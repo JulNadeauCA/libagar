@@ -143,6 +143,7 @@ AG_WindowInit(void *p, const char *name, int flags)
 	win->savy = -1;
 	win->savw = -1;
 	win->savh = -1;
+	win->caption[0] = '\0';
 	TAILQ_INIT(&win->subwins);
 	AG_MutexInitRecursive(&win->lock);
 	AG_WindowSetStyle(win, &agWindowDefaultStyle);
@@ -306,8 +307,13 @@ AG_WindowShownEv(AG_Event *event)
 	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
 		AG_WindowFocus(win);
 	}
-	if (win->flags & AG_WINDOW_MODAL)
-		agView->modal_win = win;
+	if (win->flags & AG_WINDOW_MODAL) {
+		dprintf("%s: modal #%d\n", win->caption, agView->nModal);
+		agView->winModal = Realloc(agView->winModal,
+		    (agView->nModal+1) * sizeof(AG_Window *));
+		agView->winModal[agView->nModal] = win;
+		agView->nModal++;
+	}
 
 	if (AGWIDGET(win)->x == -1 && AGWIDGET(win)->y == -1) {
 		/* First pass: initial sizing. */
@@ -332,10 +338,11 @@ AG_WindowHiddenEv(AG_Event *event)
 
 	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
 		/* Remove the focus. XXX cycle */
-		agView->focus_win = NULL;
+		agView->winToFocus = NULL;
 	}
-	if (win->flags & AG_WINDOW_MODAL)
-		agView->modal_win = NULL;
+	if (win->flags & AG_WINDOW_MODAL) {
+		agView->nModal--;
+	}
 
 	/* Update the background if necessary. */
 //	if (!AG_WindowIsSurrounded(win)) {
@@ -553,13 +560,13 @@ AG_WindowFocus(AG_Window *win)
 {
 	AG_MutexLock(&agView->lock);
 	if (win == NULL) {
-		agView->focus_win = NULL;
+		agView->winToFocus = NULL;
 		goto out;
 	}
 	AG_MutexLock(&win->lock);
 	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
 		win->flags |= AG_WINDOW_FOCUSONATTACH;
-		agView->focus_win = win;
+		agView->winToFocus = win;
 	}
 	AG_MutexUnlock(&win->lock);
 out:	AG_MutexUnlock(&agView->lock);
@@ -619,12 +626,13 @@ AG_WindowEvent(SDL_Event *ev)
 	AG_Window *win;
 	AG_Widget *wid;
 	int focus_changed = 0;
-	AG_Window *focus_saved = agView->focus_win;
+	AG_Window *focus_saved = agView->winToFocus;
 	int rv = 0;
 	
 	agCursorToSet = NULL;
 	
-	if (agView->modal_win != NULL) {
+	if (agView->nModal > 0) {
+		/* Skip window manager operations if there is a modal window. */
 		goto process;
 	}
 	switch (ev->type) {
@@ -633,7 +641,7 @@ AG_WindowEvent(SDL_Event *ev)
 		 * Focus on the highest overlapping window, and continue
 		 * with normal processing of the MOUSEBUTTONDOWN event.
 		 */
-		agView->focus_win = NULL;
+		agView->winToFocus = NULL;
 		TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq,
 		    windows) {
 			AG_MutexLock(&win->lock);
@@ -643,9 +651,9 @@ AG_WindowEvent(SDL_Event *ev)
 				continue;
 			}
 			if (win->flags & AG_WINDOW_DENYFOCUS) {
-				agView->focus_win = focus_saved;
+				agView->winToFocus = focus_saved;
 			} else {
-				agView->focus_win = win;
+				agView->winToFocus = win;
 				focus_changed++;
 			}
 			AG_MutexUnlock(&win->lock);
@@ -663,8 +671,12 @@ process:
 	 * events.
 	 */
 	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
-		if (agView->modal_win != NULL) {
-			if (win == agView->modal_win) {
+		/*
+		 * If a modal window exists and a click is made outside of
+		 * its area, send it a "window-modal-close" event.
+		 */
+		if (agView->nModal > 0) {
+			if (win == agView->winModal[agView->nModal-1]) {
 				if ((ev->type == SDL_MOUSEBUTTONDOWN) &&
 				    !AG_WidgetArea(win, ev->button.x,
 				    ev->button.y)) {
@@ -686,7 +698,7 @@ process:
 		case SDL_MOUSEMOTION:
 			/* Process active MOVE or RESIZE operations. */
 			if (agView->winop != AG_WINOP_NONE &&
-			    agView->wop_win != win) {
+			    agView->winSelected != win) {
 				AG_MutexUnlock(&win->lock);
 				continue;
 			}
@@ -771,7 +783,7 @@ process:
 			/* XXX redundant? */
 			if (agView->winop != AG_WINOP_NONE) {
 				agView->winop = AG_WINOP_NONE;
-				agView->wop_win = NULL;
+				agView->winSelected = NULL;
 			}
 			/*
 			 * Forward to all widgets that either hold focus or have
@@ -796,7 +808,7 @@ process:
 			if ((win->flags & AG_WINDOW_NOBORDERS) == 0 &&
 			    (agView->winop = AG_WindowMouseOverCtrl(win,
 			    ev->button.x, ev->button.y)) != AG_WINOP_NONE) {
-				agView->wop_win = win;
+				agView->winSelected = win;
 			}
 			/* Forward to overlapping widgets. */
 			AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
@@ -883,15 +895,15 @@ out:
 	 * holds focus.
 	 * 
 	 * The focus_changed flag is set if there was a focus change
-	 * in reaction to a window operation (focus_win can be NULL
+	 * in reaction to a window operation (winToFocus can be NULL
 	 * in that case).
 	 */
-	if (focus_changed || agView->focus_win != NULL) {
+	if (focus_changed || agView->winToFocus != NULL) {
 		AG_Window *lastwin;
 
 		lastwin = TAILQ_LAST(&agView->windows, ag_windowq);
-		if (agView->focus_win != NULL &&
-		    agView->focus_win == lastwin) 	/* Already focused? */
+		if (agView->winToFocus != NULL &&
+		    agView->winToFocus == lastwin) 	/* Already focused? */
 			goto outf;
 
 		if (lastwin != NULL) {
@@ -899,15 +911,15 @@ out:
 			if (lastwin->flags & AG_WINDOW_KEEPABOVE)
 				goto outf;
 		}
-		if (agView->focus_win != NULL &&
-		    agView->focus_win != TAILQ_LAST(&agView->windows,
+		if (agView->winToFocus != NULL &&
+		    agView->winToFocus != TAILQ_LAST(&agView->windows,
 		    ag_windowq)) {
-			TAILQ_REMOVE(&agView->windows, agView->focus_win,
+			TAILQ_REMOVE(&agView->windows, agView->winToFocus,
 			    windows);
-			TAILQ_INSERT_TAIL(&agView->windows, agView->focus_win,
+			TAILQ_INSERT_TAIL(&agView->windows, agView->winToFocus,
 			    windows);
 		}
-		agView->focus_win = NULL;
+		agView->winToFocus = NULL;
 	}
 outf:
 	return (rv);
