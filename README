@@ -33,6 +33,7 @@ Agar-RG		2D graphic rendering/edition	`agar-rg-config --libs`
 Agar-SG		3D engine (scene graph)		`agar-sg-config --libs`
 Agar-VG		Vector display engine		`agar-vg-config --libs`
 Agar-SC		Scientific computing routines	`agar-sc-config --libs`
+Agar-DEV	Developer tools			`agar-dev-config --libs`
 
 Availability
 ------------
