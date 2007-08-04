@@ -11,6 +11,7 @@ SUBDIR=	 agar-config \
 	 map agar-map-config \
 	 sc agar-sc-config \
 	 net agar-net-config \
+	 dev agar-dev-config \
 	 libintl \
 	 po
 
