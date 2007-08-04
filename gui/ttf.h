@@ -1,4 +1,3 @@
-/*	$Csoft: ttf.h,v 1.6 2005/05/10 12:25:54 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_LOADER_TTF_H_

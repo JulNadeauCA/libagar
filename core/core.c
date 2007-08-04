@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Core initialization routines.
+ */
+
 #include <config/have_setlocale.h>
 #include <config/localedir.h>
 #include <config/version.h>

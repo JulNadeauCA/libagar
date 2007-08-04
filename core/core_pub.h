@@ -1,4 +1,3 @@
-/*	$Csoft: engine.h,v 1.102 2005/10/02 09:41:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_CORE_PUBLIC_H_

@@ -1,4 +1,3 @@
-/*	$Csoft: config.h,v 1.22 2005/09/27 00:25:16 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"

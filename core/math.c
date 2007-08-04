@@ -1,4 +1,3 @@
-/*	$Csoft: math.c,v 1.3 2005/05/19 03:47:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <core/core.h>

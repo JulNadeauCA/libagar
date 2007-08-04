@@ -1,4 +1,3 @@
-/*	$Csoft: den.h,v 1.1 2003/06/21 06:50:20 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"

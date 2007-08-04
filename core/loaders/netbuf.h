@@ -1,4 +1,3 @@
-/*	$Csoft: netbuf.h,v 1.4 2005/09/17 04:48:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_LOADER_NETBUF_H_
