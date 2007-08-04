@@ -1,4 +1,3 @@
-/*	$Csoft: icons.h,v 1.26 2005/09/19 07:13:36 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_ICONMGR_H_

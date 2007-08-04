@@ -1,8 +1,5 @@
-/*	$Csoft: view.c,v 1.195 2005/10/01 09:55:38 vedge Exp $	*/
-
 /*
- * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +21,10 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Video display related routines.
  */
 
 #include <config/have_jpeg.h>

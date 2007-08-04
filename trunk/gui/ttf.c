@@ -1,6 +1,3 @@
-/*	$Csoft: ttf.c,v 1.16 2005/07/24 08:04:17 vedge Exp $	*/
-/*	Id: SDL_ttf.c,v 1.6 2002/01/18 21:46:04 slouken Exp	*/
-
 /*
  * Copyright (c) 1997, 1998, 1999, 2000, 2001, 2002  Sam Lantinga
  * All rights reserved.
@@ -27,6 +24,13 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * FreeType loader.
+ *
+ * Based on code from SDL_ttf (http://libsdl.org/projects/SDL_ttf/),
+ * placed under a BSD license with permission from Sam Lantinga.
  */
 
 #include <config/have_freetype.h>

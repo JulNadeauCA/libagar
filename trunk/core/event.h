@@ -1,4 +1,3 @@
-/*	$Csoft: event.h,v 1.35 2005/10/06 03:19:07 vedge Exp $	*/
 /*	Public domain	*/
 
 #include "begin_code.h"

@@ -1,4 +1,3 @@
-/*	$Csoft: version.h,v 1.2 2005/09/17 04:48:40 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VERSION_H_

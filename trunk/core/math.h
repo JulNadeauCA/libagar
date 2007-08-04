@@ -1,4 +1,3 @@
-/*	$Csoft: view.h,v 1.107 2005/10/03 17:37:30 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_CORE_MATH_H_

@@ -1,4 +1,3 @@
-/*	$Csoft: error.h,v 1.11 2005/09/27 00:25:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_CORE_ERROR_H_

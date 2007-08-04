@@ -1,4 +1,3 @@
-/*	$Csoft: timeout.h,v 1.6 2005/02/08 15:56:34 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TIMEOUT_H_

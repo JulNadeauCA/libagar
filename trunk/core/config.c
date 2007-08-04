@@ -1,8 +1,5 @@
-/*	$Csoft: config.c,v 1.156 2005/10/04 17:34:50 vedge Exp $	    */
-
 /*
- * Copyright (c) 2002-2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +21,12 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Global configuration object. Used for Agar-related settings, but
+ * applications are free to insert additional properties into the
+ * object.
  */
 
 #include <config/sharedir.h>

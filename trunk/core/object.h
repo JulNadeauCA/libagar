@@ -1,4 +1,3 @@
-/*	$Csoft: object.h,v 1.136 2005/09/27 02:24:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_OBJECT_H_

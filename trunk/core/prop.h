@@ -1,4 +1,3 @@
-/*	$Csoft: prop.h,v 1.26 2005/09/27 00:25:17 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_PROP_H_

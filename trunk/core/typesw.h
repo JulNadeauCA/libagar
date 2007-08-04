@@ -1,4 +1,3 @@
-/*	$Csoft: typesw.h,v 1.4 2005/09/09 02:11:47 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_TYPESW_H_

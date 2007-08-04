@@ -1,4 +1,3 @@
-/*	$Csoft: real.h,v 1.1 2003/06/19 01:53:38 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifdef _AGAR_INTERNAL

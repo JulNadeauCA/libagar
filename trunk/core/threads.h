@@ -1,4 +1,3 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_CORE_THREADS_H_

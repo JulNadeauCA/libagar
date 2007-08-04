@@ -1,8 +1,5 @@
-/*	$Csoft: timeout.c,v 1.10 2005/02/08 15:56:34 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +21,11 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Implementation of simple timers. Timers are usually associated with an
+ * AG_Object for easier management (e.g., automatic cancellation).
  */
 
 #include <core/core.h>

@@ -1,4 +1,3 @@
-/*	$Csoft$	*/
 /*	Public domain	*/
 
 #if 0

@@ -1,8 +1,5 @@
-/*	$Csoft: typesw.c,v 1.24 2005/09/20 13:46:29 vedge Exp $	*/
-
 /*
- * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +21,11 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Routines related to the AG_Object type table. The type table allows
+ * archived objects to be dynamically allocated and initialized.
  */
 
 #include <core/core.h>
