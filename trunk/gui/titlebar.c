@@ -174,8 +174,8 @@ mousebuttondown(AG_Event *event)
 
 	AG_MutexLock(&agView->lock);
 	agView->winop = AG_WINOP_MOVE;
-	agView->focus_win = tbar->win;
-	agView->wop_win = tbar->win;
+	agView->winToFocus = tbar->win;
+	agView->winSelected = tbar->win;
 	AG_MutexUnlock(&agView->lock);
 }
 
@@ -188,7 +188,7 @@ mousebuttonup(AG_Event *event)
 	
 	AG_MutexLock(&agView->lock);
 	agView->winop = AG_WINOP_NONE;
-	agView->wop_win = NULL;
+	agView->winSelected = NULL;
 	AG_MutexUnlock(&agView->lock);
 }
 
