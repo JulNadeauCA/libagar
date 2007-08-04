@@ -107,7 +107,7 @@ RG_TilesetInit(void *obj, const char *name)
 	}
 	ts->fmt = ts->icon->format;
 	ts->flags = 0;
-	ts->template[0] = '\0';
+	ts->tmpl[0] = '\0';
 	ts->tiletbl = NULL;
 	ts->ntiletbl = 0;
 	ts->animtbl = NULL;
@@ -212,7 +212,7 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 		return (-1);
 	
 	AG_MutexLock(&ts->lock);
-	AG_CopyString(ts->template, buf, sizeof(ts->template));
+	AG_CopyString(ts->tmpl, buf, sizeof(ts->tmpl));
 	ts->flags = AG_ReadUint32(buf);
 
 	/* Load the vectorial sketches. */
@@ -424,7 +424,7 @@ RG_TilesetSave(void *obj, AG_Netbuf *buf)
 
 	AG_WriteVersion(buf, rgTilesetOps.type, &rgTilesetOps.ver);
 	AG_MutexLock(&ts->lock);
-	AG_WriteString(buf, ts->template);
+	AG_WriteString(buf, ts->tmpl);
 	AG_WriteUint32(buf, ts->flags);
 
 	/* Save the vectorial sketches. */
@@ -975,7 +975,7 @@ tryname2:
 
 	t = Malloc(sizeof(RG_Tile), M_RG);
 	RG_TileInit(t, ts, ins_tile_name);
-	if (strcmp(ts->template, "Perso") == 0) {
+	if (strcmp(ts->tmpl, "Perso") == 0) {
 		RG_TileScale(ts, t, 16, 32, flags, SDL_ALPHA_OPAQUE);
 		t->xOrig = 8;
 		t->yOrig = 31;
@@ -983,7 +983,7 @@ tryname2:
 		RG_TILE_LAYER2(t,0,0) = +2;
 		RG_TILE_LAYER2(t,0,1) = +1;
 		RG_TILE_ATTR2(t,0,1) = RG_TILE_BLOCK;
-	} else if (strcmp(ts->template, "Terrain") == 0) {
+	} else if (strcmp(ts->tmpl, "Terrain") == 0) {
 		RG_TileScale(ts, t, 64, 64, flags, SDL_ALPHA_OPAQUE);
 		t->xOrig = 24;
 		t->yOrig = 24;
@@ -1181,7 +1181,7 @@ InsertTileDlg(AG_Event *event)
 	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT|AG_COMBO_HFILL, _("Class: "));
 	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, ins_tile_class,
 	    sizeof(ins_tile_class));
-	if (strcmp(ts->template, "Terrain") == 0) {
+	if (strcmp(ts->tmpl, "Terrain") == 0) {
 		AG_TlistAdd(com->list, NULL, "Ground");
 		AG_TlistAdd(com->list, NULL, "Rock");
 	}
@@ -1600,7 +1600,7 @@ SelectTemplate(AG_Event *event)
 
 	RG_TilesetReinit(ts);
 
-	if (strcmp(ts->template, "Perso") == 0) {
+	if (strcmp(ts->tmpl, "Perso") == 0) {
 		const char *tiles[] = {
 			"Idle-N", "Idle-S",
 			"Idle-W", "Idle-E"
@@ -1738,8 +1738,8 @@ RG_TilesetEdit(void *p)
 	AG_SetEvent(tl_animtbl, "tlist-poll", PollAnimTbl, "%p", ts);
 
 	com = AG_ComboNew(win, AG_COMBO_HFILL, _("Template: "));
-	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, &ts->template,
-	    sizeof(ts->template));
+	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, &ts->tmpl,
+	    sizeof(ts->tmpl));
 	AG_TlistAdd(com->list, NULL, "Perso");
 	AG_TlistAdd(com->list, NULL, "Terrain");
 	AG_SetEvent(com, "combo-selected", SelectTemplate, "%p", ts);
