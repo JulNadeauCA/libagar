@@ -1,8 +1,5 @@
-/*	$Csoft: object.c,v 1.243 2005/10/04 17:34:50 vedge Exp $	*/
-
 /*
- * Copyright (c) 2001-2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Implementation of the generic Object class.
+ */
+
 #include <core/core.h>
 
 #include <compat/md5.h>
@@ -37,7 +38,6 @@
 #include <core/config.h>
 #include <core/view.h>
 #include <core/typesw.h>
-#include <core/objmgr.h>
 
 #ifdef EDITION
 #include <gui/window.h>
@@ -99,9 +99,6 @@ int	agObjectDebugLvl = DEBUG_STATE|DEBUG_DEPRESV;
 
 int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
 int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
-int agObjectExitSavePrompt = 0;	   /* Prompt for save on exit if needed. */
-
-extern int agVerbose;
 
 /* Allocate, initialize and attach a generic object. */
 AG_Object *
@@ -850,7 +847,6 @@ fail:
 int
 AG_ObjectPageOut(void *p)
 {
-	extern int agObjMgrExiting;			/* objmgr.c */
 	AG_Object *ob = p;
 	
 	AG_MutexLock(&ob->lock);
@@ -862,8 +858,10 @@ AG_ObjectPageOut(void *p)
 		goto fail;
 	}
 	if (!AG_ObjectInUse(ob)) {
-		if (!agObjMgrExiting) {
-			if (AG_ObjectSave(ob) == -1)
+		if (AG_FindEventHandler(agWorld, "object-page-out") != NULL) {
+			AG_PostEvent(ob, agWorld, "object-page-out", NULL);
+		} else {
+			if (AG_ObjectSave(obj) == -1)
 				goto fail;
 		}
 		AG_ObjectFreeData(ob);
@@ -883,6 +881,7 @@ AG_ObjectLoad(void *p)
 
 	AG_LockLinkage();
 	AG_MutexLock(&ob->lock);
+	AG_PostEvent(ob, agWorld, "object-pre-load", NULL);
 	
 	/* Cancel scheduled non-loadable timeouts. */
 	AG_ObjectCancelTimeouts(ob, AG_TIMEOUT_LOADABLE);
@@ -909,17 +908,13 @@ AG_ObjectLoad(void *p)
 	 */
 	if (AG_ObjectReloadData(ob) == -1)
 		goto fail;
-	
-	if (ob->flags & AG_OBJECT_REOPEN_ONLOAD) {
-		AG_ObjMgrReopen(ob);
-	}
+
+	AG_PostEvent(ob, agWorld, "object-post-load", "%i", 0);
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (0);
 fail:
-	if (ob->flags & AG_OBJECT_REOPEN_ONLOAD) {
-		AG_ObjMgrReopen(ob);
-	}
+	AG_PostEvent(ob, agWorld, "object-post-load", "%i", -1);
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (-1);
@@ -1837,9 +1832,6 @@ AG_ObjectChanged(void *p)
 	AG_Object *ob = p;
 	char *pfx_save;
 	int rv;
-#ifdef DEBUG
-	extern int agObjMgrHexDiff;
-#endif
 
 	if (!AGOBJECT_PERSISTENT(ob) || !AGOBJECT_RESIDENT(ob)) {
 		return (0);
@@ -1860,27 +1852,6 @@ AG_ObjectChanged(void *p)
 		goto fail;
 	}
 	rv = (strcmp(save_sha1, tmp_sha1) != 0);
-
-#if 0
-	if (rv == 1 && agObjMgrHexDiff) {
-		char path[MAXPATHLEN];
-		char tmp[MAXPATHLEN];
-		char cmd[1024];
-
-		AG_StringCopy(agConfig, "save-path", tmp, sizeof(tmp));
-		strlcat(tmp, "/.tmp/hexdiff", sizeof(tmp));
-
-		AG_ObjectCopyFilename(ob, path, sizeof(path));
-		snprintf(cmd, sizeof(cmd), "hexdump -C '%s'>%s", path, tmp);
-		system(cmd);
-		
-		AG_ObjectSetSavePfx(ob, pfx_save);
-		AG_ObjectCopyFilename(ob, path, sizeof(path));
-		snprintf(cmd, sizeof(cmd), "hexdump -C '%s'|diff -u - %s",
-		    path, tmp);
-		system(cmd);
-		AG_ObjectSetSavePfx(ob, "/.tmp");
-	}
 #endif /* DEBUG */
 
 	AG_ObjectUnlinkDatafiles(ob);
@@ -1890,16 +1861,6 @@ fail:
 	AG_ObjectUnlinkDatafiles(ob);
 	AG_ObjectSetSavePfx(ob, pfx_save);
 	return (-1);
-}
-
-/*
- * Enable or disable the automatic "save changes?" prompt on exit, in case
- * there are unsaved changes in the main tree.
- */
-void
-AG_ObjectSavePromptOnExit(int flag)
-{
-	agObjectExitSavePrompt = flag;
 }
 
 #ifdef EDITION
