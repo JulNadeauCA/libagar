@@ -917,8 +917,9 @@ RepoRenameDlg(AG_Event *event)
 
 #endif /* NETWORK */
 
+/* Create the object browser window. */
 AG_Window *
-DEV_BrowserWindow(void)
+DEV_Browser(void)
 {
 	AG_Window *win;
 	AG_VBox *vb;
