@@ -579,7 +579,7 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
 				if (win != NULL) {
 					AG_WindowAttach(pwin, win);
 					AG_WindowShow(win);
-					agView->focus_win = pwin;
+					agView->winToFocus = pwin;
 					AG_WidgetFocus(tv);
 				}
 			}
