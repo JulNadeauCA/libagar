@@ -121,6 +121,11 @@ are expired.
 .Ft "AG_Event *"
 .Fn AG_SetEvent "AG_Object *obj" "const char *event_name" "void (*handler)(AG_Event *event)" "const char *fmt" "..."
 .Pp
+.Fn AG_AddEvent "AG_Object *obj" "const char *event_name" "void (*handler)(AG_Event *event)" "const char *fmt" "..."
+.Pp
+.Ft "AG_Event *"
+.Fn AG_FindEventHandler "AG_Object *obj" "const char *name"
+.Pp
 .Ft "void"
 .Fn AG_UnsetEvent "AG_Object *obj" "const char *event_name"
 .Pp
@@ -146,6 +151,10 @@ function registers a new event handler to service events of type
 .Fa name .
 If an event handler is already registered for the given event type, it
 is replaced.
+The
+.Fn AG_AddEvent
+variant preserves any existing event handler, such that multiple handlers
+can be invoked when the event is raised.
 .Pp
 If
 .Fa name
@@ -193,6 +202,11 @@ Converted to
 Converted to
 .Ft void *
 .El
+.Pp
+The
+.Fn AG_FindEventHandler
+function returns any event handler associated with the given event, or NULL
+if there are none.
 .Pp
 The
 .Fn AG_UnsetEvent

@@ -109,6 +109,7 @@ AG_Event *AG_AddEvent(void *, const char *, AG_EventFn, const char *, ...);
 void	  AG_UnsetEvent(void *, const char *);
 void	  AG_PostEvent(void *, void *, const char *, const char *, ...);
 void	  AG_ProcessEvent(SDL_Event *);
+AG_Event *AG_FindEventHandler(void *, const char *);
 
 int	  	 AG_SchedEvent(void *, void *, Uint32, const char *,
 		               const char *, ...);
