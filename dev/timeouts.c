@@ -37,7 +37,7 @@
 #include <gui/window.h>
 #include <gui/tableview.h>
 
-#include "monitor.h"
+#include "dev.h"
 
 static AG_Tableview *tv = NULL;
 static AG_Timeout refresher;

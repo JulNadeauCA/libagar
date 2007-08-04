@@ -53,7 +53,7 @@
 #include <gui/menu.h>
 #include <gui/text.h>
 
-#include "monitor.h"
+#include "dev.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -373,7 +373,7 @@ DEV_DebugServerStart(void)
 static void
 StartServer(AG_Event *event)
 {
-	if (AG_DebugServerStart() == 0)
+	if (DEV_DebugServerStart() == 0)
 		servRunning = 1;
 }
 

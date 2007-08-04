@@ -861,7 +861,7 @@ AG_ObjectPageOut(void *p)
 		if (AG_FindEventHandler(agWorld, "object-page-out") != NULL) {
 			AG_PostEvent(ob, agWorld, "object-page-out", NULL);
 		} else {
-			if (AG_ObjectSave(obj) == -1)
+			if (AG_ObjectSave(ob) == -1)
 				goto fail;
 		}
 		AG_ObjectFreeData(ob);

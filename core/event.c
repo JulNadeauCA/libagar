@@ -363,7 +363,7 @@ AG_ProcessEvent(SDL_Event *ev)
 		break;
 	case SDL_QUIT:
 		if (!agTerminating &&
-		    AG_FindEvent(agWorld, "quit") != NULL) {
+		    AG_FindEventHandler(agWorld, "quit") != NULL) {
 			AG_PostEvent(NULL, agWorld, "quit", NULL);
 			break;
 		}

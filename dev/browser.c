@@ -46,7 +46,8 @@
 #include <gui/file_dlg.h>
 #include <gui/notebook.h>
 
-#include <core/monitor/monitor.h>
+#include "dev.h"
+
 #ifdef NETWORK
 #include <core/rcs.h>
 #endif
@@ -1031,7 +1032,7 @@ DEV_Browser(void)
 	
 #ifdef DEBUG
 	mi = AG_MenuAddItem(me, _("Debug"));
-	AG_MonitorMenu(mi);
+	DEV_ToolMenu(mi);
 #endif /* DEBUG */
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
@@ -1159,7 +1160,7 @@ DEV_PostLoadCallback(AG_Event *event)
 /*	int rv = AG_INT(1); */
 	struct objent *oent;
 
-	if ((ob->flags & AG_OBJECT_REOPEN_ONLOAD) == 0)
+	if ((obj->flags & AG_OBJECT_REOPEN_ONLOAD) == 0)
 		return;
 
 	TAILQ_FOREACH(oent, &dobjs, objs) {
@@ -1190,6 +1191,26 @@ DEV_PageOutCallback(AG_Event *event)
 		if (AG_ObjectSave(obj) == -1)
 			AG_TextMsgFromError();
 }
+
+static void
+ConfirmQuit(AG_Event *event)
+{
+	SDL_Event nev;
+
+	agTerminating = 0;
+	nev.type = SDL_USEREVENT;
+	SDL_PushEvent(&nev);
+}
+
+static void
+AbortQuit(AG_Event *event)
+{
+	AG_Window *win = AG_PTR(1);
+
+	agTerminating = 0;
+	AG_ViewDetach(win);
+}
+
 
 /*
  * Callback invoked when the user has requested termination of the
@@ -1234,25 +1255,6 @@ DEV_BrowserInit(void)
 	AG_AddEvent(agWorld, "object-post-load", DEV_PostLoadCallback, NULL);
 	AG_AddEvent(agWorld, "object-page-out", DEV_PageOutCallback, NULL);
 	AG_AddEvent(agWorld, "quit", DEV_QuitCallback, NULL);
-}
-
-static void
-ConfirmQuit(AG_Event *event)
-{
-	SDL_Event nev;
-
-	agTerminating = 0;
-	nev.type = SDL_USEREVENT;
-	SDL_PushEvent(&nev);
-}
-
-static void
-AbortQuit(AG_Event *event)
-{
-	AG_Window *win = AG_PTR(1);
-
-	agTerminating = 0;
-	AG_ViewDetach(win);
 }
 
 void

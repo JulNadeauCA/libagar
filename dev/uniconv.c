@@ -39,7 +39,7 @@
 #include <gui/tableview.h>
 #include <gui/unicode.h>
 
-#include "monitor.h"
+#include "dev.h"
 
 static Uint32 unitext[2] = { '\0', '\0' };
 static char utf8text[256] = "";
