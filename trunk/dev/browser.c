@@ -1222,11 +1222,16 @@ DEV_QuitCallback(AG_Event *event)
 {
 	AG_Window *win;
 	AG_Box *bo;
+	
+	agTerminating = 1;
 
 	if (!AG_ObjectChangedAll(agWorld)) {
+		SDL_Event nev;
+
+		nev.type = SDL_USEREVENT;
+		SDL_PushEvent(&nev);
 		return;
 	}
-	agTerminating = 1;
 	
 	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
 	    AG_WINDOW_NORESIZE, "DEV_QuitCallback")) == NULL) {
