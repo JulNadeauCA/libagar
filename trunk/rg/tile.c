@@ -851,7 +851,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel,
 				AG_SetEvent(win, "window-close",
 				    ElementClosedEv, "%p", tv);
 				
-				agView->focus_win = pwin;
+				agView->winToFocus = pwin;
 				AG_WidgetFocus(tv);
 			} else {
 				tv->tv_feature.win = NULL;
@@ -889,7 +889,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel,
 			AG_WindowShow(win);
 			AG_SetEvent(win, "window-close", ElementClosedEv,
 			    "%p",tv);
-			agView->focus_win = pwin;
+			agView->winToFocus = pwin;
 			AG_WidgetFocus(tv);
 			
 			tv->tel_tbar = RG_PixmapToolbar(tv, tel);
@@ -921,7 +921,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel,
 			AG_WindowShow(win);
 			AG_SetEvent(win, "window-close", ElementClosedEv,
 			    "%p",tv);
-			agView->focus_win = pwin;
+			agView->winToFocus = pwin;
 			AG_WidgetFocus(tv);
 
 			tv->tel_tbar = RG_SketchToolbar(tv, tel);
