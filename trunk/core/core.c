@@ -1,8 +1,5 @@
-/*	$Csoft: engine.c,v 1.167 2005/10/05 02:00:35 vedge Exp $	*/
-
 /*
- * Copyright (c) 2001, 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,9 +31,7 @@
 #include <config/have_pthread_mutex_recursive.h>
 #include <config/have_pthread_mutex_recursive_np.h>
 #include <config/have_sdl_cpuinfo.h>
-#if 0
 #include <config/have_x11.h>
-#endif
 
 #include <core/core.h>
 #include <core/config.h>
@@ -59,11 +54,16 @@
 #ifdef HAVE_SDL_CPUINFO
 #include <SDL_cpuinfo.h>
 #endif
-#if 0
-#if defined(DEBUG) && defined(HAVE_X11)
+
+/*
+ * Force synchronous X11 events. Reduces performance, but useful for
+ * debugging things like accesses to illegal video regions.
+ */
+/* #define SYNC_X11_EVENTS */
+
+#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
 #include <SDL_syswm.h>
 #include <X11/Xlib.h>
-#endif
 #endif
 
 #ifdef THREADS
@@ -76,8 +76,8 @@ AG_Object *agWorld;
 void (*agAtexitFunc)(void) = NULL;
 AG_Mutex agLinkageLock;
 AG_Mutex agTimingLock;
-int agServerMode = 0;
 int agVerbose = 0;
+int agTerminating = 0;
 
 int
 AG_InitCore(const char *progname, Uint flags)
@@ -147,15 +147,13 @@ AG_InitCore(const char *progname, Uint flags)
 	return (0);
 }
 
-#if 0
-#if defined(DEBUG) && defined(HAVE_X11)
+#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
 static int
 AG_X11_ErrorHandler(Display *disp, XErrorEvent *event)
 {
 	printf("Caught X11 error!\n");
 	abort();
 }
-#endif
 #endif
 
 int
@@ -252,18 +250,16 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 
-#if 0
-#if defined(DEBUG) && defined(HAVE_X11)
+#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
 	{	
 		SDL_SysWMinfo wminfo;
 		if (SDL_GetWMInfo(&wminfo) &&
 		    wminfo.subsystem == SDL_SYSWM_X11) {
-			dprintf("X11: enabling sync events\n");
+			dprintf("Enabling synchronous X11 events\n");
 			XSynchronize(wminfo.info.x11.display, True);
 			XSetErrorHandler(AG_X11_ErrorHandler);
 		}
 	}
-#endif
 #endif
 
 	AG_IconMgrInit(&agIconMgr, "core-icons");
@@ -308,12 +304,6 @@ AG_InitInput(Uint flags)
 int
 AG_InitNetwork(Uint flags)
 {
-#if defined(DEBUG) && defined(THREADS)
-	if (agServerMode) {
-		extern int AG_DebugServerStart(void);
-		AG_DebugServerStart();
-	}
-#endif
 	AG_RcsInit();
 	return (0);
 }
