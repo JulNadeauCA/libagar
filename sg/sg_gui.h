@@ -12,8 +12,10 @@
 
 #ifdef SG_DOUBLE_PRECISION
 #define SG_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_DOUBLE,(p))
+#define SG_WidgetReal(w,n) AG_WidgetDouble((w),(n))
 #else
 #define SG_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_FLOAT,(p))
+#define SG_WidgetReal(w,n) AG_WidgetFloat((w),(n))
 #endif
 
 __BEGIN_DECLS

@@ -86,10 +86,6 @@ mousemotion(AG_Event *event)
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 
-	if (x < 0 || x >= AGWIDGET(skv)->w ||
-	    y < 0 || y >= AGWIDGET(skv)->h)
-		return;
-
 	vPos.x = SK_VIEW_X(skv, AG_INT(1));
 	vPos.y = SK_VIEW_Y(skv, AGWIDGET(skv)->h - AG_INT(2));
 	vPos.z = 0.0;
@@ -592,8 +588,7 @@ AddConstraint(AG_Event *event)
 	    AGOBJECT(sk)->name, skConstraintNames[type],
 	    SK_NodeName(nodes[0]), SK_NodeName(nodes[1]));
 
-	if (SK_Solve(sk) == -1)
-		AG_TextMsgFromError();
+	SK_Update(sk);
 }
 
 void

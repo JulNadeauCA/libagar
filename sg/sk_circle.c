@@ -44,7 +44,7 @@ SK_CircleNew(void *pnode)
 	SK_Circle *circle;
 
 	circle = Malloc(sizeof(SK_Circle), M_SG);
-	SK_CircleInit(circle, SK_GenName(SKNODE(pnode)->sk, "Circle"));
+	SK_CircleInit(circle, SK_GenNodeName(SKNODE(pnode)->sk, "Circle"));
 	SK_NodeAttach(pnode, circle);
 	return (circle);
 }
@@ -166,6 +166,17 @@ SK_CircleDelete(void *p)
 }
 
 void
+SK_CircleMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
+{
+	SK_Circle *c = p;
+
+	if (!(SKNODE(c->p)->flags & SK_NODE_MOVED)) {
+		SK_Translatev(c->p, vel);
+		SKNODE(c->p)->flags |= SK_NODE_MOVED;
+	}
+}
+
+void
 SK_CircleWidth(SK_Circle *circle, SG_Real size)
 {
 	circle->width = size;
@@ -187,9 +198,11 @@ SK_NodeOps skCircleOps = {
 	SK_CircleSave,
 	NULL,		/* draw_relative */
 	SK_CircleDraw,
+	NULL,		/* redraw */
 	SK_CircleEdit,
 	SK_CircleProximity,
-	SK_CircleDelete
+	SK_CircleDelete,
+	SK_CircleMove
 };
 
 #ifdef EDITION
@@ -269,6 +282,7 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 #endif
 	SK_NodeAddReference(circle, circle->p);
 	t->curCircle = circle;
+	SK_Update(sk);
 	return (1);
 }
 

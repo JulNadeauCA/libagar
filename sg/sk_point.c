@@ -44,7 +44,7 @@ SK_PointNew(void *pnode)
 	SK_Point *pt;
 
 	pt = Malloc(sizeof(SK_Point), M_SG);
-	SK_PointInit(pt, SK_GenName(SKNODE(pnode)->sk, "Point"));
+	SK_PointInit(pt, SK_GenNodeName(SKNODE(pnode)->sk, "Point"));
 	SK_NodeAttach(pnode, pt);
 	return (pt);
 }
@@ -149,6 +149,12 @@ SK_PointDelete(void *p)
 	return (SK_NodeDel(pt));
 }
 
+void
+SK_PointMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
+{
+	SK_Translatev(p, vel);
+}
+
 SK_NodeOps skPointOps = {
 	"Point",
 	sizeof(SK_Point),
@@ -159,9 +165,11 @@ SK_NodeOps skPointOps = {
 	SK_PointSave,
 	SK_PointDraw,
 	NULL,		/* draw_absolute */
+	NULL,		/* redraw */
 	SK_PointEdit,
 	SK_PointProximity,
-	SK_PointDelete
+	SK_PointDelete,
+	SK_PointMove
 };
 
 #ifdef EDITION
@@ -177,9 +185,11 @@ mousebuttondown(void *pTool, SG_Vector pos, int btn)
 		return (0);
 
 	pt = Malloc(sizeof(SK_Point), M_OBJECT);
-	SK_PointInit(pt, SK_GenName(sk, "Point"));
+	SK_PointInit(pt, SK_GenNodeName(sk, "Point"));
 	SK_NodeAttach(sk->root, pt);
 	SG_MatrixTranslate2(&SKNODE(pt)->T, pos.x, pos.y);
+	
+	SK_Update(sk);
 	return (0);
 }
 

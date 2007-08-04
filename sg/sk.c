@@ -35,6 +35,7 @@
 #include <core/typesw.h>
 
 #include "sk.h"
+#include "sk_constraint.h"
 
 #include <math.h>
 #include <string.h>
@@ -56,11 +57,11 @@ const AG_ObjectOps skOps = {
 };
 
 const char *skConstraintNames[] = {
-	N_("Coincident"),
-	N_("Perpendicular"),
-	N_("Parallel"),
+	N_("Incident"),
 	N_("Distance"),
 	N_("Angle"),
+	N_("Perpendicular"),
+	N_("Parallel"),
 	N_("Concentric"),
 };
 
@@ -97,8 +98,9 @@ SK_NodeOfClassGeneral(SK_Node *node, const char *cn)
 
 /* Evaluate whether a node's class name matches a pattern. */
 int
-SK_NodeOfClass(SK_Node *node, const char *cname)
+SK_NodeOfClass(void *pNode, const char *cname)
 {
+	SK_Node *node = pNode;
 	const char *c;
 
 #ifdef DEBUG
@@ -129,9 +131,8 @@ SK_InitEngine(void)
 	SK_NodeRegister(&skPointOps);
 	SK_NodeRegister(&skLineOps);
 	SK_NodeRegister(&skCircleOps);
-#if 0
-	SK_NodeRegister(&skTextOps);
-#endif
+
+	SK_NodeRegister(&skDimensionOps);
 	return (0);
 }
 
@@ -168,9 +169,7 @@ PostEditorLoad(AG_Event *event)
 {
 	SK *sk = AG_SELF();
 
-	if (SK_Solve(sk) == -1)
-		AG_TextMsg(AG_MSG_ERROR, _("Failed to solve sketch: %s"),
-		    AG_GetError());
+	SK_Update(sk);
 }
 #endif /* EDITION */
 
@@ -188,21 +187,42 @@ SK_Init(void *obj, const char *name)
 	AGOBJECT(sk)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 	sk->flags = 0;
 	AG_MutexInitRecursive(&sk->lock);
-	SK_InitConstraintGraph(&sk->ctGraph);
+	SK_InitCluster(&sk->ctGraph, 0);
 	TAILQ_INIT(&sk->nodes);
-	TAILQ_INIT(&sk->ctClusters);
-
-	SK_InitRoot(sk);
+	TAILQ_INIT(&sk->clusters);
+	TAILQ_INIT(&sk->insns);
 	sk->uLen = AG_FindUnit("mm");
 
 #ifdef EDITION
 	AG_SetEvent(sk, "edit-post-load", PostEditorLoad, NULL);
 #endif
+	SK_InitRoot(sk);
+}
+
+void
+SK_Update(SK *sk)
+{
+	SK_Insn *si;
+
+	if (SK_Solve(sk) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, _("Failed to solve sketch: %s"),
+		    AG_GetError());
+		return;
+	}
+#if 0
+	TAILQ_FOREACH(si, &sk->insns, insns) {
+		if (SK_ExecInsn(sk, si) == -1) {
+			AG_TextMsg(AG_MSG_ERROR, _("Instruction failed: %s"),
+			    AG_GetError());
+			return;
+		}
+	}
+#endif
 }
 
 /* Allocate a new node name. */
 Uint32
-SK_GenName(SK *sk, const char *type)
+SK_GenNodeName(SK *sk, const char *type)
 {
 	Uint32 name = 1;
 
@@ -241,7 +261,7 @@ SK_NodeColor(void *p, const SG_Color *cOrig)
 	SG_Color c = *cOrig;
 
 	if (node->flags & SK_NODE_MOUSEOVER) {
-		c.b = MIN((cOrig->b + 0.5)/2.0,1.0);
+		c.b = MIN((cOrig->b + 1.0)/2.0,1.0);
 	}
 	if (SKNODE_SELECTED(node)) {
 		c.g = MIN((c.g + 1.5)/2.0,1.0);
@@ -301,8 +321,9 @@ SK_Reinit(void *obj)
 	TAILQ_INIT(&sk->nodes);
 	SK_InitRoot(sk);
 
-	SK_FreeConstraintGraph(&sk->ctGraph);
-	SK_FreeConstraintClusters(sk);
+	SK_FreeCluster(&sk->ctGraph);
+	SK_FreeClusters(sk);
+	SK_FreeInsns(sk);
 }
 
 void
@@ -625,6 +646,15 @@ SK_NodeCoords(void *p)
 	return (v);
 }
 
+void
+SK_NodeRedraw(void *p, SK_View *skv)
+{
+	SK_Node *node = p;
+
+	if (node->ops->redraw != NULL)
+		node->ops->redraw(node, skv);
+}
+
 /* Return the orientation vector of a node. */
 SG_Vector
 SK_NodeDir(void *p)
@@ -690,8 +720,8 @@ SK_NodeAddConstraint(void *pNode, SK_Constraint *ct)
 		if (node->cons[i] == ct)
 			return;
 	}
-	node->cons = Realloc(node->cons,
-	                     (node->nCons+1)*sizeof(SK_Constraint *));
+	node->cons = Realloc(node->cons, (node->nCons+1) *
+	                                 sizeof(SK_Constraint *));
 	node->cons[node->nCons++] = ct;
 }
 
@@ -716,12 +746,12 @@ SK_NodeDelConstraint(void *pNode, SK_Constraint *ct)
 }
 
 /* Search a node by name in a sketch. */
+/* XXX use a hash table */
 void *
 SK_FindNode(SK *sk, Uint32 name, const char *type)
 {
 	SK_Node *node;
 
-	/* XXX use a hash table */
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
 		if (node->name == name &&
 		    strcmp(node->ops->name, type) == 0)
@@ -906,66 +936,96 @@ SK_ProximitySearch(SK *sk, const char *type, SG_Vector *v, SG_Vector *vC,
 	return (nClosest);
 }
 
-/* Initialize constraint graph. */
-void
-SK_InitConstraintGraph(SK_ConstraintGraph *cg)
+/* Search a node by name in a sketch. */
+/* XXX use a hash table */
+SK_Cluster *
+SK_FindCluster(SK *sk, Uint32 name)
 {
-	TAILQ_INIT(&cg->edges);
+	SK_Cluster *cl;
+
+	TAILQ_FOREACH(cl, &sk->clusters, clusters) {
+		if (cl->name == name)
+			return (cl);
+	}
+	AG_SetError("No such cluster: %u", name);
+	return (NULL);
 }
 
-/* Create a copy of a constraint graph. */
+/* Allocate a new cluster name. */
+Uint
+SK_GenClusterName(SK *sk)
+{
+	Uint name = 1;
+
+	while (SK_FindCluster(sk, name) != NULL) {
+		if (++name >= SK_NAME_MAX)
+			fatal("Out of cluster names");
+	}
+	return (name);
+}
+
 void
-SK_CopyConstraintGraph(const SK_ConstraintGraph *cgSrc,
-    SK_ConstraintGraph *cgDst)
+SK_InitCluster(SK_Cluster *cl, Uint32 name)
+{
+	cl->name = name;
+	TAILQ_INIT(&cl->edges);
+}
+
+void
+SK_CopyCluster(const SK_Cluster *clSrc, SK_Cluster *clDst)
 {
 	SK_Constraint *ct;
 
-	TAILQ_FOREACH(ct, &cgSrc->edges, constraints)
-		SK_AddConstraintCopy(cgDst, ct);
+	TAILQ_FOREACH(ct, &clSrc->edges, constraints)
+		SK_AddConstraintCopy(clDst, ct);
 }
 
-/* Free a constraint graph. */
 void
-SK_FreeConstraintGraph(SK_ConstraintGraph *cg)
+SK_FreeCluster(SK_Cluster *cl)
 {
-	SK_Constraint *ct, *ctNext;
+	SK_Constraint *ct;
 
-	for (ct = TAILQ_FIRST(&cg->edges);
-	     ct != TAILQ_END(&cg->edges);
-	     ct = ctNext) {
-		ctNext = TAILQ_NEXT(ct, constraints);
+	while ((ct = TAILQ_FIRST(&cl->edges)) != NULL) {
+		TAILQ_REMOVE(&cl->edges, ct, constraints);
 		Free(ct, M_SG);
 	}
-	TAILQ_INIT(&cg->edges);
 }
 
-/* Free all constraint graph clusters from the sketch. */
 void
-SK_FreeConstraintClusters(SK *sk)
+SK_FreeClusters(SK *sk)
 {
-	SK_ConstraintGraph *cg, *cgNext;
+	SK_Cluster *cl;
 
-	for (cg = TAILQ_FIRST(&sk->ctClusters);
-	     cg != TAILQ_END(&sk->ctClusters);
-	     cg = cgNext) {
-		cgNext = TAILQ_NEXT(cg, clusters);
-		SK_FreeConstraintGraph(cg);
-		Free(cg, M_SG);
+	while ((cl = TAILQ_FIRST(&sk->clusters)) != NULL) {
+		TAILQ_REMOVE(&sk->clusters, cl, clusters);
+		SK_FreeCluster(cl);
+		Free(cl, M_SG);
 	}
-	TAILQ_INIT(&sk->ctClusters);
+}
+
+void
+SK_FreeInsns(SK *sk)
+{
+	SK_Insn *si;
+
+	while ((si = TAILQ_FIRST(&sk->insns)) != NULL) {
+		TAILQ_REMOVE(&sk->insns, si, insns);
+		Free(si, M_SG);
+	}
 }
 
 /* Create a new constraint edge in the given constraint graph. */
 SK_Constraint *
-SK_AddConstraint(SK_ConstraintGraph *cg, void *node1, void *node2,
+SK_AddConstraint(SK_Cluster *cl, void *node1, void *node2,
     enum sk_constraint_type type, ...)
 {
 	SK_Constraint *ct;
 	va_list ap;
 
-	if (SK_FindConstraint(cg, type, node1, node2) != NULL) {
-		AG_SetError(_("Existing %s constraint"),
-		    skConstraintNames[type]);
+	if (SK_FindConstraint(cl, SK_CONSTRAINT_ANY, node1, node2) != NULL) {
+		AG_SetError(_("Existing constraint; new %s constraint would "
+		              "overconstraint sketch."),
+			      skConstraintNames[type]);
 		return (NULL);
 	}
 	ct = Malloc(sizeof(SK_Constraint), M_SG);
@@ -986,46 +1046,69 @@ SK_AddConstraint(SK_ConstraintGraph *cg, void *node1, void *node2,
 	}
 	va_end(ap);
 
-	TAILQ_INSERT_TAIL(&cg->edges, ct, constraints);
+	TAILQ_INSERT_TAIL(&cl->edges, ct, constraints);
 	return (ct);
+}
+
+/* Duplicate a constraint. */
+SK_Constraint *
+SK_DupConstraint(const SK_Constraint *ct1)
+{
+	SK_Constraint *ct2;
+
+	ct2 = Malloc(sizeof(SK_Constraint), M_SG);
+	ct2->type = ct1->type;
+	ct2->n1 = ct1->n1;
+	ct2->n2 = ct1->n2;
+	switch (ct1->type) {
+	case SK_DISTANCE:
+		ct2->ct_distance = ct1->ct_distance;
+		break;
+	case SK_ANGLE:
+		ct2->ct_angle = ct1->ct_angle;
+		break;
+	default:
+		break;
+	}
+	return (ct2);
 }
 
 /* Duplicate a constraint edge. */
 SK_Constraint *
-SK_AddConstraintCopy(SK_ConstraintGraph *cgDst, const SK_Constraint *ct)
+SK_AddConstraintCopy(SK_Cluster *clDst, const SK_Constraint *ct)
 {
 	switch (ct->type) {
 	case SK_DISTANCE:
-		return SK_AddConstraint(cgDst, ct->n1, ct->n2, SK_DISTANCE,
+		return SK_AddConstraint(clDst, ct->n1, ct->n2, SK_DISTANCE,
 		                        ct->ct_distance);
 	case SK_ANGLE:
-		return SK_AddConstraint(cgDst, ct->n1, ct->n2, SK_ANGLE,
+		return SK_AddConstraint(clDst, ct->n1, ct->n2, SK_ANGLE,
 		                        ct->ct_angle);
 	default:
 		break;
 	}
-	return SK_AddConstraint(cgDst, ct->n1, ct->n2, ct->type);
+	return SK_AddConstraint(clDst, ct->n1, ct->n2, ct->type);
 }
 
 /* Destroy a constraint edge. */
 void
-SK_DelConstraint(SK_ConstraintGraph *cg, SK_Constraint *ct)
+SK_DelConstraint(SK_Cluster *cl, SK_Constraint *ct)
 {
-	TAILQ_REMOVE(&cg->edges, ct, constraints);
+	TAILQ_REMOVE(&cl->edges, ct, constraints);
 	Free(ct, M_SG);
 }
 
 /* Destroy a constraint edge matching the argument. */
 int
-SK_DelSimilarConstraint(SK_ConstraintGraph *cg, const SK_Constraint *ctRef)
+SK_DelSimilarConstraint(SK_Cluster *cl, const SK_Constraint *ctRef)
 {
 	SK_Constraint *ct;
 
-	if ((ct = SK_FindSimilarConstraint(cg, ctRef)) == NULL) {
+	if ((ct = SK_FindSimilarConstraint(cl, ctRef)) == NULL) {
 		AG_SetError("No matching constraint");
 		return (-1);
 	}
-	TAILQ_REMOVE(&cg->edges, ct, constraints);
+	TAILQ_REMOVE(&cl->edges, ct, constraints);
 	Free(ct, M_SG);
 	return (0);
 }
@@ -1036,8 +1119,7 @@ SK_CompareConstraints(const SK_Constraint *ct1, const SK_Constraint *ct2)
 	if (ct1->type == ct2->type &&
 	    ((ct1->n1 == ct2->n1 && ct1->n2 == ct2->n2) ||
 	     (ct1->n1 == ct2->n2 && ct1->n2 == ct2->n1))) {
-		return (0);
-#if 0
+#if 1
 		switch (ct1->type) {
 		case SK_DISTANCE:
 			return (ct1->ct_distance - ct2->ct_distance);
@@ -1046,6 +1128,8 @@ SK_CompareConstraints(const SK_Constraint *ct1, const SK_Constraint *ct2)
 		default:
 			return (0);
 		}
+#else
+		return (0);
 #endif
 	}
 	return (1);
@@ -1056,13 +1140,13 @@ SK_CompareConstraints(const SK_Constraint *ct1, const SK_Constraint *ct2)
  * two given nodes.
  */
 SK_Constraint *
-SK_FindConstraint(const SK_ConstraintGraph *cg, enum sk_constraint_type type,
+SK_FindConstraint(const SK_Cluster *cl, enum sk_constraint_type type,
     void *n1, void *n2)
 {
 	SK_Constraint *ct;
 
-	TAILQ_FOREACH(ct, &cg->edges, constraints) {
-		if (ct->type == type &&
+	TAILQ_FOREACH(ct, &cl->edges, constraints) {
+		if ((ct->type == type || type == SK_CONSTRAINT_ANY) &&
 		    ((ct->n1 == n1 && ct->n2 == n2) ||
 		     (ct->n1 == n2 && ct->n2 == n1)))
 			return (ct);
@@ -1072,11 +1156,11 @@ SK_FindConstraint(const SK_ConstraintGraph *cg, enum sk_constraint_type type,
 
 /* Search a constraint graph for a constraint matching the argument. */
 SK_Constraint *
-SK_FindSimilarConstraint(const SK_ConstraintGraph *cg, const SK_Constraint *ct)
+SK_FindSimilarConstraint(const SK_Cluster *cl, const SK_Constraint *ct)
 {
 	SK_Constraint *ct2;
 
-	TAILQ_FOREACH(ct2, &cg->edges, constraints) {
+	TAILQ_FOREACH(ct2, &cl->edges, constraints) {
 		if (SK_CompareConstraints(ct2, ct) == 0)
 			return (ct2);
 	}
@@ -1088,12 +1172,12 @@ SK_FindSimilarConstraint(const SK_ConstraintGraph *cg, const SK_Constraint *ct)
  * constraint graph.
  */
 SK_Constraint *
-SK_ConstrainedNodes(const SK_ConstraintGraph *cg, const SK_Node *n1,
+SK_ConstrainedNodes(const SK_Cluster *cl, const SK_Node *n1,
     const SK_Node *n2)
 {
 	SK_Constraint *ct;
 
-	TAILQ_FOREACH(ct, &cg->edges, constraints) {
+	TAILQ_FOREACH(ct, &cl->edges, constraints) {
 		if ((ct->n1 == n1 && ct->n2 == n2) ||
 		    (ct->n1 == n2 && ct->n2 == n1))
 			return (ct);
@@ -1102,12 +1186,13 @@ SK_ConstrainedNodes(const SK_ConstraintGraph *cg, const SK_Node *n1,
 }
 
 /* Evaluate whether the given node is in the given constraint graph. */
+/* XXX optimize */
 int
-SK_NodeInGraph(const SK_Node *node, const SK_ConstraintGraph *cg)
+SK_NodeInCluster(const SK_Node *node, const SK_Cluster *cl)
 {
 	SK_Constraint *ct;
 
-	TAILQ_FOREACH(ct, &cg->edges, constraints) {
+	TAILQ_FOREACH(ct, &cl->edges, constraints) {
 		if (ct->n1 == node || ct->n2 == node)
 			return (1);
 	}
@@ -1116,18 +1201,18 @@ SK_NodeInGraph(const SK_Node *node, const SK_ConstraintGraph *cg)
 
 /*
  * Count the number of edges between a given node and any other node
- * in the given subgraph cgSub of graph cg.
+ * in the given subgraph clSub of graph cl.
  */
 Uint
-SK_ConstraintsToSubgraph(const SK_ConstraintGraph *cgOrig, const SK_Node *node,
-    const SK_ConstraintGraph *cgSub, SK_Constraint *rv[2])
+SK_ConstraintsToSubgraph(const SK_Cluster *clOrig, const SK_Node *node,
+    const SK_Cluster *clSub, SK_Constraint *rv[2])
 {
 	SK_Constraint *ct, *ctOrig;
 	Uint count = 0;
 
-	TAILQ_FOREACH(ct, &cgOrig->edges, constraints) {
-		if ((ct->n1 == node && SK_NodeInGraph(ct->n2, cgSub)) ||
-		    (ct->n2 == node && SK_NodeInGraph(ct->n1, cgSub))) {
+	TAILQ_FOREACH(ct, &clOrig->edges, constraints) {
+		if ((ct->n1 == node && SK_NodeInCluster(ct->n2, clSub)) ||
+		    (ct->n2 == node && SK_NodeInCluster(ct->n1, clSub))) {
 			if (count < 2) {
 				rv[count] = ct;
 			}
@@ -1135,6 +1220,144 @@ SK_ConstraintsToSubgraph(const SK_ConstraintGraph *cgOrig, const SK_Node *node,
 		}
 	}
 	return (count);
+}
+
+/* Add a construction step for the construction phase of the solver. */
+SK_Insn *
+SK_AddInsn(SK *sk, enum sk_insn_type type, ...)
+{
+	SK_Insn *si;
+	va_list ap;
+
+	si = Malloc(sizeof(SK_Insn), M_SG);
+	si->type = type;
+
+	va_start(ap, type);
+	switch (type) {
+	case SK_COMPOSE_PAIR:
+		si->n[0] = va_arg(ap, void *);
+		si->n[1] = va_arg(ap, void *);
+		si->ct01 = va_arg(ap, void *);
+#ifdef DEBUG
+		if (si->n[0] == NULL || si->n[1] == NULL || si->ct01 == NULL ||
+		    si->ct01->type >= SK_CONSTRAINT_LAST)
+			fatal("Bad args");
+#endif
+		break;
+	case SK_COMPOSE_RING:
+		si->n[0] = va_arg(ap, void *);
+		si->n[1] = va_arg(ap, void *);
+		si->n[2] = va_arg(ap, void *);
+		si->ct01 = va_arg(ap, void *);
+		si->ct02 = va_arg(ap, void *);
+#ifdef DEBUG
+		if (si->n[0] == NULL || si->n[1] == NULL || si->n[2] == NULL ||
+		    si->ct01 == NULL || si->ct02 == NULL ||
+		    si->ct01->type >= SK_CONSTRAINT_LAST ||
+		    si->ct02->type >= SK_CONSTRAINT_LAST)
+			fatal("Bad args");
+#endif
+		break;
+	}
+	va_end(ap);
+
+	TAILQ_INSERT_TAIL(&sk->insns, si, insns);
+	return (si);
+}
+
+static int
+SK_ComposePair(SK *sk, const SK_Insn *insn)
+{
+	SK_Node *n = insn->n[0];
+	SK_Node *n1 = insn->n[1];
+	SK_Constraint *ct = insn->ct01;
+	SG_Vector v;
+	int i, rv = -1;
+
+	dprintf("ComposePair: %s([%s:%s])\n", SK_NodeName(n),
+	    skConstraintNames[ct->type], SK_NodeName(n1));
+
+	for (i = 0; i < skConstraintPairFnCount; i++) {
+		const SK_ConstraintPairFn *fn = &skConstraintPairFns[i];
+
+		if (fn->ctType == ct->type &&
+		    SK_NodeOfClass(n, fn->type1) &&
+		    SK_NodeOfClass(n1, fn->type2)) {
+			rv = fn->fn(ct, (void *)n, (void *)n1);
+			break;
+		}
+	}
+	if (i == skConstraintPairFnCount) {
+		AG_SetError("Illegal case: %s(%s,%s)",
+		    skConstraintNames[ct->type], n->ops->name, n1->ops->name);
+		return (-1);
+	}
+	return (rv);
+}
+
+static int
+SK_ComposeRing(SK *sk, const SK_Insn *insn)
+{
+	SK_Node *n = insn->n[0];
+	SK_Node *n1 = insn->n[1];
+	SK_Node *n2 = insn->n[2];
+	SK_Constraint *ct1 = insn->ct01;
+	SK_Constraint *ct2 = insn->ct02;
+	int i;
+	int rv = 0;
+
+	dprintf("ComposeRing: %s([%s:%s], [%s:%s])\n", SK_NodeName(n),
+	    skConstraintNames[ct1->type], SK_NodeName(n1),
+	    skConstraintNames[ct2->type], SK_NodeName(n2));
+	
+	for (i = 0; i < skConstraintRingFnCount; i++) {
+		const SK_ConstraintRingFn *fn = &skConstraintRingFns[i];
+
+		if ((fn->ctType1 == ct1->type ||
+		     fn->ctType1 == SK_CONSTRAINT_ANY) &&
+		    (fn->ctType2 == ct2->type ||
+		     fn->ctType2 == SK_CONSTRAINT_ANY) &&
+		    SK_NodeOfClass(n, fn->type1) &&
+		    SK_NodeOfClass(n1, fn->type2) &&
+		    SK_NodeOfClass(n2, fn->type3)) {
+			rv = fn->fn(n, ct1, n1, ct2, n2);
+			break;
+		} else if
+		   ((fn->ctType1 == ct2->type ||
+		     fn->ctType1 == SK_CONSTRAINT_ANY) &&
+		    (fn->ctType2 == ct1->type ||
+		     fn->ctType2 == SK_CONSTRAINT_ANY) &&
+		    SK_NodeOfClass(n, fn->type1) &&
+		    SK_NodeOfClass(n2, fn->type2) &&
+		    SK_NodeOfClass(n1, fn->type3)) {
+			rv = fn->fn(n, ct2, n2, ct1, n1);
+			break;
+		}
+	}
+	if (i == skConstraintRingFnCount) {
+		AG_SetError("Illegal case: %s([%s:%s], [%s:%s])",
+		    n->ops->name,
+		    skConstraintNames[ct1->type],
+		    n1->ops->name,
+		    skConstraintNames[ct2->type],
+		    n2->ops->name);
+		return (-1);
+	}
+	return (rv);
+}
+
+int
+SK_ExecInsn(SK *sk, const SK_Insn *insn)
+{
+	switch (insn->type) {
+	case SK_COMPOSE_PAIR:
+		return SK_ComposePair(sk, insn);
+	case SK_COMPOSE_RING:
+		return SK_ComposeRing(sk, insn);
+	default:
+		AG_SetError("Illegal instruction: 0x%x", insn->type);
+		return (-1);
+	}
 }
 
 #endif /* HAVE_OPENGL */
