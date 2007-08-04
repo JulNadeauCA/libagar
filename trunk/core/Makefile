@@ -1,8 +1,7 @@
 TOP=..
 include ${TOP}/Makefile.config
 
-SUBDIR=	monitor \
-	loaders
+SUBDIR=	loaders
 
 LIB=		ag_core
 LIB_SHARED=	Yes
