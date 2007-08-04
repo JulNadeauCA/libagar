@@ -38,9 +38,6 @@
 #include <gui/label.h>
 #include <gui/fixed_plotter.h>
 #endif
-#ifdef EDITION
-#include <core/objmgr.h>
-#endif
 
 #include <string.h>
 #include <stdarg.h>
@@ -278,10 +275,6 @@ AG_MouseGetState(int *x, int *y)
 void
 AG_ProcessEvent(SDL_Event *ev)
 {
-	extern int agObjMgrExiting;
-#ifdef EDITION
-	extern int agObjectExitSavePrompt;
-#endif
 	AG_Window *win;
 	int rv;
 
@@ -369,18 +362,15 @@ AG_ProcessEvent(SDL_Event *ev)
 		AG_ViewVideoExpose();
 		break;
 	case SDL_QUIT:
-#ifdef EDITION
-		if (!agObjMgrExiting && agObjectExitSavePrompt &&
-		    AG_ObjectChangedAll(agWorld)) {
-			agObjMgrExiting = 1;
-			AG_ObjMgrQuitDlg(agWorld);
+		if (!agTerminating &&
+		    AG_FindEvent(agWorld, "quit") != NULL) {
+			AG_PostEvent(NULL, agWorld, "quit", NULL);
 			break;
 		}
-#endif
 		/* FALLTHROUGH */
 	case SDL_USEREVENT:
 		AG_MutexUnlock(&agView->lock);
-		agObjMgrExiting = 1;
+		agTerminating = 1;
 		AG_Destroy();
 		/* NOTREACHED */
 		break;
@@ -536,6 +526,21 @@ AG_UnsetEvent(void *p, const char *name)
 	Free(ev, M_EVENT);
 out:
 	AG_MutexUnlock(&ob->lock);
+}
+
+AG_Event *
+AG_FindEventHandler(void *p, const char *name)
+{
+	AG_Object *ob = p;
+	AG_Event *ev;
+	
+	AG_MutexLock(&ob->lock);
+	TAILQ_FOREACH(ev, &ob->events, events) {
+		if (strcmp(name, ev->name) == 0)
+			break;
+	}
+	AG_MutexUnlock(&ob->lock);
+	return (ev);
 }
 
 /* Forward an event to an object's descendents. */
