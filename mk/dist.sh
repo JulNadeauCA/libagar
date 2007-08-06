@@ -96,3 +96,10 @@ EOF
 	cat $TMP | ${MAILER}
 	rm -f $TMP
 fi
+
+echo "**************************************************"
+echo "TODO: Update en.wikipedia.org/wiki/Agar (software)"
+echo "TODO: Update fr.wikipedia.org/wiki/Agar (moteur)"
+echo "TODO: Update SourceForge"
+echo "**************************************************"
+
