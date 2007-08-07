@@ -31,11 +31,14 @@
 .Nm AG_Intro
 .Nd agar introduction
 .Sh DESCRIPTION
-Agar is a portable and window-system independent graphics toolkit for SDL
-and OpenGL. In addition to a fully functional GUI toolkit, a set of separate
-higher-level graphics libraries are included in the distribution.
+Agar is a set of libraries for developing graphical applications that are
+portable to numerous platforms.
 .Pp
-.Sh CORE AGAR LIBRARY
+.Sh AGAR-CORE
+.Pp
+Agar-Core implements a simple and generic object system to facilitate
+object-oriented programming in C.
+.Pp
 .Bl -tag -width "AG_Timeout(3) " -compact
 .It Xr AG_Core 3
 Core Agar library initialization.
@@ -50,14 +53,12 @@ Interface to the graphics display.
 .It Xr AG_Timeout 3
 Timing-related routines.
 .El
-.Sh RASTER GRAPHICS LIBRARY (RG)
-.Bl -tag -width "RG_Animview (3) " -compact
-.It Xr RG_Animview 3
-Display of animations.
-.It Xr RG_Tileview 3
-Display and edition of 2D vector and raster graphics.
-.El
-.Sh USER INTERFACE RELATED
+.Sh AGAR-GUI
+.Pp
+Agar-GUI implements a set of widget and a built-in window system.
+Applications can be compiled with runtime support for both SDL and
+OpenGL display modes.
+.Pp
 .Bl -tag -width "AG_Window(3) " -compact
 .It Xr AG_Text 3
 High-level interface to font engine (FreeType or bitmap).
@@ -68,7 +69,8 @@ Generic widget interface.
 .It Xr AG_Window 3
 Basic window widget; interface to built-in window manager.
 .El
-.Sh STANDARD WIDGETS
+.Sh AGAR-GUI WIDGETS
+.Pp
 .Bl -tag -width "AG_ObjectSelector(3) " -compact
 .It Xr AG_Box 3
 Horizontal/vertical widget container.
@@ -146,4 +148,102 @@ which displays a button instead of a text input.
 .It Xr AG_VBox 3
 Alternate interface to
 .Xr AG_Box 3 .
+.El
+.Sh AGAR-SG
+.Pp
+Agar-SG is a generic 3D geometry and graphics rendering engine.
+Given an input of geometrical and scene information, Agar-SG is designed
+to provide efficient space partitioning, high-quality rendering from any
+viewpoint and generic solving of geometrical constraints between entities.
+.Pp
+.Bl -tag -width "SG_Matrix(3) " -compact
+.It Xr SG 3
+Scene graph object.
+.It Xr SG_Camera 3
+Viewpoint object.
+.It Xr SG_Light 3
+Light source object.
+.It Xr SG_Matrix 3
+Optimized 4x4 matrix routines.
+.It Xr SG_Vector 3
+Optimized vector routines.
+.It Xr SG_View 3
+Scene visualization widget.
+.It Xr SK 3
+Dimensioned 2D sketch with geometrical constraints.
+.El
+.Sh AGAR-VG
+.Pp
+Agar-VG is a simple 2D vector graphics library which allows developers
+to specify hierarchical sketches consisting of elements such as lines, curves
+and text, with associated linear transformations.
+It is well suited to applications such as technical simulations; applications
+requiring dimensioned, constrained vector drawings should use the
+.Xr SK 3
+object instead.
+.Pp
+.Bl -tag -width "VG_View(3) " -compact
+.It Xr VG 3
+Vector drawing object.
+.It Xr VG_View 3
+Visualization widget.
+.El
+.Sh AGAR-RG
+.Pp
+Agar-RG is a library for generating and manipulating raster graphics (either
+static or animated) by compositing a set of graphical elements. It implements
+a "smart" image format which allows directives, transformations and instancing
+of graphical elements.
+.Pp
+.Bl -tag -width "RG_Animview (3) " -compact
+.It Xr RG_Tileset 3
+Basic package of graphics and animations.
+.It Xr RG_Animview 3
+Display of animations.
+.It Xr RG_Tileview 3
+Display and edition of 2D vector and raster graphics.
+.El
+.Sh AGAR-SC
+.Pp
+Agar-SC is a set of tools commonly needed in simulations, such as basic
+linear algebra routines, a parallel solver for large, sparse matrices and
+a set of useful visualization widgets.
+.Pp
+.Bl -tag -width "SC_Matview(3) " -compact
+.It Xr SC_Matrix 3
+Routines for m-by-n matrices.
+.It Xr SC_Vector 3
+Routines for vectors.
+.It Xr SC_Matview 3
+Matrix visualization widget.
+.It Xr SC_Plotter 3
+Widget for plotting functions and derivatives.
+.El
+.Sh AGAR-MAP
+.Pp
+Agar-MAP is a 2D tiling library aimed at isometric games, platform games
+and scrollers.
+.Pp
+.Bl -tag -width "SC_Matview(3) " -compact
+.It Xr MAP 3
+The basic 2D map object.
+.It Xr MAP_Actor 3
+Dynamic map object.
+.It Xr MAP_View 3
+Map visualization and edition widget.
+.El
+.Sh AGAR-NET
+.Pp
+Agar-NET is a network communication package which includes a portable,
+thread-safe client library along with a server framework.
+The server framework supports two models of operation: multi-process and
+multi-thread.
+Agar-NET provides support for multiple authentication methods, structured
+queries, sessions and efficient data streaming to a large number of clients.
+.Pp
+.Bl -tag -width "NS(3) " -compact
+.It Xr NC 3
+The network client library.
+.It Xr NS 3
+The server library.
 .El
