@@ -47,7 +47,7 @@ static AG_WidgetOps agMenuViewOps = {
 };
 
 static void
-select_subitem(AG_MenuItem *pitem, AG_MenuItem *subitem)
+SelectItem(AG_MenuItem *pitem, AG_MenuItem *subitem)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuView *mview = pitem->view;
@@ -69,7 +69,7 @@ select_subitem(AG_MenuItem *pitem, AG_MenuItem *subitem)
 }
 
 static Uint32
-submenu_timeout(void *obj, Uint32 ival, void *arg)
+SubmenuTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_MenuView *mview = obj;
 	AG_MenuItem *item = arg;
@@ -79,8 +79,8 @@ submenu_timeout(void *obj, Uint32 ival, void *arg)
 	if (item != mview->pitem->sel_subitem)
 		fatal("subitem");
 #endif
-	AG_MenuExpand(m, item, AGWIDGET(mview)->cx2, 
-	                     AGWIDGET(mview)->cy+item->y);
+	AG_MenuExpand(m, item, WIDGET(mview)->cx2, 
+	                     WIDGET(mview)->cy+item->y);
 	return (0);
 }
 
@@ -92,38 +92,39 @@ mousemotion(AG_Event *event)
 	AG_Menu *m = mview->pmenu;
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
-	int y = mview->vpadding, i;
+	int y = mview->tPad, i;
 
 	if (my < 0)
 		return;
-	if (mx < 0 || mx > AGWIDGET(mview)->w)
+	if (mx < 0 || mx > WIDGET(mview)->w)
 		goto selnone;
 
 	for (i = 0; i < pitem->nsubitems; i++) {
 		AG_MenuItem *subitem = &pitem->subitems[i];
 
+		AG_MenuUpdateItem(subitem);
+
 		y += m->itemh;
 		if (my < y) {
-			if (mx > AGWIDGET(mview)->w &&
+			if (mx > WIDGET(mview)->w &&
 			    subitem->nsubitems == 0) {
 				goto selnone;
 			}
 			if (pitem->sel_subitem != subitem &&
 			    (subitem->flags & AG_MENU_ITEM_NOSELECT) == 0) {
-				select_subitem(pitem, subitem);
+				SelectItem(pitem, subitem);
 			}
 			return;
 		}
 	}
 selnone:
 	if (pitem->sel_subitem != NULL &&
-	    pitem->sel_subitem->nsubitems == 0) {
-		select_subitem(pitem, NULL);
-	}
+	    pitem->sel_subitem->nsubitems == 0)
+		SelectItem(pitem, NULL);
 }
 
 static int
-get_option(AG_MenuItem *mi)
+GetItemBoolValue(AG_MenuItem *mi)
 {
 	int val = 0;
 
@@ -153,7 +154,7 @@ get_option(AG_MenuItem *mi)
 }
 
 static void
-toggle_option(AG_MenuItem *mi)
+SetItemBoolValue(AG_MenuItem *mi)
 {
 	switch (mi->bind_type) {
 	case AG_MENU_NO_BINDING:
@@ -227,28 +228,31 @@ mousebuttonup(AG_Event *event)
 	AG_Menu *m = mview->pmenu;
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
-	int y = mview->vpadding;
+	int y = mview->tPad;
 	int i;
 
 	if (my < 0 || mx < 0) {
 		goto collapse;
 	}
 	for (i = 0; i < pitem->nsubitems; i++) {
-		AG_MenuItem *mi = &pitem->subitems[i];
+		AG_MenuItem *item = &pitem->subitems[i];
+
+		AG_MenuUpdateItem(item);
 
 		y += m->itemh;
-		if (my < y && mx >= 0 && mx <= AGWIDGET(mview)->w) {
-			if (mi->onclick != NULL) {
-				AG_PostEvent(NULL, m, mi->onclick->name, NULL);
+		if (my < y && mx >= 0 && mx <= WIDGET(mview)->w) {
+			if (item->state == 0) {
+				goto collapse;
 			}
-			if (mi->bind_type != AG_MENU_NO_BINDING) {
-				if (mi->bind_lock != NULL)
-					AG_MutexLock(mi->bind_lock);
+			AG_ExecEventFn(m, item->clickFn);
+			if (item->bind_type != AG_MENU_NO_BINDING) {
+				if (item->bind_lock != NULL)
+					AG_MutexLock(item->bind_lock);
 
-				toggle_option(mi);
+				SetItemBoolValue(item);
 
-				if (mi->bind_lock != NULL)
-					AG_MutexUnlock(mi->bind_lock);
+				if (item->bind_lock != NULL)
+					AG_MutexUnlock(item->bind_lock);
 			}
 			goto collapse;
 		}
@@ -259,35 +263,36 @@ mousebuttonup(AG_Event *event)
 	return;
 collapse:
 	AG_MenuCollapse(m, pitem);
-	select_subitem(pitem, NULL);
-	m->sel_item = NULL;
+	SelectItem(pitem, NULL);
+	m->itemSel = NULL;
 	m->selecting = 0;
 }
 
 void
-AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu,
-    AG_MenuItem *pitem)
+AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu, AG_MenuItem *pitem)
 {
 	AG_MenuView *mview = p;
 
 	AG_WidgetInit(mview, &agMenuViewOps, AG_WIDGET_UNFOCUSED_MOTION|
 	                                     AG_WIDGET_UNFOCUSED_BUTTONUP);
-
 	mview->panel = panel;
 	mview->pmenu = pmenu;
 	mview->pitem = pitem;
-	mview->hspace = 8;
-	mview->vpadding = 4;
+	mview->spIconLbl = 8;
+	mview->spLblArrow = 16;
+	mview->lPad = 4;
+	mview->rPad = 4;
+	mview->tPad = 2;
+	mview->bPad = 2;
 
 	AG_SetEvent(mview, "window-mousemotion", mousemotion, NULL);
 	AG_SetEvent(mview, "window-mousebuttonup", mousebuttonup, NULL);
-
-	AG_SetTimeout(&mview->submenu_to, submenu_timeout, NULL, 0);
+	AG_SetTimeout(&mview->submenu_to, SubmenuTimeout, NULL, 0);
 
 	AG_WidgetMapSurface(mview, AG_DupSurface(AGICON(GUI_ARROW_ICON)));
 }
 
-#define VERT_ALIGNED(m, h) ((m)->itemh/2 - (h)/2 - 1)
+#define VERT_ALIGNED(m, h) ((m)->itemh/2 - (h)/2 + 1)
 
 void
 AG_MenuViewDraw(void *p)
@@ -295,37 +300,35 @@ AG_MenuViewDraw(void *p)
 	AG_MenuView *mview = p;
 	AG_MenuItem *pitem = mview->pitem;
 	AG_Menu *m = mview->pmenu;
-	int i, y = mview->vpadding;
+	int i, y = mview->tPad;
 	
-	agPrim.box(mview, 0, 0, AGWIDGET(mview)->w, AGWIDGET(mview)->h, 1,
-	    AG_COLOR(MENU_UNSEL_COLOR));
+//	agPrim.box(mview, 0, 0, WIDGET(mview)->w, WIDGET(mview)->h, 1,
+//	    AG_COLOR(MENU_UNSEL_COLOR));
 
 	for (i = 0; i < pitem->nsubitems; i++) {
-		AG_MenuItem *subitem = &pitem->subitems[i];
-		int x = mview->hspace;
+		AG_MenuItem *item = &pitem->subitems[i];
+		int x = mview->lPad;
 		
-		if (subitem == pitem->sel_subitem) {
+		AG_MenuUpdateItem(item);
+
+		if (item == pitem->sel_subitem &&
+		    item->state == 1) {
 			agPrim.rect_filled(mview,
 			    1, 1+y,
-			    AGWIDGET(mview)->w - 2,
+			    WIDGET(mview)->w - 2,
 			    m->itemh,
 			    AG_COLOR(MENU_SEL_COLOR));
 		}
-		
-		if (subitem->poll != NULL)
-			AG_PostEvent(NULL, m, subitem->poll->name, "%p",
-			    subitem);
-
-		if (subitem->icon != -1) {
-			SDL_Surface *iconsu = AGWIDGET_SURFACE(m,subitem->icon);
+		if (item->icon != -1) {
+			SDL_Surface *iconsu = WSURFACE(m,item->icon);
 			int dy = VERT_ALIGNED(m, iconsu->h);
 			int state;
 
-			AG_WidgetBlitFrom(mview, m, subitem->icon, NULL,
+			AG_WidgetBlitFrom(mview, m, item->icon, NULL,
 			    x+(m->itemh/2 - iconsu->w/2), y+dy+2);
 
-			state = (subitem->state != -1) ? subitem->state :
-			    get_option(subitem);
+			state = (item->value != -1) ? item->value :
+			    GetItemBoolValue(item);
 
 			if (state) {
 				Uint8 c[4];
@@ -342,38 +345,53 @@ AG_MenuViewDraw(void *p)
 			}
 		}
 		if (pitem->flags & AG_MENU_ITEM_ICONS)
-			x += m->itemh+mview->hspace;
+			x += m->itemh + mview->spIconLbl;
 
-		if (subitem->flags & AG_MENU_ITEM_SEPARATOR) {
+		if (item->flags & AG_MENU_ITEM_SEPARATOR) {
 			int dy = m->itemh/2 - 1;
-			int dx = AGWIDGET(mview)->w - mview->hspace - 1;
+			int dx = WIDGET(mview)->w - mview->rPad - 1;
 
 			agPrim.hline(mview,
-			    mview->hspace,
+			    mview->lPad,
 			    dx,
 			    y+dy,
 			    AG_COLOR(MENU_SEP1_COLOR));
 			agPrim.hline(mview,
-			    mview->hspace,
+			    mview->lPad,
 			    dx,
 			    y+dy+1,
 			    AG_COLOR(MENU_SEP2_COLOR));
 		} else {
-			SDL_Surface *lblSu;
+			int lbl = item->state ? item->lblEnabled :
+			                        item->lblDisabled;
 
-			if (subitem->label == -1) {
-				AG_TextColor(MENU_TXT_COLOR);
-				subitem->label = (subitem->text == NULL) ? -1 :
-				    AG_WidgetMapSurface(m,
-				    AG_TextRender(subitem->text));
+			if (item->state == 1) {
+				if (item->lblEnabled == -1) {
+					AG_TextColor(MENU_TXT_COLOR);
+					item->lblEnabled =
+					    (item->text == NULL) ? -1 :
+					    AG_WidgetMapSurface(m,
+					    AG_TextRender(item->text));
+				}
+				lbl = item->lblEnabled;
+			} else {
+				if (item->lblDisabled == -1) {
+					AG_TextColor(MENU_TXT_DISABLED_COLOR);
+					item->lblDisabled =
+					    (item->text == NULL) ? -1 :
+					    AG_WidgetMapSurface(m,
+					    AG_TextRender(item->text));
+				}
+				lbl = item->lblDisabled;
 			}
-			lblSu = AGWIDGET_SURFACE(m,subitem->label);
-			AG_WidgetBlitFrom(mview, m, subitem->label, NULL,
-			    x, y+VERT_ALIGNED(m, lblSu->h));
-			x += lblSu->w + mview->hspace;
-		}
+			AG_WidgetBlitFrom(mview, m, lbl, NULL,
+			    x,
+			    y + VERT_ALIGNED(m, WSURFACE(m,lbl)->h));
 
-		if (subitem->nsubitems > 0) {
+			x += WSURFACE(m,lbl)->w;
+		}
+		if (item->nsubitems > 0) {
+			x += mview->spLblArrow;
 			AG_WidgetBlitSurface(mview, 0,
 			    x,
 			    y + m->itemh/2 - AGICON(GUI_ARROW_ICON)->h/2 - 1);
@@ -391,34 +409,39 @@ AG_MenuViewScale(void *p, int w, int h)
 	int i;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(mview)->w = 0;
-		AGWIDGET(mview)->h = mview->vpadding*2;
+		WIDGET(mview)->w = 0;
+		WIDGET(mview)->h = mview->tPad + mview->bPad;
 		
 		for (i = 0; i < pitem->nsubitems; i++) {
-			AG_MenuItem *subitem = &pitem->subitems[i];
-			int wReq = mview->hspace;
+			AG_MenuItem *item = &pitem->subitems[i];
+			int wReq = mview->lPad + mview->rPad;
 			int wLbl;
+		
+			AG_MenuUpdateItem(item);
 
-			if (subitem->icon != -1) {
-				wReq += AGWIDGET_SURFACE(m,subitem->icon)->w;
+			if (item->icon != -1) {
+				wReq += WSURFACE(m,item->icon)->w;
 			}
 			if (pitem->flags & AG_MENU_ITEM_ICONS)
-				wReq += m->itemh+mview->hspace;
+				wReq += m->itemh + mview->spIconLbl;
 		
-			if (subitem->label != -1) {
-				wLbl = AGWIDGET_SURFACE(m,subitem->label)->w;
+			if (item->lblEnabled != -1) {
+				wLbl = WSURFACE(m,item->lblEnabled)->w;
+			} else if (item->lblDisabled != -1) {
+				wLbl = WSURFACE(m,item->lblDisabled)->w;
 			} else {
-				AG_TextSize(subitem->text, &wLbl, NULL);
+				AG_TextSize(item->text, &wLbl, NULL);
 			}
-			wReq += wLbl + mview->hspace;
-			if (subitem->nsubitems > 0) {
-				wReq += AGICON(GUI_ARROW_ICON)->w +
-				    mview->hspace;
+			wReq += wLbl;
+
+			if (item->nsubitems > 0) {
+				wReq += mview->spLblArrow +
+				        AGICON(GUI_ARROW_ICON)->w;
 			}
-			if (wReq > AGWIDGET(mview)->w) {
-				AGWIDGET(mview)->w = wReq;
+			if (wReq > WIDGET(mview)->w) {
+				WIDGET(mview)->w = wReq;
 			}
-			AGWIDGET(mview)->h += m->itemh;
+			WIDGET(mview)->h += m->itemh;
 		}
 	}
 }
