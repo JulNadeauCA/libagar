@@ -128,14 +128,14 @@ AG_RefreshListing(AG_FileDlg *fd)
 		it = AG_TlistAdd(fd->tlDirs, AGICON(DIRECTORY_ICON),
 		    "%s", dirs[i]);
 		it->cat = "dir";
-		it->p1 = (void *)i;
+		it->p1 = it;
 		Free(dirs[i], M_WIDGET);
 	}
 	for (i = 0; i < nfiles; i++) {
 		it = AG_TlistAdd(fd->tlFiles, AGICON(FILE_ICON),
 		    "%s", files[i]);
 		it->cat = "file";
-		it->p1 = (void *)i;
+		it->p1 = it;
 		Free(files[i], M_WIDGET);
 	}
 	Free(dirs, M_WIDGET);
@@ -149,7 +149,7 @@ AG_RefreshListing(AG_FileDlg *fd)
 }
 
 static void
-AG_DirSelectedEv(AG_Event *event)
+DirSelected(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
@@ -168,7 +168,7 @@ AG_DirSelectedEv(AG_Event *event)
 }
 
 static void
-AG_ChooseFile(AG_FileDlg *fd, AG_Window *pwin)
+ChooseFile(AG_FileDlg *fd, AG_Window *pwin)
 {
 	AG_TlistItem *it;
 
@@ -194,7 +194,7 @@ AG_ReplaceFileEv(AG_Event *event)
 	AG_Window *qwin = AG_PTR(2);
 	AG_Window *pwin = AG_PTR(3);
 
-	AG_ChooseFile(fd, pwin);
+	ChooseFile(fd, pwin);
 	AG_ViewDetach(qwin);
 }
 
@@ -219,11 +219,40 @@ AG_ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 	AG_WindowShow(win);
 }
 
+int
+AG_FileDlgCheckReadAccess(AG_FileDlg *fd)
+{
+	AG_FileInfo info;
+	
+	if (AG_GetFileInfo(fd->cfile, &info) == -1) {
+		return (-1);
+	}
+	if ((info.perms & AG_FILE_READABLE) == 0) {
+		AG_SetError(_("%s: Read permission denied"), fd->cfile);
+		return (-1);
+	}
+	return (0);
+}
+
+int
+AG_FileDlgCheckWriteAccess(AG_FileDlg *fd)
+{
+	AG_FileInfo info;
+	
+	if (AG_GetFileInfo(fd->cfile, &info) == -1) {
+		return (-1);
+	}
+	if ((info.perms & AG_FILE_WRITEABLE) == 0) {
+		AG_SetError(_("%s: Write permission denied"), fd->cfile);
+		return (-1);
+	}
+	return (0);
+}
+
 static void
-AG_ChooseFileDlg(AG_FileDlg *fd)
+CheckAccessAndChoose(AG_FileDlg *fd)
 {
 	AG_Window *pwin = AG_WidgetParentWindow(fd);
-	AG_FileInfo info;
 	char *s;
 
 	for (s = &fd->cfile[0]; *s != '\0'; s++) {
@@ -234,16 +263,17 @@ AG_ChooseFileDlg(AG_FileDlg *fd)
 		return;
 
 	if (fd->flags & AG_FILEDLG_LOAD) {
-		if (AG_GetFileInfo(fd->cfile, &info) == -1) {
+		if (AG_FileDlgCheckReadAccess(fd) == -1) {
 			AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 			return;
 		}
-		if ((info.perms & AG_FILE_READABLE) == 0) {
-			AG_TextMsg(AG_MSG_ERROR,
-			    _("%s: Permission denied (reading)"), fd->cfile);
-			return;
-		}
 	} else if (fd->flags & AG_FILEDLG_SAVE) {
+		AG_FileInfo info;
+
+		/*
+		 * Display a "replace file?" dialog if this file
+		 * already exists.
+		 */
 		if (AG_GetFileInfo(fd->cfile, &info) == 0) {
 			if (info.perms & AG_FILE_WRITEABLE) {
 				AG_ReplaceFileDlg(fd, pwin);
@@ -255,11 +285,11 @@ AG_ChooseFileDlg(AG_FileDlg *fd)
 			return;
 		}
 	}
-	AG_ChooseFile(fd, pwin);
+	ChooseFile(fd, pwin);
 }
 
 static void
-AG_FileSelectedEv(AG_Event *event)
+FileSelected(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
@@ -269,34 +299,45 @@ AG_FileSelectedEv(AG_Event *event)
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		char path[MAXPATHLEN];
 
-		AG_FileDlgSetFilename(fd, ti->text);
+		AG_FileDlgSetFilename(fd, "%s", ti->text);
 		AG_PostEvent(NULL, fd, "file-selected", "%s", fd->cfile);
 	}
 	AG_MutexUnlock(&tl->lock);
 }
 
 static void
-AG_FileDblClickedEv(AG_Event *event)
+FileDblClicked(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
-	AG_TlistItem *ti;
+	AG_TlistItem *itFile;
 
 	AG_MutexLock(&tl->lock);
-	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		AG_FileDlgSetFilename(fd, ti->text);
-		AG_ChooseFileDlg(fd);
+	if ((itFile = AG_TlistSelectedItem(tl)) != NULL) {
+		AG_FileDlgSetFilename(fd, "%s", itFile->text);
+
+		if (fd->okAction != NULL) {
+			AG_PostEvent(NULL, fd, fd->okAction->name, "%s,%p",
+			    fd->cfile,
+			    AG_TlistSelectedItemPtr(fd->comTypes->list));
+		} else {
+			CheckAccessAndChoose(fd);
+		}
 	}
 	AG_MutexUnlock(&tl->lock);
 }
 
 static void
-AG_FileOkEv(AG_Event *event)
+PressedOK(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_FileType *ft;
 
-	AG_ChooseFileDlg(fd);
+	if (fd->okAction != NULL) {
+		AG_PostEvent(NULL, fd, fd->okAction->name, "%s", fd->cfile);
+	} else {
+		CheckAccessAndChoose(fd);
+	}
 }
 
 static int
@@ -337,20 +378,32 @@ AG_ProcessFilename(char *file, size_t len)
 }
 
 static void
-AG_FileEnteredEv(AG_Event *event)
+TextboxChanged(AG_Event *event)
+{
+	char path[MAXPATHLEN];
+	AG_Textbox *tb = AG_SELF();
+	AG_FileDlg *fd = AG_PTR(1);
+	
+	AG_TextboxCopyString(tb, path, sizeof(path));
+	AG_FileDlgSetFilename(fd, "%s", path);
+}
+
+static void
+TextboxReturn(AG_Event *event)
 {
 	char file[MAXPATHLEN];
+	AG_Textbox *tb = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_FileType *ft;
 	AG_FileInfo info;
 	size_t last;
 
-	AG_TextboxCopyString(fd->tbFile, file, sizeof(file));
+	AG_TextboxCopyString(tb, file, sizeof(file));
 	if (file[0] == '\0' ||
 	    AG_ProcessFilename(file, sizeof(file) == -1)) {
 		return;
 	}
-	AG_TextboxPrintf(fd->tbFile, "%s", file);
+	AG_TextboxPrintf(tb, "%s", file);
 
 	if ((AG_GetFileInfo(file, &info) == 0) &&
 	    (info.type == AG_FILE_DIRECTORY)) {
@@ -362,28 +415,31 @@ AG_FileEnteredEv(AG_Event *event)
 		}
 	} else {
 		AG_FileDlgSetFilename(fd, file);
-		AG_ChooseFileDlg(fd);
+		CheckAccessAndChoose(fd);
 	}
 }
 
 static void
-AG_FileCancelEv(AG_Event *event)
+PressedCancel(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
-	AG_Window *pwin;
 	
-	if (fd->flags & AG_FILEDLG_CLOSEWIN) {
-		pwin = AG_WidgetParentWindow(fd);
-		AG_PostEvent(NULL, pwin, "window-close", NULL);
+	if (fd->cancelAction != NULL) {
+		AG_PostEvent(NULL, fd, fd->cancelAction->name, NULL);
+	} else if (fd->flags & AG_FILEDLG_CLOSEWIN) {
+		AG_Window *pwin;
+	
+		if ((pwin = AG_WidgetParentWindow(fd)) != NULL)
+			AG_PostEvent(NULL, pwin, "window-close", NULL);
 	}
 }
 
 static void
-AG_ShownEv(AG_Event *event)
+WidgetShown(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_SELF();
 
-	AG_WidgetScale(fd, AGWIDGET(fd)->w, AGWIDGET(fd)->h);
+	AG_WidgetScale(fd, WIDGET(fd)->w, WIDGET(fd)->h);
 	AG_WidgetFocus(fd->tbFile);
 	AG_RefreshListing(fd);
 }
@@ -488,11 +544,9 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	fd->hDiv = AG_HPaneAddDiv(fd->hPane,
 	    AG_BOX_VERT, AG_BOX_VFILL,
 	    AG_BOX_VERT, AG_BOX_VFILL|AG_BOX_HFILL);
-	{
-		fd->tlDirs = AG_TlistNew(fd->hDiv->box1, AG_TLIST_EXPAND);
-		fd->tlFiles = AG_TlistNew(fd->hDiv->box2, AG_TLIST_EXPAND|
-		    ((flags & AG_FILEDLG_MULTI) ? AG_TLIST_MULTI : 0));
-	}
+	fd->tlDirs = AG_TlistNew(fd->hDiv->box1, AG_TLIST_EXPAND);
+	fd->tlFiles = AG_TlistNew(fd->hDiv->box2, AG_TLIST_EXPAND|
+	    ((flags & AG_FILEDLG_MULTI) ? AG_TLIST_MULTI : 0));
 
 	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL,
 	    _("Directory: %s"), &fd->cwd[0]);
@@ -508,15 +562,38 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	fd->btnOk = AG_ButtonNew(fd, 0, _("OK"));
 	fd->btnCancel = AG_ButtonNew(fd, 0, _("Cancel"));
 
-	AG_SetEvent(fd, "widget-shown", AG_ShownEv, NULL);
-	AG_SetEvent(fd->tlDirs, "tlist-dblclick", AG_DirSelectedEv, "%p", fd);
-	AG_SetEvent(fd->tlFiles, "tlist-selected", AG_FileSelectedEv, "%p", fd);
-	AG_SetEvent(fd->tlFiles, "tlist-dblclick", AG_FileDblClickedEv, "%p",
-	    fd);
+	AG_SetEvent(fd, "widget-shown", WidgetShown, NULL);
+	AG_SetEvent(fd->tlDirs, "tlist-dblclick", DirSelected, "%p", fd);
+	AG_SetEvent(fd->tlFiles, "tlist-selected", FileSelected, "%p", fd);
+	AG_SetEvent(fd->tlFiles, "tlist-dblclick", FileDblClicked, "%p", fd);
 
-	AG_SetEvent(fd->tbFile, "textbox-return", AG_FileEnteredEv, "%p", fd);
-	AG_SetEvent(fd->btnOk, "button-pushed", AG_FileOkEv, "%p", fd);
-	AG_SetEvent(fd->btnCancel, "button-pushed", AG_FileCancelEv, "%p", fd);
+	AG_SetEvent(fd->tbFile, "textbox-postchg", TextboxChanged, "%p", fd);
+	AG_SetEvent(fd->tbFile, "textbox-return", TextboxReturn, "%p", fd);
+	AG_SetEvent(fd->btnOk, "button-pushed", PressedOK, "%p", fd);
+	AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
+
+	fd->okAction = NULL;
+	fd->cancelAction = NULL;
+}
+
+void
+AG_FileDlgOkAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
+{
+	if (fd->okAction != NULL) {
+		AG_UnsetEvent(fd, fd->okAction->name);
+	}
+	fd->okAction = AG_SetEvent(fd, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(fd->okAction, fmt);
+}
+
+void
+AG_FileDlgCancelAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
+{
+	if (fd->cancelAction != NULL) {
+		AG_UnsetEvent(fd, fd->cancelAction->name);
+	}
+	fd->cancelAction = AG_SetEvent(fd, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(fd->cancelAction, fmt);
 }
 
 void
@@ -546,67 +623,67 @@ AG_FileDlgScale(void *p, int w, int h)
 	int btn_h, y = 0;
 	
 	if (w == -1 && h == -1) {
-		AGWIDGET_SCALE(fd->hPane, -1, -1);
-		AGWIDGET_SCALE(fd->lbCwd , -1, -1);
-		AGWIDGET_SCALE(fd->tbFile, -1, -1);
-		AGWIDGET_SCALE(fd->comTypes, -1, -1);
-		AGWIDGET_SCALE(fd->btnOk, -1, -1);
-		AGWIDGET_SCALE(fd->btnCancel, -1, -1);
+		WIDGET_SCALE(fd->hPane, -1, -1);
+		WIDGET_SCALE(fd->lbCwd , -1, -1);
+		WIDGET_SCALE(fd->tbFile, -1, -1);
+		WIDGET_SCALE(fd->comTypes, -1, -1);
+		WIDGET_SCALE(fd->btnOk, -1, -1);
+		WIDGET_SCALE(fd->btnCancel, -1, -1);
 	
-		AGWIDGET(fd)->w = AGWIDGET(fd->hPane)->w;
-		AGWIDGET(fd)->h = AGWIDGET(fd->hPane)->h +
-				 AGWIDGET(fd->lbCwd)->h+1 +
-				 AGWIDGET(fd->tbFile)->h+1 +
-				 AGWIDGET(fd->comTypes)->h+1 +
-				 MAX(AGWIDGET(fd->btnOk)->h,
-				     AGWIDGET(fd->btnCancel)->h)+2;
+		WIDGET(fd)->w = WIDGET(fd->hPane)->w;
+		WIDGET(fd)->h = WIDGET(fd->hPane)->h +
+				 WIDGET(fd->lbCwd)->h+1 +
+				 WIDGET(fd->tbFile)->h+1 +
+				 WIDGET(fd->comTypes)->h+1 +
+				 MAX(WIDGET(fd->btnOk)->h,
+				     WIDGET(fd->btnCancel)->h)+2;
 		return;
 	}
 
-	btn_h = MAX(AGWIDGET(fd->btnOk)->h, AGWIDGET(fd->btnCancel)->h);
+	btn_h = MAX(WIDGET(fd->btnOk)->h, WIDGET(fd->btnCancel)->h);
 	
 	AG_WidgetScale(fd->hPane,
 	    w,
-	    h - AGWIDGET(fd->lbCwd)->h - AGWIDGET(fd->tbFile)->h -
-	        AGWIDGET(fd->comTypes)->h - btn_h);
+	    h - WIDGET(fd->lbCwd)->h - WIDGET(fd->tbFile)->h -
+	        WIDGET(fd->comTypes)->h - btn_h);
 
-	AG_WidgetScale(fd->lbCwd, w, AGWIDGET(fd->lbCwd)->h);
-	AG_WidgetScale(fd->tbFile, w, AGWIDGET(fd->tbFile)->h);
-	AG_WidgetScale(fd->comTypes, w, AGWIDGET(fd->comTypes)->h);
-	AG_WidgetScale(fd->btnOk, w/2, AGWIDGET(fd->tbFile)->h);
-	AG_WidgetScale(fd->btnCancel, w/2, AGWIDGET(fd->tbFile)->h);
+	AG_WidgetScale(fd->lbCwd, w, WIDGET(fd->lbCwd)->h);
+	AG_WidgetScale(fd->tbFile, w, WIDGET(fd->tbFile)->h);
+	AG_WidgetScale(fd->comTypes, w, WIDGET(fd->comTypes)->h);
+	AG_WidgetScale(fd->btnOk, w/2, WIDGET(fd->tbFile)->h);
+	AG_WidgetScale(fd->btnCancel, w/2, WIDGET(fd->tbFile)->h);
 	
-	AGWIDGET(fd->hPane)->x = 0;
-	AGWIDGET(fd->hPane)->y = 0;
-	AGWIDGET(fd->hPane)->w = w;
-	AGWIDGET(fd->hPane)->h = h -
-	    AGWIDGET(fd->tbFile)->h -
-	    AGWIDGET(fd->lbCwd)->h -
-	    AGWIDGET(fd->comTypes)->h - btn_h - 2;
-	AG_WidgetScale(fd->hPane, AGWIDGET(fd->hPane)->w,
-	    AGWIDGET(fd->hPane)->h);
-	y += AGWIDGET(fd->hPane)->h + 1;
+	WIDGET(fd->hPane)->x = 0;
+	WIDGET(fd->hPane)->y = 0;
+	WIDGET(fd->hPane)->w = w;
+	WIDGET(fd->hPane)->h = h -
+	    WIDGET(fd->tbFile)->h -
+	    WIDGET(fd->lbCwd)->h -
+	    WIDGET(fd->comTypes)->h - btn_h - 2;
+	AG_WidgetScale(fd->hPane, WIDGET(fd->hPane)->w,
+	    WIDGET(fd->hPane)->h);
+	y += WIDGET(fd->hPane)->h + 1;
 
-	AGWIDGET(fd->lbCwd)->x = 0;
-	AGWIDGET(fd->lbCwd)->y = y;
-	y += AGWIDGET(fd->lbCwd)->h + 1;
+	WIDGET(fd->lbCwd)->x = 0;
+	WIDGET(fd->lbCwd)->y = y;
+	y += WIDGET(fd->lbCwd)->h + 1;
 
-	AGWIDGET(fd->tbFile)->x = 0;
-	AGWIDGET(fd->tbFile)->y = y;
-	y += AGWIDGET(fd->tbFile)->h + 1;
+	WIDGET(fd->tbFile)->x = 0;
+	WIDGET(fd->tbFile)->y = y;
+	y += WIDGET(fd->tbFile)->h + 1;
 
-	AGWIDGET(fd->comTypes)->x = 0;
-	AGWIDGET(fd->comTypes)->y = y;
-	y += AGWIDGET(fd->comTypes)->h + 4;
+	WIDGET(fd->comTypes)->x = 0;
+	WIDGET(fd->comTypes)->y = y;
+	y += WIDGET(fd->comTypes)->h + 4;
 	
-	AGWIDGET(fd->btnOk)->x = 0;
-	AGWIDGET(fd->btnOk)->y = y;
+	WIDGET(fd->btnOk)->x = 0;
+	WIDGET(fd->btnOk)->y = y;
 
-	AGWIDGET(fd->btnCancel)->x = w/2;
-	AGWIDGET(fd->btnCancel)->y = y;
+	WIDGET(fd->btnCancel)->x = w/2;
+	WIDGET(fd->btnCancel)->y = y;
 	
-	AGWIDGET(fd)->w = w;
-	AGWIDGET(fd)->h = h;
+	WIDGET(fd)->w = w;
+	WIDGET(fd)->h = h;
 }
 
 AG_FileType *

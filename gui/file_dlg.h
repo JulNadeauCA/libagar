@@ -36,14 +36,15 @@ typedef struct ag_file_type {
 typedef struct ag_file_dlg {
 	AG_Widget wid;
 	Uint flags;
-#define AG_FILEDLG_MULTI	0x01	/* Return a set of files */
-#define AG_FILEDLG_CLOSEWIN	0x02	/* Close the parent window when done */
-#define AG_FILEDLG_LOAD		0x04	/* File must exist and be readable */
-#define AG_FILEDLG_SAVE		0x08	/* File must be writeable */
-#define AG_FILEDLG_HFILL	0x10
-#define AG_FILEDLG_VFILL	0x20
-#define AG_FILEDLG_FOCUS	0x40
-#define AG_FILEDLG_EXPAND	(AG_FILEDLG_HFILL|AG_FILEDLG_VFILL)
+#define AG_FILEDLG_MULTI	  0x001	/* Return a set of files */
+#define AG_FILEDLG_CLOSEWIN	  0x002	/* Close parent window on success or
+					   if "Cancel" is pressed */
+#define AG_FILEDLG_LOAD		  0x004	/* File must exist and be readable */
+#define AG_FILEDLG_SAVE		  0x008	/* File must be writeable */
+#define AG_FILEDLG_HFILL	  0x010
+#define AG_FILEDLG_VFILL	  0x020
+#define AG_FILEDLG_FOCUS	  0x040
+#define AG_FILEDLG_EXPAND	  (AG_FILEDLG_HFILL|AG_FILEDLG_VFILL)
 
 	char cwd[MAXPATHLEN];			/* Current working directory */
 	char cfile[MAXPATHLEN];			/* Current file path */
@@ -56,6 +57,8 @@ typedef struct ag_file_dlg {
 	AG_Combo *comTypes;			/* File types combo */
 	AG_Button *btnOk;			/* OK button */
 	AG_Button *btnCancel;			/* Cancel button */
+	AG_Event *okAction;			/* OK action */
+	AG_Event *cancelAction;			/* Cancel action */
 	TAILQ_HEAD(,ag_file_type) types;	/* File type handlers */
 } AG_FileDlg;
 
@@ -66,6 +69,10 @@ void AG_FileDlgScale(void *, int, int);
 void AG_FileDlgDestroy(void *);
 int AG_FileDlgSetDirectory(AG_FileDlg *, const char *);
 void AG_FileDlgSetFilename(AG_FileDlg *, const char *, ...);
+void AG_FileDlgOkAction(AG_FileDlg *, AG_EventFn, const char *, ...);
+void AG_FileDlgCancelAction(AG_FileDlg *, AG_EventFn, const char *, ...);
+int AG_FileDlgCheckReadAccess(AG_FileDlg *);
+int AG_FileDlgCheckWriteAccess(AG_FileDlg *);
 
 AG_FileType *AG_FileDlgAddType(AG_FileDlg *, const char *,
 			       const char *, void (*)(AG_Event *),
