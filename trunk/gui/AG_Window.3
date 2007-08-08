@@ -373,6 +373,9 @@ The
 .Nm
 widget delivers the following events to its child widgets:
 .Pp
+.\"
+.\" EVENTS AS SENDER
+.\"
 .Bl -tag -width 2n
 .It Fn window-mousemotion "int x" "int y" "int xrel" "int yrel" "int state"
 The mouse cursor has moved to widget-relative coordinates
@@ -417,9 +420,21 @@ was released, and the widget holds the focus.
 The key identified by
 .Fa keysym
 was pressed, and the widget holds the focus.
+.El
+.\"
+.\" EVENTS AS WINDOW RECEIVER
+.\"
+.Pp
+The
+.Nm
+object itself receives the following events:
+.Bl -tag -width 2n
 .It Fn window-close "void"
 The window's titlebar close button was pressed.
-This event is generated after the window is no longer visible.
+Generated after the window is no longer visible.
+This event is configurable via the
+.Fn AG_WindowSetCloseAction
+utility function.
 .It Fn window-shown "void"
 The window is now visible.
 .It Fn window-hidden "void"
