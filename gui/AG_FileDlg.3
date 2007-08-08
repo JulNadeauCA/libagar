@@ -92,19 +92,87 @@ It is typically used in file saving dialogs.
 .Pp
 The
 .Fn AG_FileDlgAddType
-function associates a new file format with a callback function to invoke when
-a file of that type if selected, and optionally file extensions.
+function registers a file format/extension, optionally associated with an
+event handler function (see
+.Xr AG_Event 3 )
+to invoke when a file of that type if selected.
 .Ft descr
 is a description of the file format and
 .Ft exts
 is a comma-separated list of file extensions to associate with the type, or
 an empty string.
-The arguments
-.Ft fn
+.Pp
+.Sh OK/CANCEL ACTIONS
+.Pp
+The default action that is performed when a user selects a file is:
+.Bl -enum -compact
+.It
+If
+.Dv AG_FILEDLG_LOAD
+or
+.Dv AG_FILEDLG_SAVE
+is set, check whether the file is readable or writeable.
+.It
+If
+.Dv AG_FILEDLG_SAVE
+is set and a file exists, display a "Replace file?" prompt.
+.It
+Execute the matching function (based on file extension), as previously
+registered by
+.Fn AG_FileDlgAddType .
+.It
+If
+.Dv AG_FILEDLG_CLOSEWIN
+is set, close the parent window.
+.El
+.Pp
+The default action performed when a user clicks on "Cancel" is simply to
+close the parent window if
+.Dv AG_FILEDLG_CLOSEWIN
+is set.
+.Pp
+These default actions can be overridden using the functions below:
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn AG_FileDlgOkAction "AG_FileDlg *file_dlg" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_FileDlgCancelAction "AG_FileDlg *file_dlg" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Pp
+.Ft "int"
+.Fn AG_FileDlgCheckReadAccess "AG_FileDlg *file_dlg"
+.Pp
+.Ft "int"
+.Fn AG_FileDlgCheckWriteAccess "AG_FileDlg *file_dlg"
+.nr nS 0
+.Pp
+The
+.Fn AG_FileDlgOkAction
+function configures an event handler function to invoke when a file is
+selected, overriding the default behavior.
+The event handler will be passed a string argument containing the
+absolute path to the selected file, followed by a pointer to the
+.Ft AG_FileType
+structure for the file type selected by the user.
+The public members of the structure are:
+.Bd -literal
+typedef struct ag_file_type {
+	const char *descr;                /* Description */
+	char **exts;                      /* Filename extensions */
+	Uint nexts;
+	AG_Event *action;                 /* Action (save/load) */
+} AG_FileType;
+.Ed
+.Pp
+.Fn AG_FileDlgCancelAction
+overrides the default behavior of the "Cancel" button.
+.Pp
+The utility functions
+.Fn AG_FileDlgCheckReadAccess
 and
-.Ft fmt
-describe the callback function and arguments to invoke when a file of that
-type is selected.
+.Fn AG_FileDlgCheckWriteAccess
+evaluate whether the selected file is readable or writeable.
 .Sh BINDINGS
 The
 .Nm
