@@ -135,8 +135,8 @@ AG_RadioDraw(void *p)
 	agPrim.frame(rad,
 	    0,
 	    0,
-	    AGWIDGET(rad)->w,
-	    AGWIDGET(rad)->h,
+	    WIDGET(rad)->w,
+	    WIDGET(rad)->h,
 	    AG_COLOR(FRAME_COLOR));
 
 	val = AG_WidgetInt(rad, "value");
@@ -191,9 +191,9 @@ AG_RadioScale(void *p, int rw, int rh)
 	AG_Radio *rad = p;
 
 	if (rw == -1)
-		AGWIDGET(rad)->w = XPADDING*2 + XSPACING + RADIUS*2+rad->max_w;
+		WIDGET(rad)->w = XPADDING*2 + XSPACING + RADIUS*2+rad->max_w;
 	if (rh == -1)
-		AGWIDGET(rad)->h = rad->nitems*(YSPACING + RADIUS*2)+YPADDING*2;
+		WIDGET(rad)->h = rad->nitems*(YSPACING + RADIUS*2)+YPADDING*2;
 }
 
 static void

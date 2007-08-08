@@ -180,7 +180,7 @@ AG_WindowInit(void *p, const char *name, int flags)
 void
 AG_WindowSetStyle(AG_Window *win, const AG_WidgetStyleMod *style)
 {
-	AGWIDGET(win)->style = style;
+	WIDGET(win)->style = style;
 }
 
 /* Attach a sub-window. */
@@ -209,7 +209,7 @@ AG_WindowDraw(void *p)
 
 	if ((win->flags & AG_WINDOW_NOBACKGROUND) == 0) {
 		agPrim.rect_filled(win, 0, 0,
-		    AGWIDGET(win)->w, AGWIDGET(win)->h,
+		    WIDGET(win)->w, WIDGET(win)->h,
 		    AG_COLOR(WINDOW_BG_COLOR));
 	}
 	if (win->flags & AG_WINDOW_NOBORDERS)
@@ -218,23 +218,23 @@ AG_WindowDraw(void *p)
 	/* Draw the window frame (expected to fit inside padding). */
 	for (i = 1; i < agColorsBorderSize-1; i++) {
 		agPrim.hline(win,
-		    i, AGWIDGET(win)->w - i,
+		    i, WIDGET(win)->w - i,
 		    i,
 		    agColorsBorder[i-1]);
 		agPrim.hline(win,
-		    i,  AGWIDGET(win)->w - i,
-		    AGWIDGET(win)->h - i,
+		    i,  WIDGET(win)->w - i,
+		    WIDGET(win)->h - i,
 		    agColorsBorder[i-1]);
 	}
 	for (i = 1; i < agColorsBorderSize-1; i++) {
 		agPrim.vline(win,
 		    i,
-		    i, AGWIDGET(win)->h - i,
+		    i, WIDGET(win)->h - i,
 		    agColorsBorder[i-1]);
 		agPrim.vline(win,
-		    AGWIDGET(win)->w - i,
+		    WIDGET(win)->w - i,
 		    i,
-		    AGWIDGET(win)->h - i,
+		    WIDGET(win)->h - i,
 		    agColorsBorder[i-1]);
 	}
 
@@ -242,24 +242,24 @@ AG_WindowDraw(void *p)
 	if ((win->flags & AG_WINDOW_NOHRESIZE) == 0) {
 		agPrim.vline(win,
 		    18,
-		    AGWIDGET(win)->h - agColorsBorderSize,
-		    AGWIDGET(win)->h - 2,
+		    WIDGET(win)->h - agColorsBorderSize,
+		    WIDGET(win)->h - 2,
 		    AG_COLOR(WINDOW_LO_COLOR));
 		agPrim.vline(win,
 		    19,
-		    AGWIDGET(win)->h - agColorsBorderSize,
-		    AGWIDGET(win)->h - 2,
+		    WIDGET(win)->h - agColorsBorderSize,
+		    WIDGET(win)->h - 2,
 		    AG_COLOR(WINDOW_HI_COLOR));
 		
 		agPrim.vline(win,
-		    AGWIDGET(win)->w - 19,
-		    AGWIDGET(win)->h - agColorsBorderSize,
-		    AGWIDGET(win)->h - 2,
+		    WIDGET(win)->w - 19,
+		    WIDGET(win)->h - agColorsBorderSize,
+		    WIDGET(win)->h - 2,
 		    AG_COLOR(WINDOW_LO_COLOR));
 		agPrim.vline(win,
-		    AGWIDGET(win)->w - 18,
-		    AGWIDGET(win)->h - agColorsBorderSize,
-		    AGWIDGET(win)->h - 2,
+		    WIDGET(win)->w - 18,
+		    WIDGET(win)->h - agColorsBorderSize,
+		    WIDGET(win)->h - 2,
 		    AG_COLOR(WINDOW_HI_COLOR));
 	}
 	
@@ -267,23 +267,23 @@ AG_WindowDraw(void *p)
 		agPrim.hline(win,
 		    2,
 		    agColorsBorderSize,
-		    AGWIDGET(win)->h - 20,
+		    WIDGET(win)->h - 20,
 		    AG_COLOR(WINDOW_LO_COLOR));
 		agPrim.hline(win,
 		    2,
 		    agColorsBorderSize,
-		    AGWIDGET(win)->h - 19,
+		    WIDGET(win)->h - 19,
 		    AG_COLOR(WINDOW_HI_COLOR));
 		
 		agPrim.hline(win,
-		    AGWIDGET(win)->w - agColorsBorderSize,
-		    AGWIDGET(win)->w - 2,
-		    AGWIDGET(win)->h - 20,
+		    WIDGET(win)->w - agColorsBorderSize,
+		    WIDGET(win)->w - 2,
+		    WIDGET(win)->h - 20,
 		    AG_COLOR(WINDOW_LO_COLOR));
 		agPrim.hline(win,
-		    AGWIDGET(win)->w - agColorsBorderSize,
-		    AGWIDGET(win)->w - 2,
-		    AGWIDGET(win)->h - 19,
+		    WIDGET(win)->w - agColorsBorderSize,
+		    WIDGET(win)->w - 2,
+		    WIDGET(win)->h - 19,
 		    AG_COLOR(WINDOW_HI_COLOR));
 	}
 }
@@ -307,25 +307,24 @@ AG_WindowShownEv(AG_Event *event)
 		AG_WindowFocus(win);
 	}
 	if (win->flags & AG_WINDOW_MODAL) {
-		dprintf("%s: modal #%d\n", win->caption, agView->nModal);
 		agView->winModal = Realloc(agView->winModal,
 		    (agView->nModal+1) * sizeof(AG_Window *));
 		agView->winModal[agView->nModal] = win;
 		agView->nModal++;
 	}
 
-	if (AGWIDGET(win)->x == -1 && AGWIDGET(win)->y == -1) {
+	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
 		/* First pass: initial sizing. */
-		AGWIDGET_OPS(win)->scale(win, AGWIDGET(win)->w,
-		    AGWIDGET(win)->h);
+		WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
+		    WIDGET(win)->h);
 
 		/* Second pass: [wh]fill and homogenous divisions. */
-		AGWIDGET_OPS(win)->scale(win, AGWIDGET(win)->w,
-		    AGWIDGET(win)->h);
+		WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
+		    WIDGET(win)->h);
 	
 		/* Position the window and cache the absolute widget coords. */
 		AG_WindowApplyAlignment(win, win->alignment);
-		AG_WidgetUpdateCoords(win, AGWIDGET(win)->x, AGWIDGET(win)->y);
+		AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 	}
 	AG_PostEvent(NULL, win, "window-shown", NULL);
 }
@@ -346,13 +345,13 @@ AG_WindowHiddenEv(AG_Event *event)
 	/* Update the background if necessary. */
 //	if (!AG_WindowIsSurrounded(win)) {
 		agPrim.rect_filled(win, 0, 0,
-		    AGWIDGET(win)->w,
-		    AGWIDGET(win)->h,
+		    WIDGET(win)->w,
+		    WIDGET(win)->h,
 		    AG_COLOR(BG_COLOR));
 		if (!agView->opengl) {
 			SDL_UpdateRect(agView->v,
-			    AGWIDGET(win)->x, AGWIDGET(win)->y,
-			    AGWIDGET(win)->w, AGWIDGET(win)->h);
+			    WIDGET(win)->x, WIDGET(win)->y,
+			    WIDGET(win)->w, WIDGET(win)->h);
 		}
 //	}
 	AG_PostEvent(NULL, win, "window-hidden", NULL);
@@ -370,10 +369,10 @@ AG_WindowIsSurrounded(AG_Window *win)
 	TAILQ_FOREACH(owin, &agView->windows, windows) {
 		AG_MutexLock(&owin->lock);
 		if (owin->visible &&
-		    AG_WidgetArea(owin, AGWIDGET(win)->x, AGWIDGET(win)->y) &&
+		    AG_WidgetArea(owin, WIDGET(win)->x, WIDGET(win)->y) &&
 		    AG_WidgetArea(owin,
-		     AGWIDGET(win)->x + AGWIDGET(win)->w,
-		     AGWIDGET(win)->y + AGWIDGET(win)->h)) {
+		     WIDGET(win)->x + WIDGET(win)->w,
+		     WIDGET(win)->y + WIDGET(win)->h)) {
 			AG_MutexUnlock(&owin->lock);
 			return (1);
 		}
@@ -431,7 +430,7 @@ AG_WindowCountWidgets(AG_Widget *wid, Uint *nwidgets)
 	if (wid->flags & AG_WIDGET_FOCUSABLE)
 		(*nwidgets)++;
 
-	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WindowCountWidgets(cwid, nwidgets);
 }
 
@@ -443,7 +442,7 @@ AG_WindowMapWidgets(AG_Widget *wid, AG_Widget **widgets, Uint *i)
 	if (wid->flags & AG_WIDGET_FOCUSABLE)
 		widgets[(*i)++] = wid;
 
-	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WindowMapWidgets(cwid, widgets, i);
 }
 
@@ -464,9 +463,9 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 		return;
 	}
 
-	AG_WindowCountWidgets(AGWIDGET(win), &nwidgets);
+	AG_WindowCountWidgets(WIDGET(win), &nwidgets);
 	widgets = Malloc(nwidgets * sizeof(AG_Widget *), M_WIDGET);
-	AG_WindowMapWidgets(AGWIDGET(win), widgets, &i);
+	AG_WindowMapWidgets(WIDGET(win), widgets, &i);
 
 	for (i = 0; i < nwidgets; i++) {
 		if (widgets[i] == olfocus) {
@@ -498,22 +497,22 @@ AG_WindowMoveOp(AG_Window *win, SDL_MouseMotionEvent *motion)
 {
 	SDL_Rect oldpos, newpos, rfill1, rfill2;
 
-	oldpos.x = AGWIDGET(win)->x;
-	oldpos.y = AGWIDGET(win)->y;
-	oldpos.w = AGWIDGET(win)->w;
-	oldpos.h = AGWIDGET(win)->h;
+	oldpos.x = WIDGET(win)->x;
+	oldpos.y = WIDGET(win)->y;
+	oldpos.w = WIDGET(win)->w;
+	oldpos.h = WIDGET(win)->h;
 
-	AGWIDGET(win)->x += motion->xrel;
-	AGWIDGET(win)->y += motion->yrel;
+	WIDGET(win)->x += motion->xrel;
+	WIDGET(win)->y += motion->yrel;
 	AG_WindowClamp(win);
 
-	AG_WidgetUpdateCoords(win, AGWIDGET(win)->x, AGWIDGET(win)->y);
+	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 
 	/* Update the background. */
-	newpos.x = AGWIDGET(win)->x;
-	newpos.y = AGWIDGET(win)->y;
-	newpos.w = AGWIDGET(win)->w;
-	newpos.h = AGWIDGET(win)->h;
+	newpos.x = WIDGET(win)->x;
+	newpos.y = WIDGET(win)->y;
+	newpos.w = WIDGET(win)->w;
+	newpos.h = WIDGET(win)->h;
 	rfill1.w = 0;
 	rfill2.w = 0;
 	if (newpos.x > oldpos.x) {		/* Right */
@@ -580,8 +579,8 @@ AG_WindowFocusNamed(const char *name)
 
 	AG_MutexLock(&agView->lock);
 	TAILQ_FOREACH(owin, &agView->windows, windows) {
-		if (strlen(AGOBJECT(owin)->name) >= 4 &&
-		    strcmp(AGOBJECT(owin)->name+4, name) == 0) {
+		if (strlen(OBJECT(owin)->name) >= 4 &&
+		    strcmp(OBJECT(owin)->name+4, name) == 0) {
 			AG_WindowShow(owin);
 			AG_WindowFocus(owin);
 		    	rv = 1;
@@ -600,10 +599,10 @@ out:
 static __inline__ int
 AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
 {
-	if ((y - AGWIDGET(win)->y) > (AGWIDGET(win)->h - agColorsBorderSize)) {
-	    	if ((x - AGWIDGET(win)->x) < 17) {
+	if ((y - WIDGET(win)->y) > (WIDGET(win)->h - agColorsBorderSize)) {
+	    	if ((x - WIDGET(win)->x) < 17) {
 			return (AG_WINOP_LRESIZE);
-		} else if ((x - AGWIDGET(win)->x) > (AGWIDGET(win)->w - 17)) {
+		} else if ((x - WIDGET(win)->x) > (WIDGET(win)->w - 17)) {
 			return (AG_WINOP_RRESIZE);
 		} else if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
 			return (AG_WINOP_HRESIZE);
@@ -732,7 +731,7 @@ process:
 			 * hold focus or have the AG_WIDGET_UNFOCUSED_MOTION
 			 * flag set.
 			 */
-			AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+			OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 				if (wid->flags & AG_WIDGET_PRIO_MOTION) {
 					AG_WidgetMouseMotion(win, wid,
 					    ev->motion.x, ev->motion.y,
@@ -742,7 +741,7 @@ process:
 					goto out;
 				}
 			}
-			AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+			OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 				AG_WidgetMouseMotion(win, wid,
 				    ev->motion.x, ev->motion.y,
 				    ev->motion.xrel, ev->motion.yrel,
@@ -788,7 +787,7 @@ process:
 			 * Forward to all widgets that either hold focus or have
 			 * the AG_WIDGET_UNFOCUSED_BUTTONUP flag set.
 			 */
-			AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+			OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 				AG_WidgetMouseButtonUp(win, wid,
 				    ev->button.button,
 				    ev->button.x, ev->button.y);
@@ -810,7 +809,7 @@ process:
 				agView->winSelected = win;
 			}
 			/* Forward to overlapping widgets. */
-			AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+			OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 				if (AG_WidgetMouseButtonDown(win, wid,
 				    ev->button.button, ev->button.x,
 				    ev->button.y)) {
@@ -879,7 +878,7 @@ process:
 					rv = 1;
 				} else {
 					dprintf("no focused widget in %s\n",
-					    AGOBJECT(win)->name);
+					    OBJECT(win)->name);
 				}
 			}
 		}
@@ -902,13 +901,19 @@ out:
 
 		lastwin = TAILQ_LAST(&agView->windows, ag_windowq);
 		if (agView->winToFocus != NULL &&
-		    agView->winToFocus == lastwin) 	/* Already focused? */
+		    agView->winToFocus == lastwin) {	/* Already focused? */
+			dprintf("already focused\n");
+			AG_PostEvent(NULL, agView->winToFocus,
+			    "widget-gainfocus", NULL);
+			agView->winToFocus = NULL;
 			goto outf;
+		}
 
 		if (lastwin != NULL) {
-			AG_PostEvent(NULL, lastwin, "widget-lostfocus", NULL);
-			if (lastwin->flags & AG_WINDOW_KEEPABOVE)
+			if (lastwin->flags & AG_WINDOW_KEEPABOVE) {
 				goto outf;
+			}
+			AG_PostEvent(NULL, lastwin, "widget-lostfocus", NULL);
 		}
 		if (agView->winToFocus != NULL &&
 		    agView->winToFocus != TAILQ_LAST(&agView->windows,
@@ -917,6 +922,8 @@ out:
 			    windows);
 			TAILQ_INSERT_TAIL(&agView->windows, agView->winToFocus,
 			    windows);
+			AG_PostEvent(NULL, agView->winToFocus,
+			    "widget-gainfocus", NULL);
 		}
 		agView->winToFocus = NULL;
 	}
@@ -931,7 +938,7 @@ outf:
 void
 AG_WindowClamp(AG_Window *win)
 {
-	AG_Widget *w = AGWIDGET(win);
+	AG_Widget *w = WIDGET(win);
 	
 	if (w->x + w->w > agView->w)
 		w->x = agView->w - w->w;
@@ -958,30 +965,30 @@ void
 AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 {
 	SDL_Rect rfill1, rfill2;
-	int ox = AGWIDGET(win)->x;
-	int oy = AGWIDGET(win)->y;
-	int ow = AGWIDGET(win)->w;
-	int oh = AGWIDGET(win)->h;
+	int ox = WIDGET(win)->x;
+	int oy = WIDGET(win)->y;
+	int ow = WIDGET(win)->w;
+	int oh = WIDGET(win)->h;
 	
-	if (AGWIDGET(win)->x == -1 && AGWIDGET(win)->y == -1) {
+	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
 		/* Find the minimum geometry. */
 		AG_WindowScale(win, -1, -1);
 	}
 
 	/* Limit the window within the view boundaries. */
 	if (x+w > agView->w) {
-		AGWIDGET(win)->x = ox;
-		AGWIDGET(win)->w = ow;
+		WIDGET(win)->x = ox;
+		WIDGET(win)->w = ow;
 	} else {
-		AGWIDGET(win)->x = x >= 0 ? x : 0;
-		AGWIDGET(win)->w = w < win->minw ? win->minw : w;
+		WIDGET(win)->x = x >= 0 ? x : 0;
+		WIDGET(win)->w = w < win->minw ? win->minw : w;
 	}
 	if (y+h > agView->h) {
-		AGWIDGET(win)->y = oy;
-		AGWIDGET(win)->h = oh;
+		WIDGET(win)->y = oy;
+		WIDGET(win)->h = oh;
 	} else {
-		AGWIDGET(win)->y = y >= 0 ? y : 0;
-		AGWIDGET(win)->h = h < win->minh ? win->minh : h;
+		WIDGET(win)->y = y >= 0 ? y : 0;
+		WIDGET(win)->h = h < win->minh ? win->minh : h;
 	}
 
 	/* Effect the possible changes in geometry. */
@@ -991,22 +998,22 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 	rfill1.w = 0;
 	rfill2.w = 0;
 
-	if (AGWIDGET(win)->x > ox) {			/* L-resize */
+	if (WIDGET(win)->x > ox) {			/* L-resize */
 		rfill1.x = ox;
 		rfill1.y = oy;
-		rfill1.w = AGWIDGET(win)->x - ox;
-		rfill1.h = AGWIDGET(win)->h;
-	} else if (AGWIDGET(win)->w < ow) {		/* R-resize */
-		rfill1.x = AGWIDGET(win)->x + AGWIDGET(win)->w;
-		rfill1.y = AGWIDGET(win)->y;
-		rfill1.w = ow - AGWIDGET(win)->w;
+		rfill1.w = WIDGET(win)->x - ox;
+		rfill1.h = WIDGET(win)->h;
+	} else if (WIDGET(win)->w < ow) {		/* R-resize */
+		rfill1.x = WIDGET(win)->x + WIDGET(win)->w;
+		rfill1.y = WIDGET(win)->y;
+		rfill1.w = ow - WIDGET(win)->w;
 		rfill1.h = oh;
 	}
-	if (AGWIDGET(win)->h < oh) {			/* H-resize */
+	if (WIDGET(win)->h < oh) {			/* H-resize */
 		rfill2.x = ox;
-		rfill2.y = AGWIDGET(win)->y + AGWIDGET(win)->h;
+		rfill2.y = WIDGET(win)->y + WIDGET(win)->h;
 		rfill2.w = ow;
-		rfill2.h = oh - AGWIDGET(win)->h;
+		rfill2.h = oh - WIDGET(win)->h;
 	}
 	if (!agView->opengl) {
 		if (rfill1.w > 0) {
@@ -1023,10 +1030,10 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 void
 AG_WindowSaveGeometry(AG_Window *win)
 {
-	win->savx = AGWIDGET(win)->x;
-	win->savy = AGWIDGET(win)->y;
-	win->savw = AGWIDGET(win)->w;
-	win->savh = AGWIDGET(win)->h;
+	win->savx = WIDGET(win)->x;
+	win->savy = WIDGET(win)->y;
+	win->savw = WIDGET(win)->w;
+	win->savh = WIDGET(win)->h;
 }
 
 void
@@ -1062,10 +1069,10 @@ AG_WindowMinimize(AG_Window *win)
 static void
 AG_WindowResizeOp(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 {
-	int x = AGWIDGET(win)->x;
-	int y = AGWIDGET(win)->y;
-	int w = AGWIDGET(win)->w;
-	int h = AGWIDGET(win)->h;
+	int x = WIDGET(win)->x;
+	int y = WIDGET(win)->y;
+	int w = WIDGET(win)->w;
+	int h = WIDGET(win)->h;
 
 	switch (op) {
 	case AG_WINOP_LRESIZE:
@@ -1164,46 +1171,46 @@ AG_WindowScale(void *p, int w, int h)
 	if (w == -1 && h == -1) {
 		int maxw = 0;
 
-		AGWIDGET(win)->w = win->xpadding*2;
-		AGWIDGET(win)->h = win->ypadding_top + win->ypadding_bot;
+		WIDGET(win)->w = win->xpadding*2;
+		WIDGET(win)->h = win->ypadding_top + win->ypadding_bot;
 		if (win->flags & AG_WINDOW_NOTITLE)
-			AGWIDGET(win)->h += win->spacing;
+			WIDGET(win)->h += win->spacing;
 
-		AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+		OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 			wid->x = x;
 			wid->y = y;
-			AGWIDGET_OPS(wid)->scale(wid, -1, -1);
+			WIDGET_OPS(wid)->scale(wid, -1, -1);
 			if (maxw < wid->w)
 				maxw = wid->w;
 
 			dx = maxw + win->xpadding*2;
-			if (AGWIDGET(win)->w < dx)
-				AGWIDGET(win)->w = dx;
+			if (WIDGET(win)->w < dx)
+				WIDGET(win)->w = dx;
 
 			isTitlebar = AG_ObjectIsClass(wid,
 			    "AG_Widget:AG_Box:AG_Titlebar");
 			dy = wid->h + (isTitlebar ? win->ypadding_top :
 				       win->spacing);
 			y += dy;
-			AGWIDGET(win)->h += dy;
+			WIDGET(win)->h += dy;
 		}
-		AGWIDGET(win)->h -= win->spacing;
+		WIDGET(win)->h -= win->spacing;
 
-		win->minw = AGWIDGET(win)->w;
-		win->minh = AGWIDGET(win)->h;
+		win->minw = WIDGET(win)->w;
+		win->minh = WIDGET(win)->h;
 		goto out;
 	}
 
 	/* Sum the space requested by fixed widgets. */
-	AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
-		AGWIDGET_OPS(wid)->scale(wid, -1, -1);
+	OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+		WIDGET_OPS(wid)->scale(wid, -1, -1);
 		if ((wid->flags & AG_WIDGET_VFILL) == 0)
 			totfixed += wid->h + win->spacing;
 	}
 	if (totfixed > win->spacing)
 		totfixed -= win->spacing;
 
-	AGOBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+	OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 		wid->x = x;
 		wid->y = y;
 			
@@ -1221,16 +1228,16 @@ AG_WindowScale(void *p, int w, int h)
 			wid->h = h - totfixed - win->ypadding_bot -
 			                        win->ypadding_top - 2;
 		}
-		AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+		WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 		y += wid->h;
 		y += isTitlebar ? win->ypadding_top : win->spacing;
 		nwidgets++;
 	}
 
 	if (win->tbar != NULL) {
-		AGWIDGET(win->tbar)->x = 0;
-		AGWIDGET(win->tbar)->y = 0;
-		AGWIDGET(win->tbar)->w = w;
+		WIDGET(win->tbar)->x = 0;
+		WIDGET(win->tbar)->y = 0;
+		WIDGET(win->tbar)->w = w;
 	}
 out:
 	AG_WindowClamp(win);
@@ -1295,40 +1302,40 @@ AG_WindowApplyAlignment(AG_Window *win, enum ag_window_alignment alignment)
 {
 	switch (alignment) {
 	case AG_WINDOW_UPPER_LEFT:
-		AGWIDGET(win)->x = 0;
-		AGWIDGET(win)->y = 0;
+		WIDGET(win)->x = 0;
+		WIDGET(win)->y = 0;
 		break;
 	case AG_WINDOW_MIDDLE_LEFT:
-		AGWIDGET(win)->x = 0;
-		AGWIDGET(win)->y = agView->h/2 - AGWIDGET(win)->h/2;
+		WIDGET(win)->x = 0;
+		WIDGET(win)->y = agView->h/2 - WIDGET(win)->h/2;
 		break;
 	case AG_WINDOW_LOWER_LEFT:
-		AGWIDGET(win)->x = 0;
-		AGWIDGET(win)->y = agView->h - AGWIDGET(win)->h;
+		WIDGET(win)->x = 0;
+		WIDGET(win)->y = agView->h - WIDGET(win)->h;
 		break;
 	case AG_WINDOW_UPPER_RIGHT:
-		AGWIDGET(win)->x = agView->w - AGWIDGET(win)->w;
-		AGWIDGET(win)->y = 0;
+		WIDGET(win)->x = agView->w - WIDGET(win)->w;
+		WIDGET(win)->y = 0;
 		break;
 	case AG_WINDOW_MIDDLE_RIGHT:
-		AGWIDGET(win)->x = agView->w - AGWIDGET(win)->w;
-		AGWIDGET(win)->y = agView->h/2 - AGWIDGET(win)->h/2;
+		WIDGET(win)->x = agView->w - WIDGET(win)->w;
+		WIDGET(win)->y = agView->h/2 - WIDGET(win)->h/2;
 		break;
 	case AG_WINDOW_LOWER_RIGHT:
-		AGWIDGET(win)->x = agView->w - AGWIDGET(win)->w;
-		AGWIDGET(win)->y = agView->h - AGWIDGET(win)->h;
+		WIDGET(win)->x = agView->w - WIDGET(win)->w;
+		WIDGET(win)->y = agView->h - WIDGET(win)->h;
 		break;
 	case AG_WINDOW_CENTER:
-		AGWIDGET(win)->x = agView->w/2 - AGWIDGET(win)->w/2;
-		AGWIDGET(win)->y = agView->h/2 - AGWIDGET(win)->h/2;
+		WIDGET(win)->x = agView->w/2 - WIDGET(win)->w/2;
+		WIDGET(win)->y = agView->h/2 - WIDGET(win)->h/2;
 		break;
 	case AG_WINDOW_LOWER_CENTER:
-		AGWIDGET(win)->x = agView->w/2 - AGWIDGET(win)->w/2;
-		AGWIDGET(win)->y = agView->h - AGWIDGET(win)->h;
+		WIDGET(win)->x = agView->w/2 - WIDGET(win)->w/2;
+		WIDGET(win)->y = agView->h - WIDGET(win)->h;
 		break;
 	case AG_WINDOW_UPPER_CENTER:
-		AGWIDGET(win)->x = agView->w/2 - AGWIDGET(win)->w/2;
-		AGWIDGET(win)->y = 0;
+		WIDGET(win)->x = agView->w/2 - WIDGET(win)->w/2;
+		WIDGET(win)->y = 0;
 		break;
 	}
 	AG_WindowClamp(win);

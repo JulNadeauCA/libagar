@@ -165,13 +165,13 @@ AG_CheckboxDraw(void *obj)
 	if (AG_WidgetEnabled(cbox)) {
 		agPrim.box(cbox,
 		    0, 0,
-		    AGWIDGET(cbox)->h, AGWIDGET(cbox)->h,
+		    WIDGET(cbox)->h, WIDGET(cbox)->h,
 		    state ? -1 : 1,
 		    AG_COLOR(CHECKBOX_COLOR));
 	} else {
 		agPrim.box_dithered(cbox,
 		    0, 0,
-		    AGWIDGET(cbox)->h, AGWIDGET(cbox)->h,
+		    WIDGET(cbox)->h, WIDGET(cbox)->h,
 		    state ? -1 : 1,
 		    AG_COLOR(CHECKBOX_COLOR),
 		    AG_COLOR(DISABLED_COLOR));
@@ -184,7 +184,7 @@ AG_CheckboxDraw(void *obj)
 		    AG_TextRender(cbox->labelTxt));
 	}
 	AG_WidgetBlitSurface(cbox, cbox->label,
-	    AGWIDGET(cbox)->h + LABEL_SPACING,
+	    WIDGET(cbox)->h + LABEL_SPACING,
 	    0);
 }
 
@@ -229,8 +229,8 @@ AG_CheckboxScale(void *p, int rw, int rh)
 
 	if (rw == -1 || rh == -1) {
 		AG_TextSize(cb->labelTxt, &wLbl, NULL);
-		AGWIDGET(cb)->h = agTextFontHeight;
-		AGWIDGET(cb)->w = wLbl + AGWIDGET(cb)->h + LABEL_SPACING;
+		WIDGET(cb)->h = agTextFontHeight;
+		WIDGET(cb)->w = wLbl + WIDGET(cb)->h + LABEL_SPACING;
 	}
 }
 

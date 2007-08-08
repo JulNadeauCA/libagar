@@ -169,28 +169,28 @@ AG_LabelScale(void *p, int rw, int rh)
 
 	if (rw == -1 && rh == -1) {
 		if (lbl->flags & AG_LABEL_NOMINSIZE) {
-			AGWIDGET(lbl)->w = lbl->lPad + lbl->rPad;
-			AGWIDGET(lbl)->h = agTextFontHeight +
+			WIDGET(lbl)->w = lbl->lPad + lbl->rPad;
+			WIDGET(lbl)->h = agTextFontHeight +
 			                   lbl->tPad + lbl->bPad;
 			goto out;
 		}
 		switch (lbl->type) {
 		case AG_LABEL_STATIC:
 			if (lbl->surface != -1) {
-				wSu = AGWIDGET_SURFACE(lbl,lbl->surface)->w;
-				hSu = AGWIDGET_SURFACE(lbl,lbl->surface)->h;
+				wSu = WSURFACE(lbl,lbl->surface)->w;
+				hSu = WSURFACE(lbl,lbl->surface)->h;
 			} else {
 				AG_TextSize(lbl->text, &wSu, &hSu);
 			}
-			AGWIDGET(lbl)->w = wSu + lbl->lPad + lbl->rPad;
-			AGWIDGET(lbl)->h = hSu + lbl->tPad + lbl->bPad;
+			WIDGET(lbl)->w = wSu + lbl->lPad + lbl->rPad;
+			WIDGET(lbl)->h = hSu + lbl->tPad + lbl->bPad;
 			break;
 		case AG_LABEL_POLLED:
 		case AG_LABEL_POLLED_MT:
 			if (rh == -1 && rh == -1) {
-				AGWIDGET(lbl)->w = lbl->wPre + lbl->lPad +
+				WIDGET(lbl)->w = lbl->wPre + lbl->lPad +
 				                   lbl->rPad;
-				AGWIDGET(lbl)->h = lbl->hPre + lbl->tPad +
+				WIDGET(lbl)->h = lbl->hPre + lbl->tPad +
 				                   lbl->bPad;
 			}
 			break;
@@ -198,8 +198,8 @@ AG_LabelScale(void *p, int rw, int rh)
 	}
 	if (lbl->flags & AG_LABEL_NOMINSIZE &&
 	    lbl->surface != -1) {
-		wSu = AGWIDGET_SURFACE(lbl,lbl->surface)->w;
-		hSu = AGWIDGET_SURFACE(lbl,lbl->surface)->h;
+		wSu = WSURFACE(lbl,lbl->surface)->w;
+		hSu = WSURFACE(lbl,lbl->surface)->h;
 
 		if ((wSu + lbl->lPad+lbl->rPad) > rw ||
 		    (hSu + lbl->tPad+lbl->bPad) > rh) {
@@ -213,8 +213,8 @@ AG_LabelScale(void *p, int rw, int rh)
 		} else {
 			lbl->flags &= ~AG_LABEL_PARTIAL;
 		}
-		AGWIDGET(lbl)->w = rw;
-		AGWIDGET(lbl)->h = rh;
+		WIDGET(lbl)->w = rw;
+		WIDGET(lbl)->h = rh;
 	}
 out:
 	AG_MutexUnlock(&lbl->lock);
@@ -674,17 +674,17 @@ AG_LabelDraw(void *p)
 	AG_Label *lbl = p;
 	int wClip;
 
-	if (AGWIDGET(lbl)->w == 0 || AGWIDGET(lbl)->h == 0) {
+	if (WIDGET(lbl)->w == 0 || WIDGET(lbl)->h == 0) {
 		return;
 	}
-	wClip = AGWIDGET(lbl)->w;
+	wClip = WIDGET(lbl)->w;
 
 	AG_MutexLock(&lbl->lock);
 
 	if (lbl->flags & AG_LABEL_PARTIAL)
-		wClip -= AGWIDGET_SURFACE(lbl,lbl->surfaceCont)->w;
+		wClip -= WSURFACE(lbl,lbl->surfaceCont)->w;
 
-	AG_WidgetPushClipRect(lbl, 0, 0, wClip, AGWIDGET(lbl)->h);
+	AG_WidgetPushClipRect(lbl, 0, 0, wClip, WIDGET(lbl)->h);
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:

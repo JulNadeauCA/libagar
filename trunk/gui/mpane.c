@@ -75,12 +75,12 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 	if (mp->flags & AG_MPANE_FORCE_DIV)
 		pflags |= AG_PANE_FORCE_DIV;
 
-	AG_ObjectFreeChildren(AGOBJECT(mp));
+	AG_ObjectFreeChildren(OBJECT(mp));
 
 	switch (layout) {
 	case AG_MPANE1:
 		AG_ObjectAttach(mp, mp->panes[0]);
-		AGWIDGET(mp->panes[0])->flags |= AG_WIDGET_EXPAND;
+		WIDGET(mp->panes[0])->flags |= AG_WIDGET_EXPAND;
 		mp->npanes = 1;
 		break;
 	case AG_MPANE2H:

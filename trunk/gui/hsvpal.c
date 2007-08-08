@@ -565,7 +565,7 @@ OpenMenu(AG_HSVPal *pal)
 		AG_MenuAction(pal->menu_item, _("Complementary color"), -1,
 		    SetComplementaryColor, "%p", pal);
 	}
-	pal->menu->sel_item = pal->menu_item;
+	pal->menu->itemSel = pal->menu_item;
 	
 	SDL_GetMouseState(&x, &y);
 	pal->menu_win = AG_MenuExpand(pal->menu, pal->menu_item, x, y);
@@ -791,23 +791,23 @@ AG_HSVPalScale(void *p, int w, int h)
 	int i, y = 0;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(pal)->w = 120;
-		AGWIDGET(pal)->h = 160;
+		WIDGET(pal)->w = 120;
+		WIDGET(pal)->h = 160;
 	}
 	
 	pal->rAlpha.x = 0;
 	pal->rAlpha.h = 32;
-	pal->rAlpha.y = AGWIDGET(pal)->h - 32;
-	pal->rAlpha.w = AGWIDGET(pal)->w;
+	pal->rAlpha.y = WIDGET(pal)->h - 32;
+	pal->rAlpha.w = WIDGET(pal)->w;
 	
-	pal->circle.rout = MIN(AGWIDGET(pal)->w,
-	    AGWIDGET(pal)->h - pal->rAlpha.h)/2;
+	pal->circle.rout = MIN(WIDGET(pal)->w,
+	    WIDGET(pal)->h - pal->rAlpha.h)/2;
 	pal->circle.rin = pal->circle.rout - pal->circle.width;
 	pal->circle.dh = (float)(1.0/(pal->circle.rout*M_PI));
-	pal->circle.x = AGWIDGET(pal)->w/2;
-	pal->circle.y = (AGWIDGET(pal)->h - pal->rAlpha.h)/2;
+	pal->circle.x = WIDGET(pal)->w/2;
+	pal->circle.y = (WIDGET(pal)->h - pal->rAlpha.h)/2;
 
-	pal->triangle.x = AGWIDGET(pal)->w/2;
+	pal->triangle.x = WIDGET(pal)->w/2;
 	pal->triangle.y = pal->circle.y+pal->circle.width-pal->circle.rout;
 	pal->triangle.h = pal->circle.rin*sin((37.0/360.0)*(2*M_PI)) -
 			  pal->circle.rin*sin((270.0/360.0)*(2*M_PI));
@@ -826,13 +826,13 @@ AG_HSVPalDraw(void *p)
 	int x, y;
 	int i;
 
-	if (AGWIDGET(pal)->w < 16 || AGWIDGET(pal)->h < 16)
+	if (WIDGET(pal)->w < 16 || WIDGET(pal)->h < 16)
 		return;
 
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
 		pal->surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
-		    AGWIDGET(pal)->w, AGWIDGET(pal)->h, 32,
+		    WIDGET(pal)->w, WIDGET(pal)->h, 32,
 		    agVideoFmt->Rmask, agVideoFmt->Gmask, agVideoFmt->Bmask, 0);
 		if (pal->surface == NULL) {
 			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());

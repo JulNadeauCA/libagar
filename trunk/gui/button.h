@@ -60,10 +60,10 @@ void	   AG_ButtonDraw(void *);
 void	   AG_ButtonScale(void *, int, int);
 
 void	   AG_ButtonSetPadding(AG_Button *, int, int, int, int);
-#define	AG_ButtonSetPaddingLeft(lbl,v)   AG_ButtonSetPadding(lbl,(v),-1,-1,-1)
-#define	AG_ButtonSetPaddingRight(lbl,v)  AG_ButtonSetPadding(lbl,-1,(v),-1,-1)
-#define AG_ButtonSetPaddingTop(lbl,v)    AG_ButtonSetPadding(lbl,-1,-1,(v),-1)
-#define	AG_ButtonSetPaddingBottom(lbl,v) AG_ButtonSetPadding(lbl,-1,-1,-1,(v))
+#define	AG_ButtonSetPaddingLeft(b,v)   AG_ButtonSetPadding((b),(v),-1,-1,-1)
+#define	AG_ButtonSetPaddingRight(b,v)  AG_ButtonSetPadding((b),-1,(v),-1,-1)
+#define AG_ButtonSetPaddingTop(b,v)    AG_ButtonSetPadding((b),-1,-1,(v),-1)
+#define	AG_ButtonSetPaddingBottom(b,v) AG_ButtonSetPadding((b),-1,-1,-1,(v))
 void	   AG_ButtonSetFocusable(AG_Button *, int);
 void	   AG_ButtonSetSticky(AG_Button *, int);
 void	   AG_ButtonJustify(AG_Button *, enum ag_text_justify);

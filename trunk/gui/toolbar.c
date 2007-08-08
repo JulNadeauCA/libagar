@@ -114,7 +114,7 @@ StickyUpdate(AG_Event *event)
 	int i;
 
 	for (i = 0; i < bar->nRows; i++) {
-		AGOBJECT_FOREACH_CHILD(oBtn, bar->rows[i], ag_button) {
+		OBJECT_FOREACH_CHILD(oBtn, bar->rows[i], ag_button) {
 			int *state;
 
 			stateb = AG_WidgetGetBinding(oBtn, "state", &state);
@@ -223,7 +223,7 @@ AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 	int i, *state;
 
 	for (i = 0; i < bar->nRows; i++) {
-		AGOBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
+		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
 			stateb = AG_WidgetGetBinding(b, "state", &state);
 			*state = (b == bSel);
 			AG_WidgetBindingChanged(stateb);
@@ -240,7 +240,7 @@ AG_ToolbarSelectAll(AG_Toolbar *bar)
 	int i, *state;
 
 	for (i = 0; i < bar->nRows; i++) {
-		AGOBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
+		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
 			stateb = AG_WidgetGetBinding(b, "state", &state);
 			*state = 1;
 			AG_WidgetBindingChanged(stateb);
@@ -257,7 +257,7 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 	int i, *state;
 
 	for (i = 0; i < bar->nRows; i++) {
-		AGOBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
+		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
 			stateb = AG_WidgetGetBinding(b, "state", &state);
 			*state = 0;
 			AG_WidgetBindingChanged(stateb);
@@ -279,37 +279,37 @@ AG_ToolbarScale(void *p, int w, int h)
 		int maxw = 0, maxh = 0;
 		int dw, dh;
 
-		AGWIDGET(box)->w = box->padding*2 - box->spacing;
-		AGWIDGET(box)->h = box->padding*2;
+		WIDGET(box)->w = box->padding*2 - box->spacing;
+		WIDGET(box)->h = box->padding*2;
 
 		/* Reserve enough space to hold widgets and spacing/padding. */
-		AGOBJECT_FOREACH_CHILD(child, box, ag_widget) {
-			AGWIDGET_OPS(child)->scale(child, -1, -1);
+		OBJECT_FOREACH_CHILD(child, box, ag_widget) {
+			WIDGET_OPS(child)->scale(child, -1, -1);
 			if (child->w > maxw) { maxw = child->w; }
 			if (child->h > maxh) { maxh = child->h; }
-			if ((dh = maxh + box->padding*2) > AGWIDGET(box)->h) {
-				AGWIDGET(box)->h = dh;
+			if ((dh = maxh + box->padding*2) > WIDGET(box)->h) {
+				WIDGET(box)->h = dh;
 			}
-			AGWIDGET(box)->w += child->w + box->spacing;
+			WIDGET(box)->w += child->w + box->spacing;
 		}
-		AGWIDGET(box)->w -= box->spacing;
+		WIDGET(box)->w -= box->spacing;
 		return;
 	}
 
 	if (bar->flags & AG_TOOLBAR_HOMOGENOUS) {
-		AGOBJECT_FOREACH_CHILD(child, box, ag_widget) {
+		OBJECT_FOREACH_CHILD(child, box, ag_widget) {
 			child->x = x;
 			child->y = y;
 			child->w = w;
 			x += child->w + box->spacing;
-			AGWIDGET_OPS(child)->scale(child, child->w, child->h);
+			WIDGET_OPS(child)->scale(child, child->w, child->h);
 		}
 	} else {
-		AGOBJECT_FOREACH_CHILD(child, box, ag_widget) {
+		OBJECT_FOREACH_CHILD(child, box, ag_widget) {
 			child->x = x;
 			child->y = y;
 			x += child->w + box->spacing;
-			AGWIDGET_OPS(child)->scale(child, child->w, child->h);
+			WIDGET_OPS(child)->scale(child, child->w, child->h);
 		}
 	}
 }

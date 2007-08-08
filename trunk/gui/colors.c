@@ -117,6 +117,8 @@ const char *agColorNames[] = {
 	N_("Table lines"),
 	N_("Fixed background"),
 	N_("Fixed box"),
+	N_("Text (disabled)"),
+	N_("Menu text (disabled)"),
 };
 
 void
@@ -197,6 +199,9 @@ AG_ColorsInit(void)
 	agColors[TABLE_LINE_COLOR] = agColors[LINE_COLOR];
 	agColors[FIXED_BG_COLOR] = agColors[FRAME_COLOR];
 	agColors[FIXED_BOX_COLOR] = agColors[FRAME_COLOR];
+	
+	agColors[TEXT_DISABLED_COLOR] = SDL_MapRGB(agVideoFmt, 170, 170, 170);
+	agColors[MENU_TXT_DISABLED_COLOR] = agColors[TEXT_DISABLED_COLOR];
 
 	agColorsBorder[0] = SDL_MapRGB(agVideoFmt, 92, 92, 92);
 	agColorsBorder[1] = SDL_MapRGB(agVideoFmt, 80, 80, 75);

@@ -66,11 +66,11 @@ AG_ScrollableTextScale(void *p, int w, int h)
 {
 	AG_ScrollableText *st = p;
 	AG_Scrollable *sa = AGSCROLLABLE(st);
-	SDL_Surface *label = AGWIDGET_SURFACE(st,0);
+	SDL_Surface *label = WSURFACE(st,0);
 
 	if (w == -1 || h == -1) {
-		AGWIDGET(st)->w = 0;
-		AGWIDGET(st)->h = 0;
+		WIDGET(st)->w = 0;
+		WIDGET(st)->h = 0;
 	}
 	if (st->text != NULL) {
 		AG_TextSize(st->text, &sa->w, &sa->h);
@@ -78,8 +78,8 @@ AG_ScrollableTextScale(void *p, int w, int h)
 		sa->w = 0;
 		sa->h = 0;
 	}
-	AGWIDGET(st)->w = w;
-	AGWIDGET(st)->h = h;
+	WIDGET(st)->w = w;
+	WIDGET(st)->h = h;
 }
 
 void

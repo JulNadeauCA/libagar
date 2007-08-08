@@ -287,41 +287,41 @@ AG_MSpinbuttonScale(void *p, int w, int h)
 	int bh = h/2;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET_SCALE(sbu->input, -1, -1);
-		AGWIDGET(sbu)->w = AGWIDGET(sbu->input)->w;
-		AGWIDGET(sbu)->h = AGWIDGET(sbu->input)->h;
+		WIDGET_SCALE(sbu->input, -1, -1);
+		WIDGET(sbu)->w = WIDGET(sbu->input)->w;
+		WIDGET(sbu)->h = WIDGET(sbu->input)->h;
 
-		AGWIDGET_SCALE(sbu->yincbu, -1, -1);
-		AGWIDGET_SCALE(sbu->ydecbu, -1, -1);
-		AGWIDGET_SCALE(sbu->xincbu, -1, -1);
-		AGWIDGET_SCALE(sbu->xdecbu, -1, -1);
+		WIDGET_SCALE(sbu->yincbu, -1, -1);
+		WIDGET_SCALE(sbu->ydecbu, -1, -1);
+		WIDGET_SCALE(sbu->xincbu, -1, -1);
+		WIDGET_SCALE(sbu->xdecbu, -1, -1);
 
-		AGWIDGET(sbu)->w += AGWIDGET(sbu->xdecbu)->w +
-		                  max(AGWIDGET(sbu->yincbu)->w,
-				      AGWIDGET(sbu->ydecbu)->w) +
-		                  AGWIDGET(sbu->xincbu)->w;
+		WIDGET(sbu)->w += WIDGET(sbu->xdecbu)->w +
+		                  max(WIDGET(sbu->yincbu)->w,
+				      WIDGET(sbu->ydecbu)->w) +
+		                  WIDGET(sbu->xincbu)->w;
 		return;
 	}
 
-	AGWIDGET(sbu->input)->x = x;
-	AGWIDGET(sbu->input)->y = y;
+	WIDGET(sbu->input)->x = x;
+	WIDGET(sbu->input)->y = y;
 	AG_WidgetScale(sbu->input, w - bw*3, h);
-	x += AGWIDGET(sbu->input)->w;
+	x += WIDGET(sbu->input)->w;
 
-	AGWIDGET(sbu->xdecbu)->x = x;
-	AGWIDGET(sbu->xdecbu)->y = y + bh/2;
+	WIDGET(sbu->xdecbu)->x = x;
+	WIDGET(sbu->xdecbu)->y = y + bh/2;
 	AG_WidgetScale(sbu->xdecbu, bw, bh);
 
-	AGWIDGET(sbu->xincbu)->x = x + bh*2;
-	AGWIDGET(sbu->xincbu)->y = y + bh/2;
+	WIDGET(sbu->xincbu)->x = x + bh*2;
+	WIDGET(sbu->xincbu)->y = y + bh/2;
 	AG_WidgetScale(sbu->xincbu, bw, bh);
 
-	AGWIDGET(sbu->ydecbu)->x = x + bh;
-	AGWIDGET(sbu->ydecbu)->y = y;
+	WIDGET(sbu->ydecbu)->x = x + bh;
+	WIDGET(sbu->ydecbu)->y = y;
 	AG_WidgetScale(sbu->ydecbu, bw, bh);
 	
-	AGWIDGET(sbu->yincbu)->x = x + bh;
-	AGWIDGET(sbu->yincbu)->y = y + bh;
+	WIDGET(sbu->yincbu)->x = x + bh;
+	WIDGET(sbu->yincbu)->y = y + bh;
 	AG_WidgetScale(sbu->yincbu, bw, bh);
 }
 

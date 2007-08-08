@@ -1088,8 +1088,8 @@ rect_opengl(void *p, int x, int y, int w, int h, Uint32 color)
 	Uint8 r, g, b;
 	int x1 = wid->cx+x;
 	int y1 = wid->cy+y;
-	int x2 = x1+w;
-	int y2 = y1+h;
+	int x2 = x1+w-1;
+	int y2 = y1+h-1;
 
 	if (wid->flags & AG_WIDGET_CLIPPING) {
 		if (x1 > wid->cx+wid->w ||

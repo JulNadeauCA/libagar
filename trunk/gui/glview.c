@@ -249,13 +249,13 @@ AG_GLViewScale(void *p, int w, int h)
 	AG_GLView *glv = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(glv)->w = 32;		/* XXX */
-		AGWIDGET(glv)->h = 32;
+		WIDGET(glv)->w = 32;		/* XXX */
+		WIDGET(glv)->h = 32;
 		AG_GLViewReshape(glv);
 		return;
 	}
-	AGWIDGET(glv)->w = w;
-	AGWIDGET(glv)->h = h;
+	WIDGET(glv)->w = w;
+	WIDGET(glv)->h = h;
 	AG_GLViewReshape(glv);
 }
 
@@ -264,9 +264,8 @@ AG_GLViewDraw(void *p)
 {
 	AG_GLView *glv = p;
 	
-	glViewport(
-	    AGWIDGET(glv)->cx, agView->h - AGWIDGET(glv)->cy2,
-	    AGWIDGET(glv)->w, AGWIDGET(glv)->h);
+	glViewport(WIDGET(glv)->cx, agView->h - WIDGET(glv)->cy2,
+	           WIDGET(glv)->w, WIDGET(glv)->h);
 
 	glMatrixMode(GL_TEXTURE);
 	glPushMatrix();

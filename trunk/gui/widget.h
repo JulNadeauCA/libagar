@@ -124,13 +124,23 @@ typedef struct ag_widget {
 } AG_Widget;
 
 #define AGWIDGET(wi)			((AG_Widget *)(wi))
-#define AGWIDGET_OPS(ob)		((AG_WidgetOps *)AGOBJECT(ob)->ops)
+#define AGWIDGET_OPS(wi)		((AG_WidgetOps *)OBJECT(wi)->ops)
 #define AGWIDGET_SCALE(wi, w, h)	AGWIDGET_OPS(wi)->scale((wi), (w), (h))
 #define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
 #define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
 #define AGWIDGET_SURFACE_NODUP(wi, ind)	(AGWIDGET(wi)->surfaceFlags[ind] & \
 					 AG_WIDGET_SURFACE_NODUP)
+
+#ifdef _AGAR_INTERNAL
+#define WIDGET(wi)			AGWIDGET(wi)
+#define WIDGET_OPS(wi)			AGWIDGET_OPS(wi)
+#define WIDGET_SCALE(wi,w,h)		AGWIDGET_SCALE((wi),(w),(h))
+#define WSURFACE(wi,ind)		AGWIDGET_SURFACE((wi),(ind))
+#define WTEXTURE(wi,ind)		AGWIDGET_TEXTURE((wi),(ind))
+#define WTEXCOORD(wi,ind)		AGWIDGET_TEXCOORD((wi),(ind))
+#define WSURFACE_NODUP(wi,ind)		AGWIDGET_SURFACE_NODUP((wi),(ind))
+#endif /* _AGAR_INTERNAL */
 
 #define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
 #define AG_WidgetDisabled(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)

@@ -211,37 +211,37 @@ AG_TableScale(void *p, int w, int h)
 
 	if (w == -1 && h == -1) {
 		if (t->prew != -1) {
-			AGWIDGET(t)->w = t->vbar->bw + 2;
+			WIDGET(t)->w = t->vbar->bw + 2;
 			for (n = 0; n < t->n; n++) {
 				AG_TableCol *tc = &t->cols[n];
 			
 				if (tc->flags & AG_TABLE_COL_FILL) {
-					AGWIDGET(t)->w += COLUMN_MIN_WIDTH;
+					WIDGET(t)->w += COLUMN_MIN_WIDTH;
 					continue;
 				}
-				AGWIDGET(t)->w += tc->w;
+				WIDGET(t)->w += tc->w;
 			}
 		} else {
-			AGWIDGET(t)->w = t->prew;
+			WIDGET(t)->w = t->prew;
 		}
-		AGWIDGET(t)->h = t->preh;
+		WIDGET(t)->h = t->preh;
 	}
 
-	AGWIDGET(t->vbar)->x = AGWIDGET(t)->w - t->vbar->bw;
-	AGWIDGET(t->vbar)->y = t->col_h - 1;
-	AG_WidgetScale(t->vbar, t->vbar->bw, AGWIDGET(t)->h - t->col_h + 1);
+	WIDGET(t->vbar)->x = WIDGET(t)->w - t->vbar->bw;
+	WIDGET(t->vbar)->y = t->col_h - 1;
+	AG_WidgetScale(t->vbar, t->vbar->bw, WIDGET(t)->h - t->col_h + 1);
 	
-	AGWIDGET(t->hbar)->x = t->vbar->bw + 1;
-	AGWIDGET(t->hbar)->y = AGWIDGET(t)->h - t->hbar->bw;
-	AG_WidgetScale(t->hbar, AGWIDGET(t)->w - t->hbar->bw, t->vbar->bw);
+	WIDGET(t->hbar)->x = t->vbar->bw + 1;
+	WIDGET(t->hbar)->y = WIDGET(t)->h - t->hbar->bw;
+	AG_WidgetScale(t->hbar, WIDGET(t)->w - t->hbar->bw, t->vbar->bw);
 	
-	if (AGWIDGET(t)->w < t->vbar->bw ||
-	    AGWIDGET(t)->h < t->vbar->bw*2) {
-		AGWIDGET(t->vbar)->flags |= AG_WIDGET_HIDE;
+	if (WIDGET(t)->w < t->vbar->bw ||
+	    WIDGET(t)->h < t->vbar->bw*2) {
+		WIDGET(t->vbar)->flags |= AG_WIDGET_HIDE;
 		t->wTbl = 0;
 	} else {
-		AGWIDGET(t->vbar)->flags &= ~(AG_WIDGET_HIDE);
-		t->wTbl = AGWIDGET(t)->w - AGWIDGET(t->vbar)->w;
+		WIDGET(t->vbar)->flags &= ~(AG_WIDGET_HIDE);
+		t->wTbl = WIDGET(t)->w - WIDGET(t->vbar)->w;
 	}
 #if 0
 	if (w != -1 && h != -1) {
@@ -401,7 +401,7 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 blit:
 	AG_WidgetBlitSurface(t, c->surface,
 	    rd->x,
-	    rd->y + (t->row_h>>1) - (AGWIDGET_SURFACE(t,c->surface)->h>>1));
+	    rd->y + (t->row_h>>1) - (WSURFACE(t,c->surface)->h>>1));
 }
 
 void
@@ -411,10 +411,10 @@ AG_TableDraw(void *p)
 	int n, m;
 	int x, y;
 
-	if (AGWIDGET(t)->w <= t->vbar->bw || AGWIDGET(t)->h <= t->row_h)
+	if (WIDGET(t)->w <= t->vbar->bw || WIDGET(t)->h <= t->row_h)
 		return;
 
-	agPrim.box(t, 0, 0, t->wTbl, AGWIDGET(t)->h, -1, AG_COLOR(TABLE_COLOR));
+	agPrim.box(t, 0, 0, t->wTbl, WIDGET(t)->h, -1, AG_COLOR(TABLE_COLOR));
 
 	AG_MutexLock(&t->lock);
 	t->moffs = AG_WidgetInt(t->vbar, "value");
@@ -436,21 +436,21 @@ AG_TableDraw(void *p)
 
 		/* Draw the column header and separator. */
 		if (x > 0 && x < t->wTbl) {
-			agPrim.vline(t, x-1, t->col_h-1, AGWIDGET(t)->h,
+			agPrim.vline(t, x-1, t->col_h-1, WIDGET(t)->h,
 			    AG_COLOR(TABLE_LINE_COLOR));
 		}
 		agPrim.box(t, x, 0, cw, t->col_h - 1, 1, AG_COLOR(TABLE_COLOR));
 		
-		AG_WidgetPushClipRect(t, x, 0, cw, AGWIDGET(t)->h - 2);
+		AG_WidgetPushClipRect(t, x, 0, cw, WIDGET(t)->h - 2);
 		if (col->surface != -1) {
 			AG_WidgetBlitSurface(t, col->surface,
-			    x + cw/2 - AGWIDGET_SURFACE(t,col->surface)->w/2,
+			    x + cw/2 - WSURFACE(t,col->surface)->w/2,
 			    0);
 		}
 
 		/* Draw the rows of this column. */
 		for (m = t->moffs, y = t->row_h;
-		     m < t->m && y < AGWIDGET(t)->h;
+		     m < t->m && y < WIDGET(t)->h;
 		     m++) {
 			SDL_Rect rCell;
 			
@@ -471,14 +471,14 @@ AG_TableDraw(void *p)
 		if (col->selected) {
 			Uint8 c[4] = { 0, 0, 250, 32 };
 
-			agPrim.rect_blended(t, x, 0, col->w, AGWIDGET(t)->h,
+			agPrim.rect_blended(t, x, 0, col->w, WIDGET(t)->h,
 			    c, AG_ALPHA_SRC);
 		}
 		AG_WidgetPopClipRect(t);
 		x += col->w;
 	}
 	if (x > 0 && x < t->wTbl) {
-		agPrim.vline(t, x-1, t->col_h-1, AGWIDGET(t)->h,
+		agPrim.vline(t, x-1, t->col_h-1, WIDGET(t)->h,
 		    AG_COLOR(TABLE_LINE_COLOR));
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
@@ -495,7 +495,7 @@ AG_TableUpdateScrollbars(AG_Table *t)
 	AG_WidgetBinding *maxb, *offsetb;
 	int *max, *offset;
 
-	t->mVis = AGWIDGET(t)->h / t->row_h;
+	t->mVis = WIDGET(t)->h / t->row_h;
 
 	maxb = AG_WidgetGetBinding(t->vbar, "max", &max);
 	offsetb = AG_WidgetGetBinding(t->vbar, "value", &offset);
@@ -511,7 +511,7 @@ AG_TableUpdateScrollbars(AG_Table *t)
 	}
 	if (t->m > 0 && t->mVis > 0 && (t->mVis-1) < t->m) {
 		AG_ScrollbarSetBarSize(t->vbar,
-		    (t->mVis-1)*(AGWIDGET(t->vbar)->h - t->vbar->bw*2) / t->m);
+		    (t->mVis-1)*(WIDGET(t->vbar)->h - t->vbar->bw*2) / t->m);
 	} else {
 		AG_ScrollbarSetBarSize(t->vbar, -1);		/* Full range */
 	}
@@ -526,7 +526,7 @@ AG_TableSetPopup(AG_Table *t, int m, int n)
 
 	SLIST_FOREACH(tp, &t->popups, popups) {
 		if (tp->m == m && tp->n == n) {
-			AG_MenuFreeSubItems(tp->item);
+			AG_MenuItemFree(tp->item);
 			return (tp->item);
 		}
 	}
@@ -536,7 +536,7 @@ AG_TableSetPopup(AG_Table *t, int m, int n)
 	tp->panel = NULL;
 	tp->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
 	AG_MenuInit(tp->menu, 0);
-	tp->item = AG_MenuAddItem(tp->menu, "");
+	tp->item = tp->menu->root;			/* XXX redundant */
 	SLIST_INSERT_HEAD(&t->popups, tp, popups);
 	return (tp->item);
 }
@@ -743,7 +743,7 @@ ShowPopup(AG_Table *tbl, AG_TablePopup *tp)
 		AG_MenuCollapse(tp->menu, tp->item);
 		tp->panel = NULL;
 	}
-	tp->menu->sel_item = tp->item;
+	tp->menu->itemSel = tp->item;
 	tp->panel = AG_MenuExpand(tp->menu, tp->item, x+4, y+4);
 }
 
@@ -1011,7 +1011,7 @@ keydown(AG_Event *event)
 	case SDLK_PAGEUP:
 	case SDLK_PAGEDOWN:
 		AG_SchedEvent(NULL, t, agKbdDelay, "kbdscroll", "%i", keysym);
-		AG_ExecEvent(t, "kbdscroll");
+		AG_PostEvent(NULL, t, "kbdscroll", NULL);
 		break;
 	default:
 		break;
@@ -1052,7 +1052,7 @@ mousemotion(AG_Event *event)
 	int n, cx;
 	int m;
 
-	if (x < 0 || y < 0 || x >= AGWIDGET(t)->w || y >= AGWIDGET(t)->h)
+	if (x < 0 || y < 0 || x >= WIDGET(t)->w || y >= WIDGET(t)->h)
 		return;
 
 	AG_MutexLock(&t->lock);
@@ -1273,7 +1273,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	if (size_spec != NULL) {
 		switch (AG_WidgetParseSizeSpec(size_spec, &tc->w)) {
 		case AG_WIDGET_PERCENT:
-			tc->w = tc->w*(AGWIDGET(t)->w - t->vbar->bw)/100;
+			tc->w = tc->w*(WIDGET(t)->w - t->vbar->bw)/100;
 			break;
 		default:
 			break;

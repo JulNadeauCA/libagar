@@ -316,52 +316,52 @@ AG_MFSpinbuttonScale(void *p, int w, int h)
 	int x = 0, y = 0;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET_SCALE(fsu->input, -1, -1);
-		AGWIDGET(fsu)->w = AGWIDGET(fsu->input)->w;
-		AGWIDGET(fsu)->h = AGWIDGET(fsu->input)->h;
+		WIDGET_SCALE(fsu->input, -1, -1);
+		WIDGET(fsu)->w = WIDGET(fsu->input)->w;
+		WIDGET(fsu)->h = WIDGET(fsu->input)->h;
 
 		if (units != NULL) {
-			AGWIDGET_SCALE(units, -1, -1);
-			AGWIDGET(fsu)->w += AGWIDGET(units)->w+4;
+			WIDGET_SCALE(units, -1, -1);
+			WIDGET(fsu)->w += WIDGET(units)->w+4;
 		}
-		AGWIDGET_SCALE(fsu->yincbu, -1, -1);
-		AGWIDGET_SCALE(fsu->ydecbu, -1, -1);
-		AGWIDGET_SCALE(fsu->xincbu, -1, -1);
-		AGWIDGET_SCALE(fsu->xdecbu, -1, -1);
+		WIDGET_SCALE(fsu->yincbu, -1, -1);
+		WIDGET_SCALE(fsu->ydecbu, -1, -1);
+		WIDGET_SCALE(fsu->xincbu, -1, -1);
+		WIDGET_SCALE(fsu->xdecbu, -1, -1);
 
-		AGWIDGET(fsu)->w += AGWIDGET(fsu->xdecbu)->w +
-		                  max(AGWIDGET(fsu->yincbu)->w,
-				      AGWIDGET(fsu->ydecbu)->w) +
-		                  AGWIDGET(fsu->xincbu)->w;
+		WIDGET(fsu)->w += WIDGET(fsu->xdecbu)->w +
+		                  max(WIDGET(fsu->yincbu)->w,
+				      WIDGET(fsu->ydecbu)->w) +
+		                  WIDGET(fsu->xincbu)->w;
 		return;
 	}
 
-	AGWIDGET(fsu->input)->x = x;
-	AGWIDGET(fsu->input)->y = y;
+	WIDGET(fsu->input)->x = x;
+	WIDGET(fsu->input)->y = y;
 	AG_WidgetScale(fsu->input, w - 2 - uw - 2 - bw*3, h);
-	x += AGWIDGET(fsu->input)->w+2;
+	x += WIDGET(fsu->input)->w+2;
 
 	if (units != NULL) {
-		AGWIDGET(units)->x = x;
-		AGWIDGET(units)->y = y;
+		WIDGET(units)->x = x;
+		WIDGET(units)->y = y;
 		AG_WidgetScale(units, uw, h);
-		x += AGWIDGET(units)->w+2;
+		x += WIDGET(units)->w+2;
 	}
 
-	AGWIDGET(fsu->xdecbu)->x = x;
-	AGWIDGET(fsu->xdecbu)->y = y + bh/2;
+	WIDGET(fsu->xdecbu)->x = x;
+	WIDGET(fsu->xdecbu)->y = y + bh/2;
 	AG_WidgetScale(fsu->xdecbu, bw, bh);
 
-	AGWIDGET(fsu->xincbu)->x = x + bh*2;
-	AGWIDGET(fsu->xincbu)->y = y + bh/2;
+	WIDGET(fsu->xincbu)->x = x + bh*2;
+	WIDGET(fsu->xincbu)->y = y + bh/2;
 	AG_WidgetScale(fsu->xincbu, bw, bh);
 
-	AGWIDGET(fsu->ydecbu)->x = x + bh;
-	AGWIDGET(fsu->ydecbu)->y = y;
+	WIDGET(fsu->ydecbu)->x = x + bh;
+	WIDGET(fsu->ydecbu)->y = y;
 	AG_WidgetScale(fsu->ydecbu, bw, bh);
 	
-	AGWIDGET(fsu->yincbu)->x = x + bh;
-	AGWIDGET(fsu->yincbu)->y = y + bh;
+	WIDGET(fsu->yincbu)->x = x + bh;
+	WIDGET(fsu->yincbu)->y = y + bh;
 	AG_WidgetScale(fsu->yincbu, bw, bh);
 }
 

@@ -82,7 +82,7 @@ AG_WidgetInit(void *p, const void *wops, Uint flags)
 	AG_Widget *wid = p;
 
 	AG_ObjectInit(wid, "widget", wops);
-	AGOBJECT(wid)->save_pfx = "/widgets";
+	OBJECT(wid)->save_pfx = "/widgets";
 
 	wid->flags = flags;
 	wid->redraw = 1;
@@ -223,7 +223,7 @@ GetVirtualBindingType(AG_WidgetBinding *binding)
 	switch (binding->type) {
 	case AG_WIDGET_PROP:
 		dprintf("Translating property: %s:%s\n",
-		    AGOBJECT(binding->p1)->name, binding->data.prop);
+		    OBJECT(binding->p1)->name, binding->data.prop);
 		if ((prop = AG_GetProp(binding->p1, binding->data.prop, -1,
 		    NULL)) == NULL) {
 			fatal("%s", AG_GetError());
@@ -1031,7 +1031,7 @@ AG_WidgetReplaceSurface(void *p, int name, SDL_Surface *su)
 	AG_Widget *wid = p;
 
 	if (wid->surfaces[name] != NULL) {
-		if (!AGWIDGET_SURFACE_NODUP(wid,name))
+		if (!WSURFACE_NODUP(wid,name))
 			SDL_FreeSurface(wid->surfaces[name]);
 	}
 	wid->surfaces[name] = su;
@@ -1092,10 +1092,8 @@ AG_WidgetDestroy(void *p)
 		AG_PopupDestroy(NULL, pm);
 	}
 	for (i = 0; i < wid->nsurfaces; i++) {
-		if (wid->surfaces[i] != NULL &&
-		    !AGWIDGET_SURFACE_NODUP(wid,i)) {
+		if (wid->surfaces[i] != NULL && !WSURFACE_NODUP(wid,i))
 			SDL_FreeSurface(wid->surfaces[i]);
-		}
 #ifdef HAVE_OPENGL
 		/* TODO Queue this operation? */
 		if (agView->opengl) {
@@ -1360,7 +1358,7 @@ AG_WidgetUnfocus(void *p)
 		AG_PostEvent(NULL, wid, "widget-lostfocus", NULL);
 	}
 
-	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetUnfocus(cwid);
 }
 
@@ -1374,7 +1372,7 @@ AG_WidgetParentWindow(void *p)
 	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*"))
 		return ((AG_Window *)wid);
 
-	while ((pwid = AGOBJECT(pwid)->parent) != NULL) {
+	while ((pwid = OBJECT(pwid)->parent) != NULL) {
 		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*"))
 			break;
 	}
@@ -1404,7 +1402,7 @@ AG_WidgetFocus(void *p)
 		}
 		AG_WidgetUnfocus(pwin);
 	} else {
-		dprintf("%s: no parent window\n", AGOBJECT(wid)->name);
+		dprintf("%s: no parent window\n", OBJECT(wid)->name);
 	}
 
 	/* Set the focus flag on the widget and its parents. */
@@ -1418,14 +1416,14 @@ AG_WidgetFocus(void *p)
 #if 0
 		if ((pwid->flags & AG_WIDGET_FOCUSABLE) == 0) {
 			dprintf("parent (%s) is not focusable\n",
-			    AGOBJECT(pwid)->name);
+			    OBJECT(pwid)->name);
 			break;
 		}
 #endif
 		pwid->flags |= AG_WIDGET_FOCUSED;
-		AG_PostEvent(AGOBJECT(pwid)->parent, pwid, "widget-gainfocus",
+		AG_PostEvent(OBJECT(pwid)->parent, pwid, "widget-gainfocus",
 		    NULL);
-	} while ((pwid = AGOBJECT(pwid)->parent) != NULL);
+	} while ((pwid = OBJECT(pwid)->parent) != NULL);
 }
 
 /* Evaluate whether a given widget is at least partially visible. */
@@ -1444,10 +1442,10 @@ AG_WidgetIsOcculted(AG_Widget *wid)
 	for (; owin != TAILQ_END(&agView->windows);
 	     owin = TAILQ_NEXT(owin, windows)) {
 		if (owin->visible &&
-		    wid->cx > AGWIDGET(owin)->x &&
-		    wid->cy > AGWIDGET(owin)->y &&
-		    wid->cx+wid->w < AGWIDGET(owin)->x+AGWIDGET(owin)->w &&
-		    wid->cy+wid->h < AGWIDGET(owin)->y+AGWIDGET(owin)->h) {
+		    wid->cx > WIDGET(owin)->x &&
+		    wid->cy > WIDGET(owin)->y &&
+		    wid->cx+wid->w < WIDGET(owin)->x+WIDGET(owin)->w &&
+		    wid->cy+wid->h < WIDGET(owin)->y+WIDGET(owin)->h) {
 			return (1);
 		}
 	}
@@ -1540,12 +1538,12 @@ AG_WidgetDraw(void *p)
 		return;
 
 	if (((wid->flags & AG_WIDGET_STATIC)==0 || wid->redraw) &&
-	    !AG_WidgetIsOcculted(wid) && AGWIDGET_OPS(wid)->draw != NULL &&
-	    AGWIDGET(wid)->w > 0 && AGWIDGET(wid)->h > 0) {
+	    !AG_WidgetIsOcculted(wid) && WIDGET_OPS(wid)->draw != NULL &&
+	    WIDGET(wid)->w > 0 && WIDGET(wid)->h > 0) {
 		if (wid->flags & AG_WIDGET_CLIPPING) {
 			AG_WidgetPushClipRect(wid, 0, 0, wid->w, wid->h);
 		}
-		AGWIDGET_OPS(wid)->draw(wid);
+		WIDGET_OPS(wid)->draw(wid);
 		if (wid->flags & AG_WIDGET_CLIPPING) {
 			AG_WidgetPopClipRect(wid);
 		}
@@ -1553,7 +1551,7 @@ AG_WidgetDraw(void *p)
 			wid->redraw = 0;
 	}
 
-	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetDraw(cwid);
 }
 
@@ -1565,7 +1563,7 @@ AG_WidgetScale(void *p, int w, int h)
 
 	wid->w = w;
 	wid->h = h;
-	AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+	WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 }
 
 void
@@ -1809,7 +1807,7 @@ AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
 		if (wid->flags & AG_WIDGET_PRIO_MOTION)
 			return;
 	}
-	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetMouseMotion(win, cwid, x, y, xrel, yrel, state);
 }
 
@@ -1828,7 +1826,7 @@ AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
 		AG_PostEvent(NULL, wid,  "window-mousebuttonup", "%i, %i, %i",
 		    button, x-wid->cx, y-wid->cy);
 	}
-	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetMouseButtonUp(win, cwid, button, x, y);
 }
 
@@ -1841,14 +1839,14 @@ AG_WidgetMouseButtonDown(AG_Window *win, AG_Widget *wid, int button,
 	AG_Event *ev;
 
 	/* Search for a better match. */
-	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		if (AG_WidgetMouseButtonDown(win, cwid, button, x, y))
 			return (1);
 	}
 	if (!AG_WidgetArea(wid, x, y)) {
 		return (0);
 	}
-	TAILQ_FOREACH(ev, &AGOBJECT(wid)->events, events) {
+	TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
 		if (strcmp(ev->name, "window-mousebuttondown") == 0)
 			break;
 	}
@@ -1872,7 +1870,7 @@ AG_WidgetFindFocused(void *p)
 		return (NULL);
 
 	/* Search for a better match. */
-	AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		if ((fwid = AG_WidgetFindFocused(cwid)) != NULL)
 			return (fwid);
 	}
@@ -1894,7 +1892,7 @@ AG_WidgetUpdateCoords(void *parent, int x, int y)
 	pwid->cy2 = y + pwid->h;
 	AG_PostEvent(NULL, pwid, "widget-moved", NULL);
 
-	AGOBJECT_FOREACH_CHILD(cwid, pwid, ag_widget)
+	OBJECT_FOREACH_CHILD(cwid, pwid, ag_widget)
 		AG_WidgetUpdateCoords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);
 }
 

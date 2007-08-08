@@ -69,7 +69,7 @@ combo_collapse(AG_Combo *com)
 	if (com->panel == NULL)
 		return;
 
-	com->saved_h = AGWIDGET(com->panel)->h;
+	com->saved_h = WIDGET(com->panel)->h;
 	AG_WindowHide(com->panel);
 	AG_ObjectDetach(com->list);
 	AG_ViewDetach(com->panel);
@@ -100,13 +100,13 @@ combo_expand(AG_Event *event)
 		AG_Widget *panel;
 
 		com->panel = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_MODAL);
-		panel = AGWIDGET(com->panel);
+		panel = WIDGET(com->panel);
 		AG_ObjectAttach(com->panel, com->list);
 
-		panel->w = AGWIDGET(com)->w - AGWIDGET(com->button)->w;
-		panel->h = com->saved_h > 0 ? com->saved_h : AGWIDGET(com)->h*5;
-		panel->x = AGWIDGET(com)->cx;
-		panel->y = AGWIDGET(com)->cy;
+		panel->w = WIDGET(com)->w - WIDGET(com->button)->w;
+		panel->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
+		panel->x = WIDGET(com)->cx;
+		panel->y = WIDGET(com)->cy;
 		
 		/* XXX redundant? */
 		if (panel->x+panel->w > agView->w)
@@ -285,25 +285,25 @@ AG_ComboScale(void *p, int w, int h)
 	AG_Combo *com = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET_SCALE(com->tbox, -1, -1);
-		AGWIDGET(com)->w = AGWIDGET(com->tbox)->w;
-		AGWIDGET(com)->h = AGWIDGET(com->tbox)->h;
+		WIDGET_SCALE(com->tbox, -1, -1);
+		WIDGET(com)->w = WIDGET(com->tbox)->w;
+		WIDGET(com)->h = WIDGET(com->tbox)->h;
 
-		AGWIDGET_SCALE(com->button, -1, -1);
-		AGWIDGET(com)->w += AGWIDGET(com->button)->w;
-		if (AGWIDGET(com->button)->h > AGWIDGET(com)->h) {
-			AGWIDGET(com)->h = AGWIDGET(com->button)->h;
+		WIDGET_SCALE(com->button, -1, -1);
+		WIDGET(com)->w += WIDGET(com->button)->w;
+		if (WIDGET(com->button)->h > WIDGET(com)->h) {
+			WIDGET(com)->h = WIDGET(com->button)->h;
 		}
 		return;
 	}
 	
 	AG_WidgetScale(com->button, -1, -1);
-	AG_WidgetScale(com->tbox, w - AGWIDGET(com->button)->w - 1, h);
-	AG_WidgetScale(com->button, AGWIDGET(com->button)->w, h);
+	AG_WidgetScale(com->tbox, w - WIDGET(com->button)->w - 1, h);
+	AG_WidgetScale(com->button, WIDGET(com->button)->w, h);
 
-	AGWIDGET(com->tbox)->x = 0;
-	AGWIDGET(com->tbox)->y = 0;
-	AGWIDGET(com->button)->x = w - AGWIDGET(com->button)->w - 1;
-	AGWIDGET(com->button)->y = 0;
+	WIDGET(com->tbox)->x = 0;
+	WIDGET(com->tbox)->y = 0;
+	WIDGET(com->button)->x = w - WIDGET(com->button)->w - 1;
+	WIDGET(com->button)->y = 0;
 }
 

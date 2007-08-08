@@ -76,10 +76,10 @@ void	AG_LabelText(AG_Label *, const char *, ...)
 void	 AG_LabelSetSurface(AG_Label *, SDL_Surface *);
 void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
 void	 AG_LabelJustify(AG_Label *, enum ag_text_justify);
-#define	 AG_LabelSetPaddingLeft(lbl,v)   AG_LabelSetPadding(lbl,(v),-1,-1,-1)
-#define	 AG_LabelSetPaddingRight(lbl,v)  AG_LabelSetPadding(lbl,-1,(v),-1,-1)
-#define	 AG_LabelSetPaddingTop(lbl,v)    AG_LabelSetPadding(lbl,-1,-1,(v),-1)
-#define	 AG_LabelSetPaddingBottom(lbl,v) AG_LabelSetPadding(lbl,-1,-1,-1,(v))
+#define	 AG_LabelSetPaddingLeft(lbl,v)   AG_LabelSetPadding((lbl),(v),-1,-1,-1)
+#define	 AG_LabelSetPaddingRight(lbl,v)  AG_LabelSetPadding((lbl),-1,(v),-1,-1)
+#define	 AG_LabelSetPaddingTop(lbl,v)    AG_LabelSetPadding((lbl),-1,-1,(v),-1)
+#define	 AG_LabelSetPaddingBottom(lbl,v) AG_LabelSetPadding((lbl),-1,-1,-1,(v))
 void	 AG_LabelPrescale(AG_Label *, Uint, const char *);
 
 void	 AG_LabelFlagNew(AG_Label *, Uint, const char *,
