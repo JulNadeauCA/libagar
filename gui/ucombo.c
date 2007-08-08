@@ -69,8 +69,8 @@ ucombo_collapse(AG_UCombo *com)
 	if (com->panel == NULL)
 		return;
 
-	com->saved_w = AGWIDGET(com->panel)->w;
-	com->saved_h = AGWIDGET(com->panel)->h;
+	com->saved_w = WIDGET(com->panel)->w;
+	com->saved_h = WIDGET(com->panel)->h;
 	AG_WindowHide(com->panel);
 	AG_ObjectDetach(com->list);
 	AG_ViewDetach(com->panel);
@@ -94,14 +94,14 @@ ucombo_expand(AG_Event *event)
 		                          AG_WINDOW_NOBORDERS);
 		AG_WindowSetPadding(com->panel, 0, 0, 0);
 
-		pan = AGWIDGET(com->panel);
+		pan = WIDGET(com->panel);
 
 		AG_ObjectAttach(com->panel, com->list);
 	
-		pan->w = com->saved_w > 0 ? com->saved_w : AGWIDGET(com)->w*4;
-		pan->h = com->saved_h > 0 ? com->saved_h : AGWIDGET(com)->h*5;
-		pan->x = AGWIDGET(com)->cx;
-		pan->y = AGWIDGET(com)->cy;
+		pan->w = com->saved_w > 0 ? com->saved_w : WIDGET(com)->w*4;
+		pan->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
+		pan->x = WIDGET(com)->cx;
+		pan->y = WIDGET(com)->cy;
 
 		/* XXX redundant check */
 		if (pan->x+pan->w > agView->w)
@@ -110,8 +110,8 @@ ucombo_expand(AG_Event *event)
 			pan->h = agView->h - pan->y;
 		
 		AG_TlistPrescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
-		AGWIDGET_SCALE(com->list, -1, -1);
-		AGWIDGET_SCALE(pan, -1, -1);
+		WIDGET_SCALE(com->list, -1, -1);
+		WIDGET_SCALE(pan, -1, -1);
 		AG_WINDOW_UPDATE(pan);
 		AG_WindowShow(com->panel);
 	} else {
@@ -180,14 +180,14 @@ AG_UComboScale(void *p, int w, int h)
 	AG_UCombo *com = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET_SCALE(com->button, -1, -1);
-		AGWIDGET(com)->w = AGWIDGET(com->button)->w;
-		AGWIDGET(com)->h = AGWIDGET(com->button)->h;
+		WIDGET_SCALE(com->button, -1, -1);
+		WIDGET(com)->w = WIDGET(com->button)->w;
+		WIDGET(com)->h = WIDGET(com->button)->h;
 		return;
 	}
 	
 	AG_WidgetScale(com->button, w, h);
-	AGWIDGET(com->button)->x = 0;
-	AGWIDGET(com->button)->y = 0;
+	WIDGET(com->button)->x = 0;
+	WIDGET(com->button)->y = 0;
 }
 

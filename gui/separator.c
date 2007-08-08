@@ -73,8 +73,8 @@ AG_SeparatorScale(void *p, int w, int h)
 	AG_Separator *sep = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(sep)->w = sep->padding*2 + 2;
-		AGWIDGET(sep)->h = sep->padding*2 + 2;
+		WIDGET(sep)->w = sep->padding*2 + 2;
+		WIDGET(sep)->h = sep->padding*2 + 2;
 	}
 }
 
@@ -85,15 +85,15 @@ AG_SeparatorDraw(void *p)
 
 	switch (sep->type) {
 	case AG_SEPARATOR_HORIZ:
-		agPrim.hline(sep, 0, AGWIDGET(sep)->w, sep->padding,
+		agPrim.hline(sep, 0, WIDGET(sep)->w, sep->padding,
 		    AG_COLOR(SEPARATOR_LINE1_COLOR));
-		agPrim.hline(sep, 0, AGWIDGET(sep)->w, sep->padding+1,
+		agPrim.hline(sep, 0, WIDGET(sep)->w, sep->padding+1,
 		    AG_COLOR(SEPARATOR_LINE2_COLOR));
 		break;
 	case AG_SEPARATOR_VERT:
-		agPrim.vline(sep, sep->padding, 0, AGWIDGET(sep)->h,
+		agPrim.vline(sep, sep->padding, 0, WIDGET(sep)->h,
 		    AG_COLOR(SEPARATOR_LINE1_COLOR));
-		agPrim.vline(sep, sep->padding+1, 0, AGWIDGET(sep)->h,
+		agPrim.vline(sep, sep->padding+1, 0, WIDGET(sep)->h,
 		    AG_COLOR(SEPARATOR_LINE2_COLOR));
 		break;
 	}

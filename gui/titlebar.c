@@ -95,7 +95,7 @@ void
 AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 {
 	AG_BoxInit(&tbar->hb, AG_BOX_HORIZ, AG_BOX_HFILL);
-	AGWIDGET(tbar)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
+	WIDGET(tbar)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
 	AG_ObjectSetOps(tbar, &agTitlebarOps);
 
 	AG_BoxSetPadding(&tbar->hb, 3);
@@ -154,14 +154,12 @@ AG_TitlebarDraw(void *p)
 {
 	AG_Titlebar *tbar = p;
 
-	agPrim.box(tbar,
-	    0,
-	    0,
-	    AGWIDGET(tbar)->w,
-	    AGWIDGET(tbar)->h,
+	agPrim.box(tbar, 0, 0,
+	    WIDGET(tbar)->w,
+	    WIDGET(tbar)->h,
 	    tbar->pressed ? -1 : 1,
 	    AG_WINDOW_FOCUSED(tbar->win) ? AG_COLOR(TITLEBAR_FOCUSED_COLOR) :
-	                                AG_COLOR(TITLEBAR_UNFOCUSED_COLOR));
+	                                   AG_COLOR(TITLEBAR_UNFOCUSED_COLOR));
 }
 
 static void

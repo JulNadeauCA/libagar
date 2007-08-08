@@ -201,11 +201,11 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 #if 0
 		printf("font size: %d == %d\n", font->size, size);
 		printf("font flags: 0x%x == 0x%x\n", font->flags, flags);
-		printf("font name: `%s' == `%s'\n", AGOBJECT(font)->name, name);
+		printf("font name: `%s' == `%s'\n", OBJECT(font)->name, name);
 #endif
 		if (font->size == size &&
 		    font->flags == flags &&
-		    strcmp(AGOBJECT(font)->name, name_obj) == 0)
+		    strcmp(OBJECT(font)->name, name_obj) == 0)
 			break;
 	}
 	if (font != NULL)
@@ -476,7 +476,7 @@ AG_TextRenderGlyph(Uint32 ch)
 	SLIST_FOREACH(gl, &agGlyphCache[h].glyphs, glyphs) {
 		if (state->font->size == gl->fontsize &&
 		    state->color == gl->color &&
-		    (strcmp(AGOBJECT(state->font)->name, gl->fontname) == 0) &&
+		    (strcmp(OBJECT(state->font)->name, gl->fontname) == 0) &&
 		    ch == gl->ch)
 			break;
 	}
@@ -484,7 +484,7 @@ AG_TextRenderGlyph(Uint32 ch)
 		Uint32 ucs[2];
 
 		gl = Malloc(sizeof(AG_Glyph), M_TEXT);
-		strlcpy(gl->fontname, AGOBJECT(state->font)->name,
+		strlcpy(gl->fontname, OBJECT(state->font)->name,
 		    sizeof(gl->fontname));
 		gl->fontsize = state->font->size;
 		gl->color = state->color;
@@ -1283,7 +1283,7 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	    AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
@@ -1311,8 +1311,9 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	    AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
+			   AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[title]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
@@ -1357,8 +1358,9 @@ AG_TextWarning(const char *key, const char *format, ...)
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
-	    AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
+			   AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[AG_MSG_WARNING]));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 

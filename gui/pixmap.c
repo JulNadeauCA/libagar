@@ -211,20 +211,20 @@ AG_PixmapScale(void *p, int rw, int rh)
 	
 	if (rw == -1 && rh == -1) {
 		if ((px->flags & AG_PIXMAP_FORCE_SIZE) == 0) {
-			AGWIDGET(px)->w = AGWIDGET_SURFACE(px,px->n)->w;
-			AGWIDGET(px)->h = AGWIDGET_SURFACE(px,px->n)->h;
+			WIDGET(px)->w = WSURFACE(px,px->n)->w;
+			WIDGET(px)->h = WSURFACE(px,px->n)->h;
 		} else {
-			AGWIDGET(px)->w = px->pre_w;
-			AGWIDGET(px)->h = px->pre_h;
+			WIDGET(px)->w = px->pre_w;
+			WIDGET(px)->h = px->pre_h;
 		}
 		return;
 	}
 	if ((px->flags & AG_PIXMAP_FORCE_SIZE) == 0) {
-		AGWIDGET(px)->w = AGWIDGET_SURFACE(px,px->n)->w;
-		AGWIDGET(px)->h = AGWIDGET_SURFACE(px,px->n)->h;
+		WIDGET(px)->w = WSURFACE(px,px->n)->w;
+		WIDGET(px)->h = WSURFACE(px,px->n)->h;
 	} else {
-		AGWIDGET(px)->w = px->pre_w;
-		AGWIDGET(px)->h = px->pre_h;
+		WIDGET(px)->w = px->pre_w;
+		WIDGET(px)->h = px->pre_h;
 	}
 }
 
@@ -241,7 +241,7 @@ void
 AG_PixmapSetSurface(AG_Pixmap *px, int name)
 {
 #ifdef DEBUG
-	if (name >= AGWIDGET(px)->nsurfaces)
+	if (name >= WIDGET(px)->nsurfaces)
 		fatal("no such surface: %d", name);
 #endif
 	px->n = name;

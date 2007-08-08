@@ -101,15 +101,15 @@ AG_ConsoleScale(void *p, int w, int h)
 	AG_Console *cons = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(cons)->w = 1;
-		AGWIDGET(cons)->h = 1;
+		WIDGET(cons)->w = 1;
+		WIDGET(cons)->h = 1;
 		return;
 	}
-	AGWIDGET(cons->vBar)->x = AGWIDGET(cons)->w - 20;
-	AGWIDGET(cons->vBar)->y = 0;
-	AGWIDGET(cons->vBar)->w = 20;
-	AGWIDGET(cons->vBar)->h = AGWIDGET(cons)->h;
-	cons->vBar->visible = AGWIDGET(cons)->h /
+	WIDGET(cons->vBar)->x = WIDGET(cons)->w - 20;
+	WIDGET(cons->vBar)->y = 0;
+	WIDGET(cons->vBar)->w = 20;
+	WIDGET(cons->vBar)->h = WIDGET(cons)->h;
+	cons->vBar->visible = WIDGET(cons)->h /
 	    (agTextFontHeight + cons->lineskip);
 }
 
@@ -121,9 +121,9 @@ AG_ConsoleDraw(void *p)
 	Uint r;
 	int y;
 	
-	if (AGWIDGET(cons)->w < 8 || AGWIDGET(cons)->h < 8) { return; }
+	if (WIDGET(cons)->w < 8 || WIDGET(cons)->h < 8) { return; }
 
-	agPrim.box(cons, 0, 0, AGWIDGET(cons)->w, AGWIDGET(cons)->h, -1,
+	agPrim.box(cons, 0, 0, WIDGET(cons)->w, WIDGET(cons)->h, -1,
 	    cons->cBg);
 
 	AG_MutexLock(&cons->lock);
@@ -134,7 +134,7 @@ AG_ConsoleDraw(void *p)
 		goto out;
 	}
 	for (r = cons->rOffs, y = cons->padding;
-	     r < cons->nLines && y < AGWIDGET(cons)->h;
+	     r < cons->nLines && y < WIDGET(cons)->h;
 	     r++) {
 		AG_ConsoleLine *ln = &cons->lines[r];
 
@@ -145,7 +145,7 @@ AG_ConsoleDraw(void *p)
 			ln->surface = AG_WidgetMapSurface(cons, su);
 		}
 		AG_WidgetBlitSurface(cons, ln->surface, cons->padding, y);
-		y += AGWIDGET_SURFACE(cons,ln->surface)->h + cons->lineskip;
+		y += WSURFACE(cons,ln->surface)->h + cons->lineskip;
 	}
 out:
 	AG_MutexUnlock(&cons->lock);

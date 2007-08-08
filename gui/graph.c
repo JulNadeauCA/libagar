@@ -112,7 +112,7 @@ MouseOverEdge(AG_GraphEdge *edge, int x, int y)
 		return (0);
 	}
 	GetEdgeLabelCoords(edge, &lx, &ly);
-	lbl = AGWIDGET_SURFACE(edge->graph,edge->labelSu);
+	lbl = WSURFACE(edge->graph,edge->labelSu);
 	return (abs(x - lx + edge->graph->xOffs) <= lbl->w/2 &&
 	        abs(y - ly + edge->graph->yOffs) <= lbl->h/2);
 }
@@ -399,12 +399,12 @@ AG_GraphInit(AG_Graph *gf, Uint flags)
 	AG_WidgetBind(gf->hbar, "value", AG_WIDGET_INT, &gf->xOffs);
 	AG_WidgetBind(gf->hbar, "min", AG_WIDGET_INT, &gf->xMin);
 	AG_WidgetBind(gf->hbar, "max", AG_WIDGET_INT, &gf->xMax);
-	AG_WidgetBind(gf->hbar, "visible", AG_WIDGET_INT, &AGWIDGET(gf)->w);
+	AG_WidgetBind(gf->hbar, "visible", AG_WIDGET_INT, &WIDGET(gf)->w);
 
 	AG_WidgetBind(gf->vbar, "value", AG_WIDGET_INT, &gf->yOffs);
 	AG_WidgetBind(gf->vbar, "min", AG_WIDGET_INT, &gf->yMin);
 	AG_WidgetBind(gf->vbar, "max", AG_WIDGET_INT, &gf->yMax);
-	AG_WidgetBind(gf->vbar, "visible", AG_WIDGET_INT, &AGWIDGET(gf)->h);
+	AG_WidgetBind(gf->vbar, "visible", AG_WIDGET_INT, &WIDGET(gf)->h);
 #endif
 
 	AG_SetEvent(gf, "window-keydown", keydown, NULL);
@@ -464,22 +464,22 @@ AG_GraphScale(void *p, int w, int h)
 	AG_Graph *gf = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(gf)->w = gf->wPre;
-		AGWIDGET(gf)->h = gf->hPre;
+		WIDGET(gf)->w = gf->wPre;
+		WIDGET(gf)->h = gf->hPre;
 		return;
 	}
 #if 0
-	AGWIDGET(gf->hbar)->x = 0;
-	AGWIDGET(gf->hbar)->y = AGWIDGET(gf)->h - gf->hbar->bw;
-	AGWIDGET(gf->hbar)->w = AGWIDGET(gf)->w;
-	AGWIDGET(gf->hbar)->h = gf->hbar->bw;
-	AGWIDGET(gf->vbar)->x = AGWIDGET(gf)->w - gf->vbar->bw;
-	AGWIDGET(gf->vbar)->y = gf->vbar->bw;
-	AGWIDGET(gf->vbar)->w = gf->vbar->bw;
-	AGWIDGET(gf->vbar)->h = AGWIDGET(gf)->h - gf->vbar->bw;
+	WIDGET(gf->hbar)->x = 0;
+	WIDGET(gf->hbar)->y = WIDGET(gf)->h - gf->hbar->bw;
+	WIDGET(gf->hbar)->w = WIDGET(gf)->w;
+	WIDGET(gf->hbar)->h = gf->hbar->bw;
+	WIDGET(gf->vbar)->x = WIDGET(gf)->w - gf->vbar->bw;
+	WIDGET(gf->vbar)->y = gf->vbar->bw;
+	WIDGET(gf->vbar)->w = gf->vbar->bw;
+	WIDGET(gf->vbar)->h = WIDGET(gf)->h - gf->vbar->bw;
 #endif
-	gf->xOffs = -AGWIDGET(gf)->w/2;
-	gf->yOffs = -AGWIDGET(gf)->h/2;
+	gf->xOffs = -WIDGET(gf)->w/2;
+	gf->yOffs = -WIDGET(gf)->h/2;
 }
 
 void
@@ -488,8 +488,8 @@ AG_GraphDraw(void *p)
 	AG_Graph *gf = p;
 	AG_GraphVertex *vtx;
 	AG_GraphEdge *edge;
-	int x0 = AGWIDGET(gf)->w/2;
-	int y0 = AGWIDGET(gf)->h/2;
+	int x0 = WIDGET(gf)->w/2;
+	int y0 = WIDGET(gf)->h/2;
 	int x, y;
 	Uint i;
 	Uint8 bg[4];
@@ -514,7 +514,7 @@ AG_GraphDraw(void *p)
 		    edge->edgeColor);
 
 		if (edge->labelSu >= 0) {
-			SDL_Surface *su = AGWIDGET_SURFACE(gf,edge->labelSu);
+			SDL_Surface *su = WSURFACE(gf,edge->labelSu);
 			int lblX, lblY;
 
 			GetEdgeLabelCoords(edge, &lblX, &lblY);
@@ -545,7 +545,7 @@ AG_GraphDraw(void *p)
 
 	/* Draw the vertices. */
 	TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
-		SDL_Surface *lbl = AGWIDGET_SURFACE(gf, vtx->labelSu);
+		SDL_Surface *lbl = WSURFACE(gf,vtx->labelSu);
 
 		if (vtx->flags & AG_GRAPH_HIDDEN) {
 			continue;

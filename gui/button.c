@@ -174,8 +174,8 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	AG_SetEvent(bu, "window-keyup", keyup, NULL);
 	AG_SetEvent(bu, "window-keydown", keydown, NULL);
 
-	if (flags & AG_BUTTON_HFILL) { AGWIDGET(bu)->flags |= AG_WIDGET_HFILL; }
-	if (flags & AG_BUTTON_VFILL) { AGWIDGET(bu)->flags |= AG_WIDGET_VFILL; }
+	if (flags & AG_BUTTON_HFILL) { WIDGET(bu)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_BUTTON_VFILL) { WIDGET(bu)->flags |= AG_WIDGET_VFILL; }
 }
 
 void
@@ -198,8 +198,8 @@ AG_ButtonScale(void *p, int w, int h)
 
 	if (w == -1 && h == -1) {
 		if (bu->surface != -1) {
-			wLbl = AGWIDGET_SURFACE(bu,bu->surface)->w;
-			hLbl = AGWIDGET_SURFACE(bu,bu->surface)->h;
+			wLbl = WSURFACE(bu,bu->surface)->w;
+			hLbl = WSURFACE(bu,bu->surface)->h;
 		} else {
 			if (bu->text != NULL && bu->text[0] != '\0') {
 				AG_TextSize(bu->text, &wLbl, &hLbl);
@@ -208,8 +208,8 @@ AG_ButtonScale(void *p, int w, int h)
 				hLbl = agTextFontHeight;
 			}
 		}
-		AGWIDGET(bu)->w = wLbl + bu->lPad + bu->rPad;
-		AGWIDGET(bu)->h = hLbl + bu->tPad + bu->bPad;
+		WIDGET(bu)->w = wLbl + bu->lPad + bu->rPad;
+		WIDGET(bu)->h = hLbl + bu->tPad + bu->bPad;
 	}
 }
 
@@ -223,7 +223,7 @@ AG_ButtonDraw(void *p)
 	int pressed;
 	int wLbl;
 	
-	if (AGWIDGET(bu)->w < 8 || AGWIDGET(bu)->h < 8)
+	if (WIDGET(bu)->w < 8 || WIDGET(bu)->h < 8)
 		return;
 
 	binding = AG_WidgetGetBinding(bu, "state", &pState);
@@ -233,13 +233,13 @@ AG_ButtonDraw(void *p)
 	if (AG_WidgetEnabled(bu)) {
 		agPrim.box(bu,
 		    0, 0,
-		    AGWIDGET(bu)->w, AGWIDGET(bu)->h,
+		    WIDGET(bu)->w, WIDGET(bu)->h,
 		    pressed ? -1 : 1,
 		    AG_COLOR(BUTTON_COLOR));
 	} else {
 		agPrim.box_dithered(bu,
 		    0, 0,
-		    AGWIDGET(bu)->w, AGWIDGET(bu)->h,
+		    WIDGET(bu)->w, WIDGET(bu)->h,
 		    pressed ? -1 : 1,
 		    AG_COLOR(BUTTON_COLOR),
 		    AG_COLOR(DISABLED_COLOR));
@@ -258,20 +258,20 @@ AG_ButtonDraw(void *p)
 			    AG_TextRender(bu->text));
 		}
 	}
-	wLbl = AGWIDGET_SURFACE(bu,bu->surface)->w;
+	wLbl = WSURFACE(bu,bu->surface)->w;
 
 	switch (bu->justify) {
 	case AG_TEXT_LEFT:
 		x = bu->lPad;
 		break;
 	case AG_TEXT_CENTER:
-		x = AGWIDGET(bu)->w/2 - wLbl/2;
+		x = WIDGET(bu)->w/2 - wLbl/2;
 		break;
 	case AG_TEXT_RIGHT:
-		x = AGWIDGET(bu)->w - wLbl - bu->rPad;
+		x = WIDGET(bu)->w - wLbl - bu->rPad;
 		break;
 	}
-	y = ((AGWIDGET(bu)->h - AGWIDGET_SURFACE(bu,bu->surface)->h)/2) - 1;
+	y = ((WIDGET(bu)->h - WSURFACE(bu,bu->surface)->h)/2) - 1;
 
 	if (pressed) {
 		x++;
@@ -446,7 +446,7 @@ mousebuttonup(AG_Event *event)
 	
 	if (AG_WidgetDisabled(bu) ||
 	    x < 0 || y < 0 ||
-	    x > AGWIDGET(bu)->w || y > AGWIDGET(bu)->h) {
+	    x > WIDGET(bu)->w || y > WIDGET(bu)->h) {
 		return;
 	}
 	
@@ -523,11 +523,11 @@ void
 AG_ButtonSetFocusable(AG_Button *bu, int focusable)
 {
 	if (focusable) {
-		AGWIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE;
-		AGWIDGET(bu)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
+		WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE;
+		WIDGET(bu)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
 	} else {
-		AGWIDGET(bu)->flags &= ~(AG_WIDGET_FOCUSABLE);
-		AGWIDGET(bu)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
+		WIDGET(bu)->flags &= ~(AG_WIDGET_FOCUSABLE);
+		WIDGET(bu)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
 	}
 }
 

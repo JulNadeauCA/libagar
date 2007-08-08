@@ -269,18 +269,18 @@ AG_TlistScale(void *p, int w, int h)
 	AG_Tlist *tl = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(tl)->w = tl->prew;
-		AGWIDGET(tl)->h = tl->preh;
+		WIDGET(tl)->w = tl->prew;
+		WIDGET(tl)->h = tl->preh;
 	}
 
-	AG_WidgetScale(tl->sbar, tl->sbar->bw, AGWIDGET(tl)->h);
-	if (AGWIDGET(tl)->w < tl->sbar->bw ||
-	    AGWIDGET(tl)->h < tl->sbar->bw*2) {
-		AGWIDGET(tl->sbar)->flags |= AG_WIDGET_HIDE;
+	AG_WidgetScale(tl->sbar, tl->sbar->bw, WIDGET(tl)->h);
+	if (WIDGET(tl)->w < tl->sbar->bw ||
+	    WIDGET(tl)->h < tl->sbar->bw*2) {
+		WIDGET(tl->sbar)->flags |= AG_WIDGET_HIDE;
 	} else {
-		AGWIDGET(tl->sbar)->flags &= ~(AG_WIDGET_HIDE);
-		AGWIDGET(tl->sbar)->x = AGWIDGET(tl)->w - tl->sbar->bw;
-		AGWIDGET(tl->sbar)->y = 0;
+		WIDGET(tl->sbar)->flags &= ~(AG_WIDGET_HIDE);
+		WIDGET(tl->sbar)->x = WIDGET(tl)->w - tl->sbar->bw;
+		WIDGET(tl->sbar)->y = 0;
 	}
 	UpdateListScrollbar(tl);
 }
@@ -293,11 +293,11 @@ AG_TlistDraw(void *p)
 	int y = 0, i = 0;
 	int offset;
 
-	agPrim.box(tl, 0, 0, AGWIDGET(tl)->w, AGWIDGET(tl)->h, -1,
+	agPrim.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
 	    AG_COLOR(TLIST_BG_COLOR));
 	
-	if (AGWIDGET(tl)->w <= 2 ||
-	    AGWIDGET(tl)->h <= 2)
+	if (WIDGET(tl)->w <= 2 ||
+	    WIDGET(tl)->h <= 2)
 		return;
 
 	AG_MutexLock(&tl->lock);
@@ -311,7 +311,7 @@ AG_TlistDraw(void *p)
 
 		if (i++ < offset)
 			continue;
-		if (y > AGWIDGET(tl)->h - tl->item_h)
+		if (y > WIDGET(tl)->h - tl->item_h)
 			break;
 
 		if (it->selected) {
@@ -319,8 +319,8 @@ AG_TlistDraw(void *p)
 
 			agPrim.rect_filled(tl,
 			    x1, y,
-			    AGWIDGET(tl)->w-x1-1,
-			    tl->item_h-1,
+			    WIDGET(tl)->w-x1,
+			    tl->item_h,
 			    AG_COLOR(TLIST_SEL_COLOR));
 		}
 		
@@ -364,10 +364,10 @@ AG_TlistDraw(void *p)
 		}
 		AG_WidgetBlitSurface(tl, it->label,
 		    x + tl->item_h + 5,
-		    y + tl->item_h/2 - AGWIDGET_SURFACE(tl,it->label)->h/2 + 1);
+		    y + tl->item_h/2 - WSURFACE(tl,it->label)->h/2 + 2);
 
 		y += tl->item_h;
-		agPrim.hline(tl, 0, AGWIDGET(tl)->w, y,
+		agPrim.hline(tl, 0, WIDGET(tl)->w, y,
 		    AG_COLOR(TLIST_LINE_COLOR));
 	}
 	AG_MutexUnlock(&tl->lock);
@@ -381,7 +381,7 @@ UpdateListScrollbar(AG_Tlist *tl)
 	int *max, *offset;
 	int noffset;
 	
-	tl->nvisitems = AGWIDGET(tl)->h / tl->item_h;
+	tl->nvisitems = WIDGET(tl)->h / tl->item_h;
 
 	maxb = AG_WidgetGetBinding(tl->sbar, "max", &max);
 	offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
@@ -403,7 +403,7 @@ UpdateListScrollbar(AG_Tlist *tl)
 	    tl->nvisitems < tl->nitems) {
 		AG_ScrollbarSetBarSize(tl->sbar,
 		    tl->nvisitems *
-		    (AGWIDGET(tl->sbar)->h - tl->sbar->bw*2)/tl->nitems);
+		    (WIDGET(tl->sbar)->h - tl->sbar->bw*2)/tl->nitems);
 	} else {
 		AG_ScrollbarSetBarSize(tl->sbar, -1);		/* Full range */
 	}
@@ -1067,10 +1067,13 @@ AG_TlistSelectedItem(AG_Tlist *tl)
 	return (NULL);
 }
 
+/*
+ * Return the user pointer of the first selected item.
+ * The tlist must be locked.
+ */
 void *
 AG_TlistSelectedItemPtr(AG_Tlist *tl)
 {
-#if 1
 	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -1078,9 +1081,6 @@ AG_TlistSelectedItemPtr(AG_Tlist *tl)
 			return (it->p1);
 	}
 	return (NULL);
-#else
-	return (tl->selected);
-#endif
 }
 
 /*
@@ -1213,11 +1213,9 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 	tp = Malloc(sizeof(AG_TlistPopup), M_WIDGET);
 	tp->iclass = iclass;
 	tp->panel = NULL;
-
 	tp->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
 	AG_MenuInit(tp->menu, 0);
-
-	tp->item = AG_MenuAddItem(tp->menu, iclass);
+	tp->item = tp->menu->root;		/* XXX redundant */
 
 	TAILQ_INSERT_TAIL(&tl->popups, tp, popups);
 	return (tp->item);
@@ -1231,7 +1229,7 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 
 #if 0
 	if (AG_WidgetParentWindow(tl) == NULL)
-		fatal("%s is unattached", AGOBJECT(tl)->name);
+		fatal("%s is unattached", OBJECT(tl)->name);
 #endif
 	AG_MouseGetState(&x, &y);
 
@@ -1240,11 +1238,11 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 		tp->panel = NULL;
 	}
 #if 0
-	if (m->sel_item != NULL) {
-		AG_MenuCollapse(m, m->sel_item);
+	if (m->itemSel != NULL) {
+		AG_MenuCollapse(m, m->itemSel);
 	}
 #endif
-	m->sel_item = tp->item;
+	m->itemSel = tp->item;
 	tp->panel = AG_MenuExpand(m, tp->item, x+4, y+4);
 }
 

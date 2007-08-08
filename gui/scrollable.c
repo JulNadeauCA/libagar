@@ -61,17 +61,17 @@ const AG_WidgetOps agScrollableOps = {
 void
 AG_ScrollableDrawBegin(AG_Scrollable *sa)
 {
-	sa->save.x = AGWIDGET(sa)->x;
-	sa->save.y = AGWIDGET(sa)->y;
-	sa->save.cx = AGWIDGET(sa)->cx;
-	sa->save.cy = AGWIDGET(sa)->cy;
+	sa->save.x = WIDGET(sa)->x;
+	sa->save.y = WIDGET(sa)->y;
+	sa->save.cx = WIDGET(sa)->cx;
+	sa->save.cy = WIDGET(sa)->cy;
 
-	AGWIDGET(sa)->x = sa->xOffs;
-	AGWIDGET(sa)->y = sa->yOffs;
-	AGWIDGET(sa)->cx = AGWIDGET(sa)->cx + sa->xOffs;
-	AGWIDGET(sa)->cy = AGWIDGET(sa)->cy + sa->xOffs;
+	WIDGET(sa)->x = sa->xOffs;
+	WIDGET(sa)->y = sa->yOffs;
+	WIDGET(sa)->cx = WIDGET(sa)->cx + sa->xOffs;
+	WIDGET(sa)->cy = WIDGET(sa)->cy + sa->xOffs;
 
-	AG_WidgetPushClipRect(sa, 0, 0, AGWIDGET(sa)->w, AGWIDGET(sa)->h);
+	AG_WidgetPushClipRect(sa, 0, 0, WIDGET(sa)->w, WIDGET(sa)->h);
 }
 
 void
@@ -79,10 +79,10 @@ AG_ScrollableDrawEnd(AG_Scrollable *sa)
 {
 	AG_WidgetPopClipRect(sa);
 
-	AGWIDGET(sa)->x = sa->save.x;
-	AGWIDGET(sa)->y = sa->save.y;
-	AGWIDGET(sa)->cx = sa->save.cx;
-	AGWIDGET(sa)->cy = sa->save.cy;
+	WIDGET(sa)->x = sa->save.x;
+	WIDGET(sa)->y = sa->save.y;
+	WIDGET(sa)->cx = sa->save.cx;
+	WIDGET(sa)->cy = sa->save.cy;
 }
 
 void
@@ -91,30 +91,30 @@ AG_ScrollableScale(void *p, int w, int h)
 	AG_Scrollable *sa = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(sa)->w = 16;
-		AGWIDGET(sa)->h = 16;
+		WIDGET(sa)->w = 16;
+		WIDGET(sa)->h = 16;
 	}
-	if (AGWIDGET(sa)->w < sa->vbar->bw &&
-	    AGWIDGET(sa)->h < sa->vbar->bw*2) {
-		AGWIDGET(sa->vbar)->flags |= AG_WIDGET_HIDE;
-		AGWIDGET(sa->vbar)->x = AGWIDGET(sa)->w - sa->vbar->bw;
-		AGWIDGET(sa->vbar)->y = 0;
+	if (WIDGET(sa)->w < sa->vbar->bw &&
+	    WIDGET(sa)->h < sa->vbar->bw*2) {
+		WIDGET(sa->vbar)->flags |= AG_WIDGET_HIDE;
+		WIDGET(sa->vbar)->x = WIDGET(sa)->w - sa->vbar->bw;
+		WIDGET(sa->vbar)->y = 0;
 		AG_WidgetScale(sa->vbar,
 		    sa->vbar->bw,
-		    AGWIDGET(sa)->h);
+		    WIDGET(sa)->h);
 	} else {
-		AGWIDGET(sa->vbar)->flags &= ~(AG_WIDGET_HIDE);
+		WIDGET(sa->vbar)->flags &= ~(AG_WIDGET_HIDE);
 	}
-	if (AGWIDGET(sa)->w < sa->hbar->bw &&
-	    AGWIDGET(sa)->h < sa->hbar->bw*2) {
-		AGWIDGET(sa->vbar)->flags |= AG_WIDGET_HIDE;
-		AGWIDGET(sa->hbar)->x = 0;
-		AGWIDGET(sa->hbar)->y = AGWIDGET(sa)->h - sa->hbar->bw;
+	if (WIDGET(sa)->w < sa->hbar->bw &&
+	    WIDGET(sa)->h < sa->hbar->bw*2) {
+		WIDGET(sa->vbar)->flags |= AG_WIDGET_HIDE;
+		WIDGET(sa->hbar)->x = 0;
+		WIDGET(sa->hbar)->y = WIDGET(sa)->h - sa->hbar->bw;
 		AG_WidgetScale(sa->hbar,
-		    AGWIDGET(sa)->w - sa->hbar->bw,
+		    WIDGET(sa)->w - sa->hbar->bw,
 		    sa->vbar->bw);
 	} else {
-		AGWIDGET(sa->vbar)->flags &= ~(AG_WIDGET_HIDE);
+		WIDGET(sa->vbar)->flags &= ~(AG_WIDGET_HIDE);
 	}
 }
 

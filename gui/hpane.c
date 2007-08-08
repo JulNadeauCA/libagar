@@ -117,7 +117,7 @@ mousebuttondown(AG_Event *event)
 	TAILQ_FOREACH(div, &pa->divs, divs) {
 		div->moving = OverDivControl(div, x);
 		if (div->moving)
-			AGWIDGET(pa)->flags |= AG_WIDGET_PRIO_MOTION;
+			WIDGET(pa)->flags |= AG_WIDGET_PRIO_MOTION;
 	}
 }
 
@@ -131,35 +131,35 @@ mousemotion(AG_Event *event)
 	int y = AG_INT(2);
 	int rx;
 
-	if (y < 0 || y > AGWIDGET(pa)->h) {
+	if (y < 0 || y > WIDGET(pa)->h) {
 		return;
 	}
 	rx = AG_INT(3);
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
 		if (div->moving) {
-			AG_Widget *w1 = AGWIDGET(div->box1);
-			AG_Widget *w2 = AGWIDGET(div->box2);
+			AG_Widget *w1 = WIDGET(div->box1);
+			AG_Widget *w2 = WIDGET(div->box2);
 
 			div->x += rx;
 			if (div->x < 8) {
 				div->x = 8;
 				break;
-			} else if (div->x > AGWIDGET(pa)->w-8) {
-				div->x = AGWIDGET(pa)->w-8;
+			} else if (div->x > WIDGET(pa)->w-8) {
+				div->x = WIDGET(pa)->w-8;
 				break;
 			}
 
 			w1->w += rx;
-			AGWIDGET_OPS(w1)->scale(w1, w1->w, w1->h);
+			WIDGET_OPS(w1)->scale(w1, w1->w, w1->h);
 	
 			w2->x += rx;
 			w2->w -= rx;
-			AGWIDGET_OPS(w2)->scale(w2, w2->w, w2->h);
+			WIDGET_OPS(w2)->scale(w2, w2->w, w2->h);
 
 			if ((pwin = AG_WidgetParentWindow(pa)) != NULL) {
-				AG_WidgetUpdateCoords(pwin, AGWIDGET(pwin)->x,
-				    AGWIDGET(pwin)->y);
+				AG_WidgetUpdateCoords(pwin, WIDGET(pwin)->x,
+				    WIDGET(pwin)->y);
 			}
 			if (OverDivControl(div, x)) {
 				AG_SetCursor(AG_HRESIZE_CURSOR);
@@ -171,7 +171,7 @@ mousemotion(AG_Event *event)
 	}
 
 	TAILQ_FOREACH(div, &pa->divs, divs)
-		div->x = AGWIDGET(div->box2)->x - 5;
+		div->x = WIDGET(div->box2)->x - 5;
 }
 
 static void
@@ -182,7 +182,7 @@ mousebuttonup(AG_Event *event)
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
 		if (div->moving) {
-			AGWIDGET(pa)->flags &= ~(AG_WIDGET_PRIO_MOTION);
+			WIDGET(pa)->flags &= ~(AG_WIDGET_PRIO_MOTION);
 			div->moving = 0;
 		}
 	}
@@ -199,8 +199,8 @@ AG_HPaneInit(AG_HPane *pa, Uint flags)
 	AG_BoxInit(&pa->box, AG_BOX_HORIZ, boxflags);
 	AG_BoxSetPadding(&pa->box, 0);
 	AG_BoxSetSpacing(&pa->box, 0);
-	AGWIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
-			       AG_WIDGET_UNFOCUSED_MOTION;
+	WIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
+			     AG_WIDGET_UNFOCUSED_MOTION;
 	AG_ObjectSetOps(pa, &agHPaneOps);
 	TAILQ_INIT(&pa->divs);
 
@@ -216,10 +216,10 @@ AG_HPaneDraw(void *p)
 	AG_Widget *wid;
 	AG_HPaneDiv *div;
 	Uint32 c;
-	int y = AGWIDGET(pa)->h >> 1;
+	int y = WIDGET(pa)->h >> 1;
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
-		agPrim.box(pa, div->x-3, 0, 7, AGWIDGET(pa)->h,
+		agPrim.box(pa, div->x-3, 0, 7, WIDGET(pa)->h,
 		    div->moving ? -1 : 1, AG_COLOR(PANE_COLOR));
 		AG_WidgetPutPixel(pa, div->x, y, AG_COLOR(PANE_CIRCLE_COLOR));
 		AG_WidgetPutPixel(pa, div->x, y-5, AG_COLOR(PANE_CIRCLE_COLOR));
@@ -234,22 +234,22 @@ AG_HPaneScale(void *p, int w, int h)
 	AG_HPaneDiv *div;
 	AG_Widget *wid;
 
-	AGOBJECT_FOREACH_CHILD(wid, pa, ag_widget)
-		AGWIDGET_OPS(wid)->scale(wid, w, h);
+	OBJECT_FOREACH_CHILD(wid, pa, ag_widget)
+		WIDGET_OPS(wid)->scale(wid, w, h);
 
 	AG_BoxScale(pa, w, h);
 
 	TAILQ_FOREACH(div, &pa->divs, divs) {
-		AGWIDGET(div->box1)->w -= 5;
-		AGWIDGET(div->box2)->x += 5;
-		AGWIDGET(div->box2)->w -= 5;
-		AGWIDGET_OPS(div->box1)->scale(div->box1,
-		    AGWIDGET(div->box1)->w,
-		    AGWIDGET(div->box1)->h);
-		AGWIDGET_OPS(div->box2)->scale(div->box2,
-		    AGWIDGET(div->box2)->w,
-		    AGWIDGET(div->box2)->h);
+		WIDGET(div->box1)->w -= 5;
+		WIDGET(div->box2)->x += 5;
+		WIDGET(div->box2)->w -= 5;
+		WIDGET_OPS(div->box1)->scale(div->box1,
+		    WIDGET(div->box1)->w,
+		    WIDGET(div->box1)->h);
+		WIDGET_OPS(div->box2)->scale(div->box2,
+		    WIDGET(div->box2)->w,
+		    WIDGET(div->box2)->h);
 
-		div->x = AGWIDGET(div->box2)->x - 5;
+		div->x = WIDGET(div->box2)->x - 5;
 	}
 }

@@ -229,28 +229,28 @@ AG_SpinbuttonScale(void *p, int w, int h)
 	int bh = h/2;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET_SCALE(sbu->input, -1, -1);
-		AGWIDGET(sbu)->w = AGWIDGET(sbu->input)->w;
-		AGWIDGET(sbu)->h = AGWIDGET(sbu->input)->h;
-		AGWIDGET_SCALE(sbu->incbu, -1, -1);
-		AGWIDGET_SCALE(sbu->decbu, -1, -1);
-		AGWIDGET(sbu)->w += max(AGWIDGET(sbu->incbu)->w,
-		                      AGWIDGET(sbu->decbu)->w);
+		WIDGET_SCALE(sbu->input, -1, -1);
+		WIDGET(sbu)->w = WIDGET(sbu->input)->w;
+		WIDGET(sbu)->h = WIDGET(sbu->input)->h;
+		WIDGET_SCALE(sbu->incbu, -1, -1);
+		WIDGET_SCALE(sbu->decbu, -1, -1);
+		WIDGET(sbu)->w += max(WIDGET(sbu->incbu)->w,
+		                      WIDGET(sbu->decbu)->w);
 		return;
 	}
 
-	AGWIDGET(sbu->input)->x = x;
-	AGWIDGET(sbu->input)->y = y;
+	WIDGET(sbu->input)->x = x;
+	WIDGET(sbu->input)->y = y;
 	AG_WidgetScale(sbu->input, w - bw, h);
-	x += AGWIDGET(sbu->input)->w;
+	x += WIDGET(sbu->input)->w;
 
-	AGWIDGET(sbu->incbu)->x = x;
-	AGWIDGET(sbu->incbu)->y = y;
+	WIDGET(sbu->incbu)->x = x;
+	WIDGET(sbu->incbu)->y = y;
 	AG_WidgetScale(sbu->incbu, bw, bh);
 	y += h/2;
 
-	AGWIDGET(sbu->decbu)->x = x;
-	AGWIDGET(sbu->decbu)->y = y;
+	WIDGET(sbu->decbu)->x = x;
+	WIDGET(sbu->decbu)->y = y;
 	AG_WidgetScale(sbu->decbu, bw, bh);
 }
 

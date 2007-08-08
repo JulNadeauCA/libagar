@@ -139,8 +139,8 @@ mousemotion(AG_Event *event)
 	fpl->origin_y += yrel;
 	if (fpl->origin_y < 0)
 		fpl->origin_y = 0;
-	if (fpl->origin_y > AGWIDGET(fpl)->h)
-		fpl->origin_y = AGWIDGET(fpl)->h;
+	if (fpl->origin_y > WIDGET(fpl)->h)
+		fpl->origin_y = WIDGET(fpl)->h;
 }
 
 static void
@@ -170,8 +170,8 @@ AG_FixedPlotterScale(void *p, int w, int h)
 	AG_FixedPlotter *fpl = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(fpl)->w = 100;
-		AGWIDGET(fpl)->h = 80;
+		WIDGET(fpl)->w = 100;
+		WIDGET(fpl)->h = 80;
 	}
 }
 
@@ -184,18 +184,18 @@ AG_FixedPlotterDraw(void *p)
 	Uint32 i, origin_y;
 	AG_FixedPlotterValue oval;
 
-	origin_y = AGWIDGET(fpl)->h * fpl->origin_y / 100;
+	origin_y = WIDGET(fpl)->h * fpl->origin_y / 100;
 
 	agPrim.box(fpl,
 	    0, 0,
-	    AGWIDGET(fpl)->w, AGWIDGET(fpl)->h,
+	    WIDGET(fpl)->w, WIDGET(fpl)->h,
 	    0,
 	    AG_COLOR(GRAPH_BG_COLOR));
 
 	if (fpl->flags & AG_FIXED_PLOTTER_XAXIS) {
 		agPrim.hline(fpl,
 		    0,
-		    AGWIDGET(fpl)->w-1,
+		    WIDGET(fpl)->w-1,
 		    origin_y + 1,
 		    AG_COLOR(GRAPH_XAXIS_COLOR));
 	}
@@ -205,27 +205,23 @@ AG_FixedPlotterDraw(void *p)
 			continue;
 
 		for (x = 2, ox = 0, i = fpl->xoffs;
-		     ++i < gi->nvals && x < AGWIDGET(fpl)->w;
+		     ++i < gi->nvals && x < WIDGET(fpl)->w;
 		     ox = x, x += 2) {
 
-			oval = gi->vals[i] * AGWIDGET(fpl)->h / fpl->yrange;
+			oval = gi->vals[i] * WIDGET(fpl)->h / fpl->yrange;
 			y = origin_y - oval;
 			if (i > 1) {
-				oval = gi->vals[i-1] * AGWIDGET(fpl)->h /
+				oval = gi->vals[i-1] * WIDGET(fpl)->h /
 				       fpl->yrange;
 				oy = origin_y - oval;
 			} else {
 				oy = origin_y;
 			}
 
-			if (y < 0)
-				y = 0;
-			if (oy < 0)
-				oy = 0;
-			if (y > AGWIDGET(fpl)->h)
-				y = AGWIDGET(fpl)->h;
-			if (oy > AGWIDGET(fpl)->h)
-				oy = AGWIDGET(fpl)->h;
+			if (y < 0) { y = 0; }
+			if (oy < 0) { oy = 0; }
+			if (y > WIDGET(fpl)->h) { y = WIDGET(fpl)->h; }
+			if (oy > WIDGET(fpl)->h) { oy = WIDGET(fpl)->h; }
 
 			switch (fpl->type) {
 			case AG_FIXED_PLOTTER_POINTS:

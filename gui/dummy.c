@@ -61,11 +61,11 @@ void
 AG_DummyScale(void *p, int w, int h)
 {
 	AG_Dummy *dum = p;
-	SDL_Surface *label = AGWIDGET_SURFACE(dum,0);
+	SDL_Surface *label = WIDGET_SURFACE(dum,0);
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(dum)->w = 16;
-		AGWIDGET(dum)->h = 16;
+		WIDGET(dum)->w = 16;
+		WIDGET(dum)->h = 16;
 	}
 }
 
@@ -79,13 +79,14 @@ AG_DummyDraw(void *p)
 {
 	AG_Dummy *dum = p;
 	
-	if (AGWIDGET(dum)->w < 1 || AGWIDGET(dum)->h < 1)
+	if (WIDGET(dum)->w < 1 || WIDGET(dum)->h < 1)
 		return;
 
 	/* Draw a box spanning the widget area. */
 	agPrim.box(dum,
 	    0, 0,
-	    AGWIDGET(dum)->w, AGWIDGET(dum)->h,
+	    WIDGET(dum)->w,
+	    WIDGET(dum)->h,
 	    1,
 	    AG_COLOR(BUTTON_COLOR));
 

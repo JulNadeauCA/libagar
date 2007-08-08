@@ -64,17 +64,17 @@ AG_FixedInit(AG_Fixed *fx, Uint flags)
 	AG_WidgetInit(fx, &agFixedOps, 0);
 
 	fx->flags = flags;
-	if (flags & AG_FIXED_HFILL) { AGWIDGET(fx)->flags |= AG_WIDGET_HFILL; }
-	if (flags & AG_FIXED_VFILL) { AGWIDGET(fx)->flags |= AG_WIDGET_VFILL; }
+	if (flags & AG_FIXED_HFILL) { WIDGET(fx)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_FIXED_VFILL) { WIDGET(fx)->flags |= AG_WIDGET_VFILL; }
 
 	if (flags & AG_FIXED_FILLBG)
-		AGWIDGET_OPS(fx)->draw = AG_FixedDrawBg;
+		WIDGET_OPS(fx)->draw = AG_FixedDrawBg;
 	if (flags & AG_FIXED_BOX)
-		AGWIDGET_OPS(fx)->draw = AG_FixedDrawBox;
+		WIDGET_OPS(fx)->draw = AG_FixedDrawBox;
 	if (flags & AG_FIXED_INVBOX)
-		AGWIDGET_OPS(fx)->draw = AG_FixedDrawInvBox;
+		WIDGET_OPS(fx)->draw = AG_FixedDrawInvBox;
 	if (flags & AG_FIXED_FRAME)
-		AGWIDGET_OPS(fx)->draw = AG_FixedDrawFrame;
+		WIDGET_OPS(fx)->draw = AG_FixedDrawFrame;
 }
 
 void
@@ -83,12 +83,12 @@ AG_FixedScale(void *p, int w, int h)
 	AG_Fixed *fx = p;
 	AG_Widget *cw;
 
-	AGOBJECT_FOREACH_CHILD(cw, fx, ag_widget) {
+	OBJECT_FOREACH_CHILD(cw, fx, ag_widget) {
 		if (w != -1 && h != -1) {
 			if (cw->flags & AG_WIDGET_HFILL) { cw->w = w; }
 			if (cw->flags & AG_WIDGET_VFILL) { cw->h = h; }
 		}
-		AGWIDGET_OPS(cw)->scale(cw, cw->w, cw->h);
+		WIDGET_OPS(cw)->scale(cw, cw->w, cw->h);
 	}
 }
 
@@ -144,7 +144,7 @@ AG_FixedPut(AG_Fixed *fx, void *child, int x, int y)
 	cw->x = x;
 	cw->y = y;
 
-	AGWIDGET_OPS(cw)->scale(cw, -1, -1);
+	WIDGET_OPS(cw)->scale(cw, -1, -1);
 	AG_FixedUpdate(fx);
 }
 
@@ -166,7 +166,7 @@ AG_FixedSize(AG_Fixed *fx, void *child, int w, int h)
 	cw->w = w;
 	cw->h = h;
 
-	AGWIDGET_OPS(cw)->scale(cw, w, h);
+	WIDGET_OPS(cw)->scale(cw, w, h);
 	AG_FixedUpdate(fx);
 }
 

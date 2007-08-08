@@ -262,7 +262,7 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 	if (size != NULL) {
 		switch (AG_WidgetParseSizeSpec(size, &col->w)) {
 		case AG_WIDGET_PERCENT:
-			col->w = col->w*AGWIDGET(tv)->w/100;
+			col->w = col->w*WIDGET(tv)->w/100;
 			break;
 		default:
 			break;
@@ -605,40 +605,40 @@ AG_TableviewScale(void *p, int w, int h)
 
 	/* estimate but don't change anything */
 	if (w == -1 && h == -1) {
-		AGWIDGET(tv)->w = tv->prew + tv->sbar_v->bw;
-		AGWIDGET(tv)->h = tv->preh +
+		WIDGET(tv)->w = tv->prew + tv->sbar_v->bw;
+		WIDGET(tv)->h = tv->preh +
 		    (tv->sbar_h == NULL ? 0 : tv->sbar_h->bw);
 
 		for (i = 0; i < tv->columncount; i++) {
-			AGWIDGET(tv)->w += tv->column[i].w;
+			WIDGET(tv)->w += tv->column[i].w;
 		}
 		goto out;
 	}
 	/* vertical scroll bar */
-	AGWIDGET(tv->sbar_v)->x = w - tv->sbar_v->bw;
-	AGWIDGET(tv->sbar_v)->y = 0;
+	WIDGET(tv->sbar_v)->x = w - tv->sbar_v->bw;
+	WIDGET(tv->sbar_v)->y = 0;
 	AG_WidgetScale(tv->sbar_v, -1, h - (tv->sbar_h ? tv->sbar_v->bw : 0));
 
 	/* horizontal scroll bar, if enabled */
 	if (tv->sbar_h != NULL) {
 		int col_w = 0;
 
-		AGWIDGET(tv->sbar_h)->x = 0;
-		AGWIDGET(tv->sbar_h)->y = h - tv->sbar_v->bw;
+		WIDGET(tv->sbar_h)->x = 0;
+		WIDGET(tv->sbar_h)->y = h - tv->sbar_v->bw;
 		AG_WidgetScale(tv->sbar_h, w - tv->sbar_v->bw, -1);
 
 		for (i = 0; i < tv->columncount; i++)
 			col_w += tv->column[i].w;
 
-		if (col_w > AGWIDGET(tv->sbar_h)->w) {
-			int scroll = col_w - AGWIDGET(tv->sbar_h)->w;
+		if (col_w > WIDGET(tv->sbar_h)->w) {
+			int scroll = col_w - WIDGET(tv->sbar_h)->w;
 
 			AG_WidgetSetInt(tv->sbar_h, "max", scroll);
 			if (AG_WidgetInt(tv->sbar_h, "value") > scroll) {
 				AG_WidgetSetInt(tv->sbar_h, "value", scroll);
 			}
 			AG_ScrollbarSetBarSize(tv->sbar_h,
-			    AGWIDGET(tv->sbar_h)->w*(w-tv->sbar_h->bw*3)/col_w);
+			    WIDGET(tv->sbar_h)->w*(w-tv->sbar_h->bw*3)/col_w);
 		} else {
 			AG_WidgetSetInt(tv->sbar_h, "value", 0);
 			AG_ScrollbarSetBarSize(tv->sbar_h, -1);
@@ -658,7 +658,7 @@ AG_TableviewScale(void *p, int w, int h)
 			}
 		}
 
-		fill_width = (AGWIDGET(tv)->w - AGWIDGET(tv->sbar_v)->w -
+		fill_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w -
 		    nonfill_width) / fill_cols;
 
 		for (i = 0; i < tv->columncount; i++) {
@@ -670,7 +670,7 @@ AG_TableviewScale(void *p, int w, int h)
 	/* Calculate how many rows the view holds */
 	{
 		int view_height = h - (NULL == tv->sbar_h ? 0 :
-				  AGWIDGET(tv->sbar_h)->h);
+				  WIDGET(tv->sbar_h)->h);
 
 		if (view_height < tv->head_height) {
 			view_height = tv->head_height;
@@ -709,7 +709,7 @@ AG_TableviewDraw(void *p)
 	AG_Tableview *tv = p;
 	Uint i;
 	int y, update = 0;
-	const int view_width = (AGWIDGET(tv)->w - AGWIDGET(tv->sbar_v)->w);
+	const int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
 
 	AG_MutexLock(&tv->lock);
 	
@@ -722,7 +722,7 @@ AG_TableviewDraw(void *p)
 		update = 1;
 	
 	/* Draw the background box */
-	agPrim.box(tv, 0, 0, AGWIDGET(tv)->w, AGWIDGET(tv)->h, -1,
+	agPrim.box(tv, 0, 0, WIDGET(tv)->w, WIDGET(tv)->h, -1,
 	    AG_COLOR(TABLEVIEW_COLOR));
 	
 	/* draw row selection hilites */
@@ -768,7 +768,7 @@ foreach_visible_column(AG_Tableview *tv, visible_do dothis, void *arg1,
 {
 	int x, first_col, col_width;
 	Uint i;
-	int view_width = (AGWIDGET(tv)->w - AGWIDGET(tv->sbar_v)->w);
+	int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
 	int view_edge = (tv->sbar_h ? AG_WidgetInt(tv->sbar_h, "value") : 0);
 
 	x = 0;
@@ -811,9 +811,9 @@ static void
 view_changed(AG_Tableview *tv)
 {
 	int rows_per_view, max, filled, value;
-	int view_height = AGWIDGET(tv)->h - (tv->sbar_h != NULL ?
-			                   AGWIDGET(tv->sbar_h)->h : 0);
-	int scrolling_area = AGWIDGET(tv->sbar_v)->h - tv->sbar_v->bw*2;
+	int view_height = WIDGET(tv)->h - (tv->sbar_h != NULL ?
+			                   WIDGET(tv->sbar_h)->h : 0);
+	int scrolling_area = WIDGET(tv->sbar_v)->h - tv->sbar_v->bw*2;
 	Uint i;
 
 	/* cancel double clicks if what's under it changes it */
@@ -1198,7 +1198,7 @@ static int
 draw_column(AG_Tableview *tv, int visible_start, int visible_end,
     Uint32 idx, void *arg1, void *arg2)
 {
-	const int view_width = (AGWIDGET(tv)->w - AGWIDGET(tv->sbar_v)->w);
+	const int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
 	const int *update = (int *)arg1;
 	Uint j, cidx = tv->column[idx].idx;
 	int y;
@@ -1396,7 +1396,7 @@ columnresize(AG_Event *event)
 	int x;
 
 	AG_MouseGetState(&x, NULL);
-	x -= AGWIDGET(tv)->cx;
+	x -= WIDGET(tv)->cx;
 	tv->column[col].w = (x-left > tv->column[col].label_img->w) ?
 	    (x-left) : tv->column[col].label_img->w;
 
@@ -1418,7 +1418,7 @@ columnmove(AG_Event *event)
 	tv->column[col].moving = 1;
 
 	AG_MouseGetState(&x, NULL);
-	x -= AGWIDGET(tv)->cx;
+	x -= WIDGET(tv)->cx;
 
 	/* dragging to the left */
 	if ((tv->column[col].w < tv->column[col-1].w &&

@@ -268,16 +268,16 @@ AG_TextboxDraw(void *p)
 #endif
 
 	if (tbox->label_id >= 0) {
-		if (AGWIDGET(tbox)->w < tbox->label_su->w+(tbox->boxPadX*2) ||
-		    AGWIDGET(tbox)->h < tbox->label_su->h+(tbox->boxPadY*2)) 
+		if (WIDGET(tbox)->w < tbox->label_su->w+(tbox->boxPadX*2) ||
+		    WIDGET(tbox)->h < tbox->label_su->h+(tbox->boxPadY*2)) 
 			return;
 
 		AG_WidgetBlitSurface(tbox, tbox->label_id,
-		    tbox->lblPadL, AGWIDGET(tbox)->h/2 - tbox->label_su->h/2);
+		    tbox->lblPadL, WIDGET(tbox)->h/2 - tbox->label_su->h/2);
 	} else {
-		if (AGWIDGET(tbox)->w < (tbox->boxPadX*2 + tbox->lblPadL +
+		if (WIDGET(tbox)->w < (tbox->boxPadX*2 + tbox->lblPadL +
 		    tbox->lblPadR) ||
-		    AGWIDGET(tbox)->h < (tbox->boxPadY*2)) 
+		    WIDGET(tbox)->h < (tbox->boxPadY*2)) 
 			return;
 	}
 
@@ -297,22 +297,22 @@ AG_TextboxDraw(void *p)
 	
 	if (AG_WidgetDisabled(tbox)) {
 		agPrim.box_dithered(tbox, x, 0,
-		    AGWIDGET(tbox)->w - x - 1,
-		    AGWIDGET(tbox)->h,
+		    WIDGET(tbox)->w - x - 1,
+		    WIDGET(tbox)->h,
 		    -1,
 		    AG_COLOR(TEXTBOX_COLOR),
 		    AG_COLOR(DISABLED_COLOR));
 	} else {
 		if (tbox->flags & AG_TEXTBOX_COMBO) {
 			agPrim.box(tbox, x, 0,
-			    AGWIDGET(tbox)->w - x - 1,
-			    AGWIDGET(tbox)->h,
+			    WIDGET(tbox)->w - x - 1,
+			    WIDGET(tbox)->h,
 			    1,
 			    AG_COLOR(TEXTBOX_COLOR));
 		} else {
 			agPrim.box(tbox, x, 0,
-			    AGWIDGET(tbox)->w - x - 1,
-			    AGWIDGET(tbox)->h,
+			    WIDGET(tbox)->w - x - 1,
+			    WIDGET(tbox)->h,
 			    -1,
 			    AG_COLOR(TEXTBOX_COLOR));
 		}
@@ -364,8 +364,8 @@ AG_TextboxDraw(void *p)
 
 			AG_TextColor(TEXTBOX_TXT_COLOR);
 			gl = AG_TextRenderGlyph(c);
-			rd.x = AGWIDGET(tbox)->cx + x;
-			rd.y = AGWIDGET(tbox)->cy + y;
+			rd.x = WIDGET(tbox)->cx + x;
+			rd.y = WIDGET(tbox)->cy + y;
 			x += gl->su->w;
 			SDL_BlitSurface(gl->su, NULL, agView->v, &rd);
 			AG_TextUnusedGlyph(gl);
@@ -373,8 +373,8 @@ AG_TextboxDraw(void *p)
 #ifdef HAVE_OPENGL
 			int dx, dy;
 
-			dx = AGWIDGET(tbox)->cx + x;
-			dy = AGWIDGET(tbox)->cy + y;
+			dx = WIDGET(tbox)->cx + x;
+			dy = WIDGET(tbox)->cy + y;
 
 			AG_TextColor(TEXTBOX_TXT_COLOR);
 			gl = AG_TextRenderGlyph(c);
@@ -398,7 +398,7 @@ AG_TextboxDraw(void *p)
 			AG_TextUnusedGlyph(gl);
 #endif /* HAVE_OPENGL */
 		}
-		if (x >= AGWIDGET(tbox)->w - 1)
+		if (x >= WIDGET(tbox)->w - 1)
 			break;
 	}
 	AG_WidgetUnlockBinding(stringb);
@@ -423,8 +423,8 @@ AG_TextboxScale(void *p, int rw, int rh)
 	AG_Textbox *tbox = p;
 
 	if (rw == -1 && rh == -1) {
-		AGWIDGET(tbox)->w = tbox->prew;
-		AGWIDGET(tbox)->h = tbox->preh;
+		WIDGET(tbox)->w = tbox->prew;
+		WIDGET(tbox)->h = tbox->preh;
 	}
 }
 
@@ -535,7 +535,7 @@ AG_TextboxCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 				if (i == 0 && glyph->minx < 0) {
 					x -= glyph->minx;
 				}
-				if (x1 >= AGWIDGET(tbox)->w) {
+				if (x1 >= WIDGET(tbox)->w) {
 					continue;
 				}
 				if (mx >= x && mx < x1) {
@@ -552,7 +552,7 @@ AG_TextboxCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 			
 				gl = AG_TextRenderGlyph(ch);
 				x1 = x + gl->su->w;
-				if (x1 >= AGWIDGET(tbox)->w) { continue; }
+				if (x1 >= WIDGET(tbox)->w) { continue; }
 				if (mx >= x && mx < x1) { *pos = i; goto in; }
 				x += gl->su->w;
 				AG_TextUnusedGlyph(gl);

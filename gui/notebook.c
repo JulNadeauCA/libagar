@@ -74,10 +74,10 @@ mousebuttondown(AG_Event *event)
 		int tx = SPACING;
 
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-			SDL_Surface *label = AGWIDGET_SURFACE(nb,tab->label);
+			SDL_Surface *label = WSURFACE(nb,tab->label);
 
 #if 0
-			if (tx+label->w+SPACING*2 > AGWIDGET(nb)->w)
+			if (tx+label->w+SPACING*2 > WIDGET(nb)->w)
 				break;
 #endif
 			if (x >= tx && x < tx+(label->w + SPACING*2)) {
@@ -108,8 +108,8 @@ AG_NotebookInit(AG_Notebook *nb, Uint flags)
 	AG_MutexInitRecursive(&nb->lock);
 	TAILQ_INIT(&nb->tabs);
 
-	if (flags & AG_NOTEBOOK_HFILL)	AGWIDGET(nb)->flags |= AG_WIDGET_HFILL;
-	if (flags & AG_NOTEBOOK_VFILL)	AGWIDGET(nb)->flags |= AG_WIDGET_VFILL;
+	if (flags & AG_NOTEBOOK_HFILL)	WIDGET(nb)->flags |= AG_WIDGET_HFILL;
+	if (flags & AG_NOTEBOOK_VFILL)	WIDGET(nb)->flags |= AG_WIDGET_VFILL;
 
 	AG_SetEvent(nb, "window-mousebuttondown", mousebuttondown, NULL);
 }
@@ -134,8 +134,8 @@ AG_NotebookDraw(void *p)
 
 	agPrim.rect_filled(nb,
 	    0, nb->bar_h,
-	    AGWIDGET(nb)->w,
-	    AGWIDGET(nb)->h - nb->bar_h,
+	    WIDGET(nb)->w,
+	    WIDGET(nb)->h - nb->bar_h,
 	    AG_COLOR(NOTEBOOK_SEL_COLOR));
 
 	if (nb->flags & AG_NOTEBOOK_HIDE_TABS) {
@@ -144,12 +144,12 @@ AG_NotebookDraw(void *p)
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
 		box.x = x;
 		box.y = y;
-		box.w = AGWIDGET_SURFACE(nb,tab->label)->w + SPACING*2;
+		box.w = WSURFACE(nb,tab->label)->w + SPACING*2;
 		box.h = nb->bar_h - SPACING;
 
 #if 0
-		if ((box.x+box.w) - AGWIDGET(nb)->w > 0) {
-			box.w = AGWIDGET(nb)->w - box.x;
+		if ((box.x+box.w) - WIDGET(nb)->w > 0) {
+			box.w = WIDGET(nb)->w - box.x;
 			if (box.w < nb->tab_rad<<1) {
 				break;
 			}
@@ -189,28 +189,26 @@ AG_NotebookScale(void *p, int w, int h)
 		nb->cont_w = 0;
 		nb->cont_h = 0;
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-			AGWIDGET_OPS(tab)->scale(tab, -1, -1);
-			nb->cont_w = MAX(nb->cont_w,AGWIDGET(tab)->w);
-			nb->cont_h = MAX(nb->cont_h,AGWIDGET(tab)->h);
-			if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
-				nb->bar_w +=
-				    AGWIDGET_SURFACE(nb,tab->label)->w +
+			WIDGET_OPS(tab)->scale(tab, -1, -1);
+			nb->cont_w = MAX(nb->cont_w,WIDGET(tab)->w);
+			nb->cont_h = MAX(nb->cont_h,WIDGET(tab)->h);
+			if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0)
+				nb->bar_w += WSURFACE(nb,tab->label)->w +
 				    SPACING*2;
-			}
 		}
-		AGWIDGET(nb)->h = nb->cont_h + nb->bar_h;
-		AGWIDGET(nb)->w = MAX(nb->cont_w, nb->bar_w);
+		WIDGET(nb)->h = nb->cont_h + nb->bar_h;
+		WIDGET(nb)->w = MAX(nb->cont_w, nb->bar_w);
 	}
 	if ((tab = nb->sel_tab) != NULL) {
-		AGWIDGET(tab)->x = 0;
-		AGWIDGET(tab)->y = nb->bar_h;
-		if (nb->flags & AG_NOTEBOOK_HFILL) nb->cont_w = AGWIDGET(nb)->w;
-		if (nb->flags & AG_NOTEBOOK_VFILL) nb->cont_h = AGWIDGET(nb)->h;
-		AGWIDGET(tab)->w = nb->cont_w;
-		AGWIDGET(tab)->h = nb->cont_h - nb->bar_h;
-		AGWIDGET_OPS(tab)->scale(tab,
-		    AGWIDGET(tab)->w,
-		    AGWIDGET(tab)->h);
+		WIDGET(tab)->x = 0;
+		WIDGET(tab)->y = nb->bar_h;
+		if (nb->flags & AG_NOTEBOOK_HFILL) nb->cont_w = WIDGET(nb)->w;
+		if (nb->flags & AG_NOTEBOOK_VFILL) nb->cont_h = WIDGET(nb)->h;
+		WIDGET(tab)->w = nb->cont_w;
+		WIDGET(tab)->h = nb->cont_h - nb->bar_h;
+		WIDGET_OPS(tab)->scale(tab,
+		    WIDGET(tab)->w,
+		    WIDGET(tab)->h);
 	}
 	AG_MutexUnlock(&nb->lock);
 }
@@ -297,10 +295,10 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	AG_ObjectAttach(nb, tab);
 	nb->sel_tab = tab;
 
-	AGWIDGET_OPS(tab)->scale(tab, -1, -1);
-	AGWIDGET_OPS(tab)->scale(tab, AGWIDGET(tab)->w, AGWIDGET(tab)->h);
-	AG_NotebookScale(nb, AGWIDGET(nb)->w, AGWIDGET(nb)->h);
-	AG_WidgetUpdateCoords(pwin, AGWIDGET(pwin)->x, AGWIDGET(pwin)->y);
+	WIDGET_OPS(tab)->scale(tab, -1, -1);
+	WIDGET_OPS(tab)->scale(tab, WIDGET(tab)->w, WIDGET(tab)->h);
+	AG_NotebookScale(nb, WIDGET(nb)->w, WIDGET(nb)->h);
+	AG_WidgetUpdateCoords(pwin, WIDGET(pwin)->x, WIDGET(pwin)->y);
 #if 0
 	AG_WidgetFocus(tab);
 #endif

@@ -93,8 +93,8 @@ AG_BoxInit(AG_Box *bo, enum ag_box_type type, Uint flags)
 	bo->type = type;
 	bo->depth = -1;
 
-	if (flags & AG_BOX_HFILL) { AGWIDGET(bo)->flags |= AG_WIDGET_HFILL; }
-	if (flags & AG_BOX_VFILL) { AGWIDGET(bo)->flags |= AG_WIDGET_VFILL; }
+	if (flags & AG_BOX_HFILL) { WIDGET(bo)->flags |= AG_WIDGET_HFILL; }
+	if (flags & AG_BOX_VFILL) { WIDGET(bo)->flags |= AG_WIDGET_VFILL; }
 
 	bo->padding = 2;
 	bo->spacing = 1;
@@ -116,7 +116,7 @@ AG_BoxDraw(void *p)
 {
 	AG_Box *bo = p;
 
-	agPrim.box(bo, 0, 0, AGWIDGET(bo)->w, AGWIDGET(bo)->h, bo->depth,
+	agPrim.box(bo, 0, 0, WIDGET(bo)->w, WIDGET(bo)->h, bo->depth,
 	    AG_COLOR(FRAME_COLOR));
 }
 
@@ -132,8 +132,8 @@ AG_BoxScale(void *p, int w, int h)
 	AG_MutexLock(&bo->lock);
 	
 	/* Count the child widgets. */
-	AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
-		AGWIDGET_OPS(wid)->scale(wid, -1, -1);
+	OBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
+		WIDGET_OPS(wid)->scale(wid, -1, -1);
 
 		switch (bo->type) {
 		case AG_BOX_HORIZ:
@@ -154,39 +154,39 @@ AG_BoxScale(void *p, int w, int h)
 		int maxw = 0, maxh = 0;
 		int dw, dh;
 
-		AGWIDGET(bo)->w = bo->padding*2;
-		AGWIDGET(bo)->h = bo->padding*2;
+		WIDGET(bo)->w = bo->padding*2;
+		WIDGET(bo)->h = bo->padding*2;
 
 		/* Reserve enough space to hold widgets and spacing/padding. */
-		AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
-			AGWIDGET_OPS(wid)->scale(wid, -1, -1);
+		OBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
+			WIDGET_OPS(wid)->scale(wid, -1, -1);
 			if (wid->w > maxw) maxw = wid->w;
 			if (wid->h > maxh) maxh = wid->h;
 
 			switch (bo->type) {
 			case AG_BOX_HORIZ:
 				if ((dh = maxh + bo->padding*2) >
-				    AGWIDGET(bo)->h) {
-					AGWIDGET(bo)->h = dh;
+				    WIDGET(bo)->h) {
+					WIDGET(bo)->h = dh;
 				}
-				AGWIDGET(bo)->w += wid->w + bo->spacing;
+				WIDGET(bo)->w += wid->w + bo->spacing;
 				break;
 			case AG_BOX_VERT:
 				if ((dw = maxw + bo->padding*2) >
-				    AGWIDGET(bo)->w) {
-					AGWIDGET(bo)->w = dw;
+				    WIDGET(bo)->w) {
+					WIDGET(bo)->w = dw;
 				}
-				AGWIDGET(bo)->h += wid->h + bo->spacing;
+				WIDGET(bo)->h += wid->h + bo->spacing;
 				break;
 			}
 		}
 		if (nwidgets > 0) {
 			switch (bo->type) {
 			case AG_BOX_HORIZ:
-				AGWIDGET(bo)->w -= bo->spacing;
+				WIDGET(bo)->w -= bo->spacing;
 				break;
 			case AG_BOX_VERT:
-				AGWIDGET(bo)->h -= bo->spacing;
+				WIDGET(bo)->h -= bo->spacing;
 				break;
 			}
 		}
@@ -217,16 +217,16 @@ AG_BoxScale(void *p, int w, int h)
 			}
 			break;
 		}
-		AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
+		OBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
 			wid->x = x;
 			wid->y = y;
 			
 			switch (bo->type) {
 			case AG_BOX_HORIZ:
-				AGWIDGET_OPS(wid)->scale(wid, -1, -1);
+				WIDGET_OPS(wid)->scale(wid, -1, -1);
 				wid->w = max;
 				wid->h = h - bo->padding*2;
-				AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+				WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 				x += wid->w + bo->spacing;
 				break;
 			case AG_BOX_VERT:
@@ -239,7 +239,7 @@ AG_BoxScale(void *p, int w, int h)
 		goto out;
 	}
 
-	AGOBJECT_FOREACH_CHILD(wid, bo, ag_widget) {	/* Fixed/[wh]fill */
+	OBJECT_FOREACH_CHILD(wid, bo, ag_widget) {	/* Fixed/[wh]fill */
 		wid->x = x;
 		wid->y = y;
 
@@ -267,7 +267,7 @@ AG_BoxScale(void *p, int w, int h)
 			y += wid->h + bo->spacing;
 			break;
 		}
-		AGWIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+		WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 	}
 out:
 	AG_MutexUnlock(&bo->lock);
@@ -311,6 +311,6 @@ AG_BoxSetType(AG_Box *bo, enum ag_box_type type)
 	AG_MutexLock(&bo->lock);
 	bo->type = type;
 	AG_BoxScale(bo, -1, -1);
-	AG_BoxScale(bo, AGWIDGET(bo)->w, AGWIDGET(bo)->h);
+	AG_BoxScale(bo, WIDGET(bo)->w, WIDGET(bo)->h);
 	AG_MutexUnlock(&bo->lock);
 }
