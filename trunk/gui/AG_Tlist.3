@@ -200,6 +200,9 @@ user double clicks on an item.
 .Ft "AG_TlistItem *"
 .Fn AG_TlistSelectedItem "AG_Tlist *tlist"
 .Pp
+.Ft "void *"
+.Fn AG_TlistSelectedPtr "AG_Tlist *tlist"
+.Pp
 .Ft "int"
 .Fn AG_TlistFindPtr "AG_Tlist *tlist" "void **p"
 .Pp
@@ -292,11 +295,18 @@ function returns the item at
 or NULL if there is no such item.
 The
 .Fn AG_TlistSelectedItem
-function returns the first selected item, or
-.Dv NULL
-if there are none.
+function returns the first selected item, or NULL if there are none.
+.Pp
+The
+.Fn AG_TlistSelectedItemPtr
+function returns the user pointer of the first selected item, or NULL if
+there is no selected item.
+It is not possible to distinguish a non-existent selection from an actual
+selection with a NULL user pointer using this function.
+.Pp
+The
 .Fn AG_TlistFindPtr
-is a variant that copies the user pointer associated with the first
+variant copies the user pointer associated with the first
 selected item into
 .Fa p ,
 returning 0 on success or -1 if there is no item selected.
@@ -314,11 +324,12 @@ and
 .Fn AG_TlistLastItem
 functions return the first and last items on the list.
 .Pp
-The caller must ensure that the
+If thread safety is needed, the caller must ensure that the
 .Nm
 is locked prior to invoking
 .Fn AG_TlistFindByIndex ,
 .Fn AG_TlistSelectedItem ,
+.Fn AG_TlistSelectedItemPtr ,
 .Fn AG_TlistFindPtr ,
 .Fn AG_TlistFindText ,
 .Fn AG_TlistFirstItem
@@ -402,28 +413,6 @@ or
 .Dv AG_TLIST_MULTITOGGLE
 flags are in use.
 .El
-.Sh TROUBLETONS
-A horizontal scrollbar should display when there are labels exceeding the
-.Nm
-width.
-.Pp
-Polled mode handling is inefficient since selections must be saved and restored
-each polling cycle.
-.Pp
-.Dv AG_TLIST_TREE
-is a cheap and bletcherous hack.
-.Pp
-The
-.Fn AG_TlistAddPtr
-function should probably be renamed
-.Fn AG_TlistAdd
-and take a
-.Xr printf 3
-format string.
-.Pp
-It is possible to generate a double click by quickly clicking on two different
-items; comparing with the previously clicked item is not an option since it
-may have been destroyed.
 .Sh EFFICIENCY
 Item insertion and removal are O(1) operations.
 For n items, lookup and mouse selection handling is O(n), which becomes
