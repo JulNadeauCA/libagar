@@ -59,6 +59,12 @@ values.
 .Ft void
 .Fn AG_MenuCollapse "AG_Menu *menu" "AG_MenuItem *item"
 .Pp
+.Ft void
+.Fn AG_MenuSetPadding "AG_Menu *menu" "int left" "int right" "int top" "int bottom"
+.Pp
+.Ft void
+.Fn AG_MenuSetLabelPadding "AG_Menu *menu" "int left" "int right" "int top" "int bottom"
+.Pp
 .nr nS 0
 The
 .Fn AG_MenuNew
@@ -84,52 +90,46 @@ If an item is clicked on, the window is automatically destroyed.
 The
 .Fn AG_MenuCollapse
 function manually destroys the popup window.
-.Sh TOP-LEVEL ITEMS
-.nr nS 1
-.Ft "AG_MenuItem *"
-.Fn AG_MenuAddItem "AG_Menu *menu" "const char *text"
 .Pp
-.Ft "void"
-.Fn AG_MenuFreeItems "AG_Menu *menu" 
-.Pp
-.Ft "void"
-.Fn AG_MenuFreeSubItems "AG_MenuItem *item" 
-.Pp
-.nr nS 0
-The
-.Fn AG_MenuAddItem
-inserts a new top-level menu item with a label displaying the string
-.Fa text .
-Top-level menu items have no associated action or binding.
-The
-.Fn AG_MenuFreeItems
-function destroys all top-level menu items in
-.Fa menu .
-.Fn AG_MenuFreeSubItems
-destroys all subitems associated with
-.Fa item .
+.Fn AG_MenuSetPadding
+sets the global padding around all menu items, in pixels.
+.Fn AG_MenuSetLabelPadding
+sets the padding around the text label of items.
+If a parameter is -1, its current value is preserved.
 .Sh MENU ITEMS
 .nr nS 1
 .Ft "AG_MenuItem *"
-.Fn AG_MenuNode "AG_MenuItem *" "const char *text" "int icon"
+.Fn AG_MenuNode "AG_MenuItem *parent" "const char *text" "int icon"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuAction "AG_MenuItem *" "const char *text" "int icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuAction "AG_MenuItem *parent" "const char *text" "int icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuActionKb "AG_MenuItem *" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuActionKb "AG_MenuItem *parent" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuTool "AG_MenuItem *" "AG_Toolbar *toolbar" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuDynamic "AG_MenuItem *parent" "int icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuDynamic "AG_MenuItem *" "int icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuTool "AG_MenuItem *parent" "AG_Toolbar *toolbar" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "void"
-.Fn AG_MenuSetIcon "AG_MenuItem *" "SDL_Surface *su"
+.Fn AG_MenuSetIcon "AG_MenuItem *item" "SDL_Surface *su"
 .Pp
 .Ft "void"
-.Fn AG_MenuSetLabel "AG_MenuItem *" "const char *label"
+.Fn AG_MenuSetLabel "AG_MenuItem *item" "const char *label"
+.Pp
+.Ft "void"
+.Fn AG_MenuItemFree "AG_MenuItem *menu" 
+.Pp
+.Ft "void"
+.Fn AG_MenuState "AG_MenuItem *item" "int state"
+.Pp
+.Ft "void"
+.Fn AG_MenuEnable "AG_MenuItem *item"
+.Pp
+.Ft "void"
+.Fn AG_MenuDisable "AG_MenuItem *item"
 .Pp
 .nr nS 0
 The
@@ -191,6 +191,19 @@ The
 .Va onclick
 member is a pointer to the event handler to invoke when the user selects the
 item.
+.Pp
+The
+.Fn AG_MenuItemFree
+function destroys the given menu item as well as its children.
+.Pp
+The
+.Fn AG_MenuState
+(or its variants
+.Fn AG_MenuEnable
+and
+.Fn AG_MenuDisable )
+request that all subsequently created menu items are assigned the given
+state.
 .Sh BOOLEAN AND BITMASK ITEMS
 .nr nS 1
 .Ft "AG_MenuItem *"
