@@ -29,7 +29,7 @@ CreateWindow(void)
 
 	/* Create a new scene graph. */
 	sg = SG_New(agWorld, "scene");
-	AGOBJECT(sg)->flags |= AG_OBJECT_DATA_RESIDENT;
+	AGOBJECT(sg)->flags |= AG_OBJECT_RESIDENT;
 
 	/* Create a bunch of spheres. */
 	s1 = SG_SphereNew(sg->root, "Sphere A");

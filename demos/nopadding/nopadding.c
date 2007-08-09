@@ -22,8 +22,8 @@ CreateWindow(void)
 	int i;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOBORDERS|
-	    AG_WINDOW_NOTITLE);
-	AG_WindowSetPadding(win, 0, 0, 0);
+	                   AG_WINDOW_NOTITLE);
+	AG_WindowSetPadding(win, 0, 0, 0, 0);
 	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_EXPAND);
 	AG_BoxSetPadding(box, 0);
 
