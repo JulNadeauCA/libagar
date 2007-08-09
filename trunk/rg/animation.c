@@ -479,7 +479,7 @@ open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 	AG_Combo *com;
 	RG_Tileview *tv;
 
-	AGOBJECT_FOREACH_CHILD(child, box, ag_widget) {
+	OBJECT_FOREACH_CHILD(child, box, ag_widget) {
 		AG_ObjectDetach(child);
 		AG_ObjectDestroy(child);
 		Free(child, M_OBJECT);
@@ -543,7 +543,7 @@ open_frame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 	AG_Spinbutton *sb;
 	AG_Pixmap *pix;
 
-	AGOBJECT_FOREACH_CHILD(child, box, ag_widget) {
+	OBJECT_FOREACH_CHILD(child, box, ag_widget) {
 		AG_ObjectDetach(child);
 		AG_ObjectDestroy(child);
 		Free(child, M_OBJECT);
@@ -622,7 +622,7 @@ preview_anim(AG_Event *event)
 	AG_Label *lbl;
 
 	if ((win = AG_WindowNewNamed(0, "rg-anim-prev-%s:%s",
-	    AGOBJECT(ani->tileset)->name, ani->name)) == NULL) {
+	    OBJECT(ani->tileset)->name, ani->name)) == NULL) {
 		return;
 	}
 	AG_WindowSetCaption(win, "%s", ani->name);
@@ -654,7 +654,7 @@ RG_AnimEdit(RG_Anim *ani)
 	AG_MenuItem *mi;
 	int i;
 
-	if ((win = AG_WindowNewNamed(0, "rg-anim-%s:%s", AGOBJECT(ts)->name,
+	if ((win = AG_WindowNewNamed(0, "rg-anim-%s:%s", OBJECT(ts)->name,
 	    ani->name)) == NULL) {
 		return (NULL);
 	}

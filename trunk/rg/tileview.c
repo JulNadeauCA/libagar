@@ -364,8 +364,8 @@ mousebuttondown(AG_Event *event)
 		if (button == SDL_BUTTON_MIDDLE) {
 			if (tv->tv_feature.ft->ops->menu != NULL) {
 				RG_FeatureOpenMenu(tv,
-				    AGWIDGET(tv)->cx + x,
-				    AGWIDGET(tv)->cy + y);
+				    WIDGET(tv)->cx + x,
+				    WIDGET(tv)->cy + y);
 			}
 		} else if (button == SDL_BUTTON_RIGHT) {
 			tv->scrolling++;
@@ -399,8 +399,8 @@ mousebuttondown(AG_Event *event)
 	if (button == SDL_BUTTON_MIDDLE &&
 	    tv->state == RG_TILEVIEW_TILE_EDIT) {
 		RG_TileOpenMenu(tv,
-		    AGWIDGET(tv)->cx+x,
-		    AGWIDGET(tv)->cy+y);
+		    WIDGET(tv)->cx+x,
+		    WIDGET(tv)->cy+y);
 	}
 }
 
@@ -485,7 +485,7 @@ clamp_offsets(RG_Tileview *tv)
 	int lim;
 
 	if (tv->xoffs >
-	   (lim = (AGWIDGET(tv)->w - RG_TILEVIEW_MIN_W))) {
+	   (lim = (WIDGET(tv)->w - RG_TILEVIEW_MIN_W))) {
 		tv->xoffs = lim;
 	} else if (tv->xoffs <
 	   (lim = (-tv->scaled->w + RG_TILEVIEW_MIN_W))) {
@@ -493,7 +493,7 @@ clamp_offsets(RG_Tileview *tv)
 	}
 
 	if (tv->yoffs >
-	    (lim = (AGWIDGET(tv)->h - RG_TILEVIEW_MIN_H))) {
+	    (lim = (WIDGET(tv)->h - RG_TILEVIEW_MIN_H))) {
 		tv->yoffs = lim;
 	} else if (tv->yoffs <
 	    (lim = (-tv->scaled->h + RG_TILEVIEW_MIN_H))) {
@@ -1070,19 +1070,19 @@ RG_TileviewScale(void *p, int rw, int rh)
 
 	if (rw == -1 && rh == -1) {
 		if (tv->tile != NULL) {
-			AGWIDGET(tv)->w = tv->tile->su->w + RG_TILEVIEW_MIN_W;
-			AGWIDGET(tv)->h = tv->tile->su->h + RG_TILEVIEW_MIN_H;
+			WIDGET(tv)->w = tv->tile->su->w + RG_TILEVIEW_MIN_W;
+			WIDGET(tv)->h = tv->tile->su->h + RG_TILEVIEW_MIN_H;
 		} else {
-			AGWIDGET(tv)->w = RG_TILEVIEW_MIN_W;
-			AGWIDGET(tv)->h = RG_TILEVIEW_MIN_H;
+			WIDGET(tv)->w = RG_TILEVIEW_MIN_W;
+			WIDGET(tv)->h = RG_TILEVIEW_MIN_H;
 		}
 	} else {
 		if (tv->xoffs >
-		   (lim = (AGWIDGET(tv)->w - RG_TILEVIEW_MIN_W))) {
+		   (lim = (WIDGET(tv)->w - RG_TILEVIEW_MIN_W))) {
 			tv->xoffs = lim;
 		}
 		if (tv->yoffs >
-		   (lim	= (AGWIDGET(tv)->h - RG_TILEVIEW_MIN_H))) {
+		   (lim	= (WIDGET(tv)->h - RG_TILEVIEW_MIN_H))) {
 			tv->yoffs = lim;
 		}
 	}
@@ -1102,10 +1102,10 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 				int cx = x1+dx;
 				int cy = y1+dy;
 
-				if (cx < AGWIDGET(tv)->cx ||
-				    cy < AGWIDGET(tv)->cy ||
-				    cx > AGWIDGET(tv)->cx2 ||
-				    cy > AGWIDGET(tv)->cy2)
+				if (cx < WIDGET(tv)->cx ||
+				    cy < WIDGET(tv)->cy ||
+				    cx > WIDGET(tv)->cx2 ||
+				    cy > WIDGET(tv)->cy2)
 					continue;
 
 				if (tv->c.a < 255) {
@@ -1124,13 +1124,13 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 		int x2 = x1 + tv->pxsz;
 		int y2 = y1 + tv->pxsz;
 
-		if (x1 > AGWIDGET(tv)->cx2)	return;
-		if (y1 > AGWIDGET(tv)->cy2)	return;
-		if (x1 < AGWIDGET(tv)->cx)	x1 = AGWIDGET(tv)->cx;
-		if (y1 < AGWIDGET(tv)->cy)	y1 = AGWIDGET(tv)->cy;
+		if (x1 > WIDGET(tv)->cx2)	return;
+		if (y1 > WIDGET(tv)->cy2)	return;
+		if (x1 < WIDGET(tv)->cx)	x1 = WIDGET(tv)->cx;
+		if (y1 < WIDGET(tv)->cy)	y1 = WIDGET(tv)->cy;
 		if (x1 >= x2 || y1 >= y2)	return;
-		if (x2 > AGWIDGET(tv)->cx2)	x2 = AGWIDGET(tv)->cx2;
-		if (y2 > AGWIDGET(tv)->cy2)	y2 = AGWIDGET(tv)->cy2;
+		if (x2 > WIDGET(tv)->cx2)	x2 = WIDGET(tv)->cx2;
+		if (y2 > WIDGET(tv)->cy2)	y2 = WIDGET(tv)->cy2;
 
 		glBegin(GL_POLYGON);
 		if (tv->c.a < 255) {
@@ -1156,14 +1156,14 @@ DrawStatusText(RG_Tileview *tv, const char *label)
 	AG_TextColor(TILEVIEW_TEXT_COLOR);
 	su = AG_TextRender(label);
 	agPrim.rect_filled(tv,
-	    (su->w >= AGWIDGET(tv)->w) ? 0 : (AGWIDGET(tv)->w - su->w - 2),
-	    AGWIDGET(tv)->h - su->h - 2,
-	    AGWIDGET(tv)->w,
-	    AGWIDGET(tv)->h,
+	    (su->w >= WIDGET(tv)->w) ? 0 : (WIDGET(tv)->w - su->w - 2),
+	    WIDGET(tv)->h - su->h - 2,
+	    WIDGET(tv)->w,
+	    WIDGET(tv)->h,
 	    AG_COLOR(TILEVIEW_TEXTBG_COLOR));
 	AG_WidgetBlit(tv, su,
-	    AGWIDGET(tv)->w - su->w - 1,
-	    AGWIDGET(tv)->h - su->h - 1);
+	    WIDGET(tv)->w - su->w - 1,
+	    WIDGET(tv)->h - su->h - 1);
 	SDL_FreeSurface(su);
 }
 
@@ -1224,13 +1224,13 @@ RG_TileviewRect2(RG_Tileview *tv, int x, int y, int w, int h)
 		int x2 = x1 + w*tv->pxsz;
 		int y2 = y1 + h*tv->pxsz;
 
-		if (x1 > AGWIDGET(tv)->cx2)	return;
-		if (y1 > AGWIDGET(tv)->cy2)	return;
-		if (x1 < AGWIDGET(tv)->cx)	x1 = AGWIDGET(tv)->cx;
-		if (y1 < AGWIDGET(tv)->cy)	y1 = AGWIDGET(tv)->cy;
+		if (x1 > WIDGET(tv)->cx2)	return;
+		if (y1 > WIDGET(tv)->cy2)	return;
+		if (x1 < WIDGET(tv)->cx)	x1 = WIDGET(tv)->cx;
+		if (y1 < WIDGET(tv)->cy)	y1 = WIDGET(tv)->cy;
 		if (x1 >= x2 || y1 >= y2)	return;
-		if (x2 > AGWIDGET(tv)->cx2)	x2 = AGWIDGET(tv)->cx2;
-		if (y2 > AGWIDGET(tv)->cy2)	y2 = AGWIDGET(tv)->cy2;
+		if (x2 > WIDGET(tv)->cx2)	x2 = WIDGET(tv)->cx2;
+		if (y2 > WIDGET(tv)->cy2)	y2 = WIDGET(tv)->cy2;
 
 		glBegin(GL_POLYGON);
 		if (tv->c.a < 255) {
@@ -1337,25 +1337,25 @@ RG_TileviewRect2o(RG_Tileview *tv, int x, int y, int w, int h)
 			glColor3ub(tv->c.r, tv->c.g, tv->c.b);
 		}
 
-		if (y1 > AGWIDGET(tv)->cy && y1 < AGWIDGET(tv)->cy2 &&
-		    x1 < AGWIDGET(tv)->cx2 && x2 > AGWIDGET(tv)->cx) {
-			glVertex2i(MAX(x1, AGWIDGET(tv)->cx), y1);
-			glVertex2i(MIN(x2, AGWIDGET(tv)->cx2), y1);
+		if (y1 > WIDGET(tv)->cy && y1 < WIDGET(tv)->cy2 &&
+		    x1 < WIDGET(tv)->cx2 && x2 > WIDGET(tv)->cx) {
+			glVertex2i(MAX(x1, WIDGET(tv)->cx), y1);
+			glVertex2i(MIN(x2, WIDGET(tv)->cx2), y1);
 		}
-		if (x2 < AGWIDGET(tv)->cx2 && x2 > AGWIDGET(tv)->cx &&
-		    y1 < AGWIDGET(tv)->cy2 && y2 > AGWIDGET(tv)->cy) {
-			glVertex2i(x2, MAX(y1, AGWIDGET(tv)->cy));
-			glVertex2i(x2, MIN(y2, AGWIDGET(tv)->cy2));
+		if (x2 < WIDGET(tv)->cx2 && x2 > WIDGET(tv)->cx &&
+		    y1 < WIDGET(tv)->cy2 && y2 > WIDGET(tv)->cy) {
+			glVertex2i(x2, MAX(y1, WIDGET(tv)->cy));
+			glVertex2i(x2, MIN(y2, WIDGET(tv)->cy2));
 		}
-		if (y2 > AGWIDGET(tv)->cy && y2 < AGWIDGET(tv)->cy2 &&
-		    x1 < AGWIDGET(tv)->cx2 && x2 > AGWIDGET(tv)->cx) {
-			glVertex2i(MIN(x2, AGWIDGET(tv)->cx2), y2);
-			glVertex2i(MAX(x1, AGWIDGET(tv)->cx), y2);
+		if (y2 > WIDGET(tv)->cy && y2 < WIDGET(tv)->cy2 &&
+		    x1 < WIDGET(tv)->cx2 && x2 > WIDGET(tv)->cx) {
+			glVertex2i(MIN(x2, WIDGET(tv)->cx2), y2);
+			glVertex2i(MAX(x1, WIDGET(tv)->cx), y2);
 		}
-		if (x1 > AGWIDGET(tv)->cx && x1 < AGWIDGET(tv)->cx2 &&
-		    y1 < AGWIDGET(tv)->cy2 && y2 > AGWIDGET(tv)->cy) {
-			glVertex2i(x1, MIN(y2, AGWIDGET(tv)->cy2));
-			glVertex2i(x1, MAX(y1, AGWIDGET(tv)->cy));
+		if (x1 > WIDGET(tv)->cx && x1 < WIDGET(tv)->cx2 &&
+		    y1 < WIDGET(tv)->cy2 && y2 > WIDGET(tv)->cy) {
+			glVertex2i(x1, MIN(y2, WIDGET(tv)->cy2));
+			glVertex2i(x1, MAX(y1, WIDGET(tv)->cy));
 		}
 
 		glEnd();
@@ -1680,8 +1680,8 @@ RG_TileviewDraw(void *p)
 	}
 	rtiling.x = 0;
 	rtiling.y = 0;
-	rtiling.w = AGWIDGET(tv)->w;
-	rtiling.h = AGWIDGET(tv)->h;
+	rtiling.w = WIDGET(tv)->w;
+	rtiling.h = WIDGET(tv)->h;
 	if ((tv->flags & RG_TILEVIEW_NO_TILING) == 0) {
 		agPrim.tiling(tv, rtiling, 9, 0,
 		    AG_COLOR(TILEVIEW_TILE1_COLOR),
@@ -1697,24 +1697,24 @@ RG_TileviewDraw(void *p)
 
 	if (!agView->opengl) {
 		if (tv->xoffs > 0 &&
-		    tv->xoffs + tv->scaled->w > AGWIDGET(tv)->w) {
-			rsrc.w = AGWIDGET(tv)->w - tv->xoffs;
+		    tv->xoffs + tv->scaled->w > WIDGET(tv)->w) {
+			rsrc.w = WIDGET(tv)->w - tv->xoffs;
 		} else if (tv->xoffs < 0 && -tv->xoffs < tv->scaled->w) {
 			rdst.x = 0;
 			rsrc.x = -tv->xoffs;
 			rsrc.w = tv->scaled->w - (-tv->xoffs);
-			if (rsrc.w > AGWIDGET(tv)->w)
-				rsrc.w = AGWIDGET(tv)->w;
+			if (rsrc.w > WIDGET(tv)->w)
+				rsrc.w = WIDGET(tv)->w;
 		}
 		if (tv->yoffs > 0 &&
-		    tv->yoffs + tv->scaled->h > AGWIDGET(tv)->h) {
-			rsrc.h = AGWIDGET(tv)->h - tv->yoffs;
+		    tv->yoffs + tv->scaled->h > WIDGET(tv)->h) {
+			rsrc.h = WIDGET(tv)->h - tv->yoffs;
 		} else if (tv->yoffs < 0 && -tv->yoffs < tv->scaled->h) {
 			rdst.y = 0;
 			rsrc.y = -tv->yoffs;
 			rsrc.h = tv->scaled->h - (-tv->yoffs);
-			if (rsrc.h > AGWIDGET(tv)->h)
-				rsrc.h = AGWIDGET(tv)->h;
+			if (rsrc.h > WIDGET(tv)->h)
+				rsrc.h = WIDGET(tv)->h;
 		}
 	}
 	AG_WidgetBlitFrom(tv, tv, 0, &rsrc, rdst.x, rdst.y);
@@ -1900,7 +1900,7 @@ RG_TileviewSelectTool(RG_Tileview *tv, RG_TileviewTool *tvt)
 
 #ifdef DEBUG
 	if (pwin == NULL)
-		fatal("%s has no parent window", AGOBJECT(tv)->name);
+		fatal("%s has no parent window", OBJECT(tv)->name);
 #endif
 
 	if (tv->cur_tool != NULL && tv->cur_tool->win != NULL) {
