@@ -8,9 +8,9 @@ typedef struct ag_timeout {
 	Uint32 (*fn)(void *p, Uint32 ival, void *arg);
 	void *arg;
 	int running;			/* Callback is executing */
-	int flags;
-#define AG_TIMEOUT_DETACHABLE	0x01	/* Don't cancel in AG_ObjectDetach() */
-#define AG_TIMEOUT_LOADABLE	0x02	/* Don't cancel in AG_ObjectLoad() */
+	Uint flags;
+#define AG_CANCEL_ONDETACH	0x01	/* Cancel on ObjectDetach() */
+#define AG_CANCEL_ONLOAD	0x02	/* Cancel on ObjectLoad() */
 	Uint32 ticks;			/* Expiry time in SDL ticks */
 	Uint32 ival;			/* Interval in ticks */
 
@@ -23,7 +23,7 @@ SLIST_HEAD(ag_timeoutq, ag_timeout);
 
 __BEGIN_DECLS
 void	AG_SetTimeout(AG_Timeout *, Uint32 (*)(void *, Uint32, void *), void *,
-	              int);
+	              Uint);
 void	AG_ScheduleTimeout(void *, AG_Timeout *, Uint32, int);
 int	AG_TimeoutIsScheduled(void *, AG_Timeout *);
 #define AG_AddTimeout(p,to,dt) AG_ScheduleTimeout((p), (to), (dt), 0)

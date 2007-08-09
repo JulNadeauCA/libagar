@@ -37,7 +37,7 @@ struct ag_objectq agTimeoutObjQ = TAILQ_HEAD_INITIALIZER(agTimeoutObjQ);
 /* Initialize a timeout structure. */
 void
 AG_SetTimeout(AG_Timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
-    int flags)
+    Uint flags)
 {
 	to->fn = fn;
 	to->arg = arg;
