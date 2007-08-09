@@ -315,12 +315,12 @@ VG_ViewScale(void *p, int w, int h)
 	VG_View *vv = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(vv)->w = 32;		/* XXX */
-		AGWIDGET(vv)->h = 32;
+		WIDGET(vv)->w = 32;		/* XXX */
+		WIDGET(vv)->h = 32;
 		return;
 	}
-	AGWIDGET(vv)->w = w;
-	AGWIDGET(vv)->h = h;
+	WIDGET(vv)->w = w;
+	WIDGET(vv)->h = h;
 	VG_Scale(vv->vg, w, h, vv->vg->scale);
 }
 
@@ -335,8 +335,8 @@ VG_ViewDraw(void *p)
 		vv->draw_ev->handler(vv->draw_ev);
 
 	if (vg->flags & VG_DIRECT) {
-		vg->rDst.x = AGWIDGET(vv)->cx+vv->x;
-		vg->rDst.y = AGWIDGET(vv)->cy+vv->y;
+		vg->rDst.x = WIDGET(vv)->cx+vv->x;
+		vg->rDst.y = WIDGET(vv)->cy+vv->y;
 		VG_Rasterize(vg);
 		if (vg->flags & VG_VISGRID)
 			VG_DrawGrid(vg);
@@ -347,7 +347,7 @@ VG_ViewDraw(void *p)
 
 	AG_TextColor(TEXT_COLOR);
 	status = AG_TextRender(vv->status);
-	AG_WidgetBlit(vv, status, 0, AGWIDGET(vv)->h - status->h);
+	AG_WidgetBlit(vv, status, 0, WIDGET(vv)->h - status->h);
 	SDL_FreeSurface(status);
 }
 
@@ -367,7 +367,7 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 			AG_Widget *wt;
 			AG_Window *pwin;
 
-			AGOBJECT_FOREACH_CHILD(wt, vv->curtool->pane,
+			OBJECT_FOREACH_CHILD(wt, vv->curtool->pane,
 			    ag_widget) {
 				AG_ObjectDetach(wt);
 				AG_ObjectDestroy(wt);
