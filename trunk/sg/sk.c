@@ -183,7 +183,7 @@ SK_Init(void *obj, const char *name)
 	}
 
 	AG_ObjectInit(sk, name, &skOps);
-	AGOBJECT(sk)->flags |= AG_OBJECT_REOPEN_ONLOAD;
+	OBJECT(sk)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 	sk->flags = 0;
 	AG_MutexInitRecursive(&sk->lock);
 	SK_InitCluster(&sk->ctGraph, 0);
@@ -473,7 +473,7 @@ SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 	if (i == skElementsCnt) {
 		if (sk->flags & SK_SKIP_UNKNOWN_NODES) {
 			fprintf(stderr, "%s: skipping node (%s/%luB)\n",
-			    AGOBJECT(sk)->name, type, (Ulong)bsize);
+			    OBJECT(sk)->name, type, (Ulong)bsize);
 			AG_NetbufSeek(buf, bsize, SEEK_CUR);
 			*rnode = NULL;
 			return (0);

@@ -225,7 +225,7 @@ ViewConstraintGraphs(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Constraint graph of <%s>"),
-	    AGOBJECT(sk)->name);
+	    OBJECT(sk)->name);
 	
 	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
 	gf = AG_GraphNew(pane->div[1], AG_GRAPH_EXPAND);
@@ -252,7 +252,7 @@ CreateNewView(AG_Event *event)
 	AG_Window *win;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "%s", AGOBJECT(sk)->name);
+	AG_WindowSetCaption(win, "%s", OBJECT(sk)->name);
 	skv = SK_ViewNew(win, sk, SK_VIEW_EXPAND|SK_VIEW_FOCUS);
 	AG_WindowShow(win);
 	AG_WindowAttach(winParent, win);
@@ -358,13 +358,13 @@ EditNode(AG_Event *event)
 	SK_NodeEditGeneric(node, skv->editPane, skv);
 
 	AG_WidgetScale(vp->div[1], -1, -1);
-	hPane = AGWIDGET(vp->div[1])->h;
-	wPane = AGWIDGET(vp->div[1])->w;
+	hPane = WIDGET(vp->div[1])->h;
+	wPane = WIDGET(vp->div[1])->w;
 
 	AG_PaneSetDivisionMin(vp, 1, -1, hPane + vp->dw);
 	AG_PaneSetDivisionMin(hp, 0, wPane + vp->dw, -1);
-	AG_PaneMoveDivider(vp, AGWIDGET(vp)->h - hPane);
-	AG_WindowScale(pWin, AGWIDGET(pWin)->w, AGWIDGET(pWin)->h);
+	AG_PaneMoveDivider(vp, WIDGET(vp)->h - hPane);
+	AG_WindowScale(pWin, WIDGET(pWin)->w, WIDGET(pWin)->h);
 	AG_WINDOW_UPDATE(pWin);
 }
 
@@ -490,7 +490,7 @@ SK_Edit(void *p)
 	int i, dx;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "%s", AGOBJECT(sk)->name);
+	AG_WindowSetCaption(win, "%s", OBJECT(sk)->name);
 
 	skv = Malloc(sizeof(SK_View), M_OBJECT);
 	SK_ViewInit(skv, sk, SK_VIEW_EXPAND);
@@ -501,11 +501,10 @@ SK_Edit(void *p)
 	menu = AG_MenuNew(win, AG_MENU_HFILL);
 	pitem = AG_MenuAddItem(menu, _("File"));
 	{
-		AG_MenuAction(pitem, _("Import from vector image..."),
-		    CLOSE_ICON,
+		AG_MenuAction(pitem, _("Import from vector image..."), -1,
 		    ImportSketchDlg, "%p,%p", sk, win);
 		AG_MenuSeparator(pitem);
-		AG_MenuActionKb(pitem, _("Close sketch"), CLOSE_ICON,
+		AG_MenuActionKb(pitem, _("Close sketch"), -1,
 		    SDLK_w, KMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
 	}
@@ -568,7 +567,7 @@ SK_Edit(void *p)
 			    skv);
 			AG_SetEvent(tl, "tlist-poll", PollNodes, "%p", sk);
 			AG_SetEvent(tl, "tlist-changed", SelectNode, NULL);
-			AGWIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
+			WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		}
 		ntab = AG_NotebookAddTab(nb, _("Constraints"), AG_BOX_VERT);
 		{
@@ -635,7 +634,7 @@ SK_NodeEditGeneric(SK_Node *node, AG_Widget *box, SK_View *skv)
 	AG_TableAddCol(tbl, _("Type"), "<Perpendicular>", NULL);
 	AG_TableAddCol(tbl, _("Node 1"), "<Circle88>", NULL);
 	AG_TableAddCol(tbl, _("Node 2"), NULL, NULL);
-	AGWIDGET(tbl)->flags &= ~(AG_WIDGET_FOCUSABLE);
+	WIDGET(tbl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 }
 
 #endif /* EDITION */

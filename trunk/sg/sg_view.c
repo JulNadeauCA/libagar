@@ -112,11 +112,11 @@ SG_ViewUnProject(SG_View *sv, SG_Vector w, SG_Real zNear, SG_Real zFar,
 	SG_Real y, zNearSv, zFarSv;
 	int vp[4];
 
-	vp[0] = AGWIDGET(sv)->cx;
-	vp[1] = agView->h - AGWIDGET(sv)->cy2;
-	vp[2] = AGWIDGET(sv)->w;
-	vp[3] = AGWIDGET(sv)->h;
-	y = (SG_Real)(agView->h - AGWIDGET(sv)->cy2 + AGWIDGET(sv)->h - w.y);
+	vp[0] = WIDGET(sv)->cx;
+	vp[1] = agView->h - WIDGET(sv)->cy2;
+	vp[2] = WIDGET(sv)->w;
+	vp[3] = WIDGET(sv)->h;
+	y = (SG_Real)(agView->h - WIDGET(sv)->cy2 + WIDGET(sv)->h - w.y);
 
 	zNearSv = sv->cam->zNear; sv->cam->zNear = zNear;
 	zFarSv = sv->cam->zFar; sv->cam->zFar = zFar;
@@ -125,7 +125,7 @@ SG_ViewUnProject(SG_View *sv, SG_Vector w, SG_Real zNear, SG_Real zFar,
 	sv->cam->zFar = zFarSv;
 
 	SG_GetNodeTransform(sv->cam, &T);
-	SG_UnProject(AGWIDGET(sv)->cx+w.x, y, w.z, &T, &P, vp, vOut);
+	SG_UnProject(WIDGET(sv)->cx+w.x, y, w.z, &T, &P, vp, vOut);
 	return (0);
 }
 
@@ -144,7 +144,7 @@ ViewOverlay(AG_Event *event)
 
 	AG_TextColor(TEXT_COLOR);
 	su = AG_TextRender(text);
-	AG_WidgetBlit(sv, su, 0, AGWIDGET(sv)->h - su->h);
+	AG_WidgetBlit(sv, su, 0, WIDGET(sv)->h - su->h);
 	SDL_FreeSurface(su);
 }
 

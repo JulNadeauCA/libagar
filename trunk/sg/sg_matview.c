@@ -78,10 +78,10 @@ matview_keydown(AG_Event *event)
 
 	switch (keysym) {
 	case SDLK_g:
-		AGWIDGET_OPS(mv)->draw = AG_MatviewDrawGreyscale;
+		WIDGET_OPS(mv)->draw = AG_MatviewDrawGreyscale;
 		break;
 	case SDLK_n:
-		AGWIDGET_OPS(mv)->draw = AG_MatviewDrawNumerical;
+		WIDGET_OPS(mv)->draw = AG_MatviewDrawNumerical;
 		break;
 	case SDLK_EQUALS:
 		mv->scale++;
@@ -155,22 +155,22 @@ AG_MatviewScale(void *p, int w, int h)
 	AG_Matview *mv = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(mv)->w = mv->pre_n*(mv->ent_w + mv->hspace) +
+		WIDGET(mv)->w = mv->pre_n*(mv->ent_w + mv->hspace) +
 		    mv->hspace*2;
-		AGWIDGET(mv)->h = mv->pre_m*(mv->ent_h + mv->vspace) +
+		WIDGET(mv)->h = mv->pre_m*(mv->ent_h + mv->vspace) +
 		    mv->vspace*2;
 		return;
 	}
 
-	AGWIDGET(mv->hbar)->x = 0;
-	AGWIDGET(mv->hbar)->y = AGWIDGET(mv)->h - mv->hbar->bw;
-	AGWIDGET(mv->hbar)->w = AGWIDGET(mv)->w;
-	AGWIDGET(mv->hbar)->h = mv->hbar->bw;
+	WIDGET(mv->hbar)->x = 0;
+	WIDGET(mv->hbar)->y = WIDGET(mv)->h - mv->hbar->bw;
+	WIDGET(mv->hbar)->w = WIDGET(mv)->w;
+	WIDGET(mv->hbar)->h = mv->hbar->bw;
 
-	AGWIDGET(mv->vbar)->x = AGWIDGET(mv)->w - mv->vbar->bw;
-	AGWIDGET(mv->vbar)->y = mv->vbar->bw;
-	AGWIDGET(mv->vbar)->w = mv->vbar->bw;
-	AGWIDGET(mv->vbar)->h = AGWIDGET(mv)->h - mv->vbar->bw;
+	WIDGET(mv->vbar)->x = WIDGET(mv)->w - mv->vbar->bw;
+	WIDGET(mv->vbar)->y = mv->vbar->bw;
+	WIDGET(mv->vbar)->w = mv->vbar->bw;
+	WIDGET(mv->vbar)->h = WIDGET(mv)->h - mv->vbar->bw;
 }
 
 void
@@ -183,14 +183,14 @@ AG_MatviewDrawNumerical(void *p)
 	SDL_Surface *su;
 	int x, y;
 
-	agPrim.box(mv, 0, 0, AGWIDGET(mv)->w, AGWIDGET(mv)->h, -1,
+	agPrim.box(mv, 0, 0, WIDGET(mv)->w, WIDGET(mv)->h, -1,
 	    AG_COLOR(BG_COLOR));
 
 	for (m = -1, y = -mv->yoffs*mv->ent_h;
-	     m < 4 && y < AGWIDGET(mv)->h;
+	     m < 4 && y < WIDGET(mv)->h;
 	     m++, y += (mv->ent_h + mv->vspace)) {
 		for (n = -1, x = -mv->xoffs*mv->ent_w;
-		     n < 4 && x < AGWIDGET(mv)->w;
+		     n < 4 && x < WIDGET(mv)->w;
 		     n++, x += (mv->ent_w + mv->hspace)) {
 			if (m == -1) {
 				snprintf(text, sizeof(text), "%d", n);
@@ -221,7 +221,7 @@ AG_MatviewDrawGreyscale(void *p)
 	int x, y;
 	SG_Real big = 0.0, small = 0.0;
 
-	agPrim.box(mv, 0, 0, AGWIDGET(mv)->w, AGWIDGET(mv)->h, -1,
+	agPrim.box(mv, 0, 0, WIDGET(mv)->w, WIDGET(mv)->h, -1,
 	    AG_COLOR(BG_COLOR));
 
 	for (m = 0; m < 4; m++) {
@@ -232,10 +232,10 @@ AG_MatviewDrawGreyscale(void *p)
 	}
 
 	for (m = 0, y = -mv->yoffs*mv->scale;
-	     m < 4 && y < AGWIDGET(mv)->h;
+	     m < 4 && y < WIDGET(mv)->h;
 	     m++, y += mv->scale) {
 		for (n = 0, x = -mv->xoffs*mv->scale;
-		     n < 4 && x < AGWIDGET(mv)->w;
+		     n < 4 && x < WIDGET(mv)->w;
 		     n++, x += mv->scale) {
 		     	SG_Real dv = A->m[m][n];
 			SDL_Rect rd;
@@ -256,8 +256,8 @@ AG_MatviewDrawGreyscale(void *p)
 				}
 			}
 			if (dv != 0.0) {
-				rd.x = AGWIDGET(mv)->cx+x;
-				rd.y = AGWIDGET(mv)->cy+y;
+				rd.x = WIDGET(mv)->cx+x;
+				rd.y = WIDGET(mv)->cy+y;
 				rd.w = mv->scale;
 				rd.h = mv->scale;
 				SDL_FillRect(agView->v, &rd, c);

@@ -118,13 +118,13 @@ EditNode(AG_Event *event)
 	    AG_BOX_EXPAND);
 	node->ops->edit(node, sgv->editPane, sgv);
 	AG_WidgetScale(vp->div[1], -1, -1);
-	hPane = AGWIDGET(vp->div[1])->h;
-	wPane = AGWIDGET(vp->div[1])->w;
+	hPane = WIDGET(vp->div[1])->h;
+	wPane = WIDGET(vp->div[1])->w;
 	AG_PaneSetDivisionMin(vp, 1, -1, hPane + vp->dw);
 	AG_PaneSetDivisionMin(hp, 0, wPane + vp->dw, -1);
-//	AG_PaneMoveDivider(vp, AGWIDGET(vp)->h);
-	AG_PaneMoveDivider(vp, AGWIDGET(vp)->h - hPane);
-	AG_WindowScale(pWin, AGWIDGET(pWin)->w, AGWIDGET(pWin)->h);
+//	AG_PaneMoveDivider(vp, WIDGET(vp)->h);
+	AG_PaneMoveDivider(vp, WIDGET(vp)->h - hPane);
+	AG_WindowScale(pWin, WIDGET(pWin)->w, WIDGET(pWin)->h);
 	AG_WINDOW_UPDATE(pWin);
 }
 
@@ -317,7 +317,7 @@ ViewNew(AG_Event *event)
 	int num = 0;
 	
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "%s", AGOBJECT(sg)->name);
+	AG_WindowSetCaption(win, "%s", OBJECT(sg)->name);
 
 	sv = SG_ViewNew(win, sg, SG_VIEW_EXPAND);
 tryname:
@@ -398,7 +398,7 @@ SG_Edit(void *p)
 	int i, dx;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "%s", AGOBJECT(sg)->name);
+	AG_WindowSetCaption(win, "%s", OBJECT(sg)->name);
 
 	sv = Malloc(sizeof(SG_View), M_OBJECT);
 	SG_ViewInit(sv, sg, SG_VIEW_EXPAND);
@@ -445,7 +445,7 @@ SG_Edit(void *p)
 			AG_TlistPrescale(tl, "<Isocahedron>", 2);
 			AG_SetEvent(tl, "tlist-dblclick", InsertInstance, "%p",
 			    sg);
-			AGWIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
+			WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 			ListLibraryItems(tl, "*", 0);
 		}
 		ntab = AG_NotebookAddTab(nb, _("Nodes"), AG_BOX_VERT);
@@ -458,7 +458,7 @@ SG_Edit(void *p)
 			AG_TlistSetPopupFn(tl, NodePopupMenu, "%p,%p", sg, sv);
 			AG_SetEvent(tl, "tlist-poll", PollNodes, "%p", sg);
 			AG_SetEvent(tl, "tlist-changed", SelectNode, NULL);
-			AGWIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
+			WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		}
 
 		mp = AG_MPaneNew(hp->div[1], AG_MPANE1, AG_MPANE_EXPAND);

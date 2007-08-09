@@ -249,7 +249,7 @@ ImportTextureDlg(AG_Event *event)
 	AG_Pixmap *pix;
 
 	win = AG_WindowNew(AG_WINDOW_MODAL);
-	AG_WindowSetCaption(win, _("%s: Import texture"), AGOBJECT(mat)->name);
+	AG_WindowSetCaption(win, _("%s: Import texture"), OBJECT(mat)->name);
 
 	hBox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_EXPAND);
 	{
@@ -274,7 +274,7 @@ SG_MaterialEdit(void *obj)
 	AG_NotebookTab *ntab;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("Material <%s>"), AGOBJECT(mat)->name);
+	AG_WindowSetCaption(win, _("Material <%s>"), OBJECT(mat)->name);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Lighting"), AG_BOX_VERT);

@@ -185,7 +185,7 @@ SG_Init(void *obj, const char *name)
 	}
 
 	AG_ObjectInit(sg, name, &sgOps);
-	AGOBJECT(sg)->flags |= AG_OBJECT_REOPEN_ONLOAD;
+	OBJECT(sg)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 	sg->flags = 0;
 	TAILQ_INIT(&sg->nodes);
 	AG_MutexInit(&sg->lock);
@@ -351,13 +351,13 @@ SG_NodeLoad(SG *sg, SG_Node **rnode, AG_Netbuf *buf)
 	if (i == sgElementsCnt) {
 		if (sg->flags & SG_SKIP_UNKNOWN_NODES) {
 			fprintf(stderr, "%s: skipping node %s (%s/%luB)\n",
-			    AGOBJECT(sg)->name, name, type, (Ulong)bsize);
+			    OBJECT(sg)->name, name, type, (Ulong)bsize);
 			AG_NetbufSeek(buf, bsize, SEEK_CUR);
 			*rnode = NULL;
 			return (0);
 		} else {
 			AG_SetError("%s: Unknown node class: %s (%lu bytes)",
-			    AGOBJECT(sg)->name, type, (Ulong)bsize);
+			    OBJECT(sg)->name, type, (Ulong)bsize);
 			return (-1);
 		}
 	}
