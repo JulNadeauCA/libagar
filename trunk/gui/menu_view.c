@@ -244,7 +244,9 @@ mousebuttonup(AG_Event *event)
 			if (item->state == 0) {
 				goto collapse;
 			}
-			AG_ExecEventFn(m, item->clickFn);
+			if (item->clickFn != NULL) {
+				AG_ExecEventFn(m, item->clickFn);
+			}
 			if (item->bind_type != AG_MENU_NO_BINDING) {
 				if (item->bind_lock != NULL)
 					AG_MutexLock(item->bind_lock);
@@ -302,8 +304,8 @@ AG_MenuViewDraw(void *p)
 	AG_Menu *m = mview->pmenu;
 	int i, y = mview->tPad;
 	
-//	agPrim.box(mview, 0, 0, WIDGET(mview)->w, WIDGET(mview)->h, 1,
-//	    AG_COLOR(MENU_UNSEL_COLOR));
+	agPrim.box(mview, 0, 0, WIDGET(mview)->w, WIDGET(mview)->h, 1,
+	    AG_COLOR(MENU_UNSEL_COLOR));
 
 	for (i = 0; i < pitem->nsubitems; i++) {
 		AG_MenuItem *item = &pitem->subitems[i];

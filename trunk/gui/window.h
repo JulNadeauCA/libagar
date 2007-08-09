@@ -63,8 +63,7 @@ typedef struct ag_window {
 	struct ag_titlebar *tbar;		/* Titlebar (if any) */
 	enum ag_window_alignment alignment;	/* Initial position */
 	int spacing;				/* Default spacing (px) */
-	int xpadding;				/* Window padding (px) */
-	int ypadding_top, ypadding_bot;
+	int tPad, bPad, lPad, rPad;		/* Window padding (px) */
 	int minw, minh;				/* Minimum geometry (px) */
 	int savx, savy;				/* Saved coordinates (px) */
 	int savw, savh;				/* Saved geometry (px) */
@@ -98,7 +97,7 @@ void	 AG_WindowSetCaption(AG_Window *, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf, 2, 3)
 			     NONNULL_ATTRIBUTE(2);
 void	 AG_WindowSetSpacing(AG_Window *, int);
-void	 AG_WindowSetPadding(AG_Window *, int, int, int);
+void	 AG_WindowSetPadding(AG_Window *, int, int, int, int);
 void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
 void	 AG_WindowSetCloseAction(AG_Window *, enum ag_window_close_action);
 void	 AG_WindowSetStyle(AG_Window *, const AG_WidgetStyleMod *);

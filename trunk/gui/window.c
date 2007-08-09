@@ -132,12 +132,12 @@ AG_WindowInit(void *p, const char *name, int flags)
 	win->visible = 0;
 	win->alignment = AG_WINDOW_CENTER;
 	win->spacing = 2;
-	win->xpadding = agColorsBorderSize;
-	win->ypadding_top = 1;
-	win->ypadding_bot = agColorsBorderSize + 1;
-	win->minw = win->xpadding*2 + 16;
-	win->minh = win->ypadding_top + win->ypadding_bot +
-	            agTextFontHeight + 16;
+	win->lPad = agColorsBorderSize;
+	win->rPad = agColorsBorderSize;
+	win->tPad = 1;
+	win->bPad = agColorsBorderSize + 1;
+	win->minw = win->lPad + win->rPad;
+	win->minh = win->tPad + win->bPad + agTextFontHeight + 16;
 	win->savx = -1;
 	win->savy = -1;
 	win->savw = -1;
@@ -147,9 +147,8 @@ AG_WindowInit(void *p, const char *name, int flags)
 	AG_MutexInitRecursive(&win->lock);
 	AG_WindowSetStyle(win, &agWindowDefaultStyle);
 	
-	if (win->flags & AG_WINDOW_MODAL) {
+	if (win->flags & AG_WINDOW_MODAL)
 		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
-	}
 	if (win->flags & AG_WINDOW_NORESIZE)
 		win->flags |= AG_WINDOW_NOMAXIMIZE;
 
@@ -902,7 +901,6 @@ out:
 		lastwin = TAILQ_LAST(&agView->windows, ag_windowq);
 		if (agView->winToFocus != NULL &&
 		    agView->winToFocus == lastwin) {	/* Already focused? */
-			dprintf("already focused\n");
 			AG_PostEvent(NULL, agView->winToFocus,
 			    "widget-gainfocus", NULL);
 			agView->winToFocus = NULL;
@@ -1153,48 +1151,44 @@ AG_WindowScale(void *p, int w, int h)
 {
 	AG_Window *win = p;
 	AG_Widget *wid;
-	int totfixed = 0;
-	int x = win->xpadding, dx;
-	int y, dy;
-	int nwidgets = 0;
+	int totFixed;
+	int x, y, dx, dy;
+	int nWidgets;
 	int isTitlebar = 0;
 
 	AG_MutexLock(&win->lock);
 
-	if ((win->flags & AG_WINDOW_NOTITLE) &&
-	    (win->flags & AG_WINDOW_NOBORDERS) == 0) {
-		y = win->ypadding_top + win->spacing;
-	} else {
-		y = 0;
-	}
+	x = win->lPad;
+	y = ((win->flags & AG_WINDOW_NOTITLE) &&
+	     (win->flags & AG_WINDOW_NOBORDERS) == 0) ? win->tPad : 0;
 
 	if (w == -1 && h == -1) {
-		int maxw = 0;
+		int wMax = 0;
 
-		WIDGET(win)->w = win->xpadding*2;
-		WIDGET(win)->h = win->ypadding_top + win->ypadding_bot;
-		if (win->flags & AG_WINDOW_NOTITLE)
-			WIDGET(win)->h += win->spacing;
-
+		WIDGET(win)->w = win->lPad + win->rPad;
+		WIDGET(win)->h = win->tPad + win->bPad;
+		nWidgets = 0;
 		OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 			wid->x = x;
 			wid->y = y;
 			WIDGET_OPS(wid)->scale(wid, -1, -1);
-			if (maxw < wid->w)
-				maxw = wid->w;
 
-			dx = maxw + win->xpadding*2;
+			if (wMax < wid->w) {
+				wMax = wid->w;
+			}
+			dx = win->lPad + wMax + win->rPad;
 			if (WIDGET(win)->w < dx)
 				WIDGET(win)->w = dx;
 
-			isTitlebar = AG_ObjectIsClass(wid,
-			    "AG_Widget:AG_Box:AG_Titlebar");
-			dy = wid->h + (isTitlebar ? win->ypadding_top :
-				       win->spacing);
+			isTitlebar = AG_ObjectIsClass(wid, "AG_Widget:AG_Box:"
+			                                   "AG_Titlebar");
+			dy = wid->h + (isTitlebar ? win->tPad : win->spacing);
 			y += dy;
 			WIDGET(win)->h += dy;
+			nWidgets++;
 		}
-		WIDGET(win)->h -= win->spacing;
+		if (nWidgets > 0)
+			WIDGET(win)->h -= win->spacing;
 
 		win->minw = WIDGET(win)->w;
 		win->minh = WIDGET(win)->h;
@@ -1202,36 +1196,33 @@ AG_WindowScale(void *p, int w, int h)
 	}
 
 	/* Sum the space requested by fixed widgets. */
+	nWidgets = 0;
+	totFixed = 0;
 	OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 		WIDGET_OPS(wid)->scale(wid, -1, -1);
-		if ((wid->flags & AG_WIDGET_VFILL) == 0)
-			totfixed += wid->h + win->spacing;
+		if ((wid->flags & AG_WIDGET_VFILL) == 0) {
+			totFixed += wid->h + win->spacing;
+		}
+		nWidgets++;
 	}
-	if (totfixed > win->spacing)
-		totfixed -= win->spacing;
+	if (nWidgets > 0)
+		totFixed -= win->spacing;
 
 	OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
 		wid->x = x;
 		wid->y = y;
-			
-		isTitlebar = AG_ObjectIsClass(wid,
-		    "AG_Widget:AG_Box:AG_Titlebar");
-
+		isTitlebar = AG_ObjectIsClass(wid, "AG_Widget:AG_Box:"
+		                                   "AG_Titlebar");
 		if (wid->flags & AG_WIDGET_HFILL) {
-			if (isTitlebar) {
-				wid->w = w - 1;
-			} else {
-				wid->w = w - win->xpadding*2 - 1;
-			}
+			wid->w = isTitlebar ? w :
+			                      w - (win->lPad + win->rPad);
 		}
 		if (wid->flags & AG_WIDGET_VFILL) {
-			wid->h = h - totfixed - win->ypadding_bot -
-			                        win->ypadding_top - 2;
+			wid->h = h - totFixed - win->bPad - win->tPad;
 		}
 		WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
 		y += wid->h;
-		y += isTitlebar ? win->ypadding_top : win->spacing;
-		nwidgets++;
+		y += isTitlebar ? win->tPad : win->spacing;
 	}
 
 	if (win->tbar != NULL) {
@@ -1255,13 +1246,13 @@ AG_WindowSetSpacing(AG_Window *win, int spacing)
 
 /* Change the padding around child widgets. */
 void
-AG_WindowSetPadding(AG_Window *win, int xpadding, int ypadding_top,
-    int ypadding_bot)
+AG_WindowSetPadding(AG_Window *win, int lPad, int rPad, int tPad, int bPad)
 {
 	AG_MutexLock(&win->lock);
-	if (xpadding >= 0)	{ win->xpadding = xpadding; }
-	if (ypadding_top >= 0)	{ win->ypadding_top = ypadding_top; }
-	if (ypadding_bot >= 0)	{ win->ypadding_bot = ypadding_bot; }
+	if (lPad != -1) { win->lPad = lPad; }
+	if (rPad != -1) { win->rPad = rPad; }
+	if (tPad != -1) { win->tPad = tPad; }
+	if (bPad != -1) { win->bPad = bPad; }
 	AG_MutexUnlock(&win->lock);
 }
 
