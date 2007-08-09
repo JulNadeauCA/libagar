@@ -64,7 +64,7 @@
 const AG_ObjectOps agObjectOps = {
 	"AG_Object",
 	sizeof(AG_Object),
-	{ 7, 0 },
+	{ 7, 1 },
 	NULL,	/* init */
 	NULL,	/* reinit */
 	NULL,	/* destroy */
@@ -81,7 +81,7 @@ const AG_FlagDescr agObjectFlags[] = {
 	{ AG_OBJECT_RELOAD_PROPS,	"Allow non-persistent properties", 1 },
 	{ AG_OBJECT_PRESERVE_DEPS,	"Preserve null dependencies",	1 },
 	{ AG_OBJECT_REMAIN_DATA,	"Keep data resident",		1 },
-	{ AG_OBJECT_DATA_RESIDENT,	"Data is resident",		0 },
+	{ AG_OBJECT_RESIDENT,		"Data part is resident",	0 },
 	{ AG_OBJECT_STATIC,		"Statically allocated",		0 },
 	{ AG_OBJECT_REOPEN_ONLOAD,	"",		0 },
 };
@@ -99,23 +99,8 @@ int	agObjectDebugLvl = DEBUG_STATE|DEBUG_DEPRESV;
 
 int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
 int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
+int agObjectBackups = 1;	   /* Backup object save files. */
 
-/* Allocate, initialize and attach a generic object. */
-AG_Object *
-AG_ObjectNew(void *parent, const char *name)
-{
-	AG_Object *ob;
-
-	ob = Malloc(sizeof(AG_Object), M_OBJECT);
-	AG_ObjectInit(ob, name, NULL);
-
-	if (parent != NULL) {
-		AG_ObjectAttach(parent, ob);
-	}
-	return (ob);
-}
-
-/* Initialize a generic object structure. */
 void
 AG_ObjectInit(void *p, const char *name, const void *opsp)
 {
@@ -142,6 +127,39 @@ AG_ObjectInit(void *p, const char *name, const void *opsp)
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
 	CIRCLEQ_INIT(&ob->timeouts);
+}
+
+/* Create a new object instance and mark it resident. */
+void *
+AG_ObjectNew(void *parent, const char *name, const AG_ObjectOps *ops)
+{
+	char nameGen[AG_OBJECT_NAME_MAX];
+	AG_Object *obj;
+
+	if (name == NULL) {
+		AG_ObjectGenName(parent, ops, nameGen, sizeof(nameGen));
+	} else {
+		if (parent != NULL &&
+		    AG_ObjectFindChild(parent, name) != NULL) {
+			AG_SetError(_("%s: Existing child object %s"),
+			    OBJECT(parent)->name, name);
+			return (NULL);
+		}
+	}
+	
+	obj = Malloc(ops->size, M_OBJECT);
+	if (ops->init != NULL) {
+		ops->init(obj, name != NULL ? name : nameGen);
+	} else {
+		AG_ObjectInit(obj, name != NULL ? name : nameGen, ops);
+	}
+
+	obj->flags |= AG_OBJECT_RESIDENT;
+
+	if (parent != NULL) {
+		AG_ObjectAttach(parent, obj);
+	}
+	return (obj);
 }
 
 /* Check if an object's class matches the given pattern (general case). */
@@ -208,28 +226,28 @@ AG_ObjectRemain(void *p, int flags)
 	AG_Object *ob = p;
 
 	if (flags & AG_OBJECT_REMAIN_DATA) {
-		ob->flags |= (AG_OBJECT_REMAIN_DATA|AG_OBJECT_DATA_RESIDENT);
+		ob->flags |= (AG_OBJECT_REMAIN_DATA|AG_OBJECT_RESIDENT);
 	} else {
 		ob->flags &= ~AG_OBJECT_REMAIN_DATA;
 	}
 }
 
 /*
- * Reinitialize the state of an object (eg. free map nodes), but preserve
- * the dependencies (which are assumed to then have a reference count of 0).
+ * Free an object's dataset. Dependencies are preserved, but they are all
+ * assumed to have reference counts of 0.
  */
 void
-AG_ObjectFreeData(void *p)
+AG_ObjectFreeDataset(void *p)
 {
 	AG_Object *ob = p;
 
-	if (AGOBJECT_RESIDENT(ob)) {
+	if (OBJECT_RESIDENT(ob)) {
 		if (ob->ops->reinit != NULL) {
 			ob->flags |= AG_OBJECT_PRESERVE_DEPS;
 			ob->ops->reinit(ob);
 			ob->flags &= ~(AG_OBJECT_PRESERVE_DEPS);
 		}
-		ob->flags &= ~(AG_OBJECT_DATA_RESIDENT);
+		ob->flags &= ~(AG_OBJECT_RESIDENT);
 	}
 }
 
@@ -340,7 +358,7 @@ AG_ObjectInUseFind(const void *p, const void *robj)
 		if (dep->obj == robj &&
 		    robj != ob) {
 			AG_SetError(_("The `%s' object is used by `%s'."),
-			    AGOBJECT(robj)->name, ob->name);
+			    OBJECT(robj)->name, ob->name);
 			return (1);
 		}
 	}
@@ -441,7 +459,7 @@ AG_ObjectAttachPath(const char *path, void *child)
 	} else {
 		if ((parent = AG_ObjectFind(ppath)) == NULL) {
 			AG_SetError("%s: cannot attach to `%s': %s",
-			    AGOBJECT(child)->name, ppath, AG_GetError());
+			    OBJECT(child)->name, ppath, AG_GetError());
 			goto fail;
 		}
 		AG_ObjectAttach(parent, child);
@@ -462,9 +480,7 @@ AG_ObjectDetach(void *childp)
 
 	AG_LockLinkage();
 	AG_MutexLock(&child->lock);
-
-	/* Cancel scheduled non-detachable timeouts. */
-	AG_ObjectCancelTimeouts(child, AG_TIMEOUT_DETACHABLE);
+	AG_ObjectCancelTimeouts(child, AG_CANCEL_ONDETACH);
 
 	TAILQ_REMOVE(&parent->children, child, cobjs);
 	child->parent = NULL;
@@ -514,7 +530,7 @@ AG_ObjectFindChild(void *p, const char *name)
 	AG_Object *pObj = p;
 	AG_Object *cObj;
 
-	AGOBJECT_FOREACH_CHILD(cObj, pObj, ag_object) {
+	OBJECT_FOREACH_CHILD(cObj, pObj, ag_object) {
 		if (strcmp(cObj->name, name) == 0)
 			break;
 	}
@@ -585,11 +601,11 @@ AG_ObjectFreeDeps(AG_Object *ob)
 }
 
 /*
- * Remove any dependencies of the object and its children with a reference
- * count of zero (as used by the load process to resolve object references).
+ * Remove any entry in the object's dependency table (and its children's)
+ * with a reference count of zero.
  */
 void
-AG_ObjectFreeZerodeps(AG_Object *ob)
+AG_ObjectFreeDummyDeps(AG_Object *ob)
 {
 	AG_Object *cob;
 	AG_ObjectDep *dep, *ndep;
@@ -604,7 +620,7 @@ AG_ObjectFreeZerodeps(AG_Object *ob)
 		}
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs)
-		AG_ObjectFreeZerodeps(cob);
+		AG_ObjectFreeDummyDeps(cob);
 }
 
 /*
@@ -672,9 +688,9 @@ AG_ObjectFreeEvents(AG_Object *ob)
 	AG_MutexUnlock(&ob->lock);
 }
 
-/* Cancel any scheduled timeout(3) event associated with the object. */
+/* Cancel any scheduled timeout event associated with the object. */
 void
-AG_ObjectCancelTimeouts(void *p, int flags)
+AG_ObjectCancelTimeouts(void *p, Uint flags)
 {
 	AG_Object *ob = p, *tob;
 	extern struct ag_objectq agTimeoutObjQ;
@@ -686,7 +702,7 @@ AG_ObjectCancelTimeouts(void *p, int flags)
 
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if ((ev->flags & AG_EVENT_SCHEDULED) &&
-		    (ev->timeout.flags & flags) == 0) {
+		    (ev->timeout.flags & flags)) {
 			dprintf("%s: cancelling scheduled `%s'\n", ob->name,
 			    ev->name);
 			AG_DelTimeout(ob, &ev->timeout);
@@ -737,7 +753,7 @@ AG_ObjectDestroy(void *p)
 }
 
 /* Copy the full pathname to an object's data file to a fixed-size buffer. */
-/* XXX modifies buffer even on failure */
+/* NOTE: Will return data into path even upon failure. */
 int
 AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 {
@@ -814,18 +830,18 @@ AG_ObjectPageIn(void *p)
 	int dataFound;
 
 	AG_MutexLock(&ob->lock);
-	if (!AGOBJECT_PERSISTENT(ob)) {
-		ob->flags |= AG_OBJECT_DATA_RESIDENT;
+	if (!OBJECT_PERSISTENT(ob)) {
+		ob->flags |= AG_OBJECT_RESIDENT;
 		goto out;
 	}
-	if (!AGOBJECT_RESIDENT(ob)) {
+	if (!OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (dataFound == 0) {
 				/*
 				 * Data not found in storage, just assume
 				 * the object has never been saved before.
 				 */
-				ob->flags |= AG_OBJECT_DATA_RESIDENT;
+				ob->flags |= AG_OBJECT_RESIDENT;
 				goto out;
 			} else {
 				goto fail;
@@ -850,10 +866,10 @@ AG_ObjectPageOut(void *p)
 	AG_Object *ob = p;
 	
 	AG_MutexLock(&ob->lock);
-	if (!AGOBJECT_PERSISTENT(ob)) {
+	if (!OBJECT_PERSISTENT(ob)) {
 		goto done;
 	}
-	if (!AGOBJECT_RESIDENT(ob)) {
+	if (!OBJECT_RESIDENT(ob)) {
 		AG_SetError(_("Object is non-resident"));
 		goto fail;
 	}
@@ -864,7 +880,7 @@ AG_ObjectPageOut(void *p)
 			if (AG_ObjectSave(ob) == -1)
 				goto fail;
 		}
-		AG_ObjectFreeData(ob);
+		AG_ObjectFreeDataset(ob);
 	}
 done:
 	AG_MutexUnlock(&ob->lock);
@@ -874,47 +890,29 @@ fail:
 	return (-1);
 }
 
+/* Load both the generic part and the dataset of an object from file. */
 int
-AG_ObjectLoad(void *p)
+AG_ObjectLoadFromFile(void *p, const char *path)
 {
 	AG_Object *ob = p;
+	int dataFound;
 
 	AG_LockLinkage();
 	AG_MutexLock(&ob->lock);
-	AG_PostEvent(ob, agWorld, "object-pre-load", NULL);
 	
-	/* Cancel scheduled non-loadable timeouts. */
-	AG_ObjectCancelTimeouts(ob, AG_TIMEOUT_LOADABLE);
-	
-	if (!AGOBJECT_PERSISTENT(ob)) {
+	if (!OBJECT_PERSISTENT(ob)) {
 		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
 		goto fail;
 	}
-
- 	/* Load the generic part of the object and its children. */
-	if (AG_ObjectLoadGeneric(ob) == -1)
+	if (AG_ObjectLoadGenericFromFile(ob, path) == -1 ||
+	    AG_ObjectResolveDeps(ob) == -1 ||
+	    AG_ObjectLoadDataFromFile(ob, &dataFound, path) == -1) {
 		goto fail;
-
-	/*
-	 * Resolve the dependency tables now that the generic object tree
-	 * is in a consistent state.
-	 */
-	if (AG_ObjectResolveDeps(ob) == -1)
-		goto fail;
-
-	/*
-	 * Reload the data of the object and its children (if resident),
-	 * now that the dependency tables are resolved.
-	 */
-	if (AG_ObjectReloadData(ob) == -1)
-		goto fail;
-
-	AG_PostEvent(ob, agWorld, "object-post-load", "%i", 0);
+	}
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (0);
 fail:
-	AG_PostEvent(ob, agWorld, "object-post-load", "%i", -1);
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (-1);
@@ -949,7 +947,7 @@ AG_ObjectResolveDeps(void *p)
 	}
 
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (!AGOBJECT_PERSISTENT(cob)) {
+		if (!OBJECT_PERSISTENT(cob)) {
 			continue;
 		}
 		if (AG_ObjectResolveDeps(cob) == -1)
@@ -993,49 +991,58 @@ AG_ObjectReloadData(void *p)
 }
 
 /*
- * Load the generic part of an object and its children.
+ * Load the generic part of an object from archive. If the archived
+ * object has children, create instances for them and load their
+ * generic part as well.
+ *
  * The object and linkage must be locked.
  */
 int
-AG_ObjectLoadGeneric(void *p)
+AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 {
+	AG_Version ver;
 	char path[MAXPATHLEN];
 	AG_Object *ob = p;
+	AG_ObjectDep *dep;
 	AG_Netbuf *buf;
 	Uint32 count, i;
-	int ti, flags, flags_save;
-	char *mname;
+	Uint flags, flags_save;
+	
+	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
 
-	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
-		return (-1);
+	if (pPath != NULL) {
+		strlcpy(path, pPath, sizeof(path));
+	} else {
+		if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
+			return (-1);
+	}
+	debug(DEBUG_STATE, "%s: Loading GENERIC from %s\n", ob->name, path);
+
 	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
 		return (-1);
 	}
-	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
+	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, &ver) == -1)
 		goto fail;
 
-	if (agVerbose)
-		debug(DEBUG_STATE, "loading %s (generic)\n", ob->name);
-	
 	/*
 	 * Must free the resident data in order to clear the dependencies.
 	 * Sets the WAS_RESIDENT flag to be used at data load stage.
 	 */
-	if (AGOBJECT_RESIDENT(ob)) {
+	if (OBJECT_RESIDENT(ob)) {
 		ob->flags |= AG_OBJECT_WAS_RESIDENT;
-		AG_ObjectFreeData(ob);
+		AG_ObjectFreeDataset(ob);
 	}
 	AG_ObjectFreeDeps(ob);
 
-	AG_ReadUint32(buf);			/* Ignore data offset */
-	AG_ReadUint32(buf);			/* Gfx offset (unused) */
+	AG_ReadUint32(buf);				/* Data offs */
+	if (ver.minor < 1) { AG_ReadUint32(buf); }	/* Gfx offs */
 
 	/* Read and verify the generic object flags. */
 	flags_save = ob->flags;
 	flags = (int)AG_ReadUint32(buf);
-	if (flags & (AG_OBJECT_NON_PERSISTENT|AG_OBJECT_DATA_RESIDENT|
-	    AG_OBJECT_WAS_RESIDENT)) {
+	if (flags & (AG_OBJECT_NON_PERSISTENT|AG_OBJECT_RESIDENT|
+	             AG_OBJECT_WAS_RESIDENT)) {
 		AG_SetError("%s: inconsistent flags (0x%08x)", ob->name,
 		    flags);
 		goto fail;
@@ -1045,8 +1052,6 @@ AG_ObjectLoadGeneric(void *p)
 	/* Decode the saved dependencies (to be resolved later). */
 	count = AG_ReadUint32(buf);
 	for (i = 0; i < count; i++) {
-		AG_ObjectDep *dep;
-
 		dep = Malloc(sizeof(AG_ObjectDep), M_DEP);
 		dep->path = AG_ReadString(buf);
 		dep->obj = NULL;
@@ -1059,42 +1064,38 @@ AG_ObjectLoadGeneric(void *p)
 	if (AG_PropLoad(ob, buf) == -1)
 		goto fail;
 
-	/*
-	 * Load the generic part of the child objects.
-	 *
-	 * If a saved object matches an existing object's name and type,
-	 * invoke reinit on it (and reload its data if it is resident).
-	 * Otherwise, allocate and attach a new object from scratch using
-	 * the type switch.
-	 *
-	 * XXX ensure that there are no duplicate names.
-	 */
+	/* Load the generic part of the archived child objects. */
 	count = AG_ReadUint32(buf);
 	for (i = 0; i < count; i++) {
 		char cname[AG_OBJECT_NAME_MAX];
 		char ctype[AG_OBJECT_TYPE_MAX];
 		AG_Object *eob, *child;
 
+	 	/* XXX ensure that there are no duplicate names. */
 		AG_CopyString(cname, buf, sizeof(cname));
 		AG_CopyString(ctype, buf, sizeof(ctype));
 
-		AGOBJECT_FOREACH_CHILD(eob, ob, ag_object) {
+		OBJECT_FOREACH_CHILD(eob, ob, ag_object) {
 			if (strcmp(eob->name, cname) == 0) 
 				break;
 		}
 		if (eob != NULL) {
-			/* XXX free the existing object or ignore */
+			/*
+			 * XXX TODO Allow these cases to be handled by a
+			 * special callback function.
+			 */
 			if (strcmp(eob->ops->type, ctype) != 0) {
 				fatal("existing object of different type");
 			}
-			/* XXX ignore instead? */
-			if (!AGOBJECT_PERSISTENT(eob)) {
+			if (!OBJECT_PERSISTENT(eob)) {
 				fatal("existing non-persistent object");
 			}
 			if (AG_ObjectLoadGeneric(eob) == -1) {
 				goto fail;
 			}
 		} else {
+			int ti;
+
 		 	for (ti = 0; ti < agnTypes; ti++) {
 				if (strcmp(agTypes[ti].ops->type, ctype) == 0)
 					break;
@@ -1122,95 +1123,68 @@ AG_ObjectLoadGeneric(void *p)
 			if (AG_ObjectLoadGeneric(child) == -1)
 				goto fail;
 		}
-#if 0
-		/*
-		 * Destroy any attached object without a match in the
-		 * save (that is not currently in use).
-		 */
-		AGOBJECT_FOREACH_CHILD(eob, ob, ag_object) {
-			if (eob->flags & AG_OBJECT_IN_SAVE) {
-				continue;
-			}
-			if (!AG_ObjectInUse(eob)) {
-				dprintf("%s: not in save; destroying\n",
-				    eob->name);
-				AG_ObjectDetach(eob);
-				AG_ObjectUnlinkDatafiles(eob);
-				AG_ObjectDestroy(eob);
-				if ((eob->flags & AG_OBJECT_STATIC) == 0)
-					Free(eob, M_OBJECT);
-			} else {
-				/* XXX */
-				dprintf("%s: not in save; detaching\n",
-				    AGOBJECT(eob)->name);
-				AG_TextMsg(AG_MSG_ERROR,
-				    _("Detaching `%s' (not in save)."),
-				    eob->name);
-				AG_ObjectDetach(eob);
-			}
-		}
-#endif
 	}
-
+	AG_PostEvent(ob, agWorld, "object-post-load-generic", "%s", path);
 	AG_NetbufClose(buf);
 	return (0);
 fail:
-	AG_ObjectFreeData(ob);
+	AG_ObjectFreeDataset(ob);
 	AG_ObjectFreeDeps(ob);
 	AG_NetbufClose(buf);
 	return (-1);
 }
 
 /*
- * Load object data. Called as part of a page in operation, for reading
- * data when saving a non-resident object, and from AG_ObjectLoad() for
- * reloading data of resident objects.
- *
+ * Load only the data part of an object archive.
  * The object must be locked.
- *
- * XXX no provision for saved data being out of sync with the generic object.
- * XXX encode some sort of key?
  */
 int
-AG_ObjectLoadData(void *p, int *dataFound)
+AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 {
 	char path[MAXPATHLEN];
 	AG_Object *ob = p;
 	AG_Netbuf *buf;
-	off_t data_offs;
+	off_t dataOffs;
+	AG_Version ver;
 	
+	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
+
 	*dataFound = 1;
 
-	if (AGOBJECT_RESIDENT(ob)) {
+	if (OBJECT_RESIDENT(ob)) {
 		AG_SetError(_("The data of `%s' is already resident."),
 		    ob->name);
 		return (-1);
 	}
-	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1) {
-		*dataFound = 0;
-		return (-1);
+	if (pPath != NULL) {
+		strlcpy(path, pPath, sizeof(path));
+	} else {
+		if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1) {
+			*dataFound = 0;
+			return (-1);
+		}
 	}
+	debug(DEBUG_STATE, "%s: Loading DATA from %s\n", ob->name, path);
+
 	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
 		*dataFound = 0;
 		return (-1);
 	}
-	if (agVerbose)
-		debug(DEBUG_STATE, "loading %s (data)\n", ob->name);
-
-	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
+	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, &ver) == -1)
 		goto fail;
 	
-	data_offs = (off_t)AG_ReadUint32(buf);		/* User data offset */
-	AG_ReadUint32(buf);			     /* Gfx offset (unused) */
-	AG_NetbufSeek(buf, data_offs, SEEK_SET);
+	dataOffs = (off_t)AG_ReadUint32(buf);		/* User data offset */
+	if (ver.minor < 1) { AG_ReadUint32(buf); }	/* Gfx offs */
+	AG_NetbufSeek(buf, dataOffs, SEEK_SET);
 
 	if (ob->ops->load != NULL &&
 	    ob->ops->load(ob, buf) == -1)
 		goto fail;
 
-	ob->flags |= AG_OBJECT_DATA_RESIDENT;
+	ob->flags |= AG_OBJECT_RESIDENT;
 	AG_NetbufClose(buf);
+	AG_PostEvent(ob, agWorld, "object-post-load-data", "%s", path);
 	return (0);
 fail:
 	AG_NetbufClose(buf);
@@ -1240,7 +1214,7 @@ AG_ObjectSaveAll(void *p)
 		goto fail;
 	}
 	TAILQ_FOREACH(cobj, &obj->children, cobjs) {
-		if (!AGOBJECT_PERSISTENT(cobj)) {
+		if (!OBJECT_PERSISTENT(cobj)) {
 			continue;
 		}
 		if (AG_ObjectSaveAll(cobj) == -1)
@@ -1253,18 +1227,20 @@ fail:
 	return (-1);
 }
 
-/* Save the state of an object. */
+/*
+ * Archive an object to the given file (or default location
+ * if pPath is NULL).
+ */
 int
-AG_ObjectSave(void *p)
+AG_ObjectSaveToFile(void *p, const char *pPath)
 {
-	char save_path[MAXPATHLEN];
-	char save_dir[MAXPATHLEN];
-	char save_file[MAXPATHLEN];
-	char obj_name[AG_OBJECT_PATH_MAX];
+	char pathDir[MAXPATHLEN];
+	char path[MAXPATHLEN];
+	char name[AG_OBJECT_PATH_MAX];
 	AG_Object *ob = p;
 	AG_Netbuf *buf;
 	AG_Object *child;
-	off_t count_offs, data_offs;
+	off_t countOffs, dataOffs;
 	Uint32 count;
 	AG_ObjectDep *dep;
 	int wasResident;
@@ -1273,28 +1249,33 @@ AG_ObjectSave(void *p)
 	AG_LockLinkage();
 	AG_MutexLock(&ob->lock);
 
-	if (!AGOBJECT_PERSISTENT(ob)) {
+	if (!OBJECT_PERSISTENT(ob)) {
 		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
 		goto fail_lock;
 	}
-	wasResident = AGOBJECT_RESIDENT(ob);
-	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
-	
-	/* Create the save directory. */
-	AG_StringCopy(agConfig, "save-path", save_path, sizeof(save_path));
-	strlcpy(save_dir, save_path, sizeof(save_dir));
-	if (ob->save_pfx != NULL) {
-		strlcat(save_dir, ob->save_pfx, sizeof(save_dir));
+	wasResident = OBJECT_RESIDENT(ob);
+	AG_ObjectCopyName(ob, name, sizeof(name));
+
+	if (pPath != NULL) {
+		strlcpy(path, pPath, sizeof(path));
+	} else {
+		/* Create the save directory if needed. */
+		strlcpy(pathDir, AG_String(agConfig,"save-path"),
+		    sizeof(pathDir));
+		if (ob->save_pfx != NULL) {
+			strlcat(pathDir, ob->save_pfx, sizeof(pathDir));
+		}
+		strlcat(pathDir, name, sizeof(pathDir));
+		if (AG_FileExists(pathDir) == 0 &&
+		    AG_MkPath(pathDir) == -1)
+			goto fail_lock;
 	}
-	strlcat(save_dir, obj_name, sizeof(save_dir));
-	if (AG_FileExists(save_dir) == 0 &&
-	    AG_MkPath(save_dir) == -1)
-		goto fail_lock;
 
 	/*
-	 * Page in the data unless it is already resident.
-	 * XXX TODO separate the data files in generic/data parts to
-	 * avoid this.
+	 * If we are trying to save a non-resident object, page it in
+	 * temporarily for the duration of the operation.
+	 * 
+	 * XXX TODO Allow partial generic and data modifications instead.
 	 */
 	if (!wasResident) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
@@ -1304,7 +1285,7 @@ AG_ObjectSave(void *p)
 				 * that this object has never been saved
 				 * before and mark it resident.
 				 */
-				ob->flags |= AG_OBJECT_DATA_RESIDENT;
+				ob->flags |= AG_OBJECT_RESIDENT;
 			} else {
 				AG_SetError("Failed to load non-resident "
 				            "object for save: %s",
@@ -1314,30 +1295,32 @@ AG_ObjectSave(void *p)
 		}
 	}
 
-	strlcpy(save_file, save_dir, sizeof(save_file));
-	strlcat(save_file, AG_PATHSEP, sizeof(save_file));
-	strlcat(save_file, ob->name, sizeof(save_file));
-	strlcat(save_file, ".", sizeof(save_file));
-	strlcat(save_file, ob->ops->type, sizeof(save_file));
+	if (pPath == NULL) {
+		strlcpy(path, pathDir, sizeof(path));
+		strlcat(path, AG_PATHSEP, sizeof(path));
+		strlcat(path, ob->name, sizeof(path));
+		strlcat(path, ".", sizeof(path));
+		strlcat(path, ob->ops->type, sizeof(path));
+	}
+	debug(DEBUG_STATE, "%s: Saving to %s\n", ob->name, path);
 
-	debug(DEBUG_STATE, "saving %s to %s\n", ob->name, save_file);
-
-	BackupObjectFile(ob, save_file);
-
-	if ((buf = AG_NetbufOpen(save_file, "wb", AG_NETBUF_BIG_ENDIAN))
+	if (agObjectBackups) {
+		BackupObjectFile(ob, path);
+	} else {
+		unlink(path);
+	}
+	if ((buf = AG_NetbufOpen(path, "wb", AG_NETBUF_BIG_ENDIAN))
 	    == NULL)
 		goto fail_reinit;
 
 	AG_WriteVersion(buf, agObjectOps.type, &agObjectOps.ver);
 
-	data_offs = AG_NetbufTell(buf);
-	AG_WriteUint32(buf, 0);
-	AG_WriteUint32(buf, 0);			/* Skip gfx offs */
-
+	dataOffs = AG_NetbufTell(buf);
+	AG_WriteUint32(buf, 0);					/* Data offs */
 	AG_WriteUint32(buf, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
 
 	/* Encode the object dependencies. */
-	count_offs = AG_NetbufTell(buf);
+	countOffs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
 	for (dep = TAILQ_FIRST(&ob->deps), count = 0;
 	     dep != TAILQ_END(&ob->deps);
@@ -1347,28 +1330,28 @@ AG_ObjectSave(void *p)
 		AG_ObjectCopyName(dep->obj, dep_name, sizeof(dep_name));
 		AG_WriteString(buf, dep_name);
 	}
-	AG_PwriteUint32(buf, count, count_offs);
+	AG_PwriteUint32(buf, count, countOffs);
 
 	/* Encode the generic properties. */
 	if (AG_PropSave(ob, buf) == -1)
 		goto fail;
 	
 	/* Save the list of child objects. */
-	count_offs = AG_NetbufTell(buf);
+	countOffs = AG_NetbufTell(buf);
 	AG_WriteUint32(buf, 0);
 	count = 0;
 	TAILQ_FOREACH(child, &ob->children, cobjs) {
-		if (!AGOBJECT_PERSISTENT(child)) {
+		if (!OBJECT_PERSISTENT(child)) {
 			continue;
 		}
 		AG_WriteString(buf, child->name);
 		AG_WriteString(buf, child->ops->type);
 		count++;
 	}
-	AG_PwriteUint32(buf, count, count_offs);
+	AG_PwriteUint32(buf, count, countOffs);
 
 	/* Save the user data. */
-	AG_PwriteUint32(buf, AG_NetbufTell(buf), data_offs);
+	AG_PwriteUint32(buf, AG_NetbufTell(buf), dataOffs);
 	if (ob->ops->save != NULL &&
 	    ob->ops->save(ob, buf) == -1)
 		goto fail;
@@ -1376,7 +1359,7 @@ AG_ObjectSave(void *p)
 	AG_NetbufFlush(buf);
 	AG_NetbufClose(buf);
 	if (!wasResident) {
-		AG_ObjectFreeData(ob);
+		AG_ObjectFreeDataset(ob);
 	}
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
@@ -1385,7 +1368,7 @@ fail:
 	AG_NetbufClose(buf);
 fail_reinit:
 	if (!wasResident)
-		AG_ObjectFreeData(ob);
+		AG_ObjectFreeDataset(ob);
 fail_lock:
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
@@ -1411,7 +1394,7 @@ AG_ObjectSetName(void *p, const char *name)
 void
 AG_ObjectSetOps(void *p, const void *ops)
 {
-	AGOBJECT(p)->ops = ops;
+	OBJECT(p)->ops = ops;
 }
 
 /* Add a new dependency or increment the reference count on one. */
@@ -1427,15 +1410,15 @@ AG_ObjectAddDep(void *p, void *depobj)
 	}
 	if (dep != NULL) {
 		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
-		    AGOBJECT(depobj)->name, dep->count);
+		    OBJECT(depobj)->name, dep->count);
 		if (++dep->count > AG_OBJECT_DEP_MAX) {
 			fprintf(stderr, "%s: wiring %s dep (too many refs)\n",
-			    ob->name, AGOBJECT(depobj)->name);
+			    ob->name, OBJECT(depobj)->name);
 			dep->count = AG_OBJECT_DEP_MAX;
 		}
 	} else {
 		debug(DEBUG_DEPS, "%s: +[%s]\n", ob->name,
-		    AGOBJECT(depobj)->name);
+		    OBJECT(depobj)->name);
 		dep = Malloc(sizeof(AG_ObjectDep), M_DEP);
 		dep->obj = depobj;
 		dep->count = 1;
@@ -1518,7 +1501,7 @@ AG_ObjectDelDep(void *p, const void *depobj)
 	}
 	if (dep == NULL) {
 		dprintf("%s: no such dep: %s\n", ob->name,
-		    AGOBJECT(depobj)->name);
+		    OBJECT(depobj)->name);
 		return;
 	}
 
@@ -1528,7 +1511,7 @@ AG_ObjectDelDep(void *p, const void *depobj)
 	if ((dep->count-1) == 0) {
 		if ((ob->flags & AG_OBJECT_PRESERVE_DEPS) == 0) {
 			debug(DEBUG_DEPS, "%s: -[%s]\n", ob->name,
-			    AGOBJECT(depobj)->name);
+			    OBJECT(depobj)->name);
 			TAILQ_REMOVE(&ob->deps, dep, deps);
 			Free(dep, M_DEP);
 		} else {
@@ -1538,7 +1521,7 @@ AG_ObjectDelDep(void *p, const void *depobj)
 		fatal("neg ref count");
 	} else {
 		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
-		    AGOBJECT(depobj)->name, dep->count);
+		    OBJECT(depobj)->name, dep->count);
 		dep->count--;
 	}
 }
@@ -1726,19 +1709,19 @@ AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
     char *digest)
 {
 	const AG_Object *ob = p;
-	char save_path[MAXPATHLEN];
+	char path[MAXPATHLEN];
 	Uchar buf[BUFSIZ];
 	FILE *f;
 	off_t offs;
 	size_t totlen = 0;
 	size_t rv;
 	
-	if (AG_ObjectCopyFilename(ob, save_path, sizeof(save_path)) == -1) {
+	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1) {
 		return (0);
 	}
 	/* TODO locking */
-	if ((f = fopen(save_path, "r")) == NULL) {
-		AG_SetError("%s: %s", save_path, strerror(errno));
+	if ((f = fopen(path, "r")) == NULL) {
+		AG_SetError("%s: %s", path, strerror(errno));
 		return (0);
 	}
 
@@ -1833,7 +1816,7 @@ AG_ObjectChanged(void *p)
 	char *pfx_save;
 	int rv;
 
-	if (!AGOBJECT_PERSISTENT(ob) || !AGOBJECT_RESIDENT(ob)) {
+	if (!OBJECT_PERSISTENT(ob) || !OBJECT_RESIDENT(ob)) {
 		return (0);
 	}
 	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, save_sha1) == 0)
@@ -1861,10 +1844,39 @@ fail:
 	return (-1);
 }
 
+void
+AG_ObjectGenName(AG_Object *pobj, const AG_ObjectOps *ops, char *name,
+    size_t len)
+{
+	char tname[AG_OBJECT_TYPE_MAX];
+	Uint i = 0;
+	AG_Object *ch;
+	char *s;
+	
+	if ((s = strrchr(ops->type, '.')) != NULL && s[1] != '\0') {
+		strlcpy(tname, &s[1], sizeof(tname));
+	} else {
+		strlcpy(tname, ops->type, sizeof(tname));
+	}
+	tname[0] = (char)toupper(tname[0]);
+tryname:
+	snprintf(name, len, "%s #%u", tname, i);
+	if (pobj != NULL) {
+		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
+			if (strcmp(ch->name, name) == 0)
+				break;
+		}
+		if (ch != NULL) {
+			i++;
+			goto tryname;
+		}
+	}
+}
+
 #ifdef EDITION
 
 static void
-poll_deps(AG_Event *event)
+PollDeps(AG_Event *event)
 {
 	char path[AG_OBJECT_PATH_MAX];
 	AG_Tlist *tl = AG_SELF();
@@ -1894,7 +1906,7 @@ poll_deps(AG_Event *event)
 }
 
 static void
-poll_props(AG_Event *event)
+PollProps(AG_Event *event)
 {
 	char val[AG_TLIST_LABEL_MAX];
 	AG_Tlist *tl = AG_SELF();
@@ -1910,7 +1922,7 @@ poll_props(AG_Event *event)
 }
 
 static void
-poll_events(AG_Event *event)
+PollEvents(AG_Event *event)
 {
 	extern const char *evarg_type_names[];
 	AG_Tlist *tl = AG_SELF();
@@ -1985,7 +1997,7 @@ poll_events(AG_Event *event)
 }
 
 static void
-rename_object(AG_Event *event)
+RenameObject(AG_Event *event)
 {
 	AG_WidgetBinding *stringb;
 	AG_Textbox *tb = AG_SELF();
@@ -2000,7 +2012,7 @@ rename_object(AG_Event *event)
 }
 
 static void
-refresh_checksums(AG_Event *event)
+RefreshSums(AG_Event *event)
 {
 	char checksum[128];
 	AG_Object *ob = AG_PTR(1);
@@ -2091,7 +2103,7 @@ AG_ObjectEdit(void *p)
 		tbox = AG_TextboxNew(ntab, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Name: "));
 		AG_TextboxPrintf(tbox, ob->name);
-		AG_SetEvent(tbox, "textbox-return", rename_object, "%p", ob);
+		AG_SetEvent(tbox, "textbox-return", RenameObject, "%p", ob);
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 	
@@ -2122,7 +2134,7 @@ AG_ObjectEdit(void *p)
 					            AG_BOX_HFILL);
 		{
 			btn = AG_ButtonNewFn(box, 0, _("Refresh checksums"),
-			    refresh_checksums, "%p,%p,%p,%p", ob,
+			    RefreshSums, "%p,%p,%p,%p", ob,
 			    tbMD5, tbSHA1, tbRMD160);
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);
 		}
@@ -2152,19 +2164,19 @@ AG_ObjectEdit(void *p)
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistPrescale(tl, "XXXXXXXXXXXX", 6);
-		AG_SetEvent(tl, "tlist-poll", poll_deps, "%p", ob);
+		AG_SetEvent(tl, "tlist-poll", PollDeps, "%p", ob);
 	}
 	
 	ntab = AG_NotebookAddTab(nb, _("Events"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_SetEvent(tl, "tlist-poll", poll_events, "%p", ob);
+		AG_SetEvent(tl, "tlist-poll", PollEvents, "%p", ob);
 	}
 	
 	ntab = AG_NotebookAddTab(nb, _("Properties"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_SetEvent(tl, "tlist-poll", poll_props, "%p", ob);
+		AG_SetEvent(tl, "tlist-poll", PollProps, "%p", ob);
 	}
 	return (win);
 }

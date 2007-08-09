@@ -49,16 +49,15 @@ typedef struct ag_object {
 	char name[AG_OBJECT_NAME_MAX];
 	char *save_pfx;
 	const AG_ObjectOps *ops;
-	int flags;
+	Uint flags;
 #define AG_OBJECT_RELOAD_PROPS	 0x001	/* Don't free props before load */
 #define AG_OBJECT_NON_PERSISTENT 0x002	/* Never include in saves */
 #define AG_OBJECT_INDESTRUCTIBLE 0x004	/* Not destructible (advisory) */
-#define AG_OBJECT_DATA_RESIDENT	 0x008	/* Dynamic data is resident */
+#define AG_OBJECT_RESIDENT	 0x008	/* Data part is resident */
 #define AG_OBJECT_PRESERVE_DEPS	 0x010	/* Preserve cnt=0 dependencies */
 #define AG_OBJECT_STATIC	 0x020	/* Don't free() after detach */
 #define AG_OBJECT_READONLY	 0x040	/* Disallow edition (advisory) */
 #define AG_OBJECT_WAS_RESIDENT	 0x080	/* Used internally by ObjectLoad() */
-#define AG_OBJECT_IN_SAVE	 0x100	/* Used internally by ObjectLoad() */
 #define AG_OBJECT_REOPEN_ONLOAD	 0x200	/* Recreate editor UI on ObjectLoad() */
 #define AG_OBJECT_REMAIN_DATA	 0x400	/* Keep user data resident */
 #define AG_OBJECT_DEBUG		 0x800	/* Enable debugging */
@@ -98,6 +97,12 @@ enum ag_object_checksum_alg {
 	AG_OBJECT_RMD160
 };
 
+#define AGOBJECT(ob)		((struct ag_object *)(ob))
+#define AGOBJECT_RESIDENT(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_RESIDENT)
+#define AGOBJECT_PERSISTENT(ob) ((AGOBJECT(ob)->flags & \
+				 AG_OBJECT_NON_PERSISTENT) == 0)
+#define AGOBJECT_DEBUG(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
+
 #define AGOBJECT_INITIALIZER(ob, name, pfx, ops) {		\
 		(name),(pfx),(ops),0,				\
 		AG_MUTEX_INITIALIZER,				\
@@ -109,12 +114,6 @@ enum ag_object_checksum_alg {
 		TAILQ_HEAD_INITIALIZER((ob)->children),		\
 		NULL						\
 	}
-
-#define AGOBJECT(ob)		((struct ag_object *)(ob))
-#define AGOBJECT_RESIDENT(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_DATA_RESIDENT)
-#define AGOBJECT_PERSISTENT(ob) ((AGOBJECT(ob)->flags & \
-				 AG_OBJECT_NON_PERSISTENT) == 0)
-#define AGOBJECT_DEBUG(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
 
 #define AGOBJECT_FOREACH_CHILD(var, ob, type)				\
 	for((var) = (struct type *)TAILQ_FIRST(&AGOBJECT(ob)->children); \
@@ -134,18 +133,36 @@ enum ag_object_checksum_alg {
 	    (var) = (struct type *)TAILQ_PREV(AGOBJECT(var), ag_objectq, \
 	    cobjs))
 
+#ifdef _AGAR_INTERNAL
+#define OBJECT(ob)		AGOBJECT(ob)
+#define OBJECT_RESIDENT(ob)	AGOBJECT_RESIDENT(ob)
+#define OBJECT_PERSISTENT(ob)	AGOBJECT_PERSISTENT(ob)
+#define OBJECT_DEBUG(ob) 	AGOBJECT_DEBUG(ob)
+#define OBJECT_INITIALIZER(obj,n,pfx,ops) \
+	AGOBJECT_INITIALIZER((obj),(n),(pfx),(ops))
+#define OBJECT_FOREACH_CHILD(var,ob,type) \
+	AGOBJECT_FOREACH_CHILD((var),(ob),type)
+#define OBJECT_FOREACH_CHILD_REVERSE(var,ob,type) \
+	AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),type)
+#define OBJECT_FOREACH_CLASS(var,ob,type,subclass) \
+	AGOBJECT_FOREACH_CLASS((var),(ob),(type),(subclass))
+#endif /* _AGAR_INTERNAL */
+
 #define AG_ObjectLock(ob) AG_MutexLock(&(ob)->lock)
 #define AG_ObjectUnlock(ob) AG_MutexUnlock(&(ob)->lock)
 
 __BEGIN_DECLS
-AG_Object *AG_ObjectNew(void *, const char *);
-void	   AG_ObjectAttach(void *, void *);
-int	   AG_ObjectAttachPath(const char *, void *);
-void	   AG_ObjectDetach(void *);
-void	   AG_ObjectMove(void *, void *);
+extern const AG_ObjectOps agObjectOps;
+
+void	*AG_ObjectNew(void *, const char *, const AG_ObjectOps *);
+void	 AG_ObjectAttach(void *, void *);
+int	 AG_ObjectAttachPath(const char *, void *);
+void	 AG_ObjectDetach(void *);
+void	 AG_ObjectMove(void *, void *);
 
 void	 AG_ObjectInit(void *, const char *, const void *);
-void	 AG_ObjectFreeData(void *);
+void	*AG_ObjectCreate(const AG_ObjectOps *, const char *);
+void	 AG_ObjectFreeDataset(void *);
 void	 AG_ObjectRemain(void *, int);
 int	 AG_ObjectCopyName(const void *, char *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
@@ -182,25 +199,34 @@ void	 AG_ObjectFreeChildren(AG_Object *);
 void	 AG_ObjectFreeProps(AG_Object *);
 void 	 AG_ObjectFreeEvents(AG_Object *);
 void	 AG_ObjectFreeDeps(AG_Object *);
-void	 AG_ObjectFreeZerodeps(AG_Object *);
-void 	 AG_ObjectCancelTimeouts(void *, int);
+void	 AG_ObjectFreeDummyDeps(AG_Object *);
+void 	 AG_ObjectCancelTimeouts(void *, Uint);
 
 int	 AG_ObjectPageIn(void *);
 int	 AG_ObjectPageOut(void *);
-int	 AG_ObjectSave(void *);
+int	 AG_ObjectSaveToFile(void *, const char *);
+#define	 AG_ObjectSave(p) AG_ObjectSaveToFile((p),NULL)
 int	 AG_ObjectSaveAll(void *);
 
-int	 AG_ObjectLoad(void *);
-int	 AG_ObjectLoadGeneric(void *);
+#define	 AG_ObjectLoad(p)         AG_ObjectLoadFromFile((p),NULL)
+#define	 AG_ObjectLoadData(o,f)   AG_ObjectLoadDataFromFile((o),(f),NULL)
+#define	 AG_ObjectLoadGeneric(p)  AG_ObjectLoadGenericFromFile((p),NULL)
+
+int	 AG_ObjectLoadFromFile(void *, const char *);
+int	 AG_ObjectLoadGenericFromFile(void *, const char *);
+
+
 int	 AG_ObjectReloadData(void *);
 int	 AG_ObjectResolveDeps(void *);
-int	 AG_ObjectLoadData(void *, int *);
+int	 AG_ObjectLoadDataFromFile(void *, int *, const char *);
 
 AG_ObjectDep	*AG_ObjectAddDep(void *, void *);
 __inline__ int	 AG_ObjectFindDep(const void *, Uint32, void **);
 void		 AG_ObjectDelDep(void *, const void *);
 Uint32		 AG_ObjectEncodeName(const void *, const void *);
 void		*AG_ObjectEdit(void *);
+void		 AG_ObjectGenName(AG_Object *, const AG_ObjectOps *, char *,
+		                  size_t);
 __END_DECLS
 
 #include "close_code.h"
