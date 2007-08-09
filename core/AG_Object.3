@@ -35,50 +35,51 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The Agar object system is implemented around the
-.Nm
-structure.
-The system handles memory management, persistence and interdependencies
-between a set of objects organized in a tree which is organized like a
-virtual file system.
+The Agar object system is a simply, generic and powerful system for
+object-oriented programming in C.
 .Pp
-The
-.Nm
-interface is also responsible for managing events (see
-.Xr AG_Event 3 ) ,
-timers (see
-.Xr AG_Timeout 3 )
-and generic properties (see
-.Xr AG_Prop 3 ) .
+Objects can be organized in a virtual filesystem.
+A number of features are implemented at the object level, notably
+events
+.Xr ( AG_Event 3 ) ,
+timing
+.Xr ( AG_Timeout 3 )
+and property tables
+.Xr ( AG_Prop 3 ) .
+.Pp
+Arbitrary datasets (possibly large and complex ones) can be archived in
+a portable and efficient manner.
+Generic information about an object can be kept resident, while datasets and
+moved from and to various forms of storage.
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
 .Pp
 .Ft "AG_Object *"
-.Fn AG_ObjectNew "void *parent" "const char *name"
+.Fn AG_ObjectNew "AG_Object *parent" "const char *name" "const AG_ObjectOps *ops"
 .Pp
 .Ft "void"
-.Fn AG_ObjectInit "void *obj" "const char *name" "const void *ops"
+.Fn AG_ObjectInit "AG_Object *obj" "const char *name" "const AG_ObjectOps *ops"
 .Pp
 .Ft "void"
-.Fn AG_ObjectAttach "void *new_parent" "void *obj"
+.Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_ObjectAttachPath "const char *parent_path" "void *child"
+.Fn AG_ObjectAttachPath "const char *parent_path" "AG_Object *child"
 .Pp
 .Ft "void"
-.Fn AG_ObjectDetach "void *obj"
+.Fn AG_ObjectDetach "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_ObjectMove "void *obj" "void *new_parent"
+.Fn AG_ObjectMove "AG_Object *obj" "AG_Object *new_parent"
 .Pp
-.Ft "void *"
-.Fn AG_ObjectRoot "const void *obj"
+.Ft "AG_Object *"
+.Fn AG_ObjectRoot "const AG_Object *obj"
 .Pp
-.Ft "void *"
-.Fn AG_ObjectFindParent "const void *obj" "const char *name" "const char *type"
+.Ft "AG_Object *"
+.Fn AG_ObjectFindParent "const AG_Object *obj" "const char *name" "const char *type"
 .Pp
 .Ft "int"
-.Fn AG_ObjectCopyName "const void *obj" "char *pathbuf" "size_t pathbuf_len"
+.Fn AG_ObjectCopyName "const AG_Object *obj" "char *pathbuf" "size_t pathbuf_len"
 .Pp
 .Ft "void"
 .Fn AG_LockLinkage "void"
@@ -87,35 +88,49 @@ and generic properties (see
 .Fn AG_UnlockLinkage "void"
 .Pp
 .Ft "void"
-.Fn AG_ObjectSetName "void *obj" "const char *new_name"
+.Fn AG_ObjectSetName "AG_Object *obj" "const char *new_name"
 .Pp
 .Ft "void"
-.Fn AG_ObjectSetOps "void *obj" "const void *ops"
+.Fn AG_ObjectSetOps "AG_Object *obj" "const AG_ObjectOps *ops"
 .Pp
 .nr nS 0
 The
 .Fn AG_ObjectNew
-function allocates and initializes a new, generic AG_Object and attaches it to
+function allocates and initializes a new object instance of the given class.
+The object is attached to
+.Fa parent ,
+unless the argument is NULL.
+If
+.Fa name
+is NULL, a unique name of the form
+.Dq <class-name> #<number>
+is automatically generated.
+If both
 .Fa parent
-if not NULL.
+and
+.Fa name
+are specified and the parent object already has a child of the given name,
+.Fn AG_ObjectNew
+fails and returns NULL.
 .Pp
 The
 .Fn AG_ObjectInit
-function initializes an AG_Object structure.
+function initializes an existing AG_Object structure.
 The
 .Fa name
 string identifies this object instance.
-It will be truncated if it exceeds
+Object names are truncated if they exceed
 .Dv AG_OBJECT_NAME_MAX
-bytes in length, and any
+bytes in length, and may not contain
 .Sq /
-characters are replaced by
-.Sq _ .
-If
+characters.
+.Pp
+The
 .Fa ops
-is not NULL, it should point to the
+argument describes the object class.
+It is a pointer to a
 .Ft AG_ObjectOps
-structure, which contains class-specific information:
+structure:
 .Pp
 .Bd -literal
 typedef struct ag_object_ops {
@@ -124,11 +139,11 @@ typedef struct ag_object_ops {
 	AG_Version ver;                            /* Version numbers */
 
 	void (*init)(void *obj, const char *name); /* Initialize */
-	void (*reinit)(void *obj);                 /* Free data */
+	void (*reinit)(void *obj);                 /* Free dataset */
 	void (*destroy)(void *obj);                /* Release */
-	int  (*load)(void *obj, AG_Netbuf *buf);   /* Load data */
-	int  (*save)(void *obj, AG_Netbuf *buf);   /* Save data */
-	void *(*edit)(void *obj);                  /* Edit data */
+	int  (*load)(void *obj, AG_Netbuf *buf);   /* Load dataset */
+	int  (*save)(void *obj, AG_Netbuf *buf);   /* Save dataset */
+	void *(*edit)(void *obj);                  /* Edit dataset */
 } AG_ObjectOps;
 .Ed
 .Pp
@@ -136,9 +151,9 @@ The
 .Va name
 member is the name of this class, where subclasses are separated by a
 colon, such as
-.Sq AG_Superclass:AG_Subclass .
+.Dq AG_Superclass:AG_Subclass .
 It is implied that the root class is
-.Sq AG_Object ,
+.Dq AG_Object ,
 so there is no need to specify it in the string.
 .Pp
 The
@@ -146,7 +161,7 @@ The
 member describes is the amount of memory that will be allocated by the object
 system to hold the structure.
 .Va ver
-contains the version numbers that will be used in data files (see
+contains the version numbers that will be used in dataset archives (see
 .Xr AG_Version 3
 for more details).
 .Pp
@@ -167,23 +182,24 @@ this function is
 .Pp
 The
 .Fn reinit
-operation releases any data that was dynamically allocated by the object.
+operation releases any element of the dataset that has been dynamically
+allocated.
 .Fn reinit
 is invoked by the object system:
 .Pp
 .Bl -bullet -compact
 .It
 Prior to a
-.Fn load ,
-to avoid having to free data from the loader.
+.Fn load
+operation where the dataset is going to be re-read from storage.
 .It
 Subsequent to a
-.Dv PAGE_OUT ,
-to free data no longer being referenced.
+.Dv PAGE_OUT
+operation, to free the dataset.
 .It
 Prior to a
 .Fn destroy
-operation where the object is being freed.
+operation where the object is being completely freed.
 .El
 .Pp
 The
@@ -202,41 +218,40 @@ The
 .Fn load
 and
 .Fn save
-operations are responsible for archiving any persistent
-.Nm
-data (see the
-.Em ARCHIVING AND PAGING
+operations are responsible for archiving the dataset (see the
+.Em ARCHIVING
 section for more information).
 .Pp
-If the compile-time option
-.Dv EDITION
-is defined, the
+When defined,
 .Fn edit
-operation create the main user interface window for editing the object data.
+operation generates user interface elements allowing the user to edit
+the object's dataset.
 .Pp
-If other windows are to be created as part of this instance's edition process,
-they should be attached to the main edition window using
-.Xr AG_WindowAttach 3 .
-The
+Typically.
 .Fn edit
-operation can also return other types of widgets, such as a
-.Xr AG_Box 3
-container.
+will create an
+.Xr AG_Window 3
+or a container widget such as 
+.Xr AG_Box 3 .
+When other windows are created from
+.Fn edit ,
+they must be attached to the main window via
+.Xr AG_WindowAttach 3 .
 .Pp
 The following public
 .Nm
 flags are defined:
 .Pp
 .Bd -literal
-#define AG_OBJECT_RELOAD_PROPS   0x001 /* Don't free props before load */
-#define AG_OBJECT_NON_PERSISTENT 0x002 /* Data is not archivable */
+#define AG_OBJECT_RELOAD_PROPS   0x001 /* Don't clear props before load */
+#define AG_OBJECT_NON_PERSISTENT 0x002 /* Dataset is not archivable */
 #define AG_OBJECT_INDESTRUCTIBLE 0x004 /* Not destructible (advisory) */
-#define AG_OBJECT_DATA_RESIDENT  0x008 /* Data is in memory (RO) */
-#define AG_OBJECT_PRESERVE_DEPS  0x010 /* Don't remove dep if count=0 */
+#define AG_OBJECT_RESIDENT       0x008 /* Dataset is in memory (RO) */
+#define AG_OBJECT_PRESERVE_DEPS  0x010 /* Keep deps with refcnt of 0 */
 #define AG_OBJECT_STATIC         0x020 /* Don't free() after detach */
 #define AG_OBJECT_READONLY       0x040 /* Disallow edition (advisory) */
 #define AG_OBJECT_REOPEN_ONLOAD  0x200 /* Recreate editor UI on load */
-#define AG_OBJECT_REMAIN_DATA    0x400 /* Keep data resident */
+#define AG_OBJECT_REMAIN_DATA    0x400 /* Keep dataset resident */
 .Ed
 .Pp
 The
@@ -247,38 +262,43 @@ table from being cleared by
 .Fn AG_ObjectLoad .
 .Pp
 .Dv AG_OBJECT_NON_PERSISTENT
-prevents this object (and its children) from being archived by
-.Fn AG_ObjectSave .
+prevents the object (and its children) from being archived.
 If set,
-.Fn AG_ObjectPageIn
-and
-.Fn AG_ObjectPageOut
-become no-ops.
+.Fn AG_ObjectSave
+becomes a no-op and
+.Fn AG_ObjectLoad
+calls will fail.
 .Pp
-The
+flags
 .Dv AG_OBJECT_INDESTRUCTIBLE
-flag is purely advisory and disallows the user from destroying the
-object via
-.Xr AG_ObjectMgr 3 .
-.Pp
+and
 .Dv AG_OBJECT_READONLY
-is also advisory and disallows object-specific
-.Va edit
-operations from modifying object data.
+are purely advisory and their usage is application-specific.
 .Pp
 The
 .Dv AG_OBJECT_REOPEN_ONLOAD
-flag arranges for the graphical interface (as returned by the object's
+flag arranges for all graphical interface elements (as returned by the
 .Sq edit
-operation) to be automatically destroyed and recreated upon
-.Fn AG_ObjectLoad .
+operation) to be automatically destroyed and recreated after any
+.Fn AG_ObjectLoad
+call.
 This flag is useful for complex objects where the graphical interface
-references dynamically allocated object data.
+references elements of the dataset.
 .Pp
 The read-only
-.Dv AG_OBJECT_DATA_RESIDENT
-flag is set by the object system to indicate that this object's data is
-resident in memory.
+.Dv AG_OBJECT_RESIDENT
+flag is set by the object system to indicate that the object's dataset is
+currently resident in memory.
+.Dv AG_OBJECT_RESIDENT
+is set by
+.Fn AG_ObjectNew ,
+.Fn AG_ObjectLoadData
+and
+.Fn AG_ObjectPageIn
+and is cleared by
+.Fn AG_ObjectFreeDataset
+and
+.Fn AG_ObjectPageOut .
 .Pp
 Objects are organized in a tree structure.
 .Fn AG_ObjectAttach
@@ -294,9 +314,9 @@ Prior to detaching the object,
 .Fn AG_ObjectDetach
 cancels scheduled
 .Xr AG_Timeout 3
-events (unless they have the special
-.Dv AG_TIMEOUT_DETACHABLE
-flag set).
+events where the
+.Dv AG_CANCEL_ONDETACH
+flag is set.
 If
 .Fa parent
 is NULL,
@@ -346,17 +366,21 @@ The
 .Fn AG_ObjectCopyName
 function copies the absolute pathname of an object instance to a fixed-size
 buffer, returning 0 on success and -1 on failure.
-.Pp
-Since
+Note that
 .Fn AG_ObjectCopyName
-must perform an inverse traversal of the tree, and an object instance may
-move from one parent to another, there is a global lock protecting the object
-linkage.
+must traverse the object's ancestry to generate the pathname, so in thread-safe
+applications,
+.Fn AG_LockLinkage
+should be used (and the pathname will remain safe to use until
+.Fn AG_UnlockLinkage
+is called).
+.Pp
+The
 .Fn AG_LockLinkage
 and
 .Fn AG_UnlockLinkage
-are used to acquire or release this lock (no-ops unless Agar is compiled with
-thread safety).
+functions acquire or release the virtual filesystem lock.
+They are no-ops if thread support is disabled.
 .Pp
 .Fn AG_ObjectSetName
 changes the name of the given object.
@@ -373,12 +397,12 @@ structure) associated with the given object.
 .Fn AG_FindType "const char *name"
 .Pp
 .Ft "int"
-.Fn AG_ObjectIsClass "void *obj" "const char *class_pattern"
+.Fn AG_ObjectIsClass "AG_Object *obj" "const char *class_pattern"
 .Pp
-.Fn AGOBJECT_FOREACH_CLASS "void *child_obj" "void *parent_obj" "TYPE type" "const char *class_pattern"
+.Fn AGOBJECT_FOREACH_CLASS "AG_Object *child_obj" "AG_Object *parent_obj" "TYPE type" "const char *class_pattern"
 .Pp
 .Ft "SDL_Surface *"
-.Fn AG_ObjectIcon "void *p"
+.Fn AG_ObjectIcon "AG_Object *p"
 .Pp
 .nr nS 0
 The
@@ -413,9 +437,9 @@ The
 function returns 1 if the given object's class name matches the given
 .Fa class_pattern ,
 which may contain wildcards such as
-.Sq MyClass:*
+.Dq MyClass:*
 or
-.Sq MyClass:*:MySubclass:* .
+.Dq MyClass:*:MySubclass:* .
 .Pp
 .Fn AGOBJECT_FOREACH_CLASS
 is a convenience macro that iterates
@@ -441,19 +465,19 @@ returns a surface for the icon associated with the given class.
 .Sh DEPENDENCIES
 .nr nS 1
 .Ft "int"
-.Fn AG_ObjectInUse "const void *obj"
+.Fn AG_ObjectInUse "const AG_Object *obj"
 .Pp
 .Ft "AG_ObjectDep *"
-.Fn AG_ObjectAddDep "void *obj" "void *depobj"
+.Fn AG_ObjectAddDep "AG_Object *obj" "AG_Object *depobj"
 .Pp
 .Ft "void"
-.Fn AG_ObjectDelDep "void *obj" "void *depobj"
+.Fn AG_ObjectDelDep "AG_Object *obj" "AG_Object *depobj"
 .Pp
 .Ft "Uint32"
-.Fn AG_ObjectEncodeName "const void *obj" "const void *depobj"
+.Fn AG_ObjectEncodeName "const AG_Object *obj" "const AG_Object *depobj"
 .Pp
 .Ft "int"
-.Fn AG_ObjectFindDep "const void *obj" "Uint32 ind" "AG_Object **objp"
+.Fn AG_ObjectFindDep "const AG_Object *obj" "Uint32 ind" "AG_Object **objp"
 .Pp
 .nr nS 0
 .Fn AG_ObjectInUse
@@ -483,10 +507,10 @@ and -1 on failure.
 .Sh GARBAGE COLLECTION
 .nr nS 1
 .Ft "void"
-.Fn AG_ObjectDestroy "void *obj"
+.Fn AG_ObjectDestroy "AG_Object *obj"
 .Pp
 .Ft void
-.Fn AG_ObjectFreeData "void *obj"
+.Fn AG_ObjectFreeDataset "AG_Object *obj"
 .Pp
 .Ft "void"
 .Fn AG_ObjectFreeEvents "AG_Object *obj"
@@ -498,16 +522,29 @@ and -1 on failure.
 .Fn AG_ObjectFreeDeps "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_ObjectFreeChildren "AG_Object *obj"
+.Fn AG_ObjectFreeDummyDeps "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_ObjectFreeZerodeps "AG_Object *obj"
+.Fn AG_ObjectFreeChildren "AG_Object *obj"
 .Pp
 .nr nS 0
 The
+.Fn AG_ObjectFreeDataset
+function frees any resource allocated for the dataset of the object
+(using the
+.Fn reinit
+operation), and clears the
+.Dv AG_OBJECT_RESIDENT
+flag.
+Data structure (e.g., lists) must remain in a consistent state, to prepare
+for any subsequent
+.Fn load
+operation.
+.Pp
+The
 .Fn AG_ObjectDestroy
-function is called to free all resources reserved by the given object instance,
-including its children (assuming that they are not currently in use).
+function frees all resources reserved by the given object (and any of its
+children that is not being referenced).
 .Fn AG_ObjectDestroy
 also cancels any
 .Xr AG_Timeout 3
@@ -541,106 +578,88 @@ on an object's children (except those with the
 .Dv AG_OBJECT_STATIC
 flag set), assuming that none of them are in use.
 .Pp
-The
-.Fn AG_ObjectFreeData
-function invokes the
-.Va reinit
-operation of
-.Fa obj
-(if there is one) in order to free dynamic data, and clears the
-.Dv AG_OBJECT_DATA_RESIDENT
-flag.
-.Pp
-The
-.Fn AG_ObjectFreeZerodeps
-function is used in situations where it is necessary to remove dependencies
-that have a reference count of zero for the given object (and its children).
-Dependencies with a reference count of zero only occur in objects that have the
+.Fn AG_ObjectFreeDummyDeps
+removes entries in the dependency table where the reference count is zero
+(which occur in objects that have the
 .Dv AG_OBJECT_PRESERVE_DEPS
-flag set.
-.Sh ARCHIVING AND PAGING
+flag set).
+.Pp
+.Sh ARCHIVING
 .nr nS 1
 .Ft "int"
-.Fn AG_ObjectLoad "void *obj"
+.Fn AG_ObjectLoad "AG_Object *obj"
 .Pp
 .Ft "int"
-.Fn AG_ObjectSave "const void *obj"
+.Fn AG_ObjectLoadFromFile "AG_Object *obj" "const char *file"
 .Pp
 .Ft "int"
-.Fn AG_ObjectSaveAll "const void *obj"
+.Fn AG_ObjectLoadData "AG_Object *obj"
 .Pp
 .Ft "int"
-.Fn AG_ObjectPageIn "void *obj"
+.Fn AG_ObjectLoadDataFromFile "AG_Object *obj" "const char *file"
 .Pp
 .Ft "int"
-.Fn AG_ObjectPageOut "void *obj"
+.Fn AG_ObjectLoadGeneric "AG_Object *obj"
+.Pp
+.Ft "int"
+.Fn AG_ObjectLoadGenericFromFile "AG_Object *obj" "const char *file"
+.Pp
+.Ft "int"
+.Fn AG_ObjectSave "AG_Object *obj"
+.Pp
+.Ft "int"
+.Fn AG_ObjectSaveAll "AG_Object *obj"
+.Pp
+.Ft "int"
+.Fn AG_ObjectPageIn "AG_Object *obj"
+.Pp
+.Ft "int"
+.Fn AG_ObjectPageOut "AG_Object *obj"
 .Pp
 .nr nS 0
-These functions implement archiving of objects (also known as
-"serialization" or "flattening" in object-oriented terminology).
-Persistent information such as size, dependencies and position in the
-hierarchy are encoded in a machine-independent format.
+These functions implement archiving (or "serialization") of generic object
+information and arbitrary datasets to an efficient, machine-independent
+representation.
 .Pp
 The
 .Fn load
 and
 .Fn save
-functions of the generic operation vector are responsible for
-archiving of data specific to the type of object at hand.
-Except for direct subclasses of
-.Nm ,
-the
-.Fn load
-and
-.Fn save
-operations of a given class should explicitely invoke the
-.Fn load
-and
-.Fn save
-operations of its superclass.
+operations of an object, if defined, are responsible for archiving its dataset
+to a portable format.
 .Pp
-The
-.Fn AG_ObjectLoad
-function loads the state of an object instance and its descendants from
-an archive.
-The first file found in the search path (the colon-separated
-.Sq load-path
-config setting) is used.
-.Fn AG_ObjectLoad
-performs the following operations, in order:
-.Bl -enum
-.It
-Cancel scheduled
-.Xr AG_Timeout 3
-events (that don't have the
-.Dv AG_TIMEOUT_LOADABLE
-flag set).
-.It
-Load the generic part (the
+Note: Objects that are not direct subclasses of
 .Nm
-class) of
-.Fa obj
-and its descendants.
-Archived siblings found in the data file are each compared against the
-currently attached object instances.
-If a match is found, the
-.Va reinit
-op is called.
-If there is no resident instance matching an archived object, one is
-dynamically allocated and initialized using the type switch (the
-.Va agTypes[]
-array).
-If a resident instance has no archived counterpart, it is destroyed (as
-long as it is not currently in use).
-.It
-Resolve the dependencies of
-.Fa obj
-and its children, so encoded object references may be decoded in the
-following step.
-.It
-If the object or any of its children has resident dynamic data, it is
-reloaded.
-.El
+should explicitely invoke the
+.Fn load
+and
+.Fn save
+operations of their parents.
+.Pp
+The
+.Fn AG_ObjectLoad
+function (and its variants) are used to load the generic part or the dataset
+of either a single object or an object hierarchy, from archived data.
+.Pp
+.Fn AG_ObjectLoad ,
+.Fn AG_ObjectLoadGeneric
+and
+.Fn AG_ObjectLoadData
+look for the archive file in the default search path (using the
+.Sq load-path
+setting of
+.Xr AG_Config 3 ) .
+.Pp
+.Fn AG_ObjectLoadFromFile ,
+.Fn AG_ObjectLoadGenericFromFile
+and
+.Fn AG_ObjectLoadDataFromFile
+will load the data from a specific file.
+.Pp
+Note that when loading object hierarchies, objects will need to be allocated
+and initialized from scratch.
+This functionality requires that all classes be registered with
+.Fn AG_RegisterType .
 .Pp
 The
 .Fn AG_ObjectSave
@@ -654,11 +673,14 @@ variant also saves child objects.
 .Pp
 The
 .Fn AG_ObjectPageIn
-function loads an object's data into memory (assuming it is a persistent
-object and can be found in storage) and marks the object resident.
+function loads an object's dataset into memory, assuming it is a persistent
+object and its dataset can be found on storage.
+On success, the
+.Dv AG_OBJECT_RESIDENT
+flag is set.
 .Fn AG_ObjectPageOut
 checks whether an object is referenced by another object and if that is
-not the case, the object's data is saved to storage and freed from memory.
+not the case, the dataset is archived to storage and freed from memory.
 Both functions return 0 on success or -1 if an error occured.
 .Sh EVENTS
 The
@@ -682,7 +704,7 @@ except that the event is sent from the child to the parent.
 Same as
 .Fn detached ,
 except that the event is sent from the child to the parent.
-.It Fn moved "void *new_parent"
+.It Fn moved "AG_Object *new_parent"
 The object has been moved from its current parent to
 .Fa new_parent .
 The linkage lock is held during the execution of the event handler.
@@ -695,6 +717,20 @@ A new
 property has been added.
 .It Fn prop-modified "AG_Prop *prop"
 The value of the given property has been modified.
+.It Fn object-post-load-generic "const char *path"
+Invoked if
+.Fn AG_ObjectLoadGeneric
+succeeds.
+If the object was loaded from file,
+.Fa path
+is the pathname of the file.
+.It Fn object-post-load-data "const char *path"
+Invoked by
+.Fn AG_ObjectLoadData ,
+on success.
+If the object was loaded from file,
+.Fa path
+is the pathname of the file.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
