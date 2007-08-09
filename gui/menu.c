@@ -69,7 +69,7 @@ AG_MenuNew(void *parent, Uint flags)
 			Free(agAppMenu, M_OBJECT);
 		}
 		m->flags |= AG_MENU_GLOBAL;
-		AG_MenuSetPadding(m, 0, 0, -1, -1);
+		AG_MenuSetPadding(m, 4, 4, -1, -1);
 
 		agAppMenu = m;
 		agAppMenuWin = AG_WindowNewNamed(AG_WINDOW_PLAIN|
@@ -77,6 +77,7 @@ AG_MenuNew(void *parent, Uint flags)
 						 AG_WINDOW_DENYFOCUS,
 						 "_agAppMenu");
 		AG_ObjectAttach(agAppMenuWin, m);
+		AG_WindowSetPadding(agAppMenuWin, 0, 0, 0, 0);
 		AG_WindowShow(agAppMenuWin);
 	}
 	return (m);
@@ -96,7 +97,7 @@ AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
 	panel = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
 	                     AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
 	AG_WindowSetCaption(panel, "win-popup");
-	AG_WindowSetPadding(panel, 0, 0, 0);
+	AG_WindowSetPadding(panel, 0, 0, 0, 0);
 
 	WIDGET(panel)->x = x;
 	WIDGET(panel)->y = y;
@@ -278,8 +279,7 @@ attached(AG_Event *event)
 
 	/* Adjust the top padding of the parent window if any. */
 	if ((pwin = AG_WidgetParentWindow(pwid)) != NULL)
-		AG_WindowSetPadding(pwin, pwin->xpadding, 0,
-		    pwin->ypadding_bot);
+		AG_WindowSetPadding(pwin, -1, -1, 0, pwin->bPad);
 }
 
 /* Generic constructor for menu items. */
@@ -785,15 +785,14 @@ AG_MenuScale(void *p, int w, int h)
 			}
 			wLbl += m->lPadLbl + m->rPadLbl;
 			hLbl += m->tPadLbl + m->bPadLbl;
-
 			item->x = x;
 			item->y = y;
 			x += wLbl + m->lPadLbl + m->rPadLbl;
-			if (WIDGET(m)->h < (y + hLbl)) {
-				WIDGET(m)->h = y + hLbl;
+			if (WIDGET(m)->h < (y + hLbl + m->bPad)) {
+				WIDGET(m)->h = y + hLbl + m->bPad;
 			}
 			if (WIDGET(m)->w < (x + m->rPad)) {
-				WIDGET(m)->w = x + m->bPad;
+				WIDGET(m)->w = x + m->rPad;
 			}
 			if (x >= agView->w) {			/* Wrap */
 				x = m->lPad;
@@ -828,10 +827,8 @@ AG_MenuScale(void *p, int w, int h)
 		}
 		wLbl += m->lPadLbl + m->rPadLbl;
 		hLbl += m->tPadLbl + m->bPadLbl;
-
 		item->x = x;
 		item->y = y;
-
 		if ((x += wLbl) >= w) {				/* Wrap */
 			x = m->lPad;
 			y += hLbl;
