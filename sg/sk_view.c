@@ -58,8 +58,8 @@ const AG_WidgetOps skViewOps = {
 	SK_ViewScale
 };
 
-#define SK_VIEW_X(skv,px) ((SG_Real)(px - AGWIDGET(skv)->w/2)) / ((SG_Real)AGWIDGET(skv)->w/2.0)
-#define SK_VIEW_Y(skv,py) ((SG_Real)(py - AGWIDGET(skv)->h/2)) / ((SG_Real)AGWIDGET(skv)->h/2.0)
+#define SK_VIEW_X(skv,px) ((SG_Real)(px - WIDGET(skv)->w/2)) / ((SG_Real)WIDGET(skv)->w/2.0)
+#define SK_VIEW_Y(skv,py) ((SG_Real)(py - WIDGET(skv)->h/2)) / ((SG_Real)WIDGET(skv)->h/2.0)
 #define SK_VIEW_X_SNAP(skv,px) (px)
 #define SK_VIEW_Y_SNAP(skv,py) (py)
 #define SK_VIEW_SCALE_X(skv) (skv)->mView.m[0][0]
@@ -87,7 +87,7 @@ mousemotion(AG_Event *event)
 	int y = AG_INT(2);
 
 	vPos.x = SK_VIEW_X(skv, AG_INT(1));
-	vPos.y = SK_VIEW_Y(skv, AGWIDGET(skv)->h - AG_INT(2));
+	vPos.y = SK_VIEW_Y(skv, WIDGET(skv)->h - AG_INT(2));
 	vPos.z = 0.0;
 	vRel.x = (SG_Real)AG_INT(3) * skv->wPixel;
 	vRel.y = -(SG_Real)AG_INT(4) * skv->hPixel;
@@ -128,7 +128,7 @@ mousebuttondown(AG_Event *event)
 	SG_Matrix Ti;
 
 	vPos.x = SK_VIEW_X(skv, AG_INT(2));
-	vPos.y = SK_VIEW_Y(skv, AGWIDGET(skv)->h - AG_INT(3));
+	vPos.y = SK_VIEW_Y(skv, WIDGET(skv)->h - AG_INT(3));
 	vPos.z = 0.0;
 
 	if (SG_MatrixInvert(&skv->mView, &Ti) == -1) {
@@ -196,7 +196,7 @@ mousebuttonup(AG_Event *event)
 	SG_Matrix Ti;
 
 	vPos.x = SK_VIEW_X(skv, AG_INT(2));
-	vPos.y = SK_VIEW_Y(skv, AGWIDGET(skv)->h - AG_INT(3));
+	vPos.y = SK_VIEW_Y(skv, WIDGET(skv)->h - AG_INT(3));
 	vPos.z = 0.0;
 
 	if (SG_MatrixInvert(&skv->mView, &Ti) == -1) {
@@ -363,11 +363,11 @@ SK_ViewScale(void *p, int w, int h)
 	SK_View *skv = p;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(skv)->w = 32;		/* XXX */
-		AGWIDGET(skv)->h = 32;
+		WIDGET(skv)->w = 32;		/* XXX */
+		WIDGET(skv)->h = 32;
 	} else {
-		AGWIDGET(skv)->w = w;
-		AGWIDGET(skv)->h = h;
+		WIDGET(skv)->w = w;
+		WIDGET(skv)->h = h;
 	}
 	SG_MatrixIdentityv(&skv->mProj);
 	SK_ViewZoom(skv, 0.0);
@@ -382,8 +382,8 @@ SK_ViewZoom(SK_View *skv, SG_Real zoom)
 		SK_VIEW_SCALE_X(skv) = zoom >= 0.01 ? zoom : 0.01;
 		SK_VIEW_SCALE_Y(skv) = zoom >= 0.01 ? zoom : 0.01;
 	}
-	skv->wPixel = 1.0/((SG_Real)AGWIDGET(skv)->w)*2.0/SK_VIEW_SCALE_X(skv);
-	skv->hPixel = 1.0/((SG_Real)AGWIDGET(skv)->h)*2.0/SK_VIEW_SCALE_Y(skv);
+	skv->wPixel = 1.0/((SG_Real)WIDGET(skv)->w)*2.0/SK_VIEW_SCALE_X(skv);
+	skv->hPixel = 1.0/((SG_Real)WIDGET(skv)->h)*2.0/SK_VIEW_SCALE_Y(skv);
 	skv->rSnap = 16.0*skv->wPixel;
 }
 
@@ -395,8 +395,8 @@ SK_ViewDraw(void *p)
 	SDL_Surface *status;
 
 	glViewport(
-	    AGWIDGET(skv)->cx, agView->h - AGWIDGET(skv)->cy2,
-	    AGWIDGET(skv)->w, AGWIDGET(skv)->h);
+	    WIDGET(skv)->cx, agView->h - WIDGET(skv)->cy2,
+	    WIDGET(skv)->w, WIDGET(skv)->h);
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -435,7 +435,7 @@ SK_ViewDraw(void *p)
 #if 0
 	AG_TextColor(TEXT_COLOR);
 	status = AG_TextRender(skv->status);
-	AG_WidgetBlit(skv, status, 0, AGWIDGET(skv)->h - status->h);
+	AG_WidgetBlit(skv, status, 0, WIDGET(skv)->h - status->h);
 	SDL_FreeSurface(status);
 #endif
 }
@@ -456,7 +456,7 @@ SK_ViewSelectTool(SK_View *skv, SK_Tool *ntool, void *p)
 		if (skv->curtool->pane != NULL) {
 			AG_Widget *wt;
 
-			AGOBJECT_FOREACH_CHILD(wt, skv->curtool->pane,
+			OBJECT_FOREACH_CHILD(wt, skv->curtool->pane,
 			    ag_widget) {
 				AG_ObjectDetach(wt);
 				AG_ObjectDestroy(wt);
@@ -549,7 +549,7 @@ SetLengthUnit(AG_Event *event)
 	char *uname = AG_STRING(2);
 	const AG_Unit *unit;
 
-	dprintf("%s: setting unit to %s\n", AGOBJECT(sk)->name, uname);
+	dprintf("%s: setting unit to %s\n", OBJECT(sk)->name, uname);
 	if ((unit = AG_FindUnit(uname)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "Unknown unit: %s", uname);
 		return;
@@ -585,7 +585,7 @@ AddConstraint(AG_Event *event)
 		return;
 	}
 	dprintf("%s: added %s constraint between %s and %s\n",
-	    AGOBJECT(sk)->name, skConstraintNames[type],
+	    OBJECT(sk)->name, skConstraintNames[type],
 	    SK_NodeName(nodes[0]), SK_NodeName(nodes[1]));
 
 	SK_Update(sk);
