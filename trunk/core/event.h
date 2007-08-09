@@ -51,7 +51,7 @@ typedef union evarg {
  
 #define AG_OBJECT(v,t) \
  (AG_ObjectIsClass(event->argv[v].p,(t)))?event->argv[v].p:\
-  AG_ObjectMismatch(AGOBJECT(event->argv[v].p)->ops->type,(t))
+  AG_ObjectMismatch(OBJECT(event->argv[v].p)->ops->type,(t))
 
 #else /* !DEBUG */
 
@@ -114,7 +114,7 @@ int	  	 AG_SchedEvent(void *, void *, Uint32, const char *,
 		               const char *, ...);
 int		 AG_ReschedEvent(void *, const char *, Uint32);
 int		 AG_CancelEvent(void *, const char *);
-__inline__ void	 AG_ExecEvent(void *, const char *);
+__inline__ void	 AG_ExecEventFn(void *, AG_Event *);
 void		 AG_ForwardEvent(void *, void *, AG_Event *);
 void		 AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
 struct ag_window *AG_EventShowPerfGraph(void);
