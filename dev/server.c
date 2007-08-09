@@ -121,7 +121,7 @@ auth_password(NS_Server *ns, void *p)
 static int
 srv_error(NS_Server *srv)
 {
-	NS_Log(NS_ERR, "%s: function failed (%s)", AGOBJECT(srv)->name,
+	NS_Log(NS_ERR, "%s: function failed (%s)", OBJECT(srv)->name,
 	    AG_GetError());
 	return (-1);
 }
