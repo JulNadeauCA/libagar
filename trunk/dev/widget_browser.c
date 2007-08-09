@@ -57,7 +57,7 @@ FindWidgets(AG_Widget *wid, AG_Tlist *widtl, int depth)
 	char text[AG_TLIST_LABEL_MAX];
 	AG_TlistItem *it;
 
-	strlcpy(text, AGOBJECT(wid)->ops->type, sizeof(text));
+	strlcpy(text, OBJECT(wid)->ops->type, sizeof(text));
 	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
 		AG_Window *win = (AG_Window *)wid;
 
@@ -69,14 +69,14 @@ FindWidgets(AG_Widget *wid, AG_Tlist *widtl, int depth)
 	it->depth = depth;
 	it->cat = "widget";
 	
-	if (!TAILQ_EMPTY(&AGOBJECT(wid)->children)) {
+	if (!TAILQ_EMPTY(&OBJECT(wid)->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
 	if ((it->flags & AG_TLIST_HAS_CHILDREN) &&
 	    AG_TlistVisibleChildren(widtl, it)) {
 		AG_Widget *cwid;
 
-		AGOBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+		OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 			FindWidgets(cwid, widtl, depth+1);
 	}
 }
@@ -94,11 +94,11 @@ FindWindows(AG_Tlist *tl, AG_Window *win, int depth)
 
 	strlcpy(text, win->caption, sizeof(text));
 	it = AG_TlistAdd(tl, NULL, "%s (%s)", win->caption,
-	    AGOBJECT(win)->name);
+	    OBJECT(win)->name);
 	it->p1 = win;
 	it->depth = depth;
 	it->cat = "window";
-	if (!TAILQ_EMPTY(&AGOBJECT(win)->children) ||
+	if (!TAILQ_EMPTY(&OBJECT(win)->children) ||
 	    !TAILQ_EMPTY(&win->subwins)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
 	}
@@ -106,7 +106,7 @@ FindWindows(AG_Tlist *tl, AG_Window *win, int depth)
 	    AG_TlistVisibleChildren(tl, it)) {
 		TAILQ_FOREACH(wSub, &win->subwins, swins)
 			FindWindows(tl, wSub, depth+1);
-		AGOBJECT_FOREACH_CHILD(wChild, win, ag_widget)
+		OBJECT_FOREACH_CHILD(wChild, win, ag_widget)
 			FindWidgets(wChild, tl, depth+1);
 	}
 }
@@ -163,7 +163,7 @@ PollSurfaces(AG_Event *event)
 
 	AG_TlistBegin(tl);
 	for (i = 0; i < wid->nsurfaces; i++) {
-		SDL_Surface *su = AGWIDGET_SURFACE(wid,i);
+		SDL_Surface *su = WSURFACE(wid,i);
 
 		AG_TlistAdd(tl, su, "Surface%u (%ux%u, %ubpp)",
 		    i, su->w, su->h, su->format->BitsPerPixel);
@@ -189,7 +189,7 @@ WidgetParams(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("GUI Debugger: <%s>"),
-	    AGOBJECT(wid)->name);
+	    OBJECT(wid)->name);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 	nTab = AG_NotebookAddTab(nb, _("Flags"), AG_BOX_VERT);
@@ -214,7 +214,7 @@ WidgetParams(AG_Event *event)
 		AG_Label *lbl;
 
 		AG_LabelNewStatic(nTab, 0, _("Class: %s"),
-		    AGOBJECT(wid)->ops->type);
+		    OBJECT(wid)->ops->type);
 		AG_SeparatorNewHoriz(nTab);
 		AG_CheckboxSetFromFlags(nTab, &wid->flags, flagDescr);
 	}
@@ -256,7 +256,7 @@ ResizeWindow(AG_Event *event)
 	AG_Window *win = AG_PTR(1);
 
 	AG_WindowScale(win, -1, -1);
-	AG_WindowScale(win, AGWIDGET(win)->w, AGWIDGET(win)->h);
+	AG_WindowScale(win, WIDGET(win)->w, WIDGET(win)->h);
 	AG_WINDOW_UPDATE(win);
 }
 
@@ -277,13 +277,13 @@ WindowParams(AG_Event *event)
 	wExam = it->p1;
 
 	if ((win = AG_WindowNewNamed(0, "DEV_GuiDebugger-%s",
-	    AGOBJECT(wExam)->name)) == NULL) {
+	    OBJECT(wExam)->name)) == NULL) {
 		return;
 	}
-	AG_WindowSetCaption(win, "%s", AGOBJECT(wExam)->name);
+	AG_WindowSetCaption(win, "%s", OBJECT(wExam)->name);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	AG_LabelNewStatic(win, 0, "Name: \"%s\"", AGOBJECT(wExam)->name);
+	AG_LabelNewStatic(win, 0, "Name: \"%s\"", OBJECT(wExam)->name);
 	lbl = AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &wExam->lock,
 	    "Flags: <%[flags]>", &wExam->flags);
 	AG_LabelFlag32(lbl,0,"MODAL",AG_WINDOW_MODAL);
@@ -309,17 +309,22 @@ WindowParams(AG_Event *event)
 	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", wExam);
 	
 	sb = AG_SpinbuttonNew(win, 0, _("Top padding: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->ypadding_top);
+	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->tPad);
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", wExam);
 	
 	sb = AG_SpinbuttonNew(win, 0, _("Bottom padding: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->ypadding_bot);
+	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->bPad);
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", wExam);
 	
-	sb = AG_SpinbuttonNew(win, 0, _("Horizontal padding: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->xpadding);
+	sb = AG_SpinbuttonNew(win, 0, _("Left padding: "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->lPad);
+	AG_SpinbuttonSetMin(sb, 0);
+	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", wExam);
+	
+	sb = AG_SpinbuttonNew(win, 0, _("Right padding: "));
+	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->rPad);
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", wExam);
 

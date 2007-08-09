@@ -86,28 +86,8 @@ CreateObject(AG_Event *event)
 	AG_TextboxCopyString(name_tb, name, sizeof(name));
 	AG_ViewDetach(dlg_win);
 
-	if (name[0] == '\0') {
-		Uint nameno = 0;
-		AG_Object *ch;
-		char tname[AG_OBJECT_TYPE_MAX], *s;
-	
-		if ((s = strrchr(t->ops->type, '.')) != NULL && s[1] != '\0') {
-			strlcpy(tname, &s[1], sizeof(tname));
-		} else {
-			strlcpy(tname, t->ops->type, sizeof(tname));
-		}
-		tname[0] = (char)toupper(tname[0]);
-tryname:
-		snprintf(name, sizeof(name), "%s #%d", tname, nameno);
-		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
-			if (strcmp(ch->name, name) == 0)
-				break;
-		}
-		if (ch != NULL) {
-			nameno++;
-			goto tryname;
-		}
-	}
+	if (name[0] == '\0')
+		AG_ObjectGenName(agWorld, t->ops, name, sizeof(name));
 
 	nobj = Malloc(t->ops->size, M_OBJECT);
 	if (t->ops->init != NULL) {
@@ -217,7 +197,7 @@ SaveChangesDlg(AG_Event *event)
 		AG_Window *wDlg;
 
 		wDlg = AG_TextPromptOptions(bOpts, 3, _("Save changes to %s?"),
-		    AGOBJECT(oent->obj)->name);
+		    OBJECT(oent->obj)->name);
 		AG_WindowAttach(win, wDlg);
 		{
 			AG_ButtonText(bOpts[0], _("Save"));
@@ -259,9 +239,8 @@ DEV_BrowserOpenData(void *p)
 	if (ob->ops->edit == NULL)
 		return;
 
-	if (AGOBJECT_PERSISTENT(ob) &&
-	    !AGOBJECT_RESIDENT(ob)) {
-		AG_PostEvent(NULL, ob, "edit-pre-load", NULL);
+	if (OBJECT_PERSISTENT(ob) &&
+	    !OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoad(ob) == -1 ||
 		    AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (!dataFound) {
@@ -270,7 +249,7 @@ DEV_BrowserOpenData(void *p)
 				 * object is new. Mark it resident and save it.
 				 */
 				dprintf("%s: new object\n", ob->name);
-				ob->flags |= AG_OBJECT_DATA_RESIDENT;
+				ob->flags |= AG_OBJECT_RESIDENT;
 				if (AG_ObjectSave(ob) == -1) {
 					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
 					    ob->name, AG_GetError());
@@ -313,12 +292,11 @@ ExportObject(AG_Event *event)
 	int dataFound;
 
 	/* Load the object temporarily if it is non-resident. */
-	if (!AGOBJECT_RESIDENT(ob)) {
-		AG_PostEvent(NULL, ob, "edit-pre-load", NULL);
+	if (!OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (!dataFound) {
 				/* Object was never saved before. */
-				ob->flags |= AG_OBJECT_DATA_RESIDENT;
+				ob->flags |= AG_OBJECT_RESIDENT;
 			} else {
 				AG_TextMsg(AG_MSG_ERROR,
 				    _("%s: Loading failed (non-resident): %s"),
@@ -345,7 +323,7 @@ ExportObject(AG_Event *event)
 	ob->save_pfx = pfx_save;
 	
 	if (loadedTmp)
-		AG_ObjectFreeData(ob);
+		AG_ObjectFreeDataset(ob);
 }
 
 static void
@@ -360,12 +338,11 @@ ImportObject(AG_Event *event)
 	int dataFound;
 
 	/* Load the object temporarily if it is non-resident. */
-	if (!AGOBJECT_RESIDENT(ob)) {
-		AG_PostEvent(NULL, ob, "edit-pre-load", NULL);
+	if (!OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (!dataFound) {
 				/* Object was never saved before. */
-				ob->flags |= AG_OBJECT_DATA_RESIDENT;
+				ob->flags |= AG_OBJECT_RESIDENT;
 			} else {
 				AG_TextMsg(AG_MSG_ERROR,
 				    _("%s: Loading failed (non-resident): %s"),
@@ -392,7 +369,7 @@ ImportObject(AG_Event *event)
 	ob->save_pfx = pfx_save;
 	
 	if (loadedTmp)
-		AG_ObjectFreeData(ob);
+		AG_ObjectFreeDataset(ob);
 }
 
 void
@@ -411,12 +388,9 @@ DEV_BrowserSaveTo(void *p, const char *name)
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
 	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE|
 	                        AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(fd, name, ext, NULL, NULL);
+	AG_FileDlgAddType(fd, name, ext, ExportObject, "%p,%p", ob, win);
 	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->ops->type);
-	AG_SetEvent(fd, "file-chosen", ExportObject, "%p,%p", ob, win);
-	AG_SetEvent(fd, "file-cancelled", AGWINDETACH(win));
-
 	AG_WindowShow(win);
 }
 
@@ -436,12 +410,9 @@ DEV_BrowserLoadFrom(void *p, const char *name)
 	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
 	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_LOAD|
 	                        AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(fd, name, ext, NULL, NULL);
+	AG_FileDlgAddType(fd, name, ext, ImportObject, "%p,%p", ob, win);
 	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->ops->type);
-	AG_SetEvent(fd, "file-chosen", ImportObject, "%p,%p", ob, win);
-	AG_SetEvent(fd, "file-cancelled", AGWINDETACH(win));
-
 	AG_WindowShow(win);
 }
 
@@ -472,7 +443,6 @@ ObjectOp(AG_Event *event)
 			DEV_BrowserOpenGeneric(ob);
 			break;
 		case OBJEDIT_LOAD:
-			AG_PostEvent(NULL, ob, "edit-pre-load", NULL);
 			if (AG_ObjectLoad(ob) == -1) {
 				AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name,
 				    AG_GetError());
@@ -501,7 +471,7 @@ ObjectOp(AG_Event *event)
 			}
 			break;
 		case OBJEDIT_EXPORT:
-			if (!AGOBJECT_PERSISTENT(ob)) {
+			if (!OBJECT_PERSISTENT(ob)) {
 				AG_SetError(
 				    _("The `%s' object is non-persistent."),
 				    ob->name);
@@ -513,7 +483,7 @@ ObjectOp(AG_Event *event)
 			{
 				AG_Object *dob;
 
-				if (ob == agWorld || !AGOBJECT_PERSISTENT(ob)) {
+				if (ob == agWorld || !OBJECT_PERSISTENT(ob)) {
 					AG_TextMsg(AG_MSG_ERROR,
 					    _("%s: cannot duplicate."),
 					    ob->name);
@@ -663,11 +633,11 @@ DEV_BrowserGenericMenu(void *menup, void *obj)
 	AG_MenuSeparator(pitem);
 
 	AG_MenuIntFlags(pitem, _("Persistence"), OBJLOAD_ICON,
-	    &AGOBJECT(obj)->flags, AG_OBJECT_NON_PERSISTENT, 1);
+	    &OBJECT(obj)->flags, AG_OBJECT_NON_PERSISTENT, 1);
 	AG_MenuIntFlags(pitem, _("Destructible"), TRASH_ICON,
-	    &AGOBJECT(obj)->flags, AG_OBJECT_INDESTRUCTIBLE, 1);
+	    &OBJECT(obj)->flags, AG_OBJECT_INDESTRUCTIBLE, 1);
 	AG_MenuIntFlags(pitem, _("Editable"), OBJ_ICON,
-	    &AGOBJECT(obj)->flags, AG_OBJECT_READONLY, 1);
+	    &OBJECT(obj)->flags, AG_OBJECT_READONLY, 1);
 }
 
 static AG_TlistItem *
@@ -679,7 +649,7 @@ PollObjectsFind(AG_Tlist *tl, AG_Object *pob, int depth)
 	SDL_Surface *icon;
 
 	strlcpy(label, pob->name, sizeof(label));
-	if (AGOBJECT_RESIDENT(pob)) {
+	if (OBJECT_RESIDENT(pob)) {
 		strlcat(label, _(" (resident)"), sizeof(label));
 	}
 	it = AG_TlistAddPtr(tl, AG_ObjectIcon(pob), label, pob);
@@ -729,7 +699,7 @@ LoadObject(AG_Event *event)
 	AG_Object *o = AG_PTR(1);
 
 	if (AG_ObjectLoad(o) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", AGOBJECT(o)->name,
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", OBJECT(o)->name,
 		    AG_GetError());
 	}
 }
@@ -1154,10 +1124,9 @@ DEV_Browser(void)
  * associated with the object after the load.
  */
 static void
-DEV_PostLoadCallback(AG_Event *event)
+DEV_PostLoadDataCallback(AG_Event *event)
 {
 	AG_Object *obj = AG_SENDER();	
-/*	int rv = AG_INT(1); */
 	struct objent *oent;
 
 	if ((obj->flags & AG_OBJECT_REOPEN_ONLOAD) == 0)
@@ -1257,7 +1226,8 @@ DEV_BrowserInit(void)
 	TAILQ_INIT(&dobjs);
 	TAILQ_INIT(&gobjs);
 
-	AG_AddEvent(agWorld, "object-post-load", DEV_PostLoadCallback, NULL);
+	AG_AddEvent(agWorld, "object-post-load-data", DEV_PostLoadDataCallback,
+	    NULL);
 	AG_AddEvent(agWorld, "object-page-out", DEV_PageOutCallback, NULL);
 	AG_AddEvent(agWorld, "quit", DEV_QuitCallback, NULL);
 }
