@@ -97,8 +97,8 @@ MAP_ActorLoad(void *obj, AG_Netbuf *buf)
 	AG_MutexLock(&a->lock);
 #if 0
 	if (a->parent != NULL) {
-		dprintf("reattaching %s to %s\n", AGOBJECT(a)->name,
-		    AGOBJECT(a->parent)->name);
+		dprintf("reattaching %s to %s\n", OBJECT(a)->name,
+		    OBJECT(a->parent)->name);
 		m = a->parent;
 		AG_MutexLock(&m->lock);
 		MAP_DetachActor(m, a);
@@ -134,8 +134,8 @@ MAP_ActorLoad(void *obj, AG_Netbuf *buf)
 #if 0
 	if (m != NULL) {
 		MAP_DetachActor(m, a);
-		dprintf("reattached %s to %s\n", AGOBJECT(a)->name,
-		    AGOBJECT(m)->name);
+		dprintf("reattached %s to %s\n", OBJECT(a)->name,
+		    OBJECT(m)->name);
 		AG_MutexUnlock(&m->lock);
 	}
 #endif
@@ -401,7 +401,7 @@ MAP_ActorEdit(void *p)
 	AG_Window *win;
 	
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("Actor: %s"), AGOBJECT(a)->name);
+	AG_WindowSetCaption(win, _("Actor: %s"), OBJECT(a)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_LEFT, 1);
 
 	AG_LabelNewPolled(win, 0, _("Type: %d"), &a->type);

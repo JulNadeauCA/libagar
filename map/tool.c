@@ -64,7 +64,7 @@ MAP_ToolDestroy(MAP_Tool *tool)
 		AG_Window *pwin;
 		AG_Widget *wt;
 
-		AGOBJECT_FOREACH_CHILD(wt, tool->pane, ag_widget) {
+		OBJECT_FOREACH_CHILD(wt, tool->pane, ag_widget) {
 			AG_ObjectDetach(wt);
 			AG_ObjectDestroy(wt);
 			Free(wt, M_OBJECT);

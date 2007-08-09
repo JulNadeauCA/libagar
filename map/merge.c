@@ -167,7 +167,7 @@ merge_create_brush(AG_Event *event)
 		}
 	}
 
-	TAILQ_INSERT_HEAD(&brushes, AGOBJECT(m), cobjs);
+	TAILQ_INSERT_HEAD(&brushes, OBJECT(m), cobjs);
 	AG_TlistDeselectAll(brushes_tl);
 	AG_TlistSelect(brushes_tl, AG_TlistAddPtrHead(brushes_tl, NULL,
 	    m_name, m));
@@ -193,7 +193,7 @@ merge_edit_brush(AG_Event *event)
 			continue;
 
 		if ((win = AG_WindowNewNamed(0, "mapedit-tool-merge-%s",
-		    AGOBJECT(brush)->name)) == NULL)
+		    OBJECT(brush)->name)) == NULL)
 			continue;
 
 		tbar = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 1, 0);
@@ -220,7 +220,7 @@ merge_remove_brush(AG_Event *event)
 
 			snprintf(wname, sizeof(wname),
 			    "win-mapedit-tool-merge-%s",
-			    AGOBJECT(brush)->name);
+			    OBJECT(brush)->name);
 			if ((win = AG_FindWindow(wname)) != NULL) {
 				AG_WindowHide(win);
 				AG_ViewDetach(win);
@@ -249,7 +249,7 @@ merge_effect(MAP_Tool *t, MAP_Node *n)
 	AG_TlistItem *it;
 	
 	/* Avoid circular references. XXX ugly */
-	if (strncmp(AGOBJECT(m)->name, "brush(", 6) == 0)
+	if (strncmp(OBJECT(m)->name, "brush(", 6) == 0)
 		return (1);
 	
 	TAILQ_FOREACH(it, &brushes_tl->items, items) {
@@ -302,7 +302,7 @@ merge_load(MAP_Tool *t, AG_Netbuf *buf)
 		MAP_Init(nbrush, m_name);
 		map_load(nbrush, buf);
 
-		TAILQ_INSERT_HEAD(&brushes, AGOBJECT(nbrush), cobjs);
+		TAILQ_INSERT_HEAD(&brushes, OBJECT(nbrush), cobjs);
 		AG_TlistAddPtrHead(brushes_tl, NULL, m_name, nbrush);
 	}
 	return (0);
@@ -341,7 +341,7 @@ merge_cursor(MAP_Tool *t, SDL_Rect *rd)
 	int rv = -1;
 	
 	/* XXX ugly work around circular ref */
-	if (strncmp(AGOBJECT(mv->map)->name, "brush(", 6) == 0)
+	if (strncmp(OBJECT(mv->map)->name, "brush(", 6) == 0)
 		return (-1);
 
 	TAILQ_FOREACH(it, &brushes_tl->items, items) {
@@ -359,8 +359,8 @@ merge_cursor(MAP_Tool *t, SDL_Rect *rd)
 
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
 					MAP_ItemDraw(mv->map, r,
-					    AGWIDGET(mv)->cx + dx,
-					    AGWIDGET(mv)->cy + dy,
+					    WIDGET(mv)->cx + dx,
+					    WIDGET(mv)->cy + dy,
 					    mv->cam);
 					rv = 0;
 				}
