@@ -82,7 +82,7 @@ AG_WriteVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver)
 int
 AG_ReadObjectVersion(AG_Netbuf *buf, void *p, AG_Version *pver)
 {
-	const AG_ObjectOps *ops = AGOBJECT(p)->ops;
+	const AG_ObjectOps *ops = OBJECT(p)->ops;
 	
 	return (AG_ReadVersion(buf, ops->type, &ops->ver, pver));
 }
@@ -90,7 +90,7 @@ AG_ReadObjectVersion(AG_Netbuf *buf, void *p, AG_Version *pver)
 void
 AG_WriteObjectVersion(AG_Netbuf *buf, void *p)
 {
-	const AG_ObjectOps *ops = AGOBJECT(p)->ops;
+	const AG_ObjectOps *ops = OBJECT(p)->ops;
 	
 	return (AG_WriteVersion(buf, ops->type, &ops->ver));
 }

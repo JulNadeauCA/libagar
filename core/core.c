@@ -125,7 +125,7 @@ AG_InitCore(const char *progname, Uint flags)
 	agConfig = Malloc(sizeof(AG_Config), M_OBJECT);
 	AG_ConfigInit(agConfig);
 
-	agWorld = AG_ObjectNew(NULL, "world");
+	agWorld = AG_ObjectNew(NULL, "world", &agObjectOps);
 	AG_ObjectRemain(agWorld, AG_OBJECT_REMAIN_DATA);
 	
 	AG_ObjectLoad(agConfig);

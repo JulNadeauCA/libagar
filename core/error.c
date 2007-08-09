@@ -187,11 +187,11 @@ void
 AG_DebugObj(void *obj, const char *fmt, ...)
 {
 #ifdef DEBUG
-	if (AGOBJECT_DEBUG(obj)) {
+	if (OBJECT_DEBUG(obj)) {
 		va_list args;
 
 		va_start(args, fmt);
-		printf("%s: ", AGOBJECT(obj)->name);
+		printf("%s: ", OBJECT(obj)->name);
 		printf(fmt, args);
 		printf("\n");
 		va_end(args);

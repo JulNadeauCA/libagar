@@ -60,8 +60,8 @@
 # define debug_n(mask,fmt,args...) \
  if(agDebugLvl&(mask)) fprintf(stderr, fmt, ##args)
 # define Debug(obj,fmt,args...) \
- if(AGOBJECT_DEBUG(obj) || agDebugLvl > 0) \
-   printf("%s: %s: " fmt, AGOBJECT(obj)->name, __FUNCTION__ , ##args)
+ if(OBJECT_DEBUG(obj) || agDebugLvl > 0) \
+   printf("%s: %s: " fmt, OBJECT(obj)->name, __FUNCTION__ , ##args)
 #else
 # define dprintf AG_DebugPrintf
 # define deprintf AG_DebugPrintf
