@@ -25,8 +25,8 @@ CreateGameMenu(void)
 
 	/* Create a fixed-size window with no titlebar or decorations. */
 	win = AG_WindowNewNamed(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS,
-	    "game-menu");
-	AG_WindowSetPadding(win, 0, 0, 0);
+	                        "game-menu");
+	AG_WindowSetPadding(win, 0, 0, 0, 0);
 
 	/*
 	 * Create a container which allows manual setting of the coordinates
