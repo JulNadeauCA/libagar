@@ -138,7 +138,7 @@ OpenMenu(RG_Animview *av, int x, int y)
 	
 	av->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
 	AG_MenuInit(av->menu, 0);
-	av->menu_item = av->menu->sel_item = AG_MenuAddItem(av->menu, NULL);
+	av->menu_item = av->menu->itemSel = AG_MenuAddItem(av->menu, NULL);
 	{
 		AG_MenuItem *m_speed;
 
@@ -182,17 +182,16 @@ mousebuttondown(AG_Event *event)
 	int y = AG_INT(3);
 
 	if (button == SDL_BUTTON_RIGHT &&
-	    y < AGWIDGET(av)->h - AGWIDGET(av->btns.play)->h) {
-		OpenMenu(av, AGWIDGET(av)->cx+x, AGWIDGET(av)->cy+y);
-	}
+	    y < WIDGET(av)->h - WIDGET(av->btns.play)->h)
+		OpenMenu(av, WIDGET(av)->cx + x,
+		             WIDGET(av)->cy + y);
 }
 
 void
 RG_AnimviewInit(RG_Animview *av)
 {
 	AG_WidgetInit(av, &rgAnimviewOps, 0);
-	AGWIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_HFILL|
-			       AG_WIDGET_VFILL;
+	WIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_HFILL|AG_WIDGET_VFILL;
 	av->pre_w = 64;
 	av->pre_h = 64;
 	av->ranim.x = 0;
@@ -237,28 +236,28 @@ RG_AnimviewScale(void *p, int rw, int rh)
 	int bw, bh;
 	
 	if (rw == -1 && rh == -1) {
-		AGWIDGET_SCALE(av->btns.play, -1, -1);
-		AGWIDGET_SCALE(av->btns.pause, -1, -1);
-		AGWIDGET_SCALE(av->btns.stop, -1, -1);
+		WIDGET_SCALE(av->btns.play, -1, -1);
+		WIDGET_SCALE(av->btns.pause, -1, -1);
+		WIDGET_SCALE(av->btns.stop, -1, -1);
 
-		AGWIDGET(av)->w = MAX(av->pre_w, AGWIDGET(av->btns.play)->w*3);
-		AGWIDGET(av)->h = av->pre_h + AGWIDGET(av->btns.play)->h;
+		WIDGET(av)->w = MAX(av->pre_w, WIDGET(av->btns.play)->w*3);
+		WIDGET(av)->h = av->pre_h + WIDGET(av->btns.play)->h;
 		return;
 	}
 	bw = rw/3;
-	bh = AGWIDGET(av->btns.play)->h;
+	bh = WIDGET(av->btns.play)->h;
 
-	AGWIDGET(av->btns.play)->x = 0;
-	AGWIDGET(av->btns.play)->y = rh - bh;
-	AGWIDGET(av->btns.play)->w = bw;
+	WIDGET(av->btns.play)->x = 0;
+	WIDGET(av->btns.play)->y = rh - bh;
+	WIDGET(av->btns.play)->w = bw;
 
-	AGWIDGET(av->btns.pause)->x = bw;
-	AGWIDGET(av->btns.pause)->y = rh - bh;
-	AGWIDGET(av->btns.pause)->w = bw;
+	WIDGET(av->btns.pause)->x = bw;
+	WIDGET(av->btns.pause)->y = rh - bh;
+	WIDGET(av->btns.pause)->w = bw;
 	
-	AGWIDGET(av->btns.stop)->x = bw*2;
-	AGWIDGET(av->btns.stop)->y = rh - bh;
-	AGWIDGET(av->btns.stop)->w = bw;
+	WIDGET(av->btns.stop)->x = bw*2;
+	WIDGET(av->btns.stop)->y = rh - bh;
+	WIDGET(av->btns.stop)->w = bw;
 
 	av->ranim.x = rw/2 - av->ranim.w/2;
 	av->ranim.y = (rh - bh)/2 - av->ranim.h/2;
@@ -284,9 +283,8 @@ RG_AnimviewSetAnimation(RG_Animview *av, RG_Anim *anim)
 	AG_DelTimeout(av, &av->timer);
 	av->anim = anim;
 	av->frame = 0;
-	av->ranim.x = AGWIDGET(av)->w/2 - anim->w/2;
-	av->ranim.y = (AGWIDGET(av)->h - AGWIDGET(av->btns.play)->h)/2 -
-	    anim->h/2;
+	av->ranim.x = WIDGET(av)->w/2 - anim->w/2;
+	av->ranim.y = (WIDGET(av)->h - WIDGET(av->btns.play)->h)/2 - anim->h/2;
 	av->ranim.w = anim->w;
 	av->ranim.h = anim->h;
 }

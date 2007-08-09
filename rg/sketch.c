@@ -361,7 +361,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 			
 		AG_LabelNewStaticString(ntab, 0, _("Texture: "));
 		texsel = RG_TextureSelectorNew(ntab, tv->ts, 0);
-		AGWIDGET(texsel)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
+		WIDGET(texsel)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
 		AG_WidgetBind(texsel, "texture-name", AG_WIDGET_STRING,
 		    vge->fill_st.texture, sizeof(vge->fill_st.texture));
 	}
@@ -494,7 +494,7 @@ RG_SketchUnselect(RG_Tileview *tv, RG_TileElement *tel,
 	TAILQ_FOREACH(win, &agView->windows, windows) {
 		snprintf(name, sizeof(name), "win-%s-%p-%p", sk->name, tel,
 		    vge);
-		if (strcmp(name, AGOBJECT(win)->name) == 0) {
+		if (strcmp(name, OBJECT(win)->name) == 0) {
 			AG_ViewDetach(win);
 			break;
 		}
@@ -775,7 +775,7 @@ RG_SketchOpenMenu(RG_Tileview *tv, int x, int y)
 		
 		RG_TileviewGenericMenu(tv, mi);
 	}
-	tv->tv_sketch.menu->sel_item = mi;
+	tv->tv_sketch.menu->itemSel = mi;
 	tv->tv_sketch.menu_win = AG_MenuExpand(me, mi, x, y);
 }
 

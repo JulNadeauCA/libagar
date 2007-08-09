@@ -107,7 +107,7 @@ find_tilesets(AG_Tlist *tl, AG_Object *pob, int depth)
 	
 	if (AG_ObjectIsClass(pob, "RG_Tileset:*")) {
 		it = AG_TlistAdd(tl, AG_ObjectIcon(pob), "%s%s", pob->name,
-		    AGOBJECT_RESIDENT(pob) ? _(" (resident)") : "");
+		    OBJECT_RESIDENT(pob) ? _(" (resident)") : "");
 		it->p1 = pob;
 	}
 	TAILQ_FOREACH(cob, &pob->children, cobjs)

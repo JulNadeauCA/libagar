@@ -1124,7 +1124,8 @@ ImportImageDlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Import %s from..."), t->name);
-	dlg = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN);
+	dlg = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|
+	                         AG_FILEDLG_EXPAND);
 	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
 #if 0
 	AG_FileDlgAddType(dlg, _("Gimp XCF"), "*.xcf", ImportFromXCF,
@@ -1866,7 +1867,8 @@ ExportImageDlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Export %s to..."), t->name);
-	dlg = AG_FileDlgNew(win, AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN);
+	dlg = AG_FileDlgNew(win, AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN|
+	                         AG_FILEDLG_EXPAND);
 	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(dlg, "%s.bmp", t->name);
 	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", ExportBMP, "%p", t);
@@ -1986,7 +1988,7 @@ CreateView(AG_Event *event)
 	RG_Tileview *tv;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "%s <%s>", t->name, AGOBJECT(ts)->name);
+	AG_WindowSetCaption(win, "%s <%s>", t->name, OBJECT(ts)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_CENTER, 0);
 	tv = RG_TileviewNew(win, ts, RG_TILEVIEW_READONLY);
 	RG_TileviewSetTile(tv, t);
@@ -2008,11 +2010,11 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	AG_HPane *pane;
 	AG_HPaneDiv *div;
 
-	if ((win = AG_WindowNewNamed(0, "tile-%s:%s", AGOBJECT(ts)->name,
+	if ((win = AG_WindowNewNamed(0, "tile-%s:%s", OBJECT(ts)->name,
 	    t->name)) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, "%s <%s>", t->name, AGOBJECT(ts)->name);
+	AG_WindowSetCaption(win, "%s <%s>", t->name, OBJECT(ts)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	
@@ -2032,7 +2034,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	
 	tl_feats = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tl_feats, AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND);
-	AGWIDGET(tl_feats)->flags &= ~(AG_WIDGET_HFILL);
+	WIDGET(tl_feats)->flags &= ~(AG_WIDGET_HFILL);
 	AG_TlistPrescale(tl_feats, _("FEATURE #00 <#00>"), 5);
 	AG_SetEvent(tl_feats, "tlist-poll", PollFeatures, "%p,%p,%p,%p",
 	    ts, t, win, tv);
@@ -2045,11 +2047,11 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 
 	mi = AG_MenuAddItem(me, ("File"));
 	{
-		AG_MenuTool(mi, tbar, _("Load image into pixmaps..."),
+		AG_MenuTool(mi, tbar, _("Import image file as pixmap..."),
 		    RG_PIXMAP_ICON, 0, 0,
 		    ImportImageDlg, "%p,%p,%p,%i", tv, win, tl_feats, 1);
 		
-		AG_MenuTool(mi, tbar, _("Load image into tiles..."),
+		AG_MenuTool(mi, tbar, _("Import image file as tile..."),
 		    RG_PIXMAP_ICON, 0, 0,
 		    ImportImageDlg, "%p,%p,%p,%i", tv, win, tl_feats, 0);
 	
@@ -2135,11 +2137,11 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	    AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
 	{
 		AG_ObjectAttach(div->box1, tl_feats);
-		AGWIDGET(tl_feats)->flags |= AG_WIDGET_HFILL;
+		WIDGET(tl_feats)->flags |= AG_WIDGET_HFILL;
 	
 		btn = AG_ButtonNew(div->box1, AG_BUTTON_STICKY|AG_BUTTON_HFILL,
 		    _("Edit"));
-		AGWIDGET(btn)->flags |= AG_WIDGET_HFILL;
+		WIDGET(btn)->flags |= AG_WIDGET_HFILL;
 		AG_WidgetBind(btn, "state", AG_WIDGET_INT, &tv->edit_mode);
 		AG_SetEvent(btn, "button-pushed", EditElement, "%p,%p,%p",
 		    tv, tl_feats, win);
@@ -2163,8 +2165,8 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	    agView->w/2, agView->h/2);
 
 	/* Center the tile. */
-	tv->xoffs = (AGWIDGET(tv)->w - t->su->w)/2;
-	tv->yoffs = (AGWIDGET(tv)->h - t->su->h)/2;
+	tv->xoffs = (WIDGET(tv)->w - t->su->w)/2;
+	tv->yoffs = (WIDGET(tv)->h - t->su->h)/2;
 
 	return (win);
 }
@@ -2184,7 +2186,7 @@ RG_TileOpenMenu(RG_Tileview *tv, int x, int y)
 	{
 		RG_TileviewGenericMenu(tv, tv->menu_item);
 	}
-	tv->menu->sel_item = tv->menu_item;
+	tv->menu->itemSel = tv->menu_item;
 	tv->menu_win = AG_MenuExpand(tv->menu, tv->menu_item, x, y);
 }
 
