@@ -185,21 +185,20 @@ AG_EventLoop_FixedFPS(void)
 					continue;
 				}
 #ifdef DEBUG
-				if (AGWIDGET(win)->x < 0 ||
-				    AGWIDGET(win)->y < 0 ||
-				    AGWIDGET(win)->x+AGWIDGET(win)->w >
+				if (WIDGET(win)->x < 0 ||
+				    WIDGET(win)->y < 0 ||
+				    WIDGET(win)->x+WIDGET(win)->w >
 				    agView->w ||
-				    AGWIDGET(win)->y+AGWIDGET(win)->h >
+				    WIDGET(win)->y+WIDGET(win)->h >
 				    agView->h) {
 					fatal("%s: bad coords: %d,%d (%dx%d)",
 					    win->caption,
-					    AGWIDGET(win)->x, AGWIDGET(win)->y,
-					    AGWIDGET(win)->w, AGWIDGET(win)->h);
+					    WIDGET(win)->x, WIDGET(win)->y,
+					    WIDGET(win)->w, WIDGET(win)->h);
 				}
 #endif
-				AG_UpdateRectQ(
-				    AGWIDGET(win)->x, AGWIDGET(win)->y,
-				    AGWIDGET(win)->w, AGWIDGET(win)->h);
+				AG_UpdateRectQ(WIDGET(win)->x, WIDGET(win)->y,
+				               WIDGET(win)->w, WIDGET(win)->h);
 			}
 			if (agView->ndirty > 0) {
 #ifdef HAVE_OPENGL
@@ -311,7 +310,7 @@ AG_ProcessEvent(SDL_Event *ev)
 
 			me = Malloc(sizeof(AG_Menu), M_OBJECT);
 			AG_MenuInit(me, 0);
-			mi = me->sel_item = AG_MenuAddItem(me, NULL);
+			mi = me->itemSel = AG_MenuAddItem(me, NULL);
 
 			TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq,
 			    windows) {
@@ -406,7 +405,7 @@ SchedEventTimeout(void *p, Uint32 ival, void *arg)
 		debug(DEBUG_PROPAGATION, "%s: propagate %s (timeout)\n",
 		    ob->name, ev->name);
 		AG_LockLinkage();
-		AGOBJECT_FOREACH_CHILD(child, ob, ag_object) {
+		OBJECT_FOREACH_CHILD(child, ob, ag_object) {
 			PropagateEvent(ob, child, ev);
 		}
 		AG_UnlockLinkage();
@@ -553,7 +552,7 @@ PropagateEvent(AG_Object *sndr, AG_Object *rcvr, AG_Event *ev)
 {
 	AG_Object *chld;
 
-	AGOBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
+	OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
 		PropagateEvent(rcvr, chld, ev);
 	}
 	AG_ForwardEvent(sndr, rcvr, ev);
@@ -572,7 +571,7 @@ EventThread(void *p)
 		debug(DEBUG_PROPAGATION, "%s: propagate %s (async)\n",
 		    rcvr->name, eev->name);
 		AG_LockLinkage();
-		AGOBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
+		OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
 			PropagateEvent(rcvr, chld, eev);
 		}
 		AG_UnlockLinkage();
@@ -639,7 +638,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 				    "%s: propagate %s (post)\n",
 				    rcvr->name, evname);
 				AG_LockLinkage();
-				AGOBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
+				OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
 					PropagateEvent(rcvr, chld, &tmpev);
 				}
 				AG_UnlockLinkage();
@@ -765,17 +764,10 @@ fail:
 
 /* Immediately execute the given event handler. */
 void
-AG_ExecEvent(void *p, const char *evname)
+AG_ExecEventFn(void *obj, AG_Event *ev)
 {
-	AG_Object *ob = p;
-	AG_Event *ev;
-
-	AG_MutexLock(&ob->lock);
-	TAILQ_FOREACH(ev, &ob->events, events) {
-		if (ev->handler != NULL)
-			ev->handler(ev);
-	}
-	AG_MutexUnlock(&ob->lock);
+	if (ev->handler != NULL)
+		AG_PostEvent(NULL, obj, ev->name, NULL);
 }
 
 /*
@@ -827,7 +819,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 			debug(DEBUG_PROPAGATION, "%s: propagate %s (forward)\n",
 			    rcvr->name, event->name);
 			AG_LockLinkage();
-			AGOBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
+			OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
 				PropagateEvent(rcvr, chld, ev);
 			}
 			AG_UnlockLinkage();
