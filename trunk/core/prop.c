@@ -275,13 +275,13 @@ AG_SetBool(void *ob, const char *key, int i)
 void
 AG_LockProps(void *p)
 {
-	AG_MutexLock(&AGOBJECT(p)->lock);
+	AG_MutexLock(&OBJECT(p)->lock);
 }
 
 void
 AG_UnlockProps(void *p)
 {
-	AG_MutexUnlock(&AGOBJECT(p)->lock);
+	AG_MutexUnlock(&OBJECT(p)->lock);
 }
 
 #undef PROP_GET

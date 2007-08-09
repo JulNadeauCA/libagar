@@ -276,10 +276,10 @@ AG_ResizeDisplay(int w, int h)
 
 	TAILQ_FOREACH(win, &agView->windows, windows) {
 		AG_MutexLock(&win->lock);
-		AGWIDGET(win)->x = AGWIDGET(win)->x*w/ow;
-		AGWIDGET(win)->y = AGWIDGET(win)->y*h/oh;
-		AGWIDGET(win)->w = AGWIDGET(win)->w*w/ow;
-		AGWIDGET(win)->h = AGWIDGET(win)->h*h/oh;
+		WIDGET(win)->x = WIDGET(win)->x*w/ow;
+		WIDGET(win)->y = WIDGET(win)->y*h/oh;
+		WIDGET(win)->w = WIDGET(win)->w*w/ow;
+		WIDGET(win)->h = WIDGET(win)->h*h/oh;
 		AG_WINDOW_UPDATE(win);
 		AG_MutexUnlock(&win->lock);
 	}
@@ -340,7 +340,7 @@ AG_FindWindow(const char *name)
 
 	AG_MutexLock(&agView->lock);
 	TAILQ_FOREACH(win, &agView->windows, windows) {
-		if (strcmp(AGOBJECT(win)->name, name) == 0)
+		if (strcmp(OBJECT(win)->name, name) == 0)
 			break;
 	}
 	AG_MutexUnlock(&agView->lock);

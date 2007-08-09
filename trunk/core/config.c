@@ -101,7 +101,7 @@ Set_SearchPath(AG_Event *event)
 
 	AG_TextboxCopyString(tbox, path, sizeof(path));
 	AG_SetString(agConfig, varname, "%s", path);
-	AGWIDGET(tbox)->flags &= ~(AG_WIDGET_FOCUSED);
+	WIDGET(tbox)->flags &= ~(AG_WIDGET_FOCUSED);
 }
 
 static void
@@ -161,8 +161,8 @@ AG_ConfigInit(AG_Config *cfg)
 	struct passwd *pwd;
 
 	AG_ObjectInit(cfg, "config", &agConfigOps);
-	AGOBJECT(cfg)->flags |= AG_OBJECT_RELOAD_PROPS|AG_OBJECT_DATA_RESIDENT;
-	AGOBJECT(cfg)->save_pfx = NULL;
+	OBJECT(cfg)->flags |= AG_OBJECT_RELOAD_PROPS|AG_OBJECT_RESIDENT;
+	OBJECT(cfg)->save_pfx = NULL;
 	cfg->window = NULL;
 
 	AG_SetBool(cfg, "initial-run", 1);

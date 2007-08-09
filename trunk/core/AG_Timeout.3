@@ -99,19 +99,20 @@ The
 may contain:
 .Pp
 .Bd -literal
-#define AG_TIMEOUT_DETACHABLE 0x01  /* Don't cancel on detach */
-#define AG_TIMEOUT_LOADABLE   0x02  /* Don't cancel on load */
+#define AG_CANCEL_ONDETACH 0x01  /* Cancel in ObjectDetach() */
+#define AG_CANCEL_ONLOAD   0x02  /* Cancel in ObjectLoad() */
 .Ed
 .Pp
-Flags
-.Dv AG_TIMEOUT_DETACHABLE
+The flags
+.Dv AG_CANCEL_ONDETACH
 and
-.Dv AG_TIMEOUT_LOADABLE
+.Dv AG_CANCEL_ONLOAD
 indicate that
 .Fn AG_ObjectDetach
 and
-.Fn AG_ObjectLoad ,
-respectively, should not cancel scheduled executions of this timeout.
+.Fn AG_ObjectLoad
+should automatically cancel any scheduled execution of the callback
+function.
 .Pp
 The
 .Fn AG_AddTimeout
@@ -192,19 +193,18 @@ Whenever an
 .Xr AG_Object 3
 controlling timeouts is about to be detached,
 .Fn AG_ObjectDetach
-cancels any scheduled timeout.
-This behavior can be avoided by setting the
-.Dv AG_TIMEOUT_DETACHABLE
+cancels any scheduled timeout that has the
+.Dv AG_CANCEL_ONDETACH
+flag set.
+.Pp
+Similarly,
+.Fn AG_ObjectLoad
+cancels scheduled timeouts with the
+.Dv AG_CANCEL_ONLOAD
 flag.
 .Pp
-The
-.Fn AG_ObjectLoad
-function also cancels scheduled timeouts, unless the
-.Dv AG_TIMEOUT_LOADABLE
-flag is given.
-.Pp
 .Fn AG_ObjectDestroy
-always cancels every scheduled timeout.
+always cancels all scheduled timeouts.
 .Pp
 With a multithreaded timing scheme, cancelling a timeout might imply waiting
 for the termination of a thread (possibly sending it a signal as well).
