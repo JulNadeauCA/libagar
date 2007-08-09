@@ -94,7 +94,7 @@ MouseOverPlotItem(SC_Plotter *ptr, SC_Plot *pl, int x, int y)
 	SDL_Surface *lbl;
 	
 	if (pl->label < 0) { return (0); }
-	lbl = AGWIDGET_SURFACE(ptr,pl->label);
+	lbl = WSURFACE(ptr,pl->label);
 	return (x >= pl->xLabel && x <= (pl->xLabel + lbl->w) &&
 	        y >= pl->yLabel && y <= (pl->yLabel + lbl->h));
 }
@@ -342,7 +342,7 @@ UpdateXBar(AG_Event *event)
 	SC_Plotter *ptr = AG_PTR(1);
 	int value = AG_INT(2);
 
-	if (value >= ptr->xMax - AGWIDGET(ptr)->w) {
+	if (value >= ptr->xMax - WIDGET(ptr)->w) {
 		ptr->flags |= SC_PLOTTER_SCROLL;
 	} else {
 		ptr->flags &= ~SC_PLOTTER_SCROLL;
@@ -396,7 +396,7 @@ SC_PlotterInit(SC_Plotter *ptr, Uint flags)
 	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, 0);
 	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, 0);
 	AG_WidgetBind(ptr->hbar, "value", AG_WIDGET_INT, &ptr->xOffs);
-	AG_WidgetBind(ptr->hbar, "visible", AG_WIDGET_INT, &AGWIDGET(ptr)->w);
+	AG_WidgetBind(ptr->hbar, "visible", AG_WIDGET_INT, &WIDGET(ptr)->w);
 	AG_WidgetBind(ptr->hbar, "max", AG_WIDGET_INT, &ptr->xMax);
 	AG_SetEvent(ptr->hbar, "scrollbar-changed", UpdateXBar, "%p", ptr);
 
@@ -425,29 +425,29 @@ SC_PlotterScale(void *p, int w, int h)
 	SC_Plot *pl;
 
 	if (w == -1 && h == -1) {
-		AGWIDGET(ptr)->w = ptr->wPre;
-		AGWIDGET(ptr)->h = ptr->hPre;
+		WIDGET(ptr)->w = ptr->wPre;
+		WIDGET(ptr)->h = ptr->hPre;
 		if (ptr->flags & SC_PLOTTER_SCROLL) {
 			ptr->xOffs = 0;
 		}
 		return;
 	}
 
-	AGWIDGET(ptr->hbar)->x = 0;
-	AGWIDGET(ptr->hbar)->y = AGWIDGET(ptr)->h - ptr->hbar->bw;
-	AGWIDGET(ptr->hbar)->w = AGWIDGET(ptr)->w;
-	AGWIDGET(ptr->hbar)->h = ptr->hbar->bw;
+	WIDGET(ptr->hbar)->x = 0;
+	WIDGET(ptr->hbar)->y = WIDGET(ptr)->h - ptr->hbar->bw;
+	WIDGET(ptr->hbar)->w = WIDGET(ptr)->w;
+	WIDGET(ptr->hbar)->h = ptr->hbar->bw;
 
-	AGWIDGET(ptr->vbar)->x = AGWIDGET(ptr)->w - ptr->vbar->bw;
-	AGWIDGET(ptr->vbar)->y = ptr->vbar->bw;
-	AGWIDGET(ptr->vbar)->w = ptr->vbar->bw;
-	AGWIDGET(ptr->vbar)->h = AGWIDGET(ptr)->h - ptr->vbar->bw;
+	WIDGET(ptr->vbar)->x = WIDGET(ptr)->w - ptr->vbar->bw;
+	WIDGET(ptr->vbar)->y = ptr->vbar->bw;
+	WIDGET(ptr->vbar)->w = ptr->vbar->bw;
+	WIDGET(ptr->vbar)->h = WIDGET(ptr)->h - ptr->vbar->bw;
 #if 0	
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
 		SDL_Surface *lbl;
 		
 		if (pl->label == -1) { continue; }
-		lbl = AGWIDGET_SURFACE(ptr,pl->label);
+		lbl = WSURFACE(ptr,pl->label);
 		if (pl->xLabel+lbl->w > w) { pl->xLabel = w - lbl->w; }
 		if (pl->yLabel+lbl->h > h) { pl->yLabel = h - lbl->h; }
 	}
@@ -466,13 +466,13 @@ SC_PlotterDraw(void *p)
 	SC_Plotter *ptr = p;
 	SC_Plot *pl;
 	SC_PlotLabel *plbl;
-	int y0 = AGWIDGET(ptr)->h/2;
+	int y0 = WIDGET(ptr)->h/2;
 	Uint i;
 
-	agPrim.box(ptr, 0, 0, AGWIDGET(ptr)->w, AGWIDGET(ptr)->h, -1,
+	agPrim.box(ptr, 0, 0, WIDGET(ptr)->w, WIDGET(ptr)->h, -1,
 	    AG_COLOR(GRAPH_BG_COLOR));
-	agPrim.hline(ptr, 1, AGWIDGET(ptr)->w-2, y0, ptr->colors[0]);
-	agPrim.vline(ptr, ptr->xMax-1, 30, AGWIDGET(ptr)->h-30, ptr->colors[0]);
+	agPrim.hline(ptr, 1, WIDGET(ptr)->w-2, y0, ptr->colors[0]);
+	agPrim.vline(ptr, ptr->xMax-1, 30, WIDGET(ptr)->h-30, ptr->colors[0]);
 
 	/* First pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
@@ -480,7 +480,7 @@ SC_PlotterDraw(void *p)
 		int y, py = y0+pl->yOffs+ptr->yOffs;
 
 		if (pl->label >= 0) {
-			SDL_Surface *su = AGWIDGET_SURFACE(ptr,pl->label);
+			SDL_Surface *su = WSURFACE(ptr,pl->label);
 
 			if (pl->flags & SC_PLOT_SELECTED) {
 				agPrim.rect_outlined(ptr,
@@ -511,7 +511,7 @@ SC_PlotterDraw(void *p)
 					    y0 - y + pl->yOffs + ptr->yOffs,
 					    AG_VideoPixel(pl->color));
 				}
-				if (x > AGWIDGET(ptr)->w) { break; }
+				if (x > WIDGET(ptr)->w) { break; }
 			}
 			break;
 		case SC_PLOT_LINEAR:
@@ -522,7 +522,7 @@ SC_PlotterDraw(void *p)
 				    y0 - y + pl->yOffs + ptr->yOffs,
 				    AG_VideoPixel(pl->color));
 				py = y0 - y + pl->yOffs + ptr->yOffs;
-				if (x > AGWIDGET(ptr)->w) { break; }
+				if (x > WIDGET(ptr)->w) { break; }
 			}
 			break;
 		default:
@@ -535,8 +535,7 @@ SC_PlotterDraw(void *p)
 			continue;
 		}
 		TAILQ_FOREACH(plbl, &pl->labels, labels) {
-			SDL_Surface *su = AGWIDGET_SURFACE(ptr,
-			    plbl->text_surface);
+			SDL_Surface *su = WSURFACE(ptr,plbl->text_surface);
 			int xLbl, yLbl;
 			Uint8 colLine[4];
 			Uint8 colBG[4];
@@ -551,18 +550,18 @@ SC_PlotterDraw(void *p)
 			switch (plbl->type) {
 			case SC_LABEL_X:
 				xLbl = plbl->x - ptr->xOffs - pl->xOffs;
-				yLbl = AGWIDGET(ptr)->h -
-				       AGWIDGET(ptr->hbar)->h -
+				yLbl = WIDGET(ptr)->h -
+				       WIDGET(ptr->hbar)->h -
 				       su->h - 4 - plbl->y;
 				agPrim.line_blended(ptr,
 				    xLbl, 1,
-				    xLbl, AGWIDGET(ptr)->h-2,
+				    xLbl, WIDGET(ptr)->h-2,
 				    colLine, AG_ALPHA_SRC);
 				break;
 			case SC_LABEL_Y:
 				xLbl = plbl->x - ptr->xOffs - pl->xOffs;
-				yLbl = AGWIDGET(ptr)->h -
-				       AGWIDGET(ptr->hbar)->h -
+				yLbl = WIDGET(ptr)->h -
+				       WIDGET(ptr->hbar)->h -
 				       su->h - 4 - plbl->y;
 				break;
 			case SC_LABEL_FREE:
@@ -790,7 +789,7 @@ reposition:
 			if (plbl->x != nx || plbl->y != ny) {
 				continue;
 			}
-			su = AGWIDGET_SURFACE(pl->plotter,plbl->text_surface);
+			su = WSURFACE(pl->plotter,plbl->text_surface);
 			switch (plbl->type) {
 			case SC_LABEL_X:
 				ny += su->h;
@@ -831,7 +830,7 @@ SC_PlotNew(SC_Plotter *ptr, enum sc_plot_type type)
 	pl->yLabel = 5;
 	TAILQ_FOREACH(pl2, &ptr->plots, plots) {
 		if (pl2->label == -1) { continue; }
-		pl->xLabel += AGWIDGET_SURFACE(ptr,pl2->label)->w + 5;
+		pl->xLabel += WSURFACE(ptr,pl2->label)->w + 5;
 	}
 	TAILQ_INSERT_TAIL(&ptr->plots, pl, plots);
 	TAILQ_INIT(&pl->labels);
