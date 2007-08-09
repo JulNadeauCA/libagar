@@ -65,7 +65,7 @@ ginsert_pane(void *p, void *con)
 	
 	if ((it = AG_TlistSelectedItem(mv->lib_tl)) != NULL) {
 		AG_LabelNewStatic(con, 0, _("Object: %s (%s)"),
-		    AGOBJECT(it->p1)->name, AGOBJECT(it->p1)->ops->type);
+		    OBJECT(it->p1)->name, OBJECT(it->p1)->ops->type);
 	}
 	
 	AG_LabelNewStatic(con, 0, _("Snap to: "));
@@ -128,7 +128,7 @@ ginsert_effect(void *p, MAP_Node *n)
 	go = it->p1;
 
 	if (go->parent != NULL) {
-		dprintf("detaching from %s\n", AGOBJECT(go->parent)->name);
+		dprintf("detaching from %s\n", OBJECT(go->parent)->name);
 		TAILQ_REMOVE(&go->parent->actors, go, actors);
 		MAP_DetachActor(go->parent, go);
 	}

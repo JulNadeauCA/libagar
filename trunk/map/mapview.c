@@ -94,8 +94,8 @@ void
 MAP_ViewPixel2i(MAP_View *mv, int x, int y)
 {
 	Uint8 r, g, b;
-	int dx = AGWIDGET(mv)->cx + x;
-	int dy = AGWIDGET(mv)->cy + y;
+	int dx = WIDGET(mv)->cx + x;
+	int dy = WIDGET(mv)->cy + y;
 
 	if (mv->col.a < 255) {
 		AG_BLEND_RGBA2_CLIPPED(agView->v, dx, dy,
@@ -135,7 +135,7 @@ MAP_ViewControl(MAP_View *mv, const char *slot, void *obj)
 {
 #ifdef DEBUG
 	if (!AG_ObjectIsClass(obj, "MAP_Actor:*"))
-		fatal("%s: not an actor", AGOBJECT(obj)->name);
+		fatal("%s: not an actor", OBJECT(obj)->name);
 #endif
 	mv->actor = (MAP_Actor *)obj;
 }
@@ -158,7 +158,7 @@ MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
 			AG_Widget *wt;
 			AG_Window *pwin;
 
-			AGOBJECT_FOREACH_CHILD(wt, mv->curtool->pane,
+			OBJECT_FOREACH_CHILD(wt, mv->curtool->pane,
 			    ag_widget) {
 				AG_ObjectDetach(wt);
 				AG_ObjectDestroy(wt);
@@ -432,15 +432,15 @@ MAP_ViewUseScrollbars(MAP_View *mv, AG_Scrollbar *hbar,
 	mv->vbar = vbar;
 
 	if (hbar != NULL) {
-		AGWIDGET(hbar)->flags &= ~(AG_WIDGET_FOCUSABLE);
-		AGWIDGET(hbar)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
+		WIDGET(hbar)->flags &= ~(AG_WIDGET_FOCUSABLE);
+		WIDGET(hbar)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
 		AG_WidgetBind(mv->hbar, "value", AG_WIDGET_INT, &AGMCAM(mv).x);
 		AG_SetEvent(mv->hbar, "scrollbar-changed", scrolled_bar, "%p",
 		    mv);
 	}
 	if (vbar != NULL) {
-		AGWIDGET(vbar)->flags &= ~(AG_WIDGET_FOCUSABLE);
-		AGWIDGET(vbar)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
+		WIDGET(vbar)->flags &= ~(AG_WIDGET_FOCUSABLE);
+		WIDGET(vbar)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
 		AG_WidgetBind(mv->vbar, "value", AG_WIDGET_INT, &AGMCAM(mv).y);
 		AG_SetEvent(mv->vbar, "scrollbar-changed", scrolled_bar, "%p",
 		    mv);
@@ -548,12 +548,12 @@ MAP_ViewDraw(void *p)
 	GLfloat texenvmode;
 #endif
 
-	if (AGWIDGET(mv)->w < MAPTILESZ || AGWIDGET(mv)->h < MAPTILESZ)
+	if (WIDGET(mv)->w < MAPTILESZ || WIDGET(mv)->h < MAPTILESZ)
 		return;
 
-	if (AGWIDGET(mv)->flags & AG_WIDGET_FOCUSED)
+	if (WIDGET(mv)->flags & AG_WIDGET_FOCUSED)
 		agPrim.rect_outlined(mv, 0, 0,
-		    AGWIDGET(mv)->w, AGWIDGET(mv)->h,
+		    WIDGET(mv)->w, WIDGET(mv)->h,
 		    AG_COLOR(FOCUS_COLOR));
 
 	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
@@ -569,8 +569,8 @@ MAP_ViewDraw(void *p)
 
 		rtiling.x = 0;
 		rtiling.y = 0;
-		rtiling.w = AGWIDGET(mv)->w;
-		rtiling.h = AGWIDGET(mv)->h;
+		rtiling.w = WIDGET(mv)->w;
+		rtiling.h = WIDGET(mv)->h;
 		agPrim.tiling(mv, rtiling, mapViewBgTileSize, 0,
 		    AG_COLOR(MAPVIEW_TILE1_COLOR),
 		    AG_COLOR(MAPVIEW_TILE2_COLOR));
@@ -611,8 +611,8 @@ draw_layer:
 					continue;
 
 				MAP_ItemDraw(m, nref,
-				    AGWIDGET(mv)->cx + rx,
-				    AGWIDGET(mv)->cy + ry,
+				    WIDGET(mv)->cx + rx,
+				    WIDGET(mv)->cy + ry,
 				    mv->cam);
 
 #ifdef DEBUG
@@ -770,34 +770,34 @@ MAP_ViewUpdateCamera(MAP_View *mv)
 
 	switch (cam->alignment) {
 	case AG_MAP_CENTER:
-		xcam -= AGWIDGET(mv)->w/2;
-		ycam -= AGWIDGET(mv)->h/2;
+		xcam -= WIDGET(mv)->w/2;
+		ycam -= WIDGET(mv)->h/2;
 		break;
 	case AG_MAP_LOWER_CENTER:
-		xcam -= AGWIDGET(mv)->w/2;
-		ycam -= AGWIDGET(mv)->h;
+		xcam -= WIDGET(mv)->w/2;
+		ycam -= WIDGET(mv)->h;
 		break;
 	case AG_MAP_UPPER_CENTER:
-		xcam -= AGWIDGET(mv)->w/2;
+		xcam -= WIDGET(mv)->w/2;
 		break;
 	case AG_MAP_UPPER_LEFT:
 		break;
 	case AG_MAP_MIDDLE_LEFT:
-		ycam -= AGWIDGET(mv)->h/2;
+		ycam -= WIDGET(mv)->h/2;
 		break;
 	case AG_MAP_LOWER_LEFT:
-		ycam -= AGWIDGET(mv)->h;
+		ycam -= WIDGET(mv)->h;
 		break;
 	case AG_MAP_UPPER_RIGHT:
-		xcam -= AGWIDGET(mv)->w;
+		xcam -= WIDGET(mv)->w;
 		break;
 	case AG_MAP_MIDDLE_RIGHT:
-		xcam -= AGWIDGET(mv)->w;
-		ycam -= AGWIDGET(mv)->h/2;
+		xcam -= WIDGET(mv)->w;
+		ycam -= WIDGET(mv)->h/2;
 		break;
 	case AG_MAP_LOWER_RIGHT:
-		xcam -= AGWIDGET(mv)->w;
-		ycam -= AGWIDGET(mv)->h;
+		xcam -= WIDGET(mv)->w;
+		ycam -= WIDGET(mv)->h;
 		break;
 	}
 	
@@ -849,12 +849,12 @@ MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 	if (AGMTILESZ(mv) > MAP_TILESZ_MAX)
 		AGMTILESZ(mv) = MAP_TILESZ_MAX;
 
-	mv->mw = AGWIDGET(mv)->w/AGMTILESZ(mv) + 2;
-	mv->mh = AGWIDGET(mv)->h/AGMTILESZ(mv) + 2;
+	mv->mw = WIDGET(mv)->w/AGMTILESZ(mv) + 2;
+	mv->mh = WIDGET(mv)->h/AGMTILESZ(mv) + 2;
 
 	SDL_GetMouseState(&x, &y);
-	x -= AGWIDGET(mv)->cx;
-	y -= AGWIDGET(mv)->cy;
+	x -= WIDGET(mv)->cx;
+	y -= WIDGET(mv)->cy;
 
 	pixw = mv->map->mapw*AGMTILESZ(mv);
 	pixh = mv->map->maph*AGMTILESZ(mv);
@@ -1072,7 +1072,7 @@ mousebuttondown(AG_Event *event)
 					continue;
 				}
 				if (mbinding->edit &&
-				   (AGOBJECT(m)->flags & AG_OBJECT_READONLY)) {
+				   (OBJECT(m)->flags & AG_OBJECT_READONLY)) {
 					continue;
 				}
 				tool->mv = mv;
@@ -1226,7 +1226,7 @@ mousebuttonup(AG_Event *event)
 					continue;
 				}
 				if (mbinding->edit &&
-				    (AGOBJECT(m)->flags&AG_OBJECT_READONLY)) {
+				    (OBJECT(m)->flags&AG_OBJECT_READONLY)) {
 					continue;
 				}
 				tool->mv = mv;
@@ -1308,7 +1308,7 @@ key_up(AG_Event *event)
 			     keymod & kbinding->mod)) {
 				if (kbinding->edit &&
 				   (((mv->flags & MAP_VIEW_EDIT) == 0) ||
-				    ((AGOBJECT(mv->map)->flags &
+				    ((OBJECT(mv->map)->flags &
 				      AG_OBJECT_READONLY)))) {
 					continue;
 				}
@@ -1355,7 +1355,7 @@ key_down(AG_Event *event)
 			     keymod & kbinding->mod)) {
 				if (kbinding->edit &&
 				   (((mv->flags & MAP_VIEW_EDIT) == 0) ||
-				    ((AGOBJECT(mv->map)->flags &
+				    ((OBJECT(mv->map)->flags &
 				      AG_OBJECT_READONLY)))) {
 					continue;
 				}
@@ -1445,32 +1445,32 @@ MAP_ViewScale(void *p, int rw, int rh)
 	MAP_View *mv = p;
 
 	if (rw == -1 && rh == -1) {
-		AGWIDGET(mv)->w = mv->prew*MAPTILESZ;
-		AGWIDGET(mv)->h = mv->preh*MAPTILESZ;
+		WIDGET(mv)->w = mv->prew*MAPTILESZ;
+		WIDGET(mv)->h = mv->preh*MAPTILESZ;
 		if (mv->hbar != NULL) {
-			AGWIDGET_OPS(mv->hbar)->scale(mv->hbar, -1, -1);
+			WIDGET_OPS(mv->hbar)->scale(mv->hbar, -1, -1);
 		}
 		if (mv->vbar != NULL) {
-			AGWIDGET_OPS(mv->vbar)->scale(mv->vbar, -1, -1);
+			WIDGET_OPS(mv->vbar)->scale(mv->vbar, -1, -1);
 		}
 		return;
 	}
 
 	if (mv->hbar != NULL) {
-		AGWIDGET(mv->hbar)->x = 0;
-		AGWIDGET(mv->hbar)->y = AGWIDGET(mv)->h - mv->hbar->bw;
-		AGWIDGET(mv->hbar)->w = AGWIDGET(mv)->w;
-		AGWIDGET(mv->hbar)->h = mv->hbar->bw;
-		AG_WidgetScale(mv->hbar, AGWIDGET(mv->hbar)->w,
-		   AGWIDGET(mv->hbar)->h);
+		WIDGET(mv->hbar)->x = 0;
+		WIDGET(mv->hbar)->y = WIDGET(mv)->h - mv->hbar->bw;
+		WIDGET(mv->hbar)->w = WIDGET(mv)->w;
+		WIDGET(mv->hbar)->h = mv->hbar->bw;
+		AG_WidgetScale(mv->hbar, WIDGET(mv->hbar)->w,
+		                         WIDGET(mv->hbar)->h);
 	}
 	if (mv->vbar != NULL) {
-		AGWIDGET(mv->vbar)->x = 0;
-		AGWIDGET(mv->vbar)->y = 0;
-		AGWIDGET(mv->vbar)->w = mv->vbar->bw;
-		AGWIDGET(mv->vbar)->h = AGWIDGET(mv)->h;
-		AG_WidgetScale(mv->vbar, AGWIDGET(mv->vbar)->w,
-		    AGWIDGET(mv->vbar)->h);
+		WIDGET(mv->vbar)->x = 0;
+		WIDGET(mv->vbar)->y = 0;
+		WIDGET(mv->vbar)->w = mv->vbar->bw;
+		WIDGET(mv->vbar)->h = WIDGET(mv)->h;
+		AG_WidgetScale(mv->vbar, WIDGET(mv->vbar)->w,
+		                         WIDGET(mv->vbar)->h);
 	}
 	
 	AG_MutexLock(&mv->map->lock);
