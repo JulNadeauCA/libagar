@@ -194,7 +194,8 @@ AG_BoxScale(void *p, int w, int h)
 	}
 
 	if (bo->homogenous) {
-		int max = 0, excedent = 0, nexcedent = 0;
+		int max, totUsed;
+		AG_Widget *widLast;
 
 		/* Divide the space among widgets. */
 		switch (bo->type) {
@@ -216,11 +217,15 @@ AG_BoxScale(void *p, int w, int h)
 				max = h - bo->padding*2;
 			}
 			break;
+		default:
+			max = 0;
+			break;
 		}
+		totUsed = 0;
+		widLast = NULL;
 		OBJECT_FOREACH_CHILD(wid, bo, ag_widget) {
 			wid->x = x;
 			wid->y = y;
-			
 			switch (bo->type) {
 			case AG_BOX_HORIZ:
 				WIDGET_OPS(wid)->scale(wid, -1, -1);
@@ -235,6 +240,11 @@ AG_BoxScale(void *p, int w, int h)
 				y += wid->h + bo->spacing;
 				break;
 			}
+			totUsed += max;
+			widLast = wid;
+		}
+		if (totUsed < w && widLast != NULL) {
+			widLast->w++;
 		}
 		goto out;
 	}

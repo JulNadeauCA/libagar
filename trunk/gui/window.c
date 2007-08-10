@@ -134,10 +134,13 @@ AG_WindowInit(void *p, const char *name, int flags)
 	win->spacing = 2;
 	win->lPad = agColorsBorderSize;
 	win->rPad = agColorsBorderSize;
-	win->tPad = 1;
+	win->tPad = ((win->flags & AG_WINDOW_NOTITLE) == 0 ||
+	             (win->flags & AG_WINDOW_NOBORDERS)) ?
+		    0 : agColorsBorderSize;
 	win->bPad = agColorsBorderSize + 1;
 	win->minw = win->lPad + win->rPad;
-	win->minh = win->tPad + win->bPad + agTextFontHeight + 16;
+	win->minh = win->tPad + win->bPad +
+	            ((win->flags&AG_WINDOW_NOTITLE) ? 0 : agTextFontHeight);
 	win->savx = -1;
 	win->savy = -1;
 	win->savw = -1;
@@ -1158,9 +1161,11 @@ AG_WindowScale(void *p, int w, int h)
 
 	AG_MutexLock(&win->lock);
 
+	y = ((win->flags & AG_WINDOW_NOTITLE) == 0 ||
+	     (win->flags & AG_WINDOW_NOBORDERS)) ?
+	     0 : win->tPad;
 	x = win->lPad;
-	y = ((win->flags & AG_WINDOW_NOTITLE) &&
-	     (win->flags & AG_WINDOW_NOBORDERS) == 0) ? win->tPad : 0;
+	y = win->tPad;
 
 	if (w == -1 && h == -1) {
 		int wMax = 0;
