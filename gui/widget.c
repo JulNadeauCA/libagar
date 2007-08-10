@@ -1072,9 +1072,7 @@ AG_WidgetUpdateSurface(void *p, int name)
 }
 
 /*
- * Free a widget structure.
- *
- * Must be invoked from main event handler context (for texture operations
+ * Must be invoked from event handler context (for texture operations
  * in OpenGL mode).
  */
 void

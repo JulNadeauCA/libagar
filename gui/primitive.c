@@ -186,9 +186,9 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 
 	agPrim.rect_filled(wid, xoffs+1, yoffs, w-2, h-1, cBg);
 	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs, cLeft);
-	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs+h-1, cRight);
+	agPrim.hline(wid, xoffs, xoffs+w, yoffs+h-1, cRight);
 	agPrim.vline(wid, xoffs, yoffs, yoffs+h-1, cLeft);
-	agPrim.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, cRight);
+	agPrim.vline(wid, xoffs+w-1, yoffs+1, yoffs+h-1, cRight);
 }
 
 /* Draw a 3D-style box with dithering. */
@@ -546,8 +546,8 @@ line_bresenham(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 
 #define HLINE_CLIP() \
 	if (y >= wid->h || y < 0) { return; } \
-	if (x1 >= wid->w) { x1 = wid->w - 1; } else if (x1 < 0) { x1 = 0; } \
-	if (x2 >= wid->w) { x2 = wid->w - 1; } else if (x2 < 0) { x2 = 0; } \
+	if (x1 > wid->w) { x1 = wid->w; } else if (x1 < 0) { x1 = 0; } \
+	if (x2 > wid->w) { x2 = wid->w; } else if (x2 < 0) { x2 = 0; } \
 	if (x1 > x2) { dx = x2; x2 = x1; x1 = dx; } \
 	dx = x2 - x1
 
@@ -634,8 +634,8 @@ hline8(void *widget, int x1, int x2, int y, Uint32 c)
 
 #define VLINE_CLIP() \
 	if (x >= wid->w || x < 0) { return; } \
-	if (y1 >= wid->h) { y1 = wid->h - 1; } else if (y1 < 0) { y1 = 0; } \
-	if (y2 >= wid->h) { y2 = wid->h - 1; } else if (y2 < 0) { y2 = 0; } \
+	if (y1 > wid->h) { y1 = wid->h; } else if (y1 < 0) { y1 = 0; } \
+	if (y2 > wid->h) { y2 = wid->h; } else if (y2 < 0) { y2 = 0; } \
 	if (y1 > y2) { dy = y2; y2 = y1; y1 = dy; } \
 	dy = y2 - y1
 
