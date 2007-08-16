@@ -58,6 +58,7 @@
 #include <gui/hsvpal.h>
 #include <gui/separator.h>
 #include <gui/file_dlg.h>
+#include <gui/pane.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -342,6 +343,9 @@ Set_Color(AG_Event *event)
 void
 AG_ShowSettings(void)
 {
+	if (agView->nModal > 0)		/* Avoid clobbering modal windows */
+		return;
+
 	if (!agConfig->window->visible) {
 		AG_WindowShow(agConfig->window);
 	} else {
@@ -456,6 +460,8 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 			AG_MSpinbuttonSetRange(msb, 320, 4096);
 		}
 #endif
+		AG_SeparatorNewHorizInv(tab);
+
 		sbu = AG_SpinbuttonNew(tab, 0, _("Screenshot quality (%): "));
 		AG_WidgetBind(sbu, "value", AG_WIDGET_INT,
 		    &agScreenshotQuality);
@@ -484,6 +490,8 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 
 		cbox = AG_CheckboxNew(tab, 0, _("Edit text left to right"));
 		AG_WidgetBindInt(cbox, "state", &agTextBidi);
+		
+		AG_SeparatorNewHorizInv(tab);
 		
 		sbu = AG_SpinbuttonNew(tab, 0, _("Double click delay (ms): "));
 		AG_WidgetBindInt(sbu, "value", &agMouseDblclickDelay);
@@ -542,20 +550,16 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	
 	tab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
-		AG_HPane *pane;
-		AG_HPaneDiv *div;
+		AG_Pane *hPane;
 		AG_HSVPal *hsv;
 		AG_Tlist *tl;
 		AG_TlistItem *it;
 		AG_Label *lbl;
 		int i;
 	
-		pane = AG_HPaneNew(tab, AG_HPANE_EXPAND);
-		div = AG_HPaneAddDiv(pane,
-		    AG_BOX_VERT, AG_BOX_VFILL,
-		    AG_BOX_HORIZ, AG_BOX_EXPAND);
+		hPane = AG_PaneNew(tab, AG_PANE_HORIZ, AG_PANE_EXPAND);
 		{
-			tl = AG_TlistNew(div->box1, AG_TLIST_EXPAND);
+			tl = AG_TlistNew(hPane->div[0], AG_TLIST_EXPAND);
 			AG_TlistPrescale(tl, "Tileview text background", 10);
 			for (i = 0; i < LAST_COLOR; i++) {
 				it = AG_TlistAdd(tl, NULL, _(agColorNames[i]));
@@ -567,7 +571,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 				it->p1 = &agColorsBorder[i];
 			}
 
-			hsv = AG_HSVPalNew(div->box2, AG_HSVPAL_EXPAND);
+			hsv = AG_HSVPalNew(hPane->div[1], AG_HSVPAL_EXPAND);
 			AG_WidgetBind(hsv, "pixel-format", AG_WIDGET_POINTER,
 			    &agVideoFmt);
 			AG_SetEvent(hsv, "h-changed", Set_Color, "%p", tl);
@@ -577,8 +581,8 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		}
 		
 		lbl = AG_LabelNewStatic(tab, 0,
-		    _("Warning: Some changes may not take effect until %s "
-		      "is restarted."), agProgName);
+		    _("Warning: Some color changes will not "
+		      "take effect until %s is restarted."), agProgName);
 		AG_LabelSetPaddingLeft(lbl, 10);
 		AG_LabelSetPaddingRight(lbl, 10);
 		
@@ -602,6 +606,8 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		cb = AG_CheckboxNew(tab, 0, _("Enable RCS"));
 		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &agRcsMode);
 
+		AG_SeparatorNewHorizInv(tab);
+
 		tb = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Server hostname: "));
 		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, agRcsHostname,
@@ -610,7 +616,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		sb = AG_SpinbuttonNew(tab, 0, _("Server port: "));
 		AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &agRcsPort);
 
-		AG_SeparatorNew(tab, AG_SEPARATOR_HORIZ);
+		AG_SeparatorNewHoriz(tab);
 
 		box = AG_BoxNew(tab, AG_BOX_HORIZ, AG_BOX_HFILL|
 				                   AG_BOX_HOMOGENOUS);
