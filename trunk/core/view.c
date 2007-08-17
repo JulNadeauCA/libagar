@@ -247,18 +247,6 @@ AG_ResizeDisplay(int w, int h)
 	SDL_Surface *su;
 	int ow, oh;
 
-	/*
-	 * Set initial coordinates of windows that might have not been
-	 * scaled yet.
-	 */
-	TAILQ_FOREACH(win, &agView->windows, windows) {
-		AG_MutexLock(&win->lock);
-		if (!win->visible) {
-			AG_WindowUpdate(win);
-		}
-		AG_MutexUnlock(&win->lock);
-	}
-
 	/* XXX set a minimum! */
 	if ((su = SDL_SetVideoMode(w, h, 0, flags)) == NULL) {
 		AG_SetError("resize to %ux%u: %s", w, h, SDL_GetError());
@@ -273,14 +261,47 @@ AG_ResizeDisplay(int w, int h)
 	AG_SetUint16(agConfig, "view.w", w);
 	AG_SetUint16(agConfig, "view.h", h);
 
-	TAILQ_FOREACH(win, &agView->windows, windows) {
-		AG_MutexLock(&win->lock);
-#if 0
-		WIDGET(win)->x = WIDGET(win)->x*w/ow;
-		WIDGET(win)->y = WIDGET(win)->y*h/oh;
-		WIDGET(win)->w = WIDGET(win)->w*w/ow;
-		WIDGET(win)->h = WIDGET(win)->h*h/oh;
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		Uint8 bR, bG, bB;
+
+		AG_LockGL();
+		glViewport(0, 0, w, h);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glOrtho(0, w, h, 0, -1.0, 1.0);
+		AG_UnlockGL();
+	} else
 #endif
+	{
+		SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+		SDL_UpdateRect(agView->v, 0, 0, w, h);
+	}
+
+	TAILQ_FOREACH(win, &agView->windows, windows) {
+		AG_SizeAlloc a;
+
+		a.x = WIDGET(win)->x;
+		a.y = WIDGET(win)->y;
+		a.w = WIDGET(win)->w;
+		a.h = WIDGET(win)->h;
+
+		AG_MutexLock(&win->lock);
+		if (a.x+a.w > agView->w) {
+			a.x = agView->w - a.w;
+			if (a.x < 0) {
+				a.x = 0;
+				a.w = agView->w;
+			}
+		}
+		if (a.y+a.h > agView->h) {
+			a.y = agView->h - a.h;
+			if (a.y < 0) {
+				a.y = 0;
+				a.h = agView->w;
+			}
+		}
+		AG_WidgetSizeAlloc(win, &a);
 		AG_WindowUpdate(win);
 		AG_MutexUnlock(&win->lock);
 	}
