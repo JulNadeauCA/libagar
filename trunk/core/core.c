@@ -78,6 +78,7 @@ const char *agProgName = "";
 AG_Config *agConfig;
 AG_Object *agWorld;
 void (*agAtexitFunc)(void) = NULL;
+void (*agAtexitFuncEv)(AG_Event *) = NULL;
 AG_Mutex agLinkageLock;
 AG_Mutex agTimingLock;
 int agVerbose = 0;
@@ -322,6 +323,12 @@ AG_AtExitFunc(void (*func)(void))
 	agAtexitFunc = func;
 }
 
+void
+AG_AtExitFuncEv(void (*func)(AG_Event *))
+{
+	agAtexitFuncEv = func;
+}
+
 /* Request a graceful shutdown of the application. */
 void
 AG_Quit(void)
@@ -338,6 +345,8 @@ AG_Destroy(void)
 {
 	if (agAtexitFunc != NULL)
 		agAtexitFunc();
+	if (agAtexitFuncEv != NULL)
+		agAtexitFuncEv(NULL);
 
 #ifdef NETWORK
 	AG_RcsDestroy();

@@ -48,6 +48,7 @@ int	 AG_InitInput(Uint);
 int	 AG_InitNetwork(Uint);
 int	 AG_InitConfigWin(Uint);
 void	 AG_AtExitFunc(void (*)(void));
+void	 AG_AtExitFuncEv(void (*)(AG_Event *));
 void	 AG_Quit(void);
 void	 AG_Destroy(void);
 __END_DECLS
