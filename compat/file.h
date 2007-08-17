@@ -34,7 +34,10 @@ typedef struct ag_file_info {
 
 __BEGIN_DECLS
 int AG_GetFileInfo(const char *, AG_FileInfo *);
+int AG_GetSystemTempDir(char *, size_t)
+        BOUNDED_ATTRIBUTE(__string__, 1, 2);
 int AG_FileExists(const char *);
+int AG_FileDelete(const char *);
 __END_DECLS
 
 #include "close_code.h"
