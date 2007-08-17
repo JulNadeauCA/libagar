@@ -35,22 +35,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-static AG_WidgetOps agObjectSelectorOps = {
-	{
-		"AG_Widget:AG_Combo:AG_ObjectSelector",
-		sizeof(AG_ObjectSelector),
-		{ 0,0 },
-		NULL,					/* init */
-		NULL,					/* reinit */
-		AG_ComboDestroy,
-		NULL,					/* load */
-		NULL,					/* save */
-		NULL					/* edit */
-	},
-	NULL,						/* draw */
-	AG_ComboScale
-};
-
 AG_ObjectSelector *
 AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
     const char *fmt, ...)
@@ -153,7 +137,7 @@ SelectObject(AG_Event *event)
 }
 
 static void
-bound(AG_Event *event)
+BindingSet(AG_Event *event)
 {
 	AG_ObjectSelector *os = AG_SELF();
 	AG_WidgetBinding *b = AG_PTR(1);
@@ -184,7 +168,7 @@ AG_ObjectSelectorInit(AG_ObjectSelector *os, const char *label, int flags,
 
 	AG_SetEvent(os->com.list, "tlist-poll", PollObjects, "%p", os);
 	AG_SetEvent(&os->com, "combo-selected", SelectObject, "%p", os);
-	AG_SetEvent(os, "widget-bound", bound, NULL);
+	AG_SetEvent(os, "widget-bound", BindingSet, NULL);
 }
 
 void
@@ -192,3 +176,20 @@ AG_ObjectSelectorMaskType(AG_ObjectSelector *os, const char *type)
 {
 	strlcpy(os->type_mask, type, sizeof(os->type_mask));
 }
+
+const AG_WidgetOps agObjectSelectorOps = {
+	{
+		"AG_Widget:AG_Combo:AG_ObjectSelector",
+		sizeof(AG_ObjectSelector),
+		{ 0,0 },
+		NULL,					/* init */
+		NULL,					/* reinit */
+		AG_ComboDestroy,
+		NULL,					/* load */
+		NULL,					/* save */
+		NULL					/* edit */
+	},
+	NULL,						/* draw */
+	AG_ComboSizeRequest,
+	AG_ComboSizeAllocate
+};

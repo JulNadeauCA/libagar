@@ -114,6 +114,7 @@ int agTextSymbols = 1;			/* Process special symbols in text */
 int agTextAntialiasing = 1;		/* Use font antialiasing */
 int agFreetype = 0;			/* Use Freetype font engine */
 int agGlyphGC = 0;			/* Enable glyph garbage collector */
+int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 
 static AG_TextState states[AG_TEXT_STATES_MAX], *state;
 static Uint curState = 0;
@@ -121,7 +122,7 @@ static Uint curState = 0;
 #define GLYPH_NBUCKETS	  1024	/* Buckets for glyph cache table */
 #define GLYPH_GC_INTERVAL 1000	/* Garbage collection interval (ms) */
 #define SYMBOLS			/* Allow $(x) type symbols */
-#define GLYPH_GC
+/* #define GLYPH_GC */
 
 static const char *agTextMsgTitles[] = {
 	N_("Error"),
@@ -373,7 +374,7 @@ AG_TextInit(void)
 	if (AG_Bool(agConfig, "font.freetype")) {
 		if (strcmp(AG_String(agConfig, "font.face"),"?") == 0) {
 			AG_SetString(agConfig, "font.face", "Vera.ttf");
-			AG_SetInt(agConfig, "font.size", 12);
+			AG_SetInt(agConfig, "font.size", 10);
 			AG_SetUint(agConfig, "font.flags", 0);
 		}
 		if (AG_TTFInit() == -1) {
@@ -511,10 +512,12 @@ AG_TextUnusedGlyph(AG_Glyph *gl)
 	if (gl->nrefs > 0) {
 		gl->nrefs--;
 	}
+#ifdef GLYPH_GC
 	if (agGlyphGC == 0) {
 		agGlyphGC = 1;
 		AG_AddTimeout(NULL, &glyphGcTo, GLYPH_GC_INTERVAL);
 	}
+#endif
 }
 
 /* Save the current text rendering state. */
@@ -1520,5 +1523,35 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	}
 
 	AG_WindowShow(win);
+}
+
+/* Align a text surface inside a given space. */
+void
+AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
+    int lPad, int rPad, int tPad, int bPad, enum ag_text_justify justify,
+    enum ag_text_valign valign)
+{
+	switch (justify) {
+	case AG_TEXT_LEFT:
+		*x = lPad;
+		break;
+	case AG_TEXT_CENTER:
+		*x = (wArea + lPad + rPad)/2 - wText/2;
+		break;
+	case AG_TEXT_RIGHT:
+		*x = wArea - rPad - wText;
+		break;
+	}
+	switch (valign) {
+	case AG_TEXT_TOP:
+		*y = tPad;
+		break;
+	case AG_TEXT_MIDDLE:
+		*y = (hArea + tPad + bPad)/2 - hText/2;
+		break;
+	case AG_TEXT_BOTTOM:
+		*y = hArea - bPad - wText;
+		break;
+	}
 }
 

@@ -31,10 +31,10 @@ typedef struct ag_ucombo {
 } AG_UCombo;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agUComboOps;
+
 AG_UCombo *AG_UComboNew(void *, Uint);
 void	   AG_UComboInit(AG_UCombo *, Uint);
-void	   AG_UComboScale(void *, int, int);
-void	   AG_UComboDestroy(void *);
 __END_DECLS
 
 #include "close_code.h"

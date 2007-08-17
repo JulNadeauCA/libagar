@@ -35,7 +35,7 @@ AG_PrimitiveOps agPrim;
 /* Add to individual RGB components of a pixel. */
 /* TODO use SIMD to compute the components in parallel */
 static __inline__ Uint32
-AG_ColorShift(Uint32 pixel, Sint8 *shift)
+ColorShift(Uint32 pixel, Sint8 *shift)
 {
 	Sint8 r = shift[0];
 	Sint8 g = shift[1];
@@ -168,27 +168,20 @@ arrow_right(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 
 /* Draw a 3D-style box. */
 static void
-box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
+box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 c)
 {
 	AG_Widget *wid = p;
-	Uint32 cLeft, cRight, cBg;
-
-	cLeft = AG_ColorShift(color, (z<0) ? agLowColorShift:agHighColorShift);
-	cRight = AG_ColorShift(color, (z<0) ? agHighColorShift:agLowColorShift);
+	Uint32 cBg;
 
 	if (AG_WidgetFocused(wid)) {
-		cBg = AG_ColorShift(color, (z < 0) ? agFocusSunkColorShift :
-		                                     agFocusRaisedColorShift);
+		cBg = ColorShift(c, (z<0) ? agFocusSunkColorShift :
+		                            agFocusRaisedColorShift);
 	} else {
-		cBg = AG_ColorShift(color, (z < 0) ? agNofocusSunkColorShift :
-		                                     agNofocusRaisedColorShift);
+		cBg = ColorShift(c, (z<0) ? agNofocusSunkColorShift :
+		                            agNofocusRaisedColorShift);
 	}
-
-	agPrim.rect_filled(wid, xoffs+1, yoffs, w-2, h-1, cBg);
-	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs, cLeft);
-	agPrim.hline(wid, xoffs, xoffs+w, yoffs+h-1, cRight);
-	agPrim.vline(wid, xoffs, yoffs, yoffs+h-1, cLeft);
-	agPrim.vline(wid, xoffs+w-1, yoffs+1, yoffs+h-1, cRight);
+	agPrim.rect_filled(wid, xoffs, yoffs, w, h, cBg);
+	agPrim.frame(wid, xoffs, yoffs, w, h, z, c);
 }
 
 /* Draw a 3D-style box with dithering. */
@@ -202,11 +195,11 @@ box_dithered(void *p, int xoffs, int yoffs, int w, int h, int z,
 	Uint32 cDither;
 	
 	if (AG_WidgetFocused(wid)) {
-		cDither = AG_ColorShift(c2, (z<0) ? agFocusSunkColorShift :
-		                                    agFocusRaisedColorShift);
+		cDither = ColorShift(c2, (z<0) ? agFocusSunkColorShift :
+		                                 agFocusRaisedColorShift);
 	} else {
-		cDither = AG_ColorShift(c2, (z<0) ? agNofocusSunkColorShift :
-		                                    agNofocusRaisedColorShift);
+		cDither = ColorShift(c2, (z<0) ? agNofocusSunkColorShift :
+		                                 agNofocusRaisedColorShift);
 	}
 
 	/* XXX inefficient */
@@ -227,8 +220,8 @@ box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 cBg)
 	int v, e, u;
 	int x, y;
 	
-	cLeft = AG_ColorShift(cBg, (z<0) ? agLowColorShift:agHighColorShift);
-	cRight = AG_ColorShift(cBg, (z<0) ? agHighColorShift:agLowColorShift);
+	cLeft = ColorShift(cBg, (z<0) ? agLowColorShift:agHighColorShift);
+	cRight = ColorShift(cBg, (z<0) ? agHighColorShift:agLowColorShift);
 
 	/* Fill the background except the corners. */
 	agPrim.rect_filled(wid,			/* Body */
@@ -325,15 +318,18 @@ box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 cBg)
 
 /* Draw a 3D-style frame. */
 static void
-frame(void *p, int xoffs, int yoffs, int w, int h, Uint32 color)
+frame(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 {
 	AG_Widget *wid = p;
-	Uint32 c = AG_ColorShift(color, agLowColorShift);
-
-	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs, color);
-	agPrim.hline(wid, xoffs, xoffs+w-1, yoffs+h-1, c);
-	agPrim.vline(wid, xoffs, yoffs, yoffs+h-1, color);
-	agPrim.vline(wid, xoffs+w-1, yoffs, yoffs+h-1, c);
+	Uint32 cLeft = ColorShift(color, (z<0) ? agLowColorShift :
+	                                         agHighColorShift);
+	Uint32 cRight = ColorShift(color, (z<0) ? agHighColorShift :
+	                                          agLowColorShift);
+	
+	agPrim.hline(wid, xoffs,	xoffs+w-1,	yoffs,		cLeft);
+	agPrim.hline(wid, xoffs,	xoffs+w,	yoffs+h-1,	cRight);
+	agPrim.vline(wid, xoffs,	yoffs,		yoffs+h-1,	cLeft);
+	agPrim.vline(wid, xoffs+w-1,	yoffs-1,	yoffs+h-1,	cRight);
 }
 
 /* Draw a blended 3D-style frame. */
@@ -436,9 +432,9 @@ static void
 line2(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
 	agPrim.line(wid, x1, y1, x2, y2,
-	    AG_ColorShift(color, agHighColorShift));
+	    ColorShift(color, agHighColorShift));
 	agPrim.line(wid, x1+1, y1+1, x2+1, y2+1,
-	    AG_ColorShift(color, agLowColorShift));
+	    ColorShift(color, agLowColorShift));
 }
 
 /*
@@ -1202,12 +1198,10 @@ box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 cBg)
 	}
 	glEnd();
 	if (z >= 0) {
-		Uint32 cLeft = AG_ColorShift(cBg, agHighColorShift);
-		Uint32 cRight = AG_ColorShift(cBg, agLowColorShift);
-
 		glBegin(GL_LINE_STRIP);
 		{
-			SDL_GetRGB(cLeft, agVideoFmt, &r, &g, &b);
+			SDL_GetRGB(ColorShift(cBg, agHighColorShift),
+			                      agVideoFmt, &r, &g, &b);
 			glColor3ub(r, g, b);
 			glVertex2i(0, rd->h);
 			glVertex2i(0, rad);
@@ -1216,7 +1210,8 @@ box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 cBg)
 		glEnd();
 		glBegin(GL_LINES);
 		{
-			SDL_GetRGB(cRight, agVideoFmt, &r, &g, &b);
+			SDL_GetRGB(ColorShift(cBg, agLowColorShift),
+			                      agVideoFmt, &r, &g, &b);
 			glColor3ub(r, g, b);
 			glVertex2i((rd->w - 1), rd->h);
 			glVertex2i((rd->w - 1), rad);

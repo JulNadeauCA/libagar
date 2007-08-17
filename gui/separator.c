@@ -31,55 +31,62 @@
 #include "window.h"
 #include "primitive.h"
 
-const AG_WidgetOps agSeparatorOps = {
-	{
-		"AG_Widget:AG_Separator",
-		sizeof(AG_Separator),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_WidgetDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_SeparatorDraw,
-	AG_SeparatorScale
-};
-
 AG_Separator *
 AG_SeparatorNew(void *parent, enum ag_separator_type type)
 {
 	AG_Separator *sep;
 
 	sep = Malloc(sizeof(AG_Separator), M_OBJECT);
-	AG_SeparatorInit(sep, type);
+	AG_SeparatorInit(sep, type, 1);
+	AG_ObjectAttach(parent, sep);
+	return (sep);
+}
+
+AG_Separator *
+AG_SeparatorNewInv(void *parent, enum ag_separator_type type)
+{
+	AG_Separator *sep;
+
+	sep = Malloc(sizeof(AG_Separator), M_OBJECT);
+	AG_SeparatorInit(sep, type, 0);
 	AG_ObjectAttach(parent, sep);
 	return (sep);
 }
 
 void
-AG_SeparatorInit(AG_Separator *sep, enum ag_separator_type type)
+AG_SeparatorInit(AG_Separator *sep, enum ag_separator_type type, int visible)
 {
-	AG_WidgetInit(sep, &agSeparatorOps, (type == AG_SEPARATOR_HORIZ) ?
-	                                    AG_WIDGET_HFILL : AG_WIDGET_VFILL);
+	AG_WidgetInit(sep,
+	    visible ? &agSeparatorOps : &agSeparatorInvisibleOps,
+	    (type == AG_SEPARATOR_HORIZ) ? AG_WIDGET_HFILL : AG_WIDGET_VFILL);
 	sep->type = type;
 	sep->padding = 4;
+	sep->visible = visible;
 }
 
-void
-AG_SeparatorScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Separator *sep = p;
 
-	if (w == -1 && h == -1) {
-		WIDGET(sep)->w = sep->padding*2 + 2;
-		WIDGET(sep)->h = sep->padding*2 + 2;
-	}
+	r->w = sep->padding*2 + 2;
+	r->h = sep->padding*2 + 2;
 }
 
-void
-AG_SeparatorDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Separator *sep = p;
+
+	if (a->w < sep->padding*2 + 2 ||
+	    a->h < sep->padding*2 + 2) {
+		return (-1);
+	}
+	return (0);
+}
+
+static void
+Draw(void *p)
 {
 	AG_Separator *sep = p;
 
@@ -104,3 +111,36 @@ AG_SeparatorSetPadding(AG_Separator *sep, Uint pixels)
 {
 	sep->padding = pixels;
 }
+
+const AG_WidgetOps agSeparatorOps = {
+	{
+		"AG_Widget:AG_Separator",
+		sizeof(AG_Separator),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		AG_WidgetDestroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};
+const AG_WidgetOps agSeparatorInvisibleOps = {
+	{
+		"AG_Widget:AG_Separator",
+		sizeof(AG_Separator),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		AG_WidgetDestroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	NULL,			/* draw */
+	SizeRequest,
+	SizeAllocate
+};

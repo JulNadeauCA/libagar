@@ -27,11 +27,10 @@ typedef struct ag_radio {
 } AG_Radio;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agRadioOps;
+
 AG_Radio *AG_RadioNew(void *, Uint, const char *[]);
 void	  AG_RadioInit(AG_Radio *, Uint, const char *[]);
-void	  AG_RadioDraw(void *);
-void	  AG_RadioScale(void *, int, int);
-void	  AG_RadioDestroy(void *);
 __END_DECLS
 
 #include "close_code.h"

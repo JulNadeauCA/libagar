@@ -25,6 +25,8 @@ typedef struct ag_object_selector {
 } AG_ObjectSelector;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agObjectSelectorOps;
+
 AG_ObjectSelector *AG_ObjectSelectorNew(void *, int, void *, void *,
 		                        const char *, ...)
 					FORMAT_ATTRIBUTE(printf, 5, 6)

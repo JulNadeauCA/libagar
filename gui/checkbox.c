@@ -35,22 +35,6 @@
 #include <string.h>
 #include <errno.h>
 
-static AG_WidgetOps agCheckboxOps = {
-	{
-		"AG_Widget:AG_Checkbox",
-		sizeof(AG_Checkbox),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_CheckboxDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_CheckboxDraw,
-	AG_CheckboxScale
-};
-
 #define LABEL_SPACING 6
 
 static void mousebuttondown(AG_Event *);
@@ -110,8 +94,8 @@ AG_CheckboxInit(AG_Checkbox *cbox, Uint flags, const char *label)
 	AG_SetEvent(cbox, "window-keydown", keydown, NULL);
 }
 
-void
-AG_CheckboxDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Checkbox *cbox = p;
 
@@ -119,8 +103,8 @@ AG_CheckboxDestroy(void *p)
 	AG_WidgetDestroy(cbox);
 }
 
-void
-AG_CheckboxDraw(void *obj)
+static void
+Draw(void *obj)
 {
 	AG_Checkbox *cbox = obj;
 	AG_WidgetBinding *stateb;
@@ -162,6 +146,7 @@ AG_CheckboxDraw(void *obj)
 		state = 0;
 		break;
 	}
+
 	if (AG_WidgetEnabled(cbox)) {
 		agPrim.box(cbox,
 		    0, 0,
@@ -221,17 +206,40 @@ keydown(AG_Event *event)
 	}
 }
 
-void
-AG_CheckboxScale(void *p, int rw, int rh)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Checkbox *cb = p;
-	int wLbl;
 
-	if (rw == -1 || rh == -1) {
-		AG_TextSize(cb->labelTxt, &wLbl, NULL);
-		WIDGET(cb)->h = agTextFontHeight;
-		WIDGET(cb)->w = wLbl + WIDGET(cb)->h + LABEL_SPACING;
+	r->h = agTextFontHeight;
+	r->w = agTextFontHeight;
+	
+	if (cb->labelTxt != NULL) {
+		AG_TextSize(cb->labelTxt, &r->w, NULL);
+		r->w += agTextFontHeight + LABEL_SPACING;	/* Square */
 	}
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Checkbox *cb = p;
+
+	if (a->w < agTextFontHeight || a->h < agTextFontHeight) {
+		return (-1);
+	}
+	if (cb->labelTxt != NULL) {
+		int wLbl, hLbl;
+
+		AG_TextSize(cb->labelTxt, &wLbl, &hLbl);
+		if (a->w < agTextFontHeight + LABEL_SPACING + wLbl ||
+		    a->h < agTextFontHeight) {
+			WIDGET(cb)->flags |= AG_WIDGET_CLIPPING;
+		} else {
+			WIDGET(cb)->flags &= ~(AG_WIDGET_CLIPPING);
+		}
+	}
+	return (0);
 }
 
 /* Toggle the checkbox state. */
@@ -309,3 +317,19 @@ AG_CheckboxToggle(AG_Checkbox *cbox)
 	AG_WidgetUnlockBinding(stateb);
 }
 
+const AG_WidgetOps agCheckboxOps = {
+	{
+		"AG_Widget:AG_Checkbox",
+		sizeof(AG_Checkbox),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

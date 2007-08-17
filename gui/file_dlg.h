@@ -10,7 +10,7 @@
 #include <gui/window.h>
 #include <gui/tlist.h>
 #include <gui/combo.h>
-#include <gui/hpane.h>
+#include <gui/pane.h>
 #include <gui/label.h>
 #else
 #include <agar/gui/widget.h>
@@ -19,7 +19,7 @@
 #include <agar/gui/window.h>
 #include <agar/gui/tlist.h>
 #include <agar/gui/combo.h>
-#include <agar/gui/hpane.h>
+#include <agar/gui/pane.h>
 #include <agar/gui/label.h>
 #endif
 
@@ -48,8 +48,7 @@ typedef struct ag_file_dlg {
 
 	char cwd[MAXPATHLEN];			/* Current working directory */
 	char cfile[MAXPATHLEN];			/* Current file path */
-	AG_HPane *hPane;
-	AG_HPaneDiv *hDiv;
+	AG_Pane *hPane;
 	AG_Tlist *tlDirs;			/* List of directories */
 	AG_Tlist *tlFiles;			/* List of files */
 	AG_Label *lbCwd;			/* CWD label */
@@ -59,15 +58,17 @@ typedef struct ag_file_dlg {
 	AG_Button *btnCancel;			/* Cancel button */
 	AG_Event *okAction;			/* OK action */
 	AG_Event *cancelAction;			/* Cancel action */
+	char *dirMRU;				/* MRU Directory */
 	TAILQ_HEAD(,ag_file_type) types;	/* File type handlers */
 } AG_FileDlg;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agFileDlgOps;
+
 AG_FileDlg *AG_FileDlgNew(void *, Uint);
 void AG_FileDlgInit(AG_FileDlg *, Uint);
-void AG_FileDlgScale(void *, int, int);
-void AG_FileDlgDestroy(void *);
 int AG_FileDlgSetDirectory(AG_FileDlg *, const char *);
+void AG_FileDlgSetDirectoryMRU(AG_FileDlg *, const char *, const char *);
 void AG_FileDlgSetFilename(AG_FileDlg *, const char *, ...);
 void AG_FileDlgOkAction(AG_FileDlg *, AG_EventFn, const char *, ...);
 void AG_FileDlgCancelAction(AG_FileDlg *, AG_EventFn, const char *, ...);

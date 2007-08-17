@@ -136,13 +136,12 @@ typedef struct ag_table {
 } AG_Table;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agTableOps;
+
 AG_Table *AG_TableNew(void *, Uint);
 AG_Table *AG_TableNewPolled(void *, Uint, void (*fn)(AG_Event *),
  			    const char *, ...);
 void	  AG_TableInit(AG_Table *, Uint);
-void	  AG_TableScale(void *, int, int);
-void	  AG_TableDraw(void *);
-void	  AG_TableDestroy(void *);
 void	  AG_TablePrescale(AG_Table *, int, int);
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);

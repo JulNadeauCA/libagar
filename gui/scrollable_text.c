@@ -34,22 +34,6 @@
 
 #include <stdarg.h>
 
-const AG_WidgetOps agScrollableTextOps = {
-	{
-		"AG_Widget:AG_Scrollable:AG_ScrollableText",
-		sizeof(AG_ScrollableText),
-		{ 0,0 },
-		NULL,				/* init() */
-		NULL,				/* reinit() */
-		AG_ScrollableTextDestroy,
-		NULL,				/* load() */
-		NULL,				/* save() */
-		NULL				/* edit() */
-	},
-	AG_ScrollableTextDraw,
-	AG_ScrollableTextScale
-};
-
 AG_ScrollableText *
 AG_ScrollableTextNew(void *parent, Uint flags)
 {
@@ -61,35 +45,26 @@ AG_ScrollableTextNew(void *parent, Uint flags)
 	return (st);
 }
 
-void
-AG_ScrollableTextScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_ScrollableText *st = p;
-	AG_Scrollable *sa = AGSCROLLABLE(st);
-	SDL_Surface *label = WSURFACE(st,0);
-
-	if (w == -1 || h == -1) {
-		WIDGET(st)->w = 0;
-		WIDGET(st)->h = 0;
-	}
-	if (st->text != NULL) {
-		AG_TextSize(st->text, &sa->w, &sa->h);
-	} else {
-		sa->w = 0;
-		sa->h = 0;
-	}
-	WIDGET(st)->w = w;
-	WIDGET(st)->h = h;
+	r->w = 0;
+	r->h = 0;
 }
 
-void
-AG_ScrollableTextDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	return (0);
+}
+
+static void
+Draw(void *p)
 {
 	AG_ScrollableText *st = p;
 
-	if (st->text == NULL) {
+	if (st->text == NULL)
 		return;
-	}
 
 	AG_ScrollableDrawBegin(&st->sa);
 	if (st->surface == -1) {
@@ -114,10 +89,27 @@ AG_ScrollableTextInit(AG_ScrollableText *st, Uint flags)
 	st->text_len = 0;
 }
 
-void
-AG_ScrollableTextDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_ScrollableText *st = p;
 
 	Free(st->text,0);
 }
+
+const AG_WidgetOps agScrollableTextOps = {
+	{
+		"AG_Widget:AG_Scrollable:AG_ScrollableText",
+		sizeof(AG_ScrollableText),
+		{ 0,0 },
+		NULL,				/* init() */
+		NULL,				/* reinit() */
+		Destroy,
+		NULL,				/* load() */
+		NULL,				/* save() */
+		NULL				/* edit() */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

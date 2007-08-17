@@ -15,6 +15,11 @@ enum ag_text_justify {
 	AG_TEXT_CENTER,
 	AG_TEXT_RIGHT
 };
+enum ag_text_valign {
+	AG_TEXT_TOP,
+	AG_TEXT_MIDDLE,
+	AG_TEXT_BOTTOM
+};
 
 enum ag_text_msg_title {
 	AG_MSG_ERROR,
@@ -76,7 +81,7 @@ __BEGIN_DECLS
 extern AG_Font *agDefaultFont;
 extern int agTextFontHeight, agTextFontAscent, agTextFontDescent,
 	   agTextFontLineSkip, agTextTabWidth, agTextBlinkRate,
-	   agTextAntialiasing;
+	   agTextAntialiasing, agPageIncrement;
 
 int	 AG_TextInit(void);
 void	 AG_TextParseFontSpec(const char *);
@@ -140,8 +145,11 @@ void AG_TextPromptString(const char *, void (*)(AG_Event *),
 void AG_TextPromptDouble(const char *, const char *, double, double,
 			 void (*)(AG_Event *), const char *, ...);
 
-AG_Glyph	 *AG_TextRenderGlyph(Uint32);
-__inline__ void	  AG_TextUnusedGlyph(AG_Glyph *);
+AG_Glyph       *AG_TextRenderGlyph(Uint32);
+__inline__ void	AG_TextUnusedGlyph(AG_Glyph *);
+
+__inline__ void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
+                             int, enum ag_text_justify, enum ag_text_valign);
 __END_DECLS
 
 #include "close_code.h"

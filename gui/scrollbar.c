@@ -31,22 +31,6 @@
 #include "window.h"
 #include "primitive.h"
 
-const AG_WidgetOps agScrollbarOps = {
-	{
-		"AG_Widget:AG_Scrollbar",
-		sizeof(AG_Scrollbar),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_WidgetDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_ScrollbarDraw,
-	AG_ScrollbarScale
-};
-
 enum ag_button_which {
 	AG_BUTTON_NONE,
 	AG_BUTTON_UP,
@@ -228,37 +212,49 @@ mousemotion(AG_Event *event)
 		MoveBar(sb, x, totalsize);
 }
 
-void
-AG_ScrollbarScale(void *p, int rw, int rh)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Scrollbar *sb = p;
 
 	switch (sb->type) {
 	case AG_SCROLLBAR_HORIZ:
-		if (rw == -1) {
-			WIDGET(sb)->w = sb->bw*4;
-		}
-		if (rh == -1) {
-			WIDGET(sb)->h = sb->bw;
-		} else {
-			sb->bw = WIDGET(sb)->h;	/* Square */
-		}
+		r->w = sb->bw*2;
+		r->h = sb->bw;
 		break;
 	case AG_SCROLLBAR_VERT:
-		if (rw == -1) {
-			WIDGET(sb)->w = sb->bw;
-		} else {
-			sb->bw = WIDGET(sb)->w;	/* Square */
-		}
-		if (rh == -1) {
-			WIDGET(sb)->h = sb->bw*4;
-		}
+		r->w = sb->bw;
+		r->h = sb->bw*2;
 		break;
 	}
 }
 
-void
-AG_ScrollbarDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Scrollbar *sb = p;
+
+#if 0
+	switch (sb->type) {
+	case AG_SCROLLBAR_VERT:
+		sb->bw = a->w;				/* Square */
+		if (a->h < sb->bw*2) {
+			sb->bw = a->h/2;
+		}
+		break;
+	case AG_SCROLLBAR_HORIZ:
+		sb->bw = a->h;				/* Square */
+		if (a->h < sb->bw*2) {
+			sb->bw = a->h/2;
+		}
+		break;
+	}
+#endif
+	return (sb->bw < 2) ? -1 : 0;
+}
+
+static void
+Draw(void *p)
 {
 	AG_Scrollbar *sb = p;
 	int min, max, val;
@@ -389,3 +385,20 @@ AG_ScrollbarGetBarSize(AG_Scrollbar *sb, int *bsize)
 {
 	*bsize = sb->barSz;
 }
+
+const AG_WidgetOps agScrollbarOps = {
+	{
+		"AG_Widget:AG_Scrollbar",
+		sizeof(AG_Scrollbar),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		AG_WidgetDestroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

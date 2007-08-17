@@ -38,18 +38,22 @@ typedef struct ag_pane {
 	int	dmoving;		/* Divider being moved */
 	int	dx;			/* Actual divider position */
 	int	rx;			/* Requested divider position */
-	int	dw;			/* Divider width */
+	int	wDiv;			/* Divider width */
 } AG_Pane;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agPaneOps;
+
 AG_Pane		*AG_PaneNew(void *, enum ag_pane_type, Uint);
+#define		 AG_PaneNewHoriz(p,f) AG_PaneNew((p),AG_PANE_HORIZ,(f))
+#define		 AG_PaneNewVert(p,f) AG_PaneNew((p),AG_PANE_VERT,(f))
+
 void		 AG_PaneInit(AG_Pane *, enum ag_pane_type, Uint);
-void		 AG_PaneDraw(void *);
-void		 AG_PaneScale(void *, int, int);
 void		 AG_PaneAttachBox(AG_Pane *, int, AG_Box *);
 __inline__ void	 AG_PaneAttachBoxes(AG_Pane *, AG_Box *, AG_Box *);
 __inline__ void	 AG_PaneSetDividerWidth(AG_Pane *, int);
 __inline__ void	 AG_PaneSetDivisionMin(AG_Pane *, int, int, int);
+__inline__ void	 AG_PaneSetDivisionPacking(AG_Pane *, int, enum ag_box_type);
 int		 AG_PaneMoveDivider(AG_Pane *, int);
 __END_DECLS
 

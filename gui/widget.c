@@ -31,25 +31,10 @@
 #include "window.h"
 #include "cursors.h"
 #include "menu.h"
+#include "primitive.h"
 
 #include <stdarg.h>
 #include <string.h>
-
-const AG_WidgetOps agWidgetOps = {
-	{
-		"AG_Widget",
-		sizeof(AG_Widget),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	NULL,			/* draw */
-	AG_WidgetScaleGeneric
-};
 
 SDL_Cursor *agCursorToSet = NULL;
 
@@ -222,8 +207,6 @@ GetVirtualBindingType(AG_WidgetBinding *binding)
 
 	switch (binding->type) {
 	case AG_WIDGET_PROP:
-		dprintf("Translating property: %s:%s\n",
-		    OBJECT(binding->p1)->name, binding->data.prop);
 		if ((prop = AG_GetProp(binding->p1, binding->data.prop, -1,
 		    NULL)) == NULL) {
 			fatal("%s", AG_GetError());
@@ -1399,8 +1382,6 @@ AG_WidgetFocus(void *p)
 			return;
 		}
 		AG_WidgetUnfocus(pwin);
-	} else {
-		dprintf("%s: no parent window\n", OBJECT(wid)->name);
 	}
 
 	/* Set the focus flag on the widget and its parents. */
@@ -1529,50 +1510,85 @@ void
 AG_WidgetDraw(void *p)
 {
 	AG_Widget *wid = p;
-	AG_Widget *cwid;
-	SDL_Rect clip_save;
+	AG_Widget *chld;
 
-	if (wid->flags & AG_WIDGET_HIDE)
+	if (wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE))
 		return;
 
+#if 0
+	agPrim.frame(wid, 0, 0, wid->w, wid->h, 1,
+	    AG_COLOR(FRAME_COLOR));
+#endif
+
 	if (((wid->flags & AG_WIDGET_STATIC)==0 || wid->redraw) &&
-	    !AG_WidgetIsOcculted(wid) && WIDGET_OPS(wid)->draw != NULL &&
-	    WIDGET(wid)->w > 0 && WIDGET(wid)->h > 0) {
+	    !AG_WidgetIsOcculted(wid) &&
+	    WIDGET_OPS(wid)->draw != NULL &&
+	    WIDGET(wid)->w > 0 &&
+	    WIDGET(wid)->h > 0) {
+		int clip = 0;
+
 		if (wid->flags & AG_WIDGET_CLIPPING) {
 			AG_WidgetPushClipRect(wid, 0, 0, wid->w, wid->h);
+			clip = 1;
 		}
 		WIDGET_OPS(wid)->draw(wid);
-		if (wid->flags & AG_WIDGET_CLIPPING) {
+
+		if (clip) {
 			AG_WidgetPopClipRect(wid);
 		}
 		if (wid->flags & AG_WIDGET_STATIC)
 			wid->redraw = 0;
 	}
 
-	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
-		AG_WidgetDraw(cwid);
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
+		AG_WidgetDraw(chld);
 }
 
-/* Set the geometry of a widget and invoke its scale operation. */
-void
-AG_WidgetScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_Widget *wid = p;
+	r->w = 0;
+	r->h = 0;
+}
 
-	wid->w = w;
-	wid->h = h;
-	WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	return (0);
 }
 
 void
-AG_WidgetScaleGeneric(void *p, int w, int h)
+AG_WidgetSizeReq(void *w, AG_SizeReq *r)
 {
-	AG_Widget *wid = p;
+	r->w = 0;
+	r->h = 0;
+	if (WIDGET_OPS(w)->size_request != NULL)
+		WIDGET_OPS(w)->size_request(w, r);
+}
 
-	if (w == -1 || h == -1) {
-		wid->w = 0;
-		wid->h = 0;
+int
+AG_WidgetSizeAlloc(void *p, AG_SizeAlloc *a)
+{
+	AG_Widget *w = p;
+
+	if (a->w < 0 || a->h < 0) {
+		a->w = 0;
+		a->h = 0;
+		w->flags |= AG_WIDGET_UNDERSIZE;
 	}
+	w->x = a->x;
+	w->y = a->y;
+	w->w = a->w;
+	w->h = a->h;
+	if (WIDGET_OPS(w)->size_allocate != NULL) {
+		if (WIDGET_OPS(w)->size_allocate(w, a) == -1) {
+			w->flags |= AG_WIDGET_UNDERSIZE;
+			return (-1);
+		} else {
+			w->flags &= ~(AG_WIDGET_UNDERSIZE);
+		}
+	}
+	return (0);
 }
 
 /*
@@ -1948,3 +1964,51 @@ AG_WidgetScrollDelta(Uint32 *t1)
 	return (1);
 }
 
+/*
+ * Raise `widget-shown' on a widget and its children.
+ * Used by containers such as Notebook.
+ */
+void
+AG_WidgetShownRecursive(void *p)
+{
+	AG_Widget *wid = p;
+	AG_Widget *chld;
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		AG_WidgetShownRecursive(chld);
+	}
+	AG_PostEvent(NULL, wid, "widget-shown", NULL);
+}
+
+/*
+ * Raise `widget-hidden' on a widget and its children.
+ * Used by containers such as Notebook.
+ */
+void
+AG_WidgetHiddenRecursive(void *p)
+{
+	AG_Widget *wid = p;
+	AG_Widget *chld;
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		AG_WidgetHiddenRecursive(chld);
+	}
+	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
+}
+
+const AG_WidgetOps agWidgetOps = {
+	{
+		"AG_Widget",
+		sizeof(AG_Widget),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	NULL,			/* draw */
+	SizeRequest,
+	SizeAllocate
+};

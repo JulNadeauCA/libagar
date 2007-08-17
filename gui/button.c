@@ -34,22 +34,6 @@
 
 #include <stdarg.h>
 
-const AG_WidgetOps agButtonOps = {
-	{
-		"AG_Widget:AG_Button",
-		sizeof(AG_Button),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_ButtonDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_ButtonDraw,
-	AG_ButtonScale
-};
-
 static int GetState(AG_WidgetBinding *, void *);
 static void SetState(AG_WidgetBinding *, void *, int);
 static void mousemotion(AG_Event *);
@@ -160,6 +144,7 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	bu->flags = flags;
 	bu->state = 0;
 	bu->justify = AG_TEXT_CENTER;
+	bu->valign = AG_TEXT_MIDDLE;
 	bu->lPad = 4;
 	bu->rPad = 4;
 	bu->tPad = 3;
@@ -178,8 +163,8 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	if (flags & AG_BUTTON_VFILL) { WIDGET(bu)->flags |= AG_WIDGET_VFILL; }
 }
 
-void
-AG_ButtonDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Button *bu = p;
 	SDL_Surface *su;
@@ -190,42 +175,47 @@ AG_ButtonDestroy(void *p)
 	AG_WidgetDestroy(bu);
 }
 
-void
-AG_ButtonScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Button *bu = p;
-	int wLbl, hLbl;
 
-	if (w == -1 && h == -1) {
-		if (bu->surface != -1) {
-			wLbl = WSURFACE(bu,bu->surface)->w;
-			hLbl = WSURFACE(bu,bu->surface)->h;
+	if (bu->surface != -1) {
+		r->w = WSURFACE(bu,bu->surface)->w;
+		r->h = WSURFACE(bu,bu->surface)->h;
+	} else {
+		if (bu->text != NULL && bu->text[0] != '\0') {
+			AG_TextSize(bu->text, &r->w, &r->h);
 		} else {
-			if (bu->text != NULL && bu->text[0] != '\0') {
-				AG_TextSize(bu->text, &wLbl, &hLbl);
-			} else {
-				wLbl = 0;
-				hLbl = agTextFontHeight;
-			}
+			r->w = 0;
+			r->h = agTextFontHeight;
 		}
-		WIDGET(bu)->w = wLbl + bu->lPad + bu->rPad;
-		WIDGET(bu)->h = hLbl + bu->tPad + bu->bPad;
 	}
+	r->w += bu->lPad + bu->rPad;
+	r->h += bu->tPad + bu->bPad;
 }
 
-void
-AG_ButtonDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Button *bu = p;
+
+	if (a->w < (bu->lPad + bu->rPad) ||
+	    a->h < (bu->tPad + bu->bPad)) {
+		return (-1);
+	}
+	return (0);
+}
+
+static void
+Draw(void *p)
 {
 	AG_Button *bu = p;
 	AG_WidgetBinding *binding;
 	void *pState;
 	int x = 0, y = 0;
-	int pressed;
-	int wLbl;
+	int pressed, wLbl, hLbl;
 	
-	if (WIDGET(bu)->w < 8 || WIDGET(bu)->h < 8)
-		return;
-
 	binding = AG_WidgetGetBinding(bu, "state", &pState);
 	pressed = GetState(binding, pState);
 	AG_WidgetUnlockBinding(binding);
@@ -247,19 +237,24 @@ AG_ButtonDraw(void *p)
 
 	if (bu->text != NULL && bu->text[0] != '\0') {
 		if (bu->surface == -1) {
+			AG_PushTextState();
 			AG_TextColor(BUTTON_TXT_COLOR);
 			AG_TextJustify(bu->justify);
 			bu->surface = AG_WidgetMapSurface(bu,
 			    AG_TextRender(bu->text));
+			AG_PopTextState();
 		} else if (bu->flags & AG_BUTTON_REGEN) {
+			AG_PushTextState();
 			AG_TextColor(BUTTON_TXT_COLOR);
 			AG_TextJustify(bu->justify);
 			AG_WidgetReplaceSurface(bu, bu->surface,
 			    AG_TextRender(bu->text));
+			AG_PopTextState();
 		}
 	}
 	wLbl = WSURFACE(bu,bu->surface)->w;
-
+	hLbl = WSURFACE(bu,bu->surface)->h;
+ 
 	switch (bu->justify) {
 	case AG_TEXT_LEFT:
 		x = bu->lPad;
@@ -271,8 +266,8 @@ AG_ButtonDraw(void *p)
 		x = WIDGET(bu)->w - wLbl - bu->rPad;
 		break;
 	}
-	y = ((WIDGET(bu)->h - WSURFACE(bu,bu->surface)->h)/2) - 1;
-
+	y = WIDGET(bu)->h/2 - hLbl/2;
+	
 	if (pressed) {
 		x++;
 		y++;
@@ -548,6 +543,12 @@ AG_ButtonSetJustification(AG_Button *bu, enum ag_text_justify jus)
 }
 
 void
+AG_ButtonSetValign(AG_Button *bu, enum ag_text_valign va)
+{
+	bu->valign = va;
+}
+
+void
 AG_ButtonSurface(AG_Button *bu, SDL_Surface *su)
 {
 	SDL_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
@@ -601,3 +602,20 @@ AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 	bu->flags |=  AG_BUTTON_REGEN;
 	bu->flags &= ~AG_BUTTON_TEXT_NODUP;
 }
+
+const AG_WidgetOps agButtonOps = {
+	{
+		"AG_Widget:AG_Button",
+		sizeof(AG_Button),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		Destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

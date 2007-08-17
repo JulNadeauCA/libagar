@@ -31,22 +31,6 @@
 
 #include "primitive.h"
 
-const AG_WidgetOps agTitlebarOps = {
-	{
-		"AG_Widget:AG_Box:AG_Titlebar",
-		sizeof(AG_Titlebar),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_BoxDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_TitlebarDraw,
-	AG_BoxScale
-};
-
 static void mousebuttondown(AG_Event *);
 static void mousebuttonup(AG_Event *);
 
@@ -63,7 +47,7 @@ AG_TitlebarNew(void *parent, int flags)
 }
 
 static void
-maximize_window(AG_Event *event)
+MaximizeWindow(AG_Event *event)
 {
 	AG_Titlebar *tbar = AG_PTR(1);
 	AG_Window *win = tbar->win;
@@ -76,7 +60,7 @@ maximize_window(AG_Event *event)
 }
 
 static void
-minimize_window(AG_Event *event)
+MinimizeWindow(AG_Event *event)
 {
 	AG_Titlebar *tbar = AG_PTR(1);
 
@@ -84,7 +68,7 @@ minimize_window(AG_Event *event)
 }
 
 static void
-close_window(AG_Event *event)
+CloseWindow(AG_Event *event)
 {
 	AG_Titlebar *tbar = AG_PTR(1);
 
@@ -108,39 +92,42 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	    AG_LABEL_HFILL|AG_LABEL_NOMINSIZE,
 	    _("Untitled"));
 	AG_LabelPrescale(tbar->label, 1, "X");
-	AG_LabelSetPadding(tbar->label, 5,0,2,2);
+	AG_LabelSetPadding(tbar->label, 5,5,2,2);
 	
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {
 		tbar->maximize_btn = AG_ButtonNew(tbar, 0, NULL);
+		AG_ButtonSetJustification(tbar->maximize_btn, AG_TEXT_LEFT);
 		AG_ButtonSetFocusable(tbar->maximize_btn, 0);
 		AG_ButtonSurfaceNODUP(tbar->maximize_btn,
 		    AGICON(GUI_SHOW_WINDOW_ICON));
-		AG_ButtonSetPadding(tbar->maximize_btn, 0,0,0,0);
+		AG_ButtonSetPadding(tbar->maximize_btn, 3,0,2,0);
 		AG_SetEvent(tbar->maximize_btn, "button-pushed",
-		    maximize_window, "%p", tbar);
+		    MaximizeWindow, "%p", tbar);
 	} else {
 		tbar->maximize_btn = NULL;
 	}
 
 	if ((flags & AG_TITLEBAR_NO_MINIMIZE) == 0) {
 		tbar->minimize_btn = AG_ButtonNew(tbar, 0, NULL);
+		AG_ButtonSetJustification(tbar->minimize_btn, AG_TEXT_LEFT);
 		AG_ButtonSetFocusable(tbar->minimize_btn, 0);
 		AG_ButtonSurfaceNODUP(tbar->minimize_btn,
 		    AGICON(GUI_HIDE_WINDOW_ICON));
-		AG_ButtonSetPadding(tbar->minimize_btn, 0,0,0,0);
+		AG_ButtonSetPadding(tbar->minimize_btn, 3,0,2,0);
 		AG_SetEvent(tbar->minimize_btn, "button-pushed",
-		    minimize_window, "%p", tbar);
+		    MinimizeWindow, "%p", tbar);
 	} else {
 		tbar->minimize_btn = NULL;
 	}
 
 	if ((flags & AG_TITLEBAR_NO_CLOSE) == 0) {
 		tbar->close_btn = AG_ButtonNew(tbar, 0, NULL);
+		AG_ButtonSetJustification(tbar->close_btn, AG_TEXT_LEFT);
 		AG_ButtonSetFocusable(tbar->close_btn, 0);
 		AG_ButtonSurfaceNODUP(tbar->close_btn, AGICON(GUI_CLOSE_ICON));
-		AG_ButtonSetPadding(tbar->close_btn, 0,0,0,0);
-		AG_SetEvent(tbar->close_btn, "button-pushed", close_window,
-		    "%p", tbar);
+		AG_ButtonSetPadding(tbar->close_btn, 3,0,2,0);
+		AG_SetEvent(tbar->close_btn, "button-pushed",
+		    CloseWindow, "%p", tbar);
 	} else {
 		tbar->close_btn = NULL;
 	}
@@ -149,8 +136,8 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	AG_SetEvent(tbar, "window-mousebuttonup", mousebuttonup, NULL);
 }
 
-void
-AG_TitlebarDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_Titlebar *tbar = p;
 
@@ -194,3 +181,20 @@ AG_TitlebarSetCaption(AG_Titlebar *tbar, const char *caption)
 {
 	AG_LabelText(tbar->label, (caption == NULL) ? "" : caption);
 }
+
+const AG_WidgetOps agTitlebarOps = {
+	{
+		"AG_Widget:AG_Box:AG_Titlebar",
+		sizeof(AG_Titlebar),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		AG_BoxDestroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	AG_BoxSizeRequest,
+	AG_BoxSizeAllocate
+};

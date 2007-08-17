@@ -19,6 +19,7 @@ typedef struct ag_button {
 	char *text;			/* Label text */
 	int surface;			/* Label surface handle */
 	enum ag_text_justify justify;	/* Label justification */
+	enum ag_text_valign valign;	/* Vertical alignment */
 	Uint flags;
 #define AG_BUTTON_STICKY	0x002	/* Toggle state */
 #define AG_BUTTON_MOUSEOVER	0x004	/* Mouse overlaps */
@@ -35,6 +36,8 @@ typedef struct ag_button {
 } AG_Button;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agButtonOps;
+
 AG_Button *AG_ButtonNew(void *, Uint, const char *);
 AG_Button *AG_ButtonNewFn(void *, Uint, const char *, AG_EventFn,
 			  const char *, ...);
@@ -55,9 +58,6 @@ AG_Button *AG_ButtonNewFlag16(void *, Uint, const char *, Uint16 *, Uint16);
 AG_Button *AG_ButtonNewFlag32(void *, Uint, const char *, Uint32 *, Uint32);
 
 void	   AG_ButtonInit(AG_Button *, Uint, const char *);
-void	   AG_ButtonDestroy(void *);
-void	   AG_ButtonDraw(void *);
-void	   AG_ButtonScale(void *, int, int);
 
 void	   AG_ButtonSetPadding(AG_Button *, int, int, int, int);
 #define	AG_ButtonSetPaddingLeft(b,v)   AG_ButtonSetPadding((b),(v),-1,-1,-1)
@@ -67,6 +67,7 @@ void	   AG_ButtonSetPadding(AG_Button *, int, int, int, int);
 void	   AG_ButtonSetFocusable(AG_Button *, int);
 void	   AG_ButtonSetSticky(AG_Button *, int);
 void	   AG_ButtonJustify(AG_Button *, enum ag_text_justify);
+void	   AG_ButtonSetValign(AG_Button *, enum ag_text_valign);
 void	   AG_ButtonSurface(AG_Button *, SDL_Surface *);
 void	   AG_ButtonSurfaceNODUP(AG_Button *, SDL_Surface *);
 void	   AG_ButtonSetRepeatMode(AG_Button *, int);

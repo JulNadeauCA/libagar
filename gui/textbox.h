@@ -18,8 +18,9 @@ typedef struct ag_textbox {
 	
 	char string[AG_TEXTBOX_STRING_MAX];	/* Default string binding */
 
-	SDL_Surface *label_su;			/* Label surface */
-	int	     label_id;			/* Label surface mapping */
+	AG_Mutex     lock;
+	char	    *labelText;			/* label text */
+	int	     label;			/* Label surface mapping */
 
 	Uint flags;
 #define AG_TEXTBOX_BLINK_ON	 0x002	/* Cursor blink state (internal) */
@@ -34,9 +35,10 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_INT_ONLY	 0x200	/* Accepts only valid strtol() input */
 #define AG_TEXTBOX_FLT_ONLY	 0x400	/* Accepts only valid strtof() input */
 
-	int prew, preh;			/* Prescale */
+	int wPre, hPre;			/* Prescale */
 	int boxPadX, boxPadY;		/* Padding around textbox */
 	int lblPadL, lblPadR;		/* Padding around label */
+	int wLbl;			/* Label width to display */
 	int pos;			/* Cursor position */
 	int offs;			/* Display offset */
 	int compose;			/* Key for input composition */
@@ -56,19 +58,20 @@ typedef struct ag_textbox {
 } AG_Textbox;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agTextboxOps;
+
 AG_Textbox *AG_TextboxNew(void *, Uint, const char *);
 void	    AG_TextboxInit(AG_Textbox *, Uint, const char *);
-void	    AG_TextboxDestroy(void *);
-void	    AG_TextboxDraw(void *);
 void	    AG_TextboxPrescale(AG_Textbox *, const char *);
-void	    AG_TextboxScale(void *, int, int);
+
+void	 AG_TextboxSetPassword(AG_Textbox *, int);
+void	 AG_TextboxSetLabel(AG_Textbox *, const char *, ...);
 
 void	 AG_TextboxPrintf(AG_Textbox *, const char *, ...);
 char	*AG_TextboxDupString(AG_Textbox *);
 size_t	 AG_TextboxCopyString(AG_Textbox *, char *, size_t)
 	                      BOUNDED_ATTRIBUTE(__string__, 2, 3);
 int	 AG_TextboxInt(AG_Textbox *);
-void	 AG_TextboxSetPassword(AG_Textbox *, int);
 
 /* Legacy */
 #define AG_TextboxSetWriteable(tb,flag)	do {	\

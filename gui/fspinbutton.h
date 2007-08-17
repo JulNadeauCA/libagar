@@ -39,13 +39,12 @@ typedef struct ag_fspinbutton {
 } AG_FSpinbutton;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agFSpinbuttonOps;
+
 AG_FSpinbutton *AG_FSpinbuttonNew(void *, Uint, const char *, const char *);
 void		AG_FSpinbuttonInit(AG_FSpinbutton *, Uint, const char *,
 		                   const char *);
-void		AG_FSpinbuttonDestroy(void *);
 void		AG_FSpinbuttonPrescale(AG_FSpinbutton *, const char *);
-void		AG_FSpinbuttonScale(void *, int, int);
-void		AG_FSpinbuttonDraw(void *);
 
 void	AG_FSpinbuttonSetValue(AG_FSpinbutton *, double);
 void	AG_FSpinbuttonAddValue(AG_FSpinbutton *, double);

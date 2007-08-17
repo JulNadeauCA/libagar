@@ -31,22 +31,6 @@
 #include "window.h"
 #include "primitive.h"
 
-const AG_WidgetOps agFixedPlotterOps = {
-	{
-		"AG_Widget:AG_FixedPlotter",
-		sizeof(AG_FixedPlotter),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_FixedPlotterDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_FixedPlotterDraw,
-	AG_FixedPlotterScale
-};
-
 enum {
 	NITEMS_INIT =	32,
 	NITEMS_GROW =	16
@@ -164,19 +148,21 @@ mousebuttondown(AG_Event *event)
 	AG_WidgetFocus(fpl);
 }
 
-void
-AG_FixedPlotterScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_FixedPlotter *fpl = p;
-
-	if (w == -1 && h == -1) {
-		WIDGET(fpl)->w = 100;
-		WIDGET(fpl)->h = 80;
-	}
+	r->w = 256;
+	r->h = 128;
 }
 
-void
-AG_FixedPlotterDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	return (a->w > 2 && a->h > 4) ? 0 : -1;
+}
+
+static void
+Draw(void *p)
 {
 	AG_FixedPlotter *fpl = p;
 	AG_FixedPlotterItem *gi;
@@ -296,11 +282,28 @@ AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 	TAILQ_INIT(&fpl->items);
 }
 
-void
-AG_FixedPlotterDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_FixedPlotter *fpl = p;
 
 	AG_FixedPlotterFreeItems(fpl);
 	AG_WidgetDestroy(fpl);
 }
+
+const AG_WidgetOps agFixedPlotterOps = {
+	{
+		"AG_Widget:AG_FixedPlotter",
+		sizeof(AG_FixedPlotter),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		Destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

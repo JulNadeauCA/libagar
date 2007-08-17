@@ -55,10 +55,10 @@ typedef struct ag_hsvpal {
 } AG_HSVPal;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agHSVPalOps;
+
 AG_HSVPal *AG_HSVPalNew(void *, Uint);
 void	   AG_HSVPalInit(AG_HSVPal *, Uint);
-void	   AG_HSVPalScale(void *, int, int);
-void	   AG_HSVPalDraw(void *);
 __END_DECLS
 
 #include "close_code.h"

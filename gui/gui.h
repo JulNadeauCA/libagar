@@ -15,7 +15,6 @@
 #include <agar/gui/fixed_plotter.h>
 #include <agar/gui/glview.h>
 #include <agar/gui/hbox.h>
-#include <agar/gui/hpane.h>
 #include <agar/gui/hsvpal.h>
 #include <agar/gui/keycodes.h>
 #include <agar/gui/label.h>
@@ -43,7 +42,6 @@
 #include <agar/gui/ucombo.h>
 #include <agar/gui/units.h>
 #include <agar/gui/vbox.h>
-#include <agar/gui/vpane.h>
 
 #include <agar/core/core_close.h>
 #endif /* _AGAR_GUI_H_ */

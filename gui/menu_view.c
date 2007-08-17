@@ -30,22 +30,6 @@
 
 #include "primitive.h"
 
-static AG_WidgetOps agMenuViewOps = {
-	{
-		"AG_Widget:AG_MenuView",
-		sizeof(AG_MenuView),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_WidgetDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_MenuViewDraw,
-	AG_MenuViewScale
-};
-
 static void
 SelectItem(AG_MenuItem *pitem, AG_MenuItem *subitem)
 {
@@ -282,10 +266,10 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu, AG_MenuItem *pitem)
 	mview->pitem = pitem;
 	mview->spIconLbl = 8;
 	mview->spLblArrow = 16;
-	mview->lPad = 4;
-	mview->rPad = 4;
-	mview->tPad = 2;
-	mview->bPad = 2;
+	mview->lPad = 8;
+	mview->rPad = 8;
+	mview->tPad = 4;
+	mview->bPad = 4;
 
 	AG_SetEvent(mview, "window-mousemotion", mousemotion, NULL);
 	AG_SetEvent(mview, "window-mousebuttonup", mousebuttonup, NULL);
@@ -296,8 +280,8 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu, AG_MenuItem *pitem)
 
 #define VERT_ALIGNED(m, h) ((m)->itemh/2 - (h)/2 + 1)
 
-void
-AG_MenuViewDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_MenuView *mview = p;
 	AG_MenuItem *pitem = mview->pitem;
@@ -341,6 +325,7 @@ AG_MenuViewDraw(void *p)
 				c[3] = 64;
 				agPrim.frame(mview, x, y+2,
 				    m->itemh, m->itemh-2,
+				    1,
 				    AG_COLOR(MENU_OPTION_COLOR));
 				agPrim.rect_blended(mview, x, y+2,
 				    m->itemh, m->itemh-2, c, AG_ALPHA_SRC);
@@ -402,49 +387,71 @@ AG_MenuViewDraw(void *p)
 	}
 }
 
-void
-AG_MenuViewScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_MenuView *mview = p;
 	AG_MenuItem *pitem = mview->pitem;
 	AG_Menu *m = mview->pmenu;
 	int i;
 
-	if (w == -1 && h == -1) {
-		WIDGET(mview)->w = 0;
-		WIDGET(mview)->h = mview->tPad + mview->bPad;
+	r->w = 0;
+	r->h = mview->tPad + mview->bPad;
 		
-		for (i = 0; i < pitem->nsubitems; i++) {
-			AG_MenuItem *item = &pitem->subitems[i];
-			int wReq = mview->lPad + mview->rPad;
-			int wLbl;
-		
-			AG_MenuUpdateItem(item);
+	for (i = 0; i < pitem->nsubitems; i++) {
+		AG_MenuItem *item = &pitem->subitems[i];
+		int wReq = mview->lPad + mview->rPad;
+		int wLbl;
+	
+		AG_MenuUpdateItem(item);
 
-			if (item->icon != -1) {
-				wReq += WSURFACE(m,item->icon)->w;
-			}
-			if (pitem->flags & AG_MENU_ITEM_ICONS)
-				wReq += m->itemh + mview->spIconLbl;
-		
-			if (item->lblEnabled != -1) {
-				wLbl = WSURFACE(m,item->lblEnabled)->w;
-			} else if (item->lblDisabled != -1) {
-				wLbl = WSURFACE(m,item->lblDisabled)->w;
-			} else {
-				AG_TextSize(item->text, &wLbl, NULL);
-			}
-			wReq += wLbl;
-
-			if (item->nsubitems > 0) {
-				wReq += mview->spLblArrow +
-				        AGICON(GUI_ARROW_ICON)->w;
-			}
-			if (wReq > WIDGET(mview)->w) {
-				WIDGET(mview)->w = wReq;
-			}
-			WIDGET(mview)->h += m->itemh;
+		if (item->icon != -1) {
+			wReq += WSURFACE(m,item->icon)->w;
 		}
+		if (pitem->flags & AG_MENU_ITEM_ICONS)
+			wReq += m->itemh + mview->spIconLbl;
+	
+		if (item->lblEnabled != -1) {
+			wLbl = WSURFACE(m,item->lblEnabled)->w;
+		} else if (item->lblDisabled != -1) {
+			wLbl = WSURFACE(m,item->lblDisabled)->w;
+		} else {
+			AG_TextSize(item->text, &wLbl, NULL);
+		}
+		wReq += wLbl;
+
+		if (item->nsubitems > 0) {
+			wReq += mview->spLblArrow + AGICON(GUI_ARROW_ICON)->w;
+		}
+		if (wReq > r->w) {
+			r->w = wReq;
+		}
+		r->h += m->itemh;
 	}
 }
 
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	if (a->w < 4 || a->h < 4) {
+		return (-1);
+	}
+	return (0);
+}
+
+const AG_WidgetOps agMenuViewOps = {
+	{
+		"AG_Widget:AG_MenuView",
+		sizeof(AG_MenuView),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		AG_WidgetDestroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

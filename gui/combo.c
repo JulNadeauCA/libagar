@@ -27,24 +27,7 @@
 #include <core/view.h>
 
 #include "combo.h"
-
 #include "primitive.h"
-
-static AG_WidgetOps agComboOps = {
-	{
-		"AG_Widget:AG_Combo",
-		sizeof(AG_Combo),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_ComboDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	NULL,			/* draw */
-	AG_ComboScale
-};
 
 AG_Combo *
 AG_ComboNew(void *parent, Uint flags, const char *label)
@@ -61,15 +44,17 @@ AG_ComboNew(void *parent, Uint flags, const char *label)
 }
 
 static void
-combo_collapse(AG_Combo *com)
+Collapse(AG_Combo *com)
 {
 	AG_WidgetBinding *stateb;
 	int *state;
 
-	if (com->panel == NULL)
+	if (com->panel == NULL) {
 		return;
-
+	}
+	com->saved_w = WIDGET(com->panel)->w;
 	com->saved_h = WIDGET(com->panel)->h;
+
 	AG_WindowHide(com->panel);
 	AG_ObjectDetach(com->list);
 	AG_ViewDetach(com->panel);
@@ -82,45 +67,56 @@ combo_collapse(AG_Combo *com)
 }
 
 static void
-combo_modal_close(AG_Event *event)
+ModalClose(AG_Event *event)
 {
 	AG_Combo *com = AG_PTR(1);
 
 	if (com->panel != NULL)
-		combo_collapse(com);
+		Collapse(com);
 }
 
 static void
-combo_expand(AG_Event *event)
+Expand(AG_Event *event)
 {
 	AG_Combo *com = AG_PTR(1);
 	int expand = AG_INT(2);
+	AG_SizeAlloc aPanel;
+	AG_SizeReq rList;
 
 	if (expand) {						/* Expand */
-		AG_Widget *panel;
-
-		com->panel = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_MODAL);
-		panel = WIDGET(com->panel);
+		com->panel = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
+		                          AG_WINDOW_MODAL);
+		AG_WindowSetPadding(com->panel, 0, 0, 0, 0);
 		AG_ObjectAttach(com->panel, com->list);
-
-		panel->w = WIDGET(com)->w - WIDGET(com->button)->w;
-		panel->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
-		panel->x = WIDGET(com)->cx;
-		panel->y = WIDGET(com)->cy;
 		
-		/* XXX redundant? */
-		if (panel->x+panel->w > agView->w)
-			panel->w = agView->w - panel->x;
-		if (panel->y+panel->h > agView->h)
-			panel->h = agView->h - panel->y;
-		
-		AG_SetEvent(panel, "window-modal-close", combo_modal_close,
-		    "%p", com);
+		if (com->saved_w > 0) {
+			aPanel.w = com->saved_w;
+			aPanel.h = com->saved_h;
+		} else {
+			AG_TlistPrescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
+			AG_WidgetSizeReq(com->list, &rList);
+			aPanel.w = rList.w;
+			aPanel.h = rList.h;
+		}
+		aPanel.x = WIDGET(com)->cx;
+		aPanel.y = WIDGET(com)->cy;
 
-		AG_WINDOW_UPDATE(panel);
+		if (aPanel.x+aPanel.w > agView->w)
+			aPanel.w = agView->w - aPanel.x;
+		if (aPanel.y+aPanel.h > agView->h)
+			aPanel.h = agView->h - aPanel.y;
+		if (aPanel.w < 4 || aPanel.h < 4) {
+			Collapse(com);
+			return;
+		}
+		AG_WidgetSizeAlloc(com->panel, &aPanel);
+
+		AG_SetEvent(com->panel, "window-modal-close",
+		    ModalClose, "%p", com);
+		AG_WindowUpdate(com->panel);
 		AG_WindowShow(com->panel);
 	} else {
-		combo_collapse(com);
+		Collapse(com);
 	}
 }
 
@@ -162,7 +158,7 @@ AG_ComboSelect(AG_Combo *com, AG_TlistItem *it)
 }
 
 static void
-combo_selected(AG_Event *event)
+SelectedItem(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Combo *com = AG_PTR(1);
@@ -174,11 +170,11 @@ combo_selected(AG_Event *event)
 		AG_PostEvent(NULL, com, "combo-selected", "%p", ti);
 	}
 	AG_MutexUnlock(&tl->lock);
-	combo_collapse(com);
+	Collapse(com);
 }
 
 static void
-combo_return(AG_Event *event)
+Return(AG_Event *event)
 {
 	char text[AG_TEXTBOX_STRING_MAX];
 	AG_Textbox *tbox = AG_SELF();
@@ -220,6 +216,7 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 	AG_WidgetInit(com, &agComboOps, wflags);
 	com->panel = NULL;
 	com->flags = flags;
+	com->saved_w = 0;
 	com->saved_h = 0;
 
 	com->tbox = AG_TextboxNew(com, AG_TEXTBOX_COMBO, label);
@@ -235,9 +232,9 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 	if (flags & AG_COMBO_TREE) { com->list->flags |= AG_TLIST_TREE; }
 	if (flags & AG_COMBO_POLL) { com->list->flags |= AG_TLIST_POLL; }
 
-	AG_SetEvent(com->button, "button-pushed", combo_expand, "%p", com);
-	AG_SetEvent(com->list, "tlist-changed", combo_selected, "%p", com);
-	AG_SetEvent(com->tbox, "textbox-return", combo_return, "%p", com);
+	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
+	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
+	AG_SetEvent(com->tbox, "textbox-return", Return, "%p", com);
 }
 
 void
@@ -280,30 +277,55 @@ AG_ComboDestroy(void *p)
 }
 
 void
-AG_ComboScale(void *p, int w, int h)
+AG_ComboSizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Combo *com = p;
+	AG_SizeReq rChld;
+	AG_SizeAlloc aChld;
 
-	if (w == -1 && h == -1) {
-		WIDGET_SCALE(com->tbox, -1, -1);
-		WIDGET(com)->w = WIDGET(com->tbox)->w;
-		WIDGET(com)->h = WIDGET(com->tbox)->h;
-
-		WIDGET_SCALE(com->button, -1, -1);
-		WIDGET(com)->w += WIDGET(com->button)->w;
-		if (WIDGET(com->button)->h > WIDGET(com)->h) {
-			WIDGET(com)->h = WIDGET(com->button)->h;
-		}
-		return;
-	}
-	
-	AG_WidgetScale(com->button, -1, -1);
-	AG_WidgetScale(com->tbox, w - WIDGET(com->button)->w - 1, h);
-	AG_WidgetScale(com->button, WIDGET(com->button)->w, h);
-
-	WIDGET(com->tbox)->x = 0;
-	WIDGET(com->tbox)->y = 0;
-	WIDGET(com->button)->x = w - WIDGET(com->button)->w - 1;
-	WIDGET(com->button)->y = 0;
+	AG_WidgetSizeReq(com->tbox, &rChld);
+	r->w = rChld.w;
+	r->h = rChld.h;
+	AG_WidgetSizeReq(com->button, &rChld);
+	r->w += rChld.w;
+	if (r->h < rChld.h) { r->h = rChld.h; }
 }
 
+int
+AG_ComboSizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Combo *com = p;
+	AG_SizeReq rBtn;
+	AG_SizeAlloc aChld;
+
+	AG_WidgetSizeReq(com->button, &rBtn);
+	if (a->w < rBtn.w) {
+		return (-1);
+	}
+	aChld.x = 0;
+	aChld.y = 0;
+	aChld.w = a->w - rBtn.w - 1;
+	aChld.h = a->h;
+	AG_WidgetSizeAlloc(com->tbox, &aChld);
+	aChld.x = aChld.w + 1;
+	aChld.w = rBtn.w;
+	AG_WidgetSizeAlloc(com->button, &aChld);
+	return (0);
+}
+
+const AG_WidgetOps agComboOps = {
+	{
+		"AG_Widget:AG_Combo",
+		sizeof(AG_Combo),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		AG_ComboDestroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	NULL,			/* draw */
+	AG_ComboSizeRequest,
+	AG_ComboSizeAllocate
+};

@@ -31,22 +31,6 @@
 #include "window.h"
 #include "primitive.h"
 
-static AG_WidgetOps agFixedOps = {
-	{
-		"AG_Widget:AG_Fixed",
-		sizeof(AG_Fixed),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_WidgetDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	NULL,		/* draw */
-	AG_FixedScale
-};
-
 AG_Fixed *
 AG_FixedNew(void *parent, Uint flags)
 {
@@ -64,6 +48,9 @@ AG_FixedInit(AG_Fixed *fx, Uint flags)
 	AG_WidgetInit(fx, &agFixedOps, 0);
 
 	fx->flags = flags;
+	fx->wPre = 0;
+	fx->hPre = 0;
+
 	if (flags & AG_FIXED_HFILL) { WIDGET(fx)->flags |= AG_WIDGET_HFILL; }
 	if (flags & AG_FIXED_VFILL) { WIDGET(fx)->flags |= AG_WIDGET_VFILL; }
 
@@ -78,18 +65,40 @@ AG_FixedInit(AG_Fixed *fx, Uint flags)
 }
 
 void
-AG_FixedScale(void *p, int w, int h)
+AG_FixedPrescale(AG_Fixed *fx, int w, int h)
+{
+	fx->wPre = w;
+	fx->hPre = h;
+}
+
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Fixed *fx = p;
-	AG_Widget *cw;
 
-	OBJECT_FOREACH_CHILD(cw, fx, ag_widget) {
-		if (w != -1 && h != -1) {
-			if (cw->flags & AG_WIDGET_HFILL) { cw->w = w; }
-			if (cw->flags & AG_WIDGET_VFILL) { cw->h = h; }
-		}
-		WIDGET_OPS(cw)->scale(cw, cw->w, cw->h);
+	r->w = fx->wPre;
+	r->h = fx->hPre;
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Fixed *fx = p;
+	AG_Widget *chld;
+	AG_SizeAlloc aChld;
+
+	OBJECT_FOREACH_CHILD(chld, fx, ag_widget) {
+		aChld.x = chld->x;
+		aChld.y = chld->y;
+		aChld.w = chld->w;
+		aChld.h = chld->h;
+
+		if (chld->flags & AG_WIDGET_HFILL) { aChld.w = a->w; }
+		if (chld->flags & AG_WIDGET_VFILL) { aChld.h = a->h; }
+		
+		AG_WidgetSizeAlloc(chld, &aChld);
 	}
+	return (0);
 }
 
 void
@@ -121,58 +130,85 @@ AG_FixedDrawFrame(void *p)
 {
 	AG_Widget *w = p;
 
-	agPrim.frame(w, 0, 0, w->w, w->h, AG_COLOR(FRAME_COLOR));
+	agPrim.frame(w, 0, 0, w->w, w->h, -1, AG_COLOR(FRAME_COLOR));
 }
 
 static __inline__ void
-AG_FixedUpdate(AG_Fixed *fx)
+UpdateWindow(AG_Fixed *fx)
 {
 	AG_Window *pwin;
 
 	if ((fx->flags & AG_FIXED_NO_UPDATE) == 0 &&
 	    (pwin = AG_WidgetParentWindow(fx)) != NULL)
-		AG_WINDOW_UPDATE(pwin);
+		AG_WindowUpdate(pwin);
 }
 
 void
-AG_FixedPut(AG_Fixed *fx, void *child, int x, int y)
+AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 {
-	AG_Widget *cw = child;
+	AG_Widget *chld = p;
 	AG_Window *pwin;
+	AG_SizeReq r;
+	AG_SizeAlloc a;
 
-	AG_ObjectAttach(fx, cw);
-	cw->x = x;
-	cw->y = y;
-
-	WIDGET_OPS(cw)->scale(cw, -1, -1);
-	AG_FixedUpdate(fx);
+	AG_ObjectAttach(fx, chld);
+	AG_WidgetSizeReq(chld, &r);
+	a.w = r.w;
+	a.h = r.h;
+	a.x = x;
+	a.y = y;
+	AG_WidgetSizeAlloc(chld, &a);
+	UpdateWindow(fx);
 }
 
 void
-AG_FixedMove(AG_Fixed *fx, void *child, int x, int y)
+AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 {
-	AG_Widget *cw = child;
+	AG_Widget *chld = p;
+	AG_SizeAlloc a;
 
-	cw->x = x;
-	cw->y = y;
-	AG_FixedUpdate(fx);
+	a.w = chld->w;
+	a.h = chld->h;
+	a.x = x;
+	a.y = y;
+	AG_WidgetSizeAlloc(chld, &a);
+	UpdateWindow(fx);
 }
 
 void
-AG_FixedSize(AG_Fixed *fx, void *child, int w, int h)
+AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 {
-	AG_Widget *cw = child;
+	AG_Widget *chld = p;
+	AG_SizeAlloc a;
 
-	cw->w = w;
-	cw->h = h;
-
-	WIDGET_OPS(cw)->scale(cw, w, h);
-	AG_FixedUpdate(fx);
+	a.w = w;
+	a.h = h;
+	a.x = chld->x;
+	a.y = chld->y;
+	AG_WidgetSizeAlloc(chld, &a);
+	UpdateWindow(fx);
 }
 
 void
 AG_FixedDel(AG_Fixed *fx, void *child)
 {
 	AG_ObjectDetach(child);
-	AG_FixedUpdate(fx);
+	UpdateWindow(fx);
 }
+
+const AG_WidgetOps agFixedOps = {
+	{
+		"AG_Widget:AG_Fixed",
+		sizeof(AG_Fixed),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		AG_WidgetDestroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	NULL,		/* draw */
+	SizeRequest,
+	SizeAllocate
+};

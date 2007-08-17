@@ -17,26 +17,6 @@
 #include <stdarg.h>
 
 /*
- * This is the structure passed to AG_WidgetInit, which contains information
- * about this widget class, and its function mappings.
- */
-const AG_WidgetOps agDummyOps = {
-	{
-		"AG_Widget:AG_Dummy",		/* Name of class */
-		sizeof(AG_Dummy),		/* Size of structure */
-		{ 0,0 },			/* Version */
-		NULL,				/* init() */
-		NULL,				/* reinit() */
-		NULL,				/* destroy() */
-		NULL,				/* load() */
-		NULL,				/* save() */
-		NULL				/* edit() */
-	},
-	AG_DummyDraw,		/* Draw function */
-	AG_DummyScale		/* Scale/resize function */
-};
-
-/*
  * This is a generic constructor function. It is customary of FooNew()
  * functions in agar to allocate, initialize and attach an object. When
  * useful, is also customary to provide multiple alternative constructor
@@ -54,19 +34,47 @@ AG_DummyNew(void *parent, Uint flags, const char *caption)
 }
 
 /*
- * Scale routine. Invoked with w = -1 and h = -1 for initial sizing,
- * and with the actual geometry in pixels for resizing.
+ * This function requests a minimal geometry for displaying the widget.
+ * It is expected to return the width and height in pixels into r.
  */
-void
-AG_DummyScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Dummy *dum = p;
-	SDL_Surface *label = WIDGET_SURFACE(dum,0);
 
-	if (w == -1 && h == -1) {
-		WIDGET(dum)->w = 16;
-		WIDGET(dum)->h = 16;
+	if (dum->mySurface == -1) {
+		/*
+		 * We can use AG_TextSize() to return the dimensions of rendered
+		 * text, without rendering it.
+		 */
+		AG_TextSize("Some text", &r->w, &r->h);
+	} else {
+		/*
+		 * We can use the geometry of the rendered surface. The
+		 * WSURFACE() macro returns the SDL_Surface given a
+		 * Widget surface handle.
+		 */
+		r->w = WSURFACE(dum,dum->mySurface)->w;
+		r->h = WSURFACE(dum,dum->mySurface)->h;
 	}
+}
+
+/*
+ * This function is called by the parent widget after it decided how much
+ * space to allocate to this widget. It is mostly useful to container
+ * widgets, but other widgets generally use it to check if the allocated
+ * geometry can be handled by Draw().
+ */
+static int
+SizeAllocate(void *p, AG_SizeAlloc *r)
+{
+	AG_Dummy *dum = p;
+
+	/* If we return -1, Draw() will not be called. */
+	if (r->w < 5 || r->h < 5)
+		return (-1);
+
+	return (0);
 }
 
 /*
@@ -74,14 +82,11 @@ AG_DummyScale(void *p, int w, int h)
  * at its current location. All primitive and surface operations operate
  * on widget coordinates.
  */
-void
-AG_DummyDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_Dummy *dum = p;
 	
-	if (WIDGET(dum)->w < 1 || WIDGET(dum)->h < 1)
-		return;
-
 	/* Draw a box spanning the widget area. */
 	agPrim.box(dum,
 	    0, 0,
@@ -192,3 +197,23 @@ AG_DummyInit(AG_Dummy *dum, Uint flags, const char *caption)
 	AG_SetEvent(dum, "window-keydown", keydown, NULL);
 }
 
+/*
+ * This is the structure passed to AG_WidgetInit, which contains information
+ * about this widget class, and its function mappings.
+ */
+const AG_WidgetOps agDummyOps = {
+	{
+		"AG_Widget:AG_Dummy",		/* Name of class */
+		sizeof(AG_Dummy),		/* Size of structure */
+		{ 0,0 },			/* Version */
+		NULL,				/* init() */
+		NULL,				/* reinit() */
+		NULL,				/* destroy() */
+		NULL,				/* load() */
+		NULL,				/* save() */
+		NULL				/* edit() */
+	},
+	Draw,			/* Rendering function */
+	SizeRequest,		/* Minimal size request */
+	SizeAllocate		/* Allocated size callback */
+};

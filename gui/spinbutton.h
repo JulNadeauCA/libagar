@@ -31,11 +31,10 @@ typedef struct ag_spinbutton {
 } AG_Spinbutton;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agSpinbuttonOps;
+
 AG_Spinbutton	*AG_SpinbuttonNew(void *, Uint, const char *);
 void		 AG_SpinbuttonInit(AG_Spinbutton *, Uint, const char *);
-void		 AG_SpinbuttonDestroy(void *);
-void		 AG_SpinbuttonScale(void *, int, int);
-void		 AG_SpinbuttonDraw(void *);
 
 void	AG_SpinbuttonAddValue(AG_Spinbutton *, int);
 void	AG_SpinbuttonSetValue(AG_Spinbutton *, ...);

@@ -31,22 +31,6 @@
 #include "window.h"
 #include "primitive.h"
 
-static AG_WidgetOps agRadioOps = {
-	{
-		"AG_Widget:AG_Radio",
-		sizeof(AG_Radio),
-		{ 0,0, },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_RadioDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_RadioDraw,
-	AG_RadioScale
-};
-
 enum {
 	XSPACING =	7,
 	YSPACING =	2,
@@ -124,8 +108,8 @@ static const int highlight[18] = {
 	-1, -5
 };
 
-void
-AG_RadioDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_Radio *rad = p;
 	int i, val, j;
@@ -137,6 +121,7 @@ AG_RadioDraw(void *p)
 	    0,
 	    WIDGET(rad)->w,
 	    WIDGET(rad)->h,
+	    1,
 	    AG_COLOR(FRAME_COLOR));
 
 	val = AG_WidgetInt(rad, "value");
@@ -175,8 +160,8 @@ AG_RadioDraw(void *p)
 	}
 }
 
-void
-AG_RadioDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Radio *rad = p;
 	int i;
@@ -185,15 +170,34 @@ AG_RadioDestroy(void *p)
 	AG_WidgetDestroy(rad);
 }
 
-void
-AG_RadioScale(void *p, int rw, int rh)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Radio *rad = p;
 
-	if (rw == -1)
-		WIDGET(rad)->w = XPADDING*2 + XSPACING + RADIUS*2+rad->max_w;
-	if (rh == -1)
-		WIDGET(rad)->h = rad->nitems*(YSPACING + RADIUS*2)+YPADDING*2;
+	if (rad->nitems == 0) {
+		r->w = 0;
+		r->h = 0;
+	} else {
+		r->w = XPADDING*2 + XSPACING*2 + RADIUS*2 + rad->max_w;
+		r->h = YPADDING*2 + rad->nitems*RADIUS*2 +
+		                   (rad->nitems-1)*YSPACING;
+	}
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Radio *rad = p;
+	
+	if (a->w < XPADDING*2 + XSPACING*2 + RADIUS*2 + rad->max_w ||
+	    a->h < YPADDING*2 + rad->nitems*RADIUS*2 +
+	           (rad->nitems-1)*YSPACING) {
+		WIDGET(rad)->flags |= AG_WIDGET_CLIPPING;
+	} else {
+		WIDGET(rad)->flags &= ~(AG_WIDGET_CLIPPING);
+	}
+	return (0);
 }
 
 static void
@@ -251,3 +255,19 @@ radio_event(AG_Event *event)
 	AG_WidgetUnlockBinding(valueb);
 }
 
+const AG_WidgetOps agRadioOps = {
+	{
+		"AG_Widget:AG_Radio",
+		sizeof(AG_Radio),
+		{ 0,0, },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		Destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

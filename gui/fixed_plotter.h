@@ -53,11 +53,10 @@ typedef struct ag_fixed_plotter {
 } AG_FixedPlotter;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agFixedPlotterOps;
+
 AG_FixedPlotter *AG_FixedPlotterNew(void *, enum ag_fixed_plotter_type, Uint);
 void AG_FixedPlotterInit(AG_FixedPlotter *, enum ag_fixed_plotter_type, Uint);
-void AG_FixedPlotterDestroy(void *);
-void AG_FixedPlotterDraw(void *);
-void AG_FixedPlotterScale(void *, int, int);
 
 AG_FixedPlotterItem *AG_FixedPlotterCurve(AG_FixedPlotter *, const char *,
 		                          Uint8, Uint8, Uint8, Uint32);

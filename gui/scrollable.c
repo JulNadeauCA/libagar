@@ -42,22 +42,6 @@
 #include "primitive.h"
 #include "label.h"
 
-const AG_WidgetOps agScrollableOps = {
-	{
-		"AG_Widget:AG_Scrollable",
-		sizeof(AG_Scrollable),
-		{ 0,0 },
-		NULL,			/* init() */
-		NULL,			/* reinit() */
-		NULL,			/* destroy() */
-		NULL,			/* load() */
-		NULL,			/* save() */
-		NULL			/* edit() */
-	},
-	NULL,				/* draw() */
-	AG_ScrollableScale
-};
-
 void
 AG_ScrollableDrawBegin(AG_Scrollable *sa)
 {
@@ -85,37 +69,45 @@ AG_ScrollableDrawEnd(AG_Scrollable *sa)
 	WIDGET(sa)->cy = sa->save.cy;
 }
 
-void
-AG_ScrollableScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Scrollable *sa = p;
 
-	if (w == -1 && h == -1) {
-		WIDGET(sa)->w = 16;
-		WIDGET(sa)->h = 16;
-	}
-	if (WIDGET(sa)->w < sa->vbar->bw &&
-	    WIDGET(sa)->h < sa->vbar->bw*2) {
+	r->w = 0;
+	r->h = 0;
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Scrollable *sa = p;
+	AG_SizeAlloc aBar;
+
+	if (a->w < sa->vbar->bw ||
+	    a->h < sa->vbar->bw*2) {
 		WIDGET(sa->vbar)->flags |= AG_WIDGET_HIDE;
-		WIDGET(sa->vbar)->x = WIDGET(sa)->w - sa->vbar->bw;
-		WIDGET(sa->vbar)->y = 0;
-		AG_WidgetScale(sa->vbar,
-		    sa->vbar->bw,
-		    WIDGET(sa)->h);
 	} else {
 		WIDGET(sa->vbar)->flags &= ~(AG_WIDGET_HIDE);
+		aBar.x = a->w - sa->vbar->bw;
+		aBar.y = 0;
+		aBar.w = sa->vbar->bw;
+		aBar.h = a->h;
+		AG_WidgetSizeAlloc(sa->vbar, &aBar);
 	}
-	if (WIDGET(sa)->w < sa->hbar->bw &&
-	    WIDGET(sa)->h < sa->hbar->bw*2) {
-		WIDGET(sa->vbar)->flags |= AG_WIDGET_HIDE;
-		WIDGET(sa->hbar)->x = 0;
-		WIDGET(sa->hbar)->y = WIDGET(sa)->h - sa->hbar->bw;
-		AG_WidgetScale(sa->hbar,
-		    WIDGET(sa)->w - sa->hbar->bw,
-		    sa->vbar->bw);
+	
+	if (a->w < sa->hbar->bw*2 ||
+	    a->h < sa->hbar->bw) {
+		WIDGET(sa->hbar)->flags |= AG_WIDGET_HIDE;
 	} else {
-		WIDGET(sa->vbar)->flags &= ~(AG_WIDGET_HIDE);
+		WIDGET(sa->hbar)->flags &= ~(AG_WIDGET_HIDE);
+		aBar.x = 0;
+		aBar.y = a->h - sa->hbar->bw;
+		aBar.w = a->w;
+		aBar.h = sa->hbar->bw;
+		AG_WidgetSizeAlloc(sa->hbar, &aBar);
 	}
+	return (0);
 }
 
 #if 0
@@ -183,7 +175,7 @@ AG_ScrollableInit(AG_Scrollable *sa, Uint flags, const void *ops)
 	if (flags & AG_SCROLLABLE_HFILL) { wFlags |= AG_WIDGET_HFILL; }
 	if (flags & AG_SCROLLABLE_VFILL) { wFlags |= AG_WIDGET_VFILL; }
 
-	AG_WidgetInit(sa, (const AG_WidgetOps *)ops, wFlags);
+	AG_WidgetInit(sa, ops, wFlags);
 	sa->flags = flags;
 	sa->vbar = AG_ScrollbarNew(sa, AG_SCROLLBAR_VERT, 0);
 	sa->hbar = AG_ScrollbarNew(sa, AG_SCROLLBAR_HORIZ, 0);
@@ -210,3 +202,19 @@ AG_ScrollableInit(AG_Scrollable *sa, Uint flags, const void *ops)
 #endif
 }
 
+const AG_WidgetOps agScrollableOps = {
+	{
+		"AG_Widget:AG_Scrollable",
+		sizeof(AG_Scrollable),
+		{ 0,0 },
+		NULL,			/* init() */
+		NULL,			/* reinit() */
+		NULL,			/* destroy() */
+		NULL,			/* load() */
+		NULL,			/* save() */
+		NULL			/* edit() */
+	},
+	NULL,				/* draw() */
+	SizeRequest,
+	SizeAllocate
+};
