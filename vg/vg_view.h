@@ -45,11 +45,10 @@ typedef struct vg_view {
 #define VGVIEW(p) ((VG_View *)(p))
 
 __BEGIN_DECLS
+extern const AG_WidgetOps vgViewOps;
+
 VG_View	  *VG_ViewNew(void *, VG *, Uint);
 void	   VG_ViewInit(VG_View *, VG *, Uint);
-void	   VG_ViewDestroy(void *);
-void	   VG_ViewDraw(void *);
-void	   VG_ViewScale(void *, int, int);
 void	   VG_ViewReshape(VG_View *);
 void	   VG_ViewDrawFn(VG_View *, AG_EventFn, const char *, ...);
 void	   VG_ViewScaleFn(VG_View *, AG_EventFn, const char *, ...);

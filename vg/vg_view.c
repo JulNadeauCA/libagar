@@ -39,22 +39,6 @@
 #include <gui/window.h>
 #include <gui/primitive.h>
 
-const AG_WidgetOps vgViewOps = {
-	{
-		"AG_Widget:VG_View",
-		sizeof(VG_View),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_WidgetDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	VG_ViewDraw,
-	VG_ViewScale
-};
-
 #define VG_VIEW_X(vv,px) VG_VECXF_NOSNAP((vv)->vg,(px)-(vv)->x)
 #define VG_VIEW_Y(vv,py) VG_VECYF_NOSNAP((vv)->vg,(py)-(vv)->y)
 #define VG_VIEW_X_SNAP(vv,px) VG_VECXF((vv)->vg,(px)-(vv)->x)
@@ -256,11 +240,6 @@ VG_ViewInit(VG_View *vv, VG *vg, Uint flags)
 }
 
 void
-VG_ViewDestroy(void *p)
-{
-}
-
-void
 VG_ViewDrawFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
 	vv->draw_ev = AG_SetEvent(vv, NULL, fn, NULL);
@@ -309,23 +288,24 @@ VG_ViewMotionFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 	AG_EVENT_GET_ARGS(vv->motion_ev, fmt);
 }
 
-void
-VG_ViewScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
+{
+	r->w = 32;				/* XXX */
+	r->h = 32;
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	VG_View *vv = p;
 
-	if (w == -1 && h == -1) {
-		WIDGET(vv)->w = 32;		/* XXX */
-		WIDGET(vv)->h = 32;
-		return;
-	}
-	WIDGET(vv)->w = w;
-	WIDGET(vv)->h = h;
-	VG_Scale(vv->vg, w, h, vv->vg->scale);
+	VG_Scale(vv->vg, a->w, a->h, vv->vg->scale);
+	return (0);
 }
 
-void
-VG_ViewDraw(void *p)
+static void
+Draw(void *p)
 {
 	VG_View *vv = p;
 	VG *vg = vv->vg;
@@ -375,7 +355,7 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 			}
 			if ((pwin = AG_WidgetParentWindow(vv->curtool->pane))
 			    != NULL) {
-				AG_WINDOW_UPDATE(pwin);
+				AG_WindowUpdate(pwin);
 			}
 		}
 		vv->curtool->vgv = NULL;
@@ -399,7 +379,7 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 			ntool->ops->edit(ntool, ntool->pane);
 			if ((pwin = AG_WidgetParentWindow(vv->curtool->pane))
 			    != NULL) {
-				AG_WINDOW_UPDATE(pwin);
+				AG_WindowUpdate(pwin);
 			}
 		}
 #endif
@@ -458,3 +438,20 @@ VG_ViewSetDefaultTool(VG_View *vv, VG_Tool *tool)
 {
 	vv->deftool = tool;
 }
+
+const AG_WidgetOps vgViewOps = {
+	{
+		"AG_Widget:VG_View",
+		sizeof(VG_View),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		AG_WidgetDestroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};
