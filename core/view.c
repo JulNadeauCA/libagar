@@ -98,7 +98,6 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 	agView->winToFocus = NULL;
 	agView->rNom = 1000/AG_Uint(agConfig, "view.nominal-fps");
 	agView->rCur = 0;
-	dprintf("%u fps\n", agView->rNom);
 	TAILQ_INIT(&agView->windows);
 	TAILQ_INIT(&agView->detach);
 	AG_MutexInitRecursive(&agView->lock);
@@ -255,7 +254,7 @@ AG_ResizeDisplay(int w, int h)
 	TAILQ_FOREACH(win, &agView->windows, windows) {
 		AG_MutexLock(&win->lock);
 		if (!win->visible) {
-			AG_WINDOW_UPDATE(win);
+			AG_WindowUpdate(win);
 		}
 		AG_MutexUnlock(&win->lock);
 	}
@@ -276,11 +275,13 @@ AG_ResizeDisplay(int w, int h)
 
 	TAILQ_FOREACH(win, &agView->windows, windows) {
 		AG_MutexLock(&win->lock);
+#if 0
 		WIDGET(win)->x = WIDGET(win)->x*w/ow;
 		WIDGET(win)->y = WIDGET(win)->y*h/oh;
 		WIDGET(win)->w = WIDGET(win)->w*w/ow;
 		WIDGET(win)->h = WIDGET(win)->h*h/oh;
-		AG_WINDOW_UPDATE(win);
+#endif
+		AG_WindowUpdate(win);
 		AG_MutexUnlock(&win->lock);
 	}
 	return (0);
@@ -361,17 +362,22 @@ AG_ViewAttach(void *child)
 	AG_MutexUnlock(&agView->lock);
 }
 
-static void
-DetachWindow(AG_Window *win)
+/*
+ * Hide a window (and its children) and place them on a queue, to be
+ * detached at the end of the current event processing cycle.
+ */
+void
+AG_ViewDetach(AG_Window *win)
 {
 	AG_Window *subwin, *nsubwin;
 	AG_Window *owin;
 
+	AG_MutexLock(&agView->lock);
 	for (subwin = TAILQ_FIRST(&win->subwins);
 	     subwin != TAILQ_END(&win->subwins);
 	     subwin = nsubwin) {
 		nsubwin = TAILQ_NEXT(subwin, swins);
-		DetachWindow(subwin);
+		AG_ViewDetach(subwin);
 	}
 	TAILQ_INIT(&win->subwins);
 	
@@ -388,14 +394,6 @@ DetachWindow(AG_Window *win)
 		if (subwin != NULL)
 			TAILQ_REMOVE(&owin->subwins, subwin, swins);
 	}
-}
-
-/* Place a window and its children on the detachment queue. */
-void
-AG_ViewDetach(AG_Window *win)
-{
-	AG_MutexLock(&agView->lock);
-	DetachWindow(win);
 	AG_MutexUnlock(&agView->lock);
 }
 
@@ -449,7 +447,10 @@ AG_PutPixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
 	}
 }
 
-/* Release the windows on the detachment queue. */
+/*
+ * Release the windows on the detachment queue. Call at the end of the
+ * current event processing cycle.
+ */
 void
 AG_ViewDetachQueued(void)
 {
@@ -624,16 +625,27 @@ AG_SetAlphaPixels(SDL_Surface *su, Uint8 alpha)
 int
 AG_SetRefreshRate(int fps)
 {
-	if (fps < 1) {
-		AG_SetError("FPS < 1");
-		return (-1);
-	}
 	AG_MutexLock(&agView->lock);
+
+	if (fps == -1) {
+		Uint fpsNom;
+
+		if (AG_GetProp(agConfig, "view.nominal-fps", AG_PROP_UINT,
+		    &fpsNom) == NULL) {
+			goto fail;
+		}
+		agView->rNom = 1000/fpsNom;
+		agView->rCur = 0;
+		goto out;
+	}
 	AG_SetUint(agConfig, "view.nominal-fps", fps);
 	agView->rNom = 1000/fps;
 	agView->rCur = 0;
+out:
 	AG_MutexUnlock(&agView->lock);
-	dprintf("%u fps\n", fps);
+	return (0);
+fail:
+	AG_MutexUnlock(&agView->lock);
 	return (0);
 }
 
@@ -937,7 +949,7 @@ out:
 
 /* Queue a video update. */
 void
-AG_UpdateRectQ(int x, int y, int w, int h)
+AG_QueueVideoUpdate(int x, int y, int w, int h)
 {
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
