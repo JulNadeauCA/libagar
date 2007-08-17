@@ -976,7 +976,7 @@ tryname2:
 
 	t = Malloc(sizeof(RG_Tile), M_RG);
 	RG_TileInit(t, ts, ins_tile_name);
-	if (strcmp(ts->tmpl, "Perso") == 0) {
+	if (strcmp(ts->tmpl, "Sprite") == 0) {
 		RG_TileScale(ts, t, 16, 32, flags, SDL_ALPHA_OPAQUE);
 		t->xOrig = 8;
 		t->yOrig = 31;
@@ -1168,7 +1168,7 @@ InsertTileDlg(AG_Event *event)
 	AG_Radio *rad;
 	AG_Combo *com;
 
-	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
 	    AG_WINDOW_NOMINIMIZE, "rg-instiledlg")) == NULL) {
 		return;
 	}
@@ -1601,7 +1601,7 @@ SelectTemplate(AG_Event *event)
 
 	RG_TilesetReinit(ts);
 
-	if (strcmp(ts->tmpl, "Perso") == 0) {
+	if (strcmp(ts->tmpl, "Sprite") == 0) {
 		const char *tiles[] = {
 			"Idle-N", "Idle-S",
 			"Idle-W", "Idle-E"
@@ -1711,6 +1711,8 @@ RG_TilesetEdit(void *p)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", OBJECT(ts)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
+	AG_WindowSetSpacing(win, 0);
+	AG_WindowSetPaddingTop(win, 0);
 
 	tlTiles = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tlTiles, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
@@ -1771,7 +1773,7 @@ RG_TilesetEdit(void *p)
 		com = AG_ComboNew(ntab, AG_COMBO_HFILL, _("Template: "));
 		AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, &ts->tmpl,
 		    sizeof(ts->tmpl));
-		AG_TlistAdd(com->list, NULL, "Perso");
+		AG_TlistAdd(com->list, NULL, "Sprite");
 		AG_TlistAdd(com->list, NULL, "Terrain");
 		AG_SetEvent(com, "combo-selected", SelectTemplate, "%p", ts);
 	}

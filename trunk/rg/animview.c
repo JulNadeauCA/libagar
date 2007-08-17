@@ -28,22 +28,6 @@
 
 #include "animview.h"
 
-const AG_WidgetOps rgAnimviewOps = {
-	{
-		"AG_Widget:RG_Animview",
-		sizeof(RG_Animview),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_WidgetDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	RG_AnimviewDraw,
-	RG_AnimviewScale
-};
-
 RG_Animview *
 RG_AnimviewNew(void *parent)
 {
@@ -229,42 +213,53 @@ RG_AnimviewPrescale(RG_Animview *av, int w, int h)
 	av->pre_h = h;
 }
 
-void
-RG_AnimviewScale(void *p, int rw, int rh)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	RG_Animview *av = p;
-	int bw, bh;
-	
-	if (rw == -1 && rh == -1) {
-		WIDGET_SCALE(av->btns.play, -1, -1);
-		WIDGET_SCALE(av->btns.pause, -1, -1);
-		WIDGET_SCALE(av->btns.stop, -1, -1);
+	AG_SizeReq rPlay, rPause, rStop;
 
-		WIDGET(av)->w = MAX(av->pre_w, WIDGET(av->btns.play)->w*3);
-		WIDGET(av)->h = av->pre_h + WIDGET(av->btns.play)->h;
-		return;
-	}
-	bw = rw/3;
-	bh = WIDGET(av->btns.play)->h;
+	AG_WidgetSizeReq(av->btns.play, &rPlay);
+	AG_WidgetSizeReq(av->btns.pause, &rPause);
+	AG_WidgetSizeReq(av->btns.stop, &rStop);
 
-	WIDGET(av->btns.play)->x = 0;
-	WIDGET(av->btns.play)->y = rh - bh;
-	WIDGET(av->btns.play)->w = bw;
-
-	WIDGET(av->btns.pause)->x = bw;
-	WIDGET(av->btns.pause)->y = rh - bh;
-	WIDGET(av->btns.pause)->w = bw;
-	
-	WIDGET(av->btns.stop)->x = bw*2;
-	WIDGET(av->btns.stop)->y = rh - bh;
-	WIDGET(av->btns.stop)->w = bw;
-
-	av->ranim.x = rw/2 - av->ranim.w/2;
-	av->ranim.y = (rh - bh)/2 - av->ranim.h/2;
+	r->w = MAX(av->pre_w, rPlay.w+rPause.w+rStop.w);
+	r->h = av->pre_h + MAX3(rPlay.h, rPause.h, rStop.h);
 }
 
-void
-RG_AnimviewDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	RG_Animview *av = p;
+	AG_SizeReq rBtn;
+	AG_SizeAlloc aBtn;
+	int hBtn = 0;
+
+	AG_WidgetSizeReq(av->btns.play, &rBtn);
+	if (hBtn < rBtn.h) { hBtn = rBtn.h; }
+	AG_WidgetSizeReq(av->btns.pause, &rBtn);
+	if (hBtn < rBtn.h) { hBtn = rBtn.h; }
+	AG_WidgetSizeReq(av->btns.stop, &rBtn);
+	if (hBtn < rBtn.h) { hBtn = rBtn.h; }
+
+	aBtn.x = 0;
+	aBtn.y = a->h - hBtn;
+	aBtn.w = a->w/3;
+	aBtn.h = hBtn;
+	AG_WidgetSizeAlloc(av->btns.play, &aBtn);
+	aBtn.x += aBtn.w;
+	AG_WidgetSizeAlloc(av->btns.pause, &aBtn);
+	aBtn.x += aBtn.w;
+	if ((aBtn.x + aBtn.w) < a->w) { aBtn.w++; } /* For rounding */
+	AG_WidgetSizeAlloc(av->btns.stop, &aBtn);
+
+	av->ranim.x = a->w/2 - av->ranim.w/2;
+	av->ranim.y = (a->h - hBtn)/2 - av->ranim.h/2;
+	return (0);
+}
+
+static void
+Draw(void *p)
 {
 	RG_Animview *av = p;
 	RG_AnimFrame *fr;
@@ -289,3 +284,19 @@ RG_AnimviewSetAnimation(RG_Animview *av, RG_Anim *anim)
 	av->ranim.h = anim->h;
 }
 
+const AG_WidgetOps rgAnimviewOps = {
+	{
+		"AG_Widget:RG_Animview",
+		sizeof(RG_Animview),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		AG_WidgetDestroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

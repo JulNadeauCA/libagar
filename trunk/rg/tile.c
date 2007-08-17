@@ -44,8 +44,8 @@
 #include <gui/separator.h>
 #include <gui/radio.h>
 #include <gui/separator.h>
-#include <gui/hpane.h>
 #include <gui/file_dlg.h>
+#include <gui/pane.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -764,8 +764,7 @@ CloseElement(RG_Tileview *tv)
 		AG_ObjectDestroy(tv->tel_tbar);
 		Free(tv->tel_tbar, M_OBJECT);
 		tv->tel_tbar = NULL;
-
-		AG_WINDOW_UPDATE(pwin);
+		AG_WindowUpdate(pwin);
 	}
 }
 
@@ -858,7 +857,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel,
 
 			if (ft->ops->toolbar != NULL) {
 				tv->tel_tbar = ft->ops->toolbar(ft, tv);
-				AG_WINDOW_UPDATE(pwin);
+				AG_WindowUpdate(pwin);
 			}
 		}
 		break;
@@ -892,7 +891,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel,
 			AG_WidgetFocus(tv);
 			
 			tv->tel_tbar = RG_PixmapToolbar(tv, tel);
-			AG_WINDOW_UPDATE(pwin);
+			AG_WindowUpdate(pwin);
 		}
 		break;
 	case RG_TILE_SKETCH:
@@ -924,7 +923,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel,
 			AG_WidgetFocus(tv);
 
 			tv->tel_tbar = RG_SketchToolbar(tv, tel);
-			AG_WINDOW_UPDATE(pwin);
+			AG_WindowUpdate(pwin);
 		}
 		break;
 	}
@@ -2007,8 +2006,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	AG_Tlist *tl_feats;
 	AG_Toolbar *tbar;
 	AG_Button *btn;
-	AG_HPane *pane;
-	AG_HPaneDiv *div;
+	AG_Pane *pane;
 
 	if ((win = AG_WindowNewNamed(0, "tile-%s:%s", OBJECT(ts)->name,
 	    t->name)) == NULL) {
@@ -2017,6 +2015,8 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	AG_WindowSetCaption(win, "%s <%s>", t->name, OBJECT(ts)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
+	AG_WindowSetSpacing(win, 0);
+	AG_WindowSetPaddingTop(win, 0);
 	
 	tv = Malloc(sizeof(RG_Tileview), M_OBJECT);
 	RG_TileviewInit(tv, ts, 0);
@@ -2131,15 +2131,13 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		/* TODO import */
 	}
 
-	pane = AG_HPaneNew(win, AG_HPANE_VFILL|AG_HPANE_HFILL);
-	div = AG_HPaneAddDiv(pane,
-	    AG_BOX_VERT, AG_BOX_VFILL,
-	    AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
+	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	{
-		AG_ObjectAttach(div->box1, tl_feats);
+		AG_ObjectAttach(pane->div[0], tl_feats);
 		WIDGET(tl_feats)->flags |= AG_WIDGET_HFILL;
 	
-		btn = AG_ButtonNew(div->box1, AG_BUTTON_STICKY|AG_BUTTON_HFILL,
+		btn = AG_ButtonNew(pane->div[0],
+		    AG_BUTTON_STICKY|AG_BUTTON_HFILL,
 		    _("Edit"));
 		WIDGET(btn)->flags |= AG_WIDGET_HFILL;
 		AG_WidgetBind(btn, "state", AG_WIDGET_INT, &tv->edit_mode);
@@ -2148,10 +2146,10 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		AG_SetEvent(tl_feats, "tlist-dblclick", EditElement,
 		    "%p,%p,%p", tv, tl_feats, win);
 
-		AG_ObjectAttach(div->box2, tbar);
+		AG_ObjectAttach(pane->div[1], tbar);
 
-		tv->tel_box = AG_BoxNew(div->box2, AG_BOX_HORIZ,
-		    AG_BOX_HFILL|AG_BOX_VFILL);
+		tv->tel_box = AG_BoxNew(pane->div[1], AG_BOX_HORIZ,
+		    AG_BOX_EXPAND);
 		AG_ObjectAttach(tv->tel_box, tv);
 		AG_WidgetFocus(tv);
 	}
@@ -2159,7 +2157,6 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	/* Set the tile edition mode. */
 	CloseElement(tv);
 
-	AG_WindowScale(win, -1, -1);
 	AG_WindowSetGeometry(win,
 	    agView->w/4, agView->h/4,
 	    agView->w/2, agView->h/2);
