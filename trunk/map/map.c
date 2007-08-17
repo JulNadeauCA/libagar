@@ -55,8 +55,7 @@
 #include <gui/mspinbutton.h>
 #include <gui/notebook.h>
 #include <gui/scrollbar.h>
-#include <gui/hpane.h>
-#include <gui/vpane.h>
+#include <gui/pane.h>
 #include <gui/separator.h>
 #endif
 
@@ -2119,7 +2118,6 @@ CreateView(AG_Event *event)
 	AG_WidgetFocus(mv);
 	
 	AG_WindowAttach(pwin, win);
-	AG_WindowScale(win, -1, -1);
 	AG_WindowSetGeometry(win, 0, 0, agView->w/4, agView->h/4);
 	AG_WindowShow(win);
 }
@@ -2856,11 +2854,8 @@ MAP_Edit(void *p)
 	MAP_View *mv;
 	AG_Menu *menu;
 	AG_MenuItem *pitem;
-	AG_Box *box_h, *box_v;
-	AG_HPane *hpane;
-	AG_HPaneDiv *hdiv;
-	AG_VPane *vpane;
-	AG_VPaneDiv *vdiv;
+	AG_Box *hBox, *vBox;
+	AG_Pane *hPane, *vPane;
 	MAP_Tool *tool;
 	int flags = MAP_VIEW_GRID;
 
@@ -2942,23 +2937,16 @@ MAP_Edit(void *p)
 #endif
 	}
 	
-	hpane = AG_HPaneNew(win, AG_HPANE_HFILL|AG_HPANE_VFILL);
-	hdiv = AG_HPaneAddDiv(hpane,
-	    AG_BOX_VERT,  AG_BOX_VFILL,
-	    AG_BOX_HORIZ, AG_BOX_VFILL|AG_BOX_HFILL);
+	hPane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
+	AG_PaneSetDivisionPacking(hPane, 1, AG_BOX_HORIZ);
 	{
 		AG_Notebook *nb;
 		AG_NotebookTab *ntab;
 		AG_Tlist *tl;
 		AG_MenuItem *mi;
 
-		vpane = AG_VPaneNew(hdiv->box1, AG_VPANE_HFILL|AG_VPANE_VFILL);
-		vdiv = AG_VPaneAddDiv(vpane,
-		    AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL,
-		    AG_BOX_VERT, AG_BOX_HFILL);
-
-		nb = AG_NotebookNew(vdiv->box1, AG_NOTEBOOK_VFILL|
-					        AG_NOTEBOOK_HFILL);
+		vPane = AG_PaneNewVert(hPane->div[0], AG_PANE_EXPAND);
+		nb = AG_NotebookNew(vPane->div[0], AG_NOTEBOOK_EXPAND);
 		ntab = AG_NotebookAddTab(nb, _("Library"), AG_BOX_VERT);
 		{
 			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
@@ -2975,7 +2963,6 @@ MAP_Edit(void *p)
 				    RemoveAllRefsToTileset, "%p,%p",
 				    mv->lib_tl, mv); 
 			}
-			
 			mi = AG_TlistSetPopup(mv->lib_tl, "tile");
 			{
 				AG_MenuAction(mi, _("Remove all references to"),
@@ -3020,27 +3007,23 @@ MAP_Edit(void *p)
 			AG_MenuSetPollFn(mi, CreateLayerMenu, "%p,%p",
 			    m, mv->layers_tl);
 
-			box_h = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HFILL);
-			{
-				tb = AG_TextboxNew(box_h, AG_TEXTBOX_HFILL,
-				    _("Name: "));
-				AG_SetEvent(tb, "textbox-return", PushLayer,
-				    "%p, %p", m, tb);
-			}
+			hBox = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HFILL);
+			tb = AG_TextboxNew(hBox, AG_TEXTBOX_HFILL, _("Name: "));
+			AG_SetEvent(tb, "textbox-return",
+			    PushLayer, "%p, %p", m, tb);
 			AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Push"),
 			    PushLayer, "%p, %p", m, tb);
 		}
 		
-		AG_SeparatorNew(hdiv->box1, AG_SEPARATOR_HORIZ);
+		AG_SeparatorNew(hPane->div[0], AG_SEPARATOR_HORIZ);
 		
-		vbar = AG_ScrollbarNew(hdiv->box2, AG_SCROLLBAR_VERT, 0);
-		box_v = AG_BoxNew(hdiv->box2, AG_BOX_VERT, AG_BOX_HFILL|
-		                                           AG_BOX_VFILL);
+		vbar = AG_ScrollbarNew(hPane->div[1], AG_SCROLLBAR_VERT, 0);
+		vBox = AG_BoxNew(hPane->div[1], AG_BOX_VERT, AG_BOX_EXPAND);
 		{
-			AG_ObjectAttach(box_v, mv);
-			hbar = AG_ScrollbarNew(box_v, AG_SCROLLBAR_HORIZ, 0);
+			AG_ObjectAttach(vBox, mv);
+			hbar = AG_ScrollbarNew(vBox, AG_SCROLLBAR_HORIZ, 0);
 		}
-		AG_ObjectAttach(hdiv->box2, toolbar);
+		AG_ObjectAttach(hPane->div[1], toolbar);
 	}
 
 	pitem = AG_MenuAddItem(menu, _("Tools"));
@@ -3061,7 +3044,7 @@ MAP_Edit(void *p)
 
 		for (i = 0; i < nops; i++) {
 			t = MAP_ViewRegTool(mv, ops[i], m);
-			t->pane = (void *)vdiv->box2;
+			t->pane = (void *)vPane->div[1];
 			AG_MenuAction(pitem, _(ops[i]->desc), ops[i]->icon,
 			    SelectTool, "%p, %p", mv, t);
 		}
@@ -3070,7 +3053,6 @@ MAP_Edit(void *p)
 	MAP_ViewUseScrollbars(mv, hbar, vbar);
 	AG_ObjectAttach(win, statbar);
 
-	AG_WindowScale(win, -1, -1);
 	AG_WindowSetGeometry(win,
 	    agView->w/6, agView->h/6,
 	    2*agView->w/3, 2*agView->h/3);

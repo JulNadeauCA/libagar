@@ -41,22 +41,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-const AG_WidgetOps mapViewOps = {
-	{
-		"AG_Widget:MAP_View",
-		sizeof(MAP_View),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		MAP_ViewDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	MAP_ViewDraw,
-	MAP_ViewScale
-};
-
 enum {
 	ZOOM_MIN =	 20,	/* Min zoom factor (%) */
 	ZOOM_MAX =	 500,	/* Max zoom factor (%) */
@@ -64,14 +48,13 @@ enum {
 	ZOOM_GRID_MIN =	 20	/* Min zoom factor for showing the grid (%) */
 };
 
-int	mapViewBg = 1;		/* Background tiles enable */
-int	mapViewAnimatedBg = 1;	/* Background tiles moving */
-int	mapViewBgTileSize = 8;	/* Background tile size */
-int	mapViewEditSelOnly = 0;	/* Restrict edition to selection */
-int	mapViewZoomInc = 8;
+int mapViewBg = 1;		/* Background tiles enable */
+int mapViewAnimatedBg = 1;	/* Background tiles moving */
+int mapViewBgTileSize = 8;	/* Background tile size */
+int mapViewEditSelOnly = 0;	/* Restrict edition to selection */
+int mapViewZoomInc = 8;
 
-
-static void lost_focus(AG_Event *);
+static void LostFocus(AG_Event *);
 static void mousemotion(AG_Event *);
 static void mousebuttondown(AG_Event *);
 static void mousebuttonup(AG_Event *);
@@ -166,7 +149,7 @@ MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
 			}
 			if ((pwin = AG_WidgetParentWindow(mv->curtool->pane))
 			    != NULL) {
-				AG_WINDOW_UPDATE(pwin);
+				AG_WindowUpdate(pwin);
 			}
 		}
 		mv->curtool->mv = NULL;
@@ -195,7 +178,7 @@ MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
 			ntool->ops->edit_pane(ntool, ntool->pane);
 			if ((pwin = AG_WidgetParentWindow(mv->curtool->pane))
 			    != NULL) {
-				AG_WINDOW_UPDATE(pwin);
+				AG_WindowUpdate(pwin);
 			}
 		}
 		MAP_ToolUpdateStatus(ntool);
@@ -220,7 +203,7 @@ MAP_ViewFindTool(MAP_View *mv, const char *name)
 }
 
 static void
-tool_selected_ev(AG_Event *event)
+SelectTool(AG_Event *event)
 {
 	MAP_View *mv = AG_PTR(1);
 	MAP_Tool *tool = AG_PTR(2);
@@ -248,7 +231,7 @@ MAP_ViewRegTool(MAP_View *mv, const MAP_ToolOps *ops, void *p)
 		SDL_Surface *icon = ops->icon >= 0 ? AGICON(ops->icon) : NULL;
 
 		t->trigger = AG_ToolbarButtonIcon(mv->toolbar,
-		    icon, 0, tool_selected_ev,
+		    icon, 0, SelectTool,
 		    "%p, %p, %p", mv, t, p);
 #if 0
 		AG_SetEvent(t->trigger, "button-mouseoverlap",
@@ -279,8 +262,8 @@ MAP_ViewRegDrawCb(MAP_View *mv,
 	SLIST_INSERT_HEAD(&mv->draw_cbs, dcb, draw_cbs);
 }
 
-void
-MAP_ViewDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	MAP_View *mv = p;
 	MAP_ViewDrawCb *dcb, *ndcb;
@@ -296,7 +279,7 @@ MAP_ViewDestroy(void *p)
 }
 
 static void
-mapview_detached(AG_Event *event)
+Detached(AG_Event *event)
 {
 	MAP_View *mv = AG_SELF();
 	MAP_Tool *tool, *ntool;
@@ -313,7 +296,7 @@ mapview_detached(AG_Event *event)
 }
 
 static void
-dblclick_expired(AG_Event *event)
+ExpireDblClick(AG_Event *event)
 {
 	MAP_View *mv = AG_SELF();
 
@@ -321,18 +304,9 @@ dblclick_expired(AG_Event *event)
 }
 
 static void
-scrolled_bar(AG_Event *event)
+UpdateCamera(AG_Event *event)
 {
-	AG_Scrollbar *sb = AG_SELF();
 	MAP_View *mv = AG_PTR(1);
-
-	MAP_ViewUpdateCamera(mv);
-}
-
-static void
-resized_map(AG_Event *event)
-{
-	MAP_View *mv = AG_SELF();
 
 	MAP_ViewUpdateCamera(mv);
 }
@@ -412,16 +386,16 @@ MAP_ViewInit(MAP_View *mv, MAP *m, int flags,
 	mv->my = m->origin.y;
 	AG_MutexUnlock(&m->lock);
 
-	AG_SetEvent(mv, "widget-lostfocus", lost_focus, NULL);
-	AG_SetEvent(mv, "widget-hidden", lost_focus, NULL);
+	AG_SetEvent(mv, "widget-lostfocus", LostFocus, NULL);
+	AG_SetEvent(mv, "widget-hidden", LostFocus, NULL);
 	AG_SetEvent(mv, "window-keyup", key_up, NULL);
 	AG_SetEvent(mv, "window-keydown", key_down, NULL);
 	AG_SetEvent(mv, "window-mousemotion", mousemotion, NULL);
 	AG_SetEvent(mv, "window-mousebuttondown", mousebuttondown, NULL);
 	AG_SetEvent(mv, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(mv, "detached", mapview_detached, NULL);
-	AG_SetEvent(mv, "dblclick-expire", dblclick_expired, NULL);
-	AG_SetEvent(mv, "map-resized", resized_map, NULL);
+	AG_SetEvent(mv, "detached", Detached, NULL);
+	AG_SetEvent(mv, "dblclick-expire", ExpireDblClick, NULL);
+	AG_SetEvent(mv, "map-resized", UpdateCamera, "%p", mv);
 }
 
 void
@@ -435,14 +409,14 @@ MAP_ViewUseScrollbars(MAP_View *mv, AG_Scrollbar *hbar,
 		WIDGET(hbar)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		WIDGET(hbar)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
 		AG_WidgetBind(mv->hbar, "value", AG_WIDGET_INT, &AGMCAM(mv).x);
-		AG_SetEvent(mv->hbar, "scrollbar-changed", scrolled_bar, "%p",
+		AG_SetEvent(mv->hbar, "scrollbar-changed", UpdateCamera, "%p",
 		    mv);
 	}
 	if (vbar != NULL) {
 		WIDGET(vbar)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		WIDGET(vbar)->flags |= AG_WIDGET_UNFOCUSED_MOTION;
 		AG_WidgetBind(mv->vbar, "value", AG_WIDGET_INT, &AGMCAM(mv).y);
-		AG_SetEvent(mv->vbar, "scrollbar-changed", scrolled_bar, "%p",
+		AG_SetEvent(mv->vbar, "scrollbar-changed", UpdateCamera, "%p",
 		    mv);
 	}
 }
@@ -452,7 +426,7 @@ MAP_ViewUseScrollbars(MAP_View *mv, AG_Scrollbar *hbar,
  * The map must be locked.
  */
 static __inline__ void
-get_node_coords(MAP_View *mv, int *x, int *y)
+GetNodeCoords(MAP_View *mv, int *x, int *y)
 {
 	*x -= mv->xoffs;
 	*y -= mv->yoffs;
@@ -521,15 +495,15 @@ defcurs:
 }
 
 static __inline__ void
-center_to_origin(MAP_View *mv)
+CenterToOrigin(MAP_View *mv)
 {
 	AGMCAM(mv).x = mv->map->origin.x*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
 	AGMCAM(mv).y = mv->map->origin.y*AGMTILESZ(mv) - AGMTILESZ(mv)/2;
 	MAP_ViewUpdateCamera(mv);
 }
 
-void
-MAP_ViewDraw(void *p)
+static void
+Draw(void *p)
 {
 	MAP_View *mv = p;
 	MAP_ViewDrawCb *dcb;
@@ -561,7 +535,7 @@ MAP_ViewDraw(void *p)
 	
 	if (mv->flags & MAP_VIEW_CENTER) {
 		mv->flags &= ~(MAP_VIEW_CENTER);
-		center_to_origin(mv);
+		CenterToOrigin(mv);
 	}
 
 	if ((mv->flags & MAP_VIEW_NO_BG) == 0) {
@@ -867,7 +841,7 @@ MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 }
 
 static __inline__ int
-inside_nodesel(MAP_View *mv, int x, int y)
+InsideNodeSelection(MAP_View *mv, int x, int y)
 {
 	return (!mapViewEditSelOnly || !mv->esel.set ||
 	    (x >= mv->esel.x &&
@@ -877,7 +851,7 @@ inside_nodesel(MAP_View *mv, int x, int y)
 }
 
 static void
-toggle_attrib(MAP_View *mv)
+ToggleAttribute(MAP_View *mv)
 {
 	MAP_Item *r;
 	MAP_Node *node;
@@ -919,7 +893,7 @@ mousemotion(AG_Event *event)
 	int rv;
 
 	AG_MutexLock(&mv->map->lock);
-	get_node_coords(mv, &x, &y);
+	GetNodeCoords(mv, &x, &y);
 	mv->cxrel = x - mv->mouse.x;
 	mv->cyrel = y - mv->mouse.y;
 	xmap = mv->cx*AGMTILESZ(mv) + mv->cxoffs;
@@ -933,9 +907,9 @@ mousemotion(AG_Event *event)
 		if (state & SDL_BUTTON(1) &&
 		    mv->cx != -1 && mv->cy != -1 &&
 		    (x != mv->mouse.x || y != mv->mouse.y) &&
-		    (inside_nodesel(mv, mv->cx, mv->cy))) {
+		    (InsideNodeSelection(mv, mv->cx, mv->cy))) {
 			if (mv->flags & MAP_VIEW_SET_ATTRS) {
-				toggle_attrib(mv);
+				ToggleAttribute(mv);
 				goto out;
 			}
 			if (mv->mode == MAP_VIEW_EDIT_ORIGIN) {
@@ -1015,7 +989,7 @@ mousebuttondown(AG_Event *event)
 	AG_WidgetFocus(mv);
 	
 	AG_MutexLock(&m->lock);
-	get_node_coords(mv, &x, &y);
+	GetNodeCoords(mv, &x, &y);
 	mv->mouse.x = x;
 	mv->mouse.y = y;
 	mv->mouse.xmap = mv->cx*AGMTILESZ(mv) + mv->cxoffs;
@@ -1036,7 +1010,7 @@ mousebuttondown(AG_Event *event)
 			mv->flags |= MAP_VIEW_SET_ATTRS;
 			mv->attr_x = -1;
 			mv->attr_y = -1;
-			toggle_attrib(mv);
+			ToggleAttribute(mv);
 			goto out;
 		}
 		if (mv->flags & MAP_VIEW_SHOW_ORIGIN &&
@@ -1054,7 +1028,7 @@ mousebuttondown(AG_Event *event)
 			}
 			if (button == SDL_BUTTON_LEFT &&
 			    mv->curtool->ops->effect != NULL &&
-			    inside_nodesel(mv, mv->cx, mv->cy)) {
+			    InsideNodeSelection(mv, mv->cx, mv->cy)) {
 				if ((rv = mv->curtool->ops->effect(mv->curtool,
 				     &m->map[mv->cy][mv->cx])) != -1) {
 					mv->map->nmods = rv;
@@ -1192,7 +1166,7 @@ mousebuttonup(AG_Event *event)
 	MAP_Tool *tool;
 	
 	AG_MutexLock(&m->lock);
-	get_node_coords(mv, &x, &y);
+	GetNodeCoords(mv, &x, &y);
 
 	mv->flags &= ~(MAP_VIEW_SET_ATTRS);
 	
@@ -1386,7 +1360,7 @@ key_down(AG_Event *event)
 		}
 		break;
 	case SDLK_o:
-		center_to_origin(mv);
+		CenterToOrigin(mv);
 		break;
 	case SDLK_g:
 		if (mv->flags & MAP_VIEW_GRID) {
@@ -1439,47 +1413,43 @@ out:
 	AG_MutexUnlock(&mv->map->lock);
 }
 
-void
-MAP_ViewScale(void *p, int rw, int rh)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	MAP_View *mv = p;
 
-	if (rw == -1 && rh == -1) {
-		WIDGET(mv)->w = mv->prew*MAPTILESZ;
-		WIDGET(mv)->h = mv->preh*MAPTILESZ;
-		if (mv->hbar != NULL) {
-			WIDGET_OPS(mv->hbar)->scale(mv->hbar, -1, -1);
-		}
-		if (mv->vbar != NULL) {
-			WIDGET_OPS(mv->vbar)->scale(mv->vbar, -1, -1);
-		}
-		return;
-	}
+	r->w = mv->prew*MAPTILESZ;
+	r->h = mv->preh*MAPTILESZ;
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	MAP_View *mv = p;
+	AG_SizeAlloc aBar;
 
 	if (mv->hbar != NULL) {
-		WIDGET(mv->hbar)->x = 0;
-		WIDGET(mv->hbar)->y = WIDGET(mv)->h - mv->hbar->bw;
-		WIDGET(mv->hbar)->w = WIDGET(mv)->w;
-		WIDGET(mv->hbar)->h = mv->hbar->bw;
-		AG_WidgetScale(mv->hbar, WIDGET(mv->hbar)->w,
-		                         WIDGET(mv->hbar)->h);
+		aBar.x = 0;
+		aBar.y = a->h - mv->hbar->bw;
+		aBar.w = a->w;
+		aBar.h = mv->hbar->bw;
+		AG_WidgetSizeAlloc(mv->hbar, &aBar);
 	}
 	if (mv->vbar != NULL) {
-		WIDGET(mv->vbar)->x = 0;
-		WIDGET(mv->vbar)->y = 0;
-		WIDGET(mv->vbar)->w = mv->vbar->bw;
-		WIDGET(mv->vbar)->h = WIDGET(mv)->h;
-		AG_WidgetScale(mv->vbar, WIDGET(mv->vbar)->w,
-		                         WIDGET(mv->vbar)->h);
+		aBar.x = 0;
+		aBar.y = 0;
+		aBar.w = mv->vbar->bw;
+		aBar.h = a->h;
+		AG_WidgetSizeAlloc(mv->vbar, &aBar);
 	}
-	
 	AG_MutexLock(&mv->map->lock);
 	MAP_ViewSetScale(mv, AGMZOOM(mv), 0);
 	AG_MutexUnlock(&mv->map->lock);
+	return (0);
 }
 
 static void
-lost_focus(AG_Event *event)
+LostFocus(AG_Event *event)
 {
 	MAP_View *mv = AG_SELF();
 
@@ -1539,3 +1509,20 @@ MAP_ViewStatus(MAP_View *mv, const char *fmt, ...)
 	AG_WidgetReplaceSurface(mv->status, mv->status->surface,
 	    AG_TextRender(status));
 }
+
+const AG_WidgetOps mapViewOps = {
+	{
+		"AG_Widget:MAP_View",
+		sizeof(MAP_View),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		Destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};
