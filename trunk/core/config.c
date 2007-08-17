@@ -70,7 +70,7 @@
 const AG_ObjectOps agConfigOps = {
 	"AG_Config",
 	sizeof(AG_Config),
-	{ 9, 2 },
+	{ 9, 3 },
 	NULL,
 	NULL,
 	NULL,
@@ -92,6 +92,7 @@ extern int agTextBidi;
 extern int agTextTabWidth;
 extern int agIdleThresh;
 extern int agScreenshotQuality;
+extern int agWindowAnySize;
 
 static void
 Set_SearchPath(AG_Event *event)
@@ -159,6 +160,7 @@ void
 AG_ConfigInit(AG_Config *cfg)
 {
 	char udatadir[MAXPATHLEN];
+	char tmpdir[MAXPATHLEN];
 	struct passwd *pwd;
 
 	AG_ObjectInit(cfg, "config", &agConfigOps);
@@ -189,11 +191,16 @@ AG_ConfigInit(AG_Config *cfg)
 	udatadir[0] = '.';
 	strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
 #endif
-	if (AG_FileExists(udatadir) == 0 &&
-	    AG_MkDir(udatadir) != 0) {
+	strlcpy(tmpdir, udatadir, sizeof(tmpdir));
+	strlcat(tmpdir, "/tmp", sizeof(tmpdir));
+	
+	if (AG_FileExists(udatadir) == 0 && AG_MkDir(udatadir) != 0)
 		fatal("%s: %s", udatadir, AG_GetError());
-	}
+	if (AG_FileExists(tmpdir) == 0 && AG_MkDir(tmpdir) != 0)
+		fatal("%s: %s", tmpdir, AG_GetError());
+	
 	AG_SetString(cfg, "save-path", "%s", udatadir);
+	AG_SetString(cfg, "tmp-path", "%s", tmpdir);
 
 #if defined(WIN32)
 	AG_SetString(cfg, "den-path", ".");
@@ -239,7 +246,7 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 #endif
 	if (ver.minor < 2) { AG_ReadUint8(buf); } /* agServerMode */
 	agIdleThresh = (int)AG_ReadUint8(buf);
-	if (ver.minor < 1) { AG_ReadUint8(buf); } /* agWindowAnySize */
+	if (ver.minor >= 3) { agWindowAnySize = (int)AG_ReadUint8(buf); }
 	agTextComposition = AG_ReadUint8(buf);
 	agTextBidi = AG_ReadUint8(buf);
 	agKbdUnicode = AG_ReadUint8(buf);
@@ -273,6 +280,7 @@ AG_ConfigSave(void *p, AG_Netbuf *buf)
 	AG_WriteUint8(buf, 0);
 #endif
 	AG_WriteUint8(buf, (Uint8)agIdleThresh);
+	AG_WriteUint8(buf, (Uint8)agWindowAnySize);
 	AG_WriteUint8(buf, (Uint8)agTextComposition);
 	AG_WriteUint8(buf, (Uint8)agTextBidi);
 	AG_WriteUint8(buf, (Uint8)agKbdUnicode);
@@ -480,6 +488,11 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		AG_WidgetBindInt(cbox, "state", &agTextAntialiasing);
 		AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
 		    "config.text.antialiasing");
+		
+		cbox = AG_CheckboxNew(tab, 0, _("Allow any window size"));
+		AG_WidgetBindInt(cbox, "state", &agWindowAnySize);
+		
+		AG_SeparatorNewHorizInv(tab);
 
 		cbox = AG_CheckboxNew(tab, 0, _("Unicode keyboard input"));
 		AG_WidgetBindInt(cbox, "state", &agKbdUnicode);
