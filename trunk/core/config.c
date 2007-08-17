@@ -489,9 +489,6 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
 		    "config.text.antialiasing");
 		
-		cbox = AG_CheckboxNew(tab, 0, _("Allow any window size"));
-		AG_WidgetBindInt(cbox, "state", &agWindowAnySize);
-		
 		AG_SeparatorNewHorizInv(tab);
 
 		cbox = AG_CheckboxNew(tab, 0, _("Unicode keyboard input"));
@@ -655,6 +652,9 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	{
 		cbox = AG_CheckboxNew(tab, 0, _("Enable debugging"));
 		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agDebugLvl);
+		
+		cbox = AG_CheckboxNew(tab, 0, _("Allow any window size"));
+		AG_WidgetBindInt(cbox, "state", &agWindowAnySize);
 	}
 #endif
 
