@@ -27,13 +27,12 @@ typedef struct ag_matview {
 } AG_Matview;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agMatviewOps;
+
 AG_Matview *AG_MatviewNew(void *, SG_Matrix *, Uint);
 void	    AG_MatviewInit(AG_Matview *, SG_Matrix *, Uint);
-void	    AG_MatviewScale(void *, int, int);
 void	    AG_MatviewPrescale(AG_Matview *, const char *, Uint, Uint);
 void	    AG_MatviewSetNumericalFmt(AG_Matview *, const char *);
-void	    AG_MatviewDrawNumerical(void *);
-void	    AG_MatviewDrawGreyscale(void *);
 __END_DECLS
 
 #include "close_code.h"

@@ -188,7 +188,7 @@ SG_Init(void *obj, const char *name)
 	OBJECT(sg)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 	sg->flags = 0;
 	TAILQ_INIT(&sg->nodes);
-	AG_MutexInit(&sg->lock);
+	AG_MutexInitRecursive(&sg->lock);
 
 	SG_InitRoot(sg);
 

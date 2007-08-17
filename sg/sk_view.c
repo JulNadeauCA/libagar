@@ -42,22 +42,6 @@
 #include <gui/window.h>
 #include <gui/primitive.h>
 
-const AG_WidgetOps skViewOps = {
-	{
-		"AG_Widget:SK_View",
-		sizeof(SK_View),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		SK_ViewDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	SK_ViewDraw,
-	SK_ViewScale
-};
-
 #define SK_VIEW_X(skv,px) ((SG_Real)(px - WIDGET(skv)->w/2)) / ((SG_Real)WIDGET(skv)->w/2.0)
 #define SK_VIEW_Y(skv,py) ((SG_Real)(py - WIDGET(skv)->h/2)) / ((SG_Real)WIDGET(skv)->h/2.0)
 #define SK_VIEW_X_SNAP(skv,px) (px)
@@ -285,8 +269,8 @@ SK_ViewInit(SK_View *skv, SK *sk, Uint flags)
 	SK_ViewZoom(skv, 1.0/10.0);
 }
 
-void
-SK_ViewDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	SK_View *skv = p;
 	SK_Tool *tool, *toolNext;
@@ -357,20 +341,24 @@ SK_ViewMotionFn(SK_View *skv, AG_EventFn fn, const char *fmt, ...)
 	AG_EVENT_GET_ARGS(skv->motion_ev, fmt);
 }
 
-void
-SK_ViewScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
+{
+	r->w = 32;	/* XXX */
+	r->h = 32;
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	SK_View *skv = p;
 
-	if (w == -1 && h == -1) {
-		WIDGET(skv)->w = 32;		/* XXX */
-		WIDGET(skv)->h = 32;
-	} else {
-		WIDGET(skv)->w = w;
-		WIDGET(skv)->h = h;
-	}
+	if (a->w < 1 || a->h < 1)
+		return (-1);
+
 	SG_MatrixIdentityv(&skv->mProj);
 	SK_ViewZoom(skv, 0.0);
+	return (0);
 }
 
 void
@@ -387,8 +375,8 @@ SK_ViewZoom(SK_View *skv, SG_Real zoom)
 	skv->rSnap = 16.0*skv->wPixel;
 }
 
-void
-SK_ViewDraw(void *p)
+static void
+Draw(void *p)
 {
 	SK_View *skv = p;
 	SK *sk = skv->sk;
@@ -464,7 +452,7 @@ SK_ViewSelectTool(SK_View *skv, SK_Tool *ntool, void *p)
 			}
 			wParent = AG_WidgetParentWindow(skv->curtool->pane);
 			if (wParent != NULL)
-				AG_WINDOW_UPDATE(wParent);
+				AG_WindowUpdate(wParent);
 		}
 		skv->curtool->skv = NULL;
 	}
@@ -488,7 +476,7 @@ SK_ViewSelectTool(SK_View *skv, SK_Tool *ntool, void *p)
 			}
 			wParent = AG_WidgetParentWindow(skv->curtool->pane);
 			if (wParent != NULL)
-				AG_WINDOW_UPDATE(wParent);
+				AG_WindowUpdate(wParent);
 		}
 #endif
 		snprintf(skv->status, sizeof(skv->status), _("Tool: %s"),
@@ -623,5 +611,22 @@ SK_ViewPopupMenu(SK_View *skv)
 	}
 	AG_PopupShow(skv->popup);
 }
+
+const AG_WidgetOps skViewOps = {
+	{
+		"AG_Widget:SK_View",
+		sizeof(SK_View),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		Draw,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};
 
 #endif /* HAVE_OPENGL */
