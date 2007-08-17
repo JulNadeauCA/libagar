@@ -33,22 +33,6 @@
 
 #include "sg.h"
 
-const AG_WidgetOps sgViewOps = {
-	{
-		"AG_Widget:AG_GLView:SG_View",
-		sizeof(SG_View),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		SG_ViewDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_GLViewDraw,
-	AG_GLViewScale
-};
-
 SG_View	*
 SG_ViewNew(void *parent, SG *sg, Uint flags)
 {
@@ -622,10 +606,10 @@ SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
 	AG_SetTimeout(&sv->to_trans_z, TranslateZTimeout, NULL, 0);
 }
 
-void
-SG_ViewDestroy(void *p)
+static void
+Destroy(void *p)
 {
-	AG_GLViewDestroy(p);
+/*	AG_GLViewDestroy(p); */
 }
 
 void
@@ -652,5 +636,22 @@ void
 SG_ViewMotionFn(SG_View *sv, AG_EventFn fn, const char *fmt, ...)
 {
 }
+
+const AG_WidgetOps sgViewOps = {
+	{
+		"AG_Widget:AG_GLView:SG_View",
+		sizeof(SG_View),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		Destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	AG_GLViewDraw,
+	AG_GLViewSizeRequest,
+	AG_GLViewSizeAllocate,
+};
 
 #endif /* HAVE_OPENGL */

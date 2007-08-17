@@ -341,7 +341,7 @@ EditNode(AG_Event *event)
 	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 	AG_Window *pWin = AG_WidgetParentWindow(skv);
 	SK_Node *node = it->p1;
-	int hPane, wPane;
+	AG_SizeReq rDiv;
 
 	if (skv->editPane != NULL) {
 		AG_ObjectDetach(skv->editPane);
@@ -357,15 +357,12 @@ EditNode(AG_Event *event)
 	node->ops->edit(node, skv->editPane, skv);
 	SK_NodeEditGeneric(node, skv->editPane, skv);
 
-	AG_WidgetScale(vp->div[1], -1, -1);
-	hPane = WIDGET(vp->div[1])->h;
-	wPane = WIDGET(vp->div[1])->w;
+	AG_WidgetSizeReq(vp->div[1], &rDiv);
+	AG_PaneSetDivisionMin(vp, 1, -1, rDiv.h + vp->wDiv);
+	AG_PaneSetDivisionMin(hp, 0, rDiv.w + vp->wDiv, -1);
+	AG_PaneMoveDivider(vp, WIDGET(vp)->h - rDiv.h);
 
-	AG_PaneSetDivisionMin(vp, 1, -1, hPane + vp->dw);
-	AG_PaneSetDivisionMin(hp, 0, wPane + vp->dw, -1);
-	AG_PaneMoveDivider(vp, WIDGET(vp)->h - hPane);
-	AG_WindowScale(pWin, WIDGET(pWin)->w, WIDGET(pWin)->h);
-	AG_WINDOW_UPDATE(pWin);
+	AG_WindowUpdate(pWin);
 }
 
 static void
@@ -491,6 +488,8 @@ SK_Edit(void *p)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", OBJECT(sk)->name);
+	AG_WindowSetPaddingTop(win, 0);
+	AG_WindowSetSpacing(win, 0);
 
 	skv = Malloc(sizeof(SK_View), M_OBJECT);
 	SK_ViewInit(skv, sk, SK_VIEW_EXPAND);
@@ -605,7 +604,6 @@ SK_Edit(void *p)
 		}
 	}
 	
-	AG_WindowScale(win, -1, -1);
 	AG_WindowSetGeometry(win, agView->w/6, agView->h/6,
 	                     2*agView->w/3, 2*agView->h/3);
 	AG_WidgetFocus(skv);

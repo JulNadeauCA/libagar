@@ -59,9 +59,10 @@ typedef struct sg_view {
 } SG_View;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps sgViewOps;
+
 SG_View	*SG_ViewNew(void *, struct sg *, Uint);
 void	 SG_ViewInit(SG_View *, struct sg *, Uint);
-void	 SG_ViewDestroy(void *);
 
 void	 SG_ViewKeydownFn(SG_View *, AG_EventFn, const char *, ...);
 void	 SG_ViewKeyupFn(SG_View *, AG_EventFn, const char *, ...);

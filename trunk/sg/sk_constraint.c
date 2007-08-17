@@ -169,8 +169,7 @@ LineFromAngledLine(SK_Constraint *ct, void *self, void *other)
 /*
  * Compute the position of a point relative to two fixed points from
  * distance/incidence constraints. This is a system of two quadratic
- * equations describing the intersection of two imaginary circles with
- * radii corresponding to the distances.
+ * equations describing the intersection of two circles.
  */
 static int
 PtFrom2Pts(void *self, SK_Constraint *ct1, void *n1, SK_Constraint *ct2,
