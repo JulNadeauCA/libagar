@@ -111,7 +111,7 @@ may ignore it entirely.
 .Fn AG_SetAlphaPixels "SDL_Surface *surface" "Uint8 alpha"
 .Pp
 .Ft "void"
-.Fn AG_UpdateRectQ "int x" "int y" "int w" "int h"
+.Fn AG_QueueVideoUpdate "int x" "int y" "int w" "int h"
 .Pp
 .Ft "int"
 .Fn AG_DumpSurface "SDL_Surface *su" "char *path_save"
@@ -154,7 +154,7 @@ function changes the alpha component of all pixels with a non-zero alpha
 component.
 .Pp
 The
-.Fn AG_UpdateRectQ
+.Fn AG_QueueVideoUpdate
 function queues the update of a video region.
 With direct video rendering mode, this adds a
 .Ft SDL_Rect
