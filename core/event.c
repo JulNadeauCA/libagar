@@ -73,6 +73,7 @@ struct ag_global_key {
 	SDLKey keysym;
 	SDLMod keymod;
 	void (*fn)(void);
+	void (*fn_ev)(AG_Event *);
 	SLIST_ENTRY(ag_global_key) gkeys;
 };
 static SLIST_HEAD(,ag_global_key) agGlobalKeys =
@@ -132,8 +133,7 @@ PerfMonitorInit(void)
 	AG_WindowSetPosition(agPerfWindow, AG_WINDOW_LOWER_CENTER, 0);
 	lbl = AG_LabelNewPolled(agPerfWindow, AG_LABEL_HFILL,
 	    "%dms (nom %dms), %d evnt, %dms idle",
-	    &agView->rCur, &agView->rNom, &agEventAvg,
-	    &agIdleAvg);
+	    &agView->rCur, &agView->rNom, &agEventAvg, &agIdleAvg);
 	AG_LabelPrescale(lbl, 1, "000ms (nom 000ms), 00 evnt, 000ms idle");
 	agPerfGraph = AG_FixedPlotterNew(agPerfWindow, AG_FIXED_PLOTTER_LINES,
 	                                               AG_FIXED_PLOTTER_XAXIS|
@@ -181,9 +181,8 @@ AG_EventLoop_FixedFPS(void)
 				AG_WidgetDraw(win);
 				AG_MutexUnlock(&win->lock);
 
-				if (win->flags & AG_WINDOW_NOUPDATERECT) {
+				if (win->flags & AG_WINDOW_NOUPDATERECT)
 					continue;
-				}
 #ifdef DEBUG
 				if (WIDGET(win)->x < 0 ||
 				    WIDGET(win)->y < 0 ||
@@ -197,8 +196,9 @@ AG_EventLoop_FixedFPS(void)
 					    WIDGET(win)->w, WIDGET(win)->h);
 				}
 #endif
-				AG_UpdateRectQ(WIDGET(win)->x, WIDGET(win)->y,
-				               WIDGET(win)->w, WIDGET(win)->h);
+				AG_QueueVideoUpdate(
+				    WIDGET(win)->x, WIDGET(win)->y,
+				    WIDGET(win)->w, WIDGET(win)->h);
 			}
 			if (agView->ndirty > 0) {
 #ifdef HAVE_OPENGL
@@ -335,8 +335,13 @@ AG_ProcessEvent(SDL_Event *ev)
 				if (gk->keysym == ev->key.keysym.sym &&
 				    ((gk->keymod == KMOD_NONE &&
 				      ev->key.keysym.mod == KMOD_NONE) ||
-				      ev->key.keysym.mod & gk->keymod))
-					gk->fn();
+				      ev->key.keysym.mod & gk->keymod)) {
+					if (gk->fn != NULL) {
+						gk->fn();
+					} else if (gk->fn_ev != NULL) {
+						gk->fn_ev(NULL);
+					}
+				}
 			}
 		}
 		/* FALLTHROUGH */
@@ -427,6 +432,20 @@ AG_BindGlobalKey(SDLKey keysym, SDLMod keymod, void (*fn)(void))
 	gk->keysym = keysym;
 	gk->keymod = keymod;
 	gk->fn = fn;
+	gk->fn_ev = NULL;
+	SLIST_INSERT_HEAD(&agGlobalKeys, gk, gkeys);
+}
+
+void
+AG_BindGlobalKeyEv(SDLKey keysym, SDLMod keymod, void (*fn_ev)(AG_Event *))
+{
+	struct ag_global_key *gk;
+
+	gk = Malloc(sizeof(struct ag_global_key), M_EVENT);
+	gk->keysym = keysym;
+	gk->keymod = keymod;
+	gk->fn = NULL;
+	gk->fn_ev = fn_ev;
 	SLIST_INSERT_HEAD(&agGlobalKeys, gk, gkeys);
 }
 
