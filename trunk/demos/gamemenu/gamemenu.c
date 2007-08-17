@@ -33,7 +33,7 @@ CreateGameMenu(void)
 	 * and geometry of its child widgets. The flags request that this
 	 * container cover the entire window.
 	 */
-	fx = AG_FixedNew(win, AG_FIXED_HFILL|AG_FIXED_VFILL);
+	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
 
 	/*
 	 * Set the window background color to black since the background

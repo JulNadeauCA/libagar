@@ -118,7 +118,7 @@ CreateMainWindow(void)
 
 	win = AG_WindowNew(0);
 	
-	hb = AG_HBoxNew(win, AG_HBOX_HFILL|AG_HBOX_VFILL);
+	hb = AG_HBoxNew(win, AG_HBOX_EXPAND);
 	{
 		/* Create the AG_GLView widget. */
 		glv = AG_GLViewNew(hb, AG_GLVIEW_EXPAND);
