@@ -68,7 +68,7 @@ VG_ToolDestroy(VG_Tool *tool)
 			Free(wt, M_OBJECT);
 		}
 		if ((pwin = AG_WidgetParentWindow(tool->pane)) != NULL)
-			AG_WINDOW_UPDATE(pwin);
+			AG_WindowUpdate(pwin);
 	}
 	
 	for (kbinding = SLIST_FIRST(&tool->kbindings);
