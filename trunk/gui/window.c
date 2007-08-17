@@ -36,22 +36,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-const AG_WidgetOps agWindowOps = {
-	{
-		"AG_Widget:AG_Window",
-		sizeof(AG_Window),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_WindowDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_WindowDraw,
-	AG_WindowScale
-};
-
 const AG_WidgetStyleMod agWindowDefaultStyle = {
 	"default",
 	{
@@ -62,10 +46,10 @@ const AG_WidgetStyleMod agWindowDefaultStyle = {
 	NULL				/* misc fn */
 };
 
-static void AG_WindowResizeOp(int, AG_Window *, SDL_MouseMotionEvent *);
-static void AG_WindowMoveOp(AG_Window *, SDL_MouseMotionEvent *);
-static void AG_WindowShownEv(AG_Event *);
-static void AG_WindowHiddenEv(AG_Event *);
+static void Resize(int, AG_Window *, SDL_MouseMotionEvent *);
+static void Move(AG_Window *, SDL_MouseMotionEvent *);
+static void Shown(AG_Event *);
+static void Hidden(AG_Event *);
 
 AG_Mutex agWindowLock = AG_MUTEX_INITIALIZER;
 int	 agWindowXOffs = 0;
@@ -131,13 +115,11 @@ AG_WindowInit(void *p, const char *name, int flags)
 	win->flags = flags;
 	win->visible = 0;
 	win->alignment = AG_WINDOW_CENTER;
-	win->spacing = 2;
-	win->lPad = agColorsBorderSize;
-	win->rPad = agColorsBorderSize;
-	win->tPad = ((win->flags & AG_WINDOW_NOTITLE) == 0 ||
-	             (win->flags & AG_WINDOW_NOBORDERS)) ?
-		    0 : agColorsBorderSize;
-	win->bPad = agColorsBorderSize + 1;
+	win->spacing = 3;
+	win->lPad = 2;
+	win->rPad = 2;
+	win->tPad = 2;
+	win->bPad = 2;
 	win->minw = win->lPad + win->rPad;
 	win->minh = win->tPad + win->bPad +
 	            ((win->flags&AG_WINDOW_NOTITLE) ? 0 : agTextFontHeight);
@@ -165,10 +147,14 @@ AG_WindowInit(void *p, const char *name, int flags)
 	win->tbar = (flags & AG_WINDOW_NOTITLE) ? NULL :
 	    AG_TitlebarNew(win, titlebar_flags);
 
-	/* Automatically notify children of visibility changes. */
-	ev = AG_SetEvent(win, "widget-shown", AG_WindowShownEv, NULL);
+	/* Arrange for visiblity change events to be forwarded to children. */
+	ev = AG_SetEvent(win, "widget-shown", Shown, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
-	ev = AG_SetEvent(win, "widget-hidden", AG_WindowHiddenEv, NULL);
+	ev = AG_SetEvent(win, "widget-hidden", Hidden, NULL);
+	ev->flags |= AG_EVENT_PROPAGATE;
+
+	/* Arrange for focus change events to be forwarded to children. */
+	ev = AG_SetEvent(win, "widget-gainfocus", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(win, "widget-lostfocus", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
@@ -203,8 +189,8 @@ AG_WindowDetach(AG_Window *win, AG_Window *subwin)
 	AG_MutexUnlock(&agView->lock);
 }
 
-void
-AG_WindowDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_Window *win = p;
 	int i;
@@ -230,7 +216,7 @@ AG_WindowDraw(void *p)
 	}
 	for (i = 1; i < agColorsBorderSize-1; i++) {
 		agPrim.vline(win,
-		    i,
+		    i-1,
 		    i, WIDGET(win)->h - i,
 		    agColorsBorder[i-1]);
 		agPrim.vline(win,
@@ -290,8 +276,8 @@ AG_WindowDraw(void *p)
 	}
 }
 
-void
-AG_WindowDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Window *win = p;
 
@@ -301,7 +287,7 @@ AG_WindowDestroy(void *p)
 }
 
 static void
-AG_WindowShownEv(AG_Event *event)
+Shown(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 
@@ -316,15 +302,18 @@ AG_WindowShownEv(AG_Event *event)
 	}
 
 	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
-		/* First pass: initial sizing. */
-		WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
-		    WIDGET(win)->h);
+		AG_SizeReq rWin;
+		AG_SizeAlloc aWin;
 
-		/* Second pass: [wh]fill and homogenous divisions. */
-		WIDGET_OPS(win)->scale(win, WIDGET(win)->w,
-		    WIDGET(win)->h);
-	
-		/* Position the window and cache the absolute widget coords. */
+		AG_WidgetSizeReq(win, &rWin);
+		if (rWin.w > agView->w) { rWin.w = agView->w; }
+		if (rWin.h > agView->h) { rWin.h = agView->h; }
+		aWin.x = 0;
+		aWin.y = 0;
+		aWin.w = rWin.w;
+		aWin.h = rWin.h;
+		AG_WidgetSizeAlloc(win, &aWin);
+
 		AG_WindowApplyAlignment(win, win->alignment);
 		AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 	}
@@ -332,7 +321,7 @@ AG_WindowShownEv(AG_Event *event)
 }
 
 static void
-AG_WindowHiddenEv(AG_Event *event)
+Hidden(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 
@@ -345,6 +334,7 @@ AG_WindowHiddenEv(AG_Event *event)
 	}
 
 	/* Update the background if necessary. */
+	/* XXX TODO Avoid drawing over KEEPABOVE windows */
 //	if (!AG_WindowIsSurrounded(win)) {
 		agPrim.rect_filled(win, 0, 0,
 		    WIDGET(win)->w,
@@ -491,11 +481,35 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 }
 
 /*
+ * Clamp the window geometry/coordinates down to the view area.
+ * The window must be locked.
+ */
+static void
+ClampToView(AG_Window *win)
+{
+	AG_Widget *w = WIDGET(win);
+	
+	if (w->x + w->w > agView->w) { w->x = agView->w - w->w; }
+	if (w->y + w->h > agView->h) { w->y = agView->h - w->h; }
+	if (w->x < 0) { w->x = 0; }
+	if (w->y < 0) { w->y = 0; }
+
+	if (w->x+w->w > agView->w) {
+		w->x = 0;
+		w->w = agView->w - 1;
+	}
+	if (w->y+w->h > agView->h) {
+		w->y = 0;
+		w->h = agView->h - 1;
+	}
+}
+
+/*
  * Move a window using the mouse.
  * The view and window must be locked.
  */
 static void
-AG_WindowMoveOp(AG_Window *win, SDL_MouseMotionEvent *motion)
+Move(AG_Window *win, SDL_MouseMotionEvent *motion)
 {
 	SDL_Rect oldpos, newpos, rfill1, rfill2;
 
@@ -506,11 +520,12 @@ AG_WindowMoveOp(AG_Window *win, SDL_MouseMotionEvent *motion)
 
 	WIDGET(win)->x += motion->xrel;
 	WIDGET(win)->y += motion->yrel;
-	AG_WindowClamp(win);
+	ClampToView(win);
 
 	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 
 	/* Update the background. */
+	/* XXX TODO Avoid drawing over KEEPABOVE windows */
 	newpos.x = WIDGET(win)->x;
 	newpos.y = WIDGET(win)->y;
 	newpos.w = WIDGET(win)->w;
@@ -706,23 +721,20 @@ process:
 			case AG_WINOP_NONE:
 				break;
 			case AG_WINOP_MOVE:
-				AG_WindowMoveOp(win, &ev->motion);
+				Move(win, &ev->motion);
 				AG_MutexUnlock(&win->lock);
 				rv = 1;
 				goto out;
 			case AG_WINOP_LRESIZE:
-				AG_WindowResizeOp(AG_WINOP_LRESIZE, win,
-				    &ev->motion);
+				Resize(AG_WINOP_LRESIZE, win, &ev->motion);
 				AG_MutexUnlock(&win->lock);
 				goto out;
 			case AG_WINOP_RRESIZE:
-				AG_WindowResizeOp(AG_WINOP_RRESIZE, win,
-				    &ev->motion);
+				Resize(AG_WINOP_RRESIZE, win, &ev->motion);
 				AG_MutexUnlock(&win->lock);
 				goto out;
 			case AG_WINOP_HRESIZE:
-				AG_WindowResizeOp(AG_WINOP_HRESIZE, win,
-				    &ev->motion);
+				Resize(AG_WINOP_HRESIZE, win, &ev->motion);
 				AG_MutexUnlock(&win->lock);
 				goto out;
 			default:
@@ -932,100 +944,123 @@ outf:
 	return (rv);
 }
 
-/*
- * Clamp the window geometry/coordinates down to the view area.
- * The window must be locked.
- */
 void
-AG_WindowClamp(AG_Window *win)
+AG_WindowUpdate(AG_Window *win)
 {
-	AG_Widget *w = WIDGET(win);
-	
-	if (w->x + w->w > agView->w)
-		w->x = agView->w - w->w;
-	if (w->y + w->h > agView->h)
-		w->y = agView->h - w->h;
+	AG_SizeAlloc a;
 
-	if (w->x < 0)
-		w->x = 0;
-	if (w->y < 0)
-		w->y = 0;
-
-	if (w->x+w->w > agView->w) {
-		w->x = 0;
-		w->w = agView->w - 1;
+	if (WIDGET(win)->x != -1 && WIDGET(win)->y != -1) {
+		a.x = WIDGET(win)->x;
+		a.y = WIDGET(win)->y;
+		a.w = WIDGET(win)->w;
+		a.h = WIDGET(win)->h;
+		AG_WidgetSizeAlloc(win, &a);
 	}
-	if (w->y+w->h > agView->h) {
-		w->y = 0;
-		w->h = agView->h - 1;
-	}
+	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 }
 
-/* Set the window coordinates and geometry. The window must be locked. */
-void
+/* 
+ * Set window coordinates and geometry. This should be used instead of
+ * a direct WidgetSizeAlloc() since it redraws portions of the window
+ * background when needed.
+ */
+int
 AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 {
-	SDL_Rect rfill1, rfill2;
-	int ox = WIDGET(win)->x;
-	int oy = WIDGET(win)->y;
-	int ow = WIDGET(win)->w;
-	int oh = WIDGET(win)->h;
+	AG_SizeReq rWin;
+	AG_SizeAlloc aWin;
+	SDL_Rect rFill;
+	int new;
+	int ox, oy, ow, oh;
+	int nw, nh;
+
+	AG_MutexLock(&win->lock);
+	ox = WIDGET(win)->x;
+	oy = WIDGET(win)->y;
+	ow = WIDGET(win)->w;
+	oh = WIDGET(win)->h;
+	aWin.x = (x >= 0) ? x : ox;
+	aWin.y = (y >= 0) ? y : oy;
+	aWin.w = (w >= 0) ? w : ow;
+	aWin.h = (h >= 0) ? h : oh;
+	new = ((WIDGET(win)->x == -1 || WIDGET(win)->y == -1));
+
+	if (w == -1 || h == -1) {
+		AG_WidgetSizeReq(win, &rWin);
+		nw = (w == -1) ? rWin.w : w;
+		nh = (h == -1) ? rWin.h : h;
+	} else {
+		nw = w;
+		nh = h;
+	}
+
+	/* Limit the window to the view boundaries. */
+	if ( (x + w) > agView->w ) {
+		aWin.x = ox;
+		aWin.w = ow;
+	} else {
+		aWin.x = (x == -1) ? WIDGET(win)->x : x;
+		aWin.w = nw;
+	}
+	if ( (y + h) > agView->h ) {
+		aWin.y = oy;
+		aWin.h = oh;
+	} else {
+		aWin.y = (y == -1) ? WIDGET(win)->y : y;
+		aWin.h = nh;
+	}
 	
-	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
-		/* Find the minimum geometry. */
-		AG_WindowScale(win, -1, -1);
+	/* Size the widgets and update their coordinates. */
+	if (AG_WidgetSizeAlloc(win, &aWin) == -1) {
+		if (!new) {				/* Revert */
+			aWin.x = ox;
+			aWin.y = oy;
+			aWin.w = ow;
+			aWin.h = oh;
+			AG_WidgetSizeAlloc(win, &aWin);
+			goto fail;
+		} else {
+			goto fail;
+		}
 	}
-
-	/* Limit the window within the view boundaries. */
-	if (x+w > agView->w) {
-		WIDGET(win)->x = ox;
-		WIDGET(win)->w = ow;
-	} else {
-		WIDGET(win)->x = x >= 0 ? x : 0;
-		WIDGET(win)->w = w < win->minw ? win->minw : w;
-	}
-	if (y+h > agView->h) {
-		WIDGET(win)->y = oy;
-		WIDGET(win)->h = oh;
-	} else {
-		WIDGET(win)->y = y >= 0 ? y : 0;
-		WIDGET(win)->h = h < win->minh ? win->minh : h;
-	}
-
-	/* Effect the possible changes in geometry. */
-	AG_WINDOW_UPDATE(win);
+	AG_WidgetUpdateCoords(win, aWin.x, aWin.y);
 
 	/* Update the background. */
-	rfill1.w = 0;
-	rfill2.w = 0;
-
-	if (WIDGET(win)->x > ox) {			/* L-resize */
-		rfill1.x = ox;
-		rfill1.y = oy;
-		rfill1.w = WIDGET(win)->x - ox;
-		rfill1.h = WIDGET(win)->h;
-	} else if (WIDGET(win)->w < ow) {		/* R-resize */
-		rfill1.x = WIDGET(win)->x + WIDGET(win)->w;
-		rfill1.y = WIDGET(win)->y;
-		rfill1.w = ow - WIDGET(win)->w;
-		rfill1.h = oh;
-	}
-	if (WIDGET(win)->h < oh) {			/* H-resize */
-		rfill2.x = ox;
-		rfill2.y = WIDGET(win)->y + WIDGET(win)->h;
-		rfill2.w = ow;
-		rfill2.h = oh - WIDGET(win)->h;
-	}
-	if (!agView->opengl) {
-		if (rfill1.w > 0) {
-			SDL_FillRect(agView->v, &rfill1, AG_COLOR(BG_COLOR));
-			SDL_UpdateRects(agView->v, 1, &rfill1);
+	/* XXX TODO Avoid drawing over KEEPABOVE windows */
+	if (win->visible && !new && !agView->opengl) {
+		if (WIDGET(win)->x > ox) {			/* L-resize */
+			rFill.x = ox;
+			rFill.y = oy;
+			rFill.w = WIDGET(win)->x - ox;
+			rFill.h = WIDGET(win)->h;
+		} else if (WIDGET(win)->w < ow) {		/* R-resize */
+			rFill.x = WIDGET(win)->x + WIDGET(win)->w;
+			rFill.y = WIDGET(win)->y;
+			rFill.w = ow - WIDGET(win)->w;
+			rFill.h = oh;
+		} else {
+			rFill.w = 0;
+			rFill.h = 0;
 		}
-		if (rfill2.w > 0) {
-			SDL_FillRect(agView->v, &rfill2, AG_COLOR(BG_COLOR));
-			SDL_UpdateRects(agView->v, 1, &rfill2);
+		if (rFill.w > 0 && rFill.h > 0) {
+			SDL_FillRect(agView->v, &rFill, AG_COLOR(BG_COLOR));
+			SDL_UpdateRects(agView->v, 1, &rFill);
+		}
+		if (WIDGET(win)->h < oh) {			/* H-resize */
+			rFill.x = ox;
+			rFill.y = WIDGET(win)->y + WIDGET(win)->h;
+			rFill.w = ow;
+			rFill.h = oh - WIDGET(win)->h;
+			SDL_FillRect(agView->v, &rFill, AG_COLOR(BG_COLOR));
+			SDL_UpdateRects(agView->v, 1, &rFill);
 		}
 	}
+out:
+	AG_MutexUnlock(&win->lock);
+	return (0);
+fail:
+	AG_MutexUnlock(&win->lock);
+	return (-1);
 }
 
 void
@@ -1041,18 +1076,21 @@ void
 AG_WindowMaximize(AG_Window *win)
 {
 	AG_WindowSaveGeometry(win);
-	AG_WindowSetGeometry(win, 0, 0, agView->w, agView->h);
-	win->flags |= AG_WINDOW_MAXIMIZED;
+	if (AG_WindowSetGeometry(win, 0, 0, agView->w, agView->h) == 0)
+		win->flags |= AG_WINDOW_MAXIMIZED;
 }
 
 void
 AG_WindowUnmaximize(AG_Window *win)
 {
-	AG_WindowSetGeometry(win, win->savx, win->savy, win->savw, win->savh);
-	win->flags &= ~(AG_WINDOW_MAXIMIZED);
-	if (!agView->opengl) {
-		SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
-		SDL_UpdateRect(agView->v, 0, 0, agView->v->w, agView->v->h);
+	if (AG_WindowSetGeometry(win, win->savx, win->savy, win->savw,
+	    win->savh) == 0) {
+		win->flags &= ~(AG_WINDOW_MAXIMIZED);
+		if (!agView->opengl) {
+			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+			SDL_UpdateRect(agView->v, 0, 0, agView->v->w,
+			    agView->v->h);
+		}
 	}
 }
 
@@ -1068,7 +1106,7 @@ AG_WindowMinimize(AG_Window *win)
  * The window must be locked.
  */
 static void
-AG_WindowResizeOp(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
+Resize(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 {
 	int x = WIDGET(win)->x;
 	int y = WIDGET(win)->y;
@@ -1110,16 +1148,6 @@ AG_WindowResizeOp(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 	default:
 		break;
 	}
-#if 0
-	if (!agWindowAnySize) {
-		if (w < win->minw)
-			w = win->minw;
-		if (h < win->minh)
-			h = win->minh;
-	}
-	if (x < 0) x = 0;
-	if (y < 0) y = 0;
-#endif
 	AG_WindowSetGeometry(win, x, y, w, h);
 }
 
@@ -1149,95 +1177,148 @@ AG_WindowCloseGenEv(AG_Event *event)
 	AG_PostEvent(NULL, AG_PTR(1), "window-close", NULL);
 }
 
-void
-AG_WindowScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Window *win = p;
-	AG_Widget *wid;
+	AG_Widget *chld;
+	AG_SizeReq rChld, rTbar;
+	int nWidgets, wPad;
+	
+	AG_MutexLock(&win->lock);
+
+	r->w = win->lPad + win->rPad;
+	r->h = win->bPad + win->tPad;
+
+	if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
+		r->w += agColorsBorderSize*2;
+		r->h += agColorsBorderSize;
+		if (win->tbar == NULL) {
+			r->h += agColorsBorderSize;
+		}
+		wPad = win->lPad + win->rPad + agColorsBorderSize*2;
+	} else {
+		wPad = win->lPad + win->rPad;
+	}
+	if (win->tbar != NULL) {
+		AG_WidgetSizeReq(win->tbar, &rTbar);
+		r->w = MAX(r->w, rTbar.w);
+		r->h += rTbar.h;
+	}
+	nWidgets = 0;
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
+		if (chld == WIDGET(win->tbar)) {
+			continue;
+		}
+		AG_WidgetSizeReq(chld, &rChld);
+		r->w = MAX(r->w, rChld.w + wPad);
+		r->h += rChld.h + win->spacing;
+		nWidgets++;
+	}
+	if (nWidgets > 0 && r->h >= win->spacing)
+		r->h -= win->spacing;
+
+	if (!agWindowAnySize) {
+		win->minw = r->w;
+		win->minh = r->h;
+	} else {
+		win->minw = win->lPad + win->rPad + agColorsBorderSize*2;
+		win->minh = win->tPad + win->bPad + agColorsBorderSize*2;
+		if (win->tbar != NULL) {
+			win->minw = MAX(win->minw,rTbar.w);
+			win->minh += rTbar.h;
+		}
+	}
+	ClampToView(win);
+	AG_MutexUnlock(&win->lock);
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Window *win = p;
+	AG_Widget *chld;
+	AG_SizeReq rChld;
+	AG_SizeAlloc aChld;
+	int wAvail, hAvail;
 	int totFixed;
-	int x, y, dx, dy;
 	int nWidgets;
-	int isTitlebar = 0;
 
 	AG_MutexLock(&win->lock);
 
-	y = ((win->flags & AG_WINDOW_NOTITLE) == 0 ||
-	     (win->flags & AG_WINDOW_NOBORDERS)) ?
-	     0 : win->tPad;
-	x = win->lPad;
-	y = win->tPad;
-
-	if (w == -1 && h == -1) {
-		int wMax = 0;
-
-		WIDGET(win)->w = win->lPad + win->rPad;
-		WIDGET(win)->h = win->tPad + win->bPad;
-		nWidgets = 0;
-		OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
-			wid->x = x;
-			wid->y = y;
-			WIDGET_OPS(wid)->scale(wid, -1, -1);
-
-			if (wMax < wid->w) {
-				wMax = wid->w;
-			}
-			dx = win->lPad + wMax + win->rPad;
-			if (WIDGET(win)->w < dx)
-				WIDGET(win)->w = dx;
-
-			isTitlebar = AG_ObjectIsClass(wid, "AG_Widget:AG_Box:"
-			                                   "AG_Titlebar");
-			dy = wid->h + (isTitlebar ? win->tPad : win->spacing);
-			y += dy;
-			WIDGET(win)->h += dy;
-			nWidgets++;
-		}
-		if (nWidgets > 0)
-			WIDGET(win)->h -= win->spacing;
-
-		win->minw = WIDGET(win)->w;
-		win->minh = WIDGET(win)->h;
-		goto out;
+	/* Calculate total space available for widgets. */
+	wAvail = a->w - win->lPad - win->rPad;
+	hAvail = a->h - win->tPad - win->bPad;
+	if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
+		wAvail -= agColorsBorderSize*2;
+		hAvail -= agColorsBorderSize;
 	}
 
-	/* Sum the space requested by fixed widgets. */
+	/* Calculate the space occupied by non-fill widgets. */
 	nWidgets = 0;
 	totFixed = 0;
-	OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
-		WIDGET_OPS(wid)->scale(wid, -1, -1);
-		if ((wid->flags & AG_WIDGET_VFILL) == 0) {
-			totFixed += wid->h + win->spacing;
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
+		AG_WidgetSizeReq(chld, &rChld);
+		if ((chld->flags & AG_WIDGET_VFILL) == 0) {
+			totFixed += rChld.h;
+		}
+		if (chld != WIDGET(win->tbar)) {
+			totFixed += win->spacing;
 		}
 		nWidgets++;
 	}
-	if (nWidgets > 0)
+	if (nWidgets > 0 && totFixed >= win->spacing)
 		totFixed -= win->spacing;
 
-	OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
-		wid->x = x;
-		wid->y = y;
-		isTitlebar = AG_ObjectIsClass(wid, "AG_Widget:AG_Box:"
-		                                   "AG_Titlebar");
-		if (wid->flags & AG_WIDGET_HFILL) {
-			wid->w = isTitlebar ? w :
-			                      w - (win->lPad + win->rPad);
-		}
-		if (wid->flags & AG_WIDGET_VFILL) {
-			wid->h = h - totFixed - win->bPad - win->tPad;
-		}
-		WIDGET_OPS(wid)->scale(wid, wid->w, wid->h);
-		y += wid->h;
-		y += isTitlebar ? win->tPad : win->spacing;
-	}
-
+	/* Position the widgets. */
 	if (win->tbar != NULL) {
-		WIDGET(win->tbar)->x = 0;
-		WIDGET(win->tbar)->y = 0;
-		WIDGET(win->tbar)->w = w;
+		AG_WidgetSizeReq(win->tbar, &rChld);
+		aChld.x = 0;
+		aChld.y = 0;
+		aChld.w = a->w;
+		aChld.h = rChld.h;
+		AG_WidgetSizeAlloc(win->tbar, &aChld);
+		aChld.x = win->lPad;
+		aChld.y = rChld.h + win->tPad;
+		if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
+			aChld.x += agColorsBorderSize;
+		}
+	} else {
+		aChld.x = win->lPad;
+		aChld.y = win->tPad;
+		if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
+			aChld.x += agColorsBorderSize;
+			aChld.y += agColorsBorderSize;
+		}
+	}
+	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
+		AG_WidgetSizeReq(chld, &rChld);
+		if (chld == WIDGET(win->tbar)) {
+			continue;
+		}
+		if (chld->flags & AG_WIDGET_IGNORE_PADDING) {
+			AG_SizeAlloc aTmp;
+
+			aTmp.x = 0;
+			aTmp.y = aChld.y;
+			aTmp.w = a->w;
+			aTmp.h = rChld.h;
+			AG_WidgetSizeAlloc(chld, &aTmp);
+			aChld.y += aTmp.h + win->spacing;
+			continue;
+		} else {
+			aChld.w = (chld->flags & AG_WIDGET_HFILL) ?
+			          wAvail : rChld.w;
+		}
+		aChld.h = (chld->flags & AG_WIDGET_VFILL) ?
+		          hAvail-totFixed : rChld.h;
+		AG_WidgetSizeAlloc(chld, &aChld);
+		aChld.y += aChld.h + win->spacing;
 	}
 out:
-	AG_WindowClamp(win);
+	ClampToView(win);
 	AG_MutexUnlock(&win->lock);
+	return (0);
 }
 
 /* Change the spacing between child widgets. */
@@ -1334,7 +1415,7 @@ AG_WindowApplyAlignment(AG_Window *win, enum ag_window_alignment alignment)
 		WIDGET(win)->y = 0;
 		break;
 	}
-	AG_WindowClamp(win);
+	ClampToView(win);
 }
 
 /* Set the text to show inside a window's titlebar. */
@@ -1352,9 +1433,31 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 	va_start(ap, fmt);
 	vsnprintf(s, sizeof(s), fmt, ap);
 	va_end(ap);
-
-	if (win->tbar != NULL) {
-		AG_TitlebarSetCaption(win->tbar, s);
-	}
+	
 	strlcpy(win->caption, s, sizeof(win->caption));
+	AG_WindowUpdateCaption(win);
 }
+
+void
+AG_WindowUpdateCaption(AG_Window *win)
+{
+	if (win->tbar != NULL)
+		AG_TitlebarSetCaption(win->tbar, win->caption);
+}
+
+const AG_WidgetOps agWindowOps = {
+	{
+		"AG_Widget:AG_Window",
+		sizeof(AG_Window),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

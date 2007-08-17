@@ -114,6 +114,9 @@ for notebook-style display.
 .Ft void
 .Fn AG_WindowFocus "AG_Window *win"
 .Pp
+.Ft int
+.Fn AG_WindowFocusNamed "const char *name"
+.Pp
 .nr nS 0
 The
 .Fn AG_WindowNew
@@ -311,6 +314,9 @@ function sets the focus on the given window.
 If the currently focused window has the
 .Dv AG_WINDOW_KEEPABOVE
 flag set, this function becomes a no-op.
+.Fn AG_WindowFocusNamed
+sets the focus on the window of the given name and returns 0 on success
+or -1 if the window was not found.
 .Sh VISIBILITY
 .nr nS 1
 .Ft void
