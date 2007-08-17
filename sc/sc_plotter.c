@@ -40,22 +40,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-static AG_WidgetOps scPlotterOps = {
-	{
-		"AG_Widget:SC_Plotter",
-		sizeof(SC_Plotter),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		NULL,			/* destroy */
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	SC_PlotterDraw,
-	SC_PlotterScale
-};
-
 SC_Plotter *
 SC_PlotterNew(void *parent, Uint flags)
 {
@@ -418,50 +402,48 @@ SC_PlotterPrescale(SC_Plotter *ptr, Uint w, Uint h)
 	ptr->hPre = h;
 }
 
-void
-SC_PlotterScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	SC_Plotter *ptr = p;
-	SC_Plot *pl;
 
-	if (w == -1 && h == -1) {
-		WIDGET(ptr)->w = ptr->wPre;
-		WIDGET(ptr)->h = ptr->hPre;
-		if (ptr->flags & SC_PLOTTER_SCROLL) {
-			ptr->xOffs = 0;
-		}
-		return;
-	}
+	r->w = ptr->wPre;
+	r->h = ptr->hPre;
+	if (ptr->flags & SC_PLOTTER_SCROLL)
+		ptr->xOffs = 0;
+}
 
-	WIDGET(ptr->hbar)->x = 0;
-	WIDGET(ptr->hbar)->y = WIDGET(ptr)->h - ptr->hbar->bw;
-	WIDGET(ptr->hbar)->w = WIDGET(ptr)->w;
-	WIDGET(ptr->hbar)->h = ptr->hbar->bw;
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	SC_Plotter *ptr = p;
+	AG_SizeAlloc aChld;
 
-	WIDGET(ptr->vbar)->x = WIDGET(ptr)->w - ptr->vbar->bw;
-	WIDGET(ptr->vbar)->y = ptr->vbar->bw;
-	WIDGET(ptr->vbar)->w = ptr->vbar->bw;
-	WIDGET(ptr->vbar)->h = WIDGET(ptr)->h - ptr->vbar->bw;
-#if 0	
-	TAILQ_FOREACH(pl, &ptr->plots, plots) {
-		SDL_Surface *lbl;
-		
-		if (pl->label == -1) { continue; }
-		lbl = WSURFACE(ptr,pl->label);
-		if (pl->xLabel+lbl->w > w) { pl->xLabel = w - lbl->w; }
-		if (pl->yLabel+lbl->h > h) { pl->yLabel = h - lbl->h; }
-	}
-#endif
+	if (a->w < 2 || a->h < 2)
+		return (-1);
+
+	aChld.x = 0;
+	aChld.y = a->h - ptr->hbar->bw;
+	aChld.w = a->w;
+	aChld.h = ptr->hbar->bw;
+	AG_WidgetSizeAlloc(ptr->hbar, &aChld);
+
+	aChld.x = a->w - ptr->vbar->bw;
+	aChld.y = ptr->vbar->bw;
+	aChld.w = ptr->vbar->bw;
+	aChld.h = a->h - ptr->hbar->bw;
+	AG_WidgetSizeAlloc(ptr->vbar, &aChld);
+	return (0);
 }
 
 static __inline__ SC_Real
-SC_PlotterScaleReal(SC_Plotter *ptr, SC_Plot *pl, SC_Real r)
+ScaleReal(SC_Plotter *ptr, SC_Plot *pl, SC_Real r)
 {
 	return (r*(ptr->yScale*pl->yScale));
 }
 
-void
-SC_PlotterDraw(void *p)
+static void
+Draw(void *p)
 {
 	SC_Plotter *ptr = p;
 	SC_Plot *pl;
@@ -503,7 +485,7 @@ SC_PlotterDraw(void *p)
 		case SC_PLOT_POINTS:
 			for (i = 0; i < pl->n; i++, x++) {
 				if (x < 0) { continue; }
-				y = SC_PlotterScaleReal(ptr, pl, pl->data.r[i]);
+				y = ScaleReal(ptr, pl, pl->data.r[i]);
 				if (agView->opengl) {
 					/* TODO */
 				} else {
@@ -517,7 +499,7 @@ SC_PlotterDraw(void *p)
 		case SC_PLOT_LINEAR:
 			for (i = 0; i < pl->n; i++, x++) {
 				if (x < 0) { continue; }
-				y = SC_PlotterScaleReal(ptr, pl, pl->data.r[i]);
+				y = ScaleReal(ptr, pl, pl->data.r[i]);
 				agPrim.line(ptr, x-1, py, x,
 				    y0 - y + pl->yOffs + ptr->yOffs,
 				    AG_VideoPixel(pl->color));
@@ -948,3 +930,20 @@ SC_PlotterSetDefaultScale(SC_Plotter *ptr, SC_Real xScale, SC_Real yScale)
 	ptr->xScale = xScale;
 	ptr->yScale = yScale;
 }
+
+const AG_WidgetOps scPlotterOps = {
+	{
+		"AG_Widget:SC_Plotter",
+		sizeof(SC_Plotter),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		NULL,			/* destroy */
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};
