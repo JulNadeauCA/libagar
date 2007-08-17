@@ -117,6 +117,8 @@ typedef struct map_view {
 #define AGMPIXSZ(mv)	AGMCAM(mv).pixsz
 
 __BEGIN_DECLS
+extern const AG_WidgetOps mapViewOps;
+
 MAP_View	*MAP_ViewNew(void *, MAP *, int, struct ag_toolbar *,
 		               struct ag_statusbar *);
 void	 	 MAP_ViewInit(MAP_View *, MAP *, int,
@@ -126,9 +128,6 @@ __inline__ void MAP_ViewPixel2i(MAP_View *, int, int);
 __inline__ void MAP_ViewHLine(MAP_View *, int, int, int);
 __inline__ void MAP_ViewVLine(MAP_View *, int, int, int);
 
-void	 MAP_ViewDestroy(void *);
-void	 MAP_ViewDraw(void *);
-void	 MAP_ViewScale(void *, int, int);
 void	 MAP_ViewPrescale(MAP_View *, int, int);
 void	 MAP_ViewCenter(MAP_View *, int, int);
 void	 MAP_ViewSetScale(MAP_View *, Uint, int);

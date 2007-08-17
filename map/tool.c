@@ -70,7 +70,7 @@ MAP_ToolDestroy(MAP_Tool *tool)
 			Free(wt, M_OBJECT);
 		}
 		if ((pwin = AG_WidgetParentWindow(tool->pane)) != NULL)
-			AG_WINDOW_UPDATE(pwin);
+			AG_WindowUpdate(pwin);
 	}
 	
 	for (i = 0; i < tool->nstatus; i++)
