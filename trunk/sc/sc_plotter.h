@@ -115,11 +115,11 @@ typedef struct sc_plotter {
 } SC_Plotter;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps scPlotterOps;
+
 SC_Plotter	*SC_PlotterNew(void *, Uint);
 void	 	 SC_PlotterInit(SC_Plotter *, Uint);
-void	 	 SC_PlotterScale(void *, int, int);
 void	 	 SC_PlotterPrescale(SC_Plotter *, Uint, Uint);
-void		 SC_PlotterDraw(void *);
 void		 SC_PlotterUpdate(SC_Plotter *);
 __inline__ void	 SC_PlotterSetDefaultFont(SC_Plotter *, const char *, int);
 __inline__ void	 SC_PlotterSetDefaultColor(SC_Plotter *, int, Uint8, Uint8,

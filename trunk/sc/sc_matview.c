@@ -32,45 +32,32 @@
 #include <gui/button.h>
 #include <gui/primitive.h>
 
-static AG_WidgetOps agMatviewOps = {
-	{
-		"AG_Widget:AG_Matview",
-		sizeof(AG_Matview),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		NULL,			/* destroy */
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_MatviewDrawNumerical,
-	AG_MatviewScale
-};
+static void DrawNumerical(void *);
+static void DrawGreyscale(void *);
 
-AG_Matview *
-AG_MatviewNew(void *parent, SC_Matrix *mat, Uint flags)
+SC_Matview *
+SC_MatviewNew(void *parent, SC_Matrix *mat, Uint flags)
 {
-	AG_Matview *mv;
+	SC_Matview *mv;
 
-	mv = Malloc(sizeof(AG_Matview), M_OBJECT);
-	AG_MatviewInit(mv, mat, flags);
+	mv = Malloc(sizeof(SC_Matview), M_OBJECT);
+	SC_MatviewInit(mv, mat, flags);
 	AG_ObjectAttach(parent, mv);
 	return (mv);
 }
 
 static void
-matview_keydown(AG_Event *event)
+keydown(AG_Event *event)
 {
-	AG_Matview *mv = AG_SELF();
+	SC_Matview *mv = AG_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
 	case SDLK_g:
-		WIDGET_OPS(mv)->draw = AG_MatviewDrawGreyscale;
+		WIDGET_OPS(mv)->draw = DrawGreyscale;
 		break;
 	case SDLK_n:
-		WIDGET_OPS(mv)->draw = AG_MatviewDrawNumerical;
+		WIDGET_OPS(mv)->draw = DrawNumerical;
 		break;
 	case SDLK_EQUALS:
 		mv->scale++;
@@ -84,7 +71,7 @@ matview_keydown(AG_Event *event)
 }
 
 static void
-matview_mousebuttondown(AG_Event *event)
+mousebuttondown(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 
@@ -92,9 +79,9 @@ matview_mousebuttondown(AG_Event *event)
 }
 
 void
-AG_MatviewInit(AG_Matview *mv, SC_Matrix *mat, Uint flags)
+SC_MatviewInit(SC_Matview *mv, SC_Matrix *mat, Uint flags)
 {
-	AG_WidgetInit(mv, &agMatviewOps, AG_WIDGET_EXPAND|AG_WIDGET_CLIPPING|
+	AG_WidgetInit(mv, &scMatviewOps, AG_WIDGET_EXPAND|AG_WIDGET_CLIPPING|
 	                                 AG_WIDGET_FOCUSABLE);
 	mv->mat = mat;
 	mv->flags = flags;
@@ -117,54 +104,58 @@ AG_MatviewInit(AG_Matview *mv, SC_Matrix *mat, Uint flags)
 	AG_WidgetSetInt(mv->vbar, "min", 0);
 
 	AG_TextSize("-00", &mv->ent_w, &mv->ent_h);
-	AG_SetEvent(mv, "window-keydown", matview_keydown, NULL);
-	AG_SetEvent(mv, "window-mousebuttondown", matview_mousebuttondown,
-	    NULL);
+	AG_SetEvent(mv, "window-keydown", keydown, NULL);
+	AG_SetEvent(mv, "window-mousebuttondown", mousebuttondown, NULL);
 }
 
 void
-AG_MatviewSetNumericalFmt(AG_Matview *mv, const char *fmt)
+SC_MatviewSetNumericalFmt(SC_Matview *mv, const char *fmt)
 {
 	mv->numfmt = fmt;
 }
 
 void
-AG_MatviewPrescale(AG_Matview *mv, const char *text, Uint m, Uint n)
+SC_MatviewPrescale(SC_Matview *mv, const char *text, Uint m, Uint n)
 {
 	mv->pre_m = m;
 	mv->pre_n = n;
 	AG_TextSize(text, &mv->ent_w, &mv->ent_h);
 }
 
-void
-AG_MatviewScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_Matview *mv = p;
+	SC_Matview *mv = p;
 
-	if (w == -1 && h == -1) {
-		WIDGET(mv)->w = mv->pre_n*(mv->ent_w + mv->hspace) +
-		    mv->hspace*2;
-		WIDGET(mv)->h = mv->pre_m*(mv->ent_h + mv->vspace) +
-		    mv->vspace*2;
-		return;
-	}
-
-	WIDGET(mv->hbar)->x = 0;
-	WIDGET(mv->hbar)->y = WIDGET(mv)->h - mv->hbar->bw;
-	WIDGET(mv->hbar)->w = WIDGET(mv)->w;
-	WIDGET(mv->hbar)->h = mv->hbar->bw;
-
-	WIDGET(mv->vbar)->x = WIDGET(mv)->w - mv->vbar->bw;
-	WIDGET(mv->vbar)->y = mv->vbar->bw;
-	WIDGET(mv->vbar)->w = mv->vbar->bw;
-	WIDGET(mv->vbar)->h = WIDGET(mv)->h - mv->vbar->bw;
+	r->w = mv->pre_n*(mv->ent_w + mv->hspace) + mv->hspace*2;
+	r->h = mv->pre_m*(mv->ent_h + mv->vspace) + mv->vspace*2;
 }
 
-void
-AG_MatviewDrawNumerical(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	SC_Matview *mv = p;
+	AG_SizeAlloc aChld;
+
+	aChld.x = 0;
+	aChld.y = a->h - mv->hbar->bw;
+	aChld.w = a->w;
+	aChld.h = mv->hbar->bw;
+	AG_WidgetSizeAlloc(mv->hbar, &aChld);
+
+	aChld.x = a->w - mv->vbar->bw;
+	aChld.y = mv->vbar->bw;
+	aChld.w = mv->vbar->bw;
+	aChld.h = a->h - mv->hbar->bw;
+	AG_WidgetSizeAlloc(mv->vbar, &aChld);
+	return (0);
+}
+
+static void
+DrawNumerical(void *p)
 {
 	char text[8];
-	AG_Matview *mv = p;
+	SC_Matview *mv = p;
 	SC_Matrix *M = mv->mat;
 	Uint m, n;
 	SDL_Surface *su;
@@ -198,10 +189,10 @@ AG_MatviewDrawNumerical(void *p)
 	}
 }
 
-void
-AG_MatviewDrawGreyscale(void *p)
+static void
+DrawGreyscale(void *p)
 {
-	AG_Matview *mv = p;
+	SC_Matview *mv = p;
 	SC_Matrix *A = mv->mat;
 	SDL_Surface *su;
 	Uint m, n;
@@ -252,4 +243,21 @@ AG_MatviewDrawGreyscale(void *p)
 		}
 	}
 }
+
+const AG_WidgetOps scMatviewOps = {
+	{
+		"AG_Widget:SC_Matview",
+		sizeof(SC_Matview),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		NULL,			/* destroy */
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	DrawNumerical,
+	SizeRequest,
+	SizeAllocate
+};
 
