@@ -47,11 +47,10 @@ typedef struct ag_console {
 } AG_Console;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agConsoleOps;
+
 AG_Console *AG_ConsoleNew(void *, Uint);
 void	    AG_ConsoleInit(AG_Console *, Uint);
-void	    AG_ConsoleDestroy(void *);
-void	    AG_ConsoleDraw(void *);
-void	    AG_ConsoleScale(void *, int, int);
 
 __inline__ void		   AG_ConsoleSetPadding(AG_Console *, int);
 __inline__ AG_ConsoleLine *AG_ConsoleAppendLine(AG_Console *, const char *);

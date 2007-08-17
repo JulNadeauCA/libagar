@@ -24,13 +24,12 @@ typedef struct ag_checkbox {
 } AG_Checkbox;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agCheckboxOps;
+
 AG_Checkbox	*AG_CheckboxNew(void *, Uint, const char *);
 AG_Checkbox	*AG_CheckboxNewFlag(void *, Uint *, Uint, const char *);
 void		 AG_CheckboxSetFromFlags(void *, Uint *, const AG_FlagDescr *);
 void		 AG_CheckboxInit(AG_Checkbox *, Uint, const char *);
-void	   	 AG_CheckboxDestroy(void *);
-void		 AG_CheckboxScale(void *, int, int);
-void		 AG_CheckboxDraw(void *);
 void		 AG_CheckboxToggle(AG_Checkbox *);
 __END_DECLS
 

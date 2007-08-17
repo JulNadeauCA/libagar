@@ -33,22 +33,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-const AG_WidgetOps agConsoleOps = {
-	{
-		"AG_Widget:AG_Console",
-		sizeof(AG_Console),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_ConsoleDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_ConsoleDraw,
-	AG_ConsoleScale
-};
-
 static void MouseButtonUp(AG_Event *);
 static void MouseButtonDown(AG_Event *);
 static void KeyUp(AG_Event *);
@@ -95,34 +79,39 @@ AG_ConsoleInit(AG_Console *cons, Uint flags)
 	AG_SetEvent(cons, "window-keydown", KeyDown, NULL);
 }
 
-void
-AG_ConsoleScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_Console *cons = p;
-
-	if (w == -1 && h == -1) {
-		WIDGET(cons)->w = 1;
-		WIDGET(cons)->h = 1;
-		return;
-	}
-	WIDGET(cons->vBar)->x = WIDGET(cons)->w - 20;
-	WIDGET(cons->vBar)->y = 0;
-	WIDGET(cons->vBar)->w = 20;
-	WIDGET(cons->vBar)->h = WIDGET(cons)->h;
-	cons->vBar->visible = WIDGET(cons)->h /
-	    (agTextFontHeight + cons->lineskip);
+	AG_TextSize("XXXXXXXXXXXXXXXXXXXXXXXXX", &r->w, &r->h);
 }
 
-void
-AG_ConsoleDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Console *cons = p;
+	AG_SizeAlloc aBar;
+	
+	if (a->w < 8 || a->h < 8)
+		return (-1);
+
+	aBar.w = 20;					/* XXX */
+	aBar.x = a->w - aBar.w;
+	aBar.y = 0;
+	aBar.h = a->h;
+	AG_WidgetSizeAlloc(cons->vBar, &aBar);
+
+	cons->vBar->visible = a->h / (agTextFontHeight + cons->lineskip);
+	return (0);
+}
+
+static void
+Draw(void *p)
 {
 	AG_Console *cons = p;
 	SDL_Surface *su;
 	Uint r;
 	int y;
 	
-	if (WIDGET(cons)->w < 8 || WIDGET(cons)->h < 8) { return; }
-
 	agPrim.box(cons, 0, 0, WIDGET(cons)->w, WIDGET(cons)->h, -1,
 	    cons->cBg);
 
@@ -151,8 +140,8 @@ out:
 	AG_MutexUnlock(&cons->lock);
 }
 
-void
-AG_ConsoleDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Console *cons = p;
 	int i;
@@ -251,3 +240,19 @@ AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
 	ln->icon = icon;
 }
 
+const AG_WidgetOps agConsoleOps = {
+	{
+		"AG_Widget:AG_Console",
+		sizeof(AG_Console),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		Destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

@@ -32,22 +32,6 @@
 
 #include "primitive.h"
 
-const AG_WidgetOps agPixmapOps = {
-	{
-		"AG_Widget:AG_Pixmap",
-		sizeof(AG_Pixmap),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_WidgetDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_PixmapDraw,
-	AG_PixmapScale
-};
-
 AG_Pixmap *
 AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 {
@@ -204,32 +188,28 @@ AG_PixmapInit(AG_Pixmap *px, Uint flags)
 	px->pre_h = 64;
 }
 
-void
-AG_PixmapScale(void *p, int rw, int rh)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Pixmap *px = p;
-	
-	if (rw == -1 && rh == -1) {
-		if ((px->flags & AG_PIXMAP_FORCE_SIZE) == 0) {
-			WIDGET(px)->w = WSURFACE(px,px->n)->w;
-			WIDGET(px)->h = WSURFACE(px,px->n)->h;
-		} else {
-			WIDGET(px)->w = px->pre_w;
-			WIDGET(px)->h = px->pre_h;
-		}
-		return;
-	}
+
 	if ((px->flags & AG_PIXMAP_FORCE_SIZE) == 0) {
-		WIDGET(px)->w = WSURFACE(px,px->n)->w;
-		WIDGET(px)->h = WSURFACE(px,px->n)->h;
+		r->w = WSURFACE(px,px->n)->w;
+		r->h = WSURFACE(px,px->n)->h;
 	} else {
-		WIDGET(px)->w = px->pre_w;
-		WIDGET(px)->h = px->pre_h;
+		r->w = px->pre_w;
+		r->h = px->pre_h;
 	}
 }
 
-void
-AG_PixmapDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	return (a->w < 1 || a->h < 1) ? -1 : 0;
+}
+
+static void
+Draw(void *p)
 {
 	AG_Pixmap *px = p;
 
@@ -254,3 +234,19 @@ AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
 	px->t = t;
 }
 
+const AG_WidgetOps agPixmapOps = {
+	{
+		"AG_Widget:AG_Pixmap",
+		sizeof(AG_Pixmap),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		AG_WidgetDestroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

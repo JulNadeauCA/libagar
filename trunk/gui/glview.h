@@ -43,12 +43,15 @@ typedef struct ag_glview {
 #define AGGLVIEW(p) ((AG_GLView *)(p))
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agGLViewOps;
+
 AG_GLView *AG_GLViewNew(void *, Uint);
 void	   AG_GLViewInit(AG_GLView *, Uint);
-void	   AG_GLViewDestroy(void *);
 void	   AG_GLViewDraw(void *);
+void	   AG_GLViewSizeRequest(void *, AG_SizeReq *);
+int	   AG_GLViewSizeAllocate(void *, const AG_SizeAlloc *);
+
 void	   AG_GLViewPrescale(AG_GLView *, int, int);
-void	   AG_GLViewScale(void *, int, int);
 void	   AG_GLViewReshape(AG_GLView *);
 void	   AG_GLViewDrawFn(AG_GLView *, AG_EventFn, const char *, ...);
 void	   AG_GLViewOverlayFn(AG_GLView *, AG_EventFn, const char *, ...);

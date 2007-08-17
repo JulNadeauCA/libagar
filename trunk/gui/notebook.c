@@ -31,22 +31,6 @@
 #include "window.h"
 #include "primitive.h"
 
-static AG_WidgetOps agNotebookOps = {
-	{
-		"AG_Widget:AG_Notebook",
-		sizeof(AG_Notebook),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_NotebookDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_NotebookDraw,
-	AG_NotebookScale
-};
-
 #define SPACING 8
 
 AG_Notebook *
@@ -104,7 +88,7 @@ AG_NotebookInit(AG_Notebook *nb, Uint flags)
 	nb->tab_rad = (int)(agTextFontHeight/1.5);
 	nb->spacing = -1;
 	nb->padding = -1;
-	nb->tabFont = AG_FetchFont(NULL, agDefaultFont->size-2, 0);
+	nb->tabFont = AG_FetchFont(NULL, agDefaultFont->size-1, 0);
 	AG_MutexInitRecursive(&nb->lock);
 	TAILQ_INIT(&nb->tabs);
 
@@ -114,8 +98,8 @@ AG_NotebookInit(AG_Notebook *nb, Uint flags)
 	AG_SetEvent(nb, "window-mousebuttondown", mousebuttondown, NULL);
 }
 
-void
-AG_NotebookDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Notebook *nb = p;
 
@@ -123,8 +107,8 @@ AG_NotebookDestroy(void *p)
 	AG_WidgetDestroy(nb);
 }
 
-void
-AG_NotebookDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_Notebook *nb = p;
 	AG_NotebookTab *tab;
@@ -166,51 +150,65 @@ AG_NotebookDraw(void *p)
 		    AG_COLOR(NOTEBOOK_SEL_COLOR) :
 		    AG_COLOR(NOTEBOOK_BG_COLOR));
 		
-		AG_WidgetBlitSurface(nb, tab->label, x+SPACING, y+2);
+		AG_WidgetBlitSurface(nb, tab->label, x+SPACING,
+		    y+(box.h/2 - WSURFACE(nb,tab->label)->h/2));
 		x += box.w;
 	}
 }
 
-void
-AG_NotebookScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Notebook *nb = p;
 	AG_NotebookTab *tab;
-	
+	AG_SizeReq rTab;
+
 	AG_MutexLock(&nb->lock);
-	if (w == -1 || h == -1) {
-		if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
-			nb->bar_h = agTextFontHeight + SPACING*2;
-			nb->bar_w = SPACING*2;
-		} else {
-			nb->bar_h = 0;
-			nb->bar_w = 0;
-		}
-		nb->cont_w = 0;
-		nb->cont_h = 0;
-		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-			WIDGET_OPS(tab)->scale(tab, -1, -1);
-			nb->cont_w = MAX(nb->cont_w,WIDGET(tab)->w);
-			nb->cont_h = MAX(nb->cont_h,WIDGET(tab)->h);
-			if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0)
-				nb->bar_w += WSURFACE(nb,tab->label)->w +
-				    SPACING*2;
-		}
-		WIDGET(nb)->h = nb->cont_h + nb->bar_h;
-		WIDGET(nb)->w = MAX(nb->cont_w, nb->bar_w);
+	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
+		nb->bar_h = agTextFontHeight + SPACING*2;
+		nb->bar_w = SPACING*2;
+	} else {
+		nb->bar_h = 0;
+		nb->bar_w = 0;
+	}
+	nb->cont_w = 0;
+	nb->cont_h = 0;
+	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
+		AG_WidgetSizeReq(tab, &rTab);
+
+		nb->cont_w = MAX(nb->cont_w,rTab.w);
+		nb->cont_h = MAX(nb->cont_h,rTab.h);
+		if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0)
+			nb->bar_w += WSURFACE(nb,tab->label)->w + SPACING*2;
+	}
+	r->h = nb->cont_h + nb->bar_h;
+	r->w = MAX(nb->cont_w, nb->bar_w);
+	AG_MutexUnlock(&nb->lock);
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Notebook *nb = p;
+	AG_NotebookTab *tab;
+	AG_SizeAlloc aTab;
+
+	AG_MutexLock(&nb->lock);
+	if (a->h < nb->bar_h) {
+		goto fail;
 	}
 	if ((tab = nb->sel_tab) != NULL) {
-		WIDGET(tab)->x = 0;
-		WIDGET(tab)->y = nb->bar_h;
-		if (nb->flags & AG_NOTEBOOK_HFILL) nb->cont_w = WIDGET(nb)->w;
-		if (nb->flags & AG_NOTEBOOK_VFILL) nb->cont_h = WIDGET(nb)->h;
-		WIDGET(tab)->w = nb->cont_w;
-		WIDGET(tab)->h = nb->cont_h - nb->bar_h;
-		WIDGET_OPS(tab)->scale(tab,
-		    WIDGET(tab)->w,
-		    WIDGET(tab)->h);
+		aTab.x = 0;
+		aTab.y = nb->bar_h;
+		aTab.w = a->w;
+		aTab.h = a->h - nb->bar_h;
+		AG_WidgetSizeAlloc(tab, &aTab);
 	}
 	AG_MutexUnlock(&nb->lock);
+	return (0);
+fail:
+	AG_MutexUnlock(&nb->lock);
+	return (-1);
 }
 
 void
@@ -251,15 +249,18 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	AG_NotebookTab *tab;
 
 	tab = Malloc(sizeof(AG_NotebookTab), M_OBJECT);
-	AG_BoxInit((AG_Box *)tab, btype, AG_BOX_HFILL|AG_BOX_VFILL);
+	AG_BoxInit(AGBOX(tab), btype, AG_BOX_EXPAND);
 	if (nb->padding >= 0)
-		AG_BoxSetPadding((AG_Box *)tab, nb->padding);
+		AG_BoxSetPadding(AGBOX(tab), nb->padding);
 	if (nb->spacing >= 0)
-		AG_BoxSetSpacing((AG_Box *)tab, nb->spacing);
+		AG_BoxSetSpacing(AGBOX(tab), nb->spacing);
 
+	AG_PushTextState();
 	AG_TextFont(nb->tabFont);
 	AG_TextColor(NOTEBOOK_TXT_COLOR);
 	tab->label = AG_WidgetMapSurface(nb, AG_TextRender(label));
+	AG_PopTextState();
+
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
 	if (TAILQ_FIRST(&nb->tabs) == tab) {
 		AG_NotebookSelectTab(nb, tab);
@@ -280,12 +281,15 @@ void
 AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 {
 	AG_Window *pwin = AG_WidgetParentWindow(nb);
+	AG_SizeReq rTab;
+	AG_SizeAlloc aTab;
 
 #ifdef DEBUG
 	if (pwin == NULL)
 		fatal("no window is attached");
 #endif
 	if (nb->sel_tab != NULL) {
+		AG_WidgetHiddenRecursive(nb->sel_tab);
 		AG_ObjectDetach(nb->sel_tab);
 	}
 	if (tab == NULL) {
@@ -295,13 +299,16 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	AG_ObjectAttach(nb, tab);
 	nb->sel_tab = tab;
 
-	WIDGET_OPS(tab)->scale(tab, -1, -1);
-	WIDGET_OPS(tab)->scale(tab, WIDGET(tab)->w, WIDGET(tab)->h);
-	AG_NotebookScale(nb, WIDGET(nb)->w, WIDGET(nb)->h);
-	AG_WidgetUpdateCoords(pwin, WIDGET(pwin)->x, WIDGET(pwin)->y);
-#if 0
-	AG_WidgetFocus(tab);
-#endif
+	AG_WidgetSizeReq(tab, &rTab);
+	aTab.x = 0;
+	aTab.y = nb->bar_h;
+	aTab.w = WIDGET(nb)->w;
+	aTab.h = WIDGET(nb)->h - nb->bar_h;
+	AG_WidgetSizeAlloc(tab, &aTab);
+	AG_WidgetShownRecursive(tab);
+
+	AG_WindowUpdate(pwin);
+/* 	AG_WidgetFocus(tab); */
 }
 
 void
@@ -313,3 +320,20 @@ AG_NotebookSetTabVisibility(AG_Notebook *nb, int flag)
 		nb->flags |= AG_NOTEBOOK_HIDE_TABS;
 	}
 }
+
+const AG_WidgetOps agNotebookOps = {
+	{
+		"AG_Widget:AG_Notebook",
+		sizeof(AG_Notebook),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

@@ -47,11 +47,10 @@ typedef struct ag_notebook {
 } AG_Notebook;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agNotebookOps;
+
 AG_Notebook *AG_NotebookNew(void *, Uint);
 void AG_NotebookInit(AG_Notebook *, Uint);
-void AG_NotebookDestroy(void *);
-void AG_NotebookDraw(void *);
-void AG_NotebookScale(void *, int, int);
 void AG_NotebookSetPadding(AG_Notebook *, int);
 void AG_NotebookSetSpacing(AG_Notebook *, int);
 void AG_NotebookSetTabAlignment(AG_Notebook *, enum ag_notebook_tab_alignment);

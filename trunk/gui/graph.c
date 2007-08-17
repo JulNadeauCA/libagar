@@ -34,22 +34,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-static AG_WidgetOps agGraphOps = {
-	{
-		"AG_Widget:AG_Graph",
-		sizeof(AG_Graph),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_GraphDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_GraphDraw,
-	AG_GraphScale
-};
-
 AG_Graph *
 AG_GraphNew(void *parent, Uint flags)
 {
@@ -442,8 +426,8 @@ AG_GraphFreeVertices(AG_Graph *gf)
 	gf->flags &= ~(AG_GRAPH_DRAGGING);
 }
 
-void
-AG_GraphDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Graph *gf = p;
 
@@ -458,32 +442,30 @@ AG_GraphPrescale(AG_Graph *gf, Uint w, Uint h)
 	gf->hPre = h;
 }
 
-void
-AG_GraphScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Graph *gf = p;
 
-	if (w == -1 && h == -1) {
-		WIDGET(gf)->w = gf->wPre;
-		WIDGET(gf)->h = gf->hPre;
-		return;
-	}
-#if 0
-	WIDGET(gf->hbar)->x = 0;
-	WIDGET(gf->hbar)->y = WIDGET(gf)->h - gf->hbar->bw;
-	WIDGET(gf->hbar)->w = WIDGET(gf)->w;
-	WIDGET(gf->hbar)->h = gf->hbar->bw;
-	WIDGET(gf->vbar)->x = WIDGET(gf)->w - gf->vbar->bw;
-	WIDGET(gf->vbar)->y = gf->vbar->bw;
-	WIDGET(gf->vbar)->w = gf->vbar->bw;
-	WIDGET(gf->vbar)->h = WIDGET(gf)->h - gf->vbar->bw;
-#endif
-	gf->xOffs = -WIDGET(gf)->w/2;
-	gf->yOffs = -WIDGET(gf)->h/2;
+	r->w = gf->wPre;
+	r->h = gf->hPre;
 }
 
-void
-AG_GraphDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Graph *gf = p;
+
+	if (a->w < 1 || a->h < 1)
+		return (-1);
+
+	gf->xOffs = -(a->w/2);
+	gf->yOffs = -(a->h/2);
+	return (0);
+}
+
+static void
+Draw(void *p)
 {
 	AG_Graph *gf = p;
 	AG_GraphVertex *vtx;
@@ -817,3 +799,19 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 	Free(vSorted, M_WIDGET);
 }
 
+const AG_WidgetOps agGraphOps = {
+	{
+		"AG_Widget:AG_Graph",
+		sizeof(AG_Graph),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

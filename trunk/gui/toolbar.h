@@ -36,6 +36,8 @@ typedef struct ag_toolbar {
 } AG_Toolbar;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agToolbarOps;
+
 AG_Toolbar	*AG_ToolbarNew(void *, enum ag_toolbar_type, int, Uint);
 void		 AG_ToolbarInit(AG_Toolbar *, enum ag_toolbar_type, int, Uint);
 void		 AG_ToolbarScale(void *, int, int);

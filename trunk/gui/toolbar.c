@@ -32,22 +32,6 @@
 #include "primitive.h"
 #include "separator.h"
 
-static AG_WidgetOps agToolbarOps = {
-	{
-		"AG_Widget:AG_Box:AG_Toolbar",
-		sizeof(AG_Toolbar),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_BoxDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	NULL,
-	AG_ToolbarScale
-};
-
 AG_Toolbar *
 AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 {
@@ -76,6 +60,7 @@ AG_ToolbarInit(AG_Toolbar *bar, enum ag_toolbar_type type, int nRows,
 	AG_BoxSetPadding(&bar->box, 1);
 	AG_BoxSetSpacing(&bar->box, 1);
 	AG_ObjectSetOps(bar, &agToolbarOps);
+	WIDGET(bar)->flags |= AG_WIDGET_IGNORE_PADDING;
 
 	bar->flags = flags;
 	bar->type = type;
@@ -266,50 +251,101 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 	}
 }
 
-void
-AG_ToolbarScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Toolbar *bar = p;
 	AG_Box *box = p;
-	AG_Widget *child;
-	int x = box->padding;
-	int y = box->padding;
+	AG_Widget *chld;
+	AG_SizeReq rChld;
+	int wMax = 0, hMax = 0;
+	int nChld = 0;
 
-	if (w == -1 && h == -1) {
-		int maxw = 0, maxh = 0;
-		int dw, dh;
-
-		WIDGET(box)->w = box->padding*2 - box->spacing;
-		WIDGET(box)->h = box->padding*2;
-
-		/* Reserve enough space to hold widgets and spacing/padding. */
-		OBJECT_FOREACH_CHILD(child, box, ag_widget) {
-			WIDGET_OPS(child)->scale(child, -1, -1);
-			if (child->w > maxw) { maxw = child->w; }
-			if (child->h > maxh) { maxh = child->h; }
-			if ((dh = maxh + box->padding*2) > WIDGET(box)->h) {
-				WIDGET(box)->h = dh;
-			}
-			WIDGET(box)->w += child->w + box->spacing;
+	r->w = box->padding*2;
+	r->h = box->padding*2;
+	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
+		if (chld->flags & AG_WIDGET_HIDE) {
+			continue;
 		}
-		WIDGET(box)->w -= box->spacing;
-		return;
+		AG_WidgetSizeReq(chld, &rChld);
+		if (rChld.w > wMax) { wMax = rChld.w; }
+		if (rChld.h > hMax) { hMax = rChld.h; }
+		r->h = MAX(r->h, hMax + box->padding*2);
+		r->w += rChld.w + box->spacing;
+		nChld++;
 	}
+ 	if (nChld > 0)
+		r->w -= box->spacing;
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Toolbar *bar = p;
+	AG_Box *box = p;
+	AG_Widget *chld, *chldLast;
+	AG_SizeAlloc aChld;
+	AG_SizeReq rChld;
+	int x, y, wChld, nChld;
+
+	x = box->padding;
+	y = box->padding;
 
 	if (bar->flags & AG_TOOLBAR_HOMOGENOUS) {
-		OBJECT_FOREACH_CHILD(child, box, ag_widget) {
-			child->x = x;
-			child->y = y;
-			child->w = w;
-			x += child->w + box->spacing;
-			WIDGET_OPS(child)->scale(child, child->w, child->h);
+		nChld = 0;
+		OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
+			if ((chld->flags & AG_WIDGET_HIDE) == 0)
+				nChld++;
 		}
+		if (nChld == 0) {
+			return (-1);
+		}
+		wChld = a->w / nChld;
+		chldLast = NULL;
+		OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
+			if (chld->flags & AG_WIDGET_HIDE) {
+				continue;
+			}
+			aChld.x = x;
+			aChld.y = y;
+			aChld.w = wChld;
+			aChld.h = a->h;
+			AG_WidgetSizeAlloc(chld, &aChld);
+			aChld.x += aChld.w + box->spacing;
+			chldLast = chld;
+		}
+		if (aChld.x < a->w)		/* Compensate for rounding */
+			chldLast->w++;
 	} else {
-		OBJECT_FOREACH_CHILD(child, box, ag_widget) {
-			child->x = x;
-			child->y = y;
-			x += child->w + box->spacing;
-			WIDGET_OPS(child)->scale(child, child->w, child->h);
+		OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
+			if (chld->flags & AG_WIDGET_HIDE) {
+				continue;
+			}
+			AG_WidgetSizeReq(chld, &rChld);
+			aChld.x = x;
+			aChld.y = y;
+			aChld.w = rChld.w;
+			aChld.h = a->h;
+			AG_WidgetSizeAlloc(chld, &aChld);
+			aChld.x += aChld.w + box->spacing;
 		}
 	}
+	return (0);
 }
+
+const AG_WidgetOps agToolbarOps = {
+	{
+		"AG_Widget:AG_Box:AG_Toolbar",
+		sizeof(AG_Toolbar),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		AG_BoxDestroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	NULL,			/* draw */
+	SizeRequest,
+	SizeAllocate
+};

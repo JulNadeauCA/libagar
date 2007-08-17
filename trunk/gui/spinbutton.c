@@ -35,22 +35,6 @@
 #include <string.h>
 #include <limits.h>
 
-static AG_WidgetOps agSpinbuttonOps = {
-	{
-		"AG_Widget:AG_Spinbutton",
-		sizeof(AG_Spinbutton),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_SpinbuttonDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_SpinbuttonDraw,
-	AG_SpinbuttonScale
-};
-
 AG_Spinbutton *
 AG_SpinbuttonNew(void *parent, Uint flags, const char *label)
 {
@@ -194,7 +178,7 @@ AG_SpinbuttonInit(AG_Spinbutton *sbu, Uint flags, const char *label)
 	sbu->max = 0;
 	AG_MutexInit(&sbu->lock);
 	sbu->input = AG_TextboxNew(sbu, 0, label);
-	AG_TextboxPrescale(sbu->input, "88888");
+	AG_TextboxPrescale(sbu->input, "8888");
 
 	AG_SetEvent(sbu, "widget-bound", spinbutton_bound, NULL);
 	AG_SetEvent(sbu, "window-keydown", spinbutton_keydown, NULL);
@@ -211,8 +195,8 @@ AG_SpinbuttonInit(AG_Spinbutton *sbu, Uint flags, const char *label)
 	AG_SetEvent(sbu->decbu, "button-pushed", spinbutton_dec, "%p", sbu);
 }
 
-void
-AG_SpinbuttonDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Spinbutton *sbu = p;
 
@@ -220,42 +204,8 @@ AG_SpinbuttonDestroy(void *p)
 	AG_WidgetDestroy(sbu);
 }
 
-void
-AG_SpinbuttonScale(void *p, int w, int h)
-{
-	AG_Spinbutton *sbu = p;
-	int x = 0, y = 0;
-	int bw = 10;
-	int bh = h/2;
-
-	if (w == -1 && h == -1) {
-		WIDGET_SCALE(sbu->input, -1, -1);
-		WIDGET(sbu)->w = WIDGET(sbu->input)->w;
-		WIDGET(sbu)->h = WIDGET(sbu->input)->h;
-		WIDGET_SCALE(sbu->incbu, -1, -1);
-		WIDGET_SCALE(sbu->decbu, -1, -1);
-		WIDGET(sbu)->w += max(WIDGET(sbu->incbu)->w,
-		                      WIDGET(sbu->decbu)->w);
-		return;
-	}
-
-	WIDGET(sbu->input)->x = x;
-	WIDGET(sbu->input)->y = y;
-	AG_WidgetScale(sbu->input, w - bw, h);
-	x += WIDGET(sbu->input)->w;
-
-	WIDGET(sbu->incbu)->x = x;
-	WIDGET(sbu->incbu)->y = y;
-	AG_WidgetScale(sbu->incbu, bw, bh);
-	y += h/2;
-
-	WIDGET(sbu->decbu)->x = x;
-	WIDGET(sbu->decbu)->y = y;
-	AG_WidgetScale(sbu->decbu, bw, bh);
-}
-
-void
-AG_SpinbuttonDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_Spinbutton *sbu = p;
 	AG_WidgetBinding *valueb;
@@ -294,6 +244,55 @@ AG_SpinbuttonDraw(void *p)
 		break;
 	}
 	AG_WidgetUnlockBinding(valueb);
+}
+
+static void
+SizeRequest(void *p, AG_SizeReq *r)
+{
+	AG_Spinbutton *num = p;
+	AG_SizeReq rChld, rInc, rDec;
+
+	AG_WidgetSizeReq(num->input, &rChld);
+	r->w = rChld.w;
+	r->h = rChld.h;
+	AG_WidgetSizeReq(num->incbu, &rInc);
+	AG_WidgetSizeReq(num->decbu, &rDec);
+	r->w += MAX(rInc.w, rDec.w);
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Spinbutton *num = p;
+	AG_SizeAlloc aChld;
+	AG_SizeReq rUnits;
+	int szBtn = a->h/2;
+	int hUnits;
+
+	if (a->h < 4 || a->w < szBtn+4)
+		return (-1);
+
+	rUnits.w = 0;
+	rUnits.h = 0;
+	
+	/* Size input textbox */
+	aChld.x = 0;
+	aChld.y = 0;
+	aChld.w = a->w - rUnits.w - szBtn - 4;
+	aChld.h = a->h;
+	AG_WidgetSizeAlloc(num->input, &aChld);
+	aChld.x += aChld.w + 2;
+
+	/* Size increment buttons */
+	aChld.w = szBtn;
+	aChld.h = szBtn;
+	AG_WidgetSizeAlloc(num->incbu, &aChld);
+	aChld.y += aChld.h;
+	if (aChld.h*2 < a->h) {
+		aChld.h++;
+	}
+	AG_WidgetSizeAlloc(num->decbu, &aChld);
+	return (0);
 }
 
 void
@@ -519,3 +518,20 @@ AG_SpinbuttonSetWriteable(AG_Spinbutton *sbu, int writeable)
 	}
 	AG_MutexUnlock(&sbu->lock);
 }
+
+const AG_WidgetOps agSpinbuttonOps = {
+	{
+		"AG_Widget:AG_Spinbutton",
+		sizeof(AG_Spinbutton),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

@@ -19,10 +19,20 @@
 
 #define AG_WIDGET_BINDING_NAME_MAX	16
 
+typedef struct ag_size_req {
+	int w, h;			/* Requested geometry in pixels */
+} AG_SizeReq;
+
+typedef struct ag_size_alloc {
+	int w, h;			/* Allocated geometry in pixels */
+	int x, y;			/* Allocated position in pixels */
+} AG_SizeAlloc;
+
 typedef struct ag_widget_ops {
 	const AG_ObjectOps ops;
 	void (*draw)(void *);
-	void (*scale)(void *, int, int);
+	void (*size_request)(void *, AG_SizeReq *);
+	int  (*size_allocate)(void *, const AG_SizeAlloc *);
 } AG_WidgetOps;
 
 typedef enum ag_widget_binding_type {
@@ -100,6 +110,9 @@ typedef struct ag_widget {
 #define AG_WIDGET_PRIO_MOTION		0x2000 /* Block mousemotion events to
 						  any other widget, regardless
 						  of focus */
+#define AG_WIDGET_UNDERSIZE		0x4000 /* Size allocation failed */
+#define AG_WIDGET_IGNORE_PADDING	0x8000 /* Ignore container padding
+					          (container-specific) */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int redraw;			/* Redraw flag (for WIDGET_STATIC) */
@@ -125,7 +138,6 @@ typedef struct ag_widget {
 
 #define AGWIDGET(wi)			((AG_Widget *)(wi))
 #define AGWIDGET_OPS(wi)		((AG_WidgetOps *)OBJECT(wi)->ops)
-#define AGWIDGET_SCALE(wi, w, h)	AGWIDGET_OPS(wi)->scale((wi), (w), (h))
 #define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
 #define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
@@ -135,7 +147,6 @@ typedef struct ag_widget {
 #ifdef _AGAR_INTERNAL
 #define WIDGET(wi)			AGWIDGET(wi)
 #define WIDGET_OPS(wi)			AGWIDGET_OPS(wi)
-#define WIDGET_SCALE(wi,w,h)		AGWIDGET_SCALE((wi),(w),(h))
 #define WSURFACE(wi,ind)		AGWIDGET_SURFACE((wi),(ind))
 #define WTEXTURE(wi,ind)		AGWIDGET_TEXTURE((wi),(ind))
 #define WTEXCOORD(wi,ind)		AGWIDGET_TEXCOORD((wi),(ind))
@@ -158,6 +169,7 @@ typedef struct ag_widget {
 struct ag_window;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agWidgetOps;
 extern int agKbdDelay;
 extern int agKbdRepeat;
 extern int agMouseDblclickDelay;
@@ -168,8 +180,9 @@ AG_Widget *AG_WidgetNew(void *, Uint);
 void	   AG_WidgetInit(void *, const void *, Uint);
 void	   AG_WidgetDestroy(void *);
 void	   AG_WidgetDraw(void *);
-void	   AG_WidgetScale(void *, int, int);
-void	   AG_WidgetScaleGeneric(void *, int, int);
+
+void	   AG_WidgetSizeReq(void *, AG_SizeReq *);
+int	   AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
 
 __inline__ void	   AG_WidgetSetFocusable(void *, int);
 __inline__ void	   AG_WidgetEnable(void *);
@@ -294,6 +307,9 @@ __inline__ void	 AG_WidgetSetPointer(void *, const char *, void *);
 
 enum ag_widget_sizespec AG_WidgetParseSizeSpec(const char *, int *);
 __inline__ int AG_WidgetScrollDelta(Uint32 *);
+
+void AG_WidgetShownRecursive(void *);
+void AG_WidgetHiddenRecursive(void *);
 __END_DECLS
 
 #include "close_code.h"

@@ -33,22 +33,6 @@
 #include <string.h>
 #include <limits.h>
 
-static AG_WidgetOps agNumericalOps = {
-	{
-		"AG_Widget:AG_Numerical",
-		sizeof(AG_Numerical),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_NumericalDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_NumericalDraw,
-	AG_NumericalScale
-};
-
 AG_Numerical *
 AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *label)
 {
@@ -307,8 +291,8 @@ AG_NumericalInit(AG_Numerical *num, Uint flags, const char *unit,
 	num->input = AG_TextboxNew(num, 0, label);
 	num->writeable = 1;
 	strlcpy(num->format, "%g", sizeof(num->format));
-	AG_MutexInit(&num->lock);
-	AG_TextboxPrescale(num->input, "8888.88");
+	AG_MutexInitRecursive(&num->lock);
+	AG_TextboxPrescale(num->input, "88.88");
 	
 	if (unit != NULL) {
 		num->units = AG_UComboNew(num, 0);
@@ -341,8 +325,8 @@ AG_NumericalPrescale(AG_Numerical *num, const char *text)
 	AG_TextboxPrescale(num->input, text);
 }
 
-void
-AG_NumericalDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Numerical *num = p;
 
@@ -350,65 +334,75 @@ AG_NumericalDestroy(void *p)
 	AG_WidgetDestroy(num);
 }
 
-void
-AG_NumericalScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Numerical *num = p;
-	AG_Textbox *input = num->input;
-	AG_UCombo *units = num->units;
-	AG_Button *incbu = num->incbu;
-	AG_Button *decbu = num->decbu;
-	const int bw = 10;
-	int x = 0, y = 0;
-	int uw, uh;
+	AG_SizeReq rChld, rInc, rDec;
 
-	if (units != NULL) {
-		AG_TextSize("XXXXXXXX", &uw, &uh);
-	} else {
-		uw = 0;
-		uh = 0;
+	AG_WidgetSizeReq(num->input, &rChld);
+	r->w = rChld.w;
+	r->h = rChld.h;
+	if (num->units != NULL) {
+		AG_WidgetSizeReq(num->units, &rChld);
+		r->w += rChld.w;
 	}
-
-	if (w == -1 && h == -1) {
-		WIDGET_SCALE(input, -1, -1);
-		WIDGET(num)->w = WIDGET(input)->w + input->boxPadX*2;
-		WIDGET(num)->h = WIDGET(input)->h;
-
-		x += WIDGET(num)->w;
-		
-		if (units != NULL) {
-			WIDGET_SCALE(units, -1, -1);
-			WIDGET(num)->w += WIDGET(units)->w;
-			x += WIDGET(units)->w;
-		}
-
-		WIDGET_SCALE(incbu, -1, -1);
-		WIDGET(num)->w += WIDGET(incbu)->w;
-		y += WIDGET(num)->h;
-		return;
-	}
-
-	WIDGET(input)->x = 0;
-	WIDGET(input)->y = 0;
-	AG_WidgetScale(input, w-uw-bw-4, h);
-	x += WIDGET(input)->w+2;
-	if (units != NULL) {
-		WIDGET(units)->x = x;
-		WIDGET(units)->y = y;
-		AG_WidgetScale(units, uw, h);
-		x += WIDGET(units)->w+2;
-	}
-	WIDGET(incbu)->x = x;
-	WIDGET(incbu)->y = y;
-	AG_WidgetScale(incbu, bw, h/2);
-	y += h/2;
-	WIDGET(decbu)->x = x;
-	WIDGET(decbu)->y = y;
-	AG_WidgetScale(decbu, bw, h/2);
+	AG_WidgetSizeReq(num->incbu, &rInc);
+	AG_WidgetSizeReq(num->decbu, &rDec);
+	r->w += MAX(rInc.w, rDec.w);
 }
 
-void
-AG_NumericalDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Numerical *num = p;
+	AG_SizeAlloc aChld;
+	AG_SizeReq rUnits;
+	int szBtn = a->h/2;
+	int hUnits;
+
+	if (a->h < 4 || a->w < szBtn+4)
+		return (-1);
+
+	if (num->units != NULL) {
+		AG_WidgetSizeReq(num->units, &rUnits);
+		if (rUnits.w > a->w - szBtn-4) { rUnits.w = a->w - szBtn-4; }
+		if (rUnits.h > a->h) { rUnits.h = a->h; }
+	} else {
+		rUnits.w = 0;
+		rUnits.h = 0;
+	}
+
+	/* Size input textbox */
+	aChld.x = 0;
+	aChld.y = 0;
+	aChld.w = a->w - rUnits.w - szBtn - 4;
+	aChld.h = a->h;
+	AG_WidgetSizeAlloc(num->input, &aChld);
+	aChld.x += aChld.w + 2;
+
+	/* Size unit selector */
+	if (num->units != NULL) {
+		aChld.w = rUnits.w;
+		aChld.h = a->h;
+		AG_WidgetSizeAlloc(num->units, &aChld);
+		aChld.x += aChld.w + 2;
+	}
+
+	/* Size increment buttons */
+	aChld.w = szBtn;
+	aChld.h = szBtn;
+	AG_WidgetSizeAlloc(num->incbu, &aChld);
+	aChld.y += aChld.h;
+	if (aChld.h*2 < a->h) {
+		aChld.h++;
+	}
+	AG_WidgetSizeAlloc(num->decbu, &aChld);
+	return (0);
+}
+
+static void
+Draw(void *p)
 {
 	AG_Numerical *num = p;
 	AG_WidgetBinding *valueb;
@@ -802,3 +796,21 @@ AG_NumericalGetUint64(AG_Numerical *num)
 	}
 }
 #endif /* SDL_HAS_64BIT_TYPE */
+
+const AG_WidgetOps agNumericalOps = {
+	{
+		"AG_Widget:AG_Numerical",
+		sizeof(AG_Numerical),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};
+

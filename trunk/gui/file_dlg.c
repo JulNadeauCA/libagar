@@ -25,6 +25,7 @@
 
 #include <core/core.h>
 #include <core/view.h>
+#include <core/config.h>
 
 #include <compat/dir.h>
 #include <compat/file.h>
@@ -38,22 +39,6 @@
 #include <errno.h>
 #include <unistd.h>
 #include <ctype.h>
-
-static AG_WidgetOps agFileDlgOps = {
-	{
-		"AG_Widget:AG_FileDlg",
-		sizeof(AG_FileDlg),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_FileDlgDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	NULL,			/* draw */
-	AG_FileDlgScale
-};
 
 AG_FileDlg *
 AG_FileDlgNew(void *parent, Uint flags)
@@ -439,8 +424,7 @@ WidgetShown(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_SELF();
 
-	AG_WidgetScale(fd, WIDGET(fd)->w, WIDGET(fd)->h);
-	AG_WidgetFocus(fd->tbFile);
+/*	AG_WidgetFocus(fd->tbFile); */
 	AG_RefreshListing(fd);
 }
 
@@ -499,7 +483,26 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 		AG_SetError(_("Path is too large: `%s'"), ncwd);
 		return (-1);
 	}
+	if (fd->dirMRU != NULL) {
+		dprintf("setting MRU (%s) to %s\n", fd->dirMRU, fd->cwd);
+		AG_SetString(agConfig, fd->dirMRU, fd->cwd);
+		AG_ObjectSave(agConfig);
+	}
 	return (0);
+}
+
+void
+AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
+{
+	char *s;
+
+	if (AG_GetProp(agConfig, key, AG_PROP_STRING, &s) != NULL) {
+		AG_FileDlgSetDirectory(fd, s);
+	} else {
+		AG_SetString(agConfig, key, dflt);
+		AG_FileDlgSetDirectory(fd, dflt);
+	}
+	fd->dirMRU = Strdup(key);
 }
 
 void
@@ -535,17 +538,15 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	AG_WidgetInit(fd, &agFileDlgOps, wflags);
 	fd->flags = flags;
 	fd->cfile[0] = '\0';
+	fd->dirMRU = NULL;
 	if ((getcwd(fd->cwd, sizeof(fd->cwd))) == NULL) {
 		fprintf(stderr, "%s: %s", fd->cwd, strerror(errno));
 	}
 	TAILQ_INIT(&fd->types);
 
-	fd->hPane = AG_HPaneNew(fd, AG_HPANE_HFILL|AG_HPANE_VFILL);
-	fd->hDiv = AG_HPaneAddDiv(fd->hPane,
-	    AG_BOX_VERT, AG_BOX_VFILL,
-	    AG_BOX_VERT, AG_BOX_VFILL|AG_BOX_HFILL);
-	fd->tlDirs = AG_TlistNew(fd->hDiv->box1, AG_TLIST_EXPAND);
-	fd->tlFiles = AG_TlistNew(fd->hDiv->box2, AG_TLIST_EXPAND|
+	fd->hPane = AG_PaneNewHoriz(fd, AG_PANE_EXPAND);
+	fd->tlDirs = AG_TlistNew(fd->hPane->div[0], AG_TLIST_EXPAND);
+	fd->tlFiles = AG_TlistNew(fd->hPane->div[1], AG_TLIST_EXPAND|
 	    ((flags & AG_FILEDLG_MULTI) ? AG_TLIST_MULTI : 0));
 
 	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL,
@@ -596,8 +597,8 @@ AG_FileDlgCancelAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 	AG_EVENT_GET_ARGS(fd->cancelAction, fmt);
 }
 
-void
-AG_FileDlgDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_FileDlg *fd = p;
 	AG_FileType *ft, *ft2;
@@ -613,77 +614,85 @@ AG_FileDlgDestroy(void *p)
 		Free(ft->exts, M_WIDGET);
 		Free(ft, M_WIDGET);
 	}
+	Free(fd->dirMRU,0);
 	AG_WidgetDestroy(fd);
 }
 
-void
-AG_FileDlgScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_FileDlg *fd = p;
-	int btn_h, y = 0;
-	
-	if (w == -1 && h == -1) {
-		WIDGET_SCALE(fd->hPane, -1, -1);
-		WIDGET_SCALE(fd->lbCwd , -1, -1);
-		WIDGET_SCALE(fd->tbFile, -1, -1);
-		WIDGET_SCALE(fd->comTypes, -1, -1);
-		WIDGET_SCALE(fd->btnOk, -1, -1);
-		WIDGET_SCALE(fd->btnCancel, -1, -1);
-	
-		WIDGET(fd)->w = WIDGET(fd->hPane)->w;
-		WIDGET(fd)->h = WIDGET(fd->hPane)->h +
-				 WIDGET(fd->lbCwd)->h+1 +
-				 WIDGET(fd->tbFile)->h+1 +
-				 WIDGET(fd->comTypes)->h+1 +
-				 MAX(WIDGET(fd->btnOk)->h,
-				     WIDGET(fd->btnCancel)->h)+2;
-		return;
-	}
+	AG_SizeReq rChld, rOk, rCancel;
 
-	btn_h = MAX(WIDGET(fd->btnOk)->h, WIDGET(fd->btnCancel)->h);
-	
-	AG_WidgetScale(fd->hPane,
-	    w,
-	    h - WIDGET(fd->lbCwd)->h - WIDGET(fd->tbFile)->h -
-	        WIDGET(fd->comTypes)->h - btn_h);
+	AG_WidgetSizeReq(fd->hPane, &rChld);
+	r->w = rChld.w;
+	r->h = rChld.h+4;
+	AG_WidgetSizeReq(fd->lbCwd, &rChld);
+	r->h += rChld.h+1;
+	AG_WidgetSizeReq(fd->tbFile, &rChld);
+	r->h += rChld.h+2;
+	AG_WidgetSizeReq(fd->comTypes, &rChld);
+	r->h += rChld.h+2;
+	AG_WidgetSizeReq(fd->btnOk, &rOk);
+	AG_WidgetSizeReq(fd->btnCancel, &rCancel);
+	r->h += MAX(rOk.h,rCancel.h)+1;
+}
 
-	AG_WidgetScale(fd->lbCwd, w, WIDGET(fd->lbCwd)->h);
-	AG_WidgetScale(fd->tbFile, w, WIDGET(fd->tbFile)->h);
-	AG_WidgetScale(fd->comTypes, w, WIDGET(fd->comTypes)->h);
-	AG_WidgetScale(fd->btnOk, w/2, WIDGET(fd->tbFile)->h);
-	AG_WidgetScale(fd->btnCancel, w/2, WIDGET(fd->tbFile)->h);
-	
-	WIDGET(fd->hPane)->x = 0;
-	WIDGET(fd->hPane)->y = 0;
-	WIDGET(fd->hPane)->w = w;
-	WIDGET(fd->hPane)->h = h -
-	    WIDGET(fd->tbFile)->h -
-	    WIDGET(fd->lbCwd)->h -
-	    WIDGET(fd->comTypes)->h - btn_h - 2;
-	AG_WidgetScale(fd->hPane, WIDGET(fd->hPane)->w,
-	    WIDGET(fd->hPane)->h);
-	y += WIDGET(fd->hPane)->h + 1;
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_FileDlg *fd = p;
+	AG_SizeReq r;
+	AG_SizeAlloc aChld;
+	int hBtn = 0, wBtn = a->w/2;
 
-	WIDGET(fd->lbCwd)->x = 0;
-	WIDGET(fd->lbCwd)->y = y;
-	y += WIDGET(fd->lbCwd)->h + 1;
+	AG_WidgetSizeReq(fd->btnOk, &r);
+	hBtn = MAX(hBtn, r.h);
+	AG_WidgetSizeReq(fd->btnCancel, &r);
+	hBtn = MAX(hBtn, r.h);
 
-	WIDGET(fd->tbFile)->x = 0;
-	WIDGET(fd->tbFile)->y = y;
-	y += WIDGET(fd->tbFile)->h + 1;
+	/* Size horizontal pane */
+	aChld.x = 0;
+	aChld.y = 0;
+	aChld.w = a->w;
+	aChld.h = a->h - hBtn - 10;
+	AG_WidgetSizeReq(fd->lbCwd, &r);
+	aChld.h -= r.h;
+	AG_WidgetSizeReq(fd->tbFile, &r);
+	aChld.h -= r.h;
+	AG_WidgetSizeReq(fd->comTypes, &r);
+	aChld.h -= r.h;
+	AG_WidgetSizeAlloc(fd->hPane, &aChld);
+	aChld.y += aChld.h+4;
 
-	WIDGET(fd->comTypes)->x = 0;
-	WIDGET(fd->comTypes)->y = y;
-	y += WIDGET(fd->comTypes)->h + 4;
-	
-	WIDGET(fd->btnOk)->x = 0;
-	WIDGET(fd->btnOk)->y = y;
+	/* Size cwd label. */
+	AG_WidgetSizeReq(fd->lbCwd, &r);
+	aChld.h = r.h;
+	AG_WidgetSizeAlloc(fd->lbCwd, &aChld);
+	aChld.y += aChld.h+1;
 
-	WIDGET(fd->btnCancel)->x = w/2;
-	WIDGET(fd->btnCancel)->y = y;
-	
-	WIDGET(fd)->w = w;
-	WIDGET(fd)->h = h;
+	/* Size entry textbox. */
+	AG_WidgetSizeReq(fd->tbFile, &r);
+	aChld.h = r.h;
+	AG_WidgetSizeAlloc(fd->tbFile, &aChld);
+	aChld.y += aChld.h+2;
+
+	/* Size type selector */
+	AG_WidgetSizeReq(fd->comTypes, &r);
+	aChld.h = r.h;
+	AG_WidgetSizeAlloc(fd->comTypes, &aChld);
+	aChld.y += aChld.h+2;
+
+	/* Size buttons */
+	aChld.w = wBtn;
+	aChld.h = hBtn;
+	AG_WidgetSizeAlloc(fd->btnOk, &aChld);
+	aChld.x = wBtn;
+	if (wBtn*2 < a->w) { aChld.w++; }
+	aChld.h = hBtn;
+	AG_WidgetSizeAlloc(fd->btnCancel, &aChld);
+
+	return (0);
 }
 
 AG_FileType *
@@ -721,3 +730,20 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	TAILQ_INSERT_TAIL(&fd->types, ft, types);
 	return (ft);
 }
+
+const AG_WidgetOps agFileDlgOps = {
+	{
+		"AG_Widget:AG_FileDlg",
+		sizeof(AG_FileDlg),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		Destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	NULL,			/* draw */
+	SizeRequest,
+	SizeAllocate
+};

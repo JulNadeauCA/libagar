@@ -81,12 +81,11 @@ typedef struct ag_graph {
 } AG_Graph;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agGraphOps;
+
 AG_Graph	*AG_GraphNew(void *, Uint);
 void	 	 AG_GraphInit(AG_Graph *, Uint);
-void	 	 AG_GraphDestroy(void *);
-void	 	 AG_GraphScale(void *, int, int);
 void	 	 AG_GraphPrescale(AG_Graph *, Uint, Uint);
-void		 AG_GraphDraw(void *);
 
 void		 AG_GraphFreeVertices(AG_Graph *);
  

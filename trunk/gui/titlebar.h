@@ -32,9 +32,10 @@ typedef struct ag_titlebar {
 } AG_Titlebar;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agTitlebarOps;
+
 AG_Titlebar *AG_TitlebarNew(void *, int);
 void	     AG_TitlebarInit(AG_Titlebar *, int);
-void	     AG_TitlebarDraw(void *);
 void	     AG_TitlebarSetCaption(AG_Titlebar *, const char *);
 __END_DECLS
 

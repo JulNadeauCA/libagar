@@ -57,6 +57,8 @@ typedef struct ag_label {
 } AG_Label;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agLabelOps;
+
 AG_Label *AG_LabelNewPolled(void *, Uint, const char *, ...);
 AG_Label *AG_LabelNewPolledMT(void *, Uint, AG_Mutex *, const char *, ...)
 	     NONNULL_ATTRIBUTE(3);
@@ -65,9 +67,6 @@ AG_Label *AG_LabelNewStatic(void *, Uint, const char *, ...)
 AG_Label *AG_LabelNewStaticString(void *, Uint, const char *);
 
 void	AG_LabelInit(AG_Label *, enum ag_label_type, Uint, const char *);
-void	AG_LabelDestroy(void *);
-void	AG_LabelDraw(void *);
-void	AG_LabelScale(void *, int, int);
 void	AG_LabelString(AG_Label *, const char *);
 void	AG_LabelText(AG_Label *, const char *, ...)
 	    FORMAT_ATTRIBUTE(printf, 2, 3)

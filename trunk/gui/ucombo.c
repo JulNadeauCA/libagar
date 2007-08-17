@@ -30,22 +30,6 @@
 
 #include "primitive.h"
 
-static AG_WidgetOps agUComboOps = {
-	{
-		"AG_Widget:AG_UCombo",
-		sizeof(AG_UCombo),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_UComboDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	NULL,			/* draw */
-	AG_UComboScale
-};
-
 AG_UCombo *
 AG_UComboNew(void *parent, Uint flags)
 {
@@ -61,16 +45,17 @@ AG_UComboNew(void *parent, Uint flags)
 }
 
 static void
-ucombo_collapse(AG_UCombo *com)
+Collapse(AG_UCombo *com)
 {
 	AG_WidgetBinding *stateb;
 	int *state;
 
-	if (com->panel == NULL)
+	if (com->panel == NULL) {
 		return;
-
+	}
 	com->saved_w = WIDGET(com->panel)->w;
 	com->saved_h = WIDGET(com->panel)->h;
+	
 	AG_WindowHide(com->panel);
 	AG_ObjectDetach(com->list);
 	AG_ViewDetach(com->panel);
@@ -83,45 +68,61 @@ ucombo_collapse(AG_UCombo *com)
 }
 
 static void
-ucombo_expand(AG_Event *event)
+ModalClose(AG_Event *event)
+{
+	AG_UCombo *com = AG_PTR(1);
+
+	if (com->panel != NULL)
+		Collapse(com);
+}
+
+static void
+Expand(AG_Event *event)
 {
 	AG_UCombo *com = AG_PTR(1);
 	int expand = AG_INT(2);
-	AG_Widget *pan;
+	AG_SizeAlloc aPanel;
+	AG_SizeReq rList;
 
 	if (expand) {
 		com->panel = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
 		                          AG_WINDOW_NOBORDERS);
 		AG_WindowSetPadding(com->panel, 0, 0, 0, 0);
-
-		pan = WIDGET(com->panel);
-
 		AG_ObjectAttach(com->panel, com->list);
 	
-		pan->w = com->saved_w > 0 ? com->saved_w : WIDGET(com)->w*4;
-		pan->h = com->saved_h > 0 ? com->saved_h : WIDGET(com)->h*5;
-		pan->x = WIDGET(com)->cx;
-		pan->y = WIDGET(com)->cy;
+		if (com->saved_w > 0) {
+			aPanel.w = com->saved_w;
+			aPanel.h = com->saved_h;
+		} else {
+			AG_TlistPrescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
+			AG_WidgetSizeReq(com->list, &rList);
+			aPanel.w = rList.w;
+			aPanel.h = rList.h;
+		}
+		aPanel.x = WIDGET(com)->cx;
+		aPanel.y = WIDGET(com)->cy;
 
-		/* XXX redundant check */
-		if (pan->x+pan->w > agView->w)
-			pan->w = agView->w - pan->x;
-		if (pan->y+pan->h > agView->h)
-			pan->h = agView->h - pan->y;
-		
-		AG_TlistPrescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
-		WIDGET_SCALE(com->list, -1, -1);
-		WIDGET_SCALE(pan, -1, -1);
-		AG_WINDOW_UPDATE(pan);
+		if (aPanel.x+aPanel.w > agView->w)
+			aPanel.w = agView->w - aPanel.x;
+		if (aPanel.y+aPanel.h > agView->h)
+			aPanel.h = agView->h - aPanel.y;
+		if (aPanel.w < 4 || aPanel.h < 4) {
+			Collapse(com);
+			return;
+		}
+		AG_WidgetSizeAlloc(com->panel, &aPanel);
+
+		AG_SetEvent(com->panel, "window-modal-close",
+		    ModalClose, "%p", com);
+		AG_WindowUpdate(com->panel);
 		AG_WindowShow(com->panel);
 	} else {
-		ucombo_collapse(com);
+		Collapse(com);
 	}
 }
 
-/* Effect a user item selection. */
 static void
-ucombo_selected(AG_Event *event)
+SelectedItem(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_UCombo *com = AG_PTR(1);
@@ -135,7 +136,7 @@ ucombo_selected(AG_Event *event)
 	}
 	AG_MutexUnlock(&tl->lock);
 
-	ucombo_collapse(com);
+	Collapse(com);
 }
 
 void
@@ -148,19 +149,20 @@ AG_UComboInit(AG_UCombo *com, Uint flags)
 
 	AG_WidgetInit(com, &agUComboOps, wflags);
 	com->panel = NULL;
+	com->saved_w = 0;
 	com->saved_h = 0;
 
 	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _("..."));
 	AG_ButtonSetPadding(com->button, 1,1,1,1);
-	AG_SetEvent(com->button, "button-pushed", ucombo_expand, "%p", com);
+	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	
 	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(com->list, AG_TLIST_EXPAND);
-	AG_SetEvent(com->list, "tlist-changed", ucombo_selected, "%p", com);
+	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 }
 
-void
-AG_UComboDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_UCombo *com = p;
 
@@ -174,20 +176,45 @@ AG_UComboDestroy(void *p)
 	AG_WidgetDestroy(com);
 }
 
-void
-AG_UComboScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_UCombo *com = p;
+	AG_SizeReq rButton;
 
-	if (w == -1 && h == -1) {
-		WIDGET_SCALE(com->button, -1, -1);
-		WIDGET(com)->w = WIDGET(com->button)->w;
-		WIDGET(com)->h = WIDGET(com->button)->h;
-		return;
-	}
-	
-	AG_WidgetScale(com->button, w, h);
-	WIDGET(com->button)->x = 0;
-	WIDGET(com->button)->y = 0;
+	AG_WidgetSizeReq(com->button, &rButton);
+	r->w = rButton.w;
+	r->h = rButton.h;
 }
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_UCombo *com = p;
+	AG_SizeAlloc aButton;
+
+	aButton.x = 0;
+	aButton.y = 0;
+	aButton.w = a->w;
+	aButton.h = a->h;
+	AG_WidgetSizeAlloc(com->button, &aButton);
+	return (0);
+}
+
+const AG_WidgetOps agUComboOps = {
+	{
+		"AG_Widget:AG_UCombo",
+		sizeof(AG_UCombo),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	NULL,			/* draw */
+	SizeRequest,
+	SizeAllocate
+};
 

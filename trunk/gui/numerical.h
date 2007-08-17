@@ -39,13 +39,12 @@ typedef struct ag_numerical {
 } AG_Numerical;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agNumericalOps;
+
 AG_Numerical 	*AG_NumericalNew(void *, Uint, const char *, const char *);
 void		 AG_NumericalInit(AG_Numerical *, Uint, const char *,
 		                  const char *);
-void		 AG_NumericalDestroy(void *);
 void		 AG_NumericalPrescale(AG_Numerical *, const char *);
-void		 AG_NumericalScale(void *, int, int);
-void		 AG_NumericalDraw(void *);
 
 void	AG_NumericalSetValue(AG_Numerical *, double);
 void	AG_NumericalAddValue(AG_Numerical *, double);

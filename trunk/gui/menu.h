@@ -98,6 +98,9 @@ typedef struct ag_menu_view {
 } AG_MenuView;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agMenuOps;
+extern const AG_WidgetOps agMenuViewOps;
+
 AG_Menu	  *AG_MenuNew(void *, Uint);
 #define	   AG_MenuNewGlobal(flags) AG_MenuNew(NULL,(flags))
 void	   AG_MenuInit(AG_Menu *, Uint);
@@ -181,8 +184,6 @@ AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, int, Uint32 *,
 	AG_MenuInt32FlagsMp((mi),(t),(i),(fp),(fl),(inv),NULL)
 
 void AG_MenuViewInit(void *, AG_Window *, AG_Menu *, AG_MenuItem *);
-void AG_MenuViewDraw(void *);
-void AG_MenuViewScale(void *, int, int);
 
 /* Legacy interfaces */
 #define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),-1)

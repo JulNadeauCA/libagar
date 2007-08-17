@@ -34,22 +34,6 @@
 
 #include <stdarg.h>
 
-const AG_WidgetOps agGLViewOps = {
-	{
-		"AG_Widget:AG_GLView",
-		sizeof(AG_GLView),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_GLViewDraw,
-	AG_GLViewScale
-};
-
 AG_GLView *
 AG_GLViewNew(void *parent, Uint flags)
 {
@@ -76,7 +60,7 @@ SetIdentity(GLdouble *M, GLenum which)
 }
 
 static void
-widgetmoved(AG_Event *event)
+WidgetMoved(AG_Event *event)
 {
 	AG_GLViewReshape(AG_SELF());
 }
@@ -140,7 +124,7 @@ AG_GLViewInit(AG_GLView *glv, Uint flags)
 	SetIdentity(glv->mColor, GL_COLOR);
 	AG_UnlockGL();
 
-	AG_SetEvent(glv, "widget-moved", widgetmoved, NULL);
+	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
 	AG_SetEvent(glv, "window-mousebuttondown", mousebuttondown, NULL);
 }
 
@@ -149,11 +133,6 @@ AG_GLViewPrescale(AG_GLView *glv, int w, int h)
 {
 	glv->wPre = w;
 	glv->hPre = h;
-}
-
-void
-AG_GLViewDestroy(void *p)
-{
 }
 
 void
@@ -244,19 +223,24 @@ AG_GLViewReshape(AG_GLView *glv)
 }
 
 void
-AG_GLViewScale(void *p, int w, int h)
+AG_GLViewSizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_GLView *glv = p;
 
-	if (w == -1 && h == -1) {
-		WIDGET(glv)->w = 32;		/* XXX */
-		WIDGET(glv)->h = 32;
-		AG_GLViewReshape(glv);
-		return;
-	}
-	WIDGET(glv)->w = w;
-	WIDGET(glv)->h = h;
+	r->w = 32;
+	r->h = 32;
+}
+
+int
+AG_GLViewSizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_GLView *glv = p;
+
+	if (a->w < 1 || a->h < 1)
+		return (-1);
+
 	AG_GLViewReshape(glv);
+	return (0);
 }
 
 void
@@ -303,5 +287,22 @@ AG_GLViewDraw(void *p)
 	if (glv->overlay_ev != NULL)
 		glv->overlay_ev->handler(glv->overlay_ev);
 }
+
+const AG_WidgetOps agGLViewOps = {
+	{
+		"AG_Widget:AG_GLView",
+		sizeof(AG_GLView),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	AG_GLViewDraw,
+	AG_GLViewSizeRequest,
+	AG_GLViewSizeAllocate
+};
 
 #endif /* HAVE_OPENGL */

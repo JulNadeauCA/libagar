@@ -34,31 +34,15 @@
 #include <string.h>
 #include <stdarg.h>
 
-static AG_WidgetOps agTableOps = {
-	{
-		"AG_Widget:AG_Table",
-		sizeof(AG_Table),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_TableDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_TableDraw,
-	AG_TableScale
-};
-
 static void mousebuttondown(AG_Event *);
 static void mousebuttonup(AG_Event *);
 static void mousemotion(AG_Event *);
 static void keydown(AG_Event *);
 static void keyup(AG_Event *);
-static void lostfocus(AG_Event *);
-static void kbdscroll(AG_Event *);
-static void dblclick_row_expire(AG_Event *);
-static void dblclick_col_expire(AG_Event *);
+static void LostFocus(AG_Event *);
+static void KeyboardScroll(AG_Event *);
+static void ExpireRowDblClick(AG_Event *);
+static void ExpireColDblClick(AG_Event *);
 
 #define COLUMN_RESIZE_RANGE	10	/* Range in pixels for resize ctrls */
 #define COLUMN_MIN_WIDTH	20	/* Minimum column width in pixels */
@@ -140,12 +124,12 @@ AG_TableInit(AG_Table *t, Uint flags)
 	AG_SetEvent(t, "window-mousemotion", mousemotion, NULL);
 	AG_SetEvent(t, "window-keydown", keydown, NULL);
 	AG_SetEvent(t, "window-keyup", keyup, NULL);
-	AG_SetEvent(t, "widget-lostfocus", lostfocus, NULL);
-	AG_SetEvent(t, "widget-hidden", lostfocus, NULL);
-	AG_SetEvent(t, "detached", lostfocus, NULL);
-	AG_SetEvent(t, "kbdscroll", kbdscroll, NULL);
-	AG_SetEvent(t, "dblclick-row-expire", dblclick_row_expire, NULL);
-	AG_SetEvent(t, "dblclick-col-expire", dblclick_col_expire, NULL);
+	AG_SetEvent(t, "widget-lostfocus", LostFocus, NULL);
+	AG_SetEvent(t, "widget-hidden", LostFocus, NULL);
+	AG_SetEvent(t, "detached", LostFocus, NULL);
+	AG_SetEvent(t, "kbdscroll", KeyboardScroll, NULL);
+	AG_SetEvent(t, "dblclick-row-expire", ExpireRowDblClick, NULL);
+	AG_SetEvent(t, "dblclick-col-expire", ExpireColDblClick, NULL);
 }
 
 void
@@ -155,8 +139,8 @@ AG_TablePrescale(AG_Table *t, int w, int nrows)
 	if (nrows != -1) { t->preh = nrows*agTextFontHeight; }
 }
 
-void
-AG_TableDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Table *t = p;
 	AG_TablePopup *tp, *tpn;
@@ -185,7 +169,7 @@ AG_TableDestroy(void *p)
 }
 
 static void
-AG_TableSizeFillCols(AG_Table *t)
+SizeFillCols(AG_Table *t)
 {
 	Uint n;
 
@@ -203,45 +187,54 @@ AG_TableSizeFillCols(AG_Table *t)
 	}
 }
 
-void
-AG_TableScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Table *t = p;
 	int n;
 
-	if (w == -1 && h == -1) {
-		if (t->prew != -1) {
-			WIDGET(t)->w = t->vbar->bw + 2;
-			for (n = 0; n < t->n; n++) {
-				AG_TableCol *tc = &t->cols[n];
-			
-				if (tc->flags & AG_TABLE_COL_FILL) {
-					WIDGET(t)->w += COLUMN_MIN_WIDTH;
-					continue;
-				}
-				WIDGET(t)->w += tc->w;
+	if (t->prew != -1) {
+		r->w = t->vbar->bw + 2;
+		for (n = 0; n < t->n; n++) {
+			AG_TableCol *tc = &t->cols[n];
+		
+			if (tc->flags & AG_TABLE_COL_FILL) {
+				WIDGET(t)->w += COLUMN_MIN_WIDTH;
+				continue;
 			}
-		} else {
-			WIDGET(t)->w = t->prew;
+			r->w += tc->w;
 		}
-		WIDGET(t)->h = t->preh;
+	} else {
+		r->w = t->prew;
 	}
+	r->h = t->preh;
+}
 
-	WIDGET(t->vbar)->x = WIDGET(t)->w - t->vbar->bw;
-	WIDGET(t->vbar)->y = t->col_h - 1;
-	AG_WidgetScale(t->vbar, t->vbar->bw, WIDGET(t)->h - t->col_h + 1);
-	
-	WIDGET(t->hbar)->x = t->vbar->bw + 1;
-	WIDGET(t->hbar)->y = WIDGET(t)->h - t->hbar->bw;
-	AG_WidgetScale(t->hbar, WIDGET(t)->w - t->hbar->bw, t->vbar->bw);
-	
-	if (WIDGET(t)->w < t->vbar->bw ||
-	    WIDGET(t)->h < t->vbar->bw*2) {
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Table *t = p;
+	AG_SizeAlloc aBar;
+
+	aBar.x = a->w - t->vbar->bw;
+	aBar.y = t->col_h - 1;
+	aBar.w = t->vbar->bw;
+	aBar.h = a->h - t->col_h + 1;
+	AG_WidgetSizeAlloc(t->vbar, &aBar);
+
+	aBar.x = t->vbar->bw + 1;
+	aBar.y = a->h - t->hbar->bw;
+	aBar.w = a->w - t->hbar->bw;
+	aBar.h = t->vbar->bw;
+	AG_WidgetSizeAlloc(t->hbar, &aBar);
+
+	if (a->w < t->vbar->bw ||
+	    a->h < t->vbar->bw*2) {
 		WIDGET(t->vbar)->flags |= AG_WIDGET_HIDE;
 		t->wTbl = 0;
 	} else {
 		WIDGET(t->vbar)->flags &= ~(AG_WIDGET_HIDE);
-		t->wTbl = WIDGET(t)->w - WIDGET(t->vbar)->w;
+		t->wTbl = a->w - WIDGET(t->vbar)->w;
 	}
 #if 0
 	if (w != -1 && h != -1) {
@@ -253,12 +246,13 @@ AG_TableScale(void *p, int w, int h)
 		}
 	}
 #endif
-	AG_TableSizeFillCols(t);
+	SizeFillCols(t);
 	AG_TableUpdateScrollbars(t);
+	return (0);
 }
 
 static __inline__ void
-AG_TablePrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
+PrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
 {
 	switch (c->type) {
 	case AG_CELL_INT:
@@ -393,7 +387,7 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 		}
 		break;
 	default:
-		AG_TablePrintCell(t, c, txt, sizeof(txt));
+		PrintCell(t, c, txt, sizeof(txt));
 		break;
 	}
 	AG_TextColor(TEXT_COLOR);
@@ -404,8 +398,8 @@ blit:
 	    rd->y + (t->row_h>>1) - (WSURFACE(t,c->surface)->h>>1));
 }
 
-void
-AG_TableDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_Table *t = p;
 	int n, m;
@@ -1062,7 +1056,7 @@ mousemotion(AG_Event *event)
 		if ((tc->w += xrel) < COLUMN_MIN_WIDTH) {
 			tc->w = COLUMN_MIN_WIDTH;
 		}
-		AG_TableSizeFillCols(t);
+		SizeFillCols(t);
 		AG_SetCursor(AG_HRESIZE_CURSOR);
 	} else {
 		if (y <= t->col_h &&
@@ -1094,7 +1088,7 @@ keyup(AG_Event *event)
 }
 
 static void
-lostfocus(AG_Event *event)
+LostFocus(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 
@@ -1180,7 +1174,7 @@ AG_TableDeselectAllCols(AG_Table *t)
 }
 
 static void
-kbdscroll(AG_Event *event)
+KeyboardScroll(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 	SDLKey keysym = AG_SDLKEY(1);
@@ -1217,7 +1211,7 @@ kbdscroll(AG_Event *event)
 }
 
 static void
-dblclick_row_expire(AG_Event *event)
+ExpireRowDblClick(AG_Event *event)
 {
 	AG_Table *tbl = AG_SELF();
 
@@ -1227,7 +1221,7 @@ dblclick_row_expire(AG_Event *event)
 }
 
 static void
-dblclick_col_expire(AG_Event *event)
+ExpireColDblClick(AG_Event *event)
 {
 	AG_Table *tbl = AG_SELF();
 
@@ -1497,7 +1491,7 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 			if (t->cols[n].name[0] == '\0') {
 				continue;
 			}
-			AG_TablePrintCell(t, &t->cells[m][n], txt, sizeof(txt));
+			PrintCell(t, &t->cells[m][n], txt, sizeof(txt));
 			fputs(txt, f);
 			fputc(sep, f);
 		}
@@ -1507,3 +1501,19 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 	return (0);
 }
 
+const AG_WidgetOps agTableOps = {
+	{
+		"AG_Widget:AG_Table",
+		sizeof(AG_Table),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		Destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

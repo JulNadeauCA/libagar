@@ -34,22 +34,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-static AG_WidgetOps agMenuOps = {
-	{
-		"AG_Widget:AG_Menu",
-		sizeof(AG_Menu),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_MenuDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_MenuDraw,
-	AG_MenuScale
-};
-
 AG_Menu *agAppMenu = NULL;
 AG_Window *agAppMenuWin = NULL;
 
@@ -69,6 +53,7 @@ AG_MenuNew(void *parent, Uint flags)
 			Free(agAppMenu, M_OBJECT);
 		}
 		m->flags |= AG_MENU_GLOBAL;
+		WIDGET(m)->flags |= AG_WIDGET_HFILL;
 		AG_MenuSetPadding(m, 4, 4, -1, -1);
 
 		agAppMenu = m;
@@ -87,30 +72,26 @@ AG_Window *
 AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
 {
 	AG_MenuView *mview;
-	AG_Window *panel;
+	AG_Window *win;
 
 	AG_MenuUpdateItem(item);
 
 	if (item->nsubitems == 0)
 		return (NULL);
 
-	panel = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
-	                     AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
-	AG_WindowSetCaption(panel, "win-popup");
-	AG_WindowSetPadding(panel, 0, 0, 0, 0);
-
-	WIDGET(panel)->x = x;
-	WIDGET(panel)->y = y;
+	win = AG_WindowNew(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS|
+	                   AG_WINDOW_DENYFOCUS|AG_WINDOW_KEEPABOVE);
+	AG_WindowSetCaption(win, "win-popup");
+	AG_WindowSetPadding(win, 0, 0, 0, 0);
 
 	mview = Malloc(sizeof(AG_MenuView), M_OBJECT);
-	AG_MenuViewInit(mview, panel, m, item);
-	AG_ObjectAttach(panel, mview);
+	AG_MenuViewInit(mview, win, m, item);
+	AG_ObjectAttach(win, mview);
 	item->view = mview;
 
-	WIDGET_SCALE(panel, -1, -1);
-	AG_WINDOW_UPDATE(panel);
-	AG_WindowShow(panel);
-	return (panel);
+	AG_WindowShow(win);
+	AG_WindowSetGeometry(win, x, y, -1, -1);
+	return (win);
 }
 
 void
@@ -340,10 +321,10 @@ CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 
 	/* If this is the application menu, resize its window. */
 	if (m != NULL && (m->flags & AG_MENU_GLOBAL)) {
-		WIDGET_SCALE(m, -1, -1);
-		AG_WindowSetGeometry(agAppMenuWin, 0, 0, agView->w,
-		    WIDGET(m)->h);
-		AG_WidgetScale(m, agView->w, WIDGET(m)->h);
+		AG_SizeReq rMenu;
+
+		AG_WidgetSizeReq(m, &rMenu);
+		AG_WindowSetGeometry(agAppMenuWin, 0, 0, agView->w, rMenu.h);
 	}
 	return (mi);
 }
@@ -351,8 +332,10 @@ CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 void
 AG_MenuInit(AG_Menu *m, Uint flags)
 {
-	Uint wflags = AG_WIDGET_UNFOCUSED_MOTION|AG_WIDGET_UNFOCUSED_BUTTONUP|
-	              AG_WIDGET_CLIPPING;
+	Uint wflags = AG_WIDGET_UNFOCUSED_MOTION|
+	              AG_WIDGET_UNFOCUSED_BUTTONUP|
+	              AG_WIDGET_IGNORE_PADDING|
+		      AG_WIDGET_CLIPPING;
 
 	if (flags & AG_MENU_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_MENU_VFILL) { wflags |= AG_WIDGET_VFILL; }
@@ -689,7 +672,6 @@ void
 AG_MenuUpdateItem(AG_MenuItem *mi)
 {
 	if (mi->poll != NULL) {
-		printf("Updating: %s\n", mi->text);
 		AG_MenuItemFreeChildren(mi);
 		AG_PostEvent(mi, mi->pmenu, mi->poll->name, NULL);
 	}
@@ -701,16 +683,13 @@ AG_MenuState(AG_MenuItem *mi, int state)
 	mi->pmenu->curState = state;
 }
 
-void
-AG_MenuDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_Menu *m = p;
+	int lbl, wLbl, hLbl;
 	int i;
 
-	if (WIDGET(m)->w < (m->lPad + m->rPad) ||
-	    WIDGET(m)->h < (m->tPad + m->bPad)) {
-		return;
-	}
 	agPrim.box(m, 0, 0, WIDGET(m)->w, WIDGET(m)->h, 1,
 	    AG_COLOR(MENU_UNSEL_COLOR));
 
@@ -719,8 +698,6 @@ AG_MenuDraw(void *p)
 	}
 	for (i = 0; i < m->root->nsubitems; i++) {
 		AG_MenuItem *item = &m->root->subitems[i];
-		int wLbl, hLbl;
-		int lbl;
 
 		if (item->state) {
 			if (item->lblEnabled == -1) {
@@ -756,56 +733,62 @@ AG_MenuDraw(void *p)
 	}
 }
 
-void
-AG_MenuScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Menu *m = p;
+	int i, x, y;
 	int wLbl, hLbl;
-	int x, y, lbl;
-	int i;
 
-	if (w == -1 || h == -1) {
-		x = WIDGET(m)->w = m->lPad;
-		y = WIDGET(m)->h = m->tPad;
-
-		if (m->root == NULL) {
-			return;
-		}
-		for (i = 0; i < m->root->nsubitems; i++) {
-			AG_MenuItem *item = &m->root->subitems[i];
-			int lbl = (item->lblEnabled!=-1) ? item->lblEnabled :
-				  (item->lblDisabled!=-1) ? item->lblDisabled :
-				  -1;
-
-			if (lbl != -1) {
-				wLbl = WSURFACE(m,lbl)->w;
-				hLbl = WSURFACE(m,lbl)->h;
-			} else {
-				AG_TextSize(item->text, &wLbl, &hLbl);
-			}
-			wLbl += m->lPadLbl + m->rPadLbl;
-			hLbl += m->tPadLbl + m->bPadLbl;
-			item->x = x;
-			item->y = y;
-			x += wLbl + m->lPadLbl + m->rPadLbl;
-			if (WIDGET(m)->h < (y + hLbl + m->bPad)) {
-				WIDGET(m)->h = y + hLbl + m->bPad;
-			}
-			if (WIDGET(m)->w < (x + m->rPad)) {
-				WIDGET(m)->w = x + m->rPad;
-			}
-			if (x >= agView->w) {			/* Wrap */
-				x = m->lPad;
-				y += hLbl;
-			}
-		}
-	} else {
-		WIDGET(m)->w = w;
-		WIDGET(m)->h = h;
-	}
+	x = r->w = m->lPad;
+	y = r->h = m->tPad;
 
 	if (m->root == NULL) {
 		return;
+	}
+	for (i = 0; i < m->root->nsubitems; i++) {
+		AG_MenuItem *item = &m->root->subitems[i];
+		int lbl = (item->lblEnabled!=-1) ? item->lblEnabled :
+			  (item->lblDisabled!=-1) ? item->lblDisabled :
+			  -1;
+
+		if (lbl != -1) {
+			wLbl = WSURFACE(m,lbl)->w;
+			hLbl = WSURFACE(m,lbl)->h;
+		} else {
+			AG_TextSize(item->text, &wLbl, &hLbl);
+		}
+		wLbl += m->lPadLbl + m->rPadLbl;
+		hLbl += m->tPadLbl + m->bPadLbl;
+		item->x = x;
+		item->y = y;
+		x += wLbl + m->lPadLbl + m->rPadLbl;
+		if (r->h < (y + hLbl + m->bPad)) {
+			r->h = y + hLbl + m->bPad;
+		}
+		if (r->w < (x + m->rPad)) {
+			r->w = x + m->rPad;
+		}
+		if (x >= agView->w) {			/* Wrap */
+			x = m->lPad;
+			y += hLbl;
+		}
+	}
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Menu *m = p;
+	int wLbl, hLbl;
+	int x, y, lbl, i;
+	
+	if (WIDGET(m)->w < (m->lPad + m->rPad) ||
+	    WIDGET(m)->h < (m->tPad + m->bPad)) {
+		return (-1);
+	}
+	if (m->root == NULL) {
+		return (-1);
 	}
 	x = m->lPad;
 	y = m->tPad;
@@ -829,11 +812,12 @@ AG_MenuScale(void *p, int w, int h)
 		hLbl += m->tPadLbl + m->bPadLbl;
 		item->x = x;
 		item->y = y;
-		if ((x += wLbl) >= w) {				/* Wrap */
+		if ((x += wLbl) >= a->w) {			/* Wrap */
 			x = m->lPad;
 			y += hLbl;
 		}
 	}
+	return (0);
 }
 
 AG_PopupMenu *
@@ -894,3 +878,20 @@ AG_PopupDestroy(void *pWid, AG_PopupMenu *pm)
 	pm->win = NULL;
 	Free(pm, M_WIDGET);
 }
+
+const AG_WidgetOps agMenuOps = {
+	{
+		"AG_Widget:AG_Menu",
+		sizeof(AG_Menu),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		AG_MenuDestroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

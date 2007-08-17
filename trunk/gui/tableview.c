@@ -35,22 +35,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-static AG_WidgetOps agTableviewOps = {
-	{
-		"AG_Widget:AG_Tableview",
-		sizeof(AG_Tableview),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_TableviewDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_TableviewDraw,
-	AG_TableviewScale
-};
-
 #define ID_INVALID ((Uint)-1)
 #define VISROW(tv,i) ((tv)->visible.items[i].row)
 #define VISDEPTH(tv,i) ((tv)->visible.items[i].depth)
@@ -576,60 +560,64 @@ AG_TableviewRowCollapse(AG_Tableview *tv, AG_TableviewRow *in)
 	AG_MutexUnlock(&tv->lock);
 }
 
-void
-AG_TableviewDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Tableview *tv = p;
-	Uint i;
-
-	AG_MutexLock(&tv->lock);
 
 	AG_TableviewRowDelAll(tv);
-
 	Free(tv->column, M_WIDGET);
 	Free(tv->visible.items, M_WIDGET);
-
-	AG_MutexUnlock(&tv->lock);
 	AG_MutexDestroy(&tv->lock);
-
 	AG_WidgetDestroy(tv);
 }
 
-void
-AG_TableviewScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Tableview *tv = p;
-	Uint rows_per_view, i;
+	int i;
 
 	AG_MutexLock(&tv->lock);
 
-	/* estimate but don't change anything */
-	if (w == -1 && h == -1) {
-		WIDGET(tv)->w = tv->prew + tv->sbar_v->bw;
-		WIDGET(tv)->h = tv->preh +
-		    (tv->sbar_h == NULL ? 0 : tv->sbar_h->bw);
+	r->w = tv->prew + tv->sbar_v->bw;
+	r->h = tv->preh + (tv->sbar_h == NULL ? 0 : tv->sbar_h->bw);
 
-		for (i = 0; i < tv->columncount; i++) {
-			WIDGET(tv)->w += tv->column[i].w;
-		}
-		goto out;
+	for (i = 0; i < tv->columncount; i++) {
+		r->w += tv->column[i].w;
 	}
-	/* vertical scroll bar */
-	WIDGET(tv->sbar_v)->x = w - tv->sbar_v->bw;
-	WIDGET(tv->sbar_v)->y = 0;
-	AG_WidgetScale(tv->sbar_v, -1, h - (tv->sbar_h ? tv->sbar_v->bw : 0));
+	AG_MutexUnlock(&tv->lock);
+}
 
-	/* horizontal scroll bar, if enabled */
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Tableview *tv = p;
+	Uint rows_per_view, i;
+	AG_SizeAlloc aBar;
+
+	AG_MutexLock(&tv->lock);
+	
+	/* Size vertical scroll bar. */
+	aBar.x = a->w - tv->sbar_v->bw;
+	aBar.y = 0;
+	aBar.w = tv->sbar_v->bw;
+	aBar.h = a->h - (tv->sbar_h ? tv->sbar_h->bw : 0);
+	AG_WidgetSizeAlloc(tv->sbar_v, &aBar);
+
+	/* Size horizontal scroll bar, if enabled. */
 	if (tv->sbar_h != NULL) {
 		int col_w = 0;
 
-		WIDGET(tv->sbar_h)->x = 0;
-		WIDGET(tv->sbar_h)->y = h - tv->sbar_v->bw;
-		AG_WidgetScale(tv->sbar_h, w - tv->sbar_v->bw, -1);
+		aBar.x = 0;
+		aBar.y = a->h - tv->sbar_h->bw;
+		aBar.w = a->w - tv->sbar_h->bw;
+		aBar.h = tv->sbar_h->bw;
+		AG_WidgetSizeAlloc(tv->sbar_v, &aBar);
 
-		for (i = 0; i < tv->columncount; i++)
+		for (i = 0; i < tv->columncount; i++) {
 			col_w += tv->column[i].w;
-
+		}
 		if (col_w > WIDGET(tv->sbar_h)->w) {
 			int scroll = col_w - WIDGET(tv->sbar_h)->w;
 
@@ -638,13 +626,15 @@ AG_TableviewScale(void *p, int w, int h)
 				AG_WidgetSetInt(tv->sbar_h, "value", scroll);
 			}
 			AG_ScrollbarSetBarSize(tv->sbar_h,
-			    WIDGET(tv->sbar_h)->w*(w-tv->sbar_h->bw*3)/col_w);
+			    WIDGET(tv->sbar_h)->w * (a->w - tv->sbar_h->bw*3) / 
+			    col_w);
 		} else {
 			AG_WidgetSetInt(tv->sbar_h, "value", 0);
 			AG_ScrollbarSetBarSize(tv->sbar_h, -1);
 		}
 	}
-	/* calculate widths for AG_TABLEVIEW_COL_FILL cols */
+
+	/* Calculate widths for TABLEVIEW_COL_FILL columns. */
 	{
 		Uint fill_cols, nonfill_width, fill_width;
 
@@ -658,8 +648,8 @@ AG_TableviewScale(void *p, int w, int h)
 			}
 		}
 
-		fill_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w -
-		    nonfill_width) / fill_cols;
+		fill_width = (a->w - WIDGET(tv->sbar_v)->w - nonfill_width) /
+		             fill_cols;
 
 		for (i = 0; i < tv->columncount; i++) {
 			if (tv->column[i].fill)
@@ -667,9 +657,9 @@ AG_TableviewScale(void *p, int w, int h)
 		}
 	}
 
-	/* Calculate how many rows the view holds */
+	/* Calculate how many rows the view holds. */
 	{
-		int view_height = h - (NULL == tv->sbar_h ? 0 :
+		int view_height = a->h - (NULL == tv->sbar_h ? 0 :
 				  WIDGET(tv->sbar_h)->h);
 
 		if (view_height < tv->head_height) {
@@ -699,12 +689,13 @@ AG_TableviewScale(void *p, int w, int h)
 		tv->visible.count = rows_per_view;
 		tv->visible.dirty = 1;
 	}
-out:
+
 	AG_MutexUnlock(&tv->lock);
+	return (0);
 }
 
-void
-AG_TableviewDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_Tableview *tv = p;
 	Uint i;
@@ -1239,6 +1230,7 @@ draw_column(AG_Tableview *tv, int visible_start, int visible_end,
 				Uint8 c[4] = { 255, 255, 255, 128 };
 
 				agPrim.frame(tv, offset, ty, tw, tw,
+				    1,
 				    AG_COLOR(TABLEVIEW_LINE_COLOR));
 				if (VISROW(tv,j)->expanded) {
 					agPrim.minus(tv, offset, ty,
@@ -1464,3 +1456,20 @@ AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
 	AG_TextColor(TABLEVIEW_CTXT_COLOR);
 	row->cell[cell].image = AG_TextRender(row->cell[cell].text);
 }
+
+const AG_WidgetOps agTableviewOps = {
+	{
+		"AG_Widget:AG_Tableview",
+		sizeof(AG_Tableview),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

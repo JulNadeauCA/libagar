@@ -22,17 +22,20 @@ typedef struct ag_fixed {
 #define AG_FIXED_INVBOX		0x20	/* Draw a box */
 #define AG_FIXED_FRAME		0x40	/* Draw a frame */
 #define AG_FIXED_EXPAND		(AG_FIXED_HFILL|AG_FIXED_VFILL)
+	int wPre, hPre;			/* User geometry */
 } AG_Fixed;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agFixedOps;
+
 AG_Fixed *AG_FixedNew(void *, Uint);
 void	  AG_FixedInit(AG_Fixed *, Uint);
-void	  AG_FixedDestroy(void *);
+void	  AG_FixedPrescale(AG_Fixed *, int, int);
+
 void	  AG_FixedDrawBg(void *);
 void	  AG_FixedDrawBox(void *);
 void	  AG_FixedDrawInvBox(void *);
 void	  AG_FixedDrawFrame(void *);
-void	  AG_FixedScale(void *, int, int);
 
 void	  AG_FixedPut(AG_Fixed *, void *, int, int);
 void	  AG_FixedDel(AG_Fixed *, void *);

@@ -33,30 +33,9 @@
 #include <string.h>
 #include <stdarg.h>
 
-static AG_WidgetOps agTlistOps = {
-	{
-		"AG_Widget:AG_Tlist",
-		sizeof(AG_Tlist),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_TlistDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_TlistDraw,
-	AG_TlistScale
-};
-
-enum {
-	PAGE_INCREMENT = 4
-};
-
 static void mousebuttondown(AG_Event *);
 static void keydown(AG_Event *);
 static void keyup(AG_Event *);
-static void scrolled(AG_Event *);
 
 static void FreeItem(AG_Tlist *, AG_TlistItem *);
 static void SelectItem(AG_Tlist *, AG_TlistItem *);
@@ -64,6 +43,7 @@ static void DeselectItem(AG_Tlist *, AG_TlistItem *);
 static void PopupMenu(AG_Tlist *, AG_TlistPopup *);
 static void UpdateItemIcon(AG_Tlist *, AG_TlistItem *, SDL_Surface *);
 static void UpdateListScrollbar(AG_Tlist *);
+static void ScrollbarChanged(AG_Event *);
 
 AG_Tlist *
 AG_TlistNew(void *parent, Uint flags)
@@ -95,7 +75,7 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 
 /* Displace the selection or scroll in response to keyboard events. */
 static void
-key_tick(AG_Event *event)
+KeyTimeout(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	SDLKey keysym = AG_SDLKEY(1);
@@ -142,13 +122,13 @@ key_tick(AG_Event *event)
 		}
 		break;
 	case SDLK_PAGEUP:
-		if ((*offset -= PAGE_INCREMENT) < 0) {
+		if ((*offset -= agPageIncrement) < 0) {
 			*offset = 0;
 		}
 		AG_WidgetBindingChanged(offsetb);
 		break;
 	case SDLK_PAGEDOWN:
-		if ((*offset += PAGE_INCREMENT) > tl->nitems - tl->nvisitems) {
+		if ((*offset += agPageIncrement) > tl->nitems - tl->nvisitems) {
 			*offset = tl->nitems - tl->nvisitems;
 		}
 		AG_WidgetBindingChanged(offsetb);
@@ -164,7 +144,7 @@ key_tick(AG_Event *event)
 }
 
 static void
-dblclick_expire(AG_Event *event)
+DoubleClickTimeout(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 
@@ -174,7 +154,7 @@ dblclick_expire(AG_Event *event)
 }
 
 static void
-lost_focus(AG_Event *event)
+LostFocus(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 
@@ -213,14 +193,14 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
 
-	AG_SetEvent(tl->sbar, "scrollbar-changed", scrolled, "%p", tl);
+	AG_SetEvent(tl->sbar, "scrollbar-changed", ScrollbarChanged, "%p", tl);
 	AG_SetEvent(tl, "window-mousebuttondown", mousebuttondown, NULL);
 	AG_SetEvent(tl, "window-keydown", keydown, NULL);
 	AG_SetEvent(tl, "window-keyup", keyup, NULL);
-	AG_SetEvent(tl, "key-tick", key_tick, NULL);
-	AG_SetEvent(tl, "dblclick-expire", dblclick_expire, NULL);
-	AG_SetEvent(tl, "widget-lostfocus", lost_focus, NULL);
-	AG_SetEvent(tl, "widget-hidden", lost_focus, NULL);
+	AG_SetEvent(tl, "key-tick", KeyTimeout, NULL);
+	AG_SetEvent(tl, "dblclick-expire", DoubleClickTimeout, NULL);
+	AG_SetEvent(tl, "widget-lostfocus", LostFocus, NULL);
+	AG_SetEvent(tl, "widget-hidden", LostFocus, NULL);
 }
 
 void
@@ -263,30 +243,43 @@ AG_TlistDestroy(void *p)
 	AG_WidgetDestroy(tl);
 }
 
-void
-AG_TlistScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Tlist *tl = p;
 
-	if (w == -1 && h == -1) {
-		WIDGET(tl)->w = tl->prew;
-		WIDGET(tl)->h = tl->preh;
-	}
+	r->w = tl->prew;
+	r->h = tl->preh;
+}
 
-	AG_WidgetScale(tl->sbar, tl->sbar->bw, WIDGET(tl)->h);
-	if (WIDGET(tl)->w < tl->sbar->bw ||
-	    WIDGET(tl)->h < tl->sbar->bw*2) {
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Tlist *tl = p;
+	AG_SizeReq rBar;
+	AG_SizeAlloc aBar;
+	
+	AG_WidgetSizeReq(tl->sbar, &rBar);
+	if (rBar.w > a->w) {
+		return (-1);
+	}
+	aBar.w = rBar.w;
+	aBar.h = a->h;
+	aBar.x = a->w - rBar.w;
+	aBar.y = 0;
+	AG_WidgetSizeAlloc(tl->sbar, &aBar);
+
+	if (a->w < rBar.w || a->h < tl->sbar->bw*2) {
 		WIDGET(tl->sbar)->flags |= AG_WIDGET_HIDE;
 	} else {
 		WIDGET(tl->sbar)->flags &= ~(AG_WIDGET_HIDE);
-		WIDGET(tl->sbar)->x = WIDGET(tl)->w - tl->sbar->bw;
-		WIDGET(tl->sbar)->y = 0;
 	}
 	UpdateListScrollbar(tl);
+	return (0);
 }
 
-void
-AG_TlistDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_Tlist *tl = p;
 	AG_TlistItem *it;
@@ -296,10 +289,6 @@ AG_TlistDraw(void *p)
 	agPrim.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
 	    AG_COLOR(TLIST_BG_COLOR));
 	
-	if (WIDGET(tl)->w <= 2 ||
-	    WIDGET(tl)->h <= 2)
-		return;
-
 	AG_MutexLock(&tl->lock);
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
@@ -367,8 +356,10 @@ AG_TlistDraw(void *p)
 		    y + tl->item_h/2 - WSURFACE(tl,it->label)->h/2 + 2);
 
 		y += tl->item_h;
-		agPrim.hline(tl, 0, WIDGET(tl)->w, y,
-		    AG_COLOR(TLIST_LINE_COLOR));
+		if (y < WIDGET(tl)->h - 1) {
+			agPrim.hline(tl, 0, WIDGET(tl)->w, y,
+			    AG_COLOR(TLIST_LINE_COLOR));
+		}
 	}
 	AG_MutexUnlock(&tl->lock);
 }
@@ -1027,7 +1018,7 @@ keyup(AG_Event *event)
 }
 
 static void
-scrolled(AG_Event *event)
+ScrollbarChanged(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 
@@ -1246,3 +1237,19 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 	tp->panel = AG_MenuExpand(m, tp->item, x+4, y+4);
 }
 
+const AG_WidgetOps agTlistOps = {
+	{
+		"AG_Widget:AG_Tlist",
+		sizeof(AG_Tlist),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		AG_TlistDestroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

@@ -27,11 +27,10 @@ typedef struct ag_scrollable_text {
 } AG_ScrollableText;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agScrollableTextOps;
+
 AG_ScrollableText  *AG_ScrollableTextNew(void *, Uint);
 void		    AG_ScrollableTextInit(AG_ScrollableText *, Uint);
-void		    AG_ScrollableTextDestroy(void *);
-void		    AG_ScrollableTextDraw(void *);
-void		    AG_ScrollableTextScale(void *, int, int);
 __END_DECLS
 
 #include "close_code.h"

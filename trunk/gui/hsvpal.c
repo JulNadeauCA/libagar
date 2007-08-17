@@ -36,22 +36,6 @@
 
 #include <string.h>
 
-const AG_WidgetOps agHSVPalOps = {
-	{
-		"AG_Widget:AG_HSVPal",
-		sizeof(AG_HSVPal),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* reinit */
-		AG_WidgetDestroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	AG_HSVPalDraw,
-	AG_HSVPalScale
-};
-
 static float cH = 0.0, cS = 0.0, cV = 0.0, cA = 0.0;	/* Copy buffer */
 
 static void RenderPalette(AG_HSVPal *);
@@ -784,30 +768,36 @@ RenderPalette(AG_HSVPal *pal)
 	SDL_UnlockSurface(pal->surface);
 }
 
-void
-AG_HSVPalScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
+{
+	AG_HSVPal *pal = p;
+
+	r->w = 128;
+	r->h = 128;
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	AG_HSVPal *pal = p;
 	int i, y = 0;
 
-	if (w == -1 && h == -1) {
-		WIDGET(pal)->w = 120;
-		WIDGET(pal)->h = 160;
-	}
-	
+	if (a->w < 32 || a->h < 32)
+		return (-1);
+
 	pal->rAlpha.x = 0;
 	pal->rAlpha.h = 32;
-	pal->rAlpha.y = WIDGET(pal)->h - 32;
-	pal->rAlpha.w = WIDGET(pal)->w;
+	pal->rAlpha.y = a->h - 32;
+	pal->rAlpha.w = a->w;
 	
-	pal->circle.rout = MIN(WIDGET(pal)->w,
-	    WIDGET(pal)->h - pal->rAlpha.h)/2;
+	pal->circle.rout = MIN(a->w, (a->h - pal->rAlpha.h))/2;
 	pal->circle.rin = pal->circle.rout - pal->circle.width;
 	pal->circle.dh = (float)(1.0/(pal->circle.rout*M_PI));
-	pal->circle.x = WIDGET(pal)->w/2;
-	pal->circle.y = (WIDGET(pal)->h - pal->rAlpha.h)/2;
+	pal->circle.x = a->w/2;
+	pal->circle.y = (a->h - pal->rAlpha.h)/2;
 
-	pal->triangle.x = WIDGET(pal)->w/2;
+	pal->triangle.x = a->w/2;
 	pal->triangle.y = pal->circle.y+pal->circle.width-pal->circle.rout;
 	pal->triangle.h = pal->circle.rin*sin((37.0/360.0)*(2*M_PI)) -
 			  pal->circle.rin*sin((270.0/360.0)*(2*M_PI));
@@ -815,10 +805,11 @@ AG_HSVPalScale(void *p, int w, int h)
 	pal->selcircle_r = pal->circle.width/2 - 4;
 
 	pal->flags |= AG_HSVPAL_DIRTY;
+	return (0);
 }
 
-void
-AG_HSVPalDraw(void *p)
+static void
+Draw(void *p)
 {
 	AG_HSVPal *pal = p;
 	float cur_h, cur_s, cur_v;
@@ -895,3 +886,19 @@ AG_HSVPalDraw(void *p)
 	    AG_COLOR(HSVPAL_BAR1_COLOR));
 }
 
+const AG_WidgetOps agHSVPalOps = {
+	{
+		"AG_Widget:AG_HSVPal",
+		sizeof(AG_HSVPal),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		AG_WidgetDestroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

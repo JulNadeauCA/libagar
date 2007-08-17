@@ -34,22 +34,6 @@
 #include <string.h>
 #include <limits.h>
 
-static AG_WidgetOps agMSpinbuttonOps = {
-	{
-		"AG_Widget:AG_MSpinbutton",
-		sizeof(AG_MSpinbutton),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_MSpinbuttonDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_MSpinbuttonDraw,
-	AG_MSpinbuttonScale
-};
-
 AG_MSpinbutton *
 AG_MSpinbuttonNew(void *parent, Uint flags, const char *sep, const char *label)
 {
@@ -239,7 +223,7 @@ AG_MSpinbuttonInit(AG_MSpinbutton *sbu, Uint flags, const char *sep,
 	sbu->inc = 1;
 	sbu->writeable = 0;
 	sbu->sep = sep;
-	AG_MutexInit(&sbu->lock);
+	AG_MutexInitRecursive(&sbu->lock);
 	
 	sbu->input = AG_TextboxNew(sbu, 0, label);
 	AG_SetEvent(sbu->input, "textbox-return", mspinbutton_return,
@@ -269,8 +253,8 @@ AG_MSpinbuttonInit(AG_MSpinbutton *sbu, Uint flags, const char *sep,
 	AG_SetEvent(sbu, "window-keydown", mspinbutton_keydown, NULL);
 }
 
-void
-AG_MSpinbuttonDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_MSpinbutton *sbu = p;
 
@@ -278,55 +262,65 @@ AG_MSpinbuttonDestroy(void *p)
 	AG_WidgetDestroy(sbu);
 }
 
-void
-AG_MSpinbuttonScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_MSpinbutton *sbu = p;
-	int x = 0, y = 0;
-	const int bw = 10;
-	int bh = h/2;
+	AG_MSpinbutton *fsu = p;
+	AG_SizeReq rChld, rYinc, rYdec;
 
-	if (w == -1 && h == -1) {
-		WIDGET_SCALE(sbu->input, -1, -1);
-		WIDGET(sbu)->w = WIDGET(sbu->input)->w;
-		WIDGET(sbu)->h = WIDGET(sbu->input)->h;
-
-		WIDGET_SCALE(sbu->yincbu, -1, -1);
-		WIDGET_SCALE(sbu->ydecbu, -1, -1);
-		WIDGET_SCALE(sbu->xincbu, -1, -1);
-		WIDGET_SCALE(sbu->xdecbu, -1, -1);
-
-		WIDGET(sbu)->w += WIDGET(sbu->xdecbu)->w +
-		                  max(WIDGET(sbu->yincbu)->w,
-				      WIDGET(sbu->ydecbu)->w) +
-		                  WIDGET(sbu->xincbu)->w;
-		return;
-	}
-
-	WIDGET(sbu->input)->x = x;
-	WIDGET(sbu->input)->y = y;
-	AG_WidgetScale(sbu->input, w - bw*3, h);
-	x += WIDGET(sbu->input)->w;
-
-	WIDGET(sbu->xdecbu)->x = x;
-	WIDGET(sbu->xdecbu)->y = y + bh/2;
-	AG_WidgetScale(sbu->xdecbu, bw, bh);
-
-	WIDGET(sbu->xincbu)->x = x + bh*2;
-	WIDGET(sbu->xincbu)->y = y + bh/2;
-	AG_WidgetScale(sbu->xincbu, bw, bh);
-
-	WIDGET(sbu->ydecbu)->x = x + bh;
-	WIDGET(sbu->ydecbu)->y = y;
-	AG_WidgetScale(sbu->ydecbu, bw, bh);
-	
-	WIDGET(sbu->yincbu)->x = x + bh;
-	WIDGET(sbu->yincbu)->y = y + bh;
-	AG_WidgetScale(sbu->yincbu, bw, bh);
+	AG_WidgetSizeReq(fsu->input, &rChld);
+	r->w = rChld.w;
+	r->h = rChld.h;
+	AG_WidgetSizeReq(fsu->xdecbu, &rChld);
+	r->w += rChld.w;
+	AG_WidgetSizeReq(fsu->xincbu, &rChld);
+	r->w += rChld.w;
+	AG_WidgetSizeReq(fsu->yincbu, &rYinc);
+	AG_WidgetSizeReq(fsu->ydecbu, &rYdec);
+	r->w += MAX(rYinc.w,rYdec.w);
 }
 
-void
-AG_MSpinbuttonDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_MSpinbutton *fsu = p;
+	int szBtn = a->h/2;
+	int x = 0, y = 0;
+	AG_SizeAlloc aChld;
+
+	if (a->w < szBtn*3 + 4)
+		return (-1);
+
+	/* Input textbox */
+	aChld.x = x;
+	aChld.y = y;
+	aChld.w = a->w - 4 - szBtn*3;
+	aChld.h = a->h;
+	AG_WidgetSizeAlloc(fsu->input, &aChld);
+	x += aChld.w + 2;
+
+	/* Buttons */
+	aChld.w = szBtn;
+	aChld.h = szBtn;
+	aChld.x = x;
+	aChld.y = y + szBtn/2;
+	AG_WidgetSizeAlloc(fsu->xdecbu, &aChld);
+	aChld.x = x + szBtn*2;
+	aChld.y = y + szBtn/2;
+	AG_WidgetSizeAlloc(fsu->xincbu, &aChld);
+	aChld.x = x + szBtn;
+	aChld.y = y;
+	AG_WidgetSizeAlloc(fsu->ydecbu, &aChld);
+	aChld.x = x + szBtn;
+	aChld.y = y + szBtn;
+	AG_WidgetSizeAlloc(fsu->yincbu, &aChld);
+
+	return (0);
+}
+
+
+static void
+Draw(void *p)
 {
 	AG_MSpinbutton *sbu = p;
 	AG_WidgetBinding *xvalueb, *yvalueb;
@@ -638,3 +632,20 @@ AG_MSpinbuttonSetWriteable(AG_MSpinbutton *sbu, int writeable)
 	}
 	AG_MutexUnlock(&sbu->lock);
 }
+
+const AG_WidgetOps agMSpinbuttonOps = {
+	{
+		"AG_Widget:AG_MSpinbutton",
+		sizeof(AG_MSpinbutton),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

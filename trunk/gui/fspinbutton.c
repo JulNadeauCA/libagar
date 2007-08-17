@@ -33,22 +33,6 @@
 #include <string.h>
 #include <limits.h>
 
-static AG_WidgetOps agFSpinbuttonOps = {
-	{
-		"AG_Widget:AG_FSpinbutton",
-		sizeof(AG_FSpinbutton),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_FSpinbuttonDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	AG_FSpinbuttonDraw,
-	AG_FSpinbuttonScale
-};
-
 AG_FSpinbutton *
 AG_FSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *label)
 {
@@ -308,7 +292,7 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 	fsu->writeable = 1;
 	strlcpy(fsu->format, "%g", sizeof(fsu->format));
 	AG_MutexInit(&fsu->lock);
-	AG_TextboxPrescale(fsu->input, "888.88");
+	AG_TextboxPrescale(fsu->input, "88.88");
 	
 	if (unit != NULL) {
 		fsu->units = AG_UComboNew(fsu, 0);
@@ -339,8 +323,8 @@ AG_FSpinbuttonPrescale(AG_FSpinbutton *fsu, const char *text)
 	AG_TextboxPrescale(fsu->input, text);
 }
 
-void
-AG_FSpinbuttonDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_FSpinbutton *fsu = p;
 
@@ -348,65 +332,75 @@ AG_FSpinbuttonDestroy(void *p)
 	AG_WidgetDestroy(fsu);
 }
 
-void
-AG_FSpinbuttonScale(void *p, int w, int h)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_FSpinbutton *fsu = p;
-	AG_Textbox *input = fsu->input;
-	AG_UCombo *units = fsu->units;
-	AG_Button *incbu = fsu->incbu;
-	AG_Button *decbu = fsu->decbu;
-	const int bw = 10;
-	int x = 0, y = 0;
-	int uw, uh;
+	AG_FSpinbutton *num = p;
+	AG_SizeReq rChld, rInc, rDec;
 
-	if (units != NULL) {
-		AG_TextSize("XXXXXXXX", &uw, &uh);
-	} else {
-		uw = 0;
-		uh = 0;
+	AG_WidgetSizeReq(num->input, &rChld);
+	r->w = rChld.w;
+	r->h = rChld.h;
+	if (num->units != NULL) {
+		AG_WidgetSizeReq(num->units, &rChld);
+		r->w += rChld.w;
 	}
-
-	if (w == -1 && h == -1) {
-		WIDGET_SCALE(input, -1, -1);
-		WIDGET(fsu)->w = WIDGET(input)->w + input->boxPadX*2;
-		WIDGET(fsu)->h = WIDGET(input)->h;
-
-		x += WIDGET(fsu)->w;
-		
-		if (units != NULL) {
-			WIDGET_SCALE(units, -1, -1);
-			WIDGET(fsu)->w += WIDGET(units)->w;
-			x += WIDGET(units)->w;
-		}
-
-		WIDGET_SCALE(incbu, -1, -1);
-		WIDGET(fsu)->w += WIDGET(incbu)->w;
-		y += WIDGET(fsu)->h;
-		return;
-	}
-
-	WIDGET(input)->x = 0;
-	WIDGET(input)->y = 0;
-	AG_WidgetScale(input, w-uw-bw-4, h);
-	x += WIDGET(input)->w+2;
-	if (units != NULL) {
-		WIDGET(units)->x = x;
-		WIDGET(units)->y = y;
-		AG_WidgetScale(units, uw, h);
-		x += WIDGET(units)->w+2;
-	}
-	WIDGET(incbu)->x = x;
-	WIDGET(incbu)->y = y;
-	AG_WidgetScale(incbu, bw, h/2);
-	y += h/2;
-	WIDGET(decbu)->x = x;
-	WIDGET(decbu)->y = y;
-	AG_WidgetScale(decbu, bw, h/2);
+	AG_WidgetSizeReq(num->incbu, &rInc);
+	AG_WidgetSizeReq(num->decbu, &rDec);
+	r->w += MAX(rInc.w, rDec.w);
 }
 
-void
-AG_FSpinbuttonDraw(void *p)
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_FSpinbutton *num = p;
+	AG_SizeAlloc aChld;
+	AG_SizeReq rUnits;
+	int szBtn = a->h/2;
+	int hUnits;
+
+	if (a->h < 4 || a->w < szBtn+4)
+		return (-1);
+
+	if (num->units != NULL) {
+		AG_WidgetSizeReq(num->units, &rUnits);
+		if (rUnits.w > a->w - szBtn-4) { rUnits.w = a->w - szBtn-4; }
+		if (rUnits.h > a->h) { rUnits.h = a->h; }
+	} else {
+		rUnits.w = 0;
+		rUnits.h = 0;
+	}
+	
+	/* Size input textbox */
+	aChld.x = 0;
+	aChld.y = 0;
+	aChld.w = a->w - rUnits.w - szBtn - 4;
+	aChld.h = a->h;
+	AG_WidgetSizeAlloc(num->input, &aChld);
+	aChld.x += aChld.w + 2;
+
+	/* Size unit selector */
+	if (num->units != NULL) {
+		aChld.w = rUnits.w;
+		aChld.h = a->h;
+		AG_WidgetSizeAlloc(num->units, &aChld);
+		aChld.x += aChld.w + 2;
+	}
+
+	/* Size increment buttons */
+	aChld.w = szBtn;
+	aChld.h = szBtn;
+	AG_WidgetSizeAlloc(num->incbu, &aChld);
+	aChld.y += aChld.h;
+	if (aChld.h*2 < a->h) {
+		aChld.h++;
+	}
+	AG_WidgetSizeAlloc(num->decbu, &aChld);
+	return (0);
+}
+
+static void
+Draw(void *p)
 {
 	AG_FSpinbutton *fsu = p;
 	AG_WidgetBinding *valueb;
@@ -662,3 +656,20 @@ AG_FSpinbuttonSetRange(AG_FSpinbutton *fsu, double min, double max)
 	AG_FSpinbuttonSetMax(fsu, max);
 	AG_MutexUnlock(&fsu->lock);
 }
+
+const AG_WidgetOps agFSpinbuttonOps = {
+	{
+		"AG_Widget:AG_FSpinbutton",
+		sizeof(AG_FSpinbutton),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

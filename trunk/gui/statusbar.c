@@ -30,23 +30,6 @@
 
 #include <stdarg.h>
 
-static AG_WidgetOps agStatusbarOps = {
-	{
-		"AG_Widget:AG_Box:AG_Statusbar",
-		sizeof(AG_Statusbar),
-		{ 0,0 },
-		NULL,				/* init */
-		NULL,				/* reinit */
-		AG_BoxDestroy,
-		NULL,				/* load */
-		NULL,				/* save */
-		NULL				/* edit */
-	},
-	NULL,
-	AG_BoxScale
-
-};
-
 AG_Statusbar *
 AG_StatusbarNew(void *parent, Uint flags)
 {
@@ -124,3 +107,19 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 	return (sbar->labels[sbar->nlabels++]);
 }
 
+const AG_WidgetOps agStatusbarOps = {
+	{
+		"AG_Widget:AG_Box:AG_Statusbar",
+		sizeof(AG_Statusbar),
+		{ 0,0 },
+		NULL,				/* init */
+		NULL,				/* reinit */
+		AG_BoxDestroy,
+		NULL,				/* load */
+		NULL,				/* save */
+		NULL				/* edit */
+	},
+	NULL,					/* draw */
+	AG_BoxSizeRequest,
+	AG_BoxSizeAllocate
+};

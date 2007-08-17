@@ -34,12 +34,12 @@ Uint32 agColors[LAST_COLOR];
 Uint32 agColorsBorder[7];
 int    agColorsBorderSize = 7;
 
-Sint8  agFocusSunkColorShift[3] = { -10, -10, -20 };
-Sint8  agFocusRaisedColorShift[3] = { 30, 30, 20 };
-Sint8  agNofocusSunkColorShift[3] = { -20, -20, -20 };
-Sint8  agNofocusRaisedColorShift[3] = { 10, 10, 10 };
-Sint8  agHighColorShift[3] = { 50, 50, 50 };
-Sint8  agLowColorShift[3] = { -50, -50, -50 };
+Sint8  agFocusSunkColorShift[3] =	{ -10, -10, -20 };
+Sint8  agFocusRaisedColorShift[3] =	{  30,  30,  20 };
+Sint8  agNofocusSunkColorShift[3] =	{ -20, -20, -20 };
+Sint8  agNofocusRaisedColorShift[3] =	{  10,  10,  10 };
+Sint8  agHighColorShift[3] =		{  40,  40,  40 };
+Sint8  agLowColorShift[3] =		{ -30, -30, -20 };
 
 const char *agColorNames[] = {
 	N_("Background"),
@@ -150,7 +150,7 @@ AG_ColorsInit(void)
 	agColors[MENU_TXT_COLOR] = SDL_MapRGB(agVideoFmt, 230, 230, 230);
 	agColors[MENU_SEP1_COLOR] = SDL_MapRGB(agVideoFmt, 60, 60, 60);
 	agColors[MENU_SEP2_COLOR] = SDL_MapRGB(agVideoFmt, 120, 120, 120);
-	agColors[NOTEBOOK_BG_COLOR] = agColors[WINDOW_BG_COLOR];
+	agColors[NOTEBOOK_BG_COLOR] = SDL_MapRGB(agVideoFmt, 63, 63, 63);
 	agColors[NOTEBOOK_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 117, 117, 116);
 	agColors[NOTEBOOK_TXT_COLOR] = agColors[TEXT_COLOR];
 	agColors[RADIO_SEL_COLOR] = SDL_MapRGB(agVideoFmt, 210, 210, 210);

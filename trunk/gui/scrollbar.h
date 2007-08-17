@@ -34,11 +34,13 @@ typedef struct ag_scrollbar {
 	int arrowSz;			/* Arrow height */
 } AG_Scrollbar;
 
+#define AGSCROLLBAR(p) ((AG_Scrollbar *)p)
+
 __BEGIN_DECLS
+extern const AG_WidgetOps agScrollbarOps;
+
 AG_Scrollbar	*AG_ScrollbarNew(void *, enum ag_scrollbar_type, Uint);
 void		 AG_ScrollbarInit(AG_Scrollbar *, enum ag_scrollbar_type, Uint);
-void		 AG_ScrollbarScale(void *, int, int);
-void		 AG_ScrollbarDraw(void *);
 __inline__ void	 AG_ScrollbarSetBarSize(AG_Scrollbar *, int);
 __inline__ void	 AG_ScrollbarGetBarSize(AG_Scrollbar *, int *);
 __END_DECLS

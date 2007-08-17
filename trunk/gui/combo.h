@@ -34,13 +34,14 @@ typedef struct ag_combo {
 	AG_Button *button;		/* [...] button */
 	AG_Tlist *list;			/* List of items */
 	AG_Window *panel;
-	int saved_h;			/* Saved panel height */
+	int saved_w, saved_h;		/* Saved panel height */
 } AG_Combo;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agComboOps;
+
 AG_Combo *AG_ComboNew(void *, Uint, const char *);
 void AG_ComboInit(AG_Combo *, Uint, const char *);
-void AG_ComboScale(void *, int, int);
 void AG_ComboDestroy(void *);
 void AG_ComboSelect(AG_Combo *, AG_TlistItem *);
 AG_TlistItem *AG_ComboSelectPointer(AG_Combo *, void *);
@@ -49,6 +50,9 @@ void AG_ComboSetButtonText(AG_Combo *, const char *);
 void AG_ComboSetButtonTextNODUP(AG_Combo *, char *);
 void AG_ComboSetButtonSurface(AG_Combo *, SDL_Surface *);
 void AG_ComboSetButtonSurfaceNODUP(AG_Combo *, SDL_Surface *);
+
+void AG_ComboSizeRequest(void *, AG_SizeReq *);
+int  AG_ComboSizeAllocate(void *, const AG_SizeAlloc *);
 __END_DECLS
 
 #include "close_code.h"
