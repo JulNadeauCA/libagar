@@ -33,22 +33,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-const AG_WidgetOps rgTileviewOps = {
-	{
-		"AG_Widget:RG_Tileview",
-		sizeof(RG_Tileview),
-		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		RG_TileviewDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
-	},
-	RG_TileviewDraw,
-	RG_TileviewScale
-};
-
 RG_Tileview *
 RG_TileviewNew(void *parent, RG_Tileset *ts, int flags)
 {
@@ -1062,30 +1046,36 @@ RG_TileviewSetZoom(RG_Tileview *tv, int z2, int adj_offs)
 	t->flags |= RG_TILE_DIRTY;
 }
 
-void
-RG_TileviewScale(void *p, int rw, int rh)
+static void
+SizeRequest(void *p, AG_SizeReq *r)
+{
+	RG_Tileview *tv = p;
+
+	if (tv->tile != NULL) {
+		r->w = tv->tile->su->w + RG_TILEVIEW_MIN_W;
+		r->h = tv->tile->su->h + RG_TILEVIEW_MIN_H;
+	} else {
+		r->w = RG_TILEVIEW_MIN_W;
+		r->h = RG_TILEVIEW_MIN_H;
+	}
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	RG_Tileview *tv = p;
 	int lim;
 
-	if (rw == -1 && rh == -1) {
-		if (tv->tile != NULL) {
-			WIDGET(tv)->w = tv->tile->su->w + RG_TILEVIEW_MIN_W;
-			WIDGET(tv)->h = tv->tile->su->h + RG_TILEVIEW_MIN_H;
-		} else {
-			WIDGET(tv)->w = RG_TILEVIEW_MIN_W;
-			WIDGET(tv)->h = RG_TILEVIEW_MIN_H;
-		}
-	} else {
-		if (tv->xoffs >
-		   (lim = (WIDGET(tv)->w - RG_TILEVIEW_MIN_W))) {
-			tv->xoffs = lim;
-		}
-		if (tv->yoffs >
-		   (lim	= (WIDGET(tv)->h - RG_TILEVIEW_MIN_H))) {
-			tv->yoffs = lim;
-		}
-	}
+	if (a->w < RG_TILEVIEW_MIN_W ||
+	    a->h < RG_TILEVIEW_MIN_H)
+		return (-1);
+
+	if (tv->xoffs > (lim = (a->w - RG_TILEVIEW_MIN_W)))
+		tv->xoffs = lim;
+	if (tv->yoffs > (lim = (a->h - RG_TILEVIEW_MIN_H)))
+		tv->yoffs = lim;
+
+	return (0);
 }
 
 /* Must be called from widget draw context. */
@@ -1644,8 +1634,8 @@ RG_AttrColor(Uint flag, int state, Uint8 *c)
 	}
 }
 
-void
-RG_TileviewDraw(void *p)
+static void
+Draw(void *p)
 {
 	char status[64];
 	RG_Tileview *tv = p;
@@ -1859,8 +1849,8 @@ RG_TileviewDraw(void *p)
 #endif
 }
 
-void
-RG_TileviewDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	RG_Tileview *tv = p;
 	RG_TileviewCtrl *ctrl, *nctrl;
@@ -1950,3 +1940,20 @@ RG_TileviewGenericMenu(RG_Tileview *tv, AG_MenuItem *mi)
 	AG_MenuIntFlags(mi, _("Show background"), SNAP_GRID_ICON,
 	    &tv->flags, RG_TILEVIEW_NO_TILING, 1);
 }
+
+const AG_WidgetOps rgTileviewOps = {
+	{
+		"AG_Widget:RG_Tileview",
+		sizeof(RG_Tileview),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* reinit */
+		Destroy,
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

@@ -38,12 +38,11 @@ typedef struct rg_anim_view {
 } RG_Animview;
 
 __BEGIN_DECLS
+extern const AG_WidgetOps rgAnimviewOps;
+
 RG_Animview	*RG_AnimviewNew(void *);
 void		 RG_AnimviewInit(RG_Animview *);
 void		 RG_AnimviewPrescale(RG_Animview *, int, int);
-void		 RG_AnimviewDestroy(void *);
-void		 RG_AnimviewDraw(void *);
-void		 RG_AnimviewScale(void *, int, int);
 void		 RG_AnimviewSetAnimation(RG_Animview *, RG_Anim *);
 __END_DECLS
 

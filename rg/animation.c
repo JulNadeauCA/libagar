@@ -39,6 +39,7 @@
 #include <gui/notebook.h>
 #include <gui/pixmap.h>
 #include <gui/separator.h>
+#include <gui/pane.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -47,7 +48,7 @@
 #include <stdarg.h>
 #include <string.h>
 	
-static const char *insn_names[] = {
+static const char *insnNames[] = {
 	N_("Tile"),
 	N_("Displace pixmap"),
 	N_("Rotate pixmap")
@@ -115,7 +116,7 @@ RG_AnimInsertInsn(RG_Anim *ani, enum rg_anim_insn_type type)
 }
 
 static void
-destroy_insn(RG_AnimInsn *insn)
+DestroyInsn(RG_AnimInsn *insn)
 {
 	if (insn->t != NULL)	insn->t->nrefs--;
 	if (insn->px != NULL)	insn->px->nrefs--;
@@ -125,7 +126,7 @@ destroy_insn(RG_AnimInsn *insn)
 void
 RG_AnimRemoveInsn(RG_Anim *ani, Uint insn)
 {
-	destroy_insn(&ani->insns[insn]);
+	DestroyInsn(&ani->insns[insn]);
 	if (insn+1 < ani->ninsns) {
 		memmove(&ani->insns[insn], &ani->insns[insn+1],
 		    (ani->ninsns - 1)*sizeof(RG_AnimInsn));
@@ -170,7 +171,7 @@ RG_AnimInsertFrame(RG_Anim *ani, SDL_Surface *sNew)
 }
 
 static void
-destroy_frame(RG_AnimFrame *fr)
+FreeFrame(RG_AnimFrame *fr)
 {
 	SDL_FreeSurface(fr->su);
 }
@@ -178,7 +179,7 @@ destroy_frame(RG_AnimFrame *fr)
 void
 RG_AnimRemoveFrame(RG_Anim *ani, Uint frame)
 {
-	destroy_frame(&ani->frames[frame]);
+	FreeFrame(&ani->frames[frame]);
 	if (frame+1 < ani->nframes)
 		memmove(&ani->frames[frame], &ani->frames[frame+1],
 		    (--ani->nframes)*sizeof(RG_AnimFrame));
@@ -194,12 +195,12 @@ RG_AnimGetFrame(RG_Anim *anim, Uint frame)
 }
 
 static void
-destroy_frames(RG_Anim *ani)
+FreeFrames(RG_Anim *ani)
 {
 	Uint i;
 	
 	for (i = 0; i < ani->nframes; i++) {
-		destroy_frame(&ani->frames[i]);
+		FreeFrame(&ani->frames[i]);
 	}
 	ani->nframes = 0;
 }
@@ -210,11 +211,11 @@ RG_AnimDestroy(RG_Anim *ani)
 	Uint i;
 
 	for (i = 0; i < ani->ninsns; i++) {
-		destroy_insn(&ani->insns[i]);
+		DestroyInsn(&ani->insns[i]);
 	}
 	Free(ani->insns, M_RG);
 	
-	destroy_frames(ani);
+	FreeFrames(ani);
 	Free(ani->frames, M_RG);
 }
 
@@ -319,7 +320,7 @@ RG_AnimGenerate(RG_Anim *ani)
 {
 	Uint i;
 
-	destroy_frames(ani);
+	FreeFrames(ani);
 
 	for (i = 0; i < ani->ninsns; i++) {
 		RG_AnimInsn *insn = &ani->insns[i];
@@ -343,7 +344,7 @@ RG_AnimGenerate(RG_Anim *ani)
 #ifdef EDITION
 
 static void
-close_animation(AG_Event *event)
+EditClose(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	RG_Tileset *ts = AG_PTR(1);
@@ -357,7 +358,7 @@ close_animation(AG_Event *event)
 }
 
 static void
-poll_insns(AG_Event *event)
+PollInsns(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
@@ -396,7 +397,7 @@ poll_insns(AG_Event *event)
 			break;
 		default:
 			it = AG_TlistAdd(tl, NULL, "[%04u] %s",
-			    _(insn_names[insn->type]), insn->delay);
+			    _(insnNames[insn->type]), insn->delay);
 			break;
 		}
 		it->p1 = insn;
@@ -408,7 +409,7 @@ poll_insns(AG_Event *event)
 }
 
 static void
-poll_frames(AG_Event *event)
+PollFrames(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
@@ -432,7 +433,7 @@ poll_frames(AG_Event *event)
 }
 
 static void
-poll_tiles(AG_Event *event)
+PollTiles(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Tileset *ts = AG_PTR(1);
@@ -456,7 +457,7 @@ poll_tiles(AG_Event *event)
 }
 
 static void
-select_insn_tile(AG_Event *event)
+SelectInsnTile(AG_Event *event)
 {
 	RG_Anim *ani = AG_PTR(1);
 	RG_AnimInsn *insn = AG_PTR(2);
@@ -470,7 +471,7 @@ select_insn_tile(AG_Event *event)
 }
 
 static void
-open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
+EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 {
 	AG_Widget *child;
 	AG_Spinbutton *sb;
@@ -492,10 +493,10 @@ open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 
 		com = AG_ComboNew(box, AG_COMBO_POLL|AG_COMBO_HFILL|
 		                       AG_COMBO_FOCUS, _("Tile: "));
-		AG_SetEvent(com, "combo-selected", select_insn_tile,
-		    "%p,%p,%p", ani, insn, tv);
-		AG_SetEvent(com->list, "tlist-poll", poll_tiles,
-		    "%p", ani->tileset);
+		AG_SetEvent(com, "combo-selected",
+		    SelectInsnTile, "%p,%p,%p", ani, insn, tv);
+		AG_SetEvent(com->list, "tlist-poll",
+		    PollTiles, "%p", ani->tileset);
 		if (insn->t != NULL) {
 			RG_TileviewSetTile(tv, insn->t);
 			AG_ComboSelectPointer(com, insn->t);
@@ -533,11 +534,11 @@ open_insn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SpinbuttonSetIncrement(sb, 50);
 
-	AG_WINDOW_UPDATE(AG_WidgetParentWindow(box));
+	AG_WindowUpdate(AG_WidgetParentWindow(box));
 }
 
 static void
-open_frame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
+EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 {
 	AG_Widget *child;
 	AG_Spinbutton *sb;
@@ -558,11 +559,11 @@ open_frame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SpinbuttonSetIncrement(sb, 50);
 
-	AG_WINDOW_UPDATE(AG_WidgetParentWindow(box));
+	AG_WindowUpdate(AG_WidgetParentWindow(box));
 }
 
 static void
-select_insn(AG_Event *event)
+SelectInsn(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
@@ -572,11 +573,11 @@ select_insn(AG_Event *event)
 	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
 
-	open_insn(ani, (RG_AnimInsn *)it->p1, box);
+	EditInsn(ani, (RG_AnimInsn *)it->p1, box);
 }
 
 static void
-select_frame(AG_Event *event)
+SelectFrame(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
@@ -586,11 +587,11 @@ select_frame(AG_Event *event)
 	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
 
-	open_frame(ani, (RG_AnimFrame *)it->p1, box);
+	EditFrame(ani, (RG_AnimFrame *)it->p1, box);
 }
 
 static void
-insert_insn(AG_Event *event)
+InsertInsn(AG_Event *event)
 {
 	RG_Anim *ani = AG_PTR(1);
 	enum rg_anim_insn_type type = AG_INT(2);
@@ -600,12 +601,12 @@ insert_insn(AG_Event *event)
 	RG_AnimInsn *insn;
 	
 	insn = &ani->insns[RG_AnimInsertInsn(ani, type)];
-	open_insn(ani, insn, box);
+	EditInsn(ani, insn, box);
 	AG_TlistSelectPtr(tl, insn);
 }
 
 static void
-recompile_anim(AG_Event *event)
+RegenAnim(AG_Event *event)
 {
 	RG_Anim *ani = AG_PTR(1);
 	
@@ -613,7 +614,7 @@ recompile_anim(AG_Event *event)
 }
 
 static void
-preview_anim(AG_Event *event)
+PreviewAnim(AG_Event *event)
 {
 	RG_Anim *ani = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -644,71 +645,64 @@ RG_AnimEdit(RG_Anim *ani)
 {
 	RG_Tileset *ts = ani->tileset;
 	AG_Window *win;
-	AG_Box *box_h, *box_v, *box_data;
+	AG_Box *hBox, *editBox;
 	AG_Textbox *tb;
 	AG_Tlist *tl;
-	AG_Button *btn;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;
 	AG_Menu *me;
 	AG_MenuItem *mi;
+	AG_Pane *hPane;
 	int i;
 
 	if ((win = AG_WindowNewNamed(0, "rg-anim-%s:%s", OBJECT(ts)->name,
 	    ani->name)) == NULL) {
 		return (NULL);
 	}
-	AG_WindowSetCaption(win, _("Animation: %s"), ani->name);
-	AG_SetEvent(win, "window-close", close_animation, "%p,%p", ts, ani);
+	AG_WindowSetCaption(win, "%s", ani->name);
+	AG_SetEvent(win, "window-close", EditClose, "%p,%p", ts, ani);
 	
 	me = AG_MenuNew(win, AG_MENU_HFILL);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 	nt = AG_NotebookAddTab(nb, _("Instructions"), AG_BOX_VERT);
+	hPane = AG_PaneNewHoriz(nt, AG_PANE_EXPAND);
 	{
-		box_h = AG_BoxNew(nt, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_VFILL);
-		{
-			box_v = AG_BoxNew(box_h, AG_BOX_VERT, AG_BOX_VFILL);
-			tl = AG_TlistNew(box_v, AG_TLIST_POLL|AG_TLIST_EXPAND);
-			AG_SetEvent(tl, "tlist-poll", poll_insns, "%p", ani);
+		tl = AG_TlistNew(hPane->div[0], AG_TLIST_POLL|AG_TLIST_EXPAND);
+		AG_TlistPrescale(tl, _("[00000] Displace <Tile #000>"), 4);
+		AG_SetEvent(tl, "tlist-poll", PollInsns, "%p", ani);
 
-			box_data = AG_BoxNew(box_h, AG_BOX_VERT,
-			    AG_BOX_HFILL|AG_BOX_VFILL);
-			AG_SetEvent(tl, "tlist-dblclick", select_insn, "%p,%p",
-			    ani, box_data);
-		}
+		editBox = AG_BoxNew(hPane->div[1], AG_BOX_VERT, AG_BOX_EXPAND);
+		AG_SetEvent(tl, "tlist-dblclick",
+		    SelectInsn, "%p,%p", ani, editBox);
 
 		mi = AG_MenuAddItem(me, _("Instructions"));
 		for (i = 0; i < RG_ANIM_LAST; i++)
-			AG_MenuAction(mi, _(insn_names[i]), -1, insert_insn,
-			    "%p,%i,%p,%p", ani, i, box_data, tl);
+			AG_MenuAction(mi, _(insnNames[i]), -1, InsertInsn,
+			    "%p,%i,%p,%p", ani, i, editBox, tl);
 	}
 	
 	nt = AG_NotebookAddTab(nb, _("Frames"), AG_BOX_VERT);
+	hPane = AG_PaneNewHoriz(nt, AG_PANE_EXPAND);
 	{
-		box_h = AG_BoxNew(nt, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_VFILL);
-		{
-			box_v = AG_BoxNew(box_h, AG_BOX_VERT, AG_BOX_VFILL);
-			tl = AG_TlistNew(box_v, AG_TLIST_POLL|AG_TLIST_EXPAND);
-			AG_SetEvent(tl, "tlist-poll", poll_frames, "%p", ani);
+		tl = AG_TlistNew(hPane->div[0], AG_TLIST_POLL|AG_TLIST_EXPAND);
+		AG_TlistPrescale(tl, _("[00000] Displace <Tile #000>"), 4);
+		AG_SetEvent(tl, "tlist-poll", PollFrames, "%p", ani);
 
-			box_data = AG_BoxNew(box_h, AG_BOX_VERT,
-			    AG_BOX_HFILL|AG_BOX_VFILL);
-			AG_SetEvent(tl, "tlist-dblclick", select_frame, "%p,%p",
-			    ani, box_data);
-		}
+		editBox = AG_BoxNew(hPane->div[1], AG_BOX_VERT, AG_BOX_EXPAND);
+		AG_SetEvent(tl, "tlist-dblclick",
+		    SelectFrame, "%p,%p", ani, editBox);
 	}
 	
 	mi = AG_MenuAddItem(me, _("Animation"));
 	{
-		AG_MenuAction(mi, _("Recompile"), -1, recompile_anim,
-		    "%p", ani);
+		AG_MenuAction(mi, _("Recompile"), -1,
+		    RegenAnim, "%p", ani);
 		AG_MenuSeparator(mi);
-		AG_MenuAction(mi, _("Preview..."), -1, preview_anim,
-		    "%p,%p", ani, win);
+		AG_MenuAction(mi, _("Preview..."), -1,
+		    PreviewAnim, "%p,%p", ani, win);
 	}
 	
-	AG_WindowScale(win, -1, -1);
 	AG_WindowSetGeometry(win,
 	    agView->w/4, agView->h/4,
 	    agView->w/2, agView->h/2);
