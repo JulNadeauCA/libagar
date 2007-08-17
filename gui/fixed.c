@@ -165,10 +165,12 @@ void
 AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 {
 	AG_Widget *chld = p;
+	AG_SizeReq r;
 	AG_SizeAlloc a;
 
-	a.w = chld->w;
-	a.h = chld->h;
+	AG_WidgetSizeReq(chld, &r);
+	a.w = r.w;
+	a.h = r.h;
 	a.x = x;
 	a.y = y;
 	AG_WidgetSizeAlloc(chld, &a);
