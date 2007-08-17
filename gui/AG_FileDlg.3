@@ -54,6 +54,9 @@ to specific file extensions.
 .Ft int
 .Fn AG_FileDlgSetDirectory "AG_FileDlg *file_dlg" "const char *path"
 .Pp
+.Ft int
+.Fn AG_FileDlgSetDirectoryMRU "AG_FileDlg *file_dlg" "const char *configKey" "const char *defaultDir"
+.Pp
 .Ft void
 .Fn AG_FileDlgSetFilename "AG_FileDlg *file_dlg" "const char *fmt" "..."
 .Pp
@@ -84,6 +87,22 @@ include:
 The working directory can be set manually with the
 .Fn AG_FileDlgSetDirectory
 function, which will return 0 on success and -1 on failure.
+.Pp
+The
+.Fn AG_FileDlgSetDirectoryMRU
+sets the working directory according to an
+.Xr AG_Config 3
+parameter named
+.Fa configKey .
+If the parameter does not exist, it will be set to
+.Fa defaultDir
+(it is customary to use a name such as
+.Sq myapp.mru.foofiles ) .
+If
+.Fn AG_FileDlgSetDirectoryMRU
+is used, subsequent directory changes will cause the current
+.Xr AG_Config 3
+settings to be saved automatically.
 .Pp
 The
 .Fn AG_FileDlgSetFilename
