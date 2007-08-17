@@ -283,7 +283,6 @@ fail:
 static void
 ExportObject(AG_Event *event)
 {
-	char save_path[MAXPATHLEN];
 	AG_Object *ob = AG_PTR(1);
 	AG_Window *win = AG_PTR(2);
 	char *path = AG_STRING(3);
@@ -307,21 +306,12 @@ ExportObject(AG_Event *event)
 		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 		loadedTmp = 1;
 	}
-
-	AG_StringCopy(agConfig, "save-path", save_path, sizeof(save_path));
-	AG_SetString(agConfig, "save-path", "%s", path);
-	ob->save_pfx = NULL;
-
-	if (AG_ObjectSaveAll(ob) == -1) {
+	if (AG_ObjectSaveToFile(ob, path) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
 	} else {
 		AG_TextTmsg(AG_MSG_INFO, 1000,
 		    _("Object `%s' was exported successfully."), ob->name);
 	}
-
-	AG_SetString(agConfig, "save-path", "%s", save_path);
-	ob->save_pfx = pfx_save;
-	
 	if (loadedTmp)
 		AG_ObjectFreeDataset(ob);
 }
@@ -329,11 +319,9 @@ ExportObject(AG_Event *event)
 static void
 ImportObject(AG_Event *event)
 {
-	char load_path[MAXPATHLEN];
 	AG_Object *ob = AG_PTR(1);
 	AG_Window *win = AG_PTR(2);
 	char *path = AG_STRING(3);
-	char *pfx_save = ob->save_pfx;
 	int loadedTmp = 0;
 	int dataFound;
 
@@ -353,21 +341,12 @@ ImportObject(AG_Event *event)
 		loadedTmp = 1;
 		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 	}
-
-	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
-	AG_SetString(agConfig, "load-path", "%s", path);
-	ob->save_pfx = NULL;
-
-	if (AG_ObjectLoad(ob) == -1) {
+	if (AG_ObjectLoadFromFile(ob, path) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", ob->name, AG_GetError());
 	} else {
 		AG_TextTmsg(AG_MSG_INFO, 1000,
 		    _("Object `%s' was imported successfully."), ob->name);
 	}
-
-	AG_SetString(agConfig, "load-path", "%s", load_path);
-	ob->save_pfx = pfx_save;
-	
 	if (loadedTmp)
 		AG_ObjectFreeDataset(ob);
 }
