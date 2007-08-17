@@ -41,6 +41,8 @@
 #include <core/view.h>
 #include <core/config.h>
 
+#include <compat/file.h>
+
 #include <net/net.h>
 
 #include <gui/window.h>
@@ -263,7 +265,7 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	}
 	NS_EndData(ns);
 	fclose(ftmp);
-	unlink(tmp);
+	AG_FileDelete(tmp);
 	Free(jcopybuf, M_VIEW);
 	jpeg_destroy_compress(&jcomp);
 	return (0);
