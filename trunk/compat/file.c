@@ -135,6 +135,17 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 #endif /* WIN32 */
 
 int
+AG_GetSystemTempDir(char *buf, size_t len)
+{
+#ifdef WIN32
+	return (GetTempPath(len, buf) == 0) ? -1 : 0;
+#else
+	strlcpy(buf, "/tmp/", len);
+	return (0);
+#endif
+}
+
+int
 AG_FileExists(const char *path)
 {
 #ifdef WIN32
@@ -164,3 +175,14 @@ AG_FileExists(const char *path)
 	}
 #endif /* WIN32 */
 }
+
+int
+AG_FileDelete(const char *path)
+{
+#ifdef WIN32
+	return (DeleteFile(path) == 0) ? -1 : 0;
+#else
+	return unlink(path);
+#endif
+}
+
