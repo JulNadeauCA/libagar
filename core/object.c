@@ -74,16 +74,16 @@ const AG_ObjectOps agObjectOps = {
 };
 	
 const AG_FlagDescr agObjectFlags[] = {
-	{ AG_OBJECT_DEBUG,		"Debugging",			1 },
-	{ AG_OBJECT_READONLY,		"Read-only",			1 },
-	{ AG_OBJECT_INDESTRUCTIBLE,	"Indestructible",		1 },
-	{ AG_OBJECT_NON_PERSISTENT,	"Non-persistent",		1 },
-	{ AG_OBJECT_RELOAD_PROPS,	"Allow non-persistent properties", 1 },
-	{ AG_OBJECT_PRESERVE_DEPS,	"Preserve null dependencies",	1 },
-	{ AG_OBJECT_REMAIN_DATA,	"Keep data resident",		1 },
-	{ AG_OBJECT_RESIDENT,		"Data part is resident",	0 },
-	{ AG_OBJECT_STATIC,		"Statically allocated",		0 },
-	{ AG_OBJECT_REOPEN_ONLOAD,	"",		0 },
+	{ AG_OBJECT_DEBUG,		N_("Debugging"),		  1 },
+	{ AG_OBJECT_READONLY,		N_("Read-only"),		  1 },
+	{ AG_OBJECT_INDESTRUCTIBLE,	N_("Indestructible"),		  1 },
+	{ AG_OBJECT_NON_PERSISTENT,	N_("Non-persistent"),		  1 },
+	{ AG_OBJECT_RELOAD_PROPS,	N_("Don't clear props on load"),  1 },
+	{ AG_OBJECT_PRESERVE_DEPS,	N_("Preserve null dependencies"), 1 },
+	{ AG_OBJECT_REMAIN_DATA,	N_("Keep data resident"),	  1 },
+	{ AG_OBJECT_RESIDENT,		N_("Data part is resident"),	  0 },
+	{ AG_OBJECT_STATIC,		N_("Statically allocated"),	  0 },
+	{ AG_OBJECT_REOPEN_ONLOAD,	"",				  0 },
 };
 
 #ifdef DEBUG
@@ -116,6 +116,7 @@ AG_ObjectInit(void *p, const char *name, const void *opsp)
 	}
 
 	ob->save_pfx = "/world";
+	ob->archivePath = NULL;
 	ob->ops = (opsp != NULL) ? opsp : &agObjectOps;
 	ob->parent = NULL;
 	ob->flags = 0;
@@ -153,7 +154,6 @@ AG_ObjectNew(void *parent, const char *name, const AG_ObjectOps *ops)
 	} else {
 		AG_ObjectInit(obj, name != NULL ? name : nameGen, ops);
 	}
-
 	obj->flags |= AG_OBJECT_RESIDENT;
 
 	if (parent != NULL) {
@@ -241,14 +241,16 @@ AG_ObjectFreeDataset(void *p)
 {
 	AG_Object *ob = p;
 
+	AG_MutexLock(&ob->lock);
 	if (OBJECT_RESIDENT(ob)) {
-		if (ob->ops->reinit != NULL) {
+		if (ob->ops->free_dataset != NULL) {
 			ob->flags |= AG_OBJECT_PRESERVE_DEPS;
-			ob->ops->reinit(ob);
+			ob->ops->free_dataset(ob);
 			ob->flags &= ~(AG_OBJECT_PRESERVE_DEPS);
 		}
 		ob->flags &= ~(AG_OBJECT_RESIDENT);
 	}
+	AG_MutexUnlock(&ob->lock);
 }
 
 /* Recursive function to construct absolute object names. */
@@ -638,6 +640,7 @@ AG_ObjectFreeChildren(AG_Object *pob)
 	     cob = ncob) {
 		ncob = TAILQ_NEXT(cob, cobjs);
 		debug(DEBUG_GC, "%s: freeing %s\n", pob->name, cob->name);
+		AG_ObjectDetach(cob);
 		AG_ObjectDestroy(cob);
 		if ((cob->flags & AG_OBJECT_STATIC) == 0)
 			Free(cob, M_OBJECT);
@@ -727,22 +730,17 @@ void
 AG_ObjectDestroy(void *p)
 {
 	AG_Object *ob = p;
-	AG_ObjectDep *dep, *ndep;
 
-	debug(DEBUG_GC, "destroy %s (parent=%p)\n", ob->name, ob->parent);
-
+#ifdef DEBUG
+	if (ob->parent != NULL) {
+		fatal("%s attached to %p", ob->name, ob->parent);
+	}
+	debug(DEBUG_GC, "destroy %s\n", ob->name);
+#endif
 	AG_ObjectCancelTimeouts(ob, 0);
 	AG_ObjectFreeChildren(ob);
-	
-	if (ob->ops->reinit != NULL) {
-		ob->ops->reinit(ob);
-	}
-	for (dep = TAILQ_FIRST(&ob->deps);
-	     dep != TAILQ_END(&ob->deps);
-	     dep = ndep) {
-		ndep = TAILQ_NEXT(dep, deps);
-		Free(dep, M_DEP);
-	}
+	AG_ObjectFreeDataset(ob);
+	AG_ObjectFreeDeps(ob);
 
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
@@ -750,6 +748,7 @@ AG_ObjectDestroy(void *p)
 	AG_ObjectFreeProps(ob);
 	AG_ObjectFreeEvents(ob);
 	AG_MutexDestroy(&ob->lock);
+	Free(ob->archivePath,0);
 }
 
 /* Copy the full pathname to an object's data file to a fixed-size buffer. */
@@ -761,6 +760,11 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 	char obj_name[AG_OBJECT_PATH_MAX];
 	const AG_Object *ob = p;
 	char *dir;
+
+	if (ob->archivePath != NULL) {
+		strlcpy(path, ob->archivePath, path_len);
+		return (0);
+	}
 
 	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
@@ -899,11 +903,6 @@ AG_ObjectLoadFromFile(void *p, const char *path)
 
 	AG_LockLinkage();
 	AG_MutexLock(&ob->lock);
-	
-	if (!OBJECT_PERSISTENT(ob)) {
-		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
-		goto fail;
-	}
 	if (AG_ObjectLoadGenericFromFile(ob, path) == -1 ||
 	    AG_ObjectResolveDeps(ob) == -1 ||
 	    AG_ObjectLoadDataFromFile(ob, &dataFound, path) == -1) {
@@ -957,40 +956,6 @@ AG_ObjectResolveDeps(void *p)
 }
 
 /*
- * Reload the data of an object and its children which are currently resident
- * The object and linkage must be locked.
- */
-int
-AG_ObjectReloadData(void *p)
-{
-	AG_Object *ob = p, *cob;
-	int dataFound;
-
-	if (ob->flags & (AG_OBJECT_WAS_RESIDENT|AG_OBJECT_REMAIN_DATA)) {
-		ob->flags &= ~(AG_OBJECT_WAS_RESIDENT);
-		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
-			if (agObjectIgnoreDataErrors) {
-				AG_TextMsg(AG_MSG_ERROR, _("%s: %s (ignored)"),
-				    ob->name, AG_GetError());
-			} else {
-				return (-1);
-			}
-		}
-	}
-	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (AG_ObjectReloadData(cob) == -1) {
-			if (agObjectIgnoreDataErrors) {
-				AG_TextMsg(AG_MSG_ERROR, _("%s: %s (ignored)"),
-				    cob->name, AG_GetError());
-			} else {
-				return (-1);
-			}
-		}
-	}
-	return (0);
-}
-
-/*
  * Load the generic part of an object from archive. If the archived
  * object has children, create instances for them and load their
  * generic part as well.
@@ -1008,19 +973,29 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	Uint32 count, i;
 	Uint flags, flags_save;
 	
+	if (!OBJECT_PERSISTENT(ob)) {
+		AG_SetError(_("Object is non-persistent"));
+		return (-1);
+	}
+	AG_LockLinkage();
+	AG_MutexLock(&ob->lock);
 	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
 
 	if (pPath != NULL) {
 		strlcpy(path, pPath, sizeof(path));
 	} else {
-		if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
-			return (-1);
+		if (ob->archivePath != NULL) {
+			strlcpy(path, ob->archivePath, sizeof(path));
+		} else {
+			if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
+				goto fail_unlock;
+		}
 	}
 	debug(DEBUG_STATE, "%s: Loading GENERIC from %s\n", ob->name, path);
 
 	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
-		return (-1);
+		goto fail_unlock;
 	}
 	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, &ver) == -1)
 		goto fail;
@@ -1126,11 +1101,16 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	}
 	AG_PostEvent(ob, agWorld, "object-post-load-generic", "%s", path);
 	AG_NetbufClose(buf);
+	AG_MutexUnlock(&ob->lock);
+	AG_UnlockLinkage();
 	return (0);
 fail:
 	AG_ObjectFreeDataset(ob);
 	AG_ObjectFreeDeps(ob);
 	AG_NetbufClose(buf);
+fail_unlock:
+	AG_MutexUnlock(&ob->lock);
+	AG_UnlockLinkage();
 	return (-1);
 }
 
@@ -1147,21 +1127,27 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	off_t dataOffs;
 	AG_Version ver;
 	
+	if (!OBJECT_PERSISTENT(ob)) {
+		AG_SetError(_("Object is non-persistent"));
+		return (-1);
+	}
+	AG_LockLinkage();
+	AG_MutexLock(&ob->lock);
 	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
 
 	*dataFound = 1;
 
-	if (OBJECT_RESIDENT(ob)) {
-		AG_SetError(_("The data of `%s' is already resident."),
-		    ob->name);
-		return (-1);
-	}
 	if (pPath != NULL) {
 		strlcpy(path, pPath, sizeof(path));
 	} else {
-		if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1) {
-			*dataFound = 0;
-			return (-1);
+		if (ob->archivePath != NULL) {
+			strlcpy(path, ob->archivePath, sizeof(path));
+		} else {
+			if (AG_ObjectCopyFilename(ob, path, sizeof(path))
+			    == -1) {
+				*dataFound = 0;
+				return (-1);
+			}
 		}
 	}
 	debug(DEBUG_STATE, "%s: Loading DATA from %s\n", ob->name, path);
@@ -1173,11 +1159,14 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	}
 	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, &ver) == -1)
 		goto fail;
-	
+
 	dataOffs = (off_t)AG_ReadUint32(buf);		/* User data offset */
 	if (ver.minor < 1) { AG_ReadUint32(buf); }	/* Gfx offs */
 	AG_NetbufSeek(buf, dataOffs, SEEK_SET);
 
+	if (OBJECT_RESIDENT(ob)) {
+		AG_ObjectFreeDataset(ob);
+	}
 	if (ob->ops->load != NULL &&
 	    ob->ops->load(ob, buf) == -1)
 		goto fail;
@@ -1185,9 +1174,14 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	ob->flags |= AG_OBJECT_RESIDENT;
 	AG_NetbufClose(buf);
 	AG_PostEvent(ob, agWorld, "object-post-load-data", "%s", path);
+	AG_MutexUnlock(&ob->lock);
+	AG_UnlockLinkage();
 	return (0);
 fail:
 	AG_NetbufClose(buf);
+fail_unlock:
+	AG_MutexUnlock(&ob->lock);
+	AG_UnlockLinkage();
 	return (-1);
 }
 
@@ -1227,10 +1221,7 @@ fail:
 	return (-1);
 }
 
-/*
- * Archive an object to the given file (or default location
- * if pPath is NULL).
- */
+/* Archive an object to a file. */
 int
 AG_ObjectSaveToFile(void *p, const char *pPath)
 {
@@ -1243,7 +1234,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	off_t countOffs, dataOffs;
 	Uint32 count;
 	AG_ObjectDep *dep;
-	int wasResident;
+	int pagedTemporarily;
 	int dataFound;
 
 	AG_LockLinkage();
@@ -1253,12 +1244,11 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
 		goto fail_lock;
 	}
-	wasResident = OBJECT_RESIDENT(ob);
 	AG_ObjectCopyName(ob, name, sizeof(name));
 
 	if (pPath != NULL) {
 		strlcpy(path, pPath, sizeof(path));
-	} else {
+	} else if (ob->archivePath == NULL) {
 		/* Create the save directory if needed. */
 		strlcpy(pathDir, AG_String(agConfig,"save-path"),
 		    sizeof(pathDir));
@@ -1277,7 +1267,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	 * 
 	 * XXX TODO Allow partial generic and data modifications instead.
 	 */
-	if (!wasResident) {
+	if (!OBJECT_RESIDENT(ob)) {
 		if (AG_ObjectLoadData(ob, &dataFound) == -1) {
 			if (!dataFound) {
 				/*
@@ -1293,21 +1283,28 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 				goto fail_lock;
 			}
 		}
+		pagedTemporarily = 1;
+	} else {
+		pagedTemporarily = 0;
 	}
 
 	if (pPath == NULL) {
-		strlcpy(path, pathDir, sizeof(path));
-		strlcat(path, AG_PATHSEP, sizeof(path));
-		strlcat(path, ob->name, sizeof(path));
-		strlcat(path, ".", sizeof(path));
-		strlcat(path, ob->ops->type, sizeof(path));
+		if (ob->archivePath != NULL) {
+			strlcpy(path, ob->archivePath, sizeof(path));
+		} else {
+			strlcpy(path, pathDir, sizeof(path));
+			strlcat(path, AG_PATHSEP, sizeof(path));
+			strlcat(path, ob->name, sizeof(path));
+			strlcat(path, ".", sizeof(path));
+			strlcat(path, ob->ops->type, sizeof(path));
+		}
 	}
 	debug(DEBUG_STATE, "%s: Saving to %s\n", ob->name, path);
 
 	if (agObjectBackups) {
 		BackupObjectFile(ob, path);
 	} else {
-		unlink(path);
+		AG_FileDelete(path);
 	}
 	if ((buf = AG_NetbufOpen(path, "wb", AG_NETBUF_BIG_ENDIAN))
 	    == NULL)
@@ -1358,17 +1355,14 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 
 	AG_NetbufFlush(buf);
 	AG_NetbufClose(buf);
-	if (!wasResident) {
-		AG_ObjectFreeDataset(ob);
-	}
+	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (0);
 fail:
 	AG_NetbufClose(buf);
 fail_reinit:
-	if (!wasResident)
-		AG_ObjectFreeDataset(ob);
+	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }
 fail_lock:
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
@@ -1388,6 +1382,27 @@ AG_ObjectSetName(void *p, const char *name)
 		if (*c == '/' || *c == '\\')		/* Pathname separator */
 			*c = '_';
 	}
+}
+
+void
+AG_ObjectGetArchivePath(void *p, char *buf, size_t buf_len)
+{
+	AG_Object *ob = p;
+
+	AG_MutexLock(&ob->lock);
+	strlcpy(buf, ob->archivePath, buf_len);
+	AG_MutexUnlock(&ob->lock);
+}
+
+/* Set the default path to use with ObjectLoad() and ObjectSave(). */
+void
+AG_ObjectSetArchivePath(void *p, const char *path)
+{
+	AG_Object *ob = p;
+
+	AG_MutexLock(&ob->lock);
+	ob->archivePath = Strdup(path);
+	AG_MutexUnlock(&ob->lock);
 }
 
 /* Override an object's ops; thread unsafe. */
@@ -1556,40 +1571,6 @@ AG_ObjectMoveDown(void *p)
 	TAILQ_INSERT_AFTER(&parent->children, next, ob, cobjs);
 }
 
-/* Make sure that an object's name is unique. */
-static void
-AG_ObjectRenameUnique(AG_Object *obj)
-{
-	AG_Object *oob, *oparent = obj->parent;
-	char basename[AG_OBJECT_NAME_MAX];
-	char newname[AG_OBJECT_NAME_MAX];
-	size_t len, i;
-	char *c, *num;
-	Uint n = 0;
-
-rename:
-	num = NULL;
-	len = strlen(obj->name);
-	for (i = len-1; i > 0; i--) {
-		if (!isdigit(obj->name[i])) {
-			num = &obj->name[i+1];
-			break;
-		}
-	}
-	*num = '\0';
-	strlcpy(basename, obj->name, sizeof(basename));
-	snprintf(newname, sizeof(newname), "%s%u", basename, n++);
-
-	TAILQ_FOREACH(oob, &oparent->children, cobjs) {
-		if (strcmp(oob->name, newname) == 0)
-			break;
-	}
-	if (oob != NULL) {
-		goto rename;
-	}
-	strlcpy(obj->name, newname, sizeof(obj->name));
-}
-
 /*
  * Change the save prefix of an object and its children.
  * The linkage must be locked.
@@ -1615,7 +1596,7 @@ AG_ObjectUnlinkDatafiles(void *p)
 	AG_Object *ob = p, *cob;
 
 	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == 0)
-		unlink(path);
+		AG_FileDelete(path);
 
 	TAILQ_FOREACH(cob, &ob->children, cobjs)
 		AG_ObjectUnlinkDatafiles(cob);
@@ -1627,9 +1608,9 @@ AG_ObjectUnlinkDatafiles(void *p)
 /* Duplicate an object and its children. */
 /* XXX EXPERIMENTAL */
 void *
-AG_ObjectDuplicate(void *p)
+AG_ObjectDuplicate(void *p, const char *newName)
 {
-	char oname[AG_OBJECT_NAME_MAX];
+	char nameSave[AG_OBJECT_NAME_MAX];
 	AG_Object *ob = p;
 	AG_Object *dob;
 	AG_ObjectType *t;
@@ -1647,9 +1628,9 @@ AG_ObjectDuplicate(void *p)
 
 	/* Create the duplicate object. */
 	if (t->ops->init != NULL) {
-		t->ops->init(dob, ob->name);
+		t->ops->init(dob, newName);
 	} else {
-		AG_ObjectInit(dob, ob->name, t->ops);
+		AG_ObjectInit(dob, newName, t->ops);
 	}
 
 	if (AG_ObjectPageIn(ob) == -1)
@@ -1657,11 +1638,11 @@ AG_ObjectDuplicate(void *p)
 
 	/* Change the name and attach to the same parent as the original. */
 	AG_ObjectAttach(ob->parent, dob);
-	AG_ObjectRenameUnique(dob);
 	dob->flags = (ob->flags & AG_OBJECT_DUPED_FLAGS);
 
 	/* Save the state of the original object using the new name. */
-	strlcpy(oname, ob->name, sizeof(oname));
+	/* XXX Save to temp location!! */
+	strlcpy(nameSave, ob->name, sizeof(nameSave));
 	strlcpy(ob->name, dob->name, sizeof(ob->name));
 	if (AG_ObjectSave(ob) == -1) {
 		AG_ObjectPageOut(ob);
@@ -1674,11 +1655,11 @@ AG_ObjectDuplicate(void *p)
 	if (AG_ObjectLoad(dob) == -1)
 		goto fail;
 
-	strlcpy(ob->name, oname, sizeof(ob->name));
+	strlcpy(ob->name, nameSave, sizeof(ob->name));
 	AG_MutexUnlock(&ob->lock);
 	return (dob);
 fail:
-	strlcpy(ob->name, oname, sizeof(ob->name));
+	strlcpy(ob->name, nameSave, sizeof(ob->name));
 	AG_MutexUnlock(&ob->lock);
 	AG_ObjectDestroy(dob);
 	Free(dob, M_OBJECT);
@@ -1703,7 +1684,7 @@ AG_ObjectIcon(void *p)
 	return (AGICON(OBJ_ICON));
 }
 
-/* Return a cryptographic digest for an object's last saved state. */
+/* Return a cryptographic digest of an object's most recent archive. */
 size_t
 AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
     char *digest)
@@ -1768,6 +1749,7 @@ AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
 	return (totlen);
 }
 
+/* Return a set of cryptographic digests for an object's most recent archive. */
 int
 AG_ObjectCopyDigest(const void *ob, size_t *len, char *digest)
 {
@@ -1788,7 +1770,10 @@ AG_ObjectCopyDigest(const void *ob, size_t *len, char *digest)
 	return (0);
 }
 
-/* Check whether the given object or any of its children has changed. */
+/*
+ * Check whether the dataset of the given object or any of its children are
+ * different with respect to the last archive.
+ */
 int
 AG_ObjectChangedAll(void *p)
 {
@@ -1805,43 +1790,67 @@ AG_ObjectChangedAll(void *p)
 	return (0);
 }
 
-/* Check whether the given object has changed since last saved. */
+/*
+ * Check whether the dataset of the given object is different with respect
+ * to its last archive.
+ */
 int
 AG_ObjectChanged(void *p)
 {
-	char save_pfx[6];
-	char save_sha1[SHA1_DIGEST_STRING_LENGTH];
-	char tmp_sha1[SHA1_DIGEST_STRING_LENGTH];
+	char bufCur[BUFSIZ], bufLast[BUFSIZ];
+	char pathCur[MAXPATHLEN];
+	char pathLast[MAXPATHLEN];
 	AG_Object *ob = p;
-	char *pfx_save;
+	FILE *fLast, *fCur;
+	size_t rvLast, rvCur;
 	int rv;
 
-	if (!OBJECT_PERSISTENT(ob) || !OBJECT_RESIDENT(ob)) {
+	if (!OBJECT_PERSISTENT(ob) || !OBJECT_RESIDENT(ob))
 		return (0);
-	}
-	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, save_sha1) == 0)
+	
+	AG_ObjectCopyFilename(ob, pathLast, sizeof(pathLast));
+	if ((fLast = fopen(pathLast, "r")) == NULL)
 		return (1);
 
-	pfx_save = ob->save_pfx;
-	save_pfx[0] = AG_PATHSEPC;
-	strlcpy(&save_pfx[1], ".tmp", sizeof(save_pfx)-1);
-	AG_ObjectSetSavePfx(ob, save_pfx);
-	if (AG_ObjectSave(ob) == -1) {
-		fprintf(stderr, "save %s: %s\n", ob->name, AG_GetError());
-		goto fail;
+	strlcpy(pathCur, AG_String(agConfig,"tmp-path"), sizeof(pathCur));
+	strlcat(pathCur, "/_chg.", sizeof(pathCur));
+	strlcat(pathCur, ob->name, sizeof(pathCur));
+	if (AG_ObjectSaveToFile(ob, pathCur) == -1) {
+		dprintf("%s: %s\n", ob->name, AG_GetError());
+		fclose(fLast);
+		return (1);
 	}
-	if (AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, tmp_sha1) == -1) {
-		fprintf(stderr, "md5 %s: %s\n", ob->name, AG_GetError());
-		goto fail;
+	if ((fCur = fopen(pathCur, "r")) == NULL) {
+		dprintf("%s: %s\n", pathCur, strerror(errno));
+		fclose(fLast);
+		return (1);
 	}
-	rv = (strcmp(save_sha1, tmp_sha1) != 0);
-	AG_ObjectUnlinkDatafiles(ob);
-	AG_ObjectSetSavePfx(ob, pfx_save);
-	return (rv);
-fail:
-	AG_ObjectUnlinkDatafiles(ob);
-	AG_ObjectSetSavePfx(ob, pfx_save);
-	return (-1);
+	for (;;) {
+		rvLast = fread(bufLast, 1, sizeof(bufLast), fLast);
+		rvCur = fread(bufCur, 1, sizeof(bufCur), fCur);
+	
+		if (rvLast != rvCur ||
+		   (rvLast > 0 && memcmp(bufLast, bufCur, rvLast) != 0)) {
+			goto changed;
+		}
+		if (feof(fLast)) {
+			if (!feof(fCur)) { goto changed; }
+			break;
+		}
+		if (feof(fCur)) {
+			if (!feof(fLast)) { goto changed; }
+			break;
+		}
+	}
+	AG_FileDelete(pathCur);
+	fclose(fCur);
+	fclose(fLast);
+	return (0);
+changed:
+	AG_FileDelete(pathCur);
+	fclose(fCur);
+	fclose(fLast);
+	return (1);
 }
 
 void

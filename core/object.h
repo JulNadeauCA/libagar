@@ -27,7 +27,7 @@ typedef struct ag_object_ops {
 	AG_Version ver;					/* Version numbers */
 
 	void (*init)(void *, const char *);		/* Initialize */
-	void (*reinit)(void *);				/* Reinitialize */
+	void (*free_dataset)(void *);			/* Free dataset */
 	void (*destroy)(void *);			/* Free resources */
 	int (*load)(void *, AG_Netbuf *);		/* Load from network */
 	int (*save)(void *, AG_Netbuf *);		/* Save to network */
@@ -46,9 +46,10 @@ typedef struct ag_object_dep {
 TAILQ_HEAD(ag_objectq, ag_object);
 
 typedef struct ag_object {
-	char name[AG_OBJECT_NAME_MAX];
-	char *save_pfx;
-	const AG_ObjectOps *ops;
+	char name[AG_OBJECT_NAME_MAX];	/* Object ID (unique in parent) */
+	char *archivePath;		/* Path to archive (app-specific) */
+	char *save_pfx;			/* Prefix for default save paths */
+	const AG_ObjectOps *ops;	/* Object class data */
 	Uint flags;
 #define AG_OBJECT_RELOAD_PROPS	 0x001	/* Don't free props before load */
 #define AG_OBJECT_NON_PERSISTENT 0x002	/* Never include in saves */
@@ -183,6 +184,9 @@ __inline__ void *AG_ObjectFindParent(void *, const char *, const char *);
 __inline__ void	*AG_ObjectFindChild(void *, const char *);
 int		 AG_ObjectInUse(const void *);
 void		 AG_ObjectSetName(void *, const char *);
+void		 AG_ObjectSetArchivePath(void *, const char *);
+void		 AG_ObjectGetArchivePath(void *, char *, size_t)
+		     BOUNDED_ATTRIBUTE(__string__, 2, 3);
 void		 AG_ObjectSetOps(void *, const void *);
 
 __inline__ SDL_Surface	*AG_ObjectIcon(void *);
@@ -190,7 +194,7 @@ __inline__ int		 AG_ObjectIsClass(void *, const char *);
 
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
-void	*AG_ObjectDuplicate(void *);
+void	*AG_ObjectDuplicate(void *, const char *);
 void	 AG_ObjectDestroy(void *);
 void	 AG_ObjectUnlinkDatafiles(void *);
 void	 AG_ObjectSetSavePfx(void *, char *);
@@ -215,8 +219,6 @@ int	 AG_ObjectSaveAll(void *);
 int	 AG_ObjectLoadFromFile(void *, const char *);
 int	 AG_ObjectLoadGenericFromFile(void *, const char *);
 
-
-int	 AG_ObjectReloadData(void *);
 int	 AG_ObjectResolveDeps(void *);
 int	 AG_ObjectLoadDataFromFile(void *, int *, const char *);
 
