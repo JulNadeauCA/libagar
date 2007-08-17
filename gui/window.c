@@ -993,6 +993,8 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 		nw = w;
 		nh = h;
 	}
+	if (nw < win->minw) { nw = win->minw; }
+	if (nh < win->minh) { nh = win->minh; }
 
 	/* Limit the window to the view boundaries. */
 	if ( (x + w) > agView->w ) {
