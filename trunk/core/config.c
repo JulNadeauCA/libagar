@@ -95,7 +95,7 @@ extern int agScreenshotQuality;
 extern int agWindowAnySize;
 
 static void
-Set_SearchPath(AG_Event *event)
+SetPath(AG_Event *event)
 {
 	char path[MAXPATHLEN];
 	AG_Textbox *tbox = AG_SELF();
@@ -533,32 +533,34 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		char path[MAXPATHLEN];
 
 		tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
+		
+		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
+		    _("Temporary dir: "));
+		AG_StringCopy(agConfig, "tmp-path", path, sizeof(path));
+		AG_TextboxPrintf(tbox, "%s", path);
+		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "tmp-path");
 
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Data save dir: "));
 		AG_StringCopy(agConfig, "save-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
-		AG_SetEvent(tbox, "textbox-return", Set_SearchPath, "%s",
-		    "save-path");
+		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "save-path");
 	
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Data load path: "));
 		AG_StringCopy(agConfig, "load-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
-		AG_SetEvent(tbox, "textbox-return", Set_SearchPath, "%s",
-		    "load-path");
+		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "load-path");
 	
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Font path: "));
 		AG_StringCopy(agConfig, "font-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
-		AG_SetEvent(tbox, "textbox-return", Set_SearchPath, "%s",
-		    "font-path");
+		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
 		
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Den path: "));
 		AG_StringCopy(agConfig, "den-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
-		AG_SetEvent(tbox, "textbox-return", Set_SearchPath, "%s",
-		    "den-path");
+		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "den-path");
 	}
 	
 	tab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
