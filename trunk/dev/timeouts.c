@@ -74,7 +74,7 @@ UpdateTbl(void *obj, Uint32 ival, void *arg)
 }
 
 static void
-close_timeouts(AG_Event *event)
+CloseWindow(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
 	AG_Tableview *tv = AG_PTR(1);
@@ -93,14 +93,15 @@ DEV_TimerInspector(void)
 	}
 	AG_WindowSetCaption(win, _("Timer Inspector"));
 
-	tv = AG_TableviewNew(win, AG_TABLEVIEW_NOHEADER, NULL, NULL);
+	tv = AG_TableviewNew(win, AG_TABLEVIEW_NOHEADER|AG_TABLEVIEW_EXPAND,
+	   NULL, NULL);
 	AG_TableviewPrescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
 	AG_TableviewColAdd(tv, 0, 0, NULL, NULL);
 	
 	AG_SetTimeout(&refresher, UpdateTbl, tv, 0);
 	AG_AddTimeout(tv, &refresher, 50);
 	
-	AG_SetEvent(win, "window-close", close_timeouts, "%p", tv);
+	AG_SetEvent(win, "window-close", CloseWindow, "%p", tv);
 	return (win);
 }
 

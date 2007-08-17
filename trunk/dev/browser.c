@@ -111,7 +111,7 @@ enum {
 	OBJEDIT_SAVE,
 	OBJEDIT_SAVE_ALL,
 	OBJEDIT_EXPORT,
-	OBJEDIT_REINIT,
+	OBJEDIT_FREE_DATASET,
 	OBJEDIT_DESTROY,
 	OBJEDIT_MOVE_UP,
 	OBJEDIT_MOVE_DOWN,
@@ -481,6 +481,7 @@ ObjectOp(AG_Event *event)
 			break;
 		case OBJEDIT_DUP:
 			{
+				char dupName[AG_OBJECT_NAME_MAX];
 				AG_Object *dob;
 
 				if (ob == agWorld || !OBJECT_PERSISTENT(ob)) {
@@ -489,7 +490,10 @@ ObjectOp(AG_Event *event)
 					    ob->name);
 					break;
 				}
-				if ((dob = AG_ObjectDuplicate(ob)) == NULL) {
+				AG_ObjectGenName(ob->parent, ob->ops, dupName,
+				    sizeof(dupName));
+				if ((dob = AG_ObjectDuplicate(ob, dupName))
+				    == NULL) {
 					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
 					    ob->name, AG_GetError());
 				}
@@ -501,13 +505,11 @@ ObjectOp(AG_Event *event)
 		case OBJEDIT_MOVE_DOWN:
 			AG_ObjectMoveDown(ob);
 			break;
-		case OBJEDIT_REINIT:
+		case OBJEDIT_FREE_DATASET:
 			if (it->p1 == agWorld) {
 				continue;
 			}
-			if (ob->ops->reinit != NULL) {
-				ob->ops->reinit(ob);
-			}
+			AG_ObjectFreeDataset(ob);
 			break;
 		case OBJEDIT_DESTROY:
 			if (it->p1 == agWorld) {
@@ -1078,8 +1080,8 @@ DEV_Browser(void)
 			
 			AG_MenuSeparator(mi);
 			
-			AG_MenuAction(mi, _("Reinitialize"), OBJREINIT_ICON,
-			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_REINIT);
+			AG_MenuAction(mi, _("Free dataset"), OBJREINIT_ICON,
+			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_FREE_DATASET);
 			AG_MenuAction(mi, _("Destroy"), TRASH_ICON,
 			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_DESTROY);
 		}
