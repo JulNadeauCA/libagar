@@ -129,28 +129,14 @@ PollWindows(AG_Event *event)
 static void
 ShowWindow(AG_Event *event)
 {
-	AG_Tlist *tl = AG_PTR(1);
-	AG_TlistItem *it;
-	AG_Window *win;
-
-	if ((it = AG_TlistSelectedItem(tl)) == NULL)
-		return;
-
-	win = it->p1;
+	AG_Window *win = AG_PTR(1);
 	AG_WindowShow(win);
 }
 
 static void
 HideWindow(AG_Event *event)
 {
-	AG_Tlist *tl = AG_PTR(1);
-	AG_TlistItem *it;
-	AG_Window *win;
-
-	if ((it = AG_TlistSelectedItem(tl)) == NULL)
-		return;
-
-	win = it->p1;
+	AG_Window *win = AG_PTR(1);
 	AG_WindowHide(win);
 }
 
@@ -172,10 +158,26 @@ PollSurfaces(AG_Event *event)
 }
 
 static void
+UpdateWindow(AG_Event *event)
+{
+	AG_Window *win = AG_PTR(1);
+
+	if (win != NULL)
+		AG_WindowUpdate(win);
+}
+
+static void
+UpdateWindowCaption(AG_Event *event)
+{
+	AG_Window *win = AG_PTR(1);
+
+	AG_WindowUpdateCaption(win);
+}
+
+static void
 WidgetParams(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
-	AG_Window *wExam = AG_PTR(2);
 	AG_TlistItem *it;
 	AG_Widget *wid;
 	AG_Window *win;
@@ -188,11 +190,11 @@ WidgetParams(AG_Event *event)
 	wid = it->p1;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("GUI Debugger: <%s>"),
-	    OBJECT(wid)->name);
+	AG_WindowSetCaption(win, _("GUI Debugger: <%s>"), OBJECT(wid)->name);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
-	nTab = AG_NotebookAddTab(nb, _("Flags"), AG_BOX_VERT);
+
+	nTab = AG_NotebookAddTab(nb, _("Widget"), AG_BOX_VERT);
 	{
 		static const AG_FlagDescr flagDescr[] = {
 		    { AG_WIDGET_FOCUSABLE,		"FOCUSABLE",1 },
@@ -209,6 +211,8 @@ WidgetParams(AG_Event *event)
 		    { AG_WIDGET_STATIC,			"STATIC",0 },
 		    { AG_WIDGET_FOCUS_PARENT_WIN,	"FOCUS_PARENT_WIN",1 },
 		    { AG_WIDGET_PRIO_MOTION,		"PRIO_MOTION",1 },
+		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",0 },
+		    { AG_WIDGET_IGNORE_PADDING,		"IGNORE_PADDING",1 },
 		    { 0,				NULL,0 }
 		};
 		AG_Label *lbl;
@@ -218,6 +222,84 @@ WidgetParams(AG_Event *event)
 		AG_SeparatorNewHoriz(nTab);
 		AG_CheckboxSetFromFlags(nTab, &wid->flags, flagDescr);
 	}
+
+	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
+		AG_Window *ww = (AG_Window *)wid;
+		AG_Spinbutton *sb;
+		AG_Textbox *tb;
+		AG_Label *lbl;
+		static const AG_FlagDescr flagDescr[] = {
+		    { AG_WINDOW_MODAL,		"MODAL",1 },
+		    { AG_WINDOW_MAXIMIZED,	"MAXIMIZED",1 },
+		    { AG_WINDOW_MINIMIZED,	"MINIMIZED",1 },
+		    { AG_WINDOW_KEEPABOVE,	"KEEPABOVE",1 },
+		    { AG_WINDOW_KEEPBELOW,	"KEEPBELOW",1 },
+		    { AG_WINDOW_DENYFOCUS,	"DENYFOCUS",1 },
+		    { AG_WINDOW_NOBORDERS,	"NOBORDERS",1 },
+		    { AG_WINDOW_NOHRESIZE,	"NOHRESIZE",1 },
+		    { AG_WINDOW_NOVRESIZE,	"NOVRESIZE",1 },
+		    { AG_WINDOW_NOBACKGROUND,	"NOBACKGROUND",1 },
+		    { AG_WINDOW_NOUPDATERECT,	"NOUPDATERECT",1 },
+		    { 0,			NULL,0 }
+		};
+
+		nTab = AG_NotebookAddTab(nb, _("Window"), AG_BOX_VERT);
+
+		tb = AG_TextboxNew(nTab, AG_TEXTBOX_HFILL, _("Caption: "));
+		AG_WidgetBindString(tb, "string", ww->caption,
+		    sizeof(ww->caption));
+		AG_SetEvent(tb, "textbox-postchg", UpdateWindowCaption,
+		    "%p", ww);
+
+		lbl = AG_LabelNewPolledMT(nTab, AG_LABEL_HFILL, &ww->lock,
+		    "Flags: <%[flags]>", &ww->flags);
+		AG_SeparatorNewHoriz(nTab);
+		AG_CheckboxSetFromFlags(nTab, &ww->flags, flagDescr);
+		AG_SeparatorNewHoriz(nTab);
+
+		sb = AG_SpinbuttonNew(nTab, 0, _("Widget spacing: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ww->spacing);
+		AG_SpinbuttonSetMin(sb, 0);
+		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
+		sb = AG_SpinbuttonNew(nTab, 0, _("Top padding: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ww->tPad);
+		AG_SpinbuttonSetMin(sb, 0);
+		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
+	
+		sb = AG_SpinbuttonNew(nTab, 0, _("Bottom padding: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ww->bPad);
+		AG_SpinbuttonSetMin(sb, 0);
+		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
+	
+		sb = AG_SpinbuttonNew(nTab, 0, _("Left padding: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ww->lPad);
+		AG_SpinbuttonSetMin(sb, 0);
+		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
+	
+		sb = AG_SpinbuttonNew(nTab, 0, _("Right padding: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ww->rPad);
+		AG_SpinbuttonSetMin(sb, 0);
+		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
+	}
+
+	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Box:*")) {
+		AG_Box *box = (AG_Box *)wid;
+		AG_Window *wp = AG_WidgetParentWindow(box);
+		AG_Spinbutton *sb;
+		
+		nTab = AG_NotebookAddTab(nb, _("Box"), AG_BOX_VERT);
+		
+		sb = AG_SpinbuttonNew(nTab, 0, _("Padding: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &box->padding);
+		AG_SpinbuttonSetMin(sb, 0);
+		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", wp);
+		
+		sb = AG_SpinbuttonNew(nTab, 0, _("Spacing: "));
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &box->spacing);
+		AG_SpinbuttonSetMin(sb, 0);
+		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", wp);
+	}
+	
 	nTab = AG_NotebookAddTab(nb, _("Geometry"), AG_BOX_VERT);
 	{
 		AG_MSpinbutton *msb;
@@ -251,84 +333,23 @@ WidgetParams(AG_Event *event)
 }
 
 static void
-ResizeWindow(AG_Event *event)
+CreateWindowMenu(AG_Event *event)
 {
-	AG_Window *win = AG_PTR(1);
-
-	AG_WindowScale(win, -1, -1);
-	AG_WindowScale(win, WIDGET(win)->w, WIDGET(win)->h);
-	AG_WINDOW_UPDATE(win);
-}
-
-static void
-WindowParams(AG_Event *event)
-{
+	AG_MenuItem *mi = AG_SENDER();
 	AG_Tlist *tl = AG_PTR(1);
-	AG_TlistItem *it;
-	AG_Window *wExam, *win;
-	AG_MenuItem *mi;
-	AG_Spinbutton *sb;
-	AG_Label *lbl;
+	AG_TlistItem *ti = AG_TlistSelectedItem(tl);
+	AG_Window *win;
 
-	if ((it = AG_TlistSelectedItem(tl)) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, _("No window is selected."));
+	if (ti == NULL || !AG_ObjectIsClass(ti->p1, "AG_Widget:AG_Window:*")) {
 		return;
 	}
-	wExam = it->p1;
+	win = ti->p1;
 
-	if ((win = AG_WindowNewNamed(0, "DEV_GuiDebugger-%s",
-	    OBJECT(wExam)->name)) == NULL) {
-		return;
+	if (win->visible) {
+		AG_MenuAction(mi, _("Hide window"), -1, HideWindow, "%p", win);
+	} else {
+		AG_MenuAction(mi, _("Show window"), -1, ShowWindow, "%p", win);
 	}
-	AG_WindowSetCaption(win, "%s", OBJECT(wExam)->name);
-	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
-
-	AG_LabelNewStatic(win, 0, "Name: \"%s\"", OBJECT(wExam)->name);
-	lbl = AG_LabelNewPolledMT(win, AG_LABEL_HFILL, &wExam->lock,
-	    "Flags: <%[flags]>", &wExam->flags);
-	AG_LabelFlag32(lbl,0,"MODAL",AG_WINDOW_MODAL);
-	AG_LabelFlag32(lbl,0,"MAXIMIZED",AG_WINDOW_MAXIMIZED);
-	AG_LabelFlag32(lbl,0,"MINIMIZED",AG_WINDOW_MINIMIZED);
-	AG_LabelFlag32(lbl,0,"KEEPABOVE",AG_WINDOW_KEEPABOVE);
-	AG_LabelFlag32(lbl,0,"KEEPBELOW",AG_WINDOW_KEEPBELOW);
-	AG_LabelFlag32(lbl,0,"DENYFOCUS",AG_WINDOW_DENYFOCUS);
-	AG_LabelFlag32(lbl,0,"NOTITLE",AG_WINDOW_NOTITLE);
-	AG_LabelFlag32(lbl,0,"NOBORDERS",AG_WINDOW_NOBORDERS);
-	AG_LabelFlag32(lbl,0,"NOHRESIZE",AG_WINDOW_NOHRESIZE);
-	AG_LabelFlag32(lbl,0,"NOVRESIZE",AG_WINDOW_NOVRESIZE);
-	AG_LabelFlag32(lbl,0,"NOCLOSE",AG_WINDOW_NOCLOSE);
-	AG_LabelFlag32(lbl,0,"NOMINIMIZE",AG_WINDOW_NOMINIMIZE);
-	AG_LabelFlag32(lbl,0,"NOMAXIMIZE",AG_WINDOW_NOMAXIMIZE);
-	AG_LabelFlag32(lbl,0,"NOBACKGROUND",AG_WINDOW_NOBACKGROUND);
-	AG_LabelFlag32(lbl,0,"NOUPDATERECT",AG_WINDOW_NOUPDATERECT);
-	AG_LabelFlag32(lbl,0,"FOCUSONATTACH",AG_WINDOW_FOCUSONATTACH);
-
-	sb = AG_SpinbuttonNew(win, 0, _("Widget spacing: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->spacing);
-	AG_SpinbuttonSetMin(sb, 0);
-	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", wExam);
-	
-	sb = AG_SpinbuttonNew(win, 0, _("Top padding: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->tPad);
-	AG_SpinbuttonSetMin(sb, 0);
-	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", wExam);
-	
-	sb = AG_SpinbuttonNew(win, 0, _("Bottom padding: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->bPad);
-	AG_SpinbuttonSetMin(sb, 0);
-	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", wExam);
-	
-	sb = AG_SpinbuttonNew(win, 0, _("Left padding: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->lPad);
-	AG_SpinbuttonSetMin(sb, 0);
-	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", wExam);
-	
-	sb = AG_SpinbuttonNew(win, 0, _("Right padding: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &wExam->rPad);
-	AG_SpinbuttonSetMin(sb, 0);
-	AG_SetEvent(sb, "spinbutton-changed", ResizeWindow, "%p", wExam);
-
-	AG_WindowShow(win);
 }
 
 AG_Window *
@@ -346,23 +367,10 @@ DEV_GuiDebugger(void)
 
 	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_FOCUS|AG_TLIST_EXPAND);
 	AG_SetEvent(tl, "tlist-poll", PollWindows, NULL);
-	AG_SetEvent(tl, "tlist-dblclick", WidgetParams, "%p,%p", tl, win);
+	AG_SetEvent(tl, "tlist-dblclick", WidgetParams, "%p", tl);
 
-	mi = AG_TlistSetPopup(tl, "widget");
-	{
-		AG_MenuAction(mi, _("Widget parameters..."), -1,
-		    WidgetParams, "%p,%p", tl, win);
-	}
 	mi = AG_TlistSetPopup(tl, "window");
-	{
-		AG_MenuAction(mi, _("Window parameters..."), -1,
-		    WindowParams, "%p", tl);
-		AG_MenuSeparator(mi);
-		AG_MenuAction(mi, _("Show this window"), -1,
-		    ShowWindow, "%p", tl);
-		AG_MenuAction(mi, _("Hide this window"), -1,
-		    HideWindow, "%p", tl);
-	}
+	AG_MenuSetPollFn(mi, CreateWindowMenu, "%p", tl);
 	AG_WindowSetGeometry(win, agView->w/4, agView->h/3, agView->w/2,
 	    agView->h/4);
 	return (win);
