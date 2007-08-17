@@ -11,6 +11,8 @@
 
 #include "begin_code.h"
 
+#define AG_WINDOW_CAPTION_MAX 512
+
 struct ag_titlebar;
 
 enum ag_window_alignment {
@@ -56,7 +58,7 @@ typedef struct ag_window {
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
 #define AG_WINDOW_PLAIN		(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS)
 
-	char caption[128];
+	char caption[AG_WINDOW_CAPTION_MAX];	/* Window caption */
 	int visible;				/* Window is visible */
 
 	AG_Mutex lock;
@@ -75,36 +77,35 @@ typedef struct ag_window {
 } AG_Window;
 
 #define AG_WINDOW_FOCUSED(w) (TAILQ_LAST(&agView->windows, ag_windowq) == (w))
-#define AG_WINDOW_UPDATE(win) \
-	do { \
-		AGWIDGET_OPS(win)->scale((win), AGWIDGET(win)->w, \
-		    AGWIDGET(win)->h); \
-		AG_WidgetUpdateCoords((win), AGWIDGET(win)->x, \
-		    AGWIDGET(win)->y); \
-	} while (/*CONSTCOND*/0)
 
 __BEGIN_DECLS
+extern const AG_WidgetOps agWindowOps;
+
 AG_Window *AG_WindowNew(Uint);
 AG_Window *AG_WindowNewNamed(Uint, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf, 2, 3);
 
 void	 AG_WindowInit(void *, const char *, int);
-void	 AG_WindowDestroy(void *);
-void	 AG_WindowDraw(void *);
-void	 AG_WindowScale(void *, int, int);
 
 void	 AG_WindowSetCaption(AG_Window *, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf, 2, 3)
 			     NONNULL_ATTRIBUTE(2);
+void	 AG_WindowUpdateCaption(AG_Window *);
 void	 AG_WindowSetSpacing(AG_Window *, int);
 void	 AG_WindowSetPadding(AG_Window *, int, int, int, int);
+#define	 AG_WindowSetPaddingLeft(w,p)   AG_WindowSetPadding((w),(p),-1,-1,-1)
+#define	 AG_WindowSetPaddingRight(w,p)  AG_WindowSetPadding((w),-1,(p),-1,-1)
+#define	 AG_WindowSetPaddingTop(w,p)    AG_WindowSetPadding((w),-1,-1,(p),-1)
+#define	 AG_WindowSetPaddingBottom(w,p) AG_WindowSetPadding((w),-1,-1,-1,(p))
+
 void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
 void	 AG_WindowSetCloseAction(AG_Window *, enum ag_window_close_action);
 void	 AG_WindowSetStyle(AG_Window *, const AG_WidgetStyleMod *);
-void	 AG_WindowSetGeometry(AG_Window *, int, int, int, int);
+int	 AG_WindowSetGeometry(AG_Window *, int, int, int, int);
 #define	 AG_WindowScaleToView(win) \
 	 AG_WindowSetGeometry((win),0,0,agView->w,agView->h)
 
+void	 AG_WindowUpdate(AG_Window *);
 void	 AG_WindowSaveGeometry(AG_Window *);
 void	 AG_WindowMaximize(AG_Window *);
 void	 AG_WindowUnmaximize(AG_Window *);
@@ -120,7 +121,6 @@ void	 AG_WindowResize(AG_Window *);
 void	 AG_WindowFocus(AG_Window *);
 int	 AG_WindowFocusNamed(const char *);
 void	 AG_WindowCycleFocus(AG_Window *, int);
-void	 AG_WindowClamp(AG_Window *);
 int	 AG_WindowIsSurrounded(AG_Window *);
 void	 AG_WindowApplyAlignment(AG_Window *, enum ag_window_alignment);
 
