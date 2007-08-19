@@ -74,6 +74,7 @@ SK_Tool	  *SK_ViewFindToolByOps(SK_View *, const SK_ToolOps *);
 SK_Tool	  *SK_ViewRegTool(SK_View *, const SK_ToolOps *, void *);
 void	   SK_ViewSetDefaultTool(SK_View *, SK_Tool *);
 void	   SK_ViewPopupMenu(SK_View *);
+void	   SK_ViewCloseEditPane(SK_View *);
 __END_DECLS
 
 #include "close_code.h"

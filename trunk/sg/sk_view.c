@@ -56,7 +56,7 @@ SK_ViewNew(void *parent, SK *sk, Uint flags)
 
 	skv = Malloc(sizeof(SK_View), M_OBJECT);
 	SK_ViewInit(skv, sk, flags);
-	AG_ObjectAttach(parent, sk);
+	AG_ObjectAttach(parent, skv);
 	return (skv);
 }
 
@@ -408,10 +408,6 @@ Draw(void *p)
 
 	SK_RenderNode(sk, (SK_Node *)sk->root, skv);
 	SK_RenderAbsolute(sk, skv);
-
-	if (skv->postdraw_ev != NULL)
-		skv->postdraw_ev->handler(skv->postdraw_ev);
-
 	glPopAttrib();
 
 	glMatrixMode(GL_MODELVIEW);
@@ -420,6 +416,9 @@ Draw(void *p)
 	glPopMatrix();
 	
 	glViewport(0, 0, agView->w, agView->h);
+
+	if (skv->postdraw_ev != NULL)
+		skv->postdraw_ev->handler(skv->postdraw_ev);
 #if 0
 	AG_TextColor(TEXT_COLOR);
 	status = AG_TextRender(skv->status);
@@ -612,6 +611,18 @@ SK_ViewPopupMenu(SK_View *skv)
 	AG_PopupShow(skv->popup);
 }
 
+void
+SK_ViewCloseEditPane(SK_View *skv)
+{
+	if (skv->editPane == NULL) {
+		return;
+	}
+	AG_ObjectDetach(skv->editPane);
+	AG_ObjectDestroy(skv->editPane);
+	Free(skv->editPane,0);
+	skv->editPane = NULL;
+}
+
 const AG_WidgetOps skViewOps = {
 	{
 		"AG_Widget:SK_View",
@@ -619,7 +630,7 @@ const AG_WidgetOps skViewOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		Draw,
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
