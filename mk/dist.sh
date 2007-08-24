@@ -100,6 +100,7 @@ fi
 echo "**************************************************"
 echo "TODO: Update en.wikipedia.org/wiki/Agar (software)"
 echo "TODO: Update fr.wikipedia.org/wiki/Agar (moteur)"
+echo "TODO: Update http://devmaster.net/engines/list.php"
 echo "TODO: Update SourceForge"
 echo "**************************************************"
 
