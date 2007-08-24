@@ -48,7 +48,7 @@ enum ply_prop_type {
 	SG_PLY_FLOAT32,
 	SG_PLY_FLOAT64,
 	SG_PLY_LAST_TYPE
-} type;
+};
 
 struct ply_prop {
 	char name[PLY_MAX_PROP_NAME];
