@@ -67,6 +67,9 @@ Single or multiple selections of items are possible.
 .Ft void
 .Fn AG_TlistSetDblClickFn "AG_Tlist *tl" "AG_EventFn fn" "const char *fn_args" "..."
 .Pp
+.Ft void
+.Fn AG_TlistSetChangedFn "AG_Tlist *tl" "AG_EventFn fn" "const char *fn_args" "..."
+.Pp
 .nr nS 0
 The
 .Fn AG_TlistNew
@@ -157,6 +160,13 @@ arranges for the given callback
 .Fa fn
 to be invoked with the given arguments (as well as the item pointer) when the
 user double clicks on an item.
+.Pp
+.Fn AG_TlistSetChangedFn
+arranges for the callback
+.Fa fn
+to be invoked when the user selects or deselects an item.
+The arguments are respectively, a pointer to the item and an integer with a
+value of 0 to indicate deselection and 1 to indicate selection.
 .Sh MANIPULATING ITEMS
 .nr nS 1
 .Ft "AG_TlistItem *"

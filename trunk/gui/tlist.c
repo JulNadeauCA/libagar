@@ -188,6 +188,7 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 	tl->prew = tl->item_h + 5;
 	tl->preh = tl->item_h + 2;
 	tl->popupEv = NULL;
+	tl->changedEv = NULL;
 	tl->dblClickEv = NULL;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
@@ -775,6 +776,10 @@ SelectItem(AG_Tlist *tl, AG_TlistItem *it)
 	*sel_ptr = it->p1;
 	if (!it->selected) {
 		it->selected = 1;
+		if (tl->changedEv != NULL) {
+			AG_PostEvent(NULL, tl, tl->changedEv->name, "%p,%i",
+			    it, 1);
+		}
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 1);
 	}
 	AG_PostEvent(NULL, tl, "tlist-selected", "%p", it);
@@ -792,6 +797,10 @@ DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 	*sel_ptr = NULL;
 	if (it->selected) {
 		it->selected = 0;
+		if (tl->changedEv != NULL) {
+			AG_PostEvent(NULL, tl, tl->changedEv->name, "%p,%i",
+			    it, 0);
+		}
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 0);
 	}
 	AG_WidgetBindingChanged(selectedb);
@@ -1192,6 +1201,15 @@ AG_TlistSetPopupFn(AG_Tlist *tl, void (*ev)(AG_Event *), const char *fmt, ...)
 	AG_MutexLock(&tl->lock);
 	tl->popupEv = AG_SetEvent(tl, NULL, ev, NULL);
 	AG_EVENT_GET_ARGS(tl->popupEv, fmt);
+	AG_MutexUnlock(&tl->lock);
+}
+
+void
+AG_TlistSetChangedFn(AG_Tlist *tl, void (*ev)(AG_Event *), const char *fmt, ...)
+{
+	AG_MutexLock(&tl->lock);
+	tl->changedEv = AG_SetEvent(tl, NULL, ev, NULL);
+	AG_EVENT_GET_ARGS(tl->changedEv, fmt);
 	AG_MutexUnlock(&tl->lock);
 }
 
