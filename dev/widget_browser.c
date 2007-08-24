@@ -57,7 +57,7 @@ FindWidgets(AG_Widget *wid, AG_Tlist *widtl, int depth)
 	char text[AG_TLIST_LABEL_MAX];
 	AG_TlistItem *it;
 
-	strlcpy(text, OBJECT(wid)->ops->type, sizeof(text));
+	strlcpy(text, OBJECT(wid)->name, sizeof(text));
 	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
 		AG_Window *win = (AG_Window *)wid;
 
@@ -365,8 +365,8 @@ DEV_GuiDebugger(void)
 	AG_WindowSetCaption(win, _("GUI Debugger"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_FOCUS|AG_TLIST_EXPAND);
-	AG_SetEvent(tl, "tlist-poll", PollWindows, NULL);
+	tl = AG_TlistNewPolled(win, AG_TLIST_FOCUS|AG_TLIST_EXPAND,
+	    PollWindows, NULL);
 	AG_SetEvent(tl, "tlist-dblclick", WidgetParams, "%p", tl);
 
 	mi = AG_TlistSetPopup(tl, "window");
