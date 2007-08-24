@@ -188,6 +188,7 @@ __inline__ void	   AG_WidgetSetFocusable(void *, int);
 __inline__ void	   AG_WidgetEnable(void *);
 __inline__ void	   AG_WidgetDisable(void *);
 
+void		*AG_WidgetFind(AG_Display *, const char *);
 void		 AG_WidgetFocus(void *);
 void		 AG_WidgetUnfocus(void *);
 AG_Widget	*AG_WidgetFindFocused(void *);

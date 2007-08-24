@@ -68,6 +68,7 @@ AG_WidgetInit(void *p, const void *wops, Uint flags)
 
 	AG_ObjectInit(wid, "widget", wops);
 	OBJECT(wid)->save_pfx = "/widgets";
+	OBJECT(wid)->flags |= AG_OBJECT_NAME_ONATTACH;
 
 	wid->flags = flags;
 	wid->redraw = 1;
@@ -95,6 +96,56 @@ AG_WidgetInit(void *p, const void *wops, Uint flags)
 	 * of the parent on attachment.
 	 */
 	AG_SetEvent(wid, "child-attached", child_attached, NULL);
+}
+
+/* Traverse the widget tree using a pathname. */
+static void *
+WidgetFindPath(const AG_Object *parent, const char *name)
+{
+	char node_name[AG_OBJECT_PATH_MAX];
+	void *rv;
+	char *s;
+	AG_Object *child;
+
+	strlcpy(node_name, name, sizeof(node_name));
+
+	if ((s = strchr(node_name, '/')) != NULL) {
+		*s = '\0';
+	}
+	TAILQ_FOREACH(child, &parent->children, cobjs) {
+		if (strcmp(child->name, node_name) != 0)
+			continue;
+
+		if ((s = strchr(name, '/')) != NULL) {
+			rv = WidgetFindPath(child, &s[1]);
+			if (rv != NULL) {
+				return (rv);
+			} else {
+				return (NULL);
+			}
+		}
+		return (child);
+	}
+	return (NULL);
+}
+
+/* Find a widget by name. */
+void *
+AG_WidgetFind(AG_Display *view, const char *name)
+{
+	void *rv;
+
+#ifdef DEBUG
+	if (name[0] != '/')
+		fatal("not an absolute path: `%s'", name);
+#endif
+	AG_LockLinkage();
+	rv = WidgetFindPath(OBJECT(view), &name[1]);
+	AG_UnlockLinkage();
+	if (rv == NULL) {
+		AG_SetError(_("The widget `%s' does not exist."), name);
+	}
+	return (rv);
 }
 
 void

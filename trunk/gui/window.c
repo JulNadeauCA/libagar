@@ -112,6 +112,7 @@ AG_WindowInit(void *p, const char *name, int flags)
 	strlcat(wname, (name != NULL) ? name : "generic", sizeof(wname));
 	AG_WidgetInit(win, &agWindowOps, 0);
 	AG_ObjectSetName(win, wname);
+	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
 	win->flags = flags;
 	win->visible = 0;
 	win->alignment = AG_WINDOW_CENTER;
