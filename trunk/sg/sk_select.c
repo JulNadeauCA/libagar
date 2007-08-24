@@ -47,13 +47,14 @@ typedef struct sk_select_tool {
 } SK_SelectTool;
 
 static int
-mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
+ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 {
 	SK_SelectTool *t = p;
 	SK_View *skv = SKTOOL(t)->skv;
 	SK *sk = skv->sk;
 	SG_Vector vC;
 	SK_Node *node;
+	int update = 0;
 
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
 		if (node->flags & SK_NODE_MOUSEOVER) {
@@ -77,21 +78,27 @@ mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 	/* Move selected elements. */
 	if (btn & SDL_BUTTON_LEFT) {
 		TAILQ_FOREACH(node, &sk->nodes, nodes) {
-			if (node->flags & SK_NODE_MOVED ||
-			  !(node->flags & SK_NODE_SELECTED)) {
+			if (node->flags & (SK_NODE_MOVED|SK_NODE_FIXED|
+			                   SK_NODE_KNOWN)) {
 				continue;
 			}
-			if (node->ops->move != NULL) {
-				node->ops->move(node, &pos, &vel);
+			if (node->flags & SK_NODE_SELECTED &&
+			    node->ops->move != NULL) {
+				if (node->ops->move(node, &pos, &vel) == 1) {
+					update = 1;
+				}
+				node->flags |= SK_NODE_MOVED;
 			}
-			node->flags |= SK_NODE_MOVED;
 		}
+	}
+	if (update) {
+		SK_Update(sk);
 	}
 	return (0);
 }
 
 static int
-mousebuttondown(void *pTool, SG_Vector pos, int btn)
+ToolMouseButtonDown(void *pTool, SG_Vector pos, int btn)
 {
 	SK_Tool *tool = pTool;
 	SK_SelectTool *t = pTool;
@@ -136,7 +143,7 @@ init(void *p)
 }
 
 static void
-edit(void *p, void *box)
+ToolEdit(void *p, void *box)
 {
 	SK_SelectTool *t = p;
 	static const AG_FlagDescr flagDescr[] = {
@@ -156,9 +163,9 @@ SK_ToolOps skSelectToolOps = {
 	0,
 	NULL,		/* init */
 	NULL,		/* destroy */
-	edit,
-	mousemotion,
-	mousebuttondown,
+	ToolEdit,
+	ToolMouseMotion,
+	ToolMouseButtonDown,
 	NULL,		/* buttonup */
 	NULL,		/* keydown */
 	NULL		/* keyup */

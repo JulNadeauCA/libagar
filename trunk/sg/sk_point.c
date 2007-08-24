@@ -149,10 +149,11 @@ SK_PointDelete(void *p)
 	return (SK_NodeDel(pt));
 }
 
-void
+int
 SK_PointMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 {
 	SK_Translatev(p, vel);
+	return (1);
 }
 
 SK_NodeOps skPointOps = {
@@ -175,7 +176,7 @@ SK_NodeOps skPointOps = {
 #ifdef EDITION
 
 static int
-mousebuttondown(void *pTool, SG_Vector pos, int btn)
+ToolMouseButtonDown(void *pTool, SG_Vector pos, int btn)
 {
 	SK_Tool *tool = pTool;
 	SK *sk = tool->skv->sk;
@@ -203,7 +204,7 @@ SK_ToolOps skPointToolOps = {
 	NULL,		/* destroy */
 	NULL,		/* edit */
 	NULL,		/* motion */
-	mousebuttondown,
+	ToolMouseButtonDown,
 	NULL,		/* buttonup */
 	NULL,		/* keydown */
 	NULL		/* keyup */

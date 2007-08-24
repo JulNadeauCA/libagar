@@ -72,6 +72,9 @@ MergeConstrainedRings(SK *sk, SK_Cluster *clOrig, SK_Cluster *cl)
 
 restart:
 	TAILQ_FOREACH(nUnknown, &sk->nodes, nodes) {
+		if (nUnknown->flags & (SK_NODE_UNCONSTRAINED|SK_NODE_FIXED)) {
+			continue;
+		}
 		count = 0;
 		TAILQ_FOREACH(ct, &clOrig->edges, constraints) {
 			if (ct->n1 == nUnknown &&
@@ -142,6 +145,51 @@ restart:
 }
 
 /*
+ * Check if the sketch is well-constrained. If DOF analysis ended with a
+ * single cluster, and all nodes within the cluster have two constraint
+ * edges, the sketch is well-constrained.
+ */
+static int
+SK_WellConstrained(SK *sk)
+{
+	Uint count = 0;
+	SK_Cluster *cl;
+	SK_Constraint *ct;
+	SK_Node *node;
+
+	TAILQ_FOREACH(cl, &sk->clusters, clusters) {
+		TAILQ_FOREACH(ct, &cl->edges, constraints) {
+			ct->n1->nEdges = 0;
+			ct->n2->nEdges = 0;
+		}
+		count++;
+	}
+	if (count > 1) {
+		AG_SetError("%u clusters", count);
+		return (0);
+	}
+	cl = TAILQ_FIRST(&sk->clusters);
+	TAILQ_FOREACH(ct, &cl->edges, constraints) {
+		ct->n1->nEdges++;
+		ct->n2->nEdges++;
+	}
+	TAILQ_FOREACH(node, &sk->nodes, nodes) {
+		if (node->flags & SK_NODE_UNCONSTRAINED) {
+			continue;
+		}
+		if (node->nEdges < 2) {
+			char nodeName[SK_NODE_NAME_MAX];
+
+			AG_SetError("%s has %u edges",
+			    SK_NodeNameCopy(node, nodeName, sizeof(nodeName)),
+			    node->nEdges);
+			return (0);
+		}
+	}
+	return (1);
+}
+
+/*
  * Attempt to position the elements of a sketch such that the set
  * of geometrical constraints are satisfied.
  */
@@ -193,6 +241,9 @@ SK_Solve(SK *sk)
 merge_rings:
 	nRing = 0;
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
+		if (node->flags & SK_NODE_UNCONSTRAINED) {
+			continue;
+		}
 		count = 0;
 		TAILQ_FOREACH(cl, &sk->clusters, clusters) {
 			if (SK_NodeInCluster(node, cl)) {
@@ -241,6 +292,13 @@ merge_rings:
 
 		TAILQ_INSERT_TAIL(&sk->clusters, clMerged, clusters);
 		goto merge_rings;
+	}
+
+	if (SK_WellConstrained(sk)) {
+		SK_SetStatus(sk, SK_WELL_CONSTRAINED, _("Well-constrained"));
+	} else {
+		SK_SetStatus(sk, SK_UNDER_CONSTRAINED,
+		    _("Underconstrained (%s)"), AG_GetError());
 	}
 out:
 	AG_MutexUnlock(&sk->lock);

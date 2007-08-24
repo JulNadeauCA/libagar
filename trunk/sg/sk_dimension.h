@@ -30,6 +30,6 @@ void		 SK_DimensionRedraw(void *, SK_View *);
 void		 SK_DimensionEdit(void *, AG_Widget *, SK_View *);
 SG_Real		 SK_DimensionProximity(void *, const SG_Vector *, SG_Vector *);
 int		 SK_DimensionDelete(void *);
-void		 SK_DimensionMove(void *, const SG_Vector *, const SG_Vector *);
+int		 SK_DimensionMove(void *, const SG_Vector *, const SG_Vector *);
 void		 SK_DimensionSetUnit(SK_Dimension *, const AG_Unit *);
 __END_DECLS

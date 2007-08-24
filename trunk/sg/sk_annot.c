@@ -38,7 +38,7 @@ SK_AnnotInit(void *p, Uint32 name, const SK_NodeOps *ops)
 {
 	SK_Annot *ann = p;
 
-	SK_NodeInit(ann, ops, name, 0);
+	SK_NodeInit(ann, ops, name, SK_NODE_UNCONSTRAINED);
 	ann->flags = 0;
 }
 

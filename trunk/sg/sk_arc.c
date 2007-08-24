@@ -158,7 +158,7 @@ struct sk_arc_tool {
 };
 
 static void
-init(void *p)
+ToolInit(void *p)
 {
 	struct sk_arc_tool *t = p;
 
@@ -167,7 +167,7 @@ init(void *p)
 }
 
 static int
-mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
+ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 {
 	struct sk_arc_tool *t = p;
 	SG_Vector vCenter;
@@ -180,7 +180,7 @@ mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 }
 
 static int
-mousebuttondown(void *p, SG_Vector pos, int btn)
+ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 {
 	struct sk_arc_tool *t = p;
 	SK *sk = SKTOOL(t)->skv->sk;
@@ -218,11 +218,11 @@ SK_ToolOps skArcToolOps = {
 	VGBEZIER_CURVE_ICON,
 	sizeof(struct sk_arc_tool),
 	0,
-	init,
+	ToolInit,
 	NULL,		/* destroy */
 	NULL,		/* edit */
-	mousemotion,
-	mousebuttondown,
+	ToolMouseMotion,
+	ToolMouseButtonDown,
 	NULL,		/* buttonup */
 	NULL,		/* keydown */
 	NULL		/* keyup */

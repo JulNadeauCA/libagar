@@ -142,9 +142,9 @@ SK_LineDelete(void *p)
 	SK *sk = SKNODE(line)->sk;
 
 	SK_DelConstraint(&sk->ctGraph,
-	    SK_FindConstraint(&sk->ctGraph, SK_COINCIDENT, line, line->p1));
+	    SK_FindConstraint(&sk->ctGraph, SK_INCIDENT, line, line->p1));
 	SK_DelConstraint(&sk->ctGraph,
-	    SK_FindConstraint(&sk->ctGraph, SK_COINCIDENT, line, line->p2));
+	    SK_FindConstraint(&sk->ctGraph, SK_INCIDENT, line, line->p2));
 	SK_NodeDelReference(line, line->p1);
 	SK_NodeDelReference(line, line->p2);
 
@@ -156,7 +156,7 @@ SK_LineDelete(void *p)
 	return (SK_NodeDel(line));
 }
 
-void
+int
 SK_LineMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 {
 	SK_Line *line = p;
@@ -169,6 +169,7 @@ SK_LineMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 		SK_Translatev(line->p2, vel);
 		SKNODE(line->p2)->flags |= SK_NODE_MOVED;
 	}
+	return (1);
 }
 
 void
@@ -209,7 +210,7 @@ struct sk_line_tool {
 };
 
 static void
-init(void *p)
+ToolInit(void *p)
 {
 	struct sk_line_tool *t = p;
 
@@ -235,7 +236,7 @@ OverPoint(SK_View *skv, SG_Vector *pos, SG_Vector *vC, void *ignore)
 }
 
 static int
-mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
+ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 {
 	struct sk_line_tool *t = p;
 	SG_Vector vC;
@@ -250,7 +251,7 @@ mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 }
 
 static int
-mousebuttondown(void *p, SG_Vector pos, int btn)
+ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 {
 	struct sk_line_tool *t = p;
 	SK_View *skv = SKTOOL(t)->skv;
@@ -268,20 +269,25 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 	if ((line = t->curLine) != NULL) {
 		if (overPoint != NULL &&
 		    overPoint != line->p2) {
-			SK_DelConstraint(&sk->ctGraph,
-			    SK_FindConstraint(&sk->ctGraph, SK_COINCIDENT,
-			                      line, line->p2));
+			ct = SK_FindConstraint(&sk->ctGraph, SK_INCIDENT,
+			                       line, line->p2);
+			if (ct != NULL) {
+				SK_DelConstraint(&sk->ctGraph, ct);
+			}
 		    	SK_NodeDelReference(line, line->p2);
 			if (SK_NodeDel(line->p2)) {
 				AG_TextMsgFromError();
 				return (0);
 			}
 			ct = SK_AddConstraint(&sk->ctGraph, line, overPoint,
-			    SK_COINCIDENT);
+			    SK_INCIDENT);
 			SK_NodeAddConstraint(line, ct);
 			SK_NodeAddConstraint(overPoint, ct);
 		    	SK_NodeAddReference(line, overPoint);
 			line->p2 = overPoint;
+		
+			SKNODE(line->p1)->flags &= ~(SK_NODE_UNCONSTRAINED);
+			SKNODE(line->p2)->flags &= ~(SK_NODE_UNCONSTRAINED);
 		}
 		t->curLine = NULL;
 		t->curPoint = NULL;
@@ -294,16 +300,18 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 		line->p1 = overPoint;
 	} else {
 		line->p1 = SK_PointNew(sk->root);
+		SKNODE(line->p1)->flags |= SK_NODE_UNCONSTRAINED;
 		SK_Translatev(line->p1, &pos);
 	}
 	line->p2 = SK_PointNew(sk->root);
+	SKNODE(line->p2)->flags |= SK_NODE_UNCONSTRAINED;
 	SK_Translatev(line->p2, &pos);
 	
-	ct = SK_AddConstraint(&sk->ctGraph, line, line->p1, SK_COINCIDENT);
+	ct = SK_AddConstraint(&sk->ctGraph, line, line->p1, SK_INCIDENT);
 	SK_NodeAddConstraint(line, ct);
 	SK_NodeAddConstraint(line->p1, ct);
 
-	ct = SK_AddConstraint(&sk->ctGraph, line, line->p2, SK_COINCIDENT);
+	ct = SK_AddConstraint(&sk->ctGraph, line, line->p2, SK_INCIDENT);
 	SK_NodeAddConstraint(line, ct);
 	SK_NodeAddConstraint(line->p2, ct);
 
@@ -312,7 +320,7 @@ mousebuttondown(void *p, SG_Vector pos, int btn)
 	t->curLine = line;
 	t->curPoint = line->p2;
 	
-	SK_Update(sk);
+//	SK_Update(sk);
 	return (1);
 }
 
@@ -322,11 +330,11 @@ SK_ToolOps skLineToolOps = {
 	VGLINES_ICON,
 	sizeof(struct sk_line_tool),
 	0,
-	init,
+	ToolInit,
 	NULL,		/* destroy */
 	NULL,		/* edit */
-	mousemotion,
-	mousebuttondown,
+	ToolMouseMotion,
+	ToolMouseButtonDown,
 	NULL,		/* buttonup */
 	NULL,		/* keydown */
 	NULL		/* keyup */
