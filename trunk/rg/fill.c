@@ -278,7 +278,7 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 }
 
 static void
-invert_colors(AG_Event *event)
+InvertColors(AG_Event *event)
 {
 	struct rg_fill_feature *fi = AG_PTR(1);
 	RG_Tileset *ts = RG_FEATURE(fi)->ts;
@@ -312,7 +312,7 @@ invert_colors(AG_Event *event)
 }
 
 static void
-swap_gradient(AG_Event *event)
+SwapGradientColors(AG_Event *event)
 {
 	struct rg_fill_feature *fi = AG_PTR(1);
 	Uint32 cSave;
@@ -365,9 +365,9 @@ RG_FillMenu(void *p, AG_MenuItem *mi)
 	AG_MenuSeparator(mi);
 
 	AG_MenuAction(mi, _("Swap gradient colors"), RG_SWAP_ICON,
-	    swap_gradient, "%p", fi);
+	    SwapGradientColors, "%p", fi);
 	AG_MenuAction(mi, _("Invert colors"), RG_INVERT_ICON,
-	    invert_colors, "%p", fi);
+	    InvertColors, "%p", fi);
 }
 
 AG_Toolbar *
@@ -378,9 +378,9 @@ RG_FillToolbar(void *p, RG_Tileview *tv)
 
 	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
 	AG_ToolbarButtonIcon(tbar, AGICON(RG_SWAP_ICON), 0,
-	    swap_gradient, "%p", fi);
+	    SwapGradientColors, "%p", fi);
 	AG_ToolbarButtonIcon(tbar, AGICON(RG_INVERT_ICON), 0,
-	    invert_colors, "%p", fi);
+	    InvertColors, "%p", fi);
 	return (tbar);
 }
 
