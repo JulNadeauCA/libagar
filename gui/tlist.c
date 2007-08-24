@@ -825,22 +825,6 @@ mousebuttondown(AG_Event *event)
 	if ((ti = AG_TlistFindByIndex(tl, tind)) == NULL)
 		goto out;
 
-	/* Expand the children if the user clicked on the [+] sign. */
-	if (ti->flags & AG_TLIST_HAS_CHILDREN) {
-		int th = tl->icon_w;
-
-		x -= 7;
-		if (x >= ti->depth*th &&
-		    x <= (ti->depth+1)*th) {
-			if (ti->flags & AG_TLIST_VISIBLE_CHILDREN) {
-				ti->flags &= ~(AG_TLIST_VISIBLE_CHILDREN);
-			} else {
-				ti->flags |= AG_TLIST_VISIBLE_CHILDREN;
-			}
-			goto out;
-		}
-	}
-
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
 		{
@@ -872,6 +856,20 @@ mousebuttondown(AG_Event *event)
 		}
 		break;
 	case SDL_BUTTON_LEFT:
+		/* Expand the children if the user clicked on the [+] sign. */
+		if (ti->flags & AG_TLIST_HAS_CHILDREN) {
+			x -= 7;
+			if (x >= ti->depth*tl->icon_w &&
+			    x <= (ti->depth+1)*tl->icon_w) {
+				if (ti->flags & AG_TLIST_VISIBLE_CHILDREN) {
+					ti->flags &= ~AG_TLIST_VISIBLE_CHILDREN;
+				} else {
+					ti->flags |=  AG_TLIST_VISIBLE_CHILDREN;
+				}
+				goto out;
+			}
+		}
+
 		if (ti->flags & AG_TLIST_NO_SELECT) {
 			goto out;
 		}
