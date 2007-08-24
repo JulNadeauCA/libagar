@@ -88,6 +88,8 @@ section of the widget's manual page.
 .Ft "void"
 .Fn AG_WidgetInit "AG_Widget *widget" "const AG_Widget *widget_ops" "Uint flags"
 .Pp
+.Ft "AG_Widget *"
+.Fn AG_WidgetFind "AG_Display *view" "const char *name"
 .nr nS 0
 The
 .Fn AG_WidgetInit
@@ -213,6 +215,11 @@ operation requests that the widget sizes (or resizes) itself to the
 given dimensions (see
 .Dq GEOMETRY MANAGEMENT
 below for more details).
+.Pp
+The
+.Fn AG_WidgetFind
+function searches for a given widget by name, given an absolute path,
+and returns a pointer to the widget or NULL.
 .Sh GEOMETRY MANAGEMENT
 The
 .Va scale
