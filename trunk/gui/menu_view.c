@@ -311,7 +311,7 @@ Draw(void *p)
 			int state;
 
 			AG_WidgetBlitFrom(mview, m, item->icon, NULL,
-			    x+(m->itemh/2 - iconsu->w/2), y+dy+2);
+			    x+(m->itemh/2 - iconsu->w/2), y+dy);
 
 			state = (item->value != -1) ? item->value :
 			    GetItemBoolValue(item);
