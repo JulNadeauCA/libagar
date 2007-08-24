@@ -83,7 +83,9 @@ const AG_FlagDescr agObjectFlags[] = {
 	{ AG_OBJECT_REMAIN_DATA,	N_("Keep data resident"),	  1 },
 	{ AG_OBJECT_RESIDENT,		N_("Data part is resident"),	  0 },
 	{ AG_OBJECT_STATIC,		N_("Statically allocated"),	  0 },
-	{ AG_OBJECT_REOPEN_ONLOAD,	"",				  0 },
+	{ AG_OBJECT_REOPEN_ONLOAD,	N_("Recreate UI on load"),	  0 },
+	{ AG_OBJECT_NAME_ONATTACH,	N_("Generate name upon attach"),  0 },
+	{ 0,				"",				  0 }
 };
 
 #ifdef DEBUG
@@ -419,20 +421,25 @@ AG_ObjectMove(void *childp, void *newparentp)
 
 /* Attach a child object to some parent object. */
 void
-AG_ObjectAttach(void *parentp, void *childp)
+AG_ObjectAttach(void *parentp, void *pChld)
 {
 	AG_Object *parent = parentp;
-	AG_Object *child = childp;
+	AG_Object *chld = pChld;
 
 	if (parent == NULL)
 		return;
 
 	AG_LockLinkage();
-	TAILQ_INSERT_TAIL(&parent->children, child, cobjs);
-	child->parent = parent;
-	AG_PostEvent(parent, child, "attached", NULL);
-	AG_PostEvent(child, parent, "child-attached", NULL);
-	debug(DEBUG_LINKAGE, "%s: parent = %s\n", child->name, parent->name);
+	
+	if (chld->flags & AG_OBJECT_NAME_ONATTACH) {
+		AG_ObjectGenName(parent, chld->ops,
+		    chld->name, sizeof(chld->name));
+	}
+	TAILQ_INSERT_TAIL(&parent->children, chld, cobjs);
+	chld->parent = parent;
+	AG_PostEvent(parent, chld, "attached", NULL);
+	AG_PostEvent(chld, parent, "child-attached", NULL);
+
 	AG_UnlockLinkage();
 }
 
@@ -884,7 +891,8 @@ AG_ObjectPageOut(void *p)
 			if (AG_ObjectSave(ob) == -1)
 				goto fail;
 		}
-		AG_ObjectFreeDataset(ob);
+		if ((ob->flags & AG_OBJECT_REMAIN_DATA) == 0)
+			AG_ObjectFreeDataset(ob);
 	}
 done:
 	AG_MutexUnlock(&ob->lock);
@@ -1853,6 +1861,7 @@ changed:
 	return (1);
 }
 
+/* Generate an object name that is unique in the given parent object. */
 void
 AG_ObjectGenName(AG_Object *pobj, const AG_ObjectOps *ops, char *name,
     size_t len)
@@ -1862,7 +1871,7 @@ AG_ObjectGenName(AG_Object *pobj, const AG_ObjectOps *ops, char *name,
 	AG_Object *ch;
 	char *s;
 	
-	if ((s = strrchr(ops->type, '.')) != NULL && s[1] != '\0') {
+	if ((s = strrchr(ops->type, ':')) != NULL && s[1] != '\0') {
 		strlcpy(tname, &s[1], sizeof(tname));
 	} else {
 		strlcpy(tname, ops->type, sizeof(tname));

@@ -51,17 +51,18 @@ typedef struct ag_object {
 	char *save_pfx;			/* Prefix for default save paths */
 	const AG_ObjectOps *ops;	/* Object class data */
 	Uint flags;
-#define AG_OBJECT_RELOAD_PROPS	 0x001	/* Don't free props before load */
-#define AG_OBJECT_NON_PERSISTENT 0x002	/* Never include in saves */
-#define AG_OBJECT_INDESTRUCTIBLE 0x004	/* Not destructible (advisory) */
-#define AG_OBJECT_RESIDENT	 0x008	/* Data part is resident */
-#define AG_OBJECT_PRESERVE_DEPS	 0x010	/* Preserve cnt=0 dependencies */
-#define AG_OBJECT_STATIC	 0x020	/* Don't free() after detach */
-#define AG_OBJECT_READONLY	 0x040	/* Disallow edition (advisory) */
-#define AG_OBJECT_WAS_RESIDENT	 0x080	/* Used internally by ObjectLoad() */
-#define AG_OBJECT_REOPEN_ONLOAD	 0x200	/* Recreate editor UI on ObjectLoad() */
-#define AG_OBJECT_REMAIN_DATA	 0x400	/* Keep user data resident */
-#define AG_OBJECT_DEBUG		 0x800	/* Enable debugging */
+#define AG_OBJECT_RELOAD_PROPS	 0x0001	/* Don't free props before load */
+#define AG_OBJECT_NON_PERSISTENT 0x0002	/* Never include in saves */
+#define AG_OBJECT_INDESTRUCTIBLE 0x0004	/* Not destructible (advisory) */
+#define AG_OBJECT_RESIDENT	 0x0008	/* Data part is resident */
+#define AG_OBJECT_PRESERVE_DEPS	 0x0010	/* Preserve cnt=0 dependencies */
+#define AG_OBJECT_STATIC	 0x0020	/* Don't free() after detach */
+#define AG_OBJECT_READONLY	 0x0040	/* Disallow edition (advisory) */
+#define AG_OBJECT_WAS_RESIDENT	 0x0080	/* Used internally by ObjectLoad() */
+#define AG_OBJECT_REOPEN_ONLOAD	 0x0200	/* Recreate editor UI on ObjectLoad() */
+#define AG_OBJECT_REMAIN_DATA	 0x0400	/* Keep user data resident */
+#define AG_OBJECT_DEBUG		 0x0800	/* Enable debugging */
+#define AG_OBJECT_NAME_ONATTACH	 0x1000	/* Generate name on attach */
 #define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_RELOAD_PROPS|\
  				 AG_OBJECT_INDESTRUCTIBLE|\
 				 AG_OBJECT_PRESERVE_DEPS|\

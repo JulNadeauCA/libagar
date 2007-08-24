@@ -35,7 +35,7 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The Agar object system is a simply, generic and powerful system for
+The Agar object system is a simple, generic and powerful system for
 object-oriented programming in C.
 .Pp
 Objects can be organized in a virtual filesystem.
@@ -49,8 +49,8 @@ and property tables
 .Pp
 Arbitrary datasets (possibly large and complex ones) can be archived in
 a portable and efficient manner.
-Generic information about an object can be kept resident, while datasets and
-moved from and to various forms of storage.
+Generic information about an object can be kept resident, while datasets
+are moved between memory and storage.
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
 .Pp
@@ -243,54 +243,38 @@ The following public
 flags are defined:
 .Pp
 .Bd -literal
-#define AG_OBJECT_RELOAD_PROPS   0x001 /* Don't clear props before load */
-#define AG_OBJECT_NON_PERSISTENT 0x002 /* Dataset is not archivable */
-#define AG_OBJECT_INDESTRUCTIBLE 0x004 /* Not destructible (advisory) */
-#define AG_OBJECT_RESIDENT       0x008 /* Dataset is in memory (RO) */
-#define AG_OBJECT_PRESERVE_DEPS  0x010 /* Keep deps with refcnt of 0 */
-#define AG_OBJECT_STATIC         0x020 /* Don't free() after detach */
-#define AG_OBJECT_READONLY       0x040 /* Disallow edition (advisory) */
-#define AG_OBJECT_REOPEN_ONLOAD  0x200 /* Recreate editor UI on load */
-#define AG_OBJECT_REMAIN_DATA    0x400 /* Keep dataset resident */
+#define AG_OBJECT_RELOAD_PROPS   0x0001 /* Don't clear props before load */
+#define AG_OBJECT_NON_PERSISTENT 0x0002 /* Dataset is not archivable */
+#define AG_OBJECT_INDESTRUCTIBLE 0x0004 /* Not destructible (advisory) */
+#define AG_OBJECT_RESIDENT       0x0008 /* Dataset is in memory (RO) */
+#define AG_OBJECT_PRESERVE_DEPS  0x0010 /* Keep deps with refcnt of 0 */
+#define AG_OBJECT_STATIC         0x0020 /* Don't free() after detach */
+#define AG_OBJECT_READONLY       0x0040 /* Disallow edition (advisory) */
+#define AG_OBJECT_REOPEN_ONLOAD  0x0200 /* Recreate editor UI on load */
+#define AG_OBJECT_REMAIN_DATA    0x0400 /* Keep dataset resident */
+#define AG_OBJECT_DEBUG		 0x0800	/* Enable debugging */
+#define AG_OBJECT_NAME_ONATTACH	 0x1000	/* Generate name on attach */
 .Ed
 .Pp
-The
-.Dv AG_OBJECT_RELOAD_PROPS
-flag prevents the
+.Bl -tag -width "AG_OBJECT_NON_PERSISTENT "
+.It Dv AG_OBJECT_RELOAD_PROPS
+Prevents clearing of the
 .Xr AG_Prop 3
-table from being cleared by
+table prior to
 .Fn AG_ObjectLoad .
-.Pp
-.Dv AG_OBJECT_NON_PERSISTENT
-prevents the object (and its children) from being archived.
+.It Dv AG_OBJECT_NON_PERSISTENT
+Disables archiving of the object and its children.
 If set,
 .Fn AG_ObjectSave
 becomes a no-op and
 .Fn AG_ObjectLoad
 calls will fail.
-.Pp
-flags
-.Dv AG_OBJECT_INDESTRUCTIBLE
-and
-.Dv AG_OBJECT_READONLY
-are purely advisory and their usage is application-specific.
-.Pp
-The
-.Dv AG_OBJECT_REOPEN_ONLOAD
-flag arranges for all graphical interface elements (as returned by the
-.Sq edit
-operation) to be automatically destroyed and recreated after any
-.Fn AG_ObjectLoad
-call.
-This flag is useful for complex objects where the graphical interface
-references elements of the dataset.
-.Pp
-The read-only
-.Dv AG_OBJECT_RESIDENT
-flag is set by the object system to indicate that the object's dataset is
-currently resident in memory.
-.Dv AG_OBJECT_RESIDENT
-is set by
+.It Dv AG_OBJECT_INDESTRUCTIBLE
+Advisory and application-specific.
+.It Dv AG_OBJECT_RESIDENT
+Read-only flag set by the object system to indicate that the object's dataset
+is currently resident in memory.
+This flag is set by
 .Fn AG_ObjectNew ,
 .Fn AG_ObjectLoadData
 and
@@ -299,6 +283,45 @@ and is cleared by
 .Fn AG_ObjectFreeDataset
 and
 .Fn AG_ObjectPageOut .
+.It Dv AG_OBJECT_PRESERVE_DEPS
+Disable automatic removal of object dependencies when reference counts
+reach 0.
+.It Dv AG_OBJECT_STATIC
+Indicates that this object is either statically-allocated (or allocated
+through another facility than
+.Xr malloc 3 ) .
+If the object is to be destroyed as part of
+a recursive
+.Fn AG_ObjectDestroy
+call on one of its parents, it prevents a
+.Xr free 3
+call on the structure.
+.It Dv AG_OBJECT_READONLY
+Advisory and application-specific.
+.It Dv AG_OBJECT_REOPEN_ONLOAD
+If the object has a
+.Sq edit
+operation, arrange for all graphical interface elements (as returned by
+.Sq edit )
+to be automatically destroyed and recreated after any
+.Fn AG_ObjectLoad
+call.
+This flag is useful for complex objects where the graphical interface
+references elements of the dataset.
+.It Dv AG_OBJECT_REMAIN_DATA
+Prevent the object's dataset from being automatically freed (with
+.Fn AG_ObjectFreeDataset )
+as a result of an
+.Fn AG_ObjectPageOut
+call, when the reference count reaches zero.
+.It Dv AG_OBJECT_DEBUG
+Enable per-object debugging; application-specific.
+.It Dv AG_OBJECT_NAME_ONATTACH
+Request that
+.Fn AG_ObjectAttach
+calls automatically generates a name for the child object being attached.
+The name will be unique in the parent.
+.El
 .Pp
 Objects are organized in a tree structure.
 .Fn AG_ObjectAttach
@@ -491,7 +514,7 @@ or increments the reference count if one exists.
 .Fn AG_ObjectDelDep
 decrements the reference count upon
 .Fa depobj
-and removes the dependency if the count reaches 0 (unless the object has the
+and removes the dependency if the count reaches zero (unless the object has the
 .Dv AG_OBJECT_PRESERVE_DEPS
 flag set).
 .Pp
