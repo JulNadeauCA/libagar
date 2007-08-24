@@ -73,25 +73,25 @@ SG_CopyVector(SG_Vector *vDst, const SG_Vector *vSrc)
 SG_Real
 SG_VectorLen(SG_Vector v)
 {
-	return (SG_Sqrt(v.x*v.x + v.y*v.y + v.z*v.z));
+	return (Sqrt(v.x*v.x + v.y*v.y + v.z*v.z));
 }
 
 SG_Real
 SG_VectorLen2(SG_Vector v)
 {
-	return (SG_Sqrt(v.x*v.x + v.y*v.y));
+	return (Sqrt(v.x*v.x + v.y*v.y));
 }
 
 SG_Real
 SG_VectorLenp(const SG_Vector *v)
 {
-	return (SG_Sqrt(v->x*v->x + v->y*v->y + v->z*v->z));
+	return (Sqrt(v->x*v->x + v->y*v->y + v->z*v->z));
 }
 
 SG_Real
 SG_VectorLen2p(const SG_Vector *v)
 {
-	return (SG_Sqrt(v->x*v->x + v->y*v->y));
+	return (Sqrt(v->x*v->x + v->y*v->y));
 }
 
 SG_Real
@@ -118,11 +118,25 @@ SG_VectorDistance2p(const SG_Vector *a, const SG_Vector *b)
 	return (SG_VectorLen2(SG_VectorAdd(*b, SG_VectorMirrorp(a, 1,1,1))));
 }
 
-SG_Real
-SG_VectorVectorAngle(SG_Vector v1, SG_Vector v2)
+void
+SG_VectorVectorAngle3(SG_Vector vOrig, SG_Vector vOther, SG_Real *theta,
+    SG_Real *phi)
 {
-	return (SG_Acos(SG_VectorDot(SG_VectorNormp(&v1),
-	                             SG_VectorNormp(&v2))));
+	SG_Spherical sph;
+	SG_Vector vd;
+
+	vd = SG_VectorSubp(&vOther, &vOrig);
+	*theta = Atan2(vd.y, vd.x);
+	*phi = Atan2(Sqrt(vd.x*vd.x + vd.y*vd.y), vd.z);
+}
+
+SG_Real
+SG_VectorVectorAngle2(SG_Vector vOrig, SG_Vector vOther)
+{
+	SG_Vector vd;
+	
+	vd = SG_VectorSubp(&vOther, &vOrig);
+	return (Atan2(vd.y, vd.x));
 }
 
 SG_Real
@@ -346,11 +360,11 @@ SG_VectorSubp(const SG_Vector *a, const SG_Vector *b)
 }
 
 void
-SG_VectorSubv(SG_Vector *r, const SG_Vector *a, const SG_Vector *b)
+SG_VectorSubv(SG_Vector *r, const SG_Vector *a)
 {
-	r->x = a->x - b->x;
-	r->y = a->y - b->y;
-	r->z = a->z - b->z;
+	r->x -= a->x;
+	r->y -= a->y;
+	r->z -= a->z;
 }
 
 SG_Vector
@@ -595,6 +609,17 @@ SG_VectorLERP(SG_Vector v1, SG_Vector v2, SG_Real t)
 	v.x = v1.x + (v2.x - v1.x)*t;
 	v.y = v1.y + (v2.y - v1.y)*t;
 	v.z = v1.z + (v2.z - v1.z)*t;
+	return (v);
+}
+
+SG_Vector
+SG_VectorLERPp(SG_Vector *v1, SG_Vector *v2, SG_Real t)
+{
+	SG_Vector v;
+
+	v.x = v1->x + (v2->x - v1->x)*t;
+	v.y = v1->y + (v2->y - v1->y)*t;
+	v.z = v1->z + (v2->z - v1->z)*t;
 	return (v);
 }
 #endif /* HAVE_OPENGL */

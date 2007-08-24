@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,16 +23,65 @@
  */
 
 /*
- * Basic routines related to planes in R3.
+ * Geometry routines.
  */
 
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
-
 #include "sg.h"
 
+/* Compute point-line distance with a line defined by two points. */
+SG_Real
+SG_DistanceFromLine2Pts(SG_Vector p1, SG_Vector p2, SG_Vector p3)
+{
+	SG_Real len21, u;
+	SG_Vector x;
+
+	len21 = SG_VectorDistance(p2, p1);
+	u = ((p3.x - p1.x)*(p2.x - p1.x) + (p3.y - p1.y)*(p2.y - p1.y)) /
+            (len21*len21);
+	if (u < 0.0 || u > 1.0) {
+		return (HUGE_VAL);
+	}
+	x = SG_VectorAdd(p1, SG_VectorScale(SG_VectorSubp(&p2,&p1), u));
+	return (SG_VectorDistancep(&p3, &x));
+}
+
+/* Create a line from two points in R2. */
+SG_Line2
+SG_Line2From2Pts(SG_Vector p1, SG_Vector p2)
+{
+	SG_Line2 L;
+	SG_Vector vd;
+	
+	vd = SG_VectorSubp(&p2, &p1);
+	L.a = -vd.y;
+	L.b =  vd.x;
+	L.d = L.a*p1.x - L.b*p1.y;
+
+	printf("a=%f, b=%f, d=%f\n", L.a, L.b, L.d);
+	return (L);
+}
+
+/* Create a line from two points in R3. */
+SG_Line
+SG_LineFrom2Pts(SG_Vector p1, SG_Vector p2)
+{
+	SG_Line L;
+	SG_Vector vd;
+	
+	vd = SG_VectorSubp(&p2, &p1);
+	L.a = -vd.y;
+	L.b =  vd.x;
+	L.d = L.a*p1.x - L.b*p1.y;
+
+	printf("a=%f, b=%f, d=%f\n", L.a, L.b, L.d);
+	return (L);
+}
+
+/* Create a plane from three points in R3. */
 SG_Plane
 SG_PlaneFrom3Pts(SG_Vector p1, SG_Vector p2, SG_Vector p3)
 {
@@ -47,6 +96,7 @@ SG_PlaneFrom3Pts(SG_Vector p1, SG_Vector p2, SG_Vector p3)
 	return (P);
 }
 
+/* Create a plane from a normal and distance from origin. */
 SG_Plane
 SG_PlaneFromNormal(SG_Vector n, SG_Real d)
 {
@@ -59,6 +109,7 @@ SG_PlaneFromNormal(SG_Vector n, SG_Real d)
 	return (P);
 }
 
+/* Create a plane at distance d from another plane. */
 SG_Plane
 SG_PlaneAtDistance(SG_Plane P1, SG_Real d)
 {
@@ -72,7 +123,7 @@ SG_PlaneAtDistance(SG_Plane P1, SG_Real d)
 }
 
 SG_Plane
-SG_ReadPlane(AG_Netbuf *buf)
+SG_PlaneRead(AG_Netbuf *buf)
 {
 	SG_Plane P;
 
@@ -84,7 +135,7 @@ SG_ReadPlane(AG_Netbuf *buf)
 }
 
 void
-SG_WritePlane(AG_Netbuf *buf, SG_Plane *P)
+SG_PlaneWrite(AG_Netbuf *buf, SG_Plane *P)
 {
 	SG_WriteReal(buf, P->a);
 	SG_WriteReal(buf, P->b);
@@ -93,7 +144,7 @@ SG_WritePlane(AG_Netbuf *buf, SG_Plane *P)
 }
 
 int
-SG_ValidPlane(SG_Plane P)
+SG_PlaneIsValid(SG_Plane P)
 {
 	return (P.a != 0.0 && P.b != 0.0 && P.c != 0.0);
 }

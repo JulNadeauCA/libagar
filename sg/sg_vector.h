@@ -1,9 +1,5 @@
 /*	Public domain	*/
 
-typedef struct sg_vector3 { SG_Real x, y, z; } SG_Vector3;
-typedef struct sg_vector3 SG_Vector;
-typedef struct sg_vector4 { SG_Real x, y, z, w; } SG_Vector4;
-
 #define SG_VECTOR(x,y,z) SG_GetVector((x),(y),(z))
 #define SG_VECTOR3(x,y,z) SG_GetVector((x),(y),(z))
 #define SG_VECTOR2(x,y) SG_GetVector((x),(y),0)
@@ -67,8 +63,7 @@ __inline__ void		SG_VectorAddv3(SG_Vector *, SG_Real, SG_Real, SG_Real);
 	   SG_Vector	SG_VectorAddn(int, ...);
 __inline__ SG_Vector	SG_VectorSub(SG_Vector, SG_Vector);
 __inline__ SG_Vector	SG_VectorSubp(const SG_Vector *, const SG_Vector *);
-__inline__ void		SG_VectorSubv(SG_Vector *, const SG_Vector *,
-			              const SG_Vector *);
+__inline__ void		SG_VectorSubv(SG_Vector *, const SG_Vector *);
 SG_Vector		SG_VectorSubn(int, ...);
 
 __inline__ SG_Vector	SG_VectorAvg2(SG_Vector, SG_Vector);
@@ -98,8 +93,10 @@ SG_Vector	SG_ReadVectorf(AG_Netbuf *);
 void		SG_ReadVectorfv(AG_Netbuf *, SG_Vector *);
 void		SG_WriteVectorf(AG_Netbuf *, SG_Vector *);
 
-__inline__ SG_Real	SG_VectorVectorAngle(SG_Vector, SG_Vector);
-SG_Vector		SG_VectorLERP(SG_Vector, SG_Vector, SG_Real);
-
+__inline__ SG_Real SG_VectorVectorAngle2(SG_Vector, SG_Vector);
+__inline__ void	   SG_VectorVectorAngle3(SG_Vector, SG_Vector, SG_Real *,
+		                         SG_Real *);
+SG_Vector SG_VectorLERP(SG_Vector, SG_Vector, SG_Real);
+SG_Vector SG_VectorLERPp(SG_Vector *, SG_Vector *, SG_Real);
 __END_DECLS
 

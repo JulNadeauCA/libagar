@@ -8,6 +8,30 @@ typedef float SG_Real;
 #define SG_REAL(n) AG_FLOAT(n)
 #endif
 
+/*
+ * Basic mathematical objects
+ */
+typedef struct sg_vector2 { SG_Real x, y; } SG_Vector2;
+typedef struct sg_vector3 { SG_Real x, y, z; } SG_Vector3, SG_Vector;
+typedef struct sg_vector4 { SG_Real x, y, z, w; } SG_Vector4;
+typedef struct sg_line2 { SG_Real a, b, d; } SG_Line2;
+typedef struct sg_line3 { SG_Real a, b, c, d; } SG_Line3, SG_Line;
+typedef struct sg_plane { SG_Real a, b, c, d; } SG_Plane;
+typedef struct sg_ray { SG_Vector p; SG_Vector dir; } SG_Ray;
+
+#define SGVECTOR2(v) ((SG_Vector2 *)(v))
+#define SGVECTOR3(v) ((SG_Vector3 *)(v))
+#define SGVECTOR4(v) ((SG_Vector4 *)(v))
+#define SGVECTOR(v) ((SG_Vector *)(v))
+#define SGLINE2(v) ((SG_Line2 *)(v))
+#define SGLINE3(v) ((SG_Line3 *)(v))
+#define SGLINE(v) ((SG_Line *)(v))
+#define SGPLANE(v) ((SG_Plane *)(v))
+#define SGRAY(v) ((SG_Ray *)(v))
+
+/*
+ * Mathematical constants
+ */
 #define	SG_E		2.7182818284590452354	/* e */
 #define	SG_LOG2E	1.4426950408889634074	/* log 2e */
 #define	SG_LOG10E	0.43429448190325182765	/* log 10e */
@@ -22,6 +46,9 @@ typedef float SG_Real;
 #define	SG_SQRT2	1.41421356237309504880	/* sqrt(2) */
 #define	SG_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
 
+/*
+ * Basic math routines
+ */
 #ifdef SG_DOUBLE_PRECISION
 #define SG_Sqrt(x) sqrt(x)
 #define SG_Sin(x) sin(x)
@@ -52,10 +79,32 @@ typedef float SG_Real;
 #define SG_Hypot(x,y) hypotf((y),(x))
 #define SG_Fabs(x) fabsf(x)
 #define SG_Pow(x,y) powf((x),(y))
-#endif
+#endif /* !SG_DOUBLE_PRECISION */
 
 #define SG_Radians(x) ((x)/360.0*2.0*SG_PI)
 #define SG_Degrees(x) (360.0*((x)/(2.0*SG_PI)))
+#define SG_Sgn(x) (((x)<0.0)?-1.0 : ((x)>0.0)?1.0 : 0.0)
+
+#ifdef _AGAR_INTERNAL
+#define Sqrt(r) SG_Sqrt(r)
+#define Sin(x) SG_Sin(x)
+#define Cos(x) SG_Cos(x)
+#define Tan(x) SG_Tan(x)
+#define Cot(x) SG_Cot(x)
+#define Sec(x) SG_Sec(x)
+#define Csc(x) SG_Csc(x)
+#define Asin(x) SG_Asin(x)
+#define Acos(x) SG_Acos(x)
+#define Atan(x) SG_Atan(x)
+#define Atan2(y,x) SG_Atan2((y),(x))
+#define Hypot(x,y) SG_Hypot((x),(y))
+#define Fabs(x) SG_Fabs(x)
+#define Pow(x,y) SG_Pow((x),(y))
+#define Sgn(x) SG_Sgn((x))
+#define Radians(x) SG_Radians((x))
+#define Degrees(x) SG_Degrees((x))
+#define Sgn(x) SG_Sgn((x))
+#endif /* _AGAR_INTERNAL */
 
 __BEGIN_DECLS
 __inline__ SG_Real SG_Rad2Deg(SG_Real);

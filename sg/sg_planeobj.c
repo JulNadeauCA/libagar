@@ -72,7 +72,7 @@ SG_PlaneObjLoad(void *p, AG_Netbuf *buf)
 {
 	SG_PlaneObj *po = p;
 
-	po->P = SG_ReadPlane(buf);
+	po->P = SG_PlaneRead(buf);
 	return (0);
 }
 
@@ -81,7 +81,7 @@ SG_PlaneObjSave(void *p, AG_Netbuf *buf)
 {
 	SG_PlaneObj *po = p;
 
-	SG_WritePlane(buf, &po->P);
+	SG_PlaneWrite(buf, &po->P);
 	return (0);
 }
 
