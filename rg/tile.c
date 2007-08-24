@@ -129,9 +129,7 @@ RG_TileInit(RG_Tile *t, RG_Tileset *ts, const char *name)
 	t->ts = ts;
 	t->nrefs = 0;
 	t->blend_fn = BlendOverlayAlpha;
-#if 0
-	t->blend_fn = BlendSDL;
-#endif
+/*	t->blend_fn = BlendSDL; */
 	t->attrs = NULL;
 	t->layers = NULL;
 	t->nw = 0;
@@ -1533,7 +1531,7 @@ PollFeatures(AG_Event *event)
 			it->cat = "sketch";
 			it->p1 = tel;
 			it->depth = 0;
-			AG_TlistSetIcon(tl, it, sk->vg->su);
+/*			AG_TlistSetIcon(tl, it, sk->vg->su); */
 
 			if (!TAILQ_EMPTY(&vg->vges)) {
 				it->flags |= AG_TLIST_HAS_CHILDREN;
@@ -1856,7 +1854,7 @@ ExportBMP(AG_Event *event)
 }
 
 static void
-ExportImageDlg(AG_Event *event)
+ExportRenderingDlg(AG_Event *event)
 {
 	AG_Window *pwin = AG_PTR(1);
 	RG_Tileview *tv = AG_PTR(2);
@@ -1865,7 +1863,7 @@ ExportImageDlg(AG_Event *event)
 	AG_Window *win;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("Export %s to..."), t->name);
+	AG_WindowSetCaption(win, _("Export %s rendering to..."), t->name);
 	dlg = AG_FileDlgNew(win, AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN|
 	                         AG_FILEDLG_EXPAND);
 	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
@@ -2047,16 +2045,15 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 
 	mi = AG_MenuAddItem(me, ("File"));
 	{
-		AG_MenuTool(mi, tbar, _("Import image file as pixmap..."),
-		    RG_PIXMAP_ICON, 0, 0,
+		AG_MenuAction(mi, _("Import image into pixmap..."),
+		    OBJLOAD_ICON,
 		    ImportImageDlg, "%p,%p,%p,%i", tv, win, tl_feats, 1);
-		
-		AG_MenuTool(mi, tbar, _("Import image file as tile..."),
-		    RG_PIXMAP_ICON, 0, 0,
+		AG_MenuAction(mi, _("Import image into tile..."),
+		    OBJLOAD_ICON,
 		    ImportImageDlg, "%p,%p,%p,%i", tv, win, tl_feats, 0);
-	
-		AG_MenuAction(mi, _("Save to image file..."), OBJSAVE_ICON,
-		    ExportImageDlg, "%p,%p", win, tv);
+		AG_MenuAction(mi, _("Export tile rendering..."),
+		    OBJSAVE_ICON,
+		    ExportRenderingDlg, "%p,%p", win, tv);
 		
 		AG_MenuSeparator(mi);
 		
@@ -2088,17 +2085,6 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		AG_MenuActionKb(mi, _("Sketch projection"), RG_SKETCH_PROJ_ICON,
 		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
 		    AddSketchProjFeature, "%p,%p,%p", tv, win, tl_feats);
-
-		AG_MenuSeparator(mi);
-
-		AG_MenuActionKb(mi, _("Extrusion"), RG_EXTRUSION_ICON,
-		    SDLK_e, KMOD_CTRL|KMOD_SHIFT,
-		    NULL, "%p,%p", ts, t);
-		
-		AG_MenuActionKb(mi, _("Solid of revolution"),
-		    RG_REVOLUTION_ICON,
-		    SDLK_r, KMOD_CTRL|KMOD_SHIFT,
-		    NULL, "%p,%p", ts, t);
 	}
 
 	mi = AG_MenuAddItem(me, _("View"));

@@ -72,30 +72,26 @@ RG_SketchScale(RG_Sketch *sk, int w, int h, float scale, int x, int y)
 {
 	VG *vg = sk->vg;
 	VG_Element *vge;
+#if 0
 	double xoffs = (float)x/(float)RG_TILESZ/scale;
 	double yoffs = (float)y/(float)RG_TILESZ/scale;
+#endif
 	Uint32 i;
-	double vw, vh;
+	SDL_Rect r;
 
-	if (w == -1) {
-		vw = vg->rDst.w;
-	} else {
-		vw = (float)w/(float)RG_TILESZ/scale;
-	}
-	if (h == -1) {
-		vh = vg->rDst.h;
-	} else {
-		vh = (float)h/(float)RG_TILESZ/scale;
-	}
+	r.w = (w == -1) ? vg->rDst.w : w;
+	r.h = (h == -1) ? vg->rDst.h : h;
 
-	VG_Scale(vg, vw, vh, scale);
-	
+	dprintf("scale = %d x %d (%f)\n", r.w, r.h, scale);
+	VG_Scale(vg, r.w, r.h, scale*RG_TILESZ);
+#if 0
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		for (i = 0; i < vge->nvtx; i++) {
 			vge->vtx[i].x += xoffs;
 			vge->vtx[i].y += yoffs;
 		}
 	}
+#endif
 }
 
 void
@@ -548,6 +544,7 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
 		float idx, closest_idx = FLT_MAX;
 		VG_Element *closest_vge = NULL;
 
+		printf("proximity test\n");
 		TAILQ_FOREACH(vge, &vg->vges, vges) {
 			if (vge->ops->intsect != NULL) {
 				float ix = (float)x;
@@ -560,8 +557,10 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
 				}
 			}
 		}
+		printf("closest = %p (%f)\n", closest_vge, closest_idx);
 		if (closest_vge != NULL && closest_idx < FLT_MAX-2) {
 			if (closest_vge->selected) {
+				printf("unselecting %p\n", closest_vge);
 				RG_SketchUnselect(tv, tel, closest_vge);
 			} else {
 				AG_Window *pwin = AG_WidgetParentWindow(tv);
@@ -575,6 +574,7 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
 					}
 				}
 
+				printf("selecting %p\n", closest_vge);
 				win = RG_SketchSelect(tv, tel, closest_vge);
 				if (win != NULL) {
 					AG_WindowAttach(pwin, win);
