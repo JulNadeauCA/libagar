@@ -268,10 +268,8 @@ static AG_MenuItem *
 CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 {
 	AG_MenuItem *mi;
-	AG_Menu *m;
 
 	if (pitem != NULL) {
-		m = pitem->pmenu;
 		if (pitem->subitems == NULL) {
 			pitem->subitems = Malloc(sizeof(AG_MenuItem), M_WIDGET);
 		} else {
@@ -280,17 +278,17 @@ CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 					  sizeof(AG_MenuItem));
 		}
 		mi = &pitem->subitems[pitem->nsubitems++];
+		mi->pmenu = pitem->pmenu;
 		mi->pitem = pitem;
-		mi->y = pitem->nsubitems*m->itemh - m->itemh;
-		mi->state = m->curState;
+		mi->y = pitem->nsubitems*mi->pmenu->itemh - mi->pmenu->itemh;
+		mi->state = mi->pmenu->curState;
 	} else {
-		m = NULL;
 		mi = Malloc(sizeof(AG_MenuItem), M_WIDGET);
+		mi->pmenu = NULL;
 		mi->pitem = NULL;
 		mi->y = 0;
 		mi->state = 1;
 	}
-	mi->pmenu = m;
 	mi->subitems = NULL;
 	mi->nsubitems = 0;
 	mi->view = NULL;
@@ -314,16 +312,16 @@ CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 			/* Request that the parent allocate space for icons. */
 			pitem->flags |= AG_MENU_ITEM_ICONS;
 		}
-		mi->icon = AG_WidgetMapSurface(m, AG_DupSurface(icon));
+		mi->icon = AG_WidgetMapSurface(mi->pmenu, AG_DupSurface(icon));
 	} else {
 		mi->icon = -1;
 	}
 
 	/* If this is the application menu, resize its window. */
-	if (m != NULL && (m->flags & AG_MENU_GLOBAL)) {
+	if (mi->pmenu != NULL && (mi->pmenu->flags & AG_MENU_GLOBAL)) {
 		AG_SizeReq rMenu;
 
-		AG_WidgetSizeReq(m, &rMenu);
+		AG_WidgetSizeReq(mi->pmenu, &rMenu);
 		AG_WindowSetGeometry(agAppMenuWin, 0, 0, agView->w, rMenu.h);
 	}
 	return (mi);
@@ -350,6 +348,7 @@ AG_MenuInit(AG_Menu *m, Uint flags)
 	m->rPadLbl = 7;
 	m->tPadLbl = 3;
 	m->bPadLbl = 3;
+	m->flags = flags;
 
 	m->curState = 1;
 	m->selecting = 0;
