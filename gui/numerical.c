@@ -133,6 +133,59 @@ AdjustRangeForBinding(AG_Event *event)
 	}
 }
 
+/* Update the textbox contents from the binding value. */
+static void
+UpdateTextbox(AG_Numerical *num)
+{
+	AG_WidgetBinding *valueb;
+	void *value;
+
+	valueb = AG_WidgetGetBinding(num, "value", &value);
+	switch (valueb->vtype) {
+	case AG_WIDGET_DOUBLE:
+		AG_TextboxPrintf(num->input, num->format,
+		    AG_Base2Unit(*(double *)value, num->unit));
+		break;
+	case AG_WIDGET_FLOAT:
+		AG_TextboxPrintf(num->input, num->format,
+		    AG_Base2Unit(*(float *)value, num->unit));
+		break;
+	case AG_WIDGET_INT:
+		AG_TextboxPrintf(num->input, "%d", *(int *)value);
+		break;
+	case AG_WIDGET_UINT:
+		AG_TextboxPrintf(num->input, "%u", *(Uint *)value);
+		break;
+	case AG_WIDGET_UINT8:
+		AG_TextboxPrintf(num->input, "%u", *(Uint8 *)value);
+		break;
+	case AG_WIDGET_SINT8:
+		AG_TextboxPrintf(num->input, "%d", *(Sint8 *)value);
+		break;
+	case AG_WIDGET_UINT16:
+		AG_TextboxPrintf(num->input, "%u", *(Uint16 *)value);
+		break;
+	case AG_WIDGET_SINT16:
+		AG_TextboxPrintf(num->input, "%d", *(Sint16 *)value);
+		break;
+	case AG_WIDGET_UINT32:
+		AG_TextboxPrintf(num->input, "%u", *(Uint32 *)value);
+		break;
+	case AG_WIDGET_SINT32:
+		AG_TextboxPrintf(num->input, "%d", *(Sint32 *)value);
+		break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_WIDGET_UINT64:
+		AG_TextboxPrintf(num->input, "%lld", *(Uint64 *)value);
+		break;
+	case AG_WIDGET_SINT64:
+		AG_TextboxPrintf(num->input, "%lld", *(Sint64 *)value);
+		break;
+#endif
+	}
+	AG_WidgetUnlockBinding(valueb);
+}
+
 static void
 keydown(AG_Event *event)
 {
@@ -149,6 +202,17 @@ keydown(AG_Event *event)
 		break;
 	}
 	AG_MutexUnlock(&num->lock);
+}
+
+static void
+GainedFocus(AG_Event *event)
+{
+	AG_Numerical *num = AG_SELF();
+
+	UpdateTextbox(num);
+
+	if (WIDGET(num)->flags & AG_WIDGET_FOCUSABLE)
+		AG_WidgetFocus(num->input);
 }
 
 /* Update the numerical value from the textbox. */
@@ -310,6 +374,7 @@ AG_NumericalInit(AG_Numerical *num, Uint flags, const char *unit,
 	AG_ButtonSetPadding(num->decbu, 1,1,1,1);
 
 	AG_SetEvent(num, "window-keydown", keydown, NULL);
+	AG_SetEvent(num, "widget-gainfocus", GainedFocus, NULL);
 	AG_SetEvent(num, "widget-bound", AdjustRangeForBinding, NULL);
 	AG_SetEvent(num->input, "textbox-return", UpdateFromText, "%p,%i",
 	    num, 1);
@@ -405,58 +470,12 @@ static void
 Draw(void *p)
 {
 	AG_Numerical *num = p;
-	AG_WidgetBinding *valueb;
-	void *value;
 
 	if (AG_WidgetFocused(num->input)) {
 		/* Don't update while input is being entered. */
 		return;
 	}
-
-	valueb = AG_WidgetGetBinding(num, "value", &value);
-	switch (valueb->vtype) {
-	case AG_WIDGET_DOUBLE:
-		AG_TextboxPrintf(num->input, num->format,
-		    AG_Base2Unit(*(double *)value, num->unit));
-		break;
-	case AG_WIDGET_FLOAT:
-		AG_TextboxPrintf(num->input, num->format,
-		    AG_Base2Unit(*(float *)value, num->unit));
-		break;
-	case AG_WIDGET_INT:
-		AG_TextboxPrintf(num->input, "%d", *(int *)value);
-		break;
-	case AG_WIDGET_UINT:
-		AG_TextboxPrintf(num->input, "%u", *(Uint *)value);
-		break;
-	case AG_WIDGET_UINT8:
-		AG_TextboxPrintf(num->input, "%u", *(Uint8 *)value);
-		break;
-	case AG_WIDGET_SINT8:
-		AG_TextboxPrintf(num->input, "%d", *(Sint8 *)value);
-		break;
-	case AG_WIDGET_UINT16:
-		AG_TextboxPrintf(num->input, "%u", *(Uint16 *)value);
-		break;
-	case AG_WIDGET_SINT16:
-		AG_TextboxPrintf(num->input, "%d", *(Sint16 *)value);
-		break;
-	case AG_WIDGET_UINT32:
-		AG_TextboxPrintf(num->input, "%u", *(Uint32 *)value);
-		break;
-	case AG_WIDGET_SINT32:
-		AG_TextboxPrintf(num->input, "%d", *(Sint32 *)value);
-		break;
-#ifdef SDL_HAS_64BIT_TYPE
-	case AG_WIDGET_UINT64:
-		AG_TextboxPrintf(num->input, "%lld", *(Uint64 *)value);
-		break;
-	case AG_WIDGET_SINT64:
-		AG_TextboxPrintf(num->input, "%lld", *(Sint64 *)value);
-		break;
-#endif
-	}
-	AG_WidgetUnlockBinding(valueb);
+	UpdateTextbox(num);
 }
 
 #define ADD_CONVERTED(TYPE) do { \
@@ -507,6 +526,8 @@ AG_NumericalAddValue(AG_Numerical *num, double inc)
 	AG_WidgetUnlockBinding(valueb);
 	AG_WidgetUnlockBinding(minb);
 	AG_WidgetUnlockBinding(maxb);
+
+	UpdateTextbox(num);
 }
 #undef ADD_REAL
 #undef ADD_CONVERTED
