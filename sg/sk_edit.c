@@ -45,8 +45,10 @@
 #include <gui/graph.h>
 #include <gui/spinbutton.h>
 #include <gui/hbox.h>
+#include <gui/numerical.h>
 
 #include "sk.h"
+#include "sg_gui.h"
 
 #include <string.h>
 #include <math.h>
@@ -60,13 +62,15 @@ extern SK_ToolOps skPointToolOps;
 extern SK_ToolOps skLineToolOps;
 extern SK_ToolOps skCircleToolOps;
 extern SK_ToolOps skDimensionToolOps;
+extern SK_ToolOps skMeasureToolOps;
 
 SK_ToolOps *skToolkit[] = {
 	&skSelectToolOps,
 	&skPointToolOps,
 	&skLineToolOps,
 	&skCircleToolOps,
-	&skDimensionToolOps
+	&skDimensionToolOps,
+	&skMeasureToolOps,
 };
 Uint skToolkitCount = sizeof(skToolkit) / sizeof(skToolkit[0]);
 
@@ -144,15 +148,16 @@ static void
 NodeDelete(AG_Event *event)
 {
 	SK_Node *node = AG_PTR(1);
-	SK *sk = node->sk;
+	SK_View *skv = AG_PTR(2);
 
+	SK_ViewCloseEditPane(skv);
 	if (node->ops->del != NULL) {
 		if (node->ops->del(node) == -1)
 			AG_TextMsgFromError();
 	} else {
-		AG_TextMsg(AG_MSG_ERROR, _("Item cannot be deleted"));
+		AG_TextMsg(AG_MSG_ERROR, _("Entity cannot be deleted"));
 	}
-	SK_Update(sk);
+	SK_Update(skv->sk);
 }
 
 static void
@@ -253,13 +258,18 @@ CreateNewView(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", OBJECT(sk)->name);
-	skv = SK_ViewNew(win, sk, SK_VIEW_EXPAND|SK_VIEW_FOCUS);
-	AG_WindowShow(win);
+	AG_WindowSetPaddingTop(win, 0);
+	AG_WindowSetSpacing(win, 0);
+	skv = SK_ViewNew(win, sk, SK_VIEW_EXPAND);
+	AG_WindowSetGeometry(win, agView->w/6, agView->h/6,
+	                     2*agView->w/3, 2*agView->h/3);
+	AG_WidgetFocus(skv);
 	AG_WindowAttach(winParent, win);
+	AG_WindowShow(win);
 }
 
 static void
-NodePopupMenu(AG_Event *event)
+NodeMenu(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	SK_Node *node = AG_TlistSelectedItemPtr(tl);
@@ -269,7 +279,7 @@ NodePopupMenu(AG_Event *event)
 
 	pm = AG_PopupNew(skv);
 	AG_MenuAction(pm->item, _("Delete entity"), TRASH_ICON,
-	    NodeDelete, "%p", node);
+	    NodeDelete, "%p,%p", node, skv);
 	AG_PopupShow(pm);
 }
 
@@ -307,7 +317,7 @@ PollNodes(AG_Event *event)
 }
 
 static void
-SelectNode(AG_Event *event)
+NodeSelect(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_TlistItem *it = AG_PTR(1);
@@ -332,7 +342,7 @@ SelectTool(AG_Event *event)
 }
 
 static void
-EditNode(AG_Event *event)
+NodeEdit(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Pane *hp = AG_PTR(1);
@@ -343,17 +353,12 @@ EditNode(AG_Event *event)
 	SK_Node *node = it->p1;
 	AG_SizeReq rDiv;
 
-	if (skv->editPane != NULL) {
-		AG_ObjectDetach(skv->editPane);
-		AG_ObjectDestroy(skv->editPane);
-		Free(skv->editPane,0);
-		skv->editPane = NULL;
-	}
+	SK_ViewCloseEditPane(skv);
 	if (node->ops->edit == NULL) {
 		return;
 	}
 	skv->editPane = (AG_Widget *)AG_BoxNew(vp->div[1], AG_BOX_VERT,
-	    AG_BOX_EXPAND);
+	                                       AG_BOX_EXPAND);
 	node->ops->edit(node, skv->editPane, skv);
 	SK_NodeEditGeneric(node, skv->editPane, skv);
 
@@ -361,19 +366,19 @@ EditNode(AG_Event *event)
 	AG_PaneSetDivisionMin(vp, 1, -1, rDiv.h + vp->wDiv);
 	AG_PaneSetDivisionMin(hp, 0, rDiv.w + vp->wDiv, -1);
 	AG_PaneMoveDivider(vp, WIDGET(vp)->h - rDiv.h);
-
 	AG_WindowUpdate(pWin);
 }
 
 static void
 PollConstraints(AG_Event *event)
 {
-	AG_Table *tbl = AG_SELF();
+	AG_Tlist *tl = AG_SELF();
 	SK *sk = AG_PTR(1);
 	SK_Node *node = AG_PTR(2);
 	SK_Constraint *ct;
+	AG_TlistItem *it;
 
-	AG_TableBegin(tbl);
+	AG_TlistBegin(tl);
 	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
 		char ctName[64];
 		char name1[SK_NODE_NAME_MAX];
@@ -400,11 +405,101 @@ PollConstraints(AG_Event *event)
 			    sizeof(ctName));
 			break;
 		}
-		AG_TableAddRow(tbl, "%s:%s:%s", ctName,
+		it = AG_TlistAdd(tl, NULL, "%s: %s,%s", ctName,
 		    SK_NodeNameCopy(ct->n1, name1, sizeof(name1)),
 		    SK_NodeNameCopy(ct->n2, name2, sizeof(name2)));
+		it->p1 = ct;
 	}
-	AG_TableEnd(tbl);
+	AG_TlistEnd(tl);
+}
+
+static void
+UpdateConstraint(AG_Event *event)
+{
+	SK_View *skv = AG_PTR(1);
+	SK_Constraint *ct = AG_PTR(2);
+
+	SK_Update(skv->sk);
+}
+
+static void
+ConstraintEdit(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	AG_Pane *hp = AG_PTR(1);
+	AG_Pane *vp = AG_PTR(2);
+	SK_View *skv = AG_PTR(3);
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	AG_Window *pWin = AG_WidgetParentWindow(skv);
+	SK_Constraint *ct = it->p1;
+	AG_SizeReq rDiv;
+	AG_Numerical *num;
+
+	SK_ViewCloseEditPane(skv);
+	skv->editPane = (AG_Widget *)AG_BoxNew(vp->div[1], AG_BOX_VERT,
+	                                       AG_BOX_EXPAND);
+	AG_LabelNewStatic(skv->editPane, AG_LABEL_HFILL,
+	    _("Type: %s"), skConstraintNames[ct->uType]);
+
+	switch (ct->uType) {
+	case SK_DISTANCE:
+		num = AG_NumericalNew(skv->editPane, AG_NUMERICAL_HFILL, "m",
+		    _("Distance: "));
+		AG_NumericalSetIncrement(num, 0.1);
+		AG_NumericalSetMin(num, 0.0);
+		SG_WidgetBindReal(num, "value", &ct->ct_distance);
+		AG_WidgetSetFocusable(num, 0);
+		AG_SetEvent(num, "numerical-changed",
+		    UpdateConstraint, "%p,%p", skv, ct);
+		break;
+	case SK_ANGLE:
+		num = AG_NumericalNew(skv->editPane, AG_NUMERICAL_HFILL, NULL,
+		    _("Angle: "));
+		AG_NumericalSetIncrement(num, 1.0);
+		SG_WidgetBindReal(num, "value", &ct->ct_angle);
+		AG_WidgetSetFocusable(num, 0);
+		AG_SetEvent(num, "numerical-changed",
+		    UpdateConstraint, "%p,%p", skv, ct);
+		break;
+	default:
+		break;
+	}
+
+	AG_WidgetSizeReq(vp->div[1], &rDiv);
+	AG_PaneSetDivisionMin(vp, 1, -1, rDiv.h + vp->wDiv);
+	AG_PaneSetDivisionMin(hp, 0, rDiv.w + vp->wDiv, -1);
+	AG_PaneMoveDivider(vp, WIDGET(vp)->h - rDiv.h);
+	AG_WindowUpdate(pWin);
+}
+
+static void
+ConstraintDelete(AG_Event *event)
+{
+	SK_Constraint *ct = AG_PTR(1);
+	SK_View *skv = AG_PTR(2);
+	SK *sk = skv->sk;
+
+	SK_ViewCloseEditPane(skv);
+
+	SK_NodeDelConstraint(ct->n1, ct);
+	SK_NodeDelConstraint(ct->n2, ct);
+	SK_DelConstraint(&sk->ctGraph, ct);
+	SK_Update(sk);
+}
+
+static void
+ConstraintMenu(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	SK_Constraint *ct = AG_TlistSelectedItemPtr(tl);
+	SK *sk = AG_PTR(1);
+	SK_View *skv = AG_PTR(2);
+	AG_PopupMenu *pm;
+
+	pm = AG_PopupNew(skv);
+	AG_MenuAction(pm->item, _("Delete constraint"), TRASH_ICON,
+	    ConstraintDelete, "%p,%p", ct, skv);
+	AG_PopupShow(pm);
 }
 
 static void
@@ -438,13 +533,14 @@ PollInsns(AG_Event *event)
 }
 
 static void
-ExecSingleStep(AG_Event *event)
+ExecSelectedInsns(AG_Event *event)
 {
 	SK *sk = AG_PTR(1);
 	AG_Table *tbl = AG_PTR(2);
 	SK_Insn *si;
 	Uint m = 0;
 	
+	SK_ClearProgramState(sk);
 	TAILQ_FOREACH(si, &sk->insns, insns) {
 		if (!AG_TableRowSelected(tbl, m++)) {
 			continue;
@@ -463,7 +559,8 @@ ExecInsns(AG_Event *event)
 	AG_Table *tbl = AG_PTR(2);
 	SK_Insn *si;
 	Uint m = 0;
-	
+
+	SK_ClearProgramState(sk);
 	TAILQ_FOREACH(si, &sk->insns, insns) {
 		AG_TableSelectRow(tbl, m++);
 		if (SK_ExecInsn(sk, si) == -1) {
@@ -471,6 +568,43 @@ ExecInsns(AG_Event *event)
 			break;
 		}
 	}
+}
+
+static void
+DrawStatus(AG_Event *event)
+{
+	SK_View *skv = AG_SELF();
+	SDL_Surface *lbl;
+	int x, y;
+
+	AG_PushTextState();
+	switch (skv->sk->status) {
+	case SK_WELL_CONSTRAINED:
+		AG_TextColorRGB(255, 255, 255);
+		break;
+	case SK_UNDER_CONSTRAINED:
+		AG_TextColorRGB(200, 200, 200);
+		break;
+	case SK_OVER_CONSTRAINED:
+		AG_TextColorRGB(255, 255, 0);
+		break;
+	default:
+		AG_TextColorRGB(255, 100, 100);
+		break;
+	}
+
+	lbl = AG_TextRender(skv->sk->statusText);
+	x = WIDGET(skv)->w - lbl->w;
+	y = WIDGET(skv)->h - lbl->h;
+	if (x < 0) { x = 0; }
+	if (y < 0) { y = 0; }
+
+	AG_WidgetPushClipRect(skv, 0, 0, WIDGET(skv)->w, WIDGET(skv)->h);
+	AG_WidgetBlit(skv, lbl, x, y);
+	AG_WidgetPopClipRect(skv);
+	
+	SDL_FreeSurface(lbl);
+	AG_PopTextState();
 }
 
 void *
@@ -493,7 +627,8 @@ SK_Edit(void *p)
 
 	skv = Malloc(sizeof(SK_View), M_OBJECT);
 	SK_ViewInit(skv, sk, SK_VIEW_EXPAND);
-			
+	SK_ViewPostDrawFn(skv, DrawStatus, NULL);
+	
 	for (i = 0; i < skToolkitCount; i++)
 		SK_ViewRegTool(skv, skToolkit[i], NULL);
 
@@ -556,27 +691,32 @@ SK_Edit(void *p)
 		}
 		ntab = AG_NotebookAddTab(nb, _("Nodes"), AG_BOX_VERT);
 		{
-			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
-			                       AG_TLIST_EXPAND|AG_TLIST_MULTI|
-					       AG_TLIST_NOSELSTATE);
+			tl = AG_TlistNewPolled(ntab,
+			    AG_TLIST_TREE|AG_TLIST_EXPAND|AG_TLIST_MULTI|
+			    AG_TLIST_NOSELSTATE,
+			    PollNodes, "%p", sk);
+			AG_TlistSetDblClickFn(tl,
+			    NodeEdit, "%p,%p,%p", hp, vp, skv);
+			AG_TlistSetPopupFn(tl,
+			    NodeMenu, "%p,%p", sk, skv);
+			AG_TlistSetChangedFn(tl,
+			    NodeSelect, NULL);
+
+			AG_TlistPrescale(tl, _("<Polygon00>"), 4);
 			AG_WidgetSetFocusable(tl, 0);
-			AG_TlistPrescale(tl, "<Polygon>", 4);
-			AG_TlistSetPopupFn(tl, NodePopupMenu, "%p,%p", sk, skv);
-			AG_TlistSetDblClickFn(tl, EditNode, "%p,%p,%p", hp, vp,
-			    skv);
-			AG_SetEvent(tl, "tlist-poll", PollNodes, "%p", sk);
-			AG_SetEvent(tl, "tlist-changed", SelectNode, NULL);
-			WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		}
 		ntab = AG_NotebookAddTab(nb, _("Constraints"), AG_BOX_VERT);
 		{
-			tbl = AG_TableNewPolled(ntab,
-			    AG_TABLE_MULTI|AG_TABLE_EXPAND,
+			tl = AG_TlistNewPolled(ntab,
+			    AG_TLIST_TREE|AG_TLIST_EXPAND,
 			    PollConstraints, "%p,%p", sk, NULL);
-			AG_TableAddCol(tbl, _("Type"), "<Perpendicular>", NULL);
-			AG_TableAddCol(tbl, "n1", "<Circle0>", NULL);
-			AG_TableAddCol(tbl, "n2", NULL, NULL);
-			AG_WidgetSetFocusable(tbl, 0);
+			AG_TlistSetDblClickFn(tl,
+			    ConstraintEdit, "%p,%p,%p", hp, vp, skv);
+			AG_TlistSetPopupFn(tl,
+			    ConstraintMenu, "%p,%p", sk, skv);
+
+			AG_TlistPrescale(tl, _("<Polygon00>"), 4);
+			AG_WidgetSetFocusable(tl, 0);
 		}
 		ntab = AG_NotebookAddTab(nb, _("Instructions"), AG_BOX_VERT);
 		{
@@ -598,8 +738,8 @@ SK_Edit(void *p)
 				    _("Execute program"),
 				    ExecInsns, "%p,%p", sk, tbl);
 				AG_ButtonNewFn(hBox, 0,
-				    _("Single-step"),
-				    ExecSingleStep, "%p,%p", sk, tbl);
+				    _("Execute selected"),
+				    ExecSelectedInsns, "%p,%p", sk, tbl);
 			}
 		}
 	}
@@ -613,7 +753,7 @@ SK_Edit(void *p)
 static void
 SK_NodeEditGeneric(SK_Node *node, AG_Widget *box, SK_View *skv)
 {
-	AG_Table *tbl;
+	AG_Tlist *tl;
 	AG_Label *lbl;
 	AG_Spinbutton *sb;
 
@@ -627,12 +767,9 @@ SK_NodeEditGeneric(SK_Node *node, AG_Widget *box, SK_View *skv)
 //	AG_LabelFlag(lbl, 0, "SELECTED", SK_NODE_SELECTED);
 
 	AG_LabelNewStaticString(box, 0, _("Geometric constraints: "));
-	tbl = AG_TableNewPolled(box, AG_TABLE_MULTI|AG_TABLE_EXPAND,
+	tl = AG_TlistNewPolled(box, AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND,
 	    PollConstraints, "%p,%p", SKNODE(node)->sk, node);
-	AG_TableAddCol(tbl, _("Type"), "<Perpendicular>", NULL);
-	AG_TableAddCol(tbl, _("Node 1"), "<Circle88>", NULL);
-	AG_TableAddCol(tbl, _("Node 2"), NULL, NULL);
-	WIDGET(tbl)->flags &= ~(AG_WIDGET_FOCUSABLE);
+	AG_WidgetSetFocusable(tl, 0);
 }
 
 #endif /* EDITION */

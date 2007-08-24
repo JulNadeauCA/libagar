@@ -20,7 +20,7 @@ void	 SK_LineDraw(void *, SK_View *);
 void	 SK_LineEdit(void *, AG_Widget *, SK_View *);
 SG_Real	 SK_LineProximity(void *, const SG_Vector *, SG_Vector *);
 int	 SK_LineDelete(void *);
-void	 SK_LineMove(void *, const SG_Vector *, const SG_Vector *);
+int	 SK_LineMove(void *, const SG_Vector *, const SG_Vector *);
 
 void	 SK_LineWidth(SK_Line *, SG_Real);
 void	 SK_LineColor(SK_Line *, SG_Color);

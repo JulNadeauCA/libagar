@@ -165,7 +165,7 @@ SK_CircleDelete(void *p)
 	return (SK_NodeDel(circle));
 }
 
-void
+int
 SK_CircleMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 {
 	SK_Circle *c = p;
@@ -174,6 +174,7 @@ SK_CircleMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 		SK_Translatev(c->p, vel);
 		SKNODE(c->p)->flags |= SK_NODE_MOVED;
 	}
+	return (1);
 }
 
 void
@@ -213,7 +214,7 @@ struct sk_circle_tool {
 };
 
 static void
-init(void *p)
+ToolInit(void *p)
 {
 	struct sk_circle_tool *t = p;
 
@@ -238,7 +239,7 @@ OverPoint(SK_View *skv, SG_Vector *pos, SG_Vector *vC, void *ignore)
 }
 
 static int
-mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
+ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 {
 	struct sk_circle_tool *t = p;
 	SG_Vector vCenter, vC;
@@ -253,7 +254,7 @@ mousemotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 }
 
 static int
-mousebuttondown(void *p, SG_Vector pos, int btn)
+ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 {
 	struct sk_circle_tool *t = p;
 	SK_View *skv = SKTOOL(t)->skv;
@@ -292,11 +293,11 @@ SK_ToolOps skCircleToolOps = {
 	VGCIRCLES_ICON,
 	sizeof(struct sk_circle_tool),
 	0,
-	init,
+	ToolInit,
 	NULL,		/* destroy */
 	NULL,		/* edit */
-	mousemotion,
-	mousebuttondown,
+	ToolMouseMotion,
+	ToolMouseButtonDown,
 	NULL,		/* buttonup */
 	NULL,		/* keydown */
 	NULL		/* keyup */

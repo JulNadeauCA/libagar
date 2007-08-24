@@ -56,12 +56,12 @@ const AG_ObjectOps skOps = {
 };
 
 const char *skConstraintNames[] = {
-	N_("Incident"),
 	N_("Distance"),
+	N_("Incidence"),
 	N_("Angle"),
 	N_("Perpendicular"),
 	N_("Parallel"),
-	N_("Concentric"),
+	N_("Tangent"),
 };
 
 SK_NodeOps **skElements = NULL;
@@ -159,6 +159,7 @@ SK_InitRoot(SK *sk)
 	SK_PointSize(sk->root, 3.0);
 	SK_PointColor(sk->root, SG_ColorRGB(100.0, 100.0, 0.0));
 	SKNODE(sk->root)->sk = sk;
+	SKNODE(sk->root)->flags |= SK_NODE_FIXED;
 	TAILQ_INSERT_TAIL(&sk->nodes, SKNODE(sk->root), nodes);
 }
 
@@ -191,6 +192,8 @@ SK_Init(void *obj, const char *name)
 	TAILQ_INIT(&sk->clusters);
 	TAILQ_INIT(&sk->insns);
 	sk->uLen = AG_FindUnit("mm");
+	sk->status = SK_WELL_CONSTRAINED;
+	strlcpy(sk->statusText, _("New sketch"), sizeof(sk->statusText));
 
 #ifdef EDITION
 	AG_SetEvent(sk, "edit-post-load", PostEditorLoad, NULL);
@@ -201,22 +204,8 @@ SK_Init(void *obj, const char *name)
 void
 SK_Update(SK *sk)
 {
-	SK_Insn *si;
-
-	if (SK_Solve(sk) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, _("Failed to solve sketch: %s"),
-		    AG_GetError());
-		return;
-	}
-#if 0
-	TAILQ_FOREACH(si, &sk->insns, insns) {
-		if (SK_ExecInsn(sk, si) == -1) {
-			AG_TextMsg(AG_MSG_ERROR, _("Instruction failed: %s"),
-			    AG_GetError());
-			return;
-		}
-	}
-#endif
+	if (SK_Solve(sk) == 0)
+		SK_ExecProgram(sk);
 }
 
 /* Allocate a new node name. */
@@ -1028,7 +1017,7 @@ SK_AddConstraint(SK_Cluster *cl, void *node1, void *node2,
 		return (NULL);
 	}
 	ct = Malloc(sizeof(SK_Constraint), M_SG);
-	ct->type = type;
+	ct->uType = type;
 	ct->n1 = node1;
 	ct->n2 = node2;
 
@@ -1045,6 +1034,24 @@ SK_AddConstraint(SK_Cluster *cl, void *node1, void *node2,
 	}
 	va_end(ap);
 
+	switch (type) {
+	case SK_INCIDENT:
+		ct->type = SK_DISTANCE;
+		ct->ct_distance = 0.0;
+		break;
+	case SK_PERPENDICULAR:
+		ct->type = SK_ANGLE;
+		ct->ct_angle = M_PI/2.0;
+		break;
+	case SK_PARALLEL:
+		ct->type = SK_ANGLE;
+		ct->ct_angle = 0.0;
+		break;
+	default:
+		ct->type = ct->uType;
+		break;
+	}
+
 	TAILQ_INSERT_TAIL(&cl->edges, ct, constraints);
 	return (ct);
 }
@@ -1057,6 +1064,7 @@ SK_DupConstraint(const SK_Constraint *ct1)
 
 	ct2 = Malloc(sizeof(SK_Constraint), M_SG);
 	ct2->type = ct1->type;
+	ct2->uType = ct1->uType;
 	ct2->n1 = ct1->n1;
 	ct2->n2 = ct1->n2;
 	switch (ct1->type) {
@@ -1267,22 +1275,33 @@ SK_AddInsn(SK *sk, enum sk_insn_type type, ...)
 static int
 SK_ComposePair(SK *sk, const SK_Insn *insn)
 {
-	SK_Node *n = insn->n[0];
-	SK_Node *n1 = insn->n[1];
+	SK_Node *n, *n1;
 	SK_Constraint *ct = insn->ct01;
 	SG_Vector v;
 	int i, rv = -1;
 
-	dprintf("ComposePair: %s([%s:%s])\n", SK_NodeName(n),
-	    skConstraintNames[ct->type], SK_NodeName(n1));
+	if (insn->n[0]->flags & SK_NODE_SELECTED) {
+		n =  insn->n[0];
+		n1 = insn->n[1];
+	} else {
+		n =  insn->n[1];
+		n1 = insn->n[0];
+	}
 
 	for (i = 0; i < skConstraintPairFnCount; i++) {
 		const SK_ConstraintPairFn *fn = &skConstraintPairFns[i];
 
-		if (fn->ctType == ct->type &&
-		    SK_NodeOfClass(n, fn->type1) &&
+		if (fn->ctType != ct->type) {
+			continue;
+		}
+		if (SK_NodeOfClass(n, fn->type1) &&
 		    SK_NodeOfClass(n1, fn->type2)) {
 			rv = fn->fn(ct, (void *)n, (void *)n1);
+			break;
+		} else
+		if (SK_NodeOfClass(n1, fn->type1) &&
+		    SK_NodeOfClass(n, fn->type2)) {
+			rv = fn->fn(ct, (void *)n1, (void *)n);
 			break;
 		}
 	}
@@ -1305,10 +1324,6 @@ SK_ComposeRing(SK *sk, const SK_Insn *insn)
 	int i;
 	int rv = 0;
 
-	dprintf("ComposeRing: %s([%s:%s], [%s:%s])\n", SK_NodeName(n),
-	    skConstraintNames[ct1->type], SK_NodeName(n1),
-	    skConstraintNames[ct2->type], SK_NodeName(n2));
-	
 	for (i = 0; i < skConstraintRingFnCount; i++) {
 		const SK_ConstraintRingFn *fn = &skConstraintRingFns[i];
 
@@ -1320,6 +1335,9 @@ SK_ComposeRing(SK *sk, const SK_Insn *insn)
 		    SK_NodeOfClass(n1, fn->type2) &&
 		    SK_NodeOfClass(n2, fn->type3)) {
 			rv = fn->fn(n, ct1, n1, ct2, n2);
+			if (rv == 0) {
+				n->flags |= SK_NODE_KNOWN;
+			}
 			break;
 		} else if
 		   ((fn->ctType1 == ct2->type ||
@@ -1330,6 +1348,9 @@ SK_ComposeRing(SK *sk, const SK_Insn *insn)
 		    SK_NodeOfClass(n2, fn->type2) &&
 		    SK_NodeOfClass(n1, fn->type3)) {
 			rv = fn->fn(n, ct2, n2, ct1, n1);
+			if (rv == 0) {
+				n->flags |= SK_NODE_KNOWN;
+			}
 			break;
 		}
 	}
@@ -1357,6 +1378,43 @@ SK_ExecInsn(SK *sk, const SK_Insn *insn)
 		AG_SetError("Illegal instruction: 0x%x", insn->type);
 		return (-1);
 	}
+}
+
+void
+SK_ClearProgramState(SK *sk)
+{
+	SK_Node *node;
+
+	TAILQ_FOREACH(node, &sk->nodes, nodes)
+		sk->flags &= ~(SK_NODE_KNOWN);
+}
+
+int
+SK_ExecProgram(SK *sk)
+{
+	SK_Insn *si;
+	Uint i = 0;
+
+	TAILQ_FOREACH(si, &sk->insns, insns) {
+		if (SK_ExecInsn(sk, si) == -1) {
+			SK_SetStatus(sk, SK_INVALID, _("Error(%u): %s"),
+			    i, AG_GetError());
+			return (-1);
+		}
+		i++;
+	}
+	return (0);
+}
+
+void
+SK_SetStatus(SK *sk, enum sk_status status, const char *fmt, ...)
+{
+	va_list ap;
+
+	sk->status = status;
+	va_start(ap, fmt);
+	vsnprintf(sk->statusText, sizeof(sk->statusText), fmt, ap);
+	va_end(ap);
 }
 
 #endif /* HAVE_OPENGL */

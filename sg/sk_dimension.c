@@ -134,27 +134,12 @@ TransformToAnnotFrame(SK_Dimension *dim, const SG_Vector *v1,
     const SG_Vector *v2)
 {
 	SG_Matrix T;
-	SG_Vector vd, vRot;
-	SG_Real theta, vLen;
+	SG_Vector vd;
 
-	vd = (v2->x > v1->x) ? SG_VectorSubp(v2,v1) :
-	                       SG_VectorSubp(v1,v2);
-
-	vLen = SG_VectorLen2p(&vd);
-	theta = SG_VectorVectorAngle(vd, SG_J);
-	vRot.x = 0.0;
-	vRot.y = 0.0;
-	if (vd.x < 0.0) {
-		vRot.z = -1.0;
-		theta -= SG_PI/2.0;
-	} else {
-		vRot.z = +1.0;
-		theta += SG_PI/2.0;
-	}
-	
+	vd = SG_VectorSubp(v1, v2);
 	SG_MatrixIdentityv(&T);
 	SG_MatrixTranslatev(&T, SG_VectorLERP(*v1, *v2, 0.5));
-	SG_MatrixRotatev(&T, theta, vRot);
+	SG_MatrixRotateZv(&T, Atan2(vd.y, vd.x));
 	return (T);
 }
 
@@ -201,7 +186,11 @@ NodeNodeDistance(SK_Node *n1, SK_Node *n2)
 static void
 GetLabelText(SK_Dimension *dim, char *text, size_t text_len)
 {
+	SK *sk = SKNODE(dim)->sk;
+
 	snprintf(text, text_len, "%.02f", NodeNodeDistance(dim->n1, dim->n2));
+	if (SK_ConstrainedNodes(&sk->ctGraph, dim->n1, dim->n2) == NULL)
+		strlcat(text, _(" (REF)"), text_len);
 }
 
 void
@@ -309,8 +298,8 @@ SK_DimensionProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 	SG_Vector p2 = SK_NodeCoords(dim->n2);
 	SG_Real mag, u;
 
-	SG_VectorSubv(&p1, &p1, &dim->vLbl);
-	SG_VectorSubv(&p2, &p2, &dim->vLbl);
+	SG_VectorSubv(&p1, &dim->vLbl);
+	SG_VectorSubv(&p2, &dim->vLbl);
 
 	mag = SG_VectorDistance(p2, p1);
 	u = ( ((v->x - p1.x)*(p2.x - p1.x)) +
@@ -330,21 +319,21 @@ SK_DimensionDelete(void *p)
 	return (SK_AnnotDelete(dim));
 }
 
-void
+int
 SK_DimensionMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 {
 	SK_Dimension *dim = p;
-	SG_Vector v1, v2, vDim;
+	SG_Vector v1, v2, v;
 	SG_Matrix Tf, TfInv;
 
 	v1 = SK_NodeCoords(dim->n1);
 	v2 = SK_NodeCoords(dim->n2);
 	Tf = TransformToAnnotFrame(dim, &v1, &v2);
-
+	v = SG_MatrixMultVectorp(&Tf, &dim->vLbl);
+	SG_VectorAddv(&v, vel);
 	TfInv = SG_MatrixInvertCramerp(&Tf);
-   	dim->vLbl = SG_MatrixMultVectorp(&TfInv, pos);
-	
-	SKNODE(dim)->flags |= SK_NODE_MOVED;
+	dim->vLbl = SG_MatrixMultVectorp(&TfInv, &v);
+	return (0);
 }
 
 void
@@ -471,7 +460,7 @@ AddDimConstraintDlg(struct sk_dimension_tool *t, SK *sk, SK_Dimension *dim)
 }
 
 static void
-tool_init(void *p)
+ToolInit(void *p)
 {
 	struct sk_dimension_tool *t = p;
 
@@ -479,7 +468,7 @@ tool_init(void *p)
 }
 
 static int
-tool_mousemotion(void *self, SG_Vector pos, SG_Vector vel, int btn)
+ToolMouseMotion(void *self, SG_Vector pos, SG_Vector vel, int btn)
 {
 	struct sk_dimension_tool *t = self;
 	SK_View *skv = SKTOOL(t)->skv;
@@ -521,7 +510,7 @@ tool_mousemotion(void *self, SG_Vector pos, SG_Vector vel, int btn)
 }
 
 static int
-tool_mousebuttondown(void *self, SG_Vector pos, int btn)
+ToolMouseButtonDown(void *self, SG_Vector pos, int btn)
 {
 	struct sk_dimension_tool *t = self;
 	SK_View *skv = SKTOOL(t)->skv;
@@ -577,11 +566,11 @@ SK_ToolOps skDimensionToolOps = {
 	VGLINES_ICON,
 	sizeof(struct sk_dimension_tool),
 	0,
-	tool_init,
+	ToolInit,
 	NULL,		/* destroy */
 	NULL,		/* edit */
-	tool_mousemotion,
-	tool_mousebuttondown,
+	ToolMouseMotion,
+	ToolMouseButtonDown,
 	NULL,		/* buttonup */
 	NULL,		/* keydown */
 	NULL		/* keyup */

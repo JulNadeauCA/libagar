@@ -19,6 +19,7 @@
 #define SK_TYPE_NAME_MAX 64
 #define SK_NODE_NAME_MAX (SK_TYPE_NAME_MAX+12)
 #define SK_NAME_MAX	 (0xffffffff-1)
+#define SK_STATUS_MAX	 2048
 
 struct sk;
 struct sk_node;
@@ -40,7 +41,7 @@ typedef struct sk_node_ops {
 	void (*edit)(void *, struct ag_widget *, SK_View *);
 	SG_Real (*proximity)(void *, const SG_Vector *, SG_Vector *);
 	int (*del)(void *);
-	void (*move)(void *, const SG_Vector *, const SG_Vector *);
+	int (*move)(void *, const SG_Vector *, const SG_Vector *);
 } SK_NodeOps;
 
 typedef struct sk_node {
@@ -50,6 +51,10 @@ typedef struct sk_node {
 #define SK_NODE_SELECTED	0x01	/* For editor */
 #define SK_NODE_MOUSEOVER	0x02	/* For editor */
 #define SK_NODE_MOVED		0x04	/* For editor */
+#define SK_NODE_UNCONSTRAINED	0x08	/* Suppress constraints */
+#define SK_NODE_FIXED		0x10	/* Treat position as known */
+#define SK_NODE_KNOWN		0x20	/* Position found by solver */
+
 	struct sk *sk;			/* Back pointer to sk */
 	struct sk_node *pNode;		/* Back pointer to parent node */
 	SG_Matrix4 T;			/* Transformation from parent */
@@ -57,24 +62,28 @@ typedef struct sk_node {
 	Uint nRefs;			/* Reference count (optimization) */
 	struct sk_node **refNodes;	/* References to other nodes */
 	Uint nRefNodes;
-	struct sk_constraint **cons;	/* Constraint edges */
+	struct sk_constraint **cons;	/* Constraint edges (optimization) */
 	Uint nCons;
+	Uint nEdges;			/* For solver (optimization) */
 	TAILQ_ENTRY(sk_node) sknodes;	/* Entry in transformation tree */
 	TAILQ_ENTRY(sk_node) nodes;	/* Entry in flat node list */
 	TAILQ_ENTRY(sk_node) rnodes;	/* Reverse entry (optimization) */
 } SK_Node;
 
+enum sk_constraint_type {
+	SK_DISTANCE,
+	SK_INCIDENT,		/* Translated to DISTANCE(0) */
+	SK_ANGLE,
+	SK_PERPENDICULAR,	/* Translated to ANGLE(90deg) */
+	SK_PARALLEL,		/* Translated to ANGLE(0deg) */
+	SK_TANGENT,
+	SK_CONSTRAINT_LAST
+#define	SK_CONSTRAINT_ANY SK_CONSTRAINT_LAST
+};
+
 typedef struct sk_constraint {
-	enum sk_constraint_type {
-		SK_COINCIDENT,
-		SK_DISTANCE,
-		SK_ANGLE,
-		SK_PERPENDICULAR,
-		SK_PARALLEL,
-		SK_CONCENTRIC,
-		SK_CONSTRAINT_LAST
-#define		SK_CONSTRAINT_ANY SK_CONSTRAINT_LAST
-	} type;
+	enum sk_constraint_type uType;	/* Constraint type (user-provided) */
+	enum sk_constraint_type type;	/* Constraint type (translated) */
 	union {
 		SG_Real dist;		/* DISTANCE value */
 		SG_Real angle;		/* ANGLE value (radians) */
@@ -114,6 +123,13 @@ typedef struct sk {
 	const AG_Unit *uLen;			/* Length unit */
 	struct sk_point *root;			/* Root node */
 	TAILQ_HEAD(,sk_node) nodes;		/* Flat node list */
+	enum sk_status {
+		SK_INVALID,			/* No solutions */
+		SK_WELL_CONSTRAINED,		/* One solution */
+		SK_UNDER_CONSTRAINED,		/* Infinity of solutions */
+		SK_OVER_CONSTRAINED		/* Redundant constraints */
+	} status;
+	char statusText[SK_STATUS_MAX];		/* Status text */
 
 	/* For internal use by constraint solver */
 	SK_Cluster ctGraph;			/* Original constraint graph */
@@ -189,8 +205,6 @@ void		 SK_NodeDetach(void *, void *);
 int		 SK_NodeLoadGeneric(SK *, SK_Node **, AG_Netbuf *);
 void		 SK_GetNodeTransform(void *, SG_Matrix *);
 void		 SK_GetNodeTransformInverse(void *, SG_Matrix *);
-SG_Vector	 SK_NodeCoords(void *);
-SG_Vector	 SK_NodeDir(void *);
 void		 SK_NodeAddReference(void *, void *);
 void		 SK_NodeDelReference(void *, void *);
 void		 SK_NodeAddConstraint(void *, SK_Constraint *);
@@ -208,7 +222,7 @@ void		 SK_SetLengthUnit(SK *, const AG_Unit *);
 void		*SK_ProximitySearch(SK *, const char *, SG_Vector *,
 		                    SG_Vector *, void *);
 
-void		SK_Update(SK *);
+__inline__ void	SK_Update(SK *);
 int		SK_Solve(SK *);
 void		SK_FreeClusters(SK *);
 void		SK_FreeInsns(SK *);
@@ -231,7 +245,12 @@ Uint		SK_ConstraintsToSubgraph(const SK_Cluster *, const SK_Node *,
 					 SK_Constraint *[2]);
 SK_Insn	       *SK_AddInsn(SK *, enum sk_insn_type, ...);
 int		SK_ExecInsn(SK *, const SK_Insn *);
+int		SK_ExecProgram(SK *);
+void		SK_SetStatus(SK *, enum sk_status, const char *, ...);
+void		SK_ClearProgramState(SK *);
 
+__inline__ SG_Vector	  SK_NodeCoords(void *);
+__inline__ SG_Vector	  SK_NodeDir(void *);
 __inline__ void		 *SK_FindNode(SK *, Uint32, const char *);
 __inline__ SK_Cluster	 *SK_FindCluster(SK *, Uint32);
 __inline__ SK_Constraint *SK_FindConstraint(const SK_Cluster *,
@@ -246,7 +265,7 @@ __inline__ SK_Constraint *SK_ConstrainedNodes(const SK_Cluster *,
 #define	SK_Translate(n,x,y) SG_MatrixTranslate2(&SKNODE(n)->T,(v).x,(v).y)
 #define	SK_Translatev(n,v) SG_MatrixTranslate2(&SKNODE(n)->T,(v)->x,(v)->y)
 #define	SK_Translate2(n,x,y) SG_MatrixTranslate2(&SKNODE(n)->T,(x),(y))
-#define	SK_Rotatev(n,theta,A) SG_MatrixRotatev(&SKNODE(n)->T,(theta),(A))
+#define	SK_Rotatev(n,theta) SG_MatrixRotateZv(&SKNODE(n)->T,(theta))
 #define	SK_MatrixCopy(nDst,nSrc) SG_MatrixCopy(&SKNODE(nDst)->T,\
                                                &SKNODE(nSrc)->T);
 __END_DECLS
