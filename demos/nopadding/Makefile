@@ -1,8 +1,8 @@
 TOP=	../..
 include Makefile.config
 
-PROG=	nopadding
-SRCS=	nopadding.c
+PROG=	maximized
+SRCS=	maximized.c
 
 CFLAGS+=${AGAR_CFLAGS} -I.
 LIBS+=	${AGAR_LIBS}
