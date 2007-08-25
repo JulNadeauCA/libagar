@@ -21,20 +21,24 @@ CreateWindow(void)
 	AG_Box *box;
 	int i;
 
-	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOBORDERS|
-	                   AG_WINDOW_NOTITLE);
-	AG_WindowSetPadding(win, 0, 0, 0, 0);
-	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_EXPAND);
-	AG_BoxSetPadding(box, 0);
+	/* Create a window without titlebar or decorations. */
+	win = AG_WindowNew(AG_WINDOW_PLAIN);
 
-	table = AG_TableNew(box, AG_TABLE_EXPAND);
+	/* Disable the default spacing at the window's edges. */
+	AG_WindowSetPadding(win, 0, 0, 0, 0);
+
+	/* Create an example table. */
+	table = AG_TableNew(win, AG_TABLE_EXPAND);
 	AG_TableAddCol(table, "Foo", "<8888>", NULL);
 	AG_TableAddCol(table, "Bar", NULL, NULL);
-	for (i = 0; i < 1000; i++) {
+	for (i = 0; i < 100; i++) {
 		AG_TableAddRow(table, "%d:%s", i, "Foo");
 	}
 
-	AG_WindowSetGeometry(win, 0, 0, agView->w, agView->h);
+	/* Resize the window to cover the whole view. */
+	AG_WindowMaximize(win);
+
+	/* The window is ready to be displayed. */
 	AG_WindowShow(win);
 }
 
@@ -79,8 +83,12 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* Initialize a 640x480x32 display. Respond to keyboard/mouse events. */
-	if (AG_InitVideo(640, 480, 32, 0) == -1 ||
+	/*
+	 * Initialize a 640x480x32 display. Respond to keyboard/mouse events.
+	 * Allow resizing of the display (if that's applicable to the video
+	 * backend in use).
+	 */
+	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1 ||
 	    AG_InitInput(0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
