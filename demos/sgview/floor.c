@@ -3,7 +3,7 @@
  * Sample 'floor' object for sgview demo.
  */
 
-#include <agar/core/core.h>
+#include <agar/core.h>
 #include <agar/sg.h>
 
 static SDL_Surface *bmp = NULL;
