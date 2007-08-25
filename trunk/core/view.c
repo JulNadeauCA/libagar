@@ -287,22 +287,27 @@ AG_ResizeDisplay(int w, int h)
 		a.h = WIDGET(win)->h;
 
 		AG_MutexLock(&win->lock);
-		if (a.x+a.w > agView->w) {
-			a.x = agView->w - a.w;
-			if (a.x < 0) {
-				a.x = 0;
-				a.w = agView->w;
+
+		if (win->flags & AG_WINDOW_MAXIMIZED) {
+			AG_WindowScaleToView(win);
+		} else {
+			if (a.x+a.w > agView->w) {
+				a.x = agView->w - a.w;
+				if (a.x < 0) {
+					a.x = 0;
+					a.w = agView->w;
+				}
 			}
-		}
-		if (a.y+a.h > agView->h) {
-			a.y = agView->h - a.h;
-			if (a.y < 0) {
-				a.y = 0;
-				a.h = agView->w;
+			if (a.y+a.h > agView->h) {
+				a.y = agView->h - a.h;
+				if (a.y < 0) {
+					a.y = 0;
+					a.h = agView->w;
+				}
 			}
+			AG_WidgetSizeAlloc(win, &a);
+			AG_WindowUpdate(win);
 		}
-		AG_WidgetSizeAlloc(win, &a);
-		AG_WindowUpdate(win);
 		AG_MutexUnlock(&win->lock);
 	}
 	return (0);
