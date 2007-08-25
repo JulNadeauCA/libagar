@@ -11,9 +11,7 @@
 #include <agar/core/loaders/real.h>
 #include <agar/core/loaders/string.h>
 #include <agar/core/loaders/surface.h>
-#include <agar/core/loaders/ttf.h>
 #include <agar/core/loaders/version.h>
-#include <agar/core/loaders/xcf.h>
 
 #include <agar/core/object.h>
 #include <agar/core/event.h>
