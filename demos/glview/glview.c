@@ -75,7 +75,10 @@ MyOverlayFunction(AG_Event *event)
 	SDL_Surface *myText;
 
 	/* Render a text string using the font engine. */
-	myText = AG_TextFormat(NULL, -1, myColor, "Spin = %f degrees", spin);
+	AG_PushTextState();
+	AG_TextColorRGB(255, 255, 125);
+	myText = AG_TextFormat("Spin = %.0f degrees, z = %.02f", spin, vz);
+	AG_PopTextState();
 
 	/*
 	 * Blit the text at the lower left of the widget. Note that the
@@ -98,10 +101,13 @@ Mousebutton(AG_Event *event)
 	int y = AG_INT(3);
 
 	switch (button) {
-	case SDL_BUTTON_WHEELDOWN:
-		vz += 1.0;
-		break;
 	case SDL_BUTTON_WHEELUP:
+		vz += 1.0;
+		if (vz > 0.0) {
+			vz = 0.0;
+		}
+		break;
+	case SDL_BUTTON_WHEELDOWN:
 		vz -= 1.0;
 		break;
 	}
