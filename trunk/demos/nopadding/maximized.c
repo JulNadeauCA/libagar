@@ -48,7 +48,7 @@ main(int argc, char *argv[])
 	int c, i, fps = -1;
 	char *s;
 
-	if (AG_InitCore("nopadding-demo", 0) == -1) {
+	if (AG_InitCore("maximized-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
