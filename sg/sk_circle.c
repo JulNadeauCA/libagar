@@ -231,7 +231,7 @@ OverPoint(SK_View *skv, SG_Vector *pos, SG_Vector *vC, void *ignore)
 		node->flags &= ~(SK_NODE_MOUSEOVER);
 	}
 	if ((node = SK_ProximitySearch(sk, "Point", pos, vC, ignore)) != NULL &&
-	    SG_VectorDistance2p(pos, vC) < skv->rSnap) {
+	    SG_VectorDistancep(pos, vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
 		return ((SK_Point *)node);
 	}

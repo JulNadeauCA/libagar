@@ -1,9 +1,5 @@
 /*	Public domain	*/
 
-typedef struct sg_quat {
-	SG_Real w, x, y, z;
-} SG_Quat;
-
 __BEGIN_DECLS
 SG_Quat	SG_QuatMultIdentity(void);
 SG_Quat	SG_QuatAddIdentity(void);
@@ -46,8 +42,6 @@ __inline__ void	   SG_QuatInversev(SG_Quat *);
 
 __inline__ SG_Quat SG_QuatSLERP(SG_Quat, SG_Quat, SG_Real);
 SG_Quat		   SG_QuatSLERPp(const SG_Quat *, const SG_Quat *, SG_Real);
-
-__inline__ SG_Vector SG_VectorRotateQuat(SG_Vector, SG_Quat);
 
 __inline__ SG_Quat	SG_ReadQuat(AG_Netbuf *);
 __inline__ void		SG_ReadQuatv(AG_Netbuf *, SG_Quat *);

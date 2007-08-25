@@ -495,7 +495,7 @@ SG_NodeDir(void *p)
 {
 	SG_Node *node = p;
 	SG_Matrix T;
-	SG_Vector v = SG_K;				/* Convention */
+	SG_Vector v = VecK;				/* Convention */
 	
 	SG_GetNodeTransform(node, &T);
 	SG_MatrixMultVectorv(&v, &T);

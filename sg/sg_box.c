@@ -53,7 +53,7 @@ SG_BoxInit(void *p, const char *name)
 	SGNODE(box)->ops = &sgBoxOps;
 
 	SG_EdgeRehash(box, 8);
-	SG_VertexNew(box, SG_0);
+	SG_VertexNew(box, Vec0);
 	SG_VertexNew(box, SG_VECTOR(-0.5, -1.0, -0.5));
 	SG_VertexNew(box, SG_VECTOR(+0.5, -1.0, -0.5));
 	SG_VertexNew(box, SG_VECTOR(+0.5, -1.0, +0.5));
@@ -63,11 +63,11 @@ SG_BoxInit(void *p, const char *name)
 	SG_FacetFromTri3(box, 1,5,4);
 	SG_FacetFromTri3(box, 1,2,5);
 	SG_FacetFromQuad4(box, 2,3,4,5);
-	OBJ_N(box,1) = SG_J;
-	OBJ_N(box,2) = SG_INV(SG_J);
-	OBJ_N(box,3) = SG_INV(SG_J);
-	OBJ_N(box,4) = SG_INV(SG_J);
-	OBJ_N(box,5) = SG_INV(SG_J);
+	OBJ_N(box,1) = VecJ;
+	OBJ_N(box,2) = SG_MIRROR(VecJ);
+	OBJ_N(box,3) = SG_MIRROR(VecJ);
+	OBJ_N(box,4) = SG_MIRROR(VecJ);
+	OBJ_N(box,5) = SG_MIRROR(VecJ);
 }
 
 int

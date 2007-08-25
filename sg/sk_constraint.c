@@ -46,8 +46,9 @@ PtFromDistantPt(SK_Constraint *ct, void *self, void *other)
 {
 	SG_Vector p1 = SK_NodeCoords(self);
 	SG_Vector p2 = SK_NodeCoords(other);
-	SG_Real theta = SG_VectorVectorAngle2(p1, p2);
-
+	SG_Real theta;
+	
+	SG_VectorVectorAngle(p1, p2, &theta, NULL);
 	SK_Identity(self);
 	p2.x -= ct->ct_distance*Cos(theta);
 	p2.y -= ct->ct_distance*Sin(theta);
@@ -85,15 +86,16 @@ PtFromDistantLine(SK_Constraint *ct, void *self, void *other)
 		SK_Translatev(self, &v);
 		return (0);
 	}
-	theta = SG_VectorVectorAngle2(p1, p2) + M_PI/2.0;
+	SG_VectorVectorAngle(p1, p2, &theta, NULL);
+	theta += M_PI/2.0;
 	s1.x = v.x + ct->ct_distance*Cos(theta);
 	s1.y = v.y + ct->ct_distance*Sin(theta);
 	s2.x = v.x - ct->ct_distance*Cos(theta);
 	s2.y = v.y - ct->ct_distance*Sin(theta);
 	
 	SK_Identity(self);
-	if (SG_VectorDistance2p(&pOrig, &s1) <	/* Minimize displacement */
-	    SG_VectorDistance2p(&pOrig, &s2)) {
+	if (SG_VectorDistancep(&pOrig, &s1) <	/* Minimize displacement */
+	    SG_VectorDistancep(&pOrig, &s2)) {
 		SK_Translatev(self, &s1);
 	} else {
 		SK_Translatev(self, &s2);
@@ -197,8 +199,8 @@ PtFromPtPt(void *self, SK_Constraint *ct1, void *n1, SK_Constraint *ct2,
 	s2.z = 0.0;
 
 	SK_Identity(self);
-	if (SG_VectorDistance2p(&pOrig, &s1) <	/* Minimize displacement */
-	    SG_VectorDistance2p(&pOrig, &s2)) {
+	if (SG_VectorDistancep(&pOrig, &s1) <	/* Minimize displacement */
+	    SG_VectorDistancep(&pOrig, &s2)) {
 		SK_Translatev(self, &s1);
 	} else {
 		SK_Translatev(self, &s2);
@@ -252,7 +254,7 @@ PtFromPtLine(void *self, SK_Constraint *ct1, void *n1,
 				goto fail;
 			} else {
 				/* XXX */
-				dprintf("inside??\n");
+				dprintf("u1=%f, u2=%f!\n", u1, u2);
 			}
 		} else {
 			if (u1 >= 0.0 && u1 <= 1.0)
@@ -264,8 +266,8 @@ PtFromPtLine(void *self, SK_Constraint *ct1, void *n1,
 	
 	SK_Identity(self);
 	if (nSolutions == 2) {
-		if (SG_VectorDistance2p(&pOrig, &s[0]) <
-		    SG_VectorDistance2p(&pOrig, &s[1])) {
+		if (SG_VectorDistancep(&pOrig, &s[0]) <
+		    SG_VectorDistancep(&pOrig, &s[1])) {
 			SK_Translatev(self, &s[0]);
 		} else {
 			SK_Translatev(self, &s[1]);

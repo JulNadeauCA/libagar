@@ -43,8 +43,8 @@ SG_OctreeBuild(SG *sg, SG_Octree *oct)
 {
 	SG_Object *so;
 	SG_Facet *fct;
-	SG_Vector min = SG_0;
-	SG_Vector max = SG_0;
+	SG_Vector min = Vec0;
+	SG_Vector max = Vec0;
 	int i;
 
 	/* Find the scene extrema. */

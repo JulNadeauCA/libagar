@@ -228,7 +228,7 @@ OverPoint(SK_View *skv, SG_Vector *pos, SG_Vector *vC, void *ignore)
 		node->flags &= ~(SK_NODE_MOUSEOVER);
 	}
 	if ((node = SK_ProximitySearch(sk, "Point", pos, vC, ignore)) != NULL &&
-	    SG_VectorDistance2p(pos, vC) < skv->rSnap) {
+	    SG_VectorDistancep(pos, vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
 		return ((SK_Point *)node);
 	}
@@ -279,10 +279,12 @@ ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 				AG_TextMsgFromError();
 				return (0);
 			}
+#if 0
 			ct = SK_AddConstraint(&sk->ctGraph, line, overPoint,
 			    SK_INCIDENT);
 			SK_NodeAddConstraint(line, ct);
 			SK_NodeAddConstraint(overPoint, ct);
+#endif
 		    	SK_NodeAddReference(line, overPoint);
 			line->p2 = overPoint;
 		
@@ -306,14 +308,15 @@ ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 	line->p2 = SK_PointNew(sk->root);
 	SKNODE(line->p2)->flags |= SK_NODE_UNCONSTRAINED;
 	SK_Translatev(line->p2, &pos);
-	
+
+#if 0
 	ct = SK_AddConstraint(&sk->ctGraph, line, line->p1, SK_INCIDENT);
 	SK_NodeAddConstraint(line, ct);
 	SK_NodeAddConstraint(line->p1, ct);
-
 	ct = SK_AddConstraint(&sk->ctGraph, line, line->p2, SK_INCIDENT);
 	SK_NodeAddConstraint(line, ct);
 	SK_NodeAddConstraint(line->p2, ct);
+#endif
 
 	SK_NodeAddReference(line, line->p1);
 	SK_NodeAddReference(line, line->p2);
