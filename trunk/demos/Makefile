@@ -8,7 +8,7 @@ SUBDIR=	gamemenu \
 	table \
 	textbox \
 	widgets \
-	nopadding \
+	maximized \
 	objprops
 
 SUBDIR+=sgview \
