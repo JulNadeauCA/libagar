@@ -149,44 +149,97 @@ restart:
  * single cluster, and all nodes within the cluster have two constraint
  * edges, the sketch is well-constrained.
  */
-static int
-SK_WellConstrained(SK *sk)
+static void
+UpdateConstraintStatus(SK *sk)
 {
+	char nodeName[SK_NODE_NAME_MAX];
 	Uint count = 0;
 	SK_Cluster *cl;
 	SK_Constraint *ct;
 	SK_Node *node;
 
+	/* Count the constraint edges per node in the original graph. */
+	TAILQ_FOREACH(node, &sk->nodes, nodes) {
+		node->nEdges = 0;
+	}
 	TAILQ_FOREACH(cl, &sk->clusters, clusters) {
-		TAILQ_FOREACH(ct, &cl->edges, constraints) {
-			ct->n1->nEdges = 0;
-			ct->n2->nEdges = 0;
-		}
 		count++;
 	}
-	if (count > 1) {
-		AG_SetError("%u clusters", count);
-		return (0);
-	}
-	cl = TAILQ_FIRST(&sk->clusters);
-	TAILQ_FOREACH(ct, &cl->edges, constraints) {
+	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
 		ct->n1->nEdges++;
 		ct->n2->nEdges++;
 	}
+
+	/* Nodes with >2 edges in the original graph mean over-constraint. */
+	TAILQ_FOREACH(node, &sk->nodes, nodes) {
+		if (node->nEdges > 2) {
+			SK_SetStatus(sk, SK_OVER_CONSTRAINED,
+			    _("Overconstrained (>2 edges in %s)"),
+			    SK_NodeNameCopy(node, nodeName,
+			    sizeof(nodeName)));
+			return;
+		}
+	}
+
+	/* Multiple clusters mean under-constraint. */
+	if (count > 1) {
+		SK_SetStatus(sk, SK_UNDER_CONSTRAINED,
+		    _("Underconstrained (%u clusters)"), count);
+		return;
+	}
+
+	/* Nodes with <2 edges mean under-constraint. */
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
 		if (node->flags & SK_NODE_UNCONSTRAINED) {
 			continue;
 		}
-		if (node->nEdges < 2) {
-			char nodeName[SK_NODE_NAME_MAX];
+		if (SK_NodeOfClass(node, "Line:*")) {
+			SK_Line *L = SKLINE(node);
 
-			AG_SetError("%s has %u edges",
-			    SK_NodeNameCopy(node, nodeName, sizeof(nodeName)),
-			    node->nEdges);
-			return (0);
+			if (SKNODE(L->p1)->nEdges == 2 &&
+			    SKNODE(L->p2)->nEdges == 2) {
+				if (node->nEdges > 0) {
+					goto over;
+				}
+				continue;
+			} else
+			if ((SKNODE(L->p1)->nEdges == 1 &&
+			     SKNODE(L->p2)->nEdges == 2) ||
+			    (SKNODE(L->p1)->nEdges == 2 &&
+			     SKNODE(L->p2)->nEdges == 1)) {
+				if (node->nEdges > 1) {
+					goto over;
+				} else if (node->nEdges < 1) {
+					goto under;
+				}
+			} else
+			if (SKNODE(L->p1)->nEdges < 2 &&
+			    SKNODE(L->p2)->nEdges < 2) {
+				if (node->nEdges > 2) {
+					goto over;
+				} else if (node->nEdges < 2) {
+					goto under;
+				}
+			}
+		} else {
+			if (node->nEdges < 2) {
+				goto under;
+			} else if (node->nEdges > 2) {
+				goto over;
+			}
 		}
 	}
-	return (1);
+	SK_SetStatus(sk, SK_WELL_CONSTRAINED, _("Well-constrained"));
+	return;
+over:
+	SK_SetStatus(sk, SK_OVER_CONSTRAINED,
+	    _("Overconstrained (>2 edges in %s)"),
+	    SK_NodeNameCopy(node, nodeName, sizeof(nodeName)));
+	return;
+under:
+	SK_SetStatus(sk, SK_UNDER_CONSTRAINED,
+	    _("Underconstrained (<2 edges in %s)"),
+	    SK_NodeNameCopy(node, nodeName, sizeof(nodeName)));
 }
 
 /*
@@ -293,13 +346,7 @@ merge_rings:
 		TAILQ_INSERT_TAIL(&sk->clusters, clMerged, clusters);
 		goto merge_rings;
 	}
-
-	if (SK_WellConstrained(sk)) {
-		SK_SetStatus(sk, SK_WELL_CONSTRAINED, _("Well-constrained"));
-	} else {
-		SK_SetStatus(sk, SK_UNDER_CONSTRAINED,
-		    _("Underconstrained (%s)"), AG_GetError());
-	}
+	UpdateConstraintStatus(sk);
 out:
 	AG_MutexUnlock(&sk->lock);
 	return (0);
