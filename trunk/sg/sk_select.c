@@ -46,6 +46,14 @@ typedef struct sk_select_tool {
 #define SELECT_ARCS	0x04
 } SK_SelectTool;
 
+static void
+ToolInit(void *p)
+{
+	SK_SelectTool *t = p;
+
+	t->flags = 0;
+}
+
 static int
 ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 {
@@ -64,7 +72,7 @@ ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 		node->flags &= ~(SK_NODE_MOVED);
 	}
 	if ((node = SK_ProximitySearch(sk, "Point", &pos, &vC, NULL)) != NULL &&
-	    SG_VectorDistance2p(&pos, &vC) < skv->rSnap) {
+	    SG_VectorDistancep(&pos, &vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
 		SK_NodeRedraw(node, skv);
 	} else {
@@ -100,9 +108,8 @@ ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 static int
 ToolMouseButtonDown(void *pTool, SG_Vector pos, int btn)
 {
-	SK_Tool *tool = pTool;
 	SK_SelectTool *t = pTool;
-	SK_View *skv = tool->skv;
+	SK_View *skv = SKTOOL(t)->skv;
 	SK *sk = skv->sk;
 	SK_Node *node;
 	SG_Vector vC;
@@ -120,7 +127,7 @@ ToolMouseButtonDown(void *pTool, SG_Vector pos, int btn)
 	
 	/* Give point proximity more weight than other entities. */
 	if ((node = SK_ProximitySearch(sk, "Point", &pos, &vC, NULL)) == NULL ||
-	    SG_VectorDistance2p(&pos, &vC) >= skv->rSnap) {
+	    SG_VectorDistancep(&pos, &vC) >= skv->rSnap) {
 		if ((node = SK_ProximitySearch(sk, NULL, &pos, &vC, NULL))
 		    == NULL)
 			return (0);
@@ -135,21 +142,13 @@ ToolMouseButtonDown(void *pTool, SG_Vector pos, int btn)
 }
 
 static void
-init(void *p)
-{
-	SK_SelectTool *t = p;
-
-	t->flags = 0;
-}
-
-static void
 ToolEdit(void *p, void *box)
 {
 	SK_SelectTool *t = p;
 	static const AG_FlagDescr flagDescr[] = {
-	    { SELECT_POINTS,		"Points",	1 },
-	    { SELECT_LINES,		"Lines",	1 },
-	    { SELECT_ARCS,		"Arcs",		1 },
+	    { SELECT_POINTS,	N_("Select Points"),	1 },
+	    { SELECT_LINES,	N_("Select Lines"),	1 },
+	    { SELECT_ARCS,	N_("Select Arcs"),	1 },
 	    { 0,			NULL,		0 }
 	};
 	AG_CheckboxSetFromFlags(box, &t->flags, flagDescr);
@@ -161,7 +160,7 @@ SK_ToolOps skSelectToolOps = {
 	SELECT_NODE_ICON,
 	sizeof(SK_SelectTool),
 	0,
-	NULL,		/* init */
+	ToolInit,
 	NULL,		/* destroy */
 	ToolEdit,
 	ToolMouseMotion,

@@ -234,8 +234,8 @@ ViewScale(AG_Event *event)
 static void
 RotateCameraByMouse(SG_View *sv, int x, int y)
 {
-	SG_Rotatev(sv->cam, sv->mouse.rsens.y*(SG_Real)y, SG_I);
-	SG_Rotatev(sv->cam, sv->mouse.rsens.x*(SG_Real)x, SG_J);
+	SG_Rotatev(sv->cam, sv->mouse.rsens.y*(SG_Real)y, VecI);
+	SG_Rotatev(sv->cam, sv->mouse.rsens.x*(SG_Real)x, VecJ);
 }
 
 static void
@@ -509,7 +509,7 @@ RotateYawTimeout(void *obj, Uint32 ival, void *arg)
 {
 	SG_View *sv = obj;
 
-	SG_Rotatev(sv->cam, sv->rot_yaw, SG_J);
+	SG_Rotatev(sv->cam, sv->rot_yaw, VecJ);
 	return (ival > sv->rot_vel_max ? ival-sv->rot_vel_accel : ival);
 }
 
@@ -518,7 +518,7 @@ RotatePitchTimeout(void *obj, Uint32 ival, void *arg)
 {
 	SG_View *sv = obj;
 
-	SG_Rotatev(sv->cam, sv->rot_pitch, SG_I);
+	SG_Rotatev(sv->cam, sv->rot_pitch, VecI);
 	return (ival > sv->rot_vel_max ? ival-sv->rot_vel_accel : ival);
 }
 
@@ -527,7 +527,7 @@ RotateRollTimeout(void *obj, Uint32 ival, void *arg)
 {
 	SG_View *sv = obj;
 
-	SG_Rotatev(sv->cam, sv->rot_roll, SG_K);
+	SG_Rotatev(sv->cam, sv->rot_roll, VecK);
 	return (ival > sv->rot_vel_max ? ival-sv->rot_vel_accel : ival);
 }
 

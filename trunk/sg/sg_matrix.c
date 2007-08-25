@@ -589,8 +589,8 @@ SG_MatrixGetTranslation(const SG_Matrix *T, SG_Vector *t)
 void
 SG_MatrixRotatev(SG_Matrix *M, SG_Real theta, SG_Vector A)
 {
-	SG_Real s = SG_Sin(theta);
-	SG_Real c = SG_Cos(theta);
+	SG_Real s = Sin(theta);
+	SG_Real c = Cos(theta);
 	SG_Real t = 1.0 - c;
 	SG_Matrix R;
 
@@ -618,26 +618,22 @@ SG_MatrixRotateEul(SG_Matrix *M, SG_Real pitch, SG_Real roll, SG_Real yaw)
 {
 	SG_Matrix4 R;
 
-	R.m[0][0] = SG_Cos(yaw)*SG_Cos(roll) +
-	            SG_Sin(yaw)*SG_Sin(pitch)*SG_Sin(roll);
-	R.m[0][1] = SG_Sin(yaw)*SG_Cos(roll) -
-	            SG_Cos(yaw)*SG_Sin(pitch)*SG_Sin(roll);
-	R.m[0][2] = SG_Cos(pitch)*SG_Sin(roll);
-	R.m[0][3] = 0.0;
-	R.m[1][0] = -SG_Sin(yaw)*SG_Cos(pitch);
-	R.m[1][1] = SG_Cos(yaw)*SG_Cos(pitch);
-	R.m[1][2] = SG_Sin(pitch);
-	R.m[1][3] = 0.0;
-	R.m[2][0] = SG_Sin(yaw)*SG_Sin(pitch)*SG_Cos(roll) -
-	            SG_Cos(yaw)*SG_Sin(roll);
-	R.m[2][1] = -SG_Cos(yaw)*SG_Sin(pitch)*SG_Cos(roll) -
-	            SG_Sin(yaw)*SG_Sin(roll);
-	R.m[2][2] = SG_Cos(pitch)*SG_Cos(roll);
-	R.m[2][3] = 0.0;
-	R.m[3][0] = 0.0;
-	R.m[3][1] = 0.0;
-	R.m[3][2] = 0.0;
-	R.m[3][3] = 1.0;
+	R.m[0][0] =  Cos(yaw)*Cos(roll) + Sin(yaw)*Sin(pitch)*Sin(roll);
+	R.m[0][1] =  Sin(yaw)*Cos(roll) - Cos(yaw)*Sin(pitch)*Sin(roll);
+	R.m[0][2] =  Cos(pitch)*Sin(roll);
+	R.m[0][3] =  0.0;
+	R.m[1][0] = -Sin(yaw)*Cos(pitch);
+	R.m[1][1] =  Cos(yaw)*Cos(pitch);
+	R.m[1][2] =  Sin(pitch);
+	R.m[1][3] =  0.0;
+	R.m[2][0] =  Sin(yaw)*Sin(pitch)*Cos(roll) - Cos(yaw)*Sin(roll);
+	R.m[2][1] = -Cos(yaw)*Sin(pitch)*Cos(roll) - Sin(yaw)*Sin(roll);
+	R.m[2][2] =  Cos(pitch)*Cos(roll);
+	R.m[2][3] =  0.0;
+	R.m[3][0] =  0.0;
+	R.m[3][1] =  0.0;
+	R.m[3][2] =  0.0;
+	R.m[3][3] =  1.0;
 	SG_MatrixMultv(M, &R);
 }
 
@@ -645,8 +641,8 @@ SG_MatrixRotateEul(SG_Matrix *M, SG_Real pitch, SG_Real roll, SG_Real yaw)
 void
 SG_MatrixRotateXv(SG_Matrix *M, SG_Real theta)
 {
-	SG_Real s = SG_Sin(theta);
-	SG_Real c = SG_Cos(theta);
+	SG_Real s = Sin(theta);
+	SG_Real c = Cos(theta);
 	SG_Matrix R;
 
 	R.m[0][0] = 1.0; R.m[0][1] = 0.0; R.m[0][2] = 0.0; R.m[0][3] = 0.0;
@@ -660,8 +656,8 @@ SG_MatrixRotateXv(SG_Matrix *M, SG_Real theta)
 void
 SG_MatrixRotateYv(SG_Matrix *M, SG_Real theta)
 {
-	SG_Real s = SG_Sin(theta);
-	SG_Real c = SG_Cos(theta);
+	SG_Real s = Sin(theta);
+	SG_Real c = Cos(theta);
 	SG_Matrix R;
 
 	R.m[0][0] = c;   R.m[0][1] = 0.0; R.m[0][2] = s;   R.m[0][3] = 0.0;
@@ -675,8 +671,8 @@ SG_MatrixRotateYv(SG_Matrix *M, SG_Real theta)
 void
 SG_MatrixRotateZv(SG_Matrix *M, SG_Real theta)
 {
-	SG_Real s = SG_Sin(theta);
-	SG_Real c = SG_Cos(theta);
+	SG_Real s = Sin(theta);
+	SG_Real c = Cos(theta);
 	SG_Matrix R;
 
 	R.m[0][0] = c;   R.m[0][1] = -s;  R.m[0][2] = 0.0; R.m[0][3] = 0.0;

@@ -11,6 +11,7 @@ typedef float SG_Real;
 /*
  * Basic mathematical objects
  */
+typedef struct sg_quat { SG_Real w, x, y, z; } SG_Quat;
 typedef struct sg_vector2 { SG_Real x, y; } SG_Vector2;
 typedef struct sg_vector3 { SG_Real x, y, z; } SG_Vector3, SG_Vector;
 typedef struct sg_vector4 { SG_Real x, y, z, w; } SG_Vector4;

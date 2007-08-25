@@ -418,7 +418,7 @@ SG_FacetCentroid(SG_Object *so, SG_Facet *fct)
 {
 	int i, j;
 	SG_Real dot, aTmp = 0.0;
-	SG_Vector vTmp = SG_0;
+	SG_Vector vTmp = Vec0;
 	SG_Vector cent;
 
 	for (i = (fct->n - 1), j = 0;
@@ -436,7 +436,7 @@ SG_FacetCentroid(SG_Object *so, SG_Facet *fct)
 	if (aTmp != 0.0) {
 		return (SG_VectorScalep(&vTmp, 1.0/(2.0*aTmp)));
 	}
-	return (SG_0);					/* Undefined */
+	return (Vec0);					/* Undefined */
 }
 
 /* Calculate vertex normals for the given object. */

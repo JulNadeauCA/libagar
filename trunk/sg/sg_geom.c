@@ -88,7 +88,7 @@ SG_PlaneFrom3Pts(SG_Vector p1, SG_Vector p2, SG_Vector p3)
 	SG_Plane P;
 	SG_Vector n;
 
-	n = SG_VectorNCross(SG_VectorSub(p1,p2), SG_VectorSub(p3,p2));
+	n = SG_VectorNormCross(SG_VectorSub(p1,p2), SG_VectorSub(p3,p2));
 	P.a = n.x;
 	P.b = n.y;
 	P.c = n.z;

@@ -23,8 +23,8 @@
  */
 
 /*
- * Dimension annotation. Displays distances, angles and radii between
- * two arbitrary nodes.
+ * Dimension annotation. Creates distance and angle constraints, or
+ * display effective distances, angles and radii.
  */
 
 #include <config/edition.h>
@@ -170,7 +170,7 @@ NodeNodeDistance(SK_Node *n1, SK_Node *n2)
 	    SK_NodeOfClass(n2, "Point:*")) {
 		v1 = SK_NodeCoords(n1);
 		v2 = SK_NodeCoords(n2);
-		return SG_VectorDistance2p(&v1, &v2);
+		return SG_VectorDistancep(&v1, &v2);
 	} else if (SK_NodeOfClass(n1, "Point:*") &&
 	           SK_NodeOfClass(n2, "Line:*")) {
 		v1 = SK_NodeCoords(n1);
@@ -482,7 +482,7 @@ ToolMouseMotion(void *self, SG_Vector pos, SG_Vector vel, int btn)
 		SK_NodeRedraw(node, skv);
 	}
 	if ((node = SK_ProximitySearch(sk, "Point", &pos, &vC, NULL)) != NULL &&
-	    SG_VectorDistance2p(&pos, &vC) < skv->rSnap) {
+	    SG_VectorDistancep(&pos, &vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
 		SK_NodeRedraw(node, skv);
 	} else {
@@ -528,27 +528,24 @@ ToolMouseButtonDown(void *self, SG_Vector pos, int btn)
 	}
 
 	if ((n = SK_ProximitySearch(sk, "Point", &pos, &vC, NULL)) == NULL ||
-	    SG_VectorDistance2p(&pos, &vC) >= skv->rSnap) {
-		if (t->curDim == NULL &&
-		    (n = SK_ProximitySearch(sk, "Line", &pos, &vC, NULL))
-		     != NULL) {
-			t->curDim = SK_DimensionNew(sk->root);
-			t->curDim->n1 = SKNODE(SKLINE(n)->p1);
-			t->curDim->n2 = SKNODE(SKLINE(n)->p2);
-			return (0);
-		}
-		n = SK_ProximitySearch(sk, NULL, &pos, &vC, NULL);
-	}
-	if (n == NULL) {
-		goto undo;
+	    SG_VectorDistancep(&pos, &vC) >= skv->rSnap) {
+		if ((n = SK_ProximitySearch(sk, "Line", &pos, &vC, NULL))
+		    == NULL)
+			n = SK_ProximitySearch(sk, NULL, &pos, &vC, NULL);
 	}
 	if (t->curDim == NULL) {
-		t->curDim = SK_DimensionNew(sk->root);
-		t->curDim->n1 = n;
-		return (0);
+		if (n != NULL) {
+			t->curDim = SK_DimensionNew(sk->root);
+			t->curDim->n1 = n;
+		} else {
+			goto undo;
+		}
 	} else if (t->curDim->n2 == NULL) {
-		t->curDim->n2 = n;
-		return (0);
+		if (n != NULL) {
+			t->curDim->n2 = n;
+		} else {
+			goto undo;
+		}
 	} else {
 		if (AddDimConstraintDlg(t, sk, t->curDim) == -1)
 			goto undo;

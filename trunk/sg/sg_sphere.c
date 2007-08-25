@@ -133,9 +133,9 @@ Subdivide(SG_Sphere *sph, const SG_Vector *v1, const SG_Vector *v2,
 		    SG_VertexNewvn(sph, v3, v3));
 		return;
 	}
-	SG_VectorAvg2v(&v12, v1, v2);
-	SG_VectorAvg2v(&v23, v2, v3);
-	SG_VectorAvg2v(&v31, v3, v1);
+	v12 = SG_VectorAvgp(v1, v2);
+	v23 = SG_VectorAvgp(v2, v3);
+	v31 = SG_VectorAvgp(v3, v1);
 	SG_VectorNormv(&v12);
 	SG_VectorNormv(&v23);
 	SG_VectorNormv(&v31);

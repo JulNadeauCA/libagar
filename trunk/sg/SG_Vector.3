@@ -37,22 +37,55 @@
 .Sh DESCRIPTION
 The
 .Nm
-interface operates on three and four dimensional
-.Ft SG_Real
-vectors.
+interface provides optimized basic algebra routines for vectors in R2, R3
+and R4.
+Some
+.Xr SG_Matrix 3
+routines accept vector arguments and vice-versa.
+The vector structures are defined as:
+.Bd -literal
+typedef struct sg_vector2 {
+	SG_Real x, y;
+} SG_Vector2;
 
+typedef struct sg_vector3 {
+	SG_Real x, y, z;
+} SG_Vector3, SG_Vector;
 
-.Sh INHERITANCE HIERARCHY
+typedef struct sg_vector4 {
+	SG_Real x, y, z, w;
+} SG_Vector4;
+.Ed
 .Pp
-.Xr SG_Node 3 ->
-.Nm .
+To simplify application code,
+.Nm
+and
+.Xr SG_Matrix 3
+structures are typically passed using structure copies, although variants
+accepting pointer arguments are provided for most functions.
+Variants with the "p" suffix generally accept one or more pointer arguments
+and return a vector or scalar.
+Variants with the "v" suffix accept pointer arguments and return the result
+in one of the arguments.
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "SG_Foo *"
-.Fn SG_FooNew "SG_Node *parent" "const char *name"
+.Ft "SG_Vector2"
+.Fn SG_VECTOR2 "SG_Real x" "SG_Real y"
 .Pp
-.Ft "void"
-.Fn SG_FooInit "SG_Node *parent" "const char *name"
+.Ft "SG_Vector"
+.Fn SG_VECTOR "SG_Real x" "SG_Real y" "SG_Real z"
+.Pp
+.Ft "SG_Vector4"
+.Fn SG_VECTOR4 "SG_Real x" "SG_Real y"
+.Pp
+.Ft "SG_Vector2"
+.Fn SG_MIRROR2 "SG_Vector2 v"
+.Pp
+.Ft "SG_Vector"
+.Fn SG_MIRROR "SG_Vector v"
+.Pp
+.Ft "SG_Vector4"
+.Fn SG_MIRROR4 "SG_Vector4 v"
 .nr nS 0
 .Pp
 The
