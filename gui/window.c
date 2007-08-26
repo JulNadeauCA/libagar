@@ -291,6 +291,8 @@ static void
 Shown(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
+	AG_SizeReq r;
+	AG_SizeAlloc a;
 
 	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
 		AG_WindowFocus(win);
@@ -301,23 +303,24 @@ Shown(AG_Event *event)
 		agView->winModal[agView->nModal] = win;
 		agView->nModal++;
 	}
-
 	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
-		AG_SizeReq rWin;
-		AG_SizeAlloc aWin;
-
-		AG_WidgetSizeReq(win, &rWin);
-		if (rWin.w > agView->w) { rWin.w = agView->w; }
-		if (rWin.h > agView->h) { rWin.h = agView->h; }
-		aWin.x = 0;
-		aWin.y = 0;
-		aWin.w = rWin.w;
-		aWin.h = rWin.h;
-		AG_WidgetSizeAlloc(win, &aWin);
-
+		AG_WidgetSizeReq(win, &r);
+		if (r.w > agView->w) { r.w = agView->w; }
+		if (r.h > agView->h) { r.h = agView->h; }
+		a.x = 0;
+		a.y = 0;
+		a.w = r.w;
+		a.h = r.h;
+		AG_WidgetSizeAlloc(win, &a);
 		AG_WindowApplyAlignment(win, win->alignment);
-		AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
+	} else {
+		a.x = WIDGET(win)->x;
+		a.y = WIDGET(win)->y;
+		a.w = WIDGET(win)->w;
+		a.h = WIDGET(win)->h;
+		AG_WidgetSizeAlloc(win, &a);
 	}
+	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 	AG_PostEvent(NULL, win, "window-shown", NULL);
 }
 
