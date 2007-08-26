@@ -1,7 +1,7 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=	gamemenu \
+SUBDIR=	fixedres \
 	objmgr \
 	focusing \
 	loader \
