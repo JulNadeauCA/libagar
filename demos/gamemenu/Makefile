@@ -1,8 +1,8 @@
 TOP=	../..
 include Makefile.config
 
-PROG=	gamemenu
-SRCS=	gamemenu.c
+PROG=	fixedres
+SRCS=	fixedres.c
 
 CFLAGS+=${AGAR_CFLAGS} -I.
 LIBS+=	${AGAR_LIBS}

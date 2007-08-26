@@ -1,6 +1,4 @@
-/*	$Csoft: gamemenu.c,v 1.6 2005/10/07 07:09:35 vedge Exp $	*/
 /*	Public domain	*/
-
 /*
  * This program demonstrates the use of fixed-size widgets. This is
  * typically used for specialized applications like game menus. Most
@@ -24,14 +22,14 @@ CreateGameMenu(void)
 	AG_Pixmap *px;
 
 	/* Create a fixed-size window with no titlebar or decorations. */
-	win = AG_WindowNewNamed(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS,
-	                        "game-menu");
+	win = AG_WindowNewNamed(AG_WINDOW_PLAIN, "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
+	AG_WindowSetGeometry(win, 0, 480-128, 640, 128);
 
 	/*
 	 * Create a container which allows manual setting of the coordinates
-	 * and geometry of its child widgets. The flags request that this
-	 * container cover the entire window.
+	 * and geometry of its child widgets. The AG_FIXED_EXPAND flag
+	 * requests that the container cover the entire window.
 	 */
 	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
 
@@ -52,8 +50,8 @@ CreateGameMenu(void)
 	 * Create two labels. We don't initially attach the labels to a
 	 * parent, so we must use AG_FixedPut().
 	 */
-	lb1 = AG_LabelNewStatic(NULL, 0, "Sample Game Menu");
-	lb2 = AG_LabelNewStatic(NULL, 0, "Version 1.0");
+	lb1 = AG_LabelNewStatic(NULL, 0, "Fixed Resolution");
+	lb2 = AG_LabelNewStatic(NULL, 0, "Demo");
 	AG_FixedPut(fx, lb1, 20, 32);
 	AG_FixedPut(fx, lb2, 20, 32+agTextFontHeight);
 
@@ -74,11 +72,7 @@ CreateGameMenu(void)
 	AG_FixedMove(fx, btn, 204+192, 48);
 	AG_FixedSize(fx, btn, 32, 32);
 
-	/*
-	 * Set the window geometry manually. This must be called after the
-	 * widgets have been attached.
-	 */
-	AG_WindowSetGeometry(win, 0, 480-128, 640, 128);
+	/* Display the new window. */
 	AG_WindowShow(win);
 }
 
@@ -88,7 +82,7 @@ main(int argc, char *argv[])
 	int c, i, fps = -1;
 	char *s;
 
-	if (AG_InitCore("gamemenu-demo", 0) == -1) {
+	if (AG_InitCore("fixedres-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
