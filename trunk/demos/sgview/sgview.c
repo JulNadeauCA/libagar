@@ -1,6 +1,4 @@
-/*	$Csoft: glview.c,v 1.5 2005/10/08 02:45:25 vedge Exp $	*/
 /*	Public domain	*/
-
 /*
  * This program demonstrates the use of the SG_View widget to
  * display a scene.

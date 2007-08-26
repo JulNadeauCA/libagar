@@ -1,6 +1,4 @@
-/*	$Csoft: glview.c,v 1.5 2005/10/08 02:45:25 vedge Exp $	*/
 /*	Public domain	*/
-
 /*
  * This program uses Agar-SG to display a 3D plot of (a subset of) all
  * linear combinations of 3 arbitrary vectors.

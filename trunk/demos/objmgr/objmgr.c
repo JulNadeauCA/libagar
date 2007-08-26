@@ -1,6 +1,4 @@
-/*	$Csoft: gamemenu.c,v 1.3 2005/10/01 14:19:55 vedge Exp $	*/
 /*	Public domain	*/
-
 /*
  * This application demonstrates the use of the Object Browser that
  * is part of the Agar-DEV library.

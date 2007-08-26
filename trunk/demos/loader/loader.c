@@ -1,6 +1,4 @@
-/*	$Csoft: gamemenu.c,v 1.6 2005/10/07 07:09:35 vedge Exp $	*/
 /*	Public domain	*/
-
 /*
  * This program demonstrates the use of the file loader widget,
  * AG_FileDlg.
