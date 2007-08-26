@@ -1,6 +1,4 @@
-/*	$Csoft: gamemenu.c,v 1.6 2005/10/07 07:09:35 vedge Exp $	*/
 /*	Public domain	*/
-
 /*
  * This application demonstrates the use of the AG_Textbox widget for
  * editing a string.
