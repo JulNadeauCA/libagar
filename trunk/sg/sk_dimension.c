@@ -126,25 +126,11 @@ SK_DimensionSave(SK *sk, void *p, AG_Netbuf *buf)
 }
 
 /*
- * Compute a transformation matrix that will bring us into a reference frame
- * parallel to the (v1,v2) line and translated to the midpoint of v1-v2.
+ * Compute the minimal distance between L and v, and return the
+ * closest point on L into pvC.
  */
-static SG_Matrix
-TransformToAnnotFrame(SK_Dimension *dim, const SG_Vector *v1,
-    const SG_Vector *v2)
-{
-	SG_Matrix T;
-	SG_Vector vd;
-
-	vd = SG_VectorSubp(v1, v2);
-	SG_MatrixIdentityv(&T);
-	SG_MatrixTranslatev(&T, SG_VectorLERP(*v1, *v2, 0.5));
-	SG_MatrixRotateZv(&T, Atan2(vd.y, vd.x));
-	return (T);
-}
-
 static SG_Real
-PointLineDistance(const SG_Vector *v, const SK_Line *L)
+PointLineDistance(const SG_Vector *v, const SK_Line *L, SG_Vector *pvC)
 {
 	SG_Vector p1 = SK_NodeCoords(L->p1);
 	SG_Vector p2 = SK_NodeCoords(L->p2);
@@ -154,11 +140,44 @@ PointLineDistance(const SG_Vector *v, const SK_Line *L)
 
 	u = ( ((v->x - p1.x)*(p2.x - p1.x)) +
               ((v->y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
-	if (u < 0.0 || u > 1.0) {
-		return (HUGE_VAL);
-	}
 	vC = SG_VectorAdd(p1, SG_VectorScale(SG_VectorSubp(&p2,&p1), u));
+	if (pvC != NULL) {
+		SG_CopyVector(pvC, &vC);
+	}
 	return (SG_VectorDistancep(v, &vC));
+}
+
+/*
+ * Map to the dimension's reference frame. Also return the distance between
+ * the two dimensioned entities into d if not NULL.
+ */
+static SG_Matrix
+TransformToAnnotFrame(SK_Dimension *dim, SG_Real *d)
+{
+	SG_Matrix T;
+	SG_Vector v1, v2;
+	SG_Vector vd;
+	
+	if (SK_NodeOfClass(dim->n1, "Line:*") &&
+	    SK_NodeOfClass(dim->n2, "Point:*")) {
+		v2 = SK_NodeCoords(dim->n2);
+		PointLineDistance(&v2, SKLINE(dim->n1), &v1);
+	} else
+	if (SK_NodeOfClass(dim->n1, "Point:*") &&
+	    SK_NodeOfClass(dim->n2, "Line:*")) {
+		v1 = SK_NodeCoords(dim->n1);
+		PointLineDistance(&v1, SKLINE(dim->n2), &v2);
+	} else {
+		v1 = SK_NodeCoords(dim->n1);
+		v2 = SK_NodeCoords(dim->n2);
+	}
+
+	vd = SG_VectorSubp(&v1, &v2);
+	SG_MatrixIdentityv(&T);
+	SG_MatrixTranslatev(&T, SG_VectorLERPp(&v1, &v2, 0.5));
+	SG_MatrixRotateZv(&T, Atan2(vd.y, vd.x));
+	if (d != NULL) { *d = SG_VectorDistancep(&v1, &v2); }
+	return (T);
 }
 
 static SG_Real
@@ -174,11 +193,11 @@ NodeNodeDistance(SK_Node *n1, SK_Node *n2)
 	} else if (SK_NodeOfClass(n1, "Point:*") &&
 	           SK_NodeOfClass(n2, "Line:*")) {
 		v1 = SK_NodeCoords(n1);
-		return PointLineDistance(&v1, SKLINE(n2));
+		return PointLineDistance(&v1, SKLINE(n2), NULL);
 	} else if (SK_NodeOfClass(n1, "Line:*") &&
 	           SK_NodeOfClass(n2, "Point:*")) {
 		v2 = SK_NodeCoords(n2);
-		return PointLineDistance(&v2, SKLINE(n1));
+		return PointLineDistance(&v2, SKLINE(n1), NULL);
 	}
 	return (HUGE_VAL);
 }
@@ -200,26 +219,22 @@ SK_DimensionDraw(void *p, SK_View *skv)
 	SK_Dimension *dim = p;
 	SG_Color cLblBorder = SK_NodeColor(dim, &dim->cLblBorder);
 	SG_Color cLineDim = SK_NodeColor(dim, &dim->cLineDim);
-	SG_Vector v1, v2;
-	SG_Real vLen, wLbl, hLbl;
-	SG_Matrix Tf;
+	SG_Vector vC;
+	SG_Real d, wLbl, hLbl;
+	SG_Matrix Ta;
 	int wText, hText;
 	SG_Real y, x1, x2, e1, e2;
 	SG_Real xPad = ((SG_Real)dim->xPad)*skv->wPixel; 
 	SG_Real yPad = ((SG_Real)dim->yPad)*skv->hPixel;
 
-	if (dim->n1 == NULL || dim->n2 == NULL) {
+	if (dim->n1 == NULL || dim->n2 == NULL)
 		return;
-	}
-	v1 = SK_NodeCoords(dim->n1);
-	v2 = SK_NodeCoords(dim->n2);
-	vLen = SG_VectorDistance(v1, v2);
 
 	glPushMatrix();
 
-	Tf = TransformToAnnotFrame(dim, &v1, &v2);
-	SG_MatrixTransposev(&Tf);
-	SG_MultMatrixGL(&Tf);
+	Ta = TransformToAnnotFrame(dim, &d);
+	SG_MatrixTransposev(&Ta);
+	SG_MultMatrixGL(&Ta);
 
 	GetLabelText(dim, text, sizeof(text));
 	AG_TextSize(text, &wText, &hText);
@@ -236,8 +251,8 @@ SK_DimensionDraw(void *p, SK_View *skv)
 	y = dim->vLbl.y + hLbl/2.0;
 	x1 = dim->vLbl.x - xPad;
 	x2 = dim->vLbl.x + wLbl + xPad;
-	e1 = -vLen/2.0;
-	e2 = +vLen/2.0;
+	e1 = -d/2.0;
+	e2 = +d/2.0;
 	if ((x1 - e1) > 0.0) {
 		SG_Vertex2(e1, y);
 		SG_Vertex2(x1, y);
@@ -323,16 +338,14 @@ int
 SK_DimensionMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 {
 	SK_Dimension *dim = p;
-	SG_Vector v1, v2, v;
-	SG_Matrix Tf, TfInv;
+	SG_Vector v;
+	SG_Matrix Ta, TaInv;
 
-	v1 = SK_NodeCoords(dim->n1);
-	v2 = SK_NodeCoords(dim->n2);
-	Tf = TransformToAnnotFrame(dim, &v1, &v2);
-	v = SG_MatrixMultVectorp(&Tf, &dim->vLbl);
+	Ta = TransformToAnnotFrame(dim, NULL);
+	v = SG_MatrixMultVectorp(&Ta, &dim->vLbl);
 	SG_VectorAddv(&v, vel);
-	TfInv = SG_MatrixInvertCramerp(&Tf);
-	dim->vLbl = SG_MatrixMultVectorp(&TfInv, &v);
+	TaInv = SG_MatrixInvertCramerp(&Ta);
+	dim->vLbl = SG_MatrixMultVectorp(&TaInv, &v);
 	return (0);
 }
 
@@ -495,15 +508,12 @@ ToolMouseMotion(void *self, SG_Vector pos, SG_Vector vel, int btn)
 	if (t->curDim != NULL &&
 	    t->curDim->n1 != NULL &&
 	    t->curDim->n2 != NULL) {
-		SG_Vector v1, v2, vDim;
-		SG_Matrix Tf, TfInv;
+		SG_Vector vDim;
+		SG_Matrix Ta, TaInv;
 
-		v1 = SK_NodeCoords(t->curDim->n1);
-		v2 = SK_NodeCoords(t->curDim->n2);
-
-		Tf = TransformToAnnotFrame(t->curDim, &v1, &v2);
-		TfInv = SG_MatrixInvertCramerp(&Tf);
-		vDim = SG_MatrixMultVectorp(&TfInv, &pos);
+		Ta = TransformToAnnotFrame(t->curDim, NULL);
+		TaInv = SG_MatrixInvertCramerp(&Ta);
+		vDim = SG_MatrixMultVectorp(&TaInv, &pos);
 	   	t->curDim->vLbl = vDim;
 	}
 	return (0);
