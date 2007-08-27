@@ -399,6 +399,7 @@ SK_Save(void *obj, AG_Netbuf *buf)
 	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
 	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
 		AG_WriteUint32(buf, (Uint32)ct->type);
+		AG_WriteUint32(buf, (Uint32)ct->uType);
 		SK_WriteRef(buf, ct->n1);
 		SK_WriteRef(buf, ct->n2);
 		switch (ct->type) {
@@ -542,6 +543,7 @@ SK_Load(void *obj, AG_Netbuf *buf)
 	for (i = 0; i < count; i++) {
 		ct = AG_Malloc(sizeof(SK_Constraint), M_SG);
 		ct->type = (enum sk_constraint_type)AG_ReadUint32(buf);
+		ct->uType = (enum sk_constraint_type)AG_ReadUint32(buf);
 		ct->n1 = SK_ReadRef(buf, sk, NULL);
 		ct->n2 = SK_ReadRef(buf, sk, NULL);
 		switch (ct->type) {
