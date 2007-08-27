@@ -71,16 +71,8 @@ PtFromDistantLine(SK_Constraint *ct, void *self, void *other)
 	mag = SG_VectorDistance(p2, p1);
 	u = ( ((pOrig.x - p1.x)*(p2.x - p1.x)) +
 	      ((pOrig.y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
-	if (u < 0.0 || u > 1.0) {
-		if (ct->ct_distance == 0.0) {
-			return (0);
-		} else {
-			AG_SetError("u = %f", u);
-			return (-1);
-		}
-	} else {
-		v = SG_VectorAdd(p1, SG_VectorScalep(&vd,u));
-	}
+	
+	v = SG_VectorAdd(p1, SG_VectorScalep(&vd,u));
 	if (ct->ct_distance == 0.0) {
 		SK_Identity(self);
 		SK_Translatev(self, &v);
