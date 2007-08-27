@@ -66,6 +66,18 @@ const char *agBlendFuncNames[] = {
 	NULL
 };
 
+const AG_ObjectOps agDisplayOps = {
+	"AG_Display",
+	sizeof(AG_Display),
+	{ 0,0 },
+	NULL,	/* init */
+	NULL,	/* reinit */
+	NULL,	/* destroy */
+	NULL,	/* load */
+	NULL,	/* save */
+	NULL	/* edit */
+};
+
 int
 AG_ViewInit(int w, int h, int bpp, Uint flags)
 {
@@ -87,6 +99,8 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 	if (flags & AG_VIDEO_NOFRAME) { screenflags |= SDL_NOFRAME; }
 
 	agView = Malloc(sizeof(AG_Display), M_VIEW);
+	AG_ObjectInit(agView, "_agView", &agDisplayOps);
+
 	agView->winop = AG_WINOP_NONE;
 	agView->ndirty = 0;
 	agView->maxdirty = 4;

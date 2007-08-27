@@ -20,20 +20,18 @@ struct ag_window;
 TAILQ_HEAD(ag_windowq, ag_window);
 
 typedef struct ag_display {
+	struct ag_object obj;
+
 	SDL_Surface *v;			/* Video surface */
 	SDL_Surface *stmpl;		/* Reference surface */
-
 	int w, h;			/* Display geometry */
 	int depth;			/* Depth in bpp */
 	int opengl;			/* OpenGL rendering? (if available) */
-
 	int rCur;			/* Estimated refresh delay in ms */
 	Uint rNom;			/* Nominal refresh delay */
-
 	SDL_Rect *dirty;		/* Video rectangles to update */
 	Uint	 ndirty;
 	Uint  maxdirty;
-
 	AG_Mutex lock_gl;		/* Lock on OpenGL context */
 	AG_Mutex lock;
 	struct ag_windowq windows;	/* Windows in view */
@@ -43,7 +41,6 @@ typedef struct ag_display {
 	struct ag_window *winSelected;	/* Window being moved/resized/etc */
 	struct ag_window **winModal;	/* Modal window stack */
 	Uint nModal;
-
 	enum {
 		AG_WINOP_NONE,
 		AG_WINOP_MOVE,			/* Window movement */

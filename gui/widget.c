@@ -105,26 +105,45 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 	char node_name[AG_OBJECT_PATH_MAX];
 	void *rv;
 	char *s;
-	AG_Object *child;
+	AG_Object *chld;
 
 	strlcpy(node_name, name, sizeof(node_name));
-
 	if ((s = strchr(node_name, '/')) != NULL) {
 		*s = '\0';
 	}
-	TAILQ_FOREACH(child, &parent->children, cobjs) {
-		if (strcmp(child->name, node_name) != 0)
-			continue;
+	if (AG_ObjectIsClass(parent, "AG_Display:*")) {
+		AG_Display *disp = (AG_Display *)parent;
+		AG_Window *win;
 
-		if ((s = strchr(name, '/')) != NULL) {
-			rv = WidgetFindPath(child, &s[1]);
-			if (rv != NULL) {
-				return (rv);
-			} else {
-				return (NULL);
+		TAILQ_FOREACH(win, &disp->windows, windows) {
+			if (strcmp(AGOBJECT(win)->name, node_name) != 0) {
+				continue;
 			}
+			if ((s = strchr(name, '/')) != NULL) {
+				rv = WidgetFindPath(AGOBJECT(win), &s[1]);
+				if (rv != NULL) {
+					return (rv);
+				} else {
+					return (NULL);
+				}
+			}
+			return (win);
 		}
-		return (child);
+	} else {
+		TAILQ_FOREACH(chld, &parent->children, cobjs) {
+			if (strcmp(chld->name, node_name) != 0) {
+				continue;
+			}
+			if ((s = strchr(name, '/')) != NULL) {
+				rv = WidgetFindPath(chld, &s[1]);
+				if (rv != NULL) {
+					return (rv);
+				} else {
+					return (NULL);
+				}
+			}
+			return (chld);
+		}
 	}
 	return (NULL);
 }

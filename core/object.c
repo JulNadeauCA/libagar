@@ -166,7 +166,7 @@ AG_ObjectNew(void *parent, const char *name, const AG_ObjectOps *ops)
 
 /* Check if an object's class matches the given pattern (general case). */
 static int
-ObjectIsClassGeneral(AG_Object *obj, const char *cn)
+ObjectIsClassGeneral(const AG_Object *obj, const char *cn)
 {
 	char cname[AG_OBJECT_TYPE_MAX], *cp, *c;
 	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
@@ -187,9 +187,9 @@ ObjectIsClassGeneral(AG_Object *obj, const char *cn)
 
 /* Check if an object's class name matches the given pattern. */
 int
-AG_ObjectIsClass(void *p, const char *cname)
+AG_ObjectIsClass(const void *p, const char *cname)
 {
-	AG_Object *obj = p;
+	const AG_Object *obj = p;
 	const char *c;
 	int nwild = 0;
 
