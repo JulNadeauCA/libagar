@@ -449,6 +449,16 @@ The window is no longer visible.
 The
 .Dv AG_WINDOW_MODAL
 flag is set and the user has clicked outside of the window area.
+.It Fn window-user-resize "int w" "int h"
+The window has been resized by the user.
+Calls to
+.Fn AG_WindowSetGeometry
+will not raise this event.
+.It Fn window-user-move "int x" "int y"
+The window has been displaced by the user.
+Calls to
+.Fn AG_WindowSetGeometry
+will not raise this event.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

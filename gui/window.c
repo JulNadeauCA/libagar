@@ -568,6 +568,8 @@ Move(AG_Window *win, SDL_MouseMotionEvent *motion)
 			SDL_UpdateRects(agView->v, 1, &rfill2);
 		}
 	}
+	AG_PostEvent(NULL, win, "window-user-move", "%d,%d",
+	    WIDGET(win)->x, WIDGET(win)->y);
 }
 
 /*
@@ -1155,6 +1157,7 @@ Resize(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 		break;
 	}
 	AG_WindowSetGeometry(win, x, y, w, h);
+	AG_PostEvent(NULL, win, "window-user-resize", "%d,%d", w, h);
 }
 
 void
