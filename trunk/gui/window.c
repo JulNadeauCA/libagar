@@ -102,16 +102,13 @@ out:
 void
 AG_WindowInit(void *p, const char *name, int flags)
 {
-	char wname[AG_OBJECT_NAME_MAX];
 	AG_Window *win = p;
 	int titlebar_flags = 0;
 	AG_Event *ev;
 	int i;
 
-	strlcpy(wname, "win-", sizeof(wname));
-	strlcat(wname, (name != NULL) ? name : "generic", sizeof(wname));
 	AG_WidgetInit(win, &agWindowOps, 0);
-	AG_ObjectSetName(win, wname);
+	AG_ObjectSetName(win, (name != NULL) ? name : "win-generic");
 	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
 	win->flags = flags;
 	win->visible = 0;
