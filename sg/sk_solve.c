@@ -130,11 +130,15 @@ restart:
 			    SK_NodeInCluster(ct->n2, clMerged))
 				count++;
 		}
+#if 0
 		printf("clusters %p and %p share %d nodes\n", cl, clMerged,
 		    count);
+#endif
 		if (count == 2) {
+#if 0
 			printf("merging constrained clusters %p and %p\n",
 			    cl, clMerged);
+#endif
 			SK_CopyCluster(cl, clMerged);
 			TAILQ_REMOVE(&sk->clusters, cl, clusters);
 			SK_FreeCluster(cl);
@@ -307,8 +311,10 @@ merge_rings:
 			}
 		}
 		if (count == 2) {
+#if 0
 			printf("%s: shared by %u clusters %p and %p\n",
 			    SK_NodeName(node), count, clPair[0], clPair[1]);
+#endif
 			for (j = 0; j < 2; j++) {
 				for (i = 0; i < nRing; i++) {
 					if (clRing[i] == clPair[j])
@@ -324,10 +330,10 @@ merge_rings:
 	}
 	if (nRing == 3) {
 		SK_Cluster *clMerged;
-
+#if 0
 		printf("found constrained cluster ring: %p-%p-%p\n",
 		    clRing[0], clRing[1], clRing[2]);
-
+#endif
 		clMerged = Malloc(sizeof(SK_Cluster), M_SG);
 		SK_InitCluster(clMerged, SK_GenClusterName(sk));
 		for (i = 0; i < 3; i++) {
