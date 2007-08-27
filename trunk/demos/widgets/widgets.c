@@ -15,6 +15,7 @@ CreateWindow(void)
 {
 	AG_Window *win;
 	AG_HBox *hbox;
+	AG_VBox *vbox;
 	AG_Pane *pane;
 	AG_Combo *com;
 	AG_UCombo *ucom;
@@ -67,12 +68,29 @@ CreateWindow(void)
 			AG_ButtonNew(hbox, 0, "x");
 	}
 
-	/*
-	 * The Checkbox widget is a check box. It can bind to a boolean
-	 * (integer) value or a bitmask.
-	 */
-	AG_CheckboxNew(div1, 0, "Checkbox 1");
-	AG_CheckboxNew(div1, 0, "Checkbox 2");
+
+	hbox = AG_HBoxNew(div1, AG_HBOX_HFILL);
+	{
+		/* The Radio checkbox is a group of radio buttons. */
+		{
+			const char *radioItems[] = {
+				"Radio1",
+				"Radio2",
+				NULL
+			};
+			AG_RadioNew(hbox, AG_RADIO_EXPAND, radioItems);
+		}
+	
+		vbox = AG_VBoxNew(hbox, 0);
+		{
+			/*
+			 * The Checkbox widget can bind to boolean values
+			 * and bitmasks.
+			 */
+			AG_CheckboxNew(vbox, 0, "Checkbox 1");
+			AG_CheckboxNew(vbox, 0, "Checkbox 2");
+		}
+	}
 
 	/* Separator simply renders horizontal or vertical line. */
 	AG_SeparatorNew(div1, AG_SEPARATOR_HORIZ);
