@@ -191,7 +191,7 @@ void		 AG_ObjectGetArchivePath(void *, char *, size_t)
 void		 AG_ObjectSetOps(void *, const void *);
 
 __inline__ SDL_Surface	*AG_ObjectIcon(void *);
-__inline__ int		 AG_ObjectIsClass(void *, const char *);
+__inline__ int		 AG_ObjectIsClass(const void *, const char *);
 
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
