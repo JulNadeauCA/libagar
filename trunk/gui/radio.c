@@ -45,9 +45,6 @@ enum {
 	KEYDOWN_EVENT
 };
 
-static void radio_event(AG_Event *);
-static void mousemotion(AG_Event *);
-
 AG_Radio *
 AG_RadioNew(void *parent, Uint flags, const char **items)
 {
@@ -57,43 +54,6 @@ AG_RadioNew(void *parent, Uint flags, const char **items)
 	AG_RadioInit(rad, flags, items);
 	AG_ObjectAttach(parent, rad);
 	return (rad);
-}
-
-void
-AG_RadioInit(AG_Radio *rad, Uint flags, const char **items)
-{
-	Uint wflags = AG_WIDGET_FOCUSABLE;
-	const char *s, **itemsp = items;
-	int i;
-
-	if (flags & AG_RADIO_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_RADIO_VFILL) { wflags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(rad, &agRadioOps, wflags);
-	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &rad->value);
-
-	rad->flags = flags;
-	rad->value = -1;
-	rad->max_w = 0;
-	rad->oversel = -1;
-
-	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
-		;;
-	rad->labels = Malloc(sizeof(int)*rad->nitems, M_WIDGET);
-	for (i = 0; i < rad->nitems; i++) {
-		SDL_Surface *su;
-
-		AG_TextColor(RADIO_TXT_COLOR);
-		su = AG_TextRender(_(items[i]));
-		rad->labels[i] = AG_WidgetMapSurface(rad, su);
-		if (su->w > rad->max_w)
-			rad->max_w = su->w;
-	}
-
-	AG_SetEvent(rad, "window-mousebuttondown", radio_event, "%i",
-	    MOUSEBUTTONDOWN_EVENT);
-	AG_SetEvent(rad, "window-keydown", radio_event, "%i", KEYDOWN_EVENT);
-	AG_SetEvent(rad, "window-mousemotion", mousemotion, NULL);
 }
 
 static const int highlight[18] = {
@@ -201,7 +161,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	AG_Radio *rad = AG_SELF();
 	int x = AG_INT(1);
@@ -211,49 +171,101 @@ mousemotion(AG_Event *event)
 }
 
 static void
-radio_event(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Radio *rad = AG_SELF();
 	AG_WidgetBinding *valueb;
-	int type = AG_INT(1);
-	int button, keysym;
-	int y;
-	int *sel;
+	int button = AG_INT(1);
+	int y = AG_INT(3);
+	int *sel, selNew = -1;
 
 	valueb = AG_WidgetGetBinding(rad, "value", &sel);
-	switch (type) {
-	case MOUSEBUTTONDOWN_EVENT:
-		button = AG_INT(2);
-		if (button == SDL_BUTTON_LEFT) {
-			y = AG_INT(4) - YPADDING;
-			*sel = (y/(RADIUS*2 + YSPACING));
-			AG_WidgetFocus(rad);
+	switch (button) {
+	case SDL_BUTTON_LEFT:
+		selNew = ((y - YPADDING)/(RADIUS*2 + YSPACING));
+		if (selNew >= rad->nitems) {
+			selNew = rad->nitems - 1;
+		} else if (selNew < 0) {
+			selNew = 0;
 		}
-		break;
-	case KEYDOWN_EVENT:
-		keysym = AG_INT(2);
-		switch ((SDLKey)keysym) {
-		case SDLK_DOWN:
-			if (++(*sel) > rad->nitems)
-				*sel = 0;
-			break;
-		case SDLK_UP:
-			if (--(*sel) < 0)
-				*sel = 0;
-			break;
-		default:
-			break;
-		}
+		AG_WidgetFocus(rad);
 		break;
 	default:
-		return;
+		break;
 	}
-	if (*sel >= rad->nitems) {
-		*sel = rad->nitems - 1;
+	if (selNew != -1 && selNew != *sel) {
+		*sel = selNew;
+		AG_PostEvent(NULL, rad, "radio-changed", "%i", *sel);
 	}
-	AG_PostEvent(NULL, rad, "radio-changed", "%i", *sel);
 	AG_WidgetUnlockBinding(valueb);
 }
+
+static void
+KeyDown(AG_Event *event)
+{
+	AG_Radio *rad = AG_SELF();
+	AG_WidgetBinding *valueb;
+	int keysym = AG_INT(1);
+	int *sel, selNew = -1;
+
+	valueb = AG_WidgetGetBinding(rad, "value", &sel);
+	switch ((SDLKey)keysym) {
+	case SDLK_DOWN:
+		selNew = *sel;
+		if (++selNew >= rad->nitems)
+			selNew = rad->nitems-1;
+		break;
+	case SDLK_UP:
+		selNew = *sel;
+		if (--selNew < 0)
+			selNew = 0;
+		break;
+	default:
+		break;
+	}
+	if (selNew != -1 && selNew != *sel) {
+		*sel = selNew;
+		AG_PostEvent(NULL, rad, "radio-changed", "%i", *sel);
+	}
+	AG_WidgetUnlockBinding(valueb);
+}
+
+void
+AG_RadioInit(AG_Radio *rad, Uint flags, const char **items)
+{
+	Uint wflags = AG_WIDGET_FOCUSABLE;
+	const char *s, **itemsp = items;
+	int i;
+
+	if (flags & AG_RADIO_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_RADIO_VFILL) { wflags |= AG_WIDGET_VFILL; }
+
+	AG_WidgetInit(rad, &agRadioOps, wflags);
+	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &rad->value);
+
+	rad->flags = flags;
+	rad->value = -1;
+	rad->max_w = 0;
+	rad->oversel = -1;
+
+	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
+		;;
+	rad->labels = Malloc(sizeof(int)*rad->nitems, M_WIDGET);
+	for (i = 0; i < rad->nitems; i++) {
+		SDL_Surface *su;
+
+		AG_TextColor(RADIO_TXT_COLOR);
+		su = AG_TextRender(_(items[i]));
+		rad->labels[i] = AG_WidgetMapSurface(rad, su);
+		if (su->w > rad->max_w)
+			rad->max_w = su->w;
+	}
+
+	AG_SetEvent(rad, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(rad, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(rad, "window-mousemotion", MouseMotion, NULL);
+}
+
 
 const AG_WidgetOps agRadioOps = {
 	{
