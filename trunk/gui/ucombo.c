@@ -81,40 +81,36 @@ Expand(AG_Event *event)
 {
 	AG_UCombo *com = AG_PTR(1);
 	int expand = AG_INT(2);
-	AG_SizeAlloc aPanel;
 	AG_SizeReq rList;
+	int x, y, w, h;
 
 	if (expand) {
-		com->panel = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE|
-		                          AG_WINDOW_NOBORDERS);
+		com->panel = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
 		AG_WindowSetPadding(com->panel, 0, 0, 0, 0);
 		AG_ObjectAttach(com->panel, com->list);
 	
 		if (com->saved_w > 0) {
-			aPanel.w = com->saved_w;
-			aPanel.h = com->saved_h;
+			w = com->saved_w;
+			h = com->saved_h;
 		} else {
+			/* XXX */
 			AG_TlistPrescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
 			AG_WidgetSizeReq(com->list, &rList);
-			aPanel.w = rList.w;
-			aPanel.h = rList.h;
+			w = rList.w + agColorsBorderSize*2;
+			h = rList.h + agColorsBorderSize*2;
 		}
-		aPanel.x = WIDGET(com)->cx;
-		aPanel.y = WIDGET(com)->cy;
+		x = WIDGET(com)->cx;
+		y = WIDGET(com)->cy;
 
-		if (aPanel.x+aPanel.w > agView->w)
-			aPanel.w = agView->w - aPanel.x;
-		if (aPanel.y+aPanel.h > agView->h)
-			aPanel.h = agView->h - aPanel.y;
-		if (aPanel.w < 4 || aPanel.h < 4) {
+		if (x+w > agView->w) { w = agView->w - x; }
+		if (y+h > agView->h) { h = agView->h - y; }
+		if (w < 4 || h < 4) {
 			Collapse(com);
 			return;
 		}
-		AG_WidgetSizeAlloc(com->panel, &aPanel);
-
 		AG_SetEvent(com->panel, "window-modal-close",
 		    ModalClose, "%p", com);
-		AG_WindowUpdate(com->panel);
+		AG_WindowSetGeometry(com->panel, x, y, w, h);
 		AG_WindowShow(com->panel);
 	} else {
 		Collapse(com);
