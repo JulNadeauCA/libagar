@@ -1229,10 +1229,12 @@ SizeRequest(void *p, AG_SizeReq *r)
 		win->minh = r->h;
 	} else {
 		win->minw = win->lPad + win->rPad + agColorsBorderSize*2;
-		win->minh = win->tPad + win->bPad + agColorsBorderSize*2;
+		win->minh = win->tPad + win->bPad + agColorsBorderSize;
 		if (win->tbar != NULL) {
 			win->minw = MAX(win->minw,rTbar.w);
 			win->minh += rTbar.h;
+		} else {
+			win->minh += agColorsBorderSize;
 		}
 	}
 	ClampToView(win);
@@ -1258,6 +1260,8 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
 		wAvail -= agColorsBorderSize*2;
 		hAvail -= agColorsBorderSize;
+		if (win->tbar == NULL)
+			hAvail -= agColorsBorderSize;
 	}
 
 	/* Calculate the space occupied by non-fill widgets. */
