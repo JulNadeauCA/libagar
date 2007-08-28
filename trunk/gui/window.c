@@ -982,10 +982,6 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 	oy = WIDGET(win)->y;
 	ow = WIDGET(win)->w;
 	oh = WIDGET(win)->h;
-	aWin.x = (x >= 0) ? x : ox;
-	aWin.y = (y >= 0) ? y : oy;
-	aWin.w = (w >= 0) ? w : ow;
-	aWin.h = (h >= 0) ? h : oh;
 	new = ((WIDGET(win)->x == -1 || WIDGET(win)->y == -1));
 
 	if (w == -1 || h == -1) {
@@ -1000,19 +996,26 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 	if (nh < win->minh) { nh = win->minh; }
 
 	/* Limit the window to the view boundaries. */
-	if ( (x + w) > agView->w ) {
-		aWin.x = ox;
-		aWin.w = ow;
+	aWin.w = nw;
+	if ( (x + nw) > agView->w ) {
+		aWin.x = agView->w - nw;
 	} else {
 		aWin.x = (x == -1) ? WIDGET(win)->x : x;
-		aWin.w = nw;
 	}
-	if ( (y + h) > agView->h ) {
-		aWin.y = oy;
-		aWin.h = oh;
+	if (aWin.x < 0) {
+		aWin.x = 0;
+		aWin.w = agView->w;
+	}
+
+	aWin.h = nh;
+	if ( (y + nh) > agView->h ) {
+		aWin.y = agView->h - nh;
 	} else {
 		aWin.y = (y == -1) ? WIDGET(win)->y : y;
-		aWin.h = nh;
+	}
+	if (aWin.y < 0) {
+		aWin.y = 0;
+		aWin.h = agView->h;
 	}
 	
 	/* Size the widgets and update their coordinates. */
@@ -1023,10 +1026,8 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 			aWin.w = ow;
 			aWin.h = oh;
 			AG_WidgetSizeAlloc(win, &aWin);
-			goto fail;
-		} else {
-			goto fail;
 		}
+		goto fail;
 	}
 	AG_WidgetUpdateCoords(win, aWin.x, aWin.y);
 
