@@ -87,7 +87,7 @@ AG_CheckboxInit(AG_Checkbox *cbox, Uint flags, const char *label)
 	AG_WidgetBind(cbox, "state", AG_WIDGET_BOOL, &cbox->state);
 
 	cbox->state = 0;
-	cbox->labelTxt = Strdup(label);
+	cbox->labelTxt = (label != NULL) ? Strdup(label) : NULL;
 	cbox->label = -1;
 	
 	AG_SetEvent(cbox, "window-mousebuttondown", mousebuttondown, NULL);
@@ -163,6 +163,9 @@ Draw(void *obj)
 	}
 	AG_WidgetUnlockBinding(stateb);
 
+	if (cbox->labelTxt == NULL || cbox->labelTxt[0] == '\0') {
+		return;
+	}
 	if (cbox->label == -1) {
 		AG_TextColor(CHECKBOX_TXT_COLOR);
 		cbox->label = AG_WidgetMapSurface(cbox,

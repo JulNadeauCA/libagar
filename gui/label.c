@@ -235,7 +235,8 @@ AG_LabelInit(AG_Label *lbl, enum ag_label_type type, Uint flags,
 	AG_WidgetInit(lbl, &agLabelOps, wflags);
 	lbl->type = type;
 	lbl->flags = flags;
-	lbl->text = (flags & AG_LABEL_NODUP) ? (char *)s : Strdup(s);
+	lbl->text = (flags & AG_LABEL_NODUP) ? (char *)s :
+	            (s != NULL ? Strdup(s) : NULL);
 	lbl->surface = -1;
 	lbl->surfaceCont = -1;
 	lbl->lPad = 2;
@@ -506,6 +507,9 @@ DrawPolled(AG_Label *label)
 	char *fmtp;
 	int i, ri = 0;
 
+	if (label->text == NULL || label->text[0] == '\0') {
+		return;
+	}
 	s[0] = '\0';
 	s2[0] = '\0';
 
