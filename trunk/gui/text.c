@@ -1204,6 +1204,11 @@ AG_TextSize(const char *text, int *w, int *h)
 {
 	Uint32 *ucs4;
 
+	if (text == NULL || text[0] == '\0') {
+		if (w != NULL) { *w = 0; }
+		if (h != NULL) { *h = 0; }
+		return;
+	}
 #ifdef UTF8
 	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
 #else

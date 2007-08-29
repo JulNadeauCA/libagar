@@ -253,9 +253,12 @@ Draw(void *p)
 			AG_PopTextState();
 		}
 	}
+	if (bu->surface == -1)
+		return;
+
 	wLbl = WSURFACE(bu,bu->surface)->w;
 	hLbl = WSURFACE(bu,bu->surface)->h;
- 
+
 	switch (bu->justify) {
 	case AG_TEXT_LEFT:
 		x = bu->lPad;
@@ -268,7 +271,6 @@ Draw(void *p)
 		break;
 	}
 	y = WIDGET(bu)->h/2 - hLbl/2;
-	
 	if (pressed) {
 		x++;
 		y++;
