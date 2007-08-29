@@ -291,6 +291,7 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	if (nb->sel_tab != NULL) {
 		AG_WidgetHiddenRecursive(nb->sel_tab);
 		AG_ObjectDetach(nb->sel_tab);
+		OBJECT(nb->sel_tab)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
 	}
 	if (tab == NULL) {
 		nb->sel_tab = NULL;
