@@ -32,6 +32,7 @@
 #include "cursors.h"
 #include "menu.h"
 #include "primitive.h"
+#include "notebook.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -128,6 +129,24 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 				}
 			}
 			return (win);
+		}
+	} else if (AG_ObjectIsClass(parent, "AG_Widget:AG_Notebook:*")) {
+		AG_Notebook *book = (AG_Notebook *)parent;
+		AG_NotebookTab *tab;
+
+		TAILQ_FOREACH(tab, &book->tabs, tabs) {
+			if (strcmp(OBJECT(tab)->name, node_name) != 0) {
+				continue;
+			}
+			if ((s = strchr(name, '/')) != NULL) {
+				rv = WidgetFindPath(OBJECT(tab), &s[1]);
+				if (rv != NULL) {
+					return (rv);
+				} else {
+					return (NULL);
+				}
+			}
+			return (tab);
 		}
 	} else {
 		TAILQ_FOREACH(chld, &parent->children, cobjs) {
