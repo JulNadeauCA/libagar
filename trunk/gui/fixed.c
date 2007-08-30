@@ -171,8 +171,8 @@ AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 	AG_WidgetSizeReq(chld, &r);
 	a.w = r.w;
 	a.h = r.h;
-	a.x = x;
-	a.y = y;
+	a.x = (x == -1) ? chld->x : x;
+	a.y = (y == -1) ? chld->y : y;
 	AG_WidgetSizeAlloc(chld, &a);
 	UpdateWindow(fx);
 }
@@ -183,8 +183,8 @@ AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 	AG_Widget *chld = p;
 	AG_SizeAlloc a;
 
-	a.w = w;
-	a.h = h;
+	a.w = (w == -1) ? chld->w : w;
+	a.h = (h == -1) ? chld->h : h;
 	a.x = chld->x;
 	a.y = chld->y;
 	AG_WidgetSizeAlloc(chld, &a);
