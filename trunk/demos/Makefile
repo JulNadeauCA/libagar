@@ -9,7 +9,8 @@ SUBDIR=	fixedres \
 	textbox \
 	widgets \
 	maximized \
-	objprops
+	objprops \
+	unitconv
 
 SUBDIR+=sgview \
 	linear \
