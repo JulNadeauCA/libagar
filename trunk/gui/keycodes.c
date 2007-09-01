@@ -224,7 +224,7 @@ InputCompose(AG_Textbox *tbox, Uint32 key, Uint32 *ins)
 
 static int
 InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
-    Uint32 uch)
+    Uint32 ch)
 {
 	extern int agKbdUnicode;			/* input/kbd.c */
 	AG_WidgetBinding *stringb;
@@ -233,6 +233,10 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	char *utf8;
 	Uint32 ins[2];
 	int i, nchars;
+	Uint32 uch = ch;
+
+	if (uch == '\r')
+		uch = '\n';
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
 	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
@@ -514,6 +518,9 @@ InsertASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	len = strlen(s);
 	ch = (char)InputApplyModifiers((Uint32)keysym, keymod);
+	if (ch == '\r') {
+		ch = '\n';
+	}
 #ifdef DEBUG
 	if (tbox->pos < 0 || tbox->pos > len)
 		fatal("bad position");
