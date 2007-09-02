@@ -123,14 +123,14 @@ SG_SetVector4(SG_Vector4 *v, SG_Real x, SG_Real y, SG_Real z, SG_Real w)
 }
 
 void
-SG_CopyVector2(SG_Vector2 *vDst, const SG_Vector2 *vSrc)
+SG_VectorCopy2(SG_Vector2 *vDst, const SG_Vector2 *vSrc)
 {
 	vDst->x = vSrc->x;
 	vDst->y = vSrc->y;
 }
 
 void
-SG_CopyVector(SG_Vector *vDst, const SG_Vector *vSrc)
+SG_VectorCopy(SG_Vector *vDst, const SG_Vector *vSrc)
 {
 	vDst->x = vSrc->x;
 	vDst->y = vSrc->y;
@@ -138,7 +138,7 @@ SG_CopyVector(SG_Vector *vDst, const SG_Vector *vSrc)
 }
 
 void
-SG_CopyVector4(SG_Vector4 *vDst, const SG_Vector4 *vSrc)
+SG_VectorCopy4(SG_Vector4 *vDst, const SG_Vector4 *vSrc)
 {
 	vDst->x = vSrc->x;
 	vDst->y = vSrc->y;
@@ -1048,7 +1048,7 @@ SG_VectorRotate2v(SG_Vector2 *v, SG_Real theta)
 
 	r.x = c*v->x - s*v->y;
 	r.y = s*v->x + c*v->y;
-	SG_CopyVector2(v, &r);
+	SG_VectorCopy2(v, &r);
 }
 
 void
@@ -1211,6 +1211,17 @@ SG_VectorLERP4p(SG_Vector4 *v1, SG_Vector4 *v2, SG_Real t)
 	v.z = v1->z + (v2->z - v1->z)*t;
 	v.w = v1->w + (v2->w - v1->w)*t;
 	return (v);
+}
+
+SG_Vector
+SG_VectorElemPow(SG_Vector v, SG_Real pow)
+{
+	SG_Vector r;
+
+	r.x = Pow(v.x, pow);
+	r.y = Pow(v.y, pow);
+	r.z = Pow(v.z, pow);
+	return (r);
 }
 
 SG_Vector2
