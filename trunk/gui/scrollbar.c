@@ -86,8 +86,8 @@ AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type, Uint flags)
 	AG_SetEvent(sb, "window-mousemotion", mousemotion, NULL);
 }
 
-static __inline__ int
-BarIsVisible(AG_Scrollbar *sb)
+int
+AG_ScrollbarVisible(AG_Scrollbar *sb)
 {
 	int min, max;
 
@@ -141,7 +141,7 @@ mousebuttonup(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
-	if (!BarIsVisible(sb)) {
+	if (!AG_ScrollbarVisible(sb)) {
 		if (OBJECT(sb)->parent != NULL)
 			AG_ForwardEvent(NULL, OBJECT(sb)->parent, event);
 		return;
@@ -162,7 +162,7 @@ mousebuttondown(AG_Event *event)
 	if (button != SDL_BUTTON_LEFT) {
 		return;
 	}
-	if (!BarIsVisible(sb)) {
+	if (!AG_ScrollbarVisible(sb)) {
 		if (OBJECT(sb)->parent != NULL)
 			AG_ForwardEvent(NULL, OBJECT(sb)->parent, event);
 		return;
@@ -202,12 +202,13 @@ mousemotion(AG_Event *event)
 	int state = AG_INT(5);
 	int totalsize = (sb->type == AG_SCROLLBAR_HORIZ) ?
 		WIDGET(sb)->w : WIDGET(sb)->h;
-	
-	if (!BarIsVisible(sb)) {
+#if 0	
+	if (!AG_ScrollbarVisible(sb)) {
 		if (OBJECT(sb)->parent != NULL)
 			AG_ForwardEvent(NULL, OBJECT(sb)->parent, event);
 		return;
 	}
+#endif
 	if (state & SDL_BUTTON_LMASK)
 		MoveBar(sb, x, totalsize);
 }
@@ -232,25 +233,10 @@ SizeRequest(void *p, AG_SizeReq *r)
 static int
 SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
-	AG_Scrollbar *sb = p;
-
-#if 0
-	switch (sb->type) {
-	case AG_SCROLLBAR_VERT:
-		sb->bw = a->w;				/* Square */
-		if (a->h < sb->bw*2) {
-			sb->bw = a->h/2;
-		}
-		break;
-	case AG_SCROLLBAR_HORIZ:
-		sb->bw = a->h;				/* Square */
-		if (a->h < sb->bw*2) {
-			sb->bw = a->h/2;
-		}
-		break;
+	if (a->w < 4 || a->h < 4) {
+		return (-1);
 	}
-#endif
-	return (sb->bw < 2) ? -1 : 0;
+	return (0);
 }
 
 static void
@@ -261,7 +247,7 @@ Draw(void *p)
 	int w, h, x, y;
 	int maxcoord;
 
-	if (!BarIsVisible(sb)) {
+	if (!AG_ScrollbarVisible(sb)) {
 		return;
 	}
 	min = AG_WidgetInt(sb, "min");

@@ -43,6 +43,7 @@ AG_Scrollbar	*AG_ScrollbarNew(void *, enum ag_scrollbar_type, Uint);
 void		 AG_ScrollbarInit(AG_Scrollbar *, enum ag_scrollbar_type, Uint);
 __inline__ void	 AG_ScrollbarSetBarSize(AG_Scrollbar *, int);
 __inline__ void	 AG_ScrollbarGetBarSize(AG_Scrollbar *, int *);
+__inline__ int	 AG_ScrollbarVisible(AG_Scrollbar *);
 __END_DECLS
 
 #include "close_code.h"
