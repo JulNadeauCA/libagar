@@ -298,8 +298,8 @@ SelectUnit(AG_Event *event)
 	UpdateUnitSelector(num);
 }
 
-static void
-InitUnitSystem(AG_Numerical *num, const char *unit_key)
+void
+AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 {
 	const AG_Unit *unit = NULL;
 	const AG_Unit *ugroup = NULL;
@@ -325,6 +325,7 @@ InitUnitSystem(AG_Numerical *num, const char *unit_key)
 
 	AG_MutexLock(&num->units->list->lock);
 	AG_TlistDeselectAll(num->units->list);
+	AG_TlistBegin(num->units->list);
 	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
 		AG_TlistItem *it;
 
@@ -333,6 +334,7 @@ InitUnitSystem(AG_Numerical *num, const char *unit_key)
 		if (unit == num->unit)
 			it->selected++;
 	}
+	AG_TlistEnd(num->units->list);
 	AG_MutexUnlock(&num->units->list->lock);
 }
 
@@ -362,7 +364,8 @@ AG_NumericalInit(AG_Numerical *num, Uint flags, const char *unit,
 		num->units = AG_UComboNew(num, 0);
 		AG_SetEvent(num->units, "ucombo-selected", SelectUnit,
 		    "%p", num);
-		InitUnitSystem(num, unit);
+		AG_NumericalSetUnitSystem(num, unit);
+		AG_WidgetSetFocusable(num->units, 0);
 	} else {
 		num->unit = AG_FindUnit("identity");
 		num->units = NULL;
@@ -370,8 +373,11 @@ AG_NumericalInit(AG_Numerical *num, Uint flags, const char *unit,
 
 	num->incbu = AG_ButtonNew(num, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(num->incbu, 1,1,1,1);
+	AG_WidgetSetFocusable(num->incbu, 0);
+
 	num->decbu = AG_ButtonNew(num, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(num->decbu, 1,1,1,1);
+	AG_WidgetSetFocusable(num->decbu, 0);
 
 	AG_SetEvent(num, "window-keydown", keydown, NULL);
 	AG_SetEvent(num, "widget-gainfocus", GainedFocus, NULL);
