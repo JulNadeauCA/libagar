@@ -143,6 +143,7 @@ static int
 PtFromPtPt(void *self, SK_Constraint *ct1, void *n1, SK_Constraint *ct2,
     void *n2)
 {
+	SK *sk = SKNODE(self)->sk;
 	SG_Vector pOrig = SK_NodeCoords(self);
 	SG_Vector p1 = SK_NodeCoords(n1);
 	SG_Vector p2 = SK_NodeCoords(n2);
@@ -152,7 +153,7 @@ PtFromPtPt(void *self, SK_Constraint *ct1, void *n1, SK_Constraint *ct2,
 	SG_Real a, h, b;
 	SG_Vector p, s1, s2;
 
-	dprintf("PtFromPtPt(%s,[%f:%s],[%f:%s])\n",
+	printf("PtFromPtPt(%s,[%f:%s],[%f:%s])\n",
 	    SK_NodeName(self),
 	    ct1->ct_distance, SK_NodeName(n1),
 	    ct2->ct_distance, SK_NodeName(n2));
@@ -191,11 +192,17 @@ PtFromPtPt(void *self, SK_Constraint *ct1, void *n1, SK_Constraint *ct2,
 	s2.z = 0.0;
 
 	SK_Identity(self);
-	if (SG_VectorDistancep(&pOrig, &s1) <	/* Minimize displacement */
-	    SG_VectorDistancep(&pOrig, &s2)) {
+	if (SG_VectorDistancep(&s1, &s2) == 0.0) {
 		SK_Translatev(self, &s1);
+		sk->nSolutions++;
 	} else {
-		SK_Translatev(self, &s2);
+		if (SG_VectorDistancep(&pOrig, &s1) <
+		    SG_VectorDistancep(&pOrig, &s2)) {
+			SK_Translatev(self, &s1);
+		} else {
+			SK_Translatev(self, &s2);
+		}
+		sk->nSolutions+=2;
 	}
 	return (0);
 }
@@ -209,6 +216,7 @@ static int
 PtFromPtLine(void *self, SK_Constraint *ct1, void *n1,
     SK_Constraint *ct2, void *n2)
 {
+	SK *sk = SKNODE(self)->sk;
 	SG_Vector pOrig = SK_NodeCoords(self);
 	SG_Vector p = SK_NodeCoords(n1);
 	SK_Line *L = n2;
@@ -227,17 +235,17 @@ PtFromPtLine(void *self, SK_Constraint *ct1, void *n1,
 	int nSolutions = 0;
 
 	if (deter < 0.0) {
-		dprintf("outside (det < 0)\n");
+		printf("outside (det < 0)\n");
 		goto fail;
 	} else if (deter == 0.0) {
 		/* TODO Tangent */
-		dprintf("tangent (det==0)\n");
+		printf("tangent (det==0)\n");
 	} else {
 		SG_Real e = Sqrt(deter);
 		SG_Real u1 = (-b + e) / (2.0*a);
 		SG_Real u2 = (-b - e) / (2.0*a);
 		
-		dprintf("e=%f, u1=%f, u2=%f\n", e, u1, u2);
+		printf("e=%f, u1=%f, u2=%f\n", e, u1, u2);
 		
 		if ((u1 < 0.0 || u1 > 1.0) &&
 		    (u2 < 0.0 || u2 > 1.0)) {
@@ -245,8 +253,7 @@ PtFromPtLine(void *self, SK_Constraint *ct1, void *n1,
 			    (u1 > 1.0 && u2 > 1.0)) {
 				goto fail;
 			} else {
-				/* XXX */
-				dprintf("u1=%f, u2=%f!\n", u1, u2);
+				printf("u1=%f, u2=%f!\n", u1, u2);
 			}
 		} else {
 			if (u1 >= 0.0 && u1 <= 1.0)
@@ -267,9 +274,10 @@ PtFromPtLine(void *self, SK_Constraint *ct1, void *n1,
 	} else if (nSolutions == 1) {
 		SK_Translatev(self, &s[0]);
 	} else {
-		dprintf("no solutions\n");
+		printf("no solutions\n");
 		goto fail;
 	}
+	sk->nSolutions += nSolutions;
 	return (0);
 fail:
 	{

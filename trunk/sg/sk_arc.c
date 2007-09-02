@@ -147,6 +147,7 @@ SK_NodeOps skArcOps = {
 	SK_ArcProximity,
 	NULL,		/* delete */
 	NULL,		/* move */
+	NULL,		/* constrained */
 };
 
 #ifdef EDITION

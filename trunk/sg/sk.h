@@ -27,6 +27,13 @@ struct sk_point;
 struct sk_constraint;
 struct ag_widget;
 
+typedef enum sk_status {
+	SK_INVALID,			/* No solutions */
+	SK_WELL_CONSTRAINED,		/* One solution */
+	SK_UNDER_CONSTRAINED,		/* Infinity of solutions */
+	SK_OVER_CONSTRAINED		/* Redundant constraints */
+} SK_Status;
+
 typedef struct sk_node_ops {
 	const char *name;
 	size_t size;
@@ -42,6 +49,7 @@ typedef struct sk_node_ops {
 	SG_Real (*proximity)(void *, const SG_Vector *, SG_Vector *);
 	int (*del)(void *);
 	int (*move)(void *, const SG_Vector *, const SG_Vector *);
+	SK_Status (*constrained)(void *);
 } SK_NodeOps;
 
 typedef struct sk_node {
@@ -54,6 +62,7 @@ typedef struct sk_node {
 #define SK_NODE_UNCONSTRAINED	0x08	/* Suppress constraints */
 #define SK_NODE_FIXED		0x10	/* Treat position as known */
 #define SK_NODE_KNOWN		0x20	/* Position found by solver */
+#define SK_NODE_CHECKED		0x40	/* Skip constraint check */
 
 	struct sk *sk;			/* Back pointer to sk */
 	struct sk_node *pNode;		/* Back pointer to parent node */
@@ -123,13 +132,10 @@ typedef struct sk {
 	const AG_Unit *uLen;			/* Length unit */
 	struct sk_point *root;			/* Root node */
 	TAILQ_HEAD(,sk_node) nodes;		/* Flat node list */
-	enum sk_status {
-		SK_INVALID,			/* No solutions */
-		SK_WELL_CONSTRAINED,		/* One solution */
-		SK_UNDER_CONSTRAINED,		/* Infinity of solutions */
-		SK_OVER_CONSTRAINED		/* Redundant constraints */
-	} status;
+	SK_Status status;			/* Constrainedness status */
 	char statusText[SK_STATUS_MAX];		/* Status text */
+	Uint nSolutions;			/* Total number of solutions
+						   (if well-constrained) */
 
 	/* For internal use by constraint solver */
 	SK_Cluster ctGraph;			/* Original constraint graph */
@@ -246,7 +252,7 @@ Uint		SK_ConstraintsToSubgraph(const SK_Cluster *, const SK_Node *,
 SK_Insn	       *SK_AddInsn(SK *, enum sk_insn_type, ...);
 int		SK_ExecInsn(SK *, const SK_Insn *);
 int		SK_ExecProgram(SK *);
-void		SK_SetStatus(SK *, enum sk_status, const char *, ...);
+void		SK_SetStatus(SK *, SK_Status, const char *, ...);
 void		SK_ClearProgramState(SK *);
 
 __inline__ SG_Vector	  SK_NodeCoords(void *);

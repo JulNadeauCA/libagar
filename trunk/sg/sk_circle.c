@@ -153,16 +153,15 @@ SK_CircleDelete(void *p)
 {
 	SK_Circle *circle = p;
 	SK *sk = SKNODE(circle)->sk;
+	int rv;
 
-#if 0
-	SK_DelConstraint(&sk->ctGraph,
-	    SK_FindConstraint(&sk->ctGraph, SK_CONCENTRIC, circle, circle->p));
-#endif
 	SK_NodeDelReference(circle, circle->p);
 	if (SKNODE(circle->p)->nRefs == 0) {
 		SK_NodeDel(circle->p);
 	}
-	return (SK_NodeDel(circle));
+	rv = SK_NodeDel(circle);
+	SK_Update(sk);
+	return (rv);
 }
 
 int
@@ -177,10 +176,29 @@ SK_CircleMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 	return (1);
 }
 
-void
-SK_CircleWidth(SK_Circle *circle, SG_Real size)
+/*
+ * Circles in 2D require three constraints, two for the center point
+ * and one for the radius.
+ */
+SK_Status
+SK_CircleConstrained(void *p)
 {
-	circle->width = size;
+	SK_Circle *C = p;
+
+	SKNODE(C->p)->flags |= SK_NODE_CHECKED;
+
+	if (SKNODE(C->p)->nEdges == 2) {
+		if (SKNODE(C)->nEdges == 1) {
+			return (SK_WELL_CONSTRAINED);
+		} else if (SKNODE(C)->nEdges < 1) {
+			return (SK_UNDER_CONSTRAINED);
+		} else if (SKNODE(C)->nEdges > 1) {
+			return (SK_OVER_CONSTRAINED);
+		}
+	} else if (SKNODE(C->p)->nEdges < 2) {
+		return (SK_UNDER_CONSTRAINED);
+	}
+	return (SK_OVER_CONSTRAINED);
 }
 
 void
@@ -203,7 +221,8 @@ SK_NodeOps skCircleOps = {
 	SK_CircleEdit,
 	SK_CircleProximity,
 	SK_CircleDelete,
-	SK_CircleMove
+	SK_CircleMove,
+	SK_CircleConstrained
 };
 
 #ifdef EDITION
@@ -278,9 +297,6 @@ ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 		circle->p = SK_PointNew(sk->root);
 		SK_Translatev(circle->p, &pos);
 	}
-#if 0
-	SK_AddConstraint(&sk->ctGraph, circle, circle->p, SK_CONCENTRIC);
-#endif
 	SK_NodeAddReference(circle, circle->p);
 	t->curCircle = circle;
 	SK_Update(sk);

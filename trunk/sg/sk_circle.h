@@ -22,6 +22,7 @@ void	   SK_CircleEdit(void *, AG_Widget *, SK_View *);
 SG_Real	   SK_CircleProximity(void *, const SG_Vector *, SG_Vector *);
 int	   SK_CircleDelete(void *);
 int	   SK_CircleMove(void *, const SG_Vector *, const SG_Vector *);
+SK_Status  SK_CircleConstrained(void *);
 
 void	   SK_CircleWidth(SK_Circle *, SG_Real);
 void	   SK_CircleColor(SK_Circle *, SG_Color);

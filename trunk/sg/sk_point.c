@@ -137,7 +137,7 @@ SK_PointProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 {
 	SG_Vector pv = SK_NodeCoords(p);
 
-	SG_CopyVector(vC, &pv);
+	SG_VectorCopy(vC, &pv);
 	return (SG_VectorDistancep(v, &pv));
 }
 
@@ -145,8 +145,11 @@ int
 SK_PointDelete(void *p)
 {
 	SK_Point *pt = p;
+	int rv;
 
-	return (SK_NodeDel(pt));
+	rv = SK_NodeDel(pt);
+	SK_Update(SKNODE(pt)->sk);
+	return (rv);
 }
 
 int
@@ -154,6 +157,21 @@ SK_PointMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 {
 	SK_Translatev(p, vel);
 	return (1);
+}
+
+/* Points in 2D require two constraints. */
+SK_Status
+SK_PointConstrained(void *p)
+{
+	SK_Point *pt = p;
+
+	if (SKNODE(pt)->nEdges == 2) {
+		return (SK_WELL_CONSTRAINED);
+	} else if (SKNODE(pt)->nEdges < 2) {
+		return (SK_UNDER_CONSTRAINED);
+	} else {
+		return (SK_OVER_CONSTRAINED);
+	}
 }
 
 SK_NodeOps skPointOps = {
@@ -170,7 +188,8 @@ SK_NodeOps skPointOps = {
 	SK_PointEdit,
 	SK_PointProximity,
 	SK_PointDelete,
-	SK_PointMove
+	SK_PointMove,
+	SK_PointConstrained
 };
 
 #ifdef EDITION

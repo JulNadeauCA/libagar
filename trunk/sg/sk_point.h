@@ -22,6 +22,7 @@ void		 SK_PointEdit(void *, AG_Widget *, SK_View *);
 SG_Real		 SK_PointProximity(void *, const SG_Vector *, SG_Vector *);
 int		 SK_PointDelete(void *);
 int		 SK_PointMove(void *, const SG_Vector *, const SG_Vector *);
+SK_Status	 SK_PointConstrained(void *);
 
 void		 SK_PointSize(SK_Point *, SG_Real);
 void		 SK_PointColor(SK_Point *, SG_Color);

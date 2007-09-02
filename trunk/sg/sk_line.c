@@ -140,11 +140,8 @@ SK_LineDelete(void *p)
 {
 	SK_Line *line = p;
 	SK *sk = SKNODE(line)->sk;
+	int rv;
 
-	SK_DelConstraint(&sk->ctGraph,
-	    SK_FindConstraint(&sk->ctGraph, SK_INCIDENT, line, line->p1));
-	SK_DelConstraint(&sk->ctGraph,
-	    SK_FindConstraint(&sk->ctGraph, SK_INCIDENT, line, line->p2));
 	SK_NodeDelReference(line, line->p1);
 	SK_NodeDelReference(line, line->p2);
 
@@ -153,7 +150,9 @@ SK_LineDelete(void *p)
 	if (SKNODE(line->p2)->nRefs == 0)
 		SK_NodeDel(line->p2);
 
-	return (SK_NodeDel(line));
+	rv = SK_NodeDel(line);
+	SK_Update(sk);
+	return (rv);
 }
 
 int
@@ -161,15 +160,53 @@ SK_LineMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 {
 	SK_Line *line = p;
 
-	if (!(SKNODE(line->p1)->flags & SK_NODE_MOVED)) {
+	if (!(SKNODE(line->p1)->flags & (SK_NODE_MOVED|SK_NODE_FIXED))) {
 		SK_Translatev(line->p1, vel);
 		SKNODE(line->p1)->flags |= SK_NODE_MOVED;
 	}
-	if (!(SKNODE(line->p2)->flags & SK_NODE_MOVED)) {
+	if (!(SKNODE(line->p2)->flags & (SK_NODE_MOVED|SK_NODE_FIXED))) {
 		SK_Translatev(line->p2, vel);
 		SKNODE(line->p2)->flags |= SK_NODE_MOVED;
 	}
 	return (1);
+}
+
+/*
+ * Line segments in 2D require four constraints, out of four possible
+ * constraints on the endpoints and one angle constraint on the line.
+ */
+SK_Status
+SK_LineConstrained(void *p)
+{
+	SK_Line *L = p;
+
+	SKNODE(L->p1)->flags |= SK_NODE_CHECKED;
+	SKNODE(L->p2)->flags |= SK_NODE_CHECKED;
+
+	if (SKNODE(L->p1)->nEdges > 2 ||
+	    SKNODE(L->p2)->nEdges > 2) {
+		return (SK_OVER_CONSTRAINED);
+	}
+	if (SKNODE(L->p1)->nEdges == 2 &&
+	    SKNODE(L->p2)->nEdges == 2) {
+		if (SKNODE(L)->nEdges > 0) {
+			return (SK_OVER_CONSTRAINED);
+		}
+		return (SK_WELL_CONSTRAINED);
+	}
+	if ((SKNODE(L->p1)->nEdges == 1 &&
+	     SKNODE(L->p2)->nEdges == 2) ||
+	    (SKNODE(L->p1)->nEdges == 2 &&
+	     SKNODE(L->p2)->nEdges == 1)) {
+		if (SKNODE(L)->nEdges == 1) {
+			return (SK_WELL_CONSTRAINED);
+		} else if (SKNODE(L)->nEdges > 1) {
+			return (SK_OVER_CONSTRAINED);
+		} else {
+			return (SK_UNDER_CONSTRAINED);
+		}
+	}
+	return (SK_UNDER_CONSTRAINED);
 }
 
 void
@@ -189,16 +226,17 @@ SK_NodeOps skLineOps = {
 	sizeof(SK_Line),
 	0,
 	SK_LineInit,
-	NULL,		/* destroy */
+	NULL,			/* destroy */
 	SK_LineLoad,
 	SK_LineSave,
-	NULL,		/* draw_relative */
+	NULL,			/* draw_relative */
 	SK_LineDraw,
-	NULL,		/* redraw */
+	NULL,			/* redraw */
 	SK_LineEdit,
 	SK_LineProximity,
 	SK_LineDelete,
-	SK_LineMove
+	SK_LineMove,
+	SK_LineConstrained
 };
 
 #ifdef EDITION
@@ -259,7 +297,6 @@ ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 	SK_Point *overPoint;
 	SK_Line *line;
 	SG_Vector vC;
-	SK_Constraint *ct;
 
 	if (btn != SDL_BUTTON_LEFT)
 		return (0);
@@ -269,22 +306,11 @@ ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 	if ((line = t->curLine) != NULL) {
 		if (overPoint != NULL &&
 		    overPoint != line->p2) {
-			ct = SK_FindConstraint(&sk->ctGraph, SK_INCIDENT,
-			                       line, line->p2);
-			if (ct != NULL) {
-				SK_DelConstraint(&sk->ctGraph, ct);
-			}
 		    	SK_NodeDelReference(line, line->p2);
 			if (SK_NodeDel(line->p2)) {
 				AG_TextMsgFromError();
 				return (0);
 			}
-#if 0
-			ct = SK_AddConstraint(&sk->ctGraph, line, overPoint,
-			    SK_INCIDENT);
-			SK_NodeAddConstraint(line, ct);
-			SK_NodeAddConstraint(overPoint, ct);
-#endif
 		    	SK_NodeAddReference(line, overPoint);
 			line->p2 = overPoint;
 		
@@ -308,15 +334,6 @@ ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 	line->p2 = SK_PointNew(sk->root);
 	SKNODE(line->p2)->flags |= SK_NODE_UNCONSTRAINED;
 	SK_Translatev(line->p2, &pos);
-
-#if 0
-	ct = SK_AddConstraint(&sk->ctGraph, line, line->p1, SK_INCIDENT);
-	SK_NodeAddConstraint(line, ct);
-	SK_NodeAddConstraint(line->p1, ct);
-	ct = SK_AddConstraint(&sk->ctGraph, line, line->p2, SK_INCIDENT);
-	SK_NodeAddConstraint(line, ct);
-	SK_NodeAddConstraint(line->p2, ct);
-#endif
 
 	SK_NodeAddReference(line, line->p1);
 	SK_NodeAddReference(line, line->p2);

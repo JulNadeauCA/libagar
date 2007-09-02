@@ -91,6 +91,7 @@ SK_NodeOps skDummyOps = {
 	NULL,		/* redraw */
 	NULL,		/* edit */
 	NULL,		/* proximity */
-	NULL		/* delete */
+	NULL,		/* delete */
+	NULL,		/* constrained */
 };
 #endif /* HAVE_OPENGL */

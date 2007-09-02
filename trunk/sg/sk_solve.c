@@ -24,11 +24,7 @@
  */
 
 /*
- * This is a generic, graph-based geometric constraint solver. It is based on
- * the idea that our geometric elements (points, lines and circles of fixed
- * radii) have two degrees of freedom and are completely fixed by two
- * constraints. Thus, the unknown position of a third element in a system
- * of three constrained elements can be computed.
+ * This is a generic (graph-based) geometric constraint solver.
  * 
  * Phase 1 - Recursive graph analysis:
  *   This phase determines whether the problem is well constrained, and if so,
@@ -47,7 +43,9 @@
  *   We simply follow the order of cluster formation to place elements
  *   in the same order. The position of an unknown element with respect
  *   to two other constrained elements can be computed using systems of
- *   equations (linear, linear-quadratic and quadratic).
+ *   equations (linear, linear-quadratic and quadratic). Where multiple
+ *   solutions are possible, we optimize for minimum displacement from
+ *   the original point.
  */
 
 #include <config/have_opengl.h>
@@ -165,6 +163,7 @@ UpdateConstraintStatus(SK *sk)
 	/* Count the constraint edges per node in the original graph. */
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
 		node->nEdges = 0;
+		node->flags &= ~(SK_NODE_CHECKED);
 	}
 	TAILQ_FOREACH(cl, &sk->clusters, clusters) {
 		count++;
@@ -174,81 +173,49 @@ UpdateConstraintStatus(SK *sk)
 		ct->n2->nEdges++;
 	}
 
-	/* Nodes with >2 edges in the original graph mean over-constraint. */
+	/* Check the constrainedness status of all nodes. */
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
-		if (node->nEdges > 2) {
-			SK_SetStatus(sk, SK_OVER_CONSTRAINED,
-			    _("Overconstrained (>2 edges in %s)"),
-			    SK_NodeNameCopy(node, nodeName,
-			    sizeof(nodeName)));
-			return;
+		if (node->flags & (SK_NODE_UNCONSTRAINED|SK_NODE_FIXED|
+		                   SK_NODE_CHECKED)) {
+			continue;
 		}
+		if (node->ops->constrained != NULL) {
+			switch (node->ops->constrained(node)) {
+			case SK_UNDER_CONSTRAINED:
+				goto under;
+			case SK_OVER_CONSTRAINED:
+				goto over;
+			default:
+				break;
+			}
+		}
+		SKNODE(node)->flags |= SK_NODE_CHECKED;
 	}
-
-	/* Multiple clusters mean under-constraint. */
+	
+	/*
+	 * The sketch is under-constrained if the cluster merging
+	 * phase fails to produce a single cluster.
+	 */
 	if (count > 1) {
 		SK_SetStatus(sk, SK_UNDER_CONSTRAINED,
 		    _("Underconstrained (%u clusters)"), count);
 		return;
 	}
-
-	/* Nodes with <2 edges mean under-constraint. */
-	TAILQ_FOREACH(node, &sk->nodes, nodes) {
-		if (node->flags & SK_NODE_UNCONSTRAINED) {
-			continue;
-		}
-		if (SK_NodeOfClass(node, "Line:*")) {
-			SK_Line *L = SKLINE(node);
-
-			if (SKNODE(L->p1)->nEdges == 2 &&
-			    SKNODE(L->p2)->nEdges == 2) {
-				if (node->nEdges > 0) {
-					goto over;
-				}
-				continue;
-			} else
-			if ((SKNODE(L->p1)->nEdges == 1 &&
-			     SKNODE(L->p2)->nEdges == 2) ||
-			    (SKNODE(L->p1)->nEdges == 2 &&
-			     SKNODE(L->p2)->nEdges == 1)) {
-				if (node->nEdges > 1) {
-					goto over;
-				} else if (node->nEdges < 1) {
-					goto under;
-				}
-			} else
-			if (SKNODE(L->p1)->nEdges < 2 &&
-			    SKNODE(L->p2)->nEdges < 2) {
-				if (node->nEdges > 2) {
-					goto over;
-				} else if (node->nEdges < 2) {
-					goto under;
-				}
-			}
-		} else {
-			if (node->nEdges < 2) {
-				goto under;
-			} else if (node->nEdges > 2) {
-				goto over;
-			}
-		}
-	}
+	
 	SK_SetStatus(sk, SK_WELL_CONSTRAINED, _("Well-constrained"));
 	return;
 over:
-	SK_SetStatus(sk, SK_OVER_CONSTRAINED,
-	    _("Overconstrained (>2 edges in %s)"),
+	SK_SetStatus(sk, SK_OVER_CONSTRAINED, _("Overconstrained (%s)"),
 	    SK_NodeNameCopy(node, nodeName, sizeof(nodeName)));
 	return;
 under:
-	SK_SetStatus(sk, SK_UNDER_CONSTRAINED,
-	    _("Underconstrained (<2 edges in %s)"),
+	SK_SetStatus(sk, SK_UNDER_CONSTRAINED, _("Underconstrained (%s)"),
 	    SK_NodeNameCopy(node, nodeName, sizeof(nodeName)));
 }
 
 /*
- * Attempt to position the elements of a sketch such that the set
- * of geometrical constraints are satisfied.
+ * Analyze the constraint graph, determine its constrainedness and
+ * generate a sketch placement program.
  */
 int
 SK_Solve(SK *sk)
