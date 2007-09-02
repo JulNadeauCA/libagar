@@ -58,6 +58,9 @@ structure.
 .Ft "AG_UCombo *"
 .Fn AG_UComboNew "AG_Widget *parent" "Uint flags"
 .Pp
+.Ft "AG_UCombo *"
+.Fn AG_UComboNewPolled "AG_Widget *parent" "Uint flags" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
 .Ft "void"
 .Fn AG_UComboInit "AG_UCombo *com" "Uint flags"
 .Pp
@@ -71,6 +74,10 @@ widget.
 initializes a preallocated
 .Nm
 widget.
+.Fn AG_UComboNewPolled
+arranges for a polled
+.Xr AG_Tlist 3
+and assigns the polling function.
 .Sh EVENTS
 The
 .Nm
