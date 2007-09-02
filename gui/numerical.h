@@ -53,6 +53,7 @@ void	AG_NumericalSetMax(AG_Numerical *, double);
 void	AG_NumericalSetRange(AG_Numerical *, double, double);
 void	AG_NumericalSetIncrement(AG_Numerical *, double);
 void	AG_NumericalSelectUnit(AG_Numerical *, const char *);
+void	AG_NumericalSetUnitSystem(AG_Numerical *, const char *);
 void	AG_NumericalSetPrecision(AG_Numerical *, const char *, int);
 void	AG_NumericalSetWriteable(AG_Numerical *, int);
 
