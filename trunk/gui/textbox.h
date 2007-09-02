@@ -5,8 +5,10 @@
 
 #ifdef _AGAR_INTERNAL
 #include <gui/widget.h>
+#include <gui/scrollbar.h>
 #else
 #include <agar/gui/widget.h>
+#include <agar/gui/scrollbar.h>
 #endif
 
 #include "begin_code.h"
@@ -23,17 +25,21 @@ typedef struct ag_textbox {
 	int	     label;			/* Label surface mapping */
 
 	Uint flags;
-#define AG_TEXTBOX_BLINK_ON	 0x002	/* Cursor blink state (internal) */
-#define AG_TEXTBOX_PASSWORD	 0x004	/* Password (hidden) input */
-#define AG_TEXTBOX_ABANDON_FOCUS 0x008	/* Abandon focus on return */
-#define AG_TEXTBOX_COMBO	 0x010	/* Used by AG_Combo */
-#define AG_TEXTBOX_HFILL	 0x020
-#define AG_TEXTBOX_VFILL	 0x040
+#define AG_TEXTBOX_MULTILINE	 0x0001
+#define AG_TEXTBOX_BLINK_ON	 0x0002	/* Cursor blink state (internal) */
+#define AG_TEXTBOX_PASSWORD	 0x0004	/* Password (hidden) input */
+#define AG_TEXTBOX_ABANDON_FOCUS 0x0008	/* Abandon focus on return */
+#define AG_TEXTBOX_COMBO	 0x0010	/* Used by AG_Combo */
+#define AG_TEXTBOX_HFILL	 0x0020
+#define AG_TEXTBOX_VFILL	 0x0040
 #define AG_TEXTBOX_EXPAND	 (AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL)
-#define AG_TEXTBOX_FOCUS	 0x080
-#define AG_TEXTBOX_READONLY	 0x100	/* Equivalent to WidgetDisable() */
-#define AG_TEXTBOX_INT_ONLY	 0x200	/* Accepts only valid strtol() input */
-#define AG_TEXTBOX_FLT_ONLY	 0x400	/* Accepts only valid strtof() input */
+#define AG_TEXTBOX_FOCUS	 0x0080
+#define AG_TEXTBOX_READONLY	 0x0100	/* Equivalent to WidgetDisable() */
+#define AG_TEXTBOX_INT_ONLY	 0x0200	/* Accepts only valid strtol() input */
+#define AG_TEXTBOX_FLT_ONLY	 0x0400	/* Accepts only valid strtof() input */
+#define AG_TEXTBOX_CATCH_TAB	 0x0800	/* Enter literal tabs into text
+					   instead of cycling focus */
+#define AG_TEXTBOX_CURSOR_MOVING 0x1000	/* Cursor is being moved */
 
 	int wPre, hPre;			/* Prescale */
 	int boxPadX, boxPadY;		/* Padding around textbox */
@@ -49,9 +55,12 @@ typedef struct ag_textbox {
 	AG_Timeout delay_to;		/* Pre-repeat delay timer */
 	AG_Timeout repeat_to;		/* Repeat timer */
 	AG_Timeout cblink_to;		/* Cursor blink timer */
+	AG_Scrollbar *hBar, *vBar;	/* Scrollbars for MULTILINE */
+	int xMin, x, xMax;		/* Horizontal scrollbar range */
+	int yMin, y, yMax, yVis;	/* Vertical scrollbar range */
 
 	struct {
-		SDLKey key;
+		SDLKey key;		/* For key repeat */
 		SDLMod mod;
 		Uint32 unicode;
 	} repeat;

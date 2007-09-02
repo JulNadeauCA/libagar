@@ -75,9 +75,33 @@ The
 .Fa label
 parameter (if not NULL) defines an optional text label to display left
 of the textbox.
-.Pp
+Acceptable
+.Fa flags
+include:
+.Bl -tag -width "AG_TEXTBOX_ABANDON_FOCUS "
+.It AG_TEXTBOX_MULTILINE
+Causes newlines to be entered literally into the string, and arranges for
+horizontal and vertical scrollbars to appear if the text is larger than the
+display area.
+.It AG_TEXTBOX_PASSWORD
+Password-style entry where characters are hidden.
 .Fn AG_TextboxSetPassword
-enables (1) or disables (0) password-type input, where characters are
+sets this flag.
+.It AG_TEXTBOX_ABANDON_FOCUS
+Arrange for the widget to abandon its focus when the return key is pressed.
+.It AG_TEXTBOX_INT_ONLY
+Restricts input to valid integers only.
+.It AG_TEXTBOX_FLY_ONLY
+Restricts input to valid floating-point numbers in decimal and scientific
+notation.
+.It AG_TEXTBOX_CATCH_TAB
+Cause tabs to be entered literally into the string (by default, the tab
+key moves focus to the next widget).
+.El
+.Pp
+The
+.Fn AG_TextboxSetPassword
+function enables (1) or disables (0) password-type input, where characters are
 substituted for
 .Sq *
 in the display.
