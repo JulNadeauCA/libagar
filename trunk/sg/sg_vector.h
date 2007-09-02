@@ -47,9 +47,9 @@ __inline__ void	SG_SetVector2(SG_Vector2 *, SG_Real, SG_Real);
 __inline__ void	SG_SetVector (SG_Vector  *, SG_Real, SG_Real, SG_Real);
 __inline__ void	SG_SetVector4(SG_Vector4 *, SG_Real, SG_Real, SG_Real, SG_Real);
 
-__inline__ void	SG_CopyVector2(SG_Vector2 *, const SG_Vector2 *);
-__inline__ void	SG_CopyVector (SG_Vector  *, const SG_Vector  *);
-__inline__ void	SG_CopyVector4(SG_Vector4 *, const SG_Vector4 *);
+__inline__ void	SG_VectorCopy2(SG_Vector2 *, const SG_Vector2 *);
+__inline__ void	SG_VectorCopy (SG_Vector  *, const SG_Vector  *);
+__inline__ void	SG_VectorCopy4(SG_Vector4 *, const SG_Vector4 *);
 
 __inline__ SG_Vector2 SG_VectorMirror2(SG_Vector2, int, int);
 __inline__ SG_Vector  SG_VectorMirror (SG_Vector,  int, int, int);
@@ -167,6 +167,8 @@ __inline__ SG_Vector4 SG_VectorLERP4(SG_Vector4, SG_Vector4, SG_Real);
 __inline__ SG_Vector2 SG_VectorLERP2p(SG_Vector2 *, SG_Vector2 *, SG_Real);
 __inline__ SG_Vector  SG_VectorLERPp (SG_Vector  *, SG_Vector  *, SG_Real);
 __inline__ SG_Vector4 SG_VectorLERP4p(SG_Vector4 *, SG_Vector4 *, SG_Real);
+
+SG_Vector  SG_VectorElemPow(SG_Vector, SG_Real);
 
 SG_Vector2 SG_ReadVector2(AG_Netbuf *);
 SG_Vector  SG_ReadVector (AG_Netbuf *);
