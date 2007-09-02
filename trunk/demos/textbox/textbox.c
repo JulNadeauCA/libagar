@@ -1,7 +1,6 @@
 /*	Public domain	*/
 /*
- * This application demonstrates the use of the AG_Textbox widget for
- * editing a string.
+ * This application demonstrates different uses for the Textbox widget.
  */
 
 #include <agar/core.h>
@@ -10,48 +9,55 @@
 #include <string.h>
 #include <unistd.h>
 
-static char text_buf[128];
+static char polledString[128] = { '\0' };
 
 static void
-return_pressed(AG_Event *event)
+ReturnPressed(AG_Event *event)
 {
 	AG_Textbox *textbox = AG_SELF();
-	char my_string[128];
-
+	char *s;
+	
 	/*
-	 * Copy the current textbox string to a sized buffer. We could also
-	 * have used AG_TextboxDupString() to get a malloc'd copy.
+	 * Get the current string. Alternatively, AG_TextboxCopyString()
+	 * can be used to copy to a fixed-size buffer.
 	 */
-	AG_TextboxCopyString(textbox, my_string, sizeof(my_string));
-	AG_TextMsg(AG_MSG_INFO, "Entered string: `%s'", my_string);
+	s = AG_TextboxDupString(textbox);
+	AG_TextMsg(AG_MSG_INFO, "Entered string: `%s'", s);
+	free(s);
 }
 
+/* Callback function for our test timer. */
 static Uint32
-update_text_buffer(void *obj, Uint32 ival, void *arg)
+UpdateText(void *obj, Uint32 ival, void *arg)
 {
-	snprintf(text_buf, sizeof(text_buf), "Ticks: %lu",
-	    (unsigned long)SDL_GetTicks());
+	AG_Textbox *textbox = arg;
+
+	if (!AG_WidgetFocused(textbox)) {
+		snprintf(polledString, sizeof(polledString), "Tick: %lu",
+		    (unsigned long)SDL_GetTicks());
+	}
 	return (ival);
 }
 
 static void
 CreateTextbox(void)
 {
-	AG_Timeout update_timer;
+	AG_Timeout myTimer;
 	AG_Window *win;
-	AG_Button *btn;
 	AG_Textbox *textbox;
-	int i;
+	const char *myText;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Textbox Example");
 
 	/*
-	 * Create a textbox with a label displaying "Enter string:". Use the
-	 * `textbox-return' event to catch the return key.
+	 * Create a single-line Textbox and handle the return key with the
+	 * ReturnPressed() function. TextboxPrescale() requests an initial
+	 * textbox size large enough to display given string entirely.
 	 */
-	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Enter string: ");
-	AG_SetEvent(textbox, "textbox-return", return_pressed, NULL);
+	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Static string: ");
+	AG_TextboxPrescale(textbox, "XXXXXXXXXXX");
+	AG_SetEvent(textbox, "textbox-return", ReturnPressed, NULL);
 	AG_WidgetFocus(textbox);
 
 	/*
@@ -59,41 +65,36 @@ CreateTextbox(void)
 	 * have to pass the size of the buffer along with a pointer to it to
 	 * the AG_WidgetBind() function.
 	 */
-	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Edit buffer: ");
-	AG_WidgetBind(textbox, "string", AG_WIDGET_STRING, text_buf,
-	    sizeof(text_buf));
+	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Polled string: ");
+	AG_TextboxPrescale(textbox, "Tick: 000000");
+	AG_WidgetBind(textbox, "string", AG_WIDGET_STRING, polledString,
+	    sizeof(polledString));
 
 	/* Use a timer to update the text buffer periodically. */
-	snprintf(text_buf, sizeof(text_buf), "Text buffer contents");
-	AG_SetTimeout(&update_timer, update_text_buffer, NULL, 0);
-	AG_AddTimeout(textbox, &update_timer, 250);
-
+	AG_SetTimeout(&myTimer, UpdateText, textbox, 0);
+	AG_AddTimeout(NULL, &myTimer, 250);
+	
 	/* Create a polled label to display the actual buffer contents. */
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Buffer contents: <%s>",
-	    &text_buf);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Polled string: <%s>",
+	    &polledString);
+
+	/*
+	 * Create a multiline textbox and configure it to process the
+	 * tab key (which normally is used to cycle focus).
+	 */
+	AG_SeparatorNewHoriz(win);
+	AG_LabelNewStatic(win, 0, "Multiline string:");
+	textbox = AG_TextboxNew(win,
+	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND|AG_TEXTBOX_CATCH_TAB,
+	    NULL);
+	myText = "struct {\n"
+	         "\tint foo;\n"
+	         "\tint bar;\n"
+	         "}\n";
+	AG_TextboxPrescale(textbox, myText);
+	AG_TextboxPrintf(textbox, "%s", myText);
 
 	AG_WindowShow(win);
-}
-
-static void
-UpdateTable(AG_Event *event)
-{
-	AG_Table *t = AG_SELF();
-	static int prev = 0;
-	static int dir = +1;
-	int i;
-
-	AG_TableBegin(t);
-	for (i = 0; i < prev; i++) {
-		AG_TableAddRow(t, "%d:%u", i, (unsigned)SDL_GetTicks());
-	}
-	AG_TableEnd(t);
-
-	if (dir < 0) {
-		if (--prev < 0) { prev = 0; dir = +1; }
-	} else {
-		if (++prev > 100) { prev = 100; dir = -1; }
-	}
 }
 
 int
@@ -107,7 +108,7 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFgGr:")) != -1) {
+	while ((c = getopt(argc, argv, "?vfFgGr:bBt:T:")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
@@ -130,15 +131,30 @@ main(int argc, char *argv[])
 		case 'r':
 			fps = atoi(optarg);
 			break;
+		case 'b':
+			AG_SetBool(agConfig, "font.freetype", 0);
+			AG_SetString(agConfig, "font-face", "minimal.xcf");
+			AG_SetInt(agConfig, "font-size", 11);
+			break;
+		case 'B':
+			AG_SetBool(agConfig, "font.freetype", 1);
+			AG_SetString(agConfig, "font-face", "Vera.ttf");
+			break;
+		case 't':
+			AG_TextParseFontSpec(optarg);
+			break;
+		case 'T':
+			AG_SetString(agConfig, "font-path", "%s", optarg);
+			break;
 		case '?':
 		default:
-			printf("%s [-vfFgG] [-r fps]\n", agProgName);
+			printf("%s [-vfFgGbB] [-t font] [-T fontpath] "
+			          "[-r fps]\n", agProgName);
 			exit(0);
 		}
 	}
 
-	/* Initialize a 640x480x32 display. Respond to keyboard/mouse events. */
-	if (AG_InitVideo(640, 480, 32, 0) == -1 ||
+	if (AG_InitVideo(420, 340, 32, 0) == -1 ||
 	    AG_InitInput(0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
