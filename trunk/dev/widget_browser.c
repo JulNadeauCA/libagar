@@ -183,6 +183,10 @@ WidgetParams(AG_Event *event)
 	AG_Window *win;
 	AG_Notebook *nb;
 	AG_NotebookTab *nTab;
+	AG_Textbox *tb;
+	AG_Label *lbl;
+	AG_Spinbutton *sb;
+	AG_MSpinbutton *msb;
 
 	if ((it = AG_TlistSelectedItem(tl)) == NULL) {
 		return;
@@ -209,14 +213,16 @@ WidgetParams(AG_Event *event)
 		    { AG_WIDGET_HIDE,			"HIDE",1 },
 		    { AG_WIDGET_DISABLED,		"DISABLED",1 },
 		    { AG_WIDGET_STATIC,			"STATIC",0 },
-		    { AG_WIDGET_FOCUS_PARENT_WIN,	"FOCUS_PARENT_WIN",1 },
+		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",1 },
 		    { AG_WIDGET_PRIO_MOTION,		"PRIO_MOTION",1 },
 		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",0 },
 		    { AG_WIDGET_IGNORE_PADDING,		"IGNORE_PADDING",1 },
 		    { 0,				NULL,0 }
 		};
-		AG_Label *lbl;
 
+		tb = AG_TextboxNew(nTab, AG_TEXTBOX_HFILL, _("Name: "));
+		AG_WidgetBindString(tb, "string", OBJECT(wid)->name,
+		    sizeof(OBJECT(wid)->name));
 		AG_LabelNewStatic(nTab, 0, _("Class: %s"),
 		    OBJECT(wid)->ops->type);
 		AG_SeparatorNewHoriz(nTab);
@@ -225,9 +231,6 @@ WidgetParams(AG_Event *event)
 
 	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
 		AG_Window *ww = (AG_Window *)wid;
-		AG_Spinbutton *sb;
-		AG_Textbox *tb;
-		AG_Label *lbl;
 		static const AG_FlagDescr flagDescr[] = {
 		    { AG_WINDOW_MODAL,		"MODAL",1 },
 		    { AG_WINDOW_MAXIMIZED,	"MAXIMIZED",1 },
@@ -302,8 +305,6 @@ WidgetParams(AG_Event *event)
 	
 	nTab = AG_NotebookAddTab(nb, _("Geometry"), AG_BOX_VERT);
 	{
-		AG_MSpinbutton *msb;
-
 		msb = AG_MSpinbuttonNew(nTab, 0, ",", "Container coords: ");
 		AG_WidgetBindInt(msb, "xvalue", &wid->x);
 		AG_WidgetBindInt(msb, "yvalue", &wid->y);
@@ -322,11 +323,11 @@ WidgetParams(AG_Event *event)
 	}
 	nTab = AG_NotebookAddTab(nb, _("Surfaces"), AG_BOX_VERT);
 	{
-		AG_Tlist *tl;
+		AG_Tlist *tlSurf;
 
-		tl = AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
+		tlSurf = AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
 		    PollSurfaces, "%p", wid);
-		AG_TlistSetItemHeight(tl, 16);
+		AG_TlistSetItemHeight(tlSurf, 16);
 	}
 
 	AG_WindowShow(win);
