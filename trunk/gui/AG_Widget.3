@@ -111,7 +111,7 @@ include:
 #define AG_WIDGET_VFILL			0x0080 /* Expand to fill height */
 #define AG_WIDGET_HIDE			0x0200 /* Don't draw this widget */
 #define AG_WIDGET_DISABLED		0x0400 /* Ignore user input (RO) */
-#define AG_WIDGET_FOCUS_PARENT_WIN	0x1000 /* Auto focus parent win */
+#define AG_WIDGET_CATCH_TAB		0x1000 /* Catch tab key events */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 .Ed
 .Pp
@@ -161,10 +161,13 @@ and
 section below for more details).
 .Pp
 The
-.Dv AG_WIDGET_FOCUS_PARENT_WIN
-flag indicates that whenever the widget is focused,
-.Xr AG_WindowFocus
-should be invoked automatically on the widget's parent window (if it has one).
+.Dv AG_WIDGET_CATCH_TAB
+flag requests that the widget receive normal key events for the
+.Dv SDLK_TAB
+key.
+Without this flag,
+.Dv SDLK_TAB
+changes the focus to the next or previous widget.
 .Pp
 The
 .Fa widget_ops

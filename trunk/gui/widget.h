@@ -93,7 +93,7 @@ struct ag_popup_menu;
 typedef struct ag_widget {
 	struct ag_object obj;
 
-	int flags;
+	Uint flags;
 #define AG_WIDGET_FOCUSABLE		0x0001 /* Can grab focus */
 #define AG_WIDGET_FOCUSED		0x0002 /* Holds focus (optimization) */
 #define AG_WIDGET_UNFOCUSED_MOTION	0x0004 /* All mousemotion events */
@@ -106,7 +106,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_HIDE			0x0200 /* Don't draw this widget */
 #define AG_WIDGET_DISABLED		0x0400 /* Don't respond to input */
 #define AG_WIDGET_STATIC		0x0800 /* Use the redraw flag method */
-#define AG_WIDGET_FOCUS_PARENT_WIN	0x1000 /* Focus parent win on focus */
+#define AG_WIDGET_CATCH_TAB		0x1000 /* Catch tab key events */
 #define AG_WIDGET_PRIO_MOTION		0x2000 /* Block mousemotion events to
 						  any other widget, regardless
 						  of focus */
