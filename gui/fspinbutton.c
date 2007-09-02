@@ -299,6 +299,7 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 		AG_SetEvent(fsu->units, "ucombo-selected", selected_unit,
 		    "%p", fsu);
 		init_unit_system(fsu, unit);
+		AG_WidgetSetFocusable(fsu->units, 0);
 	} else {
 		fsu->unit = AG_FindUnit("identity");
 		fsu->units = NULL;
@@ -306,8 +307,11 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 
 	fsu->incbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(fsu->incbu, 1,1,1,1);
+	AG_WidgetSetFocusable(fsu->incbu, 0);
+	
 	fsu->decbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(fsu->decbu, 1,1,1,1);
+	AG_WidgetSetFocusable(fsu->incbu, 0);
 
 	AG_SetEvent(fsu, "widget-bound", binding_changed, NULL);
 	AG_SetEvent(fsu, "window-keydown", key_pressed, NULL);
