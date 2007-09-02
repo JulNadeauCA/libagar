@@ -102,7 +102,6 @@ SK_DimensionLoad(SK *sk, void *p, AG_Netbuf *buf)
 		AG_SetError("Missing dimension nodes (%s)", AG_GetError());
 		return (-1);
 	}
-
 	dim->text[0] = '\0';
 	return (0);
 }
@@ -142,7 +141,7 @@ PointLineDistance(const SG_Vector *v, const SK_Line *L, SG_Vector *pvC)
               ((v->y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
 	vC = SG_VectorAdd(p1, SG_VectorScale(SG_VectorSubp(&p2,&p1), u));
 	if (pvC != NULL) {
-		SG_CopyVector(pvC, &vC);
+		SG_VectorCopy(pvC, &vC);
 	}
 	return (SG_VectorDistancep(v, &vC));
 }
@@ -152,7 +151,7 @@ PointLineDistance(const SG_Vector *v, const SK_Line *L, SG_Vector *pvC)
  * the two dimensioned entities into d if not NULL.
  */
 static SG_Matrix
-TransformToAnnotFrame(SK_Dimension *dim, SG_Real *d)
+TransformToAnnotFrame(SK_Dimension *dim, SG_Vector *vr1, SG_Vector *vr2)
 {
 	SG_Matrix T;
 	SG_Vector v1, v2;
@@ -176,7 +175,8 @@ TransformToAnnotFrame(SK_Dimension *dim, SG_Real *d)
 	SG_MatrixIdentityv(&T);
 	SG_MatrixTranslatev(&T, SG_VectorLERPp(&v1, &v2, 0.5));
 	SG_MatrixRotateZv(&T, Atan2(vd.y, vd.x));
-	if (d != NULL) { *d = SG_VectorDistancep(&v1, &v2); }
+	if (vr1 != NULL) { SG_VectorCopy(vr1, &v1); }
+	if (vr2 != NULL) { SG_VectorCopy(vr2, &v2); }
 	return (T);
 }
 
@@ -219,7 +219,7 @@ SK_DimensionDraw(void *p, SK_View *skv)
 	SK_Dimension *dim = p;
 	SG_Color cLblBorder = SK_NodeColor(dim, &dim->cLblBorder);
 	SG_Color cLineDim = SK_NodeColor(dim, &dim->cLineDim);
-	SG_Vector vC;
+	SG_Vector vC, v1, v2;
 	SG_Real d, wLbl, hLbl;
 	SG_Matrix Ta;
 	int wText, hText;
@@ -232,7 +232,9 @@ SK_DimensionDraw(void *p, SK_View *skv)
 
 	glPushMatrix();
 
-	Ta = TransformToAnnotFrame(dim, &d);
+	Ta = TransformToAnnotFrame(dim, &v1, &v2);
+	d = SG_VectorDistancep(&v1, &v2);
+
 	SG_MatrixTransposev(&Ta);
 	SG_MultMatrixGL(&Ta);
 
@@ -309,12 +311,17 @@ SG_Real
 SK_DimensionProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 {
 	SK_Dimension *dim = p;
-	SG_Vector p1 = SK_NodeCoords(dim->n1);
-	SG_Vector p2 = SK_NodeCoords(dim->n2);
+	SG_Matrix Ta;
+	SG_Vector p1, p2;
 	SG_Real mag, u;
 
-	SG_VectorSubv(&p1, &dim->vLbl);
-	SG_VectorSubv(&p2, &dim->vLbl);
+	if (dim->n1 == NULL || dim->n2 == NULL)
+		return (HUGE_VAL);
+
+	Ta = TransformToAnnotFrame(dim, &p1, &p2);
+
+//	SG_VectorSubv(&p1, &dim->vLbl);
+//	SG_VectorSubv(&p2, &dim->vLbl);
 
 	mag = SG_VectorDistance(p2, p1);
 	u = ( ((v->x - p1.x)*(p2.x - p1.x)) +
@@ -341,7 +348,7 @@ SK_DimensionMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 	SG_Vector v;
 	SG_Matrix Ta, TaInv;
 
-	Ta = TransformToAnnotFrame(dim, NULL);
+	Ta = TransformToAnnotFrame(dim, NULL, NULL);
 	v = SG_MatrixMultVectorp(&Ta, &dim->vLbl);
 	SG_VectorAddv(&v, vel);
 	TaInv = SG_MatrixInvertCramerp(&Ta);
@@ -360,16 +367,17 @@ SK_NodeOps skDimensionOps = {
 	sizeof(SK_Dimension),
 	0,
 	SK_DimensionInit,
-	NULL,		/* destroy */
+	NULL,			/* destroy */
 	SK_DimensionLoad,
 	SK_DimensionSave,
-	NULL,		/* draw_relative */
+	NULL,			/* draw_relative */
 	SK_DimensionDraw,
 	SK_DimensionRedraw,
 	SK_DimensionEdit,
 	SK_DimensionProximity,
 	SK_DimensionDelete,
-	SK_DimensionMove
+	SK_DimensionMove,
+	NULL,			/* constrained */
 };
 
 #ifdef EDITION
@@ -511,7 +519,7 @@ ToolMouseMotion(void *self, SG_Vector pos, SG_Vector vel, int btn)
 		SG_Vector vDim;
 		SG_Matrix Ta, TaInv;
 
-		Ta = TransformToAnnotFrame(t->curDim, NULL);
+		Ta = TransformToAnnotFrame(t->curDim, NULL, NULL);
 		TaInv = SG_MatrixInvertCramerp(&Ta);
 		vDim = SG_MatrixMultVectorp(&TaInv, &pos);
 	   	t->curDim->vLbl = vDim;

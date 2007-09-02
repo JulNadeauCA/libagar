@@ -11,6 +11,7 @@ typedef float SG_Real;
 /*
  * Basic mathematical objects
  */
+typedef struct sg_range { SG_Real a, d, b; } SG_Range;
 typedef struct sg_quat { SG_Real w, x, y, z; } SG_Quat;
 typedef struct sg_vector2 { SG_Real x, y; } SG_Vector2;
 typedef struct sg_vector3 { SG_Real x, y, z; } SG_Vector3, SG_Vector;
@@ -52,6 +53,7 @@ typedef struct sg_ray { SG_Vector p; SG_Vector dir; } SG_Ray;
  */
 #ifdef SG_DOUBLE_PRECISION
 #define SG_Sqrt(x) sqrt(x)
+#define SG_Cbrt(x) cbrt(x)
 #define SG_Sin(x) sin(x)
 #define SG_Cos(x) cos(x)
 #define SG_Tan(x) tan(x)
@@ -67,6 +69,7 @@ typedef struct sg_ray { SG_Vector p; SG_Vector dir; } SG_Ray;
 #define SG_Pow(x,y) pow((x),(y))
 #else
 #define SG_Sqrt(r) sqrtf(r)
+#define SG_Cbrt(r) cbrtf(r)
 #define SG_Sin(x) sinf(x)
 #define SG_Cos(x) cosf(x)
 #define SG_Tan(x) tanf(x)
@@ -88,6 +91,7 @@ typedef struct sg_ray { SG_Vector p; SG_Vector dir; } SG_Ray;
 
 #ifdef _AGAR_INTERNAL
 #define Sqrt(r) SG_Sqrt(r)
+#define Cbrt(r) SG_Cbrt(r)
 #define Sin(x) SG_Sin(x)
 #define Cos(x) SG_Cos(x)
 #define Tan(x) SG_Tan(x)

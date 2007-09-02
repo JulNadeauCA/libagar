@@ -157,7 +157,6 @@ NodeDelete(AG_Event *event)
 	} else {
 		AG_TextMsg(AG_MSG_ERROR, _("Entity cannot be deleted"));
 	}
-	SK_Update(skv->sk);
 }
 
 static void

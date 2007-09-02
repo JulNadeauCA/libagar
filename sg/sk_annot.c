@@ -64,7 +64,10 @@ int
 SK_AnnotDelete(void *p)
 {
 	SK_Annot *ann = p;
+	int rv;
 
-	return (SK_NodeDel(ann));
+	rv = SK_NodeDel(ann);
+	SK_Update(SKNODE(ann)->sk);
+	return (rv);
 }
 #endif /* HAVE_OPENGL */

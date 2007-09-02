@@ -194,6 +194,7 @@ SK_Init(void *obj, const char *name)
 	sk->uLen = AG_FindUnit("mm");
 	sk->status = SK_WELL_CONSTRAINED;
 	strlcpy(sk->statusText, _("New sketch"), sizeof(sk->statusText));
+	sk->nSolutions = 0;
 
 #ifdef EDITION
 	AG_SetEvent(sk, "edit-post-load", PostEditorLoad, NULL);
@@ -700,6 +701,7 @@ SK_NodeDelReference(void *pNode, void *pOther)
 	}
 }
 
+/* Associate a constraint with a node. */
 void
 SK_NodeAddConstraint(void *pNode, SK_Constraint *ct)
 {
@@ -715,6 +717,7 @@ SK_NodeAddConstraint(void *pNode, SK_Constraint *ct)
 	node->cons[node->nCons++] = ct;
 }
 
+/* Dissociate a constraint from a node. */
 void
 SK_NodeDelConstraint(void *pNode, SK_Constraint *ct)
 {
@@ -736,7 +739,6 @@ SK_NodeDelConstraint(void *pNode, SK_Constraint *ct)
 }
 
 /* Search a node by name in a sketch. */
-/* XXX use a hash table */
 void *
 SK_FindNode(SK *sk, Uint32 name, const char *type)
 {
@@ -802,21 +804,46 @@ SK_NodeAdd(void *pNode, const SK_NodeOps *ops, Uint32 name, Uint flags)
 	return (n);
 }
 
-/* Detach and free a node (and its children) from the sketch. */
+/*
+ * Detach and free a node (and its children) from the sketch. Annotations
+ * and constraints referencing the node are automatically deleted as well.
+ */
 int
 SK_NodeDel(void *p)
 {
 	SK_Node *node = p;
 	SK *sk = node->sk;
+	SK_Constraint *ct;
 
 	if (node == SKNODE(sk->root)) {
 		AG_SetError("Cannot delete root node");
 		return (-1);
 	}
+	if (!SK_NodeOfClass(node, "Annot:Dimension:*")) {
+		SK_Dimension *dim;
+deldims:
+		SK_FOREACH_NODE_CLASS(dim, sk, sk_dimension,
+		    "Annot:Dimension:*") {
+			if (dim->n1 == node || dim->n2 == node) {
+				SKNODE(dim)->ops->del(dim);
+				goto deldims;
+			}
+		}
+	}
+delcts:
+	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
+		if (ct->n1 == node || ct->n2 == node) {
+			SK_NodeDelConstraint(ct->n1, ct);
+			SK_NodeDelConstraint(ct->n2, ct);
+			SK_DelConstraint(&sk->ctGraph, ct);
+			goto delcts;
+		}
+	}
 	if (node->nRefs > 0) {
 		AG_SetError("Node is being referenced");
 		return (-1);
 	}
+
 	SK_NodeDetach(node->pNode, node);
 	SK_FreeNode(sk, node);
 	return (0);
@@ -1282,12 +1309,17 @@ SK_ComposePair(SK *sk, const SK_Insn *insn)
 	SG_Vector v;
 	int i, rv = -1;
 
-	if (insn->n[0]->flags & SK_NODE_SELECTED) {
-		n =  insn->n[0];
-		n1 = insn->n[1];
-	} else {
+	if ((insn->n[0]->flags & SK_NODE_FIXED) &&
+	    (insn->n[1]->flags & SK_NODE_FIXED)) {
+		AG_SetError("Attempt to place two fixed entities");
+		return (-1);
+	}
+	if (insn->n[0]->flags & SK_NODE_FIXED) {
 		n =  insn->n[1];
 		n1 = insn->n[0];
+	} else {
+		n =  insn->n[0];
+		n1 = insn->n[1];
 	}
 
 	for (i = 0; i < skConstraintPairFnCount; i++) {
@@ -1296,13 +1328,13 @@ SK_ComposePair(SK *sk, const SK_Insn *insn)
 		if (fn->ctType != ct->type) {
 			continue;
 		}
-		if (SK_NodeOfClass(n, fn->type1) &&
+		if (SK_NodeOfClass(n,  fn->type1) &&
 		    SK_NodeOfClass(n1, fn->type2)) {
 			rv = fn->fn(ct, (void *)n, (void *)n1);
 			break;
 		} else
 		if (SK_NodeOfClass(n1, fn->type1) &&
-		    SK_NodeOfClass(n, fn->type2)) {
+		    SK_NodeOfClass(n,  fn->type2)) {
 			rv = fn->fn(ct, (void *)n1, (void *)n);
 			break;
 		}
@@ -1387,6 +1419,7 @@ SK_ClearProgramState(SK *sk)
 {
 	SK_Node *node;
 
+	sk->nSolutions = 0;
 	TAILQ_FOREACH(node, &sk->nodes, nodes)
 		sk->flags &= ~(SK_NODE_KNOWN);
 }
@@ -1409,7 +1442,7 @@ SK_ExecProgram(SK *sk)
 }
 
 void
-SK_SetStatus(SK *sk, enum sk_status status, const char *fmt, ...)
+SK_SetStatus(SK *sk, SK_Status status, const char *fmt, ...)
 {
 	va_list ap;
 
