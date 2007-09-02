@@ -41,6 +41,7 @@ double	AG_UnitReaumur(double, int);
 #define	AG_Unit2Unitf(n, u1, u2) ((float)AG_Unit2Unit((float)(n), (u1), (u2)))
 
 extern const AG_Unit *agUnitGroups[];
+extern const char *agUnitGroupNames[];
 extern const int agnUnitGroups;
 
 extern const AG_Unit agIdentityUnit[];
