@@ -43,11 +43,6 @@
 
 extern int agFreetype;
 
-static void mousebuttondown(AG_Event *);
-static void mousemotion(AG_Event *);
-static void keydown(AG_Event *);
-static void keyup(AG_Event *);
-
 AG_Textbox *
 AG_TextboxNew(void *parent, Uint flags, const char *label)
 {
@@ -69,7 +64,8 @@ ProcessKey(AG_Textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 	char *s;
 	int i, rv = 0;
 
-	if (keysym == SDLK_RETURN)
+	if (keysym == SDLK_RETURN &&
+	   (tb->flags & AG_TEXTBOX_MULTILINE) == 0)
 		return (0);
 
 	if (keymod == KMOD_NONE && isprint((int)keysym)) {
@@ -150,10 +146,12 @@ BlinkTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Textbox *tb = obj;
 
-	if (tb->flags & AG_TEXTBOX_BLINK_ON) {
-		tb->flags &= ~(AG_TEXTBOX_BLINK_ON);
-	} else {
-		tb->flags |= AG_TEXTBOX_BLINK_ON;
+	if ((tb->flags & AG_TEXTBOX_CURSOR_MOVING) == 0) {
+		if (tb->flags & AG_TEXTBOX_BLINK_ON) {
+			tb->flags &= ~(AG_TEXTBOX_BLINK_ON);
+		} else {
+			tb->flags |= AG_TEXTBOX_BLINK_ON;
+		}
 	}
 	return (ival);
 }
@@ -180,52 +178,6 @@ LostFocus(AG_Event *event)
 	AG_UnlockTimeouts(tb);
 }
 
-void
-AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
-{
-	Uint wflags = AG_WIDGET_FOCUSABLE;
-
-	if (flags & AG_TEXTBOX_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_TEXTBOX_VFILL) { wflags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(tbox, &agTextboxOps, wflags);
-	AG_WidgetBind(tbox, "string", AG_WIDGET_STRING, tbox->string,
-	    sizeof(tbox->string));
-
-	tbox->string[0] = '\0';
-	tbox->boxPadX = 2;
-	tbox->boxPadY = 3;
-	tbox->lblPadL = 2;
-	tbox->lblPadR = 2;
-	tbox->wLbl = 0;
-	tbox->flags = flags|AG_TEXTBOX_BLINK_ON;
-	if (flags & AG_TEXTBOX_READONLY) {		/* XXX */
-		AG_WidgetDisable(tbox);
-	}
-	tbox->pos = 0;
-	tbox->offs = 0;
-	tbox->sel_x1 = 0;
-	tbox->sel_x2 = 0;
-	tbox->sel_edit = 0;
-	tbox->compose = 0;
-	tbox->wPre = 0;
-	tbox->hPre = agTextFontHeight;
-	tbox->label = -1;
-	tbox->labelText = (label != NULL) ? Strdup(label) : NULL;
-	AG_MutexInitRecursive(&tbox->lock);
-
-	AG_SetEvent(tbox, "window-keydown", keydown, NULL);
-	AG_SetEvent(tbox, "window-keyup", keyup, NULL);
-	AG_SetEvent(tbox, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(tbox, "window-mousemotion", mousemotion, NULL);
-	AG_SetEvent(tbox, "widget-gainfocus", GainedFocus, NULL);
-	AG_SetEvent(tbox, "widget-lostfocus", LostFocus, NULL);
-	AG_SetEvent(tbox, "widget-hidden", LostFocus, NULL);
-	AG_SetTimeout(&tbox->repeat_to, RepeatTimeout, NULL, 0);
-	AG_SetTimeout(&tbox->delay_to, DelayTimeout, NULL, 0);
-	AG_SetTimeout(&tbox->cblink_to, BlinkTimeout, NULL, 0);
-}
-
 static void
 Destroy(void *p)
 {
@@ -242,7 +194,7 @@ Draw(void *p)
 	AG_Textbox *tbox = p;
 	AG_WidgetBinding *stringb;
 	AG_Font *font;
-	int i, x, y, offs;
+	int i, x, xStart, y, dx, dy;
 	size_t len;
 	char *s;
 #ifdef UTF8
@@ -263,7 +215,9 @@ Draw(void *p)
 		    tbox->lblPadL, WIDGET(tbox)->h/2 - lblSu->h/2);
 		AG_WidgetPopClipRect(tbox);
 
-		x = tbox->lblPadL + tbox->wLbl + tbox->lblPadR;
+		xStart = tbox->lblPadL + tbox->wLbl + tbox->lblPadR +
+		         tbox->boxPadX;
+		x = xStart - tbox->boxPadX;
 	} else {
 		if (WIDGET(tbox)->w < (tbox->boxPadX*2 + tbox->lblPadL +
 		                       tbox->lblPadR) ||
@@ -271,6 +225,7 @@ Draw(void *p)
 			return;
 		}
 		x = 0;
+		xStart = tbox->boxPadX;
 	}
 	y = tbox->boxPadY;
 
@@ -318,22 +273,23 @@ Draw(void *p)
 	    WIDGET(tbox)->w - tbox->boxPadX*2,
 	    WIDGET(tbox)->h - tbox->boxPadY*2);
 	
-	x += tbox->boxPadX;
-	offs = tbox->offs < len-1 ? tbox->offs : len-1;
-	for (i = offs; i <= len; i++) {
+	x = xStart;
+	tbox->xMax = 0;
+	tbox->yMax = 1;
+	tbox->yVis = WIDGET(tbox)->h / agTextFontLineSkip;
+	for (i = 0; i <= len; i++) {
 		AG_Glyph *gl;
 #ifdef UTF8
 		Uint32 c = ucs[i];
 #else
 		char c = s[i];
 #endif
-
 		if (i == tbox->pos &&
 		    (tbox->flags & AG_TEXTBOX_BLINK_ON) &&
 		    AG_WidgetEnabled(tbox) &&
 		    AG_WidgetFocused(tbox)) {
 			agPrim.vline(tbox,
-			    x, (y + 1),
+			    x - tbox->x, (y + 1),
 			    (y + agTextFontHeight - 2),
 			    AG_COLOR(TEXTBOX_CURSOR_COLOR));
 		}
@@ -341,32 +297,38 @@ Draw(void *p)
 			break;
 
 		if (c == '\n') {
-			y += agTextFontLineSkip;
+			if ((tbox->yMax-1) >= tbox->y) {
+				y += agTextFontLineSkip;
+			}
+			tbox->xMax = MAX(tbox->xMax, x - xStart +
+			                 tbox->boxPadX*2);
+			x = xStart;
+			tbox->yMax++;
 			continue;
 		} else if (c == '\t') {
 			x += agTextTabWidth;
 			continue;
 		}
+		if ((tbox->yMax-1) < tbox->y) {
+			continue;
+		}
 
 		c = (tbox->flags & AG_TEXTBOX_PASSWORD) ? '*' : c;
+		dx = WIDGET(tbox)->cx + x - tbox->x;
+		dy = WIDGET(tbox)->cy + y;
 
 		if (!agView->opengl) {
 			SDL_Rect rd;
 
 			AG_TextColor(TEXTBOX_TXT_COLOR);
 			gl = AG_TextRenderGlyph(c);
-			rd.x = WIDGET(tbox)->cx + x;
-			rd.y = WIDGET(tbox)->cy + y;
+			rd.x = dx;
+			rd.y = dy;
 			x += gl->su->w;
 			SDL_BlitSurface(gl->su, NULL, agView->v, &rd);
 			AG_TextUnusedGlyph(gl);
 		} else {
 #ifdef HAVE_OPENGL
-			int dx, dy;
-
-			dx = WIDGET(tbox)->cx + x;
-			dy = WIDGET(tbox)->cy + y;
-
 			AG_TextColor(TEXTBOX_TXT_COLOR);
 			gl = AG_TextRenderGlyph(c);
 
@@ -389,8 +351,24 @@ Draw(void *p)
 			AG_TextUnusedGlyph(gl);
 #endif /* HAVE_OPENGL */
 		}
-		if (x >= WIDGET(tbox)->w - 1)
+		if (y >= WIDGET(tbox)->h)
 			break;
+	}
+	if (tbox->yMax == 1) {
+		tbox->xMax = x - xStart + tbox->boxPadX*2;
+	}
+	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
+		int bw;
+
+		AG_ScrollbarSetBarSize(tbox->vBar,
+		    ((WIDGET(tbox)->h-agTextFontLineSkip)/agTextFontLineSkip)* 
+		    (WIDGET(tbox)->h - tbox->vBar->bw*2)/tbox->yMax);
+		
+		bw = WIDGET(tbox)->w - WIDGET(tbox->hBar)->h*2 -
+		     WIDGET(tbox->vBar)->w;
+		AG_ScrollbarSetBarSize(tbox->hBar,
+		    tbox->xMax < WIDGET(tbox)->w ? WIDGET(tbox)->w :
+		    bw - abs(tbox->xMax - bw));
 	}
 	AG_WidgetUnlockBinding(stringb);
 
@@ -404,7 +382,7 @@ Draw(void *p)
 void
 AG_TextboxPrescale(AG_Textbox *tbox, const char *text)
 {
-	AG_TextSize(text, &tbox->wPre, NULL);
+	AG_TextSize(text, &tbox->wPre, &tbox->hPre);
 }
 
 static void
@@ -414,7 +392,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 	int wLbl, hLbl;
 
 	r->w = tbox->boxPadX*2 + tbox->wPre;
-	r->h = tbox->boxPadY*2;
+	r->h = tbox->boxPadY*2 + tbox->hPre;
 
 	if (tbox->labelText != NULL) {
 		if (tbox->label != -1) {
@@ -424,9 +402,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 			AG_TextSize(tbox->labelText, &wLbl, &hLbl);
 		}
 		r->w += tbox->lblPadL + wLbl + tbox->lblPadR;
-		r->h += MAX(tbox->hPre, hLbl);
+		r->h = MAX(r->h, hLbl);
 	} else {
-		r->h += MAX(tbox->hPre, agTextFontHeight);
+		r->h = MAX(r->h, agTextFontHeight);
 	}
 }
 
@@ -466,11 +444,33 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	} else {
 		tbox->wLbl = wLbl;
 	}
+
+	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
+		AG_SizeReq rBar;
+		AG_SizeAlloc aBar;
+		int d;
+
+		AG_WidgetSizeReq(tbox->hBar, &rBar);
+		d = MIN(rBar.h, a->h);
+		aBar.x = 0;
+		aBar.y = a->h - d;
+		aBar.w = a->w - d;
+		aBar.h = d;
+		AG_WidgetSizeAlloc(tbox->hBar, &aBar);
+		
+		AG_WidgetSizeReq(tbox->vBar, &rBar);
+		d = MIN(rBar.w, a->w);
+		aBar.x = a->w - d;
+		aBar.y = 0;
+		aBar.w = d;
+		aBar.h = a->h - d;
+		AG_WidgetSizeAlloc(tbox->vBar, &aBar);
+	}
 	return (0);
 }
 
 static void
-keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	AG_Textbox *tbox = AG_SELF();
 	SDLKey keysym = AG_SDLKEY(1);
@@ -480,8 +480,8 @@ keydown(AG_Event *event)
 	if (AG_WidgetDisabled(tbox))
 		return;
 
-	if (keysym == SDLK_ESCAPE || keysym == SDLK_TAB) {
-		AG_PostEvent(NULL, tbox, "textbox-done", NULL);
+	if ((tbox->flags & AG_TEXTBOX_CATCH_TAB) == 0 &&
+	    keysym == SDLK_TAB) {
 		return;
 	}
 
@@ -505,7 +505,7 @@ keydown(AG_Event *event)
 }
 
 static void
-keyup(AG_Event *event)
+KeyUp(AG_Event *event)
 {
 	AG_Textbox *tb = AG_SELF();
 	SDLKey keysym = AG_SDLKEY(1);
@@ -520,7 +520,8 @@ keyup(AG_Event *event)
 	AG_ReplaceTimeout(tb, &tb->cblink_to, agTextBlinkRate);
 	AG_UnlockTimeouts(tb);
 	
-	if (keysym == SDLK_RETURN) {
+	if (keysym == SDLK_RETURN &&
+	   (tb->flags & AG_TEXTBOX_MULTILINE) == 0) {
 		if (tb->flags & AG_TEXTBOX_ABANDON_FOCUS) {
 			AG_WidgetUnfocus(tb);
 		}
@@ -529,40 +530,65 @@ keyup(AG_Event *event)
 	AG_MutexUnlock(&tb->lock);
 }
 
+#define ON_LINE(my,y) \
+	( ((my) >= (y) && (my) <= (y)+agTextFontLineSkip) || \
+	  ((my) <= yStart && line == 0) || \
+	  ((my) > (nLines*agTextFontLineSkip) && (line == nLines-1)) )
+#define ON_CHAR(mx,x,glyph) \
+	((mx) >= (x) && (mx) <= (x)+(glyph)->advance)
+
 /* Map mouse coordinates to a position within the string. */
 static int
 GetCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 {
 	AG_WidgetBinding *stringb;
 	AG_Font *font;
-	int tstart = 0;
-	int i, x1, y;
 	size_t len;
 	char *s;
 	Uint32 ch;
-	int x = tbox->boxPadX;
+	int xStart = tbox->boxPadX;
+	int yStart = tbox->boxPadY;
+	int i, x, y, line = 0;
+	int nLines = 1;
 
-	if (tbox->label != -1) {
-		x += tbox->lblPadL + tbox->wLbl + tbox->lblPadR;
-	}
-	if (mx <= x) {
-		return (-1);
-	}
-	if (AG_WidgetFocused(tbox)) {
-		x++;
-	}
-	y = tbox->boxPadY;
+	if (tbox->label != -1)
+		xStart += tbox->lblPadL + tbox->wLbl + tbox->lblPadR;
+	if (AG_WidgetFocused(tbox))
+		xStart++;
+
+	x = xStart;
+	y = yStart;
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	len = strlen(s);
 	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL)
 		fatal("%s", AG_GetError());
 
-	for (i = tstart; i < len; i++) {
+	for (i = 0; i < len; i++) {
+		if (s[i] == '\n')
+			nLines++;
+	}
+	for (i = 0; i < len; i++) {
+		if (mx <= xStart && ON_LINE(my,y)) {
+			*pos = i;
+			goto in;
+		}
 		if (s[i] == '\n') {
+			if (ON_LINE(my,y) &&
+			    mx > x) {
+				*pos = i;
+				goto in;
+			}
 			y += agTextFontLineSkip;
+			x = xStart;
+			line++;
 			continue;
 		} else if (s[i] == '\t') {
+			if (ON_LINE(my,y) &&
+			    mx >= x && mx <= x+agTextTabWidth) {
+				*pos = (mx < x + agTextTabWidth/2) ? i : i+1;
+				goto in;
+			}
 			x += agTextTabWidth;
 			continue;
 		}
@@ -571,45 +597,40 @@ GetCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 		switch (font->type) {
 #ifdef HAVE_FREETYPE
 		case AG_FONT_VECTOR:
-			{
-				AG_TTFFont *ttf = font->ttf;
-				FT_Bitmap *ftbmp;
-				AG_TTFGlyph *glyph;
+		{
+			AG_TTFFont *ttf = font->ttf;
+			FT_Bitmap *ftbmp;
+			AG_TTFGlyph *glyph;
 
-				if (AG_TTFFindGlyph(ttf, ch,
-				    TTF_CACHED_METRICS|TTF_CACHED_BITMAP)
-				    != 0) {
-					continue;
-				}
-				glyph = ttf->current;
-				ftbmp = &glyph->bitmap;
-				x1 = x + glyph->minx + ftbmp->width;
-				if (i == 0 && glyph->minx < 0) {
-					x -= glyph->minx;
-				}
-				if (x1 >= WIDGET(tbox)->w) {
-					continue;
-				}
-				if (mx >= x && mx < x1) {
-					*pos = i;
-					goto in;
-				}
-				x += glyph->advance;
+			if (AG_TTFFindGlyph(ttf, ch,
+			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
+				continue;
 			}
+			glyph = ttf->current;
+			ftbmp = &glyph->bitmap;
+
+			if (ON_LINE(my,y) && ON_CHAR(mx,x,glyph)) {
+				*pos = (mx < x+glyph->advance/2) ? i : i+1;
+				goto in;
+			}
+			x += glyph->advance;
 			break;
+		}
 #endif /* HAVE_FREETYPE */
 		case AG_FONT_BITMAP:
-			{
-				AG_Glyph *gl;
+		{
+			AG_Glyph *gl;
 			
-				gl = AG_TextRenderGlyph(ch);
-				x1 = x + gl->su->w;
-				if (x1 >= WIDGET(tbox)->w) { continue; }
-				if (mx >= x && mx < x1) { *pos = i; goto in; }
-				x += gl->su->w;
-				AG_TextUnusedGlyph(gl);
+			gl = AG_TextRenderGlyph(ch);
+			if (ON_LINE(my,y) &&
+			    mx >= x && mx <= x+gl->su->w) {
+				*pos = i;
+				goto in;
 			}
+			x += gl->su->w;
+			AG_TextUnusedGlyph(gl);
 			break;
+		}
 		default:
 			fatal("Unknown font format");
 		}
@@ -620,6 +641,8 @@ in:
 	AG_WidgetUnlockBinding(stringb);
 	return (0);
 }
+#undef ON_LINE
+#undef ON_CHAR
 
 static void
 MoveCursorToCoords(AG_Textbox *tbox, int mx, int my)
@@ -641,31 +664,69 @@ MoveCursorToCoords(AG_Textbox *tbox, int mx, int my)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Textbox *tbox = AG_SELF();
 	int btn = AG_INT(1);
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
 	int rv;
+	
+	AG_WidgetFocus(tbox);
 
-	if (tbox->label == -1 || mx >= WSURFACE(tbox,tbox->label)->w)
-		AG_WidgetFocus(tbox);
-
-	if (btn == SDL_BUTTON_LEFT)
+	switch (btn) {
+	case SDL_BUTTON_LEFT:
+		if (tbox->flags & AG_TEXTBOX_MULTILINE) {
+			if ( (AG_ScrollbarVisible(tbox->hBar) &&
+			      my >= WIDGET(tbox->hBar)->y) ||
+			     (AG_ScrollbarVisible(tbox->vBar) &&
+			      mx >= WIDGET(tbox->vBar)->x) )
+				return;
+		}
+		tbox->flags |= AG_TEXTBOX_CURSOR_MOVING|AG_TEXTBOX_BLINK_ON;
+		mx += tbox->x;
 		MoveCursorToCoords(tbox, mx, my);
+		break;
+	default:
+		break;
+	}
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseButtonUp(AG_Event *event)
+{
+	AG_Textbox *tbox = AG_SELF();
+	int btn = AG_INT(1);
+
+	switch (btn) {
+	case SDL_BUTTON_LEFT:
+		tbox->flags &= ~(AG_TEXTBOX_CURSOR_MOVING);
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+MouseMotion(AG_Event *event)
 {
 	AG_Textbox *tbox = AG_SELF();
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
 	int state = AG_INT(5);
-
-	if (state & SDL_BUTTON_LEFT)
-		MoveCursorToCoords(tbox, mx, my);
+	
+	if ((state & SDL_BUTTON_LEFT) == 0) {
+		return;
+	}
+	mx += tbox->x;
+	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
+		if ( (AG_ScrollbarVisible(tbox->hBar) &&
+		      my >= WIDGET(tbox->hBar)->y) ||
+		     (AG_ScrollbarVisible(tbox->vBar) &&
+		      mx >= WIDGET(tbox->vBar)->x) )
+			return;
+	}
+	MoveCursorToCoords(tbox, mx, my);
 }
 
 void
@@ -761,6 +822,76 @@ AG_TextboxSetLabel(AG_Textbox *tbox, const char *fmt, ...)
 		tbox->label = -1;
 	}
 	AG_MutexUnlock(&tbox->lock);
+}
+
+void
+AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
+{
+	Uint wflags = AG_WIDGET_FOCUSABLE;
+
+	if (flags & AG_TEXTBOX_HFILL) { wflags |= AG_WIDGET_HFILL; }
+	if (flags & AG_TEXTBOX_VFILL) { wflags |= AG_WIDGET_VFILL; }
+	if (flags & AG_TEXTBOX_CATCH_TAB) { wflags |= AG_WIDGET_CATCH_TAB; }
+
+	AG_WidgetInit(tbox, &agTextboxOps, wflags);
+	AG_WidgetBind(tbox, "string", AG_WIDGET_STRING, tbox->string,
+	    sizeof(tbox->string));
+
+	tbox->string[0] = '\0';
+	tbox->boxPadX = 2;
+	tbox->boxPadY = 3;
+	tbox->lblPadL = 2;
+	tbox->lblPadR = 2;
+	tbox->wLbl = 0;
+	tbox->flags = flags|AG_TEXTBOX_BLINK_ON;
+	if (flags & AG_TEXTBOX_READONLY) {		/* XXX */
+		AG_WidgetDisable(tbox);
+	}
+	tbox->offs = 0;
+	tbox->pos = 0;
+	tbox->sel_x1 = 0;
+	tbox->sel_x2 = 0;
+	tbox->sel_edit = 0;
+	tbox->compose = 0;
+	tbox->wPre = 0;
+	tbox->hPre = agTextFontHeight;
+	tbox->label = -1;
+	tbox->labelText = (label != NULL) ? Strdup(label) : NULL;
+	AG_MutexInitRecursive(&tbox->lock);
+
+	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
+		tbox->hBar = AG_ScrollbarNew(tbox, AG_SCROLLBAR_HORIZ, 0);
+		tbox->vBar = AG_ScrollbarNew(tbox, AG_SCROLLBAR_VERT, 0);
+		tbox->xMin = 0;
+		tbox->x = 0;
+		tbox->xMax = 10;
+		tbox->yMin = 0;
+		tbox->y = 0;
+		tbox->yMax = 10;
+		tbox->yVis = 1;
+
+		AG_WidgetBindInt(tbox->hBar, "min", &tbox->xMin);
+		AG_WidgetBindInt(tbox->hBar, "value", &tbox->x);
+		AG_WidgetBindInt(tbox->hBar, "max", &tbox->xMax);
+		AG_WidgetBindInt(tbox->hBar, "visible", &WIDGET(tbox)->w);
+
+		AG_WidgetBindInt(tbox->vBar, "min",   &tbox->yMin);
+		AG_WidgetBindInt(tbox->vBar, "value", &tbox->y);
+		AG_WidgetBindInt(tbox->vBar, "max",   &tbox->yMax);
+		AG_WidgetBindInt(tbox->vBar, "visible", &tbox->yVis);
+	}
+
+	AG_SetEvent(tbox, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(tbox, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(tbox, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(tbox, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(tbox, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(tbox, "widget-gainfocus", GainedFocus, NULL);
+	AG_SetEvent(tbox, "widget-lostfocus", LostFocus, NULL);
+	AG_SetEvent(tbox, "widget-hidden", LostFocus, NULL);
+	AG_SetTimeout(&tbox->repeat_to, RepeatTimeout, NULL, 0);
+	AG_SetTimeout(&tbox->delay_to, DelayTimeout, NULL, 0);
+	AG_SetTimeout(&tbox->cblink_to, BlinkTimeout, NULL, 0);
 }
 
 const AG_WidgetOps agTextboxOps = {
