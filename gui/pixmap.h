@@ -38,12 +38,13 @@ AG_Pixmap *AG_PixmapFromXCF(void *, Uint, const char *);
 void	   AG_PixmapInit(AG_Pixmap *, Uint);
 
 int	   AG_PixmapAddSurface(AG_Pixmap *, SDL_Surface *);
+int	   AG_PixmapAddSurfaceFromBMP(AG_Pixmap *, const char *);
 int	   AG_PixmapAddSurfaceCopy(AG_Pixmap *, SDL_Surface *);
 int	   AG_PixmapAddSurfaceScaled(AG_Pixmap *, SDL_Surface *, Uint, Uint);
 void	   AG_PixmapReplaceSurfaceScaled(AG_Pixmap *, SDL_Surface *, Uint,
 		                         Uint);
 
-__inline__ void AG_PixmapSetSurface(AG_Pixmap *, int);
+__inline__ int  AG_PixmapSetSurface(AG_Pixmap *, int);
 __inline__ void AG_PixmapSetCoords(AG_Pixmap *, int, int);
 
 #define AG_PixmapReplaceSurface(px,su)	AG_WidgetReplaceSurface((px),(px)->n,su)

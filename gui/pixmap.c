@@ -148,6 +148,18 @@ AG_PixmapAddSurface(AG_Pixmap *px, SDL_Surface *su)
 }
 
 int
+AG_PixmapAddSurfaceFromBMP(AG_Pixmap *px, const char *path)
+{
+	SDL_Surface *bmp;
+	int n;
+
+	if ((bmp = SDL_LoadBMP(path)) == NULL) {
+		return (-1);
+	}
+	return AG_WidgetMapSurface(px, bmp);
+}
+
+int
 AG_PixmapAddSurfaceCopy(AG_Pixmap *px, SDL_Surface *su)
 {
 	return (AG_WidgetMapSurface(px, AG_DupSurface(su)));
@@ -217,14 +229,14 @@ Draw(void *p)
 		AG_WidgetBlitSurface(px, px->n, px->s, px->t);
 }
 
-void
+int
 AG_PixmapSetSurface(AG_Pixmap *px, int name)
 {
-#ifdef DEBUG
-	if (name >= WIDGET(px)->nsurfaces)
-		fatal("no such surface: %d", name);
-#endif
+	if (name < 0 || name >= WIDGET(px)->nsurfaces) {
+		return (-1);
+	}
 	px->n = name;
+	return (0);
 }
 
 void
