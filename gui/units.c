@@ -32,6 +32,31 @@
 #include <config/astronomical_units.h>
 #include <config/historical_units.h>
 
+const char *agUnitGroupNames[] = {
+	N_("Identity"),
+	N_("Length"),
+	N_("Video"),
+	N_("Area"),
+	N_("Volume"),
+	N_("Velocity"),
+	N_("Mass"),
+	N_("Time"),
+	N_("Electrical current"),
+	N_("Temperature"),
+	N_("Substance amount"),
+	N_("Light"),
+	N_("Power"),
+	N_("Electromotive force"),
+	N_("Electrical resistance"),
+	N_("First-order resistance coefficient"),
+	N_("Second-order resistance coefficient"),
+	N_("Capacitance"),
+	N_("Inductance"),
+	N_("Frequency"),
+	N_("Pressure"),
+	N_("Human metabolic expenditure"),
+	NULL
+};
 const AG_Unit *agUnitGroups[] = {
 	agIdentityUnit,
 	agLengthUnits,
