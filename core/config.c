@@ -174,8 +174,8 @@ AG_ConfigInit(AG_Config *cfg)
 	AG_SetBool(cfg, "view.opengl", 0);
 	AG_SetUint16(cfg, "view.w", 800);
 	AG_SetUint16(cfg, "view.h", 600);
-	AG_SetUint16(cfg, "view.min-w", 320);
-	AG_SetUint16(cfg, "view.min-h", 240);
+	AG_SetUint16(cfg, "view.min-w", 16);
+	AG_SetUint16(cfg, "view.min-h", 16);
 	AG_SetUint8(cfg, "view.depth", 32);
 	AG_SetUint(cfg, "view.nominal-fps", 40);
 	AG_SetBool(cfg, "input.joysticks", 1);
