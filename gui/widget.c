@@ -1475,12 +1475,8 @@ AG_WidgetFocus(void *p)
 
 	/* Set the focus flag on the widget and its parents. */
 	do {
-		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*")) {
-			if (wid->flags & AG_WIDGET_FOCUS_PARENT_WIN) {
-				AG_WindowFocus((AG_Window *)pwid);
-			}
+		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*"))
 			break;
-		}
 #if 0
 		if ((pwid->flags & AG_WIDGET_FOCUSABLE) == 0) {
 			dprintf("parent (%s) is not focusable\n",

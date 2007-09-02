@@ -452,10 +452,8 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 	int i = 0;
 
 	if ((olfocus = AG_WidgetFindFocused(win)) == NULL) {
-		dprintf("no focus!\n");
 		return;
 	}
-
 	AG_WindowCountWidgets(WIDGET(win), &nwidgets);
 	widgets = Malloc(nwidgets * sizeof(AG_Widget *), M_WIDGET);
 	AG_WindowMapWidgets(WIDGET(win), widgets, &i);
@@ -471,7 +469,7 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 			} else {
 				if (i+1 < nwidgets) {
 					AG_WidgetFocus(widgets[i+1]);
-				} else if (i+1 == nwidgets) {
+				} else if (i+1 >= nwidgets) {
 					AG_WidgetFocus(widgets[0]);
 				}
 			}
@@ -642,8 +640,8 @@ AG_WindowEvent(SDL_Event *ev)
 	extern SDL_Cursor *agCursorToSet;
 	static AG_Window *keydown_win = NULL;	/* XXX hack */
 	AG_Window *win;
-	AG_Widget *wid;
-	int focus_changed = 0;
+	AG_Widget *wid, *wFoc;
+	int focus_changed = 0, tabCycle;
 	AG_Window *focus_saved = agView->winToFocus;
 	int rv = 0;
 	
@@ -866,37 +864,38 @@ process:
 			default:
 				break;
 			}
-			if (ev->key.keysym.sym == SDLK_TAB &&	/* Move focus */
+			tabCycle = 1;
+			if (AG_WINDOW_FOCUSED(win) &&
+			   (wFoc = AG_WidgetFindFocused(win)) != NULL &&
+			   (ev->key.keysym.sym != SDLK_TAB ||
+			    wFoc->flags & AG_WIDGET_CATCH_TAB)) {
+				if (wFoc->flags & AG_WIDGET_CATCH_TAB) {
+					tabCycle = 0;
+				}
+				AG_PostEvent(NULL, wFoc,
+				    (ev->type == SDL_KEYUP) ?
+				    "window-keyup" : "window-keydown",
+				    "%i, %i, %i",
+				    (int)ev->key.keysym.sym,
+				    (int)ev->key.keysym.mod,
+				    (int)ev->key.keysym.unicode);
+				/*
+				 * Ensure the keyup event is posted to
+				 * this window when the key is released,
+				 * in case a keydown event handler
+				 * changes the window focus.
+				 */
+				keydown_win = win;
+				rv = 1;
+			}
+			if (tabCycle &&
+			    ev->key.keysym.sym == SDLK_TAB &&
 			    ev->type == SDL_KEYUP) {
 				AG_WindowCycleFocus(win,
 				    (ev->key.keysym.mod & KMOD_SHIFT));
 				AG_MutexUnlock(&win->lock);
 				rv = 1;
 				goto out;
-			}
-			if (AG_WINDOW_FOCUSED(win)) {
-				AG_Widget *fwid;
-
-				if ((fwid = AG_WidgetFindFocused(win))!= NULL) {
-					AG_PostEvent(NULL, fwid,
-					    (ev->type == SDL_KEYUP) ?
-					    "window-keyup" : "window-keydown",
-					    "%i, %i, %i",
-					    (int)ev->key.keysym.sym,
-					    (int)ev->key.keysym.mod,
-					    (int)ev->key.keysym.unicode);
-					/*
-					 * Ensure the keyup event is posted to
-					 * this window when the key is released,
-					 * in case a keydown event handler
-					 * changes the window focus.
-					 */
-					keydown_win = win;
-					rv = 1;
-				} else {
-					dprintf("no focused widget in %s\n",
-					    OBJECT(win)->name);
-				}
 			}
 		}
 		AG_MutexUnlock(&win->lock);
