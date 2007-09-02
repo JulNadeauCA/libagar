@@ -44,6 +44,27 @@ AG_UComboNew(void *parent, Uint flags)
 	return (com);
 }
 
+AG_UCombo *
+AG_UComboNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt,
+    ...)
+{
+	AG_UCombo *com;
+	AG_Event *ev;
+
+	com = Malloc(sizeof(AG_UCombo), M_OBJECT);
+	AG_UComboInit(com, flags);
+	AG_ObjectAttach(parent, com);
+
+	com->list->flags |= AG_TLIST_POLL;
+	ev = AG_SetEvent(com->list, "tlist-poll", fn, NULL);
+	AG_EVENT_GET_ARGS(ev, fmt);
+	
+	if (flags & AG_UCOMBO_FOCUS) {
+		AG_WidgetFocus(com);
+	}
+	return (com);
+}
+
 static void
 Collapse(AG_UCombo *com)
 {
@@ -150,6 +171,7 @@ AG_UComboInit(AG_UCombo *com, Uint flags)
 
 	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _("..."));
 	AG_ButtonSetPadding(com->button, 1,1,1,1);
+	AG_WidgetSetFocusable(com->button, 0);
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	
 	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);

@@ -34,6 +34,7 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agUComboOps;
 
 AG_UCombo *AG_UComboNew(void *, Uint);
+AG_UCombo *AG_UComboNewPolled(void *, Uint, AG_EventFn, const char *, ...);
 void	   AG_UComboInit(AG_UCombo *, Uint);
 __END_DECLS
 
