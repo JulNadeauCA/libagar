@@ -6,5 +6,6 @@
 #include <agar/sc/sc.h>
 #include <agar/sc/sc_plotter.h>
 #include <agar/sc/sc_matview.h>
+#include <agar/sc/sc_gui.h>
 #include <agar/core/core_close.h>
 #endif
