@@ -269,7 +269,7 @@ CreatePlotView(SG_Voxel *vol)
 		AG_ButtonAct(box, 0, "Generate", GeneratePlot, "%p", plt);
 	}
 
-	AG_WindowSetGeometry(win, 0, agView->h-300, agView->w, 300);
+	AG_WindowSetGeometry(win, 0, agView->h-350, agView->w, 350);
 	AG_WindowShow(win);
 }
 
