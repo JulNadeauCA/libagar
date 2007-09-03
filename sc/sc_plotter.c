@@ -356,7 +356,7 @@ SC_PlotterInit(SC_Plotter *ptr, Uint flags)
 	ptr->hPre = 64;
 	ptr->xScale = 1.0;
 	ptr->yScale = 1.0;
-	ptr->font = NULL;
+	ptr->font = AG_FetchFont(NULL, -1, -1);
 	TAILQ_INIT(&ptr->plots);
 
 	ptr->curColor = 0;
@@ -704,10 +704,12 @@ SC_PlotLabelNew(SC_Plot *pl, enum sc_plot_label_type type, Uint x, Uint y,
 	vsnprintf(plbl->text, sizeof(plbl->text), fmt, args);
 	va_end(args);
 
+	AG_PushTextState();
 	AG_TextFont(pl->plotter->font);
 	AG_TextColor32(pl->color);
 	plbl->text_surface = AG_WidgetMapSurface(pl->plotter,
 	    AG_TextRender(plbl->text));
+	AG_PopTextState();
 
 	TAILQ_INSERT_TAIL(&pl->labels, plbl, labels);
 	return (plbl);
