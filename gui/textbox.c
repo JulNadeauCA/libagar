@@ -64,6 +64,9 @@ ProcessKey(AG_Textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 	char *s;
 	int i, rv = 0;
 
+	if (keysym == SDLK_ESCAPE) {
+		return (0);
+	}
 	if (keysym == SDLK_RETURN &&
 	   (tb->flags & AG_TEXTBOX_MULTILINE) == 0)
 		return (0);
@@ -519,7 +522,7 @@ KeyUp(AG_Event *event)
 	AG_DelTimeout(tb, &tb->delay_to);
 	AG_ReplaceTimeout(tb, &tb->cblink_to, agTextBlinkRate);
 	AG_UnlockTimeouts(tb);
-	
+
 	if (keysym == SDLK_RETURN &&
 	   (tb->flags & AG_TEXTBOX_MULTILINE) == 0) {
 		if (tb->flags & AG_TEXTBOX_ABANDON_FOCUS) {
