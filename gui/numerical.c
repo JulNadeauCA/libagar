@@ -210,9 +210,7 @@ GainedFocus(AG_Event *event)
 	AG_Numerical *num = AG_SELF();
 
 	UpdateTextbox(num);
-
-	if (WIDGET(num)->flags & AG_WIDGET_FOCUSABLE)
-		AG_WidgetFocus(num->input);
+	AG_WidgetFocus(num->input);
 }
 
 /* Update the numerical value from the textbox. */
@@ -342,7 +340,7 @@ void
 AG_NumericalInit(AG_Numerical *num, Uint flags, const char *unit,
     const char *label)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE;
+	Uint wflags = 0;
 
 	if (flags & AG_NUMERICAL_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_NUMERICAL_VFILL) { wflags |= AG_WIDGET_VFILL; }
