@@ -27,9 +27,6 @@
  * Simple memory leak detection tool.
  */
 
-#include <config/debug.h>
-#ifdef DEBUG
-
 #include <core/core.h>
 #include <core/view.h>
 
@@ -119,5 +116,3 @@ DEV_LeakDetector(void)
 	}
 	return (win);
 }
-
-#endif	/* DEBUG */

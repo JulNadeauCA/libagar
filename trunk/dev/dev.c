@@ -30,6 +30,7 @@
 #include <config/network.h>
 #include <config/threads.h>
 #include <config/have_jpeg.h>
+#include <config/debug.h>
 
 #include <core/core.h>
 #include <core/view.h>
@@ -42,7 +43,9 @@ static const struct dev_tool_ent {
 	char *name;
 	AG_Window *(*fn)(void);
 } devTools[] = {
+#if defined(DEBUG)
 	{ N_("Performance Graph"),	AG_EventShowPerfGraph },
+#endif
 #if defined(NETWORK) && defined(THREADS) && defined(HAVE_JPEG)
 	{ N_("Screenshot Uploader"),	DEV_ScreenshotUploader },
 #endif

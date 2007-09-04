@@ -28,9 +28,6 @@
  * all the characters within that range. Useful for testing fonts.
  */
 
-#include <config/debug.h>
-#ifdef DEBUG
-
 #include <core/core.h>
 #include <core/view.h>
 
@@ -248,5 +245,3 @@ DEV_UnicodeBrowser(void)
 	AG_SetEvent(com, "combo-selected", SelectUnicodeRange, "%p", tv);
 	return (win);
 }
-
-#endif	/* DEBUG */

@@ -28,9 +28,6 @@
  * through the Object system.
  */
 
-#include <config/debug.h>
-#ifdef DEBUG
-
 #include <core/core.h>
 #include <core/view.h>
 
@@ -104,5 +101,3 @@ DEV_TimerInspector(void)
 	AG_SetEvent(win, "window-close", CloseWindow, "%p", tv);
 	return (win);
 }
-
-#endif	/* DEBUG */
