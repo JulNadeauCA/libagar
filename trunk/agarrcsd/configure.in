@@ -1,0 +1,34 @@
+# $Csoft: configure.in,v 1.1.1.1 2005/03/25 02:29:22 vedge Exp $
+# Public domain
+
+REGISTER("--enable-warnings",	"Enable compiler warnings [default: no]")
+
+HDEFINE(VERSION, "\"1.1-beta\"")
+HDEFINE(RELEASE, "\"Source of Agony\"")
+
+CHECK(cc)
+REQUIRE(agar, 1.3)
+REQUIRE(agar-net, 1.3)
+REQUIRE(agar-dev, 1.3)
+
+if [ "${HAVE_AGAR}" != "yes" ]; then
+	echo "This program requires Agar (http://agar.csoft.org/)"
+	exit 1
+fi
+# XXX check for server mode
+if [ "${HAVE_AGAR_NET}" != "yes" ]; then
+	echo "This program requires that Agar be compiled with network"
+	echo "server support (--enable-network --enable-server)"
+	exit 1
+fi
+if [ "${HAVE_AGAR_DEV}" != "yes" ]; then
+	echo "This program requires Agar-DEV"
+	exit 1
+fi
+
+MDEFINE(CFLAGS, "$CFLAGS -I$SRC")
+if [ "${enable_warnings}" = "yes" ]; then
+	MDEFINE(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes")
+	MDEFINE(CFLAGS, "$CFLAGS -Wno-unused")
+fi
+
