@@ -24,13 +24,9 @@
  */
 
 /*
- * GUI Debugger. This allows the user to browse through the widget tree
+ * This tool allows the user to browse through the widget tree
  * and manipulate generic Widget and Window parameters.
  */
-
-#include <config/debug.h>
-
-#ifdef DEBUG
 
 #include <core/core.h>
 #include <core/view.h>
@@ -376,5 +372,3 @@ DEV_GuiDebugger(void)
 	    agView->h/4);
 	return (win);
 }
-
-#endif	/* DEBUG */

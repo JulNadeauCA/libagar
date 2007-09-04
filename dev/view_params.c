@@ -27,9 +27,6 @@
  * This displays various parameters related to the display.
  */
 
-#include <config/debug.h>
-#ifdef DEBUG
-
 #include <core/core.h>
 #include <core/view.h>
 
@@ -94,5 +91,3 @@ DEV_DisplaySettings(void)
 	}
 	return (win);
 }
-
-#endif	/* DEBUG */
