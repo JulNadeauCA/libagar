@@ -1,0 +1,37 @@
+TOP=	..
+include Makefile.config
+
+PROG=	agarrcsd
+SRCS=	agarrcsd.c user.c mkpath.c rcsinfo.c rcs.c fgetln.c
+MAN8=	agarrcsd.8
+
+CFLAGS+=${AGAR_CFLAGS} ${AGAR_NET_CFLAGS} ${AGAR_DEV_CFLAGS}
+LIBS+=	${AGAR_LIBS} ${AGAR_NET_LIBS} ${AGAR_DEV_LIBS}
+
+all: all-subdir
+clean: clean-subdir
+cleandir: cleandir-config cleandir-subdir
+install: install-subdir install-includes
+deinstall: deinstall-subdir deinstall-includes
+depend: depend-subdir
+regress: regress-subdir
+
+configure:
+	cat configure.in | mkconfigure > configure
+	chmod 755 configure
+
+cleandir-config:
+	rm -fr config config.log
+
+package: cleandir
+	sh mk/dist.sh
+
+release: cleandir
+	sh mk/dist.sh commit
+
+include ${TOP}/mk/build.prog.mk
+include ${TOP}/mk/build.man.mk
+
+.PHONY: clean cleandir install deinstall depend regress
+.PHONY: configure clean-config release fastclean
+.PHONY: install-includes deinstall-includes
