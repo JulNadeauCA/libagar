@@ -210,7 +210,7 @@ void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
 #define  AG_WidgetBlitSurface(p,n,x,y) \
 	 AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
 void	 AG_WidgetBlitSurfaceGL(void *, int, float, float);
-void	 AG_WidgetPushClipRect(void *, int, int, Uint, Uint);
+void	 AG_WidgetPushClipRect(void *, int, int, int, int);
 void	 AG_WidgetPopClipRect(void *);
 int	 AG_WidgetIsOcculted(AG_Widget *);
 
