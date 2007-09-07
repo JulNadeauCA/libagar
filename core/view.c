@@ -997,6 +997,13 @@ AG_QueueVideoUpdate(int x, int y, int w, int h)
 	} else
 #endif
 	{
+		if (x < 0) { x = 0; }
+		if (y < 0) { y = 0; }
+		if (x+w > agView->w) { w = agView->w - x; }
+		if (y+h > agView->h) { h = agView->h - y; }
+		if (w < 0) { x = 0; w = agView->w; }
+		if (h < 0) { y = 0; h = agView->h; }
+
 		if (agView->ndirty+1 > agView->maxdirty) {
 			agView->maxdirty *= 2;
 			agView->dirty = Realloc(agView->dirty,
