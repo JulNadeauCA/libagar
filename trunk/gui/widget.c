@@ -1534,7 +1534,7 @@ AG_UnsetCursor(void)
  * This is only safe to call from widget draw context.
  */
 void
-AG_WidgetPushClipRect(void *p, int x, int y, Uint w, Uint h)
+AG_WidgetPushClipRect(void *p, int x, int y, int w, int h)
 {
 	AG_Widget *wid = p;
 
@@ -1559,8 +1559,30 @@ AG_WidgetPushClipRect(void *p, int x, int y, Uint w, Uint h)
 	{
 		SDL_Rect r;
 
-		r.x = wid->cx+x;
-		r.y = wid->cy+y;
+		x += wid->cx;
+		y += wid->cy;
+
+		if (x < 0) {
+			x = 0;
+		} else if (x+w > agView->w) {
+			w = agView->w - x;
+			if (w < 0) {
+				x = 0;
+				w = agView->w;
+			}
+		}
+		if (y < 0) {
+			y = 0;
+		} else if (y+h > agView->h) {
+			h = agView->h - y;
+			if (h < 0) {
+				y = 0;
+				h = agView->h;
+			}
+		}
+
+		r.x = x;
+		r.y = y;
 		r.w = w;
 		r.h = h;
 		SDL_GetClipRect(agView->v, &wid->rClipSave);
@@ -1599,11 +1621,6 @@ AG_WidgetDraw(void *p)
 
 	if (wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE))
 		return;
-
-#if 0
-	agPrim.frame(wid, 0, 0, wid->w, wid->h, 1,
-	    AG_COLOR(FRAME_COLOR));
-#endif
 
 	if (((wid->flags & AG_WIDGET_STATIC)==0 || wid->redraw) &&
 	    !AG_WidgetIsOcculted(wid) &&

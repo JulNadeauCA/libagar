@@ -52,9 +52,9 @@ static void Shown(AG_Event *);
 static void Hidden(AG_Event *);
 
 AG_Mutex agWindowLock = AG_MUTEX_INITIALIZER;
-int	 agWindowXOffs = 0;
-int	 agWindowYOffs = 0;
 int	 agWindowAnySize = 0;
+int	 agWindowXOutLimit = 32;
+int	 agWindowBotOutLimit = 32;
 
 AG_Window *
 AG_WindowNew(Uint flags)
@@ -129,7 +129,10 @@ AG_WindowInit(void *p, const char *name, int flags)
 	TAILQ_INIT(&win->subwins);
 	AG_MutexInitRecursive(&win->lock);
 	AG_WindowSetStyle(win, &agWindowDefaultStyle);
-	
+
+	if (!agView->opengl)
+		WIDGET(win)->flags |= AG_WIDGET_CLIPPING;
+
 	if (win->flags & AG_WINDOW_MODAL)
 		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
 	if (win->flags & AG_WINDOW_NORESIZE)
@@ -487,7 +490,18 @@ static void
 ClampToView(AG_Window *win)
 {
 	AG_Widget *w = WIDGET(win);
-	
+
+	if (w->x < agWindowXOutLimit - w->w) {
+		w->x = agWindowXOutLimit - w->w;
+	} else if (w->x > agView->w - agWindowXOutLimit) {
+		w->x = agView->w - agWindowXOutLimit;
+	}
+	if (w->y < 0) {
+		w->y = 0;
+	} else if (w->y > agView->h - agWindowBotOutLimit) {
+		w->y = agView->h - agWindowBotOutLimit;
+	}
+#if 0
 	if (w->x + w->w > agView->w) { w->x = agView->w - w->w; }
 	if (w->y + w->h > agView->h) { w->y = agView->h - w->h; }
 	if (w->x < 0) { w->x = 0; }
@@ -501,6 +515,7 @@ ClampToView(AG_Window *win)
 		w->y = 0;
 		w->h = agView->h - 1;
 	}
+#endif
 }
 
 /*
