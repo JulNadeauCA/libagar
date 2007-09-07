@@ -181,21 +181,9 @@ AG_EventLoop_FixedFPS(void)
 				AG_WidgetDraw(win);
 				AG_MutexUnlock(&win->lock);
 
-				if (win->flags & AG_WINDOW_NOUPDATERECT)
+				if (win->flags & AG_WINDOW_NOUPDATERECT) {
 					continue;
-#ifdef DEBUG
-				if (WIDGET(win)->x < 0 ||
-				    WIDGET(win)->y < 0 ||
-				    WIDGET(win)->x+WIDGET(win)->w >
-				    agView->w ||
-				    WIDGET(win)->y+WIDGET(win)->h >
-				    agView->h) {
-					fatal("%s: bad coords: %d,%d (%dx%d)",
-					    win->caption,
-					    WIDGET(win)->x, WIDGET(win)->y,
-					    WIDGET(win)->w, WIDGET(win)->h);
 				}
-#endif
 				AG_QueueVideoUpdate(
 				    WIDGET(win)->x, WIDGET(win)->y,
 				    WIDGET(win)->w, WIDGET(win)->h);
