@@ -82,14 +82,15 @@ arrow_up(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 	int y1 = wid->cy+y0 - (h>>1);
 	int y2 = y1+h-1;
 	int xs = wid->cx+x0, xe = xs;
+	SDL_Rect *rd = &agView->v->clip_rect;
 	int x, y;
 
 	SDL_LockSurface(agView->v);
 	for (y = y1; y < y2; y+=2) {
 		for (x = xs; x <= xe; x++) {
-			AG_VIEW_PUT_PIXEL2(x, y,
+			AG_VIEW_PUT_PIXEL2_CLIPPED(x, y,
 			    (x == xs || x == xe) ? c2 : c1);
-			AG_VIEW_PUT_PIXEL2(x, y+1, c1);
+			AG_VIEW_PUT_PIXEL2_CLIPPED(x, y+1, c1);
 		}
 		xs--;
 		xe++;
@@ -110,9 +111,9 @@ arrow_down(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 	SDL_LockSurface(agView->v);
 	for (y = y2; y > y1; y-=2) {
 		for (x = xs; x <= xe; x++) {
-			AG_VIEW_PUT_PIXEL2(x, y,
+			AG_VIEW_PUT_PIXEL2_CLIPPED(x, y,
 			    (x == xs || x == xe) ? c2 : c1);
-			AG_VIEW_PUT_PIXEL2(x, y-1, c1);
+			AG_VIEW_PUT_PIXEL2_CLIPPED(x, y-1, c1);
 		}
 		xs--;
 		xe++;
@@ -133,8 +134,8 @@ arrow_left(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 	SDL_LockSurface(agView->v);
 	for (x = x1; x < x2; x+=2) {
 		for (y = ys; y <= ye; y++) {
-			AG_VIEW_PUT_PIXEL2(x+1, y, c1);
-			AG_VIEW_PUT_PIXEL2(x, y,
+			AG_VIEW_PUT_PIXEL2_CLIPPED(x+1, y, c1);
+			AG_VIEW_PUT_PIXEL2_CLIPPED(x, y,
 			    (y == ys || y == ye) ? c2 : c1);
 		}
 		ys--;
@@ -156,8 +157,8 @@ arrow_right(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 	SDL_LockSurface(agView->v);
 	for (x = x2; x > x1; x-=2) {
 		for (y = ys; y <= ye; y++) {
-			AG_VIEW_PUT_PIXEL2(x-1, y, c1);
-			AG_VIEW_PUT_PIXEL2(x, y,
+			AG_VIEW_PUT_PIXEL2_CLIPPED(x-1, y, c1);
+			AG_VIEW_PUT_PIXEL2_CLIPPED(x, y,
 			    (y == ys || y == ye) ? c2 : c1);
 		}
 		ys--;
@@ -329,7 +330,7 @@ frame(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 	agPrim.hline(wid, xoffs,	xoffs+w-1,	yoffs,		cLeft);
 	agPrim.hline(wid, xoffs,	xoffs+w,	yoffs+h-1,	cRight);
 	agPrim.vline(wid, xoffs,	yoffs,		yoffs+h-1,	cLeft);
-	agPrim.vline(wid, xoffs+w-1,	yoffs-1,	yoffs+h-1,	cRight);
+	agPrim.vline(wid, xoffs+w-1,	yoffs,		yoffs+h-1,	cRight);
 }
 
 /* Draw a blended 3D-style frame. */
@@ -540,12 +541,28 @@ line_bresenham(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 	SDL_UnlockSurface(agView->v);
 }
 
-#define HLINE_CLIP() \
-	if (y >= wid->h || y < 0) { return; } \
-	if (x1 > wid->w) { x1 = wid->w; } else if (x1 < 0) { x1 = 0; } \
-	if (x2 > wid->w) { x2 = wid->w; } else if (x2 < 0) { x2 = 0; } \
-	if (x1 > x2) { dx = x2; x2 = x1; x1 = dx; } \
-	dx = x2 - x1
+static __inline__ int
+hline_clip(AG_Widget *wid, int *x1, int *x2, int *y, int *dx)
+{
+	SDL_Rect *rd = &agView->v->clip_rect;
+
+	if ((wid->cy + *y) <  rd->y ||
+	    (wid->cy + *y) >= rd->y+rd->h) {
+		return (1);
+	}
+	if (*x1 > *x2) {
+		*dx = *x2;
+		*x2 = *x1;
+		*x1 = *dx;
+	}
+	if (wid->cx + *x1 < rd->x)
+		*x1 = rd->x - wid->cx;
+	if (wid->cx + *x2 >= rd->x+rd->w)
+		*x2 = rd->x + rd->w - wid->cx - 1;
+
+	*dx = *x2 - *x1;
+	return (*dx <= 0);
+}
 
 static void
 hline32(void *widget, int x1, int x2, int y, Uint32 c)
@@ -554,7 +571,9 @@ hline32(void *widget, int x1, int x2, int y, Uint32 c)
 	Uint8 *pDst, *pEnd;
 	int dx;
 
-	HLINE_CLIP();
+	if (hline_clip(wid, &x1, &x2, &y, &dx)) {
+		return;
+	}
 	SDL_LockSurface(agView->v);
 	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
 	    ((wid->cx+x1)<<2);
@@ -572,8 +591,10 @@ hline24(void *widget, int x1, int x2, int y, Uint32 c)
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
 	int dx;
-
-	HLINE_CLIP();
+	
+	if (hline_clip(wid, &x1, &x2, &y, &dx)) {
+		return;
+	}
 	SDL_LockSurface(agView->v);
 	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
 	    (wid->cx+x1)*3;
@@ -600,7 +621,9 @@ hline16(void *widget, int x1, int x2, int y, Uint32 c)
 	Uint8 *pDst, *pEnd;
 	int dx;
 
-	HLINE_CLIP();
+	if (hline_clip(wid, &x1, &x2, &y, &dx)) {
+		return;
+	}
 	SDL_LockSurface(agView->v);
 	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
 	    ((wid->cx+x1)<<1);
@@ -619,7 +642,9 @@ hline8(void *widget, int x1, int x2, int y, Uint32 c)
 	Uint8 *pDst, *pEnd;
 	int dx;
 
-	HLINE_CLIP();
+	if (hline_clip(wid, &x1, &x2, &y, &dx)) {
+		return;
+	}
 	SDL_LockSurface(agView->v);
 	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
 	    (wid->cx+x1);
@@ -628,21 +653,39 @@ hline8(void *widget, int x1, int x2, int y, Uint32 c)
 	SDL_UnlockSurface(agView->v);
 }
 
-#define VLINE_CLIP() \
-	if (x >= wid->w || x < 0) { return; } \
-	if (y1 > wid->h) { y1 = wid->h; } else if (y1 < 0) { y1 = 0; } \
-	if (y2 > wid->h) { y2 = wid->h; } else if (y2 < 0) { y2 = 0; } \
-	if (y1 > y2) { dy = y2; y2 = y1; y1 = dy; } \
-	dy = y2 - y1
+static __inline__ int
+vline_clip(AG_Widget *wid, int *x, int *y1, int *y2, int *dy)
+{
+	SDL_Rect *rd = &agView->v->clip_rect;
+
+	if ((wid->cx + *x) <  rd->x ||
+	    (wid->cx + *x) >= rd->x+rd->w) {
+		return (1);
+	}
+	if (*y1 > *y2) {
+		*dy = *y2;
+		*y2 = *y1;
+		*y1 = *dy;
+	}
+	if (wid->cy + *y1 < rd->y)
+		*y1 = rd->y - wid->cy;
+	if (wid->cy + *y2 >= rd->y+rd->h)
+		*y2 = rd->y + rd->h - wid->cy - 1;
+
+	*dy = *y2 - *y1;
+	return (*dy <= 0);
+}
 
 static void
 vline32(void *widget, int x, int y1, int y2, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
-	int y, dy;
+	int dy;
 
-	VLINE_CLIP();
+	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
+		return;
+	}
 	SDL_LockSurface(agView->v);
 	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
 	    ((wid->cx+x)<<2);
@@ -661,7 +704,9 @@ vline24(void *widget, int x, int y1, int y2, Uint32 c)
 	Uint8 *pDst, *pEnd;
 	int y, dy;
 
-	VLINE_CLIP();
+	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
+		return;
+	}
 	SDL_LockSurface(agView->v);
 	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
 	    (wid->cx+x)*3;
@@ -688,7 +733,9 @@ vline16(void *widget, int x, int y1, int y2, Uint32 c)
 	Uint8 *pDst, *pEnd;
 	int y, dy;
 
-	VLINE_CLIP();
+	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
+		return;
+	}
 	SDL_LockSurface(agView->v);
 	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
 	    ((wid->cx+x)<<1);
@@ -707,7 +754,9 @@ vline8(void *widget, int x, int y1, int y2, Uint32 c)
 	Uint8 *pDst, *pEnd;
 	int y, dy;
 
-	VLINE_CLIP();
+	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
+		return;
+	}
 	SDL_LockSurface(agView->v);
 	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
 	    (wid->cx+x);
