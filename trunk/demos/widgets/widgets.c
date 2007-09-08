@@ -318,7 +318,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_InitConfigWin(0);
+	AG_InitConfigWin(AG_CONFIG_ALL);
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
