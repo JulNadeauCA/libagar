@@ -285,6 +285,8 @@ AG_ResizeDisplay(int w, int h)
 	SDL_Surface *su;
 	int ow, oh;
 
+	AG_LockGL();
+
 #ifdef HAVE_OPENGL
 	/*
 	 * Until SDL implements GL context saving in a portable way, we have
@@ -298,8 +300,9 @@ AG_ResizeDisplay(int w, int h)
 
 	/* XXX set a minimum! */
 	if ((su = SDL_SetVideoMode(w, h, 0, flags)) == NULL) {
-		AG_SetError("resize to %ux%u: %s", w, h, SDL_GetError());
-		return (-1);
+		AG_SetError("Cannot resize display to %ux%u: %s",
+		    w, h, SDL_GetError());
+		goto fail;
 	}
 	ow = agView->w;
 	oh = agView->h;
@@ -312,18 +315,13 @@ AG_ResizeDisplay(int w, int h)
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		Uint8 bR, bG, bB;
-	
-		AG_LockGL();
 		glViewport(0, 0, w, h);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		glOrtho(0, w, h, 0, -1.0, 1.0);
 
-		TAILQ_FOREACH(win, &agView->windows, windows) {
+		TAILQ_FOREACH(win, &agView->windows, windows)
 			RegenWidgetResourcesGL(WIDGET(win));
-		}
-		AG_UnlockGL();
 	} else
 #endif
 	{
@@ -363,7 +361,11 @@ AG_ResizeDisplay(int w, int h)
 		}
 		AG_MutexUnlock(&win->lock);
 	}
+	AG_UnlockGL();
 	return (0);
+fail:
+	AG_UnlockGL();
+	return (-1);
 }
 
 void
@@ -371,6 +373,8 @@ AG_ViewVideoExpose(void)
 {
 	AG_Window *win;
 
+	AG_LockGL();
+	AG_MutexLock(&agView->lock);
 	TAILQ_FOREACH(win, &agView->windows, windows) {
 		AG_MutexLock(&win->lock);
 		if (win->visible) {
@@ -378,14 +382,12 @@ AG_ViewVideoExpose(void)
 		}
 		AG_MutexUnlock(&win->lock);
 	}
-
+	AG_MutexUnlock(&agView->lock);
 #ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		AG_LockGL();
+	if (agView->opengl)
 		SDL_GL_SwapBuffers();
-		AG_UnlockGL();
-	}
 #endif
+	AG_UnlockGL();
 }
 
 void
