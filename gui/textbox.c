@@ -203,9 +203,10 @@ Draw(void *p)
 #ifdef UTF8
 	Uint32 *ucs;
 #endif
+	AG_TextColor(TEXTBOX_TXT_COLOR);
+
 	if (tbox->labelText != NULL &&
 	    tbox->label == -1) {
-		AG_TextColor(TEXTBOX_TXT_COLOR);
 		tbox->label = AG_WidgetMapSurface(tbox,
 		    AG_TextRender(tbox->labelText));
 	}
@@ -264,7 +265,6 @@ Draw(void *p)
 			    AG_COLOR(TEXTBOX_COLOR));
 		}
 	}
-
 #ifdef HAVE_OPENGL
 	if (agView->opengl)  {
 		glEnable(GL_BLEND);
@@ -280,6 +280,7 @@ Draw(void *p)
 	tbox->xMax = 0;
 	tbox->yMax = 1;
 	tbox->yVis = WIDGET(tbox)->h / agTextFontLineSkip;
+		
 	for (i = 0; i <= len; i++) {
 		AG_Glyph *gl;
 #ifdef UTF8
@@ -300,7 +301,7 @@ Draw(void *p)
 			break;
 
 		if (c == '\n') {
-			if ((tbox->yMax-1) >= tbox->y) {
+			if ((tbox->yMax - 1) >= tbox->y) {
 				y += agTextFontLineSkip;
 			}
 			tbox->xMax = MAX(tbox->xMax, x - xStart +
@@ -312,29 +313,24 @@ Draw(void *p)
 			x += agTextTabWidth;
 			continue;
 		}
-		if ((tbox->yMax-1) < tbox->y) {
+		if ((tbox->yMax - 1) < tbox->y)
 			continue;
-		}
 
 		c = (tbox->flags & AG_TEXTBOX_PASSWORD) ? '*' : c;
 		dx = WIDGET(tbox)->cx + x - tbox->x;
 		dy = WIDGET(tbox)->cy + y;
+	
+		gl = AG_TextRenderGlyph(c);
 
 		if (!agView->opengl) {
 			SDL_Rect rd;
 
-			AG_TextColor(TEXTBOX_TXT_COLOR);
-			gl = AG_TextRenderGlyph(c);
 			rd.x = dx;
 			rd.y = dy;
 			x += gl->su->w;
 			SDL_BlitSurface(gl->su, NULL, agView->v, &rd);
-			AG_TextUnusedGlyph(gl);
 		} else {
 #ifdef HAVE_OPENGL
-			AG_TextColor(TEXTBOX_TXT_COLOR);
-			gl = AG_TextRenderGlyph(c);
-
 			glBindTexture(GL_TEXTURE_2D, gl->texture);
 			glBegin(GL_TRIANGLE_STRIP);
 			{
@@ -350,10 +346,10 @@ Draw(void *p)
 			glEnd();
 			glBindTexture(GL_TEXTURE_2D, 0);
 			x += gl->su->w;
-			
-			AG_TextUnusedGlyph(gl);
 #endif /* HAVE_OPENGL */
 		}
+		AG_TextUnusedGlyph(gl);
+
 		if (y >= WIDGET(tbox)->h)
 			break;
 	}
@@ -376,6 +372,7 @@ Draw(void *p)
 	AG_WidgetUnlockBinding(stringb);
 
 	AG_WidgetPopClipRect(tbox);
+
 #ifdef HAVE_OPENGL
 	if (agView->opengl)
 		glDisable(GL_BLEND);

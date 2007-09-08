@@ -205,6 +205,11 @@ __inline__ void	 AG_WidgetUpdateSurface(void *, int);
 #define		 AG_WidgetUnmapSurface(w, n) \
 		 AG_WidgetReplaceSurface((w),(n),NULL)
 
+#ifdef HAVE_OPENGL
+void	 AG_WidgetFreeResourcesGL(AG_Widget *);
+void	 AG_WidgetRegenResourcesGL(AG_Widget *);
+#endif
+
 void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
 void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
 #define  AG_WidgetBlitSurface(p,n,x,y) \
