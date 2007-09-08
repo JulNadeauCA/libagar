@@ -354,7 +354,7 @@ Draw(void *p)
 		}
 		AG_WidgetBlitSurface(tl, it->label,
 		    x + tl->item_h + 5,
-		    y + tl->item_h/2 - WSURFACE(tl,it->label)->h/2 + 2);
+		    y + tl->item_h/2 - WSURFACE(tl,it->label)->h/2);
 
 		y += tl->item_h;
 		if (y < WIDGET(tl)->h - 1) {
