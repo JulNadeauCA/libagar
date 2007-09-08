@@ -46,6 +46,7 @@ extern const int agnUnitGroups;
 
 extern const AG_Unit agIdentityUnit[];
 extern const AG_Unit agLengthUnits[];
+extern const AG_Unit agAngleUnits[];
 extern const AG_Unit agVideoUnits[];
 extern const AG_Unit agAreaUnits[];
 extern const AG_Unit agVolumeUnits[];
