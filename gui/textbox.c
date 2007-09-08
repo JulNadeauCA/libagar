@@ -203,6 +203,13 @@ Draw(void *p)
 #ifdef UTF8
 	Uint32 *ucs;
 #endif
+#ifdef HAVE_OPENGL
+	GLboolean blend_sv;
+	GLint blend_sfactor, blend_dfactor;
+	GLfloat texenvmode;
+#endif
+
+	AG_PushTextState();
 	AG_TextColor(TEXTBOX_TXT_COLOR);
 
 	if (tbox->labelText != NULL &&
@@ -226,7 +233,7 @@ Draw(void *p)
 		if (WIDGET(tbox)->w < (tbox->boxPadX*2 + tbox->lblPadL +
 		                       tbox->lblPadR) ||
 		    WIDGET(tbox)->h < (tbox->boxPadY*2))  {
-			return;
+			goto out;
 		}
 		x = 0;
 		xStart = tbox->boxPadX;
@@ -267,20 +274,25 @@ Draw(void *p)
 	}
 #ifdef HAVE_OPENGL
 	if (agView->opengl)  {
+		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
+		glGetBooleanv(GL_BLEND, &blend_sv);
+		glGetIntegerv(GL_BLEND_SRC, &blend_sfactor);
+		glGetIntegerv(GL_BLEND_DST, &blend_dfactor);
+
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
 #endif
 	AG_WidgetPushClipRect(tbox, tbox->boxPadX, tbox->boxPadY,
 	    WIDGET(tbox)->w - tbox->boxPadX*2,
 	    WIDGET(tbox)->h - tbox->boxPadY*2);
-	
+
 	x = xStart;
 	tbox->xMax = 0;
 	tbox->yMax = 1;
 	tbox->yVis = WIDGET(tbox)->h / agTextFontLineSkip;
-		
+	
 	for (i = 0; i <= len; i++) {
 		AG_Glyph *gl;
 #ifdef UTF8
@@ -288,6 +300,7 @@ Draw(void *p)
 #else
 		char c = s[i];
 #endif
+
 		if (i == tbox->pos &&
 		    (tbox->flags & AG_TEXTBOX_BLINK_ON) &&
 		    AG_WidgetEnabled(tbox) &&
@@ -319,7 +332,6 @@ Draw(void *p)
 		c = (tbox->flags & AG_TEXTBOX_PASSWORD) ? '*' : c;
 		dx = WIDGET(tbox)->cx + x - tbox->x;
 		dy = WIDGET(tbox)->cy + y;
-	
 		gl = AG_TextRenderGlyph(c);
 
 		if (!agView->opengl) {
@@ -372,11 +384,18 @@ Draw(void *p)
 	AG_WidgetUnlockBinding(stringb);
 
 	AG_WidgetPopClipRect(tbox);
-
 #ifdef HAVE_OPENGL
-	if (agView->opengl)
-		glDisable(GL_BLEND);
+	if (agView->opengl) {
+		if (blend_sv) {
+			glEnable(GL_BLEND);
+		} else {
+			glDisable(GL_BLEND);
+		}
+		glBlendFunc(blend_sfactor, blend_dfactor);
+	}
 #endif
+out:
+	AG_PopTextState();
 }
 
 void
@@ -858,17 +877,18 @@ AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 	tbox->label = -1;
 	tbox->labelText = (label != NULL) ? Strdup(label) : NULL;
 	AG_MutexInitRecursive(&tbox->lock);
+	
+	tbox->xMin = 0;
+	tbox->x = 0;
+	tbox->xMax = 10;
+	tbox->yMin = 0;
+	tbox->y = 0;
+	tbox->yMax = 10;
+	tbox->yVis = 1;
 
 	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
 		tbox->hBar = AG_ScrollbarNew(tbox, AG_SCROLLBAR_HORIZ, 0);
 		tbox->vBar = AG_ScrollbarNew(tbox, AG_SCROLLBAR_VERT, 0);
-		tbox->xMin = 0;
-		tbox->x = 0;
-		tbox->xMax = 10;
-		tbox->yMin = 0;
-		tbox->y = 0;
-		tbox->yMax = 10;
-		tbox->yVis = 1;
 
 		AG_WidgetBindInt(tbox->hBar, "min", &tbox->xMin);
 		AG_WidgetBindInt(tbox->hBar, "value", &tbox->x);
