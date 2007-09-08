@@ -32,52 +32,39 @@
 #include <core/core.h>
 #include "sg.h"
 
-/* Compute point-line distance with a line defined by two points. */
-SG_Real
-SG_DistanceFromLine2Pts(SG_Vector p1, SG_Vector p2, SG_Vector p3)
-{
-	SG_Real len21, u;
-	SG_Vector x;
-
-	len21 = SG_VectorDistance(p2, p1);
-	u = ((p3.x - p1.x)*(p2.x - p1.x) + (p3.y - p1.y)*(p2.y - p1.y)) /
-            (len21*len21);
-	if (u < 0.0 || u > 1.0) {
-		return (HUGE_VAL);
-	}
-	x = SG_VectorAdd(p1, SG_VectorScale(SG_VectorSubp(&p2,&p1), u));
-	return (SG_VectorDistancep(&p3, &x));
-}
-
 /* Create a line from two points in R2. */
 SG_Line2
-SG_Line2From2Pts(SG_Vector p1, SG_Vector p2)
+SG_LineFromPts2(SG_Vector2 p1, SG_Vector2 p2)
 {
 	SG_Line2 L;
-	SG_Vector vd;
 	
-	vd = SG_VectorSubp(&p2, &p1);
-	L.a = -vd.y;
-	L.b =  vd.x;
-	L.d = L.a*p1.x - L.b*p1.y;
-
-	printf("a=%f, b=%f, d=%f\n", L.a, L.b, L.d);
+	L.x0 = p1.x;
+	L.y0 = p1.y;
+	L.dx = p2.x - p1.x;
+	L.dy = p2.y - p1.y;
+	L.t = SG_VectorDistance2p(&p1, &p2);
+	L.dx /= L.t;
+	L.dy /= L.t;
 	return (L);
 }
 
 /* Create a line from two points in R3. */
 SG_Line
-SG_LineFrom2Pts(SG_Vector p1, SG_Vector p2)
+SG_LineFromPts(SG_Vector p1, SG_Vector p2)
 {
-	SG_Line L;
 	SG_Vector vd;
+	SG_Line L;
 	
-	vd = SG_VectorSubp(&p2, &p1);
-	L.a = -vd.y;
-	L.b =  vd.x;
-	L.d = L.a*p1.x - L.b*p1.y;
-
-	printf("a=%f, b=%f, d=%f\n", L.a, L.b, L.d);
+	L.x0 = p1.x;
+	L.y0 = p1.y;
+	L.z0 = p1.z;
+	L.dx = p2.x - p1.x;
+	L.dy = p2.y - p1.y;
+	L.dz = p2.z - p1.z;
+	L.t = SG_VectorDistancep(&p1, &p2);
+	L.dx /= L.t;
+	L.dy /= L.t;
+	L.dz /= L.t;
 	return (L);
 }
 
@@ -177,6 +164,66 @@ SG_VectorPlaneAngle(SG_Vector v, SG_Plane P)
 	return (M_PI/2.0 -
 	        SG_Acos(SG_VectorDot(SG_PlaneNormp(&P),
 		                     SG_VectorNormp(&v))));
+}
+
+/* Compute minimal distance from a line segment L to a point p. */
+SG_Real
+SG_PointLineDistance2(SG_Vector2 p, SG_Line2 L)
+{
+	SG_Real u;
+	SG_Vector2 v0, v1;
+	SG_Vector2 x;
+
+	u = ((p.x - L.x0)*(L.dx*L.t - L.x0) +
+	     (p.y - L.y0)*(L.dy*L.t - L.y0)) / (L.t*L.t);
+
+	v0 = SG_VECTOR2(L.x0, L.y0);
+	v1 = SG_VECTOR2(L.dx, L.dy);
+	SG_VectorScale2v(&v1, L.t);
+
+	x = SG_VectorAdd2(v0, SG_VectorScale2(SG_VectorSub2p(&v1,&v0), u));
+	return (SG_VectorDistance2p(&p, &x));
+}
+
+SG_Real
+SG_LineLineAngle2(SG_Line2 L1, SG_Line2 L2)
+{
+	return (Atan2(L2.dy-L1.dy, L2.dx-L1.dx));
+}
+
+/* Compute intersection between two line segments in R2. */
+SG_Intersect2
+SG_IntersectLineLine2(SG_Line2 L1, SG_Line2 L2)
+{
+	SG_Intersect2 ix;
+	SG_Real a = L2.dx*(L1.y0 - L2.y0) - L2.dy*(L1.x0 - L2.x0);
+	SG_Real b = L1.dx*(L1.y0 - L2.y0) - L1.dy*(L1.x0 - L2.x0);
+	SG_Real c = L2.dy*L1.dx - L2.dx*L1.dy;
+
+	if (c != 0.0) {
+		SG_Real ac = a/c;
+		SG_Real bc = b/c;
+
+		if (ac >= 0.0 && ac <= 1.0 &&
+		    bc >= 0.0 && bc <= 1.0) {
+			ix.type = SG_POINT;
+			ix.ix_p = SG_VECTOR2(L1.x0 + ac*L1.dx,
+			                     L1.y0 + ac*L1.dy);
+			return (ix);
+		} else {
+			ix.type = SG_NONE;
+			return (ix);
+		}
+	} else {
+		if (a == 0.0 || b == 0.0) {
+			ix.type = SG_LINE;
+			ix.ix_L = L1;		/* XXX */
+			return (ix);
+		} else {
+			ix.type = SG_NONE;
+			return (ix);
+		}
+	}
 }
 
 #endif /* HAVE_OPENGL */
