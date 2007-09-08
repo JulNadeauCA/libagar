@@ -35,6 +35,7 @@
 const char *agUnitGroupNames[] = {
 	N_("Identity"),
 	N_("Length"),
+	N_("Angle"),
 	N_("Video"),
 	N_("Area"),
 	N_("Volume"),
@@ -60,6 +61,7 @@ const char *agUnitGroupNames[] = {
 const AG_Unit *agUnitGroups[] = {
 	agIdentityUnit,
 	agLengthUnits,
+	agAngleUnits,
 	agVideoUnits,
 	agAreaUnits,
 	agVolumeUnits,
@@ -220,6 +222,13 @@ const AG_Unit agLengthUnits[] = {
 	{ "L.Y.", "", N_("Light years"),	946075309081900.0, NULL },
 	{ "P.S.", "", N_("Parsecs"),		3085678e10, NULL },
 #endif
+	{ NULL,	NULL, NULL,			0, NULL }
+};
+
+/* Units of angle */
+const AG_Unit agAngleUnits[] = {
+	{ "rad", "", N_("Radians"),		1.0, NULL },
+	{ "deg", "\xc2\xb0", N_("Degrees"),	57.29577951308232087685, NULL },
 	{ NULL,	NULL, NULL,			0, NULL }
 };
 
