@@ -1372,10 +1372,6 @@ AG_WidgetBlitSurfaceGL(void *pWidget, int name, float w, float h)
 
 	glname = wid->textures[name];
 	texcoord = &wid->texcoords[name*4];
-	if (glname == 0) {
-		fatal("bad texture name: %d (widget name = %d)",
-		    glname, name);
-	}
 	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
@@ -1531,16 +1527,16 @@ AG_UnsetCursor(void)
  * This is only safe to call from widget draw context.
  */
 void
-AG_WidgetPushClipRect(void *p, int x, int y, int w, int h)
+AG_WidgetPushClipRect(void *p, int px, int py, int w, int h)
 {
 	AG_Widget *wid = p;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		GLdouble eq0[4] = { 1, 0, 0, -(wid->cx+x-1) };
-		GLdouble eq1[4] = { 0, 1, 0, -(wid->cy+y-1) };
-		GLdouble eq2[4] = { -1, 0, 0, (wid->cx+x+w) };
-		GLdouble eq3[4] = { 0, -1, 0, (wid->cy+y+h) };
+		GLdouble eq0[4] = { 1, 0, 0, -(wid->cx+px-1) };
+		GLdouble eq1[4] = { 0, 1, 0, -(wid->cy+py-1) };
+		GLdouble eq2[4] = { -1, 0, 0, (wid->cx+px+w) };
+		GLdouble eq3[4] = { 0, -1, 0, (wid->cy+py+h) };
 
 		glPushAttrib(GL_TRANSFORM_BIT);
 		glClipPlane(GL_CLIP_PLANE0, eq0);
@@ -1555,9 +1551,8 @@ AG_WidgetPushClipRect(void *p, int x, int y, int w, int h)
 #endif
 	{
 		SDL_Rect r;
-
-		x += wid->cx;
-		y += wid->cy;
+		int x = px + wid->cx;
+		int y = py + wid->cy;
 
 		if (x < 0) {
 			x = 0;
