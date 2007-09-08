@@ -250,6 +250,30 @@ fail:
 	return (-1);
 }
 
+#ifdef HAVE_OPENGL
+static void
+FreeWidgetResourcesGL(AG_Widget *wid)
+{
+	AG_Widget *chld;
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		FreeWidgetResourcesGL(chld);
+	}
+	AG_WidgetFreeResourcesGL(wid);
+}
+
+static void
+RegenWidgetResourcesGL(AG_Widget *wid)
+{
+	AG_Widget *chld;
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		RegenWidgetResourcesGL(chld);
+	}
+	AG_WidgetRegenResourcesGL(wid);
+}
+#endif /* HAVE_OPENGL */
+
 int
 AG_ResizeDisplay(int w, int h)
 {
@@ -260,6 +284,17 @@ AG_ResizeDisplay(int w, int h)
 	AG_Window *win;
 	SDL_Surface *su;
 	int ow, oh;
+
+#ifdef HAVE_OPENGL
+	/*
+	 * Until SDL implements GL context saving in a portable way, we have
+	 * to release and regenerate all resources tied to our GL context.
+	 */
+	if (agView->opengl) {
+		TAILQ_FOREACH(win, &agView->windows, windows)
+			FreeWidgetResourcesGL(WIDGET(win));
+	}
+#endif /* HAVE_OPENGL */
 
 	/* XXX set a minimum! */
 	if ((su = SDL_SetVideoMode(w, h, 0, flags)) == NULL) {
@@ -278,12 +313,16 @@ AG_ResizeDisplay(int w, int h)
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		Uint8 bR, bG, bB;
-
+	
 		AG_LockGL();
 		glViewport(0, 0, w, h);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		glOrtho(0, w, h, 0, -1.0, 1.0);
+
+		TAILQ_FOREACH(win, &agView->windows, windows) {
+			RegenWidgetResourcesGL(WIDGET(win));
+		}
 		AG_UnlockGL();
 	} else
 #endif

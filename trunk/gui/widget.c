@@ -1309,10 +1309,7 @@ AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 			texcoord[2] = (GLfloat)rs->w/AG_PowOf2i(rs->w);
 			texcoord[3] = (GLfloat)rs->h/AG_PowOf2i(rs->h);
 		}
-#ifdef DEBUG
-		if (texture == 0)
-			fatal("invalid texture name");
-#endif
+
 		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
@@ -2097,6 +2094,35 @@ AG_WidgetHiddenRecursive(void *p)
 	}
 	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
 }
+
+#ifdef HAVE_OPENGL
+/*
+ * Release the OpenGL resources associated with a widget.
+ * GL lock must be held.
+ */
+void
+AG_WidgetFreeResourcesGL(AG_Widget *wid)
+{
+	int i;
+
+	glDeleteTextures(wid->nsurfaces, (GLuint *)wid->textures);
+	memset(wid->textures, 0, wid->nsurfaces*sizeof(Uint));
+}
+
+/*
+ * Regenerate the OpenGL textures associated with a widget.
+ * GL lock must be held.
+ */
+void
+AG_WidgetRegenResourcesGL(AG_Widget *wid)
+{
+	Uint i;
+
+	for (i = 0; i < wid->nsurfaces; i++)
+		wid->textures[i] = AG_SurfaceTexture(wid->surfaces[i],
+		    &wid->texcoords[i*4]);
+}
+#endif /* HAVE_OPENGL */
 
 const AG_WidgetOps agWidgetOps = {
 	{
