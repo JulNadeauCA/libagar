@@ -63,11 +63,6 @@ SK_AnnotSave(SK *sk, void *p, AG_Netbuf *buf)
 int
 SK_AnnotDelete(void *p)
 {
-	SK_Annot *ann = p;
-	int rv;
-
-	rv = SK_NodeDel(ann);
-	SK_Update(SKNODE(ann)->sk);
-	return (rv);
+	return (SK_NodeDel(p));
 }
 #endif /* HAVE_OPENGL */
