@@ -1,4 +1,7 @@
 /*	Public domain	*/
+/*
+ * Basic mathematical structures, constants and functions.
+ */
 
 #ifdef SG_DOUBLE_PRECISION
 typedef double SG_Real;
@@ -8,18 +11,48 @@ typedef float SG_Real;
 #define SG_REAL(n) AG_FLOAT(n)
 #endif
 
-/*
- * Basic mathematical objects
- */
 typedef struct sg_range { SG_Real a, d, b; } SG_Range;
+typedef struct sg_complex { SG_Real r, i; } SG_Complex;
 typedef struct sg_quat { SG_Real w, x, y, z; } SG_Quat;
 typedef struct sg_vector2 { SG_Real x, y; } SG_Vector2;
 typedef struct sg_vector3 { SG_Real x, y, z; } SG_Vector3, SG_Vector;
 typedef struct sg_vector4 { SG_Real x, y, z, w; } SG_Vector4;
-typedef struct sg_line2 { SG_Real a, b, d; } SG_Line2;
-typedef struct sg_line3 { SG_Real a, b, c, d; } SG_Line3, SG_Line;
+typedef struct sg_line2 { SG_Real x0,y0, dx,dy, t; } SG_Line2;
+typedef struct sg_line3 { SG_Real x0,y0,z0, dx,dy,dz, t; } SG_Line3, SG_Line;
 typedef struct sg_plane { SG_Real a, b, c, d; } SG_Plane;
-typedef struct sg_ray { SG_Vector p; SG_Vector dir; } SG_Ray;
+typedef struct sg_ray { SG_Vector p, dir; } SG_Ray;
+
+enum sg_intersect_type {
+	SG_NONE,
+	SG_POINT,
+	SG_LINE,
+	SG_LINE_SEGMENT,
+	SG_PLANE
+};
+
+typedef struct sg_intersect2 {
+	enum sg_intersect_type type;
+	union {
+		SG_Vector2 ix_p;
+		SG_Line2 ix_L;
+	} ix;
+} SG_Intersect2;
+
+typedef struct sg_intersect {
+	enum sg_intersect_type type;
+	union {
+		SG_Vector ix_p;
+		SG_Line ix_L;
+		SG_Plane ix_P;
+	} ix;
+} SG_Intersect3, SG_Intersect;
+
+#ifdef _AGAR_INTERNAL
+#define ix_p ix.ix_p
+#define ix_L ix.ix_L
+#define ix_P ix.ix_P
+#define ix_l ix.ix_l
+#endif
 
 #define SGVECTOR2(v) ((SG_Vector2 *)(v))
 #define SGVECTOR3(v) ((SG_Vector3 *)(v))
