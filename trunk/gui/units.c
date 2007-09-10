@@ -191,21 +191,20 @@ const AG_Unit agIdentityUnit[] = {
 
 /* Units of length/distance */
 const AG_Unit agLengthUnits[] = {
-	{ "Ang", "\xc3\x85", N_("\xc3\x85ngstroms"), 1e-10, NULL },
-	{ "um", "\xc2\xb5", N_("Microns"),	1e-6, NULL },
-	{ "mil", "", N_("Mils"),		25e-6, NULL },
-	{ "mm", "", N_("Millimeters"),		1e-3, NULL },
-	{ "in", "", N_("Inches"),		0.0254, NULL },
-	{ "cm",	"", N_("Centimeters"),		1e-2, NULL },
-	{ "dm",	"", N_("Decimeters"),		0.1, NULL },
-	{ "ft",	"", N_("Feet"),			0.3048, NULL },
-	{ "yd", "", N_("Yards"),		0.9144,	NULL },
-	{ "m", "", N_("Meters"),		1.0, NULL },
-	{ "km", "", N_("Kilometers"),		1000, NULL },
-	{ "mi", "", N_("Miles"),		1609.344, NULL },
-	{ "mi(naut)", "", N_("Nautical miles"),	1852, NULL },
-	{ "leagues", "", N_("Leagues"),		4828.031551, NULL },
-	{ "leagues(naut)", "", N_("Nautical leagues"), 5556, NULL },
+	{ "Ang", "\xc3\x85", N_("\xc3\x85ngstroms"), 1e-10,	NULL },
+	{ "um", "\xc2\xb5", N_("Microns"),	1e-6,		NULL },
+	{ "mil", "", N_("Mils"),		25e-6,		NULL },
+	{ "mm", "", N_("Millimeters"),		1e-3,		NULL },
+	{ "in", "", N_("Inches"),		0.0254,		NULL },
+	{ "cm",	"", N_("Centimeters"),		1e-2,		NULL },
+	{ "dm",	"", N_("Decimeters"),		0.1,		NULL },
+	{ "ft",	"", N_("Feet"),			0.3048,		NULL },
+	{ "yd", "", N_("Yards"),		0.9144,		NULL },
+	{ "m", "", N_("Meters"),		1.0,		NULL },
+	{ "km", "", N_("Kilometers"),		1000,		NULL },
+	{ "mi", "", N_("Miles"),		1609.344,	NULL },
+	{ "N.M", "", N_("Nautical miles"),	1852,		NULL },
+	{ "N.L", "", N_("Nautical leagues"),	5556,		NULL },
 #ifdef HISTORICAL_UNITS
 	{ "lnk", "", N_("Links"),		0.201168,	NULL },
 	{ "span", "", N_("Spans"),		0.2286,		NULL },
@@ -218,9 +217,9 @@ const AG_Unit agLengthUnits[] = {
 	{ "cbl", "", N_("Cable lengths"),	219.456,	NULL },
 #endif
 #ifdef ASTRONOMICAL_UNITS
-	{ "A.U.", "", N_("Astronomical units"), 159598073000.0,	NULL },
-	{ "L.Y.", "", N_("Light years"),	946075309081900.0, NULL },
-	{ "P.S.", "", N_("Parsecs"),		3085678e10, NULL },
+	{ "A.U", "", N_("Astronomical units"),	159598073000.0,		NULL },
+	{ "L.Y", "", N_("Light years"),		946075309081900.0,	NULL },
+	{ "P.S", "", N_("Parsecs"),		3085678e10,		NULL },
 #endif
 	{ NULL,	NULL, NULL,			0, NULL }
 };
@@ -228,7 +227,7 @@ const AG_Unit agLengthUnits[] = {
 /* Units of angle */
 const AG_Unit agAngleUnits[] = {
 	{ "rad", "", N_("Radians"),		1.0, NULL },
-	{ "deg", "\xc2\xb0", N_("Degrees"),	57.29577951308232087685, NULL },
+	{ "deg", "\xc2\xb0", N_("Degrees"),	0.01745329251994329577, NULL },
 	{ NULL,	NULL, NULL,			0, NULL }
 };
 
@@ -285,32 +284,32 @@ const AG_Unit agSpeedUnits[] = {
 
 /* Units of weight */
 const AG_Unit agMassUnits[] = {
-	{ "ug", "\xc2\xb5g", N_("Micrograms"),	1e-6, NULL },
-	{ "mg", "", N_("Milligrams"),		1e-3, NULL },
-	{ "cg", "", N_("Centigrams"),		1e-2, NULL },
-	{ "dg", "", N_("Decigrams"),		1e-1, NULL },
-	{ "g", "", N_("Grams"),			1.0, NULL },
-	{ "oz", "", N_("Ounces [comm]"),	28.349,	NULL },
-	{ "lbs", "", N_("Pounds [comm]"),	453.59,	NULL },
-	{ "kg", "", N_("Kilograms"),		1e3, NULL },
-	{ "t(s)", "", N_("Tons [short]"),	907200, NULL },
-	{ "t", "", N_("Tons [metric]"),		1e6, NULL },
-	{ "t(l)", "", N_("Tons [long]"),	1016064, NULL },
+	{ "ug", "\xc2\xb5g", N_("Micrograms"),	1e-6,			NULL },
+	{ "mg", "", N_("Milligrams"),		1e-3,			NULL },
+	{ "cg", "", N_("Centigrams"),		1e-2,			NULL },
+	{ "dg", "", N_("Decigrams"),		1e-1,			NULL },
+	{ "g", "", N_("Grams"),			1.0,			NULL },
+	{ "oz", "", N_("Ounces [comm]"),	28.349,			NULL },
+	{ "lb", "", N_("Pounds [comm]"),	453.59,			NULL },
+	{ "kg", "", N_("Kilograms"),		1e3,			NULL },
+	{ "t(s)", "", N_("Tons [short]"),	907200,			NULL },
+	{ "t", "", N_("Tons [metric]"),		1e6,			NULL },
+	{ "t(l)", "", N_("Tons [long]"),	1016064,		NULL },
 #ifdef HISTORICAL_UNITS
-	{ "grains", "", "Grains",			0.0648,	NULL },
-	{ "carats", "", "Carats [troy]",		0.2, NULL },
-	{ "drams(apot)", "", "Drams [apot]",		3.888, NULL },
-	{ "oz(troy)", "", N_("Ounces [troy]"),		31.104,	NULL },
-	{ "lb(troy)", "", N_("Pounds [troy]"),		373.248, NULL },
-	{ "scruples", "", "Scruples [apot]",		1.296, NULL },
-	{ "pennywts", "", "Pennyweights",		1.5552, NULL },
-	{ "drams", "", "Drams",				1.771875, NULL },
-	{ "poundals", "", "Poundals",			14.086956521739, NULL },
-	{ "stones", "", "Stones",			6530.40, NULL },
-	{ "quarters", "", "Quarters",			11340, NULL },
-	{ "slugs", "", "Slugs",				14605.92, NULL },
-	{ "100wts", "", "100 weights",			45360, NULL },
-	{ "batmans", "", "Batmans",			16e6, NULL },
+	{ "grain", "", "Grains",		0.0648,			NULL },
+	{ "carat", "", "Carats [troy]",		0.2,			NULL },
+	{ "dram(a)", "", "Drams [apot]",	3.888,			NULL },
+	{ "oz(t)", "", N_("Ounces [troy]"),	31.104,			NULL },
+	{ "lb(t)", "", N_("Pounds [troy]"),	373.248,		NULL },
+	{ "scruple", "", "Scruples [apot]",	1.296,			NULL },
+	{ "pennywt", "", "Pennyweights",	1.5552,			NULL },
+	{ "dram", "", "Drams",			1.771875,		NULL },
+	{ "poundal", "", "Poundals",		14.086956521739,	NULL },
+	{ "stone", "", "Stones",		6530.40,		NULL },
+	{ "quarter", "", "Quarters",		11340,			NULL },
+	{ "slug", "", "Slugs",			14605.92,		NULL },
+	{ "100wt", "", "100 weights",		45360,			NULL },
+	{ "batman", "", "Batmans",		16e6,			NULL },
 #endif
 	{ NULL, NULL, NULL,				0, NULL }
 };
@@ -324,10 +323,10 @@ const AG_Unit agTimeUnits[] = {
 	{ "min", "", N_("Minutes"),			60, NULL },
 	{ "hr", "", N_("Hours"),			3600, NULL },
 	{ "day", "", N_("Days"),			86400, NULL },
-	{ "w(poee)", "\xce\x9a\x64", N_("Weeks [POEE]"), 432000, NULL },
-	{ "wks", "", N_("Weeks"),			604800,	NULL },
-	{ "m(poee)", "\xce\x9am", N_("Months [POEE]"),	6307200, NULL },
-	{ "yrs", "", N_("Years"),			31104000, NULL },
+	{ "w(p)", "\xce\x9a\x64", N_("Weeks [POEE]"),	432000, NULL },
+	{ "wk", "", N_("Weeks"),			604800,	NULL },
+	{ "m(p)", "\xce\x9am", N_("Months [POEE]"),	6307200, NULL },
+	{ "yr", "", N_("Years"),			31104000, NULL },
 	{ NULL,	NULL, NULL,				0, NULL }
 };
 
@@ -345,7 +344,7 @@ const AG_Unit agCurrentUnits[] = {
 
 const AG_Unit agTemperatureUnits[] = {
 	{ "degC", "\xc2\xb0\x43", N_("Degrees Celsius"),   0, AG_UnitCelsius },
-	{ "degF", "\xc2\xb0\x46", N_("Degrees Farenheit"), 0, AG_UnitFahrenheit },
+	{ "degF", "\xc2\xb0\x46", N_("Degrees Farenheit"),0, AG_UnitFahrenheit},
 #ifdef HISTORICAL_UNITS
 	{ "degRa", "\xc2\xb0\x52", N_("Degrees Rankine"),  0, AG_UnitRankine },
 	{ "degRe", "\xc2\xb0\x65", N_("Degrees Reaumur"),  0, AG_UnitReaumur },
@@ -384,7 +383,7 @@ const AG_Unit agPowerUnits[] = {
 	{ "uW", "\xc2\xb5W", "Microwatts",	1e-6, NULL },
 	{ "mW", "", "Milliwatts",		1e-3, NULL },
 	{ "BTU/h", "", "BTU/hr",		0.292875, NULL },
-	{ "f-lbs/s", "", N_("Foot-lbs/sec"),	1.355818, NULL },
+	{ "f-lb/s", "", N_("Foot-lbs/sec"),	1.355818, NULL },
 	{ "W", "", "Watts",			1.0, NULL },
 	{ "kC/m", "", "Kilocalories/min",	69.733, NULL },
 	{ "HP", "", N_("Horsepower"),		746, NULL },
@@ -407,17 +406,17 @@ const AG_Unit agEMFUnits[] = {
 
 /* Units of electrical resistance */
 const AG_Unit agResistanceUnits[] = {
-	{ "uohms", "\xc2\xb5\xce\xa9", "Microohms",	1e-6, NULL },
-	{ "mohms", "m\xce\xa9", "Milliohms",		1e-3, NULL },
-	{ "ohms", "\xce\xa9", "Ohms",			1.0, NULL },
-	{ "kohms", "k\xce\xa9",	"Kilohms",		1e3, NULL },
-	{ "megaohms", "M\xce\xa9", N_("Megaohms"),	1e6, NULL },
+	{ "uohm", "\xc2\xb5\xce\xa9", "Microohms",	1e-6, NULL },
+	{ "mohm", "m\xce\xa9", "Milliohms",		1e-3, NULL },
+	{ "ohm", "\xce\xa9", "Ohms",			1.0, NULL },
+	{ "kohm", "k\xce\xa9",	"Kilohms",		1e3, NULL },
+	{ "Mohm", "M\xce\xa9", N_("Megaohms"),		1e6, NULL },
 	{ NULL, NULL, NULL,				0, NULL }
 };
 
 /* Units of first order temperature coefficients of resistance. */
 const AG_Unit agResistanceTC1Units[] = {
-	{ "mohms/degC", "m\xce\xa9/\xc2\xb0\x43", "Milliohms per \xc2\xb0\x43",
+	{ "mohm/degC", "m\xce\xa9/\xc2\xb0\x43", "Milliohms per \xc2\xb0\x43",
 	  1e-3, NULL},
 	{ "ohms/degC", "\xce\xa9/\xc2\xb0\x43", "Ohms per\xc2\xb0\x43",
 	  1.0, NULL},
@@ -426,10 +425,10 @@ const AG_Unit agResistanceTC1Units[] = {
 
 /* Units of second order temperature coefficients of resistance. */
 const AG_Unit agResistanceTC2Units[] = {
-	{ "mohms/degC^2", "m\xce\xa9/\xc2\xb0\x43\xc2\xb2",
+	{ "mohm/degC^2", "m\xce\xa9/\xc2\xb0\x43\xc2\xb2",
 	  "Milliohms per \xc2\xb0\x43\xc2\xb2",
 	  1e-3, NULL},
-	{ "ohms/degC^2", "\xce\xa9/\xc2\xb0\x43\xc2\xb2",
+	{ "ohm/degC^2", "\xce\xa9/\xc2\xb0\x43\xc2\xb2",
 	  "Ohms per \xc2\xb0\x43\xc2\xb2",
 	  1.0, NULL},
 	{ NULL, NULL, NULL, 0, NULL }
@@ -481,11 +480,11 @@ const AG_Unit agPressureUnits[] = {
 	{ "m H2O", "m H\xc2\xb2O", N_("Meters of water"),	9806.65, NULL },
 	{ "Kips/in^2", "Kips/In\xc2\xb2", N_("Kips per in^2"),	6894760, NULL },
 #ifdef ASTRONOMICAL_UNITS
-	{ "Atm(Pluto)", "", N_("Pluto Atmospheres"),		0.5, NULL },
-	{ "Atm(Earth)", "", N_("Earth Atmospheres"),		101325, NULL },
-	{ "Atm(Mars)", "", N_("Mars Atmospheres"),		1e3, NULL },
+	{ "Atm(P)", "", N_("Pluto Atmospheres"),	0.5, NULL },
+	{ "Atm(E)", "", N_("Earth Atmospheres"),	101325, NULL },
+	{ "Atm(M)", "", N_("Mars Atmospheres"),		1e3, NULL },
 #endif
-	{ NULL,	NULL, NULL,					0, NULL }
+	{ NULL,	NULL, NULL,				0, NULL }
 };
 
 /* Units of metabolic cost (ie. physical activity) */
