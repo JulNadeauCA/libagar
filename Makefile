@@ -28,7 +28,11 @@ configure:
 	chmod 755 configure
 
 cleandir-config:
-	rm -fr config config.log
+	rm -fr config config.log Makefile.config
+	(cd agarpaint && ${MAKE} cleandir)
+	(cd agarpaint && rm -f Makefile.config)
+	(cd demos && ${MAKE} cleandir)
+	(cd demos && rm -f */Makefile.config)
 
 snapshot: cleandir
 	sh mk/dist.sh snapshot
