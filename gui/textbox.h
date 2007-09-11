@@ -41,7 +41,7 @@ typedef struct ag_textbox {
 					   instead of cycling focus */
 #define AG_TEXTBOX_CURSOR_MOVING 0x1000	/* Cursor is being moved */
 
-	int wPre, hPre;			/* Prescale */
+	int wPre, hPre;			/* Size hint */
 	int boxPadX, boxPadY;		/* Padding around textbox */
 	int lblPadL, lblPadR;		/* Padding around label */
 	int wLbl;			/* Label width to display */
@@ -71,7 +71,8 @@ extern const AG_WidgetOps agTextboxOps;
 
 AG_Textbox *AG_TextboxNew(void *, Uint, const char *);
 void	    AG_TextboxInit(AG_Textbox *, Uint, const char *);
-void	    AG_TextboxPrescale(AG_Textbox *, const char *);
+void	    AG_TextboxSizeHint(AG_Textbox *, const char *);
+#define     AG_TextboxPrescale AG_TextboxSizeHint
 
 void	 AG_TextboxSetPassword(AG_Textbox *, int);
 void	 AG_TextboxSetLabel(AG_Textbox *, const char *, ...);

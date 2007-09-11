@@ -167,6 +167,7 @@ GainedFocus(AG_Event *event)
 	AG_DelTimeout(tb, &tb->delay_to);
 	AG_DelTimeout(tb, &tb->repeat_to);
 	AG_ReplaceTimeout(tb, &tb->cblink_to, agTextBlinkRate);
+	tb->flags |= AG_TEXTBOX_BLINK_ON;
 }
 
 static void
@@ -178,6 +179,7 @@ LostFocus(AG_Event *event)
 	AG_DelTimeout(tb, &tb->delay_to);
 	AG_DelTimeout(tb, &tb->repeat_to);
 	AG_DelTimeout(tb, &tb->cblink_to);
+	tb->flags &= ~(AG_TEXTBOX_BLINK_ON|AG_TEXTBOX_CURSOR_MOVING);
 	AG_UnlockTimeouts(tb);
 }
 
@@ -399,7 +401,7 @@ out:
 }
 
 void
-AG_TextboxPrescale(AG_Textbox *tbox, const char *text)
+AG_TextboxSizeHint(AG_Textbox *tbox, const char *text)
 {
 	AG_TextSize(text, &tbox->wPre, &tbox->hPre);
 }
@@ -690,7 +692,7 @@ MouseButtonDown(AG_Event *event)
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
 	int rv;
-	
+
 	AG_WidgetFocus(tbox);
 
 	switch (btn) {
@@ -734,7 +736,7 @@ MouseMotion(AG_Event *event)
 	int my = AG_INT(2);
 	int state = AG_INT(5);
 	
-	if ((state & SDL_BUTTON_LEFT) == 0) {
+	if ((tbox->flags & AG_TEXTBOX_CURSOR_MOVING) == 0) {
 		return;
 	}
 	mx += tbox->x;
