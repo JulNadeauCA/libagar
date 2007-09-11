@@ -29,10 +29,13 @@ configure:
 
 cleandir-config:
 	rm -fr config config.log Makefile.config
+	touch Makefile.config
 	(cd agarpaint && ${MAKE} cleandir)
 	(cd agarpaint && rm -f Makefile.config)
+	(cd agarpaint && touch Makefile.config)
 	(cd demos && ${MAKE} cleandir)
 	(cd demos && rm -f */Makefile.config)
+
 
 snapshot: cleandir
 	sh mk/dist.sh snapshot
