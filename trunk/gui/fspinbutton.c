@@ -276,7 +276,7 @@ void
 AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
     const char *label)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE;
+	Uint wflags = 0;
 
 	if ((flags & AG_FSPINBUTTON_NOHFILL)==0) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_FSPINBUTTON_VFILL) { wflags |= AG_WIDGET_VFILL; }
@@ -292,7 +292,7 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 	fsu->writeable = 1;
 	strlcpy(fsu->format, "%g", sizeof(fsu->format));
 	AG_MutexInit(&fsu->lock);
-	AG_TextboxPrescale(fsu->input, "88.88");
+	AG_TextboxSizeHint(fsu->input, "88.88");
 	
 	if (unit != NULL) {
 		fsu->units = AG_UComboNew(fsu, 0);
@@ -322,9 +322,9 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 }
 
 void
-AG_FSpinbuttonPrescale(AG_FSpinbutton *fsu, const char *text)
+AG_FSpinbuttonSizeHint(AG_FSpinbutton *fsu, const char *text)
 {
-	AG_TextboxPrescale(fsu->input, text);
+	AG_TextboxSizeHint(fsu->input, text);
 }
 
 static void

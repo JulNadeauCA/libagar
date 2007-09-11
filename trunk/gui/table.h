@@ -110,7 +110,7 @@ typedef struct ag_table {
 	void *selected_row;		/* Default `selected-row' binding */
 	void *selected_col;		/* Default `selected-col' binding */
 	void *selected_cell;		/* Default `selected-cell' binding */
-	int prew, preh;			/* Prescale hint */
+	int prew, preh;			/* Size hint */
 
 	AG_Mutex lock;
 	int wTbl;			/* Width of table display area */
@@ -142,7 +142,8 @@ AG_Table *AG_TableNew(void *, Uint);
 AG_Table *AG_TableNewPolled(void *, Uint, void (*fn)(AG_Event *),
  			    const char *, ...);
 void	  AG_TableInit(AG_Table *, Uint);
-void	  AG_TablePrescale(AG_Table *, int, int);
+void	  AG_TableSizeHint(AG_Table *, int, int);
+#define	  AG_TablePrescale AG_TableSizeHint
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
 int	  AG_TablePoolAdd(AG_Table *, Uint, Uint);

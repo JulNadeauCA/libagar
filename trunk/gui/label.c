@@ -254,7 +254,7 @@ AG_LabelInit(AG_Label *lbl, enum ag_label_type type, Uint flags,
 		break;
 	case AG_LABEL_POLLED:
 	case AG_LABEL_POLLED_MT:
-/*		AG_LabelPrescale(lbl, 1, "XXXXXXXXXXXXXXXXX"); */
+/*		AG_LabelSizeHint(lbl, 1, "XXXXXXXXXXXXXXXXX"); */
 		memset(lbl->poll.ptrs, 0, sizeof(void *)*AG_LABEL_MAX_POLLPTRS);
 		lbl->poll.nptrs = 0;
 		break;
@@ -262,7 +262,7 @@ AG_LabelInit(AG_Label *lbl, enum ag_label_type type, Uint flags,
 }
 
 void
-AG_LabelPrescale(AG_Label *lab, Uint nlines, const char *text)
+AG_LabelSizeHint(AG_Label *lab, Uint nlines, const char *text)
 {
 	if (nlines > 0) {
 		AG_TextSize(text, &lab->wPre, NULL);

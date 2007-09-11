@@ -45,7 +45,7 @@ typedef struct ag_label {
 	char *text;			/* Text buffer */
 	int surface;			/* Label surface */
 	int surfaceCont;		/* [...] surface */
-	int wPre, hPre;			/* Prescale dimensions */
+	int wPre, hPre;			/* SizeHint dimensions */
 	int lPad, rPad, tPad, bPad;	/* Label padding */
 	enum ag_text_justify justify;	/* Justification mode */
 	struct {
@@ -79,7 +79,8 @@ void	 AG_LabelJustify(AG_Label *, enum ag_text_justify);
 #define	 AG_LabelSetPaddingRight(lbl,v)  AG_LabelSetPadding((lbl),-1,(v),-1,-1)
 #define	 AG_LabelSetPaddingTop(lbl,v)    AG_LabelSetPadding((lbl),-1,-1,(v),-1)
 #define	 AG_LabelSetPaddingBottom(lbl,v) AG_LabelSetPadding((lbl),-1,-1,-1,(v))
-void	 AG_LabelPrescale(AG_Label *, Uint, const char *);
+void	 AG_LabelSizeHint(AG_Label *, Uint, const char *);
+#define	 AG_LabelPrescale AG_LabelSizeHint
 
 void	 AG_LabelFlagNew(AG_Label *, Uint, const char *,
 	                 enum ag_widget_binding_type, Uint32);

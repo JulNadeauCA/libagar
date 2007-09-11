@@ -70,7 +70,7 @@ dereferenced on rendering.
 .Fn AG_LabelJustify "AG_Label *label" "enum ag_text_justify justify"
 .Pp
 .Ft "void"
-.Fn AG_LabelPrescale "AG_Label *label" "Uint nlines" "const char *text"
+.Fn AG_LabelSizeHint "AG_Label *label" "Uint nlines" "const char *text"
 .Pp
 .nr nS 0
 The
@@ -142,7 +142,7 @@ enum ag_text_justify {
 .Ed
 .Pp
 The
-.Fn AG_LabelPrescale
+.Fn AG_LabelSizeHint
 function arranges for the minimum scaling of the label to accomodate at
 least
 .Fa nlines
@@ -167,7 +167,7 @@ like directives, except that the argument following the format string are
 pointers to the data instead.
 .Pp
 Note that a call to
-.Fn AG_LabelPrescale
+.Fn AG_LabelSizeHint
 is always recommended in the case of polled labels, such that the label
 is initially scaled to an optimal size, given the data that we expect the
 label will have to display.
@@ -301,7 +301,7 @@ and a polled label:
 	win = AG_WindowNew(0);
 	AG_LabelNewStatic(win, 0, "Foo");
 	myLbl = AG_LabelNewPolled(win, 0, "myInt=%i", &myInt);
-	AG_LabelPrescale(myLbl, 1, "myInt=0000");
+	AG_LabelSizeHint(myLbl, 1, "myInt=0000");
 }
 .Ed
 .Pp

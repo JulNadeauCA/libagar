@@ -436,7 +436,7 @@ Destroy(void *p)
 }
 
 void
-AG_GraphPrescale(AG_Graph *gf, Uint w, Uint h)
+AG_GraphSizeHint(AG_Graph *gf, Uint w, Uint h)
 {
 	gf->wPre = w;
 	gf->hPre = h;

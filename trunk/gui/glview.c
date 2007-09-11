@@ -129,7 +129,7 @@ AG_GLViewInit(AG_GLView *glv, Uint flags)
 }
 
 void
-AG_GLViewPrescale(AG_GLView *glv, int w, int h)
+AG_GLViewSizeHint(AG_GLView *glv, int w, int h)
 {
 	glv->wPre = w;
 	glv->hPre = h;

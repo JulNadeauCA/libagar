@@ -65,7 +65,7 @@ AG_FixedInit(AG_Fixed *fx, Uint flags)
 }
 
 void
-AG_FixedPrescale(AG_Fixed *fx, int w, int h)
+AG_FixedSizeHint(AG_Fixed *fx, int w, int h)
 {
 	fx->wPre = w;
 	fx->hPre = h;

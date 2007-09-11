@@ -123,7 +123,7 @@ mfspinbutton_changed(AG_Event *event)
 }
 
 static void
-mfspinbutton_up(AG_Event *event)
+DecrementY(AG_Event *event)
 {
 	AG_MFSpinbutton *fsu = AG_PTR(1);
 
@@ -133,7 +133,7 @@ mfspinbutton_up(AG_Event *event)
 }
 
 static void
-mfspinbutton_down(AG_Event *event)
+IncrementY(AG_Event *event)
 {
 	AG_MFSpinbutton *fsu = AG_PTR(1);
 	
@@ -143,7 +143,7 @@ mfspinbutton_down(AG_Event *event)
 }
 
 static void
-mfspinbutton_left(AG_Event *event)
+DecrementX(AG_Event *event)
 {
 	AG_MFSpinbutton *fsu = AG_PTR(1);
 	
@@ -153,7 +153,7 @@ mfspinbutton_left(AG_Event *event)
 }
 
 static void
-mfspinbutton_right(AG_Event *event)
+IncrementX(AG_Event *event)
 {
 	AG_MFSpinbutton *fsu = AG_PTR(1);
 	
@@ -163,20 +163,20 @@ mfspinbutton_right(AG_Event *event)
 }
 
 static void
-update_unit_button(AG_MFSpinbutton *fsu)
+UpdateUnitSelector(AG_MFSpinbutton *fsu)
 {
 	AG_ButtonText(fsu->units->button, "%s", AG_UnitAbbr(fsu->unit));
 }
 
 static void
-selected_unit(AG_Event *event)
+SelectUnit(AG_Event *event)
 {
 	AG_UCombo *ucom = AG_SELF();
 	AG_MFSpinbutton *fsu = AG_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
 
 	fsu->unit = (const AG_Unit *)ti->p1;
-	update_unit_button(fsu);
+	UpdateUnitSelector(fsu);
 }
 
 static void
@@ -202,7 +202,7 @@ init_unit_system(AG_MFSpinbutton *fsu, const char *unit_key)
 		fatal("unknown unit: `%s'", unit_key);
 	}
 	fsu->unit = unit;
-	update_unit_button(fsu);
+	UpdateUnitSelector(fsu);
 
 	AG_MutexLock(&fsu->units->list->lock);
 	AG_TlistDeselectAll(fsu->units->list);
@@ -239,16 +239,14 @@ AG_MFSpinbuttonInit(AG_MFSpinbutton *fsu, Uint flags, const char *unit,
 	fsu->writeable = 1;
 	fsu->sep = sep;
 	AG_MutexInitRecursive(&fsu->lock);
-	AG_TextboxPrescale(fsu->input, "888.88");
+	AG_TextboxSizeHint(fsu->input, "888.88");
 
 	strlcpy(fsu->format, "%g", sizeof(fsu->format));
-	strlcat(fsu->format, sep, sizeof(fsu->format));
-	strlcat(fsu->format, "%g", sizeof(fsu->format));
 	
 	if (unit != NULL) {
 		fsu->units = AG_UComboNew(fsu, 0);
-		AG_SetEvent(fsu->units, "ucombo-selected", selected_unit,
-		    "%p", fsu);
+		AG_SetEvent(fsu->units, "ucombo-selected",
+		    SelectUnit, "%p", fsu);
 		init_unit_system(fsu, unit);
 		AG_WidgetSetFocusable(fsu->units, 0);
 	} else {
@@ -257,25 +255,21 @@ AG_MFSpinbuttonInit(AG_MFSpinbutton *fsu, Uint flags, const char *unit,
 	}
 
 	fsu->xincbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(fsu->xincbu, 1,1,1,1);
-	AG_WidgetSetFocusable(fsu->xincbu, 0);
-	AG_SetEvent(fsu->xincbu, "button-pushed", mfspinbutton_right,
-	    "%p", fsu);
-
 	fsu->xdecbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("-"));
-	AG_ButtonSetPadding(fsu->xdecbu, 1,1,1,1);
-	AG_WidgetSetFocusable(fsu->xdecbu, 0);
-	AG_SetEvent(fsu->xdecbu, "button-pushed", mfspinbutton_left, "%p", fsu);
-
 	fsu->yincbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("+"));
-	AG_ButtonSetPadding(fsu->yincbu, 1,1,1,1);
-	AG_WidgetSetFocusable(fsu->yincbu, 0);
-	AG_SetEvent(fsu->yincbu, "button-pushed", mfspinbutton_down, "%p", fsu);
-
 	fsu->ydecbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("-"));
+	AG_ButtonSetPadding(fsu->xincbu, 1,1,1,1);
+	AG_ButtonSetPadding(fsu->xdecbu, 1,1,1,1);
+	AG_ButtonSetPadding(fsu->yincbu, 1,1,1,1);
 	AG_ButtonSetPadding(fsu->ydecbu, 1,1,1,1);
+	AG_SetEvent(fsu->xincbu, "button-pushed", IncrementX, "%p", fsu);
+	AG_SetEvent(fsu->xdecbu, "button-pushed", DecrementX, "%p", fsu);
+	AG_SetEvent(fsu->yincbu, "button-pushed", IncrementY, "%p", fsu);
+	AG_SetEvent(fsu->ydecbu, "button-pushed", DecrementY, "%p", fsu);
+	AG_WidgetSetFocusable(fsu->xincbu, 0);
+	AG_WidgetSetFocusable(fsu->xdecbu, 0);
+	AG_WidgetSetFocusable(fsu->yincbu, 0);
 	AG_WidgetSetFocusable(fsu->ydecbu, 0);
-	AG_SetEvent(fsu->ydecbu, "button-pushed", mfspinbutton_up, "%p", fsu);
 
 	AG_SetEvent(fsu, "widget-bound", mfspinbutton_bound, NULL);
 	AG_SetEvent(fsu, "window-keydown", mfspinbutton_keydown, NULL);
@@ -364,15 +358,121 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
+/* Update the textbox contents from the binding value. */
+static void
+UpdateTextbox(AG_MFSpinbutton *num)
+{
+	char sx[64], sy[64];
+	AG_WidgetBinding *valueb;
+	void *value;
+
+	/* Get X value */
+	valueb = AG_WidgetGetBinding(num, "xvalue", &value);
+	switch (valueb->vtype) {
+	case AG_WIDGET_DOUBLE:
+		snprintf(sx, sizeof(sx), num->format,
+		    AG_Base2Unit(*(double *)value, num->unit));
+		break;
+	case AG_WIDGET_FLOAT:
+		snprintf(sx, sizeof(sx), num->format,
+		    AG_Base2Unit(*(float *)value, num->unit));
+		break;
+	case AG_WIDGET_INT:
+		snprintf(sx, sizeof(sx), "%d", *(int *)value);
+		break;
+	case AG_WIDGET_UINT:
+		snprintf(sx, sizeof(sx), "%u", *(Uint *)value);
+		break;
+	case AG_WIDGET_UINT8:
+		snprintf(sx, sizeof(sx), "%u", *(Uint8 *)value);
+		break;
+	case AG_WIDGET_SINT8:
+		snprintf(sx, sizeof(sx), "%d", *(Sint8 *)value);
+		break;
+	case AG_WIDGET_UINT16:
+		snprintf(sx, sizeof(sx), "%u", *(Uint16 *)value);
+		break;
+	case AG_WIDGET_SINT16:
+		snprintf(sx, sizeof(sx), "%d", *(Sint16 *)value);
+		break;
+	case AG_WIDGET_UINT32:
+		snprintf(sx, sizeof(sx), "%u", *(Uint32 *)value);
+		break;
+	case AG_WIDGET_SINT32:
+		snprintf(sx, sizeof(sx), "%d", *(Sint32 *)value);
+		break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_WIDGET_UINT64:
+		snprintf(sx, sizeof(sx), "%llu",
+		    (unsigned long long)(*(Uint64 *)value));
+		break;
+	case AG_WIDGET_SINT64:
+		snprintf(sx, sizeof(sx), "%lld",
+		    (long long)((Sint64 *)value));
+		break;
+#endif
+	}
+	AG_WidgetUnlockBinding(valueb);
+	
+	/* Get Y value */
+	valueb = AG_WidgetGetBinding(num, "yvalue", &value);
+	switch (valueb->vtype) {
+	case AG_WIDGET_DOUBLE:
+		snprintf(sy, sizeof(sy), num->format,
+		    AG_Base2Unit(*(double *)value, num->unit));
+		break;
+	case AG_WIDGET_FLOAT:
+		snprintf(sy, sizeof(sy), num->format,
+		    AG_Base2Unit(*(float *)value, num->unit));
+		break;
+	case AG_WIDGET_INT:
+		snprintf(sy, sizeof(sy), "%d", *(int *)value);
+		break;
+	case AG_WIDGET_UINT:
+		snprintf(sy, sizeof(sy), "%u", *(Uint *)value);
+		break;
+	case AG_WIDGET_UINT8:
+		snprintf(sy, sizeof(sy), "%u", *(Uint8 *)value);
+		break;
+	case AG_WIDGET_SINT8:
+		snprintf(sy, sizeof(sy), "%d", *(Sint8 *)value);
+		break;
+	case AG_WIDGET_UINT16:
+		snprintf(sy, sizeof(sy), "%u", *(Uint16 *)value);
+		break;
+	case AG_WIDGET_SINT16:
+		snprintf(sy, sizeof(sy), "%d", *(Sint16 *)value);
+		break;
+	case AG_WIDGET_UINT32:
+		snprintf(sy, sizeof(sy), "%u", *(Uint32 *)value);
+		break;
+	case AG_WIDGET_SINT32:
+		snprintf(sy, sizeof(sy), "%d", *(Sint32 *)value);
+		break;
+#ifdef SDL_HAS_64BIT_TYPE
+	case AG_WIDGET_UINT64:
+		snprintf(sy, sizeof(sy), "%llu",
+		    (unsigned long long)(*(Uint64 *)value));
+		break;
+	case AG_WIDGET_SINT64:
+		snprintf(sy, sizeof(sy), "%lld",
+		    (long long)(*(Uint64 *)value));
+		break;
+#endif
+	}
+	AG_TextboxPrintf(num->input, "%s%s%s", sx, num->sep, sy);
+	AG_WidgetUnlockBinding(valueb);
+}
+
 static void
 Draw(void *p)
 {
 	AG_MFSpinbutton *fsu = p;
 	AG_WidgetBinding *xvalueb, *yvalueb;
 	double *xvalue, *yvalue;
-
-	if (AG_WidgetFocused(fsu->input))
-		return;
+	
+	if (!AG_WidgetFocused(fsu->input))
+		UpdateTextbox(fsu);
 
 	xvalueb = AG_WidgetGetBinding(fsu, "xvalue", &xvalue);
 	yvalueb = AG_WidgetGetBinding(fsu, "yvalue", &yvalue);
@@ -500,13 +600,8 @@ void
 AG_MFSpinbuttonSetPrecision(AG_MFSpinbutton *fsu, const char *mode,
     int precision)
 {
-	char ps[8];
-
-	snprintf(ps, sizeof(ps), "%d", precision);
-
 	AG_MutexLock(&fsu->lock);
-	snprintf(fsu->format, sizeof(fsu->format), "%%.%d%s%s%%.%d%s",
-	    precision, mode, fsu->sep, precision, mode);
+	snprintf(fsu->format, sizeof(fsu->format), "%%.%d%s", precision, mode);
 	AG_MutexUnlock(&fsu->lock);
 }
 
@@ -523,7 +618,7 @@ AG_MFSpinbuttonSelectUnit(AG_MFSpinbutton *fsu, const char *uname)
 		if (strcmp(u->key, uname) == 0) {
 			it->selected++;
 			fsu->unit = u;
-			update_unit_button(fsu);
+			UpdateUnitSelector(fsu);
 			break;
 		}
 	}

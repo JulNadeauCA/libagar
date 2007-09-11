@@ -103,7 +103,16 @@ for notebook-style display.
 .Fn AG_WindowSetGeometry "AG_Window *win" "int x" "int y" "int w" "int h"
 .Pp
 .Ft "void"
-.Fn AG_WindowScaleToView "AG_Window *win"
+.Fn AG_WindowSetGeometryBounded "AG_Window *win" "int x" "int y" "int w" "int h"
+.Pp
+.Ft "void"
+.Fn AG_WindowSetGeometryMax "AG_Window *win"
+.Pp
+.Ft "void"
+.Fn AG_WindowMaximize "AG_Window *win"
+.Pp
+.Ft "void"
+.Fn AG_WindowMinimize "AG_Window *win"
 .Pp
 .Ft void
 .Fn AG_WindowAttach "AG_Window *win" "AG_Window *subwin"
@@ -283,10 +292,24 @@ function allows manual modification of a window's position and size in terms
 of pixels.
 It should be invoked after the window's child widgets are created, otherwise
 no minimum geometry will be enforced when the window is later resized.
-.Fn AG_WindowScaleToView
-calls
-.Fn AG_WindowSetGeometry
-to maximize the window.
+.Pp
+Note that the location and size of the window is not limited by
+.Fn AG_WindowSetGeometry .
+The
+.Fn AG_WindowSetGeometryBounded
+variant does limit the window to the view area.
+.Pp
+.Fn AG_WindowSetGeometryMax
+sets the geometry to the size of the display, without setting the
+.Dv AG_WINDOW_MAXIMIZED
+flag.
+.Pp
+.Fn AG_WindowMaximize
+maximizes the window and sets the
+.Dv AG_WINDOW_MAXIMIZED
+flag.
+.Fn AG_WindowMinimize
+minimizes the window and clears the flag.
 .Pp
 Finally, the
 .Fn AG_WindowAttach

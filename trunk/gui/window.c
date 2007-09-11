@@ -50,6 +50,8 @@ static void Resize(int, AG_Window *, SDL_MouseMotionEvent *);
 static void Move(AG_Window *, SDL_MouseMotionEvent *);
 static void Shown(AG_Event *);
 static void Hidden(AG_Event *);
+static void GainFocus(AG_Event *);
+static void LostFocus(AG_Event *);
 
 AG_Mutex agWindowLock = AG_MUTEX_INITIALIZER;
 int	 agWindowAnySize = 0;
@@ -147,20 +149,14 @@ AG_WindowInit(void *p, const char *name, int flags)
 
 	win->tbar = (flags & AG_WINDOW_NOTITLE) ? NULL :
 	    AG_TitlebarNew(win, titlebar_flags);
+	
+	AG_SetEvent(win, "window-gainfocus", GainFocus, NULL);
+	AG_SetEvent(win, "window-lostfocus", LostFocus, NULL);
 
-	/* Arrange for visiblity change events to be forwarded to children. */
 	ev = AG_SetEvent(win, "widget-shown", Shown, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(win, "widget-hidden", Hidden, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
-
-	/* Arrange for focus change events to be forwarded to children. */
-	ev = AG_SetEvent(win, "widget-gainfocus", NULL, NULL);
-	ev->flags |= AG_EVENT_PROPAGATE;
-	ev = AG_SetEvent(win, "widget-lostfocus", NULL, NULL);
-	ev->flags |= AG_EVENT_PROPAGATE;
-
-	/* Notify children prior to destruction. */
 	ev = AG_SetEvent(win, "detached", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 }
@@ -345,13 +341,42 @@ Hidden(AG_Event *event)
 		    WIDGET(win)->h,
 		    AG_COLOR(BG_COLOR));
 		if (!agView->opengl) {
-			SDL_UpdateRect(agView->v,
-			    WIDGET(win)->x, WIDGET(win)->y,
-			    WIDGET(win)->w, WIDGET(win)->h);
+			AG_QueueVideoUpdate(
+			    WIDGET(win)->x,
+			    WIDGET(win)->y,
+			    WIDGET(win)->w,
+			    WIDGET(win)->h);
 		}
 //	}
 	AG_PostEvent(NULL, win, "window-hidden", NULL);
 }
+
+static void
+WidgetGainFocus(AG_Widget *wid)
+{
+	AG_Widget *chld;
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		WidgetGainFocus(chld);
+	}
+	if (wid->flags & AG_WIDGET_FOCUSED)
+		AG_PostEvent(NULL, wid, "widget-gainfocus", NULL);
+}
+
+static void
+WidgetLostFocus(AG_Widget *wid)
+{
+	AG_Widget *chld;
+
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		WidgetLostFocus(chld);
+	}
+	if (wid->flags & AG_WIDGET_FOCUSED)
+		AG_PostEvent(NULL, wid, "widget-lostfocus", NULL);
+}
+
+static void GainFocus(AG_Event *event) { WidgetGainFocus(WIDGET(AG_SELF())); }
+static void LostFocus(AG_Event *event) { WidgetLostFocus(WIDGET(AG_SELF())); }
 
 /*
  * Verify whether a given window resides inside the area of some other
@@ -934,7 +959,7 @@ out:
 		if (agView->winToFocus != NULL &&
 		    agView->winToFocus == lastwin) {	/* Already focused? */
 			AG_PostEvent(NULL, agView->winToFocus,
-			    "widget-gainfocus", NULL);
+			    "window-gainfocus", NULL);
 			agView->winToFocus = NULL;
 			goto outf;
 		}
@@ -943,7 +968,7 @@ out:
 			if (lastwin->flags & AG_WINDOW_KEEPABOVE) {
 				goto outf;
 			}
-			AG_PostEvent(NULL, lastwin, "widget-lostfocus", NULL);
+			AG_PostEvent(NULL, lastwin, "window-lostfocus", NULL);
 		}
 		if (agView->winToFocus != NULL &&
 		    agView->winToFocus != TAILQ_LAST(&agView->windows,
@@ -953,7 +978,7 @@ out:
 			TAILQ_INSERT_TAIL(&agView->windows, agView->winToFocus,
 			    windows);
 			AG_PostEvent(NULL, agView->winToFocus,
-			    "widget-gainfocus", NULL);
+			    "window-gainfocus", NULL);
 		}
 		agView->winToFocus = NULL;
 	}
@@ -982,7 +1007,8 @@ AG_WindowUpdate(AG_Window *win)
  * background when needed.
  */
 int
-AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
+AG_WindowSetGeometryParam(AG_Window *win, int x, int y, int w, int h,
+    int bounded)
 {
 	AG_SizeReq rWin;
 	AG_SizeAlloc aWin;
@@ -1010,26 +1036,26 @@ AG_WindowSetGeometry(AG_Window *win, int x, int y, int w, int h)
 	if (nh < win->minh) { nh = win->minh; }
 
 	/* Limit the window to the view boundaries. */
+	aWin.x = (x == -1) ? WIDGET(win)->x : x;
+	aWin.y = (y == -1) ? WIDGET(win)->y : y;
 	aWin.w = nw;
-	if ( (x + nw) > agView->w ) {
-		aWin.x = agView->w - nw;
-	} else {
-		aWin.x = (x == -1) ? WIDGET(win)->x : x;
-	}
-	if (aWin.x < 0) {
-		aWin.x = 0;
-		aWin.w = agView->w;
-	}
-
 	aWin.h = nh;
-	if ( (y + nh) > agView->h ) {
-		aWin.y = agView->h - nh;
-	} else {
-		aWin.y = (y == -1) ? WIDGET(win)->y : y;
-	}
-	if (aWin.y < 0) {
-		aWin.y = 0;
-		aWin.h = agView->h;
+	
+	if (bounded) {
+		if (aWin.x+aWin.w > agView->w) {
+			aWin.w = agView->w - aWin.x;
+		}
+		if (aWin.y+aWin.h > agView->h) {
+			aWin.h = agView->h - aWin.y;
+		}
+		if (aWin.w < 0) {
+			aWin.x = 0;
+			aWin.w = agView->w;
+		}
+		if (aWin.h < 0) {
+			aWin.y = 0;
+			aWin.h = agView->h;
+		}
 	}
 	
 	/* Size the widgets and update their coordinates. */

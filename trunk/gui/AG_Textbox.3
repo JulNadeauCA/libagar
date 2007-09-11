@@ -57,7 +57,7 @@ encoded characters.
 .Fn AG_TextboxSetPassword "AG_Textbox *textbox" "int password"
 .Pp
 .Ft void
-.Fn AG_TextboxPrescale "AG_Textbox *textbox" "const char *text"
+.Fn AG_TextboxSizeHint "AG_Textbox *textbox" "const char *text"
 .Pp
 .nr nS 0
 The
@@ -106,7 +106,7 @@ substituted for
 .Sq *
 in the display.
 .Pp
-.Fn AG_TextboxPrescale
+.Fn AG_TextboxSizeHint
 requests that the initial geometry of
 .Fa textbox
 is to be sufficient to display the string

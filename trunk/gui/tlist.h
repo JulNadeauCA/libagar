@@ -65,7 +65,8 @@ typedef struct ag_tlist {
 #define AG_TLIST_EXPAND		(AG_TLIST_HFILL|AG_TLIST_VFILL)
 
 	void *selected;			/* Default `selected' binding */
-	int prew, preh;			/* Prescale hint */
+	int wHint, hHint;		/* Size hint */
+	int wSpace;			/* Icon/text spacing */
 
 	AG_Mutex lock;
 	int item_h;			/* Item height */
@@ -102,7 +103,10 @@ AG_Tlist *AG_TlistNewPolled(void *, Uint, AG_EventFn, const char *, ...);
 void	  AG_TlistInit(AG_Tlist *, Uint);
 void	  AG_TlistDestroy(void *);
 
-void		AG_TlistPrescale(AG_Tlist *, const char *, int);
+void		AG_TlistSizeHint(AG_Tlist *, const char *, int);
+void		AG_TlistSizeHintPixels(AG_Tlist *, int, int);
+#define		AG_TlistPrescale AG_TlistSizeHint
+
 void		AG_TlistSetItemHeight(AG_Tlist *, int);
 __inline__ void	AG_TlistSetIcon(AG_Tlist *, AG_TlistItem *,
 	                        SDL_Surface *);

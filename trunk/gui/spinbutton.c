@@ -161,7 +161,7 @@ spinbutton_dec(AG_Event *event)
 void
 AG_SpinbuttonInit(AG_Spinbutton *sbu, Uint flags, const char *label)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE;
+	Uint wflags = 0;
 
 	if ((flags & AG_SPINBUTTON_NOHFILL)==0) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_SPINBUTTON_VFILL) { wflags |= AG_WIDGET_VFILL; }
@@ -178,7 +178,7 @@ AG_SpinbuttonInit(AG_Spinbutton *sbu, Uint flags, const char *label)
 	sbu->max = 0;
 	AG_MutexInit(&sbu->lock);
 	sbu->input = AG_TextboxNew(sbu, 0, label);
-	AG_TextboxPrescale(sbu->input, "8888");
+	AG_TextboxSizeHint(sbu->input, "8888");
 
 	AG_SetEvent(sbu, "widget-bound", spinbutton_bound, NULL);
 	AG_SetEvent(sbu, "window-keydown", spinbutton_keydown, NULL);
@@ -187,6 +187,8 @@ AG_SpinbuttonInit(AG_Spinbutton *sbu, Uint flags, const char *label)
 	AG_ButtonSetPadding(sbu->incbu, 1, 1, 1, 1);
 	sbu->decbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(sbu->decbu, 1, 1, 1, 1);
+	AG_WidgetSetFocusable(sbu->incbu, 0);
+	AG_WidgetSetFocusable(sbu->decbu, 0);
 	
 	AG_SetEvent(sbu->input, "textbox-return", spinbutton_return, "%p", sbu);
 	AG_SetEvent(sbu->input, "textbox-postchg", spinbutton_changed, "%p",

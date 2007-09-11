@@ -62,7 +62,10 @@ Single or multiple selections of items are possible.
 .Fn AG_TlistSetIcon "AG_Tlist *tl, AG_TlistItem *item" "SDL_Surface *icon"
 .Pp
 .Ft void
-.Fn AG_TlistPrescale "AG_Tlist *tl" "const char *text" "int nitems"
+.Fn AG_TlistSizeHint "AG_Tlist *tl" "const char *text" "int nitems"
+.Pp
+.Ft void
+.Fn AG_TlistSizeHintPixels "AG_Tlist *tl" "int w" "int nitems"
 .Pp
 .Ft void
 .Fn AG_TlistSetDblClickFn "AG_Tlist *tl" "AG_EventFn fn" "const char *fn_args" "..."
@@ -149,11 +152,14 @@ by
 .Fa h
 pixels.
 .Pp
-.Fn AG_TlistPrescale
+.Fn AG_TlistSizeHint
 requests sufficient height to display
 .Fa nitems
 items at once, and sufficient width to display an item containing
 .Fa text .
+The
+.Fn AG_TlistSizeHintPixels
+variant accepts a width argument in pixels instead of a string.
 .Pp
 .Fn AG_TlistSetDblClickFn
 arranges for the given callback

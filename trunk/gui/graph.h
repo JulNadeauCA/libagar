@@ -85,7 +85,7 @@ extern const AG_WidgetOps agGraphOps;
 
 AG_Graph	*AG_GraphNew(void *, Uint);
 void	 	 AG_GraphInit(AG_Graph *, Uint);
-void	 	 AG_GraphPrescale(AG_Graph *, Uint, Uint);
+void	 	 AG_GraphSizeHint(AG_Graph *, Uint, Uint);
 
 void		 AG_GraphFreeVertices(AG_Graph *);
  
