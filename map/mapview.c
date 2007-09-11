@@ -1486,7 +1486,7 @@ MAP_ViewGetSelection(MAP_View *mv, int *x, int *y, int *w, int *h)
 }
 
 void	
-MAP_ViewPrescale(MAP_View *mv, int w, int h)
+MAP_ViewSizeHint(MAP_View *mv, int w, int h)
 {
 	mv->prew = w;
 	mv->preh = h;

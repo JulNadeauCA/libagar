@@ -128,7 +128,7 @@ __inline__ void MAP_ViewPixel2i(MAP_View *, int, int);
 __inline__ void MAP_ViewHLine(MAP_View *, int, int, int);
 __inline__ void MAP_ViewVLine(MAP_View *, int, int, int);
 
-void	 MAP_ViewPrescale(MAP_View *, int, int);
+void	 MAP_ViewSizeHint(MAP_View *, int, int);
 void	 MAP_ViewCenter(MAP_View *, int, int);
 void	 MAP_ViewSetScale(MAP_View *, Uint, int);
 void	 MAP_ViewSetSelection(MAP_View *, int, int, int, int);

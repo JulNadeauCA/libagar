@@ -1717,7 +1717,7 @@ RG_TilesetEdit(void *p)
 	tlTiles = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tlTiles, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
 		               AG_TLIST_EXPAND);
-	AG_TlistPrescale(tlTiles, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
+	AG_TlistSizeHint(tlTiles, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
 	AG_SetEvent(tlTiles, "tlist-poll", PollTiles, "%p", ts);
 	
 	tlGfx = Malloc(sizeof(AG_Tlist), M_OBJECT);

@@ -92,7 +92,7 @@ DEV_TimerInspector(void)
 
 	tv = AG_TableviewNew(win, AG_TABLEVIEW_NOHEADER|AG_TABLEVIEW_EXPAND,
 	   NULL, NULL);
-	AG_TableviewPrescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
+	AG_TableviewSizeHint(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
 	AG_TableviewColAdd(tv, 0, 0, NULL, NULL);
 	
 	AG_SetTimeout(&refresher, UpdateTbl, tv, 0);

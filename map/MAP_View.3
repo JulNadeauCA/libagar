@@ -52,7 +52,7 @@ structure.
 .Fn MAP_ViewInit "MAP_View *mv" "MAP *map" "int flags" "AG_Toolbar *toolbar" "AG_Statusbar *statbar"
 .Pp
 .Ft void
-.Fn MAP_ViewPrescale "MAP_View *mv" "int w" "int h"
+.Fn MAP_ViewSizeHint "MAP_View *mv" "int w" "int h"
 .Pp
 .Ft void
 .Fn MAP_ViewSetScale "MAP_View *mv" "Uint zoom" "int adj_offs"
@@ -97,7 +97,7 @@ flag enables write operations on the map, assuming the level editor,
 is initialized.
 .Pp
 The
-.Fn MAP_ViewPrescale
+.Fn MAP_ViewSizeHint
 function arranges for the
 .Nm
 to reserve enough space to display

@@ -396,7 +396,7 @@ SC_PlotterInit(SC_Plotter *ptr, Uint flags)
 }
 
 void
-SC_PlotterPrescale(SC_Plotter *ptr, Uint w, Uint h)
+SC_PlotterSizeHint(SC_Plotter *ptr, Uint w, Uint h)
 {
 	ptr->wPre = w;
 	ptr->hPre = h;

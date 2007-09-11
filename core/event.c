@@ -134,7 +134,7 @@ PerfMonitorInit(void)
 	lbl = AG_LabelNewPolled(agPerfWindow, AG_LABEL_HFILL,
 	    "%dms (nom %dms), %d evnt, %dms idle",
 	    &agView->rCur, &agView->rNom, &agEventAvg, &agIdleAvg);
-	AG_LabelPrescale(lbl, 1, "000ms (nom 000ms), 00 evnt, 000ms idle");
+	AG_LabelSizeHint(lbl, 1, "000ms (nom 000ms), 00 evnt, 000ms idle");
 	agPerfGraph = AG_FixedPlotterNew(agPerfWindow, AG_FIXED_PLOTTER_LINES,
 	                                               AG_FIXED_PLOTTER_XAXIS|
 						       AG_FIXED_PLOTTER_EXPAND);
@@ -164,7 +164,6 @@ AG_EventLoop_FixedFPS(void)
 		Tr2 = SDL_GetTicks();
 		if (Tr2-Tr1 >= agView->rNom) {
 			AG_MutexLock(&agView->lock);
-			agView->ndirty = 0;
 #ifdef HAVE_OPENGL
 			if (agView->opengl) {
 				AG_LockGL();

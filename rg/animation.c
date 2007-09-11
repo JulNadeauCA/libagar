@@ -635,7 +635,7 @@ PreviewAnim(AG_Event *event)
 	RG_AnimviewSetAnimation(av, ani);
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	lbl = AG_LabelNewPolled(win, 0, " %u/%u", &av->frame, &ani->nframes);
-	AG_LabelPrescale(lbl, 1, " 00000/00000");
+	AG_LabelSizeHint(lbl, 1, " 00000/00000");
 
 	AG_WindowShow(win);
 }
@@ -669,7 +669,7 @@ RG_AnimEdit(RG_Anim *ani)
 	hPane = AG_PaneNewHoriz(nt, AG_PANE_EXPAND);
 	{
 		tl = AG_TlistNew(hPane->div[0], AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_TlistPrescale(tl, _("[00000] Displace <Tile #000>"), 4);
+		AG_TlistSizeHint(tl, _("[00000] Displace <Tile #000>"), 4);
 		AG_SetEvent(tl, "tlist-poll", PollInsns, "%p", ani);
 
 		editBox = AG_BoxNew(hPane->div[1], AG_BOX_VERT, AG_BOX_EXPAND);
@@ -686,7 +686,7 @@ RG_AnimEdit(RG_Anim *ani)
 	hPane = AG_PaneNewHoriz(nt, AG_PANE_EXPAND);
 	{
 		tl = AG_TlistNew(hPane->div[0], AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_TlistPrescale(tl, _("[00000] Displace <Tile #000>"), 4);
+		AG_TlistSizeHint(tl, _("[00000] Displace <Tile #000>"), 4);
 		AG_SetEvent(tl, "tlist-poll", PollFrames, "%p", ani);
 
 		editBox = AG_BoxNew(hPane->div[1], AG_BOX_VERT, AG_BOX_EXPAND);

@@ -207,7 +207,7 @@ RG_AnimviewInit(RG_Animview *av)
 }
 
 void
-RG_AnimviewPrescale(RG_Animview *av, int w, int h)
+RG_AnimviewSizeHint(RG_Animview *av, int w, int h)
 {
 	av->pre_w = w;
 	av->pre_h = h;

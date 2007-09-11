@@ -364,7 +364,7 @@ CreateBrushDlg(AG_Event *event)
 
 		tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistSetItemHeight(tl, RG_TILESZ);
-		AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
+		AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXXX", 5);
 		AG_SetEvent(tl, "tlist-poll", PollPixmaps, "%p", tv->ts);
 		AG_SetEvent(tl, "tlist-selected", UpdateBrushOptions,
 		    "%p", tb_name);

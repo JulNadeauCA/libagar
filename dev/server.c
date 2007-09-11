@@ -403,7 +403,7 @@ DEV_DebugServer(void)
 
 	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tl, AG_TLIST_POLL|AG_TLIST_EXPAND);
-	AG_TlistPrescale(tl, "CLIENT (255.255.255.255): 0.0-beta", 8);
+	AG_TlistSizeHint(tl, "CLIENT (255.255.255.255): 0.0-beta", 8);
 	AG_SetEvent(tl, "tlist-poll", PollClients, NULL);
 		
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Start server"),

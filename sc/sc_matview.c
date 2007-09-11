@@ -115,7 +115,7 @@ SC_MatviewSetNumericalFmt(SC_Matview *mv, const char *fmt)
 }
 
 void
-SC_MatviewPrescale(SC_Matview *mv, const char *text, Uint m, Uint n)
+SC_MatviewSizeHint(SC_Matview *mv, const char *text, Uint m, Uint n)
 {
 	mv->pre_m = m;
 	mv->pre_n = n;

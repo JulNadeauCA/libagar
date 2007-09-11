@@ -1238,7 +1238,7 @@ AttachPixmapDlg(AG_Event *event)
 
 	tl = AG_TlistNew(win, AG_TLIST_EXPAND|AG_TLIST_FOCUS);
 	AG_TlistSetItemHeight(tl, RG_TILESZ);
-	AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXX", 5);
+	AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXXX", 5);
 
 	TAILQ_FOREACH(px, &tv->ts->pixmaps, pixmaps) {
 		AG_TlistItem *it;
@@ -1316,7 +1316,7 @@ AttachSketchDlg(AG_Event *event)
 
 	tl = AG_TlistNew(win, AG_TLIST_EXPAND|AG_TLIST_FOCUS);
 	AG_TlistSetItemHeight(tl, RG_TILESZ);
-	AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXXXXXXXX", 5);
+	AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXXXXXXXXX", 5);
 
 	TAILQ_FOREACH(sk, &tv->ts->sketches, sketches) {
 		AG_TlistItem *it;
@@ -2033,7 +2033,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	tl_feats = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tl_feats, AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND);
 	WIDGET(tl_feats)->flags &= ~(AG_WIDGET_HFILL);
-	AG_TlistPrescale(tl_feats, _("FEATURE #00 <#00>"), 5);
+	AG_TlistSizeHint(tl_feats, _("FEATURE #00 <#00>"), 5);
 	AG_SetEvent(tl_feats, "tlist-poll", PollFeatures, "%p,%p,%p,%p",
 	    ts, t, win, tv);
 	InitTileFeatureMenu(tv, tl_feats, win);

@@ -52,11 +52,11 @@ CreateTextbox(void)
 
 	/*
 	 * Create a single-line Textbox and handle the return key with the
-	 * ReturnPressed() function. TextboxPrescale() requests an initial
+	 * ReturnPressed() function. TextboxSizeHint() requests an initial
 	 * textbox size large enough to display given string entirely.
 	 */
 	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Static string: ");
-	AG_TextboxPrescale(textbox, "XXXXXXXXXXX");
+	AG_TextboxSizeHint(textbox, "XXXXXXXXXXX");
 	AG_SetEvent(textbox, "textbox-return", ReturnPressed, NULL);
 	AG_WidgetFocus(textbox);
 
@@ -66,7 +66,7 @@ CreateTextbox(void)
 	 * the AG_WidgetBind() function.
 	 */
 	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Polled string: ");
-	AG_TextboxPrescale(textbox, "Tick: 000000");
+	AG_TextboxSizeHint(textbox, "Tick: 000000");
 	AG_WidgetBind(textbox, "string", AG_WIDGET_STRING, polledString,
 	    sizeof(polledString));
 
@@ -91,7 +91,7 @@ CreateTextbox(void)
 	         "\tint foo;\n"
 	         "\tint bar;\n"
 	         "}\n";
-	AG_TextboxPrescale(textbox, myText);
+	AG_TextboxSizeHint(textbox, myText);
 	AG_TextboxPrintf(textbox, "%s", myText);
 
 	AG_WindowShow(win);

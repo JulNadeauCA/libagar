@@ -238,7 +238,7 @@ DEV_UnicodeBrowser(void)
 	
 	tv = AG_TableviewNew(win, AG_TABLEVIEW_EXPAND|AG_TABLEVIEW_NOSORT,
 	    NULL, NULL);
-	AG_TableviewPrescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
+	AG_TableviewSizeHint(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
 	AG_TableviewColAdd(tv, 0, 0, "Char", NULL);
 	AG_TableviewColAdd(tv, 0, 1, "Hex", "<0000>");
 	

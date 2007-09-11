@@ -102,7 +102,7 @@ DEV_LeakDetector(void)
 	AG_WindowSetCaption(win, _("Leak Detector"));
 	
 	tv = AG_TableviewNew(win, AG_TABLEVIEW_EXPAND, UpdateTblCell, NULL);
-	AG_TableviewPrescale(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 8);
+	AG_TableviewSizeHint(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 8);
 	AG_TableviewSetUpdate(tv, 250);
 	AG_TableviewColAdd(tv, AG_TABLEVIEW_COL_DYNAMIC|AG_TABLEVIEW_COL_UPDATE,
 	    0, _("Subsystem"), NULL);

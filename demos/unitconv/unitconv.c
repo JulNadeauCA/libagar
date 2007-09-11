@@ -12,24 +12,23 @@
 double value = 0.0;
 
 static void
-ValueEntered(AG_Event *event)
-{
-	AG_Numerical *num = AG_SELF();
-	
-	AG_WidgetFocus(num->input);
-}
-
-static void
 GetCategories(AG_Tlist *tl)
 {
 	int i;
+	int w, wMax = 0;
 
 	AG_TlistBegin(tl);
 	for (i = 0; i < agnUnitGroups; i++) {
+		if (strcmp(agUnitGroupNames[i], "Identity") == 0) {
+			continue;
+		}
+		AG_TextSize(agUnitGroupNames[i], &w, NULL);
+		if (w > wMax) { wMax = w; }
 		AG_TlistAddPtr(tl, NULL, agUnitGroupNames[i], agUnitGroups[i]);
 	}
 	AG_TlistSelectText(tl, "Length");
 	AG_TlistEnd(tl);
+	AG_TlistSizeHintPixels(tl, wMax, 6);
 }
 
 static void
@@ -45,8 +44,6 @@ SelectCategory(AG_Event *event)
 			printf("Selecting unit: %s\n", unit->key);
 			AG_NumericalSetUnitSystem(n1, unit->key);
 			AG_NumericalSetUnitSystem(n2, unit->key);
-			AG_WindowSetGeometry(AG_WidgetParentWindow(n1),
-			    32, 32, agView->w-32, agView->h-32);
 			return;
 		}
 	}
@@ -63,10 +60,9 @@ CreateUI(void)
 	AG_Combo *uSel;
 	int i;
 
-	win = AG_WindowNew(AG_WINDOW_PLAIN);
+	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Unit Converter");
 	AG_WindowSetPadding(win, 10, 10, 10, 10);
-	AG_WindowSetGeometry(win, 32, 32, agView->w-128, agView->h-64);
 	agColors[WINDOW_BG_COLOR] = agColors[BG_COLOR];
 
 	uSel = AG_ComboNew(win, AG_COMBO_HFILL, "Category: ");
@@ -78,14 +74,10 @@ CreateUI(void)
 	n2 = AG_NumericalNew(win, AG_NUMERICAL_HFILL, "mm", "Value: ");
 	AG_WidgetBindDouble(n1, "value", &value);
 	AG_WidgetBindDouble(n2, "value", &value);
-	AG_NumericalPrescale(n1, "0000.00");
-	AG_NumericalPrescale(n2, "0000.00");
+	AG_NumericalSizeHint(n1, "0000.00");
+	AG_NumericalSizeHint(n2, "0000.00");
 
-	AG_SetEvent(n1, "numerical-return", ValueEntered, NULL);
-	AG_SetEvent(n2, "numerical-return", ValueEntered, NULL);
 	AG_SetEvent(uSel, "combo-selected", SelectCategory, "%p,%p", n1, n2);
-
-	AG_WidgetFocus(n1->input);
 	AG_WindowShow(win);
 }
 
@@ -128,7 +120,7 @@ main(int argc, char *argv[])
 			exit(0);
 		}
 	}
-	if (AG_InitVideo(320, 240, 32, 0) == -1 ||
+	if (AG_InitVideo(400, 300, 32, 0) == -1 ||
 	    AG_InitInput(0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
@@ -138,6 +130,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	
 	CreateUI();
+	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 60, 60, 60);
 
 	AG_EventLoop();
 	AG_Destroy();

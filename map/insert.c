@@ -166,7 +166,7 @@ insert_pane(void *p, void *con)
 	ntab = AG_NotebookAddTab(nb, _("Tiles"), AG_BOX_VERT);
 	mv = ins->mvTmp = MAP_ViewNew(ntab, &ins->mTmp,
 	    MAP_VIEW_EDIT|MAP_VIEW_GRID, NULL, NULL);
-	MAP_ViewPrescale(mv, 7, 7);
+	MAP_ViewSizeHint(mv, 7, 7);
 	MAP_ViewSelectTool(mv,
 	    MAP_ViewRegTool(mv, &mapNodeselOps, &ins->mTmp),
 	    &ins->mTmp);

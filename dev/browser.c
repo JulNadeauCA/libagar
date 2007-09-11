@@ -750,7 +750,7 @@ CreateObjectDlg(AG_Event *event)
 		tlParents = AG_TlistNewPolled(bo,
 		    AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND,
 		    PollObjects, "%p,%p", agWorld, lastSelectedParent);
-		AG_TlistPrescale(tlParents, "XXXXXXXXXXXXXXXXXXX", 5);
+		AG_TlistSizeHint(tlParents, "XXXXXXXXXXXXXXXXXXX", 5);
 		AG_WidgetBind(tlParents, "selected", AG_WIDGET_POINTER,
 		    &lastSelectedParent);
 	}
@@ -889,7 +889,7 @@ DEV_Browser(void)
 	tlObjs = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tlObjs, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
 	                      AG_TLIST_EXPAND);
-	AG_TlistPrescale(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
+	AG_TlistSizeHint(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
 	AG_SetEvent(tlObjs, "tlist-poll", PollObjects, "%p,%p", agWorld, NULL);
 	AG_SetEvent(tlObjs, "tlist-dblclick", ObjectOp, "%p, %i", tlObjs,
 	    OBJEDIT_EDIT_DATA);

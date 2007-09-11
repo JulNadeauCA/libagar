@@ -2137,7 +2137,7 @@ AG_ObjectEdit(void *p)
 
 		tbMD5 = AG_TextboxNew(ntab,
 		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "MD5: ");
-		AG_TextboxPrescale(tbMD5, "888888888888888888888888888888888");
+		AG_TextboxSizeHint(tbMD5, "888888888888888888888888888888888");
 		AG_WidgetDisable(tbMD5);
 		
 		tbSHA1 = AG_TextboxNew(ntab,
@@ -2165,7 +2165,7 @@ AG_ObjectEdit(void *p)
 		AG_Tlist *tl;
 
 		lblStatus = AG_LabelNewStatic(ntab, AG_LABEL_HFILL, "...");
-		AG_LabelPrescale(lblStatus, 3, _("Repository revision: #0000"));
+		AG_LabelSizeHint(lblStatus, 3, _("Repository revision: #0000"));
 
 		AG_LabelNewStaticString(ntab, 0, _("Revision history:"));
 		tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
@@ -2181,7 +2181,7 @@ AG_ObjectEdit(void *p)
 	ntab = AG_NotebookAddTab(nb, _("Deps"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_TlistPrescale(tl, "XXXXXXXXXXXX", 6);
+		AG_TlistSizeHint(tl, "XXXXXXXXXXXX", 6);
 		AG_SetEvent(tl, "tlist-poll", PollDeps, "%p", ob);
 	}
 	

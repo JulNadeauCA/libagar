@@ -24,7 +24,7 @@ typedef struct rg_anim_view {
 	RG_Anim *anim;
 	float speed;				/* Delay multiplier */
 	Uint frame;				/* Current frame */
-	Uint pre_w, pre_h;			/* Prescale geometry */
+	Uint pre_w, pre_h;			/* SizeHint geometry */
 	SDL_Rect ranim;				/* Preview rectangle */
 	struct {
 		AG_Button *play;
@@ -42,7 +42,7 @@ extern const AG_WidgetOps rgAnimviewOps;
 
 RG_Animview	*RG_AnimviewNew(void *);
 void		 RG_AnimviewInit(RG_Animview *);
-void		 RG_AnimviewPrescale(RG_Animview *, int, int);
+void		 RG_AnimviewSizeHint(RG_Animview *, int, int);
 void		 RG_AnimviewSetAnimation(RG_Animview *, RG_Anim *);
 __END_DECLS
 
