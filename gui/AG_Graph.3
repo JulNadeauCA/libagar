@@ -64,7 +64,7 @@ The user can also move vertices manually.
 .Fn AG_GraphInit "AG_Graph *graph" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_GraphPrescale "AG_Graph *graph" "Uint width" "Uint height"
+.Fn AG_GraphSizeHint "AG_Graph *graph" "Uint width" "Uint height"
 .nr nS 0
 The
 .Fn AG_GraphNew
@@ -86,8 +86,8 @@ may include:
 #define AG_GRAPH_EXPAND		(AG_GRAPH_HFILL|AG_GRAPH_VFILL)
 .Ed
 .Pp
-.Fn AG_GraphPrescale
-sets the default widget size in pixels.
+.Fn AG_GraphSizeHint
+requests an initial widget size in pixels.
 .Pp
 .Sh VERTICES
 .nr nS 1

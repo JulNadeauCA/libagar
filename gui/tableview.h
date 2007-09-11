@@ -97,7 +97,7 @@ typedef struct ag_tableview {
 	int row_height;			/* Per-row height */
 	int dblclicked;			/* Used by double click */
 	/*int keymoved;			Used by key repeat */
-	int prew, preh;			/* Prescale hint */
+	int prew, preh;			/* Size hint */
 	
 	/* columns */
 	Uint columncount;
@@ -159,20 +159,22 @@ typedef struct ag_tableview {
 __BEGIN_DECLS
 extern const AG_WidgetOps agTableviewOps;
 
-AG_Tableview *AG_TableviewNew(void *, Uint, AG_TableviewDataFn,
-		              AG_TableviewSortFn);
-void AG_TableviewInit(AG_Tableview *, Uint, AG_TableviewDataFn,
-		      AG_TableviewSortFn);
-void AG_TableviewPrescale(AG_Tableview *, const char *, int);
-void AG_TableviewSetUpdate(AG_Tableview *, Uint);
+AG_Tableview	*AG_TableviewNew(void *, Uint, AG_TableviewDataFn,
+		                 AG_TableviewSortFn);
+void		 AG_TableviewInit(AG_Tableview *, Uint, AG_TableviewDataFn,
+		                  AG_TableviewSortFn);
+void		 AG_TableviewSizeHint(AG_Tableview *, const char *, int);
+#define		 AG_TableviewPrescale AG_TableviewSizeHint
+void		 AG_TableviewSetUpdate(AG_Tableview *, Uint);
 
 AG_TableviewCol *AG_TableviewColAdd(AG_Tableview *, int, AG_TableviewColID,
 			            const char *, const char *);
-void AG_TableviewColSelect(AG_Tableview *, AG_TableviewColID);
-
+void		 AG_TableviewColSelect(AG_Tableview *, AG_TableviewColID);
 AG_TableviewRow *AG_TableviewRowGet(AG_Tableview *, AG_TableviewRowID);
 AG_TableviewRow *AG_TableviewRowAddFn(AG_Tableview *, int, AG_TableviewRow *,
 			              void *, AG_TableviewRowID, ...);
+AG_TableviewRow *AG_TableviewRowSelected(AG_Tableview *);
+
 void AG_TableviewRowDel(AG_Tableview *, AG_TableviewRow *);
 void AG_TableviewRowDelAll(AG_Tableview *);
 void AG_TableviewRowRestoreAll(AG_Tableview *);
@@ -225,12 +227,6 @@ void AG_TableviewCellPrintf(AG_Tableview *, AG_TableviewRow *, int,
 
 #define AG_TableviewRowIDCollapse(TV, ID) \
 	AG_TableviewRowCollapse((TV), AG_TableviewRowGet((TV), (ID)))
-/*
-#define AG_TableviewRowIDExpand_all(TV, ID) \
-	AG_TableviewRowExpandAll(TV, AG_TableviewRowGet(TV, ID))
-#define AG_TableviewRowIDCollapse_all(TV, ID) \
-	AG_TableviewRowCollapseAll(TV, AG_TableviewRowGet(TV, ID))
-*/
 
 #define AG_TableviewRowIDToggle(TV, ID)					\
 	do {								\
@@ -242,8 +238,6 @@ void AG_TableviewCellPrintf(AG_Tableview *, AG_TableviewRow *, int,
 			AG_TableviewRowExpand((TV), _row);		\
 		}							\
 	} while(0)
-
-AG_TableviewRow *AG_TableviewRowSelected(AG_Tableview *);
 __END_DECLS
 
 #include "close_code.h"

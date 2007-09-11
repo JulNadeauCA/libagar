@@ -294,6 +294,7 @@ SelectUnit(AG_Event *event)
 
 	num->unit = (const AG_Unit *)ti->p1;
 	UpdateUnitSelector(num);
+	UpdateTextbox(num);
 }
 
 void
@@ -301,8 +302,9 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 {
 	const AG_Unit *unit = NULL;
 	const AG_Unit *ugroup = NULL;
-	int found = 0;
-	int i;
+	int found = 0, i;
+	int w, h, nUnits = 0;
+	AG_Window *pWin;
 
 	for (i = 0; i < agnUnitGroups; i++) {
 		ugroup = agUnitGroups[i];
@@ -321,19 +323,39 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	num->unit = unit;
 	UpdateUnitSelector(num);
 
+	num->wUnitSel = 0;
+	num->hUnitSel = 0;
+	num->wPreUnit = 0;
+
 	AG_MutexLock(&num->units->list->lock);
 	AG_TlistDeselectAll(num->units->list);
 	AG_TlistBegin(num->units->list);
 	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
 		AG_TlistItem *it;
+	
+		AG_TextSize(AG_UnitAbbr(unit), &w, &h);
+		if (w > num->wUnitSel) { num->wUnitSel = w; }
+		if (h > num->hUnitSel) { num->hUnitSel = h; }
+		
+		AG_TextSize(unit->name, &w, NULL);
+		if (w > num->wPreUnit) { num->wPreUnit = w; }
 
 		it = AG_TlistAddPtr(num->units->list, NULL, _(unit->name),
 		    (void *)unit);
 		if (unit == num->unit)
 			it->selected++;
+
+		nUnits++;
 	}
 	AG_TlistEnd(num->units->list);
 	AG_MutexUnlock(&num->units->list->lock);
+
+	if (num->wPreUnit > 0) { num->wPreUnit += 8; }
+	AG_UComboSizeHintPixels(num->units, num->wPreUnit,
+	    nUnits<6 ? (nUnits + 1) : 6);
+	
+	if ((pWin = AG_WidgetParentWindow(num)))
+		AG_WindowUpdate(pWin);
 }
 
 void
@@ -346,17 +368,19 @@ AG_NumericalInit(AG_Numerical *num, Uint flags, const char *unit,
 	if (flags & AG_NUMERICAL_VFILL) { wflags |= AG_WIDGET_VFILL; }
 
 	AG_WidgetInit(num, &agNumericalOps, wflags);
-	AG_WidgetBind(num, "value", AG_WIDGET_DOUBLE, &num->value);
-	AG_WidgetBind(num, "min", AG_WIDGET_DOUBLE, &num->min);
-	AG_WidgetBind(num, "max", AG_WIDGET_DOUBLE, &num->max);
+	AG_WidgetBindDouble(num, "value", &num->value);
+	AG_WidgetBindDouble(num, "min", &num->min);
+	AG_WidgetBindDouble(num, "max", &num->max);
 	
 	num->inc = 1.0;
 	num->value = 0.0;
 	num->input = AG_TextboxNew(num, 0, label);
 	num->writeable = 1;
+	num->wUnitSel = 0;
+	num->hUnitSel = 0;
 	strlcpy(num->format, "%g", sizeof(num->format));
 	AG_MutexInitRecursive(&num->lock);
-	AG_TextboxPrescale(num->input, "88.88");
+	AG_TextboxSizeHint(num->input, "88.88");
 	
 	if (unit != NULL) {
 		num->units = AG_UComboNew(num, 0);
@@ -389,9 +413,9 @@ AG_NumericalInit(AG_Numerical *num, Uint flags, const char *unit,
 }
 
 void
-AG_NumericalPrescale(AG_Numerical *num, const char *text)
+AG_NumericalSizeHint(AG_Numerical *num, const char *text)
 {
-	AG_TextboxPrescale(num->input, text);
+	AG_TextboxSizeHint(num->input, text);
 }
 
 static void
@@ -410,15 +434,12 @@ SizeRequest(void *p, AG_SizeReq *r)
 	AG_SizeReq rChld, rInc, rDec;
 
 	AG_WidgetSizeReq(num->input, &rChld);
-	r->w = rChld.w;
-	r->h = rChld.h;
-	if (num->units != NULL) {
-		AG_WidgetSizeReq(num->units, &rChld);
-		r->w += rChld.w;
-	}
+	r->w = rChld.w + num->wUnitSel + 4;
+	r->h = MAX(rChld.h, num->hUnitSel);
+
 	AG_WidgetSizeReq(num->incbu, &rInc);
 	AG_WidgetSizeReq(num->decbu, &rDec);
-	r->w += MAX(rInc.w, rDec.w);
+	r->w += MAX(rInc.w, rDec.w) + 4;
 }
 
 static int
@@ -426,33 +447,36 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	AG_Numerical *num = p;
 	AG_SizeAlloc aChld;
-	AG_SizeReq rUnits;
 	int szBtn = a->h/2;
-	int hUnits;
+	int wUnitSel = num->wUnitSel + 4;
+	int hUnitSel = num->hUnitSel;
 
 	if (a->h < 4 || a->w < szBtn+4)
 		return (-1);
 
 	if (num->units != NULL) {
-		AG_WidgetSizeReq(num->units, &rUnits);
-		if (rUnits.w > a->w - szBtn-4) { rUnits.w = a->w - szBtn-4; }
-		if (rUnits.h > a->h) { rUnits.h = a->h; }
+		if (wUnitSel > a->w - szBtn-4) {
+			wUnitSel = a->w - szBtn-4;
+		}
+		if (hUnitSel > a->h) {
+			hUnitSel = a->h;
+		}
 	} else {
-		rUnits.w = 0;
-		rUnits.h = 0;
+		wUnitSel = 0;
+		hUnitSel = 0;
 	}
 
 	/* Size input textbox */
 	aChld.x = 0;
 	aChld.y = 0;
-	aChld.w = a->w - rUnits.w - szBtn - 4;
+	aChld.w = a->w - wUnitSel - szBtn - 4;
 	aChld.h = a->h;
 	AG_WidgetSizeAlloc(num->input, &aChld);
 	aChld.x += aChld.w + 2;
 
 	/* Size unit selector */
 	if (num->units != NULL) {
-		aChld.w = rUnits.w;
+		aChld.w = wUnitSel;
 		aChld.h = a->h;
 		AG_WidgetSizeAlloc(num->units, &aChld);
 		aChld.x += aChld.w + 2;
@@ -475,11 +499,8 @@ Draw(void *p)
 {
 	AG_Numerical *num = p;
 
-	if (AG_WidgetFocused(num->input)) {
-		/* Don't update while input is being entered. */
-		return;
-	}
-	UpdateTextbox(num);
+	if (!AG_WidgetFocused(num->input))
+		UpdateTextbox(num);
 }
 
 #define ADD_CONVERTED(TYPE) do { \

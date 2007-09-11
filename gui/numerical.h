@@ -32,10 +32,12 @@ typedef struct ag_numerical {
 	char format[32];		/* Printing format */
 	const AG_Unit *unit;		/* Conversion unit in use */
 	int writeable;			/* 0 = read-only */
-	AG_Textbox *input;
-	AG_UCombo *units;
-	AG_Button *incbu;
-	AG_Button *decbu;
+	AG_Textbox *input;		/* Input textbox */
+	AG_UCombo *units;		/* Unit selector */
+	AG_Button *incbu;		/* Increment button */
+	AG_Button *decbu;		/* Decrement button */
+	int wUnitSel, hUnitSel;		/* Initial size hints */
+	int wPreUnit;
 } AG_Numerical;
 
 __BEGIN_DECLS
@@ -44,7 +46,7 @@ extern const AG_WidgetOps agNumericalOps;
 AG_Numerical 	*AG_NumericalNew(void *, Uint, const char *, const char *);
 void		 AG_NumericalInit(AG_Numerical *, Uint, const char *,
 		                  const char *);
-void		 AG_NumericalPrescale(AG_Numerical *, const char *);
+void		 AG_NumericalSizeHint(AG_Numerical *, const char *);
 
 void	AG_NumericalSetValue(AG_Numerical *, double);
 void	AG_NumericalAddValue(AG_Numerical *, double);

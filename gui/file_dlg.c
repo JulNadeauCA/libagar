@@ -551,14 +551,14 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 
 	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL,
 	    _("Directory: %s"), &fd->cwd[0]);
-	AG_LabelPrescale(fd->lbCwd, 1,
+	AG_LabelSizeHint(fd->lbCwd, 1,
 	    _("Directory: XXXXXXXXXXXXX"));
 
 	fd->tbFile = AG_TextboxNew(fd, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 	    _("File: "));
 	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
-	AG_TlistPrescale(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
-	AG_TlistPrescale(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
+	AG_TlistSizeHint(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
+	AG_TlistSizeHint(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
 
 	fd->btnOk = AG_ButtonNew(fd, 0, _("OK"));
 	fd->btnCancel = AG_ButtonNew(fd, 0, _("Cancel"));

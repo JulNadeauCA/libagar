@@ -153,7 +153,7 @@ SelectedItem(AG_Event *event)
 void
 AG_UComboInit(AG_UCombo *com, Uint flags)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_BUTTONUP;
+	Uint wflags = AG_WIDGET_UNFOCUSED_BUTTONUP;
 
 	if (flags & AG_UCOMBO_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_UCOMBO_VFILL) { wflags |= AG_WIDGET_VFILL; }

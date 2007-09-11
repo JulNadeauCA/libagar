@@ -177,7 +177,7 @@ AG_TableviewInit(AG_Tableview *tv, Uint flags, AG_TableviewDataFn data_callback,
 }
 
 void
-AG_TableviewPrescale(AG_Tableview *tv, const char *text, int nitems)
+AG_TableviewSizeHint(AG_Tableview *tv, const char *text, int nitems)
 {
 	AG_TextSize(text, &tv->prew, NULL);
 	tv->preh = tv->head_height + (tv->row_height * nitems);

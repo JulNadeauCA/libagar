@@ -30,7 +30,8 @@ extern const AG_WidgetOps agFixedOps;
 
 AG_Fixed *AG_FixedNew(void *, Uint);
 void	  AG_FixedInit(AG_Fixed *, Uint);
-void	  AG_FixedPrescale(AG_Fixed *, int, int);
+void	  AG_FixedSizeHint(AG_Fixed *, int, int);
+#define	  AG_FixedPrescale AG_FixedSizeHint
 
 void	  AG_FixedDrawBg(void *);
 void	  AG_FixedDrawBox(void *);

@@ -91,7 +91,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	tbar->label = AG_LabelNewStaticString(tbar,
 	    AG_LABEL_HFILL|AG_LABEL_NOMINSIZE,
 	    _("Untitled"));
-	AG_LabelPrescale(tbar->label, 1, "X");
+	AG_LabelSizeHint(tbar->label, 1, "X");
 	AG_LabelSetPadding(tbar->label, 5,5,2,2);
 	
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0) {

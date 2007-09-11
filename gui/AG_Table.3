@@ -67,7 +67,7 @@ provides tree support, but no multi-column functionality.
 .Fn AG_TableInit "AG_Table *tbl" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_TablePrescale "AG_Table *tbl" "int width" "int nrows"
+.Fn AG_TableSizeHint "AG_Table *tbl" "int width" "int nrows"
 .Pp
 .Ft "AG_MenuItem *"
 .Fn AG_TableSetPopup "AG_Table *tbl" "int row" "int col"
@@ -127,8 +127,8 @@ triggers the
 event before the table is drawn.
 .Pp
 The
-.Fn AG_TablePrescale
-function requests minimum sizing of the table, where
+.Fn AG_TableSizeHint
+function requests an initial sizing, where
 .Fa width
 is the width in pixels and
 .Fa nrows

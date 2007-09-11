@@ -178,6 +178,7 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 	AG_MutexInitRecursive(&tl->lock);
 	tl->selected = NULL;
 	tl->keymoved = 0;
+	tl->wSpace = 4;
 	tl->item_h = agTextFontHeight+2;
 	tl->icon_w = tl->item_h - 4;
 	tl->dblclicked = NULL;
@@ -185,8 +186,8 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 	tl->nvisitems = 0;
 	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, 0);
 	tl->compare_fn = AG_TlistComparePtrs;
-	tl->prew = tl->item_h + 5;
-	tl->preh = tl->item_h + 2;
+	tl->wHint = 0;
+	tl->hHint = tl->item_h + 2;
 	tl->popupEv = NULL;
 	tl->changedEv = NULL;
 	tl->dblClickEv = NULL;
@@ -205,11 +206,17 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 }
 
 void
-AG_TlistPrescale(AG_Tlist *tl, const char *text, int nitems)
+AG_TlistSizeHint(AG_Tlist *tl, const char *text, int nitems)
 {
-	AG_TextSize(text, &tl->prew, NULL);
-	tl->prew += tl->item_h + 5;
-	tl->preh = (tl->item_h+2)*nitems;
+	AG_TextSize(text, &tl->wHint, NULL);
+	tl->hHint = (tl->item_h+2)*nitems;
+}
+
+void
+AG_TlistSizeHintPixels(AG_Tlist *tl, int w, int nitems)
+{
+	tl->wHint = w;
+	tl->hHint = (tl->item_h+2)*nitems;
 }
 
 void
@@ -248,9 +255,11 @@ static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Tlist *tl = p;
+	AG_SizeReq rBar;
 
-	r->w = tl->prew;
-	r->h = tl->preh;
+	AG_WidgetSizeReq(tl->sbar, &rBar);
+	r->w = tl->icon_w + tl->wSpace*2 + tl->wHint + rBar.w;
+	r->h = tl->hHint;
 }
 
 static int
@@ -305,11 +314,11 @@ Draw(void *p)
 			break;
 
 		if (it->selected) {
-			int x1 = x + tl->item_h + 2;
+			int x1 = x + tl->icon_w + 2;
 
 			agPrim.rect_filled(tl,
 			    x1, y,
-			    WIDGET(tl)->w-x1,
+			    WIDGET(tl)->w - x1,
 			    tl->item_h,
 			    AG_COLOR(TLIST_SEL_COLOR));
 		}
@@ -319,7 +328,7 @@ Draw(void *p)
 				SDL_Surface *scaled = NULL;
 
 				AG_ScaleSurface(it->iconsrc,
-				    tl->item_h, tl->item_h, &scaled);
+				    tl->icon_w, tl->item_h, &scaled);
 				it->icon = AG_WidgetMapSurface(tl, scaled);
 			}
 			AG_WidgetBlitSurface(tl, it->icon, x, y);
@@ -330,19 +339,25 @@ Draw(void *p)
 			Uint8 cFg[4] = { 255, 255, 255, 100 };
 
 			agPrim.rect_blended(tl,
-			    x-1, y,
-			    tl->item_h + 2, tl->item_h,
+			    x - 1,
+			    y,
+			    tl->icon_w + 2,
+			    tl->item_h,
 			    cBg, AG_ALPHA_SRC);
 
 			if (it->flags & AG_TLIST_VISIBLE_CHILDREN) {
 				agPrim.minus(tl,
-				    x+2, y+2,
-				    tl->item_h-4, tl->item_h-4,
+				    x + 2,
+				    y + 2,
+				    tl->icon_w - 4,
+				    tl->item_h - 4,
 				    cFg, AG_ALPHA_SRC);
 			} else {
 				agPrim.plus(tl,
-				    x+2, y+2,
-				    tl->item_h-4, tl->item_h-4,
+				    x + 2,
+				    y + 2,
+				    tl->icon_w - 4,
+				    tl->item_h - 4,
 				    cFg, AG_ALPHA_SRC);
 			}
 		}
@@ -353,7 +368,7 @@ Draw(void *p)
 			    AG_TextRender(it->text));
 		}
 		AG_WidgetBlitSurface(tl, it->label,
-		    x + tl->item_h + 5,
+		    x + tl->icon_w + tl->wSpace,
 		    y + tl->item_h/2 - WSURFACE(tl,it->label)->h/2);
 
 		y += tl->item_h;

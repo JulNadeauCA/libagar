@@ -133,7 +133,7 @@ AG_TableInit(AG_Table *t, Uint flags)
 }
 
 void
-AG_TablePrescale(AG_Table *t, int w, int nrows)
+AG_TableSizeHint(AG_Table *t, int w, int nrows)
 {
 	if (w != -1) { t->prew = w; }
 	if (nrows != -1) { t->preh = nrows*agTextFontHeight; }

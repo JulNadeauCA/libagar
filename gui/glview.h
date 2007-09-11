@@ -51,7 +51,8 @@ void	   AG_GLViewDraw(void *);
 void	   AG_GLViewSizeRequest(void *, AG_SizeReq *);
 int	   AG_GLViewSizeAllocate(void *, const AG_SizeAlloc *);
 
-void	   AG_GLViewPrescale(AG_GLView *, int, int);
+void	   AG_GLViewSizeHint(AG_GLView *, int, int);
+#define	   AG_GLViewPrescale AG_GLViewSizeHint
 void	   AG_GLViewReshape(AG_GLView *);
 void	   AG_GLViewDrawFn(AG_GLView *, AG_EventFn, const char *, ...);
 void	   AG_GLViewOverlayFn(AG_GLView *, AG_EventFn, const char *, ...);

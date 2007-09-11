@@ -101,8 +101,12 @@ void	 AG_WindowSetPadding(AG_Window *, int, int, int, int);
 void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
 void	 AG_WindowSetCloseAction(AG_Window *, enum ag_window_close_action);
 void	 AG_WindowSetStyle(AG_Window *, const AG_WidgetStyleMod *);
-int	 AG_WindowSetGeometry(AG_Window *, int, int, int, int);
-#define	 AG_WindowScaleToView(win) \
+int	 AG_WindowSetGeometryParam(AG_Window *, int, int, int, int, int);
+#define  AG_WindowSetGeometry(win,x,y,w,h) \
+	 AG_WindowSetGeometryParam((win),(x),(y),(w),(h),0)
+#define  AG_WindowSetGeometryBounded(win,x,y,w,h) \
+	 AG_WindowSetGeometryParam((win),(x),(y),(w),(h),1)
+#define	 AG_WindowSetGeometryMax(win) \
 	 AG_WindowSetGeometry((win),0,0,agView->w,agView->h)
 
 void	 AG_WindowUpdate(AG_Window *);

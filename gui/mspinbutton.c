@@ -205,7 +205,7 @@ void
 AG_MSpinbuttonInit(AG_MSpinbutton *sbu, Uint flags, const char *sep,
     const char *label)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE;
+	Uint wflags = 0;
 
 	if ((flags & AG_MSPINBUTTON_NOHFILL)==0) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_MSPINBUTTON_VFILL) { wflags |= AG_WIDGET_VFILL; }
@@ -230,7 +230,7 @@ AG_MSpinbuttonInit(AG_MSpinbutton *sbu, Uint flags, const char *sep,
 	    "%p", sbu);
 	AG_SetEvent(sbu->input, "textbox-postchg", mspinbutton_textchg,
 	    "%p", sbu);
-	AG_TextboxPrescale(sbu->input, "88888");
+	AG_TextboxSizeHint(sbu->input, "88888");
 
 	sbu->xdecbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(sbu->xdecbu, 1,1,1,1);
@@ -252,6 +252,11 @@ AG_MSpinbuttonInit(AG_MSpinbutton *sbu, Uint flags, const char *sep,
 	AG_ButtonSetPadding(sbu->yincbu, 1,1,1,1);
 	AG_WidgetSetFocusable(sbu->yincbu, 0);
 	AG_SetEvent(sbu->yincbu, "button-pushed", mspinbutton_down, "%p", sbu);
+	
+	AG_WidgetSetFocusable(sbu->xincbu, 0);
+	AG_WidgetSetFocusable(sbu->xdecbu, 0);
+	AG_WidgetSetFocusable(sbu->yincbu, 0);
+	AG_WidgetSetFocusable(sbu->ydecbu, 0);
 
 	AG_SetEvent(sbu, "widget-bound", mspinbutton_bound, NULL);
 	AG_SetEvent(sbu, "window-keydown", mspinbutton_keydown, NULL);
