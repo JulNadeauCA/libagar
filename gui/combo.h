@@ -34,7 +34,8 @@ typedef struct ag_combo {
 	AG_Button *button;		/* [...] button */
 	AG_Tlist *list;			/* List of items */
 	AG_Window *panel;
-	int saved_w, saved_h;		/* Saved panel height */
+	int wSaved, hSaved;		/* Saved popup list geometry */
+	int wPreList, hPreList;		/* Size hints */
 } AG_Combo;
 
 __BEGIN_DECLS
@@ -42,6 +43,8 @@ extern const AG_WidgetOps agComboOps;
 
 AG_Combo *AG_ComboNew(void *, Uint, const char *);
 void AG_ComboInit(AG_Combo *, Uint, const char *);
+void AG_ComboSizeHint(AG_Combo *, const char *, int);
+void AG_ComboSizeHintPixels(AG_Combo *, int, int);
 void AG_ComboDestroy(void *);
 void AG_ComboSelect(AG_Combo *, AG_TlistItem *);
 AG_TlistItem *AG_ComboSelectPointer(AG_Combo *, void *);

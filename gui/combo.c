@@ -52,8 +52,8 @@ Collapse(AG_Combo *com)
 	if (com->panel == NULL) {
 		return;
 	}
-	com->saved_w = WIDGET(com->panel)->w;
-	com->saved_h = WIDGET(com->panel)->h;
+	com->wSaved = WIDGET(com->panel)->w;
+	com->hSaved = WIDGET(com->panel)->h;
 
 	AG_WindowHide(com->panel);
 	AG_ObjectDetach(com->list);
@@ -88,17 +88,19 @@ Expand(AG_Event *event)
 		AG_WindowSetPadding(com->panel, 0, 0, 0, 0);
 		AG_ObjectAttach(com->panel, com->list);
 		
-		if (com->saved_w > 0) {
-			w = com->saved_w;
-			h = com->saved_h;
+		if (com->wSaved > 0) {
+			w = com->wSaved;
+			h = com->hSaved;
 		} else {
-			/* XXX */
-			AG_TlistPrescale(com->list, "XXXXXXXXXXXXXXXXXX", 6);
+			if (com->wPreList != -1 && com->hPreList != -1) {
+				AG_TlistSizeHintPixels(com->list,
+				    com->wPreList, com->hPreList);
+			}
 			AG_WidgetSizeReq(com->list, &rList);
 			w = rList.w + agColorsBorderSize*2;
 			h = rList.h + agColorsBorderSize*2;
  		}
-		x = WIDGET(com)->cx;
+		x = WIDGET(com)->cx + WIDGET(com)->w - w;
 		y = WIDGET(com)->cy;
 
 		if (x+w > agView->w) { w = agView->w - x; }
@@ -212,9 +214,11 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 	AG_WidgetInit(com, &agComboOps, wflags);
 	com->panel = NULL;
 	com->flags = flags;
-	com->saved_w = 0;
-	com->saved_h = 0;
-
+	com->wSaved = 0;
+	com->hSaved = 0;
+	com->wPreList = -1;
+	com->hPreList = -1;
+	
 	com->tbox = AG_TextboxNew(com, AG_TEXTBOX_COMBO, label);
 	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _(" ... "));
 	AG_ButtonSetPadding(com->button, 1,1,1,1);
@@ -231,6 +235,20 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 	AG_SetEvent(com->tbox, "textbox-return", Return, "%p", com);
+}
+
+void
+AG_ComboSizeHint(AG_Combo *com, const char *text, int h)
+{
+	AG_TextSize(text, &com->wPreList, NULL);
+	com->hPreList = h;
+}
+
+void
+AG_ComboSizeHintPixels(AG_Combo *com, int w, int h)
+{
+	com->wPreList = w;
+	com->hPreList = h;
 }
 
 void
