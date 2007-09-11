@@ -95,8 +95,8 @@ void
 SK_LineDraw(void *p, SK_View *skv)
 {
 	SK_Line *line = p;
-	SG_Vector v1 = SK_NodeCoords(line->p1);
-	SG_Vector v2 = SK_NodeCoords(line->p2);
+	SG_Vector v1 = SK_Pos(line->p1);
+	SG_Vector v2 = SK_Pos(line->p2);
 	SG_Color color = SK_NodeColor(line, &line->color);
 
 	SG_Begin(SG_LINES);
@@ -121,8 +121,8 @@ SG_Real
 SK_LineProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 {
 	SK_Line *line = p;
-	SG_Vector p1 = SK_NodeCoords(line->p1);
-	SG_Vector p2 = SK_NodeCoords(line->p2);
+	SG_Vector p1 = SK_Pos(line->p1);
+	SG_Vector p2 = SK_Pos(line->p2);
 	SG_Real mag, u;
 
 	mag = SG_VectorDistance(p2, p1);

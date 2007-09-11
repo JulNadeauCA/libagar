@@ -235,7 +235,7 @@ ViewConstraintGraphs(AG_Event *event)
 	gf = AG_GraphNew(pane->div[1], AG_GRAPH_EXPAND);
 	tl = AG_TlistNewPolled(pane->div[0], AG_TLIST_EXPAND,
 	    PollClusters, "%p", sk);
-	AG_TlistPrescale(tl, "<Original>", 6);
+	AG_TlistSizeHint(tl, "<Original>", 6);
 	AG_TlistSetDblClickFn(tl,
 	    SelectCluster, "%p,%p", sk, gf);
 //	AG_ButtonNewFn(pane->div[0], AG_BUTTON_HFILL, _("Update"),
@@ -701,7 +701,7 @@ SK_Edit(void *p)
 			AG_TlistSetChangedFn(tl,
 			    NodeSelect, NULL);
 
-			AG_TlistPrescale(tl, _("<Polygon00>"), 4);
+			AG_TlistSizeHint(tl, _("<Polygon00>"), 4);
 			AG_WidgetSetFocusable(tl, 0);
 		}
 		ntab = AG_NotebookAddTab(nb, _("Constraints"), AG_BOX_VERT);
@@ -714,7 +714,7 @@ SK_Edit(void *p)
 			AG_TlistSetPopupFn(tl,
 			    ConstraintMenu, "%p,%p", sk, skv);
 
-			AG_TlistPrescale(tl, _("<Polygon00>"), 4);
+			AG_TlistSizeHint(tl, _("<Polygon00>"), 4);
 			AG_WidgetSetFocusable(tl, 0);
 		}
 		ntab = AG_NotebookAddTab(nb, _("Instructions"), AG_BOX_VERT);

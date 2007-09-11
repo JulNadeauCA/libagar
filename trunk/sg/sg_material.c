@@ -324,7 +324,7 @@ SG_MaterialEdit(void *obj)
 
 		tl = AG_TlistNew(ntab, AG_TLIST_EXPAND|AG_TLIST_POLL);
 		AG_TlistSetItemHeight(tl, 32);
-		AG_TlistPrescale(tl, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
+		AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
 		AG_SetEvent(tl, "tlist-poll", PollTextures, "%p", mat);
 		mi = AG_TlistSetPopup(tl, "texture");
 		{

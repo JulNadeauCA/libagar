@@ -132,8 +132,8 @@ SK_DimensionSave(SK *sk, void *p, AG_Netbuf *buf)
 static SG_Real
 PointLineDistance(const SG_Vector *v, const SK_Line *L, SG_Vector *pvC)
 {
-	SG_Vector p1 = SK_NodeCoords(L->p1);
-	SG_Vector p2 = SK_NodeCoords(L->p2);
+	SG_Vector p1 = SK_Pos(L->p1);
+	SG_Vector p2 = SK_Pos(L->p2);
 	SG_Vector vC;
 	SG_Real mag = SG_VectorDistance(p1,p2);
 	SG_Real u;
@@ -151,14 +151,14 @@ PointLineDistance(const SG_Vector *v, const SK_Line *L, SG_Vector *pvC)
 static SG_Real
 LineLineAngle(const SK_Line *line1, const SK_Line *line2)
 {
-	SG_Line L1 = SG_LineFromPts(SK_NodeCoords(line1->p1),
-	                            SK_NodeCoords(line1->p2));
-	SG_Line L2 = SG_LineFromPts(SK_NodeCoords(line2->p1),
-	                            SK_NodeCoords(line2->p2));
+	SG_Line L1 = SG_LineFromPts(SK_Pos(line1->p1),
+	                            SK_Pos(line1->p2));
+	SG_Line L2 = SG_LineFromPts(SK_Pos(line2->p1),
+	                            SK_Pos(line2->p2));
 	SG_Vector v1 = SG_VECTOR(L1.dx, L1.dy, L1.dz);
 	SG_Vector v2 = SG_VECTOR(L2.dx, L2.dy, L2.dz);
 
-	return (Asin(SG_VectorDot(v1, v2)));
+	return (M_PI - Acos(SG_VectorDot(v1,v2)));
 }
 
 /*
@@ -178,16 +178,16 @@ TransformToAnnotFrame(SK_Dimension *dim, SG_Vector *vr1, SG_Vector *vr2)
 	case SK_DIMENSION_DISTANCE:
 		if (SK_NodeOfClass(dim->n1, "Line:*") &&
 		    SK_NodeOfClass(dim->n2, "Point:*")) {
-			v2 = SK_NodeCoords(dim->n2);
+			v2 = SK_Pos(dim->n2);
 			PointLineDistance(&v2, SKLINE(dim->n1), &v1);
 		} else
 		if (SK_NodeOfClass(dim->n1, "Point:*") &&
 		    SK_NodeOfClass(dim->n2, "Line:*")) {
-			v1 = SK_NodeCoords(dim->n1);
+			v1 = SK_Pos(dim->n1);
 			PointLineDistance(&v1, SKLINE(dim->n2), &v2);
 		} else {
-			v1 = SK_NodeCoords(dim->n1);
-			v2 = SK_NodeCoords(dim->n2);
+			v1 = SK_Pos(dim->n1);
+			v2 = SK_Pos(dim->n2);
 		}
 		vd = SG_VectorSubp(&v1, &v2);
 		SG_MatrixTranslatev(&T, SG_VectorLERPp(&v1, &v2, 0.5));
@@ -201,9 +201,9 @@ TransformToAnnotFrame(SK_Dimension *dim, SG_Vector *vr1, SG_Vector *vr2)
 			SK_Line *L2 = SKLINE(dim->n2);
 
 			if (L1->p1 == L2->p1 || L1->p1 == L2->p2) {
-				v1 = SK_NodeCoords(L1->p1);
+				v1 = SK_Pos(L1->p1);
 			} else if (L1->p2 == L2->p1 || L1->p2 == L2->p2) {
-				v1 = SK_NodeCoords(L1->p2);
+				v1 = SK_Pos(L1->p2);
 			}
 			SG_MatrixTranslatev(&T, v1);
 		}
@@ -222,16 +222,16 @@ GetDimensionVal(SK_Node *n1, SK_Node *n2)
 
 	if (SK_NodeOfClass(n1, "Point:*") &&
 	    SK_NodeOfClass(n2, "Point:*")) {
-		v1 = SK_NodeCoords(n1);
-		v2 = SK_NodeCoords(n2);
+		v1 = SK_Pos(n1);
+		v2 = SK_Pos(n2);
 		return SG_VectorDistancep(&v1, &v2);
 	} else if (SK_NodeOfClass(n1, "Point:*") &&
 	           SK_NodeOfClass(n2, "Line:*")) {
-		v1 = SK_NodeCoords(n1);
+		v1 = SK_Pos(n1);
 		return PointLineDistance(&v1, SKLINE(n2), NULL);
 	} else if (SK_NodeOfClass(n1, "Line:*") &&
 	           SK_NodeOfClass(n2, "Point:*")) {
-		v2 = SK_NodeCoords(n2);
+		v2 = SK_Pos(n2);
 		return PointLineDistance(&v2, SKLINE(n1), NULL);
 	} else if (SK_NodeOfClass(n1, "Line:*") &&
 	           SK_NodeOfClass(n2, "Line:*")) {

@@ -442,7 +442,7 @@ SG_Edit(void *p)
 		ntab = AG_NotebookAddTab(nb, _("Library"), AG_BOX_VERT);
 		{
 			tl = AG_TlistNew(ntab, AG_TLIST_TREE|AG_TLIST_EXPAND);
-			AG_TlistPrescale(tl, "<Isocahedron>", 2);
+			AG_TlistSizeHint(tl, "<Isocahedron>", 2);
 			AG_SetEvent(tl, "tlist-dblclick", InsertInstance, "%p",
 			    sg);
 			WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
@@ -454,7 +454,7 @@ SG_Edit(void *p)
 
 			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
 			                       AG_TLIST_EXPAND|AG_TLIST_MULTI);
-			AG_TlistPrescale(tl, "<Isocahedron>", 2);
+			AG_TlistSizeHint(tl, "<Isocahedron>", 2);
 			AG_TlistSetPopupFn(tl, NodePopupMenu, "%p,%p", sg, sv);
 			AG_SetEvent(tl, "tlist-poll", PollNodes, "%p", sg);
 			AG_SetEvent(tl, "tlist-changed", SelectNode, NULL);

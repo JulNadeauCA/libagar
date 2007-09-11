@@ -95,7 +95,7 @@ void
 SK_CircleDraw(void *p, SK_View *skv)
 {
 	SK_Circle *circle = p;
-	SG_Vector v = SK_NodeCoords(circle->p);
+	SG_Vector v = SK_Pos(circle->p);
 	SG_Color color = SK_NodeColor(circle, &circle->color);
 	SG_Real i, incr;
 	
@@ -135,7 +135,7 @@ SK_CircleProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 {
 	SK_Circle *circle = p;
 #if 0
-	SG_Vector c = SK_NodeCoords(circle);
+	SG_Vector c = SK_Pos(circle);
 	SG_Vector vRel = SG_VectorSubp(v, &c);
 	SG_Real theta = SG_Atan2(vRel.y, vRel.x);
 	SG_Real rRel = SG_Hypot(vRel.x, vRel.y);
@@ -266,7 +266,7 @@ ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 
 	overPoint = OverPoint(SKTOOL(t)->skv, &pos, &vC, NULL);
 	if (t->curCircle != NULL) {
-		vCenter = SK_NodeCoords(t->curCircle->p);
+		vCenter = SK_Pos(t->curCircle->p);
 		t->curCircle->r = SG_VectorDistance(vCenter, pos);
 	}
 	return (0);

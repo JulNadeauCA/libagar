@@ -135,7 +135,7 @@ SK_PointColor(SK_Point *pt, SG_Color c)
 SG_Real
 SK_PointProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 {
-	SG_Vector pv = SK_NodeCoords(p);
+	SG_Vector pv = SK_Pos(p);
 
 	SG_VectorCopy(vC, &pv);
 	return (SG_VectorDistancep(v, &pv));

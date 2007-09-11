@@ -19,7 +19,7 @@ typedef struct ag_matview {
 	Uint flags;
 	int ent_w, ent_h;		/* Size of entry */
 	const char *numfmt;		/* Numerical entry format */
-	int pre_m, pre_n;		/* Prescale dimensions */
+	int pre_m, pre_n;		/* SizeHint dimensions */
 	int hspace, vspace;		/* Spacing between entries */
 	int xoffs, yoffs;		/* Display offset */
 	int scale;			/* Scale (for graphic rendering) */
@@ -31,7 +31,7 @@ extern const AG_WidgetOps agMatviewOps;
 
 AG_Matview *AG_MatviewNew(void *, SG_Matrix *, Uint);
 void	    AG_MatviewInit(AG_Matview *, SG_Matrix *, Uint);
-void	    AG_MatviewPrescale(AG_Matview *, const char *, Uint, Uint);
+void	    AG_MatviewSizeHint(AG_Matview *, const char *, Uint, Uint);
 void	    AG_MatviewSetNumericalFmt(AG_Matview *, const char *);
 __END_DECLS
 

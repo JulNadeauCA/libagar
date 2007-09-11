@@ -626,7 +626,7 @@ SK_GetNodeTransformInverse(void *p, SG_Matrix *T)
 
 /* Return the absolute position of a node. */
 SG_Vector
-SK_NodeCoords(void *p)
+SK_Pos(void *p)
 {
 	SK_Node *node = p;
 	SG_Matrix T;

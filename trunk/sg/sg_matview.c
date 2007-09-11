@@ -129,7 +129,7 @@ AG_MatviewSetNumericalFmt(AG_Matview *mv, const char *fmt)
 }
 
 void
-AG_MatviewPrescale(AG_Matview *mv, const char *text, Uint m, Uint n)
+AG_MatviewSizeHint(AG_Matview *mv, const char *text, Uint m, Uint n)
 {
 	mv->pre_m = m;
 	mv->pre_n = n;

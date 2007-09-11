@@ -44,8 +44,8 @@
 static int
 PtFromDistantPt(SK_Constraint *ct, void *self, void *other)
 {
-	SG_Vector p1 = SK_NodeCoords(self);
-	SG_Vector p2 = SK_NodeCoords(other);
+	SG_Vector p1 = SK_Pos(self);
+	SG_Vector p2 = SK_Pos(other);
 	SG_Real theta;
 	
 	SG_VectorVectorAngle(p1, p2, &theta, NULL);
@@ -60,9 +60,9 @@ static int
 PtFromDistantLine(SK_Constraint *ct, void *self, void *other)
 {
 	SK_Line *L = other;
-	SG_Vector pOrig = SK_NodeCoords(self);
-	SG_Vector p1 = SK_NodeCoords(L->p1);
-	SG_Vector p2 = SK_NodeCoords(L->p2);
+	SG_Vector pOrig = SK_Pos(self);
+	SG_Vector p1 = SK_Pos(L->p1);
+	SG_Vector p2 = SK_Pos(L->p2);
 	SG_Vector v, vd, s1, s2;
 	SG_Real mag, u, theta;
 
@@ -100,7 +100,7 @@ PtFromDistantCircle(SK_Constraint *ct, void *self, void *other)
 {
 	SK_Point *p = self;
 	SK_Circle *C1 = other;
-	SG_Vector p1 = SK_NodeCoords(C1->p);
+	SG_Vector p1 = SK_Pos(C1->p);
 	
 	SK_Identity(p);
 	SK_Translatev(p, &p1);
@@ -122,15 +122,20 @@ LineFromDistantLine(SK_Constraint *ct, void *self, void *other)
 }
 
 static int
-LineFromAngledLine(SK_Constraint *ct, void *self, void *other)
+LineFromAngledLine(SK_Constraint *ct, void *pSelf, void *pFixed)
 {
-	SK_Line *L = self;
-	SK_Line *L1 = other;
+	SK_Line *self = pSelf;
+	SK_Line *fixed = pFixed;
+	SG_Line Lself = SG_LineFromPts(SK_Pos(self->p1), SK_Pos(self->p2));
+	SG_Line Lfixed= SG_LineFromPts(SK_Pos(fixed->p1), SK_Pos(fixed->p2));
 
-	SK_MatrixCopy(L->p1, L1->p1);
-	SK_MatrixCopy(L->p2, L1->p2);
-	SK_Rotatev(L->p1, ct->ct_angle);
-	SK_Rotatev(L->p2, ct->ct_angle);
+	SK_Identity(self->p1);
+	SK_Translate2(self->p1, Lfixed.x0, Lfixed.y0);
+	SK_Identity(self->p2);
+	SK_Translate2(self->p2,
+	    Lfixed.x0 + Lfixed.dx*Lfixed.t,
+	    Lfixed.y0 + Lfixed.dy*Lfixed.t);
+
 	return (0);
 }
 
@@ -144,9 +149,9 @@ PtFromPtPt(void *self, SK_Constraint *ct1, void *n1, SK_Constraint *ct2,
     void *n2)
 {
 	SK *sk = SKNODE(self)->sk;
-	SG_Vector pOrig = SK_NodeCoords(self);
-	SG_Vector p1 = SK_NodeCoords(n1);
-	SG_Vector p2 = SK_NodeCoords(n2);
+	SG_Vector pOrig = SK_Pos(self);
+	SG_Vector p1 = SK_Pos(n1);
+	SG_Vector p2 = SK_Pos(n2);
 	SG_Real d1 = (ct1->type == SK_DISTANCE) ? ct1->ct_distance : 0.0;
 	SG_Real d2 = (ct2->type == SK_DISTANCE) ? ct2->ct_distance : 0.0;
 	SG_Real d12 = SG_VectorDistancep(&p1, &p2);
@@ -217,11 +222,11 @@ PtFromPtLine(void *self, SK_Constraint *ct1, void *n1,
     SK_Constraint *ct2, void *n2)
 {
 	SK *sk = SKNODE(self)->sk;
-	SG_Vector pOrig = SK_NodeCoords(self);
-	SG_Vector p = SK_NodeCoords(n1);
+	SG_Vector pOrig = SK_Pos(self);
+	SG_Vector p = SK_Pos(n1);
 	SK_Line *L = n2;
-	SG_Vector p1 = SK_NodeCoords(L->p1);
-	SG_Vector p2 = SK_NodeCoords(L->p2);
+	SG_Vector p1 = SK_Pos(L->p1);
+	SG_Vector p2 = SK_Pos(L->p2);
 	SG_Real d1 = (ct1->type == SK_DISTANCE) ? ct1->ct_distance : 0.0;
 	SG_Real d2 = (ct2->type == SK_DISTANCE) ? ct2->ct_distance : 0.0;
 	SG_Real a = (p2.x - p1.x)*(p2.x - p1.x) +
