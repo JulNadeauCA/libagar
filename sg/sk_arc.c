@@ -98,7 +98,7 @@ void
 SK_ArcDraw(void *p, SK_View *skv)
 {
 	SK_Arc *arc = p;
-	SG_Vector v = SK_NodeCoords(arc->p);
+	SG_Vector v = SK_Pos(arc->p);
 	SG_Real i, incr;
 	
 	if (arc->r < skv->wPixel) {
@@ -174,7 +174,7 @@ ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 	SG_Vector vCenter;
 
 	if (t->cur_arc != NULL) {
-		vCenter = SK_NodeCoords(t->cur_arc->p);
+		vCenter = SK_Pos(t->cur_arc->p);
 		t->cur_arc->r = SG_VectorDistance(vCenter, pos);
 	}
 	return (0);

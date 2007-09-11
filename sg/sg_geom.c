@@ -52,7 +52,6 @@ SG_LineFromPts2(SG_Vector2 p1, SG_Vector2 p2)
 SG_Line
 SG_LineFromPts(SG_Vector p1, SG_Vector p2)
 {
-	SG_Vector vd;
 	SG_Line L;
 	
 	L.x0 = p1.x;

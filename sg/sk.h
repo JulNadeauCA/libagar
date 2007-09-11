@@ -255,7 +255,7 @@ int		SK_ExecProgram(SK *);
 void		SK_SetStatus(SK *, SK_Status, const char *, ...);
 void		SK_ClearProgramState(SK *);
 
-__inline__ SG_Vector	  SK_NodeCoords(void *);
+__inline__ SG_Vector	  SK_Pos(void *);
 __inline__ SG_Vector	  SK_NodeDir(void *);
 __inline__ void		 *SK_FindNode(SK *, Uint32, const char *);
 __inline__ SK_Cluster	 *SK_FindCluster(SK *, Uint32);
