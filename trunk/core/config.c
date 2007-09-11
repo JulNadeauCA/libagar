@@ -572,7 +572,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		hPane = AG_PaneNew(tab, AG_PANE_HORIZ, AG_PANE_EXPAND);
 		{
 			tl = AG_TlistNew(hPane->div[0], AG_TLIST_EXPAND);
-			AG_TlistPrescale(tl, "Tileview text background", 10);
+			AG_TlistSizeHint(tl, "Tileview text background", 10);
 			for (i = 0; i < LAST_COLOR; i++) {
 				it = AG_TlistAdd(tl, NULL, _(agColorNames[i]));
 				it->p1 = &agColors[i];

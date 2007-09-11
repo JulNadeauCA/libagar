@@ -340,7 +340,7 @@ AG_ResizeDisplay(int w, int h)
 		AG_MutexLock(&win->lock);
 
 		if (win->flags & AG_WINDOW_MAXIMIZED) {
-			AG_WindowScaleToView(win);
+			AG_WindowSetGeometryMax(win);
 		} else {
 			if (a.x+a.w > agView->w) {
 				a.x = agView->w - a.w;

@@ -75,18 +75,18 @@ DEV_DisplaySettings(void)
 		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
 		    _("Window op: %d (%p)"),
 		    &agView->winop, &agView->winSelected);
-		AG_LabelPrescale(lbl, 1, _("Window op: 000 (0x00000000)"));
+		AG_LabelSizeHint(lbl, 1, _("Window op: 000 (0x00000000)"));
 		
 		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
 		    _("Refresh rate (effective): %d"),
 		    &agView->rCur);
-		AG_LabelPrescale(lbl, 1,
+		AG_LabelSizeHint(lbl, 1,
 		    _("Refresh rate (effective): 000"));
 
 		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
 		    _("Refresh rate (nominal): %d"),
 		    &agView->rNom);
-		AG_LabelPrescale(lbl, 1,
+		AG_LabelSizeHint(lbl, 1,
 		    _("Refresh rate (nominal): 000"));
 	}
 	return (win);

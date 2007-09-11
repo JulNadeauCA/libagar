@@ -285,7 +285,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_LabelNewStatic(win, 0, _("Element type: %s"), ops->name);
 	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, _("Vertices: %u"),
 	    &vge->nvtx);
-	AG_LabelPrescale(lbl, 1, _("Vertices: 00000000"));
+	AG_LabelSizeHint(lbl, 1, _("Vertices: 00000000"));
 	
 	sb = AG_SpinbuttonNew(win, 0, _("Layer: "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &vge->layer);

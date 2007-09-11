@@ -294,7 +294,7 @@ DEV_ScreenshotUploader(void)
 		strlcpy(status, _("Idle"), sizeof(status));
 		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &xmit_lock,
 		    _("Status: %s."), &status);
-		AG_LabelPrescale(lbl, 1,
+		AG_LabelSizeHint(lbl, 1,
 		    _("Status: Transmitting frame XXXXXXXXXX"));
 
 		hosttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,

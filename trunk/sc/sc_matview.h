@@ -21,7 +21,7 @@ typedef struct sc_matview {
 	Uint flags;
 	int ent_w, ent_h;		/* Size of entry */
 	const char *numfmt;		/* Numerical entry format */
-	int pre_m, pre_n;		/* Prescale dimensions */
+	int pre_m, pre_n;		/* Size hint */
 	int hspace, vspace;		/* Spacing between entries */
 	int xoffs, yoffs;		/* Display offset */
 	int scale;			/* Scale (for graphic rendering) */
@@ -33,7 +33,7 @@ extern const AG_WidgetOps scMatviewOps;
 
 SC_Matview *SC_MatviewNew(void *, struct sc_matrix *, Uint);
 void	    SC_MatviewInit(SC_Matview *, struct sc_matrix *, Uint);
-void	    SC_MatviewPrescale(SC_Matview *, const char *, Uint, Uint);
+void	    SC_MatviewSizeHint(SC_Matview *, const char *, Uint, Uint);
 void	    SC_MatviewSetNumericalFmt(SC_Matview *, const char *);
 __END_DECLS
 

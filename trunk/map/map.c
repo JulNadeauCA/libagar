@@ -2114,7 +2114,7 @@ CreateView(AG_Event *event)
 	
 	mv = MAP_ViewNew(win, map, 0, NULL, NULL);
 	mv->cam = MAP_AddCamera(map, _("View"));
-	MAP_ViewPrescale(mv, 2, 2);
+	MAP_ViewSizeHint(mv, 2, 2);
 	AG_WidgetFocus(mv);
 	
 	AG_WindowAttach(pwin, win);
@@ -2872,7 +2872,7 @@ MAP_Edit(void *p)
 	
 	mv = Malloc(sizeof(MAP_View), M_WIDGET);
 	MAP_ViewInit(mv, m, flags, toolbar, statbar);
-	MAP_ViewPrescale(mv, 2, 2);
+	MAP_ViewSizeHint(mv, 2, 2);
 #if 0
 	AG_SetEvent(mv, "mapview-dblclick", EditItemProps, NULL);
 #endif

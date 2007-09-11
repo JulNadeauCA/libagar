@@ -105,7 +105,7 @@ typedef struct sc_plotter {
 	SC_Real yMin, yMax;		/* Extrema for single value plots */
 	SC_Vector *vMin, *vMax;		/* Extrema for vector plots */
 	int xOffs, yOffs;		/* Display offset */
-	int wPre, hPre;			/* Prescale dimensions */
+	int wPre, hPre;			/* SizeHint dimensions */
 	SC_Real xScale, yScale;		/* Scaling factors */
 	AG_Font *font;			/* Default font face (or NULL) */
 	Uint32 colors[SC_PLOTTER_NDEFCOLORS];	/* Default plot color */
@@ -119,7 +119,7 @@ extern const AG_WidgetOps scPlotterOps;
 
 SC_Plotter	*SC_PlotterNew(void *, Uint);
 void	 	 SC_PlotterInit(SC_Plotter *, Uint);
-void	 	 SC_PlotterPrescale(SC_Plotter *, Uint, Uint);
+void	 	 SC_PlotterSizeHint(SC_Plotter *, Uint, Uint);
 void		 SC_PlotterUpdate(SC_Plotter *);
 __inline__ void	 SC_PlotterSetDefaultFont(SC_Plotter *, const char *, int);
 __inline__ void	 SC_PlotterSetDefaultColor(SC_Plotter *, int, Uint8, Uint8,
