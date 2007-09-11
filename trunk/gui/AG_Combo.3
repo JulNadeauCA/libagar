@@ -43,7 +43,7 @@ widget left to a
 .Xr AG_Button 3 ,
 which causes a
 .Xr AG_Tlist 3
-to be displayed when pressed.
+to popup when pressed.
 The tlist disappears when an option is selected, and is directly accessed
 as the
 .Va list
@@ -63,6 +63,12 @@ structure.
 .Ft "void"
 .Fn AG_ComboInit "AG_Combo *combo" "Uint flags" "const char *label"
 .Pp
+.Ft "void"
+.Fn AG_ComboSizeHint "AG_Combo *combo" "const char *text" "int nitems"
+.Pp
+.Ft "void"
+.Fn AG_ComboSizeHintPixels "AG_Combo *combo" "int w" "int h"
+.Pp
 .nr nS 0
 The
 .Fn AG_ComboNew
@@ -81,10 +87,20 @@ Acceptable
 include:
 .Pp
 .Bd -literal
-#define AG_COMBO_POLL		0x01	/* Polled list (AG_TLIST_POLL) */
-#define AG_COMBO_TREE		0x02	/* Tree display (AG_TLIST_TREE) */
-#define AG_COMBO_ANY_TEXT	0x04	/* Accept text not matching an item */
+#define AG_COMBO_POLL     0x01  /* Polled list (AG_TLIST_POLL) */
+#define AG_COMBO_TREE     0x02  /* Tree display (AG_TLIST_TREE) */
+#define AG_COMBO_ANY_TEXT 0x04  /* Accept text not matching any item */
 .Ed
+.Pp
+The
+.Fn AG_ComboSizeHint
+function arranges for the
+.Xr AG_Tlist 3
+widget displayed on popup to request a size large enough to display the given
+number of items.
+The
+.Fn AG_ComboSizeHintPixels
+variant specifies the size of the list in pixels.
 .Sh ITEM SELECTION
 .nr nS 1
 .Ft void
