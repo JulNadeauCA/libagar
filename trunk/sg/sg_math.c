@@ -63,4 +63,27 @@ SG_WriteReal(AG_Netbuf *buf, SG_Real v)
 	AG_WriteDouble(buf, (double)v);
 }
 
+SG_Vector
+SG_SphToCart(SG_Spherical s)
+{
+	SG_Vector v;
+
+	v.x = s.r*Cos(s.phi)*Cos(s.theta);
+	v.y = s.r*Cos(s.phi)*Sin(s.theta);
+	v.z = s.r*Sin(s.phi);
+	return (v);
+}
+
+SG_Spherical
+SG_CartToSph(SG_Vector v)
+{
+	SG_Spherical s;
+	SG_Real xy2 = v.x*v.x + v.y*v.y;
+
+	s.theta = Atan2(v.y, v.x);
+	s.phi = Atan2(Sqrt(xy2), v.z);
+	s.r = Sqrt(xy2 + v.z*v.z);
+	return (s);
+}
+
 #endif /* HAVE_OPENGL */

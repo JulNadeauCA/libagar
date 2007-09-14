@@ -17,8 +17,8 @@ typedef struct sg_quat { SG_Real w, x, y, z; } SG_Quat;
 typedef struct sg_vector2 { SG_Real x, y; } SG_Vector2;
 typedef struct sg_vector3 { SG_Real x, y, z; } SG_Vector3, SG_Vector;
 typedef struct sg_vector4 { SG_Real x, y, z, w; } SG_Vector4;
-typedef struct sg_line2 { SG_Real x0,y0, dx,dy, t; } SG_Line2;
-typedef struct sg_line3 { SG_Real x0,y0,z0, dx,dy,dz, t; } SG_Line3, SG_Line;
+typedef struct sg_line2 { SG_Vector2 p, d; SG_Real t; } SG_Line2;
+typedef struct sg_line3 { SG_Vector p, d; SG_Real t; } SG_Line3, SG_Line;
 typedef struct sg_plane { SG_Real a, b, c, d; } SG_Plane;
 typedef struct sg_ray { SG_Vector p, dir; } SG_Ray;
 
@@ -46,6 +46,12 @@ typedef struct sg_intersect {
 		SG_Plane ix_P;
 	} ix;
 } SG_Intersect3, SG_Intersect;
+
+typedef struct sg_spherical {
+	SG_Real phi;		/* Azimuth (longitude) */
+	SG_Real theta;		/* Zenith (colatitude) */
+	SG_Real r;		/* Radius */
+} SG_Spherical;
 
 #ifdef _AGAR_INTERNAL
 #define ix_p ix.ix_p
@@ -97,7 +103,7 @@ typedef struct sg_intersect {
 #define SG_Acos(x) acos(x)
 #define SG_Atan(x) atan(x)
 #define SG_Atan2(y,x) atan2((y),(x))
-#define SG_Hypot(x,y) hypot((y),(x))
+#define SG_Hypot2(x,y) hypot((x),(y))
 #define SG_Fabs(x) fabs(x)
 #define SG_Pow(x,y) pow((x),(y))
 #else
@@ -113,7 +119,7 @@ typedef struct sg_intersect {
 #define SG_Acos(x) acosf(x)
 #define SG_Atan(x) atanf(x)
 #define SG_Atan2(y,x) atan2f((y),(x))
-#define SG_Hypot(x,y) hypotf((y),(x))
+#define SG_Hypot2(x,y) hypotf((x),(y))
 #define SG_Fabs(x) fabsf(x)
 #define SG_Pow(x,y) powf((x),(y))
 #endif /* !SG_DOUBLE_PRECISION */
@@ -135,7 +141,7 @@ typedef struct sg_intersect {
 #define Acos(x) SG_Acos(x)
 #define Atan(x) SG_Atan(x)
 #define Atan2(y,x) SG_Atan2((y),(x))
-#define Hypot(x,y) SG_Hypot((x),(y))
+#define Hypot2(x,y) SG_Hypot2((x),(y))
 #define Fabs(x) SG_Fabs(x)
 #define Pow(x,y) SG_Pow((x),(y))
 #define Sgn(x) SG_Sgn((x))
@@ -145,8 +151,10 @@ typedef struct sg_intersect {
 #endif /* _AGAR_INTERNAL */
 
 __BEGIN_DECLS
-__inline__ SG_Real SG_Rad2Deg(SG_Real);
-__inline__ SG_Real SG_Deg2Rad(SG_Real);
+__inline__ SG_Real	SG_Rad2Deg(SG_Real);
+__inline__ SG_Real	SG_Deg2Rad(SG_Real);
+__inline__ SG_Spherical	SG_CartToSph(SG_Vector);
+__inline__ SG_Vector	SG_SphToCart(SG_Spherical);
 
 SG_Real SG_ReadReal(AG_Netbuf *);
 void	SG_CopyReal(AG_Netbuf *, SG_Real *);
