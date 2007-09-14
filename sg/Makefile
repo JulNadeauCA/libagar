@@ -9,7 +9,7 @@ LIB_STATIC=	No
 
 SRCS=	sg.c sg_edit.c sg_math.c sg_vector.c sg_matrix.c sg_view.c \
 	sg_camera.c sg_gui.c sg_primitive.c sg_quat.c sg_geom.c \
-	sg_spherical.c sg_dummy.c sg_sphere.c sg_point.c sg_light.c \
+	sg_dummy.c sg_sphere.c sg_point.c sg_light.c \
 	sg_solid.c sg_planeobj.c sg_object.c sg_box.c sg_matview.c \
 	sg_material.c sg_voxel.c  \
 	sk.c sk_view.c sk_tool.c sk_edit.c sk_select.c sk_solve.c \
