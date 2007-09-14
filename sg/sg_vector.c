@@ -66,6 +66,36 @@ SG_GetVector4(SG_Real x, SG_Real y, SG_Real z, SG_Real w)
 }
 
 SG_Vector2
+SG_Vector3to2(SG_Vector v)
+{
+	SG_Vector2 v2;
+	v2.x = v.x;
+	v2.y = v.y;
+	return (v2);
+}
+
+SG_Vector
+SG_Vector2to3(SG_Vector2 v)
+{
+	SG_Vector v3;
+	v3.x = v.x;
+	v3.y = v.y;
+	v3.z = 0.0;
+	return (v3);
+}
+
+SG_Vector4
+SG_Vector3to4(SG_Vector v)
+{
+	SG_Vector4 v4;
+	v4.x = v.x;
+	v4.y = v.y;
+	v4.z = v.z;
+	v4.w = 0.0;
+	return (v4);
+}
+
+SG_Vector2
 SG_GetZeroVector2(void)
 {
 	SG_Vector2 v;
@@ -215,7 +245,7 @@ SG_VectorMirror4p(const SG_Vector4 *a, int x, int y, int z, int w)
 SG_Real
 SG_VectorLen2(SG_Vector2 v)
 {
-	return Sqrt(v.x*v.x + v.y*v.y);
+	return Hypot2(v.x, v.y);
 }
 
 SG_Real
@@ -233,7 +263,7 @@ SG_VectorLen4(SG_Vector4 v)
 SG_Real
 SG_VectorLen2p(const SG_Vector2 *v)
 {
-	return Sqrt(v->x*v->x + v->y*v->y);
+	return Hypot2(v->x, v->y);
 }
 
 SG_Real
@@ -282,6 +312,18 @@ SG_Real
 SG_VectorDot4p(const SG_Vector4 *v1, const SG_Vector4 *v2)
 {
 	return (v1->x*v2->x + v1->y*v2->y + v1->z*v2->z + v1->w*v2->w);
+}
+
+SG_Real
+SG_VectorPerpDot2(SG_Vector2 v1, SG_Vector2 v2)
+{
+	return (v1.x*v2.y - v1.y*v2.x);
+}
+
+SG_Real
+SG_VectorPerpDot2p(const SG_Vector2 *v1, const SG_Vector2 *v2)
+{
+	return (v1->x*v2->y - v1->y*v2->x);
 }
 
 SG_Real
