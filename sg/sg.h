@@ -9,14 +9,12 @@
 #include <sg/sg_vector.h>
 #include <sg/sg_matrix.h>
 #include <sg/sg_quat.h>
-#include <sg/sg_spherical.h>
 #include <sg/sg_geom.h>
 #else
 #include <agar/sg/sg_math.h>
 #include <agar/sg/sg_vector.h>
 #include <agar/sg/sg_matrix.h>
 #include <agar/sg/sg_quat.h>
-#include <agar/sg/sg_spherical.h>
 #include <agar/sg/sg_geom.h>
 #endif
 
