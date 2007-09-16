@@ -222,7 +222,7 @@ DEV_UnicodeBrowser(void)
 	AG_Window *win;
 	AG_Combo *com;
 	AG_Tableview *tv;
-	int i;
+	int i, w, wMax = 0;
 
 	if ((win = AG_WindowNewNamed(0, "DEV_UnicodeBrowser")) == NULL) {
 		return (NULL);
@@ -232,9 +232,12 @@ DEV_UnicodeBrowser(void)
 
 	com = AG_ComboNew(win, AG_COMBO_HFILL|AG_COMBO_FOCUS, _("Range: "));
 	for (i = 0; i < unicodeRangeCount; i++) {
+		AG_TextSize(unicodeRanges[i].name, &w, NULL);
+		if (w > wMax) { wMax = w; }
 		AG_TlistAddPtr(com->list, NULL, unicodeRanges[i].name,
 		    (void *)&unicodeRanges[i]);
 	}
+	AG_ComboSizeHintPixels(com, wMax, 10);
 	
 	tv = AG_TableviewNew(win, AG_TABLEVIEW_EXPAND|AG_TABLEVIEW_NOSORT,
 	    NULL, NULL);
