@@ -228,6 +228,11 @@ const AG_Unit agLengthUnits[] = {
 const AG_Unit agAngleUnits[] = {
 	{ "rad", "", N_("Radians"),		1.0, NULL },
 	{ "deg", "\xc2\xb0", N_("Degrees"),	0.01745329251994329577, NULL },
+	{ "rev", "", N_("Revolutions"),		6.28318530717958647692, NULL },
+	{ "grad", "", N_("Grads"),		0.01570796326794896619, NULL },
+	{ "point", "", N_("Points"),		0.19634954084936207740, NULL },
+	{ "brad", "", N_("Binary degrees"),	0.02454369260617025968, NULL },
+	{ "HA", "", N_("Hour angle"),		0.26179938779914943654, NULL },
 	{ NULL,	NULL, NULL,			0, NULL }
 };
 
