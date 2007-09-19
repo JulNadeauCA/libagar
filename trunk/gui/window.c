@@ -935,8 +935,8 @@ process:
 				    (ev->key.keysym.mod & KMOD_SHIFT));
 				AG_MutexUnlock(&win->lock);
 				rv = 1;
-				goto out;
 			}
+			goto out;
 		}
 		AG_MutexUnlock(&win->lock);
 	}
