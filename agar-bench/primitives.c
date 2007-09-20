@@ -48,7 +48,7 @@ T_BoxChamfered(void)
 static void
 T_Frame(void)
 {
-	agPrim.frame(&wid, 0, 0, wid.w, wid.h, 0);
+	agPrim.frame(&wid, 0, 0, wid.w, wid.h, 1, 0);
 }
 
 static void
