@@ -266,14 +266,14 @@ int
 main(int argc, char *argv[])
 {
 	int c, i, fps = -1;
-	char *s;
+	int w = 640, h = 480;
 
 	if (AG_InitCore("widgets-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFgGr:bB")) != -1) {
+	while ((c = getopt(argc, argv, "?vfFgGr:w:h:bB")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
@@ -296,6 +296,12 @@ main(int argc, char *argv[])
 		case 'r':
 			fps = atoi(optarg);
 			break;
+		case 'w':
+			w = atoi(optarg);
+			break;
+		case 'h':
+			h = atoi(optarg);
+			break;
 		case 'b':
 			AG_SetBool(agConfig, "font.freetype", 0);
 			AG_SetString(agConfig, "font-face", "minimal.xcf");
@@ -313,11 +319,11 @@ main(int argc, char *argv[])
 	}
 
 	/* Initialize the display. Respond to keyboard/mouse events. */
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1 ||
-	    AG_InitInput(0) == -1) {
+	if (AG_InitVideo(w, h, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+	AG_InitInput(0);
 	AG_InitConfigWin(AG_CONFIG_ALL);
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);

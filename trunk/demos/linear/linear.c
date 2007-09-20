@@ -141,12 +141,12 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	if (AG_InitVideo(800, 600, 32, AG_VIDEO_OPENGL) == -1 ||
-	    AG_InitInput(0) == -1) {
+	if (AG_InitVideo(800, 600, 32,
+	    AG_VIDEO_OPENGL|AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_InitConfigWin(0);
+	AG_InitInput(0);
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);

@@ -86,11 +86,11 @@ main(int argc, char *argv[])
 	 * Allow resizing of the display (if that's applicable to the video
 	 * backend in use).
 	 */
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1 ||
-	    AG_InitInput(0) == -1) {
+	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+	AG_InitInput(0);
 	AG_InitConfigWin(0);
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);

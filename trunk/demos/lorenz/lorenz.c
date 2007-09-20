@@ -7,7 +7,7 @@
 #include <agar/gui.h>
 #include <agar/sg.h>
 
-#include <math.h>
+#include <unistd.h>
 
 SG_Real r = 28.0;
 SG_Real sigma = 10.0;
@@ -112,6 +112,7 @@ int
 main(int argc, char *argv[])
 {
 	int c, i, fps = -1;
+	int w = 640, h = 480;
 	AG_Window *win;
 	SG_View *sv;
 	SG_Node *node;
@@ -122,12 +123,37 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_OPENGL) == -1 ||
-	    AG_InitInput(0) == -1) {
+
+	while ((c = getopt(argc, argv, "?vfwhr:")) != -1) {
+		extern char *optarg;
+
+		switch (c) {
+		case 'v':
+			exit(0);
+		case 'f':
+			AG_SetBool(agConfig, "view.full-screen", 1);
+			break;
+		case 'r':
+			fps = atoi(optarg);
+			break;
+		case 'w':
+			w = atoi(optarg);
+			break;
+		case 'h':
+			h = atoi(optarg);
+			break;
+		case '?':
+		default:
+			printf("%s [-vf] [-w px] [-h px] [-r fps]\n",
+			    agProgName);
+			exit(0);
+		}
+	}
+	if (AG_InitVideo(w, h, 32, AG_VIDEO_OPENGL|AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_InitConfigWin(0);
+	AG_InitInput(0);
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);

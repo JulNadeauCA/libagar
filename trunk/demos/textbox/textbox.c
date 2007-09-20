@@ -154,11 +154,11 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (AG_InitVideo(420, 340, 32, 0) == -1 ||
-	    AG_InitInput(0) == -1) {
+	if (AG_InitVideo(420, 340, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+	AG_InitInput(0);
 	AG_InitConfigWin(0);
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);

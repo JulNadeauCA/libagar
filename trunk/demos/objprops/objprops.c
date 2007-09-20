@@ -58,11 +58,11 @@ main(int argc, char *argv[])
 			exit(0);
 		}
 	}
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1 ||
-	    AG_InitInput(0) == -1) {
+	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
+	AG_InitInput(0);
 	AG_InitConfigWin(0);
 	AG_SetRefreshRate(-1);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
@@ -77,7 +77,7 @@ main(int argc, char *argv[])
 	AG_WindowShow(DEV_Browser());
 
 	/* Create a generic object instance. */
-	obj = AG_ObjectNew(agWorld, "Foo");
+	obj = AG_ObjectNew(agWorld, "Foo", &agObjectOps);
 
 	/* Create one property of every type. */
 	AG_SetBool(obj, "my-boolean1", 0);
