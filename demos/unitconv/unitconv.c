@@ -79,19 +79,22 @@ CreateUI(void)
 
 	AG_SetEvent(uSel, "combo-selected", SelectCategory, "%p,%p", n1, n2);
 	AG_WindowShow(win);
+	AG_WindowMaximize(win);
 }
 
 int
 main(int argc, char *argv[])
 {
 	int c, i, fps = -1;
+	int w = 400;
+	int h = 300;
 	char *s;
 
 	if (AG_InitCore("unitconv", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	while ((c = getopt(argc, argv, "?vfFgGr:")) != -1) {
+	while ((c = getopt(argc, argv, "?vfFgGr:w:h:")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
@@ -114,17 +117,24 @@ main(int argc, char *argv[])
 		case 'r':
 			fps = atoi(optarg);
 			break;
+		case 'w':
+			w = atoi(optarg);
+			break;
+		case 'h':
+			h = atoi(optarg);
+			break;
 		case '?':
 		default:
-			printf("%s [-vfFgG] [-r fps]\n", agProgName);
+			printf("%s [-vfFgG] [-w px] [-h px] [-r fps]\n",
+			    agProgName);
 			exit(0);
 		}
 	}
-	if (AG_InitVideo(400, 300, 32, 0) == -1 ||
-	    AG_InitInput(0) == -1) {
+	if (AG_InitVideo(w, h, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+	AG_InitInput(0);
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);

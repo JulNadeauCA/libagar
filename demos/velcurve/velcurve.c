@@ -286,12 +286,12 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	if (AG_InitVideo(1024, 700, 32, AG_VIDEO_OPENGL) == -1 ||
-	    AG_InitInput(0) == -1 ||
-	    SG_InitEngine() == -1) {
+	if (AG_InitVideo(1024, 700, 32, AG_VIDEO_OPENGL) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+	AG_InitInput(0);
+	SG_InitEngine();
 	AG_InitConfigWin(0);
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);

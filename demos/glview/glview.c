@@ -150,6 +150,7 @@ int
 main(int argc, char *argv[])
 {
 	int c, i, fps = -1;
+	int wDisplay = 640, hDisplay = 480;
 	char *s;
 
 	if (AG_InitCore("glview-demo", 0) == -1) {
@@ -157,7 +158,7 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFbBt:r:")) != -1) {
+	while ((c = getopt(argc, argv, "?vfFbBt:r:w:h:")) != -1) {
 		extern char *optarg;
 
 		switch (c) {
@@ -181,20 +182,27 @@ main(int argc, char *argv[])
 		case 't':
 			AG_TextParseFontSpec(optarg);
 			break;
+		case 'w':
+			wDisplay = atoi(optarg);
+			break;
+		case 'h':
+			hDisplay = atoi(optarg);
+			break;
 		case '?':
 		default:
-			printf("%s [-vfFbB] [-r fps] [-t fontspec]\n",
-			    agProgName);
+			printf("%s [-vfFbB] [-w width] [-h height] "
+			        "[-r fps] [-t fontspec]\n", agProgName);
 			exit(0);
 		}
 	}
 
-	/* Initialize a 640x480x32 display. Respond to keyboard/mouse events. */
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_OPENGL) == -1 ||
-	    AG_InitInput(0) == -1) {
+	/* Pass AG_VIDEO_OPENGL flag to require an OpenGL display. */
+	if (AG_InitVideo(wDisplay, hDisplay, 32,
+	    AG_VIDEO_OPENGL|AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+	AG_InitInput(0);
 	AG_InitConfigWin(0);
 	AG_SetRefreshRate(fps);
 

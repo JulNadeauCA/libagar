@@ -13,6 +13,19 @@
 #include <unistd.h>
 #include <math.h>
 
+AG_Timeout rotTimer;
+SG_Sphere *center;
+
+static Uint32
+Rotate(void *obj, Uint32 t, void *arg)
+{
+	SG_Camera *cam = arg;
+	SG_Vector vCenter = SG_VectorSub(SG_NodePos(cam), SG_NodePos(center));
+
+	SG_Orbitvd(cam, vCenter, SG_VecJ, 1.0);
+	return (t);
+}
+
 static void
 CreateWindow(void)
 {
@@ -30,11 +43,11 @@ CreateWindow(void)
 	AGOBJECT(sg)->flags |= AG_OBJECT_RESIDENT;
 
 	/* Create a bunch of spheres. */
-	s1 = SG_SphereNew(sg->root, "Sphere A");
+	s1 = center = SG_SphereNew(sg->root, "Sphere A");
 	for (i = 0; i < 60; i++) {
 		s2 = SG_SphereNew(s1, "Sphere B");
 		s1 = s2;
-		SG_Rotatev(s1, angle, SG_J);
+		SG_Rotatev(s1, angle, SG_VecJ);
 		SG_Translate3(s1, 2.0, 0.4, 0.0);
 		angle -= 0.4;
 	}
@@ -51,19 +64,20 @@ CreateWindow(void)
 	sv = SG_ViewNew(win, sg, SG_VIEW_EXPAND);
 
 	/* Move the camera. */
-	SG_Translate3(sv->cam, -10.0, 10.0, -30.0);
-
-	/* Rotate the camera 180 degrees about the I axis. */
-	SG_Rotatevd(sv->cam, 180.0, SG_I);
+	SG_Translate3(sv->cam, -10.0, 10.0, 30.0);
 
 	AG_WindowSetGeometry(win, 120, 0, agView->w-120, agView->h);
 	AG_WindowShow(win);
+
+	AG_SetTimeout(&rotTimer, Rotate, sv->cam, 0);
+	AG_AddTimeout(sv, &rotTimer, 10);
 }
 
 int
 main(int argc, char *argv[])
 {
 	int c, i, fps = -1;
+	int w = 640, h = 480;
 	char *s;
 
 	if (AG_InitCore("sgview-demo", 0) == -1) {
@@ -94,6 +108,12 @@ main(int argc, char *argv[])
 		case 'r':
 			fps = atoi(optarg);
 			break;
+		case 'w':
+			w = atoi(optarg);
+			break;
+		case 'h':
+			h = atoi(optarg);
+			break;
 		case 'b':
 			AG_SetBool(agConfig, "font.freetype", 0);
 			break;
@@ -105,20 +125,23 @@ main(int argc, char *argv[])
 			break;
 		case '?':
 		default:
-			printf("%s [-vfFgGbB] [-r fps] [-t fontspec]\n",
-			    agProgName);
+			printf("%s [-vfFgGbB] [-w px] [-h px] [-r fps] "
+			       "[-t fontspec]\n", agProgName);
 			exit(0);
 		}
 	}
 
 	/* Initialize the display. Respond to keyboard/mouse events. */
-	if (AG_InitVideo(1024, 700, 32, AG_VIDEO_OPENGL) == -1 ||
-	    AG_InitInput(0) == -1) {
+	if (AG_InitVideo(w, h, 32, AG_VIDEO_OPENGL|AG_VIDEO_RESIZABLE)
+	    == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+	AG_InitInput(0);
 	AG_InitConfigWin(0);
 	AG_SetRefreshRate(fps);
+
+	/* Set some useful hotkeys */
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
