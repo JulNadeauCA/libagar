@@ -74,8 +74,6 @@ SK_LineLoad(SK *sk, void *p, AG_Netbuf *buf)
 		AG_SetError("Missing endpoint (%s)", AG_GetError());
 		return (-1);
 	}
-	dprintf("%s: width=%f, p1=%s, p2=%s\n", SK_NodeName(line),
-	    line->width, SK_NodeName(line->p1), SK_NodeName(line->p2));
 	return (0);
 }
 

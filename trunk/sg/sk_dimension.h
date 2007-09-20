@@ -3,6 +3,7 @@
 #define SK_DIMENSION_TEXT_MAX	256
 
 enum sk_dimension_type {
+	SK_DIMENSION_NONE,
 	SK_DIMENSION_DISTANCE,		/* Linear distance */
 	SK_DIMENSION_ANGLE_ENDPOINT,	/* Angle at shared endpoint */
 	SK_DIMENSION_ANGLE_INTERSECT	/* Angle at line intersection */

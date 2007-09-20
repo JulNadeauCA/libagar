@@ -16,5 +16,6 @@ __inline__ SG_Real	SG_VectorPlaneAngle(SG_Vector, SG_Plane);
 
 SG_Intersect2	SG_IntersectLineLine2(SG_Line2, SG_Line2);
 SG_Real		SG_PointLineDistance2(SG_Vector2, SG_Line2);
-SG_Real		SG_LineLineAngle2(SG_Line2, SG_Line2);
+__inline__ SG_Real SG_LineLineAngle(SG_Line, SG_Line);
+__inline__ SG_Real SG_LineLineAngle2(SG_Line2, SG_Line2);
 __END_DECLS

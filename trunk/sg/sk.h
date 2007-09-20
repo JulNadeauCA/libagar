@@ -29,8 +29,8 @@ struct ag_widget;
 
 typedef enum sk_status {
 	SK_INVALID,			/* No solutions */
-	SK_WELL_CONSTRAINED,		/* One solution */
-	SK_UNDER_CONSTRAINED,		/* Infinity of solutions */
+	SK_WELL_CONSTRAINED,		/* Finite number of solution */
+	SK_UNDER_CONSTRAINED,		/* Infinite number of solutions */
 	SK_OVER_CONSTRAINED		/* Redundant constraints */
 } SK_Status;
 
@@ -53,7 +53,8 @@ typedef struct sk_node_ops {
 } SK_NodeOps;
 
 typedef struct sk_node {
-	Uint32 name;			/* Unique handle for this node class */
+	char name[SK_NODE_NAME_MAX];
+	Uint32 handle;			/* Unique handle for this node class */
 	const SK_NodeOps *ops;
 	Uint flags;
 #define SK_NODE_SELECTED	0x01	/* For editor */
@@ -145,6 +146,8 @@ typedef struct sk {
 
 #define SKNODE(node) ((SK_Node *)(node))
 #define SKNODE_SELECTED(node) (((SK_Node *)(node))->flags & SK_NODE_SELECTED)
+#define SK_MOVED(node) (((SK_Node *)(node))->flags & SK_NODE_MOVED)
+#define SK_FIXED(node) (((SK_Node *)(node))->flags & SK_NODE_FIXED)
 #define SK_FOREACH_NODE(node, sk, ntype)				\
 	for((node) = (struct ntype *)TAILQ_FIRST(&(sk)->nodes);		\
 	    (node) != (struct ntype *)TAILQ_END(&(sk)->nodes);		\
@@ -217,8 +220,6 @@ void		 SK_NodeAddConstraint(void *, SK_Constraint *);
 void		 SK_NodeDelConstraint(void *, SK_Constraint *);
 Uint32		 SK_GenNodeName(SK *, const char *);
 Uint32		 SK_GenClusterName(SK *);
-char		*SK_NodeName(void *);
-char		*SK_NodeNameCopy(void *, char *, size_t);
 SG_Color	 SK_NodeColor(void *, const SG_Color *);
 void		 SK_NodeRedraw(void *, SK_View *);
 
@@ -258,6 +259,7 @@ void		SK_ClearProgramState(SK *);
 __inline__ SG_Vector	  SK_Pos(void *);
 __inline__ SG_Vector	  SK_NodeDir(void *);
 __inline__ void		 *SK_FindNode(SK *, Uint32, const char *);
+__inline__ void		 *SK_FindNodeByName(SK *, const char *);
 __inline__ SK_Cluster	 *SK_FindCluster(SK *, Uint32);
 __inline__ SK_Constraint *SK_FindConstraint(const SK_Cluster *,
 	                                    enum sk_constraint_type, void *,

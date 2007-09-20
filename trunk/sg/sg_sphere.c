@@ -176,8 +176,6 @@ SG_SphereDraw(void *p, SG_View *view)
 	d = SG_VectorDistance(SG_NodePos(view->cam),
 	                      SG_NodePos(sph));
 
-	printf("d = %f\n", d);
-
 	if (d < 2.0) { lod = 4; }
 	else if (d < 5.0) { lod = 3; } 
 	else if (d < 20.0) { lod = 2; } 

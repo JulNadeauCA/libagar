@@ -222,27 +222,6 @@ SK_GenNodeName(SK *sk, const char *type)
 	return (name);
 }
 
-/* Return string representation of a node name. */
-char *
-SK_NodeName(void *p)
-{
-	SK_Node *node = p;
-	char *s;
-
-	asprintf(&s, "%s%u", node->ops->name, node->name);
-	return (s);
-}
-
-/* Return string representation of a node name in fixed buffer. */
-char *
-SK_NodeNameCopy(void *p, char *buf, size_t buf_len)
-{
-	SK_Node *node = p;
-
-	snprintf(buf, buf_len, "%s%u", node->ops->name, node->name);
-	return (buf);
-}
-
 SG_Color
 SK_NodeColor(void *p, const SG_Color *cOrig)
 {
@@ -259,13 +238,15 @@ SK_NodeColor(void *p, const SG_Color *cOrig)
 }
 
 void
-SK_NodeInit(void *np, const void *ops, Uint32 name, Uint flags)
+SK_NodeInit(void *np, const void *ops, Uint32 handle, Uint flags)
 {
 	SK_Node *n = np;
 
-	n->name = name;
-	n->flags = flags;
 	n->ops = (const SK_NodeOps *)ops;
+	n->handle = handle;
+	snprintf(n->name, sizeof(n->name), "%s%u", n->ops->name, handle);
+
+	n->flags = flags;
 	n->sk = NULL;
 	n->pNode = NULL;
 	n->nRefs = 0;
@@ -350,7 +331,8 @@ SK_SaveNodeGeneric(SK *sk, SK_Node *node, AG_Netbuf *buf)
 	bsize_offs = AG_NetbufTell(buf);
 	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
 
-	AG_WriteUint32(buf, node->name);
+	AG_WriteUint32(buf, node->handle);
+	AG_WriteString(buf, node->name);
 	AG_WriteUint16(buf, (Uint16)node->flags);
 	SG_WriteMatrix(buf, &node->T);
 
@@ -427,7 +409,6 @@ fail:
 static int
 SK_LoadNodeData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 {
-	char nodeName[SK_NODE_NAME_MAX];
 	SK_Node *chldNode;
 
 	TAILQ_FOREACH(chldNode, &node->cnodes, sknodes) {
@@ -436,9 +417,7 @@ SK_LoadNodeData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 	}
 	if (node->ops->load != NULL &&
 	    node->ops->load(sk, node, buf) == -1) {
-		AG_SetError("%s: %s",
-		    SK_NodeNameCopy(node, nodeName, sizeof(nodeName)),
-		    AG_GetError());
+		AG_SetError("%s: %s", node->name, AG_GetError());
 		return (-1);
 	}
 	return (0);
@@ -451,7 +430,7 @@ SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 	char type[SK_TYPE_NAME_MAX];
 	SK_Node *node;
 	Uint32 bsize, nchildren, j;
-	Uint32 name;
+	Uint32 handle;
 	int i;
 
 	/* Load generic node information. */
@@ -474,14 +453,15 @@ SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 			return (-1);
 		}
 	}
-	name = AG_ReadUint32(buf);
 	node = Malloc(skElements[i]->size, M_SG);
-	skElements[i]->init(node, name);
-	node->flags = (Uint)AG_ReadUint16(buf);
+	handle = AG_ReadUint32(buf);
+	skElements[i]->init(node, handle);
 	node->sk = sk;
 
+	AG_CopyString(node->name, buf, sizeof(node->name));
+	node->flags = (Uint)AG_ReadUint16(buf);
 	SG_ReadMatrixv(buf, &node->T);
-	
+
 	/* Load the child nodes recursively. */
 	nchildren = AG_ReadUint32(buf);
 	for (j = 0; j < nchildren; j++) {
@@ -738,18 +718,32 @@ SK_NodeDelConstraint(void *pNode, SK_Constraint *ct)
 	}
 }
 
-/* Search a node by name in a sketch. */
+/* Search a node by handle and class. */
 void *
-SK_FindNode(SK *sk, Uint32 name, const char *type)
+SK_FindNode(SK *sk, Uint32 handle, const char *type)
 {
 	SK_Node *node;
 
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
-		if (node->name == name &&
+		if (node->handle == handle &&
 		    strcmp(node->ops->name, type) == 0)
 			return (node);
 	}
-	AG_SetError("No such node: %u", name);
+	AG_SetError("No such node: %u", handle);
+	return (NULL);
+}
+
+/* Search a node by name only. */
+void *
+SK_FindNodeByName(SK *sk, const char *name)
+{
+	SK_Node *node;
+
+	TAILQ_FOREACH(node, &sk->nodes, nodes) {
+		if (strcmp(node->name, name) == 0)
+			return (node);
+	}
+	AG_SetError("No such node: %s", name);
 	return (NULL);
 }
 
@@ -887,7 +881,7 @@ SK_WriteRef(AG_Netbuf *buf, void *pNode)
 	SK_Node *node = pNode;
 
 	AG_WriteString(buf, node->ops->name);
-	AG_WriteUint32(buf, node->name);
+	AG_WriteUint32(buf, node->handle);
 }
 
 void *
@@ -1309,17 +1303,27 @@ SK_ComposePair(SK *sk, const SK_Insn *insn)
 	SG_Vector v;
 	int i, rv = -1;
 
-	if ((insn->n[0]->flags & SK_NODE_FIXED) &&
-	    (insn->n[1]->flags & SK_NODE_FIXED)) {
+	if (SK_FIXED(insn->n[0]) && SK_FIXED(insn->n[1])) {
 		AG_SetError("Attempt to place two fixed entities");
 		return (-1);
 	}
-	if (insn->n[0]->flags & SK_NODE_FIXED) {
+	if (SK_FIXED(insn->n[0])) {
 		n =  insn->n[1];
 		n1 = insn->n[0];
-	} else {
+	} else if (SK_FIXED(insn->n[1])) {
 		n =  insn->n[0];
 		n1 = insn->n[1];
+	} else {
+		if (SK_MOVED(insn->n[0])) {
+			n =  insn->n[1];
+			n1 = insn->n[0];
+		} else if (SK_MOVED(insn->n[1])) {
+			n =  insn->n[0];
+			n1 = insn->n[1];
+		} else {
+			n =  insn->n[0];
+			n1 = insn->n[1];
+		}
 	}
 
 	for (i = 0; i < skConstraintPairFnCount; i++) {
@@ -1355,9 +1359,12 @@ SK_ComposeRing(SK *sk, const SK_Insn *insn)
 	SK_Node *n2 = insn->n[2];
 	SK_Constraint *ct1 = insn->ct01;
 	SK_Constraint *ct2 = insn->ct02;
-	int i;
-	int rv = 0;
-
+	int i, rv = 0;
+	
+	if (SK_FIXED(n)) {
+		AG_SetError("Attempt to place fixed entity");
+		return (-1);
+	}
 	for (i = 0; i < skConstraintRingFnCount; i++) {
 		const SK_ConstraintRingFn *fn = &skConstraintRingFns[i];
 

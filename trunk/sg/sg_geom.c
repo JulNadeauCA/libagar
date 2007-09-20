@@ -38,13 +38,12 @@ SG_LineFromPts2(SG_Vector2 p1, SG_Vector2 p2)
 {
 	SG_Line2 L;
 	
-	L.x0 = p1.x;
-	L.y0 = p1.y;
-	L.dx = p2.x - p1.x;
-	L.dy = p2.y - p1.y;
-	L.t = SG_VectorDistance2p(&p1, &p2);
-	L.dx /= L.t;
-	L.dy /= L.t;
+	L.p = p1;
+	L.d.x = p2.x - p1.x;
+	L.d.y = p2.y - p1.y;
+	L.t = SG_VectorLen2p(&L.d);
+	L.d.x /= L.t;
+	L.d.y /= L.t;
 	return (L);
 }
 
@@ -54,16 +53,14 @@ SG_LineFromPts(SG_Vector p1, SG_Vector p2)
 {
 	SG_Line L;
 	
-	L.x0 = p1.x;
-	L.y0 = p1.y;
-	L.z0 = p1.z;
-	L.dx = p2.x - p1.x;
-	L.dy = p2.y - p1.y;
-	L.dz = p2.z - p1.z;
-	L.t = SG_VectorDistancep(&p1, &p2);
-	L.dx /= L.t;
-	L.dy /= L.t;
-	L.dz /= L.t;
+	L.p = p1;
+	L.d.x = p2.x - p1.x;
+	L.d.y = p2.y - p1.y;
+	L.d.z = p2.z - p1.z;
+	L.t = SG_VectorLenp(&L.d);
+	L.d.x /= L.t;
+	L.d.y /= L.t;
+	L.d.z /= L.t;
 	return (L);
 }
 
@@ -160,9 +157,8 @@ SG_PlaneNormp(const SG_Plane *P)
 SG_Real
 SG_VectorPlaneAngle(SG_Vector v, SG_Plane P)
 {
-	return (M_PI/2.0 -
-	        SG_Acos(SG_VectorDot(SG_PlaneNormp(&P),
-		                     SG_VectorNormp(&v))));
+	return (M_PI - Acos(SG_VectorDot(SG_PlaneNormp(&P),
+	                                 SG_VectorNormp(&v))));
 }
 
 /* Compute minimal distance from a line segment L to a point p. */
@@ -170,24 +166,32 @@ SG_Real
 SG_PointLineDistance2(SG_Vector2 p, SG_Line2 L)
 {
 	SG_Real u;
-	SG_Vector2 v0, v1;
+	SG_Vector2 d;
 	SG_Vector2 x;
 
-	u = ((p.x - L.x0)*(L.dx*L.t - L.x0) +
-	     (p.y - L.y0)*(L.dy*L.t - L.y0)) / (L.t*L.t);
-
-	v0 = SG_VECTOR2(L.x0, L.y0);
-	v1 = SG_VECTOR2(L.dx, L.dy);
-	SG_VectorScale2v(&v1, L.t);
-
-	x = SG_VectorAdd2(v0, SG_VectorScale2(SG_VectorSub2p(&v1,&v0), u));
+	u = ((p.x - L.p.x)*(L.d.x*L.t - L.p.y) +
+	     (p.y - L.p.y)*(L.d.y*L.t - L.p.y)) / (L.t*L.t);
+	d = L.d;
+	SG_VectorScale2v(&d, L.t);
+	x = SG_VectorAdd2(L.p, SG_VectorScale2(SG_VectorSub2p(&d,&L.p), u));
 	return (SG_VectorDistance2p(&p, &x));
+}
+
+SG_Real
+SG_LineLineAngle(SG_Line L1, SG_Line L2)
+{
+	SG_Real theta;
+
+	theta = SG_PI - Atan2(VecPerpDot2(Vec3to2(L1.d),Vec3to2(L2.d)),
+	                      VecDot(L1.d,L2.d));
+	return (theta);
 }
 
 SG_Real
 SG_LineLineAngle2(SG_Line2 L1, SG_Line2 L2)
 {
-	return (Atan2(L2.dy-L1.dy, L2.dx-L1.dx));
+	return (Atan2(L2.d.y - L1.d.y,
+	              L2.d.x - L1.d.x));
 }
 
 /* Compute intersection between two line segments in R2. */
@@ -195,9 +199,9 @@ SG_Intersect2
 SG_IntersectLineLine2(SG_Line2 L1, SG_Line2 L2)
 {
 	SG_Intersect2 ix;
-	SG_Real a = L2.dx*(L1.y0 - L2.y0) - L2.dy*(L1.x0 - L2.x0);
-	SG_Real b = L1.dx*(L1.y0 - L2.y0) - L1.dy*(L1.x0 - L2.x0);
-	SG_Real c = L2.dy*L1.dx - L2.dx*L1.dy;
+	SG_Real a = L2.d.x*(L1.p.y - L2.p.y) - L2.d.y*(L1.p.x - L2.p.x);
+	SG_Real b = L1.d.x*(L1.p.y - L2.p.y) - L1.d.y*(L1.p.x - L2.p.x);
+	SG_Real c = L2.d.y*L1.d.x - L2.d.x*L1.d.y;
 
 	if (c != 0.0) {
 		SG_Real ac = a/c;
@@ -206,8 +210,7 @@ SG_IntersectLineLine2(SG_Line2 L1, SG_Line2 L2)
 		if (ac >= 0.0 && ac <= 1.0 &&
 		    bc >= 0.0 && bc <= 1.0) {
 			ix.type = SG_POINT;
-			ix.ix_p = SG_VECTOR2(L1.x0 + ac*L1.dx,
-			                     L1.y0 + ac*L1.dy);
+			ix.ix_p = SG_VectorAdd2(L1.p, SG_VectorScale2(L1.d,ac));
 			return (ix);
 		} else {
 			ix.type = SG_NONE;

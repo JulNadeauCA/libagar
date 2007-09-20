@@ -42,13 +42,13 @@
 #include "sk_constraint.h"
 
 static int
-PtFromDistantPt(SK_Constraint *ct, void *self, void *other)
+PtFromPtAtDistance(SK_Constraint *ct, void *self, void *other)
 {
 	SG_Vector p1 = SK_Pos(self);
 	SG_Vector p2 = SK_Pos(other);
 	SG_Real theta;
 	
-	SG_VectorVectorAngle(p1, p2, &theta, NULL);
+	VecVecAngle(p1, p2, &theta, NULL);
 	SK_Identity(self);
 	p2.x -= ct->ct_distance*Cos(theta);
 	p2.y -= ct->ct_distance*Sin(theta);
@@ -57,7 +57,7 @@ PtFromDistantPt(SK_Constraint *ct, void *self, void *other)
 }
 
 static int
-PtFromDistantLine(SK_Constraint *ct, void *self, void *other)
+PtFromLineAtDistance(SK_Constraint *ct, void *self, void *other)
 {
 	SK_Line *L = other;
 	SG_Vector pOrig = SK_Pos(self);
@@ -67,18 +67,18 @@ PtFromDistantLine(SK_Constraint *ct, void *self, void *other)
 	SG_Real mag, u, theta;
 
 	/* Find the closest point on the line. */
-	vd = SG_VectorSubp(&p2, &p1);
-	mag = SG_VectorDistance(p2, p1);
+	vd = VecSubp(&p2, &p1);
+	mag = VecDistance(p2, p1);
 	u = ( ((pOrig.x - p1.x)*(p2.x - p1.x)) +
 	      ((pOrig.y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
 	
-	v = SG_VectorAdd(p1, SG_VectorScalep(&vd,u));
+	v = VecAdd(p1, VecScalep(&vd,u));
 	if (ct->ct_distance == 0.0) {
 		SK_Identity(self);
 		SK_Translatev(self, &v);
 		return (0);
 	}
-	SG_VectorVectorAngle(p1, p2, &theta, NULL);
+	VecVecAngle(p1, p2, &theta, NULL);
 	theta += M_PI/2.0;
 	s1.x = v.x + ct->ct_distance*Cos(theta);
 	s1.y = v.y + ct->ct_distance*Sin(theta);
@@ -86,8 +86,7 @@ PtFromDistantLine(SK_Constraint *ct, void *self, void *other)
 	s2.y = v.y - ct->ct_distance*Sin(theta);
 	
 	SK_Identity(self);
-	if (SG_VectorDistancep(&pOrig, &s1) <	/* Minimize displacement */
-	    SG_VectorDistancep(&pOrig, &s2)) {
+	if (VecDistancep(&pOrig,&s1) < VecDistancep(&pOrig,&s2)) {
 		SK_Translatev(self, &s1);
 	} else {
 		SK_Translatev(self, &s2);
@@ -109,7 +108,7 @@ PtFromDistantCircle(SK_Constraint *ct, void *self, void *other)
 }
 
 static int
-LineFromDistantLine(SK_Constraint *ct, void *self, void *other)
+LineFromLineAtDistance(SK_Constraint *ct, void *self, void *other)
 {
 	SK_Line *L = self;
 	SK_Line *L1 = other;
@@ -122,20 +121,43 @@ LineFromDistantLine(SK_Constraint *ct, void *self, void *other)
 }
 
 static int
-LineFromAngledLine(SK_Constraint *ct, void *pSelf, void *pFixed)
+LineFromLineAtAngle(SK_Constraint *ct, void *pSelf, void *pFixed)
 {
 	SK_Line *self = pSelf;
 	SK_Line *fixed = pFixed;
-	SG_Line Lself = SG_LineFromPts(SK_Pos(self->p1), SK_Pos(self->p2));
-	SG_Line Lfixed= SG_LineFromPts(SK_Pos(fixed->p1), SK_Pos(fixed->p2));
+	SG_Vector vShd, vSelf, vFixed, v;
+	SG_Real len, theta;
+	SK_Point *p;
 
-	SK_Identity(self->p1);
-	SK_Translate2(self->p1, Lfixed.x0, Lfixed.y0);
-	SK_Identity(self->p2);
-	SK_Translate2(self->p2,
-	    Lfixed.x0 + Lfixed.dx*Lfixed.t,
-	    Lfixed.y0 + Lfixed.dy*Lfixed.t);
+	theta = ct->ct_angle;
 
+	if (self->p1 == fixed->p1 || self->p1 == fixed->p2) {
+		vShd = SK_Pos(self->p1);
+		vSelf = SK_Pos(self->p2);
+		vFixed = (self->p1==fixed->p1) ? SK_Pos(fixed->p2) :
+		                                 SK_Pos(fixed->p1);
+		p = self->p2;
+//		theta = -ct->ct_angle;
+	} else if (self->p2 == fixed->p1 || self->p2 == fixed->p2) {
+		vShd = SK_Pos(self->p2);
+		vSelf = SK_Pos(self->p1);
+		vFixed = (self->p2==fixed->p1) ? SK_Pos(fixed->p2) :
+		                                 SK_Pos(fixed->p1);
+		p = self->p1;
+//		theta = ct->ct_angle;
+	} else {
+		AG_SetError("No shared point between lines");
+		return (-1);
+	}
+	VecSubv(&vSelf, &vShd);
+	VecSubv(&vFixed, &vShd);
+	len = SG_VectorLenp(&vSelf);
+	VecNormv(&vFixed);
+	v = VecSub(vFixed, VecNorm(vSelf));
+	SK_Identity(p);
+	SK_Translate2(p,
+	    vShd.x + Cos(theta)*vFixed.x*len - Sin(theta)*vFixed.y*len,
+	    vShd.y + Sin(theta)*vFixed.x*len + Cos(theta)*vFixed.y*len);
 	return (0);
 }
 
@@ -154,39 +176,31 @@ PtFromPtPt(void *self, SK_Constraint *ct1, void *n1, SK_Constraint *ct2,
 	SG_Vector p2 = SK_Pos(n2);
 	SG_Real d1 = (ct1->type == SK_DISTANCE) ? ct1->ct_distance : 0.0;
 	SG_Real d2 = (ct2->type == SK_DISTANCE) ? ct2->ct_distance : 0.0;
-	SG_Real d12 = SG_VectorDistancep(&p1, &p2);
+	SG_Real d12 = VecDistancep(&p1,&p2);
 	SG_Real a, h, b;
 	SG_Vector p, s1, s2;
 
 	printf("PtFromPtPt(%s,[%f:%s],[%f:%s])\n",
-	    SK_NodeName(self),
-	    ct1->ct_distance, SK_NodeName(n1),
-	    ct2->ct_distance, SK_NodeName(n2));
+	    SKNODE(self)->name,
+	    ct1->ct_distance, SKNODE(n1)->name,
+	    ct2->ct_distance, SKNODE(n2)->name);
 
 	if (d12 > (d1+d2)) {
-		char *name1 = SK_NodeName(n1);
-		char *name2 = SK_NodeName(n2);
 		AG_SetError("%s and %s are too far apart to satisfy "
 		            "constraint: %.02f > (%.02f+%.02f)",
-			    name1, name2, d12, d1, d2);
-		Free(name1,0);
-		Free(name2,0);
+			    SKNODE(n1)->name, SKNODE(n2)->name, d12, d1, d2);
 		return (-1);
 	}
 	if (d12 < SG_Fabs(d1-d2)) {
-		char *name1 = SK_NodeName(n1);
-		char *name2 = SK_NodeName(n2);
 		AG_SetError("%s and %s are too close to satisfy "
 		            "constraint: %.02f < |%.02f-%.02f|",
-			    name1, name2, d12, d1, d2);
-		Free(name1,0);
-		Free(name2,0);
+			    SKNODE(n1)->name, SKNODE(n2)->name, d12, d1, d2);
 		return (-1);
 	}
 
 	a = (d1*d1 - d2*d2 + d12*d12) / (2.0*d12);
 	h = Sqrt(d1*d1 - a*a);
-	p = SG_VectorLERPp(&p1, &p2, a/d12);
+	p = VecLERPp(&p1, &p2, a/d12);
 	b = h/d12;
 
 	s1.x = p.x - b*(p2.y - p1.y);
@@ -197,12 +211,11 @@ PtFromPtPt(void *self, SK_Constraint *ct1, void *n1, SK_Constraint *ct2,
 	s2.z = 0.0;
 
 	SK_Identity(self);
-	if (SG_VectorDistancep(&s1, &s2) == 0.0) {
+	if (VecDistancep(&s1,&s2) == 0.0) {
 		SK_Translatev(self, &s1);
 		sk->nSolutions++;
 	} else {
-		if (SG_VectorDistancep(&pOrig, &s1) <
-		    SG_VectorDistancep(&pOrig, &s2)) {
+		if (VecDistancep(&pOrig,&s1) < VecDistancep(&pOrig,&s2)) {
 			SK_Translatev(self, &s1);
 		} else {
 			SK_Translatev(self, &s2);
@@ -262,16 +275,15 @@ PtFromPtLine(void *self, SK_Constraint *ct1, void *n1,
 			}
 		} else {
 			if (u1 >= 0.0 && u1 <= 1.0)
-				s[nSolutions++] = SG_VectorLERPp(&p1,&p2,u1);
+				s[nSolutions++] = VecLERPp(&p1,&p2,u1);
 			if (u2 >= 0.0 && u2 <= 1.0)
-				s[nSolutions++] = SG_VectorLERPp(&p1,&p2,u1);
+				s[nSolutions++] = VecLERPp(&p1,&p2,u1);
 		}
 	}
 	
 	SK_Identity(self);
 	if (nSolutions == 2) {
-		if (SG_VectorDistancep(&pOrig, &s[0]) <
-		    SG_VectorDistancep(&pOrig, &s[1])) {
+		if (VecDistancep(&pOrig,&s[0]) < VecDistancep(&pOrig,&s[1])) {
 			SK_Translatev(self, &s[0]);
 		} else {
 			SK_Translatev(self, &s[1]);
@@ -285,22 +297,35 @@ PtFromPtLine(void *self, SK_Constraint *ct1, void *n1,
 	sk->nSolutions += nSolutions;
 	return (0);
 fail:
-	{
-		char *name1 = SK_NodeName(n1);
-		char *name2 = SK_NodeName(n2);
-		AG_SetError("%s and %s are too far apart to satisfy constraint",
-			    name1, name2);
-		Free(name1,0);
-		Free(name2,0);
-	}
+	AG_SetError("%s and %s are too far apart to satisfy constraint",
+		    SKNODE(n1)->name, SKNODE(n2)->name);
+	return (-1);
+}
+
+/*
+ * Compute the position of a point p from two known lines L1 and L2.
+ * This is a system of two linear equations describing the intersection
+ * of two imaginary lines at distances d1 and d2 from L1 and L2.
+ */
+static int
+PtFromLineLine(void *self, SK_Constraint *ct1, void *n1,
+    SK_Constraint *ct2, void *n2)
+{
+	SK *sk = SKNODE(self)->sk;
+	SG_Vector pOrig = SK_Pos(self);
+	SK_Line *L1 = n1;
+	SK_Line *L2 = n2;
+	int nSolutions = 0;
+
+	AG_SetError("not yet");
 	return (-1);
 }
 
 const SK_ConstraintPairFn skConstraintPairFns[] = {
-	{ SK_DISTANCE,	 "Point:*", "Point:*",	PtFromDistantPt },
-	{ SK_DISTANCE,	 "Point:*", "Line:*",	PtFromDistantLine },
-	{ SK_DISTANCE,	 "Line:*",  "Line:*",	LineFromDistantLine },
-	{ SK_ANGLE,	 "Line:*",  "Line:*",	LineFromAngledLine },
+	{ SK_DISTANCE,	 "Point:*", "Point:*",	PtFromPtAtDistance },
+	{ SK_DISTANCE,	 "Point:*", "Line:*",	PtFromLineAtDistance },
+	{ SK_DISTANCE,	 "Line:*",  "Line:*",	LineFromLineAtDistance },
+	{ SK_ANGLE,	 "Line:*",  "Line:*",	LineFromLineAtAngle },
 };
 const SK_ConstraintRingFn skConstraintRingFns[] = {
 	{
@@ -313,6 +338,11 @@ const SK_ConstraintRingFn skConstraintRingFns[] = {
 		SK_CONSTRAINT_ANY, "Point:*",
 		SK_CONSTRAINT_ANY, "Line:*",
 		PtFromPtLine
+	}, {
+		"Point:*",
+		SK_CONSTRAINT_ANY, "Line:*",
+		SK_CONSTRAINT_ANY, "Line:*",
+		PtFromLineLine
 	},
 };
 

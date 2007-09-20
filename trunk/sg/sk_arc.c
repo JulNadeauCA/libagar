@@ -76,8 +76,6 @@ SK_ArcLoad(SK *sk, void *p, AG_Netbuf *buf)
 		AG_SetError("Missing endpoints (%s)", AG_GetError());
 		return (-1);
 	}
-	dprintf("%s: r=%f, p=%s, e1=%s, e2=%s\n", SK_NodeName(arc), arc->r,
-	    SK_NodeName(arc->p), SK_NodeName(arc->e1), SK_NodeName(arc->e2));
 	return (0);
 }
 

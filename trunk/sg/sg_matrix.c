@@ -613,6 +613,39 @@ SG_MatrixRotatev(SG_Matrix *M, SG_Real theta, SG_Vector A)
 	SG_MatrixMultv(M, &R);
 }
 
+/*
+ * Generate a rotation of theta radians around arbitrary axis A,
+ * with an arbitrary point p as origin.
+ */
+void
+SG_MatrixOrbitv(SG_Matrix *M, SG_Vector p, SG_Vector A, SG_Real theta)
+{
+	SG_Matrix R;
+	SG_Real s = Sin(theta);
+	SG_Real c = Cos(theta);
+	SG_Real t = 1.0 - c;
+
+	R.m[0][0] = t*A.x*A.x + c;
+	R.m[0][1] = t*A.x*A.y + s*A.z;
+	R.m[0][2] = t*A.x*A.z - s*A.y;
+	R.m[0][3] = 0.0;
+	R.m[1][0] = t*A.x*A.y - s*A.z;
+	R.m[1][1] = t*A.y*A.y + c;
+	R.m[1][2] = t*A.y*A.z + s*A.x;
+	R.m[1][3] = 0.0;
+	R.m[2][0] = t*A.x*A.z + s*A.y;
+	R.m[2][1] = t*A.y*A.z - s*A.x;
+	R.m[2][2] = t*A.z*A.z + c;
+	R.m[2][3] = 0.0;
+	R.m[3][0] = 0.0;
+	R.m[3][1] = 0.0;
+	R.m[3][2] = 0.0;
+	R.m[3][3] = 1.0;
+	SG_MatrixTranslatev(M, p);
+	SG_MatrixMultv(M, &R);
+	SG_MatrixTranslatev(M, SG_MIRROR(p));
+}
+
 void
 SG_MatrixRotateEul(SG_Matrix *M, SG_Real pitch, SG_Real roll, SG_Real yaw)
 {

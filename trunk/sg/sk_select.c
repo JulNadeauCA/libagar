@@ -61,8 +61,8 @@ ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 	SK_View *skv = SKTOOL(t)->skv;
 	SK *sk = skv->sk;
 	SG_Vector vC;
-	SK_Node *node;
-	int update = 0;
+	SK_Node *node, *oNode;
+	int update = 0, i;
 
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
 		if (node->flags & SK_NODE_MOUSEOVER) {
@@ -96,6 +96,13 @@ ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 					update = 1;
 				}
 				node->flags |= SK_NODE_MOVED;
+				TAILQ_FOREACH(oNode, &sk->nodes, nodes) {
+					for (i = 0; i < oNode->nRefNodes; i++) {
+						if (oNode->refNodes[i] != node)
+							continue;
+						oNode->flags |= SK_NODE_MOVED;
+					}
+				}
 			}
 		}
 	}
