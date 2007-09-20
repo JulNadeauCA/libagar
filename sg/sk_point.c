@@ -67,7 +67,6 @@ SK_PointLoad(SK *sk, void *p, AG_Netbuf *buf)
 
 	pt->size = SG_ReadReal(buf);
 	pt->color = SG_ReadColor(buf);
-	dprintf("%s: size=%f\n", SK_NodeName(pt), pt->size);
 	return (0);
 }
 

@@ -172,15 +172,11 @@ PlotCluster(SK *sk, AG_Graph *gf, SK_Cluster *cl)
 	TAILQ_FOREACH(ct, &cl->edges, constraints) {
 		if ((v1 = AG_GraphVertexFind(gf, ct->n1)) == NULL) {
 			v1 = AG_GraphVertexNew(gf, ct->n1);
-			AG_GraphVertexLabel(v1, "%s",
-			    SK_NodeNameCopy(ct->n1, nodeName,
-			    sizeof(nodeName)));
+			AG_GraphVertexLabel(v1, "%s", ct->n1->name);
 		}
 		if ((v2 = AG_GraphVertexFind(gf, ct->n2)) == NULL) {
 			v2 = AG_GraphVertexNew(gf, ct->n2);
-			AG_GraphVertexLabel(v2, "%s",
-			    SK_NodeNameCopy(ct->n2, nodeName,
-			    sizeof(nodeName)));
+			AG_GraphVertexLabel(v2, "%s", ct->n2->name);
 		}
 		edge = AG_GraphEdgeNew(gf, v1, v2, ct);
 		AG_GraphEdgeLabel(edge, "%s", skConstraintNames[ct->type]);
@@ -288,8 +284,7 @@ FindNodes(AG_Tlist *tl, SK_Node *node, int depth)
 	AG_TlistItem *it;
 	SK_Node *cnode;
 
-	it = AG_TlistAdd(tl, AGICON(EDA_NODE_ICON), "%s%u", node->ops->name,
-	    node->name);
+	it = AG_TlistAdd(tl, AGICON(EDA_NODE_ICON), "%s", node->name);
 	it->depth = depth;
 	it->p1 = node;
 	it->selected = (node->flags & SK_NODE_SELECTED);
@@ -380,8 +375,6 @@ PollConstraints(AG_Event *event)
 	AG_TlistBegin(tl);
 	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
 		char ctName[64];
-		char name1[SK_NODE_NAME_MAX];
-		char name2[SK_NODE_NAME_MAX];
 		
 		if (node != NULL) {
 			if (node != ct->n1 && node != ct->n2)
@@ -405,8 +398,7 @@ PollConstraints(AG_Event *event)
 			break;
 		}
 		it = AG_TlistAdd(tl, NULL, "%s: %s,%s", ctName,
-		    SK_NodeNameCopy(ct->n1, name1, sizeof(name1)),
-		    SK_NodeNameCopy(ct->n2, name2, sizeof(name2)));
+		    ct->n1->name, ct->n2->name);
 		it->p1 = ct;
 	}
 	AG_TlistEnd(tl);
@@ -452,8 +444,8 @@ ConstraintEdit(AG_Event *event)
 		    UpdateConstraint, "%p,%p", skv, ct);
 		break;
 	case SK_ANGLE:
-		num = AG_NumericalNew(skv->editPane, AG_NUMERICAL_HFILL, NULL,
-		    _("Angle: "));
+		num = AG_NumericalNew(skv->editPane, AG_NUMERICAL_HFILL,
+		    "deg", _("Angle: "));
 		AG_NumericalSetIncrement(num, 1.0);
 		SG_WidgetBindReal(num, "value", &ct->ct_angle);
 		AG_WidgetSetFocusable(num, 0);
@@ -504,9 +496,6 @@ ConstraintMenu(AG_Event *event)
 static void
 PollInsns(AG_Event *event)
 {
-	char name1[SK_NODE_NAME_MAX];
-	char name2[SK_NODE_NAME_MAX];
-	char name3[SK_NODE_NAME_MAX];
 	AG_Table *tbl = AG_SELF();
 	SK *sk = AG_PTR(1);
 	SK_Insn *si;
@@ -516,15 +505,11 @@ PollInsns(AG_Event *event)
 		switch (si->type) {
 		case SK_COMPOSE_PAIR:
 			AG_TableAddRow(tbl, "%s:%s:%s:%s", "COMPOSE_PAIR",
-			    SK_NodeNameCopy(si->n[0],name1,sizeof(name1)),
-			    SK_NodeNameCopy(si->n[1],name2,sizeof(name2)),
-			    "");
+			    si->n[0]->name, si->n[1]->name, "");
 			break;
 		case SK_COMPOSE_RING:
 			AG_TableAddRow(tbl, "%s:%s:%s:%s", "COMPOSE_RING",
-			    SK_NodeNameCopy(si->n[0],name1,sizeof(name1)),
-			    SK_NodeNameCopy(si->n[1],name2,sizeof(name2)),
-			    SK_NodeNameCopy(si->n[2],name3,sizeof(name3)));
+			    si->n[0]->name, si->n[1]->name, si->n[2]->name);
 			break;
 		}
 	}
@@ -750,6 +735,15 @@ SK_Edit(void *p)
 }
 
 static void
+UpdateNodeName(AG_Event *event)
+{
+	SK_Node *node = AG_PTR(1);
+
+	snprintf(node->name, sizeof(node->name), "%s%u", node->ops->name,
+	   node->handle);
+}
+
+static void
 SK_NodeEditGeneric(SK_Node *node, AG_Widget *box, SK_View *skv)
 {
 	AG_Tlist *tl;
@@ -759,7 +753,8 @@ SK_NodeEditGeneric(SK_Node *node, AG_Widget *box, SK_View *skv)
 	AG_SeparatorNewHoriz(box);
 
 	sb = AG_SpinbuttonNew(box, 0, _("Name: "));
-	AG_WidgetBindUint32(sb, "value", &node->name);
+	AG_WidgetBindUint32(sb, "value", &node->handle);
+	AG_SetEvent(sb, "spinbutton-changed", UpdateNodeName, "%p", node);
 
 //	lbl = AG_LabelNewPolledMT(box, AG_LABEL_HFILL, &skv->sk->lock,
 //	    "Flags: <%[flags]>", &node->flags);

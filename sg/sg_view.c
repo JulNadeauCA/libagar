@@ -330,7 +330,7 @@ PopupMenuOpen(SG_View *sv, int x, int y)
 		SG_FOREACH_NODE_CLASS(cam, sg, sg_camera, "Camera") {
 			mi = AG_MenuAction(mCam, SGNODE(cam)->name, OBJ_ICON,
 			    ViewSwitchCamera, "%p,%p", sv, cam);
-			mi->state = (cam == sv->cam);
+			mi->state = (cam != sv->cam);
 		}
 	}
 	AG_PopupShow(sv->popup);

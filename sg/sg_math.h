@@ -3,6 +3,12 @@
  * Basic mathematical structures, constants and functions.
  */
 
+#ifdef _AGAR_INTERNAL
+#include <config/have_math_fma.h>
+#else
+#include <agar/config/have_math_fma.h>
+#endif
+
 #ifdef SG_DOUBLE_PRECISION
 typedef double SG_Real;
 #define SG_REAL(n) AG_DOUBLE(n)
@@ -91,6 +97,7 @@ typedef struct sg_spherical {
  * Basic math routines
  */
 #ifdef SG_DOUBLE_PRECISION
+
 #define SG_Sqrt(x) sqrt(x)
 #define SG_Cbrt(x) cbrt(x)
 #define SG_Sin(x) sin(x)
@@ -106,7 +113,15 @@ typedef struct sg_spherical {
 #define SG_Hypot2(x,y) hypot((x),(y))
 #define SG_Fabs(x) fabs(x)
 #define SG_Pow(x,y) pow((x),(y))
+
+#ifdef HAVE_MATH_FMA
+#define SG_Fma(x,y,z) fma((x),(y),(z))
 #else
+#define SG_Fma(x,y,z) SG_FmaEmul((x),(y),(z))
+#endif
+
+#else /* !SG_DOUBLE_PRECISION */
+
 #define SG_Sqrt(r) sqrtf(r)
 #define SG_Cbrt(r) cbrtf(r)
 #define SG_Sin(x) sinf(x)
@@ -122,6 +137,13 @@ typedef struct sg_spherical {
 #define SG_Hypot2(x,y) hypotf((x),(y))
 #define SG_Fabs(x) fabsf(x)
 #define SG_Pow(x,y) powf((x),(y))
+
+#ifdef HAVE_MATH_FMA
+#define SG_Fma(x,y,z) fmaf((x),(y),(z))
+#else
+#define SG_Fma(x,y,z) SG_FmaEmulf((x),(y),(z))
+#endif
+
 #endif /* !SG_DOUBLE_PRECISION */
 
 #define SG_Radians(x) ((x)/360.0*2.0*SG_PI)

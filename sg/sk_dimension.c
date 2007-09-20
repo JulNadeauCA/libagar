@@ -67,12 +67,12 @@ SK_DimensionInit(void *p, Uint32 name)
 	dim->cLbl = SG_ColorRGB(0.0, 0.0, 0.5);
 	dim->cLblBorder = SG_ColorRGB(0.0, 0.0, 0.5);
 	dim->cLineDim = SG_ColorRGB(0.0, 0.0, 0.5);
-	dim->vLbl = SG_VECTOR(0.0, 1.0, 0.0);
+	dim->vLbl = Vec(0.0, 1.0, 0.0);
 	dim->lbl = -1;
 	dim->text[0] = '\0';
 	dim->xPad = 5;
 	dim->yPad = 2;
-	dim->type = SK_DIMENSION_DISTANCE;
+	dim->type = SK_DIMENSION_NONE;
 }
 
 int
@@ -135,30 +135,26 @@ PointLineDistance(const SG_Vector *v, const SK_Line *L, SG_Vector *pvC)
 	SG_Vector p1 = SK_Pos(L->p1);
 	SG_Vector p2 = SK_Pos(L->p2);
 	SG_Vector vC;
-	SG_Real mag = SG_VectorDistance(p1,p2);
+	SG_Real mag = VecDistance(p1,p2);
 	SG_Real u;
 
 	u = ( ((v->x - p1.x)*(p2.x - p1.x)) +
               ((v->y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
-	vC = SG_VectorAdd(p1, SG_VectorScale(SG_VectorSubp(&p2,&p1), u));
+	vC = VecAdd(p1, VecScale(VecSubp(&p2,&p1), u));
 	if (pvC != NULL) {
 		SG_VectorCopy(pvC, &vC);
 	}
-	return (SG_VectorDistancep(v, &vC));
+	return (VecDistancep(v,&vC));
 }
 
 /* Compute the angle between two lines. */
 static SG_Real
 LineLineAngle(const SK_Line *line1, const SK_Line *line2)
 {
-	SG_Line L1 = SG_LineFromPts(SK_Pos(line1->p1),
-	                            SK_Pos(line1->p2));
-	SG_Line L2 = SG_LineFromPts(SK_Pos(line2->p1),
-	                            SK_Pos(line2->p2));
-	SG_Vector v1 = SG_VECTOR(L1.dx, L1.dy, L1.dz);
-	SG_Vector v2 = SG_VECTOR(L2.dx, L2.dy, L2.dz);
+	SG_Line L1 = SG_LineFromPts(SK_Pos(line1->p1), SK_Pos(line1->p2));
+	SG_Line L2 = SG_LineFromPts(SK_Pos(line2->p1), SK_Pos(line2->p2));
 
-	return (M_PI - Acos(SG_VectorDot(v1,v2)));
+	return SG_LineLineAngle(L1, L2);
 }
 
 /*
@@ -171,6 +167,7 @@ TransformToAnnotFrame(SK_Dimension *dim, SG_Vector *vr1, SG_Vector *vr2)
 	SG_Matrix T;
 	SG_Vector v1, v2;
 	SG_Vector vd;
+	SG_Real theta;
 	
 	SG_MatrixIdentityv(&T);
 
@@ -189,9 +186,10 @@ TransformToAnnotFrame(SK_Dimension *dim, SG_Vector *vr1, SG_Vector *vr2)
 			v1 = SK_Pos(dim->n1);
 			v2 = SK_Pos(dim->n2);
 		}
-		vd = SG_VectorSubp(&v1, &v2);
-		SG_MatrixTranslatev(&T, SG_VectorLERPp(&v1, &v2, 0.5));
-		SG_MatrixRotateZv(&T, Atan2(vd.y, vd.x));
+		vd = VecSubp(&v1, &v2);
+		theta = Atan2(vd.y, vd.x);
+		SG_MatrixTranslatev(&T, VecLERPp(&v1, &v2, 0.5));
+		SG_MatrixRotateZv(&T, theta);
 		if (vr1 != NULL) { SG_VectorCopy(vr1, &v1); }
 		if (vr2 != NULL) { SG_VectorCopy(vr2, &v2); }
 		break;
@@ -206,9 +204,12 @@ TransformToAnnotFrame(SK_Dimension *dim, SG_Vector *vr1, SG_Vector *vr2)
 				v1 = SK_Pos(L1->p2);
 			}
 			SG_MatrixTranslatev(&T, v1);
+			SG_MatrixRotateZv(&T, SG_PI);
 		}
 		break;
 	case SK_DIMENSION_ANGLE_INTERSECT:
+		break;
+	default:
 		break;
 	}
 	return (T);
@@ -224,7 +225,7 @@ GetDimensionVal(SK_Node *n1, SK_Node *n2)
 	    SK_NodeOfClass(n2, "Point:*")) {
 		v1 = SK_Pos(n1);
 		v2 = SK_Pos(n2);
-		return SG_VectorDistancep(&v1, &v2);
+		return VecDistancep(&v1,&v2);
 	} else if (SK_NodeOfClass(n1, "Point:*") &&
 	           SK_NodeOfClass(n2, "Line:*")) {
 		v1 = SK_Pos(n1);
@@ -245,7 +246,20 @@ GetLabelText(SK_Dimension *dim, char *text, size_t text_len)
 {
 	SK *sk = SKNODE(dim)->sk;
 
-	snprintf(text, text_len, "%.02f", GetDimensionVal(dim->n1, dim->n2));
+	switch (dim->type) {
+	case SK_DIMENSION_DISTANCE:
+		snprintf(text, text_len, "%.02f",
+		    AG_Base2Unit(GetDimensionVal(dim->n1, dim->n2), sk->uLen));
+		break;
+	case SK_DIMENSION_ANGLE_ENDPOINT:
+	case SK_DIMENSION_ANGLE_INTERSECT:
+		snprintf(text, text_len, "%.02f\xc2\xb0",
+		    SG_Degrees(GetDimensionVal(dim->n1, dim->n2)));
+		break;
+	default:
+		text[0] = '\0';
+		break;
+	}
 	if (SK_ConstrainedNodes(&sk->ctGraph, dim->n1, dim->n2) == NULL)
 		strlcat(text, _(" (REF)"), text_len);
 }
@@ -289,7 +303,7 @@ SK_DimensionDraw(void *p, SK_View *skv)
 		y = dim->vLbl.y + hLbl/2.0;
 		x1 = dim->vLbl.x - xPad;
 		x2 = dim->vLbl.x + wLbl + xPad;
-		d = SG_VectorDistancep(&v1, &v2);
+		d = VecDistancep(&v1,&v2);
 		e1 = -d/2.0;
 		e2 = +d/2.0;
 		if ((x1 - e1) > 0.0) {
@@ -309,6 +323,8 @@ SK_DimensionDraw(void *p, SK_View *skv)
 	case SK_DIMENSION_ANGLE_ENDPOINT:
 		break;
 	case SK_DIMENSION_ANGLE_INTERSECT:
+		break;
+	default:
 		break;
 	}
 
@@ -363,18 +379,19 @@ SK_DimensionProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 
 	switch (dim->type) {
 	case SK_DIMENSION_DISTANCE:
-		SG_VectorSubv(&p1, &dim->vLbl);
-		SG_VectorSubv(&p2, &dim->vLbl);
+		VecSubv(&p1, &dim->vLbl);
+		VecSubv(&p2, &dim->vLbl);
 
-		mag = SG_VectorDistance(p2, p1);
+		mag = VecDistance(p2,p1);
 		u = ( ((v->x - p1.x)*(p2.x - p1.x)) +
 		      ((v->y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
-		*vC = SG_VectorAdd(p1,
-		    SG_VectorScale(SG_VectorSubp(&p2,&p1), u));
-		return (SG_VectorDistancep(v, vC));
+		*vC = VecAdd(p1, VecScale(VecSubp(&p2,&p1), u));
+		return VecDistancep(v,vC);
 	case SK_DIMENSION_ANGLE_ENDPOINT:
-		break;
 	case SK_DIMENSION_ANGLE_INTERSECT:
+		*vC = dim->vLbl;
+		return VecDistancep(v,vC);
+	default:
 		break;
 	}
 	return (HUGE_VAL);
@@ -397,7 +414,7 @@ SK_DimensionMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 
 	Ta = TransformToAnnotFrame(dim, NULL, NULL);
 	v = SG_MatrixMultVectorp(&Ta, &dim->vLbl);
-	SG_VectorAddv(&v, vel);
+	VecAddv(&v, vel);
 	TaInv = SG_MatrixInvertCramerp(&Ta);
 	dim->vLbl = SG_MatrixMultVectorp(&TaInv, &v);
 	return (0);
@@ -442,20 +459,22 @@ AddDimConstraint(AG_Event *event)
 	SK_Dimension *dim = AG_PTR(3);
 	AG_Numerical *num = AG_PTR(4);
 	SK *sk = SKTOOL(t)->skv->sk;
-	SK_Constraint *ct;
 
 	switch (dim->type) {
 	case SK_DIMENSION_DISTANCE:
-		ct = SK_AddConstraint(&sk->ctGraph, dim->n1, dim->n2,
+		SK_AddConstraint(&sk->ctGraph, dim->n1, dim->n2,
 		    SK_DISTANCE, AG_NumericalGetDouble(num));
+		SK_Update(sk);
 		break;
 	case SK_DIMENSION_ANGLE_ENDPOINT:
 	case SK_DIMENSION_ANGLE_INTERSECT:
-		ct = SK_AddConstraint(&sk->ctGraph, dim->n1, dim->n2,
+		SK_AddConstraint(&sk->ctGraph, dim->n1, dim->n2,
 		    SK_ANGLE, AG_NumericalGetDouble(num));
+		SK_Update(sk);
+		break;
+	default:
 		break;
 	}
-	SK_Update(sk);
 out:
 	t->curDim = NULL;
 	AG_ViewDetach(pWin);
@@ -475,8 +494,6 @@ UndoDimConstraint(AG_Event *event)
 static int
 AddDimConstraintDlg(struct sk_dimension_tool *t, SK *sk, SK_Dimension *dim)
 {
-	char name1[SK_NODE_NAME_MAX];
-	char name2[SK_NODE_NAME_MAX];
 	SG_Vector v1, v2;
 	SG_Real d;
 	AG_Window *win;
@@ -505,8 +522,7 @@ AddDimConstraintDlg(struct sk_dimension_tool *t, SK *sk, SK_Dimension *dim)
 			AG_WindowSetCaption(win, _("Distance constraint"));
 			AG_LabelNewStatic(vb, 0,
 			    _("Distance between %s and %s:"),
-			    SK_NodeNameCopy(dim->n1, name1, sizeof(name1)),
-			    SK_NodeNameCopy(dim->n2, name2, sizeof(name2)));
+			    dim->n1->name, dim->n2->name);
 			unit = "mm";
 			break;
 		case SK_DIMENSION_ANGLE_ENDPOINT:
@@ -514,10 +530,12 @@ AddDimConstraintDlg(struct sk_dimension_tool *t, SK *sk, SK_Dimension *dim)
 			AG_WindowSetCaption(win, _("Angle constraint"));
 			AG_LabelNewStatic(vb, 0,
 			    _("Angle between %s and %s:"),
-			    SK_NodeNameCopy(dim->n1, name1, sizeof(name1)),
-			    SK_NodeNameCopy(dim->n2, name2, sizeof(name2)));
-			unit = "rad";
+			    dim->n1->name, dim->n2->name);
+			unit = "deg";
 			break;
+		default:
+			AG_SetError("Bad dimension type");
+			return (-1);
 		}
 	}
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
@@ -570,7 +588,7 @@ ToolMouseMotion(void *self, SG_Vector pos, SG_Vector vel, int btn)
 		SK_NodeRedraw(node, skv);
 	}
 	if ((node = SK_ProximitySearch(sk, "Point", &pos, &vC, NULL)) != NULL &&
-	    SG_VectorDistancep(&pos, &vC) < skv->rSnap) {
+	    VecDistancep(&pos,&vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
 		SK_NodeRedraw(node, skv);
 	} else {
@@ -613,7 +631,7 @@ ToolMouseButtonDown(void *self, SG_Vector pos, int btn)
 	}
 
 	if ((n = SK_ProximitySearch(sk, "Point", &pos, &vC, NULL)) == NULL ||
-	    SG_VectorDistancep(&pos, &vC) >= skv->rSnap) {
+	    VecDistancep(&pos,&vC) >= skv->rSnap) {
 		if ((n = SK_ProximitySearch(sk, "Line", &pos, &vC, NULL))
 		    == NULL)
 			n = SK_ProximitySearch(sk, NULL, &pos, &vC, NULL);
@@ -628,26 +646,27 @@ ToolMouseButtonDown(void *self, SG_Vector pos, int btn)
 	} else if (t->curDim->n2 == NULL) {
 		if (n != NULL) {
 			t->curDim->n2 = n;
+		
+			if (SK_NodeOfClass(t->curDim->n1, "Line:*") &&
+			    SK_NodeOfClass(t->curDim->n2, "Line:*")) {
+				SK_Line *L1 = SKLINE(t->curDim->n1);
+				SK_Line *L2 = SKLINE(t->curDim->n2);
+
+				if (L1->p1 == L2->p1 || L1->p1 == L2->p2 ||
+				    L1->p2 == L2->p1 || L1->p2 == L2->p2) {
+					t->curDim->type =
+					    SK_DIMENSION_ANGLE_ENDPOINT;
+				} else {
+					t->curDim->type =
+					    SK_DIMENSION_ANGLE_INTERSECT;
+				}
+			} else {
+				t->curDim->type = SK_DIMENSION_DISTANCE;
+			}
 		} else {
 			goto undo;
 		}
 	} else {
-		printf("n1=%s, n2=%s\n", SK_NodeName(t->curDim->n1),
-		    SK_NodeName(t->curDim->n2));
-		if (SK_NodeOfClass(t->curDim->n1, "Line:*") &&
-		    SK_NodeOfClass(t->curDim->n2, "Line:*")) {
-			SK_Line *L1 = SKLINE(t->curDim->n1);
-			SK_Line *L2 = SKLINE(t->curDim->n2);
-
-			if (L1->p1 == L2->p1 || L1->p1 == L2->p2 ||
-			    L1->p2 == L2->p1 || L1->p2 == L2->p2) {
-				t->curDim->type = SK_DIMENSION_ANGLE_ENDPOINT;
-			} else {
-				t->curDim->type = SK_DIMENSION_ANGLE_INTERSECT;
-			}
-		} else {
-			t->curDim->type = SK_DIMENSION_DISTANCE;
-		}
 		if (AddDimConstraintDlg(t, sk, t->curDim) == -1)
 			goto undo;
 	}

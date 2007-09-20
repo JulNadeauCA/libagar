@@ -77,7 +77,7 @@ typedef struct sg_node {
 	SG_Matrix4 T;			/* Transformation from parent */
 	TAILQ_HEAD(,sg_node) cnodes;	/* Siblings */
 	TAILQ_ENTRY(sg_node) sgnodes;	/* Entry in parent list */
-	TAILQ_ENTRY(sg_node) nodes;	/* Entry in flat list */
+	TAILQ_ENTRY(sg_node) nodes;	/* Entry in global sg list */
 	TAILQ_ENTRY(sg_node) rnodes;	/* Used for quick inverse traversal */
 } SG_Node;
 
@@ -176,6 +176,34 @@ void		 SG_GetNodeTransform(void *, SG_Matrix *);
 void		 SG_GetNodeTransformInverse(void *, SG_Matrix *);
 SG_Vector	 SG_NodePos(void *);
 SG_Vector	 SG_NodeDir(void *);
+
+#define SG_Orbitv(n,p,v,a)	SG_MatrixOrbitv(&SGNODE(n)->T,(p),(v),(a))
+#define SG_Rotatev(n,a,v)	SG_MatrixRotatev(&SGNODE(n)->T,(a),(v))
+#define SG_RotateXv(n,a)	SG_MatrixRotateXv(&SGNODE(n)->T,(a))
+#define SG_RotateYv(n,a)	SG_MatrixRotateYv(&SGNODE(n)->T,(a))
+#define SG_RotateZv(n,a)	SG_MatrixRotateZv(&SGNODE(n)->T,(a))
+#define SG_RotateEul(n,p,y,r)	SG_MatrixRotateEul(&SGNODE(n)->T,(p),(y),(r))
+
+#define SG_Orbitvd(n,p,v,a)	SG_MatrixOrbitv(&SGNODE(n)->T,(p),(v),\
+				                SG_Radians(a))
+#define SG_Rotatevd(n,a,v)	SG_MatrixRotatev(&SGNODE(n)->T,SG_Radians(a),\
+				                 (v))
+#define SG_RotateXvd(n,a)	SG_MatrixRotateXv(&SGNODE(n)->T,SG_Radians(a))
+#define SG_RotateYvd(n,a)	SG_MatrixRotateYv(&SGNODE(n)->T,SG_Radians(a))
+#define SG_RotateZvd(n,a)	SG_MatrixRotateZv(&SGNODE(n)->T,SG_Radians(a))
+#define SG_RotateEuld(n,p,y,r)	SG_MatrixRotateEul(&SGNODE(n)->T, \
+				                   SG_Radians(p),\
+						   SG_Radians(y),\
+						   SG_Radians(r))
+
+#define SG_Translatev(n,v)	SG_MatrixTranslatev(&SGNODE(n)->T,(v))
+#define SG_Translate3(n,x,y,z)	SG_MatrixTranslate3(&SGNODE(n)->T,(x),(y),(z))
+#define SG_TranslateX(n,t)	SG_MatrixTranslateX(&SGNODE(n)->T,(t))
+#define SG_TranslateY(n,t)	SG_MatrixTranslateY(&SGNODE(n)->T,(t))
+#define SG_TranslateZ(n,t)	SG_MatrixTranslateZ(&SGNODE(n)->T,(t))
+#define SG_Scalev(n,v)		SG_MatrixScalev(&SGNODE(n)->T,(v))
+#define SG_UniScale(n,r)	SG_MatrixUniScale(&SGNODE(n)->T,(r))
+#define SG_Identity(n)		SG_MatrixIdentityv(&SGNODE(n)->T)
 __END_DECLS
 
 #include "close_code.h"

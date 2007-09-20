@@ -573,7 +573,7 @@ AddConstraint(AG_Event *event)
 	}
 	dprintf("%s: added %s constraint between %s and %s\n",
 	    OBJECT(sk)->name, skConstraintNames[type],
-	    SK_NodeName(nodes[0]), SK_NodeName(nodes[1]));
+	    nodes[0]->name, nodes[1]->name);
 
 	SK_Update(sk);
 }

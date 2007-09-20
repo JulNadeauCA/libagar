@@ -74,8 +74,6 @@ SK_CircleLoad(SK *sk, void *p, AG_Netbuf *buf)
 		AG_SetError("Missing center point (%s)", AG_GetError());
 		return (-1);
 	}
-	dprintf("%s: width=%f, r=%f, p=%s\n", SK_NodeName(circle),
-	    circle->width, circle->r, SK_NodeName(circle->p));
 	return (0);
 }
 
@@ -109,8 +107,8 @@ SK_CircleDraw(void *p, SK_View *skv)
 	SG_Begin(SG_LINE_LOOP);
 	SG_Color3v(&color);
 	for (i = 0.0; i < M_PI*2.0; i+=incr) {
-		glVertex2f(SG_Cos(i)*circle->r,
-		           SG_Sin(i)*circle->r);
+		glVertex2f(Cos(i)*circle->r,
+		           Sin(i)*circle->r);
 	}
 	SG_End();
 
@@ -137,11 +135,11 @@ SK_CircleProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 #if 0
 	SG_Vector c = SK_Pos(circle);
 	SG_Vector vRel = SG_VectorSubp(v, &c);
-	SG_Real theta = SG_Atan2(vRel.y, vRel.x);
-	SG_Real rRel = SG_Hypot(vRel.x, vRel.y);
+	SG_Real theta = Atan2(vRel.y, vRel.x);
+	SG_Real rRel = Hypot2(vRel.x, vRel.y);
 
-	vC->x = rRel*SG_Sin(theta);
-	vC->y = rRel*SG_Cos(theta);
+	vC->x = rRel*Sin(theta);
+	vC->y = rRel*Cos(theta);
 	return (SG_VectorDistancep(v, &c) - circle->r);
 #else
 	return (HUGE_VAL);

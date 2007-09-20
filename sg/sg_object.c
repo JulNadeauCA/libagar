@@ -773,11 +773,13 @@ static void
 DrawObjectSilouhette(SG_Object *so, SG_View *view)
 {
 	SG_Vector vCam = SG_CameraVector(view->cam);
-	int lit;
+	int lit, zbuf;
 	int i;
 		
 	if ((lit = glIsEnabled(GL_LIGHTING))) { glDisable(GL_LIGHTING); }
+	if ((zbuf = glIsEnabled(GL_DEPTH_TEST))) { glDisable(GL_DEPTH_TEST); }
 	glLineWidth(4.0);
+	glDisable(GL_DEPTH_TEST);
 	SG_Begin(SG_LINES);
 	SG_Color3ub(0, 0, 255);
 	
@@ -797,8 +799,8 @@ DrawObjectSilouhette(SG_Object *so, SG_View *view)
 				SG_Real dot2 = SG_VectorDot(vCam,
 				    SG_FacetNormal(so, e->oe->f));
 
-				if ((dot1 > 0.0 && dot2 < 0.0) ||
-				    (dot1 < 0.0 && dot2 > 0.0)) {
+				if ((dot1 >= 0.0 && dot2 <= 0.0) ||
+				    (dot1 <= 0.0 && dot2 >= 0.0)) {
 					SG_Vertex3v(&so->vtx[e->v].v);
 					SG_Vertex3v(&so->vtx[e->oe->v].v);
 				}
@@ -808,6 +810,7 @@ DrawObjectSilouhette(SG_Object *so, SG_View *view)
 	SG_End();
 
 	if (lit) { glEnable(GL_LIGHTING); }
+	if (zbuf) { glEnable(GL_DEPTH_TEST); }
 	glLineWidth(1.0);
 }
 

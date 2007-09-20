@@ -1,6 +1,10 @@
 /*	Public domain	*/
 
 __BEGIN_DECLS
+
+/*
+ * Rendering Primitives
+ */
 #define SG_Begin(p) glBegin(p)
 #define SG_End() glEnd()
 
@@ -121,6 +125,22 @@ __BEGIN_DECLS
 	SG_Color4v(&_vt->c); \
 	SG_Vertex3v(&_vt->v); \
 } while (0)
+
+#ifdef SG_DOUBLE_PRECISION
+#define SG_MultMatrixGL(A) glMultMatrixd(&(A)->m[0][0])
+#define SG_TranslateGL(x,y,z) glTranslated((x),(y),(z))
+#define SG_TranslateVecGL(v) glTranslated((v).x,(v).y,(v).z)
+#define SG_RotateGL(a,x,y,z) glRotated((a),(x),(y),(z))
+#define SG_RotateVecGL(a,v) glRotated((a),(v).x,(v).y,(v).z)
+#define SG_ScaleGL(x,y,z) glScaled((x),(y),(z))
+#else
+#define SG_MultMatrixGL(A) glMultMatrixf(&(A)->m[0][0])
+#define SG_TranslateGL(x,y,z) glTranslatef((x),(y),(z))
+#define SG_TranslateVecGL(v) glTranslatef((v).x,(v).y,(v).z)
+#define SG_RotateGL(a,x,y,z) glRotatef((a),(x),(y),(z))
+#define SG_RotateVecGL(a,v) glRotatef((a),(v).x,(v).y,(v).z)
+#define SG_ScaleGL(x,y,z) glScalef((x),(y),(z))
+#endif
 
 void SG_WireBox2(SG_Vector, SG_Vector);
 void SG_TessRect3(SG_Plane, SG_Real, SG_Real, SG_Real);

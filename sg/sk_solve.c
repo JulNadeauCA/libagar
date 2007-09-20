@@ -154,7 +154,6 @@ restart:
 static void
 UpdateConstraintStatus(SK *sk)
 {
-	char nodeName[SK_NODE_NAME_MAX];
 	Uint count = 0;
 	SK_Cluster *cl;
 	SK_Constraint *ct;
@@ -205,12 +204,12 @@ UpdateConstraintStatus(SK *sk)
 	SK_SetStatus(sk, SK_WELL_CONSTRAINED, _("Well-constrained"));
 	return;
 over:
-	SK_SetStatus(sk, SK_OVER_CONSTRAINED, _("Overconstrained (%s)"),
-	    SK_NodeNameCopy(node, nodeName, sizeof(nodeName)));
+	SK_SetStatus(sk, SK_OVER_CONSTRAINED,
+	    _("Overconstrained (%s)"), node->name);
 	return;
 under:
-	SK_SetStatus(sk, SK_UNDER_CONSTRAINED, _("Underconstrained (%s)"),
-	    SK_NodeNameCopy(node, nodeName, sizeof(nodeName)));
+	SK_SetStatus(sk, SK_UNDER_CONSTRAINED,
+	    _("Underconstrained (%s)"), node->name);
 }
 
 /*
