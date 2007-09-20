@@ -2,6 +2,7 @@
 /*	Public domain	*/
 
 #include <agar/core.h>
+#include <agar/sg.h>
 
 #include "agar-bench.h"
 
@@ -23,6 +24,7 @@ extern struct test_ops surfaceops_test;
 extern struct test_ops memops_test;
 extern struct test_ops misc_test;
 extern struct test_ops events_test;
+extern struct test_ops sg_test;
 
 struct test_ops *tests[] = {
 	&pixelops_test,
@@ -30,14 +32,15 @@ struct test_ops *tests[] = {
 	&surfaceops_test,
 	&memops_test,
 	&misc_test,
-	&events_test
+	&events_test,
+	&sg_test,
 };
 int ntests = sizeof(tests) / sizeof(tests[0]);
 
 #if (defined(i386) || defined(__i386__) || defined(__x86_64__)) && \
      defined(HAVE_RDTSC)
 #define USE_RDTSC
-#define RDTSC(t) asm __volatile__ (".byte 0x0f, 0x31; " : "=A" (t))
+#define RDTSC(t) __asm __volatile__ (".byte 0x0f, 0x31; " : "=A" (t))
 #endif
 
 static void
@@ -319,6 +322,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	AG_SetRefreshRate(fps);
+	SG_InitEngine();
 
 	MainWindow();
 
