@@ -43,12 +43,14 @@
 #include <config/have_opengl.h>
 #include <config/have_glu.h>
 #include <config/have_jpeg.h>
+#include <config/have_math.h>
 #include <config/have_pthreads.h>
 
 #include <config/sdl_libs.h>
 #include <config/sdl_cflags.h>
 
 #include <config/math_libs.h>
+#include <config/math_cflags.h>
 
 #ifdef HAVE_FREETYPE
 #include <config/freetype_libs.h>
