@@ -15,7 +15,8 @@ SUBDIR=	fixedres \
 SUBDIR+=sgview \
 	linear \
 	lorenz \
-	velcurve
+	velcurve \
+	catastrophe
 
 all: configure all-subdir
 clean: prereq clean-subdir
