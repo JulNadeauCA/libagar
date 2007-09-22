@@ -32,7 +32,7 @@
 #include <core/core.h>
 
 #include <gui/notebook.h>
-#include <gui/fspinbutton.h>
+#include <gui/numerical.h>
 #include <gui/radio.h>
 #include <gui/checkbox.h>
 #include <gui/box.h>
@@ -242,7 +242,7 @@ SG_CameraEdit(void *p, AG_Widget *box, SG_View *sgv)
 	SG_Camera *cam = p;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
-	AG_FSpinbutton *fsb;
+	AG_Numerical *num;
 	AG_Radio *rad;
 	AG_Checkbox *cb;
 	const char *rasModes[] = {
@@ -273,28 +273,26 @@ SG_CameraEdit(void *p, AG_Widget *box, SG_View *sgv)
 		
 		vbox = AG_BoxNewVert(sbox, AG_BOX_HFILL);
 		{
-			fsb = AG_FSpinbuttonNew(vbox, 0, NULL,
+			num = AG_NumericalNew(vbox, 0, "deg",
 			    _("Field of View: "));
-			SG_WidgetBindReal(fsb, "value", &cam->fovY);
-			AG_SetEvent(fsb, "fspinbutton-changed",
+			SG_WidgetBindReal(num, "value", &cam->fovY);
+			AG_SetEvent(num, "fspinbutton-changed",
 			    UpdateProjection, "%p", sgv);
 
-			fsb = AG_FSpinbuttonNew(vbox, 0, NULL,
+			num = AG_NumericalNew(vbox, 0, NULL,
 			    _("Aspect Ratio: "));
-			SG_WidgetBindReal(fsb, "value", &cam->aspect);
-			AG_SetEvent(fsb, "fspinbutton-changed",
+			SG_WidgetBindReal(num, "value", &cam->aspect);
+			AG_SetEvent(num, "fspinbutton-changed",
 			    UpdateProjection, "%p", sgv);
 
-			fsb = AG_FSpinbuttonNew(vbox, 0, NULL,
-			    _("Near Plane: "));
-			SG_WidgetBindReal(fsb, "value", &cam->zNear);
-			AG_SetEvent(fsb, "fspinbutton-changed",
+			num = AG_NumericalNew(vbox, 0, NULL, _("Near Plane: "));
+			SG_WidgetBindReal(num, "value", &cam->zNear);
+			AG_SetEvent(num, "fspinbutton-changed",
 			    UpdateProjection, "%p", sgv);
 
-			fsb = AG_FSpinbuttonNew(vbox, 0, NULL,
-			    _("Far Plane: "));
-			SG_WidgetBindReal(fsb, "value", &cam->zFar);
-			AG_SetEvent(fsb, "fspinbutton-changed",
+			num = AG_NumericalNew(vbox, 0, NULL, _("Far Plane: "));
+			SG_WidgetBindReal(num, "value", &cam->zFar);
+			AG_SetEvent(num, "fspinbutton-changed",
 			    UpdateProjection, "%p", sgv);
 		}
 	}
