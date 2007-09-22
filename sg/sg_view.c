@@ -133,6 +133,18 @@ ViewOverlay(AG_Event *event)
 }
 
 static void
+SetupLights(SG_View *sv, SG_Node *root)
+{
+	SG_Light *lt;
+
+	/* XXX TODO map into array */
+	SG_FOREACH_SUBNODE_CLASS(lt, root, sg_light, "Light:*") {
+		if (lt->light != GL_INVALID_ENUM)
+			SG_LightSetup(lt, sv);
+	}
+}
+
+static void
 ViewDraw(AG_Event *event)
 {
 	SG_View *sv = AG_PTR(1);
@@ -195,16 +207,12 @@ ViewDraw(AG_Event *event)
 
 	/* Enable the light sources. */
 	if ((sv->flags & SG_VIEW_NO_LIGHTING) == 0) {
-		SG_Light *lt;
-	
 		glPushAttrib(GL_LIGHTING_BIT);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
 
-		SG_FOREACH_NODE_CLASS(lt, sv->sg, sg_light, "Light:*") {
-			if (lt->light != GL_INVALID_ENUM)
-				SG_LightSetup(lt, sv);
-		}
+		/* XXX TODO array */
+		SetupLights(sv, SGNODE(sv->sg->root));
 		glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, 1.0);
 	}
 
@@ -327,7 +335,7 @@ PopupMenuOpen(SG_View *sv, int x, int y)
 		AG_MenuItem *mi;
 		SG_Camera *cam;
 
-		SG_FOREACH_NODE_CLASS(cam, sg, sg_camera, "Camera") {
+		SG_FOREACH_NODE_CLASS(cam, sg, sg_camera, "Camera:*") {
 			mi = AG_MenuAction(mCam, SGNODE(cam)->name, OBJ_ICON,
 			    ViewSwitchCamera, "%p,%p", sv, cam);
 			mi->state = (cam != sv->cam);
