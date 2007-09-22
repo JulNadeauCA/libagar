@@ -155,11 +155,15 @@ SG_Attached(AG_Event *event)
 	SG_Camera *cam;
 	SG_Light *lt0;
 
-	cam = SG_CameraNew(sg->root, "Camera0");
-	SG_Translate3(cam, 0.0, 0.0, 10.0);
+	if (SG_FindNode(sg, "Camera0") == NULL) {
+		cam = SG_CameraNew(sg->root, "Camera0");
+		SG_Translate3(cam, 0.0, 0.0, 10.0);
+	}
 	
-	lt0 = SG_LightNew(sg->root, "Light0");
-	SG_Translate3(lt0, 20.0, 20.0, 20.0);
+	if (SG_FindNode(sg, "Light0") == NULL) {
+		lt0 = SG_LightNew(sg->root, "Light0");
+		SG_Translate3(lt0, 20.0, 20.0, 20.0);
+	}
 }
 
 static void
