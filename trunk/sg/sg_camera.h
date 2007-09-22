@@ -10,12 +10,48 @@ struct sg_camera_polymode {
 	int cull;
 };
 
+typedef struct sg_camera_insn {
+	enum {
+		SG_CAMERA_CIRCULAR,	/* Circular path around node */
+		SG_CAMERA_ELLIPTIC,	/* Elliptic path around two nodes */
+		SG_CAMERA_FOLLOW,	/* Look at object and follow */
+	} type;
+	union {
+		struct {
+			SG_Node   *ci_center;	/* Center node */
+			SG_Vector  ci_axis[2];	/* Axis of rotation */
+			SG_Real    ci_angle[2];	/* Rotation increment */
+		} circular;
+		struct {
+			SG_Node   *ci_foci[2];	/* Focus nodes */
+			SG_Vector  ci_axis[2];	/* Axis of rotation */
+			SG_Real    ci_angle[2];	/* Rotation increment */
+		} elliptic;
+		struct {
+			SG_Node   *ci_node;	/* Node to follow */
+			SG_Real    ci_dMin;	/* Minimum distance */
+			SG_Real    ci_dMax;	/* Maximum distance */
+		} follow;
+	} data;
+#ifdef _AGAR_INTERNAL
+#define ci_circular_center	data.circular.ci_center
+#define ci_circular_axis	data.circular.ci_axis
+#define ci_circular_angle	data.circular.ci_angle
+#define ci_elliptic_foci	data.elliptic.ci_foci
+#define ci_elliptic_axis	data.elliptic.ci_axis
+#define ci_elliptic_angle	data.elliptic.ci_angle
+#define ci_follow_node		data.follow.ci_node
+#define ci_follow_dMin		data.follow.ci_dMin
+#define ci_follow_dMax		data.follow.ci_dMax
+#endif
+} SG_CameraInsn;
+
 typedef struct sg_camera {
 	struct sg_node node;
 	Uint flags;
-#define SG_CAMERA_ROT_I 0x01	/* Animate rotation around i (debug) */
-#define SG_CAMERA_ROT_J 0x02	/* Animate rotation around j (debug) */
-#define SG_CAMERA_ROT_K 0x04	/* Animate rotation around k (debug) */
+#define SG_CAMERA_ROT_I 0x01	/* Artificial rotation around i (debug) */
+#define SG_CAMERA_ROT_J 0x02	/* Artificial rotation around j (debug) */
+#define SG_CAMERA_ROT_K 0x04	/* Artificial rotation around k (debug) */
 
 	enum sg_camera_pmode {
 		SG_CAMERA_PERSPECTIVE,		/* Perspective projection */
@@ -32,6 +68,7 @@ typedef struct sg_camera {
 #ifdef DEBUG
 	SG_Real rotSpeed;
 #endif
+	SG_CameraInsn insn;
 } SG_Camera;
 
 __BEGIN_DECLS
