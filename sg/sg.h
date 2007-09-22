@@ -109,7 +109,7 @@ typedef struct sg {
 			continue;					\
 		} else
 #define SG_FOREACH_SUBNODE(node, pnode, ntype)				\
-	for((node) = (struct ntype *)TAILQ_FIRST(&(pnode)->nodes);	\
+	for((node) = (struct ntype *)TAILQ_FIRST(&(pnode)->cnodes);	\
 	    (node) != (struct ntype *)TAILQ_END(&(pnode)->cnodes);	\
 	    (node) = (struct ntype *)TAILQ_NEXT(SGNODE(node),sgnodes))
 #define SG_FOREACH_SUBNODE_CLASS(node, pnode, ntype, cn)		\
