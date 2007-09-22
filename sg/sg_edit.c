@@ -203,22 +203,28 @@ tryname:
 }
 
 static void
-ImportFromPLY(AG_Event *event)
+ImportMeshFromPLY(AG_Event *event)
 {
 	char name[SG_NODE_NAME_MAX];
 	SG *sg = AG_PTR(1);
 	char *path = AG_STRING(2);
 	SG_Object *so;
+	int num = 0;
 
-	snprintf(name, sizeof(name), "PLY_%s", path);
+tryname:
+	snprintf(name, sizeof(name), "Mesh%i", num++);
+	if (SG_FindNode(sg, name) != NULL) {
+		goto tryname;
+	}
 	so = SG_ObjectNew(sg->root, name);
 	if (SG_ObjectLoadPLY(so, path) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "Loading %s: %s", path, AG_GetError());
+		/* XXX */
 	}
 }
 
 static void
-ImportObjectDlg(AG_Event *event)
+ImportMeshDlg(AG_Event *event)
 {
 	SG *sg = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
@@ -229,7 +235,7 @@ ImportObjectDlg(AG_Event *event)
 	dlg = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|
 	                         AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(dlg, _("Stanford .PLY Format"), "*.ply",
-	    ImportFromPLY, "%p", sg);
+	    ImportMeshFromPLY, "%p", sg);
 	
 	AG_WindowShow(win);
 }
@@ -407,7 +413,7 @@ SG_Edit(void *p)
 	pitem = AG_MenuAddItem(menu, _("File"));
 	{
 		AG_MenuAction(pitem, _("Import mesh..."), CLOSE_ICON,
-		    ImportObjectDlg, "%p,%p", sg, win);
+		    ImportMeshDlg, "%p,%p", sg, win);
 		AG_MenuSeparator(pitem);
 		AG_MenuActionKb(pitem, _("Close scene"), CLOSE_ICON,
 		    SDLK_w, KMOD_CTRL,
