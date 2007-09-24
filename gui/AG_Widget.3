@@ -90,6 +90,12 @@ section of the widget's manual page.
 .Pp
 .Ft "AG_Widget *"
 .Fn AG_WidgetFind "AG_Display *view" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_WidgetSizeReq "AG_Widget *widget" "AG_SizeReq *req"
+.Pp
+.Ft "int"
+.Fn AG_WidgetSizeAlloc "AG_Widget *widget" "AG_SizeAlloc *alloc"
 .nr nS 0
 The
 .Fn AG_WidgetInit
@@ -177,10 +183,20 @@ is a pointer to the following structure:
 .Pp
 .Bd -literal
 typedef struct ag_widget_ops {
-	const AG_ObjectOps ops;                 /* Object operations */
-	void (*draw)(void *p);                  /* Rendering routine */
-	void (*scale)(void *p, int w, int h);   /* Size request routine */
+	const AG_ObjectOps ops;
+	void (*draw)(void *p);
+	void (*size_request)(void *, AG_SizeReq *);
+	int  (*size_allocate)(void *, const AG_SizeAlloc *);
 } AG_WidgetOps;
+
+typedef struct ag_size_req {
+	int w, h;			/* Requested geometry in pixels */
+} AG_SizeReq;
+
+typedef struct ag_size_alloc {
+	int w, h;			/* Allocated geometry in pixels */
+	int x, y;			/* Allocated position in pixels */
+} AG_SizeAlloc;
 .Ed
 .Pp
 The
@@ -191,68 +207,54 @@ operation (if not NULL) is responsible for rendering the widget
 below for functions useful in rendering).
 If the current display is in OpenGL mode, the
 .Va draw
-function is able to perform OpenGL calls, although OpenGL code is rarely
-seen in typical widgets, since they generally use the functions described
-in the 
+function of a widget can issue GL calls, but it is not recommended.
+Widgets should instead use the functions described in the
 .Dq RENDERING AND PRIMITIVES
-section, which all provide their own OpenGL/SDL abstraction.
-OpenGL applications
-tend to use
+section below.
+When an OpenGL rendering context is needed,
 .Xr AG_GLView 3
-and
-.Xr SG_View 3
-where an OpenGL context is needed.
-.Pp
-It is important to note that most GLs are not thread-safe, so OpenGL
-calls in Agar are protected by a mutex (via
-.Xr AG_LockGL 3
-and
-.Xr AG_UnlockGL 3 ) .
-It is not necessary, however, for widget
-.Va draw
-operations to acquire this mutex since it is done by the event loop.
+(or the higher-level
+.Xr SG_View 3 )
+widget should be used.
 .Pp
 The
-.Va scale
-operation requests that the widget sizes (or resizes) itself to the
-given dimensions (see
-.Dq GEOMETRY MANAGEMENT
-below for more details).
+.Va size_request
+option queries the widget for an initial, preferred geometry, without any
+guarantee that the request will be satisfied.
+For example, a
+.Xr AG_Label 3
+widget might return the expected size in pixels of the rendered label's text.
+.Pp
+The
+.Va size_allocate
+function notifies the widget that it has been allocated a new size or position
+within its parent.
+The widget is not allowed to modify the allocation, but if
+.Va size_allocate
+returns -1, the special flag
+.Dv AG_WIDGET_UNDERSIZE
+is automatically set, preventing
+.Va draw
+from being called.
 .Pp
 The
 .Fn AG_WidgetFind
 function searches for a given widget by name, given an absolute path,
 and returns a pointer to the widget or NULL.
-.Sh GEOMETRY MANAGEMENT
+.Pp
 The
-.Va scale
-operation is invoked to set the size of a widget.
-With
-.Fa w ,
-.Fa h
-arguments of -1,
-.Va scale
-is expected to choose a default, minimum geometry sufficient to display the
-widget aesthetically.
-.Pp
-Containers set the
-.Va w ,
-.Va h
-geometries of their children prior to invoking their
-.Va scale
-operation (with arguments of
-.Va w ,
-.Va h ) .
-Containers also set the
-.Va x ,
-.Va y
-coordinates of their children but this does not need to be done with
-.Fa w ,
-.Fa h
-arguments of -1.
-.Pp
-Widgets must not make any assumptions about their own position inside their
-parent container.
+.Fn AG_WidgetSizeReq
+function invokes the
+.Va size_request
+operation of the widget and returns its size requisition into
+.Fa req .
+.Fn AG_WidgetSizeAlloc
+allocates the given position and geometry of the widget.
+These functions are generally used in the
+.Va size_request
+and
+.Va size_allocate
+functions of container widgets.
 .Sh INPUT STATE
 .Pp
 The input state of a widget determines whether the user is allowed to
