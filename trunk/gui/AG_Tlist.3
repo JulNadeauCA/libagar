@@ -217,7 +217,10 @@ value of 0 to indicate deselection and 1 to indicate selection.
 .Fn AG_TlistSelectedItem "AG_Tlist *tlist"
 .Pp
 .Ft "void *"
-.Fn AG_TlistSelectedPtr "AG_Tlist *tlist"
+.Fn AG_TlistSelectedItemPtr "AG_Tlist *tlist"
+.Pp
+.Ft "void *"
+.Fn AG_TLIST_ITEM(idx)
 .Pp
 .Ft "int"
 .Fn AG_TlistFindPtr "AG_Tlist *tlist" "void **p"
@@ -319,6 +322,14 @@ function returns the user pointer of the first selected item, or NULL if
 there is no selected item.
 It is not possible to distinguish a non-existent selection from an actual
 selection with a NULL user pointer using this function.
+.Pp
+In event handler context, the
+.Fn AG_TLIST_ITEM
+macro is a shortcut for
+.Fn AG_TlistSelectedItemPtr
+on item
+.Fa n
+from the event stack.
 .Pp
 The
 .Fn AG_TlistFindPtr
