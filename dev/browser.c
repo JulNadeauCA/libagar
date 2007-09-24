@@ -53,6 +53,7 @@
 #endif
 
 #include <string.h>
+#include <ctype.h>
 
 #include "dev.h"
 
