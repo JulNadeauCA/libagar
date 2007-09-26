@@ -28,6 +28,14 @@
 # include <agar/config/have_nonnull_attribute.h>
 # define _AGAR_HAVE_NONNULL_ATTRIBUTE_
 #endif
+#ifndef HAVE_PACKED_ATTRIBUTE
+# include <agar/config/have_packed_attribute.h>
+# define _AGAR_HAVE_PACKED_ATTRIBUTE_
+#endif
+#ifndef HAVE_ALIGNED_ATTRIBUTE
+# include <agar/config/have_aligned_attribute.h>
+# define _AGAR_HAVE_ALIGNED_ATTRIBUTE_
+#endif
 
 #include <agar/core/threads.h>	/* For thread types in headers */
 
@@ -57,6 +65,16 @@
 #else
 #define NONNULL_ATTRIBUTE(a)
 #endif
+#ifdef HAVE_PACKED_ATTRIBUTE
+#define PACKED_ATTRIBUTE __attribute__((__packed__))
+#else
+#define PACKED_ATTRIBUTE
+#endif
+#ifdef HAVE_ALIGNED_ATTRIBUTE
+#define ALIGNED_ATTRIBUTE(a) __attribute__((__aligned__ (a)))
+#else
+#define ALIGNED_ATTRIBUTE(a)
+#endif
 
 #if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
 # if defined(__cplusplus)
@@ -74,16 +92,10 @@
 #define _AGAR_DEFINED_MAXPATHLEN_
 #endif
 
-#ifdef WIN32
-#define AG_PATHSEPC '\\'
-#define AG_PATHSEP "\\"
-#else
-#define AG_PATHSEPC '/'
-#define AG_PATHSEP "/"
-#endif
-
 #ifdef _AGAR_HAVE_SYS_QUEUE_H
 #include <sys/queue.h>
 #else
 #include <agar/compat/queue.h>
 #endif
+
+#include <agar/core/cpuinfo.h>	/* For agCPU structure */
