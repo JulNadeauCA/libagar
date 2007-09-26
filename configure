@@ -134,9 +134,13 @@ echo "    --with-gettext                 Use gettext tools (msgmerge, ...) [chec
 echo "    --with-manpages                Manual pages (-mdoc) [yes]"
 echo "    --with-docs                    Printable docs (-me/tbl/eqn/pic/refer) [no]"
 echo "    --enable-debug                 Include debugging code [no]"
-echo "    --with-freetype                Use FreeType font engine [default: check]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --with-jpeg                    JPEG screenshot support [default: no]"
+echo "    --with-freetype                GUI: Enable FreeType support [default: check]"
+echo "    --with-ode                     SG: ODE physics interface [default: check]"
+echo "    --with-cg                      SG: CG shader support [default: check]"
+echo "    --with-sse                     SSE/SSE2/SSE3 optimizations [default: check]"
+echo "    --with-altivec                 AltiVec optimizations [default: check]"
 echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-utf8                  Unicode text/input support [default: no]"
 echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
@@ -523,6 +527,72 @@ HAVE_NONNULL_ATTRIBUTE="no"
 echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >> Makefile.config
 echo "#undef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
 fi;
+echo -n "checking __aligned__ attribute..."
+echo -n "checking __aligned__ attribute..." >> config.log
+cat << EOT > conftest.c
+int main(int argc, char *argv[])
+{
+	struct s1 { int x,y,z; } __attribute__ ((aligned(16)));
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_ALIGNED_ATTRIBUTE="yes"
+echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >> Makefile.config
+echo "#ifndef HAVE_ALIGNED_ATTRIBUTE" > config/have_aligned_attribute.h
+echo "#define HAVE_ALIGNED_ATTRIBUTE \"$HAVE_ALIGNED_ATTRIBUTE\"" >> config/have_aligned_attribute.h
+echo "#endif" >> config/have_aligned_attribute.h
+else
+echo "no"
+echo "no" >> config.log
+HAVE_ALIGNED_ATTRIBUTE="no"
+echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >> Makefile.config
+echo "#undef HAVE_ALIGNED_ATTRIBUTE" > config/have_aligned_attribute.h
+fi;
+echo -n "checking __packed__ attribute..."
+echo -n "checking __packed__ attribute..." >> config.log
+cat << EOT > conftest.c
+int main(int argc, char *argv[])
+{
+	struct s1 { char c; int x,y,z; } __attribute__ ((packed));
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_PACKED_ATTRIBUTE="yes"
+echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >> Makefile.config
+echo "#ifndef HAVE_PACKED_ATTRIBUTE" > config/have_packed_attribute.h
+echo "#define HAVE_PACKED_ATTRIBUTE \"$HAVE_PACKED_ATTRIBUTE\"" >> config/have_packed_attribute.h
+echo "#endif" >> config/have_packed_attribute.h
+else
+echo "no"
+echo "no" >> config.log
+HAVE_PACKED_ATTRIBUTE="no"
+echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >> Makefile.config
+echo "#undef HAVE_PACKED_ATTRIBUTE" > config/have_packed_attribute.h
+fi;
 echo -n "checking for long double..."
 echo -n "checking for long double..." >> config.log
 cat << EOT > conftest.c
@@ -874,14 +944,10 @@ fi;
 fi;
 rm -f conftest conftest.c
 if [ "${free_null_noop}" = "yes" ]; then
-echo "yes"
-echo "yes" >> config.log
 echo "#ifndef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
 echo "#define FREE_NULL_IS_A_NOOP \"$FREE_NULL_IS_A_NOOP\"" >> config/free_null_is_a_noop.h
 echo "#endif" >> config/free_null_is_a_noop.h
 else
-echo "no"
-echo "no" >> config.log
 echo "#undef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
 fi;
 echo -n "checking for the C math library..."
@@ -1977,6 +2043,85 @@ else
 echo "#undef X11_CFLAGS" > config/x11_cflags.h
 echo "#undef X11_LIBS" > config/x11_libs.h
 fi;
+echo -n "checking for the signal() function..."
+echo -n "checking for the signal() function..." >> config.log
+cat << EOT > conftest.c
+#include <signal.h>
+
+void
+sighandler(int sig)
+{
+}
+
+int
+main(int argc, char *argv[])
+{
+	signal(SIGTERM, sighandler);
+	signal(SIGILL, sighandler);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SIGNAL" > config/have_signal.h
+echo "#define HAVE_SIGNAL" $HAVE_SIGNAL >> config/have_signal.h
+echo "#endif" >> config/have_signal.h
+
+	HAVE_SIGNAL="yes"
+	echo "yes"
+else
+    echo "#undef HAVE_SIGNAL" > config/have_signal.h
+
+	HAVE_SIGNAL="no"
+	echo "no"
+fi
+echo -n "checking for setjmp() and longjmp()..."
+echo -n "checking for setjmp() and longjmp()..." >> config.log
+cat << EOT > conftest.c
+#include <setjmp.h>
+
+jmp_buf jmpbuf;
+
+int
+main(int argc, char *argv[])
+{
+	longjmp(jmpbuf, 1);
+	setjmp(jmpbuf);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+	echo "ok" >> config.log
+	echo "#ifndef HAVE_SETJMP" > config/have_setjmp.h
+echo "#define HAVE_SETJMP" $HAVE_SETJMP >> config/have_setjmp.h
+echo "#endif" >> config/have_setjmp.h
+
+	HAVE_SETJMP="yes"
+	echo "yes"
+else
+    echo "#undef HAVE_SETJMP" > config/have_setjmp.h
+
+	HAVE_SETJMP="no"
+	echo "no"
+fi
 CFLAGS="$CFLAGS -I$SRC -D_AGAR_INTERNAL -D_BSD_SOURCE"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
 if [ "${enable_warnings}" = "yes" ]
@@ -2576,6 +2721,469 @@ echo "#undef HAVE_JPEG" > config/have_jpeg.h
 	fi
 else
 echo "#undef HAVE_JPEG" > config/have_jpeg.h
+fi
+if [ "${with_ode}" != "no" ]
+ then
+echo -n "checking for ODE (http://www.ode.org/)..."
+echo -n "checking for ODE (http://www.ode.org/)..." >> config.log
+ODE_VERSION=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/ode-config" ]; then
+		ODE_VERSION=`${path}/ode-config --version`
+	fi
+done
+ODE_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/ode-config" ]; then
+		ODE_CFLAGS=`${path}/ode-config --cflags`
+	fi
+done
+ODE_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/ode-config" ]; then
+		ODE_LIBS=`${path}/ode-config --libs`
+	fi
+done
+if [ "${ODE_VERSION}" != "" ]; then
+echo "yes"
+echo "yes" >> config.log
+echo -n "checking whether ODE works..."
+echo -n "checking whether ODE works..." >> config.log
+cat << EOT > conftest.c
+#include <ode/ode.h>
+
+int main(int argc, char *argv[]) {
+	dWorldID world;
+	dJointGroupID jgroup;
+
+	world = dWorldCreate();
+	jgroup = dJointGroupCreate(10000);
+	dWorldSetGravity(world, 0, 0, -0.5);
+
+	dJointGroupDestroy(jgroup);
+	dWorldDestroy(world);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o conftest conftest.c ${ODE_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o conftest conftest.c ${ODE_LIBS} 2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_ODE="yes"
+echo "HAVE_ODE=$HAVE_ODE" >> Makefile.config
+echo "#ifndef HAVE_ODE" > config/have_ode.h
+echo "#define HAVE_ODE \"$HAVE_ODE\"" >> config/have_ode.h
+echo "#endif" >> config/have_ode.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_ODE="no"
+echo "HAVE_ODE=$HAVE_ODE" >> Makefile.config
+echo "#undef HAVE_ODE" > config/have_ode.h
+fi;
+rm -f conftest conftest.c
+if [ "${HAVE_ODE}" != "" ]; then
+echo "ODE_CFLAGS=$ODE_CFLAGS" >> Makefile.config
+echo "ODE_LIBS=$ODE_LIBS" >> Makefile.config
+echo "#ifndef ODE_CFLAGS" > config/ode_cflags.h
+echo "#define ODE_CFLAGS \"$ODE_CFLAGS\"" >> config/ode_cflags.h
+echo "#endif" >> config/ode_cflags.h
+echo "#ifndef ODE_LIBS" > config/ode_libs.h
+echo "#define ODE_LIBS \"$ODE_LIBS\"" >> config/ode_libs.h
+echo "#endif" >> config/ode_libs.h
+fi;
+fi;
+	if [ "${HAVE_ODE}" != "yes" ]
+ then
+		if [ "${with_ode}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-ode was requested, but ODE was not"
+			echo "* found on this system."
+			echo "*"
+			exit 1
+		else
+echo "#undef HAVE_ODE" > config/have_ode.h
+		fi
+	fi
+else
+echo "#undef HAVE_ODE" > config/have_ode.h
+fi
+if [ "${with_cg}" != "no" ]
+ then
+echo -n "checking for Cg (http://developer.nvidia.com/object/cg_toolkit.html)..."
+echo -n "checking for Cg (http://developer.nvidia.com/object/cg_toolkit.html)..." >> config.log
+CG_CFLAGS=""
+CG_LIBS=""
+if [ -d "/usr/include/Cg" ]; then
+CG_CFLAGS="-I/usr/include"
+fi;
+if [ -d "/usr/local/include/Cg" ]; then
+CG_CFLAGS="-I/usr/local/include"
+fi;
+if [ -d "/usr/Cg/include/Cg" ]; then
+CG_CFLAGS="-I/usr/Cg/include"
+fi;
+if [ -d "/usr/local/Cg/include/Cg" ]; then
+CG_CFLAGS="-I/usr/local/Cg/include"
+fi;
+if [ -d "/usr/X11R6/include/Cg" ]; then
+CG_CFLAGS="-I/usr/X11R6/include"
+fi;
+if [ -d "/usr/X11R6/Cg/include/Cg" ]; then
+CG_CFLAGS="-I/usr/X11R6/Cg/include"
+fi;
+if [ "$SYSTEM" = "Darwin" ]; then
+CG_LIBS="-F/System/Library/Frameworks -framework Cg"
+elif [ "$SYSTEM" = "Linux" ]; then
+if [ "$MACHINE" = "x86_64" ]; then
+CG_LIBS="-L/usr/X11R6/lib64 -L/usr/lib64"
+else
+CG_LIBS="-L/usr/X11R6/lib"
+fi;
+CG_LIBS="${CG_LIBS} -lCgGL -lCg -lstdc++"
+else
+CG_LIBS="-lCgGL -lCg -lstdc++"
+fi;
+cat << EOT > conftest.c
+#include <Cg/cg.h>
+#include <Cg/cgGL.h>
+
+CGcontext context;
+CGeffect effect;
+CGtechnique technique;
+
+int main(int argc, char *argv[]) {
+	context = cgCreateContext();
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CG_CFLAGS} ${OPENGL_CFLAGS} ${PTHREADS_CFLAGS} -o conftest conftest.c ${CG_LIBS} ${OPENGL_LIBS} ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CG_CFLAGS} ${OPENGL_CFLAGS} ${PTHREADS_CFLAGS} -o conftest conftest.c ${CG_LIBS} ${OPENGL_LIBS} ${PTHREADS_LIBS} 2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_CG="yes"
+echo "HAVE_CG=$HAVE_CG" >> Makefile.config
+echo "#ifndef HAVE_CG" > config/have_cg.h
+echo "#define HAVE_CG \"$HAVE_CG\"" >> config/have_cg.h
+echo "#endif" >> config/have_cg.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_CG="no"
+echo "HAVE_CG=$HAVE_CG" >> Makefile.config
+echo "#undef HAVE_CG" > config/have_cg.h
+fi;
+rm -f conftest conftest.c
+if [ "${HAVE_CG}" = "yes" ]; then
+echo "CG_CFLAGS=$CG_CFLAGS" >> Makefile.config
+echo "CG_LIBS=$CG_LIBS" >> Makefile.config
+echo "#ifndef CG_CFLAGS" > config/cg_cflags.h
+echo "#define CG_CFLAGS \"$CG_CFLAGS\"" >> config/cg_cflags.h
+echo "#endif" >> config/cg_cflags.h
+echo "#ifndef CG_LIBS" > config/cg_libs.h
+echo "#define CG_LIBS \"$CG_LIBS\"" >> config/cg_libs.h
+echo "#endif" >> config/cg_libs.h
+fi;
+	if [ "${HAVE_CG}" != "yes" ]
+ then
+		if [ "${with_cg}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-cg was requested, but Cg was not"
+			echo "* found on this system."
+			echo "*"
+			exit 1
+		else
+echo "#undef HAVE_CG" > config/have_cg.h
+		fi
+	fi
+else
+echo "#undef HAVE_CG" > config/have_cg.h
+fi
+if [ "${with_sse}" != "no" ]
+ then
+echo -n "checking for SSE extensions..."
+echo -n "checking for SSE extensions..." >> config.log
+SSE_CFLAGS=-msse
+cat << EOT > conftest.c
+#include <xmmintrin.h>
+
+int
+main(int argc, char *argv[])
+{
+	float a[4] __attribute__ ((aligned(16)));
+	float b[4] __attribute__ ((aligned(16)));
+	float rv;
+	__m128 vec1, vec2;
+
+	vec1 = _mm_load_ps(a);
+	vec2 = _mm_load_ps(b);
+	vec1 = _mm_mul_ps(vec1, vec2);
+	_mm_store_ss(&rv, vec1);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o conftest conftest.c  2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_SSE="yes"
+echo "HAVE_SSE=$HAVE_SSE" >> Makefile.config
+echo "#ifndef HAVE_SSE" > config/have_sse.h
+echo "#define HAVE_SSE \"$HAVE_SSE\"" >> config/have_sse.h
+echo "#endif" >> config/have_sse.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_SSE="no"
+echo "HAVE_SSE=$HAVE_SSE" >> Makefile.config
+echo "#undef HAVE_SSE" > config/have_sse.h
+fi;
+rm -f conftest conftest.c
+if [ "${HAVE_SSE}" = "yes" ]; then
+echo "SSE_CFLAGS=$SSE_CFLAGS" >> Makefile.config
+echo "#ifndef SSE_CFLAGS" > config/sse_cflags.h
+echo "#define SSE_CFLAGS \"$SSE_CFLAGS\"" >> config/sse_cflags.h
+echo "#endif" >> config/sse_cflags.h
+else
+echo "#undef SSE_CFLAGS" > config/sse_cflags.h
+fi;
+echo -n "checking for SSE2 extensions..."
+echo -n "checking for SSE2 extensions..." >> config.log
+SSE2_CFLAGS=-msse2
+cat << EOT > conftest.c
+#include <emmintrin.h>
+
+int
+main(int argc, char *argv[])
+{
+	double a[4] __attribute__ ((aligned(16)));
+	double b[4] __attribute__ ((aligned(16)));
+	double rv;
+	__m128d vec1, vec2;
+
+	vec1 = _mm_load_pd(a);
+	vec2 = _mm_load_pd(b);
+	vec1 = _mm_xor_pd(vec1, vec2);
+	_mm_store_sd(&rv, vec1);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o conftest conftest.c  2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_SSE2="yes"
+echo "HAVE_SSE2=$HAVE_SSE2" >> Makefile.config
+echo "#ifndef HAVE_SSE2" > config/have_sse2.h
+echo "#define HAVE_SSE2 \"$HAVE_SSE2\"" >> config/have_sse2.h
+echo "#endif" >> config/have_sse2.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_SSE2="no"
+echo "HAVE_SSE2=$HAVE_SSE2" >> Makefile.config
+echo "#undef HAVE_SSE2" > config/have_sse2.h
+fi;
+rm -f conftest conftest.c
+if [ "${HAVE_SSE2}" = "yes" ]; then
+echo "SSE2_CFLAGS=$SSE2_CFLAGS" >> Makefile.config
+echo "#ifndef SSE2_CFLAGS" > config/sse2_cflags.h
+echo "#define SSE2_CFLAGS \"$SSE2_CFLAGS\"" >> config/sse2_cflags.h
+echo "#endif" >> config/sse2_cflags.h
+else
+echo "#undef SSE2_CFLAGS" > config/sse2_cflags.h
+fi;
+echo -n "checking for SSE3 extensions..."
+echo -n "checking for SSE3 extensions..." >> config.log
+SSE3_CFLAGS=-msse3
+cat << EOT > conftest.c
+#include <pmmintrin.h>
+
+int
+main(int argc, char *argv[])
+{
+	float a[4] __attribute__ ((aligned(16)));
+	float b[4] __attribute__ ((aligned(16)));
+	__m128 vec1, vec2;
+	float rv;
+
+	vec1 = _mm_load_ps(a);
+	vec2 = _mm_load_ps(b);
+	vec1 = _mm_mul_ps(vec1, vec2);
+	vec1 = _mm_hadd_ps(vec1, vec1);
+	vec1 = _mm_hadd_ps(vec1, vec1);
+	_mm_store_ss(&rv, vec1);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o conftest conftest.c  2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_SSE3="yes"
+echo "HAVE_SSE3=$HAVE_SSE3" >> Makefile.config
+echo "#ifndef HAVE_SSE3" > config/have_sse3.h
+echo "#define HAVE_SSE3 \"$HAVE_SSE3\"" >> config/have_sse3.h
+echo "#endif" >> config/have_sse3.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_SSE3="no"
+echo "HAVE_SSE3=$HAVE_SSE3" >> Makefile.config
+echo "#undef HAVE_SSE3" > config/have_sse3.h
+fi;
+rm -f conftest conftest.c
+if [ "${HAVE_SSE3}" = "yes" ]; then
+echo "SSE3_CFLAGS=$SSE3_CFLAGS" >> Makefile.config
+echo "#ifndef SSE3_CFLAGS" > config/sse3_cflags.h
+echo "#define SSE3_CFLAGS \"$SSE3_CFLAGS\"" >> config/sse3_cflags.h
+echo "#endif" >> config/sse3_cflags.h
+else
+echo "#undef SSE3_CFLAGS" > config/sse3_cflags.h
+fi;
+	if [ "${HAVE_SSE}" != "yes" ]
+ then
+		if [ "${with_sse}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-sse was requested, but SSE intrinsics"
+			echo "* not supported by compiler"
+			echo "*"
+			exit 1
+		else
+echo "#undef HAVE_SSE" > config/have_sse.h
+		fi
+	fi
+else
+echo "#undef HAVE_SSE" > config/have_sse.h
+fi
+if [ "${with_altivec}" != "no" ]
+ then
+echo -n "checking for AltiVec (-maltivec)..."
+echo -n "checking for AltiVec (-maltivec)..." >> config.log
+ALTIVEC_CFLAGS=-maltivec
+cat << EOT > conftest.c
+#include <altivec.h>
+
+int
+main(int argc, char *argv[])
+{
+	vector unsigned int v;
+
+	v = vec_splat_u32(0);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c  2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_ALTIVEC="yes"
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
+echo "#ifndef HAVE_ALTIVEC" > config/have_altivec.h
+echo "#define HAVE_ALTIVEC \"$HAVE_ALTIVEC\"" >> config/have_altivec.h
+echo "#endif" >> config/have_altivec.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_ALTIVEC="no"
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
+echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
+fi;
+rm -f conftest conftest.c
+if [ "${HAVE_ALTIVEC}" = "yes" ]; then
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >> Makefile.config
+echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
+echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
+echo "#endif" >> config/altivec_cflags.h
+else
+echo "#undef ALTIVEC_CFLAGS" > config/altivec_cflags.h
+echo -n "checking for AltiVec (-faltivec)..."
+echo -n "checking for AltiVec (-faltivec)..." >> config.log
+ALTIVEC_CFLAGS=-faltivec
+cat << EOT > conftest.c
+#include <altivec.h>
+
+int
+main(int argc, char *argv[])
+{
+	vector unsigned int v;
+
+	v = vec_splat_u32(0);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c  2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_ALTIVEC="yes"
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
+echo "#ifndef HAVE_ALTIVEC" > config/have_altivec.h
+echo "#define HAVE_ALTIVEC \"$HAVE_ALTIVEC\"" >> config/have_altivec.h
+echo "#endif" >> config/have_altivec.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_ALTIVEC="no"
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
+echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
+fi;
+rm -f conftest conftest.c
+if [ "${HAVE_ALTIVEC}" = "yes" ]; then
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >> Makefile.config
+echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
+echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
+echo "#endif" >> config/altivec_cflags.h
+else
+echo "#undef ALTIVEC_CFLAGS" > config/altivec_cflags.h
+fi;
+fi;
+	if [ "${HAVE_ALTIVEC}" != "yes" ]
+ then
+		if [ "${with_altivec}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-altivec was requested, but AltiVec"
+			echo "* is not supported by compiler"
+			echo "*"
+			exit 1
+		else
+echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
+		fi
+	fi
+else
+echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
 fi
 if [ "${enable_network}" != "no" ]
  then
