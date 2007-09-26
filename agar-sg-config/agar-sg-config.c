@@ -1,8 +1,5 @@
-/*	$Csoft: agar-config.c,v 1.18 2005/09/18 04:59:10 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +30,10 @@
 #include <config/libdir.h>
 #include <config/sharedir.h>
 
+#include <config/have_cg.h>
+#include <config/cg_cflags.h>
+#include <config/cg_libs.h>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -56,10 +57,16 @@ main(int argc, char *argv[])
 			printf("%s\n", SHAREDIR);
 		} else if (strcmp(argv[i], "--cflags") == 0) {
 			printf("-I%s ", INCLDIR);
+#ifdef HAVE_CG
+			printf("%s", CG_CFLAGS);
+#endif
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
-			printf("-lag_sg -lag_sgimport");
+			printf("-lag_sg -lag_sgimport ");
+#ifdef HAVE_CG
+			printf("%s", CG_LIBS);
+#endif
 			printf("\n");
 		}
 	}
