@@ -45,6 +45,7 @@ static const struct dev_tool_ent {
 } devTools[] = {
 #if defined(DEBUG)
 	{ N_("Performance Graph"),	AG_EventShowPerfGraph },
+	{ N_("CPU Information"),	DEV_CPUInfo },
 #endif
 #if defined(NETWORK) && defined(THREADS) && defined(HAVE_JPEG)
 	{ N_("Screenshot Uploader"),	DEV_ScreenshotUploader },

@@ -33,6 +33,7 @@ AG_Window *DEV_TimerInspector(void);
 AG_Window *DEV_UnicodeBrowser(void);
 AG_Window *DEV_DisplaySettings(void);
 AG_Window *DEV_GuiDebugger(void);
+AG_Window *DEV_CPUInfo(void);
 
 AG_Window *DEV_Browser(void);
 void	   DEV_BrowserInit(void);
