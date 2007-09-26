@@ -5,7 +5,7 @@
 #include "begin_code.h"
 
 typedef struct ag_cpuinfo {
-	char arch[16];			/* Architecture name */
+	const char *arch;		/* Architecture name */
 	char vendorID[13];		/* CPU Vendor ID string */
 	Uint32 ext;			/* Architecture extensions
 					   (relevant to user-mode) */
