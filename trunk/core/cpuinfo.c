@@ -56,7 +56,7 @@ static int
 HaveCPUID(void)
 {
 	int rv = 0;
-#if defined(__GNUC__) && defined(i386)
+#if defined(__GNUC__) && (defined(__i386__) || defined(i386))
 	__asm(
 		"pushfl			\n"
 		"popl	%%eax		\n"
@@ -100,7 +100,7 @@ GetCPUID(int fn)
 {
 	struct cpuid_regs regs;
 
-#if defined(__GNUC__) && defined(i386)
+#if defined(__GNUC__) && (defined(__i386__) || defined(i386))
 	__asm(
 		"mov %%ebx, %%esi\n"
 		".byte 0x0f, 0xa2\n"
@@ -150,13 +150,48 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 	struct cpuid_regs r, rExt;
 	Uint maxFns, maxExt;
 
-	cpu->arch[0] = '\0';
 	cpu->vendorID[0] = '\0';
 	cpu->ext = 0;
-	
-	/* XXX TODO: find architecture */
 
-#if defined(i386) || defined(__x86_64__)
+#if defined(__alpha__)
+	cpu->arch = "alpha";
+#elif defined(__x86_64__) || defined(__amd64__)
+	cpu->arch = "amd64";
+#elif defined(__arm__) || defined(__arm32__)
+	cpu->arch = "arm";
+#elif defined(__hppa64__)
+	cpu->arch = "hppa64";
+#elif defined(__hppa__)
+	cpu->arch = "hppa";
+#elif defined(__i386__) || defined(i386)
+	cpu->arch = "i386";
+#elif defined(__ia64__) || defined(ia64)
+	cpu->arch = "itanium";
+#elif defined(__m68010__)
+	cpu->arch = "m68010";
+#elif defined(__m68k__)
+	cpu->arch = "m68k";
+#elif defined(__mips64__)
+	cpu->arch = "mips64";
+#elif defined(__mips__)
+	cpu->arch = "mips";
+#elif defined(__ns32k__)
+	cpu->arch = "ns32k";
+#elif defined(__ppc__) || defined(__macppc__) || defined(__powerpc__)
+	cpu->arch = "powerpc";
+#elif defined(__sh3__)
+	cpu->arch = "sh3";
+#elif defined(__sparc64__)
+	cpu->arch = "sparc64";
+#elif defined(__sparc__)
+	cpu->arch = "sparc";
+#elif defined(__vax__)
+	cpu->arch = "vax";
+#else
+	cpu->arch = "unknown";
+#endif
+
+#if defined(__i386__) || defined(i386) || defined(__x86_64__)
 	if (HaveCPUID() == 0) {
 		return;
 	}
