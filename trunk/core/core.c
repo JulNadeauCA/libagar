@@ -55,9 +55,6 @@
 #ifdef HAVE_SETLOCALE
 #include <locale.h>
 #endif
-#ifdef HAVE_SDL_CPUINFO
-#include <SDL_cpuinfo.h>
-#endif
 
 /*
  * Force synchronous X11 events. Reduces performance, but useful for
@@ -101,6 +98,7 @@ AG_InitCore(const char *progname, Uint flags)
 #endif
 
 	AG_InitError();
+	AG_GetCPUInfo(&agCPU);
 
 #ifdef THREADS
 	pthread_mutexattr_init(&agRecursiveMutexAttr);
@@ -134,20 +132,6 @@ AG_InitCore(const char *progname, Uint flags)
 	if (agVerbose) {
 		printf("\n");
 	}
-#ifdef HAVE_SDL_CPUINFO
-	if (agVerbose) {
-		printf(_("Architecture extensions: "));
-		if (SDL_HasRDTSC()) { printf("RDTSC "); }
-		if (SDL_HasMMX()) { printf("MMX "); }
-		if (SDL_HasMMXExt()) { printf("MMXExt "); }
-		if (SDL_Has3DNow()) { printf("3DNow "); }
-		if (SDL_Has3DNowExt()) { printf("3DNowExt "); }
-		if (SDL_HasSSE()) { printf("SSE "); }
-		if (SDL_HasSSE2()) { printf("SSE2 "); }
-		if (SDL_HasAltiVec()) { printf("AltiVec "); }
-		printf(".\n");
-	}
-#endif
 #ifdef NETWORK
 	AG_InitNetwork(0);
 #endif
