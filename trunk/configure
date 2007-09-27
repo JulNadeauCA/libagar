@@ -2072,16 +2072,16 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_SIGNAL" > config/have_signal.h
-echo "#define HAVE_SIGNAL" $HAVE_SIGNAL >> config/have_signal.h
-echo "#endif" >> config/have_signal.h
+	echo "#ifndef _MK_HAVE_SIGNAL" > config/_mk_have_signal.h
+echo "#define _MK_HAVE_SIGNAL" $_MK_HAVE_SIGNAL >> config/_mk_have_signal.h
+echo "#endif" >> config/_mk_have_signal.h
 
-	HAVE_SIGNAL="yes"
+	_MK_HAVE_SIGNAL="yes"
 	echo "yes"
 else
-    echo "#undef HAVE_SIGNAL" > config/have_signal.h
+    echo "#undef _MK_HAVE_SIGNAL" > config/_mk_have_signal.h
 
-	HAVE_SIGNAL="no"
+	_MK_HAVE_SIGNAL="no"
 	echo "no"
 fi
 echo -n "checking for setjmp() and longjmp()..."
@@ -2110,16 +2110,16 @@ fi
 rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	echo "ok" >> config.log
-	echo "#ifndef HAVE_SETJMP" > config/have_setjmp.h
-echo "#define HAVE_SETJMP" $HAVE_SETJMP >> config/have_setjmp.h
-echo "#endif" >> config/have_setjmp.h
+	echo "#ifndef _MK_HAVE_SETJMP" > config/_mk_have_setjmp.h
+echo "#define _MK_HAVE_SETJMP" $_MK_HAVE_SETJMP >> config/_mk_have_setjmp.h
+echo "#endif" >> config/_mk_have_setjmp.h
 
-	HAVE_SETJMP="yes"
+	_MK_HAVE_SETJMP="yes"
 	echo "yes"
 else
-    echo "#undef HAVE_SETJMP" > config/have_setjmp.h
+    echo "#undef _MK_HAVE_SETJMP" > config/_mk_have_setjmp.h
 
-	HAVE_SETJMP="no"
+	_MK_HAVE_SETJMP="no"
 	echo "no"
 fi
 CFLAGS="$CFLAGS -I$SRC -D_AGAR_INTERNAL -D_BSD_SOURCE"
