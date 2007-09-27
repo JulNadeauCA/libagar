@@ -1,8 +1,5 @@
-/*	$Csoft: agar-config.c,v 1.18 2005/09/18 04:59:10 vedge Exp $	*/
-
 /*
- * Copyright (c) 2007 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

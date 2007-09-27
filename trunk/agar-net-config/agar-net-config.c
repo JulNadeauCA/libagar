@@ -1,8 +1,5 @@
-/*	$Csoft: qnet-config.c,v 1.1.1.1 2005/01/29 01:06:08 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004-2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
