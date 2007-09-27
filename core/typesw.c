@@ -53,7 +53,7 @@ AG_DestroyTypeSw(void)
 }
 
 void
-AG_RegisterType(const AG_ObjectOps *ops, int icon)
+AG_RegisterType(const void *ops, int icon)
 {
 	AG_ObjectType *ntype;
 
