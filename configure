@@ -2796,6 +2796,9 @@ echo "#ifndef ODE_LIBS" > config/ode_libs.h
 echo "#define ODE_LIBS \"$ODE_LIBS\"" >> config/ode_libs.h
 echo "#endif" >> config/ode_libs.h
 fi;
+else
+echo "no"
+echo "no" >> config.log
 fi;
 	if [ "${HAVE_ODE}" != "yes" ]
  then
