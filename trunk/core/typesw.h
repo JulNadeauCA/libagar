@@ -15,7 +15,7 @@ extern int	     agnTypes;
 __BEGIN_DECLS
 void AG_InitTypeSw(void);
 void AG_DestroyTypeSw(void);
-void AG_RegisterType(const AG_ObjectOps *, int);
+void AG_RegisterType(const void *, int);
 __inline__ AG_ObjectType *AG_FindType(const char *);
 __END_DECLS
 
