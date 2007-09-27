@@ -47,11 +47,7 @@
 #include <gui/hsvpal.h>
 #include <gui/pixmap.h>
 #include <gui/file_dlg.h>
-
-#if 0
-#include <Cg/cg.h>
-#include <Cg/cgGL.h>
-#endif
+#include <gui/objsel.h>
 
 const AG_ObjectOps sgMaterialOps = {
 	"SG_Material",
@@ -104,6 +100,8 @@ SG_MaterialInit(void *obj, const char *name)
 	mat->shininess = 0.0;
 	mat->blend_src = SG_BLEND_ONE;
 	mat->blend_dst = SG_BLEND_ZERO;
+	mat->progs = NULL;
+	mat->nProgs = 0;
 	TAILQ_INIT(&mat->textures);
 }
 
@@ -170,7 +168,7 @@ PollTextures(AG_Event *event)
 }
 
 SG_Texture *
-SG_TextureFromSurface(SDL_Surface *su)
+SG_MaterialTextureFromSurface(SDL_Surface *su)
 {
 	SG_Texture *tex;
 
@@ -199,6 +197,31 @@ SG_TextureFromSurface(SDL_Surface *su)
 	return (tex);
 }
 
+void
+SG_MaterialAddProgram(SG_Material *mat, SG_Program *prog)
+{
+	mat->progs = Realloc(mat->progs, (mat->nProgs+1)*sizeof(SG_Program *));
+	mat->progs[mat->nProgs++] = prog;
+}
+
+void
+SG_MaterialDelProgram(SG_Material *mat, SG_Program *prog)
+{
+	int i;
+
+	for (i = 0; i < mat->nProgs; i++) {
+		if (mat->progs[i] == prog) {
+			if (i+1 < mat->nProgs) {
+				memmove(&mat->progs[i],
+				        &mat->progs[i+1],
+					(mat->nProgs-1)*sizeof(SG_Program *));
+			}
+			mat->nProgs--;
+			break;
+		}
+	}
+}
+
 static void
 ImportTextureBMP(AG_Event *event)
 {
@@ -211,7 +234,7 @@ ImportTextureBMP(AG_Event *event)
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
 		return;
 	}
-	if ((tex = SG_TextureFromSurface(bmp)) == NULL) {
+	if ((tex = SG_MaterialTextureFromSurface(bmp)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 		SDL_FreeSurface(bmp);
 		return;
@@ -265,6 +288,39 @@ ImportTextureDlg(AG_Event *event)
 	AG_WindowShow(win);
 }
 
+static void
+AttachProgram(AG_Event *event)
+{
+	AG_ObjectSelector *os = AG_PTR(1);
+	SG_Material *mat = AG_PTR(2);
+	SG_Program *prog = AG_WidgetPointer(os, "object");
+	int i;
+
+	for (i = 0; i < mat->nProgs; i++) {
+		if (mat->progs[i] == prog)
+			return;
+	}
+	SG_MaterialAddProgram(mat, prog);
+	
+	dprintf("%s: Attached program %s\n", OBJECT(mat)->name,
+	    OBJECT(prog)->name);
+}
+
+static void
+PollPrograms(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	SG_Material *mat = AG_PTR(1);
+	int i;
+	
+	AG_TlistBegin(tl);
+	for (i = 0; i < mat->nProgs; i++) {
+		AG_TlistAddPtr(tl, AGICON(OBJ_ICON),
+		    OBJECT(mat->progs[i])->name, mat->progs[i]);
+	}
+	AG_TlistEnd(tl);
+}
+
 void *
 SG_MaterialEdit(void *obj)
 {
@@ -301,18 +357,18 @@ SG_MaterialEdit(void *obj)
 	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_HORIZ);
 	{
 		AG_Radio *rad;
-		AG_Box *vbox;
+		AG_Box *vBox;
 
-		vbox = AG_BoxNew(ntab, AG_BOX_VERT, 0);
+		vBox = AG_BoxNewVert(ntab, 0);
 		{
-			AG_LabelNewStaticString(vbox, 0, _("Source: "));
-			rad = AG_RadioNew(vbox, 0, sgBlendModeNames);
+			AG_LabelNewStaticString(vBox, 0, _("Source: "));
+			rad = AG_RadioNew(vBox, 0, sgBlendModeNames);
 			AG_WidgetBindInt(rad, "value", &mat->blend_src);
 		}
-		vbox = AG_BoxNew(ntab, AG_BOX_VERT, 0);
+		vBox = AG_BoxNewVert(ntab, 0);
 		{
-			AG_LabelNewStaticString(vbox, 0, _("Target: "));
-			rad = AG_RadioNew(vbox, 0, sgBlendModeNames);
+			AG_LabelNewStaticString(vBox, 0, _("Target: "));
+			rad = AG_RadioNew(vBox, 0, sgBlendModeNames);
 			AG_WidgetBindInt(rad, "value", &mat->blend_dst);
 		}
 	}
@@ -322,10 +378,10 @@ SG_MaterialEdit(void *obj)
 		AG_MenuItem *mi;
 		AG_Button *btn;
 
-		tl = AG_TlistNew(ntab, AG_TLIST_EXPAND|AG_TLIST_POLL);
+		tl = AG_TlistNewPolled(ntab, AG_TLIST_EXPAND,
+		    PollTextures, "%p", mat);
 		AG_TlistSetItemHeight(tl, 32);
 		AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
-		AG_SetEvent(tl, "tlist-poll", PollTextures, "%p", mat);
 		mi = AG_TlistSetPopup(tl, "texture");
 		{
 			AG_MenuAction(mi, _("Edit texture..."), OBJEDIT_ICON,
@@ -337,14 +393,24 @@ SG_MaterialEdit(void *obj)
 			AG_MenuAction(mi, _("Delete texture"), TRASH_ICON,
 			    NULL, "%p,%p", mat, tl);
 		}
-		btn = AG_ButtonNew(ntab, AG_BUTTON_HFILL,
-		    _("Import texture..."));
-		AG_SetEvent(btn, "button-pushed", ImportTextureDlg,
-		    "%p,%p", win, mat);
+		AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Import texture..."),
+		    ImportTextureDlg, "%p,%p", win, mat);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Programs"), AG_BOX_VERT);
 	{
-		
+		AG_ObjectSelector *os;
+		AG_Box *hBox;
+
+		hBox = AG_BoxNewHoriz(ntab, 0);
+		{
+			os = AG_ObjectSelectorNew(hBox, AG_OBJSEL_PAGE_DATA,
+			    mat, agWorld, _("Attach Program: "));
+			AG_ObjectSelectorMaskType(os, "SG_Program:*");
+			AG_ButtonNewFn(hBox, AG_BUTTON_HFILL, _("OK"),
+			    AttachProgram, "%p", os, mat);
+		}
+		AG_TlistNewPolled(ntab, AG_TLIST_EXPAND,
+		    PollPrograms, "%p", mat);
 	}
 	return (win);
 }
@@ -356,16 +422,31 @@ SG_MaterialEdit(void *obj)
 void
 SG_MaterialBind(SG_Material *mat, SG_View *view)
 {
+	int i;
+	
 	SG_MaterialColor(GL_FRONT, GL_EMISSION, &mat->emissive);
 	SG_MaterialColor(GL_FRONT, GL_AMBIENT, &mat->ambient);
 	SG_MaterialColor(GL_FRONT, GL_DIFFUSE, &mat->diffuse);
 	SG_MaterialColor(GL_FRONT, GL_SPECULAR, &mat->specular);
 	SG_Materialf(GL_FRONT, GL_SHININESS, mat->shininess);
+
+	for (i = 0; i < mat->nProgs; i++) {
+		dprintf("%s: Binding program %s\n", OBJECT(mat)->name,
+		    OBJECT(mat->progs[i])->name);
+		SG_ProgramBind(mat->progs[i], view);
+	}
 }
 
 void
 SG_MaterialUnbind(SG_Material *mat, SG_View *view)
 {
+	int i;
+
+	for (i = mat->nProgs-1; i >= 0; i--) {
+		dprintf("%s: Unbinding program %s\n", OBJECT(mat)->name,
+		    OBJECT(mat->progs[i])->name);
+		SG_ProgramUnbind(mat->progs[i], view);
+	}
 }
 
 #endif /* HAVE_OPENGL */

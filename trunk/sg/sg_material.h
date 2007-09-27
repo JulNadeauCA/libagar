@@ -38,9 +38,10 @@ typedef struct sg_material {
 	SG_Real shininess;		/* Specular exponent */
 	enum sg_blend_mode blend_src;	/* Blending mode for source fragment */
 	enum sg_blend_mode blend_dst;	/* Blending mode for target fragment */
+	SG_Program **progs;		/* Bound vertex/shader programs */
+	int	    nProgs;
 
 	TAILQ_HEAD(,sg_texture) textures;	/* Textures to apply */
-	TAILQ_HEAD(,sg_program) progs;		/* Vertex/fragment shaders */
 } SG_Material;
 
 __BEGIN_DECLS
@@ -55,5 +56,8 @@ int		 SG_MaterialSave(void *, AG_Netbuf *);
 void		 SG_MaterialBind(SG_Material *, SG_View *);
 void		 SG_MaterialUnbind(SG_Material *, SG_View *);
 
-SG_Texture	*SG_TextureFromSurface(SDL_Surface *);
+SG_Texture	*SG_MaterialTextureFromSurface(SDL_Surface *);
+void		 SG_MaterialAddProgram(SG_Material *, SG_Program *);
+void		 SG_MaterialDelProgram(SG_Material *, SG_Program *);
+
 __END_DECLS
