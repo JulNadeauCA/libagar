@@ -67,7 +67,7 @@ SK_DimensionInit(void *p, Uint32 name)
 	dim->cLbl = SG_ColorRGB(0.0, 0.0, 0.5);
 	dim->cLblBorder = SG_ColorRGB(0.0, 0.0, 0.5);
 	dim->cLineDim = SG_ColorRGB(0.0, 0.0, 0.5);
-	dim->vLbl = Vec(0.0, 1.0, 0.0);
+	dim->vLbl = Vec3(0.0, 1.0, 0.0);
 	dim->lbl = -1;
 	dim->text[0] = '\0';
 	dim->xPad = 5;
