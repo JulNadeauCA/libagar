@@ -1154,8 +1154,9 @@ AG_TextRenderUCS4(const Uint32 *text)
 #endif
 	case AG_FONT_BITMAP:
 		return TextRenderBitmap(text);
+	default:
+		return SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0);
 	}
-	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
 }
 
 /* Return the rendered size in pixels of a UCS4-encoded string. */
@@ -1170,6 +1171,8 @@ AG_TextSizeUCS4(const Uint32 *ucs4, int *w, int *h)
 #endif
 	case AG_FONT_BITMAP:
 		TextSizeBitmap(ucs4, w, h, NULL, NULL);
+		break;
+	default:
 		break;
 	}
 }
@@ -1190,6 +1193,8 @@ AG_TextSizeMultiUCS4(const Uint32 *ucs4, int *w, int *h, Uint **wLines,
 #endif
 	case AG_FONT_BITMAP:
 		TextSizeBitmap(ucs4, w, h, wLines, nLines);
+		break;
+	default:
 		break;
 	}
 	if (*nLines == 1) {
