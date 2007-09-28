@@ -31,8 +31,10 @@
 #include <config/sharedir.h>
 
 #include <config/have_cg.h>
+#ifdef HAVE_CG
 #include <config/cg_cflags.h>
 #include <config/cg_libs.h>
+#endif
 
 #include <stdio.h>
 #include <string.h>
