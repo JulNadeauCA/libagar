@@ -242,8 +242,8 @@ ViewScale(AG_Event *event)
 static void
 RotateCameraByMouse(SG_View *sv, int x, int y)
 {
-	SG_Rotatev(sv->cam, sv->mouse.rsens.y*(SG_Real)y, VecI);
-	SG_Rotatev(sv->cam, sv->mouse.rsens.x*(SG_Real)x, VecJ);
+	SG_Rotatev(sv->cam, sv->mouse.rsens.y*(SG_Real)y, VecI());
+	SG_Rotatev(sv->cam, sv->mouse.rsens.x*(SG_Real)x, VecJ());
 }
 
 static void
@@ -350,7 +350,7 @@ SelectByMouse(SG_View *sv, int x, int y)
 	int viewport[4];
 	SG_Vector vOut;
 
-	if (SG_ViewUnProject(sv, SG_VECTOR((SG_Real)x, (SG_Real)y, 0.0),
+	if (SG_ViewUnProject(sv, VecGet((SG_Real)x, (SG_Real)y, 0.0),
 	    20.0, sv->cam->zFar, &vOut) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 	}
@@ -517,7 +517,7 @@ RotateYawTimeout(void *obj, Uint32 ival, void *arg)
 {
 	SG_View *sv = obj;
 
-	SG_Rotatev(sv->cam, sv->rot_yaw, VecJ);
+	SG_Rotatev(sv->cam, sv->rot_yaw, VecJ());
 	return (ival > sv->rot_vel_max ? ival-sv->rot_vel_accel : ival);
 }
 
@@ -526,7 +526,7 @@ RotatePitchTimeout(void *obj, Uint32 ival, void *arg)
 {
 	SG_View *sv = obj;
 
-	SG_Rotatev(sv->cam, sv->rot_pitch, VecI);
+	SG_Rotatev(sv->cam, sv->rot_pitch, VecI());
 	return (ival > sv->rot_vel_max ? ival-sv->rot_vel_accel : ival);
 }
 
@@ -535,7 +535,7 @@ RotateRollTimeout(void *obj, Uint32 ival, void *arg)
 {
 	SG_View *sv = obj;
 
-	SG_Rotatev(sv->cam, sv->rot_roll, VecK);
+	SG_Rotatev(sv->cam, sv->rot_roll, VecK());
 	return (ival > sv->rot_vel_max ? ival-sv->rot_vel_accel : ival);
 }
 
@@ -589,8 +589,8 @@ SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
 
 	AG_SetEvent(sv, "attached", SG_ViewAttached, NULL);
 
-	sv->mouse.rsens = SG_VECTOR(0.002, 0.002, 0.002);
-	sv->mouse.tsens = SG_VECTOR(0.01, 0.01, 0.5);
+	sv->mouse.rsens = VecGet(0.002, 0.002, 0.002);
+	sv->mouse.tsens = VecGet(0.01, 0.01, 0.5);
 
 	sv->rot_vel_min = 30;
 	sv->rot_vel_accel = 1;

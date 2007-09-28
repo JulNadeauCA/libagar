@@ -72,7 +72,7 @@ ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 		node->flags &= ~(SK_NODE_MOVED);
 	}
 	if ((node = SK_ProximitySearch(sk, "Point", &pos, &vC, NULL)) != NULL &&
-	    SG_VectorDistancep(&pos, &vC) < skv->rSnap) {
+	    VecDistancep(&pos, &vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
 		SK_NodeRedraw(node, skv);
 	} else {
@@ -134,7 +134,7 @@ ToolMouseButtonDown(void *pTool, SG_Vector pos, int btn)
 	
 	/* Give point proximity more weight than other entities. */
 	if ((node = SK_ProximitySearch(sk, "Point", &pos, &vC, NULL)) == NULL ||
-	    SG_VectorDistancep(&pos, &vC) >= skv->rSnap) {
+	    VecDistancep(&pos, &vC) >= skv->rSnap) {
 		if ((node = SK_ProximitySearch(sk, NULL, &pos, &vC, NULL))
 		    == NULL)
 			return (0);

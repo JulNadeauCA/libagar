@@ -151,7 +151,7 @@ LineFromLineAtAngle(SK_Constraint *ct, void *pSelf, void *pFixed)
 	}
 	VecSubv(&vSelf, &vShd);
 	VecSubv(&vFixed, &vShd);
-	len = SG_VectorLenp(&vSelf);
+	len = VecLenp(&vSelf);
 	VecNormv(&vFixed);
 	v = VecSub(vFixed, VecNorm(vSelf));
 	SK_Identity(p);

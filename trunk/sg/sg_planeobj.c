@@ -64,7 +64,7 @@ SG_PlaneObjInit(void *p, const char *name)
 	SG_PlaneObj *po = p;
 
 	SG_NodeInit(po, name, &sgPlaneObjOps, 0);
-	po->P = SG_PlaneFromNormal(VecJ, 0.0);
+	po->P = SG_PlaneFromNormal(VecJ(), 0.0);
 }
 
 int

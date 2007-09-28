@@ -41,7 +41,7 @@ SG_LineFromPts2(SG_Vector2 p1, SG_Vector2 p2)
 	L.p = p1;
 	L.d.x = p2.x - p1.x;
 	L.d.y = p2.y - p1.y;
-	L.t = SG_VectorLen2p(&L.d);
+	L.t = VecLen2p(&L.d);
 	L.d.x /= L.t;
 	L.d.y /= L.t;
 	return (L);
@@ -57,7 +57,7 @@ SG_LineFromPts(SG_Vector p1, SG_Vector p2)
 	L.d.x = p2.x - p1.x;
 	L.d.y = p2.y - p1.y;
 	L.d.z = p2.z - p1.z;
-	L.t = SG_VectorLenp(&L.d);
+	L.t = VecLenp(&L.d);
 	L.d.x /= L.t;
 	L.d.y /= L.t;
 	L.d.z /= L.t;
@@ -71,7 +71,7 @@ SG_PlaneFrom3Pts(SG_Vector p1, SG_Vector p2, SG_Vector p3)
 	SG_Plane P;
 	SG_Vector n;
 
-	n = SG_VectorNormCross(SG_VectorSub(p1,p2), SG_VectorSub(p3,p2));
+	n = VecNormCross(VecSub(p1,p2), VecSub(p3,p2));
 	P.a = n.x;
 	P.b = n.y;
 	P.c = n.z;
@@ -157,8 +157,7 @@ SG_PlaneNormp(const SG_Plane *P)
 SG_Real
 SG_VectorPlaneAngle(SG_Vector v, SG_Plane P)
 {
-	return (M_PI - Acos(SG_VectorDot(SG_PlaneNormp(&P),
-	                                 SG_VectorNormp(&v))));
+	return (M_PI - Acos(VecDot(SG_PlaneNormp(&P),VecNormp(&v))));
 }
 
 /* Compute minimal distance from a line segment L to a point p. */
@@ -172,9 +171,9 @@ SG_PointLineDistance2(SG_Vector2 p, SG_Line2 L)
 	u = ((p.x - L.p.x)*(L.d.x*L.t - L.p.y) +
 	     (p.y - L.p.y)*(L.d.y*L.t - L.p.y)) / (L.t*L.t);
 	d = L.d;
-	SG_VectorScale2v(&d, L.t);
-	x = SG_VectorAdd2(L.p, SG_VectorScale2(SG_VectorSub2p(&d,&L.p), u));
-	return (SG_VectorDistance2p(&p, &x));
+	VecScale2v(&d, L.t);
+	x = VecAdd2(L.p, VecScale2(VecSub2p(&d,&L.p), u));
+	return (VecDistance2p(&p, &x));
 }
 
 SG_Real
@@ -210,7 +209,7 @@ SG_IntersectLineLine2(SG_Line2 L1, SG_Line2 L2)
 		if (ac >= 0.0 && ac <= 1.0 &&
 		    bc >= 0.0 && bc <= 1.0) {
 			ix.type = SG_POINT;
-			ix.ix_p = SG_VectorAdd2(L1.p, SG_VectorScale2(L1.d,ac));
+			ix.ix_p = VecAdd2(L1.p, VecScale2(L1.d,ac));
 			return (ix);
 		} else {
 			ix.type = SG_NONE;

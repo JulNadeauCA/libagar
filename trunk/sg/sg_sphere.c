@@ -133,12 +133,12 @@ Subdivide(SG_Sphere *sph, const SG_Vector *v1, const SG_Vector *v2,
 		    SG_VertexNewvn(sph, v3, v3));
 		return;
 	}
-	v12 = SG_VectorAvgp(v1, v2);
-	v23 = SG_VectorAvgp(v2, v3);
-	v31 = SG_VectorAvgp(v3, v1);
-	SG_VectorNormv(&v12);
-	SG_VectorNormv(&v23);
-	SG_VectorNormv(&v31);
+	v12 = VecAvgp(v1, v2);
+	v23 = VecAvgp(v2, v3);
+	v31 = VecAvgp(v3, v1);
+	VecNormv(&v12);
+	VecNormv(&v23);
+	VecNormv(&v31);
 	Subdivide(sph, v1, &v12, &v31, depth-1);
 	Subdivide(sph, v2, &v23, &v12, depth-1);
 	Subdivide(sph, v3, &v31, &v23, depth-1);
@@ -173,8 +173,7 @@ SG_SphereDraw(void *p, SG_View *view)
 	SG_Matrix T;
 	int lod;
 	
-	d = SG_VectorDistance(SG_NodePos(view->cam),
-	                      SG_NodePos(sph));
+	d = VecDistance(SG_NodePos(view->cam), SG_NodePos(sph));
 
 	if (d < 2.0) { lod = 4; }
 	else if (d < 5.0) { lod = 3; } 

@@ -305,8 +305,8 @@ SG_QuatConcat(const SG_Quat *A, const SG_Quat *B)
 	v2.x = B->x;
 	v2.y = B->y;
 	v2.z = B->z;
-	angle = A->w*B->w - SG_VectorDotp(&v1, &v2);
-	cross = SG_VectorCrossp(&v1, &v2);
+	angle = A->w*B->w - VecDotp(&v1, &v2);
+	cross = VecCrossp(&v1, &v2);
 	v1.x *= B->w;
 	v1.y *= B->w;
 	v1.z *= B->w;

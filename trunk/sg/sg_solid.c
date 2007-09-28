@@ -104,7 +104,7 @@ SG_SolidSave(void *p, AG_Netbuf *buf)
 void
 SG_SolidBox(SG_Solid *sld, SG_Real wd, SG_Real ht, SG_Real dp)
 {
-	SG_Vector d = SG_VECTOR(0.0, ht, 0.0);
+	SG_Vector d = VecGet(0.0, ht, 0.0);
 	SG_Facet *fct;
 
 	SG_VertexNew2(sld, 0.0, 0.0);

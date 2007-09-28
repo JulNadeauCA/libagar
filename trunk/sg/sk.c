@@ -610,7 +610,7 @@ SK_Pos(void *p)
 {
 	SK_Node *node = p;
 	SG_Matrix T;
-	SG_Vector v = Vec0;
+	SG_Vector v = VecZero();
 	
 	SK_GetNodeTransform(node, &T);
 	SG_MatrixMultVectorv(&v, &T);
@@ -632,7 +632,7 @@ SK_NodeDir(void *p)
 {
 	SK_Node *node = p;
 	SG_Matrix T;
-	SG_Vector v = VecK;				/* Convention */
+	SG_Vector v = VecK();				/* Convention */
 	
 	SK_GetNodeTransform(node, &T);
 	SG_MatrixMultVectorv(&v, &T);
@@ -921,7 +921,7 @@ SK_ProximitySearch(SK *sk, const char *type, SG_Vector *v, SG_Vector *vC,
 {
 	SK_Node **nodes, *node, *nClosest = NULL;
 	SG_Real rClosest = HUGE_VAL, p;
-	SG_Vector vClosest = SG_VECTOR(HUGE_VAL, HUGE_VAL, 0.0);
+	SG_Vector vClosest = VecGet(HUGE_VAL, HUGE_VAL, 0.0);
 	Uint nNodes;
 
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
