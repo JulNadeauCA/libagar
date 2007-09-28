@@ -150,7 +150,7 @@ typedef struct sg_spherical {
 #define SG_Degrees(x) (360.0*((x)/(2.0*SG_PI)))
 #define SG_Sgn(x) (((x)<0.0)?-1.0 : ((x)>0.0)?1.0 : 0.0)
 
-#ifdef _AGAR_INTERNAL
+#if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_MATH)
 #define Sqrt(r) SG_Sqrt(r)
 #define Cbrt(r) SG_Cbrt(r)
 #define Sin(x) SG_Sin(x)
