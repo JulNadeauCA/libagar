@@ -43,9 +43,9 @@ Plot(void *pNode, SG_View *sgv)
 		SG_Begin(mode);
 		for (u = ur.a; u < ur.b; u += ur.d) {
 			v.x = x;
-			v.y = SG_Cbrt(-u/3.0) + u*SG_Sqrt(-x/2.0);
+			v.y = Cbrt(-u/3.0) + u*Sqrt(-x/2.0);
 			v.z = u;
-			SG_VectorScalev(&v, 30.0);
+			VecScalev(&v, 30.0);
 			color.r = 1.0;
 			color.g = 1.0 - 1.0/SG_Fabs(u*100.0);
 			color.b = 1.0 - 1.0/SG_Fabs(u*100.0);
@@ -58,9 +58,9 @@ Plot(void *pNode, SG_View *sgv)
 		SG_Begin(mode);
 		for (u = ur.a; u < ur.b; u += ur.d) {
 			v.x = x;
-			v.y = SG_Cbrt(-u/3.0) - u*SG_Sqrt(-x/2.0);
+			v.y = Cbrt(-u/3.0) - u*Sqrt(-x/2.0);
 			v.z = u;
-			SG_VectorScalev(&v, 30.0);
+			VecScalev(&v, 30.0);
 			color.g = 1.0;
 			color.r = 1.0 - 1.0/SG_Fabs(x*3.0);
 			color.b = 1.0 - 1.0/SG_Fabs(x*3.0);
@@ -176,7 +176,7 @@ main(int argc, char *argv[])
 	sg = SG_New(agWorld, "scene");
 	cat = SG_NodeAdd(sg->root, "MyCatastrophe", &CatastropheOps, 0);
 	SG_Translate3(cat, 0.0, 0.0, 90.0);
-	SG_Rotatevd(cat, 30.0, SG_VecJ);
+	SG_Rotatevd(cat, 30.0, VecJ());
 
 	/* Create the user interface. */
 	CreateParametersWindow();
@@ -184,7 +184,7 @@ main(int argc, char *argv[])
 	AG_WindowSetCaption(win, "Catastrophe");
 	sv = SG_ViewNew(win, sg, SG_VIEW_EXPAND|SG_VIEW_NO_LIGHTING);
 	SG_Translate3(sv->cam, 10.0, 0.0, -100.0);
-	SG_Rotatevd(sv->cam, 180.0, SG_VecI);
+	SG_Rotatevd(sv->cam, 180.0, VecI());
 	
 	AG_WindowSetGeometry(win, 64, 0, agView->w-64, agView->h);
 	AG_WindowShow(win);
