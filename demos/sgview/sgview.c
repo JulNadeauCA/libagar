@@ -20,9 +20,9 @@ static Uint32
 Rotate(void *obj, Uint32 t, void *arg)
 {
 	SG_Camera *cam = arg;
-	SG_Vector vCenter = SG_VectorSub(SG_NodePos(cam), SG_NodePos(center));
+	SG_Vector vCenter = VecSub(SG_NodePos(cam), SG_NodePos(center));
 
-	SG_Orbitvd(cam, vCenter, SG_VecJ, 1.0);
+	SG_Orbitvd(cam, vCenter, VecJ(), 1.0);
 	return (t);
 }
 
@@ -47,7 +47,7 @@ CreateWindow(void)
 	for (i = 0; i < 60; i++) {
 		s2 = SG_SphereNew(s1, "Sphere B");
 		s1 = s2;
-		SG_Rotatev(s1, angle, SG_VecJ);
+		SG_Rotatev(s1, angle, VecJ());
 		SG_Translate3(s1, 2.0, 0.4, 0.0);
 		angle -= 0.4;
 	}
