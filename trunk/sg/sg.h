@@ -93,7 +93,6 @@ typedef struct sg {
 	AG_Mutex lock;
 	void *tess;			/* GLU tesselator object */
 	struct sg_point *root;		/* Root of graph */
-//	CGcontext cgCtx;		/* Context for CG programs */
 	TAILQ_HEAD(,sg_node) nodes;	/* Flat list of nodes */
 } SG;
 
@@ -123,6 +122,8 @@ extern Uint         sgElementsCnt;
 
 #ifdef _AGAR_INTERNAL
 #include <sg/sg_dummy.h>
+#include <sg/sg_program.h>
+#include <sg/sg_cg_program.h>
 #include <sg/sg_light.h>
 #include <sg/sg_camera.h>
 #include <sg/sg_primitive.h>
@@ -136,6 +137,8 @@ extern Uint         sgElementsCnt;
 #include <sg/sg_voxel.h>
 #else
 #include <agar/sg/sg_dummy.h>
+#include <agar/sg/sg_program.h>
+#include <agar/sg/sg_cg_program.h>
 #include <agar/sg/sg_light.h>
 #include <agar/sg/sg_camera.h>
 #include <agar/sg/sg_primitive.h>
