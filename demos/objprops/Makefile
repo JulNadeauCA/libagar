@@ -4,8 +4,8 @@ include Makefile.config
 PROG=	objprops
 SRCS=	objprops.c
 
-CFLAGS+=${AGAR_CFLAGS} ${AGAR_DEV_CFLAGS} -I.
-LIBS+=	${AGAR_LIBS} ${AGAR_DEV_LIBS}
+CFLAGS+=${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS} -I.
+LIBS+=	${AGAR_DEV_LIBS} ${AGAR_LIBS}
 
 all: all-subdir ${PROG}
 
