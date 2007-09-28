@@ -2262,44 +2262,6 @@ echo "#ifndef SDL_LIBS" > config/sdl_libs.h
 echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
 echo "#endif" >> config/sdl_libs.h
 fi;
-echo -n "checking for SDL cpuinfo functions..."
-echo -n "checking for SDL cpuinfo functions..." >> config.log
-cat << EOT > conftest.c
-#include <SDL.h>
-#include <SDL_cpuinfo.h>
-int main(int argc, char *argv[]) {
-	SDL_HasRDTSC();
-	SDL_HasMMX();
-	SDL_HasMMXExt();
-	SDL_Has3DNow();
-	SDL_Has3DNowExt();
-	SDL_HasSSE();
-	SDL_HasSSE2();
-	SDL_HasAltiVec();
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
-if [ $? == 0 ]; then
-echo "yes"
-echo "yes" >> config.log
-compile="ok"
-HAVE_SDL_CPUINFO="yes"
-echo "HAVE_SDL_CPUINFO=$HAVE_SDL_CPUINFO" >> Makefile.config
-echo "#ifndef HAVE_SDL_CPUINFO" > config/have_sdl_cpuinfo.h
-echo "#define HAVE_SDL_CPUINFO \"$HAVE_SDL_CPUINFO\"" >> config/have_sdl_cpuinfo.h
-echo "#endif" >> config/have_sdl_cpuinfo.h
-else
-echo "no"
-echo "no" >> config.log
-compile="failed"
-HAVE_SDL_CPUINFO="no"
-echo "HAVE_SDL_CPUINFO=$HAVE_SDL_CPUINFO" >> Makefile.config
-echo "#undef HAVE_SDL_CPUINFO" > config/have_sdl_cpuinfo.h
-fi;
-rm -f conftest conftest.c
 else
 echo "no"
 echo "no" >> config.log
@@ -2799,6 +2761,7 @@ fi;
 else
 echo "no"
 echo "no" >> config.log
+echo "#undef HAVE_SDL" > config/have_sdl.h
 fi;
 	if [ "${HAVE_ODE}" != "yes" ]
  then
@@ -3084,18 +3047,76 @@ echo "#undef HAVE_SSE" > config/have_sse.h
 fi
 if [ "${with_altivec}" != "no" ]
  then
-echo -n "checking for AltiVec (-maltivec)..."
-echo -n "checking for AltiVec (-maltivec)..." >> config.log
-ALTIVEC_CFLAGS=-maltivec
+echo -n "checking for AltiVec (with <altivec.h>)..."
+echo -n "checking for AltiVec (with <altivec.h>)..." >> config.log
+if [ "$SYSTEM" = "Darwin" ]; then
+ALTIVEC_CFLAGS="-faltivec -maltivec"
+else
+ALTIVEC_CFLAGS="-mabi=altivec -maltivec"
+fi;
 cat << EOT > conftest.c
 #include <altivec.h>
+float a[4] = { 1,2,3,4 };
+float b[4] = { 5,6,7,8 };
+float c[4];
 
 int
 main(int argc, char *argv[])
 {
-	vector unsigned int v;
+	vector float *va = (vector float *)a;
+	vector float *vb = (vector float *)b;
+	vector float *vc = (vector float *)c;
 
-	v = vec_splat_u32(0);
+	*vc = vec_add(*va, *vb);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c  2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_ALTIVEC="yes"
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
+echo "#ifndef HAVE_ALTIVEC" > config/have_altivec.h
+echo "#define HAVE_ALTIVEC \"$HAVE_ALTIVEC\"" >> config/have_altivec.h
+echo "#endif" >> config/have_altivec.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_ALTIVEC="no"
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
+echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
+fi;
+rm -f conftest conftest.c
+if [ "${HAVE_ALTIVEC}" = "yes" ]; then
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >> Makefile.config
+HAVE_ALTIVEC_H=""
+echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
+echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
+echo "#endif" >> config/altivec_cflags.h
+echo "#ifndef HAVE_ALTIVEC_H" > config/have_altivec_h.h
+echo "#define HAVE_ALTIVEC_H \"$HAVE_ALTIVEC_H\"" >> config/have_altivec_h.h
+echo "#endif" >> config/have_altivec_h.h
+else
+echo -n "checking for AltiVec (without <altivec.h>)..."
+echo -n "checking for AltiVec (without <altivec.h>)..." >> config.log
+cat << EOT > conftest.c
+float a[4] = { 1,2,3,4 };
+float b[4] = { 5,6,7,8 };
+float c[4];
+
+int
+main(int argc, char *argv[])
+{
+	vector float *va = (vector float *)a;
+	vector float *vb = (vector float *)b;
+	vector float *vc = (vector float *)c;
+
+	*vc = vec_add(*va, *vb);
 	return (0);
 }
 
@@ -3127,50 +3148,8 @@ echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
 echo "#endif" >> config/altivec_cflags.h
 else
 echo "#undef ALTIVEC_CFLAGS" > config/altivec_cflags.h
-echo -n "checking for AltiVec (-faltivec)..."
-echo -n "checking for AltiVec (-faltivec)..." >> config.log
-ALTIVEC_CFLAGS=-faltivec
-cat << EOT > conftest.c
-#include <altivec.h>
-
-int
-main(int argc, char *argv[])
-{
-	vector unsigned int v;
-
-	v = vec_splat_u32(0);
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
-echo "yes"
-echo "yes" >> config.log
-compile="ok"
-HAVE_ALTIVEC="yes"
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
-echo "#ifndef HAVE_ALTIVEC" > config/have_altivec.h
-echo "#define HAVE_ALTIVEC \"$HAVE_ALTIVEC\"" >> config/have_altivec.h
-echo "#endif" >> config/have_altivec.h
-else
-echo "no"
-echo "no" >> config.log
-compile="failed"
-HAVE_ALTIVEC="no"
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
-echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
 fi;
-rm -f conftest conftest.c
-if [ "${HAVE_ALTIVEC}" = "yes" ]; then
-echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >> Makefile.config
-echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
-echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
-echo "#endif" >> config/altivec_cflags.h
-else
-echo "#undef ALTIVEC_CFLAGS" > config/altivec_cflags.h
-fi;
+echo "#undef HAVE_ALTIVEC_H" > config/have_altivec_h.h
 fi;
 	if [ "${HAVE_ALTIVEC}" != "yes" ]
  then
