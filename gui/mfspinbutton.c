@@ -408,7 +408,7 @@ UpdateTextbox(AG_MFSpinbutton *num)
 		break;
 	case AG_WIDGET_SINT64:
 		snprintf(sx, sizeof(sx), "%lld",
-		    (long long)((Sint64 *)value));
+		    (long long)(*(Sint64 *)value));
 		break;
 #endif
 	}
