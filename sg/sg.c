@@ -27,17 +27,13 @@
  */
 
 #include <config/have_opengl.h>
+#include <config/have_cg.h>
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
 #include <core/typesw.h>
 
 #include "sg.h"
-
-#if 0
-#include <Cg/cg.h>
-#include <Cg/cgGL.h>
-#endif
 
 #include <math.h>
 #include <string.h>
@@ -113,9 +109,15 @@ SG_InitEngine(void)
 {
 	extern AG_ObjectOps sgMaterialOps;
 
+	SG_VectorInitEngine();
+
 	AG_RegisterType(&sgOps, MAP_ICON);
 	AG_RegisterType(&sgMaterialOps, RG_TILING_ICON);
-	
+	AG_RegisterType(&sgProgramOps, OBJ_ICON);
+#ifdef HAVE_CG
+	AG_RegisterType(&sgCgProgramOps, OBJ_ICON);
+#endif
+
 	SG_NodeRegister(&sgDummyOps);
 	SG_NodeRegister(&sgPointOps);
 	SG_NodeRegister(&sgPlaneObjOps);
@@ -126,6 +128,7 @@ SG_InitEngine(void)
 	SG_NodeRegister(&sgSolidOps);
 	SG_NodeRegister(&sgSphereOps);
 	SG_NodeRegister(&sgBoxOps);
+
 #if 0
 	AG_AtExitFunc(SG_DestroyEngine);
 #endif
@@ -135,6 +138,7 @@ SG_InitEngine(void)
 void
 SG_DestroyEngine(void)
 {
+	SG_VectorDestroyEngine();
 }
 
 SG *
@@ -201,10 +205,6 @@ SG_Init(void *obj, const char *name)
 	AG_UnlockGL();
 
 	AG_SetEvent(sg, "attached", SG_Attached, NULL);
-#if 0
-	if ((sgCtxCg = cgCreateContext()) == NULL)
-		fatal("cgCreateContext failed");
-#endif
 }
 
 void
@@ -487,7 +487,7 @@ SG_NodePos(void *p)
 {
 	SG_Node *node = p;
 	SG_Matrix T;
-	SG_Vector v = SG_VECTOR(0.0, 0.0, 0.0);
+	SG_Vector v = VecGet(0.0, 0.0, 0.0);
 	
 	SG_GetNodeTransformInverse(node, &T);
 	SG_MatrixMultVectorv(&v, &T);
@@ -499,7 +499,7 @@ SG_NodeDir(void *p)
 {
 	SG_Node *node = p;
 	SG_Matrix T;
-	SG_Vector v = VecK;				/* Convention */
+	SG_Vector v = VecK();				/* Convention */
 	
 	SG_GetNodeTransform(node, &T);
 	SG_MatrixMultVectorv(&v, &T);
