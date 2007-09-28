@@ -4,8 +4,8 @@ include Makefile.config
 PROG=	velcurve
 SRCS=	voxelpath.c velcurve.c
 
-CFLAGS+=${AGAR_CFLAGS} ${AGAR_SG_CFLAGS} ${AGAR_SC_CFLAGS} -I.
-LIBS+=	${AGAR_LIBS} ${AGAR_SG_LIBS} ${AGAR_SC_LIBS}
+CFLAGS+=${AGAR_SG_CFLAGS} ${AGAR_SC_CFLAGS} ${AGAR_CFLAGS} -I.
+LIBS+=	${AGAR_SG_LIBS} ${AGAR_SC_LIBS} ${AGAR_LIBS}
 
 all: all-subdir ${PROG}
 
