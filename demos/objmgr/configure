@@ -474,6 +474,72 @@ HAVE_NONNULL_ATTRIBUTE="no"
 echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >> Makefile.config
 echo "#undef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
 fi;
+echo -n "checking __aligned__ attribute..."
+echo -n "checking __aligned__ attribute..." >> config.log
+cat << EOT > conftest.c
+int main(int argc, char *argv[])
+{
+	struct s1 { int x,y,z; } __attribute__ ((aligned(16)));
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_ALIGNED_ATTRIBUTE="yes"
+echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >> Makefile.config
+echo "#ifndef HAVE_ALIGNED_ATTRIBUTE" > config/have_aligned_attribute.h
+echo "#define HAVE_ALIGNED_ATTRIBUTE \"$HAVE_ALIGNED_ATTRIBUTE\"" >> config/have_aligned_attribute.h
+echo "#endif" >> config/have_aligned_attribute.h
+else
+echo "no"
+echo "no" >> config.log
+HAVE_ALIGNED_ATTRIBUTE="no"
+echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >> Makefile.config
+echo "#undef HAVE_ALIGNED_ATTRIBUTE" > config/have_aligned_attribute.h
+fi;
+echo -n "checking __packed__ attribute..."
+echo -n "checking __packed__ attribute..." >> config.log
+cat << EOT > conftest.c
+int main(int argc, char *argv[])
+{
+	struct s1 { char c; int x,y,z; } __attribute__ ((packed));
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_PACKED_ATTRIBUTE="yes"
+echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >> Makefile.config
+echo "#ifndef HAVE_PACKED_ATTRIBUTE" > config/have_packed_attribute.h
+echo "#define HAVE_PACKED_ATTRIBUTE \"$HAVE_PACKED_ATTRIBUTE\"" >> config/have_packed_attribute.h
+echo "#endif" >> config/have_packed_attribute.h
+else
+echo "no"
+echo "no" >> config.log
+HAVE_PACKED_ATTRIBUTE="no"
+echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >> Makefile.config
+echo "#undef HAVE_PACKED_ATTRIBUTE" > config/have_packed_attribute.h
+fi;
 echo -n "checking for long double..."
 echo -n "checking for long double..." >> config.log
 cat << EOT > conftest.c
@@ -723,8 +789,8 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} ${AGAR_DEV_CFLAGS} -o conftest conftest.c ${AGAR_LIBS} ${AGAR_DEV_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} ${AGAR_DEV_CFLAGS} -o conftest conftest.c ${AGAR_LIBS} ${AGAR_DEV_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_DEV_LIBS} ${AGAR_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_DEV_LIBS} ${AGAR_LIBS} 2>>config.log
 if [ $? == 0 ]; then
 echo "yes"
 echo "yes" >> config.log
