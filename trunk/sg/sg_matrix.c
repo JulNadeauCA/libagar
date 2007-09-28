@@ -108,6 +108,53 @@ SG_MatrixMultv(SG_Matrix *A, const SG_Matrix *B)
 	SG_MatrixCopy(A, &Atmp);
 }
 
+#if 0
+void
+SG_MatrixMultv_SSE(SG_Matrix *A, const SG_Matrix *B)
+{
+	A.m1 = _mm_add_ps(
+	    _mm_add_ps(
+	        _mm_add_ps(
+		    _mm_mul_ps(_mm_shuffle_ps(m1,m1,_MM_SHUFFLE(0,0,0,0)),B.m1),
+		    _mm_mul_ps(_mm_shuffle_ps(m1,m1,_MM_SHUFFLE(1,1,1,1)),B.m2)
+		),
+		_mm_mul_ps(_mm_shuffle_ps(m1,m1,_MM_SHUFFLE(2,2,2,2)),B.m3)
+	    ),
+	    _mm_mul_ps(_mm_shuffle_ps(m1,m1,_MM_SHUFFLE(3,3,3,3)),B.m4)
+	);
+	A.m2 = _mm_add_ps(
+	    _mm_add_ps(
+	        _mm_add_ps(
+		    _mm_mul_ps(_mm_shuffle_ps(m2,m2,_MM_SHUFFLE(0,0,0,0)),B.m1),
+		    _mm_mul_ps(_mm_shuffle_ps(m2,m2,_MM_SHUFFLE(1,1,1,1)),B.m2)
+		),
+		_mm_mul_ps(_mm_shuffle_ps(m2,m2,_MM_SHUFFLE(2,2,2,2)),B.m3)
+	    ),
+	    _mm_mul_ps(_mm_shuffle_ps(m2,m2,_MM_SHUFFLE(3,3,3,3)),B.m4)
+	);
+	A.m3 = _mm_add_ps(
+	    _mm_add_ps(
+	        _mm_add_ps(
+		    _mm_mul_ps(_mm_shuffle_ps(m3,m3,_MM_SHUFFLE(0,0,0,0)),B.m1),
+		    _mm_mul_ps(_mm_shuffle_ps(m3,m3,_MM_SHUFFLE(1,1,1,1)),B.m2)
+	        ),
+		_mm_mul_ps(_mm_shuffle_ps(m3,m3,_MM_SHUFFLE(2,2,2,2)),B.m3)
+	    ),
+	    _mm_mul_ps(_mm_shuffle_ps(m3,m3,_MM_SHUFFLE(3,3,3,3)),B.m4)
+	);
+	A.m4 = _mm_add_ps(
+	    _mm_add_ps(
+	        _mm_add_ps(
+		    _mm_mul_ps(_mm_shuffle_ps(m4,m4,_MM_SHUFFLE(0,0,0,0)),B.m1),
+		    _mm_mul_ps(_mm_shuffle_ps(m4,m4,_MM_SHUFFLE(1,1,1,1)),B.m2)
+		),
+		_mm_mul_ps(_mm_shuffle_ps(m4,m4,_MM_SHUFFLE(2,2,2,2)),B.m3)
+	    ),
+	    _mm_mul_ps(_mm_shuffle_ps(m4, m4, _MM_SHUFFLE(3,3,3,3)), B.m4)
+	);
+}
+#endif /* HAVE_SSE */
+
 /* Return the product of A and B. */
 SG_Matrix
 SG_MatrixMult(SG_Matrix A, SG_Matrix B)
@@ -285,33 +332,98 @@ SG_MatrixDirection(const SG_Matrix *M, SG_Vector *x, SG_Vector *y, SG_Vector *z)
 
 #if 0
 int
-SG_MatrixInvertCramerSIMD(const SG_Matrix *A, SG_Matrix *Ainv)
+SG_MatrixInvertCramerSSE(const SG_Matrix *A, SG_Matrix *Ainv)
 {
 	__m128 minor0, minor1, minor2, minor3;
 	__m128 row0, row1, row2, row3;
 	__m128 det, tmp1;
 
-	tmp1 = _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64*)(src)),
-	                                       (__m64*)(src+4));
-	row1 = _mm_loadh_pi(_mm_loadl_pi(row1, (__m64*)(src+8)),
-	                                       (__m64*)(src+12));
-	row0 = _mm_shuffle_ps(tmp1, row1, 0x88);
-	row1 = _mm_shuffle_ps(row1, tmp1, 0xdd);
-	
-	tmp1 = _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64*)(src+2)),
-	                                       (__m64*)(src+6));
-	row3 = _mm_loadh_pi(_mm_loadl_pi(row3, (__m64*)(src+10)),
-	                                       (__m64*)(src+14));
-	
-	row2 = _mm_shuffle_ps(tmp1, row3, 0x88);
-	row3 = _mm_shuffle_ps(row3, tmp1, 0xdd);
+	tmp1	= _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64*)(src)),
+	                                          (__m64*)(src+4));
+	row1	= _mm_loadh_pi(_mm_loadl_pi(row1, (__m64*)(src+8)),
+	                                          (__m64*)(src+12));
+	row0	= _mm_shuffle_ps(tmp1, row1, 0x88);
+	row1	= _mm_shuffle_ps(row1, tmp1, 0xDD);
+	tmp1	= _mm_loadh_pi(_mm_loadl_pi(tmp1, (__m64*)(src+2)),
+	                                          (__m64*)(src+6));
+	row3	= _mm_loadh_pi(_mm_loadl_pi(row3, (__m64*)(src+10)),
+	                                          (__m64*)(src+14));
+	row2	= _mm_shuffle_ps(tmp1, row3, 0x88);
+	row3	= _mm_shuffle_ps(row3, tmp1, 0xDD);
 
-	tmp1 = _mm_mul_ps(row2, row3);
-	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xb1);
+	tmp1	= _mm_mul_ps(row2, row3);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0xB1);
+	minor0	= _mm_mul_ps(row1, tmp1);
+	minor1	= _mm_mul_ps(row0, tmp1);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0x4E);
+	minor0	= _mm_sub_ps(_mm_mul_ps(row1, tmp1), minor0);
+	minor1	= _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor1);
+	minor1	= _mm_shuffle_ps(minor1, minor1, 0x4E);
 
-	...
+	tmp1	= _mm_mul_ps(row1, row2);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0xB1);
+	minor0	= _mm_add_ps(_mm_mul_ps(row3, tmp1), minor0);
+	minor3	= _mm_mul_ps(row0, tmp1);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0x4E);
+	minor0	= _mm_sub_ps(minor0, _mm_mul_ps(row3, tmp1));
+	minor3	= _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor3);
+	minor3	= _mm_shuffle_ps(minor3, minor3, 0x4E);
+
+	tmp1	= _mm_mul_ps(_mm_shuffle_ps(row1, row1, 0x4E), row3);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0xB1);
+	row2	= _mm_shuffle_ps(row2, row2, 0x4E);
+	minor0	= _mm_add_ps(_mm_mul_ps(row2, tmp1), minor0);
+	minor2	= _mm_mul_ps(row0, tmp1);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0x4E);
+	minor0	= _mm_sub_ps(minor0, _mm_mul_ps(row2, tmp1));
+	minor2	= _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor2);
+	minor2	= _mm_shuffle_ps(minor2, minor2, 0x4E);
+
+	tmp1	= _mm_mul_ps(row0, row1);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0xB1);
+	minor2	= _mm_add_ps(_mm_mul_ps(row3, tmp1), minor2);
+	minor3	= _mm_sub_ps(_mm_mul_ps(row2, tmp1), minor3);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0x4E);
+	minor2	= _mm_sub_ps(_mm_mul_ps(row3, tmp1), minor2);
+	minor3	= _mm_sub_ps(minor3, _mm_mul_ps(row2, tmp1));
+
+	tmp1	= _mm_mul_ps(row0, row3);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0xB1);
+	minor1	= _mm_sub_ps(minor1, _mm_mul_ps(row2, tmp1));
+	minor2	= _mm_add_ps(_mm_mul_ps(row1, tmp1), minor2);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0x4E);
+	minor1	= _mm_add_ps(_mm_mul_ps(row2, tmp1), minor1);
+	minor2	= _mm_sub_ps(minor2, _mm_mul_ps(row1, tmp1));
+
+	tmp1	= _mm_mul_ps(row0, row2);
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0xB1);
+	minor1	= _mm_add_ps(_mm_mul_ps(row3, tmp1), minor1);
+	minor3	= _mm_sub_ps(minor3, _mm_mul_ps(row1, tmp1));
+	tmp1	= _mm_shuffle_ps(tmp1, tmp1, 0x4E);
+	minor1	= _mm_sub_ps(minor1, _mm_mul_ps(row3, tmp1));
+	minor3	= _mm_add_ps(_mm_mul_ps(row1, tmp1), minor3);
+
+	det	= _mm_mul_ps(row0, minor0);
+	det	= _mm_add_ps(_mm_shuffle_ps(det, det, 0x4E), det);
+	det	= _mm_add_ss(_mm_shuffle_ps(det, det, 0xB1), det);
+	tmp1	= _mm_rcp_ss(det);
+	det	= _mm_sub_ss(_mm_add_ss(tmp1, tmp1),
+	                     _mm_mul_ss(det, _mm_mul_ss(tmp1,tmp1)));
+	det	= _mm_shuffle_ps(det, det, 0x00);
+	minor0	= _mm_mul_ps(det, minor0);
+	_mm_storel_pi((__m64*)(src), minor0);
+	_mm_storeh_pi((__m64*)(src+2), minor0);
+	minor1	= _mm_mul_ps(det, minor1);
+	_mm_storel_pi((__m64*)(src+4), minor1);
+	_mm_storeh_pi((__m64*)(src+6), minor1);
+	minor2	= _mm_mul_ps(det, minor2);
+	_mm_storel_pi((__m64*)(src+ 8), minor2);
+	_mm_storeh_pi((__m64*)(src+10), minor2);
+	minor3	= _mm_mul_ps(det, minor3);
+	_mm_storel_pi((__m64*)(src+12), minor3);
+	_mm_storeh_pi((__m64*)(src+14), minor3);
 }
-#endif
+#endif /* HAVE_SSE */
 
 /*
  * Invert a 4x4 matrix using Cramer's rule. Assume that the matrix
@@ -414,7 +526,10 @@ SG_MatrixInvertCramerp(const SG_Matrix *A)
 	return (Ainv);
 }
 
-/* Return the inverse of matrix A into Ainv. */
+/*
+ * Invert a 4x4 matrix using Gaussian elimination. Return the result
+ * into Ainv.
+ */
 int
 SG_MatrixInvert(const SG_Matrix *A, SG_Matrix *Ainv)
 {
@@ -643,7 +758,7 @@ SG_MatrixOrbitv(SG_Matrix *M, SG_Vector p, SG_Vector A, SG_Real theta)
 	R.m[3][3] = 1.0;
 	SG_MatrixTranslatev(M, p);
 	SG_MatrixMultv(M, &R);
-	SG_MatrixTranslatev(M, SG_MIRROR(p));
+	SG_MatrixTranslatev(M, VecMirror(p,1,1,1));
 }
 
 void
