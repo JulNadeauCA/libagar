@@ -22,7 +22,7 @@ static void
 LorenzPlot(void *pNode, SG_View *sgv)
 {
 	SG_Node *node = pNode;
-	SG_Vector p = SG_VECTOR(0.0, 1.0, -1.0);
+	SG_Vector p = VecGet(0.0, 1.0, -1.0);
 	SG_Color color;
 	int i;
 	
@@ -175,7 +175,7 @@ main(int argc, char *argv[])
 
 	/* Reposition the default camera. */
 	SG_Translate3(sv->cam, 10.0, 0.0, -100.0);
-	SG_Rotatevd(sv->cam, 180.0, SG_VecI);
+	SG_Rotatevd(sv->cam, 180.0, VecI());
 
 	AG_EventLoop();
 	AG_Destroy();

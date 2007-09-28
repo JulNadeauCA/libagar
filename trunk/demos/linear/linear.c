@@ -23,26 +23,27 @@ static SG_Vector w = { 0.0, 0.0, 1.0 };
 
 /* Generate the plot. */
 static void
-LinearPlot(SG *sg, void *p)
+LinearPlot(void *p, SG_View *view)
 {
+	SG *sg = view->sg;
 	SG_Node *node = p;
 	SG_Real c, d, e;
 	SG_Vector up, vp, wp;
 
 	SG_Begin(SG_POINTS);
 	for (c = c1; c < c2; c += step) {
-		up = SG_VectorScale(u, c);
+		up = VecScale(u, c);
 		SG_Vertex3v(&up);
 		SG_Color3f(c/c2, d/d2, e/e2);
 		for (d = d1; d < d2; d += step) {
-			vp = SG_VectorScale(v, d);
-			vp = SG_VectorAdd(vp, up);
+			vp = VecScale(v, d);
+			vp = VecAdd(vp, up);
 			SG_Color3f(c/c2, d/d2, e/e2);
 			SG_Vertex3v(&vp);
 			for (e = e1; e < e2; e += step) {
-				wp = SG_VectorScale(w, e);
-				wp = SG_VectorAdd(wp, up);
-				wp = SG_VectorAdd(wp, vp);
+				wp = VecScale(w, e);
+				wp = VecAdd(wp, up);
+				wp = VecAdd(wp, vp);
 				SG_Color3f(c/c2, d/d2, e/e2);
 				SG_Vertex3v(&wp);
 			}
@@ -168,7 +169,7 @@ main(int argc, char *argv[])
 	
 	/* Reposition the default camera. */
 	SG_Translate3(sv->cam, 0.0, 0.0, -20.0);
-	SG_Rotatevd(sv->cam, 180.0, SG_VecI);
+	SG_Rotatevd(sv->cam, 180.0, VecI());
 
 	AG_EventLoop();
 	AG_Destroy();

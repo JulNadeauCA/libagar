@@ -4,7 +4,7 @@ include Makefile.config
 PROG=	catastrophe
 SRCS=	catastrophe.c
 
-CFLAGS+=${AGAR_CFLAGS} ${AGAR_SG_CFLAGS} -I.
+CFLAGS+=${AGAR_CFLAGS} ${AGAR_SG_CFLAGS} -I. -D_USE_AGAR_MATH
 LIBS+=	${AGAR_LIBS} ${AGAR_SG_LIBS}
 
 all: all-subdir ${PROG}
