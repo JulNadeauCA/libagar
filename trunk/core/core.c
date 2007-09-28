@@ -34,7 +34,6 @@
 #include <config/have_pthreads_xopen.h>
 #include <config/have_pthread_mutex_recursive.h>
 #include <config/have_pthread_mutex_recursive_np.h>
-#include <config/have_sdl_cpuinfo.h>
 #include <config/have_x11.h>
 
 #include <core/core.h>
