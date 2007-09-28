@@ -1,25 +1,5 @@
 /*	Public domain	*/
 
-#define SG_VECTOR2(x,y) SG_GetVector2((x),(y))
-#define SG_VECTOR(x,y,z) SG_GetVector((x),(y),(z))
-#define SG_VECTOR4(x,y,z,w) SG_GetVector4((x),(y),(z),(w))
-#define SG_MIRROR2(v) SG_VectorMirror2((v),1,1)
-#define SG_MIRROR(v) SG_VectorMirror((v),1,1,1)
-#define SG_MIRROR4(v) SG_VectorMirror4((v),1,1,1,1)
-
-#define SG_Vec0 SG_GetZeroVector()
-#define SG_VecI (SG_VECTOR(1.0,0.0,0.0))
-#define SG_VecJ (SG_VECTOR(0.0,1.0,0.0))
-#define SG_VecK (SG_VECTOR(0.0,0.0,1.0))
-#define SG_Vec20 SG_GetZeroVector2()
-#define SG_Vec2I (SG_VECTOR2(1.0,0.0))
-#define SG_Vec2J (SG_VECTOR2(0.0,1.0))
-#define SG_Vec40 SG_GetZeroVector4()
-#define SG_Vec4I (SG_VECTOR4(1.0,0.0,0.0,0.0))
-#define SG_Vec4J (SG_VECTOR4(0.0,1.0,0.0,0.0))
-#define SG_Vec4K (SG_VECTOR4(0.0,0.0,1.0,0.0))
-#define SG_Vec4L (SG_VECTOR4(0.0,0.0,0.0,0.0))
-
 #define SG_VECTOR2_INITIALIZER(x,y)	{ (x),(y) }
 #define SG_VECTOR_INITIALIZER(x,y,z)	{ (x),(y),(z) }
 #define SG_VECTOR4_INITIALIZER(x,y,z,w)	{ (x),(y),(z),(w) }
@@ -27,148 +7,162 @@
 #define SG_ZERO_VECTOR_INITIALIZER()	{ 0.0,0.0,0.0 }
 #define SG_ZERO_VECTOR4_INITIALIZER()	{ 0.0,0.0,0.0,0.0 }
 
+/* Operations on vectors in R^2 */
+typedef struct sg_vector_ops2 {
+	const char *name;
+
+	SG_Vector2 (*Zero)(void);
+	SG_Vector2 (*Get)(SG_Real, SG_Real);
+	void       (*Set)(SG_Vector2 *, SG_Real, SG_Real);
+	void       (*Copy)(SG_Vector2 *, const SG_Vector2 *);
+	SG_Vector2 (*Mirror)(SG_Vector2, int, int);
+	SG_Vector2 (*Mirrorp)(const SG_Vector2 *, int, int);
+	SG_Real    (*Len)(SG_Vector2);
+	SG_Real    (*Lenp)(const SG_Vector2 *);
+	SG_Real    (*Dot)(SG_Vector2, SG_Vector2);
+	SG_Real    (*Dotp)(const SG_Vector2 *, const SG_Vector2 *);
+	SG_Real    (*PerpDot)(SG_Vector2, SG_Vector2);
+	SG_Real    (*PerpDotp)(const SG_Vector2 *, const SG_Vector2 *);
+	SG_Real    (*Distance)(SG_Vector2, SG_Vector2);
+	SG_Real    (*Distancep)(const SG_Vector2 *, const SG_Vector2 *);
+	SG_Vector2 (*Norm)(SG_Vector2);
+	SG_Vector2 (*Normp)(const SG_Vector2 *);
+	void       (*Normv)(SG_Vector2 *);
+	SG_Vector2 (*Scale)(SG_Vector2, SG_Real);
+	SG_Vector2 (*Scalep)(const SG_Vector2 *, SG_Real);
+	void       (*Scalev)(SG_Vector2 *, SG_Real);
+	SG_Vector2 (*Add)(SG_Vector2, SG_Vector2);
+	SG_Vector2 (*Addp)(const SG_Vector2 *, const SG_Vector2 *);
+	void       (*Addv)(SG_Vector2 *, const SG_Vector2 *);
+	SG_Vector2 (*Addn)(int, ...);
+	SG_Vector2 (*Sub)(SG_Vector2, SG_Vector2);
+	SG_Vector2 (*Subp)(const SG_Vector2 *, const SG_Vector2 *);
+	void       (*Subv)(SG_Vector2 *, const SG_Vector2 *);
+	SG_Vector2 (*Subn)(int, ...);
+	SG_Vector2 (*Avg)(SG_Vector2, SG_Vector2);
+	SG_Vector2 (*Avgp)(const SG_Vector2 *, const SG_Vector2 *);
+	SG_Vector2 (*LERP)(SG_Vector2, SG_Vector2, SG_Real);
+	SG_Vector2 (*LERPp)(SG_Vector2 *, SG_Vector2 *, SG_Real);
+	SG_Vector2 (*ElemPow)(SG_Vector2, SG_Real);
+	SG_Real    (*VecAngle)(SG_Vector2, SG_Vector2);
+	SG_Vector2 (*Rotate)(SG_Vector2, SG_Real);
+	void       (*Rotatev)(SG_Vector2 *, SG_Real);
+} SG_VectorOps2;
+
+/* Operations on vectors in R^3 */
+typedef struct sg_vector_ops3 {
+	const char *name;
+
+	SG_Vector  (*Zero)(void);
+	SG_Vector  (*Get)(SG_Real, SG_Real, SG_Real);
+	void       (*Set)(SG_Vector *, SG_Real, SG_Real, SG_Real);
+	void       (*Copy)(SG_Vector *, const SG_Vector *);
+	SG_Vector  (*Mirror)(SG_Vector, int, int, int);
+	SG_Vector  (*Mirrorp)(const SG_Vector *, int, int, int);
+	SG_Real	   (*Len)(SG_Vector);
+	SG_Real    (*Lenp)(const SG_Vector *);
+	SG_Real    (*Dot)(SG_Vector, SG_Vector);
+	SG_Real    (*Dotp)(const SG_Vector *, const SG_Vector *);
+	SG_Real    (*Distance)(SG_Vector, SG_Vector);
+	SG_Real    (*Distancep)(const SG_Vector *, const SG_Vector *);
+	SG_Vector  (*Norm)(SG_Vector);
+	SG_Vector  (*Normp)(const SG_Vector *);
+	void       (*Normv)(SG_Vector *);
+	SG_Vector  (*Cross)(SG_Vector, SG_Vector);
+	SG_Vector  (*Crossp)(const SG_Vector *, const SG_Vector *);
+	SG_Vector  (*NormCross)(SG_Vector, SG_Vector);
+	SG_Vector  (*NormCrossp)(const SG_Vector *, const SG_Vector *);
+	SG_Vector  (*Scale)(SG_Vector, SG_Real);
+	SG_Vector  (*Scalep)(const SG_Vector *, SG_Real);
+	void       (*Scalev)(SG_Vector *, SG_Real);
+	SG_Vector  (*Add)(SG_Vector, SG_Vector);
+	SG_Vector  (*Addp)(const SG_Vector *, const SG_Vector *);
+	void	   (*Addv)(SG_Vector *, const SG_Vector *);
+	SG_Vector  (*Addn)(int, ...);
+	SG_Vector  (*Sub)(SG_Vector, SG_Vector);
+	SG_Vector  (*Subp)(const SG_Vector *, const SG_Vector *);
+	void	   (*Subv)(SG_Vector *, const SG_Vector *);
+	SG_Vector  (*Subn)(int, ...);
+	SG_Vector  (*Avg)(SG_Vector, SG_Vector);
+	SG_Vector  (*Avgp)(const SG_Vector *, const SG_Vector *);
+	SG_Vector  (*LERP)(SG_Vector, SG_Vector, SG_Real);
+	SG_Vector  (*LERPp)(SG_Vector *, SG_Vector *, SG_Real);
+	SG_Vector  (*ElemPow)(SG_Vector, SG_Real);
+	void	   (*VecAngle)(SG_Vector, SG_Vector, SG_Real *, SG_Real *);
+	SG_Vector  (*Rotate)(SG_Vector, SG_Real, SG_Vector);
+	void       (*Rotatev)(SG_Vector *, SG_Real, SG_Vector);
+	SG_Vector  (*RotateQuat)(SG_Vector, SG_Quat);
+	SG_Vector  (*RotateI)(SG_Vector, SG_Real);
+	SG_Vector  (*RotateJ)(SG_Vector, SG_Real);
+	SG_Vector  (*RotateK)(SG_Vector, SG_Real);
+} SG_VectorOps3;
+
+/* Operations on vectors in R^4 */
+typedef struct sg_vector_ops4 {
+	const char *name;
+
+	SG_Vector4 (*Zero)(void);
+	SG_Vector4 (*Get)(SG_Real, SG_Real, SG_Real, SG_Real);
+	void       (*Set)(SG_Vector4 *, SG_Real, SG_Real, SG_Real, SG_Real);
+	void       (*Copy)(SG_Vector4 *, const SG_Vector4 *);
+	SG_Vector4 (*Mirror)(SG_Vector4, int, int, int, int);
+	SG_Vector4 (*Mirrorp)(const SG_Vector4 *, int, int, int, int);
+	SG_Real    (*Len)(SG_Vector4);
+	SG_Real    (*Lenp)(const SG_Vector4 *);
+	SG_Real    (*Dot)(SG_Vector4, SG_Vector4);
+	SG_Real    (*Dotp)(const SG_Vector4 *, const SG_Vector4 *);
+	SG_Real    (*Distance)(SG_Vector4, SG_Vector4);
+	SG_Real    (*Distancep)(const SG_Vector4 *, const SG_Vector4 *);
+	SG_Vector4 (*Norm)(SG_Vector4);
+	SG_Vector4 (*Normp)(const SG_Vector4 *);
+	void       (*Normv)(SG_Vector4 *);
+	SG_Vector4 (*Cross)(SG_Vector4, SG_Vector4, SG_Vector4);
+	SG_Vector4 (*Crossp)(const SG_Vector4 *, const SG_Vector4 *,
+	                                         const SG_Vector4 *);
+	SG_Vector4 (*NormCross)(SG_Vector4, SG_Vector4, SG_Vector4);
+	SG_Vector4 (*NormCrossp)(const SG_Vector4 *, const SG_Vector4 *,
+	                                             const SG_Vector4 *);
+	SG_Vector4 (*Scale)(SG_Vector4, SG_Real);
+	SG_Vector4 (*Scalep)(const SG_Vector4 *, SG_Real);
+	void       (*Scalev)(SG_Vector4 *, SG_Real);
+	SG_Vector4 (*Add)(SG_Vector4, SG_Vector4);
+	SG_Vector4 (*Addp)(const SG_Vector4 *, const SG_Vector4 *);
+	void       (*Addv)(SG_Vector4 *, const SG_Vector4 *);
+	SG_Vector4 (*Addn)(int, ...);
+	SG_Vector4 (*Sub)(SG_Vector4, SG_Vector4);
+	SG_Vector4 (*Subp)(const SG_Vector4 *, const SG_Vector4 *);
+	void       (*Subv)(SG_Vector4 *, const SG_Vector4 *);
+	SG_Vector4 (*Subn)(int, ...);
+	SG_Vector4 (*Avg)(SG_Vector4, SG_Vector4);
+	SG_Vector4 (*Avgp)(const SG_Vector4 *, const SG_Vector4 *);
+	SG_Vector4 (*LERP)(SG_Vector4, SG_Vector4, SG_Real);
+	SG_Vector4 (*LERPp)(SG_Vector4 *, SG_Vector4 *, SG_Real);
+	SG_Vector4 (*ElemPow)(SG_Vector4, SG_Real);
+	void	   (*VecAngle)(SG_Vector4, SG_Vector4, SG_Real *, SG_Real *,
+	                       SG_Real *);
+	SG_Vector4 (*Rotate)(SG_Vector4, SG_Real, SG_Vector4);
+	void       (*Rotatev)(SG_Vector4 *, SG_Real, SG_Vector4);
+} SG_VectorOps4;
+
 __BEGIN_DECLS
-__inline__ SG_Vector2 SG_GetVector2(SG_Real, SG_Real);
-__inline__ SG_Vector  SG_GetVector (SG_Real, SG_Real, SG_Real);
-__inline__ SG_Vector4 SG_GetVector4(SG_Real, SG_Real, SG_Real, SG_Real);
+extern const SG_VectorOps2 *sgVecOps2;
+extern const SG_VectorOps3 *sgVecOps3;
+extern const SG_VectorOps4 *sgVecOps4;
+__END_DECLS
 
-__inline__ SG_Vector2 SG_Vector3to2(SG_Vector);
-__inline__ SG_Vector  SG_Vector2to3(SG_Vector2);
-__inline__ SG_Vector4 SG_Vector3to4(SG_Vector);
+#if defined(_AGAR_INTERNAL)
+#include <sg/sg_vector2_fpu.h>
+#include <sg/sg_vector3_fpu.h>
+#include <sg/sg_vector4_fpu.h>
+#else
+#include <agar/sg/sg_vector2_fpu.h>
+#include <agar/sg/sg_vector3_fpu.h>
+#include <agar/sg/sg_vector4_fpu.h>
+#endif
 
-__inline__ SG_Vector2 SG_GetZeroVector2(void);
-__inline__ SG_Vector  SG_GetZeroVector (void);
-__inline__ SG_Vector4 SG_GetZeroVector4(void);
-
-__inline__ void	SG_SetVector2(SG_Vector2 *, SG_Real, SG_Real);
-__inline__ void	SG_SetVector (SG_Vector  *, SG_Real, SG_Real, SG_Real);
-__inline__ void	SG_SetVector4(SG_Vector4 *, SG_Real, SG_Real, SG_Real, SG_Real);
-
-__inline__ void	SG_VectorCopy2(SG_Vector2 *, const SG_Vector2 *);
-__inline__ void	SG_VectorCopy (SG_Vector  *, const SG_Vector  *);
-__inline__ void	SG_VectorCopy4(SG_Vector4 *, const SG_Vector4 *);
-
-__inline__ SG_Vector2 SG_VectorMirror2(SG_Vector2, int, int);
-__inline__ SG_Vector  SG_VectorMirror (SG_Vector,  int, int, int);
-__inline__ SG_Vector4 SG_VectorMirror4(SG_Vector4, int, int, int, int);
-__inline__ SG_Vector2 SG_VectorMirror2p(const SG_Vector2 *, int, int);
-__inline__ SG_Vector  SG_VectorMirrorp (const SG_Vector  *, int, int, int);
-__inline__ SG_Vector4 SG_VectorMirror4p(const SG_Vector4 *, int, int, int, int);
-
-__inline__ SG_Real SG_VectorLen2(SG_Vector2);
-__inline__ SG_Real SG_VectorLen (SG_Vector );
-__inline__ SG_Real SG_VectorLen4(SG_Vector4);
-__inline__ SG_Real SG_VectorLen2p(const SG_Vector2 *);
-__inline__ SG_Real SG_VectorLenp (const SG_Vector  *);
-__inline__ SG_Real SG_VectorLen4p(const SG_Vector4 *);
-
-__inline__ SG_Real SG_VectorDot2(SG_Vector2, SG_Vector2);
-__inline__ SG_Real SG_VectorDot (SG_Vector , SG_Vector );
-__inline__ SG_Real SG_VectorDot4(SG_Vector4, SG_Vector4);
-__inline__ SG_Real SG_VectorDot2p(const SG_Vector2 *, const SG_Vector2 *);
-__inline__ SG_Real SG_VectorDotp (const SG_Vector  *, const SG_Vector  *);
-__inline__ SG_Real SG_VectorDot4p(const SG_Vector4 *, const SG_Vector4 *);
-__inline__ SG_Real SG_VectorPerpDot2(SG_Vector2, SG_Vector2);
-__inline__ SG_Real SG_VectorPerpDot2p(const SG_Vector2 *, const SG_Vector2 *);
-
-__inline__ SG_Real SG_VectorDistance2(SG_Vector2, SG_Vector2);
-__inline__ SG_Real SG_VectorDistance (SG_Vector,  SG_Vector );
-__inline__ SG_Real SG_VectorDistance4(SG_Vector4, SG_Vector4);
-__inline__ SG_Real SG_VectorDistance2p(const SG_Vector2 *, const SG_Vector2 *);
-__inline__ SG_Real SG_VectorDistancep (const SG_Vector  *, const SG_Vector  *);
-__inline__ SG_Real SG_VectorDistance4p(const SG_Vector4 *, const SG_Vector4 *);
-
-__inline__ SG_Vector2 SG_VectorNorm2(SG_Vector2);
-__inline__ SG_Vector  SG_VectorNorm (SG_Vector );
-__inline__ SG_Vector4 SG_VectorNorm4(SG_Vector4);
-__inline__ SG_Vector2 SG_VectorNorm2p(const SG_Vector2 *);
-__inline__ SG_Vector  SG_VectorNormp (const SG_Vector  *);
-__inline__ SG_Vector4 SG_VectorNorm4p(const SG_Vector4 *);
-__inline__ void	      SG_VectorNorm2v(SG_Vector2 *);
-__inline__ void	      SG_VectorNormv (SG_Vector  *);
-__inline__ void	      SG_VectorNorm4v(SG_Vector4 *);
-
-__inline__ SG_Vector  SG_VectorCross(SG_Vector, SG_Vector);
-__inline__ SG_Vector4 SG_VectorCross4(SG_Vector4, SG_Vector4, SG_Vector4);
-__inline__ SG_Vector  SG_VectorCrossp(const SG_Vector *, const SG_Vector *);
-__inline__ SG_Vector4 SG_VectorCross4p(const SG_Vector4 *, const SG_Vector4 *,
-                                       const SG_Vector4 *);
-__inline__ SG_Vector  SG_VectorNormCross(SG_Vector, SG_Vector);
-__inline__ SG_Vector4 SG_VectorNormCross4(SG_Vector4, SG_Vector4, SG_Vector4);
-__inline__ SG_Vector  SG_VectorNormCrossp(const SG_Vector *, const SG_Vector *);
-__inline__ SG_Vector4 SG_VectorNormCross4p(const SG_Vector4 *,
-                                           const SG_Vector4 *,
-                                           const SG_Vector4 *);
-
-__inline__ SG_Vector2 SG_VectorScale2(SG_Vector2, SG_Real);
-__inline__ SG_Vector  SG_VectorScale (SG_Vector,  SG_Real);
-__inline__ SG_Vector4 SG_VectorScale4(SG_Vector4, SG_Real);
-__inline__ SG_Vector2 SG_VectorScale2p(const SG_Vector2 *, SG_Real);
-__inline__ SG_Vector  SG_VectorScalep (const SG_Vector  *, SG_Real);
-__inline__ SG_Vector4 SG_VectorScale4p(const SG_Vector4 *, SG_Real);
-__inline__ void       SG_VectorScale2v(SG_Vector2 *, SG_Real);
-__inline__ void       SG_VectorScalev (SG_Vector  *, SG_Real);
-__inline__ void       SG_VectorScale4v(SG_Vector4 *, SG_Real);
-
-__inline__ SG_Vector2 SG_VectorAdd2(SG_Vector2, SG_Vector2);
-__inline__ SG_Vector  SG_VectorAdd (SG_Vector,  SG_Vector );
-__inline__ SG_Vector4 SG_VectorAdd4(SG_Vector4, SG_Vector4);
-__inline__ SG_Vector2 SG_VectorAdd2p(const SG_Vector2 *, const SG_Vector2 *);
-__inline__ SG_Vector  SG_VectorAddp (const SG_Vector  *, const SG_Vector  *);
-__inline__ SG_Vector4 SG_VectorAdd4p(const SG_Vector4 *, const SG_Vector4 *);
-__inline__ void	      SG_VectorAdd2v(SG_Vector2 *, const SG_Vector2 *);
-__inline__ void	      SG_VectorAddv (SG_Vector  *, const SG_Vector  *);
-__inline__ void	      SG_VectorAdd4v(SG_Vector4 *, const SG_Vector4 *);
-SG_Vector2	      SG_VectorAdd2n(int, ...);
-SG_Vector	      SG_VectorAddn (int, ...);
-SG_Vector4	      SG_VectorAdd4n(int, ...);
-
-__inline__ SG_Vector2 SG_VectorSub2(SG_Vector2, SG_Vector2);
-__inline__ SG_Vector  SG_VectorSub (SG_Vector,  SG_Vector);
-__inline__ SG_Vector4 SG_VectorSub4(SG_Vector4, SG_Vector4);
-__inline__ SG_Vector2 SG_VectorSub2p(const SG_Vector2 *, const SG_Vector2 *);
-__inline__ SG_Vector  SG_VectorSubp (const SG_Vector  *, const SG_Vector  *);
-__inline__ SG_Vector4 SG_VectorSub4p(const SG_Vector4 *, const SG_Vector4 *);
-__inline__ void	      SG_VectorSub2v(SG_Vector2 *, const SG_Vector2 *);
-__inline__ void	      SG_VectorSubv (SG_Vector  *, const SG_Vector  *);
-__inline__ void	      SG_VectorSub4v(SG_Vector4 *, const SG_Vector4 *);
-SG_Vector2	      SG_VectorSub2n(int, ...);
-SG_Vector	      SG_VectorSubn (int, ...);
-SG_Vector4	      SG_VectorSub4n(int, ...);
-
-__inline__ SG_Vector2 SG_VectorAvg2(SG_Vector2, SG_Vector2);
-__inline__ SG_Vector  SG_VectorAvg (SG_Vector,  SG_Vector );
-__inline__ SG_Vector4 SG_VectorAvg4(SG_Vector4, SG_Vector4);
-__inline__ SG_Vector2 SG_VectorAvg2p(const SG_Vector2 *, const SG_Vector2 *);
-__inline__ SG_Vector  SG_VectorAvgp (const SG_Vector  *, const SG_Vector  *);
-__inline__ SG_Vector4 SG_VectorAvg4p(const SG_Vector4 *, const SG_Vector4 *);
-
-__inline__ SG_Vector2 SG_VectorLERP2(SG_Vector2, SG_Vector2, SG_Real);
-__inline__ SG_Vector  SG_VectorLERP (SG_Vector,  SG_Vector,  SG_Real);
-__inline__ SG_Vector4 SG_VectorLERP4(SG_Vector4, SG_Vector4, SG_Real);
-__inline__ SG_Vector2 SG_VectorLERP2p(SG_Vector2 *, SG_Vector2 *, SG_Real);
-__inline__ SG_Vector  SG_VectorLERPp (SG_Vector  *, SG_Vector  *, SG_Real);
-__inline__ SG_Vector4 SG_VectorLERP4p(SG_Vector4 *, SG_Vector4 *, SG_Real);
-
-SG_Vector  SG_VectorElemPow(SG_Vector, SG_Real);
-
-__inline__ SG_Real SG_VectorVectorAngle2(SG_Vector2, SG_Vector2);
-__inline__ void	   SG_VectorVectorAngle(SG_Vector, SG_Vector, SG_Real *,
-                                        SG_Real *);
-__inline__ void	   SG_VectorVectorAngle4(SG_Vector4, SG_Vector4, SG_Real *,
-                                         SG_Real *, SG_Real *);
-
-__inline__ SG_Vector2 SG_VectorRotate2(SG_Vector2, SG_Real);
-__inline__ SG_Vector  SG_VectorRotate (SG_Vector,  SG_Real, SG_Vector );
-__inline__ SG_Vector4 SG_VectorRotate4(SG_Vector4, SG_Real, SG_Vector4);
-__inline__ void	      SG_VectorRotate2v(SG_Vector2 *, SG_Real);
-void		      SG_VectorRotatev (SG_Vector  *, SG_Real, SG_Vector);
-__inline__ void	      SG_VectorRotate4v(SG_Vector4 *, SG_Real, SG_Vector4);
-__inline__ SG_Vector  SG_VectorRotateQuat(SG_Vector, SG_Quat);
-__inline__ SG_Vector  SG_VectorRotateI(SG_Vector, SG_Real);
-__inline__ SG_Vector  SG_VectorRotateJ(SG_Vector, SG_Real);
-__inline__ SG_Vector  SG_VectorRotateK(SG_Vector, SG_Real);
-
+__BEGIN_DECLS
+void       SG_VectorInitEngine(void);
+void       SG_VectorDestroyEngine(void);
 SG_Vector2 SG_ReadVector2(AG_Netbuf *);
 SG_Vector  SG_ReadVector (AG_Netbuf *);
 SG_Vector4 SG_ReadVector4(AG_Netbuf *);
@@ -187,138 +181,147 @@ void	   SG_ReadVectorf4v(AG_Netbuf *, SG_Vector4 *);
 void	   SG_WriteVectorf2(AG_Netbuf *, SG_Vector2 *);
 void	   SG_WriteVectorf (AG_Netbuf *, SG_Vector *);
 void	   SG_WriteVectorf4(AG_Netbuf *, SG_Vector4 *);
+
+__inline__ SG_Vector2 SG_Vector3to2(SG_Vector);
+__inline__ SG_Vector  SG_Vector2to3(SG_Vector2);
+__inline__ SG_Vector4 SG_Vector3to4(SG_Vector);
 __END_DECLS
 
-#ifdef _AGAR_INTERNAL
+#if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_MATH)
+#define Vec2 sgVecOps2
+#define Vec3 sgVecOps3
+#define Vec4 sgVecOps4
 
-#undef Vec2
-#undef Vec
-#undef Vec4
-
-#define Vec2(x,y)	SG_VECTOR2((x),(y))
-#define Vec(x,y,z)	SG_VECTOR((x),(y),(z))
-#define Vec4(x,y,z,w)	SG_VECTOR4((x),(y),(z),(w))
-
-#define Vec0 SG_Vec0
-#define VecI SG_VecI
-#define VecJ SG_VecJ
-#define VecK SG_VecK
-
-#define VecMirror2	SG_VectorMirror2
-#define VecMirror	SG_VectorMirror
-#define VecMirror4	SG_VectorMirror4
-#define VecMirror2p	SG_VectorMirror2p
-#define VecMirrorp	SG_VectorMirrorp
-#define VecMirror4p	SG_VectorMirror4p
-
-#define VecLen2		SG_VectorLen2
-#define VecLen		SG_VectorLen
-#define VecLen4		SG_VectorLen4
-#define VecLen2p	SG_VectorLen2p
-#define VecLenp		SG_VectorLenp
-#define VecLen4p	SG_VectorLen4p
-
-#define VecDot2		SG_VectorDot2
-#define VecDot		SG_VectorDot
-#define VecDot4		SG_VectorDot4
-#define VecDot2p	SG_VectorDot2p
-#define VecDotp		SG_VectorDotp
-#define VecDot4p	SG_VectorDot4p
-#define VecPerpDot2	SG_VectorPerpDot2
-#define VecPerpDot2p	SG_VectorPerpDot2p
-
-#define VecDistance2	SG_VectorDistance2
-#define VecDistance	SG_VectorDistance
-#define VecDistance4	SG_VectorDistance4
-#define VecDistance2p	SG_VectorDistance2p
-#define VecDistancep	SG_VectorDistancep
-#define VecDistance4p	SG_VectorDistance4p
-
-#define VecNorm2	SG_VectorNorm2
-#define VecNorm		SG_VectorNorm
-#define VecNorm4	SG_VectorNorm4
-#define VecNorm2p	SG_VectorNorm2p
-#define VecNormp	SG_VectorNormp
-#define VecNorm4p	SG_VectorNorm4p
-#define VecNorm2v	SG_VectorNorm2v
-#define VecNormv	SG_VectorNormv
-#define VecNorm4v	SG_VectorNorm4v
-#define VecCross	SG_VectorCross
-#define VecCross4	SG_VectorCross4
-#define VecCrossp	SG_VectorCrossp
-#define VecCross4p	SG_VectorCross4p
-#define VecNormCross	SG_VectorNormCross
-#define VecNormCross4	SG_VectorNormCross4
-#define VecNormCross4p	SG_VectorNormCross4p
-
-#define VecScale2	SG_VectorScale2
-#define VecScale	SG_VectorScale
-#define VecScale4	SG_VectorScale4
-#define VecScale2p	SG_VectorScale2p
-#define VecScalep	SG_VectorScalep
-#define VecScale4p	SG_VectorScale4p
-#define VecScale2v	SG_VectorScale2v
-#define VecScalev	SG_VectorScalev
-#define VecScale4v	SG_VectorScale4v
-
-#define VecAdd2		SG_VectorAdd2
-#define VecAdd		SG_VectorAdd
-#define VecAdd4		SG_VectorAdd4
-#define VecAdd2p	SG_VectorAdd2p
-#define VecAddp		SG_VectorAddp
-#define VecAdd4p	SG_VectorAdd4p
-#define VecAdd2v	SG_VectorAdd2v
-#define VecAddv		SG_VectorAddv
-#define VecAdd4v	SG_VectorAdd4v
-#define VecAdd2n	SG_VectorAdd2n
-#define VecAddn		SG_VectorAddn
-#define VecAdd4n	SG_VectorAdd4n
-
-#define VecSub2		SG_VectorSub2
-#define VecSub		SG_VectorSub
-#define VecSub4		SG_VectorSub4
-#define VecSub2p	SG_VectorSub2p
-#define VecSubp		SG_VectorSubp
-#define VecSub4p	SG_VectorSub4p
-#define VecSub2v	SG_VectorSub2v
-#define VecSubv		SG_VectorSubv
-#define VecSub4v	SG_VectorSub4v
-#define VecSub2n	SG_VectorSub2n
-#define VecSubn		SG_VectorSubn
-#define VecSub4n	SG_VectorSub4n
-
-#define VecAvg2		SG_VectorAvg2
-#define VecAvg		SG_VectorAvg
-#define VecAvg4		SG_VectorAvg4
-#define VecAvg2p	SG_VectorAvg2p
-#define VecAvgp		SG_VectorAvgp
-#define VecAvg4p	SG_VectorAvg4p
-
-#define VecLERP2	SG_VectorLERP2
-#define VecLERP		SG_VectorLERP
-#define VecLERP4	SG_VectorLERP4
-#define VecLERP2p	SG_VectorLERP2p
-#define VecLERPp	SG_VectorLERPp
-#define VecLERP4p	SG_VectorLERP4p
-
-#define VecElemPow	SG_VectorElemPow
-
-#define VecVecAngle2	SG_VectorVectorAngle2
-#define VecVecAngle	SG_VectorVectorAngle
-#define VecVecAngle4	SG_VectorVectorAngle4
-
-#define VecRotate2	SG_VectorRotate2
-#define VecRotate	SG_VectorRotate
-#define VecRotate4	SG_VectorRotate4
-#define VecRotate2v	SG_VectorRotate2v
-#define VecRotatev	SG_VectorRotatev
-#define VecRotate4v	SG_VectorRotate4v
-#define VecRotateQuat	SG_VectorRotateQuat
-#define VecRotateI	SG_VectorRotateI
-#define VecRotateJ	SG_VectorRotateJ
-#define VecRotateK	SG_VectorRotateK
-
+#define VecI2()		Vec2->Get(1.0,0.0)
+#define VecJ2()		Vec2->Get(0.0,1.0)
+#define VecI()		Vec3->Get(1.0,0.0,0.0)
+#define VecJ()		Vec3->Get(0.0,1.0,0.0)
+#define VecK()		Vec3->Get(0.0,0.0,1.0)
+#define VecI4()		Vec4->Get(1.0,0.0,0.0,0.0)
+#define VecJ4()		Vec4->Get(0.0,1.0,0.0,0.0)
+#define VecK4()		Vec4->Get(0.0,0.0,1.0,0.0)
+#define VecL4()		Vec4->Get(0.0,0.0,0.0,1.0)
 #define Vec3to2		SG_Vector3to2
 #define Vec2to3		SG_Vector2to3
 #define Vec3to4		SG_Vector3to4
-#endif /* _AGAR_INTERNAL */
+
+#define VecZero2	Vec2->Zero
+#define VecGet2		Vec2->Get
+#define VecSet2		Vec2->Set
+#define VecCopy2	Vec2->Copy
+#define VecMirror2	Vec2->Mirror
+#define VecMirror2p	Vec2->Mirrorp
+#define VecLen2		Vec2->Len
+#define VecLen2p	Vec2->Lenp
+#define VecDot2		Vec2->Dot
+#define VecDot2p	Vec2->Dotp
+#define VecPerpDot2	Vec2->PerpDot
+#define VecPerpDot2p	Vec2->PerpDotp
+#define VecDistance2	Vec2->Distance
+#define VecDistance2p	Vec2->Distancep
+#define VecNorm2	Vec2->Norm
+#define VecNorm2p	Vec2->Normp
+#define VecNorm2v	Vec2->Normv
+#define VecScale2	Vec2->Scale
+#define VecScale2p	Vec2->Scalep
+#define VecScale2v	Vec2->Scalev
+#define VecAdd2		Vec2->Add
+#define VecAdd2p	Vec2->Addp
+#define VecAdd2v	Vec2->Addv
+#define VecAdd2n	Vec2->Addn
+#define VecSub2		Vec2->Sub
+#define VecSub2p	Vec2->Subp
+#define VecSub2v	Vec2->Subv
+#define VecSub2n	Vec2->Subn
+#define VecAvg2		Vec2->Avg
+#define VecAvg2p	Vec2->Avgp
+#define VecLERP2	Vec2->LERP
+#define VecLERP2p	Vec2->LERPp
+#define VecElemPow2	Vec2->ElemPow
+#define VecVecAngle2	Vec2->VecAngle
+#define VecRotate2	Vec2->Rotate
+#define VecRotate2v	Vec2->Rotatev
+
+#define VecZero		Vec3->Zero
+#define VecGet		Vec3->Get
+#define VecSet		Vec3->Set
+#define VecCopy		Vec3->Copy
+#define VecMirror	Vec3->Mirror
+#define VecMirrorp	Vec3->Mirrorp
+#define VecLen		Vec3->Len
+#define VecLenp		Vec3->Lenp
+#define VecDot		Vec3->Dot
+#define VecDotp		Vec3->Dotp
+#define VecDistance	Vec3->Distance
+#define VecDistancep	Vec3->Distancep
+#define VecNorm		Vec3->Norm
+#define VecNormp	Vec3->Normp
+#define VecNormv	Vec3->Normv
+#define VecCross	Vec3->Cross
+#define VecCrossp	Vec3->Crossp
+#define VecNormCross	Vec3->NormCross
+#define VecNormCrossp	Vec3->NormCrossp
+#define VecScale	Vec3->Scale
+#define VecScalep	Vec3->Scalep
+#define VecScalev	Vec3->Scalev
+#define VecAdd		Vec3->Add
+#define VecAddp		Vec3->Addp
+#define VecAddv		Vec3->Addv
+#define VecAddn		Vec3->Addn
+#define VecSub		Vec3->Sub
+#define VecSubp		Vec3->Subp
+#define VecSubv		Vec3->Subv
+#define VecSubn		Vec3->Subn
+#define VecAvg		Vec3->Avg
+#define VecAvgp		Vec3->Avgp
+#define VecLERP		Vec3->LERP
+#define VecLERPp	Vec3->LERPp
+#define VecElemPow	Vec3->ElemPow
+#define VecVecAngle	Vec3->VecAngle
+#define VecRotate	Vec3->Rotate
+#define VecRotatev	Vec3->Rotatev
+#define VecRotateQuat	Vec3->RotateQuat
+#define VecRotateI	Vec3->RotateI
+#define VecRotateJ	Vec3->RotateJ
+#define VecRotateK	Vec3->RotateK
+
+#define VecZero4	Vec4->Zero
+#define VecGet4		Vec4->Get
+#define VecSet4		Vec4->Set
+#define VecCopy4	Vec4->Copy
+#define VecMirror4	Vec4->Mirror
+#define VecMirror4p	Vec4->Mirrorp
+#define VecLen4		Vec4->Len
+#define VecLen4p	Vec4->Lenp
+#define VecDot4		Vec4->Dot
+#define VecDot4p	Vec4->Dotp
+#define VecDistance4	Vec4->Distance
+#define VecDistance4p	Vec4->Distancep
+#define VecNorm4	Vec4->Norm
+#define VecNorm4p	Vec4->Normp
+#define VecNorm4v	Vec4->Norm4
+#define VecCross4	Vec4->Cross
+#define VecCross4p	Vec4->Crossp
+#define VecNormCross4	Vec4->NormCross
+#define VecNormCross4p	Vec4->NormCrossp
+#define VecScale4	Vec4->Scale
+#define VecScale4p	Vec4->Scalep
+#define VecScale4v	Vec4->Scalev
+#define VecAdd4		Vec4->Add
+#define VecAdd4p	Vec4->Addp
+#define VecAdd4v	Vec4->Addv
+#define VecAdd4n	Vec4->Addn
+#define VecSub4		Vec4->Sub
+#define VecSub4p	Vec4->Subp
+#define VecSub4v	Vec4->Subv
+#define VecSub4n	Vec4->Subn
+#define VecAvg4		Vec4->Avg
+#define VecAvg4p	Vec4->Avgp
+#define VecLERP4	Vec4->LERP
+#define VecLERP4p	Vec4->LERPp
+#define VecElemPow4	Vec4->ElemPow
+#define VecVecAngle4	Vec4->VecAngle
+#define VecRotate4	Vec4->Rotate
+#define VecRotate4v	Vec4->Rotatev
+
+#endif /* _AGAR_INTERNAL or _USE_AGAR_MATH */
