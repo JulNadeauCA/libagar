@@ -252,7 +252,7 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 	
 		if (sysctl(selectors, 2, &flag, &length, NULL, 0) == 0) {
 			if (flag != 0)
-				cpu->flags |= AG_EXT_ALTIVEC;
+				cpu->ext |= AG_EXT_ALTIVEC;
 		}
 	}
 #elif defined(HAVE_ALTIVEC) && defined(HAVE_SIGNAL) && defined(HAVE_SETJMP)
@@ -271,7 +271,7 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 		}
 		signal(SIGILL, fn);
 		if (hasAltiVec)
-			cpu->flags |= AG_EXT_ALTIVEC;
+			cpu->ext |= AG_EXT_ALTIVEC;
 	}
 #endif /* HAVE_ALTIVEC and HAVE_SIGNAL and HAVE_SETJMP */
 }
