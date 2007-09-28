@@ -71,8 +71,8 @@ SG_ObjectInit(void *p, const char *name)
 void
 SG_VertexInit(SG_Vertex *vtx)
 {
-	vtx->v = SG_VECTOR(0.0, 0.0, 0.0);
-	vtx->n = SG_VECTOR(0.0, 0.0, 0.0);
+	vtx->v = VecGet(0.0, 0.0, 0.0);
+	vtx->n = VecGet(0.0, 0.0, 0.0);
 	vtx->c = SG_ColorRGB(0.0, 0.0, 0.0);
 	vtx->s = 0.0;
 	vtx->t = 0.0;
@@ -355,8 +355,8 @@ SG_FacetExtrude(void *obj, SG_Facet *f, SG_Vector d, SG_ExtrudeMode mode)
 	for (i = 0; i < 1; i++) {
 		fE[i] = SG_FacetFromQuad4(so,
 		    HVTX(f->e[i]),
-		    SG_VertexNew(so, SG_VectorAdd(OBJ_V(so,HVTX(f->e[i])), d)),
-		    SG_VertexNew(so, SG_VectorAdd(OBJ_V(so,TVTX(f->e[i])), d)),
+		    SG_VertexNew(so, VecAdd(OBJ_V(so,HVTX(f->e[i])), d)),
+		    SG_VertexNew(so, VecAdd(OBJ_V(so,TVTX(f->e[i])), d)),
 		    TVTX(f->e[i]));
 		if (fE[i] == NULL)
 			return (-1);
@@ -371,11 +371,8 @@ SG_FacetNormal(SG_Object *so, SG_Facet *fct)
 	SG_Vector v1 = so->vtx[fct->e[2]->v].v;		/* Right-hand rule */
 	SG_Vector v0 = so->vtx[fct->e[1]->v].v;
 	SG_Vector v2 = so->vtx[fct->e[0]->v].v;
-	SG_Vector n;
 
-	n = SG_VectorCross(SG_VectorSub(v0, v1),
-	                   SG_VectorSub(v0, v2));
-	return (SG_VectorNorm(n));
+	return VecNormCross(VecSub(v0,v1), VecSub(v0,v2));
 }
 
 /* Return the area covered by a facet. */
@@ -418,7 +415,7 @@ SG_FacetCentroid(SG_Object *so, SG_Facet *fct)
 {
 	int i, j;
 	SG_Real dot, aTmp = 0.0;
-	SG_Vector vTmp = Vec0;
+	SG_Vector vTmp = VecZero();
 	SG_Vector cent;
 
 	for (i = (fct->n - 1), j = 0;
@@ -427,16 +424,16 @@ SG_FacetCentroid(SG_Object *so, SG_Facet *fct)
 		SG_Vector *vi = &FACET_V(so,fct,i);
 		SG_Vector *vj = &FACET_V(so,fct,j);
 
-		dot = SG_VectorDotp(vi, vj);
+		dot = VecDotp(vi, vj);
 		aTmp += dot;
 		vTmp.x += (vj->x + vi->x) * dot;
 		vTmp.y += (vj->y + vi->y) * dot;
 		vTmp.z += (vj->z + vi->z) * dot;
 	}
 	if (aTmp != 0.0) {
-		return (SG_VectorScalep(&vTmp, 1.0/(2.0*aTmp)));
+		return (VecScalep(&vTmp, 1.0/(2.0*aTmp)));
 	}
-	return (Vec0);					/* Undefined */
+	return VecZero();				/* Undefined */
 }
 
 /* Calculate vertex normals for the given object. */
@@ -737,8 +734,8 @@ DrawFacetNormals(SG_Object *so, SG_Facet *fct)
 	SG_Begin(SG_LINES);
 	SG_Color3ub(255, 255, 0);
 	SG_Vertex3v(&vc);
-	SG_VectorScalev(&n, 0.1);
-	SG_VectorAddv(&n, &vc);
+	VecScalev(&n, 0.1);
+	VecAddv(&n, &vc);
 	SG_Vertex3v(&n);
 	SG_End();
 	
@@ -760,8 +757,8 @@ DrawVertexNormals(SG_Object *so)
 		SG_Begin(SG_LINES);
 		SG_Color3ub(0, 255, 0);
 		SG_Vertex3v(v);
-		SG_VectorScalev(&n, 0.1);
-		SG_VectorAddv(&n, v);
+		VecScalev(&n, 0.1);
+		VecAddv(&n, v);
 		SG_Vertex3v(&n);
 		SG_End();
 	}
@@ -794,9 +791,9 @@ DrawObjectSilouhette(SG_Object *so, SG_View *view)
 			 * polygon.
 			 */
 			if (e->f != NULL && e->oe->f != NULL) {
-				SG_Real dot1 = SG_VectorDot(vCam,
+				SG_Real dot1 = VecDot(vCam,
 				    SG_FacetNormal(so, e->f));
-				SG_Real dot2 = SG_VectorDot(vCam,
+				SG_Real dot2 = VecDot(vCam,
 				    SG_FacetNormal(so, e->oe->f));
 
 				if ((dot1 >= 0.0 && dot2 <= 0.0) ||

@@ -67,7 +67,7 @@ SK_DimensionInit(void *p, Uint32 name)
 	dim->cLbl = SG_ColorRGB(0.0, 0.0, 0.5);
 	dim->cLblBorder = SG_ColorRGB(0.0, 0.0, 0.5);
 	dim->cLineDim = SG_ColorRGB(0.0, 0.0, 0.5);
-	dim->vLbl = Vec3(0.0, 1.0, 0.0);
+	dim->vLbl = VecGet(0.0, 1.0, 0.0);
 	dim->lbl = -1;
 	dim->text[0] = '\0';
 	dim->xPad = 5;
@@ -142,9 +142,9 @@ PointLineDistance(const SG_Vector *v, const SK_Line *L, SG_Vector *pvC)
               ((v->y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
 	vC = VecAdd(p1, VecScale(VecSubp(&p2,&p1), u));
 	if (pvC != NULL) {
-		SG_VectorCopy(pvC, &vC);
+		VecCopy(pvC, &vC);
 	}
-	return (VecDistancep(v,&vC));
+	return VecDistancep(v,&vC);
 }
 
 /* Compute the angle between two lines. */
@@ -190,8 +190,8 @@ TransformToAnnotFrame(SK_Dimension *dim, SG_Vector *vr1, SG_Vector *vr2)
 		theta = Atan2(vd.y, vd.x);
 		SG_MatrixTranslatev(&T, VecLERPp(&v1, &v2, 0.5));
 		SG_MatrixRotateZv(&T, theta);
-		if (vr1 != NULL) { SG_VectorCopy(vr1, &v1); }
-		if (vr2 != NULL) { SG_VectorCopy(vr2, &v2); }
+		if (vr1 != NULL) { VecCopy(vr1, &v1); }
+		if (vr2 != NULL) { VecCopy(vr2, &v2); }
 		break;
 	case SK_DIMENSION_ANGLE_ENDPOINT:
 		{

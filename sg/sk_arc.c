@@ -114,7 +114,7 @@ SK_ArcDraw(void *p, SK_View *skv)
 	}
 	SG_End();
 
-	v = SG_VectorMirrorp(&v, 1,1,1);
+	v = VecMirrorp(&v, 1,1,1);
 	SG_TranslateVecGL(v);
 }
 
@@ -173,7 +173,7 @@ ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 
 	if (t->cur_arc != NULL) {
 		vCenter = SK_Pos(t->cur_arc->p);
-		t->cur_arc->r = SG_VectorDistance(vCenter, pos);
+		t->cur_arc->r = VecDistance(vCenter, pos);
 	}
 	return (0);
 }

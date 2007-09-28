@@ -112,7 +112,7 @@ SK_CircleDraw(void *p, SK_View *skv)
 	}
 	SG_End();
 
-	v = SG_VectorMirrorp(&v, 1,1,1);
+	v = VecMirrorp(&v, 1,1,1);
 	SG_TranslateVecGL(v);
 }
 
@@ -248,7 +248,7 @@ OverPoint(SK_View *skv, SG_Vector *pos, SG_Vector *vC, void *ignore)
 		node->flags &= ~(SK_NODE_MOUSEOVER);
 	}
 	if ((node = SK_ProximitySearch(sk, "Point", pos, vC, ignore)) != NULL &&
-	    SG_VectorDistancep(pos, vC) < skv->rSnap) {
+	    VecDistancep(pos, vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
 		return ((SK_Point *)node);
 	}
@@ -265,7 +265,7 @@ ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 	overPoint = OverPoint(SKTOOL(t)->skv, &pos, &vC, NULL);
 	if (t->curCircle != NULL) {
 		vCenter = SK_Pos(t->curCircle->p);
-		t->curCircle->r = SG_VectorDistance(vCenter, pos);
+		t->curCircle->r = VecDistance(vCenter, pos);
 	}
 	return (0);
 }

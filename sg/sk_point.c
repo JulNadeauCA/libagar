@@ -136,8 +136,8 @@ SK_PointProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 {
 	SG_Vector pv = SK_Pos(p);
 
-	SG_VectorCopy(vC, &pv);
-	return (SG_VectorDistancep(v, &pv));
+	VecCopy(vC, &pv);
+	return VecDistancep(v, &pv);
 }
 
 int

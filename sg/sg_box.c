@@ -53,21 +53,21 @@ SG_BoxInit(void *p, const char *name)
 	SGNODE(box)->ops = &sgBoxOps;
 
 	SG_EdgeRehash(box, 8);
-	SG_VertexNew(box, Vec0);
-	SG_VertexNew(box, SG_VECTOR(-0.5, -1.0, -0.5));
-	SG_VertexNew(box, SG_VECTOR(+0.5, -1.0, -0.5));
-	SG_VertexNew(box, SG_VECTOR(+0.5, -1.0, +0.5));
-	SG_VertexNew(box, SG_VECTOR(-0.5, -1.0, +0.5));
+	SG_VertexNew(box, VecZero());
+	SG_VertexNew(box, VecGet(-0.5, -1.0, -0.5));
+	SG_VertexNew(box, VecGet(+0.5, -1.0, -0.5));
+	SG_VertexNew(box, VecGet(+0.5, -1.0, +0.5));
+	SG_VertexNew(box, VecGet(-0.5, -1.0, +0.5));
 	SG_FacetFromTri3(box, 1,3,2);
 	SG_FacetFromTri3(box, 4,3,1);
 	SG_FacetFromTri3(box, 1,5,4);
 	SG_FacetFromTri3(box, 1,2,5);
 	SG_FacetFromQuad4(box, 2,3,4,5);
-	OBJ_N(box,1) = VecJ;
-	OBJ_N(box,2) = SG_MIRROR(VecJ);
-	OBJ_N(box,3) = SG_MIRROR(VecJ);
-	OBJ_N(box,4) = SG_MIRROR(VecJ);
-	OBJ_N(box,5) = SG_MIRROR(VecJ);
+	OBJ_N(box,1) = VecJ();
+	OBJ_N(box,2) = VecMirror(VecJ(),1,1,1);
+	OBJ_N(box,3) = VecMirror(VecJ(),1,1,1);
+	OBJ_N(box,4) = VecMirror(VecJ(),1,1,1);
+	OBJ_N(box,5) = VecMirror(VecJ(),1,1,1);
 }
 
 int

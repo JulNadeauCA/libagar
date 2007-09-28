@@ -169,15 +169,15 @@ SG_CameraSetup(SG_Camera *cam)
 		static SG_Real iRot = 0.0, jRot = 0.0, kRot = 0.0;
 
 		if (cam->flags & SG_CAMERA_ROT_I) {
-			SG_RotateVecGL(iRot, VecI);
+			SG_RotateVecGL(iRot, VecI());
 			iRot += cam->rotSpeed;
 		}
 		if (cam->flags & SG_CAMERA_ROT_J) {
-			SG_RotateVecGL(jRot, VecJ);
+			SG_RotateVecGL(jRot, VecJ());
 			jRot += cam->rotSpeed;
 		}
 		if (cam->flags & SG_CAMERA_ROT_K) {
-			SG_RotateVecGL(kRot, VecK);
+			SG_RotateVecGL(kRot, VecK());
 			kRot += cam->rotSpeed;
 		}
 	}
@@ -385,12 +385,12 @@ SG_CameraDraw(void *cam, SG_View *sgv)
 SG_Vector
 SG_CameraVector(SG_Camera *cam)
 {
-	SG_Vector v = VecK;		/* Rotate k by convention. */
+	SG_Vector v = VecK();		/* Rotate k by convention. */
 	SG_Matrix T;
 
 	SG_GetNodeTransform(cam, &T);
 	SG_MatrixMultVectorv(&v, &T);
-	SG_VectorNormv(&v);
+	VecNormv(&v);
 	return (v);
 }
 

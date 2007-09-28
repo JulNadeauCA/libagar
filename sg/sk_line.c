@@ -123,14 +123,14 @@ SK_LineProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 	SG_Vector p2 = SK_Pos(line->p2);
 	SG_Real mag, u;
 
-	mag = SG_VectorDistance(p2, p1);
+	mag = VecDistance(p2, p1);
 	u = ( ((v->x - p1.x)*(p2.x - p1.x)) +
               ((v->y - p1.y)*(p2.y - p1.y)) ) / (mag*mag);
 	if (u < 0.0 || u > 1.0) {
 		return (HUGE_VAL);
 	}
-	*vC = SG_VectorAdd(p1, SG_VectorScale(SG_VectorSubp(&p2,&p1), u));
-	return (SG_VectorDistancep(v, vC));
+	*vC = VecAdd(p1, VecScale(VecSubp(&p2,&p1), u));
+	return VecDistancep(v, vC);
 }
 
 int
@@ -264,7 +264,7 @@ OverPoint(SK_View *skv, SG_Vector *pos, SG_Vector *vC, void *ignore)
 		node->flags &= ~(SK_NODE_MOUSEOVER);
 	}
 	if ((node = SK_ProximitySearch(sk, "Point", pos, vC, ignore)) != NULL &&
-	    SG_VectorDistancep(pos, vC) < skv->rSnap) {
+	    VecDistancep(pos, vC) < skv->rSnap) {
 		node->flags |= SK_NODE_MOUSEOVER;
 		return ((SK_Point *)node);
 	}
