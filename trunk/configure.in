@@ -7,7 +7,11 @@ REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
 REGISTER("--with-ode",		"SG: ODE physics interface [default: check]")
 REGISTER("--with-cg",		"SG: CG shader support [default: check]")
 REGISTER("--with-sse",		"SSE/SSE2/SSE3 optimizations [default: check]")
+REGISTER("--with-sse-inline",	"Inline SSE operations [default: no]")
+REGISTER("--with-sse2-inline",	"Inline SSE2 operations [default: no]")
+REGISTER("--with-sse3-inline",	"Inline SSE3 operations [default: no]")
 REGISTER("--with-altivec",	"AltiVec optimizations [default: check]")
+REGISTER("--with-altivec-inline", "Inline AltiVec operations [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
 REGISTER("--enable-utf8",	"Unicode text/input support [default: no]")
 REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
@@ -187,6 +191,29 @@ if [ "${with_sse}" != "no" ]; then
 			exit 1
 		else
 			HUNDEF(HAVE_SSE)
+			HUNDEF(INLINE_SSE)
+			HUNDEF(INLINE_SSE2)
+			HUNDEF(INLINE_SSE3)
+		fi
+	else
+		if [ "${with_sse_inline}" = "yes" ]; then
+			HDEFINE(INLINE_SSE, 1)
+		else
+			HUNDEF(INLINE_SSE)
+		fi
+		if [ "${HAVE_SSE2}" = "yes" ]; then
+			if [ "${with_sse2_inline}" = "yes" ]; then
+				HDEFINE(INLINE_SSE2, 1)
+			else
+				HUNDEF(INLINE_SSE2)
+			fi
+		fi
+		if [ "${HAVE_SSE3}" = "yes" ]; then
+			if [ "${with_sse3_inline}" = "yes" ]; then
+				HDEFINE(INLINE_SSE3, 1)
+			else
+				HUNDEF(INLINE_SSE3)
+			fi
 		fi
 	fi
 else
@@ -205,6 +232,13 @@ if [ "${with_altivec}" != "no" ]; then
 			exit 1
 		else
 			HUNDEF(HAVE_ALTIVEC)
+			HUNDEF(INLINE_ALTIVEC)
+		fi
+	else
+		if [ "${with_altivec_inline}" = "yes" ]; then
+			HDEFINE(INLINE_ALTIVEC, 1)
+		else
+			HUNDEF(INLINE_ALTIVEC)
 		fi
 	fi
 else
