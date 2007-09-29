@@ -2912,22 +2912,31 @@ main(int argc, char *argv[])
 EOT
 echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+echo "no (compile failed)"
+echo "no (compile failed)" >> config.log
+compile="failed"
+HAVE_SSE="no"
+echo "HAVE_SSE=$HAVE_SSE" >> Makefile.config
+echo "#undef HAVE_SSE" > config/have_sse.h
+else
+compile="ok"
+./conftest >> config.log
 if [ $? == 0 ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_SSE="yes"
 echo "HAVE_SSE=$HAVE_SSE" >> Makefile.config
 echo "#ifndef HAVE_SSE" > config/have_sse.h
 echo "#define HAVE_SSE \"$HAVE_SSE\"" >> config/have_sse.h
 echo "#endif" >> config/have_sse.h
 else
-echo "no"
-echo "no" >> config.log
-compile="failed"
+echo "no (exec failed)"
+echo "no (exec failed)" >> config.log
 HAVE_SSE="no"
 echo "HAVE_SSE=$HAVE_SSE" >> Makefile.config
 echo "#undef HAVE_SSE" > config/have_sse.h
+fi;
 fi;
 rm -f conftest conftest.c
 if [ "${HAVE_SSE}" = "yes" ]; then
@@ -2963,22 +2972,31 @@ main(int argc, char *argv[])
 EOT
 echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+echo "no (compile failed)"
+echo "no (compile failed)" >> config.log
+compile="failed"
+HAVE_SSE2="no"
+echo "HAVE_SSE2=$HAVE_SSE2" >> Makefile.config
+echo "#undef HAVE_SSE2" > config/have_sse2.h
+else
+compile="ok"
+./conftest >> config.log
 if [ $? == 0 ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_SSE2="yes"
 echo "HAVE_SSE2=$HAVE_SSE2" >> Makefile.config
 echo "#ifndef HAVE_SSE2" > config/have_sse2.h
 echo "#define HAVE_SSE2 \"$HAVE_SSE2\"" >> config/have_sse2.h
 echo "#endif" >> config/have_sse2.h
 else
-echo "no"
-echo "no" >> config.log
-compile="failed"
+echo "no (exec failed)"
+echo "no (exec failed)" >> config.log
 HAVE_SSE2="no"
 echo "HAVE_SSE2=$HAVE_SSE2" >> Makefile.config
 echo "#undef HAVE_SSE2" > config/have_sse2.h
+fi;
 fi;
 rm -f conftest conftest.c
 if [ "${HAVE_SSE2}" = "yes" ]; then
@@ -3016,22 +3034,31 @@ main(int argc, char *argv[])
 EOT
 echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+echo "no (compile failed)"
+echo "no (compile failed)" >> config.log
+compile="failed"
+HAVE_SSE3="no"
+echo "HAVE_SSE3=$HAVE_SSE3" >> Makefile.config
+echo "#undef HAVE_SSE3" > config/have_sse3.h
+else
+compile="ok"
+./conftest >> config.log
 if [ $? == 0 ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_SSE3="yes"
 echo "HAVE_SSE3=$HAVE_SSE3" >> Makefile.config
 echo "#ifndef HAVE_SSE3" > config/have_sse3.h
 echo "#define HAVE_SSE3 \"$HAVE_SSE3\"" >> config/have_sse3.h
 echo "#endif" >> config/have_sse3.h
 else
-echo "no"
-echo "no" >> config.log
-compile="failed"
+echo "no (exec failed)"
+echo "no (exec failed)" >> config.log
 HAVE_SSE3="no"
 echo "HAVE_SSE3=$HAVE_SSE3" >> Makefile.config
 echo "#undef HAVE_SSE3" > config/have_sse3.h
+fi;
 fi;
 rm -f conftest conftest.c
 if [ "${HAVE_SSE3}" = "yes" ]; then
