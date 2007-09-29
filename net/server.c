@@ -689,11 +689,7 @@ NS_Listen(NS_Server *ns)
 
 		for (i = 0; i < nservsocks; i++) {
 			union sockunion paddr;
-#if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__)
 			socklen_t paddrlen = sizeof(paddr);
-#else
-			int paddrlen = sizeof(paddr);
-#endif
 			pid_t pid;
 
 			if (!FD_ISSET(servsocks[i], &rfds))
