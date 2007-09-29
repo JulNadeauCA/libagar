@@ -37,7 +37,7 @@
 #define X 0.525731112119133606
 #define Z 0.850650808352039932
 
-static const SG_Vector IsoVtx[12] = {
+static const SG_Real IsoVtx[12][3] = {
 	{-X, 0.0, Z}, {X, 0.0, Z}, {-X, 0.0, -Z}, {X, 0.0, -Z},
 	{0.0, Z, X}, {0.0, Z, -X}, {0.0, -Z, X}, {0.0, -Z, -X},
 	{Z, X, 0.0}, {-Z, X, 0.0}, {Z, -X, 0.0}, {-Z, -X, 0.0}
@@ -158,10 +158,11 @@ SG_SphereGen(SG_Sphere *sph)
 	    30);
 
 	for (i = 0; i < 20; i++) {
-		Subdivide(sph,
-		    &IsoVtx[IsoIdx[i][0]],
-		    &IsoVtx[IsoIdx[i][1]],
-		    &IsoVtx[IsoIdx[i][2]], sph->tesslvl);
+		SG_Vector v1 = SG_RealvToVector(IsoVtx[IsoIdx[i][0]]);
+		SG_Vector v2 = SG_RealvToVector(IsoVtx[IsoIdx[i][1]]);
+		SG_Vector v3 = SG_RealvToVector(IsoVtx[IsoIdx[i][2]]);
+
+		Subdivide(sph, &v1, &v2, &v3, sph->tesslvl);
 	}
 }
 
