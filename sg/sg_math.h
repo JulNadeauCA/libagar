@@ -4,9 +4,43 @@
  */
 
 #ifdef _AGAR_INTERNAL
-#include <config/have_math_fma.h>
+#include <config/have_math.h>
+#include <config/have_sse.h>
+#include <config/have_sse2.h>
+#include <config/have_sse3.h>
+#include <config/inline_sse.h>
+#include <config/inline_sse2.h>
+#include <config/inline_sse3.h>
+#include <config/have_altivec.h>
+#include <config/have_altivec_h.h>
+#include <config/inline_altivec.h>
 #else
-#include <agar/config/have_math_fma.h>
+#include <agar/config/have_math.h>
+#include <agar/config/have_sse.h>
+#include <agar/config/have_sse2.h>
+#include <agar/config/have_sse3.h>
+#include <agar/config/inline_sse.h>
+#include <agar/config/inline_sse2.h>
+#include <agar/config/inline_sse3.h>
+#include <agar/config/have_altivec.h>
+#include <agar/config/have_altivec_h.h>
+#include <agar/config/inline_altivec.h>
+#endif
+
+#ifdef HAVE_MATH
+#include <math.h>
+#endif
+#if defined(HAVE_ALTIVEC) && defined(HAVE_ALTIVEC_H)
+#include <altivec.h>
+#endif
+#ifdef HAVE_SSE
+#include <xmmintrin.h>
+#endif
+#ifdef HAVE_SSE2
+#include <emmintrin.h>
+#endif
+#ifdef HAVE_SSE3
+#include <pmmintrin.h>
 #endif
 
 #ifdef SG_DOUBLE_PRECISION
@@ -21,8 +55,33 @@ typedef struct sg_range { SG_Real a, d, b; } SG_Range;
 typedef struct sg_complex { SG_Real r, i; } SG_Complex;
 typedef struct sg_quat { SG_Real w, x, y, z; } SG_Quat;
 typedef struct sg_vector2 { SG_Real x, y; } SG_Vector2;
-typedef struct sg_vector3 { SG_Real x, y, z; } SG_Vector3, SG_Vector;
-typedef struct sg_vector4 { SG_Real x, y, z, w; } SG_Vector4;
+
+#ifdef HAVE_SSE
+
+typedef union sg_vector3 {
+	__m128 m128;
+	struct { SG_Real x, y, z, _pad; };
+} SG_Vector3, SG_Vector;
+
+typedef union sg_vector4 {
+	__m128 m128;
+	struct { SG_Real x, y, z, w; };
+} SG_Vector4;
+
+#else /* !HAVE_SSE */
+
+typedef union sg_vector3 {
+	struct { SG_Real x, y, z; }
+	SG_Real m[3];
+} SG_Vector3, SG_Vector;
+
+typedef union sg_vector4 {
+	struct { SG_Real x, y, z, w; }
+	SG_Real m[4];
+} SG_Vector4;
+
+#endif /* HAVE_SSE */
+
 typedef struct sg_line2 { SG_Vector2 p, d; SG_Real t; } SG_Line2;
 typedef struct sg_line3 { SG_Vector p, d; SG_Real t; } SG_Line3, SG_Line;
 typedef struct sg_plane { SG_Real a, b, c, d; } SG_Plane;
@@ -114,12 +173,6 @@ typedef struct sg_spherical {
 #define SG_Fabs(x) fabs(x)
 #define SG_Pow(x,y) pow((x),(y))
 
-#ifdef HAVE_MATH_FMA
-#define SG_Fma(x,y,z) fma((x),(y),(z))
-#else
-#define SG_Fma(x,y,z) SG_FmaEmul((x),(y),(z))
-#endif
-
 #else /* !SG_DOUBLE_PRECISION */
 
 #define SG_Sqrt(r) sqrtf(r)
@@ -137,12 +190,6 @@ typedef struct sg_spherical {
 #define SG_Hypot2(x,y) hypotf((x),(y))
 #define SG_Fabs(x) fabsf(x)
 #define SG_Pow(x,y) powf((x),(y))
-
-#ifdef HAVE_MATH_FMA
-#define SG_Fma(x,y,z) fmaf((x),(y),(z))
-#else
-#define SG_Fma(x,y,z) SG_FmaEmulf((x),(y),(z))
-#endif
 
 #endif /* !SG_DOUBLE_PRECISION */
 
