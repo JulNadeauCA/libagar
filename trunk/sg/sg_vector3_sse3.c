@@ -29,7 +29,7 @@
 #include <config/have_opengl.h>
 #include <config/have_sse3.h>
 
-#if defined(HAVE_OPENGL) || defined(HAVE_SSE3)
+#if defined(HAVE_OPENGL) && defined(HAVE_SSE3)
 
 #include <core/core.h>
 #include "sg.h"
