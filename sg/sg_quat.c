@@ -226,6 +226,7 @@ SG_QuatConjp(const SG_Quat *q)
 	nq.x = -(q->x);
 	nq.y = -(q->y);
 	nq.z = -(q->z);
+	nq.w = q->w;
 	return (nq);
 }
 
