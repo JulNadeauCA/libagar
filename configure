@@ -283,7 +283,7 @@ else
 	echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 fi
 
-VERSION="\"09222007\""
+VERSION="\"09292007\""
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION" $VERSION >> config/version.h
 echo "#endif" >> config/version.h
@@ -2209,7 +2209,7 @@ echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
 echo "#undef HAVE_SDL" > config/have_sdl.h
 fi;
 rm -f conftest conftest.c
-if [ "${HAVE_SDL}" != "no" ]; then
+if [ "${HAVE_SDL}" != "" ]; then
 echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
 echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
@@ -2218,65 +2218,11 @@ echo "#endif" >> config/sdl_cflags.h
 echo "#ifndef SDL_LIBS" > config/sdl_libs.h
 echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
 echo "#endif" >> config/sdl_libs.h
-else
-echo -n "checking whether SDL works (with X11 libs)..."
-echo -n "checking whether SDL works (with X11 libs)..." >> config.log
-SDL_LIBS="${SDL_LIBS} -L/usr/X11R6/lib -lX11 -lXext -lXrandr -lXrender"
-cat << EOT > conftest.c
-#include <stdio.h>
-#include <SDL.h>
-int main(int argc, char *argv[]) {
-	SDL_Surface *su;
-	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
-		return (1);
-	}
-	su = SDL_CreateRGBSurface(0, 16, 16, 32, 0, 0, 0, 0);
-	SDL_FreeSurface(su);
-	SDL_Quit();
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
-if [ $? == 0 ]; then
-echo "yes"
-echo "yes" >> config.log
-compile="ok"
-HAVE_SDL="yes"
-echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
-echo "#ifndef HAVE_SDL" > config/have_sdl.h
-echo "#define HAVE_SDL \"$HAVE_SDL\"" >> config/have_sdl.h
-echo "#endif" >> config/have_sdl.h
-else
-echo "no"
-echo "no" >> config.log
-compile="failed"
-HAVE_SDL="no"
-echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
-echo "#undef HAVE_SDL" > config/have_sdl.h
-fi;
-rm -f conftest conftest.c
-if [ "${HAVE_SDL}" != "no" ]; then
-echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
-echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
-echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
-echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> config/sdl_cflags.h
-echo "#endif" >> config/sdl_cflags.h
-echo "#ifndef SDL_LIBS" > config/sdl_libs.h
-echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
-echo "#endif" >> config/sdl_libs.h
-else
-echo "#undef SDL_CFLAGS" > config/sdl_cflags.h
-echo "#undef SDL_LIBS" > config/sdl_libs.h
-fi;
 fi;
 else
 echo "no"
 echo "no" >> config.log
 echo "#undef HAVE_SDL" > config/have_sdl.h
-echo "#undef SDL_CFLAGS" > config/sdl_cflags.h
-echo "#undef SDL_LIBS" > config/sdl_libs.h
 fi;
 if [ "${HAVE_SDL}" != "yes" ]
  then
@@ -2759,7 +2705,7 @@ echo "HAVE_ODE=$HAVE_ODE" >> Makefile.config
 echo "#undef HAVE_ODE" > config/have_ode.h
 fi;
 rm -f conftest conftest.c
-if [ "${HAVE_ODE}" != "no" ]; then
+if [ "${HAVE_ODE}" != "" ]; then
 echo "ODE_CFLAGS=$ODE_CFLAGS" >> Makefile.config
 echo "ODE_LIBS=$ODE_LIBS" >> Makefile.config
 echo "#ifndef ODE_CFLAGS" > config/ode_cflags.h
@@ -2772,7 +2718,7 @@ fi;
 else
 echo "no"
 echo "no" >> config.log
-echo "#undef HAVE_ODE" > config/have_ode.h
+echo "#undef HAVE_SDL" > config/have_sdl.h
 fi;
 	if [ "${HAVE_ODE}" != "yes" ]
  then
@@ -2912,31 +2858,22 @@ main(int argc, char *argv[])
 EOT
 echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-echo "no (compile failed)"
-echo "no (compile failed)" >> config.log
-compile="failed"
-HAVE_SSE="no"
-echo "HAVE_SSE=$HAVE_SSE" >> Makefile.config
-echo "#undef HAVE_SSE" > config/have_sse.h
-else
-compile="ok"
-./conftest >> config.log
 if [ $? == 0 ]; then
 echo "yes"
 echo "yes" >> config.log
+compile="ok"
 HAVE_SSE="yes"
 echo "HAVE_SSE=$HAVE_SSE" >> Makefile.config
 echo "#ifndef HAVE_SSE" > config/have_sse.h
 echo "#define HAVE_SSE \"$HAVE_SSE\"" >> config/have_sse.h
 echo "#endif" >> config/have_sse.h
 else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
+echo "no"
+echo "no" >> config.log
+compile="failed"
 HAVE_SSE="no"
 echo "HAVE_SSE=$HAVE_SSE" >> Makefile.config
 echo "#undef HAVE_SSE" > config/have_sse.h
-fi;
 fi;
 rm -f conftest conftest.c
 if [ "${HAVE_SSE}" = "yes" ]; then
@@ -2972,31 +2909,22 @@ main(int argc, char *argv[])
 EOT
 echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-echo "no (compile failed)"
-echo "no (compile failed)" >> config.log
-compile="failed"
-HAVE_SSE2="no"
-echo "HAVE_SSE2=$HAVE_SSE2" >> Makefile.config
-echo "#undef HAVE_SSE2" > config/have_sse2.h
-else
-compile="ok"
-./conftest >> config.log
 if [ $? == 0 ]; then
 echo "yes"
 echo "yes" >> config.log
+compile="ok"
 HAVE_SSE2="yes"
 echo "HAVE_SSE2=$HAVE_SSE2" >> Makefile.config
 echo "#ifndef HAVE_SSE2" > config/have_sse2.h
 echo "#define HAVE_SSE2 \"$HAVE_SSE2\"" >> config/have_sse2.h
 echo "#endif" >> config/have_sse2.h
 else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
+echo "no"
+echo "no" >> config.log
+compile="failed"
 HAVE_SSE2="no"
 echo "HAVE_SSE2=$HAVE_SSE2" >> Makefile.config
 echo "#undef HAVE_SSE2" > config/have_sse2.h
-fi;
 fi;
 rm -f conftest conftest.c
 if [ "${HAVE_SSE2}" = "yes" ]; then
@@ -3034,31 +2962,22 @@ main(int argc, char *argv[])
 EOT
 echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o conftest conftest.c " >>config.log
 $CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-echo "no (compile failed)"
-echo "no (compile failed)" >> config.log
-compile="failed"
-HAVE_SSE3="no"
-echo "HAVE_SSE3=$HAVE_SSE3" >> Makefile.config
-echo "#undef HAVE_SSE3" > config/have_sse3.h
-else
-compile="ok"
-./conftest >> config.log
 if [ $? == 0 ]; then
 echo "yes"
 echo "yes" >> config.log
+compile="ok"
 HAVE_SSE3="yes"
 echo "HAVE_SSE3=$HAVE_SSE3" >> Makefile.config
 echo "#ifndef HAVE_SSE3" > config/have_sse3.h
 echo "#define HAVE_SSE3 \"$HAVE_SSE3\"" >> config/have_sse3.h
 echo "#endif" >> config/have_sse3.h
 else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
+echo "no"
+echo "no" >> config.log
+compile="failed"
 HAVE_SSE3="no"
 echo "HAVE_SSE3=$HAVE_SSE3" >> Makefile.config
 echo "#undef HAVE_SSE3" > config/have_sse3.h
-fi;
 fi;
 rm -f conftest conftest.c
 if [ "${HAVE_SSE3}" = "yes" ]; then
