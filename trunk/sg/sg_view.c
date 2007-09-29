@@ -212,14 +212,14 @@ ViewDraw(AG_Event *event)
 		glEnable(GL_LIGHT0);
 
 		/* XXX TODO array */
-		SetupLights(sv, SGNODE(sv->sg->root));
+		SetupLights(sv, sv->sg->root);
 		glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, 1.0);
 	}
 
 	/* Render the scene. */
 	glPushMatrix();
 	glMatrixMode(GL_MODELVIEW);
-	SG_RenderNode(sv->sg, SGNODE(sv->sg->root), sv);
+	SG_RenderNode(sv->sg, sv->sg->root, sv);
 	glPopMatrix();
 
 	if ((sv->flags & SG_VIEW_NO_LIGHTING) == 0) {
@@ -310,23 +310,23 @@ PopupMenuOpen(SG_View *sv, int x, int y)
 	sv->popup = AG_PopupNew(sv);
 	mRoot = sv->popup->item;
 
-	AG_MenuIntFlags(mRoot, _("Lighting"),
+	AG_MenuUintFlags(mRoot, _("Lighting"),
 	    RG_CONTROLS_ICON, &sv->flags, SG_VIEW_NO_LIGHTING, 1);
-	AG_MenuIntFlags(mRoot, _("Z-Buffer"),
+	AG_MenuUintFlags(mRoot, _("Z-Buffer"),
 	    RG_CONTROLS_ICON, &sv->flags, SG_VIEW_NO_DEPTH_TEST, 1);
 
 	mOvl = AG_MenuNode(mRoot, _("Overlay"), -1);
 	{
-		AG_MenuIntFlags(mOvl, _("Wireframe"),
+		AG_MenuUintFlags(mOvl, _("Wireframe"),
 		    GRID_ICON,
 		    &sg->flags, SG_OVERLAY_WIREFRAME, 0);
-		AG_MenuIntFlags(mOvl, _("Vertices"),
+		AG_MenuUintFlags(mOvl, _("Vertices"),
 		    VGPOINTS_ICON,
 		    &sg->flags, SG_OVERLAY_VERTICES, 0);
-		AG_MenuIntFlags(mOvl, _("Facet normals"),
+		AG_MenuUintFlags(mOvl, _("Facet normals"),
 		    UP_ARROW_ICON,
 		    &sg->flags, SG_OVERLAY_FNORMALS, 0);
-		AG_MenuIntFlags(mOvl, _("Vertex normals"),
+		AG_MenuUintFlags(mOvl, _("Vertex normals"),
 		    UP_ARROW_ICON,
 		    &sg->flags, SG_OVERLAY_VNORMALS, 0);
 	}

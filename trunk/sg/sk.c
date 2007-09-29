@@ -156,11 +156,11 @@ SK_InitRoot(SK *sk)
 {
 	sk->root = Malloc(sizeof(SK_Point), M_SG);
 	SK_PointInit(sk->root, 0);
-	SK_PointSize(sk->root, 3.0);
-	SK_PointColor(sk->root, SG_ColorRGB(100.0, 100.0, 0.0));
-	SKNODE(sk->root)->sk = sk;
-	SKNODE(sk->root)->flags |= SK_NODE_FIXED;
-	TAILQ_INSERT_TAIL(&sk->nodes, SKNODE(sk->root), nodes);
+	SK_PointSize(SKPOINT(sk->root), 3.0);
+	SK_PointColor(SKPOINT(sk->root), SG_ColorRGB(100.0, 100.0, 0.0));
+	sk->root->sk = sk;
+	sk->root->flags |= SK_NODE_FIXED;
+	TAILQ_INSERT_TAIL(&sk->nodes, sk->root, nodes);
 }
 
 #ifdef EDITION
@@ -285,7 +285,7 @@ SK_Reinit(void *obj)
 	SK *sk = obj;
 
 	if (sk->root != NULL) {
-		SK_FreeNode(sk, SKNODE(sk->root));
+		SK_FreeNode(sk, sk->root);
 		sk->root = NULL;
 	}
 	TAILQ_INIT(&sk->nodes);
@@ -369,11 +369,11 @@ SK_Save(void *obj, AG_Netbuf *buf)
 	AG_WriteString(buf, sk->uLen->key);
 
 	/* Save the generic part of all nodes. */
-	if (SK_SaveNodeGeneric(sk, SKNODE(sk->root), buf) == -1)
+	if (SK_SaveNodeGeneric(sk, sk->root, buf) == -1)
 		goto fail;
 
 	/* Save the data part of all nodes. */
-	if (SK_NodeSaveData(sk, SKNODE(sk->root), buf) == -1)
+	if (SK_NodeSaveData(sk, sk->root, buf) == -1)
 		goto fail;
 
 	/* Save the graph of geometric constraints. */
@@ -501,7 +501,7 @@ SK_Load(void *obj, AG_Netbuf *buf)
 
 	/* Free the existing root node. */
 	if (sk->root != NULL) {
-		SK_FreeNode(sk, SKNODE(sk->root));
+		SK_FreeNode(sk, sk->root);
 		sk->root = NULL;
 	}
 	TAILQ_INIT(&sk->nodes);
@@ -510,13 +510,13 @@ SK_Load(void *obj, AG_Netbuf *buf)
 	 * Load the generic part of all nodes. We need to load the data
 	 * afterwards to properly resolve interdependencies.
 	 */
-	if (SK_LoadNodeGeneric(sk, (SK_Node **)&sk->root, buf) == -1) {
+	if (SK_LoadNodeGeneric(sk, &sk->root, buf) == -1) {
 		goto fail;
 	}
-	TAILQ_INSERT_HEAD(&sk->nodes, SKNODE(sk->root), nodes);
+	TAILQ_INSERT_HEAD(&sk->nodes, sk->root, nodes);
 
 	/* Load the data part of all nodes. */
-	if (SK_LoadNodeData(sk, SKNODE(sk->root), buf) == -1)
+	if (SK_LoadNodeData(sk, sk->root, buf) == -1)
 		goto fail;
 
 	/* Load the geometric constraint data. */
@@ -809,7 +809,7 @@ SK_NodeDel(void *p)
 	SK *sk = node->sk;
 	SK_Constraint *ct;
 
-	if (node == SKNODE(sk->root)) {
+	if (node == sk->root) {
 		AG_SetError("Cannot delete root node");
 		return (-1);
 	}

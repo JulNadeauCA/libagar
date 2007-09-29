@@ -131,7 +131,7 @@ typedef struct sk {
 						   in load (otherwise fail) */
 	AG_Mutex lock;
 	const AG_Unit *uLen;			/* Length unit */
-	struct sk_point *root;			/* Root node */
+	SK_Node *root;				/* Root node */
 	TAILQ_HEAD(,sk_node) nodes;		/* Flat node list */
 	SK_Status status;			/* Constrainedness status */
 	char statusText[SK_STATUS_MAX];		/* Status text */

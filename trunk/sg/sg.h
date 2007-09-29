@@ -92,7 +92,7 @@ typedef struct sg {
 					   (otherwise LoadObject will fail) */
 	AG_Mutex lock;
 	void *tess;			/* GLU tesselator object */
-	struct sg_point *root;		/* Root of graph */
+	SG_Node *root;			/* Root of graph */
 	TAILQ_HEAD(,sg_node) nodes;	/* Flat list of nodes */
 } SG;
 

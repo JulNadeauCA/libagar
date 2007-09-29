@@ -343,11 +343,11 @@ SG_CameraMenu(void *obj, AG_MenuItem *m, SG_View *sgv)
 		AG_MenuItem *mRot;
 
 		mRot = AG_MenuNode(m, _("Artificial rotation"), ANIM_PLAY_ICON);
-		AG_MenuIntFlags(mRot, _("Rotate around i"), RIGHT_ARROW_ICON,
+		AG_MenuUintFlags(mRot, _("Rotate around i"), RIGHT_ARROW_ICON,
 		    &cam->flags, SG_CAMERA_ROT_I, 0);
-		AG_MenuIntFlags(mRot, _("Rotate around j"), RIGHT_ARROW_ICON,
+		AG_MenuUintFlags(mRot, _("Rotate around j"), RIGHT_ARROW_ICON,
 		    &cam->flags, SG_CAMERA_ROT_J, 0);
-		AG_MenuIntFlags(mRot, _("Rotate around k"), RIGHT_ARROW_ICON,
+		AG_MenuUintFlags(mRot, _("Rotate around k"), RIGHT_ARROW_ICON,
 		    &cam->flags, SG_CAMERA_ROT_K, 0);
 		AG_MenuSeparator(mRot);
 		AG_MenuAction(mRot, _("Invert direction"), LEFT_ARROW_ICON,

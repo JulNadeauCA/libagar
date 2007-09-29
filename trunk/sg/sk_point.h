@@ -7,7 +7,7 @@ typedef struct sk_point {
 	SG_Color color;			/* Display color */
 } SK_Point;
 
-#define SK_POINT(n) ((SK_Point *)(n))
+#define SKPOINT(n) ((SK_Point *)(n))
 
 __BEGIN_DECLS
 extern SK_NodeOps skPointOps;

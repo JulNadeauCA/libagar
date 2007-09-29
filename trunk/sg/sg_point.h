@@ -6,6 +6,8 @@ typedef struct sg_point {
 	SG_Color color;
 } SG_Point;
 
+#define SGPOINT(n) ((SG_Point *)(n))
+
 __BEGIN_DECLS
 extern SG_NodeOps sgPointOps;
 
