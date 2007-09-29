@@ -23,19 +23,19 @@
  */
 
 /*
- * Operations on vectors in R^3 using SSE3 operations.
+ * Operations on vectors in R^3 using SSE1 operations.
  */
 
 #include <config/have_opengl.h>
-#include <config/have_sse3.h>
+#include <config/have_sse.h>
 
-#if defined(HAVE_OPENGL) && defined(HAVE_SSE3)
+#if defined(HAVE_OPENGL) && defined(HAVE_SSE)
 
 #include <core/core.h>
 #include "sg.h"
 
-const SG_VectorOps3 sgVecOps3_SSE3 = {
-	"sse3",
+const SG_VectorOps3 sgVecOps3_SSE = {
+	"sse",
 	SG_VectorZero3_SSE,			/* -31 clks */
 	SG_VectorGet3_SSE,			/* -8 clks */
 	SG_VectorSet3_FPU,			/* +8 clks */
@@ -44,8 +44,8 @@ const SG_VectorOps3 sgVecOps3_SSE3 = {
 	SG_VectorMirror3p_SSE,			/* TODO */
 	SG_VectorLen3_FPU,			/* = */
 	SG_VectorLen3p_FPU,			/* = */
-	SG_VectorDot3_SSE3,			/* -26 clks */
-	SG_VectorDot3p_SSE3,			/* -59 clks */
+	SG_VectorDot3_FPU,			/* ? */
+	SG_VectorDot3p_FPU,			/* ? */
 	SG_VectorDistance3_SSE,			/* -31 clks */
 	SG_VectorDistance3p_SSE,		/* -27 clks */
 	SG_VectorNorm3_SSE,			/* -87 clks */
@@ -71,7 +71,7 @@ const SG_VectorOps3 sgVecOps3_SSE3 = {
 	SG_VectorLERP3_SSE,			/* TODO */
 	SG_VectorLERP3p_SSE,			/* TODO */
 	SG_VectorElemPow3_SSE,			/* TODO */
-	SG_VectorVecAngle3_SSE,			/* TODO */
+	SG_VectorVecAngle3_SSE,		/* TODO */
 	SG_VectorRotate3_SSE,			/* TODO */
 	SG_VectorRotate3v_SSE			/* TODO */,
 	SG_VectorRotateQuat3_SSE,		/* TODO */
@@ -80,4 +80,85 @@ const SG_VectorOps3 sgVecOps3_SSE3 = {
 	SG_VectorRotateK3_SSE,			/* TODO */
 };
 
-#endif /* HAVE_OPENGL and HAVE_SSE3 */
+SG_Vector
+SG_VectorAdd3n_SSE(int nvecs, ...)
+{
+	SG_Vector c, *v;
+	int i;
+	va_list ap;
+
+	va_start(ap, nvecs);
+	v = va_arg(ap, void *);
+	c.m128 = v->m128;
+	for (i = 0; i < nvecs; i++) {
+		v = va_arg(ap, void *);
+		c.m128 = _mm_add_ps(c.m128, v->m128);
+	}
+	va_end(ap);
+	return (c);
+}
+
+SG_Vector
+SG_VectorSub3n_SSE(int nvecs, ...)
+{
+	SG_Vector c, *v;
+	int i;
+	va_list ap;
+
+	va_start(ap, nvecs);
+	v = va_arg(ap, void *);
+	c.m128 = v->m128;
+	for (i = 0; i < nvecs; i++) {
+		v = va_arg(ap, void *);
+		c.m128 = _mm_sub_ps(c.m128, v->m128);
+	}
+	va_end(ap);
+	return (c);
+}
+
+SG_Vector
+SG_VectorRotate3_SSE(SG_Vector v, SG_Real theta, SG_Vector n)
+{
+	SG_Vector r = v;
+
+	SG_VectorRotate3v_SSE(&r, theta, n);
+	return (r);
+}
+
+void
+SG_VectorRotate3v_SSE(SG_Vector *v, SG_Real theta, SG_Vector n)
+{
+	SG_Real s = Sin(theta);
+	SG_Real c = Cos(theta);
+	SG_Real t = 1.0 - c;
+	SG_Matrix R;
+
+	R.m[0][0] = t*n.x*n.x + c;
+	R.m[0][1] = t*n.x*n.y + s*n.z;
+	R.m[0][2] = t*n.x*n.z - s*n.y;
+	R.m[0][3] = 0.0;
+	R.m[1][0] = t*n.x*n.y - s*n.z;
+	R.m[1][1] = t*n.y*n.y + c;
+	R.m[1][2] = t*n.y*n.z + s*n.x;
+	R.m[1][3] = 0.0;
+	R.m[2][0] = t*n.x*n.z + s*n.y;
+	R.m[2][1] = t*n.y*n.z - s*n.x;
+	R.m[2][2] = t*n.z*n.z + c;
+	R.m[2][3] = 0.0;
+	R.m[3][0] = 0.0;
+	R.m[3][1] = 0.0;
+	R.m[3][2] = 0.0;
+	R.m[3][3] = 1.0;
+	SG_MatrixMultVectorv(v, &R);
+}
+
+SG_Vector
+SG_VectorRotateQuat3_SSE(SG_Vector V, SG_Quat Q)
+{
+	SG_Matrix R;
+
+	SG_QuatToMatrix(&R, &Q);
+	return (SG_MatrixMultVectorp(&R, &V));
+}
+
+#endif /* HAVE_OPENGL and HAVE_SSE */
