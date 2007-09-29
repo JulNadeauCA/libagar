@@ -135,7 +135,7 @@ SG_VoxelReset(SG_Voxel *vol, SG_Real v)
 void
 SG_VoxelDraw(void *pNode, SG_View *sgv)
 {
-	static const SG_Vector p[] = {
+	static const SG_Real p[8][3] = {
 		{ 0.0, 0.0, 0.0 },
 		{ 1.0, 0.0, 0.0 },
 		{ 1.0, 0.0, 1.0 },
