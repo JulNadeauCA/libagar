@@ -31,9 +31,26 @@
 #include <config/sharedir.h>
 
 #include <config/have_cg.h>
+#include <config/have_altivec.h>
+#include <config/have_sse.h>
+#include <config/have_sse2.h>
+#include <config/have_sse3.h>
+
 #ifdef HAVE_CG
 #include <config/cg_cflags.h>
 #include <config/cg_libs.h>
+#endif
+#ifdef HAVE_ALTIVEC
+#include <config/altivec_cflags.h>
+#endif
+#ifdef HAVE_SSE
+#include <config/sse_cflags.h>
+#endif
+#ifdef HAVE_SSE2
+#include <config/sse2_cflags.h>
+#endif
+#ifdef HAVE_SSE3
+#include <config/sse3_cflags.h>
 #endif
 
 #include <stdio.h>
@@ -60,7 +77,19 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--cflags") == 0) {
 			printf("-I%s ", INCLDIR);
 #ifdef HAVE_CG
-			printf("%s", CG_CFLAGS);
+			printf("%s ", CG_CFLAGS);
+#endif
+#ifdef HAVE_ALTIVEC
+			printf("%s ", ALTIVEC_CFLAGS);
+#endif
+#ifdef HAVE_SSE
+			printf("%s ", SSE_CFLAGS);
+#endif
+#ifdef HAVE_SSE2
+			printf("%s ", SSE2_CFLAGS);
+#endif
+#ifdef HAVE_SSE3
+			printf("%s ", SSE3_CFLAGS);
 #endif
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
