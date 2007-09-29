@@ -71,12 +71,12 @@ typedef union sg_vector4 {
 #else /* !HAVE_SSE */
 
 typedef union sg_vector3 {
-	struct { SG_Real x, y, z; }
+	struct { SG_Real x, y, z; };
 	SG_Real m[3];
 } SG_Vector3, SG_Vector;
 
 typedef union sg_vector4 {
-	struct { SG_Real x, y, z, w; }
+	struct { SG_Real x, y, z, w; };
 	SG_Real m[4];
 } SG_Vector4;
 
