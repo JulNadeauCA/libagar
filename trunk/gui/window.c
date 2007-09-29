@@ -477,7 +477,7 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 	AG_Widget **widgets;
 	AG_Widget *olfocus;
 	Uint nwidgets = 0;
-	int i = 0;
+	Uint i = 0;
 
 	if ((olfocus = AG_WidgetFindFocused(win)) == NULL) {
 		return;

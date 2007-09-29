@@ -614,11 +614,11 @@ DEV_BrowserGenericMenu(void *menup, void *obj)
 
 	AG_MenuSeparator(pitem);
 
-	AG_MenuIntFlags(pitem, _("Persistence"), OBJLOAD_ICON,
+	AG_MenuUintFlags(pitem, _("Persistence"), OBJLOAD_ICON,
 	    &OBJECT(obj)->flags, AG_OBJECT_NON_PERSISTENT, 1);
-	AG_MenuIntFlags(pitem, _("Destructible"), TRASH_ICON,
+	AG_MenuUintFlags(pitem, _("Destructible"), TRASH_ICON,
 	    &OBJECT(obj)->flags, AG_OBJECT_INDESTRUCTIBLE, 1);
-	AG_MenuIntFlags(pitem, _("Editable"), OBJ_ICON,
+	AG_MenuUintFlags(pitem, _("Editable"), OBJ_ICON,
 	    &OBJECT(obj)->flags, AG_OBJECT_READONLY, 1);
 }
 
