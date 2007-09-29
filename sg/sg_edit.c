@@ -77,7 +77,7 @@ PollNodes(AG_Event *event)
 	SG *sg = AG_PTR(1);
 
 	AG_TlistClear(tl);
-	FindSGNodes(tl, SGNODE(sg->root), 0);
+	FindSGNodes(tl, sg->root, 0);
 	AG_TlistRestore(tl);
 }
 

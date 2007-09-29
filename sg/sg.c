@@ -175,10 +175,10 @@ SG_InitRoot(SG *sg)
 {
 	sg->root = Malloc(sizeof(SG_Point), M_SG);
 	SG_PointInit(sg->root, "_root");
-	SG_PointSize(sg->root, 3.0);
-	SG_PointColor(sg->root, SG_ColorRGB(0.0, 255.0, 0.0));
-	SGNODE(sg->root)->sg = sg;
-	TAILQ_INSERT_TAIL(&sg->nodes, SGNODE(sg->root), nodes);
+	SG_PointSize(SGPOINT(sg->root), 3.0);
+	SG_PointColor(SGPOINT(sg->root), SG_ColorRGB(0.0, 255.0, 0.0));
+	sg->root->sg = sg;
+	TAILQ_INSERT_TAIL(&sg->nodes, sg->root, nodes);
 }
 
 void
@@ -248,7 +248,7 @@ SG_Reinit(void *obj)
 {
 	SG *sg = obj;
 
-	SG_FreeNode(sg, SGNODE(sg->root));
+	SG_FreeNode(sg, sg->root);
 	TAILQ_INIT(&sg->nodes);
 	SG_InitRoot(sg);
 }
@@ -274,7 +274,7 @@ SG_Save(void *obj, AG_Netbuf *buf)
 	AG_WriteVersion(buf, "SG", &sgOps.ver);
 	AG_MutexLock(&sg->lock);
 	AG_WriteUint32(buf, sg->flags);
-	rv = SG_NodeSave(sg, SGNODE(sg->root), buf);
+	rv = SG_NodeSave(sg, sg->root, buf);
 	AG_MutexUnlock(&sg->lock);
 	return (rv);
 }
@@ -329,7 +329,7 @@ SG_Load(void *obj, AG_Netbuf *buf)
 
 	AG_MutexLock(&sg->lock);
 	sg->flags = (Uint)AG_ReadUint32(buf);
-	rv = SG_NodeLoad(sg, (SG_Node **)&sg->root, buf);
+	rv = SG_NodeLoad(sg, &sg->root, buf);
 	AG_MutexUnlock(&sg->lock);
 	return ((rv == 0 && sg->root != NULL) ? 0 : -1);
 }
@@ -423,10 +423,10 @@ SG_SearchNodes(SG_Node *node, const char *name)
 void *
 SG_FindNode(SG *sg, const char *name)
 {
-	if (strcmp(name, SGNODE(sg->root)->name) == 0) {
+	if (strcmp(name, sg->root->name) == 0) {
 		return (sg->root);
 	} else {
-		return ((void *)SG_SearchNodes(SGNODE(sg->root), name));
+		return ((void *)SG_SearchNodes(sg->root, name));
 	}
 }
 
