@@ -952,8 +952,8 @@ echo "#undef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
 fi;
 echo -n "checking for the C math library..."
 echo -n "checking for the C math library..." >> config.log
-MATH_LIBS=-lm
-MATH_CFLAGS=
+MATH_LIBS="-lm"
+MATH_CFLAGS=""
 cat << EOT > conftest.c
 #include <math.h>
 
@@ -1003,7 +1003,7 @@ echo "#undef MATH_LIBS" > config/math_libs.h
 fi;
 echo -n "checking for fast multiply-accumulate..."
 echo -n "checking for fast multiply-accumulate..." >> config.log
-MATH_CFLAGS=-std=c99
+MATH_CFLAGS=""
 cat << EOT > conftest.c
 #include <math.h>
 
