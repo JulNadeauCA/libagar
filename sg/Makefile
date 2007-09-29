@@ -1,7 +1,7 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=	import
+#SUBDIR=	import
 
 LIB=		ag_sg
 LIB_SHARED=	Yes
@@ -9,7 +9,7 @@ LIB_STATIC=	No
 
 SRCS=	sg.c sg_math.c \
 	sg_vector.c sg_vector2_fpu.c sg_vector3_fpu.c sg_vector4_fpu.c \
-	sg_vector3_sse3.c sg_matrix.c \
+	sg_vector3_sse.c sg_vector3_sse3.c sg_matrix.c \
 	sg_view.c sg_camera.c sg_gui.c sg_primitive.c sg_quat.c sg_geom.c \
 	sg_edit.c sg_dummy.c sg_sphere.c sg_point.c sg_light.c \
 	sg_solid.c sg_planeobj.c sg_object.c sg_box.c sg_matview.c \
