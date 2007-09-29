@@ -183,6 +183,11 @@ AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, int, Uint32 *,
 #define AG_MenuInt32Flags(mi,t,i,fp,fl,inv) \
 	AG_MenuInt32FlagsMp((mi),(t),(i),(fp),(fl),(inv),NULL)
 
+#define AG_MenuUintFlagsMp(mi,t,i,fp,fl,inv,mtx) \
+	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),(mtx))
+#define AG_MenuUintFlags(mi,t,i,fp,fl,inv) \
+	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),NULL)
+
 void AG_MenuViewInit(void *, AG_Window *, AG_Menu *, AG_MenuItem *);
 
 /* Legacy interfaces */

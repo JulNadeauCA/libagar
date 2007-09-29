@@ -1843,7 +1843,7 @@ AG_WidgetBlendPixelRGBA(void *p, int wx, int wy, Uint8 c[4], AG_BlendFn fn)
 			break;
 		}
 		glBegin(GL_POINTS);
-		glColor4ubv((GLbyte *)c);
+		glColor4ubv((GLubyte *)c);
 		glVertex2s(vx, vy);
 		glEnd();
 
