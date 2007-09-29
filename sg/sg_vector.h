@@ -154,10 +154,12 @@ __END_DECLS
 #include <sg/sg_vector2_fpu.h>
 #include <sg/sg_vector3_fpu.h>
 #include <sg/sg_vector4_fpu.h>
+#include <sg/sg_vector3_sse3.h>
 #else
 #include <agar/sg/sg_vector2_fpu.h>
 #include <agar/sg/sg_vector3_fpu.h>
 #include <agar/sg/sg_vector4_fpu.h>
+#include <agar/sg/sg_vector3_sse3.h>
 #endif
 
 __BEGIN_DECLS
@@ -182,6 +184,9 @@ void	   SG_WriteVectorf2(AG_Netbuf *, SG_Vector2 *);
 void	   SG_WriteVectorf (AG_Netbuf *, SG_Vector *);
 void	   SG_WriteVectorf4(AG_Netbuf *, SG_Vector4 *);
 
+__inline__ SG_Vector2 SG_RealvToVector2(const SG_Real *);
+__inline__ SG_Vector  SG_RealvToVector(const SG_Real *);
+__inline__ SG_Vector4 SG_RealvToVector4(const SG_Real *);
 __inline__ SG_Vector2 SG_Vector3to2(SG_Vector);
 __inline__ SG_Vector  SG_Vector2to3(SG_Vector2);
 __inline__ SG_Vector4 SG_Vector3to4(SG_Vector);
@@ -242,6 +247,53 @@ __END_DECLS
 #define VecRotate2	Vec2->Rotate
 #define VecRotate2v	Vec2->Rotatev
 
+#ifdef INLINE_SSE3
+
+#define VecZero		SG_VectorZero3_SSE3
+#define VecGet		SG_VectorGet3_SSE3
+#define VecSet		SG_VectorSet3_FPU
+#define VecCopy		SG_VectorCopy3_FPU
+#define VecMirror	SG_VectorMirror3_SSE3
+#define VecMirrorp	SG_VectorMirror3p_SSE3
+#define VecLen		SG_VectorLen3_FPU
+#define VecLenp		SG_VectorLen3p_FPU
+#define VecDot		SG_VectorDot3_SSE3
+#define VecDotp		SG_VectorDot3p_SSE3
+#define VecDistance	SG_VectorDistance3_SSE3
+#define VecDistancep	SG_VectorDistance3p_SSE3
+#define VecNorm		SG_VectorNorm3_SSE3
+#define VecNormp	SG_VectorNorm3p_SSE3
+#define VecNormv	SG_VectorNorm3v_FPU
+#define VecCross	SG_VectorCross3_FPU
+#define VecCrossp	SG_VectorCross3p_FPU
+#define VecNormCross	SG_VectorNormCross3_FPU
+#define VecNormCrossp	SG_VectorNormCross3p_FPU
+#define VecScale	SG_VectorScale3_SSE3
+#define VecScalep	SG_VectorScale3p_SSE3
+#define VecScalev	SG_VectorScale3v_FPU
+#define VecAdd		SG_VectorAdd3_SSE3
+#define VecAddp		SG_VectorAdd3p_SSE3
+#define VecAddv		SG_VectorAdd3v_FPU
+#define VecAddn		SG_VectorAdd3n_SSE3
+#define VecSub		SG_VectorSub3_SSE3
+#define VecSubp		SG_VectorSub3p_SSE3
+#define VecSubv		SG_VectorSub3v_FPU
+#define VecSubn		SG_VectorSub3n_SSE3
+#define VecAvg		SG_VectorAvg3_SSE3
+#define VecAvgp		SG_VectorAvg3p_SSE3
+#define VecLERP		SG_VectorLERP3_SSE3
+#define VecLERPp	SG_VectorLERP3p_SSE3
+#define VecElemPow	SG_VectorElemPow3_SSE3
+#define VecVecAngle	SG_VectorVecAngle3_SSE3
+#define VecRotate	SG_VectorRotate3_SSE3
+#define VecRotatev	SG_VectorRotate3v_SSE3
+#define VecRotateQuat	SG_VectorRotateQuat3_SSE3
+#define VecRotateI	SG_VectorRotateI3_SSE3
+#define VecRotateJ	SG_VectorRotateJ3_SSE3
+#define VecRotateK	SG_VectorRotateK3_SSE3
+
+#else /* !INLINE_SSE3 */
+
 #define VecZero		Vec3->Zero
 #define VecGet		Vec3->Get
 #define VecSet		Vec3->Set
@@ -284,6 +336,8 @@ __END_DECLS
 #define VecRotateI	Vec3->RotateI
 #define VecRotateJ	Vec3->RotateJ
 #define VecRotateK	Vec3->RotateK
+
+#endif /* INLINE_SSE3 */
 
 #define VecZero4	Vec4->Zero
 #define VecGet4		Vec4->Get

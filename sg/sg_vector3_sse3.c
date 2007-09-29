@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,63 +23,65 @@
  */
 
 /*
- * Operations on vectors in R^3 using standard FPU instructions.
+ * Operations on vectors in R^3 using SSE3 operations.
  */
 
 #include <config/have_opengl.h>
-#ifdef HAVE_OPENGL
+#include <config/have_sse3.h>
+
+#if defined(HAVE_OPENGL) || defined(HAVE_SSE3)
 
 #include <core/core.h>
 #include "sg.h"
 
-const SG_VectorOps3 sgVecOps3_FPU = {
-	"fpu",
-	SG_VectorZero3_FPU,
-	SG_VectorGet3_FPU,
-	SG_VectorSet3_FPU,
-	SG_VectorCopy3_FPU,
-	SG_VectorMirror3_FPU,
-	SG_VectorMirror3p_FPU,
-	SG_VectorLen3_FPU,
-	SG_VectorLen3p_FPU,
-	SG_VectorDot3_FPU,
-	SG_VectorDot3p_FPU,
-	SG_VectorDistance3_FPU,
-	SG_VectorDistance3p_FPU,
-	SG_VectorNorm3_FPU,
-	SG_VectorNorm3p_FPU,
-	SG_VectorNorm3v_FPU,
-	SG_VectorCross3_FPU,
-	SG_VectorCross3p_FPU,
-	SG_VectorNormCross3_FPU,
-	SG_VectorNormCross3p_FPU,
-	SG_VectorScale3_FPU,
-	SG_VectorScale3p_FPU,
-	SG_VectorScale3v_FPU,
-	SG_VectorAdd3_FPU,
-	SG_VectorAdd3p_FPU,
-	SG_VectorAdd3v_FPU,
-	SG_VectorAdd3n_FPU,
-	SG_VectorSub3_FPU,
-	SG_VectorSub3p_FPU,
-	SG_VectorSub3v_FPU,
-	SG_VectorSub3n_FPU,
-	SG_VectorAvg3_FPU,
-	SG_VectorAvg3p_FPU,
-	SG_VectorLERP3_FPU,
-	SG_VectorLERP3p_FPU,
-	SG_VectorElemPow3_FPU,
-	SG_VectorVecAngle3_FPU,
-	SG_VectorRotate3_FPU,
-	SG_VectorRotate3v_FPU,
-	SG_VectorRotateQuat3_FPU,
-	SG_VectorRotateI3_FPU,
-	SG_VectorRotateJ3_FPU,
-	SG_VectorRotateK3_FPU,
+const SG_VectorOps3 sgVecOps3_SSE3 = {
+	"sse3",
+	SG_VectorZero3_SSE3,			/* -31 clks */
+	SG_VectorGet3_SSE3,			/* -8 clks */
+	SG_VectorSet3_FPU,			/* +8 clks */
+	SG_VectorCopy3_FPU,			/* = */
+	SG_VectorMirror3_SSE3,			/* TODO */
+	SG_VectorMirror3p_SSE3,			/* TODO */
+	SG_VectorLen3_FPU,			/* = */
+	SG_VectorLen3p_FPU,			/* = */
+	SG_VectorDot3_SSE3,			/* -26 clks */
+	SG_VectorDot3p_SSE3,			/* -59 clks */
+	SG_VectorDistance3_SSE3,		/* -31 clks */
+	SG_VectorDistance3p_SSE3,		/* -27 clks */
+	SG_VectorNorm3_SSE3,			/* -87 clks */
+	SG_VectorNorm3p_SSE3,			/* -54 clks */
+	SG_VectorNorm3v_FPU,			/* +147 clks */
+	SG_VectorCross3_FPU,			/* TODO */
+	SG_VectorCross3p_FPU,			/* TODO */
+	SG_VectorNormCross3_FPU,		/* TODO */
+	SG_VectorNormCross3p_FPU,		/* TODO */
+	SG_VectorScale3_SSE3,			/* -27 clks */
+	SG_VectorScale3p_SSE3,			/* -15 clks */
+	SG_VectorScale3v_FPU,			/* = */
+	SG_VectorAdd3_SSE3,			/* -29 clks */
+	SG_VectorAdd3p_SSE3,			/* -15 clks */
+	SG_VectorAdd3v_FPU,			/* = */
+	SG_VectorAdd3n_SSE3,			/* TODO */
+	SG_VectorSub3_SSE3,			/* -29 clks */
+	SG_VectorSub3p_SSE3,			/* -15 clks */
+	SG_VectorSub3v_FPU,			/* = */
+	SG_VectorSub3n_SSE3,			/* TODO */
+	SG_VectorAvg3_SSE3,			/* TODO */
+	SG_VectorAvg3p_SSE3,			/* TODO */
+	SG_VectorLERP3_SSE3,			/* TODO */
+	SG_VectorLERP3p_SSE3,			/* TODO */
+	SG_VectorElemPow3_SSE3,			/* TODO */
+	SG_VectorVecAngle3_SSE3,		/* TODO */
+	SG_VectorRotate3_SSE3,			/* TODO */
+	SG_VectorRotate3v_SSE3			/* TODO */,
+	SG_VectorRotateQuat3_SSE3,		/* TODO */
+	SG_VectorRotateI3_SSE3,			/* TODO */
+	SG_VectorRotateJ3_SSE3,			/* TODO */
+	SG_VectorRotateK3_SSE3,			/* TODO */
 };
 
 SG_Vector
-SG_VectorAdd3n_FPU(int nvecs, ...)
+SG_VectorAdd3n_SSE3(int nvecs, ...)
 {
 	SG_Vector c, *v;
 	int i;
@@ -87,21 +89,17 @@ SG_VectorAdd3n_FPU(int nvecs, ...)
 
 	va_start(ap, nvecs);
 	v = va_arg(ap, void *);
-	c.x = v->x;
-	c.y = v->y;
-	c.z = v->z;
+	c.m128 = v->m128;
 	for (i = 0; i < nvecs; i++) {
 		v = va_arg(ap, void *);
-		c.x += v->x;
-		c.y += v->y;
-		c.z += v->z;
+		c.m128 = _mm_add_ps(c.m128, v->m128);
 	}
 	va_end(ap);
 	return (c);
 }
 
 SG_Vector
-SG_VectorSub3n_FPU(int nvecs, ...)
+SG_VectorSub3n_SSE3(int nvecs, ...)
 {
 	SG_Vector c, *v;
 	int i;
@@ -109,30 +107,26 @@ SG_VectorSub3n_FPU(int nvecs, ...)
 
 	va_start(ap, nvecs);
 	v = va_arg(ap, void *);
-	c.x = v->x;
-	c.y = v->y;
-	c.z = v->z;
+	c.m128 = v->m128;
 	for (i = 0; i < nvecs; i++) {
 		v = va_arg(ap, void *);
-		c.x -= v->x;
-		c.y -= v->y;
-		c.z -= v->z;
+		c.m128 = _mm_sub_ps(c.m128, v->m128);
 	}
 	va_end(ap);
 	return (c);
 }
 
 SG_Vector
-SG_VectorRotate3_FPU(SG_Vector v, SG_Real theta, SG_Vector n)
+SG_VectorRotate3_SSE3(SG_Vector v, SG_Real theta, SG_Vector n)
 {
 	SG_Vector r = v;
 
-	SG_VectorRotate3v_FPU(&r, theta, n);
+	SG_VectorRotate3v_SSE3(&r, theta, n);
 	return (r);
 }
 
 void
-SG_VectorRotate3v_FPU(SG_Vector *v, SG_Real theta, SG_Vector n)
+SG_VectorRotate3v_SSE3(SG_Vector *v, SG_Real theta, SG_Vector n)
 {
 	SG_Real s = Sin(theta);
 	SG_Real c = Cos(theta);
@@ -159,7 +153,7 @@ SG_VectorRotate3v_FPU(SG_Vector *v, SG_Real theta, SG_Vector n)
 }
 
 SG_Vector
-SG_VectorRotateQuat3_FPU(SG_Vector V, SG_Quat Q)
+SG_VectorRotateQuat3_SSE3(SG_Vector V, SG_Quat Q)
 {
 	SG_Matrix R;
 
@@ -167,5 +161,4 @@ SG_VectorRotateQuat3_FPU(SG_Vector V, SG_Quat Q)
 	return (SG_MatrixMultVectorp(&R, &V));
 }
 
-
-#endif /* HAVE_OPENGL */
+#endif /* HAVE_OPENGL and HAVE_SSE3 */

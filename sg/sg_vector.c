@@ -39,14 +39,57 @@ const SG_VectorOps4 *sgVecOps4 = NULL;
 void
 SG_VectorInitEngine(void)
 {
-	sgVecOps2 = &sgVecOps2_FPU;
+#ifdef HAVE_SSE3
+# ifdef INLINE_SSE3
+	printf("Vector Engine: SSE3 (inline)\n");
+# else
+	printf("Vector Engine: SSE3\n");
+# endif
+	sgVecOps3 = &sgVecOps3_SSE3;
+#else
+	printf("Vector Engine: Scalar\n");
 	sgVecOps3 = &sgVecOps3_FPU;
+#endif
+	sgVecOps2 = &sgVecOps2_FPU;
 	sgVecOps4 = &sgVecOps4_FPU;
 }
 
 void
 SG_VectorDestroyEngine(void)
 {
+}
+
+SG_Vector2
+SG_RealvToVector2(const SG_Real *r)
+{
+	SG_Vector2 v;
+
+	v.x = r[0];
+	v.y = r[1];
+	return (v);
+}
+
+SG_Vector
+SG_RealvToVector(const SG_Real *r)
+{
+	SG_Vector v;
+
+	v.x = r[0];
+	v.y = r[1];
+	v.z = r[2];
+	return (v);
+}
+
+SG_Vector4
+SG_RealvToVector4(const SG_Real *r)
+{
+	SG_Vector4 v;
+
+	v.x = r[0];
+	v.y = r[1];
+	v.z = r[2];
+	v.w = r[3];
+	return (v);
 }
 
 SG_Vector2
