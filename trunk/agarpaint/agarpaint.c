@@ -440,7 +440,7 @@ main(int argc, char *argv[])
 		DEV_ToolMenu(AG_MenuNode(appMenu->root, "Debug", -1));
 	}
 #endif
-	Splash();
+	//Splash();
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
