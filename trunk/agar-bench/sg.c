@@ -459,6 +459,8 @@ static void VectorAdd3p_SSE3(void) {
 	if (r.z > Reals[cur]) { foo = 3; }
 	if (r.y > Reals[cur]) { foo = 2; }
 }
+
+#if 0
 static void VectorAdd3v_SSE3(void) {
 	SG_Vector r;
 	RANDOMIZE();
@@ -469,6 +471,7 @@ static void VectorAdd3v_SSE3(void) {
 	if (r.z > Reals[cur]) { foo = 3; }
 	if (r.y > Reals[cur]) { foo = 2; }
 }
+#endif
 
 #endif /* HAVE_SSE3 */
 
