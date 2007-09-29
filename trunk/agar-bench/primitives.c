@@ -145,5 +145,5 @@ struct test_ops primitives_test = {
 	&testfns[0],
 	sizeof(testfns) / sizeof(testfns[0]),
 	TEST_SDL,
-	4, 32
+	4, 32, 0
 };

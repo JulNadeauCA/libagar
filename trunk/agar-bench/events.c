@@ -48,5 +48,5 @@ struct test_ops events_test = {
 	&testfns[0],
 	sizeof(testfns) / sizeof(testfns[0]),
 	0,
-	4, 10000
+	4, 10000, 0
 };

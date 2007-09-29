@@ -54,5 +54,5 @@ struct test_ops memops_test = {
 	&testfns[0],
 	sizeof(testfns) / sizeof(testfns[0]),
 	0,
-	4, 10
+	4, 10, 0
 };
