@@ -2879,7 +2879,7 @@ if [ "${with_sse}" != "no" ]
  then
 echo -n "checking for SSE extensions..."
 echo -n "checking for SSE extensions..." >> config.log
-SSE_CFLAGS=-msse
+SSE_CFLAGS="-msse"
 cat << EOT > conftest.c
 #include <xmmintrin.h>
 
@@ -2920,16 +2920,17 @@ echo "#undef HAVE_SSE" > config/have_sse.h
 fi;
 rm -f conftest conftest.c
 if [ "${HAVE_SSE}" = "yes" ]; then
-echo "SSE_CFLAGS=$SSE_CFLAGS" >> Makefile.config
 echo "#ifndef SSE_CFLAGS" > config/sse_cflags.h
 echo "#define SSE_CFLAGS \"$SSE_CFLAGS\"" >> config/sse_cflags.h
 echo "#endif" >> config/sse_cflags.h
 else
 echo "#undef SSE_CFLAGS" > config/sse_cflags.h
+SSE_CFLAGS=""
 fi;
+echo "SSE_CFLAGS=$SSE_CFLAGS" >> Makefile.config
 echo -n "checking for SSE2 extensions..."
 echo -n "checking for SSE2 extensions..." >> config.log
-SSE2_CFLAGS=-msse2
+SSE2_CFLAGS="-msse2"
 cat << EOT > conftest.c
 #include <emmintrin.h>
 
@@ -2970,16 +2971,17 @@ echo "#undef HAVE_SSE2" > config/have_sse2.h
 fi;
 rm -f conftest conftest.c
 if [ "${HAVE_SSE2}" = "yes" ]; then
-echo "SSE2_CFLAGS=$SSE2_CFLAGS" >> Makefile.config
 echo "#ifndef SSE2_CFLAGS" > config/sse2_cflags.h
 echo "#define SSE2_CFLAGS \"$SSE2_CFLAGS\"" >> config/sse2_cflags.h
 echo "#endif" >> config/sse2_cflags.h
 else
 echo "#undef SSE2_CFLAGS" > config/sse2_cflags.h
+SSE2_CFLAGS=""
 fi;
+echo "SSE2_CFLAGS=$SSE2_CFLAGS" >> Makefile.config
 echo -n "checking for SSE3 extensions..."
 echo -n "checking for SSE3 extensions..." >> config.log
-SSE3_CFLAGS=-msse3
+SSE3_CFLAGS="-msse3"
 cat << EOT > conftest.c
 #include <pmmintrin.h>
 
@@ -3022,13 +3024,14 @@ echo "#undef HAVE_SSE3" > config/have_sse3.h
 fi;
 rm -f conftest conftest.c
 if [ "${HAVE_SSE3}" = "yes" ]; then
-echo "SSE3_CFLAGS=$SSE3_CFLAGS" >> Makefile.config
 echo "#ifndef SSE3_CFLAGS" > config/sse3_cflags.h
 echo "#define SSE3_CFLAGS \"$SSE3_CFLAGS\"" >> config/sse3_cflags.h
 echo "#endif" >> config/sse3_cflags.h
 else
 echo "#undef SSE3_CFLAGS" > config/sse3_cflags.h
+SSE3_CFLAGS=""
 fi;
+echo "SSE3_CFLAGS=$SSE3_CFLAGS" >> Makefile.config
 	if [ "${HAVE_SSE}" != "yes" ]
  then
 		if [ "${with_sse}" = "yes" ]
@@ -3148,6 +3151,8 @@ echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
 echo "#endif" >> config/altivec_cflags.h
 else
 echo "#undef ALTIVEC_CFLAGS" > config/altivec_cflags.h
+ALTIVEC_CFLAGS=""
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >> Makefile.config
 fi;
 echo "#undef HAVE_ALTIVEC_H" > config/have_altivec_h.h
 fi;
