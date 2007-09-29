@@ -30,12 +30,17 @@
 #include <config/libdir.h>
 #include <config/sharedir.h>
 
+#include <config/have_math.h>
 #include <config/have_cg.h>
 #include <config/have_altivec.h>
 #include <config/have_sse.h>
 #include <config/have_sse2.h>
 #include <config/have_sse3.h>
 
+#ifdef HAVE_MATH
+#include <config/math_cflags.h>
+#include <config/math_libs.h>
+#endif
 #ifdef HAVE_CG
 #include <config/cg_cflags.h>
 #include <config/cg_libs.h>
@@ -76,6 +81,9 @@ main(int argc, char *argv[])
 			printf("%s\n", SHAREDIR);
 		} else if (strcmp(argv[i], "--cflags") == 0) {
 			printf("-I%s ", INCLDIR);
+#ifdef HAVE_MATH
+			printf("%s ", MATH_CFLAGS);
+#endif
 #ifdef HAVE_CG
 			printf("%s ", CG_CFLAGS);
 #endif
@@ -96,7 +104,10 @@ main(int argc, char *argv[])
 			printf("-L%s ", LIBDIR);
 			printf("-lag_sg -lag_sgimport ");
 #ifdef HAVE_CG
-			printf("%s", CG_LIBS);
+			printf("%s ", CG_LIBS);
+#endif
+#ifdef HAVE_MATH
+			printf("%s ", MATH_LIBS);
 #endif
 			printf("\n");
 		}
