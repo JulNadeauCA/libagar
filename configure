@@ -140,7 +140,11 @@ echo "    --with-freetype                GUI: Enable FreeType support [default: 
 echo "    --with-ode                     SG: ODE physics interface [default: check]"
 echo "    --with-cg                      SG: CG shader support [default: check]"
 echo "    --with-sse                     SSE/SSE2/SSE3 optimizations [default: check]"
+echo "    --with-sse-inline              Inline SSE operations [default: no]"
+echo "    --with-sse2-inline             Inline SSE2 operations [default: no]"
+echo "    --with-sse3-inline             Inline SSE3 operations [default: no]"
 echo "    --with-altivec                 AltiVec optimizations [default: check]"
+echo "    --with-altivec-inline          Inline AltiVec operations [default: no]"
 echo "    --enable-threads               Thread safety [default: no]"
 echo "    --enable-utf8                  Unicode text/input support [default: no]"
 echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
@@ -2996,6 +3000,43 @@ echo "SSE3_CFLAGS=$SSE3_CFLAGS" >> Makefile.config
 			exit 1
 		else
 echo "#undef HAVE_SSE" > config/have_sse.h
+echo "#undef INLINE_SSE" > config/inline_sse.h
+echo "#undef INLINE_SSE2" > config/inline_sse2.h
+echo "#undef INLINE_SSE3" > config/inline_sse3.h
+		fi
+	else
+		if [ "${with_sse_inline}" = "yes" ]
+ then
+INLINE_SSE=1
+echo "#ifndef INLINE_SSE" > config/inline_sse.h
+echo "#define INLINE_SSE" $INLINE_SSE >> config/inline_sse.h
+echo "#endif" >> config/inline_sse.h
+		else
+echo "#undef INLINE_SSE" > config/inline_sse.h
+		fi
+		if [ "${HAVE_SSE2}" = "yes" ]
+ then
+			if [ "${with_sse2_inline}" = "yes" ]
+ then
+INLINE_SSE2=1
+echo "#ifndef INLINE_SSE2" > config/inline_sse2.h
+echo "#define INLINE_SSE2" $INLINE_SSE2 >> config/inline_sse2.h
+echo "#endif" >> config/inline_sse2.h
+			else
+echo "#undef INLINE_SSE2" > config/inline_sse2.h
+			fi
+		fi
+		if [ "${HAVE_SSE3}" = "yes" ]
+ then
+			if [ "${with_sse3_inline}" = "yes" ]
+ then
+INLINE_SSE3=1
+echo "#ifndef INLINE_SSE3" > config/inline_sse3.h
+echo "#define INLINE_SSE3" $INLINE_SSE3 >> config/inline_sse3.h
+echo "#endif" >> config/inline_sse3.h
+			else
+echo "#undef INLINE_SSE3" > config/inline_sse3.h
+			fi
 		fi
 	fi
 else
@@ -3120,6 +3161,17 @@ fi;
 			exit 1
 		else
 echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
+echo "#undef INLINE_ALTIVEC" > config/inline_altivec.h
+		fi
+	else
+		if [ "${with_altivec_inline}" = "yes" ]
+ then
+INLINE_ALTIVEC=1
+echo "#ifndef INLINE_ALTIVEC" > config/inline_altivec.h
+echo "#define INLINE_ALTIVEC" $INLINE_ALTIVEC >> config/inline_altivec.h
+echo "#endif" >> config/inline_altivec.h
+		else
+echo "#undef INLINE_ALTIVEC" > config/inline_altivec.h
 		fi
 	fi
 else
