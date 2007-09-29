@@ -20,8 +20,11 @@ struct test_ops {
 	unsigned flags;
 #define TEST_SDL	0x01		/* SDL-only */
 #define TEST_GL		0x02		/* OpenGL-only */
-	unsigned runs;
-	unsigned iterations;
+	unsigned runs;			/* Number of loop cycles */
+	unsigned iterations;		/* Iterations in loop */
+	unsigned maximum;		/* If tests exceed value, assume
+					   preemption and retry (0=disable) */
+					   
 };
 
 extern SDL_Surface *surface, *surface64, *surface128;

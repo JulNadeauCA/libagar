@@ -56,5 +56,5 @@ struct test_ops surfaceops_test = {
 	&testfns[0],
 	sizeof(testfns) / sizeof(testfns[0]),
 	TEST_SDL,
-	4, 64
+	4, 64, 0
 };

@@ -44,7 +44,7 @@ int ntests = sizeof(tests) / sizeof(tests[0]);
 #endif
 
 static void
-run_tests(AG_Event *event)
+RunTests(AG_Event *event)
 {
 	struct test_ops *test = AG_PTR(1);
 	AG_Table *t = AG_PTR(2);
@@ -68,10 +68,13 @@ run_tests(AG_Event *event)
 		if (!AG_TableRowSelected(t, m)) {
 			continue;
 		}
+		
+		ops->clksMax = 0;
 		fprintf(stderr, "Running test: %s...", ops->name);
 		if (ops->init != NULL) ops->init();
 		for (i = 0, tTot = 0; i < test->runs; i++) {
 #ifdef USE_RDTSC
+retry:
 			RDTSC(t1);
 			for (j = 0; j < test->iterations; j++) {
 				ops->run();
@@ -79,6 +82,10 @@ run_tests(AG_Event *event)
 			RDTSC(t2);
 			fprintf(stderr, " %llu", (t2 - t1));
 			tRun = (t2 - t1) / test->iterations;
+			if (test->maximum > 0 && tRun > test->maximum) {
+				fprintf(stderr, " <preempted>");
+				goto retry;
+			}
 			ops->clksMax = MAX(ops->clksMax, tRun);
 			ops->clksMin = ops->clksMin > 0 ?
 			    MIN(ops->clksMin, tRun) : tRun;
@@ -226,7 +233,7 @@ MainWindow(void)
 		hbox = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 		{
 			btn = AG_ButtonNew(hbox, 0, "Run tests");
-			AG_SetEvent(btn, "button-pushed", run_tests,
+			AG_SetEvent(btn, "button-pushed", RunTests,
 			    "%p,%p", test, t);
 	
 			btn = AG_ButtonNew(hbox, 0, "Save results");
