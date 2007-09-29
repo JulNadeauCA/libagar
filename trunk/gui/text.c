@@ -707,6 +707,7 @@ JustifyOffset(int w, int wLine)
 	case AG_TEXT_RIGHT:
 		return (w - wLine);
 	}
+	return (0);
 }
 
 #ifdef HAVE_FREETYPE
