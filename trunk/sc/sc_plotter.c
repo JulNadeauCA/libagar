@@ -289,7 +289,7 @@ mousebuttondown(AG_Event *event)
 				AG_PopupMenu *pm;
 
 				pm = AG_PopupNew(ptr);
-				AG_MenuIntFlags(pm->item, _("Display plot"),
+				AG_MenuUintFlags(pm->item, _("Display plot"),
 				    OBJ_ICON,
 				    &pl->flags, SC_PLOT_HIDDEN, 1);
 				AG_MenuAction(pm->item, _("Plot settings"),
