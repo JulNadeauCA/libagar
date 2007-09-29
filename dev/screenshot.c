@@ -43,11 +43,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <jpeglib.h>
-
-/* Silly SDL tries to redefine this */
-#undef HAVE_STDLIB_H
-
 #include <core/core.h>
 #include <core/view.h>
 
@@ -60,6 +55,9 @@
 #include <gui/spinbutton.h>
 
 #include "dev.h"
+
+#undef HAVE_STDLIB_H		/* Work around SDL.h retardation */
+#include <jpeglib.h>
 
 static AG_Thread thread;
 static AG_Mutex lock = AG_MUTEX_INITIALIZER;
