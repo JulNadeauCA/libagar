@@ -490,7 +490,7 @@ SG_VectorRotate4v_FPU(SG_Vector4 *v, SG_Real theta, SG_Vector4 n)
 	R.m[3][1] = -s*n.y;
 	R.m[3][2] = -s*n.z;
 	R.m[3][3] = c;
-	SG_MatrixMultVector4v(v, &R);
+	MatMultVector4v(v, &R);
 }
 
 SG_Vector4

@@ -51,7 +51,7 @@ SG_UnProject(SG_Real wx, SG_Real wy, SG_Real wz, const SG_Matrix *M,
 	SG_Matrix A;
 	SG_Vector4 in, out;
 
-	SG_MatrixMultpv(&A, M, P);
+	MatMultpv(&A, M, P);
 	in.x = wx;
 	in.y = wy;
 	in.z = wz;
@@ -62,7 +62,7 @@ SG_UnProject(SG_Real wx, SG_Real wy, SG_Real wz, const SG_Matrix *M,
 	in.y = in.y*2.0 - 1.0;
 	in.z = in.z*2.0 - 1.0;
 
-	out = SG_MatrixMultVector4p(&A, &in);
+	out = MatMultVector4p(&A, &in);
 	if (out.w == 0.0) { return (-1); }
 	out.x /= out.w;
 	out.y /= out.w;
@@ -262,7 +262,7 @@ MoveCameraByMouse(SG_View *sv, int xrel, int yrel, int zrel)
 //	T->m[2][3] += m.z;
 #if 1
 	/* Translate along the local camera axis. */
-	SG_MatrixTranslatev(&SGNODE(sv->cam)->T, m);
+	MatTranslate(&SGNODE(sv->cam)->T, m);
 #endif
 
 	if (sv->cam->pmode == SG_CAMERA_ORTHOGRAPHIC) {

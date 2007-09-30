@@ -149,7 +149,7 @@ SG_VectorRotate3v_SSE(SG_Vector *v, SG_Real theta, SG_Vector n)
 	R.m[3][1] = 0.0;
 	R.m[3][2] = 0.0;
 	R.m[3][3] = 1.0;
-	SG_MatrixMultVectorv(v, &R);
+	MatMultVectorv(v, &R);
 }
 
 SG_Vector
@@ -158,7 +158,7 @@ SG_VectorRotateQuat3_SSE(SG_Vector V, SG_Quat Q)
 	SG_Matrix R;
 
 	SG_QuatToMatrix(&R, &Q);
-	return (SG_MatrixMultVectorp(&R, &V));
+	return (MatMultVectorp(&R, &V));
 }
 
 #endif /* HAVE_OPENGL and HAVE_SSE */

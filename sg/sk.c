@@ -254,7 +254,7 @@ SK_NodeInit(void *np, const void *ops, Uint32 handle, Uint flags)
 	n->nRefNodes = 0;
 	n->cons = Malloc(sizeof(SK_Constraint *), M_SG);
 	n->nCons = 0;
-	SG_MatrixIdentityv(&n->T);
+	MatIdentityv(&n->T);
 	TAILQ_INIT(&n->cnodes);
 }
 
@@ -571,9 +571,9 @@ SK_GetNodeTransform(void *p, SG_Matrix *T)
 		}
 		cnode = cnode->pNode;
 	}
-	SG_MatrixIdentityv(T);
+	MatIdentityv(T);
 	TAILQ_FOREACH(cnode, &rnodes, rnodes)
-		SG_MatrixMultv(T, &cnode->T);
+		MatMultv(T, &cnode->T);
 }
 
 /*
@@ -587,7 +587,7 @@ SK_GetNodeTransformInverse(void *p, SG_Matrix *T)
 	SK_Node *cnode = node;
 	TAILQ_HEAD(,sk_node) rnodes = TAILQ_HEAD_INITIALIZER(rnodes);
 
-	SG_MatrixIdentityv(T);
+	MatIdentityv(T);
 
 	while (cnode != NULL) {
 		TAILQ_INSERT_TAIL(&rnodes, cnode, rnodes);
@@ -599,8 +599,8 @@ SK_GetNodeTransformInverse(void *p, SG_Matrix *T)
 	TAILQ_FOREACH(cnode, &rnodes, rnodes) {
 		SG_Matrix Tinv;
 
-		Tinv = SG_MatrixInvertCramerp(&cnode->T);
-		SG_MatrixMultv(T, &Tinv);
+		Tinv = MatInvertp(&cnode->T);
+		MatMultv(T, &Tinv);
 	}
 }
 
@@ -613,7 +613,7 @@ SK_Pos(void *p)
 	SG_Vector v = VecZero();
 	
 	SK_GetNodeTransform(node, &T);
-	SG_MatrixMultVectorv(&v, &T);
+	MatMultVectorv(&v, &T);
 	return (v);
 }
 
@@ -635,7 +635,7 @@ SK_NodeDir(void *p)
 	SG_Vector v = VecK();				/* Convention */
 	
 	SK_GetNodeTransform(node, &T);
-	SG_MatrixMultVectorv(&v, &T);
+	MatMultVectorv(&v, &T);
 	return (v);
 }
 
@@ -852,7 +852,7 @@ SK_RenderNode(SK *sk, SK_Node *node, SK_View *view)
 	SK_Node *cnode;
 
 	SG_GetMatrixGL(GL_MODELVIEW_MATRIX, &Tsave);
-	Tt = SG_MatrixTransposep(&node->T);
+	Tt = MatTransposep(&node->T);
 	SG_MultMatrixGL(&Tt);
 	if (node->ops->draw_relative != NULL) {
 		node->ops->draw_relative(node, view);

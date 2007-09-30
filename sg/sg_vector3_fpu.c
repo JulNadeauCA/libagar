@@ -33,7 +33,7 @@
 #include "sg.h"
 
 const SG_VectorOps3 sgVecOps3_FPU = {
-	"fpu",
+	"scalar",
 	SG_VectorZero3_FPU,
 	SG_VectorGet3_FPU,
 	SG_VectorSet3_FPU,
@@ -155,7 +155,7 @@ SG_VectorRotate3v_FPU(SG_Vector *v, SG_Real theta, SG_Vector n)
 	R.m[3][1] = 0.0;
 	R.m[3][2] = 0.0;
 	R.m[3][3] = 1.0;
-	SG_MatrixMultVectorv(v, &R);
+	MatMultVectorv(v, &R);
 }
 
 SG_Vector
@@ -164,7 +164,7 @@ SG_VectorRotateQuat3_FPU(SG_Vector V, SG_Quat Q)
 	SG_Matrix R;
 
 	SG_QuatToMatrix(&R, &Q);
-	return (SG_MatrixMultVectorp(&R, &V));
+	return (MatMultVectorp(&R, &V));
 }
 
 

@@ -68,6 +68,11 @@ typedef union sg_vector4 {
 	struct { SG_Real x, y, z, w; };
 } SG_Vector4;
 
+typedef union sg_matrix {
+	struct { __m128 m1, m2, m3, m4; };
+	SG_Real m[4][4];
+} SG_Matrix44, SG_Matrix;
+
 #else /* !HAVE_SSE */
 
 typedef union sg_vector3 {
@@ -79,6 +84,10 @@ typedef union sg_vector4 {
 	struct { SG_Real x, y, z, w; };
 	SG_Real m[4];
 } SG_Vector4;
+
+typedef struct sg_matrix {
+	SG_Real m[4][4];
+} SG_Matrix44, SG_Matrix;
 
 #endif /* HAVE_SSE */
 

@@ -171,7 +171,6 @@ SG_SphereDraw(void *p, SG_View *view)
 {
 	SG_Sphere *sph = p;
 	SG_Real d;
-	SG_Matrix T;
 	int lod;
 	
 	d = VecDistance(SG_NodePos(view->cam), SG_NodePos(sph));

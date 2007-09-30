@@ -1,12 +1,5 @@
 /*	Public domain	*/
 
-#define SG_VECTOR2_INITIALIZER(x,y)	{ (x),(y) }
-#define SG_VECTOR_INITIALIZER(x,y,z)	{ (x),(y),(z) }
-#define SG_VECTOR4_INITIALIZER(x,y,z,w)	{ (x),(y),(z),(w) }
-#define SG_ZERO_VECTOR2_INITIALIZER()	{ 0.0,0.0 }
-#define SG_ZERO_VECTOR_INITIALIZER()	{ 0.0,0.0,0.0 }
-#define SG_ZERO_VECTOR4_INITIALIZER()	{ 0.0,0.0,0.0,0.0 }
-
 /* Operations on vectors in R^2 */
 typedef struct sg_vector_ops2 {
 	const char *name;
@@ -166,7 +159,6 @@ __END_DECLS
 
 __BEGIN_DECLS
 void       SG_VectorInitEngine(void);
-void       SG_VectorDestroyEngine(void);
 SG_Vector2 SG_ReadVector2(AG_Netbuf *);
 SG_Vector  SG_ReadVector (AG_Netbuf *);
 SG_Vector4 SG_ReadVector4(AG_Netbuf *);
@@ -299,7 +291,7 @@ __END_DECLS
 #define VecRotateJ	SG_VectorRotateJ3_SSE
 #define VecRotateK	SG_VectorRotateK3_SSE
 
-#else /* !INLINE_SSE[123] */
+#else  /* !INLINE_SSE[123] */
 
 #define VecZero		Vec3->Zero
 #define VecGet		Vec3->Get
