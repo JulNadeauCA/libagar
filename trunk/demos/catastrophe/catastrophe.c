@@ -70,8 +70,10 @@ Plot(void *pNode, SG_View *sgv)
 		SG_End();
 	}
 
-	SG_RotateEul(node, spinX, spinY, spinZ);
-	SG_RotateEul(node, spinX, spinY, spinZ);
+	SG_RotateI(node, spinX);
+	SG_RotateJ(node, spinY);
+	SG_RotateK(node, spinZ);
+
 	if (init) {
 		if (ur.a > urMin) {
 			ur.a -= 0.06;
