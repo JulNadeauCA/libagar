@@ -13,7 +13,7 @@ SG_Real r = 28.0;
 SG_Real sigma = 10.0;
 SG_Real b = 8.0/3.0;
 SG_Real h = 0.01;
-SG_Real spinX = 0.0, spinY = 0.0005, spinZ = 0.0;
+SG_Real spinI = 0.0, spinJ = 0.0005, spinK = 0.0;
 SG_Node *node;
 int iter = 1, iteriter = 10;
 
@@ -38,7 +38,9 @@ LorenzPlot(void *pNode, SG_View *sgv)
 	}
 	SG_End();
 	
-	SG_RotateEul(node, spinX, spinY, spinZ);
+	SG_RotateI(node, spinI);
+	SG_RotateJ(node, spinJ);
+	SG_RotateK(node, spinK);
 	iter += iteriter;
 }
 
@@ -95,15 +97,15 @@ CreateParametersWindow(void)
 
 	fsb = AG_FSpinbuttonNew(win, 0, NULL, "Pitch:");
 	AG_FSpinbuttonSetIncrement(fsb, 0.0001);
-	SG_WidgetBindReal(fsb, "value", &spinX);
+	SG_WidgetBindReal(fsb, "value", &spinI);
 
 	fsb = AG_FSpinbuttonNew(win, 0, NULL, "Yaw:");
 	AG_FSpinbuttonSetIncrement(fsb, 0.0001);
-	SG_WidgetBindReal(fsb, "value", &spinY);
+	SG_WidgetBindReal(fsb, "value", &spinJ);
 	
 	fsb = AG_FSpinbuttonNew(win, 0, NULL, "Roll:");
 	AG_FSpinbuttonSetIncrement(fsb, 0.0001);
-	SG_WidgetBindReal(fsb, "value", &spinZ);
+	SG_WidgetBindReal(fsb, "value", &spinK);
 	
 	AG_WindowShow(win);
 }
