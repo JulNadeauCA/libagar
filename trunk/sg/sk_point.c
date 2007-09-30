@@ -206,7 +206,7 @@ ToolMouseButtonDown(void *pTool, SG_Vector pos, int btn)
 	pt = Malloc(sizeof(SK_Point), M_OBJECT);
 	SK_PointInit(pt, SK_GenNodeName(sk, "Point"));
 	SK_NodeAttach(sk->root, pt);
-	SG_MatrixTranslate2(&SKNODE(pt)->T, pos.x, pos.y);
+	MatTranslate3(&SKNODE(pt)->T, pos.x, pos.y, 0.0);
 	
 	SK_Update(sk);
 	return (0);

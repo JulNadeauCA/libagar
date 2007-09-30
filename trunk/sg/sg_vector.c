@@ -23,7 +23,7 @@
  */
 
 /*
- * Generic utility routines for vectors.
+ * Miscellaneous utility routines for vectors.
  */
 
 #include <config/have_opengl.h>
@@ -39,24 +39,41 @@ const SG_VectorOps4 *sgVecOps4 = NULL;
 void
 SG_VectorInitEngine(void)
 {
-#ifdef HAVE_SSE3
-# ifdef INLINE_SSE3
-	printf("Vector Engine: SSE3 (inline)\n");
-# else
-	printf("Vector Engine: SSE3\n");
-# endif
-	sgVecOps3 = &sgVecOps3_SSE3;
-#else
-	printf("Vector Engine: Scalar\n");
 	sgVecOps3 = &sgVecOps3_FPU;
-#endif
 	sgVecOps2 = &sgVecOps2_FPU;
 	sgVecOps4 = &sgVecOps4_FPU;
-}
 
-void
-SG_VectorDestroyEngine(void)
-{
+	if (HasSSE()) {
+#ifdef HAVE_SSE
+		sgVecOps3 = &sgVecOps3_SSE;
+#elif defined(DEBUG)
+		fprintf(stderr, "SSE is available, but support disabled "
+		                "at compile time\n");
+#endif
+	}
+	if (HasSSE3()) {
+#ifdef HAVE_SSE
+		sgVecOps3 = &sgVecOps3_SSE3;
+#elif defined(DEBUG)
+		fprintf(stderr, "SSE3 is available, but support disabled "
+		                "at compile time\n");
+#endif
+	}
+
+#ifdef DEBUG
+	printf("Vector operations: ");
+#if defined(INLINE_ALTIVEC)
+	printf("altivec (inline)\n");
+#elif defined(INLINE_SSE3)
+	printf("sse3 (inline)\n");
+#elif defined(INLINE_SSE2)
+	printf("sse2 (inline)\n");
+#elif defined(INLINE_SSE)
+	printf("sse (inline)\n");
+#else
+	printf("%s\n", sgVecOps3->name);
+#endif
+#endif /* DEBUG */
 }
 
 SG_Vector2

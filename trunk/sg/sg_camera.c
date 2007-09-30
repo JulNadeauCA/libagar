@@ -161,7 +161,7 @@ SG_CameraSetup(SG_Camera *cam)
 	SG_Matrix T;
 
 	SG_GetNodeTransformInverse(cam, &T);
-	SG_MatrixTransposev(&T);		/* OpenGL is column-major */
+	MatTransposev(&T);			/* OpenGL is column-major */
 	SG_MultMatrixGL(&T);
 
 #ifdef DEBUG
@@ -195,7 +195,7 @@ SG_CameraGetProjection(SG_Camera *cam, SG_Matrix *M)
 	glLoadIdentity();
 	SG_CameraProject(cam);
 	SG_GetMatrixGL(GL_PROJECTION_MATRIX, M);
-	SG_MatrixTransposev(M);
+	MatTransposev(M);
 	glPopMatrix();
 	glPopAttrib();
 	AG_UnlockGL();
@@ -225,7 +225,7 @@ SG_CameraSetClipPlanes(SG_Camera *cam, SG_Real zNear, SG_Real zFar)
 void
 SG_CameraSetUser(SG_Camera *cam, const SG_Matrix *P)
 {
-	cam->userProj = SG_MatrixTransposep(P);
+	cam->userProj = MatTransposep(P);
 }
 
 static void
@@ -389,7 +389,7 @@ SG_CameraVector(SG_Camera *cam)
 	SG_Matrix T;
 
 	SG_GetNodeTransform(cam, &T);
-	SG_MatrixMultVectorv(&v, &T);
+	MatMultVectorv(&v, &T);
 	VecNormv(&v);
 	return (v);
 }

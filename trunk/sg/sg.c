@@ -110,6 +110,7 @@ SG_InitEngine(void)
 	extern AG_ObjectOps sgMaterialOps;
 
 	SG_VectorInitEngine();
+	SG_MatrixInitEngine();
 
 	AG_RegisterType(&sgOps, MAP_ICON);
 	AG_RegisterType(&sgMaterialOps, RG_TILING_ICON);
@@ -138,7 +139,6 @@ SG_InitEngine(void)
 void
 SG_DestroyEngine(void)
 {
-	SG_VectorDestroyEngine();
 }
 
 SG *
@@ -217,7 +217,7 @@ SG_NodeInit(void *np, const char *name, const void *ops, Uint flags)
 	n->ops = (const SG_NodeOps *)ops;
 	n->sg = NULL;
 	n->pNode = NULL;
-	SG_MatrixIdentityv(&n->T);
+	MatIdentityv(&n->T);
 	TAILQ_INIT(&n->cnodes);
 }
 
@@ -226,12 +226,10 @@ SG_FreeNode(SG *sg, SG_Node *node)
 {
 	SG_Node *n1, *n2;
 
-	printf("FreeNode: %s\n", node->name);
 	for (n1 = TAILQ_FIRST(&node->cnodes);
 	     n1 != TAILQ_END(&node->cnodes);
 	     n1 = n2) {
 		n2 = TAILQ_NEXT(n1, sgnodes);
-		printf("FreeNode: child (%s)\n", n1->name);
 		if (n1->ops->destroy != NULL) {
 			n1->ops->destroy(n1);
 		}
@@ -441,7 +439,7 @@ SG_GetNodeTransform(void *p, SG_Matrix *T)
 	SG_Node *cnode = node;
 	TAILQ_HEAD(,sg_node) rnodes = TAILQ_HEAD_INITIALIZER(rnodes);
 
-	SG_MatrixIdentityv(T);
+	MatIdentityv(T);
 
 	while (cnode != NULL) {
 		TAILQ_INSERT_TAIL(&rnodes, cnode, rnodes);
@@ -451,7 +449,7 @@ SG_GetNodeTransform(void *p, SG_Matrix *T)
 		cnode = cnode->pNode;
 	}
 	TAILQ_FOREACH(cnode, &rnodes, rnodes)
-		SG_MatrixMultv(T, &cnode->T);
+		MatMultv(T, &cnode->T);
 }
 
 /*
@@ -465,7 +463,7 @@ SG_GetNodeTransformInverse(void *p, SG_Matrix *T)
 	SG_Node *cnode = node;
 	TAILQ_HEAD(,sg_node) rnodes = TAILQ_HEAD_INITIALIZER(rnodes);
 
-	SG_MatrixIdentityv(T);
+	MatIdentityv(T);
 
 	while (cnode != NULL) {
 		TAILQ_INSERT_TAIL(&rnodes, cnode, rnodes);
@@ -477,8 +475,8 @@ SG_GetNodeTransformInverse(void *p, SG_Matrix *T)
 	TAILQ_FOREACH(cnode, &rnodes, rnodes) {
 		SG_Matrix Tinv;
 
-		Tinv = SG_MatrixInvertCramerp(&cnode->T);
-		SG_MatrixMultv(T, &Tinv);
+		Tinv = MatInvertp(&cnode->T);
+		MatMultv(T, &Tinv);
 	}
 }
 
@@ -490,7 +488,7 @@ SG_NodePos(void *p)
 	SG_Vector v = VecGet(0.0, 0.0, 0.0);
 	
 	SG_GetNodeTransformInverse(node, &T);
-	SG_MatrixMultVectorv(&v, &T);
+	MatMultVectorv(&v, &T);
 	return (v);
 }
 
@@ -502,7 +500,7 @@ SG_NodeDir(void *p)
 	SG_Vector v = VecK();				/* Convention */
 	
 	SG_GetNodeTransform(node, &T);
-	SG_MatrixMultVectorv(&v, &T);
+	MatMultVectorv(&v, &T);
 	return (v);
 }
 
@@ -552,7 +550,7 @@ SG_RenderNode(SG *sg, SG_Node *node, SG_View *view)
 	SG_Node *cnode;
 
 	SG_GetMatrixGL(GL_MODELVIEW_MATRIX, &Tsave);
-	T = SG_MatrixTransposep(&node->T);	/* OpenGL is column-major */
+	T = MatTransposep(&node->T);		/* OpenGL is column-major */
 	SG_MultMatrixGL(&T);
 	if (node->ops->draw != NULL) {
 		node->ops->draw(node, view);

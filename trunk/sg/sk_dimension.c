@@ -169,7 +169,7 @@ TransformToAnnotFrame(SK_Dimension *dim, SG_Vector *vr1, SG_Vector *vr2)
 	SG_Vector vd;
 	SG_Real theta;
 	
-	SG_MatrixIdentityv(&T);
+	MatIdentityv(&T);
 
 	switch (dim->type) {
 	case SK_DIMENSION_DISTANCE:
@@ -188,8 +188,8 @@ TransformToAnnotFrame(SK_Dimension *dim, SG_Vector *vr1, SG_Vector *vr2)
 		}
 		vd = VecSubp(&v1, &v2);
 		theta = Atan2(vd.y, vd.x);
-		SG_MatrixTranslatev(&T, VecLERPp(&v1, &v2, 0.5));
-		SG_MatrixRotateZv(&T, theta);
+		MatTranslate(&T, VecLERPp(&v1, &v2, 0.5));
+		MatRotateK(&T, theta);
 		if (vr1 != NULL) { VecCopy(vr1, &v1); }
 		if (vr2 != NULL) { VecCopy(vr2, &v2); }
 		break;
@@ -203,8 +203,8 @@ TransformToAnnotFrame(SK_Dimension *dim, SG_Vector *vr1, SG_Vector *vr2)
 			} else if (L1->p2 == L2->p1 || L1->p2 == L2->p2) {
 				v1 = SK_Pos(L1->p2);
 			}
-			SG_MatrixTranslatev(&T, v1);
-			SG_MatrixRotateZv(&T, SG_PI);
+			MatTranslate(&T, v1);
+			MatRotateK(&T, SG_PI);
 		}
 		break;
 	case SK_DIMENSION_ANGLE_INTERSECT:
@@ -293,7 +293,7 @@ SK_DimensionDraw(void *p, SK_View *skv)
 
 	glPushMatrix();
 	Ta = TransformToAnnotFrame(dim, &v1, &v2);
-	SG_MatrixTransposev(&Ta);
+	MatTransposev(&Ta);
 	SG_MultMatrixGL(&Ta);
 	
 	switch (dim->type) {
@@ -413,10 +413,10 @@ SK_DimensionMove(void *p, const SG_Vector *pos, const SG_Vector *vel)
 	SG_Matrix Ta, TaInv;
 
 	Ta = TransformToAnnotFrame(dim, NULL, NULL);
-	v = SG_MatrixMultVectorp(&Ta, &dim->vLbl);
+	v = MatMultVectorp(&Ta, &dim->vLbl);
 	VecAddv(&v, vel);
-	TaInv = SG_MatrixInvertCramerp(&Ta);
-	dim->vLbl = SG_MatrixMultVectorp(&TaInv, &v);
+	TaInv = MatInvertp(&Ta);
+	dim->vLbl = MatMultVectorp(&TaInv, &v);
 	return (0);
 }
 
@@ -605,8 +605,8 @@ ToolMouseMotion(void *self, SG_Vector pos, SG_Vector vel, int btn)
 		SG_Matrix Ta, TaInv;
 
 		Ta = TransformToAnnotFrame(t->curDim, NULL, NULL);
-		TaInv = SG_MatrixInvertCramerp(&Ta);
-		vDim = SG_MatrixMultVectorp(&TaInv, &pos);
+		TaInv = MatInvertp(&Ta);
+		vDim = MatMultVectorp(&TaInv, &pos);
 	   	t->curDim->vLbl = vDim;
 	}
 	return (0);

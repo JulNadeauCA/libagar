@@ -60,7 +60,7 @@ SG_QuatAddIdentity(void)
 }
 
 void
-SG_QuatToMatrix(SG_Matrix4 *A, const SG_Quat *q)
+SG_QuatToMatrix(SG_Matrix *A, const SG_Quat *q)
 {
 	SG_Real x = q->x;
 	SG_Real y = q->y;

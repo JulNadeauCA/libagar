@@ -15,7 +15,7 @@ void	SG_QuatpFromAxisAngle3(SG_Quat *, SG_Real, SG_Real, SG_Real, SG_Real);
 void	SG_QuatFromEulv(SG_Quat *, SG_Real, SG_Real, SG_Real);
 SG_Quat	SG_QuatFromEul(SG_Real, SG_Real, SG_Real);
 
-void	SG_QuatToMatrix(SG_Matrix4 *, const SG_Quat *);
+void	SG_QuatToMatrix(SG_Matrix *, const SG_Quat *);
 
 __inline__ SG_Quat SG_QuatConj(SG_Quat);
 __inline__ SG_Quat SG_QuatConjp(const SG_Quat *);

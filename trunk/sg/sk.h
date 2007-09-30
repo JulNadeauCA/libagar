@@ -67,7 +67,7 @@ typedef struct sk_node {
 
 	struct sk *sk;			/* Back pointer to sk */
 	struct sk_node *pNode;		/* Back pointer to parent node */
-	SG_Matrix4 T;			/* Transformation from parent */
+	SG_Matrix T;			/* Transformation from parent */
 	TAILQ_HEAD(,sk_node) cnodes;	/* Siblings */
 	Uint nRefs;			/* Reference count (optimization) */
 	struct sk_node **refNodes;	/* References to other nodes */
@@ -269,13 +269,12 @@ __inline__ SK_Constraint *SK_FindSimilarConstraint(const SK_Cluster *,
 __inline__ SK_Constraint *SK_ConstrainedNodes(const SK_Cluster *,
 			                      const SK_Node *, const SK_Node *);
 
-#define	SK_Identity(n) SG_MatrixIdentityv(&SKNODE(n)->T)
-#define	SK_Translate(n,x,y) SG_MatrixTranslate2(&SKNODE(n)->T,(v).x,(v).y)
-#define	SK_Translatev(n,v) SG_MatrixTranslate2(&SKNODE(n)->T,(v)->x,(v)->y)
-#define	SK_Translate2(n,x,y) SG_MatrixTranslate2(&SKNODE(n)->T,(x),(y))
-#define	SK_Rotatev(n,theta) SG_MatrixRotateZv(&SKNODE(n)->T,(theta))
-#define	SK_MatrixCopy(nDst,nSrc) SG_MatrixCopy(&SKNODE(nDst)->T,\
-                                               &SKNODE(nSrc)->T);
+#define	SK_Identity(n)		MatIdentityv(&SKNODE(n)->T)
+#define	SK_Translate(n,x,y)	MatTranslate3(&SKNODE(n)->T,(v).x,(v).y,0.0)
+#define	SK_Translatev(n,v)	MatTranslate3(&SKNODE(n)->T,(v)->x,(v)->y,0.0)
+#define	SK_Translate2(n,x,y)	MatTranslate3(&SKNODE(n)->T,(x),(y),0.0)
+#define	SK_Rotatev(n,theta)	MatRotateZv(&SKNODE(n)->T,(theta))
+#define	SK_MatrixCopy(nDst,nSrc) MatCopy(&SKNODE(nDst)->T,&SKNODE(nSrc)->T);
 __END_DECLS
 
 #include "close_code.h"

@@ -77,16 +77,13 @@ mousemotion(AG_Event *event)
 	vRel.y = -(SG_Real)AG_INT(4) * skv->hPixel;
 	vRel.z = 0.0;
 
-	if (SG_MatrixInvert(&skv->mView, &Ti) == -1) {
-		fprintf(stderr, "mView: %s\n", AG_GetError());
-		return;
-	}
-	SG_MatrixMultVectorv(&vPos, &Ti);
+	Ti = MatInvertp(&skv->mView);
+	MatMultVectorv(&vPos, &Ti);
 
 	AG_MutexLock(&skv->sk->lock);
 
 	if (skv->mouse.panning) {
-		SG_MatrixTranslate2(&skv->mView, vRel.x, vRel.y);
+		MatTranslate3(&skv->mView, vRel.x, vRel.y, 0.0);
 		goto out;
 	}
 	if (tool != NULL && tool->ops->mousemotion != NULL) {
@@ -115,11 +112,8 @@ mousebuttondown(AG_Event *event)
 	vPos.y = SK_VIEW_Y(skv, WIDGET(skv)->h - AG_INT(3));
 	vPos.z = 0.0;
 
-	if (SG_MatrixInvert(&skv->mView, &Ti) == -1) {
-		fprintf(stderr, "mView: %s\n", AG_GetError());
-		return;
-	}
-	SG_MatrixMultVectorv(&vPos, &Ti);
+	Ti = MatInvertp(&skv->mView);
+	MatMultVectorv(&vPos, &Ti);
 
 	AG_WidgetFocus(skv);
 	AG_MutexLock(&skv->sk->lock);
@@ -183,11 +177,8 @@ mousebuttonup(AG_Event *event)
 	vPos.y = SK_VIEW_Y(skv, WIDGET(skv)->h - AG_INT(3));
 	vPos.z = 0.0;
 
-	if (SG_MatrixInvert(&skv->mView, &Ti) == -1) {
-		fprintf(stderr, "mView: %s\n", AG_GetError());
-		return;
-	}
-	SG_MatrixMultVectorv(&vPos, &Ti);
+	Ti = MatInvertp(&skv->mView);
+	MatMultVectorv(&vPos, &Ti);
 
 	AG_MutexLock(&skv->sk->lock);
 
@@ -258,8 +249,8 @@ SK_ViewInit(SK_View *skv, SK *sk, Uint flags)
 	skv->editPane = NULL;
 	skv->popup = NULL;
 	skv->rSnap = 1.0;
-	SG_MatrixIdentityv(&skv->mView);
-	SG_MatrixIdentityv(&skv->mProj);
+	skv->mView = MatIdentity();
+	skv->mProj = MatIdentity();
 	TAILQ_INIT(&skv->tools);
 
 	AG_SetEvent(skv, "window-mousemotion", mousemotion, NULL);
@@ -356,7 +347,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	if (a->w < 1 || a->h < 1)
 		return (-1);
 
-	SG_MatrixIdentityv(&skv->mProj);
+	skv->mProj = MatIdentity();
 	SK_ViewZoom(skv, 0.0);
 	return (0);
 }
