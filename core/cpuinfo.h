@@ -44,5 +44,17 @@ extern AG_CPUInfo agCPU;
 void AG_GetCPUInfo(AG_CPUInfo *);
 __END_DECLS
 
+#ifdef _AGAR_INTERNAL
+#define HasMMX()	(agCPU.ext & AG_EXT_MMX)
+#define HasMMXEXT()	(agCPU.ext & AG_EXT_MMX_EXT)
+#define Has3DNOW()	(agCPU.ext & AG_EXT_3DNOW)
+#define Has3DNOWEXT()	(agCPU.ext & AG_EXT_3DNOW_EXT)
+#define HasAltiVec()	(agCPU.ext & AG_EXT_ALTIVEC)
+#define HasSSE()	(agCPU.ext & AG_EXT_SSE)
+#define HasSSE2()	(agCPU.ext & AG_EXT_SSE2)
+#define HasSSE3()	(agCPU.ext & AG_EXT_SSE3)
+#define HasSSSE3()	(agCPU.ext & AG_EXT_SSSE3)
+#endif
+
 #include "close_code.h"
 #endif	/* _AGAR_CORE_CPUINFO_H_ */
