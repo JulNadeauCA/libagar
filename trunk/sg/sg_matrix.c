@@ -172,9 +172,11 @@ SG_WriteMatrix(AG_Netbuf *buf, SG_Matrix *A)
 void
 SG_LoadMatrixGL(const SG_Matrix *M)
 {
+	SG_Matrix Mt;
 	float fv[4][4];
 
-	MatToFloats(&fv[0][0], M);
+	Mt = MatTransposep(M);
+	MatToFloats(&fv[0][0], &Mt);
 	glLoadMatrixf(&fv[0][0]);
 }
 
@@ -185,5 +187,6 @@ SG_GetMatrixGL(int which, SG_Matrix *M)
 
 	glGetFloatv((GLenum)which, &fv[0][0]);
 	MatFromFloats(M, &fv[0][0]);
+	MatTransposev(M);
 }
 #endif /* HAVE_OPENGL */
