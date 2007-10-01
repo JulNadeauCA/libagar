@@ -23,6 +23,9 @@ MAN3=	SG.3 SG_Camera.3 SG_Light.3 SG_View.3
 CFLAGS+=${SDL_CFLAGS} ${AGAR_CFLAGS} ${MATH_CFLAGS}
 CFLAGS+=${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS}
 
+# For gcc warnings in sg_matrix44_sse.c.
+CFLAGS+=${WNO_UNINITIALIZED}
+
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk
