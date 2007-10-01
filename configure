@@ -146,7 +146,7 @@ echo "    --with-sse3-inline             Inline SSE3 operations [default: no]"
 echo "    --with-altivec                 AltiVec optimizations [default: check]"
 echo "    --with-altivec-inline          Inline AltiVec operations [default: no]"
 echo "    --enable-threads               Thread safety [default: no]"
-echo "    --enable-utf8                  Unicode text/input support [default: no]"
+echo "    --enable-utf8                  Unicode text/input support [default: yes]"
 echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
 echo "    --enable-16bpp                 Support for 16 bpp display [default: yes]"
 echo "    --enable-24bpp                 Support for 24 bpp display [default: yes]"
@@ -3373,7 +3373,7 @@ echo "#endif" >> config/threads.h
 else
 echo "#undef THREADS" > config/threads.h
 fi
-if [ "${enable_utf8}" = "yes" ]
+if [ "${enable_utf8}" != "no" ]
  then
 UTF8=1
 echo "#ifndef UTF8" > config/utf8.h
