@@ -22,6 +22,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HAVE_SSE
+
 static __inline__ SG_Matrix
 SG_MatrixMult44_SSE(SG_Matrix A, SG_Matrix B)
 {
@@ -157,3 +159,5 @@ extern const SG_MatrixOps44 sgMatOps44_SSE;
 SG_Matrix SG_MatrixInvert44_SSE(const SG_Matrix);
 SG_Matrix SG_MatrixInvert44p_SSE(const SG_Matrix *);
 __END_DECLS
+
+#endif /* HAVE_SSE */
