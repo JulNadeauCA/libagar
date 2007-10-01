@@ -72,6 +72,9 @@ MDEFINE(CFLAGS, "$CFLAGS -I$SRC -D_AGAR_INTERNAL -D_BSD_SOURCE")
 if [ "${enable_warnings}" = "yes" ]; then
 	MDEFINE(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes")
 	MDEFINE(CFLAGS, "$CFLAGS -Wno-unused")
+	MDEFINE(WNO_UNINITIALIZED, "-Wno-uninitialized")
+else
+	MDEFINE(WNO_UNINITIALIZED, "")
 fi
 
 # SDL is required.
@@ -245,8 +248,8 @@ else
 	HUNDEF(HAVE_ALTIVEC)
 fi
 
-# Enable network support by default if system supports getaddrinfo().
-if [ "${enable_network}" != "no" ]; then
+# Enable network support if system supports getaddrinfo().
+if [ "${enable_network}" = "yes" ]; then
 	CHECK(getaddrinfo)
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
 		HDEFINE(NETWORK, 1)
