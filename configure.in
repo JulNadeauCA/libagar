@@ -210,6 +210,8 @@ if [ "${with_sse}" != "no" ]; then
 			else
 				HUNDEF(INLINE_SSE2)
 			fi
+		else
+			HUNDEF(INLINE_SSE2)
 		fi
 		if [ "${HAVE_SSE3}" = "yes" ]; then
 			if [ "${with_sse3_inline}" = "yes" ]; then
@@ -217,10 +219,15 @@ if [ "${with_sse}" != "no" ]; then
 			else
 				HUNDEF(INLINE_SSE3)
 			fi
+		else
+			HUNDEF(INLINE_SSE2)
 		fi
 	fi
 else
 	HUNDEF(HAVE_SSE)
+	HUNDEF(INLINE_SSE)
+	HUNDEF(INLINE_SSE2)
+	HUNDEF(INLINE_SSE3)
 fi
 
 # Enable (optional) AltiVec optimizations if compiler supports intrinsics.
@@ -246,6 +253,7 @@ if [ "${with_altivec}" != "no" ]; then
 	fi
 else
 	HUNDEF(HAVE_ALTIVEC)
+	HUNDEF(INLINE_ALTIVEC)
 fi
 
 # Enable network support if system supports getaddrinfo().
