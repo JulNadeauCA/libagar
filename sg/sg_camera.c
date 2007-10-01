@@ -67,7 +67,7 @@ SG_CameraInit(void *p, const char *name)
 	cam->aspect = 1.0;
 	cam->zNear = 0.001;
 	cam->zFar = 300.0;
-	cam->fovY = 60.0;
+	cam->fovY = SG_Radians(60.0);
 	cam->polyFace.mode = SG_CAMERA_SMOOTH_SHADED;
 	cam->polyFace.cull = 0;
 	cam->polyBack.mode = SG_CAMERA_WIREFRAME;
@@ -127,7 +127,7 @@ SG_CameraProject(SG_Camera *cam)
 	AG_LockGL();
 	switch (cam->pmode) {
 	case SG_CAMERA_PERSPECTIVE:
-		yMax = cam->zNear*SG_Tan(SG_Radians(cam->fovY/2.0));
+		yMax = cam->zNear*SG_Tan(cam->fovY/2.0);
 		yMin = -yMax;
 		glFrustum(yMin*cam->aspect, yMax*cam->aspect,
 		    yMin, yMax,
@@ -232,8 +232,11 @@ static void
 UpdateProjection(AG_Event *event)
 {
 	SG_View *sv = AG_PTR(1);
+	AG_Window *pWin;
 
 	SG_ViewUpdateProjection(sv);
+	if ((pWin = AG_WidgetParentWindow(sv)) != NULL)
+		AG_WindowUpdate(pWin);
 }
 
 void
@@ -276,23 +279,24 @@ SG_CameraEdit(void *p, AG_Widget *box, SG_View *sgv)
 			num = AG_NumericalNew(vbox, 0, "deg",
 			    _("Field of View: "));
 			SG_WidgetBindReal(num, "value", &cam->fovY);
-			AG_SetEvent(num, "fspinbutton-changed",
+			AG_SetEvent(num, "numerical-changed",
 			    UpdateProjection, "%p", sgv);
 
 			num = AG_NumericalNew(vbox, 0, NULL,
 			    _("Aspect Ratio: "));
+			AG_NumericalSetIncrement(num, 0.1);
 			SG_WidgetBindReal(num, "value", &cam->aspect);
-			AG_SetEvent(num, "fspinbutton-changed",
+			AG_SetEvent(num, "numerical-changed",
 			    UpdateProjection, "%p", sgv);
 
 			num = AG_NumericalNew(vbox, 0, NULL, _("Near Plane: "));
 			SG_WidgetBindReal(num, "value", &cam->zNear);
-			AG_SetEvent(num, "fspinbutton-changed",
+			AG_SetEvent(num, "numerical-changed",
 			    UpdateProjection, "%p", sgv);
 
 			num = AG_NumericalNew(vbox, 0, NULL, _("Far Plane: "));
 			SG_WidgetBindReal(num, "value", &cam->zFar);
-			AG_SetEvent(num, "fspinbutton-changed",
+			AG_SetEvent(num, "numerical-changed",
 			    UpdateProjection, "%p", sgv);
 		}
 	}

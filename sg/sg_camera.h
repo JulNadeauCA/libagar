@@ -60,7 +60,7 @@ typedef struct sg_camera {
 	} pmode;
 	struct sg_camera_polymode polyFace;	/* Front-facing polygon modes */
 	struct sg_camera_polymode polyBack;	/* Back-facing polygon modes */
-	SG_Real fovY;				/* Field of view (degrees) */
+	SG_Real fovY;				/* Field of view (radians) */
 	SG_Real aspect;				/* Aspect ratio */
 	SG_Real zNear, zFar;			/* Clipping planes */
 	SG_Matrix userProj;			/* User projection matrix
