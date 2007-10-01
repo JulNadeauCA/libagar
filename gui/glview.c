@@ -204,7 +204,7 @@ AG_GLViewReshape(AG_GLView *glv)
 	glMatrixMode(GL_COLOR);		glPushMatrix();	glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW);	glPushMatrix();	glLoadIdentity();
 
-	glMatrixMode(GL_PROJECTION)
+	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
 	if (glv->scale_ev != NULL) {
