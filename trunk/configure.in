@@ -13,7 +13,7 @@ REGISTER("--with-sse3-inline",	"Inline SSE3 operations [default: no]")
 REGISTER("--with-altivec",	"AltiVec optimizations [default: check]")
 REGISTER("--with-altivec-inline", "Inline AltiVec operations [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
-REGISTER("--enable-utf8",	"Unicode text/input support [default: no]")
+REGISTER("--enable-utf8",	"Unicode text/input support [default: yes]")
 REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
 REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
@@ -304,8 +304,8 @@ else
 	HUNDEF(THREADS)
 fi
 
-# Disable UTF8 support by default.
-if [ "${enable_utf8}" = "yes" ]; then
+# Enable UTF8 support by default.
+if [ "${enable_utf8}" != "no" ]; then
 	HDEFINE(UTF8, 1)
 else
 	HUNDEF(UTF8)
