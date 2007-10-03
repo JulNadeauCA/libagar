@@ -220,7 +220,7 @@ if [ "${with_sse}" != "no" ]; then
 				HUNDEF(INLINE_SSE3)
 			fi
 		else
-			HUNDEF(INLINE_SSE2)
+			HUNDEF(INLINE_SSE3)
 		fi
 	fi
 else
