@@ -3169,7 +3169,7 @@ echo "#endif" >> config/inline_sse3.h
 echo "#undef INLINE_SSE3" > config/inline_sse3.h
 			fi
 		else
-echo "#undef INLINE_SSE2" > config/inline_sse2.h
+echo "#undef INLINE_SSE3" > config/inline_sse3.h
 		fi
 	fi
 else
