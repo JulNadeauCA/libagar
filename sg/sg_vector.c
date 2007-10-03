@@ -52,7 +52,7 @@ SG_VectorInitEngine(void)
 #endif
 	}
 	if (HasSSE3()) {
-#ifdef HAVE_SSE
+#ifdef HAVE_SSE3
 		sgVecOps3 = &sgVecOps3_SSE3;
 #elif defined(DEBUG)
 		fprintf(stderr, "SSE3 is available, but support disabled "
