@@ -401,7 +401,7 @@ SG_MaterialEdit(void *obj)
 		AG_ObjectSelector *os;
 		AG_Box *hBox;
 
-		hBox = AG_BoxNewHoriz(ntab, 0);
+		hBox = AG_BoxNewHoriz(ntab, AG_BOX_HFILL);
 		{
 			os = AG_ObjectSelectorNew(hBox, AG_OBJSEL_PAGE_DATA,
 			    mat, agWorld, _("Attach Program: "));
