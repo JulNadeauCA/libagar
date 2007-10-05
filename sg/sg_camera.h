@@ -10,42 +10,6 @@ struct sg_camera_polymode {
 	int cull;
 };
 
-typedef struct sg_camera_insn {
-	enum {
-		SG_CAMERA_CIRCULAR,	/* Circular path around node */
-		SG_CAMERA_ELLIPTIC,	/* Elliptic path around two nodes */
-		SG_CAMERA_FOLLOW,	/* Look at object and follow */
-	} type;
-	union {
-		struct {
-			SG_Node   *ci_center;	/* Center node */
-			SG_Vector  ci_axis[2];	/* Axis of rotation */
-			SG_Real    ci_angle[2];	/* Rotation increment */
-		} circular;
-		struct {
-			SG_Node   *ci_foci[2];	/* Focus nodes */
-			SG_Vector  ci_axis[2];	/* Axis of rotation */
-			SG_Real    ci_angle[2];	/* Rotation increment */
-		} elliptic;
-		struct {
-			SG_Node   *ci_node;	/* Node to follow */
-			SG_Real    ci_dMin;	/* Minimum distance */
-			SG_Real    ci_dMax;	/* Maximum distance */
-		} follow;
-	} data;
-#ifdef _AGAR_INTERNAL
-#define ci_circular_center	data.circular.ci_center
-#define ci_circular_axis	data.circular.ci_axis
-#define ci_circular_angle	data.circular.ci_angle
-#define ci_elliptic_foci	data.elliptic.ci_foci
-#define ci_elliptic_axis	data.elliptic.ci_axis
-#define ci_elliptic_angle	data.elliptic.ci_angle
-#define ci_follow_node		data.follow.ci_node
-#define ci_follow_dMin		data.follow.ci_dMin
-#define ci_follow_dMax		data.follow.ci_dMax
-#endif
-} SG_CameraInsn;
-
 typedef struct sg_camera {
 	struct sg_node node;
 	Uint flags;
@@ -65,10 +29,15 @@ typedef struct sg_camera {
 	SG_Real zNear, zFar;			/* Clipping planes */
 	SG_Matrix userProj;			/* User projection matrix
 						   (column-major) */
+	enum sg_camera_rotctrl {
+		SG_CAMERA_ROT_IGNORE,		/* Disable rotation control */
+		SG_CAMERA_ROT_CIRCULAR,		/* Circular path (1 node) */
+		SG_CAMERA_ROT_ELLIPTIC		/* Elliptic path (2 nodes) */
+	} rotCtrl;
+	SG_Node *focus[2];			/* Center nodes */
 #ifdef DEBUG
-	SG_Real rotSpeed;
+	SG_Real rotSpeed;			/* For artificial rotate */
 #endif
-	SG_CameraInsn insn;
 } SG_Camera;
 
 __BEGIN_DECLS
@@ -90,4 +59,5 @@ __inline__ void	 SG_CameraSetClipPlanes(SG_Camera *, SG_Real, SG_Real);
 __inline__ void	 SG_CameraSetup(SG_Camera *);
 SG_Vector	 SG_CameraVector(SG_Camera *);
 void		 SG_CameraDraw(void *, SG_View *);
+void		 SG_CameraMouseRotate(SG_Camera *, SG_View *, int, int);
 __END_DECLS

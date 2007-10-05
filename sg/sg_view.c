@@ -242,8 +242,7 @@ ViewScale(AG_Event *event)
 static void
 RotateCameraByMouse(SG_View *sv, int x, int y)
 {
-	SG_Rotatev(sv->cam, sv->mouse.rsens.y*(SG_Real)y, VecI());
-	SG_Rotatev(sv->cam, sv->mouse.rsens.x*(SG_Real)x, VecJ());
+	SG_CameraMouseRotate(sv->cam, sv, x, y);
 }
 
 static void
@@ -507,7 +506,8 @@ SG_ViewAttached(AG_Event *event)
 
 	/* Attach to the default camera. */
 	if ((cam = SG_FindNode(sv->sg, "Camera0")) == NULL) {
-		fatal("no Camera0");
+		SG_AttachDefaultNodes(sv->sg);
+		cam = SG_FindNode(sv->sg, "Camera0");
 	}
 	SG_ViewSetCamera(sv, cam);
 }
