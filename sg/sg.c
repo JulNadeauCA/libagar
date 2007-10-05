@@ -152,21 +152,23 @@ SG_New(void *parent, const char *name)
 	return (sg);
 }
 
-static void
-SG_Attached(AG_Event *event)
+void
+SG_AttachDefaultNodes(SG *sg)
 {
-	SG *sg = AG_SELF();
 	SG_Camera *cam;
-	SG_Light *lt0;
+	SG_Light *lt;
 
 	if (SG_FindNode(sg, "Camera0") == NULL) {
 		cam = SG_CameraNew(sg->root, "Camera0");
 		SG_Translate3(cam, 0.0, 0.0, 10.0);
 	}
-	
 	if (SG_FindNode(sg, "Light0") == NULL) {
-		lt0 = SG_LightNew(sg->root, "Light0");
-		SG_Translate3(lt0, 20.0, 20.0, 20.0);
+		lt = SG_LightNew(sg->root, "Light0");
+		SG_Translate3(lt, 20.0, 20.0, 20.0);
+	}
+	if (SG_FindNode(sg, "Light1") == NULL) {
+		lt = SG_LightNew(sg->root, "Light1");
+		SG_Translate3(lt, -20.0, -20.0, -20.0);
 	}
 }
 
@@ -203,8 +205,6 @@ SG_Init(void *obj, const char *name)
 	AG_LockGL();			/* Probably not needed */
 	sg->tess = gluNewTess();
 	AG_UnlockGL();
-
-	AG_SetEvent(sg, "attached", SG_Attached, NULL);
 }
 
 void
