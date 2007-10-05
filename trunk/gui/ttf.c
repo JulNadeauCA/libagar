@@ -83,12 +83,13 @@ AG_TTFOpenFont(const char *file, int ptsize)
 	AG_TTFFont *font;
 	FT_Face face;
 	FT_Fixed scale;
+	int rv;
 
 	font = Malloc(sizeof(AG_TTFFont), M_LOADER);
 	memset(font, 0, sizeof(AG_TTFFont));
 
-	if (FT_New_Face(ftLibrary, file, 0, &font->face) != 0) {
-		AG_SetError(_("Cannot find font face: `%s'."), file);
+	if ((rv = FT_New_Face(ftLibrary, file, 0, &font->face)) != 0) {
+		AG_SetError("%s: FreeType error %d", file, rv);
 		goto fail1;
 	}
 	face = font->face;
