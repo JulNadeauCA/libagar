@@ -119,6 +119,9 @@ const char *agColorNames[] = {
 	N_("Fixed box"),
 	N_("Text (disabled)"),
 	N_("Menu text (disabled)"),
+	N_("Socket"),
+	N_("Socket label"),
+	N_("Socket highlight"),
 };
 
 void
@@ -199,9 +202,11 @@ AG_ColorsInit(void)
 	agColors[TABLE_LINE_COLOR] = agColors[LINE_COLOR];
 	agColors[FIXED_BG_COLOR] = agColors[FRAME_COLOR];
 	agColors[FIXED_BOX_COLOR] = agColors[FRAME_COLOR];
-	
 	agColors[TEXT_DISABLED_COLOR] = SDL_MapRGB(agVideoFmt, 170, 170, 170);
 	agColors[MENU_TXT_DISABLED_COLOR] = agColors[TEXT_DISABLED_COLOR];
+	agColors[SOCKET_COLOR] = agColors[FRAME_COLOR];
+	agColors[SOCKET_LABEL_COLOR] = agColors[TEXT_COLOR];
+	agColors[SOCKET_HIGHLIGHT_COLOR] = SDL_MapRGB(agVideoFmt, 200, 0, 0);
 
 	agColorsBorder[0] = SDL_MapRGB(agVideoFmt, 92, 92, 92);
 	agColorsBorder[1] = SDL_MapRGB(agVideoFmt, 80, 80, 75);
