@@ -59,6 +59,12 @@ void AG_NotebookSetTabVisibility(AG_Notebook *, int);
 
 AG_NotebookTab *AG_NotebookAddTab(AG_Notebook *, const char *,
 		                  enum ag_box_type);
+
+#define AG_NotebookAddTabVert(nb,lbl) \
+	AG_NotebookAddTab((nb),(lbl),AG_BOX_VERT)
+#define AG_NotebookAddTabHoriz(nb,lbl) \
+	AG_NotebookAddTab((nb),(lbl),AG_BOX_HORIZ)
+
 void AG_NotebookDelTab(AG_Notebook *, AG_NotebookTab *);
 void AG_NotebookSelectTab(AG_Notebook *, AG_NotebookTab *);
 __END_DECLS
