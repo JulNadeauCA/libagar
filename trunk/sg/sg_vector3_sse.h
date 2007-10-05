@@ -101,8 +101,10 @@ static __inline__ SG_Vector
 SG_VectorScale3_SSE(SG_Vector a, SG_Real c)
 {
 	SG_Vector b;
+	__m128 vs;
 
-	b.m128 = _mm_mul_ps(a.m128, _mm_set1_ps(c));
+	vs = _mm_set1_ps(c);
+	b.m128 = _mm_mul_ps(a.m128, vs);
 	return (b);
 }
 
