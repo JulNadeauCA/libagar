@@ -373,10 +373,12 @@ Draw(void *p)
 	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
 		int bw;
 
+#if 0
 		AG_ScrollbarSetBarSize(tbox->vBar,
 		    ((WIDGET(tbox)->h-agTextFontLineSkip)/agTextFontLineSkip)* 
 		    (WIDGET(tbox)->h - tbox->vBar->bw*2)/tbox->yMax);
-		
+#endif
+
 		bw = WIDGET(tbox)->w - WIDGET(tbox->hBar)->h*2 -
 		     WIDGET(tbox->vBar)->w;
 		AG_ScrollbarSetBarSize(tbox->hBar,
@@ -397,6 +399,27 @@ Draw(void *p)
 	}
 #endif
 out:
+	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
+		if (tbox->vBar != NULL && AG_ScrollbarVisible(tbox->vBar)) {
+			int d = WIDGET(tbox->vBar)->w;
+
+			agPrim.box(tbox, 
+			    WIDGET(tbox)->w - d,
+			    WIDGET(tbox)->h - d,
+			    d, d, -1,
+			    AG_COLOR(TEXTBOX_COLOR));
+		} else if (tbox->hBar != NULL &&
+		           AG_ScrollbarVisible(tbox->hBar)) {
+			int d = WIDGET(tbox->hBar)->h;
+
+			agPrim.box(tbox, 
+			    WIDGET(tbox)->w - d,
+			    WIDGET(tbox)->h - d,
+			    d, d, -1,
+			    AG_COLOR(TEXTBOX_COLOR));
+		}
+	}
+	    
 	AG_PopTextState();
 }
 
