@@ -28,7 +28,6 @@
  */
 
 #include <config/have_opengl.h>
-#include <config/have_cg.h>
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
