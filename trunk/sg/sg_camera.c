@@ -75,6 +75,9 @@ SG_CameraInit(void *p, const char *name)
 #ifdef DEBUG
 	cam->rotSpeed = 0.1;
 #endif
+	cam->rotCtrl = SG_CAMERA_ROT_CIRCULAR;
+	cam->focus[0] = NULL;
+	cam->focus[1] = NULL;
 }
 
 int
@@ -396,6 +399,30 @@ SG_CameraVector(SG_Camera *cam)
 	MatMultVectorv(&v, &T);
 	VecNormv(&v);
 	return (v);
+}
+
+void
+SG_CameraMouseRotate(SG_Camera *cam, SG_View *sv, int x, int y)
+{
+	SG_Real iRot, jRot;
+
+	switch (cam->rotCtrl) {
+	case SG_CAMERA_ROT_CIRCULAR:
+		iRot = sv->mouse.rsens.y*(SG_Real)y;
+		jRot = sv->mouse.rsens.x*(SG_Real)x;
+		if (cam->focus[0] == NULL || cam->focus[0] == SGNODE(cam)) {
+			SG_Rotatev(cam, iRot, VecI());
+			SG_Rotatev(cam, jRot, VecJ());
+		} else {
+			SG_Vector vFocus = SG_NodePos(cam->focus[0]);
+
+			SG_Orbitv(cam, vFocus, VecI(), iRot);
+			SG_Orbitv(cam, vFocus, VecJ(), jRot);
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 SG_NodeOps sgCameraOps = {
