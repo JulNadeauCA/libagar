@@ -152,11 +152,18 @@ extern Uint         sgElementsCnt;
 #include <agar/sg/sg_voxel.h>
 #endif
 
+#ifdef _AGAR_INTERNAL
+#include <sg/pe/pe.h>
+#else
+#include <agar/sg/pe/pe.h>
+#endif
+
 __BEGIN_DECLS
 int	 SG_InitEngine(void);
 void	 SG_DestroyEngine(void);
 
 SG	*SG_New(void *, const char *);
+void	 SG_AttachDefaultNodes(SG *);
 void	 SG_Init(void *, const char *);
 void	 SG_Reinit(void *);
 void	 SG_Destroy(void *);
@@ -184,11 +191,11 @@ SG_Vector	 SG_NodeDir(void *);
  * Operations on node transformation matrices
  */
 #define SG_Identity(n)		MatIdentityv(&SGNODE(n)->T)
-#define SG_Orbitv(n,p,v,a)	MatOrbitAxis(&SGNODE(n)->T,(p),(v),(a))
-#define SG_Rotatev(n,a,v)	MatRotateAxis(&SGNODE(n)->T,(a),(v))
-#define SG_RotateI(n,a)		MatRotateI(&SGNODE(n)->T,(a))
-#define SG_RotateJ(n,a)		MatRotateJ(&SGNODE(n)->T,(a))
-#define SG_RotateK(n,a)		MatRotateK(&SGNODE(n)->T,(a))
+#define SG_Orbitv(n,p,a,deg)	MatOrbitAxis(&SGNODE(n)->T,(p),(a),(deg))
+#define SG_Rotatev(n,a,d)	MatRotateAxis(&SGNODE(n)->T,(a),(d))
+#define SG_RotateI(n,d)		MatRotateI(&SGNODE(n)->T,(d))
+#define SG_RotateJ(n,d)		MatRotateJ(&SGNODE(n)->T,(d))
+#define SG_RotateK(n,d)		MatRotateK(&SGNODE(n)->T,(d))
 
 #define SG_Orbitvd(n,p,v,a)	MatOrbitAxis(&SGNODE(n)->T,(p),(v),\
 				             SG_Radians(a))

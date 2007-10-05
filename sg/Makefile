@@ -1,7 +1,8 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-#SUBDIR=	import
+SUBDIR=	import \
+	pe
 
 LIB=		ag_sg
 LIB_SHARED=	Yes
