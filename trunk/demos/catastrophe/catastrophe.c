@@ -176,6 +176,7 @@ main(int argc, char *argv[])
 
 	/* Create the scene. */
 	sg = SG_New(agWorld, "scene");
+	SG_AttachDefaultNodes(sg);
 	cat = SG_NodeAdd(sg->root, "MyCatastrophe", &CatastropheOps, 0);
 	SG_Translate3(cat, 0.0, 0.0, 90.0);
 	SG_Rotatevd(cat, 30.0, VecJ());

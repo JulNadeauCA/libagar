@@ -164,6 +164,7 @@ main(int argc, char *argv[])
 
 	/* Create the scene. */
 	sg = SG_New(agWorld, "scene");
+	SG_AttachDefaultNodes(sg);
 
 	/* Create an instance of the plot object. */
 	node = SG_NodeAdd(sg->root, "MyLorenzAttractor", &LorenzOps, 0);

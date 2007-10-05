@@ -40,6 +40,7 @@ CreateWindow(void)
 
 	/* Create a new scene graph. */
 	sg = SG_New(agWorld, "scene");
+	SG_AttachDefaultNodes(sg);
 	AGOBJECT(sg)->flags |= AG_OBJECT_RESIDENT;
 
 	/* Create a bunch of spheres. */

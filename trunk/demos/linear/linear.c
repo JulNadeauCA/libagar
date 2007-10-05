@@ -156,6 +156,7 @@ main(int argc, char *argv[])
 
 	/* Create the scene. */
 	sg = SG_New(agWorld, "scene");
+	SG_AttachDefaultNodes(sg);
 
 	/* Create an instance of the linear plot object. */
 	node = SG_NodeAdd(sg->root, "MyLinearPlot", &LinearOps, 0);
