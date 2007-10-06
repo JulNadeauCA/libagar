@@ -183,7 +183,7 @@ else
 fi
 
 # Enable (optional) SSE optimizations if compiler supports intrinsics.
-if [ "${with_sse}" != "no" ]; then
+if [ "${with_sse}" = "yes" ]; then
 	CHECK(sse)
 	if [ "${HAVE_SSE}" != "yes" ]; then
 		if [ "${with_sse}" = "yes" ]; then
@@ -233,7 +233,7 @@ else
 fi
 
 # Enable (optional) AltiVec optimizations if compiler supports intrinsics.
-if [ "${with_altivec}" != "no" ]; then
+if [ "${with_altivec}" = "yes" ]; then
 	CHECK(altivec)
 	if [ "${HAVE_ALTIVEC}" != "yes" ]; then
 		if [ "${with_altivec}" = "yes" ]; then
