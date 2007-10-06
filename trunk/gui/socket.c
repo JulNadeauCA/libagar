@@ -27,10 +27,12 @@
 #include <core/view.h>
 
 #include "socket.h"
+#include "icon.h"
 
 #include "window.h"
 #include "primitive.h"
 #include "label.h"
+#include "pixmap.h"
 
 #include <stdarg.h>
 
@@ -47,6 +49,35 @@ AG_SocketNew(void *parent, Uint flags)
 	sock = Malloc(sizeof(AG_Socket), M_OBJECT);
 	AG_SocketInit(sock, flags);
 	AG_ObjectAttach(parent, sock);
+	return (sock);
+}
+
+AG_Socket *
+AG_SocketFromSurface(void *parent, Uint flags, SDL_Surface *su)
+{
+	AG_Socket *sock;
+	
+	sock = Malloc(sizeof(AG_Socket), M_OBJECT);
+	AG_SocketInit(sock, flags);
+	AG_ObjectAttach(parent, sock);
+	AG_SocketBgPixmap(sock, su);
+	return (sock);
+}
+
+AG_Socket *
+AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
+{
+	AG_Socket *sock;
+	SDL_Surface *bmp;
+	
+	if ((bmp = SDL_LoadBMP(bmpfile)) == NULL) {
+		AG_SetError("%s: %s", bmpfile, SDL_GetError());
+		return (NULL);
+	}
+	sock = Malloc(sizeof(AG_Socket), M_OBJECT);
+	AG_SocketInit(sock, flags);
+	AG_ObjectAttach(parent, sock);
+	AG_SocketBgPixmapNODUP(sock, bmp);
 	return (sock);
 }
 
@@ -69,6 +100,9 @@ AG_SocketInit(AG_Socket *sock, Uint flags)
 	sock->rPad = 2;
 	sock->tPad = 2;
 	sock->bPad = 2;
+	sock->icon = NULL;
+	sock->insertFn = NULL;
+	sock->removeFn = NULL;
 
 	AG_SetEvent(sock, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(sock, "window-mousebuttondown", MouseButtonDown, NULL);
@@ -76,6 +110,18 @@ AG_SocketInit(AG_Socket *sock, Uint flags)
 
 	if (flags & AG_SOCKET_HFILL) { WIDGET(sock)->flags |= AG_WIDGET_HFILL; }
 	if (flags & AG_SOCKET_VFILL) { WIDGET(sock)->flags |= AG_WIDGET_VFILL; }
+}
+
+void
+AG_SocketInsertFn(AG_Socket *sock, int (*fn)(AG_Socket *, AG_Icon *))
+{
+	sock->insertFn = fn;
+}
+
+void
+AG_SocketRemoveFn(AG_Socket *sock, void (*fn)(AG_Socket *, AG_Icon *))
+{
+	sock->removeFn = fn;
 }
 
 static void
@@ -181,6 +227,10 @@ Draw(void *p)
 	switch (sock->bgType) {
 	case AG_SOCKET_PIXMAP:
 		AG_WidgetBlitSurface(sock, sock->bgData.pixmap.s, 0, 0);
+		if (sock->icon != NULL) {
+			AG_WidgetBlitSurface(sock->icon, sock->icon->surface,
+			    0, 0);
+		}
 		if (state) {
 			agPrim.rect_outlined(sock, sock->lPad, sock->tPad,
 			    WIDGET(sock)->w - sock->lPad - sock->rPad,
@@ -201,6 +251,10 @@ Draw(void *p)
 			    AG_COLOR(SOCKET_COLOR),
 			    AG_COLOR(DISABLED_COLOR));
 		}
+		if (sock->icon != NULL) {
+			AG_WidgetBlitSurface(sock->icon, sock->icon->surface,
+			    0, 0);
+		}
 		if (state) {
 			agPrim.rect_outlined(sock, sock->lPad, sock->tPad,
 			    WIDGET(sock)->w - sock->lPad - sock->rPad,
@@ -214,6 +268,10 @@ Draw(void *p)
 		    WIDGET(sock)->h/2,
 		    sock->bgData.circle.r,
 		    AG_COLOR(SOCKET_COLOR));
+		if (sock->icon != NULL) {
+			AG_WidgetBlitSurface(sock->icon, sock->icon->surface,
+			    0, 0);
+		}
 		if (state) {
 			agPrim.circle(sock,
 			    WIDGET(sock)->w/2,
@@ -223,7 +281,6 @@ Draw(void *p)
 		}
 		break;
 	}
-
 }
 
 static void
@@ -333,6 +390,49 @@ MouseMotion(AG_Event *event)
 }
 
 static void
+IconMotion(AG_Event *event)
+{
+	AG_Icon *icon = AG_PTR(1);
+	int xRel = AG_INT(4);
+	int yRel = AG_INT(5);
+	AG_Window *wDND = icon->wDND;
+
+	AG_WindowSetGeometryParam(wDND,
+	    WIDGET(wDND)->x + xRel,
+	    WIDGET(wDND)->y + yRel,
+	    WIDGET(wDND)->w,
+	    WIDGET(wDND)->h,
+	    1);
+}
+
+static void
+IconButtonUp(AG_Event *event)
+{
+	AG_Icon *icon = AG_PTR(1);
+	AG_Window *wDND = icon->wDND;
+	int x = WIDGET(wDND)->cx;
+	int y = WIDGET(wDND)->cy;
+	AG_Socket *sock;
+	int detach = 1;
+
+	sock = AG_WidgetFindRect("AG_Widget:AG_Socket:*", x, y,
+	    WIDGET(wDND)->w,
+	    WIDGET(wDND)->h);
+	if (sock != NULL) {
+		if (sock->insertFn != NULL) {
+			detach = sock->insertFn(sock, icon);
+		} else {
+			if (icon->sock != NULL) {
+				AG_SocketRemoveIcon(icon->sock);
+			}
+			AG_SocketInsertIcon(sock, icon);
+		}
+	}
+	if (detach)
+		AG_ViewDetach(wDND);
+}
+
+static void
 MouseButtonDown(AG_Event *event)
 {
 	AG_Socket *sock = AG_SELF();
@@ -340,6 +440,7 @@ MouseButtonDown(AG_Event *event)
 	AG_WidgetBinding *binding;
 	void *pState;
 	int newState;
+	AG_Icon *icon;
 	
 	if (AG_WidgetDisabled(sock))
 		return;
@@ -359,6 +460,24 @@ MouseButtonDown(AG_Event *event)
 	}
 	AG_WidgetBindingChanged(binding);
 	AG_WidgetUnlockBinding(binding);
+
+	if ((icon = sock->icon) != NULL) {
+		AG_Pixmap *px;
+		
+		icon->wDND = AG_WindowNew(AG_WINDOW_PLAIN|
+		                          AG_WINDOW_NOBACKGROUND);
+		px = AG_PixmapFromSurfaceCopy(icon->wDND, 0,
+		    WSURFACE(icon,icon->surface));
+		WIDGET(px)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
+		                     AG_WIDGET_UNFOCUSED_BUTTONUP;
+		AG_SetEvent(px, "window-mousemotion", IconMotion,"%p",icon);
+		AG_SetEvent(px, "window-mousebuttonup", IconButtonUp,"%p",icon);
+
+		AG_WindowSetGeometry(icon->wDND,
+		    WIDGET(icon)->cx, WIDGET(icon)->cy,
+		    WIDGET(icon)->w,  WIDGET(icon)->h);
+		AG_WindowShow(icon->wDND);
+	}
 }
 
 static void
@@ -417,11 +536,43 @@ AG_SocketBgPixmap(AG_Socket *sock, SDL_Surface *su)
 	SDL_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
 
 	sock->bgType = AG_SOCKET_PIXMAP;
-	if (sock->bgData.pixmap.s != -1) {
-		AG_WidgetReplaceSurface(sock, sock->bgData.pixmap.s, suDup);
-	} else {
-		sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, suDup);
+	sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, suDup);
+}
+
+void
+AG_SocketBgPixmapNODUP(AG_Socket *sock, SDL_Surface *su)
+{
+	sock->bgType = AG_SOCKET_PIXMAP;
+	sock->bgData.pixmap.s = AG_WidgetMapSurface(sock, su);
+}
+
+void
+AG_SocketInsertIcon(AG_Socket *sock, AG_Icon *icon)
+{
+	AG_SizeAlloc a;
+	
+	sock->icon = icon;
+	icon->sock = sock;
+
+	a.w = WIDGET(sock)->w;
+	a.h = WIDGET(sock)->h;
+	a.x = WIDGET(sock)->cx;
+	a.y = WIDGET(sock)->cy;
+	AG_WidgetSizeAlloc(icon, &a);
+	AG_WidgetUpdateCoords(icon, a.x, a.y);
+}
+
+void
+AG_SocketRemoveIcon(AG_Socket *sock)
+{
+	if (sock->icon != NULL) {
+		if (sock->removeFn != NULL) {
+			sock->removeFn(sock, sock->icon);
+			return;
+		}
+		sock->icon->sock = NULL;
 	}
+	sock->icon = NULL;
 }
 
 const AG_WidgetOps agSocketOps = {
