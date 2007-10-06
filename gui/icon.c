@@ -26,40 +26,59 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include "icon.h"
 #include "socket.h"
+#include "icon.h"
 
 #include "window.h"
 #include "primitive.h"
 
 #include <stdarg.h>
 
-static void SetState(AG_WidgetBinding *, void *, int);
-static void MouseMotion(AG_Event *);
-static void MouseButtonUp(AG_Event *);
-static void MouseButtonDown(AG_Event *);
-
 AG_Icon *
-AG_IconNew(void *parent, Uint flags)
+AG_IconNew(void)
 {
 	AG_Icon *icon;
 
 	icon = Malloc(sizeof(AG_Icon), M_OBJECT);
-	AG_IconInit(icon, flags);
-	AG_ObjectAttach(parent, icon);
+	AG_IconInit(icon, 0);
+	return (icon);
+}
+
+AG_Icon *
+AG_IconFromSurface(SDL_Surface *su)
+{
+	AG_Icon *icon;
+
+	icon = Malloc(sizeof(AG_Icon), M_OBJECT);
+	AG_IconInit(icon, 0);
+	AG_IconSetSurface(icon, su);
+	return (icon);
+}
+
+AG_Icon *
+AG_IconFromBMP(const char *bmpfile)
+{
+	AG_Icon *icon;
+	SDL_Surface *bmp;
+
+	if ((bmp = SDL_LoadBMP(bmpfile)) == NULL) {
+		AG_SetError("%s: %s", bmpfile, SDL_GetError());
+		return (NULL);
+	}
+	icon = Malloc(sizeof(AG_Icon), M_OBJECT);
+	AG_IconInit(icon, 0);
+	AG_IconSetSurfaceNODUP(icon, bmp);
 	return (icon);
 }
 
 void
 AG_IconInit(AG_Icon *icon, Uint flags)
 {
-	AG_WidgetInit(icon, &agSocketOps, AG_WIDGET_FOCUSABLE);
+	AG_WidgetInit(icon, &agIconOps, AG_WIDGET_FOCUSABLE);
 	icon->flags = 0;
 	icon->surface = -1;
-
-	AG_SetEvent(icon, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(icon, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(icon, "window-mousemotion", MouseMotion, NULL);
+	icon->wDND = NULL;
+	icon->sock = NULL;
 }
 
 static void
@@ -75,8 +94,10 @@ SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Icon *icon = p;
 
-	r->w = WSURFACE(icon,icon->surface)->w;
-	r->h = WSURFACE(icon,icon->surface)->h;
+	if (icon->surface != -1) {
+		r->w = WSURFACE(icon,icon->surface)->w;
+		r->h = WSURFACE(icon,icon->surface)->h;
+	}
 }
 
 static int
@@ -99,46 +120,6 @@ Draw(void *p)
 	AG_WidgetBlitSurface(icon, icon->surface, 0, 0);
 }
 
-static void
-MouseMotion(AG_Event *event)
-{
-	AG_Icon *icon = AG_SELF();
-	int xRel = AG_INT(3);
-	int yRel = AG_INT(4);
-
-	printf("move %d,%d\n", xRel, yRel);
-}
-
-static void
-MouseButtonDown(AG_Event *event)
-{
-	AG_Icon *icon = AG_SELF();
-	int button = AG_INT(1);
-	AG_WidgetBinding *binding;
-	void *pState;
-	int newState;
-
-	if (button == SDL_BUTTON_RIGHT) {
-		/* TODO popup */
-	} else if (button != SDL_BUTTON_LEFT) {
-		return;
-	}
-	if (AG_WidgetDisabled(icon)) {
-		return;
-	}
-	AG_WidgetFocus(icon);
-
-}
-
-static void
-MouseButtonUp(AG_Event *event)
-{
-	AG_Icon *icon = AG_SELF();
-	int button = AG_INT(1);
-
-	/* TODO check socket overlap */
-}
-
 void
 AG_IconSetSurface(AG_Icon *icon, SDL_Surface *su)
 {
@@ -148,6 +129,16 @@ AG_IconSetSurface(AG_Icon *icon, SDL_Surface *su)
 		AG_WidgetReplaceSurface(icon, icon->surface, suDup);
 	} else {
 		icon->surface = AG_WidgetMapSurface(icon, suDup);
+	}
+}
+
+void
+AG_IconSetSurfaceNODUP(AG_Icon *icon, SDL_Surface *su)
+{
+	if (icon->surface != -1) {
+		AG_WidgetReplaceSurface(icon, icon->surface, su);
+	} else {
+		icon->surface = AG_WidgetMapSurface(icon, su);
 	}
 }
 

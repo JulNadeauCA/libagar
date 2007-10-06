@@ -13,6 +13,8 @@
 
 #include "begin_code.h"
 
+struct ag_icon;
+
 typedef struct ag_socket {
 	struct ag_widget wid;
 	int state;			/* Default boolean state binding */
@@ -41,13 +43,24 @@ typedef struct ag_socket {
 	} bgData;
 	enum ag_text_justify lblJustify; /* Label justification */
 	int lPad, rPad, tPad, bPad;	/* Padding around contained Icon */
+	struct ag_icon *icon;		/* Icon in socket or NULL */
+
+	/* Callbacks */
+	int (*insertFn)(struct ag_socket *, struct ag_icon *);
+	void (*removeFn)(struct ag_socket *, struct ag_icon *);
 } AG_Socket;
 
 __BEGIN_DECLS
 extern const AG_WidgetOps agSocketOps;
 
 AG_Socket *AG_SocketNew(void *, Uint);
+AG_Socket *AG_SocketFromBMP(void *, Uint, const char *);
+AG_Socket *AG_SocketFromSurface(void *, Uint, SDL_Surface *);
 void	   AG_SocketInit(AG_Socket *, Uint);
+void	   AG_SocketInsertFn(AG_Socket *,
+	                     int (*)(AG_Socket *, struct ag_icon *));
+void	   AG_SocketRemoveFn(AG_Socket *,
+	                     void (*)(AG_Socket *, struct ag_icon *));
 
 void	   AG_SocketSetPadding(AG_Socket *, int, int, int, int);
 #define	AG_SocketSetPaddingLeft(b,v)   AG_SocketSetPadding((b),(v),-1,-1,-1)
@@ -58,6 +71,10 @@ void	   AG_SocketSetPadding(AG_Socket *, int, int, int, int);
 void AG_SocketBgRect(AG_Socket *, Uint, Uint);
 void AG_SocketBgCircle(AG_Socket *, Uint);
 void AG_SocketBgPixmap(AG_Socket *, SDL_Surface *);
+void AG_SocketBgPixmapNODUP(AG_Socket *, SDL_Surface *);
+
+void AG_SocketInsertIcon(AG_Socket *, struct ag_icon *);
+void AG_SocketRemoveIcon(AG_Socket *);
 __END_DECLS
 
 #include "close_code.h"
