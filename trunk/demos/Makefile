@@ -10,7 +10,8 @@ SUBDIR=	fixedres \
 	widgets \
 	maximized \
 	objprops \
-	unitconv
+	unitconv \
+	sockets
 
 SUBDIR+=sgview \
 	linear \
