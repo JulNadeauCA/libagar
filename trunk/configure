@@ -2891,7 +2891,7 @@ echo "#undef HAVE_CG" > config/have_cg.h
 else
 echo "#undef HAVE_CG" > config/have_cg.h
 fi
-if [ "${with_sse}" != "no" ]
+if [ "${with_sse}" = "yes" ]
  then
 echo -n "checking for SSE extensions..."
 echo -n "checking for SSE extensions..." >> config.log
@@ -3137,7 +3137,7 @@ echo "#undef INLINE_SSE" > config/inline_sse.h
 echo "#undef INLINE_SSE2" > config/inline_sse2.h
 echo "#undef INLINE_SSE3" > config/inline_sse3.h
 fi
-if [ "${with_altivec}" != "no" ]
+if [ "${with_altivec}" = "yes" ]
  then
 echo -n "checking for AltiVec (with <altivec.h>)..."
 echo -n "checking for AltiVec (with <altivec.h>)..." >> config.log
