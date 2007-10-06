@@ -42,6 +42,8 @@
 #include <agar/gui/ucombo.h>
 #include <agar/gui/units.h>
 #include <agar/gui/vbox.h>
+#include <agar/gui/socket.h>
+#include <agar/gui/icon.h>
 
 #include <agar/core/core_close.h>
 #endif /* _AGAR_GUI_H_ */
