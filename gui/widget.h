@@ -192,8 +192,11 @@ void		*AG_WidgetFind(AG_Display *, const char *);
 void		 AG_WidgetFocus(void *);
 void		 AG_WidgetUnfocus(void *);
 AG_Widget	*AG_WidgetFindFocused(void *);
+void		*AG_WidgetFindPoint(const char *, int, int);
+void		*AG_WidgetFindRect(const char *, int, int, int, int);
 __inline__ int	 AG_WidgetRelativeArea(void *, int, int);
 __inline__ int	 AG_WidgetArea(void *, int, int);
+__inline__ int	 AG_WidgetRectIntersect(void *, int, int, int, int);
 void		 AG_WidgetUpdateCoords(void *, int, int);
 struct ag_window *AG_WidgetParentWindow(void *);
 

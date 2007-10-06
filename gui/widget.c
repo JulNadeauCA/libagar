@@ -1897,6 +1897,23 @@ AG_WidgetRelativeArea(void *p, int x, int y)
 		y < wid->h);
 }
 
+/* Evaluate to true if the given rectangle intersects the widget area. */
+int
+AG_WidgetRectIntersect(void *p, int x, int y, int w, int h)
+{
+	AG_Widget *wid = p;
+	int r1l = wid->cx;
+	int r1r = wid->cx+wid->w;
+	int r1t = wid->cy;
+	int r1b = wid->cy+wid->h;
+
+	if (x+w < wid->cx || x > wid->cx2 ||
+	    y+w < wid->cy || y > wid->cy2) {
+		return (0);
+	}
+	return (1);
+}
+
 /*
  * Post a mousemotion event to widgets that either hold focus or have the
  * AG_WIDGET_UNFOCUSED_MOTION flag set.
@@ -2118,6 +2135,66 @@ AG_WidgetRegenResourcesGL(AG_Widget *wid)
 		    &wid->texcoords[i*4]);
 }
 #endif /* HAVE_OPENGL */
+
+static void *
+FindAtPoint(AG_Widget *parent, const char *type, int x, int y)
+{
+	AG_Widget *chld;
+	void *p;
+
+	OBJECT_FOREACH_CHILD(chld, parent, ag_widget) {
+		if ((p = FindAtPoint(chld, type, x, y)) != NULL)
+			return (p);
+	}
+	if (AG_ObjectIsClass(parent, type) &&
+	    AG_WidgetArea(parent, x, y)) {
+		return (parent);
+	}
+	return (NULL);
+}
+
+void *
+AG_WidgetFindPoint(const char *type, int x, int y)
+{
+	AG_Window *win;
+	void *p;
+	
+	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
+		if ((p = FindAtPoint(WIDGET(win), type, x, y)) != NULL)
+			return (p);
+	}
+	return (NULL);
+}
+
+static void *
+FindRectOverlap(AG_Widget *parent, const char *type, int x, int y, int w, int h)
+{
+	AG_Widget *chld;
+	void *p;
+
+	OBJECT_FOREACH_CHILD(chld, parent, ag_widget) {
+		if ((p = FindRectOverlap(chld, type, x,y,w,h)) != NULL)
+			return (p);
+	}
+	if (AG_ObjectIsClass(parent, type) &&
+	    AG_WidgetRectIntersect(parent, x,y,w,h)) {
+		return (parent);
+	}
+	return (NULL);
+}
+
+void *
+AG_WidgetFindRect(const char *type, int x, int y, int w, int h)
+{
+	AG_Window *win;
+	void *p;
+	
+	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
+		if ((p = FindRectOverlap(WIDGET(win), type, x,y,w,h)) != NULL)
+			return (p);
+	}
+	return (NULL);
+}
 
 const AG_WidgetOps agWidgetOps = {
 	{
