@@ -244,6 +244,7 @@ if [ "${with_altivec}" = "yes" ]; then
 			exit 1
 		else
 			HUNDEF(HAVE_ALTIVEC)
+			HUNDEF(HAVE_ALTIVEC_H)
 			HUNDEF(INLINE_ALTIVEC)
 		fi
 	else
@@ -255,6 +256,7 @@ if [ "${with_altivec}" = "yes" ]; then
 	fi
 else
 	HUNDEF(HAVE_ALTIVEC)
+	HUNDEF(HAVE_ALTIVEC_H)
 	HUNDEF(INLINE_ALTIVEC)
 fi
 
