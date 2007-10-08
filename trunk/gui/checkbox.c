@@ -64,6 +64,17 @@ AG_CheckboxNewFlag(void *parent, Uint *pFlags, Uint bitmask, const char *label)
 	return (cb);
 }
 
+AG_Checkbox *
+AG_CheckboxNewFlag32(void *parent, Uint32 *pFlags, Uint32 bitmask,
+    const char *label)
+{
+	AG_Checkbox *cb;
+
+	cb = AG_CheckboxNew(parent, AG_CHECKBOX_HFILL, label);
+	AG_WidgetBindFlag32(cb, "state", pFlags, bitmask);
+	return (cb);
+}
+
 /* Create a set of checkboxes for the given set of flags. */
 void
 AG_CheckboxSetFromFlags(void *parent, Uint *pFlags, const AG_FlagDescr *fdSet)
@@ -75,6 +86,24 @@ AG_CheckboxSetFromFlags(void *parent, Uint *pFlags, const AG_FlagDescr *fdSet)
 	for (i = 0; fdSet[i].bitmask != 0; i++) {
 		fd = &fdSet[i];
 		cb = AG_CheckboxNewFlag(parent, pFlags, fd->bitmask, fd->descr);
+		if (!fd->writeable)
+			AG_WidgetDisable(cb);
+	}
+}
+
+/* Create a set of checkboxes for the given set of flags. */
+void
+AG_CheckboxSetFromFlags32(void *parent, Uint32 *pFlags,
+    const AG_FlagDescr *fdSet)
+{
+	const AG_FlagDescr *fd;
+	AG_Checkbox *cb;
+	int i;
+
+	for (i = 0; fdSet[i].bitmask != 0; i++) {
+		fd = &fdSet[i];
+		cb = AG_CheckboxNewFlag32(parent, pFlags,
+		    (Uint32)fd->bitmask, fd->descr);
 		if (!fd->writeable)
 			AG_WidgetDisable(cb);
 	}
