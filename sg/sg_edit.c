@@ -44,7 +44,7 @@
 #include "sg_matview.h"
 #include "sg_gui.h"
 
-#include "import/ply.h"
+#include "sg_load_ply.h"
 
 #include <string.h>
 #include <math.h>
@@ -238,14 +238,6 @@ ImportMeshDlg(AG_Event *event)
 	    ImportMeshFromPLY, "%p", sg);
 	
 	AG_WindowShow(win);
-}
-
-static void
-NodeSelect(AG_Event *event)
-{
-	SG_View *sgv = AG_PTR(1);
-	SG_Node *node = AG_PTR(2);
-
 }
 
 static void
