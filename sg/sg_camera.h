@@ -59,5 +59,8 @@ __inline__ void	 SG_CameraSetClipPlanes(SG_Camera *, SG_Real, SG_Real);
 __inline__ void	 SG_CameraSetup(SG_Camera *);
 SG_Vector	 SG_CameraVector(SG_Camera *);
 void		 SG_CameraDraw(void *, SG_View *);
-void		 SG_CameraMouseRotate(SG_Camera *, SG_View *, int, int);
+
+void		 SG_CameraRotMouse(SG_Camera *, SG_View *, int, int);
+void		 SG_CameraSetRotCtrlCircular(SG_Camera *, SG_Node *);
+void		 SG_CameraSetRotCtrlElliptic(SG_Camera *, SG_Node *, SG_Node *);
 __END_DECLS

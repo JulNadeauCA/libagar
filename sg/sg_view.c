@@ -242,7 +242,7 @@ ViewScale(AG_Event *event)
 static void
 RotateCameraByMouse(SG_View *sv, int x, int y)
 {
-	SG_CameraMouseRotate(sv->cam, sv, x, y);
+	SG_CameraRotMouse(sv->cam, sv, x, y);
 }
 
 static void

@@ -324,6 +324,21 @@ SG_CameraEdit(void *p, AG_Widget *box, SG_View *sgv)
 		cb = AG_CheckboxNew(ntab, 0, _("Cull all"));
 		AG_WidgetBindInt(cb, "state", &cam->polyBack.cull);
 	}
+	ntab = AG_NotebookAddTab(nb, _("Rotation"), AG_BOX_VERT);
+	{
+		const char *rotModes[] = {
+			N_("Ignore"),
+			N_("Circular path"),
+			N_("Elliptic path"),
+			NULL
+		};
+
+		rad = AG_RadioNew(ntab, 0, rotModes);
+		AG_WidgetBindInt(rad, "value", &cam->rotCtrl);
+
+		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
+		    "Center: %s", &cam->focus[0]->name);
+	}
 }
 
 #ifdef DEBUG
@@ -402,7 +417,22 @@ SG_CameraVector(SG_Camera *cam)
 }
 
 void
-SG_CameraMouseRotate(SG_Camera *cam, SG_View *sv, int x, int y)
+SG_CameraSetRotCtrlCircular(SG_Camera *cam, SG_Node *focus)
+{
+	cam->rotCtrl = SG_CAMERA_ROT_CIRCULAR;
+	cam->focus[0] = focus;
+}
+
+void
+SG_CameraSetRotCtrlElliptic(SG_Camera *cam, SG_Node *foc1, SG_Node *foc2)
+{
+	cam->rotCtrl = SG_CAMERA_ROT_ELLIPTIC;
+	cam->focus[0] = foc1;
+	cam->focus[1] = foc2;
+}
+
+void
+SG_CameraRotMouse(SG_Camera *cam, SG_View *sv, int x, int y)
 {
 	SG_Real iRot, jRot;
 
