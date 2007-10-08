@@ -1433,7 +1433,7 @@ AG_ObjectAddDep(void *p, void *depobj)
 	}
 	if (dep != NULL) {
 		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
-		    OBJECT(depobj)->name, dep->count);
+		    OBJECT(depobj)->name, (Uint)dep->count);
 		if (++dep->count > AG_OBJECT_DEP_MAX) {
 			fprintf(stderr, "%s: wiring %s dep (too many refs)\n",
 			    ob->name, OBJECT(depobj)->name);
@@ -1477,7 +1477,8 @@ AG_ObjectFindDep(const void *p, Uint32 ind, void **objp)
 		return (0);
 	}
 
-	AG_SetError(_("Unable to resolve dependency %s:%u."), ob->name, ind);
+	AG_SetError(_("Unable to resolve dependency %s:%u."), ob->name, 
+	    (Uint)ind);
 	return (-1);
 }
 
@@ -1544,7 +1545,7 @@ AG_ObjectDelDep(void *p, const void *depobj)
 		fatal("neg ref count");
 	} else {
 		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
-		    OBJECT(depobj)->name, dep->count);
+		    OBJECT(depobj)->name, (Uint)dep->count);
 		dep->count--;
 	}
 }
@@ -1915,7 +1916,7 @@ PollDeps(AG_Event *event)
 			snprintf(label, sizeof(label), "%s (wired)", path);
 		} else {
 			snprintf(label, sizeof(label), "%s (%u)", path,
-			    dep->count);
+			    (Uint)dep->count);
 		}
 		AG_TlistAddPtr(tl, AG_ObjectIcon(dep->obj), label, dep);
 	}

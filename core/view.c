@@ -181,14 +181,15 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 	agVideoFmt = agView->v->format;
 	agSurfaceFmt = agView->stmpl->format;
 	printf(_("Video display is %dbpp (%08x,%08x,%08x)\n"),
-	     agVideoFmt->BitsPerPixel, agVideoFmt->Rmask, agVideoFmt->Gmask,
-	     agVideoFmt->Bmask);
+	     (int)agVideoFmt->BitsPerPixel, 
+	     (Uint)agVideoFmt->Rmask, (Uint)agVideoFmt->Gmask,
+	     (Uint)agVideoFmt->Bmask);
 	printf(_("Reference surface is %dbpp (%08x,%08x,%08x,%08x)\n"),
-	     agSurfaceFmt->BitsPerPixel,
-	     agSurfaceFmt->Rmask,
-	     agSurfaceFmt->Gmask,
-	     agSurfaceFmt->Bmask,
-	     agSurfaceFmt->Amask);
+	     (int)agSurfaceFmt->BitsPerPixel,
+	     (Uint)agSurfaceFmt->Rmask,
+	     (Uint)agSurfaceFmt->Gmask,
+	     (Uint)agSurfaceFmt->Bmask,
+	     (Uint)agSurfaceFmt->Amask);
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {

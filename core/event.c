@@ -387,7 +387,7 @@ SchedEventTimeout(void *p, Uint32 ival, void *arg)
 	va_list ap;
 	
 	debug(DEBUG_SCHED, "%s: timeout `%s' (ival=%u)\n", ob->name,
-	    ev->name, ival);
+	    ev->name, (Uint)ival);
 	ev->flags &= ~(AG_EVENT_SCHEDULED);
 
 	/* Propagate event to children. */
@@ -669,7 +669,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	AG_Event *ev;
 	
 	debug(DEBUG_SCHED, "%s: sched `%s' (in %u ticks)\n", rcvr->name,
-	    evname, ticks);
+	    evname, (Uint)ticks);
 
 	AG_LockTiming();
 	AG_MutexLock(&rcvr->lock);
@@ -707,7 +707,7 @@ AG_ReschedEvent(void *p, const char *evname, Uint32 ticks)
 	AG_Event *ev;
 
 	debug(DEBUG_SCHED, "%s: resched `%s' (%u ticks)\n", ob->name, evname,
-	    ticks);
+	    (Uint)ticks);
 
 	AG_LockTiming();
 	AG_MutexLock(&ob->lock);
