@@ -28,7 +28,10 @@ extern const AG_WidgetOps agCheckboxOps;
 
 AG_Checkbox	*AG_CheckboxNew(void *, Uint, const char *);
 AG_Checkbox	*AG_CheckboxNewFlag(void *, Uint *, Uint, const char *);
+AG_Checkbox	*AG_CheckboxNewFlag32(void *, Uint32 *, Uint32, const char *);
 void		 AG_CheckboxSetFromFlags(void *, Uint *, const AG_FlagDescr *);
+void		 AG_CheckboxSetFromFlags32(void *, Uint32 *, 
+		                           const AG_FlagDescr *);
 void		 AG_CheckboxInit(AG_Checkbox *, Uint, const char *);
 void		 AG_CheckboxToggle(AG_Checkbox *);
 __END_DECLS

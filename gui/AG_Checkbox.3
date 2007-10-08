@@ -52,8 +52,14 @@ binding.
 .Ft "AG_Checkbox *"
 .Fn AG_CheckboxNewFlag "AG_Widget *parent" "Uint *pFlags" "Uint bitmask" "const char *label"
 .Pp
+.Ft "AG_Checkbox *"
+.Fn AG_CheckboxNewFlag32 "AG_Widget *parent" "Uint32 *pFlags" "Uint32 bitmask" "const char *label"
+.Pp
 .Fn "AG_Checkbox *"
 .Fn AG_CheckboxSetFromFlags "AG_Widget *parent" "Uint *pFlags" "const AG_FlagDescr *flagsDescr"
+.Pp
+.Fn "AG_Checkbox *"
+.Fn AG_CheckboxSetFromFlags32 "AG_Widget *parent" "Uint32 *pFlags" "const AG_FlagDescr *flagsDescr"
 .Pp
 .Ft "void"
 .Fn AG_CheckboxInit "AG_Checkbox *checkbox" "Uint flags" "const char *label"
