@@ -95,7 +95,7 @@ DEV_CPUInfo(void)
 	}
 
 	AG_LabelNewStatic(win, 0, _("Architecture Extensions:"));
-	AG_CheckboxSetFromFlags(win, &agCPU.ext, archExtns);
+	AG_CheckboxSetFromFlags32(win, &agCPU.ext, archExtns);
 
 	return (win);
 }

@@ -61,7 +61,7 @@ UpdateTbl(void *obj, Uint32 ival, void *arg)
 		AG_MutexLock(&ob->lock);
 		CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
 			snprintf(text, sizeof(text), "%p: %u ticks", to,
-			    to->ticks);
+			    (Uint)to->ticks);
 			AG_TableviewRowAdd(tv, 0, row1, NULL, id++, 0, text);
 		}
 		AG_MutexUnlock(&ob->lock);

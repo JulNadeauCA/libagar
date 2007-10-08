@@ -64,11 +64,11 @@ DEV_DisplaySettings(void)
 		AG_LabelNewStatic(vb, 0, _("Depth: %dbpp"),
 		    (int)agVideoInfo->vfmt->BitsPerPixel);
 		AG_LabelNewStatic(vb, 0, _("Video masks: %08x,%08x,%08x"),
-		    agVideoInfo->vfmt->Rmask,
-		    agVideoInfo->vfmt->Gmask,
-		    agVideoInfo->vfmt->Bmask);
+		    (Uint)agVideoInfo->vfmt->Rmask,
+		    (Uint)agVideoInfo->vfmt->Gmask,
+		    (Uint)agVideoInfo->vfmt->Bmask);
 		AG_LabelNewStatic(vb, 0, _("Color key: 0x%x"),
-		    agVideoInfo->vfmt->colorkey);
+		    (Uint)agVideoInfo->vfmt->colorkey);
 		AG_LabelNewStatic(vb, 0, _("Alpha: %d"),
 		    agVideoInfo->vfmt->alpha);
 

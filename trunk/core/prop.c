@@ -862,7 +862,8 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 			}
 			break;
 		default:
-			AG_SetError(_("Cannot load property of type %d."), t);
+			AG_SetError(_("Cannot load property of type %d."), 
+			    (int)t);
 			goto fail;
 		}
 	}
