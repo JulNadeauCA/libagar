@@ -465,7 +465,8 @@ MouseButtonDown(AG_Event *event)
 		AG_Pixmap *px;
 		
 		icon->wDND = AG_WindowNew(AG_WINDOW_PLAIN|
-		                          AG_WINDOW_NOBACKGROUND);
+		                          AG_WINDOW_NOBACKGROUND|
+					  AG_WINDOW_NOUPDATERECT);
 		px = AG_PixmapFromSurfaceCopy(icon->wDND, 0,
 		    WSURFACE(icon,icon->surface));
 		WIDGET(px)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
