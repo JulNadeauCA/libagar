@@ -593,7 +593,8 @@ Move(AG_Window *win, SDL_MouseMotionEvent *motion)
 		rfill2.w = oldpos.w;
 		rfill2.h = oldpos.y - newpos.y;
 	}
-	if (!agView->opengl) {
+	if (!agView->opengl &&
+	    !(win->flags & AG_WINDOW_NOUPDATERECT)) {
 		if (rfill1.w > 0) {
 			SDL_FillRect(agView->v, &rfill1, AG_COLOR(BG_COLOR));
 			SDL_UpdateRects(agView->v, 1, &rfill1);
@@ -1073,7 +1074,8 @@ AG_WindowSetGeometryParam(AG_Window *win, int x, int y, int w, int h,
 
 	/* Update the background. */
 	/* XXX TODO Avoid drawing over KEEPABOVE windows */
-	if (win->visible && !new && !agView->opengl) {
+	if (win->visible && !new && !agView->opengl &&
+	    !(win->flags & AG_WINDOW_NOUPDATERECT)) {
 		if (WIDGET(win)->x > ox) {			/* L-resize */
 			rFill.x = ox;
 			rFill.y = oy;
@@ -1132,7 +1134,8 @@ AG_WindowUnmaximize(AG_Window *win)
 	if (AG_WindowSetGeometry(win, win->savx, win->savy, win->savw,
 	    win->savh) == 0) {
 		win->flags &= ~(AG_WINDOW_MAXIMIZED);
-		if (!agView->opengl) {
+		if (!agView->opengl &&
+		    !(win->flags & AG_WINDOW_NOUPDATERECT)) {
 			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
 			SDL_UpdateRect(agView->v, 0, 0, agView->v->w,
 			    agView->v->h);
