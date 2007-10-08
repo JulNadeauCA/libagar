@@ -50,6 +50,18 @@ InsertWeapon(AG_Socket *sock, AG_Icon *icon)
 }
 
 static void
+CreateGameView(void)
+{
+	AG_Window *win;
+
+	win = AG_WindowNew(AG_WINDOW_PLAIN);
+	AG_WindowSetGeometry(win,
+	    0,		0,
+	    agView->w,	agView->h-128);
+	AG_WindowShow(win);
+}
+
+static void
 CreateGameMenu(void)
 {
 	AG_Window *win;
@@ -63,15 +75,20 @@ CreateGameMenu(void)
 	/* Create a fixed-size window with a Fixed container. */
 	win = AG_WindowNewNamed(AG_WINDOW_PLAIN, "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
-	AG_WindowSetGeometry(win, 0, 480-128, 640, 128);
+	AG_WindowSetGeometry(win,
+	    0,		agView->h-128,
+	    agView->w,	128);
 	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
+
 	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
 	if ((px = AG_PixmapFromBMP(fx, 0, "menubg.bmp")) == NULL) {
 		fprintf(stderr, "Cannot find menubg.bmp\n", AG_GetError());
 		exit(1);
 	}
 	AG_FixedMove(fx, px, 0, 0);
-	lbl = AG_LabelNewStatic(NULL, 0, "Drag & Drop Demo");
+	
+	lbl = AG_LabelNewStatic(NULL, 0, "Drag & Drop Demo (%s)",
+	    agView->opengl ? "OpenGL" : "SDL");
 	AG_FixedPut(fx, lbl, 20, 32);
 
 	/* Load some pixmaps */
@@ -175,7 +192,8 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
-	
+
+	CreateGameView();
 	CreateGameMenu();
 
 	AG_EventLoop();
