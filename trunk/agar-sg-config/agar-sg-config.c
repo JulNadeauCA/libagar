@@ -102,7 +102,7 @@ main(int argc, char *argv[])
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
-			printf("-lag_sg -lag_sg_import -lag_sg_pe ");
+			printf("-lag_sg -lag_sg_pe ");
 #ifdef HAVE_CG
 			printf("%s ", CG_LIBS);
 #endif
