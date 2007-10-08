@@ -161,6 +161,7 @@ SG_AttachDefaultNodes(SG *sg)
 	if (SG_FindNode(sg, "Camera0") == NULL) {
 		cam = SG_CameraNew(sg->root, "Camera0");
 		SG_Translate3(cam, 0.0, 0.0, 10.0);
+		SG_CameraSetRotCtrlCircular(cam, sg->root);
 	}
 	if (SG_FindNode(sg, "Light0") == NULL) {
 		lt = SG_LightNew(sg->root, "Light0");

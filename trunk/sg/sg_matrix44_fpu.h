@@ -260,9 +260,9 @@ static __inline__ void
 SG_MatrixGetDirection44_FPU(const SG_Matrix *A, SG_Vector *x, SG_Vector *y,
     SG_Vector *z)
 {
-	if (x != NULL) { x->x = A->m[0][0]; x->y = A->m[1][0]; x->z = A->m[2][0]; }
-	if (y != NULL) { y->x = A->m[0][1]; y->y = A->m[1][1]; y->z = A->m[2][1]; }
-	if (z != NULL) { z->x = A->m[0][2]; z->y = A->m[1][2]; z->z = A->m[2][2]; }
+	if (x != NULL) { x->x=A->m[0][0]; x->y=A->m[1][0]; x->z=A->m[2][0]; }
+	if (y != NULL) { y->x=A->m[0][1]; y->y=A->m[1][1]; y->z=A->m[2][1]; }
+	if (z != NULL) { z->x=A->m[0][2]; z->y=A->m[1][2]; z->z=A->m[2][2]; }
 }
 
 static __inline__ SG_Matrix
@@ -270,10 +270,14 @@ SG_MatrixTranspose44_FPU(SG_Matrix M)
 {
 	SG_Matrix T;
 
-	T.m[0][0] = M.m[0][0]; T.m[1][0] = M.m[0][1]; T.m[2][0] = M.m[0][2]; T.m[3][0] = M.m[0][3];
-	T.m[0][1] = M.m[1][0]; T.m[1][1] = M.m[1][1]; T.m[2][1] = M.m[1][2]; T.m[3][1] = M.m[1][3];
-	T.m[0][2] = M.m[2][0]; T.m[1][2] = M.m[2][1]; T.m[2][2] = M.m[2][2]; T.m[3][2] = M.m[2][3];
-	T.m[0][3] = M.m[3][0]; T.m[1][3] = M.m[3][1]; T.m[2][3] = M.m[3][2]; T.m[3][3] = M.m[3][3];
+	T.m[0][0] = M.m[0][0]; T.m[1][0] = M.m[0][1]; T.m[2][0] = M.m[0][2];
+	T.m[3][0] = M.m[0][3];
+	T.m[0][1] = M.m[1][0]; T.m[1][1] = M.m[1][1]; T.m[2][1] = M.m[1][2];
+	T.m[3][1] = M.m[1][3];
+	T.m[0][2] = M.m[2][0]; T.m[1][2] = M.m[2][1]; T.m[2][2] = M.m[2][2];
+	T.m[3][2] = M.m[2][3];
+	T.m[0][3] = M.m[3][0]; T.m[1][3] = M.m[3][1]; T.m[2][3] = M.m[3][2];
+	T.m[3][3] = M.m[3][3];
 	return (T);
 }
 
@@ -282,10 +286,14 @@ SG_MatrixTranspose44p_FPU(const SG_Matrix *M)
 {
 	SG_Matrix T;
 
-	T.m[0][0] = M->m[0][0]; T.m[1][0] = M->m[0][1]; T.m[2][0] = M->m[0][2]; T.m[3][0] = M->m[0][3];
-	T.m[0][1] = M->m[1][0]; T.m[1][1] = M->m[1][1]; T.m[2][1] = M->m[1][2]; T.m[3][1] = M->m[1][3];
-	T.m[0][2] = M->m[2][0]; T.m[1][2] = M->m[2][1]; T.m[2][2] = M->m[2][2]; T.m[3][2] = M->m[2][3];
-	T.m[0][3] = M->m[3][0]; T.m[1][3] = M->m[3][1]; T.m[2][3] = M->m[3][2]; T.m[3][3] = M->m[3][3];
+	T.m[0][0] = M->m[0][0]; T.m[1][0] = M->m[0][1]; T.m[2][0] = M->m[0][2];
+	T.m[3][0] = M->m[0][3];
+	T.m[0][1] = M->m[1][0]; T.m[1][1] = M->m[1][1]; T.m[2][1] = M->m[1][2];
+	T.m[3][1] = M->m[1][3];
+	T.m[0][2] = M->m[2][0]; T.m[1][2] = M->m[2][1]; T.m[2][2] = M->m[2][2];
+	T.m[3][2] = M->m[2][3];
+	T.m[0][3] = M->m[3][0]; T.m[1][3] = M->m[3][1]; T.m[2][3] = M->m[3][2];
+	T.m[3][3] = M->m[3][3];
 	return (T);
 }
 
@@ -294,10 +302,14 @@ SG_MatrixTranspose44v_FPU(SG_Matrix *M)
 {
 	SG_Matrix T;
 
-	T.m[0][0] = M->m[0][0]; T.m[1][0] = M->m[0][1]; T.m[2][0] = M->m[0][2]; T.m[3][0] = M->m[0][3];
-	T.m[0][1] = M->m[1][0]; T.m[1][1] = M->m[1][1]; T.m[2][1] = M->m[1][2]; T.m[3][1] = M->m[1][3];
-	T.m[0][2] = M->m[2][0]; T.m[1][2] = M->m[2][1]; T.m[2][2] = M->m[2][2]; T.m[3][2] = M->m[2][3];
-	T.m[0][3] = M->m[3][0]; T.m[1][3] = M->m[3][1]; T.m[2][3] = M->m[3][2]; T.m[3][3] = M->m[3][3];
+	T.m[0][0] = M->m[0][0]; T.m[1][0] = M->m[0][1]; T.m[2][0] = M->m[0][2];
+	T.m[3][0] = M->m[0][3];
+	T.m[0][1] = M->m[1][0]; T.m[1][1] = M->m[1][1]; T.m[2][1] = M->m[1][2];
+	T.m[3][1] = M->m[1][3];
+	T.m[0][2] = M->m[2][0]; T.m[1][2] = M->m[2][1]; T.m[2][2] = M->m[2][2];
+	T.m[3][2] = M->m[2][3];
+	T.m[0][3] = M->m[3][0]; T.m[1][3] = M->m[3][1]; T.m[2][3] = M->m[3][2];
+	T.m[3][3] = M->m[3][3];
 	SG_MatrixCopy44_FPU(M, &T);
 }
 
@@ -379,9 +391,9 @@ SG_MatrixOrbitAxis44_FPU(SG_Matrix *M, SG_Vector p, SG_Vector A, SG_Real theta)
 	R.m[3][3] = 1.0;
 
 	/* XXX Optimize! */
-	SG_MatrixTranslate44_FPU(M, p);
-	SG_MatrixMult44v_FPU(M, &R);
 	SG_MatrixTranslate344_FPU(M, -p.x, -p.y, -p.z);
+	SG_MatrixMult44v_FPU(M, &R);
+	SG_MatrixTranslate44_FPU(M, p);
 }
 
 static __inline__ void
