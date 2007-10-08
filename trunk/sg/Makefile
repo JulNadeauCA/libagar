@@ -1,8 +1,7 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=	import \
-	pe
+SUBDIR=	pe
 
 LIB=		ag_sg
 LIB_SHARED=	Yes
@@ -16,6 +15,7 @@ SRCS=	sg.c sg_math.c \
 	sg_edit.c sg_dummy.c sg_sphere.c sg_point.c sg_light.c \
 	sg_solid.c sg_planeobj.c sg_object.c sg_box.c sg_matview.c \
 	sg_material.c sg_voxel.c sg_program.c sg_cg_program.c \
+	sg_load_ply.c \
 	sk.c sk_view.c sk_tool.c sk_edit.c sk_select.c sk_solve.c \
 	sk_dummy.c sk_point.c sk_line.c sk_circle.c sk_arc.c sk_constraint.c \
 	sk_annot.c sk_dimension.c sk_measure.c

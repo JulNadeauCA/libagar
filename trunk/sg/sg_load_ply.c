@@ -22,6 +22,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Loader for Stanford PLY file format.
+ */
+
 #include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
