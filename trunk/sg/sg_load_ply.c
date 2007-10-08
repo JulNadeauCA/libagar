@@ -31,7 +31,8 @@
 
 #include <core/core.h>
 #include <sg/sg.h>
-#include "ply.h"
+
+#include "sg_load_ply.h"
 
 #include <stdio.h>
 #include <string.h>
