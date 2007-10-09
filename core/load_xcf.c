@@ -32,7 +32,7 @@
 #include <config/have_ieee754.h>
 
 #include <core/core.h>
-#include <core/loaders/xcf.h>
+#include <core/load_xcf.h>
 
 #include <string.h>
 #include <stdlib.h>

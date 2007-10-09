@@ -4,14 +4,14 @@
 #define _AGAR_CORE_PUBLIC_H_
 #include <agar/core/core_begin.h>
 
-#include <agar/core/loaders/netbuf.h>
-#include <agar/core/loaders/den.h>
-#include <agar/core/loaders/color.h>
-#include <agar/core/loaders/integral.h>
-#include <agar/core/loaders/real.h>
-#include <agar/core/loaders/string.h>
-#include <agar/core/loaders/surface.h>
-#include <agar/core/loaders/version.h>
+#include <agar/core/load_netbuf.h>
+#include <agar/core/load_den.h>
+#include <agar/core/load_color.h>
+#include <agar/core/load_integral.h>
+#include <agar/core/load_real.h>
+#include <agar/core/load_string.h>
+#include <agar/core/load_surface.h>
+#include <agar/core/load_version.h>
 
 #include <agar/core/object.h>
 #include <agar/core/event.h>

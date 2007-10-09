@@ -1,8 +1,5 @@
-/*	$Csoft: dencomp.c,v 1.5 2005/01/05 04:44:03 vedge Exp $	*/
-
 /*
- * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +31,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <core/loaders/den.h>
+#include <core/load_den.h>
 
 int verbose = 0;
 char *outfile = NULL;

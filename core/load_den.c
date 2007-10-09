@@ -36,7 +36,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include <core/loaders/den.h>
+#include <core/load_den.h>
 
 const char *agDenMagic = "AG_DEN";
 const AG_Version agDenVer = { 0, 0 };

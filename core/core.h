@@ -84,12 +84,12 @@ typedef unsigned long Ulong;
 #include <compat/strsep.h>
 #include <compat/math.h>
 
-#include <core/loaders/netbuf.h>
-#include <core/loaders/integral.h>
-#include <core/loaders/real.h>
-#include <core/loaders/string.h>
-#include <core/loaders/version.h>
-#include <core/loaders/color.h>
+#include <core/load_netbuf.h>
+#include <core/load_integral.h>
+#include <core/load_real.h>
+#include <core/load_string.h>
+#include <core/load_version.h>
+#include <core/load_color.h>
 
 #include <core/object.h>
 #include <core/event.h>

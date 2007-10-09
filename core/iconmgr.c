@@ -31,8 +31,8 @@
 #include <core/config.h>
 #include <core/view.h>
 
-#include <core/loaders/den.h>
-#include <core/loaders/xcf.h>
+#include <core/load_den.h>
+#include <core/load_xcf.h>
 
 #include <string.h>
 #include <stdarg.h>

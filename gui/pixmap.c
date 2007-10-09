@@ -26,7 +26,7 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <core/loaders/xcf.h>
+#include <core/load_xcf.h>
 
 #include "pixmap.h"
 

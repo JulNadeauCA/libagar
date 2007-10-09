@@ -1,8 +1,5 @@
-/*	$Csoft: denex.c,v 1.5 2005/01/05 04:44:03 vedge Exp $	*/
-
 /*
- * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +32,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include <core/loaders/den.h>
+#include <core/load_den.h>
 
 int verbose = 1;
 int iflag = 0;
