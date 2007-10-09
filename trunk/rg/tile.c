@@ -27,8 +27,8 @@
 #include <core/view.h>
 #include <core/config.h>
 
-#include <core/loaders/surface.h>
-#include <core/loaders/xcf.h>
+#include <core/load_surface.h>
+#include <core/load_xcf.h>
 
 #include <gui/window.h>
 #include <gui/box.h>

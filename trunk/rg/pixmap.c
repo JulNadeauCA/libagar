@@ -28,7 +28,7 @@
 #include <core/core.h>
 #include <core/view.h>
 
-#include <core/loaders/surface.h>
+#include <core/load_surface.h>
 
 #include <gui/cursors.h>
 #include <gui/window.h>
