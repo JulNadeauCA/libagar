@@ -127,7 +127,7 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
 			printf("-lag_core ");
-			printf("-lag_gui -lag_core_loaders -lag_compat ");
+			printf("-lag_gui -lag_compat ");
 #ifdef NETWORK
 			printf("-lag_net ");
 #endif
