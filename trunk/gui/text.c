@@ -72,7 +72,7 @@
 #ifdef HAVE_FREETYPE
 #include "ttf.h"
 #endif
-#include <core/loaders/xcf.h>
+#include <core/load_xcf.h>
 
 #include "window.h"
 #include "vbox.h"

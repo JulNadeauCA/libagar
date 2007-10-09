@@ -29,10 +29,10 @@
 
 #include <core/core.h>
 
-#include "netbuf.h"
-#include "integral.h"
-#include "surface.h"
-#include "version.h"
+#include "load_netbuf.h"
+#include "load_integral.h"
+#include "load_surface.h"
+#include "load_version.h"
 
 const AG_Version agSurfaceVer = { 0, 0 };
 
