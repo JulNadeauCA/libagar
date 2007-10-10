@@ -22,6 +22,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#
+# Build PostScript/PDF documents from nroff+{eqn,pic,tbl,refer} source.
+#
+
 DOCPS?=		untitled.ps
 DOCPDF?=	untitled.pdf
 DOCSRC?=

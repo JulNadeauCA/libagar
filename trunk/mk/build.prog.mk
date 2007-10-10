@@ -22,12 +22,18 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#
+# Compile executables from source.
+#
+
 CC?=		cc
 CFLAGS?=	-O2 -g
 CXXFLAGS?=
 OBJCFLAGS?=	${CFLAGS}
 CPPFLAGS?=
 PROG_INSTALL?=	Yes
+PROG_TYPE?=	"CLI"
+PROG_GUID?=
 GMONOUT?=	gmon.out
 ASM?=		nasm
 ASMFLAGS?=	-g -w-orphan-labels
@@ -49,23 +55,27 @@ cleandir: clean-prog clean-subdir cleandir-prog cleandir-subdir
 regress: regress-subdir
 depend: depend-subdir
 
-.SUFFIXES: .o .po .c .cc .asm .l .y .m
+.SUFFIXES: .o .po .c .cc .cpp .asm .l .y .m
 
 # Compile C code into an object file
 .c.o:
-	${CC} ${CFLAGS} ${CPPFLAGS} -c $<
+	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Compile C++ code into an object file
 .cc.o:
-	${CXX} ${CXXFLAGS} ${CPPFLAGS} -c $<
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.po:
+	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+.cpp.o:
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+.cpp.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Compile C+Objective-C code into an object file
 .m.o:
-	${CC} ${OBJCFLAGS} ${CPPFLAGS} -c $<
+	${CC} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.po:
 	${CC} -pg -DPROF ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 
@@ -80,12 +90,12 @@ depend: depend-subdir
 	@rm -f $@.yy.c
 .l.o:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} ${CFLAGS} -c $@.yy.c
+	${CC} ${CFLAGS} -o $@ -c $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 .l.po:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} -pg -DPROF ${CFLAGS} -c $@.yy.c
+	${CC} -pg -DPROF ${CFLAGS} -o $@ -c $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 
@@ -96,12 +106,12 @@ depend: depend-subdir
 	@rm -f $@.tab.c
 .y.o:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} ${CFLAGS} -c $@.tab.c
+	${CC} ${CFLAGS} -o $@ -c $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 .y.po:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} -pg -DPROF ${CFLAGS} -c $@.tab.c
+	${CC} -pg -DPROF ${CFLAGS} -o $@ -c $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
@@ -111,6 +121,7 @@ _prog_objs:
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	        F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	        ${MAKE} $$F; \
 		if [ $$? != 0 ]; then \
@@ -130,6 +141,7 @@ _prog_pobjs:
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.po/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.po/'`; \
+	        F=`echo $$F | sed 's/.cpp$$/.po/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.po/'`; \
 	        ${MAKE} $$F; \
 		if [ $$? != 0 ]; then \
@@ -147,6 +159,7 @@ ${PROG}: _prog_objs ${OBJS}
                 for F in ${SRCS}; do \
 	            F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	    F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	    _objs="$$_objs $$F"; \
                 done; \
@@ -180,6 +193,7 @@ ${GMONOUT}: _prog_pobjs ${POBJS}
                 for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.po/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.po/'`; \
+	    	    F=`echo $$F | sed 's/.cpp$$/.po/'`; \
 	    	    F=`echo $$F | sed 's/.asm$$/.po/'`; \
 	    	    _pobjs="$$_pobjs $$F"; \
                 done; \
@@ -199,6 +213,7 @@ clean-prog:
                 for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	    F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	    echo "rm -f $$F"; \
 	    	    rm -f $$F; \
@@ -211,6 +226,7 @@ clean-prog:
                 for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.po/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.po/'`; \
+	    	    F=`echo $$F | sed 's/.cpp$$/.po/'`; \
 	    	    F=`echo $$F | sed 's/.asm$$/.po/'`; \
 	    	    echo "rm -f $$F"; \
 	    	    rm -f $$F; \
@@ -301,4 +317,5 @@ deinstall-prog:
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.dep.mk
+include ${TOP}/mk/build.proj.mk
 include ${TOP}/mk/build.subdir.mk

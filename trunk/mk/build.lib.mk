@@ -22,6 +22,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#
+# Build static and shared libraries from source.
+#
+
 CC?=		cc
 CFLAGS?=
 OBJCFLAGS?=	${CFLAGS}
@@ -38,6 +42,7 @@ LIB_STATIC?=	Yes
 LIB_MAJOR?=	1
 LIB_MINOR?=	0
 LIB_ADD?=
+LIB_GUID?=
 
 LIBTOOL?=	${TOP}/mk/libtool/libtool
 LIBTOOL_COOKIE?=${TOP}/mk/libtool.ok
@@ -67,30 +72,36 @@ cleandir: clean-lib clean-subdir cleandir-lib cleandir-subdir
 regress: regress-subdir
 depend: depend-subdir
 
-.SUFFIXES: .o .po .lo .c .cc .asm .l .y .m
+.SUFFIXES: .o .po .lo .c .cc .cpp .asm .l .y .m
 
 # Compile C code into an object file
 .c.o:
-	${CC} ${CFLAGS} -c $<
+	${CC} ${CFLAGS} -o $@ -c $<
 .c.lo: ${LIBTOOL}
-	${LIBTOOL} ${CC} ${CFLAGS} -c $<
+	${LIBTOOL} ${CC} ${CFLAGS} -o $@ -c $<
 .c.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Compile Objective-C code into an object file
 .m.o:
-	${CC} ${OBJCFLAGS} -c $<
+	${CC} ${OBJCFLAGS} -o $@ -c $<
 .m.lo: ${LIBTOOL}
-	${LIBTOOL} ${CC} ${OBJCFLAGS} -c $<
+	${LIBTOOL} ${CC} ${OBJCFLAGS} -o $@ -c $<
 .m.po:
 	${CC} -pg -DPROF ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Compile C++ code into an object file
 .cc.o:
-	${CXX} ${CXXFLAGS} -c $<
+	${CXX} ${CXXFLAGS} -o $@ -c $<
 .cc.lo: ${LIBTOOL}
-	${LIBTOOL} ${CXX} ${CXXFLAGS} -c $<
+	${LIBTOOL} ${CXX} ${CXXFLAGS} -o $@ -c $<
 .cc.po:
+	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
+.cpp.o:
+	${CXX} ${CXXFLAGS} -o $@ -c $<
+.cpp.lo: ${LIBTOOL}
+	${LIBTOOL} ${CXX} ${CXXFLAGS} -o $@ -c $<
+.cpp.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Compile assembly code into an object file
@@ -104,12 +115,12 @@ depend: depend-subdir
 	@rm -f $@.yy.c
 .l.o:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} ${CFLAGS} -c $@.yy.c
+	${CC} ${CFLAGS} -o $@ -c $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 .l.po:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} -pg -DPROF ${CFLAGS} -c $@.yy.c
+	${CC} -pg -DPROF ${CFLAGS} -o $@ -c $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 
@@ -120,12 +131,12 @@ depend: depend-subdir
 	@rm -f $@.tab.c
 .y.o:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} ${CFLAGS} -c $@.tab.c
+	${CC} ${CFLAGS} -o $@ -c $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 .y.po:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} -pg -DPROF ${CFLAGS} -c $@.tab.c
+	${CC} -pg -DPROF ${CFLAGS} -o $@ -c $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
@@ -136,6 +147,7 @@ _lib_objs:
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	        F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	        ${MAKE} $$F; \
 		if [ $$? != 0 ]; then \
@@ -152,6 +164,7 @@ _lib_shobjs:
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.lo/'`; \
+	        F=`echo $$F | sed 's/.cpp$$/.lo/'`; \
 	        F=`echo $$F | sed 's/.asm$$/.lo/'`; \
 	        ${MAKE} $$F; \
 		if [ $$? != 0 ]; then \
@@ -170,6 +183,7 @@ lib${LIB}.a: _lib_objs ${OBJS}
 	        for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	    F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	    _objs="$$_objs $$F"; \
                 done; \
@@ -192,6 +206,7 @@ lib${LIB}.la: ${LIBTOOL_COOKIE} _lib_shobjs ${SHOBJS}
 	        for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.lo/'`; \
+	    	    F=`echo $$F | sed 's/.cpp$$/.lo/'`; \
 	    	    F=`echo $$F | sed 's/.asm$$/.lo/'`; \
 	    	    _shobjs="$$_shobjs $$F"; \
                 done; \
@@ -222,6 +237,7 @@ clean-lib:
                     for F in ${SRCS}; do \
 	   	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	        F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	    	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	    	echo "rm -f $$F"; \
 	    	    	rm -f $$F; \
@@ -238,6 +254,7 @@ clean-lib:
                     for F in ${SRCS}; do \
 	    	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.lo/'`; \
+	    	        F=`echo $$F | sed 's/.cpp$$/.lo/'`; \
 	    	        F=`echo $$F | sed 's/.asm$$/.lo/'`; \
 	    	        echo "rm -f $$F"; \
 	    	        rm -f $$F; \
@@ -245,6 +262,7 @@ clean-lib:
                     for F in ${SRCS}; do \
 	    	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	        F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	    	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	        echo "rm -f $$F"; \
 	    	        rm -f $$F; \
@@ -376,4 +394,5 @@ ${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.dep.mk
+include ${TOP}/mk/build.proj.mk
 include ${TOP}/mk/build.subdir.mk

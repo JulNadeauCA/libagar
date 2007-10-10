@@ -21,6 +21,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#
+# Compile a set of HTML files (language and character set variants) from
+# source files processed by m4 and xsltproc.
+#
+
 M4?=		m4
 M4FLAGS?=
 XSLTPROC?=	xsltproc
