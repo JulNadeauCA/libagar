@@ -29,6 +29,14 @@ typedef unsigned long Ulong;
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#include <config/_mk_have_stdlib.h>
+#ifdef _MK_HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#include <config/_mk_have_unistd.h>
+#ifdef _MK_HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #ifdef HAVE_OPENGL
 # ifdef __APPLE__
