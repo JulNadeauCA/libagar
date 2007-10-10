@@ -725,8 +725,8 @@ cat << EOT > conftest.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
 	size_t len = 1;
-	ssize_t slen = 1;
-	return (len>1?len:slen);
+	len++;
+	return (0);
 }
 
 EOT
@@ -926,36 +926,29 @@ if [ $? != 0 ]; then
 echo "no (compile failed)"
 echo "no (compile failed)" >> config.log
 compile="failed"
-free_null_noop="no"
-echo "free_null_noop=$free_null_noop" >> Makefile.config
-echo "#undef free_null_noop" > config/free_null_noop.h
+FREE_NULL_IS_A_NOOP="no"
+echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >> Makefile.config
+echo "#undef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
 else
 compile="ok"
 ./conftest >> config.log
 if [ $? == 0 ]; then
 echo "yes"
 echo "yes" >> config.log
-free_null_noop="yes"
-echo "free_null_noop=$free_null_noop" >> Makefile.config
-echo "#ifndef free_null_noop" > config/free_null_noop.h
-echo "#define free_null_noop \"$free_null_noop\"" >> config/free_null_noop.h
-echo "#endif" >> config/free_null_noop.h
-else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
-free_null_noop="no"
-echo "free_null_noop=$free_null_noop" >> Makefile.config
-echo "#undef free_null_noop" > config/free_null_noop.h
-fi;
-fi;
-rm -f conftest conftest.c
-if [ "${free_null_noop}" = "yes" ]; then
+FREE_NULL_IS_A_NOOP="yes"
+echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >> Makefile.config
 echo "#ifndef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
 echo "#define FREE_NULL_IS_A_NOOP \"$FREE_NULL_IS_A_NOOP\"" >> config/free_null_is_a_noop.h
 echo "#endif" >> config/free_null_is_a_noop.h
 else
+echo "no (exec failed)"
+echo "no (exec failed)" >> config.log
+FREE_NULL_IS_A_NOOP="no"
+echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >> Makefile.config
 echo "#undef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
 fi;
+fi;
+rm -f conftest conftest.c
 echo -n "checking for the C math library..."
 echo -n "checking for the C math library..." >> config.log
 MATH_LIBS="-lm"

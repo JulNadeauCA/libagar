@@ -215,7 +215,7 @@ AG_CopyUnicode(enum ag_unicode_conv conv, const char *s, Uint32 *ucs,
  * If retval >= dst_size, truncation occurred. If retval == -1, a
  * conversion error has occurred.
  */
-ssize_t
+long
 AG_ExportUnicode(enum ag_unicode_conv conv, char *dst, const Uint32 *ucs,
     size_t dst_size)
 {
@@ -249,7 +249,7 @@ AG_ExportUnicode(enum ag_unicode_conv conv, char *dst, const Uint32 *ucs,
 				return (-1);
 			}
 			if (len+chlen+1 >= dst_size) {
-				return ((ssize_t)len+chlen);
+				return ((long)len+chlen);
 			}
 			for (i = chlen - 1; i > 0; i--) {
 				dst[i] = (uch & 0x3f) | 0x80;
@@ -260,7 +260,7 @@ AG_ExportUnicode(enum ag_unicode_conv conv, char *dst, const Uint32 *ucs,
 			len += chlen;
 		}
 		*dst = '\0';
-		return (len);
+		return (long)len;
 	default:
 		return (-1);
 	}

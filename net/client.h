@@ -37,8 +37,8 @@ int		 NC_Connect(NC_Session *, const char *, const char *,
 		             const char *, const char *);
 int		 NC_Reconnect(NC_Session *);
 void	 	 NC_Disconnect(NC_Session *);
-ssize_t		 NC_Read(NC_Session *, size_t);
-ssize_t		 NC_ReadBinary(NC_Session *, size_t);
+long		 NC_Read(NC_Session *, size_t);
+long		 NC_ReadBinary(NC_Session *, size_t);
 int		 NC_Write(NC_Session *, const char *, ...);
 NC_Result	*NC_Query(NC_Session *, const char *, ...);
 NC_Result	*NC_QueryBinary(NC_Session *, const char *, ...);

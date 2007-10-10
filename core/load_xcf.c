@@ -327,7 +327,7 @@ xcf_read_tile_rle(AG_Netbuf *buf, Uint32 len, int bpp, int x, int y)
 {
 	int i, size, count, j;
 	Uint8 *tilep, *tile, *data;
-	ssize_t rv;
+	long rv;
 
 	tilep = tile = Malloc(len, M_LOADER);
 	rv = AG_NetbufReadE(tile, sizeof(Uint8), len, buf);
