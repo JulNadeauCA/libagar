@@ -1,10 +1,13 @@
 TOP=	..
 include ./Makefile.config
 
-PROG=	agar-bench
-SRCS=	agar-bench.c generic.c pixelops.c primitives.c surfaceops.c memops.c \
-	misc.c events.c sg.c
-VERSION=1.0
+PROG=		agar-bench
+PROG_TYPE=	"GUI"
+PROG_GUID=	"8CECE971-4D10-4787-B8CF-349F58861C95"
+VERSION=	1.0
+
+SRCS=		agar-bench.c generic.c pixelops.c primitives.c surfaceops.c \
+		memops.c misc.c events.c sg.c
 
 CFLAGS+=${AGAR_CFLAGS} ${AGAR_SG_CFLAGS} -I. -DHAVE_RDTSC -DVERSION=\"${VERSION}\" -D_USE_AGAR_MATH
 LIBS+=	${AGAR_LIBS} ${AGAR_SG_LIBS}

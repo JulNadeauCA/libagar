@@ -1,7 +1,10 @@
 TOP=	..
 include Makefile.config
 
-PROG=	agarrcsd
+PROG=		agarrcsd
+PROG_TYPE=	"DAEMON"
+PROG_GUID=	"45170011-03CA-40f2-BA07-D954E3C61CA2"
+
 SRCS=	agarrcsd.c user.c mkpath.c rcsinfo.c rcs.c fgetln.c
 MAN8=	agarrcsd.8
 

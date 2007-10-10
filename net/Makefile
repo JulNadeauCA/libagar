@@ -4,6 +4,7 @@ include ${TOP}/Makefile.config
 LIB=		ag_net
 LIB_SHARED=	Yes
 LIB_STATIC=	No
+LIB_GUID=	"c2e73d69-e1f4-4b92-a54f-03b1016b6357"
 
 SRCS=		command.c server.c client.c fgetln.c
 # MAN3+=	AGN.3

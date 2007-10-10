@@ -4,6 +4,7 @@ include ${TOP}/Makefile.config
 LIB=		ag_dev
 LIB_SHARED=	Yes
 LIB_STATIC=	No
+LIB_GUID=	"e0baea2d-5cb8-4a7a-9120-8352f36109e7"
 
 SRCS=	dev.c browser.c leak.c screenshot.c server.c timeouts.c uniconv.c \
 	view_params.c widget_browser.c cpuinfo.c

@@ -6,6 +6,7 @@ SUBDIR=	pe
 LIB=		ag_sg
 LIB_SHARED=	Yes
 LIB_STATIC=	No
+LIB_GUID=	"ea398f34-6e0e-4436-aae6-08f47550f52d"
 
 SRCS=	sg.c sg_math.c \
 	sg_vector.c sg_vector2_fpu.c sg_vector3_fpu.c sg_vector4_fpu.c \
