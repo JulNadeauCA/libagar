@@ -147,15 +147,17 @@ IllegalInsn(int sig)
 void
 AG_GetCPUInfo(AG_CPUInfo *cpu)
 {
+#if defined(__i386__) || defined(i386) || defined(__x86_64__)
 	struct cpuid_regs r, rExt;
 	Uint maxFns, maxExt;
+#endif
 
 	cpu->vendorID[0] = '\0';
 	cpu->ext = 0;
 
 #if defined(__alpha__)
 	cpu->arch = "alpha";
-#elif defined(__x86_64__) || defined(__amd64__)
+#elif defined(__x86_64__) || defined(__amd64__) || defined(_M_X64)
 	cpu->arch = "amd64";
 #elif defined(__arm__) || defined(__arm32__)
 	cpu->arch = "arm";
@@ -163,7 +165,7 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 	cpu->arch = "hppa64";
 #elif defined(__hppa__)
 	cpu->arch = "hppa";
-#elif defined(__i386__) || defined(i386)
+#elif defined(__i386__) || defined(i386) || defined(_M_IX86)
 	cpu->arch = "i386";
 #elif defined(__ia64__) || defined(ia64)
 	cpu->arch = "itanium";

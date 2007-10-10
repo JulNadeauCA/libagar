@@ -26,7 +26,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef __WIN32__
+#ifdef _WIN32
 #include <windows.h>
 #undef SLIST_ENTRY
 #else
@@ -42,7 +42,7 @@
 #include <core/core.h>
 #include <compat/file.h>
 
-#ifdef __WIN32__
+#ifdef _WIN32
 int
 AG_GetFileInfo(const char *path, AG_FileInfo *i)
 {
@@ -82,7 +82,7 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	return (0);
 }
 
-#else /* !__WIN32__ */
+#else /* !_WIN32 */
 
 int
 AG_GetFileInfo(const char *path, AG_FileInfo *i)
@@ -132,12 +132,12 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	return (0);
 }
 
-#endif /* __WIN32__ */
+#endif /* _WIN32 */
 
 int
 AG_GetSystemTempDir(char *buf, size_t len)
 {
-#ifdef __WIN32__
+#ifdef _WIN32
 	return (GetTempPath((DWORD)len, buf) == 0) ? -1 : 0;
 #else
 	strlcpy(buf, "/tmp/", len);
@@ -148,7 +148,7 @@ AG_GetSystemTempDir(char *buf, size_t len)
 int
 AG_FileExists(const char *path)
 {
-#ifdef __WIN32__
+#ifdef _WIN32
 	if (GetFileAttributes(path) == INVALID_FILE_ATTRIBUTES) {
 		if (GetLastError() == ERROR_FILE_NOT_FOUND ||
 		    GetLastError() == ERROR_PATH_NOT_FOUND) {
@@ -173,13 +173,13 @@ AG_FileExists(const char *path)
 	} else {
 		return (1);
 	}
-#endif /* __WIN32__ */
+#endif /* _WIN32 */
 }
 
 int
 AG_FileDelete(const char *path)
 {
-#ifdef __WIN32__
+#ifdef _WIN32
 	return (DeleteFile(path) == 0) ? -1 : 0;
 #else
 	return unlink(path);

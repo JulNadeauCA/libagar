@@ -2,7 +2,7 @@ TOP=	..
 include ${TOP}/Makefile.config
 
 LIB=		ag_compat
-LIB_SHARED=	Yes
+LIB_SHARED=	No
 LIB_STATIC=	Yes
 LIB_GUID=	"70d7394b-aee9-4a95-9a8f-386b3406d0d9"
 

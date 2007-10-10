@@ -55,7 +55,6 @@ void
 AG_IconMgrInit(void *p, const char *name)
 {
 	AG_IconMgr *im = p;
-	int i;
 
 	AG_ObjectInit(im, name, &agIconMgrOps);
 	im->icons = Malloc(sizeof(SDL_Surface *), M_GFX);
@@ -105,7 +104,7 @@ void
 AG_IconMgrDestroy(void *p)
 {
 	AG_IconMgr *im = p;
-	int i;
+	Uint i;
 
 	for (i = 0; i < im->nicons; i++) {
 		SDL_FreeSurface(im->icons[i]);

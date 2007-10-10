@@ -20,6 +20,9 @@
 
 #ifdef HAVE_SNPRINTF
 #include <stdio.h>
+# if defined(_WIN32)
+# define snprintf _snprintf
+# endif
 #else
 # ifdef HAVE_BOUNDED_ATTRIBUTE
 # define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
@@ -36,6 +39,7 @@
 # else
 # define NONNULL_ATTRIBUTE(a)
 # endif
+
 int snprintf(char *, size_t, const char *, ...)
     FORMAT_ATTRIBUTE(printf, 3, 4)
     NONNULL_ATTRIBUTE(3)

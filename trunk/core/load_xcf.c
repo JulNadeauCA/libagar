@@ -35,7 +35,6 @@
 #include <core/load_xcf.h>
 
 #include <string.h>
-#include <stdlib.h>
 
 enum xcf_compression {
 	XCF_COMPRESSION_NONE,
@@ -419,8 +418,8 @@ xcf_convert_level(AG_Netbuf *buf, Uint32 xcfoffs,
 		int y;
 
 		AG_NetbufSeek(buf, xcfoffs + level->tile_offsets[j], SEEK_SET);
-		ox = (tx+64 > level->w) ? (level->w % 64) : 64;
-		oy = (ty+64 > level->h) ? (level->h % 64) : 64;
+		ox = (tx+64 > (int)level->w) ? (level->w % 64) : 64;
+		oy = (ty+64 > (int)level->h) ? (level->h % 64) : 64;
 
 		if (level->tile_offsets[j+1] != 0) {
 			tile = xcf_read_tile(head, buf,
@@ -505,11 +504,11 @@ xcf_convert_level(AG_Netbuf *buf, Uint32 xcfoffs,
 		}
 
 		tx += 64;
-		if (tx >= level->w) {
+		if (tx >= (int)level->w) {
 			tx = 0;
 			ty += 64;
 		}
-		if (ty >= level->h) {
+		if (ty >= (int)level->h) {
 			Free(tile, M_LOADER);
 			break;
 		}
@@ -523,7 +522,6 @@ xcf_convert_layer(AG_Netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 {
 	struct xcf_hierarchy *hier;
 	SDL_Surface *su;
-	Uint32 *p;
 	int aflags = 0;
 	int i;
 
@@ -717,7 +715,6 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs,
 	for (i = offsets; i > 0; i--) {
 		struct xcf_layer *layer;
 		struct xcf_prop prop;
-		Uint32 sname;
 		SDL_Surface *su;
 
 		AG_NetbufSeek(buf, xcf_offs + head->layer_offstable[i-1],
@@ -770,10 +767,5 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs,
 	Free(head->layer_offstable, M_LOADER);
 	Free(head, M_LOADER);
 	return (0);
-fail:
-	Free(head->colormap.data, M_LOADER);
-	Free(head->layer_offstable, M_LOADER);
-	Free(head, M_LOADER);
-	return (-1);
 }
 

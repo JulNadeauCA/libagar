@@ -46,7 +46,6 @@
 #include <gui/colors.h>
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #ifdef NETWORK
 #include <core/rcs.h>
@@ -151,7 +150,6 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 {
 	char path[MAXPATHLEN];
 	extern int agBgPopupMenu;
-	char *s;
 
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
 		AG_SetError("SDL_INIT_VIDEO: %s", SDL_GetError());

@@ -44,7 +44,6 @@
 #include <compat/file.h>
 
 #include <gui/window.h>
-#include <gui/vbox.h>
 #include <gui/hbox.h>
 #include <gui/label.h>
 #include <gui/button.h>
@@ -60,12 +59,10 @@
 #include <gui/file_dlg.h>
 #include <gui/pane.h>
 
-#include <stdlib.h>
 #include <string.h>
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 #include <pwd.h>
 #endif
-#include <unistd.h>
 
 const AG_ObjectOps agConfigOps = {
 	"AG_Config",
@@ -161,7 +158,6 @@ AG_ConfigInit(AG_Config *cfg)
 {
 	char udatadir[MAXPATHLEN];
 	char tmpdir[MAXPATHLEN];
-	struct passwd *pwd;
 
 	AG_ObjectInit(cfg, "config", &agConfigOps);
 	OBJECT(cfg)->flags |= AG_OBJECT_RELOAD_PROPS|AG_OBJECT_RESIDENT;
@@ -182,11 +178,13 @@ AG_ConfigInit(AG_Config *cfg)
 
 	/* Set the save directory path and create it as needed. */
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-	pwd = getpwuid(getuid());
-	strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
-	strlcat(udatadir, AG_PATHSEP, sizeof(udatadir));
-	strlcat(udatadir, ".", sizeof(udatadir));
-	strlcat(udatadir, agProgName, sizeof(udatadir));
+	{
+		struct passwd *pwd = getpwuid(getuid());
+		strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
+		strlcat(udatadir, AG_PATHSEP, sizeof(udatadir));
+		strlcat(udatadir, ".", sizeof(udatadir));
+		strlcat(udatadir, agProgName, sizeof(udatadir));
+	}
 #else
 	udatadir[0] = '.';
 	strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
@@ -202,7 +200,7 @@ AG_ConfigInit(AG_Config *cfg)
 	AG_SetString(cfg, "save-path", "%s", udatadir);
 	AG_SetString(cfg, "tmp-path", "%s", tmpdir);
 
-#if defined(WIN32)
+#if defined(_WIN32)
 	AG_SetString(cfg, "den-path", ".");
 	AG_SetString(cfg, "load-path", "%s:.", udatadir);
 #else
@@ -215,7 +213,7 @@ AG_ConfigInit(AG_Config *cfg)
 	                                  "/Library/Fonts:"
 					  "/System/Library/Fonts",
 					  udatadir, TTFDIR, pwd->pw_dir);
-#elif defined(WIN32)
+#elif defined(_WIN32)
 	AG_SetString(cfg, "font-path", "fonts:.");
 #else
 	AG_SetString(cfg, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
@@ -328,12 +326,13 @@ Set_Color(AG_Event *event)
 	AG_HSVPal *hsv = AG_SELF();
 	AG_Tlist *tl = AG_PTR(1);
 	AG_TlistItem *it;
-	Uint8 r, g, b;
 
 	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
 	    it->p1 == &agColors[BG_COLOR]) {
 #ifdef HAVE_OPENGL
 		if (agView->opengl) {
+			Uint8 r, g, b;
+
 			SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
 			AG_LockGL();
 			glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
@@ -422,13 +421,11 @@ void
 AG_ConfigWindow(AG_Config *cfg, Uint flags)
 {
 	AG_Window *win;
-	AG_VBox *vb;
 	AG_HBox *hb;
 	AG_Textbox *tbox;
 	AG_Checkbox *cbox;
 	AG_Notebook *nb;
 	AG_NotebookTab *tab;
-	AG_MSpinbutton *msb;
 	AG_Spinbutton *sbu;
 
 	win = AG_WindowNewNamed(0, "config-engine-settings");

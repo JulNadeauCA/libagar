@@ -32,7 +32,7 @@
 #include <core/core.h>
 #include <core/config.h>
 #include <core/view.h>
-#include <core/math.h>
+#include <core/util.h>
 
 #include <gui/window.h>
 
@@ -40,11 +40,9 @@
 
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #ifdef HAVE_JPEG
 #undef HAVE_STDLIB_H		/* Work around SDL.h retardation */
@@ -671,7 +669,6 @@ AG_ScaleSurface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 			pDst += (*ds)->format->BytesPerPixel;
 		}
 	}
-out:
 	if (SDL_MUSTLOCK((*ds)))
 		SDL_UnlockSurface(*ds);
 	if (SDL_MUSTLOCK(ss))
@@ -1093,9 +1090,9 @@ AG_RGB2HSV(Uint8 r, Uint8 g, Uint8 b, float *h, float *s, float *v)
 	float vMin, vMax, deltaMax;
 	float deltaR, deltaG, deltaB;
 
-	vR = (float)r/255.0;
-	vG = (float)g/255.0;
-	vB = (float)b/255.0;
+	vR = (float)r/(float)255.0;
+	vG = (float)g/(float)255.0;
+	vB = (float)b/(float)255.0;
 
 	vMin = MIN3(vR, vG, vB);
 	vMax = MAX3(vR, vG, vB);
@@ -1108,20 +1105,20 @@ AG_RGB2HSV(Uint8 r, Uint8 g, Uint8 b, float *h, float *s, float *v)
 		*s = 0.0;
 	} else {
 		*s = deltaMax / vMax;
-		deltaR = ((vMax - vR)/6.0 + deltaMax/2.0) / deltaMax;
-		deltaG = ((vMax - vG)/6.0 + deltaMax/2.0) / deltaMax;
-		deltaB = ((vMax - vB)/6.0 + deltaMax/2.0) / deltaMax;
+		deltaR = ((vMax - vR)/(float)6.0 + deltaMax/(float)2.0) / deltaMax;
+		deltaG = ((vMax - vG)/(float)6.0 + deltaMax/(float)2.0) / deltaMax;
+		deltaB = ((vMax - vB)/(float)6.0 + deltaMax/(float)2.0) / deltaMax;
 
 		if (vR == vMax) {
-			*h = (deltaB - deltaG)*360.0;
+			*h = (deltaB - deltaG)*(float)360.0;
 		} else if (vG == vMax) {
-			*h = 120.0 + (deltaR - deltaB)*360.0;	/* 1/3 */
+			*h = (float)120.0 + (deltaR - deltaB)*(float)360.0;	/* 1/3 */
 		} else if (vB == vMax) {
-			*h = 240.0 + (deltaG - deltaR)*360.0;	/* 2/3 */
+			*h = (float)240.0 + (deltaG - deltaR)*(float)360.0;	/* 2/3 */
 		}
 
-		if (*h < 0.0)	(*h)++;
-		if (*h > 360.0)	(*h)--;
+		if (*h < (float)0.0)	(*h)++;
+		if (*h > (float)360.0)	(*h)--;
 	}
 }
 
@@ -1140,8 +1137,8 @@ AG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 		return;
 	}
 	
-	hv = h/60.0;
-	iv = floor(hv);
+	hv = h/(float)60.0;
+	iv = (int)floor(hv);
 	var[0] = v * (1 - s);
 	var[1] = v * (1 - s*(hv - iv));
 	var[2] = v * (1 - s*(1 - (hv - iv)));
@@ -1155,9 +1152,9 @@ AG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 	default:	vR = v;		vG = var[0];	vB = var[1];	break;
 	}
 	
-	*r = vR*255;
-	*g = vG*255;
-	*b = vB*255;
+	*r = (Uint8)vR*255;
+	*g = (Uint8)vG*255;
+	*b = (Uint8)vB*255;
 }
 
 void
