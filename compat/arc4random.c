@@ -33,11 +33,7 @@
 #include "arc4random.h"
 
 #include <fcntl.h>
-#include <unistd.h>
-#include <sys/time.h>
-#if 0
-#include <sys/sysctl.h>
-#endif
+#include <stdlib.h>
 
 struct arc4_stream {
 	Uint8 i;
@@ -47,7 +43,9 @@ struct arc4_stream {
 
 static int rs_initialized;
 static struct arc4_stream rs;
+#ifndef __WIN32__
 static pid_t arc4_stir_pid;
+#endif
 
 static __inline__ Uint8 arc4_getbyte(struct arc4_stream *);
 
@@ -57,7 +55,7 @@ arc4_init(struct arc4_stream *as)
 	int     n;
 
 	for (n = 0; n < 256; n++)
-		as->s[n] = n;
+		as->s[n] = (Uint8)n;
 	as->i = 0;
 	as->j = 0;
 }
@@ -84,17 +82,26 @@ arc4_stir(struct arc4_stream *as)
 {
 	int     i;
 	struct {
-		unsigned rnd[(128 - sizeof(struct timeval)) / sizeof(unsigned)];
-	}       rdat;
-	int	fd;
+		unsigned rnd[128 / sizeof(unsigned)];
+	} rdat;
 
-	fd = open("/dev/random", O_RDONLY);
-
-	for (i = 0; i < sizeof(rdat.rnd) / sizeof(unsigned); i ++) {
-		read(fd, &rdat.rnd[i], sizeof(unsigned));
+#ifdef __WIN32__
+	for (i = 0; i < sizeof(rdat.rnd) / sizeof(unsigned); i++)
+		rdat.rnd[i] = (unsigned)rand();
+#else
+	{
+		FILE *f;
+		f = fopen("/dev/random", "r");
+		for (i = 0; i < sizeof(rdat.rnd) / sizeof(unsigned); i++) {
+			fread(&rdat.rnd[i], sizeof(unsigned), 1, f);
+		}
+		fclose(f);
 	}
+#endif
 
+#ifndef __WIN32__
 	arc4_stir_pid = getpid();
+#endif
 	arc4_addrandom(as, (void *) &rdat, sizeof(rdat));
 
 	/*
@@ -103,8 +110,6 @@ arc4_stir(struct arc4_stream *as)
 	 */
 	for (i = 0; i < 256; i++)
 		(void) arc4_getbyte(as);
-
-	close(fd);
 }
 
 static __inline__ Uint8
@@ -153,8 +158,13 @@ arc4random_addrandom(unsigned char *dat, int datlen)
 Uint32
 arc4random(void)
 {
+#ifdef __WIN32__
+	if (!rs_initialized)
+		arc4random_stir();
+#else
 	if (!rs_initialized || arc4_stir_pid != getpid())
 		arc4random_stir();
+#endif
 	return arc4_getword(&rs);
 }
 
