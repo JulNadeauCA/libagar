@@ -59,7 +59,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
-#include <unistd.h>
 
 const AG_ObjectOps agObjectOps = {
 	"AG_Object",
@@ -705,7 +704,6 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
 	AG_Object *ob = p, *tob;
 	extern struct ag_objectq agTimeoutObjQ;
 	AG_Event *ev;
-	AG_Timeout *to;
 
 	AG_LockTiming();
 	AG_MutexLock(&ob->lock);
@@ -1187,9 +1185,6 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	return (0);
 fail:
 	AG_NetbufClose(buf);
-fail_unlock:
-	AG_MutexUnlock(&ob->lock);
-	AG_UnlockLinkage();
 	return (-1);
 }
 
@@ -1702,7 +1697,6 @@ AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
 	char path[MAXPATHLEN];
 	Uchar buf[BUFSIZ];
 	FILE *f;
-	off_t offs;
 	size_t totlen = 0;
 	size_t rv;
 	
@@ -1812,7 +1806,6 @@ AG_ObjectChanged(void *p)
 	AG_Object *ob = p;
 	FILE *fLast, *fCur;
 	size_t rvLast, rvCur;
-	int rv;
 
 	if (!OBJECT_PERSISTENT(ob) || !OBJECT_RESIDENT(ob))
 		return (0);
@@ -1951,7 +1944,7 @@ PollEvents(AG_Event *event)
 	AG_TlistClear(tl);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		char args[AG_TLIST_LABEL_MAX], arg[16];
-		Uint i;
+		int i;
 
 		args[0] = '(';
 		args[1] = '\0';
@@ -2018,7 +2011,6 @@ PollEvents(AG_Event *event)
 static void
 RenameObject(AG_Event *event)
 {
-	AG_WidgetBinding *stringb;
 	AG_Textbox *tb = AG_SELF();
 	AG_Object *ob = AG_PTR(1);
 
@@ -2107,7 +2099,6 @@ AG_ObjectEdit(void *p)
 	AG_Tlist *tl;
 	AG_Box *box;
 	AG_Button *btn;
-	AG_Label *lbl;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Object %s"), ob->name);
@@ -2116,7 +2107,6 @@ AG_ObjectEdit(void *p)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Infos"), AG_BOX_VERT);
 	{
-		char path[AG_OBJECT_PATH_MAX];
 		AG_Textbox *tbMD5, *tbSHA1, *tbRMD160;
 
 		tbox = AG_TextboxNew(ntab, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,

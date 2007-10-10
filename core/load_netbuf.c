@@ -30,7 +30,6 @@
 #include <core/core.h>
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
@@ -76,7 +75,7 @@ AG_NetbufRead(void *ptr, size_t size, size_t nmemb, AG_Netbuf *buf)
 __inline__ long
 AG_NetbufReadE(void *ptr, size_t size, size_t nmemb, AG_Netbuf *buf)
 {
-	return (fread(ptr, size, nmemb, buf->file));
+	return (long)fread(ptr, size, nmemb, buf->file);
 }
 
 void

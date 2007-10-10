@@ -69,7 +69,7 @@ AG_CopyProp(const AG_Prop *prop)
 
 	switch (prop->type) {
 	case AG_PROP_STRING:
-		nprop->data.s = strdup(prop->data.s);
+		nprop->data.s = Strdup(prop->data.s);
 		if (nprop->data.s == NULL) {
 			Free(nprop, M_PROP);
 			AG_SetError(_("Out of memory for string"));
@@ -86,9 +86,9 @@ AG_CopyProp(const AG_Prop *prop)
 #define PROP_SET(fn,v,type,argtype) do { \
 	if (prop->writeFn.fn != NULL) { \
 		prop->data.v = (type)prop->writeFn.fn(ob, prop, \
-		    va_arg(ap, argtype)); \
+		    (type)va_arg(ap, argtype)); \
 	} else { \
-		prop->data.v = va_arg(ap, argtype); \
+		prop->data.v = (type)va_arg(ap, argtype); \
 	} \
 } while (0)
 
@@ -338,7 +338,6 @@ AG_GetProp(void *obp, const char *key, int t, void *p)
 			AG_SetError("bad prop %d", prop->type);
 			goto fail;
 		}
-out:
 		AG_MutexUnlock(&ob->lock);
 		return (prop);
 	}
@@ -354,7 +353,6 @@ AG_FindProp(const char *spec, int type, void *rval)
 {
 	char sb[AG_OBJECT_PATH_MAX+1+AG_PROP_KEY_MAX];
 	char *s = &sb[0], *objname, *propname;
-	AG_Prop *prop;
 	void *obj;
 
 	strlcpy(sb, spec, sizeof(sb));

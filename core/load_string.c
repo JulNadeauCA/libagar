@@ -30,7 +30,6 @@
 #include <core/core.h>
 
 #include <string.h>
-#include <stdlib.h>
 
 /* Allocate and read a length-encoded string. */
 char *

@@ -134,7 +134,6 @@ AG_ReadSurface(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
 	Uint8 depth, grayscale;
 	Uint32 Rmask, Gmask, Bmask, Amask;
 	Uint8 *dst;
-	int i;
 	int x, y;
 
 	if (AG_ReadVersion(buf, "AG_Surface", &agSurfaceVer, NULL) != 0)
@@ -171,7 +170,7 @@ AG_ReadSurface(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
 #endif
 	if (depth == 8) {
 		SDL_Color *colors;
-		Uint32 ncolors;
+		Uint32 i, ncolors;
 
 		ncolors = AG_ReadUint32(buf);
 		colors = Malloc(ncolors*sizeof(SDL_Color), 0);

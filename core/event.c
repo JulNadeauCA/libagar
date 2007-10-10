@@ -265,9 +265,6 @@ AG_MouseGetState(int *x, int *y)
 void
 AG_ProcessEvent(SDL_Event *ev)
 {
-	AG_Window *win;
-	int rv;
-
 	AG_MutexLock(&agView->lock);
 
 	switch (ev->type) {
@@ -370,7 +367,6 @@ AG_ProcessEvent(SDL_Event *ev)
 		/* NOTREACHED */
 		break;
 	}
-out:
 	AG_ViewDetachQueued();
 	AG_MutexUnlock(&agView->lock);
 }
@@ -384,7 +380,6 @@ SchedEventTimeout(void *p, Uint32 ival, void *arg)
 {
 	AG_Object *ob = p;
 	AG_Event *ev = arg;
-	va_list ap;
 	
 	debug(DEBUG_SCHED, "%s: timeout `%s' (ival=%u)\n", ob->name,
 	    ev->name, (Uint)ival);
@@ -631,7 +626,6 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 #endif /* THREADS */
 		{
 			AG_Event tmpev;
-			va_list ap;
 
 			memcpy(&tmpev, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(&tmpev, fmt);
@@ -787,7 +781,6 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 	AG_Object *rcvr = pRcvr;
 	AG_Object *chld;
 	AG_Event *ev;
-	va_list ap;
 
 	debug(DEBUG_EVENTS, "%s event to %s\n", event->name, rcvr->name);
 	AG_MutexLock(&rcvr->lock);

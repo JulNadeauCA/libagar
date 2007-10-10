@@ -43,7 +43,7 @@ struct arc4_stream {
 
 static int rs_initialized;
 static struct arc4_stream rs;
-#ifndef __WIN32__
+#ifndef _WIN32
 static pid_t arc4_stir_pid;
 #endif
 
@@ -85,7 +85,7 @@ arc4_stir(struct arc4_stream *as)
 		unsigned rnd[128 / sizeof(unsigned)];
 	} rdat;
 
-#ifdef __WIN32__
+#ifdef _WIN32
 	for (i = 0; i < sizeof(rdat.rnd) / sizeof(unsigned); i++)
 		rdat.rnd[i] = (unsigned)rand();
 #else
@@ -99,7 +99,7 @@ arc4_stir(struct arc4_stream *as)
 	}
 #endif
 
-#ifndef __WIN32__
+#ifndef _WIN32
 	arc4_stir_pid = getpid();
 #endif
 	arc4_addrandom(as, (void *) &rdat, sizeof(rdat));
@@ -158,7 +158,7 @@ arc4random_addrandom(unsigned char *dat, int datlen)
 Uint32
 arc4random(void)
 {
-#ifdef __WIN32__
+#ifdef _WIN32
 	if (!rs_initialized)
 		arc4random_stir();
 #else

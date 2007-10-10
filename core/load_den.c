@@ -30,11 +30,9 @@
 
 #include <core/core.h>
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
 
 #include <core/load_den.h>
 

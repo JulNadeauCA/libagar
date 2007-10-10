@@ -116,7 +116,7 @@ AG_TimeoutIsScheduled(void *p, AG_Timeout *to)
 void
 AG_DelTimeout(void *p, AG_Timeout *to)
 {
-	AG_Object *ob = p, *tob;
+	AG_Object *ob = p;
 	AG_Timeout *oto;
 	
 	if (ob == NULL)
@@ -145,7 +145,7 @@ AG_DelTimeout(void *p, AG_Timeout *to)
 int
 AG_TimeoutWait(void *p, AG_Timeout *to, Uint32 timeout)
 {
-	AG_Object *ob = p, *tob;
+	AG_Object *ob = p;
 	AG_Timeout *oto;
 	Uint32 elapsed = 0;
 	

@@ -92,5 +92,5 @@ AG_WriteObjectVersion(AG_Netbuf *buf, void *p)
 {
 	const AG_ObjectOps *ops = OBJECT(p)->ops;
 	
-	return (AG_WriteVersion(buf, ops->type, &ops->ver));
+	AG_WriteVersion(buf, ops->type, &ops->ver);
 }
