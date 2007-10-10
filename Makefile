@@ -1,6 +1,10 @@
 TOP=	.
 include ${TOP}/Makefile.config
 
+PROJECT=	"Agar"
+PROJECT_GUID=	"93733df2-c743-489e-bc9f-f22aee00d787"
+PROJECT_ADD=	config
+
 SUBDIR=	 agar-config \
 	 compat \
 	 core \
@@ -140,3 +144,4 @@ deinstall-includes:
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk
 include ${TOP}/mk/build.man.mk
+include ${TOP}/mk/build.proj.mk
