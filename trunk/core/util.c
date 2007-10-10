@@ -1,7 +1,11 @@
 /*	Public domain	*/
 
 #include <core/core.h>
-#include "math.h"
+
+#include <config/have_math.h>
+#ifdef HAVE_MATH
+#include <math.h>
+#endif
 
 int
 AG_PowOf2i(int i)
