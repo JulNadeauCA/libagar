@@ -26,7 +26,7 @@ __inline__ void		AG_NetbufRead(void *, size_t, size_t, AG_Netbuf *);
 __inline__ void		AG_NetbufFlush(AG_Netbuf *);
 __inline__ void		AG_NetbufWrite(const void *, size_t, size_t,
 		                       AG_Netbuf *);
-__inline__ ssize_t	AG_NetbufReadE(void *, size_t, size_t, AG_Netbuf *);
+__inline__ long		AG_NetbufReadE(void *, size_t, size_t, AG_Netbuf *);
 __inline__ off_t	AG_NetbufTell(AG_Netbuf *);
 __inline__ void		AG_NetbufSeek(AG_Netbuf *, off_t, int);
 __inline__ void		AG_NetbufFlush(AG_Netbuf *);

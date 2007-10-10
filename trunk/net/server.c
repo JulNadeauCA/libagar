@@ -356,7 +356,6 @@ ServerLoop(NS_Server *ns)
 	char *buf, *lbuf = NULL, *value, *p;
 	NS_Command ncmd;
 	size_t len;
-	ssize_t rv;
 	int seq = 0;
 	int i;
 

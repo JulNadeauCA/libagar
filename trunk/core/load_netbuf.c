@@ -73,7 +73,7 @@ AG_NetbufRead(void *ptr, size_t size, size_t nmemb, AG_Netbuf *buf)
 	}
 }
 
-__inline__ ssize_t
+__inline__ long
 AG_NetbufReadE(void *ptr, size_t size, size_t nmemb, AG_Netbuf *buf)
 {
 	return (fread(ptr, size, nmemb, buf->file));

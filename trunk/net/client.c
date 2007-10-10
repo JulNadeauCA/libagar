@@ -379,7 +379,7 @@ NC_Reconnect(NC_Session *client)
 	return (0);
 }
 
-ssize_t
+long
 NC_Read(NC_Session *client, size_t nbytes)
 {
 	ssize_t rv;
@@ -411,7 +411,7 @@ NC_Read(NC_Session *client, size_t nbytes)
 		for (i = client->read.len; i < client->read.len+rv; i++) {
 			if (client->read.buf[i] == '\n') {
 				client->read.buf[client->read.len+rv-1] = '\0';
-				return ((ssize_t)client->read.len+rv);
+				return (long)(client->read.len+rv);
 			}
 		}
 		client->read.len += (size_t)rv;
@@ -421,7 +421,7 @@ NC_Read(NC_Session *client, size_t nbytes)
 	return (-1);
 }
 
-ssize_t
+long
 NC_ReadBinary(NC_Session *client, size_t nbytes)
 {
 	ssize_t rv;
@@ -451,7 +451,7 @@ NC_ReadBinary(NC_Session *client, size_t nbytes)
 		}
 		client->read.len += (size_t)rv;
 		if (client->read.len >= nbytes)
-			return (client->read.len);
+			return ((long)client->read.len);
 	}
 
 	AG_SetError("Illegal server response");

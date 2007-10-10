@@ -100,8 +100,7 @@ AG_WriteString(AG_Netbuf *buf, const char *s)
 size_t
 AG_CopyString(char *dst, AG_Netbuf *buf, size_t dst_size)
 {
-	size_t rv, len;
-	ssize_t rrv;
+	size_t rv, len, rrv;
 
 	if ((len = (size_t)AG_ReadUint32(buf)) > (dst_size-1)) {
 #ifdef DEBUG
@@ -139,8 +138,7 @@ AG_CopyString(char *dst, AG_Netbuf *buf, size_t dst_size)
 size_t
 AG_CopyNulString(char *dst, AG_Netbuf *buf, size_t dst_size)
 {
-	size_t rv, len;
-	ssize_t rrv;
+	size_t rv, len, rrv;
 
 	if ((len = (size_t)AG_ReadUint32(buf)) > dst_size) {
 #ifdef DEBUG
