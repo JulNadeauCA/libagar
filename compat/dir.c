@@ -57,7 +57,7 @@
 
 #include <sys/types.h>
 
-#ifdef WIN32
+#ifdef __WIN32__
 #include <windows.h>
 #undef SLIST_ENTRY
 #else
@@ -76,7 +76,7 @@
 int
 AG_MkDir(const char *dir)
 {
-#ifdef WIN32
+#ifdef __WIN32__
 	if (CreateDirectory(dir, NULL)) {
 		return (0);
 	} else {
@@ -97,7 +97,7 @@ AG_MkDir(const char *dir)
 int
 AG_RmDir(const char *dir)
 {
-#ifdef WIN32
+#ifdef __WIN32__
 	if (RemoveDirectory(dir)) {
 		return (0);
 	} else {
@@ -118,7 +118,7 @@ AG_RmDir(const char *dir)
 int
 AG_ChDir(const char *dir)
 {
-#ifdef WIN32
+#ifdef __WIN32__
 	if (SetCurrentDirectory(dir)) {
 		return (0);
 	} else {
@@ -145,7 +145,7 @@ AG_OpenDir(const char *path)
 	dir->ents = NULL;
 	dir->nents = 0;
 
-#ifdef WIN32
+#ifdef __WIN32__
 	{
 		HANDLE h;
 		WIN32_FIND_DATA fdata;
@@ -169,7 +169,7 @@ AG_OpenDir(const char *path)
 		}
 		return (dir);
 	}
-#else /* !WIN32 */
+#else /* !__WIN32__ */
 	{
 		DIR *dp;
 		struct dirent *dent;
@@ -185,7 +185,7 @@ AG_OpenDir(const char *path)
 		}
 		closedir(dp);
 	}
-#endif /* WIN32 */
+#endif /* __WIN32__ */
 
 	return (dir);
 fail:
