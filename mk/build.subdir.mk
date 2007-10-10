@@ -22,6 +22,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#
+# Logic required for recursing into subdirectories.
+#
+
 MAKE?=	    make
 
 all-subdir:
@@ -263,8 +267,42 @@ regress-subdir-ifexists:
 		done; \
 	fi)
 
-.PHONY:	all-subdir clean-subdir cleandir-subdir
-.PHONY: install-subdir deinstall-subdir depend-subdir regress-subdir
+proj-subdir:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    echo "==> ${REL}$$F"; \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/ proj); \
+		    if [ $$? != 0 ]; then \
+		    	exit 1; \
+		    fi; \
+		done; \
+	fi)
+
+proj-subdir-ifexists:
+	@(if [ "${SUBDIR}" = "" ]; then \
+	    SUBDIR="NONE"; \
+	else \
+	    SUBDIR="${SUBDIR}"; \
+	fi; \
+	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+		for F in $$SUBDIR; do \
+		    if [ -e "$$F" ]; then \
+		        echo "==> ${REL}$$F"; \
+		        (cd $$F && ${MAKE} REL=${REL}$$F/ proj); \
+		        if [ $$? != 0 ]; then \
+		    	    exit 1; \
+		        fi; \
+		    fi; \
+		done; \
+	fi)
+
+.PHONY:	all-subdir clean-subdir cleandir-subdir install-subdir
+.PHONY: deinstall-subdir depend-subdir regress-subdir proj-subdir
 .PHONY:	all-subdir-ifexists clean-subdir-ifexists cleandir-subdir-ifexists
 .PHONY: install-subdir-ifexists deinstall-subdir-ifexists
-.PHONY: depend-subdir-ifexists regress-subdir-ifexists
+.PHONY: depend-subdir-ifexists regress-subdir-ifexists proj-subdir-ifexists

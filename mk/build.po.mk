@@ -22,6 +22,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#
+# Generate gettext object files for internationalization.
+#
+
 XGETTEXT?=	xgettext
 XGETTEXT_FLAGS?=--no-location
 MSGMERGE?=	msgmerge
@@ -149,3 +153,4 @@ count:
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk
+include ${TOP}/mk/build.proj.mk

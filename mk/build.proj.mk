@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,42 +23,42 @@
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Generic defines common to all BSDBuild libraries.
+# For Makefiles using <build.prog.mk> and <build.lib.mk>, generate project
+# files for various IDEs using Premake (http://premake.sourceforge.net/).
 #
 
-PREFIX?=	/usr/local
-LOCALSTATEDIR?=	${PREFIX}/share
-SYSCONFDIR?=	${PREFIX}/etc
-SHAREDIR?=	${PREFIX}/share
-BINDIR?=	${PREFIX}/bin
-LIBDIR?=	${PREFIX}/lib
-INCLDIR?=	${PREFIX}/include
-MANDIR?=	${PREFIX}/man
-PSDIR?=		${PREFIX}/man
+PREMAKE?=	premake
+MKPROJFILES?=	mkprojfiles
+PREMAKEOUT?=	premake.lua
+PREMAKEFLAGS?=
 
-SUDO?=
-SH?=		sh
-FIND?=		find
-AWK?=		awk
+PROJECT?=
+PROJDIR?=	${TOP}/ProjectFiles
+# PROJTARGETS=	monodev vs2002 vs2003 sharpdev
+PROJTARGETS=	cb-gcc \
+		vs6 \
+		vs2002 \
+		vs2003 \
+		vs2005
 
-INSTALL_PROG=	install -c -m 755
-INSTALL_LIB=	install -c -m 644
-INSTALL_DATA=	install -c -m 644
-INSTALL_INCL=	install -c -m 644
+proj: proj-subdir
+	@if [ "${PROJECT}" = "" ]; then \
+	    cat Makefile | ${MKPROJFILES} > ${PREMAKEOUT};\
+	else \
+	    if [ ! -d "${PROJDIR}" ]; then \
+	    	echo "mkdir -p ${PROJDIR}"; \
+	    	mkdir -p ${PROJDIR}; \
+	    fi; \
+	    for TGT in ${PROJTARGETS}; do \
+	        perl ${TOP}/mk/cmpfiles.pl; \
+	        cat Makefile | ${MKPROJFILES} > ${PREMAKEOUT};\
+	        echo "${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} --target $$TGT"; \
+	        ${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} --target $$TGT;\
+	        perl ${TOP}/mk/cmpfiles.pl added > .projfiles.out; \
+	        rm .cmpfiles.out; \
+		cat .projfiles.out | zip ${PROJDIR}/$$TGT.zip -@; \
+		rm `cat .projfiles.out`; \
+	    done; \
+	fi
 
-INSTALL_PROG_DIR=	mkdir -p
-INSTALL_LIB_DIR=	mkdir -p
-INSTALL_DATA_DIR=	mkdir -p
-INSTALL_INCL_DIR=	mkdir -p
-INSTALL_MAN_DIR=	mkdir -p
-INSTALL_PS_DIR=		mkdir -p
-
-DEINSTALL_PROG=		rm -f
-DEINSTALL_LIB=		rm -f
-DEINSTALL_DATA=		rm -f
-DEINSTALL_INCL=		rm -f
-
-DEINSTALL_PROG_DIR=	rmdir -p
-DEINSTALL_LIB_DIR=	rmdir -p
-DEINSTALL_DATA_DIR=	rmdir -p
-DEINSTALL_INCL_DIR=	rmdir -p
+.PHONY: proj
