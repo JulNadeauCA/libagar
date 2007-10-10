@@ -6,6 +6,7 @@ SUBDIR=	fonts
 LIB=		ag_gui
 LIB_SHARED=	Yes
 LIB_STATIC=	No
+LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
 
 #SHARESRC=	gui-pixmaps.den
 

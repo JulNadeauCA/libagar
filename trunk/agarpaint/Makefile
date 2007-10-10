@@ -1,7 +1,11 @@
 TOP=	..
 include Makefile.config
 
-PROG=	agarpaint
+PROJECT=	"AgarPaint"
+PROG=		agarpaint
+PROG_TYPE=	"GUI"
+PROG_GUID=	"68DBFDA9-4965-4cca-8348-38409D8587A6"
+
 SRCS=	agarpaint.c
 SHARE=	agarpaint.bmp
 

@@ -4,6 +4,8 @@ include ${TOP}/Makefile.config
 LIB=		ag_core
 LIB_SHARED=	Yes
 LIB_STATIC=	No
+LIB_GUID=	"9d6bb497-1d2a-4ac0-9f7b-7be68b9077e8"
+
 SHARESRC=	core-icons.den
 
 SRCS=	config.c core.c error.c event.c math.c iconmgr.c \
