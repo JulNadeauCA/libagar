@@ -5,6 +5,7 @@ LIB=		ag_core
 LIB_SHARED=	Yes
 LIB_STATIC=	No
 LIB_GUID=	"9d6bb497-1d2a-4ac0-9f7b-7be68b9077e8"
+LIB_LINKS=	ag_compat
 
 SHARESRC=	core-icons.den
 
@@ -16,7 +17,7 @@ SRCS=	config.c core.c error.c event.c util.c iconmgr.c \
 
 MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 \
 	AG_Timeout.3 AG_View.3 AG_Config.3 AG_Version.3
-MAN5=	AG_XCF.5 AG_DEN.5
+MAN5=	AG_DEN.5
 
 CFLAGS+=${SDL_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS} \
 	${PTHREADS_XOPEN_CFLAGS}
