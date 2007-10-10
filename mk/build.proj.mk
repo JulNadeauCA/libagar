@@ -28,22 +28,26 @@
 #
 
 PREMAKE?=	premake
+ZIP?=		zip
+ZIPFLAGS?=	-r
 MKPROJFILES?=	mkprojfiles
 PREMAKEOUT?=	premake.lua
 PREMAKEFLAGS?=
 
 PROJECT?=
 PROJDIR?=	${TOP}/ProjectFiles
+PROJFILESEXTRA?=
 # PROJTARGETS=	monodev vs2002 vs2003 sharpdev
 PROJTARGETS=	cb-gcc \
 		vs6 \
 		vs2002 \
 		vs2003 \
 		vs2005
+PROJINCLUDES=	${TOP}/configure.lua
 
 proj: proj-subdir
 	@if [ "${PROJECT}" = "" ]; then \
-	    cat Makefile | ${MKPROJFILES} > ${PREMAKEOUT};\
+	    cat Makefile | ${MKPROJFILES} ${PROJINCLUDES} > ${PREMAKEOUT};\
 	else \
 	    if [ ! -d "${PROJDIR}" ]; then \
 	    	echo "mkdir -p ${PROJDIR}"; \
@@ -51,12 +55,20 @@ proj: proj-subdir
 	    fi; \
 	    for TGT in ${PROJTARGETS}; do \
 	        perl ${TOP}/mk/cmpfiles.pl; \
-	        cat Makefile | ${MKPROJFILES} > ${PREMAKEOUT};\
+	        cat Makefile | ${MKPROJFILES} ${PROJINCLUDES} > ${PREMAKEOUT};\
 	        echo "${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} --target $$TGT"; \
 	        ${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} --target $$TGT;\
+		rm -f premake.lua; \
 	        perl ${TOP}/mk/cmpfiles.pl added > .projfiles.out; \
+		cp -f .projfiles.out .projfiles2.out; \
 	        rm .cmpfiles.out; \
-		cat .projfiles.out | zip ${PROJDIR}/$$TGT.zip -@; \
+		if [ "${PROJFILESEXTRA}" != "" ]; then \
+	            for EXTRA in ${PROJFILESEXTRA}; do \
+		        echo "$$EXTRA" >> .projfiles2.out; \
+		    done; \
+		fi; \
+		cat .projfiles2.out | ${ZIP} ${ZIPFLAGS} \
+		    ${PROJDIR}/$$TGT.zip -@; \
 		rm `cat .projfiles.out`; \
 	    done; \
 	fi
