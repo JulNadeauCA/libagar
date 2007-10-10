@@ -50,7 +50,7 @@ asprintf(char **ret, const char *fmt, ...)
 	va_start(ap, fmt);
 	size = vsprintf(buf, fmt, ap);
 	va_end(ap);
-	if (size <= buflen) {
+	if ((size_t)size <= buflen) {
 		*ret = buf;
 		return (size);
 	}

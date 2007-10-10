@@ -37,14 +37,14 @@
 #include <compat/rmd160.h>
 
 #define PUT_64BIT_LE(cp, value) do {                                    \
-	(cp)[7] = (value) >> 56;                                        \
-	(cp)[6] = (value) >> 48;                                        \
-	(cp)[5] = (value) >> 40;                                        \
-	(cp)[4] = (value) >> 32;                                        \
-	(cp)[3] = (value) >> 24;                                        \
-	(cp)[2] = (value) >> 16;                                        \
-	(cp)[1] = (value) >> 8;                                         \
-	(cp)[0] = (value); } while (0)
+	(cp)[7] = (Uint8)((value) >> 56);                                        \
+	(cp)[6] = (Uint8)((value) >> 48);                                        \
+	(cp)[5] = (Uint8)((value) >> 40);                                        \
+	(cp)[4] = (Uint8)((value) >> 32);                                        \
+	(cp)[3] = (Uint8)((value) >> 24);                                        \
+	(cp)[2] = (Uint8)((value) >> 16);                                        \
+	(cp)[1] = (Uint8)((value) >> 8);                                         \
+	(cp)[0] = (Uint8)(value); } while (0)
 
 #define PUT_32BIT_LE(cp, value) do {                                    \
 	(cp)[3] = (value) >> 24;                                        \
@@ -109,7 +109,7 @@ RMD160Update(RMD160_CTX *ctx, const Uint8 *input, size_t len)
 {
 	size_t have, off, need;
 
-	have = (ctx->count / 8) % RMD160_BLOCK_LENGTH;
+	have = (size_t)(ctx->count / 8) % RMD160_BLOCK_LENGTH;
 	need = RMD160_BLOCK_LENGTH - have;
 	ctx->count += 8 * len;
 	off = 0;
@@ -143,7 +143,7 @@ RMD160Pad(RMD160_CTX *ctx)
 	 * pad to RMD160_BLOCK_LENGTH byte blocks, at least one byte from
 	 * PADDING plus 8 bytes for the size
 	 */
-	padlen = RMD160_BLOCK_LENGTH - ((ctx->count / 8) % RMD160_BLOCK_LENGTH);
+	padlen = (size_t)(RMD160_BLOCK_LENGTH - ((ctx->count / 8) % RMD160_BLOCK_LENGTH));
 	if (padlen < 1 + 8)
 		padlen += RMD160_BLOCK_LENGTH;
 	RMD160Update(ctx, PADDING, padlen - 8);		/* padlen - 8 <= 64 */

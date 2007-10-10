@@ -36,14 +36,14 @@
 #include <compat/md5.h>
 
 #define PUT_64BIT_LE(cp, value) do {					\
-	(cp)[7] = (value) >> 56;					\
-	(cp)[6] = (value) >> 48;					\
-	(cp)[5] = (value) >> 40;					\
-	(cp)[4] = (value) >> 32;					\
-	(cp)[3] = (value) >> 24;					\
-	(cp)[2] = (value) >> 16;					\
-	(cp)[1] = (value) >> 8;						\
-	(cp)[0] = (value); } while (0)
+	(cp)[7] = (Uint8)((value) >> 56);					\
+	(cp)[6] = (Uint8)((value) >> 48);					\
+	(cp)[5] = (Uint8)((value) >> 40);					\
+	(cp)[4] = (Uint8)((value) >> 32);					\
+	(cp)[3] = (Uint8)((value) >> 24);					\
+	(cp)[2] = (Uint8)((value) >> 16);					\
+	(cp)[1] = (Uint8)((value) >> 8);						\
+	(cp)[0] = (Uint8)(value); } while (0)
 
 #define PUT_32BIT_LE(cp, value) do {					\
 	(cp)[3] = (value) >> 24;					\
@@ -123,8 +123,8 @@ MD5Pad(MD5_CTX *ctx)
 	PUT_64BIT_LE(count, ctx->count);
 
 	/* Pad out to 56 mod 64. */
-	padlen = MD5_BLOCK_LENGTH -
-	    ((ctx->count >> 3) & (MD5_BLOCK_LENGTH - 1));
+	padlen = (size_t)(MD5_BLOCK_LENGTH -
+	    ((ctx->count >> 3) & (MD5_BLOCK_LENGTH - 1)));
 	if (padlen < 1 + 8)
 		padlen += MD5_BLOCK_LENGTH;
 	MD5Update(ctx, PADDING, padlen - 8);		/* padlen - 8 <= 64 */

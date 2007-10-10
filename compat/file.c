@@ -46,7 +46,7 @@
 int
 AG_GetFileInfo(const char *path, AG_FileInfo *i)
 {
-	DWORD attrs, type;
+	DWORD attrs;
 	FILE *f;
 	
 	if ((attrs = GetFileAttributes(path)) == INVALID_FILE_ATTRIBUTES) {
@@ -138,7 +138,7 @@ int
 AG_GetSystemTempDir(char *buf, size_t len)
 {
 #ifdef __WIN32__
-	return (GetTempPath(len, buf) == 0) ? -1 : 0;
+	return (GetTempPath((DWORD)len, buf) == 0) ? -1 : 0;
 #else
 	strlcpy(buf, "/tmp/", len);
 	return (0);

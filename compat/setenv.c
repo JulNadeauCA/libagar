@@ -59,7 +59,7 @@ findenv(const char *name, int *offset)
 		return (NULL);
 	for (np = name; *np && *np != '='; ++np)
 		;
-	len = np - name;
+	len = (int)(np - name);
 	for (p = environ; (cp = *p) != NULL; ++p) {
 		for (np = name, i = len; i && *cp; i--) {
 			if (*cp++ != *np++) {
@@ -67,7 +67,7 @@ findenv(const char *name, int *offset)
 			}
 		}
 		if (i == 0 && *cp++ == '=') {
-			*offset = p - environ;
+			*offset = (int)(p - environ);
 			return (cp);
 		}
 	}
@@ -88,11 +88,11 @@ setenv(const char *name, const char *value, int rewrite)
 
 	if (*value == '=')			/* no `=' in value */
 		++value;
-	l_value = strlen(value);
-	if ((C = findenv(name, &offset))) {	/* find if already exists */
+	l_value = (int)strlen(value);
+	if ((C = findenv(name, &offset)) != NULL) {	/* find if already exists */
 		if (!rewrite)
 			return (0);
-		if (strlen(C) >= l_value) {	/* old larger; copy over */
+		if ((int)strlen(C) >= l_value) {	/* old larger; copy over */
 			while ((*C++ = *value++))
 				;
 			return (0);
@@ -140,7 +140,7 @@ unsetenv(const char *name)
 
 	while (findenv(name, &offset)) { 	/* if set multiple times */
 		for (P = &environ[offset];; ++P) {
-			if (!(*P = *(P + 1))) {
+			if ((*P = *(P + 1)) == 0) {
 				break;
 			}
 		}

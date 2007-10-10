@@ -150,8 +150,11 @@ AG_OpenDir(const char *path)
 		HANDLE h;
 		WIN32_FIND_DATA fdata;
 		DWORD rv;
+		char dpath[MAXPATHLEN];
 
-		if ((h = FindFirstFile("*", &fdata))==INVALID_HANDLE_VALUE) {
+		strlcpy(dpath, path, sizeof(dpath));
+		strlcat(dpath, "\\*", sizeof(dpath));
+		if ((h = FindFirstFile(dpath, &fdata))==INVALID_HANDLE_VALUE) {
 			AG_SetError("Invalid file handle (%lu)",
 			    (Ulong)GetLastError());
 			goto fail;
@@ -167,7 +170,6 @@ AG_OpenDir(const char *path)
 			AG_SetError("FindNextFileError (%lu)", rv);
 			goto fail;
 		}
-		return (dir);
 	}
 #else /* !__WIN32__ */
 	{
