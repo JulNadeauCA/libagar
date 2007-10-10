@@ -23,20 +23,20 @@ REGISTER("--enable-network",	"Build network client library [default: check]")
 REGISTER("--enable-server",	"Build network server library [default: no]")
 
 # Agar version
-HDEFINE(VERSION, "\"09292007\"")
-HDEFINE(RELEASE, "\"The Birth of an Era Obscured by Sulfur and Flames\"")
+HDEFINE(VERSION, "09292007")
+HDEFINE(RELEASE, "The Birth Of An Era Obscured By Sulfur And Flames")
 
 # Installation directories
 MDEFINE(SHAREDIR, "\${PREFIX}/share/agar")
-HDEFINE(SHAREDIR, "\"$PREFIX/share/agar\"")
+HDEFINE(SHAREDIR, "$PREFIX/share/agar")
 MDEFINE(LOCALEDIR, "\${PREFIX}/share/agar/locale")
-HDEFINE(LOCALEDIR, "\"$PREFIX/share/agar/locale\"")
+HDEFINE(LOCALEDIR, "$PREFIX/share/agar/locale")
 MDEFINE(TTFDIR, "\${PREFIX}/share/agar/fonts")
-HDEFINE(TTFDIR, "\"$PREFIX/share/agar/fonts\"")
+HDEFINE(TTFDIR, "$PREFIX/share/agar/fonts")
 MDEFINE(LIBDIR, "\${PREFIX}/lib")
-HDEFINE(LIBDIR, "\"$PREFIX/lib\"")
+HDEFINE(LIBDIR, "$PREFIX/lib")
 MDEFINE(INCLDIR, "\${PREFIX}/include/agar")
-HDEFINE(INCLDIR, "\"$PREFIX/include/agar\"")
+HDEFINE(INCLDIR, "$PREFIX/include/agar")
 MDEFINE(MANDIR, "\${PREFIX}/share/man")
 MDEFINE(PSDIR, "\${PREFIX}/share/agar/doc")
 
@@ -68,10 +68,15 @@ CHECK(x11)
 CHECK(signal)
 CHECK(setjmp)
 
-MDEFINE(CFLAGS, "$CFLAGS -I$SRC -D_AGAR_INTERNAL -D_BSD_SOURCE")
+C_DEFINE(_AGAR_INTERNAL)
+C_DEFINE(_BSD_SOURCE)
+C_INCDIR($SRC)
+
 if [ "${enable_warnings}" = "yes" ]; then
-	MDEFINE(CFLAGS, "$CFLAGS -Wall -Werror -Wmissing-prototypes")
-	MDEFINE(CFLAGS, "$CFLAGS -Wno-unused")
+	C_OPTION(-Wall)
+	C_OPTION(-Werror)
+	C_OPTION(-Wmissing-prototypes)
+	C_OPTION(-Wno-unused)
 	MDEFINE(WNO_UNINITIALIZED, "-Wno-uninitialized")
 else
 	MDEFINE(WNO_UNINITIALIZED, "")
