@@ -292,7 +292,6 @@ main(int argc, char *argv[])
 	}
 	AG_InitInput(0);
 	SG_InitEngine();
-	AG_InitConfigWin(0);
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);

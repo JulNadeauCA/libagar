@@ -63,10 +63,8 @@ main(int argc, char *argv[])
 		return (1);
 	}
 	AG_InitInput(0);
-	AG_InitConfigWin(0);
 	AG_SetRefreshRate(-1);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
-	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
 	/* Reload the previous state, initialize the object manager. */
