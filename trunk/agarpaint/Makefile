@@ -5,6 +5,7 @@ PROJECT=	"AgarPaint"
 PROG=		agarpaint
 PROG_TYPE=	"GUI"
 PROG_GUID=	"68DBFDA9-4965-4cca-8348-38409D8587A6"
+PROG_LINKS=	ag_core ag_gui ag_map ag_rg ag_vg ag_dev
 
 SRCS=	agarpaint.c
 SHARE=	agarpaint.bmp
