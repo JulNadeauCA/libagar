@@ -30,7 +30,7 @@
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
-#include <core/math.h>
+#include <core/util.h>
 
 #include "sg.h"
 #include "sg_gui.h"
