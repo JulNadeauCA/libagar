@@ -4,9 +4,10 @@ include ${TOP}/Makefile.config
 SUBDIR=	pe
 
 LIB=		ag_sg
+LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
-LIB_STATIC=	No
 LIB_GUID=	"ea398f34-6e0e-4436-aae6-08f47550f52d"
+
 LIB_LINKS=	ag_core ag_gui
 
 SRCS=	sg.c sg_math.c \
@@ -23,7 +24,7 @@ SRCS=	sg.c sg_math.c \
 	sk_annot.c sk_dimension.c sk_measure.c
 
 MAN3=	SG.3 SG_Camera.3 SG_Light.3 SG_View.3
-CFLAGS+=${SDL_CFLAGS} ${AGAR_CFLAGS} ${MATH_CFLAGS}
+CFLAGS+=-I.. ${SDL_CFLAGS} ${AGAR_CFLAGS} ${MATH_CFLAGS}
 CFLAGS+=${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS}
 
 # For gcc warnings in sg_matrix44_sse.c.

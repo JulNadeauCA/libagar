@@ -4,9 +4,10 @@ include ${TOP}/Makefile.config
 SUBDIR=	fonts
 
 LIB=		ag_gui
+LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
-LIB_STATIC=	No
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
+
 LIB_LINKS=	ag_core SDL
 
 #SHARESRC=	gui-pixmaps.den
@@ -27,7 +28,7 @@ MAN3=	AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 AG_Label.3 \
 	AG_SizeSpec.3 AG_Table.3 AG_Pane.3 AG_MPane.3 AG_Fixed.3 AG_Pixmap.3 \
 	AG_Colors.3 AG_Notebook.3 AG_Toolbar.3 AG_FileDlg.3 AG_Console.3
 
-CFLAGS+=${SDL_CFLAGS} ${FREETYPE_CFLAGS}
+CFLAGS+=-I.. ${SDL_CFLAGS} ${FREETYPE_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
