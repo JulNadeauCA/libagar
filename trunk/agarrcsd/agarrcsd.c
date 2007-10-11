@@ -160,15 +160,13 @@ main(int argc, char *argv[])
 
 	if (adminflag) {
 		/* Set up administrator interface. */
-		if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1 ||
-		    AG_InitInput(0) == -1) {
+		if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
 			fprintf(stderr, "%s\n", AG_GetError());
 			return (-1);
 		}
-		AG_InitConfigWin(0);
+		AG_InitInput(0);
 		AG_SetRefreshRate(-1);
 		AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
-		AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 
 		DEV_InitSubsystem(0);
 		DEV_Browser();

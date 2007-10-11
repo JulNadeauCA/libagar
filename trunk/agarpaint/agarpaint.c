@@ -406,18 +406,16 @@ main(int argc, char *argv[])
 	if (fontSpec != NULL) {
 		AG_TextParseFontSpec(fontSpec);
 	}
-	if (AG_InitVideo(800, 600, 32, 0) == -1 ||
-	    AG_InitInput(0) == -1 ||
-	    AG_InitConfigWin(0) == -1 ||
-	    AG_SetRefreshRate(fps) == -1) {
+	if (AG_InitVideo(800, 600, 32, 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+	AG_InitInput(0);
+	AG_SetRefreshRate(fps);
 	AG_SetString(agConfig, "load-path", ".:%s", SHAREDIR);
 
 	AG_AtExitFuncEv(Quit);
 	AG_BindGlobalKeyEv(SDLK_ESCAPE, KMOD_NONE, Quit);
-	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
 	/* Initialize the subsystems. */
