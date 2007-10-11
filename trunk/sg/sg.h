@@ -195,9 +195,9 @@ SG_Vector	 SG_NodeDir(void *);
 #define SG_RotateI(n,d)		MatRotateI(&SGNODE(n)->T,(d))
 #define SG_RotateJ(n,d)		MatRotateJ(&SGNODE(n)->T,(d))
 #define SG_RotateK(n,d)		MatRotateK(&SGNODE(n)->T,(d))
-
-#define SG_Orbitvd(n,p,v,a)	MatOrbitAxis(&SGNODE(n)->T,(p),(v),\
-				             SG_Radians(a))
+#define SG_Orbitv(n,p,a,d)	MatOrbitAxis(&SGNODE(n)->T, \
+				             VecSub((p),SG_NodePos(n)),(a),(d));
+#define SG_Orbitvd(n,p,a,d)	SG_Orbitv((n),(p),(a),SG_Radians(d))
 #define SG_Rotatevd(n,a,v)	MatRotateAxis(&SGNODE(n)->T,SG_Radians(a),(v))
 #define SG_RotateId(n,a)	MatRotateI(&SGNODE(n)->T,SG_Radians(a))
 #define SG_RotateJd(n,a)	MatRotateJ(&SGNODE(n)->T,SG_Radians(a))
@@ -209,12 +209,6 @@ SG_Vector	 SG_NodeDir(void *);
 #define SG_TranslateZ(n,t)	MatTranslateZ(&SGNODE(n)->T,(t))
 #define SG_Scale(n,x,y,z)	MatScale(&SGNODE(n)->T,(x),(y),(z),1.0)
 #define SG_UniScale(n,r)	MatUniScale(&SGNODE(n)->T,(r))
-
-static __inline__ void
-SG_Orbitv(void *node, SG_Vector p, SG_Vector a, SG_Real deg)
-{
-	MatOrbitAxis(&SGNODE(node)->T, VecSub(p,SG_NodePos(node)), a, deg);
-}
 __END_DECLS
 
 #include "close_code.h"
