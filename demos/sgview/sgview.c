@@ -139,12 +139,10 @@ main(int argc, char *argv[])
 		return (-1);
 	}
 	AG_InitInput(0);
-	AG_InitConfigWin(0);
 	AG_SetRefreshRate(fps);
 
 	/* Set some useful hotkeys */
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
-	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	
 	/* Initialize Agar-DEV and show the object browser. */
