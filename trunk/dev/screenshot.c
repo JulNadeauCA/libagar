@@ -45,6 +45,7 @@
 
 #include <core/core.h>
 #include <core/view.h>
+#include <core/config.h>
 
 #include <gui/window.h>
 #include <gui/vbox.h>
@@ -87,7 +88,6 @@ OutputJpegMessage(j_common_ptr jcomp)
 static void
 XmitLoop(int fd)
 {
-	extern int agScreenshotQuality;
 	int nframe = 0;
 	FILE *fp;
 	SDL_Surface *su;

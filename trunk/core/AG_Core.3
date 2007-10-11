@@ -52,9 +52,6 @@ mode, the font engine and other subsystems.
 .Ft "int"
 .Fn AG_InitInput "Uint flags"
 .Pp
-.Ft "int"
-.Fn AG_InitConfigWin "Uint flags"
-.Pp
 .Ft "void"
 .Fn AG_AtExitFunc "void (*fn)(void)"
 .Pp
@@ -86,13 +83,6 @@ function sets the video mode, initializes the font engine and GUI.
 The
 .Fn AG_InitInput
 function initializes the input devices.
-.Pp
-The
-.Fn AG_InitConfigWin
-function initializes a dialog window which can be used to modify generic
-application settings (see
-.Xr AG_Config 3
-for more details).
 .Pp
 The
 .Fn AG_AtExitFunc

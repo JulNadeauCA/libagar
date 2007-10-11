@@ -711,11 +711,7 @@ ExitProgram(AG_Event *event)
 static void
 ShowPreferences(AG_Event *event)
 {
-	if (!agConfig->window->visible) {
-		AG_WindowShow(agConfig->window);
-	} else {
-		AG_WindowFocus(agConfig->window);
-	}
+	DEV_ConfigShow();
 }
 
 static void
@@ -943,11 +939,10 @@ DEV_Browser(void)
 		    SDLK_d, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_MOVE_DOWN);
 
-		if (agConfig->window != NULL) {
-			AG_MenuSeparator(mi);
-			AG_MenuAction(mi, _("Preferences..."), -1,
-			    ShowPreferences, NULL);
-		}
+		AG_MenuSeparator(mi);
+
+		AG_MenuAction(mi, _("Agar settings..."), -1,
+		    ShowPreferences, NULL);
 	}
 
 #ifdef NETWORK

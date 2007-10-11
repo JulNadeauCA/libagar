@@ -107,6 +107,7 @@ void AG_ColorsInit(void);
 void AG_ColorsDestroy(void);
 int AG_ColorsLoad(const char *);
 int AG_ColorsSave(const char *);
+int AG_ColorsSaveDefault(void);
 __END_DECLS
 
 #include "close_code.h"

@@ -27,13 +27,6 @@
 #define AG_FORCE_UNICODE	0x01
 #define AG_FORCE_JOYSTICK	0x02
 
-/* Flags for AG_InitConfigWin() */
-#define AG_CONFIG_FULLSCREEN	0x01	/* Full-screen option */
-#define AG_CONFIG_GL		0x02	/* OpenGL mode */
-#define AG_CONFIG_RESOLUTION	0x04	/* Display resolution */
-#define AG_CONFIG_DIRECTORIES	0x08	/* Data directories */
-#define AG_CONFIG_ALL		0xff
-
 __BEGIN_DECLS
 extern const char *agProgName;
 extern AG_Object *agWorld;
@@ -46,7 +39,6 @@ int	 AG_InitCore(const char *, Uint);
 int	 AG_InitVideo(int, int, int, Uint);
 int	 AG_InitInput(Uint);
 int	 AG_InitNetwork(Uint);
-int	 AG_InitConfigWin(Uint);
 void	 AG_AtExitFunc(void (*)(void));
 void	 AG_AtExitFuncEv(void (*)(AG_Event *));
 void	 AG_Quit(void);

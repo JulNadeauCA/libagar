@@ -25,6 +25,7 @@
 
 #include <core/core.h>
 #include <core/view.h>
+#include <core/config.h>
 
 #include "colors.h"
 
@@ -289,6 +290,21 @@ AG_ColorsSave(const char *file)
 	AG_WriteRGBShift(buf, agLowColorShift);
 	
 	AG_NetbufClose(buf);
+	return (0);
+}
+
+int
+AG_ColorsSaveDefault(void)
+{
+	char path[MAXPATHLEN];
+
+	if (AG_String(agConfig, "save-path") != NULL) {
+		strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
+		strlcat(path, AG_PATHSEP, sizeof(path));
+		strlcat(path, "gui-colors.acs", sizeof(path));
+		if (AG_ColorsSave(path) == -1)
+			return (-1);
+	}
 	return (0);
 }
 

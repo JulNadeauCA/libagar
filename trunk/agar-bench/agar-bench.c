@@ -323,10 +323,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_InitConfigWin(AG_CONFIG_FULLSCREEN|AG_CONFIG_GL|
-	                 AG_CONFIG_RESOLUTION);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
-	AG_BindGlobalKey(SDLK_F1, KMOD_NONE, AG_ShowSettings);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	AG_SetRefreshRate(fps);
 	SG_InitEngine();
