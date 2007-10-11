@@ -37,7 +37,7 @@ PREMAKEFLAGS?=
 PROJECT?=
 PROJDIR?=	${TOP}/ProjectFiles
 PROJFILESEXTRA?=
-# PROJTARGETS=	monodev vs2002 vs2003 sharpdev
+# PROJTARGETS=	monodev sharpdev
 PROJTARGETS=	cb-gcc \
 		vs6 \
 		vs2002 \

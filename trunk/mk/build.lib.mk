@@ -26,37 +26,41 @@
 # Build static and shared libraries from source.
 #
 
+LIB?=
+WINRES?=
+
 CC?=		cc
-CFLAGS?=
-OBJCFLAGS?=	${CFLAGS}
+ASM?=		nasm
+LEX?=		lex
+YACC?=		yacc
 SH?=		sh
 AR?=		ar
 RANLIB?=	ranlib
-ASM?=		nasm
-ASMFLAGS?=	-g -w-orphan-labels
 
-LIB?=
+CFLAGS?=
+CPPFLAGS?=
+CXXFLAGS?=
+OBJCFLAGS?=	${CFLAGS}
+ASMFLAGS?=	-g -w-orphan-labels
+LFLAGS?=
+LIBL?=		-ll
+YFLAGS?=	-d
+
 LIB_INSTALL?=	No
 LIB_SHARED?=	No
-LIB_STATIC?=	Yes
 LIB_MAJOR?=	1
 LIB_MINOR?=	0
-LIB_ADD?=
+LIB_XOBJS?=
 LIB_GUID?=
 
+USE_LIBTOOL?=	Yes
 LIBTOOL?=	${TOP}/mk/libtool/libtool
 LIBTOOL_COOKIE?=${TOP}/mk/libtool.ok
 LTCONFIG?=	${TOP}/mk/libtool/ltconfig
 LTCONFIG_GUESS?=${TOP}/mk/libtool/config.guess
 LTCONFIG_SUB?=	${TOP}/mk/libtool/config.sub
 LTMAIN_SH?=	${TOP}/mk/libtool/ltmain.sh
-
 LTCONFIG_LOG?=	./config.log
-BINMODE?=	755
-STATIC?=	Yes
-CFLAGS+=	${COPTS}
-LFLAGS?=
-YFLAGS?=
 
 SHARE?=none
 SHARESRC?=none
@@ -76,31 +80,31 @@ depend: depend-subdir
 
 # Compile C code into an object file
 .c.o:
-	${CC} ${CFLAGS} -o $@ -c $<
+	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.lo: ${LIBTOOL}
-	${LIBTOOL} ${CC} ${CFLAGS} -o $@ -c $<
+	${LIBTOOL} --mode=compile ${CC} -prefer-pic ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 .c.po:
 	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Compile Objective-C code into an object file
 .m.o:
-	${CC} ${OBJCFLAGS} -o $@ -c $<
+	${CC} ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.lo: ${LIBTOOL}
-	${LIBTOOL} ${CC} ${OBJCFLAGS} -o $@ -c $<
+	${LIBTOOL} --mode=compile ${CC} -prefer-pic ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 .m.po:
 	${CC} -pg -DPROF ${OBJCFLAGS} ${CPPFLAGS} -o $@ -c $<
 
 # Compile C++ code into an object file
 .cc.o:
-	${CXX} ${CXXFLAGS} -o $@ -c $<
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.lo: ${LIBTOOL}
-	${LIBTOOL} ${CXX} ${CXXFLAGS} -o $@ -c $<
+	${LIBTOOL} --mode=compile ${CXX} -prefer-pic ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cc.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.o:
-	${CXX} ${CXXFLAGS} -o $@ -c $<
+	${CXX} ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.lo: ${LIBTOOL}
-	${LIBTOOL} ${CXX} ${CXXFLAGS} -o $@ -c $<
+	${LIBTOOL} --mode=compile ${CXX} -prefer-pic ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 .cpp.po:
 	${CXX} -pg -DPROF ${CXXFLAGS} ${CPPFLAGS} -o $@ -c $<
 
@@ -111,39 +115,39 @@ depend: depend-subdir
 # Compile a Lex lexer into an object file
 .l:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}
+	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}
 	@rm -f $@.yy.c
 .l.o:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} ${CFLAGS} -o $@ -c $@.yy.c
+	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ -c $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 .l.po:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} -pg -DPROF ${CFLAGS} -o $@ -c $@.yy.c
+	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 
 # Compile a Yacc parser into an object file
 .y:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $@.tab.c ${LIBS}
+	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS} -o $@ $@.tab.c ${LIBS}
 	@rm -f $@.tab.c
 .y.o:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} ${CFLAGS} -o $@ -c $@.tab.c
+	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ -c $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 .y.po:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} -pg -DPROF ${CFLAGS} -o $@ -c $@.tab.c
+	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
 # Build the library's object files.
 _lib_objs:
 	@if [ "${LIB}" != "" -a "${OBJS}" = "" -a "${SRCS}" != "none" \
-	      -a "${LIB_STATIC}" = "Yes" ]; then \
+	      -a "${USE_LIBTOOL}" = "No" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
@@ -156,11 +160,15 @@ _lib_objs:
 		fi; \
             done; \
 	fi
+	if [ "${WINRES}" != "" -a "${WINDRES}" != "" ]; then \
+		echo "${WINDRES} -o ${WINRES}.o ${WINRES}"; \
+		${WINDRES} -o ${WINRES}.o ${WINRES}; \
+	fi
 
 # Build PIC versions of the library's object files.
 _lib_shobjs:
 	@if [ "${LIB}" != "" -a "${SHOBJS}" = "" -a "${SRCS}" != "none" \
-	      -a "${LIB_SHARED}" = "Yes" ]; then \
+	      -a "${USE_LIBTOOL}" = "Yes" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.lo/'`; \
@@ -174,9 +182,9 @@ _lib_shobjs:
             done; \
 	fi
 
-# Build a static version of the library.
+# Build a non-libtool version of the library.
 lib${LIB}.a: _lib_objs ${OBJS}
-	@if [ "${LIB}" != "" -a "${LIB_STATIC}" = "Yes" \
+	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "No" \
 	      -a "${SRCS}" != "none" ]; then \
 	    if [ "${OBJS}" = "" ]; then \
 	        export _objs=""; \
@@ -187,11 +195,11 @@ lib${LIB}.a: _lib_objs ${OBJS}
 	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
 	    	    _objs="$$_objs $$F"; \
                 done; \
-	        echo "${AR} -cru lib${LIB}.a $$_objs ${LIB_ADD}"; \
-	        ${AR} -cru lib${LIB}.a $$_objs ${LIB_ADD}; \
+	        echo "${AR} -cru lib${LIB}.a $$_objs ${LIB_XOBJS}"; \
+	        ${AR} -cru lib${LIB}.a $$_objs ${LIB_XOBJS}; \
 	    else \
-	        echo "${AR} -cru lib${LIB}.a ${OBJS} ${LIB_ADD}"; \
-	        ${AR} -cru lib${LIB}.a ${OBJS} ${LIB_ADD}; \
+	        echo "${AR} -cru lib${LIB}.a ${OBJS} ${LIB_XOBJS}"; \
+	        ${AR} -cru lib${LIB}.a ${OBJS} ${LIB_XOBJS}; \
 	    fi; \
 	    echo "${RANLIB} lib${LIB}.a"; \
 	    (${RANLIB} lib${LIB}.a || exit 0); \
@@ -199,7 +207,7 @@ lib${LIB}.a: _lib_objs ${OBJS}
 
 # Build a Libtool version of the library.
 lib${LIB}.la: ${LIBTOOL_COOKIE} _lib_shobjs ${SHOBJS}
-	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" \
+	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" \
 	      -a "${SRCS}" != "none" ]; then \
 	    if [ "${SHOBJS}" = "" ]; then \
 	        export _shobjs=""; \
@@ -210,46 +218,55 @@ lib${LIB}.la: ${LIBTOOL_COOKIE} _lib_shobjs ${SHOBJS}
 	    	    F=`echo $$F | sed 's/.asm$$/.lo/'`; \
 	    	    _shobjs="$$_shobjs $$F"; \
                 done; \
-	        echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
-	            -shared -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		    ${LDFLAGS} $$_shobjs \
-		    ${LIBS} ${LIB_ADD}"; \
-	        ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
-		    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		    ${LDFLAGS} $$_shobjs ${LIBS} \
-		    ${LIB_ADD}; \
+	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
+	            echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		        -rpath ${PREFIX}/lib \
+	                -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		        ${LDFLAGS} $$_shobjs \
+		        ${LIBS} ${LIB_XOBJS}"; \
+	            ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		        -rpath ${PREFIX}/lib \
+		        -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		        ${LDFLAGS} $$_shobjs \
+			${LIBS} ${LIB_XOBJS}; \
+		else \
+	            echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+	                -static \
+		        ${LDFLAGS} $$_shobjs \
+		        ${LIBS} ${LIB_XOBJS}"; \
+	            ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		        -static \
+		        ${LDFLAGS} $$_shobjs \
+			${LIBS} ${LIB_XOBJS}; \
+		fi; \
 	    else \
-	        echo "${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib \
-	            -shared -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		    ${LDFLAGS} ${SHOBJS} \
-		    ${LIBS} ${LIB_ADD}"; \
-	        ${LIBTOOL} ${CC} -o lib${LIB}.la -rpath ${PREFIX}/lib -shared \
-		    -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
-		    ${LDFLAGS} ${SHOBJS} ${LIBS} \
-		    ${LIB_ADD}; \
+	    	if [ "${LIB_SHARED}" = "Yes" ]; then \
+	            echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		        -rpath ${PREFIX}/lib \
+	                -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		        ${LDFLAGS} ${SHOBJS} \
+		        ${LIBS} ${LIB_XOBJS}"; \
+	            ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		        -rpath ${PREFIX}/lib \
+		        -version-info ${LIB_MAJOR}:${LIB_MINOR}:0 \
+		        ${LDFLAGS} ${SHOBJS} \
+			${LIBS} ${LIB_XOBJS}; \
+	        else \
+	            echo "${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		        -static \
+		        ${LDFLAGS} ${SHOBJS} \
+		        ${LIBS} ${LIB_XOBJS}"; \
+	            ${LIBTOOL} --mode=link ${CC} -o lib${LIB}.la \
+		        -static \
+		        ${LDFLAGS} ${SHOBJS} \
+			${LIBS} ${LIB_XOBJS}; \
+		fi; \
 	    fi; \
 	fi
 
 clean-lib:
 	@if [ "${LIB}" != "" -a "${SRCS}" != "none" ]; then \
-	    if [ "${LIB_STATIC}" = "Yes" ]; then \
-	        if [ "${OBJS}" = "" ]; then \
-                    for F in ${SRCS}; do \
-	   	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
-	    	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
-	    	        F=`echo $$F | sed 's/.cpp$$/.o/'`; \
-	    	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
-	    	    	echo "rm -f $$F"; \
-	    	    	rm -f $$F; \
-                    done; \
-	    	else \
-	            echo "rm -f ${OBJS}"; \
-		    rm -f ${OBJS}; \
-	    	fi; \
-	   	echo "rm -f lib${LIB}.a"; \
-		rm -f lib${LIB}.a; \
-	    fi; \
-	    if [ "${LIB_SHARED}" = "Yes" ]; then \
+	    if [ "${USE_LIBTOOL}" = "Yes" ]; then \
 	        if [ "${SHOBJS}" = "" ]; then \
                     for F in ${SRCS}; do \
 	    	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
@@ -270,9 +287,30 @@ clean-lib:
 		else \
 		    rm -f ${SHOBJS}; \
 		    echo "rm -f ${SHOBJS}"; \
+                    for F in ${SHOBJS}; do \
+	    	        F=`echo $$F | sed 's/.lo$$/.o/'`; \
+	    	        echo "rm -f $$F"; \
+	    	        rm -f $$F; \
+                    done; \
 		fi; \
 		echo "rm -fR lib${LIB}.la .libs"; \
 		rm -fR lib${LIB}.la .libs; \
+	    else \
+	        if [ "${OBJS}" = "" ]; then \
+                    for F in ${SRCS}; do \
+	   	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
+	    	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
+	    	        F=`echo $$F | sed 's/.cpp$$/.o/'`; \
+	    	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
+	    	    	echo "rm -f $$F"; \
+	    	    	rm -f $$F; \
+                    done; \
+	    	else \
+	            echo "rm -f ${OBJS}"; \
+		    rm -f ${OBJS}; \
+	    	fi; \
+	   	echo "rm -f lib${LIB}.a"; \
+		rm -f lib${LIB}.a; \
 	    fi; \
 	fi
 	@if [ "${CLEANFILES}" != "" ]; then \
@@ -297,21 +335,23 @@ install-lib: ${LIBTOOL_COOKIE}
 	        ${SUDO} ${INSTALL_DATA} $$F ${INCLDIR}; \
 	    done; \
 	fi
-	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
+	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" -a \
+	      "${LIB_INSTALL}" = "Yes" ]; then \
 	    if [ ! -d "${LIBDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${LIBDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${LIBDIR}; \
 	    fi; \
-	    if [ "${LIB_STATIC}" = "Yes" ]; then \
+	    if [ "${USE_LIBTOOL}" = "Yes" ]; then \
+	        echo "${LIBTOOL} --mode=install \
+	            ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}"; \
+	        ${SUDO} ${LIBTOOL} --mode=install \
+	            ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}; \
+	        echo "${LIBTOOL} --finish ${LIBDIR}"; \
+	        ${SUDO} ${LIBTOOL} --finish ${LIBDIR}; \
+	    else \
 	        echo "${INSTALL_LIB} lib${LIB}.a ${LIBDIR}"; \
 	        ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${LIBDIR}; \
 	    fi; \
-	    echo "${LIBTOOL} --mode=install \
-	        ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}"; \
-	    ${SUDO} ${LIBTOOL} --mode=install \
-	        ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}; \
-	    echo "${LIBTOOL} --finish ${LIBDIR}"; \
-	    ${SUDO} ${LIBTOOL} --finish ${LIBDIR}; \
 	fi
 	@export _share="${SHARE}"; \
         if [ "$$_share" != "" -a "${SHARE}" != "none" ]; then \
@@ -345,15 +385,16 @@ install-lib: ${LIBTOOL_COOKIE}
 	fi
 
 deinstall-lib: ${LIBTOOL_COOKIE}
-	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
-	    if [ "${LIB_STATIC}" = "Yes" ]; then \
+	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" ]; then \
+	    if [ "${USE_LIBTOOL}" = "Yes" ]; then \
+	        echo "${LIBTOOL} --mode=uninstall \
+	            rm -f ${LIBDIR}/lib${LIB}.la"; \
+	        ${SUDO} ${LIBTOOL} --mode=uninstall \
+	            rm -f ${LIBDIR}/lib${LIB}.la; \
+	    else \
 	        echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a"; \
 	        ${SUDO} ${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a; \
 	    fi; \
-	    echo "${LIBTOOL} --mode=uninstall \
-	        rm -f ${LIBDIR}/lib${LIB}.la"; \
-	    ${SUDO} ${LIBTOOL} --mode=uninstall \
-	        rm -f ${LIBDIR}/lib${LIB}.la; \
 	fi
 	@if [ "${SHARE}" != "" -a "${SHARE}" != "none" ]; then \
 	    for F in ${SHARE}; do \
@@ -372,7 +413,7 @@ includes:
 	(cd ${TOP} && ${MAKE} install-includes)
 
 ${LIBTOOL_COOKIE}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
-	@if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
+	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" ]; then \
 	    echo "${SH} ${LTCONFIG} ${LTMAIN_SH}"; \
 	    ${SH} ${LTCONFIG} ${LTMAIN_SH}; \
 	    if [ $? != 0 ]; then \

@@ -91,12 +91,14 @@ EOF
 	my @shobjs = ();
 	my %catman;
 	my %psman;
+	my $libtool = 1;
 	my $shared = 0;
 	my $static = 1;
 
 	foreach $_ (@lines) {
 		my @srcs = ();
 
+		if (/^\s*USE_LIBTOOL\s*=\s*No\s*$/) { $libtool = 0; }
 		if (/^\s*LIB_SHARED\s*=\s*Yes\s*$/) { $shared = 1; }
 		if (/^\s*LIB_STATIC\s*=\s*No\s*$/) { $static = 0; }
 		if (/^\s*(SRCS|MAN\d|MOS)\s*=\s*(.+)$/) {
@@ -110,14 +112,13 @@ EOF
 				my $shobj = $src;
 
 				if ($type eq 'SRCS') {
-					if ($static) {
-						$obj =~ s/\.(c|cc|l|y|m)$/\.o/;
-						push @objs, $obj;
-					}
-					if ($shared) {
+					if ($libtool) {
 						$shobj =~
 						    s/\.(c|cc|l|y|m)$/\.lo/;
 						push @shobjs, $shobj;
+					} else {
+						$obj =~ s/\.(c|cc|l|y|m)$/\.o/;
+						push @objs, $obj;
 					}
 				} elsif ($type =~ /MAN(\d)/) {
 					$obj =~ s/\.(\d)$//;
@@ -129,7 +130,14 @@ EOF
 
 				# SYNC with build.{prog,lib}.mk
 				if ($src =~ /\.[cly]$/) { # C/Lex/Yacc
-					if ($static) {
+					if ($libtool) {
+						push @deps,
+						    "$shobj: $SRC/$ndir/$src";
+						push @deps, << 'EOF';
+	${LIBTOOL} --mode=compile ${CC} -prefer-pic ${CFLAGS} ${CPPFLAGS} -c $<
+
+EOF
+					} else {
 						push @deps,
 						    "$obj: $SRC/$ndir/$src";
 						push @deps, << 'EOF',
@@ -137,16 +145,15 @@ EOF
 
 EOF
 					}
-					if ($shared) {
+				} elsif ($src =~ /\.cc$/) { # C++
+					if ($libtool) {
 						push @deps,
 						    "$shobj: $SRC/$ndir/$src";
 						push @deps, << 'EOF';
-	${LIBTOOL} ${CC} ${CFLAGS} ${CPPFLAGS} -c $<
+	${LIBTOOL} --mode=compile ${CC} -prefer-pic ${CXXFLAGS} ${CPPFLAGS} -c $<
 
 EOF
-					}
-				} elsif ($src =~ /\.cc$/) { # C++
-					if ($static) {
+					} else {
 						push @deps,
 						    "$obj: $SRC/$ndir/$src";
 						push @deps, << 'EOF',
@@ -154,28 +161,19 @@ EOF
 
 EOF
 					}
-					if ($shared) {
+				} elsif ($src =~ /\.m$/) { # C+Objective-C
+					if ($libtool) {
 						push @deps,
 						    "$shobj: $SRC/$ndir/$src";
 						push @deps, << 'EOF';
-	${LIBTOOL} ${CC} ${CXXFLAGS} ${CPPFLAGS} -c $<
+	${LIBTOOL} --mode=compile ${CC} -prefer-pic ${OBJCFLAGS} ${CPPFLAGS} -c $<
 
 EOF
-					}
-				} elsif ($src =~ /\.m$/) { # C+Objective-C
-					if ($static) {
+					} else {
 						push @deps,
 						    "$obj: $SRC/$ndir/$src";
 						push @deps, << 'EOF',
 	${CC} ${OBJCFLAGS} ${CPPFLAGS} -c $<
-
-EOF
-					}
-					if ($shared) {
-						push @deps,
-						    "$shobj: $SRC/$ndir/$src";
-						push @deps, << 'EOF';
-	${LIBTOOL} ${CC} ${OBJCFLAGS} ${CPPFLAGS} -c $<
 
 EOF
 					}
@@ -241,11 +239,10 @@ EOF
 		} else {
 			if (/^\s*include.+\/build\.(lib|prog|po)\.mk\s*$/) {
 				print DSTMAKEFILE "# Generated objects:\n";
-				if ($static) {
-					print DSTMAKEFILE "OBJS=@objs\n";
-				}
-				if ($shared) {
+				if ($libtool) {
 					print DSTMAKEFILE "SHOBJS=@shobjs\n";
+				} else {
+					print DSTMAKEFILE "OBJS=@objs\n";
 				}
 				print DSTMAKEFILE "CATMAN1=$catman{1}\n";
 				print DSTMAKEFILE "CATMAN2=$catman{2}\n";
