@@ -26,26 +26,32 @@
 # Compile executables from source.
 #
 
+PROG?=
+GMONOUT?=	gmon.out
+WINRES?=
+
 CC?=		cc
+ASM?=		nasm
+LEX?=		lex
+YACC?=		yacc
+WINDRES?=
+
 CFLAGS?=	-O2 -g
+CPPFLAGS?=
 CXXFLAGS?=
 OBJCFLAGS?=	${CFLAGS}
-CPPFLAGS?=
+ASMFLAGS?=	-g -w-orphan-labels
+LFLAGS?=
+LIBL?=		-ll
+YFLAGS?=	-d
+
 PROG_INSTALL?=	Yes
 PROG_TYPE?=	"CLI"
 PROG_GUID?=
-GMONOUT?=	gmon.out
-ASM?=		nasm
-ASMFLAGS?=	-g -w-orphan-labels
-LEX?=		lex
-LIBL?=		-ll
-LFLAGS?=
-YACC?=		yacc
-YFLAGS?=	-d
+
 SHARE?=
 CONF?=
 CONFDIR?=
-WINDRES?=
 
 all: all-subdir ${PROG}
 install: install-prog install-subdir
@@ -86,32 +92,32 @@ depend: depend-subdir
 # Compile a Lex lexer into an object file
 .l:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}
+	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS} -o $@ $@.yy.c ${LIBL} ${LIBS}
 	@rm -f $@.yy.c
 .l.o:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} ${CFLAGS} -o $@ -c $@.yy.c
+	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ -c $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 .l.po:
 	${LEX} ${LFLAGS} -o$@.yy.c $<
-	${CC} -pg -DPROF ${CFLAGS} -o $@ -c $@.yy.c
+	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $@.yy.c
 	@mv -f $@.yy.o $@
 	@rm -f $@.yy.c
 
 # Compile a Yacc parser into an object file
 .y:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $@.tab.c ${LIBS}
+	${CC} ${CFLAGS} ${CPPFLAGS} ${LDFLAGS} -o $@ $@.tab.c ${LIBS}
 	@rm -f $@.tab.c
 .y.o:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} ${CFLAGS} -o $@ -c $@.tab.c
+	${CC} ${CFLAGS} ${CPPFLAGS} -o $@ -c $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 .y.po:
 	${YACC} ${YFLAGS} -b $@ $<
-	${CC} -pg -DPROF ${CFLAGS} -o $@ -c $@.tab.c
+	${CC} -pg -DPROF ${CFLAGS} ${CPPFLAGS} -o $@ -c $@.tab.c
 	@mv -f $@.tab.o $@
 	@rm -f $@.tab.c
 
@@ -267,6 +273,25 @@ install-prog:
                 echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
             done; \
+	fi
+	@export _sharesrc="${SHARESRC}"; \
+        if [ "$$_sharesrc" != "" -a "${SHARESRC}" != "none" ]; then \
+            if [ ! -d "${SHAREDIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
+            fi; \
+	    if [ "${SRC}" != "" ]; then \
+                for F in $$_sharesrc; do \
+                    echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
+                    ${SUDO} ${INSTALL_DATA} ${SRC}/${BUILDREL}/$$F \
+		    ${SHAREDIR}; \
+                done; \
+	    else \
+                for F in $$_sharesrc; do \
+                    echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
+                    ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
+                done; \
+	    fi; \
 	fi
 	@export _conf="${CONF}"; \
         if [ "$$_conf" != "" ]; then \
