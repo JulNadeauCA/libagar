@@ -3,9 +3,12 @@
 #include <core/core.h>
 
 #include <config/have_math.h>
+
 #ifdef HAVE_MATH
 #include <math.h>
 #endif
+
+#include "util.h"
 
 int
 AG_PowOf2i(int i)
