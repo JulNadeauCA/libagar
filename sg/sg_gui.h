@@ -4,7 +4,7 @@
 #define _SG_GUI_H_
 
 #ifndef _AGAR_INTERNAL
-#include <agar/gui/gui.h>
+#include <agar/gui.h>
 #else
 #include <gui/fspinbutton.h>
 #include <gui/spinbutton.h>
