@@ -31,7 +31,7 @@
 #if defined(HAVE_OPENGL) && defined(HAVE_ODE)
 
 #include <core/core.h>
-#include <core/math.h>
+#include <core/util.h>
 #include <gui/window.h>
 #include <sg/sg.h>
 #include <sg/sg_gui.h>

@@ -25,7 +25,7 @@
 
 #include <core/core.h>
 #include <core/view.h>
-#include <core/math.h>
+#include <core/util.h>
 
 #include "tileset.h"
 

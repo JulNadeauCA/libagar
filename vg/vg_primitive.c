@@ -28,7 +28,7 @@
 
 #include <core/core.h>
 #include <core/view.h>
-#include <core/math.h>
+#include <core/util.h>
 
 #include "vg.h"
 #include "vg_math.h"

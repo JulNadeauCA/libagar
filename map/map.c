@@ -26,7 +26,7 @@
 #include <core/core.h>
 #include <core/config.h>
 #include <core/view.h>
-#include <core/math.h>
+#include <core/util.h>
 #include <core/typesw.h>
 
 #include <rg/tileset.h>
