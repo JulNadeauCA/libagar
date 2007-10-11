@@ -72,6 +72,7 @@ CHECK(setjmp)
 
 C_DEFINE(_AGAR_INTERNAL)
 C_DEFINE(_BSD_SOURCE)
+C_INCDIR($SRC)
 
 if [ "${enable_warnings}" = "yes" ]; then
 	C_OPTION(-Wall)

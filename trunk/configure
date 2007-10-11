@@ -2143,6 +2143,10 @@ CFLAGS="$CFLAGS -D_BSD_SOURCE"
 CXXFLAGS="$CXXFLAGS -D_BSD_SOURCE"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
 echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
+CFLAGS="$CFLAGS -I$SRC"
+CXXFLAGS="$CXXFLAGS -I$SRC"
+echo "CFLAGS=$CFLAGS" >> Makefile.config
+echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
 if [ "${enable_warnings}" = "yes" ]
  then
 CFLAGS="$CFLAGS -Wall"
