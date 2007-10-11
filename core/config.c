@@ -69,14 +69,6 @@ int agMouseDblclickDelay = 250;			/* Mouse double-click delay */
 int agMouseSpinDelay = 250;			/* Spinbutton repeat delay */
 int agMouseSpinIval = 50;			/* Spinbutton repeat interval */
 
-extern int agTextAntialiasing;
-extern int agTextComposition;
-extern int agTextBidi;
-extern int agTextTabWidth;
-extern int agIdleThresh;
-extern int agScreenshotQuality;
-extern int agWindowAnySize;
-
 void
 AG_ConfigInit(AG_Config *cfg)
 {

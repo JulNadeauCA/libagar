@@ -44,6 +44,8 @@ void	   DEV_BrowserOpenGeneric(AG_Object *);
 void	   DEV_BrowserSaveTo(void *, const char *);
 void	   DEV_BrowserLoadFrom(void *, const char *);
 void	   DEV_BrowserGenericMenu(void *, void *);
+
+void	   DEV_ConfigShow(void);
 __END_DECLS
 
 #include "close_code.h"

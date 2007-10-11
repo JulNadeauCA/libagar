@@ -257,18 +257,10 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	return (0);
 }
 
-int
-AG_InitConfigWin(Uint flags)
-{
-	AG_ConfigWindow(agConfig, flags);
-	return (0);
-}
-
 /* Initialize graphics and input devices. */
 int
 AG_InitInput(Uint flags)
 {
-	extern int agKbdUnicode;			/* config.c */
 	int i, n, njoys;
 
 	SDL_EnableUNICODE(agKbdUnicode || (flags & AG_FORCE_UNICODE));

@@ -115,7 +115,6 @@ static struct {
 	{ 0x005e, 0x0057, 0x0174 },  /* LATIN CAPITAL LETTER W */
 };
 static const int ncompose = sizeof(compose) / sizeof(compose[0]);
-extern int agTextComposition;
 #endif /* UTF8 */
 
 static Uint32
@@ -226,7 +225,6 @@ static int
 InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
     Uint32 ch)
 {
-	extern int agKbdUnicode;			/* input/kbd.c */
 	AG_WidgetBinding *stringb;
 	size_t len;
 	Uint32 *ucs4;

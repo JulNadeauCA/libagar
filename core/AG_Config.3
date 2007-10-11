@@ -47,38 +47,12 @@ settings that should remain persistent.
 also implements an optional graphical dialog which allows users to configure
 generic Agar settings such as input device preferences and cosmetic GUI
 parameters.
-.Sh INTERFACE
+.Sh LOCATING FILES
 .nr nS 1
-.Ft "int"
-.Fn AG_InitConfigWin "Uint flags"
-.Pp
-.Ft "void"
-.Fn AG_ConfigWindow "AG_Config *cfg" "Uint flags"
-.Pp
 .Ft "int"
 .Fn AG_ConfigFile "const char *path_key" "const char *name" "const char *extension" "char *dst_path" "size_t dst_len"
 .Pp
 .nr nS 0
-The
-.Fn AG_InitConfigWin
-function initializes the generic Agar configuration dialog, returning 0 on
-success and -1 on failure, and accepts the following flags:
-.Bd -literal
-#define AG_CONFIG_FULLSCREEN	0x01	/* Full-screen option */
-#define AG_CONFIG_GL		0x02	/* OpenGL mode */
-#define AG_CONFIG_RESOLUTION	0x04	/* Display resolution */
-#define AG_CONFIG_DIRECTORIES	0x08	/* Data directories */
-#define AG_CONFIG_ALL		0xff
-.Ed
-.Pp
-The
-.Fn AG_ConfigWindow
-function displays the configuration dialog.
-It accepts the same
-.Fa flags
-as
-.Fn AG_InitConfigWin .
-.Pp
 The
 .Fn AG_ConfigFile
 utility function searches a colon-separated pathname setting (ie.

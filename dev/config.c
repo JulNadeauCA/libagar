@@ -30,6 +30,7 @@
 #include <core/core.h>
 #include <core/config.h>
 #include <core/view.h>
+#include <core/rcs.h>
 
 #include <gui/window.h>
 #include <gui/hbox.h>
@@ -47,7 +48,11 @@
 #include <gui/file_dlg.h>
 #include <gui/pane.h>
 
-struct ag_window *agConfigWindow;
+#include "dev.h"
+
+AG_Window *devConfigWindow = NULL;
+
+static AG_Window *DEV_ConfigWindow(AG_Config *);
 
 static void
 SetPath(AG_Event *event)
@@ -96,7 +101,7 @@ BindSelectedColor(AG_Event *event)
 	AG_TlistItem *it = AG_PTR(2);
 	Uint32 *c = it->p1;
 
-	AG_WidgetBind(hsv, "pixel", AG_WIDGET_UINT32, c);
+	AG_WidgetBindUint32(hsv, "pixel", c);
 }
 
 static void
@@ -138,16 +143,20 @@ SetColor(AG_Event *event)
 }
 
 void
-AG_ShowSettings(void)
+DEV_ConfigShow(void)
 {
 	if (agView->nModal > 0)		/* Avoid clobbering modal windows */
 		return;
 
-	if (!agConfig->window->visible) {
-		AG_WindowShow(agConfig->window);
-	} else {
-		AG_WindowFocus(agConfig->window);
+	if (devConfigWindow != NULL) {
+		if (devConfigWindow->visible) {
+			AG_WindowFocus(devConfigWindow);
+		} else {
+			AG_WindowShow(devConfigWindow);
+		}
 	}
+	devConfigWindow = DEV_ConfigWindow(agConfig);
+	AG_WindowShow(devConfigWindow);
 }
 
 static void
@@ -218,9 +227,10 @@ SaveConfig(AG_Event *event)
 	}
 }
 
-void
-AG_ConfigWindow(AG_Config *cfg, Uint flags)
+static AG_Window *
+DEV_ConfigWindow(AG_Config *cfg)
 {
+	char path[MAXPATHLEN];
 	AG_Window *win;
 	AG_HBox *hb;
 	AG_Textbox *tbox;
@@ -236,47 +246,34 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	tab = AG_NotebookAddTab(nb, _("Video"), AG_BOX_VERT);
 	{
-		if (flags & AG_CONFIG_FULLSCREEN) {
-			cbox = AG_CheckboxNew(tab, 0, _("Full screen"));
-			AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
-			    "view.full-screen");
-			AG_SetEvent(cbox, "checkbox-changed", Set_Fullscreen,
-			    NULL);
-		}
+		cbox = AG_CheckboxNew(tab, 0, _("Full screen"));
+		AG_WidgetBindProp(cbox,"state", agConfig,"view.full-screen");
+		AG_SetEvent(cbox, "checkbox-changed", SetFullscreen, NULL);
 
 		cbox = AG_CheckboxNew(tab, 0, _("Asynchronous blits"));
-		AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
-		    "view.async-blits");
+		AG_WidgetBindProp(cbox,"state", agConfig,"view.async-blits");
 		AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
 		    "config.view.async-blits");
 
-		if (flags & AG_CONFIG_GL) {
-			cbox = AG_CheckboxNew(tab, 0, _("OpenGL mode"));
-			AG_WidgetBind(cbox, "state", AG_WIDGET_PROP, agConfig,
-			    "view.opengl");
-			AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
-			    "config.view.opengl");
-		}
+		cbox = AG_CheckboxNew(tab, 0, _("OpenGL mode"));
+		AG_WidgetBindProp(cbox,"state", agConfig,"view.opengl");
+		AG_SetEvent(cbox, "checkbox-changed",
+		    WarnRestart, "%s", "config.view.opengl");
 #if 0
-		if (flags & AG_CONFIG_RESOLUTION) {
-			msb = AG_MSpinbuttonNew(tab, 0, "x", _("Resolution: "));
-			AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT16,
-			    &agView->w);
-			AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT16,
-			    &agView->h);
-			AG_MSpinbuttonSetRange(msb, 320, 4096);
-		}
+		msb = AG_MSpinbuttonNew(tab, 0, "x", _("Resolution: "));
+		AG_WidgetBindUint16(msb,"xvalue", &agView->w);
+		AG_WidgetBindUint16(msb,"yvalue", &agView->h);
+		AG_MSpinbuttonSetRange(msb, 320, 4096);
 #endif
 		AG_SeparatorNewHorizInv(tab);
 
 		sbu = AG_SpinbuttonNew(tab, 0, _("Screenshot quality (%): "));
-		AG_WidgetBind(sbu, "value", AG_WIDGET_INT,
-		    &agScreenshotQuality);
+		AG_WidgetBindInt(sbu,"value", &agScreenshotQuality);
 		AG_SpinbuttonSetMin(sbu, 1);
 		AG_SpinbuttonSetMax(sbu, 100);
 	
 		sbu = AG_SpinbuttonNew(tab, 0, _("Idling threshold (ms): "));
-		AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &agIdleThresh);
+		AG_WidgetBindInt(sbu,"value", &agIdleThresh);
 		AG_SpinbuttonSetMin(sbu, 0);
 		AG_SpinbuttonSetMax(sbu, 255);
 	}
@@ -284,52 +281,49 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	tab = AG_NotebookAddTab(nb, _("GUI"), AG_BOX_VERT);
 	{
 		cbox = AG_CheckboxNew(tab, 0, _("Antialiased text rendering"));
-		AG_WidgetBindInt(cbox, "state", &agTextAntialiasing);
+		AG_WidgetBindInt(cbox,"state", &agTextAntialiasing);
 		AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
 		    "config.text.antialiasing");
 		
 		AG_SeparatorNewHorizInv(tab);
 
 		cbox = AG_CheckboxNew(tab, 0, _("Unicode keyboard input"));
-		AG_WidgetBindInt(cbox, "state", &agKbdUnicode);
+		AG_WidgetBindInt(cbox,"state", &agKbdUnicode);
 		AG_SetEvent(cbox, "checkbox-changed", SetUnicodeKbd, NULL);
 
 		cbox = AG_CheckboxNew(tab, 0, _("Built-in key composition"));
-		AG_WidgetBindInt(cbox, "state", &agTextComposition);
+		AG_WidgetBindInt(cbox,"state", &agTextComposition);
 
 		cbox = AG_CheckboxNew(tab, 0, _("Edit text left to right"));
-		AG_WidgetBindInt(cbox, "state", &agTextBidi);
+		AG_WidgetBindInt(cbox,"state", &agTextBidi);
 		
 		AG_SeparatorNewHorizInv(tab);
 		
 		sbu = AG_SpinbuttonNew(tab, 0, _("Double click delay (ms): "));
-		AG_WidgetBindInt(sbu, "value", &agMouseDblclickDelay);
+		AG_WidgetBindInt(sbu,"value", &agMouseDblclickDelay);
 		AG_SpinbuttonSetMin(sbu, 1);
 		
 		sbu = AG_SpinbuttonNew(tab, 0, _("Mouse spin delay (ms): "));
-		AG_WidgetBindInt(sbu, "value", &agMouseSpinDelay);
+		AG_WidgetBindInt(sbu,"value", &agMouseSpinDelay);
 		AG_SpinbuttonSetMin(sbu, 1);
 
 		sbu = AG_SpinbuttonNew(tab, 0, _("Mouse spin interval (ms): "));
-		AG_WidgetBindInt(sbu, "value", &agMouseSpinIval);
+		AG_WidgetBindInt(sbu,"value", &agMouseSpinIval);
 		AG_SpinbuttonSetMin(sbu, 1);
 
 		sbu = AG_SpinbuttonNew(tab, 0,
 		    _("Keyboard repeat delay (ms): "));
-		AG_WidgetBindInt(sbu, "value", &agKbdDelay);
+		AG_WidgetBindInt(sbu,"value", &agKbdDelay);
 		AG_SpinbuttonSetMin(sbu, 1);
 		
 		sbu = AG_SpinbuttonNew(tab, 0,
 		    _("Keyboard repeat interval (ms): "));
-		AG_WidgetBindInt(sbu, "value", &agKbdRepeat);
+		AG_WidgetBindInt(sbu,"value", &agKbdRepeat);
 		AG_SpinbuttonSetMin(sbu, 1);
 	}
 
-	if (flags & AG_CONFIG_DIRECTORIES) {
-		char path[MAXPATHLEN];
-
-		tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
-		
+	tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
+	{
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Temporary dir: "));
 		AG_StringCopy(agConfig, "tmp-path", path, sizeof(path));
@@ -383,8 +377,7 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 			}
 
 			hsv = AG_HSVPalNew(hPane->div[1], AG_HSVPAL_EXPAND);
-			AG_WidgetBind(hsv, "pixel-format", AG_WIDGET_POINTER,
-			    &agVideoFmt);
+			AG_WidgetBindPointer(hsv,"pixel-format", &agVideoFmt);
 			AG_SetEvent(hsv, "h-changed", SetColor, "%p", tl);
 			AG_SetEvent(hsv, "sv-changed", SetColor, "%p", tl);
 			AG_SetEvent(tl, "tlist-selected", BindSelectedColor,
@@ -415,17 +408,17 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		AG_Checkbox *cb;
 
 		cb = AG_CheckboxNew(tab, 0, _("Enable RCS"));
-		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &agRcsMode);
+		AG_WidgetBindInt(cb,"state", &agRcsMode);
 
 		AG_SeparatorNewHorizInv(tab);
 
 		tb = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Server hostname: "));
-		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, agRcsHostname,
+		AG_WidgetBindString(tb,"string", agRcsHostname,
 		    sizeof(agRcsHostname));
 	
 		sb = AG_SpinbuttonNew(tab, 0, _("Server port: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &agRcsPort);
+		AG_WidgetBindUint(sb,"value", &agRcsPort);
 
 		AG_SeparatorNewHoriz(tab);
 
@@ -434,14 +427,14 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		{
 			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL,
 			    _("Username: "));
-			AG_WidgetBind(tb, "string", AG_WIDGET_STRING,
-			    agRcsUsername, sizeof(agRcsUsername));
+			AG_WidgetBindString(tb,"string", agRcsUsername,
+			    sizeof(agRcsUsername));
 
 			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL,
 			    _("Password: "));
 			AG_TextboxSetPassword(tb, 1);
-			AG_WidgetBind(tb, "string", AG_WIDGET_STRING,
-			    agRcsPassword, sizeof(agRcsPassword));
+			AG_WidgetBindString(tb,"string", agRcsPassword,
+			    sizeof(agRcsPassword));
 		}
 	}
 #endif /* NETWORK */
@@ -450,10 +443,10 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 	tab = AG_NotebookAddTab(nb, _("Debug"), AG_BOX_VERT);
 	{
 		cbox = AG_CheckboxNew(tab, 0, _("Enable debugging"));
-		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &agDebugLvl);
+		AG_WidgetBindInt(cbox,"state", &agDebugLvl);
 		
 		cbox = AG_CheckboxNew(tab, 0, _("Allow any window size"));
-		AG_WidgetBindInt(cbox, "state", &agWindowAnySize);
+		AG_WidgetBindInt(cbox,"state", &agWindowAnySize);
 	}
 #endif
 
@@ -462,46 +455,5 @@ AG_ConfigWindow(AG_Config *cfg, Uint flags)
 		AG_ButtonNewFn(hb, 0, _("Close"), AGWINHIDE(win));
 		AG_ButtonNewFn(hb, 0, _("Save"), SaveConfig, NULL);
 	}
-	agConfig->window = win;
-}
-
-/* Copy the full pathname of a data file to a sized buffer. */
-int
-AG_ConfigFile(const char *path_key, const char *name, const char *ext,
-    char *path, size_t path_len)
-{
-	char file[MAXPATHLEN];
-	char *dir, *pathp = path;
-	int rv;
-
-	AG_StringCopy(agConfig, path_key, path, path_len);
-
-	for (dir = AG_Strsep(&pathp, ":");
-	     dir != NULL;
-	     dir = AG_Strsep(&pathp, ":")) {
-		strlcpy(file, dir, sizeof(file));
-
-		if (name[0] != AG_PATHSEPC) {
-			strlcat(file, AG_PATHSEP, sizeof(file));
-		}
-		strlcat(file, name, sizeof(file));
-		if (ext != NULL) {
-			strlcat(file, ".", sizeof(file));
-			strlcat(file, ext, sizeof(file));
-		}
-		if ((rv = AG_FileExists(file)) == 1) {
-			if (strlcpy(path, file, path_len) >= path_len) {
-				AG_SetError(_("The search path is too big."));
-				return (-1);
-			}
-			return (0);
-		} else if (rv == -1) {
-			AG_SetError("%s: %s", file, AG_GetError());
-			return (-1);
-		}
-	}
-	AG_StringCopy(agConfig, path_key, path, path_len);
-	AG_SetError(_("Cannot find %s.%s (in <%s>:%s)."), name,
-	    (ext != NULL) ? ext : "", path_key, path);
-	return (-1);
+	return (win);
 }

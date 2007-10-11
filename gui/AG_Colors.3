@@ -50,6 +50,9 @@ widgets.
 .Ft "int"
 .Fn AG_ColorsSave "const char *path"
 .Pp
+.Ft "void"
+.Fn AG_ColorsSaveDefault "void"
+.Pp
 .nr nS 0
 The
 .Fn AG_ColorsInit
@@ -62,6 +65,11 @@ The
 function loads the color scheme from the given Agar color scheme (*.acs) file.
 .Fn AG_ColorsSave
 saves the current color scheme to the given *.acs file.
+.Fn AG_ColorsSaveDefault
+saves the current color scheme to the default location, assuming
+.Va save-path
+is set in
+.Xr AG_Config 3 .
 .Sh COLOR INDICES
 The widget rendering functions read the colors from the global
 .Va agColors[]
