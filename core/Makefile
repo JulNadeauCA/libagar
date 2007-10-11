@@ -2,10 +2,12 @@ TOP=..
 include ${TOP}/Makefile.config
 
 LIB=		ag_core
+LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
-LIB_STATIC=	No
 LIB_GUID=	"9d6bb497-1d2a-4ac0-9f7b-7be68b9077e8"
+
 LIB_LINKS=	ag_compat
+LIBS=		../compat/libag_compat.la
 
 SHARESRC=	core-icons.den
 
@@ -19,10 +21,9 @@ MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 \
 	AG_Timeout.3 AG_View.3 AG_Config.3 AG_Version.3
 MAN5=	AG_DEN.5
 
-CFLAGS+=${SDL_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS} \
+CFLAGS+=-I.. ${SDL_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS} \
 	${PTHREADS_XOPEN_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk
-include ${TOP}/mk/build.proj.mk
