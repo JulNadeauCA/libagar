@@ -1,8 +1,5 @@
-/*	$Csoft: agar-config.c,v 1.18 2005/09/18 04:59:10 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005, 2007 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -126,8 +123,7 @@ main(int argc, char *argv[])
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
-			printf("-lag_core ");
-			printf("-lag_gui -lag_compat ");
+			printf("-lag_core -lag_gui ");
 #ifdef NETWORK
 			printf("-lag_net ");
 #endif
