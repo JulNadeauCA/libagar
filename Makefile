@@ -77,8 +77,8 @@ install-includes:
 		echo "${INSTALL_INCL} core_pub.h ${INCLDIR}/agar/core.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/core/core_pub.h \
 		    ${INCLDIR}/agar/core.h; \
-		echo "${INSTALL_INCL} gui.h ${INCLDIR}/agar/gui.h"; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/gui/gui.h \
+		echo "${INSTALL_INCL} gui_pub.h ${INCLDIR}/agar/gui.h"; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/gui/gui_pub.h \
 		    ${INCLDIR}/agar/gui.h; \
 		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/vg/vg_pub.h \
@@ -106,8 +106,8 @@ install-includes:
 		    ${INCLDIR}/agar/core.h"; \
 		${SUDO} ${INSTALL_INCL} core/core_pub.h \
 		    ${INCLDIR}/agar/core.h; \
-		echo "${INSTALL_INCL} gui/gui.h ${INCLDIR}/agar/gui.h"; \
-		${SUDO} ${INSTALL_INCL} gui/gui.h ${INCLDIR}/agar/gui.h; \
+		echo "${INSTALL_INCL} gui/gui_pub.h ${INCLDIR}/agar/gui.h"; \
+		${SUDO} ${INSTALL_INCL} gui/gui_pub.h ${INCLDIR}/agar/gui.h; \
 		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h"; \
 		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h; \
 		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h"; \
