@@ -35,7 +35,12 @@
 
 #if defined(__MACOSX__) && defined(__ppc__)
 #include <sys/sysctl.h>
+#elif defined(__AMIGAOS4__)
+#include <exec/exec.h>
+#include <interfaces/exec.h>
+#include <proto/exec.h>
 #endif
+
 #if defined(HAVE_ALTIVEC) && defined(HAVE_SIGNAL) && defined(HAVE_SETJMP)
 #include <signal.h>
 #include <setjmp.h>
@@ -256,6 +261,15 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 			if (flag != 0)
 				cpu->ext |= AG_EXT_ALTIVEC;
 		}
+	}
+#elif defined(__AMIGAOS4__)
+	{
+    		extern struct ExecIFace *IExec;
+    		Ulong rv = 0;
+
+    		IExec->GetCPUInfoTags(GCIT_VectorUnit, &rv, TAG_DONE);
+    		if (rv == VECTORTYPE_ALTIVEC)
+			cpu->ext |= AG_EXT_ALTIVEC;
 	}
 #elif defined(HAVE_ALTIVEC) && defined(HAVE_SIGNAL) && defined(HAVE_SETJMP)
 	{
