@@ -46,6 +46,7 @@ void	   DEV_BrowserLoadFrom(void *, const char *);
 void	   DEV_BrowserGenericMenu(void *, void *);
 
 void	   DEV_ConfigShow(void);
+void	  *DEV_ObjectEdit(void *);
 __END_DECLS
 
 #include "close_code.h"
