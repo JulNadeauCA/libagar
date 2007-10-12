@@ -84,11 +84,14 @@ Application is being ran for the first time (read-only).
 Display is in full-screen mode.
 Default = FALSE.
 .It Va BOOL view.async-blits
-Pass the
+When the
+.Dv sdl
+video driver, pass the
 .Dv SDL_ASYNCBLIT
 flag to
 .Xr SDL_SetVideoMode 3
-on initialization.
+on initialization, possibly improving performance in multithreaded
+environments.
 Default = FALSE
 .It Va BOOL view.opengl
 OpenGL display mode (Agar must have been compiled with OpenGL support).
@@ -176,10 +179,7 @@ AG_SetString(agConfig, "font-path", "%s/.fonts:/usr/X11R6/lib/X11/fonts/TTF",
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,
-.Xr AG_Window 3 ,
-.Xr AG_Widget 3 ,
-.Xr AG_Text 3 ,
-.Xr SDL_SetVideoMode 3 .
+.Xr AG_Text 3
 .Sh HISTORY
 The
 .Nm

@@ -153,7 +153,7 @@ DEV_BrowserOpenGeneric(AG_Object *ob)
 	
 	oent = Malloc(sizeof(struct objent), M_OBJECT);
 	oent->obj = ob;
-	oent->win = AG_ObjectEdit(ob);
+	oent->win = DEV_ObjectEdit(ob);
 	TAILQ_INSERT_HEAD(&gobjs, oent, objs);
 	AG_WindowShow(oent->win);
 
