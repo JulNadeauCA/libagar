@@ -1,5 +1,3 @@
-/*	$Csoft: vg_text.c,v 1.24 2005/09/27 02:25:03 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -26,6 +24,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <compat/limits.h>
 #include <core/core.h>
 
 #include "vg.h"
@@ -332,7 +331,7 @@ VG_TextIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 	float d;
 
 	if (vge->nvtx < 1 || vge->vg_text.su == NULL)
-		return (FLT_MAX);
+		return (AG_FLT_MAX);
 
 	d = VG_Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
 	*x = vge->vtx[0].x;

@@ -653,6 +653,41 @@ echo "no" >> config.log
 HAVE_LONG_DOUBLE="no"
 echo "#undef HAVE_LONG_DOUBLE" > config/have_long_double.h
 fi;
+echo -n "checking for long long..."
+echo -n "checking for long long..." >> config.log
+cat << EOT > conftest.c
+int
+main(int argc, char *argv[])
+{
+	long long ll = 0.0;
+	unsigned long long ull = 0.0;
+	ll = 1.0;
+	ull = 1.0;
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_LONG_LONG="yes"
+echo "#ifndef HAVE_LONG_LONG" > config/have_long_long.h
+echo "#define HAVE_LONG_LONG \"$HAVE_LONG_LONG\"" >> config/have_long_long.h
+echo "#endif" >> config/have_long_long.h
+else
+echo "no"
+echo "no" >> config.log
+HAVE_LONG_LONG="no"
+echo "#undef HAVE_LONG_LONG" > config/have_long_long.h
+fi;
 echo -n "checking for cygwin environment..."
 echo -n "checking for cygwin environment..." >> config.log
 cat << EOT > conftest.c
@@ -769,8 +804,8 @@ echo "#undef _MK_HAVE_SYS_TYPES_H" > config/_mk_have_sys_types_h.h
 fi;
 rm -f conftest conftest.c
 if [ "${_MK_HAVE_SYS_TYPES_H}" = "yes" ]; then
-echo -n "checking for unsigned typedefs..."
-echo -n "checking for unsigned typedefs..." >> config.log
+echo -n "checking for conflicting typedefs..."
+echo -n "checking for conflicting typedefs..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
@@ -803,8 +838,8 @@ echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
 fi;
 rm -f conftest conftest.c
 else
-echo -n "checking for unsigned typedefs..."
-echo -n "checking for unsigned typedefs..." >> config.log
+echo -n "checking for conflicting typedefs..."
+echo -n "checking for conflicting typedefs..." >> config.log
 cat << EOT > conftest.c
 int main(int argc, char *argv[]) {
 	Uchar foo = 0;
@@ -957,6 +992,78 @@ compile="failed"
 _MK_HAVE_UNISTD_H="no"
 echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >> Makefile.config
 echo "#undef _MK_HAVE_UNISTD_H" > config/_mk_have_unistd_h.h
+fi;
+rm -f conftest conftest.c
+echo -n "checking for <limits.h>..."
+echo -n "checking for <limits.h>..." >> config.log
+cat << EOT > conftest.c
+#include <limits.h>
+
+int main(int argc, char *argv[]) {
+	int i;
+	unsigned u;
+	long l;
+	unsigned long ul;
+
+	i = INT_MIN;	i = INT_MAX;	u = UINT_MAX;
+	l = LONG_MIN;	l = LONG_MAX;	ul = ULONG_MAX;
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+_MK_HAVE_LIMITS_H="yes"
+echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >> Makefile.config
+echo "#ifndef _MK_HAVE_LIMITS_H" > config/_mk_have_limits_h.h
+echo "#define _MK_HAVE_LIMITS_H \"$_MK_HAVE_LIMITS_H\"" >> config/_mk_have_limits_h.h
+echo "#endif" >> config/_mk_have_limits_h.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+_MK_HAVE_LIMITS_H="no"
+echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >> Makefile.config
+echo "#undef _MK_HAVE_LIMITS_H" > config/_mk_have_limits_h.h
+fi;
+rm -f conftest conftest.c
+echo -n "checking for FP definitions in <limits.h>..."
+echo -n "checking for FP definitions in <limits.h>..." >> config.log
+cat << EOT > conftest.c
+#include <limits.h>
+
+int main(int argc, char *argv[]) {
+	float f;
+	double d;
+
+	f = FLT_MIN;	f = FLT_MAX;
+	d = DBL_MIN;	d = DBL_MAX;
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
+if [ $? == 0 ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+_MK_HAVE_LIMITS_H_FP="yes"
+echo "_MK_HAVE_LIMITS_H_FP=$_MK_HAVE_LIMITS_H_FP" >> Makefile.config
+echo "#ifndef _MK_HAVE_LIMITS_H_FP" > config/_mk_have_limits_h_fp.h
+echo "#define _MK_HAVE_LIMITS_H_FP \"$_MK_HAVE_LIMITS_H_FP\"" >> config/_mk_have_limits_h_fp.h
+echo "#endif" >> config/_mk_have_limits_h_fp.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+_MK_HAVE_LIMITS_H_FP="no"
+echo "_MK_HAVE_LIMITS_H_FP=$_MK_HAVE_LIMITS_H_FP" >> Makefile.config
+echo "#undef _MK_HAVE_LIMITS_H_FP" > config/_mk_have_limits_h_fp.h
 fi;
 rm -f conftest conftest.c
 echo -n "checking for BSD-style __progname..."

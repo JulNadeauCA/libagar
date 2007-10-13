@@ -23,15 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <compat/limits.h>
+
 #include <core/core.h>
 #include <core/view.h>
 
 #include "numerical.h"
-
 #include "primitive.h"
 
 #include <string.h>
-#include <limits.h>
 
 AG_Numerical *
 AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *label)
@@ -55,26 +55,26 @@ AdjustRangeForBinding(AG_Event *event)
 		AG_MutexLock(&num->lock);
 		switch (binding->vtype) {
 		case AG_WIDGET_DOUBLE:
-			num->min = -DBL_MAX+1;
-			num->max = DBL_MAX-1;
+			num->min = -AG_DBL_MAX+1;
+			num->max =  AG_DBL_MAX-1;
 			num->input->flags |= AG_TEXTBOX_FLT_ONLY;
 			num->input->flags &= ~AG_TEXTBOX_INT_ONLY;
 			break;
 		case AG_WIDGET_FLOAT:
-			num->min = -FLT_MAX+1;
-			num->max = FLT_MAX-1;
+			num->min = -AG_FLT_MAX+1;
+			num->max =  AG_FLT_MAX-1;
 			num->input->flags |= AG_TEXTBOX_FLT_ONLY;
 			num->input->flags &= ~AG_TEXTBOX_INT_ONLY;
 			break;
 		case AG_WIDGET_INT:
-			num->min = INT_MIN+1;
-			num->max = INT_MAX-1;
+			num->min = AG_INT_MIN+1;
+			num->max = AG_INT_MAX-1;
 			num->input->flags |= AG_TEXTBOX_INT_ONLY;
 			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;
 		case AG_WIDGET_UINT:
 			num->min = 0;
-			num->max = UINT_MAX-1;
+			num->max = AG_UINT_MAX-1;
 			num->input->flags |= AG_TEXTBOX_INT_ONLY;
 			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;
