@@ -1093,8 +1093,8 @@ circle_opengl(void *p, int x, int y, int radius, Uint32 color)
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(r, g, b);
 	for (i = 0; i < nedges; i++) {
-		glVertex2f(wid->cx + x + radius*cos((2*M_PI*i)/nedges),
-		           wid->cy + y + radius*sin((2*M_PI*i)/nedges));
+		glVertex2f(wid->cx + x + radius*cos((2*AG_PI*i)/nedges),
+		           wid->cy + y + radius*sin((2*AG_PI*i)/nedges));
 	}
 	glEnd();
 }
@@ -1112,10 +1112,10 @@ circle2_opengl(void *p, int x, int y, int radius, Uint32 color)
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(r, g, b);
 	for (i = 0; i < nedges; i++) {
-		glVertex2f(wid->cx + x + radius*cos((2*M_PI*i)/nedges),
-		           wid->cy + y + radius*sin((2*M_PI*i)/nedges));
-		glVertex2f(wid->cx + x + (radius+1)*cos((2*M_PI*i)/nedges),
-		           wid->cy + y + (radius+1)*sin((2*M_PI*i)/nedges));
+		glVertex2f(wid->cx + x + radius*cos((2*AG_PI*i)/nedges),
+		           wid->cy + y + radius*sin((2*AG_PI*i)/nedges));
+		glVertex2f(wid->cx + x + (radius+1)*cos((2*AG_PI*i)/nedges),
+		           wid->cy + y + (radius+1)*sin((2*AG_PI*i)/nedges));
 	}
 	glEnd();
 }

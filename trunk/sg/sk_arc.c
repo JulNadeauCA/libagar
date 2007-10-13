@@ -102,13 +102,13 @@ SK_ArcDraw(void *p, SK_View *skv)
 	if (arc->r < skv->wPixel) {
 		return;
 	}
-	incr = (2*M_PI)/10.0;
+	incr = (2*SG_PI)/10.0;
 
 	SG_TranslateVecGL(v);
 
 	SG_Begin(SG_LINE_LOOP);
 	SG_Color3v(&arc->color);
-	for (i = 0.0; i < M_PI*2; i+=incr) {
+	for (i = 0.0; i < SG_PI*2; i+=incr) {
 		glVertex2f(SG_Cos(i)*arc->r,
 		           SG_Sin(i)*arc->r);
 	}
