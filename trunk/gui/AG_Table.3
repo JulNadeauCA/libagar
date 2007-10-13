@@ -109,22 +109,23 @@ Acceptable values for the
 .Fa flags
 argument include:
 .Pp
-.Bd -literal
-#define AG_TABLE_MULTI		0x01	/* Multiple selections */
-#define AG_TABLE_MULTITOGGLE	0x02	/* Toggle multiple selections */
-#define AG_TABLE_POLL		0x08	/* Table is polled */
-#define AG_TABLE_MULTIMODE	(AG_TABLE_MULTI|AG_TABLE_MULTITOGGLE)
-.Ed
-.Pp
-The
-.Dv AG_TABLE_MULTI
-flag enables multiple selections when ctrl or shift key is held.
-.Dv AG_TABLE_MULTITOGGLE
-enables multiple selections by default.
-.Dv AG_TABLE_POLL
-triggers the
+.Bl -tag -width "AG_TABLE_MULTITOGGLE "
+.It AG_TABLE_MULTI
+Allow the user to select multiple items while holding
+.Dv CTRL
+or
+.Dv SHIFT .
+.It AG_TABLE_MULTITOGGLE
+Allow the user to select multiple items without holding
+.Dv CTRL
+or
+.Dv SHIFT .
+.It AG_TABLE_POLL
+Table contents are updated dynamically by the
 .Sq table-poll
-event before the table is drawn.
+event handler (implied by
+.Fn AG_TableNewPolled ) .
+.El
 .Pp
 The
 .Fn AG_TableSizeHint

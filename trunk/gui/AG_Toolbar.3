@@ -94,25 +94,16 @@ The
 .Fa flags
 may include:
 .Pp
-.Bd -literal
-#define AG_TOOLBAR_HOMOGENOUS   0x01   /* Scale buttons homogenously */
-#define AG_TOOLBAR_STICKY       0x02   /* Single toggle selection */
-#define AG_TOOLBAR_MULTI_STICKY 0x02   /* Multiple toggle selections */
-.Ed
-.Pp
-If
-.Dv AG_TOOLBAR_HOMOGENOUS
-is given,
-.Nm
-will try to allocate an equal amount of space to each button.
-.Pp
-The
-.Dv AG_TOOLBAR_STICKY
-flag enables the toggle behavior of the buttons, where only one button may
-be enabled at any given time.
-.Dv AG_TOOLBAR_MULTI_STICKY
-enables toggle behavior but allows multiple buttons to be enabled at the
-same time.
+.Bl -tag -width "AG_TOOLBAR_MULTI_STICKY "
+.It AG_TOOLBAR_HOMOGENOUS
+Scale the buttons so that they cover the whole toolbar area,
+instead of using their preferred sizes.
+.It AG_TOOLBAR_STICKY
+Buttons should preserve their state, and only one button can be selected
+at any given time.
+.It AG_TOOLBAR_MULTI_STICKY
+Button should preserve their state but multiple buttons can be selected.
+.El
 .Pp
 .Fn AG_ToolbarRow
 specifies the row number for all subsequent operations.

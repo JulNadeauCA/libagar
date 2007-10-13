@@ -77,12 +77,19 @@ widget.
 Acceptable
 .Fa flags
 include:
-.Bd -literal
-#define AG_FILEDLG_MULTI    0x01    /* Return a set of files */
-#define AG_FILEDLG_CLOSEWIN 0x02    /* Close the parent window when done */
-#define AG_FILEDLG_LOAD     0x04    /* File must exist and be readable */
-#define AG_FILEDLG_SAVE	    0x08    /* File must be writeable */
-.Ed
+.Bl -tag -width "AG_FILEDLG_CLOSEWIN "
+.It AG_FILEDLG_MULTI
+Allow multiple files to be selected at once.
+.It AG_FILEDLG_CLOSEWIN
+Automatically close the
+.Nm
+widget's parent window when a file is selected.
+.It AG_FILEDLG_LOAD
+The selected file must exist and be readable or an error is returned to
+the user.
+.It AG_FILEDLG_SAVE
+The selected file must be writeable or an error is returned to the user.
+.El
 .Pp
 The working directory can be set manually with the
 .Fn AG_FileDlgSetDirectory

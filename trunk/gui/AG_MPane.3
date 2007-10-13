@@ -97,10 +97,12 @@ The
 .Fa flags
 may include:
 .Pp
-.Bd -literal
-#define AG_MPANE_FRAMES    0x04	/* Decorative frames */
-#define AG_MPANE_FORCE_DIV 0x08	/* Always divide (not user-resizable) */
-.Ed
+.Bl -tag -width "AG_MPANE_FORCE_DIV "
+.It AG_MPANE_FRAMES
+Render decorative frames.
+.It AG_MPANE_FORCE_DIV
+Don't allow the user to move the dividers.
+.El
 .Pp
 The
 .Fn AG_MPaneSetLayout

@@ -37,9 +37,14 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget implements a dynamic, scrollable list of items.
-Individual items are typically associated with user-supplied pointers.
-Single or multiple selections of items are possible.
+widget displays a set of items in list or tree format.
+Typically, the contents are dynamically updated.
+.Pp
+Note that
+.Xr AG_Table 3
+is a more efficient alternative to
+.Nm
+in situations where tree display is not needed.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -96,45 +101,34 @@ The
 .Fa flags
 may include:
 .Pp
-.Bd -literal
-#define AG_TLIST_MULTI		0x001  /* Ctrl/shift multiple selections */
-#define AG_TLIST_MULTITOGGLE	0x002  /* Multiple toggle selections */
-#define AG_TLIST_POLL		0x004  /* Generate tlist-poll events */
-#define AG_TLIST_TREE		0x010  /* Arrange the items in a tree */
-#define AG_TLIST_NOSELSTATE	0x100  /* Don't restore previous selection
-                                          state after poll operation */
-.Ed
-.Pp
-If the
-.Dv AG_TLIST_MULTI
-flag is set, selecting an item while holding the
-.Dv KMOD_CTRL
-key will not cause other currently selected item
-to be deselected.
-If the flag
-.Dv AG_TLIST_MULTITOGGLE
-is set in addition to
-.Dv AG_TLIST_MULTI ,
-this behavior is achieved without having to hold
-.Dv KMOD_CTRL .
-.Pp
-The
-.Dv AG_TLIST_POLL
-flag causes the posting of a
+.Bl -tag -width "AG_TLIST_MULTITOGGLE "
+.It AG_TLIST_MULTI
+Allow the user to select multiple items while holding
+.Dv CTRL
+or
+.Dv SHIFT .
+.It AG_TLIST_MULTITOGGLE
+Allow the user to select multiple items without holding
+.Dv CTRL
+or
+.Dv SHIFT .
+.It AG_TLIST_POLL
+List contents are updated dynamically by the
 .Sq tlist-poll
-event every time the widget is redrawn.
-Typically, the
-.Sq tlist-poll
-event handler clears the list with
-.Fn AG_TlistClear ,
-inserts the items with
-.Fn AG_TlistAdd
-and restores the previous selections using
-.Fn AG_TlistRestore .
-.Pp
-The
-.Dv AG_TLIST_TREE
-option indicates that a tree is to be displayed.
+event handler (implied by
+.Fn AG_TlistNewPolled ) .
+Note that it is necessary to use
+.Fn AG_TlistClear
+and
+.Fn AG_TlistRestore
+when updating a dynamic list.
+.It AG_TLIST_TREE
+List contents are organized in a tree structure.
+.It AG_TLIST_NOSELSTATE
+When using
+.Dv AG_TLIST_POLL ,
+don't try to preserve selection information across list updates.
+.El
 .Pp
 The
 .Fn AG_TlistSetItemHeight
@@ -440,22 +434,6 @@ or
 .Dv AG_TLIST_MULTITOGGLE
 flags are in use.
 .El
-.Sh EFFICIENCY
-Item insertion and removal are O(1) operations.
-For n items, lookup and mouse selection handling is O(n), which becomes
-significant when viewing the bottom of lists with large n.
-For polled lists where the item list is rebuilt very frequently, it would
-be much more efficient to store the items in an array, at the cost of O(n)
-removal.
-This would also allow O(1) handling of mouse selections since all items have
-the same height.
-The allocation of items also incur significant overhead with polled lists.
-.Pp
-The
-.Xr AG_Table 3
-widget is a more efficient alternative to
-.Nm
-in many situations, but it does not support trees.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,

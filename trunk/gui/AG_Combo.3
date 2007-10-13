@@ -86,11 +86,20 @@ Acceptable
 .Fa flags
 include:
 .Pp
-.Bd -literal
-#define AG_COMBO_POLL     0x01  /* Polled list (AG_TLIST_POLL) */
-#define AG_COMBO_TREE     0x02  /* Tree display (AG_TLIST_TREE) */
-#define AG_COMBO_ANY_TEXT 0x04  /* Accept text not matching any item */
-.Ed
+.Bl -tag -width "AG_COMBO_ANY_TEXT "
+.It AG_COMBO_POLL
+List contents are dynamic (pass the
+.Dv AG_TLIST_POLL
+flag to the
+.Va tlist ) .
+.It AG_COMBO_TREE
+List is a tree display (pass the
+.Dv AG_TLIST_TREE
+flag to the
+.Va tlist ) .
+.It AG_COMBO_ANY_TEXT
+Allow user to enter text that does not match any item in the list.
+.El
 .Pp
 The
 .Fn AG_ComboSizeHint

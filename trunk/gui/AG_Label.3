@@ -116,13 +116,9 @@ enum ag_label_type {
 };
 .Ed
 .Pp
-All of the previous functions accept the following
-.Fa flags :
-.Bd -literal
-#define AG_LABEL_HFILL		0x01		/* Fill horizontal space */
-#define AG_LABEL_VFILL		0x02		/* Fill vertical space */
-#define AG_LABEL_EXPAND		(AG_LABEL_HFILL|AG_LABEL_VFILL)
-.Ed
+There are currently no
+.Fa flags
+specific to this widget.
 .Pp
 The
 .Fn AG_LabelSetPadding

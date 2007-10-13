@@ -38,6 +38,10 @@
 The
 .Nm
 widget is a scrollable plotter widget that accepts integer values.
+It is mainly designed for displaying performance measurements.
+.Pp
+A much more featureful, floating-point plotter is available as
+.Xr SC_Plotter 3 .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -76,14 +80,12 @@ The
 .Fa flags
 may include:
 .Pp
-.Bd -literal
-#define AG_FIXED_PLOTTER_SCROLL	0x01	/* Scroll if end is not visible */
-#define AG_FIXED_PLOTTER_XAXIS	0x02	/* Display X axis line */
-#define AG_FIXED_PLOTTER_HFILL	0x04
-#define AG_FIXED_PLOTTER_VFILL	0x08
-#define AG_FIXED_PLOTTER_FOCUS	0x10
-#define AG_FIXED_PLOTTER_EXPAND (AG_FIXED_PLOTTER_HFILL|AG_FIXED_PLOTTER_VFILL)
-.Ed
+.Bl -tag -width "AG_FIXED_PLOTTER_SCROLL "
+.It AG_FIXED_PLOTTER_SCROLL
+Always scroll to the end of the plot if it is not visible.
+.It AG_FIXED_PLOTTER_XAXIS
+Display the X-axis  line.
+.El
 .Sh PLOTTING
 .nr nS 1
 .Ft "AG_FixedPlotterCurve *"
