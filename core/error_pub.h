@@ -31,6 +31,7 @@ enum {
 	M_GAME,		/* game applications */
 	M_MATH,		/* math routines */
 	M_SG,		/* scene graph */
+	M_GI,		/* graphics interface */
 	M_LAST
 };
 
