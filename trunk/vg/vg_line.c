@@ -180,7 +180,6 @@ float
 VG_LineIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	float d, dMin = FLT_MAX;
-	VG_Vtx v1, v2;
 	float Ax, Ay, Bx, By, Cx, Cy;
 	float ix, iy, mx = 0.0, my = 0.0;
 	int i;

@@ -208,7 +208,6 @@ DrawGreyscale(void *p)
 {
 	AG_Matview *mv = p;
 	SG_Matrix *A = mv->mat;
-	SDL_Surface *su;
 	Uint m, n;
 	int x, y;
 	SG_Real big = 0.0, small = 0.0;
@@ -233,7 +232,6 @@ DrawGreyscale(void *p)
 			SDL_Rect rd;
 			Uint32 c;
 			Uint8 v;
-			Uint vi;
 
 			if (dv == HUGE_VAL) {
 				c = SDL_MapRGB(agVideoFmt, 200, 0, 0);

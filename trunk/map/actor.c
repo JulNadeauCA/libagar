@@ -232,7 +232,7 @@ MAP_ActorMoveTiles(void *obj, int xo, int yo)
 	for (y = a->g_map.y0; y <= a->g_map.y1; y++) {
 		for (x = a->g_map.x0; x <= a->g_map.x1; x++) {
 			MAP_Node *node = &m->map[y][x];
-			MAP_Item *r, *nr;
+			MAP_Item *r;
 		
 			TAILQ_FOREACH(r, &node->nrefs, nrefs) {
 				if (r->p != a ||

@@ -132,9 +132,6 @@ Edit(void *obj)
 {
 	SG_CgProgram *prog = obj;
 	AG_Window *win;
-	AG_Notebook *nb;
-	AG_NotebookTab *ntab;
-	AG_Textbox *tbox;
 	AG_Box *hBox;
 	AG_Radio *rad;
 	const char *programTypeNames[] = {

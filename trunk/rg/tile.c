@@ -112,11 +112,13 @@ BlendOverlayAlpha(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
 	SDL_UnlockSurface(su);
 }
 
+#if 0
 static void
 BlendSDL(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
 {
 	SDL_BlitSurface(su, NULL, t->su, rd);
 }
+#endif
 
 void
 RG_TileInit(RG_Tile *t, RG_Tileset *ts, const char *name)
@@ -196,7 +198,6 @@ void
 RG_TileGenerate(RG_Tile *t)
 {
 	RG_TileElement *tel;
-	SDL_Rect rd, sd;
 	
 	SDL_SetAlpha(t->su, SDL_SRCALPHA, t->ts->fmt->alpha);
 
@@ -445,7 +446,7 @@ RG_TileSave(RG_Tile *t, AG_Netbuf *buf)
 	Uint32 nelements = 0;
 	off_t nelements_offs;
 	RG_TileElement *tel;
-	int i, x, y;
+	int x, y;
 
 	AG_WriteString(buf, t->name);
 	AG_WriteUint8(buf, t->flags & ~RG_TILE_DIRTY);
@@ -514,8 +515,6 @@ RG_TileLoad(RG_Tile *t, AG_Netbuf *buf)
 {
 	RG_Tileset *ts = t->ts;
 	Uint32 i, nelements;
-	Sint32 s;
-	Uint8 flags;
 	int x, y;
 	
 	t->flags = AG_ReadUint8(buf);
@@ -603,7 +602,6 @@ RG_TileLoad(RG_Tile *t, AG_Netbuf *buf)
 				char sk_name[RG_SKETCH_NAME_MAX];
 				RG_Sketch *sk;
 				Sint32 x, y;
-				Uint32 w, h;
 				int alpha;
 
 				AG_CopyString(sk_name, buf, sizeof(sk_name));
@@ -769,7 +767,6 @@ CloseElement(RG_Tileview *tv)
 static void
 ElementClosedEv(AG_Event *event)
 {
-	AG_Window *win = AG_SELF();
 	RG_Tileview *tv = AG_PTR(1);
 
 	if (tv->edit_mode)
@@ -1077,8 +1074,6 @@ static void
 ImportFromBMP(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
-	AG_Tlist *tl_feats = AG_PTR(2);
-	int into_pixmaps = AG_INT(3);
 	char *path = AG_STRING(4);
 	RG_Pixmap *px;
 	Uint pixno = 0;
@@ -1368,7 +1363,6 @@ AddFillFeature(AG_Event *event)
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
 	AG_Tlist *tl_feats = AG_PTR(3);
-	AG_TlistItem *eit;
 	struct rg_fill_feature *fill;
 	RG_TileElement *tel;
 
@@ -1387,7 +1381,6 @@ AddSketchProjFeature(AG_Event *event)
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
 	AG_Tlist *tl_feats = AG_PTR(3);
-	AG_TlistItem *eit;
 	struct rg_sketchproj *sproj;
 	RG_TileElement *tel;
 
@@ -1406,7 +1399,6 @@ PollFeatures(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	RG_Tileset *ts = AG_PTR(1);
 	RG_Tile *t = AG_PTR(2);
-	AG_Window *win = AG_PTR(3);
 	RG_Tileview *tv = AG_PTR(4);
 	RG_TileElement *tel;
 	AG_TlistItem *it;
@@ -1462,8 +1454,6 @@ PollFeatures(AG_Event *event)
 	}
 
 	TAILQ_FOREACH(tel, &t->elements, elements) {
-		char label[AG_TLIST_LABEL_MAX];
-
 		if (tel->type == RG_TILE_FEATURE) {
 			RG_Feature *ft = tel->tel_feature.ft;
 			RG_FeatureSketch *fsk;
@@ -1562,8 +1552,6 @@ EditElement(AG_Event *event)
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
 	AG_Window *pwin = AG_PTR(3);
-	RG_Tileset *ts = tv->ts;
-	RG_Tile *t = tv->tile;
 	AG_TlistItem *it;
 	
 	if (AG_ObjectIsClass(sndr, "AG_Widget:AG_Button:*") && !tv->edit_mode) {
@@ -1610,7 +1598,6 @@ static void
 DeleteElement(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
-	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
 	AG_Tlist *tl_feats = AG_PTR(2);
 	int detach_only = AG_INT(3);
@@ -1683,17 +1670,14 @@ TileSettingsDlg(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
-	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
 	AG_Window *win;
 	AG_MSpinbutton *msb;
 	AG_Box *box;
-	AG_Button *b;
 	AG_Checkbox *ckey_cb, *alpha_cb;
 	AG_Spinbutton *alpha_sb;
 	AG_Radio *rad;
 	AG_Textbox *tb;
-	int i;
 
 	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	    AG_WINDOW_NOMINIMIZE, "rg-tileinfo-%s", t->name)) == NULL) {
@@ -1798,7 +1782,7 @@ ToggleElementVisibility(AG_Event *event)
 	AG_Tlist *tl = AG_PTR(2);
 	RG_Tile *t = tv->tile;
 	AG_TlistItem *it;
-	RG_TileElement *tel, *ntel;
+	RG_TileElement *tel;
 
 	if ((it = AG_TlistSelectedItem(tl)) == NULL ||
 	    (strcmp(it->cat, "pixmap") != 0 &&
@@ -1997,7 +1981,6 @@ AG_Window *
 RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 {
 	AG_Window *win;
-	AG_Box *box, *box1, *box2;
 	AG_Menu *me;
 	AG_MenuItem *mi;
 	RG_Tileview *tv;
@@ -2157,8 +2140,6 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 void
 RG_TileOpenMenu(RG_Tileview *tv, int x, int y)
 {
-	RG_Tile *t = tv->tile;
-	
 	if (tv->menu != NULL)
 		RG_TileCloseMenu(tv);
 

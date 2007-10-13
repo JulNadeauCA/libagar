@@ -285,9 +285,7 @@ static void
 ExportObject(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
-	AG_Window *win = AG_PTR(2);
 	char *path = AG_STRING(3);
-	char *pfx_save = ob->save_pfx;
 	int loadedTmp = 0;
 	int dataFound;
 
@@ -321,7 +319,6 @@ static void
 ImportObject(AG_Event *event)
 {
 	AG_Object *ob = AG_PTR(1);
-	AG_Window *win = AG_PTR(2);
 	char *path = AG_STRING(3);
 	int loadedTmp = 0;
 	int dataFound;
@@ -628,7 +625,6 @@ PollObjectsFind(AG_Tlist *tl, AG_Object *pob, int depth)
 	char label[AG_TLIST_LABEL_MAX];
 	AG_Object *cob;
 	AG_TlistItem *it;
-	SDL_Surface *icon;
 
 	strlcpy(label, pob->name, sizeof(label));
 	if (OBJECT_RESIDENT(pob)) {
@@ -871,8 +867,6 @@ AG_Window *
 DEV_Browser(void)
 {
 	AG_Window *win;
-	AG_VBox *vb;
-	AG_Textbox *name_tb;
 	AG_Tlist *tlObjs;
 	AG_Menu *me;
 	AG_MenuItem *mi, *mi_objs;

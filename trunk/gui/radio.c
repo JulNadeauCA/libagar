@@ -124,7 +124,6 @@ static void
 Destroy(void *p)
 {
 	AG_Radio *rad = p;
-	int i;
 
 	Free(rad->labels, M_WIDGET);
 	AG_WidgetDestroy(rad);
@@ -164,7 +163,6 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Radio *rad = AG_SELF();
-	int x = AG_INT(1);
 	int y = AG_INT(2) - YPADDING;
 
 	rad->oversel = (y/(RADIUS*2 + YSPACING));

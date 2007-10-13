@@ -232,7 +232,6 @@ SG_Edge2(void *obj, int vT, int vH)
 	SG_Object *so = obj;
 	SG_Edge *eT, *eH;
 	SG_EdgeEnt *ent = &so->edgetbl[SG_EdgeHash(so,vT,vH)];
-	int i;
 
 	SLIST_FOREACH(eH, &ent->edges, edges) {
 		if (eH->v == vH && eH->oe->v == vT)
@@ -416,7 +415,6 @@ SG_FacetCentroid(SG_Object *so, SG_Facet *fct)
 	int i, j;
 	SG_Real dot, aTmp = 0.0;
 	SG_Vector vTmp = VecZero();
-	SG_Vector cent;
 
 	for (i = (fct->n - 1), j = 0;
 	     j < fct->n;
@@ -461,7 +459,7 @@ SG_ObjectCheckConnectivity(void *obj)
 {
 	SG_Object *so = obj;
 	SG_Facet *f;
-	SG_Edge *e, *oe;
+	SG_Edge *e;
 	int i;
 
 	SLIST_FOREACH(f, &so->facets, facets) {
@@ -678,8 +676,6 @@ SG_ObjectSave(void *p, AG_Netbuf *buf)
 	SG_Object *so = p;
 	Uint i;
 	off_t offs;
-	SG_Facet *f;
-	SG_Edge *e;
 	
 	AG_WriteVersion(buf, "SG:SG_Object", &sgObjectVer);
 	AG_WriteUint32(buf, (Uint32)so->flags);

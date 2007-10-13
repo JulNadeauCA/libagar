@@ -57,8 +57,6 @@ AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
 AG_TlistItem *
 AG_ObjectSelectorSelect(AG_ObjectSelector *os, void *p)
 {
-	AG_TlistItem *it;
-
 	return (AG_ComboSelectPointer(&os->com, p));
 }
 
@@ -111,7 +109,6 @@ PollObjects(AG_Event *event)
 static void
 SelectObject(AG_Event *event)
 {
-	AG_Combo *com = AG_SELF();
 	AG_ObjectSelector *os = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
 	AG_WidgetBinding *objectb;

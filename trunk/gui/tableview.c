@@ -394,7 +394,6 @@ tableview_row_destroy(AG_Tableview *tv, AG_TableviewRow *row)
 void
 AG_TableviewRowDel(AG_Tableview *tv, AG_TableviewRow *row)
 {
-	Uint i;
 	AG_TableviewRow *row1, *row2;
 
 	if (row == NULL)
@@ -738,7 +737,6 @@ Draw(void *p)
 	if (update) {
 		tv->visible.redraw_last = SDL_GetTicks();
 	}
-out:
 	AG_MutexUnlock(&tv->lock);
 }
 
@@ -1372,8 +1370,6 @@ dblclick_expire(AG_Event *event)
 static void
 lost_focus(AG_Event *event)
 {
-	AG_Tableview *tv = AG_SELF();
-
 	//AG_CancelEvent(tv, "key-tick");
 	//AG_CancelEvent(tv, "dblclick-expire");
 	//tv->dblclicked = 0;

@@ -572,7 +572,6 @@ int
 AG_TablePoolAdd(AG_Table *t, Uint m, Uint n)
 {
 	AG_TableCol *tc = &t->cols[n];
-	AG_TableCell *c1 = &t->cells[m][n], *c2;
 	
 	tc->pool = Realloc(tc->pool, (tc->mpool+1)*sizeof(AG_TableCell));
 	memcpy(&tc->pool[tc->mpool], &t->cells[m][n], sizeof(AG_TableCell));
@@ -686,7 +685,7 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 void
 AG_TableEnd(AG_Table *t)
 {
-	Uint n, m, i;
+	Uint n, m;
 
 	for (n = 0; n < t->n; n++) {
 		AG_TableCol *tc = &t->cols[n];
@@ -768,7 +767,6 @@ ColumnRightClick(AG_Table *t, int px)
 static void
 ColumnLeftClick(AG_Table *tbl, int px)
 {
-	AG_TableCell *c;
 	int x = px - (COLUMN_RESIZE_RANGE/2), x1;
 	int multi = SelectingMultiple(tbl);
 	Uint n;
@@ -873,7 +871,6 @@ CellLeftClick(AG_Table *tbl, int mc, int x)
 static void
 CellRightClick(AG_Table *t, int m, int px)
 {
-	AG_TablePopup *tp;
 	int x = px - (COLUMN_RESIZE_RANGE/2), cx;
 	Uint n;
 
@@ -978,9 +975,6 @@ mousebuttonup(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
-	Uint m, n;
 
 	switch (button) {
 	case SDL_BUTTON_LEFT:
@@ -1042,8 +1036,6 @@ mousemotion(AG_Event *event)
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	int xrel = AG_INT(3);
-	int yrel = AG_INT(4);
-	int n, cx;
 	int m;
 
 	if (x < 0 || y < 0 || x >= WIDGET(t)->w || y >= WIDGET(t)->h)
@@ -1178,7 +1170,6 @@ KeyboardScroll(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 	SDLKey keysym = AG_SDLKEY(1);
-	Uint m2, n;
 	int m;
 	
 	AG_MutexLock(&t->lock);
@@ -1235,7 +1226,6 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
     int (*sort_fn)(const void *, const void *))
 {
 	AG_TableCol *tc, *lc;
-	AG_TableCell *c;
 	Uint m, n;
 
 	AG_MutexLock(&t->lock);
@@ -1315,7 +1305,6 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	t->cells = Realloc(t->cells, (t->m+1)*sizeof(AG_TableCell));
 	t->cells[t->m] = Malloc(t->n*sizeof(AG_TableCell), M_WIDGET);
 	for (n = 0; n < t->n; n++) {
-		AG_TableCol *tc = &t->cols[n];
 		AG_TableCell *c = &t->cells[t->m][n];
 		char *s = AG_Strsep(&sp, ":"), *sc;
 		int ptr = 0, lflag = 0, ptr_long = 0;

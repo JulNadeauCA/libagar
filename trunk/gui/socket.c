@@ -214,8 +214,7 @@ Draw(void *p)
 	AG_Socket *sock = p;
 	AG_WidgetBinding *binding;
 	void *pBinding;
-	int x = 0, y = 0;
-	int state, count, wLbl, hLbl;
+	int state, count;
 	
 	binding = AG_WidgetGetBinding(sock, "state", &pBinding);
 	state = GetState(binding, pBinding);
@@ -343,6 +342,7 @@ SetState(AG_WidgetBinding *binding, void *p, int v)
 	}
 }
 
+#if 0
 static void
 SetCount(AG_WidgetBinding *binding, void *p, int v)
 {
@@ -357,6 +357,7 @@ SetCount(AG_WidgetBinding *binding, void *p, int v)
 	case AG_WIDGET_SINT32:	*(Sint32 *)p = v;	break;
 	}
 }
+#endif
 
 static void
 MouseMotion(AG_Event *event)

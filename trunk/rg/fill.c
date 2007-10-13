@@ -152,7 +152,6 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 		AG_Spinbutton *sb;
 		AG_Notebook *nb;
 		AG_NotebookTab *ntab;
-		AG_Box *hb;
 
 		nb = AG_NotebookNew(box, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 		ntab = AG_NotebookAddTab(nb, _("Color A"), AG_BOX_VERT);

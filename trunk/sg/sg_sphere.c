@@ -120,7 +120,6 @@ Subdivide(SG_Sphere *sph, const SG_Vector *v1, const SG_Vector *v2,
     const SG_Vector *v3, int depth)
 {
 	SG_Vector v12, v23, v31;
-	int i;
 
 	if (depth == 0) {
 		/*

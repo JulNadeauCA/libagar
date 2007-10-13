@@ -118,7 +118,6 @@ PollProps(AG_Event *event)
 static void
 PollEvents(AG_Event *event)
 {
-	extern const char *evarg_type_names[];
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *ob = AG_PTR(1);
 	AG_Event *ev;

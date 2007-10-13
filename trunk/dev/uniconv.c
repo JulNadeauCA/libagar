@@ -176,7 +176,7 @@ SelectUnicodeRange(AG_Event *event)
 	AG_TlistItem *it = AG_PTR(2);
 	struct unicode_range *range = it->p1;
 	const struct unicode_range *next_range = NULL;
-	Uint32 i, j, end;
+	Uint32 i, end;
 	char *c;
 
 	for (i = 0; i < unicodeRangeCount; i++) {

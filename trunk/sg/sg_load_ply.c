@@ -435,7 +435,6 @@ SG_ObjectLoadPLY(void *obj, const char *path)
 			cur_el = el;
 		} else if (strcmp(key, "property") == 0) {
 			struct ply_prop *prop;
-			int i;
 			
 			if (cur_el == NULL) {
 				AG_SetError("Properties must follow elements");

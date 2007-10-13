@@ -136,7 +136,6 @@ static void
 mousebuttondown(AG_Event *event)
 {
 	AG_Menu *m = AG_SELF();
-	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 	int i;
@@ -254,7 +253,6 @@ mousemotion(AG_Event *event)
 static void
 attached(AG_Event *event)
 {
-	AG_Menu *m = AG_SELF();
 	AG_Widget *pwid = AG_SENDER();
 	AG_Window *pwin;
 
@@ -531,7 +529,6 @@ AG_MenuItem *
 AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, int icon,
     int *boolp, int inv, AG_Mutex *lock)
 {
-	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
 	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
@@ -546,7 +543,6 @@ AG_MenuItem *
 AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, int icon,
     Uint8 *boolp, int inv, AG_Mutex *lock)
 {
-	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
 	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
@@ -561,7 +557,6 @@ AG_MenuItem *
 AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, int icon,
     int *flagsp, int flags, int inv, AG_Mutex *lock)
 {
-	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
 	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
@@ -577,7 +572,6 @@ AG_MenuItem *
 AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, int icon, 
     Uint8 *flagsp, Uint8 flags, int inv, AG_Mutex *lock)
 {
-	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
 	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
@@ -593,7 +587,6 @@ AG_MenuItem *
 AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, int icon,
     Uint16 *flagsp, Uint16 flags, int inv, AG_Mutex *lock)
 {
-	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
 	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
@@ -609,7 +602,6 @@ AG_MenuItem *
 AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, int icon, 
     Uint32 *flagsp, Uint32 flags, int inv, AG_Mutex *lock)
 {
-	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
 	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);

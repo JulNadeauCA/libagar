@@ -125,7 +125,6 @@ RG_TilesetReinit(void *obj)
 	RG_Feature *ft, *nft;
 	RG_Anim *ani, *nani;
 	RG_Texture *tex, *ntex;
-	int i;
 
 	AG_MutexLock(&ts->lock);
 	
@@ -1028,7 +1027,6 @@ InsertTexture(AG_Event *event)
 	RG_Tileset *ts = AG_PTR(3);
 	AG_Window *win;
 	RG_Texture *tex;
-	Uint flags = 0;
 
 	if (ins_texture_name[0] == '\0') {
 		Uint nameno = 0;
@@ -1251,7 +1249,6 @@ InsertAnimDlg(AG_Event *event)
 	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
 	AG_Box *btnbox;
-	AG_Button *btn;
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
 	AG_Checkbox *cb;
@@ -1320,7 +1317,7 @@ TileDup(RG_Tileset *ts, RG_Tile *t1)
 {
 	char name[RG_TILE_NAME_MAX];
 	RG_Tile *t2;
-	RG_TileElement *e1, *e2;
+	RG_TileElement *e1;
 	int x, y;
 	int ncopy = 0;
 
@@ -1698,12 +1695,8 @@ RG_TilesetEdit(void *p)
 	AG_Window *win;
 	AG_Tlist *tlTiles, *tlGfx, *tlAnims, *tl_textures;
 	AG_Tlist *tlTileTbl, *tlAnimTbl;
-	AG_Box *box, *hbox, *bbox;
-	AG_Textbox *tb;
-	AG_MSpinbutton *msb;
-	AG_Menu *m;
+	AG_Box *bbox;
 	AG_MenuItem *mi;
-	AG_Button *bu;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 	AG_Combo *com;

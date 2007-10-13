@@ -459,7 +459,6 @@ PollTiles(AG_Event *event)
 static void
 SelectInsnTile(AG_Event *event)
 {
-	RG_Anim *ani = AG_PTR(1);
 	RG_AnimInsn *insn = AG_PTR(2);
 	RG_Tileview *tv = AG_PTR(3);
 	AG_TlistItem *it = AG_PTR(4);
@@ -476,7 +475,6 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 	AG_Widget *child;
 	AG_Spinbutton *sb;
 	AG_MSpinbutton *msb;
-	AG_Checkbox *cb;
 	AG_Combo *com;
 	RG_Tileview *tv;
 
@@ -568,7 +566,7 @@ SelectInsn(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
 	AG_Box *box = AG_PTR(2);
-	AG_TlistItem *it, *eit;
+	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
@@ -597,7 +595,6 @@ InsertInsn(AG_Event *event)
 	enum rg_anim_insn_type type = AG_INT(2);
 	AG_Box *box = AG_PTR(3);
 	AG_Tlist *tl = AG_PTR(4);
-	AG_TlistItem *it;
 	RG_AnimInsn *insn;
 	
 	insn = &ani->insns[RG_AnimInsertInsn(ani, type)];
@@ -645,8 +642,7 @@ RG_AnimEdit(RG_Anim *ani)
 {
 	RG_Tileset *ts = ani->tileset;
 	AG_Window *win;
-	AG_Box *hBox, *editBox;
-	AG_Textbox *tb;
+	AG_Box *editBox;
 	AG_Tlist *tl;
 	AG_Notebook *nb;
 	AG_NotebookTab *nt;

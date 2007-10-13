@@ -171,7 +171,6 @@ UpdateUnitSelector(AG_MFSpinbutton *fsu)
 static void
 SelectUnit(AG_Event *event)
 {
-	AG_UCombo *ucom = AG_SELF();
 	AG_MFSpinbutton *fsu = AG_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
 

@@ -115,7 +115,6 @@ VG_ArcPrimitive(VG *vg, int cx, int cy, int w, int h, int a1, int a2,
 {
 	extern int vg_cos_tbl[];
 	extern int vg_sin_tbl[];
-	SDL_Surface *su = vg->su;
 	int px = 0, py = 0;
 	int w2 = w/2, h2 = h/2;
 	int a;
@@ -145,7 +144,7 @@ VG_HLinePrimitive(VG *vg, int px1, int px2, int py, Uint32 c)
 	int x1 = vg->rDst.x+px1;
 	int x2 = vg->rDst.x+px2;
 	int y = vg->rDst.y+py;
-	int x, dx;
+	int dx;
 
 	if (y >= su->clip_rect.y+su->clip_rect.h || y < su->clip_rect.y) {
 		return;
@@ -317,10 +316,8 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
     int thick, Uint32 color)
 {
 	float x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
-	float grad, xd, yd, length, xm, ym, xgap, ygap, xEnd, yEnd, xf, yf,
-	    lum1, lum2, ipart;
+	float grad, xd, yd, xgap, ygap, xEnd, yEnd, xf, yf, lum1, lum2;
 	int x, y, ix1, ix2, iy1, iy2;
-	Uint32 c1, c2;
 	Uint8 r, g, b, a;
 	int yoffs;
 	float focus;

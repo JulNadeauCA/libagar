@@ -200,7 +200,6 @@ VG_TextRenderLabel(VG *vg, VG_Element *vge)
 {
 	char s[VG_TEXT_MAX];
 	char s2[32];
-	SDL_Surface *ts;
 	char *fmtp;
 	int i, ri = 0;
 

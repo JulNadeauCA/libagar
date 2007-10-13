@@ -50,7 +50,6 @@ Init(void *obj, const char *name)
 static void
 Destroy(void *obj)
 {
-	PE_Ode *pe = obj;
 }
 
 static int

@@ -84,7 +84,6 @@ PollNodes(AG_Event *event)
 static void
 SelectNode(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	AG_TlistItem *it = AG_PTR(1);
 	int state = AG_INT(2);
 	SG_Node *node = it->p1;
@@ -227,7 +226,6 @@ static void
 ImportMeshDlg(AG_Event *event)
 {
 	SG *sg = AG_PTR(1);
-	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
 	AG_FileDlg *dlg;
 
@@ -257,7 +255,6 @@ PollChildNodes(AG_Event *event)
 static void
 NodeInfo(AG_Event *event)
 {
-	SG_View *sgv = AG_PTR(1);
 	SG_Node *node = AG_PTR(2);
 	AG_Window *win;
 	AG_Matview *mv;
@@ -281,8 +278,6 @@ NodeInfo(AG_Event *event)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 	ntab = AG_NotebookAddTab(nb, _("T-matrix"), AG_BOX_VERT);
 	{
-		static SG_Matrix Tp;
-
 		mv = AG_MatviewNew(ntab, &node->T, 0);
 		AG_MatviewSetNumericalFmt(mv, "%.06f");
 		AG_TextSize("-0.000000", &mv->ent_w, &mv->ent_h);
@@ -300,7 +295,9 @@ NodeInfo(AG_Event *event)
 static void
 NodeDelete(AG_Event *event)
 {
-	SG_Node *node = AG_PTR(1);
+/*	SG_Node *node = AG_PTR(1); */
+
+	/* TODO */
 }
 
 static void
@@ -391,7 +388,6 @@ SG_Edit(void *p)
 	AG_Menu *menu;
 	AG_MenuItem *pitem;
 	AG_Pane *hp;
-	int i, dx;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", OBJECT(sg)->name);
@@ -448,8 +444,6 @@ SG_Edit(void *p)
 		}
 		ntab = AG_NotebookAddTab(nb, _("Nodes"), AG_BOX_VERT);
 		{
-			AG_MenuItem *popup;
-
 			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
 			                       AG_TLIST_EXPAND|AG_TLIST_MULTI);
 			AG_TlistSizeHint(tl, "<Isocahedron>", 2);

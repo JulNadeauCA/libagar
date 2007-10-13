@@ -89,7 +89,6 @@ mousemotion(AG_Event *event)
 	SC_Plotter *ptr = AG_SELF();
 	int x = AG_INT(1);
 	int y = AG_INT(2);
-	int dx = AG_INT(3);
 	int dy = AG_INT(4);
 	int state = AG_INT(5);
 	SC_Plot *pl;
@@ -194,7 +193,6 @@ SC_PlotSettings(SC_Plot *pl)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 	ntab = AG_NotebookAddTab(nb, _("Trace"), AG_BOX_VERT);
 	{
-		AG_MFSpinbutton *mfsb;
 		AG_FSpinbutton *fsb;
 		AG_Radio *rad;
 
@@ -322,7 +320,6 @@ mousebuttondown(AG_Event *event)
 static void
 UpdateXBar(AG_Event *event)
 {
-	AG_Scrollbar *sbar = AG_SELF();
 	SC_Plotter *ptr = AG_PTR(1);
 	int value = AG_INT(2);
 
@@ -337,7 +334,6 @@ void
 SC_PlotterInit(SC_Plotter *ptr, Uint flags)
 {
 	Uint wflags = AG_WIDGET_CLIPPING|AG_WIDGET_FOCUSABLE;
-	int i;
 
 	if (flags & SC_PLOTTER_HFILL) wflags |= AG_WIDGET_HFILL;
 	if (flags & SC_PLOTTER_VFILL) wflags |= AG_WIDGET_VFILL;
@@ -653,7 +649,6 @@ SC_PlotPropVal(SC_Plotter *ptr, SC_Plot *pl)
 void
 SC_PlotterUpdate(SC_Plotter *ptr)
 {
-	void *p;
 	SC_Plot *pl;
 
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {

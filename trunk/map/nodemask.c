@@ -83,9 +83,12 @@ MAP_NodeMaskDestroy(MAP *m, MAP_NodeMask *mask)
 int
 MAP_NodeMaskLoad(MAP *m, AG_Netbuf *buf, MAP_NodeMask *mask)
 {
+#if 0
 	AG_Object *obj;
-	Uint32 i, objref, offs;
+	Uint32 objref, offs;
 	void *pobj;
+#endif
+	Uint32 i;
 
 	mask->type = AG_ReadUint8(buf);
 	mask->scale = (int)AG_ReadSint16(buf);

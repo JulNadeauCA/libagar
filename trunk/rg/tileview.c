@@ -428,7 +428,6 @@ mousebuttonup(AG_Event *event)
 				{
 					RG_TileElement *tel =
 					    tv->tv_pixmap.tel;
-					RG_Pixmap *px = tel->tel_pixmap.px;
 
 					RG_PixmapButtonup(tv, tel,
 					    tv->xms - tel->tel_pixmap.x,
@@ -440,7 +439,6 @@ mousebuttonup(AG_Event *event)
 				{
 					RG_TileElement *tel =
 					    tv->tv_sketch.tel;
-					RG_Sketch *sk = tel->tel_sketch.sk;
 					float vx, vy;
 				
 					VG_Vcoords2(tel->tel_sketch.sk->vg,
@@ -552,7 +550,6 @@ static void
 move_handle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, int nhandle,
     int x2, int y2)
 {
-	RG_TileviewHandle *th = &ctrl->handles[nhandle];
 	int dx = x2 - tv->xorig;
 	int dy = y2 - tv->yorig;
 	int xoffs = 0;
@@ -1010,7 +1007,6 @@ void
 RG_TileviewSetZoom(RG_Tileview *tv, int z2, int adj_offs)
 {
 	RG_Tile *t = tv->tile;
-	int z1 = tv->zoom;
 	int pxsz1 = tv->pxsz;
 
 	if (z2 < 100 ||
@@ -1197,8 +1193,6 @@ RG_TileviewAlpha(RG_Tileview *tv, Uint8 a)
 void
 RG_TileviewRect2(RG_Tileview *tv, int x, int y, int w, int h)
 {
-	Uint8 r, g, b;
-
 	if (!agView->opengl) {
 		int xi, yi;
 		int x2 = x+w;
@@ -1642,7 +1636,6 @@ Draw(void *p)
 	RG_Tile *t = tv->tile;
 	RG_TileviewCtrl *ctrl;
 	SDL_Rect rsrc, rdst, rtiling;
-	int dxoffs, dyoffs;
 	int x, y, n;
 
 	if (t == NULL)

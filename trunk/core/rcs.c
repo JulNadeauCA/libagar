@@ -170,10 +170,8 @@ enum ag_rcs_status
 AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
     char *name, char *type, Uint *repo_rev, Uint *working_rev)
 {
-	enum ag_rcs_status rv = AG_RCS_UPTODATE;
-	char *buf, *bufp;
+	char *buf;
 	int sum_match = 1;
-	int i;
 	char *s;
 	
 	if (NC_Write(&rcs_client, "rcs-info\nobject-path=%s\n\n",
@@ -220,7 +218,8 @@ AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
 	} else if (*working_rev < *repo_rev) {
 		return (AG_RCS_DESYNCH);
 	} else {
-		AG_SetError("Working revision %u < %u", *working_rev, *repo_rev);
+		AG_SetError("Working revision %u < %u", *working_rev,
+		    *repo_rev);
 		return (AG_RCS_ERROR);
 	}
 }
@@ -442,14 +441,13 @@ fail:
 int
 AG_RcsUpdate(AG_Object *ob)
 {
-	char buf[BUFSIZ];
 	char type[AG_OBJECT_TYPE_MAX];
 	char objdir[AG_OBJECT_PATH_MAX];
 	char objpath[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
 	Uint working_rev, repo_rev;
 	NC_Result *res;
-	size_t len, wrote = 0;
+	size_t len;
 	FILE *f;
 	
 	if (AG_ObjectCopyName(ob, objdir, sizeof(objdir)) == -1 ||
@@ -641,7 +639,8 @@ AG_RcsLog(const char *objdir, AG_Tlist *tl)
 				break;
 			}
 		}
-		AG_TlistAdd(tl, icon, "[#%s.%s] %s", rev, author, msg);
+		AG_TlistAdd(tl, icon, "[#%s.%s] %s: %s", rev, author, name,
+		    msg);
 	}
 	NC_FreeResult(res);
 	return (0);
@@ -695,7 +694,6 @@ AG_RcsList(AG_Tlist *tl)
 		it->cat = "object";
 		it->depth = depth;
 	}
-out:
 	AG_TlistRestore(tl);
 	NC_FreeResult(res);
 	return (0);
@@ -750,7 +748,6 @@ AG_RcsCheckout(const char *path)
 	char name[AG_OBJECT_NAME_MAX];
 	char type[AG_OBJECT_TYPE_MAX];
 	char *buf, *s;
-	int i;
 	Uint rev = 0;
 	AG_Object *obj;
 	AG_ObjectType *t;

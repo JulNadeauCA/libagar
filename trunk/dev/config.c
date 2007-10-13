@@ -96,7 +96,6 @@ WarnRestart(AG_Event *event)
 static void
 BindSelectedColor(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	AG_HSVPal *hsv = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
 	Uint32 *c = it->p1;
@@ -237,7 +236,6 @@ DEV_ConfigWindow(AG_Config *cfg)
 	AG_Checkbox *cbox;
 	AG_Notebook *nb;
 	AG_NotebookTab *tab;
-	AG_MSpinbutton *msb;
 	AG_Spinbutton *sbu;
 
 	win = AG_WindowNewNamed(0, "config-engine-settings");

@@ -221,7 +221,7 @@ SK_Solve(SK *sk)
 {
 	SK_Cluster clOrig;
 	SK_Cluster *cl, *clRing[3], *clPair[2];
-	SK_Constraint *ct, *ctCluster, *ctPair[2];
+	SK_Constraint *ct;
 	SK_Node *node;
 	int nRing;
 	Uint i, j, count;

@@ -646,7 +646,6 @@ void
 AG_HSVPalInit(AG_HSVPal *pal, Uint flags)
 {
 	int wflags = AG_WIDGET_FOCUSABLE;
-	int i;
 
 	if (flags & AG_HSVPAL_HFILL) { wflags |= AG_WIDGET_HFILL; }
 	if (flags & AG_HSVPAL_VFILL) { wflags |= AG_WIDGET_VFILL; }
@@ -690,7 +689,6 @@ RenderPalette(AG_HSVPal *pal)
 	float h, cur_h, cur_s, cur_v;
 	Uint32 pc;
 	Uint8 r, g, b, a, da;
-	Uint8 *pDst;
 	int x, y, i;
 	SDL_Rect rd;
 
@@ -771,8 +769,6 @@ RenderPalette(AG_HSVPal *pal)
 static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_HSVPal *pal = p;
-
 	r->w = 128;
 	r->h = 128;
 }
@@ -781,7 +777,6 @@ static int
 SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	AG_HSVPal *pal = p;
-	int i, y = 0;
 
 	if (a->w < 32 || a->h < 32)
 		return (-1);
@@ -815,7 +810,6 @@ Draw(void *p)
 	float cur_h, cur_s, cur_v;
 	Uint8 r, g, b, a;
 	int x, y;
-	int i;
 
 	if (WIDGET(pal)->w < 16 || WIDGET(pal)->h < 16)
 		return;

@@ -254,7 +254,6 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_Toolbar *bar = p;
 	AG_Box *box = p;
 	AG_Widget *chld;
 	AG_SizeReq rChld;

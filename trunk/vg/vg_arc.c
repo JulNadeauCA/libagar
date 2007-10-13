@@ -69,7 +69,6 @@ VG_ArcRender(VG *vg, VG_Element *vge)
 {
 	int x, y;
 	int w, h;
-	int s, e;
 
 	VG_Rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
 	VG_RLength(vg, vge->vg_arc.w, &w);

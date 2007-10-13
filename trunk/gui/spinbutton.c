@@ -128,7 +128,6 @@ static void
 spinbutton_return(AG_Event *event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
-	AG_WidgetBinding *stringb;
 
 	AG_PostEvent(NULL, sbu, "spinbutton-return", NULL);
 	AG_WidgetUnfocus(sbu->input);
@@ -269,7 +268,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_SizeAlloc aChld;
 	AG_SizeReq rUnits;
 	int szBtn = a->h/2;
-	int hUnits;
 
 	if (a->h < 4 || a->w < szBtn+4)
 		return (-1);

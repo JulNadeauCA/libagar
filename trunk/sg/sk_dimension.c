@@ -219,7 +219,6 @@ static SG_Real
 GetDimensionVal(SK_Node *n1, SK_Node *n2)
 {
 	SG_Vector v1, v2;
-	SG_Line2 L1, L2;
 
 	if (SK_NodeOfClass(n1, "Point:*") &&
 	    SK_NodeOfClass(n2, "Point:*")) {
@@ -271,7 +270,7 @@ SK_DimensionDraw(void *p, SK_View *skv)
 	SK_Dimension *dim = p;
 	SG_Color cLblBorder = SK_NodeColor(dim, &dim->cLblBorder);
 	SG_Color cLineDim = SK_NodeColor(dim, &dim->cLineDim);
-	SG_Vector vC, v1, v2;
+	SG_Vector v1, v2;
 	SG_Real d, wLbl, hLbl;
 	SG_Matrix Ta;
 	int wText, hText;
@@ -361,7 +360,6 @@ SK_DimensionRedraw(void *p, SK_View *skv)
 void
 SK_DimensionEdit(void *p, AG_Widget *box, SK_View *skv)
 {
-	SK_Dimension *dim = p;
 }
 
 SG_Real
@@ -475,7 +473,6 @@ AddDimConstraint(AG_Event *event)
 	default:
 		break;
 	}
-out:
 	t->curDim = NULL;
 	AG_ViewDetach(pWin);
 }
@@ -494,8 +491,6 @@ UndoDimConstraint(AG_Event *event)
 static int
 AddDimConstraintDlg(struct sk_dimension_tool *t, SK *sk, SK_Dimension *dim)
 {
-	SG_Vector v1, v2;
-	SG_Real d;
 	AG_Window *win;
 	AG_Numerical *num;
 	AG_VBox *vb;
@@ -578,7 +573,6 @@ ToolMouseMotion(void *self, SG_Vector pos, SG_Vector vel, int btn)
 {
 	struct sk_dimension_tool *t = self;
 	SK_View *skv = SKTOOL(t)->skv;
-	SK_Dimension *dim;
 	SK *sk = skv->sk;
 	SG_Vector vC;
 	SK_Node *node;

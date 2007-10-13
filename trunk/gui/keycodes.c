@@ -328,7 +328,6 @@ DeleteUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	size_t len;
 	Uint32 *ucs4, *c;
 	char *utf8;
-	int i;
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
 	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);

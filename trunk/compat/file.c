@@ -88,7 +88,6 @@ int
 AG_GetFileInfo(const char *path, AG_FileInfo *i)
 {
 	struct stat sb;
-	FILE *f;
 	uid_t uid = geteuid();
 	gid_t gid = getegid();
 

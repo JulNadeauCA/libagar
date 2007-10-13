@@ -118,7 +118,6 @@ static void
 poll_tilesets(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
-	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
 	AG_LockLinkage();
@@ -152,7 +151,6 @@ poll_src_tiles(AG_Event *event)
 static void
 select_tileset(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	RG_Texture *tex = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
 	RG_Tileset *ts = it->p1;
@@ -164,7 +162,6 @@ select_tileset(AG_Event *event)
 static void
 select_src_tile(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	RG_Texture *tex = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
 	RG_Tile *t = it->p1;
@@ -172,16 +169,10 @@ select_src_tile(AG_Event *event)
 	strlcpy(tex->tile, t->name, sizeof(tex->tile));
 }
 
-static int
-compare_pixmap_ents(const AG_TlistItem *it1, const AG_TlistItem *it2)
-{
-	return (0);
-}
-
 AG_Window *
 RG_TextureEdit(RG_Texture *tex)
 {
-	const char *wrap_modes[] ={
+	const char *wrapModes[] ={
 		N_("Repeat"),
 		N_("Clamp"),
 		N_("Clamp to edge"),
@@ -189,7 +180,6 @@ RG_TextureEdit(RG_Texture *tex)
 		NULL
 	};
 	AG_Window *win;
-	AG_Box *bo;
 	AG_Combo *com;
 	AG_Tlist *tl;
 	AG_Spinbutton *sb;
@@ -222,11 +212,11 @@ RG_TextureEdit(RG_Texture *tex)
 	ntab = AG_NotebookAddTab(nb, _("Wrapping"), AG_BOX_VERT);
 	{
 		AG_LabelNewStaticString(ntab, 0, _("S-coordinate: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, wrap_modes);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, wrapModes);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->wrap_s);
 		
 		AG_LabelNewStaticString(ntab, 0, _("T-coordinate: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, wrap_modes);
+		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, wrapModes);
 		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->wrap_t);
 	}
 

@@ -249,7 +249,6 @@ static void
 MoveCameraByMouse(SG_View *sv, int xrel, int yrel, int zrel)
 {
 	SG_Vector m;
-	SG_Matrix *T = &SGNODE(sv->cam)->T;
 	
 	m.x = sv->mouse.tsens.x*(-(SG_Real)xrel);
 	m.y = sv->mouse.tsens.y*((SG_Real)yrel);
@@ -273,8 +272,6 @@ static void
 ViewMotion(AG_Event *event)
 {
 	SG_View *sv = AG_PTR(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
 	int xrel = AG_INT(4);
 	int yrel = AG_INT(5);
 	int state = AG_INT(6);
@@ -346,7 +343,6 @@ PopupMenuOpen(SG_View *sv, int x, int y)
 static void
 SelectByMouse(SG_View *sv, int x, int y)
 {
-	int viewport[4];
 	SG_Vector vOut;
 
 	if (SG_ViewUnProject(sv, VecGet((SG_Real)x, (SG_Real)y, 0.0),
@@ -371,7 +367,6 @@ ViewKeydown(AG_Event *event)
 	SG_View *sv = AG_PTR(1);
 	int keysym = AG_INT(2);
 	int kmod = AG_INT(3);
-	int unicode = AG_INT(4);
 
 	switch (keysym) {
 	case SDLK_LEFT:
@@ -440,8 +435,6 @@ ViewKeyup(AG_Event *event)
 {
 	SG_View *sv = AG_PTR(1);
 	int keysym = AG_INT(2);
-	int keymode = AG_INT(3);
-	int unicode = AG_INT(4);
 
 	switch (keysym) {
 	case SDLK_LEFT:

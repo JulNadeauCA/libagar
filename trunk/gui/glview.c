@@ -69,27 +69,8 @@ static void
 mousebuttondown(AG_Event *event)
 {
 	AG_GLView *glv = AG_SELF();
-	int button = AG_INT(1);
 
 	AG_WidgetFocus(glv);
-}
-
-static void
-GLViewKeydown(AG_Event *event)
-{
-	AG_GLView *glv = AG_SELF();
-	int sym = AG_INT(1);
-	int mod = AG_INT(2);
-	
-	if (glv->keydown_ev != NULL) {
-		glv->keydown_ev->handler(glv->keydown_ev);
-	} else {
-		extern const char *agKeySyms[];
-		extern const int agnKeySyms;
-
-		if (sym < agnKeySyms)
-			dprintf("%s: no binding\n", agKeySyms[sym]);
-	}
 }
 
 void
@@ -226,8 +207,6 @@ AG_GLViewReshape(AG_GLView *glv)
 void
 AG_GLViewSizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_GLView *glv = p;
-
 	r->w = 32;
 	r->h = 32;
 }

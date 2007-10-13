@@ -61,7 +61,7 @@ void
 SG_VoxelReinit(void *p)
 {
 	SG_Voxel *vol = p;
-	int x, y, z;
+	int x, y;
 	
 	for (x = 0; x < vol->w; x++) {
 		for (y = 0; y < vol->h; y++) {
@@ -102,9 +102,6 @@ SG_VoxelAlloc3(SG_Voxel *vol, Uint w, Uint h, Uint d)
 				vol->map[x][y][z] = 0.0;
 		}
 	}
-	return;
-fail_mem:
-	fatal("Out of memory for %ux%ux%u voxel", w, h, d);
 }
 
 void

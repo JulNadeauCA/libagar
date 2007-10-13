@@ -88,7 +88,6 @@ GenerateTileMap(struct map_insert_tool *ins, RG_Tile *tile)
 	int sy, sx, dx, dy;
 	int sw = tile->su->w/MAPTILESZ;
 	int sh = tile->su->h/MAPTILESZ;
-	int nw, nh;
 
 	if (tile->su->w%MAPTILESZ > 0) sw++;
 	if (tile->su->h%MAPTILESZ > 0) sh++;
@@ -148,7 +147,6 @@ insert_pane(void *p, void *con)
 	AG_Radio *rad;
 	AG_Checkbox *cb;
 	AG_Spinbutton *sb;
-	AG_Combo *com;
 	AG_TlistItem *it;
 	MAP_View *mvMain = TOOL(ins)->mv;
 	MAP_View *mv;
@@ -197,7 +195,6 @@ insert_effect(void *p, MAP_Node *node)
 	MAP *mDst = mv->map;
 	int sx, sy, sx0, sy0, sx1, sy1;
 	int dx, dy, dx0, dy0;
-	int l;
 	AG_TlistItem *it;
 	RG_Tile *tile;
 	
@@ -276,7 +273,7 @@ insert_cursor(void *p, SDL_Rect *rd)
 	AG_TlistItem *it;
 	RG_Tile *tile;
 	int sx0, sy0, sx1, sy1;
-	int dx0, dy0, dx1, dy1;
+	int dx0, dy0;
 	int dx, dy, sx, sy;
 
 	if (mv->lib_tl == NULL ||
@@ -343,7 +340,6 @@ insert_mousemotion(void *p, int x, int y, int xrel, int yrel, int btn)
 	int nx = x/AGMTILESZ(mv);
 	int ny = y/AGMTILESZ(mv);
 	AG_TlistItem *it;
-	AG_Object *ob;
 
 	if (nx == mv->mouse.x && ny == mv->mouse.y)
 		return (0);

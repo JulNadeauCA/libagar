@@ -68,7 +68,6 @@ int
 SG_SolidLoad(void *p, AG_Netbuf *buf)
 {
 	SG_Solid *sld = p;
-	Uint i;
 
 	if (SG_ObjectLoad(sld, buf) == -1) {
 		return (-1);
@@ -86,7 +85,6 @@ int
 SG_SolidSave(void *p, AG_Netbuf *buf)
 {
 	SG_Solid *sld = p;
-	Uint i;
 
 	if (SG_ObjectSave(sld, buf) == -1) {
 		return (-1);

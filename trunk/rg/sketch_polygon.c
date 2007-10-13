@@ -62,7 +62,7 @@ RG_SketchDrawPolygon(RG_Tile *t, VG *vg, VG_Element *vge)
 	RG_Texture *tex = NULL;
 	VG_Vtx *vtx = vge->vtx;
 	Uint i, nvtx = vge->nvtx;
-	int x, y, x1, y1, x2, y2;
+	int y, x1, y1, x2, y2;
 	int miny, maxy;
 	int ind1, ind2;
 	int ints;
@@ -232,7 +232,6 @@ mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
     double yrel)
 {
 	struct polygon_tool *pt = p;
-	RG_Tileview *tv = RG_TILEVIEW_TOOL(pt)->tv;
 
 	if (pt->vtx != NULL) {
 		pt->vtx->x = x;

@@ -455,7 +455,6 @@ FreeModBlk(MAP *m, MAP_ModBlk *blk)
 
 	for (i = 0; i < blk->nmods; i++) {
 		MAP_Mod *mm = &blk->mods[i];
-		MAP_Item *r, *nr;
 	
 		switch (mm->type) {
 		case AG_MAPMOD_NODECHG:
@@ -949,8 +948,6 @@ MAP_ItemLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node, MAP_Item **r)
 	switch (type) {
 	case MAP_ITEM_TILE:
 		{
-			SDL_Rect rs;
-
 			obj_ref = AG_ReadUint32(buf);
 			offs = AG_ReadUint32(buf);
 
@@ -1121,7 +1118,6 @@ MAP_DetachActor(MAP *m, MAP_Actor *a)
 	}
 	AG_ObjectDelDep(m, a);
 	a->parent = NULL;
-out:
 	AG_MutexUnlock(&a->lock);
 }
 
@@ -1444,7 +1440,6 @@ static __inline__ void
 RenderTileItem(MAP_Item *r, RG_Tile *tile, SDL_Surface **pSurface,
     Uint *pTexture)
 {
-	RG_Tileset *ts = r->r_tile.obj;
 	RG_TileVariant *var;
 	RG_Transform *xf, *xf2;
 
@@ -1763,7 +1758,6 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 #endif
 #ifdef HAVE_OPENGL
 	Uint texture = 0;
-	GLfloat texcoord[4];
 #endif
 	SDL_Surface *su;
 	int tilesz = m->cameras[cam].tilesz;
@@ -2189,7 +2183,6 @@ EditMapParameters(AG_Event *event)
 	MAP *m = mv->map;
 	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
-	AG_Box *bo;
 	AG_MSpinbutton *msb;
 	AG_Spinbutton *sb;
 	AG_Checkbox *cbox;
@@ -2303,9 +2296,8 @@ PollLibsFind(AG_Tlist *tl, AG_Object *pob, int depth)
 
 	if (AG_ObjectIsClass(pob, "RG_Tileset:*")) {
 		RG_Tileset *ts = (RG_Tileset *)pob;
-		AG_TlistItem *sit, *fit;
+		AG_TlistItem *sit;
 		RG_Tile *tile;
-		int i;
 
 		it->cat = "tileset";
 
@@ -2349,7 +2341,6 @@ PollLibs(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *pob = AG_PTR(1);
-	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
 	AG_LockLinkage();
@@ -2529,7 +2520,7 @@ ClearLayer(AG_Event *event)
 {
 	MAP *m = AG_PTR(1);
 	MAP_Layer *lay = AG_PTR(2);
-	int i, x, y, nlayer;
+	int x, y, nlayer;
 	
 	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
 		if (&m->layers[nlayer] == lay)
@@ -2856,7 +2847,6 @@ MAP_Edit(void *p)
 	AG_MenuItem *pitem;
 	AG_Box *hBox, *vBox;
 	AG_Pane *hPane, *vPane;
-	MAP_Tool *tool;
 	int flags = MAP_VIEW_GRID;
 
 	if ((OBJECT(m)->flags & AG_OBJECT_READONLY) == 0)

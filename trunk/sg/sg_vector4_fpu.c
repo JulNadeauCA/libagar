@@ -445,7 +445,6 @@ void
 SG_VectorVecAngle4_FPU(SG_Vector4 vOrig, SG_Vector4 vOther, SG_Real *phi1,
     SG_Real *phi2, SG_Real *phi3)
 {
-	SG_Spherical sph;
 	SG_Vector4 vd;
 
 	vd = SG_VectorSub4p_FPU(&vOther, &vOrig);

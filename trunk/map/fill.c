@@ -86,7 +86,7 @@ effect(void *p, MAP_Node *n)
 	MAP *copybuf = &mapEditor.copybuf;
 	int sx = 0, sy = 0, dx = 0, dy = 0;
 	int dw = m->mapw, dh = m->maph;
-	int x, y, angle = 0, i = 0;
+	int x, y, i = 0;
 	AG_TlistItem *it;
 	Uint32 rand = 0;
 	Uint8 byte = 0;

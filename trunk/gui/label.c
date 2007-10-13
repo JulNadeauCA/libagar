@@ -36,7 +36,6 @@
 AG_Label *
 AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 {
-	char buf[AG_LABEL_MAX];
 	AG_Label *label;
 	va_list ap;
 	const char *p;
@@ -76,7 +75,6 @@ AG_Label *
 AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
     const char *fmt, ...)
 {
-	char buf[AG_LABEL_MAX];
 	AG_Label *label;
 	va_list ap;
 	const char *p;
@@ -218,7 +216,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 			lbl->flags &= ~AG_LABEL_PARTIAL;
 		}
 	}
-out:
 	AG_MutexUnlock(&lbl->lock);
 	return (0);
 }
@@ -322,8 +319,6 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 void
 AG_LabelString(AG_Label *lbl, const char *s)
 {
-	va_list ap;
-
 	AG_MutexLock(&lbl->lock);
 	Free(lbl->text,0);
 	lbl->text = Strdup(s);

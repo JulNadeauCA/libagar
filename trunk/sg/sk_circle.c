@@ -131,8 +131,8 @@ SK_CircleEdit(void *p, AG_Widget *box, SK_View *skv)
 SG_Real
 SK_CircleProximity(void *p, const SG_Vector *v, SG_Vector *vC)
 {
-	SK_Circle *circle = p;
 #if 0
+	SK_Circle *circle = p;
 	SG_Vector c = SK_Pos(circle);
 	SG_Vector vRel = SG_VectorSubp(v, &c);
 	SG_Real theta = Atan2(vRel.y, vRel.x);

@@ -40,12 +40,12 @@
 SDL_Cursor *agCursors[AG_LAST_CURSOR];
 
 static SDL_Cursor *
-create_cursor(char *xpm[], int xHot, int yHot)
+GenCursor(char *xpm[], int xHot, int yHot)
 {
 	int i = -1, row, col;
 	Uint8 data[4*CURSOR_MAX_W];
 	Uint8 mask[4*CURSOR_MAX_H];
-	int w, h, num_colors, cpp;
+	int w, h;
 
 	sscanf(xpm[0], "%d %d", &w, &h);
 
@@ -80,13 +80,13 @@ create_cursor(char *xpm[], int xHot, int yHot)
 void
 AG_CursorsInit(void)
 {
-	agCursors[AG_FILL_CURSOR] = create_cursor(fill_xpm, 23, 25);
-	agCursors[AG_ERASE_CURSOR] = create_cursor(erase_xpm, 10, 20);
-	agCursors[AG_PICK_CURSOR] = create_cursor(pick_xpm, 8, 22);
-	agCursors[AG_HRESIZE_CURSOR] = create_cursor(hresize_xpm, 16, 17);
-	agCursors[AG_VRESIZE_CURSOR] = create_cursor(vresize_xpm, 15, 16);
-	agCursors[AG_LLDIAG_CURSOR] = create_cursor(lldiag_xpm, 16, 15);
-	agCursors[AG_LRDIAG_CURSOR] = create_cursor(lrdiag_xpm, 16, 15);
+	agCursors[AG_FILL_CURSOR] = GenCursor(fill_xpm, 23, 25);
+	agCursors[AG_ERASE_CURSOR] = GenCursor(erase_xpm, 10, 20);
+	agCursors[AG_PICK_CURSOR] = GenCursor(pick_xpm, 8, 22);
+	agCursors[AG_HRESIZE_CURSOR] = GenCursor(hresize_xpm, 16, 17);
+	agCursors[AG_VRESIZE_CURSOR] = GenCursor(vresize_xpm, 15, 16);
+	agCursors[AG_LLDIAG_CURSOR] = GenCursor(lldiag_xpm, 16, 15);
+	agCursors[AG_LRDIAG_CURSOR] = GenCursor(lrdiag_xpm, 16, 15);
 }
 
 void

@@ -83,7 +83,6 @@ CountChildWidgets(AG_Box *box, int *totFixed)
 {
 	AG_Widget *chld;
 	AG_SizeReq r;
-	AG_SizeAlloc a;
 	Uint count = 0;
 	int fixed = 0;
 
@@ -115,7 +114,6 @@ AG_BoxSizeRequest(void *p, AG_SizeReq *r)
 	AG_Box *box = p;
 	AG_Widget *chld;
 	AG_SizeReq rChld;
-	AG_SizeAlloc aChld;
 	int wMax = 0, hMax = 0;
 	int nWidgets, totArea;
 

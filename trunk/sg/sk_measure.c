@@ -58,7 +58,6 @@ ToolMouseMotion(void *p, SG_Vector pos, SG_Vector vel, int btn)
 	SK *sk = skv->sk;
 	SG_Vector vC;
 	SK_Node *node;
-	int movedNodes = 0;
 
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
 		if (node->flags & SK_NODE_MOUSEOVER) {

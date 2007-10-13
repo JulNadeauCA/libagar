@@ -109,7 +109,6 @@ mousemotion(AG_Event *event)
 	int y = AG_INT(2);
 	int dx = AG_INT(3);
 	int dy = AG_INT(4);
-	int state = AG_INT(5);
 	AG_GraphVertex *vtx;
 	AG_GraphEdge *edge;
 
@@ -353,7 +352,6 @@ void
 AG_GraphInit(AG_Graph *gf, Uint flags)
 {
 	Uint wflags = AG_WIDGET_CLIPPING|AG_WIDGET_FOCUSABLE;
-	int i;
 
 	if (flags & AG_GRAPH_HFILL) wflags |= AG_WIDGET_HFILL;
 	if (flags & AG_GRAPH_VFILL) wflags |= AG_WIDGET_VFILL;
@@ -470,10 +468,6 @@ Draw(void *p)
 	AG_Graph *gf = p;
 	AG_GraphVertex *vtx;
 	AG_GraphEdge *edge;
-	int x0 = WIDGET(gf)->w/2;
-	int y0 = WIDGET(gf)->h/2;
-	int x, y;
-	Uint i;
 	Uint8 bg[4];
 
 	agPrim.rect_outlined(gf,
@@ -752,7 +746,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 {
 	AG_GraphVertex **vSorted, *vtx;
 	int nSorted = 0, i;
-	int tx, ty, tOffs;
+	int tx, ty;
 
 	if (gf->nvertices == 0 || gf->nedges == 0)
 		return;

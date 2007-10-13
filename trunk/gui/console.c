@@ -33,7 +33,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-static void MouseButtonUp(AG_Event *);
 static void MouseButtonDown(AG_Event *);
 static void KeyUp(AG_Event *);
 static void KeyDown(AG_Event *);
@@ -159,23 +158,28 @@ Destroy(void *p)
 static void
 MouseButtonDown(AG_Event *event)
 {
+#if 0
 	AG_Console *bu = AG_SELF();
 	int button = AG_INT(1);
-	
+#endif
 }
 
 static void
 KeyDown(AG_Event *event)
 {
+#if 0
 	AG_Console *bu = AG_SELF();
 	int keysym = AG_INT(1);
+#endif
 }
 
 static void
 KeyUp(AG_Event *event)
 {
+#if 0
 	AG_Console *bu = AG_SELF();
 	int keysym = AG_INT(1);
+#endif
 }
 
 void
