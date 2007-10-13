@@ -2,10 +2,12 @@
 
 #ifdef _AGAR_INTERNAL
 #include <config/_mk_have_limits_h.h>
+#include <config/_mk_have_limits_h_fp.h>
 #include <config/have_long_double.h>
 #include <config/have_long_long.h>
 #else
 #include <agar/config/_mk_have_limits_h.h>
+#include <agar/config/_mk_have_limits_h_fp.h>
 #include <agar/config/have_long_double.h>
 #include <agar/config/have_long_long.h>
 #endif
