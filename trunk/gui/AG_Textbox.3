@@ -225,6 +225,12 @@ value_ptr = AG_TextboxDupString(tb);
 Note that the default binding is limited to
 .Dv AG_TEXTBOX_STRING_MAX
 bytes in size.
+.Pp
+Also see the
+.Pa textbox
+demo in the Agar
+.Pa demos
+directory.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Text 3 ,
@@ -236,6 +242,8 @@ The
 .Nm
 widget first appeared in Agar 1.0.
 .Sh BUGS
+A binding for dynamically-allocated text should be provided.
+.Pp
 .Fn AG_TextboxInt
 will be obsoleted by integral type bindings.
 .Pp
