@@ -24,11 +24,9 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "socket.h"
 #include "icon.h"
-
 #include "window.h"
 #include "primitive.h"
 

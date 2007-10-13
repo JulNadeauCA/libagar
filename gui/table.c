@@ -24,10 +24,8 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "table.h"
-
 #include "primitive.h"
 #include "cursors.h"
 

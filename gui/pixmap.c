@@ -24,12 +24,11 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
-
+#if 0
 #include <core/load_xcf.h>
+#endif
 
 #include "pixmap.h"
-
 #include "primitive.h"
 
 AG_Pixmap *

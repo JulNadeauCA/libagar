@@ -29,7 +29,6 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include <gui/window.h>
 #include <gui/tableview.h>

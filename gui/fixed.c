@@ -24,7 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "fixed.h"
 

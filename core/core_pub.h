@@ -17,8 +17,6 @@
 #include <agar/core/event.h>
 #include <agar/core/error_pub.h>
 #include <agar/core/config.h>
-#include <agar/core/view.h>
-#include <agar/core/iconmgr.h>
 #include <agar/core/rcs.h>
 #include <agar/core/typesw.h>
 #include <agar/core/core_init.h>

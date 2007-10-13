@@ -170,6 +170,7 @@ __BEGIN_DECLS
 void AG_IconMgrInit(void *, const char *);
 int AG_IconMgrLoadFromDenXCF(AG_IconMgr *, const char *);
 void AG_IconMgrDestroy(void *);
+SDL_Surface *AG_ObjectIcon(void *);
 __END_DECLS
 
 #include "close_code.h"

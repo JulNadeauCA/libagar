@@ -75,7 +75,7 @@ structure.
 .Sh NODE MANIPULATION
 .nr nS 1
 .Ft "void"
-.Fn SG_NodeRegister "SG_NodeOps *ops"
+.Fn SG_RegisterClass "SG_NodeOps *ops"
 .Pp
 .Ft "void"
 .Fn SG_NodeInit "void *node" "const char *name" "const SG_NodeOps *ops" "Uint flags"
@@ -97,7 +97,7 @@ structure.
 .nr nS 0
 .Pp
 The
-.Fn SG_NodeRegister
+.Fn SG_RegisterClass
 function registers a new node class, described by the given
 .Ft SG_NodeOps
 structure.

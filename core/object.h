@@ -190,7 +190,6 @@ void		 AG_ObjectGetArchivePath(void *, char *, size_t)
 		     BOUNDED_ATTRIBUTE(__string__, 2, 3);
 void		 AG_ObjectSetOps(void *, const void *);
 
-__inline__ SDL_Surface	*AG_ObjectIcon(void *);
 __inline__ int		 AG_ObjectIsClass(const void *, const char *);
 
 void	 AG_ObjectMoveUp(void *);

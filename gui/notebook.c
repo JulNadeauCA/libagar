@@ -24,10 +24,8 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "notebook.h"
-
 #include "window.h"
 #include "primitive.h"
 

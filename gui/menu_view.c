@@ -24,10 +24,8 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "menu.h"
-
 #include "primitive.h"
 
 static void

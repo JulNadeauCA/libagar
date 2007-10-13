@@ -29,18 +29,16 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_View
-.Nd agar display interface
+.Nd agar-gui display interface
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
+#include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
 The Agar
 .Nm
-interface manages low-level access to video displays, which is represented
-by the
-.Fa AG_Display
-structure.
+interface provides low-level video functions to the Agar GUI.
 Every display manages a list of
 .Xr AG_Window 3
 objects for use by the GUI (see the
@@ -54,32 +52,58 @@ a number of utility routines for surface and texture manipulation.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "int"
-.Fn AG_ViewInit "int w" "int h" "int bpp" "Uint flags"
+.Fn AG_InitVideo "int w" "int h" "int bpp" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_ViewDestroy "void"
+.Fn AG_DestroyVideo "void"
+.Pp
+.Ft "int"
+.Fn AG_ResizeDisplay "int w" "int h"
 .Pp
 .Ft "int"
 .Fn AG_ViewSetRefreshRate "int fps"
 .Pp
+.Ft void
+.Fn AG_BindGlobalKey "SDLKey key" "SDLMod mod" "void (*fn)(void)"
+.Pp
+.Ft void
+.Fn AG_BindGlobalKeyEv "SDLKey key" "SDLMod mod" "void (*fn)(AG_Event *)"
+.Pp
+.Ft int
+.Fn AG_UnbindGlobalKey "SDLKey key" "SDLMod mod"
+.Pp
 .nr nS 0
 The
-.Fn AG_ViewInit
+.Fn AG_InitVideo
 function initializes the graphic display if there is one available,
 returning 0 on success and -1 on failure.
-If the
-.Va
-flag is set,
-.Fn AG_ViewInit
-will attempt to create an OpenGL rendering context, and the GUI will arrange
-for widgets to be rendered using OpenGL, if OpenGL is available and support
-for it was enabled at compile time.
+Acceptable
+.Va flags
+include:
+.Bd -literal
+#define AG_VIDEO_HWSURFACE     0x001  /* Request hardware FB */
+#define AG_VIDEO_ASYNCBLIT     0x002  /* Multithreaded blits */
+#define AG_VIDEO_ANYFORMAT     0x004  /* Disable depth emulation */
+#define AG_VIDEO_HWPALETTE     0x008  /* Exclusive palette access */
+#define AG_VIDEO_DOUBLEBUF     0x010  /* Double buffering */
+#define AG_VIDEO_FULLSCREEN    0x020  /* Start in fullscreen mode */
+#define AG_VIDEO_RESIZABLE     0x040  /* Request resizable window */
+#define AG_VIDEO_NOFRAME       0x080  /* Request frameless window */
+#define AG_VIDEO_BGPOPUPMENU   0x100  /* Set a background popup menu */
+#define AG_VIDEO_OPENGL	       0x200  /* Require OpenGL mode */
+#define AG_VIDEO_OPENGL_OR_SDL 0x400  /* Prefer OpenGL mode */
+.Ed
 .Pp
 The
-.Fn AG_ViewDestroy
-function frees resources allocated by the view structure.
+.Fn AG_DestroyVideo
+function frees all resources allocated to the GUI.
 It is invoked automatically by
 .Xr AG_Destroy 3 .
+.Pp
+The
+.Fn AG_ResizeDisplay
+function attempts to resize the display, assuming that the underlying
+graphics system allows such an operation.
 .Pp
 The
 .Fn AG_SetRefreshRate
@@ -90,6 +114,18 @@ will attempt to draw exactly this number of frames per second and then idle
 as much as possible.
 This value is only advisory, alternate or user-defined event loop functions
 may ignore it entirely.
+.Pp
+.Fn AG_BindGlobalKey
+arranges for the given function to be invoked whenever the user presses the
+given key combination, regardless of widgets.
+The
+.Fn AG_BindGlobalKeyEv
+variant accepts an
+.Xr AG_Event 3
+style function.
+.Fn AG_UnbindGlobalKey
+removes the given key mapping, returning 0 on success and -1 if no such
+mapping exists.
 .Sh GRAPHIC SURFACES
 .nr nS 1
 .Ft "SDL_Surface *"
@@ -380,8 +416,8 @@ functions looks for a window identified by
 and return NULL if there is no such window.
 .Sh BUGS
 .Pp
-Currently only one display is supported, but that will change with future
-SDL versions.
+Work is currently being done to support graphics backends other than SDL
+and OpenGL, with multiple displays.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Window 3 ,

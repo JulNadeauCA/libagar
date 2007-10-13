@@ -607,7 +607,7 @@ fail:
 }
 
 int
-AG_RcsLog(const char *objdir, AG_Tlist *tl)
+AG_RcsGetLog(const char *objdir, AG_RCSLog *log)
 {
 	NC_Result *res;
 	int i;
@@ -618,6 +618,8 @@ AG_RcsLog(const char *objdir, AG_Tlist *tl)
 		AG_SetError("%s", AG_GetError());
 		return (-1);
 	}
+	log->ents = NULL;
+	log->nEnts = 0;
 
 	for (i = 0; i < res->argc; i++) {
 		char *s = res->argv[i];
@@ -627,76 +629,95 @@ AG_RcsLog(const char *objdir, AG_Tlist *tl)
 		char *name = AG_Strsep(&s, ":");
 		char *sum = AG_Strsep(&s, ":");
 		char *msg = AG_Strsep(&s, ":");
-		AG_ObjectType *t;
-		SDL_Surface *icon = NULL;
+		AG_RCSLogEntry *lent;
 
 		if (rev == NULL || author == NULL || sum == NULL)
 			continue;
 		
-		for (t = &agTypes[0]; t < &agTypes[agnTypes]; t++) {
-			if (strcmp(type, t->ops->type) == 0) {
-				icon = t->icon >= 0 ? AGICON(t->icon) : NULL;
-				break;
-			}
-		}
-		AG_TlistAdd(tl, icon, "[#%s.%s] %s: %s", rev, author, name,
-		    msg);
+		log->ents = Realloc(log->ents, (log->nEnts+1) *
+		                               sizeof(AG_RCSLogEntry));
+		lent = &log->ents[log->nEnts++];
+		lent->rev = AG_Strdup(rev);
+		lent->author = AG_Strdup(author);
+		lent->type = type!=NULL ? AG_Strdup(type) : NULL;
+		lent->name = name!=NULL ? AG_Strdup(name) : NULL;
+		lent->sum = AG_Strdup(sum);
+		lent->msg = msg!=NULL ? AG_Strdup(msg) : NULL;
 	}
 	NC_FreeResult(res);
 	return (0);
 }
 
+void
+AG_RcsFreeLog(AG_RCSLog *log)
+{
+	int i;
+
+	for (i = 0; i < log->nEnts; i++) {
+		AG_RCSLogEntry *lent = &log->ents[i];
+
+		Free(lent->rev,0);
+		Free(lent->author,0);
+		Free(lent->type,0);
+		Free(lent->name,0);
+		Free(lent->sum,0);
+		Free(lent->msg,0);
+	}
+	log->ents = NULL;
+	log->nEnts = 0;
+}
+
 int
-AG_RcsList(AG_Tlist *tl)
+AG_RcsGetList(AG_RCSList *list)
 {
 	NC_Result *res;
-	AG_TlistItem *it;
 	int i;
 
 	if ((res = NC_Query(&rcs_client, "rcs-list\n")) == NULL) {
 		AG_SetError("%s", AG_GetError());
 		return (-1);
 	}
-	AG_TlistClear(tl);
-	it = AG_TlistAdd(tl, NULL, "/");
-	it->flags |= AG_TLIST_HAS_CHILDREN;
-	it->cat = "object";
-	it->depth = 0;
-
+	list->ents = NULL;
+	list->nEnts = 0;
 	for (i = 0; i < res->argc; i++) {
 		char *s = res->argv[i];
 		char *name = AG_Strsep(&s, ":");
 		char *rev = AG_Strsep(&s, ":");
 		char *author = AG_Strsep(&s, ":");
 		char *type = AG_Strsep(&s, ":");
-		AG_ObjectType *t;
-		SDL_Surface *icon = NULL;
-		AG_TlistItem *it;
-		char *c;
-		int depth = 0;
+		AG_RCSListEntry *lent;
 
 		if (name == NULL || rev == NULL || author == NULL ||
 		    type == NULL)
 			continue;
-
-		for (t = &agTypes[0]; t < &agTypes[agnTypes]; t++) {
-			if (strcmp(type, t->ops->type) == 0) {
-				icon = t->icon >= 0 ? AGICON(t->icon) : NULL;
-				break;
-			}
-		}
-		for (c = &name[0]; *c != '\0'; c++) {
-			if (*c == '/')
-				depth++;
-		}
-
-		it = AG_TlistAdd(tl, icon, "%s", &name[1]);
-		it->cat = "object";
-		it->depth = depth;
+		
+		list->ents = Realloc(list->ents, (list->nEnts+1) *
+		                                 sizeof(AG_RCSListEntry));
+		lent = &list->ents[list->nEnts++];
+		lent->name = Strdup(name);
+		lent->rev = Strdup(rev);
+		lent->author = Strdup(author);
+		lent->type = Strdup(type);
 	}
-	AG_TlistRestore(tl);
 	NC_FreeResult(res);
 	return (0);
+}
+
+void
+AG_RcsFreeList(AG_RCSList *list)
+{
+	int i;
+
+	for (i = 0; i < list->nEnts; i++) {
+		AG_RCSListEntry *lent = &list->ents[i];
+
+		Free(lent->name,0);
+		Free(lent->rev,0);
+		Free(lent->author,0);
+		Free(lent->type,0);
+	}
+	list->ents = NULL;
+	list->nEnts = 0;
 }
 
 int
@@ -750,7 +771,7 @@ AG_RcsCheckout(const char *path)
 	char *buf, *s;
 	Uint rev = 0;
 	AG_Object *obj;
-	AG_ObjectType *t;
+	const AG_ObjectOps *cl;
 
 	if (AG_RcsConnect() == -1)
 		goto fail;
@@ -790,14 +811,8 @@ AG_RcsCheckout(const char *path)
 			break;
 		}
 	}
-	for (t = &agTypes[0]; t < &agTypes[agnTypes]; t++) {
-		if (strcmp(type, t->ops->type) == 0)
-			break;
-	}
-	if (t == &agTypes[agnTypes]) {
-		AG_SetError(_("Unimplemented object type: %s"), type);
+	if ((cl = AG_FindClass(type)) == NULL)
 		goto fail;
-	}
 
 	/* Create the working copy if it does not exist. */
 	localpath[0] = '/';
@@ -808,11 +823,11 @@ AG_RcsCheckout(const char *path)
 		    _("Creating working copy of %s (%s)."),
 		    name, type);
 
-		obj = Malloc(t->ops->size, M_OBJECT);
-		if (t->ops->init != NULL) {
-			t->ops->init(obj, name);
+		obj = Malloc(cl->size, M_OBJECT);
+		if (cl->init != NULL) {
+			cl->init(obj, name);
 		} else {
-			AG_ObjectInit(obj, name, t->ops);
+			AG_ObjectInit(obj, name, cl);
 		}
 
 		if (AG_ObjectAttachPath(localpath, obj) == -1) {

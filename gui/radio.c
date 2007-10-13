@@ -24,10 +24,8 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "radio.h"
-
 #include "window.h"
 #include "primitive.h"
 

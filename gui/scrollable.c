@@ -34,10 +34,8 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "scrollable.h"
-
 #include "window.h"
 #include "primitive.h"
 #include "label.h"

@@ -36,7 +36,6 @@
 #include <compat/file.h>
 
 #include <core/config.h>
-#include <core/view.h>
 #include <core/typesw.h>
 
 #include <gui/window.h>
@@ -241,8 +240,10 @@ RefreshRepoStatus(AG_Event *event)
 	AG_Tlist *tl = AG_PTR(3);
 	extern const char *agRcsStatusStrings[];
 	enum ag_rcs_status status;
+	AG_RCSLog log;
 	size_t len;
 	Uint working_rev, repo_rev;
+	int i;
 
 	if (AG_ObjectCopyName(ob, objdir, sizeof(objdir)) == -1 ||
 	    AG_ObjectCopyDigest(ob, &len, digest) == -1) {
@@ -261,10 +262,19 @@ RefreshRepoStatus(AG_Event *event)
 	    (status!=AG_RCS_UNKNOWN && status!=AG_RCS_ERROR) ? working_rev : 0,
 	    (status!=AG_RCS_UNKNOWN && status!=AG_RCS_ERROR) ? repo_rev: 0);
 
+	if (AG_RcsGetLog(objdir, &log) == -1)
+		goto out;
+	
 	AG_TlistClear(tl);
-	AG_RcsLog(objdir, tl);
-	AG_TlistRestore(tl);
+	for (i = 0; i < log.nEnts; i++) {
+		AG_RCSLogEntry *lent = &log.ents[i];
 
+		AG_TlistAdd(tl, NULL, "[#%s.%s] %s", lent->rev, lent->author,
+		    lent->msg);
+	}
+	AG_TlistRestore(tl);
+	AG_RcsFreeLog(&log);
+out:
 	AG_RcsDisconnect();
 }
 

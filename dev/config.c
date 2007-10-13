@@ -29,7 +29,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/view.h>
 #include <core/rcs.h>
 
 #include <gui/window.h>

@@ -27,7 +27,8 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
+
+#include <gui/view.h>
 #include <gui/window.h>
 
 #include "vg.h"

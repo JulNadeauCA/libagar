@@ -26,7 +26,7 @@
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
-#include <core/view.h>
+
 #include <gui/window.h>
 
 #include "sk.h"

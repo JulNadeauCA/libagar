@@ -414,9 +414,9 @@ structure) associated with the given object.
 .Sh CLASS INFORMATION
 .nr nS 1
 .Ft "void"
-.Fn AG_RegisterType "const AG_ObjectOps *ops" "int icon"
+.Fn AG_RegisterClass "const AG_ObjectOps *ops" "int icon"
 .Pp
-.Ft "AG_ObjectType *"
+.Ft "AG_ObjectOps *"
 .Fn AG_FindType "const char *name"
 .Pp
 .Ft "int"
@@ -429,10 +429,10 @@ structure) associated with the given object.
 .Pp
 .nr nS 0
 The
-.Fn AG_RegisterType
+.Fn AG_RegisterClass
 function is used to register a new object class (described by
 .Fa ops )
-with the object type table.
+in the object class table.
 This table contains all the information needed by
 .Fn AG_ObjectLoad
 to load previously saved objects from disk or network and completely
@@ -447,13 +447,7 @@ The
 .Fn AG_FindType
 function queries the object type table for the given class
 .Fa name
-and returns a pointer to the following structure (or NULL on failure):
-.Bd -literal
-typedef struct ag_object_type {
-	const AG_ObjectOps *ops;
-	int icon;
-} AG_ObjectType;
-.Ed
+and returns a pointer to the object's class information structure.
 .Pp
 The
 .Fn AG_ObjectIsClass
@@ -682,7 +676,7 @@ will load the data from a specific file.
 Note that when loading object hierarchies, objects will need to be allocated
 and initialized from scratch.
 This functionality requires that all classes be registered with
-.Fn AG_RegisterType .
+.Fn AG_RegisterClass .
 .Pp
 The
 .Fn AG_ObjectSave

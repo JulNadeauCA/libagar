@@ -26,10 +26,8 @@
 #include <compat/limits.h>
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "fspinbutton.h"
-
 #include "primitive.h"
 
 #include <string.h>

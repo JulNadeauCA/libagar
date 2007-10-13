@@ -10,19 +10,6 @@
 /* Flags for AG_InitCore() */
 #define AG_CORE_VERBOSE		0x01
 
-/* Flags for AG_InitVideo() */
-#define AG_VIDEO_HWSURFACE	0x001
-#define AG_VIDEO_ASYNCBLIT	0x002
-#define AG_VIDEO_ANYFORMAT	0x004
-#define AG_VIDEO_HWPALETTE	0x008
-#define AG_VIDEO_DOUBLEBUF	0x010
-#define AG_VIDEO_FULLSCREEN	0x020
-#define AG_VIDEO_RESIZABLE	0x040
-#define AG_VIDEO_NOFRAME	0x080
-#define AG_VIDEO_BGPOPUPMENU	0x100
-#define AG_VIDEO_OPENGL		0x200
-#define AG_VIDEO_OPENGL_OR_SDL	0x400
-
 /* Flags for AG_InitInput() */
 #define AG_FORCE_UNICODE	0x01
 #define AG_FORCE_JOYSTICK	0x02

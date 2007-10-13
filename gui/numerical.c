@@ -26,7 +26,6 @@
 #include <compat/limits.h>
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "numerical.h"
 #include "primitive.h"

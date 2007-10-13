@@ -4,19 +4,14 @@
 #define _AGAR_TYPESW_H
 #include "begin_code.h"
 
-typedef struct ag_object_type {
-	const AG_ObjectOps *ops;
-	int icon;
-} AG_ObjectType;
-
-extern AG_ObjectType *agTypes;
-extern int	     agnTypes;
-
 __BEGIN_DECLS
-void AG_InitTypeSw(void);
-void AG_DestroyTypeSw(void);
-void AG_RegisterType(const void *, int);
-__inline__ AG_ObjectType *AG_FindType(const char *);
+extern const AG_ObjectOps **agClassTbl;
+extern int                  agClassCount;
+
+void			 AG_InitClassTbl(void);
+void			 AG_DestroyClassTbl(void);
+void			 AG_RegisterClass(const void *);
+const AG_ObjectOps	*AG_FindClass(const char *);
 __END_DECLS
 
 #include "close_code.h"

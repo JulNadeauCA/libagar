@@ -100,9 +100,6 @@ typedef void (*AG_EventFn)(AG_Event *);
 extern const char *agEvArgTypeNames[];
 
 __BEGIN_DECLS
-void	AG_EventLoop_FixedFPS(void);
-#define AG_EventLoop() AG_EventLoop_FixedFPS()
-
 AG_Event *AG_SetEvent(void *, const char *, AG_EventFn, const char *, ...);
 AG_Event *AG_AddEvent(void *, const char *, AG_EventFn, const char *, ...);
 void	  AG_UnsetEvent(void *, const char *);
@@ -118,8 +115,6 @@ __inline__ void	 AG_ExecEventFn(void *, AG_Event *);
 void		 AG_ForwardEvent(void *, void *, AG_Event *);
 void		 AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
 void		 AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
-struct ag_window *AG_EventShowPerfGraph(void);
-__inline__ Uint8 AG_MouseGetState(int *, int *);
 __END_DECLS
 
 #ifdef DEBUG

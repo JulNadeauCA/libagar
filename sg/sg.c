@@ -54,7 +54,7 @@ SG_NodeOps **sgElements = NULL;
 Uint         sgElementsCnt = 0;
 
 void
-SG_NodeRegister(SG_NodeOps *nops)
+SG_RegisterClass(SG_NodeOps *nops)
 {
 	sgElements = Realloc(sgElements,(sgElementsCnt+1)*sizeof(SG_NodeOps *));
 	sgElements[sgElementsCnt] = nops;
@@ -112,24 +112,23 @@ SG_InitEngine(void)
 	SG_VectorInitEngine();
 	SG_MatrixInitEngine();
 
-	AG_RegisterType(&sgOps, MAP_ICON);
-	AG_RegisterType(&sgMaterialOps, RG_TILING_ICON);
-	AG_RegisterType(&sgProgramOps, OBJ_ICON);
+	AG_RegisterClass(&sgOps);
+	AG_RegisterClass(&sgMaterialOps);
+	AG_RegisterClass(&sgProgramOps);
 #ifdef HAVE_CG
-	AG_RegisterType(&sgCgProgramOps, OBJ_ICON);
+	AG_RegisterClass(&sgCgProgramOps);
 #endif
 
-	SG_NodeRegister(&sgDummyOps);
-	SG_NodeRegister(&sgPointOps);
-	SG_NodeRegister(&sgPlaneObjOps);
-	SG_NodeRegister(&sgCameraOps);
-	SG_NodeRegister(&sgLightOps);
+	SG_RegisterClass(&sgDummyOps);
+	SG_RegisterClass(&sgPointOps);
+	SG_RegisterClass(&sgPlaneObjOps);
+	SG_RegisterClass(&sgCameraOps);
+	SG_RegisterClass(&sgLightOps);
 
-	SG_NodeRegister(&sgObjectOps);
-	SG_NodeRegister(&sgSolidOps);
-	SG_NodeRegister(&sgSphereOps);
-	SG_NodeRegister(&sgBoxOps);
-
+	SG_RegisterClass(&sgObjectOps);
+	SG_RegisterClass(&sgSolidOps);
+	SG_RegisterClass(&sgSphereOps);
+	SG_RegisterClass(&sgBoxOps);
 #if 0
 	AG_AtExitFunc(SG_DestroyEngine);
 #endif

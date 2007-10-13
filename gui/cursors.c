@@ -38,6 +38,7 @@
 #define CURSOR_MAX_H 32
 
 SDL_Cursor *agCursors[AG_LAST_CURSOR];
+SDL_Cursor *agDefaultCursor = NULL;
 
 static SDL_Cursor *
 GenCursor(char *xpm[], int xHot, int yHot)
@@ -80,6 +81,7 @@ GenCursor(char *xpm[], int xHot, int yHot)
 void
 AG_CursorsInit(void)
 {
+	agDefaultCursor = SDL_GetCursor();
 	agCursors[AG_FILL_CURSOR] = GenCursor(fill_xpm, 23, 25);
 	agCursors[AG_ERASE_CURSOR] = GenCursor(erase_xpm, 10, 20);
 	agCursors[AG_PICK_CURSOR] = GenCursor(pick_xpm, 8, 22);

@@ -24,8 +24,8 @@
  */
 
 /*
- * Routines related to the AG_Object type table. The type table allows
- * archived objects to be dynamically allocated and initialized.
+ * Routines related to the Object class information table. This table allows,
+ * notably, archived objects to be dynamically allocated and initialized.
  */
 
 #include <core/core.h>
@@ -34,43 +34,42 @@
 #include <string.h>
 
 extern const AG_ObjectOps agObjectOps;
-AG_ObjectType *agTypes = NULL;
-int agnTypes = 0;
 
-/* Initialize the type switch and register the built-in types. */
+const AG_ObjectOps **agClassTbl = NULL;
+int                  agClassCount = 0;
+
 void
-AG_InitTypeSw(void)
+AG_InitClassTbl(void)
 {
-	agTypes = Malloc(sizeof(AG_ObjectType), M_TYPESW);
-	agnTypes = 0;
-	AG_RegisterType(&agObjectOps, OBJ_ICON);
+	agClassTbl = Malloc(sizeof(AG_ObjectOps), M_TYPESW);
+	agClassCount = 0;
+	AG_RegisterClass(&agObjectOps);
 }
 
 void
-AG_DestroyTypeSw(void)
+AG_DestroyClassTbl(void)
 {
-	Free(agTypes, M_TYPESW);
+	Free(agClassTbl, M_TYPESW);
+	agClassTbl = NULL;
+	agClassCount = 0;
 }
 
 void
-AG_RegisterType(const void *ops, int icon)
+AG_RegisterClass(const void *cl)
 {
-	AG_ObjectType *ntype;
-
-	agTypes = Realloc(agTypes, (agnTypes+1)*sizeof(AG_ObjectType));
-	ntype = &agTypes[agnTypes++];
-	ntype->ops = ops != NULL ? ops : &agObjectOps;
-	ntype->icon = icon;
+	agClassTbl = Realloc(agClassTbl, (agClassCount+1)*sizeof(AG_ObjectOps));
+	agClassTbl[agClassCount++] = cl;
 }
 
-AG_ObjectType *
-AG_FindType(const char *type)
+const AG_ObjectOps *
+AG_FindClass(const char *type)
 {
 	int i;
 
-	for (i = 0; i < agnTypes; i++) {
-		if (strcmp(agTypes[i].ops->type, type) == 0)
-			return (&agTypes[i]);
+	for (i = 0; i < agClassCount; i++) {
+		if (strcmp(agClassTbl[i]->type, type) == 0)
+			return (agClassTbl[i]);
 	}
+	AG_SetError(_("No such class: `%s'"), type);
 	return (NULL);
 }

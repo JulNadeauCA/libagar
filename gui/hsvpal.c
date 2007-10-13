@@ -25,9 +25,8 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/view.h>
 
-#include <rg/prim.h>
+#include <rg/prim.h>					/* XXX depends on rg */
 
 #include "hsvpal.h"
 

@@ -15,9 +15,10 @@ enum {
 	AG_LAST_CURSOR
 };
 
-extern SDL_Cursor *agCursors[];
-
 __BEGIN_DECLS
+extern SDL_Cursor *agCursors[];
+extern SDL_Cursor *agDefaultCursor;
+
 void AG_CursorsInit(void);
 void AG_CursorsDestroy(void);
 __END_DECLS

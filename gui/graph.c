@@ -24,12 +24,10 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "graph.h"
-
-#include <gui/primitive.h>
-#include <gui/menu.h>
+#include "primitive.h"
+#include "menu.h"
 
 #include <stdarg.h>
 #include <string.h>

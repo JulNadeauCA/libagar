@@ -156,7 +156,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	AG_RegisterType(&UserOps, OBJ_ICON);
+	AG_RegisterClass(&UserOps);
 
 	if (adminflag) {
 		/* Set up administrator interface. */

@@ -2,7 +2,6 @@
 
 #ifndef _AGAR_CORE_VIEW_H_
 #define _AGAR_CORE_VIEW_H_
-#include "begin_code.h"
 
 #ifdef _AGAR_INTERNAL
 #include <config/view_8bpp.h>
@@ -15,6 +14,13 @@
 #include <agar/config/view_24bpp.h>
 #include <agar/config/view_32bpp.h>
 #endif
+#ifdef _AGAR_INTERNAL
+#include <gui/iconmgr.h>
+#else
+#include <agar/gui/iconmgr.h>
+#endif
+
+#include "begin_code.h"
 
 struct ag_window;
 TAILQ_HEAD(ag_windowq, ag_window);
@@ -199,24 +205,42 @@ case 4:					\
 	}								\
 } while (0)
 
+/* Flags for AG_InitVideo() */
+#define AG_VIDEO_HWSURFACE     0x001  /* Request hardware FB */
+#define AG_VIDEO_ASYNCBLIT     0x002  /* Multithreaded blits */
+#define AG_VIDEO_ANYFORMAT     0x004  /* Disable depth emulation */
+#define AG_VIDEO_HWPALETTE     0x008  /* Exclusive palette access */
+#define AG_VIDEO_DOUBLEBUF     0x010  /* Double buffering */
+#define AG_VIDEO_FULLSCREEN    0x020  /* Start in fullscreen mode */
+#define AG_VIDEO_RESIZABLE     0x040  /* Request resizable window */
+#define AG_VIDEO_NOFRAME       0x080  /* Request frameless window */
+#define AG_VIDEO_BGPOPUPMENU   0x100  /* Set a background popup menu */
+#define AG_VIDEO_OPENGL	       0x200  /* Require OpenGL mode */
+#define AG_VIDEO_OPENGL_OR_SDL 0x400  /* Prefer OpenGL mode */
+
+__BEGIN_DECLS
 extern AG_Display *agView;
 extern SDL_PixelFormat *agVideoFmt;
 extern SDL_PixelFormat *agSurfaceFmt;
 extern const SDL_VideoInfo *agVideoInfo;
 extern const char *agBlendFuncNames[];
-extern SDL_Cursor *agDefaultCursor;
 
-__BEGIN_DECLS
-int		 AG_ViewInit(int, int, int, Uint);
+int		 AG_InitVideo(int, int, int, Uint);
+void		 AG_DestroyVideo(void);
 int		 AG_ResizeDisplay(int, int);
+int		 AG_SetRefreshRate(int);
+void		 AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
+void		 AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
+int		 AG_UnbindGlobalKey(SDLKey, SDLMod);
+
+/* GUI-related */
 void		 AG_ViewVideoExpose(void);
 void		 AG_ViewAttach(void *);
 void		 AG_ViewDetach(struct ag_window *);
 __inline__ void	 AG_ViewDetachQueued(void);
-void		 AG_ViewDestroy(void);
-int		 AG_SetRefreshRate(int);
 struct ag_window *AG_FindWindow(const char *);
 
+/* Surface operations */
 __inline__ SDL_Surface	*AG_DupSurface(SDL_Surface *);
 void			 AG_ScaleSurface(SDL_Surface *, Uint16, Uint16,
 			                 SDL_Surface **);
@@ -225,33 +249,103 @@ int			 AG_DumpSurface(SDL_Surface *, char *);
 __inline__ void		 AG_QueueVideoUpdate(int, int, int, int);
 void			 AG_ViewCapture(void);
 __inline__ void		 AG_FlipSurface(Uint8 *, int, int);
+__inline__ void	  	 AG_CopySurfaceAsIs(SDL_Surface *, SDL_Surface *);
 
+/* OpenGL-specific operations */
 #ifdef HAVE_OPENGL
-#define AG_LockGL()	AG_MutexLock(&agView->lock_gl)
-#define AG_UnlockGL()	AG_MutexUnlock(&agView->lock_gl)
+#define AG_LockGL()	 AG_MutexLock(&agView->lock_gl)
+#define AG_UnlockGL()	 AG_MutexUnlock(&agView->lock_gl)
+Uint		 	 AG_SurfaceTexture(SDL_Surface *, float *);
+void		 	 AG_UpdateTexture(SDL_Surface *, int);
+SDL_Surface		*AG_CaptureGLView(void);
 #else
 #define	AG_LockGL()
 #define	AG_UnlockGL()
 #endif
 
-#ifdef HAVE_OPENGL
-Uint		 AG_SurfaceTexture(SDL_Surface *, float *);
-void		 AG_UpdateTexture(SDL_Surface *, int);
-SDL_Surface	*AG_CaptureGLView(void);
+/*
+ * Pixel operations
+ */
+void AG_BlendPixelRGBA(SDL_Surface *, Uint8 *, Uint8, Uint8, Uint8, Uint8,
+                       AG_BlendFn);
+void AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
+void AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
+
+static __inline__ Uint32 AG_VideoPixel(Uint32 c)
+{
+	Uint8 r, g, b;
+	SDL_GetRGB(c, agSurfaceFmt, &r, &g, &b);
+	return (SDL_MapRGB(agVideoFmt, r, g, b));
+}
+static __inline__ Uint32 AG_SurfacePixel(Uint32 c)
+{
+	Uint8 r, g, b;
+	SDL_GetRGB(c, agVideoFmt, &r, &g, &b);
+	return (SDL_MapRGB(agSurfaceFmt, r, g, b));
+}
+static __inline__ Uint32 AG_GetPixel(SDL_Surface *s, Uint8 *pSrc)
+{
+	switch (s->format->BytesPerPixel) {
+	case 4:
+		return (*(Uint32 *)pSrc);
+	case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		return ((pSrc[0] << 16) +
+		        (pSrc[1] << 8) +
+		         pSrc[2]);
+#else
+		return  (pSrc[0] +
+		        (pSrc[1] << 8) +
+		        (pSrc[2] << 16));
 #endif
+	case 2:
+		return (*(Uint16 *)pSrc);
+	}
+	return (*pSrc);
+}
+static __inline__ void AG_PutPixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
+{
+	switch (s->format->BytesPerPixel) {
+	case 4:
+		*(Uint32 *)pDst = cDst;
+		break;
+	case 3:
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		pDst[0] = (cDst>>16) & 0xff;
+		pDst[1] = (cDst>>8) & 0xff;
+		pDst[2] = cDst & 0xff;
+#else
+		pDst[2] = (cDst>>16) & 0xff;
+		pDst[1] = (cDst>>8) & 0xff;
+		pDst[0] = cDst & 0xff;
+#endif
+		break;
+	case 2:
+		*(Uint16 *)pDst = cDst;
+		break;
+	default:
+		*pDst = cDst;
+		break;
+	}
+}
+static __inline__ int
+AG_SamePixelFmt(SDL_Surface *s1, SDL_Surface *s2)
+{
+	return (s1->format->BytesPerPixel == s2->format->BytesPerPixel &&
+	        s1->format->Rmask == s2->format->Rmask &&
+		s1->format->Gmask == s2->format->Gmask &&
+		s1->format->Bmask == s2->format->Bmask &&
+		s1->format->Amask == s2->format->Amask &&
+		s1->format->colorkey == s2->format->colorkey);
+}
 
-__inline__ Uint32 AG_VideoPixel(Uint32);
-__inline__ Uint32 AG_SurfacePixel(Uint32);
-__inline__ int	  AG_SamePixelFmt(SDL_Surface *, SDL_Surface *);
-__inline__ Uint32 AG_GetPixel(SDL_Surface *, Uint8 *);
-__inline__ void	  AG_PutPixel(SDL_Surface *, Uint8 *, Uint32);
-__inline__ void	  AG_BlendPixelRGBA(SDL_Surface *, Uint8 *,
-		                    Uint8, Uint8, Uint8, Uint8,
-			  	    AG_BlendFn);
-void		  AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
-void		  AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
-
-__inline__ void	  AG_CopySurfaceAsIs(SDL_Surface *, SDL_Surface *);
+/* Event processing */
+void              AG_EventLoop_FixedFPS(void);
+#define           AG_EventLoop() AG_EventLoop_FixedFPS()
+__inline__ Uint8  AG_MouseGetState(int *, int *);
+#ifdef DEBUG
+struct ag_window *AG_EventShowPerfGraph(void);
+#endif
 __END_DECLS
 
 #include "close_code.h"

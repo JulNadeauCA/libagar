@@ -98,7 +98,7 @@ structure.
 .Sh NODE MANIPULATION
 .nr nS 1
 .Ft "void"
-.Fn SK_NodeRegister "SK_NodeOps *ops"
+.Fn SK_RegisterClass "SK_NodeOps *ops"
 .Pp
 .Ft "void"
 .Fn SK_NodeInit "void *node" "const SK_NodeOps *ops" "Uint flags"
@@ -114,7 +114,7 @@ structure.
 .Pp
 .nr nS 0
 The
-.Fn SK_NodeRegister
+.Fn SK_RegisterClass
 function registers a new node class, described by the given
 .Ft SK_NodeOps
 structure.
