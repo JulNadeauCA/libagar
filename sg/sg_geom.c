@@ -157,7 +157,7 @@ SG_PlaneNormp(const SG_Plane *P)
 SG_Real
 SG_VectorPlaneAngle(SG_Vector v, SG_Plane P)
 {
-	return (M_PI - Acos(VecDot(SG_PlaneNormp(&P),VecNormp(&v))));
+	return (SG_PI - Acos(VecDot(SG_PlaneNormp(&P),VecNormp(&v))));
 }
 
 /* Compute minimal distance from a line segment L to a point p. */

@@ -65,7 +65,7 @@ RG_TransformRotate(struct map_item *r, int angle)
 	    r->r_gfx.yorigin - su->w/2,
 	    r->r_gfx.xorigin - su->h/2);
 
-	theta += ((float)angle/360.0)*(2.0*M_PI);
+	theta += ((float)angle/360.0)*(2.0*AG_PI);
 	r->r_gfx.xorigin = rad*cos(theta) + su->w/2;
 	r->r_gfx.yorigin = rad*sin(theta) + su->h/2;
 

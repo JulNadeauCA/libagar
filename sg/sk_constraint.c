@@ -79,7 +79,7 @@ PtFromLineAtDistance(SK_Constraint *ct, void *self, void *other)
 		return (0);
 	}
 	VecVecAngle(p1, p2, &theta, NULL);
-	theta += M_PI/2.0;
+	theta += SG_PI/2.0;
 	s1.x = v.x + ct->ct_distance*Cos(theta);
 	s1.y = v.y + ct->ct_distance*Sin(theta);
 	s2.x = v.x - ct->ct_distance*Cos(theta);

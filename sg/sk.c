@@ -1060,7 +1060,7 @@ SK_AddConstraint(SK_Cluster *cl, void *node1, void *node2,
 		break;
 	case SK_PERPENDICULAR:
 		ct->type = SK_ANGLE;
-		ct->ct_angle = M_PI/2.0;
+		ct->ct_angle = SG_PI/2.0;
 		break;
 	case SK_PARALLEL:
 		ct->type = SK_ANGLE;

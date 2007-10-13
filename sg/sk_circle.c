@@ -100,13 +100,13 @@ SK_CircleDraw(void *p, SK_View *skv)
 	if (circle->r < skv->wPixel) {
 		return;
 	}
-	incr = (2.0*M_PI)/30.0;
+	incr = (2.0*SG_PI)/30.0;
 
 	SG_TranslateVecGL(v);
 
 	SG_Begin(SG_LINE_LOOP);
 	SG_Color3v(&color);
-	for (i = 0.0; i < M_PI*2.0; i+=incr) {
+	for (i = 0.0; i < SG_PI*2.0; i+=incr) {
 		glVertex2f(Cos(i)*circle->r,
 		           Sin(i)*circle->r);
 	}

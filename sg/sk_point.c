@@ -99,7 +99,7 @@ SK_PointDraw(void *p, SK_View *skv)
 		SG_Begin(SG_LINE_LOOP);
 		SG_Color3v(&color);
 //		SG_Color3f(0.0, 0.0, 1.0);
-		for (i = 0.0; i < M_PI*2.0; i += (2.0*M_PI)/6.0) {
+		for (i = 0.0; i < SG_PI*2.0; i += (2.0*SG_PI)/6.0) {
 			SG_Vertex2(SG_Cos(i)*skv->wPixel*4.0,
 			           SG_Sin(i)*skv->hPixel*4.0);
 		}

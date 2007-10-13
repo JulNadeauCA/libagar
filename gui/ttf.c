@@ -153,7 +153,7 @@ AG_TTFOpenFont(const char *file, int ptsize)
 	font->style = TTF_STYLE_NORMAL;
 	font->glyph_overhang = face->size->metrics.y_ppem / 10;
 
-	/* x offset = cos(((90.0-12)/360)*2*M_PI), or 12 degree angle. */
+	/* x offset = cos(((90.0-12)/360)*2*AG_PI), or 12 degree angle. */
 	font->glyph_italics = 0.207f;
 	font->glyph_italics *= font->height;
 	return (font);

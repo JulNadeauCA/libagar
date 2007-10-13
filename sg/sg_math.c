@@ -36,13 +36,13 @@
 SG_Real
 SG_Rad2Deg(SG_Real theta)
 {
-	return (theta/(2.0*M_PI)*360.0);
+	return (theta/(2.0*SG_PI)*360.0);
 }
 
 SG_Real
 SG_Deg2Rad(SG_Real theta)
 {
-	return ((theta/360.0)*(2.0*M_PI));
+	return ((theta/360.0)*(2.0*SG_PI));
 }
 
 SG_Real

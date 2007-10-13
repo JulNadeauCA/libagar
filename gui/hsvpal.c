@@ -303,9 +303,9 @@ UpdateHue(AG_HSVPal *pal, int x, int y)
 
 	h = atan2((float)y, (float)x);
 	if (h < 0) {
-		h += 2*M_PI;
+		h += 2*AG_PI;
 	}
-	AG_WidgetSetFloat(pal, "hue", h/(2*M_PI)*360.0);
+	AG_WidgetSetFloat(pal, "hue", h/(2*AG_PI)*360.0);
 
 	UpdatePixelFromHSVA(pal);
 	AG_PostEvent(NULL, pal, "h-changed", NULL);
@@ -692,15 +692,15 @@ RenderPalette(AG_HSVPal *pal)
 	int x, y, i;
 	SDL_Rect rd;
 
-	cur_h = (AG_WidgetFloat(pal, "hue")/360) * 2*M_PI;
+	cur_h = (AG_WidgetFloat(pal, "hue")/360) * 2*AG_PI;
 	cur_s = AG_WidgetFloat(pal, "saturation");
 	cur_v = AG_WidgetFloat(pal, "value");
 
 	SDL_LockSurface(pal->surface);
 
 	/* Render the circle of hues. */
-	for (h = 0.0; h < 2*M_PI; h += pal->circle.dh) {
-		AG_HSV2RGB((h/(2*M_PI)*360.0), 1.0, 1.0, &r, &g, &b);
+	for (h = 0.0; h < 2*AG_PI; h += pal->circle.dh) {
+		AG_HSV2RGB((h/(2*AG_PI)*360.0), 1.0, 1.0, &r, &g, &b);
 		pc = SDL_MapRGB(agVideoFmt, r, g, b);
 
 		for (i = 0; i < pal->circle.width; i++) {
@@ -720,7 +720,7 @@ RenderPalette(AG_HSVPal *pal)
 		            (float)(pal->triangle.h);
 
 		for (x = 0; x < y; x++) {
-			AG_HSV2RGB((cur_h/(2*M_PI))*360.0, sat,
+			AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, sat,
 			    1.0 - ((float)x/(float)pal->triangle.h),
 			    &r, &g, &b);
 			pc = SDL_MapRGB(agVideoFmt, r, g, b);
@@ -754,7 +754,7 @@ RenderPalette(AG_HSVPal *pal)
 			SDL_FillRect(pal->surface, &rd, pal->cTile);
 		}
 	}
-	AG_HSV2RGB((cur_h/(2*M_PI))*360.0, cur_s, cur_v, &r, &g, &b);
+	AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, cur_s, cur_v, &r, &g, &b);
 	da = MIN(1, pal->surface->w/255);
 	for (y = pal->rAlpha.y+8; y < pal->surface->h; y++) {
 		for (x = 0, a = 0; x < pal->surface->w; x++) {
@@ -788,14 +788,14 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	
 	pal->circle.rout = MIN(a->w, (a->h - pal->rAlpha.h))/2;
 	pal->circle.rin = pal->circle.rout - pal->circle.width;
-	pal->circle.dh = (float)(1.0/(pal->circle.rout*M_PI));
+	pal->circle.dh = (float)(1.0/(pal->circle.rout*AG_PI));
 	pal->circle.x = a->w/2;
 	pal->circle.y = (a->h - pal->rAlpha.h)/2;
 
 	pal->triangle.x = a->w/2;
 	pal->triangle.y = pal->circle.y+pal->circle.width-pal->circle.rout;
-	pal->triangle.h = pal->circle.rin*sin((37.0/360.0)*(2*M_PI)) -
-			  pal->circle.rin*sin((270.0/360.0)*(2*M_PI));
+	pal->triangle.h = pal->circle.rin*sin((37.0/360.0)*(2*AG_PI)) -
+			  pal->circle.rin*sin((270.0/360.0)*(2*AG_PI));
 	
 	pal->selcircle_r = pal->circle.width/2 - 4;
 
@@ -827,7 +827,7 @@ Draw(void *p)
 		AG_WidgetReplaceSurface(pal, 0, pal->surface);
 	}
 
-	cur_h = (AG_WidgetFloat(pal, "hue") / 360.0) * 2*M_PI;
+	cur_h = (AG_WidgetFloat(pal, "hue") / 360.0) * 2*AG_PI;
 	cur_s = AG_WidgetFloat(pal, "saturation");
 	cur_v = AG_WidgetFloat(pal, "value");
 	a = (Uint8)(AG_WidgetFloat(pal, "alpha")*255);
@@ -856,7 +856,7 @@ Draw(void *p)
 	if (x > pal->rAlpha.w-3) { x = pal->rAlpha.w-3; }
 
 	/* Draw the color preview. */
-	AG_HSV2RGB((cur_h*360.0)/(2*M_PI), cur_s, cur_v, &r, &g, &b);
+	AG_HSV2RGB((cur_h*360.0)/(2*AG_PI), cur_s, cur_v, &r, &g, &b);
 	agPrim.rect_filled(pal,
 	    pal->rAlpha.x, pal->rAlpha.y,
 	    pal->rAlpha.w, 8,
