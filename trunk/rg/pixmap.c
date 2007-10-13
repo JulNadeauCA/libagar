@@ -127,8 +127,8 @@ RG_PixmapLoad(RG_Pixmap *px, AG_Netbuf *buf)
 		AG_CopyString(br->name, buf, sizeof(br->name));
 		br->type = (enum pixmap_brush_type)AG_ReadUint8(buf);
 		br->flags = (int)AG_ReadUint32(buf);
-		AG_ReadSint16(buf);			/* Pad: xorig */
-		AG_ReadSint16(buf);			/* Pad: yorig */
+		(void)AG_ReadSint16(buf);		/* Pad: xorig */
+		(void)AG_ReadSint16(buf);		/* Pad: yorig */
 		AG_CopyString(br->px_name, buf, sizeof(br->px_name));
 		br->px = NULL;
 		TAILQ_INSERT_TAIL(&px->brushes, br, brushes);
