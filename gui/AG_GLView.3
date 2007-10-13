@@ -1,0 +1,184 @@
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd October 12, 2007
+.Dt AG_GLVIEW 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.2
+.Sh NAME
+.Nm AG_GLView
+.Nd low-level OpenGL context widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget provides a low-level OpenGL context.
+.Pp
+If high-level scene rendering capabilities are required, see
+.Xr SG 3
+and
+.Xr SG_View 3 .
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_GLView *"
+.Fn AG_GLViewNew "AG_Widget *parent" "Uint flags"
+.Pp
+.Ft void
+.Fn AG_GLViewInit "AG_GLView *glv" "Uint flags"
+.Pp
+.Ft void
+.Fn AG_GLViewSizeHint "AG_GLView *glv" "int w" "int h"
+.Pp
+.Ft void
+.Fn AG_GLViewReshape "AG_GLView *glv"
+.Pp
+.Ft void
+.Fn AG_GLViewDrawFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
+.Pp
+.Ft void
+.Fn AG_GLViewOverlayFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
+.Pp
+.Ft void
+.Fn AG_GLViewScaleFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
+.Pp
+.Ft void
+.Fn AG_GLViewKeydownFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
+.Pp
+.Ft void
+.Fn AG_GLViewKeyupFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
+.Pp
+.Ft void
+.Fn AG_GLViewButtondownFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
+.Pp
+.Ft void
+.Fn AG_GLViewButtonupFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
+.Pp
+.Ft void
+.Fn AG_GLViewMotionFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
+.Pp
+.nr nS 0
+The
+.Fn AG_GLViewNew
+function allocates, initializes, and attaches a new
+.Nm
+widget.
+The
+.Fn AG_GLViewInit
+function initializes a preallocated
+.Nm
+widget.
+There are currently no
+.Fa flags
+defined.
+.Pp
+.Fn AG_GLViewSizeHint
+suggests an initial widget size in pixels.
+.Pp
+The
+.Fn AG_GLViewReshape
+function recomputes the projection matrix used in the GL context and invokes
+the
+.Va scale
+operation.
+.Fn AG_GLViewReshape
+is called automatically when the widget is resized.
+.Pp
+The
+.Fn AG_GLViewDrawFn
+registers a the rendering function (specified in
+.Xr AG_Event 3
+format).
+Prior to invoking this function, the widget will set the
+.Xr glViewport 3
+to the widget area, save the current OpenGL matrices and load the
+widget-specific matrices.
+.Pp
+.Fn AG_GLViewOverlayFn
+registers a function that will be invoked after rendering, after the
+GUI matrices and viewport have been restored.
+It is typically used to draw text or controls independently of the
+.Nm ' s
+projection and viewing matrices.
+.Pp
+.Fn AG_GLViewScaleFn
+registers a function to invoke whenever the widget is resized.
+.Pp
+.Fn AG_GLViewKeydownFn ,
+.Fn AG_GLViewKeyupFn ,
+.Fn AG_GLViewButtondownFn ,
+.Fn AG_GLViewButtonupFn
+and
+.Fn AG_GLViewMotionFn
+register general event handler functions that will be forwarded
+.Sq window-keydown ,
+.Sq window-keyup ,
+.Sq window-mousebuttondown ,
+.Sq window-mousebuttonup
+and
+.Sq window-mousemotion
+events, respectively.
+.Sh BINDINGS
+The
+.Nm
+widget does not provide any binding.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n
+.It widget-moved
+Projection matrix is recomputed and the
+.Va scale
+operation is invoked.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
+.Sh EXAMPLES
+.Pp
+See the
+.Pa glview
+demo in the Agar
+.Pa demos
+directory.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3 ,
+.Xr SG 3 ,
+.Xr SG_View 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.2.
