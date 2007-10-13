@@ -6,15 +6,12 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "dummy.h"
 
 #include "window.h"
 #include "primitive.h"
 #include "label.h"
-
-#include <stdarg.h>
 
 /*
  * This is a generic constructor function. It is customary of FooNew()

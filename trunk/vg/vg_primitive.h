@@ -5,9 +5,9 @@
 #define _AGAR_VG_PRIMITIVE_H_
 
 #ifdef _AGAR_INTERNAL
-#include <core/view.h>
+#include <gui/view.h>
 #else
-#include <agar/core/view.h>
+#include <agar/gui/view.h>
 #endif
 
 #include "begin_code.h"

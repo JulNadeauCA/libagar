@@ -24,10 +24,8 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "console.h"
-
 #include "primitive.h"
 
 #include <stdarg.h>

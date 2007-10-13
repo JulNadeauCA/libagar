@@ -68,7 +68,7 @@ SK_NodeOps **skElements = NULL;
 Uint         skElementsCnt = 0;
 
 void
-SK_NodeRegister(SK_NodeOps *nops)
+SK_RegisterClass(SK_NodeOps *nops)
 {
 	skElements = Realloc(skElements,(skElementsCnt+1)*sizeof(SK_NodeOps *));
 	skElements[skElementsCnt] = nops;
@@ -120,18 +120,20 @@ SK_NodeOfClass(void *pNode, const char *cname)
 	return (SK_NodeOfClassGeneral(node, cname));	/* General case */
 }
 
-/* Register the SK classes with the Agar object system. */
+/*
+ * Register the SK classes with the Agar object system, and also register
+ * the default SK node classes.
+ */
 int
 SK_InitEngine(void)
 {
-	AG_RegisterType(&skOps, DRAWING_ICON);
+	AG_RegisterClass(&skOps);
 
-	SK_NodeRegister(&skDummyOps);
-	SK_NodeRegister(&skPointOps);
-	SK_NodeRegister(&skLineOps);
-	SK_NodeRegister(&skCircleOps);
-
-	SK_NodeRegister(&skDimensionOps);
+	SK_RegisterClass(&skDummyOps);
+	SK_RegisterClass(&skPointOps);
+	SK_RegisterClass(&skLineOps);
+	SK_RegisterClass(&skCircleOps);
+	SK_RegisterClass(&skDimensionOps);
 	return (0);
 }
 

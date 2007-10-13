@@ -24,7 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "sc_plotter.h"
 #include "sc_gui.h"

@@ -24,7 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 #include <core/typesw.h>
 
 #include <gui/window.h>
@@ -74,7 +73,7 @@ extern const char *rgTileSnapModes[];
 void
 RG_InitSubsystem(void)
 {
-	AG_RegisterType(&rgTilesetOps, TILESET_ICON);
+	AG_RegisterClass(&rgTilesetOps);
 }
 
 void

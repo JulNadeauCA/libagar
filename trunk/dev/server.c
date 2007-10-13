@@ -38,7 +38,6 @@
 #include <config/have_jpeg.h>
 
 #include <core/core.h>
-#include <core/view.h>
 #include <core/config.h>
 
 #include <compat/file.h>

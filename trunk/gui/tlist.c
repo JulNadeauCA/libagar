@@ -24,10 +24,8 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "tlist.h"
-
 #include "primitive.h"
 
 #include <string.h>

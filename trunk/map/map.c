@@ -25,7 +25,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/view.h>
 #include <core/util.h>
 #include <core/typesw.h>
 
@@ -84,8 +83,8 @@ MAP_InitSubsystem(void)
 {
 	extern const AG_ObjectOps mapActorOps;
 
-	AG_RegisterType(&mapOps, MAP_ICON);
-	AG_RegisterType(&mapActorOps, OBJ_ICON);
+	AG_RegisterClass(&mapOps);
+	AG_RegisterClass(&mapActorOps);
 }
 
 void

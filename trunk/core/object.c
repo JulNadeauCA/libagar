@@ -36,7 +36,6 @@
 #include <compat/file.h>
 
 #include <core/config.h>
-#include <core/view.h>
 #include <core/typesw.h>
 
 #ifdef NETWORK
@@ -1023,12 +1022,12 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	count = AG_ReadUint32(buf);
 	for (i = 0; i < count; i++) {
 		char cname[AG_OBJECT_NAME_MAX];
-		char ctype[AG_OBJECT_TYPE_MAX];
+		char classID[AG_OBJECT_TYPE_MAX];
 		AG_Object *eob, *child;
 
 	 	/* XXX ensure that there are no duplicate names. */
 		AG_CopyString(cname, buf, sizeof(cname));
-		AG_CopyString(ctype, buf, sizeof(ctype));
+		AG_CopyString(classID, buf, sizeof(classID));
 
 		OBJECT_FOREACH_CHILD(eob, ob, ag_object) {
 			if (strcmp(eob->name, cname) == 0) 
@@ -1039,7 +1038,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			 * XXX TODO Allow these cases to be handled by a
 			 * special callback function.
 			 */
-			if (strcmp(eob->ops->type, ctype) != 0) {
+			if (strcmp(eob->ops->type, classID) != 0) {
 				fatal("existing object of different type");
 			}
 			if (!OBJECT_PERSISTENT(eob)) {
@@ -1049,15 +1048,10 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 				goto fail;
 			}
 		} else {
-			int ti;
+			const AG_ObjectOps *cl;
 
-		 	for (ti = 0; ti < agnTypes; ti++) {
-				if (strcmp(agTypes[ti].ops->type, ctype) == 0)
-					break;
-			}
-			if (ti == agnTypes) {
-				AG_SetError(_("%s: unknown object type: `%s'"),
-				    ob->name, ctype);
+			if ((cl = AG_FindClass(classID)) == NULL) {
+				AG_SetError("%s: %s", ob->name, AG_GetError());
 				if (agObjectIgnoreUnknownObjs) {
 					AG_TextMsg(AG_MSG_ERROR,
 					    _("%s (ignored)"), AG_GetError());
@@ -1068,11 +1062,11 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 				goto fail;
 			}
 
-			child = Malloc(agTypes[ti].ops->size, M_OBJECT);
-			if (agTypes[ti].ops->init != NULL) {
-				agTypes[ti].ops->init(child, cname);
+			child = Malloc(cl->size, M_OBJECT);
+			if (cl->init != NULL) {
+				cl->init(child, cname);
 			} else {
-				AG_ObjectInit(child, cname, agTypes[ti].ops);
+				AG_ObjectInit(child, cname, cl);
 			}
 			AG_ObjectAttach(ob, child);
 			if (AG_ObjectLoadGeneric(child) == -1)
@@ -1590,25 +1584,18 @@ AG_ObjectDuplicate(void *p, const char *newName)
 {
 	char nameSave[AG_OBJECT_NAME_MAX];
 	AG_Object *ob = p;
+	const AG_ObjectOps *ops = ob->ops;
 	AG_Object *dob;
-	AG_ObjectType *t;
 
-	for (t = &agTypes[0]; t < &agTypes[agnTypes]; t++)
-		if (strcmp(ob->ops->type, t->ops->type) == 0)
-			break;
-#ifdef DEBUG
-	if (t == &agTypes[agnTypes])
-		fatal("unrecognized object type");
-#endif
-	dob = Malloc(t->ops->size, M_OBJECT);
+	dob = Malloc(ops->size, M_OBJECT);
 
 	AG_MutexLock(&ob->lock);
 
 	/* Create the duplicate object. */
-	if (t->ops->init != NULL) {
-		t->ops->init(dob, newName);
+	if (ops->init != NULL) {
+		ops->init(dob, newName);
 	} else {
-		AG_ObjectInit(dob, newName, t->ops);
+		AG_ObjectInit(dob, newName, ops);
 	}
 
 	if (AG_ObjectPageIn(ob) == -1)
@@ -1642,24 +1629,6 @@ fail:
 	AG_ObjectDestroy(dob);
 	Free(dob, M_OBJECT);
 	return (NULL);
-}
-
-/* Return the icon associated with this object type, if any. */
-SDL_Surface *
-AG_ObjectIcon(void *p)
-{
-	AG_Object *obj = p;
-	int i;
-	
-	if (obj == NULL) {
-		return (NULL);
-	}
-	for (i = 0; i < agnTypes; i++) {
-		if (strcmp(agTypes[i].ops->type, obj->ops->type) == 0)
-			return (agTypes[i].icon >= 0 ? AGICON(agTypes[i].icon) :
-			    NULL);
-	}
-	return (AGICON(OBJ_ICON));
 }
 
 /* Return a cryptographic digest of an object's most recent archive. */

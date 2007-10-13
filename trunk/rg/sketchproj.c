@@ -24,9 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
-
-#include <vg/vg.h>
 
 #include <gui/window.h>
 #include <gui/label.h>
@@ -36,6 +33,8 @@
 #include <gui/spinbutton.h>
 #include <gui/notebook.h>
 #include <gui/combo.h>
+
+#include <vg/vg.h>
 
 #include "tileset.h"
 #include "tileview.h"

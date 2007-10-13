@@ -24,19 +24,28 @@
  */
 
 /*
- * Video display related routines.
+ * Low-level interface between the GUI and video display.
  */
 
+#include <config/have_opengl.h>
 #include <config/have_jpeg.h>
+#include <config/have_x11.h>
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/view.h>
 #include <core/util.h>
 
-#include <gui/window.h>
-
 #include <compat/dir.h>
+
+#include "window.h"
+#include "primitive.h"
+#include "cursors.h"
+#include "colors.h"
+#include "menu.h"
+#ifdef DEBUG
+#include "label.h"
+#include "fixed_plotter.h"
+#endif
 
 #include <math.h>
 #include <stdio.h>
@@ -49,13 +58,29 @@
 #include <jpeglib.h>
 #endif
 
-/* Read-only as long as the engine is running. */
-AG_Display *agView = NULL;
-SDL_PixelFormat *agVideoFmt = NULL;
-SDL_PixelFormat *agSurfaceFmt = NULL;
-const SDL_VideoInfo *agVideoInfo;
-int agScreenshotQuality = 75;
-SDL_Cursor *agDefaultCursor = NULL;
+/*
+ * Force synchronous X11 events. Reduces performance, but useful for
+ * debugging things like accesses to illegal video regions.
+ */
+/* #define SYNC_X11_EVENTS */
+
+/*
+ * Invert the Y-coordinate in OpenGL mode.
+ */
+/* #define OPENGL_INVERTED_Y */
+
+#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
+#include <SDL_syswm.h>
+#include <X11/Xlib.h>
+#endif
+
+AG_Display *agView = NULL;		/* Main view */
+SDL_PixelFormat *agVideoFmt = NULL;	/* Current format of display */
+SDL_PixelFormat *agSurfaceFmt = NULL;	/* Preferred format for surfaces */
+const SDL_VideoInfo *agVideoInfo;	/* Display information */
+int agScreenshotQuality = 75;		/* JPEG quality in % */
+int agBgPopupMenu = 0;			/* Background popup menu */
+int agIdleThresh = 20;			/* Idling threshold */
 
 const char *agBlendFuncNames[] = {
 	N_("Alpha sum"),
@@ -65,6 +90,32 @@ const char *agBlendFuncNames[] = {
 	N_("One minus source alpha"),
 	NULL
 };
+
+struct ag_global_key {
+	SDLKey keysym;
+	SDLMod keymod;
+	void (*fn)(void);
+	void (*fn_ev)(AG_Event *);
+	SLIST_ENTRY(ag_global_key) gkeys;
+};
+static SLIST_HEAD(,ag_global_key) agGlobalKeys =
+    SLIST_HEAD_INITIALIZER(&agGlobalKeys);
+
+#ifdef DEBUG
+
+#define DEBUG_KEY_EVENTS	0x01
+#define DEBUG_JOY_EVENTS	0x02
+#define	agDebugLvl		agViewDebugLvl
+int	agViewDebugLvl = 0;
+
+int	agEventAvg = 0;		/* Number of events in last frame */
+int	agIdleAvg = 0;		/* Measured SDL_Delay() granularity */
+
+AG_Window *agPerfWindow;
+static AG_FixedPlotter *agPerfGraph;
+static AG_FixedPlotterItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
+
+#endif /* DEBUG */
 
 const AG_ObjectOps agDisplayOps = {
 	"AG_Display",
@@ -78,12 +129,39 @@ const AG_ObjectOps agDisplayOps = {
 	NULL	/* edit */
 };
 
-int
-AG_ViewInit(int w, int h, int bpp, Uint flags)
+#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
+static int
+AG_X11_ErrorHandler(Display *disp, XErrorEvent *event)
 {
+	printf("Caught X11 error!\n");
+	abort();
+}
+#endif
+
+int
+AG_InitVideo(int w, int h, int bpp, Uint flags)
+{
+	char path[MAXPATHLEN];
 	Uint32 screenflags = 0;
 	int depth;
 
+	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+		AG_SetError("SDL_INIT_VIDEO: %s", SDL_GetError());
+		return (-1);
+	}
+	SDL_WM_SetCaption(agProgName, agProgName);
+
+	agVideoInfo = SDL_GetVideoInfo();
+
+	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
+#ifdef HAVE_OPENGL
+		AG_SetBool(agConfig, "view.opengl", 1);
+#else
+		if ((flags & AG_VIDEO_OPENGL_OR_SDL) == 0)
+			fatal("Agar OpenGL support is not compiled in");
+#endif
+	}
+	
 	if (flags & AG_VIDEO_HWSURFACE) {
 		screenflags |= SDL_HWSURFACE;
 	} else {
@@ -130,8 +208,6 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 	if (agView->depth == 8)
 		screenflags |= SDL_HWPALETTE;
 	
-	dprintf("Mode: %ux%ux%u\n", agView->w, agView->h, agView->depth);
-
 #ifdef HAVE_OPENGL
 	if (AG_Bool(agConfig, "view.opengl")) {
 		screenflags |= SDL_OPENGL;
@@ -239,7 +315,52 @@ AG_ViewInit(int w, int h, int bpp, Uint flags)
 	AG_SetUint8(agConfig, "view.depth", agView->depth);
 	AG_SetUint16(agConfig, "view.w", agView->w);
 	AG_SetUint16(agConfig, "view.h", agView->h);
-	agDefaultCursor = SDL_GetCursor();
+
+	AG_ColorsInit();
+	AG_InitPrimitives();
+	AG_CursorsInit();
+	
+	strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
+	strlcat(path, AG_PATHSEP, sizeof(path));
+	strlcat(path, "gui-colors.acs", sizeof(path));
+	(void)AG_ColorsLoad(path);
+	
+	/* Fill the background. */
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		Uint8 r, g, b;
+
+		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
+		AG_LockGL();
+		glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
+		AG_UnlockGL();
+	} else
+#endif
+	{
+		SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+		SDL_UpdateRect(agView->v, 0, 0, agView->w, agView->h);
+	}
+#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
+	{	
+		SDL_SysWMinfo wminfo;
+		if (SDL_GetWMInfo(&wminfo) &&
+		    wminfo.subsystem == SDL_SYSWM_X11) {
+			dprintf("Enabling synchronous X11 events\n");
+			XSynchronize(wminfo.info.x11.display, True);
+			XSetErrorHandler(AG_X11_ErrorHandler);
+		}
+	}
+#endif
+	if (AG_TextInit() == -1) {
+		goto fail;
+	}
+	if (flags & AG_VIDEO_BGPOPUPMENU) {
+		agBgPopupMenu = 1;
+	}
+	AG_IconMgrInit(&agIconMgr, "core-icons");
+	if (AG_IconMgrLoadFromDenXCF(&agIconMgr, "core-icons") == -1) {
+		fatal("Unable to load icons: %s", AG_GetError());
+	}
 	return (0);
 fail:
 	AG_MutexDestroy(&agView->lock);
@@ -248,6 +369,81 @@ fail:
 #endif
 	Free(agView, M_VIEW);
 	agView = NULL;
+	return (-1);
+}
+
+void
+AG_DestroyVideo(void)
+{
+	AG_Window *win, *nwin;
+
+	if (agView == NULL)
+		return;
+	
+	AG_TextDestroy();
+
+	for (win = TAILQ_FIRST(&agView->windows);
+	     win != TAILQ_END(&agView->windows);
+	     win = nwin) {
+		nwin = TAILQ_NEXT(win, windows);
+		AG_ObjectDestroy(win);
+		Free(win, M_OBJECT);
+	}
+	SDL_FreeSurface(agView->stmpl);
+	Free(agView->dirty, M_VIEW);
+	AG_MutexDestroy(&agView->lock);
+#ifdef HAVE_OPENGL
+	AG_MutexDestroy(&agView->lock_gl);
+#endif
+	Free(agView->winModal, M_VIEW);
+	Free(agView, M_VIEW);
+	
+	AG_ColorsDestroy();
+	AG_CursorsDestroy();
+	AG_ObjectDestroy(&agIconMgr);
+
+	agView = NULL;
+}
+
+void
+AG_BindGlobalKey(SDLKey keysym, SDLMod keymod, void (*fn)(void))
+{
+	struct ag_global_key *gk;
+
+	gk = Malloc(sizeof(struct ag_global_key), M_EVENT);
+	gk->keysym = keysym;
+	gk->keymod = keymod;
+	gk->fn = fn;
+	gk->fn_ev = NULL;
+	SLIST_INSERT_HEAD(&agGlobalKeys, gk, gkeys);
+}
+
+void
+AG_BindGlobalKeyEv(SDLKey keysym, SDLMod keymod, void (*fn_ev)(AG_Event *))
+{
+	struct ag_global_key *gk;
+
+	gk = Malloc(sizeof(struct ag_global_key), M_EVENT);
+	gk->keysym = keysym;
+	gk->keymod = keymod;
+	gk->fn = NULL;
+	gk->fn_ev = fn_ev;
+	SLIST_INSERT_HEAD(&agGlobalKeys, gk, gkeys);
+}
+
+int
+AG_UnbindGlobalKey(SDLKey keysym, SDLMod keymod)
+{
+	struct ag_global_key *gk;
+
+	SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
+		if (gk->keysym == keysym && gk->keymod == keymod) {
+			SLIST_REMOVE(&agGlobalKeys, gk, ag_global_key, gkeys);
+			Free(gk, M_EVENT);
+			return (0);
+		}
+	}
+	AG_SetError(_("No such key binding"));
 	return (-1);
 }
 
@@ -391,30 +587,6 @@ AG_ViewVideoExpose(void)
 	AG_UnlockGL();
 }
 
-void
-AG_ViewDestroy(void)
-{
-	AG_Window *win, *nwin;
-
-	for (win = TAILQ_FIRST(&agView->windows);
-	     win != TAILQ_END(&agView->windows);
-	     win = nwin) {
-		nwin = TAILQ_NEXT(win, windows);
-		AG_ObjectDestroy(win);
-		Free(win, M_OBJECT);
-	}
-
-	SDL_FreeSurface(agView->stmpl);
-	Free(agView->dirty, M_VIEW);
-	AG_MutexDestroy(&agView->lock);
-#ifdef HAVE_OPENGL
-	AG_MutexDestroy(&agView->lock_gl);
-#endif
-	Free(agView->winModal, M_VIEW);
-	Free(agView, M_VIEW);
-	agView = NULL;
-}
-
 /* Return the named window or NULL if there is no such window. */
 AG_Window *
 AG_FindWindow(const char *name)
@@ -479,56 +651,6 @@ AG_ViewDetach(AG_Window *win)
 	AG_MutexUnlock(&agView->lock);
 }
 
-/* Return the 32-bit form of the pixel at the given location. */
-Uint32
-AG_GetPixel(SDL_Surface *s, Uint8 *pSrc)
-{
-	switch (s->format->BytesPerPixel) {
-	case 4:
-		return (*(Uint32 *)pSrc);
-	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		return ((pSrc[0] << 16) +
-		        (pSrc[1] << 8) +
-		         pSrc[2]);
-#else
-		return  (pSrc[0] +
-		        (pSrc[1] << 8) +
-		        (pSrc[2] << 16));
-#endif
-	case 2:
-		return (*(Uint16 *)pSrc);
-	}
-	return (*pSrc);
-}
-
-void
-AG_PutPixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
-{
-	switch (s->format->BytesPerPixel) {
-	case 4:
-		*(Uint32 *)pDst = cDst;
-		break;
-	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		pDst[0] = (cDst>>16) & 0xff;
-		pDst[1] = (cDst>>8) & 0xff;
-		pDst[2] = cDst & 0xff;
-#else
-		pDst[2] = (cDst>>16) & 0xff;
-		pDst[1] = (cDst>>8) & 0xff;
-		pDst[0] = cDst & 0xff;
-#endif
-		break;
-	case 2:
-		*(Uint16 *)pDst = cDst;
-		break;
-	default:
-		*pDst = cDst;
-		break;
-	}
-}
-
 /*
  * Release the windows on the detachment queue. Call at the end of the
  * current event processing cycle.
@@ -563,37 +685,6 @@ AG_DupSurface(SDL_Surface *ss)
 	rs->format->alpha = ss->format->alpha;
 	rs->format->colorkey = ss->format->colorkey;
 	return (rs);
-}
-
-/* Convert a pixel from agSurfaceFormat to agVideoFormat. */
-Uint32
-AG_VideoPixel(Uint32 c)
-{
-	Uint8 r, g, b;
-
-	SDL_GetRGB(c, agSurfaceFmt, &r, &g, &b);
-	return (SDL_MapRGB(agVideoFmt, r, g, b));
-}
-
-/* Convert a pixel from agVideoFormat to agSurfaceFormat. */
-Uint32
-AG_SurfacePixel(Uint32 c)
-{
-	Uint8 r, g, b;
-
-	SDL_GetRGB(c, agVideoFmt, &r, &g, &b);
-	return (SDL_MapRGB(agSurfaceFmt, r, g, b));
-}
-
-int
-AG_SamePixelFmt(SDL_Surface *s1, SDL_Surface *s2)
-{
-	return (s1->format->BytesPerPixel == s2->format->BytesPerPixel &&
-	        s1->format->Rmask == s2->format->Rmask &&
-		s1->format->Gmask == s2->format->Gmask &&
-		s1->format->Bmask == s2->format->Bmask &&
-		s1->format->Amask == s2->format->Amask &&
-		s1->format->colorkey == s2->format->colorkey);
 }
 
 /*
@@ -1172,4 +1263,281 @@ AG_CopySurfaceAsIs(SDL_Surface *sSrc, SDL_Surface *sDst)
 	SDL_BlitSurface(sSrc, NULL, sDst, NULL);
 	SDL_SetColorKey(sSrc, svcflags, svcolorkey);
 	SDL_SetAlpha(sSrc, svaflags, svalpha);
+}
+
+#ifdef DEBUG
+/*
+ * Update the performance counters.
+ * XXX remove this once the graph widget implements polling.
+ */
+static __inline__ void
+PerfMonitorUpdate(void)
+{
+	static int einc = 0;
+
+	AG_FixedPlotterDatum(agPerfFPS, agView->rCur);
+	AG_FixedPlotterDatum(agPerfEvnts, agEventAvg * 30 / 10);
+	AG_FixedPlotterDatum(agPerfIdle, agIdleAvg);
+	AG_FixedPlotterScroll(agPerfGraph, 1);
+
+	if (++einc == 1) {
+		agEventAvg = 0;
+		einc = 0;
+	}
+}
+
+AG_Window *
+AG_EventShowPerfGraph(void)
+{
+	AG_WindowShow(agPerfWindow);
+	return (agPerfWindow);
+}
+
+static void
+PerfMonitorInit(void)
+{
+	AG_Label *lbl;
+
+	agPerfWindow = AG_WindowNewNamed(0, "event-fps-counter");
+	AG_WindowSetCaption(agPerfWindow, _("Performance counters"));
+	AG_WindowSetPosition(agPerfWindow, AG_WINDOW_LOWER_CENTER, 0);
+	lbl = AG_LabelNewPolled(agPerfWindow, AG_LABEL_HFILL,
+	    "%dms (nom %dms), %d evnt, %dms idle",
+	    &agView->rCur, &agView->rNom, &agEventAvg, &agIdleAvg);
+	AG_LabelSizeHint(lbl, 1, "000ms (nom 000ms), 00 evnt, 000ms idle");
+	agPerfGraph = AG_FixedPlotterNew(agPerfWindow, AG_FIXED_PLOTTER_LINES,
+	                                               AG_FIXED_PLOTTER_XAXIS|
+						       AG_FIXED_PLOTTER_EXPAND);
+	agPerfFPS = AG_FixedPlotterCurve(agPerfGraph, "refresh", 0,160,0, 99);
+	agPerfEvnts = AG_FixedPlotterCurve(agPerfGraph, "event", 0,0,180, 99);
+	agPerfIdle = AG_FixedPlotterCurve(agPerfGraph, "idle", 180,180,180, 99);
+}
+#endif /* DEBUG */
+
+/*
+ * Try to ensure a fixed frame rate, and idle as much as possible.
+ * TODO provide MD hooks for finer idling.
+ */
+void
+AG_EventLoop_FixedFPS(void)
+{
+	extern struct ag_objectq agTimeoutObjQ;
+	SDL_Event ev;
+	AG_Window *win;
+	Uint32 Tr1, Tr2 = 0;
+
+#ifdef DEBUG
+	PerfMonitorInit();
+#endif
+	Tr1 = SDL_GetTicks();
+	for (;;) {
+		Tr2 = SDL_GetTicks();
+		if (Tr2-Tr1 >= agView->rNom) {
+			AG_MutexLock(&agView->lock);
+#ifdef HAVE_OPENGL
+			if (agView->opengl) {
+				AG_LockGL();
+				glClear(GL_COLOR_BUFFER_BIT|
+				        GL_DEPTH_BUFFER_BIT);
+			}
+#endif
+			TAILQ_FOREACH(win, &agView->windows, windows) {
+				AG_MutexLock(&win->lock);
+				if (!win->visible) {
+					AG_MutexUnlock(&win->lock);
+					continue;
+				}
+				AG_WidgetDraw(win);
+				AG_MutexUnlock(&win->lock);
+
+				if (win->flags & AG_WINDOW_NOUPDATERECT) {
+					continue;
+				}
+				AG_QueueVideoUpdate(
+				    WIDGET(win)->x, WIDGET(win)->y,
+				    WIDGET(win)->w, WIDGET(win)->h);
+			}
+			if (agView->ndirty > 0) {
+#ifdef HAVE_OPENGL
+				if (agView->opengl) {
+					SDL_GL_SwapBuffers();
+				} else
+#endif
+				{
+					SDL_UpdateRects(agView->v,
+					    agView->ndirty,
+					    agView->dirty);
+				}
+				agView->ndirty = 0;
+			}
+#ifdef HAVE_OPENGL
+			if (agView->opengl)
+				AG_UnlockGL();
+#endif
+			AG_MutexUnlock(&agView->lock);
+
+			/* Recalibrate the effective refresh rate. */
+			Tr1 = SDL_GetTicks();
+			agView->rCur = agView->rNom - (Tr1-Tr2);
+#ifdef DEBUG
+			if (agPerfWindow->visible)
+				PerfMonitorUpdate();
+#endif
+			if (agView->rCur < 1) {
+				agView->rCur = 1;
+			}
+		} else if (SDL_PollEvent(&ev) != 0) {
+			AG_ProcessEvent(&ev);
+#ifdef DEBUG
+			agEventAvg++;
+#endif
+		} else if (TAILQ_FIRST(&agTimeoutObjQ) != NULL) {     /* Safe */
+			AG_ProcessTimeout(Tr2);
+		} else if (agView->rCur > agIdleThresh) {
+			SDL_Delay(agView->rCur - agIdleThresh);
+#ifdef DEBUG
+			agIdleAvg = SDL_GetTicks() - Tr2;
+		} else {
+			agIdleAvg = 0;
+		}
+#else
+		}
+#endif
+	}
+}
+
+static void
+UnminimizeWindow(AG_Event *event)
+{
+	AG_Window *win = AG_PTR(1);
+
+	if (!win->visible) {
+		AG_WindowShow(win);
+		win->flags &= ~(AG_WINDOW_MINIMIZED);
+	} else {
+		AG_WindowFocus(win);
+	}
+}
+
+void
+AG_ProcessEvent(SDL_Event *ev)
+{
+	AG_MutexLock(&agView->lock);
+
+	switch (ev->type) {
+	case SDL_MOUSEMOTION:
+#ifdef OPENGL_INVERTED_Y
+		if (agView->opengl) {
+			ev->motion.y = agView->h - ev->motion.y;
+			ev->motion.yrel = -ev->motion.yrel;
+		}
+#endif
+		AG_WindowEvent(ev);
+		break;
+	case SDL_MOUSEBUTTONUP:
+	case SDL_MOUSEBUTTONDOWN:
+#ifdef OPENGL_INVERTED_Y
+		if (agView->opengl)
+			ev->button.y = agView->h - ev->button.y;
+#endif
+		if (AG_WindowEvent(ev) == 0 &&
+		    agBgPopupMenu && ev->type == SDL_MOUSEBUTTONDOWN &&
+		    (ev->button.button == SDL_BUTTON_MIDDLE ||
+		     ev->button.button == SDL_BUTTON_RIGHT)) {
+			AG_Menu *me;
+			AG_MenuItem *mi;
+			AG_Window *win;
+			int x, y;
+
+			me = Malloc(sizeof(AG_Menu), M_OBJECT);
+			AG_MenuInit(me, 0);
+			mi = me->itemSel = AG_MenuAddItem(me, NULL);
+
+			TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq,
+			    windows) {
+				if (strcmp(win->caption, "win-popup")
+				    == 0) {
+					continue;
+				}
+				AG_MenuAction(mi, win->caption,
+				    OBJ_ICON,
+				    UnminimizeWindow, "%p", win);
+			}
+				
+			AG_MouseGetState(&x, &y);
+			AG_MenuExpand(me, mi, x+4, y+4);
+		}
+		break;
+	case SDL_KEYDOWN:
+		{
+			struct ag_global_key *gk;
+
+			SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
+				if (gk->keysym == ev->key.keysym.sym &&
+				    ((gk->keymod == KMOD_NONE &&
+				      ev->key.keysym.mod == KMOD_NONE) ||
+				      ev->key.keysym.mod & gk->keymod)) {
+					if (gk->fn != NULL) {
+						gk->fn();
+					} else if (gk->fn_ev != NULL) {
+						gk->fn_ev(NULL);
+					}
+				}
+			}
+		}
+		/* FALLTHROUGH */
+	case SDL_KEYUP:
+		debug(DEBUG_KEY_EVENTS,
+		    "SDL_KEY%s keysym=%d u=%04x state=%s\n",
+		    (ev->key.type == SDL_KEYUP) ? "UP" : "DOWN",
+		    (int)ev->key.keysym.sym, ev->key.keysym.unicode,
+		    (ev->key.state == SDL_PRESSED) ?
+		    "PRESSED" : "RELEASED");
+		AG_WindowEvent(ev);
+		break;
+	case SDL_JOYAXISMOTION:
+	case SDL_JOYBUTTONDOWN:
+	case SDL_JOYBUTTONUP:
+		debug(DEBUG_JOY_EVENTS, "SDL_JOY%s\n",
+		    (ev->type == SDL_JOYAXISMOTION) ? "AXISMOTION" :
+		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
+		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" :
+		    "???");
+		AG_WindowEvent(ev);
+		break;
+	case SDL_VIDEORESIZE:
+		AG_ResizeDisplay(ev->resize.w, ev->resize.h);
+		break;
+	case SDL_VIDEOEXPOSE:
+		AG_ViewVideoExpose();
+		break;
+	case SDL_QUIT:
+		if (!agTerminating &&
+		    AG_FindEventHandler(agWorld, "quit") != NULL) {
+			AG_PostEvent(NULL, agWorld, "quit", NULL);
+			break;
+		}
+		/* FALLTHROUGH */
+	case SDL_USEREVENT:
+		AG_MutexUnlock(&agView->lock);
+		agTerminating = 1;
+		AG_Destroy();
+		/* NOTREACHED */
+		break;
+	}
+	AG_ViewDetachQueued();
+	AG_MutexUnlock(&agView->lock);
+}
+
+Uint8
+AG_MouseGetState(int *x, int *y)
+{
+	Uint8 rv;
+
+	rv = SDL_GetMouseState(x, y);
+#ifdef OPENGL_INVERTED_Y
+	if (agView->opengl && y != NULL)
+		*y = agView->h - *y;
+#endif
+	return (rv);
 }

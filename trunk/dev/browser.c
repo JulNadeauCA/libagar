@@ -28,7 +28,6 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 #include <core/config.h>
 #include <core/timeout.h>
 #include <core/typesw.h>
@@ -71,7 +70,7 @@ static void
 CreateObject(AG_Event *event)
 {
 	char name[AG_OBJECT_NAME_MAX];
-	AG_ObjectType *t = AG_PTR(1);
+	AG_ObjectOps *cl = AG_PTR(1);
 	AG_Textbox *name_tb = AG_PTR(2);
 	AG_Tlist *tlObjs = AG_PTR(3);
 	AG_Window *dlg_win = AG_PTR(4);
@@ -88,20 +87,20 @@ CreateObject(AG_Event *event)
 	AG_ViewDetach(dlg_win);
 
 	if (name[0] == '\0')
-		AG_ObjectGenName(agWorld, t->ops, name, sizeof(name));
+		AG_ObjectGenName(agWorld, cl, name, sizeof(name));
 
-	nobj = Malloc(t->ops->size, M_OBJECT);
-	if (t->ops->init != NULL) {
-		t->ops->init(nobj, name);
+	nobj = Malloc(cl->size, M_OBJECT);
+	if (cl->init != NULL) {
+		cl->init(nobj, name);
 	} else {
-		AG_ObjectInit(nobj, name, t->ops);
+		AG_ObjectInit(nobj, name, cl);
 	}
 	AG_ObjectAttach(pobj, nobj);
 	AG_ObjectUnlinkDatafiles(nobj);
 
 	AG_PostEvent(NULL, nobj, "edit-create", NULL);
 	
-	if (editNowFlag && t->ops->edit != NULL)
+	if (editNowFlag && cl->edit != NULL)
 		DEV_BrowserOpenData(nobj);
 }
 
@@ -714,7 +713,7 @@ static void
 CreateObjectDlg(AG_Event *event)
 {
 	AG_Window *win;
-	AG_ObjectType *t = AG_PTR(1);
+	AG_ObjectOps *cl = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
 	AG_Tlist *tlParents;
 	AG_Box *bo;
@@ -722,12 +721,12 @@ CreateObjectDlg(AG_Event *event)
 	AG_Checkbox *cb;
 
 	win = AG_WindowNew(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE);
-	AG_WindowSetCaption(win, _("New %s object"), t->ops->type);
+	AG_WindowSetCaption(win, _("New %s object"), cl->type);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		AG_LabelNewStatic(bo, 0, _("Type: %s"), t->ops->type);
+		AG_LabelNewStatic(bo, 0, _("Type: %s"), cl->type);
 		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
 		    _("Name: "));
 	}
@@ -757,9 +756,9 @@ CreateObjectDlg(AG_Event *event)
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
 		AG_ButtonNewFn(bo, 0, _("OK"), CreateObject, "%p,%p,%p,%p",
-		    t, tb, tlParents, win);
+		    cl, tb, tlParents, win);
 		AG_SetEvent(tb, "textbox-return", CreateObject, "%p,%p,%p,%p",
-		    t, tb, tlParents, win);
+		    cl, tb, tlParents, win);
 		
 		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
@@ -774,15 +773,42 @@ static void
 PollRevisions(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
+	AG_TlistItem *it;
+	AG_RCSList list;
+	int i;
 
 	if (!agRcsMode) {
 		AG_TextMsg(AG_MSG_ERROR, _("RCS is currently disabled."));
 		return;
 	}
 	if (AG_RcsConnect() == -1 ||
-	    AG_RcsList(tl) == -1) {
+	    AG_RcsGetList(&list) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		goto out;
 	}
+
+	AG_TlistClear(tl);
+	it = AG_TlistAdd(tl, NULL, "/");
+	it->flags |= AG_TLIST_HAS_CHILDREN;
+	it->cat = "object";
+	it->depth = 0;
+
+	for (i = 0; i < list.nEnts; i++) {
+		AG_RCSListEntry *lent = &list.ents[i];
+		int depth = 0;
+		char *c;
+
+		for (c = &lent->name[0]; *c != '\0'; c++) {
+			if (*c == '/')
+				depth++;
+		}
+		it = AG_TlistAdd(tl, NULL, "%s", &lent->name[1]);
+		it->cat = "object";
+		it->depth = depth;
+	}
+	AG_TlistRestore(tl);
+	AG_RcsFreeList(&list);
+out:
 	AG_RcsDisconnect();
 }
 
@@ -821,16 +847,17 @@ DeleteFromRepo(AG_Event *event)
 			    _("Object %s removed from repository."), it->text);
 		}
 	}
+#if 0
 	if (AG_RcsConnect() == 0) {
 		AG_RcsList(tl);
 		AG_RcsDisconnect();
 	}
+#endif
 }
 
 static void
 RepoRenameObject(AG_Event *event)
 {
-	AG_Tlist *tl = AG_PTR(1);
 	char *from = AG_STRING(2);
 	char *to = AG_STRING(3);
 
@@ -840,10 +867,12 @@ RepoRenameObject(AG_Event *event)
 		AG_TextTmsg(AG_MSG_INFO, 1000, _("Object %s renamed to %s."),
 		    from, to);
 	}
+#if 0
 	if (AG_RcsConnect() == 0) {
 		AG_RcsList(tl);
 		AG_RcsDisconnect();
 	}
+#endif
 }
 
 static void
@@ -888,18 +917,16 @@ DEV_Browser(void)
 	me = AG_MenuNew(win, AG_MENU_HFILL);
 	mi = AG_MenuAddItem(me, _("File"));
 	{
+		char label[32];
 		int i;
 
 		mi_objs = AG_MenuAction(mi, _("New object"), OBJCREATE_ICON,
 		    NULL, NULL);
-		for (i = agnTypes-1; i >= 0; i--) {
-			char label[32];
-			AG_ObjectType *t = &agTypes[i];
-
-			strlcpy(label, t->ops->type, sizeof(label));
+		for (i = 0; i < agClassCount; i++) {
+			strlcpy(label, agClassTbl[i]->type, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
-			AG_MenuAction(mi_objs, label, t->icon,
-			    CreateObjectDlg, "%p,%p", t, win);
+			AG_MenuAction(mi_objs, label, -1,
+			    CreateObjectDlg, "%p,%p", agClassTbl[i], win);
 		}
 
 		AG_MenuSeparator(mi);

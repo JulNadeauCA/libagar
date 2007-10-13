@@ -24,10 +24,8 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "fixed_plotter.h"
-
 #include "window.h"
 #include "primitive.h"
 

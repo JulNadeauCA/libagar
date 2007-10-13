@@ -30,7 +30,6 @@
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "sg.h"
 #include "sg_matview.h"

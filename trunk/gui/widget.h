@@ -7,12 +7,12 @@
 #include <config/have_opengl.h>
 #include <gui/style.h>
 #include <gui/colors.h>
-#include <core/view.h>
+#include <gui/view.h>
 #else
 #include <agar/config/have_opengl.h>
 #include <agar/gui/style.h>
 #include <agar/gui/colors.h>
-#include <agar/core/view.h>
+#include <agar/gui/view.h>
 #endif
 
 #include "begin_code.h"

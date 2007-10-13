@@ -172,7 +172,7 @@ int	 SG_Load(void *, AG_Netbuf *);
 void	*SG_Edit(void *);
 void	 SG_RenderNode(SG *, SG_Node *, SG_View *);
 
-void		 SG_NodeRegister(SG_NodeOps *);
+void		 SG_RegisterClass(SG_NodeOps *);
 __inline__ int	 SG_NodeOfClass(SG_Node *, const char *);
 void		 SG_NodeInit(void *, const char *, const void *, Uint);
 void		*SG_NodeAdd(void *, const char *, const SG_NodeOps *, Uint);

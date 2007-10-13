@@ -24,13 +24,10 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "scrollable_text.h"
-
 #include "window.h"
 #include "primitive.h"
-#include "scrollable_text.h"
 
 #include <stdarg.h>
 

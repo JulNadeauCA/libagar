@@ -26,8 +26,6 @@
 #include <compat/arc4random.h>
 
 #include <core/core.h>
-#include <core/view.h>
-
 #include <core/load_surface.h>
 
 #include <gui/cursors.h>

@@ -25,7 +25,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/view.h>
 
 #include "window.h"
 #include "titlebar.h"
@@ -54,7 +53,6 @@ static void GainFocus(AG_Event *);
 static void LostFocus(AG_Event *);
 
 AG_Mutex agWindowLock = AG_MUTEX_INITIALIZER;
-int	 agWindowAnySize = 0;
 int	 agWindowXOutLimit = 32;
 int	 agWindowBotOutLimit = 32;
 

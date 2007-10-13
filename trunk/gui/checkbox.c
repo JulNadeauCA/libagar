@@ -24,7 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "checkbox.h"
 
@@ -33,7 +32,6 @@
 
 #include <stdarg.h>
 #include <string.h>
-#include <errno.h>
 
 #define LABEL_SPACING 6
 

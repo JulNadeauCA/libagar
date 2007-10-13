@@ -29,13 +29,14 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/view.h>
 
 #include <core/load_den.h>
 #include <core/load_xcf.h>
 
 #include <string.h>
 #include <stdarg.h>
+
+#include "iconmgr.h"
 
 AG_IconMgr agIconMgr;
 
@@ -110,4 +111,12 @@ AG_IconMgrDestroy(void *p)
 		SDL_FreeSurface(im->icons[i]);
 	}
 	Free(im->icons, M_GFX);
+}
+
+/* Return the icon associated with an object class, if any. */
+SDL_Surface *
+AG_ObjectIcon(void *p)
+{
+	/* TODO */
+	return (NULL);
 }

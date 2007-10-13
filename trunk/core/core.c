@@ -34,16 +34,10 @@
 #include <config/have_pthreads_xopen.h>
 #include <config/have_pthread_mutex_recursive.h>
 #include <config/have_pthread_mutex_recursive_np.h>
-#include <config/have_x11.h>
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/view.h>
 #include <core/typesw.h>
-
-#include <gui/primitive.h>
-#include <gui/cursors.h>
-#include <gui/colors.h>
 
 #include <stdio.h>
 
@@ -52,17 +46,6 @@
 #endif
 #ifdef HAVE_SETLOCALE
 #include <locale.h>
-#endif
-
-/*
- * Force synchronous X11 events. Reduces performance, but useful for
- * debugging things like accesses to illegal video regions.
- */
-/* #define SYNC_X11_EVENTS */
-
-#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
-#include <SDL_syswm.h>
-#include <X11/Xlib.h>
 #endif
 
 #ifdef THREADS
@@ -117,7 +100,7 @@ AG_InitCore(const char *progname, Uint flags)
 		return (-1);
 	}
 
-	AG_InitTypeSw();
+	AG_InitClassTbl();
 	
 	agConfig = Malloc(sizeof(AG_Config), M_OBJECT);
 	AG_ConfigInit(agConfig);
@@ -133,127 +116,6 @@ AG_InitCore(const char *progname, Uint flags)
 #ifdef NETWORK
 	AG_InitNetwork(0);
 #endif
-	return (0);
-}
-
-#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
-static int
-AG_X11_ErrorHandler(Display *disp, XErrorEvent *event)
-{
-	printf("Caught X11 error!\n");
-	abort();
-}
-#endif
-
-int
-AG_InitVideo(int w, int h, int bpp, Uint flags)
-{
-	char path[MAXPATHLEN];
-	extern int agBgPopupMenu;
-
-	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-		AG_SetError("SDL_INIT_VIDEO: %s", SDL_GetError());
-		return (-1);
-	}
-	SDL_WM_SetCaption(agProgName, agProgName);
-
-	agVideoInfo = SDL_GetVideoInfo();
-#ifdef DEBUG
-	if (agVerbose) {
-		char accel[2048];
-		char unaccel[2048];
-		size_t size = 2048;
-
-		agVideoFmt = agVideoInfo->vfmt;
-
-		printf(_("Window manager is %s.\n"),
-		    agVideoInfo->wm_available ?
-		    _("available") : _("unavailable"));
-		printf(_("Hardware surfaces are %s.\n"),
-		    agVideoInfo->hw_available ?
-		    _("available") : _("unavailable"));
-		
-		accel[0] = '\0';
-		unaccel[0] = '\0';
-
-		strlcat(agVideoInfo->blit_hw ? accel : unaccel,
-		    _("\tSDL hardware blits\n"), size);
-		strlcat(agVideoInfo->blit_hw_CC ? accel : unaccel,
-		    _("\tSDL hardware->hardware colorkey blits\n"), size);
-		strlcat(agVideoInfo->blit_hw_A ? accel : unaccel,
-		    _("\tSDL hardware->hardware alpha blits\n"), size);
-		strlcat(agVideoInfo->blit_sw ? accel : unaccel,
-		    _("\tSDL software->hardware blits\n"), size);
-		strlcat(agVideoInfo->blit_sw_CC ? accel : unaccel,
-		    _("\tSDL software->hardware colorkey blits\n"), size);
-		strlcat(agVideoInfo->blit_sw_A ? accel : unaccel,
-		    _("\tSDL software->hardware alpha blits\n"), size);
-		strlcat(agVideoInfo->blit_fill ? accel : unaccel,
-		    _("\tSDL color fills\n"), size);
-
-		if (accel[0] != '\0')
-			printf(_("Accelerated operations:\n%s"), accel);
-		if (unaccel[0] != '\0')
-			printf(_("Unaccelerated operations:\n%s"), unaccel);
-
-		printf("\n");
-	}
-#endif
-
-	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
-#ifdef HAVE_OPENGL
-		AG_SetBool(agConfig, "view.opengl", 1);
-#else
-		if ((flags & AG_VIDEO_OPENGL_OR_SDL) == 0)
-			fatal("Agar OpenGL support is not compiled in");
-#endif
-	}
-	if (AG_ViewInit(w, h, bpp, flags) == -1 || AG_TextInit() == -1) {
-		return (-1);
-	}
-	AG_ColorsInit();
-	AG_InitPrimitives();
-	AG_CursorsInit();
-
-	strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
-	strlcat(path, AG_PATHSEP, sizeof(path));
-	strlcat(path, "gui-colors.acs", sizeof(path));
-	(void)AG_ColorsLoad(path);
-
-	/* Fill the background. */
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		Uint8 r, g, b;
-
-		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
-		AG_LockGL();
-		glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
-		AG_UnlockGL();
-	} else
-#endif
-	{
-		SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
-		SDL_UpdateRect(agView->v, 0, 0, agView->w, agView->h);
-	}
-
-	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
-
-#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
-	{	
-		SDL_SysWMinfo wminfo;
-		if (SDL_GetWMInfo(&wminfo) &&
-		    wminfo.subsystem == SDL_SYSWM_X11) {
-			dprintf("Enabling synchronous X11 events\n");
-			XSynchronize(wminfo.info.x11.display, True);
-			XSetErrorHandler(AG_X11_ErrorHandler);
-		}
-	}
-#endif
-
-	AG_IconMgrInit(&agIconMgr, "core-icons");
-	if (AG_IconMgrLoadFromDenXCF(&agIconMgr, "core-icons") == -1) {
-		fatal("Unable to load icons: %s", AG_GetError());
-	}
 	return (0);
 }
 
@@ -327,14 +189,6 @@ AG_Destroy(void)
 
 	AG_ObjectDestroy(agWorld);
 
-	if (agView != NULL) {
-		AG_TextDestroy();
-		AG_ViewDestroy();
-		AG_ColorsDestroy();
-		AG_CursorsDestroy();
-		AG_ObjectDestroy(&agIconMgr);
-	}
-
 	AG_ObjectDestroy(agConfig);
 	Free(agConfig, M_OBJECT);
 
@@ -342,8 +196,7 @@ AG_Destroy(void)
 	AG_MutexDestroy(&agTimingLock);
 
 	AG_DestroyError();
-	AG_DestroyTypeSw();
+	AG_DestroyClassTbl();
 	SDL_Quit();
 	exit(0);
 }
-

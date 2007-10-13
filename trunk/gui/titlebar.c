@@ -24,11 +24,9 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "titlebar.h"
 #include "window.h"
-
 #include "primitive.h"
 
 static void mousebuttondown(AG_Event *);

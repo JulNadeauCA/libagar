@@ -24,7 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 #include <core/config.h>
 
 #include <config/have_freetype.h>

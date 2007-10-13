@@ -44,7 +44,6 @@
 #include <unistd.h>
 
 #include <core/core.h>
-#include <core/view.h>
 #include <core/config.h>
 
 #include <gui/window.h>

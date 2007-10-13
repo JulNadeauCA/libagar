@@ -26,10 +26,8 @@
 #include <compat/limits.h>
 
 #include <core/core.h>
-#include <core/view.h>
 
 #include "mspinbutton.h"
-
 #include "window.h"
 
 #include <stdarg.h>

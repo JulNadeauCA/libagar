@@ -25,7 +25,31 @@ enum ag_rcs_status {
 	AG_RCS_DESYNCH,	 /* Working copy < last rev */
 };
 
-struct ag_tlist;
+typedef struct ag_rcs_log_entry {
+	char *rev;		/* Revision number */
+	char *author;		/* Committer */
+	char *type;		/* Object class */
+	char *name;		/* Object name */
+	char *sum;		/* Dataset checksum */
+	char *msg;		/* Commit message */
+} AG_RCSLogEntry;
+
+typedef struct ag_rcs_log {
+	AG_RCSLogEntry *ents;
+	Uint nEnts;
+} AG_RCSLog;
+
+typedef struct ag_rcs_list_entry {
+	char *name;		/* Object name */
+	char *rev;		/* Last revision number */
+	char *author;		/* Last committer */
+	char *type;		/* Object class */
+} AG_RCSListEntry;
+
+typedef struct ag_rcs_list {
+	AG_RCSListEntry *ents;
+	Uint nEnts;
+} AG_RCSList;
 
 __BEGIN_DECLS
 #ifdef NETWORK
@@ -45,8 +69,12 @@ int AG_RcsGetWorkingRev(AG_Object *, Uint *);
 int AG_RcsSetWorkingRev(AG_Object *, Uint);
 enum ag_rcs_status AG_RcsStatus(AG_Object *, const char *, const char *,
 		                char *, char *, Uint *, Uint *);
-int AG_RcsLog(const char *, struct ag_tlist *);
-int AG_RcsList(struct ag_tlist *);
+
+int  AG_RcsGetLog(const char *, AG_RCSLog *);
+void AG_RcsFreeLog(AG_RCSLog *);
+int  AG_RcsGetList(AG_RCSList *);
+void AG_RcsFreeList(AG_RCSList *);
+
 int AG_RcsDelete(const char *);
 int AG_RcsRename(const char *, const char *);
 int AG_RcsCheckout(const char *);

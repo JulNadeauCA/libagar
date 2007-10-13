@@ -28,7 +28,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/view.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -36,6 +35,7 @@
 #include "vg.h"
 #include "vg_view.h"
 
+#include <gui/view.h>
 #include <gui/window.h>
 #include <gui/primitive.h>
 

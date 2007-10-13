@@ -24,9 +24,9 @@
  */
 
 #include <core/core.h>
-#include <core/view.h>
 #include <core/config.h>
 
+#include "view.h"
 #include "colors.h"
 
 const AG_Version agColorSchemeVer = { 1, 0 };

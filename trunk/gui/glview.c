@@ -28,7 +28,6 @@
 #ifdef HAVE_OPENGL
 
 #include <core/config.h>
-#include <core/view.h>
 
 #include "glview.h"
 

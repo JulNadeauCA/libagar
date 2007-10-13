@@ -37,7 +37,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/view.h>
 #include <core/rcs.h>
 
 #include <compat/dir.h>
@@ -68,6 +67,7 @@ int agKbdRepeat = 35;				/* Key repeat interval */
 int agMouseDblclickDelay = 250;			/* Mouse double-click delay */
 int agMouseSpinDelay = 250;			/* Spinbutton repeat delay */
 int agMouseSpinIval = 50;			/* Spinbutton repeat interval */
+int agWindowAnySize = 0;			/* Allow any window size */
 
 void
 AG_ConfigInit(AG_Config *cfg)

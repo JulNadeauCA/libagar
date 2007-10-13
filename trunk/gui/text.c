@@ -66,7 +66,6 @@
 #include <config/utf8.h>
 
 #include <core/core.h>
-#include <core/view.h>
 #include <core/config.h>
 
 #ifdef HAVE_FREETYPE
@@ -74,6 +73,7 @@
 #endif
 #include <core/load_xcf.h>
 
+#include "view.h"
 #include "window.h"
 #include "vbox.h"
 #include "box.h"

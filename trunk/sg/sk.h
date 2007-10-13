@@ -204,7 +204,7 @@ void	*SK_Edit(void *);
 void	 	 SK_RenderNode(SK *, SK_Node *, SK_View *);
 __inline__ void	 SK_RenderAbsolute(SK *, SK_View *);
 
-void		 SK_NodeRegister(SK_NodeOps *);
+void		 SK_RegisterClass(SK_NodeOps *);
 int	 	 SK_NodeOfClass(void *, const char *);
 void		 SK_NodeInit(void *, const void *, Uint32, Uint);
 void		*SK_NodeAdd(void *, const SK_NodeOps *, Uint32, Uint);

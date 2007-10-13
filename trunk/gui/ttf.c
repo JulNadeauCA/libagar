@@ -38,13 +38,11 @@
 #ifdef HAVE_FREETYPE
 
 #include <core/core.h>
-#include <core/view.h>
-#include <gui/unicode.h>
 
+#include "unicode.h"
 #include "ttf.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 /* FIXME: Right now we assume the gray-scale renderer Freetype is using

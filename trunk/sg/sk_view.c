@@ -31,7 +31,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/view.h>
 
 #include <stdarg.h>
 #include <string.h>
