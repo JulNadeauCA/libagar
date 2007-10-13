@@ -63,7 +63,8 @@ static const char *mallocTypeNames[] = {
 	"eda",
 	"game",
 	"math",
-	"sg"
+	"sg",
+	"gi"
 };
 
 static char *
