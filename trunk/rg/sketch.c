@@ -23,6 +23,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <compat/limits.h>
 #include <core/core.h>
 
 #include <vg/vg.h>
@@ -534,7 +535,7 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
 
 	{
 		VG_Element *vge;
-		float idx, closest_idx = FLT_MAX;
+		float idx, closest_idx = AG_FLT_MAX;
 		VG_Element *closest_vge = NULL;
 
 		printf("proximity test\n");
@@ -551,7 +552,7 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
 			}
 		}
 		printf("closest = %p (%f)\n", closest_vge, closest_idx);
-		if (closest_vge != NULL && closest_idx < FLT_MAX-2) {
+		if (closest_vge != NULL && closest_idx < AG_FLT_MAX-2) {
 			if (closest_vge->selected) {
 				printf("unselecting %p\n", closest_vge);
 				RG_SketchUnselect(tv, tel, closest_vge);
@@ -614,7 +615,7 @@ RG_SketchMotion(RG_Tileview *tv, RG_TileElement *tel, double x, double y,
 	{
 		RG_Sketch *sk = tel->tel_sketch.sk;
 		VG *vg = sk->vg;
-		float idx, closest_idx = FLT_MAX;
+		float idx, closest_idx = AG_FLT_MAX;
 		VG_Element *vge, *closest_vge = NULL;
 
 		TAILQ_FOREACH(vge, &vg->vges, vges) {
@@ -630,7 +631,7 @@ RG_SketchMotion(RG_Tileview *tv, RG_TileElement *tel, double x, double y,
 				}
 			}
 		}
-		if (closest_vge != NULL && closest_idx < FLT_MAX-2) {
+		if (closest_vge != NULL && closest_idx < AG_FLT_MAX-2) {
 			closest_vge->mouseover = 1;
 		}
 	}

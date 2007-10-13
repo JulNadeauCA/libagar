@@ -23,6 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <compat/limits.h>
+
 #include <core/core.h>
 #include <core/view.h>
 
@@ -31,7 +33,6 @@
 #include "primitive.h"
 
 #include <string.h>
-#include <limits.h>
 
 AG_FSpinbutton *
 AG_FSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *label)
@@ -56,26 +57,26 @@ binding_changed(AG_Event *event)
 		AG_MutexLock(&fsu->lock);
 		switch (binding->vtype) {
 		case AG_WIDGET_DOUBLE:
-			fsu->min = -DBL_MAX+1;
-			fsu->max = DBL_MAX-1;
+			fsu->min = -AG_DBL_MAX+1;
+			fsu->max =  AG_DBL_MAX-1;
 			fsu->input->flags |= AG_TEXTBOX_FLT_ONLY;
 			fsu->input->flags &= ~AG_TEXTBOX_INT_ONLY;
 			break;
 		case AG_WIDGET_FLOAT:
-			fsu->min = -FLT_MAX+1;
-			fsu->max = FLT_MAX-1;
+			fsu->min = -AG_FLT_MAX+1;
+			fsu->max =  AG_FLT_MAX-1;
 			fsu->input->flags |= AG_TEXTBOX_FLT_ONLY;
 			fsu->input->flags &= ~AG_TEXTBOX_INT_ONLY;
 			break;
 		case AG_WIDGET_INT:
-			fsu->min = INT_MIN+1;
-			fsu->max = INT_MAX-1;
+			fsu->min = AG_INT_MIN+1;
+			fsu->max = AG_INT_MAX-1;
 			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
 			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;
 		case AG_WIDGET_UINT:
 			fsu->min = 0;
-			fsu->max = UINT_MAX-1;
+			fsu->max = AG_UINT_MAX-1;
 			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
 			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;

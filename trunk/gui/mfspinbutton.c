@@ -23,6 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <compat/limits.h>
+
 #include <core/core.h>
 #include <core/view.h>
 
@@ -31,7 +33,6 @@
 #include "window.h"
 
 #include <string.h>
-#include <limits.h>
 
 AG_MFSpinbutton *
 AG_MFSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *sep,
@@ -58,12 +59,12 @@ mfspinbutton_bound(AG_Event *event)
 		AG_MutexLock(&fsu->lock);
 		switch (binding->vtype) {
 		case AG_WIDGET_DOUBLE:
-			fsu->min = -DBL_MAX+1;
-			fsu->max = DBL_MAX-1;
+			fsu->min = -AG_DBL_MAX+1;
+			fsu->max =  AG_DBL_MAX-1;
 			break;
 		case AG_WIDGET_FLOAT:
-			fsu->min = -FLT_MAX+1;
-			fsu->max = FLT_MAX-1;
+			fsu->min = -AG_FLT_MAX+1;
+			fsu->max =  AG_FLT_MAX-1;
 			break;
 		}
 		AG_MutexUnlock(&fsu->lock);

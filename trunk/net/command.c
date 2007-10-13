@@ -26,6 +26,7 @@
 #include <config/network.h>
 #ifdef NETWORK
 
+#include <compat/limits.h>
 #include <core/core.h>
 
 #include <stdlib.h>
@@ -90,7 +91,7 @@ NS_CommandLong(NS_Command *cmd, const char *key, long *lp)
 				return (-1);
 			}
 			if (errno == ERANGE &&
-			    (lv == LONG_MAX || lv == LONG_MIN)) {
+			    (lv == AG_LONG_MAX || lv == AG_LONG_MIN)) {
 				nsCommandErrorString = "long arg out of range";
 				return (-1);
 			}

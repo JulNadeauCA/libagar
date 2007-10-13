@@ -26,6 +26,7 @@
 #include <config/network.h>
 #ifdef NETWORK
 
+#include <compat/limits.h>
 #include <core/core.h>
 
 #include <sys/types.h>
@@ -99,8 +100,9 @@ ParseItemCount(const char *buf, unsigned int *ip)
 		*ip = 0;
 		return (0);
 	}
-	if ((errno == ERANGE && (lval == LONG_MAX || lval == LONG_MIN)) ||
-	    (lval > INT_MAX || lval < INT_MIN)) {
+	if ((errno == ERANGE &&
+	    (lval == AG_LONG_MAX || lval == AG_LONG_MIN)) ||
+	    (lval > AG_INT_MAX || lval < AG_INT_MIN)) {
 		AG_SetError("Item count out of range");
 		return (-1);
 	}

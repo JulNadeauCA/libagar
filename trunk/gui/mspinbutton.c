@@ -23,6 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <compat/limits.h>
+
 #include <core/core.h>
 #include <core/view.h>
 
@@ -32,7 +34,6 @@
 
 #include <stdarg.h>
 #include <string.h>
-#include <limits.h>
 
 AG_MSpinbutton *
 AG_MSpinbuttonNew(void *parent, Uint flags, const char *sep, const char *label)
@@ -56,12 +57,12 @@ mspinbutton_bound(AG_Event *event)
 		AG_MutexLock(&sbu->lock);
 		switch (binding->vtype) {
 		case AG_WIDGET_INT:
-			sbu->min = INT_MIN+1;
-			sbu->max = INT_MAX-1;
+			sbu->min = AG_INT_MIN+1;
+			sbu->max = AG_INT_MAX-1;
 			break;
 		case AG_WIDGET_UINT:
 			sbu->min = 0;
-			sbu->max = UINT_MAX-1;
+			sbu->max = AG_UINT_MAX-1;
 			break;
 		case AG_WIDGET_UINT8:
 			sbu->min = 0;

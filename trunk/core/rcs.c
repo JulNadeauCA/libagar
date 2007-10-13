@@ -134,8 +134,8 @@ AG_RcsGetWorkingRev(AG_Object *ob, Uint *pRev)
 		return (-1);
 	}
 #if 0
-	if ((errno == ERANGE && (rev == LONG_MAX || rev == LONG_MIN)) ||
-	    (rev > INT_MAX || rev < INT_MIN)) {
+	if ((errno == ERANGE && (rev == AG_LONG_MAX || rev == AG_LONG_MIN)) ||
+	    (rev > AG_INT_MAX || rev < AG_INT_MIN)) {
 		AG_SetError("%s: out of range", path);
 		return (-1);
 	}

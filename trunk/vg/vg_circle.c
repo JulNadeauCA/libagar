@@ -1,5 +1,3 @@
-/*	$Csoft: vg_circle.c,v 1.25 2005/09/27 00:25:20 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -26,6 +24,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <compat/limits.h>
 #include <core/core.h>
 
 #include "vg.h"
@@ -75,7 +74,7 @@ VG_CircleIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 	float d;
 
 	if (vge->nvtx < 1) {
-		return (FLT_MAX);
+		return (AG_FLT_MAX);
 	}
 	d = VG_Distance2(vge->vtx[0].x, vge->vtx[0].y, *x, *y) -
 	    vge->vg_circle.radius;

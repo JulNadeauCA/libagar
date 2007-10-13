@@ -1,5 +1,3 @@
-/*	$Csoft: vg_block.c,v 1.18 2005/10/04 17:34:54 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -26,6 +24,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <compat/limits.h>
 #include <core/core.h>
 
 #include <gui/window.h>
@@ -240,7 +239,7 @@ VG_Block *
 VG_BlockClosest(VG *vg, float x, float y)
 {
 	VG_Element *vge;
-	float closest_idx = FLT_MAX, idx;
+	float closest_idx = AG_FLT_MAX, idx;
 	VG_Element *closest_vge = NULL;
 	float ix, iy;
 #if 0
