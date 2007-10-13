@@ -34,14 +34,14 @@
 float
 VG_Rad2Deg(float theta)
 {
-    return (theta/(2.0*M_PI)*360.0);
+    return (theta/(2.0*AG_PI)*360.0);
 }
 
 /* Convert degrees to radians. */
 float
 VG_Deg2Rad(float theta)
 {
-    return ((theta/360.0)*(2.0*M_PI));
+    return ((theta/360.0)*(2.0*AG_PI));
 }
 
 /* Convert Cartesian to polar coordinates. */

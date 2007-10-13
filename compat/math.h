@@ -13,10 +13,23 @@
 #include <math.h>
 #endif
 
-#ifndef min
-#define min(a,b) ((a) <= (b) ? (a) : (b))
+#ifdef M_PI
+#define AG_PI M_PI
+#else
+#define	AG_PI 3.14159265358979323846
 #endif
-#ifndef max
-#define max(a,b) ((a) <= (b) ? (a) : (b))
+
+#ifndef MIN
+#define	MIN(a,b) (((a)<(b))?(a):(b))
 #endif
+#ifndef MAX
+#define	MAX(a,b) (((a)>(b))?(a):(b))
+#endif
+#ifndef MIN3
+#define	MIN3(a,b,c) MIN((a),MIN((b),(c)))
+#endif
+#ifndef MAX3
+#define	MAX3(a,b,c) MAX((a),MAX((b),(c)))
+#endif
+
 #endif /* _COMPAT_MATH_H */
