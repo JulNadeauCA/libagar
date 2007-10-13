@@ -118,7 +118,6 @@ The
 variant creates a button and sets a default event function to be executed
 with the given arguments whenever the button is pressed.
 .Pp
-The functions
 .Fn AG_ButtonNewInt ,
 .Fn AG_ButtonNewUint8 ,
 .Fn AG_ButtonNewUint16
@@ -128,7 +127,6 @@ associate the state of the button (the
 .Sq state
 binding) with the given integer, where a value of 0 is false and 1 is true.
 .Pp
-The functions
 .Fn AG_ButtonNewFlag ,
 .Fn AG_ButtonNewFlag8 ,
 .Fn AG_ButtonNewFlag16
@@ -153,11 +151,16 @@ Acceptable values for the
 .Fa flags
 argument include:
 .Pp
-.Bd -literal
-#define AG_BUTTON_STICKY	0x02	/* Toggle state */
-#define AG_BUTTON_MOUSEOVER	0x04	/* Mouse overlaps */
-#define AG_BUTTON_REPEAT	0x08	/* Repeat button-pushed event */
-.Ed
+.Bl -tag -width "AG_BUTTON_MOUSEOVER "
+.It AG_BUTTON_STICKY
+Preserve button state.
+.It AG_BUTTON_MOUSEOVER
+Mouse pointer is currently over the button (read-only).
+.It AG_BUTTON_REPEAT
+Repeatedly generate
+.Sq button-pushed
+events as long as the button is pressed.
+.El
 .Pp
 The
 .Fn AG_ButtonSetPadding

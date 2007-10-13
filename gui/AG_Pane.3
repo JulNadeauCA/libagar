@@ -37,9 +37,11 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget is a dual container widget with a separator that is movable by the user.
-The two partitions are containers of type
-.Xr AG_Box 3 .
+widget is a dual container widget with a separator that is (by default)
+movable by the user.
+The two partitions are general-purpose
+.Xr AG_Box 3
+containers.
 Depending on the application, partitions may or may not be allowed to shrink
 to zero size.
 .Sh INHERITANCE HIERARCHY
@@ -93,31 +95,20 @@ The
 .Fa flags
 may include:
 .Pp
-.Bd -literal
-#define AG_PANE_DIV1FILL	0x04	/* Expand div1 (default is div2) */
-#define AG_PANE_FRAME		0x08	/* Decorative frames */
-#define AG_PANE_DIV		0x40	/* Initially divide area in two */
-#define AG_PANE_FORCE_DIV	0x80	/* Force divide area in two */
-.Ed
-.Pp
-By default, the first division will be sized appropriately and the second
-division will expand to fill available space; that behavior can be changed
-with the
-.Dv AG_PANE_DIV1FILL
-flag.
+.Bl -tag -width "AG_PANE_FORCE_DIV "
+.It AG_PANE_DIV1FILL
+Allocate the preferred size for the second division, and allocate the
+remaining space to the first division (default is the other way around).
+.It AG_PANE_FRAME
+Render decorative frames.
+.It AG_PANE_DIV
+Ignore the preferred sizes and divide into two equal parts.
+.It AG_PANE_FORCE_DIV
+Don't allow the user to move the divider.
+.El
 If
-.Dv AG_PANE_DIV
-is given, space is initially divided by two.
-With
-.Dv AG_PANE_FORCE_DIV ,
-the space is always divided by two and the user cannot move the separator.
-.Pp
-The
 .Dv AG_PANE_FRAME
-flag enables
-.Dv AG_BOX_FRAME
-on the partitions, which draws a frame.
-The depth of the frame can be adjusted by invoking
+is set, the depth of the frame can be adjusted by invoking
 .Xr AG_BoxSetDepth 3
 on the partitions.
 .Pp

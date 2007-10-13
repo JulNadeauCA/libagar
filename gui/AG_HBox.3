@@ -72,21 +72,14 @@ widget.
 initializes a preallocated
 .Nm
 widget.
-Acceptable
+There are currently no
 .Fa flags
-include:
-.Pp
-.Bd -literal
-#define AG_HBOX_HOMOGENOUS  AG_BOX_HOMOGENOUS  /* Divide space evenly */
-#define AG_HBOX_HFILL       AG_BOX_HFILL       /* Fill remaining width */
-#define AG_HBOX_VFILL       AG_BOX_VFILL       /* Fill remaining height */
-.Ed
+specific to this widget.
 .Pp
 The
 .Fn AG_HBoxSetHomogenous
-function sets/clears the
-.Dv AG_HBOX_HOMOGENOUS
-flag, which controls whether available space is divided evenly between widgets.
+function defines whether avialable space is divided evenly between attached
+widgets.
 .Pp
 The
 .Fn AG_HBoxSetPadding

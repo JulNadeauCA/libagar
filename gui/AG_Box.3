@@ -75,25 +75,20 @@ widget.
 .Pp
 The
 .Fa type
-argument defines whether child widgets are packed horizontally:
-.Pp
-.Bd -literal
-enum ag_box_type {
-	AG_BOX_HORIZ,
-	AG_BOX_VERT
-};
-.Ed
-.Pp
+argument defines the packing as
+.Dv AG_BOX_HORIZ
+or
+.Dv AG_BOX_VERT .
 Acceptable
 .Fa flags
 include:
 .Pp
-.Bd -literal
-#define AG_BOX_HOMOGENOUS  0x01  /* Divide space evenly */
-#define AG_BOX_HFILL       0x02  /* Fill container's remaining width */
-#define AG_BOX_VFILL       0x04  /* Fill container's remaining height */
-#define AG_BOX_FRAME       0x08  /* Display a frame */
-.Ed
+.Bl -tag -width "AG_BOX_HOMOGENOUS "
+.It AG_BOX_HOMOGENOUS
+Divide space into equal parts.
+.It AG_BOX_FRAME
+Draw a decorative frame.
+.El
 .Pp
 The
 .Fn AG_BoxSetHomogenous

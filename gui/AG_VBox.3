@@ -48,10 +48,10 @@ which packs its children vertically.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_VBox *"
-.Fn AG_VBoxNew "AG_Widget *parent" "int flags"
+.Fn AG_VBoxNew "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_VBoxInit "AG_VBox *box" "int flags"
+.Fn AG_VBoxInit "AG_VBox *box" "Uint flags"
 .Pp
 .Ft void
 .Fn AG_VBoxSetHomogenous "AG_VBox *box" "int homogenous"
@@ -72,22 +72,14 @@ widget.
 initializes a preallocated
 .Nm
 widget.
-.Pp
-Acceptable
+There are currently no
 .Fa flags
-include:
-.Pp
-.Bd -literal
-#define AG_VBOX_HOMOGENOUS  AG_BOX_HOMOGENOUS  /* Divide space evenly */
-#define AG_VBOX_HFILL       AG_BOX_HFILL       /* Fill remaining width */
-#define AG_VBOX_VFILL       AG_BOX_VFILL       /* Fill remaining height */
-.Ed
+specific to this widget.
 .Pp
 The
 .Fn AG_VBoxSetHomogenous
-function sets/clears the
-.Dv AG_VBOX_HOMOGENOUS
-flag, which controls whether available space is divided evenly between widgets.
+function defines whether avialable space is divided evenly between attached
+widgets.
 .Pp
 The
 .Fn AG_VBoxSetPadding
