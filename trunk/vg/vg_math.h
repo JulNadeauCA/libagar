@@ -5,12 +5,6 @@
 #define _AGAR_VG_MATH_H_
 #include "begin_code.h"
 
-#ifdef _AGAR_INTERNAL
-#include <compat/math.h>
-#else
-#include <agar/compat/math.h>
-#endif
-
 #define VG_DotProd2(ax,ay,bx,by) ((ax)*(bx) + (ay)*(by))
 #define VG_Norm2(ax,ay) sqrtf(VG_DotProd2((ax),(ay),(ax),(ay)))
 #define VG_Distance2(ax,ay,bx,by) VG_Norm2((float)((ax)-(bx)),(float)((ay)-(by)))

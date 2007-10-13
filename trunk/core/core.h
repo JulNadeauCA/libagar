@@ -126,19 +126,6 @@ typedef unsigned long Ulong;
 #define MAXPATHLEN 1024
 #endif
 
-#ifndef MIN
-#define	MIN(a,b) (((a)<(b))?(a):(b))
-#endif
-#ifndef MAX
-#define	MAX(a,b) (((a)>(b))?(a):(b))
-#endif
-#ifndef MIN3
-#define	MIN3(a,b,c) MIN((a),MIN((b),(c)))
-#endif
-#ifndef MAX3
-#define	MAX3(a,b,c) MAX((a),MAX((b),(c)))
-#endif
-
 #ifdef WIN32
 #define AG_PATHSEPC '\\'
 #define AG_PATHSEP "\\"

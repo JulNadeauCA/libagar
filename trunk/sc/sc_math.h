@@ -108,8 +108,8 @@ typedef struct sc_qtime_range {
 # define SC_Pow(x,y) powf((x),(y))
 #endif
 
-#define SC_Radians(x) ((x)/360.0*2.0*M_PI)
-#define SC_Degrees(x) (360.0*((x)/(2.0*M_PI)))
+#define SC_Radians(x) ((x)/360.0*2.0*SC_PI)
+#define SC_Degrees(x) (360.0*((x)/(2.0*SC_PI)))
 
 #ifndef SC_TINY_VAL
 #define SC_TINY_VAL	1.0e-22
