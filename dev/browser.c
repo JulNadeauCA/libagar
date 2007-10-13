@@ -1006,7 +1006,10 @@ DEV_Browser(void)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Working copy"), AG_BOX_VERT);
 	{
-		AG_MenuItem *mi, *mi2;
+		AG_MenuItem *mi;
+#ifdef NETWORK
+		AG_MenuItem *mi2;
+#endif
 
 		AG_ObjectAttach(ntab, tlObjs);
 
