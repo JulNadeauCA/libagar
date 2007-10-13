@@ -56,7 +56,6 @@ SK_ToolDestroy(SK_Tool *tool)
 {
 	SK_ToolKeyBinding *kbinding, *nkbinding;
 	SK_ToolMouseBinding *mbinding, *nmbinding;
-	int i;
 	
 	if (tool->win != NULL) {
 		AG_ViewDetach(tool->win);

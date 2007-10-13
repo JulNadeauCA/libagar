@@ -67,8 +67,6 @@ mousebuttondown(AG_Event *event)
 int
 AG_PaneMoveDivider(AG_Pane *pa, int dx)
 {
-	AG_Widget *w1 = WIDGET(pa->div[0]);
-	AG_Widget *w2 = WIDGET(pa->div[1]);
 	AG_Window *pwin;
 	AG_SizeAlloc a;
 
@@ -229,7 +227,6 @@ static void
 Draw(void *p)
 {
 	AG_Pane *pa = p;
-	AG_Widget *wid;
 	int x, y;
 	int z = pa->dmoving ? -1 : 1;
 

@@ -226,7 +226,6 @@ update_unit_button(AG_FSpinbutton *fsu)
 static void
 selected_unit(AG_Event *event)
 {
-	AG_UCombo *ucom = AG_SELF();
 	AG_FSpinbutton *fsu = AG_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
 
@@ -361,7 +360,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_SizeAlloc aChld;
 	AG_SizeReq rUnits;
 	int szBtn = a->h/2;
-	int hUnits;
 
 	if (a->h < 4 || a->w < szBtn+4)
 		return (-1);

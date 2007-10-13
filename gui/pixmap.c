@@ -151,7 +151,6 @@ int
 AG_PixmapAddSurfaceFromBMP(AG_Pixmap *px, const char *path)
 {
 	SDL_Surface *bmp;
-	int n;
 
 	if ((bmp = SDL_LoadBMP(path)) == NULL) {
 		return (-1);

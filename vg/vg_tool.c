@@ -53,7 +53,6 @@ VG_ToolDestroy(VG_Tool *tool)
 {
 	VG_ToolKeyBinding *kbinding, *nkbinding;
 	VG_ToolMouseBinding *mbinding, *nmbinding;
-	int i;
 	
 	if (tool->win != NULL)
 		AG_ViewDetach(tool->win);

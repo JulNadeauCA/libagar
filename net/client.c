@@ -241,10 +241,8 @@ NC_QueryBinary(NC_Session *client, const char *fmt, ...)
 	char req[REQBUF_MAX];
 	NC_Result *res;
 	size_t binread = 0, binsize;
-	size_t len = 0;
 	char *dst;
-	ssize_t rv;
-	int i;
+	ssize_t rv, i;
 	va_list ap;
 
 	if (client == NULL) {
@@ -425,7 +423,6 @@ long
 NC_ReadBinary(NC_Session *client, size_t nbytes)
 {
 	ssize_t rv;
-	size_t i;
 
 	client->read.len = 0;
 	for (;;) {

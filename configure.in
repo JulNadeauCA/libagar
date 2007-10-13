@@ -73,12 +73,15 @@ CHECK(setjmp)
 C_DEFINE(_AGAR_INTERNAL)
 C_DEFINE(_BSD_SOURCE)
 C_INCDIR($SRC)
+C_NO_SECURE_WARNINGS()
+#C_EXTRA_WARNINGS()
+#C_FATAL_WARNINGS()
 
 if [ "${enable_warnings}" = "yes" ]; then
 	C_OPTION(-Wall)
 	C_OPTION(-Werror)
 	C_OPTION(-Wmissing-prototypes)
-	C_OPTION(-Wno-unused)
+#	C_OPTION(-Wno-unused)
 	MDEFINE(WNO_UNINITIALIZED, "-Wno-uninitialized")
 else
 	MDEFINE(WNO_UNINITIALIZED, "")

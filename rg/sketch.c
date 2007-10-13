@@ -71,12 +71,10 @@ void
 RG_SketchScale(RG_Sketch *sk, int w, int h, float scale, int x, int y)
 {
 	VG *vg = sk->vg;
-	VG_Element *vge;
 #if 0
 	double xoffs = (float)x/(float)RG_TILESZ/scale;
 	double yoffs = (float)y/(float)RG_TILESZ/scale;
 #endif
-	Uint32 i;
 	SDL_Rect r;
 
 	r.w = (w == -1) ? vg->rDst.w : w;
@@ -188,7 +186,6 @@ AG_Window *
 RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 {
 	RG_Sketch *sk = tel->tel_sketch.sk;
-	VG *vg = sk->vg;
 	AG_Window *win;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
@@ -201,8 +198,6 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 	{
 		AG_HSVPal *pal;
-		AG_FSpinbutton *fsb;
-		AG_Box *hb;
 
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
 		AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER,
@@ -412,7 +407,6 @@ RG_SketchRedo(RG_Tileview *tv, RG_TileElement *tel)
 static void
 UpdateCircleRadius(AG_Event *event)
 {
-	VG *vg = AG_PTR(1);
 	VG_Element *vge = AG_PTR(2);
 
 	vge->vg_circle.radius = sqrt(
@@ -423,7 +417,6 @@ UpdateCircleRadius(AG_Event *event)
 static void
 UpdateCircleVertex(AG_Event *event)
 {
-	VG *vg = AG_PTR(1);
 	VG_Element *vge = AG_PTR(2);
 
 	vge->vtx[1].x = vge->vtx[0].x + vge->vg_circle.radius;
@@ -797,7 +790,6 @@ RG_SketchCloseMenu(RG_Tileview *tv)
 AG_Toolbar *
 RG_SketchToolbar(RG_Tileview *tv, RG_TileElement *tel)
 {
-	RG_Sketch *sk = tel->tel_sketch.sk;
 	AG_Toolbar *tbar;
 	RG_TileviewTool *tvt;
 

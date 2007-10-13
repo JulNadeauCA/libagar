@@ -124,9 +124,7 @@ poll_sketches(AG_Event *event)
 static void
 select_sketch(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	struct rg_sketchproj *sproj = AG_PTR(1);
-	RG_Tile *t = AG_PTR(2);
 	AG_TlistItem *it = AG_PTR(3);
 
 	strlcpy(sproj->sketch, it->text, sizeof(sproj->sketch));
@@ -152,11 +150,10 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 
 	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
 	{
-		AG_HSVPal *hsv1, *hsv2;
+		AG_HSVPal *hsv1;
 		AG_Spinbutton *sb;
 		AG_Notebook *nb;
 		AG_NotebookTab *ntab;
-		AG_Box *hb;
 
 		nb = AG_NotebookNew(box, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 		ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
@@ -180,7 +177,6 @@ void
 RG_SketchProjApply(void *p, RG_Tile *t, int fx, int fy)
 {
 	struct rg_sketchproj *sproj = p;
-	SDL_Surface *sDst = t->su;
 	float x1, y1, x2, y2;
 	VG *vg;
 	VG_Element *vge;

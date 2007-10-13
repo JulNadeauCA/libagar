@@ -334,8 +334,6 @@ Draw(void *p)
 void
 VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 {
-	AG_Window *pwin;
-
 	if (vv->curtool != NULL) {
 		if (vv->curtool->trigger != NULL) {
 			AG_WidgetSetBool(vv->curtool->trigger, "state", 0);

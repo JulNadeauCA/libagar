@@ -2161,10 +2161,6 @@ CFLAGS="$CFLAGS -Wmissing-prototypes"
 CXXFLAGS="$CXXFLAGS -Wmissing-prototypes"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
 echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
-CFLAGS="$CFLAGS -Wno-unused"
-CXXFLAGS="$CXXFLAGS -Wno-unused"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
 WNO_UNINITIALIZED="-Wno-uninitialized"
 echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >> Makefile.config
 else

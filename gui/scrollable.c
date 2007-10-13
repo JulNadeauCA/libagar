@@ -72,8 +72,6 @@ AG_ScrollableDrawEnd(AG_Scrollable *sa)
 static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_Scrollable *sa = p;
-
 	r->w = 0;
 	r->h = 0;
 }

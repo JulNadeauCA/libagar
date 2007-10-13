@@ -357,7 +357,6 @@ int
 SK_Save(void *obj, AG_Netbuf *buf)
 {
 	SK *sk = obj;
-	SK_Node *node;
 	SK_Constraint *ct;
 	Uint32 count;
 	off_t offs;
@@ -483,9 +482,7 @@ SK_Load(void *obj, AG_Netbuf *buf)
 {
 	char unitKey[AG_UNIT_KEY_MAX];
 	SK *sk = obj;
-	SK_Node *node;
 	Uint32 i, count;
-	int rv;
 	SK_Constraint *ct;
 	
 	if (AG_ReadObjectVersion(buf, sk, NULL) == -1)
@@ -766,7 +763,7 @@ SK_NodeDetach(void *ppNode, void *pcNode)
 {
 	SK_Node *pNode = ppNode;
 	SK_Node *cNode = pcNode;
-	SK_Node *subnode, *subnodeNext;
+	SK_Node *subnode;
 	SK *sk = pNode->sk;
 	SK_Constraint *ct;
 
@@ -919,10 +916,9 @@ void *
 SK_ProximitySearch(SK *sk, const char *type, SG_Vector *v, SG_Vector *vC,
     void *nodeIgnore)
 {
-	SK_Node **nodes, *node, *nClosest = NULL;
+	SK_Node *node, *nClosest = NULL;
 	SG_Real rClosest = HUGE_VAL, p;
 	SG_Vector vClosest = VecGet(HUGE_VAL, HUGE_VAL, 0.0);
-	Uint nNodes;
 
 	TAILQ_FOREACH(node, &sk->nodes, nodes) {
 		if (node == nodeIgnore ||
@@ -1237,7 +1233,7 @@ Uint
 SK_ConstraintsToSubgraph(const SK_Cluster *clOrig, const SK_Node *node,
     const SK_Cluster *clSub, SK_Constraint *rv[2])
 {
-	SK_Constraint *ct, *ctOrig;
+	SK_Constraint *ct;
 	Uint count = 0;
 
 	TAILQ_FOREACH(ct, &clOrig->edges, constraints) {
@@ -1300,7 +1296,6 @@ SK_ComposePair(SK *sk, const SK_Insn *insn)
 {
 	SK_Node *n, *n1;
 	SK_Constraint *ct = insn->ct01;
-	SG_Vector v;
 	int i, rv = -1;
 
 	if (SK_FIXED(insn->n[0]) && SK_FIXED(insn->n[1])) {

@@ -183,7 +183,7 @@ SG_QuatpFromAxisAngle3(SG_Quat *q, SG_Real theta, SG_Real x, SG_Real y,
 void
 SG_QuatFromEulv(SG_Quat *Qr, SG_Real a, SG_Real b, SG_Real c)
 {
-	SG_Quat Qx, Qy, Qv;
+	SG_Quat Qx, Qy;
 
 	Qx.w = SG_Cos(a/2.0);
 	Qx.x = SG_Sin(a/2.0);

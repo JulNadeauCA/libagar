@@ -147,7 +147,6 @@ void
 AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 {
 	AG_Widget *chld = p;
-	AG_Window *pwin;
 	AG_SizeReq r;
 	AG_SizeAlloc a;
 

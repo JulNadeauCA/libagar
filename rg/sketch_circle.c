@@ -93,7 +93,6 @@ mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
     double yrel)
 {
 	struct circle_tool *ct = p;
-	RG_Tileview *tv = RG_TILEVIEW_TOOL(ct)->tv;
 
 	if (ct->cur_circle != NULL) {
 		ct->cur_radius->x = x;

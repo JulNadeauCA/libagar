@@ -159,9 +159,6 @@ NS_ServerDestroy(void *p)
 void
 NS_ClientDestroy(void *p)
 {
-	NS_Client *nc = p;
-
-	
 }
 
 /* Set the protocol version string to use (thread unsafe). */
@@ -183,7 +180,9 @@ NS_ServerBind(NS_Server *ns, const char *hostName, const char *portName)
 void
 NS_Log(enum ns_log_lvl loglvl, const char *fmt, ...)
 {
-	char msg[128];
+#if !defined(HAVE_VSYSLOG) && defined(HAVE_SYSLOG)
+	char msg[256];
+#endif
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -191,6 +190,7 @@ NS_Log(enum ns_log_lvl loglvl, const char *fmt, ...)
 	vsyslog(nsSyslogLevels[loglvl], fmt, ap)
 #else
 # ifdef HAVE_SYSLOG
+	vsnprintf(msg, sizeof(msg), fmt, ap);
 	syslog(nsSyslogLevels[loglvl], "%s", msg);
 # else
 	fprintf(stderr, "[%s] ", nsLogLevelNames[loglvl]);
@@ -353,7 +353,7 @@ ServerLoop(NS_Server *ns)
 {
 	char tmp[BUFSIZ];
 	char prot[32];
-	char *buf, *lbuf = NULL, *value, *p;
+	char *buf, *lbuf = NULL, *value;
 	NS_Command ncmd;
 	size_t len;
 	int seq = 0;

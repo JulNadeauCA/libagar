@@ -123,7 +123,6 @@ mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
     double yrel)
 {
 	struct line_tool *lt = p;
-	RG_Tileview *tv = RG_TILEVIEW_TOOL(lt)->tv;
 
 	if (lt->cur_line != NULL) {
 		lt->cur_vtx->x = x;

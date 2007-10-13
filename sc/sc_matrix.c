@@ -568,7 +568,6 @@ SC_MatrixTest(void)
 	SC_Matrix *A, *Alu;
 	SC_Vector *c;
 	SC_Ivector *iv;
-	int i, j;
 	SC_Real d;
 
 	A = SC_MatrixNew(2, 2);

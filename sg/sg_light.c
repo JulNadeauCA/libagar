@@ -287,7 +287,6 @@ SG_LightEdit(void *p, AG_Widget *box, SG_View *sgv)
 	SG_Light *lt = p;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
-	AG_FSpinbutton *fsb;
 	AG_HSVPal *pal;
 
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
@@ -313,7 +312,6 @@ SG_LightEdit(void *p, AG_Widget *box, SG_View *sgv)
 	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 	{
 		AG_Toolbar *bar;
-		AG_Button *b;
 		
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
 		SG_WidgetBindReal(pal, "RGBAv", (void *)&lt->ambient);

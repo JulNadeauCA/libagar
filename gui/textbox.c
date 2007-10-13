@@ -553,8 +553,6 @@ KeyUp(AG_Event *event)
 {
 	AG_Textbox *tb = AG_SELF();
 	SDLKey keysym = AG_SDLKEY(1);
-	int keymod = AG_INT(2);
-	Uint32 unicode = (Uint32)AG_INT(3);		/* XXX use AG_UINT32 */
 	
 	AG_MutexLock(&tb->lock);
 
@@ -714,7 +712,6 @@ MouseButtonDown(AG_Event *event)
 	int btn = AG_INT(1);
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
-	int rv;
 
 	AG_WidgetFocus(tbox);
 
@@ -757,7 +754,6 @@ MouseMotion(AG_Event *event)
 	AG_Textbox *tbox = AG_SELF();
 	int mx = AG_INT(1);
 	int my = AG_INT(2);
-	int state = AG_INT(5);
 	
 	if ((tbox->flags & AG_TEXTBOX_CURSOR_MOVING) == 0) {
 		return;

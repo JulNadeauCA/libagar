@@ -78,11 +78,9 @@ static void
 arrow_up(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
-	Uint8 *pLeft, *pDst, *pEnd;
 	int y1 = wid->cy+y0 - (h>>1);
 	int y2 = y1+h-1;
 	int xs = wid->cx+x0, xe = xs;
-	SDL_Rect *rd = &agView->v->clip_rect;
 	int x, y;
 
 	SDL_LockSurface(agView->v);
@@ -102,7 +100,6 @@ static void
 arrow_down(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
-	Uint8 *pLeft, *pDst, *pEnd;
 	int y1 = wid->cy+y0 - (h>>1);
 	int y2 = y1+h-1;
 	int xs = wid->cx+x0, xe = xs;
@@ -125,7 +122,6 @@ static void
 arrow_left(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
-	Uint8 *pLeft, *pDst, *pEnd;
 	int x1 = wid->cx+x0 - (h>>1);
 	int x2 = x1+h-1;
 	int ys = wid->cy+y0, ye = ys;
@@ -148,7 +144,6 @@ static void
 arrow_right(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
-	Uint8 *pLeft, *pDst, *pEnd;
 	int x1 = wid->cx+x0 - (h>>1);
 	int x2 = x1+h-1;
 	int ys = wid->cy+y0, ye = ys;
@@ -702,7 +697,7 @@ vline24(void *widget, int x, int y1, int y2, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
-	int y, dy;
+	int dy;
 
 	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
 		return;
@@ -731,7 +726,7 @@ vline16(void *widget, int x, int y1, int y2, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
-	int y, dy;
+	int  dy;
 
 	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
 		return;
@@ -752,7 +747,7 @@ vline8(void *widget, int x, int y1, int y2, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
-	int y, dy;
+	int  dy;
 
 	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
 		return;
@@ -888,7 +883,6 @@ rect_filled(void *p, int x, int y, int w, int h, Uint32 color)
 {
 	AG_Widget *wid = p;
 	SDL_Rect rd;
-	Uint8 a;
 
 	rd.x = wid->cx+x;
 	rd.y = wid->cy+y;
@@ -1167,7 +1161,6 @@ rect_blended_opengl(void *p, int x, int y, int w, int h, Uint8 c[4],
     enum ag_blend_func func)
 {
 	AG_Widget *wid = p;
-	Uint8 r, g, b;
 	int x1 = wid->cx+x;
 	int y1 = wid->cy+y;
 	int x2 = x1+w;

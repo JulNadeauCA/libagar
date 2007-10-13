@@ -47,7 +47,7 @@
 static jmp_buf jmpbuf;
 #endif
 
-static struct cpuid_regs {
+struct cpuid_regs {
 	Uint32 a;
 	Uint32 b;
 	Uint32 c;

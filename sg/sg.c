@@ -267,7 +267,6 @@ int
 SG_Save(void *obj, AG_Netbuf *buf)
 {
 	SG *sg = obj;
-	SG_Node *node;
 	int rv = 0;
 	
 	AG_WriteVersion(buf, "SG", &sgOps.ver);
@@ -320,7 +319,6 @@ int
 SG_Load(void *obj, AG_Netbuf *buf)
 {
 	SG *sg = obj;
-	SG_Node *node;
 	int rv;
 	
 	if (AG_ReadVersion(buf, "SG", &sgOps.ver, NULL) == -1)

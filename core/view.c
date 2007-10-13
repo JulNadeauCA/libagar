@@ -850,7 +850,7 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 SDL_Surface *
 AG_CaptureGLView(void)
 {
-	Uint8 *pixels, *tmp;
+	Uint8 *pixels;
 	SDL_Surface *su;
 
 	pixels = Malloc(agView->w*agView->h*3, M_RG);

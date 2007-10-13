@@ -94,6 +94,7 @@ PtFromLineAtDistance(SK_Constraint *ct, void *self, void *other)
 	return (0);
 }
 
+#if 0
 static int
 PtFromDistantCircle(SK_Constraint *ct, void *self, void *other)
 {
@@ -106,6 +107,7 @@ PtFromDistantCircle(SK_Constraint *ct, void *self, void *other)
 	SK_Translate2(p, C1->r + ct->ct_distance, 0.0);
 	return (0);
 }
+#endif
 
 static int
 LineFromLineAtDistance(SK_Constraint *ct, void *self, void *other)
@@ -241,7 +243,6 @@ PtFromPtLine(void *self, SK_Constraint *ct1, void *n1,
 	SG_Vector p1 = SK_Pos(L->p1);
 	SG_Vector p2 = SK_Pos(L->p2);
 	SG_Real d1 = (ct1->type == SK_DISTANCE) ? ct1->ct_distance : 0.0;
-	SG_Real d2 = (ct2->type == SK_DISTANCE) ? ct2->ct_distance : 0.0;
 	SG_Real a = (p2.x - p1.x)*(p2.x - p1.x) +
 	            (p2.y - p1.y)*(p2.y - p1.y);
 	SG_Real b = 2.0*( (p2.x - p1.x)*(p1.x - p.x) +
@@ -311,12 +312,14 @@ static int
 PtFromLineLine(void *self, SK_Constraint *ct1, void *n1,
     SK_Constraint *ct2, void *n2)
 {
+#if 0
 	SK *sk = SKNODE(self)->sk;
 	SG_Vector pOrig = SK_Pos(self);
 	SK_Line *L1 = n1;
 	SK_Line *L2 = n2;
 	int nSolutions = 0;
-
+#endif
+	/* TODO */
 	AG_SetError("not yet");
 	return (-1);
 }

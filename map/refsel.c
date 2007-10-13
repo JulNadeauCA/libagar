@@ -35,7 +35,6 @@ MAP_UpdateRefSel(MAP_View *mv, int xRel, int yRel)
 	MAP *m = mv->map;
 	MAP_Item *r;
 	int nx, ny;
-	int tilesz = AGMTILESZ(mv);
 
 	for (ny = mv->my;
 	     (ny - mv->my) <= mv->mh && ny < m->maph;

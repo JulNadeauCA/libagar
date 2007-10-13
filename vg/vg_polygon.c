@@ -47,7 +47,7 @@ static void
 VG_PolygonRender(VG *vg, VG_Element *vge)
 {
 	int i;
-	int x, y, x1, y1, x2, y2;
+	int y, x1, y1, x2, y2;
 	int miny, maxy;
 	int ind1, ind2;
 	int ints;
@@ -113,8 +113,7 @@ VG_PolygonRender(VG *vg, VG_Element *vge)
 		qsort(vg->ints, ints, sizeof(int), compare_ints);
 
 		for (i = 0; i < ints; i += 2) {
-			int xa, xb, xi;
-			Uint8 r, g, b;
+			int xa, xb;
 
 			xa = vg->ints[i] + 1;
 			xa = (xa>>16) + ((xa&0x8000) >> 15);

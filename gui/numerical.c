@@ -288,7 +288,6 @@ UpdateUnitSelector(AG_Numerical *num)
 static void
 SelectUnit(AG_Event *event)
 {
-	AG_UCombo *ucom = AG_SELF();
 	AG_Numerical *num = AG_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
 

@@ -125,8 +125,6 @@ ListLibraryItems(AG_Tlist *tl, const char *cname, int depth)
 static void
 ImportSketchDlg(AG_Event *event)
 {
-	SK *sk = AG_PTR(1);
-	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
 	AG_FileDlg *dlg;
 
@@ -162,7 +160,6 @@ NodeDelete(AG_Event *event)
 static void
 PlotCluster(SK *sk, AG_Graph *gf, SK_Cluster *cl)
 {
-	char nodeName[SK_NODE_NAME_MAX];
 	SK_Constraint *ct;
 	AG_GraphVertex *v1, *v2;
 	AG_GraphEdge *edge;
@@ -218,10 +215,8 @@ ViewConstraintGraphs(AG_Event *event)
 	SK *sk = AG_PTR(2);
 	AG_Graph *gf;
 	AG_Window *win;
-	SK_Node *node;
 	AG_Pane *pane;
 	AG_Tlist *tl;
-	AG_TlistItem *ti;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Constraint graph of <%s>"),
@@ -268,7 +263,6 @@ NodeMenu(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	SK_Node *node = AG_TlistSelectedItemPtr(tl);
-	SK *sk = AG_PTR(1);
 	SK_View *skv = AG_PTR(2);
 	AG_PopupMenu *pm;
 
@@ -313,7 +307,6 @@ PollNodes(AG_Event *event)
 static void
 NodeSelect(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	AG_TlistItem *it = AG_PTR(1);
 	int state = AG_INT(2);
 	SK_Node *node = it->p1;
@@ -408,7 +401,6 @@ static void
 UpdateConstraint(AG_Event *event)
 {
 	SK_View *skv = AG_PTR(1);
-	SK_Constraint *ct = AG_PTR(2);
 
 	SK_Update(skv->sk);
 }
@@ -483,7 +475,6 @@ ConstraintMenu(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	SK_Constraint *ct = AG_TlistSelectedItemPtr(tl);
-	SK *sk = AG_PTR(1);
 	SK_View *skv = AG_PTR(2);
 	AG_PopupMenu *pm;
 
@@ -602,7 +593,7 @@ SK_Edit(void *p)
 	AG_Menu *menu;
 	AG_MenuItem *pitem;
 	AG_Pane *hp;
-	int i, dx;
+	int i;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", OBJECT(sk)->name);
@@ -747,7 +738,6 @@ static void
 SK_NodeEditGeneric(SK_Node *node, AG_Widget *box, SK_View *skv)
 {
 	AG_Tlist *tl;
-	AG_Label *lbl;
 	AG_Spinbutton *sb;
 
 	AG_SeparatorNewHoriz(box);

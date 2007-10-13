@@ -149,7 +149,6 @@ RG_BlendRGB(SDL_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
 void
 RG_Line(RG_Tile *t, int x1, int y1, int x2, int y2)
 {
-	SDL_Surface *su = t->su;
 	int dx, dy;
 	int inc1, inc2;
 	int d, x, y;
@@ -246,14 +245,14 @@ RG_Line(RG_Tile *t, int x1, int y1, int x2, int y2)
 void
 RG_HLine(RG_Tile *t, int x1, int x2, int y, Uint32 c)
 {
-	int x, xtmp;
+	int xTmp;
 	Uint8 *pDst, *pEnd;
 	int dx;
 
 	if (y >= t->su->h || y < 0) { return; }
 	if (x1 >= t->su->w) { x1 = t->su->w - 1; } else if (x1 < 0) { x1 = 0; }
 	if (x2 >= t->su->w) { x2 = t->su->w - 1; } else if (x2 < 0) { x2 = 0; }
-	if (x1 > x2) { xtmp = x2; x2 = x1; x1 = xtmp; }
+	if (x1 > x2) { xTmp = x2; x2 = x1; x1 = xTmp; }
 	dx = x2 - x1;
 
 	pDst = (Uint8 *)t->su->pixels + y*t->su->pitch + ((x1)<<2);
@@ -268,10 +267,8 @@ void
 RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 {
 	double x1 = x1p, y1 = y1p, x2 = x2p, y2 = y2p;
-	double grad, xd, yd, length, xm, ym, xgap, ygap, xend, yend, xf, yf,
-	    lum1, lum2, ipart;
+	double grad, xd, yd, xgap, xend, yend, xf, yf, lum1, lum2;
 	int x, y, ix1, ix2, iy1, iy2;
-	Uint32 c1, c2;
 	Uint8 r, g, b, a;
 
 	xd = x2 - x1;
@@ -394,8 +391,8 @@ RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 			lum1 = AG_FracInvf(xf);
 			lum2 = AG_Fracf(xf);
 			focus = (1.0 - fabs(lum1-lum2));
-			lum1 + 0.3*focus;
-			lum2 + 0.3*focus;
+			lum1 += 0.3*focus;
+			lum2 += 0.3*focus;
 			RG_BlendRGB(t->su, (int)xf, y, RG_PRIM_OVERLAY_ALPHA,
 			    r, g, b, (Uint8)(lum1*255));
 			RG_BlendRGB(t->su, (int)xf+1, y, RG_PRIM_OVERLAY_ALPHA,

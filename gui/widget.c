@@ -1902,10 +1902,6 @@ int
 AG_WidgetRectIntersect(void *p, int x, int y, int w, int h)
 {
 	AG_Widget *wid = p;
-	int r1l = wid->cx;
-	int r1r = wid->cx+wid->w;
-	int r1t = wid->cy;
-	int r1b = wid->cy+wid->h;
 
 	if (x+w < wid->cx || x > wid->cx2 ||
 	    y+w < wid->cy || y > wid->cy2) {
@@ -2115,8 +2111,6 @@ AG_WidgetHiddenRecursive(void *p)
 void
 AG_WidgetFreeResourcesGL(AG_Widget *wid)
 {
-	int i;
-
 	glDeleteTextures(wid->nsurfaces, (GLuint *)wid->textures);
 	memset(wid->textures, 0, wid->nsurfaces*sizeof(Uint));
 }

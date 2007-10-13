@@ -56,7 +56,6 @@ VG_Origin(VG *vg, int o, float ox, float oy)
 {
 	VG_Element *vge;
 	VG_Block *vgb;
-	VG_Vtx *vtx;
 	int i;
 
 	if (o == 0) {

@@ -48,7 +48,6 @@ static void
 mousebuttondown(AG_Event *event)
 {
 	AG_Notebook *nb = AG_SELF();
-	int button = AG_INT(1);
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 

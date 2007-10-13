@@ -282,8 +282,6 @@ FileSelected(AG_Event *event)
 
 	AG_MutexLock(&tl->lock);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		char path[MAXPATHLEN];
-
 		AG_FileDlgSetFilename(fd, "%s", ti->text);
 		AG_PostEvent(NULL, fd, "file-selected", "%s", fd->cfile);
 	}
@@ -316,7 +314,6 @@ static void
 PressedOK(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
-	AG_FileType *ft;
 
 	if (fd->okAction != NULL) {
 		AG_PostEvent(NULL, fd, fd->okAction->name, "%s", fd->cfile);
@@ -329,7 +326,6 @@ static int
 AG_ProcessFilename(char *file, size_t len)
 {
 	char *end = &file[strlen(file)-1];
-	char dupseps[3];
 	char *s;
 
 	/* Remove trailing whitespaces. */
@@ -379,9 +375,7 @@ TextboxReturn(AG_Event *event)
 	char file[MAXPATHLEN];
 	AG_Textbox *tb = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
-	AG_FileType *ft;
 	AG_FileInfo info;
-	size_t last;
 
 	AG_TextboxCopyString(tb, file, sizeof(file));
 	if (file[0] == '\0' ||

@@ -168,7 +168,6 @@ static void
 Destroy(void *p)
 {
 	AG_Button *bu = p;
-	SDL_Surface *su;
 
 	if ((bu->flags & AG_BUTTON_TEXT_NODUP) == 0) {
 		Free(bu->text,0);

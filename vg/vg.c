@@ -81,8 +81,7 @@ void
 VG_Init(VG *vg, int flags)
 {
 	Uint32 sflags = SDL_SWSURFACE|SDL_RLEACCEL;
-	int i, x, y;
-
+	int i;
 
 	strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;
@@ -237,8 +236,6 @@ VG_Reinit(VG *vg)
 void
 VG_Destroy(VG *vg)
 {
-	int y;
-
 	Free(vg->origin, M_VG);
 	Free(vg->origin_radius, M_VG);
 	Free(vg->origin_color, M_VG);
@@ -296,8 +293,6 @@ VG_Scale(VG *vg, int w, int h, float scale)
 		Uint32 Bmask = vg->fmt->Bmask;
 		Uint32 Amask = vg->fmt->Amask;
 		int depth = vg->fmt->BitsPerPixel;
-		Uint32 colorkey = vg->fmt->colorkey;
-		Uint8 alpha = vg->fmt->alpha;
 		Uint32 sFlags = vg->su->flags & (SDL_SWSURFACE|SDL_SRCALPHA|
 		                                 SDL_SRCCOLORKEY|SDL_RLEACCEL);
 
@@ -321,7 +316,6 @@ VG_Element *
 VG_Begin(VG *vg, enum vg_element_type eltype)
 {
 	VG_Element *vge;
-	int i;
 
 	vge = Malloc(sizeof(VG_Element), M_VG);
 	vge->flags = 0;
@@ -397,7 +391,6 @@ VG_DrawExtents(VG *vg)
 	VG_Element *vge;
 	VG_Block *vgb;
 	int x, y, w, h;
-	int i;
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		if (vge->ops->bbox != NULL) {
@@ -468,8 +461,6 @@ VG_Rasterize(VG *vg)
 {
 	Uint32 color_save = 0;			/* XXX -Wuninitialized */
 	VG_Element *vge;
-	VG_Block *vgb;
-	int i;
 
 	AG_MutexLock(&vg->lock);
 
@@ -627,7 +618,6 @@ void
 VG_VtxCoords2d(VG *vg, VG_Element *vge, int vi, float *rx, float *ry)
 {
 	VG_Vtx c;
-	VG_Matrix m;
 	int i;
 
 	c.x = vge->vtx[vi].x;

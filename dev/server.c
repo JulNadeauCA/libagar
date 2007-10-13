@@ -182,7 +182,7 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	SDL_Surface *su = pSu;
 	Uint8 *jcopybuf;
 	int i, nshots = 1;
-	size_t l, len;
+	size_t len;
 	FILE *ftmp;
 	int fd;
 	size_t rv;
@@ -393,10 +393,7 @@ AG_Window *
 DEV_DebugServer(void)
 {
 	AG_Window *win;
-	AG_Menu *me;
-	AG_MenuItem *mi;
 	AG_Tlist *tl;
-	AG_Box *bo;
 	
 	win = AG_WindowNewNamed(0, "DEV_DebugServer");
 	AG_WindowSetCaption(win, _("Debug Server"));

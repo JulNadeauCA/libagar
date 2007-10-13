@@ -103,8 +103,6 @@ SizeRequest(void *p, AG_SizeReq *r)
 static int
 SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
-	AG_Icon *icon = p;
-
 	if (a->w < 1 ||
 	    a->h < 1) {
 		return (-1);

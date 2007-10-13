@@ -72,7 +72,6 @@ VG_CircleExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 static float
 VG_CircleIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
-	float rho, theta;
 	float d;
 
 	if (vge->nvtx < 1) {

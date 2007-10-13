@@ -108,20 +108,16 @@ SG_MaterialInit(void *obj, const char *name)
 void
 SG_MaterialReinit(void *obj)
 {
-	SG_Material *mat = obj;
 }
 
 void
 SG_MaterialDestroy(void *obj)
 {
-	SG_Material *mat = obj;
 }
 
 int
 SG_MaterialLoad(void *obj, AG_Netbuf *buf)
 {
-	SG_Material *mat = obj;
-
 	if (AG_ReadVersion(buf, sgMaterialOps.type, &sgMaterialOps.ver, NULL)
 	    != 0)
 		return (-1);
@@ -132,8 +128,6 @@ SG_MaterialLoad(void *obj, AG_Netbuf *buf)
 int
 SG_MaterialSave(void *obj, AG_Netbuf *buf)
 {
-	SG_Material *mat = obj;
-
 	AG_WriteVersion(buf, sgMaterialOps.type, &sgMaterialOps.ver);
 	return (0);
 }
@@ -248,7 +242,6 @@ ImportTextureBMP(AG_Event *event)
 static void
 PreviewTexture(AG_Event *event)
 {
-	AG_FileDlg *fd = AG_SELF();
 	AG_Pixmap *pix = AG_PTR(1);
 	char *path = AG_STRING(2);
 	SDL_Surface *bmp;
@@ -265,7 +258,7 @@ PreviewTexture(AG_Event *event)
 static void
 ImportTextureDlg(AG_Event *event)
 {
-	AG_Window *pwin = AG_PTR(1), *win;
+	AG_Window *win;
 	SG_Material *mat = AG_PTR(2);
 	AG_FileDlg *fd;
 	AG_Box *hBox;
@@ -376,7 +369,6 @@ SG_MaterialEdit(void *obj)
 	{
 		AG_Tlist *tl;
 		AG_MenuItem *mi;
-		AG_Button *btn;
 
 		tl = AG_TlistNewPolled(ntab, AG_TLIST_EXPAND,
 		    PollTextures, "%p", mat);

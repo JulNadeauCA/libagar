@@ -76,7 +76,6 @@ MAP_ViewNew(void *parent, MAP *m, int flags, struct ag_toolbar *toolbar,
 void
 MAP_ViewPixel2i(MAP_View *mv, int x, int y)
 {
-	Uint8 r, g, b;
 	int dx = WIDGET(mv)->cx + x;
 	int dy = WIDGET(mv)->cy + y;
 
@@ -267,7 +266,6 @@ Destroy(void *p)
 {
 	MAP_View *mv = p;
 	MAP_ViewDrawCb *dcb, *ndcb;
-	int i;
 
 	for (dcb = SLIST_FIRST(&mv->draw_cbs);
 	     dcb != SLIST_END(&mv->draw_cbs);
@@ -449,7 +447,6 @@ static void
 draw_cursor(MAP_View *mv)
 {
 	SDL_Rect rd;
-	int msx, msy;
 
 	rd.w = AGMTILESZ(mv);
 	rd.h = AGMTILESZ(mv);
@@ -807,7 +804,6 @@ MAP_ViewUpdateCamera(MAP_View *mv)
 void
 MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 {
-	int old_tilesz = AGMTILESZ(mv);
 	int x, y;
 	int old_pixw = mv->map->mapw*AGMTILESZ(mv);
 	int old_pixh = mv->map->maph*AGMTILESZ(mv);

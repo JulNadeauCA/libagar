@@ -318,7 +318,6 @@ CreateBrush(AG_Event *event)
 static void
 UpdateBrushOptions(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	AG_Textbox *tb_name = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
 	RG_Pixmap *spx;
@@ -395,7 +394,6 @@ CreateBrushDlg(AG_Event *event)
 static void
 FlipPixmap(AG_Event *event)
 {
-	RG_Tileview *tv = AG_PTR(1);
 	RG_Pixmap *px = AG_PTR(2);
 	size_t totsize = px->su->h*px->su->pitch;
 	Uint8 *row, *buf;
@@ -416,7 +414,6 @@ FlipPixmap(AG_Event *event)
 static void
 MirrorPixmap(AG_Event *event)
 {
-	RG_Tileview *tv = AG_PTR(1);
 	RG_Pixmap *px = AG_PTR(2);
 	Uint8 *row, *rowp;
 	Uint8 *fb = px->su->pixels;
@@ -440,8 +437,6 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
 	AG_Window *win;
-	AG_MSpinbutton *msb;
-	AG_Spinbutton *sb;
 	AG_Checkbox *cb;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
@@ -455,8 +450,6 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 	ntab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
 		AG_HSVPal *pal;
-		AG_FSpinbutton *fsb;
-		AG_Box *hb;
 
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
 		AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER,
@@ -862,7 +855,6 @@ fill_ortho(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     Uint32 cOrig, Uint32 cFill)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
-	Uint8 *pDst;
 	Uint32 cDst;
 
 	cDst = RG_PixmapSourcePixel(tv, tel, x, y);
@@ -883,7 +875,6 @@ randfill_ortho(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     Uint32 cOrig, Uint32 cFill, Uint32 *bit, Uint32 *r)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
-	Uint8 *pDst;
 	Uint32 cDst;
 	int flag;
 
@@ -1056,7 +1047,6 @@ void
 RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     int xrel, int yrel, int state)
 {
-	RG_Pixmap *px = tel->tel_pixmap.px;
 	Uint8 *ks = SDL_GetKeyState(NULL);
 	int d, x2, y2;
 

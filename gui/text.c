@@ -250,7 +250,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 #endif
 	{
 		char *s;
-		char *msig, *c0, *c1, *flags;
+		char *msig, *c0, *c1;
 		AG_Netbuf *buf;
 		
 		if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN))
@@ -562,8 +562,6 @@ AG_TextFontLookup(const char *face, int size, Uint flags)
 void
 AG_TextFont(AG_Font *font)
 {
-	int rv;
-
 	AG_MutexLock(&agTextLock);
 	state->font = font;
 	AG_MutexUnlock(&agTextLock);
@@ -937,7 +935,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	AG_TTFGlyph *glyph;
 	const Uint32 *ch;
 	int xStart;
-	int w, h, line;
+	int w, h;
 	SDL_Surface *su;
 	Uint32 pixel;
 	Uint8 *src;
@@ -1102,7 +1100,6 @@ static SDL_Surface *
 TextRenderBitmap(const Uint32 *ucs)
 {
 	AG_Font *font = state->font;
-	size_t i;
 	SDL_Rect rd;
 	int w, h, line;
 	const Uint32 *c;
@@ -1498,7 +1495,6 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 {
 	AG_Window *win;
 	AG_Box *bo;
-	va_list args;
 	AG_Button *btn;
 	AG_Textbox *tb;
 	AG_Event *ev;

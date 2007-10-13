@@ -296,7 +296,6 @@ AG_ComboSizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Combo *com = p;
 	AG_SizeReq rChld;
-	AG_SizeAlloc aChld;
 
 	AG_WidgetSizeReq(com->tbox, &rChld);
 	r->w = rChld.w;

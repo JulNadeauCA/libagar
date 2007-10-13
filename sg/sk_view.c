@@ -67,8 +67,6 @@ mousemotion(AG_Event *event)
 	SK_Tool *tool = skv->curtool;
 	SG_Vector vPos, vRel;
 	SG_Matrix Ti;
-	int x = AG_INT(1);
-	int y = AG_INT(2);
 
 	vPos.x = SK_VIEW_X(skv, AG_INT(1));
 	vPos.y = SK_VIEW_Y(skv, WIDGET(skv)->h - AG_INT(2));
@@ -355,8 +353,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 void
 SK_ViewZoom(SK_View *skv, SG_Real zoom)
 {
-	SG_Vector v;
-
 	if (zoom != 0.0) {
 		SK_VIEW_SCALE_X(skv) = zoom >= 0.01 ? zoom : 0.01;
 		SK_VIEW_SCALE_Y(skv) = zoom >= 0.01 ? zoom : 0.01;
@@ -371,7 +367,6 @@ Draw(void *p)
 {
 	SK_View *skv = p;
 	SK *sk = skv->sk;
-	SDL_Surface *status;
 
 	glViewport(
 	    WIDGET(skv)->cx, agView->h - WIDGET(skv)->cy2,

@@ -107,7 +107,6 @@ AG_WindowInit(void *p, const char *name, int flags)
 	AG_Window *win = p;
 	int titlebar_flags = 0;
 	AG_Event *ev;
-	int i;
 
 	AG_WidgetInit(win, &agWindowOps, 0);
 	AG_ObjectSetName(win, (name != NULL) ? name : "win-generic");
@@ -1103,7 +1102,6 @@ AG_WindowSetGeometryParam(AG_Window *win, int x, int y, int w, int h,
 			SDL_UpdateRects(agView->v, 1, &rFill);
 		}
 	}
-out:
 	AG_MutexUnlock(&win->lock);
 	return (0);
 fail:
@@ -1369,7 +1367,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		AG_WidgetSizeAlloc(chld, &aChld);
 		aChld.y += aChld.h + win->spacing;
 	}
-out:
 	ClampToView(win);
 	AG_MutexUnlock(&win->lock);
 	return (0);
@@ -1478,7 +1475,6 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 {
 	char s[AG_LABEL_MAX];
 	va_list ap;
-	SDL_Surface *su;
 
 #ifndef DEBUG
 	if (win->tbar == NULL)
