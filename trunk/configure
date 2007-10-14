@@ -2276,6 +2276,43 @@ echo "no" >> config.log
 _MK_HAVE_SETJMP="no"
 echo "#undef _MK_HAVE_SETJMP" > config/_mk_have_setjmp.h
 fi;
+echo -n "checking for a strtoll() function..."
+echo -n "checking for a strtoll() function..." >> config.log
+cat << EOT > conftest.c
+#include <stdlib.h>
+
+int
+main(int argc, char *argv[])
+{
+	long long int lli;
+	char *ep = NULL;
+
+	lli = strtoll(NULL, &ep, 10);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_STRTOLL="yes"
+echo "#ifndef HAVE_STRTOLL" > config/have_strtoll.h
+echo "#define HAVE_STRTOLL \"$HAVE_STRTOLL\"" >> config/have_strtoll.h
+echo "#endif" >> config/have_strtoll.h
+else
+echo "no"
+echo "no" >> config.log
+HAVE_STRTOLL="no"
+echo "#undef HAVE_STRTOLL" > config/have_strtoll.h
+fi;
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
