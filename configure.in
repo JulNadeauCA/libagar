@@ -70,6 +70,7 @@ CHECK(pthreads)
 CHECK(x11)
 CHECK(signal)
 CHECK(setjmp)
+CHECK(strtoll)
 
 C_DEFINE(_AGAR_INTERNAL)
 C_DEFINE(_BSD_SOURCE)
