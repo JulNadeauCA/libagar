@@ -189,4 +189,5 @@ SG_GetMatrixGL(int which, SG_Matrix *M)
 	MatFromFloats(M, &fv[0][0]);
 	MatTransposev(M);
 }
+
 #endif /* HAVE_OPENGL */

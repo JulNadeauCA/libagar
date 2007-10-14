@@ -202,7 +202,7 @@ int	 SK_Load(void *, AG_Netbuf *);
 void	*SK_Edit(void *);
 
 void	 	 SK_RenderNode(SK *, SK_Node *, SK_View *);
-__inline__ void	 SK_RenderAbsolute(SK *, SK_View *);
+void	 	 SK_RenderAbsolute(SK *, SK_View *);
 
 void		 SK_RegisterClass(SK_NodeOps *);
 int	 	 SK_NodeOfClass(void *, const char *);
@@ -229,7 +229,6 @@ void		 SK_SetLengthUnit(SK *, const AG_Unit *);
 void		*SK_ProximitySearch(SK *, const char *, SG_Vector *,
 		                    SG_Vector *, void *);
 
-__inline__ void	SK_Update(SK *);
 int		SK_Solve(SK *);
 void		SK_FreeClusters(SK *);
 void		SK_FreeInsns(SK *);
@@ -256,18 +255,17 @@ int		SK_ExecProgram(SK *);
 void		SK_SetStatus(SK *, SK_Status, const char *, ...);
 void		SK_ClearProgramState(SK *);
 
-__inline__ SG_Vector	  SK_Pos(void *);
-__inline__ SG_Vector	  SK_NodeDir(void *);
-__inline__ void		 *SK_FindNode(SK *, Uint32, const char *);
-__inline__ void		 *SK_FindNodeByName(SK *, const char *);
-__inline__ SK_Cluster	 *SK_FindCluster(SK *, Uint32);
-__inline__ SK_Constraint *SK_FindConstraint(const SK_Cluster *,
-	                                    enum sk_constraint_type, void *,
-					    void *);
-__inline__ SK_Constraint *SK_FindSimilarConstraint(const SK_Cluster *,
-		                                   const SK_Constraint *);
-__inline__ SK_Constraint *SK_ConstrainedNodes(const SK_Cluster *,
-			                      const SK_Node *, const SK_Node *);
+SG_Vector      SK_Pos(void *);
+SG_Vector      SK_NodeDir(void *);
+void          *SK_FindNode(SK *, Uint32, const char *);
+void          *SK_FindNodeByName(SK *, const char *);
+SK_Cluster    *SK_FindCluster(SK *, Uint32);
+SK_Constraint *SK_FindConstraint(const SK_Cluster *, enum sk_constraint_type,
+                                 void *, void *);
+SK_Constraint *SK_FindSimilarConstraint(const SK_Cluster *,
+                                        const SK_Constraint *);
+SK_Constraint *SK_ConstrainedNodes(const SK_Cluster *, const SK_Node *,
+                                   const SK_Node *);
 
 #define	SK_Identity(n)		MatIdentityv(&SKNODE(n)->T)
 #define	SK_Translate(n,x,y)	MatTranslate3(&SKNODE(n)->T,(v).x,(v).y,0.0)
@@ -275,6 +273,14 @@ __inline__ SK_Constraint *SK_ConstrainedNodes(const SK_Cluster *,
 #define	SK_Translate2(n,x,y)	MatTranslate3(&SKNODE(n)->T,(x),(y),0.0)
 #define	SK_Rotatev(n,theta)	MatRotateZv(&SKNODE(n)->T,(theta))
 #define	SK_MatrixCopy(nDst,nSrc) MatCopy(&SKNODE(nDst)->T,&SKNODE(nSrc)->T);
+
+/* Update the sketch. */
+static __inline__ void
+SK_Update(SK *sk)
+{
+	if (SK_Solve(sk) == 0)
+		SK_ExecProgram(sk);
+}
 __END_DECLS
 
 #include "close_code.h"

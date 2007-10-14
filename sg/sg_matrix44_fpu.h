@@ -22,6 +22,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+__BEGIN_DECLS
 static __inline__ SG_Matrix
 SG_MatrixZero44_FPU(void)
 {
@@ -531,6 +532,7 @@ SG_MatrixUniScale44_FPU(SG_Matrix *M, SG_Real r)
 	S.m[3][0] = 0.0; S.m[3][1] = 0.0; S.m[3][2] = 0.0; S.m[3][3] = 1.0;
 	SG_MatrixMult44v_FPU(M, &S);
 }
+__END_DECLS
 
 __BEGIN_DECLS
 extern const SG_MatrixOps44 sgMatOps44_FPU;

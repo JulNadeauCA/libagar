@@ -173,7 +173,7 @@ void	*SG_Edit(void *);
 void	 SG_RenderNode(SG *, SG_Node *, SG_View *);
 
 void		 SG_RegisterClass(SG_NodeOps *);
-__inline__ int	 SG_NodeOfClass(SG_Node *, const char *);
+int		 SG_NodeOfClassGeneral(SG_Node *, const char *);
 void		 SG_NodeInit(void *, const char *, const void *, Uint);
 void		*SG_NodeAdd(void *, const char *, const SG_NodeOps *, Uint);
 void		 SG_NodeAttach(void *, void *);
@@ -209,6 +209,28 @@ SG_Vector	 SG_NodeDir(void *);
 #define SG_TranslateZ(n,t)	MatTranslateZ(&SGNODE(n)->T,(t))
 #define SG_Scale(n,x,y,z)	MatScale(&SGNODE(n)->T,(x),(y),(z),1.0)
 #define SG_UniScale(n,r)	MatUniScale(&SGNODE(n)->T,(r))
+
+static __inline__ int
+SG_NodeOfClass(SG_Node *node, const char *cname)
+{
+	const char *c;
+#ifdef DEBUG
+	if (cname[0] == '*' && cname[1] == '\0')
+		AG_FatalError("Use SG_FOREACH_NODE()");
+#endif
+	for (c = &cname[0]; *c != '\0'; c++) {
+		if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
+			if (c == &cname[0]) {
+				return (1);
+			}
+			if (strncmp(node->ops->name, cname, c - &cname[0])
+			    == 0)
+				return (1);
+		}
+	}
+	return (SG_NodeOfClassGeneral(node, cname));	/* General case */
+}
+
 __END_DECLS
 
 #include "close_code.h"

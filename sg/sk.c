@@ -204,13 +204,6 @@ SK_Init(void *obj, const char *name)
 	SK_InitRoot(sk);
 }
 
-void
-SK_Update(SK *sk)
-{
-	if (SK_Solve(sk) == 0)
-		SK_ExecProgram(sk);
-}
-
 /* Allocate a new node name. */
 Uint32
 SK_GenNodeName(SK *sk, const char *type)

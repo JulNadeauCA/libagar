@@ -24,6 +24,8 @@
 
 #ifdef HAVE_SSE
 
+__BEGIN_DECLS
+
 static __inline__ SG_Matrix
 SG_MatrixMult44_SSE(SG_Matrix A, SG_Matrix B)
 {
@@ -152,6 +154,8 @@ SG_MatrixCopy44_SSE(SG_Matrix *mDst, const SG_Matrix *mSrc)
 	mDst->m3 = mSrc->m3;
 	mDst->m4 = mSrc->m4;
 }
+
+__END_DECLS
 
 __BEGIN_DECLS
 extern const SG_MatrixOps44 sgMatOps44_SSE;

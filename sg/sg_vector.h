@@ -178,12 +178,12 @@ void	   SG_WriteVectorf2(AG_Netbuf *, SG_Vector2 *);
 void	   SG_WriteVectorf (AG_Netbuf *, SG_Vector *);
 void	   SG_WriteVectorf4(AG_Netbuf *, SG_Vector4 *);
 
-__inline__ SG_Vector2 SG_RealvToVector2(const SG_Real *);
-__inline__ SG_Vector  SG_RealvToVector(const SG_Real *);
-__inline__ SG_Vector4 SG_RealvToVector4(const SG_Real *);
-__inline__ SG_Vector2 SG_Vector3to2(SG_Vector);
-__inline__ SG_Vector  SG_Vector2to3(SG_Vector2);
-__inline__ SG_Vector4 SG_Vector3to4(SG_Vector);
+SG_Vector2 SG_RealvToVector2(const SG_Real *);
+SG_Vector  SG_RealvToVector(const SG_Real *);
+SG_Vector4 SG_RealvToVector4(const SG_Real *);
+SG_Vector2 SG_Vector3to2(SG_Vector);
+SG_Vector  SG_Vector2to3(SG_Vector2);
+SG_Vector4 SG_Vector3to4(SG_Vector);
 __END_DECLS
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_MATH)

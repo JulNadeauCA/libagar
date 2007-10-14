@@ -74,11 +74,12 @@ void SG_MatrixGetTranslation(const SG_Matrix *, SG_Vector *);
 void SG_MatrixGetRotationXYZ(const SG_Matrix *, SG_Real *, SG_Real *,
                              SG_Real *);
 
-__inline__ SG_Matrix SG_ReadMatrix(AG_Netbuf *);
-void                 SG_ReadMatrixv(AG_Netbuf *, SG_Matrix *);
-void                 SG_WriteMatrix(AG_Netbuf *, SG_Matrix *);
-__inline__ void      SG_LoadMatrixGL(const SG_Matrix *);
-__inline__ void      SG_GetMatrixGL(int, SG_Matrix *);
+SG_Matrix SG_ReadMatrix(AG_Netbuf *);
+void      SG_ReadMatrixv(AG_Netbuf *, SG_Matrix *);
+void      SG_WriteMatrix(AG_Netbuf *, SG_Matrix *);
+
+void	  SG_LoadMatrixGL(const SG_Matrix *);
+void	  SG_GetMatrixGL(int, SG_Matrix *);
 __END_DECLS
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_MATH)
