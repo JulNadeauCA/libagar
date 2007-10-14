@@ -49,8 +49,13 @@ PROG_INSTALL?=	Yes
 PROG_TYPE?=	"CLI"
 PROG_GUID?=
 
-SHARE?=
-CONF?=
+SHARE?=none
+SHARESRC?=none
+SRCS?=none
+OBJS?=none
+POBJS?=none
+SHOBJS?=none
+CONF?=none
 CONFDIR?=
 
 all: all-subdir ${PROG}
@@ -123,7 +128,8 @@ depend: depend-subdir
 
 # Build the program's object files
 _prog_objs:
-	@if [ "${PROG}" != "" -a "${OBJS}" = "" ]; then \
+	@if [ "${PROG}" != "" -a "${OBJS}" = "none" \
+	      -a "${SRCS}" != "none" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
@@ -143,7 +149,8 @@ _prog_objs:
 
 # Build profiled versions of the program's object files
 _prog_pobjs:
-	@if [ "${GMONOUT}" != "" -a "${POBJS}" = "" ]; then \
+	@if [ "${GMONOUT}" != "" -a "${POBJS}" = "none" \
+	      -a "${SRCS}" != "none" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.po/'`; \
 	        F=`echo $$F | sed 's/.cc$$/.po/'`; \
@@ -159,8 +166,8 @@ _prog_pobjs:
 
 # Compile and link the program
 ${PROG}: _prog_objs ${OBJS}
-	@if [ "${PROG}" != "" ]; then \
-	    if [ "${OBJS}" = "" ]; then \
+	@if [ "${PROG}" != "" -a "${SRCS}" != "none" ]; then \
+	    if [ "${OBJS}" = "none" ]; then \
 	        export _objs=""; \
                 for F in ${SRCS}; do \
 	            F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
@@ -193,8 +200,8 @@ ${PROG}: _prog_objs ${OBJS}
 
 # Compile and link a profiled version of the program
 ${GMONOUT}: _prog_pobjs ${POBJS}
-	if [ "${GMONOUT}" != "" ]; then \
-	    if [ "${OBJS}" = "" ]; then \
+	if [ "${GMONOUT}" != "" -a "${SRCS}" != "none" ]; then \
+	    if [ "${POBJS}" = "none" ]; then \
 	        export _pobjs=""; \
                 for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.po/'`; \
@@ -214,8 +221,8 @@ ${GMONOUT}: _prog_pobjs ${POBJS}
 	fi
 
 clean-prog:
-	@if [ "${PROG}" != "" ]; then \
-	    if [ "${OBJS}" = "" ]; then \
+	@if [ "${PROG}" != "" -a "${SRCS}" != "none" ]; then \
+	    if [ "${OBJS}" = "none" ]; then \
                 for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.o/'`; \
@@ -228,7 +235,7 @@ clean-prog:
 	        echo "rm -f ${OBJS}"; \
 	        rm -f ${OBJS}; \
 	    fi; \
-	    if [ "${POBJS}" = "" ]; then \
+	    if [ "${POBJS}" = "none" ]; then \
                 for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.po/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.po/'`; \
@@ -263,38 +270,35 @@ install-prog:
 	    echo "${INSTALL_PROG} ${PROG} ${BINDIR}"; \
 	    ${SUDO} ${INSTALL_PROG} ${PROG} ${BINDIR}; \
 	fi
-	@export _share="${SHARE}"; \
-        if [ "$$_share" != "" ]; then \
+	@if [ "${SHARE}" != "none" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
             fi; \
-            for F in $$_share; do \
+            for F in ${SHARE}; do \
                 echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
             done; \
 	fi
-	@export _sharesrc="${SHARESRC}"; \
-        if [ "$$_sharesrc" != "" -a "${SHARESRC}" != "none" ]; then \
+	@if [ "${SHARESRC}" != "none" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
             fi; \
 	    if [ "${SRC}" != "" ]; then \
-                for F in $$_sharesrc; do \
+                for F in ${SHARESRC}; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                     ${SUDO} ${INSTALL_DATA} ${SRC}/${BUILDREL}/$$F \
 		    ${SHAREDIR}; \
                 done; \
 	    else \
-                for F in $$_sharesrc; do \
+                for F in ${SHARESRC}; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                     ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
                 done; \
 	    fi; \
 	fi
-	@export _conf="${CONF}"; \
-        if [ "$$_conf" != "" ]; then \
+	@if [ "${CONF}" != "none" ]; then \
             if [ ! -d "${CONFDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${CONFDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${CONFDIR}; \
@@ -303,7 +307,7 @@ install-prog:
 	    echo "| The following configuration files have been preserved."; \
 	    echo "| You may want to compare them to the current sample files.";\
 	    echo "|"; \
-            for F in $$_conf; do \
+            for F in ${CONF}; do \
 	        if [ -e "${CONFDIR}/$$F" ]; then \
           	      echo "| - $$F"; \
 		else \
@@ -318,13 +322,13 @@ deinstall-prog:
 	    echo "${DEINSTALL_PROG} ${BINDIR}/${PROG}"; \
 	    ${SUDO} ${DEINSTALL_PROG} ${BINDIR}/${PROG}; \
 	fi
-	@if [ "${SHARE}" != "" ]; then \
+	@if [ "${SHARE}" != "none" ]; then \
 	    for F in ${SHARE}; do \
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
 	        ${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
 	    done; \
 	fi
-	@if [ "${CONF}" != "" ]; then \
+	@if [ "${CONF}" != "none" ]; then \
 	    echo "+----------------"; \
 	    echo "| To completely deinstall ${PROG} you need to perform."; \
 	    echo "| this step as root:"; \
@@ -336,9 +340,11 @@ deinstall-prog:
 	    echo "+----------------"; \
 	fi
 
+none:
+
 .PHONY: install deinstall clean cleandir regress depend
 .PHONY: install-prog deinstall-prog clean-prog cleandir-prog
-.PHONY: _prog_objs _prog_pobjs
+.PHONY: _prog_objs _prog_pobjs none
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.dep.mk
