@@ -300,7 +300,7 @@ AG_WidgetDisable(void *p)
 static __inline__ int
 AG_WidgetArea(void *p, int x, int y)
 {
-	AG_Widget *wid = p;
+	AG_Widget *wid = AGWIDGET(p);
 
 	return (x > wid->cx && y > wid->cy &&
 	        x < wid->cx+wid->w && y < wid->cy+wid->h);
@@ -309,7 +309,7 @@ AG_WidgetArea(void *p, int x, int y)
 static __inline__ int
 AG_WidgetRelativeArea(void *p, int x, int y)
 {
-	AG_Widget *wid = p;
+	AG_Widget *wid = AGWIDGET(p);
 
 	return (x >= 0 &&
 	        y >= 0 &&
@@ -320,7 +320,7 @@ AG_WidgetRelativeArea(void *p, int x, int y)
 static __inline__ int
 AG_WidgetRectIntersect(void *p, int x, int y, int w, int h)
 {
-	AG_Widget *wid = p;
+	AG_Widget *wid = AGWIDGET(p);
 
 	if (x+w < wid->cx || x > wid->cx2 ||
 	    y+w < wid->cy || y > wid->cy2) {
@@ -332,7 +332,7 @@ AG_WidgetRectIntersect(void *p, int x, int y, int w, int h)
 static __inline__ void
 AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 {
-	AG_Widget *wid = p;
+	AG_Widget *wid = AGWIDGET(p);
 	int vx = wid->cx+wx;
 	int vy = wid->cy+wy;
 	
@@ -354,7 +354,7 @@ AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 static __inline__ void
 AG_WidgetPutPixel32OrClip(void *p, int wx, int wy, Uint32 color)
 {
-	AG_Widget *wid = p;
+	AG_Widget *wid = AGWIDGET(p);
 	int vx = wid->cx+wx, vy = wid->cy+wy;
 	
 	if (!AG_WidgetArea(wid, vx, vy))
@@ -376,7 +376,7 @@ AG_WidgetPutPixel32OrClip(void *p, int wx, int wy, Uint32 color)
 static __inline__ void
 AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 {
-	AG_Widget *wid = p;
+	AG_Widget *wid = AGWIDGET(p);
 	int vx = wid->cx+wx, vy = wid->cy+wy;
 	
 	if (AG_CLIPPED_PIXEL(agView->v, vx, vy))
@@ -395,7 +395,7 @@ AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 static __inline__ void
 AG_WidgetPutPixelRGBOrClip(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 {
-	AG_Widget *wid = p;
+	AG_Widget *wid = AGWIDGET(p);
 	int vx = wid->cx+wx, vy = wid->cy+wy;
 	
 	if (!AG_WidgetArea(wid, vx, vy))
@@ -428,7 +428,7 @@ AG_WidgetInt(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	int *i, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (int **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *i;
@@ -442,7 +442,7 @@ AG_WidgetUint(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	Uint *i, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (Uint **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *i;
@@ -456,7 +456,7 @@ AG_WidgetUint8(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	Uint8 *i, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (Uint8 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *i;
@@ -470,7 +470,7 @@ AG_WidgetSint8(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	Sint8 *i, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (Sint8 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *i;
@@ -484,7 +484,7 @@ AG_WidgetUint16(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	Uint16 *i, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (Uint16 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *i;
@@ -498,7 +498,7 @@ AG_WidgetSint16(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	Sint16 *i, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (Sint16 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *i;
@@ -512,7 +512,7 @@ AG_WidgetUint32(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	Uint32 *i, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (Uint32 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *i;
@@ -526,7 +526,7 @@ AG_WidgetSint32(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	Sint32 *i, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (Sint32 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *i;
@@ -541,7 +541,7 @@ AG_WidgetUint64(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	Uint64 *i, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (Uint64 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *i;
@@ -555,7 +555,7 @@ AG_WidgetSint64(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	Sint64 *i, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (Sint64 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *i;
@@ -570,7 +570,7 @@ AG_WidgetFloat(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	float *f, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &f)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (float **)&f)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *f;
@@ -584,7 +584,7 @@ AG_WidgetDouble(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	double *d, rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &d)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (double **)&d)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *d;
@@ -598,7 +598,7 @@ AG_WidgetString(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	char *s, *sd;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (char **)&s)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	sd = AG_Strdup(s);
@@ -612,7 +612,7 @@ AG_WidgetPointer(void *wid, const char *name)
 	AG_WidgetBinding *b;
 	void **p, *rv;
 
-	if ((b = AG_WidgetGetBinding(wid, name, &p)) == NULL) {
+	if ((b = AG_WidgetGetBinding(wid, name, (void ***)&p)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	rv = *p;
@@ -628,7 +628,7 @@ AG_WidgetSetInt(void *wid, const char *name, int ni)
 	AG_WidgetBinding *binding;
 	int *i;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (int **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*i = ni;
@@ -641,7 +641,7 @@ AG_WidgetSetUint(void *wid, const char *name, Uint ni)
 	AG_WidgetBinding *binding;
 	Uint *i;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (Uint **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*i = ni;
@@ -654,7 +654,7 @@ AG_WidgetSetUint8(void *wid, const char *name, Uint8 ni)
 	AG_WidgetBinding *binding;
 	Uint8 *i;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (Uint8 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*i = ni;
@@ -667,7 +667,7 @@ AG_WidgetSetSint8(void *wid, const char *name, Sint8 ni)
 	AG_WidgetBinding *binding;
 	Sint8 *i;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (Sint8 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*i = ni;
@@ -680,7 +680,7 @@ AG_WidgetSetUint16(void *wid, const char *name, Uint16 ni)
 	AG_WidgetBinding *binding;
 	Uint16 *i;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (Uint16 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*i = ni;
@@ -693,7 +693,7 @@ AG_WidgetSetSint16(void *wid, const char *name, Sint16 ni)
 	AG_WidgetBinding *binding;
 	Sint16 *i;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (Sint16 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*i = ni;
@@ -706,7 +706,7 @@ AG_WidgetSetUint32(void *wid, const char *name, Uint32 ni)
 	AG_WidgetBinding *binding;
 	Uint32 *i;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (Uint32 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*i = ni;
@@ -719,7 +719,7 @@ AG_WidgetSetSint32(void *wid, const char *name, Sint32 ni)
 	AG_WidgetBinding *binding;
 	Sint32 *i;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (Sint32 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*i = ni;
@@ -733,7 +733,7 @@ AG_WidgetSetUint64(void *wid, const char *name, Uint64 ni)
 	AG_WidgetBinding *binding;
 	Uint64 *i;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (Uint64 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*i = ni;
@@ -746,7 +746,7 @@ AG_WidgetSetSint64(void *wid, const char *name, Sint64 ni)
 	AG_WidgetBinding *binding;
 	Sint64 *i;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &i)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (Sint64 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*i = ni;
@@ -760,7 +760,7 @@ AG_WidgetSetFloat(void *wid, const char *name, float nf)
 	AG_WidgetBinding *binding;
 	float *f;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &f)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (float **)&f)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*f = nf;
@@ -773,7 +773,7 @@ AG_WidgetSetDouble(void *wid, const char *name, double nd)
 	AG_WidgetBinding *binding;
 	double *d;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &d)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (double **)&d)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*d = nd;
@@ -786,7 +786,7 @@ AG_WidgetSetPointer(void *wid, const char *name, void *np)
 	AG_WidgetBinding *binding;
 	void **p;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &p)) == NULL) {
+	if ((binding = AG_WidgetGetBinding(wid, name, (void ***)&p)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	*p = np;
