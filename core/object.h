@@ -288,7 +288,7 @@ AG_ObjectRoot(const void *p)
 		if (ob->parent == NULL) {
 			return ((void *)ob);
 		}
-		ob = ob->parent;
+		ob = AGOBJECT(ob->parent);
 	}
 	return (NULL);
 }
