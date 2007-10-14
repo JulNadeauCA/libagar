@@ -24,19 +24,19 @@ struct ag_window;
 
 __BEGIN_DECLS
 VG_Block	  *VG_BeginBlock(struct vg *, const char *, int);
-__inline__ void	   VG_SelectBlock(struct vg *, VG_Block *);
-__inline__ void	   VG_EndBlock(struct vg *);
+void	   	   VG_SelectBlock(struct vg *, VG_Block *);
+void	   	   VG_EndBlock(struct vg *);
 VG_Block	  *VG_GetBlock(struct vg *, const char *);
 void		   VG_MoveBlock(struct vg *, VG_Block *, float, float, int);
-__inline__ void	   VG_BlockTheta(struct vg *, VG_Block *, float);
+void	   	   VG_BlockTheta(struct vg *, VG_Block *, float);
 void		   VG_RotateBlock(struct vg *, VG_Block *, float);
 void		   VG_ClearBlock(struct vg *, VG_Block *);
 void		   VG_DestroyBlock(struct vg *, VG_Block *);
 void		   VG_BlockOffset(struct vg *, VG_Vtx *);
 struct ag_window  *VG_BlockEditor(struct vg *);
 void		   VG_BlockExtent(struct vg *, VG_Block *, VG_Rect *);
-__inline__ void	   VG_Abs2Rel(struct vg *, const VG_Vtx *, float *, float *);
-__inline__ void	   VG_Rel2Abs(struct vg *, float, float, VG_Vtx *);
+void	   	   VG_Abs2Rel(struct vg *, const VG_Vtx *, float *, float *);
+void	 	   VG_Rel2Abs(struct vg *, float, float, VG_Vtx *);
 VG_Block	  *VG_BlockClosest(struct vg *, float, float);
 __END_DECLS
 

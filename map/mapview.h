@@ -124,10 +124,6 @@ MAP_View	*MAP_ViewNew(void *, MAP *, int, struct ag_toolbar *,
 void	 	 MAP_ViewInit(MAP_View *, MAP *, int,
 		              struct ag_toolbar *, struct ag_statusbar *);
 
-__inline__ void MAP_ViewPixel2i(MAP_View *, int, int);
-__inline__ void MAP_ViewHLine(MAP_View *, int, int, int);
-__inline__ void MAP_ViewVLine(MAP_View *, int, int, int);
-
 void	 MAP_ViewSizeHint(MAP_View *, int, int);
 void	 MAP_ViewCenter(MAP_View *, int, int);
 void	 MAP_ViewSetScale(MAP_View *, Uint, int);
@@ -146,6 +142,41 @@ MAP_Tool *MAP_ViewRegTool(MAP_View *, const MAP_ToolOps *, void *);
 MAP_Tool *MAP_ViewFindTool(MAP_View *, const char *);
 void MAP_ViewSetDefaultTool(MAP_View *, MAP_Tool *);
 void MAP_ViewSelectTool(MAP_View *, MAP_Tool *, void *);
+
+static __inline__ void
+MAP_ViewPixel2i(MAP_View *mv, int x, int y)
+{
+	int dx = AGWIDGET(mv)->cx + x;
+	int dy = AGWIDGET(mv)->cy + y;
+
+	if (mv->col.a < 255) {
+		AG_BLEND_RGBA2_CLIPPED(agView->v, dx, dy,
+		    mv->col.r, mv->col.g, mv->col.b, mv->col.a,
+		    AG_ALPHA_OVERLAY);
+	} else {
+		AG_VIEW_PUT_PIXEL2_CLIPPED(dx, dy, mv->col.pixval);
+	}
+}
+static __inline__ void
+MAP_ViewHLine(MAP_View *mv, int x1, int x2, int y)
+{
+	int x;
+	/* TODO opengl */
+	if (!agView->opengl) {
+		for (x = x1; x < x2; x++)
+			MAP_ViewPixel2i(mv, x, y);
+	}
+}
+static __inline__ void
+MAP_ViewVLine(MAP_View *mv, int x, int y1, int y2)
+{
+	int y;
+	/* TODO opengl */
+	if (!agView->opengl) {
+		for (y = y1; y < y2; y++)
+			MAP_ViewPixel2i(mv, x, y);
+	}
+}
 __END_DECLS
 
 #include "close_code.h"

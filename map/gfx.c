@@ -100,7 +100,7 @@ AG_SpriteGetNodeAttrs(AG_Sprite *spr, Uint *w, Uint *h)
 }
 
 static __inline__ void
-MAP_FreeSpriteTransforms(AG_Sprite *spr)
+FreeSpriteTransforms(AG_Sprite *spr)
 {
 	AG_CachedSprite *csprite, *ncsprite;
 	MAP_Transform *trans, *ntrans;
@@ -169,7 +169,7 @@ AG_SpriteDestroy(AG_Gfx *gfx, Uint32 s)
 		spr->texcoords[3] = 0.0f;
 	}
 #endif
-	MAP_FreeSpriteTransforms(spr);
+	FreeSpriteTransforms(spr);
 }
 
 void
@@ -364,7 +364,7 @@ AG_GfxInit(AG_Gfx *gfx)
 }
 
 static void
-destroy_anim(AG_Anim *anim)
+FreeAnim(AG_Anim *anim)
 {
 	Uint32 i;
 
@@ -391,12 +391,12 @@ AG_AnimDestroy(AG_Gfx *gfx, Uint32 name)
 			ntrans = TAILQ_NEXT(trans, transforms);
 			MAP_TransformDestroy(trans);
 		}
-		destroy_anim(canim->anim);
+		FreeAnim(canim->anim);
 		Free(canim, M_GFX);
 	}
 	SLIST_INIT(&animcl->anims);
 
-	destroy_anim(&gfx->anims[name]);
+	FreeAnim(&gfx->anims[name]);
 }
 
 /* Release a graphics package that is no longer in use. */
@@ -658,7 +658,7 @@ AG_GfxSave(AG_Object *ob, AG_Netbuf *buf)
 }
 
 static void
-poll_gfx(AG_Event *event)
+PollGfx(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *ob = AG_PTR(1);

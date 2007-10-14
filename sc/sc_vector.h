@@ -20,15 +20,12 @@ SC_Vector	*SC_VectorNewZero(Uint);
 #define		 SC_VectorFree(v) SC_MatrixFree(v)
 #define		 SC_ReadVector(buf) ((SC_Vector *)SC_ReadMatrix(buf))
 #define		 SC_WriteVector(v,buf) SC_WriteMatrix(v, buf)
-
 void		 SC_VectorMinimum(SC_Vector *, const SC_Vector *,
 		                  const SC_Vector *);
 void		 SC_VectorMaximum(SC_Vector *, const SC_Vector *,
 		                  const SC_Vector *);
-
-__inline__ void	 SC_VectorCopy(const SC_Vector *, SC_Vector *);
+void		 SC_VectorCopy(const SC_Vector *, SC_Vector *);
 SC_Real		 SC_VectorLength(const SC_Vector *);
-
 #ifdef DEBUG
 void		 SC_VectorPrint(const SC_Vector *);
 #endif

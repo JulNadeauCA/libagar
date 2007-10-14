@@ -562,9 +562,10 @@ RG_PixmapUndo(RG_Tileview *tv, RG_TileElement *tel)
 void
 RG_PixmapRedo(RG_Tileview *tv, RG_TileElement *tel)
 {
+#if 0
 	RG_Pixmap *px = tel->tel_pixmap.px;
-	
 	dprintf("redo (curblk=%d )\n", px->curblk);
+#endif
 }
 
 int

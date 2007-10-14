@@ -46,18 +46,18 @@ typedef struct sc_matrix {
 
 __BEGIN_DECLS
 SC_Matrix	*SC_MatrixNew(Uint, Uint);
-__inline__ void	 SC_MatrixFree(SC_Matrix *);
+void		 SC_MatrixFree(SC_Matrix *);
 void		 SC_MatrixAlloc(SC_Matrix *, Uint, Uint);
 void		 SC_MatrixFreeElements(SC_Matrix *);
-__inline__ void	 SC_MatrixResize(SC_Matrix *, Uint, Uint);
+void	 	 SC_MatrixResize(SC_Matrix *, Uint, Uint);
 void		 SC_WriteMatrix(SC_Matrix *, AG_Netbuf *);
 SC_Matrix	*SC_ReadMatrix(AG_Netbuf *);
 
-__inline__ SC_Real	 SC_MatrixGetEntry(const SC_Matrix *, Uint, Uint);
-__inline__ SC_Real	*SC_MatrixGetEntryp(const SC_Matrix *, Uint, Uint);
-__inline__ int		 SC_MatrixEntryExists(const SC_Matrix *, Uint, Uint);
-__inline__ SC_Matrix	*SC_MatrixDup(const SC_Matrix *);
-__inline__ int		 SC_MatrixCompare(const SC_Matrix *, const SC_Matrix *);
+SC_Real		 SC_MatrixGetEntry(const SC_Matrix *, Uint, Uint);
+SC_Real		*SC_MatrixGetEntryp(const SC_Matrix *, Uint, Uint);
+int		 SC_MatrixEntryExists(const SC_Matrix *, Uint, Uint);
+SC_Matrix	*SC_MatrixDup(const SC_Matrix *);
+int		 SC_MatrixCompare(const SC_Matrix *, const SC_Matrix *);
 
 void		 SC_MatrixSetIdentity(SC_Matrix *);
 void	 	 SC_MatrixSetZero(SC_Matrix *);
@@ -80,7 +80,7 @@ void		 SC_MatrixCompose22(SC_Matrix *, const SC_Matrix *,
 		                    const SC_Matrix *, const SC_Matrix *,
 				    const SC_Matrix *);
 
-__inline__ int	 SC_MatrixIsSquare(const SC_Matrix *);
+int	 	 SC_MatrixIsSquare(const SC_Matrix *);
 int		 SC_MatrixIsIdentity(const SC_Matrix *);
 int		 SC_MatrixIsZero(const SC_Matrix *);
 int		 SC_MatrixIsLowTri(const SC_Matrix *);

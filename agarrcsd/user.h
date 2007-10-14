@@ -33,8 +33,7 @@ void UserTblInit(void);
 void UserTblRehash(void);
 void UserTblDestroy(void);
 
-__inline__ User *UserLookup(const char *);
-
+User	*UserLookup(const char *);
 void	 UserInit(void *, const char *);
 int	 UserLoad(void *, AG_Netbuf *);
 int	 UserSave(void *, AG_Netbuf *);

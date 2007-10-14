@@ -37,8 +37,6 @@ int		 RG_TransformInit(RG_Transform *, enum rg_transform_type, int,
 int		 RG_TransformLoad(AG_Netbuf *, RG_Transform *);
 void		 RG_TransformSave(AG_Netbuf *, const RG_Transform *);
 void		 RG_TransformDestroy(RG_Transform *);
-__inline__ int	 RG_TransformCompare(const RG_Transform *,
-		                     const RG_Transform *);
 
 void	 RG_TransformChainInit(RG_TransformChain *);
 int	 RG_TransformChainLoad(AG_Netbuf *, RG_TransformChain *);
@@ -47,6 +45,15 @@ void	 RG_TransformChainDestroy(RG_TransformChain *);
 void	 RG_TransformChainPrint(const RG_TransformChain *, char *, size_t)
 	                        BOUNDED_ATTRIBUTE(__string__, 2, 3);
 void	 RG_TransformChainDup(const RG_TransformChain *, RG_TransformChain *);
+
+static __inline__ int
+RG_TransformCompare(const RG_Transform *xf1, const RG_Transform *xf2)
+{
+	return (xf1->type == xf2->type &&
+	        xf1->nargs == xf2->nargs &&
+		(xf1->nargs == 0 ||
+		 memcmp(xf1->args, xf2->args, xf1->nargs*sizeof(Uint32)) == 0));
+}
 __END_DECLS
 
 #include "close_code.h"

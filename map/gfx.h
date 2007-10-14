@@ -120,19 +120,19 @@ Uint32		 AG_GfxAddSprite(AG_Gfx *, SDL_Surface *);
 Uint32		 AG_GfxAddAnim(AG_Gfx *);
 Uint32		 AG_GfxAddAnimFrame(AG_Anim *, SDL_Surface *);
 
-void		 AG_SpriteInit(AG_Gfx *, Uint32);
-__inline__ int	 AG_SpriteFind(AG_Gfx *, const char *, Uint32 *);
-void		 AG_SpriteDestroy(AG_Gfx *, Uint32);
-void		 AG_AnimInit(AG_Gfx *, Uint32);
-void		 AG_AnimDestroy(AG_Gfx *, Uint32);
-__inline__ void	 AG_SpriteSetName(AG_Gfx *, Uint32, const char *);
-__inline__ void	 AG_SpriteSetClass(AG_Gfx *, Uint32, const char *);
-__inline__ void	 AG_SpriteSetSurface(AG_Gfx *, Uint32, SDL_Surface *);
-__inline__ void	 AG_SpriteSetOrigin(AG_Sprite *, int, int);
-__inline__ void	 AG_SpriteSetSnapMode(AG_Sprite *, enum ag_gfx_snap_mode);
-__inline__ void	 AG_SpriteUpdate(AG_Sprite *);
-__inline__ void	 AG_SpriteGetNodeAttrs(AG_Sprite *, Uint *, Uint *);
-__inline__ Uint AG_SpriteGetWtiles(AG_Sprite *);
+void	 AG_SpriteInit(AG_Gfx *, Uint32);
+int	 AG_SpriteFind(AG_Gfx *, const char *, Uint32 *);
+void	 AG_SpriteDestroy(AG_Gfx *, Uint32);
+void	 AG_AnimInit(AG_Gfx *, Uint32);
+void	 AG_AnimDestroy(AG_Gfx *, Uint32);
+void	 AG_SpriteSetName(AG_Gfx *, Uint32, const char *);
+void	 AG_SpriteSetClass(AG_Gfx *, Uint32, const char *);
+void	 AG_SpriteSetSurface(AG_Gfx *, Uint32, SDL_Surface *);
+void	 AG_SpriteSetOrigin(AG_Sprite *, int, int);
+void	 AG_SpriteSetSnapMode(AG_Sprite *, enum ag_gfx_snap_mode);
+void	 AG_SpriteUpdate(AG_Sprite *);
+void	 AG_SpriteGetNodeAttrs(AG_Sprite *, Uint *, Uint *);
+Uint	 AG_SpriteGetWtiles(AG_Sprite *);
 __END_DECLS
 
 #include "close_code.h"

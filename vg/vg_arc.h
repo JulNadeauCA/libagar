@@ -11,9 +11,9 @@ struct vg_arc_args {
 };
 
 __BEGIN_DECLS
-__inline__ void VG_ArcBox(struct vg *, float, float);
-__inline__ void VG_ArcRange(struct vg *, float, float);
-__inline__ void VG_Arc3Points(struct vg *, VG_Vtx v[3]);
+void VG_ArcBox(struct vg *, float, float);
+void VG_ArcRange(struct vg *, float, float);
+void VG_Arc3Points(struct vg *, VG_Vtx v[3]);
 __END_DECLS
 
 #include "close_code.h"

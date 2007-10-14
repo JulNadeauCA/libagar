@@ -384,17 +384,18 @@ void
 RG_SketchUndo(RG_Tileview *tv, RG_TileElement *tel)
 {
 	RG_Sketch *sk = tel->tel_sketch.sk;
-	RG_SketchUndoBlk *ublk = &sk->ublks[sk->curblk];
-	int i;
+/*	RG_SketchUndoBlk *ublk = &sk->ublks[sk->curblk]; */
+/*	int i; */
 
 	if (sk->curblk-1 <= 0)
 		return;
 
+#if 0
 	for (i = 0; i < ublk->nmods; i++) {
 		RG_SketchMod *mod = &ublk->mods[i];
-
 		dprintf("undo mod %p\n", mod);
 	}
+#endif
 	sk->curblk--;
 	tv->tile->flags |= RG_TILE_DIRTY;
 }

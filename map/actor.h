@@ -66,13 +66,10 @@ int	MAP_ActorLoad(void *, AG_Netbuf *);
 int	MAP_ActorSave(void *, AG_Netbuf *);
 void   *MAP_ActorEdit(void *);
 void	MAP_ActorUpdate(void *);
-
-__inline__ int	MAP_ActorSetTile(void *, int, int, int, RG_Tileset *,
-		                 const char *);
-int		MAP_ActorMapTiles(void *, int, int, int, RG_Tileset *,
-		                  const char *);
-void		MAP_ActorUnmapTiles(void *);
-void		MAP_ActorMoveTiles(void *, int, int);
+int	MAP_ActorSetTile(void *, int, int, int, RG_Tileset *, const char *);
+int	MAP_ActorMapTiles(void *, int, int, int, RG_Tileset *, const char *);
+void	MAP_ActorUnmapTiles(void *);
+void	MAP_ActorMoveTiles(void *, int, int);
 __END_DECLS
 
 #include "close_code.h"
