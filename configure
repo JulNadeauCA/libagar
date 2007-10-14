@@ -2286,8 +2286,9 @@ main(int argc, char *argv[])
 {
 	long long int lli;
 	char *ep = NULL;
+	char *foo = "1234";
 
-	lli = strtoll(NULL, &ep, 10);
+	lli = strtoll(foo, &ep, 10);
 	return (0);
 }
 
@@ -2303,15 +2304,15 @@ rm -f conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
-HAVE_STRTOLL="yes"
-echo "#ifndef HAVE_STRTOLL" > config/have_strtoll.h
-echo "#define HAVE_STRTOLL \"$HAVE_STRTOLL\"" >> config/have_strtoll.h
-echo "#endif" >> config/have_strtoll.h
+_MK_HAVE_STRTOLL="yes"
+echo "#ifndef _MK_HAVE_STRTOLL" > config/_mk_have_strtoll.h
+echo "#define _MK_HAVE_STRTOLL \"$_MK_HAVE_STRTOLL\"" >> config/_mk_have_strtoll.h
+echo "#endif" >> config/_mk_have_strtoll.h
 else
 echo "no"
 echo "no" >> config.log
-HAVE_STRTOLL="no"
-echo "#undef HAVE_STRTOLL" > config/have_strtoll.h
+_MK_HAVE_STRTOLL="no"
+echo "#undef _MK_HAVE_STRTOLL" > config/_mk_have_strtoll.h
 fi;
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
