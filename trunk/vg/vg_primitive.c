@@ -37,41 +37,6 @@
 
 #include <string.h>
 
-void
-VG_PutPixel(VG *vg, int x, int y, Uint32 c)
-{
-	Uint8 *d;
-
-	if (AG_CLIPPED_PIXEL(vg->su, x, y))
-		return;
-	
-	d = (Uint8 *)vg->su->pixels + y*vg->su->pitch +
-	    x*vg->fmt->BytesPerPixel;
-
-	switch (vg->fmt->BytesPerPixel) {
-	case 4:
-		*(Uint32 *)d = c;
-		break;
-	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		d[0] = (c>>16) & 0xff;
-		d[1] = (c>>8) & 0xff;
-		d[2] = c & 0xff;	
-#else
-		d[2] = (c>>16) & 0xff;
-		d[1] = (c>>8) & 0xff;
-		d[0] = c & 0xff;	
-#endif
-		break;
-	case 2:
-		*(Uint16 *)d = c;
-		break;
-	case 1:
-		*d = c;
-		break;
-	}
-}
-
 /* Render a circle using a modified Bresenham line algorithm. */
 void
 VG_CirclePrimitive(VG *vg, int px, int py, int radius, Uint32 color)

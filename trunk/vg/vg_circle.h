@@ -10,8 +10,8 @@ struct vg_circle_args {
 };
 
 __BEGIN_DECLS
-__inline__ void	VG_CircleRadius(struct vg *, float);
-__inline__ void	VG_CircleDiameter(struct vg *, float);
+void	VG_CircleRadius(struct vg *, float);
+void	VG_CircleDiameter(struct vg *, float);
 __END_DECLS
 
 #include "close_code.h"

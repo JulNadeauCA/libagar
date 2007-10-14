@@ -116,8 +116,8 @@ typedef struct sc_qtime_range {
 #endif
 
 __BEGIN_DECLS
-__inline__ SC_Real SC_Rad2Deg(SC_Real);
-__inline__ SC_Real SC_Deg2Rad(SC_Real);
+SC_Real SC_Rad2Deg(SC_Real);
+SC_Real SC_Deg2Rad(SC_Real);
 
 SC_Real SC_ReadReal(AG_Netbuf *);
 void	SC_CopyReal(AG_Netbuf *, SC_Real *);

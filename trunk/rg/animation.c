@@ -183,15 +183,6 @@ RG_AnimRemoveFrame(RG_Anim *ani, Uint frame)
 		    (--ani->nframes)*sizeof(RG_AnimFrame));
 }
 
-RG_AnimFrame *
-RG_AnimGetFrame(RG_Anim *anim, Uint frame)
-{
-	if (frame >= anim->nframes) {
-		fatal("%s: no such frame %u", anim->name, frame);
-	}
-	return (&anim->frames[frame]);
-}
-
 static void
 FreeFrames(RG_Anim *ani)
 {

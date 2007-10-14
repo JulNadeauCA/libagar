@@ -73,45 +73,6 @@ MAP_ViewNew(void *parent, MAP *m, int flags, struct ag_toolbar *toolbar,
 }
 
 void
-MAP_ViewPixel2i(MAP_View *mv, int x, int y)
-{
-	int dx = WIDGET(mv)->cx + x;
-	int dy = WIDGET(mv)->cy + y;
-
-	if (mv->col.a < 255) {
-		AG_BLEND_RGBA2_CLIPPED(agView->v, dx, dy,
-		    mv->col.r, mv->col.g, mv->col.b, mv->col.a,
-		    AG_ALPHA_OVERLAY);
-	} else {
-		AG_VIEW_PUT_PIXEL2_CLIPPED(dx, dy, mv->col.pixval);
-	}
-}
-
-void
-MAP_ViewHLine(MAP_View *mv, int x1, int x2, int y)
-{
-	int x;
-
-	/* TODO opengl */
-	if (!agView->opengl) {
-		for (x = x1; x < x2; x++)
-			MAP_ViewPixel2i(mv, x, y);
-	}
-}
-
-void
-MAP_ViewVLine(MAP_View *mv, int x, int y1, int y2)
-{
-	int y;
-
-	/* TODO opengl */
-	if (!agView->opengl) {
-		for (y = y1; y < y2; y++)
-			MAP_ViewPixel2i(mv, x, y);
-	}
-}
-
-void
 MAP_ViewControl(MAP_View *mv, const char *slot, void *obj)
 {
 #ifdef DEBUG

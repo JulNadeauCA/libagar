@@ -33,7 +33,7 @@ void RG_TextureInit(RG_Texture *, struct rg_tileset *, const char *);
 void RG_TextureDestroy(RG_Texture *);
 int  RG_TextureLoad(RG_Texture *, AG_Netbuf *);
 void RG_TextureSave(RG_Texture *, AG_Netbuf *);
-__inline__ RG_Texture *RG_TextureFind(struct rg_tileset *, const char *);
+RG_Texture *RG_TextureFind(struct rg_tileset *, const char *);
 struct ag_window *RG_TextureEdit(RG_Texture *);
 __END_DECLS
 

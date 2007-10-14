@@ -198,31 +198,29 @@ void	 MAP_ModLayerAdd(MAP *, int);
 void	 MAP_Undo(MAP *);
 void	 MAP_Redo(MAP *);
 
-void		 MAP_ItemInit(MAP_Item *, enum map_item_type);
-__inline__ void	 MAP_ItemSetCenter(MAP_Item *, int, int);
-__inline__ void	 MAP_ItemSetMotion(MAP_Item *, int, int);
-__inline__ void	 MAP_ItemSetFriction(MAP_Item *, int);
-__inline__ void	 MAP_ItemSetLayer(MAP_Item *, int);
+void	 MAP_ItemInit(MAP_Item *, enum map_item_type);
+void	 MAP_ItemSetCenter(MAP_Item *, int, int);
+void	 MAP_ItemSetMotion(MAP_Item *, int, int);
+void	 MAP_ItemSetFriction(MAP_Item *, int);
+void	 MAP_ItemSetLayer(MAP_Item *, int);
 
-void	 	 MAP_ItemDestroy(MAP *, MAP_Item *);
-int		 MAP_ItemLoad(MAP *, AG_Netbuf *, MAP_Node *,
-			      MAP_Item **);
-void	 	 MAP_ItemSave(MAP *, AG_Netbuf *, MAP_Item *);
-__inline__ int	 MAP_ItemExtent(MAP *, MAP_Item *, SDL_Rect *, int);
-__inline__ void	 MAP_ItemDraw(MAP *, MAP_Item *, int, int, int);
-__inline__ void	 MAP_ItemSetTile(MAP_Item *, MAP *, RG_Tileset *, Uint32);
-__inline__ void	 MAP_ItemSetAnim(MAP_Item *, MAP *, RG_Tileset *, Uint32);
+void	 MAP_ItemDestroy(MAP *, MAP_Item *);
+int	 MAP_ItemLoad(MAP *, AG_Netbuf *, MAP_Node *, MAP_Item **);
+void	 MAP_ItemSave(MAP *, AG_Netbuf *, MAP_Item *);
+int	 MAP_ItemExtent(MAP *, MAP_Item *, SDL_Rect *, int);
+void	 MAP_ItemDraw(MAP *, MAP_Item *, int, int, int);
+void	 MAP_ItemSetTile(MAP_Item *, MAP *, RG_Tileset *, Uint32);
+void	 MAP_ItemSetAnim(MAP_Item *, MAP *, RG_Tileset *, Uint32);
+void	 MAP_ItemAttrColor(Uint, int, Uint8 *);
+
 MAP_Item	*MAP_ItemLocate(MAP *, int, int, int);
-void		 MAP_ItemAttrColor(Uint, int, Uint8 *);
-
-__inline__ void	 MAP_NodeInit(MAP_Node *);
+void		 MAP_NodeInit(MAP_Node *);
 int		 MAP_NodeLoad(MAP *, AG_Netbuf *, MAP_Node *);
 void		 MAP_NodeSave(MAP *, AG_Netbuf *, MAP_Node *);
 void		 MAP_NodeDestroy(MAP *, MAP_Node *);
 void		 MAP_NodeRemoveAll(MAP *, MAP_Node *, int);
 
-__inline__ void	 MAP_NodeCopy(MAP *, MAP_Node *, int, MAP *, MAP_Node *,
-		             int);
+void	 	 MAP_NodeCopy(MAP *, MAP_Node *, int, MAP *, MAP_Node *, int);
 void		 MAP_NodeMoveItem(MAP *, MAP_Node *, MAP_Item *, MAP *,
 		                 MAP_Node *, int);
 MAP_Item	*MAP_NodeCopyItem(const MAP_Item *, MAP *, MAP_Node *, int);

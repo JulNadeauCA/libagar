@@ -94,17 +94,24 @@ void RG_AnimInit(RG_Anim *, struct rg_tileset *, const char *, int);
 void RG_AnimDestroy(RG_Anim *);
 int  RG_AnimLoad(RG_Anim *, AG_Netbuf *);
 void RG_AnimSave(RG_Anim *, AG_Netbuf *);
+struct ag_window *RG_AnimEdit(RG_Anim *);
 
 void RG_AnimScale(RG_Anim *, Uint, Uint);
 void RG_AnimGenerate(RG_Anim *);
 Uint RG_AnimInsertInsn(RG_Anim *, enum rg_anim_insn_type);
 void RG_AnimRemoveInsn(RG_Anim *, Uint);
 
-Uint			 RG_AnimInsertFrame(RG_Anim *, SDL_Surface *);
-void			 RG_AnimRemoveFrame(RG_Anim *, Uint);
-__inline__ RG_AnimFrame	*RG_AnimGetFrame(RG_Anim *, Uint);
+Uint RG_AnimInsertFrame(RG_Anim *, SDL_Surface *);
+void RG_AnimRemoveFrame(RG_Anim *, Uint);
 
-struct ag_window *RG_AnimEdit(RG_Anim *);
+static __inline__ RG_AnimFrame *
+RG_AnimGetFrame(RG_Anim *anim, Uint frame)
+{
+	if (frame >= anim->nframes) {
+		AG_FatalError("%s: no such frame %u", anim->name, frame);
+	}
+	return (&anim->frames[frame]);
+}
 __END_DECLS
 
 #include "close_code.h"

@@ -293,69 +293,66 @@ int	 VG_Load(VG *, AG_Netbuf *);
 void	 	 VG_PreRasterFn(VG *, void *, AG_EventFn, const char *, ...);
 void	 	 VG_PostRasterFn(VG *, void *, AG_EventFn, const char *, ...);
 void		 VG_Scale(VG *, int, int, float);
-__inline__ void	 VG_DefaultScale(VG *, float);
-__inline__ void	 VG_SetGridGap(VG *, float);
-__inline__ void	 VG_Rasterize(VG *);
+void	 	 VG_DefaultScale(VG *, float);
+void	 	 VG_SetGridGap(VG *, float);
+void	 	 VG_Rasterize(VG *);
 
-__inline__ void	 VG_Vcoords2(VG *, int, int, float *, float *);
-__inline__ void	 VG_AbsVcoords2(VG *, int, int, float *, float *);
-__inline__ float VG_VcoordX(VG *, int);
-__inline__ float VG_VcoordY(VG *, int);
-__inline__ void  VG_Rcoords2(VG *, float, float, int *, int *);
-__inline__ void	 VG_AbsRcoords2(VG *, float, float, int *, int *);
-__inline__ void  VG_Rcoords2d(VG *, float, float, float *, float *);
-__inline__ void	 VG_AbsRcoords2d(VG *, float, float, float *, float *);
-__inline__ void	 VG_VtxCoords2d(VG *, VG_Element *, int, float *, float *);
-__inline__ void	 VG_VtxCoords2i(VG *, VG_Element *, int, int *, int *);
-__inline__ void  VG_RLength(VG *, float, int *);
-void		 VG_VLength(VG *, int, float *);
+void	VG_Vcoords2(VG *, int, int, float *, float *);
+void	VG_AbsVcoords2(VG *, int, int, float *, float *);
+float	VG_VcoordX(VG *, int);
+float	VG_VcoordY(VG *, int);
+void	VG_Rcoords2(VG *, float, float, int *, int *);
+void	VG_AbsRcoords2(VG *, float, float, int *, int *);
+void	VG_Rcoords2d(VG *, float, float, float *, float *);
+void	VG_AbsRcoords2d(VG *, float, float, float *, float *);
+void	VG_VtxCoords2d(VG *, VG_Element *, int, float *, float *);
+void	VG_VtxCoords2i(VG *, VG_Element *, int, int *, int *);
+void	VG_RLength(VG *, float, int *);
+void	VG_VLength(VG *, int, float *);
 
-VG_Vtx		     *VG_PopVertex(VG *);
-__inline__ VG_Vtx    *VG_AllocVertex(VG_Element *);
-__inline__ VG_Matrix *VG_AllocMatrix(VG_Element *);
-VG_Matrix	     *VG_PopMatrix(VG *);
-void		      VG_WriteVertex(AG_Netbuf *, VG_Vtx *);
-void		      VG_ReadVertex(AG_Netbuf *, VG_Vtx *);
+VG_Vtx		*VG_PopVertex(VG *);
+VG_Vtx    	*VG_AllocVertex(VG_Element *);
+VG_Matrix 	*VG_AllocMatrix(VG_Element *);
+VG_Matrix	*VG_PopMatrix(VG *);
+void		 VG_WriteVertex(AG_Netbuf *, VG_Vtx *);
+void		 VG_ReadVertex(AG_Netbuf *, VG_Vtx *);
 
-VG_Layer	*VG_PushLayer(VG *, const char *);
-__inline__ void	 VG_PopLayer(VG *);
+VG_Layer *VG_PushLayer(VG *, const char *);
+void	  VG_PopLayer(VG *);
 
-VG_Element	  *VG_Begin(VG *, enum vg_element_type);
-__inline__ void	   VG_End(VG *);
-__inline__ void	   VG_Select(VG *, VG_Element *);
-void		   VG_DestroyElement(VG *, VG_Element *);
-void		   VG_FreeElement(VG *, VG_Element *);
-int	   	   VG_Rintersect(VG *, VG_Rect *, VG_Rect *, VG_Rect *);
-
+VG_Element	*VG_Begin(VG *, enum vg_element_type);
+void		 VG_End(VG *);
+void		 VG_Select(VG *, VG_Element *);
+void		 VG_DestroyElement(VG *, VG_Element *);
+void		 VG_FreeElement(VG *, VG_Element *);
+int		 VG_Rintersect(VG *, VG_Rect *, VG_Rect *, VG_Rect *);
 VG_Style	*VG_CreateStyle(VG *, enum vg_style_type, const char *);
 int		 VG_SetStyle(VG *, const char *);
  
-__inline__ void		 VG_SetLayer(VG *, int);
-__inline__ void		 VG_Color(VG *, Uint32);
-__inline__ void		 VG_Color3(VG *, int r, int g, int b);
-__inline__ void		 VG_Color4(VG *, int r, int g, int b, int a);
-__inline__ VG_Vtx	*VG_Vertex2(VG *, float x, float y);
-void	 		 VG_VertexV(VG *, const VG_Vtx *, Uint);
-VG_Vtx			*VG_VertexVint2(VG *, float x, float x1, float y1,
-			                float x2, float y2);
-__inline__ void		 VG_Line(VG *, float x1, float y1, float x2, float y2);
-__inline__ void		 VG_VLine(VG *, float x, float y1, float y2);
-__inline__ void		 VG_HLine(VG *, float x1, float x2, float y);
-__inline__ void		 VG_VintVLine2(VG *, float x, float y, float x1,
-			               float y1, float x2, float y2);
-__inline__ void		 VG_Rectangle(VG *, float x1, float y1, float x2,
-			              float y2);
+void	 VG_SetLayer(VG *, int);
+void	 VG_Color(VG *, Uint32);
+void	 VG_Color3(VG *, int r, int g, int b);
+void	 VG_Color4(VG *, int r, int g, int b, int a);
+VG_Vtx	*VG_Vertex2(VG *, float x, float y);
+void	 VG_VertexV(VG *, const VG_Vtx *, Uint);
+VG_Vtx	*VG_VertexVint2(VG *, float x, float x1, float y1, float x2, float y2);
+void	 VG_Line(VG *, float x1, float y1, float x2, float y2);
+void	 VG_VLine(VG *, float x, float y1, float y2);
+void	 VG_HLine(VG *, float x1, float x2, float y);
+void	 VG_VintVLine2(VG *, float x, float y, float x1, float y1, float x2,
+	               float y2);
+void	 VG_Rectangle(VG *, float x1, float y1, float x2, float y2);
 
-VG_Matrix	*VG_PushIdentity(VG *);
-VG_Matrix	*VG_Translate(VG *, float, float);
-VG_Matrix	*VG_Rotate(VG *, float);
+VG_Matrix *VG_PushIdentity(VG *);
+VG_Matrix *VG_Translate(VG *, float, float);
+VG_Matrix *VG_Rotate(VG *, float);
 
 void VG_LoadIdentity(VG_Matrix *);
 void VG_LoadTranslate(VG_Matrix *, float, float);
 void VG_LoadRotate(VG_Matrix *, float);
 void VG_MultMatrixByVector(VG_Vtx *, const VG_Vtx *, const VG_Matrix *);
 void VG_MultMatrixByMatrix(VG_Matrix *, const VG_Matrix *, const VG_Matrix *);
-__inline__ void VG_CopyMatrix(VG_Matrix *, const VG_Matrix *);
+void VG_CopyMatrix(VG_Matrix *, const VG_Matrix *);
 
 #ifdef DEBUG
 void VG_DrawExtents(VG *);

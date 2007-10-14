@@ -28,7 +28,6 @@ AG_Window *DEV_ScreenshotUploader(void);
 AG_Window *DEV_DebugServer(void);
 int	   DEV_DebugServerStart(void);
 #endif
-AG_Window *DEV_LeakDetector(void);
 AG_Window *DEV_TimerInspector(void);
 AG_Window *DEV_UnicodeBrowser(void);
 AG_Window *DEV_DisplaySettings(void);

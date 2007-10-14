@@ -53,7 +53,6 @@ static const struct dev_tool_ent {
 #if defined(NETWORK) && defined(THREADS)
 	{ N_("Debug Server"),		DEV_DebugServer },
 #endif
-	{ N_("Leak Detector"),		DEV_LeakDetector },
 	{ N_("Timer Inspector"),	DEV_TimerInspector },
 	{ N_("Unicode Browser"),	DEV_UnicodeBrowser },
 	{ N_("Display settings"),	DEV_DisplaySettings },

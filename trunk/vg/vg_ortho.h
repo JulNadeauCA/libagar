@@ -16,8 +16,8 @@ struct ag_toolbar;
 enum ag_toolbar_type;
 
 __BEGIN_DECLS
-void		VG_RestrictOrtho(struct vg *, float *, float *);
-__inline__ void	VG_OrthoRestrictMode(struct vg *, enum vg_ortho_mode);
+void		   VG_RestrictOrtho(struct vg *, float *, float *);
+void		   VG_OrthoRestrictMode(struct vg *, enum vg_ortho_mode);
 struct ag_toolbar *VG_OrthoRestrictToolbar(void *, struct vg *,
 		                           enum ag_toolbar_type);
 __END_DECLS

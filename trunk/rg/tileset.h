@@ -75,15 +75,15 @@ int	 RG_TilesetLoad(void *, AG_Netbuf *);
 int	 RG_TilesetSave(void *, AG_Netbuf *);
 void	*RG_TilesetEdit(void *);
 
-__inline__ RG_Tile	*RG_TilesetFindTile(RG_Tileset *, const char *);
-__inline__ RG_Sketch	*RG_TilesetFindSketch(RG_Tileset *, const char *);
-__inline__ RG_Pixmap	*RG_TilesetFindPixmap(RG_Tileset *, const char *);
-__inline__ RG_Anim	*RG_TilesetFindAnim(RG_Tileset *, const char *);
-RG_Pixmap		*RG_TilesetResvPixmap(const char *, const char *);
-RG_Tile			*RG_TilesetResvTile(const char *, const char *);
+RG_Tile		*RG_TilesetFindTile(RG_Tileset *, const char *);
+RG_Sketch	*RG_TilesetFindSketch(RG_Tileset *, const char *);
+RG_Pixmap	*RG_TilesetFindPixmap(RG_Tileset *, const char *);
+RG_Anim		*RG_TilesetFindAnim(RG_Tileset *, const char *);
+RG_Pixmap	*RG_TilesetResvPixmap(const char *, const char *);
+RG_Tile		*RG_TilesetResvTile(const char *, const char *);
 
-__inline__ int		 RG_LookupTile(RG_Tileset *, Uint32, RG_Tile **);
-__inline__ int		 RG_LookupAnim(RG_Tileset *, Uint32, RG_Anim **);
+int		 RG_LookupTile(RG_Tileset *, Uint32, RG_Tile **);
+int		 RG_LookupAnim(RG_Tileset *, Uint32, RG_Anim **);
 __END_DECLS
 
 #include "close_code.h"

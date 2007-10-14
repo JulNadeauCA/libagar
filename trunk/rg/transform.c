@@ -243,15 +243,6 @@ RG_TransformDestroy(RG_Transform *xf)
 }
 
 int
-RG_TransformCompare(const RG_Transform *xf1, const RG_Transform *xf2)
-{
-	return (xf1->type == xf2->type &&
-	        xf1->nargs == xf2->nargs &&
-		(xf1->nargs == 0 ||
-		 memcmp(xf1->args, xf2->args, xf1->nargs*sizeof(Uint32)) == 0));
-}
-
-int
 RG_TransformLoad(AG_Netbuf *buf, RG_Transform *xf)
 {
 	int i;

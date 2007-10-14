@@ -126,13 +126,13 @@ VG_RotateBlock(VG *vg, VG_Block *vgb, float theta)
 
 	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
 		for (i = 0; i < vge->nvtx; i++) {
-			float r, theta;
-			float x, y;
+			float x, y, r, theta;
 
 			VG_Abs2Rel(vg, &vge->vtx[i], &x, &y);
-			VG_Car2Pol(vg, x, y, &r, &theta);
-			theta += vgb->theta;
-			VG_Pol2Car(vg, r, theta, &x, &y);
+			r = hypotf(x,y);
+			theta = atan2f(y,x) + vgb->theta;
+			x = r*cosf(theta);
+			y = r*sinf(theta);
 			VG_Rel2Abs(vg, x, y, &vge->vtx[i]);
 		}
 	}

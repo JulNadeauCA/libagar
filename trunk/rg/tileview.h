@@ -258,25 +258,172 @@ void RG_TileviewCircle2o(RG_Tileview *, int, int, int);
 void RG_TileviewHLine(RG_Tileview *, int, int, int);
 void RG_TileviewVLine(RG_Tileview *, int, int, int);
 
-__inline__ void   RG_TileviewScaledPixel(RG_Tileview *, int, int, Uint8,
-		                      Uint8, Uint8);
 RG_TileviewCtrl  *RG_TileviewAddCtrl(RG_Tileview *, enum rg_tileview_ctrl_type,
 			             const char *, ...);
 void		  RG_TileviewDelCtrl(RG_Tileview *, RG_TileviewCtrl *);
 
-__inline__ int	  RG_TileviewInt(RG_TileviewCtrl *, int);
-__inline__ void	  RG_TileviewSetInt(RG_TileviewCtrl *, int, int);
-__inline__ float  RG_TileviewFloat(RG_TileviewCtrl *, int);
-__inline__ void	  RG_TileviewSetFloat(RG_TileviewCtrl *, int, float);
-__inline__ double RG_TileviewDouble(RG_TileviewCtrl *, int);
-__inline__ void	  RG_TileviewSetDouble(RG_TileviewCtrl *, int, double);
-
-#define RG_TileviewUint(ctrl,nval) (Uint)RG_TileviewInt((ctrl),(nval))
-#define RG_TileviewSetUint(tv,nval,v) RG_TileviewSetInt((tv),(nval),(Uint)(v))
-
 void RG_TileviewSelectTool(RG_Tileview *, RG_TileviewTool *);
 void RG_TileviewUnselectTool(RG_Tileview *);
 void RG_TileviewGenericMenu(RG_Tileview *, AG_MenuItem *);
+
+/* Put (scaled) pixel on the tileview's cache surface. */
+static __inline__ void
+RG_TileviewScaledPixel(RG_Tileview *tv, int x, int y, Uint8 r, Uint8 g, Uint8 b)
+{
+	int sx = x*tv->pxsz;
+	int sy = y*tv->pxsz;
+	Uint32 pixel;
+	Uint8 *dst;
+
+	if (sx < 0 || sy < 0 || sx >= tv->scaled->w || sy >= tv->scaled->h) {
+		return;
+	}
+	pixel = SDL_MapRGB(tv->scaled->format, r, g, b);
+	if (SDL_MUSTLOCK(tv->scaled)) {
+		SDL_LockSurface(tv->scaled);
+	}
+	if (tv->pxsz == 1) {
+		dst = (Uint8 *)tv->scaled->pixels + y*tv->scaled->pitch +
+		    x*tv->scaled->format->BytesPerPixel;
+		*(Uint32 *)dst = pixel;
+	} else {
+		int px, py;
+		
+		dst = (Uint8 *)tv->scaled->pixels +
+		    sy*tv->scaled->pitch +
+		    sx*tv->scaled->format->BytesPerPixel;
+		for (py = 0; py < tv->pxsz; py++) {
+			for (px = 0; px < tv->pxsz; px++) {
+				*(Uint32 *)dst = pixel;
+				dst += tv->scaled->format->BytesPerPixel;
+			}
+			dst += tv->scaled->pitch - tv->pxlen;
+		}
+	}
+	if (SDL_MUSTLOCK(tv->scaled)) {
+		SDL_UnlockSurface(tv->scaled);
+	}
+	AG_WidgetUpdateSurface(tv, 0);
+}
+
+/*
+ * Return values associated with control bindings.
+ */
+static __inline__ int
+RG_TileviewInt(RG_TileviewCtrl *ctrl, int nval)
+{
+	switch (ctrl->valtypes[nval]) {
+	case RG_TILEVIEW_INT_VAL:
+		return (ctrl->vals[nval].i);
+	case RG_TILEVIEW_INT_PTR:
+		return (*(int *)ctrl->vals[nval].p);
+	case RG_TILEVIEW_UINT_VAL:
+		return ((int)ctrl->vals[nval].ui);
+	case RG_TILEVIEW_UINT_PTR:
+		return (*(Uint *)ctrl->vals[nval].p);
+	default:
+		AG_FatalError("cannot convert");
+	}
+}
+static __inline__ float
+RG_TileviewFloat(RG_TileviewCtrl *ctrl, int nval)
+{
+	switch (ctrl->valtypes[nval]) {
+	case RG_TILEVIEW_FLOAT_VAL:
+		return (ctrl->vals[nval].f);
+	case RG_TILEVIEW_FLOAT_PTR:
+		return (*(float *)ctrl->vals[nval].p);
+	case RG_TILEVIEW_DOUBLE_VAL:
+		return ((float)ctrl->vals[nval].d);
+	case RG_TILEVIEW_DOUBLE_PTR:
+		return ((float)(*(double *)ctrl->vals[nval].p));
+	default:
+		AG_FatalError("cannot convert");
+	}
+}
+static __inline__ double
+RG_TileviewDouble(RG_TileviewCtrl *ctrl, int nval)
+{
+	switch (ctrl->valtypes[nval]) {
+	case RG_TILEVIEW_FLOAT_VAL:
+		return ((double)ctrl->vals[nval].f);
+	case RG_TILEVIEW_FLOAT_PTR:
+		return ((double)(*(float *)ctrl->vals[nval].p));
+	case RG_TILEVIEW_DOUBLE_VAL:
+		return (ctrl->vals[nval].d);
+	case RG_TILEVIEW_DOUBLE_PTR:
+		return (*(double *)ctrl->vals[nval].p);
+	default:
+		AG_FatalError("cannot convert");
+	}
+}
+
+/*
+ * Set values associated with control bindings.
+ */
+static __inline__ void
+RG_TileviewSetInt(RG_TileviewCtrl *ctrl, int nval, int v)
+{
+	switch (ctrl->valtypes[nval]) {
+	case RG_TILEVIEW_INT_VAL:
+		ctrl->vals[nval].i = v;
+		break;
+	case RG_TILEVIEW_UINT_VAL:
+		ctrl->vals[nval].ui = (Uint)v;
+		break;
+	case RG_TILEVIEW_INT_PTR:
+		*(int *)ctrl->vals[nval].p = v;
+		break;
+	case RG_TILEVIEW_UINT_PTR:
+		*(Uint *)ctrl->vals[nval].p = (Uint)v;
+		break;
+	default:
+		AG_FatalError("cannot convert");
+	}
+}
+static __inline__ void
+RG_TileviewSetFloat(RG_TileviewCtrl *ctrl, int nval, float v)
+{
+	switch (ctrl->valtypes[nval]) {
+	case RG_TILEVIEW_FLOAT_VAL:
+		ctrl->vals[nval].f = v;
+		break;
+	case RG_TILEVIEW_DOUBLE_VAL:
+		ctrl->vals[nval].d = (double)v;
+		break;
+	case RG_TILEVIEW_FLOAT_PTR:
+		*(float *)ctrl->vals[nval].p = v;
+		break;
+	case RG_TILEVIEW_DOUBLE_PTR:
+		*(double *)ctrl->vals[nval].p = (double)v;
+		break;
+	default:
+		AG_FatalError("cannot convert");
+	}
+}
+static __inline__ void
+RG_TileviewSetDouble(RG_TileviewCtrl *ctrl, int nval, double v)
+{
+	switch (ctrl->valtypes[nval]) {
+	case RG_TILEVIEW_FLOAT_VAL:
+		ctrl->vals[nval].f = (float)v;
+		break;
+	case RG_TILEVIEW_DOUBLE_VAL:
+		ctrl->vals[nval].d = v;
+		break;
+	case RG_TILEVIEW_FLOAT_PTR:
+		*(float *)ctrl->vals[nval].p = (float)v;
+		break;
+	case RG_TILEVIEW_DOUBLE_PTR:
+		*(double *)ctrl->vals[nval].p = v;
+		break;
+	default:
+		AG_FatalError("cannot convert");
+	}
+}
+
+#define RG_TileviewUint(ctrl,nval) (Uint)RG_TileviewInt((ctrl),(nval))
+#define RG_TileviewSetUint(tv,nval,v) RG_TileviewSetInt((tv),(nval),(Uint)(v))
 __END_DECLS
 
 #include "close_code.h"
