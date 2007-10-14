@@ -11,7 +11,8 @@ SUBDIR=	fixedres \
 	maximized \
 	objprops \
 	unitconv \
-	sockets
+	sockets \
+	glview
 
 SUBDIR+=sgview \
 	linear \
