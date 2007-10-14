@@ -137,8 +137,8 @@ AG_ObjectNew(void *parent, const char *name, const AG_ObjectOps *ops)
 }
 
 /* Check if an object's class matches the given pattern (general case). */
-static int
-ObjectIsClassGeneral(const AG_Object *obj, const char *cn)
+int
+AG_ObjectIsClassGeneral(const AG_Object *obj, const char *cn)
 {
 	char cname[AG_OBJECT_TYPE_MAX], *cp, *c;
 	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
@@ -155,43 +155,6 @@ ObjectIsClassGeneral(const AG_Object *obj, const char *cn)
 			return (0);
 	}
 	return (1);
-}
-
-/* Check if an object's class name matches the given pattern. */
-int
-AG_ObjectIsClass(const void *p, const char *cname)
-{
-	const AG_Object *obj = p;
-	const char *c;
-	int nwild = 0;
-
-	if (cname[0] == '*' && cname[1] == '\0') {
-		return (1);
-	}
-	for (c = &cname[0]; *c != '\0'; c++) {
-		if (*c == '*')
-			nwild++;
-	}
-	
-	/* Optimize for simplest case (no wildcards). */
-	if (nwild == 0)
-		return (strncmp(obj->ops->type, cname, c - &cname[0]) == 0);
-	
-	/* Optimize for single-wildcard cases. */
-	if (nwild == 1) {
-		for (c = &cname[0]; *c != '\0'; c++) {
-			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
-				if (c == &cname[0] ||
-				    strncmp(obj->ops->type, cname,
-				            c - &cname[0]) == 0)
-					return (1);
-			}
-		}
-		/* TODO: Optimize for "*:Foo" case */
-	}
-
-	/* Fallback to the general matching algorithm. */
-	return (ObjectIsClassGeneral(obj, cname));
 }
 
 void
@@ -276,48 +239,6 @@ AG_ObjectCopyName(const void *obj, char *path, size_t path_len)
 	}
 	AG_UnlockLinkage();
 	return (rv);
-}
-
-/*
- * Return the root of a given object's ancestry.
- * The linkage must be locked.
- */
-void *
-AG_ObjectRoot(const void *p)
-{
-	const AG_Object *ob = p;
-
-	while (ob != NULL) {
-		if (ob->parent == NULL) {
-			return ((void *)ob);
-		}
-		ob = ob->parent;
-	}
-	return (NULL);
-}
-
-/*
- * Traverse an object's ancestry looking for a matching parent object.
- * The linkage must be locked.
- */
-void *
-AG_ObjectFindParent(void *obj, const char *name, const char *type)
-{
-	AG_Object *ob = obj;
-
-	while (ob != NULL) {
-		AG_Object *po = ob->parent;
-
-		if (po == NULL) {
-			return (NULL);
-		}
-		if ((type == NULL || strcmp(po->ops->type, type) == 0) &&
-		    (name == NULL || strcmp(po->name, name) == 0)) {
-			return (po);
-		}
-		ob = ob->parent;
-	}
-	return (NULL);
 }
 
 /*
@@ -503,19 +424,6 @@ AG_ObjectSearchPath(const AG_Object *parent, const char *name)
 		return (child);
 	}
 	return (NULL);
-}
-
-void *
-AG_ObjectFindChild(void *p, const char *name)
-{
-	AG_Object *pObj = p;
-	AG_Object *cObj;
-
-	OBJECT_FOREACH_CHILD(cObj, pObj, ag_object) {
-		if (strcmp(cObj->name, name) == 0)
-			break;
-	}
-	return (cObj);
 }
 
 /* Search for the named object (absolute path). */

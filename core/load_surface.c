@@ -30,7 +30,6 @@
 #include <core/core.h>
 
 #include "load_netbuf.h"
-#include "load_integral.h"
 #include "load_surface.h"
 #include "load_version.h"
 

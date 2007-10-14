@@ -167,30 +167,6 @@ wait:
 }
 
 void
-AG_LockTimeouts(void *p)
-{
-	AG_Object *ob = p;
-
-	if (ob == NULL) {
-		ob = agWorld;
-	}
-	AG_ObjectLock(ob);
-	AG_LockTiming();
-}
-
-void
-AG_UnlockTimeouts(void *p)
-{
-	AG_Object *ob = p;
-
-	if (ob == NULL) {
-		ob = agWorld;
-	}
-	AG_UnlockTiming();
-	AG_ObjectUnlock(ob);
-}
-
-void
 AG_ProcessTimeout(Uint32 t)
 {
 	AG_Timeout *to;
@@ -227,4 +203,28 @@ pop:
 	}
 	AG_UnlockTiming();
 	SDL_Delay(1);
+}
+
+void
+AG_LockTimeouts(void *p)
+{
+	AG_Object *ob = p;
+
+	if (ob == NULL) {
+		ob = agWorld;
+	}
+	AG_ObjectLock(ob);
+	AG_LockTiming();
+}
+
+void
+AG_UnlockTimeouts(void *p)
+{
+	AG_Object *ob = p;
+
+	if (ob == NULL) {
+		ob = agWorld;
+	}
+	AG_UnlockTiming();
+	AG_ObjectUnlock(ob);
 }

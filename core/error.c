@@ -41,19 +41,11 @@ char *agErrorKey;
 
 #ifdef DEBUG
 int agDebugLvl = 1;				/* Default debug level */
-struct ag_malloc_type agMallocTypes[M_LAST];
 #endif
 
 void
 AG_InitError(void)
 {
-#ifdef DEBUG
-	int i;
-
-	for (i = 0; i < M_LAST; i++)
-		memset(&agMallocTypes[i], 0, sizeof(struct ag_malloc_type));
-#endif
-
 #ifdef THREADS
 	AG_ThreadKeyCreate(&agErrorKey);
 #else
@@ -106,50 +98,6 @@ AG_GetError(void)
 #else
 	return ((const char *)agErrorKey);
 #endif
-}
-
-void *
-AG_Malloc(size_t len, int type)
-{
-	void *p;
-	
-	if ((p = malloc(len)) == NULL)
-		fatal("malloc");
-#ifdef DEBUG
-	if (type > 0) {
-		agMallocTypes[type].nallocs++;
-		agMallocTypes[type].msize += len;
-	}
-#endif
-	return (p);
-}
-
-void *
-AG_Realloc(void *pOld, size_t len)
-{
-	void *pNew;
-
-	if (pOld == NULL) {
-		if ((pNew= malloc(len)) == NULL)
-			fatal("malloc");
-	} else {
-		if ((pNew= realloc(pOld, len)) == NULL)
-			fatal("realloc");
-	}
-	return (pNew);
-}
-
-void
-AG_Free(void *p, int type)
-{
-	/* XXX redundant on some systems */
-	if (p == NULL)
-		return;
-#ifdef DEBUG
-	if (type > 0)
-		agMallocTypes[type].nfrees++;
-#endif
-	free(p);
 }
 
 void

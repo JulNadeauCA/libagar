@@ -424,14 +424,6 @@ fail:
 	return (-1);
 }
 
-/* Immediately execute the given event handler. */
-void
-AG_ExecEventFn(void *obj, AG_Event *ev)
-{
-	if (ev->handler != NULL)
-		AG_PostEvent(NULL, obj, ev->name, NULL);
-}
-
 /*
  * Forward an event, without modifying the original event structure, except
  * for the sender and receiver pointers.
