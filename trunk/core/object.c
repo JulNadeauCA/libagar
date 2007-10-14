@@ -989,8 +989,8 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	}
 	AG_ObjectFreeDeps(ob);
 
-	AG_ReadUint32(buf);				/* Data offs */
-	if (ver.minor < 1) { AG_ReadUint32(buf); }	/* Gfx offs */
+	(void)AG_ReadUint32(buf);				/* Data offs */
+	if (ver.minor < 1) { (void)AG_ReadUint32(buf); }	/* Gfx offs */
 
 	/* Read and verify the generic object flags. */
 	flags_save = ob->flags;
@@ -1135,7 +1135,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		goto fail;
 
 	dataOffs = (off_t)AG_ReadUint32(buf);		/* User data offset */
-	if (ver.minor < 1) { AG_ReadUint32(buf); }	/* Gfx offs */
+	if (ver.minor < 1) { (void)AG_ReadUint32(buf); }	/* Gfx offs */
 	AG_NetbufSeek(buf, dataOffs, SEEK_SET);
 
 	if (OBJECT_RESIDENT(ob)) {
