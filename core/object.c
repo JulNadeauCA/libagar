@@ -961,8 +961,8 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			if ((cl = AG_FindClass(classID)) == NULL) {
 				AG_SetError("%s: %s", ob->name, AG_GetError());
 				if (agObjectIgnoreUnknownObjs) {
-					AG_TextMsg(AG_MSG_ERROR,
-					    _("%s (ignored)"), AG_GetError());
+					dprintf("%s; ignoring\n",
+					    AG_GetError());
 					continue;
 				} else {
 					goto fail;
