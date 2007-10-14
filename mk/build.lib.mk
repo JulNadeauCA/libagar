@@ -65,11 +65,10 @@ LTCONFIG_LOG?=	./config.log
 SHARE?=none
 SHARESRC?=none
 SRCS?=none
-INCL?=none
-INCLDIR?=
-
 OBJS?=none
 SHOBJS?=none
+INCL?=none
+INCLDIR?=
 
 all: all-subdir lib${LIB}.a lib${LIB}.la
 install: install-lib install-subdir
@@ -328,7 +327,7 @@ cleandir-lib:
 	if [ -e "Makefile.config" ]; then echo -n >Makefile.config; fi
 
 install-lib: ${LIBTOOL_COOKIE}
-	@if [ "${INCL}" != "" -a "${INCL}" != "none" ]; then \
+	@if [ "${INCL}" != "none" -a "${INCL}" != "none" ]; then \
 	    if [ ! -d "${INCLDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${INCLDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${INCLDIR}; \
@@ -356,31 +355,29 @@ install-lib: ${LIBTOOL_COOKIE}
 	        ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${LIBDIR}; \
 	    fi; \
 	fi
-	@export _share="${SHARE}"; \
-        if [ "$$_share" != "" -a "${SHARE}" != "none" ]; then \
+	if [ "${SHARE}" != "none" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
             fi; \
-            for F in $$_share; do \
+            for F in ${SHARE}; do \
                 echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
             done; \
 	fi
-	@export _sharesrc="${SHARESRC}"; \
-        if [ "$$_sharesrc" != "" -a "${SHARESRC}" != "none" ]; then \
+	if [ "${SHARESRC}" != "none" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
             fi; \
 	    if [ "${SRC}" != "" ]; then \
-                for F in $$_sharesrc; do \
+                for F in ${SHARESRC}; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                     ${SUDO} ${INSTALL_DATA} ${SRC}/${BUILDREL}/$$F \
 		    ${SHAREDIR}; \
                 done; \
 	    else \
-                for F in $$_sharesrc; do \
+                for F in ${SHARESRC}; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                     ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
                 done; \
@@ -399,13 +396,13 @@ deinstall-lib: ${LIBTOOL_COOKIE}
 	        ${SUDO} ${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a; \
 	    fi; \
 	fi
-	@if [ "${SHARE}" != "" -a "${SHARE}" != "none" ]; then \
+	@if [ "${SHARE}" != "none" ]; then \
 	    for F in ${SHARE}; do \
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
 	        ${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
 	    done; \
 	fi
-	@if [ "${SHARESRC}" != "" -a "${SHARESRC}" != "none" ]; then \
+	@if [ "${SHARESRC}" != "none" ]; then \
 	    for F in ${SHARESRC}; do \
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
 	        ${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
