@@ -363,6 +363,7 @@ SG_CameraMenu(void *obj, AG_MenuItem *m, SG_View *sgv)
 
 	{
 		AG_MenuItem *mRot;
+		SG_Camera *cam = obj;
 
 		mRot = AG_MenuNode(m, _("Artificial rotation"), ANIM_PLAY_ICON);
 		AG_MenuUintFlags(mRot, _("Rotate around i"), RIGHT_ARROW_ICON,
