@@ -108,10 +108,8 @@ void		AG_TlistSizeHintPixels(AG_Tlist *, int, int);
 #define		AG_TlistPrescale AG_TlistSizeHint
 
 void		AG_TlistSetItemHeight(AG_Tlist *, int);
-__inline__ void	AG_TlistSetIcon(AG_Tlist *, AG_TlistItem *,
-	                        SDL_Surface *);
+void		AG_TlistSetIcon(AG_Tlist *, AG_TlistItem *, SDL_Surface *);
 
-__inline__ int AG_TlistVisibleChildren(AG_Tlist *, AG_TlistItem *);
 void	       AG_TlistSetArgs(AG_TlistItem *, const char *, ...);
 void	       AG_TlistDel(AG_Tlist *, AG_TlistItem *);
 void	       AG_TlistClear(AG_Tlist *);
@@ -146,6 +144,21 @@ int AG_TlistComparePtrsAndClasses(const AG_TlistItem *, const AG_TlistItem *);
 
 #define AG_TlistBegin AG_TlistClear
 #define AG_TlistEnd AG_TlistRestore
+
+static __inline__ int
+AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
+{
+	AG_TlistItem *sit;
+
+	TAILQ_FOREACH(sit, &tl->selitems, selitems) {
+		if (tl->compare_fn(sit, cit))
+			break;
+	}
+	if (sit == NULL) { 
+		return (0);			/* TODO default setting */
+	}
+	return (sit->flags & AG_TLIST_VISIBLE_CHILDREN);
+}
 __END_DECLS
 
 #include "close_code.h"

@@ -237,19 +237,15 @@ int		 AG_UnbindGlobalKey(SDLKey, SDLMod);
 void		 AG_ViewVideoExpose(void);
 void		 AG_ViewAttach(void *);
 void		 AG_ViewDetach(struct ag_window *);
-__inline__ void	 AG_ViewDetachQueued(void);
 struct ag_window *AG_FindWindow(const char *);
 
 /* Surface operations */
-__inline__ SDL_Surface	*AG_DupSurface(SDL_Surface *);
-void			 AG_ScaleSurface(SDL_Surface *, Uint16, Uint16,
-			                 SDL_Surface **);
-void			 AG_SetAlphaPixels(SDL_Surface *, Uint8);
-int			 AG_DumpSurface(SDL_Surface *, char *);
-__inline__ void		 AG_QueueVideoUpdate(int, int, int, int);
-void			 AG_ViewCapture(void);
-__inline__ void		 AG_FlipSurface(Uint8 *, int, int);
-__inline__ void	  	 AG_CopySurfaceAsIs(SDL_Surface *, SDL_Surface *);
+SDL_Surface	*AG_DupSurface(SDL_Surface *);
+void		 AG_ScaleSurface(SDL_Surface *, Uint16, Uint16, SDL_Surface **);
+void		 AG_SetAlphaPixels(SDL_Surface *, Uint8);
+int		 AG_DumpSurface(SDL_Surface *, char *);
+void		 AG_ViewCapture(void);
+void		 AG_FlipSurface(Uint8 *, int, int);
 
 /* OpenGL-specific operations */
 #ifdef HAVE_OPENGL
@@ -263,27 +259,40 @@ SDL_Surface		*AG_CaptureGLView(void);
 #define	AG_UnlockGL()
 #endif
 
-/*
- * Pixel operations
- */
+/* Event processing */
+void              AG_EventLoop_FixedFPS(void);
+#define           AG_EventLoop() AG_EventLoop_FixedFPS()
+Uint8  		  AG_MouseGetState(int *, int *);
+#ifdef DEBUG
+struct ag_window *AG_EventShowPerfGraph(void);
+#endif
+
+/* Pixel ops */
 void AG_BlendPixelRGBA(SDL_Surface *, Uint8 *, Uint8, Uint8, Uint8, Uint8,
                        AG_BlendFn);
 void AG_RGB2HSV(Uint8, Uint8, Uint8, float *, float *, float *);
 void AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
 
-static __inline__ Uint32 AG_VideoPixel(Uint32 c)
+/* Convert pixel to video format. */
+static __inline__ Uint32
+AG_VideoPixel(Uint32 c)
 {
 	Uint8 r, g, b;
 	SDL_GetRGB(c, agSurfaceFmt, &r, &g, &b);
 	return (SDL_MapRGB(agVideoFmt, r, g, b));
 }
-static __inline__ Uint32 AG_SurfacePixel(Uint32 c)
+
+/* Convert pixel to surface format. */
+static __inline__ Uint32
+AG_SurfacePixel(Uint32 c)
 {
 	Uint8 r, g, b;
 	SDL_GetRGB(c, agVideoFmt, &r, &g, &b);
 	return (SDL_MapRGB(agSurfaceFmt, r, g, b));
 }
-static __inline__ Uint32 AG_GetPixel(SDL_Surface *s, Uint8 *pSrc)
+
+static __inline__ Uint32
+AG_GetPixel(SDL_Surface *s, Uint8 *pSrc)
 {
 	switch (s->format->BytesPerPixel) {
 	case 4:
@@ -303,7 +312,9 @@ static __inline__ Uint32 AG_GetPixel(SDL_Surface *s, Uint8 *pSrc)
 	}
 	return (*pSrc);
 }
-static __inline__ void AG_PutPixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
+
+static __inline__ void
+AG_PutPixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
 {
 	switch (s->format->BytesPerPixel) {
 	case 4:
@@ -328,6 +339,7 @@ static __inline__ void AG_PutPixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
 		break;
 	}
 }
+
 static __inline__ int
 AG_SamePixelFmt(SDL_Surface *s1, SDL_Surface *s2)
 {
@@ -339,13 +351,52 @@ AG_SamePixelFmt(SDL_Surface *s1, SDL_Surface *s2)
 		s1->format->colorkey == s2->format->colorkey);
 }
 
-/* Event processing */
-void              AG_EventLoop_FixedFPS(void);
-#define           AG_EventLoop() AG_EventLoop_FixedFPS()
-__inline__ Uint8  AG_MouseGetState(int *, int *);
-#ifdef DEBUG
-struct ag_window *AG_EventShowPerfGraph(void);
+static __inline__ void
+AG_QueueVideoUpdate(int x, int y, int w, int h)
+{
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		agView->ndirty = 1;
+	} else
 #endif
+	{
+		if (x < 0) { x = 0; }
+		if (y < 0) { y = 0; }
+		if (x+w > agView->w) { w = agView->w - x; }
+		if (y+h > agView->h) { h = agView->h - y; }
+		if (w < 0) { x = 0; w = agView->w; }
+		if (h < 0) { y = 0; h = agView->h; }
+
+		if (agView->ndirty+1 > agView->maxdirty) {
+			agView->maxdirty *= 2;
+			agView->dirty = AG_Realloc(agView->dirty,
+			    agView->maxdirty * sizeof(SDL_Rect));
+		}
+		agView->dirty[agView->ndirty].x = x;
+		agView->dirty[agView->ndirty].y = y;
+		agView->dirty[agView->ndirty].w = w;
+		agView->dirty[agView->ndirty].h = h;
+		agView->ndirty++;
+	}
+}
+
+static __inline__ void
+AG_CopySurfaceAsIs(SDL_Surface *sSrc, SDL_Surface *sDst)
+{
+	Uint32 svaflags, svcflags, svcolorkey;
+	Uint8 svalpha;
+
+	svaflags = sSrc->flags&(SDL_SRCALPHA|SDL_RLEACCEL);
+	svalpha = sSrc->format->alpha;
+	svcflags = sSrc->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
+	svcolorkey = sSrc->format->colorkey;
+	SDL_SetAlpha(sSrc, 0, 0);
+	SDL_SetColorKey(sSrc, 0, 0);
+	SDL_BlitSurface(sSrc, NULL, sDst, NULL);
+	SDL_SetColorKey(sSrc, svcflags, svcolorkey);
+	SDL_SetAlpha(sSrc, svaflags, svalpha);
+}
+
 __END_DECLS
 
 #include "close_code.h"

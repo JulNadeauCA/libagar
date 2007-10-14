@@ -652,11 +652,11 @@ AG_ViewDetach(AG_Window *win)
 }
 
 /*
- * Release the windows on the detachment queue. Call at the end of the
+ * Release the windows on the detachment queue. Called at the end of the
  * current event processing cycle.
  */
-void
-AG_ViewDetachQueued(void)
+static __inline__ void
+FreeDetachedWindows(void)
 {
 	AG_Window *win, *nwin;
 
@@ -1119,36 +1119,6 @@ out:
 #endif
 }
 
-/* Queue a video update. */
-void
-AG_QueueVideoUpdate(int x, int y, int w, int h)
-{
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		agView->ndirty = 1;
-	} else
-#endif
-	{
-		if (x < 0) { x = 0; }
-		if (y < 0) { y = 0; }
-		if (x+w > agView->w) { w = agView->w - x; }
-		if (y+h > agView->h) { h = agView->h - y; }
-		if (w < 0) { x = 0; w = agView->w; }
-		if (h < 0) { y = 0; h = agView->h; }
-
-		if (agView->ndirty+1 > agView->maxdirty) {
-			agView->maxdirty *= 2;
-			agView->dirty = Realloc(agView->dirty,
-			    agView->maxdirty * sizeof(SDL_Rect));
-		}
-		agView->dirty[agView->ndirty].x = x;
-		agView->dirty[agView->ndirty].y = y;
-		agView->dirty[agView->ndirty].w = w;
-		agView->dirty[agView->ndirty].h = h;
-		agView->ndirty++;
-	}
-}
-
 /* Flip the lines of a frame buffer; useful with glReadPixels(). */
 void
 AG_FlipSurface(Uint8 *src, int h, int pitch)
@@ -1246,23 +1216,6 @@ AG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 	*r = (Uint8)vR*255;
 	*g = (Uint8)vG*255;
 	*b = (Uint8)vB*255;
-}
-
-void
-AG_CopySurfaceAsIs(SDL_Surface *sSrc, SDL_Surface *sDst)
-{
-	Uint32 svaflags, svcflags, svcolorkey;
-	Uint8 svalpha;
-
-	svaflags = sSrc->flags&(SDL_SRCALPHA|SDL_RLEACCEL);
-	svalpha = sSrc->format->alpha;
-	svcflags = sSrc->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
-	svcolorkey = sSrc->format->colorkey;
-	SDL_SetAlpha(sSrc, 0, 0);
-	SDL_SetColorKey(sSrc, 0, 0);
-	SDL_BlitSurface(sSrc, NULL, sDst, NULL);
-	SDL_SetColorKey(sSrc, svcflags, svcolorkey);
-	SDL_SetAlpha(sSrc, svaflags, svalpha);
 }
 
 #ifdef DEBUG
@@ -1525,7 +1478,7 @@ AG_ProcessEvent(SDL_Event *ev)
 		/* NOTREACHED */
 		break;
 	}
-	AG_ViewDetachQueued();
+	FreeDetachedWindows();
 	AG_MutexUnlock(&agView->lock);
 }
 

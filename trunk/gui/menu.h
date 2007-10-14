@@ -109,9 +109,9 @@ void	   AG_MenuDraw(void *);
 void 	   AG_MenuDestroy(void *);
 
 AG_PopupMenu	*AG_PopupNew(void *);
-__inline__ void	 AG_PopupShow(AG_PopupMenu *);
-__inline__ void	 AG_PopupShowAt(AG_PopupMenu *, int, int);
-__inline__ void	 AG_PopupHide(AG_PopupMenu *);
+void		 AG_PopupShow(AG_PopupMenu *);
+void		 AG_PopupShowAt(AG_PopupMenu *, int, int);
+void		 AG_PopupHide(AG_PopupMenu *);
 void		 AG_PopupDestroy(void *, AG_PopupMenu *);
 
 void	     AG_MenuItemFree(AG_MenuItem *);
@@ -134,10 +134,10 @@ void	 AG_MenuSetLabelPadding(AG_Menu *, int, int, int, int);
 #define	 AG_MenuSetLabelPaddingBottom(m,v) \
 	 AG_MenuSetLabelPadding((m),-1,-1,-1,(v))
 
-__inline__ void AG_MenuSetIcon(AG_MenuItem *, SDL_Surface *);
-__inline__ void AG_MenuSetLabel(AG_MenuItem *, const char *, ...);
-void	        AG_MenuSetPollFn(AG_MenuItem *, AG_EventFn, const char *, ...);
-__inline__ void	AG_MenuUpdateItem(AG_MenuItem *);
+void AG_MenuSetIcon(AG_MenuItem *, SDL_Surface *);
+void AG_MenuSetLabel(AG_MenuItem *, const char *, ...);
+void AG_MenuSetPollFn(AG_MenuItem *, AG_EventFn, const char *, ...);
+void AG_MenuUpdateItem(AG_MenuItem *);
 
 void	     AG_MenuState(AG_MenuItem *, int);
 #define      AG_MenuDisable(m) AG_MenuState((m),0)
