@@ -324,6 +324,7 @@ RG_TileviewInt(RG_TileviewCtrl *ctrl, int nval)
 	default:
 		AG_FatalError("cannot convert");
 	}
+	return (0);
 }
 static __inline__ float
 RG_TileviewFloat(RG_TileviewCtrl *ctrl, int nval)
@@ -340,6 +341,7 @@ RG_TileviewFloat(RG_TileviewCtrl *ctrl, int nval)
 	default:
 		AG_FatalError("cannot convert");
 	}
+	return (0.0);
 }
 static __inline__ double
 RG_TileviewDouble(RG_TileviewCtrl *ctrl, int nval)
@@ -356,6 +358,7 @@ RG_TileviewDouble(RG_TileviewCtrl *ctrl, int nval)
 	default:
 		AG_FatalError("cannot convert");
 	}
+	return (0.0);
 }
 
 /*
