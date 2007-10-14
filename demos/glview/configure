@@ -222,8 +222,10 @@ fi
 echo "ENABLE_NLS=${ENABLE_NLS}" >> Makefile.config
 echo "HAVE_GETTEXT=${HAVE_GETTEXT}" >> Makefile.config
 
+echo -n "checking for libtool..."
+LIBTOOL_BUNDLED="no"
 if [ "${with_libtool}" != "" ]; then
-	echo "LIBTOOL=${with_libtool}" >> Makefile.config
+	LIBTOOL=${with_libtool}
 else
 	ltool=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
@@ -232,10 +234,22 @@ else
 		fi
 	done
 	if [ "${ltool}" != "" ]; then
-		echo "LIBTOOL=${ltool}" >> Makefile.config
+		LIBTOOL=${ltool}
 	else
-		echo "Warning: libtool not found on system, using bundled copy"
-		echo "LIBTOOL=\${TOP}/mk/libtool/libtool" >> Makefile.config
+		LIBTOOL=\${TOP}/mk/libtool/libtool
+		LIBTOOL_BUNDLED="yes"
+	fi
+fi
+echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
+grep ^VERSION=1.5 "${LIBTOOL}" 1>/dev/null 2>&1
+if [ $? == 0 ]; then
+	echo "yes (1.5)"
+	echo "LIBTOOLFLAGS=-prefer-pic" >> Makefile.config
+else
+	if [ "${LIBTOOL_BUNDLED}" = "yes" ]; then
+		echo "yes (bundled)"
+	else
+		echo "yes"
 	fi
 fi
 
@@ -832,6 +846,9 @@ fi;
 if [ "$SYSTEM" = "Darwin" ]; then
 OPENGL_CFLAGS=""
 OPENGL_LIBS="-framework OpenGL"
+elif [ "$HAVE_MINGW" = "yes" ]; then
+OPENGL_CFLAGS=""
+OPENGL_LIBS="-lopengl32"
 else
 OPENGL_CFLAGS="${GL_CFLAGS}"
 OPENGL_LIBS="${GL_LIBS} -lGL"
@@ -887,6 +904,8 @@ echo -n "checking for GLU (http://www.opengl.org)..." >> config.log
 if [ "$SYSTEM" = "Darwin" ]; then
 GLU_CFLAGS=""
 GLU_LIBS=""
+elif [ "$HAVE_MINGW" = "yes" ]; then
+GLU_LIBS="-lglu32"
 else
 GLU_CFLAGS=""
 if [ -d "/usr/include/X11/GL/glu.h" ]; then
