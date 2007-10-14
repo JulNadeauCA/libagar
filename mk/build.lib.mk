@@ -68,6 +68,9 @@ SRCS?=none
 INCL?=none
 INCLDIR?=
 
+OBJS?=none
+SHOBJS?=none
+
 all: all-subdir lib${LIB}.a lib${LIB}.la
 install: install-lib install-subdir
 deinstall: deinstall-lib deinstall-subdir
@@ -146,7 +149,7 @@ depend: depend-subdir
 
 # Build the library's object files.
 _lib_objs:
-	@if [ "${LIB}" != "" -a "${OBJS}" = "" -a "${SRCS}" != "none" \
+	@if [ "${LIB}" != "" -a "${OBJS}" = "none" -a "${SRCS}" != "none" \
 	      -a "${USE_LIBTOOL}" = "No" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
@@ -167,7 +170,7 @@ _lib_objs:
 
 # Build PIC versions of the library's object files.
 _lib_shobjs:
-	@if [ "${LIB}" != "" -a "${SHOBJS}" = "" -a "${SRCS}" != "none" \
+	@if [ "${LIB}" != "" -a "${SHOBJS}" = "none" -a "${SRCS}" != "none" \
 	      -a "${USE_LIBTOOL}" = "Yes" ]; then \
 	    for F in ${SRCS}; do \
 	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
@@ -186,7 +189,7 @@ _lib_shobjs:
 lib${LIB}.a: _lib_objs ${OBJS}
 	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "No" \
 	      -a "${SRCS}" != "none" ]; then \
-	    if [ "${OBJS}" = "" ]; then \
+	    if [ "${OBJS}" = "none" ]; then \
 	        export _objs=""; \
 	        for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
@@ -209,7 +212,7 @@ lib${LIB}.a: _lib_objs ${OBJS}
 lib${LIB}.la: ${LIBTOOL_COOKIE} _lib_shobjs ${SHOBJS}
 	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" \
 	      -a "${SRCS}" != "none" ]; then \
-	    if [ "${SHOBJS}" = "" ]; then \
+	    if [ "${SHOBJS}" = "none" ]; then \
 	        export _shobjs=""; \
 	        for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
@@ -267,7 +270,7 @@ lib${LIB}.la: ${LIBTOOL_COOKIE} _lib_shobjs ${SHOBJS}
 clean-lib:
 	@if [ "${LIB}" != "" -a "${SRCS}" != "none" ]; then \
 	    if [ "${USE_LIBTOOL}" = "Yes" ]; then \
-	        if [ "${SHOBJS}" = "" ]; then \
+	        if [ "${SHOBJS}" = "none" ]; then \
                     for F in ${SRCS}; do \
 	    	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.lo/'`; \
@@ -296,7 +299,7 @@ clean-lib:
 		echo "rm -fR lib${LIB}.la .libs"; \
 		rm -fR lib${LIB}.la .libs; \
 	    else \
-	        if [ "${OBJS}" = "" ]; then \
+	        if [ "${OBJS}" = "none" ]; then \
                     for F in ${SRCS}; do \
 	   	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
@@ -427,11 +430,13 @@ ${LIBTOOL_COOKIE}: ${LTCONFIG} ${LTMAIN_SH} ${LTCONFIG_GUESS} ${LTCONFIG_SUB}
 	    echo "${LIBTOOL}" > ${LIBTOOL_COOKIE}; \
 	fi
 
+none:
+
 ${LTCONFIG} ${LTCONFIG_GUESS} ${LTCONFIG_SUB} ${LTMAIN_SH}:
 
 .PHONY: install deinstall includes clean cleandir regress depend
 .PHONY: install-lib deinstall-lib clean-lib cleandir-lib
-.PHONY: _lib_objs _lib_shobjs
+.PHONY: _lib_objs _lib_shobjs none
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.dep.mk
