@@ -5,7 +5,7 @@ my $found = 0;
 open(CONFIG, "configure.in") || die "configure.in: $!";
 foreach $_ (<CONFIG>) {
 	chop;
-	if (/^HDEFINE\(RELEASE,\s*"\\"(.+)\\""\)$/) {
+	if (/^\s*HDEFINE\s*\(RELEASE,\s*\"(.+)\"\s*\)\s*$/) {
 		print $1, "\n";
 		$found++;
 	}
