@@ -6,7 +6,7 @@ LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"9d6bb497-1d2a-4ac0-9f7b-7be68b9077e8"
 
-LIB_LINKS=	ag_compat
+LIB_LINKS=	ag_compat SDL
 LIBS=		../compat/libag_compat.la
 
 SRCS=	config.c core.c error.c event.c util.c object.c prop.c rcs.c \
