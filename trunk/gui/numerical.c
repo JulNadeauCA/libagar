@@ -113,7 +113,7 @@ AdjustRangeForBinding(AG_Event *event)
 			num->input->flags |= AG_TEXTBOX_INT_ONLY;
 			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		case AG_WIDGET_UINT64:
 			num->min = 0;
 			num->max = 0xffffffffffffffffULL;
@@ -173,7 +173,7 @@ UpdateTextbox(AG_Numerical *num)
 	case AG_WIDGET_SINT32:
 		AG_TextboxPrintf(num->input, "%d", *(Sint32 *)value);
 		break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:
 		AG_TextboxPrintf(num->input, "%lld", *(Uint64 *)value);
 		break;
@@ -241,7 +241,7 @@ UpdateFromText(AG_Event *event)
 	case AG_WIDGET_SINT32:
 		AG_NumericalSetValue(num, (double)strtol(s, NULL, 10));
 		break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:
 	case AG_WIDGET_SINT64:
 		AG_NumericalSetValue(num, (double)strtoll(s, NULL, 10));
@@ -538,7 +538,7 @@ AG_NumericalAddValue(AG_Numerical *num, double inc)
 	case AG_WIDGET_SINT16:	ADD_CONVERTED(Sint16);	break;
 	case AG_WIDGET_UINT32:	ADD_CONVERTED(Uint32);	break;
 	case AG_WIDGET_SINT32:	ADD_CONVERTED(Sint32);	break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:	ADD_CONVERTED(Uint64);	break;
 	case AG_WIDGET_SINT64:	ADD_CONVERTED(Sint64);	break;
 #endif
@@ -584,7 +584,7 @@ AG_NumericalSetValue(AG_Numerical *num, double nvalue)
 	case AG_WIDGET_SINT16:	CONV_VALUE(Sint16);	break;
 	case AG_WIDGET_UINT32:	CONV_VALUE(Uint32);	break;
 	case AG_WIDGET_SINT32:	CONV_VALUE(Sint32);	break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:	CONV_VALUE(Uint64);	break;
 	case AG_WIDGET_SINT64:	CONV_VALUE(Sint64);	break;
 #endif
@@ -723,7 +723,7 @@ AG_NumericalGetFloat(AG_Numerical *num)
 	case AG_WIDGET_SINT8:	return  (float)(*(Sint8 *)value);
 	case AG_WIDGET_SINT16:	return  (float)(*(Sint16 *)value);
 	case AG_WIDGET_SINT32:	return  (float)(*(Sint32 *)value);
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:	return  (float)(*(Uint64 *)value);
 	case AG_WIDGET_SINT64:	return  (float)(*(Sint64 *)value);
 #endif
@@ -750,7 +750,7 @@ AG_NumericalGetDouble(AG_Numerical *num)
 	case AG_WIDGET_SINT8:	return  (double)(*(Sint8 *)value);
 	case AG_WIDGET_SINT16:	return  (double)(*(Sint16 *)value);
 	case AG_WIDGET_SINT32:	return  (double)(*(Sint32 *)value);
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:	return  (double)(*(Uint64 *)value);
 	case AG_WIDGET_SINT64:	return  (double)(*(Sint64 *)value);
 #endif
@@ -775,7 +775,7 @@ AG_NumericalGetInt(AG_Numerical *num)
 	case AG_WIDGET_SINT8:	return (int)(*(Sint8 *)value);
 	case AG_WIDGET_SINT16:	return (int)(*(Sint16 *)value);
 	case AG_WIDGET_SINT32:	return (int)(*(Sint32 *)value);
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:	return (int)(*(Uint64 *)value);
 	case AG_WIDGET_SINT64:	return (int)(*(Sint64 *)value);
 #endif
@@ -802,7 +802,7 @@ AG_NumericalGetUint32(AG_Numerical *num)
 	case AG_WIDGET_SINT8:	return (Uint32)(*(Sint8 *)value);
 	case AG_WIDGET_SINT16:	return (Uint32)(*(Sint16 *)value);
 	case AG_WIDGET_SINT32:	return (Uint32)(*(Sint32 *)value);
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:	return (Uint32)(*(Uint64 *)value);
 	case AG_WIDGET_SINT64:	return (Uint32)(*(Sint64 *)value);
 #endif
@@ -812,7 +812,7 @@ AG_NumericalGetUint32(AG_Numerical *num)
 	}
 }
 
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 /* Convert the bound value to a 64-bit integer and return it. */
 Uint64
 AG_NumericalGetUint64(AG_Numerical *num)
@@ -822,7 +822,7 @@ AG_NumericalGetUint64(AG_Numerical *num)
 
 	bValue = AG_WidgetGetBinding(num, "value", &value);
 	switch (bValue->vtype) {
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:	return *(Uint64 *)value;
 	case AG_WIDGET_SINT64:	return (Uint64)(*(Sint64 *)value);
 #endif
@@ -839,7 +839,7 @@ AG_NumericalGetUint64(AG_Numerical *num)
 	default:		return (0);
 	}
 }
-#endif /* SDL_HAS_64BIT_TYPE */
+#endif /* HAVE_64BIT */
 
 const AG_WidgetOps agNumericalOps = {
 	{

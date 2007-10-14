@@ -399,7 +399,7 @@ UpdateTextbox(AG_MFSpinbutton *num)
 	case AG_WIDGET_SINT32:
 		snprintf(sx, sizeof(sx), "%d", *(Sint32 *)value);
 		break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:
 		snprintf(sx, sizeof(sx), "%llu",
 		    (unsigned long long)(*(Uint64 *)value));
@@ -447,7 +447,7 @@ UpdateTextbox(AG_MFSpinbutton *num)
 	case AG_WIDGET_SINT32:
 		snprintf(sy, sizeof(sy), "%d", *(Sint32 *)value);
 		break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:
 		snprintf(sy, sizeof(sy), "%llu",
 		    (unsigned long long)(*(Uint64 *)value));

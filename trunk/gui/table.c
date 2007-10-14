@@ -285,7 +285,7 @@ PrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
 	case AG_CELL_PDOUBLE:
 		snprintf(buf, bufsz, c->fmt, *(double *)c->data.p);
 		break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_CELL_INT64:
 	case AG_CELL_UINT64:
 		snprintf(buf, bufsz, c->fmt, c->data.f);
@@ -630,7 +630,7 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 	case AG_CELL_FLOAT:
 	case AG_CELL_DOUBLE:
 		return (c1->data.f != c2->data.f);
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_CELL_INT64:
 	case AG_CELL_UINT64:
 		return (c1->data.u64 - c2->data.u64);
@@ -1384,7 +1384,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 					c->type = AG_CELL_INT;
 					c->data.i = va_arg(ap, int);
 				}
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 			} else if (lflag == 2) {
 				if (ptr) {
 					c->type = AG_CELL_PINT64;
@@ -1410,7 +1410,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 					c->type = AG_CELL_UINT;
 					c->data.i = va_arg(ap, int);
 				}
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 			} else if (lflag == 2) {
 				if (ptr) {
 					c->type = AG_CELL_PUINT64;

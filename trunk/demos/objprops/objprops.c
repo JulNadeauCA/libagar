@@ -88,7 +88,7 @@ main(int argc, char *argv[])
 	AG_SetSint16(obj, "my-sint16", -32000);
 	AG_SetUint32(obj, "my-uint32", 0xffffffe);
 	AG_SetSint32(obj, "my-sint32", -1234);
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef AG_HAVE_64BIT
 	AG_SetUint64(obj, "my-uint64", 0xfffffffffffffffe);
 	AG_SetSint64(obj, "my-sint64", -4567);
 #endif
