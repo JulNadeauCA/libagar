@@ -37,7 +37,6 @@ typedef struct ag_glview {
 	double mProjection[16];			/* Projection matrix to load */
 	double mModelview[16];			/* Modelview matrix to load */
 	double mTexture[16];			/* Texture matrix to load */
-	double mColor[16];			/* Color matrix to load */
 } AG_GLView;
 
 #define AGGLVIEW(p) ((AG_GLView *)(p))
