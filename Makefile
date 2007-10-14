@@ -39,7 +39,7 @@ cleandir-config:
 	(cd agarpaint && touch Makefile.config)
 	(cd demos && ${MAKE} cleandir)
 	(cd demos && rm -f */Makefile.config)
-
+	find . -name premake.lua -or -name configure.lua -exec rm -f {} \;
 
 snapshot: cleandir
 	sh mk/dist.sh snapshot
