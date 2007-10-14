@@ -78,9 +78,7 @@ AG_Display *agView = NULL;		/* Main view */
 SDL_PixelFormat *agVideoFmt = NULL;	/* Current format of display */
 SDL_PixelFormat *agSurfaceFmt = NULL;	/* Preferred format for surfaces */
 const SDL_VideoInfo *agVideoInfo;	/* Display information */
-int agScreenshotQuality = 75;		/* JPEG quality in % */
 int agBgPopupMenu = 0;			/* Background popup menu */
-int agIdleThresh = 20;			/* Idling threshold */
 
 const char *agBlendFuncNames[] = {
 	N_("Alpha sum"),
