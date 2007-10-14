@@ -369,7 +369,7 @@ AG_QueueVideoUpdate(int x, int y, int w, int h)
 
 		if (agView->ndirty+1 > agView->maxdirty) {
 			agView->maxdirty *= 2;
-			agView->dirty = AG_Realloc(agView->dirty,
+			agView->dirty = (SDL_Rect *)AG_Realloc(agView->dirty,
 			    agView->maxdirty * sizeof(SDL_Rect));
 		}
 		agView->dirty[agView->ndirty].x = x;
