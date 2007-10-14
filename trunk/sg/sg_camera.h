@@ -52,11 +52,11 @@ void		 SG_CameraMenu(void *, AG_MenuItem *, SG_View *);
 
 void	 	 SG_CameraProject(SG_Camera *);
 void		 SG_CameraGetProjection(SG_Camera *, SG_Matrix *);
-__inline__ void	 SG_CameraSetPerspective(SG_Camera *, SG_Real, SG_Real);
-__inline__ void	 SG_CameraSetOrthographic(SG_Camera *);
-__inline__ void	 SG_CameraSetUser(SG_Camera *, const SG_Matrix *);
-__inline__ void	 SG_CameraSetClipPlanes(SG_Camera *, SG_Real, SG_Real);
-__inline__ void	 SG_CameraSetup(SG_Camera *);
+void	 	 SG_CameraSetPerspective(SG_Camera *, SG_Real, SG_Real);
+void	 	 SG_CameraSetOrthographic(SG_Camera *);
+void	 	 SG_CameraSetUser(SG_Camera *, const SG_Matrix *);
+void	 	 SG_CameraSetClipPlanes(SG_Camera *, SG_Real, SG_Real);
+void	 	 SG_CameraSetup(SG_Camera *);
 SG_Vector	 SG_CameraVector(SG_Camera *);
 void		 SG_CameraDraw(void *, SG_View *);
 

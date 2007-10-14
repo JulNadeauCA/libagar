@@ -355,7 +355,7 @@ SetRotationSpeed(AG_Event *event)
 void
 SG_CameraMenu(void *obj, AG_MenuItem *m, SG_View *sgv)
 {
-	SG_Camera *cam = obj;
+//	SG_Camera *cam = obj;
 
 //	AG_MenuAction(m, _("Camera parameters..."), OBJEDIT_ICON,
 //	    EditCameraParams, "%p,%p", cam, sgv);

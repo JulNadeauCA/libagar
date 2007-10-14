@@ -169,7 +169,7 @@ SG_VertexNewCopy(void *obj, const SG_Vertex *vp)
 /* Edge hash function. Opposing halfedges always share the same bucket. */
 /* XXX */
 static __inline__ Uint
-SG_EdgeHash(SG_Object *so, int v1, int v2)
+HashEdge(SG_Object *so, int v1, int v2)
 {
 	return ((v1*v2) % so->nedgetbl);
 }
@@ -194,7 +194,7 @@ SG_EdgeRehash(void *pso, Uint nedges_new)
 		SG_Edge *e;
 
 		SLIST_FOREACH(e, &oEnt->edges, edges) {
-			nEnt = &so->edgetbl[SG_EdgeHash(so, e->v, e->oe->v)];
+			nEnt = &so->edgetbl[HashEdge(so, e->v, e->oe->v)];
 			if (oEnt != nEnt) {
 				SLIST_REMOVE(&oEnt->edges, e, sg_edge, edges);
 				SLIST_INSERT_HEAD(&nEnt->edges, e, edges);
@@ -208,7 +208,7 @@ SG_Edge *
 SG_EdgeFindByVtx(void *obj, int v1, int v2)
 {
 	SG_Object *so = obj;
-	SG_EdgeEnt *ent = &so->edgetbl[SG_EdgeHash(so, v1, v2)];
+	SG_EdgeEnt *ent = &so->edgetbl[HashEdge(so, v1, v2)];
 	SG_Edge *e;
 
 	SLIST_FOREACH(e, &ent->edges, edges) {
@@ -231,7 +231,7 @@ SG_Edge2(void *obj, int vT, int vH)
 {
 	SG_Object *so = obj;
 	SG_Edge *eT, *eH;
-	SG_EdgeEnt *ent = &so->edgetbl[SG_EdgeHash(so,vT,vH)];
+	SG_EdgeEnt *ent = &so->edgetbl[HashEdge(so,vT,vH)];
 
 	SLIST_FOREACH(eH, &ent->edges, edges) {
 		if (eH->v == vH && eH->oe->v == vT)

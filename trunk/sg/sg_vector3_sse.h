@@ -24,6 +24,7 @@
 
 #ifdef HAVE_SSE
 
+__BEGIN_DECLS
 static __inline__ SG_Vector
 SG_VectorZero3_SSE(void)
 {
@@ -279,6 +280,7 @@ SG_VectorElemPow3_SSE(SG_Vector v, SG_Real pow)
 	r.z = SG_Pow(v.z, pow);
 	return (r);
 }
+__END_DECLS
 
 __BEGIN_DECLS
 extern const SG_VectorOps3 sgVecOps3_SSE;

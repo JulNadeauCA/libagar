@@ -227,12 +227,9 @@ typedef struct sg_spherical {
 #endif /* _AGAR_INTERNAL */
 
 __BEGIN_DECLS
-__inline__ SG_Real	SG_Rad2Deg(SG_Real);
-__inline__ SG_Real	SG_Deg2Rad(SG_Real);
-__inline__ SG_Spherical	SG_CartToSph(SG_Vector);
-__inline__ SG_Vector	SG_SphToCart(SG_Spherical);
-
-SG_Real SG_ReadReal(AG_Netbuf *);
-void	SG_CopyReal(AG_Netbuf *, SG_Real *);
-void	SG_WriteReal(AG_Netbuf *, SG_Real);
+SG_Spherical	SG_CartToSph(SG_Vector);
+SG_Vector	SG_SphToCart(SG_Spherical);
+SG_Real 	SG_ReadReal(AG_Netbuf *);
+void		SG_CopyReal(AG_Netbuf *, SG_Real *);
+void		SG_WriteReal(AG_Netbuf *, SG_Real);
 __END_DECLS

@@ -34,18 +34,6 @@
 #include "sg.h"
 
 SG_Real
-SG_Rad2Deg(SG_Real theta)
-{
-	return (theta/(2.0*SG_PI)*360.0);
-}
-
-SG_Real
-SG_Deg2Rad(SG_Real theta)
-{
-	return ((theta/360.0)*(2.0*SG_PI));
-}
-
-SG_Real
 SG_ReadReal(AG_Netbuf *buf)
 {
 	return ((SG_Real)AG_ReadDouble(buf));

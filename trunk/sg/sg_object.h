@@ -107,10 +107,10 @@ SG_Facet  *SG_FacetFromTri3(void *, int, int, int);
 SG_Facet  *SG_FacetFromQuad4(void *, int, int, int, int);
 int	   SG_FacetExtrude(void *, SG_Facet *, SG_Vector, SG_ExtrudeMode);
 
-__inline__ SG_Vector SG_FacetNormal(SG_Object *, SG_Facet *);
-__inline__ SG_Real   SG_FacetArea(SG_Object *, SG_Facet *);
-__inline__ SG_Real   SG_FacetAreaSigned(SG_Object *, SG_Facet *);
-__inline__ SG_Vector SG_FacetCentroid(SG_Object *, SG_Facet *);
+SG_Vector SG_FacetNormal(SG_Object *, SG_Facet *);
+SG_Real   SG_FacetArea(SG_Object *, SG_Facet *);
+SG_Real   SG_FacetAreaSigned(SG_Object *, SG_Facet *);
+SG_Vector SG_FacetCentroid(SG_Object *, SG_Facet *);
 
 Uint8	 *SG_ObjectEdgeMatrix(SG_Object *, Uint *);
 Uint8	 *SG_ObjectFacetMatrix(SG_Object *, Uint *);

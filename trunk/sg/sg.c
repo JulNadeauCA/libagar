@@ -61,8 +61,8 @@ SG_RegisterClass(SG_NodeOps *nops)
 	sgElementsCnt++;
 }
 
-static int
-SG_NodeOfClassGen(SG_Node *node, const char *cn)
+int
+SG_NodeOfClassGeneral(SG_Node *node, const char *cn)
 {
 	char cname[SG_CLASS_MAX], *cp, *c;
 	char nname[SG_CLASS_MAX], *np, *s;
@@ -79,29 +79,6 @@ SG_NodeOfClassGen(SG_Node *node, const char *cn)
 			return (0);
 	}
 	return (1);
-}
-
-int
-SG_NodeOfClass(SG_Node *node, const char *cname)
-{
-	const char *c;
-
-#ifdef DEBUG
-	if (cname[0] == '*' && cname[1] == '\0')
-		fatal("Use SG_FOREACH_NODE()");
-#endif
-	for (c = &cname[0]; *c != '\0'; c++) {
-		if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
-			if (c == &cname[0]) {
-				return (1);
-			}
-			if (strncmp(node->ops->name, cname, c - &cname[0])
-			    == 0) {
-				return (1);
-			}
-		}
-	}
-	return (SG_NodeOfClassGen(node, cname));	/* General case */
 }
 
 int

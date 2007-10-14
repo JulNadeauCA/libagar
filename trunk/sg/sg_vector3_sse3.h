@@ -24,6 +24,7 @@
 
 #ifdef HAVE_SSE3
 
+__BEGIN_DECLS
 static __inline__ SG_Real
 SG_VectorDot3_SSE3(SG_Vector v1, SG_Vector v2)
 {
@@ -49,6 +50,7 @@ SG_VectorDot3p_SSE3(const SG_Vector *v1, const SG_Vector *v2)
 	_mm_store_ss(&rv, v1->m128);
 	return (rv);
 }
+__END_DECLS
 
 __BEGIN_DECLS
 extern const SG_VectorOps3 sgVecOps3_SSE3;

@@ -22,7 +22,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-static __inline__  SG_Vector
+__BEGIN_DECLS
+static __inline__ SG_Vector
 SG_VectorZero3_FPU(void)
 {
 	SG_Vector v;
@@ -400,6 +401,7 @@ SG_VectorElemPow3_FPU(SG_Vector v, SG_Real pow)
 	r.z = SG_Pow(v.z, pow);
 	return (r);
 }
+__END_DECLS
 
 __BEGIN_DECLS
 extern const SG_VectorOps3 sgVecOps3_FPU;
