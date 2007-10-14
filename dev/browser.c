@@ -224,7 +224,7 @@ DEV_BrowserOpenData(void *p)
 	AG_Object *ob = p;
 	struct objent *oent;
 	AG_Window *win;
-	int dataFound;
+	int dataFound = 0;
 
 	TAILQ_FOREACH(oent, &dobjs, objs) {
 		if (oent->obj == ob)
@@ -241,14 +241,14 @@ DEV_BrowserOpenData(void *p)
 
 	if (OBJECT_PERSISTENT(ob) &&
 	    !OBJECT_RESIDENT(ob)) {
-		if (AG_ObjectLoad(ob) == -1 ||
-		    AG_ObjectLoadData(ob, &dataFound) == -1) {
+		if (AG_ObjectLoadGenericFromFile(ob, NULL) == -1 ||
+		    AG_ObjectResolveDeps(ob) == -1 ||
+		    AG_ObjectLoadDataFromFile(ob, &dataFound, NULL) == -1) {
 			if (!dataFound) {
 				/*
 				 * Data not found in storage, so assume
 				 * object is new. Mark it resident and save it.
 				 */
-				dprintf("%s: new object\n", ob->name);
 				ob->flags |= AG_OBJECT_RESIDENT;
 				if (AG_ObjectSave(ob) == -1) {
 					AG_TextMsg(AG_MSG_ERROR, "%s: %s",
