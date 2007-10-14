@@ -101,7 +101,6 @@ AG_GLViewInit(AG_GLView *glv, Uint flags)
 	SetIdentity(glv->mProjection, GL_PROJECTION);
 	SetIdentity(glv->mModelview, GL_MODELVIEW);
 	SetIdentity(glv->mTexture, GL_TEXTURE);
-	SetIdentity(glv->mColor, GL_COLOR);
 	AG_UnlockGL();
 
 	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
@@ -181,7 +180,6 @@ AG_GLViewReshape(AG_GLView *glv)
 	AG_LockGL();
 
 	glMatrixMode(GL_TEXTURE);	glPushMatrix();	glLoadIdentity();
-	glMatrixMode(GL_COLOR);		glPushMatrix();	glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW);	glPushMatrix();	glLoadIdentity();
 
 	glMatrixMode(GL_PROJECTION);
@@ -193,12 +191,10 @@ AG_GLViewReshape(AG_GLView *glv)
 	glGetDoublev(GL_PROJECTION_MATRIX, glv->mProjection);
 	glGetDoublev(GL_MODELVIEW_MATRIX, glv->mModelview);
 	glGetDoublev(GL_TEXTURE_MATRIX, glv->mTexture);
-	glGetDoublev(GL_COLOR_MATRIX, glv->mColor);
 	
 	glMatrixMode(GL_PROJECTION);	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
 	glMatrixMode(GL_TEXTURE);	glPopMatrix();
-	glMatrixMode(GL_COLOR);		glPopMatrix();
 
 	AG_UnlockGL();
 }
@@ -234,10 +230,6 @@ AG_GLViewDraw(void *p)
 	glPushMatrix();
 	glLoadMatrixd(glv->mTexture);
 
-	glMatrixMode(GL_COLOR);
-	glPushMatrix();
-	glLoadMatrixd(glv->mColor);
-	
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadMatrixd(glv->mProjection);
@@ -251,13 +243,8 @@ AG_GLViewDraw(void *p)
 		
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-	
-	glMatrixMode(GL_COLOR);
-	glPopMatrix();
-	
 	glMatrixMode(GL_TEXTURE);
 	glPopMatrix();
-	
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	
