@@ -166,124 +166,6 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 }
 #undef PROP_SET
 
-AG_Prop *
-AG_SetUint(void *ob, const char *key, Uint i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_UINT, i));
-}
-
-AG_Prop *
-AG_SetInt(void *ob, const char *key, int i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_INT, i));
-}
-
-AG_Prop *
-AG_SetUint8(void *ob, const char *key, Uint8 i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_UINT8, i));
-}
-
-AG_Prop *
-AG_SetSint8(void *ob, const char *key, Sint8 i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_SINT8, i));
-}
-
-AG_Prop *
-AG_SetUint16(void *ob, const char *key, Uint16 i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_UINT16, i));
-}
-
-AG_Prop *
-AG_SetSint16(void *ob, const char *key, Sint16 i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_SINT16, i));
-}
-
-AG_Prop *
-AG_SetUint32(void *ob, const char *key, Uint32 i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_UINT32, i));
-}
-
-AG_Prop *
-AG_SetSint32(void *ob, const char *key, Sint32 i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_SINT32, i));
-}
-
-#ifdef SDL_HAS_64BIT_TYPE
-AG_Prop *
-AG_SetUint64(void *ob, const char *key, Uint64 i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_UINT64, i));
-}
-
-AG_Prop *
-AG_SetSint64(void *ob, const char *key, Sint64 i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_SINT64, i));
-}
-#endif /* SDL_HAS_64BIT_TYPE */
-
-AG_Prop *
-AG_SetFloat(void *ob, const char *key, float f)
-{
-	return (AG_SetProp(ob, key, AG_PROP_FLOAT, f));
-}
-
-AG_Prop *
-AG_SetDouble(void *ob, const char *key, double d)
-{
-	return (AG_SetProp(ob, key, AG_PROP_DOUBLE, d));
-}
-
-#ifdef HAVE_LONG_DOUBLE
-AG_Prop *
-AG_SetLongDouble(void *ob, const char *key, long double d)
-{
-	return (AG_SetProp(ob, key, AG_PROP_LONG_DOUBLE, d));
-}
-#endif /* HAVE_LONG_DOUBLE */
-
-AG_Prop *
-AG_SetString(void *ob, const char *key, const char *fmt, ...)
-{
-	va_list ap;
-	char *s;
-
-	va_start(ap, fmt);
-	Vasprintf(&s, fmt, ap);
-	va_end(ap);
-	return (AG_SetProp(ob, key, AG_PROP_STRING, s));
-}
-
-AG_Prop *
-AG_SetPointer(void *ob, const char *key, void *p)
-{
-	return (AG_SetProp(ob, key, AG_PROP_POINTER, p));
-}
-
-AG_Prop *
-AG_SetBool(void *ob, const char *key, int i)
-{
-	return (AG_SetProp(ob, key, AG_PROP_BOOL, i));
-}
-
-void
-AG_LockProps(void *p)
-{
-	AG_MutexLock(&OBJECT(p)->lock);
-}
-
-void
-AG_UnlockProps(void *p)
-{
-	AG_MutexUnlock(&OBJECT(p)->lock);
-}
-
 #undef PROP_GET
 #define PROP_GET(fn,v,type) do { \
 	if (prop->readFn.fn != NULL) { \
@@ -379,392 +261,6 @@ AG_PropPath(char *dst, size_t size, const void *obj, const char *prop_name)
 		return (-1);
 	}
 	return (0);
-}
-
-Uint
-AG_Uint(void *p, const char *key)
-{
-	Uint i;
-
-	if (AG_GetProp(p, key, AG_PROP_UINT, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Uint
-AG_FindUint(const char *key)
-{
-	Uint i;
-
-	if (AG_FindProp(key, AG_PROP_UINT, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-int
-AG_Int(void *p, const char *key)
-{
-	int i;
-
-	if (AG_GetProp(p, key, AG_PROP_INT, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-int
-AG_FindInt(const char *key)
-{
-	int i;
-
-	if (AG_FindProp(key, AG_PROP_INT, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-int
-AG_Bool(void *p, const char *key)
-{
-	int i;
-
-	if (AG_GetProp(p, key, AG_PROP_BOOL, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-int
-AG_FindBool(const char *key)
-{
-	int i;
-
-	if (AG_FindProp(key, AG_PROP_BOOL, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-
-Uint8
-AG_Uint8(void *p, const char *key)
-{
-	Uint8 i;
-
-	if (AG_GetProp(p, key, AG_PROP_UINT8, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Uint8
-AG_FindUint8(const char *key)
-{
-	Uint8 i;
-
-	if (AG_FindProp(key, AG_PROP_UINT8, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Sint8
-AG_Sint8(void *p, const char *key)
-{
-	Sint8 i;
-
-	if (AG_GetProp(p, key, AG_PROP_SINT8, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Sint8
-AG_FindSint8(const char *key)
-{
-	Sint8 i;
-
-	if (AG_FindProp(key, AG_PROP_SINT8, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Uint16
-AG_Uint16(void *p, const char *key)
-{
-	Uint16 i;
-
-	if (AG_GetProp(p, key, AG_PROP_UINT16, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Uint16
-AG_FindUint16(const char *key)
-{
-	Uint16 i;
-
-	if (AG_FindProp(key, AG_PROP_UINT16, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Sint16
-AG_Sint16(void *p, const char *key)
-{
-	Sint16 i;
-
-	if (AG_GetProp(p, key, AG_PROP_SINT16, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Sint16
-AG_FindSint16(const char *key)
-{
-	Sint16 i;
-
-	if (AG_FindProp(key, AG_PROP_SINT16, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Uint32
-AG_Uint32(void *p, const char *key)
-{
-	Uint32 i;
-
-	if (AG_GetProp(p, key, AG_PROP_UINT32, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Uint32
-AG_FindUint32(const char *key)
-{
-	Uint32 i;
-
-	if (AG_FindProp(key, AG_PROP_UINT32, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Sint32
-AG_Sint32(void *p, const char *key)
-{
-	Sint32 i;
-
-	if (AG_GetProp(p, key, AG_PROP_SINT32, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Sint32
-AG_FindSint32(const char *key)
-{
-	Sint32 i;
-
-	if (AG_FindProp(key, AG_PROP_SINT32, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-#ifdef SDL_HAS_64BIT_TYPE
-Uint64
-AG_Uint64(void *p, const char *key)
-{
-	Uint64 i;
-
-	if (AG_GetProp(p, key, AG_PROP_UINT64, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Sint64
-AG_Sint64(void *p, const char *key)
-{
-	Sint64 i;
-
-	if (AG_GetProp(p, key, AG_PROP_SINT64, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Uint64
-AG_FindUint64(const char *key)
-{
-	Uint64 i;
-
-	if (AG_FindProp(key, AG_PROP_UINT64, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-
-Sint64
-AG_FindSint64(const char *key)
-{
-	Sint64 i;
-
-	if (AG_FindProp(key, AG_PROP_SINT64, &i) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (i);
-}
-#endif /* SDL_HAS_64BIT_TYPE */
-
-float
-AG_Float(void *p, const char *key)
-{
-	float f;
-
-	if (AG_GetProp(p, key, AG_PROP_FLOAT, &f) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (f);
-}
-
-float
-AG_FindFloat(const char *key)
-{
-	float f;
-
-	if (AG_FindProp(key, AG_PROP_FLOAT, &f) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (f);
-}
-
-double
-AG_Double(void *p, const char *key)
-{
-	double d;
-
-	if (AG_GetProp(p, key, AG_PROP_DOUBLE, &d) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (d);
-}
-
-double
-AG_FindDouble(const char *key)
-{
-	double d;
-
-	if (AG_FindProp(key, AG_PROP_DOUBLE, &d) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (d);
-}
-
-#ifdef HAVE_LONG_DOUBLE
-long double
-AG_LongDouble(void *p, const char *key)
-{
-	long double d;
-
-	if (AG_GetProp(p, key, AG_PROP_LONG_DOUBLE, &d) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (d);
-}
-
-long double
-AG_FindLongDouble(const char *key)
-{
-	long double d;
-
-	if (AG_FindProp(key, AG_PROP_LONG_DOUBLE, &d) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (d);
-}
-#endif /* HAVE_LONG_DOUBLE */
-
-char *
-AG_String(void *p, const char *key)
-{
-	char *s;
-
-	if (AG_GetProp(p, key, AG_PROP_STRING, &s) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (s);
-}
-
-char *
-AG_FindString(const char *key)
-{
-	char *s;
-
-	if (AG_FindProp(key, AG_PROP_STRING, &s) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (s);
-}
-
-size_t
-AG_StringCopy(void *p, const char *key, char *buf, size_t bufsize)
-{
-	size_t sl;
-	char *s;
-
-	AG_LockProps(p);
-	if (AG_GetProp(p, key, AG_PROP_STRING, &s) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	sl = strlcpy(buf, s, bufsize);
-	AG_UnlockProps(p);
-	return (sl);
-}
-
-size_t
-AG_FindStringCopy(const char *key, char *buf, size_t bufsize)
-{
-	size_t sl;
-	char *s;
-
-	/* XXX thread unsafe */
-	if (AG_FindProp(key, AG_PROP_STRING, &s) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	sl = strlcpy(buf, s, bufsize);
-	return (sl);
-}
-
-void *
-AG_Pointer(void *p, const char *key)
-{
-	void *np;
-
-	if (AG_GetProp(p, key, AG_PROP_POINTER, &np) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (np);
-}
-
-void *
-AG_FindPointer(const char *key)
-{
-	void *np;
-
-	if (AG_FindProp(key, AG_PROP_POINTER, &np) == NULL) {
-		fatal("%s", AG_GetError());
-	}
-	return (np);
 }
 
 int
@@ -1019,3 +515,42 @@ AG_PropPrint(char *s, size_t len, void *obj, const char *pname)
 	}
 }
 
+size_t
+AG_StringCopy(void *p, const char *key, char *buf, size_t bufsize)
+{
+	size_t sl;
+	char *s;
+	AG_LockProps(p);
+	if (AG_GetProp(p, key, AG_PROP_STRING, &s) == NULL) {
+		AG_FatalError("%s", AG_GetError());
+	}
+	sl = strlcpy(buf, s, bufsize);
+	AG_UnlockProps(p);
+	return (sl);
+}
+
+size_t
+AG_FindStringCopy(const char *key, char *buf, size_t bufsize)
+{
+	size_t sl;
+	char *s;
+
+	/* XXX thread unsafe */
+	if (AG_FindProp(key, AG_PROP_STRING, &s) == NULL) {
+		AG_FatalError("%s", AG_GetError());
+	}
+	sl = strlcpy(buf, s, bufsize);
+	return (sl);
+}
+
+AG_Prop *
+AG_SetString(void *ob, const char *key, const char *fmt, ...)
+{
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+	return (AG_SetProp(ob, key, AG_PROP_STRING, s));
+}

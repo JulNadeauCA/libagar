@@ -8,6 +8,8 @@
 #define AG_OBJECT_PATH_MAX 1024
 #define AG_OBJECT_DIGEST_MAX 170
 
+#define AGOBJECT(ob) ((struct ag_object *)(ob))
+
 #ifdef _AGAR_INTERNAL
 #include <core/timeout.h>
 #include <core/prop.h>
@@ -99,7 +101,6 @@ enum ag_object_checksum_alg {
 	AG_OBJECT_RMD160
 };
 
-#define AGOBJECT(ob)		((struct ag_object *)(ob))
 #define AGOBJECT_RESIDENT(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_RESIDENT)
 #define AGOBJECT_PERSISTENT(ob) ((AGOBJECT(ob)->flags & \
 				 AG_OBJECT_NON_PERSISTENT) == 0)
@@ -180,9 +181,6 @@ int	 AG_ObjectChangedAll(void *);
 
 void		*AG_ObjectFind(const char *);
 void		*AG_ObjectFindF(const char *, ...);
-__inline__ void	*AG_ObjectRoot(const void *);
-__inline__ void *AG_ObjectFindParent(void *, const char *, const char *);
-__inline__ void	*AG_ObjectFindChild(void *, const char *);
 int		 AG_ObjectInUse(const void *);
 void		 AG_ObjectSetName(void *, const char *);
 void		 AG_ObjectSetArchivePath(void *, const char *);
@@ -190,7 +188,7 @@ void		 AG_ObjectGetArchivePath(void *, char *, size_t)
 		     BOUNDED_ATTRIBUTE(__string__, 2, 3);
 void		 AG_ObjectSetOps(void *, const void *);
 
-__inline__ int		 AG_ObjectIsClass(const void *, const char *);
+int	 AG_ObjectIsClassGeneral(const AG_Object *, const char *);
 
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
@@ -223,12 +221,118 @@ int	 AG_ObjectResolveDeps(void *);
 int	 AG_ObjectLoadDataFromFile(void *, int *, const char *);
 
 AG_ObjectDep	*AG_ObjectAddDep(void *, void *);
-__inline__ int	 AG_ObjectFindDep(const void *, Uint32, void **);
+int	 	 AG_ObjectFindDep(const void *, Uint32, void **);
 void		 AG_ObjectDelDep(void *, const void *);
 Uint32		 AG_ObjectEncodeName(const void *, const void *);
 void		*AG_ObjectEdit(void *);
 void		 AG_ObjectGenName(AG_Object *, const AG_ObjectOps *, char *,
 		                  size_t);
+
+/* Lock/unlock the property table of an object. */
+static __inline__ void
+AG_LockProps(void *p)
+{
+	AG_MutexLock(&AGOBJECT(p)->lock);
+}
+static __inline__ void
+AG_UnlockProps(void *p)
+{
+	AG_MutexUnlock(&AGOBJECT(p)->lock);
+}
+
+/* Check if an object's class name matches the given pattern. */
+static __inline__ int
+AG_ObjectIsClass(const void *p, const char *cname)
+{
+	const AG_Object *obj = p;
+	const char *c;
+	int nwild = 0;
+
+	if (cname[0] == '*' && cname[1] == '\0') {
+		return (1);
+	}
+	for (c = &cname[0]; *c != '\0'; c++) {
+		if (*c == '*')
+			nwild++;
+	}
+	/* Optimize for simplest case (no wildcards). */
+	if (nwild == 0) {
+		return (strncmp(obj->ops->type, cname, c - &cname[0]) == 0);
+	}
+	/* Optimize for single-wildcard cases. */
+	if (nwild == 1) {
+		for (c = &cname[0]; *c != '\0'; c++) {
+			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
+				if (c == &cname[0] ||
+				    strncmp(obj->ops->type, cname,
+				            c - &cname[0]) == 0)
+					return (1);
+			}
+		}
+		/* TODO: Optimize for "*:Foo" case */
+	}
+	/* Fallback to the general matching algorithm. */
+	return (AG_ObjectIsClassGeneral(obj, cname));
+}
+
+/*
+ * Return the root of a given object's ancestry.
+ * The linkage must be locked.
+ */
+static __inline__ void *
+AG_ObjectRoot(const void *p)
+{
+	const AG_Object *ob = p;
+
+	while (ob != NULL) {
+		if (ob->parent == NULL) {
+			return ((void *)ob);
+		}
+		ob = ob->parent;
+	}
+	return (NULL);
+}
+
+/*
+ * Traverse an object's ancestry looking for a matching parent object.
+ * The linkage must be locked.
+ */
+static __inline__ void *
+AG_ObjectFindParent(void *obj, const char *name, const char *type)
+{
+	AG_Object *ob = obj;
+
+	while (ob != NULL) {
+		AG_Object *po = ob->parent;
+
+		if (po == NULL) {
+			return (NULL);
+		}
+		if ((type == NULL || strcmp(po->ops->type, type) == 0) &&
+		    (name == NULL || strcmp(po->name, name) == 0)) {
+			return (po);
+		}
+		ob = ob->parent;
+	}
+	return (NULL);
+}
+
+/*
+ * Return a child object by name.
+ * The linkage must be locked.
+ */
+static __inline__ void *
+AG_ObjectFindChild(void *p, const char *name)
+{
+	AG_Object *pObj = p;
+	AG_Object *cObj;
+
+	AGOBJECT_FOREACH_CHILD(cObj, pObj, ag_object) {
+		if (strcmp(cObj->name, name) == 0)
+			break;
+	}
+	return (cObj);
+}
 __END_DECLS
 
 #include "close_code.h"

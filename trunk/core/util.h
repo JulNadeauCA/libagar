@@ -5,10 +5,32 @@
 #include "begin_code.h"
 
 __BEGIN_DECLS
-__inline__ int AG_PowOf2i(int);
-__inline__ int AG_Truncf(double);
-__inline__ double AG_Fracf(double);
-__inline__ double AG_FracInvf(double);
+static __inline__ int
+AG_PowOf2i(int i)
+{
+	int val = 1;
+
+	while (val < i) { val <<= 1; }
+	return (val);
+}
+
+static __inline__ int
+AG_Truncf(double d)
+{
+	return ((int)floor(d));
+}
+
+static __inline__ double
+AG_Fracf(double d)
+{
+	return (d - floor(d));
+}
+
+static __inline__ double
+AG_FracInvf(double d)
+{
+	return (1 - (d - floor(d)));
+}
 __END_DECLS
 
 #include "close_code.h"

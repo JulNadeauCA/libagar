@@ -9,9 +9,9 @@ LIB_GUID=	"9d6bb497-1d2a-4ac0-9f7b-7be68b9077e8"
 LIB_LINKS=	ag_compat SDL
 LIBS=		../compat/libag_compat.la
 
-SRCS=	config.c core.c error.c event.c util.c object.c prop.c rcs.c \
-	timeout.c typesw.c cpuinfo.c load_color.c load_den.c load_integral.c \
-	load_netbuf.c load_real.c load_string.c load_surface.c load_version.c \
+SRCS=	config.c core.c error.c event.c object.c prop.c rcs.c \
+	timeout.c typesw.c cpuinfo.c load_color.c load_den.c \
+	load_netbuf.c load_string.c load_surface.c load_version.c \
 	load_xcf.c
 
 MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 AG_Timeout.3 \

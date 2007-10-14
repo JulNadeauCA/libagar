@@ -8,6 +8,14 @@
 # include <agar/config/_mk_have_sys_types_h.h>
 # define _AGAR_HAVE_SYS_TYPES_H_
 #endif
+#ifndef _AGAR_HAVE_STDLIB_H
+# include <agar/config/_mk_have_stdlib_h.h>
+# define _AGAR_HAVE_STDLIB_H_
+#endif
+#ifndef _AGAR_HAVE_UNISTD_H
+# include <agar/config/_mk_have_unistd_h.h>
+# define _AGAR_HAVE_UNISTD_H_
+#endif
 #ifndef _AGAR_HAVE_SYS_QUEUE_H
 # include <agar/config/_mk_have_sys_queue_h.h>
 # define _AGAR_HAVE_SYS_QUEUE_H_
@@ -37,11 +45,19 @@
 # define _AGAR_HAVE_ALIGNED_ATTRIBUTE_
 #endif
 
-#include <agar/core/threads.h>	/* For thread types in headers */
+#include <agar/core/threads.h>
 
-#ifdef _AGAR_HAVE_SYS_TYPES_H
+#ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#ifdef _MK_HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef _MK_HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <string.h>
+
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 #define Uchar unsigned char
 #define Uint unsigned int

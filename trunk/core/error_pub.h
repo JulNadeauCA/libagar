@@ -35,16 +35,10 @@ enum {
 	M_LAST
 };
 
-struct ag_malloc_type {
-	size_t msize;
-	Uint nallocs;
-	Uint nfrees;
-};
-
 __BEGIN_DECLS
 void		 AG_InitError(void);
 void		 AG_DestroyError(void);
-__inline__ char	*AG_Strdup(const char *);
+char		*AG_Strdup(const char *);
 const char	*AG_GetError(void);
 void		 AG_SetError(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
@@ -69,9 +63,44 @@ void		*AG_PtrMismatch(void);
 void		*AG_ObjectMismatch(const char *, const char *);
 int		 AG_IntMismatch(void);
 float		 AG_FloatMismatch(void);
-__inline__ void	*AG_Malloc(size_t, int);
-__inline__ void	*AG_Realloc(void *, size_t);
-void		 AG_Free(void *, int);
+
+static __inline__ void *
+AG_Malloc(size_t len, int type)
+{
+	void *p;
+	
+	if ((p = malloc(len)) == NULL) {
+		AG_FatalError("malloc");
+	}
+	return (p);
+}
+
+static __inline__ void *
+AG_Realloc(void *pOld, size_t len)
+{
+	void *pNew;
+
+	/* XXX redundant on some systems */
+	if (pOld == NULL) {
+		if ((pNew = malloc(len)) == NULL)
+			AG_FatalError("malloc");
+	} else {
+		if ((pNew = realloc(pOld, len)) == NULL)
+			AG_FatalError("realloc");
+	}
+	return (pNew);
+}
+
+static __inline__ void
+AG_Free(void *p, int type)
+{
+	/* XXX redundant on some systems */
+	if (p == NULL) {
+		return;
+	}
+	free(p);
+}
+
 __END_DECLS
 
 #include "close_code.h"

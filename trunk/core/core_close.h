@@ -29,6 +29,14 @@
 # undef _AGAR_HAVE_SYS_TYPES_H_
 # undef _MK_HAVE_SYS_TYPES_H
 #endif
+#ifdef _AGAR_HAVE_STDLIB_H_
+# undef _AGAR_HAVE_STDLIB_H_
+# undef _MK_HAVE_STDLIB_H
+#endif
+#ifdef _AGAR_HAVE_UNISTD_H_
+# undef _AGAR_HAVE_UNISTD_H_
+# undef _MK_HAVE_UNISTD_H
+#endif
 #ifdef _AGAR_HAVE_SYS_QUEUE_H_
 # undef _AGAR_HAVE_SYS_QUEUE_H_
 # undef _MK_HAVE_SYS_QUEUE_H

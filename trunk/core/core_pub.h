@@ -13,9 +13,9 @@
 #include <agar/core/load_surface.h>
 #include <agar/core/load_version.h>
 
+#include <agar/core/error_pub.h>
 #include <agar/core/object.h>
 #include <agar/core/event.h>
-#include <agar/core/error_pub.h>
 #include <agar/core/config.h>
 #include <agar/core/rcs.h>
 #include <agar/core/typesw.h>
