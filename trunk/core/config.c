@@ -61,13 +61,24 @@ const AG_ObjectOps agConfigOps = {
 	NULL
 };
 
-int agKbdUnicode = 1;				/* Unicode translation */
-int agKbdDelay = 250;				/* Key repeat delay */
-int agKbdRepeat = 35;				/* Key repeat interval */
-int agMouseDblclickDelay = 250;			/* Mouse double-click delay */
-int agMouseSpinDelay = 250;			/* Spinbutton repeat delay */
-int agMouseSpinIval = 50;			/* Spinbutton repeat interval */
-int agWindowAnySize = 0;			/* Allow any window size */
+int agKbdUnicode = 1;			/* Unicode translation */
+int agKbdDelay = 250;			/* Key repeat delay */
+int agKbdRepeat = 35;			/* Key repeat interval */
+int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
+int agMouseSpinDelay = 250;		/* Spinbutton repeat delay */
+int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
+
+int agTextComposition = 1;		/* Built-in input composition */
+int agTextBidi = 0;			/* Bidirectionnal text display */
+int agTextAntialiasing = 1;		/* Use font antialiasing */
+int agTextTabWidth = 40;		/* Tab width (px) */
+int agTextBlinkRate = 250;		/* Cursor blink rate (ms) */
+int agTextSymbols = 1;			/* Process special symbols in text */
+int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
+
+int agIdleThresh = 20;			/* Idling threshold */
+int agScreenshotQuality = 75;		/* JPEG quality in % */
+int agWindowAnySize = 0;		/* Allow any window size */
 
 void
 AG_ConfigInit(AG_Config *cfg)
@@ -155,9 +166,9 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 #ifdef DEBUG
 	agDebugLvl = AG_ReadUint8(buf);
 #else
-	AG_ReadUint8(buf);
+	(void)AG_ReadUint8(buf);
 #endif
-	if (ver.minor < 2) { AG_ReadUint8(buf); } /* agServerMode */
+	if (ver.minor < 2) { (void)AG_ReadUint8(buf); } /* agServerMode */
 	agIdleThresh = (int)AG_ReadUint8(buf);
 	if (ver.minor >= 3) { agWindowAnySize = (int)AG_ReadUint8(buf); }
 	agTextComposition = AG_ReadUint8(buf);

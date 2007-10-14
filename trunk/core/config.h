@@ -6,17 +6,12 @@ typedef struct ag_object AG_Config;
 extern AG_Config *agConfig;
 
 __BEGIN_DECLS
-extern int agKbdUnicode;
-extern int agKbdDelay;
-extern int agKbdRepeat;
-extern int agMouseDblclickDelay;
-extern int agMouseSpinDelay;
-extern int agMouseSpinIval;
+extern int agKbdUnicode, agKbdDelay, agKbdRepeat;
+extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval;
 
-extern int agTextAntialiasing;
-extern int agTextComposition;
-extern int agTextBidi;
-extern int agTextTabWidth;
+extern int agTextComposition, agTextBidi, agTextAntialiasing, agTextTabWidth,
+	   agTextBlinkRate, agTextAntialiasing, agPageIncrement, agTextSymbols;
+	   
 extern int agIdleThresh;
 extern int agScreenshotQuality;
 extern int agWindowAnySize;

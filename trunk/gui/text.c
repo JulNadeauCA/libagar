@@ -102,19 +102,12 @@ const AG_ObjectOps agFontOps = {
 	NULL,		/* edit */
 };
 
-int agTextComposition = 1;		/* Built-in input composition */
-int agTextBidi = 0;			/* Bidirectionnal text display */
 int agTextFontHeight = 0;		/* Default font height (px) */
 int agTextFontAscent = 0;		/* Default font ascent (px) */
 int agTextFontDescent = 0;		/* Default font descent (px) */
 int agTextFontLineSkip = 0;		/* Default font line skip (px) */
-int agTextTabWidth = 40;		/* Tab width (px) */
-int agTextBlinkRate = 250;		/* Cursor blink rate (ms) */
-int agTextSymbols = 1;			/* Process special symbols in text */
-int agTextAntialiasing = 1;		/* Use font antialiasing */
 int agFreetype = 0;			/* Use Freetype font engine */
 int agGlyphGC = 0;			/* Enable glyph garbage collector */
-int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 
 static AG_TextState states[AG_TEXT_STATES_MAX], *state;
 static Uint curState = 0;

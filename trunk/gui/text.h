@@ -79,9 +79,12 @@ typedef struct ag_text_state {
 
 __BEGIN_DECLS
 extern AG_Font *agDefaultFont;
-extern int agTextFontHeight, agTextFontAscent, agTextFontDescent,
-	   agTextFontLineSkip, agTextTabWidth, agTextBlinkRate,
-	   agTextAntialiasing, agPageIncrement;
+extern int agTextFontHeight;
+extern int agTextFontAscent;
+extern int agTextFontDescent;
+extern int agTextFontLineSkip;
+extern int agFreetype;
+extern int agGlyphGC;
 
 int	 AG_TextInit(void);
 void	 AG_TextParseFontSpec(const char *);
