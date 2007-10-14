@@ -70,7 +70,6 @@ AG_FixedPlotterScroll(AG_FixedPlotter *fpl, int i)
 	if (fpl->flags & AG_FIXED_PLOTTER_SCROLL)
 		fpl->xoffs += i;
 }
-
 __END_DECLS
 
 #include "close_code.h"

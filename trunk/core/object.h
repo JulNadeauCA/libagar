@@ -244,7 +244,7 @@ AG_UnlockProps(void *p)
 static __inline__ int
 AG_ObjectIsClass(const void *p, const char *cname)
 {
-	const AG_Object *obj = p;
+	const AG_Object *obj = AGOBJECT(p);
 	const char *c;
 	int nwild = 0;
 
@@ -282,7 +282,7 @@ AG_ObjectIsClass(const void *p, const char *cname)
 static __inline__ void *
 AG_ObjectRoot(const void *p)
 {
-	const AG_Object *ob = p;
+	const AG_Object *ob = AGOBJECT(p);
 
 	while (ob != NULL) {
 		if (ob->parent == NULL) {
@@ -300,19 +300,19 @@ AG_ObjectRoot(const void *p)
 static __inline__ void *
 AG_ObjectFindParent(void *obj, const char *name, const char *type)
 {
-	AG_Object *ob = obj;
+	AG_Object *ob = AGOBJECT(obj);
 
 	while (ob != NULL) {
-		AG_Object *po = ob->parent;
+		AG_Object *po = AGOBJECT(ob->parent);
 
 		if (po == NULL) {
 			return (NULL);
 		}
 		if ((type == NULL || strcmp(po->ops->type, type) == 0) &&
 		    (name == NULL || strcmp(po->name, name) == 0)) {
-			return (po);
+			return ((void *)po);
 		}
-		ob = ob->parent;
+		ob = AGOBJECT(ob->parent);
 	}
 	return (NULL);
 }
@@ -324,7 +324,7 @@ AG_ObjectFindParent(void *obj, const char *name, const char *type)
 static __inline__ void *
 AG_ObjectFindChild(void *p, const char *name)
 {
-	AG_Object *pObj = p;
+	AG_Object *pObj = AGOBJECT(p);
 	AG_Object *cObj;
 
 	AGOBJECT_FOREACH_CHILD(cObj, pObj, ag_object) {
