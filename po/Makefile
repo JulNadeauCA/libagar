@@ -6,4 +6,3 @@ POS=	fr.po no.po
 MOS=	fr.mo no.mo
 
 include ${TOP}/mk/build.po.mk
-include ${TOP}/mk/build.proj.mk

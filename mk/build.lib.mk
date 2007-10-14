@@ -162,7 +162,7 @@ _lib_objs:
 		fi; \
             done; \
 	fi
-	if [ "${WINRES}" != "" -a "${WINDRES}" != "" ]; then \
+	@if [ "${WINRES}" != "" -a "${WINDRES}" != "" ]; then \
 		echo "${WINDRES} -o ${WINRES}.o ${WINRES}"; \
 		${WINDRES} -o ${WINRES}.o ${WINRES}; \
 	fi
@@ -270,43 +270,51 @@ clean-lib:
 	@if [ "${LIB}" != "" -a "${SRCS}" != "none" ]; then \
 	    if [ "${USE_LIBTOOL}" = "Yes" ]; then \
 	        if [ "${SHOBJS}" = "none" ]; then \
+		    export _objs=""; \
                     for F in ${SRCS}; do \
 	    	        F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.lo/'`; \
 	    	        F=`echo $$F | sed 's/.cpp$$/.lo/'`; \
 	    	        F=`echo $$F | sed 's/.asm$$/.lo/'`; \
-	    	        echo "rm -f $$F"; \
-	    	        rm -f $$F; \
+			_objs="$$_objs $$F"; \
                     done; \
+	    	    echo "rm -f $$_objs"; \
+	    	    rm -f $$_objs; \
+		    export _objs=""; \
                     for F in ${SRCS}; do \
 	    	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	    	        F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	    	        F=`echo $$F | sed 's/.asm$$/.o/'`; \
-	    	        echo "rm -f $$F"; \
-	    	        rm -f $$F; \
+			_objs="$$_objs $$F"; \
                     done; \
+	    	    echo "rm -f $$_objs"; \
+	    	    rm -f $$_objs; \
 		else \
 		    rm -f ${SHOBJS}; \
 		    echo "rm -f ${SHOBJS}"; \
+		    export _objs=""; \
                     for F in ${SHOBJS}; do \
 	    	        F=`echo $$F | sed 's/.lo$$/.o/'`; \
-	    	        echo "rm -f $$F"; \
-	    	        rm -f $$F; \
+			_objs="$$_objs $$F"; \
                     done; \
+	    	    echo "rm -f $$_objs"; \
+	    	    rm -f $$_objs; \
 		fi; \
 		echo "rm -fR lib${LIB}.la .libs"; \
 		rm -fR lib${LIB}.la .libs; \
 	    else \
 	        if [ "${OBJS}" = "none" ]; then \
+		    export _objs=""; \
                     for F in ${SRCS}; do \
 	   	        F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	        F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	    	        F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	    	    	F=`echo $$F | sed 's/.asm$$/.o/'`; \
-	    	    	echo "rm -f $$F"; \
-	    	    	rm -f $$F; \
+			_objs="$$_objs $$F"; \
                     done; \
+	    	    echo "rm -f $$_objs"; \
+	    	    rm -f $$_objs; \
 	    	else \
 	            echo "rm -f ${OBJS}"; \
 		    rm -f ${OBJS}; \
@@ -355,7 +363,7 @@ install-lib: ${LIBTOOL_COOKIE}
 	        ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${LIBDIR}; \
 	    fi; \
 	fi
-	if [ "${SHARE}" != "none" ]; then \
+	@if [ "${SHARE}" != "none" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
@@ -365,7 +373,7 @@ install-lib: ${LIBTOOL_COOKIE}
                 ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
             done; \
 	fi
-	if [ "${SHARESRC}" != "none" ]; then \
+	@if [ "${SHARESRC}" != "none" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
                 ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \

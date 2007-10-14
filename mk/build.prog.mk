@@ -142,7 +142,7 @@ _prog_objs:
 		fi; \
 	    done; \
 	fi
-	if [ "${WINRES}" != "" -a "${WINDRES}" != "" ]; then \
+	@if [ "${WINRES}" != "" -a "${WINDRES}" != "" ]; then \
 		echo "${WINDRES} -o ${WINRES}.o ${WINRES}"; \
 		${WINDRES} -o ${WINRES}.o ${WINRES}; \
 	fi
@@ -200,7 +200,7 @@ ${PROG}: _prog_objs ${OBJS}
 
 # Compile and link a profiled version of the program
 ${GMONOUT}: _prog_pobjs ${POBJS}
-	if [ "${GMONOUT}" != "" -a "${SRCS}" != "none" ]; then \
+	@if [ "${GMONOUT}" != "" -a "${SRCS}" != "none" ]; then \
 	    if [ "${POBJS}" = "none" ]; then \
 	        export _pobjs=""; \
                 for F in ${SRCS}; do \
@@ -222,31 +222,55 @@ ${GMONOUT}: _prog_pobjs ${POBJS}
 
 clean-prog:
 	@if [ "${PROG}" != "" -a "${SRCS}" != "none" ]; then \
+	    if [ "${SHOBJS}" = "none" ]; then \
+                export _objs=""; \
+                for F in ${SRCS}; do \
+	    	    F=`echo $$F | sed 's/.[clym]$$/.lo/'`; \
+	    	    F=`echo $$F | sed 's/.cc$$/.lo/'`; \
+	    	    F=`echo $$F | sed 's/.cpp$$/.lo/'`; \
+	    	    F=`echo $$F | sed 's/.asm$$/.lo/'`; \
+		    _objs="$$_objs $$F"; \
+                done; \
+	    	echo "rm -f $$_objs"; \
+	    	rm -f $$_objs; \
+	    else \
+		export _objs=""; \
+                for F in ${SHOBJS}; do \
+	    	    F=`echo $$F | sed 's/.lo$$/.o/'`; \
+		    _objs="$$_objs $$F"; \
+                done; \
+	        echo "rm -f $$_objs ${SHOBJS}"; \
+	        rm -f $$_objs ${SHOBJS}; \
+	    fi; \
 	    if [ "${OBJS}" = "none" ]; then \
+                export _objs=""; \
                 for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.cpp$$/.o/'`; \
 	    	    F=`echo $$F | sed 's/.asm$$/.o/'`; \
-	    	    echo "rm -f $$F"; \
-	    	    rm -f $$F; \
+		    _objs="$$_objs $$F"; \
                 done; \
+	    	echo "rm -f $$_objs"; \
+	    	rm -f $$_objs; \
 	    else \
 	        echo "rm -f ${OBJS}"; \
 	        rm -f ${OBJS}; \
 	    fi; \
 	    if [ "${POBJS}" = "none" ]; then \
+                export _objs=""; \
                 for F in ${SRCS}; do \
 	    	    F=`echo $$F | sed 's/.[clym]$$/.po/'`; \
 	    	    F=`echo $$F | sed 's/.cc$$/.po/'`; \
 	    	    F=`echo $$F | sed 's/.cpp$$/.po/'`; \
 	    	    F=`echo $$F | sed 's/.asm$$/.po/'`; \
-	    	    echo "rm -f $$F"; \
-	    	    rm -f $$F; \
+		    _objs="$$_objs $$F"; \
                 done; \
+	    	echo "rm -f $$_objs"; \
+	    	rm -f $$_objs; \
 	    else \
 	        echo "rm -f ${POBJS}"; \
-	        rm -f ${POBJS}; \
+	        rm -f ${OBJS}; \
 	    fi; \
 	    echo "rm -f ${PROG} ${GMONOUT} ${WINRES}.o"; \
 	    rm -f ${PROG} ${GMONOUT} ${WINRES}.o; \

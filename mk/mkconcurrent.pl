@@ -94,10 +94,14 @@ EOF
 	my $libtool = 1;
 	my $shared = 0;
 	my $static = 1;
+	my $isProg = 0;
+	my $isLib = 0;
 
 	foreach $_ (@lines) {
 		my @srcs = ();
 
+		if (/^\s*PROG\s*=/) { $isProg = 1; }
+		if (/^\s*LIB\s*=/) { $isLib = 1; }
 		if (/^\s*USE_LIBTOOL\s*=\s*No\s*$/) { $libtool = 0; }
 		if (/^\s*LIB_SHARED\s*=\s*Yes\s*$/) { $shared = 1; }
 		if (/^\s*LIB_STATIC\s*=\s*No\s*$/) { $static = 0; }
@@ -112,7 +116,7 @@ EOF
 				my $shobj = $src;
 
 				if ($type eq 'SRCS') {
-					if ($libtool) {
+					if ($isLib && $libtool) {
 						$shobj =~
 						    s/\.(c|cc|l|y|m)$/\.lo/;
 						push @shobjs, $shobj;
@@ -130,7 +134,7 @@ EOF
 
 				# SYNC with build.{prog,lib}.mk
 				if ($src =~ /\.[cly]$/) { # C/Lex/Yacc
-					if ($libtool) {
+					if ($isLib && $libtool) {
 						push @deps,
 						    "$shobj: $SRC/$ndir/$src";
 						push @deps, << 'EOF';
@@ -146,7 +150,7 @@ EOF
 EOF
 					}
 				} elsif ($src =~ /\.cc$/) { # C++
-					if ($libtool) {
+					if ($isLib && $libtool) {
 						push @deps,
 						    "$shobj: $SRC/$ndir/$src";
 						push @deps, << 'EOF';
@@ -162,7 +166,7 @@ EOF
 EOF
 					}
 				} elsif ($src =~ /\.m$/) { # C+Objective-C
-					if ($libtool) {
+					if ($isLib && $libtool) {
 						push @deps,
 						    "$shobj: $SRC/$ndir/$src";
 						push @deps, << 'EOF';
@@ -239,7 +243,7 @@ EOF
 		} else {
 			if (/^\s*include.+\/build\.(lib|prog|po)\.mk\s*$/) {
 				print DSTMAKEFILE "# Generated objects:\n";
-				if ($libtool) {
+				if ($isLib && $libtool) {
 					print DSTMAKEFILE "SHOBJS=@shobjs\n";
 				} else {
 					print DSTMAKEFILE "OBJS=@objs\n";
