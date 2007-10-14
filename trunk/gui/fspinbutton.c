@@ -24,6 +24,7 @@
  */
 
 #include <compat/limits.h>
+#include <config/have_strtoll.h>
 
 #include <core/core.h>
 
@@ -179,7 +180,7 @@ changed(AG_Event *event)
 	case AG_WIDGET_SINT32:
 		AG_FSpinbuttonSetValue(fsu, (double)strtol(s, NULL, 10));
 		break;
-#ifdef HAVE_64BIT
+#if defined(HAVE_64BIT) && defined(HAVE_STRTOLL)
 	case AG_WIDGET_UINT64:
 	case AG_WIDGET_SINT64:
 		AG_FSpinbuttonSetValue(fsu, (double)strtoll(s, NULL, 10));
