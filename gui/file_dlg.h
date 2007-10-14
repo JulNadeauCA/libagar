@@ -78,7 +78,7 @@ int AG_FileDlgCheckWriteAccess(AG_FileDlg *);
 AG_FileType *AG_FileDlgAddType(AG_FileDlg *, const char *,
 			       const char *, void (*)(AG_Event *),
 			       const char *, ...);
-__inline__ int AG_FileDlgAtRoot(AG_FileDlg *);
+int AG_FileDlgAtRoot(AG_FileDlg *);
 __END_DECLS
 
 #include "close_code.h"

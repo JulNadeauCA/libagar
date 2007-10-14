@@ -49,16 +49,16 @@ typedef struct ag_console {
 __BEGIN_DECLS
 extern const AG_WidgetOps agConsoleOps;
 
-AG_Console *AG_ConsoleNew(void *, Uint);
-void	    AG_ConsoleInit(AG_Console *, Uint);
+AG_Console     *AG_ConsoleNew(void *, Uint);
+void		AG_ConsoleInit(AG_Console *, Uint);
 
-__inline__ void		   AG_ConsoleSetPadding(AG_Console *, int);
-__inline__ AG_ConsoleLine *AG_ConsoleAppendLine(AG_Console *, const char *);
-AG_ConsoleLine		  *AG_ConsoleMsg(AG_Console *, const char *, ...)
-				         FORMAT_ATTRIBUTE(printf, 2, 3)
-				         NONNULL_ATTRIBUTE(2);
-__inline__ void		   AG_ConsoleMsgPtr(AG_ConsoleLine *, void *);
-__inline__ void		   AG_ConsoleMsgIcon(AG_ConsoleLine *, int);
+void		AG_ConsoleSetPadding(AG_Console *, int);
+AG_ConsoleLine *AG_ConsoleAppendLine(AG_Console *, const char *);
+AG_ConsoleLine *AG_ConsoleMsg(AG_Console *, const char *, ...)
+			         FORMAT_ATTRIBUTE(printf, 2, 3)
+			         NONNULL_ATTRIBUTE(2);
+void		AG_ConsoleMsgPtr(AG_ConsoleLine *, void *);
+void		AG_ConsoleMsgIcon(AG_ConsoleLine *, int);
 __END_DECLS
 
 #include "close_code.h"

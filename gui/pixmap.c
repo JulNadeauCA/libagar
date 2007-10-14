@@ -227,23 +227,6 @@ Draw(void *p)
 		AG_WidgetBlitSurface(px, px->n, px->s, px->t);
 }
 
-int
-AG_PixmapSetSurface(AG_Pixmap *px, int name)
-{
-	if (name < 0 || name >= WIDGET(px)->nsurfaces) {
-		return (-1);
-	}
-	px->n = name;
-	return (0);
-}
-
-void
-AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
-{
-	px->s = s;
-	px->t = t;
-}
-
 const AG_WidgetOps agPixmapOps = {
 	{
 		"AG_Widget:AG_Pixmap",

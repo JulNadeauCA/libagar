@@ -63,7 +63,14 @@ AG_FixedPlotterItem *AG_FixedPlotterCurve(AG_FixedPlotter *, const char *,
 void AG_FixedPlotterFreeItems(AG_FixedPlotter *);
 void AG_FixedPlotterSetRange(AG_FixedPlotter *, AG_FixedPlotterValue);
 void AG_FixedPlotterDatum(AG_FixedPlotterItem *, AG_FixedPlotterValue);
-__inline__ void AG_FixedPlotterScroll(AG_FixedPlotter *, int);
+
+static __inline__ void
+AG_FixedPlotterScroll(AG_FixedPlotter *fpl, int i)
+{
+	if (fpl->flags & AG_FIXED_PLOTTER_SCROLL)
+		fpl->xoffs += i;
+}
+
 __END_DECLS
 
 #include "close_code.h"

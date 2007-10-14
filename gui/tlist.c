@@ -551,25 +551,6 @@ AG_TlistRestore(AG_Tlist *tl)
 }
 
 /*
- * See if the child items of an item are supposed to be visible; called from
- * polling routines when displaying trees.
- */
-int
-AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
-{
-	AG_TlistItem *sit;
-
-	TAILQ_FOREACH(sit, &tl->selitems, selitems) {
-		if (tl->compare_fn(sit, cit))
-			break;
-	}
-	if (sit == NULL) 
-		return (0);				/* Default */
-
-	return (sit->flags & AG_TLIST_VISIBLE_CHILDREN);
-}
-
-/*
  * Allocate a new tlist item.
  * XXX allocate from a pool, especially for polled items.
  */

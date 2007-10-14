@@ -155,34 +155,6 @@ AG_UnitFormat(double n, const AG_Unit ugroup[], char *buf, size_t len)
 	    ubest->abbr[0] != '\0' ? ubest->abbr : ubest->key));
 }
 
-/* Return the abbreviation associated with the given unit. */
-const char *
-AG_UnitAbbr(const AG_Unit *unit)
-{
-	return (unit->abbr[0] != '\0' ? unit->abbr : unit->key);
-}
-
-/* Convert from n in given unit to base unit. */
-double
-AG_Unit2Base(double n, const AG_Unit *unit)
-{
-	return (unit->func != NULL ? unit->func(n, 1) : n*unit->divider);
-}
-
-/* Convert from n in base unit to given unit. */
-double
-AG_Base2Unit(double n, const AG_Unit *unit)
-{
-	return (unit->func != NULL ? unit->func(n, 0) : n/unit->divider);
-}
-
-/* Convert n from one unit system to another. */
-double
-AG_Unit2Unit(double n, const AG_Unit *ufrom, const AG_Unit *uto)
-{
-	return (AG_Base2Unit(AG_Unit2Base(n, ufrom), uto));
-}
-
 /* Default unit (identity) */
 const AG_Unit agIdentityUnit[] = {
 	{ "identity", "", "",	1.0, NULL },

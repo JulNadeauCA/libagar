@@ -93,29 +93,28 @@ void	 AG_FontDestroy(void *);
 void	 AG_PushTextState(void);
 void	 AG_PopTextState(void);
 
-__inline__ void	AG_TextFont(AG_Font *);
-__inline__ int  AG_TextFontLookup(const char *, int, Uint);
-__inline__ void AG_TextJustify(enum ag_text_justify);
-__inline__ void AG_TextColorVideo32(Uint32);
-__inline__ void AG_TextColor32(Uint32);
-__inline__ void AG_TextColorRGB(Uint8, Uint8, Uint8);
-__inline__ void AG_TextColorRGBA(Uint8, Uint8, Uint8, Uint8);
-__inline__ void AG_TextBGColorVideo32(Uint32);
-__inline__ void AG_TextBGColor32(Uint32);
-__inline__ void AG_TextBGColorRGB(Uint8, Uint8, Uint8);
-__inline__ void AG_TextBGColorRGBA(Uint8, Uint8, Uint8, Uint8);
-#define		AG_TextColor(name) AG_TextColorVideo32(AG_COLOR(name))
-#define		AG_TextBGColor(name) AG_TextBGColorVideo32(AG_COLOR(name))
+void	AG_TextFont(AG_Font *);
+int	AG_TextFontLookup(const char *, int, Uint);
+void	AG_TextJustify(enum ag_text_justify);
+void	AG_TextColorVideo32(Uint32);
+void	AG_TextColor32(Uint32);
+void	AG_TextColorRGB(Uint8, Uint8, Uint8);
+void	AG_TextColorRGBA(Uint8, Uint8, Uint8, Uint8);
+void	AG_TextBGColorVideo32(Uint32);
+void	AG_TextBGColor32(Uint32);
+void	AG_TextBGColorRGB(Uint8, Uint8, Uint8);
+void	AG_TextBGColorRGBA(Uint8, Uint8, Uint8, Uint8);
+#define	AG_TextColor(name) AG_TextColorVideo32(AG_COLOR(name))
+#define	AG_TextBGColor(name) AG_TextBGColorVideo32(AG_COLOR(name))
 
-__inline__ SDL_Surface	*AG_TextFormat(const char *, ...);
-__inline__ SDL_Surface	*AG_TextRender(const char *);
-__inline__ SDL_Surface	*AG_TextRenderUCS4(const Uint32 *);
-__inline__ void		 AG_TextSize(const char *, int *, int *);
-__inline__ void		 AG_TextSizeMulti(const char *, int *, int *, Uint **,
-			                  Uint *);
-__inline__ void		 AG_TextSizeUCS4(const Uint32 *, int *, int *);
-__inline__ void		 AG_TextSizeMultiUCS4(const Uint32 *, int *, int *,
-			                      Uint **, Uint *);
+SDL_Surface	*AG_TextFormat(const char *, ...);
+SDL_Surface	*AG_TextRender(const char *);
+SDL_Surface	*AG_TextRenderUCS4(const Uint32 *);
+void		 AG_TextSize(const char *, int *, int *);
+void		 AG_TextSizeMulti(const char *, int *, int *, Uint **, Uint *);
+void		 AG_TextSizeUCS4(const Uint32 *, int *, int *);
+void		 AG_TextSizeMultiUCS4(const Uint32 *, int *, int *, Uint **,
+		                      Uint *);
 
 void AG_TextMsg(enum ag_text_msg_title, const char *, ...)
 	      FORMAT_ATTRIBUTE(printf, 2, 3)
@@ -145,11 +144,11 @@ void AG_TextPromptString(const char *, void (*)(AG_Event *),
 void AG_TextPromptDouble(const char *, const char *, double, double,
 			 void (*)(AG_Event *), const char *, ...);
 
-AG_Glyph       *AG_TextRenderGlyph(Uint32);
-__inline__ void	AG_TextUnusedGlyph(AG_Glyph *);
+AG_Glyph *AG_TextRenderGlyph(Uint32);
+void	  AG_TextUnusedGlyph(AG_Glyph *);
 
-__inline__ void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
-                             int, enum ag_text_justify, enum ag_text_valign);
+void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
+                  int, enum ag_text_justify, enum ag_text_valign);
 __END_DECLS
 
 #include "close_code.h"

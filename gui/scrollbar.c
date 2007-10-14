@@ -84,30 +84,6 @@ AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type, Uint flags)
 	AG_SetEvent(sb, "window-mousemotion", mousemotion, NULL);
 }
 
-int
-AG_ScrollbarVisible(AG_Scrollbar *sb)
-{
-	int min, max;
-
-	switch (sb->type) {
-	case AG_SCROLLBAR_VERT:
-		if (WIDGET(sb)->w < sb->bw ||
-		    WIDGET(sb)->h < sb->bw*2 + sb->barSz) {
-			return (0);
-		}
-		break;
-	case AG_SCROLLBAR_HORIZ:
-		if (WIDGET(sb)->w < sb->bw*2 + sb->barSz ||
-		    WIDGET(sb)->h < sb->bw) {
-			return (0);
-		}
-		break;
-	}
-	min = AG_WidgetInt(sb, "min");
-	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
-	return (max > 0 && max >= min);
-}
-
 /* Clicked or dragged mouse to coord, so adjust value */
 static void
 MoveBar(AG_Scrollbar *sb, int x, int totalsize)
@@ -356,18 +332,6 @@ Draw(void *p)
 		    
 	}
 #endif
-}
-
-void
-AG_ScrollbarSetBarSize(AG_Scrollbar *sb, int bsize)
-{
-	sb->barSz = (bsize > 10 || bsize == -1) ? bsize : 10;
-}
-
-void
-AG_ScrollbarGetBarSize(AG_Scrollbar *sb, int *bsize)
-{
-	*bsize = sb->barSz;
 }
 
 const AG_WidgetOps agScrollbarOps = {

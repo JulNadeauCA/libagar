@@ -231,21 +231,22 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 #ifdef HAVE_FREETYPE
 	if (agFreetype) {
 		int tflags = 0;
+		AG_TTFFont *ttf;
 
 		dprintf("<%s>: Vector (%d pts)\n", name, size);
-		if ((font->ttf = AG_TTFOpenFont(path, size)) == NULL) {
+		if ((font->ttf = ttf = AG_TTFOpenFont(path, size)) == NULL) {
 			goto fail;
 		}
 		if (flags & AG_FONT_BOLD)	{ tflags|=TTF_STYLE_BOLD; }
 		if (flags & AG_FONT_ITALIC)	{ tflags|=TTF_STYLE_ITALIC; }
 		if (flags & AG_FONT_UNDERLINE)	{ tflags|=TTF_STYLE_UNDERLINE; }
-		AG_TTFSetFontStyle(font->ttf, tflags);
+		AG_TTFSetFontStyle(ttf, tflags);
 
 		font->type = AG_FONT_VECTOR;
-		font->height = AG_TTFHeight(font->ttf);
-		font->ascent = AG_TTFAscent(font->ttf);
-		font->descent = AG_TTFDescent(font->ttf);
-		font->lineskip = AG_TTFLineSkip(font->ttf);
+		font->height = ttf->height;
+		font->ascent = ttf->ascent;
+		font->descent = ttf->descent;
+		font->lineskip = ttf->lineskip;
 	} else
 #endif
 	{

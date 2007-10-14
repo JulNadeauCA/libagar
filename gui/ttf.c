@@ -456,45 +456,9 @@ AG_TTFFindGlyph(AG_TTFFont *font, Uint32 ch, int want)
 }
 
 int
-AG_TTFHeight(AG_TTFFont *font)
-{
-	return (font->height);
-}
-
-int
-AG_TTFAscent(AG_TTFFont *font)
-{
-       return (font->ascent);
-}
-
-int
-AG_TTFDescent(AG_TTFFont *font)
-{
-	return (font->descent);
-}
-
-int
-AG_TTFLineSkip(AG_TTFFont *font)
-{
-	return (font->lineskip);
-}
-
-int
 AG_TTFFaceFixedWidth(AG_TTFFont *font)
 {
 	return (FT_IS_FIXED_WIDTH(font->face));
-}
-
-char *
-AG_TTFFaceFamily(AG_TTFFont *font)
-{
-	return (font->face->family_name);
-}
-
-char *
-AG_TTFFaceStyle(AG_TTFFont *font)
-{
-	return (font->face->style_name);
 }
 
 int
@@ -523,12 +487,6 @@ AG_TTFSetFontStyle(AG_TTFFont *font, int style)
 {
 	font->style = style;
 	FlushCache(font);
-}
-
-int
-AG_TTFGetFontStyle(AG_TTFFont *font)
-{
-	return (font->style);
 }
 
 #endif /* HAVE_FREETYPE */

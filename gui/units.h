@@ -22,12 +22,8 @@ typedef struct {
 
 __BEGIN_DECLS
 const AG_Unit	  *AG_FindUnit(const char *);
-__inline__ double  AG_Unit2Base(double, const AG_Unit *);
-double		   AG_Base2Unit(double, const AG_Unit *);
-__inline__ double  AG_Unit2Unit(double, const AG_Unit *, const AG_Unit *);
 const AG_Unit	  *AG_BestUnit(const AG_Unit[], double);
-const char	  *AG_UnitAbbr(const AG_Unit *);
-__inline__ int	   AG_UnitFormat(double, const AG_Unit[], char *, size_t);
+int	   	   AG_UnitFormat(double, const AG_Unit[], char *, size_t);
 
 double	AG_UnitFahrenheit(double, int);
 double	AG_UnitCelsius(double, int);
@@ -35,10 +31,6 @@ double	AG_UnitCelsius(double, int);
 double	AG_UnitRankine(double, int);
 double	AG_UnitReaumur(double, int);
 #endif
-
-#define	AG_Unit2Basef(n, u) ((float)AG_Unit2Base((float)(n), (u)))
-#define	AG_Base2Unitf(n, u) ((float)AG_Base2Unit((float)(n), (u)))
-#define	AG_Unit2Unitf(n, u1, u2) ((float)AG_Unit2Unit((float)(n), (u1), (u2)))
 
 extern const AG_Unit *agUnitGroups[];
 extern const char *agUnitGroupNames[];
@@ -67,6 +59,31 @@ extern const AG_Unit agInductanceUnits[];
 extern const AG_Unit agFrequencyUnits[];
 extern const AG_Unit agPressureUnits[];
 extern const AG_Unit agMetabolicExpenditureUnits[];
+
+static __inline__ double
+AG_Unit2Base(double n, const AG_Unit *unit)
+{
+	return (unit->func != NULL ? unit->func(n, 1) : n*unit->divider);
+}
+static __inline__ double
+AG_Base2Unit(double n, const AG_Unit *unit)
+{
+	return (unit->func != NULL ? unit->func(n, 0) : n/unit->divider);
+}
+static __inline__ double
+AG_Unit2Unit(double n, const AG_Unit *ufrom, const AG_Unit *uto)
+{
+	return (AG_Base2Unit(AG_Unit2Base(n, ufrom), uto));
+}
+static __inline__ const char *
+AG_UnitAbbr(const AG_Unit *unit)
+{
+	return (unit->abbr[0] != '\0' ? unit->abbr : unit->key);
+}
+
+#define	AG_Unit2Basef(n, u) ((float)AG_Unit2Base((float)(n), (u)))
+#define	AG_Base2Unitf(n, u) ((float)AG_Base2Unit((float)(n), (u)))
+#define	AG_Unit2Unitf(n, u1, u2) ((float)AG_Unit2Unit((float)(n), (u1), (u2)))
 __END_DECLS
 
 #include "close_code.h"

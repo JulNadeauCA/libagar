@@ -259,13 +259,6 @@ AG_FixedPlotterDatum(AG_FixedPlotterItem *gi, AG_FixedPlotterValue val)
 }
 
 void
-AG_FixedPlotterScroll(AG_FixedPlotter *fpl, int i)
-{
-	if (fpl->flags & AG_FIXED_PLOTTER_SCROLL)
-		fpl->xoffs += i;
-}
-
-void
 AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 {
 	AG_FixedPlotterItem *git, *nextgit;

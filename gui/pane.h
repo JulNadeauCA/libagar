@@ -44,17 +44,16 @@ typedef struct ag_pane {
 __BEGIN_DECLS
 extern const AG_WidgetOps agPaneOps;
 
-AG_Pane		*AG_PaneNew(void *, enum ag_pane_type, Uint);
-#define		 AG_PaneNewHoriz(p,f) AG_PaneNew((p),AG_PANE_HORIZ,(f))
-#define		 AG_PaneNewVert(p,f) AG_PaneNew((p),AG_PANE_VERT,(f))
-
-void		 AG_PaneInit(AG_Pane *, enum ag_pane_type, Uint);
-void		 AG_PaneAttachBox(AG_Pane *, int, AG_Box *);
-__inline__ void	 AG_PaneAttachBoxes(AG_Pane *, AG_Box *, AG_Box *);
-__inline__ void	 AG_PaneSetDividerWidth(AG_Pane *, int);
-__inline__ void	 AG_PaneSetDivisionMin(AG_Pane *, int, int, int);
-__inline__ void	 AG_PaneSetDivisionPacking(AG_Pane *, int, enum ag_box_type);
-int		 AG_PaneMoveDivider(AG_Pane *, int);
+AG_Pane	*AG_PaneNew(void *, enum ag_pane_type, Uint);
+#define	 AG_PaneNewHoriz(p,f) AG_PaneNew((p),AG_PANE_HORIZ,(f))
+#define	 AG_PaneNewVert(p,f) AG_PaneNew((p),AG_PANE_VERT,(f))
+void	 AG_PaneInit(AG_Pane *, enum ag_pane_type, Uint);
+void	 AG_PaneAttachBox(AG_Pane *, int, AG_Box *);
+void	 AG_PaneAttachBoxes(AG_Pane *, AG_Box *, AG_Box *);
+void	 AG_PaneSetDividerWidth(AG_Pane *, int);
+void	 AG_PaneSetDivisionMin(AG_Pane *, int, int, int);
+void	 AG_PaneSetDivisionPacking(AG_Pane *, int, enum ag_box_type);
+int	 AG_PaneMoveDivider(AG_Pane *, int);
 __END_DECLS
 
 #include "close_code.h"

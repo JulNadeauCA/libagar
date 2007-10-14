@@ -173,9 +173,8 @@ void	  AG_TableDeselectAllCols(AG_Table *);
 #define	  AG_TableDeselectCol(t,n) do { (t)->cols[n].selected = 0; } while (0)
 #define	  AG_TableColSelected(t,n) ((t)->cols[n].selected)
 
-__inline__ void	  AG_TableRedrawCells(AG_Table *);
-__inline__ int	  AG_TableCompareCells(const AG_TableCell *,
-			               const AG_TableCell *);
+void	  AG_TableRedrawCells(AG_Table *);
+int	  AG_TableCompareCells(const AG_TableCell *, const AG_TableCell *);
 
 int	     AG_TableSaveASCII(AG_Table *, FILE *, char);
 void	     AG_TableUpdateScrollbars(AG_Table *);

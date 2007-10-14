@@ -44,11 +44,25 @@ int	   AG_PixmapAddSurfaceScaled(AG_Pixmap *, SDL_Surface *, Uint, Uint);
 void	   AG_PixmapReplaceSurfaceScaled(AG_Pixmap *, SDL_Surface *, Uint,
 		                         Uint);
 
-__inline__ int  AG_PixmapSetSurface(AG_Pixmap *, int);
-__inline__ void AG_PixmapSetCoords(AG_Pixmap *, int, int);
-
 #define AG_PixmapReplaceSurface(px,su)	AG_WidgetReplaceSurface((px),(px)->n,su)
 #define AG_PixmapUpdateSurface(px)	AG_WidgetUpdateSurface((px),(px)->n)
+
+static __inline__ int
+AG_PixmapSetSurface(AG_Pixmap *px, int name)
+{
+	if (name < 0 || name >= AGWIDGET(px)->nsurfaces) {
+		return (-1);
+	}
+	px->n = name;
+	return (0);
+}
+
+static __inline__ void
+AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
+{
+	px->s = s;
+	px->t = t;
+}
 __END_DECLS
 
 #include "close_code.h"
