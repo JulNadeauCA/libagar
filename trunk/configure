@@ -2686,6 +2686,9 @@ fi;
 if [ "$SYSTEM" = "Darwin" ]; then
 OPENGL_CFLAGS=""
 OPENGL_LIBS="-framework OpenGL"
+elif [ "$HAVE_MINGW" = "yes" ]; then
+OPENGL_CFLAGS=""
+OPENGL_LIBS="-lopengl32"
 else
 OPENGL_CFLAGS="${GL_CFLAGS}"
 OPENGL_LIBS="${GL_LIBS} -lGL"
@@ -2741,6 +2744,8 @@ echo -n "checking for GLU (http://www.opengl.org)..." >> config.log
 if [ "$SYSTEM" = "Darwin" ]; then
 GLU_CFLAGS=""
 GLU_LIBS=""
+elif [ "$HAVE_MINGW" = "yes" ]; then
+GLU_LIBS="-lglu32"
 else
 GLU_CFLAGS=""
 if [ -d "/usr/include/X11/GL/glu.h" ]; then
