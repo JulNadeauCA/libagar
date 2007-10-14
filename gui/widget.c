@@ -300,7 +300,7 @@ GetVirtualBindingType(AG_WidgetBinding *binding)
 			return (AG_WIDGET_UINT32);
 		case AG_PROP_SINT32:
 			return (AG_WIDGET_SINT32);
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		case AG_PROP_UINT64:
 			return (AG_WIDGET_UINT64);
 		case AG_PROP_SINT64:
@@ -479,7 +479,7 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 		case AG_WIDGET_SINT32:
 			*(Sint32 **)res = (Sint32 *)binding->p1;
 			break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		case AG_WIDGET_UINT64:
 			*(Uint64 **)res = (Uint64 *)binding->p1;
 			break;
@@ -539,7 +539,7 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 			case AG_PROP_SINT32:
 				*(Sint32 **)res = (Sint32 *)&prop->data.s32;
 				break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 			case AG_PROP_UINT64:
 				*(Uint64 **)res = (Uint64 *)&prop->data.u64;
 				break;

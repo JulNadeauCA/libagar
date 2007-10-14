@@ -69,7 +69,7 @@ Uint32	AG_NumericalGetUint32(AG_Numerical *);
 #define AG_NumericalGetSint8(n) ((Sint8)AG_NumericalGetUint32(n))
 #define AG_NumericalGetSint16(n) ((Sint16)AG_NumericalGetUint32(n))
 #define AG_NumericalGetSint32(n) ((Sint32)AG_NumericalGetUint32(n))
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 Uint64	AG_NumericalGetUint64(AG_Numerical *);
 #define AG_NumericalGetSint64(n) ((Sint64)AG_NumericalGetUint64(n))
 #endif

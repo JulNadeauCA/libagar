@@ -8,6 +8,13 @@
 # include <agar/config/_mk_have_sys_types_h.h>
 # define _AGAR_HAVE_SYS_TYPES_H_
 #endif
+#ifndef _AGAR_HAVE_64BIT_H
+# include <agar/config/have_64bit.h>
+# define _AGAR_HAVE_64BIT_H_
+# ifdef HAVE_64BIT
+#  define AG_HAVE_64BIT
+# endif
+#endif
 #ifndef _AGAR_HAVE_STDLIB_H
 # include <agar/config/_mk_have_stdlib_h.h>
 # define _AGAR_HAVE_STDLIB_H_

@@ -510,7 +510,7 @@ DrawPolled(AG_Label *label)
 	for (fmtp = label->text; *fmtp != '\0'; fmtp++) {
 		if (*fmtp == '%' && *(fmtp+1) != '\0') {
 			switch (*(fmtp+1)) {
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 			case 'l':
 				if (*(fmtp+2) == 'l') {
 					switch (*(fmtp+3)) {
@@ -554,7 +554,7 @@ DrawPolled(AG_Label *label)
 					fmtp += 2;
 				}
 				break;
-#endif /* SDL_HAS_64BIT_TYPE */
+#endif /* HAVE_64BIT */
 			case 'd':
 			case 'i':
 				snprintf(s2, sizeof(s2), "%d", LABEL_ARG(int));

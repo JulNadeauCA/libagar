@@ -78,7 +78,7 @@ AG_PwriteUint32(AG_Netbuf *buf, Uint32 u32, off_t offs)
 	AG_NetbufPwrite(&i, sizeof(i), 1, offs, buf);
 }
 
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 static __inline__ Uint64
 AG_ReadUint64(AG_Netbuf *buf)
 {
@@ -101,7 +101,7 @@ AG_PwriteUint64(AG_Netbuf *buf, Uint64 u64, off_t offs)
 	    SDL_SwapBE64(u64) : SDL_SwapLE64(u64);
 	AG_NetbufPwrite(&i, sizeof(i), 1, offs, buf);
 }
-#endif /* SDL_HAS_64BIT_TYPE */
+#endif /* HAVE_64BIT */
 
 __END_DECLS
 #include "close_code.h"

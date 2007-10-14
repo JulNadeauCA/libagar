@@ -48,7 +48,7 @@ typedef struct ag_table_cell {
 		AG_CELL_PSINT32,
 		AG_CELL_PFLOAT,
 		AG_CELL_PDOUBLE,
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		AG_CELL_INT64,
 		AG_CELL_UINT64,
 		AG_CELL_PINT64,
@@ -64,7 +64,7 @@ typedef struct ag_table_cell {
 		double f;
 		void *p;
 		long l;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		Uint64 u64;
 #endif
 	} data;

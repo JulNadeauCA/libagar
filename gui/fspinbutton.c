@@ -114,7 +114,7 @@ binding_changed(AG_Event *event)
 			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
 			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
 			break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		case AG_WIDGET_UINT64:
 			fsu->min = 0;
 			fsu->max = 0xffffffffffffffffULL;
@@ -179,7 +179,7 @@ changed(AG_Event *event)
 	case AG_WIDGET_SINT32:
 		AG_FSpinbuttonSetValue(fsu, (double)strtol(s, NULL, 10));
 		break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:
 	case AG_WIDGET_SINT64:
 		AG_FSpinbuttonSetValue(fsu, (double)strtoll(s, NULL, 10));
@@ -444,7 +444,7 @@ Draw(void *p)
 	case AG_WIDGET_SINT32:
 		AG_TextboxPrintf(fsu->input, "%d", *(Sint32 *)value);
 		break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:
 		AG_TextboxPrintf(fsu->input, "%lld", *(Uint64 *)value);
 		break;
@@ -493,7 +493,7 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 	case AG_WIDGET_SINT16:	ADD_CONVERTED(Sint16);	break;
 	case AG_WIDGET_UINT32:	ADD_CONVERTED(Uint32);	break;
 	case AG_WIDGET_SINT32:	ADD_CONVERTED(Sint32);	break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:	ADD_CONVERTED(Uint64);	break;
 	case AG_WIDGET_SINT64:	ADD_CONVERTED(Sint64);	break;
 #endif
@@ -538,7 +538,7 @@ AG_FSpinbuttonSetValue(AG_FSpinbutton *fsu, double nvalue)
 	case AG_WIDGET_SINT16:	CONV_VALUE(Sint16);	break;
 	case AG_WIDGET_UINT32:	CONV_VALUE(Uint32);	break;
 	case AG_WIDGET_SINT32:	CONV_VALUE(Sint32);	break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:	CONV_VALUE(Uint64);	break;
 	case AG_WIDGET_SINT64:	CONV_VALUE(Sint64);	break;
 #endif

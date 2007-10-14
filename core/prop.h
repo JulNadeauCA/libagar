@@ -63,7 +63,7 @@ typedef struct ag_prop {
 		Sint16	 s16;
 		Uint32	 u32;
 		Sint32	 s32;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		Uint64   u64;
 		Sint64   s64;
 #endif
@@ -85,7 +85,7 @@ typedef struct ag_prop {
 		Sint16	(*wSint16)(void *, struct ag_prop *, Sint16);
 		Uint32	(*wUint32)(void *, struct ag_prop *, Uint32);
 		Sint32	(*wSint32)(void *, struct ag_prop *, Sint32);
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		Uint64	(*wUint64)(void *, struct ag_prop *, Uint64);
 		Sint64	(*wSint64)(void *, struct ag_prop *, Sint64);
 #endif
@@ -108,7 +108,7 @@ typedef struct ag_prop {
 		Sint16	(*rSint16)(void *, struct ag_prop *);
 		Uint32	(*rUint32)(void *, struct ag_prop *);
 		Sint32	(*rSint32)(void *, struct ag_prop *);
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		Uint64	(*rUint64)(void *, struct ag_prop *);
 		Sint64	(*rSint64)(void *, struct ag_prop *);
 #endif
@@ -199,14 +199,14 @@ static __inline__ AG_Prop *AG_SetSint32(void *ob, const char *key, Sint32 i) {
 	return (AG_SetProp(ob, key, AG_PROP_SINT32, i));
 }
 
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 static __inline__ AG_Prop *AG_SetUint64(void *ob, const char *key, Uint64 i) {
 	return (AG_SetProp(ob, key, AG_PROP_UINT64, i));
 }
 static __inline__ AG_Prop *AG_SetSint64(void *ob, const char *key, Sint64 i) {
 	return (AG_SetProp(ob, key, AG_PROP_SINT64, i));
 }
-#endif /* SDL_HAS_64BIT_TYPE */
+#endif /* HAVE_64BIT */
 
 static __inline__ AG_Prop *AG_SetFloat(void *ob, const char *key, float f) {
 	return (AG_SetProp(ob, key, AG_PROP_FLOAT, f));
@@ -356,7 +356,7 @@ static __inline__ Sint32 AG_FindSint32(const char *key) {
 	return (i);
 }
 
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 static __inline__ Uint64 AG_Uint64(void *p, const char *key) {
 	Uint64 i;
 	if (AG_GetProp(p, key, AG_PROP_UINT64, &i) == NULL) {
@@ -385,7 +385,7 @@ static __inline__ Sint64 AG_FindSint64(const char *key) {
 	}
 	return (i);
 }
-#endif /* SDL_HAS_64BIT_TYPE */
+#endif /* HAVE_64BIT */
 
 static __inline__ float AG_Float(void *p, const char *key) {
 	float f;

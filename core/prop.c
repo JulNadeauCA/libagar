@@ -145,7 +145,7 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 	case AG_PROP_SINT16:	PROP_SET(wSint16, s16, Sint16, int);	break;
 	case AG_PROP_UINT32:	PROP_SET(wUint32, u32, Uint32, int);	break;
 	case AG_PROP_SINT32:	PROP_SET(wSint32, s32, Sint32, int);	break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_PROP_UINT64:	PROP_SET(wUint64, u64, Uint64, int);	break;
 	case AG_PROP_SINT64:	PROP_SET(wSint64, s64, Sint64, int);	break;
 #endif
@@ -203,7 +203,7 @@ AG_GetProp(void *obp, const char *key, int t, void *p)
 		case AG_PROP_SINT16:	PROP_GET(rSint16, s16, Sint16);	break;
 		case AG_PROP_UINT32:	PROP_GET(rUint32, u32, Uint32);	break;
 		case AG_PROP_SINT32:	PROP_GET(rSint32, s32, Sint32);	break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		case AG_PROP_UINT64:	PROP_GET(rUint64, u64, Uint64);	break;
 		case AG_PROP_SINT64:	PROP_GET(rSint64, s64, Sint64);	break;
 #endif
@@ -311,7 +311,7 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 		case AG_PROP_SINT32:
 			AG_SetSint32(ob, key, AG_ReadSint32(buf));
 			break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		case AG_PROP_UINT64:
 			AG_SetUint64(ob, key, AG_ReadUint64(buf));
 			break;
@@ -411,7 +411,7 @@ AG_PropSave(void *p, AG_Netbuf *buf)
 		case AG_PROP_SINT32:
 			AG_WriteSint32(buf, prop->data.s32);
 			break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 		case AG_PROP_UINT64:
 			AG_WriteUint64(buf, prop->data.u64);
 			break;
@@ -491,7 +491,7 @@ AG_PropPrint(char *s, size_t len, void *obj, const char *pname)
 	case AG_PROP_SINT32:
 		snprintf(s, len, "%ld", (long)pr->data.s32);
 		break;
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 	case AG_PROP_UINT64:	snprintf(s, len, "%llu",
 				(unsigned long long)pr->data.u64);
 				break;

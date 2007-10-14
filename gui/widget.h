@@ -534,7 +534,7 @@ AG_WidgetSint32(void *wid, const char *name)
 	return (rv);
 }
 
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 static __inline__ Uint64
 AG_WidgetUint64(void *wid, const char *name)
 {
@@ -562,7 +562,7 @@ AG_WidgetSint64(void *wid, const char *name)
 	AG_WidgetUnlockBinding(b);
 	return (rv);
 }
-#endif /* SDL_HAS_64BIT_TYPE */
+#endif /* HAVE_64BIT */
 
 static __inline__ float
 AG_WidgetFloat(void *wid, const char *name)
@@ -726,7 +726,7 @@ AG_WidgetSetSint32(void *wid, const char *name, Sint32 ni)
 	AG_WidgetUnlockBinding(binding);
 }
 
-#ifdef SDL_HAS_64BIT_TYPE
+#ifdef HAVE_64BIT
 static __inline__ void
 AG_WidgetSetUint64(void *wid, const char *name, Uint64 ni)
 {
@@ -752,7 +752,7 @@ AG_WidgetSetSint64(void *wid, const char *name, Sint64 ni)
 	*i = ni;
 	AG_WidgetUnlockBinding(binding);
 }
-#endif /* SDL_HAS_64BIT_TYPE */
+#endif /* HAVE_64BIT */
 
 static __inline__ void
 AG_WidgetSetFloat(void *wid, const char *name, float nf)

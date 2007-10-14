@@ -29,6 +29,10 @@
 # undef _AGAR_HAVE_SYS_TYPES_H_
 # undef _MK_HAVE_SYS_TYPES_H
 #endif
+#ifdef _AGAR_HAVE_64BIT_H_
+# undef _AGAR_HAVE_64BIT_H_
+# undef HAVE_64BIT
+#endif
 #ifdef _AGAR_HAVE_STDLIB_H_
 # undef _AGAR_HAVE_STDLIB_H_
 # undef _MK_HAVE_STDLIB_H
