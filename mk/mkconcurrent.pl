@@ -138,7 +138,7 @@ EOF
 						push @deps,
 						    "$shobj: $SRC/$ndir/$src";
 						push @deps, << 'EOF';
-	${LIBTOOL} --mode=compile ${CC} -prefer-pic ${CFLAGS} ${CPPFLAGS} -c $<
+	${LIBTOOL} --mode=compile ${CC} ${LIBTOOLFLAGS} ${CFLAGS} ${CPPFLAGS} -c $<
 
 EOF
 					} else {
@@ -154,7 +154,7 @@ EOF
 						push @deps,
 						    "$shobj: $SRC/$ndir/$src";
 						push @deps, << 'EOF';
-	${LIBTOOL} --mode=compile ${CC} -prefer-pic ${CXXFLAGS} ${CPPFLAGS} -c $<
+	${LIBTOOL} --mode=compile ${CC} ${LIBTOOLFLAGS} ${CXXFLAGS} ${CPPFLAGS} -c $<
 
 EOF
 					} else {
@@ -170,7 +170,7 @@ EOF
 						push @deps,
 						    "$shobj: $SRC/$ndir/$src";
 						push @deps, << 'EOF';
-	${LIBTOOL} --mode=compile ${CC} -prefer-pic ${OBJCFLAGS} ${CPPFLAGS} -c $<
+	${LIBTOOL} --mode=compile ${CC} ${LIBTOOLFLAGS} ${OBJCFLAGS} ${CPPFLAGS} -c $<
 
 EOF
 					} else {
