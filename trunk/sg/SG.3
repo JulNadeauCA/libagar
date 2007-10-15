@@ -48,9 +48,7 @@ The same structure is used to described "group" nodes and "leaf" nodes.
 Scene-graphs are usually rendered using the
 .Xr SG_View 3
 widget.
-.Pp
 .Sh INHERITANCE HIERARCHY
-.Pp
 .Xr AG_Object 3 ->
 .Nm .
 .Sh INITIALIZATION
@@ -135,9 +133,7 @@ of the given name.
 It returns NULL if no such node was found.
 .Fn SG_FindNode
 is a variant that searches the entire graph.
-.Pp
 .Sh GEOMETRIC NODES
-.Pp
 The Agar-SG distribution includes a set of common node classes.
 Most scene-graphs will reference mainly geometric objects which are derived
 from the
@@ -151,7 +147,6 @@ objects and generate suitable approximations as needed by the application.
 .Pp
 Nodes describing geometric entities are related to each other by a homogenous
 transformation matrix.
-.Pp
 .Sh BUILTIN NODE CLASSES
 .Bl -tag -compact -width "SG_CYLINDER "
 .It SG_SOLID
@@ -182,7 +177,6 @@ Light source.
 Audio reference (for sound occlusion calculations).
 .El
 .Sh NODE TRANSFORMATIONS
-.Pp
 These functions multiply a node's transformation matrix
 .Va T
 with a translation, scaling or rotation matrix.
@@ -274,7 +268,6 @@ The
 .Fn SG_GetNodeTransform
 function returns a matrix which is the product of the transformation
 matrices of the given node and all of its parents.
-.Pp
 .Sh SEE ALSO
 .Xr SG_Camera 3 ,
 .Xr SG_Light 3 ,
