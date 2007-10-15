@@ -78,15 +78,18 @@ The
 .Fa flags
 may include:
 .Pp
-.Bd -literal
-#define RG_TILEVIEW_NO_SCROLLIN   0x01  /* Disable right click scrolling */
-#define RG_TILEVIEW_HIDE_CONTROLS 0x02  /* Hide the current controls */
-#define RG_TILEVIEW_NO_TILING     0x04  /* Don't draw background tiling */
-#define RG_TILEVIEW_NO_EXTENT     0x08  /* Hide the extent rectangle */
-#define RG_TILEVIEW_NO_GRID       0x10  /* Hide the tile grid */
-#define RG_TILEVIEW_SET_ATTRIBS   0x20  /* Setting node attributes */
-#define RG_TILEVIEW_READONLY      0x40
-.Ed
+.Bl -tag -width "RG_TILEVIEW_HIDE_CONTROLS "
+.It RG_TILEVIEW_NO_SCROLLING
+Disable panning on right click.
+.It RG_TILEVIEW_HIDE_CONTROLS
+Hide the control overlays.
+.It RG_TILEVIEW_NO_TILING
+Disable background tiling.
+.It RG_TILEVIEW_NO_EXTENT
+Don't display the boundary rectangle.
+.It RG_TILEVIEW_NO_GRID
+Disable the standard tile grid.
+.El
 .Pp
 The
 .Fn RG_TileviewSetTile
@@ -226,10 +229,10 @@ function creates a new graphical control of the given type:
 .Pp
 .Bd -literal
 enum rg_tileview_ctrl_type {
-	RG_TILEVIEW_POINT,			/* Point (x,y) */
-	RG_TILEVIEW_RECTANGLE,		/* Rectangle (x,y,w,h) */
-	RG_TILEVIEW_RDIMENSIONS,		/* Rectangle (w,h) */
-	RG_TILEVIEW_CIRCLE			/* Circle (x,y,r) */
+	RG_TILEVIEW_POINT,         /* Point (x,y) */
+	RG_TILEVIEW_RECTANGLE,     /* Rectangle (x,y,w,h) */
+	RG_TILEVIEW_RDIMENSIONS,   /* Rectangle (w,h) */
+	RG_TILEVIEW_CIRCLE         /* Circle (x,y,r) */
 };
 .Ed
 .Pp

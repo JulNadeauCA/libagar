@@ -35,7 +35,7 @@
 .Nd agar map display/edition widget
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/map/mapview.h>
+#include <agar/map.h>
 .Ed
 .Sh DESCRIPTION
 The
@@ -72,16 +72,26 @@ widget displaying the given
 The
 .Fa flags
 may include:
-.Bd -literal
-#define MAP_VIEW_EDIT         0x01	/* Mouse/keyboard edition */
-#define MAP_VIEW_GRID         0x02	/* Display the grid */
-#define MAP_VIEW_PROPS        0x04	/* Display node properties */
-#define MAP_VIEW_CENTER       0x08	/* Request initial centering */
-#define MAP_VIEW_NO_CURSOR    0x10	/* Disable the cursor */
-#define MAP_VIEW_NO_BMPSCALE  0x20	/* Disable bitmap scaling */
-#define MAP_VIEW_NO_BG        0x40	/* Disable background tiles */ 
-#define MAP_VIEW_NO_NODESEL   0x80	/* Disable node selections */
-.Ed
+.Bl -tag -width "MAP_VIEW_NO_BMPSCALE "
+.It MAP_VIEW_EDIT
+Enable map edition tools.
+.It MAP_VIEW_GRID
+Display the standard tile grid.
+.It MAP_VIEW_CENTER
+When the widget is attached to a new map, center on its origin.
+.It MAP_VIEW_NO_CURSOR
+Disable the edition cursor.
+.It MAP_VIEW_NO_BMPSCALE
+Disable bitmap scaling on zoom.
+.It MAP_VIEW_NO_BG
+Disable background tiling.
+.It MAP_VIEW_NO_NODESEL
+Disable node selection functions.
+.It MAP_VIEW_SHOW_OFFSETS
+Show lines to indicate element offsets (debug only).
+.It MAP_VIEW_SHOW_ORIGIN
+Draw a circle at the origin.
+.El
 .Pp
 If
 .Fa toolbar
@@ -89,12 +99,6 @@ is not NULL, the
 .Nm
 will automatically create buttons in it for each tool registered with
 .Fn MAP_ViewRegTool .
-.Pp
-The
-.Dv MAP_VIEW_EDIT
-flag enables write operations on the map, assuming the level editor,
-.Xr mapedit 3 ,
-is initialized.
 .Pp
 The
 .Fn MAP_ViewSizeHint

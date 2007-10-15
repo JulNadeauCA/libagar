@@ -98,21 +98,16 @@ The
 .Fa flags
 may contain:
 .Pp
-.Bd -literal
-#define AG_CANCEL_ONDETACH 0x01  /* Cancel in ObjectDetach() */
-#define AG_CANCEL_ONLOAD   0x02  /* Cancel in ObjectLoad() */
-.Ed
-.Pp
-The flags
-.Dv AG_CANCEL_ONDETACH
-and
-.Dv AG_CANCEL_ONLOAD
-indicate that
-.Fn AG_ObjectDetach
-and
-.Fn AG_ObjectLoad
-should automatically cancel any scheduled execution of the callback
-function.
+.Bl -tag -width "AG_CANCEL_ONDETACH "
+.It AG_CANCEL_ONDETACH
+In
+.Fn AG_ObjectDetach ,
+cancel any scheduled execution of the callback function.
+.It AG_CANCEL_ONLOAD
+In
+.Fn AG_ObjectLoad ,
+cancel any scheduled execution of the callback function.
+.El
 .Pp
 The
 .Fn AG_AddTimeout
