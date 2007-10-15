@@ -241,21 +241,6 @@ they must be attached to the main window via
 The following public
 .Nm
 flags are defined:
-.Pp
-.Bd -literal
-#define AG_OBJECT_RELOAD_PROPS   0x0001 /* Don't clear props before load */
-#define AG_OBJECT_NON_PERSISTENT 0x0002 /* Dataset is not archivable */
-#define AG_OBJECT_INDESTRUCTIBLE 0x0004 /* Not destructible (advisory) */
-#define AG_OBJECT_RESIDENT       0x0008 /* Dataset is in memory (RO) */
-#define AG_OBJECT_PRESERVE_DEPS  0x0010 /* Keep deps with refcnt of 0 */
-#define AG_OBJECT_STATIC         0x0020 /* Don't free() after detach */
-#define AG_OBJECT_READONLY       0x0040 /* Disallow edition (advisory) */
-#define AG_OBJECT_REOPEN_ONLOAD  0x0200 /* Recreate editor UI on load */
-#define AG_OBJECT_REMAIN_DATA    0x0400 /* Keep dataset resident */
-#define AG_OBJECT_DEBUG		 0x0800	/* Enable debugging */
-#define AG_OBJECT_NAME_ONATTACH	 0x1000	/* Generate name on attach */
-.Ed
-.Pp
 .Bl -tag -width "AG_OBJECT_NON_PERSISTENT "
 .It Dv AG_OBJECT_RELOAD_PROPS
 Prevents clearing of the

@@ -36,7 +36,7 @@
 .Nm MAP
 .Nd agar two-dimensional map
 .Sh SYNOPSIS
-.Fd #include <agar/map/map.h>
+.Fd #include <agar/map.h>
 .Sh DESCRIPTION
 The
 .Nm
@@ -337,20 +337,9 @@ and
 arguments describe the initial position and direction of the object in the
 destination map.
 .El
-.Sh TROUBLETONS
-The node operation functions should probably use a state variable instead of
-arguments for the layer number.
-.Pp
-.Dv MAP_ITEM_WARP
-could probably be replaced by a "warp" object.
-.Pp
-The
-.Dv NITEM_REGEN
-and
-.Dv NITEM_BIO
-flags could be replaced by a special type of reference for such attributes.
 .Sh SEE ALSO
 .Xr MAP_View 3 ,
+.Xr MAP_Actor 3 ,
 .Xr AG_Object 3
 .Sh HISTORY
 The

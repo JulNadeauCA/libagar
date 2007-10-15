@@ -263,32 +263,25 @@ for the
 .Nm
 structure include:
 .Pp
-.Bd -literal
-#define	AG_EVENT_ASYNC     0x01	/* Event handler runs in own thread */
-#define AG_EVENT_PROPAGATE 0x02	/* Automatically forward to children */
-#define AG_EVENT_SCHEDULED 0x04	/* Pending execution (read-only flag) */
-.Ed
-.Pp
-.Dv AG_EVENT_ASYNC
-arranges for the event handler to execute inside a separate thread that will
+.Bl -tag -width "AG_EVENT_PROPAGATE "
+.It AG_EVENT_ASYNC
+Arrange for the event handler to execute inside a separate thread that will
 be automatically created (and managed by the receiver object).
 This flag is only available if Agar was compiled with the
 .Dv THREADS
 option.
-.Pp
-If the
-.Dv AG_EVENT_PROPAGATE
-flag is set, the event is automatically forwarded to all of the receiver
-object's children, recursively.
+.It AG_EVENT_PROPAGATE
+Event is to be automatically forwarded to all of the receiver object's
+children, recursively.
 Unless
 .Dv AG_EVENT_ASYNC
 events are used, the order of execution is such that the children's event
 handler functions are executed prior to the receiver object's.
-.Pp
-.Dv AG_EVENT_SCHEDULED
-is a read-only flag that is set only if an event of this type has been
-previously scheduled for execution by
-.Fn AG_SchedEvent .
+.It AG_EVENT_SCHEDULED
+Event has been previously scheduled for execution by
+.Fn AG_SchedEvent
+(read-only).
+.El
 .Sh ARGUMENT MANIPULATION
 In some cases it is desirable for functions to accept a list of event handler
 arguments like

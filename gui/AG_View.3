@@ -80,19 +80,36 @@ returning 0 on success and -1 on failure.
 Acceptable
 .Fa flags
 include:
-.Bd -literal
-#define AG_VIDEO_HWSURFACE     0x001  /* Request hardware FB */
-#define AG_VIDEO_ASYNCBLIT     0x002  /* Multithreaded blits */
-#define AG_VIDEO_ANYFORMAT     0x004  /* Disable depth emulation */
-#define AG_VIDEO_HWPALETTE     0x008  /* Exclusive palette access */
-#define AG_VIDEO_DOUBLEBUF     0x010  /* Double buffering */
-#define AG_VIDEO_FULLSCREEN    0x020  /* Start in fullscreen mode */
-#define AG_VIDEO_RESIZABLE     0x040  /* Request resizable window */
-#define AG_VIDEO_NOFRAME       0x080  /* Request frameless window */
-#define AG_VIDEO_BGPOPUPMENU   0x100  /* Set a background popup menu */
-#define AG_VIDEO_OPENGL	       0x200  /* Require OpenGL mode */
-#define AG_VIDEO_OPENGL_OR_SDL 0x400  /* Prefer OpenGL mode */
-.Ed
+.Bl -tag -width "AG_VIDEO_OPENGL_OR_SDL "
+.It AG_VIDEO_HWSURFACE
+Request hardware framebuffer, whenever possible.
+.It AG_VIDEO_ASYNCBLIT
+In SDL mode, pass the
+.Dv SDL_ASYNCBLIT
+to
+.Xr SDL_SetVideoMode 3 .
+.It AG_VIDEO_ANYFORMAT
+In SDL mode, avoid emulating surface of requested depth if not available.
+.It AG_VIDEO_HWPALETTE
+In color-index mode, request exclusive palette access.
+.It AG_VIDEO_DOUBLEBUF
+If
+.Dv AG_VIDEO_HWSURFACE
+is used, enable hardware double-buffering.
+.It AG_VIDEO_FULLSCREEN
+Start in full screen mode.
+.It AG_VIDEO_RESIZABLE
+If display is windowed, request a resizable window.
+.It AG_VIDEO_NOFRAME
+If display is windowed, request a frame-less window.
+.It AG_VIDEO_BGPOPUPMENU
+When the user clicks on the background, display a generic popup menu,
+by default listing the minimize windows.
+.It AG_VIDEO_OPENGL
+Request OpenGL mode and fail if it is not available.
+.It AG_VIDEO_OPENGL_OR_SDL
+Request OpenGL mode if it is available, and fallback to SDL.
+.El
 .Pp
 The
 .Fn AG_DestroyVideo
