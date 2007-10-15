@@ -2,13 +2,9 @@
 
 #ifdef _AGAR_INTERNAL
 #include <config/_mk_have_limits_h.h>
-#include <config/_mk_have_limits_h_fp.h>
-#include <config/have_long_double.h>
 #include <config/have_long_long.h>
 #else
 #include <agar/config/_mk_have_limits_h.h>
-#include <agar/config/_mk_have_limits_h_fp.h>
-#include <agar/config/have_long_double.h>
 #include <agar/config/have_long_long.h>
 #endif
 
@@ -42,16 +38,10 @@
 # define AG_LLONG_MIN	(-0x7fffffffffffffffLL-1)	
 # define AG_LLONG_MAX	0x7fffffffffffffffLL	
 #endif
-#ifdef _MK_HAVE_LIMITS_H_FP
-# define AG_FLT_MIN	FLT_MIN
-# define AG_FLT_MAX	FLT_MAX
-# define AG_DBL_MIN	DBL_MIN
-# define AG_DBL_MAX	DBL_MAX
-#else
-# define AG_FLT_MIN	1.175494351e-38F
-# define AG_FLT_MAX	3.402823466e+38F
-# define AG_DBL_MIN	2.2250738585072014e-308
-# define AG_DBL_MAX	1.7976931348623158e+308
-#endif
+
+#define AG_FLT_MIN	1.175494351e-38F
+#define AG_FLT_MAX	3.402823466e+38F
+#define AG_DBL_MIN	2.2250738585072014e-308
+#define AG_DBL_MAX	1.7976931348623158e+308
 
 #endif /* _COMPAT_LIMITS_H */
