@@ -240,7 +240,6 @@ and
 .Va size_allocate
 functions of container widgets.
 .Sh INPUT STATE
-.Pp
 The input state of a widget determines whether the user is allowed to
 modify whatever data the widget is accessing.
 The way it is implemented is widget-specific.
@@ -276,7 +275,6 @@ and
 .Fn AG_WidgetDisabled
 macros evaluate whether the given widget is enabled for input.
 .Sh FOCUS STATE
-.Pp
 The focus state of a widget controls both its appearance and enables the
 reception of specific types of events.
 A focused widget (in a currently focused window) will receive mouse events
@@ -515,7 +513,6 @@ typedef enum ag_blend_func {
 } AG_BlendFn;
 .Ed
 .Sh GRAPHICS PRIMITIVES
-.Pp
 All of the following functions are called from the widget
 .Va draw
 operation (they are not safe to use in another context), to render primitives
