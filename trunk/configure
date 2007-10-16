@@ -266,10 +266,10 @@ else
 	${LIBTOOL} --version 1>/dev/null 2>&1
 	if [ $? != 0 ]; then
 		echo "yes (generic libtool)"
-		LIBTOOL_COMPILE=
-		LIBTOOL_LINK=
-		LIBTOOL_INSTALL=
-		LIBTOOL_UNINSTALL=
+		echo "LIBTOOL_COMPILE=" >> Makefile.config
+		echo "LIBTOOL_LINK=" >> Makefile.config
+		echo "LIBTOOL_INSTALL=" >> Makefile.config
+		echo "LIBTOOL_UNINSTALL=" >> Makefile.config
 	else
 		grep ^VERSION=1.5 "${LIBTOOL}" 1>/dev/null 2>&1
 		if [ $? == 0 ]; then
