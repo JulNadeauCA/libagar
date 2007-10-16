@@ -253,7 +253,13 @@ else
 		fi
 	done
 	if [ "${ltool}" != "" ]; then
-		LIBTOOL=${ltool}
+		${ltool} --version 1>/dev/null 2>&1
+		if [ $? == 0 ]; then
+			LIBTOOL=${ltool}
+		else
+			LIBTOOL=\${TOP}/mk/libtool/libtool
+			LIBTOOL_BUNDLED="yes"
+		fi
 	else
 		LIBTOOL=\${TOP}/mk/libtool/libtool
 		LIBTOOL_BUNDLED="yes"
@@ -262,22 +268,12 @@ fi
 if [ "${LIBTOOL_BUNDLED}" = "yes" ]; then
 	echo "yes (bundled)"
 else
-	echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
-	${LIBTOOL} --version 1>/dev/null 2>&1
-	if [ $? != 0 ]; then
-		echo "yes (generic libtool)"
-		echo "LIBTOOL_COMPILE=" >> Makefile.config
-		echo "LIBTOOL_LINK=" >> Makefile.config
-		echo "LIBTOOL_INSTALL=" >> Makefile.config
-		echo "LIBTOOL_UNINSTALL=" >> Makefile.config
+	grep ^VERSION=1.5 "${LIBTOOL}" 1>/dev/null 2>&1
+	if [ $? == 0 ]; then
+		echo "yes (GNU libtool 1.5)"
+		echo "LIBTOOLFLAGS=-prefer-pic" >> Makefile.config
 	else
-		grep ^VERSION=1.5 "${LIBTOOL}" 1>/dev/null 2>&1
-		if [ $? == 0 ]; then
-			echo "yes (GNU libtool 1.5)"
-			echo "LIBTOOLFLAGS=-prefer-pic" >> Makefile.config
-		else
-			echo "yes (GNU libtool)"
-		fi
+		echo "yes (GNU libtool)"
 	fi
 fi
 
