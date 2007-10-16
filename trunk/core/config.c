@@ -77,7 +77,7 @@ int agTextSymbols = 1;			/* Process special symbols in text */
 int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 
 int agIdleThresh = 20;			/* Idling threshold */
-int agScreenshotQuality = 75;		/* JPEG quality in % */
+int agScreenshotQuality = 100;		/* JPEG quality in % */
 int agWindowAnySize = 0;		/* Allow any window size */
 
 void
