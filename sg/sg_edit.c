@@ -301,26 +301,27 @@ NodeDelete(AG_Event *event)
 }
 
 static void
-ViewNew(AG_Event *event)
+CreateNewView(AG_Event *event)
 {
 	char name[SG_NODE_NAME_MAX];
 	SG *sg = AG_PTR(1);
-	SG_View *sv;
+	SG_View *svOrig = AG_PTR(2), *sv;
+	int shareCam = AG_INT(3);
 	AG_Window *win;
 	int num = 0;
 	
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", OBJECT(sg)->name);
-
 	sv = SG_ViewNew(win, sg, SG_VIEW_EXPAND);
 tryname:
 	snprintf(name, sizeof(name), "cView%d", num++);
 	if (SG_FindNode(sg, name) != NULL) {
 		goto tryname;
 	}
-	sv->cam = SG_CameraNew(sg->root, name);
-	SG_Translate3(sv->cam, 0.0, 0.0, -10.0);
+	sv->cam = shareCam ? svOrig->cam :
+	          SG_CameraNewDuplicate(sg->root, name, svOrig->cam);
 
+	AG_WindowSetGeometry(win, -1, -1, 300, 300);
 	AG_WindowShow(win);
 }
 
@@ -417,7 +418,9 @@ SG_Edit(void *p)
 	pitem = AG_MenuAddItem(menu, _("View"));
 	{
 		AG_MenuAction(pitem, _("New view..."), -1,
-		    ViewNew, "%p", sg);
+		    CreateNewView, "%p,%p,%i", sg, sv, 0);
+		AG_MenuAction(pitem, _("New view (share camera)..."), -1,
+		    CreateNewView, "%p,%p,%i", sg, sv, 1);
 //		AG_MenuAction(pitem, _("Switch camera..."), -1,
 //		    SwitchCameraDlg, "%p", sv);
 	}

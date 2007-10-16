@@ -50,10 +50,34 @@ SG_CameraNew(void *pnode, const char *name)
 {
 	SG_Camera *cam;
 
-	cam = Malloc(sizeof(struct sg_camera), M_SG);
+	cam = Malloc(sizeof(SG_Camera), M_SG);
 	SG_CameraInit(cam, name);
 	SG_NodeAttach(pnode, cam);
 	return (cam);
+}
+
+SG_Camera *
+SG_CameraNewDuplicate(void *pnode, const char *name, const SG_Camera *cOrig)
+{
+	SG_Camera *cNew;
+
+	cNew = Malloc(sizeof(SG_Camera), M_SG);
+	SG_CameraInit(cNew, name);
+	cNew->flags = cOrig->flags;
+	cNew->pmode = cOrig->pmode;
+	cNew->polyFace = cOrig->polyFace;
+	cNew->polyBack = cOrig->polyBack;
+	cNew->fovY = cOrig->fovY;
+	cNew->aspect = cOrig->aspect;
+	cNew->zNear = cOrig->zNear;
+	cNew->zFar = cOrig->zFar;
+	cNew->userProj = cOrig->userProj;
+	cNew->rotCtrl = cOrig->rotCtrl;
+	cNew->focus[0] = cOrig->focus[0];
+	cNew->focus[1] = cOrig->focus[1];
+	SGNODE(cNew)->T = SGNODE(cOrig)->T;
+	SG_NodeAttach(pnode, cNew);
+	return (cNew);
 }
 
 void
@@ -72,12 +96,12 @@ SG_CameraInit(void *p, const char *name)
 	cam->polyFace.cull = 0;
 	cam->polyBack.mode = SG_CAMERA_WIREFRAME;
 	cam->polyBack.cull = 0;
-#ifdef DEBUG
-	cam->rotSpeed = 0.1;
-#endif
 	cam->rotCtrl = SG_CAMERA_ROT_CIRCULAR;
 	cam->focus[0] = NULL;
 	cam->focus[1] = NULL;
+#ifdef DEBUG
+	cam->rotSpeed = 0.1;
+#endif
 }
 
 int
@@ -113,7 +137,6 @@ SG_CameraSave(void *p, AG_Netbuf *buf)
 	SG_WriteReal(buf, cam->aspect);
 	SG_WriteReal(buf, cam->zNear);
 	SG_WriteReal(buf, cam->zFar);
-
 	AG_WriteUint8(buf, (Uint8)cam->polyFace.mode);
 	AG_WriteUint8(buf, (Uint8)cam->polyFace.cull);
 	AG_WriteUint8(buf, (Uint8)cam->polyBack.mode);
