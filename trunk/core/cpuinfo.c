@@ -56,12 +56,13 @@ struct cpuid_regs {
 
 AG_CPUInfo agCPU;
 
-/* Check whether the CPUID instruction is supported (i386/amd64) */
+#if defined(__GNUC__) && (defined(__i386__) || defined(i386) || defined(__x86_64__))
 static int
-HaveCPUID(void)
+X86_HaveCPUID(void)
 {
 	int rv = 0;
-#if defined(__GNUC__) && (defined(__i386__) || defined(i386))
+
+#if defined(__i386__) || defined(i386)
 	__asm(
 		"pushfl			\n"
 		"popl	%%eax		\n"
@@ -78,7 +79,7 @@ HaveCPUID(void)
 		: "=m" (rv)
 		:
 		: "%eax", "%ecx");
-#elif defined(__GNUC__) && defined(__x86_64__)
+#elif defined(__x86_64__)
 	__asm(
 		"pushfq			\n"
 		"popq	%%rax		\n"
@@ -99,13 +100,12 @@ HaveCPUID(void)
 	return (rv);
 }
 
-/* Get the CPUID data for the given function (i386/amd64) */
 static struct cpuid_regs
-GetCPUID(int fn)
+X86_GetCPUID(int fn)
 {
 	struct cpuid_regs regs;
 
-#if defined(__GNUC__) && (defined(__i386__) || defined(i386))
+#if defined(__i386__) || defined(i386)
 	__asm(
 		"mov %%ebx, %%esi\n"
 		".byte 0x0f, 0xa2\n"
@@ -113,21 +113,17 @@ GetCPUID(int fn)
 		: "=a" (regs.a), "=S" (regs.b), "=c" (regs.c), "=d" (regs.d)
 		: "0" (fn));
 
-#elif defined(__GNUC__) && defined(__x86_64__)
+#elif defined(__x86_64__)
 	__asm(
 		"mov %%rbx, %%rsi\n"
 		".byte 0x0f, 0xa2\n"
 		"xchg %%rsi, %%rbx\n"
 		: "=a" (regs.a), "=S" (regs.b), "=c" (regs.c), "=d" (regs.d)
 		: "0" (fn));
-#else
-	regs.a = 0;
-	regs.b = 0;
-	regs.c = 0;
-	regs.d = 0;
 #endif
 	return (regs);
 }
+#endif /* __GNUC__ && (__i386__ || __x86_64__) */
 
 /* For decoding vendor ID string */
 static __inline__ void
@@ -199,13 +195,13 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 #endif
 
 #if defined(__i386__) || defined(i386) || defined(__x86_64__)
-	if (HaveCPUID() == 0) {
+	if (X86_HaveCPUID() == 0) {
 		return;
 	}
 	cpu->ext |= AG_EXT_CPUID;
 
 	/* Standard Level 0 */
-	r = GetCPUID(0x00000000);
+	r = X86_GetCPUID(0x00000000);
 	maxFns = (Uint)r.a;		/* Maximum supported standard level */
 	Conv32(&cpu->vendorID[0], r.b);
 	Conv32(&cpu->vendorID[4], r.d);
@@ -213,10 +209,10 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 	cpu->vendorID[12] = '\0';
 
 	/* Extended Level */
-	rExt = GetCPUID(0x80000000);
+	rExt = X86_GetCPUID(0x80000000);
 	maxExt = rExt.a;
 	if (maxExt >= 0x80000001) {
-		rExt = GetCPUID(0x80000001);
+		rExt = X86_GetCPUID(0x80000001);
 		if (rExt.d & 0x80000000) cpu->ext |= AG_EXT_3DNOW;
 		if (rExt.d & 0x40000000) cpu->ext |= AG_EXT_3DNOW_EXT;
 		if (rExt.d & 0x20000000) cpu->ext |= AG_EXT_LONG_MODE;
@@ -231,7 +227,7 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 		if (rExt.c & 0x00000040) cpu->ext |= AG_EXT_SSE4A;
 	}
 	if (maxFns >= 1) {
-		rExt = GetCPUID(1);
+		rExt = X86_GetCPUID(1);
 		if (rExt.d & 0x00000001) cpu->ext |= AG_EXT_ONCHIP_FPU;
 		if (rExt.d & 0x00000010) cpu->ext |= AG_EXT_TSC;
 		if (rExt.d & 0x00008000) cpu->ext |= AG_EXT_CMOV;
