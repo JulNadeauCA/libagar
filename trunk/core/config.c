@@ -85,6 +85,9 @@ AG_ConfigInit(AG_Config *cfg)
 {
 	char udatadir[MAXPATHLEN];
 	char tmpdir[MAXPATHLEN];
+#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
+	struct passwd *pwd = getpwuid(getuid());
+#endif
 
 	AG_ObjectInit(cfg, "config", &agConfigOps);
 	OBJECT(cfg)->flags |= AG_OBJECT_RELOAD_PROPS|AG_OBJECT_RESIDENT;
@@ -104,13 +107,10 @@ AG_ConfigInit(AG_Config *cfg)
 
 	/* Set the save directory path and create it as needed. */
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-	{
-		struct passwd *pwd = getpwuid(getuid());
-		strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
-		strlcat(udatadir, AG_PATHSEP, sizeof(udatadir));
-		strlcat(udatadir, ".", sizeof(udatadir));
-		strlcat(udatadir, agProgName, sizeof(udatadir));
-	}
+	strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
+	strlcat(udatadir, AG_PATHSEP, sizeof(udatadir));
+	strlcat(udatadir, ".", sizeof(udatadir));
+	strlcat(udatadir, agProgName, sizeof(udatadir));
 #else
 	udatadir[0] = '.';
 	strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
@@ -135,10 +135,17 @@ AG_ConfigInit(AG_Config *cfg)
 #endif
 	
 #if defined(__APPLE__)
+# if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 	AG_SetString(cfg, "font-path", "%s/fonts:%s:%s/Library/Fonts:"
-	                                  "/Library/Fonts:"
-					  "/System/Library/Fonts",
-					  udatadir, TTFDIR, pwd->pw_dir);
+	                                "/Library/Fonts:"
+					"/System/Library/Fonts",
+					udatadir, TTFDIR, pwd->pw_dir);
+# else
+	AG_SetString(cfg, "font-path", "%s/fonts:%s:"
+	                                "/Library/Fonts:"
+					"/System/Library/Fonts",
+					udatadir, TTFDIR);
+# endif
 #elif defined(_WIN32)
 	AG_SetString(cfg, "font-path", "fonts:.");
 #else
