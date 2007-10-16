@@ -36,7 +36,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
 #include <ctype.h>
 
 AG_FileDlg *
@@ -59,7 +58,7 @@ AG_FilenameCompare(const void *p1, const void *p2)
 	const char *s1 = *(const void **)p1;
 	const char *s2 = *(const void **)p2;
 
-	return (strcoll(s1, s2));
+	return (strcmp(s1, s2));
 }
 
 static void
