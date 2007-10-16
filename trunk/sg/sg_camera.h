@@ -44,6 +44,7 @@ __BEGIN_DECLS
 extern SG_NodeOps sgCameraOps;
 
 SG_Camera	*SG_CameraNew(void *, const char *);
+SG_Camera	*SG_CameraNewDuplicate(void *, const char *, const SG_Camera *);
 void		 SG_CameraInit(void *, const char *);
 int		 SG_CameraLoad(void *, AG_Netbuf *);
 int		 SG_CameraSave(void *, AG_Netbuf *);
