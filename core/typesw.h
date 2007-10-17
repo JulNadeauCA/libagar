@@ -5,8 +5,8 @@
 #include "begin_code.h"
 
 __BEGIN_DECLS
-extern const AG_ObjectOps **agClassTbl;
-extern int                  agClassCount;
+extern AG_ObjectOps **agClassTbl;
+extern int            agClassCount;
 
 void			 AG_InitClassTbl(void);
 void			 AG_DestroyClassTbl(void);
