@@ -16,6 +16,7 @@ int	   AG_ChDir(const char *);
 AG_Dir	  *AG_OpenDir(const char *);
 void	   AG_CloseDir(AG_Dir *);
 int	   AG_MkPath(const char *);
+int	   AG_GetCWD(char *, size_t);
 __END_DECLS
 
 #include "close_code.h"

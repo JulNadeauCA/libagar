@@ -80,8 +80,8 @@ AG_MkDir(const char *dir)
 	if (CreateDirectory(dir, NULL)) {
 		return (0);
 	} else {
-		AG_SetError("%s: cannot create dir (%lu)", dir,
-		    (Ulong)GetLastError());
+		AG_SetError("%s: cannot create dir (%d)", dir,
+		    GetLastError());
 		return (-1);
 	}
 #else
@@ -101,8 +101,8 @@ AG_RmDir(const char *dir)
 	if (RemoveDirectory(dir)) {
 		return (0);
 	} else {
-		AG_SetError("%s: cannot remove dir (%lu)", dir,
-		    (Ulong)GetLastError());
+		AG_SetError("%s: cannot remove dir (%d)", dir,
+		    GetLastError());
 		return (-1);
 	}
 #else
@@ -122,8 +122,8 @@ AG_ChDir(const char *dir)
 	if (SetCurrentDirectory(dir)) {
 		return (0);
 	} else {
-		AG_SetError("%s: cannot set cwd (%lu)", dir,
-		    (Ulong)GetLastError());
+		AG_SetError("%s: cannot set cwd (%d)", dir,
+		    GetLastError());
 		return (-1);
 	}
 #else
@@ -155,8 +155,8 @@ AG_OpenDir(const char *path)
 		strlcpy(dpath, path, sizeof(dpath));
 		strlcat(dpath, "\\*", sizeof(dpath));
 		if ((h = FindFirstFile(dpath, &fdata))==INVALID_HANDLE_VALUE) {
-			AG_SetError("Invalid file handle (%lu)",
-			    (Ulong)GetLastError());
+			AG_SetError("Invalid file handle (%d)",
+			    GetLastError());
 			goto fail;
 		}
 		while (FindNextFile(h, &fdata) != 0) {
@@ -245,3 +245,25 @@ fail:
 	return (-1);
 }
 
+int
+AG_GetCWD(char *buf, size_t len)
+{
+#ifdef _WIN32
+	DWORD rv;
+
+	if ((rv = GetCurrentDirectory(len, buf)) == 0) {
+		AG_SetError("GetCWD: Error %d", GetLastError());
+		return (-1);
+	} else if (rv > len) {
+		AG_SetError("GetCWD: Buffer too small");
+		return (-1);
+	}
+	return (0);
+#else
+	if (getcwd(buf, len) == NULL) {
+		AG_SetError("GetCWD: %s", strerror(errno));
+		return (-1);
+	}
+	return (0);
+#endif
+}

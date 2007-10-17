@@ -35,7 +35,6 @@
 
 #include <stdarg.h>
 #include <string.h>
-#include <errno.h>
 #include <ctype.h>
 
 AG_FileDlg *
@@ -71,7 +70,7 @@ AG_RefreshListing(AG_FileDlg *fd)
 	size_t i, ndirs = 0, nfiles = 0;
 
 	if ((dir = AG_OpenDir(fd->cwd)) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", fd->cwd, strerror(errno));
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", fd->cwd, AG_GetError());
 		return;
 	}
 	
@@ -377,7 +376,7 @@ TextboxReturn(AG_Event *event)
 
 	AG_TextboxCopyString(tb, file, sizeof(file));
 	if (file[0] == '\0' ||
-	    AG_ProcessFilename(file, sizeof(file) == -1)) {
+	    AG_ProcessFilename(file, sizeof(file)) == -1) {
 		return;
 	}
 	AG_TextboxPrintf(tb, "%s", file);
@@ -434,8 +433,8 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 	char *c;
 
 	if (dir[0] == '.' && dir[1] == '\0') {
-		if ((getcwd(ncwd, sizeof(ncwd))) == NULL) {
-			AG_SetError("getcwd: %s", strerror(errno));
+		if (AG_GetCWD(ncwd, sizeof(ncwd)) == -1) {
+			AG_SetError("%s", AG_GetError());
 			return (-1);
 		}
 	} else if (dir[0] == '.' && dir[1] == '.' && dir[2] == '\0') {
@@ -531,8 +530,8 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	fd->flags = flags;
 	fd->cfile[0] = '\0';
 	fd->dirMRU = NULL;
-	if ((getcwd(fd->cwd, sizeof(fd->cwd))) == NULL) {
-		fprintf(stderr, "%s: %s", fd->cwd, strerror(errno));
+	if (AG_GetCWD(fd->cwd, sizeof(fd->cwd)) == -1) {
+		fprintf(stderr, "%s: %s", fd->cwd, AG_GetError());
 	}
 	TAILQ_INIT(&fd->types);
 
