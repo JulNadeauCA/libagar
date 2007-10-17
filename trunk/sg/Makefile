@@ -7,8 +7,7 @@ LIB=		ag_sg
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"ea398f34-6e0e-4436-aae6-08f47550f52d"
-
-LIB_LINKS=	ag_core ag_gui
+LIB_LINKS=	ag_core ag_gui SDL opengl32 glu32
 
 SRCS=	sg.c sg_math.c \
 	sg_vector.c sg_vector2_fpu.c sg_vector3_fpu.c sg_vector4_fpu.c \
