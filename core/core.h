@@ -135,5 +135,11 @@ typedef unsigned long Ulong;
 #define AG_PATHSEP "/"
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4018)
+#pragma warning(disable: 4267)
+#pragma warning(disable: 4244)
+#endif
+
 #include <core/core_init.h>
 #endif /* !_AGAR_CORE_CORE_H_ */
