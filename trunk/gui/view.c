@@ -972,7 +972,7 @@ AG_BlendPixelRGBA(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
 {
 	Uint32 cDst;
 	Uint8 dR, dG, dB, dA;
-	int alpha = (int)dA;
+	int alpha = 0;
 
 	cDst = AG_GET_PIXEL(s, pDst);
 	if ((s->flags & SDL_SRCCOLORKEY) && (cDst == s->format->colorkey)) {
