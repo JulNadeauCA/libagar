@@ -35,13 +35,13 @@
 
 extern const AG_ObjectOps agObjectOps;
 
-const AG_ObjectOps **agClassTbl = NULL;
-int                  agClassCount = 0;
+AG_ObjectOps **agClassTbl = NULL;
+int            agClassCount = 0;
 
 void
 AG_InitClassTbl(void)
 {
-	agClassTbl = Malloc(sizeof(AG_ObjectOps), M_TYPESW);
+	agClassTbl = Malloc(sizeof(AG_ObjectOps *), M_TYPESW);
 	agClassCount = 0;
 	AG_RegisterClass(&agObjectOps);
 }
@@ -57,8 +57,9 @@ AG_DestroyClassTbl(void)
 void
 AG_RegisterClass(const void *cl)
 {
-	agClassTbl = Realloc(agClassTbl, (agClassCount+1)*sizeof(AG_ObjectOps));
-	agClassTbl[agClassCount++] = cl;
+	agClassTbl = Realloc(agClassTbl,
+	    (agClassCount+1)*sizeof(AG_ObjectOps *));
+	agClassTbl[agClassCount++] = (AG_ObjectOps *)cl;
 }
 
 const AG_ObjectOps *
