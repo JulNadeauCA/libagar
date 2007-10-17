@@ -726,7 +726,7 @@ PlaceVertex(AG_Graph *gf, AG_GraphVertex *vtx, AG_GraphVertex **vSorted,
 				PlaceVertex(gf, oVtx, vSorted, ox, oy);
 				break;
 			}
-			theta += (AG_PI*2.0)/6;
+			theta += (float)(AG_PI*2.0)/6;
 			if (theta >= (AG_PI*2.0)) {
 				r += 64.0;
 			}

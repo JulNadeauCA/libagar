@@ -300,9 +300,9 @@ UpdateHue(AG_HSVPal *pal, int x, int y)
 {
 	float h;
 
-	h = atan2((float)y, (float)x);
+	h = atan2f((float)y, (float)x);
 	if (h < 0) {
-		h += 2*AG_PI;
+		h += (float)(2*AG_PI);
 	}
 	AG_WidgetSetFloat(pal, "hue", h/(2*AG_PI)*360.0);
 
@@ -325,11 +325,10 @@ UpdateSV(AG_HSVPal *pal, int ax, int ay)
 	s = 1.0 - (float)y/(float)pal->triangle.h;
 	v = 1.0 - (float)(x + y/2)/(float)pal->triangle.h;
 
-	if (s < 0.0) { s = 0.00001; }
-	else if (s > 1.0) { s = 1.0; }
-
-	if (v < 0.0) { v = 0.0001; }
-	else if (v > 1.0) { v = 1.0; }
+	if (s < 0.0F) { s = 0.00001F; }
+	else if (s > 1.0F) { s = 1.0F; }
+	if (v < 0.0F) { v = 0.0001F; }
+	else if (v > 1.0F) { v = 1.0F; }
 
 	AG_WidgetSetFloat(pal, "saturation", s);
 	AG_WidgetSetFloat(pal, "value", v);
