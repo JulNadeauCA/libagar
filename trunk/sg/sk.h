@@ -278,8 +278,15 @@ SK_Constraint *SK_ConstrainedNodes(const SK_Cluster *, const SK_Node *,
 static __inline__ void
 SK_Update(SK *sk)
 {
+#if 1
+	if (SK_Solve(sk) != 0) {
+		fprintf(stderr, "%s: Sketch is not solvable\n",
+		    AGOBJECT(sk)->name);
+	}
+#else
 	if (SK_Solve(sk) == 0)
 		SK_ExecProgram(sk);
+#endif
 }
 __END_DECLS
 
