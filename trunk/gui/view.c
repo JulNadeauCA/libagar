@@ -1149,9 +1149,9 @@ AG_RGB2HSV(Uint8 r, Uint8 g, Uint8 b, float *h, float *s, float *v)
 	float vMin, vMax, deltaMax;
 	float deltaR, deltaG, deltaB;
 
-	vR = (float)r/(float)255.0;
-	vG = (float)g/(float)255.0;
-	vB = (float)b/(float)255.0;
+	vR = (float)r/255.0F;
+	vG = (float)g/255.0F;
+	vB = (float)b/255.0F;
 
 	vMin = MIN3(vR, vG, vB);
 	vMax = MAX3(vR, vG, vB);
@@ -1164,20 +1164,20 @@ AG_RGB2HSV(Uint8 r, Uint8 g, Uint8 b, float *h, float *s, float *v)
 		*s = 0.0;
 	} else {
 		*s = deltaMax / vMax;
-		deltaR = ((vMax - vR)/(float)6.0 + deltaMax/(float)2.0) / deltaMax;
-		deltaG = ((vMax - vG)/(float)6.0 + deltaMax/(float)2.0) / deltaMax;
-		deltaB = ((vMax - vB)/(float)6.0 + deltaMax/(float)2.0) / deltaMax;
+		deltaR = ((vMax - vR)/6.0F + deltaMax/2.0F) / deltaMax;
+		deltaG = ((vMax - vG)/6.0F + deltaMax/2.0F) / deltaMax;
+		deltaB = ((vMax - vB)/6.0F + deltaMax/2.0F) / deltaMax;
 
 		if (vR == vMax) {
-			*h = (deltaB - deltaG)*(float)360.0;
+			*h = (deltaB - deltaG)*360.0F;
 		} else if (vG == vMax) {
-			*h = (float)120.0 + (deltaR - deltaB)*(float)360.0;	/* 1/3 */
+			*h = 120.0F + (deltaR - deltaB)*360.0F;	/* 1/3 */
 		} else if (vB == vMax) {
-			*h = (float)240.0 + (deltaG - deltaR)*(float)360.0;	/* 2/3 */
+			*h = 240.0F + (deltaG - deltaR)*360.0F;	/* 2/3 */
 		}
 
-		if (*h < (float)0.0)	(*h)++;
-		if (*h > (float)360.0)	(*h)--;
+		if (*h < 0.0F)		(*h)++;
+		if (*h > 360.0F)	(*h)--;
 	}
 }
 
@@ -1196,11 +1196,11 @@ AG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 		return;
 	}
 	
-	hv = h/(float)60.0;
-	iv = (int)floor(hv);
-	var[0] = v * (1 - s);
-	var[1] = v * (1 - s*(hv - iv));
-	var[2] = v * (1 - s*(1 - (hv - iv)));
+	hv = h/60.0F;
+	iv = floor(hv);
+	var[0] = v * (1.0F - s);
+	var[1] = v * (1.0F - s*(hv - iv));
+	var[2] = v * (1.0F - s*(1.0F - (hv - iv)));
 
 	switch (iv) {
 	case 0:		vR = v;		vG = var[2];	vB = var[0];	break;
@@ -1211,9 +1211,9 @@ AG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 	default:	vR = v;		vG = var[0];	vB = var[1];	break;
 	}
 	
-	*r = (Uint8)vR*255;
-	*g = (Uint8)vG*255;
-	*b = (Uint8)vB*255;
+	*r = vR*255;
+	*g = vG*255;
+	*b = vB*255;
 }
 
 #ifdef DEBUG
