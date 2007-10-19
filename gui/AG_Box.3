@@ -45,10 +45,16 @@ widget packs its children horizontally or vertically.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Box *"
-.Fn AG_BoxNew "AG_Widget *parent" "enum ag_box_type type" "int flags"
+.Fn AG_BoxNew "AG_Widget *parent" "enum ag_box_type type" "Uint flags"
+.Pp
+.Ft "AG_Box *"
+.Fn AG_BoxNewHoriz "AG_Widget *parent" "Uint flags"
+.Pp
+.Ft "AG_Box *"
+.Fn AG_BoxNewVert "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_BoxInit "AG_Box *box" "enum ag_box_type type" "int flags"
+.Fn AG_BoxInit "AG_Box *box" "enum ag_box_type type" "Uint flags"
 .Pp
 .Ft void
 .Fn AG_BoxSetHomogenous "AG_Box *box" "int homogenous"
