@@ -42,7 +42,6 @@ AG_Checkbox *
 AG_CheckboxNew(void *parent, Uint flags, const char *label)
 {
 	AG_Checkbox *cb;
-
 	cb = Malloc(sizeof(AG_Checkbox), M_OBJECT);
 	AG_CheckboxInit(cb, flags, label);
 	AG_ObjectAttach(parent, cb);
@@ -53,10 +52,18 @@ AG_CheckboxNew(void *parent, Uint flags, const char *label)
 }
 
 AG_Checkbox *
+AG_CheckboxNewInt(void *parent, Uint flags, int *pVal, const char *label)
+{
+	AG_Checkbox *cb;
+	cb = AG_CheckboxNew(parent, AG_CHECKBOX_HFILL, label);
+	AG_WidgetBindBool(cb, "state", pVal);
+	return (cb);
+}
+
+AG_Checkbox *
 AG_CheckboxNewFlag(void *parent, Uint *pFlags, Uint bitmask, const char *label)
 {
 	AG_Checkbox *cb;
-
 	cb = AG_CheckboxNew(parent, AG_CHECKBOX_HFILL, label);
 	AG_WidgetBindFlag(cb, "state", pFlags, bitmask);
 	return (cb);
@@ -67,7 +74,6 @@ AG_CheckboxNewFlag32(void *parent, Uint32 *pFlags, Uint32 bitmask,
     const char *label)
 {
 	AG_Checkbox *cb;
-
 	cb = AG_CheckboxNew(parent, AG_CHECKBOX_HFILL, label);
 	AG_WidgetBindFlag32(cb, "state", pFlags, bitmask);
 	return (cb);
