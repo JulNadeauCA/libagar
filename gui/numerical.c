@@ -296,7 +296,7 @@ SelectUnit(AG_Event *event)
 	UpdateTextbox(num);
 }
 
-void
+int
 AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 {
 	const AG_Unit *unit = NULL;
@@ -317,7 +317,8 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 			break;
 	}
 	if (!found) {
-		fatal("unknown unit: `%s'", unit_key);
+		AG_SetError("No such unit: %s", unit_key);
+		return (-1);
 	}
 	num->unit = unit;
 	UpdateUnitSelector(num);
@@ -353,8 +354,10 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	AG_UComboSizeHintPixels(num->units, num->wPreUnit,
 	    nUnits<6 ? (nUnits + 1) : 6);
 	
-	if ((pWin = AG_WidgetParentWindow(num)))
+	if ((pWin = AG_WidgetParentWindow(num))) {
 		AG_WindowUpdate(pWin);
+	}
+	return (0);
 }
 
 void
