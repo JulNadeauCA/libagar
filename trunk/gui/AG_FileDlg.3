@@ -199,6 +199,102 @@ The utility functions
 and
 .Fn AG_FileDlgCheckWriteAccess
 evaluate whether the selected file is readable or writeable.
+.Sh FORMAT-SPECIFIC OPTIONS
+In many cases where we are using
+.Nm
+to load or save files, we may want to provide the user with format-specific
+options that will affect the loading or saving process.
+This interface allows a table of generic options to be associated with an
+.Ft AG_FileType
+structure (as returned by
+.Fn AG_FileDlgAddType ) ,
+such that control widgets are dynamically created in a specified container,
+allowing the user to manipulate those options.
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn AG_FileDlgSetOptionContainer "AG_FileDlg *file_dlg" "AG_Widget *container"
+.Pp
+.Ft "AG_FileOption *"
+.Fn AG_FileOptionNewBool "AG_FileType *type" "const char *descr" "const char *key" "int default"
+.Pp
+.Ft "AG_FileOption *"
+.Fn AG_FileOptionNewInt "AG_FileType *type" "const char *descr" "const char *key" "int default" "int min" "int max"
+.Pp
+.Ft "AG_FileOption *"
+.Fn AG_FileOptionNewFlt "AG_FileType *type" "const char *descr" "const char *key" "float default" "float min" "float max" "const char *unit"
+.Pp
+.Ft "AG_FileOption *"
+.Fn AG_FileOptionNewDbl "AG_FileType *type" "const char *descr" "const char *key" "double default" "double min" "double max" "const char *unit"
+.Pp
+.Ft "AG_FileOption *"
+.Fn AG_FileOptionGet "AG_FileType *type" "const char *key"
+.Pp
+.Ft "int"
+.Fn AG_FileOptionBool "AG_FileType *type" "const char *key"
+.Pp
+.Ft "int"
+.Fn AG_FileOptionInt "AG_FileType *type" "const char *key"
+.Pp
+.Ft "float"
+.Fn AG_FileOptionFlt "AG_FileType *type" "const char *key"
+.Pp
+.Ft "double"
+.Fn AG_FileOptionDbl "AG_FileType *type" "const char *key"
+.Pp
+.nr nS 0
+The
+.Fn AG_FileDlgSetOptionContainer
+function arranges for the given container widget to hold the control
+widgets that will be dynamically created.
+.Pp
+.Fn AG_FileOptionNewBool
+registers a boolean option, manipulated by an
+.Xr AG_Checkbox 3 .
+.Fa descr
+is a description string and
+.Fa key
+is a handle that the save/load routine will use to retrieve the option.
+.Fa default
+indicates the initial value of the option (1 = true, 0 = false).
+.Pp
+.Fn AG_FileOptionNewInt
+registers an integer option, manipulated by an
+.Xr AG_Numerical 3 .
+.Fa default
+is the initial value,
+.Fa min
+and
+.Fa max
+define the bounds.
+.Pp
+.Fn AG_FileOptionNewFlt
+and
+.Fn AG_FileOptionNewDbl
+register single and double precision floating-point options, using
+.Xr AG_Numerical 3 .
+.Fa default
+is the initial value,
+.Fa min
+and
+.Fa max
+define the bounds
+and
+.Fa unit ,
+if not NULL, is the unit system to use (see
+.Xr AG_Units 3 ) .
+.Pp
+.Fn AG_FileOptionGet
+returns a pointer to the
+.Ft AG_FileOption
+structure for the given option name, or NULL if there is no such option.
+.Fn AG_FileOptionBool ,
+.Fn AG_FileOptionInt ,
+.Fn AG_FileOptionFlt
+and
+.Fn AG_FileOptionDbl
+return the value of the given option assuming it exists.
+.Pp
 .Sh BINDINGS
 The
 .Nm
