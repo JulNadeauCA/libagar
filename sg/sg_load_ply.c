@@ -79,24 +79,24 @@ struct ply_info {
 	TAILQ_HEAD(,ply_element) elements;
 };
 
-static const char *ply_prop_names[] = {
+static const char *plyPropNames[] = {
 	"int8", "int16", "int32", "uint8", "uint16", "uint32",
 	"float32", "float64"
 };
-static const char *ply_prop_names_legacy[] = {
+static const char *plyPropNamesLegacy[] = {
 	"char", "short", "int", "uchar", "ushort", "uint",
 	"float", "double"
 };
 
 static void
-PLY_Init(struct ply_info *ply)
+InitPLY(struct ply_info *ply)
 {
 	ply->format = PLY_ASCII;
 	TAILQ_INIT(&ply->elements);
 }
 
 static void
-PLY_Free(struct ply_info *ply)
+FreePLY(struct ply_info *ply)
 {
 	struct ply_element *el, *el2;
 	struct ply_prop *prop, *nprop;
@@ -117,7 +117,7 @@ PLY_Free(struct ply_info *ply)
 }
 
 static int
-PLY_NameOK(const char *s)
+IsValidElementName(const char *s)
 {
 	const char *c;
 
@@ -131,13 +131,13 @@ PLY_NameOK(const char *s)
 }
 
 static int
-PLY_GetType(const char *name)
+GetPropType(const char *name)
 {
 	int i;
 
 	for (i = 0; i < SG_PLY_LAST_TYPE; i++) {
-		if (strcmp(name, ply_prop_names[i]) == 0 ||
-		    strcmp(name, ply_prop_names_legacy[i]) == 0) {
+		if (strcmp(name, plyPropNames[i]) == 0 ||
+		    strcmp(name, plyPropNamesLegacy[i]) == 0) {
 			return (i);
 		}
 	}
@@ -146,7 +146,7 @@ PLY_GetType(const char *name)
 }
 
 static __inline__ int
-PLY_GetUintASCII(const char *s, Uint *rv)
+GetUintASCII(const char *s, Uint *rv)
 {
 	Uint v;
 	char *c;
@@ -161,7 +161,7 @@ PLY_GetUintASCII(const char *s, Uint *rv)
 }
 		
 static __inline__ int
-PLY_GetRealASCII(const char *s, SG_Real *rv)
+GetRealASCII(const char *s, SG_Real *rv)
 {
 	SG_Real v;
 	char *c;
@@ -176,29 +176,34 @@ PLY_GetRealASCII(const char *s, SG_Real *rv)
 }
 
 static void
-PLY_SetVertexProps(SG_Vertex *v, struct ply_prop *prop, SG_Real fv)
+SetVertexProps(SG_Vertex *v, struct ply_prop *prop, SG_Real fv, Uint flags)
 {
 	struct {
 		const char *name;
 		SG_Real *p;
 		int conv8;
+		Uint flags;
 	} vprops[] = {
-		{ "x", &v->v.x, 0 },
-		{ "y", &v->v.y, 0 },
-		{ "z", &v->v.z, 0 },
-		{ "nx", &v->n.x, 0 },
-		{ "ny", &v->n.y, 0 },
-		{ "nz", &v->n.z, 0 },
-		{ "s", &v->s, 0 },
-		{ "t", &v->t, 0 },
-		{ "red", &v->c.r, 1 },
-		{ "green", &v->c.g, 1 },
-		{ "blue", &v->c.b, 1 },
+		{ "x",     &v->v.x, 0, 0 },
+		{ "y",     &v->v.y, 0, 0 },
+		{ "z",     &v->v.z, 0, 0 },
+		{ "nx",    &v->n.x, 0, SG_PLY_LOAD_VTX_NORMALS },
+		{ "ny",    &v->n.y, 0, SG_PLY_LOAD_VTX_NORMALS },
+		{ "nz",    &v->n.z, 0, SG_PLY_LOAD_VTX_NORMALS },
+		{ "s",     &v->s,   0, SG_PLY_LOAD_TEXCOORDS },
+		{ "t",     &v->t,   0, SG_PLY_LOAD_TEXCOORDS },
+		{ "red",   &v->c.r, 1, SG_PLY_LOAD_VTX_COLORS },
+		{ "green", &v->c.g, 1, SG_PLY_LOAD_VTX_COLORS },
+		{ "blue",  &v->c.b, 1, SG_PLY_LOAD_VTX_COLORS },
 	};
 	const int nprops = sizeof(vprops)/sizeof(vprops[0]);
 	int i;
-	
+
 	for (i = 0; i < nprops; i++) {
+		if (vprops[i].flags != 0 &&
+		    (vprops[i].flags & flags) == 0) {
+			continue;
+		}
 		if (strcmp(vprops[i].name, prop->name) == 0) {
 			if (vprops[i].conv8) {
 				*(vprops[i].p) = ((SG_Real)fv)/255.0;
@@ -210,7 +215,7 @@ PLY_SetVertexProps(SG_Vertex *v, struct ply_prop *prop, SG_Real fv)
 }
 
 static __inline__ int
-PLY_InsertFace(SG_Object *so, Uint *vind, Uint nind, Uint *map)
+CreateFacet(SG_Object *so, Uint *vind, Uint nind, Uint *map)
 {
 	switch (nind) {
 	case 4:
@@ -228,7 +233,7 @@ PLY_InsertFace(SG_Object *so, Uint *vind, Uint nind, Uint *map)
 }
 
 static int
-PLY_LoadASCII(SG_Object *so, struct ply_info *ply, FILE *f)
+LoadASCII(SG_Object *so, struct ply_info *ply, FILE *f, Uint flags)
 {
 	char line[4096], *s, *c;
 	struct ply_element *el;
@@ -236,10 +241,6 @@ PLY_LoadASCII(SG_Object *so, struct ply_info *ply, FILE *f)
 	Uint *map = NULL;
 	Ulong i;
 
-	/*
-	 * Load the data into the object. Use an array to remap vertex names
-	 * since the file might contain duplicate vertices.
-	 */
 	TAILQ_FOREACH(el, &ply->elements, elements) {
 		if (strcmp(el->name, "vertex") == 0) {
 			if (map != NULL) {
@@ -257,6 +258,13 @@ PLY_LoadASCII(SG_Object *so, struct ply_info *ply, FILE *f)
 		}
 		for (i = 0; i < el->count; i++) {
 			SG_Vertex vTmp;
+	
+			vTmp.n = VecZero();
+			vTmp.s = 0.0;
+			vTmp.t = 0.0;
+			vTmp.c.r = 0.5;
+			vTmp.c.g = 0.5;
+			vTmp.c.b = 0.5;
 
 			if ((s = fgets(line, sizeof(line), f)) == NULL ||
 			    (c = strchr(line, '\n')) == NULL) {
@@ -270,57 +278,55 @@ PLY_LoadASCII(SG_Object *so, struct ply_info *ply, FILE *f)
 				Uint vind[4], nind = 0, j;
 
 				if (prop->list) {
-					if (PLY_GetUintASCII(num, &nind) == -1)
+					if (GetUintASCII(num, &nind) == -1)
 						goto fail;
 					if (nind > 4) {
 						AG_SetError("Polygon facet");
 						goto fail;
 					}
 					for (j = 0; j < nind; j++) {
-						if (PLY_GetUintASCII(
+						if (GetUintASCII(
 						    strsep(&s, " "),
 						    &vind[j]) == -1)
 							goto fail;
 					}
 				} else {
-					if (PLY_GetRealASCII(num, &fv) == -1) {
+					if (GetRealASCII(num, &fv) == -1) {
 						goto fail;
 					}
-					if (strcmp(el->name, "vertex") == 0) {
-						PLY_SetVertexProps(&vTmp,
-						    prop, fv);
-					}
+					if (strcmp(el->name, "vertex") == 0)
+						SetVertexProps(&vTmp, prop, fv,
+						    flags);
 				}
 				if (strcmp(el->name, "face") == 0 &&
-				    PLY_InsertFace(so, vind, nind, map) == -1)
+				    CreateFacet(so, vind, nind, map) == -1)
 					goto fail;
 			}
 			if (strcmp(el->name, "vertex") == 0) {
 				Uint j;
-#if 1
-				/* 
-				 * Find and remap duplicate vertices.
-				 * XXX extremely expensive; we should allow for
-				 * skipping if we know the input file has no
-				 * duplicate vertices.
-				 */
-				for (j = 1; j < so->nvtx; j++) {
-					SG_Vertex *ve = &so->vtx[j];
 
-					if (ve->v.x == vTmp.v.x &&
-					    ve->v.y == vTmp.v.y &&
-					    ve->v.z == vTmp.v.z) {
+				/* Detect duplicate vertices. */
+				if (flags & SG_PLY_DUP_VERTICES) {
+					for (j = 1; j < so->nvtx; j++) {
+						SG_Vertex *ve = &so->vtx[j];
+
+						/* XXX space partitioning! */
+						if (ve->v.x != vTmp.v.x ||
+						    ve->v.y != vTmp.v.y ||
+						    ve->v.z != vTmp.v.z) {
+							continue;
+						}
 						ve->n = vTmp.n;
 						ve->c = vTmp.c;
 						ve->s = vTmp.s;
 						ve->t = vTmp.t;
-						map[i] = j;   /* Map existing */
+						/* Map existing */
+						map[i] = j;
 						break;
 					}
+				} else {
+					j = so->nvtx;
 				}
-#else
-				j = so->nvtx;
-#endif
 				if (j == so->nvtx) {
 					SG_Vertex *vNew;
 
@@ -346,14 +352,14 @@ fail:
 }
 
 static int
-PLY_LoadBinary(SG_Object *so, struct ply_info *ply, FILE *f)
+LoadBinary(SG_Object *so, struct ply_info *ply, FILE *f, Uint flags)
 {
 	AG_SetError("Unimplemented format %d", ply->format);
 	return (-1);
 }
 
 int
-SG_ObjectLoadPLY(void *obj, const char *path)
+SG_ObjectLoadPLY(void *obj, const char *path, Uint flags)
 {
 	SG_Object *so = obj;
 	struct ply_info ply;
@@ -375,7 +381,7 @@ SG_ObjectLoadPLY(void *obj, const char *path)
 		return (-1);
 	}
 
-	PLY_Init(&ply);
+	InitPLY(&ply);
 
 	/* Load the PLY header information */
 	for (nline = 0;
@@ -418,7 +424,7 @@ SG_ObjectLoadPLY(void *obj, const char *path)
 				AG_SetError("Bad element line");
 				goto fail;
 			}
-			if (!PLY_NameOK(v1)) {
+			if (!IsValidElementName(v1)) {
 				goto fail;
 			}
 			count = strtoul(v2, &c, 10);
@@ -454,17 +460,17 @@ SG_ObjectLoadPLY(void *obj, const char *path)
 					Free(prop, M_SG);
 					goto fail;
 				}
-				if ((prop->list_type = PLY_GetType(v2)) == -1 ||
-				    (prop->type = PLY_GetType(v3)) == -1 ||
-				    !PLY_NameOK(v4)) {
+				if ((prop->list_type = GetPropType(v2)) == -1 ||
+				    (prop->type = GetPropType(v3)) == -1 ||
+				    !IsValidElementName(v4)) {
 					Free(prop, M_SG);
 					goto fail;
 				}
 				strlcpy(prop->name, v4, sizeof(prop->name));
 				prop->list = 1;
 			} else {
-				if ((prop->type = PLY_GetType(v1)) == -1 ||
-				    !PLY_NameOK(v2)) {
+				if ((prop->type = GetPropType(v1)) == -1 ||
+				    !IsValidElementName(v2)) {
 					Free(prop, M_SG);
 					goto fail;
 				}
@@ -477,20 +483,20 @@ SG_ObjectLoadPLY(void *obj, const char *path)
 
 	switch (ply.format) {
 	case PLY_ASCII:
-		if (PLY_LoadASCII(so, &ply, f) == -1) { goto fail; }
+		if (LoadASCII(so, &ply, f, flags) == -1) { goto fail; }
 		break;
 	case PLY_BIN_BE:
 	case PLY_BIN_LE:
-		if (PLY_LoadBinary(so, &ply, f) == -1) { goto fail; }
+		if (LoadBinary(so, &ply, f, flags) == -1) { goto fail; }
 		break;
 	}
 
 	fclose(f);
-	PLY_Free(&ply);
+	FreePLY(&ply);
 	return (0);
 fail:
 	fclose(f);
-	PLY_Free(&ply);
+	FreePLY(&ply);
 	return (-1);
 }
 
