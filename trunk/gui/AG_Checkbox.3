@@ -50,6 +50,9 @@ binding.
 .Fn AG_CheckboxNew "AG_Widget *parent" "Uint flags" "const char *label"
 .Pp
 .Ft "AG_Checkbox *"
+.Fn AG_CheckboxNewInt "AG_Widget *parent" "int *pBool" "const char *label"
+.Pp
+.Ft "AG_Checkbox *"
 .Fn AG_CheckboxNewFlag "AG_Widget *parent" "Uint *pFlags" "Uint bitmask" "const char *label"
 .Pp
 .Ft "AG_Checkbox *"
@@ -79,8 +82,10 @@ initializes a preallocated
 widget.
 .Pp
 The
+.Fn AG_CheckboxNewInt
+function binds the default state to a boolean integer.
 .Fn AG_CheckboxNewFlag
-variant also binds the default state to a specified set of bits
+binds the default state to a specified set of bits
 .Fa bitmask
 in
 .Fa pFlags .
