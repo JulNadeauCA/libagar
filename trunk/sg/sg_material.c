@@ -398,7 +398,7 @@ SG_MaterialEdit(void *obj)
 			os = AG_ObjectSelectorNew(hBox, AG_OBJSEL_PAGE_DATA,
 			    mat, agWorld, _("Attach Program: "));
 			AG_ObjectSelectorMaskType(os, "SG_Program:*");
-			AG_ButtonNewFn(hBox, AG_BUTTON_HFILL, _("OK"),
+			AG_ButtonNewFn(hBox, AG_BUTTON_VFILL, _("OK"),
 			    AttachProgram, "%p", os, mat);
 		}
 		AG_TlistNewPolled(ntab, AG_TLIST_EXPAND,
