@@ -32,6 +32,8 @@
 #include "file_dlg.h"
 
 #include <gui/hbox.h>
+#include <gui/numerical.h>
+#include <gui/checkbox.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -49,6 +51,12 @@ AG_FileDlgNew(void *parent, Uint flags)
 		AG_WidgetFocus(fd);
 	}
 	return (fd);
+}
+
+void
+AG_FileDlgSetOptionContainer(AG_FileDlg *fd, void *ctr)
+{
+	fd->optsCtr = ctr;
 }
 
 static int
@@ -158,8 +166,8 @@ ChooseFile(AG_FileDlg *fd, AG_Window *pwin)
 		AG_FileType *ft = it->p1;
 
 		if (ft->action != NULL) {
-			AG_PostEvent(NULL, fd, ft->action->name, "%s",
-			    fd->cfile);
+			AG_PostEvent(NULL, fd, ft->action->name, "%s,%p",
+			    fd->cfile, ft);
 		}
 		AG_PostEvent(NULL, fd, "file-chosen", "%s,%p", fd->cfile, ft);
 	} else {
@@ -411,12 +419,66 @@ PressedCancel(AG_Event *event)
 }
 
 static void
+SelectedType(AG_Event *event)
+{
+	AG_FileDlg *fd = AG_PTR(1);
+	AG_TlistItem *it = AG_PTR(2);
+	AG_FileType *ft = (it != NULL) ? it->p1 : TAILQ_FIRST(&fd->types);
+	AG_FileOption *fo;
+	AG_Numerical *num;
+	AG_Widget *chld;
+	AG_Window *pWin;
+
+	if (fd->optsCtr == NULL) {
+		return;
+	}
+	OBJECT_FOREACH_CHILD(chld, fd->optsCtr, ag_widget) {
+		AG_ObjectDetach(chld);
+		AG_ObjectDestroy(chld);
+		Free(chld, M_OBJECT);
+	}
+	TAILQ_FOREACH(fo, &ft->opts, opts) {
+		switch (fo->type) {
+		case AG_FILEDLG_BOOL:
+			AG_CheckboxNewInt(fd->optsCtr, 0, &fo->data.i.val,
+			    fo->descr);
+			break;
+		case AG_FILEDLG_INT:
+			num = AG_NumericalNew(fd->optsCtr, 0, NULL, fo->descr);
+			AG_WidgetBindInt(num, "value", &fo->data.i.val);
+			AG_NumericalSetRangeInt(num, fo->data.i.min,
+			    fo->data.i.max);
+			break;
+		case AG_FILEDLG_FLOAT:
+			num = AG_NumericalNew(fd->optsCtr, 0, fo->unit,
+			    fo->descr);
+			AG_WidgetBindFloat(num, "value", &fo->data.flt.val);
+			AG_NumericalSetRangeDbl(num, fo->data.flt.min,
+			                             fo->data.flt.max);
+			break;
+		case AG_FILEDLG_DOUBLE:
+			num = AG_NumericalNew(fd->optsCtr, 0, fo->unit,
+			    fo->descr);
+			AG_WidgetBindDouble(num, "value", &fo->data.dbl.val);
+			AG_NumericalSetRange(num, fo->data.dbl.min,
+			                          fo->data.dbl.max);
+			break;
+		default:
+			break;
+		}
+	}
+	if ((pWin = AG_WidgetParentWindow(fd)) != NULL)
+		AG_WindowUpdate(pWin);
+}
+
+static void
 WidgetShown(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_SELF();
 
 /*	AG_WidgetFocus(fd->tbFile); */
 	AG_RefreshListing(fd);
+	AG_PostEvent(NULL, fd->comTypes, "combo-selected", "%p", NULL);
 }
 
 int
@@ -475,7 +537,6 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 		return (-1);
 	}
 	if (fd->dirMRU != NULL) {
-		dprintf("setting MRU (%s) to %s\n", fd->dirMRU, fd->cwd);
 		AG_SetString(agConfig, fd->dirMRU, fd->cwd);
 		AG_ObjectSave(agConfig);
 	}
@@ -533,9 +594,11 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	if (AG_GetCWD(fd->cwd, sizeof(fd->cwd)) == -1) {
 		fprintf(stderr, "%s: %s", fd->cwd, AG_GetError());
 	}
+	fd->optsCtr = NULL;
 	TAILQ_INIT(&fd->types);
 
 	fd->hPane = AG_PaneNewHoriz(fd, AG_PANE_EXPAND);
+
 	fd->tlDirs = AG_TlistNew(fd->hPane->div[0], AG_TLIST_EXPAND);
 	fd->tlFiles = AG_TlistNew(fd->hPane->div[1], AG_TLIST_EXPAND|
 	    ((flags & AG_FILEDLG_MULTI) ? AG_TLIST_MULTI : 0));
@@ -553,19 +616,18 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 
 	fd->btnOk = AG_ButtonNew(fd, 0, _("OK"));
 	fd->btnCancel = AG_ButtonNew(fd, 0, _("Cancel"));
+	fd->okAction = NULL;
+	fd->cancelAction = NULL;
 
 	AG_SetEvent(fd, "widget-shown", WidgetShown, NULL);
 	AG_SetEvent(fd->tlDirs, "tlist-dblclick", DirSelected, "%p", fd);
 	AG_SetEvent(fd->tlFiles, "tlist-selected", FileSelected, "%p", fd);
 	AG_SetEvent(fd->tlFiles, "tlist-dblclick", FileDblClicked, "%p", fd);
-
 	AG_SetEvent(fd->tbFile, "textbox-postchg", TextboxChanged, "%p", fd);
 	AG_SetEvent(fd->tbFile, "textbox-return", TextboxReturn, "%p", fd);
 	AG_SetEvent(fd->btnOk, "button-pushed", PressedOK, "%p", fd);
 	AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
-
-	fd->okAction = NULL;
-	fd->cancelAction = NULL;
+	AG_SetEvent(fd->comTypes, "combo-selected", SelectedType, "%p", fd);
 }
 
 void
@@ -593,12 +655,20 @@ Destroy(void *p)
 {
 	AG_FileDlg *fd = p;
 	AG_FileType *ft, *ft2;
+	AG_FileOption *fo, *fo2;
 	Uint i;
 
 	for (ft = TAILQ_FIRST(&fd->types);
 	     ft != TAILQ_END(&fd->types);
 	     ft = ft2) {
 		ft2 = TAILQ_NEXT(ft, types);
+	
+		for (fo = TAILQ_FIRST(&ft->opts);
+		     fo != TAILQ_END(&ft->opts);
+		     fo = fo2) {
+			fo2 = TAILQ_NEXT(fo, opts);
+			Free(fo, M_WIDGET);
+		}
 		for (i = 0; i < ft->nexts; i++) {
 			Free(ft->exts[i], M_WIDGET);
 		}
@@ -698,6 +768,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	ft->descr = descr;
 	ft->exts = Malloc(sizeof(char *), M_WIDGET);
 	ft->nexts = 0;
+	TAILQ_INIT(&ft->opts);
 
 	ds = dexts = Strdup(exts);
 	while ((ext = AG_Strsep(&ds, ",;")) != NULL) {
@@ -720,6 +791,112 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 
 	TAILQ_INSERT_TAIL(&fd->types, ft, types);
 	return (ft);
+}
+
+AG_FileOption *
+AG_FileOptionNewBool(AG_FileType *ft, const char *descr, const char *key,
+    int dflt)
+{
+	AG_FileOption *fto;
+
+	fto = Malloc(sizeof(AG_FileOption), M_WIDGET);
+	fto->descr = descr;
+	fto->key = key;
+	fto->unit = NULL;
+	fto->type = AG_FILEDLG_BOOL;
+	fto->data.i.val = dflt;
+	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
+	return (fto);
+}
+
+AG_FileOption *
+AG_FileOptionNewInt(AG_FileType *ft, const char *descr, const char *key,
+    int dflt, int min, int max)
+{
+	AG_FileOption *fto;
+
+	fto = Malloc(sizeof(AG_FileOption), M_WIDGET);
+	fto->descr = descr;
+	fto->key = key;
+	fto->unit = NULL;
+	fto->type = AG_FILEDLG_INT;
+	fto->data.i.val = dflt;
+	fto->data.i.min = min;
+	fto->data.i.max = max;
+	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
+	return (fto);
+}
+
+AG_FileOption *
+AG_FileOptionNewFlt(AG_FileType *ft, const char *descr, const char *key,
+    float dflt, float min, float max, const char *unit)
+{
+	AG_FileOption *fto;
+
+	fto = Malloc(sizeof(AG_FileOption), M_WIDGET);
+	fto->descr = descr;
+	fto->key = key;
+	fto->unit = NULL;
+	fto->type = AG_FILEDLG_FLOAT;
+	fto->data.flt.val = dflt;
+	fto->data.flt.min = min;
+	fto->data.flt.max = max;
+	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
+	return (fto);
+}
+
+AG_FileOption *
+AG_FileOptionNewDbl(AG_FileType *ft, const char *descr, const char *key,
+    double dflt, double min, double max, const char *unit)
+{
+	AG_FileOption *fto;
+
+	fto = Malloc(sizeof(AG_FileOption), M_WIDGET);
+	fto->descr = descr;
+	fto->key = key;
+	fto->unit = unit;
+	fto->type = AG_FILEDLG_DOUBLE;
+	fto->data.dbl.val = dflt;
+	fto->data.dbl.min = min;
+	fto->data.dbl.max = max;
+	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
+	return (fto);
+}
+
+AG_FileOption *
+AG_FileOptionGet(AG_FileType *ft, const char *key)
+{
+	AG_FileOption *fo;
+
+	TAILQ_FOREACH(fo, &ft->opts, opts) {
+		if (strcmp(fo->key, key) == 0)
+			break;
+	}
+	return (fo);
+}
+
+int
+AG_FileOptionInt(AG_FileType *ft, const char *key)
+{
+	AG_FileOption *fo;
+	fo = AG_FileOptionGet(ft, key);
+	return (fo != NULL) ? fo->data.i.val : -1;
+}
+
+float
+AG_FileOptionFlt(AG_FileType *ft, const char *key)
+{
+	AG_FileOption *fo;
+	fo = AG_FileOptionGet(ft, key);
+	return (fo != NULL) ? fo->data.flt.val : 0.0;
+}
+
+double
+AG_FileOptionDbl(AG_FileType *ft, const char *key)
+{
+	AG_FileOption *fo;
+	fo = AG_FileOptionGet(ft, key);
+	return (fo != NULL) ? fo->data.dbl.val : 0.0;
 }
 
 const AG_WidgetOps agFileDlgOps = {
