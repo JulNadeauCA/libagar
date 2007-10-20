@@ -50,12 +50,30 @@ void		 AG_NumericalSizeHint(AG_Numerical *, const char *);
 
 void	AG_NumericalSetValue(AG_Numerical *, double);
 void	AG_NumericalAddValue(AG_Numerical *, double);
+#define AG_NumericalSubValue(num,val) \
+	AG_NumericalAddValue((num),-(val))
+
 void	AG_NumericalSetMin(AG_Numerical *, double);
+#define AG_NumericalSetMinInt(num, v) AG_NumericalSetMin((num),(double)(v))
+#define AG_NumericalSetMinFlt(num, v) AG_NumericalSetMin((num),(double)(v))
+#define AG_NumericalSetMinDbl(num, v) AG_NumericalSetMin((num),(v))
+
 void	AG_NumericalSetMax(AG_Numerical *, double);
+#define AG_NumericalSetMaxInt(num, v) AG_NumericalSetMax((num),(double)(v))
+#define AG_NumericalSetMaxFlt(num, v) AG_NumericalSetMax((num),(double)(v))
+#define AG_NumericalSetMaxDbl(num, v) AG_NumericalSetMax((num),(v))
+
 void	AG_NumericalSetRange(AG_Numerical *, double, double);
+#define AG_NumericalSetRangeInt(num, min, max) \
+	AG_NumericalSetRange((num),(double)(min),(double)(max))
+#define AG_NumericalSetRangeFlt(num, min, max) \
+	AG_NumericalSetRange((num),(double)(min),(double)(max))
+#define AG_NumericalSetRangeDbl(num, min, max) \
+	AG_NumericalSetRange((num),(min),(max))
+
 void	AG_NumericalSetIncrement(AG_Numerical *, double);
 void	AG_NumericalSelectUnit(AG_Numerical *, const char *);
-void	AG_NumericalSetUnitSystem(AG_Numerical *, const char *);
+int	AG_NumericalSetUnitSystem(AG_Numerical *, const char *);
 void	AG_NumericalSetPrecision(AG_Numerical *, const char *, int);
 void	AG_NumericalSetWriteable(AG_Numerical *, int);
 
