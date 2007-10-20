@@ -1,0 +1,256 @@
+.\" Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 20, 2003
+.Dt AG_NUMERICAL 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.2
+.Sh NAME
+.Nm AG_Numerical
+.Nd agar numerical entry widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget allows the user to modify the value of a floating-point or integer
+variable.
+.Pp
+The widget is composed of an
+.Xr AG_Textbox 3 ,
+two
+.Xr AG_Button 3
+widgets to increment and decrement the value,
+and optionally an
+.Xr AG_UCombo 3
+for choosing between different units
+(see
+.Xr AG_Units 3 ) .
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNew "AG_Widget *parent, Uint flags, const char *unit" "const char *label"
+.Pp
+.Ft void
+.Fn AG_NumericalInit "AG_Numerical *num, Uint flags, const char *unit" "const char *label"
+.Pp
+.Ft void
+.Fn AG_NumericalSetMin "AG_Numerical *num" "double min_value"
+.Pp
+.Ft void
+.Fn AG_NumericalSetMax "AG_Numerical *num" "double max_value"
+.Pp
+.Ft void
+.Fn AG_NumericalSetRange "AG_Numerical *num" "double min" "double max"
+.Pp
+.Ft void
+.Fn AG_NumericalSetIncrement "AG_Numerical *num" "double increment"
+.Pp
+.Ft int
+.Fn AG_NumericalSetUnitSystem "AG_Numerical *num" "const char *unit"
+.Pp
+.Ft void
+.Fn AG_NumericalSelectUnit "AG_Numerical *num" "const char *unit"
+.Pp
+.Ft void
+.Fn AG_NumericalSetPrecision "AG_Numerical *num, const char *fmt" "int precision"
+.Pp
+.nr nS 0
+The
+.Fn AG_NumericalNew
+function allocates, initializes, and attaches a new
+.Nm
+widget.
+The
+.Fn AG_NumericalInit
+function initializes a preallocated
+.Nm
+widget.
+.Pp
+The
+.Fa unit 
+argument is the name of the conversion unit that will be used by default
+(other conversion units in the same unit group will also be displayed in the
+unit selector).
+If
+.Fa unit
+is NULL, no conversion is done and the unit selector is not shown.
+See
+.Xr AG_Units 3
+for more information.
+.Pp
+The
+.Fn AG_NumericalSetMin ,
+.Fn AG_NumericalSetMax
+and
+.Fn AG_NumericalSetRange
+functions define the range of acceptable values (in base units).
+Invocations of these functions must always follow any
+.Fn AG_WidgetBind
+call, since binding to
+.Va value
+automatically causes
+.Va min
+and
+.Va max
+to be adjusted to the maximum range allowed by the data type of the
+new binding.
+.Pp
+The
+.Fn AG_NumericalSetIncrement
+function defines the step value (given in selected units) for the
+"+" and "-" buttons.
+.Pp
+.Fn AG_NumericalSetUnitSystem
+searches all unit groups for a unit of the given name and selects it as the
+active unit.
+Other units in the group will be displayed in the unit selector.
+If no such unit exists, the function returns -1.
+.Pp
+.Fn AG_NumericalSelectUnit
+searches only the current unit group and selects the unit of the given name
+as the active conversion unit.
+.Pp
+The
+.Fn AG_NumericalSetPrecision
+function selects the preferred style and precision for printing.
+The default is
+.Sq %.2f .
+.Pp
+.Fn AG_NumericalSetWriteable
+enables of disables user modification
+sets the writeability flag, also accessible as the
+.Va writeable
+member of the structure.
+.Sh TYPE-INDEPENDENT VALUE MANIPULATION
+.nr nS 1
+.Ft void
+.Fn AG_NumericalSetValue "AG_Numerical *num" "double value"
+.Pp
+.Ft void
+.Fn AG_NumericalAddValue "AG_Numerical *num" "double value"
+.Pp
+.Ft void
+.Fn AG_NumericalSubValue "AG_Numerical *num" "double value"
+.Pp
+.nr nS 0
+The
+.Fn AG_NumericalSetValue
+function assigns
+.Fa value
+to the current binding, performing any conversion necessary.
+.Pp
+Similarly,
+.Fn AG_NumericalAddValue
+and
+.Fn AG_NumericalSubValue
+increment or decrement the bound value by the specified amount, converting to
+the binding type as needed.
+.Pp
+.Fn AG_NumericalSetValue ,
+.Fn AG_NumericalAddValue
+and
+.Fn AG_NumericalSubValue
+all clamp the value according to the
+.Va min
+and
+.Va max
+bindings.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebuttondown "
+.It widget-bound
+A new binding has been configured, so we set the maximum possible range that
+the new binding's data type can accomodate (we set an initial value for the
+.Va min
+and
+.Va max
+bindings).
+.It window-keydown
+Increment or decrement the value if
+.Dv SDLK_UP
+or
+.Dv SDLK_DOWN
+is pressed.
+.It window-mousebuttondown
+Increment or decrement the value in response to mouse wheel events.
+.El
+.Pp
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn numerical-changed "void"
+The value has been modified by the textbox or the +/- buttons.
+.It Fn numerical-return "void"
+The value has been modified by the textbox and return was pressed.
+.El
+.Sh BINDINGS
+The
+.Nm
+widget provides the following bindings:
+.Pp
+.Bl -tag -compact -width "double *value"
+.It Va double *value
+Real number (double-precision).
+.It Va float *value
+Real number (single-precision).
+.It Va int *value
+Integer value.
+.It Va Uint *value
+Unsigned integer value.
+.It Va Uint8 *value
+Unsigned 8-bit value.
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_MSpinbutton 3 ,
+.Xr AG_MFSpinbutton 3 ,
+.Xr AG_Button 3 ,
+.Xr AG_Textbox 3 ,
+.Xr AG_Ucombo 3 ,
+.Xr AG_Units 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.2 as a replacement for
+.Sq AG_Spinbutton
+and
+.Sq AG_FSpinbutton
+that can handle both floating-point and integer values.
+.Sh BUGS
+We should handle key and mouse wheel increment/decrement values in a more
+sophisticated way, possibly allowing the user to change the value and
+remember the setting.
