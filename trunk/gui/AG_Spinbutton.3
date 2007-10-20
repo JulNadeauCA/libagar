@@ -23,7 +23,7 @@
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
 .Dd March 24, 2004
-.Dt SPINBUTTON 3
+.Dt AG_SPINBUTTON 3
 .Os
 .ds vT Agar API Reference
 .ds oS Agar 1.0
@@ -44,14 +44,16 @@ widget binds to an integer value of type
 .Dv [SU]int16
 or
 .Dv [SU]int32 .
-For floating point values, see
-.Xr AG_FSpinbutton 3 .
 .Pp
 This widget is composed of a
 .Xr AG_Textbox 3
 for manually entering the value and a set of
 .Xr AG_Button 3
 widgets to increment or decrement the value.
+.Pp
+NOTE: This widget has been deprecated, please use
+.Xr AG_Numerical 3
+instead.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -188,3 +190,6 @@ regardless of the binding type.
 The
 .Nm
 widget first appeared in Agar 1.0.
+It has been superceded by
+.Xr AG_Numerical 3
+in Agar 1.3.
