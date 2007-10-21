@@ -153,10 +153,8 @@ OpenTilesetDlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Open tileset...");
-	fd = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|
-	                        AG_FILEDLG_EXPAND);
-	AG_FileDlgSetDirectoryMRU(fd, "agarpaint.mru.tilesets-dir",
-	    AG_String(agConfig,"save-path"));
+	fd = AG_FileDlgNewMRU(win, "agarpaint.mru.tilesets",
+	    AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, "agarpaint tileset", "*.agt", NULL, NULL);
 	AG_FileDlgOkAction(fd, OpenTileset, "%p", win);
 	AG_WindowShow(win);
@@ -184,10 +182,8 @@ SaveTilesetAsDlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Save tileset as...");
-	fd = AG_FileDlgNew(win, AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN|
-	                        AG_FILEDLG_EXPAND);
-	AG_FileDlgSetDirectoryMRU(fd, "agarpaint.mru.tilesets-dir",
-	    AG_String(agConfig,"save-path"));
+	fd = AG_FileDlgNewMRU(win, "agarpaint.mru.tilesets",
+	    AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, "agarpaint tileset", "*.agt",
 	    SaveTilesetAs, "%p", ts);
 	AG_WindowShow(win);

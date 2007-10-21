@@ -240,8 +240,8 @@ ImportMeshDlg(AG_Event *event)
 	AG_FileType *ft;
 
 	win = AG_WindowNew(0);
-	dlg = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|
-	                         AG_FILEDLG_EXPAND);
+	dlg = AG_FileDlgNewMRU(win, "sg.mru.meshes",
+	    AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 
 	ft = AG_FileDlgAddType(dlg, _("Stanford .PLY Format"), "*.ply",
 	    ImportMeshFromPLY, "%p", sg);

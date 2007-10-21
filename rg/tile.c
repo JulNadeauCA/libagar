@@ -1114,9 +1114,8 @@ ImportImageDlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Import %s from..."), t->name);
-	dlg = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|
-	                         AG_FILEDLG_EXPAND);
-	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
+	dlg = AG_FileDlgNewMRU(win, "rg.mru.image-import",
+	    AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 #if 0
 	AG_FileDlgAddType(dlg, _("Gimp XCF"), "*.xcf", ImportFromXCF,
 	    "%p,%p,%i", tv, tl_feats, into_pixmaps);
@@ -1836,7 +1835,7 @@ ExportBMP(AG_Event *event)
 }
 
 static void
-ExportRenderingDlg(AG_Event *event)
+ExportImageDlg(AG_Event *event)
 {
 	AG_Window *pwin = AG_PTR(1);
 	RG_Tileview *tv = AG_PTR(2);
@@ -1845,10 +1844,9 @@ ExportRenderingDlg(AG_Event *event)
 	AG_Window *win;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, _("Export %s rendering to..."), t->name);
-	dlg = AG_FileDlgNew(win, AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN|
-	                         AG_FILEDLG_EXPAND);
-	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
+	AG_WindowSetCaption(win, _("Export %s image to..."), t->name);
+	dlg = AG_FileDlgNewMRU(win, "rg.mru.image-export",
+	    AG_FILEDLG_SAVE|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 	AG_FileDlgSetFilename(dlg, "%s.bmp", t->name);
 	AG_FileDlgAddType(dlg, _("PC bitmap"), "*.bmp", ExportBMP, "%p", t);
 	AG_WindowAttach(pwin, win);
@@ -2032,9 +2030,9 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		AG_MenuAction(mi, _("Import image into tile..."),
 		    OBJLOAD_ICON,
 		    ImportImageDlg, "%p,%p,%p,%i", tv, win, tl_feats, 0);
-		AG_MenuAction(mi, _("Export tile rendering..."),
+		AG_MenuAction(mi, _("Export image..."),
 		    OBJSAVE_ICON,
-		    ExportRenderingDlg, "%p,%p", win, tv);
+		    ExportImageDlg, "%p,%p", win, tv);
 		
 		AG_MenuSeparator(mi);
 		

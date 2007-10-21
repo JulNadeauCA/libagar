@@ -129,8 +129,8 @@ ImportSketchDlg(AG_Event *event)
 	AG_FileDlg *dlg;
 
 	win = AG_WindowNew(0);
-	dlg = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|
-	                         AG_FILEDLG_EXPAND);
+	dlg = AG_FileDlgNewMRU(win, "sg.mru.sketches",
+	    AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 #if 0
 	AG_FileDlgAddType(dlg, _("SVG Format"), "*.svg",
 	    ImportFromSVG, "%p", sk);
