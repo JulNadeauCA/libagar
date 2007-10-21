@@ -11,17 +11,18 @@
 	sqrtf(VG_DotProd2((ax),(ay),(ax),(ay)))
 #define VG_Distance2(ax,ay,bx,by) \
 	VG_Norm2((float)((ax)-(bx)),(float)((ay)-(by)))
+#define	VG_PI 3.14159265358979323846
 
 __BEGIN_DECLS
 static __inline__ float
 VG_Rad2Deg(float theta)
 {
-    return (theta/(2.0*AG_PI)*360.0);
+    return (theta/(2.0*VG_PI)*360.0);
 }
 static __inline__ float
 VG_Deg2Rad(float theta)
 {
-    return ((theta/360.0)*(2.0*AG_PI));
+    return ((theta/360.0)*(2.0*VG_PI));
 }
 __END_DECLS
 
