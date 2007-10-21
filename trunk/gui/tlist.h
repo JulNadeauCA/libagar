@@ -85,7 +85,9 @@ typedef struct ag_tlist {
 	AG_Event *dblClickEv;
 } AG_Tlist;
 
-/* Traverse the user pointer of tlist items assumed to be of the same type. */
+#define AG_TLIST_FOREACH(it, tl) \
+	TAILQ_FOREACH(it, &(tl)->items, items)
+
 #define AG_TLIST_FOREACH_ITEM(p, tl, it, type)				\
 	for((it) = TAILQ_FIRST(&(tl)->items),				\
 	     (p) = (it)!=NULL ? (struct type *)(it)->p1 : NULL;		\
