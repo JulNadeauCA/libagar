@@ -11,12 +11,14 @@
 
 #include "begin_code.h"
 
+enum ag_box_type {
+	AG_BOX_HORIZ,
+	AG_BOX_VERT
+};
+
 typedef struct ag_box {
 	struct ag_widget wid;
-	enum ag_box_type {
-		AG_BOX_HORIZ,
-		AG_BOX_VERT
-	} type;
+	enum ag_box_type type;
 	AG_Mutex lock;
 	Uint flags;
 #define AG_BOX_HOMOGENOUS	0x01	/* Divide space evenly */
