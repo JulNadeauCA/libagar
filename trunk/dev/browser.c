@@ -362,10 +362,9 @@ DEV_BrowserSaveTo(void *p, const char *name)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
-	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE|
-	                        AG_FILEDLG_EXPAND);
+	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
+	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE| AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, ExportObject, "%p,%p", ob, win);
-	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->ops->type);
 	AG_WindowShow(win);
 }
@@ -384,10 +383,9 @@ DEV_BrowserLoadFrom(void *p, const char *name)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
-	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_LOAD|
-	                        AG_FILEDLG_EXPAND);
+	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
+	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_LOAD|AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, ImportObject, "%p,%p", ob, win);
-	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
 	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->ops->type);
 	AG_WindowShow(win);
 }

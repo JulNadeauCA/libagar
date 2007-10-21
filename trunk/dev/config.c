@@ -191,8 +191,8 @@ LoadColorSchemeDlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Load color scheme..."));
-	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
-	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
+	fd = AG_FileDlgNewMRU(win, "dev.mru.color-schemes",
+	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 	AG_FileDlgSetFilename(fd, "colors.acs");
 	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
 	    LoadColorSchemeFromACS, NULL);
@@ -207,8 +207,8 @@ SaveColorSchemeDlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Load color scheme..."));
-	fd = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
-	AG_FileDlgSetDirectory(fd, AG_String(agConfig, "save-path"));
+	fd = AG_FileDlgNewMRU(win, "dev.mru.color-schemes",
+	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, _("Agar Color Scheme"), "*.acs",
 	    SaveColorSchemeToACS, NULL);
 	AG_WindowShow(win);

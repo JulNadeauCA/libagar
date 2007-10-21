@@ -188,8 +188,8 @@ SaveToFileDlg(AG_Event *event)
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Save benchmark results");
-	dlg = AG_FileDlgNew(win, AG_FILEDLG_CLOSEWIN);
-	AG_FileDlgSetDirectory(dlg, AG_String(agConfig, "save-path"));
+	dlg = AG_FileDlgNewMRU(win, "agar-bench.mru.results",
+	    AG_FILEDLG_CLOSEWIN);
 	AG_FileDlgSetFilename(dlg, "%s.txt", test->name);
 
 	AG_FileDlgAddType(dlg, "ASCII File (comma-separated)", "*.txt",
