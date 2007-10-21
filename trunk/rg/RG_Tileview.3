@@ -1,7 +1,5 @@
-.\"	$Csoft: tileview.3,v 1.2 2005/09/15 17:21:25 vedge Exp $
 .\"
-.\" Copyright (c) 2005 CubeSoft Communications, Inc.
-.\" <http://www.csoft.org>
+.\" Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -28,14 +26,16 @@
 .Dd May 16, 2005
 .Dt RG_TILEVIEW 3
 .Os
-.ds vT Agar API Reference
-.ds oS Agar 1.0
+.ds vT Agar-RG API Reference
+.ds oS Agar-RG 1.0
 .Sh NAME
 .Nm RG_Tileview
-.Nd agar 2D graphics editor
+.Nd agar-rg graphics editor
 .Sh SYNOPSIS
 .Bd -literal
-#include <agar/rg/tileview.h>
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/rg.h>
 .Ed
 .Sh DESCRIPTION
 The
@@ -78,7 +78,7 @@ The
 .Fa flags
 may include:
 .Pp
-.Bl -tag -width "RG_TILEVIEW_HIDE_CONTROLS "
+.Bl -tag -compact -width "RG_TILEVIEW_HIDE_CONTROLS "
 .It RG_TILEVIEW_NO_SCROLLING
 Disable panning on right click.
 .It RG_TILEVIEW_HIDE_CONTROLS
@@ -283,50 +283,43 @@ functions select or deselect the current edition tool.
 The generic features of all edition tools are defined by the structure:
 .Pp
 .Bd -literal
-RG_TileviewToolOps {
-	const char *name;		/* Name of tool */
-	const char *desc;		/* Description */
-	size_t len;			/* Length of structure */
-	int flags;				
-#define TILEVIEW_TILE_TOOL	0x01	/* Call in default edition mode */
-#define TILEVIEW_FEATURE_TOOL	0x02	/* Call in feature edition mode */
-#define TILEVIEW_SKETCH_TOOL	0x04	/* Call in vector edition mode */
-#define TILEVIEW_PIXMAP_TOOL	0x08	/* Call in pixmap edition mode */
+typedef struct rg_tileview_tool_ops {
+	const char *name;     /* Name of tool */
+	const char *desc;     /* Tool description */
+	size_t len;           /* Size of structure */
+	int flags;
+	int icon;             /* Specific icon (or -1) */
+	int cursor;           /* Specific cursor (or -1) */
 
-	int icon;			/* Index into icons[] array */
-	int cursor;			/* Index into agCursors[] array */
-
-	void		(*init)(void *);
-	void		(*destroy)(void *);
-	AG_Window  *(*edit)(void *);
-	void		(*selected)(void *);
-	void		(*unselected)(void *);
-};
+	void       (*init)(void *);
+	void       (*destroy)(void *);
+	AG_Window *(*edit)(void *);
+	void       (*selected)(void *);
+	void       (*unselected)(void *);
+} RG_TileviewToolOps;
 .Ed
 .Pp
 Two specialized derivates are available, one for bitmap-specific tools and
 another for vector-specific tools:
 .Pp
 .Bd -literal
-RG_TileviewBitmapToolOps {
-	RG_TileviewToolOps ops;
+typedef struct rg_tileview_bitmap_tool_ops {
+	struct rg_tileview_tool_ops ops;
 	void (*mousebuttondown)(void *, int, int, int);
 	void (*mousebuttonup)(void *, int, int, int);
 	void (*mousemotion)(void *, int, int, int, int);
-};
+} RG_TileviewBitmapToolOps;
 
-RG_TileviewSketchToolOps {
-	RG_TileviewToolOps ops;
-	void (*mousebuttondown)(void *, RG_Sketch *, double, double,
-	                        int);
-	void (*mousebuttonup)(void *, RG_Sketch *, double, double,
-	                      int);
-	void (*mousemotion)(void *, RG_Sketch *, double, double,
-	                    double, double);
+typedef struct rg_tileview_sketch_tool_ops {
+	struct rg_tileview_tool_ops ops;
+	void (*mousebuttondown)(void *, RG_Sketch *, double, double, int);
+	void (*mousebuttonup)(void *, RG_Sketch *, double, double, int);
+	void (*mousemotion)(void *, RG_Sketch *, double, double, double,
+	                    double);
 	int (*mousewheel)(void *, RG_Sketch *, int);
 	void (*keydown)(void *, RG_Sketch *, int, int);
 	void (*keyup)(void *, RG_Sketch *, int, int);
-};
+} RG_TileviewSketchToolOps;
 .Ed
 .Sh EVENTS
 The
@@ -353,10 +346,12 @@ widget does not generate any event.
 .Sh SEE ALSO
 .Xr RG_Tileset 3 ,
 .Xr RG_Tile 3 ,
-.Xr AG_Intro 3 ,
-.Xr AG_Widget 3 ,
-.Xr AG_Window 3
+.Xr RG_Anim 3 ,
+.Xr RG_Pixmap 3 ,
+.Xr RG_Sketch 3 ,
+.Xr RG_Feature 3 ,
+.Xr RG_Texture 3
 .Sh HISTORY
 The
 .Nm
-widget first appeared in Agar 1.0.
+widget first appeared in Agar-RG 1.0.
