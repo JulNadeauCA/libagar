@@ -83,13 +83,13 @@ RG_PixmapInit(RG_Pixmap *px, RG_Tileset *ts, int flags)
 	px->ublks[0].nmods = 0;
 }
 
-struct rg_pixmap_brush *
-RG_PixmapAddBrush(RG_Pixmap *px, enum pixmap_brush_type type,
+RG_Brush *
+RG_PixmapAddBrush(RG_Pixmap *px, enum rg_brush_type type,
     RG_Pixmap *bpx)
 {
-	struct rg_pixmap_brush *br;
+	RG_Brush *br;
 
-	br = Malloc(sizeof(struct rg_pixmap_brush), M_RG);
+	br = Malloc(sizeof(RG_Brush), M_RG);
 	br->type = type;
 	br->name[0] = '\0';
 	br->flags = 0;
@@ -100,7 +100,7 @@ RG_PixmapAddBrush(RG_Pixmap *px, enum pixmap_brush_type type,
 }
 
 void
-RG_PixmapDelBrush(RG_Pixmap *px, struct rg_pixmap_brush *br)
+RG_PixmapDelBrush(RG_Pixmap *px, RG_Brush *br)
 {
 	TAILQ_REMOVE(&px->brushes, br, brushes);
 	br->px->nrefs--;
@@ -121,11 +121,11 @@ RG_PixmapLoad(RG_Pixmap *px, AG_Netbuf *buf)
 
 	nbrushes = AG_ReadUint32(buf);
 	for (i = 0; i < nbrushes; i++) {
-		struct rg_pixmap_brush *br;
+		RG_Brush *br;
 
-		br = Malloc(sizeof(struct rg_pixmap_brush), M_RG);
+		br = Malloc(sizeof(RG_Brush), M_RG);
 		AG_CopyString(br->name, buf, sizeof(br->name));
-		br->type = (enum pixmap_brush_type)AG_ReadUint8(buf);
+		br->type = (enum rg_brush_type)AG_ReadUint8(buf);
 		br->flags = (int)AG_ReadUint32(buf);
 		(void)AG_ReadSint16(buf);		/* Pad: xorig */
 		(void)AG_ReadSint16(buf);		/* Pad: yorig */
@@ -141,7 +141,7 @@ RG_PixmapSave(RG_Pixmap *px, AG_Netbuf *buf)
 {
 	Uint32 nbrushes = 0;
 	off_t nbrushes_offs;
-	struct rg_pixmap_brush *br;
+	RG_Brush *br;
 
 	AG_WriteString(buf, px->name);
 	AG_WriteUint32(buf, (Uint32)px->flags);
@@ -166,7 +166,7 @@ RG_PixmapSave(RG_Pixmap *px, AG_Netbuf *buf)
 void
 RG_PixmapDestroy(RG_Pixmap *px)
 {
-	struct rg_pixmap_brush *br, *nbr;
+	RG_Brush *br, *nbr;
 	int i;
 
 	if (px->su != NULL)
@@ -228,7 +228,7 @@ PollBrushes(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Pixmap *px = AG_PTR(1);
-	struct rg_pixmap_brush *br;
+	RG_Brush *br;
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
@@ -255,7 +255,7 @@ SelectBrush(AG_Event *event)
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
-		struct rg_pixmap_brush *br = it->p1;
+		RG_Brush *br = it->p1;
 
 		px->curbrush = (px->curbrush == br) ? NULL : br;
 	} else {
@@ -291,9 +291,9 @@ CreateBrush(AG_Event *event)
 	AG_Radio *rad_types = AG_PTR(4);
 	AG_Checkbox *cb_oneshot = AG_PTR(5);
 	AG_Window *dlg_win = AG_PTR(6);
-	enum pixmap_brush_type btype;
+	enum rg_brush_type btype;
 	RG_Pixmap *spx;
-	struct rg_pixmap_brush *pbr;
+	RG_Brush *pbr;
 	AG_TlistItem *it;
 
 	if ((it = AG_TlistSelectedItem(tl)) == NULL) {
@@ -301,7 +301,7 @@ CreateBrush(AG_Event *event)
 	}
 	spx = it->p1;
 
-	btype = (enum pixmap_brush_type)AG_WidgetInt(rad_types, "value");
+	btype = (enum rg_brush_type)AG_WidgetInt(rad_types, "value");
 	pbr = RG_PixmapAddBrush(px, btype, spx);
 	AG_TextboxCopyString(tb, pbr->name, sizeof(pbr->name));
 	if (pbr->name[0] == '\0') {
@@ -654,7 +654,7 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
     int x0, int y0, Uint32 specPx)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
-	struct rg_pixmap_brush *br = px->curbrush;
+	RG_Brush *br = px->curbrush;
 	SDL_Surface *brsu = br->px->su;
 	Uint8 *pBrush = brsu->pixels;
 	Uint8 r, g, b, specA;
@@ -758,7 +758,7 @@ pixmap_apply(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 	Uint8 *keystate;
 	int erase_mode;
 	enum rg_pixmap_blend_mode bmode_save = 0;
-	enum pixmap_brush_type btype_save = 0;
+	enum rg_brush_type btype_save = 0;
 
 	keystate = SDL_GetKeyState(NULL);
 	erase_mode = keystate[SDLK_e];

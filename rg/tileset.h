@@ -66,14 +66,24 @@ typedef struct rg_tileset {
 	TAILQ_HEAD(, rg_texture) textures;
 } RG_Tileset;
 
+#ifdef DEBUG
+#define RGTILE(ts,id) RG_GetTile((ts),(id))
+#define RGANIM(ts,id) RG_GetAnim((ts),(id))
+#else
+#define RGTILE(ts,id) (ts)->tiletbl[(id)]
+#define RGANIM(ts,id) (ts)->animtbl[(id)]
+#endif
+
 __BEGIN_DECLS
-void	 RG_InitSubsystem(void);
-void	 RG_TilesetInit(void *, const char *);
-void	 RG_TilesetReinit(void *);
-void	 RG_TilesetDestroy(void *);
-int	 RG_TilesetLoad(void *, AG_Netbuf *);
-int	 RG_TilesetSave(void *, AG_Netbuf *);
-void	*RG_TilesetEdit(void *);
+void	 	 RG_InitSubsystem(void);
+
+RG_Tileset	*RG_TilesetNew(void *, const char *, Uint);
+void		 RG_TilesetInit(void *, const char *);
+void		 RG_TilesetReinit(void *);
+void		 RG_TilesetDestroy(void *);
+int		 RG_TilesetLoad(void *, AG_Netbuf *);
+int		 RG_TilesetSave(void *, AG_Netbuf *);
+void		*RG_TilesetEdit(void *);
 
 RG_Tile		*RG_TilesetFindTile(RG_Tileset *, const char *);
 RG_Sketch	*RG_TilesetFindSketch(RG_Tileset *, const char *);
@@ -84,6 +94,51 @@ RG_Tile		*RG_TilesetResvTile(const char *, const char *);
 
 int		 RG_LookupTile(RG_Tileset *, Uint32, RG_Tile **);
 int		 RG_LookupAnim(RG_Tileset *, Uint32, RG_Anim **);
+
+static __inline__ RG_Tile *
+RG_GetTile(RG_Tileset *ts, Uint32 id)
+{
+	RG_Tile *t;
+	if (RG_LookupTile(ts, id, &t) == -1) {
+		AG_FatalError("%s", AG_GetError());
+	}
+	return (t);
+}
+
+static __inline__ RG_Tile *
+RG_GetAnim(RG_Tileset *ts, Uint32 id)
+{
+	RG_Tile *t;
+	if (RG_LookupAnim(ts, id, &t) == -1) {
+		AG_FatalError("%s", AG_GetError());
+	}
+	return (t);
+}
+
+static __inline__ int
+RG_LookupTile(RG_Tileset *ts, Uint32 id, RG_Tile **t)
+{
+	if (id >= ts->ntiletbl || ts->tiletbl[id] == NULL) {
+		AG_SetError("%s: no such tile: %u", AGOBJECT(ts)->name,
+		    (Uint)id);
+		return (-1);
+	}
+	*t = ts->tiletbl[id];
+	return (0);
+}
+
+static __inline__ int
+RG_LookupAnim(RG_Tileset *ts, Uint32 id, RG_Anim **anim)
+{
+	if (id >= ts->nanimtbl || ts->animtbl[id] == NULL) {
+		AG_SetError("%s: no such anim: %u", AGOBJECT(ts)->name,
+		    (Uint)id);
+		return (-1);
+	}
+	*anim = ts->animtbl[id];
+	return (0);
+}
+
 __END_DECLS
 
 #include "close_code.h"

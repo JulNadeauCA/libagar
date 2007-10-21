@@ -76,6 +76,20 @@ RG_InitSubsystem(void)
 	AG_RegisterClass(&rgTilesetOps);
 }
 
+RG_Tileset *
+RG_TilesetNew(void *parent, const char *name, Uint flags)
+{
+	RG_Tileset *ts;
+
+	ts = Malloc(sizeof(RG_Tileset), M_OBJECT);
+	RG_TilesetInit(ts, name);
+	ts->flags |= flags;
+	if (parent != NULL) {
+		AG_ObjectAttach(parent, ts);
+	}
+	return (ts);
+}
+
 void
 RG_TilesetInit(void *obj, const char *name)
 {
@@ -628,32 +642,6 @@ RG_TilesetFindAnim(RG_Tileset *ts, const char *name)
 	return (ani);
 }
 
-/* Lookup a tile by ID. */
-int
-RG_LookupTile(RG_Tileset *ts, Uint32 id, RG_Tile **t)
-{
-	if (id >= ts->ntiletbl || ts->tiletbl[id] == NULL) {
-		AG_SetError("%s: no such tile: %u", OBJECT(ts)->name,
-		    (Uint)id);
-		return (-1);
-	}
-	*t = ts->tiletbl[id];
-	return (0);
-}
-
-/* Lookup an animation by ID. */
-int
-RG_LookupAnim(RG_Tileset *ts, Uint32 id, RG_Anim **anim)
-{
-	if (id >= ts->nanimtbl || ts->animtbl[id] == NULL) {
-		AG_SetError("%s: no such anim: %u", OBJECT(ts)->name,
-		    (Uint)id);
-		return (-1);
-	}
-	*anim = ts->animtbl[id];
-	return (0);
-}
-
 #ifdef EDITION
 
 static void
@@ -999,6 +987,16 @@ tryname2:
 		RG_TILE_ATTR2(t,3,3) = RG_TILE_BLOCK;
 		RG_TILE_ATTR2(t,1,3) = RG_TILE_BLOCK;
 		RG_TILE_ATTR2(t,2,3) = RG_TILE_BLOCK;
+	} else if (strcmp(ts->tmpl, "Icons (16x16)") == 0) {
+		RG_TileScale(ts, t, 16, 16, flags, SDL_ALPHA_OPAQUE);
+		t->xOrig = 0;
+		t->yOrig = 0;
+		t->snap_mode = RG_SNAP_TO_GRID;
+	} else if (strcmp(ts->tmpl, "Icons (32x32)") == 0) {
+		RG_TileScale(ts, t, 32, 32, flags, SDL_ALPHA_OPAQUE);
+		t->xOrig = 0;
+		t->yOrig = 0;
+		t->snap_mode = RG_SNAP_TO_GRID;
 	} else {
 		RG_TileScale(ts, t, ins_tile_w, ins_tile_h, flags,
 		    SDL_ALPHA_OPAQUE);
@@ -1765,6 +1763,8 @@ RG_TilesetEdit(void *p)
 		com = AG_ComboNew(ntab, AG_COMBO_HFILL, _("Template: "));
 		AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, &ts->tmpl,
 		    sizeof(ts->tmpl));
+		AG_TlistAdd(com->list, NULL, "Icons (16x16)");
+		AG_TlistAdd(com->list, NULL, "Icons (32x32)");
 		AG_TlistAdd(com->list, NULL, "Sprite");
 		AG_TlistAdd(com->list, NULL, "Terrain");
 		AG_SetEvent(com, "combo-selected", SelectTemplate, "%p", ts);

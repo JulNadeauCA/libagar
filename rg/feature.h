@@ -13,11 +13,11 @@ struct ag_toolbar;
 struct ag_window;
 
 typedef struct rg_feature_ops {
-	const char *type;
-	size_t len;
-	const char *desc;
+	const char *type;       /* Feature name */
+	size_t len;             /* Size of structure */
+	const char *desc;       /* Feature description */
 	int flags;
-#define FEATURE_AUTOREDRAW	0x01	/* Redraw tile periodically on edit */
+#define FEATURE_AUTOREDRAW 0x01 /* Redraw tile periodically on edit */
 
 	void (*init)(void *, struct rg_tileset *, int);
 	int  (*load)(void *, AG_Netbuf *);

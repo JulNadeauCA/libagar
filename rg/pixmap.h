@@ -27,27 +27,27 @@ typedef struct rg_pixmap_undoblk {
 } RG_PixmapUndoBlk;
 
 enum rg_pixmap_blend_mode {
-	RG_PIXMAP_OVERLAY_ALPHA,
-	RG_PIXMAP_AVERAGE_ALPHA,
-	RG_PIXMAP_DEST_ALPHA,
-	RG_PIXMAP_NO_BLENDING
+	RG_PIXMAP_OVERLAY_ALPHA,        /* dA = sA+dA */
+	RG_PIXMAP_AVERAGE_ALPHA,        /* dA = (sA+dA)/2 */
+	RG_PIXMAP_DEST_ALPHA,           /* dA = dA */
+	RG_PIXMAP_NO_BLENDING           /* No blending done */
 };
 
-enum pixmap_brush_type {
-	RG_PIXMAP_BRUSH_MONO,		/* Monochromatic (use current color) */
-	RG_PIXMAP_BRUSH_RGB		/* Replace by brush color */
+enum rg_brush_type {
+	RG_PIXMAP_BRUSH_MONO,  /* Monochromatic (use current color) */
+	RG_PIXMAP_BRUSH_RGB    /* Replace by brush color */
 };
 
-struct rg_pixmap_brush {
+typedef struct rg_brush {
 	char name[RG_PIXMAP_NAME_MAX];
-	enum pixmap_brush_type type;
+	enum rg_brush_type type;
 	int flags;
 #define RG_PIXMAP_BRUSH_ONESHOT 0x01	/* Don't mod the same pixel twice
 					   in the same pass */
 	char px_name[RG_PIXMAP_NAME_MAX];	/* Pixmap reference */
 	struct rg_pixmap *px;				/* Resolved pixmap */
-	TAILQ_ENTRY(rg_pixmap_brush) brushes;
-};
+	TAILQ_ENTRY(rg_brush) brushes;
+} RG_Brush;
 
 typedef struct rg_pixmap {
 	char name[RG_PIXMAP_NAME_MAX];
@@ -60,9 +60,9 @@ typedef struct rg_pixmap {
 	Uint nublks, curblk;
 
 	float h, s, v, a;			/* Current pixel value */
-	struct rg_pixmap_brush *curbrush;	/* Current brush */
+	RG_Brush *curbrush;			/* Current brush */
 	enum rg_pixmap_blend_mode blend_mode;	/* Current blending method */
-	TAILQ_HEAD(, rg_pixmap_brush) brushes;	/* Brush references */
+	TAILQ_HEAD(, rg_brush) brushes;	/* Brush references */
 	TAILQ_ENTRY(rg_pixmap) pixmaps;
 } RG_Pixmap;
 
@@ -88,21 +88,30 @@ void RG_PixmapBeginUndoBlk(RG_Pixmap *);
 void RG_PixmapUndo(struct rg_tileview *, RG_TileElement *);
 void RG_PixmapRedo(struct rg_tileview *, RG_TileElement *);
 
-int RG_PixmapPutPixel(struct rg_tileview *, RG_TileElement *, int, int,
-                      Uint32, int);
-void RG_PixmapApplyBrush(struct rg_tileview *, RG_TileElement *, int, int,
-			 Uint32);
-Uint32 RG_PixmapSourcePixel(struct rg_tileview *, RG_TileElement *, int, int);
-void RG_PixmapSourceRGBA(struct rg_tileview *, RG_TileElement *, int, int,
-			 Uint8 *, Uint8 *, Uint8 *, Uint8 *);
-
-struct rg_pixmap_brush *RG_PixmapAddBrush(RG_Pixmap *, enum pixmap_brush_type,
-					  RG_Pixmap *);
-void		        RG_PixmapDelBrush(RG_Pixmap *,
-		                          struct rg_pixmap_brush *);
+int       RG_PixmapPutPixel(struct rg_tileview *, RG_TileElement *, int, int,
+                            Uint32, int);
+void      RG_PixmapApplyBrush(struct rg_tileview *, RG_TileElement *, int, int,
+                              Uint32);
+Uint32    RG_PixmapSourcePixel(struct rg_tileview *, RG_TileElement *, int,
+                               int);
+void      RG_PixmapSourceRGBA(struct rg_tileview *, RG_TileElement *, int, int,
+                              Uint8 *, Uint8 *, Uint8 *, Uint8 *);
+RG_Brush *RG_PixmapAddBrush(RG_Pixmap *, enum rg_brush_type, RG_Pixmap *);
+void      RG_PixmapDelBrush(RG_Pixmap *, RG_Brush *);
 
 void RG_PixmapOpenMenu(struct rg_tileview *, int, int);
 void RG_PixmapCloseMenu(struct rg_tileview *);
+
+static __inline__ void
+RG_PixmapSetBlendingMode(RG_Pixmap *pixmap, enum rg_pixel_blend_mode bmode)
+{
+	pixmap->blend_mode = bmode;
+}
+static __inline__ void
+RG_PixmapSetBrush(RG_Pixmap *pixmap, RG_Brush *brush)
+{
+	pixmap->curbrush = brush;
+}
 __END_DECLS
 
 #include "close_code.h"
