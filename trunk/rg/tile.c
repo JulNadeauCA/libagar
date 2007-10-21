@@ -118,6 +118,16 @@ BlendSDL(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
 }
 #endif
 
+RG_Tile *
+RG_TileNew(RG_Tileset *ts, const char *name, Uint16 w, Uint16 h, Uint flags)
+{
+	RG_Tile *t;
+
+	t = Malloc(sizeof(RG_Tile), M_RG);
+	RG_TileInit(t, ts, name);
+	RG_TileScale(ts, t, w, h, flags, 255);
+}
+
 void
 RG_TileInit(RG_Tile *t, RG_Tileset *ts, const char *name)
 {
@@ -139,8 +149,7 @@ RG_TileInit(RG_Tile *t, RG_Tileset *ts, const char *name)
 }
 
 void
-RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags,
-    Uint8 alpha)
+RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags)
 {
 	Uint32 sflags = SDL_SWSURFACE;
 	int x, y;

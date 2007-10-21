@@ -81,17 +81,17 @@ typedef struct rg_tileview_ctrl {
 } RG_TileviewCtrl;
 
 typedef struct rg_tileview_tool_ops {
-	const char *name;
-	const char *desc;
-	size_t len;
+	const char *name;     /* Name of tool */
+	const char *desc;     /* Tool description */
+	size_t len;           /* Size of structure */
 	int flags;
-	int icon, cursor;
-
-	void		(*init)(void *);
-	void		(*destroy)(void *);
-	AG_Window  *(*edit)(void *);
-	void		(*selected)(void *);
-	void		(*unselected)(void *);
+	int icon;             /* Specific icon (or -1) */
+	int cursor;           /* Specific cursor (or -1) */
+	void       (*init)(void *);
+	void       (*destroy)(void *);
+	AG_Window *(*edit)(void *);
+	void       (*selected)(void *);
+	void       (*unselected)(void *);
 } RG_TileviewToolOps;
 
 typedef struct rg_tileview_bitmap_tool_ops {

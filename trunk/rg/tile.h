@@ -58,8 +58,8 @@ typedef struct rg_tile_element {
 TAILQ_HEAD(rg_tile_elementq, rg_tile_element);
 
 typedef struct rg_tile {
-	char name[RG_TILE_NAME_MAX];
-	char clname[RG_TILE_CLASS_MAX];
+	char name[RG_TILE_NAME_MAX];	/* User description */
+	char clname[RG_TILE_CLASS_MAX];	/* Category (application-specific) */
 	Uint32 main_id;			/* Default ID mapping */
 	struct rg_tileset *ts;
 	SDL_Surface *su;		/* Generated surface */
@@ -122,6 +122,7 @@ typedef struct rg_tile_variant {
 __BEGIN_DECLS
 extern const char *rgTileSnapModes[];
 
+RG_Tile        *RG_TileNew(RG_Tileset *, const char *, Uint16, Uint16, Uint);
 void	 	RG_TileInit(RG_Tile *, struct rg_tileset *, const char *);
 void		RG_TileScale(struct rg_tileset *, RG_Tile *, Uint16, Uint16,
 		             Uint, Uint8);
