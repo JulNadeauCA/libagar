@@ -931,7 +931,7 @@ VG_Translate(VG *vg, float x, float y)
 void
 VG_LoadRotate(VG_Matrix *m, float tdeg)
 {
-	float theta = (tdeg/360.0)*(2.0*AG_PI);
+	float theta = (tdeg/360.0)*(2.0*VG_PI);
 	float rcos = cosf(theta);
 	float rsin = sinf(theta);
 
