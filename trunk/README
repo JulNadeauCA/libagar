@@ -38,13 +38,13 @@ Agar-DEV	Developer tools			`agar-dev-config --libs`
 Availability
 ------------
 You can download the most recent Agar version from the Agar home page
-at http://agar.csoft.org/, or the SourceForge project page.
+at http://libagar.org/.
 
 Portability
 -----------
 Thanks to SDL, Agar is portable to many different platforms, including
 FreeBSD, IRIX, Linux, MacOS Classic, MacOS X, NetBSD, OpenBSD and Windows.
-For the list of official ports, see http://agar.csoft.org/portable.html.
+For the list of official ports, see http://libagar.org/portable.html.
 
 License
 -------
@@ -52,5 +52,5 @@ Agar is freely distributable under the terms of a revised BSD license.
 
 Acknowledgements
 ----------------
-See: http://agar.csoft.org/credits.html.
+See: http://libagar.org/credits.html.
 
