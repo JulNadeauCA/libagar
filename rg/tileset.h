@@ -92,29 +92,6 @@ RG_Anim		*RG_TilesetFindAnim(RG_Tileset *, const char *);
 RG_Pixmap	*RG_TilesetResvPixmap(const char *, const char *);
 RG_Tile		*RG_TilesetResvTile(const char *, const char *);
 
-int		 RG_LookupTile(RG_Tileset *, Uint32, RG_Tile **);
-int		 RG_LookupAnim(RG_Tileset *, Uint32, RG_Anim **);
-
-static __inline__ RG_Tile *
-RG_GetTile(RG_Tileset *ts, Uint32 id)
-{
-	RG_Tile *t;
-	if (RG_LookupTile(ts, id, &t) == -1) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (t);
-}
-
-static __inline__ RG_Tile *
-RG_GetAnim(RG_Tileset *ts, Uint32 id)
-{
-	RG_Tile *t;
-	if (RG_LookupAnim(ts, id, &t) == -1) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (t);
-}
-
 static __inline__ int
 RG_LookupTile(RG_Tileset *ts, Uint32 id, RG_Tile **t)
 {
@@ -126,7 +103,6 @@ RG_LookupTile(RG_Tileset *ts, Uint32 id, RG_Tile **t)
 	*t = ts->tiletbl[id];
 	return (0);
 }
-
 static __inline__ int
 RG_LookupAnim(RG_Tileset *ts, Uint32 id, RG_Anim **anim)
 {
@@ -137,6 +113,24 @@ RG_LookupAnim(RG_Tileset *ts, Uint32 id, RG_Anim **anim)
 	}
 	*anim = ts->animtbl[id];
 	return (0);
+}
+static __inline__ RG_Tile *
+RG_GetTile(RG_Tileset *ts, Uint32 id)
+{
+	RG_Tile *t;
+	if (RG_LookupTile(ts, id, &t) == -1) {
+		AG_FatalError("%s", AG_GetError());
+	}
+	return (t);
+}
+static __inline__ RG_Anim *
+RG_GetAnim(RG_Tileset *ts, Uint32 id)
+{
+	RG_Anim *a;
+	if (RG_LookupAnim(ts, id, &a) == -1) {
+		AG_FatalError("%s", AG_GetError());
+	}
+	return (a);
 }
 
 __END_DECLS

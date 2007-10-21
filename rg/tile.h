@@ -122,10 +122,11 @@ typedef struct rg_tile_variant {
 __BEGIN_DECLS
 extern const char *rgTileSnapModes[];
 
-RG_Tile        *RG_TileNew(RG_Tileset *, const char *, Uint16, Uint16, Uint);
+RG_Tile        *RG_TileNew(struct rg_tileset *, const char *, Uint16, Uint16,
+		           Uint);
 void	 	RG_TileInit(RG_Tile *, struct rg_tileset *, const char *);
 void		RG_TileScale(struct rg_tileset *, RG_Tile *, Uint16, Uint16,
-		             Uint, Uint8);
+		             Uint);
 void		RG_TileGenerate(RG_Tile *);
 struct ag_window *RG_TileEdit(struct rg_tileset *, RG_Tile *);
 void		RG_TileDestroy(RG_Tile *);

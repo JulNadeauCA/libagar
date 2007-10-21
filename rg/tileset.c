@@ -310,12 +310,8 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 			Free(t, M_RG);
 			goto fail;
 		}
-
-		/* Allocate the surface fragments. */
-		RG_TileScale(ts, t, t->su->w, t->su->h, t->flags,
-		    t->su->format->alpha);
+		RG_TileScale(ts, t, t->su->w, t->su->h, t->flags);
 		RG_TileGenerate(t);
-		
 		TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 	}
 
@@ -397,7 +393,7 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 
 	/* Resolve the pixmap brush references. */
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
-		struct rg_pixmap_brush *pbr;
+		RG_Brush *pbr;
 		RG_Pixmap *ppx;
 
 		TAILQ_FOREACH(pbr, &px->brushes, brushes) {
@@ -963,7 +959,7 @@ tryname2:
 	t = Malloc(sizeof(RG_Tile), M_RG);
 	RG_TileInit(t, ts, ins_tile_name);
 	if (strcmp(ts->tmpl, "Sprite") == 0) {
-		RG_TileScale(ts, t, 16, 32, flags, SDL_ALPHA_OPAQUE);
+		RG_TileScale(ts, t, 16, 32, flags);
 		t->xOrig = 8;
 		t->yOrig = 31;
 		t->snap_mode = RG_SNAP_TO_GRID;
@@ -971,7 +967,7 @@ tryname2:
 		RG_TILE_LAYER2(t,0,1) = +1;
 		RG_TILE_ATTR2(t,0,1) = RG_TILE_BLOCK;
 	} else if (strcmp(ts->tmpl, "Terrain") == 0) {
-		RG_TileScale(ts, t, 64, 64, flags, SDL_ALPHA_OPAQUE);
+		RG_TileScale(ts, t, 64, 64, flags);
 		t->xOrig = 24;
 		t->yOrig = 24;
 		t->snap_mode = RG_SNAP_TO_GRID;
@@ -988,18 +984,17 @@ tryname2:
 		RG_TILE_ATTR2(t,1,3) = RG_TILE_BLOCK;
 		RG_TILE_ATTR2(t,2,3) = RG_TILE_BLOCK;
 	} else if (strcmp(ts->tmpl, "Icons (16x16)") == 0) {
-		RG_TileScale(ts, t, 16, 16, flags, SDL_ALPHA_OPAQUE);
+		RG_TileScale(ts, t, 16, 16, flags);
 		t->xOrig = 0;
 		t->yOrig = 0;
 		t->snap_mode = RG_SNAP_TO_GRID;
 	} else if (strcmp(ts->tmpl, "Icons (32x32)") == 0) {
-		RG_TileScale(ts, t, 32, 32, flags, SDL_ALPHA_OPAQUE);
+		RG_TileScale(ts, t, 32, 32, flags);
 		t->xOrig = 0;
 		t->yOrig = 0;
 		t->snap_mode = RG_SNAP_TO_GRID;
 	} else {
-		RG_TileScale(ts, t, ins_tile_w, ins_tile_h, flags,
-		    SDL_ALPHA_OPAQUE);
+		RG_TileScale(ts, t, ins_tile_w, ins_tile_h, flags);
 		t->xOrig = t->su->w/2;
 		t->yOrig = t->su->h/2;
 		t->snap_mode = ins_snap_mode;
@@ -1325,8 +1320,8 @@ tryname1:
 		goto tryname1;
 	}
 	RG_TileInit(t2, ts, name);
-	RG_TileScale(ts, t2, t1->su->w, t1->su->h, t1->flags,
-	    t1->su->format->alpha);
+	RG_TileScale(ts, t2, t1->su->w, t1->su->h, t1->flags);
+	t2->su->format->alpha = t1->su->format->alpha;
 	strlcpy(t2->clname, t1->clname, sizeof(t2->clname));
 
 	t2->xOrig = t1->xOrig;
@@ -1613,8 +1608,7 @@ SelectTemplate(AG_Event *event)
 		for (i = 0; i < ntiles; i++) {
 			t = Malloc(sizeof(RG_Tile), M_RG);
 			RG_TileInit(t, ts, tiles[i]);
-			RG_TileScale(ts, t, 16, 32, RG_TILE_SRCCOLORKEY,
-			    SDL_ALPHA_OPAQUE);
+			RG_TileScale(ts, t, 16, 32, RG_TILE_SRCCOLORKEY);
 			TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 		}
 		for (i = 0; i < nanims; i++) {
