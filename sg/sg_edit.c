@@ -39,6 +39,7 @@
 #include <gui/mpane.h>
 #include <gui/file_dlg.h>
 #include <gui/table.h>
+#include <gui/box.h>
 
 #include "sg.h"
 #include "sg_matview.h"
@@ -207,19 +208,27 @@ ImportMeshFromPLY(AG_Event *event)
 	char name[SG_NODE_NAME_MAX];
 	SG *sg = AG_PTR(1);
 	char *path = AG_STRING(2);
+	AG_FileType *ft = AG_PTR(3);
 	SG_Object *so;
 	int num = 0;
+	Uint flags = 0;
 
+	if (AG_FileOptionInt(ft, "ply.vtxnormals"))
+		flags |= SG_PLY_LOAD_VTX_NORMALS;
+	if (AG_FileOptionInt(ft, "ply.vtxcolors"))
+		flags |= SG_PLY_LOAD_VTX_COLORS;
+	if (AG_FileOptionInt(ft, "ply.texcoords"))
+		flags |= SG_PLY_LOAD_TEXCOORDS;
+	if (AG_FileOptionInt(ft, "ply.dups"))
+		flags |= SG_PLY_DUP_VERTICES;
 tryname:
 	snprintf(name, sizeof(name), "Mesh%i", num++);
 	if (SG_FindNode(sg, name) != NULL) {
 		goto tryname;
 	}
 	so = SG_ObjectNew(sg->root, name);
-	if (SG_ObjectLoadPLY(so, path) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "Loading %s: %s", path, AG_GetError());
-		/* XXX */
-	}
+	if (SG_ObjectLoadPLY(so, path, flags) == -1)
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
 }
 
 static void
@@ -228,13 +237,20 @@ ImportMeshDlg(AG_Event *event)
 	SG *sg = AG_PTR(1);
 	AG_Window *win;
 	AG_FileDlg *dlg;
+	AG_FileType *ft;
 
 	win = AG_WindowNew(0);
 	dlg = AG_FileDlgNew(win, AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|
 	                         AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(dlg, _("Stanford .PLY Format"), "*.ply",
+
+	ft = AG_FileDlgAddType(dlg, _("Stanford .PLY Format"), "*.ply",
 	    ImportMeshFromPLY, "%p", sg);
-	
+	AG_FileDlgSetOptionContainer(dlg, AG_BoxNewVert(win,AG_BOX_HFILL));
+	AG_FileOptionNewBool(ft, _("Load vertex normals"), "ply.vtxnormals", 1);
+	AG_FileOptionNewBool(ft, _("Load vertex colors"), "ply.vtxcolors", 1);
+	AG_FileOptionNewBool(ft, _("Load texture coords"), "ply.texcoords", 1);
+	AG_FileOptionNewBool(ft, _("Detect duplicate vertices"), "ply.dups", 1);
+
 	AG_WindowShow(win);
 }
 

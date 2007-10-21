@@ -268,6 +268,23 @@ SG_FacetNew(void *obj, int n)
 	return (fct);
 }
 
+void
+SG_FacetDelete(SG_Facet *fct)
+{
+	SG_Object *so = fct->obj;
+	SG_Edge *e;
+	Uint i;
+
+	SLIST_REMOVE(&so->facets, fct, sg_facet, facets);
+
+	/* XXX TODO */
+	SG_FOREACH_EDGE(e, i, so) {
+		if (e->f == fct)
+			e->f = NULL;
+	}
+	Free(fct, M_SG);
+}
+
 /* 
  * Generate a triangular facet from a specified contour.
  *
@@ -441,7 +458,7 @@ SG_ObjectNormalize(void *obj)
 	SG_Object *so = obj;
 	SG_Facet *fct;
 
-	SLIST_FOREACH(fct, &so->facets, facets) {
+	SG_FOREACH_FACET(fct, so) {
 		SG_Vector n;
 		int i;
 
@@ -453,6 +470,27 @@ SG_ObjectNormalize(void *obj)
 	return (0);
 }
 
+/* Tesselate quads to triangles for the given object. */
+Uint
+SG_ObjectConvQuadsToTriangles(void *obj)
+{
+	SG_Object *so = obj;
+	SG_Facet *fct, *t1, *t2;
+	Uint count = 0;
+
+	SG_FOREACH_FACET(fct, so) {
+		if (fct->n != 4) {
+			continue;
+		}
+		t1 = SG_FacetFromTri3(so, FV1(fct), FV2(fct), FV3(fct));
+		t2 = SG_FacetFromTri3(so, FV3(fct), FV4(fct), FV1(fct));
+		/* XXX edge faces */
+		SG_FacetDelete(fct);
+		count++;
+	}
+	return (count);
+}
+
 /* Check for errors in the edge/facet/vertex connectivity information. */
 int
 SG_ObjectCheckConnectivity(void *obj)
@@ -462,7 +500,7 @@ SG_ObjectCheckConnectivity(void *obj)
 	SG_Edge *e;
 	int i;
 
-	SLIST_FOREACH(f, &so->facets, facets) {
+	SG_FOREACH_FACET(f, so) {
 		/* All facets must be referenced by at least one edge. */
 		for (i = 0; i < so->nedgetbl; i++) {
 			SG_EdgeEnt *ent = &so->edgetbl[i];
@@ -532,7 +570,7 @@ SG_ObjectCheckConnectivity(void *obj)
 				return (-1);
 			}
 			/* Edge must be referenced by at least one facet. */
-			SLIST_FOREACH(f, &so->facets, facets) {
+			SG_FOREACH_FACET(f, so) {
 				for (i = 0; i < f->n; i++) {
 					if (f->e[i] == e)
 						break;
@@ -745,19 +783,21 @@ DrawVertexNormals(SG_Object *so)
 	int lit;
 	
 	if ((lit = glIsEnabled(GL_LIGHTING))) { glDisable(GL_LIGHTING); }
+	
+	SG_Begin(SG_LINES);
+	SG_Color3ub(0, 255, 0);
 
 	for (i = 0; i < so->nvtx; i++) {
 		SG_Vector *v = &so->vtx[i].v;
 		SG_Vector n = so->vtx[i].n;
 
-		SG_Begin(SG_LINES);
-		SG_Color3ub(0, 255, 0);
 		SG_Vertex3v(v);
 		VecScalev(&n, 0.1);
 		VecAddv(&n, v);
 		SG_Vertex3v(&n);
-		SG_End();
 	}
+	
+	SG_End();
 	
 	if (lit) { glEnable(GL_LIGHTING); }
 }
@@ -861,7 +901,7 @@ SG_ObjectDraw(void *p, SG_View *view)
 	if (so->mat != NULL) {
 		SG_MaterialBind(so->mat, view);
 	}
-	SLIST_FOREACH(fct, &so->facets, facets) {
+	SG_FOREACH_FACET(fct, so) {
 		switch (fct->n) {
 		case 3:
 			SG_Begin(SG_TRIANGLES);
@@ -921,7 +961,7 @@ CheckConnectivity(AG_Event *event)
 }
 
 static void
-CalculateNormals(AG_Event *event)
+RecomputeNormals(AG_Event *event)
 {
 	SG_Object *so = AG_PTR(1);
 
@@ -929,6 +969,17 @@ CalculateNormals(AG_Event *event)
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", SGNODE(so)->name,
 		    AG_GetError());
 	}
+}
+
+static void
+ConvQuadsToTriangles(AG_Event *event)
+{
+	SG_Object *so = AG_PTR(1);
+	Uint count;
+
+	count = SG_ObjectConvQuadsToTriangles(so);
+	AG_TextMsg(AG_MSG_INFO, "%s: converted %u quads", SGNODE(so)->name,
+	    count);
 }
 
 static void
@@ -999,7 +1050,8 @@ FacetTableDlg(AG_Event *event)
 	AG_TableAddCol(tbl, "v3", "<8888>", NULL);
 	AG_TableAddCol(tbl, "flags", NULL, NULL);
 	AG_TableBegin(tbl);
-	SLIST_FOREACH(f, &so->facets, facets) {
+
+	SG_FOREACH_FACET(f, so) {
 		if (f->n == 3) {
 			AG_TableAddRow(tbl, "%s:%d:%d:%d:%s:%s", "Tri",
 			    f->e[0]->v, f->e[1]->v, f->e[2]->v, "",
@@ -1029,8 +1081,10 @@ SG_ObjectMenuInstance(void *pNode, AG_MenuItem *m, SG_View *sgv)
 	    FacetTableDlg, "%p", node);
 	AG_MenuAction(m, _("    Check connectivity"), -1,
 	    CheckConnectivity, "%p", node);
-	AG_MenuAction(m, _("    Recalculate normals"), -1,
-	    CalculateNormals, "%p", node);
+	AG_MenuAction(m, _("    Recompute normals"), -1,
+	    RecomputeNormals, "%p", node);
+	AG_MenuAction(m, _("    Convert quads to triangles"), -1,
+	    ConvQuadsToTriangles, "%p", node);
 }
 
 void
