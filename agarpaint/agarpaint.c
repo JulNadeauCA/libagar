@@ -32,15 +32,14 @@
 #ifdef HAVE_AGAR_DEV
 #include <agar/dev.h>
 #endif
+/* #define SPLASH */
 
 #include <string.h>
 #include <unistd.h>
 
 extern const AG_ObjectOps rgTilesetOps;
-
 static AG_Menu *appMenu = NULL;
 static RG_Tileset *tsFocused = NULL;
-static int splashTick = 0;
 
 static void
 SaveAndClose(RG_Tileset *ts, AG_Window *win)
@@ -89,7 +88,7 @@ SaveChangesDlg(AG_Event *event)
 static void
 WindowGainedFocus(AG_Event *event)
 {
-	AG_Window *win = AG_SELF();
+/*	AG_Window *win = AG_SELF(); */
 	RG_Tileset *ts = AG_PTR(1);
 
 	tsFocused = ts;
@@ -98,7 +97,7 @@ WindowGainedFocus(AG_Event *event)
 static void
 WindowLostFocus(AG_Event *event)
 {
-	AG_Window *win = AG_SELF();
+/*	AG_Window *win = AG_SELF(); */
 
 	tsFocused = NULL;
 }
@@ -130,9 +129,7 @@ OpenTileset(AG_Event *event)
 {
 	AG_Window *pWin = AG_PTR(1);
 	char *path = AG_STRING(2);
-	char *p;
 	RG_Tileset *ts;
-	AG_Window *win;
 
 	ts = AG_ObjectNew(agWorld, NULL, &rgTilesetOps);
 	if (AG_ObjectLoadFromFile(ts, path) == -1) {
@@ -218,7 +215,7 @@ SaveTileset(AG_Event *event)
 static void
 ExportImagesDlg(AG_Event *event)
 {
-	RG_Tileset *ts = AG_PTR(1);
+/*	RG_Tileset *ts = AG_PTR(1); */
 }
 
 static void
@@ -242,7 +239,6 @@ AbortQuit(AG_Event *event)
 static void
 Quit(AG_Event *event)
 {
-	SDL_Event ev;
 	RG_Tileset *ts;
 	AG_Window *win;
 	AG_Box *box;
@@ -323,6 +319,8 @@ EditMenu(AG_Event *event)
 	}
 }
 
+#ifdef SPLASH
+
 static Uint32
 SplashExpire(void *obj, Uint32 ival, void *arg)
 {
@@ -352,12 +350,13 @@ Splash(void)
 	AG_WindowShow(win);
 }
 
+#endif /* SPLASH */
+
 int
 main(int argc, char *argv[])
 {
-	int c, i, fps = -1;
+	int c, fps = -1;
 	const char *fontSpec = NULL;
-	char *s;
 #ifdef HAVE_AGAR_DEV
 	int debug = 0;
 #endif
@@ -438,12 +437,11 @@ main(int argc, char *argv[])
 		DEV_ToolMenu(AG_MenuNode(appMenu->root, "Debug", -1));
 	}
 #endif
-	//Splash();
+#ifdef SPLASH
+	Splash();
+#endif
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
-fail:
-	AG_Destroy();
-	return (1);
 }
 
