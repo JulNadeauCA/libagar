@@ -73,7 +73,17 @@ typedef enum sg_extrude_mode {
 #define RFACE(e) ((e)->oe->f)
 #define HVTX(e) ((e)->v)
 #define TVTX(e) ((e)->oe->v)
+#define FV1(fct) ((fct)->e[0]->v)
+#define FV2(fct) ((fct)->e[1]->v)
+#define FV3(fct) ((fct)->e[2]->v)
+#define FV4(fct) ((fct)->e[3]->v)
 #endif /* _AGAR_INTERNAL */
+
+#define SG_FOREACH_EDGE(edge, i, so) \
+	for ((i) = 0; (i) < (so)->nedgetbl; (i)++) \
+		SLIST_FOREACH(edge, &(so)->edgetbl[i].edges, edges)
+#define SG_FOREACH_FACET(fct, so) \
+	SLIST_FOREACH((fct), &(so)->facets, facets)
 
 __BEGIN_DECLS
 extern SG_NodeOps sgObjectOps;
@@ -101,6 +111,7 @@ void	   SG_EdgeInsert(SG_Object *, int, int);
 SG_Edge	  *SG_Edge2(void *, int, int);
 
 SG_Facet  *SG_FacetNew(void *, int);
+void       SG_FacetDelete(SG_Facet *);
 #define    SG_Facet3(so) SG_FacetNew((so),3)
 #define    SG_Facet4(so) SG_FacetNew((so),4)
 SG_Facet  *SG_FacetFromTri3(void *, int, int, int);
@@ -116,6 +127,7 @@ Uint8	 *SG_ObjectEdgeMatrix(SG_Object *, Uint *);
 Uint8	 *SG_ObjectFacetMatrix(SG_Object *, Uint *);
 int	  SG_ObjectCheckConnectivity(void *);
 int	  SG_ObjectNormalize(void *);
+Uint	  SG_ObjectConvQuadsToTriangles(void *);
 void	  SG_ObjectFreeGeometry(void *);
 
 void	  SG_ObjectEdit(void *, struct ag_widget *, SG_View *);
