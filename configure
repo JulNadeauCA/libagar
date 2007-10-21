@@ -276,6 +276,7 @@ else
 		echo "yes (GNU libtool)"
 	fi
 fi
+echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
 
 echo "PREFIX?=${PREFIX}" >> Makefile.config
 echo "#ifndef PREFIX" > config/prefix.h
