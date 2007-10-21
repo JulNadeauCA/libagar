@@ -103,7 +103,7 @@ void RG_PixmapOpenMenu(struct rg_tileview *, int, int);
 void RG_PixmapCloseMenu(struct rg_tileview *);
 
 static __inline__ void
-RG_PixmapSetBlendingMode(RG_Pixmap *pixmap, enum rg_pixel_blend_mode bmode)
+RG_PixmapSetBlendingMode(RG_Pixmap *pixmap, enum rg_pixmap_blend_mode bmode)
 {
 	pixmap->blend_mode = bmode;
 }

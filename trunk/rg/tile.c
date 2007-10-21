@@ -125,7 +125,8 @@ RG_TileNew(RG_Tileset *ts, const char *name, Uint16 w, Uint16 h, Uint flags)
 
 	t = Malloc(sizeof(RG_Tile), M_RG);
 	RG_TileInit(t, ts, name);
-	RG_TileScale(ts, t, w, h, flags, 255);
+	RG_TileScale(ts, t, w, h, flags);
+	return (t);
 }
 
 void
@@ -674,7 +675,7 @@ GeoCtrlButtonUp(AG_Event *event)
 	int h = RG_TileviewInt(ctrl, 3);
 	
 	if (w != t->su->w || h != t->su->h)  {
-		RG_TileScale(ts, t, w, h, t->flags, t->su->format->alpha);
+		RG_TileScale(ts, t, w, h, t->flags);
 		RG_TileviewSetZoom(tv, tv->zoom, 0);
 	}
 }
@@ -1060,7 +1061,7 @@ tryname3:
 			px->su = SDL_ConvertSurface(spr->su, ts->fmt, 0);
 			RG_TileAddPixmap(t, NULL, px, 0, 0);
 			RG_TileScale(ts, t, px->su->w, px->su->h,
-			    RG_TILE_SRCALPHA|RG_TILE_SRCCOLORKEY, 255);
+			    RG_TILE_SRCALPHA|RG_TILE_SRCCOLORKEY);
 			RG_TileGenerate(t);
 			TAILQ_INSERT_TAIL(&ts->pixmaps, px, pixmaps);
 			TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
@@ -1641,7 +1642,7 @@ DeleteElement(AG_Event *event)
 }
 
 static void
-ResizeTile(AG_Event *event)
+UpdateTileSettings(AG_Event *event)
 {
 	RG_Tileview *tv = AG_PTR(1);
 	AG_MSpinbutton *msb = AG_PTR(2);
@@ -1660,8 +1661,8 @@ ResizeTile(AG_Event *event)
 	if (AG_WidgetBool(alpha_cb, "state"))
 		flags |= RG_TILE_SRCALPHA;
 
-	RG_TileScale(ts, t, w, h, flags,
-	    (Uint8)AG_WidgetInt(alpha_sb, "value"));
+	RG_TileScale(ts, t, w, h, flags);
+	t->su->format->alpha = AG_WidgetInt(alpha_sb, "value");
 	RG_TileviewSetZoom(tv, 100, 0);
 	AG_ViewDetach(dlg_w);
 
@@ -1725,7 +1726,8 @@ TileSettingsDlg(AG_Event *event)
 
 	box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(box, 0, _("OK"), ResizeTile, "%p,%p,%p,%p,%p,%p",
+		AG_ButtonNewFn(box, 0, _("OK"),
+		    UpdateTileSettings, "%p,%p,%p,%p,%p,%p",
 		    tv, msb, win, ckey_cb, alpha_cb, alpha_sb);
 		AG_ButtonNewFn(box, 0, _("Cancel"), AGWINDETACH(win));
 	}
@@ -2007,7 +2009,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	tv = Malloc(sizeof(RG_Tileview), M_OBJECT);
 	RG_TileviewInit(tv, ts, 0);
 	RG_TileviewSetTile(tv, t);
-	RG_TileScale(ts, t, t->su->w, t->su->h, t->flags, t->su->format->alpha);
+	RG_TileScale(ts, t, t->su->w, t->su->h, t->flags);
 	{
 		extern RG_TileviewSketchToolOps sketch_line_ops;
 		extern RG_TileviewSketchToolOps sketch_polygon_ops;
