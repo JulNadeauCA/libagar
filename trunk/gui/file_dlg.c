@@ -47,9 +47,18 @@ AG_FileDlgNew(void *parent, Uint flags)
 	fd = Malloc(sizeof(AG_FileDlg), M_OBJECT);
 	AG_FileDlgInit(fd, flags);
 	AG_ObjectAttach(parent, fd);
-	if (fd->flags & AG_FILEDLG_FOCUS) {
-		AG_WidgetFocus(fd);
-	}
+	return (fd);
+}
+
+AG_FileDlg *
+AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
+{
+	AG_FileDlg *fd;
+
+	fd = Malloc(sizeof(AG_FileDlg), M_OBJECT);
+	AG_FileDlgInit(fd, flags);
+	AG_FileDlgSetDirectoryMRU(fd, mruKey, AG_String(agConfig,"save-path"));
+	AG_ObjectAttach(parent, fd);
 	return (fd);
 }
 

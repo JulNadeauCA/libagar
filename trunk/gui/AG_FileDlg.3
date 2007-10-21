@@ -48,6 +48,9 @@ to specific file extensions.
 .Ft AG_FileDlg *
 .Fn AG_FileDlgNew "AG_Widget *parent" "Uint flags"
 .Pp
+.Ft AG_FileDlg *
+.Fn AG_FileDlgNewMRU "AG_Widget *parent" "const char *mruKey" "Uint flags"
+.Pp
 .Ft void
 .Fn AG_FileDlgInit "AG_FileDlg *file_dlg" "Uint flags"
 .Pp
@@ -55,7 +58,7 @@ to specific file extensions.
 .Fn AG_FileDlgSetDirectory "AG_FileDlg *file_dlg" "const char *path"
 .Pp
 .Ft int
-.Fn AG_FileDlgSetDirectoryMRU "AG_FileDlg *file_dlg" "const char *configKey" "const char *defaultDir"
+.Fn AG_FileDlgSetDirectoryMRU "AG_FileDlg *file_dlg" "const char *mruKey" "const char *defaultDir"
 .Pp
 .Ft void
 .Fn AG_FileDlgSetFilename "AG_FileDlg *file_dlg" "const char *fmt" "..."
@@ -69,6 +72,16 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
+The
+.Fn AG_FileDlgNewMRU
+variant implicitely calls
+.Fn AG_FileDlgSetDirectoryMRU
+with the given key.
+The
+.Xr AG_Config 3
+.Sq save-path
+parameter is used as the default directory.
+.Pp
 .Fn AG_FileDlgInit
 initializes a preallocated
 .Nm
@@ -100,7 +113,7 @@ The
 sets the working directory according to an
 .Xr AG_Config 3
 parameter named
-.Fa configKey .
+.Fa mruKey
 If the parameter does not exist, it will be set to
 .Fa defaultDir
 (it is customary to use a name such as
