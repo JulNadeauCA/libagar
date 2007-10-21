@@ -475,10 +475,19 @@ static void
 WidgetShown(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_SELF();
+	AG_TlistItem *it;
+	int w, wMax = 0, nItems = 0;
 
 /*	AG_WidgetFocus(fd->tbFile); */
 	AG_RefreshListing(fd);
 	AG_PostEvent(NULL, fd->comTypes, "combo-selected", "%p", NULL);
+
+	AG_COMBO_FOREACH(it, fd->comTypes) {
+		AG_TextSize(it->text, &w, NULL);
+		if (w > wMax) { wMax = w; }
+		nItems++;
+	}
+	AG_ComboSizeHintPixels(fd->comTypes, wMax, nItems);
 }
 
 int
