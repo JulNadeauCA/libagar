@@ -1,0 +1,21 @@
+# Public domain
+
+REGISTER("--enable-static",	"Produce a static binary [default: no]")
+REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
+
+CHECK(cc)
+REQUIRE(agar, 1.3)
+
+if [ "${HAVE_AGAR}" != "yes" ]; then
+	echo "This application requires Agar."
+	exit 1
+fi
+
+if [ "${enable_warnings}" = "yes" ]; then
+	C_OPTION(-Wall)
+	C_OPTION(-Werror)
+	C_OPTION(-Wmissing-prototypes)
+fi
+if [ "${enable_static}" = "yes" ]; then
+	MDEFINE(LDFLAGS, "-static")
+fi

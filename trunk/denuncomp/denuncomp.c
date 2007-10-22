@@ -23,16 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_progname.h>
-
-#include <core/core.h>
+#include <agar/core.h>
 
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
 
-#include <core/load_den.h>
 
 int verbose = 1;
 int iflag = 0;
@@ -41,13 +38,7 @@ char *outdir = ".";
 static void
 printusage(void)
 {
-#ifdef HAVE_PROGNAME
-	extern char *__progname;
-	char *progname = __progname;
-#else
-	char *progname = "denuncomp";
-#endif
-	fprintf(stderr, "Usage: %s [-qi] [-o outdir] archive.den\n", progname);
+	fprintf(stderr, "Usage: denuncomp [-qi] [-o outdir] archive.den\n");
 }
 
 int
@@ -134,7 +125,7 @@ main(int argc, char *argv[])
 			goto fail;
 		}
 		
-		buf = Malloc(memb->size, 0);
+		buf = AG_Malloc(memb->size, 0);
 		AG_NetbufSeek(den->buf, memb->offs, SEEK_SET);
 		rv = AG_NetbufReadE(buf, 1, memb->size, den->buf);
 		if (rv > 0) {
@@ -145,7 +136,7 @@ main(int argc, char *argv[])
 			}
 		}
 		fclose(f);
-		Free(buf, 0);
+		AG_Free(buf, 0);
 	}
 out:
 	AG_DenClose(den);
