@@ -109,10 +109,6 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_ObjectRemain(agWorld, AG_OBJECT_REMAIN_DATA);
 	
 	AG_ObjectLoad(agConfig);
-
-	if (agVerbose) {
-		printf("\n");
-	}
 #ifdef NETWORK
 	AG_InitNetwork(0);
 #endif

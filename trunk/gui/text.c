@@ -219,14 +219,12 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	if (AG_ConfigFile("font-path", name, NULL, path, sizeof(path)) == -1)
 		goto fail;
 
-	dprintf("Loading font: %s\n", path);
-
 #ifdef HAVE_FREETYPE
 	if (agFreetype) {
 		int tflags = 0;
 		AG_TTFFont *ttf;
 
-		dprintf("<%s>: Vector (%d pts)\n", name, size);
+		Verbose("Loading font %s (vector %d pts)\n", name, size);
 		if ((font->ttf = ttf = AG_TTFOpenFont(path, size)) == NULL) {
 			goto fail;
 		}
@@ -247,10 +245,10 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		char *msig, *c0, *c1;
 		AG_Netbuf *buf;
 		
+		Verbose("Loading font %s (bitmap)\n", name);
 		if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN))
-		    == NULL) {
+		    == NULL)
 			goto fail;
-		}
 
 		font->type = AG_FONT_BITMAP;
 		font->bglyphs = Malloc(32*sizeof(SDL_Surface *), M_TEXT);
@@ -284,9 +282,6 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		font->ascent = font->height;
 		font->descent = 0;
 		font->lineskip = font->height+2;
-	
-		dprintf("<%s>: Bitmap '%c'-'%c'\n", name,
-		    (char)font->c0, (char)font->c1);
 	}
 
 	SLIST_INSERT_HEAD(&fonts, font, fonts);
@@ -832,7 +827,7 @@ TextRenderFT(const Uint32 *ucs)
 
 	su = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 8, 0, 0, 0, 0);
 	if (su == NULL) {
-		dprintf("TextRenderFT: CreateRGBSurface: %s\n", SDL_GetError());
+		Verbose("TextRenderFT: CreateRGBSurface: %s\n", SDL_GetError());
 		goto empty;
 	}
 	palette = su->format->palette;
@@ -873,7 +868,7 @@ TextRenderFT(const Uint32 *ucs)
 #endif
 		if (AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
 		                                 TTF_CACHED_BITMAP) != 0) {
-			dprintf("TTFFindGlyph: %s\n", AG_GetError());
+			Verbose("TTFFindGlyph: %s\n", AG_GetError());
 		    	continue;
 		}
 		glyph = ftFont->current;
@@ -948,7 +943,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	su = SDL_AllocSurface(SDL_SWSURFACE, w, h, 32,
 	                      0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 	if (su == NULL) {
-		dprintf("TextRenderFT_Blended: CreateRGBSurface: %s\n",
+		Verbose("TextRenderFT_Blended: CreateRGBSurface: %s\n",
 		    SDL_GetError());
 		goto empty;
 	}
@@ -1250,7 +1245,6 @@ AG_TextParseFontSpec(const char *fontspec)
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
 		AG_SetString(agConfig, "font.face", s);
-		dprintf("set: %s\n", AG_String(agConfig, "font.face"));
 	}
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {

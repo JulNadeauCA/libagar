@@ -160,6 +160,16 @@ AG_DebugN(int mask, const char *fmt, ...)
 }
 
 void
+AG_Verbose(const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	printf(fmt, args);
+	va_end(args);
+}
+
+void
 AG_FatalError(const char *fmt, ...)
 {
 	va_list args;
