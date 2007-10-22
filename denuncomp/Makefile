@@ -1,5 +1,5 @@
 TOP=	..
-include ${TOP}/Makefile.config
+include Makefile.config
 
 PROG=		denuncomp
 PROG_TYPE=	"CLI"
@@ -9,8 +9,16 @@ PROG_LINKS=	ag_core SDL opengl32 glu32
 SRCS=	denuncomp.c
 MAN1=	denuncomp.1
 
-CFLAGS+=`agar-config --cflags`
-LIBS+=	`agar-config --libs`
+CFLAGS+=${AGAR_CFLAGS}
+LIBS+=	${AGAR_LIBS}
+
+all: all-subdir ${PROG}
+
+configure: configure.in
+	cat configure.in | mkconfigure > configure
+	chmod 755 configure
+
+.PHONY: configure
 
 include ${TOP}/mk/build.prog.mk
 include ${TOP}/mk/build.man.mk
