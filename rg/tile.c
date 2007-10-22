@@ -126,6 +126,14 @@ RG_TileNew(RG_Tileset *ts, const char *name, Uint16 w, Uint16 h, Uint flags)
 	t = Malloc(sizeof(RG_Tile), M_RG);
 	RG_TileInit(t, ts, name);
 	RG_TileScale(ts, t, w, h, flags);
+
+	if ((ts->ntiletbl+1) >= RG_TILE_ID_MAX) {
+		AG_FatalError("Out of tile mappings");
+	}
+	ts->tiletbl = Realloc(ts->tiletbl, (ts->ntiletbl+1)*sizeof(RG_Tile *));
+	ts->tiletbl[ts->ntiletbl] = t;
+	t->main_id = ts->ntiletbl++;
+	TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 	return (t);
 }
 
