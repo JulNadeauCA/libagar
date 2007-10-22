@@ -203,7 +203,7 @@ AG_ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 	AG_Window *win;
 	AG_HBox *hb;
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
+	win = AG_WindowNew(AG_WINDOW_NORESIZE|
 	                   AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_LabelNewStatic(win, 0, _("File %s exists. Overwrite?"), fd->cfile);
@@ -435,6 +435,7 @@ SelectedType(AG_Event *event)
 	AG_FileType *ft = (it != NULL) ? it->p1 : TAILQ_FIRST(&fd->types);
 	AG_FileOption *fo;
 	AG_Numerical *num;
+	AG_Textbox *tbox;
 	AG_Widget *chld;
 	AG_Window *pWin;
 
@@ -471,6 +472,12 @@ SelectedType(AG_Event *event)
 			AG_WidgetBindDouble(num, "value", &fo->data.dbl.val);
 			AG_NumericalSetRange(num, fo->data.dbl.min,
 			                          fo->data.dbl.max);
+			break;
+		case AG_FILEDLG_STRING:
+			tbox = AG_TextboxNew(fd->optsCtr, AG_TEXTBOX_HFILL,
+			    fo->descr);
+			AG_WidgetBindString(tbox, "string",
+			    fo->data.s, sizeof(fo->data.s));
 			break;
 		default:
 			break;
@@ -882,6 +889,22 @@ AG_FileOptionNewDbl(AG_FileType *ft, const char *descr, const char *key,
 }
 
 AG_FileOption *
+AG_FileOptionNewString(AG_FileType *ft, const char *descr, const char *key,
+    const char *dflt)
+{
+	AG_FileOption *fto;
+
+	fto = Malloc(sizeof(AG_FileOption), M_WIDGET);
+	fto->descr = descr;
+	fto->key = key;
+	fto->unit = NULL;
+	fto->type = AG_FILEDLG_STRING;
+	strlcpy(fto->data.s, dflt, sizeof(fto->data.s));
+	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
+	return (fto);
+}
+
+AG_FileOption *
 AG_FileOptionGet(AG_FileType *ft, const char *key)
 {
 	AG_FileOption *fo;
@@ -915,6 +938,14 @@ AG_FileOptionDbl(AG_FileType *ft, const char *key)
 	AG_FileOption *fo;
 	fo = AG_FileOptionGet(ft, key);
 	return (fo != NULL) ? fo->data.dbl.val : 0.0;
+}
+
+char *
+AG_FileOptionString(AG_FileType *ft, const char *key)
+{
+	AG_FileOption *fo;
+	fo = AG_FileOptionGet(ft, key);
+	return (fo != NULL) ? fo->data.s : "";
 }
 
 const AG_WidgetOps agFileDlgOps = {

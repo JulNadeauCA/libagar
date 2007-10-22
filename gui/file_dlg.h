@@ -33,12 +33,14 @@ typedef struct ag_file_type_option {
 		AG_FILEDLG_BOOL,
 		AG_FILEDLG_INT,
 		AG_FILEDLG_FLOAT,
-		AG_FILEDLG_DOUBLE
+		AG_FILEDLG_DOUBLE,
+		AG_FILEDLG_STRING
 	} type;
 	union {
 		struct { int val, min, max; } i;
 		struct { float val, min, max; } flt;
 		struct { double val, min, max; } dbl;
+		char s[128];
 	} data;
 	TAILQ_ENTRY(ag_file_type_option) opts;
 } AG_FileOption;
@@ -110,12 +112,15 @@ AG_FileOption *AG_FileOptionNewFlt(AG_FileType *, const char *, const char *,
                                    float, float, float, const char *);
 AG_FileOption *AG_FileOptionNewDbl(AG_FileType *, const char *, const char *,
                                    double, double, double, const char *);
+AG_FileOption *AG_FileOptionNewString(AG_FileType *, const char *, const char *,
+                                      const char *);
 
 AG_FileOption *AG_FileOptionGet(AG_FileType *, const char *);
 int            AG_FileOptionInt(AG_FileType *, const char *);
+#define        AG_FileOptionBool(ft,key) AG_FileOptionInt((ft),(key))
 float          AG_FileOptionFlt(AG_FileType *, const char *);
 double         AG_FileOptionDbl(AG_FileType *, const char *);
-#define        AG_FileOptionBool(ft,key) AG_FileOptionInt((ft),(key))
+char          *AG_FileOptionString(AG_FileType *, const char *);
 __END_DECLS
 
 #include "close_code.h"
