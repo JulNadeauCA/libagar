@@ -258,6 +258,7 @@ else
 		echo "yes (GNU libtool)"
 	fi
 fi
+echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
 
 echo "PREFIX?=${PREFIX}" >> Makefile.config
 echo "#ifndef PREFIX" > config/prefix.h
@@ -306,11 +307,11 @@ else
 	echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 fi
 
-VERSION="\"1.0\""
+VERSION="1.1"
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION \"$VERSION\"" >> config/version.h
 echo "#endif" >> config/version.h
-RELEASE="\"I hear the whispered words of the Trees\""
+RELEASE="The Ecstatic Spiral to Hell"
 echo "#ifndef RELEASE" > config/release.h
 echo "#define RELEASE \"$RELEASE\"" >> config/release.h
 echo "#endif" >> config/release.h
