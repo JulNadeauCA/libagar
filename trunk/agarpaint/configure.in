@@ -3,8 +3,8 @@
 REGISTER("--enable-static",	"Produce a static binary [default: no]")
 REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 
-HDEFINE(VERSION, "\"1.0\"")
-HDEFINE(RELEASE, "\"I hear the whispered words of the Trees\"")
+HDEFINE(VERSION, "1.1")
+HDEFINE(RELEASE, "The Ecstatic Spiral to Hell")
 
 CHECK(cc)
 REQUIRE(agar, 1.3)
