@@ -52,6 +52,8 @@
 #include <agar/core/error_pub.h>
 #endif
 
+#define Verbose AG_Verbose
+
 #ifdef DEBUG
 #ifdef __GNUC__
 # define dprintf(fmt,args...) printf("%s: " fmt, __FUNCTION__ , ##args)

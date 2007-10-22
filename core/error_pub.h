@@ -59,6 +59,11 @@ void		 AG_DebugObj(void *, const char *, ...)
 void		 AG_DebugN(int, const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 2, 3)
 		     NONNULL_ATTRIBUTE(2);
+
+void		 AG_Verbose(const char *, ...)
+		     FORMAT_ATTRIBUTE(printf, 1, 2)
+		     NONNULL_ATTRIBUTE(1);
+
 void		*AG_PtrMismatch(void);
 void		*AG_ObjectMismatch(const char *, const char *);
 int		 AG_IntMismatch(void);

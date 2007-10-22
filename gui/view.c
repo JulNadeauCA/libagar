@@ -131,7 +131,7 @@ const AG_ObjectOps agDisplayOps = {
 static int
 AG_X11_ErrorHandler(Display *disp, XErrorEvent *event)
 {
-	printf("Caught X11 error!\n");
+	Verbose("Caught X11 error!\n");
 	abort();
 }
 #endif
@@ -252,11 +252,12 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	}
 	agVideoFmt = agView->v->format;
 	agSurfaceFmt = agView->stmpl->format;
-	printf(_("Video display is %dbpp (%08x,%08x,%08x)\n"),
+
+	Verbose(_("Video display is %dbpp (%08x,%08x,%08x)\n"),
 	     (int)agVideoFmt->BitsPerPixel, 
 	     (Uint)agVideoFmt->Rmask, (Uint)agVideoFmt->Gmask,
 	     (Uint)agVideoFmt->Bmask);
-	printf(_("Reference surface is %dbpp (%08x,%08x,%08x,%08x)\n"),
+	Verbose(_("Reference surface is %dbpp (%08x,%08x,%08x,%08x)\n"),
 	     (int)agSurfaceFmt->BitsPerPixel,
 	     (Uint)agSurfaceFmt->Rmask,
 	     (Uint)agSurfaceFmt->Gmask,
@@ -343,7 +344,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		SDL_SysWMinfo wminfo;
 		if (SDL_GetWMInfo(&wminfo) &&
 		    wminfo.subsystem == SDL_SYSWM_X11) {
-			dprintf("Enabling synchronous X11 events\n");
+			Verbose("Enabling synchronous X11 events");
 			XSynchronize(wminfo.info.x11.display, True);
 			XSetErrorHandler(AG_X11_ErrorHandler);
 		}
