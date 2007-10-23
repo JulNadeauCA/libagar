@@ -45,6 +45,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "agarpaint.h"
+
 extern const AG_ObjectOps rgTilesetOps;
 static AG_Menu *appMenu = NULL;
 static RG_Tileset *tsFocused = NULL;
@@ -78,17 +80,17 @@ SaveChangesDlg(AG_Event *event)
 		AG_Window *wDlg;
 
 		wDlg = AG_TextPromptOptions(bOpts, 3,
-		    "Save changes to %s?", AGOBJECT(ts)->name);
+		    _("Save changes to %s?"), AGOBJECT(ts)->name);
 		AG_WindowAttach(win, wDlg);
 		
-		AG_ButtonText(bOpts[0], "Save");
+		AG_ButtonText(bOpts[0], _("Save"));
 		AG_SetEvent(bOpts[0], "button-pushed", SaveChangesReturn,
 		    "%p,%p,%i", win, ts, 1);
 		AG_WidgetFocus(bOpts[0]);
-		AG_ButtonText(bOpts[1], "Discard");
+		AG_ButtonText(bOpts[1], _("Discard"));
 		AG_SetEvent(bOpts[1], "button-pushed", SaveChangesReturn,
 		    "%p,%p,%i", win, ts, 0);
-		AG_ButtonText(bOpts[2], "Cancel");
+		AG_ButtonText(bOpts[2], _("Cancel"));
 		AG_SetEvent(bOpts[2], "button-pushed", AGWINDETACH(wDlg));
 	}
 }
@@ -99,7 +101,6 @@ WindowGainedFocus(AG_Event *event)
 /*	AG_Window *win = AG_SELF(); */
 	RG_Tileset *ts = AG_PTR(1);
 
-	printf("gained focus: %s\n", AGOBJECT(ts)->name);
 	tsFocused = ts;
 }
 
@@ -141,8 +142,7 @@ OpenTilesetAGT(AG_Event *event)
 
 	ts = AG_ObjectNew(agWorld, NULL, &rgTilesetOps);
 	if (AG_ObjectLoadFromFile(ts, path) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "Error loading %s: %s",
-		    path, AG_GetError());
+		AG_TextMsgFromError();
 		AG_ObjectDetach(ts);
 		AG_ObjectDestroy(ts);
 		AG_Free(ts, M_OBJECT);
@@ -153,57 +153,17 @@ OpenTilesetAGT(AG_Event *event)
 }
 
 static void
-LoadTileFromXCF(SDL_Surface *su, const char *lbl, void *p)
-{
-	RG_Tileset *ts = p;
-	RG_Pixmap *px;
-	RG_Tile *t;
-
-	t = RG_TileNew(ts, lbl, su->w, su->h, RG_TILE_SRCALPHA);
-	px = RG_PixmapNew(ts, lbl, 0);
-	px->su = SDL_ConvertSurface(su, ts->fmt, 0);
-	RG_TileAddPixmap(t, NULL, px, 0, 0);
-	RG_TileGenerate(t);
-}
-
-static void
-OpenTilesetXCF(AG_Event *event)
-{
-	char *path = AG_STRING(1);
-	RG_Tileset *ts;
-	AG_Netbuf *buf;
-
-	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
-		return;
-	}
-	ts = AG_ObjectNew(agWorld, NULL, &rgTilesetOps);
-	if (AG_XCFLoad(buf, 0, LoadTileFromXCF, ts) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
-		AG_ObjectDetach(ts);
-		AG_ObjectDestroy(ts);
-		AG_Free(ts, M_OBJECT);
-		AG_NetbufClose(buf);
-		return;
-	}
-	AG_NetbufClose(buf);
-	CreateEditionWindow(ts);
-}
-
-static void
 OpenTilesetDlg(AG_Event *event)
 {
 	AG_Window *win;
 	AG_FileDlg *fd;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Open tileset...");
+	AG_WindowSetCaption(win, _("Open tileset..."));
 	fd = AG_FileDlgNewMRU(win, "agarpaint.mru.tilesets",
 	    AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(fd, "AgarPaint tileset", "*.agt",
+	AG_FileDlgAddType(fd, _("AgarPaint tileset"), "*.agt",
 	    OpenTilesetAGT, NULL);
-	AG_FileDlgAddType(fd, "Gimp XCF layers", "*.xcf",
-	    OpenTilesetXCF, NULL);
 	AG_WindowShow(win);
 }
 
@@ -312,7 +272,38 @@ SaveTilesetAsDlg(AG_Event *event)
 
 	AG_WindowShow(win);
 }
-	
+
+static void
+ImportImageFromBMP(AG_Event *event)
+{
+	RG_Tileset *ts = AG_PTR(1);
+	char *path = AG_STRING(2);
+	SDL_Surface *bmp;
+	RG_Pixmap *px;
+
+	if ((bmp = SDL_LoadBMP(path)) == NULL) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, SDL_GetError());
+		return;
+	}
+	px = RG_PixmapNew(ts, "Bitmap", 0);
+	px->su = SDL_ConvertSurface(bmp, ts->fmt, 0);
+	SDL_FreeSurface(bmp);
+}
+
+static void
+LoadTileFromXCF(SDL_Surface *xcf, const char *lbl, void *p)
+{
+	RG_Tileset *ts = p;
+	RG_Pixmap *px;
+	RG_Tile *t;
+
+	t = RG_TileNew(ts, lbl, xcf->w, xcf->h, RG_TILE_SRCALPHA);
+	px = RG_PixmapNew(ts, lbl, 0);
+	px->su = SDL_ConvertSurface(xcf, ts->fmt, 0);
+	RG_TileAddPixmap(t, NULL, px, 0, 0);
+	RG_TileGenerate(t);
+}
+
 static void
 ImportImagesFromXCF(AG_Event *event)
 {
@@ -344,6 +335,8 @@ ImportImagesDlg(AG_Event *event)
 	AG_WindowSetCaption(win, "Import images...");
 	fd = AG_FileDlgNewMRU(win, "agarpaint.mru.tilesets",
 	    AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
+	AG_FileDlgAddType(fd, "PC bitmap", "*.bmp",
+	    ImportImageFromBMP, "%p", ts);
 	AG_FileDlgAddType(fd, "Gimp XCF layers", "*.xcf",
 	    ImportImagesFromXCF, "%p", ts);
 	AG_WindowShow(win);
