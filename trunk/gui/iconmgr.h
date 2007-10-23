@@ -167,10 +167,11 @@ extern AG_IconMgr agIconMgr;
 #endif
 
 __BEGIN_DECLS
-void AG_IconMgrInit(void *, const char *);
-int AG_IconMgrLoadFromDenXCF(AG_IconMgr *, const char *);
-void AG_IconMgrDestroy(void *);
-SDL_Surface *AG_ObjectIcon(void *);
+void		 AG_IconMgrInit(void *, const char *);
+void		 AG_LoadIcons(AG_IconMgr *, const Uint32 **, Uint);
+int		 AG_IconMgrLoadFromDenXCF(AG_IconMgr *, const char *);
+void		 AG_IconMgrDestroy(void *);
+SDL_Surface	*AG_ObjectIcon(void *);
 __END_DECLS
 
 #include "close_code.h"
