@@ -108,7 +108,7 @@ AG_DebugPrintf(const char *fmt, ...)
 		va_list args;
 
 		va_start(args, fmt);
-		printf(fmt, args);
+		vprintf(fmt, args);
 		va_end(args);
 	}
 #endif
@@ -122,7 +122,7 @@ AG_Debug(int mask, const char *fmt, ...)
 		va_list args;
 
 		va_start(args, fmt);
-		printf(fmt, args);
+		vprintf(fmt, args);
 		printf("\n");
 		va_end(args);
 	}
@@ -138,7 +138,7 @@ AG_DebugObj(void *obj, const char *fmt, ...)
 
 		va_start(args, fmt);
 		printf("%s: ", OBJECT(obj)->name);
-		printf(fmt, args);
+		vprintf(fmt, args);
 		printf("\n");
 		va_end(args);
 	}
@@ -153,7 +153,7 @@ AG_DebugN(int mask, const char *fmt, ...)
 		va_list args;
 
 		va_start(args, fmt);
-		fprintf(stderr, fmt, args);
+		vfprintf(stderr, fmt, args);
 		va_end(args);
 	}
 #endif
@@ -165,7 +165,7 @@ AG_Verbose(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-	printf(fmt, args);
+	vprintf(fmt, args);
 	va_end(args);
 }
 
@@ -176,7 +176,7 @@ AG_FatalError(const char *fmt, ...)
 
 	va_start(args, fmt);
 	fprintf(stderr, "fatal: ");
-	fprintf(stderr, fmt, args);
+	vfprintf(stderr, fmt, args);
 	fprintf(stderr, "\n");
 	va_end(args);
 
