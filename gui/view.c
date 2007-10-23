@@ -356,7 +356,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	if (flags & AG_VIDEO_BGPOPUPMENU) {
 		agBgPopupMenu = 1;
 	}
-	AG_IconMgrInit(&agIconMgr, "core-icons");
+	AG_IconMgrInit(&agIconMgr, "_agIconMgr");
 	if (AG_IconMgrLoadFromDenXCF(&agIconMgr, "core-icons") == -1) {
 		fatal("Unable to load icons: %s", AG_GetError());
 	}
