@@ -37,6 +37,7 @@
 #include <stdarg.h>
 
 #include "iconmgr.h"
+#include "view.h"
 
 AG_IconMgr agIconMgr;
 
@@ -69,6 +70,76 @@ AG_IconMgrLoadIcon(SDL_Surface *su, const char *lbl, void *p)
 
 	im->icons = Realloc(im->icons, (im->nicons+1)*sizeof(SDL_Surface *));
 	im->icons[im->nicons++] = su;
+}
+
+static void
+LoadIconRaw(SDL_Surface *su, const Uint32 *data)
+{
+	const Uint32 *src = &data[0];
+	Uint8 *dst = su->pixels;
+	int x, y;
+	
+	for (y = 0; y < su->h; y++) {
+		for (x = 0; x < su->w; x++) {
+			AG_PutPixel(su, dst, *src);
+			dst += su->format->BytesPerPixel;
+			src++;
+		}
+	}
+}
+
+static void
+LoadIconConvert(SDL_Surface *su, const Uint32 *data)
+{
+	const Uint32 *src = &data[0];
+	Uint8 *dst = su->pixels;
+	int x, y;
+	
+	for (y = 0; y < su->h; y++) {
+		for (x = 0; x < su->w; x++) {
+			AG_PutPixel(su, dst, AG_SurfacePixel(*src));
+			dst += su->format->BytesPerPixel;
+			src++;
+		}
+	}
+}
+
+/* Load a set of icons from agarpaint-generated .h data. */
+void
+AG_LoadIcons(AG_IconMgr *im, const Uint32 **icons, Uint count)
+{
+	SDL_Surface *su;
+	Uint32 Rmask, Gmask, Bmask, Amask;
+	Uint i;
+
+	dprintf("loading %u static icons\n", count);
+	for (i = 0; i < count; i++) {
+		const Uint32 *data = icons[i];
+
+		su = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
+		    data[0], data[1], agSurfaceFmt->BitsPerPixel,
+		    agSurfaceFmt->Rmask, agSurfaceFmt->Gmask,
+		    agSurfaceFmt->Bmask, agSurfaceFmt->Amask);
+		if (su == NULL) {
+			AG_FatalError("SDL_CreateRGBSurface: %s",
+			    SDL_GetError());
+		}
+		Rmask = data[2];
+		Gmask = data[3];
+		Bmask = data[4];
+		Amask = data[5];
+
+		if (Rmask == agSurfaceFmt->Rmask &&
+		    Gmask == agSurfaceFmt->Gmask &&
+		    Bmask == agSurfaceFmt->Bmask &&
+		    Amask == agSurfaceFmt->Amask) {
+			dprintf("load %dx%d icon raw\n", su->w, su->h);
+			LoadIconRaw(su, &data[6]);
+		} else {
+			dprintf("load %dx%d icon converted\n", su->w, su->h);
+			LoadIconConvert(su, &data[6]);
+		}
+	}
 }
 
 /*
