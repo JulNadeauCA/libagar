@@ -169,48 +169,41 @@ void
 RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags)
 {
 	Uint32 sflags = SDL_SWSURFACE;
+	int wNew, hNew;
 	int x, y;
-	int nw, nh;
-	Uint *sattrs, *slayers;
+	Uint *nAttrs;
+	int *nLayers;
 
-	if (t->nw > 0 && t->nh > 0) {
-		sattrs = Malloc(t->nw*t->nh*sizeof(Uint), M_RG);
-		memcpy(sattrs, t->attrs, t->nw*t->nh*sizeof(Uint));
-		
-		slayers = Malloc(t->nw*t->nh*sizeof(int), M_RG);
-		memcpy(slayers, t->layers, t->nw*t->nh*sizeof(int));
-	} else {
-		sattrs = NULL;
-		slayers = NULL;
-	}
-
-	nw = w/RG_TILESZ + 1;
-	nh = h/RG_TILESZ + 1;
-	t->attrs = Realloc(t->attrs, nw*nh*sizeof(Uint));
-	t->layers = Realloc(t->layers , nw*nh*sizeof(int));
-	memset(t->attrs, 0, nw*nh*sizeof(Uint));
-	memset(t->layers, 0, nw*nh*sizeof(int));
-
-	/* Recover the previous attributes. */
-	if (sattrs != NULL) {
-		for (y = 0; y < t->nh; y++) {
-			for (x = 0; x < t->nw; x++)
-				t->attrs[y*nw + x] = sattrs[y*t->nw + x];
+	/* Resize the attribute grids. */
+	wNew = w/RG_TILESZ + 1;
+	hNew = h/RG_TILESZ + 1;
+	nAttrs = Malloc(wNew*hNew*sizeof(Uint), M_RG);
+	nLayers = Malloc(wNew*hNew*sizeof(int), M_RG);
+	for (y = 0; y < hNew; y++) {
+		for (x = 0; x < wNew; x++) {
+			if (x >= t->nw || y >= t->nh) {
+				nAttrs[y*wNew + x] = 0;
+				nLayers[y*wNew + x] = 0;
+			} else {
+				nAttrs[y*wNew + x] = t->attrs[y*t->nw + x];
+				nLayers[y*wNew + x] = t->layers[y*t->nw + x];
+			}
 		}
 	}
-	if (slayers != NULL) {
-		for (y = 0; y < t->nh; y++) {
-			for (x = 0; x < t->nw; x++)
-				t->layers[y*nw + x] = slayers[y*t->nw + x];
-		}
+	Free(t->attrs, M_RG);
+	Free(t->layers, M_RG);
+	t->attrs = nAttrs;
+	t->layers = nLayers;
+
+	t->nw = wNew;
+	t->nh = hNew;
+
+	if (flags & RG_TILE_SRCCOLORKEY) {
+		sflags |= SDL_SRCCOLORKEY;
 	}
-	
-	t->nw = nw;
-	t->nh = nh;
-
-	if (flags & RG_TILE_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
-	if (flags & RG_TILE_SRCALPHA)		sflags |= SDL_SRCALPHA;
-
+	if (flags & RG_TILE_SRCALPHA) {
+		sflags |= SDL_SRCALPHA;
+	}
 	t->flags = flags|RG_TILE_DIRTY;
 	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
 	    ts->fmt->Rmask, ts->fmt->Gmask, ts->fmt->Bmask, ts->fmt->Amask);
