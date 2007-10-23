@@ -707,12 +707,8 @@ AG_WindowEvent(SDL_Event *ev)
 			if (win->flags & AG_WINDOW_DENYFOCUS) {
 				agView->winToFocus = focus_saved;
 			} else {
-		
-				if (win !=
-				    TAILQ_LAST(&agView->windows, ag_windowq)) {
-					agView->winToFocus = win;
-					focus_changed++;
-				}
+				agView->winToFocus = win;
+				focus_changed++;
 			}
 			AG_MutexUnlock(&win->lock);
 			break;
