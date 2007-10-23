@@ -4,8 +4,8 @@
 #define _AGAR_RG_TILE_H_
 #include "begin_code.h"
 
-#define RG_TILE_NAME_MAX	 32
-#define RG_TILE_CLASS_MAX	 16
+#define RG_TILE_NAME_MAX	 128
+#define RG_TILE_CLASS_MAX	 32
 #define RG_TILE_ELEMENT_NAME_MAX 32
 #define RG_TILE_SIZE_MIN	 2
 #define RG_TILE_SIZE_MAX	 1024

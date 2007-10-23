@@ -67,6 +67,7 @@ typedef struct rg_pixmap {
 } RG_Pixmap;
 
 __BEGIN_DECLS
+RG_Pixmap	*RG_PixmapNew(struct rg_tileset *, const char *, int);
 void		 RG_PixmapInit(RG_Pixmap *, struct rg_tileset *, int);
 void		 RG_PixmapDestroy(RG_Pixmap *);
 int		 RG_PixmapLoad(RG_Pixmap *, AG_Netbuf *);

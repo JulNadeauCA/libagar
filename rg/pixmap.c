@@ -56,6 +56,26 @@ const char *pixmap_state_names[] = {
 	" (diagonal)"
 };
 
+RG_Pixmap *
+RG_PixmapNew(RG_Tileset *ts, const char *pName, int flags)
+{
+	char name[RG_TILE_NAME_MAX];
+	int no = 0;
+	RG_Pixmap *px;
+
+tryname:
+	snprintf(name, sizeof(name), _("%s #%d"),
+	    (pName != NULL) ? pName : _("Pixmap"), no++);
+	if (RG_TilesetFindPixmap(ts, name) != NULL)
+		goto tryname;
+
+	px = Malloc(sizeof(RG_Pixmap), M_RG);
+	RG_PixmapInit(px, ts, flags);
+	strlcpy(px->name, name, sizeof(px->name));
+	TAILQ_INSERT_TAIL(&ts->pixmaps, px, pixmaps);
+	return (px);
+}
+
 void
 RG_PixmapInit(RG_Pixmap *px, RG_Tileset *ts, int flags)
 {

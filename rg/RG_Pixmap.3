@@ -70,18 +70,22 @@ typedef struct rg_pixmap {
 .Ed
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "void"
-.Fn RG_PixmapInit "RG_Pixmap *pixmap" "RG_Tileset *set" "int flags"
+.Ft "RG_Pixmap *"
+.Fn RG_PixmapNew "RG_Tileset *set" "const char *name" "int flags"
 .Pp
 .Ft "void"
 .Fn RG_PixmapScale "RG_Pixmap *pixmap" "int width" "int height" "int x_offset" "int y_offset"
 .Pp
 .nr nS 0
 The
-.Fn RG_PixmapInit
-function initializes a
+.Fn RG_PixmapNew
+function allocates, initializes and attaches a
 .Nm
 structure.
+.Fa name
+is a string identifier for the pixmap
+(if a pixmap of the same name exists, a unique name will be
+generated automatically).
 There are currently no
 .Fa flags
 defined.
