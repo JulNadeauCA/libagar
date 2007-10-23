@@ -165,6 +165,7 @@ LoadTileFromXCF(SDL_Surface *su, const char *lbl, void *p)
 	px->su = SDL_ConvertSurface(su, ts->fmt, 0);
 	TAILQ_INSERT_TAIL(&ts->pixmaps, px, pixmaps);
 	RG_TileAddPixmap(t, NULL, px, 0, 0);
+	RG_TileGenerate(t);
 }
 
 static void
