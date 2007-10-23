@@ -321,6 +321,7 @@ Shown(AG_Event *event)
 	}
 	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
 	AG_PostEvent(NULL, win, "window-shown", NULL);
+	AG_PostEvent(NULL, win, "window-gainfocus", NULL);
 }
 
 static void
