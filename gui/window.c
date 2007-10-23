@@ -994,7 +994,10 @@ void
 AG_WindowUpdate(AG_Window *win)
 {
 	AG_SizeAlloc a;
-
+	
+	if (win == NULL) {
+		return;
+	}
 	if (WIDGET(win)->x != -1 && WIDGET(win)->y != -1) {
 		a.x = WIDGET(win)->x;
 		a.y = WIDGET(win)->y;
