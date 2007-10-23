@@ -69,9 +69,9 @@ typedef struct rg_tile {
 #endif
 	int xOrig, yOrig;		/* Origin point */
 	enum rg_snap_mode snap_mode;	/* Snapping mode (edition) */
-	Uint *attrs;			/* Node attributes (edition) */
-	int *layers;			/* Node layer offsets (edition) */
-	Uint nw, nh;			/* Node dimensions */
+	Uint *attrs;			/* Node attribute grid (edition) */
+	int *layers;			/* Node layer offset grid (edition) */
+	Uint nw, nh;			/* Node grid dimensions */
 	Uint8 flags;
 #define RG_TILE_SRCCOLORKEY	0x01	/* Colorkey source */
 #define RG_TILE_SRCALPHA	0x02	/* Alpha source */
