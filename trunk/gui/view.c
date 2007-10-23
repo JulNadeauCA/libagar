@@ -272,6 +272,12 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		float lineW[2];
 #endif
 
+		if (agVerbose) {
+			Verbose("\tGL Version: %s\n", glGetString(GL_VERSION));
+			Verbose("\tGL Vendor: %s\n", glGetString(GL_VENDOR));
+			Verbose("\tGL Renderer: %s\n",
+			    glGetString(GL_RENDERER));
+		}
 		SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
 		SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &green);
 		SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &blue);
