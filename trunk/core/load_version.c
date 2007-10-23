@@ -60,8 +60,8 @@ AG_ReadVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver,
 		    name, major, minor, ver->major, ver->minor);
 		return (-1);
 	}
-	if (agVerbose && minor != ver->minor) {
-		fprintf(stderr, "%s: Minor differs: v%d.%d != %d.%d.\n",
+	if (minor != ver->minor) {
+		Verbose("%s: Minor differs: v%d.%d != %d.%d.\n",
 		    name, major, minor, ver->major, ver->minor);
 	}
 	return (0);
