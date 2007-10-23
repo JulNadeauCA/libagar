@@ -1616,6 +1616,7 @@ Draw(void *p)
 			char text[16];
 			int nx, ny;
 
+			AG_PushTextState();
 			n = 0;
 			for (y = 0, ny = 0;
 			     y < th;
@@ -1629,8 +1630,7 @@ Draw(void *p)
 
 					snprintf(text, sizeof(text), "%s%d",
 					    (l > 0) ? "+" : "", l);
-					AG_TextFontLookup(NULL, 9, 0);
-					AG_TextColor(BG_COLOR);
+					AG_TextColorRGB(0, 0, 0);
 					tsu = AG_TextRender(text);
 					agPrim.rect_blended(tv,
 					    tv->xoffs+x,
@@ -1648,6 +1648,7 @@ Draw(void *p)
 			strlcpy(status, _("Editing node layers"),
 			    sizeof(status));
 			DrawStatusText(tv, status);
+			AG_PopTextState();
 		}
 		break;
 	case RG_TILEVIEW_FEATURE_EDIT:
