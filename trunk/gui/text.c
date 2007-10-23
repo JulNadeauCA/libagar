@@ -1310,7 +1310,7 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 	vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
-	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
 	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
 			   AG_WINDOW_NOBORDERS);
 	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[title]));
@@ -1329,6 +1329,40 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 
 	AG_SetTimeout(&textMsgTo, TextTmsgExpire, win, 0);
 	AG_AddTimeout(NULL, &textMsgTo, expire);
+}
+
+void
+AG_TextInfo(const char *fmt, ...)
+{
+	char msg[AG_LABEL_MAX];
+	AG_Window *win;
+	AG_VBox *vb;
+	va_list args;
+
+	if (agMsgDelay == 0)
+		return;
+
+	va_start(args, fmt);
+	vsnprintf(msg, sizeof(msg), fmt, args);
+	va_end(args);
+
+	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	                   AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|
+			   AG_WINDOW_NOBORDERS);
+	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[AG_MSG_INFO]));
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
+
+	vb = AG_VBoxNew(win, 0);
+	AG_LabelNewStaticString(vb, 0, msg);
+	AG_WindowShow(win);
+	AG_LockTimeouts(NULL);
+	if (AG_TimeoutIsScheduled(NULL, &textMsgTo)) {
+		AG_ViewDetach((AG_Window *)textMsgTo.arg);
+		AG_DelTimeout(NULL, &textMsgTo);
+	}
+	AG_UnlockTimeouts(NULL);
+	AG_SetTimeout(&textMsgTo, TextTmsgExpire, win, 0);
+	AG_AddTimeout(NULL, &textMsgTo, agMsgDelay);
 }
 
 /*

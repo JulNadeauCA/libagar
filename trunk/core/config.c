@@ -52,7 +52,7 @@
 const AG_ObjectOps agConfigOps = {
 	"AG_Config",
 	sizeof(AG_Config),
-	{ 9, 3 },
+	{ 9, 4 },
 	NULL,
 	NULL,
 	NULL,
@@ -79,6 +79,7 @@ int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 int agIdleThresh = 20;			/* Idling threshold */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
 int agWindowAnySize = 0;		/* Allow any window size */
+int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
 
 void
 AG_ConfigInit(AG_Config *cfg)
@@ -178,6 +179,7 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 	if (ver.minor < 2) { (void)AG_ReadUint8(buf); } /* agServerMode */
 	agIdleThresh = (int)AG_ReadUint8(buf);
 	if (ver.minor >= 3) { agWindowAnySize = (int)AG_ReadUint8(buf); }
+	if (ver.minor >= 3) { agMsgDelay = (int)AG_ReadUint32(buf); }
 	agTextComposition = AG_ReadUint8(buf);
 	agTextBidi = AG_ReadUint8(buf);
 	agKbdUnicode = AG_ReadUint8(buf);
@@ -210,6 +212,7 @@ AG_ConfigSave(void *p, AG_Netbuf *buf)
 #endif
 	AG_WriteUint8(buf, (Uint8)agIdleThresh);
 	AG_WriteUint8(buf, (Uint8)agWindowAnySize);
+	AG_WriteUint32(buf, (Uint32)agMsgDelay);
 	AG_WriteUint8(buf, (Uint8)agTextComposition);
 	AG_WriteUint8(buf, (Uint8)agTextBidi);
 	AG_WriteUint8(buf, (Uint8)agKbdUnicode);

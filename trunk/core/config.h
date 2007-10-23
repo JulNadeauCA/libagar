@@ -15,6 +15,7 @@ extern int agTextComposition, agTextBidi, agTextAntialiasing, agTextTabWidth,
 extern int agIdleThresh;
 extern int agScreenshotQuality;
 extern int agWindowAnySize;
+extern int agMsgDelay;
 
 void AG_ConfigInit(AG_Config *);
 int  AG_ConfigLoad(void *, AG_Netbuf *);
