@@ -182,8 +182,10 @@ ChooseFile(AG_FileDlg *fd, AG_Window *pwin)
 	} else {
 		AG_PostEvent(NULL, fd, "file-chosen", "%s,%p", fd->cfile, NULL);
 	}
-	if (fd->flags & AG_FILEDLG_CLOSEWIN)
-		AG_PostEvent(NULL, pwin, "window-close", NULL);
+	if (fd->flags & AG_FILEDLG_CLOSEWIN) {
+/*		AG_PostEvent(NULL, pwin, "window-close", NULL); */
+		AG_ViewDetach(pwin);
+	}
 }
 
 static void
@@ -422,8 +424,10 @@ PressedCancel(AG_Event *event)
 	} else if (fd->flags & AG_FILEDLG_CLOSEWIN) {
 		AG_Window *pwin;
 	
-		if ((pwin = AG_WidgetParentWindow(fd)) != NULL)
-			AG_PostEvent(NULL, pwin, "window-close", NULL);
+		if ((pwin = AG_WidgetParentWindow(fd)) != NULL) {
+/*			AG_PostEvent(NULL, pwin, "window-close", NULL); */
+			AG_ViewDetach(pwin);
+		}
 	}
 }
 
