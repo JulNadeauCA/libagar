@@ -169,6 +169,9 @@ AG_WindowSetStyle(AG_Window *win, const AG_WidgetStyleMod *style)
 void
 AG_WindowAttach(AG_Window *win, AG_Window *subwin)
 {
+	if (win == NULL) {
+		return;
+	}
 	AG_MutexLock(&agView->lock);
 	TAILQ_INSERT_HEAD(&win->subwins, subwin, swins);
 	AG_MutexUnlock(&agView->lock);
@@ -178,6 +181,9 @@ AG_WindowAttach(AG_Window *win, AG_Window *subwin)
 void
 AG_WindowDetach(AG_Window *win, AG_Window *subwin)
 {
+	if (win == NULL) {
+		return;
+	}
 	AG_MutexLock(&agView->lock);
 	TAILQ_REMOVE(&win->subwins, subwin, swins);
 	AG_MutexUnlock(&agView->lock);
