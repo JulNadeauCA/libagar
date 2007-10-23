@@ -197,6 +197,15 @@ and the width in pixels of each line in the array
 .Fn AG_TextMsg "enum ag_text_msg_title title" "const char *format" "..."
 .Pp
 .Ft "void"
+.Fn AG_TextMsgFromError "void"
+.Pp
+.Ft "void"
+.Fn AG_TextWarning "const char *disableKey" "const char *format" "..."
+.Pp
+.Ft "void"
+.Fn AG_TextInfo "const char *format" "..."
+.Pp
+.Ft "void"
 .Fn AG_TextTmsg "enum ag_text_msg_title title" "Uint32 expire" "const char *format" "..."
 .Pp
 .Ft "void"
@@ -213,9 +222,6 @@ function displays a text message window containing the given
 formatted string, and an
 .Sq OK
 button.
-The
-.Fn AG_TextTmsg
-variant displays the message for a period of time given in milliseconds.
 .Fa title
 is one of the following:
 .Pp
@@ -226,6 +232,33 @@ enum ag_text_msg_title {
 	AG_MSG_INFO
 };
 .Ed
+.Pp
+.Fn AG_TextMsgFromError
+displays a standard error message using the value of
+.Xr AG_GetError 3 .
+.Pp
+.Fn AG_TextWarning
+displays a standard warning message, but also provides the user
+with a
+.Dq Don't show again
+checkbox.
+The checkbox controls the
+.Xr AG_Config 3
+value specified by
+.Fa disableKey .
+.Pp
+.Fn AG_TextInfo
+displays an informational message for the amount of time specified by the
+.Xr AG_Config 3
+setting
+.Va agMsgDelay
+(in milliseconds).
+If that parameter is 0, informational messages are not shown.
+.Pp
+.Fn AG_TextTmsg
+is a variant of
+.Fn AG_TextMsg
+that displays the message for a specific amount of time, given in milliseconds.
 .Pp
 The
 .Fn AG_TextEditFloat

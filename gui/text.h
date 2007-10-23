@@ -126,6 +126,9 @@ void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *, ...)
 	       FORMAT_ATTRIBUTE(printf, 3, 4)
 	       NONNULL_ATTRIBUTE(3);
 void AG_TextWarning(const char *, const char *, ...);
+void AG_TextInfo(const char *, ...)
+	       FORMAT_ATTRIBUTE(printf, 1, 2)
+	       NONNULL_ATTRIBUTE(1);
 
 #define AG_TextMsgFromError() \
 	AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError())
