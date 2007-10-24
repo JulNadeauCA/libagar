@@ -77,6 +77,7 @@ proj: proj-subdir
 			fi; \
 			echo "mv -f config.$$_tgtos config"; \
 			mv -f config.$$_tgtos config; \
+			mv -f config/.svn config.svn.ORIG; \
 		        echo "config" >> .projfiles2.out; \
 		fi; \
 		cat .projfiles2.out | ${ZIP} ${ZIPFLAGS} \
@@ -86,6 +87,7 @@ proj: proj-subdir
 		if [ -e "config.ORIG" ]; then \
 			echo "mv -f config.ORIG config"; \
 			mv -f config.ORIG config; \
+			mv -f config.svn.ORIG config/.svn; \
 		fi; \
 		rm `cat .projfiles.out`; \
 	    done; \
