@@ -45,7 +45,6 @@ int	agEventDebugLvl = 0;
 #endif
 
 static void PropagateEvent(AG_Object *, AG_Object *, AG_Event *);
-static void *EventThread(void *);
 
 const char *agEvArgTypeNames[] = {
 	"pointer",
