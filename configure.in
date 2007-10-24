@@ -83,7 +83,6 @@ if [ "${enable_warnings}" = "yes" ]; then
 	C_OPTION(-Wall)
 	C_OPTION(-Werror)
 	C_OPTION(-Wmissing-prototypes)
-#	C_OPTION(-Wno-unused)
 	MDEFINE(WNO_UNINITIALIZED, "-Wno-uninitialized")
 else
 	MDEFINE(WNO_UNINITIALIZED, "")
@@ -326,6 +325,13 @@ if [ "${enable_threads}" = "yes" ]; then
 	fi
 else
 	HUNDEF(THREADS)
+	#
+	# Lock macros expand to no-ops when compiled !THREADS, which may
+	# result in unused variables in some places.
+	#
+	if [ "${enable_warnings}" = "yes" ]; then
+		C_OPTION(-Wno-unused)
+	fi
 fi
 
 # Enable UTF8 support by default.
