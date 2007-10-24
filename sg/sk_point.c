@@ -215,7 +215,7 @@ ToolMouseButtonDown(void *pTool, SG_Vector pos, int btn)
 SK_ToolOps skPointToolOps = {
 	N_("Point"),
 	N_("Insert a point into the sketch"),
-	VGPOINTS_ICON,
+	NULL,
 	sizeof(SK_Tool),
 	0,
 	NULL,		/* init */

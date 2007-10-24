@@ -56,7 +56,11 @@
 #include <gui/scrollbar.h>
 #include <gui/pane.h>
 #include <gui/separator.h>
-#endif
+#include <gui/icons.h>
+
+#include "icons.h"
+#include "icons_data.h"
+#endif /* EDITION */
 
 #include <string.h>
 
@@ -85,6 +89,8 @@ MAP_InitSubsystem(void)
 
 	AG_RegisterClass(&mapOps);
 	AG_RegisterClass(&mapActorOps);
+
+	mapIcon_Init();
 }
 
 void
@@ -2429,7 +2435,7 @@ PollLayers(AG_Event *event)
 	for (i = 0; i < m->nlayers; i++) {
 		MAP_Layer *lay = &m->layers[i];
 
-		it = AG_TlistAdd(tl, AGICON(LAYER_EDITOR_ICON), "%s%s%s",
+		it = AG_TlistAdd(tl, mapIconLayerEditor.s, "%s%s%s",
 		    (i == m->cur_layer) ? "[*] " : "", lay->name,
 		    lay->visible ? "" : _(" (hidden)"));
 		it->p1 = lay;
@@ -2817,19 +2823,18 @@ CreateLayerMenu(AG_Event *event)
 		return;
 	}
 	AG_MenuAction(mi,
-	    layer->visible ? _("Hide layer") : _("Show layer"),
-	    ERASER_TOOL_ICON,
+	    layer->visible ? _("Hide layer") : _("Show layer"), NULL,
 	    SetLayerVisibility, "%p,%i", layer, !layer->visible);
-	AG_MenuAction(mi, _("Delete layer"), ERASER_TOOL_ICON,
+	AG_MenuAction(mi, _("Delete layer"), agIconTrash.s,
 	    DeleteLayer, "%p,%p", m, layer);
-	AG_MenuAction(mi, _("Clear layer"), ERASER_TOOL_ICON,
+	AG_MenuAction(mi, _("Clear layer"), agIconTrash.s,
 	    ClearLayer, "%p,%p", m, layer);
 	AG_MenuSeparator(mi);
-	AG_MenuActionKb(mi, _("Move layer up"), OBJMOVEUP_ICON,
+	AG_MenuActionKb(mi, _("Move layer up"), agIconUp.s,
 	    SDLK_u, KMOD_SHIFT,
 	    MoveLayer, "%p,%p,%i", m, layer, 0, tlLayers); 
-	AG_MenuActionKb(mi, _("Move layer down"),
-	    OBJMOVEDOWN_ICON, SDLK_d, KMOD_SHIFT,
+	AG_MenuActionKb(mi, _("Move layer down"), agIconDown.s,
+	    SDLK_d, KMOD_SHIFT,
 	    MoveLayer, "%p,%p,%i", m, layer, 1, tlLayers); 
 }
 
@@ -2869,34 +2874,34 @@ MAP_Edit(void *p)
 	menu = AG_MenuNew(win, AG_MENU_HFILL);
 	pitem = AG_MenuAddItem(menu, _("File"));
 	{
-		AG_MenuActionKb(pitem, _("Close map"), CLOSE_ICON,
+		AG_MenuActionKb(pitem, _("Close map"), agIconClose.s,
 		    SDLK_w, KMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
 	}
 	
 	pitem = AG_MenuAddItem(menu, _("Edit"));
 	{
-		AG_MenuAction(pitem, _("Undo"), -1, Undo, "%p", m);
-		AG_MenuAction(pitem, _("Redo"), -1, Redo, "%p", m);
+		AG_MenuAction(pitem, _("Undo"), NULL, Undo, "%p", m);
+		AG_MenuAction(pitem, _("Redo"), NULL, Redo, "%p", m);
 
 		AG_MenuSeparator(pitem);
 
-		AG_MenuAction(pitem, _("Map parameters..."), SETTINGS_ICON,
+		AG_MenuAction(pitem, _("Map parameters..."), mapIconSettings.s,
 		    EditMapParameters, "%p,%p", mv, win);
 	}
 	
 	pitem = AG_MenuAddItem(menu, _("Attributes"));
 	{
-		AG_MenuAction(pitem, _("None"), -1,
+		AG_MenuAction(pitem, _("None"), NULL,
 		    EditPropMode, "%p,%i", mv, 0);
 
-		AG_MenuAction(pitem, _("Walkability"), WALKABILITY_ICON,
+		AG_MenuAction(pitem, _("Walkability"), mapIconWalkable.s,
 		    EditPropMode, "%p,%i", mv, MAP_ITEM_BLOCK);
-		AG_MenuAction(pitem, _("Climbability"), CLIMBABILITY_ICON,
+		AG_MenuAction(pitem, _("Climbability"), mapIconClimbable.s,
 		    EditPropMode, "%p,%i", mv, MAP_ITEM_CLIMBABLE);
-		AG_MenuAction(pitem, _("Jumpability"), JUMPABILITY_ICON,
+		AG_MenuAction(pitem, _("Jumpability"), mapIconJumpable.s,
 		    EditPropMode, "%p,%i", mv, MAP_ITEM_JUMPABLE);
-		AG_MenuAction(pitem, _("Slippery"), SLIPPAGE_ICON,
+		AG_MenuAction(pitem, _("Slippery"), mapIconSlippery.s,
 		    EditPropMode, "%p,%i", mv, MAP_ITEM_SLIPPERY);
 	}
 
@@ -2904,24 +2909,23 @@ MAP_Edit(void *p)
 	{
 		extern int mapViewAnimatedBg;
 
-		AG_MenuAction(pitem, _("Create view..."), NEW_VIEW_ICON,
+		AG_MenuAction(pitem, _("Create view..."), mapIconNewView.s,
 		    CreateView, "%p, %p", mv, win);
-		
-		AG_MenuAction(pitem, _("Center around origin"), VGORIGIN_ICON,
+		AG_MenuAction(pitem, _("Center around origin"), mapIconOrigin.s,
 		    CenterViewToOrigin, "%p", mv);
 
 		AG_MenuSeparator(pitem);
 
-		AG_MenuIntFlags(pitem, _("Show grid"), GRID_ICON,
+		AG_MenuIntFlags(pitem, _("Show grid"), mapIconGrid.s,
 		    &mv->flags, MAP_VIEW_GRID, 0);
-		AG_MenuIntFlags(pitem, _("Show background"), GRID_ICON,
+		AG_MenuIntFlags(pitem, _("Show background"), mapIconGrid.s,
 		    &mv->flags, MAP_VIEW_NO_BG, 1);
-		AG_MenuIntBool(pitem, _("Animate background"), GRID_ICON,
+		AG_MenuIntBool(pitem, _("Animate background"), mapIconGrid.s,
 		    &mapViewAnimatedBg, 0);
-		AG_MenuIntFlags(pitem, _("Show map origin"), VGORIGIN_ICON,
+		AG_MenuIntFlags(pitem, _("Show map origin"), mapIconOrigin.s,
 		    &mv->flags, MAP_VIEW_SHOW_ORIGIN, 0);
 #ifdef DEBUG
-		AG_MenuIntFlags(pitem, _("Show element offsets"), GRID_ICON,
+		AG_MenuIntFlags(pitem, _("Show element offsets"), mapIconGrid.s,
 		    &mv->flags, MAP_VIEW_SHOW_OFFSETS, 0);
 #endif
 	}
@@ -2948,14 +2952,14 @@ MAP_Edit(void *p)
 			mi = AG_TlistSetPopup(mv->lib_tl, "tileset");
 			{
 				AG_MenuAction(mi, _("Remove all references to"),
-				    TRASH_ICON,
+				    agIconTrash.s,
 				    RemoveAllRefsToTileset, "%p,%p",
 				    mv->lib_tl, mv); 
 			}
 			mi = AG_TlistSetPopup(mv->lib_tl, "tile");
 			{
 				AG_MenuAction(mi, _("Remove all references to"),
-				    TRASH_ICON,
+				    agIconTrash.s,
 				    RemoveAllRefsToTile, "%p,%p",
 				    mv->lib_tl, mv); 
 			}
@@ -2972,12 +2976,12 @@ MAP_Edit(void *p)
 			mi = AG_TlistSetPopup(mv->objs_tl, "actor");
 			{
 				AG_MenuAction(mi, _("Control actor"),
-				    OBJ_ICON, SelectActor,
-				    "%p,%p", mv->objs_tl, mv); 
+				    mapIconActor.s,
+				    SelectActor, "%p,%p", mv->objs_tl, mv); 
 
 				AG_MenuAction(mi, _("Detach actor"),
-				    ERASER_TOOL_ICON, DetachActor,
-				    "%p,%p", mv->objs_tl, m); 
+				    agIconTrash.s,
+				    DetachActor, "%p,%p", mv->objs_tl, m); 
 			}
 		}
 		ntab = AG_NotebookAddTab(nb, _("Layers"), AG_BOX_VERT);
@@ -3034,7 +3038,8 @@ MAP_Edit(void *p)
 		for (i = 0; i < nops; i++) {
 			t = MAP_ViewRegTool(mv, ops[i], m);
 			t->pane = (void *)vPane->div[1];
-			AG_MenuAction(pitem, _(ops[i]->desc), ops[i]->icon,
+			AG_MenuAction(pitem, _(ops[i]->desc),
+			    (ops[i]->icon!=NULL) ? ops[i]->icon->s : NULL,
 			    SelectTool, "%p, %p", mv, t);
 		}
 	}

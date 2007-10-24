@@ -46,6 +46,7 @@
 #include <gui/spinbutton.h>
 #include <gui/hbox.h>
 #include <gui/numerical.h>
+#include <gui/icons.h>
 
 #include "sk.h"
 #include "sg_gui.h"
@@ -112,7 +113,7 @@ ListLibraryItems(AG_Tlist *tl, const char *cname, int depth)
 				j++;
 		}
 		if (j == depth) {
-			it = AG_TlistAdd(tl, AGICON(OBJ_ICON), "%s", ops->name);
+			it = AG_TlistAdd(tl, NULL, "%s", ops->name);
 			it->p1 = ops;
 			it->depth = depth;
 			strlcpy(subname, ops->name, sizeof(subname));
@@ -267,7 +268,7 @@ NodeMenu(AG_Event *event)
 	AG_PopupMenu *pm;
 
 	pm = AG_PopupNew(skv);
-	AG_MenuAction(pm->item, _("Delete entity"), TRASH_ICON,
+	AG_MenuAction(pm->item, _("Delete entity"), agIconTrash.s,
 	    NodeDelete, "%p,%p", node, skv);
 	AG_PopupShow(pm);
 }
@@ -278,7 +279,7 @@ FindNodes(AG_Tlist *tl, SK_Node *node, int depth)
 	AG_TlistItem *it;
 	SK_Node *cnode;
 
-	it = AG_TlistAdd(tl, AGICON(EDA_NODE_ICON), "%s", node->name);
+	it = AG_TlistAdd(tl, NULL, "%s", node->name);
 	it->depth = depth;
 	it->p1 = node;
 	it->selected = (node->flags & SK_NODE_SELECTED);
@@ -479,7 +480,7 @@ ConstraintMenu(AG_Event *event)
 	AG_PopupMenu *pm;
 
 	pm = AG_PopupNew(skv);
-	AG_MenuAction(pm->item, _("Delete constraint"), TRASH_ICON,
+	AG_MenuAction(pm->item, _("Delete constraint"), agIconTrash.s,
 	    ConstraintDelete, "%p,%p", ct, skv);
 	AG_PopupShow(pm);
 }
@@ -610,10 +611,10 @@ SK_Edit(void *p)
 	menu = AG_MenuNew(win, AG_MENU_HFILL);
 	pitem = AG_MenuAddItem(menu, _("File"));
 	{
-		AG_MenuAction(pitem, _("Import from vector image..."), -1,
+		AG_MenuAction(pitem, _("Import from vector image..."), NULL,
 		    ImportSketchDlg, "%p,%p", sk, win);
 		AG_MenuSeparator(pitem);
-		AG_MenuActionKb(pitem, _("Close sketch"), -1,
+		AG_MenuActionKb(pitem, _("Close sketch"), NULL,
 		    SDLK_w, KMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
 	}
@@ -621,14 +622,14 @@ SK_Edit(void *p)
 	pitem = AG_MenuAddItem(menu, _("Edit"));
 	{
 		/* TODO */
-		AG_MenuAction(pitem, _("Undo"), -1, NULL, "%p", NULL);
-		AG_MenuAction(pitem, _("Redo"), -1, NULL, "%p", NULL);
+		AG_MenuAction(pitem, _("Undo"), NULL, NULL, "%p", NULL);
+		AG_MenuAction(pitem, _("Redo"), NULL, NULL, "%p", NULL);
 	}
 	pitem = AG_MenuAddItem(menu, _("View"));
 	{
-		AG_MenuAction(pitem, _("New view..."), -1,
+		AG_MenuAction(pitem, _("New view..."), NULL,
 		    CreateNewView, "%p,%p", win, sk);
-		AG_MenuAction(pitem, _("Constraint graphs..."), -1,
+		AG_MenuAction(pitem, _("Constraint graphs..."), NULL,
 		    ViewConstraintGraphs, "%p,%p", win, sk);
 	}
 	
@@ -657,7 +658,9 @@ SK_Edit(void *p)
 			tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
 			AG_WidgetSetFocusable(tl, 0);
 			TAILQ_FOREACH(tool, &skv->tools, tools) {
-				AG_TlistAddPtr(tl, AGICON(tool->ops->icon),
+				AG_TlistAddPtr(tl,
+				    (tool->ops->icon != NULL) ?
+				     tool->ops->icon->s : NULL,
 				    _(tool->ops->name), tool);
 			}
 

@@ -187,15 +187,10 @@ MAP_ViewRegTool(MAP_View *mv, const MAP_ToolOps *ops, void *p)
 	MAP_ToolInit(t);
 
 	if (((ops->flags & TOOL_HIDDEN) == 0) && mv->toolbar != NULL) {
-		SDL_Surface *icon = ops->icon >= 0 ? AGICON(ops->icon) : NULL;
-
 		t->trigger = AG_ToolbarButtonIcon(mv->toolbar,
-		    icon, 0, SelectTool,
+		    (ops->icon != NULL) ? ops->icon->s : NULL,
+		    0, SelectTool,
 		    "%p, %p, %p", mv, t, p);
-#if 0
-		AG_SetEvent(t->trigger, "button-mouseoverlap",
-		    update_tooltips, "%p, %p", mv, t);
-#endif
 	}
 
 	TAILQ_INSERT_TAIL(&mv->tools, t, tools);
@@ -404,7 +399,7 @@ GetNodeCoords(MAP_View *mv, int *x, int *y)
 }
 
 static void
-draw_cursor(MAP_View *mv)
+DrawMapCursor(MAP_View *mv)
 {
 	SDL_Rect rd;
 
@@ -418,7 +413,7 @@ draw_cursor(MAP_View *mv)
 		rd.x = msx;
 		rd.y = msy;
 		if (!agView->opengl) {
-			SDL_BlitSurface(AGICON(SELECT_CURSORBMP), NULL,
+			SDL_BlitSurface(mapIconCursor.s, NULL,
 			    agView->v, &rd);
 		}
 #endif
@@ -653,7 +648,7 @@ next_layer:
 	if ((mv->flags & MAP_VIEW_EDIT) && (mv->mode == MAP_VIEW_EDITION) &&
 	    (mv->flags & MAP_VIEW_NO_CURSOR) == 0 &&
 	    (mv->cx != -1 && mv->cy != -1)) {
-		draw_cursor(mv);
+		DrawMapCursor(mv);
 	}
 #endif /* EDITION */
 

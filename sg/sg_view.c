@@ -32,6 +32,7 @@
 #include <core/core.h>
 
 #include "sg.h"
+#include "icons.h"
 
 SG_View	*
 SG_ViewNew(void *parent, SG *sg, Uint flags)
@@ -307,32 +308,33 @@ PopupMenuOpen(SG_View *sv, int x, int y)
 	mRoot = sv->popup->item;
 
 	AG_MenuUintFlags(mRoot, _("Lighting"),
-	    RG_CONTROLS_ICON, &sv->flags, SG_VIEW_NO_LIGHTING, 1);
+	    sgIconLighting.s, &sv->flags, SG_VIEW_NO_LIGHTING, 1);
 	AG_MenuUintFlags(mRoot, _("Z-Buffer"),
-	    RG_CONTROLS_ICON, &sv->flags, SG_VIEW_NO_DEPTH_TEST, 1);
+	    sgIconZBuffer.s, &sv->flags, SG_VIEW_NO_DEPTH_TEST, 1);
 
-	mOvl = AG_MenuNode(mRoot, _("Overlay"), -1);
+	mOvl = AG_MenuNode(mRoot, _("Overlay"), NULL);
 	{
 		AG_MenuUintFlags(mOvl, _("Wireframe"),
-		    GRID_ICON,
+		    sgIconWireframe.s,
 		    &sg->flags, SG_OVERLAY_WIREFRAME, 0);
 		AG_MenuUintFlags(mOvl, _("Vertices"),
-		    VGPOINTS_ICON,
+		    sgIconVertices.s,
 		    &sg->flags, SG_OVERLAY_VERTICES, 0);
 		AG_MenuUintFlags(mOvl, _("Facet normals"),
-		    UP_ARROW_ICON,
+		    sgIconFacetNormals.s,
 		    &sg->flags, SG_OVERLAY_FNORMALS, 0);
 		AG_MenuUintFlags(mOvl, _("Vertex normals"),
-		    UP_ARROW_ICON,
+		    sgIconVertexNormals.s,
 		    &sg->flags, SG_OVERLAY_VNORMALS, 0);
 	}
-	mCam = AG_MenuNode(mRoot, _("Switch to camera"), -1);
+	mCam = AG_MenuNode(mRoot, _("Switch to camera"), NULL);
 	{
 		AG_MenuItem *mi;
 		SG_Camera *cam;
 
 		SG_FOREACH_NODE_CLASS(cam, sg, sg_camera, "Camera:*") {
-			mi = AG_MenuAction(mCam, SGNODE(cam)->name, OBJ_ICON,
+			mi = AG_MenuAction(mCam, SGNODE(cam)->name,
+			    sgIconCamera.s,
 			    ViewSwitchCamera, "%p,%p", sv, cam);
 			mi->state = (cam != sv->cam);
 		}

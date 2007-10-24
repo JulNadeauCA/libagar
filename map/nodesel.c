@@ -28,6 +28,7 @@
 #include "map.h"
 #include "mapedit.h"
 #include "nodesel.h"
+#include "icons.h"
 
 /* Begin a rectangular selection of nodes. */
 void
@@ -160,7 +161,8 @@ MAP_NodeselUpdateMove(MAP_View *mv, int xRel, int yRel)
 			MAP_Node *nDst = &mDst->map[dy][dx];
 	
 			MAP_ModNodeChg(mDst, dx, dy);
-			MAP_NodeCopy(mTmp, nTmp, 0, mDst, nDst, mDst->nlayers-1);
+			MAP_NodeCopy(mTmp, nTmp, 0, mDst, nDst,
+			    mDst->nlayers-1);
 		}
 	}
 	
@@ -310,7 +312,7 @@ MAP_NodeselCut(MAP_Tool *t, SDLKey key, int state, void *arg)
 }
 
 static void
-nodesel_init(void *p)
+Init(void *p)
 {
 	MAP_ToolBindKey(p, KMOD_CTRL, SDLK_c, MAP_NodeselCopy, NULL);
 	MAP_ToolBindKey(p, KMOD_CTRL, SDLK_v, MAP_NodeselPaste, NULL);
@@ -325,10 +327,10 @@ nodesel_init(void *p)
 
 const MAP_ToolOps mapNodeselOps = {
 	"Nodesel", N_("Select node(s)"),
-	SELECT_NODE_ICON,
+	&mapIconSelectNode,
 	sizeof(MAP_Tool),
 	0,
-	nodesel_init,
+	Init,
 	NULL,			/* destroy */
 	NULL,			/* pane */
 	NULL,			/* edit */

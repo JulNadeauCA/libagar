@@ -28,6 +28,7 @@
 #include "titlebar.h"
 #include "window.h"
 #include "primitive.h"
+#include "icons.h"
 
 static void mousebuttondown(AG_Event *);
 static void mousebuttonup(AG_Event *);
@@ -81,7 +82,7 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 	AG_ObjectSetOps(tbar, &agTitlebarOps);
 
 	AG_BoxSetPadding(&tbar->hb, 3);
-	AG_BoxSetSpacing(&tbar->hb, 0);
+	AG_BoxSetSpacing(&tbar->hb, 1);
 
 	tbar->flags = flags;
 	tbar->pressed = 0;
@@ -96,9 +97,8 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		tbar->maximize_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetJustification(tbar->maximize_btn, AG_TEXT_LEFT);
 		AG_ButtonSetFocusable(tbar->maximize_btn, 0);
-		AG_ButtonSurfaceNODUP(tbar->maximize_btn,
-		    AGICON(GUI_SHOW_WINDOW_ICON));
-		AG_ButtonSetPadding(tbar->maximize_btn, 3,0,2,0);
+		AG_ButtonSurfaceNODUP(tbar->maximize_btn, agIconWinMaximize.s);
+		AG_ButtonSetPadding(tbar->maximize_btn, 0,0,0,0);
 		AG_SetEvent(tbar->maximize_btn, "button-pushed",
 		    MaximizeWindow, "%p", tbar);
 	} else {
@@ -109,9 +109,8 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		tbar->minimize_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetJustification(tbar->minimize_btn, AG_TEXT_LEFT);
 		AG_ButtonSetFocusable(tbar->minimize_btn, 0);
-		AG_ButtonSurfaceNODUP(tbar->minimize_btn,
-		    AGICON(GUI_HIDE_WINDOW_ICON));
-		AG_ButtonSetPadding(tbar->minimize_btn, 3,0,2,0);
+		AG_ButtonSurfaceNODUP(tbar->minimize_btn, agIconWinMinimize.s);
+		AG_ButtonSetPadding(tbar->minimize_btn, 0,0,0,0);
 		AG_SetEvent(tbar->minimize_btn, "button-pushed",
 		    MinimizeWindow, "%p", tbar);
 	} else {
@@ -122,8 +121,8 @@ AG_TitlebarInit(AG_Titlebar *tbar, int flags)
 		tbar->close_btn = AG_ButtonNew(tbar, 0, NULL);
 		AG_ButtonSetJustification(tbar->close_btn, AG_TEXT_LEFT);
 		AG_ButtonSetFocusable(tbar->close_btn, 0);
-		AG_ButtonSurfaceNODUP(tbar->close_btn, AGICON(GUI_CLOSE_ICON));
-		AG_ButtonSetPadding(tbar->close_btn, 3,0,2,0);
+		AG_ButtonSurfaceNODUP(tbar->close_btn, agIconWinClose.s);
+		AG_ButtonSetPadding(tbar->close_btn, 0,0,0,0);
 		AG_SetEvent(tbar->close_btn, "button-pushed",
 		    CloseWindow, "%p", tbar);
 	} else {

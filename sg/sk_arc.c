@@ -214,7 +214,7 @@ ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 SK_ToolOps skArcToolOps = {
 	N_("Arc"),
 	N_("Insert an arc into the sketch"),
-	VGBEZIER_CURVE_ICON,
+	NULL,
 	sizeof(struct sk_arc_tool),
 	0,
 	ToolInit,

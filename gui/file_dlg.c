@@ -39,6 +39,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "icons.h"
+
 AG_FileDlg *
 AG_FileDlgNew(void *parent, Uint flags)
 {
@@ -124,15 +126,13 @@ AG_RefreshListing(AG_FileDlg *fd)
 	AG_TlistClear(fd->tlDirs);
 	AG_TlistClear(fd->tlFiles);
 	for (i = 0; i < ndirs; i++) {
-		it = AG_TlistAdd(fd->tlDirs, AGICON(DIRECTORY_ICON),
-		    "%s", dirs[i]);
+		it = AG_TlistAdd(fd->tlDirs, agIconDirectory.s, "%s", dirs[i]);
 		it->cat = "dir";
 		it->p1 = it;
 		Free(dirs[i], M_WIDGET);
 	}
 	for (i = 0; i < nfiles; i++) {
-		it = AG_TlistAdd(fd->tlFiles, AGICON(FILE_ICON),
-		    "%s", files[i]);
+		it = AG_TlistAdd(fd->tlFiles, agIconDoc.s, "%s", files[i]);
 		it->cat = "file";
 		it->p1 = it;
 		Free(files[i], M_WIDGET);
@@ -216,7 +216,7 @@ AG_ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 		AG_WidgetFocus(AG_ButtonNewFn(hb, 0, _("Cancel"),
 		    AGWINDETACH(win)));
 	}
-	AG_WindowAttach(pwin, win);
+//	AG_WindowAttach(pwin, win);
 	AG_WindowShow(win);
 }
 
@@ -426,7 +426,7 @@ PressedCancel(AG_Event *event)
 	
 		if ((pwin = AG_WidgetParentWindow(fd)) != NULL) {
 /*			AG_PostEvent(NULL, pwin, "window-close", NULL); */
-			AG_ViewDetach(pwin);
+/*			AG_ViewDetach(pwin); */
 		}
 	}
 }

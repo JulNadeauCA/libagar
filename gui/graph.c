@@ -321,12 +321,12 @@ mousebuttondown(AG_Event *event)
 				continue;
 			}
 			pm = AG_PopupNew(gf);
-			AG_MenuUintFlags(pm->item, _("Hide vertex"), -1,
+			AG_MenuUintFlags(pm->item, _("Hide vertex"), NULL,
 			    &vtx->flags, AG_GRAPH_HIDDEN, 1);
 			AG_MenuSeparator(pm->item);
-			AG_MenuAction(pm->item, _("Rectangular"), -1,
+			AG_MenuAction(pm->item, _("Rectangular"), NULL,
 			    SetVertexStyle, "%p,%i", vtx, AG_GRAPH_RECTANGLE);
-			AG_MenuAction(pm->item, _("Circular"), -1,
+			AG_MenuAction(pm->item, _("Circular"), NULL,
 			    SetVertexStyle, "%p,%i", vtx, AG_GRAPH_CIRCLE);
 			AG_PopupShow(pm);
 			break;
@@ -336,7 +336,7 @@ mousebuttondown(AG_Event *event)
 				continue;
 			}
 			pm = AG_PopupNew(gf);
-			AG_MenuUintFlags(pm->item, _("Hide edge"), -1,
+			AG_MenuUintFlags(pm->item, _("Hide edge"), NULL,
 			    &edge->flags, AG_GRAPH_HIDDEN, 1);
 			AG_PopupShow(pm);
 			break;

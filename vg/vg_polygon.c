@@ -1,5 +1,3 @@
-/*	$Csoft: vg_polygon.c,v 1.8 2005/09/27 00:25:21 vedge Exp $	*/
-
 /*
  * Copyright (c) 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -30,6 +28,7 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
+#include "icons.h"
 
 static void
 VG_PolygonInit(VG *vg, VG_Element *vge)
@@ -127,7 +126,7 @@ VG_PolygonRender(VG *vg, VG_Element *vge)
 
 const VG_ElementOps vgPolygonOps = {
 	N_("Polygon"),
-	RG_POLYGON_ICON,
+	&vgIconPolygon,
 	VG_PolygonInit,
 	NULL,				/* destroy */
 	VG_PolygonRender,

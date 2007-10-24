@@ -43,6 +43,7 @@
 
 #include "tileset.h"
 #include "tileview.h"
+#include "icons.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -527,11 +528,11 @@ RG_PixmapToolbar(RG_Tileview *tv, RG_TileElement *tel)
 	AG_Toolbar *tbar;
 
 	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
-	AG_ToolbarButtonIcon(tbar, AGICON(STAMP_TOOL_ICON), 0,
+	AG_ToolbarButtonIcon(tbar, rgIconStamp.s, 0,
 	    CreateBrushDlg, "%p,%p,%p", tv, px, AG_WidgetParentWindow(tv));
-	AG_ToolbarButtonIcon(tbar, AGICON(FLIP_TOOL_ICON), 0,
+	AG_ToolbarButtonIcon(tbar, rgIconFlip.s, 0,
 	    FlipPixmap, "%p,%p", tv, px);
-	AG_ToolbarButtonIcon(tbar, AGICON(MIRROR_TOOL_ICON), 0,
+	AG_ToolbarButtonIcon(tbar, rgIconMirror.s, 0,
 	    MirrorPixmap, "%p,%p", tv, px);
 
 	return (tbar);

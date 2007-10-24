@@ -345,7 +345,7 @@ ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 SK_ToolOps skLineToolOps = {
 	N_("Line segment"),
 	N_("Insert a line segment into the sketch"),
-	VGLINES_ICON,
+	NULL,
 	sizeof(struct sk_line_tool),
 	0,
 	ToolInit,

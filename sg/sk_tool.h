@@ -10,7 +10,7 @@ struct sk_view;
 typedef struct sk_tool_ops {
 	const char *name;
 	const char *desc;
-	int icon;
+	AG_StaticIcon *icon;
 	size_t len;
 	Uint flags;
 #define SK_MOUSEMOTION_NOSNAP	0x01	/* Ignore snapping in mousemotion */

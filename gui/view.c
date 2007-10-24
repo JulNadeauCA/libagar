@@ -74,6 +74,9 @@
 #include <X11/Xlib.h>
 #endif
 
+#include "icons.h"
+#include "icons_data.h"
+
 AG_Display *agView = NULL;		/* Main view */
 SDL_PixelFormat *agVideoFmt = NULL;	/* Current format of display */
 SDL_PixelFormat *agSurfaceFmt = NULL;	/* Preferred format for surfaces */
@@ -324,6 +327,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	AG_ColorsInit();
 	AG_InitPrimitives();
 	AG_CursorsInit();
+	agIcon_Init();
 	
 	strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
 	strlcat(path, AG_PATHSEP, sizeof(path));
@@ -361,10 +365,6 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	}
 	if (flags & AG_VIDEO_BGPOPUPMENU) {
 		agBgPopupMenu = 1;
-	}
-	AG_IconMgrInit(&agIconMgr, "_agIconMgr");
-	if (AG_IconMgrLoadFromDenXCF(&agIconMgr, "core-icons") == -1) {
-		fatal("Unable to load icons: %s", AG_GetError());
 	}
 	return (0);
 fail:
@@ -405,7 +405,6 @@ AG_DestroyVideo(void)
 	
 	AG_ColorsDestroy();
 	AG_CursorsDestroy();
-	AG_ObjectDestroy(&agIconMgr);
 
 	agView = NULL;
 }
@@ -1417,8 +1416,7 @@ AG_ProcessEvent(SDL_Event *ev)
 				    == 0) {
 					continue;
 				}
-				AG_MenuAction(mi, win->caption,
-				    OBJ_ICON,
+				AG_MenuAction(mi, win->caption, NULL,
 				    UnminimizeWindow, "%p", win);
 			}
 				

@@ -43,6 +43,7 @@
 #include "tileset.h"
 #include "tileview.h"
 #include "texsel.h"
+#include "icons.h"
 
 #include <string.h>
 
@@ -747,23 +748,23 @@ RG_SketchOpenMenu(RG_Tileview *tv, int x, int y)
 		RG_TileviewTool *tvt;
 		AG_MenuItem *m_tool;
 
-		m_tool = AG_MenuAction(mi, _("Tools"), OBJEDIT_ICON,
-		    NULL, NULL);
+		m_tool = AG_MenuAction(mi, _("Tools"), rgIconEdit.s, NULL,NULL);
 		TAILQ_FOREACH(tvt, &tv->tools, tools) {
 			if ((tvt->flags & TILEVIEW_SKETCH_TOOL) == 0) {
 				continue;
 			}
-			AG_MenuAction(m_tool, _(tvt->ops->name), tvt->ops->icon,
+			AG_MenuAction(m_tool, _(tvt->ops->name),
+			    (tvt->ops->icon != NULL) ? tvt->ops->icon->s : NULL,
 			    SelectTool, "%p,%p", tv, tvt);
 		}
 
 		AG_MenuSeparator(mi);
 	
-		AG_MenuIntFlags(mi, _("Show sketch origin"), VGORIGIN_ICON,
+		AG_MenuIntFlags(mi, _("Show sketch origin"), rgIconOrigin.s,
 		    &sk->vg->flags, VG_VISORIGIN, 0);
-		AG_MenuIntFlags(mi, _("Show sketch grid"), SNAP_GRID_ICON,
+		AG_MenuIntFlags(mi, _("Show sketch grid"), rgIconGrid.s,
 		    &sk->vg->flags, VG_VISGRID, 0);
-		AG_MenuIntFlags(mi, _("Show sketch extents"), VGBLOCK_ICON,
+		AG_MenuIntFlags(mi, _("Show sketch extents"), NULL,
 		    &sk->vg->flags, VG_VISBBOXES, 0);
 
 		AG_MenuSeparator(mi);
@@ -801,8 +802,8 @@ RG_SketchToolbar(RG_Tileview *tv, RG_TileElement *tel)
 		if ((tvt->flags & TILEVIEW_SKETCH_TOOL) == 0) {
 			continue;
 		}
-		AG_ToolbarButtonIcon(tbar, tvt->ops->icon >= 0 ?
-		    AGICON(tvt->ops->icon) : NULL, 0,
+		AG_ToolbarButtonIcon(tbar,
+		    tvt->ops->icon != NULL ? tvt->ops->icon->s : NULL, 0,
 		    SelectToolFromToolbar, "%p,%p,%p", tbar, tv, tvt);
 	}
 	return (tbar);

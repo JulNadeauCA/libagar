@@ -100,19 +100,19 @@ If a parameter is -1, its current value is preserved.
 .Sh MENU ITEMS
 .nr nS 1
 .Ft "AG_MenuItem *"
-.Fn AG_MenuNode "AG_MenuItem *parent" "const char *text" "int icon"
+.Fn AG_MenuNode "AG_MenuItem *parent" "const char *text" "SDL_Surface *icon"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuAction "AG_MenuItem *parent" "const char *text" "int icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuAction "AG_MenuItem *parent" "const char *text" "SDL_Surface *icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuActionKb "AG_MenuItem *parent" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuActionKb "AG_MenuItem *parent" "const char *text" "SDL_Surface *icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuDynamic "AG_MenuItem *parent" "int icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuDynamic "AG_MenuItem *parent" "SDL_Surface *icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuTool "AG_MenuItem *parent" "AG_Toolbar *toolbar" "const char *text" "int icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuTool "AG_MenuItem *parent" "AG_Toolbar *toolbar" "const char *text" "SDL_Surface *icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "void"
 .Fn AG_MenuSetIcon "AG_MenuItem *item" "SDL_Surface *su"
@@ -139,7 +139,7 @@ function inserts a new node (no-op) item displaying the given
 .Fa text
 and
 .Fa icon
-(or -1 if none).
+(or NULL if none).
 Node items are typically only used to attach subitems.
 .Pp
 The
@@ -148,7 +148,7 @@ function inserts a new action item displaying the given
 .Fa text
 and
 .Fa icon
-(or -1 if none).
+(or NULL if none).
 When selected, the item will invoke the event handler function
 .Fa fn ,
 with the additional arguments specified in
@@ -208,40 +208,40 @@ state.
 .Sh BOOLEAN AND BITMASK ITEMS
 .nr nS 1
 .Ft "AG_MenuItem *"
-.Fn AG_MenuIntBool "AG_MenuItem *" "const char *text" "int icon" "int *value" "int invert"
+.Fn AG_MenuIntBool "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "int *value" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuIntBoolMp "AG_MenuItem *" "const char *text" "int icon" "int *value" "int invert" "AG_Mutex *mutex"
+.Fn AG_MenuIntBoolMp "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "int *value" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuInt8Bool "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert"
+.Fn AG_MenuInt8Bool "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "Uint8 *value" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuInt8BoolMp "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "int invert" "AG_Mutex *mutex"
+.Fn AG_MenuInt8BoolMp "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "Uint8 *value" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuIntFlags "AG_MenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert"
+.Fn AG_MenuIntFlags "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "int *value" "int flags" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuIntFlagsMp "AG_MenuItem *" "const char *text" "int icon" "int *value" "int flags" "int invert" "AG_Mutex *mutex"
+.Fn AG_MenuIntFlagsMp "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "int *value" "int flags" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuInt8Flags "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert"
+.Fn AG_MenuInt8Flags "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "Uint8 *value" "Uint8 flags" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuInt8FlagsMp "AG_MenuItem *" "const char *text" "int icon" "Uint8 *value" "Uint8 flags" "int invert" "AG_Mutex *mutex"
+.Fn AG_MenuInt8FlagsMp "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "Uint8 *value" "Uint8 flags" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuInt16Flags "AG_MenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert"
+.Fn AG_MenuInt16Flags "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "Uint16 *value" "Uint16 flags" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuInt16FlagsMp "AG_MenuItem *" "const char *text" "int icon" "Uint16 *value" "Uint16 flags" "int invert" "AG_Mutex *mutex"
+.Fn AG_MenuInt16FlagsMp "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "Uint16 *value" "Uint16 flags" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuInt32Flags "AG_MenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert"
+.Fn AG_MenuInt32Flags "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "Uint32 *value" "Uint32 flags" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuIntFlagsMp "AG_MenuItem *" "const char *text" "int icon" "Uint32 *value" "Uint32 flags" "int invert" "AG_Mutex *mutex"
+.Fn AG_MenuIntFlagsMp "AG_MenuItem *" "const char *text" "SDL_Surface *icon" "Uint32 *value" "Uint32 flags" "int invert" "AG_Mutex *mutex"
 .Pp
 .nr nS 0
 The
@@ -330,13 +330,13 @@ AG_MenuItem *item;
 menu = AG_MenuNew(win);
 item = AG_MenuAddItem(menu, "File");
 {
-	AG_MenuAction(item, "Say hello", -1, hello, "%s", "world");
+	AG_MenuAction(item, "Say hello", NULL, hello, "%s", "world");
 	AG_MenuSeparator(item);
-	AG_MenuIntBool(item, "Some flag", -1, &someflag, 0);
-	AG_MenuUint16_bool(item, "Foo flag", -1, &flags, FOO_FLAG, 0);
-	AG_MenuUint16_bool(item, "Bar flag", -1, &flags, BAR_FLAG, 0);
+	AG_MenuIntBool(item, "Some flag", NULL, &someflag, 0);
+	AG_MenuUint16_bool(item, "Foo flag", NULL, &flags, FOO_FLAG, 0);
+	AG_MenuUint16_bool(item, "Bar flag", NULL, &flags, BAR_FLAG, 0);
 	AG_MenuSeparator(item);
-	AG_MenuAction(item, "Quit", CLOSE_ICON, quit_app, NULL);
+	AG_MenuAction(item, "Quit", myQuitIcon, quit_app, NULL);
 }
 .Ed
 .Sh SEE ALSO

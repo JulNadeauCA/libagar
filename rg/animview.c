@@ -26,6 +26,7 @@
 #include <core/core.h>
 
 #include "animview.h"
+#include "icons.h"
 
 RG_Animview *
 RG_AnimviewNew(void *parent)
@@ -125,30 +126,30 @@ OpenMenu(RG_Animview *av, int x, int y)
 	{
 		AG_MenuItem *m_speed;
 
-		AG_MenuAction(av->menu_item, _("Play"), ANIM_PLAY_ICON,
+		AG_MenuAction(av->menu_item, _("Play"), rgIconPlay.s,
 		    Play, "%p", av);
-		AG_MenuAction(av->menu_item, _("Pause"), ANIM_PAUSE_ICON,
+		AG_MenuAction(av->menu_item, _("Pause"), rgIconPause.s,
 		    Pause, "%p", av);
-		AG_MenuAction(av->menu_item, _("Stop"), ANIM_STOP_ICON,
+		AG_MenuAction(av->menu_item, _("Stop"), rgIconStop.s,
 		    Stop, "%p", av);
 
 		AG_MenuSeparator(av->menu_item);
 		m_speed = AG_MenuAction(av->menu_item, _("Playback speed"),
-		    -1, NULL, NULL);
+		    NULL, NULL, NULL);
 		{
-			AG_MenuAction(m_speed, _("Quadruple"), -1,
+			AG_MenuAction(m_speed, _("Quadruple"), NULL,
 			    SetSpeed, "%p, %i", av, 400);
-			AG_MenuAction(m_speed, _("Triple"), -1,
+			AG_MenuAction(m_speed, _("Triple"), NULL,
 			    SetSpeed, "%p, %i", av, 300);
-			AG_MenuAction(m_speed, _("Double"), -1,
+			AG_MenuAction(m_speed, _("Double"), NULL,
 			    SetSpeed, "%p, %i", av, 200);
-			AG_MenuAction(m_speed, _("Normal"), -1,
+			AG_MenuAction(m_speed, _("Normal"), NULL,
 			    SetSpeed, "%p, %i", av, 100);
-			AG_MenuAction(m_speed, _("Half"), -1,
+			AG_MenuAction(m_speed, _("Half"), NULL,
 			    SetSpeed, "%p, %i", av, 50);
-			AG_MenuAction(m_speed, _("One third"), -1,
+			AG_MenuAction(m_speed, _("One third"), NULL,
 			    SetSpeed, "%p, %i", av, 33);
-			AG_MenuAction(m_speed, _("One quarter"), -1,
+			AG_MenuAction(m_speed, _("One quarter"), NULL,
 			    SetSpeed, "%p, %i", av, 25);
 		}
 	}
@@ -187,15 +188,15 @@ RG_AnimviewInit(RG_Animview *av)
 	AG_SetTimeout(&av->timer, TickFrame, av, 0);
 	
 	av->btns.play = AG_ButtonNew(av, 0, NULL);
-	AG_ButtonSurfaceNODUP(av->btns.play, AGICON(ANIM_PLAY_ICON));
+	AG_ButtonSurfaceNODUP(av->btns.play, rgIconPlay.s);
 	AG_SetEvent(av->btns.play, "button-pushed", Play, "%p", av);
 	
 	av->btns.pause = AG_ButtonNew(av, 0, NULL);
-	AG_ButtonSurfaceNODUP(av->btns.pause, AGICON(ANIM_PAUSE_ICON));
+	AG_ButtonSurfaceNODUP(av->btns.pause, rgIconPause.s);
 	AG_SetEvent(av->btns.pause, "button-pushed", Pause, "%p", av);
 	
 	av->btns.stop = AG_ButtonNew(av, 0, NULL);
-	AG_ButtonSurfaceNODUP(av->btns.stop, AGICON(ANIM_STOP_ICON));
+	AG_ButtonSurfaceNODUP(av->btns.stop, rgIconStop.s);
 	AG_SetEvent(av->btns.stop, "button-pushed", Stop, "%p", av);
 	
 	AG_ButtonEnable(av->btns.play);

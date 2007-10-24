@@ -30,6 +30,7 @@
 
 #include "map.h"
 #include "mapedit.h"
+#include "icons.h"
 
 static void
 init(void *p)
@@ -108,7 +109,7 @@ cursor(void *p, SDL_Rect *rd)
 
 const MAP_ToolOps mapInvertOps = {
 	"Invert", N_("Invert RGB values of tile"),
-	INVERT_TOOL_ICON,
+	&mapIconInvert,
 	sizeof(MAP_Tool),
 	0,
 	init,

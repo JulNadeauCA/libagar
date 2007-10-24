@@ -30,6 +30,7 @@
 #include "vg.h"
 #include "vg_primitive.h"
 #include "vg_math.h"
+#include "icons.h"
 
 static void
 VG_ArcInit(VG *vg, VG_Element *vge)
@@ -94,7 +95,7 @@ VG_ArcIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 
 const VG_ElementOps vgArcOps = {
 	N_("Arc"),
-	VGCIRCLES_ICON,
+	&vgIconCircle,
 	VG_ArcInit,
 	NULL,
 	VG_ArcRender,
@@ -104,7 +105,7 @@ const VG_ElementOps vgArcOps = {
 
 const VG_ElementOps vgEllipseOps = {
 	N_("Ellipse"),
-	VGCIRCLES_ICON,
+	&vgIconCircle,
 	VG_ArcInit,
 	NULL,
 	VG_ArcRender,

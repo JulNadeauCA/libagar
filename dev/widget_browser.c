@@ -342,9 +342,11 @@ CreateWindowMenu(AG_Event *event)
 	win = ti->p1;
 
 	if (win->visible) {
-		AG_MenuAction(mi, _("Hide window"), -1, HideWindow, "%p", win);
+		AG_MenuAction(mi, _("Hide window"), NULL,
+		    HideWindow, "%p", win);
 	} else {
-		AG_MenuAction(mi, _("Show window"), -1, ShowWindow, "%p", win);
+		AG_MenuAction(mi, _("Show window"), NULL,
+		    ShowWindow, "%p", win);
 	}
 }
 

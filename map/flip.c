@@ -30,18 +30,19 @@
 
 #include "map.h"
 #include "mapedit.h"
+#include "icons.h"
 
 static int mapFlipSelection = 0;
 
 static void
-flip_init(void *p)
+Init(void *p)
 {
 	MAP_ToolPushStatus(p,
 	    _("Select element and use $(L)=Mirror, $(R)=Flip"));
 }
 
 static void
-flip_pane(void *p, void *con)
+EditPane(void *p, void *con)
 {
 	AG_Checkbox *cb;
 
@@ -68,7 +69,7 @@ ToggleXform(MAP_Item *mi, int type)
 }
 
 static int
-flip_mousebuttondown(void *p, int xmap, int ymap, int b)
+MouseButtonDown(void *p, int xmap, int ymap, int b)
 {
 	MAP_Tool *t = p;
 	MAP_View *mv = t->mv;
@@ -113,7 +114,7 @@ flip_mousebuttondown(void *p, int xmap, int ymap, int b)
 }
 
 static int
-flip_cursor(void *p, SDL_Rect *rd)
+Cursor(void *p, SDL_Rect *rd)
 {
 	Uint8 c[4] = { 255, 255, 0, 64 };
 
@@ -124,17 +125,17 @@ flip_cursor(void *p, SDL_Rect *rd)
 
 const MAP_ToolOps mapFlipOps = {
 	"Flip", N_("Flip/mirror node element"),
-	FLIP_TOOL_ICON,
+	&mapIconFlip,
 	sizeof(MAP_Tool),
 	0,
-	flip_init,
+	Init,
 	NULL,			/* destroy */
-	flip_pane,
+	EditPane,
 	NULL,			/* edit */
-	flip_cursor,
+	Cursor,
 	NULL,			/* effect */
 	NULL,			/* mousemotion */
-	flip_mousebuttondown,
+	MouseButtonDown,
 	NULL,			/* mousebuttonup */
 	NULL,			/* keydown */
 	NULL			/* keyup */

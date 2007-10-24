@@ -8,5 +8,6 @@
 #include <agar/map/map.h>
 #include <agar/map/mapview.h>
 #include <agar/map/actor.h>
+#include <agar/map/icons.h>
 #include <agar/core/core_close.h>
 #endif

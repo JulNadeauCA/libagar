@@ -27,6 +27,7 @@
 
 #include "menu.h"
 #include "primitive.h"
+#include "icons.h"
 
 static void
 SelectItem(AG_MenuItem *pitem, AG_MenuItem *subitem)
@@ -273,7 +274,7 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu, AG_MenuItem *pitem)
 	AG_SetEvent(mview, "window-mousebuttonup", mousebuttonup, NULL);
 	AG_SetTimeout(&mview->submenu_to, SubmenuTimeout, NULL, 0);
 
-	AG_WidgetMapSurface(mview, AG_DupSurface(AGICON(GUI_ARROW_ICON)));
+	AG_WidgetMapSurface(mview, AG_DupSurface(agIconSmallArrowRight.s));
 }
 
 #define VERT_ALIGNED(m, h) ((m)->itemh/2 - (h)/2 + 1)
@@ -379,7 +380,7 @@ Draw(void *p)
 			x += mview->spLblArrow;
 			AG_WidgetBlitSurface(mview, 0,
 			    x,
-			    y + m->itemh/2 - AGICON(GUI_ARROW_ICON)->h/2 - 1);
+			    y + m->itemh/2 - agIconSmallArrowRight.s->h/2 - 1);
 		}
 		y += m->itemh;
 	}
@@ -419,7 +420,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 		wReq += wLbl;
 
 		if (item->nsubitems > 0) {
-			wReq += mview->spLblArrow + AGICON(GUI_ARROW_ICON)->w;
+			wReq += mview->spLblArrow + agIconSmallArrowRight.s->w;
 		}
 		if (wReq > r->w) {
 			r->w = wReq;

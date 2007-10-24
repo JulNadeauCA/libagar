@@ -33,6 +33,7 @@
 
 #include "map.h"
 #include "mapedit.h"
+#include "icons.h"
 
 #include <string.h>
 
@@ -193,7 +194,7 @@ effect(void *p, MAP_Node *n)
 
 const MAP_ToolOps mapFillOps = {
 	"Fill", N_("Clear/fill layer"),
-	FILL_TOOL_ICON,
+	&mapIconFill,
 	sizeof(struct rg_fill_tool),
 	0,
 	init,

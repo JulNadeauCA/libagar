@@ -32,6 +32,8 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
+#include "icons.h"
+#include "icons_data.h"
 
 #include <string.h>
 
@@ -68,6 +70,14 @@ const VG_ElementOps *vgElementTypes[] = {
 	&vgMaskOps,
 };
 
+static int vgInited = 0;
+
+static void
+VG_InitSubsystem(void)
+{
+	vgIcon_Init();
+}
+
 VG *
 VG_New(int flags)
 {
@@ -83,6 +93,11 @@ VG_Init(VG *vg, int flags)
 {
 	Uint32 sflags = SDL_SWSURFACE|SDL_RLEACCEL;
 	int i;
+
+	if (!vgInited) {
+		VG_InitSubsystem();
+		vgInited = 1;
+	}
 
 	strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;

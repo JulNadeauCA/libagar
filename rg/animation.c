@@ -663,7 +663,7 @@ RG_AnimEdit(RG_Anim *ani)
 
 		mi = AG_MenuAddItem(me, _("Instructions"));
 		for (i = 0; i < RG_ANIM_LAST; i++)
-			AG_MenuAction(mi, _(insnNames[i]), -1, InsertInsn,
+			AG_MenuAction(mi, _(insnNames[i]), NULL, InsertInsn,
 			    "%p,%i,%p,%p", ani, i, editBox, tl);
 	}
 	
@@ -681,10 +681,10 @@ RG_AnimEdit(RG_Anim *ani)
 	
 	mi = AG_MenuAddItem(me, _("Animation"));
 	{
-		AG_MenuAction(mi, _("Recompile"), -1,
+		AG_MenuAction(mi, _("Recompile"), NULL,
 		    RegenAnim, "%p", ani);
 		AG_MenuSeparator(mi);
-		AG_MenuAction(mi, _("Preview..."), -1,
+		AG_MenuAction(mi, _("Preview..."), NULL,
 		    PreviewAnim, "%p,%p", ani, win);
 	}
 	

@@ -533,18 +533,18 @@ OpenMenu(AG_HSVPal *pal)
 	pal->menu_item = AG_MenuAddItem(pal->menu, NULL);
 	{
 #if 0
-		AG_MenuAction(pal->menu_item, _("Edit numerically"), -1,
+		AG_MenuAction(pal->menu_item, _("Edit numerically"), NULL,
 		    EditNumValues, "%p", pal);
 
 #endif
-		AG_MenuAction(pal->menu_item, _("Copy"), -1,
+		AG_MenuAction(pal->menu_item, _("Copy"), NULL,
 		    CopyColor, "%p", pal);
-		AG_MenuAction(pal->menu_item, _("Paste"), -1,
+		AG_MenuAction(pal->menu_item, _("Paste"), NULL,
 		    PasteColor, "%p", pal);
 		AG_MenuSeparator(pal->menu_item);
-		AG_MenuAction(pal->menu_item, _("Show RGB value"), -1,
+		AG_MenuAction(pal->menu_item, _("Show RGB value"), NULL,
 		    ShowRGBValue, "%p", pal);
-		AG_MenuAction(pal->menu_item, _("Complementary color"), -1,
+		AG_MenuAction(pal->menu_item, _("Complementary color"), NULL,
 		    SetComplementaryColor, "%p", pal);
 	}
 	pal->menu->itemSel = pal->menu_item;

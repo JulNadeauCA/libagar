@@ -40,12 +40,14 @@
 #include <gui/file_dlg.h>
 #include <gui/table.h>
 #include <gui/box.h>
+#include <gui/icons.h>
 
 #include "sg.h"
 #include "sg_matview.h"
 #include "sg_gui.h"
 
 #include "sg_load_ply.h"
+#include "icons.h"
 
 #include <string.h>
 #include <math.h>
@@ -56,7 +58,7 @@ FindSGNodes(AG_Tlist *tl, SG_Node *node, int depth)
 	AG_TlistItem *it;
 	SG_Node *cnode;
 
-	it = AG_TlistAdd(tl, AGICON(EDA_NODE_ICON), "%s", node->name);
+	it = AG_TlistAdd(tl, sgIconNode.s, "%s", node->name);
 	it->depth = depth;
 	it->p1 = node;
 	it->selected = (node->flags & SG_NODE_SELECTED);
@@ -166,7 +168,7 @@ ListLibraryItems(AG_Tlist *tl, const char *cname, int depth)
 				j++;
 		}
 		if (j == depth) {
-			it = AG_TlistAdd(tl, AGICON(OBJ_ICON), "%s", ops->name);
+			it = AG_TlistAdd(tl, sgIconNode.s, "%s", ops->name);
 			it->p1 = ops;
 			it->depth = depth;
 			strlcpy(subname, ops->name, sizeof(subname));
@@ -374,9 +376,9 @@ NodePopupMenu(AG_Event *event)
 		node->ops->menuInstance(node, pm->item, sgv);
 		AG_MenuSeparator(pm->item);
 	}
-	AG_MenuAction(pm->item, _("Node information..."), OBJEDIT_ICON,
+	AG_MenuAction(pm->item, _("Node information..."), sgIconNode.s,
 	    NodeInfo, "%p,%p", sgv, node);
-	AG_MenuAction(pm->item, _("Delete node"), TRASH_ICON,
+	AG_MenuAction(pm->item, _("Delete node"), agIconTrash.s,
 	    NodeDelete, "%p", node);
 
 	if (nsel > 1) {
@@ -390,7 +392,7 @@ NodePopupMenu(AG_Event *event)
 		AG_MenuSeparator(pm->item);
 		AG_MenuSection(pm->item, _("[All selections]"));
 		AG_MenuAction(pm->item, _("    Delete selected nodes"),
-		    TRASH_ICON, DeleteSelectedNoes, "%p", sg);
+		    agIconTrash.s, DeleteSelectedNoes, "%p", sg);
 #endif
 	}
 	AG_PopupShow(pm);
@@ -417,10 +419,10 @@ SG_Edit(void *p)
 	menu = AG_MenuNew(win, AG_MENU_HFILL);
 	pitem = AG_MenuAddItem(menu, _("File"));
 	{
-		AG_MenuAction(pitem, _("Import mesh..."), CLOSE_ICON,
+		AG_MenuAction(pitem, _("Import mesh..."), NULL,
 		    ImportMeshDlg, "%p,%p", sg, win);
 		AG_MenuSeparator(pitem);
-		AG_MenuActionKb(pitem, _("Close scene"), CLOSE_ICON,
+		AG_MenuActionKb(pitem, _("Close scene"), agIconClose.s,
 		    SDLK_w, KMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
 	}
@@ -428,16 +430,16 @@ SG_Edit(void *p)
 	pitem = AG_MenuAddItem(menu, _("Edit"));
 	{
 		/* TODO */
-		AG_MenuAction(pitem, _("Undo"), -1, NULL, "%p", NULL);
-		AG_MenuAction(pitem, _("Redo"), -1, NULL, "%p", NULL);
+		AG_MenuAction(pitem, _("Undo"), NULL, NULL, "%p", NULL);
+		AG_MenuAction(pitem, _("Redo"), NULL, NULL, "%p", NULL);
 	}
 	pitem = AG_MenuAddItem(menu, _("View"));
 	{
-		AG_MenuAction(pitem, _("New view..."), -1,
+		AG_MenuAction(pitem, _("New view..."), NULL,
 		    CreateNewView, "%p,%p,%i", sg, sv, 0);
-		AG_MenuAction(pitem, _("New view (share camera)..."), -1,
+		AG_MenuAction(pitem, _("New view (share camera)..."), NULL,
 		    CreateNewView, "%p,%p,%i", sg, sv, 1);
-//		AG_MenuAction(pitem, _("Switch camera..."), -1,
+//		AG_MenuAction(pitem, _("Switch camera..."), NULL,
 //		    SwitchCameraDlg, "%p", sv);
 	}
 	

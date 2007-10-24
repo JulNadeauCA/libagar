@@ -48,6 +48,9 @@
 #include <gui/pixmap.h>
 #include <gui/file_dlg.h>
 #include <gui/objsel.h>
+#include <gui/icons.h>
+
+#include "icons.h"
 
 const AG_ObjectOps sgMaterialOps = {
 	"SG_Material",
@@ -308,7 +311,7 @@ PollPrograms(AG_Event *event)
 	
 	AG_TlistBegin(tl);
 	for (i = 0; i < mat->nProgs; i++) {
-		AG_TlistAddPtr(tl, AGICON(OBJ_ICON),
+		AG_TlistAddPtr(tl, sgIconCgProgram.s,
 		    OBJECT(mat->progs[i])->name, mat->progs[i]);
 	}
 	AG_TlistEnd(tl);
@@ -376,13 +379,13 @@ SG_MaterialEdit(void *obj)
 		AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
 		mi = AG_TlistSetPopup(tl, "texture");
 		{
-			AG_MenuAction(mi, _("Edit texture..."), OBJEDIT_ICON,
+			AG_MenuAction(mi, _("Edit texture..."), NULL,
 			    NULL, "%p,%p,%p", win, mat, tl);
 			AG_MenuSeparator(mi);
-			AG_MenuAction(mi, _("Duplicate texture"), OBJDUP_ICON,
+			AG_MenuAction(mi, _("Duplicate texture"), NULL,
 			    NULL, "%p,%p", mat, tl);
 			AG_MenuSeparator(mi);
-			AG_MenuAction(mi, _("Delete texture"), TRASH_ICON,
+			AG_MenuAction(mi, _("Delete texture"), agIconTrash.s,
 			    NULL, "%p,%p", mat, tl);
 		}
 		AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Import texture..."),

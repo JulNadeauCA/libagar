@@ -92,7 +92,7 @@ VG_MaskMouseButton(VG *vg, void (*func)(void *, Uint8), void *p)
 
 const VG_ElementOps vgMaskOps = {
 	N_("Polygonal mask"),
-	-1,
+	NULL,
 	init,
 	NULL,		/* destroy */
 	render,

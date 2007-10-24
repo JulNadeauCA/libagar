@@ -164,7 +164,7 @@ ToolEdit(void *p, void *box)
 SK_ToolOps skSelectToolOps = {
 	N_("Select"),
 	N_("Select and move sketch items"),
-	SELECT_NODE_ICON,
+	NULL,
 	sizeof(SK_SelectTool),
 	0,
 	ToolInit,

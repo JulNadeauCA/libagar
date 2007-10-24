@@ -112,7 +112,7 @@ RG_TileviewSketchToolOps sketch_circle_ops = {
 		N_("Draw circles."),
 		sizeof(struct circle_tool),
 		TILEVIEW_SKETCH_TOOL,
-		VGCIRCLES_ICON, -1,
+		NULL, -1,
 		init,
 		NULL,		/* destroy */
 		NULL,		/* edit */
