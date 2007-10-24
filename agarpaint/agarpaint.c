@@ -244,30 +244,34 @@ SaveTilesetToIconsHdr(AG_Event *event)
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		strlcpy(iconID, t->name, sizeof(iconID));
 		TransformIconName(iconID);
-		fprintf(f, "static const Uint32 %s%s_Data[%u] = {\n",
+		fprintf(f, "static const Uint32 %s%s_Data[%u] = {",
 		    pkgName, iconID, t->su->w*t->su->h);
 		src = t->su->pixels;
 		for (h = 0; h < t->su->h; h++) {
 			for (w = 0; w < t->su->w; w++) {
-				fprintf(f, "0x%.08lx,", (unsigned long)
-				    AG_GetPixel(t->su, src));
+				unsigned long px = AG_GetPixel(t->su, src);
+
+				if (px == 0) {
+					fprintf(f, "0,");
+				} else {
+					fprintf(f, "0x%lx,", px);
+				}
 				src += t->su->format->BytesPerPixel;
 			}
-			fprintf(f, "\n");
 		}
 		fprintf(f, "};\n");
-		fprintf(f, "AG_StaticIcon %s%s = {\n", pkgName, iconID);
-		fprintf(f, "%lu,%lu,\n0x%.08lx,0x%.08lx,0x%.08lx,0x%.08lx,\n",
+		fprintf(f, "AG_StaticIcon %s%s = {", pkgName, iconID);
+		fprintf(f, "%lu,%lu,0x%.08lx,0x%.08lx,0x%.08lx,0x%.08lx,",
 		    (unsigned long)t->su->w,
 		    (unsigned long)t->su->h,
 		    (unsigned long)t->su->format->Rmask,
 		    (unsigned long)t->su->format->Gmask,
 		    (unsigned long)t->su->format->Bmask,
 		    (unsigned long)t->su->format->Amask);
-		fprintf(f, "%s%s_Data, NULL\n", pkgName, iconID);
+		fprintf(f, "%s%s_Data, NULL", pkgName, iconID);
 		fprintf(f, "};\n");
 	}
-	fprintf(f, "static __inline__ void\n%s_Init(void)\n{\n", pkgName);
+	fprintf(f, "\nstatic __inline__ void\n%s_Init(void)\n{\n", pkgName);
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		strlcpy(iconID, t->name, sizeof(iconID));
 		TransformIconName(iconID);
@@ -462,27 +466,28 @@ FileMenu(AG_Event *event)
 {
 	AG_MenuItem *m = AG_SENDER();
 
-	AG_MenuActionKb(m, "New", -1, SDLK_n, KMOD_CTRL,
+	AG_MenuActionKb(m, "New", agIconDoc.s, SDLK_n, KMOD_CTRL,
 	    NewTileset, NULL);
-	AG_MenuActionKb(m, "Open...", -1, SDLK_o, KMOD_CTRL,
+	AG_MenuActionKb(m, "Open...", agIconLoad.s, SDLK_o, KMOD_CTRL,
 	    OpenTilesetDlg, NULL);
 
 	if (tsFocused == NULL) { AG_MenuDisable(m); }
 
-	AG_MenuActionKb(m, "Save", -1, SDLK_s, KMOD_CTRL,
+	AG_MenuActionKb(m, "Save", agIconSave.s, SDLK_s, KMOD_CTRL,
 	    SaveTileset, "%p", tsFocused);
-	AG_MenuAction(m, "Save as...",	-1,
+	AG_MenuAction(m, "Save as...", agIconSave.s,
 	    SaveTilesetAsDlg, "%p", tsFocused);
 	
 	AG_MenuSeparator(m);
 
-	AG_MenuActionKb(m, "Import images...", -1, SDLK_o, KMOD_CTRL,
+	AG_MenuActionKb(m, "Import images...", agIconDocImport.s,
+	    SDLK_o, KMOD_CTRL,
 	    ImportImagesDlg, "%p", tsFocused);
 
 	if (tsFocused == NULL) { AG_MenuEnable(m); }
 	
 	AG_MenuSeparator(m);
-	AG_MenuActionKb(m, "Quit", -1, SDLK_q, KMOD_CTRL, Quit, NULL);
+	AG_MenuActionKb(m, "Quit", NULL, SDLK_q, KMOD_CTRL, Quit, NULL);
 }
 
 static void
@@ -498,7 +503,7 @@ EditMenu(AG_Event *event)
 	
 	if (tsFocused == NULL) { AG_MenuDisable(m); }
 
-	AG_MenuActionKb(m, "Undo", -1, SDLK_z, KMOD_CTRL,
+	AG_MenuActionKb(m, "Undo", NULL, SDLK_z, KMOD_CTRL,
 	    Undo, "%p", tsFocused);
 
 	if (tsFocused == NULL) { AG_MenuEnable(m); }
@@ -617,12 +622,12 @@ main(int argc, char *argv[])
 
 	/* Create the application menu. */ 
 	appMenu = AG_MenuNewGlobal(0);
-	AG_MenuDynamicItem(appMenu->root, "File", -1, FileMenu, NULL);
-	AG_MenuDynamicItem(appMenu->root, "Edit", -1, EditMenu, NULL);
+	AG_MenuDynamicItem(appMenu->root, "File", NULL, FileMenu, NULL);
+	AG_MenuDynamicItem(appMenu->root, "Edit", NULL, EditMenu, NULL);
 #ifdef HAVE_AGAR_DEV
 	if (debug) {
 		DEV_InitSubsystem(0);
-		DEV_ToolMenu(AG_MenuNode(appMenu->root, "Debug", -1));
+		DEV_ToolMenu(AG_MenuNode(appMenu->root, "Debug", NULL));
 	}
 #endif
 #ifdef SPLASH
