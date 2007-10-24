@@ -39,6 +39,7 @@
 #include "mapedit.h"
 #include "insert.h"
 #include "tools.h"
+#include "icons.h"
 
 #include <string.h>
 
@@ -358,7 +359,7 @@ insert_mousemotion(void *p, int x, int y, int xrel, int yrel, int btn)
 
 const MAP_ToolOps mapInsertOps = {
 	"Insert", N_("Insert node element"),
-	STAMP_TOOL_ICON,
+	&mapIconStamp,
 	sizeof(struct map_insert_tool),
 	TOOL_HIDDEN,
 	insert_init,

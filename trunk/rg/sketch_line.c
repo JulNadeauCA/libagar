@@ -136,7 +136,7 @@ RG_TileviewSketchToolOps sketch_line_ops = {
 		N_("Line segments, strips and loops."),
 		sizeof(struct line_tool),
 		TILEVIEW_SKETCH_TOOL,
-		VGLINES_ICON, -1,
+		NULL, -1,
 		init,
 		NULL,		/* destroy */
 		edit,

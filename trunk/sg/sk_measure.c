@@ -118,7 +118,7 @@ ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 SK_ToolOps skMeasureToolOps = {
 	N_("Measure tool"),
 	N_("Measure distances and angles"),
-	VGLINES_ICON,
+	NULL,
 	sizeof(struct sk_measure_tool),
 	0,
 	ToolInit,

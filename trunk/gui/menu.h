@@ -100,6 +100,8 @@ typedef struct ag_menu_view {
 __BEGIN_DECLS
 extern const AG_WidgetOps agMenuOps;
 extern const AG_WidgetOps agMenuViewOps;
+extern AG_Menu *agAppMenu;
+extern AG_Window *agAppMenuWin;
 
 AG_Menu	  *AG_MenuNew(void *, Uint);
 #define	   AG_MenuNewGlobal(flags) AG_MenuNew(NULL,(flags))
@@ -143,31 +145,33 @@ void	     AG_MenuState(AG_MenuItem *, int);
 #define      AG_MenuDisable(m) AG_MenuState((m),0)
 #define      AG_MenuEnable(m) AG_MenuState((m),1)
 
-AG_MenuItem *AG_MenuNode(AG_MenuItem *, const char *, int);
+AG_MenuItem *AG_MenuNode(AG_MenuItem *, const char *, SDL_Surface *);
 AG_MenuItem *AG_MenuSeparator(AG_MenuItem *);
 AG_MenuItem *AG_MenuSection(AG_MenuItem *, const char *, ...);
-AG_MenuItem *AG_MenuAction(AG_MenuItem *, const char *, int,
+AG_MenuItem *AG_MenuAction(AG_MenuItem *, const char *, SDL_Surface *,
 			   AG_EventFn, const char *, ...);
-AG_MenuItem *AG_MenuActionKb(AG_MenuItem *, const char *, int, SDLKey, SDLMod,
-	                     AG_EventFn, const char *, ...);
-AG_MenuItem *AG_MenuTool(AG_MenuItem *, AG_Toolbar *, const char *, int,
-			 SDLKey, SDLMod, AG_EventFn, const char *, ...);
-AG_MenuItem *AG_MenuDynamicItem(AG_MenuItem *, const char *, int, AG_EventFn,
-                                const char *, ...);
-AG_MenuItem *AG_MenuDynamicItemKb(AG_MenuItem *, const char *, int, SDLKey,
-                                  SDLMod, AG_EventFn, const char *, ...);
-AG_MenuItem *AG_MenuIntBoolMp(AG_MenuItem *, const char *, int, int *, int,
-			      AG_Mutex *);
-AG_MenuItem *AG_MenuInt8BoolMp(AG_MenuItem *, const char *, int, Uint8 *, int,
-			       AG_Mutex *);
-AG_MenuItem *AG_MenuIntFlagsMp(AG_MenuItem *, const char *, int, int *, int,
-			       int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt8FlagsMp(AG_MenuItem *, const char *, int, Uint8 *,
-				Uint8, int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt16FlagsMp(AG_MenuItem *, const char *, int, Uint16 *,
-				 Uint16, int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, int, Uint32 *,
-				 Uint32, int, AG_Mutex *);
+AG_MenuItem *AG_MenuActionKb(AG_MenuItem *, const char *, SDL_Surface *,
+                             SDLKey, SDLMod, AG_EventFn, const char *, ...);
+AG_MenuItem *AG_MenuTool(AG_MenuItem *, AG_Toolbar *, const char *,
+                         SDL_Surface *, SDLKey, SDLMod, AG_EventFn,
+			 const char *, ...);
+AG_MenuItem *AG_MenuDynamicItem(AG_MenuItem *, const char *, SDL_Surface *,
+                                AG_EventFn, const char *, ...);
+AG_MenuItem *AG_MenuDynamicItemKb(AG_MenuItem *, const char *, SDL_Surface *,
+                                  SDLKey, SDLMod, AG_EventFn, const char *,
+				  ...);
+AG_MenuItem *AG_MenuIntBoolMp(AG_MenuItem *, const char *, SDL_Surface *,
+                              int *, int, AG_Mutex *);
+AG_MenuItem *AG_MenuInt8BoolMp(AG_MenuItem *, const char *, SDL_Surface *,
+                               Uint8 *, int, AG_Mutex *);
+AG_MenuItem *AG_MenuIntFlagsMp(AG_MenuItem *, const char *, SDL_Surface *,
+                               int *, int, int, AG_Mutex *);
+AG_MenuItem *AG_MenuInt8FlagsMp(AG_MenuItem *, const char *, SDL_Surface *,
+                                Uint8 *, Uint8, int, AG_Mutex *);
+AG_MenuItem *AG_MenuInt16FlagsMp(AG_MenuItem *, const char *, SDL_Surface *,
+                                 Uint16 *, Uint16, int, AG_Mutex *);
+AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, SDL_Surface *,
+                                 Uint32 *, Uint32, int, AG_Mutex *);
 
 #define	AG_MenuIntBool(mi,t,i,p,inv) \
 	AG_MenuIntBoolMp((mi),(t),(i),(p),(inv),NULL)
@@ -191,7 +195,7 @@ AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, int, Uint32 *,
 void AG_MenuViewInit(void *, AG_Window *, AG_Menu *, AG_MenuItem *);
 
 /* Legacy interfaces */
-#define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),-1)
+#define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)
 __END_DECLS
 
 #include "close_code.h"

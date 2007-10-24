@@ -34,6 +34,8 @@
 #include <core/typesw.h>
 
 #include "sg.h"
+#include "icons.h"
+#include "icons_data.h"
 
 #include <math.h>
 #include <string.h>
@@ -109,6 +111,7 @@ SG_InitEngine(void)
 #if 0
 	AG_AtExitFunc(SG_DestroyEngine);
 #endif
+	sgIcon_Init();
 	return (0);
 }
 

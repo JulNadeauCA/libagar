@@ -574,23 +574,23 @@ SK_ViewPopupMenu(SK_View *skv)
 		AG_PopupDestroy(skv, skv->popup);
 	}
 	skv->popup = AG_PopupNew(skv);
-	node = AG_MenuNode(skv->popup->item, _("Add constraint"), -1);
+	node = AG_MenuNode(skv->popup->item, _("Add constraint"), NULL);
 	for (i = 0; i < SK_CONSTRAINT_LAST; i++) {
-		AG_MenuAction(node, _(skConstraintNames[i]), -1,
+		AG_MenuAction(node, _(skConstraintNames[i]), NULL,
 		    AddConstraint, "%p,%i", sk, i);
 	}
 	AG_MenuSeparator(skv->popup->item);
-	node = AG_MenuNode(skv->popup->item, _("Set Unit system"), -1);
+	node = AG_MenuNode(skv->popup->item, _("Set Unit system"), NULL);
 	{
-		AG_MenuAction(node, _("Inches"), -1,
+		AG_MenuAction(node, _("Inches"), NULL,
 		    SetLengthUnit, "%p,%s", sk, "in");
-		AG_MenuAction(node, _("Meters"), -1,
+		AG_MenuAction(node, _("Meters"), NULL,
 		    SetLengthUnit, "%p,%s", sk, "m");
-		AG_MenuAction(node, _("Centimeters"), -1,
+		AG_MenuAction(node, _("Centimeters"), NULL,
 		    SetLengthUnit, "%p,%s", sk, "cm");
-		AG_MenuAction(node, _("Millimeters"), -1,
+		AG_MenuAction(node, _("Millimeters"), NULL,
 		    SetLengthUnit, "%p,%s", sk, "mm");
-		AG_MenuAction(node, _("Microns"), -1,
+		AG_MenuAction(node, _("Microns"), NULL,
 		    SetLengthUnit, "%p,%s", sk, "um");
 	}
 	AG_PopupShow(skv->popup);

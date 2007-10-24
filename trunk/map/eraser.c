@@ -30,6 +30,7 @@
 
 #include "map.h"
 #include "mapedit.h"
+#include "icons.h"
 
 static int erase_all = 0;
 static int all_layers = 0;
@@ -60,7 +61,7 @@ delete_noderefs(MAP_Tool *t, SDLKey key, int state, void *arg)
 }
 
 static void
-eraser_init(void *p)
+Init(void *p)
 {
 	MAP_ToolBindKey(p, 0, SDLK_DELETE, delete_noderefs, NULL);
 	MAP_ToolPushStatus(p,
@@ -68,7 +69,7 @@ eraser_init(void *p)
 }
 
 static void
-eraser_pane(void *p, void *con)
+EditPane(void *p, void *con)
 {
 	AG_Checkbox *cb;
 
@@ -80,14 +81,14 @@ eraser_pane(void *p, void *con)
 }
 
 static int
-mousebuttondown(void *p, int x, int y, int btn)
+MouseButtonDown(void *p, int x, int y, int btn)
 {
 	MAP_ModBegin(TOOL(p)->mv->map);
 	return (0);
 }
 
 static int
-mousebuttonup(void *p, int x, int y, int btn)
+MouseButtonUp(void *p, int x, int y, int btn)
 {
 	MAP_Tool *t = p;
 	MAP_View *mv = t->mv;
@@ -101,7 +102,7 @@ mousebuttonup(void *p, int x, int y, int btn)
 }
 
 static int
-eraser_effect(void *p, MAP_Node *n)
+Effect(void *p, MAP_Node *n)
 {
 	MAP_Tool *t = p;
 	MAP_View *mv = t->mv;
@@ -128,7 +129,7 @@ eraser_effect(void *p, MAP_Node *n)
 }
 
 static int
-eraser_cursor(void *p, SDL_Rect *rd)
+Cursor(void *p, SDL_Rect *rd)
 {
 	Uint8 c[4] = { 255, 0, 0, 64 };
 
@@ -139,18 +140,18 @@ eraser_cursor(void *p, SDL_Rect *rd)
 
 const MAP_ToolOps mapEraserOps = {
 	"Eraser", N_("Remove node elements."),
-	ERASER_TOOL_ICON,
+	&mapIconEraser,
 	sizeof(MAP_Tool),
 	0,
-	eraser_init,
+	Init,
 	NULL,			/* destroy */
-	eraser_pane,
+	EditPane,
 	NULL,			/* edit */
-	eraser_cursor,
-	eraser_effect,
+	Cursor,
+	Effect,
 	NULL,			/* mousemotion */
-	mousebuttondown,
-	mousebuttonup,
+	MouseButtonDown,
+	MouseButtonUp,
 	NULL,			/* keydown */
 	NULL			/* keyup */
 };

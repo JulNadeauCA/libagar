@@ -29,6 +29,7 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
+#include "icons.h"
 
 void
 VG_DrawLineSegments(VG *vg, VG_Element *vge)
@@ -267,7 +268,7 @@ VG_LineIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 
 const VG_ElementOps vgLinesOps = {
 	N_("Line"),
-	VGLINES_ICON,
+	&vgIconLine,
 	NULL,				/* init */
 	NULL,				/* destroy */
 	VG_DrawLineSegments,
@@ -276,7 +277,7 @@ const VG_ElementOps vgLinesOps = {
 };
 const VG_ElementOps vgLineStripOps = {
 	N_("Line strip"),
-	VGLINES_ICON,
+	&vgIconLine,
 	NULL,				/* init */
 	NULL,				/* destroy */
 	VG_DrawLineStrip,
@@ -285,7 +286,7 @@ const VG_ElementOps vgLineStripOps = {
 };
 const VG_ElementOps vgLineLoopOps = {
 	N_("Line loop"),
-	VGLINES_ICON,
+	&vgIconLine,
 	NULL,				/* init */
 	NULL,				/* destroy */
 	VG_DrawLineLoop,

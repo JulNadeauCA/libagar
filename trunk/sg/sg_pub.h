@@ -6,6 +6,7 @@
 #include <agar/core/core_begin.h>
 #include <agar/sg/sg.h>
 #include <agar/sg/sg_gui.h>
+#include <agar/sg/icons.h>
 #include <agar/core/core_close.h>
 
 #include <agar/config/have_opengl.h>

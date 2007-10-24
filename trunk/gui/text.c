@@ -90,6 +90,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+#include "icons.h"
+
 const AG_ObjectOps agFontOps = {
 	"AG_Font",
 	sizeof(AG_Font),
@@ -674,10 +676,10 @@ static __inline__ SDL_Surface *
 GetSymbolSurface(Uint32 ch)
 {
 	switch (ch) {
-	case 'L': return (AGICON(LEFT_BUTTON_SYMBOL));
-	case 'M': return (AGICON(MID_BUTTON_SYMBOL));
-	case 'R': return (AGICON(RIGHT_BUTTON_SYMBOL));
-	case 'C': return (AGICON(CTRL_SYMBOL));
+	case 'L': return agIconLeftButton.s;
+	case 'M': return agIconMidButton.s;
+	case 'R': return agIconRightButton.s;
+	case 'C': return agIconCtrlKey.s;
 	default: return (NULL);
 	}
 }

@@ -29,6 +29,7 @@
 
 #include "vg.h"
 #include "vg_text.h"
+#include "icons.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -341,7 +342,7 @@ VG_TextIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 
 const VG_ElementOps vgTextOps = {
 	N_("Text string"),
-	VGTEXT_ICON,
+	&vgIconText,
 	VG_TextInit,
 	VG_TextDestroy,
 	VG_TextRender,

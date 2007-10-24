@@ -35,6 +35,7 @@
 #include "vg.h"
 #include "vg_math.h"
 #include "vg_primitive.h"
+#include "icons.h"
 
 #include <string.h>
 
@@ -282,9 +283,9 @@ destroy_block(AG_Event *event)
 		if (!it->selected)
 			continue;
 
-		if (it->iconsrc == AGICON(VGBLOCK_ICON)) {
+		if (it->iconsrc == vgIconBlock.s) {
 			VG_DestroyBlock(vg, (VG_Block *)it->p1);
-		} else if (it->iconsrc == AGICON(DRAWING_ICON)) {
+		} else if (it->iconsrc == vgIconDrawing.s) {
 			VG_DestroyElement(vg, (VG_Element *)it->p1);
 		}
 	}
@@ -311,17 +312,17 @@ poll_blocks(AG_Event *event)
 		    "%s (%.2f,%.2f; \xce\xb8=%.2f; ext=%.2f,%.2f %.2fx%.2f)",
 		    vgb->name, vgb->pos.x, vgb->pos.y, vgb->theta,
 		    rext.x, rext.y, rext.w, rext.h);
-		it = AG_TlistAddPtr(tl, AGICON(VGBLOCK_ICON), name, vgb);
+		it = AG_TlistAddPtr(tl, vgIconBlock.s, name, vgb);
 		it->depth = 0;
 		TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
-			it = AG_TlistAddPtr(tl, AGICON(DRAWING_ICON),
+			it = AG_TlistAddPtr(tl, vgIconDrawing.s,
 			    _(vge->ops->name), vge);
 			it->depth = 1;
 		}
 	}
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		it = AG_TlistAddPtr(tl, AGICON(DRAWING_ICON),
-		    _(vge->ops->name), vge);
+		it = AG_TlistAddPtr(tl, vgIconDrawing.s, _(vge->ops->name),
+		    vge);
 		it->depth = 1;
 	}
 

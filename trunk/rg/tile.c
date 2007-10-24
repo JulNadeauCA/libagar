@@ -44,11 +44,13 @@
 #include <gui/separator.h>
 #include <gui/file_dlg.h>
 #include <gui/pane.h>
+#include <gui/icons.h>
 
 #include "tileset.h"
 #include "tileview.h"
 #include "fill.h"
 #include "sketchproj.h"
+#include "icons.h"
 
 #include <string.h>
 
@@ -1260,38 +1262,34 @@ PollFeatures(AG_Event *event)
 	it->p1 = &attr_names[0];
 
 	if (AG_TlistVisibleChildren(tl, it)) {
-		it = AG_TlistAdd(tl, AGICON(LAYER_EDITOR_ICON), _("%sLayers"),
+		it = AG_TlistAdd(tl, rgIconLayerEditor.s, _("%sLayers"),
 		    (tv->state==RG_TILEVIEW_LAYERS_EDIT) ? "* " : "");
 		it->cat = "layers";
 		it->depth = 1;
 		it->p1 = &attr_names[1];
 		
-		it = AG_TlistAdd(tl, AGICON(WALKABILITY_ICON),
-		    _("%sWalkable"),
+		it = AG_TlistAdd(tl, rgIconWalkable.s, _("%sWalkable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
 		     tv->edit_attr == RG_TILE_BLOCK) ? "* " : "");
 		it->cat = "walkable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[2];
 		
-		it = AG_TlistAdd(tl, AGICON(CLIMBABILITY_ICON),
-		    _("%sClimbable"),
+		it = AG_TlistAdd(tl, rgIconClimbable.s, _("%sClimbable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
 		     tv->edit_attr == RG_TILE_CLIMBABLE) ? "* " : "");
 		it->cat = "climbable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[3];
 		
-		it = AG_TlistAdd(tl, AGICON(JUMPABILITY_ICON),
-		    _("%sJumpable"),
+		it = AG_TlistAdd(tl, rgIconJumpable.s, _("%sJumpable"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
 		     tv->edit_attr == RG_TILE_JUMPABLE) ? "* " : "");
 		it->cat = "jumpable-attrs";
 		it->depth = 1;
 		it->p1 = &attr_names[4];
 		
-		it = AG_TlistAdd(tl, AGICON(SLIPPAGE_ICON),
-		    _("%sSlippery"),
+		it = AG_TlistAdd(tl, rgIconSlippery.s, _("%sSlippery"),
 		    (tv->state==RG_TILEVIEW_ATTRIB_EDIT &&
 		     tv->edit_attr == RG_TILE_SLIPPERY) ? "* " : "");
 		it->cat = "slippery-attrs";
@@ -1305,7 +1303,7 @@ PollFeatures(AG_Event *event)
 			RG_FeatureSketch *fsk;
 			RG_FeaturePixmap *fpx;
 	
-			it = AG_TlistAdd(tl, AGICON(OBJ_ICON), "%s%s%s",
+			it = AG_TlistAdd(tl, rgIconObject.s, "%s%s%s",
 			    (tv->state==RG_TILEVIEW_FEATURE_EDIT &&
 			     tv->tv_feature.ft == ft) ? "* " : "",
 			    tel->name,
@@ -1322,7 +1320,7 @@ PollFeatures(AG_Event *event)
 				continue;
 
 			TAILQ_FOREACH(fsk, &ft->sketches, sketches) {
-				it = AG_TlistAdd(tl, AGICON(DRAWING_ICON),
+				it = AG_TlistAdd(tl, rgIconDrawing.s,
 				    "%s%s%s",
 				    (tv->state==RG_TILEVIEW_SKETCH_EDIT &&
 				     tv->tv_sketch.sk == fsk->sk) ? "* ": "",
@@ -1333,7 +1331,7 @@ PollFeatures(AG_Event *event)
 			}
 
 			TAILQ_FOREACH(fpx, &ft->pixmaps, pixmaps) {
-				it = AG_TlistAdd(tl, AGICON(DRAWING_ICON),
+				it = AG_TlistAdd(tl, rgIconPixmap.s,
 				    "%s%s (%d,%d)%s",
 				    (tv->state==RG_TILEVIEW_PIXMAP_EDIT &&
 				     tv->tv_pixmap.px == fpx->px) ? "* ": "",
@@ -1377,7 +1375,7 @@ PollFeatures(AG_Event *event)
 
 			TAILQ_FOREACH(vge, &vg->vges, vges) {
 				it = AG_TlistAdd(tl,
-				    AGICON(vgElementTypes[vge->type]->icon),
+				    vgElementTypes[vge->type]->icon->s,
 				    "%s%s", (vge == vg->cur_vge) ? "* " : "",
 				    vgElementTypes[vge->type]->name);
 				it->cat = "sketch-element";
@@ -1744,91 +1742,91 @@ InitTileFeatureMenu(RG_Tileview *tv, AG_Tlist *tl, AG_Window *win)
 
 	mi = AG_TlistSetPopup(tl, "feature");
 	{
-		AG_MenuAction(mi, _("Toggle visibility"), OBJCREATE_ICON,
+		AG_MenuAction(mi, _("Toggle visibility"), NULL,
 		    ToggleElementVisibility, "%p,%p", tv, tl);
 #if 0
-		AG_MenuAction(mi, _("Edit feature"), OBJEDIT_ICON,
+		AG_MenuAction(mi, _("Edit feature"), NULL,
 		    EditElement, "%p,%p", tv, tl);
 #endif
 		AG_MenuSeparator(mi);
 
-		AG_MenuAction(mi, _("Detach feature"), TRASH_ICON,
+		AG_MenuAction(mi, _("Detach feature"), agIconTrash.s,
 		    DeleteElement, "%p,%p,%i", tv, tl, 1);
-		AG_MenuAction(mi, _("Destroy feature"), TRASH_ICON,
+		AG_MenuAction(mi, _("Destroy feature"), agIconTrash.s,
 		    DeleteElement, "%p,%p,%i", tv, tl, 0);
 		
 		AG_MenuSeparator(mi);
 
-		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
+		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
 		    SDLK_u, KMOD_SHIFT,
 		    MoveElementUp, "%p,%p", tv, tl);
-		AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
 		    SDLK_d, KMOD_SHIFT,
 		    MoveElementDown, "%p,%p", tv, tl);
 	}
 
 	mi = AG_TlistSetPopup(tl, "pixmap");
 	{
-		AG_MenuAction(mi, _("Toggle visibility"), OBJCREATE_ICON,
+		AG_MenuAction(mi, _("Toggle visibility"), NULL,
 		    ToggleElementVisibility, "%p,%p", tv, tl);
 
 		AG_MenuSeparator(mi);
 #if 0
-		AG_MenuAction(mi, _("Edit pixmap"), OBJEDIT_ICON,
+		AG_MenuAction(mi, _("Edit pixmap"), NULL,
 		    EditElement, "%p,%p", tv, tl);
 #endif
-		AG_MenuAction(mi, _("Detach pixmap"), TRASH_ICON,
+		AG_MenuAction(mi, _("Detach pixmap"), agIconTrash.s,
 		    DeleteElement, "%p,%p,%i", tv, tl, 1);
-		AG_MenuAction(mi, _("Destroy pixmap"), TRASH_ICON,
+		AG_MenuAction(mi, _("Destroy pixmap"), agIconTrash.s,
 		    DeleteElement, "%p,%p,%i", tv, tl, 0);
 		
 		AG_MenuSeparator(mi);
 		
-		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
+		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
 		    SDLK_u, KMOD_SHIFT,
 		    MoveElementUp, "%p,%p", tv, tl);
-		AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
 		    SDLK_d, KMOD_SHIFT,
 		    MoveElementDown, "%p,%p", tv, tl);
 	}
 	
 	mi = AG_TlistSetPopup(tl, "sketch");
 	{
-		AG_MenuAction(mi, _("Toggle visibility"), OBJCREATE_ICON,
+		AG_MenuAction(mi, _("Toggle visibility"), NULL,
 		    ToggleElementVisibility, "%p,%p", tv, tl);
 
 		AG_MenuSeparator(mi);
 
-		AG_MenuAction(mi, _("Edit sketch"), OBJEDIT_ICON,
+		AG_MenuAction(mi, _("Edit sketch"), rgIconSketch.s,
 		    EditElement, "%p,%p", tv, tl);
-		AG_MenuAction(mi, _("Detach sketch"), TRASH_ICON,
+		AG_MenuAction(mi, _("Detach sketch"), agIconTrash.s,
 		    DeleteElement, "%p,%p,%i", tv, tl, 1);
-		AG_MenuAction(mi, _("Destroy sketch"), TRASH_ICON,
+		AG_MenuAction(mi, _("Destroy sketch"), agIconTrash.s,
 		    DeleteElement, "%p,%p,%i", tv, tl, 0);
 		
 		AG_MenuSeparator(mi);
 		
-		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
+		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
 		    SDLK_u, KMOD_SHIFT,
 		    MoveElementUp, "%p,%p", tv, tl);
-		AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
 		    SDLK_d, KMOD_SHIFT,
 		    MoveElementDown, "%p,%p", tv, tl);
 	}
 	
 	mi = AG_TlistSetPopup(tl, "sketch-element");
 	{
-		AG_MenuAction(mi, _("Edit sketch element"), OBJEDIT_ICON,
+		AG_MenuAction(mi, _("Edit sketch element"), rgIconSketch.s,
 		    EditElement, "%p,%p", tv, tl);
-		AG_MenuAction(mi, _("Delete sketch element"), TRASH_ICON,
+		AG_MenuAction(mi, _("Delete sketch element"), agIconTrash.s,
 		    DeleteElement, "%p,%p,%i", tv, tl, 1);
 #if 0
 		AG_MenuSeparator(mi);
-		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
+		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
 		    SDLK_u, KMOD_SHIFT,
 		    move_vg_element_up, "%p,%p", tv, tl);
 
-		AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
 		    SDLK_d, KMOD_SHIFT,
 		    move_vg_element_down, "%p,%p", tv, tl);
 #endif
@@ -1904,68 +1902,65 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 
 	mi = AG_MenuAddItem(me, ("File"));
 	{
-		AG_MenuAction(mi, _("Import image file..."), OBJLOAD_ICON,
+		AG_MenuAction(mi, _("Import image file..."), agIconLoad.s,
 		    ImportImageDlg, "%p", tv);
-		AG_MenuAction(mi, _("Export image file..."), OBJSAVE_ICON,
+		AG_MenuAction(mi, _("Export image file..."), agIconSave.s,
 		    ExportImageDlg, "%p", tv);
 		
 		AG_MenuSeparator(mi);
 		
-		AG_MenuActionKb(mi, _("Close tileset"), CLOSE_ICON,
+		AG_MenuActionKb(mi, _("Close tileset"), agIconClose.s,
 		    SDLK_w, KMOD_CTRL,
 		    AG_WindowCloseGenEv, "%p", win);
 	}
 	
 	mi = AG_MenuAddItem(me, _("Edit"));
 	{
-		AG_MenuActionKb(mi, _("Undo"), -1, SDLK_z, KMOD_CTRL,
+		AG_MenuActionKb(mi, _("Undo"), NULL, SDLK_z, KMOD_CTRL,
 		    Undo, "%p", tv);
-		AG_MenuActionKb(mi, _("Redo"), -1, SDLK_r, KMOD_CTRL,
+		AG_MenuActionKb(mi, _("Redo"), NULL, SDLK_r, KMOD_CTRL,
 		    Redo, "%p", tv);
 
 		AG_MenuSeparator(mi);
 
-		AG_MenuAction(mi, _("Tile settings..."),
-		    RG_PIXMAP_RESIZE_ICON,
+		AG_MenuAction(mi, _("Tile settings..."), rgIconPixmapResize.s,
 		    TileSettingsDlg, "%p", tv);
 	}
 
 	mi = AG_MenuAddItem(me, _("Features"));
 	{
-		AG_MenuTool(mi, tbar, _("Fill"), RG_FILL_ICON,
+		AG_MenuTool(mi, tbar, _("Fill"), rgIconFill.s,
 		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
 		    AddFillFeature, "%p,%p", tv, tlFeatures);
 		
-		AG_MenuActionKb(mi, _("Sketch projection"), RG_SKETCH_PROJ_ICON,
+		AG_MenuActionKb(mi, _("Sketch projection"), rgIconSketchProj.s,
 		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
 		    AddSketchProjFeature, "%p,%p", tv, tlFeatures);
 	}
 
 	mi = AG_MenuAddItem(me, _("View"));
 	{
-		AG_MenuAction(mi, _("Create view..."), NEW_VIEW_ICON,
+		AG_MenuAction(mi, _("Create view..."), rgIconMagnifier.s,
 		    CreateView, "%p,%p,%p", tv->ts, tv->tile, win);
 	}
 
 	mi = AG_MenuAddItem(me, _("Pixmaps"));
 	{
-		AG_MenuTool(mi, tbar, _("Create pixmap"), RG_PIXMAP_ICON,
-		    0, 0,
+		AG_MenuTool(mi, tbar, _("Create pixmap"), rgIconPixmap.s, 0, 0,
 		    CreatePixmap, "%p,%p", tv, tlFeatures);
 		
 		AG_MenuAction(mi, _("Attach existing pixmap..."),
-		    RG_PIXMAP_ATTACH_ICON,
+		    rgIconPixmapAttach.s,
 		    AttachPixmapDlg, "%p,%p", tv, tlFeatures);
 	}
 	
 	mi = AG_MenuAddItem(me, _("Sketches"));
 	{
-		AG_MenuTool(mi, tbar, _("Create sketch..."), RG_SKETCH_ICON,
+		AG_MenuTool(mi, tbar, _("Create sketch..."), rgIconSketch.s,
 		    0, 0,
 		    CreateSketch, "%p,%p", tv, tlFeatures);
 		
-		AG_MenuAction(mi, _("Attach sketch..."),
-		    RG_SKETCH_ATTACH_ICON,
+		AG_MenuAction(mi, _("Attach sketch..."), rgIconSketchAttach.s,
 		    AttachSketchDlg, "%p,%p", tv, tlFeatures);
 
 		/* TODO import */

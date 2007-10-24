@@ -674,7 +674,7 @@ undo:
 SK_ToolOps skDimensionToolOps = {
 	N_("Dimension"),
 	N_("Specify distances, angles and radii"),
-	VGLINES_ICON,
+	NULL,
 	sizeof(struct sk_dimension_tool),
 	0,
 	ToolInit,

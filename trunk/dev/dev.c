@@ -76,7 +76,7 @@ DEV_ToolMenu(AG_MenuItem *mi)
 	int i;
 
 	for (i = 0; i < devToolCount; i++) {
-		AG_MenuAction(mi, _(devTools[i].name), -1,
+		AG_MenuAction(mi, _(devTools[i].name), NULL,
 		    SelectTool, "%p", &devTools[i]);
 	}
 }

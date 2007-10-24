@@ -44,6 +44,7 @@
 #include <gui/separator.h>
 #include <gui/file_dlg.h>
 #include <gui/notebook.h>
+#include <gui/icons.h>
 
 #include "dev.h"
 
@@ -597,22 +598,22 @@ DEV_BrowserGenericMenu(void *menup, void *obj)
 {
 	AG_MenuItem *pitem = menup;
 
-	AG_MenuAction(pitem, _("Save"), OBJSAVE_ICON,
+	AG_MenuAction(pitem, _("Save"), agIconSave.s,
 	    DEV_BrowserGenericSave, "%p", obj);
-	AG_MenuAction(pitem, _("Load"), OBJLOAD_ICON,
+	AG_MenuAction(pitem, _("Load"), agIconLoad.s,
 	    DEV_BrowserGenericLoad, "%p", obj);
-	AG_MenuAction(pitem, _("Export to..."), OBJSAVE_ICON,
+	AG_MenuAction(pitem, _("Export to..."), agIconSave.s,
 	    DEV_BrowserGenericSaveTo, "%p", obj);
-	AG_MenuAction(pitem, _("Import from..."), OBJLOAD_ICON,
+	AG_MenuAction(pitem, _("Import from..."), agIconLoad.s,
 	    DEV_BrowserGenericLoadFrom, "%p", obj);
 
 	AG_MenuSeparator(pitem);
 
-	AG_MenuUintFlags(pitem, _("Persistence"), OBJLOAD_ICON,
+	AG_MenuUintFlags(pitem, _("Persistence"), agIconLoad.s,
 	    &OBJECT(obj)->flags, AG_OBJECT_NON_PERSISTENT, 1);
-	AG_MenuUintFlags(pitem, _("Destructible"), TRASH_ICON,
+	AG_MenuUintFlags(pitem, _("Destructible"), agIconTrash.s,
 	    &OBJECT(obj)->flags, AG_OBJECT_INDESTRUCTIBLE, 1);
-	AG_MenuUintFlags(pitem, _("Editable"), OBJ_ICON,
+	AG_MenuUintFlags(pitem, _("Editable"), NULL,
 	    &OBJECT(obj)->flags, AG_OBJECT_READONLY, 1);
 }
 
@@ -918,81 +919,67 @@ DEV_Browser(void)
 		char label[32];
 		int i;
 
-		mi_objs = AG_MenuAction(mi, _("New object"), OBJCREATE_ICON,
+		mi_objs = AG_MenuAction(mi, _("New object"), NULL,
 		    NULL, NULL);
 		for (i = 0; i < agClassCount; i++) {
 			strlcpy(label, agClassTbl[i]->type, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
-			AG_MenuAction(mi_objs, label, -1,
+			AG_MenuAction(mi_objs, label, NULL,
 			    CreateObjectDlg, "%p,%p", agClassTbl[i], win);
 		}
 
 		AG_MenuSeparator(mi);
 
-		AG_MenuAction(mi, _("Load full state"), OBJLOAD_ICON,
+		AG_MenuAction(mi, _("Load full state"), agIconLoad.s,
 		    LoadObject, "%p", agWorld);
-		AG_MenuAction(mi, _("Save full state"), OBJSAVE_ICON,
+		AG_MenuAction(mi, _("Save full state"), agIconSave.s,
 		    SaveObject, "%p", agWorld);
 		
 		AG_MenuSeparator(mi);
 		
-		AG_MenuAction(mi, _("Exit"), -1, ExitProgram, NULL);
+		AG_MenuAction(mi, _("Exit"), NULL, ExitProgram, NULL);
 	}
 	
 	mi = AG_MenuAddItem(me, _("Edit"));
 	{
-		AG_MenuAction(mi, _("Edit object data..."), OBJEDIT_ICON,
+		AG_MenuAction(mi, _("Edit object data..."), NULL,
 		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_DATA);
-		AG_MenuAction(mi, _("Edit generic information..."),
-		    OBJGENEDIT_ICON,
+		AG_MenuAction(mi, _("Edit generic information..."), NULL,
 		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_GENERIC);
 		
 		AG_MenuSeparator(mi);
 			
-		AG_MenuAction(mi, _("Duplicate"), OBJDUP_ICON,
+		AG_MenuAction(mi, _("Duplicate"), NULL,
 		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_DUP);
-		AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
+		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
 		    SDLK_u, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_MOVE_UP);
-		AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
 		    SDLK_d, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
 		    OBJEDIT_MOVE_DOWN);
 
 		AG_MenuSeparator(mi);
 
-		AG_MenuAction(mi, _("Agar settings..."), -1,
+		AG_MenuAction(mi, _("Agar settings..."), NULL,
 		    ShowPreferences, NULL);
 	}
 
 #ifdef NETWORK
 	mi = AG_MenuAddItem(me, _("Repository"));
 	{
-		AG_MenuAction(mi, _("Commit"),
-		    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
-		    OBJEDIT_RCS_COMMIT);
-
-		AG_MenuAction(mi, _("Update"),
-		    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
-		    OBJEDIT_RCS_UPDATE);
-
-		AG_MenuAction(mi, _("Import"),
-		    OBJSAVE_ICON, ObjectOp, "%p, %i", tlObjs,
-		    OBJEDIT_RCS_IMPORT);
-
+		AG_MenuAction(mi, _("Commit"), agIconLoad.s,
+		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_COMMIT);
+		AG_MenuAction(mi, _("Update"), agIconLoad.s,
+		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_UPDATE);
+		AG_MenuAction(mi, _("Import"), agIconSave.s,
+		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_IMPORT);
 		AG_MenuSeparator(mi);
-
-		AG_MenuAction(mi, _("Commit all"),
-		    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
-		    OBJEDIT_RCS_COMMIT_ALL);
-
-		AG_MenuAction(mi, _("Update all"),
-		    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
-		    OBJEDIT_RCS_UPDATE_ALL);
-			
-		
-		AG_MenuAction(mi, _("Import all"),
-		    OBJSAVE_ICON, ObjectOp, "%p, %i", tlObjs,
-		    OBJEDIT_RCS_IMPORT_ALL);
+		AG_MenuAction(mi, _("Commit all"), agIconSave.s,
+		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_COMMIT_ALL);
+		AG_MenuAction(mi, _("Update all"), agIconLoad.s,
+		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_UPDATE_ALL);
+		AG_MenuAction(mi, _("Import all"), agIconSave.s,
+		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_IMPORT_ALL);
 	}
 #endif /* NETWORK */
 	
@@ -1013,73 +1000,70 @@ DEV_Browser(void)
 
 		mi = AG_TlistSetPopup(tlObjs, "object");
 		{
-			AG_MenuAction(mi, _("Edit object..."), OBJEDIT_ICON,
+			AG_MenuAction(mi, _("Edit object..."), NULL,
 			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_DATA);
-			AG_MenuAction(mi, _("Edit object information..."),
-			    OBJGENEDIT_ICON,
+			AG_MenuAction(mi, _("Edit object information..."), NULL,
 			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_GENERIC);
 
 			AG_MenuSeparator(mi);
 			
-			AG_MenuAction(mi, _("Load"), OBJLOAD_ICON, ObjectOp,
-			    "%p, %i", tlObjs, OBJEDIT_LOAD);
-			AG_MenuAction(mi, _("Save"), OBJSAVE_ICON, ObjectOp,
-			    "%p, %i", tlObjs, OBJEDIT_SAVE);
-			AG_MenuAction(mi, _("Save all"), OBJSAVE_ICON, ObjectOp,
-			    "%p, %i", tlObjs, OBJEDIT_SAVE_ALL);
-			AG_MenuAction(mi, _("Save to..."), OBJSAVE_ICON, ObjectOp,
-			    "%p, %i", tlObjs, OBJEDIT_EXPORT);
+			AG_MenuAction(mi, _("Load"), agIconLoad.s,
+			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_LOAD);
+			AG_MenuAction(mi, _("Save"), agIconSave.s,
+			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_SAVE);
+			AG_MenuAction(mi, _("Save all"), agIconSave.s,
+			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_SAVE_ALL);
+			AG_MenuAction(mi, _("Save to..."), agIconSave.s,
+			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EXPORT);
 
 #ifdef NETWORK
 			if (agRcsMode) {
 				AG_MenuSeparator(mi);
 			
 				mi2 = AG_MenuAction(mi, _("Repository"),
-				    OBJLOAD_ICON, NULL, NULL);
-
-				AG_MenuAction(mi2, _("Commit"),
-				    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
+				    agIconLoad.s, NULL, NULL);
+				AG_MenuAction(mi2, _("Commit"), agIconLoad.s,
+				    ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_COMMIT);
-				
-				AG_MenuAction(mi2, _("Update"),
-				    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
+				AG_MenuAction(mi2, _("Update"), agIconLoad.s,
+				    ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_UPDATE);
-				
-				AG_MenuAction(mi2, _("Import"),
-				    OBJSAVE_ICON, ObjectOp, "%p, %i", tlObjs,
+				AG_MenuAction(mi2, _("Import"), agIconLoad.s,
+				    ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_IMPORT);
 		
 				AG_MenuSeparator(mi2);
 				
 				AG_MenuAction(mi2, _("Commit all"),
-				    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
+				    agIconLoad.s,
+				    ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_COMMIT_ALL);
-
 				AG_MenuAction(mi2, _("Update all"),
-				    OBJLOAD_ICON, ObjectOp, "%p, %i", tlObjs,
+				    agIconLoad.s,
+				    ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_UPDATE_ALL);
-			
 				AG_MenuAction(mi2, _("Import all"),
-				    OBJSAVE_ICON, ObjectOp, "%p, %i", tlObjs,
+				    agIconSave.s,
+				    ObjectOp, "%p, %i", tlObjs,
 				    OBJEDIT_RCS_IMPORT_ALL);
 			}
 #endif /* NETWORK */
 			AG_MenuSeparator(mi);
 			
-			AG_MenuAction(mi, _("Duplicate"), OBJDUP_ICON,
+			AG_MenuAction(mi, _("Duplicate"), NULL,
 			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_DUP);
-			AG_MenuActionKb(mi, _("Move up"), OBJMOVEUP_ICON,
+			AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
 			    SDLK_u, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
 			    OBJEDIT_MOVE_UP);
-			AG_MenuActionKb(mi, _("Move down"), OBJMOVEDOWN_ICON,
+			AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
 			    SDLK_d, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
 			    OBJEDIT_MOVE_DOWN);
 			
 			AG_MenuSeparator(mi);
 			
-			AG_MenuAction(mi, _("Free dataset"), OBJREINIT_ICON,
+			AG_MenuAction(mi, _("Free dataset"), NULL,
 			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_FREE_DATASET);
-			AG_MenuAction(mi, _("Destroy"), TRASH_ICON,
+			AG_MenuAction(mi, _("Destroy"), agIconTrash.s,
 			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_DESTROY);
 		}
 	}
@@ -1097,11 +1081,11 @@ DEV_Browser(void)
 		mi = AG_TlistSetPopup(tl, "object");
 		{
 			AG_MenuAction(mi, _("Update from repository"),
-			    OBJLOAD_ICON, UpdateFromRepo, "%p", tl);
+			    agIconLoad.s, UpdateFromRepo, "%p", tl);
 			AG_MenuAction(mi, _("Delete from repository"),
-			    TRASH_ICON, DeleteFromRepo, "%p", tl);
-			AG_MenuAction(mi, _("Rename"),
-			    -1, RepoRenameDlg, "%p", tl);
+			    agIconTrash.s, DeleteFromRepo, "%p", tl);
+			AG_MenuAction(mi, _("Rename"), NULL,
+			    RepoRenameDlg, "%p", tl);
 		}
 
 		btn = AG_ButtonNewFn(ntab, AG_BUTTON_HFILL,

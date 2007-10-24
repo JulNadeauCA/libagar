@@ -245,7 +245,7 @@ RG_TileviewSketchToolOps sketch_polygon_ops = {
 		N_("Sketch filled polygons."),
 		sizeof(struct polygon_tool),
 		TILEVIEW_SKETCH_TOOL,
-		RG_POLYGON_ICON, -1,
+		NULL, -1,
 		init,
 		NULL,		/* destroy */
 		edit,

@@ -174,10 +174,10 @@ is assumed to point to a
 structure with the following fields properly initialized:
 .Bd -literal
 typedef struct map_tool {
-	const char *name;		/* Name of the tool */
-	const char *desc;		/* Short description */
-	int icon;			/* Icon (-1 = none) */
-	int cursor_index;		/* Static cursor (-1 = none) */
+	const char *name;     /* Name of the tool */
+	const char *desc;     /* Short description */
+	AG_StaticIcon *icon;  /* Icon (or NULL) */
+	int cursor_index;     /* Static cursor (or -1) */
 
 	void (*init)(MAP_Tool *t);
 	void (*destroy)(MAP_Tool *t);

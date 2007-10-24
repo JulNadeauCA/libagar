@@ -30,6 +30,7 @@
 #include "vg.h"
 #include "vg_primitive.h"
 #include "vg_math.h"
+#include "icons.h"
 
 static void
 VG_CircleInit(VG *vg, VG_Element *vge)
@@ -83,7 +84,7 @@ VG_CircleIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 
 const VG_ElementOps vgCircleOps = {
 	N_("Circle"),
-	VGCIRCLES_ICON,
+	&vgIconCircle,
 	VG_CircleInit,
 	NULL,
 	VG_CircleRender,

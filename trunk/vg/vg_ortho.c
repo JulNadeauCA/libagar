@@ -1,5 +1,3 @@
-/*	$Csoft: vg_ortho.c,v 1.4 2005/09/27 00:25:21 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -34,6 +32,7 @@
 #include "vg.h"
 #include "vg_math.h"
 #include "vg_primitive.h"
+#include "icons.h"
 
 void
 VG_RestrictOrtho(VG *vg, float *x, float *y)
@@ -75,11 +74,11 @@ VG_OrthoRestrictToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
 	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS|
 	                                        AG_TOOLBAR_STICKY);
 
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_FREE_ICON), 1,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 1,
 	    select_mode, "%p,%p,%i", snbar, vg, VG_NO_ORTHO);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_FREE_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 0,
 	    select_mode, "%p,%p,%i", snbar, vg, VG_HORIZ_ORTHO);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_FREE_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 0,
 	    select_mode, "%p,%p,%i", snbar, vg, VG_VERT_ORTHO);
 
 	return (snbar);

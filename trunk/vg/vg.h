@@ -96,7 +96,7 @@ enum vg_element_type {
 
 typedef struct vg_element_ops {
 	const char *name;
-	int icon;
+	AG_StaticIcon *icon;
 	void (*init)(struct vg *, struct vg_element *);
 	void (*destroy)(struct vg *, struct vg_element *);
 	void (*draw)(struct vg *, struct vg_element *);

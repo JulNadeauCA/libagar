@@ -1075,15 +1075,15 @@ SG_ObjectMenuInstance(void *pNode, AG_MenuItem *m, SG_View *sgv)
 {
 	SG_Node *node = pNode;
 
-	AG_MenuAction(m, _("    Edge table..."), -1,
+	AG_MenuAction(m, _("    Edge table..."), NULL,
 	    EdgeTableDlg, "%p", node);
-	AG_MenuAction(m, _("    Facet table..."), -1,
+	AG_MenuAction(m, _("    Facet table..."), NULL,
 	    FacetTableDlg, "%p", node);
-	AG_MenuAction(m, _("    Check connectivity"), -1,
+	AG_MenuAction(m, _("    Check connectivity"), NULL,
 	    CheckConnectivity, "%p", node);
-	AG_MenuAction(m, _("    Recompute normals"), -1,
+	AG_MenuAction(m, _("    Recompute normals"), NULL,
 	    RecomputeNormals, "%p", node);
-	AG_MenuAction(m, _("    Convert quads to triangles"), -1,
+	AG_MenuAction(m, _("    Convert quads to triangles"), NULL,
 	    ConvQuadsToTriangles, "%p", node);
 }
 

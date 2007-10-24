@@ -9,8 +9,6 @@ LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
 LIB_LINKS=	ag_core SDL opengl32 glu32
 
-SHARESRC=	core-icons.den
-
 SRCS=	view.c widget.c window.c box.c text.c label.c button.c checkbox.c \
 	textbox.c keycodes.c keysyms.c primitive.c radio.c fixed_plotter.c \
 	tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \

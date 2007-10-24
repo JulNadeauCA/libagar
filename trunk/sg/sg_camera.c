@@ -42,6 +42,7 @@
 
 #include "sg.h"
 #include "sg_gui.h"
+#include "icons.h"
 
 const AG_Version sgCameraVer = { 0, 0 };
 
@@ -380,7 +381,7 @@ SG_CameraMenu(void *obj, AG_MenuItem *m, SG_View *sgv)
 {
 //	SG_Camera *cam = obj;
 
-//	AG_MenuAction(m, _("Camera parameters..."), OBJEDIT_ICON,
+//	AG_MenuAction(m, _("Camera parameters..."), sgIconCamera.s,
 //	    EditCameraParams, "%p,%p", cam, sgv);
 #ifdef DEBUG
 
@@ -388,26 +389,26 @@ SG_CameraMenu(void *obj, AG_MenuItem *m, SG_View *sgv)
 		AG_MenuItem *mRot;
 		SG_Camera *cam = obj;
 
-		mRot = AG_MenuNode(m, _("Artificial rotation"), ANIM_PLAY_ICON);
-		AG_MenuUintFlags(mRot, _("Rotate around i"), RIGHT_ARROW_ICON,
+		mRot = AG_MenuNode(m, _("Artificial rotation"), NULL);
+		AG_MenuUintFlags(mRot, _("Rotate around i"), sgIconI.s,
 		    &cam->flags, SG_CAMERA_ROT_I, 0);
-		AG_MenuUintFlags(mRot, _("Rotate around j"), RIGHT_ARROW_ICON,
+		AG_MenuUintFlags(mRot, _("Rotate around j"), sgIconJ.s,
 		    &cam->flags, SG_CAMERA_ROT_J, 0);
-		AG_MenuUintFlags(mRot, _("Rotate around k"), RIGHT_ARROW_ICON,
+		AG_MenuUintFlags(mRot, _("Rotate around k"), sgIconK.s,
 		    &cam->flags, SG_CAMERA_ROT_K, 0);
 		AG_MenuSeparator(mRot);
-		AG_MenuAction(mRot, _("Invert direction"), LEFT_ARROW_ICON,
+		AG_MenuAction(mRot, _("Invert direction"), NULL,
 		    SetRotationSpeed, "%p,%f", cam, -cam->rotSpeed);
 		AG_MenuSeparator(mRot);
-		AG_MenuAction(mRot, _("Very slow"), ANIM_PLAY_ICON,
+		AG_MenuAction(mRot, _("Very slow"), NULL,
 		    SetRotationSpeed, "%p,%f", cam, 0.1);
-		AG_MenuAction(mRot, _("Slow"), ANIM_PLAY_ICON,
+		AG_MenuAction(mRot, _("Slow"), NULL,
 		    SetRotationSpeed, "%p,%f", cam, 0.2);
-		AG_MenuAction(mRot, _("Medium"), ANIM_PLAY_ICON,
+		AG_MenuAction(mRot, _("Medium"), NULL,
 		    SetRotationSpeed, "%p,%f", cam, 1.0);
-		AG_MenuAction(mRot, _("Fast"), ANIM_PLAY_ICON,
+		AG_MenuAction(mRot, _("Fast"), NULL,
 		    SetRotationSpeed, "%p,%f", cam, 3.0);
-		AG_MenuAction(mRot, _("Very fast"), ANIM_PLAY_ICON,
+		AG_MenuAction(mRot, _("Very fast"), NULL,
 		    SetRotationSpeed, "%p,%f", cam, 6.0);
 	}
 #endif

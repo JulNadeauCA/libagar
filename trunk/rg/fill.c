@@ -38,6 +38,7 @@
 #include "tileset.h"
 #include "tileview.h"
 #include "fill.h"
+#include "icons.h"
 
 const AG_Version rgFillVer = { 0, 0, };
 const RG_FeatureOps rgFillOps = {
@@ -343,28 +344,25 @@ RG_FillMenu(void *p, AG_MenuItem *mi)
 	struct rg_fill_feature *fi = p;
 	AG_MenuItem *mi_fill;
 
-	mi_fill = AG_MenuAction(mi, _("Fill type"), RG_FILL_ICON, NULL, NULL);
+	mi_fill = AG_MenuAction(mi, _("Fill type"), rgIconFill.s, NULL, NULL);
 	{
-		AG_MenuAction(mi_fill, _("Solid fill"), RG_FILL_ICON,
+		AG_MenuAction(mi_fill, _("Solid fill"), rgIconFill.s,
 		    set_type, "%p, %i", fi, FILL_SOLID);
-		AG_MenuAction(mi_fill, _("Horizontal gradient"),
-		    RG_HGRADIENT_ICON,
+		AG_MenuAction(mi_fill, _("Horizontal gradient"), rgIconHGrad.s,
 		    set_type, "%p, %i", fi, FILL_HGRADIENT);
-		AG_MenuAction(mi_fill, _("Vertical gradient"),
-		    RG_VGRADIENT_ICON,
+		AG_MenuAction(mi_fill, _("Vertical gradient"), rgIconVGrad.s,
 		    set_type, "%p, %i", fi, FILL_VGRADIENT);
-		AG_MenuAction(mi_fill, _("Circular gradient"),
-		    RG_CGRADIENT_ICON,
+		AG_MenuAction(mi_fill, _("Circular gradient"), rgIconCGrad.s,
 		    set_type, "%p, %i", fi, FILL_CGRADIENT);
-		AG_MenuAction(mi_fill, _("Pattern"), RG_TILING_ICON,
+		AG_MenuAction(mi_fill, _("Pattern"), rgIconTiling.s,
 		    set_type, "%p, %i", fi, FILL_PATTERN);
 	}
 	
 	AG_MenuSeparator(mi);
 
-	AG_MenuAction(mi, _("Swap gradient colors"), RG_SWAP_ICON,
+	AG_MenuAction(mi, _("Swap gradient colors"), rgIconSwap.s,
 	    SwapGradientColors, "%p", fi);
-	AG_MenuAction(mi, _("Invert colors"), RG_INVERT_ICON,
+	AG_MenuAction(mi, _("Invert colors"), rgIconInvert.s,
 	    InvertColors, "%p", fi);
 }
 
@@ -375,9 +373,9 @@ RG_FillToolbar(void *p, RG_Tileview *tv)
 	AG_Toolbar *tbar;
 
 	tbar = AG_ToolbarNew(tv->tel_box, AG_TOOLBAR_VERT, 1, 0);
-	AG_ToolbarButtonIcon(tbar, AGICON(RG_SWAP_ICON), 0,
+	AG_ToolbarButtonIcon(tbar, rgIconSwap.s, 0,
 	    SwapGradientColors, "%p", fi);
-	AG_ToolbarButtonIcon(tbar, AGICON(RG_INVERT_ICON), 0,
+	AG_ToolbarButtonIcon(tbar, rgIconInvert.s, 0,
 	    InvertColors, "%p", fi);
 	return (tbar);
 }

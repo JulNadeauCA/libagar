@@ -304,7 +304,7 @@ ToolMouseButtonDown(void *p, SG_Vector pos, int btn)
 SK_ToolOps skCircleToolOps = {
 	N_("Circle"),
 	N_("Insert a circle into the sketch"),
-	VGCIRCLES_ICON,
+	NULL,
 	sizeof(struct sk_circle_tool),
 	0,
 	ToolInit,

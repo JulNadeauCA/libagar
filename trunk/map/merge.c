@@ -34,6 +34,7 @@
 
 #include "map.h"
 #include "mapedit.h"
+#include "icons.h"
 
 #include <string.h>
 
@@ -375,7 +376,7 @@ merge_cursor(MAP_Tool *t, SDL_Rect *rd)
 
 const MAP_Tool mapMergeOps = {
 	"Merge", N_("Merge Pattern"),
-	MERGE_TOOL_ICON,
+	&mapIconMerge,
 	sizeof(MAP_Tool),
 	0,
 	merge_init,

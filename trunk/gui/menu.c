@@ -426,13 +426,13 @@ AG_MenuSection(AG_MenuItem *pitem, const char *fmt, ...)
 
 /* Create a dynamically-updated menu item. */
 AG_MenuItem *
-AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, int icon,
+AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
     AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	mi = CreateItem(pitem, text, icon);
 	mi->poll = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->poll, fmt);
 	return (mi);
@@ -440,13 +440,13 @@ AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, int icon,
 
 /* Create a dynamically-updated menu item with a keyboard binding. */
 AG_MenuItem *
-AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, int icon,
+AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
     SDLKey key, SDLMod kmod, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	mi = CreateItem(pitem, text, icon);
 	mi->key_equiv = key;
 	mi->key_mod = kmod;
 	mi->poll = AG_SetEvent(m, NULL, fn, NULL);
@@ -467,33 +467,33 @@ AG_MenuSetPollFn(AG_MenuItem *mi, AG_EventFn fn, const char *fmt, ...)
 
 /* Create a menu item without any associated action. */
 AG_MenuItem *
-AG_MenuNode(AG_MenuItem *pitem, const char *text, int icon)
+AG_MenuNode(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 {
-	return CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	return CreateItem(pitem, text, icon);
 }
 
 /* Create a menu item associated with a function. */
 AG_MenuItem *
-AG_MenuAction(AG_MenuItem *pitem, const char *text, int icon, AG_EventFn fn,
-    const char *fmt, ...)
+AG_MenuAction(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+    AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	mi = CreateItem(pitem, text, icon);
 	mi->clickFn = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->clickFn, fmt);
 	return (mi);
 }
 
 AG_MenuItem *
-AG_MenuActionKb(AG_MenuItem *pitem, const char *text, int icon, SDLKey key,
-    SDLMod kmod, AG_EventFn fn, const char *fmt, ...)
+AG_MenuActionKb(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+    SDLKey key, SDLMod kmod, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	mi = CreateItem(pitem, text, icon);
 	mi->key_equiv = key;
 	mi->key_mod = kmod;
 	mi->clickFn = AG_SetEvent(m, NULL, fn, NULL);
@@ -502,8 +502,9 @@ AG_MenuActionKb(AG_MenuItem *pitem, const char *text, int icon, SDLKey key,
 }
 
 AG_MenuItem *
-AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text, int icon,
-    SDLKey key, SDLMod kmod, void (*fn)(AG_Event *), const char *fmt, ...)
+AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text,
+    SDL_Surface *icon, SDLKey key, SDLMod kmod, void (*fn)(AG_Event *),
+    const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
@@ -511,12 +512,12 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text, int icon,
 	AG_Event *btn_ev;
 
 	bu = AG_ButtonNew(tbar->rows[0], 0, NULL);
-	AG_ButtonSurfaceNODUP(bu, AGICON(icon));
+	AG_ButtonSurfaceNODUP(bu, icon);
 	AG_ButtonSetFocusable(bu, 0);
 	btn_ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
 	AG_EVENT_GET_ARGS(btn_ev, fmt);
 
-	mi = CreateItem(pitem, text, AGICON(icon));
+	mi = CreateItem(pitem, text, icon);
 	mi->key_equiv = key;
 	mi->key_mod = kmod;
 	mi->clickFn = AG_SetEvent(m, NULL, fn, NULL);
@@ -525,12 +526,12 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text, int icon,
 }
 
 AG_MenuItem *
-AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, int icon,
+AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
     int *boolp, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
 
-	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT_BOOL;
 	mi->bind_p = (void *)boolp;
 	mi->bind_invert = inv;
@@ -539,12 +540,12 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, int icon,
 }
 
 AG_MenuItem *
-AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, int icon,
+AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
     Uint8 *boolp, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
 
-	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT8_BOOL;
 	mi->bind_p = (void *)boolp;
 	mi->bind_invert = inv;
@@ -553,12 +554,12 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, int icon,
 }
 
 AG_MenuItem *
-AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, int icon,
+AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
     int *flagsp, int flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
 
-	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -568,12 +569,12 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, int icon,
 }
 
 AG_MenuItem *
-AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, int icon, 
+AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
     Uint8 *flagsp, Uint8 flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
 
-	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT8_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -583,12 +584,12 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, int icon,
 }
 
 AG_MenuItem *
-AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, int icon,
+AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
     Uint16 *flagsp, Uint16 flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
 
-	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT16_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
@@ -598,12 +599,12 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, int icon,
 }
 
 AG_MenuItem *
-AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, int icon, 
+AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon, 
     Uint32 *flagsp, Uint32 flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
 
-	mi = CreateItem(pitem, text, icon>=0 ? AGICON(icon) : NULL);
+	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT32_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;

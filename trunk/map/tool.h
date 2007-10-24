@@ -17,7 +17,7 @@ struct map_tool_mousebinding;
 typedef struct map_tool_ops {
 	const char *name;
 	const char *desc;
-	int icon;
+	AG_StaticIcon *icon;
 
 	size_t len;
 	int flags;

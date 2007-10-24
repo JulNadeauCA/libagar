@@ -34,6 +34,7 @@
 
 #include "map.h"
 #include "mapedit.h"
+#include "icons.h"
 
 #include <string.h>
 
@@ -145,7 +146,7 @@ ginsert_effect(void *p, MAP_Node *n)
 
 const MAP_ToolOps mapGInsertOps = {
 	"Ginsert", N_("Insert geometrical object"),
-	STAMP_TOOL_ICON,
+	&mapIconStamp,
 	sizeof(struct ginsert_tool),
 	TOOL_HIDDEN,
 	ginsert_init,

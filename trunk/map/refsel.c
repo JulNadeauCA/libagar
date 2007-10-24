@@ -28,6 +28,7 @@
 #include "map.h"
 #include "mapedit.h"
 #include "refsel.h"
+#include "icons.h"
 
 void
 MAP_UpdateRefSel(MAP_View *mv, int xRel, int yRel)
@@ -68,7 +69,7 @@ MAP_UpdateRefSel(MAP_View *mv, int xRel, int yRel)
 }
 
 static void
-refsel_init(void *p)
+Init(void *p)
 {
 	MAP_ToolPushStatus(p,
 	    _("Select an element with $(L). Hold $(C) to select "
@@ -77,10 +78,10 @@ refsel_init(void *p)
 
 const MAP_ToolOps mapRefselOps = {
 	"Refsel", N_("Select Node Elements"),
-	SELECT_REF_ICON,
+	&mapIconSelectItem,
 	sizeof(MAP_Tool),
 	0,
-	refsel_init,
+	Init,
 	NULL,			/* destroy */
 	NULL,			/* pane */
 	NULL,			/* edit */

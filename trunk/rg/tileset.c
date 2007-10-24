@@ -38,8 +38,11 @@
 #include <gui/radio.h>
 #include <gui/combo.h>
 #include <gui/pane.h>
+#include <gui/icons.h>
 
 #include "tileset.h"
+#include "icons.h"
+#include "icons_data.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -74,6 +77,7 @@ void
 RG_InitSubsystem(void)
 {
 	AG_RegisterClass(&rgTilesetOps);
+	rgIcon_Init();
 }
 
 RG_Tileset *
@@ -757,7 +761,7 @@ PollTiles(AG_Event *event)
 					    tel->tel_feature.ft;
 					RG_FeatureSketch *fts;
 
-					it = AG_TlistAdd(tl, AGICON(OBJ_ICON),
+					it = AG_TlistAdd(tl, rgIconObject.s,
 					    "%s [%d,%d] %s", ft->name,
 					    tel->tel_feature.x,
 					    tel->tel_feature.y,
@@ -769,7 +773,7 @@ PollTiles(AG_Event *event)
 					TAILQ_FOREACH(fts, &ft->sketches,
 					    sketches) {
 						it = AG_TlistAdd(tl,
-						    AGICON(DRAWING_ICON),
+						    rgIconDrawing.s,
 						    "%s [at %d,%d]%s",
 						    fts->sk->name,
 						    fts->x, fts->y,
@@ -800,8 +804,7 @@ PollTiles(AG_Event *event)
 				{
 					RG_Sketch *sk = tel->tel_sketch.sk;
 
-					it = AG_TlistAdd(tl,
-					    AGICON(DRAWING_ICON),
+					it = AG_TlistAdd(tl, rgIconDrawing.s,
 					    "%s (%ux%u)%s", sk->name,
 					    tel->tel_sketch.sk->vg->su->w,
 					    tel->tel_sketch.sk->vg->su->h,
@@ -1164,13 +1167,13 @@ InsertTileDlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create new tile"));
 	
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name: "));
-	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_tile_name,
-	    sizeof(ins_tile_name));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name: "));
+	AG_WidgetBindString(tb, "string", ins_tile_name, sizeof(ins_tile_name));
 	AG_SetEvent(tb, "textbox-return", InsertTile, "%p,%p", win, ts);
+	AG_WidgetFocus(tb);
 
 	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT|AG_COMBO_HFILL, _("Class: "));
-	AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, ins_tile_class,
+	AG_WidgetBindString(com->tbox, "string", ins_tile_class,
 	    sizeof(ins_tile_class));
 	if (strcmp(ts->tmpl, "Terrain") == 0) {
 		AG_TlistAdd(com->list, NULL, "Ground");
@@ -1178,23 +1181,23 @@ InsertTileDlg(AG_Event *event)
 	}
 
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size: "));
-	AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &ins_tile_w);
-	AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &ins_tile_h);
+	AG_WidgetBindInt(msb, "xvalue", &ins_tile_w);
+	AG_WidgetBindInt(msb, "yvalue", &ins_tile_h);
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 
 	cb = AG_CheckboxNew(win, 0, _("Alpha blending"));
-	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_alpha);
+	AG_WidgetBindInt(cb, "state", &ins_alpha);
 	
 	cb = AG_CheckboxNew(win, 0, _("Colorkeying"));
-	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
+	AG_WidgetBindInt(cb, "state", &ins_colorkey);
 	
 	AG_LabelNewStaticString(win, 0, _("Snapping mode: "));
 	rad = AG_RadioNew(win, AG_RADIO_HFILL, rgTileSnapModes);
-	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins_snap_mode);
+	AG_WidgetBindInt(rad, "value", &ins_snap_mode);
 
-	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	btnbox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(btnbox, 0, _("OK"), InsertTile, "%p,%p", win, ts);
+		AG_ButtonNewFn(btnbox, 0, _("OK"), InsertTile, "%p,%p",win,ts);
 		AG_ButtonNewFn(btnbox, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
@@ -1218,12 +1221,12 @@ InsertTextureDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("Create a new texture"));
 	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name:"));
-	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_texture_name,
+	AG_WidgetBindString(tb, "string", ins_texture_name,
 	    sizeof(ins_texture_name));
-	AG_SetEvent(tb, "textbox-return", InsertTexture, "%p,%p,%p", win,
-	    pwin, ts);
+	AG_SetEvent(tb, "textbox-return",
+	    InsertTexture, "%p,%p,%p", win, pwin, ts);
 
-	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	btnbox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
 		AG_ButtonNewFn(btnbox, 0, _("OK"), InsertTexture,
 		    "%p,%p,%p", win, pwin, ts);
@@ -1251,28 +1254,27 @@ InsertAnimDlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create new animation"));
 	
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name:"));
-	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, ins_anim_name,
-	    sizeof(ins_anim_name));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name:"));
+	AG_WidgetBindString(tb, "string", ins_anim_name, sizeof(ins_anim_name));
 	AG_SetEvent(tb, "textbox-return", InsertAnim, "%p,%p", win, ts);
+	AG_WidgetFocus(tb);
 
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size:"));
-	AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &ins_tile_w);
-	AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &ins_tile_h);
+	AG_WidgetBindInt(msb, "xvalue", &ins_tile_w);
+	AG_WidgetBindInt(msb, "yvalue", &ins_tile_h);
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 
 	cb = AG_CheckboxNew(win, 0, _("Alpha blending"));
-	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_alpha);
+	AG_WidgetBindInt(cb, "state", &ins_alpha);
 	
 	cb = AG_CheckboxNew(win, 0, _("Colorkey"));
-	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins_colorkey);
+	AG_WidgetBindInt(cb, "state", &ins_colorkey);
 
-	btnbox = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	btnbox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(btnbox, 0, _("OK"), InsertAnim, "%p,%p", win, ts);
+		AG_ButtonNewFn(btnbox, 0, _("OK"), InsertAnim, "%p,%p",win,ts);
 		AG_ButtonNewFn(btnbox, 0, _("Cancel"), AGWINDETACH(win));
 	}
-
 	AG_WindowAttach(pwin, win);
 	AG_WindowShow(win);
 }
@@ -1473,9 +1475,6 @@ DeleteSelPixmaps(AG_Event *event)
 		RG_Pixmap *px = it->p1;
 	
 		if (px->nrefs > 0) {
-			AG_TextMsg(AG_MSG_ERROR,
-			    _("The pixmap \"%s\" is currently in use."),
-			    px->name);
 			return;
 		}
 		TAILQ_REMOVE(&ts->pixmaps, px, pixmaps);
@@ -1526,6 +1525,36 @@ DeleteSelSketches(AG_Event *event)
 		TAILQ_REMOVE(&ts->sketches, sk, sketches);
 		RG_SketchDestroy(sk);
 		Free(sk, M_RG);
+	}
+}
+
+static void
+DeleteSelGraphics(AG_Event *event)
+{
+	RG_Tileset *ts = AG_PTR(1);
+	AG_Tlist *tlGfx = AG_PTR(2);
+	AG_TlistItem *it;
+
+	AG_TLIST_FOREACH(it, tlGfx) {
+		if (strcmp(it->cat, "pixmap") == 0) {
+			RG_Pixmap *px = it->p1;
+	
+			if (px->nrefs > 0) {
+				continue;
+			}
+			TAILQ_REMOVE(&ts->pixmaps, px, pixmaps);
+			RG_PixmapDestroy(px);
+			Free(px, M_RG);
+		} else if (strcmp(it->cat, "sketch") == 0) {
+			RG_Sketch *sk = it->p1;
+	
+			if (sk->nrefs > 0) {
+				continue;
+			}
+			TAILQ_REMOVE(&ts->sketches, sk, sketches);
+			RG_SketchDestroy(sk);
+			Free(sk, M_RG);
+		}
 	}
 }
 
@@ -1700,12 +1729,12 @@ RG_TilesetEdit(void *p)
 
 	tlTiles = Malloc(sizeof(AG_Tlist), M_OBJECT);
 	AG_TlistInit(tlTiles, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
-		               AG_TLIST_EXPAND);
+		              AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tlTiles, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
 	AG_SetEvent(tlTiles, "tlist-poll", PollTiles, "%p", ts);
 	
 	tlGfx = Malloc(sizeof(AG_Tlist), M_OBJECT);
-	AG_TlistInit(tlGfx, AG_TLIST_POLL|AG_TLIST_EXPAND);
+	AG_TlistInit(tlGfx, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_EXPAND);
 	AG_SetEvent(tlGfx, "tlist-poll", PollGraphics, "%p", ts);
 	
 	tl_textures = Malloc(sizeof(AG_Tlist), M_OBJECT);
@@ -1726,36 +1755,34 @@ RG_TilesetEdit(void *p)
 
 	mi = AG_TlistSetPopup(tlTiles, "tile");
 	{
-		AG_MenuAction(mi, _("Edit tiles..."), OBJEDIT_ICON,
+		AG_MenuAction(mi, _("Edit tiles..."), rgIconEdit.s,
 		    EditSelTiles, "%p,%p,%p", ts, tlTiles, win);
 		AG_MenuSeparator(mi);
-		AG_MenuAction(mi, _("Duplicate tiles"),
-		    OBJDUP_ICON,
+		AG_MenuAction(mi, _("Duplicate tiles"), rgIconDuplicate.s,
 		    DupSelTiles, "%p,%p", ts, tlTiles);
 		AG_MenuSeparator(mi);
-		AG_MenuAction(mi, _("Delete tiles"), TRASH_ICON,
+		AG_MenuAction(mi, _("Delete tiles"), agIconTrash.s,
 		    DeleteSelTiles, "%p,%p", tlTiles, ts);
 	}
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 	ntab = AG_NotebookAddTab(nb, _("Tiles"), AG_BOX_VERT);
 	{
 		AG_ObjectAttach(ntab, tlTiles);
-		AG_SetEvent(tlTiles, "tlist-dblclick", EditSelTiles,
-		    "%p,%p,%p", ts, tlTiles, win);
+		AG_SetEvent(tlTiles, "tlist-dblclick",
+		    EditSelTiles, "%p,%p,%p", ts, tlTiles, win);
 
-		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
-		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+		bbox = AG_BoxNewHoriz(ntab, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
-			AG_ButtonNewFn(bbox, 0, _("Insert"), InsertTileDlg,
-			    "%p,%p", ts, win);
-			AG_ButtonNewFn(bbox, 0, _("Edit"), EditSelTiles,
-			    "%p,%p,%p", ts, tlTiles, win);
-			AG_ButtonNewFn(bbox, 0, _("Delete"), DeleteSelTiles,
-			    "%p,%p", tlTiles, ts);
+			AG_ButtonNewFn(bbox, 0, _("Insert"),
+			    InsertTileDlg, "%p,%p", ts, win);
+			AG_ButtonNewFn(bbox, 0, _("Edit"),
+			    EditSelTiles, "%p,%p,%p", ts, tlTiles, win);
+			AG_ButtonNewFn(bbox, 0, _("Delete"),
+			    DeleteSelTiles, "%p,%p", tlTiles, ts);
 		}
 		com = AG_ComboNew(ntab, AG_COMBO_HFILL, _("Template: "));
-		AG_WidgetBind(com->tbox, "string", AG_WIDGET_STRING, &ts->tmpl,
+		AG_WidgetBindString(com->tbox, "string", &ts->tmpl,
 		    sizeof(ts->tmpl));
 		AG_TlistAdd(com->list, NULL, "Icons (16x16)");
 		AG_TlistAdd(com->list, NULL, "Icons (32x32)");
@@ -1764,21 +1791,28 @@ RG_TilesetEdit(void *p)
 		AG_SetEvent(com, "combo-selected", SelectTemplate, "%p", ts);
 	}
 
-	ntab = AG_NotebookAddTab(nb, _("Gfx"), AG_BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Graphics"), AG_BOX_VERT);
 	{
 		AG_ObjectAttach(ntab, tlGfx);
 	
 		mi = AG_TlistSetPopup(tlGfx, "pixmap");
 		{
-			AG_MenuAction(mi, _("Delete pixmap"), TRASH_ICON,
+			AG_MenuAction(mi, _("Delete pixmap"), agIconTrash.s,
 			    DeleteSelPixmaps, "%p,%p", ts, tlGfx);
-			AG_MenuAction(mi, _("Duplicate pixmap"), OBJDUP_ICON,
+			AG_MenuAction(mi, _("Duplicate pixmap"),
+			    rgIconDuplicate.s,
 			    DupSelPixmaps, "%p,%p", ts, tlGfx);
 		}
 		mi = AG_TlistSetPopup(tlGfx, "sketch");
 		{
-			AG_MenuAction(mi, _("Delete sketch"), TRASH_ICON,
+			AG_MenuAction(mi, _("Delete sketch"), agIconTrash.s,
 			    DeleteSelSketches, "%p,%p", ts, tlGfx);
+		}
+		bbox = AG_BoxNewHoriz(ntab, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+		{
+			AG_ButtonNewFn(bbox, 0,
+			    _("Delete selected/unreferenced"),
+			    DeleteSelGraphics, "%p,%p", ts, tlGfx);
 		}
 	}
 	
@@ -1788,12 +1822,11 @@ RG_TilesetEdit(void *p)
 	
 		mi = AG_TlistSetPopup(tl_textures, "texture");
 		{
-			AG_MenuAction(mi, _("Delete texture"), TRASH_ICON,
+			AG_MenuAction(mi, _("Delete texture"), agIconTrash.s,
 			    DeleteSelTextures, "%p,%p", ts, tl_textures);
 		}
 		
-		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ, 
-		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+		bbox = AG_BoxNewHoriz(ntab, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
 			AG_ButtonNewFn(bbox, 0, _("Insert"),
 			    InsertTextureDlg, "%p,%p", ts, win);
@@ -1803,8 +1836,8 @@ RG_TilesetEdit(void *p)
 			    DeleteSelTextures, "%p,%p", ts, tl_textures);
 		}
 		
-		AG_SetEvent(tl_textures, "tlist-dblclick", EditSelTextures,
-		    "%p,%p,%p", ts, tl_textures, win);
+		AG_SetEvent(tl_textures, "tlist-dblclick",
+		    EditSelTextures, "%p,%p,%p", ts, tl_textures, win);
 	}
 	
 	ntab = AG_NotebookAddTab(nb, _("Anims"), AG_BOX_VERT);
@@ -1815,14 +1848,13 @@ RG_TilesetEdit(void *p)
 		
 		mi = AG_TlistSetPopup(tlAnims, "anim");
 		{
-			AG_MenuAction(mi, _("Edit animation"), EDIT_ICON,
+			AG_MenuAction(mi, _("Edit animation"), rgIconEdit.s,
 			    EditSelAnims, "%p,%p,%p", ts, tlAnims, win);
-			AG_MenuAction(mi, _("Delete animation"), TRASH_ICON,
+			AG_MenuAction(mi, _("Delete animation"), agIconTrash.s,
 			    DeleteSelAnims, "%p,%p", ts, tlAnims);
 		}
 		
-		bbox = AG_BoxNew(ntab, AG_BOX_HORIZ,
-		    AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+		bbox = AG_BoxNewHoriz(ntab, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
 			AG_ButtonNewFn(bbox, 0, _("Insert"),
 			    InsertAnimDlg, "%p,%p", ts, win);
@@ -1837,9 +1869,8 @@ RG_TilesetEdit(void *p)
 	{
 		AG_Pane *pane;
 
-		pane = AG_PaneNew(ntab, AG_PANE_HORIZ, AG_PANE_EXPAND|
-		                                       AG_PANE_DIV|
-						       AG_PANE_FORCE_DIV);
+		pane = AG_PaneNew(ntab, AG_PANE_HORIZ,
+		    AG_PANE_EXPAND|AG_PANE_DIV|AG_PANE_FORCE_DIV);
 		AG_LabelNewStatic(pane->div[0], 0, _("Tiles:"));
 		AG_ObjectAttach(pane->div[0], tlTileTbl);
 		AG_LabelNewStatic(pane->div[1], 0, _("Animations:"));

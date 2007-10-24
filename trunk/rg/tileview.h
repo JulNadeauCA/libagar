@@ -85,7 +85,7 @@ typedef struct rg_tileview_tool_ops {
 	const char *desc;     /* Tool description */
 	size_t len;           /* Size of structure */
 	int flags;
-	int icon;             /* Specific icon (or -1) */
+	AG_StaticIcon *icon;  /* Specific icon (or NULL) */
 	int cursor;           /* Specific cursor (or -1) */
 	void       (*init)(void *);
 	void       (*destroy)(void *);

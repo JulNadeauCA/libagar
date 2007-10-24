@@ -29,6 +29,7 @@
 #include <gui/primitive.h>
 
 #include "tileview.h"
+#include "icons.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -1767,13 +1768,13 @@ RG_TileviewUnselectTool(RG_Tileview *tv)
 void
 RG_TileviewGenericMenu(RG_Tileview *tv, AG_MenuItem *mi)
 {
-	AG_MenuIntFlags(mi, _("Show tile grid"), RG_CONTROLS_ICON,
+	AG_MenuIntFlags(mi, _("Show tile grid"), rgIconControls.s,
 	    &tv->flags, RG_TILEVIEW_NO_GRID, 1);
-	AG_MenuIntFlags(mi, _("Show tile extent"), RG_CONTROLS_ICON,
+	AG_MenuIntFlags(mi, _("Show tile extent"), rgIconControls.s,
 	    &tv->flags, RG_TILEVIEW_NO_EXTENT, 1);
-	AG_MenuIntFlags(mi, _("Show controls"), RG_CONTROLS_ICON,
+	AG_MenuIntFlags(mi, _("Show controls"), rgIconControls.s,
 	    &tv->flags, RG_TILEVIEW_HIDE_CONTROLS, 1);
-	AG_MenuIntFlags(mi, _("Show background"), SNAP_GRID_ICON,
+	AG_MenuIntFlags(mi, _("Show background"), rgIconTiling.s,
 	    &tv->flags, RG_TILEVIEW_NO_TILING, 1);
 }
 

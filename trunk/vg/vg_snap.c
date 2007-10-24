@@ -1,5 +1,3 @@
-/*	$Csoft: vg_snap.c,v 1.11 2005/09/27 00:25:21 vedge Exp $	*/
-
 /*
  * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -37,6 +35,7 @@
 #include "vg.h"
 #include "vg_math.h"
 #include "vg_primitive.h"
+#include "icons.h"
 
 static void
 VG_SnapToGrid(VG *vg, float *x, float *y)
@@ -155,26 +154,26 @@ VG_SnapToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
 
 	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS|
 	                                        AG_TOOLBAR_STICKY);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_FREE_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_FREE_POSITIONING);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_RINT_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapRint.s, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_NEAREST_INTEGER);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_GRID_ICON), 1,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapGrid.s, 1,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_GRID);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_ENDPOINT_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapEndpt.s, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_ENDPOINT_D_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapEndptDist.s, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT_DISTANCE);
 
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_CLOSEST_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapClosest.s, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_CLOSEST_POINT);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_CENTERPT_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapCenterPt.s, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_CENTER_POINT);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_MIDDLEPT_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapMiddlePt.s, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_MIDDLE_POINT);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_INTSECT_AUTO_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapIntsectAuto.s, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_INTERSECTIONS_AUTO);
-	AG_ToolbarButtonIcon(snbar, AGICON(SNAP_INTSECT_MANUAL_ICON), 0,
+	AG_ToolbarButtonIcon(snbar, vgIconSnapIntsectManual.s, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_INTERSECTIONS_MANUAL);
 	return (snbar);
 }
@@ -182,30 +181,30 @@ VG_SnapToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
 void
 VG_SnapMenu(AG_Menu *m, AG_MenuItem *mi, VG *vg)
 {
-	AG_MenuAction(mi, _("Free positioning"), SNAP_FREE_ICON,
+	AG_MenuAction(mi, _("Free positioning"), vgIconSnapFree.s,
 	    snap_to_m, "%p,%i", vg, VG_FREE_POSITIONING);
-	AG_MenuAction(mi, _("Grid"), SNAP_GRID_ICON,
+	AG_MenuAction(mi, _("Grid"), vgIconSnapGrid.s,
 	    snap_to_m, "%p,%i", vg, VG_GRID);
-	AG_MenuAction(mi, _("Nearest integer"), SNAP_RINT_ICON,
+	AG_MenuAction(mi, _("Nearest integer"), vgIconSnapRint.s,
 	    snap_to_m, "%p,%i", vg, VG_NEAREST_INTEGER);
 	
 	AG_MenuSeparator(mi);
 
-	AG_MenuAction(mi, _("Endpoint"), SNAP_ENDPOINT_ICON,
+	AG_MenuAction(mi, _("Endpoint"), vgIconSnapEndpt.s,
 	    snap_to_m, "%p,%i", vg, VG_ENDPOINT);
-	AG_MenuAction(mi, _("Distance from endpoint"), SNAP_ENDPOINT_D_ICON,
+	AG_MenuAction(mi, _("Distance from endpoint"), vgIconSnapEndptDist.s,
 	    snap_to_m, "%p,%i", vg, VG_ENDPOINT_DISTANCE);
-	AG_MenuAction(mi, _("Closest point"), SNAP_CLOSEST_ICON,
+	AG_MenuAction(mi, _("Closest point"), vgIconSnapClosest.s,
 	    snap_to_m, "%p,%i", vg, VG_CLOSEST_POINT);
-	AG_MenuAction(mi, _("Center point"), SNAP_CENTERPT_ICON,
+	AG_MenuAction(mi, _("Center point"), vgIconSnapCenterPt.s,
 	    snap_to_m, "%p,%i", vg, VG_CENTER_POINT);
-	AG_MenuAction(mi, _("Middle point"), SNAP_MIDDLEPT_ICON,
+	AG_MenuAction(mi, _("Middle point"), vgIconSnapMiddlePt.s,
 	    snap_to_m, "%p,%i", vg, VG_MIDDLE_POINT);
 
 	AG_MenuSeparator(mi);
 
-	AG_MenuAction(mi, _("Intersections (auto)"), SNAP_INTSECT_AUTO_ICON,
+	AG_MenuAction(mi, _("Intersections (auto)"), vgIconSnapIntsectAuto.s,
 	    snap_to_m, "%p,%i", vg, VG_INTERSECTIONS_AUTO);
-	AG_MenuAction(mi, _("Intersections (manual)"),SNAP_INTSECT_MANUAL_ICON,
+	AG_MenuAction(mi, _("Intersections (manual)"),vgIconSnapIntsectManual.s,
 	    snap_to_m, "%p,%i", vg, VG_INTERSECTIONS_MANUAL);
 }

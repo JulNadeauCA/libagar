@@ -29,6 +29,7 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
+#include "icons.h"
 
 static void
 VG_PointRender(VG *vg, VG_Element *vge)
@@ -80,7 +81,7 @@ VG_PointIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 
 const VG_ElementOps vgPointsOps = {
 	N_("Point"),
-	VGPOINTS_ICON,
+	&vgIconPoints,
 	NULL,
 	NULL,
 	VG_PointRender,

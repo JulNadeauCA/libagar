@@ -334,7 +334,7 @@ SG_LightMenu(void *obj, AG_MenuItem *m, SG_View *sgv)
 #if 0
 	SG_Light *lt = obj;
 
-	AG_MenuAction(m, _("Light parameters..."), OBJEDIT_ICON,
+	AG_MenuAction(m, _("Light parameters..."), NULL,
 	    EditLightParams, "%p", lt);
 #endif
 }
