@@ -12,7 +12,10 @@ LIBS=		../compat/libag_compat.la
 SRCS=	config.c core.c error.c event.c object.c prop.c rcs.c \
 	timeout.c typesw.c cpuinfo.c load_color.c load_den.c \
 	load_netbuf.c load_string.c load_surface.c load_version.c \
-	load_xcf.c
+	load_xcf.c \
+	setenv.c strlcat.c strlcpy.c strsep.c asprintf.c vasprintf.c \
+	gethostname.c snprintf.c arc4random.c dir.c md5.c sha1.c rmd160.c \
+	file.c
 
 MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 AG_Timeout.3 \
 	AG_Config.3 AG_Version.3
