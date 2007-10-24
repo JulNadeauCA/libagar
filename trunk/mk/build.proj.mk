@@ -81,6 +81,7 @@ proj: proj-subdir
 			mv -f config/.svn config.svn.ORIG; \
 		        echo "config" >> .projfiles2.out; \
 		fi; \
+		rm -f ${PROJDIR}/$$_tgtproj-$$_tgtos.zip; \
 		cat .projfiles2.out | ${ZIP} ${ZIPFLAGS} \
 		    ${PROJDIR}/$$_tgtproj-$$_tgtos.zip -@; \
 		echo "mv -f config.svn.ORIG config/.svn"; \
