@@ -32,4 +32,8 @@ typedef unsigned long Ulong;
 #define Malloc AG_Malloc
 #define Free AG_Free
 
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024
+#endif
+
 #endif /* _AGARPAINT_H_ */
