@@ -1,0 +1,3 @@
+#ifndef HISTORICAL_UNITS
+#define HISTORICAL_UNITS "1"
+#endif

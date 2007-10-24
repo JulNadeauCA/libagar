@@ -1,0 +1,1 @@
+#undef ASTRONOMICAL_UNITS
