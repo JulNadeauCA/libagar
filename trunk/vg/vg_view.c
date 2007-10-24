@@ -64,17 +64,15 @@ VG_ViewMotion(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
-	VG *vg = vv->vg;
 	float x, y;
 	float xrel = AG_INT(3);
 	float yrel = AG_INT(4);
 	int state = AG_INT(5);
 	
-	AG_MutexLock(&vg->lock);
 	if (vv->mouse.panning) {
 		vv->x += xrel;
 		vv->y += yrel;
-		goto out;
+		return;
 	}
 	if (tool != NULL && tool->ops->mousemotion != NULL) {
 		if (tool->ops->flags & VG_MOUSEMOTION_NOSNAP) {
@@ -88,7 +86,7 @@ VG_ViewMotion(AG_Event *event)
 		    VG_VIEW_LEN(vv,xrel), VG_VIEW_LEN(vv,yrel), state) == 1) {
 			vv->mouse.x = x;
 			vv->mouse.y = y;
-			goto out;
+			return;
 		}
 		vv->mouse.x = x;
 		vv->mouse.y = y;
@@ -96,8 +94,6 @@ VG_ViewMotion(AG_Event *event)
 		vv->mouse.x = VG_VIEW_X(vv,AG_INT(1));
 		vv->mouse.y = VG_VIEW_Y(vv,AG_INT(2));
 	}
-out:
-	AG_MutexUnlock(&vg->lock);
 }
 
 static void
@@ -113,7 +109,6 @@ VG_ViewButtonDown(AG_Event *event)
 	float xSn, ySn;
 	
 	AG_WidgetFocus(vv);
-	AG_MutexLock(&vg->lock);
 	vv->mouse.x = x;
 	vv->mouse.y = y;
 	switch (button) {
@@ -122,10 +117,10 @@ VG_ViewButtonDown(AG_Event *event)
 		break;
 	case SDL_BUTTON_WHEELDOWN:
 		VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale-1.0);
-		goto out;
+		return;
 	case SDL_BUTTON_WHEELUP:
 		VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale+1.0);
-		goto out;
+		return;
 	default:
 		break;
 	}
@@ -138,7 +133,7 @@ VG_ViewButtonDown(AG_Event *event)
 			ySn = VG_VIEW_Y_SNAP(vv,AG_INT(3));
 		}
 		if (tool->ops->mousebuttondown(tool, xSn, ySn, button) == 1)
-			goto out;
+			return;
 	}
 	TAILQ_FOREACH(tool, &vv->tools, tools) {
 		SLIST_FOREACH(mb, &tool->mbindings, mbindings) {
@@ -147,21 +142,18 @@ VG_ViewButtonDown(AG_Event *event)
 			}
 			tool->vgv = vv;
 			if (mb->func(tool, button, 1, x, y, mb->arg) == 1)
-				goto out;
+				return;
 		}
 	}
 	if (vv->btndown_ev != NULL)
-		AG_PostEvent(NULL, vv, vv->btndown_ev->name, "%i,%f,%f", button,
-		    x, y);
-out:
-	AG_MutexUnlock(&vg->lock);
+		AG_PostEvent(NULL, vv, vv->btndown_ev->name,
+		    "%i,%f,%f", button, x, y);
 }
 
 static void
 VG_ViewButtonUp(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
-	VG *vg = vv->vg;
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int button = AG_INT(1);
 	float x = VG_VIEW_X(vv,AG_INT(2));
@@ -169,7 +161,6 @@ VG_ViewButtonUp(AG_Event *event)
 	float xSn, ySn;
 	VG_ToolMouseBinding *mb;
 
-	AG_MutexLock(&vg->lock);
 	if (tool != NULL && tool->ops->mousebuttonup != NULL) {
 		if (tool->ops->flags & VG_BUTTONUP_NOSNAP) {
 			xSn = x;
@@ -179,7 +170,7 @@ VG_ViewButtonUp(AG_Event *event)
 			ySn = VG_VIEW_Y_SNAP(vv,AG_INT(3));
 		}
 		if (tool->ops->mousebuttonup(tool, xSn, ySn, button) == 1)
-			goto out;
+			return;
 	}
 	TAILQ_FOREACH(tool, &vv->tools, tools) {
 		SLIST_FOREACH(mb, &tool->mbindings, mbindings) {
@@ -188,21 +179,19 @@ VG_ViewButtonUp(AG_Event *event)
 			}
 			tool->vgv = vv;
 			if (mb->func(tool, button, 0, x, y, mb->arg) == 1)
-				goto out;
+				return;
 		}
 	}
 	switch (button) {
 	case SDL_BUTTON_MIDDLE:
 		vv->mouse.panning = 0;
-		goto out;
+		return;
 	default:
 		break;
 	}
 	if (vv->btnup_ev != NULL)
-		AG_PostEvent(NULL, vv, vv->btnup_ev->name, "%i,%f,%f", button,
-		    x, y);
-out:
-	AG_MutexUnlock(&vg->lock);
+		AG_PostEvent(NULL, vv, vv->btnup_ev->name, "%i,%f,%f",
+		    button, x, y);
 }
 
 void
