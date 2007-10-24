@@ -115,6 +115,7 @@ WindowLostFocus(AG_Event *event)
 static void
 CreateEditionWindow(RG_Tileset *ts)
 {
+	extern AG_Menu *agAppMenu;
 	AG_Window *win;
 
 	win = rgTilesetOps.edit(ts);
@@ -123,6 +124,11 @@ CreateEditionWindow(RG_Tileset *ts)
 	AG_AddEvent(win, "window-lostfocus", WindowLostFocus, "%p", ts);
 	AG_AddEvent(win, "window-hidden", WindowLostFocus, "%p", ts);
 	AG_WindowShow(win);
+	AG_WindowSetGeometry(win,
+	    0,
+	    AGWIDGET(agAppMenu)->h,
+	    AGWIDGET(win)->w,
+	    agView->h - AGWIDGET(agAppMenu)->h);
 }
 
 static void
@@ -534,7 +540,7 @@ Splash(void)
 int
 main(int argc, char *argv[])
 {
-	int i, c, fps = -1;
+	int i, c, fps = 25;
 	const char *fontSpec = NULL;
 #ifdef HAVE_AGAR_DEV
 	int debug = 0;
@@ -543,6 +549,9 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
+#ifdef HAVE_OPENGL
+	AG_SetBool(agConfig, "view.opengl", 1);
+#endif
 	while ((c = getopt(argc, argv, "?dvfFgGr:t:")) != -1) {
 		extern char *optarg;
 
