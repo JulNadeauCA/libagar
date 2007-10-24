@@ -179,7 +179,7 @@ AG_ConfigLoad(void *p, AG_Netbuf *buf)
 	if (ver.minor < 2) { (void)AG_ReadUint8(buf); } /* agServerMode */
 	agIdleThresh = (int)AG_ReadUint8(buf);
 	if (ver.minor >= 3) { agWindowAnySize = (int)AG_ReadUint8(buf); }
-	if (ver.minor >= 3) { agMsgDelay = (int)AG_ReadUint32(buf); }
+	if (ver.minor >= 4) { agMsgDelay = (int)AG_ReadUint32(buf); }
 	agTextComposition = AG_ReadUint8(buf);
 	agTextBidi = AG_ReadUint8(buf);
 	agKbdUnicode = AG_ReadUint8(buf);
