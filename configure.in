@@ -23,7 +23,7 @@ REGISTER("--enable-network",	"Build network client library [default: check]")
 REGISTER("--enable-server",	"Build network server library [default: no]")
 
 # Agar version
-HDEFINE(VERSION, "10142007")
+HDEFINE(VERSION, "10242007")
 HDEFINE(RELEASE, "The Birth Of An Era Obscured By Sulfur And Flames")
 
 # Installation directories
