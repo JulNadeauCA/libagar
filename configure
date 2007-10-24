@@ -241,42 +241,47 @@ fi
 echo "ENABLE_NLS=${ENABLE_NLS}" >> Makefile.config
 echo "HAVE_GETTEXT=${HAVE_GETTEXT}" >> Makefile.config
 
-echo -n "checking for libtool..."
-LIBTOOL_BUNDLED="no"
-if [ "${with_libtool}" != "" ]; then
-	LIBTOOL=${with_libtool}
-else
-	ltool=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/libtool" ]; then
-			ltool=${path}/libtool
-		fi
-	done
-	if [ "${ltool}" != "" ]; then
-		${ltool} --version 1>/dev/null 2>&1
-		if [ $? == 0 ]; then
-			LIBTOOL=${ltool}
-		else
-			LIBTOOL=\${TOP}/mk/libtool/libtool
-			LIBTOOL_BUNDLED="yes"
-		fi
-	else
-		LIBTOOL=\${TOP}/mk/libtool/libtool
-		LIBTOOL_BUNDLED="yes"
-	fi
-fi
-if [ "${LIBTOOL_BUNDLED}" = "yes" ]; then
-	echo "yes (bundled)"
-else
-	grep ^VERSION=1.5 "${LIBTOOL}" 1>/dev/null 2>&1
-	if [ $? == 0 ]; then
-		echo "yes (GNU libtool 1.5)"
-		echo "LIBTOOLFLAGS=-prefer-pic" >> Makefile.config
-	else
-		echo "yes (GNU libtool)"
-	fi
-fi
+LIBTOOL_BUNDLED="yes"
+LIBTOOL=\${TOP}/mk/libtool/libtool
 echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
+
+#
+# (insert defamatory comment about libtool here)
+#
+#echo -n "checking for libtool..."
+#if [ "${with_libtool}" != "" ]; then
+#	LIBTOOL=${with_libtool}
+#else
+#	ltool=""
+#	for path in `echo $PATH | sed 's/:/ /g'`; do
+#		if [ -x "${path}/libtool" ]; then
+#			ltool=${path}/libtool
+#		fi
+#	done
+#	if [ "${ltool}" != "" ]; then
+#		${ltool} --version 1>/dev/null 2>&1
+#		if [ $? == 0 ]; then
+#			LIBTOOL=${ltool}
+#		else
+#			LIBTOOL=\${TOP}/mk/libtool/libtool
+#			LIBTOOL_BUNDLED="yes"
+#		fi
+#	else
+#		LIBTOOL=\${TOP}/mk/libtool/libtool
+#		LIBTOOL_BUNDLED="yes"
+#	fi
+#fi
+#if [ "${LIBTOOL_BUNDLED}" = "yes" ]; then
+#	echo "yes (bundled)"
+#else
+#	grep ^VERSION=1.5 "${LIBTOOL}" 1>/dev/null 2>&1
+#	if [ $? == 0 ]; then
+#		echo "yes (GNU libtool 1.5)"
+#		echo "LIBTOOLFLAGS=-prefer-pic" >> Makefile.config
+#	else
+#		echo "yes (GNU libtool)"
+#	fi
+#fi
 
 echo "PREFIX?=${PREFIX}" >> Makefile.config
 echo "#ifndef PREFIX" > config/prefix.h
@@ -3664,6 +3669,13 @@ echo "#endif" >> config/threads.h
 	fi
 else
 echo "#undef THREADS" > config/threads.h
+	if [ "${enable_warnings}" = "yes" ]
+ then
+CFLAGS="$CFLAGS -Wno-unused"
+CXXFLAGS="$CXXFLAGS -Wno-unused"
+echo "CFLAGS=$CFLAGS" >> Makefile.config
+echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
+	fi
 fi
 if [ "${enable_utf8}" != "no" ]
  then
