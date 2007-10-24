@@ -29,7 +29,7 @@
 #ifndef HAVE_SHA1
 #include <core/core.h>
 #include <string.h>
-#include <compat/sha1.h>
+#include <core/sha1.h>
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 

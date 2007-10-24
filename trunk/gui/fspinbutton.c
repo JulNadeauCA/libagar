@@ -23,9 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <compat/limits.h>
 #include <config/_mk_have_strtoll.h>
 
+#include <core/limits.h>
 #include <core/core.h>
 
 #include "fspinbutton.h"

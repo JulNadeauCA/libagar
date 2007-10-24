@@ -34,8 +34,7 @@
 #include <core/core.h>
 #include <core/config.h>
 #include <core/util.h>
-
-#include <compat/dir.h>
+#include <core/dir.h>
 
 #include "window.h"
 #include "primitive.h"

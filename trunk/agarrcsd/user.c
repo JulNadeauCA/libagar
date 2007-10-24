@@ -23,8 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/compat/strlcpy.h>
-#include <agar/compat/strlcat.h>
+#include <agar/core/strlcpy.h>
+#include <agar/core/strlcat.h>
 #include <sys/types.h>
 
 #include <stdio.h>

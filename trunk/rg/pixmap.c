@@ -23,8 +23,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <compat/arc4random.h>
-
+#include <core/arc4random.h>
 #include <core/core.h>
 #include <core/load_surface.h>
 

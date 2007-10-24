@@ -39,8 +39,7 @@
 
 #include <core/core.h>
 #include <core/config.h>
-
-#include <compat/file.h>
+#include <core/file.h>
 
 #include <net/net.h>
 

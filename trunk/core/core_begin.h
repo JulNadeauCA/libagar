@@ -118,7 +118,7 @@
 #ifdef _AGAR_HAVE_SYS_QUEUE_H
 #include <sys/queue.h>
 #else
-#include <agar/compat/queue.h>
+#include <agar/core/queue.h>
 #endif
 
 #include <agar/core/cpuinfo.h>	/* For agCPU structure */

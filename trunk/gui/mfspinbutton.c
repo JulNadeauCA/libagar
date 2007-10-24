@@ -23,8 +23,7 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <compat/limits.h>
-
+#include <core/limits.h>
 #include <core/core.h>
 
 #include "mfspinbutton.h"

@@ -40,7 +40,7 @@
 #include <stdio.h>
 
 #include <core/core.h>
-#include <compat/file.h>
+#include <core/file.h>
 
 #ifdef _WIN32
 int
