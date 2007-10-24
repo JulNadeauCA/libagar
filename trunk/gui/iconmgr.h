@@ -4,14 +4,15 @@
 #define _AGAR_ICONMGR_H_
 #include "begin_code.h"
 
+/* Description of icon stored in data segment. */
 typedef struct ag_static_icon {
-	Uint w, h;
-	Uint32 Rmask;
-	Uint32 Gmask;
-	Uint32 Bmask;
-	Uint32 Amask;
-	const Uint32 *data;
-	SDL_Surface *s;
+	Uint w, h;			/* Dimensions in pixels */
+	Uint32 Rmask;			/* Red mask */
+	Uint32 Gmask;			/* Green mask */
+	Uint32 Bmask;			/* Blue mask */
+	Uint32 Amask;			/* Alpha mask */
+	const Uint32 *data;		/* Pixel data */
+	SDL_Surface *s;			/* Initialized surface */
 } AG_StaticIcon;
 
 __BEGIN_DECLS

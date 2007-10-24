@@ -10,6 +10,11 @@
 struct ag_window;
 struct ag_button;
 
+enum ag_font_type {
+	AG_FONT_VECTOR,		/* Vectorial font */
+	AG_FONT_BITMAP		/* Series of pixmaps */
+} type;
+
 enum ag_text_justify {
 	AG_TEXT_LEFT,
 	AG_TEXT_CENTER,
@@ -20,7 +25,6 @@ enum ag_text_valign {
 	AG_TEXT_MIDDLE,
 	AG_TEXT_BOTTOM
 };
-
 enum ag_text_msg_title {
 	AG_MSG_ERROR,
 	AG_MSG_WARNING,
@@ -46,10 +50,7 @@ typedef struct ag_glyph {
 /* Cached font */
 typedef struct ag_font {
 	struct ag_object obj;
-	enum {
-		AG_FONT_VECTOR,
-		AG_FONT_BITMAP
-	} type;
+	enum ag_font_type type;		/* Class of font */
 	int size;			/* Size in points */
 	Uint flags;
 #define AG_FONT_BOLD		0x01	/* Bold font */
@@ -70,12 +71,23 @@ typedef struct ag_font {
 	SLIST_ENTRY(ag_font) fonts;
 } AG_Font;
 
+/* State variables for text rendering. */
 typedef struct ag_text_state {
 	AG_Font *font;			/* Font face */
 	Uint32 color;			/* FG color (surfaceFmt) */
 	Uint32 colorBG;			/* BG color (surfaceFmt) */
 	enum ag_text_justify justify;	/* Justification mode */
 } AG_TextState;
+
+/* Description of font stored in data segment. */
+typedef struct ag_static_font {
+	const char *name;		/* Identifier */
+	const char *copyright;		/* Copyright text */
+	enum ag_font_type type;		/* Type of font */
+	Uint32 size;			/* Size in bytes */
+	const Uint8 *data;		/* Font data */
+	AG_Font *font;			/* Initialized font structure */
+} AG_StaticFont;
 
 __BEGIN_DECLS
 extern AG_Font *agDefaultFont;
