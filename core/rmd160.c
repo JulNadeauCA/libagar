@@ -34,7 +34,7 @@
 #ifndef HAVE_RMD160
 #include <core/core.h>
 #include <string.h>
-#include <compat/rmd160.h>
+#include <core/rmd160.h>
 
 #define PUT_64BIT_LE(cp, value) do {                                    \
 	(cp)[7] = (Uint8)((value) >> 56);                                        \

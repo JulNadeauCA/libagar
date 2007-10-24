@@ -28,13 +28,11 @@
  */
 
 #include <core/core.h>
-
-#include <compat/md5.h>
-#include <compat/sha1.h>
-#include <compat/rmd160.h>
-#include <compat/dir.h>
-#include <compat/file.h>
-
+#include <core/md5.h>
+#include <core/sha1.h>
+#include <core/rmd160.h>
+#include <core/dir.h>
+#include <core/file.h>
 #include <core/config.h>
 #include <core/typesw.h>
 

@@ -33,7 +33,7 @@
 #ifndef HAVE_MD5
 #include <core/core.h>
 #include <string.h>
-#include <compat/md5.h>
+#include <core/md5.h>
 
 #define PUT_64BIT_LE(cp, value) do {					\
 	(cp)[7] = (Uint8)((value) >> 56);					\

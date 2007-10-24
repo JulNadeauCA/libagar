@@ -82,17 +82,17 @@ typedef unsigned long Ulong;
 #ifdef _MK_HAVE_SYS_QUEUE_H
 #include <sys/queue.h>
 #else
-#include <compat/queue.h>
+#include <core/queue.h>
 #endif
 
-#include <compat/strlcpy.h>
-#include <compat/strlcat.h>
-#include <compat/snprintf.h>
-#include <compat/vsnprintf.h>
-#include <compat/asprintf.h>
-#include <compat/vasprintf.h>
-#include <compat/strsep.h>
-#include <compat/math.h>
+#include <core/strlcpy.h>
+#include <core/strlcat.h>
+#include <core/snprintf.h>
+#include <core/vsnprintf.h>
+#include <core/asprintf.h>
+#include <core/vasprintf.h>
+#include <core/strsep.h>
+#include <core/math.h>
 
 #include <core/load_netbuf.h>
 #include <core/load_integral.h>

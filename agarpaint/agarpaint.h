@@ -1,8 +1,8 @@
 #ifndef _AGARPAINT_H_
 #define _AGARPAINT_H_
 
-#include <agar/compat/strlcpy.h>
-#include <agar/compat/strlcat.h>
+#include <agar/core/strlcpy.h>
+#include <agar/core/strlcat.h>
 
 #include <agar/config/_mk_have_unsigned_typedefs.h>
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS

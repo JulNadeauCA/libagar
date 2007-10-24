@@ -26,7 +26,7 @@
 #include <config/network.h>
 #ifdef NETWORK
 
-#include <compat/limits.h>
+#include <core/limits.h>
 #include <core/core.h>
 
 #include <sys/types.h>

@@ -29,10 +29,9 @@
 
 #include <core/core.h>
 #include <core/typesw.h>
-
-#include <compat/md5.h>
-#include <compat/sha1.h>
-#include <compat/rmd160.h>
+#include <core/md5.h>
+#include <core/sha1.h>
+#include <core/rmd160.h>
 
 #include <config/network.h>
 #include <config/version.h>

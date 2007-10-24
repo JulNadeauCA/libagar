@@ -70,8 +70,8 @@
 #include <errno.h>
 
 #include <core/core.h>
-#include <compat/dir.h>
-#include <compat/file.h>
+#include <core/dir.h>
+#include <core/file.h>
 
 int
 AG_MkDir(const char *dir)

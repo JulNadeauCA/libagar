@@ -29,7 +29,7 @@
 
 #include <agar/core/load_xcf.h>
 
-#include <agar/compat/strlcpy.h>
+#include <agar/core/strlcpy.h>
 
 #include "config/sharedir.h"
 #include "config/have_agar_dev.h"
