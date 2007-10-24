@@ -1,0 +1,1 @@
+#undef INLINE_ALTIVEC
