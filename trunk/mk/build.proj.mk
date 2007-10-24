@@ -77,17 +77,19 @@ proj: proj-subdir
 			fi; \
 			echo "mv -f config.$$_tgtos config"; \
 			mv -f config.$$_tgtos config; \
+			echo "mv -f config/.svn config.svn.ORIG"; \
 			mv -f config/.svn config.svn.ORIG; \
 		        echo "config" >> .projfiles2.out; \
 		fi; \
 		cat .projfiles2.out | ${ZIP} ${ZIPFLAGS} \
 		    ${PROJDIR}/$$_tgtproj-$$_tgtos.zip -@; \
+		echo "mv -f config.svn.ORIG config/.svn"; \
+		mv -f config.svn.ORIG config/.svn; \
 		echo "mv -f config config.$$_tgtos"; \
 		mv -f config config.$$_tgtos; \
 		if [ -e "config.ORIG" ]; then \
 			echo "mv -f config.ORIG config"; \
 			mv -f config.ORIG config; \
-			mv -f config.svn.ORIG config/.svn; \
 		fi; \
 		rm `cat .projfiles.out`; \
 	    done; \
