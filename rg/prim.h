@@ -20,13 +20,25 @@ void RG_ColorHSV(struct rg_tile *, float, float, float);
 void RG_ColorHSVA(struct rg_tile *, float, float, float, Uint8);
 void RG_ColorUint32(struct rg_tile *, Uint32);
 
-void RG_PutPixel(SDL_Surface *, int, int, Uint32);
 void RG_BlendRGB(SDL_Surface *, int, int, enum rg_prim_blend_mode,
 	            Uint8, Uint8, Uint8, Uint8);
 void RG_Circle2(struct rg_tile *, int, int, int);
 void RG_Line(struct rg_tile *, int, int, int, int);
 void RG_WuLine(struct rg_tile *, double, double, double, double);
 void RG_HLine(struct rg_tile *, int, int, int, Uint32);
+
+static __inline__ void
+RG_PutPixel(SDL_Surface *su, int x, int y, Uint32 pc)
+{
+	Uint8 *dst;
+	    
+	if (x < 0 || y < 0 || x >= su->w || y >= su->h) {
+		return;
+	}
+	dst = (Uint8 *)su->pixels + y*su->pitch + (x << 2);
+	*(Uint32 *)dst = pc;
+}
+
 __END_DECLS
 
 #include "close_code.h"

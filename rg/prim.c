@@ -69,21 +69,6 @@ RG_ColorUint32(RG_Tile *t, Uint32 pc)
 	t->pc = pc;
 }
 
-void
-RG_PutPixel(SDL_Surface *su, int x, int y, Uint32 pc)
-{
-	Uint8 *dst;
-	    
-	if (x < 0 || y < 0 || x >= su->w || y >= su->h)
-		return;
-#ifdef DEBUG
-	if (su->format->BitsPerPixel != 32)
-		fatal("surface != 32bpp");
-#endif
-	dst = (Uint8 *)su->pixels + y*su->pitch + (x << 2);
-	*(Uint32 *)dst = pc;
-}
-
 /* Blend the pixel at t:[x,y] with the given RGBA value. */
 void
 RG_BlendRGB(SDL_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
@@ -93,13 +78,9 @@ RG_BlendRGB(SDL_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
 	Uint8 *pDst;
 	int alpha;
 
-	if (x < 0 || y < 0 ||
-	    x >= su->w || y >= su->h)
+	if (x < 0 || y < 0 || x >= su->w || y >= su->h) {
 		return;
-#ifdef DEBUG
-	if (su->format->BitsPerPixel != 32)
-		fatal("surface != 32bpp");
-#endif
+	}
 	pDst = (Uint8 *)su->pixels + y*su->pitch + (x << 2);
 	if (*(Uint32 *)pDst != su->format->colorkey) {
 		SDL_GetRGBA(*(Uint32 *)pDst, su->format, &dR, &dG, &dB, &dA);
@@ -264,6 +245,7 @@ RG_HLine(RG_Tile *t, int x1, int x2, int y, Uint32 c)
 	}
 }
 
+/* Draw an antialiased line using the Wu-line algorithm. */
 void
 RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 {
@@ -404,6 +386,7 @@ RG_WuLine(RG_Tile *t, double x1p, double y1p, double x2p, double y2p)
 	}
 }
 
+/* Draw a circle. */
 void
 RG_Circle2(RG_Tile *t, int wx, int wy, int radius)
 {

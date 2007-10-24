@@ -1012,7 +1012,10 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-/* Must be called from widget draw context. */
+/*
+ * Plot a "scaled pixel" at x,y.
+ * Must be called from widget draw context.
+ */
 void
 RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 {
@@ -1047,6 +1050,8 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 #ifdef HAVE_OPENGL
 		int x2 = x1 + tv->pxsz;
 		int y2 = y1 + tv->pxsz;
+		GLboolean svBlendBit;
+		GLint svBlendSrc, svBlendDst;
 
 		if (x1 > WIDGET(tv)->cx2)	return;
 		if (y1 > WIDGET(tv)->cy2)	return;
@@ -1055,18 +1060,29 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 		if (x1 >= x2 || y1 >= y2)	return;
 		if (x2 > WIDGET(tv)->cx2)	x2 = WIDGET(tv)->cx2;
 		if (y2 > WIDGET(tv)->cy2)	y2 = WIDGET(tv)->cy2;
-
-		glBegin(GL_POLYGON);
+		
 		if (tv->c.a < 255) {
-			glColor4ub(tv->c.r, tv->c.g, tv->c.b, tv->c.a);
-		} else {
-			glColor3ub(tv->c.r, tv->c.g, tv->c.b);
+			glGetBooleanv(GL_BLEND, &svBlendBit);
+			glGetIntegerv(GL_BLEND_SRC, &svBlendSrc);
+			glGetIntegerv(GL_BLEND_DST, &svBlendDst);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_DST_ALPHA, GL_ZERO);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		}
+		glBegin(GL_QUADS);
+		glColor4ub(tv->c.r, tv->c.g, tv->c.b, tv->c.a);
 		glVertex2i(x1, y1);
 		glVertex2i(x2, y1);
 		glVertex2i(x2, y2);
 		glVertex2i(x1, y2);
 		glEnd();
+		if (tv->c.a < 255) {
+			if (!svBlendBit) {
+				glDisable(GL_BLEND);
+			}
+			glBlendFunc(GL_SRC_ALPHA, svBlendSrc);
+			glBlendFunc(GL_DST_ALPHA, svBlendDst);
+		}
 #endif /* HAVE_OPENGL */
 	}
 }
@@ -1145,6 +1161,8 @@ RG_TileviewRect2(RG_Tileview *tv, int x, int y, int w, int h)
 		int y1 = RG_TILEVIEW_SCALED_Y(tv,y);
 		int x2 = x1 + w*tv->pxsz;
 		int y2 = y1 + h*tv->pxsz;
+		GLboolean svBlendBit;
+		GLint svBlendSrc, svBlendDst;
 
 		if (x1 > WIDGET(tv)->cx2)	return;
 		if (y1 > WIDGET(tv)->cy2)	return;
@@ -1154,17 +1172,28 @@ RG_TileviewRect2(RG_Tileview *tv, int x, int y, int w, int h)
 		if (x2 > WIDGET(tv)->cx2)	x2 = WIDGET(tv)->cx2;
 		if (y2 > WIDGET(tv)->cy2)	y2 = WIDGET(tv)->cy2;
 
-		glBegin(GL_POLYGON);
 		if (tv->c.a < 255) {
-			glColor4ub(tv->c.r, tv->c.g, tv->c.b, tv->c.a);
-		} else {
-			glColor3ub(tv->c.r, tv->c.g, tv->c.b);
+			glGetBooleanv(GL_BLEND, &svBlendBit);
+			glGetIntegerv(GL_BLEND_SRC, &svBlendSrc);
+			glGetIntegerv(GL_BLEND_DST, &svBlendDst);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_DST_ALPHA, GL_ZERO);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		}
+		glBegin(GL_QUADS);
+		glColor4ub(tv->c.r, tv->c.g, tv->c.b, tv->c.a);
 		glVertex2i(x1, y1);
 		glVertex2i(x2, y1);
 		glVertex2i(x2, y2);
 		glVertex2i(x1, y2);
 		glEnd();
+		if (tv->c.a < 255) {
+			if (!svBlendBit) {
+				glDisable(GL_BLEND);
+			}
+			glBlendFunc(GL_SRC_ALPHA, svBlendSrc);
+			glBlendFunc(GL_DST_ALPHA, svBlendDst);
+		}
 #endif /* HAVE_OPENGL */
 	}
 }
