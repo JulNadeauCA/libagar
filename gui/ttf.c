@@ -75,29 +75,18 @@ AG_TTFDestroy(void)
 	FT_Done_FreeType(ftLibrary);
 }
 
-AG_TTFFont *
-AG_TTFOpenFont(const char *file, int ptsize)
+static int
+InitFontAttributes(AG_TTFFont *font, int ptsize)
 {
-	AG_TTFFont *font;
-	FT_Face face;
+	FT_Face face = font->face;
 	FT_Fixed scale;
-	int rv;
-
-	font = Malloc(sizeof(AG_TTFFont), M_LOADER);
-	memset(font, 0, sizeof(AG_TTFFont));
-
-	if ((rv = FT_New_Face(ftLibrary, file, 0, &font->face)) != 0) {
-		AG_SetError("%s: FreeType error %d", file, rv);
-		goto fail1;
-	}
-	face = font->face;
-
+	
 	/* Make sure that our font face is scalable (global metrics). */
 	if (FT_IS_SCALABLE(face)) {
 	  	/* Set the character size and use default DPI (72). */
 	  	if (FT_Set_Char_Size(font->face, 0, ptsize * 64, 0, 0)) {
 			AG_SetError(_("Failed to set font size."));
-			goto fail2;
+			return (-1);
 		}
 		/* Get the scalable font metrics for this font */
 		scale = face->size->metrics.y_scale;
@@ -136,28 +125,57 @@ AG_TTFOpenFont(const char *file, int ptsize)
 	  	font->underline_offset = FT_FLOOR(face->underline_position);
 	  	font->underline_height = FT_FLOOR(face->underline_thickness);
 	}
-
 	if (font->underline_height < 1) {
 		font->underline_height = 1;
 	}
-#ifdef DEBUG
-	printf("%s:\n", file);
-	printf("\tascent=%d, descent=%d, height=%d, lineskip=%d\n",
-	    font->ascent, font->descent, font->height, font->lineskip);
-	printf("\tunderline_offset=%d, underine_height=%d\n",
-	    font->underline_offset, font->underline_height);
-#endif
-
 	font->style = TTF_STYLE_NORMAL;
 	font->glyph_overhang = face->size->metrics.y_ppem / 10;
-
-	/* x offset = cos(((90.0-12)/360)*2*AG_PI), or 12 degree angle. */
-	font->glyph_italics = 0.207f;
+	font->glyph_italics = 0.207f;				/* 12 deg */
 	font->glyph_italics *= font->height;
+	return (0);
+}
+
+AG_TTFFont *
+AG_TTFOpenFont(const char *file, int ptsize)
+{
+	AG_TTFFont *font;
+	int rv;
+
+	font = Malloc(sizeof(AG_TTFFont), M_LOADER);
+	memset(font, 0, sizeof(AG_TTFFont));
+	if ((rv = FT_New_Face(ftLibrary, file, 0, &font->face)) != 0) {
+		AG_SetError("%s: FreeType error %d", file, rv);
+		goto fail;
+	}
+	if (InitFontAttributes(font, ptsize) == -1) {
+		AG_TTFCloseFont(font);
+		goto fail;
+	}
 	return (font);
-fail2:
-	AG_TTFCloseFont(font);
-fail1:
+fail:
+	Free(font, M_LOADER);
+	return (NULL);
+}
+
+AG_TTFFont *
+AG_TTFOpenFontFromMemory(const Uint8 *data, size_t size, int ptsize)
+{
+	AG_TTFFont *font;
+	int rv;
+
+	font = Malloc(sizeof(AG_TTFFont), M_LOADER);
+	memset(font, 0, sizeof(AG_TTFFont));
+	if ((rv = FT_New_Memory_Face(ftLibrary, data, size, 0, &font->face))
+	    != 0) {
+		AG_SetError("FreeType error %d", rv);
+		goto fail;
+	}
+	if (InitFontAttributes(font, ptsize) == -1) {
+		AG_TTFCloseFont(font);
+		goto fail;
+	}
+	return (font);
+fail:
 	Free(font, M_LOADER);
 	return (NULL);
 }

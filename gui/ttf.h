@@ -60,6 +60,7 @@ __BEGIN_DECLS
 int		 AG_TTFInit(void);
 void		 AG_TTFDestroy(void);
 AG_TTFFont	*AG_TTFOpenFont(const char *, int);
+AG_TTFFont	*AG_TTFOpenFontFromMemory(const Uint8 *, size_t, int);
 void		 AG_TTFCloseFont(AG_TTFFont *);
 int	 	 AG_TTFFindGlyph(AG_TTFFont *, Uint32, int);
 void	 	 AG_TTFSetFontStyle(AG_TTFFont *, int);

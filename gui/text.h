@@ -82,7 +82,6 @@ typedef struct ag_text_state {
 /* Description of font stored in data segment. */
 typedef struct ag_static_font {
 	const char *name;		/* Identifier */
-	const char *copyright;		/* Copyright text */
 	enum ag_font_type type;		/* Type of font */
 	Uint32 size;			/* Size in bytes */
 	const Uint8 *data;		/* Font data */
