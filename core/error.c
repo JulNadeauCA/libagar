@@ -164,6 +164,9 @@ AG_Verbose(const char *fmt, ...)
 {
 	va_list args;
 
+	if (!agVerbose)
+		return;
+
 	va_start(args, fmt);
 	vprintf(fmt, args);
 	va_end(args);
