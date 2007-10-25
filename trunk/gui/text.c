@@ -89,8 +89,11 @@
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include "icons.h"
+#include "fonts.h"
+#include "fonts_data.h"
 
 const AG_ObjectOps agFontOps = {
 	"AG_Font",
@@ -103,6 +106,12 @@ const AG_ObjectOps agFontOps = {
 	NULL,		/* save */
 	NULL,		/* edit */
 };
+
+AG_StaticFont *agBuiltinFonts[] = {
+	&agFontVera,
+	&agFontMinimal
+};
+const int agBuiltinFontCount = 2;
 
 int agTextFontHeight = 0;		/* Default font height (px) */
 int agTextFontAscent = 0;		/* Default font ascent (px) */
@@ -166,6 +175,29 @@ AG_FontDestroy(void *p)
 	}
 }
 
+static int
+GetFontTypeFromSignature(const char *path, enum ag_font_type *pType)
+{
+	char buf[13];
+	FILE *f;
+
+	if ((f = fopen(path, "rb")) == NULL) {
+		AG_SetError("%s: %s", path, strerror(errno));
+		return (-1);
+	}
+	if (fread(buf, 13, 1, f) == 13) {
+		if (strncmp(buf, "gimp xcf file", 13) == 0) {
+			*pType = AG_FONT_BITMAP;
+		} else {
+			*pType = AG_FONT_VECTOR;
+		}
+	} else {
+		*pType = AG_FONT_VECTOR;
+	}
+	fclose(f);
+	return (0);
+}
+
 /*
  * Search for a given font face/size/flags combination and load it from
  * disk or cache.
@@ -176,10 +208,13 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	char path[MAXPATHLEN];
 	char name[AG_OBJECT_NAME_MAX];
 	char name_obj[AG_OBJECT_NAME_MAX];
-	AG_Font *font;
-	int size = (psize >= 0) ? psize : AG_Int(agConfig, "font.size");
+	int ptsize = (psize >= 0) ? psize : AG_Int(agConfig, "font.size");
 	Uint flags = (pflags >= 0) ? pflags : AG_Uint(agConfig, "font.flags");
+	enum ag_font_type type;
+	AG_StaticFont *builtin;
+	AG_Font *font;
 	char *c;
+	int i;
 
 	if (pname != NULL) {
 		strlcpy(name, pname, sizeof(name));
@@ -194,12 +229,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 
 	AG_MutexLock(&agTextLock);
 	SLIST_FOREACH(font, &fonts, fonts) {
-#if 0
-		printf("font size: %d == %d\n", font->size, size);
-		printf("font flags: 0x%x == 0x%x\n", font->flags, flags);
-		printf("font name: `%s' == `%s'\n", OBJECT(font)->name, name);
-#endif
-		if (font->size == size &&
+		if (font->size == ptsize &&
 		    font->flags == flags &&
 		    strcmp(OBJECT(font)->name, name_obj) == 0)
 			break;
@@ -209,7 +239,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 
 	font = Malloc(sizeof(AG_Font), M_TEXT);
 	AG_ObjectInit(font, name, &agFontOps);
-	font->size = size;
+	font->size = ptsize;
 	font->flags = flags;
 	font->c0 = 0;
 	font->c1 = 0;
@@ -217,22 +247,50 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	font->ascent = 0;
 	font->descent = 0;
 	font->lineskip = 0;
-	
-	if (AG_ConfigFile("font-path", name, NULL, path, sizeof(path)) == -1)
-		goto fail;
+
+	if (name[0] == '_') {
+		for (i = 0; i < agBuiltinFontCount; i++) {
+			if (agBuiltinFonts[i]->type == AG_FONT_VECTOR &&
+			    strcmp(agBuiltinFonts[i]->name, &name[1]) == 0)
+				break;
+		}
+		if (i == agBuiltinFontCount) {
+			AG_SetError("No such builtin font: %s", name);
+			goto fail;
+		}
+		builtin = agBuiltinFonts[i];
+		type = builtin->type;
+	} else {
+		if (AG_ConfigFile("font-path", name, NULL, path, sizeof(path))
+		    == -1) {
+			goto fail;
+		}
+		builtin = NULL;
+		if (GetFontTypeFromSignature(path, &type) == -1)
+			goto fail;
+	}
 
 #ifdef HAVE_FREETYPE
-	if (agFreetype) {
+	if (type == AG_FONT_VECTOR) {
 		int tflags = 0;
 		AG_TTFFont *ttf;
 
-		Verbose("Loading font %s (vector %d pts)\n", name, size);
-		if ((font->ttf = ttf = AG_TTFOpenFont(path, size)) == NULL) {
-			goto fail;
+		if (builtin){
+			Verbose("Using builtin font: %s\n", name);
+			if ((font->ttf = ttf = AG_TTFOpenFontFromMemory(
+			    builtin->data, builtin->size, ptsize)) == NULL) {
+				goto fail;
+			}
+		} else {
+			Verbose("Loading vector font: %s\n", name);
+			if ((font->ttf = ttf = AG_TTFOpenFont(path, ptsize))
+			    == NULL)
+				goto fail;
 		}
-		if (flags & AG_FONT_BOLD)	{ tflags|=TTF_STYLE_BOLD; }
-		if (flags & AG_FONT_ITALIC)	{ tflags|=TTF_STYLE_ITALIC; }
-		if (flags & AG_FONT_UNDERLINE)	{ tflags|=TTF_STYLE_UNDERLINE; }
+		if (flags & AG_FONT_BOLD)      { tflags |= TTF_STYLE_BOLD; }
+		if (flags & AG_FONT_ITALIC)    { tflags |= TTF_STYLE_ITALIC; }
+		if (flags & AG_FONT_UNDERLINE) { tflags |= TTF_STYLE_UNDERLINE;}
+
 		AG_TTFSetFontStyle(ttf, tflags);
 
 		font->type = AG_FONT_VECTOR;
@@ -247,7 +305,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		char *msig, *c0, *c1;
 		AG_Netbuf *buf;
 		
-		Verbose("Loading font %s (bitmap)\n", name);
+		Verbose("Loading bitmap font: %s\n", name);
 		if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN))
 		    == NULL)
 			goto fail;
@@ -364,7 +422,7 @@ AG_TextInit(void)
 #ifdef HAVE_FREETYPE
 	if (AG_Bool(agConfig, "font.freetype")) {
 		if (strcmp(AG_String(agConfig, "font.face"),"?") == 0) {
-			AG_SetString(agConfig, "font.face", "Vera.ttf");
+			AG_SetString(agConfig, "font.face", "_agFontVera");
 			AG_SetInt(agConfig, "font.size", 10);
 			AG_SetUint(agConfig, "font.flags", 0);
 		}
@@ -373,19 +431,18 @@ AG_TextInit(void)
 			return (-1);
 		}
 		agFreetype = 1;
-		if ((agDefaultFont = AG_FetchFont(NULL, -1, -1)) == NULL)
-			fatal("%s", AG_GetError());
 	} else
 #endif
 	{
 		if (strcmp(AG_String(agConfig, "font.face"),"?") == 0) {
-			AG_SetString(agConfig, "font.face", "minimal.xcf");
+			AG_SetString(agConfig, "font.face", "_agFontMinimal");
 			AG_SetInt(agConfig, "font.size", 12);
 			AG_SetUint(agConfig, "font.flags", 0);
 		}
 		agFreetype = 0;
-		if ((agDefaultFont = AG_FetchFont(NULL, -1, -1)) == NULL)
-			fatal("%s", AG_GetError());
+	}
+	if ((agDefaultFont = AG_FetchFont(NULL, -1, -1)) == NULL) {
+		fatal("%s", AG_GetError());
 	}
 	agTextFontHeight = agDefaultFont->height;
 	agTextFontAscent = agDefaultFont->ascent;
