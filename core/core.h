@@ -95,7 +95,7 @@ typedef unsigned long Ulong;
 #include <core/strsep.h>
 #include <core/math.h>
 
-#include <core/load_netbuf.h>
+#include <core/data_source.h>
 #include <core/load_integral.h>
 #include <core/load_real.h>
 #include <core/load_string.h>

@@ -9,7 +9,7 @@ LIB_LINKS=	SDL
 
 SRCS=	config.c core.c error.c event.c object.c prop.c rcs.c \
 	timeout.c typesw.c cpuinfo.c load_color.c load_den.c \
-	load_netbuf.c load_string.c load_surface.c load_version.c \
+	data_source.c load_string.c load_surface.c load_version.c \
 	load_xcf.c \
 	setenv.c strlcat.c strlcpy.c strsep.c asprintf.c vasprintf.c \
 	gethostname.c snprintf.c arc4random.c dir.c md5.c sha1.c rmd160.c \
