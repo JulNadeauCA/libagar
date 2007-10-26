@@ -158,32 +158,6 @@ enum {
 	PROP_PATHS,
 	PROP_USER_UNIT
 };
-
-static SDL_Surface *xcf_convert_layer(AG_Netbuf *, Uint32, struct xcf_header *, 
-		                      struct xcf_layer *);
-static Uint8 *xcf_read_tile(struct xcf_header *, AG_Netbuf *, Uint32, int, int,
-		            int);
-static void xcf_read_property(AG_Netbuf *, struct xcf_prop *);
-
-#ifdef DEBUG
-#define DEBUG_COLORMAPS		0x0001
-#define DEBUG_LAYER_OFFSETS	0x0002
-#define DEBUG_LAYER_OPACITY	0x0004
-#define DEBUG_LAYER_MODE	0x0008
-#define DEBUG_IMAGE_COMPRESSION	0x0010
-#define DEBUG_CHANNELS		0x0020
-#define DEBUG_GUIDES		0x0040
-#define DEBUG_RESOLUTIONS	0x0080
-#define DEBUG_PARASITES		0x0100
-#define DEBUG_UNITS		0x0200
-#define DEBUG_LAYER_NAMES	0x0400
-#define DEBUG_UNKNOWN_PROPS	0x0800
-#define DEBUG_XCF		0x1000
-
-int	agXCFDebugLvl = 0;
-#define	agDebugLvl agXCFDebugLvl
-#endif
-
 enum {
 	LEVEL_OFFSETS_INIT =	2,
 	LEVEL_OFFSETS_GROW =	4,
@@ -191,13 +165,11 @@ enum {
 	TILE_OFFSETS_GROW =	8
 };
 
-#define XCF_SIGNATURE	"gimp xcf "
-#define XCF_MAGIC_LEN	14
 #define XCF_WIDTH_MAX	65536
 #define XCF_HEIGHT_MAX	65536
 
 static void 
-xcf_read_property(AG_Netbuf *buf, struct xcf_prop *prop)
+ReadProp(AG_DataSource *buf, struct xcf_prop *prop)
 {
 	Uint32 i;
 	Uint8 c;
@@ -205,64 +177,44 @@ xcf_read_property(AG_Netbuf *buf, struct xcf_prop *prop)
 	prop->id = AG_ReadUint32(buf);
 	prop->length = AG_ReadUint32(buf);
 
-	debug(DEBUG_XCF, "id %u len %u\n", prop->id, prop->length);
-	
 	switch (prop->id) {
 	case PROP_COLORMAP:		      /* Colormap for indexed images */
 		prop->data.colormap.size = AG_ReadUint32(buf);
 		prop->data.colormap.data = Malloc(prop->data.colormap.size*3,
 		    M_LOADER);
-		AG_NetbufRead(prop->data.colormap.data, prop->data.colormap.size,
-		    3, buf);
-		debug(DEBUG_COLORMAPS, "%u-entry colormap\n",
-		    prop->data.colormap.size);
+		if (AG_Read(buf, prop->data.colormap.data,
+		    prop->data.colormap.size, 3) != 0) {
+			AG_FatalError(NULL);
+		}
 		break;
 	case PROP_OFFSETS:		         /* Offset of layer in image */
 		prop->data.offset.x = AG_ReadSint32(buf);
 		prop->data.offset.y = AG_ReadSint32(buf);
-		debug(DEBUG_LAYER_OFFSETS, "offsets %d,%d\n",
-		    prop->data.offset.x, prop->data.offset.y);
 		break;
 	case PROP_OPACITY:				    /* Layer opacity */
 		prop->data.opacity = AG_ReadUint32(buf);
-		debug(DEBUG_LAYER_OPACITY, "opacity %u\n",
-		    prop->data.opacity);
 		break;
 	case PROP_MODE:					 /* Application mode */
 		prop->data.mode = AG_ReadUint32(buf);
-		debug(DEBUG_LAYER_MODE, "mode %u\n", prop->data.mode);
 		break;
 	case PROP_COMPRESSION:			    /* Tile compression mode */
 		c = AG_ReadUint8(buf);
 		prop->data.compression = (enum xcf_compression)c;
-		debug(DEBUG_IMAGE_COMPRESSION, "compression %s\n",
-		    prop->data.compression == XCF_COMPRESSION_NONE ? "none" :
-		    prop->data.compression == XCF_COMPRESSION_RLE ? "rle" :
-		    "???");
 		break;
 	case PROP_COLOR:			       /* Color of a channel */
-		AG_NetbufRead(&prop->data.color, sizeof(Uint8), 3, buf);
-		debug(DEBUG_CHANNELS, "color %u,%u,%u\n",
-		    prop->data.color[0],
-		    prop->data.color[1],
-		    prop->data.color[2]);
+		if (AG_Read(buf, &prop->data.color, sizeof(Uint8), 3) != 0)
+			AG_FatalError(NULL);
 		break;
 	case PROP_GUIDES:			                  /* Guides */
 		for (i = 0; i < prop->length / 5; i++) {
 			prop->data.guide.position = AG_ReadSint32(buf);
 			prop->data.guide.orientation = AG_ReadSint8(buf);
-			debug(DEBUG_GUIDES,
-			    "guide: position %u, orientation %u\n",
-			    prop->data.guide.position,
-			    prop->data.guide.orientation);
 		}
 		break;
 #if defined(HAVE_IEEE754)
 	case PROP_RESOLUTION:				 /* Image resolution */
 		prop->data.resolution.x = AG_ReadFloat(buf);
 		prop->data.resolution.y = AG_ReadFloat(buf);
-		debug(DEBUG_RESOLUTIONS, "resolution %f x %f\n",
-		    prop->data.resolution.x, prop->data.resolution.y);
 		break;
 #endif
 	case PROP_TATTOO:					/* Tattoo */
@@ -273,72 +225,52 @@ xcf_read_property(AG_Netbuf *buf, struct xcf_prop *prop)
 		prop->data.parasite.flags = AG_ReadUint32(buf);
 		prop->data.parasite.size = AG_ReadUint32(buf);
 		prop->data.parasite.data = Malloc(prop->data.parasite.size,
-		    M_LOADER);
-		AG_NetbufRead(prop->data.parasite.data, prop->data.parasite.size,
-		    1, buf);
-#if 0
-		debug_n(DEBUG_PARASITES, "parasite: %s (flags 0x%X size %u)",
-		    prop->data.parasite.name, prop->data.parasite.flags,
-		    prop->data.parasite.size);
-		if (strcmp(prop->data.parasite.name, "gimp-comment") == 0) {
-			if (prop->data.parasite.size > 1 &&
-			    prop->data.parasite.data[prop->data.parasite.size-2]
-			    == '\n')  {
-				/* Chop trailing newline. */
-				prop->data.parasite.data
-				    [prop->data.parasite.size-2] = '\0';
-			}
-			debug_n(DEBUG_PARASITES, " `%s'",
-			    prop->data.parasite.data);
+		                                  M_LOADER);
+		if (AG_Read(buf, prop->data.parasite.data,
+		    prop->data.parasite.size, 1) != 0) {
+			AG_FatalError(NULL);
 		}
-		debug_n(DEBUG_PARASITES, "\n");
-#endif
 		Free(prop->data.parasite.name, 0);
 		Free(prop->data.parasite.data, M_LOADER);
 		break;
 	case PROP_UNIT:
 		prop->data.unit = AG_ReadUint32(buf);
-		debug(DEBUG_UNITS, "unit: %u\n", prop->data.unit);
 		break;
 	case PROP_USER_UNIT:
 	case PROP_PATHS:
 		/* XXX ... */
 		break;
 	default:
-		debug(DEBUG_UNKNOWN_PROPS, "unknown: id %u len %u\n",
-		    prop->id, prop->length);
-		AG_NetbufSeek(buf, prop->length, SEEK_CUR);
+		AG_Seek(buf, prop->length, AG_SEEK_CUR);
 	}
 }
 
 static Uint8 *
-xcf_read_tile_flat(AG_Netbuf *buf, Uint32 len, int bpp, int x, int y)
+ReadTileFlat(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 {
 	Uint8 *load;
 
 	load = Malloc(len, M_LOADER);
-	AG_NetbufRead(load, len, 1, buf);
+	if (AG_Read(buf, load, len, 1) != 0) {
+		Free(load,M_LOADER);
+		return (NULL);
+	}
 	return (load);
 }
 
 static Uint8 *
-xcf_read_tile_rle(AG_Netbuf *buf, Uint32 len, int bpp, int x, int y)
+ReadTileRLE(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 {
 	int i, size, count, j;
 	Uint8 *tilep, *tile, *data;
-	long rv;
 
 	tilep = tile = Malloc(len, M_LOADER);
-	rv = AG_NetbufReadE(tile, sizeof(Uint8), len, buf);
-#if 0
-	if (rv < len) {
-		AG_SetError("short read");
-		Free(tile, M_LOADER);
+	AG_Read(buf, tile, sizeof(Uint8), len);
+
+	if ((data = malloc(x * y * bpp)) == NULL) {
+		AG_SetError("Out of memory for XCF tile");
 		return (NULL);
 	}
-#endif
-
-	data = Malloc(x * y * bpp, M_LOADER);
 	for (i = 0; i < bpp; i++) {
 		Uint8 *d = &data[i];
 	
@@ -386,16 +318,16 @@ xcf_read_tile_rle(AG_Netbuf *buf, Uint32 len, int bpp, int x, int y)
 }
 
 static Uint8 *
-xcf_read_tile(struct xcf_header *head, AG_Netbuf *buf, Uint32 len, int bpp,
+ReadTile(struct xcf_header *head, AG_DataSource *buf, Uint32 len, int bpp,
     int x, int y)
 {
 	switch (head->compression) {
 	case XCF_COMPRESSION_NONE:
-		return (xcf_read_tile_flat(buf, len, bpp, x, y));
+		return ReadTileFlat(buf, len, bpp, x, y);
 	case XCF_COMPRESSION_RLE:
-		return (xcf_read_tile_rle(buf, len, bpp, x, y));
+		return ReadTileRLE(buf, len, bpp, x, y);
 	}
-	AG_SetError(_("Unknown XCF compression: %d."), head->compression);
+	AG_SetError("Unknown XCF compression mode: %d", head->compression);
 	return (NULL);
 }
 
@@ -403,38 +335,34 @@ xcf_read_tile(struct xcf_header *head, AG_Netbuf *buf, Uint32 len, int bpp,
 #define XCF_ALPHA_ALPHA		0x02	/* Contains an alpha pixel */
 #define XCF_ALPHA_OPAQUE	0x04	/* Contains an opaque pixel */
 
-static void
-xcf_convert_level(AG_Netbuf *buf, Uint32 xcfoffs,
-    struct xcf_hierarchy *hier, struct xcf_header *head,
-    struct xcf_level *level, SDL_Surface *su, int *aflags)
+static int
+ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
+    struct xcf_header *head, struct xcf_level *level, SDL_Surface *su,
+    int *aflags)
 {
 	int tx = 0, ty = 0;
 	int ox, oy;
 	int j;
 
 	for (j = 0; j < level->ntile_offsets; j++) {
-		Uint8 *tile;
-		Uint32 *src;
+		Uint8 *tile, *p;
 		int y;
 
-		AG_NetbufSeek(buf, xcfoffs + level->tile_offsets[j], SEEK_SET);
+		AG_Seek(buf, xcfoffs+level->tile_offsets[j], AG_SEEK_SET);
 		ox = (tx+64 > (int)level->w) ? (level->w % 64) : 64;
 		oy = (ty+64 > (int)level->h) ? (level->h % 64) : 64;
 
 		if (level->tile_offsets[j+1] != 0) {
-			tile = xcf_read_tile(head, buf,
+			tile = ReadTile(head, buf,
 			    level->tile_offsets[j+1] - level->tile_offsets[j],
 			    hier->bpp, ox, oy);
 		} else {
-			tile = xcf_read_tile(head, buf, ox*oy*6, hier->bpp,
-			    ox, oy);
+			tile = ReadTile(head, buf, ox*oy*6, hier->bpp, ox, oy);
 		}
-		if (tile == NULL) {
-			dprintf("tile read error\n");
-			return;
-		}
+		if (tile == NULL)
+			return (-1);
 	
-		src = (Uint32 *)tile;
+		p = tile;
 		for (y = ty; y < ty+oy; y++) {
 			Uint8 *dst = (Uint8 *)su->pixels +
 			    y*su->pitch +
@@ -447,23 +375,28 @@ xcf_convert_level(AG_Netbuf *buf, Uint32 xcfoffs,
 				switch (hier->bpp) {
 				case 4:
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-					r = (*src & 0xff000000)>>24;
-					g = (*src & 0x00ff0000)>>16;
-					b = (*src & 0x0000ff00)>>8;
-					a = (*src & 0x000000ff);
+					r = (*(Uint32 *)p & 0xff000000)>>24;
+					g = (*(Uint32 *)p & 0x00ff0000)>>16;
+					b = (*(Uint32 *)p & 0x0000ff00)>>8;
+					a = (*(Uint32 *)p & 0x000000ff);
 #else
-					r = (*src & 0x000000ff);
-					g = (*src & 0x0000ff00)>>8;
-					b = (*src & 0x00ff0000)>>16;
-					a = (*src & 0xff000000)>>24;
+					r = (*(Uint32 *)p & 0x000000ff);
+					g = (*(Uint32 *)p & 0x0000ff00)>>8;
+					b = (*(Uint32 *)p & 0x00ff0000)>>16;
+					a = (*(Uint32 *)p & 0xff000000)>>24;
 #endif
 					break;
+				case 3:
+					r = p[2];
+					g = p[1];
+					b = p[0];
+					a = 255;
+					break;
 				default:
-					fatal("unsupported xcf depth");
+					break;
 				}
 
 				color = SDL_MapRGBA(su->format, r, g, b, a);
-
 				switch (su->format->BytesPerPixel) {
 				case 4:
 					*(Uint32 *)dst = color;
@@ -487,7 +420,7 @@ xcf_convert_level(AG_Netbuf *buf, Uint32 xcfoffs,
 					break;
 				}
 				dst += su->format->BytesPerPixel;
-				src++;
+				p += hier->bpp;
 
 				switch (a) {
 				case 0:
@@ -514,10 +447,11 @@ xcf_convert_level(AG_Netbuf *buf, Uint32 xcfoffs,
 		}
 		Free(tile, M_LOADER);
 	}
+	return (0);
 }
 
 static SDL_Surface *
-xcf_convert_layer(AG_Netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
+ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
     struct xcf_layer *layer)
 {
 	struct xcf_hierarchy *hier;
@@ -544,15 +478,21 @@ xcf_convert_layer(AG_Netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 	}
 
 	/* Read the hierarchy. */
-	AG_NetbufSeek(buf, xcfoffs+layer->hierarchy_offset, SEEK_SET);
+	AG_Seek(buf, xcfoffs+layer->hierarchy_offset, AG_SEEK_SET);
 
 	hier = Malloc(sizeof(struct xcf_hierarchy), M_LOADER);
 	hier->w = AG_ReadUint32(buf);
 	hier->h = AG_ReadUint32(buf);
 	hier->bpp = AG_ReadUint32(buf);
+	if (hier->bpp != 4 && hier->bpp != 3) {
+		AG_SetError("Cannot handle %dBpp XCF", hier->bpp);
+		Free(hier, M_LOADER);
+		return (NULL);
+	}
 
 	/* Read the level offsets. */
-	hier->level_offsets = Malloc(LEVEL_OFFSETS_INIT*sizeof(Uint32), M_LOADER);
+	hier->level_offsets = Malloc(LEVEL_OFFSETS_INIT*sizeof(Uint32),
+	                             M_LOADER);
 	hier->maxlevel_offsets = LEVEL_OFFSETS_INIT;
 	hier->nlevel_offsets = 0;
 	i = 0;
@@ -573,7 +513,7 @@ xcf_convert_layer(AG_Netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 	for (i = 0; i < hier->nlevel_offsets; i++) {
 		struct xcf_level *level;
 
-		AG_NetbufSeek(buf, xcfoffs + hier->level_offsets[i], SEEK_SET);
+		AG_Seek(buf, xcfoffs+hier->level_offsets[i], AG_SEEK_SET);
 		level = Malloc(sizeof(struct xcf_level), M_LOADER);
 		level->w = AG_ReadUint32(buf);
 		level->h = AG_ReadUint32(buf);
@@ -595,8 +535,15 @@ xcf_convert_layer(AG_Netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 			}
 			level->ntile_offsets++;
 		}
-		xcf_convert_level(buf, xcfoffs, hier, head, level, su, &aflags);
-
+		if (ConvertLevel(buf, xcfoffs, hier, head, level, su, &aflags)
+		    == -1) {
+			Free(hier->level_offsets, M_LOADER);
+			Free(hier, M_LOADER);
+			Free(level->tile_offsets, M_LOADER);
+			Free(level, M_LOADER);
+			SDL_FreeSurface(su);
+			return (NULL);				/* LEAK */
+		}
 		Free(level->tile_offsets, M_LOADER);
 		Free(level, M_LOADER);
 	}
@@ -605,26 +552,11 @@ xcf_convert_layer(AG_Netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
 
 	/* Adjust the alpha/colorkey properties of the surface. */
 	{	
-		Uint8 oldalpha, oldckey;
-
-		oldalpha = su->format->alpha;
-		oldckey = su->format->colorkey;
-
+		Uint8 oldalpha = su->format->alpha;
 		SDL_SetAlpha(su, 0, 0);
 		SDL_SetColorKey(su, 0, 0);
-	
-		if (aflags & (XCF_ALPHA_ALPHA|XCF_ALPHA_TRANSPARENT)) {
+		if (aflags & (XCF_ALPHA_ALPHA|XCF_ALPHA_TRANSPARENT))
 			SDL_SetAlpha(su, SDL_SRCALPHA, oldalpha);
-#if 0
-		/* XXX causes some images to be rendered incorrectly */
-		/*
-		 * XXX the AG_NitemDraw_scaled hack does not understand
-		 * RLE acceleration!
-		 */
-		} else if (aflags & XCF_ALPHA_TRANSPARENT) {
-			SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
-#endif
-		}
 	}
 	return (su);
 }
@@ -634,23 +566,20 @@ xcf_convert_layer(AG_Netbuf *buf, Uint32 xcfoffs, struct xcf_header *head,
  * is passed the converted surface for each layer in the file.
  */
 int
-AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs,
+AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
     void (*add_layer_fn)(SDL_Surface *, const char *, void *), void *arg)
 {
-	char magic[XCF_MAGIC_LEN];
+	char magic[14];
 	struct xcf_header *head;
 	int i, offsets;
 	Uint32 offset;
 	struct xcf_prop prop;
 
-	AG_NetbufSeek(buf, xcf_offs, SEEK_SET);
+	AG_Seek(buf, xcf_offs, AG_SEEK_SET);
 
-	if (AG_NetbufReadE(magic, sizeof(magic), 1, buf) < 1) {
-		AG_SetError("Cannot read XCF magic.");
-		return (-1);
-	}
-	if (strncmp(magic, XCF_SIGNATURE, strlen(XCF_SIGNATURE)) != 0) {
-		AG_SetError(_("Bad XCF magic."));
+	if (AG_Read(buf, magic, sizeof(magic), 1) != 0 ||
+	    strncmp(magic, "gimp xcf ", 9) != 0) {
+		AG_SetError(_("Not a Gimp XCF file"));
 		return (-1);
 	}
 
@@ -658,7 +587,8 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs,
 	head = Malloc(sizeof(struct xcf_header), M_LOADER);
 	head->w = AG_ReadUint32(buf);
 	head->h = AG_ReadUint32(buf);
-	if (head->w > XCF_WIDTH_MAX || head->h > XCF_HEIGHT_MAX) {
+	if (head->w > XCF_WIDTH_MAX ||
+	    head->h > XCF_HEIGHT_MAX) {
 		AG_SetError("Bad XCF geometry: %ux%u", head->w, head->h);
 		Free(head, M_LOADER);
 		return (-1);
@@ -679,11 +609,9 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs,
 	head->colormap.size = 0;
 	head->colormap.data = NULL;
 	
-	debug(DEBUG_XCF, "%ux%u, type %u\n", head->w, head->h, head->base_type);
-
 	/* Read the image properties. */
 	do {
-		xcf_read_property(buf, &prop);
+		ReadProp(buf, &prop);
 
 		switch (prop.id) {
 		case PROP_COMPRESSION:
@@ -717,20 +645,16 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs,
 		struct xcf_prop prop;
 		SDL_Surface *su;
 
-		AG_NetbufSeek(buf, xcf_offs + head->layer_offstable[i-1],
-		    SEEK_SET);
+		AG_Seek(buf, xcf_offs+head->layer_offstable[i-1], AG_SEEK_SET);
 		layer = Malloc(sizeof(struct xcf_layer), M_LOADER);
 		layer->w = AG_ReadUint32(buf);
 		layer->h = AG_ReadUint32(buf);
 		layer->layer_type = AG_ReadUint32(buf);
 		layer->name = AG_ReadNulString(buf);
 
-		debug(DEBUG_LAYER_NAMES, "Layer `%s': %ux%u\n", layer->name,
-		    layer->w, layer->h);
-
 		/* Read the layer properties. */
 		do {
-			xcf_read_property(buf, &prop);
+			ReadProp(buf, &prop);
 
 			switch (prop.id) {
 			case PROP_OFFSETS:
@@ -750,7 +674,7 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs,
 		layer->mask_offset = AG_ReadUint32(buf);
 
 		/* Convert this layer to a SDL surface. */
-		if ((su = xcf_convert_layer(buf, xcf_offs, head, layer))
+		if ((su = ConvertLayer(buf, xcf_offs, head, layer))
 		    == NULL) {
 			Free(layer->name, 0);
 			Free(layer, M_LOADER);
@@ -768,4 +692,3 @@ AG_XCFLoad(AG_Netbuf *buf, off_t xcf_offs,
 	Free(head, M_LOADER);
 	return (0);
 }
-
