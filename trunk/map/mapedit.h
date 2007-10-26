@@ -22,8 +22,8 @@ extern MAP_Editor mapEditor;
 __BEGIN_DECLS
 void	 MAP_EditorInit(void);
 void	 MAP_EditorDestroy(void *);
-void	 MAP_EditorLoad(AG_Netbuf *);
-void	 MAP_EditorSave(AG_Netbuf *);
+void	 MAP_EditorLoad(AG_DataSource *);
+void	 MAP_EditorSave(AG_DataSource *);
 void	*MAP_EditorConfig(void *);
 __END_DECLS
 

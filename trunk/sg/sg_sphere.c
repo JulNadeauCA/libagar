@@ -73,7 +73,7 @@ SG_SphereInit(void *p, const char *name)
 }
 
 int
-SG_SphereLoad(void *p, AG_Netbuf *buf)
+SG_SphereLoad(void *p, AG_DataSource *buf)
 {
 	SG_Sphere *sph = p;
 
@@ -85,7 +85,7 @@ SG_SphereLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-SG_SphereSave(void *p, AG_Netbuf *buf)
+SG_SphereSave(void *p, AG_DataSource *buf)
 {
 	SG_Sphere *sph = p;
 

@@ -57,7 +57,7 @@ SG_PointInit(void *p, const char *name)
 }
 
 int
-SG_PointLoad(void *p, AG_Netbuf *buf)
+SG_PointLoad(void *p, AG_DataSource *buf)
 {
 	SG_Point *pt = p;
 	
@@ -67,7 +67,7 @@ SG_PointLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-SG_PointSave(void *p, AG_Netbuf *buf)
+SG_PointSave(void *p, AG_DataSource *buf)
 {
 	SG_Point *pt = p;
 	

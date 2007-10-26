@@ -62,7 +62,7 @@ SK_CircleInit(void *p, Uint32 name)
 }
 
 int
-SK_CircleLoad(SK *sk, void *p, AG_Netbuf *buf)
+SK_CircleLoad(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Circle *circle = p;
 
@@ -78,7 +78,7 @@ SK_CircleLoad(SK *sk, void *p, AG_Netbuf *buf)
 }
 
 int
-SK_CircleSave(SK *sk, void *p, AG_Netbuf *buf)
+SK_CircleSave(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Circle *circle = p;
 

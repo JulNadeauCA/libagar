@@ -106,7 +106,7 @@ SG_CameraInit(void *p, const char *name)
 }
 
 int
-SG_CameraLoad(void *p, AG_Netbuf *buf)
+SG_CameraLoad(void *p, AG_DataSource *buf)
 {
 	SG_Camera *cam = p;
 	
@@ -127,7 +127,7 @@ SG_CameraLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-SG_CameraSave(void *p, AG_Netbuf *buf)
+SG_CameraSave(void *p, AG_DataSource *buf)
 {
 	SG_Camera *cam = p;
 

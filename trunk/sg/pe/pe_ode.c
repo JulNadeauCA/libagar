@@ -53,7 +53,7 @@ Destroy(void *obj)
 }
 
 static int
-Load(void *obj, AG_Netbuf *buf)
+Load(void *obj, AG_DataSource *buf)
 {
 	PE_Ode *pe = obj;
 
@@ -64,7 +64,7 @@ Load(void *obj, AG_Netbuf *buf)
 }
 
 static int
-Save(void *obj, AG_Netbuf *buf)
+Save(void *obj, AG_DataSource *buf)
 {
 	PE_Ode *pe = obj;
 

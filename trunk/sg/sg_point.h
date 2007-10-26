@@ -13,8 +13,8 @@ extern SG_NodeOps sgPointOps;
 
 SG_Point *SG_PointNew(void *, const char *);
 void	  SG_PointInit(void *, const char *);
-int	  SG_PointLoad(void *, AG_Netbuf *);
-int	  SG_PointSave(void *, AG_Netbuf *);
+int	  SG_PointLoad(void *, AG_DataSource *);
+int	  SG_PointSave(void *, AG_DataSource *);
 void	 *SG_PointEdit(void *);
 void	  SG_PointDraw(void *, SG_View *);
 void	  SG_PointSize(void *, SG_Real);

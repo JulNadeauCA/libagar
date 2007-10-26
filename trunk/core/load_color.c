@@ -30,25 +30,25 @@
 #include <core/core.h>
 
 void
-AG_WriteColor(AG_Netbuf *buf, SDL_PixelFormat *pixfmt, Uint32 color)
+AG_WriteColor(AG_DataSource *ds, SDL_PixelFormat *pixfmt, Uint32 color)
 {
 	Uint8 r, g, b, a;
 
 	SDL_GetRGBA(color, pixfmt, &r, &g, &b, &a);
-	AG_WriteUint8(buf, r);
-	AG_WriteUint8(buf, g);
-	AG_WriteUint8(buf, b);
-	AG_WriteUint8(buf, a);
+	AG_WriteUint8(ds, r);
+	AG_WriteUint8(ds, g);
+	AG_WriteUint8(ds, b);
+	AG_WriteUint8(ds, a);
 }
 
 Uint32
-AG_ReadColor(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
+AG_ReadColor(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 {
 	Uint8 r, g, b, a;
 
-	r = AG_ReadUint8(buf);
-	g = AG_ReadUint8(buf);
-	b = AG_ReadUint8(buf);
-	a = AG_ReadUint8(buf);
+	r = AG_ReadUint8(ds);
+	g = AG_ReadUint8(ds);
+	b = AG_ReadUint8(ds);
+	a = AG_ReadUint8(ds);
 	return (SDL_MapRGBA(pixfmt, r, g, b, a));
 }

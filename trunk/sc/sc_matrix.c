@@ -513,7 +513,7 @@ SC_MatrixIsSquare(const SC_Matrix *M)
 }
 
 void
-SC_WriteMatrix(SC_Matrix *A, AG_Netbuf *buf)
+SC_WriteMatrix(SC_Matrix *A, AG_DataSource *buf)
 {
 	Uint i, j;
 
@@ -526,7 +526,7 @@ SC_WriteMatrix(SC_Matrix *A, AG_Netbuf *buf)
 }
 
 SC_Matrix *
-SC_ReadMatrix(AG_Netbuf *buf)
+SC_ReadMatrix(AG_DataSource *buf)
 {
 	SC_Matrix *A;
 	Uint m, n;

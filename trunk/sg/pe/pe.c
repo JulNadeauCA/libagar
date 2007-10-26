@@ -45,7 +45,7 @@ PE_Init(void *obj, const char *name)
 }
 
 int
-PE_Load(void *obj, AG_Netbuf *buf)
+PE_Load(void *obj, AG_DataSource *buf)
 {
 	PE *pe = obj;
 
@@ -57,7 +57,7 @@ PE_Load(void *obj, AG_Netbuf *buf)
 }
 
 int
-PE_Save(void *obj, AG_Netbuf *buf)
+PE_Save(void *obj, AG_DataSource *buf)
 {
 	PE *pe = obj;
 

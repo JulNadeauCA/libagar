@@ -39,6 +39,7 @@ typedef unsigned long Ulong;
 #include <unistd.h>
 #endif
 #include <string.h>
+#include <stdio.h>
 
 #ifdef HAVE_OPENGL
 # ifdef __APPLE__

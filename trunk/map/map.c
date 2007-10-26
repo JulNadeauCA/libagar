@@ -932,7 +932,7 @@ MAP_Destroy(void *p)
  * The map must be locked.
  */
 int
-MAP_ItemLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node, MAP_Item **r)
+MAP_ItemLoad(MAP *m, AG_DataSource *buf, MAP_Node *node, MAP_Item **r)
 {
 	enum map_item_type type;
 	Uint32 nmasks = 0;
@@ -1060,7 +1060,7 @@ fail:
 }
 
 int
-MAP_NodeLoad(MAP *m, AG_Netbuf *buf, MAP_Node *node)
+MAP_NodeLoad(MAP *m, AG_DataSource *buf, MAP_Node *node)
 {
 	Uint32 nrefs;
 	MAP_Item *r;
@@ -1127,7 +1127,7 @@ MAP_DetachActor(MAP *m, MAP_Actor *a)
 }
 
 int
-MAP_Load(void *ob, AG_Netbuf *buf)
+MAP_Load(void *ob, AG_DataSource *buf)
 {
 	MAP *m = ob;
 	Uint32 w, h, origin_x, origin_y;
@@ -1244,7 +1244,7 @@ fail:
  * The noderef's parent map must be locked.
  */
 void
-MAP_ItemSave(MAP *m, AG_Netbuf *buf, MAP_Item *r)
+MAP_ItemSave(MAP *m, AG_DataSource *buf, MAP_Item *r)
 {
 	off_t nmasks_offs;
 	Uint32 nmasks = 0;
@@ -1293,23 +1293,23 @@ MAP_ItemSave(MAP *m, AG_Netbuf *buf, MAP_Item *r)
 	RG_TransformChainSave(buf, &r->transforms);
 
 	/* Save the masks. */
-	nmasks_offs = AG_NetbufTell(buf);
+	nmasks_offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(mask, &r->masks, masks) {
 		MAP_NodeMaskSave(m, buf, mask);
 		nmasks++;
 	}
-	AG_PwriteUint32(buf, nmasks, nmasks_offs);
+	AG_WriteUint32At(buf, nmasks, nmasks_offs);
 }
 
 void
-MAP_NodeSave(MAP *m, AG_Netbuf *buf, MAP_Node *node)
+MAP_NodeSave(MAP *m, AG_DataSource *buf, MAP_Node *node)
 {
 	MAP_Item *r;
 	off_t nrefs_offs;
 	Uint32 nrefs = 0;
 
-	nrefs_offs = AG_NetbufTell(buf);
+	nrefs_offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(r, &node->nrefs, nrefs) {
 		if (r->flags & MAP_ITEM_NOSAVE) {
@@ -1318,11 +1318,11 @@ MAP_NodeSave(MAP *m, AG_Netbuf *buf, MAP_Node *node)
 		MAP_ItemSave(m, buf, r);
 		nrefs++;
 	}
-	AG_PwriteUint32(buf, nrefs, nrefs_offs);
+	AG_WriteUint32At(buf, nrefs, nrefs_offs);
 }
 
 int
-MAP_Save(void *p, AG_Netbuf *buf)
+MAP_Save(void *p, AG_DataSource *buf)
 {
 	MAP *m = p;
 	int i, x, y;

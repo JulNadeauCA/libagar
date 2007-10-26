@@ -46,8 +46,8 @@ struct ag_prop_ops {
 	void *(*get_val)(void *obj, AG_Prop *prop);
 	void (*print_val)(char *buf, size_t len, void *obj, AG_Prop *prop);
 	int (*compare)(AG_Prop *, AG_Prop *);
-	void *(*load)(void *obj, AG_Prop *, AG_Netbuf *);
-	void (*save)(void *obj, AG_Prop *, AG_Netbuf *);
+	void *(*load)(void *obj, AG_Prop *, AG_DataSource *);
+	void (*save)(void *obj, AG_Prop *, AG_DataSource *);
 } AG_PropOps;
 #endif
 
@@ -158,8 +158,8 @@ typedef struct ag_prop {
 #define AG_SetPointerRdFn(prop,fn) (prop)->readFn.rPointer = (fn)
 
 __BEGIN_DECLS
-int	 AG_PropLoad(void *, AG_Netbuf *);
-int	 AG_PropSave(void *, AG_Netbuf *);
+int	 AG_PropLoad(void *, AG_DataSource *);
+int	 AG_PropSave(void *, AG_DataSource *);
 void	 AG_PropDestroy(AG_Prop *);
 AG_Prop	*AG_CopyProp(const AG_Prop *);
 AG_Prop	*AG_SetProp(void *, const char *, enum ag_prop_type, ...);

@@ -13,11 +13,11 @@ typedef struct ag_version {
 #define AG_VERSION_MAX		(AG_VERSION_NAME_MAX+8)
 
 __BEGIN_DECLS
-int	AG_ReadVersion(AG_Netbuf *, const char *, const AG_Version *,
+int	AG_ReadVersion(AG_DataSource *, const char *, const AG_Version *,
 	               AG_Version *);
-void	AG_WriteVersion(AG_Netbuf *, const char *, const AG_Version *);
-int	AG_ReadObjectVersion(AG_Netbuf *, void *, AG_Version *);
-void	AG_WriteObjectVersion(AG_Netbuf *, void *);
+void	AG_WriteVersion(AG_DataSource *, const char *, const AG_Version *);
+int	AG_ReadObjectVersion(AG_DataSource *, void *, AG_Version *);
+void	AG_WriteObjectVersion(AG_DataSource *, void *);
 __END_DECLS
 
 #include "close_code.h"

@@ -31,8 +31,8 @@ extern SK_NodeOps skDimensionOps;
 
 SK_Dimension	*SK_DimensionNew(void *);
 void		 SK_DimensionInit(void *, Uint32);
-int		 SK_DimensionLoad(SK *, void *, AG_Netbuf *);
-int		 SK_DimensionSave(SK *, void *, AG_Netbuf *);
+int		 SK_DimensionLoad(SK *, void *, AG_DataSource *);
+int		 SK_DimensionSave(SK *, void *, AG_DataSource *);
 void		 SK_DimensionDraw(void *, SK_View *);
 void		 SK_DimensionRedraw(void *, SK_View *);
 void		 SK_DimensionEdit(void *, AG_Widget *, SK_View *);

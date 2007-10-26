@@ -44,26 +44,26 @@ enum {
 };
 
 void
-AG_WriteSurface(AG_Netbuf *buf, SDL_Surface *su)
+AG_WriteSurface(AG_DataSource *ds, SDL_Surface *su)
 {
 	Uint8 *src;
 	int x, y;
 
-	AG_WriteVersion(buf, "AG_Surface", &agSurfaceVer);
-	AG_WriteUint32(buf, RAW_ENCODING);
+	AG_WriteVersion(ds, "AG_Surface", &agSurfaceVer);
+	AG_WriteUint32(ds, RAW_ENCODING);
 
-	AG_WriteUint32(buf, su->flags &
+	AG_WriteUint32(ds, su->flags &
 	    (SDL_SRCCOLORKEY|SDL_SRCALPHA|SDL_RLEACCEL));
-	AG_WriteUint16(buf, su->w);
-	AG_WriteUint16(buf, su->h);
-	AG_WriteUint8(buf, su->format->BitsPerPixel);
-	AG_WriteUint8(buf, 0);				/* TODO grayscale */
-	AG_WriteUint32(buf, su->format->Rmask);
-	AG_WriteUint32(buf, su->format->Gmask);
-	AG_WriteUint32(buf, su->format->Bmask);
-	AG_WriteUint32(buf, su->format->Amask);
-	AG_WriteUint8(buf, su->format->alpha);
-	AG_WriteUint32(buf, su->format->colorkey);
+	AG_WriteUint16(ds, su->w);
+	AG_WriteUint16(ds, su->h);
+	AG_WriteUint8(ds, su->format->BitsPerPixel);
+	AG_WriteUint8(ds, 0);				/* TODO grayscale */
+	AG_WriteUint32(ds, su->format->Rmask);
+	AG_WriteUint32(ds, su->format->Gmask);
+	AG_WriteUint32(ds, su->format->Bmask);
+	AG_WriteUint32(ds, su->format->Amask);
+	AG_WriteUint8(ds, su->format->alpha);
+	AG_WriteUint32(ds, su->format->colorkey);
 #if 0
 	dprintf("saving %dx%dx%d bpp%s%s surface\n", su->w, su->h,
 	    su->format->BitsPerPixel,
@@ -77,11 +77,11 @@ AG_WriteSurface(AG_Netbuf *buf, SDL_Surface *su)
 	if (su->format->BitsPerPixel == 8) {
 		int i;
 
-		AG_WriteUint32(buf, su->format->palette->ncolors);
+		AG_WriteUint32(ds, su->format->palette->ncolors);
 		for (i = 0; i < su->format->palette->ncolors; i++) {
-			AG_WriteUint8(buf, su->format->palette->colors[i].r);
-			AG_WriteUint8(buf, su->format->palette->colors[i].g);
-			AG_WriteUint8(buf, su->format->palette->colors[i].b);
+			AG_WriteUint8(ds, su->format->palette->colors[i].r);
+			AG_WriteUint8(ds, su->format->palette->colors[i].g);
+			AG_WriteUint8(ds, su->format->palette->colors[i].b);
 		}
 	}
 
@@ -93,27 +93,27 @@ AG_WriteSurface(AG_Netbuf *buf, SDL_Surface *su)
 		for (x = 0; x < su->w; x++) {
 			switch (su->format->BytesPerPixel) {
 			case 4:
-				AG_WriteUint32(buf, *(Uint32 *)src);
+				AG_WriteUint32(ds, *(Uint32 *)src);
 				break;
 			case 3:
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-				AG_WriteUint32(buf,
+				AG_WriteUint32(ds,
 				    (src[0] << 16) +
 				    (src[1] << 8) +
 				     src[2]);
 #else
-				AG_WriteUint32(buf,
+				AG_WriteUint32(ds,
 				    (src[2] << 16) +
 				    (src[1] << 8) +
 				     src[0]);
 #endif
 				break;
 			case 2:
-				AG_WriteUint16(buf, *(Uint16 *)src);
+				AG_WriteUint16(ds, *(Uint16 *)src);
 				break;
 			case 1:
 				/* XXX do one big write */
-				AG_WriteUint8(buf, *src);
+				AG_WriteUint8(ds, *src);
 				break;
 			}
 			src += su->format->BytesPerPixel;
@@ -124,7 +124,7 @@ AG_WriteSurface(AG_Netbuf *buf, SDL_Surface *su)
 }
 
 SDL_Surface *
-AG_ReadSurface(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
+AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 {
 	SDL_Surface *su;
 	Uint32 encoding;
@@ -135,29 +135,29 @@ AG_ReadSurface(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
 	Uint8 *dst;
 	int x, y;
 
-	if (AG_ReadVersion(buf, "AG_Surface", &agSurfaceVer, NULL) != 0)
+	if (AG_ReadVersion(ds, "AG_Surface", &agSurfaceVer, NULL) != 0)
 		return (NULL);
 
-	encoding = AG_ReadUint32(buf);
+	encoding = AG_ReadUint32(ds);
 	if (encoding != RAW_ENCODING) {
 		AG_SetError("unsupported encoding");
 		return (NULL);
 	}
 
-	flags = AG_ReadUint32(buf);
-	w = AG_ReadUint16(buf);
-	h = AG_ReadUint16(buf);
-	depth = AG_ReadUint8(buf);
-	grayscale = AG_ReadUint8(buf);
-	Rmask = AG_ReadUint32(buf);
-	Gmask = AG_ReadUint32(buf);
-	Bmask = AG_ReadUint32(buf);
-	Amask = AG_ReadUint32(buf);
+	flags = AG_ReadUint32(ds);
+	w = AG_ReadUint16(ds);
+	h = AG_ReadUint16(ds);
+	depth = AG_ReadUint8(ds);
+	grayscale = AG_ReadUint8(ds);
+	Rmask = AG_ReadUint32(ds);
+	Gmask = AG_ReadUint32(ds);
+	Bmask = AG_ReadUint32(ds);
+	Amask = AG_ReadUint32(ds);
 
 	su = SDL_CreateRGBSurface(flags|SDL_SWSURFACE, w, h, depth,
 	    Rmask, Gmask, Bmask, Amask);
-	su->format->alpha = AG_ReadUint8(buf);
-	su->format->colorkey = AG_ReadUint32(buf);
+	su->format->alpha = AG_ReadUint8(ds);
+	su->format->colorkey = AG_ReadUint32(ds);
 #if 0	
 	dprintf("loading %dx%dx%d bpp%s%s%s surface\n", w, h, depth,
 	    grayscale ? " grayscale" : "",
@@ -171,7 +171,7 @@ AG_ReadSurface(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
 		SDL_Color *colors;
 		Uint32 i, ncolors;
 
-		ncolors = AG_ReadUint32(buf);
+		ncolors = AG_ReadUint32(ds);
 		colors = Malloc(ncolors*sizeof(SDL_Color), 0);
 
 		if (grayscale) {
@@ -182,9 +182,9 @@ AG_ReadSurface(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
 			}
 		} else {
 			for (i = 0; i < ncolors; i++) {
-				colors[i].r = AG_ReadUint8(buf);
-				colors[i].g = AG_ReadUint8(buf);
-				colors[i].b = AG_ReadUint8(buf);
+				colors[i].r = AG_ReadUint8(ds);
+				colors[i].g = AG_ReadUint8(ds);
+				colors[i].b = AG_ReadUint8(ds);
 			}
 		}
 		SDL_SetPalette(su, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, ncolors);
@@ -199,11 +199,11 @@ AG_ReadSurface(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
 		for (x = 0; x < su->w; x++) {
 			switch (su->format->BytesPerPixel) {
 			case 4:
-				*(Uint32 *)dst = AG_ReadUint32(buf);
+				*(Uint32 *)dst = AG_ReadUint32(ds);
 				break;
 			case 3:
 				{
-					Uint32 c = AG_ReadUint32(buf);
+					Uint32 c = AG_ReadUint32(ds);
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 					dst[0] = (c >> 16) & 0xff;
 					dst[1] = (c >> 8) & 0xff;
@@ -216,11 +216,11 @@ AG_ReadSurface(AG_Netbuf *buf, SDL_PixelFormat *pixfmt)
 				}
 				break;
 			case 2:
-				*(Uint16 *)dst = AG_ReadUint16(buf);
+				*(Uint16 *)dst = AG_ReadUint16(ds);
 				break;
 			case 1:
 				/* XXX do one big read */
-				*dst = AG_ReadUint8(buf);
+				*dst = AG_ReadUint8(ds);
 				break;
 			}
 			dst += su->format->BytesPerPixel;

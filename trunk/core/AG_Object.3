@@ -138,12 +138,12 @@ typedef struct ag_object_ops {
 	size_t size;                               /* Size of structure */
 	AG_Version ver;                            /* Version numbers */
 
-	void (*init)(void *obj, const char *name); /* Initialize */
-	void (*reinit)(void *obj);                 /* Free dataset */
-	void (*destroy)(void *obj);                /* Release */
-	int  (*load)(void *obj, AG_Netbuf *buf);   /* Load dataset */
-	int  (*save)(void *obj, AG_Netbuf *buf);   /* Save dataset */
-	void *(*edit)(void *obj);                  /* Edit dataset */
+	void (*init)(void *obj, const char *name);   /* Initialize */
+	void (*reinit)(void *obj);                   /* Free dataset */
+	void (*destroy)(void *obj);                  /* Release */
+	int  (*load)(void *obj, AG_DataSource *buf); /* Load dataset */
+	int  (*save)(void *obj, AG_DataSource *buf); /* Save dataset */
+	void *(*edit)(void *obj);                    /* Edit dataset */
 } AG_ObjectOps;
 .Ed
 .Pp

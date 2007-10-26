@@ -54,7 +54,7 @@ SG_DummyInit(void *p, const char *name)
 }
 
 int
-SG_DummyLoad(void *p, AG_Netbuf *buf)
+SG_DummyLoad(void *p, AG_DataSource *buf)
 {
 	SG_Dummy *dum = p;
 
@@ -63,7 +63,7 @@ SG_DummyLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-SG_DummySave(void *p, AG_Netbuf *buf)
+SG_DummySave(void *p, AG_DataSource *buf)
 {
 	SG_Dummy *dum = p;
 

@@ -16,8 +16,8 @@ extern SG_NodeOps sgSolidOps;
 SG_Solid *SG_SolidNew(void *, const char *);
 void	  SG_SolidInit(void *, const char *);
 void	  SG_SolidDestroy(void *);
-int	  SG_SolidLoad(void *, AG_Netbuf *);
-int	  SG_SolidSave(void *, AG_Netbuf *);
+int	  SG_SolidLoad(void *, AG_DataSource *);
+int	  SG_SolidSave(void *, AG_DataSource *);
 #define   SG_SolidDraw SG_ObjectDraw
 void	  SG_SolidBox(SG_Solid *, SG_Real, SG_Real, SG_Real);
 __END_DECLS

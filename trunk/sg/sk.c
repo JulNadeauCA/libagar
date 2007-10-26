@@ -297,7 +297,7 @@ SK_Destroy(void *obj)
 }
 
 static int
-SK_NodeSaveData(SK *sk, SK_Node *node, AG_Netbuf *buf)
+SK_NodeSaveData(SK *sk, SK_Node *node, AG_DataSource *buf)
 {
 	SK_Node *chldNode;
 
@@ -314,7 +314,7 @@ SK_NodeSaveData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 }
 
 static int
-SK_SaveNodeGeneric(SK *sk, SK_Node *node, AG_Netbuf *buf)
+SK_SaveNodeGeneric(SK *sk, SK_Node *node, AG_DataSource *buf)
 {
 	SK_Node *cnode;
 	Uint32 ncnodes;
@@ -323,8 +323,8 @@ SK_SaveNodeGeneric(SK *sk, SK_Node *node, AG_Netbuf *buf)
 	/* Save generic node information. */
 	AG_WriteString(buf, node->ops->name);
 
-	bsize_offs = AG_NetbufTell(buf);
-	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
+	bsize_offs = AG_Tell(buf);
+	AG_Seek(buf, sizeof(Uint32), AG_SEEK_CUR);
 
 	AG_WriteUint32(buf, node->handle);
 	AG_WriteString(buf, node->name);
@@ -332,24 +332,24 @@ SK_SaveNodeGeneric(SK *sk, SK_Node *node, AG_Netbuf *buf)
 	SG_WriteMatrix(buf, &node->T);
 
 	/* Save the child nodes recursively. */
-	ncnodes_offs = AG_NetbufTell(buf);
+	ncnodes_offs = AG_Tell(buf);
 	ncnodes = 0;
-	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
+	AG_Seek(buf, sizeof(Uint32), AG_SEEK_CUR);
 	TAILQ_FOREACH(cnode, &node->cnodes, sknodes) {
 		if (SK_SaveNodeGeneric(sk, cnode, buf) == -1) {
 			return (-1);
 		}
 		ncnodes++;
 	}
-	AG_PwriteUint32(buf, ncnodes, ncnodes_offs);
+	AG_WriteUint32At(buf, ncnodes, ncnodes_offs);
 
 	/* Save the total block size to allow the loader to skip. */
-	AG_PwriteUint32(buf, AG_NetbufTell(buf)-bsize_offs, bsize_offs);
+	AG_WriteUint32At(buf, AG_Tell(buf)-bsize_offs, bsize_offs);
 	return (0);
 }
 
 int
-SK_Save(void *obj, AG_Netbuf *buf)
+SK_Save(void *obj, AG_DataSource *buf)
 {
 	SK *sk = obj;
 	SK_Constraint *ct;
@@ -371,9 +371,9 @@ SK_Save(void *obj, AG_Netbuf *buf)
 		goto fail;
 
 	/* Save the graph of geometric constraints. */
-	offs = AG_NetbufTell(buf);
+	offs = AG_Tell(buf);
 	count = 0;
-	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
+	AG_Seek(buf, sizeof(Uint32), AG_SEEK_CUR);
 	TAILQ_FOREACH(ct, &sk->ctGraph.edges, constraints) {
 		AG_WriteUint32(buf, (Uint32)ct->type);
 		AG_WriteUint32(buf, (Uint32)ct->uType);
@@ -391,7 +391,7 @@ SK_Save(void *obj, AG_Netbuf *buf)
 		}
 		count++;
 	}
-	AG_PwriteUint32(buf, count, offs);
+	AG_WriteUint32At(buf, count, offs);
 	AG_MutexUnlock(&sk->lock);
 	return (0);
 fail:
@@ -401,7 +401,7 @@ fail:
 
 /* Load the data part of a node. */
 static int
-SK_LoadNodeData(SK *sk, SK_Node *node, AG_Netbuf *buf)
+SK_LoadNodeData(SK *sk, SK_Node *node, AG_DataSource *buf)
 {
 	SK_Node *chldNode;
 
@@ -419,7 +419,7 @@ SK_LoadNodeData(SK *sk, SK_Node *node, AG_Netbuf *buf)
 
 /* Load the generic part of a node. */
 static int
-SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
+SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_DataSource *buf)
 {
 	char type[SK_TYPE_NAME_MAX];
 	SK_Node *node;
@@ -438,7 +438,7 @@ SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 		if (sk->flags & SK_SKIP_UNKNOWN_NODES) {
 			fprintf(stderr, "%s: skipping node (%s/%luB)\n",
 			    OBJECT(sk)->name, type, (Ulong)bsize);
-			AG_NetbufSeek(buf, bsize, SEEK_CUR);
+			AG_Seek(buf, bsize, AG_SEEK_CUR);
 			*rnode = NULL;
 			return (0);
 		} else {
@@ -473,7 +473,7 @@ SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_Netbuf *buf)
 }
 
 int
-SK_Load(void *obj, AG_Netbuf *buf)
+SK_Load(void *obj, AG_DataSource *buf)
 {
 	char unitKey[AG_UNIT_KEY_MAX];
 	SK *sk = obj;
@@ -868,7 +868,7 @@ SK_RenderAbsolute(SK *sk, SK_View *view)
 }
 
 void
-SK_WriteRef(AG_Netbuf *buf, void *pNode)
+SK_WriteRef(AG_DataSource *buf, void *pNode)
 {
 	SK_Node *node = pNode;
 
@@ -877,7 +877,7 @@ SK_WriteRef(AG_Netbuf *buf, void *pNode)
 }
 
 void *
-SK_ReadRef(AG_Netbuf *buf, SK *sk, const char *expType)
+SK_ReadRef(AG_DataSource *buf, SK *sk, const char *expType)
 {
 	char rType[SK_TYPE_NAME_MAX];
 

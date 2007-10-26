@@ -151,7 +151,7 @@ AG_FeatureDestroy(RG_Feature *ft)
 }
 
 int
-RG_FeatureLoad(void *p, AG_Netbuf *buf)
+RG_FeatureLoad(void *p, AG_DataSource *buf)
 {
 	RG_Feature *ft = p;
 
@@ -163,7 +163,7 @@ RG_FeatureLoad(void *p, AG_Netbuf *buf)
 }
 
 void
-RG_FeatureSave(void *p, AG_Netbuf *buf)
+RG_FeatureSave(void *p, AG_DataSource *buf)
 {
 	RG_Feature *ft = p;
 

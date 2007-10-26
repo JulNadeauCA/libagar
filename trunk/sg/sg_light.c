@@ -146,7 +146,7 @@ SG_LightAlloc(SG_Light *lt, int name)
 }
 
 void
-SG_WriteColor(AG_Netbuf *buf, SG_Color *cr)
+SG_WriteColor(AG_DataSource *buf, SG_Color *cr)
 {
 	AG_WriteUint8(buf, 0);				/* Expn: type */
 	SG_WriteReal(buf, cr->r);
@@ -156,7 +156,7 @@ SG_WriteColor(AG_Netbuf *buf, SG_Color *cr)
 }
 
 SG_Color
-SG_ReadColor(AG_Netbuf *buf)
+SG_ReadColor(AG_DataSource *buf)
 {
 	SG_Color cr;
 
@@ -169,7 +169,7 @@ SG_ReadColor(AG_Netbuf *buf)
 }
 
 int
-SG_LightLoad(void *p, AG_Netbuf *buf)
+SG_LightLoad(void *p, AG_DataSource *buf)
 {
 	SG_Light *lt = p;
 
@@ -186,7 +186,7 @@ SG_LightLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-SG_LightSave(void *p, AG_Netbuf *buf)
+SG_LightSave(void *p, AG_DataSource *buf)
 {
 	SG_Light *lt = p;
 

@@ -35,8 +35,8 @@ void UserTblDestroy(void);
 
 User	*UserLookup(const char *);
 void	 UserInit(void *, const char *);
-int	 UserLoad(void *, AG_Netbuf *);
-int	 UserSave(void *, AG_Netbuf *);
+int	 UserLoad(void *, AG_DataSource *);
+int	 UserSave(void *, AG_DataSource *);
 void	 UserLink(struct user *);
 void	 UserUnlink(struct user *);
 void	*UserEdit(void *);

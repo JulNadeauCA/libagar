@@ -74,9 +74,9 @@ void SG_MatrixGetTranslation(const SG_Matrix *, SG_Vector *);
 void SG_MatrixGetRotationXYZ(const SG_Matrix *, SG_Real *, SG_Real *,
                              SG_Real *);
 
-SG_Matrix SG_ReadMatrix(AG_Netbuf *);
-void      SG_ReadMatrixv(AG_Netbuf *, SG_Matrix *);
-void      SG_WriteMatrix(AG_Netbuf *, SG_Matrix *);
+SG_Matrix SG_ReadMatrix(AG_DataSource *);
+void      SG_ReadMatrixv(AG_DataSource *, SG_Matrix *);
+void      SG_WriteMatrix(AG_DataSource *, SG_Matrix *);
 
 void	  SG_LoadMatrixGL(const SG_Matrix *);
 void	  SG_GetMatrixGL(int, SG_Matrix *);

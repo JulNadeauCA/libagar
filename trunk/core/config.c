@@ -163,72 +163,72 @@ AG_ConfigInit(AG_Config *cfg)
 }
 
 int
-AG_ConfigLoad(void *p, AG_Netbuf *buf)
+AG_ConfigLoad(void *p, AG_DataSource *ds)
 {
 	AG_Version ver;
 
-	if (AG_ReadVersion(buf, agConfigOps.type, &agConfigOps.ver, &ver) != 0)
+	if (AG_ReadVersion(ds, agConfigOps.type, &agConfigOps.ver, &ver) != 0)
 		return (-1);
 
 #ifdef DEBUG
-	agDebugLvl = AG_ReadUint8(buf);
+	agDebugLvl = AG_ReadUint8(ds);
 #else
-	(void)AG_ReadUint8(buf);
+	(void)AG_ReadUint8(ds);
 #endif
-	if (ver.minor < 2) { (void)AG_ReadUint8(buf); } /* agServerMode */
-	agIdleThresh = (int)AG_ReadUint8(buf);
-	if (ver.minor >= 3) { agWindowAnySize = (int)AG_ReadUint8(buf); }
-	if (ver.minor >= 4) { agMsgDelay = (int)AG_ReadUint32(buf); }
-	agTextComposition = AG_ReadUint8(buf);
-	agTextBidi = AG_ReadUint8(buf);
-	agKbdUnicode = AG_ReadUint8(buf);
-	agKbdDelay = (int)AG_ReadUint32(buf);
-	agKbdRepeat = (int)AG_ReadUint32(buf);
-	agMouseDblclickDelay = (int)AG_ReadUint32(buf);
-	agMouseSpinDelay = (int)AG_ReadUint16(buf);
-	agMouseSpinIval = (int)AG_ReadUint16(buf);
-	agScreenshotQuality = (int)AG_ReadUint8(buf);
-	agTextTabWidth = (int)AG_ReadUint16(buf);
-	if (ver.minor >= 1) { agTextAntialiasing = AG_ReadUint8(buf); }
+	if (ver.minor < 2) { (void)AG_ReadUint8(ds); } /* agServerMode */
+	agIdleThresh = (int)AG_ReadUint8(ds);
+	if (ver.minor >= 3) { agWindowAnySize = (int)AG_ReadUint8(ds); }
+	if (ver.minor >= 4) { agMsgDelay = (int)AG_ReadUint32(ds); }
+	agTextComposition = AG_ReadUint8(ds);
+	agTextBidi = AG_ReadUint8(ds);
+	agKbdUnicode = AG_ReadUint8(ds);
+	agKbdDelay = (int)AG_ReadUint32(ds);
+	agKbdRepeat = (int)AG_ReadUint32(ds);
+	agMouseDblclickDelay = (int)AG_ReadUint32(ds);
+	agMouseSpinDelay = (int)AG_ReadUint16(ds);
+	agMouseSpinIval = (int)AG_ReadUint16(ds);
+	agScreenshotQuality = (int)AG_ReadUint8(ds);
+	agTextTabWidth = (int)AG_ReadUint16(ds);
+	if (ver.minor >= 1) { agTextAntialiasing = AG_ReadUint8(ds); }
 
-	agRcsMode = (int)AG_ReadUint8(buf);
-	AG_CopyString(agRcsHostname, buf, sizeof(agRcsHostname));
-	agRcsPort = (Uint)AG_ReadUint16(buf);
-	AG_CopyString(agRcsUsername, buf, sizeof(agRcsUsername));
-	AG_CopyString(agRcsPassword, buf, sizeof(agRcsPassword));
+	agRcsMode = (int)AG_ReadUint8(ds);
+	AG_CopyString(agRcsHostname, ds, sizeof(agRcsHostname));
+	agRcsPort = (Uint)AG_ReadUint16(ds);
+	AG_CopyString(agRcsUsername, ds, sizeof(agRcsUsername));
+	AG_CopyString(agRcsPassword, ds, sizeof(agRcsPassword));
 	return (0);
 }
 
 int
-AG_ConfigSave(void *p, AG_Netbuf *buf)
+AG_ConfigSave(void *p, AG_DataSource *ds)
 {
-	AG_WriteVersion(buf, agConfigOps.type, &agConfigOps.ver);
+	AG_WriteVersion(ds, agConfigOps.type, &agConfigOps.ver);
 
 #ifdef DEBUG
-	AG_WriteUint8(buf, (Uint8)agDebugLvl);
+	AG_WriteUint8(ds, (Uint8)agDebugLvl);
 #else
-	AG_WriteUint8(buf, 0);
+	AG_WriteUint8(ds, 0);
 #endif
-	AG_WriteUint8(buf, (Uint8)agIdleThresh);
-	AG_WriteUint8(buf, (Uint8)agWindowAnySize);
-	AG_WriteUint32(buf, (Uint32)agMsgDelay);
-	AG_WriteUint8(buf, (Uint8)agTextComposition);
-	AG_WriteUint8(buf, (Uint8)agTextBidi);
-	AG_WriteUint8(buf, (Uint8)agKbdUnicode);
-	AG_WriteUint32(buf, (Uint32)agKbdDelay);
-	AG_WriteUint32(buf, (Uint32)agKbdRepeat);
-	AG_WriteUint32(buf, (Uint32)agMouseDblclickDelay);
-	AG_WriteUint16(buf, (Uint16)agMouseSpinDelay);
-	AG_WriteUint16(buf, (Uint16)agMouseSpinIval);
-	AG_WriteUint8(buf, (Uint8)agScreenshotQuality);
-	AG_WriteUint16(buf, (Uint16)agTextTabWidth);
-	AG_WriteUint8(buf, (Uint8)agTextAntialiasing);
+	AG_WriteUint8(ds, (Uint8)agIdleThresh);
+	AG_WriteUint8(ds, (Uint8)agWindowAnySize);
+	AG_WriteUint32(ds, (Uint32)agMsgDelay);
+	AG_WriteUint8(ds, (Uint8)agTextComposition);
+	AG_WriteUint8(ds, (Uint8)agTextBidi);
+	AG_WriteUint8(ds, (Uint8)agKbdUnicode);
+	AG_WriteUint32(ds, (Uint32)agKbdDelay);
+	AG_WriteUint32(ds, (Uint32)agKbdRepeat);
+	AG_WriteUint32(ds, (Uint32)agMouseDblclickDelay);
+	AG_WriteUint16(ds, (Uint16)agMouseSpinDelay);
+	AG_WriteUint16(ds, (Uint16)agMouseSpinIval);
+	AG_WriteUint8(ds, (Uint8)agScreenshotQuality);
+	AG_WriteUint16(ds, (Uint16)agTextTabWidth);
+	AG_WriteUint8(ds, (Uint8)agTextAntialiasing);
 
-	AG_WriteUint8(buf, (Uint8)agRcsMode);
-	AG_WriteString(buf, agRcsHostname);
-	AG_WriteUint16(buf, (Uint16)agRcsPort);
-	AG_WriteString(buf, agRcsUsername);
-	AG_WriteString(buf, agRcsPassword);
+	AG_WriteUint8(ds, (Uint8)agRcsMode);
+	AG_WriteString(ds, agRcsHostname);
+	AG_WriteUint16(ds, (Uint16)agRcsPort);
+	AG_WriteString(ds, agRcsUsername);
+	AG_WriteString(ds, agRcsPassword);
 	return (0);
 }
 

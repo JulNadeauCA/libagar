@@ -275,20 +275,20 @@ are not available on all platforms.
 .Sh SAVING/LOADING
 .nr nS 1
 .Ft int
-.Fn AG_PropLoad "void *obj" "AG_Netbuf *buf"
+.Fn AG_PropLoad "void *obj" "AG_DataSource *ds"
 .Pp
 .Ft int
-.Fn AG_PropSave "void *obj" "AG_Netbuf *buf"
+.Fn AG_PropSave "void *obj" "AG_DataSource *ds"
 .Pp
 .nr nS 0
 The
 .Fn AG_PropLoad
 function loads an object's property table in machine-independent format from
-.Fa fd ,
+.Fa ds ,
 and
 .Fn AG_PropSave
 saves an object's property table in machine-independent format to
-.Fa fd .
+.Fa ds .
 Properties which are marked non-persistent
 (such as all properties of type
 .Dv AG_PROP_POINTER )
@@ -415,7 +415,8 @@ The first argument to the read and write functions is always a pointer to
 the object which contains the given property.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr AG_Object 3
+.Xr AG_Object 3 ,
+.Xr AG_DataSource 3
 .Sh HISTORY
 The
 .Nm

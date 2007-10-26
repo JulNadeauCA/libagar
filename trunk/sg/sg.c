@@ -243,7 +243,7 @@ SG_Destroy(void *obj)
 }
 
 int
-SG_Save(void *obj, AG_Netbuf *buf)
+SG_Save(void *obj, AG_DataSource *buf)
 {
 	SG *sg = obj;
 	int rv = 0;
@@ -257,7 +257,7 @@ SG_Save(void *obj, AG_Netbuf *buf)
 }
 
 int
-SG_NodeSave(SG *sg, SG_Node *node, AG_Netbuf *buf)
+SG_NodeSave(SG *sg, SG_Node *node, AG_DataSource *buf)
 {
 	SG_Node *cnode;
 	Uint32 ncnodes;
@@ -266,8 +266,8 @@ SG_NodeSave(SG *sg, SG_Node *node, AG_Netbuf *buf)
 	/* Save generic node information. */
 	AG_WriteString(buf, node->ops->name);
 	AG_WriteString(buf, node->name);
-	bsize_offs = AG_NetbufTell(buf);
-	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
+	bsize_offs = AG_Tell(buf);
+	AG_Seek(buf, sizeof(Uint32), AG_SEEK_CUR);
 
 	AG_WriteUint16(buf, (Uint16)node->flags);
 	SG_WriteMatrix(buf, &node->T);
@@ -278,24 +278,24 @@ SG_NodeSave(SG *sg, SG_Node *node, AG_Netbuf *buf)
 		return (-1);
 
 	/* Save the child nodes recursively. */
-	ncnodes_offs = AG_NetbufTell(buf);
+	ncnodes_offs = AG_Tell(buf);
 	ncnodes = 0;
-	AG_NetbufSeek(buf, sizeof(Uint32), SEEK_CUR);
+	AG_Seek(buf, sizeof(Uint32), AG_SEEK_CUR);
 	TAILQ_FOREACH(cnode, &node->cnodes, sgnodes) {
 		if (SG_NodeSave(sg, cnode, buf) == -1) {
 			return (-1);
 		}
 		ncnodes++;
 	}
-	AG_PwriteUint32(buf, ncnodes, ncnodes_offs);
+	AG_WriteUint32At(buf, ncnodes, ncnodes_offs);
 
 	/* Save the total block size to allow the loader to skip. */
-	AG_PwriteUint32(buf, AG_NetbufTell(buf)-bsize_offs, bsize_offs);
+	AG_WriteUint32At(buf, AG_Tell(buf)-bsize_offs, bsize_offs);
 	return (0);
 }
 
 int
-SG_Load(void *obj, AG_Netbuf *buf)
+SG_Load(void *obj, AG_DataSource *buf)
 {
 	SG *sg = obj;
 	int rv;
@@ -311,7 +311,7 @@ SG_Load(void *obj, AG_Netbuf *buf)
 }
 
 int
-SG_NodeLoad(SG *sg, SG_Node **rnode, AG_Netbuf *buf)
+SG_NodeLoad(SG *sg, SG_Node **rnode, AG_DataSource *buf)
 {
 	char name[SG_NODE_NAME_MAX];
 	char type[SG_CLASS_MAX];
@@ -332,7 +332,7 @@ SG_NodeLoad(SG *sg, SG_Node **rnode, AG_Netbuf *buf)
 		if (sg->flags & SG_SKIP_UNKNOWN_NODES) {
 			fprintf(stderr, "%s: skipping node %s (%s/%luB)\n",
 			    OBJECT(sg)->name, name, type, (Ulong)bsize);
-			AG_NetbufSeek(buf, bsize, SEEK_CUR);
+			AG_Seek(buf, bsize, AG_SEEK_CUR);
 			*rnode = NULL;
 			return (0);
 		} else {

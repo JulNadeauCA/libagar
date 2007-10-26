@@ -43,7 +43,7 @@ SK_AnnotInit(void *p, Uint32 name, const SK_NodeOps *ops)
 }
 
 int
-SK_AnnotLoad(SK *sk, void *p, AG_Netbuf *buf)
+SK_AnnotLoad(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Annot *ann = p;
 
@@ -52,7 +52,7 @@ SK_AnnotLoad(SK *sk, void *p, AG_Netbuf *buf)
 }
 
 int
-SK_AnnotSave(SK *sk, void *p, AG_Netbuf *buf)
+SK_AnnotSave(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Annot *ann = p;
 

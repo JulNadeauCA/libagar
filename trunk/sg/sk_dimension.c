@@ -76,7 +76,7 @@ SK_DimensionInit(void *p, Uint32 name)
 }
 
 int
-SK_DimensionLoad(SK *sk, void *p, AG_Netbuf *buf)
+SK_DimensionLoad(SK *sk, void *p, AG_DataSource *buf)
 {
 	char unitKey[AG_UNIT_KEY_MAX];
 	SK_Dimension *dim = p;
@@ -108,7 +108,7 @@ SK_DimensionLoad(SK *sk, void *p, AG_Netbuf *buf)
 }
 
 int
-SK_DimensionSave(SK *sk, void *p, AG_Netbuf *buf)
+SK_DimensionSave(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Dimension *dim = p;
 	

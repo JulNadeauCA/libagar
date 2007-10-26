@@ -155,10 +155,10 @@ Actors are displayed to this scale.
 .Fn MAP_NodeInit "MAP_Node *node"
 .Pp
 .Ft int
-.Fn MAP_NodeLoad "MAP *map" "AG_Netbuf *buf" "MAP_Node *node"
+.Fn MAP_NodeLoad "MAP *map" "AG_DataSource *ds" "MAP_Node *node"
 .Pp
 .Ft void
-.Fn MAP_NodeSave "const MAP *map, AG_Netbuf *buf" "const MAP_Node *node"
+.Fn MAP_NodeSave "const MAP *map, AG_DataSource *ds" "const MAP_Node *node"
 .Pp
 .Ft void
 .Fn MAP_NodeDestroy "MAP *map" "MAP_Node *node"
@@ -176,11 +176,11 @@ To reinitialize a node, this function must be followed by
 The
 .Fn MAP_NodeLoad
 function loads a node from
-.Fa buf ,
+.Fa ds ,
 returning 0 on success or -1 on failure.
 .Fn MAP_NodeSave
 saves a node to
-.Fa buf .
+.Fa ds .
 .Sh NODE REFERENCES
 .nr nS 1
 .Ft void
@@ -205,10 +205,10 @@ saves a node to
 .Fn MAP_ItemDestroy "MAP *map" "MAP_Item *r"
 .Pp
 .Ft int
-.Fn MAP_ItemLoad "MAP *map, AG_Netbuf *buf, MAP_Node *node" "MAP_Item **r"
+.Fn MAP_ItemLoad "MAP *map, AG_DataSource *ds, MAP_Node *node" "MAP_Item **r"
 .Pp
 .Ft void
-.Fn MAP_ItemSave "const MAP *map, AG_Netbuf *buf" "const MAP_Item *r"
+.Fn MAP_ItemSave "const MAP *map, AG_DataSource *ds" "const MAP_Item *r"
 .Pp
 .nr nS 0
 The
@@ -339,9 +339,10 @@ arguments describe the initial position and direction of the object in the
 destination map.
 .El
 .Sh SEE ALSO
+.Xr AG_DataSource 3 ,
+.Xr AG_Object 3 ,
 .Xr MAP_View 3 ,
-.Xr MAP_Actor 3 ,
-.Xr AG_Object 3
+.Xr MAP_Actor 3
 .Sh HISTORY
 The
 .Nm

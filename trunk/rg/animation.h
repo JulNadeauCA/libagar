@@ -92,8 +92,8 @@ typedef struct rg_anim_variant {
 __BEGIN_DECLS
 void RG_AnimInit(RG_Anim *, struct rg_tileset *, const char *, int);
 void RG_AnimDestroy(RG_Anim *);
-int  RG_AnimLoad(RG_Anim *, AG_Netbuf *);
-void RG_AnimSave(RG_Anim *, AG_Netbuf *);
+int  RG_AnimLoad(RG_Anim *, AG_DataSource *);
+void RG_AnimSave(RG_Anim *, AG_DataSource *);
 struct ag_window *RG_AnimEdit(RG_Anim *);
 
 void RG_AnimScale(RG_Anim *, Uint, Uint);

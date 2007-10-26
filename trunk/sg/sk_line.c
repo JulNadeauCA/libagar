@@ -62,7 +62,7 @@ SK_LineInit(void *p, Uint32 name)
 }
 
 int
-SK_LineLoad(SK *sk, void *p, AG_Netbuf *buf)
+SK_LineLoad(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Line *line = p;
 
@@ -78,7 +78,7 @@ SK_LineLoad(SK *sk, void *p, AG_Netbuf *buf)
 }
 
 int
-SK_LineSave(SK *sk, void *p, AG_Netbuf *buf)
+SK_LineSave(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Line *line = p;
 

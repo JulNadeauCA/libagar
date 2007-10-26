@@ -15,8 +15,8 @@ extern SK_NodeOps skArcOps;
 
 SK_Arc	*SK_ArcNew(void *);
 void	 SK_ArcInit(void *, Uint32);
-int	 SK_ArcLoad(SK *, void *, AG_Netbuf *);
-int	 SK_ArcSave(SK *, void *, AG_Netbuf *);
+int	 SK_ArcLoad(SK *, void *, AG_DataSource *);
+int	 SK_ArcSave(SK *, void *, AG_DataSource *);
 void	 SK_ArcDraw(void *, SK_View *);
 void	 SK_ArcEdit(void *, AG_Widget *, SK_View *);
 SG_Real	 SK_ArcProximity(void *, const SG_Vector *, SG_Vector *);

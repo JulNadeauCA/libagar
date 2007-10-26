@@ -41,8 +41,8 @@ struct rg_fill_feature {
 
 __BEGIN_DECLS
 void		 RG_FillInit(void *, RG_Tileset *, int);
-int		 RG_FillLoad(void *, AG_Netbuf *);
-void		 RG_FillSave(void *, AG_Netbuf *);
+int		 RG_FillLoad(void *, AG_DataSource *);
+void		 RG_FillSave(void *, AG_DataSource *);
 void		 RG_FillApply(void *, RG_Tile *, int, int);
 void		 RG_FillMenu(void *, AG_MenuItem *);
 struct ag_window *RG_FillEdit(void *, RG_Tileview *);

@@ -43,7 +43,7 @@ void	SG_QuatInversev(SG_Quat *);
 SG_Quat SG_QuatSLERP(SG_Quat, SG_Quat, SG_Real);
 SG_Quat	SG_QuatSLERPp(const SG_Quat *, const SG_Quat *, SG_Real);
 
-SG_Quat	SG_ReadQuat(AG_Netbuf *);
-void	SG_ReadQuatv(AG_Netbuf *, SG_Quat *);
-void	SG_WriteQuat(AG_Netbuf *, SG_Quat *);
+SG_Quat	SG_ReadQuat(AG_DataSource *);
+void	SG_ReadQuatv(AG_DataSource *, SG_Quat *);
+void	SG_WriteQuat(AG_DataSource *, SG_Quat *);
 __END_DECLS

@@ -71,7 +71,7 @@ SG_BoxInit(void *p, const char *name)
 }
 
 int
-SG_BoxLoad(void *p, AG_Netbuf *buf)
+SG_BoxLoad(void *p, AG_DataSource *buf)
 {
 	SG_Box *box = p;
 
@@ -79,7 +79,7 @@ SG_BoxLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-SG_BoxSave(void *p, AG_Netbuf *buf)
+SG_BoxSave(void *p, AG_DataSource *buf)
 {
 	SG_Box *box = p;
 

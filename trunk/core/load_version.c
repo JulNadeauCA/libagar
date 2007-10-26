@@ -34,7 +34,7 @@
 #include <stdio.h>
 
 int
-AG_ReadVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver,
+AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
     AG_Version *rver)
 {
 	char nbuf[AG_VERSION_NAME_MAX];
@@ -43,13 +43,13 @@ AG_ReadVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver,
 
 	nlen = strlen(name);
 
-	if (AG_NetbufReadE(nbuf, sizeof(nbuf), 1, buf) < 1 ||
+	if (AG_Read(ds, nbuf, sizeof(nbuf), 1) != 0 ||
 	    strncmp(nbuf, name, nlen) != 0) {
 		AG_SetError("%s: Bad magic", name);
 		return (-1);
 	}
-	major = AG_ReadUint32(buf);
-	minor = AG_ReadUint32(buf);
+	major = AG_ReadUint32(ds);
+	minor = AG_ReadUint32(ds);
 
 	if (rver != NULL) {
 		rver->major = major;
@@ -68,29 +68,27 @@ AG_ReadVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver,
 }
 
 void
-AG_WriteVersion(AG_Netbuf *buf, const char *name, const AG_Version *ver)
+AG_WriteVersion(AG_DataSource *ds, const char *name, const AG_Version *ver)
 {
 	char nbuf[AG_VERSION_NAME_MAX];
 
 	memset(nbuf, '!', sizeof(nbuf));
 	strlcpy(nbuf, name, sizeof(nbuf));
-	AG_NetbufWrite(nbuf, sizeof(nbuf), 1, buf);
-	AG_WriteUint32(buf, ver->major);
-	AG_WriteUint32(buf, ver->minor);
+	if (AG_Write(ds, nbuf, sizeof(nbuf), 1) != 0) { AG_FatalError(NULL); }
+	AG_WriteUint32(ds, ver->major);
+	AG_WriteUint32(ds, ver->minor);
 }
 
 int
-AG_ReadObjectVersion(AG_Netbuf *buf, void *p, AG_Version *pver)
+AG_ReadObjectVersion(AG_DataSource *ds, void *p, AG_Version *pver)
 {
 	const AG_ObjectOps *ops = OBJECT(p)->ops;
-	
-	return (AG_ReadVersion(buf, ops->type, &ops->ver, pver));
+	return (AG_ReadVersion(ds, ops->type, &ops->ver, pver));
 }
 
 void
-AG_WriteObjectVersion(AG_Netbuf *buf, void *p)
+AG_WriteObjectVersion(AG_DataSource *ds, void *p)
 {
 	const AG_ObjectOps *ops = OBJECT(p)->ops;
-	
-	AG_WriteVersion(buf, ops->type, &ops->ver);
+	AG_WriteVersion(ds, ops->type, &ops->ver);
 }

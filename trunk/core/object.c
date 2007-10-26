@@ -854,7 +854,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	char path[MAXPATHLEN];
 	AG_Object *ob = p;
 	AG_ObjectDep *dep;
-	AG_Netbuf *buf;
+	AG_DataSource *ds;
 	Uint32 count, i;
 	Uint flags, flags_save;
 	
@@ -878,11 +878,11 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	}
 	debug(DEBUG_STATE, "%s: Loading GENERIC from %s\n", ob->name, path);
 
-	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
+	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
 		goto fail_unlock;
 	}
-	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, &ver) == -1)
+	if (AG_ReadVersion(ds, agObjectOps.type, &agObjectOps.ver, &ver) == -1)
 		goto fail;
 
 	/*
@@ -895,12 +895,12 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	}
 	AG_ObjectFreeDeps(ob);
 
-	(void)AG_ReadUint32(buf);				/* Data offs */
-	if (ver.minor < 1) { (void)AG_ReadUint32(buf); }	/* Gfx offs */
+	(void)AG_ReadUint32(ds);				/* Data offs */
+	if (ver.minor < 1) { (void)AG_ReadUint32(ds); }		/* Gfx offs */
 
 	/* Read and verify the generic object flags. */
 	flags_save = ob->flags;
-	flags = (int)AG_ReadUint32(buf);
+	flags = (int)AG_ReadUint32(ds);
 	if (flags & (AG_OBJECT_NON_PERSISTENT|AG_OBJECT_RESIDENT|
 	             AG_OBJECT_WAS_RESIDENT)) {
 		AG_SetError("%s: inconsistent flags (0x%08x)", ob->name,
@@ -910,10 +910,10 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	ob->flags = flags | (flags_save & AG_OBJECT_WAS_RESIDENT);
 
 	/* Decode the saved dependencies (to be resolved later). */
-	count = AG_ReadUint32(buf);
+	count = AG_ReadUint32(ds);
 	for (i = 0; i < count; i++) {
 		dep = Malloc(sizeof(AG_ObjectDep), M_DEP);
-		dep->path = AG_ReadString(buf);
+		dep->path = AG_ReadString(ds);
 		dep->obj = NULL;
 		dep->count = 0;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
@@ -921,19 +921,19 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	}
 
 	/* Decode the generic properties. */
-	if (AG_PropLoad(ob, buf) == -1)
+	if (AG_PropLoad(ob, ds) == -1)
 		goto fail;
 
 	/* Load the generic part of the archived child objects. */
-	count = AG_ReadUint32(buf);
+	count = AG_ReadUint32(ds);
 	for (i = 0; i < count; i++) {
 		char cname[AG_OBJECT_NAME_MAX];
 		char classID[AG_OBJECT_TYPE_MAX];
 		AG_Object *eob, *child;
 
 	 	/* XXX ensure that there are no duplicate names. */
-		AG_CopyString(cname, buf, sizeof(cname));
-		AG_CopyString(classID, buf, sizeof(classID));
+		AG_CopyString(cname, ds, sizeof(cname));
+		AG_CopyString(classID, ds, sizeof(classID));
 
 		OBJECT_FOREACH_CHILD(eob, ob, ag_object) {
 			if (strcmp(eob->name, cname) == 0) 
@@ -980,14 +980,14 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		}
 	}
 	AG_PostEvent(ob, agWorld, "object-post-load-generic", "%s", path);
-	AG_NetbufClose(buf);
+	AG_CloseFile(ds);
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (0);
 fail:
 	AG_ObjectFreeDataset(ob);
 	AG_ObjectFreeDeps(ob);
-	AG_NetbufClose(buf);
+	AG_CloseFile(ds);
 fail_unlock:
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
@@ -1003,7 +1003,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 {
 	char path[MAXPATHLEN];
 	AG_Object *ob = p;
-	AG_Netbuf *buf;
+	AG_DataSource *ds;
 	off_t dataOffs;
 	AG_Version ver;
 	
@@ -1032,33 +1032,33 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	}
 	debug(DEBUG_STATE, "%s: Loading DATA from %s\n", ob->name, path);
 
-	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
+	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
 		*dataFound = 0;
 		return (-1);
 	}
-	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, &ver) == -1)
+	if (AG_ReadVersion(ds, agObjectOps.type, &agObjectOps.ver, &ver) == -1)
 		goto fail;
 
-	dataOffs = (off_t)AG_ReadUint32(buf);		/* User data offset */
-	if (ver.minor < 1) { (void)AG_ReadUint32(buf); }	/* Gfx offs */
-	AG_NetbufSeek(buf, dataOffs, SEEK_SET);
+	dataOffs = (off_t)AG_ReadUint32(ds);		/* User data offset */
+	if (ver.minor < 1) { (void)AG_ReadUint32(ds); }	/* Gfx offs */
+	AG_Seek(ds, dataOffs, AG_SEEK_SET);
 
 	if (OBJECT_RESIDENT(ob)) {
 		AG_ObjectFreeDataset(ob);
 	}
 	if (ob->ops->load != NULL &&
-	    ob->ops->load(ob, buf) == -1)
+	    ob->ops->load(ob, ds) == -1)
 		goto fail;
 
 	ob->flags |= AG_OBJECT_RESIDENT;
-	AG_NetbufClose(buf);
+	AG_CloseFile(ds);
 	AG_PostEvent(ob, agWorld, "object-post-load-data", "%s", path);
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (0);
 fail:
-	AG_NetbufClose(buf);
+	AG_CloseFile(ds);
 	return (-1);
 }
 
@@ -1106,7 +1106,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	char path[MAXPATHLEN];
 	char name[AG_OBJECT_PATH_MAX];
 	AG_Object *ob = p;
-	AG_Netbuf *buf;
+	AG_DataSource *ds;
 	AG_Object *child;
 	off_t countOffs, dataOffs;
 	Uint32 count;
@@ -1183,61 +1183,59 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	} else {
 		AG_FileDelete(path);
 	}
-	if ((buf = AG_NetbufOpen(path, "wb", AG_NETBUF_BIG_ENDIAN))
-	    == NULL)
+	if ((ds = AG_OpenFile(path, "wb")) == NULL)
 		goto fail_reinit;
 
-	AG_WriteVersion(buf, agObjectOps.type, &agObjectOps.ver);
+	AG_WriteVersion(ds, agObjectOps.type, &agObjectOps.ver);
 
-	dataOffs = AG_NetbufTell(buf);
-	AG_WriteUint32(buf, 0);					/* Data offs */
-	AG_WriteUint32(buf, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
+	dataOffs = AG_Tell(ds);
+	AG_WriteUint32(ds, 0);					/* Data offs */
+	AG_WriteUint32(ds, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
 
 	/* Encode the object dependencies. */
-	countOffs = AG_NetbufTell(buf);
-	AG_WriteUint32(buf, 0);
+	countOffs = AG_Tell(ds);
+	AG_WriteUint32(ds, 0);
 	for (dep = TAILQ_FIRST(&ob->deps), count = 0;
 	     dep != TAILQ_END(&ob->deps);
 	     dep = TAILQ_NEXT(dep, deps), count++) {
 		char dep_name[AG_OBJECT_PATH_MAX];
 		
 		AG_ObjectCopyName(dep->obj, dep_name, sizeof(dep_name));
-		AG_WriteString(buf, dep_name);
+		AG_WriteString(ds, dep_name);
 	}
-	AG_PwriteUint32(buf, count, countOffs);
+	AG_WriteUint32At(ds, count, countOffs);
 
 	/* Encode the generic properties. */
-	if (AG_PropSave(ob, buf) == -1)
+	if (AG_PropSave(ob, ds) == -1)
 		goto fail;
 	
 	/* Save the list of child objects. */
-	countOffs = AG_NetbufTell(buf);
-	AG_WriteUint32(buf, 0);
+	countOffs = AG_Tell(ds);
+	AG_WriteUint32(ds, 0);
 	count = 0;
 	TAILQ_FOREACH(child, &ob->children, cobjs) {
 		if (!OBJECT_PERSISTENT(child)) {
 			continue;
 		}
-		AG_WriteString(buf, child->name);
-		AG_WriteString(buf, child->ops->type);
+		AG_WriteString(ds, child->name);
+		AG_WriteString(ds, child->ops->type);
 		count++;
 	}
-	AG_PwriteUint32(buf, count, countOffs);
+	AG_WriteUint32At(ds, count, countOffs);
 
 	/* Save the user data. */
-	AG_PwriteUint32(buf, AG_NetbufTell(buf), dataOffs);
+	AG_WriteUint32At(ds, AG_Tell(ds), dataOffs);
 	if (ob->ops->save != NULL &&
-	    ob->ops->save(ob, buf) == -1)
+	    ob->ops->save(ob, ds) == -1)
 		goto fail;
 
-	AG_NetbufFlush(buf);
-	AG_NetbufClose(buf);
+	AG_CloseFile(ds);
 	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }
 	AG_MutexUnlock(&ob->lock);
 	AG_UnlockLinkage();
 	return (0);
 fail:
-	AG_NetbufClose(buf);
+	AG_CloseFile(ds);
 fail_reinit:
 	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }
 fail_lock:

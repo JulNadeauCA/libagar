@@ -95,7 +95,7 @@ UserInit(void *p, const char *name)
 }
 
 int
-UserLoad(void *p, AG_Netbuf *buf)
+UserLoad(void *p, AG_DataSource *buf)
 {
 	User *u = p;
 	Uint32 i, count;
@@ -115,7 +115,7 @@ UserLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-UserSave(void *p, AG_Netbuf *buf)
+UserSave(void *p, AG_DataSource *buf)
 {
 	User *u = p;
 	FILE *f;

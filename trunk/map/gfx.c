@@ -516,24 +516,23 @@ AG_GfxLoad(AG_Object *ob)
 	extern const AG_ObjectOps agObjectOps;
 	AG_Gfx *gfx = ob->gfx;
 	char path[MAXPATHLEN];
-	AG_Netbuf *buf;
+	AG_DataSource *buf;
 	off_t gfx_offs;
 	Uint32 i, j;
 	
 	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1) {
 		return (-1);
 	}
-	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
+	if ((buf = AG_OpenFile(path, "rb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
 		return (-1);
 	}
-	
 	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
 		goto fail;
 
 	AG_ReadUint32(buf);				/* Skip data offs */
 	gfx_offs = (off_t)AG_ReadUint32(buf);
-	AG_NetbufSeek(buf, gfx_offs, SEEK_SET);
+	AG_Seek(buf, gfx_offs, AG_SEEK_SET);
 
 	if (AG_ReadUint8(buf) == 0)
 		goto out;
@@ -590,15 +589,15 @@ AG_GfxLoad(AG_Object *ob)
 	}
 
 out:
-	AG_NetbufClose(buf);
+	AG_CloseFile(buf);
 	return (0);
 fail:
-	AG_NetbufClose(buf);
+	AG_CloseFile(buf);
 	return (-1);
 }
 
 int
-AG_GfxSave(AG_Object *ob, AG_Netbuf *buf)
+AG_GfxSave(AG_Object *ob, AG_DataSource *buf)
 {
 	AG_Gfx *gfx = ob->gfx;
 	Uint32 i, j;

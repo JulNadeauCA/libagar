@@ -12,6 +12,6 @@ SG_PlaneObj	*SG_PlaneObjNew(void *, const char *, SG_Vector, SG_Real);
 SG_PlaneObj	*SG_PlaneObjNewPts(void *, const char *, SG_Vector, SG_Vector,
 		                   SG_Vector);
 void		 SG_PlaneObjInit(void *, const char *);
-int		 SG_PlaneObjLoad(void *, AG_Netbuf *);
-int		 SG_PlaneObjSave(void *, AG_Netbuf *);
+int		 SG_PlaneObjLoad(void *, AG_DataSource *);
+int		 SG_PlaneObjSave(void *, AG_DataSource *);
 __END_DECLS

@@ -59,7 +59,7 @@ SK_ArcInit(void *p, Uint32 name)
 }
 
 int
-SK_ArcLoad(SK *sk, void *p, AG_Netbuf *buf)
+SK_ArcLoad(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Arc *arc = p;
 
@@ -80,7 +80,7 @@ SK_ArcLoad(SK *sk, void *p, AG_Netbuf *buf)
 }
 
 int
-SK_ArcSave(SK *sk, void *p, AG_Netbuf *buf)
+SK_ArcSave(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Arc *arc = p;
 

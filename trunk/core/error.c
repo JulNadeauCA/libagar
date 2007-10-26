@@ -177,12 +177,15 @@ AG_FatalError(const char *fmt, ...)
 {
 	va_list args;
 
-	va_start(args, fmt);
-	fprintf(stderr, "fatal: ");
-	vfprintf(stderr, fmt, args);
+	fprintf(stderr, "Fatal error: ");
+	if (fmt != NULL) {
+		va_start(args, fmt);
+		vfprintf(stderr, fmt, args);
+		va_end(args);
+	} else {
+		fprintf(stderr, "%s", AG_GetError());
+	}
 	fprintf(stderr, "\n");
-	va_end(args);
-
 	abort();
 }
 

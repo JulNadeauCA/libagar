@@ -14,8 +14,8 @@ extern SK_NodeOps skPointOps;
 
 SK_Point	*SK_PointNew(void *);
 void		 SK_PointInit(void *, Uint32);
-int		 SK_PointLoad(SK *, void *, AG_Netbuf *);
-int		 SK_PointSave(SK *, void *, AG_Netbuf *);
+int		 SK_PointLoad(SK *, void *, AG_DataSource *);
+int		 SK_PointSave(SK *, void *, AG_DataSource *);
 void		 SK_PointDraw(void *, SK_View *);
 void		 SK_PointDrawAbsolute(void *, SK_View *);
 void		 SK_PointEdit(void *, AG_Widget *, SK_View *);

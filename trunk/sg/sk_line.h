@@ -14,8 +14,8 @@ extern SK_NodeOps skLineOps;
 
 SK_Line	 *SK_LineNew(void *);
 void	  SK_LineInit(void *, Uint32);
-int	  SK_LineLoad(SK *, void *, AG_Netbuf *);
-int	  SK_LineSave(SK *, void *, AG_Netbuf *);
+int	  SK_LineLoad(SK *, void *, AG_DataSource *);
+int	  SK_LineSave(SK *, void *, AG_DataSource *);
 void	  SK_LineDraw(void *, SK_View *);
 void	  SK_LineEdit(void *, AG_Widget *, SK_View *);
 SG_Real	  SK_LineProximity(void *, const SG_Vector *, SG_Vector *);

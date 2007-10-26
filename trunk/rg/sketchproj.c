@@ -68,7 +68,7 @@ RG_SketchProjInit(void *p, RG_Tileset *ts, int flags)
 }
 
 int
-RG_SketchProjLoad(void *p, AG_Netbuf *buf)
+RG_SketchProjLoad(void *p, AG_DataSource *buf)
 {
 	struct rg_sketchproj *sproj = p;
 	RG_Tileset *ts = RG_FEATURE(sproj)->ts;
@@ -84,7 +84,7 @@ RG_SketchProjLoad(void *p, AG_Netbuf *buf)
 }
 
 void
-RG_SketchProjSave(void *p, AG_Netbuf *buf)
+RG_SketchProjSave(void *p, AG_DataSource *buf)
 {
 	struct rg_sketchproj *sproj = p;
 	RG_Tileset *ts = RG_FEATURE(sproj)->ts;

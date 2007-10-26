@@ -34,13 +34,13 @@ __BEGIN_DECLS
 RG_Transform	*RG_TransformNew(enum rg_transform_type, int, Uint32 *);
 int		 RG_TransformInit(RG_Transform *, enum rg_transform_type, int,
 		                 Uint32 *);
-int		 RG_TransformLoad(AG_Netbuf *, RG_Transform *);
-void		 RG_TransformSave(AG_Netbuf *, const RG_Transform *);
+int		 RG_TransformLoad(AG_DataSource *, RG_Transform *);
+void		 RG_TransformSave(AG_DataSource *, const RG_Transform *);
 void		 RG_TransformDestroy(RG_Transform *);
 
 void	 RG_TransformChainInit(RG_TransformChain *);
-int	 RG_TransformChainLoad(AG_Netbuf *, RG_TransformChain *);
-void	 RG_TransformChainSave(AG_Netbuf *, const RG_TransformChain *);
+int	 RG_TransformChainLoad(AG_DataSource *, RG_TransformChain *);
+void	 RG_TransformChainSave(AG_DataSource *, const RG_TransformChain *);
 void	 RG_TransformChainDestroy(RG_TransformChain *);
 void	 RG_TransformChainPrint(const RG_TransformChain *, char *, size_t)
 	                        BOUNDED_ATTRIBUTE(__string__, 2, 3);

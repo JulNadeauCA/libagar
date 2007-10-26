@@ -40,33 +40,33 @@ SC_Deg2Rad(SC_Real theta)
 }
 
 SC_Real
-SC_ReadReal(AG_Netbuf *buf)
+SC_ReadReal(AG_DataSource *buf)
 {
 	double rv;
 
-	AG_NetbufRead(&rv, sizeof(double), 1, buf);
+	if (AG_Read(buf, &rv, sizeof(double), 1) != 0) { AG_FatalError(NULL); }
 	return ((SC_Real)rv);
 }
 
 void
-SC_CopyReal(AG_Netbuf *buf, SC_Real *pv)
+SC_CopyReal(AG_DataSource *buf, SC_Real *pv)
 {
 	double v;
 
-	AG_NetbufRead(&v, sizeof(double), 1, buf);
+	if (AG_Read(buf, &v, sizeof(double), 1) != 0) { AG_FatalError(NULL); }
 	*pv = (SC_Real)v;
 }
 
 void
-SC_WriteReal(AG_Netbuf *buf, SC_Real v)
+SC_WriteReal(AG_DataSource *buf, SC_Real v)
 {
 	double rv = (double)v;
 
-	AG_NetbufWrite(&rv, sizeof(double), 1, buf);
+	if (AG_Write(buf, &rv, sizeof(double), 1) != 0) { AG_FatalError(NULL); }
 }
 
 SC_Range
-SC_ReadRange(AG_Netbuf *buf)
+SC_ReadRange(AG_DataSource *buf)
 {
 	SC_Range r;
 
@@ -77,7 +77,7 @@ SC_ReadRange(AG_Netbuf *buf)
 }
 
 void
-SC_CopyRange(AG_Netbuf *buf, SC_Range *r)
+SC_CopyRange(AG_DataSource *buf, SC_Range *r)
 {
 	r->min = SC_ReadReal(buf);
 	r->typ = SC_ReadReal(buf);
@@ -85,7 +85,7 @@ SC_CopyRange(AG_Netbuf *buf, SC_Range *r)
 }
 
 void
-SC_WriteRange(AG_Netbuf *buf, SC_Range r)
+SC_WriteRange(AG_DataSource *buf, SC_Range r)
 {
 	SC_WriteReal(buf, r.min);
 	SC_WriteReal(buf, r.typ);
@@ -93,7 +93,7 @@ SC_WriteRange(AG_Netbuf *buf, SC_Range r)
 }
 
 SC_QTimeRange
-SC_ReadQTimeRange(AG_Netbuf *buf)
+SC_ReadQTimeRange(AG_DataSource *buf)
 {
 	SC_QTimeRange r;
 
@@ -104,7 +104,7 @@ SC_ReadQTimeRange(AG_Netbuf *buf)
 }
 
 void
-SC_CopyQTimeRange(AG_Netbuf *buf, SC_QTimeRange *r)
+SC_CopyQTimeRange(AG_DataSource *buf, SC_QTimeRange *r)
 {
 	r->min = SC_ReadQTime(buf);
 	r->typ = SC_ReadQTime(buf);
@@ -112,7 +112,7 @@ SC_CopyQTimeRange(AG_Netbuf *buf, SC_QTimeRange *r)
 }
 
 void
-SC_WriteQTimeRange(AG_Netbuf *buf, SC_QTimeRange r)
+SC_WriteQTimeRange(AG_DataSource *buf, SC_QTimeRange r)
 {
 	SC_WriteQTime(buf, r.min);
 	SC_WriteQTime(buf, r.typ);

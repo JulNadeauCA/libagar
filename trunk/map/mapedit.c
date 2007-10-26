@@ -111,7 +111,7 @@ MAP_EditorDestroy(void *p)
 }
 
 void
-MAP_EditorSave(AG_Netbuf *buf)
+MAP_EditorSave(AG_DataSource *buf)
 {
 	AG_WriteUint8(buf, 0);				/* Pad: mapViewBg */
 	AG_WriteUint8(buf, (Uint8)mapViewAnimatedBg);
@@ -125,7 +125,7 @@ MAP_EditorSave(AG_Netbuf *buf)
 }
 
 void
-MAP_EditorLoad(AG_Netbuf *buf)
+MAP_EditorLoad(AG_DataSource *buf)
 {
 	AG_ReadUint8(buf);				/* Pad: mapViewBg */
 	mapViewAnimatedBg = (int)AG_ReadUint8(buf);

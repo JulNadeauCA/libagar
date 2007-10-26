@@ -11,8 +11,8 @@ __BEGIN_DECLS
 extern SK_NodeOps skAnnotOps;
 
 void		 SK_AnnotInit(void *, Uint32, const SK_NodeOps *);
-int		 SK_AnnotLoad(SK *, void *, AG_Netbuf *);
-int		 SK_AnnotSave(SK *, void *, AG_Netbuf *);
+int		 SK_AnnotLoad(SK *, void *, AG_DataSource *);
+int		 SK_AnnotSave(SK *, void *, AG_DataSource *);
 void		 SK_AnnotDraw(void *, SK_View *);
 int		 SK_AnnotDelete(void *);
 __END_DECLS

@@ -15,8 +15,8 @@ extern SK_NodeOps skCircleOps;
 
 SK_Circle *SK_CircleNew(void *);
 void	   SK_CircleInit(void *, Uint32);
-int	   SK_CircleLoad(SK *, void *, AG_Netbuf *);
-int	   SK_CircleSave(SK *, void *, AG_Netbuf *);
+int	   SK_CircleLoad(SK *, void *, AG_DataSource *);
+int	   SK_CircleSave(SK *, void *, AG_DataSource *);
 void	   SK_CircleDraw(void *, SK_View *);
 void	   SK_CircleEdit(void *, AG_Widget *, SK_View *);
 SG_Real	   SK_CircleProximity(void *, const SG_Vector *, SG_Vector *);

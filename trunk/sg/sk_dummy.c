@@ -53,7 +53,7 @@ SK_DummyInit(void *p, Uint32 name)
 }
 
 int
-SK_DummyLoad(SK *sk, void *p, AG_Netbuf *buf)
+SK_DummyLoad(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Dummy *dum = p;
 
@@ -62,7 +62,7 @@ SK_DummyLoad(SK *sk, void *p, AG_Netbuf *buf)
 }
 
 int
-SK_DummySave(SK *sk, void *p, AG_Netbuf *buf)
+SK_DummySave(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Dummy *dum = p;
 

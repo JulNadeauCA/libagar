@@ -50,8 +50,8 @@ void		 SC_MatrixFree(SC_Matrix *);
 void		 SC_MatrixAlloc(SC_Matrix *, Uint, Uint);
 void		 SC_MatrixFreeElements(SC_Matrix *);
 void	 	 SC_MatrixResize(SC_Matrix *, Uint, Uint);
-void		 SC_WriteMatrix(SC_Matrix *, AG_Netbuf *);
-SC_Matrix	*SC_ReadMatrix(AG_Netbuf *);
+void		 SC_WriteMatrix(SC_Matrix *, AG_DataSource *);
+SC_Matrix	*SC_ReadMatrix(AG_DataSource *);
 
 SC_Real		 SC_MatrixGetEntry(const SC_Matrix *, Uint, Uint);
 SC_Real		*SC_MatrixGetEntryp(const SC_Matrix *, Uint, Uint);

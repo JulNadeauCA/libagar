@@ -218,7 +218,7 @@ RG_TilesetDestroy(void *obj)
 }
 
 int
-RG_TilesetLoad(void *obj, AG_Netbuf *buf)
+RG_TilesetLoad(void *obj, AG_DataSource *buf)
 {
 	RG_Tileset *ts = obj;
 	RG_Pixmap *px;
@@ -283,7 +283,7 @@ RG_TilesetLoad(void *obj, AG_Netbuf *buf)
 			dprintf("%s: unimplemented feature: %s; "
 			        "skipping %lu bytes.\n", name, type,
 				(Ulong)len);
-			AG_NetbufSeek(buf, len-4, SEEK_CUR);
+			AG_Seek(buf, len-4, AG_SEEK_CUR);
 			continue;
 		}
 
@@ -423,7 +423,7 @@ fail:
 }
 
 int
-RG_TilesetSave(void *obj, AG_Netbuf *buf)
+RG_TilesetSave(void *obj, AG_DataSource *buf)
 {
 	RG_Tileset *ts = obj;
 	Uint32 count, i;
@@ -442,27 +442,27 @@ RG_TilesetSave(void *obj, AG_Netbuf *buf)
 
 	/* Save the vectorial sketches. */
 	count = 0;
-	offs = AG_NetbufTell(buf);
+	offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
 		RG_SketchSave(sk, buf);
 		count++;
 	}
-	AG_PwriteUint32(buf, count, offs);
+	AG_WriteUint32At(buf, count, offs);
 
 	/* Save the pixmaps. */
 	count = 0;
-	offs = AG_NetbufTell(buf);
+	offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(px, &ts->pixmaps, pixmaps) {
 		RG_PixmapSave(px, buf);
 		count++;
 	}
-	AG_PwriteUint32(buf, count, offs);
+	AG_WriteUint32At(buf, count, offs);
 
 	/* Save the features. */
 	count = 0;
-	offs = AG_NetbufTell(buf);
+	offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(ft, &ts->features, features) {
 		off_t ftsize_offs;
@@ -472,30 +472,29 @@ RG_TilesetSave(void *obj, AG_Netbuf *buf)
 		AG_WriteUint32(buf, ft->flags);
 
 		/* Encode the size to allow skipping unimplemented features. */
-		ftsize_offs = AG_NetbufTell(buf);
+		ftsize_offs = AG_Tell(buf);
 		AG_WriteUint32(buf, 0);
 		RG_FeatureSave(ft, buf);
-		AG_PwriteUint32(buf, AG_NetbufTell(buf) - ftsize_offs,
-		    ftsize_offs);
+		AG_WriteUint32At(buf, AG_Tell(buf)-ftsize_offs, ftsize_offs);
 
 		count++;
 	}
-	AG_PwriteUint32(buf, count, offs);
+	AG_WriteUint32At(buf, count, offs);
 	
 	/* Save the tiles. */
 	count = 0;
-	offs = AG_NetbufTell(buf);
+	offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		RG_TileSave(t, buf);
 		count++;
 	}
-	AG_PwriteUint32(buf, count, offs);
+	AG_WriteUint32At(buf, count, offs);
 	dprintf("saved %u tiles\n", count);
 	
 	/* Save the animation information. */
 	count = 0;
-	offs = AG_NetbufTell(buf);
+	offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(ani, &ts->animations, animations) {
 		AG_WriteString(buf, ani->name);
@@ -503,18 +502,18 @@ RG_TilesetSave(void *obj, AG_Netbuf *buf)
 		RG_AnimSave(ani, buf);
 		count++;
 	}
-	AG_PwriteUint32(buf, count, offs);
+	AG_WriteUint32At(buf, count, offs);
 	
 	/* Save the textures. */
 	count = 0;
-	offs = AG_NetbufTell(buf);
+	offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(tex, &ts->textures, textures) {
 		AG_WriteString(buf, tex->name);
 		RG_TextureSave(tex, buf);
 		count++;
 	}
-	AG_PwriteUint32(buf, count, offs);
+	AG_WriteUint32At(buf, count, offs);
 
 	/* Save the static tile and animation mappings. */
 	AG_WriteUint32(buf, ts->ntiletbl);

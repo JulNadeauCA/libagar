@@ -128,7 +128,7 @@ RG_PixmapDelBrush(RG_Pixmap *px, RG_Brush *br)
 }
 
 int
-RG_PixmapLoad(RG_Pixmap *px, AG_Netbuf *buf)
+RG_PixmapLoad(RG_Pixmap *px, AG_DataSource *buf)
 {
 	Uint32 i, nbrushes;
 
@@ -157,7 +157,7 @@ RG_PixmapLoad(RG_Pixmap *px, AG_Netbuf *buf)
 }
 
 void
-RG_PixmapSave(RG_Pixmap *px, AG_Netbuf *buf)
+RG_PixmapSave(RG_Pixmap *px, AG_DataSource *buf)
 {
 	Uint32 nbrushes = 0;
 	off_t nbrushes_offs;
@@ -169,7 +169,7 @@ RG_PixmapSave(RG_Pixmap *px, AG_Netbuf *buf)
 	AG_WriteSint16(buf, (Sint16)px->yorig);
 	AG_WriteSurface(buf, px->su);
 
-	nbrushes_offs = AG_NetbufTell(buf);
+	nbrushes_offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(br, &px->brushes, brushes) {
 		AG_WriteString(buf, br->name);
@@ -180,7 +180,7 @@ RG_PixmapSave(RG_Pixmap *px, AG_Netbuf *buf)
 		AG_WriteString(buf, br->px->name);
 		nbrushes++;
 	}
-	AG_PwriteUint32(buf, nbrushes, nbrushes_offs);
+	AG_WriteUint32At(buf, nbrushes, nbrushes_offs);
 }
 
 void
