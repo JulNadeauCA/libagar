@@ -14,8 +14,8 @@ struct rg_sketchproj {
 
 __BEGIN_DECLS
 void		 RG_SketchProjInit(void *, RG_Tileset *, int);
-int		 RG_SketchProjLoad(void *, AG_Netbuf *);
-void		 RG_SketchProjSave(void *, AG_Netbuf *);
+int		 RG_SketchProjLoad(void *, AG_DataSource *);
+void		 RG_SketchProjSave(void *, AG_DataSource *);
 void		 RG_SketchProjApply(void *, RG_Tile *, int, int);
 AG_Window	*RG_SketchProjEdit(void *, RG_Tileview *);
 __END_DECLS

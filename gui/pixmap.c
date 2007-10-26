@@ -110,10 +110,10 @@ AG_PixmapFromXCF(void *parent, Uint flags, const char *path)
 	AG_Object tmpObj;
 	AG_Pixmap *px;
 	SDL_Surface *su;
-	AG_Netbuf *buf;
+	AG_DataSource *ds;
 	Uint i;
 	
-	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
+	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
 		return (NULL);
 	}
@@ -121,7 +121,7 @@ AG_PixmapFromXCF(void *parent, Uint flags, const char *path)
 	/* XXX hack */
 	AG_ObjectInit(&tmpObj, "tmp", NULL);
 	tmpObj.gfx = AG_GfxNew(&tmpObj);
-	if (AG_XCFLoad(buf, 0, tmpObj.gfx) == -1)
+	if (AG_XCFLoad(ds, 0, tmpObj.gfx) == -1)
 		goto fail;
 	
 	px = Malloc(sizeof(AG_Pixmap), M_OBJECT);
@@ -130,11 +130,11 @@ AG_PixmapFromXCF(void *parent, Uint flags, const char *path)
 	for (i = 0; i < tmpObj.gfx->nsprites; i++) {
 		AG_WidgetMapSurface(px, AG_DupSurface(AG_SPRITE(&tmpObj,i).su));
 	}
-	AG_NetbufClose(buf);
+	AG_CloseFile(ds);
 	AG_ObjectDestroy(&tmpObj);
 	return (px);
 fail:
-	AG_NetbufClose(buf);
+	AG_CloseFile(ds);
 	AG_ObjectDestroy(&tmpObj);
 	return (NULL);
 }

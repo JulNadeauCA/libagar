@@ -108,7 +108,7 @@ RG_SketchDestroy(RG_Sketch *sk)
 }
 
 int
-RG_SketchLoad(RG_Sketch *sk, AG_Netbuf *buf)
+RG_SketchLoad(RG_Sketch *sk, AG_DataSource *buf)
 {
 	int vgflags;
 	
@@ -127,7 +127,7 @@ RG_SketchLoad(RG_Sketch *sk, AG_Netbuf *buf)
 }
 
 void
-RG_SketchSave(RG_Sketch *sk, AG_Netbuf *buf)
+RG_SketchSave(RG_Sketch *sk, AG_DataSource *buf)
 {
 	AG_WriteString(buf, sk->name);
 	AG_WriteUint32(buf, (Uint32)sk->flags);

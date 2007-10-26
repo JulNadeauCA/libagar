@@ -677,7 +677,7 @@ SG_ObjectDestroy(void *p)
 }
 
 int
-SG_ObjectLoad(void *p, AG_Netbuf *buf)
+SG_ObjectLoad(void *p, AG_DataSource *buf)
 {
 	SG_Object *so = p;
 	Uint i;
@@ -709,7 +709,7 @@ SG_ObjectLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-SG_ObjectSave(void *p, AG_Netbuf *buf)
+SG_ObjectSave(void *p, AG_DataSource *buf)
 {
 	SG_Object *so = p;
 	Uint i;
@@ -744,14 +744,14 @@ SG_ObjectSave(void *p, AG_Netbuf *buf)
 		SG_Edge *e;
 		Uint32 count = 0;
 
-		offs = AG_NetbufTell(buf);
+		offs = AG_Tell(buf);
 		AG_WriteUint32(buf, 0);
 		SLIST_FOREACH(e, &ee->edges, edges) {
 			AG_WriteUint32(buf, e->v);
 			/* XXX */
 			count++;
 		}
-		AG_PwriteUint32(buf, count, offs);
+		AG_WriteUint32At(buf, count, offs);
 	}
 	return (0);
 }

@@ -18,8 +18,8 @@ extern int agWindowAnySize;
 extern int agMsgDelay;
 
 void AG_ConfigInit(AG_Config *);
-int  AG_ConfigLoad(void *, AG_Netbuf *);
-int  AG_ConfigSave(void *, AG_Netbuf *);
+int  AG_ConfigLoad(void *, AG_DataSource *);
+int  AG_ConfigSave(void *, AG_DataSource *);
 int  AG_ConfigFile(const char *, const char *, const char *, char *, size_t)
 		   BOUNDED_ATTRIBUTE(__string__, 4, 5);
 __END_DECLS

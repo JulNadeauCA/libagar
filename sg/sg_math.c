@@ -34,19 +34,19 @@
 #include "sg.h"
 
 SG_Real
-SG_ReadReal(AG_Netbuf *buf)
+SG_ReadReal(AG_DataSource *buf)
 {
 	return ((SG_Real)AG_ReadDouble(buf));
 }
 
 void
-SG_CopyReal(AG_Netbuf *buf, SG_Real *rv)
+SG_CopyReal(AG_DataSource *buf, SG_Real *rv)
 {
 	*rv = (SG_Real)AG_ReadDouble(buf);
 }
 
 void
-SG_WriteReal(AG_Netbuf *buf, SG_Real v)
+SG_WriteReal(AG_DataSource *buf, SG_Real v)
 {
 	AG_WriteDouble(buf, (double)v);
 }

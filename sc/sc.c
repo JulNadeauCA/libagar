@@ -78,13 +78,13 @@ SC_VectorCompareProp(AG_Prop *p1, AG_Prop *p2)
 }
 
 void *
-SC_VectorLoadProp(void *obj, AG_Prop *prop, AG_Netbuf *buf)
+SC_VectorLoadProp(void *obj, AG_Prop *prop, AG_DataSource *buf)
 {
 	return (SC_ReadVector(buf));
 }
 
 void
-SC_VectorSaveProp(void *obj, AG_Prop *prop, AG_Netbuf *buf)
+SC_VectorSaveProp(void *obj, AG_Prop *prop, AG_DataSource *buf)
 {
 	return (SC_WriteVector(buf, (SC_Vector *)prop->data.p));
 }

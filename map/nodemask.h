@@ -38,8 +38,8 @@ __BEGIN_DECLS
 MAP_NodeMask	*MAP_NodeMaskNew(enum map_nodemask_type);
 
 void	 MAP_NodeMaskInit(MAP_NodeMask *, enum map_nodemask_type);
-int	 MAP_NodeMaskLoad(struct map *, AG_Netbuf *, MAP_NodeMask *);
-void	 MAP_NodeMaskSave(struct map *, AG_Netbuf *, const MAP_NodeMask *);
+int	 MAP_NodeMaskLoad(struct map *, AG_DataSource *, MAP_NodeMask *);
+void	 MAP_NodeMaskSave(struct map *, AG_DataSource *, const MAP_NodeMask *);
 void	 MAP_NodeMaskDestroy(struct map *, MAP_NodeMask *);
 void	 MAP_NodeMaskCopy(const MAP_NodeMask *, struct map *,
 	               MAP_NodeMask *);

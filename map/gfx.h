@@ -109,7 +109,7 @@ void	 AG_GfxInit(AG_Gfx *);
 void	 AG_GfxDestroy(AG_Gfx *);
 int	 AG_HasTransparency(SDL_Surface *);
 int	 AG_GfxLoad(struct ag_object *);
-int	 AG_GfxSave(struct ag_object *, AG_Netbuf *);
+int	 AG_GfxSave(struct ag_object *, AG_DataSource *);
 void	 AG_GfxUsed(void *);
 int	 AG_GfxUnused(void *);
 int	 AG_GfxLoadFromDEN(void *, const char *);

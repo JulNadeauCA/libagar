@@ -303,21 +303,20 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	{
 		char *s;
 		char *msig, *c0, *c1;
-		AG_Netbuf *buf;
+		AG_DataSource *ds;
 		
 		Verbose("Loading bitmap font: %s\n", name);
-		if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN))
-		    == NULL)
+		if ((ds = AG_OpenFile(path, "rb")) == NULL)
 			goto fail;
 
 		font->type = AG_FONT_BITMAP;
 		font->bglyphs = Malloc(32*sizeof(SDL_Surface *), M_TEXT);
 		font->nglyphs = 0;
 
-		if (AG_XCFLoad(buf, 0, AG_LoadBitmapGlyph, font) == -1) {
+		if (AG_XCFLoad(ds, 0, AG_LoadBitmapGlyph, font) == -1) {
 			goto fail;
 		}
-		AG_NetbufClose(buf);
+		AG_CloseFile(ds);
 
 		/* Get the range of characters from the "MAP:x-y" string. */
 		s = font->bspec;

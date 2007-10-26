@@ -352,9 +352,9 @@ ImportImagesFromXCF(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	char *path = AG_STRING(2);
-	AG_Netbuf *buf;
+	AG_DataSource *buf;
 
-	if ((buf = AG_NetbufOpen(path, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
+	if ((buf = AG_OpenFile(path, "rb")) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
 		return;
 	}
@@ -364,7 +364,7 @@ ImportImagesFromXCF(AG_Event *event)
 		AG_TextInfo("Successfully imported XCF image into %s",
 		    AGOBJECT(ts)->name);
 	}
-	AG_NetbufClose(buf);
+	AG_CloseFile(buf);
 }
 
 static void

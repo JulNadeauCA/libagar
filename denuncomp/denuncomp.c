@@ -126,9 +126,9 @@ main(int argc, char *argv[])
 		}
 		
 		buf = AG_Malloc(memb->size, 0);
-		AG_NetbufSeek(den->buf, memb->offs, SEEK_SET);
-		rv = AG_NetbufReadE(buf, 1, memb->size, den->buf);
-		if (rv > 0) {
+		AG_Seek(den->buf, memb->offs, AG_SEEK_SET);
+		AG_Read(den->buf, buf, 1, memb->size);
+		if (den->buf->rdLast > 0) {
 			if (fwrite(buf, rv, 1, f) < 1) {
 				fprintf(stderr, "%s: write error\n",
 				    memb->name);

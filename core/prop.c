@@ -264,12 +264,12 @@ AG_PropPath(char *dst, size_t size, const void *obj, const char *prop_name)
 }
 
 int
-AG_PropLoad(void *p, AG_Netbuf *buf)
+AG_PropLoad(void *p, AG_DataSource *ds)
 {
 	AG_Object *ob = p;
 	Uint32 i, nprops;
 
-	if (AG_ReadVersion(buf, "AG_PropTbl", &agPropTblVer, NULL) == -1)
+	if (AG_ReadVersion(ds, "AG_PropTbl", &agPropTblVer, NULL) == -1)
 		return (-1);
 
 	AG_MutexLock(&ob->lock);
@@ -277,64 +277,64 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 	if ((ob->flags & AG_OBJECT_RELOAD_PROPS) == 0)
 		AG_ObjectFreeProps(ob);
 
-	nprops = AG_ReadUint32(buf);
+	nprops = AG_ReadUint32(ds);
 	for (i = 0; i < nprops; i++) {
 		char key[AG_PROP_KEY_MAX];
 		Uint32 t;
 
-		if (AG_CopyString(key, buf, sizeof(key)) >= sizeof(key)) {
+		if (AG_CopyString(key, ds, sizeof(key)) >= sizeof(key)) {
 			AG_SetError("key %lu >= %lu", (Ulong)strlen(key),
 			    (Ulong)sizeof(key));
 			goto fail;
 		}
-		t = AG_ReadUint32(buf);
+		t = AG_ReadUint32(ds);
 		
 		switch (t) {
 		case AG_PROP_BOOL:
-			AG_SetBool(ob, key, (int)AG_ReadUint8(buf));
+			AG_SetBool(ob, key, (int)AG_ReadUint8(ds));
 			break;
 		case AG_PROP_UINT8:
-			AG_SetBool(ob, key, AG_ReadUint8(buf));
+			AG_SetBool(ob, key, AG_ReadUint8(ds));
 			break;
 		case AG_PROP_SINT8:
-			AG_SetBool(ob, key, AG_ReadSint8(buf));
+			AG_SetBool(ob, key, AG_ReadSint8(ds));
 			break;
 		case AG_PROP_UINT16:
-			AG_SetUint16(ob, key, AG_ReadUint16(buf));
+			AG_SetUint16(ob, key, AG_ReadUint16(ds));
 			break;
 		case AG_PROP_SINT16:
-			AG_SetSint16(ob, key, AG_ReadSint16(buf));
+			AG_SetSint16(ob, key, AG_ReadSint16(ds));
 			break;
 		case AG_PROP_UINT32:
-			AG_SetUint32(ob, key, AG_ReadUint32(buf));
+			AG_SetUint32(ob, key, AG_ReadUint32(ds));
 			break;
 		case AG_PROP_SINT32:
-			AG_SetSint32(ob, key, AG_ReadSint32(buf));
+			AG_SetSint32(ob, key, AG_ReadSint32(ds));
 			break;
 #ifdef HAVE_64BIT
 		case AG_PROP_UINT64:
-			AG_SetUint64(ob, key, AG_ReadUint64(buf));
+			AG_SetUint64(ob, key, AG_ReadUint64(ds));
 			break;
 		case AG_PROP_SINT64:
-			AG_SetSint64(ob, key, AG_ReadSint64(buf));
+			AG_SetSint64(ob, key, AG_ReadSint64(ds));
 			break;
 #endif
 		case AG_PROP_UINT:
-			AG_SetUint(ob, key, (Uint)AG_ReadUint32(buf));
+			AG_SetUint(ob, key, (Uint)AG_ReadUint32(ds));
 			break;
 		case AG_PROP_INT:
-			AG_SetInt(ob, key, (int)AG_ReadSint32(buf));
+			AG_SetInt(ob, key, (int)AG_ReadSint32(ds));
 			break;
 #ifdef HAVE_IEEE754
 		case AG_PROP_FLOAT:
-			AG_SetFloat(ob, key, AG_ReadFloat(buf));
+			AG_SetFloat(ob, key, AG_ReadFloat(ds));
 			break;
 		case AG_PROP_DOUBLE:
-			AG_SetDouble(ob, key, AG_ReadDouble(buf));
+			AG_SetDouble(ob, key, AG_ReadDouble(ds));
 			break;
 # ifdef HAVE_LONG_DOUBLE
 		case AG_PROP_LONG_DOUBLE:
-			AG_SetDouble(ob, key, AG_ReadLongDouble(buf));
+			AG_SetDouble(ob, key, AG_ReadLongDouble(ds));
 			break;
 # endif
 #endif
@@ -342,7 +342,7 @@ AG_PropLoad(void *p, AG_Netbuf *buf)
 			{
 				char *s;
 
-				s = AG_ReadString(buf);
+				s = AG_ReadString(ds);
 #ifdef AG_PROP_STRING_LIMIT
 				if (strlen(s) >= AG_PROP_STRING_LIMIT) {
 					AG_SetError("prop string %lu >= %lu",
@@ -369,7 +369,7 @@ fail:
 }
 
 int
-AG_PropSave(void *p, AG_Netbuf *buf)
+AG_PropSave(void *p, AG_DataSource *ds)
 {
 	AG_Object *ob = p;
 	off_t count_offs;
@@ -377,69 +377,69 @@ AG_PropSave(void *p, AG_Netbuf *buf)
 	AG_Prop *prop;
 	Uint8 c;
 	
-	AG_WriteVersion(buf, "AG_PropTbl", &agPropTblVer);
+	AG_WriteVersion(ds, "AG_PropTbl", &agPropTblVer);
 	
 	AG_MutexLock(&ob->lock);
 
-	count_offs = AG_NetbufTell(buf);			/* Skip count */
-	AG_WriteUint32(buf, 0);
+	count_offs = AG_Tell(ds);			/* Skip count */
+	AG_WriteUint32(ds, 0);
 
 	TAILQ_FOREACH(prop, &ob->props, props) {
-		AG_WriteString(buf, (char *)prop->key);
-		AG_WriteUint32(buf, prop->type);
+		AG_WriteString(ds, (char *)prop->key);
+		AG_WriteUint32(ds, prop->type);
 		debug(DEBUG_STATE, "%s -> %s\n", ob->name, prop->key);
 		switch (prop->type) {
 		case AG_PROP_BOOL:
 			c = (prop->data.i == 1) ? 1 : 0;
-			AG_WriteUint8(buf, c);
+			AG_WriteUint8(ds, c);
 			break;
 		case AG_PROP_UINT8:
-			AG_WriteUint8(buf, prop->data.u8);
+			AG_WriteUint8(ds, prop->data.u8);
 			break;
 		case AG_PROP_SINT8:
-			AG_WriteSint8(buf, prop->data.s8);
+			AG_WriteSint8(ds, prop->data.s8);
 			break;
 		case AG_PROP_UINT16:
-			AG_WriteUint16(buf, prop->data.u16);
+			AG_WriteUint16(ds, prop->data.u16);
 			break;
 		case AG_PROP_SINT16:
-			AG_WriteSint16(buf, prop->data.s16);
+			AG_WriteSint16(ds, prop->data.s16);
 			break;
 		case AG_PROP_UINT32:
-			AG_WriteUint32(buf, prop->data.u32);
+			AG_WriteUint32(ds, prop->data.u32);
 			break;
 		case AG_PROP_SINT32:
-			AG_WriteSint32(buf, prop->data.s32);
+			AG_WriteSint32(ds, prop->data.s32);
 			break;
 #ifdef HAVE_64BIT
 		case AG_PROP_UINT64:
-			AG_WriteUint64(buf, prop->data.u64);
+			AG_WriteUint64(ds, prop->data.u64);
 			break;
 		case AG_PROP_SINT64:
-			AG_WriteSint64(buf, prop->data.s64);
+			AG_WriteSint64(ds, prop->data.s64);
 			break;
 #endif
 		case AG_PROP_UINT:
-			AG_WriteUint32(buf, (Uint32)prop->data.u);
+			AG_WriteUint32(ds, (Uint32)prop->data.u);
 			break;
 		case AG_PROP_INT:
-			AG_WriteSint32(buf, (Sint32)prop->data.i);
+			AG_WriteSint32(ds, (Sint32)prop->data.i);
 			break;
 #ifdef HAVE_IEEE754
 		case AG_PROP_FLOAT:
-			AG_WriteFloat(buf, prop->data.f);
+			AG_WriteFloat(ds, prop->data.f);
 			break;
 		case AG_PROP_DOUBLE:
-			AG_WriteDouble(buf, prop->data.d);
+			AG_WriteDouble(ds, prop->data.d);
 			break;
 # ifdef HAVE_LONG_DOUBLE
 		case AG_PROP_LONG_DOUBLE:
-			AG_WriteLongDouble(buf, prop->data.ld);
+			AG_WriteLongDouble(ds, prop->data.ld);
 			break;
 # endif
 #endif
 		case AG_PROP_STRING:
-			AG_WriteString(buf, prop->data.s);
+			AG_WriteString(ds, prop->data.s);
 			break;
 		case AG_PROP_POINTER:
 			break;
@@ -451,7 +451,7 @@ AG_PropSave(void *p, AG_Netbuf *buf)
 		nprops++;
 	}
 	AG_MutexUnlock(&ob->lock);
-	AG_PwriteUint32(buf, nprops, count_offs);	/* Write count */
+	AG_WriteUint32At(ds, nprops, count_offs);	/* Write count */
 	return (0);
 fail:
 	AG_MutexUnlock(&ob->lock);

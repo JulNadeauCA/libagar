@@ -23,8 +23,8 @@ __BEGIN_DECLS
 extern const AG_ObjectOps sgProgramOps;
 
 void	 SG_ProgramInit(void *, const char *);
-int	 SG_ProgramLoad(void *, AG_Netbuf *);
-int	 SG_ProgramSave(void *, AG_Netbuf *);
+int	 SG_ProgramLoad(void *, AG_DataSource *);
+int	 SG_ProgramSave(void *, AG_DataSource *);
 
 void	 SG_ProgramInstall(SG_Program *, SG_View *);
 void	 SG_ProgramDeinstall(SG_Program *, SG_View *);

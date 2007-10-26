@@ -64,14 +64,14 @@
 #include <unistd.h>
 #endif
 #include <string.h>
+#include <stdio.h>	/* For use of FILE in headers */
+#include <SDL.h>	/* For use of SDL types in headers */
 
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 #define Uchar unsigned char
 #define Uint unsigned int
 #define Ulong unsigned long
 #endif
-
-#include <SDL.h>		/* For SDL types in headers */
 
 #ifdef HAVE_BOUNDED_ATTRIBUTE
 #define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))

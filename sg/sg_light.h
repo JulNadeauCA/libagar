@@ -25,14 +25,14 @@ SG_Color	 SG_ColorRGBA(SG_Real, SG_Real, SG_Real, SG_Real);
 void		 SG_ColorTo4fv(const SG_Color *, float *);
 void		 SG_ColorTo4dv(const SG_Color *, double *);
 
-SG_Color	 SG_ReadColor(AG_Netbuf *);
-void		 SG_WriteColor(AG_Netbuf *, SG_Color *);
+SG_Color	 SG_ReadColor(AG_DataSource *);
+void		 SG_WriteColor(AG_DataSource *, SG_Color *);
 
 SG_Light	*SG_LightNew(void *, const char *);
 void		 SG_LightInit(void *, const char *);
 void		 SG_LightDestroy(void *);
-int		 SG_LightLoad(void *, AG_Netbuf *);
-int		 SG_LightSave(void *, AG_Netbuf *);
+int		 SG_LightLoad(void *, AG_DataSource *);
+int		 SG_LightSave(void *, AG_DataSource *);
 void	 	 SG_LightSetup(SG_Light *, SG_View *);
 void		 SG_LightAlloc(SG_Light *, int);
 void		 SG_LightDraw(void *, SG_View *);

@@ -45,7 +45,7 @@ SG_ProgramInit(void *obj, const char *name)
 }
 
 int
-SG_ProgramLoad(void *obj, AG_Netbuf *buf)
+SG_ProgramLoad(void *obj, AG_DataSource *buf)
 {
 	SG_Program *prog = obj;
 
@@ -57,7 +57,7 @@ SG_ProgramLoad(void *obj, AG_Netbuf *buf)
 }
 
 int
-SG_ProgramSave(void *obj, AG_Netbuf *buf)
+SG_ProgramSave(void *obj, AG_DataSource *buf)
 {
 	SG_Program *prog = obj;
 

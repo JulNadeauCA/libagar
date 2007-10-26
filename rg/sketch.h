@@ -38,8 +38,8 @@ typedef struct rg_sketch {
 __BEGIN_DECLS
 void RG_SketchInit(RG_Sketch *, struct rg_tileset *, int);
 void RG_SketchDestroy(RG_Sketch *);
-int  RG_SketchLoad(RG_Sketch *, AG_Netbuf *);
-void RG_SketchSave(RG_Sketch *, AG_Netbuf *);
+int  RG_SketchLoad(RG_Sketch *, AG_DataSource *);
+void RG_SketchSave(RG_Sketch *, AG_DataSource *);
 void RG_SketchScale(RG_Sketch *, int, int, float, int, int);
 void RG_SketchRender(RG_Tile *, RG_TileElement *);
 

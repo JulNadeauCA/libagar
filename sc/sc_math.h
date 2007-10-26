@@ -119,9 +119,9 @@ __BEGIN_DECLS
 SC_Real SC_Rad2Deg(SC_Real);
 SC_Real SC_Deg2Rad(SC_Real);
 
-SC_Real SC_ReadReal(AG_Netbuf *);
-void	SC_CopyReal(AG_Netbuf *, SC_Real *);
-void	SC_WriteReal(AG_Netbuf *, SC_Real);
+SC_Real SC_ReadReal(AG_DataSource *);
+void	SC_CopyReal(AG_DataSource *, SC_Real *);
+void	SC_WriteReal(AG_DataSource *, SC_Real);
 #define SC_ReadTime(buf) SC_ReadReal(buf)
 #define SC_CopyTime(buf,t) SC_CopyReal((buf),(t))
 #define SC_WriteTime(buf,t) SC_WriteReal((buf),(t))
@@ -129,11 +129,11 @@ void	SC_WriteReal(AG_Netbuf *, SC_Real);
 #define SC_CopyQTime(buf,t) AG_CopyUint32((buf),(t))
 #define SC_WriteQTime(buf,t) AG_WriteUint32((buf),(Uint32)(t))
 
-SC_Range	SC_ReadRange(AG_Netbuf *);
-void		SC_CopyRange(AG_Netbuf *, SC_Range *);
-void		SC_WriteRange(AG_Netbuf *, SC_Range);
-SC_QTimeRange	SC_ReadQTimeRange(AG_Netbuf *);
-void		SC_CopyQTimeRange(AG_Netbuf *, SC_QTimeRange *);
-void		SC_WriteQTimeRange(AG_Netbuf *, SC_QTimeRange);
+SC_Range	SC_ReadRange(AG_DataSource *);
+void		SC_CopyRange(AG_DataSource *, SC_Range *);
+void		SC_WriteRange(AG_DataSource *, SC_Range);
+SC_QTimeRange	SC_ReadQTimeRange(AG_DataSource *);
+void		SC_CopyQTimeRange(AG_DataSource *, SC_QTimeRange *);
+void		SC_WriteQTimeRange(AG_DataSource *, SC_QTimeRange);
 
 __END_DECLS

@@ -70,8 +70,8 @@ __BEGIN_DECLS
 RG_Pixmap	*RG_PixmapNew(struct rg_tileset *, const char *, int);
 void		 RG_PixmapInit(RG_Pixmap *, struct rg_tileset *, int);
 void		 RG_PixmapDestroy(RG_Pixmap *);
-int		 RG_PixmapLoad(RG_Pixmap *, AG_Netbuf *);
-void		 RG_PixmapSave(RG_Pixmap *, AG_Netbuf *);
+int		 RG_PixmapLoad(RG_Pixmap *, AG_DataSource *);
+void		 RG_PixmapSave(RG_Pixmap *, AG_DataSource *);
 void		 RG_PixmapScale(RG_Pixmap *, int, int, int, int);
 
 struct ag_window  *RG_PixmapEdit(struct rg_tileview *, RG_TileElement *);

@@ -43,9 +43,7 @@ const char	*AG_GetError(void);
 void		 AG_SetError(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);
-void		 AG_FatalError(const char *, ...)
-		     FORMAT_ATTRIBUTE(printf, 1, 2)
-		     NONNULL_ATTRIBUTE(1);
+void		 AG_FatalError(const char *, ...);
 void		 AG_DebugPrintf(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);

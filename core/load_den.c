@@ -95,8 +95,8 @@ AG_DenWriteHeader(AG_Den *den, int nmemb)
 	AG_WriteUint32(den->buf, den->nmembers);
 	
 	/* Skip the mappings. */
-	den->mapoffs = AG_NetbufTell(den->buf);
-	AG_NetbufSeek(den->buf, den->nmembers*AG_DEN_MAPPING_SIZE, SEEK_CUR);
+	den->mapoffs = AG_Tell(den->buf);
+	AG_Seek(den->buf, den->nmembers*AG_DEN_MAPPING_SIZE, AG_SEEK_CUR);
 }
 
 /* Write the den mappings. */
@@ -105,16 +105,21 @@ AG_DenWriteMappings(AG_Den *den)
 {
 	Uint32 i;
 
-	AG_NetbufSeek(den->buf, den->mapoffs, SEEK_SET);
+	AG_Seek(den->buf, den->mapoffs, AG_SEEK_SET);
 
 	for (i = 0; i < den->nmembers; i++) {
 		AG_DenMember *memb = &den->members[i];
 
 		AG_WriteUint32(den->buf, (Uint32)sizeof(memb->name));
-		AG_NetbufWrite(memb->name, sizeof(memb->name), 1, den->buf);
-		AG_WriteUint32(den->buf, (Uint32)sizeof(memb->lang));
-		AG_NetbufWrite(memb->lang, sizeof(memb->lang), 1, den->buf);
 
+		if (AG_Write(den->buf, memb->name, sizeof(memb->name), 1) != 0)
+			AG_FatalError(NULL);
+
+		AG_WriteUint32(den->buf, (Uint32)sizeof(memb->lang));
+		
+		if (AG_Write(den->buf, memb->lang, sizeof(memb->lang), 1) != 0)
+			AG_FatalError(NULL);
+			
 		AG_WriteUint32(den->buf, (Uint32)memb->offs);
 		AG_WriteUint32(den->buf, (Uint32)memb->size);
 	}
@@ -127,13 +132,11 @@ AG_DenOpen(const char *path, enum ag_den_open_mode mode)
 	AG_Den *den;
 
 	den = Malloc(sizeof(AG_Den), M_LOADER);
-	den->buf = AG_NetbufOpen(path, (mode == AG_DEN_READ) ? "rb" : "wb",
-	    AG_NETBUF_BIG_ENDIAN);
+	den->buf = AG_OpenFile(path, (mode == AG_DEN_READ) ? "rb" : "wb");
 	if (den->buf == NULL) {
 		Free(den, M_LOADER);
 		return (NULL);
 	}
-
 	switch (mode) {
 	case AG_DEN_READ:
 		if (AG_ReadVersion(den->buf, agDenMagic, &agDenVer, NULL)==-1 ||
@@ -147,7 +150,7 @@ AG_DenOpen(const char *path, enum ag_den_open_mode mode)
 	}
 	return (den);
 fail:
-	AG_NetbufClose(den->buf);
+	AG_CloseFile(den->buf);
 	Free(den, M_LOADER);
 	return (NULL);
 }
@@ -155,7 +158,7 @@ fail:
 void
 AG_DenClose(AG_Den *den)
 {
-	AG_NetbufClose(den->buf);
+	AG_CloseFile(den->buf);
 
 	Free(den->author, 0);
 	Free(den->copyright, 0);
@@ -176,7 +179,7 @@ AG_DenImportFile(AG_Den *den, int ind, const char *name, const char *lang,
 	size_t size, rrv;
 	off_t offs;
 	
-	offs = AG_NetbufTell(den->buf);
+	offs = AG_Tell(den->buf);
 	size = 0;
 
 	if ((f = fopen(infile, "rb")) == NULL) {
@@ -187,14 +190,8 @@ AG_DenImportFile(AG_Den *den, int ind, const char *name, const char *lang,
 		rrv = fread(buf, 1, sizeof(buf), f);
 		size += rrv;
 
-		AG_NetbufWrite(buf, rrv, 1, den->buf);
-		if (rrv < sizeof(buf)) {
-			if (feof(f)) {
-				break;
-			} else {
-				AG_SetError("%s: read error", infile);
-				return (-1);
-			}
+		if (AG_Write(den->buf, buf, rrv, 1) != 0) {
+			return (-1);
 		}
 	}
 	fclose(f);

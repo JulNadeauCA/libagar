@@ -174,8 +174,8 @@ void	 MAP_InitSubsystem(void);
 MAP	*MAP_New(void *, const char *);
 void	 MAP_Init(void *, const char *);
 void	 MAP_Reinit(void *);
-int	 MAP_Load(void *, AG_Netbuf *);
-int	 MAP_Save(void *, AG_Netbuf *);
+int	 MAP_Load(void *, AG_DataSource *);
+int	 MAP_Save(void *, AG_DataSource *);
 void	 MAP_Destroy(void *);
 void	*MAP_Edit(void *);
 
@@ -205,8 +205,8 @@ void	 MAP_ItemSetFriction(MAP_Item *, int);
 void	 MAP_ItemSetLayer(MAP_Item *, int);
 
 void	 MAP_ItemDestroy(MAP *, MAP_Item *);
-int	 MAP_ItemLoad(MAP *, AG_Netbuf *, MAP_Node *, MAP_Item **);
-void	 MAP_ItemSave(MAP *, AG_Netbuf *, MAP_Item *);
+int	 MAP_ItemLoad(MAP *, AG_DataSource *, MAP_Node *, MAP_Item **);
+void	 MAP_ItemSave(MAP *, AG_DataSource *, MAP_Item *);
 int	 MAP_ItemExtent(MAP *, MAP_Item *, SDL_Rect *, int);
 void	 MAP_ItemDraw(MAP *, MAP_Item *, int, int, int);
 void	 MAP_ItemSetTile(MAP_Item *, MAP *, RG_Tileset *, Uint32);
@@ -215,8 +215,8 @@ void	 MAP_ItemAttrColor(Uint, int, Uint8 *);
 
 MAP_Item	*MAP_ItemLocate(MAP *, int, int, int);
 void		 MAP_NodeInit(MAP_Node *);
-int		 MAP_NodeLoad(MAP *, AG_Netbuf *, MAP_Node *);
-void		 MAP_NodeSave(MAP *, AG_Netbuf *, MAP_Node *);
+int		 MAP_NodeLoad(MAP *, AG_DataSource *, MAP_Node *);
+void		 MAP_NodeSave(MAP *, AG_DataSource *, MAP_Node *);
 void		 MAP_NodeDestroy(MAP *, MAP_Node *);
 void		 MAP_NodeRemoveAll(MAP *, MAP_Node *, int);
 

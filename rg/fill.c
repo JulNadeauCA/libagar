@@ -69,7 +69,7 @@ RG_FillInit(void *p, RG_Tileset *ts, int flags)
 }
 
 int
-RG_FillLoad(void *p, AG_Netbuf *buf)
+RG_FillLoad(void *p, AG_DataSource *buf)
 {
 	struct rg_fill_feature *f = p;
 	RG_Tileset *ts = RG_FEATURE(f)->ts;
@@ -98,7 +98,7 @@ RG_FillLoad(void *p, AG_Netbuf *buf)
 }
 
 void
-RG_FillSave(void *p, AG_Netbuf *buf)
+RG_FillSave(void *p, AG_DataSource *buf)
 {
 	struct rg_fill_feature *f = p;
 	RG_Tileset *ts = RG_FEATURE(f)->ts;

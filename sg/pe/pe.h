@@ -22,8 +22,8 @@ extern const AG_ObjectOps peOps;
 
 void	 PE_Init(void *, const char *);
 void	 PE_Destroy(void *);
-int	 PE_Load(void *, AG_Netbuf *);
-int	 PE_Save(void *, AG_Netbuf *);
+int	 PE_Load(void *, AG_DataSource *);
+int	 PE_Save(void *, AG_DataSource *);
 
 void	 PE_AttachObject(PE *, SG_Object *);
 void	 PE_DetachObject(PE *, SG_Object *);

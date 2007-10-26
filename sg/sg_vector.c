@@ -140,7 +140,7 @@ SG_Vector3to4(SG_Vector v)
 }
 
 SG_Vector2
-SG_ReadVector2(AG_Netbuf *buf)
+SG_ReadVector2(AG_DataSource *buf)
 {
 	SG_Vector2 v;
 
@@ -150,7 +150,7 @@ SG_ReadVector2(AG_Netbuf *buf)
 }
 
 SG_Vector
-SG_ReadVector(AG_Netbuf *buf)
+SG_ReadVector(AG_DataSource *buf)
 {
 	SG_Vector v;
 
@@ -161,7 +161,7 @@ SG_ReadVector(AG_Netbuf *buf)
 }
 
 SG_Vector4
-SG_ReadVector4(AG_Netbuf *buf)
+SG_ReadVector4(AG_DataSource *buf)
 {
 	SG_Vector4 v;
 
@@ -173,14 +173,14 @@ SG_ReadVector4(AG_Netbuf *buf)
 }
 
 void
-SG_ReadVector2v(AG_Netbuf *buf, SG_Vector2 *v)
+SG_ReadVector2v(AG_DataSource *buf, SG_Vector2 *v)
 {
 	v->x = (SG_Real)AG_ReadDouble(buf);
 	v->y = (SG_Real)AG_ReadDouble(buf);
 }
 
 void
-SG_ReadVectorv(AG_Netbuf *buf, SG_Vector *v)
+SG_ReadVectorv(AG_DataSource *buf, SG_Vector *v)
 {
 	v->x = (SG_Real)AG_ReadDouble(buf);
 	v->y = (SG_Real)AG_ReadDouble(buf);
@@ -188,7 +188,7 @@ SG_ReadVectorv(AG_Netbuf *buf, SG_Vector *v)
 }
 
 void
-SG_ReadVector4v(AG_Netbuf *buf, SG_Vector4 *v)
+SG_ReadVector4v(AG_DataSource *buf, SG_Vector4 *v)
 {
 	v->x = (SG_Real)AG_ReadDouble(buf);
 	v->y = (SG_Real)AG_ReadDouble(buf);
@@ -197,14 +197,14 @@ SG_ReadVector4v(AG_Netbuf *buf, SG_Vector4 *v)
 }
 
 void
-SG_WriteVector2(AG_Netbuf *buf, SG_Vector2 *v)
+SG_WriteVector2(AG_DataSource *buf, SG_Vector2 *v)
 {
 	AG_WriteDouble(buf, (double)v->x);
 	AG_WriteDouble(buf, (double)v->y);
 }
 
 void
-SG_WriteVector(AG_Netbuf *buf, SG_Vector *v)
+SG_WriteVector(AG_DataSource *buf, SG_Vector *v)
 {
 	AG_WriteDouble(buf, (double)v->x);
 	AG_WriteDouble(buf, (double)v->y);
@@ -212,7 +212,7 @@ SG_WriteVector(AG_Netbuf *buf, SG_Vector *v)
 }
 
 void
-SG_WriteVector4(AG_Netbuf *buf, SG_Vector4 *v)
+SG_WriteVector4(AG_DataSource *buf, SG_Vector4 *v)
 {
 	AG_WriteDouble(buf, (double)v->x);
 	AG_WriteDouble(buf, (double)v->y);
@@ -221,7 +221,7 @@ SG_WriteVector4(AG_Netbuf *buf, SG_Vector4 *v)
 }
 
 SG_Vector2
-SG_ReadVectorf2(AG_Netbuf *buf)
+SG_ReadVectorf2(AG_DataSource *buf)
 {
 	SG_Vector2 v;
 
@@ -231,7 +231,7 @@ SG_ReadVectorf2(AG_Netbuf *buf)
 }
 
 SG_Vector
-SG_ReadVectorf(AG_Netbuf *buf)
+SG_ReadVectorf(AG_DataSource *buf)
 {
 	SG_Vector v;
 
@@ -242,7 +242,7 @@ SG_ReadVectorf(AG_Netbuf *buf)
 }
 
 SG_Vector4
-SG_ReadVectorf4(AG_Netbuf *buf)
+SG_ReadVectorf4(AG_DataSource *buf)
 {
 	SG_Vector4 v;
 
@@ -254,14 +254,14 @@ SG_ReadVectorf4(AG_Netbuf *buf)
 }
 
 void
-SG_ReadVectorf2v(AG_Netbuf *buf, SG_Vector2 *v)
+SG_ReadVectorf2v(AG_DataSource *buf, SG_Vector2 *v)
 {
 	v->x = (SG_Real)AG_ReadFloat(buf);
 	v->y = (SG_Real)AG_ReadFloat(buf);
 }
 
 void
-SG_ReadVectorfv(AG_Netbuf *buf, SG_Vector *v)
+SG_ReadVectorfv(AG_DataSource *buf, SG_Vector *v)
 {
 	v->x = (SG_Real)AG_ReadFloat(buf);
 	v->y = (SG_Real)AG_ReadFloat(buf);
@@ -269,7 +269,7 @@ SG_ReadVectorfv(AG_Netbuf *buf, SG_Vector *v)
 }
 
 void
-SG_ReadVectorf4v(AG_Netbuf *buf, SG_Vector4 *v)
+SG_ReadVectorf4v(AG_DataSource *buf, SG_Vector4 *v)
 {
 	v->x = (SG_Real)AG_ReadFloat(buf);
 	v->y = (SG_Real)AG_ReadFloat(buf);
@@ -279,14 +279,14 @@ SG_ReadVectorf4v(AG_Netbuf *buf, SG_Vector4 *v)
 
 
 void
-SG_WriteVectorf2(AG_Netbuf *buf, SG_Vector2 *v)
+SG_WriteVectorf2(AG_DataSource *buf, SG_Vector2 *v)
 {
 	AG_WriteFloat(buf, (float)v->x);
 	AG_WriteFloat(buf, (float)v->y);
 }
 
 void
-SG_WriteVectorf(AG_Netbuf *buf, SG_Vector *v)
+SG_WriteVectorf(AG_DataSource *buf, SG_Vector *v)
 {
 	AG_WriteFloat(buf, (float)v->x);
 	AG_WriteFloat(buf, (float)v->y);
@@ -294,7 +294,7 @@ SG_WriteVectorf(AG_Netbuf *buf, SG_Vector *v)
 }
 
 void
-SG_WriteVectorf4(AG_Netbuf *buf, SG_Vector4 *v)
+SG_WriteVectorf4(AG_DataSource *buf, SG_Vector4 *v)
 {
 	AG_WriteFloat(buf, (float)v->x);
 	AG_WriteFloat(buf, (float)v->y);

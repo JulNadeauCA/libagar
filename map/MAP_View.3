@@ -181,8 +181,8 @@ typedef struct map_tool {
 
 	void (*init)(MAP_Tool *t);
 	void (*destroy)(MAP_Tool *t);
-	int  (*load)(MAP_Tool *t, AG_Netbuf *b);
-	int  (*save)(MAP_Tool *t, AG_Netbuf *b);
+	int  (*load)(MAP_Tool *t, AG_DataSource *ds);
+	int  (*save)(MAP_Tool *t, AG_DataSource *ds);
 	int  (*cursor)(MAP_Tool *t, SDL_Rect *r);
 	void (*effect)(MAP_Tool *t, MAP_Node *n);
 	int (*mousemotion)(MAP_Tool *t, int x, int y, int xrel,
@@ -297,9 +297,10 @@ The user double clicked over the given tile.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
-.Xr MAP 3 ,
+.Xr AG_DataSource 3 ,
 .Xr AG_Widget 3 ,
-.Xr AG_Window 3
+.Xr AG_Window 3 ,
+.Xr MAP 3
 .Sh HISTORY
 The
 .Nm

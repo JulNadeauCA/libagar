@@ -62,16 +62,16 @@ in the loader routine.
 .Sh VERSIONING
 .nr nS 1
 .Ft "int"
-.Fn AG_ReadVersion "AG_Netbuf *buf" "const char *magic" "const AG_Version *ver" "AG_Version *rver"
+.Fn AG_ReadVersion "AG_DataSource *ds" "const char *magic" "const AG_Version *ver" "AG_Version *rver"
 .Pp
 .Ft "void"
-.Fn AG_WriteVersion "AG_Netbuf *buf" "const char *magic" "const AG_Version *ver"
+.Fn AG_WriteVersion "AG_DataSource *ds" "const char *magic" "const AG_Version *ver"
 .Pp
 .Ft "int"
-.Fn AG_ReadObjectVersion "AG_Netbuf *buf" "AG_Object *obj"
+.Fn AG_ReadObjectVersion "AG_DataSource *ds" "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_WriteObjectVersion "AG_Netbuf *buf" "const AG_Object *obj"
+.Fn AG_WriteObjectVersion "AG_DataSource *ds" "const AG_Object *obj"
 .Pp
 .nr nS 0
 The
@@ -92,7 +92,7 @@ The
 function writes version information from the structure
 .Fa ver
 to
-.Fa buf .
+.Fa ds .
 .Pp
 The
 .Fn AG_ReadObjectVersion
@@ -104,7 +104,8 @@ structure of
 .Xr AG_Object 3 ,
 using the name of the object class as a signature.
 .Sh SEE ALSO
-.Xr AG_Intro 3
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3
 .Sh HISTORY
 The
 .Nm

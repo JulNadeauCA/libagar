@@ -1089,7 +1089,7 @@ VG_PopLayer(VG *vg)
 }
 
 static void
-VG_SaveMatrix(VG_Matrix *A, AG_Netbuf *buf)
+VG_SaveMatrix(VG_Matrix *A, AG_DataSource *buf)
 {
 	int m, n;
 
@@ -1100,7 +1100,7 @@ VG_SaveMatrix(VG_Matrix *A, AG_Netbuf *buf)
 }
 
 static void
-VG_LoadMatrix(VG_Matrix *A, AG_Netbuf *buf)
+VG_LoadMatrix(VG_Matrix *A, AG_DataSource *buf)
 {
 	int m, n;
 
@@ -1111,7 +1111,7 @@ VG_LoadMatrix(VG_Matrix *A, AG_Netbuf *buf)
 }
 
 void
-VG_Save(VG *vg, AG_Netbuf *buf)
+VG_Save(VG *vg, AG_DataSource *buf)
 {
 	off_t nblocks_offs, nvges_offs, nstyles_offs;
 	Uint32 nblocks = 0, nvges = 0, nstyles = 0;
@@ -1155,7 +1155,7 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 	}
 
 	/* Save the block information. */
-	nblocks_offs = AG_NetbufTell(buf);
+	nblocks_offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 		if (vgb->flags & VG_BLOCK_NOSAVE)
@@ -1168,10 +1168,10 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 		AG_WriteFloat(buf, vgb->theta);
 		nblocks++;
 	}
-	AG_PwriteUint32(buf, nblocks, nblocks_offs);
+	AG_WriteUint32At(buf, nblocks, nblocks_offs);
 
 	/* Save the global style information. */
-	nstyles_offs = AG_NetbufTell(buf);
+	nstyles_offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(vgs, &vg->styles, styles) {
 		AG_WriteString(buf, vgs->name);
@@ -1200,10 +1200,10 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 		}
 		nstyles++;
 	}
-	AG_PwriteUint32(buf, nstyles, nstyles_offs);
+	AG_WriteUint32At(buf, nstyles, nstyles_offs);
 
 	/* Save the vg elements. */
-	nvges_offs = AG_NetbufTell(buf);
+	nvges_offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		if (vge->flags & VG_ELEMENT_NOSAVE)
@@ -1273,13 +1273,12 @@ VG_Save(VG *vg, AG_Netbuf *buf)
 		}
 		nvges++;
 	}
-	AG_PwriteUint32(buf, nvges, nvges_offs);
-
+	AG_WriteUint32At(buf, nvges, nvges_offs);
 	AG_MutexUnlock(&vg->lock);
 }
 
 int
-VG_Load(VG *vg, AG_Netbuf *buf)
+VG_Load(VG *vg, AG_DataSource *buf)
 {
 	Uint32 norigin, nlayers, nstyles, nelements, nblocks;
 	Uint32 i;
@@ -1504,14 +1503,14 @@ fail:
 }
 
 void
-VG_WriteVertex(AG_Netbuf *buf, VG_Vtx *vtx)
+VG_WriteVertex(AG_DataSource *buf, VG_Vtx *vtx)
 {
 	AG_WriteFloat(buf, vtx->x);
 	AG_WriteFloat(buf, vtx->y);
 }
 
 void
-VG_ReadVertex(AG_Netbuf *buf, VG_Vtx *vtx)
+VG_ReadVertex(AG_DataSource *buf, VG_Vtx *vtx)
 {
 	vtx->x = AG_ReadFloat(buf);
 	vtx->y = AG_ReadFloat(buf);

@@ -159,24 +159,24 @@ __END_DECLS
 
 __BEGIN_DECLS
 void       SG_VectorInitEngine(void);
-SG_Vector2 SG_ReadVector2(AG_Netbuf *);
-SG_Vector  SG_ReadVector (AG_Netbuf *);
-SG_Vector4 SG_ReadVector4(AG_Netbuf *);
-void	   SG_ReadVector2v(AG_Netbuf *, SG_Vector2 *);
-void	   SG_ReadVectorv (AG_Netbuf *, SG_Vector  *);
-void	   SG_ReadVector4v(AG_Netbuf *, SG_Vector4 *);
-void	   SG_WriteVector2(AG_Netbuf *, SG_Vector2 *);
-void	   SG_WriteVector (AG_Netbuf *, SG_Vector  *);
-void	   SG_WriteVector4(AG_Netbuf *, SG_Vector4 *);
-SG_Vector2 SG_ReadVectorf2(AG_Netbuf *);
-SG_Vector  SG_ReadVectorf (AG_Netbuf *);
-SG_Vector4 SG_ReadVectorf4(AG_Netbuf *);
-void	   SG_ReadVectorf2v(AG_Netbuf *, SG_Vector2 *);
-void	   SG_ReadVectorfv (AG_Netbuf *, SG_Vector  *);
-void	   SG_ReadVectorf4v(AG_Netbuf *, SG_Vector4 *);
-void	   SG_WriteVectorf2(AG_Netbuf *, SG_Vector2 *);
-void	   SG_WriteVectorf (AG_Netbuf *, SG_Vector *);
-void	   SG_WriteVectorf4(AG_Netbuf *, SG_Vector4 *);
+SG_Vector2 SG_ReadVector2(AG_DataSource *);
+SG_Vector  SG_ReadVector (AG_DataSource *);
+SG_Vector4 SG_ReadVector4(AG_DataSource *);
+void	   SG_ReadVector2v(AG_DataSource *, SG_Vector2 *);
+void	   SG_ReadVectorv (AG_DataSource *, SG_Vector  *);
+void	   SG_ReadVector4v(AG_DataSource *, SG_Vector4 *);
+void	   SG_WriteVector2(AG_DataSource *, SG_Vector2 *);
+void	   SG_WriteVector (AG_DataSource *, SG_Vector  *);
+void	   SG_WriteVector4(AG_DataSource *, SG_Vector4 *);
+SG_Vector2 SG_ReadVectorf2(AG_DataSource *);
+SG_Vector  SG_ReadVectorf (AG_DataSource *);
+SG_Vector4 SG_ReadVectorf4(AG_DataSource *);
+void	   SG_ReadVectorf2v(AG_DataSource *, SG_Vector2 *);
+void	   SG_ReadVectorfv (AG_DataSource *, SG_Vector  *);
+void	   SG_ReadVectorf4v(AG_DataSource *, SG_Vector4 *);
+void	   SG_WriteVectorf2(AG_DataSource *, SG_Vector2 *);
+void	   SG_WriteVectorf (AG_DataSource *, SG_Vector *);
+void	   SG_WriteVectorf4(AG_DataSource *, SG_Vector4 *);
 
 SG_Vector2 SG_RealvToVector2(const SG_Real *);
 SG_Vector  SG_RealvToVector(const SG_Real *);

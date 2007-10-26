@@ -283,7 +283,7 @@ merge_effect(MAP_Tool *t, MAP_Node *n)
 }
 
 static int
-merge_load(MAP_Tool *t, AG_Netbuf *buf)
+merge_load(MAP_Tool *t, AG_DataSource *buf)
 {
 	Uint32 i, nbrushes;
 	
@@ -309,15 +309,14 @@ merge_load(MAP_Tool *t, AG_Netbuf *buf)
 }
 
 static int
-merge_save(MAP_Tool *t, AG_Netbuf *buf)
+merge_save(MAP_Tool *t, AG_DataSource *buf)
 {
 	AG_Object *ob;
 	Uint32 nbrushes = 0;
 	off_t count_offs;
 
 	AG_WriteVersion(buf, &merge_ver);
-
-	count_offs = AG_NetbufTell(buf);				/* Skip count */
+	count_offs = AG_Tell(buf);			/* Skip count */
 	AG_WriteUint32(buf, 0);	
 	TAILQ_FOREACH(ob, &brushes, cobjs) {
 		struct brush *brush = (struct brush *)ob;
@@ -326,7 +325,7 @@ merge_save(MAP_Tool *t, AG_Netbuf *buf)
 		map_save(brush, buf);
 		nbrushes++;
 	}
-	AG_PwriteUint32(buf, nbrushes, count_offs);	/* Write count */
+	AG_WriteUint32At(buf, nbrushes, count_offs);	/* Write count */
 	return (0);
 }
 

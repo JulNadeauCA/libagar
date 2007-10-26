@@ -209,7 +209,7 @@ RG_AnimDestroy(RG_Anim *ani)
 }
 
 int
-RG_AnimLoad(RG_Anim *ani, AG_Netbuf *buf)
+RG_AnimLoad(RG_Anim *ani, AG_DataSource *buf)
 {
 	RG_Tileset *ts = ani->tileset;
 	Uint32 i, ninsns;
@@ -263,7 +263,7 @@ RG_AnimLoad(RG_Anim *ani, AG_Netbuf *buf)
 }
 
 void
-RG_AnimSave(RG_Anim *ani, AG_Netbuf *buf)
+RG_AnimSave(RG_Anim *ani, AG_DataSource *buf)
 {
 	Uint i;
 	

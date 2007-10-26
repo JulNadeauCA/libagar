@@ -68,7 +68,7 @@ SG_PlaneObjInit(void *p, const char *name)
 }
 
 int
-SG_PlaneObjLoad(void *p, AG_Netbuf *buf)
+SG_PlaneObjLoad(void *p, AG_DataSource *buf)
 {
 	SG_PlaneObj *po = p;
 
@@ -77,7 +77,7 @@ SG_PlaneObjLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-SG_PlaneObjSave(void *p, AG_Netbuf *buf)
+SG_PlaneObjSave(void *p, AG_DataSource *buf)
 {
 	SG_PlaneObj *po = p;
 

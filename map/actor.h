@@ -62,8 +62,8 @@ __BEGIN_DECLS
 void	MAP_ActorInit(void *, const char *);
 void	MAP_ActorReinit(void *);
 void	MAP_ActorDestroy(void *);
-int	MAP_ActorLoad(void *, AG_Netbuf *);
-int	MAP_ActorSave(void *, AG_Netbuf *);
+int	MAP_ActorLoad(void *, AG_DataSource *);
+int	MAP_ActorSave(void *, AG_DataSource *);
 void   *MAP_ActorEdit(void *);
 void	MAP_ActorUpdate(void *);
 int	MAP_ActorSetTile(void *, int, int, int, RG_Tileset *, const char *);

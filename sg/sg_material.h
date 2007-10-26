@@ -50,8 +50,8 @@ void		 SG_MaterialInit(void *, const char *);
 void		 SG_MaterialReinit(void *);
 void		 SG_MaterialDestroy(void *);
 void		*SG_MaterialEdit(void *);
-int		 SG_MaterialLoad(void *, AG_Netbuf *);
-int		 SG_MaterialSave(void *, AG_Netbuf *);
+int		 SG_MaterialLoad(void *, AG_DataSource *);
+int		 SG_MaterialSave(void *, AG_DataSource *);
 
 void		 SG_MaterialBind(SG_Material *, SG_View *);
 void		 SG_MaterialUnbind(SG_Material *, SG_View *);

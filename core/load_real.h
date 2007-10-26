@@ -11,62 +11,57 @@
 __BEGIN_DECLS
 
 static __inline__ float
-AG_ReadFloat(AG_Netbuf *buf)
+AG_ReadFloat(AG_DataSource *ds)
 {
 	float f;
-	AG_NetbufRead(&f, sizeof(f), 1, buf);
+	if (AG_Read(ds, &f, sizeof(f), 1) != 0) { AG_FatalError(NULL); }
 	return (f);
 }
-
 static __inline__ void
-AG_WriteFloat(AG_Netbuf *buf, float f)
+AG_WriteFloat(AG_DataSource *ds, float f)
 {
-	AG_NetbufWrite(&f, sizeof(f), 1, buf);
+	if (AG_Write(ds, &f, sizeof(f), 1) != 0) { AG_FatalError(NULL); }
 }
-
 static __inline__ void
-AG_PwriteFloat(AG_Netbuf *buf, float f, off_t offs)
+AG_WriteFloatAt(AG_DataSource *ds, float f, off_t pos)
 {
-	AG_NetbufPwrite(&f, sizeof(f), 1, offs, buf);
+	if (AG_WriteAt(ds, &f, sizeof(f), 1, pos) != 0) { AG_FatalError(NULL); }
 }
-
 static __inline__ double
-AG_ReadDouble(AG_Netbuf *buf)
+AG_ReadDouble(AG_DataSource *ds)
 {
 	double f;
-	AG_NetbufRead(&f, sizeof(f), 1, buf);
+	if (AG_Read(ds, &f, sizeof(f), 1) != 0) { AG_FatalError(NULL); }
 	return (f);
 }
-
 static __inline__ void
-AG_WriteDouble(AG_Netbuf *buf, double f)
+AG_WriteDouble(AG_DataSource *ds, double f)
 {
-	AG_NetbufWrite(&f, sizeof(f), 1, buf);
+	if (AG_Write(ds, &f, sizeof(f), 1) != 0) { AG_FatalError(NULL); }
 }
-
 static __inline__ void
-AG_PwriteDouble(AG_Netbuf *buf, double f, off_t offs)
+AG_WriteDoubleAt(AG_DataSource *ds, double f, off_t pos)
 {
-	AG_NetbufPwrite(&f, sizeof(f), 1, offs, buf);
+	if (AG_WriteAt(ds, &f, sizeof(f), 1, pos) != 0) { AG_FatalError(NULL); }
 }
 
 #ifdef HAVE_LONG_DOUBLE
 static __inline__ long double
-AG_ReadLongDouble(AG_Netbuf *buf)
+AG_ReadLongDouble(AG_DataSource *ds)
 {
 	long double f;
-	AG_NetbufRead(&f, sizeof(f), 1, buf);
+	if (AG_Read(ds, &f, sizeof(f), 1) != 0) { AG_FatalError(NULL); }
 	return (f);
 }
 static __inline__ void
-AG_WriteLongDouble(AG_Netbuf *buf, long double f)
+AG_WriteLongDouble(AG_DataSource *ds, long double f)
 {
-	AG_NetbufWrite(&f, sizeof(f), 1, buf);
+	if (AG_Write(ds, &f, sizeof(f), 1) != 0) { AG_FatalError(NULL); }
 }
 static __inline__ void
-AG_PwriteLongDouble(AG_Netbuf *buf, long double f, off_t offs)
+AG_WriteLongDoubleAt(AG_DataSource *ds, long double f, off_t pos)
 {
-	AG_NetbufPwrite(&f, sizeof(f), 1, offs, buf);
+	if (AG_WriteAt(ds, &f, sizeof(f), 1, pos) != 0) { AG_FatalError(NULL); }
 }
 #endif /* HAVE_LONG_DOUBLE */
 

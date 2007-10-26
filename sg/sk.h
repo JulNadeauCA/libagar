@@ -40,8 +40,8 @@ typedef struct sk_node_ops {
 	Uint flags;
 	void (*init)(void *, Uint32);
 	void (*destroy)(void *);
-	int (*load)(struct sk *, void *, AG_Netbuf *);
-	int (*save)(struct sk *, void *, AG_Netbuf *);
+	int (*load)(struct sk *, void *, AG_DataSource *);
+	int (*save)(struct sk *, void *, AG_DataSource *);
 	void (*draw_relative)(void *, SK_View *);
 	void (*draw_absolute)(void *, SK_View *);
 	void (*redraw)(void *, SK_View *);
@@ -197,8 +197,8 @@ SK	*SK_New(void *, const char *);
 void	 SK_Init(void *, const char *);
 void	 SK_Reinit(void *);
 void	 SK_Destroy(void *);
-int	 SK_Save(void *, AG_Netbuf *);
-int	 SK_Load(void *, AG_Netbuf *);
+int	 SK_Save(void *, AG_DataSource *);
+int	 SK_Load(void *, AG_DataSource *);
 void	*SK_Edit(void *);
 
 void	 	 SK_RenderNode(SK *, SK_Node *, SK_View *);
@@ -211,7 +211,7 @@ void		*SK_NodeAdd(void *, const SK_NodeOps *, Uint32, Uint);
 int		 SK_NodeDel(void *);
 void		 SK_NodeAttach(void *, void *);
 void		 SK_NodeDetach(void *, void *);
-int		 SK_NodeLoadGeneric(SK *, SK_Node **, AG_Netbuf *);
+int		 SK_NodeLoadGeneric(SK *, SK_Node **, AG_DataSource *);
 void		 SK_GetNodeTransform(void *, SG_Matrix *);
 void		 SK_GetNodeTransformInverse(void *, SG_Matrix *);
 void		 SK_NodeAddReference(void *, void *);
@@ -223,8 +223,8 @@ Uint32		 SK_GenClusterName(SK *);
 SG_Color	 SK_NodeColor(void *, const SG_Color *);
 void		 SK_NodeRedraw(void *, SK_View *);
 
-void		*SK_ReadRef(AG_Netbuf *, SK *, const char *);
-void		 SK_WriteRef(AG_Netbuf *, void *);
+void		*SK_ReadRef(AG_DataSource *, SK *, const char *);
+void		 SK_WriteRef(AG_DataSource *, void *);
 void		 SK_SetLengthUnit(SK *, const AG_Unit *);
 void		*SK_ProximitySearch(SK *, const char *, SG_Vector *,
 		                    SG_Vector *, void *);

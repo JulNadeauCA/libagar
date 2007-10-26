@@ -119,7 +119,7 @@ SG_MaterialDestroy(void *obj)
 }
 
 int
-SG_MaterialLoad(void *obj, AG_Netbuf *buf)
+SG_MaterialLoad(void *obj, AG_DataSource *buf)
 {
 	if (AG_ReadVersion(buf, sgMaterialOps.type, &sgMaterialOps.ver, NULL)
 	    != 0)
@@ -129,7 +129,7 @@ SG_MaterialLoad(void *obj, AG_Netbuf *buf)
 }
 
 int
-SG_MaterialSave(void *obj, AG_Netbuf *buf)
+SG_MaterialSave(void *obj, AG_DataSource *buf)
 {
 	AG_WriteVersion(buf, sgMaterialOps.type, &sgMaterialOps.ver);
 	return (0);

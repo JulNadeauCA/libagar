@@ -130,8 +130,8 @@ void		RG_TileScale(struct rg_tileset *, RG_Tile *, Uint16, Uint16,
 void		RG_TileGenerate(RG_Tile *);
 struct ag_window *RG_TileEdit(struct rg_tileset *, RG_Tile *);
 void		RG_TileDestroy(RG_Tile *);
-void		RG_TileSave(RG_Tile *, AG_Netbuf *);
-int		RG_TileLoad(RG_Tile *, AG_Netbuf *);
+void		RG_TileSave(RG_Tile *, AG_DataSource *);
+int		RG_TileLoad(RG_Tile *, AG_DataSource *);
 void		RG_TileOpenMenu(struct rg_tileview *, int, int);
 void		RG_TileCloseMenu(struct rg_tileview *);
 

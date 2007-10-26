@@ -29,16 +29,14 @@
 
 #include <core/core.h>
 
-#include <string.h>
-
 /* Allocate and read a length-encoded string. */
 char *
-AG_ReadStringLen(AG_Netbuf *buf, size_t maxlen)
+AG_ReadStringLen(AG_DataSource *ds, size_t maxlen)
 {
 	size_t len;
 	char *s;
 
-	if ((len = (size_t)AG_ReadUint32(buf))+1 >= maxlen) {
+	if ((len = (size_t)AG_ReadUint32(ds))+1 >= maxlen) {
 		AG_SetError("String overflow");
 		return (NULL);
 	}
@@ -47,7 +45,7 @@ AG_ReadStringLen(AG_Netbuf *buf, size_t maxlen)
 		return (NULL);
 	}
 	if (len > 0) {
-		AG_NetbufRead(s, len, 1, buf);
+		if (AG_Read(ds, s, len, 1) != 0) { AG_FatalError(NULL); }
 	}
 	s[len] = '\0';
 	return (s);
@@ -55,12 +53,12 @@ AG_ReadStringLen(AG_Netbuf *buf, size_t maxlen)
 
 /* Allocate and read a NUL-terminated, length-encoded string. */
 char *
-AG_ReadNulStringLen(AG_Netbuf *buf, size_t maxlen)
+AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
 {
 	size_t len;
 	char *s;
 
-	if ((len = (size_t)AG_ReadUint32(buf)) >= maxlen) {
+	if ((len = (size_t)AG_ReadUint32(ds)) >= maxlen) {
 		AG_SetError("String overflow");
 		return (NULL);
 	}
@@ -72,22 +70,22 @@ AG_ReadNulStringLen(AG_Netbuf *buf, size_t maxlen)
 		AG_SetError("Out of memory for string");
 		return (NULL);
 	}
-	AG_NetbufRead(s, len, 1, buf);
+	if (AG_Read(ds, s, len, 1) != 0) { AG_FatalError(NULL); }
 	return (s);
 }
 
 /* Write a length-encoded string. */
 void
-AG_WriteString(AG_Netbuf *buf, const char *s)
+AG_WriteString(AG_DataSource *ds, const char *s)
 {
 	size_t len;
 
 	if (s == NULL || s[0] == '\0') {
-		AG_WriteUint32(buf, 0);
+		AG_WriteUint32(ds, 0);
 	} else {
 		len = strlen(s);
-		AG_WriteUint32(buf, (Uint32)len);
-		AG_NetbufWrite(s, len, 1, buf);
+		AG_WriteUint32(ds, (Uint32)len);
+		if (AG_Write(ds, s, len, 1) != 0) { AG_FatalError(NULL); }
 	}
 }
 
@@ -97,14 +95,15 @@ AG_WriteString(AG_Netbuf *buf, const char *s)
  * dst_size unlimited. The function NUL-terminates the string.
  */
 size_t
-AG_CopyString(char *dst, AG_Netbuf *buf, size_t dst_size)
+AG_CopyString(char *dst, AG_DataSource *ds, size_t dst_size)
 {
-	size_t rv, len, rrv;
+	size_t rv, len;
 
-	if ((len = (size_t)AG_ReadUint32(buf)) > (dst_size-1)) {
+	AG_LockDataSource(ds);
+	if ((len = (size_t)AG_ReadUint32(ds)) > (dst_size-1)) {
 #ifdef DEBUG
-		fprintf(stderr, "0x%x: %lub string truncated to fit %lub\n",
-		    (unsigned)AG_NetbufTell(buf), (unsigned long)len,
+		Verbose("0x%x: %lub string truncated to fit %lub\n",
+		    (unsigned)AG_Tell(ds), (unsigned long)len,
 		    (unsigned long)dst_size);
 #endif
 		rv = len+1;		/* Save the intended length */
@@ -112,20 +111,13 @@ AG_CopyString(char *dst, AG_Netbuf *buf, size_t dst_size)
 	} else {
 		rv = len;
 	}
-
 	if (len == 0) {
 		dst[0] = '\0';
 	} else {
-		if ((rrv = fread(dst, 1, len, buf->file)) < len) {
-			if (ferror(buf->file) || feof(buf->file)) {
-				fatal("read error");
-			} else {
-				fatal("short read");
-			}
-		} else {
-			dst[rrv] = '\0';
-		}
+		if (AG_Read(ds, dst, 1, len) != 0) { AG_FatalError(NULL); }
+		dst[ds->rdLast] = '\0';
 	}
+	AG_UnlockDataSource(ds);
 	return (rv);				/* Count does not include NUL */
 }
 
@@ -135,14 +127,15 @@ AG_CopyString(char *dst, AG_Netbuf *buf, size_t dst_size)
  * copied were dst_size unlimited.
  */
 size_t
-AG_CopyNulString(char *dst, AG_Netbuf *buf, size_t dst_size)
+AG_CopyNulString(char *dst, AG_DataSource *ds, size_t dst_size)
 {
-	size_t rv, len, rrv;
+	size_t rv, len;
 
-	if ((len = (size_t)AG_ReadUint32(buf)) > dst_size) {
+	AG_LockDataSource(ds);
+	if ((len = (size_t)AG_ReadUint32(ds)) > dst_size) {
 #ifdef DEBUG
-		fprintf(stderr, "0x%x: %lub string truncated to fit %lub\n",
-		    (unsigned)AG_NetbufTell(buf), (unsigned long)len,
+		Verbose("0x%x: %lub string truncated to fit %lub\n",
+		    (unsigned)AG_Tell(ds), (unsigned long)len,
 		    (unsigned long)dst_size);
 #endif
 		rv = len;		/* Save the intended length */
@@ -150,13 +143,7 @@ AG_CopyNulString(char *dst, AG_Netbuf *buf, size_t dst_size)
 	} else {
 		rv = len;
 	}
-
-	if ((rrv = fread(dst, 1, len, buf->file)) < len) {
-		if (ferror(buf->file) || feof(buf->file)) {
-			fatal("read error");
-		} else {
-			fatal("short read");
-		}
-	}
-	return (rv-1);				/* Count does not include NUL */
+	if (AG_Read(ds, dst, 1, len) != 0) { AG_FatalError(NULL); }
+	AG_UnlockDataSource(ds);
+	return (rv-1);			/* Count does not include NUL */
 }

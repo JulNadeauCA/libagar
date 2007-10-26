@@ -9,6 +9,6 @@ extern SG_NodeOps sgBoxOps;
 
 SG_Box	*SG_BoxNew(void *, const char *);
 void	 SG_BoxInit(void *, const char *);
-int	 SG_BoxLoad(void *, AG_Netbuf *);
-int	 SG_BoxSave(void *, AG_Netbuf *);
+int	 SG_BoxLoad(void *, AG_DataSource *);
+int	 SG_BoxSave(void *, AG_DataSource *);
 __END_DECLS

@@ -106,7 +106,7 @@ SG_PlaneAtDistance(SG_Plane P1, SG_Real d)
 }
 
 SG_Plane
-SG_PlaneRead(AG_Netbuf *buf)
+SG_PlaneRead(AG_DataSource *buf)
 {
 	SG_Plane P;
 
@@ -118,7 +118,7 @@ SG_PlaneRead(AG_Netbuf *buf)
 }
 
 void
-SG_PlaneWrite(AG_Netbuf *buf, SG_Plane *P)
+SG_PlaneWrite(AG_DataSource *buf, SG_Plane *P)
 {
 	SG_WriteReal(buf, P->a);
 	SG_WriteReal(buf, P->b);

@@ -457,7 +457,7 @@ RG_TileDelSketch(RG_Tile *t, RG_Sketch *sk, int destroy)
 }
 
 void
-RG_TileSave(RG_Tile *t, AG_Netbuf *buf)
+RG_TileSave(RG_Tile *t, AG_DataSource *buf)
 {
 	Uint32 nelements = 0;
 	off_t nelements_offs;
@@ -481,7 +481,7 @@ RG_TileSave(RG_Tile *t, AG_Netbuf *buf)
 		}
 	}
 
-	nelements_offs = AG_NetbufTell(buf);
+	nelements_offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(tel, &t->elements, elements) {
 		AG_WriteString(buf, tel->name);
@@ -523,11 +523,11 @@ RG_TileSave(RG_Tile *t, AG_Netbuf *buf)
 		}
 		nelements++;
 	}
-	AG_PwriteUint32(buf, nelements, nelements_offs);
+	AG_WriteUint32At(buf, nelements, nelements_offs);
 }
 
 int
-RG_TileLoad(RG_Tile *t, AG_Netbuf *buf)
+RG_TileLoad(RG_Tile *t, AG_DataSource *buf)
 {
 	RG_Tileset *ts = t->ts;
 	Uint32 i, nelements;

@@ -85,7 +85,7 @@ MAP_ActorDestroy(void *obj)
 }
 
 int
-MAP_ActorLoad(void *obj, AG_Netbuf *buf)
+MAP_ActorLoad(void *obj, AG_DataSource *buf)
 {
 	MAP_Actor *a = obj;
 #if 0
@@ -144,7 +144,7 @@ MAP_ActorLoad(void *obj, AG_Netbuf *buf)
 }
 
 int
-MAP_ActorSave(void *obj, AG_Netbuf *buf)
+MAP_ActorSave(void *obj, AG_DataSource *buf)
 {
 	MAP_Actor *a = obj;
 

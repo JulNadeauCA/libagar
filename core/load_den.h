@@ -18,7 +18,7 @@ typedef struct ag_den_member {
 } AG_DenMember;
 
 typedef struct ag_den {
-	AG_Netbuf *buf;		/* I/O buffer */
+	AG_DataSource *buf;		/* Data source */
 	char hint[AG_DEN_HINT_MAX];	/* Hint on type of content */
 	char name[AG_DEN_NAME_MAX];	/* Name of the package */
 	

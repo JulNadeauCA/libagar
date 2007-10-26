@@ -95,7 +95,7 @@ SG_MatrixGetTranslation(const SG_Matrix *T, SG_Vector *t)
 }
 
 SG_Matrix
-SG_ReadMatrix(AG_Netbuf *buf)
+SG_ReadMatrix(AG_DataSource *buf)
 {
 	SG_Matrix A;
 
@@ -104,7 +104,7 @@ SG_ReadMatrix(AG_Netbuf *buf)
 }
 
 void
-SG_ReadMatrixv(AG_Netbuf *buf, SG_Matrix *A)
+SG_ReadMatrixv(AG_DataSource *buf, SG_Matrix *A)
 {
 	SG_Real *pm = &A->m[0][0];
 	int i;
@@ -112,8 +112,8 @@ SG_ReadMatrixv(AG_Netbuf *buf, SG_Matrix *A)
 	bitstr_t bit_decl(map0, 16);
 	bitstr_t bit_decl(map1, 16);
 
-	AG_NetbufRead(&map0, sizeof(map0), 1, buf);
-	AG_NetbufRead(&map1, sizeof(map1), 1, buf);
+	AG_Read(buf, &map0, sizeof(map0), 1);
+	AG_Read(buf, &map1, sizeof(map1), 1);
 
 	for (i = 0; i < 16; i++) {
 		if (bit_test(map0, i)) {
@@ -134,7 +134,7 @@ SG_ReadMatrixv(AG_Netbuf *buf, SG_Matrix *A)
 }
 
 void
-SG_WriteMatrix(AG_Netbuf *buf, SG_Matrix *A)
+SG_WriteMatrix(AG_DataSource *buf, SG_Matrix *A)
 {
 	SG_Real *pm = &A->m[0][0];
 	int i;
@@ -143,8 +143,8 @@ SG_WriteMatrix(AG_Netbuf *buf, SG_Matrix *A)
 	bitstr_t bit_decl(map1, 16);
 	off_t offs;
 
-	offs = AG_NetbufTell(buf);
-	AG_NetbufSeek(buf, 4, SEEK_CUR);
+	offs = AG_Tell(buf);
+	AG_Seek(buf, 4, AG_SEEK_CUR);
 	for (i = 0; i < 16; i++) {
 		if (*pm == 0.0) {
 			bit_set(map0, i);
@@ -159,8 +159,8 @@ SG_WriteMatrix(AG_Netbuf *buf, SG_Matrix *A)
 		}
 		pm++;
 	}
-	AG_NetbufPwrite(&map0, sizeof(map0), 1, offs, buf);
-	AG_NetbufPwrite(&map1, sizeof(map1), 1, offs+2, buf);
+	AG_WriteAt(buf, &map0, sizeof(map0), 1, offs);
+	AG_WriteAt(buf, &map1, sizeof(map1), 1, offs+2);
 #else
 	for (i = 0; i < 16; i++) {
 		AG_WriteDouble(buf, (double)(*pm));

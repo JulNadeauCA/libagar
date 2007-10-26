@@ -81,7 +81,7 @@ MAP_NodeMaskDestroy(MAP *m, MAP_NodeMask *mask)
 }
 
 int
-MAP_NodeMaskLoad(MAP *m, AG_Netbuf *buf, MAP_NodeMask *mask)
+MAP_NodeMaskLoad(MAP *m, AG_DataSource *buf, MAP_NodeMask *mask)
 {
 #if 0
 	AG_Object *obj;
@@ -119,7 +119,7 @@ MAP_NodeMaskLoad(MAP *m, AG_Netbuf *buf, MAP_NodeMask *mask)
 }
 
 void
-MAP_NodeMaskSave(MAP *m, AG_Netbuf *buf, const MAP_NodeMask *mask)
+MAP_NodeMaskSave(MAP *m, AG_DataSource *buf, const MAP_NodeMask *mask)
 {
 	Uint32 i;
 

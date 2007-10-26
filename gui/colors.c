@@ -218,78 +218,77 @@ AG_ColorsInit(void)
 	agColorsBorder[6] = SDL_MapRGB(agVideoFmt, 0, 255, 0);
 }
 
-#define AG_WriteRGBShift(buf,v) do {	\
-	AG_WriteSint8((buf), (v)[0]);	\
-	AG_WriteSint8((buf), (v)[1]);	\
-	AG_WriteSint8((buf), (v)[2]);	\
+#define AG_WriteRGBShift(ds,v) do {	\
+	AG_WriteSint8((ds), (v)[0]);	\
+	AG_WriteSint8((ds), (v)[1]);	\
+	AG_WriteSint8((ds), (v)[2]);	\
 } while (0)
 
-#define AG_ReadRGBShift(buf,v) do {	\
-	(v)[0] = AG_ReadSint8(buf);	\
-	(v)[1] = AG_ReadSint8(buf);	\
-	(v)[2] = AG_ReadSint8(buf);	\
+#define AG_ReadRGBShift(ds,v) do {	\
+	(v)[0] = AG_ReadSint8(ds);	\
+	(v)[1] = AG_ReadSint8(ds);	\
+	(v)[2] = AG_ReadSint8(ds);	\
 } while (0)
 
 int
 AG_ColorsLoad(const char *file)
 {
-	AG_Netbuf *buf;
+	AG_DataSource *ds;
 	int i, ncolors;
 
-	if ((buf = AG_NetbufOpen(file, "rb", AG_NETBUF_BIG_ENDIAN)) == NULL ||
-	    AG_ReadVersion(buf, "AG_ColorScheme", &agColorSchemeVer, NULL)
-	    == -1)
+	if ((ds = AG_OpenFile(file, "rb")) == NULL ||
+	    AG_ReadVersion(ds,"AG_ColorScheme",&agColorSchemeVer, NULL) == -1)
 		return (-1);
 
-	ncolors = (int)AG_ReadUint16(buf);
+	ncolors = (int)AG_ReadUint16(ds);
 	for (i = 0; i < ncolors; i++)
-		agColors[i] = AG_ReadColor(buf, agVideoFmt);
+		agColors[i] = AG_ReadColor(ds, agVideoFmt);
 
-	ncolors = (int)AG_ReadUint8(buf);
+	ncolors = (int)AG_ReadUint8(ds);
 	for (i = 0; i < ncolors; i++)
-		agColorsBorder[i] = AG_ReadColor(buf, agVideoFmt);
+		agColorsBorder[i] = AG_ReadColor(ds, agVideoFmt);
 
-	AG_ReadUint8(buf);
-	AG_ReadRGBShift(buf, agFocusSunkColorShift);
-	AG_ReadRGBShift(buf, agFocusRaisedColorShift);
-	AG_ReadRGBShift(buf, agNofocusSunkColorShift);
-	AG_ReadRGBShift(buf, agNofocusRaisedColorShift);
-	AG_ReadRGBShift(buf, agHighColorShift);
-	AG_ReadRGBShift(buf, agLowColorShift);
+	AG_ReadUint8(ds);
+	AG_ReadRGBShift(ds, agFocusSunkColorShift);
+	AG_ReadRGBShift(ds, agFocusRaisedColorShift);
+	AG_ReadRGBShift(ds, agNofocusSunkColorShift);
+	AG_ReadRGBShift(ds, agNofocusRaisedColorShift);
+	AG_ReadRGBShift(ds, agHighColorShift);
+	AG_ReadRGBShift(ds, agLowColorShift);
 
-	AG_NetbufClose(buf);
+	AG_CloseFile(ds);
 	return (0);
 }
 
 int
 AG_ColorsSave(const char *file)
 {
-	AG_Netbuf *buf;
+	AG_DataSource *ds;
 	int i;
 	
-	if ((buf = AG_NetbufOpen(file, "wb", AG_NETBUF_BIG_ENDIAN)) == NULL) {
+	if ((ds = AG_OpenFile(file, "wb")) == NULL) {
 		return (-1);
 	}
-	AG_WriteVersion(buf, "AG_ColorScheme", &agColorSchemeVer);
+	AG_WriteVersion(ds, "AG_ColorScheme", &agColorSchemeVer);
 
-	AG_WriteUint16(buf, LAST_COLOR);
+	AG_WriteUint16(ds, LAST_COLOR);
 	for (i = 0; i < LAST_COLOR; i++) {
-		AG_WriteColor(buf, agVideoFmt, agColors[i]);
+		AG_WriteColor(ds, agVideoFmt, agColors[i]);
 	}
-	AG_WriteUint8(buf, (Uint8)agColorsBorderSize);
+	AG_WriteUint8(ds, (Uint8)agColorsBorderSize);
 	for (i = 0; i < agColorsBorderSize; i++) {
-		AG_WriteColor(buf, agVideoFmt, agColorsBorder[i]);
+		AG_WriteColor(ds, agVideoFmt, agColorsBorder[i]);
 	}
 
-	AG_WriteUint8(buf, 6);
-	AG_WriteRGBShift(buf, agFocusSunkColorShift);
-	AG_WriteRGBShift(buf, agFocusRaisedColorShift);
-	AG_WriteRGBShift(buf, agNofocusSunkColorShift);
-	AG_WriteRGBShift(buf, agNofocusRaisedColorShift);
-	AG_WriteRGBShift(buf, agHighColorShift);
-	AG_WriteRGBShift(buf, agLowColorShift);
+	AG_WriteUint8(ds, 6);
+	AG_WriteRGBShift(ds, agFocusSunkColorShift);
+	AG_WriteRGBShift(ds, agFocusRaisedColorShift);
+	AG_WriteRGBShift(ds, agNofocusSunkColorShift);
+	AG_WriteRGBShift(ds, agNofocusRaisedColorShift);
+	AG_WriteRGBShift(ds, agHighColorShift);
+	AG_WriteRGBShift(ds, agLowColorShift);
 	
-	AG_NetbufClose(buf);
+	AG_CloseFile(ds);
 	return (0);
 }
 

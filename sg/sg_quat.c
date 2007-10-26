@@ -434,7 +434,7 @@ SG_QuatSLERPp(const SG_Quat *q1, const SG_Quat *q2, SG_Real alpha)
 }
 
 SG_Quat
-SG_ReadQuat(AG_Netbuf *buf)
+SG_ReadQuat(AG_DataSource *buf)
 {
 	SG_Quat q;
 
@@ -446,7 +446,7 @@ SG_ReadQuat(AG_Netbuf *buf)
 }
 
 void
-SG_ReadQuatv(AG_Netbuf *buf, SG_Quat *q)
+SG_ReadQuatv(AG_DataSource *buf, SG_Quat *q)
 {
 	q->w = SG_ReadReal(buf);
 	q->x = SG_ReadReal(buf);
@@ -455,7 +455,7 @@ SG_ReadQuatv(AG_Netbuf *buf, SG_Quat *q)
 }
 
 void
-SG_WriteQuat(AG_Netbuf *buf, SG_Quat *q)
+SG_WriteQuat(AG_DataSource *buf, SG_Quat *q)
 {
 	SG_WriteReal(buf, q->w);
 	SG_WriteReal(buf, q->x);

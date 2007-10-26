@@ -142,7 +142,7 @@ RG_TransformChainInit(RG_TransformChain *xchain)
 }
 
 int
-RG_TransformChainLoad(AG_Netbuf *buf, RG_TransformChain *xchain)
+RG_TransformChainLoad(AG_DataSource *buf, RG_TransformChain *xchain)
 {
 	Uint32 i, count = 0;
 
@@ -165,19 +165,19 @@ RG_TransformChainLoad(AG_Netbuf *buf, RG_TransformChain *xchain)
 }
 
 void
-RG_TransformChainSave(AG_Netbuf *buf, const RG_TransformChain *xchain)
+RG_TransformChainSave(AG_DataSource *buf, const RG_TransformChain *xchain)
 {
 	RG_Transform *xf;
 	Uint32 count = 0;
 	off_t offs;
 
-	offs = AG_NetbufTell(buf);
+	offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
 	TAILQ_FOREACH(xf, xchain, transforms) {
 		RG_TransformSave(buf, xf);
 		count++;
 	}
-	AG_PwriteUint32(buf, count, offs);
+	AG_WriteUint32At(buf, count, offs);
 }
 
 void
@@ -243,7 +243,7 @@ RG_TransformDestroy(RG_Transform *xf)
 }
 
 int
-RG_TransformLoad(AG_Netbuf *buf, RG_Transform *xf)
+RG_TransformLoad(AG_DataSource *buf, RG_Transform *xf)
 {
 	int i;
 
@@ -275,7 +275,7 @@ RG_TransformLoad(AG_Netbuf *buf, RG_Transform *xf)
 }
 
 void
-RG_TransformSave(AG_Netbuf *buf, const RG_Transform *xf)
+RG_TransformSave(AG_DataSource *buf, const RG_Transform *xf)
 {
 	int i;
 

@@ -287,8 +287,8 @@ VG	*VG_New(int);
 void	 VG_Init(VG *, int);
 void	 VG_Reinit(VG *);
 void	 VG_Destroy(VG *);
-void	 VG_Save(VG *, AG_Netbuf *);
-int	 VG_Load(VG *, AG_Netbuf *);
+void	 VG_Save(VG *, AG_DataSource *);
+int	 VG_Load(VG *, AG_DataSource *);
 
 void	 	 VG_PreRasterFn(VG *, void *, AG_EventFn, const char *, ...);
 void	 	 VG_PostRasterFn(VG *, void *, AG_EventFn, const char *, ...);
@@ -314,8 +314,8 @@ VG_Vtx		*VG_PopVertex(VG *);
 VG_Vtx    	*VG_AllocVertex(VG_Element *);
 VG_Matrix 	*VG_AllocMatrix(VG_Element *);
 VG_Matrix	*VG_PopMatrix(VG *);
-void		 VG_WriteVertex(AG_Netbuf *, VG_Vtx *);
-void		 VG_ReadVertex(AG_Netbuf *, VG_Vtx *);
+void		 VG_WriteVertex(AG_DataSource *, VG_Vtx *);
+void		 VG_ReadVertex(AG_DataSource *, VG_Vtx *);
 
 VG_Layer *VG_PushLayer(VG *, const char *);
 void	  VG_PopLayer(VG *);

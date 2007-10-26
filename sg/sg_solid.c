@@ -65,7 +65,7 @@ SG_SolidDestroy(void *p)
 }
 
 int
-SG_SolidLoad(void *p, AG_Netbuf *buf)
+SG_SolidLoad(void *p, AG_DataSource *buf)
 {
 	SG_Solid *sld = p;
 
@@ -82,7 +82,7 @@ SG_SolidLoad(void *p, AG_Netbuf *buf)
 }
 
 int
-SG_SolidSave(void *p, AG_Netbuf *buf)
+SG_SolidSave(void *p, AG_DataSource *buf)
 {
 	SG_Solid *sld = p;
 

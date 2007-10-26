@@ -12,8 +12,8 @@ extern SK_NodeOps skDummyOps;
 
 SK_Dummy	*SK_DummyNew(void *);
 void		 SK_DummyInit(void *, Uint32);
-int		 SK_DummyLoad(SK *, void *, AG_Netbuf *);
-int		 SK_DummySave(SK *, void *, AG_Netbuf *);
+int		 SK_DummyLoad(SK *, void *, AG_DataSource *);
+int		 SK_DummySave(SK *, void *, AG_DataSource *);
 void		 SK_DummyDraw(void *, SK_View *);
 __END_DECLS
 

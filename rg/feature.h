@@ -20,8 +20,8 @@ typedef struct rg_feature_ops {
 #define FEATURE_AUTOREDRAW 0x01 /* Redraw tile periodically on edit */
 
 	void (*init)(void *, struct rg_tileset *, int);
-	int  (*load)(void *, AG_Netbuf *);
-	void (*save)(void *, AG_Netbuf *);
+	int  (*load)(void *, AG_DataSource *);
+	void (*save)(void *, AG_DataSource *);
 	void (*destroy)(void *);
 	void (*apply)(void *, RG_Tile *, int, int);
 	void (*menu)(void *, struct ag_menu_item *);
@@ -59,8 +59,8 @@ typedef struct rg_feature {
 __BEGIN_DECLS
 void	AG_FeatureInit(void *, struct rg_tileset *, int, const RG_FeatureOps *);
 void	AG_FeatureDestroy(RG_Feature *);
-int	RG_FeatureLoad(void *, AG_Netbuf *);
-void	RG_FeatureSave(void *, AG_Netbuf *);
+int	RG_FeatureLoad(void *, AG_DataSource *);
+void	RG_FeatureSave(void *, AG_DataSource *);
 
 RG_FeatureSketch *RG_FeatureAddSketch(RG_Feature *, struct rg_sketch *);
 void		  RG_FeatureDelSketch(RG_Feature *, struct rg_sketch *);

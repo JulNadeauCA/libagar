@@ -31,8 +31,8 @@ typedef struct ag_object_ops {
 	void (*init)(void *, const char *);		/* Initialize */
 	void (*free_dataset)(void *);			/* Free dataset */
 	void (*destroy)(void *);			/* Free resources */
-	int (*load)(void *, AG_Netbuf *);		/* Load from network */
-	int (*save)(void *, AG_Netbuf *);		/* Save to network */
+	int (*load)(void *, AG_DataSource *);		/* Load from network */
+	int (*save)(void *, AG_DataSource *);		/* Save to network */
 	void *(*edit)(void *);				/* Edit object */
 } AG_ObjectOps;
 

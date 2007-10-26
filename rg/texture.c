@@ -59,7 +59,7 @@ RG_TextureDestroy(RG_Texture *tex)
 }
 
 int
-RG_TextureLoad(RG_Texture *tex, AG_Netbuf *buf)
+RG_TextureLoad(RG_Texture *tex, AG_DataSource *buf)
 {
 	AG_CopyString(tex->tileset, buf, sizeof(tex->tileset));
 	AG_CopyString(tex->tile, buf, sizeof(tex->tile));
@@ -72,7 +72,7 @@ RG_TextureLoad(RG_Texture *tex, AG_Netbuf *buf)
 }
 
 void
-RG_TextureSave(RG_Texture *tex, AG_Netbuf *buf)
+RG_TextureSave(RG_Texture *tex, AG_DataSource *buf)
 {
 	AG_WriteString(buf, tex->tileset);
 	AG_WriteString(buf, tex->tile);

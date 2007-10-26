@@ -61,7 +61,7 @@ SK_PointInit(void *p, Uint32 name)
 }
 
 int
-SK_PointLoad(SK *sk, void *p, AG_Netbuf *buf)
+SK_PointLoad(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Point *pt = p;
 
@@ -71,7 +71,7 @@ SK_PointLoad(SK *sk, void *p, AG_Netbuf *buf)
 }
 
 int
-SK_PointSave(SK *sk, void *p, AG_Netbuf *buf)
+SK_PointSave(SK *sk, void *p, AG_DataSource *buf)
 {
 	SK_Point *pt = p;
 
