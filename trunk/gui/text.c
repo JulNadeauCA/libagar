@@ -250,8 +250,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 
 	if (name[0] == '_') {
 		for (i = 0; i < agBuiltinFontCount; i++) {
-			if (agBuiltinFonts[i]->type == AG_FONT_VECTOR &&
-			    strcmp(agBuiltinFonts[i]->name, &name[1]) == 0)
+			if (strcmp(agBuiltinFonts[i]->name, &name[1]) == 0)
 				break;
 		}
 		if (i == agBuiltinFontCount) {
@@ -275,8 +274,8 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		int tflags = 0;
 		AG_TTFFont *ttf;
 
-		if (builtin){
-			Verbose("Using builtin font: %s\n", name);
+		if (builtin != NULL) {
+			Verbose("Using builtin vector font: %s\n", name);
 			if ((font->ttf = ttf = AG_TTFOpenFontFromMemory(
 			    builtin->data, builtin->size, ptsize)) == NULL) {
 				goto fail;
@@ -304,10 +303,15 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		char *s;
 		char *msig, *c0, *c1;
 		AG_DataSource *ds;
-		
-		Verbose("Loading bitmap font: %s\n", name);
-		if ((ds = AG_OpenFile(path, "rb")) == NULL)
-			goto fail;
+	
+		if (builtin != NULL) {
+			Verbose("Using builtin bitmap font: %s\n", name);
+			ds = AG_OpenConstCore(builtin->data, builtin->size);
+		} else {
+			Verbose("Loading bitmap font: %s\n", name);
+			if ((ds = AG_OpenFile(path, "rb")) == NULL)
+				goto fail;
+		}
 
 		font->type = AG_FONT_BITMAP;
 		font->bglyphs = Malloc(32*sizeof(SDL_Surface *), M_TEXT);
@@ -316,7 +320,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		if (AG_XCFLoad(ds, 0, AG_LoadBitmapGlyph, font) == -1) {
 			goto fail;
 		}
-		AG_CloseFile(ds);
+		AG_CloseDataSource(ds);
 
 		/* Get the range of characters from the "MAP:x-y" string. */
 		s = font->bspec;
