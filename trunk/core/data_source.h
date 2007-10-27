@@ -38,6 +38,7 @@ typedef struct ag_data_source {
 	                        size_t, off_t, size_t *);
 	off_t       (*tell)(struct ag_data_source *);
 	int         (*seek)(struct ag_data_source *, off_t, enum ag_seek_mode);
+	void        (*close)(struct ag_data_source *);
 } AG_DataSource;
 
 typedef struct ag_file_source {
@@ -69,11 +70,12 @@ __BEGIN_DECLS
 void           AG_DataSourceInit(AG_DataSource *);
 void           AG_DataSourceDestroy(AG_DataSource *);
 void	       AG_SetByteOrder(AG_DataSource *, enum ag_byte_order);
+void           AG_CloseDataSource(AG_DataSource *);
 
 AG_DataSource *AG_OpenFile(const char *, const char *);
 AG_DataSource *AG_OpenFileHandle(FILE *);
-AG_DataSource *AG_OpenCore(Uint8 *, size_t);
-AG_DataSource *AG_OpenConstCore(const Uint8 *, size_t);
+AG_DataSource *AG_OpenCore(void *, size_t);
+AG_DataSource *AG_OpenConstCore(const void *, size_t);
 void           AG_CloseFile(AG_DataSource *);
 #define        AG_CloseFileHandle(ds) AG_CloseFile(ds)
 void           AG_CloseCore(AG_DataSource *);

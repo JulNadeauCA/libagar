@@ -33,6 +33,10 @@
 #include <string.h>
 #include <errno.h>
 
+/*
+ * File operations.
+ */
+
 static AG_IOStatus
 FileRead(AG_DataSource *ds, void *buf, size_t size, size_t nmemb, size_t *rv)
 {
@@ -44,7 +48,7 @@ FileRead(AG_DataSource *ds, void *buf, size_t size, size_t nmemb, size_t *rv)
 		if (ferror(f)) {
 			AG_SetError("Read error");
 			return (AG_IO_ERROR);
-		} else {
+		} else if (feof(f)) {
 			return (AG_IO_EOF);
 		}
 	}
@@ -69,8 +73,9 @@ FileReadAt(AG_DataSource *ds, void *buf, size_t size, size_t nmemb, off_t pos,
 			goto fail_seek;
 		}
 		if (feof(f)) {
+			fseek(f, savedPos, SEEK_SET);
 			return (AG_IO_EOF);
-		} else {
+		} else if (ferror(f)) {
 			AG_SetError("Write Error");
 			return (AG_IO_ERROR);
 		}
@@ -117,9 +122,7 @@ FileWriteAt(AG_DataSource *ds, const void *buf, size_t size, size_t nmemb,
 	clearerr(f);
 	*rv = fwrite(buf, size, nmemb, f) * size;
 	if (*rv < (nmemb*size)) {
-		if (fseek(f, savedPos, SEEK_SET) == -1) {
-			goto fail_seek;
-		}
+		fseek(f, savedPos, SEEK_SET);
 		if (feof(f)) {
 			return (AG_IO_EOF);
 		} else {
@@ -157,6 +160,134 @@ FileSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
 	return (0);
 }
 
+/*
+ * Memory operations.
+ */
+
+static AG_IOStatus
+CoreRead(AG_DataSource *ds, void *buf, size_t msize, size_t nmemb, size_t *rv)
+{
+	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
+	size_t size = msize*nmemb;
+
+	if (cs->offs >= cs->size) {
+		*rv = 0;
+		return (AG_IO_EOF);
+	}
+	if (cs->offs+size >= cs->size) {
+		*rv = cs->size - cs->offs;
+		memcpy(buf, &cs->data[cs->offs], *rv);
+		return (AG_IO_EOF);
+	}
+	memcpy(buf, &cs->data[cs->offs], size);
+	*rv = size;
+	cs->offs += size;
+	return (AG_IO_SUCCESS);
+}
+
+static AG_IOStatus
+CoreReadAt(AG_DataSource *ds, void *buf, size_t msize, size_t nmemb, off_t pos,
+    size_t *rv)
+{
+	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
+	size_t size = msize*nmemb;
+
+	if (pos < 0) {
+		AG_SetError("Bad position");
+		return (AG_IO_ERROR);
+	}
+	if (pos >= cs->size) {
+		*rv = 0;
+		return (AG_IO_EOF);
+	}
+	if (pos+size >= cs->size) {
+		*rv = cs->size - pos;
+		memcpy(buf, &cs->data[pos], *rv);
+		return (AG_IO_EOF);
+	}
+	memcpy(buf, &cs->data[pos], size);
+	*rv = size;
+	return (AG_IO_SUCCESS);
+}
+
+static AG_IOStatus
+CoreWrite(AG_DataSource *ds, const void *buf, size_t msize, size_t nmemb,
+    size_t *rv)
+{
+	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
+	size_t size = msize*nmemb;
+
+	if (cs->offs >= cs->size) {
+		*rv = 0;
+		return (AG_IO_EOF);
+	}
+	if (cs->offs+size >= cs->size) {
+		*rv = cs->size - cs->offs;
+		memcpy(&cs->data[cs->offs], buf, *rv);
+		return (AG_IO_EOF);
+	}
+	memcpy(&cs->data[cs->offs], buf, size);
+	*rv = size;
+	cs->offs += size;
+	return (AG_IO_SUCCESS);
+}
+
+static AG_IOStatus
+CoreWriteAt(AG_DataSource *ds, const void *buf, size_t msize, size_t nmemb,
+    off_t pos, size_t *rv)
+{
+	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
+	size_t size = msize*nmemb;
+
+	if (pos < 0) {
+		AG_SetError("Bad position");
+		return (AG_IO_ERROR);
+	}
+	if (pos >= cs->size) {
+		*rv = 0;
+		return (AG_IO_EOF);
+	}
+	if (pos+size >= cs->size) {
+		*rv = cs->size - pos;
+		memcpy(&cs->data[pos], buf, *rv);
+		return (AG_IO_EOF);
+	}
+	memcpy(&cs->data[pos], buf, size);
+	*rv = size;
+	return (AG_IO_SUCCESS);
+}
+
+static off_t
+CoreTell(AG_DataSource *ds)
+{
+	return AG_CORE_SOURCE(ds)->offs;
+}
+
+static int
+CoreSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
+{
+	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
+	off_t nOffs;
+
+	switch (mode) {
+	case AG_SEEK_SET:
+		nOffs = offs;
+		break;
+	case AG_SEEK_CUR:
+		nOffs = cs->offs + offs;
+		break;
+	case AG_SEEK_END:
+		nOffs = cs->size - offs;
+		break;
+	}
+	if (nOffs < 0 || nOffs >= cs->size) {
+		AG_SetError("Bad offset %ld", (long)nOffs);
+		return (-1);
+	}
+	cs->offs = nOffs;
+	return (0);
+}
+
 void
 AG_DataSourceInit(AG_DataSource *ds)
 {
@@ -171,7 +302,14 @@ AG_DataSourceInit(AG_DataSource *ds)
 	ds->write_at = NULL;
 	ds->tell = NULL;
 	ds->seek = NULL;
+	ds->close = NULL;
 	AG_MutexInitRecursive(&ds->lock);
+}
+
+void
+AG_CloseDataSource(AG_DataSource *ds)
+{
+	ds->close(ds);
 }
 
 void
@@ -196,6 +334,7 @@ AG_OpenFileHandle(FILE *f)
 	fs->ds.write_at = FileWriteAt;
 	fs->ds.tell = FileTell;
 	fs->ds.seek = FileSeek;
+	fs->ds.close = AG_CloseFile;
 	return (&fs->ds);
 }
 
@@ -212,28 +351,42 @@ AG_OpenFile(const char *path, const char *mode)
 }
 
 AG_DataSource *
-AG_OpenCore(Uint8 *data, size_t size)
+AG_OpenCore(void *data, size_t size)
 {
 	AG_CoreSource *cs;
 
 	cs = Malloc(sizeof(AG_CoreSource), 0);
 	AG_DataSourceInit(&cs->ds);
-	cs->data = data;
+	cs->data = (Uint8 *)data;
 	cs->size = size;
 	cs->offs = 0;
+	cs->ds.read = CoreRead;
+	cs->ds.read_at = CoreReadAt;
+	cs->ds.write = CoreWrite;
+	cs->ds.write_at = CoreWriteAt;
+	cs->ds.tell = CoreTell;
+	cs->ds.seek = CoreSeek;
+	cs->ds.close = AG_CloseCore;
 	return (&cs->ds);
 }
 
 AG_DataSource *
-AG_OpenConstCore(const Uint8 *data, size_t size)
+AG_OpenConstCore(const void *data, size_t size)
 {
 	AG_ConstCoreSource *cs;
 
 	cs = Malloc(sizeof(AG_ConstCoreSource), 0);
 	AG_DataSourceInit(&cs->ds);
-	cs->data = data;
+	cs->data = (const Uint8 *)data;
 	cs->size = size;
 	cs->offs = 0;
+	cs->ds.read = CoreRead;
+	cs->ds.read_at = CoreReadAt;
+	cs->ds.write = NULL;
+	cs->ds.write_at = NULL;
+	cs->ds.tell = CoreTell;
+	cs->ds.seek = CoreSeek;
+	cs->ds.close = AG_CloseCore;
 	return (&cs->ds);
 }
 
