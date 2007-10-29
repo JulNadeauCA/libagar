@@ -97,6 +97,9 @@ do
 	--srcdir=*)
 	    srcdir=$optarg
 	    ;;
+	--testdir=*)
+	    testdir=$optarg
+	    ;;
 	*)
 	    echo "invalid argument: $arg"
 	    echo "try ./configure --help"
@@ -121,6 +124,16 @@ if [ "${srcdir}" != "" ]; then
 else
 	SRC=`pwd`
 fi
+
+if [ "${testdir}" != "" ]; then
+	echo "Configure tests will be executed in ${testdir}"
+	if [ ! -e "${testdir}" ]; then
+		echo "Creating ${testdir}"
+		mkdir ${testdir}
+	fi
+else
+	testdir="."
+fi
 if [ "${help}" = "yes" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
@@ -128,6 +141,7 @@ echo "    --sysconfdir                   System-wide configuration prefix [/etc]
 echo "    --sharedir                     Share prefix [$PREFIX/share]"
 echo "    --localedir                    Locale prefix [$PREFIX/share/locale]"
 echo "    --srcdir                       Source tree for concurrent build [.]"
+echo "    --testdir                      Directory in which to execute tests [.]"
 echo "    --help                         Display this message"
 echo "    --enable-nls                   Native Language Support [no]"
 echo "    --with-gettext                 Use gettext tools (msgmerge, ...) [check]"
@@ -183,7 +197,7 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 done
 if [ "${NROFF}" != "" ]; then
 	echo | ${NROFF} -Tmandoc >/dev/null
-	if [ $? == 0 ]; then
+	if [ "$?" = "0" ]; then
 		HAVE_MANDOC="yes"
 	fi
 fi
@@ -260,7 +274,7 @@ echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
 #	done
 #	if [ "${ltool}" != "" ]; then
 #		${ltool} --version 1>/dev/null 2>&1
-#		if [ $? == 0 ]; then
+#		if [ "$?" = "0" ]; then
 #			LIBTOOL=${ltool}
 #		else
 #			LIBTOOL=\${TOP}/mk/libtool/libtool
@@ -275,7 +289,7 @@ echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
 #	echo "yes (bundled)"
 #else
 #	grep ^VERSION=1.5 "${LIBTOOL}" 1>/dev/null 2>&1
-#	if [ $? == 0 ]; then
+#	if [ "$?" = "0" ]; then
 #		echo "yes (GNU libtool 1.5)"
 #		echo "LIBTOOLFLAGS=-prefer-pic" >> Makefile.config
 #	else
@@ -413,9 +427,9 @@ cat << EOT > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -432,7 +446,7 @@ HAVE_CC_WARNINGS="no"
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >> Makefile.config
 echo "#undef HAVE_CC_WARNINGS" > config/have_cc_warnings.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
@@ -451,9 +465,9 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -470,7 +484,7 @@ HAVE_IEEE754="no"
 echo "HAVE_IEEE754=$HAVE_IEEE754" >> Makefile.config
 echo "#undef HAVE_IEEE754" > config/have_ieee754.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking __bounded__ attribute..."
 echo -n "checking __bounded__ attribute..." >> config.log
 cat << EOT > conftest.c
@@ -484,9 +498,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -503,7 +517,7 @@ HAVE_BOUNDED_ATTRIBUTE="no"
 echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >> Makefile.config
 echo "#undef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking __format__ attribute..."
 echo -n "checking __format__ attribute..." >> config.log
 cat << EOT > conftest.c
@@ -523,9 +537,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -542,7 +556,7 @@ HAVE_FORMAT_ATTRIBUTE="no"
 echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >> Makefile.config
 echo "#undef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking __nonnull__ attribute..."
 echo -n "checking __nonnull__ attribute..." >> config.log
 cat << EOT > conftest.c
@@ -556,13 +570,13 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -589,13 +603,13 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -622,13 +636,13 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -658,13 +672,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -693,13 +707,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -731,13 +745,13 @@ main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -771,13 +785,13 @@ main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -808,9 +822,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -827,7 +841,7 @@ _MK_HAVE_SYS_TYPES_H="no"
 echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >> Makefile.config
 echo "#undef _MK_HAVE_SYS_TYPES_H" > config/_mk_have_sys_types_h.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${_MK_HAVE_SYS_TYPES_H}" = "yes" ]; then
 echo -n "checking for 64-bit types..."
 echo -n "checking for 64-bit types..." >> config.log
@@ -842,9 +856,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -861,7 +875,7 @@ HAVE_64BIT="no"
 echo "HAVE_64BIT=$HAVE_64BIT" >> Makefile.config
 echo "#undef HAVE_64BIT" > config/have_64bit.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking for conflicting typedefs..."
 echo -n "checking for conflicting typedefs..." >> config.log
 cat << EOT > conftest.c
@@ -875,9 +889,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -894,7 +908,7 @@ _MK_HAVE_UNSIGNED_TYPEDEFS="no"
 echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >> Makefile.config
 echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 else
 echo "#undef HAVE_64BIT" > config/have_64bit.h
 echo -n "checking for conflicting typedefs..."
@@ -909,9 +923,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -928,7 +942,7 @@ _MK_HAVE_UNSIGNED_TYPEDEFS="no"
 echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >> Makefile.config
 echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 fi;
 echo -n "checking for a compatible <sys/queue.h>..."
 echo -n "checking for a compatible <sys/queue.h>..." >> config.log
@@ -968,9 +982,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -987,7 +1001,7 @@ _MK_HAVE_SYS_QUEUE_H="no"
 echo "_MK_HAVE_SYS_QUEUE_H=$_MK_HAVE_SYS_QUEUE_H" >> Makefile.config
 echo "#undef _MK_HAVE_SYS_QUEUE_H" > config/_mk_have_sys_queue_h.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking for <stdlib.h>..."
 echo -n "checking for <stdlib.h>..." >> config.log
 cat << EOT > conftest.c
@@ -999,9 +1013,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -1018,7 +1032,7 @@ _MK_HAVE_STDLIB_H="no"
 echo "_MK_HAVE_STDLIB_H=$_MK_HAVE_STDLIB_H" >> Makefile.config
 echo "#undef _MK_HAVE_STDLIB_H" > config/_mk_have_stdlib_h.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking for <unistd.h>..."
 echo -n "checking for <unistd.h>..." >> config.log
 cat << EOT > conftest.c
@@ -1033,9 +1047,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -1052,7 +1066,7 @@ _MK_HAVE_UNISTD_H="no"
 echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >> Makefile.config
 echo "#undef _MK_HAVE_UNISTD_H" > config/_mk_have_unistd_h.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking for <limits.h>..."
 echo -n "checking for <limits.h>..." >> config.log
 cat << EOT > conftest.c
@@ -1070,9 +1084,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -1089,7 +1103,7 @@ _MK_HAVE_LIMITS_H="no"
 echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >> Makefile.config
 echo "#undef _MK_HAVE_LIMITS_H" > config/_mk_have_limits_h.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking for BSD-style __progname..."
 echo -n "checking for BSD-style __progname..." >> config.log
 cat << EOT > conftest.c
@@ -1104,13 +1118,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1134,8 +1148,8 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 echo "no (compile failed)"
 echo "no (compile failed)" >> config.log
@@ -1145,8 +1159,8 @@ echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >> Makefile.config
 echo "#undef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
 else
 compile="ok"
-./conftest >> config.log
-if [ $? == 0 ]; then
+(cd $testdir && ./conftest) >> config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 FREE_NULL_IS_A_NOOP="yes"
@@ -1162,7 +1176,7 @@ echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >> Makefile.config
 echo "#undef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
 fi;
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking for the C math library..."
 echo -n "checking for the C math library..." >> config.log
 MATH_LIBS="-lm"
@@ -1182,9 +1196,9 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o conftest conftest.c ${MATH_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o conftest conftest.c ${MATH_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o $testdir/conftest conftest.c ${MATH_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o $testdir/conftest conftest.c ${MATH_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -1201,7 +1215,7 @@ HAVE_MATH="no"
 echo "HAVE_MATH=$HAVE_MATH" >> Makefile.config
 echo "#undef HAVE_MATH" > config/have_math.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_MATH}" = "yes" ]; then
 echo "MATH_CFLAGS=$MATH_CFLAGS" >> Makefile.config
 echo "MATH_LIBS=$MATH_LIBS" >> Makefile.config
@@ -1232,13 +1246,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1270,13 +1284,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1307,13 +1321,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1340,13 +1354,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1375,13 +1389,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1408,13 +1422,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1441,13 +1455,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1474,13 +1488,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1513,13 +1527,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1563,13 +1577,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1599,13 +1613,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1645,13 +1659,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1679,13 +1693,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1715,13 +1729,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1752,13 +1766,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1789,13 +1803,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1826,13 +1840,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1867,9 +1881,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -1886,7 +1900,7 @@ HAVE_PTHREADS="no"
 echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
 echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
@@ -1919,9 +1933,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -1938,7 +1952,7 @@ HAVE_PTHREADS="no"
 echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
 echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
@@ -1974,9 +1988,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o conftest conftest.c ${PTHREADS_XOPEN_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -1993,7 +2007,7 @@ HAVE_PTHREADS_XOPEN="no"
 echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >> Makefile.config
 echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
 echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >> Makefile.config
 echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >> Makefile.config
@@ -2024,9 +2038,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -2043,7 +2057,7 @@ HAVE_PTHREAD_MUTEX_RECURSIVE="no"
 echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >> Makefile.config
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
 echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
@@ -2066,9 +2080,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -2085,7 +2099,7 @@ HAVE_PTHREAD_MUTEX_RECURSIVE_NP="no"
 echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >> Makefile.config
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
 echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
@@ -2156,9 +2170,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -2175,7 +2189,7 @@ HAVE_X11="no"
 echo "HAVE_X11=$HAVE_X11" >> Makefile.config
 echo "#undef HAVE_X11" > config/have_x11.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_X11}" != "" ]; then
 echo "#ifndef X11_CFLAGS" > config/x11_cflags.h
 echo "#define X11_CFLAGS \"$X11_CFLAGS\"" >> config/x11_cflags.h
@@ -2209,13 +2223,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -2246,13 +2260,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -2284,13 +2298,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -2437,9 +2451,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -2456,7 +2470,7 @@ HAVE_SDL="no"
 echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
 echo "#undef HAVE_SDL" > config/have_sdl.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SDL}" != "no" ]; then
 echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
@@ -2485,9 +2499,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o conftest conftest.c ${SDL_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -2504,7 +2518,7 @@ HAVE_SDL="no"
 echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
 echo "#undef HAVE_SDL" > config/have_sdl.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SDL}" != "no" ]; then
 echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
@@ -2579,9 +2593,9 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -2598,7 +2612,7 @@ HAVE_FREETYPE="no"
 echo "HAVE_FREETYPE=$HAVE_FREETYPE" >> Makefile.config
 echo "#undef HAVE_FREETYPE" > config/have_freetype.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 echo "#ifndef FREETYPE_CFLAGS" > config/freetype_cflags.h
 echo "#define FREETYPE_CFLAGS \"$FREETYPE_CFLAGS\"" >> config/freetype_cflags.h
@@ -2696,9 +2710,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -2715,7 +2729,7 @@ HAVE_OPENGL="no"
 echo "HAVE_OPENGL=$HAVE_OPENGL" >> Makefile.config
 echo "#undef HAVE_OPENGL" > config/have_opengl.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >> Makefile.config
 echo "OPENGL_LIBS=$OPENGL_LIBS" >> Makefile.config
@@ -2779,9 +2793,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o conftest conftest.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} ${GLU_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} ${GLU_LIBS} ${MATH_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -2798,7 +2812,7 @@ HAVE_GLU="no"
 echo "HAVE_GLU=$HAVE_GLU" >> Makefile.config
 echo "#undef HAVE_GLU" > config/have_glu.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_GLU}" = "yes" ]; then
 echo "GLU_CFLAGS=$GLU_CFLAGS" >> Makefile.config
 echo "GLU_LIBS=$GLU_LIBS" >> Makefile.config
@@ -2889,9 +2903,9 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o conftest conftest.c ${JPEG_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o $testdir/conftest conftest.c ${JPEG_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o $testdir/conftest conftest.c ${JPEG_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -2908,7 +2922,7 @@ HAVE_JPEG="no"
 echo "HAVE_JPEG=$HAVE_JPEG" >> Makefile.config
 echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_JPEG}" != "" ]; then
 echo "JPEG_CFLAGS=$JPEG_CFLAGS" >> Makefile.config
 echo "JPEG_LIBS=$JPEG_LIBS" >> Makefile.config
@@ -2987,9 +3001,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o conftest conftest.c ${ODE_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o conftest conftest.c ${ODE_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o $testdir/conftest conftest.c ${ODE_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o $testdir/conftest conftest.c ${ODE_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -3006,7 +3020,7 @@ HAVE_ODE="no"
 echo "HAVE_ODE=$HAVE_ODE" >> Makefile.config
 echo "#undef HAVE_ODE" > config/have_ode.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_ODE}" != "no" ]; then
 echo "ODE_CFLAGS=$ODE_CFLAGS" >> Makefile.config
 echo "ODE_LIBS=$ODE_LIBS" >> Makefile.config
@@ -3088,9 +3102,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CG_CFLAGS} ${OPENGL_CFLAGS} ${PTHREADS_CFLAGS} -o conftest conftest.c ${CG_LIBS} ${OPENGL_LIBS} ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CG_CFLAGS} ${OPENGL_CFLAGS} ${PTHREADS_CFLAGS} -o conftest conftest.c ${CG_LIBS} ${OPENGL_LIBS} ${PTHREADS_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${CG_CFLAGS} ${OPENGL_CFLAGS} ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${CG_LIBS} ${OPENGL_LIBS} ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CG_CFLAGS} ${OPENGL_CFLAGS} ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${CG_LIBS} ${OPENGL_LIBS} ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -3107,7 +3121,7 @@ HAVE_CG="no"
 echo "HAVE_CG=$HAVE_CG" >> Makefile.config
 echo "#undef HAVE_CG" > config/have_cg.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_CG}" = "yes" ]; then
 echo "CG_CFLAGS=$CG_CFLAGS" >> Makefile.config
 echo "CG_LIBS=$CG_LIBS" >> Makefile.config
@@ -3201,8 +3215,8 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o conftest conftest.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 echo "no (compile failed)"
 echo "no (compile failed)" >> config.log
@@ -3212,8 +3226,8 @@ echo "HAVE_SSE=$HAVE_SSE" >> Makefile.config
 echo "#undef HAVE_SSE" > config/have_sse.h
 else
 compile="ok"
-./conftest >> config.log
-if [ $? == 0 ]; then
+(cd $testdir && ./conftest) >> config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_SSE="yes"
@@ -3229,7 +3243,7 @@ echo "HAVE_SSE=$HAVE_SSE" >> Makefile.config
 echo "#undef HAVE_SSE" > config/have_sse.h
 fi;
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SSE}" = "yes" ]; then
 echo "#ifndef SSE_CFLAGS" > config/sse_cflags.h
 echo "#define SSE_CFLAGS \"$SSE_CFLAGS\"" >> config/sse_cflags.h
@@ -3261,8 +3275,8 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o conftest conftest.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 echo "no (compile failed)"
 echo "no (compile failed)" >> config.log
@@ -3272,8 +3286,8 @@ echo "HAVE_SSE2=$HAVE_SSE2" >> Makefile.config
 echo "#undef HAVE_SSE2" > config/have_sse2.h
 else
 compile="ok"
-./conftest >> config.log
-if [ $? == 0 ]; then
+(cd $testdir && ./conftest) >> config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_SSE2="yes"
@@ -3289,7 +3303,7 @@ echo "HAVE_SSE2=$HAVE_SSE2" >> Makefile.config
 echo "#undef HAVE_SSE2" > config/have_sse2.h
 fi;
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SSE2}" = "yes" ]; then
 echo "#ifndef SSE2_CFLAGS" > config/sse2_cflags.h
 echo "#define SSE2_CFLAGS \"$SSE2_CFLAGS\"" >> config/sse2_cflags.h
@@ -3323,8 +3337,8 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o conftest conftest.c  2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
 if [ $? != 0 ]; then
 echo "no (compile failed)"
 echo "no (compile failed)" >> config.log
@@ -3334,8 +3348,8 @@ echo "HAVE_SSE3=$HAVE_SSE3" >> Makefile.config
 echo "#undef HAVE_SSE3" > config/have_sse3.h
 else
 compile="ok"
-./conftest >> config.log
-if [ $? == 0 ]; then
+(cd $testdir && ./conftest) >> config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_SSE3="yes"
@@ -3351,7 +3365,7 @@ echo "HAVE_SSE3=$HAVE_SSE3" >> Makefile.config
 echo "#undef HAVE_SSE3" > config/have_sse3.h
 fi;
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SSE3}" = "yes" ]; then
 echo "#ifndef SSE3_CFLAGS" > config/sse3_cflags.h
 echo "#define SSE3_CFLAGS \"$SSE3_CFLAGS\"" >> config/sse3_cflags.h
@@ -3450,9 +3464,9 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -3469,7 +3483,7 @@ HAVE_ALTIVEC="no"
 echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
 echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >> Makefile.config
 HAVE_ALTIVEC_H=""
@@ -3499,9 +3513,9 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -3518,7 +3532,7 @@ HAVE_ALTIVEC="no"
 echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
 echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >> Makefile.config
 echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
@@ -3588,13 +3602,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
