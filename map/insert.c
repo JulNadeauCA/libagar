@@ -285,8 +285,11 @@ insert_cursor(void *p, SDL_Rect *rd)
 	}
 
 	if (ins->snap_mode == RG_SNAP_NONE) {
-		agPrim.rect_outlined(mv, rd->x+1, rd->y+1,
-		    AGMTILESZ(mv)-1, AGMTILESZ(mv)-1,
+		AG_DrawRectOutline(mv,
+		    AG_RECT(rd->x+1,
+		            rd->y+1,
+		            AGMTILESZ(mv)-1,
+			    AGMTILESZ(mv)-1),
 		    AG_COLOR(MAPVIEW_GRID_COLOR));
 	}
 	

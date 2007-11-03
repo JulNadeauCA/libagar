@@ -48,7 +48,8 @@ Draw(void *p)
 	int x = rad->xPadding + rad->radius*2 + rad->xSpacing;
 	int y = rad->yPadding;
 
-	STYLE(rad)->RadioGroupBackground(rad, 0, 0, WIDTH(rad), HEIGHT(rad));
+	STYLE(rad)->RadioGroupBackground(rad,
+	    AG_RECT(0, 0, WIDTH(rad), HEIGHT(rad)));
 	val = AG_WidgetInt(rad, "value");
 	for (i = 0; i < rad->nitems;
 	     i++, y += (rad->radius*2 + rad->ySpacing)) {

@@ -432,17 +432,11 @@ DrawMapCursor(MAP_View *mv)
 	}
 	return;
 defcurs:
-	agPrim.rect_outlined(mv,
-	    rd.x + 1,
-	    rd.y + 1,
-	    AGMTILESZ(mv) - 1,
-	    AGMTILESZ(mv) - 1,
+	AG_DrawRectOutline(mv,
+	    AG_RECT(rd.x+1, rd.y+1, AGMTILESZ(mv)-1, AGMTILESZ(mv)-1),
 	    AG_COLOR(MAPVIEW_CURSOR_COLOR));
-	agPrim.rect_outlined(mv,
-	    rd.x + 2,
-	    rd.y + 2,
-	    AGMTILESZ(mv) - 3,
-	    AGMTILESZ(mv) - 3,
+	AG_DrawRectOutline(mv,
+	    AG_RECT(rd.x+2, rd.y+2, AGMTILESZ(mv)-3, AGMTILESZ(mv)-3),
 	    AG_COLOR(MAPVIEW_CURSOR_COLOR));
 }
 
@@ -478,8 +472,8 @@ Draw(void *p)
 		return;
 
 	if (WIDGET(mv)->flags & AG_WIDGET_FOCUSED)
-		agPrim.rect_outlined(mv, 0, 0,
-		    WIDGET(mv)->w, WIDGET(mv)->h,
+		AG_DrawRectOutline(mv,
+		    AG_RECT(0, 0, WIDGET(mv)->w, WIDGET(mv)->h),
 		    AG_COLOR(FOCUS_COLOR));
 
 	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
@@ -491,13 +485,9 @@ Draw(void *p)
 	}
 
 	if ((mv->flags & MAP_VIEW_NO_BG) == 0) {
-		SDL_Rect rtiling;
-
-		rtiling.x = 0;
-		rtiling.y = 0;
-		rtiling.w = WIDGET(mv)->w;
-		rtiling.h = WIDGET(mv)->h;
-		agPrim.tiling(mv, rtiling, mapViewBgTileSize, 0,
+		AG_DrawTiling(mv,
+		    AG_RECT(0, 0, WIDTH(mv), HEIGHT(mv)),
+		    mapViewBgTileSize, 0,
 		    AG_COLOR(MAPVIEW_TILE1_COLOR),
 		    AG_COLOR(MAPVIEW_TILE2_COLOR));
 	}
@@ -543,7 +533,7 @@ draw_layer:
 
 #ifdef DEBUG
 				if (mv->flags & MAP_VIEW_SHOW_OFFSETS) {
-					agPrim.line(mv, rx, ry,
+					AG_DrawLine(mv, rx, ry,
 					    (rx+nref->r_gfx.xcenter +
 					     nref->r_gfx.xmotion -
 					     nref->r_gfx.xorigin),
@@ -559,19 +549,21 @@ draw_layer:
 
 					MAP_ItemAttrColor(mv->edit_attr,
 					    (nref->flags & mv->edit_attr), c);
-					agPrim.rect_blended(mv, rx, ry,
-					    AGMTILESZ(mv), AGMTILESZ(mv), c,
+					AG_DrawRectBlended(mv,
+					    AG_RECT(rx, ry,
+					            AGMTILESZ(mv),
+						    AGMTILESZ(mv)), c,
 					    AG_ALPHA_OVERLAY);
 				}
 
 				if ((nref->flags & MAP_ITEM_SELECTED) &&
 				    MAP_ItemExtent(m, nref, &rExtent, mv->cam)
 				    == 0) {
-					agPrim.rect_outlined(mv,
-					    rx + rExtent.x - 1,
-					    ry + rExtent.y - 1,
-					    rExtent.w + 1,
-					    rExtent.h + 1,
+					AG_DrawRectOutline(mv,
+					    AG_RECT(rx + rExtent.x - 1,
+					            ry + rExtent.y - 1,
+					            rExtent.w + 1,
+					            rExtent.h + 1),
 					    AG_COLOR(MAPVIEW_RSEL_COLOR));
 				}
 			}
@@ -583,16 +575,16 @@ draw_layer:
 			    (mx == m->origin.x && my == m->origin.y)) {
 				int t2 = AGMTILESZ(mv)/2;
 			
-				agPrim.circle(mv,
+				AG_DrawCircle(mv,
 				    rx+t2,
 				    ry+t2,
 				    t2,
 				    AG_COLOR(MAPVIEW_ORIGIN_COLOR));
-				agPrim.line(mv,
+				AG_DrawLine(mv,
 				    rx+t2, ry,
 				    rx+t2, ry+AGMTILESZ(mv),
 				    AG_COLOR(MAPVIEW_ORIGIN_COLOR));
-				agPrim.line(mv,
+				AG_DrawLine(mv,
 				    rx, ry+t2,
 				    rx+AGMTILESZ(mv), ry+t2,
 				    AG_COLOR(MAPVIEW_ORIGIN_COLOR));
@@ -632,15 +624,13 @@ next_layer:
 
 	/* Indicate the selection. */
 	if (esel_x != -1) {
-		agPrim.rect_outlined(mv,
-		    esel_x, esel_y,
-		    esel_w, esel_h,
+		AG_DrawRectOutline(mv,
+		    AG_RECT(esel_x, esel_y, esel_w, esel_h),
 		    AG_COLOR(MAPVIEW_ESEL_COLOR));
 	}
 	if (msel_x != -1) {
-		agPrim.rect_outlined(mv,
-		    msel_x, msel_y,
-		    msel_w, msel_h,
+		AG_DrawRectOutline(mv,
+		    AG_RECT(msel_x, msel_y, msel_w, msel_h),
 		    AG_COLOR(MAPVIEW_MSEL_COLOR));
 	}
 

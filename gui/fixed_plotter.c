@@ -200,7 +200,7 @@ Draw(void *p)
 				AG_WidgetPutPixel(fpl, x, y, gi->color);
 				break;
 			case AG_FIXED_PLOTTER_LINES:
-				agPrim.line(fpl, ox, oy, x, y, gi->color);
+				AG_DrawLine(fpl, ox, oy, x, y, gi->color);
 				break;
 			}
 		}

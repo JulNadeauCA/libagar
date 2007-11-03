@@ -26,6 +26,15 @@ struct ag_window;
 struct ag_style;
 TAILQ_HEAD(ag_windowq, ag_window);
 
+typedef struct ag_point {
+	int x, y;
+} AG_Point;
+
+typedef struct ag_rect {
+	int x, y;
+	int w, h;
+} AG_Rect;
+
 typedef struct ag_display {
 	struct ag_object obj;
 
@@ -399,7 +408,31 @@ AG_CopySurfaceAsIs(SDL_Surface *sSrc, SDL_Surface *sDst)
 	SDL_SetAlpha(sSrc, svaflags, svalpha);
 }
 
+static __inline__ AG_Point
+AG_POINT(int x, int y)
+{
+	AG_Point pt;
+	pt.x = x;
+	pt.y = y;
+	return (pt);
+}
+
+static __inline__ AG_Rect
+AG_RECT(int x, int y, int w, int h)
+{
+	AG_Rect r;
+	r.x = x;
+	r.y = y;
+	r.w = w;
+	r.h = h;
+	return (r);
+}
 __END_DECLS
+
+#ifdef _AGAR_INTERNAL
+#define POINT AG_POINT
+#define RECT AG_RECT
+#endif
 
 #include "close_code.h"
 #endif	/* _AGAR_CORE_VIEW_H_ */

@@ -30,38 +30,32 @@ FreeWidget(void)
 static void
 T_Box(void)
 {
-	agPrim.box(&wid, 0, 0, wid.w/2, wid.h/2, 1, 0);
+	AG_DrawBox(&wid, AG_RECT(0, 0, wid.w/2, wid.h/2), 1, 0);
 }
 
 static void
 T_BoxChamfered(void)
 {
-	SDL_Rect r;
-
-	r.x = 0;
-	r.y = 0;
-	r.w = agView->w/2;
-	r.h = agView->h/2;
-	agPrim.box_chamfered(&wid, &r, 1, 32, 0);
+	AG_DrawBoxRounded(&wid, AG_RECT(0,0,agView->w/2,agView->h/2), 1, 32, 0);
 }
 
 static void
 T_Frame(void)
 {
-	agPrim.frame(&wid, 0, 0, wid.w, wid.h, 1, 0);
+	AG_DrawFrame(&wid, AG_RECT(0, 0, wid.w, wid.h), 1, 0);
 }
 
 static void
 T_Circle(void)
 {
-	agPrim.circle(&wid, 0, 0, wid.w/3, 0);
+	AG_DrawCircle(&wid, 0, 0, wid.w/3, 0);
 }
 
 static void
 T_Line(void)
 {
-	agPrim.line(&wid, 0, 0, wid.w, wid.h, 0);
-	agPrim.line(&wid, 0, 0, wid.w, wid.h/2, 0);
+	AG_DrawLine(&wid, 0, 0, wid.w, wid.h, 0);
+	AG_DrawLine(&wid, 0, 0, wid.w, wid.h/2, 0);
 }
 
 static void
@@ -69,74 +63,60 @@ T_LineBlended(void)
 {
 	Uint8 c[4];
 
-	agPrim.line_blended(&wid, 0, 0, wid.w, wid.h, c, AG_ALPHA_SRC);
-	agPrim.line_blended(&wid, 0, 0, wid.w, wid.h/2, c, AG_ALPHA_SRC);
+	AG_DrawLineBlended(&wid, 0, 0, wid.w, wid.h, c, AG_ALPHA_SRC);
+	AG_DrawLineBlended(&wid, 0, 0, wid.w, wid.h/2, c, AG_ALPHA_SRC);
 }
 
 static void
 T_HLine(void)
 {
-	agPrim.hline(&wid, 1, 479, 1, 0);
+	AG_DrawLineH(&wid, 1, 479, 1, 0);
 }
 
 static void
 T_VLine(void)
 {
-	agPrim.vline(&wid, 1, 1, 479, 0);
+	AG_DrawLineV(&wid, 1, 1, 479, 0);
 }
 
 static void
 T_RectFilled(void)
 {
-	agPrim.rect_filled(&wid, 1, 1, 256, 256, 0);
+	AG_DrawRectFilled(&wid, AG_RECT(1, 1, 256, 256), 0);
 }
 
 static void
 T_RectBlended(void)
 {
-	Uint8 c[4];
-
-	agPrim.rect_blended(&wid, 1, 1, 128, 128, c, AG_ALPHA_SRC);
+	Uint8 c[4] = { 100,200,100,128 };
+	AG_DrawRectBlended(&wid, AG_RECT(1, 1, 128, 128), c, AG_ALPHA_SRC);
 }
 
 static void
 T_Tiling16(void)
 {
-	SDL_Rect rd;
-
-	rd.x = 0;
-	rd.y = 0;
-	rd.w = wid.w;
-	rd.h = wid.h;
-	agPrim.tiling(&wid, rd, 16, 0, 255, 0);
+	AG_DrawTiling(&wid, AG_RECT(0,0,wid.w,wid.h), 16, 0, 255, 0);
 }
 
 static void
 T_Tiling32(void)
 {
-	SDL_Rect rd;
-
-	rd.x = 0;
-	rd.y = 0;
-	rd.w = wid.w;
-	rd.h = wid.h;
-	agPrim.tiling(&wid, rd, 32, 0, 255, 0);
+	AG_DrawTiling(&wid, AG_RECT(0,0,wid.w,wid.h), 32, 0, 255, 0);
 }
 
 static struct testfn_ops testfns[] = {
- { "primitive.box()", InitWidget, FreeWidget, T_Box },
- { "primitive.box_chamfered()", InitWidget, FreeWidget, T_BoxChamfered },
- { "primitive.frame()", InitWidget, FreeWidget, T_Frame },
- { "primitive.circle()", InitWidget, FreeWidget, T_Circle },
- { "primitive.line()", InitWidget, FreeWidget, T_Line },
- { "primitive.line_blended()", InitWidget, FreeWidget, T_LineBlended },
- { "primitive.hline(479px)", InitWidget, FreeWidget, T_HLine },
- { "primitive.vline(479px)", InitWidget, FreeWidget, T_VLine },
- { "primitive.rect_filled(256x256)", InitWidget, FreeWidget, T_RectFilled },
- { "primitive.rect_blended(128x128, ALPHA_SRC)", InitWidget, FreeWidget,
-    T_RectBlended },
- { "primitive.tiling(16x16)", InitWidget, FreeWidget, T_Tiling16 },
- { "primitive.tiling(32x32)", InitWidget, FreeWidget, T_Tiling32 },
+ { "Box", InitWidget, FreeWidget, T_Box },
+ { "BoxRounded", InitWidget, FreeWidget, T_BoxChamfered },
+ { "Frame", InitWidget, FreeWidget, T_Frame },
+ { "Circle", InitWidget, FreeWidget, T_Circle },
+ { "Line", InitWidget, FreeWidget, T_Line },
+ { "LineBlended", InitWidget, FreeWidget, T_LineBlended },
+ { "LineH(479px)", InitWidget, FreeWidget, T_HLine },
+ { "LineV(479px)", InitWidget, FreeWidget, T_VLine },
+ { "RectFilled(256x256)", InitWidget, FreeWidget, T_RectFilled },
+ { "RectBlended(128x128)", InitWidget, FreeWidget, T_RectBlended },
+ { "Tiling(16x16)", InitWidget, FreeWidget, T_Tiling16 },
+ { "Tiling(32x32)", InitWidget, FreeWidget, T_Tiling32 },
 };
 
 struct test_ops primitives_test = {

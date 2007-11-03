@@ -524,20 +524,14 @@ typedef enum ag_blend_func {
 } AG_BlendFn;
 .Ed
 .Sh GRAPHICS PRIMITIVES
-All of the following functions are called from the widget
+All of the following functions must be called from widget
 .Va draw
-operation (they are not safe to use in another context), to render primitives
-that are designed specifically for use in GUI widgets.
+functions.
+These primitives are designed specifically for use in GUI widgets, and are
+not safe to invoke from any other context.
 .Pp
-These functions are called via the
-.Va agPrim
-structure to allow switching between different primitive functions at run time
-or specifying alternate user primitives.
-By default, the built-in primitive functions are selected depending on whether
-the display uses direct video or OpenGL.
-.Pp
-The coordinates for all the
-.Fn agPrim.*
+The coordinates for all of the
+.Fn AG_Draw*
 functions are given in pixels and are relative to the specified widget.
 Unless otherwise noted, the
 .Fa c
@@ -546,58 +540,54 @@ arguments are indices into the global GUI color array (see
 .Pp
 .nr nS 1
 .Ft void
-.Fn agPrim.box "AG_Widget *widget" "int x" "int y" "int w" "int h" "int z" "Uint32 c"
+.Fn AG_DrawBox "AG_Widget *widget" "AG_Rect r" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.box_chamfered "AG_Widget *widget" "SDL_Rect *r" "int z" "int radius" "Uint32 c"
+.Fn AG_DrawBoxRounded "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.frame "AG_Widget *widget" "int x" "int y" "int w" "int h" "Uint32 c"
+.Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.circle "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
+.Fn AG_DrawCircle "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.circle2 "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
+.Fn AG_DrawCircle2 "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.line "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
+.Fn AG_DrawLine "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.line2 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
+.Fn AG_DrawLine2 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.hline "AG_Widget *widget" "int x1" "int x2" "int y" "Uint32 c"
+.Fn AG_DrawLineH "AG_Widget *widget" "int x1" "int x2" "int y" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.vline "AG_Widget *widget" "int x" "int y1" "int y2" "Uint32 c"
+.Fn AG_DrawLineV "AG_Widget *widget" "int x" "int y1" "int y2" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.rect_outlined "AG_Widget *widget, int x, int y, int w, int h" "Uint32 c"
+.Fn AG_DrawRectOutline "AG_Widget *widget, AG_Rect r" "Uint32 c"
 .Pp
 .Ft void
-.Fn agPrim.rect_filled "AG_Widget *widget, int x, int y, int w, int h" "Uint32 c"
+.Fn AG_DrawRectFIlled "AG_Widget *widget, AG_Rect r" "Uint32 c"
 .Pp
 .nr nS 0
-.Fn agPrim.box
-draws a 3D-style box of size
-.Fa w ,
-.Fa h ,
-with a depth of
+.Fn AG_DrawBox
+draws a 3D-style box, where 
 .Fa z
-pixels.
+indicates the
+.Sq depth
+in pixels.
 The
-.Fn primitive.box_chamfered
-variant draws a 3D-style box with the two top edges chamfered to the
-given
+.Fn AG_DrawBoxRounded
+variant renders the two top edges as rounded to the given
 .Fa radius .
 .Pp
-.Fn agPrim.frame
-draws a 3D-style frame of size
-.Fa w ,
-.Fa h .
+.Fn AG_DrawFrame
+draws a 3D-style frame.
 .Pp
-.Fn agPrim.circle
+.Fn AG_DrawCircle
 draws a circle with the origin at
 .Fa x ,
 .Fa y
@@ -605,7 +595,7 @@ and a radius of
 .Fa radius
 pixels.
 .Pp
-.Fn agPrim.line
+.Fn AG_DrawLine
 scan-converts a line segment going from point
 .Fa x1 ,
 .Fa y1
@@ -613,22 +603,18 @@ to point
 .Fa x2 ,
 .Fa y2 .
 The variants
-.Fn agPrim.hline
+.Fn AG_DrawLineH
 and
-.Fn agPrim.vline
+.Fn AG_DrawLineV
 render horizontal and vertical line segments, respectively.
-.Fn agPrim.line2
-renders two line segments of different intensities.
+.Fn AG_DrawLine2
+renders two line segments for a 3D-style effect.
 .Pp
-.Fn agPrim.rect_outlined
-draws a rectangle outline of
-.Fa w ,
-.Fa h .
+.Fn AG_DrawRectOutline
+draws the outline of a rectangle.
 .Pp
-.Fn agPrim.rect_filled
-draws a filled rectangle of size
-.Fa w ,
-.Fa h .
+.Fn AG_DrawRectFilled
+fills a rectangle of pixels.
 .Sh BINDINGS
 Each widget has a list of named
 .Sq bindings ,

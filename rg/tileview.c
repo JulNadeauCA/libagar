@@ -1095,11 +1095,11 @@ DrawStatusText(RG_Tileview *tv, const char *label)
 	/* XXX pointless colorkey blit */
 	AG_TextColor(TILEVIEW_TEXT_COLOR);
 	su = AG_TextRender(label);
-	agPrim.rect_filled(tv,
-	    (su->w >= WIDGET(tv)->w) ? 0 : (WIDGET(tv)->w - su->w - 2),
-	    WIDGET(tv)->h - su->h - 2,
-	    WIDGET(tv)->w,
-	    WIDGET(tv)->h,
+	AG_DrawRectFilled(tv,
+	    AG_RECT((su->w >= WIDGET(tv)->w) ? 0 : (WIDGET(tv)->w - su->w - 2),
+	            WIDGET(tv)->h - su->h - 2,
+	            WIDGET(tv)->w,
+	            WIDGET(tv)->h),
 	    AG_COLOR(TILEVIEW_TEXTBG_COLOR));
 	AG_WidgetBlit(tv, su,
 	    WIDGET(tv)->w - su->w - 1,
@@ -1507,7 +1507,7 @@ Draw(void *p)
 	RG_Tileview *tv = p;
 	RG_Tile *t = tv->tile;
 	RG_TileviewCtrl *ctrl;
-	SDL_Rect rsrc, rdst, rtiling;
+	SDL_Rect rsrc, rdst;
 	int x, y, n;
 
 	if (t == NULL)
@@ -1533,12 +1533,9 @@ Draw(void *p)
 			AG_WidgetUpdateSurface(tv, 0);
 		}
 	}
-	rtiling.x = 0;
-	rtiling.y = 0;
-	rtiling.w = WIDGET(tv)->w;
-	rtiling.h = WIDGET(tv)->h;
 	if ((tv->flags & RG_TILEVIEW_NO_TILING) == 0) {
-		agPrim.tiling(tv, rtiling, 9, 0,
+		AG_DrawTiling(tv,
+		    AG_RECT(0, 0, WIDTH(tv), HEIGHT(tv)), 9, 0,
 		    AG_COLOR(TILEVIEW_TILE1_COLOR),
 		    AG_COLOR(TILEVIEW_TILE2_COLOR));
 	}
@@ -1624,11 +1621,12 @@ Draw(void *p)
 					if ((d = (tsz - (th - y))) > 0) {
 						h -= d;
 					}
-					agPrim.rect_blended(tv,
-					    tv->xoffs+x,
-					    tv->yoffs+y,
-					    w, h, c, AG_ALPHA_OVERLAY);
-	
+					AG_DrawRectBlended(tv,
+					    AG_RECT(tv->xoffs+x,
+					            tv->yoffs+y,
+					            w, h),
+					    c, AG_ALPHA_OVERLAY);
+
 					n++;
 				}
 			}
@@ -1662,11 +1660,11 @@ Draw(void *p)
 					    (l > 0) ? "+" : "", l);
 					AG_TextColorRGB(0, 0, 0);
 					tsu = AG_TextRender(text);
-					agPrim.rect_blended(tv,
-					    tv->xoffs+x,
-					    tv->yoffs+y,
-					    tsu->w, tsu->h, c,
-					    AG_ALPHA_OVERLAY);
+					AG_DrawRectBlended(tv,
+					    AG_RECT(tv->xoffs+x,
+					            tv->yoffs+y,
+					            tsu->w, tsu->h),
+					    c, AG_ALPHA_OVERLAY);
 					AG_WidgetBlit(tv, tsu,
 					    tv->xoffs+x,
 					    tv->yoffs+y);

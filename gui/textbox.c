@@ -249,8 +249,8 @@ Draw(void *p)
 #else
 	len = strlen(s);
 #endif
-	STYLE(tbox)->TextboxBackground(tbox, x, 0,
-	    (WIDTH(tbox) - x - 1), HEIGHT(tbox),
+	STYLE(tbox)->TextboxBackground(tbox,
+	    AG_RECT(x, 0, WIDTH(tbox)-x-1, HEIGHT(tbox)),
 	    (tbox->flags & AG_TEXTBOX_COMBO));
 #ifdef HAVE_OPENGL
 	if (agView->opengl)  {
@@ -285,7 +285,7 @@ Draw(void *p)
 		    (tbox->flags & AG_TEXTBOX_BLINK_ON) &&
 		    AG_WidgetEnabled(tbox) &&
 		    AG_WidgetFocused(tbox)) {
-			agPrim.vline(tbox,
+			AG_DrawLineV(tbox,
 			    x - tbox->x, (y + 1),
 			    (y + agTextFontHeight - 2),
 			    AG_COLOR(TEXTBOX_CURSOR_COLOR));
@@ -380,14 +380,16 @@ out:
 		if (tbox->vBar != NULL && AG_ScrollbarVisible(tbox->vBar)) {
 			int d = WIDTH(tbox->vBar);
 
-			agPrim.box(tbox, WIDTH(tbox)-d, HEIGHT(tbox)-d, d, d,
-			    -1, AG_COLOR(TEXTBOX_COLOR));
+			AG_DrawBox(tbox,
+			    AG_RECT(WIDTH(tbox)-d, HEIGHT(tbox)-d, d, d), -1,
+			    AG_COLOR(TEXTBOX_COLOR));
 		} else if (tbox->hBar != NULL &&
 		           AG_ScrollbarVisible(tbox->hBar)) {
 			int d = HEIGHT(tbox->hBar);
 
-			agPrim.box(tbox, WIDTH(tbox)-d, HEIGHT(tbox)-d, d, d,
-			    -1, AG_COLOR(TEXTBOX_COLOR));
+			AG_DrawBox(tbox,
+			    AG_RECT(WIDTH(tbox)-d, HEIGHT(tbox)-d, d, d), -1,
+			    AG_COLOR(TEXTBOX_COLOR));
 		}
 	}
 	    
