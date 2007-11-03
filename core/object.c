@@ -336,7 +336,7 @@ AG_ObjectAttach(void *parentp, void *pChld)
 
 /* Attach a child object to some parent object according to a path. */
 int
-AG_ObjectAttachPath(const char *path, void *child)
+AG_ObjectAttachToNamed(const char *path, void *child)
 {
 	char ppath[MAXPATHLEN];
 	void *parent;

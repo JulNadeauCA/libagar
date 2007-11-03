@@ -829,7 +829,7 @@ AG_RcsCheckout(const char *path)
 			AG_ObjectInit(obj, name, cl);
 		}
 
-		if (AG_ObjectAttachPath(localpath, obj) == -1) {
+		if (AG_ObjectAttachToNamed(localpath, obj) == -1) {
 			AG_ObjectDestroy(obj);
 			goto fail;
 		}
