@@ -90,16 +90,10 @@ Draw(void *p)
 
 	switch (sep->type) {
 	case AG_SEPARATOR_HORIZ:
-		agPrim.hline(sep, 0, WIDGET(sep)->w, sep->padding,
-		    AG_COLOR(SEPARATOR_LINE1_COLOR));
-		agPrim.hline(sep, 0, WIDGET(sep)->w, sep->padding+1,
-		    AG_COLOR(SEPARATOR_LINE2_COLOR));
+		STYLE(sep)->SeparatorHoriz(sep);
 		break;
 	case AG_SEPARATOR_VERT:
-		agPrim.vline(sep, sep->padding, 0, WIDGET(sep)->h,
-		    AG_COLOR(SEPARATOR_LINE1_COLOR));
-		agPrim.vline(sep, sep->padding+1, 0, WIDGET(sep)->h,
-		    AG_COLOR(SEPARATOR_LINE2_COLOR));
+		STYLE(sep)->SeparatorVert(sep);
 		break;
 	}
 }

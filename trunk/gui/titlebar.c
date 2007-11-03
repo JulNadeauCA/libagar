@@ -138,12 +138,8 @@ Draw(void *p)
 {
 	AG_Titlebar *tbar = p;
 
-	agPrim.box(tbar, 0, 0,
-	    WIDGET(tbar)->w,
-	    WIDGET(tbar)->h,
-	    tbar->pressed ? -1 : 1,
-	    AG_WINDOW_FOCUSED(tbar->win) ? AG_COLOR(TITLEBAR_FOCUSED_COLOR) :
-	                                   AG_COLOR(TITLEBAR_UNFOCUSED_COLOR));
+	STYLE(p)->TitlebarBackground(p, tbar->pressed,
+	    AG_WINDOW_FOCUSED(tbar->win));
 }
 
 static void

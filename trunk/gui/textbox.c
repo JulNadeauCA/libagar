@@ -197,7 +197,6 @@ Draw(void *p)
 {
 	AG_Textbox *tbox = p;
 	AG_WidgetBinding *stringb;
-	AG_Font *font;
 	int i, x, xStart, y, dx, dy;
 	size_t len;
 	char *s;
@@ -215,34 +214,33 @@ Draw(void *p)
 
 	if (tbox->labelText != NULL &&
 	    tbox->label == -1) {
+		AG_PushTextState();
+		AG_TextColor(TEXTBOX_TXT_COLOR);
 		tbox->label = AG_WidgetMapSurface(tbox,
 		    AG_TextRender(tbox->labelText));
+		AG_PopTextState();
 	}
 	if (tbox->label != -1) {
 		SDL_Surface *lblSu = WSURFACE(tbox,tbox->label);
 	
-		AG_WidgetPushClipRect(tbox, 0, 0,
-		    tbox->wLbl, WIDGET(tbox)->h);
-		AG_WidgetBlitSurface(tbox, tbox->label,
-		    tbox->lblPadL, WIDGET(tbox)->h/2 - lblSu->h/2);
+		AG_WidgetPushClipRect(tbox, 0, 0, tbox->wLbl, WIDTH(tbox));
+		AG_WidgetBlitSurface(tbox, tbox->label, tbox->lblPadL,
+		    HEIGHT(tbox)/2 - lblSu->h/2);
 		AG_WidgetPopClipRect(tbox);
 
 		xStart = tbox->lblPadL + tbox->wLbl + tbox->lblPadR +
 		         tbox->boxPadX;
 		x = xStart - tbox->boxPadX;
 	} else {
-		if (WIDGET(tbox)->w < (tbox->boxPadX*2 + tbox->lblPadL +
-		                       tbox->lblPadR) ||
-		    WIDGET(tbox)->h < (tbox->boxPadY*2))  {
+		if (WIDTH(tbox) < (tbox->boxPadX*2 + tbox->lblPadL +
+		                   tbox->lblPadR) ||
+		    HEIGHT(tbox) < (tbox->boxPadY*2))  {
 			goto out;
 		}
 		x = 0;
 		xStart = tbox->boxPadX;
 	}
 	y = tbox->boxPadY;
-
-	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL)
-		fatal("%s", AG_GetError());
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 #ifdef UTF8
@@ -251,28 +249,9 @@ Draw(void *p)
 #else
 	len = strlen(s);
 #endif
-	if (AG_WidgetDisabled(tbox)) {
-		agPrim.box_dithered(tbox, x, 0,
-		    WIDGET(tbox)->w - x - 1,
-		    WIDGET(tbox)->h,
-		    -1,
-		    AG_COLOR(TEXTBOX_COLOR),
-		    AG_COLOR(DISABLED_COLOR));
-	} else {
-		if (tbox->flags & AG_TEXTBOX_COMBO) {
-			agPrim.box(tbox, x, 0,
-			    WIDGET(tbox)->w - x - 1,
-			    WIDGET(tbox)->h,
-			    1,
-			    AG_COLOR(TEXTBOX_COLOR));
-		} else {
-			agPrim.box(tbox, x, 0,
-			    WIDGET(tbox)->w - x - 1,
-			    WIDGET(tbox)->h,
-			    -1,
-			    AG_COLOR(TEXTBOX_COLOR));
-		}
-	}
+	STYLE(tbox)->TextboxBackground(tbox, x, 0,
+	    (WIDTH(tbox) - x - 1), HEIGHT(tbox),
+	    (tbox->flags & AG_TEXTBOX_COMBO));
 #ifdef HAVE_OPENGL
 	if (agView->opengl)  {
 		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
@@ -286,13 +265,13 @@ Draw(void *p)
 	}
 #endif
 	AG_WidgetPushClipRect(tbox, tbox->boxPadX, tbox->boxPadY,
-	    WIDGET(tbox)->w - tbox->boxPadX*2,
-	    WIDGET(tbox)->h - tbox->boxPadY*2);
+	    WIDTH(tbox) - tbox->boxPadX*2,
+	    HEIGHT(tbox) - tbox->boxPadY*2);
 
 	x = xStart;
 	tbox->xMax = 0;
 	tbox->yMax = 1;
-	tbox->yVis = WIDGET(tbox)->h / agTextFontLineSkip;
+	tbox->yVis = WIDTH(tbox)/agTextFontLineSkip;
 	
 	for (i = 0; i <= len; i++) {
 		AG_Glyph *gl;
@@ -363,7 +342,7 @@ Draw(void *p)
 		}
 		AG_TextUnusedGlyph(gl);
 
-		if (y >= WIDGET(tbox)->h)
+		if (y >= HEIGHT(tbox))
 			break;
 	}
 	if (tbox->yMax == 1) {
@@ -374,14 +353,13 @@ Draw(void *p)
 
 #if 0
 		AG_ScrollbarSetBarSize(tbox->vBar,
-		    ((WIDGET(tbox)->h-agTextFontLineSkip)/agTextFontLineSkip)* 
-		    (WIDGET(tbox)->h - tbox->vBar->bw*2)/tbox->yMax);
+		    ((HEIGHT(tbox)-agTextFontLineSkip)/agTextFontLineSkip)* 
+		     (HEIGHT(tbox) - tbox->vBar->bw*2)/tbox->yMax);
 #endif
 
-		bw = WIDGET(tbox)->w - WIDGET(tbox->hBar)->h*2 -
-		     WIDGET(tbox->vBar)->w;
+		bw = WIDTH(tbox) - HEIGHT(tbox->hBar)*2 - WIDTH(tbox->vBar);
 		AG_ScrollbarSetBarSize(tbox->hBar,
-		    tbox->xMax < WIDGET(tbox)->w ? WIDGET(tbox)->w :
+		    tbox->xMax < WIDTH(tbox) ? WIDTH(tbox) :
 		    bw - abs(tbox->xMax - bw));
 	}
 	AG_WidgetUnlockBinding(stringb);
@@ -400,22 +378,16 @@ Draw(void *p)
 out:
 	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
 		if (tbox->vBar != NULL && AG_ScrollbarVisible(tbox->vBar)) {
-			int d = WIDGET(tbox->vBar)->w;
+			int d = WIDTH(tbox->vBar);
 
-			agPrim.box(tbox, 
-			    WIDGET(tbox)->w - d,
-			    WIDGET(tbox)->h - d,
-			    d, d, -1,
-			    AG_COLOR(TEXTBOX_COLOR));
+			agPrim.box(tbox, WIDTH(tbox)-d, HEIGHT(tbox)-d, d, d,
+			    -1, AG_COLOR(TEXTBOX_COLOR));
 		} else if (tbox->hBar != NULL &&
 		           AG_ScrollbarVisible(tbox->hBar)) {
-			int d = WIDGET(tbox->hBar)->h;
+			int d = HEIGHT(tbox->hBar);
 
-			agPrim.box(tbox, 
-			    WIDGET(tbox)->w - d,
-			    WIDGET(tbox)->h - d,
-			    d, d, -1,
-			    AG_COLOR(TEXTBOX_COLOR));
+			agPrim.box(tbox, WIDTH(tbox)-d, HEIGHT(tbox)-d, d, d,
+			    -1, AG_COLOR(TEXTBOX_COLOR));
 		}
 	}
 	    
@@ -720,7 +692,7 @@ MouseButtonDown(AG_Event *event)
 			if ( (AG_ScrollbarVisible(tbox->hBar) &&
 			      my >= WIDGET(tbox->hBar)->y) ||
 			     (AG_ScrollbarVisible(tbox->vBar) &&
-			      mx >= WIDGET(tbox->vBar)->x) )
+			      mx >= WIDGET(tbox->vBar)->x))
 				return;
 		}
 		tbox->flags |= AG_TEXTBOX_CURSOR_MOVING|AG_TEXTBOX_BLINK_ON;
@@ -913,7 +885,7 @@ AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 		AG_WidgetBindInt(tbox->hBar, "min", &tbox->xMin);
 		AG_WidgetBindInt(tbox->hBar, "value", &tbox->x);
 		AG_WidgetBindInt(tbox->hBar, "max", &tbox->xMax);
-		AG_WidgetBindInt(tbox->hBar, "visible", &WIDGET(tbox)->w);
+		AG_WidgetBindInt(tbox->hBar, "visible", &WIDTH(tbox));
 
 		AG_WidgetBindInt(tbox->vBar, "min",   &tbox->yMin);
 		AG_WidgetBindInt(tbox->vBar, "value", &tbox->y);

@@ -277,8 +277,6 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu, AG_MenuItem *pitem)
 	AG_WidgetMapSurface(mview, AG_DupSurface(agIconSmallArrowRight.s));
 }
 
-#define VERT_ALIGNED(m, h) ((m)->itemh/2 - (h)/2 + 1)
-
 static void
 Draw(void *p)
 {
@@ -286,9 +284,8 @@ Draw(void *p)
 	AG_MenuItem *pitem = mview->pitem;
 	AG_Menu *m = mview->pmenu;
 	int i, y = mview->tPad;
-	
-	agPrim.box(mview, 0, 0, WIDGET(mview)->w, WIDGET(mview)->h, 1,
-	    AG_COLOR(MENU_UNSEL_COLOR));
+
+	STYLE(mview)->MenuBackground(mview, 0, 0, WIDTH(mview), HEIGHT(mview));
 
 	for (i = 0; i < pitem->nsubitems; i++) {
 		AG_MenuItem *item = &pitem->subitems[i];
@@ -296,57 +293,19 @@ Draw(void *p)
 		
 		AG_MenuUpdateItem(item);
 
-		if (item == pitem->sel_subitem &&
-		    item->state == 1) {
-			agPrim.rect_filled(mview,
-			    1, 1+y,
-			    WIDGET(mview)->w - 2,
-			    m->itemh,
-			    AG_COLOR(MENU_SEL_COLOR));
-		}
-		if (item->icon != -1) {
-			SDL_Surface *iconsu = WSURFACE(m,item->icon);
-			int dy = VERT_ALIGNED(m, iconsu->h);
-			int state;
+		STYLE(mview)->MenuItemBackground(mview, 0, y, m->itemh,
+		    x, m, item->icon,
+		    (item == pitem->sel_subitem && item->state == 1),
+		    (item->value != -1) ? item->value : GetItemBoolValue(item));
 
-			AG_WidgetBlitFrom(mview, m, item->icon, NULL,
-			    x+(m->itemh/2 - iconsu->w/2), y+dy);
-
-			state = (item->value != -1) ? item->value :
-			    GetItemBoolValue(item);
-
-			if (state) {
-				Uint8 c[4];
-
-				SDL_GetRGB(AG_COLOR(MENU_OPTION_COLOR),
-				    agVideoFmt,
-				    &c[0], &c[1], &c[2]);
-				c[3] = 64;
-				agPrim.frame(mview, x, y+2,
-				    m->itemh, m->itemh-2,
-				    1,
-				    AG_COLOR(MENU_OPTION_COLOR));
-				agPrim.rect_blended(mview, x, y+2,
-				    m->itemh, m->itemh-2, c, AG_ALPHA_SRC);
-			}
-		}
-		if (pitem->flags & AG_MENU_ITEM_ICONS)
+		if (pitem->flags & AG_MENU_ITEM_ICONS) {
 			x += m->itemh + mview->spIconLbl;
-
+		}
 		if (item->flags & AG_MENU_ITEM_SEPARATOR) {
-			int dy = m->itemh/2 - 1;
-			int dx = WIDGET(mview)->w - mview->rPad - 1;
-
-			agPrim.hline(mview,
+			STYLE(mview)->MenuItemSeparator(mview,
 			    mview->lPad,
-			    dx,
-			    y+dy,
-			    AG_COLOR(MENU_SEP1_COLOR));
-			agPrim.hline(mview,
-			    mview->lPad,
-			    dx,
-			    y+dy+1,
-			    AG_COLOR(MENU_SEP2_COLOR));
+			    WIDTH(mview) - mview->rPad - 1,
+			    y, m->itemh);
 		} else {
 			int lbl = item->state ? item->lblEnabled :
 			                        item->lblDisabled;
@@ -372,8 +331,7 @@ Draw(void *p)
 			}
 			AG_WidgetBlitFrom(mview, m, lbl, NULL,
 			    x,
-			    y + VERT_ALIGNED(m, WSURFACE(m,lbl)->h));
-
+			    y + m->itemh/2 - WSURFACE(m,lbl)->h/2 + 1);
 			x += WSURFACE(m,lbl)->w;
 		}
 		if (item->nsubitems > 0) {

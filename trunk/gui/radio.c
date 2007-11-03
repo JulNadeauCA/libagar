@@ -29,20 +29,6 @@
 #include "window.h"
 #include "primitive.h"
 
-enum {
-	XSPACING =	7,
-	YSPACING =	2,
-	XPADDING =	3,
-	YPADDING =	4,
-	RADIUS =	6,
-	SEL_RADIUS =	3
-};
-
-enum {
-	MOUSEBUTTONDOWN_EVENT,
-	KEYDOWN_EVENT
-};
-
 AG_Radio *
 AG_RadioNew(void *parent, Uint flags, const char **items)
 {
@@ -54,66 +40,21 @@ AG_RadioNew(void *parent, Uint flags, const char **items)
 	return (rad);
 }
 
-static const int highlight[18] = {
-	-5, +1,
-	-5,  0,
-	-5, -1,
-	-4, -2,
-	-4, -3,
-	-3, -4,
-	-2, -4,
-	 0, -5,
-	-1, -5
-};
-
 static void
 Draw(void *p)
 {
 	AG_Radio *rad = p;
-	int i, val, j;
-	int x = XPADDING + RADIUS*2 + XSPACING;
-	int y = YPADDING;
+	int i, val;
+	int x = rad->xPadding + rad->radius*2 + rad->xSpacing;
+	int y = rad->yPadding;
 
-	agPrim.frame(rad,
-	    0,
-	    0,
-	    WIDGET(rad)->w,
-	    WIDGET(rad)->h,
-	    1,
-	    AG_COLOR(FRAME_COLOR));
-
+	STYLE(rad)->RadioGroupBackground(rad, 0, 0, WIDTH(rad), HEIGHT(rad));
 	val = AG_WidgetInt(rad, "value");
-
-	for (i = 0;
-	     i < rad->nitems;
-	     i++, y += (RADIUS*2 + YSPACING)) {
-		int xc = XPADDING + RADIUS;
-		int yc = y + RADIUS;
-
-		for (j = 0; j < 18; j+=2) {
-			AG_WidgetPutPixel(rad,
-			    xc + highlight[j],
-			    yc + highlight[j+1],
-			    AG_COLOR(RADIO_HI_COLOR));
-			AG_WidgetPutPixel(rad,
-			    xc - highlight[j],
-			    yc - highlight[j+1],
-			    AG_COLOR(RADIO_LO_COLOR));
-		}
-
-		if (i == val) {
-			agPrim.circle(rad,
-			    XPADDING + RADIUS,
-			    y + RADIUS,
-			    SEL_RADIUS,
-			    AG_COLOR(RADIO_SEL_COLOR));
-		} else if (i == rad->oversel) {
-			agPrim.circle(rad,
-			    XPADDING + RADIUS,
-			    y + RADIUS,
-			    SEL_RADIUS,
-			    AG_COLOR(RADIO_OVER_COLOR));
-		}
+	for (i = 0; i < rad->nitems;
+	     i++, y += (rad->radius*2 + rad->ySpacing)) {
+		STYLE(rad)->RadioButton(rad, x, y,
+		    (i == val),
+		    (i == rad->oversel));
 		AG_WidgetBlitSurface(rad, rad->labels[i], x, y);
 	}
 }
@@ -136,9 +77,10 @@ SizeRequest(void *p, AG_SizeReq *r)
 		r->w = 0;
 		r->h = 0;
 	} else {
-		r->w = XPADDING*2 + XSPACING*2 + RADIUS*2 + rad->max_w;
-		r->h = YPADDING*2 + rad->nitems*RADIUS*2 +
-		                   (rad->nitems-1)*YSPACING;
+		r->w = rad->xPadding*2 + rad->xSpacing*2 + rad->radius*2 +
+		       rad->max_w;
+		r->h = rad->yPadding*2 + rad->nitems*rad->radius*2 +
+		       (rad->nitems-1)*rad->ySpacing;
 	}
 }
 
@@ -147,9 +89,10 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	AG_Radio *rad = p;
 	
-	if (a->w < XPADDING*2 + XSPACING*2 + RADIUS*2 + rad->max_w ||
-	    a->h < YPADDING*2 + rad->nitems*RADIUS*2 +
-	           (rad->nitems-1)*YSPACING) {
+	if (a->w < rad->xPadding*2 + rad->xSpacing*2 + rad->radius*2 +
+	    rad->max_w ||
+	    a->h < rad->yPadding*2 + rad->nitems*rad->radius*2 +
+	           (rad->nitems-1)*rad->ySpacing) {
 		WIDGET(rad)->flags |= AG_WIDGET_CLIPPING;
 	} else {
 		WIDGET(rad)->flags &= ~(AG_WIDGET_CLIPPING);
@@ -161,9 +104,9 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Radio *rad = AG_SELF();
-	int y = AG_INT(2) - YPADDING;
+	int y = AG_INT(2) - rad->yPadding;
 
-	rad->oversel = (y/(RADIUS*2 + YSPACING));
+	rad->oversel = (y/(rad->radius*2 + rad->ySpacing));
 }
 
 static void
@@ -178,7 +121,7 @@ MouseButtonDown(AG_Event *event)
 	valueb = AG_WidgetGetBinding(rad, "value", &sel);
 	switch (button) {
 	case SDL_BUTTON_LEFT:
-		selNew = ((y - YPADDING)/(RADIUS*2 + YSPACING));
+		selNew = ((y - rad->yPadding)/(rad->radius*2 + rad->ySpacing));
 		if (selNew >= rad->nitems) {
 			selNew = rad->nitems - 1;
 		} else if (selNew < 0) {
@@ -243,6 +186,11 @@ AG_RadioInit(AG_Radio *rad, Uint flags, const char **items)
 	rad->value = -1;
 	rad->max_w = 0;
 	rad->oversel = -1;
+	rad->xPadding = 3;
+	rad->yPadding = 4;
+	rad->xSpacing = 7;
+	rad->ySpacing = 2;
+	rad->radius = 6;
 
 	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
 		;;

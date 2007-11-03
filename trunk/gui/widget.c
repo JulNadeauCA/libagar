@@ -43,7 +43,7 @@ child_attached(AG_Event *event)
 {
 	AG_Widget *pwid = AG_SELF();
 	AG_Widget *wid = AG_SENDER();
-	const AG_WidgetStyleMod *style = pwid->style;
+	AG_Style *style = pwid->style;
 
 	/* Inherit style from parent widget. */
 	if (style != NULL)
@@ -78,7 +78,7 @@ AG_WidgetInit(void *p, const void *wops, Uint flags)
 	wid->y = -1;
 	wid->w = -1;
 	wid->h = -1;
-	wid->style = NULL;
+	wid->style = &agStyleDefault;
 	SLIST_INIT(&wid->bindings);
 	SLIST_INIT(&wid->menus);
 	AG_MutexInitRecursive(&wid->bindings_lock);
@@ -195,6 +195,12 @@ AG_WidgetSetFocusable(void *p, int flag)
 	} else {
 		wid->flags &= ~(AG_WIDGET_FOCUSABLE);
 	}
+}
+
+void
+AG_WidgetSetStyle(void *p, AG_Style *style)
+{
+	AGWIDGET(p)->style = style;
 }
 
 int

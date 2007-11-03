@@ -213,6 +213,9 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	AG_Table *t = p;
 	AG_SizeAlloc aBar;
+	
+	if (a->w <= t->vbar->bw || a->h <= t->row_h)
+		return (-1);
 
 	aBar.x = a->w - t->vbar->bw;
 	aBar.y = t->col_h - 1;
@@ -345,13 +348,6 @@ AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
 {
 	char txt[AG_TABLE_TXT_MAX];
 
-	if (c->selected) {		     		 /* TODO col sel */
-		Uint8 c[4] = { 0, 0, 250, 64 };
-
-		agPrim.rect_blended(t, rd->x, rd->y, rd->w-1, rd->h-1,
-		    c, AG_ALPHA_SRC);
-	}
-
 	if (c->surface >= 0) {
 		if (t->flags & AG_TABLE_REDRAW_CELLS) {
 			AG_WidgetUnmapSurface(t, c->surface);
@@ -403,18 +399,13 @@ Draw(void *p)
 	int n, m;
 	int x, y;
 
-	if (WIDGET(t)->w <= t->vbar->bw || WIDGET(t)->h <= t->row_h)
-		return;
-
-	agPrim.box(t, 0, 0, t->wTbl, WIDGET(t)->h, -1, AG_COLOR(TABLE_COLOR));
+	STYLE(t)->TableBackground(t, 0, 0, t->wTbl, HEIGHT(t));
 
 	AG_MutexLock(&t->lock);
 	t->moffs = AG_WidgetInt(t->vbar, "value");
-
 	if (t->poll_ev != NULL) {
 		t->poll_ev->handler(t->poll_ev);
 	}
-
 	for (n = 0, x = t->xoffs;
 	     n < t->n && x < t->wTbl;
 	     n++) {
@@ -431,7 +422,8 @@ Draw(void *p)
 			agPrim.vline(t, x-1, t->col_h-1, WIDGET(t)->h,
 			    AG_COLOR(TABLE_LINE_COLOR));
 		}
-		agPrim.box(t, x, 0, cw, t->col_h - 1, 1, AG_COLOR(TABLE_COLOR));
+		STYLE(t)->TableColumnHeaderBackground(t, n, x, 0, cw,
+		    t->col_h-1, col->selected);
 		
 		AG_WidgetPushClipRect(t, x, 0, cw, WIDGET(t)->h - 2);
 		if (col->surface != -1) {
@@ -453,6 +445,8 @@ Draw(void *p)
 			rCell.y = y;
 			rCell.w = col->w;
 			rCell.h = t->row_h;
+			STYLE(t)->TableCellBackground(t, &rCell,
+			    t->cells[m][n].selected);
 			AG_TableDrawCell(t, &t->cells[m][n], &rCell);
 			y += t->row_h;
 		}

@@ -24,6 +24,9 @@ typedef struct ag_radio {
 	int selitem;		/* Index of selected item */
 	int max_w;		/* Width of widest label */
 	int oversel;		/* Overlapping selection */
+	int xPadding, yPadding;
+	int xSpacing, ySpacing;
+	int radius;
 } AG_Radio;
 
 __BEGIN_DECLS

@@ -226,39 +226,15 @@ static void
 Draw(void *p)
 {
 	AG_Pane *pa = p;
-	int x, y;
-	int z = pa->dmoving ? -1 : 1;
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
-		y = WIDGET(pa)->h >> 1;
-		agPrim.box(pa, pa->dx+1, 0, pa->wDiv - 2, WIDGET(pa)->h, z,
-		    AG_COLOR(PANE_COLOR));
-		if (!agView->opengl) {
-			int cx = pa->dx + pa->wDiv/2;
-
-			AG_WidgetPutPixel(pa, cx, y,
-			    AG_COLOR(PANE_CIRCLE_COLOR));
-			AG_WidgetPutPixel(pa, cx, y-5,
-			    AG_COLOR(PANE_CIRCLE_COLOR));
-			AG_WidgetPutPixel(pa, cx, y+5,
-			    AG_COLOR(PANE_CIRCLE_COLOR));
-		}
+		STYLE(pa)->PaneHorizDivider(pa, pa->dx, WIDGET(pa)->h/2,
+		    pa->wDiv, pa->dmoving);
 		break;
 	case AG_PANE_VERT:
-		x = WIDGET(pa)->w >> 1;
-		agPrim.box(pa, 0, pa->dx+1, WIDGET(pa)->w, pa->wDiv - 2, z,
-		    AG_COLOR(PANE_COLOR));
-		if (!agView->opengl) {
-			int cx = pa->dx + pa->wDiv/2;
-			
-			AG_WidgetPutPixel(pa, x, cx,
-			    AG_COLOR(PANE_CIRCLE_COLOR));
-			AG_WidgetPutPixel(pa, x-5, cx,
-			    AG_COLOR(PANE_CIRCLE_COLOR));
-			AG_WidgetPutPixel(pa, x+5, cx,
-			    AG_COLOR(PANE_CIRCLE_COLOR));
-		}
+		STYLE(pa)->PaneVertDivider(pa, WIDGET(pa)->w/2, pa->dx,
+		    pa->wDiv, pa->dmoving);
 		break;
 	}
 }

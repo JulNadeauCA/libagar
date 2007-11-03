@@ -40,11 +40,10 @@
 
 /*
  * Worker function for foreach_visible_column()
- * arguments: tableview, visible_start, visible_end,
- * visible_index, and the argument passed to foreach_.
  * Should return 0 if foreach_ should stop.
  */
-typedef int (*visible_do)(AG_Tableview *, int, int, Uint32, void *, void *);
+typedef int (*visible_do)(AG_Tableview *tv, int x1, int x2, Uint32 visidx,
+    void *, void *);
 
 static void foreach_visible_column(AG_Tableview *, visible_do, void *,
                                    void *);
@@ -711,8 +710,7 @@ Draw(void *p)
 		update = 1;
 	
 	/* Draw the background box */
-	agPrim.box(tv, 0, 0, WIDGET(tv)->w, WIDGET(tv)->h, -1,
-	    AG_COLOR(TABLEVIEW_COLOR));
+	STYLE(tv)->TableBackground(tv, 0, 0, WIDTH(tv), HEIGHT(tv));
 	
 	/* draw row selection hilites */
 	y = tv->head_height;
@@ -720,13 +718,9 @@ Draw(void *p)
 		if (VISROW(tv,i) == NULL) {
 			break;
 		}
-		if (VISROW(tv,i)->selected) {
-			agPrim.box(tv,
-			    1, y,
-			    view_width - 2,
-			    tv->row_height,
-			    1, AG_COLOR(TABLEVIEW_SEL_COLOR));
-		}
+		STYLE(tv)->TableRowBackground(tv, 1, y,
+		    view_width-2, tv->row_height,
+		    VISROW(tv,i)->selected);
 		y += tv->row_height;
 	}
 
@@ -1023,21 +1017,19 @@ render_dyncolumn(AG_Tableview *tv, Uint idx)
 }
 
 static int
-clicked_header(AG_Tableview *tv, int visible_start, int visible_end,
-    Uint32 idx, void *arg1, void *arg2)
+clicked_header(AG_Tableview *tv, int x1, int x2, Uint32 idx,
+    void *arg1, void *arg2)
 {
 	int x = *(int *)arg1;
 
-	if ((x < visible_start || x >= visible_end) &&
-	    idx != tv->columncount-1)
+	if ((x < x1 || x >= x2) && idx != tv->columncount-1)
 		return (1);
 
 	/* click on the CENTER */
-	if (x >= visible_start+3 &&
-	    x <= visible_end-3) {
+	if (x >= x1+3 && x <= x2-3) {
 		if (tv->reordercols) {
 			AG_SchedEvent(NULL, tv, 400, "column-move",
-				       "%i,%i", idx, visible_start);
+				       "%i,%i", idx, x1);
 		}
 		if (tv->reordercols || tv->sort)
 			tv->column[idx].mousedown = 1;
@@ -1046,24 +1038,24 @@ clicked_header(AG_Tableview *tv, int visible_start, int visible_end,
 	else if (idx-1 >= 0 && idx-1 < tv->columncount &&
 	         tv->column[idx-1].resizable &&
 		 idx > 0 &&
-		 x < visible_start+3) {
-		 AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
-		     "%i,%i", idx-1, visible_start - tv->column[idx - 1].w);
+		 x < x1+3) {
+		AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
+		    "%i,%i", idx-1, x1-tv->column[idx-1].w);
 	}
 	/* click on the RIGHT resize line */
 	else if (idx >= 0 && idx < tv->columncount &&
 	         tv->column[idx].resizable &&
-		 (x > visible_end-3 ||
-		  (idx == tv->columncount-1 && x < visible_end+3))) {
+		 (x > x2-3 ||
+		  (idx == tv->columncount-1 && x < x2+3))) {
 		AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
-		    "%i,%i", idx, visible_start);
+		    "%i,%i", idx, x1);
 	}
 	return (0);
 }
 
 static int
-clicked_row(AG_Tableview *tv, int visible_start, int visible_end,
-    Uint32 idx, void *arg1, void *arg2)
+clicked_row(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
+    void *arg2)
 {
 	const int x = *(int *)arg1;
 	const int y = *(int *)arg2;
@@ -1074,7 +1066,7 @@ clicked_row(AG_Tableview *tv, int visible_start, int visible_end,
 	Uint i, j, row_idx;
 	int px;
 
-	if (x < visible_start || x >= visible_end)
+	if (x < x1 || x >= x2)
 		return (1);
 
 	/* Find the visible row under the cursor. */
@@ -1104,8 +1096,8 @@ clicked_row(AG_Tableview *tv, int visible_start, int visible_end,
 	/* Check for a click on the +/- button, if applicable. */
 	if (tv->column[idx].cid == tv->expanderColumn &&
 	    !TAILQ_EMPTY(&row->children) &&
-	    x > (visible_start+4+(depth * (ts+4))) &&
-	    x < (visible_start+4+(depth * (ts+4))+ts)) {
+	    x > (x1+4+(depth*(ts+4))) &&
+	    x < (x1+4+(depth*(ts+4))+ts)) {
 		if (row->expanded) {
 			row->expanded = 0;
 			/*
@@ -1183,8 +1175,8 @@ clicked_row(AG_Tableview *tv, int visible_start, int visible_end,
 }
 
 static int
-draw_column(AG_Tableview *tv, int visible_start, int visible_end,
-    Uint32 idx, void *arg1, void *arg2)
+draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
+    void *arg2)
 {
 	const int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
 	const int *update = (int *)arg1;
@@ -1193,16 +1185,17 @@ draw_column(AG_Tableview *tv, int visible_start, int visible_end,
 
 	/* draw label for this column */
 	if (tv->header) {
-		int label_x;
+		int xLbl;
 
-		label_x = tv->column[idx].w/2 - tv->column[idx].label_img->w/2;
-		agPrim.box(tv, visible_start, 0, tv->column[idx].w,
-		    tv->head_height,
+		STYLE(tv)->TableColumnHeaderBackground(tv, idx,
+		    x1,			0,
+		    tv->column[idx].w,	tv->head_height,
 		    (tv->column[idx].mousedown ||
-		     tv->column[idx].cid == tv->sortColumn) ? -1 : 1,
-		    AG_COLOR(TABLEVIEW_HEAD_COLOR));
+		     tv->column[idx].cid == tv->sortColumn));
+
+		xLbl = tv->column[idx].w/2 - tv->column[idx].label_img->w/2;
 		AG_WidgetBlitSurface(tv, tv->column[idx].label_id,
-		    visible_start + label_x,
+		    x1 + xLbl,
 		    0);
 	}
 	/* check for the need to update */
@@ -1212,57 +1205,39 @@ draw_column(AG_Tableview *tv, int visible_start, int visible_end,
 	/* draw cells in this column */
 	y = tv->head_height;
 	for (j = 0; j < tv->visible.count; j++) {
-		int offset = visible_start+4;
+		int x = x1+4;
 
 		if (VISROW(tv,j) == NULL) {
 			break;
 		}
 		if (tv->column[idx].cid == tv->expanderColumn) {
 			int tw = tv->row_height/2 + 1;
-			int ty = y + tw/2;
 
-			offset += VISDEPTH(tv,j)*(tw+4);
-
+			x += VISDEPTH(tv,j)*(tw+4);
 			if (!TAILQ_EMPTY(&VISROW(tv,j)->children)) {
-				Uint8 c[4] = { 255, 255, 255, 128 };
-
-				agPrim.frame(tv, offset, ty, tw, tw,
-				    1,
-				    AG_COLOR(TABLEVIEW_LINE_COLOR));
-				if (VISROW(tv,j)->expanded) {
-					agPrim.minus(tv, offset, ty,
-					    tw - 2,
-					    tw - 2,
-					    c, AG_ALPHA_SRC);
-				} else {
-					agPrim.plus(tv, offset, ty,
-					    tw - 2,
-					    tw - 2,
-					    c, AG_ALPHA_SRC);
-				}
+				STYLE(tv)->TreeSubnodeIndicator(tv,
+				    x,
+				    y + tw/2,
+				    tw, tw,
+				    VISROW(tv,j)->expanded);
 			}
-			offset += tw+4;
+			x += tw+4;
 		}
 		if (VISROW(tv,j)->cell[cidx].image) {
 			/* XXX inefficient in opengl mode */
 			AG_WidgetBlit(tv,
 			    VISROW(tv,j)->cell[cidx].image,
-			    offset, y+1);
+			    x, y+1);
 		}
 		y += tv->row_height;
 	}
 
 	/* Fill the Remaining Space in column heading */
-	if (tv->header &&
-	    idx == tv->columncount-1 &&
-	    visible_end < view_width) {
-		agPrim.box(tv,
-		    visible_end,
-		    0,
-		    view_width - visible_end,
-		    tv->head_height,
-		    1,
-		    AG_COLOR(TABLEVIEW_HEAD_COLOR));
+	if (tv->header && idx == tv->columncount-1 && x2 < view_width) {
+		STYLE(tv)->TableColumnHeaderBackground(tv, -1,
+		    x2,			0,
+		    view_width-x2,	tv->head_height,
+		    0);
 	}
 	return (1);
 }

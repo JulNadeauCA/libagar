@@ -219,33 +219,20 @@ Draw(void *p)
 	pressed = GetState(binding, pState);
 	AG_WidgetUnlockBinding(binding);
 
-	if (AG_WidgetEnabled(bu)) {
-		agPrim.box(bu,
-		    0, 0,
-		    WIDGET(bu)->w, WIDGET(bu)->h,
-		    pressed ? -1 : 1,
-		    AG_COLOR(BUTTON_COLOR));
-	} else {
-		agPrim.box_dithered(bu,
-		    0, 0,
-		    WIDGET(bu)->w, WIDGET(bu)->h,
-		    pressed ? -1 : 1,
-		    AG_COLOR(BUTTON_COLOR),
-		    AG_COLOR(DISABLED_COLOR));
-	}
+	STYLE(bu)->ButtonBackground(bu, pressed);
 
 	if (bu->text != NULL && bu->text[0] != '\0') {
 		if (bu->surface == -1) {
 			AG_PushTextState();
-			AG_TextColor(BUTTON_TXT_COLOR);
 			AG_TextJustify(bu->justify);
+			AG_TextColor(BUTTON_TXT_COLOR);
 			bu->surface = AG_WidgetMapSurface(bu,
 			    AG_TextRender(bu->text));
 			AG_PopTextState();
 		} else if (bu->flags & AG_BUTTON_REGEN) {
 			AG_PushTextState();
-			AG_TextColor(BUTTON_TXT_COLOR);
 			AG_TextJustify(bu->justify);
+			AG_TextColor(BUTTON_TXT_COLOR);
 			AG_WidgetReplaceSurface(bu, bu->surface,
 			    AG_TextRender(bu->text));
 			AG_PopTextState();
@@ -269,10 +256,7 @@ Draw(void *p)
 		break;
 	}
 	y = WIDGET(bu)->h/2 - hLbl/2;
-	if (pressed) {
-		x++;
-		y++;
-	}
+	STYLE(bu)->ButtonTextOffset(bu, pressed, &x, &y);
 	AG_WidgetBlitSurface(bu, bu->surface, x, y);
 }
 

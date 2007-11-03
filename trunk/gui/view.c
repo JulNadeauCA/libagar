@@ -323,16 +323,21 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	AG_SetUint16(agConfig, "view.w", agView->w);
 	AG_SetUint16(agConfig, "view.h", agView->h);
 
+	/* Initialize the GUI subsystems. */
 	AG_ColorsInit();
 	AG_InitPrimitives();
 	AG_CursorsInit();
 	agIcon_Init();
-	
+
+	/* Try to load a color scheme from the default path. */
 	strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
 	strlcat(path, AG_PATHSEP, sizeof(path));
 	strlcat(path, "gui-colors.acs", sizeof(path));
 	(void)AG_ColorsLoad(path);
 	
+	/* Initialize the built-in style. */
+	AG_SetStyle(agView, &agStyleDefault);
+
 	/* Fill the background. */
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
@@ -359,9 +364,10 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		}
 	}
 #endif
-	if (AG_TextInit() == -1) {
+	/* Initialize the font engine. */
+	if (AG_TextInit() == -1)
 		goto fail;
-	}
+
 	if (flags & AG_VIDEO_BGPOPUPMENU) {
 		agBgPopupMenu = 1;
 	}

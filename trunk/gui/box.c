@@ -73,8 +73,7 @@ DrawFrame(void *p)
 {
 	AG_Box *box = p;
 
-	agPrim.box(box, 0, 0, WIDGET(box)->w, WIDGET(box)->h, box->depth,
-	    AG_COLOR(FRAME_COLOR));
+	STYLE(box)->BoxFrame(box, box->depth);
 }
 
 static int

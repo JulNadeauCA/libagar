@@ -681,8 +681,7 @@ Draw(void *p)
 	int lbl, wLbl, hLbl;
 	int i;
 
-	agPrim.box(m, 0, 0, WIDGET(m)->w, WIDGET(m)->h, 1,
-	    AG_COLOR(MENU_UNSEL_COLOR));
+	STYLE(m)->MenuRootBackground(m);
 
 	if (m->root == NULL) {
 		return;
@@ -709,14 +708,11 @@ Draw(void *p)
 		}
 		wLbl = WSURFACE(m,lbl)->w;
 		hLbl = WSURFACE(m,lbl)->h;
-
 		if (item == m->itemSel) {
-			agPrim.rect_filled(m,
-			    item->x,
-			    item->y,
-			    m->lPadLbl + wLbl + m->rPadLbl,
-			    m->tPadLbl + hLbl + m->bPadLbl,
-			    AG_COLOR(MENU_SEL_COLOR));
+			STYLE(m)->MenuRootSelectedItemBackground(m,
+			    item->x, item->y,
+	    		    m->lPadLbl + wLbl + m->rPadLbl,
+	    		    m->tPadLbl + hLbl + m->bPadLbl);
 		}
 		AG_WidgetBlitSurface(m, lbl,
 		    item->x + m->lPadLbl,

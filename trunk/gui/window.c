@@ -35,16 +35,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-const AG_WidgetStyleMod agWindowDefaultStyle = {
-	"default",
-	{
-		NULL,			/* bggradient */
-		NULL,			/* bgtexture */
-		AG_NOTCH_RESIZE_STYLE
-	},
-	NULL				/* misc fn */
-};
-
 static void Resize(int, AG_Window *, SDL_MouseMotionEvent *);
 static void Move(AG_Window *, SDL_MouseMotionEvent *);
 static void Shown(AG_Event *);
@@ -56,6 +46,7 @@ AG_Mutex agWindowLock = AG_MUTEX_INITIALIZER;
 int	 agWindowXOutLimit = 32;
 int	 agWindowBotOutLimit = 32;
 
+/* Create a generic window. */
 AG_Window *
 AG_WindowNew(Uint flags)
 {
@@ -71,6 +62,7 @@ AG_WindowNew(Uint flags)
 	return (win);
 }
 
+/* Create a named window */
 AG_Window *
 AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 {
@@ -127,7 +119,6 @@ AG_WindowInit(void *p, const char *name, int flags)
 	win->caption[0] = '\0';
 	TAILQ_INIT(&win->subwins);
 	AG_MutexInitRecursive(&win->lock);
-	AG_WindowSetStyle(win, &agWindowDefaultStyle);
 
 	if (!agView->opengl)
 		WIDGET(win)->flags |= AG_WIDGET_CLIPPING;
@@ -158,13 +149,6 @@ AG_WindowInit(void *p, const char *name, int flags)
 	ev->flags |= AG_EVENT_PROPAGATE;
 }
 
-/* Apply style settings to a window, which will be inherited by children. */
-void
-AG_WindowSetStyle(AG_Window *win, const AG_WidgetStyleMod *style)
-{
-	WIDGET(win)->style = style;
-}
-
 /* Attach a sub-window. */
 void
 AG_WindowAttach(AG_Window *win, AG_Window *subwin)
@@ -193,87 +177,11 @@ static void
 Draw(void *p)
 {
 	AG_Window *win = p;
-	int i;
 
-	if ((win->flags & AG_WINDOW_NOBACKGROUND) == 0) {
-		agPrim.rect_filled(win, 0, 0,
-		    WIDGET(win)->w, WIDGET(win)->h,
-		    AG_COLOR(WINDOW_BG_COLOR));
-	}
-	if (win->flags & AG_WINDOW_NOBORDERS)
-		return;
-
-	/* Draw the window frame (expected to fit inside padding). */
-	for (i = 1; i < agColorsBorderSize-1; i++) {
-		agPrim.hline(win,
-		    i, WIDGET(win)->w - i,
-		    i,
-		    agColorsBorder[i-1]);
-		agPrim.hline(win,
-		    i,  WIDGET(win)->w - i,
-		    WIDGET(win)->h - i,
-		    agColorsBorder[i-1]);
-	}
-	for (i = 1; i < agColorsBorderSize-1; i++) {
-		agPrim.vline(win,
-		    i-1,
-		    i, WIDGET(win)->h - i,
-		    agColorsBorder[i-1]);
-		agPrim.vline(win,
-		    WIDGET(win)->w - i,
-		    i,
-		    WIDGET(win)->h - i,
-		    agColorsBorder[i-1]);
-	}
-
-	/* Draw the resize controls. */
-	if ((win->flags & AG_WINDOW_NOHRESIZE) == 0) {
-		agPrim.vline(win,
-		    18,
-		    WIDGET(win)->h - agColorsBorderSize,
-		    WIDGET(win)->h - 2,
-		    AG_COLOR(WINDOW_LO_COLOR));
-		agPrim.vline(win,
-		    19,
-		    WIDGET(win)->h - agColorsBorderSize,
-		    WIDGET(win)->h - 2,
-		    AG_COLOR(WINDOW_HI_COLOR));
-		
-		agPrim.vline(win,
-		    WIDGET(win)->w - 19,
-		    WIDGET(win)->h - agColorsBorderSize,
-		    WIDGET(win)->h - 2,
-		    AG_COLOR(WINDOW_LO_COLOR));
-		agPrim.vline(win,
-		    WIDGET(win)->w - 18,
-		    WIDGET(win)->h - agColorsBorderSize,
-		    WIDGET(win)->h - 2,
-		    AG_COLOR(WINDOW_HI_COLOR));
-	}
-	
-	if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
-		agPrim.hline(win,
-		    2,
-		    agColorsBorderSize,
-		    WIDGET(win)->h - 20,
-		    AG_COLOR(WINDOW_LO_COLOR));
-		agPrim.hline(win,
-		    2,
-		    agColorsBorderSize,
-		    WIDGET(win)->h - 19,
-		    AG_COLOR(WINDOW_HI_COLOR));
-		
-		agPrim.hline(win,
-		    WIDGET(win)->w - agColorsBorderSize,
-		    WIDGET(win)->w - 2,
-		    WIDGET(win)->h - 20,
-		    AG_COLOR(WINDOW_LO_COLOR));
-		agPrim.hline(win,
-		    WIDGET(win)->w - agColorsBorderSize,
-		    WIDGET(win)->w - 2,
-		    WIDGET(win)->h - 19,
-		    AG_COLOR(WINDOW_HI_COLOR));
-	}
+	if ((win->flags & AG_WINDOW_NOBACKGROUND) == 0)
+		STYLE(win)->WindowBackground(win);
+	if ((win->flags & AG_WINDOW_NOBORDERS) == 0)
+		STYLE(win)->WindowBorders(win);
 }
 
 static void

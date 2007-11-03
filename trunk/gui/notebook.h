@@ -39,7 +39,6 @@ typedef struct ag_notebook {
 	AG_Mutex lock;
 	int bar_w, bar_h;		/* Dimensions of tab button bar */
 	int cont_w, cont_h;		/* Dimensions of largest container */
-	int tab_rad;			/* Radius for chamfered tab edges */
 	int spacing, padding;		/* Spacing for tabs */
 	AG_Font *tabFont;		/* Font for tab labels */
 	struct ag_notebook_tab *sel_tab;

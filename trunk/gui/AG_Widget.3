@@ -98,6 +98,9 @@ section of the widget's manual page.
 .Ft "int"
 .Fn AG_WidgetSizeAlloc "AG_Widget *widget" "AG_SizeAlloc *alloc"
 .Pp
+.Ft "void"
+.Fn AG_WidgetSetStyle "AG_Widget *widget" "AG_Style *style"
+.Pp
 .nr nS 0
 The
 .Fn AG_WidgetInit
@@ -241,6 +244,12 @@ These functions are generally used in the
 and
 .Va size_allocate
 functions of container widgets.
+.Pp
+.Fn AG_WidgetSetStyle
+changes the style associated with a widget (see
+.Xr AG_Style 3 ) .
+Note that child widgets automatically inherit the style associated with
+their parent.
 .Sh INPUT STATE
 The input state of a widget determines whether the user is allowed to
 modify whatever data the widget is accessing.
