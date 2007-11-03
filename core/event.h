@@ -3,7 +3,7 @@
 #include "begin_code.h"
 
 #define AG_EVENT_ARGS_MAX 16
-#define AG_EVENT_NAME_MAX 31
+#define AG_EVENT_NAME_MAX 32
 
 enum ag_evarg_type {
 	AG_EVARG_POINTER,
