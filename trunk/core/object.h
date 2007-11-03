@@ -91,10 +91,6 @@ typedef struct ag_object {
 	TAILQ_ENTRY(ag_object) tobjs;	 /* Entry in timeout queue */
 } AG_Object;
 
-enum ag_object_page_item {
-	AG_OBJECT_DATA			/* User data */
-};
-
 enum ag_object_checksum_alg {
 	AG_OBJECT_MD5,
 	AG_OBJECT_SHA1,
@@ -159,7 +155,7 @@ extern const AG_ObjectOps agObjectOps;
 
 void	*AG_ObjectNew(void *, const char *, const AG_ObjectOps *);
 void	 AG_ObjectAttach(void *, void *);
-int	 AG_ObjectAttachPath(const char *, void *);
+int	 AG_ObjectAttachToNamed(const char *, void *);
 void	 AG_ObjectDetach(void *);
 void	 AG_ObjectMove(void *, void *);
 

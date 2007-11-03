@@ -64,7 +64,7 @@ are moved between memory and storage.
 .Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_ObjectAttachPath "const char *parent_path" "AG_Object *child"
+.Fn AG_ObjectAttachToNamed "const char *parent_path" "AG_Object *child"
 .Pp
 .Ft "void"
 .Fn AG_ObjectDetach "AG_Object *obj"
@@ -331,7 +331,7 @@ is NULL,
 .Fn AG_ObjectAttach
 is a no-op.
 .Pp
-.Fn AG_ObjectAttachPath
+.Fn AG_ObjectAttachToNamed
 is a variant of
 .Fn AG_ObjectAttach
 which looks up the parent using
