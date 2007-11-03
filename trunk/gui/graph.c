@@ -469,11 +469,9 @@ Draw(void *p)
 	Uint8 bg[4];
 
 	/* Draw the bounding box */
-	agPrim.rect_outlined(gf,
-	    gf->pxMin - gf->xOffs,
-	    gf->pyMin - gf->yOffs, 
-	    gf->pxMax - gf->pxMin,
-	    gf->pyMax - gf->pyMin,
+	AG_DrawRectOutline(gf,
+	    AG_RECT(gf->pxMin - gf->xOffs, gf->pyMin - gf->yOffs, 
+	            gf->pxMax - gf->pxMin, gf->pyMax - gf->pyMin),
 	    SDL_MapRGB(agVideoFmt, 128, 128, 128)); 
 
 	/* Draw the edges */
@@ -481,7 +479,7 @@ Draw(void *p)
 		if (edge->flags & AG_GRAPH_HIDDEN) {
 			continue;
 		}
-		agPrim.line(gf,
+		AG_DrawLine(gf,
 		    edge->v1->x - gf->xOffs,
 		    edge->v1->y - gf->yOffs,
 		    edge->v2->x - gf->xOffs,
@@ -497,22 +495,23 @@ Draw(void *p)
 			lblY -= gf->yOffs + su->h/2;
 
 			if (edge->flags & AG_GRAPH_SELECTED) {
-				agPrim.rect_outlined(gf,
-				    lblX-1, lblY-1,
-				    su->w+2, su->h+2,
+				AG_DrawRectOutline(gf,
+				    AG_RECT(lblX-1, lblY-1,
+				            su->w+2, su->h+2),
 				    AG_VideoPixel(edge->labelColor));
 			}
 			if (edge->flags & AG_GRAPH_MOUSEOVER) {
-				agPrim.rect_outlined(gf,
-				    lblX-2, lblY-2,
-				    su->w+4, su->h+4,
+				AG_DrawRectOutline(gf,
+				    AG_RECT(lblX-2, lblY-2,
+				            su->w+4, su->h+4),
 				    AG_COLOR(TEXT_COLOR));
 			}
 			bg[0] = 128;
 			bg[1] = 128;
 			bg[2] = 128;
 			bg[3] = 128;
-			agPrim.rect_blended(gf, lblX, lblY, su->w, su->h,
+			AG_DrawRectBlended(gf,
+			    AG_RECT(lblX, lblY, su->w, su->h),
 			    bg, AG_ALPHA_SRC);
 			AG_WidgetBlitSurface(gf, edge->labelSu, lblX, lblY);
 		}
@@ -529,31 +528,31 @@ Draw(void *p)
 		    &bg[0], &bg[1], &bg[2], &bg[3]);
 		switch (vtx->style) {
 		case AG_GRAPH_RECTANGLE:
-			agPrim.rect_blended(gf,
-			    vtx->x - vtx->w/2 - gf->xOffs,
-			    vtx->y - vtx->h/2 - gf->yOffs,
-			    vtx->w,
-			    vtx->h,
+			AG_DrawRectBlended(gf,
+			    AG_RECT(vtx->x - vtx->w/2 - gf->xOffs,
+			            vtx->y - vtx->h/2 - gf->yOffs,
+				    vtx->w,
+				    vtx->h),
 			    bg, AG_ALPHA_SRC);
 			if (vtx->flags & AG_GRAPH_SELECTED) {
-				agPrim.rect_outlined(gf,
-				    vtx->x - vtx->w/2 - gf->xOffs - 1,
-				    vtx->y - vtx->h/2 - gf->yOffs - 1,
-				    vtx->w + 2,
-				    vtx->h + 2,
+				AG_DrawRectOutline(gf,
+				    AG_RECT(vtx->x - vtx->w/2 - gf->xOffs - 1,
+				            vtx->y - vtx->h/2 - gf->yOffs - 1,
+				            vtx->w + 2,
+				            vtx->h + 2),
 				    SDL_MapRGB(agVideoFmt, 0,0,255));
 			}
 			if (vtx->flags & AG_GRAPH_MOUSEOVER) {
-				agPrim.rect_outlined(gf,
-				    vtx->x - vtx->w/2 - gf->xOffs - 2,
-				    vtx->y - vtx->h/2 - gf->yOffs - 2,
-				    vtx->w + 4,
-				    vtx->h + 4,
+				AG_DrawRectOutline(gf,
+				    AG_RECT(vtx->x - vtx->w/2 - gf->xOffs - 2,
+				            vtx->y - vtx->h/2 - gf->yOffs - 2,
+				            vtx->w + 4,
+				            vtx->h + 4),
 				    SDL_MapRGB(agVideoFmt, 255,0,0));
 			}
 			break;
 		case AG_GRAPH_CIRCLE:
-			agPrim.circle(gf,
+			AG_DrawCircle(gf,
 			    vtx->x - gf->xOffs,
 			    vtx->y - gf->yOffs,
 			    MAX(vtx->w,vtx->h)/2,

@@ -833,7 +833,7 @@ Draw(void *p)
 	AG_WidgetBlitFrom(pal, pal, 0, NULL, 0, 0);
 
 	/* Indicate the current selection. */
-	agPrim.circle(pal,
+	AG_DrawCircle(pal,
 	    pal->circle.x + (pal->circle.rin + pal->circle.width/2)*cos(cur_h),
 	    pal->circle.y + (pal->circle.rin + pal->circle.width/2)*sin(cur_h),
 	    pal->selcircle_r,
@@ -844,7 +844,7 @@ Draw(void *p)
 	x = (int)(-(cur_v*(float)pal->triangle.h - (float)pal->triangle.h));
 	if (x < 0) { x = 0; }
 	if (x > y) { x = y; }
-	agPrim.circle(pal,
+	AG_DrawCircle(pal,
 	    pal->triangle.x + x - y/2,
 	    pal->triangle.y + y,
 	    pal->selcircle_r,
@@ -855,23 +855,22 @@ Draw(void *p)
 
 	/* Draw the color preview. */
 	AG_HSV2RGB((cur_h*360.0)/(2*AG_PI), cur_s, cur_v, &r, &g, &b);
-	agPrim.rect_filled(pal,
-	    pal->rAlpha.x, pal->rAlpha.y,
-	    pal->rAlpha.w, 8,
+	AG_DrawRectFilled(pal,
+	    AG_RECT(pal->rAlpha.x, pal->rAlpha.y, pal->rAlpha.w, 8),
 	    SDL_MapRGB(agVideoFmt, r, g, b));
 
 	/* Draw the alpha bar. */
-	agPrim.vline(pal,
+	AG_DrawLineV(pal,
 	    pal->rAlpha.x + x,
 	    pal->rAlpha.y + 1,
 	    pal->rAlpha.y + pal->rAlpha.h,
 	    AG_COLOR(HSVPAL_BAR1_COLOR));
-	agPrim.vline(pal,
+	AG_DrawLineV(pal,
 	    pal->rAlpha.x + x + 1,
 	    pal->rAlpha.y + 1,
 	    pal->rAlpha.y + pal->rAlpha.h,
 	    AG_COLOR(HSVPAL_BAR2_COLOR));
-	agPrim.vline(pal,
+	AG_DrawLineV(pal,
 	    pal->rAlpha.x + x + 2,
 	    pal->rAlpha.y + 1,
 	    pal->rAlpha.y + pal->rAlpha.h,

@@ -295,7 +295,8 @@ Draw(void *p)
 	int y = 0, i = 0;
 	int offset;
 
-	STYLE(tl)->ListBackground(tl, 0, 0, WIDTH(tl), HEIGHT(tl));
+	STYLE(tl)->ListBackground(tl,
+	    AG_RECT(0, 0, WIDTH(tl), HEIGHT(tl)));
 
 	AG_MutexLock(&tl->lock);
 	if (tl->flags & AG_TLIST_POLL) {
@@ -312,8 +313,7 @@ Draw(void *p)
 			break;
 
 		STYLE(tl)->ListItemBackground(tl,
-		    x+tl->icon_w+2,  y,
-		    WIDTH(tl)-x,     tl->item_h,
+		    AG_RECT(x+tl->icon_w+2, y, WIDTH(tl)-x,tl->item_h),
 		    it->selected);
 
 		if (it->iconsrc != NULL) {
@@ -327,8 +327,8 @@ Draw(void *p)
 			AG_WidgetBlitSurface(tl, it->icon, x, y);
 		}
 		if (it->flags & AG_TLIST_HAS_CHILDREN) {
-			STYLE(tl)->TreeSubnodeIndicator(tl, x, y,
-			    tl->icon_w, tl->item_h,
+			STYLE(tl)->TreeSubnodeIndicator(tl,
+			    AG_RECT(x, y, tl->icon_w, tl->item_h),
 			    (it->flags & AG_TLIST_VISIBLE_CHILDREN));
 		}
 		if (it->label == -1) {
@@ -342,7 +342,7 @@ Draw(void *p)
 
 		y += tl->item_h;
 		if (y < HEIGHT(tl)-1)
-			agPrim.hline(tl, 0, WIDTH(tl), y,
+			AG_DrawLineH(tl, 0, WIDTH(tl), y,
 			    AG_COLOR(TLIST_LINE_COLOR));
 	}
 	AG_MutexUnlock(&tl->lock);

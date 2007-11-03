@@ -160,7 +160,8 @@ DrawNumerical(void *p)
 	SDL_Surface *su;
 	int x, y;
 
-	agPrim.box(mv, 0, 0, WIDGET(mv)->w, WIDGET(mv)->h, -1,
+	AG_DrawBox(mv,
+	    AG_RECT(0, 0, WIDGET(mv)->w, WIDGET(mv)->h), -1,
 	    AG_COLOR(BG_COLOR));
 
 	for (m = 0, y = -mv->yoffs*mv->ent_h;
@@ -174,8 +175,8 @@ DrawNumerical(void *p)
 			} else if (n == 0) {
 				snprintf(text, sizeof(text), "%d", m);
 			} else {
-				agPrim.box(mv, x, y,
-				    mv->ent_w, mv->ent_h, -1,
+				AG_DrawBox(mv,
+				    AG_RECT(x, y, mv->ent_w, mv->ent_h), -1,
 				    AG_COLOR(FRAME_COLOR));
 				snprintf(text, sizeof(text), mv->numfmt,
 				    M->mat[m][n]);
@@ -197,7 +198,8 @@ DrawGreyscale(void *p)
 	int x, y;
 	SC_Real big = 0.0, small = 0.0;
 
-	agPrim.box(mv, 0, 0, WIDGET(mv)->w, WIDGET(mv)->h, -1,
+	AG_DrawBox(mv,
+	    AG_RECT(0, 0, WIDGET(mv)->w, WIDGET(mv)->h), -1,
 	    AG_COLOR(BG_COLOR));
 
 	for (m = 1; m <= A->m; m++) {

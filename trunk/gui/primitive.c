@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Low-level primitive graphics routines for use by GUI widgets.
+ */
+
 #include <core/core.h>
 
 #include "widget.h"
@@ -74,7 +78,7 @@ ColorShift(Uint32 pixel, Sint8 *shift)
 }
 
 static void
-arrow_up(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
+ArrowUpFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
 	int y1 = wid->cy+y0 - (h>>1);
@@ -96,7 +100,7 @@ arrow_up(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 }
 
 static void
-arrow_down(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
+ArrowDownFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
 	int y1 = wid->cy+y0 - (h>>1);
@@ -118,7 +122,7 @@ arrow_down(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 }
 
 static void
-arrow_left(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
+ArrowLeftFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
 	int x1 = wid->cx+x0 - (h>>1);
@@ -140,7 +144,7 @@ arrow_left(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 }
 
 static void
-arrow_right(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
+ArrowRightFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
 	int x1 = wid->cx+x0 - (h>>1);
@@ -161,9 +165,9 @@ arrow_right(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 	SDL_UnlockSurface(agView->v);
 }
 
-/* Draw a 3D-style box. */
+/* Render a 3D-style box. */
 static void
-box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 c)
+Box(void *p, AG_Rect r, int z, Uint32 c)
 {
 	AG_Widget *wid = p;
 	Uint32 cBg;
@@ -175,17 +179,16 @@ box(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 c)
 		cBg = ColorShift(c, (z<0) ? agNofocusSunkColorShift :
 		                            agNofocusRaisedColorShift);
 	}
-	agPrim.rect_filled(wid, xoffs, yoffs, w, h, cBg);
-	agPrim.frame(wid, xoffs, yoffs, w, h, z, c);
+	AG_DrawRectFilled(wid, r, cBg);
+	AG_DrawFrame(wid, r, z, c);
 }
 
-/* Draw a 3D-style box with dithering. */
+/* Render a 3D-style box with dithering. */
 static void
-box_dithered(void *p, int xoffs, int yoffs, int w, int h, int z,
-    Uint32 c1, Uint32 c2)
+BoxDitheredFB(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
-	Uint x, y;
+	int x, y;
 	int flag = 0;
 	Uint32 cDither;
 	
@@ -198,59 +201,59 @@ box_dithered(void *p, int xoffs, int yoffs, int w, int h, int z,
 	}
 
 	/* XXX inefficient */
-	agPrim.box(p, xoffs, yoffs, w, h, z, c1);
-	for (y = yoffs; y < yoffs+h-2; y++) {
+	AG_DrawBox(p, r, z, c1);
+	for (y = r.y; y < r.y+r.h-2; y++) {
 		flag = !flag;
-		for (x = xoffs+1+flag; x < xoffs+w-2; x+=2)
+		for (x = r.x+1+flag; x < r.x+r.w-2; x+=2)
 			AG_WidgetPutPixel(wid, x, y, cDither);
 	}
 }
 
-/* Draw a 3D-style box with chamfered top edges. */
+/* Render a 3D-style box with rounded top edges. */
 static void
-box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 cBg)
+BoxRoundedFB(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 {
 	AG_Widget *wid = p;
+	AG_Rect rd;
 	Uint32 cLeft, cRight;
 	int v, e, u;
-	int x, y;
+	int x, y, i;
 	
 	cLeft = ColorShift(cBg, (z<0) ? agLowColorShift:agHighColorShift);
 	cRight = ColorShift(cBg, (z<0) ? agHighColorShift:agLowColorShift);
 
-	/* Fill the background except the corners. */
-	agPrim.rect_filled(wid,			/* Body */
-	    r->x + rad,			r->y + rad,
-	    r->w - rad*2,		r->h - rad,
-	    cBg);
-	agPrim.rect_filled(wid,			/* Top */
-	    r->x + rad,			r->y,
-	    r->w - rad*2,		r->h,
-	    cBg);
-	agPrim.rect_filled(wid,			/* Left */
-	    r->x,			r->y + rad,
-	    rad,			r->h - rad,
-	    cBg);
-	agPrim.rect_filled(wid,			/* Right */
-	    r->x + r->w - rad,		r->y + rad,
-	    rad,			r->h - rad,
-	    cBg);
+	/* Center */
+	rd.x = r.x+rad;
+	rd.y = r.y+rad;
+	rd.w = r.w - rad*2;
+	rd.h = r.h - rad;
+	AG_DrawRectFilled(wid, rd, cBg);
 
-	/* Draw the three straight lines. */
-	agPrim.hline(wid,				/* Top line */
-	    r->x + rad,			r->x + r->w - rad,
-	    r->y,
-	    cBg);
-	agPrim.vline(wid,				/* Left line */
-	    r->x,
-	    r->y + rad,			r->y + r->h,
-	    cLeft);
-	agPrim.vline(wid,				/* Right line */
-	    r->x + r->w - 1,
-	    r->y + rad,			r->y + r->h,
-	    cRight);
+	/* Top */
+	rd.y = r.y;
+	rd.h = r.h;
+	AG_DrawRectFilled(wid, rd, cBg);
 
-	/* Draw the two chamfered edges using a Bresenham generalization. */
+	/* Left */
+	rd.x = r.x;
+	rd.y = r.y+rad;
+	rd.w = rad;
+	rd.h = r.h-rad;
+	AG_DrawRectFilled(wid, rd, cBg);
+
+	/* Right */
+	rd.x = r.x+r.w-rad;
+	rd.y = r.y+rad;
+	rd.w = rad;
+	rd.h = r.h-rad;
+	AG_DrawRectFilled(wid, rd, cBg);
+
+	/* Top, left and right lines */
+	AG_DrawLineH(wid, r.x+rad,   r.x+r.w-rad, r.y,     cBg);
+	AG_DrawLineV(wid, r.x,       r.y+rad,     r.y+r.h, cLeft);
+	AG_DrawLineV(wid, r.x+r.w-1, r.y+rad,     r.y+r.h, cRight);
+
+	/* Top left and top right rounded edges */
 	v = 2*rad - 1;
 	e = 0;
 	u = 0;
@@ -258,47 +261,20 @@ box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 cBg)
 	y = rad;
 	SDL_LockSurface(agView->v);
 	while (x <= y) {
-		int i;
-
-		AG_WidgetPutPixel(wid,
-		    r->x + rad - x,
-		    r->y + rad - y,
-		    cLeft);
-		AG_WidgetPutPixel(wid,
-		    r->x + rad - y,
-		    r->y + rad - x,
-		    cLeft);
-
-		AG_WidgetPutPixel(wid,
-		    r->x - rad + (r->w - 1) + x,
-		    r->y + rad - y,
-		    cRight);
-		AG_WidgetPutPixel(wid,
-		    r->x - rad + (r->w - 1) + y,
-		    r->y + rad - x,
-		    cRight);
-		
+		AG_WidgetPutPixel(wid, r.x+rad-x, r.y+rad-y, cLeft);
+		AG_WidgetPutPixel(wid, r.x+rad-y, r.y+rad-x, cLeft);
+		AG_WidgetPutPixel(wid, r.x-rad+(r.w-1)+x, r.y+rad-y, cRight);
+		AG_WidgetPutPixel(wid, r.x-rad+(r.w-1)+y, r.y+rad-x, cRight);
 		for (i = 0; i < x; i++) {
-			AG_WidgetPutPixel(wid,
-			    r->x + rad - i,
-			    r->y + rad - y,
-			    cBg);
-			AG_WidgetPutPixel(wid,
-			    r->x - rad + (r->w - 1) + i,
-			    r->y + rad - y,
+			AG_WidgetPutPixel(wid, r.x+rad-i, r.y+rad-y, cBg);
+			AG_WidgetPutPixel(wid, r.x-rad+(r.w-1)+i, r.y+rad-y,
 			    cBg);
 		}
 		for (i = 0; i < y; i++) {
-			AG_WidgetPutPixel(wid,
-			    r->x + rad - i,
-			    r->y + rad - x,
-			    cBg);
-			AG_WidgetPutPixel(wid,
-			    r->x - rad + (r->w - 1) + i,
-			    r->y + rad - x,
+			AG_WidgetPutPixel(wid, r.x+rad-i, r.y+rad-x, cBg);
+			AG_WidgetPutPixel(wid, r.x-rad+(r.w-1)+i, r.y+rad-x,
 			    cBg);
 		}
-
 		e += u;
 		u += 2;
 		if (v < 2*e) {
@@ -311,9 +287,9 @@ box_chamfered(void *p, SDL_Rect *r, int z, int rad, Uint32 cBg)
 	SDL_UnlockSurface(agView->v);
 }
 
-/* Draw a 3D-style frame. */
+/* Render a 3D-style frame. */
 static void
-frame(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
+Frame(void *p, AG_Rect r, int z, Uint32 color)
 {
 	AG_Widget *wid = p;
 	Uint32 cLeft = ColorShift(color, (z<0) ? agLowColorShift :
@@ -321,32 +297,27 @@ frame(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 color)
 	Uint32 cRight = ColorShift(color, (z<0) ? agHighColorShift :
 	                                          agLowColorShift);
 	
-	agPrim.hline(wid, xoffs,	xoffs+w-1,	yoffs,		cLeft);
-	agPrim.hline(wid, xoffs,	xoffs+w,	yoffs+h-1,	cRight);
-	agPrim.vline(wid, xoffs,	yoffs,		yoffs+h-1,	cLeft);
-	agPrim.vline(wid, xoffs+w-1,	yoffs,		yoffs+h-1,	cRight);
+	AG_DrawLineH(wid, r.x,		r.x+r.w-1,	r.y,		cLeft);
+	AG_DrawLineH(wid, r.x,		r.x+r.w,	r.y+r.h-1,	cRight);
+	AG_DrawLineV(wid, r.x,		r.y,		r.y+r.h-1,	cLeft);
+	AG_DrawLineV(wid, r.x+r.w-1,	r.y,		r.y+r.h-1,	cRight);
 }
 
-/* Draw a blended 3D-style frame. */
+/* Render a blended 3D-style frame. */
 static void
-frame_blended(void *p, int xoffs, int yoffs, int w, int h, Uint8 c[4],
-    enum ag_blend_func func)
+FrameBlended(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 {
 	AG_Widget *wid = p;
 
-	agPrim.line_blended(wid, xoffs, yoffs, xoffs+w-1, yoffs,
-	    c, func);
-	agPrim.line_blended(wid, xoffs, yoffs, xoffs, yoffs+h-1,
-	    c, func);
-	agPrim.line_blended(wid, xoffs, yoffs+h-1, xoffs+w-1, yoffs+h-1,
-	    c, func);
-	agPrim.line_blended(wid, xoffs+w-1, yoffs, xoffs+w-1, yoffs+h-1,
-	    c, func);
+	AG_DrawLineBlended(wid, r.x, r.y, r.x+r.w-1, r.y, c, func);
+	AG_DrawLineBlended(wid, r.x, r.y, r.x, r.y+r.h-1, c, func);
+	AG_DrawLineBlended(wid, r.x, r.y+r.h-1, r.x+r.w-1, r.y+r.h-1, c, func);
+	AG_DrawLineBlended(wid, r.x+r.w-1, r.y, r.x+r.w-1, r.y+r.h-1, c, func);
 }
 
 /* Render a circle using a modified Bresenham line algorithm. */
 static void
-circle_bresenham(void *p, int wx, int wy, int radius, Uint32 color)
+CircleFB(void *p, int px, int py, int radius, Uint32 color)
 {
 	AG_Widget *wid = p;
 	int v = 2*radius - 1;
@@ -355,11 +326,10 @@ circle_bresenham(void *p, int wx, int wy, int radius, Uint32 color)
 
 	SDL_LockSurface(agView->v);
 	while (x < y) {
-		AG_WidgetPutPixel(wid, wx+x, wy+y, color);
-		AG_WidgetPutPixel(wid, wx+x, wy-y, color);
-		AG_WidgetPutPixel(wid, wx-x, wy+y, color);
-		AG_WidgetPutPixel(wid, wx-x, wy-y, color);
-
+		AG_WidgetPutPixel(wid, px+x, py+y, color);
+		AG_WidgetPutPixel(wid, px+x, py-y, color);
+		AG_WidgetPutPixel(wid, px-x, py+y, color);
+		AG_WidgetPutPixel(wid, px-x, py-y, color);
 		e += u;
 		u += 2;
 		if (v < 2*e) {
@@ -368,19 +338,18 @@ circle_bresenham(void *p, int wx, int wy, int radius, Uint32 color)
 			v -= 2;
 		}
 		x++;
-		
-		AG_WidgetPutPixel(wid, wx+y, wy+x, color);
-		AG_WidgetPutPixel(wid, wx+y, wy-x, color);
-		AG_WidgetPutPixel(wid, wx-y, wy+x, color);
-		AG_WidgetPutPixel(wid, wx-y, wy-x, color);
+		AG_WidgetPutPixel(wid, px+y, py+x, color);
+		AG_WidgetPutPixel(wid, px+y, py-x, color);
+		AG_WidgetPutPixel(wid, px-y, py+x, color);
+		AG_WidgetPutPixel(wid, px-y, py-x, color);
 	}
-	AG_WidgetPutPixel(wid, wx-radius, wy, color);
-	AG_WidgetPutPixel(wid, wx+radius, wy, color);
+	AG_WidgetPutPixel(wid, px-radius, py, color);
+	AG_WidgetPutPixel(wid, px+radius, py, color);
 	SDL_UnlockSurface(agView->v);
 }
 
 static void
-circle2_bresenham(void *p, int wx, int wy, int radius, Uint32 color)
+Circle2FB(void *p, int px, int py, int radius, Uint32 color)
 {
 	AG_Widget *wid = p;
 	int v = 2*radius - 1;
@@ -389,16 +358,14 @@ circle2_bresenham(void *p, int wx, int wy, int radius, Uint32 color)
 
 	SDL_LockSurface(agView->v);
 	while (x < y) {
-		AG_WidgetPutPixel(wid, wx+x, wy+y, color);
-		AG_WidgetPutPixel(wid, wx+x+1, wy+y, color);
-		AG_WidgetPutPixel(wid, wx+x, wy-y, color);
-		AG_WidgetPutPixel(wid, wx+x+1, wy-y, color);
-		AG_WidgetPutPixel(wid, wx-x, wy+y, color);
-		AG_WidgetPutPixel(wid, wx-x-1, wy+y, color);
-		AG_WidgetPutPixel(wid, wx-x, wy-y, color);
-		AG_WidgetPutPixel(wid, wx-x-1, wy-y, color);
-
-
+		AG_WidgetPutPixel(wid, px+x,   py+y, color);
+		AG_WidgetPutPixel(wid, px+x+1, py+y, color);
+		AG_WidgetPutPixel(wid, px+x,   py-y, color);
+		AG_WidgetPutPixel(wid, px+x+1, py-y, color);
+		AG_WidgetPutPixel(wid, px-x,   py+y, color);
+		AG_WidgetPutPixel(wid, px-x-1, py+y, color);
+		AG_WidgetPutPixel(wid, px-x,   py-y, color);
+		AG_WidgetPutPixel(wid, px-x-1, py-y, color);
 		e += u;
 		u += 2;
 		if (v < 2*e) {
@@ -407,47 +374,46 @@ circle2_bresenham(void *p, int wx, int wy, int radius, Uint32 color)
 			v -= 2;
 		}
 		x++;
-		
-		AG_WidgetPutPixel(wid, wx+y, wy+x, color);
-		AG_WidgetPutPixel(wid, wx+y+1, wy+x, color);
-		AG_WidgetPutPixel(wid, wx+y, wy-x, color);
-		AG_WidgetPutPixel(wid, wx+y+1, wy-x, color);
-		AG_WidgetPutPixel(wid, wx-y, wy+x, color);
-		AG_WidgetPutPixel(wid, wx-y-1, wy+x, color);
-		AG_WidgetPutPixel(wid, wx-y, wy-x, color);
-		AG_WidgetPutPixel(wid, wx-y-1, wy-x, color);
+		AG_WidgetPutPixel(wid, px+y,   py+x, color);
+		AG_WidgetPutPixel(wid, px+y+1, py+x, color);
+		AG_WidgetPutPixel(wid, px+y,   py-x, color);
+		AG_WidgetPutPixel(wid, px+y+1, py-x, color);
+		AG_WidgetPutPixel(wid, px-y,   py+x, color);
+		AG_WidgetPutPixel(wid, px-y-1, py+x, color);
+		AG_WidgetPutPixel(wid, px-y,   py-x, color);
+		AG_WidgetPutPixel(wid, px-y-1, py-x, color);
 	}
-	AG_WidgetPutPixel(wid, wx-radius, wy, color);
-	AG_WidgetPutPixel(wid, wx+radius, wy, color);
+	AG_WidgetPutPixel(wid, px-radius, py, color);
+	AG_WidgetPutPixel(wid, px+radius, py, color);
 	SDL_UnlockSurface(agView->v);
 }
 
 /* Render a 3D-style line. */
 static void
-line2(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
+Line2(void *wid, int x1, int y1, int x2, int y2, Uint32 color)
 {
-	agPrim.line(wid, x1, y1, x2, y2,
+	AG_DrawLine(wid, x1, y1, x2, y2,
 	    ColorShift(color, agHighColorShift));
-	agPrim.line(wid, x1+1, y1+1, x2+1, y2+1,
+	AG_DrawLine(wid, x1+1, y1+1, x2+1, y2+1,
 	    ColorShift(color, agLowColorShift));
 }
 
 /*
- * Draw a line segment between two points using the Bresenham algorithm
- * presented by Foley & Van Dam [1990].
+ * Render a line segment between two points using the Bresenham algorithm
+ * as presented by Foley & Van Dam [1990].
  */
 static void
-line_bresenham(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
+LineFB(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 {
 	AG_Widget *wid = widget;
 	int dx, dy;
 	int inc1, inc2;
-	int d, x, y;
+	int x, y, d;
 	int xend, yend;
 	int xdir, ydir;
 
-	dx = abs(x2-x1);
-	dy = abs(y2-y1);
+	dx = abs(x2 - x1);
+	dy = abs(y2 - y1);
 
 	SDL_LockSurface(agView->v);
 
@@ -536,7 +502,7 @@ line_bresenham(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 }
 
 static __inline__ int
-hline_clip(AG_Widget *wid, int *x1, int *x2, int *y, int *dx)
+ClipHorizLine(AG_Widget *wid, int *x1, int *x2, int *y, int *dx)
 {
 	SDL_Rect *rd = &agView->v->clip_rect;
 
@@ -559,13 +525,13 @@ hline_clip(AG_Widget *wid, int *x1, int *x2, int *y, int *dx)
 }
 
 static void
-hline32(void *widget, int x1, int x2, int y, Uint32 c)
+LineH32(void *widget, int x1, int x2, int y, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
 	int dx;
 
-	if (hline_clip(wid, &x1, &x2, &y, &dx)) {
+	if (ClipHorizLine(wid, &x1, &x2, &y, &dx)) {
 		return;
 	}
 	SDL_LockSurface(agView->v);
@@ -580,13 +546,13 @@ hline32(void *widget, int x1, int x2, int y, Uint32 c)
 }
 
 static void
-hline24(void *widget, int x1, int x2, int y, Uint32 c)
+LineH24(void *widget, int x1, int x2, int y, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
 	int dx;
 	
-	if (hline_clip(wid, &x1, &x2, &y, &dx)) {
+	if (ClipHorizLine(wid, &x1, &x2, &y, &dx)) {
 		return;
 	}
 	SDL_LockSurface(agView->v);
@@ -609,13 +575,13 @@ hline24(void *widget, int x1, int x2, int y, Uint32 c)
 }
 
 static void
-hline16(void *widget, int x1, int x2, int y, Uint32 c)
+LineH16(void *widget, int x1, int x2, int y, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
 	int dx;
 
-	if (hline_clip(wid, &x1, &x2, &y, &dx)) {
+	if (ClipHorizLine(wid, &x1, &x2, &y, &dx)) {
 		return;
 	}
 	SDL_LockSurface(agView->v);
@@ -630,13 +596,13 @@ hline16(void *widget, int x1, int x2, int y, Uint32 c)
 }
 		
 static void
-hline8(void *widget, int x1, int x2, int y, Uint32 c)
+LineH8(void *widget, int x1, int x2, int y, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
 	int dx;
 
-	if (hline_clip(wid, &x1, &x2, &y, &dx)) {
+	if (ClipHorizLine(wid, &x1, &x2, &y, &dx)) {
 		return;
 	}
 	SDL_LockSurface(agView->v);
@@ -648,7 +614,7 @@ hline8(void *widget, int x1, int x2, int y, Uint32 c)
 }
 
 static __inline__ int
-vline_clip(AG_Widget *wid, int *x, int *y1, int *y2, int *dy)
+ClipVertLine(AG_Widget *wid, int *x, int *y1, int *y2, int *dy)
 {
 	SDL_Rect *rd = &agView->v->clip_rect;
 
@@ -671,13 +637,13 @@ vline_clip(AG_Widget *wid, int *x, int *y1, int *y2, int *dy)
 }
 
 static void
-vline32(void *widget, int x, int y1, int y2, Uint32 c)
+LineV32(void *widget, int x, int y1, int y2, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
 	int dy;
 
-	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
+	if (ClipVertLine(wid, &x, &y1, &y2, &dy)) {
 		return;
 	}
 	SDL_LockSurface(agView->v);
@@ -692,13 +658,13 @@ vline32(void *widget, int x, int y1, int y2, Uint32 c)
 }
 
 static void
-vline24(void *widget, int x, int y1, int y2, Uint32 c)
+LineV24(void *widget, int x, int y1, int y2, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
 	int dy;
 
-	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
+	if (ClipVertLine(wid, &x, &y1, &y2, &dy)) {
 		return;
 	}
 	SDL_LockSurface(agView->v);
@@ -721,13 +687,13 @@ vline24(void *widget, int x, int y1, int y2, Uint32 c)
 }
 
 static void
-vline16(void *widget, int x, int y1, int y2, Uint32 c)
+LineV16(void *widget, int x, int y1, int y2, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
-	int  dy;
+	int dy;
 
-	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
+	if (ClipVertLine(wid, &x, &y1, &y2, &dy)) {
 		return;
 	}
 	SDL_LockSurface(agView->v);
@@ -742,13 +708,13 @@ vline16(void *widget, int x, int y1, int y2, Uint32 c)
 }
 
 static void
-vline8(void *widget, int x, int y1, int y2, Uint32 c)
+LineV8(void *widget, int x, int y1, int y2, Uint32 c)
 {
 	AG_Widget *wid = widget;
 	Uint8 *pDst, *pEnd;
-	int  dy;
+	int dy;
 
-	if (vline_clip(wid, &x, &y1, &y2, &dy)) {
+	if (ClipVertLine(wid, &x, &y1, &y2, &dy)) {
 		return;
 	}
 	SDL_LockSurface(agView->v);
@@ -763,8 +729,8 @@ vline8(void *widget, int x, int y1, int y2, Uint32 c)
 }
 
 static void
-line_blended_bresenham(void *widget, int x1, int y1, int x2, int y2,
-    Uint8 c[4], enum ag_blend_func func)
+LineBlendedFB(void *widget, int x1, int y1, int x2, int y2, Uint8 c[4],
+    AG_BlendFn func)
 {
 	AG_Widget *wid = widget;
 	int dx, dy;
@@ -862,44 +828,45 @@ line_blended_bresenham(void *widget, int x1, int y1, int x2, int y2,
 	SDL_UnlockSurface(agView->v);
 }
 
-/* Render an outlined rectangle. */
+/* Render a rectangle outline. */
 static void
-rect_outlined(void *p, int x1, int y1, int w, int h, Uint32 color)
+RectOutline(void *p, AG_Rect r, Uint32 color)
 {
 	AG_Widget *wid = p;
-	int x2 = x1+w-1;
-	int y2 = y1+h-1;
+	int x2 = r.x+r.w-1;
+	int y2 = r.y+r.h-1;
 
-	agPrim.hline(wid, x1, x2, y1, color);
-	agPrim.hline(wid, x1, x2, y2, color);
-	agPrim.vline(wid, x1, y1, y2, color);
-	agPrim.vline(wid, x2, y1, y2, color);
+	AG_DrawLineH(wid, r.x, x2, r.y, color);
+	AG_DrawLineH(wid, r.x, x2, y2, color);
+	AG_DrawLineV(wid, r.x, r.y, y2, color);
+	AG_DrawLineV(wid, x2, r.y, y2, color);
 }
 
 /* Render a filled rectangle. */
 static void
-rect_filled(void *p, int x, int y, int w, int h, Uint32 color)
+RectFilledFB(void *p, AG_Rect r, Uint32 color)
 {
 	AG_Widget *wid = p;
 	SDL_Rect rd;
 
-	rd.x = wid->cx+x;
-	rd.y = wid->cy+y;
-	rd.w = w;
-	rd.h = h;
+	rd.x = wid->cx+r.x;
+	rd.y = wid->cy+r.y;
+	rd.w = r.w;
+	rd.h = r.h;
 	SDL_FillRect(agView->v, &rd, color);
 }
 
 /* Render an alpha blended rectangle. */
 static void
-rect_blended(void *p, int x1, int y1, int pw, int ph, Uint8 c[4],
-    enum ag_blend_func func)
+RectBlendedFB(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 {
 	AG_Widget *wid = p;
 	Uint8 *pView;
 	int x, y, yinc, d;
-	int w = pw;
-	int h = ph;
+	int w = r.w;
+	int h = r.h;
+	int x1 = r.x;
+	int y1 = r.y;
 
 	if (x1 < 0) {
 		if (x1+w >= 0) {
@@ -935,28 +902,29 @@ rect_blended(void *p, int x1, int y1, int pw, int ph, Uint8 c[4],
 	}
 }
 
-/* Draw a gimp-style background tiling. */
+/* Render a gimp-style background tiling. */
 static void
-tiling(void *p, SDL_Rect rd, int tsz, int offs, Uint32 c1, Uint32 c2)
+Tiling(void *p, AG_Rect r, int tsz, int offs, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
 	int alt1 = 0, alt2 = 0;
-	int x, y;
+	AG_Rect rt;
+
+	rt.w = tsz;
+	rt.h = tsz;
 
 	/* XXX inelegant */
-	for (y = rd.y-tsz+offs;
-	     y < rd.y+rd.h;
-	     y += tsz) {
-		for (x = rd.x-tsz+offs;
-		     x < rd.x+rd.w;
-		     x += tsz) {
+	for (rt.y = r.y-tsz+offs;
+	     rt.y < r.y+r.h;
+	     rt.y += tsz) {
+		for (rt.x = r.x-tsz+offs;
+		     rt.x < r.x+r.w;
+		     rt.x += tsz) {
 			if (alt1++ == 1) {
-				agPrim.rect_filled(wid, x, y, tsz, tsz,
-				    c1);
+				AG_DrawRectFilled(wid, rt, c1);
 				alt1 = 0;
 			} else {
-				agPrim.rect_filled(wid, x, y, tsz, tsz,
-				    c2);
+				AG_DrawRectFilled(wid, rt, c2);
 			}
 		}
 		if (alt2++ == 1) {
@@ -966,36 +934,35 @@ tiling(void *p, SDL_Rect rd, int tsz, int offs, Uint32 c1, Uint32 c2)
 	}
 }
 
-/* Draw a [+] sign. */
+/* Render a [+] sign. */
 static void
-plus(void *p, int x, int y, int w, int h, Uint8 c[4], enum ag_blend_func func)
+Plus(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 {
-	int xcen = x + w/2;
-	int ycen = y + h/2;
+	int xcen = r.x + r.w/2;
+	int ycen = r.y + r.h/2;
 
-	agPrim.line_blended(p, xcen, y, xcen, y+h, c, func);
-	agPrim.line_blended(p, x, ycen, x+w, ycen, c, func);
+	AG_DrawLineBlended(p, xcen, r.y, xcen, r.y+r.h, c, func);
+	AG_DrawLineBlended(p, r.x, ycen, r.x+r.w, ycen, c, func);
 }
 
-/* Draw a [-] sign. */
+/* Render a [-] sign. */
 static void
-minus(void *p, int x, int y, int w, int h, Uint8 c[4],
-    enum ag_blend_func func)
+Minus(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 {
-	AG_Widget *wid = p;
-	int ycen = y+h/2;
+	int ycen = r.y+r.h/2;
 
-	agPrim.line_blended(wid, x, ycen, x+w, ycen, c, func);
+	AG_DrawLineBlended(p, r.x, ycen, r.x+r.w, ycen, c, func);
 }
 
+#ifdef HAVE_OPENGL
 /*
  * OpenGL versions of the primitives. Note that we do not bother using
  * LockGL(), so the primitives are not safe to invoke anywhere outside
  * of widget draw functions.
  */
-#ifdef HAVE_OPENGL
+
 static void
-line_opengl(void *p, int px1, int py1, int px2, int py2, Uint32 color)
+LineGL(void *p, int px1, int py1, int px2, int py2, Uint32 color)
 {
 	AG_Widget *wid = p;
 	int x1 = wid->cx + px1;
@@ -1013,7 +980,7 @@ line_opengl(void *p, int px1, int py1, int px2, int py2, Uint32 color)
 }
 
 static void
-hline_opengl(void *p, int x1, int x2, int py, Uint32 color)
+LineHGL(void *p, int x1, int x2, int py, Uint32 color)
 {
 	AG_Widget *wid = p;
 	int y = wid->cy + py;
@@ -1028,7 +995,7 @@ hline_opengl(void *p, int x1, int x2, int py, Uint32 color)
 }
 
 static void
-vline_opengl(void *p, int px, int y1, int y2, Uint32 color)
+LineVGL(void *p, int px, int y1, int y2, Uint32 color)
 {
 	AG_Widget *wid = p;
 	int x = wid->cx + px;
@@ -1043,8 +1010,8 @@ vline_opengl(void *p, int px, int y1, int y2, Uint32 color)
 }
 
 static void
-line_blended_opengl(void *p, int px1, int py1, int px2, int py2, Uint8 c[4],
-    enum ag_blend_func func)
+LineBlendedGL(void *p, int px1, int py1, int px2, int py2, Uint8 c[4],
+    AG_BlendFn func)
 {
 	AG_Widget *wid = p;
 	int x1 = wid->cx + px1;
@@ -1080,7 +1047,7 @@ line_blended_opengl(void *p, int px1, int py1, int px2, int py2, Uint8 c[4],
 }
 
 static void
-circle_opengl(void *p, int x, int y, int radius, Uint32 color)
+CircleGL(void *p, int x, int y, int radius, Uint32 color)
 {
 	AG_Widget *wid = p;
 	int nedges = radius*2;
@@ -1099,7 +1066,7 @@ circle_opengl(void *p, int x, int y, int radius, Uint32 color)
 }
 
 static void
-circle2_opengl(void *p, int x, int y, int radius, Uint32 color)
+Circle2GL(void *p, int x, int y, int radius, Uint32 color)
 {
 	AG_Widget *wid = p;
 	int nedges = radius*2;
@@ -1120,14 +1087,14 @@ circle2_opengl(void *p, int x, int y, int radius, Uint32 color)
 }
 
 static void
-rect_opengl(void *p, int x, int y, int w, int h, Uint32 color)
+RectGL(void *p, AG_Rect r, Uint32 color)
 {
 	AG_Widget *wid = p;
-	Uint8 r, g, b;
-	int x1 = wid->cx+x;
-	int y1 = wid->cy+y;
-	int x2 = x1+w-1;
-	int y2 = y1+h-1;
+	Uint8 red, green, blue;
+	int x1 = wid->cx+r.x;
+	int y1 = wid->cy+r.y;
+	int x2 = x1+r.w-1;
+	int y2 = y1+r.h-1;
 
 	if (wid->flags & AG_WIDGET_CLIPPING) {
 		if (x1 > wid->cx+wid->w ||
@@ -1143,11 +1110,9 @@ rect_opengl(void *p, int x, int y, int w, int h, Uint32 color)
 		if (y2 > wid->cy+wid->h)
 			y2 = wid->cy+wid->h;
 	}
-
-	SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
-
+	SDL_GetRGB(color, agVideoFmt, &red, &green, &blue);
 	glBegin(GL_POLYGON);
-	glColor3ub(r, g, b);
+	glColor3ub(red, green, blue);
 	glVertex2i(x1, y1);
 	glVertex2i(x2, y1);
 	glVertex2i(x2, y2);
@@ -1156,14 +1121,13 @@ rect_opengl(void *p, int x, int y, int w, int h, Uint32 color)
 }
 
 static void
-rect_blended_opengl(void *p, int x, int y, int w, int h, Uint8 c[4],
-    enum ag_blend_func func)
+RectBlendedGL(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 {
 	AG_Widget *wid = p;
-	int x1 = wid->cx+x;
-	int y1 = wid->cy+y;
-	int x2 = x1+w;
-	int y2 = y1+h;
+	int x1 = wid->cx+r.x;
+	int y1 = wid->cy+r.y;
+	int x2 = x1+r.w;
+	int y2 = y1+r.h;
 	GLboolean blend_save;
 	GLint sfac_save, dfac_save;
 
@@ -1210,41 +1174,40 @@ rect_blended_opengl(void *p, int x, int y, int w, int h, Uint8 c[4],
 }
 
 static void
-box_dithered_gl(void *p, int xoffs, int yoffs, int w, int h, int z, Uint32 c1,
-    Uint32 c2)
+BoxDitheredGL(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
 {
 	/* TODO */
 }
 
-/* Draw a 3D-style box with chamfered top edges. */
+/* Render a 3D-style box with chamfered top edges. */
 static void
-box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 cBg)
+BoxRoundedGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 {
 	AG_Widget *wid = p;
-	Uint8 r, g, b;
+	Uint8 red, green, blue;
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef(wid->cx+rd->x, wid->cy+rd->y, 0);
+	glTranslatef(wid->cx+r.x, wid->cy+r.y, 0);
 	glBegin(GL_POLYGON);
 	{
-		SDL_GetRGB(cBg, agVideoFmt, &r, &g, &b);
-		glColor3ub(r, g, b);
-		glVertex2i(0,			rd->h);
-		glVertex2i(0,			rad);
-		glVertex2i(rad,			0);
-		glVertex2i((rd->w - rad),	0);
-		glVertex2i(rd->w,		rad);
-		glVertex2i(rd->w,		rd->h);
+		SDL_GetRGB(cBg, agVideoFmt, &red, &green, &blue);
+		glColor3ub(red, green, blue);
+		glVertex2i(0, r.h);
+		glVertex2i(0, rad);
+		glVertex2i(rad, 0);
+		glVertex2i(r.w-rad, 0);
+		glVertex2i(r.w, rad);
+		glVertex2i(r.w, r.h);
 	}
 	glEnd();
 	if (z >= 0) {
 		glBegin(GL_LINE_STRIP);
 		{
 			SDL_GetRGB(ColorShift(cBg, agHighColorShift),
-			                      agVideoFmt, &r, &g, &b);
-			glColor3ub(r, g, b);
-			glVertex2i(0, rd->h);
+			                      agVideoFmt, &red, &green, &blue);
+			glColor3ub(red, green, blue);
+			glVertex2i(0, r.h);
 			glVertex2i(0, rad);
 			glVertex2i(rad, 0);
 		}
@@ -1252,10 +1215,10 @@ box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 cBg)
 		glBegin(GL_LINES);
 		{
 			SDL_GetRGB(ColorShift(cBg, agLowColorShift),
-			                      agVideoFmt, &r, &g, &b);
-			glColor3ub(r, g, b);
-			glVertex2i((rd->w - 1), rd->h);
-			glVertex2i((rd->w - 1), rad);
+			                      agVideoFmt, &red, &green, &blue);
+			glColor3ub(red, green, blue);
+			glVertex2i(r.w-1, r.h);
+			glVertex2i(r.w-1, rad);
 		}
 		glEnd();
 	}
@@ -1263,7 +1226,7 @@ box_chamfered_gl(void *p, SDL_Rect *rd, int z, int rad, Uint32 cBg)
 }
 
 static void
-arrow_up_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
+ArrowUpGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
 	Uint8 r, g, b;
@@ -1284,7 +1247,7 @@ arrow_up_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 }
 
 static void
-arrow_down_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
+ArrowDownGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
 	Uint8 r, g, b;
@@ -1305,78 +1268,80 @@ arrow_down_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 }
 
 static void
-arrow_left_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
+ArrowLeftGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 {
+	/* TODO */
 }
 
 static void
-arrow_right_gl(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
+ArrowRightGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 {
+	/* TODO */
 }
+
 #endif /* HAVE_OPENGL */
 
 void
 AG_InitPrimitives(void)
 {
-	agPrim.box = box;
-	agPrim.frame = frame;
-	agPrim.frame_blended = frame_blended;
-	agPrim.rect_outlined = rect_outlined;
-	agPrim.plus = plus;
-	agPrim.minus = minus;
-	agPrim.line2 = line2;
-	agPrim.tiling = tiling;
+	agPrim.Box = Box;
+	agPrim.Frame = Frame;
+	agPrim.FrameBlended = FrameBlended;
+	agPrim.RectOutline = RectOutline;
+	agPrim.Plus = Plus;
+	agPrim.Minus = Minus;
+	agPrim.Line2 = Line2;
+	agPrim.Tiling = Tiling;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		agPrim.line = line_opengl;
-		agPrim.hline = hline_opengl;
-		agPrim.vline = vline_opengl;
-		agPrim.line_blended = line_blended_opengl;
-		agPrim.rect_filled = rect_opengl;
-		agPrim.rect_blended = rect_blended_opengl;
-		agPrim.circle = circle_opengl;
-		agPrim.circle2 = circle2_opengl;
-		agPrim.box_chamfered = box_chamfered_gl;
-		agPrim.box_dithered = box_dithered_gl;
-		agPrim.arrow_up = arrow_up_gl;
-		agPrim.arrow_down = arrow_down_gl;
-		agPrim.arrow_left = arrow_left_gl;
-		agPrim.arrow_right = arrow_right_gl;
+		agPrim.Line = LineGL;
+		agPrim.LineH = LineHGL;
+		agPrim.LineV = LineVGL;
+		agPrim.LineBlended = LineBlendedGL;
+		agPrim.RectFilled = RectGL;
+		agPrim.RectBlended = RectBlendedGL;
+		agPrim.Circle = CircleGL;
+		agPrim.Circle2 = Circle2GL;
+		agPrim.BoxRounded = BoxRoundedGL;
+		agPrim.BoxDithered = BoxDitheredGL;
+		agPrim.ArrowUp = ArrowUpGL;
+		agPrim.ArrowDown = ArrowDownGL;
+		agPrim.ArrowLeft = ArrowLeftGL;
+		agPrim.ArrowRight = ArrowRightGL;
 	} else
 #endif
 	{
-		agPrim.line = line_bresenham;
-		agPrim.line_blended = line_blended_bresenham;
-		agPrim.rect_filled = rect_filled;
-		agPrim.rect_blended = rect_blended;
-		agPrim.circle = circle_bresenham;
-		agPrim.circle2 = circle2_bresenham;
-		agPrim.box_chamfered = box_chamfered;
-		agPrim.box_dithered = box_dithered;
-		agPrim.arrow_up = arrow_up;
-		agPrim.arrow_down = arrow_down;
-		agPrim.arrow_left = arrow_left;
-		agPrim.arrow_right = arrow_right;
-		
+		agPrim.Line = LineFB;
+		agPrim.LineBlended = LineBlendedFB;
+		agPrim.RectFilled = RectFilledFB;
+		agPrim.RectBlended = RectBlendedFB;
+		agPrim.Circle = CircleFB;
+		agPrim.Circle2 = Circle2FB;
+		agPrim.BoxRounded = BoxRoundedFB;
+		agPrim.BoxDithered = BoxDitheredFB;
+		agPrim.ArrowUp = ArrowUpFB;
+		agPrim.ArrowDown = ArrowDownFB;
+		agPrim.ArrowLeft = ArrowLeftFB;
+		agPrim.ArrowRight = ArrowRightFB;
+
 		switch (agVideoFmt->BytesPerPixel) {
 		case 4:
-			agPrim.hline = hline32;
-			agPrim.vline = vline32;
+			agPrim.LineH = LineH32;
+			agPrim.LineV = LineV32;
 			break;
 		case 3:
-			agPrim.hline = hline24;
-			agPrim.vline = vline24;
+			agPrim.LineH = LineH24;
+			agPrim.LineV = LineV24;
 			break;
 		case 2:
-			agPrim.hline = hline16;
-			agPrim.vline = vline16;
+			agPrim.LineH = LineH16;
+			agPrim.LineV = LineV16;
 			break;
 		case 1:
-			agPrim.hline = hline8;
-			agPrim.vline = vline8;
+			agPrim.LineH = LineH8;
+			agPrim.LineV = LineV8;
 			break;
 		}
 	}
 }
-

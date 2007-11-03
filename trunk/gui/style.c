@@ -36,8 +36,11 @@ void
 AG_SetStyle(void *p, AG_Style *style)
 {
 	if (AG_ObjectIsClass(p, "AG_Display")) {
-		((AG_Display *)p)->style = style;
+		AG_Display *disp = (AG_Display *)p;
+		disp->style = style;
 	} else {
 		WIDGET(p)->style = style;
 	}
+	if (style->init != NULL)
+		style->init(style);
 }

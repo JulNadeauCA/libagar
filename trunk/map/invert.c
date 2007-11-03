@@ -102,7 +102,8 @@ cursor(void *p, SDL_Rect *rd)
 {
 	Uint8 c[4] = { 255, 255, 255, 64 };
 
-	agPrim.rect_blended(TOOL(p)->mv, rd->x, rd->y, rd->w, rd->h, 
+	AG_DrawRectBlended(TOOL(p)->mv,
+	    AG_RECT(rd->x, rd->y, rd->w, rd->h), 
 	    c, AG_ALPHA_OVERLAY);
 	return (1);
 }

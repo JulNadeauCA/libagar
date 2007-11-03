@@ -446,10 +446,11 @@ Draw(void *p)
 	int y0 = WIDGET(ptr)->h/2;
 	Uint i;
 
-	agPrim.box(ptr, 0, 0, WIDGET(ptr)->w, WIDGET(ptr)->h, -1,
+	AG_DrawBox(ptr,
+	    AG_RECT(0, 0, WIDGET(ptr)->w, WIDGET(ptr)->h), -1,
 	    AG_COLOR(GRAPH_BG_COLOR));
-	agPrim.hline(ptr, 1, WIDGET(ptr)->w-2, y0, ptr->colors[0]);
-	agPrim.vline(ptr, ptr->xMax-1, 30, WIDGET(ptr)->h-30, ptr->colors[0]);
+	AG_DrawLineH(ptr, 1, WIDGET(ptr)->w-2, y0, ptr->colors[0]);
+	AG_DrawLineV(ptr, ptr->xMax-1, 30, WIDGET(ptr)->h-30, ptr->colors[0]);
 
 	/* First pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
@@ -460,14 +461,14 @@ Draw(void *p)
 			SDL_Surface *su = WSURFACE(ptr,pl->label);
 
 			if (pl->flags & SC_PLOT_SELECTED) {
-				agPrim.rect_outlined(ptr,
-				    pl->xLabel-2, pl->yLabel-2,
-				    su->w+4, su->h+4,
+				AG_DrawRectOutline(ptr,
+				    AG_RECT(pl->xLabel-2, pl->yLabel-2,
+				            su->w+4, su->h+4),
 				    AG_VideoPixel(pl->color));
 			} else if (pl->flags & SC_PLOT_MOUSEOVER) {
-				agPrim.rect_outlined(ptr,
-				    pl->xLabel-2, pl->yLabel-2,
-				    su->w+4, su->h+4,
+				AG_DrawRectOutline(ptr,
+				    AG_RECT(pl->xLabel-2, pl->yLabel-2,
+				            su->w+4, su->h+4),
 				    AG_COLOR(TEXT_COLOR));
 			}
 			AG_WidgetBlitSurface(ptr, pl->label, pl->xLabel,
@@ -495,7 +496,7 @@ Draw(void *p)
 			for (i = 0; i < pl->n; i++, x++) {
 				if (x < 0) { continue; }
 				y = ScaleReal(ptr, pl, pl->data.r[i]);
-				agPrim.line(ptr, x-1, py, x,
+				AG_DrawLine(ptr, x-1, py, x,
 				    y0 - y + pl->yOffs + ptr->yOffs,
 				    AG_VideoPixel(pl->color));
 				py = y0 - y + pl->yOffs + ptr->yOffs;
@@ -530,7 +531,7 @@ Draw(void *p)
 				yLbl = WIDGET(ptr)->h -
 				       WIDGET(ptr->hbar)->h -
 				       su->h - 4 - plbl->y;
-				agPrim.line_blended(ptr,
+				AG_DrawLineBlended(ptr,
 				    xLbl, 1,
 				    xLbl, WIDGET(ptr)->h-2,
 				    colLine, AG_ALPHA_SRC);
@@ -550,7 +551,8 @@ Draw(void *p)
 				yLbl = 4 + plbl->y;
 				break;
 			}
-			agPrim.rect_blended(ptr, xLbl+2, yLbl, su->w, su->h,
+			AG_DrawRectBlended(ptr,
+			    AG_RECT(xLbl+2, yLbl, su->w, su->h),
 			    colBG, AG_ALPHA_SRC);
 			AG_WidgetBlitSurface(ptr, plbl->text_surface,
 			    xLbl+2, yLbl);

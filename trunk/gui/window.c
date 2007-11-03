@@ -248,9 +248,8 @@ Hidden(AG_Event *event)
 	/* Update the background if necessary. */
 	/* XXX TODO Avoid drawing over KEEPABOVE windows */
 //	if (!AG_WindowIsSurrounded(win)) {
-		agPrim.rect_filled(win, 0, 0,
-		    WIDGET(win)->w,
-		    WIDGET(win)->h,
+		AG_DrawRectFilled(win,
+		    AG_RECT(0,0, WIDTH(win), HEIGHT(win)),
 		    AG_COLOR(BG_COLOR));
 		if (!agView->opengl) {
 			AG_QueueVideoUpdate(

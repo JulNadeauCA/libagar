@@ -110,7 +110,7 @@ Draw(void *p)
 	AG_NotebookTab *tab;
 	int x = SPACING;
 	int y = SPACING;
-	SDL_Rect box;
+	AG_Rect r;
 	int idx = 0;
 
 	STYLE(nb)->NotebookBackground(nb, nb->bar_h);
@@ -119,17 +119,17 @@ Draw(void *p)
 		return;
 	}
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-		box.x = x;
-		box.y = y;
-		box.w = WSURFACE(nb,tab->label)->w + SPACING*2;
-		box.h = nb->bar_h - SPACING;
+		r.x = x;
+		r.y = y;
+		r.w = WSURFACE(nb,tab->label)->w + SPACING*2;
+		r.h = nb->bar_h - SPACING;
 
-		STYLE(nb)->NotebookTabBackground(nb, &box, idx++,
+		STYLE(nb)->NotebookTabBackground(nb, r, idx++,
 		    (nb->sel_tab == tab));
 		
 		AG_WidgetBlitSurface(nb, tab->label, x+SPACING,
-		    y+(box.h/2 - WSURFACE(nb,tab->label)->h/2));
-		x += box.w;
+		    y+(r.h/2 - WSURFACE(nb,tab->label)->h/2));
+		x += r.w;
 	}
 }
 

@@ -718,8 +718,8 @@ Draw(void *p)
 		if (VISROW(tv,i) == NULL) {
 			break;
 		}
-		STYLE(tv)->TableRowBackground(tv, 1, y,
-		    view_width-2, tv->row_height,
+		STYLE(tv)->TableRowBackground(tv,
+		    AG_RECT(1, y, view_width-2, tv->row_height),
 		    VISROW(tv,i)->selected);
 		y += tv->row_height;
 	}
@@ -1188,8 +1188,9 @@ draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 		int xLbl;
 
 		STYLE(tv)->TableColumnHeaderBackground(tv, idx,
-		    x1,			0,
-		    tv->column[idx].w,	tv->head_height,
+		    AG_RECT(x1, 0,
+		            tv->column[idx].w,
+			    tv->head_height),
 		    (tv->column[idx].mousedown ||
 		     tv->column[idx].cid == tv->sortColumn));
 
@@ -1216,9 +1217,7 @@ draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 			x += VISDEPTH(tv,j)*(tw+4);
 			if (!TAILQ_EMPTY(&VISROW(tv,j)->children)) {
 				STYLE(tv)->TreeSubnodeIndicator(tv,
-				    x,
-				    y + tw/2,
-				    tw, tw,
+				    AG_RECT(x, y+tw/2, tw, tw),
 				    VISROW(tv,j)->expanded);
 			}
 			x += tw+4;
@@ -1235,8 +1234,9 @@ draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 	/* Fill the Remaining Space in column heading */
 	if (tv->header && idx == tv->columncount-1 && x2 < view_width) {
 		STYLE(tv)->TableColumnHeaderBackground(tv, -1,
-		    x2,			0,
-		    view_width-x2,	tv->head_height,
+		    AG_RECT(x2, 0,
+		            view_width-x2,
+			    tv->head_height),
 		    0);
 	}
 	return (1);

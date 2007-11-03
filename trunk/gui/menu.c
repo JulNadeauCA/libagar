@@ -710,9 +710,10 @@ Draw(void *p)
 		hLbl = WSURFACE(m,lbl)->h;
 		if (item == m->itemSel) {
 			STYLE(m)->MenuRootSelectedItemBackground(m,
-			    item->x, item->y,
-	    		    m->lPadLbl + wLbl + m->rPadLbl,
-	    		    m->tPadLbl + hLbl + m->bPadLbl);
+			    AG_RECT(item->x,
+			            item->y,
+	    		            m->lPadLbl + wLbl + m->rPadLbl,
+	    		            m->tPadLbl + hLbl + m->bPadLbl));
 		}
 		AG_WidgetBlitSurface(m, lbl,
 		    item->x + m->lPadLbl,

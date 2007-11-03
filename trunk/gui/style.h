@@ -27,19 +27,18 @@ typedef struct ag_style {
 	void (*ConsoleBackground)(void *, Uint32 bg);
 	void (*FixedPlotterBackground)(void *, int showAxis, Uint32 yOffs);
 	void (*MenuRootBackground)(void *);
-	void (*MenuRootSelectedItemBackground)(void *, int x, int y, int w,
-	                                       int h);
-	void (*MenuBackground)(void *, int x, int y, int w, int h);
+	void (*MenuRootSelectedItemBackground)(void *, AG_Rect r);
+	void (*MenuBackground)(void *, AG_Rect r);
 	void (*MenuItemBackground)(void *, int x, int y, int h, int xIcon,
 	                           void *iconObj, int icon, int isSelected,
 				   int boolState);
 	void (*MenuItemSeparator)(void *, int x1, int x2, int y, int h);
 	void (*NotebookBackground)(void *, int y1);
-	void (*NotebookTabBackground)(void *, SDL_Rect *, int idx,
+	void (*NotebookTabBackground)(void *, AG_Rect r, int idx,
 	                              int isSelected);
 	void (*PaneHorizDivider)(void *, int x, int y, int w, int isMoving);
 	void (*PaneVertDivider)(void *, int x, int y, int w, int isMoving);
-	void (*RadioGroupBackground)(void *, int x, int y, int w, int h);
+	void (*RadioGroupBackground)(void *, AG_Rect r);
 	void (*RadioButton)(struct ag_radio *, int x, int y, int selected,
 	                    int over);
 	void (*ScrollbarBackground)(void *);
@@ -50,18 +49,14 @@ typedef struct ag_style {
 	void (*SocketBackground)(struct ag_socket *);
 	void (*SocketOverlay)(struct ag_socket *, int highlight);
 	void (*TableBackground)(void *, int, int, int, int);
-	void (*TableColumnHeaderBackground)(void *, int idx, int x, int y,
-	                                    int w, int h, int isSelected);
-	void (*TableRowBackground)(void *, int x, int y, int w, int h,
-	                           int isSelected);
-	void (*TableCellBackground)(void *, SDL_Rect *rd, int isSelected);
-	void (*TextboxBackground)(void *, int x, int y, int w, int h,
-	                          int isCombo);
-	void (*ListBackground)(void *, int x, int y, int w, int h);
-	void (*ListItemBackground)(void *, int x, int y, int w, int h,
-	                           int isSelected);
-	void (*TreeSubnodeIndicator)(void *, int x, int y, int w, int h,
-	                             int isExpanded);
+	void (*TableColumnHeaderBackground)(void *, int idx, AG_Rect r,
+	                                    int isSelected);
+	void (*TableRowBackground)(void *, AG_Rect r, int isSelected);
+	void (*TableCellBackground)(void *, AG_Rect r, int isSelected);
+	void (*TextboxBackground)(void *, AG_Rect r, int isCombo);
+	void (*ListBackground)(void *, AG_Rect r);
+	void (*ListItemBackground)(void *, AG_Rect r, int isSelected);
+	void (*TreeSubnodeIndicator)(void *, AG_Rect r, int isExpanded);
 } AG_Style;
 
 __BEGIN_DECLS

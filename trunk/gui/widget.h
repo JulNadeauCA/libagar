@@ -5,14 +5,14 @@
 
 #ifdef _AGAR_INTERNAL
 #include <config/have_opengl.h>
-#include <gui/style.h>
 #include <gui/colors.h>
 #include <gui/view.h>
+#include <gui/style.h>
 #else
 #include <agar/config/have_opengl.h>
-#include <agar/gui/style.h>
 #include <agar/gui/colors.h>
 #include <agar/gui/view.h>
+#include <agar/gui/style.h>
 #endif
 
 #include "begin_code.h"

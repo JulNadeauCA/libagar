@@ -344,7 +344,7 @@ PrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
 }
 
 static __inline__ void
-AG_TableDrawCell(AG_Table *t, AG_TableCell *c, SDL_Rect *rd)
+AG_TableDrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 {
 	char txt[AG_TABLE_TXT_MAX];
 
@@ -396,8 +396,8 @@ static void
 Draw(void *p)
 {
 	AG_Table *t = p;
+	AG_Rect rCell;
 	int n, m;
-	int x, y;
 
 	STYLE(t)->TableBackground(t, 0, 0, t->wTbl, HEIGHT(t));
 
@@ -406,8 +406,9 @@ Draw(void *p)
 	if (t->poll_ev != NULL) {
 		t->poll_ev->handler(t->poll_ev);
 	}
-	for (n = 0, x = t->xoffs;
-	     n < t->n && x < t->wTbl;
+	rCell.h = t->row_h;
+	for (n = 0, rCell.x = t->xoffs;
+	     n < t->n && rCell.x < t->wTbl;
 	     n++) {
 		AG_TableCol *col = &t->cols[n];
 		int cw;
@@ -415,56 +416,54 @@ Draw(void *p)
 		if (col->w <= 0) {
 			continue;
 		}
-		cw = ((x+col->w) < t->wTbl) ? col->w: t->wTbl - x;
+		cw = ((rCell.x + col->w) < t->wTbl) ? col->w: t->wTbl - rCell.x;
+		rCell.w = col->w;
 
 		/* Draw the column header and separator. */
-		if (x > 0 && x < t->wTbl) {
-			agPrim.vline(t, x-1, t->col_h-1, WIDGET(t)->h,
+		if (rCell.x > 0 && rCell.x < t->wTbl) {
+			AG_DrawLineV(t, rCell.x-1, t->col_h-1, WIDGET(t)->h,
 			    AG_COLOR(TABLE_LINE_COLOR));
 		}
-		STYLE(t)->TableColumnHeaderBackground(t, n, x, 0, cw,
-		    t->col_h-1, col->selected);
+		STYLE(t)->TableColumnHeaderBackground(t, n,
+		    AG_RECT(rCell.x, 0, cw, t->col_h-1),
+		    col->selected);
 		
-		AG_WidgetPushClipRect(t, x, 0, cw, WIDGET(t)->h - 2);
+		AG_WidgetPushClipRect(t, rCell.x, 0, cw, WIDGET(t)->h - 2);
 		if (col->surface != -1) {
 			AG_WidgetBlitSurface(t, col->surface,
-			    x + cw/2 - WSURFACE(t,col->surface)->w/2,
+			    rCell.x + cw/2 - WSURFACE(t,col->surface)->w/2,
 			    0);
 		}
 
 		/* Draw the rows of this column. */
-		for (m = t->moffs, y = t->row_h;
-		     m < t->m && y < WIDGET(t)->h;
+		for (m = t->moffs, rCell.y = t->row_h;
+		     m < t->m && rCell.y < WIDGET(t)->h;
 		     m++) {
-			SDL_Rect rCell;
-			
-			agPrim.hline(t, 0, t->wTbl, y,
+			AG_DrawLineH(t, 0, t->wTbl, rCell.y,
 			    AG_COLOR(TABLE_LINE_COLOR));
 
-			rCell.x = x;
-			rCell.y = y;
-			rCell.w = col->w;
-			rCell.h = t->row_h;
-			STYLE(t)->TableCellBackground(t, &rCell,
+			STYLE(t)->TableCellBackground(t, rCell,
 			    t->cells[m][n].selected);
 			AG_TableDrawCell(t, &t->cells[m][n], &rCell);
-			y += t->row_h;
+			rCell.y += t->row_h;
 		}
-		agPrim.hline(t, 0, t->wTbl, y,
+		AG_DrawLineH(t, 0, t->wTbl, rCell.y,
 		    AG_COLOR(TABLE_LINE_COLOR));
 
 		/* Indicate column selection. */
 		if (col->selected) {
 			Uint8 c[4] = { 0, 0, 250, 32 };
 
-			agPrim.rect_blended(t, x, 0, col->w, WIDGET(t)->h,
+			AG_DrawRectBlended(t,
+			    AG_RECT(rCell.x, 0, col->w, WIDGET(t)->h),
 			    c, AG_ALPHA_SRC);
 		}
 		AG_WidgetPopClipRect(t);
-		x += col->w;
+		rCell.x += col->w;
 	}
-	if (x > 0 && x < t->wTbl) {
-		agPrim.vline(t, x-1, t->col_h-1, WIDGET(t)->h,
+	if (rCell.x > 0 &&
+	    rCell.x < t->wTbl) {
+		AG_DrawLineV(t, rCell.x-1, t->col_h-1, WIDGET(t)->h,
 		    AG_COLOR(TABLE_LINE_COLOR));
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);

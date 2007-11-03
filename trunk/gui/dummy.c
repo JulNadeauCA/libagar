@@ -85,11 +85,8 @@ Draw(void *p)
 	AG_Dummy *dum = p;
 	
 	/* Draw a box spanning the widget area. */
-	agPrim.box(dum,
-	    0, 0,
-	    WIDGET(dum)->w,
-	    WIDGET(dum)->h,
-	    1,
+	AG_DrawBox(dum,
+	    AG_RECT(0, 0, WIDGET(dum)->w, WIDGET(dum)->h), 1,
 	    AG_COLOR(BUTTON_COLOR));
 
 	/*

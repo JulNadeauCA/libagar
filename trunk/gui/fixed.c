@@ -105,7 +105,9 @@ AG_FixedDrawBg(void *p)
 {
 	AG_Widget *w = p;
 
-	agPrim.rect_filled(w, 0, 0, w->w, w->h, AG_COLOR(FIXED_BG_COLOR));
+	AG_DrawRectFilled(w,
+	    AG_RECT(0, 0, w->w, w->h),
+	    AG_COLOR(FIXED_BG_COLOR));
 }
 
 void
@@ -113,7 +115,9 @@ AG_FixedDrawBox(void *p)
 {
 	AG_Widget *w = p;
 	
-	agPrim.box(w, 0, 0, w->w, w->h, -1, AG_COLOR(FRAME_COLOR));
+	AG_DrawBox(w,
+	    AG_RECT(0, 0, w->w, w->h), -1,
+	    AG_COLOR(FRAME_COLOR));
 }
 
 void
@@ -121,7 +125,9 @@ AG_FixedDrawInvBox(void *p)
 {
 	AG_Widget *w = p;
 	
-	agPrim.box(w, 0, 0, w->w, w->h, -1, AG_COLOR(FRAME_COLOR));
+	AG_DrawBox(w,
+	    AG_RECT(0, 0, w->w, w->h), -1,
+	    AG_COLOR(FRAME_COLOR));
 }
 
 void
@@ -129,7 +135,9 @@ AG_FixedDrawFrame(void *p)
 {
 	AG_Widget *w = p;
 
-	agPrim.frame(w, 0, 0, w->w, w->h, -1, AG_COLOR(FRAME_COLOR));
+	AG_DrawFrame(w,
+	    AG_RECT(0, 0, w->w, w->h), -1,
+	    AG_COLOR(FRAME_COLOR));
 }
 
 static __inline__ void

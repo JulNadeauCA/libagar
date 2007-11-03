@@ -285,7 +285,8 @@ Draw(void *p)
 	AG_Menu *m = mview->pmenu;
 	int i, y = mview->tPad;
 
-	STYLE(mview)->MenuBackground(mview, 0, 0, WIDTH(mview), HEIGHT(mview));
+	STYLE(mview)->MenuBackground(mview,
+	    AG_RECT(0, 0, WIDTH(mview), HEIGHT(mview)));
 
 	for (i = 0; i < pitem->nsubitems; i++) {
 		AG_MenuItem *item = &pitem->subitems[i];
