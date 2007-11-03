@@ -120,7 +120,7 @@ typedef struct ag_widget {
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
 	SDL_Rect rClipSave;		/* Saved clipping rectangle */
-	const AG_WidgetStyleMod *style;	/* Style mods (inherited from parent) */
+	AG_Style *style;		/* Style (inherited from parent) */
 
 	SDL_Surface **surfaces;		/* Registered surfaces */
 	Uint *surfaceFlags;		/* Surface flags */
@@ -143,6 +143,7 @@ typedef struct ag_widget {
 #define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
 #define AGWIDGET_SURFACE_NODUP(wi, ind)	(AGWIDGET(wi)->surfaceFlags[ind] & \
 					 AG_WIDGET_SURFACE_NODUP)
+#define AGSTYLE(p)			 AGWIDGET(p)->style
 
 #ifdef _AGAR_INTERNAL
 #define WIDGET(wi)			AGWIDGET(wi)
@@ -151,6 +152,9 @@ typedef struct ag_widget {
 #define WTEXTURE(wi,ind)		AGWIDGET_TEXTURE((wi),(ind))
 #define WTEXCOORD(wi,ind)		AGWIDGET_TEXCOORD((wi),(ind))
 #define WSURFACE_NODUP(wi,ind)		AGWIDGET_SURFACE_NODUP((wi),(ind))
+#define STYLE(p)                        AGSTYLE(p)
+#define WIDTH(p)			AGWIDGET(p)->w
+#define HEIGHT(p)			AGWIDGET(p)->h
 #endif /* _AGAR_INTERNAL */
 
 #define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
@@ -183,7 +187,9 @@ void	   AG_WidgetDraw(void *);
 
 void	   AG_WidgetSizeReq(void *, AG_SizeReq *);
 int	   AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
+
 void	   AG_WidgetSetFocusable(void *, int);
+void	   AG_WidgetSetStyle(void *, AG_Style *);
 
 void		  AG_WidgetFocus(void *);
 void		  AG_WidgetUnfocus(void *);

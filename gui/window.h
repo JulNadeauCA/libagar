@@ -100,7 +100,6 @@ void	 AG_WindowSetPadding(AG_Window *, int, int, int, int);
 
 void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
 void	 AG_WindowSetCloseAction(AG_Window *, enum ag_window_close_action);
-void	 AG_WindowSetStyle(AG_Window *, const AG_WidgetStyleMod *);
 int	 AG_WindowSetGeometryParam(AG_Window *, int, int, int, int, int);
 #define  AG_WindowSetGeometry(win,x,y,w,h) \
 	 AG_WindowSetGeometryParam((win),(x),(y),(w),(h),0)

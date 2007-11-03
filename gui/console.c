@@ -108,9 +108,8 @@ Draw(void *p)
 	SDL_Surface *su;
 	Uint r;
 	int y;
-	
-	agPrim.box(cons, 0, 0, WIDGET(cons)->w, WIDGET(cons)->h, -1,
-	    cons->cBg);
+
+	STYLE(cons)->ConsoleBackground(cons, cons->cBg);
 
 	AG_MutexLock(&cons->lock);
 	if (cons->rOffs >= cons->nLines) {

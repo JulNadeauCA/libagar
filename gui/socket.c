@@ -222,63 +222,11 @@ Draw(void *p)
 	count = GetCount(binding, pBinding);
 	AG_WidgetUnlockBinding(binding);
 	
-	switch (sock->bgType) {
-	case AG_SOCKET_PIXMAP:
-		AG_WidgetBlitSurface(sock, sock->bgData.pixmap.s, 0, 0);
-		if (sock->icon != NULL) {
-			AG_WidgetBlitSurface(sock->icon, sock->icon->surface,
-			    0, 0);
-		}
-		if (state) {
-			agPrim.rect_outlined(sock, sock->lPad, sock->tPad,
-			    WIDGET(sock)->w - sock->lPad - sock->rPad,
-			    WIDGET(sock)->h - sock->tPad - sock->bPad,
-			    AG_COLOR(SOCKET_HIGHLIGHT_COLOR));
-		}
-		break;
-	case AG_SOCKET_RECT:
-		if (AG_WidgetEnabled(sock)) {
-			agPrim.box(sock,
-			    0, 0,
-			    WIDGET(sock)->w, WIDGET(sock)->h, -1,
-			    AG_COLOR(SOCKET_COLOR));
-		} else {
-			agPrim.box_dithered(sock,
-			    0, 0,
-			    WIDGET(sock)->w, WIDGET(sock)->h, -1,
-			    AG_COLOR(SOCKET_COLOR),
-			    AG_COLOR(DISABLED_COLOR));
-		}
-		if (sock->icon != NULL) {
-			AG_WidgetBlitSurface(sock->icon, sock->icon->surface,
-			    0, 0);
-		}
-		if (state) {
-			agPrim.rect_outlined(sock, sock->lPad, sock->tPad,
-			    WIDGET(sock)->w - sock->lPad - sock->rPad,
-			    WIDGET(sock)->h - sock->tPad - sock->bPad,
-			    AG_COLOR(SOCKET_HIGHLIGHT_COLOR));
-		}
-		break;
-	case AG_SOCKET_CIRCLE:
-		agPrim.circle(sock,
-		    WIDGET(sock)->w/2,
-		    WIDGET(sock)->h/2,
-		    sock->bgData.circle.r,
-		    AG_COLOR(SOCKET_COLOR));
-		if (sock->icon != NULL) {
-			AG_WidgetBlitSurface(sock->icon, sock->icon->surface,
-			    0, 0);
-		}
-		if (state) {
-			agPrim.circle(sock,
-			    WIDGET(sock)->w/2,
-			    WIDGET(sock)->h/2,
-			    sock->bgData.circle.r - sock->lPad,
-			    AG_COLOR(SOCKET_HIGHLIGHT_COLOR));
-		}
-		break;
+	STYLE(sock)->SocketBackground(sock);
+	if (sock->icon != NULL) {
+		AG_WidgetBlitSurface(sock->icon, sock->icon->surface, 0, 0);
 	}
+	STYLE(sock)->SocketOverlay(sock, state);
 }
 
 static void

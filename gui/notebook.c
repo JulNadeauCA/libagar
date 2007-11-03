@@ -82,7 +82,6 @@ AG_NotebookInit(AG_Notebook *nb, Uint flags)
 	nb->bar_h = -1;
 	nb->cont_w = -1;
 	nb->cont_h = -1;
-	nb->tab_rad = (int)(agTextFontHeight/1.5);
 	nb->spacing = -1;
 	nb->padding = -1;
 	nb->tabFont = AG_FetchFont(NULL, agDefaultFont->size-1, 0);
@@ -112,12 +111,9 @@ Draw(void *p)
 	int x = SPACING;
 	int y = SPACING;
 	SDL_Rect box;
+	int idx = 0;
 
-	agPrim.rect_filled(nb,
-	    0, nb->bar_h,
-	    WIDGET(nb)->w,
-	    WIDGET(nb)->h - nb->bar_h,
-	    AG_COLOR(NOTEBOOK_SEL_COLOR));
+	STYLE(nb)->NotebookBackground(nb, nb->bar_h);
 
 	if (nb->flags & AG_NOTEBOOK_HIDE_TABS) {
 		return;
@@ -128,24 +124,8 @@ Draw(void *p)
 		box.w = WSURFACE(nb,tab->label)->w + SPACING*2;
 		box.h = nb->bar_h - SPACING;
 
-#if 0
-		if ((box.x+box.w) - WIDGET(nb)->w > 0) {
-			box.w = WIDGET(nb)->w - box.x;
-			if (box.w < nb->tab_rad<<1) {
-				break;
-			}
-			agPrim.box_chamfered(nb, &box, 1, nb->tab_rad,
-			    AG_COLOR(NOTEBOOK_BG_COLOR));
-			AG_WidgetBlitSurface(nb, nb->lblMore, x+SPACING, y+2);
-			break;
-		}
-#endif
-
-		agPrim.box_chamfered(nb, &box,
-		    nb->sel_tab==tab ? -1 : 1, nb->tab_rad,
-		    nb->sel_tab==tab ?
-		    AG_COLOR(NOTEBOOK_SEL_COLOR) :
-		    AG_COLOR(NOTEBOOK_BG_COLOR));
+		STYLE(nb)->NotebookTabBackground(nb, &box, idx++,
+		    (nb->sel_tab == tab));
 		
 		AG_WidgetBlitSurface(nb, tab->label, x+SPACING,
 		    y+(box.h/2 - WSURFACE(nb,tab->label)->h/2));

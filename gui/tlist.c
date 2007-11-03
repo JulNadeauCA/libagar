@@ -295,9 +295,8 @@ Draw(void *p)
 	int y = 0, i = 0;
 	int offset;
 
-	agPrim.box(tl, 0, 0, WIDGET(tl)->w, WIDGET(tl)->h, -1,
-	    AG_COLOR(TLIST_BG_COLOR));
-	
+	STYLE(tl)->ListBackground(tl, 0, 0, WIDTH(tl), HEIGHT(tl));
+
 	AG_MutexLock(&tl->lock);
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
@@ -309,19 +308,14 @@ Draw(void *p)
 
 		if (i++ < offset)
 			continue;
-		if (y > WIDGET(tl)->h - tl->item_h)
+		if (y > HEIGHT(tl) - tl->item_h)
 			break;
 
-		if (it->selected) {
-			int x1 = x + tl->icon_w + 2;
+		STYLE(tl)->ListItemBackground(tl,
+		    x+tl->icon_w+2,  y,
+		    WIDTH(tl)-x,     tl->item_h,
+		    it->selected);
 
-			agPrim.rect_filled(tl,
-			    x1, y,
-			    WIDGET(tl)->w - x1,
-			    tl->item_h,
-			    AG_COLOR(TLIST_SEL_COLOR));
-		}
-		
 		if (it->iconsrc != NULL) {
 			if (it->icon == -1) {
 				SDL_Surface *scaled = NULL;
@@ -332,35 +326,11 @@ Draw(void *p)
 			}
 			AG_WidgetBlitSurface(tl, it->icon, x, y);
 		}
-
 		if (it->flags & AG_TLIST_HAS_CHILDREN) {
-			Uint8 cBg[4] = { 0, 0, 0, 64 };
-			Uint8 cFg[4] = { 255, 255, 255, 100 };
-
-			agPrim.rect_blended(tl,
-			    x - 1,
-			    y,
-			    tl->icon_w + 2,
-			    tl->item_h,
-			    cBg, AG_ALPHA_SRC);
-
-			if (it->flags & AG_TLIST_VISIBLE_CHILDREN) {
-				agPrim.minus(tl,
-				    x + 2,
-				    y + 2,
-				    tl->icon_w - 4,
-				    tl->item_h - 4,
-				    cFg, AG_ALPHA_SRC);
-			} else {
-				agPrim.plus(tl,
-				    x + 2,
-				    y + 2,
-				    tl->icon_w - 4,
-				    tl->item_h - 4,
-				    cFg, AG_ALPHA_SRC);
-			}
+			STYLE(tl)->TreeSubnodeIndicator(tl, x, y,
+			    tl->icon_w, tl->item_h,
+			    (it->flags & AG_TLIST_VISIBLE_CHILDREN));
 		}
-		
 		if (it->label == -1) {
 			AG_TextColor(TLIST_TXT_COLOR);
 			it->label = AG_WidgetMapSurface(tl,
@@ -371,10 +341,9 @@ Draw(void *p)
 		    y + tl->item_h/2 - WSURFACE(tl,it->label)->h/2);
 
 		y += tl->item_h;
-		if (y < WIDGET(tl)->h - 1) {
-			agPrim.hline(tl, 0, WIDGET(tl)->w, y,
+		if (y < HEIGHT(tl)-1)
+			agPrim.hline(tl, 0, WIDTH(tl), y,
 			    AG_COLOR(TLIST_LINE_COLOR));
-		}
 	}
 	AG_MutexUnlock(&tl->lock);
 }
@@ -387,7 +356,7 @@ UpdateListScrollbar(AG_Tlist *tl)
 	int *max, *offset;
 	int noffset;
 	
-	tl->nvisitems = WIDGET(tl)->h / tl->item_h;
+	tl->nvisitems = HEIGHT(tl)/tl->item_h;
 
 	maxb = AG_WidgetGetBinding(tl->sbar, "max", &max);
 	offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
@@ -408,8 +377,8 @@ UpdateListScrollbar(AG_Tlist *tl)
 	if (tl->nitems > 0 && tl->nvisitems > 0 &&
 	    tl->nvisitems < tl->nitems) {
 		AG_ScrollbarSetBarSize(tl->sbar,
-		    tl->nvisitems *
-		    (WIDGET(tl->sbar)->h - tl->sbar->bw*2)/tl->nitems);
+		    tl->nvisitems*(HEIGHT(tl->sbar) - tl->sbar->bw*2) /
+		    tl->nitems);
 	} else {
 		AG_ScrollbarSetBarSize(tl->sbar, -1);		/* Full range */
 	}

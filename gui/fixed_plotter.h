@@ -48,7 +48,7 @@ typedef struct ag_fixed_plotter {
 #define AG_FIXED_PLOTTER_EXPAND (AG_FIXED_PLOTTER_HFILL|AG_FIXED_PLOTTER_VFILL)
 	AG_FixedPlotterValue yrange;		/* Max. value */
 	AG_FixedPlotterValue xoffs;		/* Display offset */
-	int origin_y;			/* Origin position (%) */
+	int yOrigin;				/* Origin position (%) */
 	struct ag_fixed_plotter_itemq items;	/* Items to plot */
 } AG_FixedPlotter;
 

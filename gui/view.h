@@ -23,6 +23,7 @@
 #include "begin_code.h"
 
 struct ag_window;
+struct ag_style;
 TAILQ_HEAD(ag_windowq, ag_window);
 
 typedef struct ag_display {
@@ -54,6 +55,7 @@ typedef struct ag_display {
 		AG_WINOP_RRESIZE,
 		AG_WINOP_HRESIZE
 	} winop;
+	struct ag_style *style;		/* Default style for new windows */
 } AG_Display;
 
 /* Alpha functions for BlendPixelRGBA(). */

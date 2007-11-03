@@ -468,6 +468,7 @@ Draw(void *p)
 	AG_GraphEdge *edge;
 	Uint8 bg[4];
 
+	/* Draw the bounding box */
 	agPrim.rect_outlined(gf,
 	    gf->pxMin - gf->xOffs,
 	    gf->pyMin - gf->yOffs, 

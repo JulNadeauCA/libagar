@@ -21,6 +21,7 @@ typedef struct ag_checkbox {
 	int state;
 	char *labelTxt;
 	int label;
+	int spacing;
 } AG_Checkbox;
 
 __BEGIN_DECLS

@@ -662,8 +662,8 @@ DrawPolled(AG_Label *label)
 	}
 
 	/* XXX TODO render directly! */
-	AG_TextColor(TEXT_COLOR);
 	AG_TextJustify(label->justify);
+	AG_TextColor(TEXT_COLOR);
 	ts = AG_TextRender(s);
 	AG_WidgetBlit(label, ts, label->lPad, label->tPad);
 	SDL_FreeSurface(ts);
@@ -684,13 +684,13 @@ Draw(void *p)
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
 		if (lbl->surface == -1) {
-			AG_TextColor(TEXT_COLOR);
 			AG_TextJustify(lbl->justify);
+			AG_TextColor(TEXT_COLOR);
 			lbl->surface = (lbl->text == NULL) ? -1 :
 			    AG_WidgetMapSurface(lbl, AG_TextRender(lbl->text));
 		} else if (lbl->flags & AG_LABEL_REGEN) {
-			AG_TextColor(TEXT_COLOR);
 			AG_TextJustify(lbl->justify);
+			AG_TextColor(TEXT_COLOR);
 			AG_LabelSetSurface(lbl, (lbl->text == NULL) ? NULL :
 			    AG_TextRender(lbl->text));
 		}

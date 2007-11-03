@@ -30,10 +30,10 @@
 #include "primitive.h"
 
 enum ag_button_which {
-	AG_BUTTON_NONE,
-	AG_BUTTON_UP,
-	AG_BUTTON_DOWN,
-	AG_BUTTON_SCROLL
+	AG_BUTTON_NONE = 0,
+	AG_BUTTON_UP = 1,
+	AG_BUTTON_DOWN = 2,
+	AG_BUTTON_SCROLL = 3
 };
 
 static void mousebuttonup(AG_Event *);
@@ -218,7 +218,7 @@ Draw(void *p)
 {
 	AG_Scrollbar *sb = p;
 	int min, max, val;
-	int w, h, x, y;
+	int x, size;
 	int maxcoord;
 
 	if (!AG_ScrollbarVisible(sb)) {
@@ -236,85 +236,35 @@ Draw(void *p)
 		val = max-1;
 		AG_WidgetSetInt(sb, "value", max-1);
 	}
-	
-	agPrim.box(sb, 0, 0, WIDGET(sb)->w, WIDGET(sb)->h, -1,
-	    AG_COLOR(SCROLLBAR_COLOR));
+
+	STYLE(sb)->ScrollbarBackground(sb);
 
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:
-		if (WIDGET(sb)->h < sb->bw*2 + 6) {
-			return;
-		}
 		maxcoord = WIDGET(sb)->h - sb->bw*2 - sb->barSz;
-
-		agPrim.box(sb,
-		    0, 0,
-		    sb->bw, sb->bw, (sb->curbutton == AG_BUTTON_UP) ? -1 : 1,
-		    AG_COLOR(SCROLLBAR_BTN_COLOR));
-		agPrim.arrow_up(sb, sb->bw/2, sb->bw/2, sb->arrowSz,
-		    AG_COLOR(SCROLLBAR_ARR1_COLOR),
-		    AG_COLOR(SCROLLBAR_ARR2_COLOR));
-
-		y = WIDGET(sb)->h - sb->bw;
-		agPrim.box(sb,
-		    0, y,
-		    sb->bw, sb->bw, (sb->curbutton == AG_BUTTON_DOWN) ? -1 : 1,
-		    AG_COLOR(SCROLLBAR_BTN_COLOR));
-		agPrim.arrow_down(sb, sb->bw/2, (y + sb->bw/2), sb->arrowSz,
-		    AG_COLOR(SCROLLBAR_ARR1_COLOR),
-		    AG_COLOR(SCROLLBAR_ARR2_COLOR));
-		
-		if (sb->barSz == -1) {
-			y = 0;
-			h = WIDGET(sb)->h - sb->bw*2;
-		} else {
-			y = val * maxcoord / (max-min);
-			h = sb->barSz;
-			if (sb->bw + y + h >
-			    WIDGET(sb)->h - sb->bw)
-				y = WIDGET(sb)->h - sb->bw*2 - h;
-		}
-		agPrim.box(sb, 0, sb->bw+y, sb->bw, h,
-		    (sb->curbutton == AG_BUTTON_SCROLL) ? -1 : 1,
-		    AG_COLOR(SCROLLBAR_BTN_COLOR));
-		break;
-	case AG_SCROLLBAR_HORIZ:
-		if (WIDGET(sb)->w < sb->bw*2 + 6) {
-			return;
-		}
-		maxcoord = WIDGET(sb)->w - sb->bw*2 - sb->barSz;
-
-		agPrim.box(sb,
-		    0, 0,
-		    sb->bw, sb->bw, (sb->curbutton == AG_BUTTON_UP) ? -1 : 1,
-		    AG_COLOR(SCROLLBAR_BTN_COLOR));
-		agPrim.arrow_left(sb, sb->bw/2, sb->bw/2, sb->arrowSz,
-		    AG_COLOR(SCROLLBAR_ARR1_COLOR),
-		    AG_COLOR(SCROLLBAR_ARR2_COLOR));
-
-		x = WIDGET(sb)->w - sb->bw;
-		agPrim.box(sb,
-		    x, 0,
-		    sb->bw, sb->bw, (sb->curbutton == AG_BUTTON_DOWN) ? -1 : 1,
-		    AG_COLOR(SCROLLBAR_BTN_COLOR));
-		agPrim.arrow_right(sb, (x + sb->bw/2), sb->bw/2, sb->arrowSz,
-		    AG_COLOR(SCROLLBAR_ARR1_COLOR),
-		    AG_COLOR(SCROLLBAR_ARR2_COLOR));
-		
-		/* Calculate disabled bar */
 		if (sb->barSz == -1) {
 			x = 0;
-			w = WIDGET(sb)->w - sb->bw*2;
+			size = WIDGET(sb)->h - sb->bw*2;
 		} else {
 			x = val * maxcoord / (max-min);
-			w = sb->barSz;
-			if (sb->bw + x + w >
-			    WIDGET(sb)->w - sb->bw)
-				x = WIDGET(sb)->w - sb->bw*2 - w;
+			size = sb->barSz;
+			if (sb->bw+x+size > WIDGET(sb)->h - sb->bw)
+				x = WIDGET(sb)->h - sb->bw*2 - size;
 		}
-		agPrim.box(sb, sb->bw+x, 0, w, sb->bw,
-		    (sb->curbutton == AG_BUTTON_SCROLL) ? -1 : 1,
-		    AG_COLOR(SCROLLBAR_BTN_COLOR));
+		STYLE(sb)->ScrollbarVertButtons(sb, x, size);
+		break;
+	case AG_SCROLLBAR_HORIZ:
+		maxcoord = WIDGET(sb)->w - sb->bw*2 - sb->barSz;
+		if (sb->barSz == -1) {
+			x = 0;
+			size = WIDGET(sb)->w - sb->bw*2;
+		} else {
+			x = val * maxcoord / (max-min);
+			size = sb->barSz;
+			if (sb->bw+x+size > WIDGET(sb)->w - sb->bw)
+				x = WIDGET(sb)->w - sb->bw*2 - size;
+		}
+		STYLE(sb)->ScrollbarHorizButtons(sb, x, size);
 		break;
 	}
 #if 0

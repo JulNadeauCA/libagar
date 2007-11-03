@@ -66,7 +66,7 @@ AG_FixedPlotterInit(AG_FixedPlotter *fpl, enum ag_fixed_plotter_type type,
 	fpl->type = type;
 	fpl->flags = flags;
 	fpl->xoffs = 0;
-	fpl->origin_y = 50;
+	fpl->yOrigin = 50;
 	fpl->yrange = 100;
 	TAILQ_INIT(&fpl->items);
 
@@ -118,11 +118,11 @@ mousemotion(AG_Event *event)
 	if ((fpl->xoffs -= xrel) < 0)
 		fpl->xoffs = 0;
 
-	fpl->origin_y += yrel;
-	if (fpl->origin_y < 0)
-		fpl->origin_y = 0;
-	if (fpl->origin_y > WIDGET(fpl)->h)
-		fpl->origin_y = WIDGET(fpl)->h;
+	fpl->yOrigin += yrel;
+	if (fpl->yOrigin < 0)
+		fpl->yOrigin = 0;
+	if (fpl->yOrigin > WIDGET(fpl)->h)
+		fpl->yOrigin = WIDGET(fpl)->h;
 }
 
 static void
@@ -165,24 +165,12 @@ Draw(void *p)
 	AG_FixedPlotter *fpl = p;
 	AG_FixedPlotterItem *gi;
 	int x, y, ox = 0, oy;
-	Uint32 i, origin_y;
+	Uint32 i, yOrigin;
 	AG_FixedPlotterValue oval;
 
-	origin_y = WIDGET(fpl)->h * fpl->origin_y / 100;
-
-	agPrim.box(fpl,
-	    0, 0,
-	    WIDGET(fpl)->w, WIDGET(fpl)->h,
-	    0,
-	    AG_COLOR(GRAPH_BG_COLOR));
-
-	if (fpl->flags & AG_FIXED_PLOTTER_XAXIS) {
-		agPrim.hline(fpl,
-		    0,
-		    WIDGET(fpl)->w-1,
-		    origin_y + 1,
-		    AG_COLOR(GRAPH_XAXIS_COLOR));
-	}
+	yOrigin = WIDGET(fpl)->h * fpl->yOrigin / 100;
+	STYLE(fpl)->FixedPlotterBackground(fpl,
+	    (fpl->flags & AG_FIXED_PLOTTER_XAXIS), yOrigin);
 
 	TAILQ_FOREACH(gi, &fpl->items, items) {
 		if (fpl->xoffs > gi->nvals || fpl->xoffs < 0)
@@ -193,13 +181,13 @@ Draw(void *p)
 		     ox = x, x += 2) {
 
 			oval = gi->vals[i] * WIDGET(fpl)->h / fpl->yrange;
-			y = origin_y - oval;
+			y = yOrigin - oval;
 			if (i > 1) {
 				oval = gi->vals[i-1] * WIDGET(fpl)->h /
 				       fpl->yrange;
-				oy = origin_y - oval;
+				oy = yOrigin - oval;
 			} else {
-				oy = origin_y;
+				oy = yOrigin;
 			}
 
 			if (y < 0) { y = 0; }
@@ -212,8 +200,7 @@ Draw(void *p)
 				AG_WidgetPutPixel(fpl, x, y, gi->color);
 				break;
 			case AG_FIXED_PLOTTER_LINES:
-				agPrim.line(fpl, ox, oy, x, y,
-				    gi->color);
+				agPrim.line(fpl, ox, oy, x, y, gi->color);
 				break;
 			}
 		}

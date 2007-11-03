@@ -33,8 +33,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define LABEL_SPACING 6
-
 static void mousebuttondown(AG_Event *);
 static void keydown(AG_Event *);
 
@@ -42,6 +40,7 @@ AG_Checkbox *
 AG_CheckboxNew(void *parent, Uint flags, const char *label)
 {
 	AG_Checkbox *cb;
+
 	cb = Malloc(sizeof(AG_Checkbox), M_OBJECT);
 	AG_CheckboxInit(cb, flags, label);
 	AG_ObjectAttach(parent, cb);
@@ -114,37 +113,38 @@ AG_CheckboxSetFromFlags32(void *parent, Uint32 *pFlags,
 }
 
 void
-AG_CheckboxInit(AG_Checkbox *cbox, Uint flags, const char *label)
+AG_CheckboxInit(AG_Checkbox *cb, Uint flags, const char *label)
 {
-	AG_WidgetInit(cbox, &agCheckboxOps, AG_WIDGET_FOCUSABLE);
-	AG_WidgetBind(cbox, "state", AG_WIDGET_BOOL, &cbox->state);
+	AG_WidgetInit(cb, &agCheckboxOps, AG_WIDGET_FOCUSABLE);
+	AG_WidgetBind(cb, "state", AG_WIDGET_BOOL, &cb->state);
 
-	cbox->state = 0;
-	cbox->labelTxt = (label != NULL) ? Strdup(label) : NULL;
-	cbox->label = -1;
+	cb->state = 0;
+	cb->labelTxt = (label != NULL) ? Strdup(label) : NULL;
+	cb->label = -1;
+	cb->spacing = 6;
 	
-	AG_SetEvent(cbox, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(cbox, "window-keydown", keydown, NULL);
+	AG_SetEvent(cb, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(cb, "window-keydown", keydown, NULL);
 }
 
 static void
 Destroy(void *p)
 {
-	AG_Checkbox *cbox = p;
+	AG_Checkbox *cb = p;
 
-	Free(cbox->labelTxt,0);
-	AG_WidgetDestroy(cbox);
+	Free(cb->labelTxt,0);
+	AG_WidgetDestroy(cb);
 }
 
 static void
 Draw(void *obj)
 {
-	AG_Checkbox *cbox = obj;
+	AG_Checkbox *cb = obj;
 	AG_WidgetBinding *stateb;
 	void *p;
 	int state;
 	
-	stateb = AG_WidgetGetBinding(cbox, "state", &p);
+	stateb = AG_WidgetGetBinding(cb, "state", &p);
 	switch (stateb->vtype) {
 	case AG_WIDGET_BOOL:
 	case AG_WIDGET_INT:
@@ -179,63 +179,47 @@ Draw(void *obj)
 		state = 0;
 		break;
 	}
-
-	if (AG_WidgetEnabled(cbox)) {
-		agPrim.box(cbox,
-		    0, 0,
-		    WIDGET(cbox)->h, WIDGET(cbox)->h,
-		    state ? -1 : 1,
-		    AG_COLOR(CHECKBOX_COLOR));
-	} else {
-		agPrim.box_dithered(cbox,
-		    0, 0,
-		    WIDGET(cbox)->h, WIDGET(cbox)->h,
-		    state ? -1 : 1,
-		    AG_COLOR(CHECKBOX_COLOR),
-		    AG_COLOR(DISABLED_COLOR));
-	}
+	STYLE(cb)->CheckboxButton(cb, state);
 	AG_WidgetUnlockBinding(stateb);
 
-	if (cbox->labelTxt == NULL || cbox->labelTxt[0] == '\0') {
+	if (cb->labelTxt == NULL || cb->labelTxt[0] == '\0') {
 		return;
 	}
-	if (cbox->label == -1) {
+	if (cb->label == -1) {
 		AG_TextColor(CHECKBOX_TXT_COLOR);
-		cbox->label = AG_WidgetMapSurface(cbox,
-		    AG_TextRender(cbox->labelTxt));
+		cb->label = AG_WidgetMapSurface(cb,
+		    AG_TextRender(cb->labelTxt));
 	}
-	AG_WidgetBlitSurface(cbox, cbox->label,
-	    WIDGET(cbox)->h + LABEL_SPACING,
-	    0);
+	AG_WidgetBlitSurface(cb, cb->label, HEIGHT(cb)+cb->spacing, 0);
 }
 
 static void
 mousebuttondown(AG_Event *event)
 {
-	AG_Checkbox *cbox = AG_SELF();
+	AG_Checkbox *cb = AG_SELF();
 	int button = AG_INT(1);
 
-	if (!AG_WidgetEnabled(cbox))
+	if (!AG_WidgetEnabled(cb))
 		return;
 
 	if (button == SDL_BUTTON(1)) {
-		AG_CheckboxToggle(cbox);
+		AG_CheckboxToggle(cb);
 	}
-	AG_WidgetFocus(cbox);
+	AG_WidgetFocus(cb);
 }
 
 static void
 keydown(AG_Event *event)
 {
-	AG_Checkbox *cbox = AG_SELF();
+	AG_Checkbox *cb = AG_SELF();
 	
-	if (!AG_WidgetEnabled(cbox))
+	if (!AG_WidgetEnabled(cb))
 		return;
 
 	switch (AG_SDLKEY(1)) {
 	case SDLK_RETURN:
 	case SDLK_SPACE:
-		AG_CheckboxToggle(cbox);
+		AG_CheckboxToggle(cb);
 		break;
 	default:
 		break;
@@ -252,7 +236,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 	
 	if (cb->labelTxt != NULL) {
 		AG_TextSize(cb->labelTxt, &r->w, NULL);
-		r->w += agTextFontHeight + LABEL_SPACING;	/* Square */
+		r->w += cb->spacing;
 	}
 }
 
@@ -268,7 +252,8 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		int wLbl, hLbl;
 
 		AG_TextSize(cb->labelTxt, &wLbl, &hLbl);
-		if (a->w < agTextFontHeight + LABEL_SPACING + wLbl ||
+
+		if (a->w < agTextFontHeight+cb->spacing+wLbl ||
 		    a->h < agTextFontHeight) {
 			WIDGET(cb)->flags |= AG_WIDGET_CLIPPING;
 		} else {
@@ -280,12 +265,12 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 
 /* Toggle the checkbox state. */
 void
-AG_CheckboxToggle(AG_Checkbox *cbox)
+AG_CheckboxToggle(AG_Checkbox *cb)
 {
 	AG_WidgetBinding *stateb;
 	void *p;
 
-	stateb = AG_WidgetGetBinding(cbox, "state", &p);
+	stateb = AG_WidgetGetBinding(cb, "state", &p);
 	switch (stateb->vtype) {
 	case AG_WIDGET_BOOL:
 	case AG_WIDGET_INT:
@@ -293,7 +278,7 @@ AG_CheckboxToggle(AG_Checkbox *cbox)
 		{
 			int *state = (int *)p;
 			*state = !(*state);
-			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    *state);
 		}
 		break;
@@ -305,7 +290,7 @@ AG_CheckboxToggle(AG_Checkbox *cbox)
 			} else {
 				*state |= (int)stateb->data.bitmask;
 			}
-			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (int)*state);
 		}
 		break;
@@ -317,7 +302,7 @@ AG_CheckboxToggle(AG_Checkbox *cbox)
 			} else {
 				*state |= (Uint8)stateb->data.bitmask;
 			}
-			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (Uint8)*state);
 		}
 		break;
@@ -326,7 +311,7 @@ AG_CheckboxToggle(AG_Checkbox *cbox)
 		{
 			Uint8 *state = (Uint8 *)p;
 			*state = !(*state);
-			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (int)*state);
 		}
 		break;
@@ -335,7 +320,7 @@ AG_CheckboxToggle(AG_Checkbox *cbox)
 		{
 			Uint16 *state = (Uint16 *)p;
 			*state = !(*state);
-			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (int)*state);
 		}
 		break;
@@ -344,7 +329,7 @@ AG_CheckboxToggle(AG_Checkbox *cbox)
 		{
 			Uint32 *state = (Uint32 *)p;
 			*state = !(*state);
-			AG_PostEvent(NULL, cbox, "checkbox-changed", "%i",
+			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (int)*state);
 		}
 		break;

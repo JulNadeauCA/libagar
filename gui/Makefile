@@ -14,8 +14,8 @@ SRCS=	view.c widget.c window.c box.c text.c label.c button.c checkbox.c \
 	tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \
 	fspinbutton.c combo.c ucombo.c units.c nlunits.c hsvpal.c \
 	mspinbutton.c mfspinbutton.c statusbar.c menu.c menu_view.c \
-	tableview.c separator.c colors.c cursors.c notebook.c pixmap.c \
-	file_dlg.c objsel.c fixed.c numerical.c iconmgr.c \
+	tableview.c separator.c colors.c cursors.c notebook.c pixmap.c style.c \
+	file_dlg.c objsel.c fixed.c numerical.c iconmgr.c style_default.c \
 	table.c glview.c unicode.c ucslcpy.c ucslcat.c ucssep.c mpane.c pane.c \
 	console.c graph.c ttf.c scrollable.c scrollable_text.c socket.c icon.c
 MAN3=	AG_View.3 AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
