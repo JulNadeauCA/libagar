@@ -1,22 +1,19 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_CORE_VIEW_H_
-#define _AGAR_CORE_VIEW_H_
+#ifndef _AGAR_GUI_VIEW_H_
+#define _AGAR_GUI_VIEW_H_
 
 #ifdef _AGAR_INTERNAL
 #include <config/view_8bpp.h>
 #include <config/view_16bpp.h>
 #include <config/view_24bpp.h>
 #include <config/view_32bpp.h>
+#include <gui/iconmgr.h>
 #else
 #include <agar/config/view_8bpp.h>
 #include <agar/config/view_16bpp.h>
 #include <agar/config/view_24bpp.h>
 #include <agar/config/view_32bpp.h>
-#endif
-#ifdef _AGAR_INTERNAL
-#include <gui/iconmgr.h>
-#else
 #include <agar/gui/iconmgr.h>
 #endif
 
@@ -237,6 +234,8 @@ extern const SDL_VideoInfo *agVideoInfo;
 extern const char *agBlendFuncNames[];
 
 int		 AG_InitVideo(int, int, int, Uint);
+int		 AG_InitGUI(Uint);
+
 void		 AG_DestroyVideo(void);
 int		 AG_ResizeDisplay(int, int);
 int		 AG_SetRefreshRate(int);
@@ -435,4 +434,4 @@ __END_DECLS
 #endif
 
 #include "close_code.h"
-#endif	/* _AGAR_CORE_VIEW_H_ */
+#endif	/* _AGAR_GUI_VIEW_H_ */

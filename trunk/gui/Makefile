@@ -9,15 +9,17 @@ LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
 LIB_LINKS=	ag_core SDL opengl32 glu32
 
-SRCS=	view.c widget.c window.c box.c text.c label.c button.c checkbox.c \
-	textbox.c keycodes.c keysyms.c primitive.c radio.c fixed_plotter.c \
-	tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \
+SRCS=	gui.c view.c widget.c window.c keycodes.c keysyms.c style.c iconmgr.c \
+	colors.c cursors.c ttf.c text.c unicode.c ucslcpy.c ucslcat.c ucssep.c \
+	style_default.c \
+	box.c label.c button.c checkbox.c textbox.c primitive.c radio.c \
+	fixed_plotter.c tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \
 	fspinbutton.c combo.c ucombo.c units.c nlunits.c hsvpal.c \
 	mspinbutton.c mfspinbutton.c statusbar.c menu.c menu_view.c \
-	tableview.c separator.c colors.c cursors.c notebook.c pixmap.c style.c \
-	file_dlg.c objsel.c fixed.c numerical.c iconmgr.c style_default.c \
-	table.c glview.c unicode.c ucslcpy.c ucslcat.c ucssep.c mpane.c pane.c \
-	console.c graph.c ttf.c scrollable.c scrollable_text.c socket.c icon.c
+	tableview.c separator.c notebook.c pixmap.c file_dlg.c objsel.c \
+	fixed.c numerical.c table.c glview.c mpane.c pane.c console.c graph.c \
+	scrollable.c scrollable_text.c socket.c icon.c
+
 MAN3=	AG_View.3 AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Label.3 AG_Radio.3 AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 \
 	AG_Tlist.3 AG_Text.3 AG_Box.3 AG_HBox.3 AG_VBox.3 AG_Combo.3 \
