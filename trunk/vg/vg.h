@@ -285,8 +285,8 @@ extern const VG_ElementOps *vgElementTypes[];
 __BEGIN_DECLS
 VG	*VG_New(int);
 void	 VG_Init(VG *, int);
-void	 VG_Reinit(VG *);
 void	 VG_Destroy(VG *);
+void	 VG_Reinit(VG *);
 void	 VG_Save(VG *, AG_DataSource *);
 int	 VG_Load(VG *, AG_DataSource *);
 

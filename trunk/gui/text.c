@@ -95,18 +95,6 @@
 #include "fonts.h"
 #include "fonts_data.h"
 
-const AG_ObjectOps agFontOps = {
-	"AG_Font",
-	sizeof(AG_Font),
-	{ 0, 0 },
-	NULL,		/* init */
-	NULL,		/* reinit */
-	AG_FontDestroy,
-	NULL,		/* load */
-	NULL,		/* save */
-	NULL,		/* edit */
-};
-
 AG_StaticFont *agBuiltinFonts[] = {
 	&agFontVera,
 	&agFontMinimal
@@ -161,8 +149,8 @@ AG_LoadBitmapGlyph(SDL_Surface *su, const char *lbl, void *p)
 	font->bglyphs[font->nglyphs++] = su;
 }
 
-void
-AG_FontDestroy(void *p)
+static void
+DestroyFont(void *p)
 {
 	AG_Font *font = p;
 	int i;
@@ -1646,3 +1634,14 @@ AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
 	}
 }
 
+const AG_ObjectOps agFontOps = {
+	"AG_Font",
+	sizeof(AG_Font),
+	{ 0, 0 },
+	NULL,		/* init */
+	NULL,		/* reinit */
+	DestroyFont,
+	NULL,		/* load */
+	NULL,		/* save */
+	NULL,		/* edit */
+};

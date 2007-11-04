@@ -228,7 +228,6 @@ Destroy(void *p)
 		ndcb = SLIST_NEXT(dcb, draw_cbs);
 		Free(dcb, M_WIDGET);
 	}
-	AG_WidgetDestroy(mv);
 }
 
 static void

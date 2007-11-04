@@ -425,10 +425,7 @@ AG_GraphFreeVertices(AG_Graph *gf)
 static void
 Destroy(void *p)
 {
-	AG_Graph *gf = p;
-
-	AG_GraphFreeVertices(gf);
-	AG_WidgetDestroy(gf);
+	AG_GraphFreeVertices((AG_Graph *)p);
 }
 
 void

@@ -24,7 +24,7 @@ InitWidget(void)
 static void
 FreeWidget(void)
 {
-	AG_WidgetDestroy(&wid);
+	AG_ObjectDestroy(&wid);
 }
 
 static void

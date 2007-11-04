@@ -159,6 +159,8 @@ extern Uint         sgElementsCnt;
 #endif
 
 __BEGIN_DECLS
+extern const AG_ObjectOps sgOps;
+
 int	 SG_InitEngine(void);
 void	 SG_DestroyEngine(void);
 
@@ -166,7 +168,6 @@ SG	*SG_New(void *, const char *);
 void	 SG_AttachDefaultNodes(SG *);
 void	 SG_Init(void *, const char *);
 void	 SG_Reinit(void *);
-void	 SG_Destroy(void *);
 int	 SG_Save(void *, AG_DataSource *);
 int	 SG_Load(void *, AG_DataSource *);
 void	*SG_Edit(void *);

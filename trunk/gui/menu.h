@@ -108,7 +108,6 @@ AG_Menu	  *AG_MenuNew(void *, Uint);
 void	   AG_MenuInit(AG_Menu *, Uint);
 void 	   AG_MenuScale(void *, int, int);
 void	   AG_MenuDraw(void *);
-void 	   AG_MenuDestroy(void *);
 
 AG_PopupMenu	*AG_PopupNew(void *);
 void		 AG_PopupShow(AG_PopupMenu *);

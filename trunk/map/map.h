@@ -169,14 +169,16 @@ typedef struct map {
 } MAP;
 
 __BEGIN_DECLS
+extern const AG_ObjectOps mapOps;
+
 void	 MAP_InitSubsystem(void);
 
 MAP	*MAP_New(void *, const char *);
 void	 MAP_Init(void *, const char *);
+void	 MAP_Destroy(void *);
 void	 MAP_Reinit(void *);
 int	 MAP_Load(void *, AG_DataSource *);
 int	 MAP_Save(void *, AG_DataSource *);
-void	 MAP_Destroy(void *);
 void	*MAP_Edit(void *);
 
 int	 MAP_AllocNodes(MAP *, Uint, Uint);

@@ -168,10 +168,8 @@ Destroy(void *p)
 {
 	AG_Button *bu = p;
 
-	if ((bu->flags & AG_BUTTON_TEXT_NODUP) == 0) {
+	if ((bu->flags & AG_BUTTON_TEXT_NODUP) == 0)
 		Free(bu->text,0);
-	}
-	AG_WidgetDestroy(bu);
 }
 
 static void

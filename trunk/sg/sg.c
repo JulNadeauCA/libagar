@@ -40,18 +40,6 @@
 #include <math.h>
 #include <string.h>
 
-const AG_ObjectOps sgOps = {
-	"SG",
-	sizeof(SG),
-	{ 1,0 },
-	SG_Init,
-	SG_Reinit,
-	SG_Destroy,
-	SG_Load,
-	SG_Save,
-	SG_Edit
-};
-
 SG_NodeOps **sgElements = NULL;
 Uint         sgElementsCnt = 0;
 
@@ -86,8 +74,6 @@ SG_NodeOfClassGeneral(SG_Node *node, const char *cn)
 int
 SG_InitEngine(void)
 {
-	extern AG_ObjectOps sgMaterialOps;
-
 	SG_VectorInitEngine();
 	SG_MatrixInitEngine();
 
@@ -231,8 +217,8 @@ SG_Reinit(void *obj)
 	SG_InitRoot(sg);
 }
 
-void
-SG_Destroy(void *obj)
+static void
+Destroy(void *obj)
 {
 	SG *sg = obj;
 
@@ -538,5 +524,17 @@ SG_RenderNode(SG *sg, SG_Node *node, SG_View *view)
 	}
 	SG_LoadMatrixGL(&Tsave);
 }
+
+const AG_ObjectOps sgOps = {
+	"SG",
+	sizeof(SG),
+	{ 1,0 },
+	SG_Init,
+	SG_Reinit,
+	Destroy,
+	SG_Load,
+	SG_Save,
+	SG_Edit
+};
 
 #endif /* HAVE_OPENGL */

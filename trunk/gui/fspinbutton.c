@@ -332,7 +332,6 @@ Destroy(void *p)
 	AG_FSpinbutton *fsu = p;
 
 	AG_MutexDestroy(&fsu->lock);
-	AG_WidgetDestroy(fsu);
 }
 
 static void

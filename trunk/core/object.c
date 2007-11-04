@@ -607,13 +607,51 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
 }
 
 /*
+ * Return an array of classes describing the inheritance hierarchy
+ * of an object.
+ */
+int
+AG_ObjectGetInheritHier(void *obj, const AG_ObjectOps ***ops, Uint *nOps)
+{
+	char cname[AG_OBJECT_TYPE_MAX], *c;
+	const AG_ObjectOps *cl;
+	int i;
+
+	strlcpy(cname, AGOBJECT(obj)->ops->type, sizeof(cname));
+
+	(*nOps) = 0;
+	for (c = &cname[0]; *c != '\0'; c++) {
+		if (*c == ':')
+			(*nOps)++;
+	}
+	*ops = Malloc((*nOps)*sizeof(AG_ObjectOps *), M_OBJECT);
+	i = 0;
+	for (c = &cname[0]; *c != '\0'; c++) {
+		if (*c != ':') {
+			continue;
+		}
+		*c = '\0';
+		if ((cl = AG_FindClass(cname)) == NULL) {
+			Free(*ops, M_OBJECT);
+			return (-1);
+		}
+		*c = ':';
+		(*ops)[i++] = cl;
+	}
+	return (0);
+}
+
+/*
  * Release the resources allocated by an object and its children, assuming
- * that none of them is currently in use.
+ * that none of them are currently in use.
  */
 void
 AG_ObjectDestroy(void *p)
 {
 	AG_Object *ob = p;
+	const AG_ObjectOps **hier;
+	Uint nHier;
+	int i;
 
 #ifdef DEBUG
 	if (ob->parent != NULL) {
@@ -626,6 +664,17 @@ AG_ObjectDestroy(void *p)
 	AG_ObjectFreeDataset(ob);
 	AG_ObjectFreeDeps(ob);
 
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
+		for (i = nHier-1; i >= 0; i--) {
+			printf("hier[%d]: %s\n",i, hier[i]->type);
+			if (hier[i]->destroy != NULL) {
+				printf("%s: destroy superclass %s\n",
+				    ob->name, hier[i]->type);
+				hier[i]->destroy(ob);
+			}
+		}
+		Free(hier, M_OBJECT);
+	}
 	if (ob->ops->destroy != NULL)
 		ob->ops->destroy(ob);
 

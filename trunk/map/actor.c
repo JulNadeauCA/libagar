@@ -32,22 +32,6 @@
 
 #include "actor.h"
 
-const AG_ObjectOps mapActorOps = {
-	"MAP_Actor",
-	sizeof(MAP_Actor),
-	{ 0, 0 },
-	MAP_ActorInit,
-	MAP_ActorReinit,
-	MAP_ActorDestroy,
-	MAP_ActorLoad,
-	MAP_ActorSave,
-#ifdef EDITION
-	MAP_ActorEdit
-#else
-	NULL
-#endif
-};
-
 void
 MAP_ActorInit(void *obj, const char *name)
 {
@@ -76,8 +60,8 @@ MAP_ActorReinit(void *obj)
 {
 }
 
-void
-MAP_ActorDestroy(void *obj)
+static void
+Destroy(void *obj)
 {
 	MAP_Actor *a = obj;
 
@@ -420,3 +404,19 @@ MAP_ActorEdit(void *p)
 	return (win);
 }
 #endif /* EDITION */
+
+const AG_ObjectOps mapActorOps = {
+	"MAP_Actor",
+	sizeof(MAP_Actor),
+	{ 0, 0 },
+	MAP_ActorInit,
+	MAP_ActorReinit,
+	Destroy,
+	MAP_ActorLoad,
+	MAP_ActorSave,
+#ifdef EDITION
+	MAP_ActorEdit
+#else
+	NULL
+#endif
+};

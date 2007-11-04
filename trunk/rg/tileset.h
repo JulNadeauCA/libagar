@@ -75,12 +75,13 @@ typedef struct rg_tileset {
 #endif
 
 __BEGIN_DECLS
+extern const AG_ObjectOps rgTilesetOps;
+
 void	 	 RG_InitSubsystem(void);
 
 RG_Tileset	*RG_TilesetNew(void *, const char *, Uint);
 void		 RG_TilesetInit(void *, const char *);
 void		 RG_TilesetReinit(void *);
-void		 RG_TilesetDestroy(void *);
 int		 RG_TilesetLoad(void *, AG_DataSource *);
 int		 RG_TilesetSave(void *, AG_DataSource *);
 void		*RG_TilesetEdit(void *);

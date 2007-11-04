@@ -45,10 +45,10 @@ typedef struct sg_material {
 } SG_Material;
 
 __BEGIN_DECLS
+extern const AG_ObjectOps sgMaterialOps;
+
 SG_Material	*SG_MaterialNew(void *, const char *);
 void		 SG_MaterialInit(void *, const char *);
-void		 SG_MaterialReinit(void *);
-void		 SG_MaterialDestroy(void *);
 void		*SG_MaterialEdit(void *);
 int		 SG_MaterialLoad(void *, AG_DataSource *);
 int		 SG_MaterialSave(void *, AG_DataSource *);

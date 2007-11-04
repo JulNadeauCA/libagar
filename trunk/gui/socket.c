@@ -124,14 +124,6 @@ AG_SocketRemoveFn(AG_Socket *sock, void (*fn)(AG_Socket *, AG_Icon *))
 }
 
 static void
-Destroy(void *p)
-{
-	AG_Socket *sock = p;
-
-	AG_WidgetDestroy(sock);
-}
-
-static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Socket *sock = p;
@@ -531,7 +523,7 @@ const AG_WidgetOps agSocketOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		Destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

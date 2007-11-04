@@ -64,22 +64,6 @@
 
 #include <string.h>
 
-const AG_ObjectOps mapOps = {
-	"MAP",
-	sizeof(MAP),
-	{ 11, 0 },
-	MAP_Init,
-	MAP_Reinit,
-	MAP_Destroy,
-	MAP_Load,
-	MAP_Save,
-#ifdef EDITION
-	MAP_Edit
-#else
-	NULL
-#endif
-};
-
 int mapSmoothScaling = 0;
 
 void
@@ -89,6 +73,8 @@ MAP_InitSubsystem(void)
 
 	AG_RegisterClass(&mapOps);
 	AG_RegisterClass(&mapActorOps);
+	AG_RegisterClass(&mapEditorOps);
+	AG_RegisterClass(&mapViewOps);
 
 	mapIcon_Init();
 }
@@ -3059,3 +3045,19 @@ MAP_Edit(void *p)
 	return (win);
 }
 #endif /* EDITION */
+
+const AG_ObjectOps mapOps = {
+	"MAP",
+	sizeof(MAP),
+	{ 11, 0 },
+	MAP_Init,
+	MAP_Reinit,
+	MAP_Destroy,
+	MAP_Load,
+	MAP_Save,
+#ifdef EDITION
+	MAP_Edit
+#else
+	NULL
+#endif
+};

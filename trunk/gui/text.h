@@ -89,6 +89,7 @@ typedef struct ag_static_font {
 } AG_StaticFont;
 
 __BEGIN_DECLS
+const AG_ObjectOps agFontOps;
 extern AG_Font *agDefaultFont;
 extern int agTextFontHeight;
 extern int agTextFontAscent;
@@ -102,7 +103,6 @@ void	 AG_TextParseFontSpec(const char *);
 void	 AG_TextDestroy(void);
 
 AG_Font	*AG_FetchFont(const char *, int, int);
-void	 AG_FontDestroy(void *);
 
 void	 AG_PushTextState(void);
 void	 AG_PopTextState(void);

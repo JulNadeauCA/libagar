@@ -1735,7 +1735,6 @@ Destroy(void *p)
 		ntool = TAILQ_NEXT(tool, tools);
 		tileview_free_tool(tool);
 	}
-	AG_WidgetDestroy(tv);
 }
 
 static void

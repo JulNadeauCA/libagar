@@ -103,7 +103,6 @@ extern const AG_WidgetOps agTlistOps;
 AG_Tlist *AG_TlistNew(void *, Uint);
 AG_Tlist *AG_TlistNewPolled(void *, Uint, AG_EventFn, const char *, ...);
 void	  AG_TlistInit(AG_Tlist *, Uint);
-void	  AG_TlistDestroy(void *);
 
 void		AG_TlistSizeHint(AG_Tlist *, const char *, int);
 void		AG_TlistSizeHintPixels(AG_Tlist *, int, int);

@@ -648,15 +648,13 @@ AG_MenuItemFree(AG_MenuItem *mi)
 	Free(mi->text,0);
 }
 
-void
-AG_MenuDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Menu *m = p;
 
-	if (m->root != NULL) {
+	if (m->root != NULL)
 		AG_MenuItemFree(m->root);
-	}
-	AG_WidgetDestroy(m);
 }
 
 void
@@ -874,7 +872,7 @@ const AG_WidgetOps agMenuOps = {
 		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
-		AG_MenuDestroy,
+		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */

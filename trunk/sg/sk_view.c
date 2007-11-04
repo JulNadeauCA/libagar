@@ -270,7 +270,6 @@ Destroy(void *p)
 		SK_ToolDestroy(tool);
 		Free(tool, M_SG);
 	}
-	AG_WidgetDestroy(skv);
 }
 
 void

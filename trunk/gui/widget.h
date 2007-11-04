@@ -182,7 +182,6 @@ extern int agMouseSpinIval;
 
 AG_Widget *AG_WidgetNew(void *, Uint);
 void	   AG_WidgetInit(void *, const void *, Uint);
-void	   AG_WidgetDestroy(void *);
 void	   AG_WidgetDraw(void *);
 
 void	   AG_WidgetSizeReq(void *, AG_SizeReq *);

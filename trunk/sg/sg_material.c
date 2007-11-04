@@ -52,18 +52,6 @@
 
 #include "icons.h"
 
-const AG_ObjectOps sgMaterialOps = {
-	"SG_Material",
-	sizeof(SG_Material),
-	{ 0,0 },
-	SG_MaterialInit,
-	SG_MaterialReinit,
-	SG_MaterialDestroy,
-	SG_MaterialLoad,
-	SG_MaterialSave,
-	SG_MaterialEdit
-};
-
 static const char *sgBlendModeNames[] = {
 	("One"),
 	("Zero"),
@@ -106,16 +94,6 @@ SG_MaterialInit(void *obj, const char *name)
 	mat->progs = NULL;
 	mat->nProgs = 0;
 	TAILQ_INIT(&mat->textures);
-}
-
-void
-SG_MaterialReinit(void *obj)
-{
-}
-
-void
-SG_MaterialDestroy(void *obj)
-{
 }
 
 int
@@ -443,5 +421,17 @@ SG_MaterialUnbind(SG_Material *mat, SG_View *view)
 		SG_ProgramUnbind(mat->progs[i], view);
 	}
 }
+
+const AG_ObjectOps sgMaterialOps = {
+	"SG_Material",
+	sizeof(SG_Material),
+	{ 0,0 },
+	SG_MaterialInit,
+	NULL,			/* reinit */
+	NULL,			/* destroy */
+	SG_MaterialLoad,
+	SG_MaterialSave,
+	SG_MaterialEdit
+};
 
 #endif /* HAVE_OPENGL */
