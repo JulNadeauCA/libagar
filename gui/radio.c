@@ -66,7 +66,6 @@ Destroy(void *p)
 	AG_Radio *rad = p;
 
 	Free(rad->labels, M_WIDGET);
-	AG_WidgetDestroy(rad);
 }
 
 static void

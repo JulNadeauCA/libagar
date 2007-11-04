@@ -732,7 +732,6 @@ Destroy(void *p)
 		Free(lfl, M_WIDGET);
 	}
 	AG_MutexDestroy(&lbl->lock);
-	AG_WidgetDestroy(lbl);
 }
 
 /* Register a flag description text. */

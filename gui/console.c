@@ -149,7 +149,6 @@ Destroy(void *p)
 	}
 	Free(cons->lines, M_WIDGET);
 	cons->lines = NULL;
-	AG_WidgetDestroy(cons);
 }
 
 static void

@@ -133,7 +133,6 @@ Destroy(void *p)
 	AG_Checkbox *cb = p;
 
 	Free(cb->labelTxt,0);
-	AG_WidgetDestroy(cb);
 }
 
 static void

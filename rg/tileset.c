@@ -41,27 +41,13 @@
 #include <gui/icons.h>
 
 #include "tileset.h"
+#include "tileview.h"
+#include "animview.h"
 #include "icons.h"
 #include "icons_data.h"
 
 #include <ctype.h>
 #include <string.h>
-
-const AG_ObjectOps rgTilesetOps = {
-	"RG_Tileset",
-	sizeof(RG_Tileset),
-	{ 8, 0 },
-	RG_TilesetInit,
-	RG_TilesetReinit,
-	RG_TilesetDestroy,
-	RG_TilesetLoad,
-	RG_TilesetSave,
-#ifdef EDITION
-	RG_TilesetEdit
-#else
-	NULL
-#endif
-};
 
 extern const RG_FeatureOps rgFillOps;
 extern const RG_FeatureOps rgSketchProjOps;
@@ -77,6 +63,8 @@ void
 RG_InitSubsystem(void)
 {
 	AG_RegisterClass(&rgTilesetOps);
+	AG_RegisterClass(&rgAnimviewOps);
+	AG_RegisterClass(&rgTileviewOps);
 	rgIcon_Init();
 }
 
@@ -206,8 +194,8 @@ RG_TilesetReinit(void *obj)
 	AG_MutexUnlock(&ts->lock);
 }
 
-void
-RG_TilesetDestroy(void *obj)
+static void
+Destroy(void *obj)
 {
 	RG_Tileset *ts = obj;
 
@@ -1877,5 +1865,20 @@ RG_TilesetEdit(void *p)
 	}
 	return (win);
 }
-
 #endif /* EDITION */
+
+const AG_ObjectOps rgTilesetOps = {
+	"RG_Tileset",
+	sizeof(RG_Tileset),
+	{ 8, 0 },
+	RG_TilesetInit,
+	RG_TilesetReinit,
+	Destroy,
+	RG_TilesetLoad,
+	RG_TilesetSave,
+#ifdef EDITION
+	RG_TilesetEdit
+#else
+	NULL
+#endif
+};

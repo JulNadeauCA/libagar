@@ -722,11 +722,11 @@ AG_WidgetUpdateSurface(void *p, int name)
 }
 
 /*
- * Must be invoked from event handler context (for texture operations
- * in OpenGL mode).
+ * Note: Widget objects must be destroyed in event handler context
+ * (for texture operations in OpenGL mode).
  */
-void
-AG_WidgetDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Widget *wid = p;
 	AG_PopupMenu *pm, *pm2;
@@ -743,7 +743,7 @@ AG_WidgetDestroy(void *p)
 		if (wid->surfaces[i] != NULL && !WSURFACE_NODUP(wid,i))
 			SDL_FreeSurface(wid->surfaces[i]);
 #ifdef HAVE_OPENGL
-		/* TODO Queue this operation? */
+		/* XXX TODO Queue this operation? */
 		if (agView->opengl) {
 			AG_LockGL();
 			if (wid->textures[i] != 0) {
@@ -1640,7 +1640,7 @@ const AG_WidgetOps agWidgetOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		NULL,		/* destroy */
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

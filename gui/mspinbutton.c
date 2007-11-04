@@ -266,7 +266,6 @@ Destroy(void *p)
 	AG_MSpinbutton *sbu = p;
 
 	AG_MutexDestroy(&sbu->lock);
-	AG_WidgetDestroy(sbu);
 }
 
 static void
@@ -645,12 +644,12 @@ const AG_WidgetOps agMSpinbuttonOps = {
 		"AG_Widget:AG_MSpinbutton",
 		sizeof(AG_MSpinbutton),
 		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,		/* init */
+		NULL,		/* reinit */
 		Destroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,

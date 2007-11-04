@@ -17,11 +17,11 @@ typedef struct map_editor {
 	AG_Object pseudo;	/* Pseudo-object (for depkeeping) */
 } MAP_Editor;
 
+__BEGIN_DECLS
+extern const AG_ObjectOps mapEditorOps;
 extern MAP_Editor mapEditor;
 
-__BEGIN_DECLS
 void	 MAP_EditorInit(void);
-void	 MAP_EditorDestroy(void *);
 void	 MAP_EditorLoad(AG_DataSource *);
 void	 MAP_EditorSave(AG_DataSource *);
 void	*MAP_EditorConfig(void *);

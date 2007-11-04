@@ -163,7 +163,6 @@ Destroy(void *p)
 	Free(t->cols, M_WIDGET);
 
 	AG_MutexDestroy(&t->lock);
-	AG_WidgetDestroy(t);
 }
 
 static void

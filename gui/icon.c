@@ -80,14 +80,6 @@ AG_IconInit(AG_Icon *icon, Uint flags)
 }
 
 static void
-Destroy(void *p)
-{
-	AG_Icon *icon = p;
-
-	AG_WidgetDestroy(icon);
-}
-
-static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Icon *icon = p;
@@ -145,7 +137,7 @@ const AG_WidgetOps agIconOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		Destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

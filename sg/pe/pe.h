@@ -21,7 +21,6 @@ __BEGIN_DECLS
 extern const AG_ObjectOps peOps;
 
 void	 PE_Init(void *, const char *);
-void	 PE_Destroy(void *);
 int	 PE_Load(void *, AG_DataSource *);
 int	 PE_Save(void *, AG_DataSource *);
 

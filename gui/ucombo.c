@@ -200,7 +200,6 @@ Destroy(void *p)
 	}
 	AG_ObjectDestroy(com->list);
 	Free(com->list, M_OBJECT);
-	AG_WidgetDestroy(com);
 }
 
 static void
@@ -240,7 +239,7 @@ const AG_WidgetOps agUComboOps = {
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	NULL,			/* draw */
+	NULL,				/* draw */
 	SizeRequest,
 	SizeAllocate
 };

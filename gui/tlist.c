@@ -218,8 +218,8 @@ AG_TlistSizeHintPixels(AG_Tlist *tl, int w, int nitems)
 	tl->hHint = (tl->item_h+2)*nitems;
 }
 
-void
-AG_TlistDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Tlist *tl = p;
 	AG_TlistItem *it, *nit;
@@ -245,9 +245,7 @@ AG_TlistDestroy(void *p)
 		Free(tp->menu, M_OBJECT);
 		Free(tp, M_WIDGET);
 	}
-
 	AG_MutexDestroy(&tl->lock);
-	AG_WidgetDestroy(tl);
 }
 
 static void
@@ -1224,7 +1222,7 @@ const AG_WidgetOps agTlistOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		AG_TlistDestroy,
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

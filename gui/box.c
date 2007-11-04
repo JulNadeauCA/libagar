@@ -59,13 +59,12 @@ AG_BoxInit(AG_Box *box, enum ag_box_type type, Uint flags)
 	AG_MutexInitRecursive(&box->lock);
 }
 
-void
-AG_BoxDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Box *box = p;
 
 	AG_MutexDestroy(&box->lock);
-	AG_WidgetDestroy(box);
 }
 
 static void
@@ -310,7 +309,7 @@ const AG_WidgetOps agBoxOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		AG_BoxDestroy,
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
@@ -327,7 +326,7 @@ const AG_WidgetOps agBoxOpsWithFrame = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		AG_BoxDestroy,
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

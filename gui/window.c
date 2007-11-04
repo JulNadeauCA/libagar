@@ -191,7 +191,6 @@ Destroy(void *p)
 
 	AG_MutexDestroy(&win->lock);
 	/* AG_ViewDetachQueued() will free the sub-windows */
-	AG_WidgetDestroy(win);
 }
 
 static void

@@ -275,8 +275,8 @@ AG_ComboSetButtonSurfaceNODUP(AG_Combo *com, SDL_Surface *su)
 	AG_ButtonSurfaceNODUP(com->button, su);
 }
 
-void
-AG_ComboDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	AG_Combo *com = p;
 
@@ -287,7 +287,6 @@ AG_ComboDestroy(void *p)
 	}
 	AG_ObjectDestroy(com->list);
 	Free(com->list, M_OBJECT);
-	AG_WidgetDestroy(com);
 }
 
 void
@@ -333,7 +332,7 @@ const AG_WidgetOps agComboOps = {
 		{ 0,0 },
 		NULL,			/* init */
 		NULL,			/* reinit */
-		AG_ComboDestroy,
+		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */

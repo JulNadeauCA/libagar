@@ -178,14 +178,14 @@ const AG_WidgetOps agObjectSelectorOps = {
 		"AG_Widget:AG_Combo:AG_ObjectSelector",
 		sizeof(AG_ObjectSelector),
 		{ 0,0 },
-		NULL,					/* init */
-		NULL,					/* reinit */
-		AG_ComboDestroy,
-		NULL,					/* load */
-		NULL,					/* save */
-		NULL					/* edit */
+		NULL,		/* init */
+		NULL,		/* reinit */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
-	NULL,						/* draw */
+	NULL,			/* draw */
 	AG_ComboSizeRequest,
 	AG_ComboSizeAllocate
 };

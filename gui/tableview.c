@@ -566,7 +566,6 @@ Destroy(void *p)
 	Free(tv->column, M_WIDGET);
 	Free(tv->visible.items, M_WIDGET);
 	AG_MutexDestroy(&tv->lock);
-	AG_WidgetDestroy(tv);
 }
 
 static void

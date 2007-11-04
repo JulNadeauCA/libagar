@@ -111,14 +111,14 @@ const AG_WidgetOps agStatusbarOps = {
 		"AG_Widget:AG_Box:AG_Statusbar",
 		sizeof(AG_Statusbar),
 		{ 0,0 },
-		NULL,				/* init */
-		NULL,				/* reinit */
-		AG_BoxDestroy,
-		NULL,				/* load */
-		NULL,				/* save */
-		NULL				/* edit */
+		NULL,		/* init */
+		NULL,		/* reinit */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
-	NULL,					/* draw */
+	NULL,			/* draw */
 	AG_BoxSizeRequest,
 	AG_BoxSizeAllocate
 };

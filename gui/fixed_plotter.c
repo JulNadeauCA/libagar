@@ -263,10 +263,7 @@ AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 static void
 Destroy(void *p)
 {
-	AG_FixedPlotter *fpl = p;
-
-	AG_FixedPlotterFreeItems(fpl);
-	AG_WidgetDestroy(fpl);
+	AG_FixedPlotterFreeItems((AG_FixedPlotter *)p);
 }
 
 const AG_WidgetOps agFixedPlotterOps = {

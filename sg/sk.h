@@ -190,13 +190,14 @@ extern const char *skConstraintNames[];
 #endif
 
 __BEGIN_DECLS
+extern const AG_ObjectOps skOps;
+
 int	 SK_InitEngine(void);
 void	 SK_DestroyEngine(void);
 
 SK	*SK_New(void *, const char *);
 void	 SK_Init(void *, const char *);
 void	 SK_Reinit(void *);
-void	 SK_Destroy(void *);
 int	 SK_Save(void *, AG_DataSource *);
 int	 SK_Load(void *, AG_DataSource *);
 void	*SK_Edit(void *);

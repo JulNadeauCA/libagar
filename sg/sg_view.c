@@ -609,12 +609,6 @@ SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
 	AG_SetTimeout(&sv->to_trans_z, TranslateZTimeout, NULL, 0);
 }
 
-static void
-Destroy(void *p)
-{
-/*	AG_GLViewDestroy(p); */
-}
-
 void
 SG_ViewKeydownFn(SG_View *sv, AG_EventFn fn, const char *fmt, ...)
 {
@@ -647,7 +641,7 @@ const AG_WidgetOps sgViewOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		Destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

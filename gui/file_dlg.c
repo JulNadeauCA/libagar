@@ -704,7 +704,6 @@ Destroy(void *p)
 		Free(ft, M_WIDGET);
 	}
 	Free(fd->dirMRU,0);
-	AG_WidgetDestroy(fd);
 }
 
 static void

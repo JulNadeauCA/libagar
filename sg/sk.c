@@ -39,22 +39,6 @@
 #include <math.h>
 #include <string.h>
 
-const AG_ObjectOps skOps = {
-	"SK",
-	sizeof(SK),
-	{ 0,0 },
-	SK_Init,
-	SK_Reinit,
-	SK_Destroy,
-	SK_Load,
-	SK_Save,
-#ifdef EDITION
-	SK_Edit
-#else
-	NULL
-#endif
-};
-
 const char *skConstraintNames[] = {
 	N_("Distance"),
 	N_("Incidence"),
@@ -289,11 +273,6 @@ SK_Reinit(void *obj)
 	SK_FreeCluster(&sk->ctGraph);
 	SK_FreeClusters(sk);
 	SK_FreeInsns(sk);
-}
-
-void
-SK_Destroy(void *obj)
-{
 }
 
 static int
@@ -1448,5 +1427,21 @@ SK_SetStatus(SK *sk, SK_Status status, const char *fmt, ...)
 	vsnprintf(sk->statusText, sizeof(sk->statusText), fmt, ap);
 	va_end(ap);
 }
+
+const AG_ObjectOps skOps = {
+	"SK",
+	sizeof(SK),
+	{ 0,0 },
+	SK_Init,
+	SK_Reinit,
+	NULL,		/* destroy */
+	SK_Load,
+	SK_Save,
+#ifdef EDITION
+	SK_Edit
+#else
+	NULL
+#endif
+};
 
 #endif /* HAVE_OPENGL */

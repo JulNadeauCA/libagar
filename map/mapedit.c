@@ -35,18 +35,6 @@
 #include "map.h"
 #include "mapedit.h"
 
-const AG_ObjectOps mapEditorOps = {
-	"MAP_Editor",
-	sizeof(AG_Object),
-	{ 0, 0 },
-	NULL,				/* init */
-	NULL,				/* reinit */
-	MAP_EditorDestroy,
-	NULL,				/* load */
-	NULL,				/* save */
-	NULL				/* edit */
-};
-
 const AG_ObjectOps mapEditorPseudoOps = {
 	"MAP_EditorPseudo",
 	sizeof(AG_Object),
@@ -104,8 +92,8 @@ MAP_EditorInit(void)
 	AG_SetUint32(&mapEditor, "default-brush-height", 5);
 }
 
-void
-MAP_EditorDestroy(void *p)
+static void
+Destroy(void *p)
 {
 	MAP_Destroy(&mapEditor.copybuf);
 }
@@ -189,3 +177,14 @@ MAP_EditorConfig(void *p)
 	return (win);
 }
 
+const AG_ObjectOps mapEditorOps = {
+	"MAP_Editor",
+	sizeof(AG_Object),
+	{ 0, 0 },
+	NULL,		/* init */
+	NULL,		/* reinit */
+	Destroy,
+	NULL,		/* load */
+	NULL,		/* save */
+	NULL		/* edit */
+};

@@ -426,7 +426,6 @@ Destroy(void *p)
 	AG_Numerical *num = p;
 
 	AG_MutexDestroy(&num->lock);
-	AG_WidgetDestroy(num);
 }
 
 static void

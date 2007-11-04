@@ -54,30 +54,6 @@
 #include "sockunion.h"
 #include "fgetln.h"
 
-const AG_ObjectOps nsServerOps = {
-	"NS_Server",
-	sizeof(NS_Server),
-	{ 0,0 },
-	NS_ServerInit,
-	NS_ServerReinit,
-	NS_ServerDestroy,
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL			/* edit */
-};
-
-const AG_ObjectOps nsClientOps = {
-	"NS_Client",
-	sizeof(NS_Client),
-	{ 0,0 },
-	NS_ClientInit,
-	NULL,			/* reinit */
-	NS_ClientDestroy,
-	NULL,			/* load */
-	NULL,			/* save */
-	NULL			/* edit */
-};
-
 #define MAX_SERVER_SOCKS 64
 
 #if defined(HAVE_SYSLOG) || defined(HAVE_VSYSLOG)
@@ -146,8 +122,8 @@ NS_ServerReinit(void *p)
 	
 }
 
-void
-NS_ServerDestroy(void *p)
+static void
+DestroyServer(void *p)
 {
 	NS_Server *ns = p;
 
@@ -156,8 +132,8 @@ NS_ServerDestroy(void *p)
 	Free(ns->listItems, M_NETBUF);
 }
 
-void
-NS_ClientDestroy(void *p)
+static void
+DestroyClient(void *p)
 {
 }
 
@@ -752,5 +728,29 @@ NS_Listen(NS_Server *ns)
 	}
 	return (0);
 }
+
+const AG_ObjectOps nsServerOps = {
+	"NS_Server",
+	sizeof(NS_Server),
+	{ 0,0 },
+	NS_ServerInit,
+	NS_ServerReinit,
+	DestroyServer,
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL			/* edit */
+};
+
+const AG_ObjectOps nsClientOps = {
+	"NS_Client",
+	sizeof(NS_Client),
+	{ 0,0 },
+	NS_ClientInit,
+	NULL,			/* reinit */
+	DestroyClient,
+	NULL,			/* load */
+	NULL,			/* save */
+	NULL			/* edit */
+};
 
 #endif /* SERVER */

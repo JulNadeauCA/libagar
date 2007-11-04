@@ -189,7 +189,6 @@ Destroy(void *p)
 
 	Free(tbox->labelText,0);
 	AG_MutexDestroy(&tbox->lock);
-	AG_WidgetDestroy(tbox);
 }
 
 static void

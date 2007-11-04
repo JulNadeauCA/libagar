@@ -884,7 +884,7 @@ const AG_WidgetOps agHSVPalOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		AG_WidgetDestroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

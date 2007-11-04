@@ -180,12 +180,12 @@ const AG_WidgetOps agTitlebarOps = {
 		"AG_Widget:AG_Box:AG_Titlebar",
 		sizeof(AG_Titlebar),
 		{ 0,0 },
-		NULL,			/* init */
-		NULL,			/* reinit */
-		AG_BoxDestroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* init */
+		NULL,		/* reinit */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	AG_BoxSizeRequest,

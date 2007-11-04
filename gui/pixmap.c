@@ -234,7 +234,7 @@ const AG_WidgetOps agPixmapOps = {
 		{ 0,0 },
 		NULL,		/* init */
 		NULL,		/* reinit */
-		AG_WidgetDestroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

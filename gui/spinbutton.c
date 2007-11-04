@@ -200,7 +200,6 @@ Destroy(void *p)
 	AG_Spinbutton *sbu = p;
 
 	AG_MutexDestroy(&sbu->lock);
-	AG_WidgetDestroy(sbu);
 }
 
 static void

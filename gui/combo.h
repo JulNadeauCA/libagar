@@ -50,7 +50,6 @@ AG_Combo *AG_ComboNew(void *, Uint, const char *);
 void AG_ComboInit(AG_Combo *, Uint, const char *);
 void AG_ComboSizeHint(AG_Combo *, const char *, int);
 void AG_ComboSizeHintPixels(AG_Combo *, int, int);
-void AG_ComboDestroy(void *);
 void AG_ComboSelect(AG_Combo *, AG_TlistItem *);
 AG_TlistItem *AG_ComboSelectPointer(AG_Combo *, void *);
 AG_TlistItem *AG_ComboSelectText(AG_Combo *, const char *);

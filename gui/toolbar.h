@@ -41,7 +41,6 @@ extern const AG_WidgetOps agToolbarOps;
 AG_Toolbar	*AG_ToolbarNew(void *, enum ag_toolbar_type, int, Uint);
 void		 AG_ToolbarInit(AG_Toolbar *, enum ag_toolbar_type, int, Uint);
 void		 AG_ToolbarScale(void *, int, int);
-void	 	 AG_ToolbarDestroy(void *);
 void	 	 AG_ToolbarRow(AG_Toolbar *, int);
 AG_Button	*AG_ToolbarButton(AG_Toolbar *, const char *, int,
 		                  void (*)(AG_Event *), const char *, ...);

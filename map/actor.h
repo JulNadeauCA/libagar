@@ -59,9 +59,10 @@ typedef struct map_actor {
 #define MAP_ACTOR_OPS(ob) ((MAP_ActorOps *)AGOBJECT(ob)->ops)
 
 __BEGIN_DECLS
+extern const AG_ObjectOps mapActorOps;
+
 void	MAP_ActorInit(void *, const char *);
 void	MAP_ActorReinit(void *);
-void	MAP_ActorDestroy(void *);
 int	MAP_ActorLoad(void *, AG_DataSource *);
 int	MAP_ActorSave(void *, AG_DataSource *);
 void   *MAP_ActorEdit(void *);

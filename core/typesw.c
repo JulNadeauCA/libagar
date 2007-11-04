@@ -61,16 +61,3 @@ AG_RegisterClass(const void *cl)
 	    (agClassCount+1)*sizeof(AG_ObjectOps *));
 	agClassTbl[agClassCount++] = (AG_ObjectOps *)cl;
 }
-
-const AG_ObjectOps *
-AG_FindClass(const char *type)
-{
-	int i;
-
-	for (i = 0; i < agClassCount; i++) {
-		if (strcmp(agClassTbl[i]->type, type) == 0)
-			return (agClassTbl[i]);
-	}
-	AG_SetError(_("No such class: `%s'"), type);
-	return (NULL);
-}

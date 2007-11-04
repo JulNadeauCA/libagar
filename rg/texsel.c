@@ -40,7 +40,7 @@ RG_TextureSelectorNew(void *parent, RG_Tileset *tset, int flags)
 }
 
 static void
-poll_textures(AG_Event *event)
+PollTextures(AG_Event *event)
 {
 	RG_TextureSelector *ts = AG_SELF();
 	AG_Tlist *tl = (AG_Tlist *)ts;
@@ -66,7 +66,7 @@ poll_textures(AG_Event *event)
 }
 
 static void
-select_texture(AG_Event *event)
+SelectTexture(AG_Event *event)
 {
 	RG_TextureSelector *ts = AG_SELF();
 	AG_Tlist *tl = (AG_Tlist *)ts;
@@ -88,8 +88,8 @@ RG_TextureSelectorInit(RG_TextureSelector *ts, RG_Tileset *tset, int flags)
 {
 	AG_TlistInit(&ts->tl, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_TlistSetItemHeight(&ts->tl, RG_TILESZ);
-	AG_SetEvent(&ts->tl, "tlist-poll", poll_textures, NULL);
-	AG_SetEvent(&ts->tl, "tlist-selected", select_texture, NULL);
+	AG_SetEvent(&ts->tl, "tlist-poll", PollTextures, NULL);
+	AG_SetEvent(&ts->tl, "tlist-selected", SelectTexture, NULL);
 	
 	ts->tset = tset;
 	ts->flags = flags;
@@ -99,11 +99,19 @@ RG_TextureSelectorInit(RG_TextureSelector *ts, RG_Tileset *tset, int flags)
 	    sizeof(ts->texname));
 }
 
-void
-RG_TextureSelectorDestroy(void *p)
-{
-	RG_TextureSelector *ts = p;
-
-	AG_TlistDestroy(ts);
-}
-
+const AG_WidgetOps agTextureSelectorOps = {
+	{
+		"AG_Widget:AG_Tlist:AG_TextureSelector",
+		sizeof(AG_Tlist),
+		{ 0,0 },
+		NULL,		/* init */
+		NULL,		/* reinit */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	NULL,			/* draw */
+	NULL,			/* size_request */
+	NULL			/* size_allocate */
+};

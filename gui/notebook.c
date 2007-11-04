@@ -100,7 +100,6 @@ Destroy(void *p)
 	AG_Notebook *nb = p;
 
 	AG_MutexDestroy(&nb->lock);
-	AG_WidgetDestroy(nb);
 }
 
 static void
