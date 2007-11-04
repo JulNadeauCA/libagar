@@ -73,9 +73,6 @@
 #include <X11/Xlib.h>
 #endif
 
-#include "icons.h"
-#include "icons_data.h"
-
 AG_Display *agView = NULL;		/* Main view */
 SDL_PixelFormat *agVideoFmt = NULL;	/* Current format of display */
 SDL_PixelFormat *agSurfaceFmt = NULL;	/* Preferred format for surfaces */
@@ -141,7 +138,6 @@ AG_X11_ErrorHandler(Display *disp, XErrorEvent *event)
 int
 AG_InitVideo(int w, int h, int bpp, Uint flags)
 {
-	char path[MAXPATHLEN];
 	Uint32 screenflags = 0;
 	int depth;
 
@@ -175,6 +171,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	if (flags & AG_VIDEO_FULLSCREEN) { screenflags |= SDL_FULLSCREEN; }
 	if (flags & AG_VIDEO_RESIZABLE) { screenflags |= SDL_RESIZABLE; }
 	if (flags & AG_VIDEO_NOFRAME) { screenflags |= SDL_NOFRAME; }
+	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 
 	agView = Malloc(sizeof(AG_Display), M_VIEW);
 	AG_ObjectInit(agView, "_agView", &agDisplayOps);
@@ -323,18 +320,9 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	AG_SetUint16(agConfig, "view.w", agView->w);
 	AG_SetUint16(agConfig, "view.h", agView->h);
 
-	/* Initialize the GUI subsystems. */
-	AG_ColorsInit();
-	AG_InitPrimitives();
-	AG_CursorsInit();
-	agIcon_Init();
+	if (AG_InitGUI(0) == -1)
+		goto fail;
 
-	/* Try to load a color scheme from the default path. */
-	strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
-	strlcat(path, AG_PATHSEP, sizeof(path));
-	strlcat(path, "gui-colors.acs", sizeof(path));
-	(void)AG_ColorsLoad(path);
-	
 	/* Initialize the built-in style. */
 	AG_SetStyle(agView, &agStyleDefault);
 
@@ -364,13 +352,6 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		}
 	}
 #endif
-	/* Initialize the font engine. */
-	if (AG_TextInit() == -1)
-		goto fail;
-
-	if (flags & AG_VIDEO_BGPOPUPMENU) {
-		agBgPopupMenu = 1;
-	}
 	return (0);
 fail:
 	AG_MutexDestroy(&agView->lock);

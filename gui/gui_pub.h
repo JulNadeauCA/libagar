@@ -20,6 +20,7 @@
 #include <agar/gui/glview.h>
 #include <agar/gui/hbox.h>
 #include <agar/gui/hsvpal.h>
+#include <agar/gui/icon.h>
 #include <agar/gui/keycodes.h>
 #include <agar/gui/label.h>
 #include <agar/gui/menu.h>
@@ -31,10 +32,9 @@
 #include <agar/gui/pane.h>
 #include <agar/gui/pixmap.h>
 #include <agar/gui/radio.h>
-#include <agar/gui/scrollable.h>
-#include <agar/gui/scrollable_text.h>
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/separator.h>
+#include <agar/gui/socket.h>
 #include <agar/gui/spinbutton.h>
 #include <agar/gui/statusbar.h>
 #include <agar/gui/table.h>
@@ -46,8 +46,6 @@
 #include <agar/gui/ucombo.h>
 #include <agar/gui/units.h>
 #include <agar/gui/vbox.h>
-#include <agar/gui/socket.h>
-#include <agar/gui/icon.h>
 
 #include <agar/core/core_close.h>
 #endif /* _AGAR_GUI_H_ */
