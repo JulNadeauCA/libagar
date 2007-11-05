@@ -73,7 +73,7 @@ RG_TilesetNew(void *parent, const char *name, Uint flags)
 {
 	RG_Tileset *ts;
 
-	ts = Malloc(sizeof(RG_Tileset), M_OBJECT);
+	ts = Malloc(sizeof(RG_Tileset));
 	RG_TilesetInit(ts, name);
 	ts->flags |= flags;
 	if (parent != NULL) {
@@ -138,42 +138,42 @@ FreeDataset(void *obj)
 	     t = nt) {
 		nt = TAILQ_NEXT(t, tiles);
 		RG_TileDestroy(t);
-		Free(t, M_RG);
+		Free(t);
 	}
 	for (sk = TAILQ_FIRST(&ts->sketches);
 	     sk != TAILQ_END(&ts->sketches);
 	     sk = nsk) {
 		nsk = TAILQ_NEXT(sk, sketches);
 		RG_SketchDestroy(sk);
-		Free(sk, M_RG);
+		Free(sk);
 	}
 	for (px = TAILQ_FIRST(&ts->pixmaps);
 	     px != TAILQ_END(&ts->pixmaps);
 	     px = npx) {
 		npx = TAILQ_NEXT(px, pixmaps);
 		RG_PixmapDestroy(px);
-		Free(px, M_RG);
+		Free(px);
 	}
 	for (ft = TAILQ_FIRST(&ts->features);
 	     ft != TAILQ_END(&ts->features);
 	     ft = nft) {
 		nft = TAILQ_NEXT(ft, features);
 		AG_FeatureDestroy(ft);
-		Free(ft, M_RG);
+		Free(ft);
 	}
 	for (ani = TAILQ_FIRST(&ts->animations);
 	     ani != TAILQ_END(&ts->animations);
 	     ani = nani) {
 		nani = TAILQ_NEXT(ani, animations);
 		RG_AnimDestroy(ani);
-		Free(ani, M_RG);
+		Free(ani);
 	}
 	for (tex = TAILQ_FIRST(&ts->textures);
 	     tex != TAILQ_END(&ts->textures);
 	     tex = ntex) {
 		ntex = TAILQ_NEXT(tex, textures);
 		RG_TextureDestroy(tex);
-		Free(tex, M_RG);
+		Free(tex);
 	}
 	
 	TAILQ_INIT(&ts->tiles);
@@ -183,9 +183,9 @@ FreeDataset(void *obj)
 	TAILQ_INIT(&ts->animations);
 	TAILQ_INIT(&ts->textures);
 
-	Free(ts->tiletbl, M_RG);
+	Free(ts->tiletbl);
 	ts->tiletbl = NULL;
-	Free(ts->animtbl, M_RG);
+	Free(ts->animtbl);
 	ts->animtbl = NULL;
 
 	ts->ntiletbl = 0;
@@ -201,8 +201,8 @@ Destroy(void *obj)
 
 	AG_MutexDestroy(&ts->lock);
 	SDL_FreeSurface(ts->icon);
-	Free(ts->tiletbl, M_RG);
-	Free(ts->animtbl, M_RG);
+	Free(ts->tiletbl);
+	Free(ts->animtbl);
 }
 
 static int
@@ -225,10 +225,10 @@ Load(void *obj, AG_DataSource *buf)
 	for (i = 0; i < count; i++) {
 		RG_Sketch *sk;
 
-		sk = Malloc(sizeof(RG_Sketch), M_RG);
+		sk = Malloc(sizeof(RG_Sketch));
 		RG_SketchInit(sk, ts, 0);
 		if (RG_SketchLoad(sk, buf) == -1) {
-			Free(sk, M_RG);
+			Free(sk);
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&ts->sketches, sk, sketches);
@@ -239,10 +239,10 @@ Load(void *obj, AG_DataSource *buf)
 	for (i = 0; i < count; i++) {
 		RG_Pixmap *px;
 
-		px = Malloc(sizeof(RG_Pixmap), M_RG);
+		px = Malloc(sizeof(RG_Pixmap));
 		RG_PixmapInit(px, ts, 0);
 		if (RG_PixmapLoad(px, buf) == -1) {
-			Free(px, M_RG);
+			Free(px);
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&ts->pixmaps, px, pixmaps);
@@ -275,12 +275,12 @@ Load(void *obj, AG_DataSource *buf)
 			continue;
 		}
 
-		ft = Malloc((*ftops)->len, M_RG);
+		ft = Malloc((*ftops)->len);
 		ft->ops = *ftops;
 		ft->ops->init(ft, ts, flags);
 		if (RG_FeatureLoad(ft, buf) == -1) {
 			AG_FeatureDestroy(ft);
-			Free(ft, M_RG);
+			Free(ft);
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&ts->features, ft, features);
@@ -293,13 +293,13 @@ Load(void *obj, AG_DataSource *buf)
 		char name[RG_TILE_NAME_MAX];
 		RG_Tile *t;
 		
-		t = Malloc(sizeof(RG_Tile), M_RG);
+		t = Malloc(sizeof(RG_Tile));
 		AG_CopyString(name, buf, sizeof(name));
 		RG_TileInit(t, ts, name);
 
 		if (RG_TileLoad(t, buf) == -1) {
 			RG_TileDestroy(t);
-			Free(t, M_RG);
+			Free(t);
 			goto fail;
 		}
 		RG_TileScale(ts, t, t->su->w, t->su->h, t->flags);
@@ -314,13 +314,13 @@ Load(void *obj, AG_DataSource *buf)
 		RG_Anim *ani;
 		int flags;
 		
-		ani = Malloc(sizeof(RG_Anim), M_RG);
+		ani = Malloc(sizeof(RG_Anim));
 		AG_CopyString(name, buf, sizeof(name));
 		flags = (int)AG_ReadUint32(buf);
 		RG_AnimInit(ani, ts, name, flags);
 		if (RG_AnimLoad(ani, buf) == -1) {
 			RG_AnimDestroy(ani);
-			Free(ani, M_RG);
+			Free(ani);
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&ts->animations, ani, animations);
@@ -332,12 +332,12 @@ Load(void *obj, AG_DataSource *buf)
 		char name[RG_TEXTURE_NAME_MAX];
 		RG_Texture *tex;
 		
-		tex = Malloc(sizeof(RG_Texture), M_RG);
+		tex = Malloc(sizeof(RG_Texture));
 		AG_CopyString(name, buf, sizeof(name));
 		RG_TextureInit(tex, ts, name);
 		if (RG_TextureLoad(tex, buf) == -1) {
 			RG_TextureDestroy(tex);
-			Free(tex, M_RG);
+			Free(tex);
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&ts->textures, tex, textures);
@@ -946,7 +946,7 @@ tryname2:
 		}
 	}
 
-	t = Malloc(sizeof(RG_Tile), M_RG);
+	t = Malloc(sizeof(RG_Tile));
 	RG_TileInit(t, ts, ins_tile_name);
 	if (strcmp(ts->tmpl, "Sprite") == 0) {
 		RG_TileScale(ts, t, 16, 32, flags);
@@ -993,7 +993,7 @@ tryname2:
 		TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 	} else {
 		RG_TileDestroy(t);
-		Free(t, M_RG);
+		Free(t);
 		AG_TextMsg(AG_MSG_ERROR, _("Failed to create item: %s"),
 		    AG_GetError());
 	}
@@ -1053,7 +1053,7 @@ tryname2:
 		}
 	}
 
-	tex = Malloc(sizeof(RG_Texture), M_RG);
+	tex = Malloc(sizeof(RG_Texture));
 	RG_TextureInit(tex, ts, ins_texture_name);
 	TAILQ_INSERT_TAIL(&ts->textures, tex, textures);
 	
@@ -1120,14 +1120,14 @@ tryname2:
 		}
 	}
 
-	ani = Malloc(sizeof(RG_Anim), M_RG);
+	ani = Malloc(sizeof(RG_Anim));
 	RG_AnimInit(ani, ts, ins_anim_name, flags);
 	RG_AnimScale(ani, ins_tile_w, ins_tile_h);
 	if (InsertAnimMapping(ts, ani, &ani->main_id) == 0) {
 		TAILQ_INSERT_TAIL(&ts->animations, ani, animations);
 	} else {
 		RG_AnimDestroy(ani);
-		Free(ani, M_RG);
+		Free(ani);
 		AG_TextMsg(AG_MSG_ERROR, _("Failed to create item: %s"),
 		    AG_GetError());
 	}
@@ -1288,7 +1288,7 @@ DeleteSelTiles(AG_Event *event)
 		TAILQ_REMOVE(&ts->tiles, t, tiles);
 		RemoveTileMappings(ts, t);
 		RG_TileDestroy(t);
-		Free(t, M_RG);
+		Free(t);
 	}
 	AG_MutexUnlock(&ts->lock);
 }
@@ -1302,7 +1302,7 @@ TileDup(RG_Tileset *ts, RG_Tile *t1)
 	int x, y;
 	int ncopy = 0;
 
-	t2 = Malloc(sizeof(RG_Tile), M_RG);
+	t2 = Malloc(sizeof(RG_Tile));
 tryname1:
 	snprintf(name, sizeof(name), _("Copy #%d of %s"), ncopy++, t1->name);
 	if (RG_TilesetFindTile(ts, name) != NULL) {
@@ -1331,7 +1331,7 @@ tryname1:
 		switch (e1->type) {
 		case RG_TILE_PIXMAP:
 			px1 = e1->tel_pixmap.px;
-			px2 = Malloc(sizeof(RG_Pixmap), M_RG);
+			px2 = Malloc(sizeof(RG_Pixmap));
 			RG_PixmapInit(px2, ts, 0);
 tryname2:
 			snprintf(px2->name, sizeof(px2->name),
@@ -1466,7 +1466,7 @@ DeleteSelPixmaps(AG_Event *event)
 		}
 		TAILQ_REMOVE(&ts->pixmaps, px, pixmaps);
 		RG_PixmapDestroy(px);
-		Free(px, M_RG);
+		Free(px);
 	}
 }
 
@@ -1489,7 +1489,7 @@ DeleteSelAnims(AG_Event *event)
 		TAILQ_REMOVE(&ts->animations, ani, animations);
 		RemoveAnimMappings(ts, ani);
 		RG_AnimDestroy(ani);
-		Free(ani, M_RG);
+		Free(ani);
 	}
 }
 
@@ -1511,7 +1511,7 @@ DeleteSelSketches(AG_Event *event)
 		}
 		TAILQ_REMOVE(&ts->sketches, sk, sketches);
 		RG_SketchDestroy(sk);
-		Free(sk, M_RG);
+		Free(sk);
 	}
 }
 
@@ -1531,7 +1531,7 @@ DeleteSelGraphics(AG_Event *event)
 			}
 			TAILQ_REMOVE(&ts->pixmaps, px, pixmaps);
 			RG_PixmapDestroy(px);
-			Free(px, M_RG);
+			Free(px);
 		} else if (strcmp(it->cat, "sketch") == 0) {
 			RG_Sketch *sk = it->p1;
 	
@@ -1540,7 +1540,7 @@ DeleteSelGraphics(AG_Event *event)
 			}
 			TAILQ_REMOVE(&ts->sketches, sk, sketches);
 			RG_SketchDestroy(sk);
-			Free(sk, M_RG);
+			Free(sk);
 		}
 	}
 }
@@ -1560,7 +1560,7 @@ DeleteSelTextures(AG_Event *event)
 
 		TAILQ_REMOVE(&ts->textures, tex, textures);
 		RG_TextureDestroy(tex);
-		Free(tex, M_RG);
+		Free(tex);
 	}
 }
 
@@ -1576,7 +1576,7 @@ DupSelPixmaps(AG_Event *event)
 		RG_Pixmap *px2;
 		int ncopy = 0;
 
-		px2 = Malloc(sizeof(RG_Pixmap), M_RG);
+		px2 = Malloc(sizeof(RG_Pixmap));
 		RG_PixmapInit(px2, ts, 0);
 tryname:
 		snprintf(px2->name, sizeof(px2->name), _("Copy #%d of %s"),
@@ -1622,13 +1622,13 @@ SelectTemplate(AG_Event *event)
 		int i;
 
 		for (i = 0; i < ntiles; i++) {
-			t = Malloc(sizeof(RG_Tile), M_RG);
+			t = Malloc(sizeof(RG_Tile));
 			RG_TileInit(t, ts, tiles[i]);
 			RG_TileScale(ts, t, 16, 32, RG_TILE_SRCCOLORKEY);
 			TAILQ_INSERT_TAIL(&ts->tiles, t, tiles);
 		}
 		for (i = 0; i < nanims; i++) {
-			a = Malloc(sizeof(RG_Anim), M_RG);
+			a = Malloc(sizeof(RG_Anim));
 			RG_AnimInit(a, ts, anims[i], RG_ANIM_SRCCOLORKEY);
 			RG_AnimScale(a, 16, 32);
 			TAILQ_INSERT_TAIL(&ts->animations, a, animations);
@@ -1714,29 +1714,29 @@ RG_TilesetEdit(void *p)
 	AG_WindowSetSpacing(win, 0);
 	AG_WindowSetPaddingTop(win, 0);
 
-	tlTiles = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tlTiles = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tlTiles, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
 		              AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tlTiles, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
 	AG_SetEvent(tlTiles, "tlist-poll", PollTiles, "%p", ts);
 	
-	tlGfx = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tlGfx = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tlGfx, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_EXPAND);
 	AG_SetEvent(tlGfx, "tlist-poll", PollGraphics, "%p", ts);
 	
-	tl_textures = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tl_textures = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tl_textures, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tl_textures, "tlist-poll", PollTextures, "%p", ts);
 
-	tlAnims = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tlAnims = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tlAnims, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tlAnims, "tlist-poll", PollAnims, "%p", ts);
 	
-	tlTileTbl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tlTileTbl = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tlTileTbl, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tlTileTbl, "tlist-poll", PollTileTbl, "%p", ts);
 	
-	tlAnimTbl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tlAnimTbl = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tlAnimTbl, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tlAnimTbl, "tlist-poll", PollAnimTbl, "%p", ts);
 

@@ -292,7 +292,7 @@ user_activate(NS_Command *cmd, void *p)
 		return (-1);
 	}
 
-	u = Malloc(sizeof(User), M_OBJECT);
+	u = Malloc(sizeof(User));
 	UserInit(u, name);
 	strlcpy(u->name, name, sizeof(u->name));
 	if (SetInfosFromCommand(cmd, u) == -1)
@@ -311,7 +311,7 @@ user_activate(NS_Command *cmd, void *p)
 	return (0);
 fail:
 	AG_ObjectDestroy(u);
-	Free(u, M_OBJECT);
+	Free(u);
 	return (-1);
 }
 

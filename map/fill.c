@@ -137,7 +137,7 @@ effect(void *p, MAP_Node *n)
 
 				MAP_ModNodeChg(m, x, y);
 				MAP_NodeRemoveAll(m, n, m->cur_layer);
-				r = Malloc(sizeof(MAP_Item), M_MAP);
+				r = Malloc(sizeof(MAP_Item));
 				MAP_ItemInit(r, MAP_ITEM_TILE);
 				MAP_ItemSetTile(r, m, tile->ts, tile->main_id);
 				MAP_ItemSetLayer(r, m->cur_layer);

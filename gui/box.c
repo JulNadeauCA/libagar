@@ -35,7 +35,7 @@ AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 {
 	AG_Box *box;
 
-	box = Malloc(sizeof(AG_Box), M_OBJECT);
+	box = Malloc(sizeof(AG_Box));
 	AG_BoxInit(box, type, flags);
 	AG_ObjectAttach(parent, box);
 	return (box);

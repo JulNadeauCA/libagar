@@ -36,7 +36,7 @@ AG_MPaneNew(void *parent, enum ag_mpane_layout lay, Uint flags)
 {
 	AG_MPane *mp;
 
-	mp = Malloc(sizeof(AG_MPane), M_OBJECT);
+	mp = Malloc(sizeof(AG_MPane));
 	AG_MPaneInit(mp, lay, flags);
 	AG_ObjectAttach(parent, mp);
 	return (mp);

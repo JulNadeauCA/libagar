@@ -46,7 +46,7 @@ asprintf(char **ret, const char *fmt, ...)
 	va_list ap;
 
 	buflen = strlen(fmt)+64;
-	buf = Malloc(buflen, 0);
+	buf = Malloc(buflen);
 	va_start(ap, fmt);
 	size = vsprintf(buf, fmt, ap);
 	va_end(ap);

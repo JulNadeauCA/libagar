@@ -45,7 +45,7 @@ AG_Vasprintf(char **ret, const char *fmt, va_list ap)
 	size_t buflen;
 
 	buflen = strlen(fmt) + 128;
-	buf = Malloc(buflen, 0);
+	buf = Malloc(buflen);
 	size = vsprintf(buf, fmt, ap);
 	if ((size_t)size <= buflen) {
 		*ret = buf;

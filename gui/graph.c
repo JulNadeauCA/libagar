@@ -37,7 +37,7 @@ AG_GraphNew(void *parent, Uint flags)
 {
 	AG_Graph *gf;
 
-	gf = Malloc(sizeof(AG_Graph), M_OBJECT);
+	gf = Malloc(sizeof(AG_Graph));
 	AG_GraphInit(gf, flags);
 	AG_ObjectAttach(parent, gf);
 	return (gf);
@@ -181,7 +181,7 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 			return (NULL);
 		}
 	}
-	edge = Malloc(sizeof(AG_GraphEdge), M_WIDGET);
+	edge = Malloc(sizeof(AG_GraphEdge));
 	edge->labelTxt[0] = '\0';
 	edge->labelSu = -1;
 	edge->edgeColor = SDL_MapRGB(agSurfaceFmt, 0,0,0);
@@ -209,7 +209,7 @@ AG_GraphEdgeFree(AG_GraphEdge *edge)
 	if (edge->labelSu != -1) {
 		AG_WidgetUnmapSurface(edge->graph, edge->labelSu);
 	}
-	Free(edge,M_WIDGET);
+	Free(edge);
 }
 
 void
@@ -581,7 +581,7 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 {
 	AG_GraphVertex *vtx;
 	
-	vtx = Malloc(sizeof(AG_GraphVertex), M_WIDGET);
+	vtx = Malloc(sizeof(AG_GraphVertex));
 	vtx->labelTxt[0] = '\0';
 	vtx->labelSu = -1;
 	vtx->labelColor = SDL_MapRGB(agSurfaceFmt, 0,0,0);
@@ -607,8 +607,8 @@ AG_GraphVertexFree(AG_GraphVertex *vtx)
 	if (vtx->labelSu != -1) {
 		AG_WidgetUnmapSurface(vtx->graph, vtx->labelSu);
 	}
-	Free(vtx->edges,M_WIDGET);
-	Free(vtx,M_WIDGET);
+	Free(vtx->edges);
+	Free(vtx);
 }
 
 void
@@ -747,7 +747,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 		return;
 
 	/* Sort the vertices based on their number of connected edges. */
-	vSorted = Malloc(gf->nvertices*sizeof(AG_GraphVertex *), M_WIDGET);
+	vSorted = Malloc(gf->nvertices*sizeof(AG_GraphVertex *));
 	TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
 		vtx->flags &= ~(AG_GRAPH_AUTOPLACED);
 		vSorted[nSorted++] = vtx;
@@ -785,7 +785,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 			continue;
 		}
 	}
-	Free(vSorted, M_WIDGET);
+	Free(vSorted);
 }
 
 const AG_WidgetOps agGraphOps = {

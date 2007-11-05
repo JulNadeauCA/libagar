@@ -141,7 +141,7 @@ AG_TTFOpenFont(const char *file, int ptsize)
 	AG_TTFFont *font;
 	int rv;
 
-	font = Malloc(sizeof(AG_TTFFont), M_LOADER);
+	font = Malloc(sizeof(AG_TTFFont));
 	memset(font, 0, sizeof(AG_TTFFont));
 	if ((rv = FT_New_Face(ftLibrary, file, 0, &font->face)) != 0) {
 		AG_SetError("%s: FreeType error %d", file, rv);
@@ -153,7 +153,7 @@ AG_TTFOpenFont(const char *file, int ptsize)
 	}
 	return (font);
 fail:
-	Free(font, M_LOADER);
+	Free(font);
 	return (NULL);
 }
 
@@ -163,7 +163,7 @@ AG_TTFOpenFontFromMemory(const Uint8 *data, size_t size, int ptsize)
 	AG_TTFFont *font;
 	int rv;
 
-	font = Malloc(sizeof(AG_TTFFont), M_LOADER);
+	font = Malloc(sizeof(AG_TTFFont));
 	memset(font, 0, sizeof(AG_TTFFont));
 	if ((rv = FT_New_Memory_Face(ftLibrary, data, size, 0, &font->face))
 	    != 0) {
@@ -176,7 +176,7 @@ AG_TTFOpenFontFromMemory(const Uint8 *data, size_t size, int ptsize)
 	}
 	return (font);
 fail:
-	Free(font, M_LOADER);
+	Free(font);
 	return (NULL);
 }
 
@@ -185,7 +185,7 @@ AG_TTFCloseFont(AG_TTFFont *font)
 {
 	FlushCache(font);
 	FT_Done_Face(font->face);
-	Free(font, M_LOADER);
+	Free(font);
 }
 
 static void
@@ -348,7 +348,7 @@ LoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached, int want)
 		}
 
 		if (dst->rows != 0) {
-			dst->buffer = Malloc(dst->pitch * dst->rows, M_LOADER);
+			dst->buffer = Malloc(dst->pitch*dst->rows);
 			memset(dst->buffer, 0, dst->pitch * dst->rows);
 
 			for (i = 0; i < src->rows; i++) {

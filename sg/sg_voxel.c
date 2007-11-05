@@ -39,7 +39,7 @@ SG_VoxelNew(void *pNode, const char *name)
 {
 	SG_Voxel *vol;
 
-	vol = AG_Malloc(sizeof(SG_Voxel), M_SG);
+	vol = Malloc(sizeof(SG_Voxel));
 	SG_VoxelInit(vol, name);
 	SG_NodeAttach(pNode, vol);
 	return (vol);
@@ -65,11 +65,11 @@ SG_VoxelReinit(void *p)
 	
 	for (x = 0; x < vol->w; x++) {
 		for (y = 0; y < vol->h; y++) {
-			Free(vol->map[y], M_SG);
+			Free(vol->map[y]);
 		}
-		Free(vol->map[x], M_SG);
+		Free(vol->map[x]);
 	}
-	Free(vol->map, M_SG);
+	Free(vol->map);
 	vol->map = NULL;
 	vol->w = 0;
 	vol->h = 0;
@@ -93,11 +93,11 @@ SG_VoxelAlloc3(SG_Voxel *vol, Uint w, Uint h, Uint d)
 	vol->w = w;
 	vol->h = h;
 	vol->d = d;
-	vol->map = Malloc(w*sizeof(SG_Real *), M_SG);
+	vol->map = Malloc(w*sizeof(SG_Real *));
 	for (x = 0; x < w; x++) {
-		vol->map[x] = Malloc(h*sizeof(SG_Real *), M_SG);
+		vol->map[x] = Malloc(h*sizeof(SG_Real *));
 		for (y = 0; y < h; y++) {
-			vol->map[x][y] = Malloc(d*sizeof(SG_Real), M_SG);
+			vol->map[x][y] = Malloc(d*sizeof(SG_Real));
 			for (z = 0; z < d; z++)
 				vol->map[x][y][z] = 0.0;
 		}

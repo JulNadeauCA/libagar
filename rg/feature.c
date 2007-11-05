@@ -68,7 +68,7 @@ RG_FeatureAddSketch(RG_Feature *ft, RG_Sketch *sk)
 {
 	RG_FeatureSketch *fsk;
 
-	fsk = Malloc(sizeof(RG_FeatureSketch), M_RG);
+	fsk = Malloc(sizeof(RG_FeatureSketch));
 	fsk->sk = sk;
 	fsk->x = 0;
 	fsk->y = 0;
@@ -88,7 +88,7 @@ RG_FeatureDelSketch(RG_Feature *ft, RG_Sketch *sk)
 	}
 	if (fsk != NULL) {
 		TAILQ_REMOVE(&ft->sketches, fsk, sketches);
-		Free(fsk, M_RG);
+		Free(fsk);
 	}
 }
 
@@ -97,7 +97,7 @@ RG_FeatureAddPixmap(RG_Feature *ft, RG_Pixmap *px)
 {
 	RG_FeaturePixmap *fpx;
 
-	fpx = Malloc(sizeof(RG_FeaturePixmap), M_RG);
+	fpx = Malloc(sizeof(RG_FeaturePixmap));
 	fpx->px = px;
 	fpx->x = 0;
 	fpx->y = 0;
@@ -117,7 +117,7 @@ RG_FeatureDelPixmap(RG_Feature *ft, RG_Pixmap *px)
 	}
 	if (fpx != NULL) {
 		TAILQ_REMOVE(&ft->pixmaps, fpx, pixmaps);
-		Free(fpx, M_RG);
+		Free(fpx);
 	}
 }
 
@@ -139,14 +139,14 @@ AG_FeatureDestroy(RG_Feature *ft)
 	     fsk != TAILQ_END(&ft->sketches);
 	     fsk = nfsk) {
 		nfsk = TAILQ_NEXT(fsk, sketches);
-		Free(fsk, M_RG);
+		Free(fsk);
 	}
 	
 	for (fpx = TAILQ_FIRST(&ft->pixmaps);
 	     fpx != TAILQ_END(&ft->pixmaps);
 	     fpx = nfpx) {
 		nfpx = TAILQ_NEXT(fpx, pixmaps);
-		Free(fpx, M_RG);
+		Free(fpx);
 	}
 }
 
@@ -181,7 +181,7 @@ RG_FeatureOpenMenu(RG_Tileview *tv, int x, int y)
 	if (ft->ops->menu == NULL)
 		return;
 
-	tv->tv_feature.menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	tv->tv_feature.menu = Malloc(sizeof(AG_Menu));
 	AG_MenuInit(tv->tv_feature.menu, 0);
 
 	tv->tv_feature.menu_item = AG_MenuAddItem(tv->tv_feature.menu, NULL);
@@ -201,7 +201,7 @@ RG_FeatureCloseMenu(RG_Tileview *tv)
 
 	AG_MenuCollapse(menu, item);
 	AG_ObjectDestroy(menu);
-	Free(menu, M_OBJECT);
+	Free(menu);
 
 	tv->tv_feature.menu = NULL;
 	tv->tv_feature.menu_item = NULL;

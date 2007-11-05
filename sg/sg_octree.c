@@ -64,7 +64,7 @@ SG_OctreeBuild(SG *sg, SG_Octree *oct)
 		}
 	}
 
-	oct->root = Malloc(sizeof(SG_Octnode), M_SG);
+	oct->root = Malloc(sizeof(SG_Octnode));
 }
 
 int

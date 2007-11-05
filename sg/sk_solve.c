@@ -140,7 +140,7 @@ restart:
 			SK_CopyCluster(cl, clMerged);
 			TAILQ_REMOVE(&sk->clusters, cl, clusters);
 			SK_FreeCluster(cl);
-			Free(cl, M_SG);
+			Free(cl);
 			goto restart;		/* Cluster chain changed */
 		}
 	}
@@ -242,7 +242,7 @@ SK_Solve(SK *sk)
 	SK_CopyCluster(&sk->ctGraph, &clOrig);
 
 	while (!TAILQ_EMPTY(&clOrig.edges)) {
-		cl = Malloc(sizeof(SK_Cluster), M_SG);
+		cl = Malloc(sizeof(SK_Cluster));
 		SK_InitCluster(cl, SK_GenClusterName(sk));
 
 		/* Start with any edge and find n2 from n1. */
@@ -300,13 +300,13 @@ merge_rings:
 		printf("found constrained cluster ring: %p-%p-%p\n",
 		    clRing[0], clRing[1], clRing[2]);
 #endif
-		clMerged = Malloc(sizeof(SK_Cluster), M_SG);
+		clMerged = Malloc(sizeof(SK_Cluster));
 		SK_InitCluster(clMerged, SK_GenClusterName(sk));
 		for (i = 0; i < 3; i++) {
 			SK_CopyCluster(clRing[i], clMerged);
 			TAILQ_REMOVE(&sk->clusters, clRing[i], clusters);
 			SK_FreeCluster(clRing[i]);
-			Free(clRing[i], M_SG);
+			Free(clRing[i]);
 		}
 
 		/*

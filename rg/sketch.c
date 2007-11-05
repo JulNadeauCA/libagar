@@ -58,14 +58,14 @@ RG_SketchInit(RG_Sketch *sk, RG_Tileset *ts, int flags)
 	sk->v = 0.0;
 	sk->a = 1.0;
 
-	sk->vg = Malloc(sizeof(VG), M_VG);
+	sk->vg = Malloc(sizeof(VG));
 	VG_Init(sk->vg, VG_ANTIALIAS|VG_ALPHA);
 
-	sk->ublks = Malloc(sizeof(RG_SketchUndoBlk), M_RG);
+	sk->ublks = Malloc(sizeof(RG_SketchUndoBlk));
 	sk->nublks = 1;
 	sk->curblk = 0;
 	RG_SketchBeginUndoBlk(sk);
-	sk->ublks[0].mods = Malloc(sizeof(RG_SketchMod), M_RG);
+	sk->ublks[0].mods = Malloc(sizeof(RG_SketchMod));
 	sk->ublks[0].nmods = 0;
 }
 
@@ -102,9 +102,9 @@ RG_SketchDestroy(RG_Sketch *sk)
 	VG_Destroy(sk->vg);
 
 	for (i = 0; i < sk->nublks; i++) {
-		Free(sk->ublks[i].mods, M_RG);
+		Free(sk->ublks[i].mods);
 	}
-	Free(sk->ublks, M_RG);
+	Free(sk->ublks);
 }
 
 int
@@ -119,7 +119,7 @@ RG_SketchLoad(RG_Sketch *sk, AG_DataSource *buf)
 	sk->vg = VG_New(vgflags);
 	if (VG_Load(sk->vg, buf) == -1) {
 		VG_Destroy(sk->vg);
-		Free(sk->vg, M_VG);
+		Free(sk->vg);
 		return (-1);
 	}
 	VG_Rasterize(sk->vg);
@@ -369,7 +369,7 @@ RG_SketchBeginUndoBlk(RG_Sketch *sk)
 
 	while (sk->nublks > sk->curblk+1) {
 		ublk = &sk->ublks[sk->nublks-1];
-		Free(ublk->mods, M_RG);
+		Free(ublk->mods);
 		sk->nublks--;
 	}
 
@@ -377,7 +377,7 @@ RG_SketchBeginUndoBlk(RG_Sketch *sk)
 	sk->curblk++;
 
 	ublk = &sk->ublks[sk->curblk];
-	ublk->mods = Malloc(sizeof(RG_SketchMod), M_RG);
+	ublk->mods = Malloc(sizeof(RG_SketchMod));
 	ublk->nmods = 0;
 }
 
@@ -740,7 +740,7 @@ RG_SketchOpenMenu(RG_Tileview *tv, int x, int y)
 	if (tv->tv_sketch.menu != NULL)
 		RG_SketchCloseMenu(tv);
 
-	me = tv->tv_sketch.menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	me = tv->tv_sketch.menu = Malloc(sizeof(AG_Menu));
 	AG_MenuInit(me, 0);
 
 	mi = tv->tv_sketch.menu_item = AG_MenuAddItem(me, NULL);
@@ -783,7 +783,7 @@ RG_SketchCloseMenu(RG_Tileview *tv)
 
 	AG_MenuCollapse(me, mi);
 	AG_ObjectDestroy(me);
-	Free(me, M_OBJECT);
+	Free(me);
 
 	tv->tv_sketch.menu = NULL;
 	tv->tv_sketch.menu_item = NULL;

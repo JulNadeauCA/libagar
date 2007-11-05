@@ -43,7 +43,7 @@ SK_LineNew(void *pnode)
 {
 	SK_Line *line;
 
-	line = Malloc(sizeof(SK_Line), M_SG);
+	line = Malloc(sizeof(SK_Line));
 	SK_LineInit(line, SK_GenNodeName(SKNODE(pnode)->sk, "Line"));
 	SK_NodeAttach(pnode, line);
 	return (line);

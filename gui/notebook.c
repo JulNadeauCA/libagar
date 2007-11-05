@@ -36,7 +36,7 @@ AG_NotebookNew(void *parent, Uint flags)
 {
 	AG_Notebook *nb;
 
-	nb = Malloc(sizeof(AG_Notebook), M_OBJECT);
+	nb = Malloc(sizeof(AG_Notebook));
 	AG_NotebookInit(nb, flags);
 	AG_ObjectAttach(parent, nb);
 	return (nb);
@@ -224,7 +224,7 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 {
 	AG_NotebookTab *tab;
 
-	tab = Malloc(sizeof(AG_NotebookTab), M_OBJECT);
+	tab = Malloc(sizeof(AG_NotebookTab));
 	AG_BoxInit(AGBOX(tab), btype, AG_BOX_EXPAND);
 	if (nb->padding >= 0)
 		AG_BoxSetPadding(AGBOX(tab), nb->padding);
@@ -250,7 +250,7 @@ AG_NotebookDelTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	TAILQ_REMOVE(&nb->tabs, tab, tabs);
 	AG_WidgetUnmapSurface(nb, tab->label);
 	AG_ObjectDestroy(tab);
-	Free(tab, M_OBJECT);
+	Free(tab);
 }
 
 void

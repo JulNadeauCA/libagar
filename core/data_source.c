@@ -316,7 +316,7 @@ void
 AG_DataSourceDestroy(AG_DataSource *ds)
 {
 	AG_MutexDestroy(&ds->lock);
-	Free(ds, 0);
+	Free(ds);
 }
 
 AG_DataSource *
@@ -324,7 +324,7 @@ AG_OpenFileHandle(FILE *f)
 {
 	AG_FileSource *fs;
 
-	fs = Malloc(sizeof(AG_FileSource), 0);
+	fs = Malloc(sizeof(AG_FileSource));
 	AG_DataSourceInit(&fs->ds);
 	fs->path = NULL;
 	fs->file = f;
@@ -355,7 +355,7 @@ AG_OpenCore(void *data, size_t size)
 {
 	AG_CoreSource *cs;
 
-	cs = Malloc(sizeof(AG_CoreSource), 0);
+	cs = Malloc(sizeof(AG_CoreSource));
 	AG_DataSourceInit(&cs->ds);
 	cs->data = (Uint8 *)data;
 	cs->size = size;
@@ -375,7 +375,7 @@ AG_OpenConstCore(const void *data, size_t size)
 {
 	AG_ConstCoreSource *cs;
 
-	cs = Malloc(sizeof(AG_ConstCoreSource), 0);
+	cs = Malloc(sizeof(AG_ConstCoreSource));
 	AG_DataSourceInit(&cs->ds);
 	cs->data = (const Uint8 *)data;
 	cs->size = size;
@@ -404,7 +404,7 @@ AG_CloseFile(AG_DataSource *ds)
 	AG_FileSource *fs = AG_FILE_SOURCE(ds);
 
 	fclose(fs->file);
-	Free(fs->path, 0);
+	Free(fs->path);
 	AG_DataSourceDestroy(ds);
 }
 

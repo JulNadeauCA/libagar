@@ -38,8 +38,8 @@ SC_IvectorNew(Uint n)
 {
 	SC_Ivector *veci;
 
-	veci = Malloc(sizeof(SC_Ivector), M_MATH);
-	veci->vec = Malloc((n+1)*sizeof(int), M_MATH);
+	veci = Malloc(sizeof(SC_Ivector));
+	veci->vec = Malloc((n+1)*sizeof(int));
 	veci->n = n;
 	return (veci);
 }
@@ -66,8 +66,8 @@ SC_IvectorCopy(const SC_Ivector *v1, SC_Ivector *v2)
 void
 SC_IvectorFree(SC_Ivector *v)
 {
-	Free(v->vec, M_MATH);
-	Free(v, M_MATH);
+	Free(v->vec);
+	Free(v);
 }
 
 void

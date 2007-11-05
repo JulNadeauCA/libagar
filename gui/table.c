@@ -51,7 +51,7 @@ AG_TableNew(void *parent, Uint flags)
 {
 	AG_Table *t;
 
-	t = Malloc(sizeof(AG_Table), M_OBJECT);
+	t = Malloc(sizeof(AG_Table));
 	AG_TableInit(t, flags);
 	AG_ObjectAttach(parent, t);
 	if (flags & AG_TABLE_FOCUS) {
@@ -66,7 +66,7 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 {
 	AG_Table *t;
 
-	t = Malloc(sizeof(AG_Table), M_OBJECT);
+	t = Malloc(sizeof(AG_Table));
 	AG_TableInit(t, flags);
 	t->flags |= AG_TABLE_POLL;
 	t->poll_ev = AG_SetEvent(t, "table-poll", fn, NULL);
@@ -149,8 +149,8 @@ Destroy(void *p)
 	     tp = tpn) {
 		tpn = SLIST_NEXT(tp, popups);
 		AG_ObjectDestroy(tp->menu);
-		Free(tp->menu, M_OBJECT);
-		Free(tp, M_WIDGET);
+		Free(tp->menu);
+		Free(tp);
 	}
 	
 	for (m = 0; m < t->m; m++) {
@@ -160,7 +160,7 @@ Destroy(void *p)
 	for (n = 0; n < t->n; n++) {
 		AG_TablePoolFree(t, n);
 	}
-	Free(t->cols, M_WIDGET);
+	Free(t->cols);
 
 	AG_MutexDestroy(&t->lock);
 }
@@ -514,11 +514,11 @@ AG_TableSetPopup(AG_Table *t, int m, int n)
 			return (tp->item);
 		}
 	}
-	tp = Malloc(sizeof(AG_TablePopup), M_WIDGET);
+	tp = Malloc(sizeof(AG_TablePopup));
 	tp->m = m;
 	tp->n = n;
 	tp->panel = NULL;
-	tp->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	tp->menu = Malloc(sizeof(AG_Menu));
 	AG_MenuInit(tp->menu, 0);
 	tp->item = tp->menu->root;			/* XXX redundant */
 	SLIST_INSERT_HEAD(&t->popups, tp, popups);
@@ -577,7 +577,7 @@ AG_TablePoolFree(AG_Table *t, Uint n)
 	for (m = 0; m < tc->mpool; m++) {
 		AG_TableFreeCell(t, &tc->pool[m]);
 	}
-	Free(tc->pool, M_WIDGET);
+	Free(tc->pool);
 	tc->pool = NULL;
 	tc->mpool = 0;
 }
@@ -594,9 +594,9 @@ AG_TableBegin(AG_Table *t)
 		for (n = 0; n < t->n; n++) {
 			AG_TablePoolAdd(t, m, n);
 		}
-		Free(t->cells[m], M_WIDGET);
+		Free(t->cells[m]);
 	}
-	Free(t->cells, M_WIDGET);
+	Free(t->cells);
 	t->cells = NULL;
 	t->m = 0;
 	AG_WidgetSetInt(t->vbar, "max", 0);
@@ -694,7 +694,7 @@ AG_TableEnd(AG_Table *t)
 			}
 			AG_TableFreeCell(t, cPool);
 		}
-		Free(tc->pool, M_WIDGET);
+		Free(tc->pool);
 		tc->pool = NULL;
 		tc->mpool = 0;
 	}
@@ -1293,7 +1293,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 
 	va_start(ap, fmtp);
 	t->cells = Realloc(t->cells, (t->m+1)*sizeof(AG_TableCell));
-	t->cells[t->m] = Malloc(t->n*sizeof(AG_TableCell), M_WIDGET);
+	t->cells[t->m] = Malloc(t->n*sizeof(AG_TableCell));
 	for (n = 0; n < t->n; n++) {
 		AG_TableCell *c = &t->cells[t->m][n];
 		char *s = AG_Strsep(&sp, ":"), *sc;

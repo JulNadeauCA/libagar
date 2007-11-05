@@ -39,7 +39,7 @@ SK_ArcNew(void *pnode)
 {
 	SK_Arc *arc;
 
-	arc = Malloc(sizeof(SK_Arc), M_SG);
+	arc = Malloc(sizeof(SK_Arc));
 	SK_ArcInit(arc, SK_GenNodeName(SKNODE(pnode)->sk, "Arc"));
 	SK_NodeAttach(pnode, arc);
 	return (arc);

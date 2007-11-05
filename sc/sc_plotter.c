@@ -44,7 +44,7 @@ SC_PlotterNew(void *parent, Uint flags)
 {
 	SC_Plotter *pl;
 
-	pl = Malloc(sizeof(SC_Plotter), M_OBJECT);
+	pl = Malloc(sizeof(SC_Plotter));
 	SC_PlotterInit(pl, flags);
 	AG_ObjectAttach(parent, pl);
 	return (pl);
@@ -691,7 +691,7 @@ SC_PlotLabelNew(SC_Plot *pl, enum sc_plot_label_type type, Uint x, Uint y,
 	SC_PlotLabel *plbl;
 	va_list args;
 
-	plbl = Malloc(sizeof(SC_PlotLabel), M_WIDGET);
+	plbl = Malloc(sizeof(SC_PlotLabel));
 	plbl->type = type;
 	plbl->x = x;
 	plbl->y = y;
@@ -792,7 +792,7 @@ SC_PlotNew(SC_Plotter *ptr, enum sc_plot_type type)
 {
 	SC_Plot *pl, *pl2;
 	
-	pl = Malloc(sizeof(SC_Plot), M_WIDGET);
+	pl = Malloc(sizeof(SC_Plot));
 	pl->plotter = ptr;
 	pl->flags = 0;
 	pl->type = type;

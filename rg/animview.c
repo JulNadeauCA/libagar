@@ -33,7 +33,7 @@ RG_AnimviewNew(void *parent)
 {
 	RG_Animview *av;
 
-	av = Malloc(sizeof(RG_Animview), M_OBJECT);
+	av = Malloc(sizeof(RG_Animview));
 	RG_AnimviewInit(av);
 	AG_ObjectAttach(parent, av);
 	return (av);
@@ -99,7 +99,7 @@ CloseMenu(RG_Animview *av)
 {
 	AG_MenuCollapse(av->menu, av->menu_item);
 	AG_ObjectDestroy(av->menu);
-	Free(av->menu, M_OBJECT);
+	Free(av->menu);
 	av->menu = NULL;
 	av->menu_win = NULL;
 	av->menu_item = NULL;
@@ -120,7 +120,7 @@ OpenMenu(RG_Animview *av, int x, int y)
 	if (av->menu != NULL)
 		CloseMenu(av);
 	
-	av->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	av->menu = Malloc(sizeof(AG_Menu));
 	AG_MenuInit(av->menu, 0);
 	av->menu_item = av->menu->itemSel = AG_MenuAddItem(av->menu, NULL);
 	{

@@ -44,7 +44,7 @@ AG_HSVPalNew(void *parent, Uint flags)
 {
 	AG_HSVPal *pal;
 
-	pal = Malloc(sizeof(AG_HSVPal), M_OBJECT);
+	pal = Malloc(sizeof(AG_HSVPal));
 	AG_HSVPalInit(pal, flags);
 	AG_ObjectAttach(parent, pal);
 	if (flags & AG_HSVPAL_FOCUS) {
@@ -385,7 +385,7 @@ CloseMenu(AG_HSVPal *pal)
 {
 	AG_MenuCollapse(pal->menu, pal->menu_item);
 	AG_ObjectDestroy(pal->menu);
-	Free(pal->menu, M_OBJECT);
+	Free(pal->menu);
 
 	pal->menu = NULL;
 	pal->menu_item = NULL;
@@ -527,7 +527,7 @@ OpenMenu(AG_HSVPal *pal)
 	if (pal->menu != NULL)
 		CloseMenu(pal);
 
-	pal->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	pal->menu = Malloc(sizeof(AG_Menu));
 	AG_MenuInit(pal->menu, 0);
 
 	pal->menu_item = AG_MenuAddItem(pal->menu, NULL);

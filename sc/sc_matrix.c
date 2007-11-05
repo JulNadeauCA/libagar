@@ -37,7 +37,7 @@ SC_MatrixNew(Uint m, Uint n)
 {
 	SC_Matrix *M;
 
-	M = Malloc(sizeof(SC_Matrix), M_MATH);
+	M = Malloc(sizeof(SC_Matrix));
 	SC_MatrixAlloc(M, m, n);
 	return (M);
 }
@@ -48,9 +48,9 @@ SC_MatrixAlloc(SC_Matrix *M, Uint m, Uint n)
 	Uint i;
 
 	if (m != 0 && n != 0) {
-		M->mat = Malloc((m+1)*sizeof(SC_Real), M_MATH);
+		M->mat = Malloc((m+1)*sizeof(SC_Real));
 		for (i = 1; i <= m; i++) {
-			M->mat[i] = Malloc((n+1)*sizeof(SC_Real), M_MATH);
+			M->mat[i] = Malloc((n+1)*sizeof(SC_Real));
 		}
 	} else {
 		M->mat = NULL;
@@ -493,16 +493,16 @@ SC_MatrixFreeElements(SC_Matrix *M)
 		return;
 	}
 	for (m = 1; m <= M->m; m++) {
-		Free(M->mat[m], M_MATH);
+		Free(M->mat[m]);
 	}
-	Free(M->mat, M_MATH);
+	Free(M->mat);
 }
 
 void
 SC_MatrixFree(SC_Matrix *M)
 {
 	SC_MatrixFreeElements(M);
-	Free(M, M_MATH);
+	Free(M);
 }
 
 /* Evaluate the squareness of a matrix. */

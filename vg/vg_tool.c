@@ -65,7 +65,7 @@ VG_ToolDestroy(VG_Tool *tool)
 		OBJECT_FOREACH_CHILD(wt, tool->pane, ag_widget) {
 			AG_ObjectDetach(wt);
 			AG_ObjectDestroy(wt);
-			Free(wt, M_OBJECT);
+			Free(wt);
 		}
 		if ((pwin = AG_WidgetParentWindow(tool->pane)) != NULL)
 			AG_WindowUpdate(pwin);
@@ -75,13 +75,13 @@ VG_ToolDestroy(VG_Tool *tool)
 	     kbinding != SLIST_END(&tool->kbindings);
 	     kbinding = nkbinding) {
 		nkbinding = SLIST_NEXT(kbinding, kbindings);
-		Free(kbinding, M_MAPEDIT);
+		Free(kbinding);
 	}
 	for (mbinding = SLIST_FIRST(&tool->mbindings);
 	     mbinding != SLIST_END(&tool->mbindings);
 	     mbinding = nmbinding) {
 		nmbinding = SLIST_NEXT(mbinding, mbindings);
-		Free(mbinding, M_MAPEDIT);
+		Free(mbinding);
 	}
 	if (tool->ops->destroy != NULL)
 		tool->ops->destroy(tool);
@@ -115,7 +115,7 @@ VG_ToolBindMouseButton(void *p, int button,
 	VG_Tool *tool = p;
 	VG_ToolMouseBinding *mb;
 	
-	mb = Malloc(sizeof(VG_ToolMouseBinding), M_MAPEDIT);
+	mb = Malloc(sizeof(VG_ToolMouseBinding));
 	mb->button = button;
 	mb->func = func;
 	mb->edit = 0;
@@ -130,7 +130,7 @@ VG_ToolBindKey(void *p, SDLMod keymod, SDLKey keysym,
 	VG_Tool *tool = p;
 	VG_ToolKeyBinding *kb;
 
-	kb = Malloc(sizeof(VG_ToolKeyBinding), M_MAPEDIT);
+	kb = Malloc(sizeof(VG_ToolKeyBinding));
 	kb->key = keysym;
 	kb->mod = keymod;
 	kb->func = func;
@@ -154,6 +154,6 @@ VG_ToolUnbindKey(void *p, SDLMod keymod, SDLKey keysym)
 		return;
 	}
 	SLIST_REMOVE(&tool->kbindings, kb, vg_tool_keybinding, kbindings);
-	Free(kb, M_MAPEDIT);
+	Free(kb);
 }
 

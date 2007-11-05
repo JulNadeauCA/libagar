@@ -39,7 +39,7 @@ RG_TileviewNew(void *parent, RG_Tileset *ts, int flags)
 {
 	RG_Tileview *tv;
 
-	tv = Malloc(sizeof(RG_Tileview), M_OBJECT);
+	tv = Malloc(sizeof(RG_Tileview));
 	RG_TileviewInit(tv, ts, flags);
 	AG_ObjectAttach(parent, tv);
 	return (tv);
@@ -693,7 +693,7 @@ RG_TileviewRegTool(RG_Tileview *tv, const void *p)
 	const RG_TileviewToolOps *ops = p;
 	RG_TileviewTool *tvt;
 
-	tvt = Malloc(ops->len, M_RG);
+	tvt = Malloc(ops->len);
 	tvt->ops = ops;
 	tvt->tv = tv;
 	tvt->flags = ops->flags;
@@ -779,12 +779,10 @@ RG_TileviewAddCtrl(RG_Tileview *tv, enum rg_tileview_ctrl_type type,
 	va_list ap;
 	int i;
 
-	ctrl = Malloc(sizeof(RG_TileviewCtrl), M_WIDGET);
+	ctrl = Malloc(sizeof(RG_TileviewCtrl));
 	ctrl->type = type;
-	ctrl->vals = Malloc(sizeof(union rg_tileview_val)*strlen(fmt),
-	    M_WIDGET);
-	ctrl->valtypes = Malloc(sizeof(enum tileview_val_type)*strlen(fmt),
-	    M_WIDGET);
+	ctrl->vals = Malloc(sizeof(union rg_tileview_val) * strlen(fmt));
+	ctrl->valtypes = Malloc(sizeof(enum tileview_val_type) * strlen(fmt));
 	ctrl->nvals = 0;
 	ctrl->vg = NULL;
 	ctrl->vge = NULL;
@@ -889,8 +887,7 @@ out:
 		break;
 	}
 	ctrl->handles = (ctrl->nhandles > 0) ?
-	    Malloc(sizeof(RG_TileviewHandle)*ctrl->nhandles, M_WIDGET) :
-	    NULL;
+	    Malloc(sizeof(RG_TileviewHandle)*ctrl->nhandles) : NULL;
 	for (i = 0; i < ctrl->nhandles; i++) {
 		RG_TileviewHandle *th = &ctrl->handles[i];
 
@@ -908,9 +905,9 @@ missingvals:
 static void
 tileview_free_ctrl(RG_TileviewCtrl *ctrl)
 {
-	Free(ctrl->valtypes, M_WIDGET);
-	Free(ctrl->vals, M_WIDGET);
-	Free(ctrl, M_WIDGET);
+	Free(ctrl->valtypes);
+	Free(ctrl->vals);
+	Free(ctrl);
 }
 
 static void
@@ -919,7 +916,7 @@ tileview_free_tool(RG_TileviewTool *t)
 	if (t->ops->destroy != NULL) {
 		t->ops->destroy(t);
 	}
-	Free(t, M_RG);
+	Free(t);
 }
 
 void

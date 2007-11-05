@@ -164,15 +164,15 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	if (flags & AG_VIDEO_NOFRAME) { screenflags |= SDL_NOFRAME; }
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 
-	agView = Malloc(sizeof(AG_Display), M_VIEW);
+	agView = Malloc(sizeof(AG_Display));
 	AG_ObjectInit(agView, "_agView", &agDisplayOps);
 
 	agView->winop = AG_WINOP_NONE;
 	agView->ndirty = 0;
 	agView->maxdirty = 4;
-	agView->dirty = Malloc(agView->maxdirty * sizeof(SDL_Rect), M_VIEW);
+	agView->dirty = Malloc(agView->maxdirty*sizeof(SDL_Rect));
 	agView->opengl = 0;
-	agView->winModal = Malloc(sizeof(AG_Window *), M_VIEW);
+	agView->winModal = Malloc(sizeof(AG_Window *));
 	agView->nModal = 0;
 	agView->winSelected = NULL;
 	agView->winToFocus = NULL;
@@ -349,7 +349,7 @@ fail:
 #ifdef HAVE_OPENGL
 	AG_MutexDestroy(&agView->lock_gl);
 #endif
-	Free(agView, M_VIEW);
+	Free(agView);
 	agView = NULL;
 	return (-1);
 }
@@ -369,16 +369,16 @@ AG_DestroyVideo(void)
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, windows);
 		AG_ObjectDestroy(win);
-		Free(win, M_OBJECT);
+		Free(win);
 	}
 	SDL_FreeSurface(agView->stmpl);
-	Free(agView->dirty, M_VIEW);
+	Free(agView->dirty);
 	AG_MutexDestroy(&agView->lock);
 #ifdef HAVE_OPENGL
 	AG_MutexDestroy(&agView->lock_gl);
 #endif
-	Free(agView->winModal, M_VIEW);
-	Free(agView, M_VIEW);
+	Free(agView->winModal);
+	Free(agView);
 	
 	AG_ColorsDestroy();
 	AG_CursorsDestroy();
@@ -391,7 +391,7 @@ AG_BindGlobalKey(SDLKey keysym, SDLMod keymod, void (*fn)(void))
 {
 	struct ag_global_key *gk;
 
-	gk = Malloc(sizeof(struct ag_global_key), M_EVENT);
+	gk = Malloc(sizeof(struct ag_global_key));
 	gk->keysym = keysym;
 	gk->keymod = keymod;
 	gk->fn = fn;
@@ -404,7 +404,7 @@ AG_BindGlobalKeyEv(SDLKey keysym, SDLMod keymod, void (*fn_ev)(AG_Event *))
 {
 	struct ag_global_key *gk;
 
-	gk = Malloc(sizeof(struct ag_global_key), M_EVENT);
+	gk = Malloc(sizeof(struct ag_global_key));
 	gk->keysym = keysym;
 	gk->keymod = keymod;
 	gk->fn = NULL;
@@ -420,7 +420,7 @@ AG_UnbindGlobalKey(SDLKey keysym, SDLMod keymod)
 	SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
 		if (gk->keysym == keysym && gk->keymod == keymod) {
 			SLIST_REMOVE(&agGlobalKeys, gk, ag_global_key, gkeys);
-			Free(gk, M_EVENT);
+			Free(gk);
 			return (0);
 		}
 	}
@@ -646,7 +646,7 @@ FreeDetachedWindows(void)
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
 		AG_ObjectDestroy(win);
-		Free(win, M_OBJECT);
+		Free(win);
 	}
 	TAILQ_INIT(&agView->detach);
 }
@@ -925,7 +925,7 @@ AG_CaptureGLView(void)
 	Uint8 *pixels;
 	SDL_Surface *su;
 
-	pixels = Malloc(agView->w*agView->h*3, M_RG);
+	pixels = Malloc(agView->w*agView->h*3);
 
 	AG_LockGL();
 	glReadPixels(0, 0, agView->w, agView->h, GL_RGB, GL_UNSIGNED_BYTE,
@@ -1062,7 +1062,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 	jpeg_set_quality(&jcomp, agScreenshotQuality, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
-	jcopybuf = Malloc(su->w*3, M_VIEW);
+	jcopybuf = Malloc(su->w*3);
 
 	jpeg_start_compress(&jcomp, TRUE);
 	while (jcomp.next_scanline < jcomp.image_height) {
@@ -1087,7 +1087,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 
 	fclose(fp);
 	close(fd);
-	Free(jcopybuf, M_VIEW);
+	Free(jcopybuf);
 out:
 #ifdef HAVE_OPENGL
 	if (agView->opengl && su != pSu)
@@ -1104,7 +1104,7 @@ out:
 void
 AG_FlipSurface(Uint8 *src, int h, int pitch)
 {
-	Uint8 *tmp = Malloc(pitch, M_RG);
+	Uint8 *tmp = Malloc(pitch);
 	int h2 = h >> 1;
 	Uint8 *p1 = &src[0];
 	Uint8 *p2 = &src[(h-1)*pitch];
@@ -1118,7 +1118,7 @@ AG_FlipSurface(Uint8 *src, int h, int pitch)
 		p1 += pitch;
 		p2 -= pitch;
 	}
-	Free(tmp, M_RG);
+	Free(tmp);
 }
 
 /*
@@ -1383,7 +1383,7 @@ AG_ProcessEvent(SDL_Event *ev)
 			AG_Window *win;
 			int x, y;
 
-			me = Malloc(sizeof(AG_Menu), M_OBJECT);
+			me = Malloc(sizeof(AG_Menu));
 			AG_MenuInit(me, 0);
 			mi = me->itemSel = AG_MenuAddItem(me, NULL);
 

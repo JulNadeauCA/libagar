@@ -141,7 +141,7 @@ AG_OpenDir(const char *path)
 {
 	AG_Dir *dir;
 
-	dir = Malloc(sizeof(AG_Dir), 0);
+	dir = Malloc(sizeof(AG_Dir));
 	dir->ents = NULL;
 	dir->nents = 0;
 
@@ -191,7 +191,7 @@ AG_OpenDir(const char *path)
 
 	return (dir);
 fail:
-	Free(dir, 0);
+	Free(dir);
 	return (NULL);
 }
 
@@ -201,10 +201,10 @@ AG_CloseDir(AG_Dir *dir)
 	int i;
 
 	for (i = 0; i < dir->nents; i++) {
-		Free(dir->ents[i], 0);
+		Free(dir->ents[i]);
 	}
-	Free(dir->ents, 0);
-	Free(dir, 0);
+	Free(dir->ents);
+	Free(dir);
 }
 
 int
@@ -238,10 +238,10 @@ AG_MkPath(const char *path)
 
 		*slash = AG_PATHSEPC;
 	}
-	Free(pathp, 0);
+	Free(pathp);
 	return (0);
 fail:
-	Free(pathp, 0);
+	Free(pathp);
 	return (-1);
 }
 

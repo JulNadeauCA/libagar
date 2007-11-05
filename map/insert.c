@@ -114,7 +114,7 @@ GenerateTileMap(struct map_insert_tool *ins, RG_Tile *tile)
 			dw = tile->su->w - sx;
 			dh = tile->su->h - sy;
 
-			r = Malloc(sizeof(MAP_Item), M_MAP);
+			r = Malloc(sizeof(MAP_Item));
 			MAP_ItemInit(r, MAP_ITEM_TILE);
 			MAP_ItemSetTile(r, &ins->mTmp, tile->ts, tile->main_id);
 

@@ -83,7 +83,7 @@ VG_New(int flags)
 {
 	VG *vg;
 
-	vg = Malloc(sizeof(VG), M_VG);
+	vg = Malloc(sizeof(VG));
 	VG_Init(vg, flags);
 	return (vg);
 }
@@ -138,10 +138,10 @@ VG_Init(VG *vg, int flags)
 	vg->selection_color = SDL_MapRGB(vg->fmt, 255, 255, 0);
 	vg->mouseover_color = SDL_MapRGB(vg->fmt, 200, 200, 0);
 	vg->grid_gap = 0.25;
-	vg->origin = Malloc(sizeof(VG_Vtx)*VG_NORIGINS, M_VG);
-	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS, M_VG);
-	vg->origin_color = Malloc(sizeof(Uint32)*VG_NORIGINS, M_VG);
-	vg->layers = Malloc(sizeof(VG_Layer), M_VG);
+	vg->origin = Malloc(sizeof(VG_Vtx)*VG_NORIGINS);
+	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS);
+	vg->origin_color = Malloc(sizeof(Uint32)*VG_NORIGINS);
+	vg->layers = Malloc(sizeof(VG_Layer));
 	vg->nlayers = 0;
 	vg->cur_layer = 0;
 	vg->cur_block = NULL;
@@ -194,9 +194,9 @@ VG_FreeElement(VG *vg, VG_Element *vge)
 	if (vge->ops->destroy != NULL) {
 		vge->ops->destroy(vg, vge);
 	}
-	Free(vge->vtx, M_VG);
-	Free(vge->trans, M_VG);
-	Free(vge, M_VG);
+	Free(vge->vtx);
+	Free(vge->trans);
+	Free(vge);
 }
 
 static void
@@ -222,7 +222,7 @@ VG_DestroyBlocks(VG *vg)
 	     vgb != TAILQ_END(&vg->blocks);
 	     vgb = nvgb) {
 		nvgb = TAILQ_NEXT(vgb, vgbs);
-		Free(vgb, M_VG);
+		Free(vgb);
 	}
 	TAILQ_INIT(&vg->blocks);
 }
@@ -236,7 +236,7 @@ VG_DestroyStyles(VG *vg)
 	     st != TAILQ_END(&vg->styles);
 	     st = nst) {
 		nst = TAILQ_NEXT(st, styles);
-		Free(st, M_VG);
+		Free(st);
 	}
 	TAILQ_INIT(&vg->styles);
 }
@@ -252,17 +252,17 @@ VG_Reinit(VG *vg)
 void
 VG_Destroy(VG *vg)
 {
-	Free(vg->origin, M_VG);
-	Free(vg->origin_radius, M_VG);
-	Free(vg->origin_color, M_VG);
-	Free(vg->layers, M_VG);
+	Free(vg->origin);
+	Free(vg->origin_radius);
+	Free(vg->origin_color);
+	Free(vg->layers);
 
 	VG_DestroyBlocks(vg);
 	VG_DestroyElements(vg);
 	VG_DestroyStyles(vg);
 	AG_MutexDestroy(&vg->lock);
 
-	Free(vg->ints, M_VG);
+	Free(vg->ints);
 }
 
 void
@@ -333,7 +333,7 @@ VG_Begin(VG *vg, enum vg_element_type eltype)
 {
 	VG_Element *vge;
 
-	vge = Malloc(sizeof(VG_Element), M_VG);
+	vge = Malloc(sizeof(VG_Element));
 	vge->flags = 0;
 	vge->type = eltype;
 	vge->style = NULL;
@@ -684,7 +684,7 @@ VG_Vtx *
 VG_AllocVertex(VG_Element *vge)
 {
 	if (vge->vtx == NULL) {
-		vge->vtx = Malloc(sizeof(VG_Vtx), M_VG);
+		vge->vtx = Malloc(sizeof(VG_Vtx));
 	} else {
 		vge->vtx = Realloc(vge->vtx, (vge->nvtx+1)*sizeof(VG_Vtx));
 	}
@@ -695,7 +695,7 @@ VG_Matrix *
 VG_AllocMatrix(VG_Element *vge)
 {
 	if (vge->trans == NULL) {
-		vge->trans = Malloc(sizeof(VG_Matrix), M_VG);
+		vge->trans = Malloc(sizeof(VG_Matrix));
 	} else {
 		vge->trans = Realloc(vge->trans,
 		    (vge->ntrans+1)*sizeof(VG_Matrix));
@@ -977,7 +977,7 @@ VG_CreateStyle(VG *vg, enum vg_style_type type, const char *name)
 {
 	VG_Style *vgs;
 
-	vgs = Malloc(sizeof(VG_Style), M_VG);
+	vgs = Malloc(sizeof(VG_Style));
 	strlcpy(vgs->name, name, sizeof(vgs->name));
 	vgs->type = type;
 	vgs->color = SDL_MapRGB(vg->fmt, 250, 250, 250);
@@ -1338,7 +1338,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 	for (i = 0; i < nblocks; i++) {
 		VG_Block *vgb;
 
-		vgb = Malloc(sizeof(VG_Block), M_VG);
+		vgb = Malloc(sizeof(VG_Block));
 		AG_CopyString(vgb->name, buf, sizeof(vgb->name));
 		vgb->flags = (int)AG_ReadUint32(buf);
 		VG_ReadVertex(buf, &vgb->pos);
@@ -1423,13 +1423,13 @@ VG_Load(VG *vg, AG_DataSource *buf)
 
 		/* Load the vertices. */
 		vge->nvtx = (Uint)AG_ReadUint32(buf);
-		vge->vtx = Malloc(vge->nvtx*sizeof(VG_Vtx), M_VG);
+		vge->vtx = Malloc(vge->nvtx*sizeof(VG_Vtx));
 		for (j = 0; j < vge->nvtx; j++)
 			VG_ReadVertex(buf, &vge->vtx[j]);
 
 		/* Load the matrices. */
 		vge->ntrans = (Uint)AG_ReadUint32(buf);
-		vge->trans = Malloc(vge->ntrans*sizeof(VG_Matrix), M_VG);
+		vge->trans = Malloc(vge->ntrans*sizeof(VG_Matrix));
 		for (j = 0; j < vge->ntrans; j++)
 			VG_LoadMatrix(&vge->trans[j], buf);
 			

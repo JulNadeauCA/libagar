@@ -52,8 +52,7 @@ AG_WindowNew(Uint flags)
 {
 	AG_Window *win;
 
-	win = Malloc(sizeof(AG_Window), M_OBJECT);
-
+	win = Malloc(sizeof(AG_Window));
 	AG_MutexLock(&agView->lock);			/* XXX needed?? */
 	AG_WindowInit(win, NULL, flags);
 	AG_SetEvent(win, "window-close", AGWINDETACH(win));
@@ -82,7 +81,7 @@ AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 		win = NULL;
 		goto out;
 	}
-	win = Malloc(sizeof(AG_Window), M_OBJECT);
+	win = Malloc(sizeof(AG_Window));
 	AG_WindowInit(win, name, flags);
 	AG_SetEvent(win, "window-close", AGWINHIDE(win));
 	AG_ViewAttach(win);
@@ -393,7 +392,7 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 		return;
 	}
 	AG_WindowCountWidgets(WIDGET(win), &nwidgets);
-	widgets = Malloc(nwidgets * sizeof(AG_Widget *), M_WIDGET);
+	widgets = Malloc(nwidgets*sizeof(AG_Widget *));
 	AG_WindowMapWidgets(WIDGET(win), widgets, &i);
 
 	for (i = 0; i < nwidgets; i++) {
@@ -414,7 +413,7 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 			break;
 		}
 	}
-	Free(widgets, M_WIDGET);
+	Free(widgets);
 }
 
 /*

@@ -159,7 +159,7 @@ DestroyFont(void *p)
 		for (i = 0; i < font->nglyphs; i++) {
 			SDL_FreeSurface(font->bglyphs[i]);
 		}
-		Free(font->bglyphs, M_TEXT);
+		Free(font->bglyphs);
 	}
 }
 
@@ -225,7 +225,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	if (font != NULL)
 		goto out;
 
-	font = Malloc(sizeof(AG_Font), M_TEXT);
+	font = Malloc(sizeof(AG_Font));
 	AG_ObjectInit(font, name, &agFontOps);
 	font->size = ptsize;
 	font->flags = flags;
@@ -302,7 +302,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		}
 
 		font->type = AG_FONT_BITMAP;
-		font->bglyphs = Malloc(32*sizeof(SDL_Surface *), M_TEXT);
+		font->bglyphs = Malloc(32*sizeof(SDL_Surface *));
 		font->nglyphs = 0;
 
 		if (AG_XCFLoad(ds, 0, AG_LoadBitmapGlyph, font) == -1) {
@@ -342,7 +342,7 @@ out:
 fail:
 	AG_MutexUnlock(&agTextLock);
 	AG_ObjectDestroy(font);
-	Free(font, M_TEXT);
+	Free(font);
 	return (NULL);
 }
 
@@ -375,7 +375,7 @@ FreeGlyph(AG_Glyph *gl)
 		AG_UnlockGL();
 	}
 #endif
-	Free(gl, M_TEXT);
+	Free(gl);
 }
 
 #ifdef GLYPH_GC
@@ -489,7 +489,7 @@ AG_TextDestroy(void)
 			AG_TTFCloseFont(font->ttf);
 #endif
 		AG_ObjectDestroy(font);
-		Free(font, M_TEXT);
+		Free(font);
 	}
 #ifdef HAVE_FREETYPE
 	if (agFreetype)
@@ -523,7 +523,7 @@ AG_TextRenderGlyph(Uint32 ch)
 	if (gl == NULL) {
 		Uint32 ucs[2];
 
-		gl = Malloc(sizeof(AG_Glyph), M_TEXT);
+		gl = Malloc(sizeof(AG_Glyph));
 		strlcpy(gl->fontname, OBJECT(state->font)->name,
 		    sizeof(gl->fontname));
 		gl->fontsize = state->font->size;
@@ -960,7 +960,7 @@ TextRenderFT(const Uint32 *ucs)
 			dst += su->pitch;
 		}
 	}
-	Free(wLines, M_TEXT);
+	Free(wLines);
 	return (su);
 empty:
 	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
@@ -1078,7 +1078,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 			dst += su->pitch/4;
 		}
 	}
-	Free(wLines, M_TEXT);
+	Free(wLines);
 	return (su);
 empty:
 	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));

@@ -33,7 +33,7 @@ AG_ComboNew(void *parent, Uint flags, const char *label)
 {
 	AG_Combo *com;
 
-	com = Malloc(sizeof(AG_Combo), M_OBJECT);
+	com = Malloc(sizeof(AG_Combo));
 	AG_ComboInit(com, flags, label);
 	AG_ObjectAttach(parent, com);
 	if (flags & AG_COMBO_FOCUS) {
@@ -226,7 +226,7 @@ AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
 	if (flags & AG_COMBO_ANY_TEXT)
 		AG_WidgetDisable(com->tbox);
 
-	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	com->list = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(com->list, AG_TLIST_EXPAND);
 	
 	if (flags & AG_COMBO_TREE) { com->list->flags |= AG_TLIST_TREE; }
@@ -286,7 +286,7 @@ Destroy(void *p)
 		AG_ViewDetach(com->panel);
 	}
 	AG_ObjectDestroy(com->list);
-	Free(com->list, M_OBJECT);
+	Free(com->list);
 }
 
 void

@@ -199,7 +199,7 @@ tryname:
 	if (SG_FindNode(sg, name) != NULL)
 		goto tryname;
 
-	node = Malloc(ops->size, M_SG);
+	node = Malloc(ops->size);
 	ops->init(node, name);
 	SG_NodeAttach(sg->root, node);
 }
@@ -413,7 +413,7 @@ SG_Edit(void *p)
 	AG_WindowSetPaddingTop(win, 0);
 	AG_WindowSetSpacing(win, 0);
 
-	sv = Malloc(sizeof(SG_View), M_OBJECT);
+	sv = Malloc(sizeof(SG_View));
 	SG_ViewInit(sv, sg, SG_VIEW_EXPAND);
 	
 	menu = AG_MenuNew(win, AG_MENU_HFILL);

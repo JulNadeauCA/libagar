@@ -38,7 +38,7 @@ AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *label)
 {
 	AG_Numerical *num;
 
-	num = Malloc(sizeof(AG_Numerical), M_OBJECT);
+	num = Malloc(sizeof(AG_Numerical));
 	AG_NumericalInit(num, flags, unit, label);
 	AG_ObjectAttach(parent, num);
 	return (num);

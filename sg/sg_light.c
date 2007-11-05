@@ -46,7 +46,7 @@ SG_LightNew(void *pnode, const char *name)
 {
 	SG_Light *lt;
 
-	lt = Malloc(sizeof(SG_Light), M_SG);
+	lt = Malloc(sizeof(SG_Light));
 	SG_LightInit(lt, name);
 	SG_NodeAttach(pnode, lt);
 	return (lt);

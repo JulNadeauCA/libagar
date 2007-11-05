@@ -50,7 +50,7 @@ VG_ViewNew(void *parent, VG *vg, Uint flags)
 {
 	VG_View *vgv;
 
-	vgv = Malloc(sizeof(VG_View), M_OBJECT);
+	vgv = Malloc(sizeof(VG_View));
 	VG_ViewInit(vgv, vg, flags);
 	AG_ObjectAttach(parent, vgv);
 	if (flags & VG_VIEW_FOCUS) {
@@ -338,7 +338,7 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 			    ag_widget) {
 				AG_ObjectDetach(wt);
 				AG_ObjectDestroy(wt);
-				Free(wt, M_OBJECT);
+				Free(wt);
 			}
 			if ((pwin = AG_WidgetParentWindow(vv->curtool->pane))
 			    != NULL) {
@@ -411,7 +411,7 @@ VG_ViewRegTool(VG_View *vv, const VG_ToolOps *ops, void *p)
 {
 	VG_Tool *t;
 
-	t = Malloc(ops->len, M_MAPEDIT);
+	t = Malloc(ops->len);
 	t->ops = ops;
 	t->vgv = vv;
 	t->p = p;

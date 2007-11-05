@@ -111,7 +111,7 @@ SG_New(void *parent, const char *name)
 {
 	SG *sg;
 
-	sg = Malloc(sizeof(SG), M_SG);
+	sg = Malloc(sizeof(SG));
 	SG_Init(sg, name);
 	AG_ObjectAttach(parent, sg);
 	return (sg);
@@ -141,7 +141,7 @@ SG_AttachDefaultNodes(SG *sg)
 static void
 SG_InitRoot(SG *sg)
 {
-	sg->root = Malloc(sizeof(SG_Point), M_SG);
+	sg->root = Malloc(sizeof(SG_Point));
 	SG_PointInit(sg->root, "_root");
 	SG_PointSize(SGPOINT(sg->root), 3.0);
 	SG_PointColor(SGPOINT(sg->root), SG_ColorRGB(0.0, 255.0, 0.0));
@@ -199,12 +199,12 @@ SG_FreeNode(SG *sg, SG_Node *node)
 		if (n1->ops->destroy != NULL) {
 			n1->ops->destroy(n1);
 		}
-		Free(n1, M_SG);
+		Free(n1);
 	}
 	if (node->ops->destroy != NULL) {
 		node->ops->destroy(node);
 	}
-	Free(node, M_SG);
+	Free(node);
 }
 
 static void
@@ -328,7 +328,7 @@ SG_NodeLoad(SG *sg, SG_Node **rnode, AG_DataSource *buf)
 		}
 	}
 	nops = sgElements[i];
-	node = Malloc(nops->size, M_SG);
+	node = Malloc(nops->size);
 	nops->init(node, name);
 	node->sg = sg;
 
@@ -501,7 +501,7 @@ SG_NodeAdd(void *pNode, const char *name, const SG_NodeOps *ops, Uint flags)
 {
 	SG_Node *n;
 
-	n = Malloc(ops->size, M_SG);
+	n = Malloc(ops->size);
 	SG_NodeInit(n, name, ops, flags);
 	SG_NodeAttach(pNode, n);
 	return (n);

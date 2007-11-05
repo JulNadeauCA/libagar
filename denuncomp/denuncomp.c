@@ -125,7 +125,7 @@ main(int argc, char *argv[])
 			goto fail;
 		}
 		
-		buf = AG_Malloc(memb->size, 0);
+		buf = AG_Malloc(memb->size);
 		AG_Seek(den->buf, memb->offs, AG_SEEK_SET);
 		AG_Read(den->buf, buf, 1, memb->size);
 		if (den->buf->rdLast > 0) {
@@ -136,7 +136,7 @@ main(int argc, char *argv[])
 			}
 		}
 		fclose(f);
-		AG_Free(buf, 0);
+		AG_Free(buf);
 	}
 out:
 	AG_DenClose(den);

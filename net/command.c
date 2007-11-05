@@ -117,7 +117,7 @@ NS_CommandCopyString(char *dst, NS_Command *cmd, const char *key,
 void
 NS_InitCommand(NS_Command *cmd)
 {
-	cmd->args = Malloc(sizeof(NS_CommandArg), M_NETBUF);
+	cmd->args = Malloc(sizeof(NS_CommandArg));
 	cmd->nargs = 0;
 }
 
@@ -129,9 +129,9 @@ NS_DestroyCommand(NS_Command *cmd)
 	for (i = 0; i < cmd->nargs; i++) {
 		NS_CommandArg *arg = &cmd->args[i];
 
-		Free(arg->value, 0);
+		Free(arg->value);
 	}
-	Free(cmd->args, M_NETBUF);
+	Free(cmd->args);
 }
 
 #endif /* NETWORK */

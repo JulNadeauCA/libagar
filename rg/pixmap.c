@@ -69,7 +69,7 @@ tryname:
 	if (RG_TilesetFindPixmap(ts, name) != NULL)
 		goto tryname;
 
-	px = Malloc(sizeof(RG_Pixmap), M_RG);
+	px = Malloc(sizeof(RG_Pixmap));
 	RG_PixmapInit(px, ts, flags);
 	strlcpy(px->name, name, sizeof(px->name));
 	TAILQ_INSERT_TAIL(&ts->pixmaps, px, pixmaps);
@@ -86,7 +86,7 @@ RG_PixmapInit(RG_Pixmap *px, RG_Tileset *ts, int flags)
 	px->yorig = 0;
 	px->su = NULL;
 	px->nrefs = 0;
-	px->ublks = Malloc(sizeof(RG_PixmapUndoBlk), M_RG);
+	px->ublks = Malloc(sizeof(RG_PixmapUndoBlk));
 	px->nublks = 1;
 	px->curblk = 0;
 
@@ -99,7 +99,7 @@ RG_PixmapInit(RG_Pixmap *px, RG_Tileset *ts, int flags)
 	TAILQ_INIT(&px->brushes);
 
 	RG_PixmapBeginUndoBlk(px);
-	px->ublks[0].mods = Malloc(sizeof(RG_PixmapMod), M_RG);
+	px->ublks[0].mods = Malloc(sizeof(RG_PixmapMod));
 	px->ublks[0].nmods = 0;
 }
 
@@ -109,7 +109,7 @@ RG_PixmapAddBrush(RG_Pixmap *px, enum rg_brush_type type,
 {
 	RG_Brush *br;
 
-	br = Malloc(sizeof(RG_Brush), M_RG);
+	br = Malloc(sizeof(RG_Brush));
 	br->type = type;
 	br->name[0] = '\0';
 	br->flags = 0;
@@ -124,7 +124,7 @@ RG_PixmapDelBrush(RG_Pixmap *px, RG_Brush *br)
 {
 	TAILQ_REMOVE(&px->brushes, br, brushes);
 	br->px->nrefs--;
-	Free(br, M_RG);
+	Free(br);
 }
 
 int
@@ -143,7 +143,7 @@ RG_PixmapLoad(RG_Pixmap *px, AG_DataSource *buf)
 	for (i = 0; i < nbrushes; i++) {
 		RG_Brush *br;
 
-		br = Malloc(sizeof(RG_Brush), M_RG);
+		br = Malloc(sizeof(RG_Brush));
 		AG_CopyString(br->name, buf, sizeof(br->name));
 		br->type = (enum rg_brush_type)AG_ReadUint8(buf);
 		br->flags = (int)AG_ReadUint32(buf);
@@ -193,15 +193,15 @@ RG_PixmapDestroy(RG_Pixmap *px)
 		SDL_FreeSurface(px->su);
 
 	for (i = 0; i < px->nublks; i++) {
-		Free(px->ublks[i].mods, M_RG);
+		Free(px->ublks[i].mods);
 	}
-	Free(px->ublks, M_RG);
+	Free(px->ublks);
 
 	for (br = TAILQ_FIRST(&px->brushes);
 	     br != TAILQ_END(&px->brushes);
 	     br = nbr) {
 		nbr = TAILQ_NEXT(br, brushes);
-		Free(br, M_RG);
+		Free(br);
 	}
 }
 
@@ -367,10 +367,10 @@ CreateBrushDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("New %s brush"), px->name);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	tb_name = Malloc(sizeof(AG_Textbox), M_OBJECT);
+	tb_name = Malloc(sizeof(AG_Textbox));
 	AG_TextboxInit(tb_name, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name: "));
 	
-	cb_oneshot = Malloc(sizeof(AG_Checkbox), M_OBJECT);
+	cb_oneshot = Malloc(sizeof(AG_Checkbox));
 	AG_CheckboxInit(cb_oneshot, 0, _("One-shot"));
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
@@ -418,7 +418,7 @@ FlipPixmap(AG_Event *event)
 	Uint8 *fb = px->su->pixels;
 	int y;
 
-	buf = Malloc(totsize, M_RG);
+	buf = Malloc(totsize);
 	memcpy(buf, fb, totsize);
 	row = buf + totsize - px->su->pitch;
 	for (y = 0; y < px->su->h; y++) {
@@ -426,7 +426,7 @@ FlipPixmap(AG_Event *event)
 		row -= px->su->pitch;
 		fb += px->su->pitch;
 	}
-	Free(buf, M_RG);
+	Free(buf);
 }
 
 static void
@@ -437,7 +437,7 @@ MirrorPixmap(AG_Event *event)
 	Uint8 *fb = px->su->pixels;
 	int x, y;
 
-	row = Malloc(px->su->pitch, M_RG);
+	row = Malloc(px->su->pitch);
 	for (y = 0; y < px->su->h; y++) {
 		memcpy(row, fb, px->su->pitch);
 		rowp = row + px->su->pitch - px->su->format->BytesPerPixel;
@@ -447,7 +447,7 @@ MirrorPixmap(AG_Event *event)
 			rowp -= px->su->format->BytesPerPixel;
 		}
 	}
-	Free(row, M_RG);
+	Free(row);
 }
 
 AG_Window *
@@ -545,7 +545,7 @@ RG_PixmapBeginUndoBlk(RG_Pixmap *px)
 
 	while (px->nublks > px->curblk+1) {
 		ublk = &px->ublks[px->nublks-1];
-		Free(ublk->mods, M_RG);
+		Free(ublk->mods);
 		px->nublks--;
 	}
 
@@ -553,7 +553,7 @@ RG_PixmapBeginUndoBlk(RG_Pixmap *px)
 	px->curblk++;
 
 	ublk = &px->ublks[px->curblk];
-	ublk->mods = Malloc(sizeof(RG_PixmapMod), M_RG);
+	ublk->mods = Malloc(sizeof(RG_PixmapMod));
 	ublk->nmods = 0;
 }
 
@@ -1128,7 +1128,7 @@ RG_PixmapOpenMenu(RG_Tileview *tv, int x, int y)
 	if (tv->tv_pixmap.menu != NULL)
 		RG_PixmapCloseMenu(tv);
 
-	me = tv->tv_pixmap.menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	me = tv->tv_pixmap.menu = Malloc(sizeof(AG_Menu));
 	AG_MenuInit(me, 0);
 
 	mi = tv->tv_pixmap.menu_item = AG_MenuAddItem(me, NULL);
@@ -1147,7 +1147,7 @@ RG_PixmapCloseMenu(RG_Tileview *tv)
 
 	AG_MenuCollapse(me, mi);
 	AG_ObjectDestroy(me);
-	Free(me, M_OBJECT);
+	Free(me);
 
 	tv->tv_pixmap.menu = NULL;
 	tv->tv_pixmap.menu_item = NULL;

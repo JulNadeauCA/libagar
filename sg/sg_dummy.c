@@ -39,7 +39,7 @@ SG_DummyNew(void *pnode, const char *name)
 {
 	SG_Dummy *dum;
 
-	dum = Malloc(sizeof(SG_Dummy), M_SG);
+	dum = Malloc(sizeof(SG_Dummy));
 	SG_DummyInit(dum, name);
 	SG_NodeAttach(pnode, dum);
 	return (dum);

@@ -47,7 +47,7 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 {
 	AG_Textbox *textbox;
 
-	textbox = Malloc(sizeof(AG_Textbox), M_OBJECT);
+	textbox = Malloc(sizeof(AG_Textbox));
 	AG_TextboxInit(textbox, flags, label);
 	AG_ObjectAttach(parent, textbox);
 	if (flags & AG_TEXTBOX_FOCUS) {
@@ -187,7 +187,7 @@ Destroy(void *p)
 {
 	AG_Textbox *tbox = p;
 
-	Free(tbox->labelText,0);
+	Free(tbox->labelText);
 	AG_MutexDestroy(&tbox->lock);
 }
 
@@ -825,7 +825,7 @@ AG_TextboxSetLabel(AG_Textbox *tbox, const char *fmt, ...)
 	AG_MutexLock(&tbox->lock);
 
 	va_start(ap, fmt);
-	Free(tbox->labelText,0);
+	Free(tbox->labelText);
 	Vasprintf(&tbox->labelText, fmt, ap);
 	va_end(ap);
 

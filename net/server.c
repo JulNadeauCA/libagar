@@ -74,7 +74,7 @@ NS_ServerNew(void *parent, Uint flags, const char *name, const char *proto,
 {
 	NS_Server *ns;
 
-	ns = Malloc(sizeof(NS_Server), M_OBJECT);
+	ns = Malloc(sizeof(NS_Server));
 	NS_ServerInit(ns, name);
 	ns->flags |= flags;
 	NS_ServerSetProtocol(ns, proto, protoVer);
@@ -121,9 +121,9 @@ DestroyServer(void *p)
 {
 	NS_Server *ns = p;
 
-	Free(ns->cmds, M_NETBUF);
-	Free(ns->authModes, M_NETBUF);
-	Free(ns->listItems, M_NETBUF);
+	Free(ns->cmds);
+	Free(ns->authModes);
+	Free(ns->listItems);
 }
 
 /* Set the protocol version string to use (thread unsafe). */
@@ -207,8 +207,8 @@ NS_EndList(NS_Server *ns)
 	fgets(ack, 2, stdin);
 
 	if (ns->listItemCount > 0) {
-		Free(ns->listItems, M_NETBUF);
-		Free(ns->listItemSize, M_NETBUF);
+		Free(ns->listItems);
+		Free(ns->listItemSize);
 		ns->listItemSize = NULL;
 		ns->listItemCount = 0;
 	}
@@ -219,8 +219,8 @@ void
 NS_ListItem(NS_Server *ns, void *buf, size_t len)
 {
 	if (ns->listItemCount == 0) {
-		ns->listItems = Malloc(sizeof(void *), M_NETBUF);
-		ns->listItemSize = Malloc(sizeof(size_t), M_NETBUF);
+		ns->listItems = Malloc(sizeof(void *));
+		ns->listItemSize = Malloc(sizeof(size_t));
 	} else {
 		ns->listItems = Realloc(ns->listItems,
 		    (ns->listItemCount+1)*sizeof(void *));
@@ -397,7 +397,7 @@ ServerLoop(NS_Server *ns)
 			if (strlcpy(ncmd.name, buf, sizeof(ncmd.name)) >=
 			    sizeof(ncmd.name)) {
 				NS_DestroyCommand(&ncmd);
-				Free(lbuf, M_NETBUF);
+				Free(lbuf);
 				NS_Logout(ns, 1, "command name too big");
 			}
 		} else if ((value = strchr(buf, '=')) != NULL) {
@@ -416,7 +416,7 @@ ServerLoop(NS_Server *ns)
 			if (strlcpy(narg->key, buf, sizeof(narg->key)) >=
 			    sizeof(narg->key)) {
 				NS_DestroyCommand(&ncmd);
-				Free(lbuf, M_NETBUF);
+				Free(lbuf);
 				NS_Logout(ns, 1, "command key is too big");
 			}
 		} else {
@@ -426,7 +426,7 @@ ServerLoop(NS_Server *ns)
 		}
 
 		if (lbuf != NULL) {
-			Free(lbuf, M_NETBUF);
+			Free(lbuf);
 			lbuf = NULL;
 		}
 	}
@@ -465,7 +465,7 @@ NS_Message(NS_Server *ns, int rv, const char *fmt, ...)
 	va_end(ap);
 	printf("%d %s\n", rv, s);
 	fflush(stdout);
-	Free(s,0);
+	Free(s);
 }
 
 /* Initiate a binary transfer. */

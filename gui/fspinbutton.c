@@ -38,7 +38,7 @@ AG_FSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *label)
 {
 	AG_FSpinbutton *fsu;
 
-	fsu = Malloc(sizeof(AG_FSpinbutton), M_OBJECT);
+	fsu = Malloc(sizeof(AG_FSpinbutton));
 	AG_FSpinbuttonInit(fsu, flags, unit, label);
 	AG_ObjectAttach(parent, fsu);
 	return (fsu);

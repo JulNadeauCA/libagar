@@ -54,8 +54,7 @@ ReadDenHeader(AG_Den *den)
 	den->keywords = AG_ReadString(den->buf);
 
 	den->nmembers = AG_ReadUint32(den->buf);
-	den->members = Malloc(den->nmembers*sizeof(AG_DenMember),
-	    M_LOADER);
+	den->members = Malloc(den->nmembers*sizeof(AG_DenMember));
 
 	for (i = 0; i < den->nmembers; i++) {
 		AG_DenMember *memb = &den->members[i];
@@ -83,7 +82,7 @@ AG_DenWriteHeader(AG_Den *den, int nmemb)
 	AG_WriteString(den->buf, den->keywords);
 
 	/* Initialize the mapping table. */
-	den->members = Malloc(nmemb*sizeof(AG_DenMember), M_LOADER);
+	den->members = Malloc(nmemb*sizeof(AG_DenMember));
 	den->nmembers = (Uint32)nmemb;
 	for (i = 0; i < den->nmembers; i++) {
 		AG_DenMember *memb = &den->members[i];
@@ -131,10 +130,10 @@ AG_DenOpen(const char *path, enum ag_den_open_mode mode)
 {
 	AG_Den *den;
 
-	den = Malloc(sizeof(AG_Den), M_LOADER);
+	den = Malloc(sizeof(AG_Den));
 	den->buf = AG_OpenFile(path, (mode == AG_DEN_READ) ? "rb" : "wb");
 	if (den->buf == NULL) {
-		Free(den, M_LOADER);
+		Free(den);
 		return (NULL);
 	}
 	switch (mode) {
@@ -151,7 +150,7 @@ AG_DenOpen(const char *path, enum ag_den_open_mode mode)
 	return (den);
 fail:
 	AG_CloseFile(den->buf);
-	Free(den, M_LOADER);
+	Free(den);
 	return (NULL);
 }
 
@@ -160,12 +159,12 @@ AG_DenClose(AG_Den *den)
 {
 	AG_CloseFile(den->buf);
 
-	Free(den->author, 0);
-	Free(den->copyright, 0);
-	Free(den->descr, 0);
-	Free(den->keywords, 0);
-	Free(den->members, M_LOADER);
-	Free(den, M_LOADER);
+	Free(den->author);
+	Free(den->copyright);
+	Free(den->descr);
+	Free(den->keywords);
+	Free(den->members);
+	Free(den);
 }
 
 /* Import the contents of a file in a den archive. */

@@ -37,7 +37,7 @@ AG_MSpinbuttonNew(void *parent, Uint flags, const char *sep, const char *label)
 {
 	AG_MSpinbutton *sbu;
 
-	sbu = Malloc(sizeof(AG_MSpinbutton), M_OBJECT);
+	sbu = Malloc(sizeof(AG_MSpinbutton));
 	AG_MSpinbuttonInit(sbu, flags, sep, label);
 	AG_ObjectAttach(parent, sbu);
 	return (sbu);

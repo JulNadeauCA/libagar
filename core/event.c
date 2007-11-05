@@ -109,7 +109,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 		ev = NULL;
 	}
 	if (ev == NULL) {
-		ev = Malloc(sizeof(AG_Event), M_EVENT);
+		ev = Malloc(sizeof(AG_Event));
 		if (name != NULL) {
 			strlcpy(ev->name, name, sizeof(ev->name));
 		} else {
@@ -145,7 +145,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 
 	AG_MutexLock(&ob->lock);
 
-	ev = Malloc(sizeof(AG_Event), M_EVENT);
+	ev = Malloc(sizeof(AG_Event));
 	if (name != NULL) {
 		strlcpy(ev->name, name, sizeof(ev->name));
 	} else {
@@ -188,7 +188,7 @@ AG_UnsetEvent(void *p, const char *name)
 	}
 	TAILQ_REMOVE(&ob->events, ev, events);
 	ob->nevents--;
-	Free(ev, M_EVENT);
+	Free(ev);
 out:
 	AG_MutexUnlock(&ob->lock);
 }
@@ -243,7 +243,7 @@ EventThread(void *p)
 		eev->handler(eev);
 	}
 	debug(DEBUG_ASYNC, "%s: %s end\n", rcvr->name, eev->name);
-	Free(eev, M_EVENT);
+	Free(eev);
 	return (NULL);
 }
 #endif /* THREADS */
@@ -276,7 +276,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			AG_Event *evNew;
 
 			/* TODO allocate from an per-object pool */
-			evNew = Malloc(sizeof(AG_Event), M_EVENT);
+			evNew = Malloc(sizeof(AG_Event));
 			memcpy(evNew, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(evNew, fmt);
 			evNew->argv[evNew->argc].p = sndr;
@@ -449,7 +449,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 		AG_Event *evNew;
 
 		/* TODO allocate from an per-object pool */
-		evNew = Malloc(sizeof(AG_Event), M_EVENT);
+		evNew = Malloc(sizeof(AG_Event));
 		memcpy(evNew, ev, sizeof(AG_Event));
 		evNew->argv[0].p = rcvr;
 		evNew->argv[evNew->argc].p = sndr;

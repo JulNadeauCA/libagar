@@ -47,7 +47,7 @@ SG_ObjectNew(void *pnode, const char *name)
 {
 	SG_Object *so;
 
-	so = Malloc(sizeof(SG_Object), M_SG);
+	so = Malloc(sizeof(SG_Object));
 	SG_ObjectInit(so, name);
 	SG_NodeAttach(pnode, so);
 	return (so);
@@ -59,9 +59,9 @@ SG_ObjectInit(void *p, const char *name)
 	SG_Object *so = p;
 
 	SG_NodeInit(so, name, &sgObjectOps, 0);
-	so->vtx = Malloc(sizeof(SG_Vertex), M_SG);
+	so->vtx = Malloc(sizeof(SG_Vertex));
 	so->nvtx = 1;
-	so->edgetbl = Malloc(sizeof(SG_EdgeEnt), M_SG);
+	so->edgetbl = Malloc(sizeof(SG_EdgeEnt));
 	so->nedgetbl = 0;
 	SLIST_INIT(&so->facets);
 	SG_VertexInit(&so->vtx[0]);				/* Reserved */
@@ -237,8 +237,8 @@ SG_Edge2(void *obj, int vT, int vH)
 		if (eH->v == vH && eH->oe->v == vT)
 			return (eH);
 	}
-	eT = Malloc(sizeof(SG_Edge), M_SG);
-	eH = Malloc(sizeof(SG_Edge), M_SG);
+	eT = Malloc(sizeof(SG_Edge));
+	eH = Malloc(sizeof(SG_Edge));
 	eT->v = vT;
 	eT->f = NULL;
 	eT->oe = eH;
@@ -256,7 +256,7 @@ SG_FacetNew(void *obj, int n)
 	SG_Object *so = obj;
 	SG_Facet *fct;
 
-	fct = Malloc(sizeof(SG_Facet), M_SG);
+	fct = Malloc(sizeof(SG_Facet));
 	fct->obj = so;
 	fct->e[0] = NULL;
 	fct->e[1] = NULL;
@@ -282,7 +282,7 @@ SG_FacetDelete(SG_Facet *fct)
 		if (e->f == fct)
 			e->f = NULL;
 	}
-	Free(fct, M_SG);
+	Free(fct);
 }
 
 /* 
@@ -597,7 +597,7 @@ SG_ObjectEdgeMatrix(SG_Object *so, Uint *pn)
 	int i, j;
 	Uint n = so->nvtx;
 	
-	M = Malloc(sizeof(Uint8)*n*n, M_SG);
+	M = Malloc(sizeof(Uint8)*n*n);
 	for (i = 0; i < n*n; i++) {
 		M[i] = 0;
 	}
@@ -621,7 +621,7 @@ SG_ObjectFacetMatrix(SG_Object *so, Uint *pn)
 	int i, j;
 	Uint n = so->nvtx;
 	
-	M = Malloc(sizeof(Uint8)*n*n, M_SG);
+	M = Malloc(sizeof(Uint8)*n*n);
 	for (i = 0; i < n*n; i++) {
 		M[i] = 0;
 	}
@@ -650,7 +650,7 @@ SG_ObjectFreeGeometry(void *p)
 		     e1 != SLIST_END(&ent->edges);
 		     e1 = e2) {
 			e2 = SLIST_NEXT(e1, edges);
-			Free(e1, M_SG);
+			Free(e1);
 		}
 		SLIST_INIT(&ent->edges);
 	}
@@ -658,7 +658,7 @@ SG_ObjectFreeGeometry(void *p)
 	     f1 != SLIST_END(&so->facets);
 	     f1 = f2) {
 		f2 = SLIST_NEXT(f1, facets);
-		Free(f1, M_SG);
+		Free(f1);
 	}
 	SLIST_INIT(&so->facets);
 	

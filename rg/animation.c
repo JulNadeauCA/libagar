@@ -63,9 +63,9 @@ RG_AnimInit(RG_Anim *ani, RG_Tileset *ts, const char *name, int flags)
 	ani->tileset = ts;
 	ani->nrefs = 0;
 
-	ani->insns = Malloc(sizeof(RG_AnimInsn), M_RG);
+	ani->insns = Malloc(sizeof(RG_AnimInsn));
 	ani->ninsns = 0;
-	ani->frames = Malloc(sizeof(RG_AnimFrame), M_RG);
+	ani->frames = Malloc(sizeof(RG_AnimFrame));
 	ani->nframes = 0;
 
 	ani->gframe = 0;
@@ -202,10 +202,9 @@ RG_AnimDestroy(RG_Anim *ani)
 	for (i = 0; i < ani->ninsns; i++) {
 		DestroyInsn(&ani->insns[i]);
 	}
-	Free(ani->insns, M_RG);
-	
+	Free(ani->insns);
 	FreeFrames(ani);
-	Free(ani->frames, M_RG);
+	Free(ani->frames);
 }
 
 int
@@ -470,12 +469,12 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 	OBJECT_FOREACH_CHILD(child, box, ag_widget) {
 		AG_ObjectDetach(child);
 		AG_ObjectDestroy(child);
-		Free(child, M_OBJECT);
+		Free(child);
 	}
 
 	switch (insn->type) {
 	case RG_ANIM_TILE:
-		tv = Malloc(sizeof(RG_Tileview), M_OBJECT);
+		tv = Malloc(sizeof(RG_Tileview));
 		RG_TileviewInit(tv, ani->tileset, 0);
 
 		com = AG_ComboNew(box, AG_COMBO_POLL|AG_COMBO_HFILL|
@@ -534,7 +533,7 @@ EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 	OBJECT_FOREACH_CHILD(child, box, ag_widget) {
 		AG_ObjectDetach(child);
 		AG_ObjectDestroy(child);
-		Free(child, M_OBJECT);
+		Free(child);
 	}
 	
 	ani->gframe = fr->name;

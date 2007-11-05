@@ -39,7 +39,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	va_list ap;
 	const char *p;
 	
-	label = Malloc(sizeof(AG_Label), M_OBJECT);
+	label = Malloc(sizeof(AG_Label));
 	AG_LabelInit(label, AG_LABEL_POLLED, flags, fmt);
 #ifdef THREADS
 	label->poll.lock = NULL;
@@ -78,7 +78,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 	va_list ap;
 	const char *p;
 	
-	label = Malloc(sizeof(AG_Label), M_OBJECT);
+	label = Malloc(sizeof(AG_Label));
 	AG_LabelInit(label, AG_LABEL_POLLED_MT, flags, fmt);
 #ifdef THREADS
 	label->poll.lock = mutex;
@@ -123,7 +123,7 @@ AG_LabelNewStatic(void *parent, Uint flags, const char *fmt, ...)
 	} else {
 		s = NULL;
 	}
-	label = Malloc(sizeof(AG_Label), M_OBJECT);
+	label = Malloc(sizeof(AG_Label));
 	AG_LabelInit(label, AG_LABEL_STATIC, flags|AG_LABEL_NODUP, s);
 	AG_ObjectAttach(parent, label);
 	return (label);
@@ -135,7 +135,7 @@ AG_LabelNewStaticString(void *parent, Uint flags, const char *text)
 {
 	AG_Label *lbl;
 	
-	lbl = Malloc(sizeof(AG_Label), M_OBJECT);
+	lbl = Malloc(sizeof(AG_Label));
 	AG_LabelInit(lbl, AG_LABEL_STATIC, flags, text);
 	AG_ObjectAttach(parent, lbl);
 	return (lbl);
@@ -307,7 +307,7 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 	va_list ap;
 
 	AG_MutexLock(&lbl->lock);
-	Free(lbl->text,0);
+	Free(lbl->text);
 	va_start(ap, fmt);
 	Vasprintf(&lbl->text, fmt, ap);
 	va_end(ap);
@@ -319,7 +319,7 @@ void
 AG_LabelString(AG_Label *lbl, const char *s)
 {
 	AG_MutexLock(&lbl->lock);
-	Free(lbl->text,0);
+	Free(lbl->text);
 	lbl->text = Strdup(s);
 	lbl->flags |= AG_LABEL_REGEN;
 	AG_MutexUnlock(&lbl->lock);
@@ -729,7 +729,7 @@ Destroy(void *p)
 	     lfl != SLIST_END(&lbl->lflags);
 	     lfl = lflNext) {
 		lflNext = SLIST_NEXT(lfl, lflags);
-		Free(lfl, M_WIDGET);
+		Free(lfl);
 	}
 	AG_MutexDestroy(&lbl->lock);
 }
@@ -741,7 +741,7 @@ AG_LabelFlagNew(AG_Label *lbl, Uint idx, const char *text,
 {
 	struct ag_label_flag *lfl;
 
-	lfl = Malloc(sizeof(struct ag_label_flag), M_WIDGET);
+	lfl = Malloc(sizeof(struct ag_label_flag));
 	lfl->idx = idx;
 	lfl->text = text;
 	lfl->type = type;

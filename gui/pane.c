@@ -36,7 +36,7 @@ AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)
 {
 	AG_Pane *pa;
 
-	pa = Malloc(sizeof(AG_Pane), M_OBJECT);
+	pa = Malloc(sizeof(AG_Pane));
 	AG_PaneInit(pa, type, flags);
 	AG_ObjectAttach(parent, pa);
 	return (pa);
@@ -208,7 +208,7 @@ AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
 
 		AG_ObjectDetach(pa->div[which]);
 		AG_ObjectDestroy(pa->div[which]);
-		Free(pa->div[which],M_OBJECT);
+		Free(pa->div[which]);
 	}
 #endif
 	AG_ObjectAttach(pa->div[which], box);

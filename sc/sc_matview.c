@@ -39,7 +39,7 @@ SC_MatviewNew(void *parent, SC_Matrix *mat, Uint flags)
 {
 	SC_Matview *mv;
 
-	mv = Malloc(sizeof(SC_Matview), M_OBJECT);
+	mv = Malloc(sizeof(SC_Matview));
 	SC_MatviewInit(mv, mat, flags);
 	AG_ObjectAttach(parent, mv);
 	return (mv);

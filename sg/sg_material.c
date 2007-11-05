@@ -71,7 +71,7 @@ SG_MaterialNew(void *parent, const char *name)
 {
 	SG_Material *mat;
 
-	mat = Malloc(sizeof(SG_Material), M_OBJECT);
+	mat = Malloc(sizeof(SG_Material));
 	SG_MaterialInit(mat, name);
 	SG_NodeAttach(parent, mat);
 	return (mat);
@@ -147,7 +147,7 @@ SG_MaterialTextureFromSurface(SDL_Surface *su)
 {
 	SG_Texture *tex;
 
-	tex = Malloc(sizeof(SG_Texture), M_SG);
+	tex = Malloc(sizeof(SG_Texture));
 	tex->s = 0;
 	tex->t = 0;
 	tex->su = SDL_CreateRGBSurface(SDL_SWSURFACE,

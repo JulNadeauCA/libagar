@@ -38,7 +38,7 @@ AG_GLViewNew(void *parent, Uint flags)
 {
 	AG_GLView *glv;
 
-	glv = Malloc(sizeof(AG_GLView), M_OBJECT);
+	glv = Malloc(sizeof(AG_GLView));
 	AG_GLViewInit(glv, flags);
 	AG_ObjectAttach(parent, glv);
 	if (flags & AG_GLVIEW_FOCUS) {

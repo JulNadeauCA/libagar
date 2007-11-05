@@ -64,14 +64,14 @@ AG_CopyProp(const AG_Prop *prop)
 {
 	AG_Prop *nprop;
 
-	nprop = Malloc(sizeof(AG_Prop), M_PROP);
+	nprop = Malloc(sizeof(AG_Prop));
 	memcpy(nprop, prop, sizeof(AG_Prop));
 
 	switch (prop->type) {
 	case AG_PROP_STRING:
 		nprop->data.s = Strdup(prop->data.s);
 		if (nprop->data.s == NULL) {
-			Free(nprop, M_PROP);
+			Free(nprop);
 			AG_SetError(_("Out of memory for string"));
 			return (NULL);
 		}
@@ -107,7 +107,7 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 			break;
 	}
 	if (prop == NULL) {
-		prop = Malloc(sizeof(AG_Prop), M_PROP);
+		prop = Malloc(sizeof(AG_Prop));
 		strlcpy(prop->key, key, sizeof(prop->key));
 		prop->type = type;
 		prop->writeFn.wUint = NULL;
@@ -133,7 +133,7 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 		if (modify) {
 			char *old_s = prop->data.s;
 			PROP_SET(wString, s, char *, char *);
-			if (prop->data.s != old_s) { Free(old_s, 0); }
+			if (prop->data.s != old_s) { Free(old_s); }
 		} else {
 			PROP_SET(wString, s, char *, char *);
 		}
@@ -347,12 +347,12 @@ AG_PropLoad(void *p, AG_DataSource *ds)
 				if (strlen(s) >= AG_PROP_STRING_LIMIT) {
 					AG_SetError("prop string %lu >= %lu",
 					    strlen(s), AG_PROP_STRING_LIMIT);
-					Free(s, 0);
+					Free(s);
 					goto fail;
 				}
 #endif
 				AG_SetString(ob, key, "%s", s);
-				Free(s, 0);
+				Free(s);
 			}
 			break;
 		default:
@@ -463,7 +463,7 @@ AG_PropDestroy(AG_Prop *prop)
 {
 	switch (prop->type) {
 	case AG_PROP_STRING:
-		Free(prop->data.s, 0);
+		Free(prop->data.s);
 		break;
 	}
 }

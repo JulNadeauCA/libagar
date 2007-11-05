@@ -119,7 +119,7 @@ Effect(void *p, MAP_Node *n)
 
 		TAILQ_REMOVE(&n->nrefs, r, nrefs);
 		MAP_ItemDestroy(m, r);
-		Free(r, M_MAP);
+		Free(r);
 		nmods++;
 
 		if (!erase_all)

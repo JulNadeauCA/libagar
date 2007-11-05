@@ -45,7 +45,7 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 {
 	AG_Scrollbar *sb;
 
-	sb = Malloc(sizeof(AG_Scrollbar), M_WIDGET);
+	sb = Malloc(sizeof(AG_Scrollbar));
 	AG_ScrollbarInit(sb, type, flags);
 	AG_ObjectAttach(parent, sb);
 	if (flags & AG_SCROLLBAR_FOCUS) {

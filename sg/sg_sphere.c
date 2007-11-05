@@ -55,7 +55,7 @@ SG_SphereNew(void *pnode, const char *name)
 {
 	SG_Sphere *sph;
 
-	sph = Malloc(sizeof(SG_Sphere), M_SG);
+	sph = Malloc(sizeof(SG_Sphere));
 	SG_SphereInit(sph, name);
 	SG_NodeAttach(pnode, sph);
 	return (sph);

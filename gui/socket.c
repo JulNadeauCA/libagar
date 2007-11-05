@@ -45,7 +45,7 @@ AG_SocketNew(void *parent, Uint flags)
 {
 	AG_Socket *sock;
 
-	sock = Malloc(sizeof(AG_Socket), M_OBJECT);
+	sock = Malloc(sizeof(AG_Socket));
 	AG_SocketInit(sock, flags);
 	AG_ObjectAttach(parent, sock);
 	return (sock);
@@ -56,7 +56,7 @@ AG_SocketFromSurface(void *parent, Uint flags, SDL_Surface *su)
 {
 	AG_Socket *sock;
 	
-	sock = Malloc(sizeof(AG_Socket), M_OBJECT);
+	sock = Malloc(sizeof(AG_Socket));
 	AG_SocketInit(sock, flags);
 	AG_ObjectAttach(parent, sock);
 	AG_SocketBgPixmap(sock, su);
@@ -73,7 +73,7 @@ AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
 		AG_SetError("%s: %s", bmpfile, SDL_GetError());
 		return (NULL);
 	}
-	sock = Malloc(sizeof(AG_Socket), M_OBJECT);
+	sock = Malloc(sizeof(AG_Socket));
 	AG_SocketInit(sock, flags);
 	AG_ObjectAttach(parent, sock);
 	AG_SocketBgPixmapNODUP(sock, bmp);

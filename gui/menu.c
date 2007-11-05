@@ -41,7 +41,7 @@ AG_MenuNew(void *parent, Uint flags)
 {
 	AG_Menu *m;
 
-	m = Malloc(sizeof(AG_Menu), M_OBJECT);
+	m = Malloc(sizeof(AG_Menu));
 	AG_MenuInit(m, flags);
 	if (parent != NULL) {
 		AG_ObjectAttach(parent, m);
@@ -49,7 +49,7 @@ AG_MenuNew(void *parent, Uint flags)
 		if (agAppMenu != NULL) {
 			AG_ViewDetach(agAppMenuWin);
 			AG_ObjectDestroy(agAppMenu);
-			Free(agAppMenu, M_OBJECT);
+			Free(agAppMenu);
 		}
 		m->flags |= AG_MENU_GLOBAL;
 		WIDGET(m)->flags |= AG_WIDGET_HFILL;
@@ -83,7 +83,7 @@ AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
 	AG_WindowSetCaption(win, "win-popup");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 
-	mview = Malloc(sizeof(AG_MenuView), M_OBJECT);
+	mview = Malloc(sizeof(AG_MenuView));
 	AG_MenuViewInit(mview, win, m, item);
 	AG_ObjectAttach(win, mview);
 	item->view = mview;
@@ -268,7 +268,7 @@ CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 
 	if (pitem != NULL) {
 		if (pitem->subitems == NULL) {
-			pitem->subitems = Malloc(sizeof(AG_MenuItem), M_WIDGET);
+			pitem->subitems = Malloc(sizeof(AG_MenuItem));
 		} else {
 			pitem->subitems = Realloc(pitem->subitems,
 					  (pitem->nsubitems+1) * 
@@ -280,7 +280,7 @@ CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 		mi->y = pitem->nsubitems*mi->pmenu->itemh - mi->pmenu->itemh;
 		mi->state = mi->pmenu->curState;
 	} else {
-		mi = Malloc(sizeof(AG_MenuItem), M_WIDGET);
+		mi = Malloc(sizeof(AG_MenuItem));
 		mi->pmenu = NULL;
 		mi->pitem = NULL;
 		mi->y = 0;
@@ -382,7 +382,7 @@ AG_MenuSetLabel(AG_MenuItem *mi, const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	Free(mi->text,0);
+	Free(mi->text);
 	Vasprintf(&mi->text, fmt, ap);
 	va_end(ap);
 
@@ -622,7 +622,7 @@ AG_MenuItemFreeChildren(AG_MenuItem *mi)
 	for (i = 0; i < mi->nsubitems; i++) {
 		AG_MenuItemFree(&mi->subitems[i]);
 	}
-	Free(mi->subitems, M_WIDGET);
+	Free(mi->subitems);
 	mi->subitems = NULL;
 	mi->nsubitems = 0;
 }
@@ -645,7 +645,7 @@ AG_MenuItemFree(AG_MenuItem *mi)
 		AG_WidgetUnmapSurface(mi->pmenu, mi->icon);
 		mi->icon = -1;
 	}
-	Free(mi->text,0);
+	Free(mi->text);
 }
 
 static void
@@ -812,8 +812,8 @@ AG_PopupNew(void *pwid)
 	AG_Widget *wid = pwid;
 	AG_PopupMenu *pm;
 
-	pm = Malloc(sizeof(AG_PopupMenu), M_WIDGET);
-	pm->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	pm = Malloc(sizeof(AG_PopupMenu));
+	pm->menu = Malloc(sizeof(AG_Menu));
 	AG_MenuInit(pm->menu, 0);
 	pm->item = pm->menu->itemSel = AG_MenuAddItem(pm->menu, NULL);
 	/* XXX redundant */
@@ -857,12 +857,12 @@ AG_PopupDestroy(void *pWid, AG_PopupMenu *pm)
 	if (pm->menu != NULL) {
 		AG_MenuCollapse(pm->menu, pm->item);
 		AG_ObjectDestroy(pm->menu);
-		Free(pm->menu, M_OBJECT);
+		Free(pm->menu);
 	}
 	pm->menu = NULL;
 	pm->item = NULL;
 	pm->win = NULL;
-	Free(pm, M_WIDGET);
+	Free(pm);
 }
 
 const AG_WidgetOps agMenuOps = {

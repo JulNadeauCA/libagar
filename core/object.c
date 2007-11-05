@@ -120,7 +120,7 @@ AG_ObjectNew(void *parent, const char *name, const AG_ObjectOps *ops)
 		}
 	}
 	
-	obj = Malloc(ops->size, M_OBJECT);
+	obj = Malloc(ops->size);
 	if (ops->init != NULL) {
 		ops->init(obj, name != NULL ? name : nameGen);
 	} else {
@@ -190,7 +190,7 @@ AG_ObjectFreeDataset(void *p)
 			if (hier[i]->free_dataset != NULL)
 				hier[i]->free_dataset(ob);
 		}
-		Free(hier, M_OBJECT);
+		Free(hier);
 	} else {
 		dprintf("hier %s: %s\n", ob->name, AG_GetError());
 	}
@@ -495,7 +495,7 @@ AG_ObjectFreeDeps(AG_Object *ob)
 	     dep != TAILQ_END(&ob->deps);
 	     dep = ndep) {
 		ndep = TAILQ_NEXT(dep, deps);
-		Free(dep, M_DEP);
+		Free(dep);
 	}
 	TAILQ_INIT(&ob->deps);
 }
@@ -516,7 +516,7 @@ AG_ObjectFreeDummyDeps(AG_Object *ob)
 		ndep = TAILQ_NEXT(dep, deps);
 		if (dep->count == 0) {
 			TAILQ_REMOVE(&ob->deps, dep, deps);
-			Free(dep, M_DEP);
+			Free(dep);
 		}
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs)
@@ -541,7 +541,7 @@ AG_ObjectFreeChildren(AG_Object *pob)
 		AG_ObjectDetach(cob);
 		AG_ObjectDestroy(cob);
 		if ((cob->flags & AG_OBJECT_STATIC) == 0)
-			Free(cob, M_OBJECT);
+			Free(cob);
 	}
 	TAILQ_INIT(&pob->children);
 	AG_MutexUnlock(&pob->lock);
@@ -559,7 +559,7 @@ AG_ObjectFreeProps(AG_Object *ob)
 	     prop = nextprop) {
 		nextprop = TAILQ_NEXT(prop, props);
 		AG_PropDestroy(prop);
-		Free(prop, M_PROP);
+		Free(prop);
 	}
 	TAILQ_INIT(&ob->props);
 	AG_MutexUnlock(&ob->lock);
@@ -583,7 +583,7 @@ AG_ObjectFreeEvents(AG_Object *ob)
 		if (eev->flags & AG_EVENT_SCHEDULED) {
 			AG_CancelEvent(ob, eev->name);
 		}
-		Free(eev, M_EVENT);
+		Free(eev);
 	}
 	TAILQ_INIT(&ob->events);
 	AG_MutexUnlock(&ob->lock);
@@ -636,7 +636,7 @@ AG_ObjectGetInheritHier(void *obj, const AG_ObjectOps ***ops, int *nOps)
 		if (*c == ':')
 			(*nOps)++;
 	}
-	*ops = Malloc((*nOps)*sizeof(AG_ObjectOps *), M_OBJECT);
+	*ops = Malloc((*nOps)*sizeof(AG_ObjectOps *));
 	i = 0;
 	for (c = &cname[0]; *c != '\0'; c++) {
 		if (*c != ':') {
@@ -644,7 +644,7 @@ AG_ObjectGetInheritHier(void *obj, const AG_ObjectOps ***ops, int *nOps)
 		}
 		*c = '\0';
 		if ((cl = AG_FindClass(cname)) == NULL) {
-			Free(*ops, M_OBJECT);
+			Free(*ops);
 			return (-1);
 		}
 		*c = ':';
@@ -680,7 +680,7 @@ AG_ObjectDestroy(void *p)
 			if (hier[i]->destroy != NULL)
 				hier[i]->destroy(ob);
 		}
-		Free(hier, M_OBJECT);
+		Free(hier);
 	} else {
 		dprintf("hier %s: %s\n", ob->name, AG_GetError());
 	}
@@ -688,7 +688,7 @@ AG_ObjectDestroy(void *p)
 	AG_ObjectFreeProps(ob);
 	AG_ObjectFreeEvents(ob);
 	AG_MutexDestroy(&ob->lock);
-	Free(ob->archivePath,0);
+	Free(ob->archivePath);
 }
 
 /* Copy the full pathname to an object's data file to a fixed-size buffer. */
@@ -882,7 +882,7 @@ AG_ObjectResolveDeps(void *p)
 			return (-1);
 		}
 		debug_n(DEBUG_DEPRESV, "%p (%s)\n", dep->obj, dep->obj->name);
-		Free(dep->path, 0);
+		Free(dep->path);
 		dep->path = NULL;
 	}
 
@@ -968,7 +968,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	/* Decode the saved dependencies (to be resolved later). */
 	count = AG_ReadUint32(ds);
 	for (i = 0; i < count; i++) {
-		dep = Malloc(sizeof(AG_ObjectDep), M_DEP);
+		dep = Malloc(sizeof(AG_ObjectDep));
 		dep->path = AG_ReadString(ds);
 		dep->obj = NULL;
 		dep->count = 0;
@@ -1024,7 +1024,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 				goto fail;
 			}
 
-			child = Malloc(cl->size, M_OBJECT);
+			child = Malloc(cl->size);
 			if (cl->init != NULL) {
 				cl->init(child, cname);
 			} else {
@@ -1110,7 +1110,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 			if (hier[i]->load != NULL)
 				hier[i]->load(ob, ds);
 		}
-		Free(hier, M_OBJECT);
+		Free(hier);
 	} else {
 		dprintf("hier %s: %s\n", ob->name, AG_GetError());
 	}
@@ -1298,7 +1298,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 			if (hier[i]->save(ob, ds) == -1)
 				goto fail;
 		}
-		Free(hier, M_OBJECT);
+		Free(hier);
 	} else {
 		dprintf("hier %s: %s\n", ob->name, AG_GetError());
 	}
@@ -1383,7 +1383,7 @@ AG_ObjectAddDep(void *p, void *depobj)
 	} else {
 		debug(DEBUG_DEPS, "%s: +[%s]\n", ob->name,
 		    OBJECT(depobj)->name);
-		dep = Malloc(sizeof(AG_ObjectDep), M_DEP);
+		dep = Malloc(sizeof(AG_ObjectDep));
 		dep->obj = depobj;
 		dep->count = 1;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
@@ -1478,7 +1478,7 @@ AG_ObjectDelDep(void *p, const void *depobj)
 			debug(DEBUG_DEPS, "%s: -[%s]\n", ob->name,
 			    OBJECT(depobj)->name);
 			TAILQ_REMOVE(&ob->deps, dep, deps);
-			Free(dep, M_DEP);
+			Free(dep);
 		} else {
 			dep->count = 0;
 		}
@@ -1565,7 +1565,7 @@ AG_ObjectDuplicate(void *p, const char *newName)
 	const AG_ObjectOps *ops = ob->ops;
 	AG_Object *dob;
 
-	dob = Malloc(ops->size, M_OBJECT);
+	dob = Malloc(ops->size);
 
 	AG_MutexLock(&ob->lock);
 
@@ -1605,7 +1605,7 @@ fail:
 	strlcpy(ob->name, nameSave, sizeof(ob->name));
 	AG_MutexUnlock(&ob->lock);
 	AG_ObjectDestroy(dob);
-	Free(dob, M_OBJECT);
+	Free(dob);
 	return (NULL);
 }
 
