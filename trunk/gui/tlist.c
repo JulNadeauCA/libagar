@@ -1221,7 +1221,7 @@ const AG_WidgetOps agTlistOps = {
 		sizeof(AG_Tlist),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

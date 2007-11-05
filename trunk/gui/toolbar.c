@@ -337,7 +337,7 @@ const AG_WidgetOps agToolbarOps = {
 		sizeof(AG_Toolbar),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

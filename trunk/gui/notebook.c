@@ -304,7 +304,7 @@ const AG_WidgetOps agNotebookOps = {
 		sizeof(AG_Notebook),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

@@ -1456,7 +1456,7 @@ const AG_WidgetOps mapViewOps = {
 		sizeof(MAP_View),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

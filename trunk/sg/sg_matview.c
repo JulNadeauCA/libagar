@@ -263,7 +263,7 @@ const AG_WidgetOps agMatviewOps = {
 		sizeof(AG_Matview),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		NULL,			/* destroy */
 		NULL,			/* load */
 		NULL,			/* save */

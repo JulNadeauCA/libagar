@@ -116,12 +116,6 @@ NS_ClientInit(void *p, const char *name)
 	nc->host[0] = '\0';
 }
 
-void
-NS_ServerReinit(void *p)
-{
-	
-}
-
 static void
 DestroyServer(void *p)
 {
@@ -130,11 +124,6 @@ DestroyServer(void *p)
 	Free(ns->cmds, M_NETBUF);
 	Free(ns->authModes, M_NETBUF);
 	Free(ns->listItems, M_NETBUF);
-}
-
-static void
-DestroyClient(void *p)
-{
 }
 
 /* Set the protocol version string to use (thread unsafe). */
@@ -734,7 +723,7 @@ const AG_ObjectOps nsServerOps = {
 	sizeof(NS_Server),
 	{ 0,0 },
 	NS_ServerInit,
-	NS_ServerReinit,
+	NULL,			/* free */
 	DestroyServer,
 	NULL,			/* load */
 	NULL,			/* save */
@@ -746,8 +735,8 @@ const AG_ObjectOps nsClientOps = {
 	sizeof(NS_Client),
 	{ 0,0 },
 	NS_ClientInit,
-	NULL,			/* reinit */
-	DestroyClient,
+	NULL,			/* free */
+	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
 	NULL			/* edit */

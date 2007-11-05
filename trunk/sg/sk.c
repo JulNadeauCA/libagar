@@ -258,8 +258,8 @@ SK_FreeNode(SK *sk, SK_Node *node)
 	Free(node, M_SG);
 }
 
-void
-SK_Reinit(void *obj)
+static void
+FreeDataset(void *obj)
 {
 	SK *sk = obj;
 
@@ -327,8 +327,8 @@ SK_SaveNodeGeneric(SK *sk, SK_Node *node, AG_DataSource *buf)
 	return (0);
 }
 
-int
-SK_Save(void *obj, AG_DataSource *buf)
+static int
+Save(void *obj, AG_DataSource *buf)
 {
 	SK *sk = obj;
 	SK_Constraint *ct;
@@ -451,8 +451,8 @@ SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_DataSource *buf)
 	return (0);
 }
 
-int
-SK_Load(void *obj, AG_DataSource *buf)
+static int
+Load(void *obj, AG_DataSource *buf)
 {
 	char unitKey[AG_UNIT_KEY_MAX];
 	SK *sk = obj;
@@ -516,7 +516,7 @@ SK_Load(void *obj, AG_DataSource *buf)
 	return (0);
 fail:
 	AG_MutexUnlock(&sk->lock);
-	SK_Reinit(sk);
+	AG_ObjectFreeDataset(sk);
 	return (-1);
 }
 
@@ -1433,10 +1433,10 @@ const AG_ObjectOps skOps = {
 	sizeof(SK),
 	{ 0,0 },
 	SK_Init,
-	SK_Reinit,
+	FreeDataset,
 	NULL,		/* destroy */
-	SK_Load,
-	SK_Save,
+	Load,
+	Save,
 #ifdef EDITION
 	SK_Edit
 #else

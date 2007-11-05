@@ -74,6 +74,7 @@ MAP_InitSubsystem(void)
 	AG_RegisterClass(&mapOps);
 	AG_RegisterClass(&mapActorOps);
 	AG_RegisterClass(&mapEditorOps);
+	AG_RegisterClass(&mapEditorPseudoOps);
 	AG_RegisterClass(&mapViewOps);
 
 	mapIcon_Init();
@@ -882,7 +883,7 @@ MAP_NodeMoveItemToHead(MAP_Node *node, MAP_Item *r)
 }
 
 void
-MAP_Reinit(void *p)
+MAP_FreeDataset(void *p)
 {
 	MAP *m = p;
 	int i;
@@ -1112,8 +1113,8 @@ MAP_DetachActor(MAP *m, MAP_Actor *a)
 	AG_MutexUnlock(&a->lock);
 }
 
-int
-MAP_Load(void *ob, AG_DataSource *buf)
+static int
+Load(void *ob, AG_DataSource *buf)
 {
 	MAP *m = ob;
 	Uint32 w, h, origin_x, origin_y;
@@ -1307,8 +1308,8 @@ MAP_NodeSave(MAP *m, AG_DataSource *buf, MAP_Node *node)
 	AG_WriteUint32At(buf, nrefs, nrefs_offs);
 }
 
-int
-MAP_Save(void *p, AG_DataSource *buf)
+static int
+Save(void *p, AG_DataSource *buf)
 {
 	MAP *m = p;
 	int i, x, y;
@@ -3051,10 +3052,10 @@ const AG_ObjectOps mapOps = {
 	sizeof(MAP),
 	{ 11, 0 },
 	MAP_Init,
-	MAP_Reinit,
+	MAP_FreeDataset,
 	MAP_Destroy,
-	MAP_Load,
-	MAP_Save,
+	Load,
+	Save,
 #ifdef EDITION
 	MAP_Edit
 #else

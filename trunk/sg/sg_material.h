@@ -50,8 +50,6 @@ extern const AG_ObjectOps sgMaterialOps;
 SG_Material	*SG_MaterialNew(void *, const char *);
 void		 SG_MaterialInit(void *, const char *);
 void		*SG_MaterialEdit(void *);
-int		 SG_MaterialLoad(void *, AG_DataSource *);
-int		 SG_MaterialSave(void *, AG_DataSource *);
 
 void		 SG_MaterialBind(SG_Material *, SG_View *);
 void		 SG_MaterialUnbind(SG_Material *, SG_View *);

@@ -78,8 +78,6 @@ extern const AG_ObjectOps nsClientOps;
 NS_Server *NS_ServerNew(void *, Uint, const char *, const char *, const char *,
 	                const char *);
 void	   NS_ServerInit(void *, const char *);
-void	   NS_ServerReinit(void *);
-void	   NS_ServerDestroy(void *);
 void	   NS_ServerSetProtocol(NS_Server *, const char *, const char *);
 void	   NS_ServerBind(NS_Server *, const char *, const char *);
 

@@ -19,12 +19,12 @@ typedef struct map_editor {
 
 __BEGIN_DECLS
 extern const AG_ObjectOps mapEditorOps;
+extern const AG_ObjectOps mapEditorPseudoOps;
 extern MAP_Editor mapEditor;
 
 void	 MAP_EditorInit(void);
 void	 MAP_EditorLoad(AG_DataSource *);
 void	 MAP_EditorSave(AG_DataSource *);
-void	*MAP_EditorConfig(void *);
 __END_DECLS
 
 #include "close_code.h"

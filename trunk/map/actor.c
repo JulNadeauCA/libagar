@@ -55,11 +55,6 @@ MAP_ActorInit(void *obj, const char *name)
 	a->g_map.ymot = 0;
 }
 
-void
-MAP_ActorReinit(void *obj)
-{
-}
-
 static void
 Destroy(void *obj)
 {
@@ -68,8 +63,8 @@ Destroy(void *obj)
 	AG_MutexDestroy(&a->lock);
 }
 
-int
-MAP_ActorLoad(void *obj, AG_DataSource *buf)
+static int
+Load(void *obj, AG_DataSource *buf)
 {
 	MAP_Actor *a = obj;
 #if 0
@@ -127,8 +122,8 @@ MAP_ActorLoad(void *obj, AG_DataSource *buf)
 	return (0);
 }
 
-int
-MAP_ActorSave(void *obj, AG_DataSource *buf)
+static int
+Save(void *obj, AG_DataSource *buf)
 {
 	MAP_Actor *a = obj;
 
@@ -410,10 +405,10 @@ const AG_ObjectOps mapActorOps = {
 	sizeof(MAP_Actor),
 	{ 0, 0 },
 	MAP_ActorInit,
-	MAP_ActorReinit,
+	NULL,			/* free_dataset */
 	Destroy,
-	MAP_ActorLoad,
-	MAP_ActorSave,
+	Load,
+	Save,
 #ifdef EDITION
 	MAP_ActorEdit
 #else

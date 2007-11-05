@@ -522,7 +522,7 @@ const AG_WidgetOps agSpinbuttonOps = {
 		sizeof(AG_Spinbutton),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

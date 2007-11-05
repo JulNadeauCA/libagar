@@ -110,7 +110,7 @@ const AG_WidgetOps agSeparatorOps = {
 		sizeof(AG_Separator),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
@@ -126,7 +126,7 @@ const AG_WidgetOps agSeparatorInvisibleOps = {
 		sizeof(AG_Separator),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

@@ -613,7 +613,7 @@ const AG_WidgetOps skViewOps = {
 		sizeof(SK_View),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

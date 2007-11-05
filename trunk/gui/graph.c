@@ -794,7 +794,7 @@ const AG_WidgetOps agGraphOps = {
 		sizeof(AG_Graph),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

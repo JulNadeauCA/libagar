@@ -343,7 +343,7 @@ const AG_WidgetOps agCheckboxOps = {
 		sizeof(AG_Checkbox),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

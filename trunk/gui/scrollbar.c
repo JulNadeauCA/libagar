@@ -290,7 +290,7 @@ const AG_WidgetOps agScrollbarOps = {
 		sizeof(AG_Scrollbar),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

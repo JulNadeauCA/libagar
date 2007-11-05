@@ -201,7 +201,7 @@ const AG_WidgetOps agDummyOps = {
 		sizeof(AG_Dummy),		/* Size of structure */
 		{ 0,0 },			/* Version */
 		NULL,				/* init() */
-		NULL,				/* reinit() */
+		NULL,				/* free_dataset() */
 		NULL,				/* destroy() */
 		NULL,				/* load() */
 		NULL,				/* save() */

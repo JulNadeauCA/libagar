@@ -35,6 +35,7 @@
 #include <core/config.h>
 #include <core/util.h>
 #include <core/dir.h>
+#include <core/typesw.h>
 
 #include "window.h"
 #include "primitive.h"
@@ -114,18 +115,6 @@ static AG_FixedPlotterItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
 
 #endif /* DEBUG */
 
-const AG_ObjectOps agDisplayOps = {
-	"AG_Display",
-	sizeof(AG_Display),
-	{ 0,0 },
-	NULL,	/* init */
-	NULL,	/* reinit */
-	NULL,	/* destroy */
-	NULL,	/* load */
-	NULL,	/* save */
-	NULL	/* edit */
-};
-
 #if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
 static int
 AG_X11_ErrorHandler(Display *disp, XErrorEvent *event)
@@ -140,6 +129,8 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 {
 	Uint32 screenflags = 0;
 	int depth;
+
+	AG_RegisterClass(&agDisplayOps);
 
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
 		AG_SetError("SDL_INIT_VIDEO: %s", SDL_GetError());
@@ -1483,3 +1474,15 @@ AG_MouseGetState(int *x, int *y)
 #endif
 	return (rv);
 }
+
+const AG_ObjectOps agDisplayOps = {
+	"AG_Display",
+	sizeof(AG_Display),
+	{ 0,0 },
+	NULL,	/* init */
+	NULL,	/* free */
+	NULL,	/* destroy */
+	NULL,	/* load */
+	NULL,	/* save */
+	NULL	/* edit */
+};

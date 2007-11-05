@@ -102,7 +102,7 @@ const PE_Ops peOdeOps = {
 		sizeof(PE_Ode),
 		{ 0,0 },
 		Init,
-		NULL,			/* reinit */
+		NULL,		/* free */
 		Destroy,
 		Load,
 		Save,

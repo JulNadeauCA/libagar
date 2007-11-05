@@ -1639,7 +1639,7 @@ const AG_ObjectOps agFontOps = {
 	sizeof(AG_Font),
 	{ 0, 0 },
 	NULL,		/* init */
-	NULL,		/* reinit */
+	NULL,		/* free */
 	DestroyFont,
 	NULL,		/* load */
 	NULL,		/* save */

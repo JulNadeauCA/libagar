@@ -197,9 +197,6 @@ void	 SK_DestroyEngine(void);
 
 SK	*SK_New(void *, const char *);
 void	 SK_Init(void *, const char *);
-void	 SK_Reinit(void *);
-int	 SK_Save(void *, AG_DataSource *);
-int	 SK_Load(void *, AG_DataSource *);
 void	*SK_Edit(void *);
 
 void	 	 SK_RenderNode(SK *, SK_Node *, SK_View *);

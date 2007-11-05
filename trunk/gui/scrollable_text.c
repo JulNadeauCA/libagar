@@ -99,12 +99,12 @@ const AG_WidgetOps agScrollableTextOps = {
 		"AG_Widget:AG_Scrollable:AG_ScrollableText",
 		sizeof(AG_ScrollableText),
 		{ 0,0 },
-		NULL,				/* init() */
-		NULL,				/* reinit() */
+		NULL,				/* init */
+		NULL,				/* free */
 		Destroy,
-		NULL,				/* load() */
-		NULL,				/* save() */
-		NULL				/* edit() */
+		NULL,				/* load */
+		NULL,				/* save */
+		NULL				/* edit */
 	},
 	Draw,
 	SizeRequest,

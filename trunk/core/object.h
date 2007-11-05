@@ -185,7 +185,7 @@ void		 AG_ObjectGetArchivePath(void *, char *, size_t)
 void		 AG_ObjectSetOps(void *, const void *);
 
 int	 AG_ObjectIsClassGeneral(const AG_Object *, const char *);
-int	 AG_ObjectGetInheritHier(void *, const AG_ObjectOps ***, Uint *);
+int	 AG_ObjectGetInheritHier(void *, const AG_ObjectOps ***, int *);
 
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);

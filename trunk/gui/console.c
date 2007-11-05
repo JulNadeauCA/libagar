@@ -246,7 +246,7 @@ const AG_WidgetOps agConsoleOps = {
 		sizeof(AG_Console),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

@@ -210,7 +210,7 @@ const AG_WidgetOps agFixedOps = {
 		sizeof(AG_Fixed),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

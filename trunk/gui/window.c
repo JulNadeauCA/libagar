@@ -1415,7 +1415,7 @@ const AG_WidgetOps agWindowOps = {
 		sizeof(AG_Window),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

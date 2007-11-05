@@ -43,18 +43,6 @@
 
 #include <agar/gui.h>
 
-const AG_ObjectOps UserOps = {
-	"User",
-	sizeof(User),
-	{ 8, 0 },
-	UserInit,
-	NULL,		/* reinit */
-	NULL,		/* destroy */
-	UserLoad,
-	UserSave,
-	UserEdit
-};
-
 const char *UserLangDefault = "en";
 
 void
@@ -94,8 +82,8 @@ UserInit(void *p, const char *name)
 	strlcpy(u->lang, "en", sizeof(u->lang));
 }
 
-int
-UserLoad(void *p, AG_DataSource *buf)
+static int
+Load(void *p, AG_DataSource *buf)
 {
 	User *u = p;
 	Uint32 i, count;
@@ -114,8 +102,8 @@ UserLoad(void *p, AG_DataSource *buf)
 	return (0);
 }
 
-int
-UserSave(void *p, AG_DataSource *buf)
+static int
+Save(void *p, AG_DataSource *buf)
 {
 	User *u = p;
 	FILE *f;
@@ -372,3 +360,15 @@ UserEdit(void *p)
 
 	return (win);
 }
+
+const AG_ObjectOps UserOps = {
+	"User",
+	sizeof(User),
+	{ 8, 0 },
+	UserInit,
+	NULL,		/* free */
+	NULL,		/* destroy */
+	Load,
+	Save,
+	UserEdit
+};

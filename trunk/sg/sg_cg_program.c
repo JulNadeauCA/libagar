@@ -238,7 +238,7 @@ const SG_ProgramOps sgCgProgramOps = {
 		sizeof(SG_CgProgram),
 		{ 0,0 },
 		Init,
-		NULL,			/* reinit */
+		NULL,		/* free */
 		Destroy,
 		Load,
 		Save,

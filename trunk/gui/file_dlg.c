@@ -956,7 +956,7 @@ const AG_WidgetOps agFileDlgOps = {
 		sizeof(AG_FileDlg),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

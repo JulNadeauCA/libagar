@@ -1432,7 +1432,7 @@ const AG_WidgetOps agTableviewOps = {
 		sizeof(AG_Tableview),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

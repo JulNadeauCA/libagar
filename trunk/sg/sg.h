@@ -167,9 +167,6 @@ void	 SG_DestroyEngine(void);
 SG	*SG_New(void *, const char *);
 void	 SG_AttachDefaultNodes(SG *);
 void	 SG_Init(void *, const char *);
-void	 SG_Reinit(void *);
-int	 SG_Save(void *, AG_DataSource *);
-int	 SG_Load(void *, AG_DataSource *);
 void	*SG_Edit(void *);
 void	 SG_RenderNode(SG *, SG_Node *, SG_View *);
 
