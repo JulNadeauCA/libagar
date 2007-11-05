@@ -871,7 +871,7 @@ const AG_WidgetOps agMenuOps = {
 		sizeof(AG_Menu),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

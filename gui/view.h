@@ -227,6 +227,7 @@ case 4:					\
 #define AG_VIDEO_OPENGL_OR_SDL 0x400  /* Prefer OpenGL mode */
 
 __BEGIN_DECLS
+extern const AG_ObjectOps agDisplayOps;
 extern AG_Display *agView;
 extern SDL_PixelFormat *agVideoFmt;
 extern SDL_PixelFormat *agSurfaceFmt;

@@ -44,8 +44,8 @@ SG_ProgramInit(void *obj, const char *name)
 	prog->flags = 0;
 }
 
-int
-SG_ProgramLoad(void *obj, AG_DataSource *buf)
+static int
+Load(void *obj, AG_DataSource *buf)
 {
 	SG_Program *prog = obj;
 
@@ -56,8 +56,8 @@ SG_ProgramLoad(void *obj, AG_DataSource *buf)
 	return (0);
 }
 
-int
-SG_ProgramSave(void *obj, AG_DataSource *buf)
+static int
+Save(void *obj, AG_DataSource *buf)
 {
 	SG_Program *prog = obj;
 
@@ -99,10 +99,10 @@ const AG_ObjectOps sgProgramOps = {
 	sizeof(SG_Program),
 	{ 0,0 },
 	SG_ProgramInit,
-	NULL,			/* reinit */
+	NULL,			/* free */
 	NULL,			/* destroy */
-	SG_ProgramLoad,
-	SG_ProgramSave,
+	Load,
+	Save,
 	NULL,			/* edit */
 };
 

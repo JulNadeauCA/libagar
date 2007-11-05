@@ -290,7 +290,7 @@ const AG_WidgetOps rgAnimviewOps = {
 		sizeof(RG_Animview),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

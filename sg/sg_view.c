@@ -640,7 +640,7 @@ const AG_WidgetOps sgViewOps = {
 		sizeof(SG_View),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

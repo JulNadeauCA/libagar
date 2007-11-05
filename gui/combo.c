@@ -331,13 +331,13 @@ const AG_WidgetOps agComboOps = {
 		sizeof(AG_Combo),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	NULL,			/* draw */
+	NULL,				/* draw */
 	AG_ComboSizeRequest,
 	AG_ComboSizeAllocate
 };

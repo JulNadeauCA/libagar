@@ -139,7 +139,7 @@ typedef struct ag_object_ops {
 	AG_Version ver;                            /* Version numbers */
 
 	void (*init)(void *obj, const char *name);   /* Initialize */
-	void (*reinit)(void *obj);                   /* Free dataset */
+	void (*free_dataset)(void *obj);             /* Free dataset */
 	void (*destroy)(void *obj);                  /* Release */
 	int  (*load)(void *obj, AG_DataSource *buf); /* Load dataset */
 	int  (*save)(void *obj, AG_DataSource *buf); /* Save dataset */
@@ -181,10 +181,10 @@ this function is
 .Fn AG_ObjectInit .
 .Pp
 The
-.Fn reinit
+.Fn free_dataset
 operation releases any element of the dataset that has been dynamically
 allocated.
-.Fn reinit
+.Fn free_dataset
 is invoked by the object system:
 .Pp
 .Bl -bullet -compact
@@ -207,7 +207,7 @@ The
 operation is invoked from
 .Fn AG_ObjectDestroy
 to release any resources that are not handled by
-.Fn reinit .
+.Fn free_dataset .
 Note that
 .Fn destroy
 must not free the
@@ -532,9 +532,9 @@ and -1 on failure.
 .nr nS 0
 The
 .Fn AG_ObjectFreeDataset
-function frees any resource allocated for the dataset of the object
+function frees any dynamically allocated resources
 (using the
-.Fn reinit
+.Fn free_dataset
 operation), and clears the
 .Dv AG_OBJECT_RESIDENT
 flag.

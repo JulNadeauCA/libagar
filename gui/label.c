@@ -755,7 +755,7 @@ const AG_WidgetOps agLabelOps = {
 		sizeof(AG_Label),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

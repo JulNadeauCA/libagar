@@ -233,7 +233,7 @@ const AG_WidgetOps agUComboOps = {
 		sizeof(AG_UCombo),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

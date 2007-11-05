@@ -120,8 +120,8 @@ RG_TilesetInit(void *obj, const char *name)
 	ts->nanimtbl = 0;
 }
 
-void
-RG_TilesetReinit(void *obj)
+static void
+FreeDataset(void *obj)
 {
 	RG_Tileset *ts = obj;
 	RG_Tile *t, *nt;
@@ -205,8 +205,8 @@ Destroy(void *obj)
 	Free(ts->animtbl, M_RG);
 }
 
-int
-RG_TilesetLoad(void *obj, AG_DataSource *buf)
+static int
+Load(void *obj, AG_DataSource *buf)
 {
 	RG_Tileset *ts = obj;
 	RG_Pixmap *px;
@@ -410,8 +410,8 @@ fail:
 	return (-1);
 }
 
-int
-RG_TilesetSave(void *obj, AG_DataSource *buf)
+static int
+Save(void *obj, AG_DataSource *buf)
 {
 	RG_Tileset *ts = obj;
 	Uint32 count, i;
@@ -1604,7 +1604,7 @@ SelectTemplate(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 
-	RG_TilesetReinit(ts);
+	AG_ObjectFreeDataset(ts);
 
 	if (strcmp(ts->tmpl, "Sprite") == 0) {
 		const char *tiles[] = {
@@ -1872,10 +1872,10 @@ const AG_ObjectOps rgTilesetOps = {
 	sizeof(RG_Tileset),
 	{ 8, 0 },
 	RG_TilesetInit,
-	RG_TilesetReinit,
+	FreeDataset,
 	Destroy,
-	RG_TilesetLoad,
-	RG_TilesetSave,
+	Load,
+	Save,
 #ifdef EDITION
 	RG_TilesetEdit
 #else

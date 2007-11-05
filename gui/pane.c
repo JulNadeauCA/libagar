@@ -379,7 +379,7 @@ const AG_WidgetOps agPaneOps = {
 		sizeof(AG_Pane),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

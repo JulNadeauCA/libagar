@@ -308,7 +308,7 @@ const AG_WidgetOps agBoxOps = {
 		sizeof(AG_Box),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
@@ -325,7 +325,7 @@ const AG_WidgetOps agBoxOpsWithFrame = {
 		sizeof(AG_Box),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

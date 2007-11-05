@@ -44,8 +44,8 @@ PE_Init(void *obj, const char *name)
 	pe->time = 0;
 }
 
-int
-PE_Load(void *obj, AG_DataSource *buf)
+static int
+Load(void *obj, AG_DataSource *buf)
 {
 	PE *pe = obj;
 
@@ -56,8 +56,8 @@ PE_Load(void *obj, AG_DataSource *buf)
 	return (0);
 }
 
-int
-PE_Save(void *obj, AG_DataSource *buf)
+static int
+Save(void *obj, AG_DataSource *buf)
 {
 	PE *pe = obj;
 
@@ -85,10 +85,10 @@ const AG_ObjectOps peOps = {
 	sizeof(PE),
 	{ 0,0 },
 	PE_Init,
-	NULL,			/* reinit */
+	NULL,			/* free */
 	NULL,			/* destroy */
-	PE_Load,
-	PE_Save,
+	Load,
+	Save,
 	NULL,			/* edit */
 };
 

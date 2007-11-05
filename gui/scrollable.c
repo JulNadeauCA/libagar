@@ -203,14 +203,14 @@ const AG_WidgetOps agScrollableOps = {
 		"AG_Widget:AG_Scrollable",
 		sizeof(AG_Scrollable),
 		{ 0,0 },
-		NULL,			/* init() */
-		NULL,			/* reinit() */
-		NULL,			/* destroy() */
-		NULL,			/* load() */
-		NULL,			/* save() */
-		NULL			/* edit() */
+		NULL,			/* init */
+		NULL,			/* free */
+		NULL,			/* destroy */
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
 	},
-	NULL,				/* draw() */
+	NULL,				/* draw */
 	SizeRequest,
 	SizeAllocate
 };

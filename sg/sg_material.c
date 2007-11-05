@@ -96,8 +96,8 @@ SG_MaterialInit(void *obj, const char *name)
 	TAILQ_INIT(&mat->textures);
 }
 
-int
-SG_MaterialLoad(void *obj, AG_DataSource *buf)
+static int
+Load(void *obj, AG_DataSource *buf)
 {
 	if (AG_ReadVersion(buf, sgMaterialOps.type, &sgMaterialOps.ver, NULL)
 	    != 0)
@@ -106,8 +106,8 @@ SG_MaterialLoad(void *obj, AG_DataSource *buf)
 	return (0);
 }
 
-int
-SG_MaterialSave(void *obj, AG_DataSource *buf)
+static int
+Save(void *obj, AG_DataSource *buf)
 {
 	AG_WriteVersion(buf, sgMaterialOps.type, &sgMaterialOps.ver);
 	return (0);
@@ -427,10 +427,10 @@ const AG_ObjectOps sgMaterialOps = {
 	sizeof(SG_Material),
 	{ 0,0 },
 	SG_MaterialInit,
-	NULL,			/* reinit */
+	NULL,			/* free */
 	NULL,			/* destroy */
-	SG_MaterialLoad,
-	SG_MaterialSave,
+	Load,
+	Save,
 	SG_MaterialEdit
 };
 

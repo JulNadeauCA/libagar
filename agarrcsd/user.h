@@ -29,14 +29,14 @@ typedef struct user {
 	TAILQ_ENTRY(user) userl;		/* Entry in flat list */
 } User;
 
+extern const AG_ObjectOps UserOps;
+
 void UserTblInit(void);
 void UserTblRehash(void);
 void UserTblDestroy(void);
 
 User	*UserLookup(const char *);
 void	 UserInit(void *, const char *);
-int	 UserLoad(void *, AG_DataSource *);
-int	 UserSave(void *, AG_DataSource *);
 void	 UserLink(struct user *);
 void	 UserUnlink(struct user *);
 void	*UserEdit(void *);

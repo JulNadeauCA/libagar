@@ -181,7 +181,7 @@ const AG_WidgetOps agTitlebarOps = {
 		sizeof(AG_Titlebar),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

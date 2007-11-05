@@ -592,7 +592,7 @@ const AG_WidgetOps agButtonOps = {
 		sizeof(AG_Button),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

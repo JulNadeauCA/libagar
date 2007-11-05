@@ -48,18 +48,6 @@
 #include <pwd.h>
 #endif
 
-const AG_ObjectOps agConfigOps = {
-	"AG_Config",
-	sizeof(AG_Config),
-	{ 9, 4 },
-	NULL,
-	NULL,
-	NULL,
-	AG_ConfigLoad,
-	AG_ConfigSave,
-	NULL
-};
-
 int agKbdUnicode = 1;			/* Unicode translation */
 int agKbdDelay = 250;			/* Key repeat delay */
 int agKbdRepeat = 35;			/* Key repeat interval */
@@ -162,8 +150,8 @@ AG_ConfigInit(AG_Config *cfg)
 	AG_SetUint(cfg, "font.flags", 0);
 }
 
-int
-AG_ConfigLoad(void *p, AG_DataSource *ds)
+static int
+Load(void *p, AG_DataSource *ds)
 {
 	AG_Version ver;
 
@@ -199,8 +187,8 @@ AG_ConfigLoad(void *p, AG_DataSource *ds)
 	return (0);
 }
 
-int
-AG_ConfigSave(void *p, AG_DataSource *ds)
+static int
+Save(void *p, AG_DataSource *ds)
 {
 	AG_WriteVersion(ds, agConfigOps.type, &agConfigOps.ver);
 
@@ -272,3 +260,15 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	    (ext != NULL) ? ext : "", path_key, path);
 	return (-1);
 }
+
+const AG_ObjectOps agConfigOps = {
+	"AG_Config",
+	sizeof(AG_Config),
+	{ 9, 4 },
+	NULL,
+	NULL,
+	NULL,
+	Load,
+	Save,
+	NULL
+};

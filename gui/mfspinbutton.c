@@ -657,7 +657,7 @@ const AG_WidgetOps agMFSpinbuttonOps = {
 		sizeof(AG_MFSpinbutton),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

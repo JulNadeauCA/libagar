@@ -207,8 +207,8 @@ SG_FreeNode(SG *sg, SG_Node *node)
 	Free(node, M_SG);
 }
 
-void
-SG_Reinit(void *obj)
+static void
+FreeDataset(void *obj)
 {
 	SG *sg = obj;
 
@@ -228,8 +228,8 @@ Destroy(void *obj)
 	AG_MutexDestroy(&sg->lock);
 }
 
-int
-SG_Save(void *obj, AG_DataSource *buf)
+static int
+Save(void *obj, AG_DataSource *buf)
 {
 	SG *sg = obj;
 	int rv = 0;
@@ -280,8 +280,8 @@ SG_NodeSave(SG *sg, SG_Node *node, AG_DataSource *buf)
 	return (0);
 }
 
-int
-SG_Load(void *obj, AG_DataSource *buf)
+static int
+Load(void *obj, AG_DataSource *buf)
 {
 	SG *sg = obj;
 	int rv;
@@ -530,10 +530,10 @@ const AG_ObjectOps sgOps = {
 	sizeof(SG),
 	{ 1,0 },
 	SG_Init,
-	SG_Reinit,
+	FreeDataset,
 	Destroy,
-	SG_Load,
-	SG_Save,
+	Load,
+	Save,
 	SG_Edit
 };
 

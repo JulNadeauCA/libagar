@@ -196,7 +196,7 @@ MAP_NodeselEndMove(MAP_View *mv)
 	MAP_PopLayer(mDst);
 	MAP_ModEnd(mDst);
 	
-	MAP_Reinit(mTmp);
+	MAP_FreeDataset(mTmp);
 	MAP_Destroy(mTmp);
 	mv->esel.moving = 0;
 }

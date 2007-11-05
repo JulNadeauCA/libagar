@@ -850,7 +850,7 @@ const AG_WidgetOps agNumericalOps = {
 		sizeof(AG_Numerical),
 		{ 0,0 },
 		NULL,			/* init */
-		NULL,			/* reinit */
+		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */

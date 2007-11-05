@@ -1639,7 +1639,7 @@ const AG_WidgetOps agWidgetOps = {
 		sizeof(AG_Widget),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */

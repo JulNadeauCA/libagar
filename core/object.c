@@ -175,16 +175,29 @@ void
 AG_ObjectFreeDataset(void *p)
 {
 	AG_Object *ob = p;
+	int preserveDeps;
+	const AG_ObjectOps **hier;
+	int i, nHier;
 
 	AG_MutexLock(&ob->lock);
-	if (OBJECT_RESIDENT(ob)) {
-		if (ob->ops->free_dataset != NULL) {
-			ob->flags |= AG_OBJECT_PRESERVE_DEPS;
-			ob->ops->free_dataset(ob);
-			ob->flags &= ~(AG_OBJECT_PRESERVE_DEPS);
-		}
-		ob->flags &= ~(AG_OBJECT_RESIDENT);
+	if (!OBJECT_RESIDENT(ob)) {
+		goto out;
 	}
+	preserveDeps = (ob->flags & AG_OBJECT_PRESERVE_DEPS);
+	ob->flags |= AG_OBJECT_PRESERVE_DEPS;
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
+		for (i = nHier-1; i >= 0; i--) {
+			if (hier[i]->free_dataset != NULL)
+				hier[i]->free_dataset(ob);
+		}
+		Free(hier, M_OBJECT);
+	} else {
+		dprintf("hier %s: %s\n", ob->name, AG_GetError());
+	}
+	ob->flags &= ~(AG_OBJECT_RESIDENT);
+	if (!preserveDeps)
+		ob->flags &= ~(AG_OBJECT_PRESERVE_DEPS);
+out:
 	AG_MutexUnlock(&ob->lock);
 }
 
@@ -607,19 +620,18 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
 }
 
 /*
- * Return an array of classes describing the inheritance hierarchy
- * of an object.
+ * Return an array of class structures describing the inheritance
+ * hierarchy of an object.
  */
 int
-AG_ObjectGetInheritHier(void *obj, const AG_ObjectOps ***ops, Uint *nOps)
+AG_ObjectGetInheritHier(void *obj, const AG_ObjectOps ***ops, int *nOps)
 {
 	char cname[AG_OBJECT_TYPE_MAX], *c;
 	const AG_ObjectOps *cl;
 	int i;
 
-	strlcpy(cname, AGOBJECT(obj)->ops->type, sizeof(cname));
-
 	(*nOps) = 0;
+	strlcpy(cname, AGOBJECT(obj)->ops->type, sizeof(cname));
 	for (c = &cname[0]; *c != '\0'; c++) {
 		if (*c == ':')
 			(*nOps)++;
@@ -650,8 +662,7 @@ AG_ObjectDestroy(void *p)
 {
 	AG_Object *ob = p;
 	const AG_ObjectOps **hier;
-	Uint nHier;
-	int i;
+	int i, nHier;
 
 #ifdef DEBUG
 	if (ob->parent != NULL) {
@@ -666,17 +677,13 @@ AG_ObjectDestroy(void *p)
 
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = nHier-1; i >= 0; i--) {
-			printf("hier[%d]: %s\n",i, hier[i]->type);
-			if (hier[i]->destroy != NULL) {
-				printf("%s: destroy superclass %s\n",
-				    ob->name, hier[i]->type);
+			if (hier[i]->destroy != NULL)
 				hier[i]->destroy(ob);
-			}
 		}
 		Free(hier, M_OBJECT);
+	} else {
+		dprintf("hier %s: %s\n", ob->name, AG_GetError());
 	}
-	if (ob->ops->destroy != NULL)
-		ob->ops->destroy(ob);
 
 	AG_ObjectFreeProps(ob);
 	AG_ObjectFreeEvents(ob);
@@ -1055,6 +1062,8 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	AG_DataSource *ds;
 	off_t dataOffs;
 	AG_Version ver;
+	const AG_ObjectOps **hier;
+	int i, nHier;
 	
 	if (!OBJECT_PERSISTENT(ob)) {
 		AG_SetError(_("Object is non-persistent"));
@@ -1096,10 +1105,15 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	if (OBJECT_RESIDENT(ob)) {
 		AG_ObjectFreeDataset(ob);
 	}
-	if (ob->ops->load != NULL &&
-	    ob->ops->load(ob, ds) == -1)
-		goto fail;
-
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
+		for (i = 0; i < nHier; i++) {
+			if (hier[i]->load != NULL)
+				hier[i]->load(ob, ds);
+		}
+		Free(hier, M_OBJECT);
+	} else {
+		dprintf("hier %s: %s\n", ob->name, AG_GetError());
+	}
 	ob->flags |= AG_OBJECT_RESIDENT;
 	AG_CloseFile(ds);
 	AG_PostEvent(ob, agWorld, "object-post-load-data", "%s", path);
@@ -1162,6 +1176,8 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	AG_ObjectDep *dep;
 	int pagedTemporarily;
 	int dataFound;
+	const AG_ObjectOps **hier;
+	int i, nHier;
 
 	AG_LockLinkage();
 	AG_MutexLock(&ob->lock);
@@ -1272,11 +1288,20 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	}
 	AG_WriteUint32At(ds, count, countOffs);
 
-	/* Save the user data. */
+	/* Save the dataset. */
 	AG_WriteUint32At(ds, AG_Tell(ds), dataOffs);
-	if (ob->ops->save != NULL &&
-	    ob->ops->save(ob, ds) == -1)
-		goto fail;
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
+		for (i = 0; i < nHier; i++) {
+			if (hier[i]->save == NULL) {
+				continue;
+			}
+			if (hier[i]->save(ob, ds) == -1)
+				goto fail;
+		}
+		Free(hier, M_OBJECT);
+	} else {
+		dprintf("hier %s: %s\n", ob->name, AG_GetError());
+	}
 
 	AG_CloseFile(ds);
 	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }

@@ -81,9 +81,6 @@ void	 	 RG_InitSubsystem(void);
 
 RG_Tileset	*RG_TilesetNew(void *, const char *, Uint);
 void		 RG_TilesetInit(void *, const char *);
-void		 RG_TilesetReinit(void *);
-int		 RG_TilesetLoad(void *, AG_DataSource *);
-int		 RG_TilesetSave(void *, AG_DataSource *);
 void		*RG_TilesetEdit(void *);
 
 RG_Tile		*RG_TilesetFindTile(RG_Tileset *, const char *);

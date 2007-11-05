@@ -179,7 +179,7 @@ const AG_WidgetOps agObjectSelectorOps = {
 		sizeof(AG_ObjectSelector),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* reinit */
+		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

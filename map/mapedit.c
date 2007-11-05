@@ -35,18 +35,6 @@
 #include "map.h"
 #include "mapedit.h"
 
-const AG_ObjectOps mapEditorPseudoOps = {
-	"MAP_EditorPseudo",
-	sizeof(AG_Object),
-	{ 0, 0 },
-	NULL,			/* init */
-	NULL,			/* reinit */
-	NULL,			/* destroy */
-	NULL,			/* load */
-	NULL,			/* save */
-	MAP_EditorConfig	/* edit */
-};
-
 extern int mapViewAnimatedBg, mapViewBgTileSize;
 extern int mapViewEditSelOnly;
 
@@ -126,8 +114,8 @@ MAP_EditorLoad(AG_DataSource *buf)
 	mapDefaultBrushHeight = (int)AG_ReadUint16(buf);
 }
 
-void *
-MAP_EditorConfig(void *p)
+static void *
+ConfigEditor(void *p)
 {
 	AG_Window *win;
 	AG_Checkbox *cb;
@@ -177,12 +165,24 @@ MAP_EditorConfig(void *p)
 	return (win);
 }
 
+const AG_ObjectOps mapEditorPseudoOps = {
+	"MAP_EditorPseudo",
+	sizeof(AG_Object),
+	{ 0, 0 },
+	NULL,			/* init */
+	NULL,			/* free */
+	NULL,			/* destroy */
+	NULL,			/* load */
+	NULL,			/* save */
+	ConfigEditor
+};
+
 const AG_ObjectOps mapEditorOps = {
 	"MAP_Editor",
 	sizeof(AG_Object),
 	{ 0, 0 },
 	NULL,		/* init */
-	NULL,		/* reinit */
+	NULL,		/* free */
 	Destroy,
 	NULL,		/* load */
 	NULL,		/* save */
