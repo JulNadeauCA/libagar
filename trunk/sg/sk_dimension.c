@@ -48,7 +48,7 @@ SK_DimensionNew(void *parent)
 {
 	SK_Dimension *dim;
 
-	dim = Malloc(sizeof(SK_Dimension), M_SG);
+	dim = Malloc(sizeof(SK_Dimension));
 	SK_DimensionInit(dim, SK_GenNodeName(SKNODE(parent)->sk, "Dimension"));
 	SK_NodeAttach(parent, dim);
 	return (dim);

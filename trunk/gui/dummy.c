@@ -24,7 +24,7 @@ AG_DummyNew(void *parent, Uint flags, const char *caption)
 {
 	AG_Dummy *dum;
 
-	dum = Malloc(sizeof(AG_Dummy), M_OBJECT);
+	dum = Malloc(sizeof(AG_Dummy));
 	AG_DummyInit(dum, flags, caption);
 	AG_ObjectAttach(parent, dum);
 	return (dum);

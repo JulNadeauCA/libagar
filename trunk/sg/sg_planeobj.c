@@ -39,7 +39,7 @@ SG_PlaneObjNewPts(void *pNode, const char *name, SG_Vector p1, SG_Vector p2,
 {
 	SG_PlaneObj *po;
 
-	po = Malloc(sizeof(SG_PlaneObj), M_SG);
+	po = Malloc(sizeof(SG_PlaneObj));
 	SG_PlaneObjInit(po, name);
 	po->P = SG_PlaneFrom3Pts(p1, p2, p3);
 	SG_NodeAttach(pNode, po);
@@ -51,7 +51,7 @@ SG_PlaneObjNew(void *pNode, const char *name, SG_Vector n, SG_Real d)
 {
 	SG_PlaneObj *po;
 
-	po = Malloc(sizeof(SG_PlaneObj), M_SG);
+	po = Malloc(sizeof(SG_PlaneObj));
 	SG_PlaneObjInit(po, name);
 	po->P = SG_PlaneFromNormal(n, d);
 	SG_NodeAttach(pNode, po);

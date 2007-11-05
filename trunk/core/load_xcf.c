@@ -180,8 +180,7 @@ ReadProp(AG_DataSource *buf, struct xcf_prop *prop)
 	switch (prop->id) {
 	case PROP_COLORMAP:		      /* Colormap for indexed images */
 		prop->data.colormap.size = AG_ReadUint32(buf);
-		prop->data.colormap.data = Malloc(prop->data.colormap.size*3,
-		    M_LOADER);
+		prop->data.colormap.data = Malloc(prop->data.colormap.size*3);
 		if (AG_Read(buf, prop->data.colormap.data,
 		    prop->data.colormap.size, 3) != 0) {
 			AG_FatalError(NULL);
@@ -224,14 +223,13 @@ ReadProp(AG_DataSource *buf, struct xcf_prop *prop)
 		prop->data.parasite.name = AG_ReadNulString(buf);
 		prop->data.parasite.flags = AG_ReadUint32(buf);
 		prop->data.parasite.size = AG_ReadUint32(buf);
-		prop->data.parasite.data = Malloc(prop->data.parasite.size,
-		                                  M_LOADER);
+		prop->data.parasite.data = Malloc(prop->data.parasite.size);
 		if (AG_Read(buf, prop->data.parasite.data,
 		    prop->data.parasite.size, 1) != 0) {
 			AG_FatalError(NULL);
 		}
-		Free(prop->data.parasite.name, 0);
-		Free(prop->data.parasite.data, M_LOADER);
+		Free(prop->data.parasite.name);
+		Free(prop->data.parasite.data);
 		break;
 	case PROP_UNIT:
 		prop->data.unit = AG_ReadUint32(buf);
@@ -250,9 +248,9 @@ ReadTileFlat(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 {
 	Uint8 *load;
 
-	load = Malloc(len, M_LOADER);
+	load = Malloc(len);
 	if (AG_Read(buf, load, len, 1) != 0) {
-		Free(load,M_LOADER);
+		Free(load);
 		return (NULL);
 	}
 	return (load);
@@ -264,7 +262,7 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 	int i, size, count, j;
 	Uint8 *tilep, *tile, *data;
 
-	tilep = tile = Malloc(len, M_LOADER);
+	tilep = tile = Malloc(len);
 	AG_Read(buf, tile, sizeof(Uint8), len);
 
 	if ((data = malloc(x * y * bpp)) == NULL) {
@@ -312,8 +310,7 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 			}
 		}
 	}
-
-	Free(tilep, M_LOADER);
+	Free(tilep);
 	return (data);
 }
 
@@ -442,10 +439,10 @@ ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
 			ty += 64;
 		}
 		if (ty >= (int)level->h) {
-			Free(tile, M_LOADER);
+			Free(tile);
 			break;
 		}
-		Free(tile, M_LOADER);
+		Free(tile);
 	}
 	return (0);
 }
@@ -480,19 +477,18 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 	/* Read the hierarchy. */
 	AG_Seek(buf, xcfoffs+layer->hierarchy_offset, AG_SEEK_SET);
 
-	hier = Malloc(sizeof(struct xcf_hierarchy), M_LOADER);
+	hier = Malloc(sizeof(struct xcf_hierarchy));
 	hier->w = AG_ReadUint32(buf);
 	hier->h = AG_ReadUint32(buf);
 	hier->bpp = AG_ReadUint32(buf);
 	if (hier->bpp != 4 && hier->bpp != 3) {
 		AG_SetError("Cannot handle %dBpp XCF", hier->bpp);
-		Free(hier, M_LOADER);
+		Free(hier);
 		return (NULL);
 	}
 
 	/* Read the level offsets. */
-	hier->level_offsets = Malloc(LEVEL_OFFSETS_INIT*sizeof(Uint32),
-	                             M_LOADER);
+	hier->level_offsets = Malloc(LEVEL_OFFSETS_INIT*sizeof(Uint32));
 	hier->maxlevel_offsets = LEVEL_OFFSETS_INIT;
 	hier->nlevel_offsets = 0;
 	i = 0;
@@ -514,11 +510,10 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 		struct xcf_level *level;
 
 		AG_Seek(buf, xcfoffs+hier->level_offsets[i], AG_SEEK_SET);
-		level = Malloc(sizeof(struct xcf_level), M_LOADER);
+		level = Malloc(sizeof(struct xcf_level));
 		level->w = AG_ReadUint32(buf);
 		level->h = AG_ReadUint32(buf);
-		level->tile_offsets = Malloc(TILE_OFFSETS_INIT*sizeof(Uint32),
-		    M_LOADER);
+		level->tile_offsets = Malloc(TILE_OFFSETS_INIT*sizeof(Uint32));
 		level->maxtile_offsets = TILE_OFFSETS_INIT;
 		level->ntile_offsets = 0;
 
@@ -537,18 +532,18 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 		}
 		if (ConvertLevel(buf, xcfoffs, hier, head, level, su, &aflags)
 		    == -1) {
-			Free(hier->level_offsets, M_LOADER);
-			Free(hier, M_LOADER);
-			Free(level->tile_offsets, M_LOADER);
-			Free(level, M_LOADER);
+			Free(hier->level_offsets);
+			Free(hier);
+			Free(level->tile_offsets);
+			Free(level);
 			SDL_FreeSurface(su);
 			return (NULL);				/* LEAK */
 		}
-		Free(level->tile_offsets, M_LOADER);
-		Free(level, M_LOADER);
+		Free(level->tile_offsets);
+		Free(level);
 	}
-	Free(hier->level_offsets, M_LOADER);
-	Free(hier, M_LOADER);
+	Free(hier->level_offsets);
+	Free(hier);
 
 	/* Adjust the alpha/colorkey properties of the surface. */
 	{	
@@ -584,13 +579,13 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 	}
 
 	/* Read the XCF header. */
-	head = Malloc(sizeof(struct xcf_header), M_LOADER);
+	head = Malloc(sizeof(struct xcf_header));
 	head->w = AG_ReadUint32(buf);
 	head->h = AG_ReadUint32(buf);
 	if (head->w > XCF_WIDTH_MAX ||
 	    head->h > XCF_HEIGHT_MAX) {
 		AG_SetError("Bad XCF geometry: %ux%u", head->w, head->h);
-		Free(head, M_LOADER);
+		Free(head);
 		return (-1);
 	}
 
@@ -602,7 +597,7 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 		break;
 	default:
 		AG_SetError(_("Unknown base image type: %u."), head->base_type);
-		Free(head, M_LOADER);
+		Free(head);
 		return (-1);
 	}
 	head->compression = XCF_COMPRESSION_NONE;
@@ -619,8 +614,7 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 			break;
 		case PROP_COLORMAP:
 			head->colormap.size = prop.data.colormap.size;
-			head->colormap.data = Malloc(3*head->colormap.size,
-			    M_LOADER);
+			head->colormap.data = Malloc(3*head->colormap.size);
 			memcpy(head->colormap.data, prop.data.colormap.data,
 			    3*head->colormap.size);
 			break;
@@ -646,7 +640,7 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 		SDL_Surface *su;
 
 		AG_Seek(buf, xcf_offs+head->layer_offstable[i-1], AG_SEEK_SET);
-		layer = Malloc(sizeof(struct xcf_layer), M_LOADER);
+		layer = Malloc(sizeof(struct xcf_layer));
 		layer->w = AG_ReadUint32(buf);
 		layer->h = AG_ReadUint32(buf);
 		layer->layer_type = AG_ReadUint32(buf);
@@ -676,19 +670,19 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 		/* Convert this layer to a SDL surface. */
 		if ((su = ConvertLayer(buf, xcf_offs, head, layer))
 		    == NULL) {
-			Free(layer->name, 0);
-			Free(layer, M_LOADER);
-			Free(head, M_LOADER);
+			Free(layer->name);
+			Free(layer);
+			Free(head);
 			return (-1);
 		}
 
 		add_layer_fn(su, layer->name, arg);
-		Free(layer->name, 0);
-		Free(layer, M_LOADER);
+		Free(layer->name);
+		Free(layer);
 	}
 
-	Free(head->colormap.data, M_LOADER);
-	Free(head->layer_offstable, M_LOADER);
-	Free(head, M_LOADER);
+	Free(head->colormap.data);
+	Free(head->layer_offstable);
+	Free(head);
 	return (0);
 }

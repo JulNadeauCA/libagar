@@ -116,7 +116,7 @@ FreeSpriteTransforms(AG_Sprite *spr)
 			MAP_TransformDestroy(trans);
 		}
 		SDL_FreeSurface(csprite->su);
-		Free(csprite, M_GFX);
+		Free(csprite);
 	}
 	SLIST_INIT(&spr->csprites);
 }
@@ -148,11 +148,11 @@ AG_SpriteDestroy(AG_Gfx *gfx, Uint32 s)
 		spr->su = NULL;
 	}
 	if (spr->attrs != NULL) {
-		Free(spr->attrs, M_RG);
+		Free(spr->attrs);
 		spr->attrs = NULL;
 	}
 	if (spr->layers != NULL) {
-		Free(spr->layers, M_RG);
+		Free(spr->layers);
 		spr->layers = NULL;
 	}
 #ifdef HAVE_OPENGL
@@ -255,7 +255,7 @@ AG_GfxAllocSprites(AG_Gfx *gfx, Uint32 n)
 	if (n > 0) {
 		gfx->sprites = Realloc(gfx->sprites, n*sizeof(AG_Sprite));
 	} else {
-		Free(gfx->sprites, M_GFX);
+		Free(gfx->sprites);
 		gfx->sprites = NULL;
 	}
 	gfx->nsprites = n;
@@ -276,7 +276,7 @@ AG_GfxAllocAnims(AG_Gfx *gfx, Uint32 n)
 	if (n > 0) {
 		gfx->anims = Realloc(gfx->anims, n*sizeof(AG_Anim));
 	} else {
-		Free(gfx->anims, M_GFX);
+		Free(gfx->anims);
 		gfx->anims = NULL;
 	}
 	gfx->nanims = n;
@@ -345,7 +345,7 @@ AG_GfxNew(void *pobj)
 {
 	AG_Gfx *gfx;
 	
-	gfx = Malloc(sizeof(AG_Gfx), M_GFX);
+	gfx = Malloc(sizeof(AG_Gfx));
 	AG_GfxInit(gfx);
 	gfx->pobj = pobj;
 	return (gfx);
@@ -371,7 +371,7 @@ FreeAnim(AG_Anim *anim)
 	for (i = 0; i < anim->nframes; i++) {
 		SDL_FreeSurface(anim->frames[i]);
 	}
-	Free(anim->frames, M_GFX);
+	Free(anim->frames);
 }
 
 void
@@ -392,7 +392,7 @@ AG_AnimDestroy(AG_Gfx *gfx, Uint32 name)
 			MAP_TransformDestroy(trans);
 		}
 		FreeAnim(canim->anim);
-		Free(canim, M_GFX);
+		Free(canim);
 	}
 	SLIST_INIT(&animcl->anims);
 
@@ -412,10 +412,10 @@ AG_GfxDestroy(AG_Gfx *gfx)
 		AG_AnimDestroy(gfx, i);
 	}
 
-	Free(gfx->sprites, M_GFX);
-	Free(gfx->anims, M_GFX);
-	Free(gfx->canims, M_GFX);
-	Free(gfx, M_GFX);
+	Free(gfx->sprites);
+	Free(gfx->anims);
+	Free(gfx->canims);
+	Free(gfx);
 }
 
 /* Insert a frame into an animation. */
@@ -423,7 +423,7 @@ Uint32
 AG_GfxAddAnimFrame(AG_Anim *anim, SDL_Surface *surface)
 {
 	if (anim->frames == NULL) {
-		anim->frames = Malloc(FRAMES_INIT*sizeof(SDL_Surface *), M_GFX);
+		anim->frames = Malloc(FRAMES_INIT*sizeof(SDL_Surface *));
 		anim->maxframes = FRAMES_INIT;
 		anim->nframes = 0;
 	} else if (anim->nframes+1 > anim->maxframes) {
@@ -570,8 +570,8 @@ AG_GfxLoad(AG_Object *ob)
 				}
 			}
 		} else {
-			Free(spr->attrs, M_RG);
-			Free(spr->layers, M_RG);
+			Free(spr->attrs);
+			Free(spr->layers);
 			spr->layers = NULL;
 		}
 	}

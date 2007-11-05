@@ -38,7 +38,7 @@ AG_TitlebarNew(void *parent, int flags)
 {
 	AG_Titlebar *tbar;
 
-	tbar = Malloc(sizeof(AG_Titlebar), M_OBJECT);
+	tbar = Malloc(sizeof(AG_Titlebar));
 	AG_TitlebarInit(tbar, flags);
 	AG_ObjectAttach(parent, tbar);
 	tbar->win = (AG_Window *)parent;

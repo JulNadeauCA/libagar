@@ -50,7 +50,7 @@ AG_MatviewNew(void *parent, SG_Matrix *mat, Uint flags)
 {
 	AG_Matview *mv;
 
-	mv = Malloc(sizeof(AG_Matview), M_OBJECT);
+	mv = Malloc(sizeof(AG_Matview));
 	AG_MatviewInit(mv, mat, flags);
 	AG_ObjectAttach(parent, mv);
 	return (mv);

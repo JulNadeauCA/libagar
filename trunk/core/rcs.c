@@ -655,12 +655,12 @@ AG_RcsFreeLog(AG_RCSLog *log)
 	for (i = 0; i < log->nEnts; i++) {
 		AG_RCSLogEntry *lent = &log->ents[i];
 
-		Free(lent->rev,0);
-		Free(lent->author,0);
-		Free(lent->type,0);
-		Free(lent->name,0);
-		Free(lent->sum,0);
-		Free(lent->msg,0);
+		Free(lent->rev);
+		Free(lent->author);
+		Free(lent->type);
+		Free(lent->name);
+		Free(lent->sum);
+		Free(lent->msg);
 	}
 	log->ents = NULL;
 	log->nEnts = 0;
@@ -710,10 +710,10 @@ AG_RcsFreeList(AG_RCSList *list)
 	for (i = 0; i < list->nEnts; i++) {
 		AG_RCSListEntry *lent = &list->ents[i];
 
-		Free(lent->name,0);
-		Free(lent->rev,0);
-		Free(lent->author,0);
-		Free(lent->type,0);
+		Free(lent->name);
+		Free(lent->rev);
+		Free(lent->author);
+		Free(lent->type);
 	}
 	list->ents = NULL;
 	list->nEnts = 0;
@@ -822,7 +822,7 @@ AG_RcsCheckout(const char *path)
 		    _("Creating working copy of %s (%s)."),
 		    name, type);
 
-		obj = Malloc(cl->size, M_OBJECT);
+		obj = Malloc(cl->size);
 		if (cl->init != NULL) {
 			cl->init(obj, name);
 		} else {

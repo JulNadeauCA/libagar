@@ -34,7 +34,7 @@ AG_SeparatorNew(void *parent, enum ag_separator_type type)
 {
 	AG_Separator *sep;
 
-	sep = Malloc(sizeof(AG_Separator), M_OBJECT);
+	sep = Malloc(sizeof(AG_Separator));
 	AG_SeparatorInit(sep, type, 1);
 	AG_ObjectAttach(parent, sep);
 	return (sep);
@@ -45,7 +45,7 @@ AG_SeparatorNewInv(void *parent, enum ag_separator_type type)
 {
 	AG_Separator *sep;
 
-	sep = Malloc(sizeof(AG_Separator), M_OBJECT);
+	sep = Malloc(sizeof(AG_Separator));
 	AG_SeparatorInit(sep, type, 0);
 	AG_ObjectAttach(parent, sep);
 	return (sep);

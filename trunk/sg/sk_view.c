@@ -53,7 +53,7 @@ SK_ViewNew(void *parent, SK *sk, Uint flags)
 {
 	SK_View *skv;
 
-	skv = Malloc(sizeof(SK_View), M_OBJECT);
+	skv = Malloc(sizeof(SK_View));
 	SK_ViewInit(skv, sk, flags);
 	AG_ObjectAttach(parent, skv);
 	return (skv);
@@ -268,7 +268,7 @@ Destroy(void *p)
 	     tool = toolNext) {
 		toolNext = TAILQ_NEXT(tool, tools);
 		SK_ToolDestroy(tool);
-		Free(tool, M_SG);
+		Free(tool);
 	}
 }
 
@@ -431,7 +431,7 @@ SK_ViewSelectTool(SK_View *skv, SK_Tool *ntool, void *p)
 			    ag_widget) {
 				AG_ObjectDetach(wt);
 				AG_ObjectDestroy(wt);
-				Free(wt, M_OBJECT);
+				Free(wt);
 			}
 			wParent = AG_WidgetParentWindow(skv->curtool->pane);
 			if (wParent != NULL)
@@ -498,7 +498,7 @@ SK_ViewRegTool(SK_View *skv, const SK_ToolOps *ops, void *p)
 {
 	SK_Tool *t;
 
-	t = Malloc(ops->len, M_SG);
+	t = Malloc(ops->len);
 	t->ops = ops;
 	t->skv = skv;
 	t->p = p;
@@ -603,7 +603,7 @@ SK_ViewCloseEditPane(SK_View *skv)
 	}
 	AG_ObjectDetach(skv->editPane);
 	AG_ObjectDestroy(skv->editPane);
-	Free(skv->editPane,0);
+	Free(skv->editPane);
 	skv->editPane = NULL;
 }
 

@@ -131,7 +131,7 @@ SK_New(void *parent, const char *name)
 {
 	SK *sk;
 
-	sk = Malloc(sizeof(SK), M_SG);
+	sk = Malloc(sizeof(SK));
 	SK_Init(sk, name);
 	AG_ObjectAttach(parent, sk);
 	return (sk);
@@ -140,7 +140,7 @@ SK_New(void *parent, const char *name)
 static void
 SK_InitRoot(SK *sk)
 {
-	sk->root = Malloc(sizeof(SK_Point), M_SG);
+	sk->root = Malloc(sizeof(SK_Point));
 	SK_PointInit(sk->root, 0);
 	SK_PointSize(SKPOINT(sk->root), 3.0);
 	SK_PointColor(SKPOINT(sk->root), SG_ColorRGB(100.0, 100.0, 0.0));
@@ -229,9 +229,9 @@ SK_NodeInit(void *np, const void *ops, Uint32 handle, Uint flags)
 	n->sk = NULL;
 	n->pNode = NULL;
 	n->nRefs = 0;
-	n->refNodes = Malloc(sizeof(SK_Node *), M_SG);
+	n->refNodes = Malloc(sizeof(SK_Node *));
 	n->nRefNodes = 0;
-	n->cons = Malloc(sizeof(SK_Constraint *), M_SG);
+	n->cons = Malloc(sizeof(SK_Constraint *));
 	n->nCons = 0;
 	MatIdentityv(&n->T);
 	TAILQ_INIT(&n->cnodes);
@@ -253,9 +253,9 @@ SK_FreeNode(SK *sk, SK_Node *node)
 	if (node->ops->destroy != NULL) {
 		node->ops->destroy(node);
 	}
-	Free(node->refNodes, M_SG);
-	Free(node->cons, M_SG);
-	Free(node, M_SG);
+	Free(node->refNodes);
+	Free(node->cons);
+	Free(node);
 }
 
 static void
@@ -426,7 +426,7 @@ SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_DataSource *buf)
 			return (-1);
 		}
 	}
-	node = Malloc(skElements[i]->size, M_SG);
+	node = Malloc(skElements[i]->size);
 	handle = AG_ReadUint32(buf);
 	skElements[i]->init(node, handle);
 	node->sk = sk;
@@ -493,7 +493,7 @@ Load(void *obj, AG_DataSource *buf)
 	/* Load the geometric constraint data. */
 	count = AG_ReadUint32(buf);
 	for (i = 0; i < count; i++) {
-		ct = AG_Malloc(sizeof(SK_Constraint), M_SG);
+		ct = AG_Malloc(sizeof(SK_Constraint));
 		ct->type = (enum sk_constraint_type)AG_ReadUint32(buf);
 		ct->uType = (enum sk_constraint_type)AG_ReadUint32(buf);
 		ct->n1 = SK_ReadRef(buf, sk, NULL);
@@ -763,7 +763,7 @@ SK_NodeAdd(void *pNode, const SK_NodeOps *ops, Uint32 name, Uint flags)
 {
 	SK_Node *n;
 
-	n = Malloc(ops->size, M_SG);
+	n = Malloc(ops->size);
 	SK_NodeInit(n, ops, 0, flags);
 	SK_NodeAttach(pNode, n);
 	return (n);
@@ -968,7 +968,7 @@ SK_FreeCluster(SK_Cluster *cl)
 
 	while ((ct = TAILQ_FIRST(&cl->edges)) != NULL) {
 		TAILQ_REMOVE(&cl->edges, ct, constraints);
-		Free(ct, M_SG);
+		Free(ct);
 	}
 }
 
@@ -980,7 +980,7 @@ SK_FreeClusters(SK *sk)
 	while ((cl = TAILQ_FIRST(&sk->clusters)) != NULL) {
 		TAILQ_REMOVE(&sk->clusters, cl, clusters);
 		SK_FreeCluster(cl);
-		Free(cl, M_SG);
+		Free(cl);
 	}
 }
 
@@ -991,7 +991,7 @@ SK_FreeInsns(SK *sk)
 
 	while ((si = TAILQ_FIRST(&sk->insns)) != NULL) {
 		TAILQ_REMOVE(&sk->insns, si, insns);
-		Free(si, M_SG);
+		Free(si);
 	}
 }
 
@@ -1009,7 +1009,7 @@ SK_AddConstraint(SK_Cluster *cl, void *node1, void *node2,
 			      skConstraintNames[type]);
 		return (NULL);
 	}
-	ct = Malloc(sizeof(SK_Constraint), M_SG);
+	ct = Malloc(sizeof(SK_Constraint));
 	ct->uType = type;
 	ct->n1 = node1;
 	ct->n2 = node2;
@@ -1055,7 +1055,7 @@ SK_DupConstraint(const SK_Constraint *ct1)
 {
 	SK_Constraint *ct2;
 
-	ct2 = Malloc(sizeof(SK_Constraint), M_SG);
+	ct2 = Malloc(sizeof(SK_Constraint));
 	ct2->type = ct1->type;
 	ct2->uType = ct1->uType;
 	ct2->n1 = ct1->n1;
@@ -1095,7 +1095,7 @@ void
 SK_DelConstraint(SK_Cluster *cl, SK_Constraint *ct)
 {
 	TAILQ_REMOVE(&cl->edges, ct, constraints);
-	Free(ct, M_SG);
+	Free(ct);
 }
 
 /* Destroy a constraint edge matching the argument. */
@@ -1109,7 +1109,7 @@ SK_DelSimilarConstraint(SK_Cluster *cl, const SK_Constraint *ctRef)
 		return (-1);
 	}
 	TAILQ_REMOVE(&cl->edges, ct, constraints);
-	Free(ct, M_SG);
+	Free(ct);
 	return (0);
 }
 
@@ -1229,7 +1229,7 @@ SK_AddInsn(SK *sk, enum sk_insn_type type, ...)
 	SK_Insn *si;
 	va_list ap;
 
-	si = Malloc(sizeof(SK_Insn), M_SG);
+	si = Malloc(sizeof(SK_Insn));
 	si->type = type;
 
 	va_start(ap, type);

@@ -219,7 +219,7 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 		return (-1);
 	}
 	jpeg_stdio_dest(&jcomp, ftmp);
-	jcopybuf = Malloc(su->w * 3, M_VIEW);
+	jcopybuf = Malloc(su->w*3);
 	if (SDL_MUSTLOCK(su)) {
 		SDL_LockSurface(su);
 	}
@@ -265,7 +265,7 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	NS_EndData(ns);
 	fclose(ftmp);
 	AG_FileDelete(tmp);
-	Free(jcopybuf, M_VIEW);
+	Free(jcopybuf);
 	jpeg_destroy_compress(&jcomp);
 	return (0);
 #else /* !HAVE_JPEG */
@@ -397,7 +397,7 @@ DEV_DebugServer(void)
 	AG_WindowSetCaption(win, _("Debug Server"));
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_RIGHT, 0);
 
-	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tl = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tl, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tl, "CLIENT (255.255.255.255): 0.0-beta", 8);
 	AG_SetEvent(tl, "tlist-poll", PollClients, NULL);

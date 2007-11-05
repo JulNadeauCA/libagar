@@ -39,7 +39,7 @@ SG_ViewNew(void *parent, SG *sg, Uint flags)
 {
 	SG_View *sv;
 
-	sv = Malloc(sizeof(SG_View), M_OBJECT);
+	sv = Malloc(sizeof(SG_View));
 	SG_ViewInit(sv, sg, flags);
 	AG_ObjectAttach(parent, sv);
 	return (sv);

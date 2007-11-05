@@ -38,7 +38,7 @@ AG_SpinbuttonNew(void *parent, Uint flags, const char *label)
 {
 	AG_Spinbutton *sbu;
 
-	sbu = Malloc(sizeof(AG_Spinbutton), M_OBJECT);
+	sbu = Malloc(sizeof(AG_Spinbutton));
 	AG_SpinbuttonInit(sbu, flags, label);
 	AG_ObjectAttach(parent, sbu);
 	return (sbu);

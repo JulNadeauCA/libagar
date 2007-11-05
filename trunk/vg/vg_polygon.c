@@ -57,7 +57,7 @@ VG_PolygonRender(VG *vg, VG_Element *vge)
 	}
 	
 	if (vg->ints == NULL) {
-		vg->ints = Malloc(vge->nvtx*sizeof(int), M_VG);
+		vg->ints = Malloc(vge->nvtx*sizeof(int));
 		vg->nints = vge->nvtx;
 	} else {
 		if (vge->nvtx > vg->nints) {

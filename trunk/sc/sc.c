@@ -32,7 +32,7 @@ SC_VectorSetProp(void *obj, AG_Prop *prop, void *arg)
 	SC_Vector *a = arg;
 
 	prop->size = a->m*sizeof(SC_Real);
-	prop->data.p = Malloc(prop->size, M_OBJECT);
+	prop->data.p = Malloc(prop->size);
 	SC_VectorCopy(a, (SC_Vector *)prop->data.p);
 }
 

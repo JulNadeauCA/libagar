@@ -90,7 +90,7 @@ CreateObject(AG_Event *event)
 	if (name[0] == '\0')
 		AG_ObjectGenName(agWorld, cl, name, sizeof(name));
 
-	nobj = Malloc(cl->size, M_OBJECT);
+	nobj = Malloc(cl->size);
 	if (cl->init != NULL) {
 		cl->init(nobj, name);
 	} else {
@@ -133,7 +133,7 @@ CloseGenericDlg(AG_Event *event)
 
 	AG_ViewDetach(win);
 	TAILQ_REMOVE(&gobjs, oent, objs);
-	Free(oent, M_OBJECT);
+	Free(oent);
 }
 
 void
@@ -151,7 +151,7 @@ DEV_BrowserOpenGeneric(AG_Object *ob)
 		return;
 	}
 	
-	oent = Malloc(sizeof(struct objent), M_OBJECT);
+	oent = Malloc(sizeof(struct objent));
 	oent->obj = ob;
 	oent->win = DEV_ObjectEdit(ob);
 	TAILQ_INSERT_HEAD(&gobjs, oent, objs);
@@ -174,7 +174,7 @@ SaveAndCloseObject(struct objent *oent, AG_Window *win, int save)
 	AG_ObjectPageOut(oent->obj);
 
 	agTerminating = 0;
-	Free(oent, M_OBJECT);
+	Free(oent);
 }
 
 static void
@@ -269,7 +269,7 @@ DEV_BrowserOpenData(void *p)
 	}
 	AG_PostEvent(NULL, ob, "edit-open", NULL);
 	
-	oent = Malloc(sizeof(struct objent), M_OBJECT);
+	oent = Malloc(sizeof(struct objent));
 	oent->obj = ob;
 	oent->win = win;
 	TAILQ_INSERT_HEAD(&dobjs, oent, objs);
@@ -505,7 +505,7 @@ ObjectOp(AG_Event *event)
 			AG_ObjectUnlinkDatafiles(ob);
 			AG_ObjectDestroy(ob);
 			if ((ob->flags & AG_OBJECT_STATIC) == 0) {
-				Free(ob, M_OBJECT);
+				Free(ob);
 			}
 			break;
 #ifdef NETWORK
@@ -905,7 +905,7 @@ DEV_Browser(void)
 	AG_WindowSetCaption(win, _("Object Browser"));
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_LEFT, 0);
 	
-	tlObjs = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tlObjs = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tlObjs, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
 	                      AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
@@ -1224,13 +1224,13 @@ DEV_BrowserDestroy(void)
 	     oent != TAILQ_END(&dobjs);
 	     oent = noent) {
 		noent = TAILQ_NEXT(oent, objs);
-		Free(oent, M_OBJECT);
+		Free(oent);
 	}
 	for (oent = TAILQ_FIRST(&gobjs);
 	     oent != TAILQ_END(&gobjs);
 	     oent = noent) {
 		noent = TAILQ_NEXT(oent, objs);
-		Free(oent, M_OBJECT);
+		Free(oent);
 	}
 }
 

@@ -34,7 +34,7 @@ AG_RadioNew(void *parent, Uint flags, const char **items)
 {
 	AG_Radio *rad;
 
-	rad = Malloc(sizeof(AG_Radio), M_OBJECT);
+	rad = Malloc(sizeof(AG_Radio));
 	AG_RadioInit(rad, flags, items);
 	AG_ObjectAttach(parent, rad);
 	return (rad);
@@ -65,7 +65,7 @@ Destroy(void *p)
 {
 	AG_Radio *rad = p;
 
-	Free(rad->labels, M_WIDGET);
+	Free(rad->labels);
 }
 
 static void
@@ -194,7 +194,7 @@ AG_RadioInit(AG_Radio *rad, Uint flags, const char **items)
 
 	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
 		;;
-	rad->labels = Malloc(sizeof(int)*rad->nitems, M_WIDGET);
+	rad->labels = Malloc(sizeof(int)*rad->nitems);
 	for (i = 0; i < rad->nitems; i++) {
 		SDL_Surface *su;
 

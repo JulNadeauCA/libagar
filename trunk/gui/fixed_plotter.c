@@ -44,7 +44,7 @@ AG_FixedPlotterNew(void *parent, enum ag_fixed_plotter_type type, Uint flags)
 {
 	AG_FixedPlotter *fpl;
 
-	fpl = Malloc(sizeof(AG_FixedPlotter), M_OBJECT);
+	fpl = Malloc(sizeof(AG_FixedPlotter));
 	AG_FixedPlotterInit(fpl, type, flags);
 	AG_ObjectAttach(parent, fpl);
 	if (flags & AG_FIXED_PLOTTER_FOCUS) {
@@ -213,10 +213,10 @@ AG_FixedPlotterCurve(AG_FixedPlotter *fpl, const char *name,
 {
 	AG_FixedPlotterItem *gi;
 
- 	gi = Malloc(sizeof(AG_FixedPlotterItem), M_WIDGET);
+ 	gi = Malloc(sizeof(AG_FixedPlotterItem));
 	strlcpy(gi->name, name, sizeof(gi->name));
 	gi->color = SDL_MapRGB(agVideoFmt, r, g, b);
-	gi->vals = Malloc(NITEMS_INIT * sizeof(AG_FixedPlotterValue), M_WIDGET);
+	gi->vals = Malloc(NITEMS_INIT*sizeof(AG_FixedPlotterValue));
 	gi->maxvals = NITEMS_INIT;
 	gi->nvals = 0;
 	gi->fpl = fpl;
@@ -254,8 +254,8 @@ AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 	     git != TAILQ_END(&fpl->items);
 	     git = nextgit) {
 		nextgit = TAILQ_NEXT(git, items);
-		Free(git->vals, M_WIDGET);
-		Free(git, M_WIDGET);
+		Free(git->vals);
+		Free(git);
 	}
 	TAILQ_INIT(&fpl->items);
 }

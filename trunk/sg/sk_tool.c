@@ -66,7 +66,7 @@ SK_ToolDestroy(SK_Tool *tool)
 		OBJECT_FOREACH_CHILD(wt, tool->pane, ag_widget) {
 			AG_ObjectDetach(wt);
 			AG_ObjectDestroy(wt);
-			Free(wt, M_OBJECT);
+			Free(wt);
 		}
 		if ((pwin = AG_WidgetParentWindow(tool->pane)) != NULL)
 			AG_WindowUpdate(pwin);
@@ -76,13 +76,13 @@ SK_ToolDestroy(SK_Tool *tool)
 	     kbinding != SLIST_END(&tool->kbindings);
 	     kbinding = nkbinding) {
 		nkbinding = SLIST_NEXT(kbinding, kbindings);
-		Free(kbinding, M_SG);
+		Free(kbinding);
 	}
 	for (mbinding = SLIST_FIRST(&tool->mbindings);
 	     mbinding != SLIST_END(&tool->mbindings);
 	     mbinding = nmbinding) {
 		nmbinding = SLIST_NEXT(mbinding, mbindings);
-		Free(mbinding, M_SG);
+		Free(mbinding);
 	}
 	if (tool->ops->destroy != NULL)
 		tool->ops->destroy(tool);
@@ -116,7 +116,7 @@ SK_ToolBindMouseButton(void *p, int button,
 	SK_Tool *tool = p;
 	SK_ToolMouseBinding *mb;
 	
-	mb = Malloc(sizeof(SK_ToolMouseBinding), M_SG);
+	mb = Malloc(sizeof(SK_ToolMouseBinding));
 	mb->button = button;
 	mb->func = func;
 	mb->edit = 0;
@@ -131,7 +131,7 @@ SK_ToolBindKey(void *p, SDLMod keymod, SDLKey keysym,
 	SK_Tool *tool = p;
 	SK_ToolKeyBinding *kb;
 
-	kb = Malloc(sizeof(SK_ToolKeyBinding), M_SG);
+	kb = Malloc(sizeof(SK_ToolKeyBinding));
 	kb->key = keysym;
 	kb->mod = keymod;
 	kb->func = func;
@@ -155,7 +155,7 @@ SK_ToolUnbindKey(void *p, SDLMod keymod, SDLKey keysym)
 		return;
 	}
 	SLIST_REMOVE(&tool->kbindings, kb, sk_tool_keybinding, kbindings);
-	Free(kb, M_SG);
+	Free(kb);
 }
 
 #endif /* HAVE_OPENGL */

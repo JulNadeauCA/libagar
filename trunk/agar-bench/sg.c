@@ -23,9 +23,9 @@ static void InitVectors(void)
 
 	if (Vecs == NULL) {
 		fprintf(stderr, "Initializing %d random vectors...", nVecs);
-		Vecs = AG_Malloc(nVecs*sizeof(SG_Vector), M_SG);
-		Vecs2 = AG_Malloc(nVecs*sizeof(SG_Vector), M_SG);
-		Reals = AG_Malloc(nVecs*sizeof(SG_Real), M_SG);
+		Vecs = AG_Malloc(nVecs*sizeof(SG_Vector));
+		Vecs2 = AG_Malloc(nVecs*sizeof(SG_Vector));
+		Reals = AG_Malloc(nVecs*sizeof(SG_Real));
 		for (i = 0; i < nVecs; i++) {
 			Vecs[i] = VecGet(drand48(), drand48(), drand48());
 			Vecs2[i] = VecGet(drand48(), drand48(), drand48());

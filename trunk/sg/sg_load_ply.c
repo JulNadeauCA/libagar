@@ -110,9 +110,9 @@ FreePLY(struct ply_info *ply)
 		     prop != TAILQ_END(&el->props);
 		     prop = nprop) {
 			nprop = TAILQ_NEXT(prop, props);
-			Free(prop, M_SG);
+			Free(prop);
 		}
-		Free(el, M_SG);
+		Free(el);
 	}
 }
 
@@ -245,10 +245,10 @@ LoadASCII(SG_Object *so, struct ply_info *ply, FILE *f, Uint flags)
 		if (strcmp(el->name, "vertex") == 0) {
 			if (map != NULL) {
 				AG_SetError("Multiple `vertex' elements");
-				Free(map, M_SG);
+				Free(map);
 				goto fail;
 			}
-			map = Malloc(el->count*sizeof(long), M_SG);
+			map = Malloc(el->count*sizeof(long));
 		} else if (strcmp(el->name, "face") == 0) {
 			/*
 			 * Optimize based on assumption that object has
@@ -344,10 +344,10 @@ LoadASCII(SG_Object *so, struct ply_info *ply, FILE *f, Uint flags)
 			}
 		}
 	}
-	Free(map, M_SG);
+	Free(map);
 	return (0);
 fail:
-	Free(map, M_SG);
+	Free(map);
 	return (-1);
 }
 
@@ -433,7 +433,7 @@ SG_ObjectLoadPLY(void *obj, const char *path, Uint flags)
 				goto fail;
 			}
 
-			el = Malloc(sizeof(struct ply_element), M_SG);
+			el = Malloc(sizeof(struct ply_element));
 			strlcpy(el->name, v1, sizeof(el->name));
 			el->count = count;
 			TAILQ_INIT(&el->props);
@@ -452,18 +452,18 @@ SG_ObjectLoadPLY(void *obj, const char *path, Uint flags)
 				goto fail;
 			}
 
-			prop = Malloc(sizeof(struct ply_prop), M_SG);
+			prop = Malloc(sizeof(struct ply_prop));
 			if (strcmp(v1, "list") == 0) {
 				if ((v3 = AG_Strsep(&s, " ")) == NULL ||
 				    (v4 = AG_Strsep(&s, " ")) == NULL) {
 					AG_SetError("Bad property list line");
-					Free(prop, M_SG);
+					Free(prop);
 					goto fail;
 				}
 				if ((prop->list_type = GetPropType(v2)) == -1 ||
 				    (prop->type = GetPropType(v3)) == -1 ||
 				    !IsValidElementName(v4)) {
-					Free(prop, M_SG);
+					Free(prop);
 					goto fail;
 				}
 				strlcpy(prop->name, v4, sizeof(prop->name));
@@ -471,7 +471,7 @@ SG_ObjectLoadPLY(void *obj, const char *path, Uint flags)
 			} else {
 				if ((prop->type = GetPropType(v1)) == -1 ||
 				    !IsValidElementName(v2)) {
-					Free(prop, M_SG);
+					Free(prop);
 					goto fail;
 				}
 				strlcpy(prop->name, v2, sizeof(prop->name));

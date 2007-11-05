@@ -112,7 +112,7 @@ XmitLoop(int fd)
 	jpeg_set_quality(&jcomp, agScreenshotQuality, TRUE);
 	jpeg_stdio_dest(&jcomp, fp);
 
-	jcopybuf = Malloc(agView->w * 3, M_VIEW);
+	jcopybuf = Malloc(agView->w*3);
 
 	for (;;) {
 		JSAMPROW row[1];
@@ -169,7 +169,7 @@ XmitLoop(int fd)
 		nframe++;
 		AG_MutexUnlock(&xmit_lock);
 	}
-	Free(jcopybuf, M_VIEW);
+	Free(jcopybuf);
 	jpeg_destroy_compress(&jcomp);
 	fclose(fp);
 }

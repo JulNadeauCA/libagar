@@ -36,7 +36,7 @@ AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 {
 	AG_Pixmap *px;
 
-	px = Malloc(sizeof(AG_Pixmap), M_OBJECT);
+	px = Malloc(sizeof(AG_Pixmap));
 	AG_PixmapInit(px, flags|AG_PIXMAP_FORCE_SIZE);
 	AG_ObjectAttach(parent, px);
 	AG_WidgetMapSurface(px,
@@ -51,7 +51,7 @@ AG_PixmapFromSurface(void *parent, Uint flags, SDL_Surface *su)
 {
 	AG_Pixmap *px;
 
-	px = Malloc(sizeof(AG_Pixmap), M_OBJECT);
+	px = Malloc(sizeof(AG_Pixmap));
 	AG_PixmapInit(px, flags);
 	AG_ObjectAttach(parent, px);
 	AG_WidgetMapSurface(px, su);
@@ -63,7 +63,7 @@ AG_PixmapFromSurfaceCopy(void *parent, Uint flags, SDL_Surface *su)
 {
 	AG_Pixmap *px;
 
-	px = Malloc(sizeof(AG_Pixmap), M_OBJECT);
+	px = Malloc(sizeof(AG_Pixmap));
 	AG_PixmapInit(px, flags);
 	AG_ObjectAttach(parent, px);
 	AG_WidgetMapSurface(px, AG_DupSurface(su));
@@ -78,7 +78,7 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, SDL_Surface *su,
 	AG_Pixmap *px;
 	SDL_Surface *su2 = NULL;
 
-	px = Malloc(sizeof(AG_Pixmap), M_OBJECT);
+	px = Malloc(sizeof(AG_Pixmap));
 	AG_PixmapInit(px, flags);
 	AG_ObjectAttach(parent, px);
 	AG_ScaleSurface(su, w, h, &su2);
@@ -96,7 +96,7 @@ AG_PixmapFromBMP(void *parent, Uint flags, const char *bmpfile)
 		AG_SetError("%s: %s", bmpfile, SDL_GetError());
 		return (NULL);
 	}
-	px = Malloc(sizeof(AG_Pixmap), M_OBJECT);
+	px = Malloc(sizeof(AG_Pixmap));
 	AG_PixmapInit(px, flags);
 	AG_ObjectAttach(parent, px);
 	AG_WidgetMapSurface(px, bmp);
@@ -124,7 +124,7 @@ AG_PixmapFromXCF(void *parent, Uint flags, const char *path)
 	if (AG_XCFLoad(ds, 0, tmpObj.gfx) == -1)
 		goto fail;
 	
-	px = Malloc(sizeof(AG_Pixmap), M_OBJECT);
+	px = Malloc(sizeof(AG_Pixmap));
 	AG_PixmapInit(px, flags);
 	AG_ObjectAttach(parent, px);
 	for (i = 0; i < tmpObj.gfx->nsprites; i++) {

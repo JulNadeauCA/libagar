@@ -172,7 +172,7 @@ sendreq:
 	}
 
 	/* Parse the list/item size specification. */
-	res = Malloc(sizeof(NC_Result), M_NETBUF);
+	res = Malloc(sizeof(NC_Result));
 	bufp = &client->read.buf[2];
 	for (i = 0; (s = strsep(&bufp, ":")) != NULL; i++) {
 		if (s[0] == '\0') {
@@ -180,14 +180,14 @@ sendreq:
 		}
 		if (ParseItemCount(s, &count) == -1) {
 			if (i == 0) {
-				Free(res, M_NETBUF);
+				Free(res);
 			} else {
 				for (i = 0; i < res->argc; i++) {
-					Free(res->argv[i], M_NETBUF);
+					Free(res->argv[i]);
 				}
 				if (res->argv != NULL) {
-					Free(res->argv, M_NETBUF);
-					Free(res->argv_len, M_NETBUF);
+					Free(res->argv);
+					Free(res->argv_len);
 				}
 			}
 			return (NULL);
@@ -200,13 +200,11 @@ sendreq:
 				res->argv_len = NULL;
 				return (res);
 			} else {
-				res->argv = Malloc(count * sizeof(char *),
-				    M_NETBUF);
-				res->argv_len = Malloc(count * sizeof(size_t),
-				    M_NETBUF);
+				res->argv = Malloc(count*sizeof(char *));
+				res->argv_len = Malloc(count*sizeof(size_t));
 			}
 		} else {
-			res->argv[i-1] = Malloc(count, M_NETBUF);
+			res->argv[i-1] = Malloc(count);
 			res->argv_len[i-1] = count;
 			totsz += count;
 		}
@@ -289,11 +287,11 @@ sendreq:
 	binsize = atoi(sizbuf);
 
 	/* Allocate the response structure. */
-	res = Malloc(sizeof(NC_Result), M_NETBUF);
-	res->argv = Malloc(sizeof(char *), M_NETBUF);
-	res->argv_len = Malloc(sizeof(size_t), M_NETBUF);
+	res = Malloc(sizeof(NC_Result));
+	res->argv = Malloc(sizeof(char *));
+	res->argv_len = Malloc(sizeof(size_t));
 	res->argc = 1;
-	res->argv[0] = dst = Malloc(binsize, M_NETBUF);
+	res->argv[0] = dst = Malloc(binsize);
 	res->argv_len[0] = binsize;
 
 	/* Read the binary data. */
@@ -319,10 +317,10 @@ readbin:
 	printf("downloaded %lu bytes\n", (u_long)binread);
 	return (res);
 fail:
-	Free(res->argv[0], M_NETBUF);
-	Free(res->argv_len, M_NETBUF);
-	Free(res->argv, M_NETBUF);
-	Free(res, M_NETBUF);
+	Free(res->argv[0]);
+	Free(res->argv_len);
+	Free(res->argv);
+	Free(res);
 	return (NULL);
 }
 
@@ -333,14 +331,14 @@ NC_FreeResult(NC_Result *res)
 
 	if (res->argv != NULL) {
 		for (i = 0; i < res->argc; i++) {
-			Free(res->argv[i], M_NETBUF);
+			Free(res->argv[i]);
 		}
-		Free(res->argv, M_NETBUF);
+		Free(res->argv);
 	}
 	if (res->argv_len != NULL) {
-		Free(res->argv_len, M_NETBUF);
+		Free(res->argv_len);
 	}
-	Free(res, M_NETBUF);
+	Free(res);
 }
 
 /* Destroy the current server connection and establish a new one. */
@@ -620,7 +618,7 @@ NC_Init(NC_Session *client, const char *name, const char *ver)
 	client->pass[0] = '\0';
 	client->sock = -1;
 
-	client->read.buf = Malloc(RDBUF_INIT, M_NETBUF);
+	client->read.buf = Malloc(RDBUF_INIT);
 	client->read.maxlen = RDBUF_INIT;
 	client->read.len = 0;
 	client->server_proto[0] = '\0';
@@ -634,7 +632,7 @@ void
 NC_Destroy(NC_Session *client)
 {
 	NC_Disconnect(client);
-	Free(client->read.buf, M_NETBUF);
+	Free(client->read.buf);
 }
 
 #endif /* NETWORK */

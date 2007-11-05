@@ -45,7 +45,7 @@ VG_BeginBlock(VG *vg, const char *name, int flags)
 {
 	VG_Block *vgb;
 
-	vgb = Malloc(sizeof(VG_Block), M_VG);
+	vgb = Malloc(sizeof(VG_Block));
 	strlcpy(vgb->name, name, sizeof(vgb->name));
 	vgb->flags = flags;
 	vgb->pos.x = 0;
@@ -206,7 +206,7 @@ VG_DestroyBlock(VG *vg, VG_Block *vgb)
 		VG_FreeElement(vg, vge);
 	}
 	TAILQ_REMOVE(&vg->blocks, vgb, vgbs);
-	Free(vgb, M_VG);
+	Free(vgb);
 }
 
 /* Destroy all elements associated with a block. */

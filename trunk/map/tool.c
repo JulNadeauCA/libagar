@@ -66,26 +66,26 @@ MAP_ToolDestroy(MAP_Tool *tool)
 		OBJECT_FOREACH_CHILD(wt, tool->pane, ag_widget) {
 			AG_ObjectDetach(wt);
 			AG_ObjectDestroy(wt);
-			Free(wt, M_OBJECT);
+			Free(wt);
 		}
 		if ((pwin = AG_WidgetParentWindow(tool->pane)) != NULL)
 			AG_WindowUpdate(pwin);
 	}
 	
 	for (i = 0; i < tool->nstatus; i++)
-		Free(tool->status[i], 0);
+		Free(tool->status[i]);
 
 	for (kbinding = SLIST_FIRST(&tool->kbindings);
 	     kbinding != SLIST_END(&tool->kbindings);
 	     kbinding = nkbinding) {
 		nkbinding = SLIST_NEXT(kbinding, kbindings);
-		Free(kbinding, M_MAPEDIT);
+		Free(kbinding);
 	}
 	for (mbinding = SLIST_FIRST(&tool->mbindings);
 	     mbinding != SLIST_END(&tool->mbindings);
 	     mbinding = nmbinding) {
 		nmbinding = SLIST_NEXT(mbinding, mbindings);
-		Free(mbinding, M_MAPEDIT);
+		Free(mbinding);
 	}
 	if (tool->ops->destroy != NULL)
 		tool->ops->destroy(tool);
@@ -119,7 +119,7 @@ MAP_ToolBindMouseButton(void *p, int button,
 	MAP_Tool *tool = p;
 	MAP_ToolMouseBinding *mb;
 	
-	mb = Malloc(sizeof(MAP_ToolMouseBinding), M_MAPEDIT);
+	mb = Malloc(sizeof(MAP_ToolMouseBinding));
 	mb->button = button;
 	mb->func = func;
 	mb->edit = 0;
@@ -134,7 +134,7 @@ MAP_ToolBindKey(void *p, SDLMod keymod, SDLKey keysym,
 	MAP_Tool *tool = p;
 	MAP_ToolKeyBinding *kb;
 
-	kb = Malloc(sizeof(MAP_ToolKeyBinding), M_MAPEDIT);
+	kb = Malloc(sizeof(MAP_ToolKeyBinding));
 	kb->key = keysym;
 	kb->mod = keymod;
 	kb->func = func;
@@ -157,7 +157,7 @@ MAP_ToolUnbindKey(void *p, SDLMod keymod, SDLKey keysym)
 	if (kb != NULL) {
 		SLIST_REMOVE(&tool->kbindings, kb, map_tool_keybinding,
 		    kbindings);
-		Free(kb, M_MAPEDIT);
+		Free(kb);
 	}
 }
 
@@ -211,6 +211,6 @@ MAP_ToolPopStatus(void *p)
 	if (t->mv->status == NULL || t->nstatus == 1)
 		return;
 
-	Free(t->status[--t->nstatus], 0);
+	Free(t->status[--t->nstatus]);
 	MAP_ToolUpdateStatus(t);
 }

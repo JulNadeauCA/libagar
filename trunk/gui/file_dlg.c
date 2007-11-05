@@ -45,7 +45,7 @@ AG_FileDlgNew(void *parent, Uint flags)
 {
 	AG_FileDlg *fd;
 
-	fd = Malloc(sizeof(AG_FileDlg), M_OBJECT);
+	fd = Malloc(sizeof(AG_FileDlg));
 	AG_FileDlgInit(fd, flags);
 	AG_ObjectAttach(parent, fd);
 	return (fd);
@@ -56,7 +56,7 @@ AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 {
 	AG_FileDlg *fd;
 
-	fd = Malloc(sizeof(AG_FileDlg), M_OBJECT);
+	fd = Malloc(sizeof(AG_FileDlg));
 	AG_FileDlgInit(fd, flags);
 	AG_FileDlgSetDirectoryMRU(fd, mruKey, AG_String(agConfig,"save-path"));
 	AG_ObjectAttach(parent, fd);
@@ -92,8 +92,8 @@ AG_RefreshListing(AG_FileDlg *fd)
 		return;
 	}
 	
-	dirs = Malloc(sizeof(char *), M_WIDGET);
-	files = Malloc(sizeof(char *), M_WIDGET);
+	dirs = Malloc(sizeof(char *));
+	files = Malloc(sizeof(char *));
 	
 	AG_MutexLock(&fd->tlDirs->lock);
 	AG_MutexLock(&fd->tlFiles->lock);
@@ -128,16 +128,16 @@ AG_RefreshListing(AG_FileDlg *fd)
 		it = AG_TlistAdd(fd->tlDirs, agIconDirectory.s, "%s", dirs[i]);
 		it->cat = "dir";
 		it->p1 = it;
-		Free(dirs[i], M_WIDGET);
+		Free(dirs[i]);
 	}
 	for (i = 0; i < nfiles; i++) {
 		it = AG_TlistAdd(fd->tlFiles, agIconDoc.s, "%s", files[i]);
 		it->cat = "file";
 		it->p1 = it;
-		Free(files[i], M_WIDGET);
+		Free(files[i]);
 	}
-	Free(dirs, M_WIDGET);
-	Free(files, M_WIDGET);
+	Free(dirs);
+	Free(files);
 	AG_TlistRestore(fd->tlDirs);
 	AG_TlistRestore(fd->tlFiles);
 	
@@ -448,7 +448,7 @@ SelectedType(AG_Event *event)
 	OBJECT_FOREACH_CHILD(chld, fd->optsCtr, ag_widget) {
 		AG_ObjectDetach(chld);
 		AG_ObjectDestroy(chld);
-		Free(chld, M_OBJECT);
+		Free(chld);
 	}
 	TAILQ_FOREACH(fo, &ft->opts, opts) {
 		switch (fo->type) {
@@ -695,15 +695,15 @@ Destroy(void *p)
 		     fo != TAILQ_END(&ft->opts);
 		     fo = fo2) {
 			fo2 = TAILQ_NEXT(fo, opts);
-			Free(fo, M_WIDGET);
+			Free(fo);
 		}
 		for (i = 0; i < ft->nexts; i++) {
-			Free(ft->exts[i], M_WIDGET);
+			Free(ft->exts[i]);
 		}
-		Free(ft->exts, M_WIDGET);
-		Free(ft, M_WIDGET);
+		Free(ft->exts);
+		Free(ft);
 	}
-	Free(fd->dirMRU,0);
+	Free(fd->dirMRU);
 }
 
 static void
@@ -791,9 +791,9 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	char *dexts, *ds, *ext;
 	AG_TlistItem *it;
 
-	ft = Malloc(sizeof(AG_FileType), M_WIDGET);
+	ft = Malloc(sizeof(AG_FileType));
 	ft->descr = descr;
-	ft->exts = Malloc(sizeof(char *), M_WIDGET);
+	ft->exts = Malloc(sizeof(char *));
 	ft->nexts = 0;
 	TAILQ_INIT(&ft->opts);
 
@@ -802,7 +802,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 		ft->exts = Realloc(ft->exts, (ft->nexts+1)*sizeof(char *));
 		ft->exts[ft->nexts++] = Strdup(ext);
 	}
-	Free(dexts, M_WIDGET);
+	Free(dexts);
 
 	if (fn != NULL) {
 		ft->action = AG_SetEvent(fd, NULL, fn, NULL);
@@ -826,7 +826,7 @@ AG_FileOptionNewBool(AG_FileType *ft, const char *descr, const char *key,
 {
 	AG_FileOption *fto;
 
-	fto = Malloc(sizeof(AG_FileOption), M_WIDGET);
+	fto = Malloc(sizeof(AG_FileOption));
 	fto->descr = descr;
 	fto->key = key;
 	fto->unit = NULL;
@@ -842,7 +842,7 @@ AG_FileOptionNewInt(AG_FileType *ft, const char *descr, const char *key,
 {
 	AG_FileOption *fto;
 
-	fto = Malloc(sizeof(AG_FileOption), M_WIDGET);
+	fto = Malloc(sizeof(AG_FileOption));
 	fto->descr = descr;
 	fto->key = key;
 	fto->unit = NULL;
@@ -860,7 +860,7 @@ AG_FileOptionNewFlt(AG_FileType *ft, const char *descr, const char *key,
 {
 	AG_FileOption *fto;
 
-	fto = Malloc(sizeof(AG_FileOption), M_WIDGET);
+	fto = Malloc(sizeof(AG_FileOption));
 	fto->descr = descr;
 	fto->key = key;
 	fto->unit = NULL;
@@ -878,7 +878,7 @@ AG_FileOptionNewDbl(AG_FileType *ft, const char *descr, const char *key,
 {
 	AG_FileOption *fto;
 
-	fto = Malloc(sizeof(AG_FileOption), M_WIDGET);
+	fto = Malloc(sizeof(AG_FileOption));
 	fto->descr = descr;
 	fto->key = key;
 	fto->unit = unit;
@@ -896,7 +896,7 @@ AG_FileOptionNewString(AG_FileType *ft, const char *descr, const char *key,
 {
 	AG_FileOption *fto;
 
-	fto = Malloc(sizeof(AG_FileOption), M_WIDGET);
+	fto = Malloc(sizeof(AG_FileOption));
 	fto->descr = descr;
 	fto->key = key;
 	fto->unit = NULL;

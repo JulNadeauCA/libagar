@@ -36,7 +36,7 @@ AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 {
 	AG_Toolbar *bar;
 
-	bar = Malloc(sizeof(AG_Toolbar), M_OBJECT);
+	bar = Malloc(sizeof(AG_Toolbar));
 	AG_ToolbarInit(bar, type, nRows, flags);
 	AG_ObjectAttach(parent, bar);
 	return (bar);

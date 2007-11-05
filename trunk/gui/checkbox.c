@@ -41,7 +41,7 @@ AG_CheckboxNew(void *parent, Uint flags, const char *label)
 {
 	AG_Checkbox *cb;
 
-	cb = Malloc(sizeof(AG_Checkbox), M_OBJECT);
+	cb = Malloc(sizeof(AG_Checkbox));
 	AG_CheckboxInit(cb, flags, label);
 	AG_ObjectAttach(parent, cb);
 	if (flags & AG_CHECKBOX_FOCUS) {
@@ -132,7 +132,7 @@ Destroy(void *p)
 {
 	AG_Checkbox *cb = p;
 
-	Free(cb->labelTxt,0);
+	Free(cb->labelTxt);
 }
 
 static void

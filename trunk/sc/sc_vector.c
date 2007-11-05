@@ -37,7 +37,7 @@ SC_VectorNew(Uint n)
 {
 	SC_Vector *v;
 
-	v = Malloc(sizeof(SC_Vector), M_MATH);
+	v = Malloc(sizeof(SC_Vector));
 	SC_MatrixAlloc(v, n, 1);
 	return (v);
 }
@@ -47,7 +47,7 @@ SC_VectorNewZero(Uint n)
 {
 	SC_Vector *v;
 
-	v = Malloc(sizeof(SC_Vector), M_MATH);
+	v = Malloc(sizeof(SC_Vector));
 	SC_MatrixAlloc(v, n, 1);
 	SC_VectorSetZero(v);
 	return (v);

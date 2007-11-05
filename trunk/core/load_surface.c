@@ -171,7 +171,7 @@ AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 		Uint32 i, ncolors;
 
 		ncolors = AG_ReadUint32(ds);
-		colors = Malloc(ncolors*sizeof(SDL_Color), 0);
+		colors = Malloc(ncolors*sizeof(SDL_Color));
 
 		if (grayscale) {
 			for (i = 0; i < ncolors; i++) {
@@ -187,7 +187,7 @@ AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 			}
 		}
 		SDL_SetPalette(su, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, ncolors);
-		Free(colors, 0);
+		Free(colors);
 	}
 	
 	if (SDL_MUSTLOCK(su))

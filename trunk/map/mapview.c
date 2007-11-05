@@ -66,7 +66,7 @@ MAP_ViewNew(void *parent, MAP *m, int flags, struct ag_toolbar *toolbar,
 {
 	MAP_View *mv;
 
-	mv = Malloc(sizeof(MAP_View), M_OBJECT);
+	mv = Malloc(sizeof(MAP_View));
 	MAP_ViewInit(mv, m, flags, toolbar, statbar);
 	AG_ObjectAttach(parent, mv);
 	return (mv);
@@ -104,7 +104,7 @@ MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
 			    ag_widget) {
 				AG_ObjectDetach(wt);
 				AG_ObjectDestroy(wt);
-				Free(wt, M_OBJECT);
+				Free(wt);
 			}
 			if ((pwin = AG_WidgetParentWindow(mv->curtool->pane))
 			    != NULL) {
@@ -180,7 +180,7 @@ MAP_ViewRegTool(MAP_View *mv, const MAP_ToolOps *ops, void *p)
 {
 	MAP_Tool *t;
 
-	t = Malloc(ops->len, M_MAPEDIT);
+	t = Malloc(ops->len);
 	t->ops = ops;
 	t->mv = mv;
 	t->p = p;
@@ -210,7 +210,7 @@ MAP_ViewRegDrawCb(MAP_View *mv,
 {
 	MAP_ViewDrawCb *dcb;
 
-	dcb = Malloc(sizeof(MAP_ViewDrawCb), M_WIDGET);
+	dcb = Malloc(sizeof(MAP_ViewDrawCb));
 	dcb->func = draw_func;
 	dcb->p = p;
 	SLIST_INSERT_HEAD(&mv->draw_cbs, dcb, draw_cbs);
@@ -226,7 +226,7 @@ Destroy(void *p)
 	     dcb != SLIST_END(&mv->draw_cbs);
 	     dcb = ndcb) {
 		ndcb = SLIST_NEXT(dcb, draw_cbs);
-		Free(dcb, M_WIDGET);
+		Free(dcb);
 	}
 }
 
@@ -241,7 +241,7 @@ Detached(AG_Event *event)
 	     tool = ntool) {
 		ntool = TAILQ_NEXT(tool, tools);
 		MAP_ToolDestroy(tool);
-		Free(tool, M_MAPEDIT);
+		Free(tool);
 	}
 	TAILQ_INIT(&mv->tools);
 	mv->curtool = NULL;

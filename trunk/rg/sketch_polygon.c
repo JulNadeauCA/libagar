@@ -76,7 +76,7 @@ RG_SketchDrawPolygon(RG_Tile *t, VG *vg, VG_Element *vge)
 		return;
 
 	if (vg->ints == NULL) {
-		vg->ints = Malloc(nvtx*sizeof(int), M_RG);
+		vg->ints = Malloc(nvtx*sizeof(int));
 		vg->nints = nvtx;
 	} else {
 		if (nvtx > vg->nints) {

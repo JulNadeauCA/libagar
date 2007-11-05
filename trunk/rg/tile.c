@@ -133,7 +133,7 @@ tryname:
 	if (RG_TilesetFindTile(ts, name) != NULL)
 		goto tryname;
 
-	t = Malloc(sizeof(RG_Tile), M_RG);
+	t = Malloc(sizeof(RG_Tile));
 	RG_TileInit(t, ts, name);
 	RG_TileScale(ts, t, w, h, flags);
 
@@ -179,8 +179,8 @@ RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags)
 	/* Resize the attribute grids. */
 	wNew = w/RG_TILESZ + 1;
 	hNew = h/RG_TILESZ + 1;
-	nAttrs = Malloc(wNew*hNew*sizeof(Uint), M_RG);
-	nLayers = Malloc(wNew*hNew*sizeof(int), M_RG);
+	nAttrs = Malloc(wNew*hNew*sizeof(Uint));
+	nLayers = Malloc(wNew*hNew*sizeof(int));
 	for (y = 0; y < hNew; y++) {
 		for (x = 0; x < wNew; x++) {
 			if (x >= t->nw || y >= t->nh) {
@@ -192,8 +192,8 @@ RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags)
 			}
 		}
 	}
-	Free(t->attrs, M_RG);
-	Free(t->layers, M_RG);
+	Free(t->attrs);
+	Free(t->layers);
 	t->attrs = nAttrs;
 	t->layers = nLayers;
 
@@ -324,7 +324,7 @@ RG_TileAddFeature(RG_Tile *t, const char *name, void *ft, int x, int y)
 {
 	RG_TileElement *tel;
 
-	tel = Malloc(sizeof(RG_TileElement), M_RG);
+	tel = Malloc(sizeof(RG_TileElement));
 	if (name != NULL) {
 		strlcpy(tel->name, name, sizeof(tel->name));
 	} else {
@@ -352,14 +352,14 @@ RG_TileDelFeature(RG_Tile *t, void *ftp, int destroy)
 	}
 	if (tel != NULL) {
 		TAILQ_REMOVE(&t->elements, tel, elements);
-		Free(tel, M_RG);
+		Free(tel);
 
 		if (--ft->nrefs == 0 && destroy) {
 			AG_TextInfo(_("Destroying unreferenced feature: %s"),
 			    ft->name);
 			TAILQ_REMOVE(&t->ts->features, ft, features);
 			AG_FeatureDestroy(ft);
-			Free(ft, M_RG);
+			Free(ft);
 		}
 	}
 }
@@ -369,7 +369,7 @@ RG_TileAddPixmap(RG_Tile *t, const char *name, RG_Pixmap *px, int x, int y)
 {
 	RG_TileElement *tel;
 
-	tel = Malloc(sizeof(RG_TileElement), M_RG);
+	tel = Malloc(sizeof(RG_TileElement));
 	if (name != NULL) {
 		strlcpy(tel->name, name, sizeof(tel->name));
 	} else {
@@ -393,7 +393,7 @@ RG_TileAddSketch(RG_Tile *t, const char *name, RG_Sketch *sk, int x, int y)
 {
 	RG_TileElement *tel;
 
-	tel = Malloc(sizeof(RG_TileElement), M_RG);
+	tel = Malloc(sizeof(RG_TileElement));
 	if (name != NULL) {
 		strlcpy(tel->name, name, sizeof(tel->name));
 	} else {
@@ -423,13 +423,13 @@ RG_TileDelPixmap(RG_Tile *t, RG_Pixmap *px, int destroy)
 	}
 	if (tel != NULL) {
 		TAILQ_REMOVE(&t->elements, tel, elements);
-		Free(tel, M_RG);
+		Free(tel);
 		if (--px->nrefs == 0 && destroy) {
 			AG_TextInfo(_("Destroying unreferenced pixmap: %s"),
 			    px->name);
 			TAILQ_REMOVE(&t->ts->pixmaps, px, pixmaps);
 			RG_PixmapDestroy(px);
-			Free(px, M_RG);
+			Free(px);
 		}
 	}
 }
@@ -445,13 +445,13 @@ RG_TileDelSketch(RG_Tile *t, RG_Sketch *sk, int destroy)
 	}
 	if (tel != NULL) {
 		TAILQ_REMOVE(&t->elements, tel, elements);
-		Free(tel, M_RG);
+		Free(tel);
 		if (--sk->nrefs == 0 && destroy) {
 			AG_TextInfo(_("Destroying unreferenced sketch: %s"),
 			    sk->name);
 			TAILQ_REMOVE(&t->ts->sketches, sk, sketches);
 			RG_SketchDestroy(sk);
-			Free(sk, M_RG);
+			Free(sk);
 		}
 	}
 }
@@ -652,21 +652,21 @@ RG_TileDestroy(RG_Tile *t)
 	RG_TileElement *tel, *tel_next;
 	RG_TileVariant *var, *var_next;
 
-	Free(t->attrs, 0);
-	Free(t->layers, 0);
+	Free(t->attrs);
+	Free(t->layers);
 	SDL_FreeSurface(t->su);
 	
 	for (tel = TAILQ_FIRST(&t->elements);
 	     tel != TAILQ_END(&t->elements);
 	     tel = tel_next) {
 		tel_next = TAILQ_NEXT(tel, elements);
-		Free(tel, M_RG);
+		Free(tel);
 	}
 	for (var = SLIST_FIRST(&t->vars);
 	     var != SLIST_END(&t->vars);
 	     var = var_next) {
 		var_next = SLIST_NEXT(var, vars);
-		Free(var, M_RG);
+		Free(var);
 	}
 }
 
@@ -773,7 +773,7 @@ CloseElement(RG_Tileview *tv)
 		AG_ObjectDetach(tv->tel_tbar);
 		AG_WindowUpdate(AG_WidgetParentWindow(tv->tel_tbar));
 		AG_ObjectDestroy(tv->tel_tbar);
-		Free(tv->tel_tbar, M_OBJECT);
+		Free(tv->tel_tbar);
 		tv->tel_tbar = NULL;
 	}
 }
@@ -956,7 +956,7 @@ CreatePixmap(AG_Event *event)
 	Uint pixno = 0;
 	RG_Pixmap *opx;
 
-	px = Malloc(sizeof(RG_Pixmap), M_RG);
+	px = Malloc(sizeof(RG_Pixmap));
 	RG_PixmapInit(px, tv->ts, 0);
 tryname:
 	snprintf(px->name, sizeof(px->name), "pixmap #%u", pixno);
@@ -1002,7 +1002,7 @@ CreateSketch(AG_Event *event)
 	RG_TileElement *tel;
 	Uint skno = 0;
 
-	sk = Malloc(sizeof(RG_Sketch), M_RG);
+	sk = Malloc(sizeof(RG_Sketch));
 	RG_SketchInit(sk, tv->ts, 0);
 tryname:
 	snprintf(sk->name, sizeof(sk->name), "sketch #%u", skno);
@@ -1217,7 +1217,7 @@ AddFillFeature(AG_Event *event)
 	struct rg_fill_feature *fill;
 	RG_TileElement *tel;
 
-	fill = Malloc(sizeof(struct rg_fill_feature), M_RG);
+	fill = Malloc(sizeof(struct rg_fill_feature));
 	RG_FillInit(fill, tv->ts, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->features, RG_FEATURE(fill), features);
 	tel = RG_TileAddFeature(tv->tile, NULL, fill, 0, 0);
@@ -1233,7 +1233,7 @@ AddSketchProjFeature(AG_Event *event)
 	struct rg_sketchproj *sproj;
 	RG_TileElement *tel;
 
-	sproj = Malloc(sizeof(struct rg_sketchproj), M_RG);
+	sproj = Malloc(sizeof(struct rg_sketchproj));
 	RG_SketchProjInit(sproj, tv->ts, 0);
 	TAILQ_INSERT_TAIL(&tv->ts->features, RG_FEATURE(sproj), features);
 	tel = RG_TileAddFeature(tv->tile, NULL, sproj, 0, 0);
@@ -1873,7 +1873,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	AG_WindowSetSpacing(win, 0);
 	AG_WindowSetPaddingTop(win, 0);
 	
-	tv = Malloc(sizeof(RG_Tileview), M_OBJECT);
+	tv = Malloc(sizeof(RG_Tileview));
 	RG_TileviewInit(tv, ts, 0);
 	RG_TileviewSetTile(tv, t);
 	RG_TileScale(ts, t, t->su->w, t->su->h, t->flags);
@@ -1887,7 +1887,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		RG_TileviewRegTool(tv, &sketch_circle_ops);
 	}
 	
-	tlFeatures = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tlFeatures = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tlFeatures, AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND);
 	WIDGET(tlFeatures)->flags &= ~(AG_WIDGET_HFILL);
 	AG_TlistSizeHint(tlFeatures, _("FEATURE #00 <#00>"), 5);
@@ -1897,7 +1897,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	
 	me = AG_MenuNew(win, AG_MENU_HFILL);
 
-	tbar = Malloc(sizeof(AG_Toolbar), M_OBJECT);
+	tbar = Malloc(sizeof(AG_Toolbar));
 	AG_ToolbarInit(tbar, AG_TOOLBAR_HORIZ, 1, 0);
 
 	mi = AG_MenuAddItem(me, ("File"));
@@ -2009,7 +2009,7 @@ RG_TileOpenMenu(RG_Tileview *tv, int x, int y)
 	if (tv->menu != NULL)
 		RG_TileCloseMenu(tv);
 
-	tv->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	tv->menu = Malloc(sizeof(AG_Menu));
 	AG_MenuInit(tv->menu, 0);
 
 	tv->menu_item = AG_MenuAddItem(tv->menu, NULL);
@@ -2025,7 +2025,7 @@ RG_TileCloseMenu(RG_Tileview *tv)
 {
 	AG_MenuCollapse(tv->menu, tv->menu_item);
 	AG_ObjectDestroy(tv->menu);
-	Free(tv->menu, M_OBJECT);
+	Free(tv->menu);
 
 	tv->menu = NULL;
 	tv->menu_item = NULL;

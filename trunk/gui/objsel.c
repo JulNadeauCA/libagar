@@ -46,7 +46,7 @@ AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
 	vsnprintf(label, sizeof(label), fmt, ap);
 	va_end(ap);
 
-	os = Malloc(sizeof(AG_ObjectSelector), M_OBJECT);
+	os = Malloc(sizeof(AG_ObjectSelector));
 	AG_ObjectSelectorInit(os, label, flags, pobj, root);
 	AG_ObjectAttach(parent, os);
 	return (os);

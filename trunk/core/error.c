@@ -62,7 +62,7 @@ AG_DestroyError(void)
 	AG_ThreadKeyDelete(agErrorKey);
 #endif
 #else
-	Free(agErrorKey, 0);
+	Free(agErrorKey);
 #endif
 }
 
@@ -80,12 +80,12 @@ AG_SetError(const char *fmt, ...)
 		char *ekey;
 
 		if ((ekey = (char *)AG_ThreadKeyGet(agErrorKey)) != NULL) {
-			Free(ekey, 0);
+			Free(ekey);
 		}
 		AG_ThreadKeySet(agErrorKey, buf);
 	}
 #else
-	Free(agErrorKey, 0);
+	Free(agErrorKey);
 	agErrorKey = buf;
 #endif
 }
@@ -207,7 +207,7 @@ AG_Strdup(const char *s)
 	char *ns;
 	
 	buflen = strlen(s)+1;
-	ns = Malloc(buflen, 0);
+	ns = Malloc(buflen);
 	memcpy(ns, s, buflen);
 	return (ns);
 }

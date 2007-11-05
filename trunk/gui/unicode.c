@@ -60,7 +60,7 @@ AG_ImportUnicode(enum ag_unicode_conv conv, const char *s)
 	size_t i, j;
 
 	len = strlen(s);
-	ucs = Malloc((len + 1) * sizeof(Uint32), 0);
+	ucs = Malloc((len+1)*sizeof(Uint32));
 
 	switch (conv) {
 	case AG_UNICODE_FROM_USASCII:
@@ -289,7 +289,7 @@ AG_UCS4Dup(const Uint32 *ucs)
 	Uint32 *ns;
 	
 	buflen = (AG_UCS4Len(ucs)+1) * sizeof(Uint32);
-	ns = Malloc(buflen, 0);
+	ns = Malloc(buflen);
 	memcpy(ns, ucs, buflen);
 	return (ns);
 }

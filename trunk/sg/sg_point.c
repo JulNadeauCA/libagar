@@ -40,7 +40,7 @@ SG_PointNew(void *pnode, const char *name)
 {
 	SG_Point *pt;
 
-	pt = Malloc(sizeof(SG_Point), M_SG);
+	pt = Malloc(sizeof(SG_Point));
 	SG_PointInit(pt, name);
 	SG_NodeAttach(pnode, pt);
 	return (pt);

@@ -3,38 +3,6 @@
 #ifndef _AGAR_CORE_ERROR_PUB_H_
 #define _AGAR_CORE_ERROR_PUB_H_
 #include "begin_code.h"
-enum {
-	M_GENERIC,	/* generic */
-	M_OBJECT,	/* object */
-	M_POSITION,	/* object position */
-	M_DEP,		/* dependency table entry */
-	M_PROP,		/* property table entry */
-	M_EVENT,	/* event queue entry */
-	M_GFX,		/* gfx structure */
-	M_AUDIO,	/* audio structure */
-	M_MAP,		/* map nodes and layers */
-	M_MAP_NITEM,	/* map noderefs */
-	M_MAPEDIT,	/* map edition */
-	M_NODEXFORM,	/* map node transform */
-	M_NODEMASK,	/* map node mask */
-	M_WIDGET,	/* widget */
-	M_VG,		/* vector graphics */
-	M_RG,		/* raster graphics */
-	M_VIEW,		/* view interface */
-	M_NETBUF,	/* network i/o */
-	M_LOADER,	/* file loaders */
-	M_TEXT,		/* text rendering */
-	M_TYPESW,	/* type switch */
-	M_INPUT,	/* input devices */
-	M_CAD,		/* cad applications */
-	M_EDA,		/* eda applications */
-	M_GAME,		/* game applications */
-	M_MATH,		/* math routines */
-	M_SG,		/* scene graph */
-	M_GI,		/* graphics interface */
-	M_LAST
-};
-
 __BEGIN_DECLS
 void		 AG_InitError(void);
 void		 AG_DestroyError(void);
@@ -67,13 +35,10 @@ int		 AG_IntMismatch(void);
 float		 AG_FloatMismatch(void);
 
 static __inline__ void *
-AG_Malloc(size_t len, int type)
+AG_Malloc(size_t len)
 {
 	void *p;
-	
-	if ((p = malloc(len)) == NULL) {
-		AG_FatalError("malloc");
-	}
+	if ((p = malloc(len)) == NULL) { AG_FatalError("malloc"); }
 	return (p);
 }
 
@@ -81,7 +46,6 @@ static __inline__ void *
 AG_Realloc(void *pOld, size_t len)
 {
 	void *pNew;
-
 	/* XXX redundant on some systems */
 	if (pOld == NULL) {
 		if ((pNew = malloc(len)) == NULL)
@@ -94,7 +58,7 @@ AG_Realloc(void *pOld, size_t len)
 }
 
 static __inline__ void
-AG_Free(void *p, int type)
+AG_Free(void *p)
 {
 	/* XXX redundant on some systems */
 	if (p == NULL) {

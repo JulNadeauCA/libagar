@@ -102,7 +102,7 @@ AG_InitCore(const char *progname, Uint flags)
 
 	AG_InitClassTbl();
 	
-	agConfig = Malloc(sizeof(AG_Config), M_OBJECT);
+	agConfig = Malloc(sizeof(AG_Config));
 	AG_ConfigInit(agConfig);
 
 	agWorld = AG_ObjectNew(NULL, "world", &agObjectOps);
@@ -186,7 +186,7 @@ AG_Destroy(void)
 	AG_ObjectDestroy(agWorld);
 
 	AG_ObjectDestroy(agConfig);
-	Free(agConfig, M_OBJECT);
+	Free(agConfig);
 
 /*	AG_MutexDestroy(&agLinkageLock); */
 	AG_MutexDestroy(&agTimingLock);

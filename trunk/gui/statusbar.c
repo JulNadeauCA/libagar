@@ -34,7 +34,7 @@ AG_StatusbarNew(void *parent, Uint flags)
 {
 	AG_Statusbar *sbar;
 
-	sbar = Malloc(sizeof(AG_Statusbar), M_OBJECT);
+	sbar = Malloc(sizeof(AG_Statusbar));
 	AG_StatusbarInit(sbar, flags);
 	AG_ObjectAttach(parent, sbar);
 	return (sbar);
@@ -62,7 +62,7 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 	if (sbar->nlabels+1 >= AG_STATUSBAR_MAX_LABELS)
 		fatal("too many labels");
 #endif
-	sbar->labels[sbar->nlabels] = Malloc(sizeof(AG_Label), M_OBJECT);
+	sbar->labels[sbar->nlabels] = Malloc(sizeof(AG_Label));
 	lab = sbar->labels[sbar->nlabels];
 
 	if (type == AG_LABEL_STATIC) {
@@ -72,7 +72,7 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 		Vasprintf(&s, fmt, ap);
 		va_end(ap);
 		AG_LabelInit(lab, AG_LABEL_STATIC, AG_LABEL_HFILL, s);
-		Free(s, 0);
+		Free(s);
 	} else {
 		AG_LabelInit(lab, AG_LABEL_POLLED, AG_LABEL_HFILL, fmt);
 	}

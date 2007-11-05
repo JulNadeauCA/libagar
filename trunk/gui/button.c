@@ -46,7 +46,7 @@ AG_ButtonNew(void *parent, Uint flags, const char *caption)
 {
 	AG_Button *btn;
 
-	btn = Malloc(sizeof(AG_Button), M_OBJECT);
+	btn = Malloc(sizeof(AG_Button));
 	AG_ButtonInit(btn, flags, caption);
 	AG_ObjectAttach(parent, btn);
 	return (btn);
@@ -59,7 +59,7 @@ AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
 	AG_Button *btn;
 	AG_Event *ev;
 
-	btn = Malloc(sizeof(AG_Button), M_OBJECT);
+	btn = Malloc(sizeof(AG_Button));
 	AG_ButtonInit(btn, flags, caption);
 	AG_ObjectAttach(parent, btn);
 
@@ -169,7 +169,7 @@ Destroy(void *p)
 	AG_Button *bu = p;
 
 	if ((bu->flags & AG_BUTTON_TEXT_NODUP) == 0)
-		Free(bu->text,0);
+		Free(bu->text);
 }
 
 static void
@@ -568,7 +568,7 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 void
 AG_ButtonTextNODUP(AG_Button *bu, char *text)
 {
-	Free(bu->text,0);
+	Free(bu->text);
 	bu->text = text;
 	bu->flags |= (AG_BUTTON_REGEN|AG_BUTTON_TEXT_NODUP);
 }
@@ -578,7 +578,7 @@ AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 {
 	va_list args;
 	
-	Free(bu->text,0);
+	Free(bu->text);
 	va_start(args, fmt);
 	Vasprintf(&bu->text, fmt, args);
 	va_end(args);

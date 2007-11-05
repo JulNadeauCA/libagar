@@ -35,7 +35,7 @@ AG_FixedNew(void *parent, Uint flags)
 {
 	AG_Fixed *bo;
 
-	bo = Malloc(sizeof(AG_Fixed), M_OBJECT);
+	bo = Malloc(sizeof(AG_Fixed));
 	AG_FixedInit(bo, flags);
 	AG_ObjectAttach(parent, bo);
 	return (bo);

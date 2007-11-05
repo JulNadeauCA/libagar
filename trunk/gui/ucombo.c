@@ -34,7 +34,7 @@ AG_UComboNew(void *parent, Uint flags)
 {
 	AG_UCombo *com;
 
-	com = Malloc(sizeof(AG_UCombo), M_OBJECT);
+	com = Malloc(sizeof(AG_UCombo));
 	AG_UComboInit(com, flags);
 	AG_ObjectAttach(parent, com);
 	if (flags & AG_UCOMBO_FOCUS) {
@@ -50,7 +50,7 @@ AG_UComboNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt,
 	AG_UCombo *com;
 	AG_Event *ev;
 
-	com = Malloc(sizeof(AG_UCombo), M_OBJECT);
+	com = Malloc(sizeof(AG_UCombo));
 	AG_UComboInit(com, flags);
 	AG_ObjectAttach(parent, com);
 
@@ -169,7 +169,7 @@ AG_UComboInit(AG_UCombo *com, Uint flags)
 	AG_WidgetSetFocusable(com->button, 0);
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	
-	com->list = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	com->list = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(com->list, AG_TLIST_EXPAND);
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 }
@@ -199,7 +199,7 @@ Destroy(void *p)
 		AG_ViewDetach(com->panel);
 	}
 	AG_ObjectDestroy(com->list);
-	Free(com->list, M_OBJECT);
+	Free(com->list);
 }
 
 static void

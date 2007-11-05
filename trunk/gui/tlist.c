@@ -49,7 +49,7 @@ AG_TlistNew(void *parent, Uint flags)
 {
 	AG_Tlist *tl;
 
-	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tl = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tl, flags);
 	AG_ObjectAttach(parent, tl);
 	if (flags & AG_TLIST_FOCUS) {
@@ -64,7 +64,7 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	AG_Tlist *tl;
 	AG_Event *ev;
 
-	tl = Malloc(sizeof(AG_Tlist), M_OBJECT);
+	tl = Malloc(sizeof(AG_Tlist));
 	AG_TlistInit(tl, flags|AG_TLIST_POLL);
 	ev = AG_SetEvent(tl, "tlist-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
@@ -242,8 +242,8 @@ Destroy(void *p)
 	     tp = ntp) {
 		ntp = TAILQ_NEXT(tp, popups);
 		AG_ObjectDestroy(tp->menu);
-		Free(tp->menu, M_OBJECT);
-		Free(tp, M_WIDGET);
+		Free(tp->menu);
+		Free(tp);
 	}
 	AG_MutexDestroy(&tl->lock);
 }
@@ -394,10 +394,10 @@ FreeItem(AG_Tlist *tl, AG_TlistItem *it)
 	if (it->flags & AG_TLIST_DYNICON && it->iconsrc != NULL) {
 		SDL_FreeSurface(it->iconsrc);
 	}
-	if (it->icon != -1)
+	if (it->icon != -1) {
 		AG_WidgetUnmapSurface(tl, it->icon);
-
-	Free(it, M_WIDGET);
+	}
+	Free(it);
 }
 
 void
@@ -527,7 +527,7 @@ AllocItem(AG_Tlist *tl, SDL_Surface *iconsrc)
 {
 	AG_TlistItem *it;
 
-	it = Malloc(sizeof(AG_TlistItem), M_WIDGET);
+	it = Malloc(sizeof(AG_TlistItem));
 	it->selected = 0;
 	it->cat = "";
 	it->depth = 0;
@@ -1179,10 +1179,10 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 {
 	AG_TlistPopup *tp;
 
-	tp = Malloc(sizeof(AG_TlistPopup), M_WIDGET);
+	tp = Malloc(sizeof(AG_TlistPopup));
 	tp->iclass = iclass;
 	tp->panel = NULL;
-	tp->menu = Malloc(sizeof(AG_Menu), M_OBJECT);
+	tp->menu = Malloc(sizeof(AG_Menu));
 	AG_MenuInit(tp->menu, 0);
 	tp->item = tp->menu->root;		/* XXX redundant */
 

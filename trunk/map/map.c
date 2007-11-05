@@ -96,7 +96,7 @@ MAP_NodeDestroy(MAP *m, MAP_Node *node)
 	     r = nr) {
 		nr = TAILQ_NEXT(r, nrefs);
 		MAP_ItemDestroy(m, r);
-		Free(r, M_MAP);
+		Free(r);
 	}
 }
 
@@ -206,7 +206,7 @@ MAP_ItemDestroy(MAP *m, MAP_Item *r)
 		}
 		break;
 	case MAP_ITEM_WARP:
-		Free(r->r_warp.map, 0);
+		Free(r->r_warp.map);
 		break;
 	default:
 		break;
@@ -263,9 +263,9 @@ MAP_AllocNodes(MAP *m, Uint w, Uint h)
 	AG_MutexLock(&m->lock);
 	m->mapw = w;
 	m->maph = h;
-	m->map = Malloc(h * sizeof(MAP_Node *), M_MAP);
+	m->map = Malloc(h*sizeof(MAP_Node *));
 	for (y = 0; y < h; y++) {
-		m->map[y] = Malloc(w * sizeof(MAP_Node), M_MAP);
+		m->map[y] = Malloc(w*sizeof(MAP_Node));
 		for (x = 0; x < w; x++) {
 			MAP_NodeInit(&m->map[y][x]);
 		}
@@ -288,9 +288,9 @@ MAP_FreeNodes(MAP *m)
 				node = &m->map[y][x];
 				MAP_NodeDestroy(m, node);
 			}
-			Free(m->map[y], M_MAP);
+			Free(m->map[y]);
 		}
-		Free(m->map, M_MAP);
+		Free(m->map);
 		m->map = NULL;
 	}
 	AG_MutexUnlock(&m->lock);
@@ -390,7 +390,7 @@ MAP_New(void *parent, const char *name)
 {
 	MAP *m;
 
-	m = Malloc(sizeof(MAP), M_OBJECT);
+	m = Malloc(sizeof(MAP));
 	MAP_Init(m, name);
 	if (parent != NULL) {
 		AG_ObjectAttach(parent, m);
@@ -434,7 +434,7 @@ MAP_AddCamera(MAP *m, const char *name)
 static void
 InitModBlk(MAP_ModBlk *blk)
 {
-	blk->mods = Malloc(sizeof(MAP_Mod), M_RG);
+	blk->mods = Malloc(sizeof(MAP_Mod));
 	blk->nmods = 0;
 	blk->cancel = 0;
 }
@@ -456,13 +456,13 @@ FreeModBlk(MAP *m, MAP_ModBlk *blk)
 			break;
 		}
 	}
-	Free(blk->mods, M_RG);
+	Free(blk->mods);
 }
 
 void
 MAP_InitModBlks(MAP *m)
 {
-	m->blks = Malloc(sizeof(MAP_ModBlk), M_MAP);
+	m->blks = Malloc(sizeof(MAP_ModBlk));
 	m->nblks = 1;
 	InitModBlk(&m->blks[0]);
 	m->curblk = 0;
@@ -485,9 +485,9 @@ MAP_Init(void *obj, const char *name)
 	m->origin.layer = 0;
 	m->map = NULL;
 	m->cur_layer = 0;
-	m->layers = Malloc(sizeof(MAP_Layer), M_MAP);
+	m->layers = Malloc(sizeof(MAP_Layer));
 	m->nlayers = 1;
-	m->cameras = Malloc(sizeof(MAP_Camera), M_MAP);
+	m->cameras = Malloc(sizeof(MAP_Camera));
 	m->ncameras = 1;
 	AG_MutexInitRecursive(&m->lock);
 	TAILQ_INIT(&m->actors);
@@ -580,7 +580,7 @@ MAP_NodeAddTile(MAP *map, MAP_Node *node, RG_Tileset *ts, Uint32 tileid)
 {
 	MAP_Item *r;
 
-	r = Malloc(sizeof(MAP_Item), M_MAP);
+	r = Malloc(sizeof(MAP_Item));
 	MAP_ItemInit(r, MAP_ITEM_TILE);
 	MAP_ItemSetTile(r, map, ts, tileid);
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
@@ -629,7 +629,7 @@ MAP_NodeAddAnim(MAP *map, MAP_Node *node, RG_Tileset *ts, Uint32 animid)
 {
 	MAP_Item *r;
 
-	r = Malloc(sizeof(MAP_Item), M_MAP);
+	r = Malloc(sizeof(MAP_Item));
 	MAP_ItemInit(r, MAP_ITEM_ANIM);
 	MAP_ItemSetAnim(r, map, ts, animid);
 	TAILQ_INSERT_TAIL(&node->nrefs, r, nrefs);
@@ -646,7 +646,7 @@ MAP_NodeAddWarpPoint(MAP *map, MAP_Node *node, const char *mapname,
 {
 	MAP_Item *r;
 
-	r = Malloc(sizeof(MAP_Item), M_MAP);
+	r = Malloc(sizeof(MAP_Item));
 	MAP_ItemInit(r, MAP_ITEM_WARP);
 	r->r_warp.map = Strdup(mapname);
 	r->r_warp.x = x;
@@ -760,7 +760,7 @@ MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn, int dlayer)
 
 	/* Inherit the transformations. */
 	TAILQ_FOREACH(xf, &sr->transforms, transforms) {
-		xfDup = Malloc(sizeof(RG_Transform), M_RG);
+		xfDup = Malloc(sizeof(RG_Transform));
 		RG_TransformInit(xfDup , xf->type, xf->nargs, xf->args);
 		TAILQ_INSERT_TAIL(&dr->transforms, xfDup, transforms);
 	}
@@ -769,7 +769,7 @@ MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn, int dlayer)
 	TAILQ_FOREACH(mask, &sr->masks, masks) {
 		MAP_NodeMask *nmask;
 
-		nmask = Malloc(sizeof(MAP_NodeMask), M_NODEMASK);
+		nmask = Malloc(sizeof(MAP_NodeMask));
 		MAP_NodeMaskInit(nmask, mask->type);
 		MAP_NodeMaskCopy(mask, dm, nmask);
 		TAILQ_INSERT_TAIL(&dr->masks, nmask, masks);
@@ -784,7 +784,7 @@ MAP_NodeDelItem(MAP *m, MAP_Node *node, MAP_Item *r)
 	AG_MutexLock(&m->lock);
 	TAILQ_REMOVE(&node->nrefs, r, nrefs);
 	MAP_ItemDestroy(m, r);
-	Free(r, M_MAP);
+	Free(r);
 	AG_MutexUnlock(&m->lock);
 }
 
@@ -806,7 +806,7 @@ MAP_NodeRemoveAll(MAP *m, MAP_Node *node, int layer)
 		}
 		TAILQ_REMOVE(&node->nrefs, r, nrefs);
 		MAP_ItemDestroy(m, r);
-		Free(r, M_MAP);
+		Free(r);
 	}
 
 	AG_MutexUnlock(&m->lock);
@@ -898,7 +898,7 @@ MAP_FreeDataset(void *p)
 	for (i = 0; i < m->nblks; i++) {
 		FreeModBlk(m, &m->blks[i]);
 	}
-	Free(m->blks, M_MAP);
+	Free(m->blks);
 	MAP_InitModBlks(m);
 }
 
@@ -910,8 +910,8 @@ MAP_Destroy(void *p)
 #ifdef THREADS
 	AG_MutexDestroy(&m->lock);
 #endif
-	Free(m->layers, M_MAP);
-	Free(m->cameras, M_MAP);
+	Free(m->layers);
+	Free(m->cameras);
 }
 
 /*
@@ -1028,10 +1028,10 @@ MAP_ItemLoad(MAP *m, AG_DataSource *buf, MAP_Node *node, MAP_Item **r)
 	for (i = 0; i < nmasks; i++) {
 		MAP_NodeMask *mask;
 
-		mask = Malloc(sizeof(MAP_NodeMask), M_NODEMASK);
+		mask = Malloc(sizeof(MAP_NodeMask));
 		MAP_NodeMaskInit(mask, 0);
 		if (MAP_NodeMaskLoad(m, buf, mask) == -1) {
-			Free(mask, M_NODEMASK);
+			Free(mask);
 			goto fail;
 		}
 		TAILQ_INSERT_TAIL(&(*r)->masks, mask, masks);
@@ -1040,7 +1040,7 @@ MAP_ItemLoad(MAP *m, AG_DataSource *buf, MAP_Node *node, MAP_Item **r)
 fail:
 	if (*r != NULL) {
 		MAP_ItemDestroy(m, *r);
-		Free(*r, M_MAP);
+		Free(*r);
 		*r = NULL;
 	}
 	return (-1);
@@ -1461,7 +1461,7 @@ RenderTileItem(MAP_Item *r, RG_Tile *tile, SDL_Surface **pSurface,
 		RG_Transform *xf;
 		SDL_Surface *xsu;
 		
-		var = Malloc(sizeof(RG_TileVariant), M_RG);
+		var = Malloc(sizeof(RG_TileVariant));
 		TAILQ_INIT(&var->transforms);
 		RG_TransformChainDup(&r->transforms, &var->transforms);
 		var->last_drawn = SDL_GetTicks();
@@ -1548,10 +1548,10 @@ RenderAnimItem(MAP_Item *r, RG_Anim *anim, SDL_Surface **pSurface,
 		 * Create a new variant. Inherit the generated frames and
 		 * apply the transformations. Ignore the source instructions.
 		 */
-		var = Malloc(sizeof(RG_AnimVariant), M_RG);
+		var = Malloc(sizeof(RG_AnimVariant));
 		TAILQ_INIT(&var->transforms);
 		RG_TransformChainDup(&r->transforms, &var->transforms);
-		var->anim = Malloc(sizeof(RG_Anim), M_RG);
+		var->anim = Malloc(sizeof(RG_Anim));
 		RG_AnimInit(var->anim, ts, anim->name, (anim->flags &
 		                                        RG_ANIM_DUPED_FLAGS));
 		var->anim->w = anim->w;
@@ -2017,7 +2017,7 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 	mw = sprite->w/MAPTILESZ + 1;
 	mh = sprite->h/MAPTILESZ + 1;
 
-	fragmap = Malloc(sizeof(MAP), M_OBJECT);
+	fragmap = Malloc(sizeof(MAP));
 	snprintf(mapname, sizeof(mapname), "f%u", gfx->nsubmaps);
 	MAP_Init(fragmap, mapname);
 	if (MAP_AllocNodes(fragmap, mw, mh) == -1)
@@ -2497,7 +2497,7 @@ DeleteLayer(AG_Event *event)
 				if (r->layer == nlayer) {
 					TAILQ_REMOVE(&node->nrefs, r, nrefs);
 					MAP_ItemDestroy(m, r);
-					Free(r, M_MAP);
+					Free(r);
 				} else if (r->layer > nlayer) {
 					r->layer--;
 				}
@@ -2530,7 +2530,7 @@ ClearLayer(AG_Event *event)
 				if (r->layer == nlayer) {
 					TAILQ_REMOVE(&node->nrefs, r, nrefs);
 					MAP_ItemDestroy(m, r);
-					Free(r, M_MAP);
+					Free(r);
 				}
 			}
 		}
@@ -2846,12 +2846,12 @@ MAP_Edit(void *p)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", OBJECT(m)->name);
 
-	toolbar = Malloc(sizeof(AG_Toolbar), M_OBJECT);
+	toolbar = Malloc(sizeof(AG_Toolbar));
 	AG_ToolbarInit(toolbar, AG_TOOLBAR_VERT, 2, 0);
-	statbar = Malloc(sizeof(AG_Statusbar), M_OBJECT);
+	statbar = Malloc(sizeof(AG_Statusbar));
 	AG_StatusbarInit(statbar, 0);
 	
-	mv = Malloc(sizeof(MAP_View), M_WIDGET);
+	mv = Malloc(sizeof(MAP_View));
 	MAP_ViewInit(mv, m, flags, toolbar, statbar);
 	MAP_ViewSizeHint(mv, 2, 2);
 #if 0

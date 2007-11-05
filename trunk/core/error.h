@@ -8,10 +8,8 @@
 
 #ifdef _AGAR_INTERNAL
 #include <config/debug.h>
-#include <config/free_null_is_a_noop.h>
 #else
 #include <agar/config/debug.h>
-#include <agar/config/free_null_is_a_noop.h>
 #endif
 
 #ifdef __GNUC__
@@ -25,18 +23,9 @@
 #define fatal AG_FatalError
 #endif
 
-#define Malloc(len,t) AG_Malloc((len),(t))
+#define Malloc(len) AG_Malloc(len)
+#define Free(p) AG_Free(p)
 #define Realloc(p,len) AG_Realloc((p),(len))
-
-#ifdef DEBUG
-#define Free(p,t) AG_Free((p),(t))
-#else
-# ifdef FREE_NULL_IS_A_NOOP
-# define Free(p,t) free(p)
-# else
-# define Free(p,t) if ((p)!=NULL) free(p)
-# endif
-#endif
 
 #define Strdup(s) AG_Strdup(s)
 #define Vasprintf(msg, fmt, args) do {				\

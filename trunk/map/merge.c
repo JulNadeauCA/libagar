@@ -123,7 +123,7 @@ merge_free_brushes(void)
 	     ob = nob) {
 		nob = TAILQ_NEXT(ob, cobjs);
 		AG_ObjectDestroy(ob);
-		Free(ob, M_OBJECT);
+		Free(ob);
 	}
 	TAILQ_INIT(&brushes);
 }
@@ -175,7 +175,7 @@ merge_create_brush(AG_Event *event)
 	return;
 fail:
 	AG_ObjectDestroy(m);
-	Free(m, M_OBJECT);
+	Free(m);
 }
 
 static void
@@ -229,7 +229,7 @@ merge_remove_brush(AG_Event *event)
 			TAILQ_REMOVE(&brushes, brush, cobjs);
 			AG_TlistDel(brushes_tl, it);
 			AG_ObjectDestroy(brush);
-			Free(brush, M_OBJECT);
+			Free(brush);
 		}
 	}
 }
@@ -298,7 +298,7 @@ merge_load(MAP_Tool *t, AG_DataSource *buf)
 		MAP *nbrush;
 
 		AG_CopyString(m_name, buf, sizeof(m_name));
-		nbrush = Malloc(sizeof(MAP), M_OBJECT);
+		nbrush = Malloc(sizeof(MAP));
 		MAP_Init(nbrush, m_name);
 		map_load(nbrush, buf);
 

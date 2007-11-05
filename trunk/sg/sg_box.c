@@ -38,7 +38,7 @@ SG_BoxNew(void *pnode, const char *name)
 {
 	SG_Box *box;
 
-	box = Malloc(sizeof(SG_Box), M_SG);
+	box = Malloc(sizeof(SG_Box));
 	SG_BoxInit(box, name);
 	SG_NodeAttach(pnode, box);
 	return (box);

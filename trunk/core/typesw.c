@@ -41,7 +41,7 @@ int            agClassCount = 0;
 void
 AG_InitClassTbl(void)
 {
-	agClassTbl = Malloc(sizeof(AG_ObjectOps *), M_TYPESW);
+	agClassTbl = Malloc(sizeof(AG_ObjectOps *));
 	agClassCount = 0;
 	AG_RegisterClass(&agObjectOps);
 }
@@ -49,7 +49,7 @@ AG_InitClassTbl(void)
 void
 AG_DestroyClassTbl(void)
 {
-	Free(agClassTbl, M_TYPESW);
+	Free(agClassTbl);
 	agClassTbl = NULL;
 	agClassCount = 0;
 }

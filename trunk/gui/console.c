@@ -40,7 +40,7 @@ AG_ConsoleNew(void *parent, Uint flags)
 {
 	AG_Console *cons;
 
-	cons = Malloc(sizeof(AG_Console), M_OBJECT);
+	cons = Malloc(sizeof(AG_Console));
 	AG_ConsoleInit(cons, flags);
 	AG_ObjectAttach(parent, cons);
 
@@ -144,10 +144,9 @@ Destroy(void *p)
 
 	for (i = 0; i < cons->nLines; i++) {
 		AG_ConsoleLine *ln = &cons->lines[i];
-
-		Free(ln->text, M_WIDGET);
+		Free(ln->text);
 	}
-	Free(cons->lines, M_WIDGET);
+	Free(cons->lines);
 	cons->lines = NULL;
 }
 

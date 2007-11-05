@@ -43,7 +43,7 @@ SK_PointNew(void *pnode)
 {
 	SK_Point *pt;
 
-	pt = Malloc(sizeof(SK_Point), M_SG);
+	pt = Malloc(sizeof(SK_Point));
 	SK_PointInit(pt, SK_GenNodeName(SKNODE(pnode)->sk, "Point"));
 	SK_NodeAttach(pnode, pt);
 	return (pt);
@@ -203,7 +203,7 @@ ToolMouseButtonDown(void *pTool, SG_Vector pos, int btn)
 	if (btn != SDL_BUTTON_LEFT)
 		return (0);
 
-	pt = Malloc(sizeof(SK_Point), M_OBJECT);
+	pt = Malloc(sizeof(SK_Point));
 	SK_PointInit(pt, SK_GenNodeName(sk, "Point"));
 	SK_NodeAttach(sk->root, pt);
 	MatTranslate3(&SKNODE(pt)->T, pos.x, pos.y, 0.0);

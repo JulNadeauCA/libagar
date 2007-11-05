@@ -51,7 +51,7 @@ SG_CameraNew(void *pnode, const char *name)
 {
 	SG_Camera *cam;
 
-	cam = Malloc(sizeof(SG_Camera), M_SG);
+	cam = Malloc(sizeof(SG_Camera));
 	SG_CameraInit(cam, name);
 	SG_NodeAttach(pnode, cam);
 	return (cam);
@@ -62,7 +62,7 @@ SG_CameraNewDuplicate(void *pnode, const char *name, const SG_Camera *cOrig)
 {
 	SG_Camera *cNew;
 
-	cNew = Malloc(sizeof(SG_Camera), M_SG);
+	cNew = Malloc(sizeof(SG_Camera));
 	SG_CameraInit(cNew, name);
 	cNew->flags = cOrig->flags;
 	cNew->pmode = cOrig->pmode;

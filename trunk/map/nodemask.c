@@ -34,7 +34,7 @@ MAP_NodeMaskNew(enum map_nodemask_type type)
 {
 	MAP_NodeMask *mask;
 
-	mask = Malloc(sizeof(MAP_NodeMask), M_NODEMASK);
+	mask = Malloc(sizeof(MAP_NodeMask));
 	MAP_NodeMaskInit(mask, type);
 	return (mask);
 }
@@ -74,10 +74,10 @@ MAP_NodeMaskDestroy(MAP *m, MAP_NodeMask *mask)
 #endif
 	case AG_NODEMASK_RECTANGLE:
 	case AG_NODEMASK_POLYGON:
-		Free(mask->nm_poly.vertices, M_NODEMASK);
+		Free(mask->nm_poly.vertices);
 		break;
 	}
-	Free(mask, M_NODEMASK);
+	Free(mask);
 }
 
 int
@@ -106,10 +106,10 @@ MAP_NodeMaskLoad(MAP *m, AG_DataSource *buf, MAP_NodeMask *mask)
 #endif
 	case AG_NODEMASK_POLYGON:
 	case AG_NODEMASK_RECTANGLE:
-		Free(mask->nm_poly.vertices, M_NODEMASK);
+		Free(mask->nm_poly.vertices);
 		mask->nm_poly.nvertices = AG_ReadUint32(buf);
 		mask->nm_poly.vertices = Malloc(mask->nm_poly.nvertices *
-		    sizeof(int), M_NODEMASK);
+		                                sizeof(int));
 		for (i = 0; i < mask->nm_poly.nvertices; i++) {
 			mask->nm_poly.vertices[i] = AG_ReadUint32(buf);
 		}
@@ -160,12 +160,11 @@ MAP_NodeMaskCopy(const MAP_NodeMask *smask, MAP *m,
 #endif
 	case AG_NODEMASK_POLYGON:
 	case AG_NODEMASK_RECTANGLE:
-		Free(dmask->nm_poly.vertices, M_NODEMASK);
+		Free(dmask->nm_poly.vertices);
 		if (smask->nm_poly.vertices != NULL) {
 			dmask->nm_poly.nvertices = smask->nm_poly.nvertices;
 			dmask->nm_poly.vertices = Malloc(
-			    smask->nm_poly.nvertices * sizeof(Uint32),
-			    M_NODEMASK);
+			    smask->nm_poly.nvertices * sizeof(Uint32));
 			memcpy(dmask->nm_poly.vertices, smask->nm_poly.vertices,
 			    smask->nm_poly.nvertices * sizeof(Uint32));
 		} else {
@@ -197,7 +196,7 @@ MAP_NodeMaskVertex(MAP_NodeMask *mask, Uint32 x, Uint32 y)
 	dprintf("%u,%u\n", x, y);
 
 	if (mask->nm_poly.vertices == NULL) {
-		mask->nm_poly.vertices = Malloc(2*sizeof(Uint32), M_NODEMASK);
+		mask->nm_poly.vertices = Malloc(2*sizeof(Uint32));
 		mask->nm_poly.nvertices = 0;
 	} else {
 		mask->nm_poly.vertices = Realloc(mask->nm_poly.vertices,

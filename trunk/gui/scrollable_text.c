@@ -36,7 +36,7 @@ AG_ScrollableTextNew(void *parent, Uint flags)
 {
 	AG_ScrollableText *st;
 
-	st = Malloc(sizeof(AG_ScrollableText), M_OBJECT);
+	st = Malloc(sizeof(AG_ScrollableText));
 	AG_ScrollableTextInit(st, flags);
 	AG_ObjectAttach(parent, st);
 	return (st);
@@ -91,7 +91,7 @@ Destroy(void *p)
 {
 	AG_ScrollableText *st = p;
 
-	Free(st->text,0);
+	Free(st->text);
 }
 
 const AG_WidgetOps agScrollableTextOps = {

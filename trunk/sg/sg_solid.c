@@ -41,7 +41,7 @@ SG_SolidNew(void *pnode, const char *name)
 {
 	SG_Solid *sld;
 
-	sld = Malloc(sizeof(SG_Solid), M_SG);
+	sld = Malloc(sizeof(SG_Solid));
 	SG_SolidInit(sld, name);
 	SG_NodeAttach(pnode, sld);
 	return (sld);

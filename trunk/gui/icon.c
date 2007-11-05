@@ -37,7 +37,7 @@ AG_IconNew(void)
 {
 	AG_Icon *icon;
 
-	icon = Malloc(sizeof(AG_Icon), M_OBJECT);
+	icon = Malloc(sizeof(AG_Icon));
 	AG_IconInit(icon, 0);
 	return (icon);
 }
@@ -47,7 +47,7 @@ AG_IconFromSurface(SDL_Surface *su)
 {
 	AG_Icon *icon;
 
-	icon = Malloc(sizeof(AG_Icon), M_OBJECT);
+	icon = Malloc(sizeof(AG_Icon));
 	AG_IconInit(icon, 0);
 	AG_IconSetSurface(icon, su);
 	return (icon);
@@ -63,7 +63,7 @@ AG_IconFromBMP(const char *bmpfile)
 		AG_SetError("%s: %s", bmpfile, SDL_GetError());
 		return (NULL);
 	}
-	icon = Malloc(sizeof(AG_Icon), M_OBJECT);
+	icon = Malloc(sizeof(AG_Icon));
 	AG_IconInit(icon, 0);
 	AG_IconSetSurfaceNODUP(icon, bmp);
 	return (icon);

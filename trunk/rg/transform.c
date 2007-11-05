@@ -72,7 +72,7 @@ RG_TransformRotate(struct map_item *r, int angle)
 		if (tr->type == RG_TRANSFORM_ROTATE) {
 			if (angle == 0) {
 				TAILQ_REMOVE(&r->transforms, tr, transforms);
-				Free(tr, M_RG);
+				Free(tr);
 				return (NULL);
 			}
 			break;
@@ -96,9 +96,9 @@ RG_TransformNew(enum rg_transform_type type, int nargs, Uint32 *args)
 {
 	RG_Transform *xf;
 
-	xf = Malloc(sizeof(RG_Transform), M_RG);
+	xf = Malloc(sizeof(RG_Transform));
 	if (RG_TransformInit(xf, type, nargs, args) == -1) {
-		Free(xf, M_RG);
+		Free(xf);
 		return (NULL);
 	}
 	return (xf);
@@ -120,7 +120,7 @@ RG_TransformInit(RG_Transform *xf, enum rg_transform_type type, int nargs,
 	xf->func = NULL;
 	xf->nargs = nargs;
 	if (nargs > 0) {
-		xf->args = Malloc(nargs * sizeof(Uint32), M_RG);
+		xf->args = Malloc(nargs*sizeof(Uint32));
 		memcpy(xf->args, args, nargs * sizeof(Uint32));
 	} else {
 		xf->args = NULL;
@@ -153,10 +153,10 @@ RG_TransformChainLoad(AG_DataSource *buf, RG_TransformChain *xchain)
 	for (i = 0; i < count; i++) {
 		RG_Transform *xf;
 
-		xf = Malloc(sizeof(RG_Transform), M_RG);
+		xf = Malloc(sizeof(RG_Transform));
 		RG_TransformInit(xf, 0, 0, NULL);
 		if (RG_TransformLoad(buf, xf) == -1) {
-			Free(xf, M_RG);
+			Free(xf);
 			return (-1);
 		}
 		TAILQ_INSERT_TAIL(xchain, xf, transforms);
@@ -190,7 +190,7 @@ RG_TransformChainDestroy(RG_TransformChain *xchain)
 	     xf = xf_next) {
 		xf_next = TAILQ_NEXT(xf, transforms);
 		RG_TransformDestroy(xf);
-		Free(xf, M_RG);
+		Free(xf);
 	}
 }
 
@@ -230,7 +230,7 @@ RG_TransformChainDup(const RG_TransformChain *xc, RG_TransformChain *xc_dup)
 	RG_Transform *xf, *xf_dup;
 
 	TAILQ_FOREACH(xf, xc, transforms) {
-		xf_dup = Malloc(sizeof(RG_Transform), M_RG);
+		xf_dup = Malloc(sizeof(RG_Transform));
 		RG_TransformInit(xf_dup, xf->type, xf->nargs, xf->args);
 		TAILQ_INSERT_TAIL(xc_dup, xf_dup, transforms);
 	}
@@ -239,7 +239,7 @@ RG_TransformChainDup(const RG_TransformChain *xc, RG_TransformChain *xc_dup)
 void
 RG_TransformDestroy(RG_Transform *xf)
 {
-	Free(xf->args, M_RG);
+	Free(xf->args);
 }
 
 int
@@ -255,8 +255,8 @@ RG_TransformLoad(AG_DataSource *buf, RG_Transform *xf)
 		return (-1);
 	}
 
-	Free(xf->args, M_RG);
-	xf->args = Malloc(xf->nargs * sizeof(Uint32), M_RG);
+	Free(xf->args);
+	xf->args = Malloc(xf->nargs * sizeof(Uint32));
 	for (i = 0; i < xf->nargs; i++)
 		xf->args[i] = AG_ReadUint32(buf);
 
@@ -294,7 +294,7 @@ RG_TransformMirror(SDL_Surface *su, int argc, Uint32 *argv)
 	Uint8 *fb = su->pixels;
 	int x, y;
 
-	row = Malloc(su->pitch, M_RG);
+	row = Malloc(su->pitch);
 	for (y = 0; y < su->h; y++) {
 		memcpy(row, fb, su->pitch);
 		rowp = row + su->pitch - su->format->BytesPerPixel;
@@ -304,7 +304,7 @@ RG_TransformMirror(SDL_Surface *su, int argc, Uint32 *argv)
 			rowp -= su->format->BytesPerPixel;
 		}
 	}
-	Free(row, M_RG);
+	Free(row);
 	return (su);
 }
 
@@ -317,7 +317,7 @@ RG_TransformFlip(SDL_Surface *su, int argc, Uint32 *argv)
 	Uint8 *fb = su->pixels;
 	int y;
 
-	rowbuf = Malloc(totsize, M_RG);
+	rowbuf = Malloc(totsize);
 	memcpy(rowbuf, fb, totsize);
 	row = rowbuf + totsize - su->pitch;
 	for (y = 0; y < su->h; y++) {
@@ -325,7 +325,7 @@ RG_TransformFlip(SDL_Surface *su, int argc, Uint32 *argv)
 		row -= su->pitch;
 		fb += su->pitch;
 	}
-	Free(rowbuf, M_RG);
+	Free(rowbuf);
 	return (su);
 }
 

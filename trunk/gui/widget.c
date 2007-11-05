@@ -55,7 +55,7 @@ AG_WidgetNew(void *parent, Uint flags)
 {
 	AG_Widget *w;
 
-	w = Malloc(sizeof(AG_Widget), M_OBJECT);
+	w = Malloc(sizeof(AG_Widget));
 	AG_WidgetInit(w, &agWidgetOps, flags);
 	AG_ObjectAttach(parent, w);
 	return (w);
@@ -404,7 +404,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 		return (binding);
 	}
 
-	binding = Malloc(sizeof(AG_WidgetBinding), M_WIDGET);
+	binding = Malloc(sizeof(AG_WidgetBinding));
 	strlcpy(binding->name, name, sizeof(binding->name));
 	binding->type = type;
 	binding->p1 = p1;
@@ -754,13 +754,13 @@ Destroy(void *p)
 		}
 #endif
 	}
-	Free(wid->surfaces, M_WIDGET);
-	Free(wid->surfaceFlags, M_WIDGET);
+	Free(wid->surfaces);
+	Free(wid->surfaceFlags);
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		Free(wid->textures, M_WIDGET);
-		Free(wid->texcoords, M_WIDGET);
+		Free(wid->textures);
+		Free(wid->texcoords);
 	}
 #endif
 
@@ -768,7 +768,7 @@ Destroy(void *p)
 	     bind != SLIST_END(&wid->bindings);
 	     bind = nbind) {
 		nbind = SLIST_NEXT(bind, bindings);
-		Free(bind, M_WIDGET);
+		Free(bind);
 	}
 	AG_MutexDestroy(&wid->bindings_lock);
 }

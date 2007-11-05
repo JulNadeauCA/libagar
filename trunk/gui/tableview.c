@@ -76,7 +76,7 @@ AG_TableviewNew(void *parent, Uint flags, AG_TableviewDataFn data_callback,
 {
 	AG_Tableview *tv;
 
-	tv = Malloc(sizeof(AG_Tableview), M_WIDGET);
+	tv = Malloc(sizeof(AG_Tableview));
 	AG_TableviewInit(tv, flags, data_callback, sort_callback);
 	AG_ObjectAttach(parent, tv);
 	if (flags & AG_TABLEVIEW_FOCUS) {
@@ -308,9 +308,8 @@ AG_TableviewRowAddFn(AG_Tableview *tv, int flags,
 		AG_MutexUnlock(&tv->lock);
 		return (NULL);
 	}
-	row = Malloc(sizeof(AG_TableviewRow), M_WIDGET);
-	row->cell = Malloc(sizeof(struct ag_tableview_cell) * tv->columncount,
-	    M_WIDGET);
+	row = Malloc(sizeof(AG_TableviewRow));
+	row->cell = Malloc(sizeof(struct ag_tableview_cell)*tv->columncount);
 	row->userp = userp;
 	row->dynamic = !(flags & AG_TABLEVIEW_STATIC_ROW);
 
@@ -384,9 +383,8 @@ tableview_row_destroy(AG_Tableview *tv, AG_TableviewRow *row)
 		SDL_FreeSurface(row->cell[i].image);
 		free(row->cell[i].text);
 	}
-
-	Free(row->cell, M_WIDGET);
-	Free(row, M_WIDGET);
+	Free(row->cell);
+	Free(row);
 }
 
 void
@@ -563,8 +561,8 @@ Destroy(void *p)
 	AG_Tableview *tv = p;
 
 	AG_TableviewRowDelAll(tv);
-	Free(tv->column, M_WIDGET);
-	Free(tv->visible.items, M_WIDGET);
+	Free(tv->column);
+	Free(tv->visible.items);
 	AG_MutexDestroy(&tv->lock);
 }
 
@@ -1416,7 +1414,7 @@ AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
 	if (row->cell[cell].image != NULL) {
 		SDL_FreeSurface(row->cell[cell].image);
 	}
-	Free(row->cell[cell].text, 0);
+	Free(row->cell[cell].text);
 
 	va_start(args, fmt);
 	Vasprintf(&row->cell[cell].text, fmt, args);

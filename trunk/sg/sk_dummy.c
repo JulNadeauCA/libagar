@@ -38,7 +38,7 @@ SK_DummyNew(void *pnode)
 {
 	SK_Dummy *dum;
 
-	dum = Malloc(sizeof(SK_Dummy), M_SG);
+	dum = Malloc(sizeof(SK_Dummy));
 	SK_DummyInit(dum, SK_GenNodeName(SKNODE(pnode)->sk, "Dummy"));
 	SK_NodeAttach(pnode, dum);
 	return (dum);

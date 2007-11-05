@@ -33,7 +33,7 @@ RG_TextureSelectorNew(void *parent, RG_Tileset *tset, int flags)
 {
 	RG_TextureSelector *ts;
 
-	ts = Malloc(sizeof(RG_TextureSelector), M_OBJECT);
+	ts = Malloc(sizeof(RG_TextureSelector));
 	RG_TextureSelectorInit(ts, tset, flags);
 	AG_ObjectAttach(parent, ts);
 	return (ts);
