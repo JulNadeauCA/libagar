@@ -30,8 +30,8 @@
 #endif
 
 __BEGIN_DECLS
-int	SC_Init(Uint);
-void	SC_Destroy(void);
+void	SC_InitSubsystem(void);
+void	SC_DestroySubsystem(void);
 __END_DECLS
 
 #include "close_code.h"

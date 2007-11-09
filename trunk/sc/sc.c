@@ -25,6 +25,10 @@
 
 #include <core/core.h>
 
+#include "sc.h"
+#include "sc_plotter.h"
+#include "sc_matview.h"
+
 #if 0
 static void
 SC_VectorSetProp(void *obj, AG_Prop *prop, void *arg)
@@ -99,15 +103,17 @@ const AG_PropOps scVectorOps = {
 	SC_VectorLoadProp,
 	SC_VectorSaveProp
 };
+#endif
 
-int
-SC_Init(Uint flags)
+void
+SC_InitSubsystem(void)
 {
-	AG_PropRegister(&scVectorOps);
+/*	AG_PropRegister(&scVectorOps); */
+	AG_RegisterClass(&scPlotterOps);
+	AG_RegisterClass(&scMatviewOps);
 }
 
 void
-SC_Destroy(void)
+SC_DestroySubsystem(void)
 {
 }
-#endif

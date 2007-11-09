@@ -118,7 +118,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps scPlotterOps;
 
 SC_Plotter	*SC_PlotterNew(void *, Uint);
-void	 	 SC_PlotterInit(SC_Plotter *, Uint);
 void	 	 SC_PlotterSizeHint(SC_Plotter *, Uint, Uint);
 void		 SC_PlotterUpdate(SC_Plotter *);
 void		 SC_PlotterSetDefaultFont(SC_Plotter *, const char *, int);
