@@ -123,7 +123,6 @@ merge_free_brushes(void)
 	     ob = nob) {
 		nob = TAILQ_NEXT(ob, cobjs);
 		AG_ObjectDestroy(ob);
-		Free(ob);
 	}
 	TAILQ_INIT(&brushes);
 }
@@ -175,7 +174,6 @@ merge_create_brush(AG_Event *event)
 	return;
 fail:
 	AG_ObjectDestroy(m);
-	Free(m);
 }
 
 static void
@@ -229,7 +227,6 @@ merge_remove_brush(AG_Event *event)
 			TAILQ_REMOVE(&brushes, brush, cobjs);
 			AG_TlistDel(brushes_tl, it);
 			AG_ObjectDestroy(brush);
-			Free(brush);
 		}
 	}
 }

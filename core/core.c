@@ -184,9 +184,7 @@ AG_Destroy(void)
 #endif
 
 	AG_ObjectDestroy(agWorld);
-
 	AG_ObjectDestroy(agConfig);
-	Free(agConfig);
 
 /*	AG_MutexDestroy(&agLinkageLock); */
 	AG_MutexDestroy(&agTimingLock);

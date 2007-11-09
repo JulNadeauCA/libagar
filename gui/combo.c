@@ -286,7 +286,6 @@ Destroy(void *p)
 		AG_ViewDetach(com->panel);
 	}
 	AG_ObjectDestroy(com->list);
-	Free(com->list);
 }
 
 void

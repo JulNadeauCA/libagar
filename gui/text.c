@@ -344,7 +344,6 @@ out:
 fail:
 	AG_MutexUnlock(&agTextLock);
 	AG_ObjectDestroy(font);
-	Free(font);
 	return (NULL);
 }
 
@@ -491,7 +490,6 @@ AG_TextDestroy(void)
 			AG_TTFCloseFont(font->ttf);
 #endif
 		AG_ObjectDestroy(font);
-		Free(font);
 	}
 #ifdef HAVE_FREETYPE
 	if (agFreetype)

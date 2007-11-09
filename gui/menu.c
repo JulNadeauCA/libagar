@@ -64,7 +64,6 @@ AG_MenuNewGlobal(Uint flags)
 	if (agAppMenu != NULL) {
 		AG_ViewDetach(agAppMenuWin);
 		AG_ObjectDestroy(agAppMenu);
-		Free(agAppMenu);
 	}
 	m->flags |= AG_MENU_GLOBAL;
 	AG_MenuSetPadding(m, 4, 4, -1, -1);
@@ -871,7 +870,6 @@ AG_PopupDestroy(void *pWid, AG_PopupMenu *pm)
 	if (pm->menu != NULL) {
 		AG_MenuCollapse(pm->menu, pm->item);
 		AG_ObjectDestroy(pm->menu);
-		Free(pm->menu);
 	}
 	pm->menu = NULL;
 	pm->item = NULL;

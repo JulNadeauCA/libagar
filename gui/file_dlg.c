@@ -451,7 +451,6 @@ SelectedType(AG_Event *event)
 	OBJECT_FOREACH_CHILD(chld, fd->optsCtr, ag_widget) {
 		AG_ObjectDetach(chld);
 		AG_ObjectDestroy(chld);
-		Free(chld);
 	}
 	TAILQ_FOREACH(fo, &ft->opts, opts) {
 		switch (fo->type) {

@@ -773,7 +773,6 @@ CloseElement(RG_Tileview *tv)
 		AG_ObjectDetach(tv->tel_tbar);
 		AG_WindowUpdate(AG_WidgetParentWindow(tv->tel_tbar));
 		AG_ObjectDestroy(tv->tel_tbar);
-		Free(tv->tel_tbar);
 		tv->tel_tbar = NULL;
 	}
 }
@@ -2021,8 +2020,6 @@ RG_TileCloseMenu(RG_Tileview *tv)
 {
 	AG_MenuCollapse(tv->menu, tv->menu_item);
 	AG_ObjectDestroy(tv->menu);
-	Free(tv->menu);
-
 	tv->menu = NULL;
 	tv->menu_item = NULL;
 	tv->menu_win = NULL;

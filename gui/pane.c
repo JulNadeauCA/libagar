@@ -208,7 +208,6 @@ AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
 
 		AG_ObjectDetach(pa->div[which]);
 		AG_ObjectDestroy(pa->div[which]);
-		Free(pa->div[which]);
 	}
 #endif
 	AG_ObjectAttach(pa->div[which], box);

@@ -241,7 +241,6 @@ Destroy(void *p)
 	     tp = ntp) {
 		ntp = TAILQ_NEXT(tp, popups);
 		AG_ObjectDestroy(tp->menu);
-		Free(tp->menu);
 		Free(tp);
 	}
 	AG_MutexDestroy(&tl->lock);

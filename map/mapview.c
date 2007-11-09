@@ -120,7 +120,6 @@ MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
 			    ag_widget) {
 				AG_ObjectDetach(wt);
 				AG_ObjectDestroy(wt);
-				Free(wt);
 			}
 			if ((pwin = AG_WidgetParentWindow(mv->curtool->pane))
 			    != NULL) {

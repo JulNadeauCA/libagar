@@ -1143,7 +1143,6 @@ RG_PixmapCloseMenu(RG_Tileview *tv)
 
 	AG_MenuCollapse(me, mi);
 	AG_ObjectDestroy(me);
-	Free(me);
 
 	tv->tv_pixmap.menu = NULL;
 	tv->tv_pixmap.menu_item = NULL;

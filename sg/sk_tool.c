@@ -66,7 +66,6 @@ SK_ToolDestroy(SK_Tool *tool)
 		OBJECT_FOREACH_CHILD(wt, tool->pane, ag_widget) {
 			AG_ObjectDetach(wt);
 			AG_ObjectDestroy(wt);
-			Free(wt);
 		}
 		if ((pwin = AG_WidgetParentWindow(tool->pane)) != NULL)
 			AG_WindowUpdate(pwin);

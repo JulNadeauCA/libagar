@@ -311,7 +311,6 @@ user_activate(NS_Command *cmd, void *p)
 	return (0);
 fail:
 	AG_ObjectDestroy(u);
-	Free(u);
 	return (-1);
 }
 

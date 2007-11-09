@@ -500,9 +500,6 @@ ObjectOp(AG_Event *event)
 			AG_ObjectDetach(ob);
 			AG_ObjectUnlinkDatafiles(ob);
 			AG_ObjectDestroy(ob);
-			if ((ob->flags & AG_OBJECT_STATIC) == 0) {
-				Free(ob);
-			}
 			break;
 #ifdef NETWORK
 		case OBJEDIT_RCS_IMPORT:

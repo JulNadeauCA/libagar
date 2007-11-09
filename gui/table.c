@@ -147,7 +147,6 @@ Destroy(void *obj)
 	     tp = tpn) {
 		tpn = SLIST_NEXT(tp, popups);
 		AG_ObjectDestroy(tp->menu);
-		Free(tp->menu);
 		Free(tp);
 	}
 	

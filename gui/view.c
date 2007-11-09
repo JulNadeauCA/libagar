@@ -369,7 +369,6 @@ AG_DestroyVideo(void)
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, windows);
 		AG_ObjectDestroy(win);
-		Free(win);
 	}
 	SDL_FreeSurface(agView->stmpl);
 	Free(agView->dirty);
@@ -646,7 +645,6 @@ FreeDetachedWindows(void)
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
 		AG_ObjectDestroy(win);
-		Free(win);
 	}
 	TAILQ_INIT(&agView->detach);
 }
