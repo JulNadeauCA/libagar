@@ -283,6 +283,9 @@ typedef struct vg {
 extern const VG_ElementOps *vgElementTypes[];
 
 __BEGIN_DECLS
+void	 VG_InitSubsystem(void);
+void	 VG_DestroySubsystem(void);
+
 VG	*VG_New(int);
 void	 VG_Init(VG *, int);
 void	 VG_Destroy(VG *);
