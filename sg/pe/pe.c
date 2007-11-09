@@ -34,12 +34,11 @@
 
 #include <sg/sg.h>
 
-void
-PE_Init(void *obj, const char *name)
+static void
+Init(void *obj)
 {
 	PE *pe = obj;
 
-	AG_ObjectInit(pe, name, &peOps);
 	pe->flags = 0;
 	pe->time = 0;
 }
@@ -84,7 +83,7 @@ const AG_ObjectOps peOps = {
 	"PE",
 	sizeof(PE),
 	{ 0,0 },
-	PE_Init,
+	Init,
 	NULL,			/* free */
 	NULL,			/* destroy */
 	Load,

@@ -601,8 +601,7 @@ SK_Edit(void *p)
 	AG_WindowSetPaddingTop(win, 0);
 	AG_WindowSetSpacing(win, 0);
 
-	skv = Malloc(sizeof(SK_View));
-	SK_ViewInit(skv, sk, SK_VIEW_EXPAND);
+	skv = SK_ViewNew(NULL, sk, SK_VIEW_EXPAND);
 	SK_ViewPostDrawFn(skv, DrawStatus, NULL);
 	
 	for (i = 0; i < skToolkitCount; i++)

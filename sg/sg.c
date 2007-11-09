@@ -31,9 +31,9 @@
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
-#include <core/typesw.h>
 
 #include "sg.h"
+#include "sg_matview.h"
 #include "icons.h"
 #include "icons_data.h"
 
@@ -72,10 +72,13 @@ SG_NodeOfClassGeneral(SG_Node *node, const char *cn)
 }
 
 int
-SG_InitEngine(void)
+SG_InitSubsystem(void)
 {
 	SG_VectorInitEngine();
 	SG_MatrixInitEngine();
+
+	AG_RegisterClass(&sgViewOps);
+	AG_RegisterClass(&sgMatviewOps);
 
 	AG_RegisterClass(&sgOps);
 	AG_RegisterClass(&sgMaterialOps);
@@ -95,14 +98,14 @@ SG_InitEngine(void)
 	SG_RegisterClass(&sgSphereOps);
 	SG_RegisterClass(&sgBoxOps);
 #if 0
-	AG_AtExitFunc(SG_DestroyEngine);
+	AG_AtExitFunc(SG_DestroySubsystem);
 #endif
 	sgIcon_Init();
 	return (0);
 }
 
 void
-SG_DestroyEngine(void)
+SG_DestroySubsystem(void)
 {
 }
 
@@ -110,9 +113,16 @@ SG *
 SG_New(void *parent, const char *name)
 {
 	SG *sg;
+	
+	if (sgElementsCnt == 0) {
+		if (SG_InitSubsystem() == -1 ||
+		    SK_InitSubsystem() == -1)
+			fatal("SG: %s", AG_GetError());
+	}
 
 	sg = Malloc(sizeof(SG));
-	SG_Init(sg, name);
+	AG_ObjectInit(sg, &sgOps);
+	AG_ObjectSetName(sg, "%s", name);
 	AG_ObjectAttach(parent, sg);
 	return (sg);
 }
@@ -149,18 +159,11 @@ SG_InitRoot(SG *sg)
 	TAILQ_INSERT_TAIL(&sg->nodes, sg->root, nodes);
 }
 
-void
-SG_Init(void *obj, const char *name)
+static void
+Init(void *obj)
 {
 	SG *sg = obj;
 	
-	if (sgElementsCnt == 0) {
-		if (SG_InitEngine() == -1 ||
-		    SK_InitEngine() == -1)
-			fatal("SG: %s", AG_GetError());
-	}
-
-	AG_ObjectInit(sg, name, &sgOps);
 	OBJECT(sg)->flags |= AG_OBJECT_REOPEN_ONLOAD;
 	sg->flags = 0;
 	TAILQ_INIT(&sg->nodes);
@@ -529,7 +532,7 @@ const AG_ObjectOps sgOps = {
 	"SG",
 	sizeof(SG),
 	{ 1,0 },
-	SG_Init,
+	Init,
 	FreeDataset,
 	Destroy,
 	Load,

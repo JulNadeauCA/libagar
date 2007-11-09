@@ -53,9 +53,6 @@ node.
 .Fn SG_ViewNew "SG_Node *parent" "const char *name"
 .Pp
 .Ft "void"
-.Fn SG_ViewInit "SG_Node *parent" "const char *name"
-.Pp
-.Ft "void"
 .Fn SG_ViewKeydownFn "SG_View *view" "AG_EventFn fn" "const char *fmt" "..."
 .Pp
 .Ft "void"
@@ -76,10 +73,6 @@ The
 function allocates, initializes, and attaches a
 .Nm
 object.
-.Fn SG_ViewInit
-initializes a
-.Nm
-structure.
 .Pp
 The
 .Fn SG_View*Fn

@@ -35,12 +35,11 @@
 
 #include "sg.h"
 
-void
-SG_ProgramInit(void *obj, const char *name)
+static void
+Init(void *obj)
 {
 	SG_Program *prog = obj;
 
-	AG_ObjectInit(prog, name, &sgProgramOps);
 	prog->flags = 0;
 }
 
@@ -98,7 +97,7 @@ const AG_ObjectOps sgProgramOps = {
 	"SG_Program",
 	sizeof(SG_Program),
 	{ 0,0 },
-	SG_ProgramInit,
+	Init,
 	NULL,			/* free */
 	NULL,			/* destroy */
 	Load,

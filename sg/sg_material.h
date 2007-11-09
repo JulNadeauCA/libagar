@@ -48,14 +48,10 @@ __BEGIN_DECLS
 extern const AG_ObjectOps sgMaterialOps;
 
 SG_Material	*SG_MaterialNew(void *, const char *);
-void		 SG_MaterialInit(void *, const char *);
-void		*SG_MaterialEdit(void *);
-
 void		 SG_MaterialBind(SG_Material *, SG_View *);
 void		 SG_MaterialUnbind(SG_Material *, SG_View *);
 
 SG_Texture	*SG_MaterialTextureFromSurface(SDL_Surface *);
 void		 SG_MaterialAddProgram(SG_Material *, SG_Program *);
 void		 SG_MaterialDelProgram(SG_Material *, SG_Program *);
-
 __END_DECLS

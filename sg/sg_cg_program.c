@@ -48,12 +48,10 @@
 CGcontext sgCgProgramCtx = NULL;
 
 static void
-Init(void *obj, const char *name)
+Init(void *obj)
 {
 	SG_CgProgram *prog = obj;
 
-	SG_ProgramInit(prog, name);
-	AG_ObjectSetOps(prog, &sgProgramOps);
 	prog->type = SG_VERTEX_PROGRAM;
 	prog->objs = NULL;
 	prog->nObjs = 0;

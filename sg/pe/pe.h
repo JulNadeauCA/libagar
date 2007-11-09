@@ -20,7 +20,6 @@ typedef struct pe {
 __BEGIN_DECLS
 extern const AG_ObjectOps peOps;
 
-void	 PE_Init(void *, const char *);
 void	 PE_AttachObject(PE *, SG_Object *);
 void	 PE_DetachObject(PE *, SG_Object *);
 __END_DECLS

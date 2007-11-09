@@ -31,7 +31,6 @@
 #ifdef HAVE_OPENGL
 
 #include <core/core.h>
-#include <core/typesw.h>
 
 #include "sk.h"
 #include "sk_constraint.h"
@@ -109,10 +108,11 @@ SK_NodeOfClass(void *pNode, const char *cname)
  * the default SK node classes.
  */
 int
-SK_InitEngine(void)
+SK_InitSubsystem(void)
 {
-	AG_RegisterClass(&skOps);
+	AG_RegisterClass(&skViewOps);
 
+	AG_RegisterClass(&skOps);
 	SK_RegisterClass(&skDummyOps);
 	SK_RegisterClass(&skPointOps);
 	SK_RegisterClass(&skLineOps);
@@ -122,7 +122,7 @@ SK_InitEngine(void)
 }
 
 void
-SK_DestroyEngine(void)
+SK_DestroySubsystem(void)
 {
 }
 
@@ -130,9 +130,15 @@ SK *
 SK_New(void *parent, const char *name)
 {
 	SK *sk;
+	
+	if (skElementsCnt == 0) {
+		if (SK_InitSubsystem() == -1)
+			fatal("%s", AG_GetError());
+	}
 
 	sk = Malloc(sizeof(SK));
-	SK_Init(sk, name);
+	AG_ObjectInit(sk, &skOps);
+	AG_ObjectSetName(sk, "%s", name);
 	AG_ObjectAttach(parent, sk);
 	return (sk);
 }
@@ -159,18 +165,13 @@ PostEditorLoad(AG_Event *event)
 }
 #endif /* EDITION */
 
-void
-SK_Init(void *obj, const char *name)
+static void
+Init(void *obj)
 {
 	SK *sk = obj;
 	
-	if (skElementsCnt == 0) {
-		if (SK_InitEngine() == -1)
-			fatal("SK: %s", AG_GetError());
-	}
-
-	AG_ObjectInit(sk, name, &skOps);
 	OBJECT(sk)->flags |= AG_OBJECT_REOPEN_ONLOAD;
+
 	sk->flags = 0;
 	AG_MutexInitRecursive(&sk->lock);
 	SK_InitCluster(&sk->ctGraph, 0);
@@ -1432,7 +1433,7 @@ const AG_ObjectOps skOps = {
 	"SK",
 	sizeof(SK),
 	{ 0,0 },
-	SK_Init,
+	Init,
 	FreeDataset,
 	NULL,		/* destroy */
 	Load,

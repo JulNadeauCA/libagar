@@ -192,11 +192,10 @@ extern const char *skConstraintNames[];
 __BEGIN_DECLS
 extern const AG_ObjectOps skOps;
 
-int	 SK_InitEngine(void);
-void	 SK_DestroyEngine(void);
+int	 SK_InitSubsystem(void);
+void	 SK_DestroySubsystem(void);
 
 SK	*SK_New(void *, const char *);
-void	 SK_Init(void *, const char *);
 void	*SK_Edit(void *);
 
 void	 	 SK_RenderNode(SK *, SK_Node *, SK_View *);
