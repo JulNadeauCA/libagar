@@ -8,15 +8,17 @@
 
 static AG_Object obj;
 
-static void InitObj(void) {
-	AG_ObjectInit(&obj, "foo", NULL);
+static void InitObj(void)
+{
+	AG_ObjectInit(&obj, &agObjectOps);
 	AG_SetEvent(&obj, "object-foo-event", NULL, NULL);
 	AG_SetEvent(&obj, "object-bar-event", NULL, "%i%i%i%i", 1,2,3,4);
 	AG_SetEvent(&obj, "object-baz-event", NULL, "%f%f%f%f%d%d%d%d%p%p%p%p",
 	    1.0, 1.0, 1.0, 1.0, 1,1,1,1, NULL, NULL, NULL, NULL);
 	AG_SetEvent(&obj, "object-bezo-event", NULL, "%s", "foo");
 }
-static void FreeObj(void) {
+static void FreeObj(void)
+{
 	AG_ObjectDestroy(&obj);
 }
 
