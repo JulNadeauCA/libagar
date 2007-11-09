@@ -28,7 +28,6 @@
  */
 
 #include <core/core.h>
-#include <core/typesw.h>
 #include <core/md5.h>
 #include <core/sha1.h>
 #include <core/rmd160.h>
@@ -823,12 +822,8 @@ AG_RcsCheckout(const char *path)
 		    name, type);
 
 		obj = Malloc(cl->size);
-		if (cl->init != NULL) {
-			cl->init(obj, name);
-		} else {
-			AG_ObjectInit(obj, name, cl);
-		}
-
+		AG_ObjectInit(obj, cl);
+		AG_ObjectSetName(obj, "%s", name);
 		if (AG_ObjectAttachToNamed(localpath, obj) == -1) {
 			AG_ObjectDestroy(obj);
 			goto fail;
