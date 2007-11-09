@@ -68,9 +68,6 @@ instead.
 .Fn AG_FSpinbuttonNew "AG_Widget *parent, Uint flags, const char *conv_unit" "const char *label"
 .Pp
 .Ft void
-.Fn AG_FSpinbuttonInit "AG_FSpinbutton *fsu, Uint flags, const char *conv_unit" "const char *label"
-.Pp
-.Ft void
 .Fn AG_FSpinbuttonSetValue "AG_FSpinbutton *fsu" "double value"
 .Pp
 .Ft void
@@ -103,15 +100,9 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-The
-.Fn AG_FSpinbuttonInit
-function initializes a preallocated
-.Nm
-widget.
-The
 .Fa conv_unit 
-argument defines the unit system to use (if set to NULL or "identity", no
-conversion is done).
+defines the unit system to use (if set to NULL or "identity", no conversion
+is done).
 .Pp
 The
 .Fn AG_FSpinbuttonSetValue

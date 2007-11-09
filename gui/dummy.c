@@ -2,7 +2,8 @@
 
 /*
  * This file demonstrates the implementation of a minimal Agar widget
- * that uses surface mappings.
+ * that uses surface mappings in a way that allows for efficient use of
+ * texture hardware (if we are using the GL display mode).
  */
 
 #include <core/core.h>
@@ -14,19 +15,29 @@
 #include "label.h"
 
 /*
- * This is a generic constructor function. It is customary of FooNew()
- * functions in agar to allocate, initialize and attach an object. When
- * useful, is also customary to provide multiple alternative constructor
- * functions.
+ * This is a generic constructor function. It is customary of Agar FooNew()
+ * functions to allocate, initialize and attach an instance of the class.
  */
 AG_Dummy *
 AG_DummyNew(void *parent, Uint flags, const char *caption)
 {
 	AG_Dummy *dum;
 
+	/* Create a new instance of the AG_Dummy class */
 	dum = Malloc(sizeof(AG_Dummy));
-	AG_DummyInit(dum, flags, caption);
+	AG_ObjectInit(dum, &agDummyOps);
+
+	/* Set some constructor arguments */
+	dum->flags |= flags;
+	dum->caption = caption;
+
+	/* It is customary for widgets to provide HFILL and VFILL flags. */
+	if (flags & AG_DUMMY_HFILL) { AG_ExpandHoriz(dum); }
+	if (flags & AG_DUMMY_VFILL) { AG_ExpandVert(dum); }
+
+	/* Attach the object to the parent (if parent==NULL, this is a noop) */
 	AG_ObjectAttach(parent, dum);
+
 	return (dum);
 }
 
@@ -84,7 +95,11 @@ Draw(void *p)
 {
 	AG_Dummy *dum = p;
 	
-	/* Draw a box spanning the widget area. */
+	/*
+	 * Draw a box spanning the widget area. In order to allow themeing,
+	 * you would generally use a STYLE() call here instead, see AG_Style(3)
+	 * for more information on styles.
+	 */
 	AG_DrawBox(dum,
 	    AG_RECT(0, 0, WIDGET(dum)->w, WIDGET(dum)->h), 1,
 	    AG_COLOR(BUTTON_COLOR));
@@ -107,7 +122,7 @@ Draw(void *p)
 
 /* Mouse motion event handler */
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	AG_Dummy *dum = AG_SELF();
 	int x = AG_INT(1);
@@ -118,7 +133,7 @@ mousemotion(AG_Event *event)
 
 /* Mouse click event handler */
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Dummy *dum = AG_SELF();
 	int button = AG_INT(1);
@@ -131,7 +146,7 @@ mousebuttondown(AG_Event *event)
 
 /* Mouse click event handler */
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	AG_Dummy *dum = AG_SELF();
 	int button = AG_INT(1);
@@ -143,7 +158,7 @@ mousebuttonup(AG_Event *event)
 
 /* Keystroke event handler */
 static void
-keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	AG_Dummy *dum = AG_SELF();
 	int keysym = AG_INT(1);
@@ -153,7 +168,7 @@ keydown(AG_Event *event)
 
 /* Keystroke event handler */
 static void
-keyup(AG_Event *event)
+KeyUp(AG_Event *event)
 {
 	AG_Dummy *dum = AG_SELF();
 	int keysym = AG_INT(1);
@@ -161,19 +176,20 @@ keyup(AG_Event *event)
 	/* ... */
 }
 
-/* Initialization routine. */
-void
-AG_DummyInit(AG_Dummy *dum, Uint flags, const char *caption)
+/*
+ * Initialization routine. Note that the object system will automatically
+ * invoke the initialization routines of the parent classes first.
+ */
+static void
+Init(void *obj)
 {
-	Uint wFlags = AG_WIDGET_FOCUSABLE;
+	AG_Dummy *dum = obj;
 
-	/* It is customary for widgets to provide HFILL and VFILL flags. */
-	if (flags & AG_DUMMY_HFILL) { wFlags |= AG_WIDGET_HFILL; }
-	if (flags & AG_DUMMY_VFILL) { wFlags |= AG_WIDGET_VFILL; }
+	/* Allow this widget to grab focus. */
+	WIDGET(dum)->flags |= AG_WIDGET_FOCUSABLE;
 
 	/* Initialize the parent widget structure. */
-	AG_WidgetInit(dum, &agDummyOps, wFlags);
-	dum->flags = flags;
+	dum->flags = 0;
 
 	/*
 	 * We need to map a surface, but we cannot do this from this
@@ -183,31 +199,72 @@ AG_DummyInit(AG_Dummy *dum, Uint flags, const char *caption)
 	 */
 	dum->mySurface = -1;
 
-	/* Map our event handlers. */
-	AG_SetEvent(dum, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(dum, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(dum, "window-mousemotion", mousemotion, NULL);
-	AG_SetEvent(dum, "window-keyup", keyup, NULL);
-	AG_SetEvent(dum, "window-keydown", keydown, NULL);
+	/*
+	 * Map our event handlers. For a list of all meaningful events
+	 * we can handle, see AG_Object(3), AG_Widget(3) and AG_Window(3).
+	 *
+	 * Here we register handlers for the common AG_Window(3) events.
+	 */
+	AG_SetEvent(dum, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(dum, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(dum, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(dum, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(dum, "window-keydown", KeyDown, NULL);
 }
 
 /*
- * This is the structure passed to AG_WidgetInit, which contains information
- * about this widget class, and its function mappings.
+ * Destructor routine. Note that the object system will automatically
+ * invoke the destructors of the parent classes afterwards.
+ */
+static void
+Destroy(void *obj)
+{
+	AG_Dummy *dum = obj;
+}
+
+/*
+ * Load routine. For persistent widgets, this is typically used when
+ * reading data files generated by the GUI builder.
+ *
+ * The object system will automatically invoke the load routines of
+ * the parent beforehand.
+ */
+int
+Load(void *obj, AG_DataSource *ds)
+{
+	return (0);
+}
+
+/*
+ * Save routine. For persistent widgets, this is typically used by
+ * the GUI builder.
+ *
+ * The object system will automatically invoke the save routines of
+ * the parent beforehand.
+ */
+int
+Save(void *obj, AG_DataSource *ds)
+{
+	return (0);
+}
+
+/*
+ * This structure describes our widget class. It inherits from the
+ * AG_ObjectOps structure. Any of the function members may be NULL.
  */
 const AG_WidgetOps agDummyOps = {
 	{
-		"AG_Widget:AG_Dummy",		/* Name of class */
-		sizeof(AG_Dummy),		/* Size of structure */
-		{ 0,0 },			/* Version */
-		NULL,				/* init() */
-		NULL,				/* free_dataset() */
-		NULL,				/* destroy() */
-		NULL,				/* load() */
-		NULL,				/* save() */
-		NULL				/* edit() */
+		"AG_Widget:AG_Dummy",	/* Name of class */
+		sizeof(AG_Dummy),	/* Size of structure */
+		{ 0,0 },		/* Version for load/save */
+		Init,			/* Initialize dataset */
+		NULL,			/* Free dataset */
+		Destroy,		/* Destroy dataset */
+		Load,			/* Load dataset */
+		Save,			/* Save dataset */
+		NULL			/* Generic edit operation */
 	},
-	Draw,			/* Rendering function */
-	SizeRequest,		/* Minimal size request */
-	SizeAllocate		/* Allocated size callback */
+	Draw,				/* Render widget */
+	SizeRequest,			/* Default size requisition */
+	SizeAllocate			/* Size allocation callback */
 };

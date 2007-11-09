@@ -30,12 +30,30 @@
 #include "primitive.h"
 
 AG_Radio *
-AG_RadioNew(void *parent, Uint flags, const char **items)
+AG_RadioNew(void *parent, Uint flags, const char **itemText)
 {
+	const char *s, **pItems = itemText;
 	AG_Radio *rad;
+	int i, w;
 
 	rad = Malloc(sizeof(AG_Radio));
-	AG_RadioInit(rad, flags, items);
+	AG_ObjectInit(rad, &agRadioOps);
+	rad->flags |= flags;
+	rad->itemText = itemText;
+
+	if (flags & AG_RADIO_HFILL) { AG_ExpandHoriz(rad); }
+	if (flags & AG_RADIO_VFILL) { AG_ExpandVert(rad); }
+
+	/* Count the items and compute the size requisition */
+	for (rad->nitems = 0; (s = *pItems++) != NULL; rad->nitems++)
+		;;
+	rad->labels = Malloc(sizeof(int)*rad->nitems);
+	for (i = 0; i < rad->nitems; i++) {
+		rad->labels[i] = -1;
+		AG_TextSize(rad->itemText[i], &w, NULL);
+		if (w > rad->max_w) { rad->max_w = w; }
+	}
+
 	AG_ObjectAttach(parent, rad);
 	return (rad);
 }
@@ -56,6 +74,13 @@ Draw(void *p)
 		STYLE(rad)->RadioButton(rad, x, y,
 		    (i == val),
 		    (i == rad->oversel));
+		if (rad->labels[i] == -1) {
+			AG_PushTextState();
+			AG_TextColor(RADIO_TXT_COLOR);
+			rad->labels[i] = AG_WidgetMapSurface(rad,
+			    AG_TextRender(_(rad->itemText[i])));
+			AG_PopTextState();
+		}
 		AG_WidgetBlitSurface(rad, rad->labels[i], x, y);
 	}
 }
@@ -169,20 +194,16 @@ KeyDown(AG_Event *event)
 	AG_WidgetUnlockBinding(valueb);
 }
 
-void
-AG_RadioInit(AG_Radio *rad, Uint flags, const char **items)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE;
-	const char *s, **itemsp = items;
-	int i;
+	AG_Radio *rad = obj;
 
-	if (flags & AG_RADIO_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_RADIO_VFILL) { wflags |= AG_WIDGET_VFILL; }
+	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetInit(rad, &agRadioOps, wflags);
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &rad->value);
 
-	rad->flags = flags;
+	rad->flags = 0;
 	rad->value = -1;
 	rad->max_w = 0;
 	rad->oversel = -1;
@@ -192,31 +213,17 @@ AG_RadioInit(AG_Radio *rad, Uint flags, const char **items)
 	rad->ySpacing = 2;
 	rad->radius = 6;
 
-	for (rad->nitems = 0; (s = *itemsp++) != NULL; rad->nitems++)
-		;;
-	rad->labels = Malloc(sizeof(int)*rad->nitems);
-	for (i = 0; i < rad->nitems; i++) {
-		SDL_Surface *su;
-
-		AG_TextColor(RADIO_TXT_COLOR);
-		su = AG_TextRender(_(items[i]));
-		rad->labels[i] = AG_WidgetMapSurface(rad, su);
-		if (su->w > rad->max_w)
-			rad->max_w = su->w;
-	}
-
 	AG_SetEvent(rad, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(rad, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(rad, "window-mousemotion", MouseMotion, NULL);
 }
-
 
 const AG_WidgetOps agRadioOps = {
 	{
 		"AG_Widget:AG_Radio",
 		sizeof(AG_Radio),
 		{ 0,0, },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

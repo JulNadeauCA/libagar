@@ -42,8 +42,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agFSpinbuttonOps;
 
 AG_FSpinbutton *AG_FSpinbuttonNew(void *, Uint, const char *, const char *);
-void		AG_FSpinbuttonInit(AG_FSpinbutton *, Uint, const char *,
-		                   const char *);
 void		AG_FSpinbuttonSizeHint(AG_FSpinbutton *, const char *);
 #define		AG_FSpinbuttonPrescale AG_FSpinbuttonSizeHint
 

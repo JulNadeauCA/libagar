@@ -62,9 +62,6 @@ structure.
 .Fn AG_ComboNew "AG_Widget *parent" "Uint flags" "const char *label"
 .Pp
 .Ft "void"
-.Fn AG_ComboInit "AG_Combo *combo" "Uint flags" "const char *label"
-.Pp
-.Ft "void"
 .Fn AG_ComboSizeHint "AG_Combo *combo" "const char *text" "int nitems"
 .Pp
 .Ft "void"
@@ -74,10 +71,6 @@ structure.
 The
 .Fn AG_ComboNew
 function allocates, initializes, and attaches a new
-.Nm
-widget.
-.Fn AG_ComboInit
-initializes a preallocated
 .Nm
 widget.
 The

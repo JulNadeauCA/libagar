@@ -33,34 +33,27 @@
 AG_Fixed *
 AG_FixedNew(void *parent, Uint flags)
 {
-	AG_Fixed *bo;
+	AG_Fixed *fx;
 
-	bo = Malloc(sizeof(AG_Fixed));
-	AG_FixedInit(bo, flags);
-	AG_ObjectAttach(parent, bo);
-	return (bo);
+	fx = Malloc(sizeof(AG_Fixed));
+	AG_ObjectInit(fx, &agFixedOps);
+	fx->flags |= flags;
+
+	if (flags & AG_FIXED_HFILL) { AG_ExpandHoriz(fx); }
+	if (flags & AG_FIXED_VFILL) { AG_ExpandVert(fx); }
+
+	AG_ObjectAttach(parent, fx);
+	return (fx);
 }
 
-void
-AG_FixedInit(AG_Fixed *fx, Uint flags)
+static void
+Init(void *obj)
 {
-	AG_WidgetInit(fx, &agFixedOps, 0);
+	AG_Fixed *fx = obj;
 
-	fx->flags = flags;
+	fx->flags = 0;
 	fx->wPre = 0;
 	fx->hPre = 0;
-
-	if (flags & AG_FIXED_HFILL) { WIDGET(fx)->flags |= AG_WIDGET_HFILL; }
-	if (flags & AG_FIXED_VFILL) { WIDGET(fx)->flags |= AG_WIDGET_VFILL; }
-
-	if (flags & AG_FIXED_FILLBG)
-		WIDGET_OPS(fx)->draw = AG_FixedDrawBg;
-	if (flags & AG_FIXED_BOX)
-		WIDGET_OPS(fx)->draw = AG_FixedDrawBox;
-	if (flags & AG_FIXED_INVBOX)
-		WIDGET_OPS(fx)->draw = AG_FixedDrawInvBox;
-	if (flags & AG_FIXED_FRAME)
-		WIDGET_OPS(fx)->draw = AG_FixedDrawFrame;
 }
 
 void
@@ -100,44 +93,28 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-void
-AG_FixedDrawBg(void *p)
+static void
+Draw(void *obj)
 {
-	AG_Widget *w = p;
+	AG_Fixed *fx = obj;
 
-	AG_DrawRectFilled(w,
-	    AG_RECT(0, 0, w->w, w->h),
-	    AG_COLOR(FIXED_BG_COLOR));
-}
-
-void
-AG_FixedDrawBox(void *p)
-{
-	AG_Widget *w = p;
-	
-	AG_DrawBox(w,
-	    AG_RECT(0, 0, w->w, w->h), -1,
-	    AG_COLOR(FRAME_COLOR));
-}
-
-void
-AG_FixedDrawInvBox(void *p)
-{
-	AG_Widget *w = p;
-	
-	AG_DrawBox(w,
-	    AG_RECT(0, 0, w->w, w->h), -1,
-	    AG_COLOR(FRAME_COLOR));
-}
-
-void
-AG_FixedDrawFrame(void *p)
-{
-	AG_Widget *w = p;
-
-	AG_DrawFrame(w,
-	    AG_RECT(0, 0, w->w, w->h), -1,
-	    AG_COLOR(FRAME_COLOR));
+	if (fx->flags & AG_FIXED_BOX) {
+		AG_DrawBox(fx,
+		    AG_RECT(0, 0, WIDGET(fx)->w, WIDGET(fx)->h), -1,
+		    AG_COLOR(FRAME_COLOR));
+	} else if (fx->flags & AG_FIXED_INVBOX) {
+		AG_DrawBox(fx,
+		    AG_RECT(0, 0, WIDGET(fx)->w, WIDGET(fx)->h), -1,
+		    AG_COLOR(FRAME_COLOR));
+	} else if (fx->flags & AG_FIXED_FRAME) {
+		AG_DrawFrame(fx,
+		    AG_RECT(0, 0, WIDGET(fx)->w, WIDGET(fx)->h), -1,
+		    AG_COLOR(FRAME_COLOR));
+	} else if (fx->flags & AG_FIXED_FILLBG) {
+		AG_DrawRectFilled(fx,
+		    AG_RECT(0, 0, WIDGET(fx)->w, WIDGET(fx)->h),
+		    AG_COLOR(FIXED_BG_COLOR));
+	}
 }
 
 static __inline__ void
@@ -209,14 +186,14 @@ const AG_WidgetOps agFixedOps = {
 		"AG_Widget:AG_Fixed",
 		sizeof(AG_Fixed),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* draw */
+	Draw,
 	SizeRequest,
 	SizeAllocate
 };

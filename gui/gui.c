@@ -24,7 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/typesw.h>
 #include <core/config.h>
 
 #include <config/have_opengl.h>
@@ -47,6 +46,7 @@
 #include "mspinbutton.h"
 #include "notebook.h"
 #include "numerical.h"
+#include "objsel.h"
 #include "pane.h"
 #include "pixmap.h"
 #include "radio.h"
@@ -58,6 +58,7 @@
 #include "table.h"
 #include "tableview.h"
 #include "textbox.h"
+#include "titlebar.h"
 #include "tlist.h"
 #include "toolbar.h"
 #include "ucombo.h"
@@ -72,6 +73,7 @@
 const void *agGUIClasses[] = {
 	&agWidgetOps,
 	&agWindowOps,
+	&agFontOps,
 	&agBoxOps,
 	&agButtonOps,
 	&agCheckboxOps,
@@ -88,10 +90,13 @@ const void *agGUIClasses[] = {
 	&agIconOps,
 	&agLabelOps,
 	&agMenuOps,
+	&agMenuViewOps,
 	&agMFSpinbuttonOps,
 	&agMSpinbuttonOps,
 	&agNotebookOps,
+	&agNotebookTabOps,
 	&agNumericalOps,
+	&agObjectSelectorOps,
 	&agPaneOps,
 	&agPixmapOps,
 	&agRadioOps,
@@ -100,6 +105,7 @@ const void *agGUIClasses[] = {
 	&agSocketOps,
 	&agSpinbuttonOps,
 	&agStatusbarOps,
+	&agTitlebarOps,
 	&agTableOps,
 	&agTableviewOps,
 	&agTextboxOps,

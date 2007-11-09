@@ -139,7 +139,7 @@ typedef struct ag_tableview {
 #define AG_TABLEVIEW_COL_EXPANDER	0x40	/* Should hold +/- boxes */
 #define AG_TABLEVIEW_COL_FILL		0x80	/* Fill remaining space */
 
-/* Flags for AG_TableviewNew() and AG_TableviewInit() */
+/* Flags for AG_TableviewNew() */
 #define AG_TABLEVIEW_SELMULTI	 0x001 /* Multiple selections (ctrl/shift) */
 #define AG_TABLEVIEW_SELSINGLE	 0x002
 #define AG_TABLEVIEW_SELNOCLEAR	 0x004
@@ -150,7 +150,6 @@ typedef struct ag_tableview {
 #define AG_TABLEVIEW_POLLED	 0x080 /* remember selections */
 #define AG_TABLEVIEW_HFILL	 0x100
 #define AG_TABLEVIEW_VFILL	 0x200
-#define AG_TABLEVIEW_FOCUS	 0x400
 #define AG_TABLEVIEW_EXPAND	 (AG_TABLEVIEW_HFILL|AG_TABLEVIEW_VFILL)
 
 /* Flags for tableview_add_row() */
@@ -161,8 +160,6 @@ extern const AG_WidgetOps agTableviewOps;
 
 AG_Tableview	*AG_TableviewNew(void *, Uint, AG_TableviewDataFn,
 		                 AG_TableviewSortFn);
-void		 AG_TableviewInit(AG_Tableview *, Uint, AG_TableviewDataFn,
-		                  AG_TableviewSortFn);
 void		 AG_TableviewSizeHint(AG_Tableview *, const char *, int);
 #define		 AG_TableviewPrescale AG_TableviewSizeHint
 void		 AG_TableviewSetUpdate(AG_Tableview *, Uint);

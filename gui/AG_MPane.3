@@ -57,9 +57,6 @@ useful for 3D modeling applications.
 .Fn AG_MPaneNew "AG_Widget *parent" "enum ag_mpane_layout layout" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_MPaneInit "AG_MPane *mpane" "enum ag_mpane_layout layout" "Uint flags"
-.Pp
-.Ft "void"
 .Fn AG_MPaneSetLayout "AG_MPane *mpane" "enum ag_mpane_layout layout"
 .Pp
 .nr nS 0
@@ -68,11 +65,6 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-.Fn AG_MPaneInit
-initializes a preallocated
-.Nm
-widget.
-.Pp
 Acceptable values for the
 .Fa layout
 argument include:

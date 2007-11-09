@@ -33,7 +33,6 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_HFILL	 0x0020
 #define AG_TEXTBOX_VFILL	 0x0040
 #define AG_TEXTBOX_EXPAND	 (AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL)
-#define AG_TEXTBOX_FOCUS	 0x0080
 #define AG_TEXTBOX_READONLY	 0x0100	/* Equivalent to WidgetDisable() */
 #define AG_TEXTBOX_INT_ONLY	 0x0200	/* Accepts only valid strtol() input */
 #define AG_TEXTBOX_FLT_ONLY	 0x0400	/* Accepts only valid strtof() input */
@@ -70,7 +69,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agTextboxOps;
 
 AG_Textbox *AG_TextboxNew(void *, Uint, const char *);
-void	    AG_TextboxInit(AG_Textbox *, Uint, const char *);
 void	    AG_TextboxSizeHint(AG_Textbox *, const char *);
 #define     AG_TextboxPrescale AG_TextboxSizeHint
 

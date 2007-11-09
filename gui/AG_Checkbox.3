@@ -66,9 +66,6 @@ binding.
 .Fn AG_CheckboxSetFromFlags32 "AG_Widget *parent" "Uint32 *pFlags" "const AG_FlagDescr *flagsDescr"
 .Pp
 .Ft "void"
-.Fn AG_CheckboxInit "AG_Checkbox *checkbox" "Uint flags" "const char *label"
-.Pp
-.Ft "void"
 .Fn AG_CheckboxToggle "AG_Checkbox *checkbox"
 .Pp
 .nr nS 0
@@ -77,10 +74,6 @@ The
 function allocates, initializes, and attaches a
 .Nm
 widget displaying the given text label.
-.Fn AG_CheckboxInit
-initializes a preallocated
-.Nm
-widget.
 .Pp
 The
 .Fn AG_CheckboxNewInt

@@ -52,9 +52,6 @@ to specific file extensions.
 .Ft AG_FileDlg *
 .Fn AG_FileDlgNewMRU "AG_Widget *parent" "const char *mruKey" "Uint flags"
 .Pp
-.Ft void
-.Fn AG_FileDlgInit "AG_FileDlg *file_dlg" "Uint flags"
-.Pp
 .Ft int
 .Fn AG_FileDlgSetDirectory "AG_FileDlg *file_dlg" "const char *path"
 .Pp
@@ -82,11 +79,6 @@ The
 .Xr AG_Config 3
 .Sq save-path
 parameter is used as the default directory.
-.Pp
-.Fn AG_FileDlgInit
-initializes a preallocated
-.Nm
-widget.
 .Pp
 Acceptable
 .Fa flags

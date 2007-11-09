@@ -62,9 +62,6 @@ The user can also move vertices manually.
 .Fn AG_GraphNew "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_GraphInit "AG_Graph *graph" "Uint flags"
-.Pp
-.Ft "void"
 .Fn AG_GraphSizeHint "AG_Graph *graph" "Uint width" "Uint height"
 .nr nS 0
 The
@@ -72,11 +69,6 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-.Fn AG_GraphInit
-initializes a preallocated
-.Nm
-widget.
-.Pp
 There currently no
 .Fa flags
 specific to this widget.

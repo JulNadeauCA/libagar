@@ -88,7 +88,6 @@ extern const AG_WidgetOps agFileDlgOps;
 
 AG_FileDlg *AG_FileDlgNew(void *, Uint);
 AG_FileDlg *AG_FileDlgNewMRU(void *, const char *, Uint);
-void AG_FileDlgInit(AG_FileDlg *, Uint);
 
 void AG_FileDlgSetOptionContainer(AG_FileDlg *, void *);
 int AG_FileDlgSetDirectory(AG_FileDlg *, const char *);

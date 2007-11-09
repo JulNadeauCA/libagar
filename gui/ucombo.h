@@ -22,7 +22,6 @@ typedef struct ag_ucombo {
 	Uint flags;
 #define AG_UCOMBO_HFILL	  0x01
 #define AG_UCOMBO_VFILL	  0x02
-#define AG_UCOMBO_FOCUS	  0x04
 #define AG_UCOMBO_EXPAND  (AG_UCOMBO_HFILL|AG_UCOMBO_VFILL)
 	AG_Button *button;		/* Selection button */
 	AG_Tlist *list;			/* Item list */
@@ -36,7 +35,6 @@ extern const AG_WidgetOps agUComboOps;
 
 AG_UCombo *AG_UComboNew(void *, Uint);
 AG_UCombo *AG_UComboNewPolled(void *, Uint, AG_EventFn, const char *, ...);
-void	   AG_UComboInit(AG_UCombo *, Uint);
 void	   AG_UComboSizeHint(AG_UCombo *, const char *, int);
 void	   AG_UComboSizeHintPixels(AG_UCombo *, int, int);
 __END_DECLS

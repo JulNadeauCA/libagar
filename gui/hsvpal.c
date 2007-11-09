@@ -45,11 +45,13 @@ AG_HSVPalNew(void *parent, Uint flags)
 	AG_HSVPal *pal;
 
 	pal = Malloc(sizeof(AG_HSVPal));
-	AG_HSVPalInit(pal, flags);
+	AG_ObjectInit(pal, &agHSVPalOps);
+	pal->flags |= flags;
+
+	if (flags & AG_HSVPAL_HFILL) { AG_ExpandHoriz(pal); }
+	if (flags & AG_HSVPAL_VFILL) { AG_ExpandVert(pal); }
+
 	AG_ObjectAttach(parent, pal);
-	if (flags & AG_HSVPAL_FOCUS) {
-		AG_WidgetFocus(pal);
-	}
 	return (pal);
 }
 
@@ -527,15 +529,12 @@ OpenMenu(AG_HSVPal *pal)
 	if (pal->menu != NULL)
 		CloseMenu(pal);
 
-	pal->menu = Malloc(sizeof(AG_Menu));
-	AG_MenuInit(pal->menu, 0);
-
+	pal->menu = AG_MenuNew(NULL, 0);
 	pal->menu_item = AG_MenuAddItem(pal->menu, NULL);
 	{
 #if 0
 		AG_MenuAction(pal->menu_item, _("Edit numerically"), NULL,
 		    EditNumValues, "%p", pal);
-
 #endif
 		AG_MenuAction(pal->menu_item, _("Copy"), NULL,
 		    CopyColor, "%p", pal);
@@ -640,15 +639,13 @@ binding_changed(AG_Event *event)
 	}
 }
 
-void
-AG_HSVPalInit(AG_HSVPal *pal, Uint flags)
+static void
+Init(void *obj)
 {
-	int wflags = AG_WIDGET_FOCUSABLE;
+	AG_HSVPal *pal = obj;
 
-	if (flags & AG_HSVPAL_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_HSVPAL_VFILL) { wflags |= AG_WIDGET_VFILL; }
+	WIDGET(pal)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetInit(pal, &agHSVPalOps, wflags);
 	AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &pal->h);
 	AG_WidgetBind(pal, "saturation", AG_WIDGET_FLOAT, &pal->s);
 	AG_WidgetBind(pal, "value", AG_WIDGET_FLOAT, &pal->v);
@@ -660,7 +657,7 @@ AG_HSVPalInit(AG_HSVPal *pal, Uint flags)
 /*	AG_WidgetBind(pal, "blue", AG_WIDGET_FLOAT, &pal->b); */
 /*	AG_WidgetBind(pal, "RGBAv", AG_WIDGET_FLOAT, &pal->rgbav); */
 
-	pal->flags = flags;
+	pal->flags = 0;
 	pal->h = 0.0;
 	pal->s = 0.0;
 	pal->v = 0.0;
@@ -882,7 +879,7 @@ const AG_WidgetOps agHSVPalOps = {
 		"AG_Widget:AG_HSVPal",
 		sizeof(AG_HSVPal),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

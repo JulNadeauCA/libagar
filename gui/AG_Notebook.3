@@ -53,9 +53,6 @@ be selected programmatically.
 .Fn AG_NotebookNew "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_NotebookInit "AG_Notebook *nb" "Uint flags"
-.Pp
-.Ft "void"
 .Fn AG_NotebookSetPadding "AG_Notebook *nb" "int padding"
 .Pp
 .Ft "void"
@@ -76,11 +73,6 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-.Fn AG_NotebookInit
-initializes a preallocated
-.Nm
-widget.
-.Pp
 The
 .Fa flags
 may include:

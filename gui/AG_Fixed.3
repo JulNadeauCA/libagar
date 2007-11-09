@@ -50,20 +50,12 @@ running at fixed resolutions.
 .Ft "AG_Fixed *"
 .Fn AG_FixedNew "AG_Widget *parent" "Uint flags"
 .Pp
-.Ft void
-.Fn AG_FixedInit "AG_Fixed *tmpl" "Uint flags"
-.Pp
 .nr nS 0
 The
 .Fn AG_FixedNew
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-.Fn AG_FixedInit
-initializes a preallocated
-.Nm
-widget.
-.Pp
 The
 .Fa flags
 may include:

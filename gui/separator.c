@@ -35,7 +35,15 @@ AG_SeparatorNew(void *parent, enum ag_separator_type type)
 	AG_Separator *sep;
 
 	sep = Malloc(sizeof(AG_Separator));
-	AG_SeparatorInit(sep, type, 1);
+	AG_ObjectInit(sep, &agSeparatorOps);
+	sep->type = type;
+	sep->visible = 1;
+
+	if (type == AG_SEPARATOR_HORIZ) {
+		AG_ExpandHoriz(sep);
+	} else {
+		AG_ExpandVert(sep);
+	}
 	AG_ObjectAttach(parent, sep);
 	return (sep);
 }
@@ -46,20 +54,27 @@ AG_SeparatorNewInv(void *parent, enum ag_separator_type type)
 	AG_Separator *sep;
 
 	sep = Malloc(sizeof(AG_Separator));
-	AG_SeparatorInit(sep, type, 0);
+	AG_ObjectInit(sep, &agSeparatorOps);
+	sep->type = type;
+	sep->visible = 0;
+
+	if (type == AG_SEPARATOR_HORIZ) {
+		AG_ExpandHoriz(sep);
+	} else {
+		AG_ExpandVert(sep);
+	}
 	AG_ObjectAttach(parent, sep);
 	return (sep);
 }
 
-void
-AG_SeparatorInit(AG_Separator *sep, enum ag_separator_type type, int visible)
+static void
+Init(void *obj)
 {
-	AG_WidgetInit(sep,
-	    visible ? &agSeparatorOps : &agSeparatorInvisibleOps,
-	    (type == AG_SEPARATOR_HORIZ) ? AG_WIDGET_HFILL : AG_WIDGET_VFILL);
-	sep->type = type;
+	AG_Separator *sep = obj;
+
+	sep->type = AG_SEPARATOR_HORIZ;
 	sep->padding = 4;
-	sep->visible = visible;
+	sep->visible = 1;
 }
 
 static void
@@ -88,6 +103,9 @@ Draw(void *p)
 {
 	AG_Separator *sep = p;
 
+	if (!sep->visible)
+		return;
+	
 	switch (sep->type) {
 	case AG_SEPARATOR_HORIZ:
 		STYLE(sep)->SeparatorHoriz(sep);
@@ -109,7 +127,7 @@ const AG_WidgetOps agSeparatorOps = {
 		"AG_Widget:AG_Separator",
 		sizeof(AG_Separator),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */
@@ -117,22 +135,6 @@ const AG_WidgetOps agSeparatorOps = {
 		NULL		/* edit */
 	},
 	Draw,
-	SizeRequest,
-	SizeAllocate
-};
-const AG_WidgetOps agSeparatorInvisibleOps = {
-	{
-		"AG_Widget:AG_Separator",
-		sizeof(AG_Separator),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* free */
-		NULL,		/* destroy */
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	NULL,			/* draw */
 	SizeRequest,
 	SizeAllocate
 };

@@ -44,28 +44,31 @@ static void keydown(AG_Event *);
 AG_Button *
 AG_ButtonNew(void *parent, Uint flags, const char *caption)
 {
-	AG_Button *btn;
+	AG_Button *bu;
 
-	btn = Malloc(sizeof(AG_Button));
-	AG_ButtonInit(btn, flags, caption);
-	AG_ObjectAttach(parent, btn);
-	return (btn);
+	bu = Malloc(sizeof(AG_Button));
+	AG_ObjectInit(bu, &agButtonOps);
+	bu->text = (caption != NULL) ? Strdup(caption) : NULL;
+	bu->flags |= flags;
+
+	if (flags & AG_BUTTON_HFILL) { AG_ExpandHoriz(bu); }
+	if (flags & AG_BUTTON_VFILL) { AG_ExpandVert(bu); }
+
+	AG_ObjectAttach(parent, bu);
+	return (bu);
 }
 
 AG_Button *
 AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
     const char *fmt, ...)
 {
-	AG_Button *btn;
+	AG_Button *bu;
 	AG_Event *ev;
 
-	btn = Malloc(sizeof(AG_Button));
-	AG_ButtonInit(btn, flags, caption);
-	AG_ObjectAttach(parent, btn);
-
-	ev = AG_SetEvent(btn, "button-pushed", fn, NULL);
+	bu = AG_ButtonNew(parent, flags, caption);
+	ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
-	return (btn);
+	return (bu);
 }
 
 AG_Button *
@@ -129,19 +132,21 @@ ExpireDelay(void *obj, Uint32 ival, void *arg)
 	return (0);
 }
 
-void
-AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
+static void
+Init(void *obj)
 {
+	AG_Button *bu = obj;
+
 	/* TODO replace the unfocused motion flag with a timer */
-	AG_WidgetInit(bu, &agButtonOps, AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|
-	                                AG_WIDGET_UNFOCUSED_MOTION|
-					AG_WIDGET_UNFOCUSED_BUTTONUP);
+	WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|
+	                     AG_WIDGET_UNFOCUSED_MOTION|
+			     AG_WIDGET_UNFOCUSED_BUTTONUP;
+
 	AG_WidgetBindBool(bu, "state", &bu->state);
 
-	bu->text = (caption != NULL) ? Strdup(caption) : NULL;
+	bu->flags = 0;
+	bu->text = NULL;
 	bu->surface = -1;
-
-	bu->flags = flags;
 	bu->state = 0;
 	bu->justify = AG_TEXT_CENTER;
 	bu->valign = AG_TEXT_MIDDLE;
@@ -158,9 +163,6 @@ AG_ButtonInit(AG_Button *bu, Uint flags, const char *caption)
 	AG_SetEvent(bu, "window-mousemotion", mousemotion, NULL);
 	AG_SetEvent(bu, "window-keyup", keyup, NULL);
 	AG_SetEvent(bu, "window-keydown", keydown, NULL);
-
-	if (flags & AG_BUTTON_HFILL) { WIDGET(bu)->flags |= AG_WIDGET_HFILL; }
-	if (flags & AG_BUTTON_VFILL) { WIDGET(bu)->flags |= AG_WIDGET_VFILL; }
 }
 
 static void
@@ -591,7 +593,7 @@ const AG_WidgetOps agButtonOps = {
 		"AG_Widget:AG_Button",
 		sizeof(AG_Button),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

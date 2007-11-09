@@ -59,7 +59,6 @@ typedef struct ag_tlist {
 #define AG_TLIST_TREE		0x010	/* Hack to display trees */
 #define AG_TLIST_HFILL		0x020
 #define AG_TLIST_VFILL		0x040
-#define AG_TLIST_FOCUS		0x080
 #define AG_TLIST_NOSELSTATE	0x100	/* Don't restore previous selection
 					   state after poll operation */
 #define AG_TLIST_EXPAND		(AG_TLIST_HFILL|AG_TLIST_VFILL)
@@ -102,7 +101,6 @@ extern const AG_WidgetOps agTlistOps;
 
 AG_Tlist *AG_TlistNew(void *, Uint);
 AG_Tlist *AG_TlistNewPolled(void *, Uint, AG_EventFn, const char *, ...);
-void	  AG_TlistInit(AG_Tlist *, Uint);
 
 void		AG_TlistSizeHint(AG_Tlist *, const char *, int);
 void		AG_TlistSizeHintPixels(AG_Tlist *, int, int);

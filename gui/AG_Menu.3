@@ -51,8 +51,8 @@ values.
 .Ft "AG_Menu *"
 .Fn AG_MenuNew "AG_Widget *parent" "Uint flags"
 .Pp
-.Ft void
-.Fn AG_MenuInit "AG_Menu *menu" "Uint flags"
+.FT "AG_Menu *"
+.Fn AG_MenuNewGlobal "Uint flags"
 .Pp
 .Ft void
 .Fn AG_MenuExpand "AG_Menu *menu" "AG_MenuItem *item" "int x" "int y"
@@ -73,10 +73,8 @@ function allocates, initializes, and attaches a new
 .Nm
 widget.
 The
-.Fn AG_MenuInit
-function initializes a preallocated
-.Nm
-widget.
+.Fn AG_MenuNewGlobal
+variant creates a global application menu.
 .Pp
 The
 .Fn AG_MenuExpand

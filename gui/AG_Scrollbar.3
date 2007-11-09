@@ -49,9 +49,6 @@ widget represents a single value inside a fixed range.
 .Fn AG_ScrollbarNew "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags"
 .Pp
 .Ft void
-.Fn AG_ScrollbarInit "AG_Scrollbar *scrollbar" "enum ag_scrollbar_type type" "Uint flags"
-.Pp
-.Ft void
 .Fn AG_ScrollbarSetBarSize "AG_Scrollbar *scrollbar" "int size"
 .Pp
 .Ft void
@@ -63,14 +60,8 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-.Fn AG_ScrollbarInit
-initializes a preallocated
-.Nm
-widget.
-.Pp
-The
 .Fa type
-argument defines the orientation of the scrollbar:
+defines the orientation of the scrollbar:
 .Bd -literal
 enum ag_scrollbar_type {
 	AG_SCROLLBAR_HORIZ,

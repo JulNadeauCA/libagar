@@ -35,37 +35,13 @@ AG_Toolbar *
 AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 {
 	AG_Toolbar *bar;
+	int i;
 
 	bar = Malloc(sizeof(AG_Toolbar));
-	AG_ToolbarInit(bar, type, nRows, flags);
-	AG_ObjectAttach(parent, bar);
-	return (bar);
-}
-
-void
-AG_ToolbarInit(AG_Toolbar *bar, enum ag_toolbar_type type, int nRows,
-    Uint flags)
-{
-	int i;
-	
-	switch (type) {
-	case AG_TOOLBAR_HORIZ:
-		AG_BoxInit(&bar->box, AG_BOX_VERT, AG_BOX_HFILL);
-		break;
-	case AG_TOOLBAR_VERT:
-		AG_BoxInit(&bar->box, AG_BOX_HORIZ, AG_BOX_VFILL);
-		break;
-	}
-	AG_BoxSetPadding(&bar->box, 1);
-	AG_BoxSetSpacing(&bar->box, 1);
-	AG_ObjectSetOps(bar, &agToolbarOps);
-	WIDGET(bar)->flags |= AG_WIDGET_IGNORE_PADDING;
-
-	bar->flags = flags;
+	AG_ObjectInit(bar, &agToolbarOps);
+	bar->flags |= flags;
 	bar->type = type;
-	bar->nRows = 0;
-	bar->nButtons = 0;
-	bar->curRow = 0;
+
 	for (i = 0; i < nRows && i < AG_TOOLBAR_MAX_ROWS; i++) {
 		int bflags = 0;
 
@@ -74,11 +50,11 @@ AG_ToolbarInit(AG_Toolbar *bar, enum ag_toolbar_type type, int nRows,
 		}
 		switch (type) {
 		case AG_TOOLBAR_HORIZ:
-			bar->rows[i] = AG_BoxNew(&bar->box, AG_BOX_HORIZ,
+			bar->rows[i] = AG_BoxNew(bar, AG_BOX_HORIZ,
 			    AG_BOX_HFILL|bflags);
 			break;
 		case AG_TOOLBAR_VERT:
-			bar->rows[i] = AG_BoxNew(&bar->box, AG_BOX_VERT, 
+			bar->rows[i] = AG_BoxNew(bar, AG_BOX_VERT, 
 			    AG_BOX_VFILL|bflags);
 			break;
 		}
@@ -86,6 +62,37 @@ AG_ToolbarInit(AG_Toolbar *bar, enum ag_toolbar_type type, int nRows,
 		AG_BoxSetSpacing(bar->rows[i], 1);
 		bar->nRows++;
 	}
+
+	AG_ObjectAttach(parent, bar);
+	return (bar);
+}
+
+static void
+Init(void *obj)
+{
+	AG_Toolbar *bar = obj;
+	AG_Box *box = obj;
+	
+	WIDGET(bar)->flags |= AG_WIDGET_IGNORE_PADDING;
+
+	switch (type) {
+	case AG_TOOLBAR_HORIZ:
+		AG_BoxSetType(box, AG_BOX_VERT);
+		WIDGET(bar)->flags |= AG_WIDGET_HFILL;
+		break;
+	case AG_TOOLBAR_VERT:
+		AG_BoxSetType(box, AG_BOX_HORIZ);
+		WIDGET(bar)->flags |= AG_WIDGET_VFILL;
+		break;
+	}
+	AG_BoxSetPadding(box, 1);
+	AG_BoxSetSpacing(box, 1);
+	
+	bar->flags = 0;
+	bar->type = AG_TOOLBAR_HORIZ;
+	bar->nRows = 0;
+	bar->curRow = 0;
+	bar->nButtons = 0;
 }
 
 static void
@@ -336,7 +343,7 @@ const AG_WidgetOps agToolbarOps = {
 		"AG_Widget:AG_Box:AG_Toolbar",
 		sizeof(AG_Toolbar),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

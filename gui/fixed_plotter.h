@@ -44,7 +44,6 @@ typedef struct ag_fixed_plotter {
 #define AG_FIXED_PLOTTER_XAXIS	0x02	/* Display X axis */
 #define AG_FIXED_PLOTTER_HFILL	0x04
 #define AG_FIXED_PLOTTER_VFILL	0x08
-#define AG_FIXED_PLOTTER_FOCUS	0x10
 #define AG_FIXED_PLOTTER_EXPAND (AG_FIXED_PLOTTER_HFILL|AG_FIXED_PLOTTER_VFILL)
 	AG_FixedPlotterValue yrange;		/* Max. value */
 	AG_FixedPlotterValue xoffs;		/* Display offset */
@@ -56,8 +55,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agFixedPlotterOps;
 
 AG_FixedPlotter *AG_FixedPlotterNew(void *, enum ag_fixed_plotter_type, Uint);
-void AG_FixedPlotterInit(AG_FixedPlotter *, enum ag_fixed_plotter_type, Uint);
-
 AG_FixedPlotterItem *AG_FixedPlotterCurve(AG_FixedPlotter *, const char *,
 		                          Uint8, Uint8, Uint8, Uint32);
 void AG_FixedPlotterFreeItems(AG_FixedPlotter *);

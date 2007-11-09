@@ -42,11 +42,12 @@ AG_CheckboxNew(void *parent, Uint flags, const char *label)
 	AG_Checkbox *cb;
 
 	cb = Malloc(sizeof(AG_Checkbox));
-	AG_CheckboxInit(cb, flags, label);
-	AG_ObjectAttach(parent, cb);
-	if (flags & AG_CHECKBOX_FOCUS) {
-		AG_WidgetFocus(cb);
+	AG_ObjectInit(cb, &agCheckboxOps);
+	cb->flags |= flags;
+	if (label != NULL) {
+		cb->labelTxt = Strdup(label);
 	}
+	AG_ObjectAttach(parent, cb);
 	return (cb);
 }
 
@@ -112,14 +113,18 @@ AG_CheckboxSetFromFlags32(void *parent, Uint32 *pFlags,
 	}
 }
 
-void
-AG_CheckboxInit(AG_Checkbox *cb, Uint flags, const char *label)
+static void
+Init(void *obj)
 {
-	AG_WidgetInit(cb, &agCheckboxOps, AG_WIDGET_FOCUSABLE);
+	AG_Checkbox *cb = obj;
+
+	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE;
+
 	AG_WidgetBind(cb, "state", AG_WIDGET_BOOL, &cb->state);
 
+	cb->flags = 0;
 	cb->state = 0;
-	cb->labelTxt = (label != NULL) ? Strdup(label) : NULL;
+	cb->labelTxt = NULL;
 	cb->label = -1;
 	cb->spacing = 6;
 	
@@ -342,7 +347,7 @@ const AG_WidgetOps agCheckboxOps = {
 		"AG_Widget:AG_Checkbox",
 		sizeof(AG_Checkbox),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

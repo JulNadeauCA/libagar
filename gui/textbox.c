@@ -42,18 +42,44 @@
 
 extern int agFreetype;
 
+static void
+EnableMultiline(AG_Textbox *tbox)
+{
+	tbox->hBar = AG_ScrollbarNew(tbox, AG_SCROLLBAR_HORIZ, 0);
+	tbox->vBar = AG_ScrollbarNew(tbox, AG_SCROLLBAR_VERT, 0);
+
+	AG_WidgetBindInt(tbox->hBar, "min", &tbox->xMin);
+	AG_WidgetBindInt(tbox->hBar, "value", &tbox->x);
+	AG_WidgetBindInt(tbox->hBar, "max", &tbox->xMax);
+	AG_WidgetBindInt(tbox->hBar, "visible", &WIDTH(tbox));
+
+	AG_WidgetBindInt(tbox->vBar, "min",   &tbox->yMin);
+	AG_WidgetBindInt(tbox->vBar, "value", &tbox->y);
+	AG_WidgetBindInt(tbox->vBar, "max",   &tbox->yMax);
+	AG_WidgetBindInt(tbox->vBar, "visible", &tbox->yVis);
+}
+
 AG_Textbox *
 AG_TextboxNew(void *parent, Uint flags, const char *label)
 {
-	AG_Textbox *textbox;
+	AG_Textbox *tb;
 
-	textbox = Malloc(sizeof(AG_Textbox));
-	AG_TextboxInit(textbox, flags, label);
-	AG_ObjectAttach(parent, textbox);
-	if (flags & AG_TEXTBOX_FOCUS) {
-		AG_WidgetFocus(textbox);
+	tb = Malloc(sizeof(AG_Textbox));
+	AG_ObjectInit(tb, &agTextboxOps);
+
+	if (flags & AG_TEXTBOX_HFILL) { AG_ExpandHoriz(tb); }
+	if (flags & AG_TEXTBOX_VFILL) { AG_ExpandVert(tb); }
+	if (flags & AG_TEXTBOX_READONLY) { AG_WidgetDisable(tb); }
+	if (tb->flags & AG_TEXTBOX_MULTILINE) { EnableMultiline(tb); }
+
+	if (flags & AG_TEXTBOX_CATCH_TAB) {
+		WIDGET(tb)->flags |= AG_WIDGET_CATCH_TAB;
 	}
-	return (textbox);
+	if (label != NULL) {
+		tb->labelText = Strdup(label);
+	}
+	AG_ObjectAttach(parent, tb);
+	return (tb);
 }
 
 static int
@@ -836,16 +862,13 @@ AG_TextboxSetLabel(AG_Textbox *tbox, const char *fmt, ...)
 	AG_MutexUnlock(&tbox->lock);
 }
 
-void
-AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE;
+	AG_Textbox *tbox = obj;
 
-	if (flags & AG_TEXTBOX_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_TEXTBOX_VFILL) { wflags |= AG_WIDGET_VFILL; }
-	if (flags & AG_TEXTBOX_CATCH_TAB) { wflags |= AG_WIDGET_CATCH_TAB; }
+	WIDGET(tbox)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetInit(tbox, &agTextboxOps, wflags);
 	AG_WidgetBind(tbox, "string", AG_WIDGET_STRING, tbox->string,
 	    sizeof(tbox->string));
 
@@ -855,10 +878,7 @@ AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 	tbox->lblPadL = 2;
 	tbox->lblPadR = 2;
 	tbox->wLbl = 0;
-	tbox->flags = flags|AG_TEXTBOX_BLINK_ON;
-	if (flags & AG_TEXTBOX_READONLY) {		/* XXX */
-		AG_WidgetDisable(tbox);
-	}
+	tbox->flags = AG_TEXTBOX_BLINK_ON;
 	tbox->offs = 0;
 	tbox->pos = 0;
 	tbox->sel_x1 = 0;
@@ -868,9 +888,11 @@ AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 	tbox->wPre = 0;
 	tbox->hPre = agTextFontHeight;
 	tbox->label = -1;
-	tbox->labelText = (label != NULL) ? Strdup(label) : NULL;
+	tbox->labelText = NULL;
 	AG_MutexInitRecursive(&tbox->lock);
 	
+	tbox->hBar = NULL;
+	tbox->vBar = NULL;
 	tbox->xMin = 0;
 	tbox->x = 0;
 	tbox->xMax = 10;
@@ -878,21 +900,6 @@ AG_TextboxInit(AG_Textbox *tbox, Uint flags, const char *label)
 	tbox->y = 0;
 	tbox->yMax = 10;
 	tbox->yVis = 1;
-
-	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
-		tbox->hBar = AG_ScrollbarNew(tbox, AG_SCROLLBAR_HORIZ, 0);
-		tbox->vBar = AG_ScrollbarNew(tbox, AG_SCROLLBAR_VERT, 0);
-
-		AG_WidgetBindInt(tbox->hBar, "min", &tbox->xMin);
-		AG_WidgetBindInt(tbox->hBar, "value", &tbox->x);
-		AG_WidgetBindInt(tbox->hBar, "max", &tbox->xMax);
-		AG_WidgetBindInt(tbox->hBar, "visible", &WIDTH(tbox));
-
-		AG_WidgetBindInt(tbox->vBar, "min",   &tbox->yMin);
-		AG_WidgetBindInt(tbox->vBar, "value", &tbox->y);
-		AG_WidgetBindInt(tbox->vBar, "max",   &tbox->yMax);
-		AG_WidgetBindInt(tbox->vBar, "visible", &tbox->yVis);
-	}
 
 	AG_SetEvent(tbox, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(tbox, "window-keyup", KeyUp, NULL);
@@ -912,7 +919,7 @@ const AG_WidgetOps agTextboxOps = {
 		"AG_Widget:AG_Textbox",
 		sizeof(AG_Textbox),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

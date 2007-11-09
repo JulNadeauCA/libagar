@@ -59,9 +59,6 @@ in situations where tree display is not needed.
 .Fn AG_TlistNewPolled "AG_Widget *parent" "Uint flags" "void (*eventFn)(AG_Event *)" "const char *eventArgs" "..."
 .Pp
 .Ft void
-.Fn AG_TlistInit "AG_Tlist *tlist" "Uint flags"
-.Pp
-.Ft void
 .Fn AG_TlistSetItemHeight "AG_Tlist *tl" "int item_height"
 .Pp
 .Ft void
@@ -94,10 +91,6 @@ flag and configures a default
 .Sq tlist-poll
 event handler.
 .Pp
-.Fn AG_TlistInit
-initializes an existing
-.Nm
-structure.
 The
 .Fa flags
 may include:

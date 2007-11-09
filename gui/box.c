@@ -36,43 +36,46 @@ AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 	AG_Box *box;
 
 	box = Malloc(sizeof(AG_Box));
-	AG_BoxInit(box, type, flags);
+	AG_ObjectInit(box, &agBoxOps);
+
+	box->type = type;
+	box->flags |= flags;
+
+	if (flags & AG_BOX_HFILL) { AG_ExpandHoriz(box); }
+	if (flags & AG_BOX_VFILL) { AG_ExpandVert(box); }
+
 	AG_ObjectAttach(parent, box);
 	return (box);
 }
 
-void
-AG_BoxInit(AG_Box *box, enum ag_box_type type, Uint flags)
+static void
+Init(void *obj)
 {
-	AG_WidgetInit(box, (flags & AG_BOX_FRAME) ?
-	    &agBoxOpsWithFrame : &agBoxOps, 0);
+	AG_Box *box = obj;
 
-	box->flags = flags;
-	box->type = type;
+	box->flags = 0;
+	box->type = AG_BOX_VERT;
 	box->depth = -1;
-
-	if (flags & AG_BOX_HFILL) { WIDGET(box)->flags |= AG_WIDGET_HFILL; }
-	if (flags & AG_BOX_VFILL) { WIDGET(box)->flags |= AG_WIDGET_VFILL; }
-
 	box->padding = 4;
 	box->spacing = 2;
 	AG_MutexInitRecursive(&box->lock);
 }
 
 static void
-Destroy(void *p)
+Destroy(void *obj)
 {
-	AG_Box *box = p;
+	AG_Box *box = obj;
 
 	AG_MutexDestroy(&box->lock);
 }
 
 static void
-DrawFrame(void *p)
+Draw(void *obj)
 {
-	AG_Box *box = p;
+	AG_Box *box = obj;
 
-	STYLE(box)->BoxFrame(box, box->depth);
+	if (box->flags & AG_BOX_FRAME)
+		STYLE(box)->BoxFrame(box, box->depth);
 }
 
 static int
@@ -106,9 +109,9 @@ CountChildWidgets(AG_Box *box, int *totFixed)
 }
 
 void
-AG_BoxSizeRequest(void *p, AG_SizeReq *r)
+AG_BoxSizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Box *box = p;
+	AG_Box *box = obj;
 	AG_Widget *chld;
 	AG_SizeReq rChld;
 	int wMax = 0, hMax = 0;
@@ -199,9 +202,9 @@ SizeAllocateHomogenous(AG_Box *box, const AG_SizeAlloc *a, int nWidgets)
 }
 
 int
-AG_BoxSizeAllocate(void *p, const AG_SizeAlloc *a)
+AG_BoxSizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Box *box = p;
+	AG_Box *box = obj;
 	AG_Widget *chld;
 	AG_SizeReq rChld;
 	AG_SizeAlloc aChld;
@@ -307,31 +310,14 @@ const AG_WidgetOps agBoxOps = {
 		"AG_Widget:AG_Box",
 		sizeof(AG_Box),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* draw */
-	AG_BoxSizeRequest,
-	AG_BoxSizeAllocate
-};
-
-const AG_WidgetOps agBoxOpsWithFrame = {
-	{
-		"AG_Widget:Box",
-		sizeof(AG_Box),
-		{ 0,0 },
-		NULL,		/* init */
-		NULL,		/* free */
-		Destroy,
-		NULL,		/* load */
-		NULL,		/* save */
-		NULL		/* edit */
-	},
-	DrawFrame,
+	Draw,
 	AG_BoxSizeRequest,
 	AG_BoxSizeAllocate
 };

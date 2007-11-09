@@ -85,8 +85,6 @@ AG_Window *AG_WindowNew(Uint);
 AG_Window *AG_WindowNewNamed(Uint, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf, 2, 3);
 
-void	 AG_WindowInit(void *, const char *, int);
-
 void	 AG_WindowSetCaption(AG_Window *, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf, 2, 3)
 			     NONNULL_ATTRIBUTE(2);

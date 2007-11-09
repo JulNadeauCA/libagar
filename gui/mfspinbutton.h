@@ -43,8 +43,6 @@ extern const AG_WidgetOps agMFSpinbuttonOps;
 
 AG_MFSpinbutton	*AG_MFSpinbuttonNew(void *, Uint, const char *, const char *,
 		                    const char *);
-void		 AG_MFSpinbuttonInit(AG_MFSpinbutton *, Uint, const char *,
-		                     const char *, const char *);
 
 void	AG_MFSpinbuttonSetValue(AG_MFSpinbutton *, const char *, double);
 void	AG_MFSpinbuttonAddValue(AG_MFSpinbutton *, const char *, double);

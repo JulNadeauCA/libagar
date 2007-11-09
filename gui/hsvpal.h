@@ -22,7 +22,6 @@ typedef struct ag_hsvpal {
 #define AG_HSVPAL_DIRTY	0x02		/* Redraw the palette */
 #define AG_HSVPAL_HFILL 0x04
 #define AG_HSVPAL_VFILL 0x08
-#define AG_HSVPAL_FOCUS	0x10
 #define AG_HSVPAL_EXPAND (AG_HSVPAL_HFILL|AG_HSVPAL_VFILL)
 
 	float h, s, v, a;		/* Default bindings */
@@ -56,9 +55,7 @@ typedef struct ag_hsvpal {
 
 __BEGIN_DECLS
 extern const AG_WidgetOps agHSVPalOps;
-
 AG_HSVPal *AG_HSVPalNew(void *, Uint);
-void	   AG_HSVPalInit(AG_HSVPal *, Uint);
 __END_DECLS
 
 #include "close_code.h"

@@ -52,9 +52,6 @@ encoded characters.
 .Fn AG_TextboxNew "AG_Widget *parent" "Uint flags" "const char *label"
 .Pp
 .Ft void
-.Fn AG_TextboxInit "AG_Textbox *textbox" "Uint flags" "const char *label"
-.Pp
-.Ft void
 .Fn AG_TextboxSetPassword "AG_Textbox *textbox" "int password"
 .Pp
 .Ft void
@@ -66,12 +63,6 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-The
-.Fn AG_TextboxInit
-function initializes a preallocated
-.Nm
-widget.
-.Pp
 The
 .Fa label
 parameter (if not NULL) defines an optional text label to display left

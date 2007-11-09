@@ -52,9 +52,6 @@ The buttons may be arranged in multiple rows.
 .Fn AG_ToolbarNew "AG_Widget *parent" "enum ag_toolbar_type" "int nRows" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_ToolbarInit "AG_Toolbar *toolbar" "enum ag_toolbar_type" "int n_rows" "Uint flags"
-.Pp
-.Ft "void"
 .Fn AG_ToolbarRow "AG_Toolbar *toolbar" "int row_name"
 .Pp
 .Ft "AG_Button *"
@@ -86,11 +83,6 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-.Fn AG_ToolbarInit
-initializes a preallocated
-.Nm
-widget.
-.Pp
 The
 .Fa flags
 may include:

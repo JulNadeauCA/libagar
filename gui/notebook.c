@@ -37,13 +37,18 @@ AG_NotebookNew(void *parent, Uint flags)
 	AG_Notebook *nb;
 
 	nb = Malloc(sizeof(AG_Notebook));
-	AG_NotebookInit(nb, flags);
+	AG_ObjectInit(nb, &agNotebookOps);
+	nb->flags |= flags;
+	
+	if (flags & AG_NOTEBOOK_HFILL) { AG_ExpandHoriz(nb); }
+	if (flags & AG_NOTEBOOK_VFILL) { AG_ExpandVert(nb); }
+
 	AG_ObjectAttach(parent, nb);
 	return (nb);
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Notebook *nb = AG_SELF();
 	int x = AG_INT(2);
@@ -70,12 +75,14 @@ mousebuttondown(AG_Event *event)
 	}
 }
 
-void
-AG_NotebookInit(AG_Notebook *nb, Uint flags)
+static void
+Init(void *obj)
 {
-	AG_WidgetInit(nb, &agNotebookOps, AG_WIDGET_CLIPPING);
+	AG_Notebook *nb = obj;
 
-	nb->flags = flags;
+	WIDGET(nb)->flags |= AG_WIDGET_CLIPPING;
+
+	nb->flags = 0;
 	nb->tab_align = AG_NOTEBOOK_TABS_TOP;
 	nb->sel_tab = NULL;
 	nb->bar_w = -1;
@@ -85,13 +92,10 @@ AG_NotebookInit(AG_Notebook *nb, Uint flags)
 	nb->spacing = -1;
 	nb->padding = -1;
 	nb->tabFont = AG_FetchFont(NULL, agDefaultFont->size-1, 0);
-	AG_MutexInitRecursive(&nb->lock);
 	TAILQ_INIT(&nb->tabs);
+	AG_MutexInitRecursive(&nb->lock);
 
-	if (flags & AG_NOTEBOOK_HFILL)	WIDGET(nb)->flags |= AG_WIDGET_HFILL;
-	if (flags & AG_NOTEBOOK_VFILL)	WIDGET(nb)->flags |= AG_WIDGET_VFILL;
-
-	AG_SetEvent(nb, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(nb, "window-mousebuttondown", MouseButtonDown, NULL);
 }
 
 static void
@@ -225,11 +229,14 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	AG_NotebookTab *tab;
 
 	tab = Malloc(sizeof(AG_NotebookTab));
-	AG_BoxInit(AGBOX(tab), btype, AG_BOX_EXPAND);
+	AG_ObjectInit(tab, &agNotebookTabOps);
+	AG_BoxSetType(&tab->box, btype);
+	AG_Expand(tab);
+
 	if (nb->padding >= 0)
-		AG_BoxSetPadding(AGBOX(tab), nb->padding);
+		AG_BoxSetPadding(&tab->box, nb->padding);
 	if (nb->spacing >= 0)
-		AG_BoxSetSpacing(AGBOX(tab), nb->spacing);
+		AG_BoxSetSpacing(&tab->box, nb->spacing);
 
 	AG_PushTextState();
 	AG_TextFont(nb->tabFont);
@@ -303,7 +310,7 @@ const AG_WidgetOps agNotebookOps = {
 		"AG_Widget:AG_Notebook",
 		sizeof(AG_Notebook),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */
@@ -313,4 +320,21 @@ const AG_WidgetOps agNotebookOps = {
 	Draw,
 	SizeRequest,
 	SizeAllocate
+};
+
+const AG_WidgetOps agNotebookTabOps = {
+	{
+		"AG_Widget:AG_Box:AG_NotebookTab",
+		sizeof(AG_NotebookTab),
+		{ 0,0 },
+		NULL,			/* init */
+		NULL,			/* free */
+		NULL,			/* destroy */
+		NULL,			/* load */
+		NULL,			/* save */
+		NULL			/* edit */
+	},
+	NULL,				/* draw */
+	AG_BoxSizeRequest,
+	AG_BoxSizeAllocate
 };

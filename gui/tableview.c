@@ -77,30 +77,35 @@ AG_TableviewNew(void *parent, Uint flags, AG_TableviewDataFn data_callback,
 	AG_Tableview *tv;
 
 	tv = Malloc(sizeof(AG_Tableview));
-	AG_TableviewInit(tv, flags, data_callback, sort_callback);
-	AG_ObjectAttach(parent, tv);
-	if (flags & AG_TABLEVIEW_FOCUS) {
-		AG_WidgetFocus(tv);
-	}
-	return (tv);
-}
-
-void
-AG_TableviewInit(AG_Tableview *tv, Uint flags, AG_TableviewDataFn data_callback,
-    AG_TableviewSortFn sort_callback)
-{
-	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
-
-	if (flags & AG_TABLEVIEW_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_TABLEVIEW_VFILL) { wflags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(tv, &agTableviewOps, wflags);
-	AG_MutexInitRecursive(&tv->lock);
-
+	AG_ObjectInit(tv, &agTableviewOps);
 	tv->data_callback = data_callback;
 	tv->sort_callback = sort_callback;
 
-	/* initialize flags */
+	if (  flags & AG_TABLEVIEW_HFILL)	{ AG_ExpandHoriz(tv); }
+	if (  flags & AG_TABLEVIEW_VFILL)	{ AG_ExpandVert(tv); }
+	if (  flags & AG_TABLEVIEW_REORDERCOLS)	{ tv->reordercols = 1; }
+	if (!(flags & AG_TABLEVIEW_NOHEADER))	{ tv->header = 1; }
+	if (!(flags & AG_TABLEVIEW_NOSORT))	{ tv->sort = 1; }
+	if (  flags & AG_TABLEVIEW_REORDERCOLS)	{ tv->reordercols = 1; }
+	if (  flags & AG_TABLEVIEW_SELMULTI)	{ tv->selmulti = 1; }
+	if (  flags & AG_TABLEVIEW_POLLED)	{ tv->polled = 1; }
+
+	if (flags & AG_TABLEVIEW_HORIZ) {
+		tv->sbar_h = AG_ScrollbarNew(tv, AG_SCROLLBAR_HORIZ, 0);
+	}
+	AG_ObjectAttach(parent, tv);
+	return (tv);
+}
+
+static void
+Init(void *obj)
+{
+	AG_Tableview *tv = obj;
+	
+	WIDGET(tv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
+
+	tv->data_callback = NULL;
+	tv->sort_callback = NULL;
 	tv->selmulti = 0;
 	tv->selsingle = 0;
 	tv->selnoclear = 0;
@@ -109,21 +114,13 @@ AG_TableviewInit(AG_Tableview *tv, Uint flags, AG_TableviewDataFn data_callback,
 	tv->locked = 0;
 	tv->sort = 0;
 	tv->polled = 0;
-
-	/* set requested flags */
-	if (flags & AG_TABLEVIEW_REORDERCOLS)	tv->reordercols = 1;
-	if (!(flags & AG_TABLEVIEW_NOHEADER))	tv->header = 1;
-	if (!(flags & AG_TABLEVIEW_NOSORT))	tv->sort = 1;
-	if (flags & AG_TABLEVIEW_REORDERCOLS)	tv->reordercols = 1;
-	if (flags & AG_TABLEVIEW_SELMULTI)	tv->selmulti = 1;
-	if (flags & AG_TABLEVIEW_POLLED)	tv->polled = 1;
+	AG_MutexInitRecursive(&tv->lock);
 
 	tv->head_height = tv->header ? agTextFontHeight : 0;
 	tv->row_height = agTextFontHeight+2;
 	tv->dblclicked = 0;
 	tv->sbar_v = AG_ScrollbarNew(tv, AG_SCROLLBAR_VERT, 0);
-	tv->sbar_h = (flags & AG_TABLEVIEW_HORIZ) ?
-	    AG_ScrollbarNew(tv, AG_SCROLLBAR_HORIZ, 0) : NULL;
+	tv->sbar_h = NULL;
 	//tv->editbox = NULL;
 
 	AG_WidgetSetInt(tv->sbar_v, "min", 0);
@@ -1429,7 +1426,7 @@ const AG_WidgetOps agTableviewOps = {
 		"AG_Widget:AG_Tableview",
 		sizeof(AG_Tableview),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

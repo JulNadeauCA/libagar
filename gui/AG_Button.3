@@ -78,9 +78,6 @@ can be used to trigger events, or control a boolean value.
 .Fn AG_ButtonNewFlag32 "AG_Widget *parent" "Uint flags" "const char *label" "Uint32 *p" "Uint32 bitmask"
 .Pp
 .Ft void
-.Fn AG_ButtonInit "AG_Button *button" "Uint flags" "char *caption"
-.Pp
-.Ft void
 .Fn AG_ButtonSetPadding "AG_Button *button" "int lPad" "int rPad" "int tPad" "int bPad"
 .Pp
 .Ft void
@@ -137,12 +134,6 @@ associate the state of the button with the state of one or more bits
 (as described by
 .Fa bitmask )
 in the given integer.
-.Pp
-The
-.Fn AG_ButtonInit
-function initializes a preallocated
-.Nm
-widget.
 .Pp
 The
 .Fa caption

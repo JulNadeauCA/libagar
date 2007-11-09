@@ -32,9 +32,9 @@
 #include <string.h>
 #include <stdarg.h>
 
-static void mousebuttondown(AG_Event *);
-static void keydown(AG_Event *);
-static void keyup(AG_Event *);
+static void MouseButtonDown(AG_Event *);
+static void KeyDown(AG_Event *);
+static void KeyUp(AG_Event *);
 
 static void FreeItem(AG_Tlist *, AG_TlistItem *);
 static void SelectItem(AG_Tlist *, AG_TlistItem *);
@@ -50,11 +50,13 @@ AG_TlistNew(void *parent, Uint flags)
 	AG_Tlist *tl;
 
 	tl = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tl, flags);
+	AG_ObjectInit(tl, &agTlistOps);
+	tl->flags |= flags;
+
+	if (flags & AG_TLIST_HFILL) { AG_ExpandHoriz(tl); }
+	if (flags & AG_TLIST_VFILL) { AG_ExpandVert(tl); }
+
 	AG_ObjectAttach(parent, tl);
-	if (flags & AG_TLIST_FOCUS) {
-		AG_WidgetFocus(tl);
-	}
 	return (tl);
 }
 
@@ -64,11 +66,10 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	AG_Tlist *tl;
 	AG_Event *ev;
 
-	tl = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tl, flags|AG_TLIST_POLL);
+	tl = AG_TlistNew(parent, flags);
+	tl->flags |= AG_TLIST_POLL;
 	ev = AG_SetEvent(tl, "tlist-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
-	AG_ObjectAttach(parent, tl);
 	return (tl);
 }
 
@@ -162,19 +163,16 @@ LostFocus(AG_Event *event)
 	tl->keymoved = 0;
 }
 
-void
-AG_TlistInit(AG_Tlist *tl, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
+	AG_Tlist *tl = obj;
 
-	if (flags & AG_TLIST_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_TLIST_VFILL) { wflags |= AG_WIDGET_VFILL; }
+	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
 
-	AG_WidgetInit(tl, &agTlistOps, wflags);
 	AG_WidgetBind(tl, "selected", AG_WIDGET_POINTER, &tl->selected);
 
-	tl->flags = flags;
-	AG_MutexInitRecursive(&tl->lock);
+	tl->flags = 0;
 	tl->selected = NULL;
 	tl->keymoved = 0;
 	tl->wSpace = 4;
@@ -193,11 +191,12 @@ AG_TlistInit(AG_Tlist *tl, Uint flags)
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
+	AG_MutexInitRecursive(&tl->lock);
 
 	AG_SetEvent(tl->sbar, "scrollbar-changed", ScrollbarChanged, "%p", tl);
-	AG_SetEvent(tl, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(tl, "window-keydown", keydown, NULL);
-	AG_SetEvent(tl, "window-keyup", keyup, NULL);
+	AG_SetEvent(tl, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(tl, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(tl, "window-keyup", KeyUp, NULL);
 	AG_SetEvent(tl, "key-tick", KeyTimeout, NULL);
 	AG_SetEvent(tl, "dblclick-expire", DoubleClickTimeout, NULL);
 	AG_SetEvent(tl, "widget-lostfocus", LostFocus, NULL);
@@ -540,7 +539,7 @@ AllocItem(AG_Tlist *tl, SDL_Surface *iconsrc)
 }
 
 static __inline__ void
-insert_item(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
+InsertItem(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 {
 	AG_MutexLock(&tl->lock);
 	if (ins_head) {
@@ -563,7 +562,7 @@ AG_TlistAddPtr(AG_Tlist *tl, SDL_Surface *iconsrc, const char *text,
 	it->p1 = p1;
 	strlcpy(it->text, text, sizeof(it->text));
 
-	insert_item(tl, it, 0);
+	InsertItem(tl, it, 0);
 	return (it);
 }
 
@@ -580,7 +579,7 @@ AG_TlistAdd(AG_Tlist *tl, SDL_Surface *iconsrc, const char *fmt, ...)
 	vsnprintf(it->text, sizeof(it->text), fmt, args);
 	va_end(args);
 
-	insert_item(tl, it, 0);
+	InsertItem(tl, it, 0);
 	return (it);
 }
 
@@ -632,7 +631,7 @@ AG_TlistAddPtrHead(AG_Tlist *tl, SDL_Surface *icon, const char *text,
 	it->p1 = p1;
 	strlcpy(it->text, text, sizeof(it->text));
 
-	insert_item(tl, it, 1);
+	InsertItem(tl, it, 1);
 	return (it);
 }
 
@@ -770,7 +769,7 @@ DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	int button = AG_INT(1);
@@ -943,7 +942,7 @@ out:
 }
 
 static void
-keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	int keysym = AG_INT(1);
@@ -963,7 +962,7 @@ keydown(AG_Event *event)
 }
 
 static void
-keyup(AG_Event *event)
+KeyUp(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	int keysym = AG_INT(1);
@@ -1182,8 +1181,7 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 	tp = Malloc(sizeof(AG_TlistPopup));
 	tp->iclass = iclass;
 	tp->panel = NULL;
-	tp->menu = Malloc(sizeof(AG_Menu));
-	AG_MenuInit(tp->menu, 0);
+	tp->menu = AG_MenuNew(NULL, 0);
 	tp->item = tp->menu->root;		/* XXX redundant */
 
 	TAILQ_INSERT_TAIL(&tl->popups, tp, popups);
@@ -1220,7 +1218,7 @@ const AG_WidgetOps agTlistOps = {
 		"AG_Widget:AG_Tlist",
 		sizeof(AG_Tlist),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

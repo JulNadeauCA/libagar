@@ -19,7 +19,7 @@ typedef struct ag_radio {
 #define AG_RADIO_EXPAND (AG_RADIO_HFILL|AG_RADIO_VFILL)
 	int value;		/* Default value binding */
 	int *labels;		/* Label surface IDs */
-	const char **items;
+	const char **itemText;
 	int nitems;
 	int selitem;		/* Index of selected item */
 	int max_w;		/* Width of widest label */
@@ -31,9 +31,7 @@ typedef struct ag_radio {
 
 __BEGIN_DECLS
 extern const AG_WidgetOps agRadioOps;
-
 AG_Radio *AG_RadioNew(void *, Uint, const char *[]);
-void	  AG_RadioInit(AG_Radio *, Uint, const char *[]);
 __END_DECLS
 
 #include "close_code.h"

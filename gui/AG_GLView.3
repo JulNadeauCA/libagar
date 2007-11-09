@@ -54,9 +54,6 @@ and
 .Fn AG_GLViewNew "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft void
-.Fn AG_GLViewInit "AG_GLView *glv" "Uint flags"
-.Pp
-.Ft void
 .Fn AG_GLViewSizeHint "AG_GLView *glv" "int w" "int h"
 .Pp
 .Ft void
@@ -90,11 +87,6 @@ and
 The
 .Fn AG_GLViewNew
 function allocates, initializes, and attaches a new
-.Nm
-widget.
-The
-.Fn AG_GLViewInit
-function initializes a preallocated
 .Nm
 widget.
 There are currently no

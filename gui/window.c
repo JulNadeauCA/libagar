@@ -51,13 +51,33 @@ AG_Window *
 AG_WindowNew(Uint flags)
 {
 	AG_Window *win;
+	Uint titlebarFlags = 0;
 
 	win = Malloc(sizeof(AG_Window));
-	AG_MutexLock(&agView->lock);			/* XXX needed?? */
-	AG_WindowInit(win, NULL, flags);
+	AG_ObjectInit(win, &agWindowOps);
+	AG_ObjectSetName(win, "win-generic");
+	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
+
+	win->flags |= flags;
+
+	if ((win->flags & AG_WINDOW_NOTITLE) == 0)
+		win->minh += agTextFontHeight;
+	if (win->flags & AG_WINDOW_MODAL)
+		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
+	if (win->flags & AG_WINDOW_NORESIZE)
+		win->flags |= AG_WINDOW_NOMAXIMIZE;
+	if (win->flags & AG_WINDOW_NOCLOSE)
+		titlebarFlags |= AG_TITLEBAR_NO_CLOSE;
+	if (win->flags & AG_WINDOW_NOMINIMIZE)
+		titlebarFlags |= AG_TITLEBAR_NO_MINIMIZE;
+	if (win->flags & AG_WINDOW_NOMAXIMIZE)
+		titlebarFlags |= AG_TITLEBAR_NO_MAXIMIZE;
+	if ((win->flags & AG_WINDOW_NOTITLE) == 0) {
+		win->tbar = AG_TitlebarNew(win, titlebarFlags);
+	}
+
 	AG_SetEvent(win, "window-close", AGWINDETACH(win));
 	AG_ViewAttach(win);
-	AG_MutexUnlock(&agView->lock);
 	return (win);
 }
 
@@ -81,26 +101,22 @@ AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 		win = NULL;
 		goto out;
 	}
-	win = Malloc(sizeof(AG_Window));
-	AG_WindowInit(win, name, flags);
+	win = AG_WindowNew(flags);
+	AG_ObjectSetName(win, "%s", name);
+
 	AG_SetEvent(win, "window-close", AGWINHIDE(win));
-	AG_ViewAttach(win);
 out:
 	AG_MutexUnlock(&agView->lock);
 	return (win);
 }
 
-void
-AG_WindowInit(void *p, const char *name, int flags)
+static void
+Init(void *obj)
 {
-	AG_Window *win = p;
-	int titlebar_flags = 0;
+	AG_Window *win = obj;
 	AG_Event *ev;
 
-	AG_WidgetInit(win, &agWindowOps, 0);
-	AG_ObjectSetName(win, (name != NULL) ? name : "win-generic");
-	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
-	win->flags = flags;
+	win->flags = 0;
 	win->visible = 0;
 	win->alignment = AG_WINDOW_CENTER;
 	win->spacing = 3;
@@ -109,37 +125,21 @@ AG_WindowInit(void *p, const char *name, int flags)
 	win->tPad = 2;
 	win->bPad = 2;
 	win->minw = win->lPad + win->rPad;
-	win->minh = win->tPad + win->bPad +
-	            ((win->flags&AG_WINDOW_NOTITLE) ? 0 : agTextFontHeight);
+	win->minh = win->tPad + win->bPad;
 	win->savx = -1;
 	win->savy = -1;
 	win->savw = -1;
 	win->savh = -1;
 	win->caption[0] = '\0';
+	win->tbar = NULL;
 	TAILQ_INIT(&win->subwins);
 	AG_MutexInitRecursive(&win->lock);
 
 	if (!agView->opengl)
 		WIDGET(win)->flags |= AG_WIDGET_CLIPPING;
 
-	if (win->flags & AG_WINDOW_MODAL)
-		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
-	if (win->flags & AG_WINDOW_NORESIZE)
-		win->flags |= AG_WINDOW_NOMAXIMIZE;
-
-	if (win->flags & AG_WINDOW_NOCLOSE)
-		titlebar_flags |= AG_TITLEBAR_NO_CLOSE;
-	if (win->flags & AG_WINDOW_NOMINIMIZE)
-		titlebar_flags |= AG_TITLEBAR_NO_MINIMIZE;
-	if (win->flags & AG_WINDOW_NOMAXIMIZE)
-		titlebar_flags |= AG_TITLEBAR_NO_MAXIMIZE;
-
-	win->tbar = (flags & AG_WINDOW_NOTITLE) ? NULL :
-	    AG_TitlebarNew(win, titlebar_flags);
-	
 	AG_SetEvent(win, "window-gainfocus", GainFocus, NULL);
 	AG_SetEvent(win, "window-lostfocus", LostFocus, NULL);
-
 	ev = AG_SetEvent(win, "widget-shown", Shown, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(win, "widget-hidden", Hidden, NULL);
@@ -1413,7 +1413,7 @@ const AG_WidgetOps agWindowOps = {
 		"AG_Widget:AG_Window",
 		sizeof(AG_Window),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

@@ -43,10 +43,8 @@ typedef struct ag_numerical {
 __BEGIN_DECLS
 extern const AG_WidgetOps agNumericalOps;
 
-AG_Numerical 	*AG_NumericalNew(void *, Uint, const char *, const char *);
-void		 AG_NumericalInit(AG_Numerical *, Uint, const char *,
-		                  const char *);
-void		 AG_NumericalSizeHint(AG_Numerical *, const char *);
+AG_Numerical *AG_NumericalNew(void *, Uint, const char *, const char *);
+void          AG_NumericalSizeHint(AG_Numerical *, const char *);
 
 void	AG_NumericalSetValue(AG_Numerical *, double);
 void	AG_NumericalAddValue(AG_Numerical *, double);

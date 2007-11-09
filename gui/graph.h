@@ -84,10 +84,8 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agGraphOps;
 
 AG_Graph	*AG_GraphNew(void *, Uint);
-void	 	 AG_GraphInit(AG_Graph *, Uint);
-void	 	 AG_GraphSizeHint(AG_Graph *, Uint, Uint);
-
 void		 AG_GraphFreeVertices(AG_Graph *);
+void		 AG_GraphSizeHint(AG_Graph *, Uint, Uint);
  
 AG_GraphVertex *AG_GraphVertexNew(AG_Graph *, void *);
 void		AG_GraphVertexFree(AG_GraphVertex *);

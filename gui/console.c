@@ -41,25 +41,24 @@ AG_ConsoleNew(void *parent, Uint flags)
 	AG_Console *cons;
 
 	cons = Malloc(sizeof(AG_Console));
-	AG_ConsoleInit(cons, flags);
-	AG_ObjectAttach(parent, cons);
+	AG_ObjectInit(cons, &agConsoleOps);
+	cons->flags |= flags;
 
-	if (flags & AG_CONSOLE_FOCUS) {
-		AG_WidgetFocus(cons);
-	}
+	if (flags & AG_CONSOLE_HFILL) { AG_ExpandHoriz(cons); }
+	if (flags & AG_CONSOLE_VFILL) { AG_ExpandVert(cons); }
+
+	AG_ObjectAttach(parent, cons);
 	return (cons);
 }
 
-void
-AG_ConsoleInit(AG_Console *cons, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
+	AG_Console *cons = obj;
 
-	if (flags & AG_CONSOLE_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_CONSOLE_VFILL) { wflags |= AG_WIDGET_VFILL; }
+	WIDGET(cons)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
 
-	AG_WidgetInit(cons, &agConsoleOps, wflags);
-	cons->flags = flags;
+	cons->flags = 0;
 	cons->padding = 4;
 	cons->lines = NULL;
 	cons->lineskip = agTextFontLineSkip - agTextFontHeight;
@@ -244,7 +243,7 @@ const AG_WidgetOps agConsoleOps = {
 		"AG_Widget:AG_Console",
 		sizeof(AG_Console),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

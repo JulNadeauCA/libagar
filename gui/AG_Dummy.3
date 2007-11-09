@@ -48,20 +48,12 @@ widget ...
 .Ft "AG_Template *"
 .Fn AG_TemplateNew "AG_Widget *parent" "Uint flags"
 .Pp
-.Ft "void"
-.Fn AG_TemplateInit "AG_Template *tmpl" "Uint flags"
-.Pp
 .nr nS 0
 The
 .Fn AG_TemplateNew
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-.Fn AG_TemplateInit
-initializes a preallocated
-.Nm
-widget.
-.Pp
 The
 .Fa flags
 may include:

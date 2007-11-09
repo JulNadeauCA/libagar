@@ -68,7 +68,7 @@ SubmenuTimeout(void *obj, Uint32 ival, void *arg)
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	AG_MenuView *mview = AG_SELF();
 	AG_MenuItem *pitem = mview->pitem;
@@ -204,7 +204,7 @@ SetItemBoolValue(AG_MenuItem *mi)
 }
 
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	AG_MenuView *mview = AG_SELF();
 	AG_MenuItem *pitem = mview->pitem;
@@ -253,16 +253,17 @@ collapse:
 	m->selecting = 0;
 }
 
-void
-AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu, AG_MenuItem *pitem)
+static void
+Init(void *obj)
 {
-	AG_MenuView *mview = p;
+	AG_MenuView *mview = obj;
 
-	AG_WidgetInit(mview, &agMenuViewOps, AG_WIDGET_UNFOCUSED_MOTION|
-	                                     AG_WIDGET_UNFOCUSED_BUTTONUP);
-	mview->panel = panel;
-	mview->pmenu = pmenu;
-	mview->pitem = pitem;
+	WIDGET(mview)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
+	                        AG_WIDGET_UNFOCUSED_BUTTONUP;
+
+	mview->panel = NULL;
+	mview->pmenu = NULL;
+	mview->pitem = NULL;
 	mview->spIconLbl = 8;
 	mview->spLblArrow = 16;
 	mview->lPad = 8;
@@ -270,10 +271,11 @@ AG_MenuViewInit(void *p, AG_Window *panel, AG_Menu *pmenu, AG_MenuItem *pitem)
 	mview->tPad = 4;
 	mview->bPad = 4;
 
-	AG_SetEvent(mview, "window-mousemotion", mousemotion, NULL);
-	AG_SetEvent(mview, "window-mousebuttonup", mousebuttonup, NULL);
+	AG_SetEvent(mview, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(mview, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetTimeout(&mview->submenu_to, SubmenuTimeout, NULL, 0);
 
+	/* XXX wasteful */
 	AG_WidgetMapSurface(mview, AG_DupSurface(agIconSmallArrowRight.s));
 }
 
@@ -402,7 +404,7 @@ const AG_WidgetOps agMenuViewOps = {
 		"AG_Widget:AG_MenuView",
 		sizeof(AG_MenuView),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

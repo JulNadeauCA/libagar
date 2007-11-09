@@ -30,7 +30,6 @@ extern const AG_WidgetOps agIconOps;
 AG_Icon *AG_IconNew(void);
 AG_Icon *AG_IconFromSurface(SDL_Surface *);
 AG_Icon *AG_IconFromBMP(const char *);
-void     AG_IconInit(AG_Icon *, Uint);
 
 void    AG_IconSetPadding(AG_Icon *, int, int, int, int);
 #define	AG_IconSetPaddingLeft(b,v)   AG_IconSetPadding((b),(v),-1,-1,-1)
