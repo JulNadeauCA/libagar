@@ -29,9 +29,8 @@ typedef struct ag_style {
 	void (*MenuRootBackground)(void *);
 	void (*MenuRootSelectedItemBackground)(void *, AG_Rect r);
 	void (*MenuBackground)(void *, AG_Rect r);
-	void (*MenuItemBackground)(void *, int x, int y, int h, int xIcon,
-	                           void *iconObj, int icon, int isSelected,
-				   int boolState);
+	void (*MenuItemBackground)(void *, AG_Rect r, int xIcon, void *iconObj,
+	                           int icon, int isSelected, int boolState);
 	void (*MenuItemSeparator)(void *, int x1, int x2, int y, int h);
 	void (*NotebookBackground)(void *, int y1);
 	void (*NotebookTabBackground)(void *, AG_Rect r, int idx,
