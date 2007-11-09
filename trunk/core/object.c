@@ -638,6 +638,10 @@ AG_ObjectGetInheritHier(void *obj, const AG_ObjectOps ***ops, int *nOps)
 	const AG_ObjectOps *cl;
 	int i, stop = 0;
 
+	if (AGOBJECT(obj)->ops->type[0] == '\0') {
+		(*nOps) = 0;
+		return (0);
+	}
 	(*nOps) = 1;
 	strlcpy(cname, AGOBJECT(obj)->ops->type, sizeof(cname));
 	for (c = &cname[0]; *c != '\0'; c++) {
