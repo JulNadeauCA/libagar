@@ -343,8 +343,9 @@ VG_BlockEditor(VG *vg)
 	AG_WindowSetCloseAction(win, AG_WINDOW_HIDE);
 	
 	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
-	                      AG_TLIST_EXPAND|AG_TLIST_FOCUS);
+	                      AG_TLIST_EXPAND);
 	AG_SetEvent(tl, "tlist-poll", poll_blocks, "%p", vg);
+	AG_WidgetFocus(tl);
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{

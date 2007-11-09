@@ -48,19 +48,22 @@
 VG_View *
 VG_ViewNew(void *parent, VG *vg, Uint flags)
 {
-	VG_View *vgv;
+	VG_View *vv;
 
-	vgv = Malloc(sizeof(VG_View));
-	VG_ViewInit(vgv, vg, flags);
-	AG_ObjectAttach(parent, vgv);
-	if (flags & VG_VIEW_FOCUS) {
-		AG_WidgetFocus(vgv);
-	}
-	return (vgv);
+	vv = Malloc(sizeof(VG_View));
+	AG_ObjectInit(vv, &vgViewOps);
+	vv->flags |= flags;
+	vv->vg = vg;
+	
+	if (flags & VG_VIEW_HFILL) { AG_ExpandHoriz(vv); }
+	if (flags & VG_VIEW_VFILL) { AG_ExpandVert(vv); }
+
+	AG_ObjectAttach(parent, vv);
+	return (vv);
 }
 
 static void
-VG_ViewMotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
@@ -97,7 +100,7 @@ VG_ViewMotion(AG_Event *event)
 }
 
 static void
-VG_ViewButtonDown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 	VG *vg = vv->vg;
@@ -151,7 +154,7 @@ VG_ViewButtonDown(AG_Event *event)
 }
 
 static void
-VG_ViewButtonUp(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
@@ -194,17 +197,15 @@ VG_ViewButtonUp(AG_Event *event)
 		    button, x, y);
 }
 
-void
-VG_ViewInit(VG_View *vv, VG *vg, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
+	VG_View *vv = obj;
 
-	if (flags & VG_VIEW_HFILL) wflags |= AG_WIDGET_HFILL;
-	if (flags & VG_VIEW_VFILL) wflags |= AG_WIDGET_VFILL;
+	WIDGET(vv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
 
-	AG_WidgetInit(vv, &vgViewOps, wflags);
-
-	vv->vg = vg;
+	vv->flags = 0;
+	vv->vg = NULL;
 	vv->draw_ev = NULL;
 	vv->scale_ev = NULL;
 	vv->keydown_ev = NULL;
@@ -223,9 +224,9 @@ VG_ViewInit(VG_View *vv, VG *vg, Uint flags)
 	vv->deftool = NULL;
 	TAILQ_INIT(&vv->tools);
 
-	AG_SetEvent(vv, "window-mousemotion", VG_ViewMotion, NULL);
-	AG_SetEvent(vv, "window-mousebuttondown", VG_ViewButtonDown, NULL);
-	AG_SetEvent(vv, "window-mousebuttonup", VG_ViewButtonUp, NULL);
+	AG_SetEvent(vv, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(vv, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(vv, "window-mousebuttonup", MouseButtonUp, NULL);
 }
 
 void
@@ -431,7 +432,7 @@ const AG_WidgetOps vgViewOps = {
 		"AG_Widget:VG_View",
 		sizeof(VG_View),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

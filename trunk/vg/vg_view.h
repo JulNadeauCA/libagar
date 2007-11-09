@@ -23,7 +23,6 @@ typedef struct vg_view {
 	Uint flags;
 #define VG_VIEW_HFILL	0x01
 #define VG_VIEW_VFILL	0x02
-#define VG_VIEW_FOCUS	0x10
 #define VG_VIEW_EXPAND	(VG_VIEW_HFILL|VG_VIEW_VFILL)
 	VG *vg;					/* Vector drawing */
 	int x, y;				/* Display offset */
@@ -48,7 +47,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps vgViewOps;
 
 VG_View	  *VG_ViewNew(void *, VG *, Uint);
-void	   VG_ViewInit(VG_View *, VG *, Uint);
 void	   VG_ViewReshape(VG_View *);
 void	   VG_ViewDrawFn(VG_View *, AG_EventFn, const char *, ...);
 void	   VG_ViewScaleFn(VG_View *, AG_EventFn, const char *, ...);
