@@ -34,7 +34,6 @@
 #include <core/dir.h>
 #include <core/file.h>
 #include <core/config.h>
-#include <core/typesw.h>
 
 #ifdef NETWORK
 #include <core/rcs.h>
@@ -74,19 +73,13 @@ int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
 int agObjectBackups = 1;	   /* Backup object save files. */
 
 void
-AG_ObjectInit(void *p, const char *name, const void *opsp)
+AG_ObjectInit(void *p, const void *opsp)
 {
 	AG_Object *ob = p;
-	char *c;
+	const AG_ObjectOps **hier;
+	int i, nHier;
 
-	strlcpy(ob->name, name, sizeof(ob->name));
-
-	/* Prevent ambiguous characters in the name. */
-	for (c = ob->name; *c != '\0'; c++) {
-		if (*c == '/' || *c == '.' || *c == ':' || *c == ',')
-			*c = '_';
-	}
-
+	ob->name[0] = '\0';
 	ob->save_pfx = "/world";
 	ob->archivePath = NULL;
 	ob->ops = (opsp != NULL) ? opsp : &agObjectOps;
@@ -100,6 +93,24 @@ AG_ObjectInit(void *p, const char *name, const void *opsp)
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
 	CIRCLEQ_INIT(&ob->timeouts);
+	
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
+		for (i = 0; i < nHier; i++) {
+			if (hier[i]->init != NULL)
+				hier[i]->init(ob);
+		}
+		Free(hier);
+	} else {
+		AG_FatalError("ObjectInit: %s", AG_GetError());
+	}
+	ob->flags &= ~(AG_OBJECT_RESIDENT);
+}
+
+void
+AG_ObjectInitStatic(void *p, const void *opsp)
+{
+	AG_ObjectInit(p, opsp);
+	OBJECT(p)->flags |= AG_OBJECT_STATIC;
 }
 
 /* Create a new object instance and mark it resident. */
@@ -121,13 +132,10 @@ AG_ObjectNew(void *parent, const char *name, const AG_ObjectOps *ops)
 	}
 	
 	obj = Malloc(ops->size);
-	if (ops->init != NULL) {
-		ops->init(obj, name != NULL ? name : nameGen);
-	} else {
-		AG_ObjectInit(obj, name != NULL ? name : nameGen, ops);
-	}
-	obj->flags |= AG_OBJECT_RESIDENT;
+	AG_ObjectInit(obj, ops);
+	AG_ObjectSetName(obj, "%s", (name != NULL) ? name : nameGen);
 
+	obj->flags |= AG_OBJECT_RESIDENT;
 	if (parent != NULL) {
 		AG_ObjectAttach(parent, obj);
 	}
@@ -187,12 +195,12 @@ AG_ObjectFreeDataset(void *p)
 	ob->flags |= AG_OBJECT_PRESERVE_DEPS;
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = nHier-1; i >= 0; i--) {
-			if (hier[i]->free_dataset != NULL)
-				hier[i]->free_dataset(ob);
+			if (hier[i]->reinit != NULL)
+				hier[i]->reinit(ob);
 		}
 		Free(hier);
 	} else {
-		dprintf("hier %s: %s\n", ob->name, AG_GetError());
+		AG_FatalError("%s: %s", ob->name, AG_GetError());
 	}
 	ob->flags &= ~(AG_OBJECT_RESIDENT);
 	if (!preserveDeps)
@@ -628,9 +636,9 @@ AG_ObjectGetInheritHier(void *obj, const AG_ObjectOps ***ops, int *nOps)
 {
 	char cname[AG_OBJECT_TYPE_MAX], *c;
 	const AG_ObjectOps *cl;
-	int i;
+	int i, stop = 0;
 
-	(*nOps) = 0;
+	(*nOps) = 1;
 	strlcpy(cname, AGOBJECT(obj)->ops->type, sizeof(cname));
 	for (c = &cname[0]; *c != '\0'; c++) {
 		if (*c == ':')
@@ -638,17 +646,24 @@ AG_ObjectGetInheritHier(void *obj, const AG_ObjectOps ***ops, int *nOps)
 	}
 	*ops = Malloc((*nOps)*sizeof(AG_ObjectOps *));
 	i = 0;
-	for (c = &cname[0]; *c != '\0'; c++) {
-		if (*c != ':') {
+	for (c = &cname[0];; c++) {
+		if (*c != ':' && *c != '\0') {
 			continue;
 		}
-		*c = '\0';
+		if (*c == '\0') {
+			stop++;
+		} else {
+			*c = '\0';
+		}
 		if ((cl = AG_FindClass(cname)) == NULL) {
 			Free(*ops);
 			return (-1);
 		}
 		*c = ':';
 		(*ops)[i++] = cl;
+		
+		if (stop)
+			break;
 	}
 	return (0);
 }
@@ -682,7 +697,7 @@ AG_ObjectDestroy(void *p)
 		}
 		Free(hier);
 	} else {
-		dprintf("hier %s: %s\n", ob->name, AG_GetError());
+		AG_FatalError("%s: %s", ob->name, AG_GetError());
 	}
 
 	AG_ObjectFreeProps(ob);
@@ -1025,11 +1040,8 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			}
 
 			child = Malloc(cl->size);
-			if (cl->init != NULL) {
-				cl->init(child, cname);
-			} else {
-				AG_ObjectInit(child, cname, cl);
-			}
+			AG_ObjectInit(child, cl);
+			AG_ObjectSetName(child, "%s", cname);
 			AG_ObjectAttach(ob, child);
 			if (AG_ObjectLoadGeneric(child) == -1)
 				goto fail;
@@ -1107,12 +1119,16 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	}
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = 0; i < nHier; i++) {
-			if (hier[i]->load != NULL)
-				hier[i]->load(ob, ds);
+			if (hier[i]->load == NULL) {
+				continue;
+			}
+			if (hier[i]->load(ob, ds) == -1) {
+				goto fail;
+			}
 		}
 		Free(hier);
 	} else {
-		dprintf("hier %s: %s\n", ob->name, AG_GetError());
+		AG_FatalError("%s: %s", ob->name, AG_GetError());
 	}
 	ob->flags |= AG_OBJECT_RESIDENT;
 	AG_CloseFile(ds);
@@ -1300,7 +1316,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 		}
 		Free(hier);
 	} else {
-		dprintf("hier %s: %s\n", ob->name, AG_GetError());
+		AG_FatalError("%s: %s", ob->name, AG_GetError());
 	}
 
 	AG_CloseFile(ds);
@@ -1318,14 +1334,24 @@ fail_lock:
 	return (-1);
 }
 
-/* Override an object's name; thread unsafe. */
+/*
+ * Change the name of an object.
+ * The parent VFS, if any, must be locked.
+ */
 void
-AG_ObjectSetName(void *p, const char *name)
+AG_ObjectSetName(void *p, const char *fmt, ...)
 {
 	AG_Object *ob = p;
+	va_list ap;
 	char *c;
 
-	strlcpy(ob->name, name, sizeof(ob->name));
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		vsnprintf(ob->name, sizeof(ob->name), fmt, ap);
+		va_end(ap);
+	} else {
+		ob->name[0] = '\0';
+	}
 
 	for (c = &ob->name[0]; *c != '\0'; c++) {
 		if (*c == '/' || *c == '\\')		/* Pathname separator */
@@ -1566,19 +1592,12 @@ AG_ObjectDuplicate(void *p, const char *newName)
 	AG_Object *dob;
 
 	dob = Malloc(ops->size);
-
 	AG_MutexLock(&ob->lock);
-
-	/* Create the duplicate object. */
-	if (ops->init != NULL) {
-		ops->init(dob, newName);
-	} else {
-		AG_ObjectInit(dob, newName, ops);
-	}
-
-	if (AG_ObjectPageIn(ob) == -1)
+	AG_ObjectInit(dob, ops);
+	AG_ObjectSetName(dob, "%s", newName);
+	if (AG_ObjectPageIn(ob) == -1) {
 		goto fail;
-
+	}
 	/* Change the name and attach to the same parent as the original. */
 	AG_ObjectAttach(ob->parent, dob);
 	dob->flags = (ob->flags & AG_OBJECT_DUPED_FLAGS);
@@ -1591,13 +1610,12 @@ AG_ObjectDuplicate(void *p, const char *newName)
 		AG_ObjectPageOut(ob);
 		goto fail;
 	}
-
-	if (AG_ObjectPageOut(ob) == -1)
+	if (AG_ObjectPageOut(ob) == -1) {
 		goto fail;
-
-	if (AG_ObjectLoad(dob) == -1)
+	}
+	if (AG_ObjectLoad(dob) == -1) {
 		goto fail;
-
+	}
 	strlcpy(ob->name, nameSave, sizeof(ob->name));
 	AG_MutexUnlock(&ob->lock);
 	return (dob);

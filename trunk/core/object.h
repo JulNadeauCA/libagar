@@ -28,8 +28,8 @@ typedef struct ag_object_ops {
 	size_t size;					/* Structure size */
 	AG_Version ver;					/* Version numbers */
 
-	void (*init)(void *, const char *);		/* Initialize */
-	void (*free_dataset)(void *);			/* Free dataset */
+	void (*init)(void *);				/* Initialize */
+	void (*reinit)(void *);				/* Free dataset */
 	void (*destroy)(void *);			/* Free resources */
 	int (*load)(void *, AG_DataSource *);		/* Load from network */
 	int (*save)(void *, AG_DataSource *);		/* Save to network */
@@ -159,16 +159,16 @@ int	 AG_ObjectAttachToNamed(const char *, void *);
 void	 AG_ObjectDetach(void *);
 void	 AG_ObjectMove(void *, void *);
 
-void	 AG_ObjectInit(void *, const char *, const void *);
-void	*AG_ObjectCreate(const AG_ObjectOps *, const char *);
+void	 AG_ObjectInit(void *, const void *);
+void	 AG_ObjectInitStatic(void *, const void *);
 void	 AG_ObjectFreeDataset(void *);
 void	 AG_ObjectRemain(void *, int);
 int	 AG_ObjectCopyName(const void *, char *, size_t)
-	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
+	                   BOUNDED_ATTRIBUTE(__string__, 2, 3);
 int	 AG_ObjectCopyDirname(const void *, char *, size_t)
-	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
+	                      BOUNDED_ATTRIBUTE(__string__, 2, 3);
 int	 AG_ObjectCopyFilename(const void *, char *, size_t)
-	     BOUNDED_ATTRIBUTE(__string__, 2, 3);
+	                       BOUNDED_ATTRIBUTE(__string__, 2, 3);
 size_t	 AG_ObjectCopyChecksum(const void *, enum ag_object_checksum_alg,
 	                       char *);
 int	 AG_ObjectCopyDigest(const void *, size_t *, char *);
@@ -176,12 +176,14 @@ int	 AG_ObjectChanged(void *);
 int	 AG_ObjectChangedAll(void *);
 
 void		*AG_ObjectFind(const char *);
-void		*AG_ObjectFindF(const char *, ...);
+void		*AG_ObjectFindF(const char *, ...)
+		                FORMAT_ATTRIBUTE(printf, 1, 2);
 int		 AG_ObjectInUse(const void *);
-void		 AG_ObjectSetName(void *, const char *);
+void		 AG_ObjectSetName(void *, const char *, ...)
+		                  FORMAT_ATTRIBUTE(printf, 2, 3);
 void		 AG_ObjectSetArchivePath(void *, const char *);
 void		 AG_ObjectGetArchivePath(void *, char *, size_t)
-		     BOUNDED_ATTRIBUTE(__string__, 2, 3);
+		                         BOUNDED_ATTRIBUTE(__string__, 2, 3);
 void		 AG_ObjectSetOps(void *, const void *);
 
 int	 AG_ObjectIsClassGeneral(const AG_Object *, const char *);
