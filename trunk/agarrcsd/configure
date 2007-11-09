@@ -325,11 +325,11 @@ else
 	echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 fi
 
-VERSION="\"1.1-beta\""
+VERSION="1.1-beta"
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION \"$VERSION\"" >> config/version.h
 echo "#endif" >> config/version.h
-RELEASE="\"Source of Agony\""
+RELEASE="Source of Agony"
 echo "#ifndef RELEASE" > config/release.h
 echo "#define RELEASE \"$RELEASE\"" >> config/release.h
 echo "#endif" >> config/release.h
