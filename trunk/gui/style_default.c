@@ -213,30 +213,28 @@ MenuBackground(void *mv, AG_Rect r)
 
 /* Background decorations for selected Menu items */
 static void
-MenuItemBackground(void *mv, int x, int y, int h, int xIcon, void *iconObj,
+MenuItemBackground(void *mv, AG_Rect r, int xIcon, void *iconObj,
     int icon, int isSelected, int boolState)
 {
 	if (isSelected) {
-		AG_DrawRectFilled(mv,
-		    AG_RECT(x+1, y+1, WIDTH(mv), h),
-		    AG_COLOR(MENU_SEL_COLOR));
+		AG_DrawRectFilled(mv, r, AG_COLOR(MENU_SEL_COLOR));
 	}
 	if (icon != -1) {
 		Uint8 c[4];
 
 		AG_WidgetBlitFrom(mv, iconObj, icon, NULL,
 		    xIcon,
-		    y + (h/2 - WSURFACE(iconObj,icon)->h/2) + 1);
+		    r.y + (r.h/2 - WSURFACE(iconObj,icon)->h/2) + 1);
 
 		if (boolState) {
 			SDL_GetRGB(AG_COLOR(MENU_OPTION_COLOR), agVideoFmt,
 			    &c[0], &c[1], &c[2]);
 			c[3] = 64;
 			AG_DrawFrame(mv,
-			    AG_RECT(x, y+2, h, h-2), 1,
+			    AG_RECT(r.x, r.y+2, r.h, r.h-2), 1,
 			    AG_COLOR(MENU_OPTION_COLOR));
 			AG_DrawRectBlended(mv,
-			    AG_RECT(x, y+2, h, h-2),
+			    AG_RECT(r.x, r.y+2, r.h, r.h-2),
 			    c, AG_ALPHA_SRC);
 		}
 	}

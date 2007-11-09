@@ -285,10 +285,16 @@ Draw(void *p)
 	AG_MenuView *mview = p;
 	AG_MenuItem *pitem = mview->pitem;
 	AG_Menu *m = mview->pmenu;
-	int i, y = mview->tPad;
+	AG_Rect r;
+	int i;
 
 	STYLE(mview)->MenuBackground(mview,
 	    AG_RECT(0, 0, WIDTH(mview), HEIGHT(mview)));
+
+	r.x = 0;
+	r.y = mview->tPad;
+	r.w = WIDGET(mview)->w;
+	r.h = m->itemh;
 
 	for (i = 0; i < pitem->nsubitems; i++) {
 		AG_MenuItem *item = &pitem->subitems[i];
@@ -296,8 +302,7 @@ Draw(void *p)
 		
 		AG_MenuUpdateItem(item);
 
-		STYLE(mview)->MenuItemBackground(mview, 0, y, m->itemh,
-		    x, m, item->icon,
+		STYLE(mview)->MenuItemBackground(mview, r, x, m, item->icon,
 		    (item == pitem->sel_subitem && item->state == 1),
 		    (item->value != -1) ? item->value : GetItemBoolValue(item));
 
@@ -308,7 +313,7 @@ Draw(void *p)
 			STYLE(mview)->MenuItemSeparator(mview,
 			    mview->lPad,
 			    WIDTH(mview) - mview->rPad - 1,
-			    y, m->itemh);
+			    r.y, m->itemh);
 		} else {
 			int lbl = item->state ? item->lblEnabled :
 			                        item->lblDisabled;
@@ -334,16 +339,16 @@ Draw(void *p)
 			}
 			AG_WidgetBlitFrom(mview, m, lbl, NULL,
 			    x,
-			    y + m->itemh/2 - WSURFACE(m,lbl)->h/2 + 1);
+			    r.y + m->itemh/2 - WSURFACE(m,lbl)->h/2 + 1);
 			x += WSURFACE(m,lbl)->w;
 		}
 		if (item->nsubitems > 0) {
 			x += mview->spLblArrow;
 			AG_WidgetBlitSurface(mview, 0,
 			    x,
-			    y + m->itemh/2 - agIconSmallArrowRight.s->h/2 - 1);
+			    r.y + m->itemh/2 - agIconSmallArrowRight.s->h/2 -1);
 		}
-		y += m->itemh;
+		r.y += m->itemh;
 	}
 }
 
