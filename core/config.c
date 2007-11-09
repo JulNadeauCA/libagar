@@ -77,7 +77,8 @@ AG_ConfigInit(AG_Config *cfg)
 	struct passwd *pwd = getpwuid(getuid());
 #endif
 
-	AG_ObjectInit(cfg, "config", &agConfigOps);
+	AG_ObjectInit(cfg, &agConfigOps);
+	AG_ObjectSetName(cfg, "config");
 	OBJECT(cfg)->flags |= AG_OBJECT_RELOAD_PROPS|AG_OBJECT_RESIDENT;
 	OBJECT(cfg)->save_pfx = NULL;
 

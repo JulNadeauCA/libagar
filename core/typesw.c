@@ -24,12 +24,11 @@
  */
 
 /*
- * Routines related to the Object class information table. This table allows,
+ * Routines related to the Agar class information table. This table allows,
  * notably, archived objects to be dynamically allocated and initialized.
  */
 
 #include <core/core.h>
-#include <core/typesw.h>
 
 #include <string.h>
 
