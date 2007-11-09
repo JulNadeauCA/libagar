@@ -189,25 +189,26 @@ SG_Vector	 SG_NodeDir(void *);
 /*
  * Operations on node transformation matrices
  */
-#define SG_Identity(n)		MatIdentityv(&SGNODE(n)->T)
-#define SG_Rotatev(n,a,d)	MatRotateAxis(&SGNODE(n)->T,(a),(d))
-#define SG_RotateI(n,d)		MatRotateI(&SGNODE(n)->T,(d))
-#define SG_RotateJ(n,d)		MatRotateJ(&SGNODE(n)->T,(d))
-#define SG_RotateK(n,d)		MatRotateK(&SGNODE(n)->T,(d))
-#define SG_Orbitv(n,p,a,d)	MatOrbitAxis(&SGNODE(n)->T, \
-				             VecSub((p),SG_NodePos(n)),(a),(d));
+#define SG_Identity(n)		SG_MatIdentityv(&SGNODE(n)->T)
+#define SG_Rotatev(n,a,d)	SG_MatRotateAxis(&SGNODE(n)->T,(a),(d))
+#define SG_RotateI(n,d)		SG_MatRotateI(&SGNODE(n)->T,(d))
+#define SG_RotateJ(n,d)		SG_MatRotateJ(&SGNODE(n)->T,(d))
+#define SG_RotateK(n,d)		SG_MatRotateK(&SGNODE(n)->T,(d))
+#define SG_Orbitv(n,p,a,d)	SG_MatOrbitAxis(&SGNODE(n)->T, \
+				SG_VecSub((p),SG_NodePos(n)),(a),(d));
 #define SG_Orbitvd(n,p,a,d)	SG_Orbitv((n),(p),(a),SG_Radians(d))
-#define SG_Rotatevd(n,a,v)	MatRotateAxis(&SGNODE(n)->T,SG_Radians(a),(v))
-#define SG_RotateId(n,a)	MatRotateI(&SGNODE(n)->T,SG_Radians(a))
-#define SG_RotateJd(n,a)	MatRotateJ(&SGNODE(n)->T,SG_Radians(a))
-#define SG_RotateKd(n,a)	MatRotateK(&SGNODE(n)->T,SG_Radians(a))
-#define SG_Translatev(n,v)	MatTranslate(&SGNODE(n)->T,(v))
-#define SG_Translate3(n,x,y,z)	MatTranslate3(&SGNODE(n)->T,(x),(y),(z))
-#define SG_TranslateX(n,t)	MatTranslateX(&SGNODE(n)->T,(t))
-#define SG_TranslateY(n,t)	MatTranslateY(&SGNODE(n)->T,(t))
-#define SG_TranslateZ(n,t)	MatTranslateZ(&SGNODE(n)->T,(t))
-#define SG_Scale(n,x,y,z)	MatScale(&SGNODE(n)->T,(x),(y),(z),1.0)
-#define SG_UniScale(n,r)	MatUniScale(&SGNODE(n)->T,(r))
+#define SG_Rotatevd(n,a,v)	SG_MatRotateAxis(&SGNODE(n)->T,SG_Radians(a),\
+                                                 (v))
+#define SG_RotateId(n,a)	SG_MatRotateI(&SGNODE(n)->T,SG_Radians(a))
+#define SG_RotateJd(n,a)	SG_MatRotateJ(&SGNODE(n)->T,SG_Radians(a))
+#define SG_RotateKd(n,a)	SG_MatRotateK(&SGNODE(n)->T,SG_Radians(a))
+#define SG_Translatev(n,v)	SG_MatTranslate(&SGNODE(n)->T,(v))
+#define SG_Translate3(n,x,y,z)	SG_MatTranslate3(&SGNODE(n)->T,(x),(y),(z))
+#define SG_TranslateX(n,t)	SG_MatTranslateX(&SGNODE(n)->T,(t))
+#define SG_TranslateY(n,t)	SG_MatTranslateY(&SGNODE(n)->T,(t))
+#define SG_TranslateZ(n,t)	SG_MatTranslateZ(&SGNODE(n)->T,(t))
+#define SG_Scale(n,x,y,z)	SG_MatScale(&SGNODE(n)->T,(x),(y),(z),1.0)
+#define SG_UniScale(n,r)	SG_MatUniScale(&SGNODE(n)->T,(r))
 
 static __inline__ int
 SG_NodeOfClass(SG_Node *node, const char *cname)
