@@ -11,7 +11,7 @@ struct vg_view;
 
 typedef struct vg_tool_ops {
 	const char *name, *desc;
-	int icon;
+	AG_StaticIcon *icon;
 	size_t len;
 	Uint flags;
 #define VG_MOUSEMOTION_NOSNAP	0x01	/* Ignore snapping in mousemotion */

@@ -73,12 +73,17 @@ const VG_ElementOps *vgElementTypes[] = {
 
 static int vgInited = 0;
 
-static void
+void
 VG_InitSubsystem(void)
 {
 	AG_RegisterClass(&vgViewOps);
 
 	vgIcon_Init();
+}
+
+void
+VG_DestroySubsystem(void)
+{
 }
 
 VG *
