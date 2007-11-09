@@ -469,7 +469,6 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 	OBJECT_FOREACH_CHILD(child, box, ag_widget) {
 		AG_ObjectDetach(child);
 		AG_ObjectDestroy(child);
-		Free(child);
 	}
 
 	switch (insn->type) {
@@ -531,7 +530,6 @@ EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 	OBJECT_FOREACH_CHILD(child, box, ag_widget) {
 		AG_ObjectDetach(child);
 		AG_ObjectDestroy(child);
-		Free(child);
 	}
 	
 	ani->gframe = fr->name;

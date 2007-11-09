@@ -99,7 +99,6 @@ CloseMenu(RG_Animview *av)
 {
 	AG_MenuCollapse(av->menu, av->menu_item);
 	AG_ObjectDestroy(av->menu);
-	Free(av->menu);
 	av->menu = NULL;
 	av->menu_win = NULL;
 	av->menu_item = NULL;

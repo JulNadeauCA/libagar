@@ -339,7 +339,6 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 			    ag_widget) {
 				AG_ObjectDetach(wt);
 				AG_ObjectDestroy(wt);
-				Free(wt);
 			}
 			if ((pwin = AG_WidgetParentWindow(vv->curtool->pane))
 			    != NULL) {

@@ -781,8 +781,6 @@ RG_SketchCloseMenu(RG_Tileview *tv)
 
 	AG_MenuCollapse(me, mi);
 	AG_ObjectDestroy(me);
-	Free(me);
-
 	tv->tv_sketch.menu = NULL;
 	tv->tv_sketch.menu_item = NULL;
 	tv->tv_sketch.menu_win = NULL;

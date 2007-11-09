@@ -266,12 +266,11 @@ reach 0.
 Indicates that this object is either statically-allocated (or allocated
 through another facility than
 .Xr malloc 3 ) .
-If the object is to be destroyed as part of
-a recursive
+The
 .Fn AG_ObjectDestroy
-call on one of its parents, it prevents a
+operation will not call
 .Xr free 3
-call on the structure.
+on the structure.
 .It Dv AG_OBJECT_READONLY
 Advisory and application-specific.
 .It Dv AG_OBJECT_REOPEN_ONLOAD
@@ -554,11 +553,13 @@ Note that
 also cancels any
 .Xr AG_Timeout 3
 event scheduled for future execution.
-To permit static allocation,
+Unless the
+.Dv AG_OBJECT_STATIC
+flag is set,
 .Fn AG_ObjectDestroy
-does not invoke
+invokes
 .Xr free 3
-on the AG_Object structure.
+on the structure.
 .Pp
 Internally,
 .Fn AG_ObjectDestroy

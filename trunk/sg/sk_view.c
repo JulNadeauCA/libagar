@@ -435,7 +435,6 @@ SK_ViewSelectTool(SK_View *skv, SK_Tool *ntool, void *p)
 			    ag_widget) {
 				AG_ObjectDetach(wt);
 				AG_ObjectDestroy(wt);
-				Free(wt);
 			}
 			wParent = AG_WidgetParentWindow(skv->curtool->pane);
 			if (wParent != NULL)
@@ -607,7 +606,6 @@ SK_ViewCloseEditPane(SK_View *skv)
 	}
 	AG_ObjectDetach(skv->editPane);
 	AG_ObjectDestroy(skv->editPane);
-	Free(skv->editPane);
 	skv->editPane = NULL;
 }
 

@@ -548,8 +548,6 @@ AG_ObjectFreeChildren(AG_Object *pob)
 		debug(DEBUG_GC, "%s: freeing %s\n", pob->name, cob->name);
 		AG_ObjectDetach(cob);
 		AG_ObjectDestroy(cob);
-		if ((cob->flags & AG_OBJECT_STATIC) == 0)
-			Free(cob);
 	}
 	TAILQ_INIT(&pob->children);
 	AG_MutexUnlock(&pob->lock);
@@ -708,6 +706,9 @@ AG_ObjectDestroy(void *p)
 	AG_ObjectFreeEvents(ob);
 	AG_MutexDestroy(&ob->lock);
 	Free(ob->archivePath);
+	
+	if ((ob->flags & AG_OBJECT_STATIC) == 0)
+		Free(ob);
 }
 
 /* Copy the full pathname to an object's data file to a fixed-size buffer. */
@@ -1627,7 +1628,6 @@ fail:
 	strlcpy(ob->name, nameSave, sizeof(ob->name));
 	AG_MutexUnlock(&ob->lock);
 	AG_ObjectDestroy(dob);
-	Free(dob);
 	return (NULL);
 }
 

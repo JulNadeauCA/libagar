@@ -387,7 +387,6 @@ CloseMenu(AG_HSVPal *pal)
 {
 	AG_MenuCollapse(pal->menu, pal->menu_item);
 	AG_ObjectDestroy(pal->menu);
-	Free(pal->menu);
 
 	pal->menu = NULL;
 	pal->menu_item = NULL;

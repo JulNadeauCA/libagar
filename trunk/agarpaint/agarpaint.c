@@ -151,7 +151,6 @@ OpenTilesetAGT(AG_Event *event)
 		AG_TextMsgFromError();
 		AG_ObjectDetach(ts);
 		AG_ObjectDestroy(ts);
-		AG_Free(ts);
 		return;
 	}
 	AG_ObjectSetArchivePath(ts, path);
@@ -645,7 +644,6 @@ main(int argc, char *argv[])
 			AG_TextMsgFromError();
 			AG_ObjectDetach(ts);
 			AG_ObjectDestroy(ts);
-			AG_Free(ts);
 		}
 	}
 	AG_EventLoop();

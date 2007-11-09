@@ -257,7 +257,6 @@ AG_NotebookDelTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	TAILQ_REMOVE(&nb->tabs, tab, tabs);
 	AG_WidgetUnmapSurface(nb, tab->label);
 	AG_ObjectDestroy(tab);
-	Free(tab);
 }
 
 void

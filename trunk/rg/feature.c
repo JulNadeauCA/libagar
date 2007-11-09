@@ -199,8 +199,6 @@ RG_FeatureCloseMenu(RG_Tileview *tv)
 
 	AG_MenuCollapse(menu, item);
 	AG_ObjectDestroy(menu);
-	Free(menu);
-
 	tv->tv_feature.menu = NULL;
 	tv->tv_feature.menu_item = NULL;
 	tv->tv_feature.menu_win = NULL;
