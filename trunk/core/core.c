@@ -37,7 +37,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/typesw.h>
 
 #include <stdio.h>
 
@@ -101,7 +100,8 @@ AG_InitCore(const char *progname, Uint flags)
 	}
 
 	AG_InitClassTbl();
-	
+	AG_RegisterClass(&agConfigOps);
+
 	agConfig = Malloc(sizeof(AG_Config));
 	AG_ConfigInit(agConfig);
 
