@@ -94,14 +94,14 @@ MAP_NodeselBeginMove(MAP_View *mv)
 	MAP *mTmp = &mv->esel.map;
 	int sx, sy, x, y;
 
-	MAP_Init(mTmp, "");
+	AG_ObjectInitStatic(mTmp, &mapOps);
 
-	if (MAP_AllocNodes(mTmp, mv->esel.w, mv->esel.h) == -1)
+	if (MAP_AllocNodes(mTmp, mv->esel.w, mv->esel.h) == -1) {
 		goto fail;
-
-	if (MAP_PushLayer(mSrc, _("(Floating selection)")) == -1)
+	}
+	if (MAP_PushLayer(mSrc, _("(Floating selection)")) == -1) {
 		goto fail;
-
+	}
 	MAP_ModBegin(mSrc);
 
 	for (y = 0, sy = mv->esel.y;
@@ -125,7 +125,7 @@ MAP_NodeselBeginMove(MAP_View *mv)
 	mv->esel.moving = 1;
 	return;
 fail:
-	MAP_Destroy(mTmp);
+	AG_ObjectDestroy(mTmp);
 }
 
 void
@@ -196,8 +196,8 @@ MAP_NodeselEndMove(MAP_View *mv)
 	MAP_PopLayer(mDst);
 	MAP_ModEnd(mDst);
 	
-	MAP_FreeDataset(mTmp);
-	MAP_Destroy(mTmp);
+	AG_ObjectFreeDataset(mTmp);
+	AG_ObjectDestroy(mTmp);
 	mv->esel.moving = 0;
 }
 

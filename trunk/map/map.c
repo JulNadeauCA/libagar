@@ -26,7 +26,6 @@
 #include <core/core.h>
 #include <core/config.h>
 #include <core/util.h>
-#include <core/typesw.h>
 
 #include <rg/tileset.h>
 
@@ -328,7 +327,8 @@ MAP_Resize(MAP *m, Uint w, Uint h)
 	AG_MutexLock(&m->lock);
 
 	/* Save the nodes to a temporary map, to preserve dependencies. */
-	MAP_Init(&tm, "t");
+	AG_ObjectInitStatic(&tm, &mapOps);
+
 	if (MAP_AllocNodes(&tm, m->mapw, m->maph) == -1) {
 		goto fail;
 	}
@@ -391,10 +391,9 @@ MAP_New(void *parent, const char *name)
 	MAP *m;
 
 	m = Malloc(sizeof(MAP));
-	MAP_Init(m, name);
-	if (parent != NULL) {
-		AG_ObjectAttach(parent, m);
-	}
+	AG_ObjectInit(m, &mapOps);
+	AG_ObjectSetName(m, "%s", name);
+	AG_ObjectAttach(parent, m);
 	return (m);
 }
 
@@ -470,12 +469,11 @@ MAP_InitModBlks(MAP *m)
 	MAP_ModBegin(m);
 }
 
-void
-MAP_Init(void *obj, const char *name)
+static void
+Init(void *obj)
 {
 	MAP *m = obj;
 
-	AG_ObjectInit(m, name, &mapOps);
 	m->flags = 0;
 	m->redraw = 0;
 	m->mapw = 0;
@@ -882,8 +880,8 @@ MAP_NodeMoveItemToHead(MAP_Node *node, MAP_Item *r)
 	}
 }
 
-void
-MAP_FreeDataset(void *p)
+static void
+FreeDataset(void *p)
 {
 	MAP *m = p;
 	int i;
@@ -902,8 +900,8 @@ MAP_FreeDataset(void *p)
 	MAP_InitModBlks(m);
 }
 
-void
-MAP_Destroy(void *p)
+static void
+Destroy(void *p)
 {
 	MAP *m = p;
 
@@ -2018,8 +2016,7 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 	mh = sprite->h/MAPTILESZ + 1;
 
 	fragmap = Malloc(sizeof(MAP));
-	snprintf(mapname, sizeof(mapname), "f%u", gfx->nsubmaps);
-	MAP_Init(fragmap, mapname);
+	AG_ObjectInit(fragmap, &mapOps);
 	if (MAP_AllocNodes(fragmap, mw, mh) == -1)
 		fatal("%s", AG_GetError());
 
@@ -2825,8 +2822,8 @@ CreateLayerMenu(AG_Event *event)
 	    MoveLayer, "%p,%p,%i", m, layer, 1, tlLayers); 
 }
 
-void *
-MAP_Edit(void *p)
+static void *
+Edit(void *p)
 {
 	MAP *m = p;
 	AG_Window *win;
@@ -2838,7 +2835,7 @@ MAP_Edit(void *p)
 	AG_MenuItem *pitem;
 	AG_Box *hBox, *vBox;
 	AG_Pane *hPane, *vPane;
-	int flags = MAP_VIEW_GRID;
+	Uint flags = MAP_VIEW_GRID;
 
 	if ((OBJECT(m)->flags & AG_OBJECT_READONLY) == 0)
 		flags |= MAP_VIEW_EDIT;
@@ -2846,13 +2843,10 @@ MAP_Edit(void *p)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", OBJECT(m)->name);
 
-	toolbar = Malloc(sizeof(AG_Toolbar));
-	AG_ToolbarInit(toolbar, AG_TOOLBAR_VERT, 2, 0);
-	statbar = Malloc(sizeof(AG_Statusbar));
-	AG_StatusbarInit(statbar, 0);
+	toolbar = AG_ToolbarNew(NULL, AG_TOOLBAR_VERT, 2, 0);
+	statbar = AG_StatusbarNew(NULL, 0);
 	
-	mv = Malloc(sizeof(MAP_View));
-	MAP_ViewInit(mv, m, flags, toolbar, statbar);
+	mv = MAP_ViewNew(NULL, m, flags, toolbar, statbar);
 	MAP_ViewSizeHint(mv, 2, 2);
 #if 0
 	AG_SetEvent(mv, "mapview-dblclick", EditItemProps, NULL);
@@ -3051,13 +3045,13 @@ const AG_ObjectOps mapOps = {
 	"MAP",
 	sizeof(MAP),
 	{ 11, 0 },
-	MAP_Init,
-	MAP_FreeDataset,
-	MAP_Destroy,
+	Init,
+	FreeDataset,
+	Destroy,
 	Load,
 	Save,
 #ifdef EDITION
-	MAP_Edit
+	Edit
 #else
 	NULL
 #endif

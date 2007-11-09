@@ -47,10 +47,7 @@ structure.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft MAP_View *
-.Fn MAP_ViewNew "void *parent" "MAP *map" "int flags" "AG_Toolbar *toolbar" "AG_Statusbar *statbar"
-.Pp
-.Ft void
-.Fn MAP_ViewInit "MAP_View *mv" "MAP *map" "int flags" "AG_Toolbar *toolbar" "AG_Statusbar *statbar"
+.Fn MAP_ViewNew "void *parent" "MAP *map" "Uint flags" "AG_Toolbar *toolbar" "AG_Statusbar *statbar"
 .Pp
 .Ft void
 .Fn MAP_ViewSizeHint "MAP_View *mv" "int w" "int h"
@@ -63,12 +60,7 @@ The
 .Fn MAP_ViewNew
 function allocates, initializes, and attaches a
 .Nm
-widget.
-The
-.Fn MAP_ViewInit
-function initializes a
-.Nm
-widget displaying the given
+widget, displaying the given
 .Fa map .
 The
 .Fa flags
@@ -100,6 +92,10 @@ is not NULL, the
 .Nm
 will automatically create buttons in it for each tool registered with
 .Fn MAP_ViewRegTool .
+If
+.Fa statbar
+is not NULL, it will be used to display status information.
+.Pp
 .Pp
 The
 .Fn MAP_ViewSizeHint
