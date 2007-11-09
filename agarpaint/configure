@@ -97,6 +97,9 @@ do
 	--srcdir=*)
 	    srcdir=$optarg
 	    ;;
+	--testdir=*)
+	    testdir=$optarg
+	    ;;
 	*)
 	    echo "invalid argument: $arg"
 	    echo "try ./configure --help"
@@ -121,6 +124,16 @@ if [ "${srcdir}" != "" ]; then
 else
 	SRC=`pwd`
 fi
+
+if [ "${testdir}" != "" ]; then
+	echo "Configure tests will be executed in ${testdir}"
+	if [ ! -e "${testdir}" ]; then
+		echo "Creating ${testdir}"
+		mkdir ${testdir}
+	fi
+else
+	testdir="."
+fi
 if [ "${help}" = "yes" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix                       Installation prefix [/usr/local]"
@@ -128,6 +141,7 @@ echo "    --sysconfdir                   System-wide configuration prefix [/etc]
 echo "    --sharedir                     Share prefix [$PREFIX/share]"
 echo "    --localedir                    Locale prefix [$PREFIX/share/locale]"
 echo "    --srcdir                       Source tree for concurrent build [.]"
+echo "    --testdir                      Directory in which to execute tests [.]"
 echo "    --help                         Display this message"
 echo "    --enable-nls                   Native Language Support [no]"
 echo "    --with-gettext                 Use gettext tools (msgmerge, ...) [check]"
@@ -165,7 +179,7 @@ for path in `echo $PATH | sed 's/:/ /g'`; do
 done
 if [ "${NROFF}" != "" ]; then
 	echo | ${NROFF} -Tmandoc >/dev/null
-	if [ $? == 0 ]; then
+	if [ "$?" = "0" ]; then
 		HAVE_MANDOC="yes"
 	fi
 fi
@@ -223,42 +237,47 @@ fi
 echo "ENABLE_NLS=${ENABLE_NLS}" >> Makefile.config
 echo "HAVE_GETTEXT=${HAVE_GETTEXT}" >> Makefile.config
 
-echo -n "checking for libtool..."
-LIBTOOL_BUNDLED="no"
-if [ "${with_libtool}" != "" ]; then
-	LIBTOOL=${with_libtool}
-else
-	ltool=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/libtool" ]; then
-			ltool=${path}/libtool
-		fi
-	done
-	if [ "${ltool}" != "" ]; then
-		${ltool} --version 1>/dev/null 2>&1
-		if [ $? == 0 ]; then
-			LIBTOOL=${ltool}
-		else
-			LIBTOOL=\${TOP}/mk/libtool/libtool
-			LIBTOOL_BUNDLED="yes"
-		fi
-	else
-		LIBTOOL=\${TOP}/mk/libtool/libtool
-		LIBTOOL_BUNDLED="yes"
-	fi
-fi
-if [ "${LIBTOOL_BUNDLED}" = "yes" ]; then
-	echo "yes (bundled)"
-else
-	grep ^VERSION=1.5 "${LIBTOOL}" 1>/dev/null 2>&1
-	if [ $? == 0 ]; then
-		echo "yes (GNU libtool 1.5)"
-		echo "LIBTOOLFLAGS=-prefer-pic" >> Makefile.config
-	else
-		echo "yes (GNU libtool)"
-	fi
-fi
+LIBTOOL_BUNDLED="yes"
+LIBTOOL=\${TOP}/mk/libtool/libtool
 echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
+
+#
+# (insert defamatory comment about libtool here)
+#
+#echo -n "checking for libtool..."
+#if [ "${with_libtool}" != "" ]; then
+#	LIBTOOL=${with_libtool}
+#else
+#	ltool=""
+#	for path in `echo $PATH | sed 's/:/ /g'`; do
+#		if [ -x "${path}/libtool" ]; then
+#			ltool=${path}/libtool
+#		fi
+#	done
+#	if [ "${ltool}" != "" ]; then
+#		${ltool} --version 1>/dev/null 2>&1
+#		if [ "$?" = "0" ]; then
+#			LIBTOOL=${ltool}
+#		else
+#			LIBTOOL=\${TOP}/mk/libtool/libtool
+#			LIBTOOL_BUNDLED="yes"
+#		fi
+#	else
+#		LIBTOOL=\${TOP}/mk/libtool/libtool
+#		LIBTOOL_BUNDLED="yes"
+#	fi
+#fi
+#if [ "${LIBTOOL_BUNDLED}" = "yes" ]; then
+#	echo "yes (bundled)"
+#else
+#	grep ^VERSION=1.5 "${LIBTOOL}" 1>/dev/null 2>&1
+#	if [ "$?" = "0" ]; then
+#		echo "yes (GNU libtool 1.5)"
+#		echo "LIBTOOLFLAGS=-prefer-pic" >> Makefile.config
+#	else
+#		echo "yes (GNU libtool)"
+#	fi
+#fi
 
 echo "PREFIX?=${PREFIX}" >> Makefile.config
 echo "#ifndef PREFIX" > config/prefix.h
@@ -356,9 +375,9 @@ cat << EOT > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -375,7 +394,7 @@ HAVE_CC_WARNINGS="no"
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >> Makefile.config
 echo "#undef HAVE_CC_WARNINGS" > config/have_cc_warnings.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
@@ -394,9 +413,9 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -413,7 +432,7 @@ HAVE_IEEE754="no"
 echo "HAVE_IEEE754=$HAVE_IEEE754" >> Makefile.config
 echo "#undef HAVE_IEEE754" > config/have_ieee754.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking __bounded__ attribute..."
 echo -n "checking __bounded__ attribute..." >> config.log
 cat << EOT > conftest.c
@@ -427,9 +446,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -446,7 +465,7 @@ HAVE_BOUNDED_ATTRIBUTE="no"
 echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >> Makefile.config
 echo "#undef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking __format__ attribute..."
 echo -n "checking __format__ attribute..." >> config.log
 cat << EOT > conftest.c
@@ -466,9 +485,9 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c  2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -485,7 +504,7 @@ HAVE_FORMAT_ATTRIBUTE="no"
 echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >> Makefile.config
 echo "#undef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking __nonnull__ attribute..."
 echo -n "checking __nonnull__ attribute..." >> config.log
 cat << EOT > conftest.c
@@ -499,13 +518,13 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -532,13 +551,13 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -565,13 +584,13 @@ int main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -601,13 +620,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -636,13 +655,13 @@ main(int argc, char *argv[])
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -674,13 +693,13 @@ main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -714,13 +733,13 @@ main(int argc, char *argv[]) {
 
 EOT
 compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	compile="failed"
 fi
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -740,8 +759,8 @@ if [ "${compile}" = "ok" ]; then
 	CFLAGS="$CFLAGS -mno-cygwin"
 	echo "CFLAGS=$CFLAGS" >> Makefile.config
 fi
-echo -n "checking for Agar (http://hypertriton.com/agar/)..."
-echo -n "checking for Agar (http://hypertriton.com/agar/)..." >> config.log
+echo -n "checking for Agar (http://libagar.org/)..."
+echo -n "checking for Agar (http://libagar.org/)..." >> config.log
 AGAR_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/agar-config" ]; then
@@ -794,9 +813,9 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -813,7 +832,7 @@ HAVE_AGAR="no"
 echo "HAVE_AGAR=$HAVE_AGAR" >> Makefile.config
 echo "#undef HAVE_AGAR" > config/have_agar.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 echo -n "checking for agar-vg (http://hypertriton.com/agar-vg/)..."
 echo -n "checking for agar-vg (http://hypertriton.com/agar-vg/)..." >> config.log
 AGAR_VERSION=""
@@ -868,9 +887,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_VG_CFLAGS} ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_VG_LIBS} ${AGAR_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_VG_CFLAGS} ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_VG_LIBS} ${AGAR_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_VG_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_VG_LIBS} ${AGAR_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_VG_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_VG_LIBS} ${AGAR_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -887,7 +906,7 @@ HAVE_AGAR_VG="no"
 echo "HAVE_AGAR_VG=$HAVE_AGAR_VG" >> Makefile.config
 echo "#undef HAVE_AGAR_VG" > config/have_agar_vg.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_AGAR_VG}" != "" ]; then
 echo "AGAR_VG_CFLAGS=$AGAR_VG_CFLAGS" >> Makefile.config
 echo "AGAR_VG_LIBS=$AGAR_VG_LIBS" >> Makefile.config
@@ -953,15 +972,17 @@ cat << EOT > conftest.c
 #include <agar/rg.h>
 
 int main(int argc, char *argv[]) {
-	RG_Tileset ts;
-	RG_TilesetInit(&ts, "foo");
+	RG_Tileset *ts;
+
+	ts = RG_TilesetNew(NULL, "foo", 0);
+	AG_ObjectDestroy(ts);
 	return (0);
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_RG_CFLAGS} ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_RG_LIBS} ${AGAR_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_RG_CFLAGS} ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_RG_LIBS} ${AGAR_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_RG_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_RG_LIBS} ${AGAR_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_RG_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_RG_LIBS} ${AGAR_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -978,7 +999,7 @@ HAVE_AGAR_RG="no"
 echo "HAVE_AGAR_RG=$HAVE_AGAR_RG" >> Makefile.config
 echo "#undef HAVE_AGAR_RG" > config/have_agar_rg.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_AGAR_RG}" != "" ]; then
 echo "AGAR_RG_CFLAGS=$AGAR_RG_CFLAGS" >> Makefile.config
 echo "AGAR_RG_LIBS=$AGAR_RG_LIBS" >> Makefile.config
@@ -1043,15 +1064,17 @@ cat << EOT > conftest.c
 #include <agar/core.h>
 #include <agar/map.h>
 int main(int argc, char *argv[]) {
-	MAP m;
-	MAP_Init(&m, "test");
+	MAP *m;
+
+	m = MAP_New(NULL, "foo");
+	AG_ObjectDestroy(m);
 	return (0);
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_MAP_CFLAGS} ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_MAP_LIBS} ${AGAR_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_MAP_CFLAGS} ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_MAP_LIBS} ${AGAR_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_MAP_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_MAP_LIBS} ${AGAR_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_MAP_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_MAP_LIBS} ${AGAR_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -1068,7 +1091,7 @@ HAVE_AGAR_MAP="no"
 echo "HAVE_AGAR_MAP=$HAVE_AGAR_MAP" >> Makefile.config
 echo "#undef HAVE_AGAR_MAP" > config/have_agar_map.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_AGAR_MAP}" != "" ]; then
 echo "AGAR_MAP_CFLAGS=$AGAR_MAP_CFLAGS" >> Makefile.config
 echo "AGAR_MAP_LIBS=$AGAR_MAP_LIBS" >> Makefile.config
@@ -1143,9 +1166,9 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_DEV_LIBS} ${AGAR_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS} -o conftest conftest.c ${AGAR_DEV_LIBS} ${AGAR_LIBS} 2>>config.log
-if [ $? == 0 ]; then
+echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_DEV_LIBS} ${AGAR_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_DEV_LIBS} ${AGAR_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 compile="ok"
@@ -1162,7 +1185,7 @@ HAVE_AGAR_DEV="no"
 echo "HAVE_AGAR_DEV=$HAVE_AGAR_DEV" >> Makefile.config
 echo "#undef HAVE_AGAR_DEV" > config/have_agar_dev.h
 fi;
-rm -f conftest conftest.c
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_AGAR_DEV}" != "" ]; then
 echo "AGAR_DEV_CFLAGS=$AGAR_DEV_CFLAGS" >> Makefile.config
 echo "AGAR_DEV_LIBS=$AGAR_DEV_LIBS" >> Makefile.config
