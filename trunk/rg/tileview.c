@@ -35,18 +35,21 @@
 #include <string.h>
 
 RG_Tileview *
-RG_TileviewNew(void *parent, RG_Tileset *ts, int flags)
+RG_TileviewNew(void *parent, RG_Tileset *ts, Uint flags)
 {
 	RG_Tileview *tv;
 
 	tv = Malloc(sizeof(RG_Tileview));
-	RG_TileviewInit(tv, ts, flags);
+	AG_ObjectInit(tv, &rgTileviewOps);
+	tv->ts = ts;
+	tv->flags |= flags;
+
 	AG_ObjectAttach(parent, tv);
 	return (tv);
 }
 
 static Uint32
-zoomin_tick(void *obj, Uint32 ival, void *arg)
+ZoomInTimeout(void *obj, Uint32 ival, void *arg)
 {
 	RG_Tileview *tv = obj;
 
@@ -58,7 +61,7 @@ zoomin_tick(void *obj, Uint32 ival, void *arg)
 }
 
 static Uint32
-zoomout_tick(void *obj, Uint32 ival, void *arg)
+ZoomOutTimeout(void *obj, Uint32 ival, void *arg)
 {
 	RG_Tileview *tv = obj;
 
@@ -70,7 +73,7 @@ zoomout_tick(void *obj, Uint32 ival, void *arg)
 }
 
 static __inline__ void
-move_cursor(RG_Tileview *tv, int x, int y)
+MoveCursor(RG_Tileview *tv, int x, int y)
 {
 	tv->xms = x;
 	tv->yms = y;
@@ -83,14 +86,14 @@ move_cursor(RG_Tileview *tv, int x, int y)
 }
 
 static __inline__ int
-cursor_overlap(RG_TileviewHandle *th, int sx, int sy)
+CursorOver(RG_TileviewHandle *th, int sx, int sy)
 {
 	return (sx >= th->x - 2 && sx <= th->x + 2 &&
 	        sy >= th->y - 2 && sy <= th->y + 2);
 }
 
 static void
-keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	RG_Tileview *tv = AG_SELF();
 	int keysym = AG_INT(1);
@@ -139,16 +142,16 @@ keydown(AG_Event *event)
 		}
 		break;
 	case SDLK_EQUALS:
-		AG_SetTimeout(&tv->zoom_to, zoomin_tick, NULL, 0);
+		AG_SetTimeout(&tv->zoom_to, ZoomInTimeout, NULL, 0);
 		AG_DelTimeout(tv, &tv->zoom_to);
 		AG_AddTimeout(tv, &tv->zoom_to, 10);
-		zoomin_tick(tv, 0, NULL);
+		ZoomInTimeout(tv, 0, NULL);
 		break;
 	case SDLK_MINUS:
-		AG_SetTimeout(&tv->zoom_to, zoomout_tick, NULL, 0);
+		AG_SetTimeout(&tv->zoom_to, ZoomOutTimeout, NULL, 0);
 		AG_DelTimeout(tv, &tv->zoom_to);
 		AG_AddTimeout(tv, &tv->zoom_to, 10);
-		zoomout_tick(tv, 0, NULL);
+		ZoomOutTimeout(tv, 0, NULL);
 		break;
 	case SDLK_0:
 	case SDLK_1:
@@ -158,7 +161,7 @@ keydown(AG_Event *event)
 }
 
 static void
-keyup(AG_Event *event)
+KeyUp(AG_Event *event)
 {
 	RG_Tileview *tv = AG_SELF();
 	int keysym = AG_INT(1);
@@ -184,7 +187,7 @@ keyup(AG_Event *event)
 }
 
 static __inline__ int
-pixmap_coincident(RG_TileElement *tel, int x, int y)
+OverPixmap(RG_TileElement *tel, int x, int y)
 {
 	return (x >= tel->tel_pixmap.x &&
 	        x < tel->tel_pixmap.x + tel->tel_pixmap.px->su->w &&
@@ -193,7 +196,7 @@ pixmap_coincident(RG_TileElement *tel, int x, int y)
 }
 
 static __inline__ int
-sketch_coincident(RG_TileElement *tel, int x, int y)
+OverSketch(RG_TileElement *tel, int x, int y)
 {
 	return (x >= tel->tel_sketch.x &&
 	        x < tel->tel_sketch.x + tel->tel_sketch.sk->vg->su->w &&
@@ -202,7 +205,7 @@ sketch_coincident(RG_TileElement *tel, int x, int y)
 }
 
 static void
-toggle_attrib(RG_Tileview *tv, int sx, int sy)
+ToggleAttrib(RG_Tileview *tv, int sx, int sy)
 {
 	RG_Tile *t = tv->tile;
 	int nx = sx/RG_TILESZ;
@@ -228,7 +231,7 @@ toggle_attrib(RG_Tileview *tv, int sx, int sy)
 }
 
 static void
-increment_layer(RG_Tileview *tv, int sx, int sy, int inc)
+IncrementLayer(RG_Tileview *tv, int sx, int sy, int inc)
 {
 	RG_Tile *t = tv->tile;
 	int nx = sx/RG_TILESZ;
@@ -246,7 +249,7 @@ increment_layer(RG_Tileview *tv, int sx, int sy, int inc)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	RG_Tileview *tv = AG_SELF();
 	int button = AG_INT(1);
@@ -271,7 +274,7 @@ mousebuttondown(AG_Event *event)
 		}
 		RG_TileviewSetZoom(tv,
 		    tv->zoom<100 ? tv->zoom+5 : tv->zoom+100, 1);
-		move_cursor(tv, x - tv->xoffs, y - tv->yoffs);
+		MoveCursor(tv, x - tv->xoffs, y - tv->yoffs);
 		return;
 	case SDL_BUTTON_WHEELDOWN:
 		if (tv->state == RG_TILEVIEW_PIXMAP_EDIT) {
@@ -283,7 +286,7 @@ mousebuttondown(AG_Event *event)
 		}
 		RG_TileviewSetZoom(tv,
 		    tv->zoom<100 ? tv->zoom-5 : tv->zoom-100, 1);
-		move_cursor(tv, x - tv->xoffs, y - tv->yoffs);
+		MoveCursor(tv, x - tv->xoffs, y - tv->yoffs);
 		break;
 	default:
 		break;
@@ -295,7 +298,7 @@ mousebuttondown(AG_Event *event)
 			for (i = 0; i < ctrl->nhandles; i++) {
 				RG_TileviewHandle *th = &ctrl->handles[i];
 		
-				if (cursor_overlap(th, sx, sy)) {
+				if (CursorOver(th, sx, sy)) {
 					th->enable = 1;
 					tv->xorig = sx;
 					tv->yorig = sy;
@@ -316,7 +319,7 @@ mousebuttondown(AG_Event *event)
 
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
-		if (pixmap_coincident(tel, sx, sy)) {
+		if (OverPixmap(tel, sx, sy)) {
 			tv->tv_pixmap.xorig = sx - tel->tel_pixmap.x;
 			tv->tv_pixmap.yorig = sy - tel->tel_pixmap.y;
 			RG_PixmapButtondown(tv, tel, tv->tv_pixmap.xorig,
@@ -334,7 +337,7 @@ mousebuttondown(AG_Event *event)
 		}
 		if (button == SDL_BUTTON_MIDDLE || button == SDL_BUTTON_RIGHT ||
 		   (button == SDL_BUTTON_LEFT &&
-		    sketch_coincident(tel, sx, sy)))
+		    OverSketch(tel, sx, sy)))
 		{
 			RG_Sketch *sk = tv->tv_sketch.sk;
 			float vx, vy;
@@ -368,14 +371,14 @@ mousebuttondown(AG_Event *event)
 			tv->flags |= RG_TILEVIEW_SET_ATTRIBS;
 			tv->tv_attrs.nx = -1;
 			tv->tv_attrs.ny = -1;
-			toggle_attrib(tv, sx, sy);
+			ToggleAttrib(tv, sx, sy);
 		}
 		break;
 	case RG_TILEVIEW_LAYERS_EDIT:
 		if (button == SDL_BUTTON_LEFT) {
-			increment_layer(tv, sx, sy, +1);
+			IncrementLayer(tv, sx, sy, +1);
 		} else if (button == SDL_BUTTON_RIGHT) {
-			increment_layer(tv, sx, sy, -1);
+			IncrementLayer(tv, sx, sy, -1);
 			tv->scrolling++;
 		}
 		break;
@@ -390,7 +393,7 @@ mousebuttondown(AG_Event *event)
 }
 
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	RG_Tileview *tv = AG_SELF();
 	int button = AG_INT(1);
@@ -463,7 +466,7 @@ mousebuttonup(AG_Event *event)
 }
 
 static __inline__ void
-clamp_offsets(RG_Tileview *tv)
+ClampOffsets(RG_Tileview *tv)
 {
 	int lim;
 
@@ -485,7 +488,7 @@ clamp_offsets(RG_Tileview *tv)
 }
 
 static void
-move_handle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, int nhandle,
+MoveHandle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, int nhandle,
     int x2, int y2)
 {
 	int dx = x2 - tv->xorig;
@@ -586,7 +589,7 @@ move_handle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, int nhandle,
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	RG_Tileview *tv = AG_SELF();
 	int x = AG_INT(1);
@@ -600,14 +603,14 @@ mousemotion(AG_Event *event)
 	if (tv->scrolling) {
 		tv->xoffs += xrel;
 		tv->yoffs += yrel;
-		clamp_offsets(tv);
-		move_cursor(tv, x - tv->xoffs, y - tv->yoffs);
+		ClampOffsets(tv);
+		MoveCursor(tv, x - tv->xoffs, y - tv->yoffs);
 		return;
 	}
 
 	sx = x - tv->xoffs;
 	sy = y - tv->yoffs;
-	move_cursor(tv, sx, sy);
+	MoveCursor(tv, sx, sy);
 	sx /= tv->pxsz;
 	sy /= tv->pxsz;
 
@@ -616,14 +619,10 @@ mousemotion(AG_Event *event)
 			RG_TileviewHandle *th = &ctrl->handles[i];
 
 			if (th->enable) {
-				move_handle(tv, ctrl, i, sx, sy);
+				MoveHandle(tv, ctrl, i, sx, sy);
 				break;
 			} else {
-				if (cursor_overlap(th, sx, sy)) {
-					th->over = 1;
-				} else {
-					th->over = 0;
-				}
+				th->over = CursorOver(th, sx, sy);
 			}
 		}
 		if (i < ctrl->nhandles)
@@ -635,7 +634,7 @@ mousemotion(AG_Event *event)
 			{
 				RG_TileElement *tel = tv->tv_pixmap.tel;
 
-				if (pixmap_coincident(tel, sx, sy)) {
+				if (OverPixmap(tel, sx, sy)) {
 					RG_PixmapMotion(tv, tel,
 					    sx - tel->tel_pixmap.x,
 					    sy - tel->tel_pixmap.y,
@@ -666,7 +665,7 @@ mousemotion(AG_Event *event)
 			break;
 		case RG_TILEVIEW_ATTRIB_EDIT:
 			if (tv->flags & RG_TILEVIEW_SET_ATTRIBS) {
-				toggle_attrib(tv, sx, sy);
+				ToggleAttrib(tv, sx, sy);
 			}
 			break;
 		default:
@@ -679,7 +678,7 @@ mousemotion(AG_Event *event)
 }
 
 static Uint32
-autoredraw(void *obj, Uint32 ival, void *arg)
+RedrawTimeout(void *obj, Uint32 ival, void *arg)
 {
 	RG_Tileview *tv = obj;
 
@@ -718,13 +717,16 @@ RG_TileviewSetTile(RG_Tileview *tv, RG_Tile *t)
 	}
 }
 
-void
-RG_TileviewInit(RG_Tileview *tv, RG_Tileset *ts, int flags)
+static void
+Init(void *obj)
 {
-	AG_WidgetInit(tv, &rgTileviewOps, AG_WIDGET_HFILL|AG_WIDGET_VFILL|
-	                                  AG_WIDGET_FOCUSABLE|
-					  AG_WIDGET_CLIPPING);
-	tv->ts = ts;
+	RG_Tileview *tv = obj;
+	
+	WIDGET(tv)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL|
+	                     AG_WIDGET_FOCUSABLE|
+	                     AG_WIDGET_CLIPPING;
+	tv->flags = 0;
+	tv->ts = NULL;
 	tv->tile = NULL;
 	tv->scaled = NULL;
 	tv->zoom = 100;
@@ -735,7 +737,6 @@ RG_TileviewInit(RG_Tileview *tv, RG_Tileset *ts, int flags)
 	tv->xms = 0;
 	tv->yms = 0;
 	tv->scrolling = 0;
-	tv->flags = flags;
 	tv->state = RG_TILEVIEW_TILE_EDIT;
 	tv->tv_tile.geo_ctrl = NULL;
 	tv->tv_tile.orig_ctrl = NULL;
@@ -755,13 +756,13 @@ RG_TileviewInit(RG_Tileview *tv, RG_Tileset *ts, int flags)
 
 	AG_WidgetMapSurface(tv, NULL);
 
-	AG_SetTimeout(&tv->redraw_to, autoredraw, NULL, 0);
+	AG_SetTimeout(&tv->redraw_to, RedrawTimeout, NULL, 0);
 	
-	AG_SetEvent(tv, "window-keydown", keydown, NULL);
-	AG_SetEvent(tv, "window-keyup", keyup, NULL);
-	AG_SetEvent(tv, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(tv, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(tv, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(tv, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(tv, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(tv, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(tv, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(tv, "window-mousemotion", MouseMotion, NULL);
 }
 
 #define INSERT_VALUE(vt,memb, type,arg) do {			\
@@ -931,10 +932,8 @@ RG_TileviewSetAutoRefresh(RG_Tileview *tv, int ena, int rate)
 {
 	if (ena) {
 		AG_AddTimeout(tv, &tv->redraw_to, rate);
-		dprintf("enabled autoredraw\n");
 	} else {
 		AG_DelTimeout(tv, &tv->redraw_to);
-		dprintf("disabled autoredraw\n");
 	}
 }
 
@@ -972,7 +971,7 @@ RG_TileviewSetZoom(RG_Tileview *tv, int z2, int adj_offs)
 	if (adj_offs) {
 		tv->xoffs += (t->su->w*pxsz1 - t->su->w*tv->pxsz)/2;
 		tv->yoffs += (t->su->h*pxsz1 - t->su->h*tv->pxsz)/2;
-		clamp_offsets(tv);
+		ClampOffsets(tv);
 	}
 	t->flags |= RG_TILE_DIRTY;
 }
@@ -1806,7 +1805,7 @@ const AG_WidgetOps rgTileviewOps = {
 		"AG_Widget:RG_Tileview",
 		sizeof(RG_Tileview),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

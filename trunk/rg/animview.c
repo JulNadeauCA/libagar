@@ -34,7 +34,7 @@ RG_AnimviewNew(void *parent)
 	RG_Animview *av;
 
 	av = Malloc(sizeof(RG_Animview));
-	RG_AnimviewInit(av);
+	AG_ObjectInit(av, &rgAnimviewOps);
 	AG_ObjectAttach(parent, av);
 	return (av);
 }
@@ -120,8 +120,7 @@ OpenMenu(RG_Animview *av, int x, int y)
 	if (av->menu != NULL)
 		CloseMenu(av);
 	
-	av->menu = Malloc(sizeof(AG_Menu));
-	AG_MenuInit(av->menu, 0);
+	av->menu = AG_MenuNew(NULL, 0);
 	av->menu_item = av->menu->itemSel = AG_MenuAddItem(av->menu, NULL);
 	{
 		AG_MenuItem *m_speed;
@@ -158,7 +157,7 @@ OpenMenu(RG_Animview *av, int x, int y)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	RG_Animview *av = AG_SELF();
 	int button = AG_INT(1);
@@ -171,11 +170,13 @@ mousebuttondown(AG_Event *event)
 		             WIDGET(av)->cy + y);
 }
 
-void
-RG_AnimviewInit(RG_Animview *av)
+static void
+Init(void *obj)
 {
-	AG_WidgetInit(av, &rgAnimviewOps, 0);
-	WIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_HFILL|AG_WIDGET_VFILL;
+	RG_Animview *av = obj;
+
+	WIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_EXPAND;
+
 	av->pre_w = 64;
 	av->pre_h = 64;
 	av->ranim.x = 0;
@@ -190,11 +191,9 @@ RG_AnimviewInit(RG_Animview *av)
 	av->btns.play = AG_ButtonNew(av, 0, NULL);
 	AG_ButtonSurfaceNODUP(av->btns.play, rgIconPlay.s);
 	AG_SetEvent(av->btns.play, "button-pushed", Play, "%p", av);
-	
 	av->btns.pause = AG_ButtonNew(av, 0, NULL);
 	AG_ButtonSurfaceNODUP(av->btns.pause, rgIconPause.s);
 	AG_SetEvent(av->btns.pause, "button-pushed", Pause, "%p", av);
-	
 	av->btns.stop = AG_ButtonNew(av, 0, NULL);
 	AG_ButtonSurfaceNODUP(av->btns.stop, rgIconStop.s);
 	AG_SetEvent(av->btns.stop, "button-pushed", Stop, "%p", av);
@@ -203,7 +202,7 @@ RG_AnimviewInit(RG_Animview *av)
 	AG_ButtonDisable(av->btns.pause);
 	AG_ButtonDisable(av->btns.stop);
 	
-	AG_SetEvent(av, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(av, "window-mousebuttondown", MouseButtonDown, NULL);
 }
 
 void
@@ -289,7 +288,7 @@ const AG_WidgetOps rgAnimviewOps = {
 		"AG_Widget:RG_Animview",
 		sizeof(RG_Animview),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

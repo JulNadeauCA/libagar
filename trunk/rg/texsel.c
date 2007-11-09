@@ -23,18 +23,24 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Simple texture selection widget.
+ */
+
 #include <core/core.h>
 
 #include "tileset.h"
 #include "texsel.h"
 
 RG_TextureSelector *
-RG_TextureSelectorNew(void *parent, RG_Tileset *tset, int flags)
+RG_TextureSelectorNew(void *parent, RG_Tileset *tset, Uint flags)
 {
 	RG_TextureSelector *ts;
 
 	ts = Malloc(sizeof(RG_TextureSelector));
-	RG_TextureSelectorInit(ts, tset, flags);
+	AG_ObjectInit(ts, &rgTextureSelectorOps);
+	ts->flags |= flags;
+	ts->tset = tset;
 	AG_ObjectAttach(parent, ts);
 	return (ts);
 }
@@ -83,28 +89,33 @@ SelectTexture(AG_Event *event)
 	AG_WidgetUnlockBinding(bTexname);
 }
 
-void
-RG_TextureSelectorInit(RG_TextureSelector *ts, RG_Tileset *tset, int flags)
+static void
+Init(void *obj)
 {
-	AG_TlistInit(&ts->tl, AG_TLIST_POLL|AG_TLIST_EXPAND);
-	AG_TlistSetItemHeight(&ts->tl, RG_TILESZ);
-	AG_SetEvent(&ts->tl, "tlist-poll", PollTextures, NULL);
-	AG_SetEvent(&ts->tl, "tlist-selected", SelectTexture, NULL);
+	RG_TextureSelector *ts = obj;
+	AG_Tlist *tl = obj;
+
+	WIDGET(ts)->flags |= AG_WIDGET_EXPAND;
+
+	tl->flags |= AG_TLIST_POLL;
+	AG_TlistSetItemHeight(tl, RG_TILESZ);
+	AG_SetEvent(tl, "tlist-poll", PollTextures, NULL);
+	AG_SetEvent(tl, "tlist-selected", SelectTexture, NULL);
 	
-	ts->tset = tset;
-	ts->flags = flags;
+	ts->tset = NULL;
+	ts->flags = 0;
 	ts->texname[0] = '\0';
 
 	AG_WidgetBind(ts, "texture-name", AG_WIDGET_STRING, ts->texname,
 	    sizeof(ts->texname));
 }
 
-const AG_WidgetOps agTextureSelectorOps = {
+const AG_WidgetOps rgTextureSelectorOps = {
 	{
 		"AG_Widget:AG_Tlist:AG_TextureSelector",
 		sizeof(AG_Tlist),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

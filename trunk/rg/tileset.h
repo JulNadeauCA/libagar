@@ -78,11 +78,9 @@ __BEGIN_DECLS
 extern const AG_ObjectOps rgTilesetOps;
 
 void	 	 RG_InitSubsystem(void);
+void		 RG_DestroySubsystem(void);
 
 RG_Tileset	*RG_TilesetNew(void *, const char *, Uint);
-void		 RG_TilesetInit(void *, const char *);
-void		*RG_TilesetEdit(void *);
-
 RG_Tile		*RG_TilesetFindTile(RG_Tileset *, const char *);
 RG_Sketch	*RG_TilesetFindSketch(RG_Tileset *, const char *);
 RG_Pixmap	*RG_TilesetFindPixmap(RG_Tileset *, const char *);
