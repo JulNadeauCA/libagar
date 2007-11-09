@@ -363,9 +363,9 @@ DEV_GuiDebugger(void)
 	AG_WindowSetCaption(win, _("GUI Debugger"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	tl = AG_TlistNewPolled(win, AG_TLIST_FOCUS|AG_TLIST_EXPAND,
-	    PollWindows, NULL);
+	tl = AG_TlistNewPolled(win, AG_TLIST_EXPAND, PollWindows, NULL);
 	AG_SetEvent(tl, "tlist-dblclick", WidgetParams, "%p", tl);
+	AG_WidgetFocus(tl);
 
 	mi = AG_TlistSetPopup(tl, "window");
 	AG_MenuSetPollFn(mi, CreateWindowMenu, "%p", tl);
