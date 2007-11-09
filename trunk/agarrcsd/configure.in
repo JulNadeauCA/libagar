@@ -3,8 +3,8 @@
 
 REGISTER("--enable-warnings",	"Enable compiler warnings [default: no]")
 
-HDEFINE(VERSION, "\"1.1-beta\"")
-HDEFINE(RELEASE, "\"Source of Agony\"")
+HDEFINE(VERSION, "1.1-beta")
+HDEFINE(RELEASE, "Source of Agony")
 
 CHECK(cc)
 REQUIRE(agar, 1.3)
