@@ -30,7 +30,6 @@
 #include <core/core.h>
 #include <core/config.h>
 #include <core/timeout.h>
-#include <core/typesw.h>
 
 #include <gui/window.h>
 #include <gui/box.h>
@@ -91,11 +90,8 @@ CreateObject(AG_Event *event)
 		AG_ObjectGenName(agWorld, cl, name, sizeof(name));
 
 	nobj = Malloc(cl->size);
-	if (cl->init != NULL) {
-		cl->init(nobj, name);
-	} else {
-		AG_ObjectInit(nobj, name, cl);
-	}
+	AG_ObjectInit(nobj, cl);
+	AG_ObjectSetName(nobj, "%s", name);
 	AG_ObjectAttach(pobj, nobj);
 	AG_ObjectUnlinkDatafiles(nobj);
 
@@ -726,8 +722,8 @@ CreateObjectDlg(AG_Event *event)
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		AG_LabelNewStatic(bo, 0, _("Type: %s"), cl->type);
-		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
-		    _("Name: "));
+		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL, _("Name: "));
+		AG_WidgetFocus(tb);
 	}
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
@@ -905,13 +901,13 @@ DEV_Browser(void)
 	AG_WindowSetCaption(win, _("Object Browser"));
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_LEFT, 0);
 	
-	tlObjs = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tlObjs, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
-	                      AG_TLIST_EXPAND);
+	tlObjs = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
+	                           AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
-	AG_SetEvent(tlObjs, "tlist-poll", PollObjects, "%p,%p", agWorld, NULL);
-	AG_SetEvent(tlObjs, "tlist-dblclick", ObjectOp, "%p, %i", tlObjs,
-	    OBJEDIT_EDIT_DATA);
+	AG_SetEvent(tlObjs, "tlist-poll",
+	    PollObjects, "%p,%p", agWorld, NULL);
+	AG_SetEvent(tlObjs, "tlist-dblclick",
+	    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_DATA);
 
 	me = AG_MenuNew(win, AG_MENU_HFILL);
 	mi = AG_MenuAddItem(me, _("File"));

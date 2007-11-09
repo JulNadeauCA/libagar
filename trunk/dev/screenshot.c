@@ -294,9 +294,9 @@ DEV_ScreenshotUploader(void)
 		AG_LabelSizeHint(lbl, 1,
 		    _("Status: Transmitting frame XXXXXXXXXX"));
 
-		hosttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
-		    _("Host: "));
+		hosttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, _("Host: "));
 		porttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, _("Port: "));
+		AG_WidgetFocus(hosttb);
 
 		sbu = AG_SpinbuttonNew(vb, 0, _("Refresh rate (ms): "));
 		AG_SpinbuttonSetMin(sbu, 1);

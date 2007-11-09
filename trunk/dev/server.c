@@ -348,7 +348,8 @@ DEV_DebugServerStart(void)
 	int rv;
 
 	if (!server_inited) {
-		NS_ServerInit(&server, "_DebugServer");
+		AG_ObjectInitStatic(&server, &nsServerOps);
+		AG_ObjectSetName(&server, "_DebugServer");
 		NS_ServerSetProtocol(&server, "agar-debug", PROTO_VERSION);
 		NS_ServerBind(&server, NULL, DEFAULT_PORT);
 	
@@ -397,8 +398,7 @@ DEV_DebugServer(void)
 	AG_WindowSetCaption(win, _("Debug Server"));
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_RIGHT, 0);
 
-	tl = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tl, AG_TLIST_POLL|AG_TLIST_EXPAND);
+	tl = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tl, "CLIENT (255.255.255.255): 0.0-beta", 8);
 	AG_SetEvent(tl, "tlist-poll", PollClients, NULL);
 		

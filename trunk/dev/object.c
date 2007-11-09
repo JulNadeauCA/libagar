@@ -34,7 +34,6 @@
 #include <core/dir.h>
 #include <core/file.h>
 #include <core/config.h>
-#include <core/typesw.h>
 
 #include <gui/window.h>
 #include <gui/box.h>
@@ -299,9 +298,9 @@ DEV_ObjectEdit(void *p)
 	{
 		AG_Textbox *tbMD5, *tbSHA1, *tbRMD160;
 
-		tbox = AG_TextboxNew(ntab, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
-		    _("Name: "));
+		tbox = AG_TextboxNew(ntab, AG_TEXTBOX_HFILL, _("Name: "));
 		AG_TextboxPrintf(tbox, ob->name);
+		AG_WidgetFocus(tbox);
 		AG_SetEvent(tbox, "textbox-return", RenameObject, "%p", ob);
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
