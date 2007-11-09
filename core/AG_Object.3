@@ -35,22 +35,16 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-The Agar object system is a simple, generic and powerful system for
-object-oriented programming in C.
+The Agar object system enables developers to implement components using
+C or C++, and still provide equally good object-oriented programming support
+(e.g., inheritance, virtual functions, etc) to applications in either
+C or C++ (and possibly other languages).
 .Pp
-Objects can be organized in a virtual filesystem.
-A number of features are implemented at the object level, notably
-events
-.Xr ( AG_Event 3 ) ,
-timing
-.Xr ( AG_Timeout 3 )
-and property tables
-.Xr ( AG_Prop 3 ) .
-.Pp
-Arbitrary datasets (possibly large and complex ones) can be archived in
-a portable and efficient manner.
-Generic information about an object can be kept resident, while datasets
-are moved between memory and storage.
+It also provides a number of features, such as virtual filesystems,
+virtual functions, generic properties and per-object management of
+resources such as timers and threads (where available).
+The virtual system allows arbitrary datasets (possibly large and complex ones)
+to be archived to different forms of persistent storage in an efficient manner.
 .Sh INITIALIZATION AND LINKAGE
 .nr nS 1
 .Pp
@@ -58,7 +52,7 @@ are moved between memory and storage.
 .Fn AG_ObjectNew "AG_Object *parent" "const char *name" "const AG_ObjectOps *ops"
 .Pp
 .Ft "void"
-.Fn AG_ObjectInit "AG_Object *obj" "const char *name" "const AG_ObjectOps *ops"
+.Fn AG_ObjectInit "AG_Object *obj" "const AG_ObjectOps *ops"
 .Pp
 .Ft "void"
 .Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
@@ -88,7 +82,7 @@ are moved between memory and storage.
 .Fn AG_UnlockLinkage "void"
 .Pp
 .Ft "void"
-.Fn AG_ObjectSetName "AG_Object *obj" "const char *new_name"
+.Fn AG_ObjectSetName "AG_Object *obj" "const char *fmt" "..."
 .Pp
 .Ft "void"
 .Fn AG_ObjectSetOps "AG_Object *obj" "const AG_ObjectOps *ops"
@@ -115,7 +109,9 @@ fails and returns NULL.
 .Pp
 The
 .Fn AG_ObjectInit
-function initializes an existing AG_Object structure.
+function initializes an object of the specified class, invoking the
+.Fn init
+operation of every class in the inheritance hierarchy.
 The
 .Fa name
 string identifies this object instance.
@@ -138,8 +134,8 @@ typedef struct ag_object_ops {
 	size_t size;                               /* Size of structure */
 	AG_Version ver;                            /* Version numbers */
 
-	void (*init)(void *obj, const char *name);   /* Initialize */
-	void (*free_dataset)(void *obj);             /* Free dataset */
+	void (*init)(void *obj);                     /* Initialize */
+	void (*reinit)(void *obj);                   /* Free dataset */
 	void (*destroy)(void *obj);                  /* Release */
 	int  (*load)(void *obj, AG_DataSource *buf); /* Load dataset */
 	int  (*save)(void *obj, AG_DataSource *buf); /* Save dataset */
@@ -169,22 +165,16 @@ The
 .Fn init
 operation initializes an
 .Nm
-instance after memory has been allocated for it.
-A subclass object's
+instance.
+It invokes the
 .Fn init
-should invoke the
-.Fn init
-function of its superclass.
-For direct subclasses of
-.Fn AG_Object ,
-this function is
-.Fn AG_ObjectInit .
+operation of every class in the inheritance hierarchy.
 .Pp
 The
-.Fn free_dataset
+.Fn reinit
 operation releases any element of the dataset that has been dynamically
 allocated.
-.Fn free_dataset
+.Fn reinit
 is invoked by the object system:
 .Pp
 .Bl -bullet -compact
@@ -207,7 +197,7 @@ The
 operation is invoked from
 .Fn AG_ObjectDestroy
 to release any resources that are not handled by
-.Fn free_dataset .
+.Fn reinit .
 Note that
 .Fn destroy
 must not free the
@@ -222,14 +212,15 @@ operations are responsible for archiving the dataset (see the
 .Em ARCHIVING
 section for more information).
 .Pp
-When defined,
+When defined, the
 .Fn edit
 operation generates user interface elements allowing the user to edit
 the object's dataset.
+It is a generic operation, not dependent on any particular GUI library.
 .Pp
-Typically.
+If using the Agar-GUI, the
 .Fn edit
-will create an
+operation will usually create an
 .Xr AG_Window 3
 or a container widget such as 
 .Xr AG_Box 3 .
@@ -392,6 +383,8 @@ They are no-ops if thread support is disabled.
 .Pp
 .Fn AG_ObjectSetName
 changes the name of the given object.
+If the object is attached to a VFS, it is assumed to be locked.
+.Pp
 .Fn AG_ObjectSetOps
 changes the generic operation vector (pointer to
 .Ft AG_ObjectOps
@@ -532,21 +525,31 @@ and -1 on failure.
 .nr nS 0
 The
 .Fn AG_ObjectFreeDataset
-function frees any dynamically allocated resources
-(using the
-.Fn free_dataset
-operation), and clears the
+function frees any dynamically allocated resources by invoking the
+.Fn reinit
+of every class in the inheritance hierachy.
+The function also clears the
 .Dv AG_OBJECT_RESIDENT
 flag.
-Data structure (e.g., lists) must remain in a consistent state, to prepare
-for any subsequent
+Contrary to the
+.Fn destroy
+operation,
+.Fn reinit
+must leave the data structures in a consistent state (e.g., for a subsequent
 .Fn load
-operation.
+operation).
 .Pp
 The
 .Fn AG_ObjectDestroy
 function frees all resources reserved by the given object (and any of its
 children that is not being referenced).
+.Fn AG_ObjectDestroy
+invokes the
+.Fn reinit
+and
+.Fn destroy
+operations of every class in the inheritance hierarchy.
+Note that
 .Fn AG_ObjectDestroy
 also cancels any
 .Xr AG_Timeout 3
@@ -624,24 +627,13 @@ information and arbitrary datasets to an efficient, machine-independent
 representation.
 .Pp
 The
-.Fn load
-and
-.Fn save
-operations of an object, if defined, are responsible for archiving its dataset
-to a portable format.
-.Pp
-Note: Objects that are not direct subclasses of
-.Nm
-should explicitely invoke the
-.Fn load
-and
-.Fn save
-operations of their parents.
-.Pp
-The
 .Fn AG_ObjectLoad
 function (and its variants) are used to load the generic part or the dataset
 of either a single object or an object hierarchy, from archived data.
+.Fn AG_ObjectLoad
+invokes the
+.Fn load
+operation of every class in the inheritance hierarchy of the object.
 .Pp
 .Fn AG_ObjectLoad ,
 .Fn AG_ObjectLoadGeneric
@@ -669,6 +661,10 @@ function creates an archive of the given AG_Object in the save
 directory (the
 .Sq save-path
 config setting).
+.Fn AG_ObjectSave
+invokes the
+.Fn load
+operation of every class in the inheritance hierarchy of the object.
 The
 .Fn AG_ObjectSaveAll
 variant also saves child objects.
@@ -734,6 +730,73 @@ If the object was loaded from file,
 .Fa path
 is the pathname of the file.
 .El
+.Sh EXAMPLES
+.Pp
+The following C code defines an new object class named
+.Sq MyClass :
+.Bd -literal
+	typedef struct my_class {
+		struct ag_object inherit;
+		int foo, bar;
+	} MyClass;
+
+	static void
+	Init(void *obj)
+	{
+		MyClass *my = obj;
+		my->foo = 0;
+		my->bar = 0;
+	}
+	
+	const AG_ObjectOps MyClassOps = {
+		"MyClass",
+		sizeof(MyClass),
+		{ 1,0 },
+		Init,
+		NULL,	/* reinit */
+		NULL,	/* destroy */
+		NULL,	/* load */
+		NULL,	/* save */
+		NULL	/* edit */
+	};
+.Ed
+.Pp
+The following C code implements a subclass of
+.Sq MyClass :
+.Bd -literal
+	typedef struct my_subclass {
+		struct my_class inherit;
+		char *baz;
+	} MySubclass;
+	
+	static void
+	Init(void *obj)
+	{
+		MySubclass *my = obj;
+		my->baz = "Baz";
+	}
+	
+	const AG_ObjectOps MySubclassOps = {
+		"MyClass:MySubclass",
+		sizeof(MySubclass),
+		{ 1,0 },
+		Init,
+		NULL,	/* reinit */
+		NULL,	/* destroy */
+		NULL,	/* load */
+		NULL,	/* save */
+		NULL	/* edit */
+	};
+.Ed
+.Pp
+The following code will create an initialized instance of
+.Sq MySubclass :
+.Bd -literal
+	MySubclass *my;
+	
+	my = Malloc(sizeof(MySubclass));
+	AG_ObjectInit(my, &MySubclassOps);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,
