@@ -119,10 +119,8 @@ typedef struct map_view {
 __BEGIN_DECLS
 extern const AG_WidgetOps mapViewOps;
 
-MAP_View	*MAP_ViewNew(void *, MAP *, int, struct ag_toolbar *,
-		               struct ag_statusbar *);
-void	 	 MAP_ViewInit(MAP_View *, MAP *, int,
-		              struct ag_toolbar *, struct ag_statusbar *);
+MAP_View *MAP_ViewNew(void *, MAP *, Uint, struct ag_toolbar *,
+                      struct ag_statusbar *);
 
 void	 MAP_ViewSizeHint(MAP_View *, int, int);
 void	 MAP_ViewCenter(MAP_View *, int, int);

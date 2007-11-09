@@ -51,7 +51,8 @@ insert_init(void *p)
 	ins->snap_mode = RG_SNAP_NONE;
 	ins->replace_mode = 0;
 	ins->angle = 0;
-	MAP_Init(&ins->mTmp, "tmp");
+
+	AG_ObjectInitStatic(&ins->mTmp, &mapOps);
 	ins->mvTmp = NULL;
 
 	MAP_ToolPushStatus(ins,
@@ -63,7 +64,7 @@ insert_destroy(void *p)
 {
 	struct map_insert_tool *ins = p;
 
-	MAP_Destroy(&ins->mTmp);
+	AG_ObjectDestroy(&ins->mTmp);
 }
 
 #if 0

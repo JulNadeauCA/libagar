@@ -92,9 +92,6 @@ A per-element layer attribute also defines the attributed layer.
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft void
-.Fn MAP_Init "void *obj" "const char *name"
-.Pp
 .Ft "MAP *"
 .Fn MAP_New "void *parent" "const char *name"
 .Pp
@@ -108,17 +105,8 @@ A per-element layer attribute also defines the attributed layer.
 .Fn MAP_SetZoom "MAP *map" "int camera" "Uint factor"
 .Pp
 .nr nS 0
-.Fn MAP_Init
-initializes
-.Fa obj
-as a
-.Nm
-identified by the string
-.Fa name .
 .Fn MAP_New
-allocates, initializes and attaches a new map to
-.Fa parent ,
-unless the latter is a NULL pointer.
+allocates, initializes and attaches a new map.
 .Pp
 The
 .Fn MAP_AllocNodes

@@ -61,13 +61,29 @@ static void key_up(AG_Event *);
 static void key_down(AG_Event *);
 
 MAP_View *
-MAP_ViewNew(void *parent, MAP *m, int flags, struct ag_toolbar *toolbar,
+MAP_ViewNew(void *parent, MAP *m, Uint flags, struct ag_toolbar *toolbar,
     struct ag_statusbar *statbar)
 {
 	MAP_View *mv;
 
 	mv = Malloc(sizeof(MAP_View));
-	MAP_ViewInit(mv, m, flags, toolbar, statbar);
+	AG_ObjectInit(mv, &mapViewOps);
+	mv->flags |= flags;
+	mv->map = m;
+	mv->toolbar = toolbar;
+	mv->statusbar = statbar;
+
+	AG_MutexLock(&m->lock);
+	mv->mx = m->origin.x;
+	mv->my = m->origin.y;
+	AG_MutexUnlock(&m->lock);
+
+	if (statbar != NULL) {
+		mv->statusbar = statbar;
+		mv->status = AG_StatusbarAddLabel(statbar, AG_LABEL_STATIC,
+		    "...");
+	}
+
 	AG_ObjectAttach(parent, mv);
 	return (mv);
 }
@@ -263,17 +279,18 @@ UpdateCamera(AG_Event *event)
 	MAP_ViewUpdateCamera(mv);
 }
 
-void
-MAP_ViewInit(MAP_View *mv, MAP *m, int flags,
-    struct ag_toolbar *toolbar, struct ag_statusbar *statbar)
+static void
+Init(void *obj)
 {
-	AG_WidgetInit(mv, &mapViewOps, AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|
-	                               AG_WIDGET_HFILL|AG_WIDGET_VFILL);
+	MAP_View *mv = obj;
 
-	mv->flags = (flags | MAP_VIEW_CENTER);
+	WIDGET(mv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|
+	                     AG_WIDGET_EXPAND;
+
+	mv->flags = MAP_VIEW_CENTER;
 	mv->mode = MAP_VIEW_EDITION;
 	mv->edit_attr = 0;
-	mv->map = m;
+	mv->map = NULL;
 	mv->actor = NULL;
 	mv->cam = 0;
 	mv->mw = 0;					/* Set on scale */
@@ -292,11 +309,9 @@ MAP_ViewInit(MAP_View *mv, MAP *m, int flags,
 	mv->dblclicked = 0;
 	mv->hbar = NULL;
 	mv->vbar = NULL;
-	mv->toolbar = toolbar;
-	mv->statusbar = statbar;
-	mv->status = (statbar != NULL) ?
-	             AG_StatusbarAddLabel(statbar, AG_LABEL_STATIC, "...") :
-		     NULL;
+	mv->toolbar = NULL;
+	mv->statusbar = NULL;
+	mv->status = NULL;
 	mv->lib_tl = NULL;
 	mv->objs_tl = NULL;
 	mv->layers_tl = NULL;
@@ -332,11 +347,6 @@ MAP_ViewInit(MAP_View *mv, MAP *m, int flags,
 	mv->col.b = 255;
 	mv->col.a = 32;
 	mv->col.pixval = SDL_MapRGB(agVideoFmt, 255, 255, 255);
-
-	AG_MutexLock(&m->lock);
-	mv->mx = m->origin.x;
-	mv->my = m->origin.y;
-	AG_MutexUnlock(&m->lock);
 
 	AG_SetEvent(mv, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(mv, "widget-hidden", LostFocus, NULL);
@@ -1455,7 +1465,7 @@ const AG_WidgetOps mapViewOps = {
 		"AG_Widget:MAP_View",
 		sizeof(MAP_View),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

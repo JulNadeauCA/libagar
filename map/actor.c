@@ -32,12 +32,11 @@
 
 #include "actor.h"
 
-void
-MAP_ActorInit(void *obj, const char *name)
+static void
+Init(void *obj)
 {
 	MAP_Actor *a = obj;
 
-	AG_ObjectInit(a, name, &mapActorOps);
 	AG_ObjectRemain(a, AG_OBJECT_REMAIN_DATA);
 	AG_MutexInitRecursive(&a->lock);
 	a->flags = 0;
@@ -161,7 +160,7 @@ MAP_ActorUpdate(void *obj)
 }
 
 static void
-move_nodes(MAP_Actor *a, int xo, int yo)
+MoveNodes(MAP_Actor *a, int xo, int yo)
 {
 	MAP *m = a->parent;
 	int x, y;
@@ -227,28 +226,28 @@ MAP_ActorMoveTiles(void *obj, int xo, int yo)
 				case 0:
 					if (a->g_map.xmot < -MAPTILESZ/2) {
 						a->g_map.xmot = +MAPTILESZ/2;
-						move_nodes(a, -1, 0);
+						MoveNodes(a, -1, 0);
 						goto out;
 					}
 					break;
 				case 90:
 					if (a->g_map.ymot < -MAPTILESZ/2) {
 						a->g_map.ymot = +MAPTILESZ/2;
-						move_nodes(a, 0, -1);
+						MoveNodes(a, 0, -1);
 						goto out;
 					}
 					break;
 				case 180:
 					if (a->g_map.xmot > +MAPTILESZ/2) {
 						a->g_map.xmot = -MAPTILESZ/2;
-						move_nodes(a, +1, 0);
+						MoveNodes(a, +1, 0);
 						goto out;
 					}
 					break;
 				case 270:
 					if (a->g_map.ymot > +MAPTILESZ/2) {
 						a->g_map.ymot = -MAPTILESZ/2;
-						move_nodes(a, 0, +1);
+						MoveNodes(a, 0, +1);
 						goto out;
 					}
 					break;
@@ -373,8 +372,8 @@ MAP_ActorUnmapTiles(void *obj)
 }
 
 #ifdef EDITION
-void *
-MAP_ActorEdit(void *p)
+static void *
+Edit(void *p)
 {
 	MAP_Actor *a = p;
 	AG_Window *win;
@@ -404,13 +403,13 @@ const AG_ObjectOps mapActorOps = {
 	"MAP_Actor",
 	sizeof(MAP_Actor),
 	{ 0, 0 },
-	MAP_ActorInit,
-	NULL,			/* free_dataset */
+	Init,
+	NULL,		/* reinit */
 	Destroy,
 	Load,
 	Save,
 #ifdef EDITION
-	MAP_ActorEdit
+	Edit
 #else
 	NULL
 #endif
