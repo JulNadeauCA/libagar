@@ -75,7 +75,8 @@ NS_ServerNew(void *parent, Uint flags, const char *name, const char *proto,
 	NS_Server *ns;
 
 	ns = Malloc(sizeof(NS_Server));
-	NS_ServerInit(ns, name);
+	AG_ObjectInit(ns, &nsServerOps);
+	AG_ObjectSetName(ns, "%s", name);
 	ns->flags |= flags;
 	NS_ServerSetProtocol(ns, proto, protoVer);
 	NS_ServerBind(ns, NULL, port);
@@ -83,12 +84,11 @@ NS_ServerNew(void *parent, Uint flags, const char *name, const char *proto,
 	return (ns);
 }
 
-void
-NS_ServerInit(void *p, const char *name)
+static void
+InitServer(void *obj)
 {
-	NS_Server *ns = p;
+	NS_Server *ns = obj;
 
-	AG_ObjectInit(ns, name, &nsServerOps);
 	ns->flags = 0;
 	ns->host = NULL;
 	ns->port = NULL;
@@ -107,19 +107,18 @@ NS_ServerInit(void *p, const char *name)
 	TAILQ_INIT(&ns->clients);
 }
 
-void
-NS_ClientInit(void *p, const char *name)
+static void
+InitClient(void *obj)
 {
-	NS_Client *nc = p;
+	NS_Client *nc = obj;
 
-	AG_ObjectInit(nc, name, &nsClientOps);
 	nc->host[0] = '\0';
 }
 
 static void
-DestroyServer(void *p)
+DestroyServer(void *obj)
 {
-	NS_Server *ns = p;
+	NS_Server *ns = obj;
 
 	Free(ns->cmds);
 	Free(ns->authModes);
@@ -722,7 +721,7 @@ const AG_ObjectOps nsServerOps = {
 	"NS_Server",
 	sizeof(NS_Server),
 	{ 0,0 },
-	NS_ServerInit,
+	InitServer,
 	NULL,			/* free */
 	DestroyServer,
 	NULL,			/* load */
@@ -734,7 +733,7 @@ const AG_ObjectOps nsClientOps = {
 	"NS_Client",
 	sizeof(NS_Client),
 	{ 0,0 },
-	NS_ClientInit,
+	InitClient,
 	NULL,			/* free */
 	NULL,			/* destroy */
 	NULL,			/* load */
