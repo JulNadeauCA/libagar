@@ -42,32 +42,37 @@
 #include <string.h>
 #include <errno.h>
 
-static void DrawGreyscale(void *);
-static void DrawNumerical(void *);
-
-AG_Matview *
-AG_MatviewNew(void *parent, SG_Matrix *mat, Uint flags)
+SG_Matview *
+SG_MatviewNew(void *parent, SG_Matrix *mat, Uint flags)
 {
-	AG_Matview *mv;
+	SG_Matview *mv;
 
-	mv = Malloc(sizeof(AG_Matview));
-	AG_MatviewInit(mv, mat, flags);
+	mv = Malloc(sizeof(SG_Matview));
+	AG_ObjectInit(mv, &sgMatviewOps);
+	mv->flags |= flags;
+	mv->mat = mat;
 	AG_ObjectAttach(parent, mv);
 	return (mv);
 }
 
-static void
-matview_keydown(AG_Event *event)
+void
+SG_MatviewSetDisplayMode(SG_Matview *mv, enum sg_matview_mode mode)
 {
-	AG_Matview *mv = AG_SELF();
+	mv->mode = mode;
+}
+
+static void
+KeyDown(AG_Event *event)
+{
+	SG_Matview *mv = AG_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
 	case SDLK_g:
-		WIDGET_OPS(mv)->draw = DrawGreyscale;
+		SG_MatviewSetDisplayMode(mv, SG_MATVIEW_GREYSCALE);
 		break;
 	case SDLK_n:
-		WIDGET_OPS(mv)->draw = DrawNumerical;
+		SG_MatviewSetDisplayMode(mv, SG_MATVIEW_NUMERICAL);
 		break;
 	case SDLK_EQUALS:
 		mv->scale++;
@@ -81,22 +86,24 @@ matview_keydown(AG_Event *event)
 }
 
 static void
-matview_mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 
 	AG_WidgetFocus(bu);
 }
 
-void
-AG_MatviewInit(AG_Matview *mv, SG_Matrix *mat, Uint flags)
+static void
+Init(void *obj)
 {
+	SG_Matview *mv = obj;
 	static int max_m = 4, max_n = 4;
 
-	AG_WidgetInit(mv, &agMatviewOps, AG_WIDGET_EXPAND|AG_WIDGET_CLIPPING|
-	                                 AG_WIDGET_FOCUSABLE);
-	mv->mat = mat;
-	mv->flags = flags;
+	WIDGET(mv)->flags |= AG_WIDGET_EXPAND|AG_WIDGET_CLIPPING|
+	                     AG_WIDGET_FOCUSABLE;
+
+	mv->mat = NULL;
+	mv->flags = 0;
 	mv->hspace = 2;
 	mv->vspace = 2;
 	mv->hbar = AG_ScrollbarNew(mv, AG_SCROLLBAR_HORIZ, 0);
@@ -116,19 +123,19 @@ AG_MatviewInit(AG_Matview *mv, SG_Matrix *mat, Uint flags)
 	AG_WidgetSetInt(mv->vbar, "min", 0);
 
 	AG_TextSize("-00", &mv->ent_w, &mv->ent_h);
-	AG_SetEvent(mv, "window-keydown", matview_keydown, NULL);
-	AG_SetEvent(mv, "window-mousebuttondown", matview_mousebuttondown,
-	    NULL);
+
+	AG_SetEvent(mv, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(mv, "window-mousebuttondown", MouseButtonDown, NULL);
 }
 
 void
-AG_MatviewSetNumericalFmt(AG_Matview *mv, const char *fmt)
+SG_MatviewSetNumericalFmt(SG_Matview *mv, const char *fmt)
 {
 	mv->numfmt = fmt;
 }
 
 void
-AG_MatviewSizeHint(AG_Matview *mv, const char *text, Uint m, Uint n)
+SG_MatviewSizeHint(SG_Matview *mv, const char *text, Uint m, Uint n)
 {
 	mv->pre_m = m;
 	mv->pre_n = n;
@@ -138,7 +145,7 @@ AG_MatviewSizeHint(AG_Matview *mv, const char *text, Uint m, Uint n)
 static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
-	AG_Matview *mv = p;
+	SG_Matview *mv = p;
 
 	r->w = mv->pre_n*(mv->ent_w + mv->hspace) + mv->hspace*2;
 	r->h = mv->pre_m*(mv->ent_h + mv->vspace) + mv->vspace*2;
@@ -147,7 +154,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 static int
 SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
-	AG_Matview *mv = p;
+	SG_Matview *mv = p;
 	AG_SizeAlloc aChld;
 
 	aChld.x = 0;
@@ -168,7 +175,7 @@ static void
 DrawNumerical(void *p)
 {
 	char text[8];
-	AG_Matview *mv = p;
+	SG_Matview *mv = p;
 	SG_Matrix *M = mv->mat;
 	int m, n;
 	SDL_Surface *su;
@@ -206,7 +213,7 @@ DrawNumerical(void *p)
 static void
 DrawGreyscale(void *p)
 {
-	AG_Matview *mv = p;
+	SG_Matview *mv = p;
 	SG_Matrix *A = mv->mat;
 	Uint m, n;
 	int x, y;
@@ -257,19 +264,31 @@ DrawGreyscale(void *p)
 	}
 }
 
-const AG_WidgetOps agMatviewOps = {
+static void
+Draw(void *obj)
+{
+	SG_Matview *mv = obj;
+
+	if (mv->mode == SG_MATVIEW_NUMERICAL) {
+		DrawNumerical(mv);
+	} else {
+		DrawGreyscale(mv);
+	}
+}
+
+const AG_WidgetOps sgMatviewOps = {
 	{
-		"AG_Widget:AG_Matview",
-		sizeof(AG_Matview),
+		"AG_Widget:SG_Matview",
+		sizeof(SG_Matview),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		NULL,			/* destroy */
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	DrawNumerical,
+	Draw,
 	SizeRequest,
 	SizeAllocate
 };
