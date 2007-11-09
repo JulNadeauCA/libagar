@@ -3,7 +3,7 @@
 
 REGISTER("--enable-static",	"Produce a static binary [default: no]")
 
-HDEFINE(VERSION, "\"1.0\"")
+HDEFINE(VERSION, "1.0")
 
 CHECK(cc)
 REQUIRE(agar, 1.0)
