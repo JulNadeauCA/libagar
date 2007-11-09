@@ -105,6 +105,7 @@ typedef unsigned long Ulong;
 #include <core/object.h>
 #include <core/event.h>
 #include <core/cpuinfo.h>
+#include <core/typesw.h>
 
 #include <gui/text.h>
 
