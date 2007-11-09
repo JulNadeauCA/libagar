@@ -32,6 +32,7 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
+#include "vg_view.h"
 #include "icons.h"
 #include "icons_data.h"
 
@@ -75,6 +76,8 @@ static int vgInited = 0;
 static void
 VG_InitSubsystem(void)
 {
+	AG_RegisterClass(&vgViewOps);
+
 	vgIcon_Init();
 }
 
