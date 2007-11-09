@@ -63,12 +63,11 @@ UserLookup(const char *name)
 	return (AG_ObjectFindF("/%s", name));
 }
 
-void
-UserInit(void *p, const char *name)
+static void
+Init(void *obj)
 {
-	User *u = p;
+	User *u = obj;
 
-	AG_ObjectInit(u, name, &UserOps);
 	u->name[0] = '\0';
 	u->pass[0] = '\0';
 	u->real_name[0] = '\0';
@@ -293,7 +292,8 @@ user_activate(NS_Command *cmd, void *p)
 	}
 
 	u = Malloc(sizeof(User));
-	UserInit(u, name);
+	AG_ObjectInit(u, &UserOps);
+	AG_ObjectSetName(u, "%s", name);
 	strlcpy(u->name, name, sizeof(u->name));
 	if (SetInfosFromCommand(cmd, u) == -1)
 		goto fail;
@@ -315,8 +315,8 @@ fail:
 	return (-1);
 }
 
-void *
-UserEdit(void *p)
+static void *
+Edit(void *p)
 {
 	User *u = p;
 	AG_Window *win;
@@ -327,8 +327,9 @@ UserEdit(void *p)
 	AG_WindowSetCaption(win, "User: %s", AGOBJECT(u)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 1);
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, "Name: ");
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Name: ");
 	AG_WidgetBindString(tb, "string", u->name, sizeof(u->name));
+	AG_WidgetFocus(tb);
 
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Password: ");
 	AG_TextboxSetPassword(tb, 1);
@@ -336,28 +337,21 @@ UserEdit(void *p)
 	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Real name: ");
 	AG_WidgetBindString(tb, "string", u->real_name, sizeof(u->real_name));
-	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "E-mail address: ");
 	AG_WidgetBindString(tb, "string", u->email, sizeof(u->email));
-	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Language (ISO639): ");
 	AG_WidgetBindString(tb, "string", u->lang, sizeof(u->lang));
-	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Country (ISO3166): ");
 	AG_WidgetBindString(tb, "string", u->country, sizeof(u->country));
-	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Comments: ");
 	AG_WidgetBindString(tb, "string", u->comments, sizeof(u->comments));
 
 	cb = AG_CheckboxNew(win, 0, "Write access");
 	AG_WidgetBindFlag(cb, "state", &u->flags, USER_WRITE);
-	
 	cb = AG_CheckboxNew(win, 0, "Administrative access");
 	AG_WidgetBindFlag(cb, "state", &u->flags, USER_ADMIN);
-	
 	cb = AG_CheckboxNew(win, 0, "Send e-mail notices");
 	AG_WidgetBindFlag(cb, "state", &u->flags, USER_EMAIL_NOTICES);
-
 	return (win);
 }
 
@@ -365,10 +359,10 @@ const AG_ObjectOps UserOps = {
 	"User",
 	sizeof(User),
 	{ 8, 0 },
-	UserInit,
+	Init,
 	NULL,		/* free */
 	NULL,		/* destroy */
 	Load,
 	Save,
-	UserEdit
+	Edit
 };

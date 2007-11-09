@@ -35,11 +35,9 @@ void UserTblInit(void);
 void UserTblRehash(void);
 void UserTblDestroy(void);
 
-User	*UserLookup(const char *);
-void	 UserInit(void *, const char *);
-void	 UserLink(struct user *);
-void	 UserUnlink(struct user *);
-void	*UserEdit(void *);
+User *UserLookup(const char *);
+void  UserLink(struct user *);
+void  UserUnlink(struct user *);
 
 int user_get_infos(NS_Command *, void *);
 int user_set_infos(NS_Command *, void *);
