@@ -474,9 +474,7 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 
 	switch (insn->type) {
 	case RG_ANIM_TILE:
-		tv = Malloc(sizeof(RG_Tileview));
-		RG_TileviewInit(tv, ani->tileset, 0);
-
+		tv = RG_TileviewNew(NULL, ani->tileset, 0);
 		com = AG_ComboNew(box, AG_COMBO_POLL|AG_COMBO_HFILL|
 		                       AG_COMBO_FOCUS, _("Tile: "));
 		AG_SetEvent(com, "combo-selected",

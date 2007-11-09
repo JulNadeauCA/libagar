@@ -24,7 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/typesw.h>
 
 #include <gui/window.h>
 #include <gui/box.h>
@@ -43,6 +42,7 @@
 #include "tileset.h"
 #include "tileview.h"
 #include "animview.h"
+#include "texsel.h"
 #include "icons.h"
 #include "icons_data.h"
 
@@ -62,10 +62,18 @@ extern const char *rgTileSnapModes[];
 void
 RG_InitSubsystem(void)
 {
-	AG_RegisterClass(&rgTilesetOps);
-	AG_RegisterClass(&rgAnimviewOps);
 	AG_RegisterClass(&rgTileviewOps);
+	AG_RegisterClass(&rgAnimviewOps);
+	AG_RegisterClass(&rgTextureSelectorOps);
+	
+	AG_RegisterClass(&rgTilesetOps);
+
 	rgIcon_Init();
+}
+
+void
+RG_DestroySubsystem(void)
+{
 }
 
 RG_Tileset *
@@ -74,20 +82,18 @@ RG_TilesetNew(void *parent, const char *name, Uint flags)
 	RG_Tileset *ts;
 
 	ts = Malloc(sizeof(RG_Tileset));
-	RG_TilesetInit(ts, name);
+	AG_ObjectInit(ts, &rgTilesetOps);
+	AG_ObjectSetName(ts, "%s", name);
 	ts->flags |= flags;
-	if (parent != NULL) {
-		AG_ObjectAttach(parent, ts);
-	}
+
+	AG_ObjectAttach(parent, ts);
 	return (ts);
 }
 
-void
-RG_TilesetInit(void *obj, const char *name)
+static void
+Init(void *obj)
 {
 	RG_Tileset *ts = obj;
-
-	AG_ObjectInit(ts, name, &rgTilesetOps);
 
 	/* Restart the graphical editor on load. */
 	OBJECT(ts)->flags |= AG_OBJECT_REOPEN_ONLOAD;
@@ -1207,11 +1213,12 @@ InsertTextureDlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create a new texture"));
 	
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name:"));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name:"));
 	AG_WidgetBindString(tb, "string", ins_texture_name,
 	    sizeof(ins_texture_name));
 	AG_SetEvent(tb, "textbox-return",
 	    InsertTexture, "%p,%p,%p", win, pwin, ts);
+	AG_WidgetFocus(tb);
 
 	btnbox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
@@ -1549,10 +1556,10 @@ static void
 DeleteSelTextures(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
-	AG_Tlist *tl_textures = AG_PTR(2);
+	AG_Tlist *tlTextures = AG_PTR(2);
 	AG_TlistItem *it;
 
-	TAILQ_FOREACH(it, &tl_textures->items, items) {
+	TAILQ_FOREACH(it, &tlTextures->items, items) {
 		RG_Texture *tex = it->p1;
 
 		if (!it->selected)
@@ -1695,12 +1702,12 @@ PollAnimTbl(AG_Event *event)
 	AG_MutexUnlock(&ts->lock);
 }
 
-void *
-RG_TilesetEdit(void *p)
+static void *
+Edit(void *p)
 {
 	RG_Tileset *ts = p;
 	AG_Window *win;
-	AG_Tlist *tlTiles, *tlGfx, *tlAnims, *tl_textures;
+	AG_Tlist *tlTiles, *tlGfx, *tlAnims, *tlTextures;
 	AG_Tlist *tlTileTbl, *tlAnimTbl;
 	AG_Box *bbox;
 	AG_MenuItem *mi;
@@ -1714,30 +1721,20 @@ RG_TilesetEdit(void *p)
 	AG_WindowSetSpacing(win, 0);
 	AG_WindowSetPaddingTop(win, 0);
 
-	tlTiles = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tlTiles, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
-		              AG_TLIST_EXPAND);
+	tlTiles = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
+	                            AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tlTiles, "XXXXXXXXXXXXXXXXXXXXXXXX (00x00)", 6);
 	AG_SetEvent(tlTiles, "tlist-poll", PollTiles, "%p", ts);
 	
-	tlGfx = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tlGfx, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_EXPAND);
+	tlGfx = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_EXPAND);
 	AG_SetEvent(tlGfx, "tlist-poll", PollGraphics, "%p", ts);
-	
-	tl_textures = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tl_textures, AG_TLIST_POLL|AG_TLIST_EXPAND);
-	AG_SetEvent(tl_textures, "tlist-poll", PollTextures, "%p", ts);
-
-	tlAnims = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tlAnims, AG_TLIST_POLL|AG_TLIST_EXPAND);
+	tlTextures = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_EXPAND);
+	AG_SetEvent(tlTextures, "tlist-poll", PollTextures, "%p", ts);
+	tlAnims = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tlAnims, "tlist-poll", PollAnims, "%p", ts);
-	
-	tlTileTbl = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tlTileTbl, AG_TLIST_POLL|AG_TLIST_EXPAND);
+	tlTileTbl = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tlTileTbl, "tlist-poll", PollTileTbl, "%p", ts);
-	
-	tlAnimTbl = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tlAnimTbl, AG_TLIST_POLL|AG_TLIST_EXPAND);
+	tlAnimTbl = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tlAnimTbl, "tlist-poll", PollAnimTbl, "%p", ts);
 
 	mi = AG_TlistSetPopup(tlTiles, "tile");
@@ -1805,12 +1802,12 @@ RG_TilesetEdit(void *p)
 	
 	ntab = AG_NotebookAddTab(nb, _("Textures"), AG_BOX_VERT);
 	{
-		AG_ObjectAttach(ntab, tl_textures);
+		AG_ObjectAttach(ntab, tlTextures);
 	
-		mi = AG_TlistSetPopup(tl_textures, "texture");
+		mi = AG_TlistSetPopup(tlTextures, "texture");
 		{
 			AG_MenuAction(mi, _("Delete texture"), agIconTrash.s,
-			    DeleteSelTextures, "%p,%p", ts, tl_textures);
+			    DeleteSelTextures, "%p,%p", ts, tlTextures);
 		}
 		
 		bbox = AG_BoxNewHoriz(ntab, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
@@ -1818,13 +1815,13 @@ RG_TilesetEdit(void *p)
 			AG_ButtonNewFn(bbox, 0, _("Insert"),
 			    InsertTextureDlg, "%p,%p", ts, win);
 			AG_ButtonNewFn(bbox, 0, _("Edit"),
-			    EditSelTextures, "%p,%p,%p", ts, tl_textures, win);
+			    EditSelTextures, "%p,%p,%p", ts, tlTextures, win);
 			AG_ButtonNewFn(bbox, 0, _("Delete"),
-			    DeleteSelTextures, "%p,%p", ts, tl_textures);
+			    DeleteSelTextures, "%p,%p", ts, tlTextures);
 		}
 		
-		AG_SetEvent(tl_textures, "tlist-dblclick",
-		    EditSelTextures, "%p,%p,%p", ts, tl_textures, win);
+		AG_SetEvent(tlTextures, "tlist-dblclick",
+		    EditSelTextures, "%p,%p,%p", ts, tlTextures, win);
 	}
 	
 	ntab = AG_NotebookAddTab(nb, _("Anims"), AG_BOX_VERT);
@@ -1871,13 +1868,13 @@ const AG_ObjectOps rgTilesetOps = {
 	"RG_Tileset",
 	sizeof(RG_Tileset),
 	{ 8, 0 },
-	RG_TilesetInit,
+	Init,
 	FreeDataset,
 	Destroy,
 	Load,
 	Save,
 #ifdef EDITION
-	RG_TilesetEdit
+	Edit
 #else
 	NULL
 #endif

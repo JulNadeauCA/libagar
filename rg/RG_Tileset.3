@@ -86,9 +86,6 @@ structure.
 .Ft "RG_Tileset *"
 .Fn RG_TilesetNew "void *parent" "const char *name" "Uint flags"
 .Pp
-.Ft "void"
-.Fn RG_TilesetInit "RG_Tileset *tileset" "const char *name"
-.Pp
 .nr nS 0
 The
 .Fn RG_TilesetNew
@@ -97,10 +94,6 @@ function allocates and initializes a new
 object and attaches it to
 .Fa parent
 if not NULL.
-.Fn RG_TilesetInit
-initializes a preallocated
-.Nm
-object.
 There are currently no
 .Fa flags
 defined.

@@ -115,7 +115,7 @@ find_tilesets(AG_Tlist *tl, AG_Object *pob, int depth)
 }
 
 static void
-poll_tilesets(AG_Event *event)
+PollTilesets(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 
@@ -127,7 +127,7 @@ poll_tilesets(AG_Event *event)
 }
 
 static void
-poll_src_tiles(AG_Event *event)
+PollSourceTiles(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Texture *tex = AG_PTR(1);
@@ -149,7 +149,7 @@ poll_src_tiles(AG_Event *event)
 }
 
 static void
-select_tileset(AG_Event *event)
+SelectTileset(AG_Event *event)
 {
 	RG_Texture *tex = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
@@ -160,7 +160,7 @@ select_tileset(AG_Event *event)
 }
 
 static void
-select_src_tile(AG_Event *event)
+SelectSourceTile(AG_Event *event)
 {
 	RG_Texture *tex = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
@@ -192,20 +192,21 @@ RG_TextureEdit(RG_Texture *tex)
 	AG_WindowSetCaption(win, "%s", tex->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name: "));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, tex->name,
 	    sizeof(tex->name));
+	AG_WidgetFocus(tb);
 
 	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL|AG_COMBO_FOCUS,
 	    _("Tileset: "));
-	AG_SetEvent(com->list, "tlist-poll", poll_tilesets, NULL);
-	AG_SetEvent(com, "combo-selected", select_tileset, "%p", tex);
+	AG_SetEvent(com->list, "tlist-poll", PollTilesets, NULL);
+	AG_SetEvent(com, "combo-selected", SelectTileset, "%p", tex);
 	AG_ComboSelectText(com, tex->tileset);
 	AG_TextboxPrintf(com->tbox, "%s", tex->tileset);
 
 	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_EXPAND);
-	AG_SetEvent(tl, "tlist-poll", poll_src_tiles, "%p", tex);
-	AG_SetEvent(tl, "tlist-selected", select_src_tile, "%p", tex);
+	AG_SetEvent(tl, "tlist-poll", PollSourceTiles, "%p", tex);
+	AG_SetEvent(tl, "tlist-selected", SelectSourceTile, "%p", tex);
 	AG_TlistSelectText(tl, tex->tile);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL);

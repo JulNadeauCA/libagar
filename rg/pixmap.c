@@ -367,13 +367,11 @@ CreateBrushDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("New %s brush"), px->name);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	tb_name = Malloc(sizeof(AG_Textbox));
-	AG_TextboxInit(tb_name, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name: "));
-	
-	cb_oneshot = Malloc(sizeof(AG_Checkbox));
-	AG_CheckboxInit(cb_oneshot, 0, _("One-shot"));
+	tb_name = AG_TextboxNew(NULL, AG_TEXTBOX_HFILL, _("Name: "));
+	cb_oneshot = AG_CheckboxNew(NULL, 0, _("One-shot"));
+	AG_WidgetFocus(tb_name);
 
-	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
+	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_EXPAND);
 	AG_BoxSetPadding(bo, 0);
 	AG_BoxSetSpacing(bo, 0);
 	{
@@ -463,7 +461,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 	AG_WindowSetCaption(win, _("Pixmap %s"), px->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
+	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 
 	ntab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
@@ -1128,9 +1126,7 @@ RG_PixmapOpenMenu(RG_Tileview *tv, int x, int y)
 	if (tv->tv_pixmap.menu != NULL)
 		RG_PixmapCloseMenu(tv);
 
-	me = tv->tv_pixmap.menu = Malloc(sizeof(AG_Menu));
-	AG_MenuInit(me, 0);
-
+	me = tv->tv_pixmap.menu = AG_MenuNew(NULL, 0);
 	mi = tv->tv_pixmap.menu_item = AG_MenuAddItem(me, NULL);
 	{
 		RG_TileviewGenericMenu(tv, mi);

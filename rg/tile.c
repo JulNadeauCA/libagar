@@ -1088,9 +1088,10 @@ AttachPixmapDlg(AG_Event *event)
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOMINIMIZE);
 	AG_WindowSetCaption(win, _("Attach existing pixmap"));
 
-	tl = AG_TlistNew(win, AG_TLIST_EXPAND|AG_TLIST_FOCUS);
+	tl = AG_TlistNew(win, AG_TLIST_EXPAND);
 	AG_TlistSetItemHeight(tl, RG_TILESZ);
 	AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXXX", 5);
+	AG_WidgetFocus(tl);
 
 	TAILQ_FOREACH(px, &tv->ts->pixmaps, pixmaps) {
 		AG_TlistItem *it;
@@ -1161,9 +1162,10 @@ AttachSketchDlg(AG_Event *event)
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOMINIMIZE);
 	AG_WindowSetCaption(win, _("Attach existing sketch"));
 
-	tl = AG_TlistNew(win, AG_TLIST_EXPAND|AG_TLIST_FOCUS);
+	tl = AG_TlistNew(win, AG_TLIST_EXPAND);
 	AG_TlistSetItemHeight(tl, RG_TILESZ);
 	AG_TlistSizeHint(tl, "XXXXXXXXXXXXXXXXXXXXXXXXX", 5);
+	AG_WidgetFocus(tl);
 
 	TAILQ_FOREACH(sk, &tv->ts->sketches, sketches) {
 		AG_TlistItem *it;
@@ -1524,8 +1526,9 @@ TileSettingsDlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Tile information: %s"), t->name);
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, _("Name: "));
+	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, t->name, sizeof(t->name));
+	AG_WidgetFocus(tb);
 
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Class: "));
 	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, t->clname,
@@ -1872,9 +1875,8 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	AG_WindowSetSpacing(win, 0);
 	AG_WindowSetPaddingTop(win, 0);
-	
-	tv = Malloc(sizeof(RG_Tileview));
-	RG_TileviewInit(tv, ts, 0);
+
+	tv = RG_TileviewNew(NULL, ts, 0);
 	RG_TileviewSetTile(tv, t);
 	RG_TileScale(ts, t, t->su->w, t->su->h, t->flags);
 	{
@@ -1887,18 +1889,16 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		RG_TileviewRegTool(tv, &sketch_circle_ops);
 	}
 	
-	tlFeatures = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(tlFeatures, AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND);
-	WIDGET(tlFeatures)->flags &= ~(AG_WIDGET_HFILL);
+	tlFeatures = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_TREE|
+	                               AG_TLIST_VFILL);
 	AG_TlistSizeHint(tlFeatures, _("FEATURE #00 <#00>"), 5);
-	AG_SetEvent(tlFeatures, "tlist-poll", PollFeatures, "%p,%p,%p,%p",
-	    ts, t, win, tv);
+	AG_SetEvent(tlFeatures, "tlist-poll",
+	    PollFeatures, "%p,%p,%p,%p", ts, t, win, tv);
 	InitTileFeatureMenu(tv, tlFeatures, win);
 	
 	me = AG_MenuNew(win, AG_MENU_HFILL);
 
-	tbar = Malloc(sizeof(AG_Toolbar));
-	AG_ToolbarInit(tbar, AG_TOOLBAR_HORIZ, 1, 0);
+	tbar = AG_ToolbarNew(NULL, AG_TOOLBAR_HORIZ, 1, 0);
 
 	mi = AG_MenuAddItem(me, ("File"));
 	{
@@ -2006,16 +2006,12 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 void
 RG_TileOpenMenu(RG_Tileview *tv, int x, int y)
 {
-	if (tv->menu != NULL)
+	if (tv->menu != NULL) {
 		RG_TileCloseMenu(tv);
-
-	tv->menu = Malloc(sizeof(AG_Menu));
-	AG_MenuInit(tv->menu, 0);
-
-	tv->menu_item = AG_MenuAddItem(tv->menu, NULL);
-	{
-		RG_TileviewGenericMenu(tv, tv->menu_item);
 	}
+	tv->menu = AG_MenuNew(NULL, 0);
+	tv->menu_item = AG_MenuAddItem(tv->menu, NULL);
+	RG_TileviewGenericMenu(tv, tv->menu_item);
 	tv->menu->itemSel = tv->menu_item;
 	tv->menu_win = AG_MenuExpand(tv->menu, tv->menu_item, x, y);
 }

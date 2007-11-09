@@ -15,18 +15,14 @@
 
 typedef struct rg_texture_selector {
 	struct ag_tlist tl;
-	RG_Tileset *tset;		  /* Attached tileset */
+	RG_Tileset *tset;		   /* Attached tileset */
 	char texname[RG_TEXTURE_NAME_MAX]; /* Default texture name binding */
-	int flags;
+	Uint flags;
 } RG_TextureSelector;
 
 __BEGIN_DECLS
 extern const AG_WidgetOps rgTextureSelectorOps;
-
-RG_TextureSelector *RG_TextureSelectorNew(void *, RG_Tileset *, int);
-void 		    RG_TextureSelectorInit(RG_TextureSelector *, RG_Tileset *,
-		                           int);
-void 		    RG_TextureSelectorScale(void *, int, int);
+RG_TextureSelector *RG_TextureSelectorNew(void *, RG_Tileset *, Uint);
 __END_DECLS
 
 #include "close_code.h"

@@ -237,10 +237,8 @@ typedef struct rg_tileview {
 __BEGIN_DECLS
 extern const AG_WidgetOps rgTileviewOps;
 
-RG_Tileview	*RG_TileviewNew(void *, RG_Tileset *, int);
+RG_Tileview	*RG_TileviewNew(void *, RG_Tileset *, Uint);
 RG_TileviewTool *RG_TileviewRegTool(RG_Tileview *, const void *);
-
-void RG_TileviewInit(RG_Tileview *, RG_Tileset *, int);
 
 void RG_TileviewSetTile(RG_Tileview *, RG_Tile *);
 void RG_TileviewSetZoom(RG_Tileview *, int, int);

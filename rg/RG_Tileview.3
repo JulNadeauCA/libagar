@@ -48,10 +48,7 @@ Built-in graphical editors for tile pixmaps, sketches and features are provided.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "RG_Tileview *"
-.Fn RG_TileviewNew "void *parent" "RG_Tileset *ts" "int flags"
-.Pp
-.Ft "void"
-.Fn RG_TileviewInit "RG_Tileview *tv" "RG_Tileset *ts" "int flags"
+.Fn RG_TileviewNew "void *parent" "RG_Tileset *ts" "Uint flags"
 .Pp
 .Ft "void"
 .Fn RG_TileviewSetTile "RG_Tileview *tv" "RG_Tile *tile"
@@ -67,12 +64,7 @@ The
 .Fn RG_TileviewNew
 function allocates, initializes, and attaches a
 .Nm
-widget.
-The
-.Fn RG_TileviewInit
-function initializes a
-.Nm
-widget displaying the given
+widget, initially displaying the given
 .Fa tile .
 The
 .Fa flags

@@ -181,9 +181,7 @@ RG_FeatureOpenMenu(RG_Tileview *tv, int x, int y)
 	if (ft->ops->menu == NULL)
 		return;
 
-	tv->tv_feature.menu = Malloc(sizeof(AG_Menu));
-	AG_MenuInit(tv->tv_feature.menu, 0);
-
+	tv->tv_feature.menu = AG_MenuNew(NULL, 0);
 	tv->tv_feature.menu_item = AG_MenuAddItem(tv->tv_feature.menu, NULL);
 	tv->tv_feature.menu->itemSel = tv->tv_feature.menu_item;
 

@@ -41,7 +41,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps rgAnimviewOps;
 
 RG_Animview	*RG_AnimviewNew(void *);
-void		 RG_AnimviewInit(RG_Animview *);
 void		 RG_AnimviewSizeHint(RG_Animview *, int, int);
 void		 RG_AnimviewSetAnimation(RG_Animview *, RG_Anim *);
 __END_DECLS
