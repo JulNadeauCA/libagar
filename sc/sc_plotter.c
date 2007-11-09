@@ -45,7 +45,12 @@ SC_PlotterNew(void *parent, Uint flags)
 	SC_Plotter *pl;
 
 	pl = Malloc(sizeof(SC_Plotter));
-	SC_PlotterInit(pl, flags);
+	AG_ObjectInit(pl, &scPlotterOps);
+	pl->flags |= flags;
+	
+	if (flags & SC_PLOTTER_HFILL) WIDGET(pl)->flags |= AG_WIDGET_HFILL;
+	if (flags & SC_PLOTTER_VFILL) WIDGET(pl)->flags |= AG_WIDGET_VFILL;
+
 	AG_ObjectAttach(parent, pl);
 	return (pl);
 }
@@ -329,17 +334,15 @@ UpdateXBar(AG_Event *event)
 	}
 }
 
-void
-SC_PlotterInit(SC_Plotter *ptr, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_CLIPPING|AG_WIDGET_FOCUSABLE;
+	SC_Plotter *ptr = obj;
 
-	if (flags & SC_PLOTTER_HFILL) wflags |= AG_WIDGET_HFILL;
-	if (flags & SC_PLOTTER_VFILL) wflags |= AG_WIDGET_VFILL;
+	WIDGET(ptr)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetInit(ptr, &scPlotterOps, wflags);
 	ptr->type = SC_PLOT_2D;
-	ptr->flags = flags;
+	ptr->flags = 0;
 	ptr->xMax = 0;
 	ptr->yMin = 0.0;
 	ptr->yMax = 0.0;
@@ -934,7 +937,7 @@ const AG_WidgetOps scPlotterOps = {
 		"AG_Widget:SC_Plotter",
 		sizeof(SC_Plotter),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		NULL,			/* destroy */
 		NULL,			/* load */

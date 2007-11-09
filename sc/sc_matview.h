@@ -15,10 +15,16 @@
 
 #include "begin_code.h"
 
+enum sc_matview_mode {
+	SC_MATVIEW_GREYSCALE,
+	SC_MATVIEW_NUMERICAL
+};
+
 typedef struct sc_matview {
 	struct ag_widget wid;
 	struct sc_matrix *mat;		/* Matrix to view */
 	Uint flags;
+	enum sc_matview_mode mode;	/* Mode of display */
 	int ent_w, ent_h;		/* Size of entry */
 	const char *numfmt;		/* Numerical entry format */
 	int pre_m, pre_n;		/* Size hint */
@@ -32,8 +38,9 @@ __BEGIN_DECLS
 extern const AG_WidgetOps scMatviewOps;
 
 SC_Matview *SC_MatviewNew(void *, struct sc_matrix *, Uint);
-void	    SC_MatviewInit(SC_Matview *, struct sc_matrix *, Uint);
 void	    SC_MatviewSizeHint(SC_Matview *, const char *, Uint, Uint);
+void        SC_MatviewSetMatrix(SC_Matview *, struct sc_matrix *);
+void	    SC_MatviewSetDisplayMode(SC_Matview *, enum sc_matview_mode);
 void	    SC_MatviewSetNumericalFmt(SC_Matview *, const char *);
 __END_DECLS
 
