@@ -46,7 +46,12 @@ AG_SocketNew(void *parent, Uint flags)
 	AG_Socket *sock;
 
 	sock = Malloc(sizeof(AG_Socket));
-	AG_SocketInit(sock, flags);
+	AG_ObjectInit(sock, &agSocketOps);
+	sock->flags |= flags;
+	
+	if (flags & AG_SOCKET_HFILL) { AG_ExpandHoriz(sock); }
+	if (flags & AG_SOCKET_VFILL) { AG_ExpandVert(sock); }
+
 	AG_ObjectAttach(parent, sock);
 	return (sock);
 }
@@ -56,9 +61,7 @@ AG_SocketFromSurface(void *parent, Uint flags, SDL_Surface *su)
 {
 	AG_Socket *sock;
 	
-	sock = Malloc(sizeof(AG_Socket));
-	AG_SocketInit(sock, flags);
-	AG_ObjectAttach(parent, sock);
+	sock = AG_SocketNew(parent, flags);
 	AG_SocketBgPixmap(sock, su);
 	return (sock);
 }
@@ -73,24 +76,26 @@ AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
 		AG_SetError("%s: %s", bmpfile, SDL_GetError());
 		return (NULL);
 	}
-	sock = Malloc(sizeof(AG_Socket));
-	AG_SocketInit(sock, flags);
-	AG_ObjectAttach(parent, sock);
+	sock = AG_SocketNew(parent, flags);
 	AG_SocketBgPixmapNODUP(sock, bmp);
 	return (sock);
 }
 
-void
-AG_SocketInit(AG_Socket *sock, Uint flags)
+static void
+Init(void *obj)
 {
-	AG_WidgetInit(sock, &agSocketOps,
-	    AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION|
-	    AG_WIDGET_UNFOCUSED_BUTTONUP);
+	AG_Socket *sock = obj;
+
+	WIDGET(sock)->flags |= AG_WIDGET_FOCUSABLE|
+	                       AG_WIDGET_UNFOCUSED_MOTION|
+	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
+
 	AG_WidgetBindBool(sock, "state", &sock->state);
 	AG_WidgetBindInt(sock, "count", &sock->count);
+
+	sock->flags = 0;
 	sock->state = 0;
 	sock->count = 0;
-	sock->flags = flags;
 	sock->bgType = AG_SOCKET_RECT;
 	sock->bgData.rect.w = 32;
 	sock->bgData.rect.h = 32;
@@ -106,9 +111,6 @@ AG_SocketInit(AG_Socket *sock, Uint flags)
 	AG_SetEvent(sock, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(sock, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(sock, "window-mousemotion", MouseMotion, NULL);
-
-	if (flags & AG_SOCKET_HFILL) { WIDGET(sock)->flags |= AG_WIDGET_HFILL; }
-	if (flags & AG_SOCKET_VFILL) { WIDGET(sock)->flags |= AG_WIDGET_VFILL; }
 }
 
 void
@@ -124,9 +126,9 @@ AG_SocketRemoveFn(AG_Socket *sock, void (*fn)(AG_Socket *, AG_Icon *))
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Socket *sock = p;
+	AG_Socket *sock = obj;
 
 	switch (sock->bgType) {
 	case AG_SOCKET_PIXMAP:
@@ -147,9 +149,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Socket *sock = p;
+	AG_Socket *sock = obj;
 
 	if (a->w < (sock->lPad + sock->rPad) ||
 	    a->h < (sock->tPad + sock->bPad)) {
@@ -200,9 +202,9 @@ GetCount(AG_WidgetBinding *binding, void *p)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Socket *sock = p;
+	AG_Socket *sock = obj;
 	AG_WidgetBinding *binding;
 	void *pBinding;
 	int state, count;
@@ -521,7 +523,7 @@ const AG_WidgetOps agSocketOps = {
 		"AG_Widget:AG_Socket",
 		sizeof(AG_Socket),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

@@ -29,7 +29,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agFixedOps;
 
 AG_Fixed *AG_FixedNew(void *, Uint);
-void	  AG_FixedInit(AG_Fixed *, Uint);
 void	  AG_FixedSizeHint(AG_Fixed *, int, int);
 #define	  AG_FixedPrescale AG_FixedSizeHint
 

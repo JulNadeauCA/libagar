@@ -39,13 +39,20 @@ AG_SpinbuttonNew(void *parent, Uint flags, const char *label)
 	AG_Spinbutton *sbu;
 
 	sbu = Malloc(sizeof(AG_Spinbutton));
-	AG_SpinbuttonInit(sbu, flags, label);
+	AG_ObjectInit(sbu, &agSpinbuttonOps);
+	
+	if (label != NULL) {
+		AG_TextboxSetLabel(sbu->input, "%s", label);
+	}
+	if (!(flags & AG_SPINBUTTON_NOHFILL))	{ AG_ExpandHoriz(sbu); }
+	if (  flags & AG_SPINBUTTON_VFILL)	{ AG_ExpandVert(sbu); }
+
 	AG_ObjectAttach(parent, sbu);
 	return (sbu);
 }
 
 static void
-spinbutton_bound(AG_Event *event)
+Bound(AG_Event *event)
 {
 	AG_Spinbutton *sbu = AG_SELF();
 	AG_WidgetBinding *binding = AG_PTR(1);
@@ -91,7 +98,7 @@ spinbutton_bound(AG_Event *event)
 }
 
 static void
-spinbutton_keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	AG_Spinbutton *sbu = AG_SELF();
 	int keysym = AG_INT(1);
@@ -109,7 +116,7 @@ spinbutton_keydown(AG_Event *event)
 }
 
 static void
-spinbutton_changed(AG_Event *event)
+PostChange(AG_Event *event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
 	AG_WidgetBinding *stringb;
@@ -123,7 +130,7 @@ spinbutton_changed(AG_Event *event)
 }
 
 static void
-spinbutton_return(AG_Event *event)
+Return(AG_Event *event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
 
@@ -132,7 +139,7 @@ spinbutton_return(AG_Event *event)
 }
 
 static void
-spinbutton_inc(AG_Event *event)
+Increment(AG_Event *event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
 
@@ -144,7 +151,7 @@ spinbutton_inc(AG_Event *event)
 }
 
 static void
-spinbutton_dec(AG_Event *event)
+Decrement(AG_Event *event)
 {
 	AG_Spinbutton *sbu = AG_PTR(1);
 	
@@ -155,15 +162,11 @@ spinbutton_dec(AG_Event *event)
 	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
 }
 
-void
-AG_SpinbuttonInit(AG_Spinbutton *sbu, Uint flags, const char *label)
+static void
+Init(void *obj)
 {
-	Uint wflags = 0;
+	AG_Spinbutton *sbu = obj;
 
-	if ((flags & AG_SPINBUTTON_NOHFILL)==0) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_SPINBUTTON_VFILL) { wflags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(sbu, &agSpinbuttonOps, wflags);
 	AG_WidgetBind(sbu, "value", AG_WIDGET_INT, &sbu->value);
 	AG_WidgetBind(sbu, "min", AG_WIDGET_INT, &sbu->min);
 	AG_WidgetBind(sbu, "max", AG_WIDGET_INT, &sbu->max);
@@ -174,11 +177,11 @@ AG_SpinbuttonInit(AG_Spinbutton *sbu, Uint flags, const char *label)
 	sbu->min = 0;
 	sbu->max = 0;
 	AG_MutexInit(&sbu->lock);
-	sbu->input = AG_TextboxNew(sbu, 0, label);
+	sbu->input = AG_TextboxNew(sbu, 0, NULL);
 	AG_TextboxSizeHint(sbu->input, "8888");
 
-	AG_SetEvent(sbu, "widget-bound", spinbutton_bound, NULL);
-	AG_SetEvent(sbu, "window-keydown", spinbutton_keydown, NULL);
+	AG_SetEvent(sbu, "widget-bound", Bound, NULL);
+	AG_SetEvent(sbu, "window-keydown", KeyDown, NULL);
 
 	sbu->incbu = AG_ButtonNew(sbu, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(sbu->incbu, 1, 1, 1, 1);
@@ -187,11 +190,10 @@ AG_SpinbuttonInit(AG_Spinbutton *sbu, Uint flags, const char *label)
 	AG_WidgetSetFocusable(sbu->incbu, 0);
 	AG_WidgetSetFocusable(sbu->decbu, 0);
 	
-	AG_SetEvent(sbu->input, "textbox-return", spinbutton_return, "%p", sbu);
-	AG_SetEvent(sbu->input, "textbox-postchg", spinbutton_changed, "%p",
-	    sbu);
-	AG_SetEvent(sbu->incbu, "button-pushed", spinbutton_inc, "%p", sbu);
-	AG_SetEvent(sbu->decbu, "button-pushed", spinbutton_dec, "%p", sbu);
+	AG_SetEvent(sbu->input, "textbox-return", Return, "%p", sbu);
+	AG_SetEvent(sbu->input, "textbox-postchg", PostChange, "%p", sbu);
+	AG_SetEvent(sbu->incbu, "button-pushed", Increment, "%p", sbu);
+	AG_SetEvent(sbu->decbu, "button-pushed", Decrement, "%p", sbu);
 }
 
 static void
@@ -521,7 +523,7 @@ const AG_WidgetOps agSpinbuttonOps = {
 		"AG_Widget:AG_Spinbutton",
 		sizeof(AG_Spinbutton),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

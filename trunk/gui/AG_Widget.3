@@ -84,34 +84,12 @@ section of the widget's manual page.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
-.Sh INITIALIZATION
-.nr nS 1
-.Ft "void"
-.Fn AG_WidgetInit "AG_Widget *widget" "const AG_Widget *widget_ops" "Uint flags"
-.Pp
-.Ft "AG_Widget *"
-.Fn AG_WidgetFind "AG_Display *view" "const char *name"
-.Pp
-.Ft "void"
-.Fn AG_WidgetSizeReq "AG_Widget *widget" "AG_SizeReq *req"
-.Pp
-.Ft "int"
-.Fn AG_WidgetSizeAlloc "AG_Widget *widget" "AG_SizeAlloc *alloc"
-.Pp
-.Ft "void"
-.Fn AG_WidgetSetStyle "AG_Widget *widget" "AG_Style *style"
-.Pp
-.nr nS 0
+.Sh FLAGS
 The
-.Fn AG_WidgetInit
-function initializes a preallocated
+.Va flags
+member of the
 .Nm
-structure.
-.Pp
-Acceptable
-.Fa flags
-include:
-.Pp
+structure accepts the following flags:
 .Bl -tag -width "AG_WIDGET_UNFOCUSED_BUTTONDOWN "
 .It AG_WIDGET_HFILL
 Hint to container widgets that in a vertical packing, this widget can expand
@@ -163,13 +141,14 @@ Without this flag,
 .Dv TAB
 is used to change the focus to the next widget.
 .El
-.Pp
+.Sh OPERATIONS
 The
-.Fa widget_ops
-argument to
-.Fn AG_WidgetInit
-is a pointer to the following structure:
-.Pp
+.Nm
+class overloads
+.Ft AG_ObjectOps
+with the
+.Ft AG_WidgetOps
+structure:
 .Bd -literal
 typedef struct ag_widget_ops {
 	const AG_ObjectOps ops;
@@ -177,34 +156,24 @@ typedef struct ag_widget_ops {
 	void (*size_request)(void *, AG_SizeReq *);
 	int  (*size_allocate)(void *, const AG_SizeAlloc *);
 } AG_WidgetOps;
-
-typedef struct ag_size_req {
-	int w, h;			/* Requested geometry in pixels */
-} AG_SizeReq;
-
-typedef struct ag_size_alloc {
-	int w, h;			/* Allocated geometry in pixels */
-	int x, y;			/* Allocated position in pixels */
-} AG_SizeAlloc;
 .Ed
 .Pp
 The
 .Va draw
-operation (if not NULL) is responsible for rendering the widget
-(see
-.Dq RENDERING AND PRIMITIVES
-below for functions useful in rendering).
+operation (if not NULL) is responsible for rendering the widget.
 If the current display is in OpenGL mode, the
 .Va draw
-function of a widget can issue GL calls, but it is not recommended.
-Widgets should instead use the functions described in the
-.Dq RENDERING AND PRIMITIVES
-section below.
+function of a widget can issue GL calls, but it is best to use the
+.Fn AG_Draw*
+functions whenever possible.
 When an OpenGL rendering context is needed,
 .Xr AG_GLView 3
 (or the higher-level
 .Xr SG_View 3 )
 widget should be used.
+See the
+.Dq RENDERING AND PRIMITIVES
+section for information about widget rendering.
 .Pp
 The
 .Va size_request
@@ -224,12 +193,31 @@ returns -1, the special flag
 .Dv AG_WIDGET_UNDERSIZE
 is automatically set, preventing
 .Va draw
-from being called.
+from being invoked at all.
+.Sh WIDGET SIZING
+.nr nS 1
+.Ft "void"
+.Fn AG_WidgetSizeReq "AG_Widget *widget" "AG_SizeReq *req"
 .Pp
+.Ft "int"
+.Fn AG_WidgetSizeAlloc "AG_Widget *widget" "AG_SizeAlloc *alloc"
+.Pp
+.nr nS 0
 The
-.Fn AG_WidgetFind
-function searches for a given widget by name, given an absolute path,
-and returns a pointer to the widget or NULL.
+.Ft AG_SizeReq
+and
+.Ft AG_SizeAlloc
+structures are defined as follows:
+.Bd -literal
+typedef struct ag_size_req {
+	int w, h;			/* Requested geometry in pixels */
+} AG_SizeReq;
+
+typedef struct ag_size_alloc {
+	int w, h;			/* Allocated geometry in pixels */
+	int x, y;			/* Allocated position in pixels */
+} AG_SizeAlloc;
+.Ed
 .Pp
 The
 .Fn AG_WidgetSizeReq
@@ -244,12 +232,6 @@ These functions are generally used in the
 and
 .Va size_allocate
 functions of container widgets.
-.Pp
-.Fn AG_WidgetSetStyle
-changes the style associated with a widget (see
-.Xr AG_Style 3 ) .
-Note that child widgets automatically inherit the style associated with
-their parent.
 .Sh INPUT STATE
 The input state of a widget determines whether the user is allowed to
 modify whatever data the widget is accessing.
@@ -930,6 +912,28 @@ NUL-terminating the result and returning the number of bytes that would
 have been copied if
 .Fa dst_size
 was unlimited.
+.Sh MISCELLANEOUS
+.nr nS 1
+.Ft "AG_Widget *"
+.Fn AG_WidgetFind "AG_Display *view" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_WidgetSetStyle "AG_Widget *widget" "AG_Style *style"
+.Pp
+.nr nS 0
+The
+.Fn AG_WidgetFind
+function searches for a given widget by name, given an absolute path,
+and returns a pointer to the widget or NULL.
+.Pp
+The
+.Fn AG_WidgetSetStyle
+function changes the style/theme associated with a widget.
+See
+.Xr AG_Style 3
+for more information about styles.
+Note that child widgets automatically inherit the style associated with
+their parent.
 .Sh THREAD SAFETY
 Agar-GUI is thread-safe on a fine-grained level, so it is safe to make GUI
 calls from different threads (unless documented otherwise in the widget's

@@ -32,37 +32,38 @@
 #include "pane.h"
 
 AG_MPane *
-AG_MPaneNew(void *parent, enum ag_mpane_layout lay, Uint flags)
+AG_MPaneNew(void *parent, enum ag_mpane_layout layout, Uint flags)
 {
 	AG_MPane *mp;
 
 	mp = Malloc(sizeof(AG_MPane));
-	AG_MPaneInit(mp, lay, flags);
+	AG_ObjectInit(mp, &agMPaneOps);
+	mp->flags |= flags;
+	
+	if (flags & AG_MPANE_HFILL) { AG_ExpandHoriz(mp); }
+	if (flags & AG_MPANE_VFILL) { AG_ExpandVert(mp); }
+
+	AG_MPaneSetLayout(mp, layout);
 	AG_ObjectAttach(parent, mp);
 	return (mp);
 }
 
-void
-AG_MPaneInit(AG_MPane *mp, enum ag_mpane_layout lay, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint boxflags = 0;
-	Uint paneflags = flags & AG_MPANE_FRAMES ? AG_BOX_FRAME : 0;
+	AG_MPane *mp = obj;
 	int i;
 
-	if (flags & AG_MPANE_HFILL) boxflags |= AG_BOX_HFILL;
-	if (flags & AG_MPANE_VFILL) boxflags |= AG_BOX_VFILL;
-
-	AG_BoxInit(&mp->box, AG_BOX_VERT, boxflags);
+	AG_BoxSetType(&mp->box, AG_BOX_VERT);
 	AG_BoxSetPadding(&mp->box, 0);
 	AG_BoxSetSpacing(&mp->box, 0);
 	for (i = 0; i < 4; i++) {
-		mp->panes[i] = AG_BoxNew(NULL, AG_BOX_VERT, paneflags);
+		mp->panes[i] = AG_BoxNew(NULL, AG_BOX_VERT, AG_BOX_FRAME);
 		AG_BoxSetSpacing(mp->panes[i], 0);
 		AG_BoxSetPadding(mp->panes[i], 0);
 	}
-	mp->flags = flags;
+	mp->flags = 0;
 	mp->npanes = 0;
-	AG_MPaneSetLayout(mp, lay);
 }
 
 void
@@ -149,3 +150,20 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 	}
 	mp->layout = layout;
 }
+
+const AG_WidgetOps agMPaneOps = {
+	{
+		"AG_Widget:AG_Box:AG_MPane",
+		sizeof(AG_MPane),
+		{ 0,0 },
+		Init,
+		NULL,		/* free */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	NULL,			/* draw */
+	NULL,			/* size_request */
+	NULL			/* size_allocate */
+};

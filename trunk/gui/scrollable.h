@@ -35,9 +35,8 @@ typedef struct ag_scrollable {
 __BEGIN_DECLS
 extern const AG_WidgetOps agScrollableOps;
 
-void	 AG_ScrollableInit(AG_Scrollable *, Uint, const void *);
-void	 AG_ScrollableDrawBegin(AG_Scrollable *);
-void	 AG_ScrollableDrawEnd(AG_Scrollable *);
+void AG_ScrollableDrawBegin(AG_Scrollable *);
+void AG_ScrollableDrawEnd(AG_Scrollable *);
 __END_DECLS
 
 #include "close_code.h"

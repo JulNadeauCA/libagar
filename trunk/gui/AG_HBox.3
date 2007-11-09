@@ -51,9 +51,6 @@ which packs its children horizontally.
 .Ft "AG_HBox *"
 .Fn AG_HBoxNew "AG_Widget *parent" "int flags"
 .Pp
-.Ft "void"
-.Fn AG_HBoxInit "AG_HBox *box" "int flags"
-.Pp
 .Ft void
 .Fn AG_HBoxSetHomogenous "AG_HBox *box" "int homogenous"
 .Pp
@@ -67,10 +64,6 @@ which packs its children horizontally.
 The
 .Fn AG_HBoxNew
 function allocates, initializes, and attaches a new
-.Nm
-widget.
-.Fn AG_HBoxInit
-initializes a preallocated
 .Nm
 widget.
 There are currently no

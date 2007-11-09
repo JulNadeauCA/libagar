@@ -51,9 +51,6 @@ which packs its children vertically.
 .Ft "AG_VBox *"
 .Fn AG_VBoxNew "AG_Widget *parent" "Uint flags"
 .Pp
-.Ft "void"
-.Fn AG_VBoxInit "AG_VBox *box" "Uint flags"
-.Pp
 .Ft void
 .Fn AG_VBoxSetHomogenous "AG_VBox *box" "int homogenous"
 .Pp
@@ -67,10 +64,6 @@ which packs its children vertically.
 The
 .Fn AG_VBoxNew
 function allocates, initializes, and attaches a new
-.Nm
-widget.
-.Fn AG_VBoxInit
-initializes a preallocated
 .Nm
 widget.
 There are currently no

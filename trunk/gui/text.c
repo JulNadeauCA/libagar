@@ -150,9 +150,9 @@ AG_LoadBitmapGlyph(SDL_Surface *su, const char *lbl, void *p)
 }
 
 static void
-DestroyFont(void *p)
+DestroyFont(void *obj)
 {
-	AG_Font *font = p;
+	AG_Font *font = obj;
 	int i;
 
 	if (!agFreetype) {
@@ -226,7 +226,9 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		goto out;
 
 	font = Malloc(sizeof(AG_Font));
-	AG_ObjectInit(font, name, &agFontOps);
+	AG_ObjectInit(font, &agFontOps);
+	AG_ObjectSetName(font, "%s", name);
+
 	font->size = ptsize;
 	font->flags = flags;
 	font->c0 = 0;
@@ -1551,9 +1553,10 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
-		tb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, NULL);
+		tb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, NULL);
 		AG_WidgetBind(tb, "string", AG_WIDGET_STRING, sp, len);
 		AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
+		AG_WidgetFocus(tb);
 	}
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
@@ -1581,12 +1584,13 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS, NULL);
+		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL, NULL);
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt)
 		AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, "string", s,
 		    &tb->string[0]);
 		AG_AddEvent(tb, "textbox-return", AGWINDETACH(win));
+		AG_WidgetFocus(tb);
 	}
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);

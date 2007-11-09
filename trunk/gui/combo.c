@@ -34,11 +34,20 @@ AG_ComboNew(void *parent, Uint flags, const char *label)
 	AG_Combo *com;
 
 	com = Malloc(sizeof(AG_Combo));
-	AG_ComboInit(com, flags, label);
-	AG_ObjectAttach(parent, com);
-	if (flags & AG_COMBO_FOCUS) {
-		AG_WidgetFocus(com);
+	AG_ObjectInit(com, &agComboOps);
+	com->flags |= flags;
+
+	if (label != NULL) {
+		AG_TextboxSetLabel(com->tbox, "%s", label);
 	}
+	if (flags & AG_COMBO_FOCUS) { AG_WidgetFocus(com); }
+	if (flags & AG_COMBO_ANY_TEXT) { AG_WidgetDisable(com->tbox); }
+	if (flags & AG_COMBO_TREE) { com->list->flags |= AG_TLIST_TREE; }
+	if (flags & AG_COMBO_POLL) { com->list->flags |= AG_TLIST_POLL; }
+	if (flags & AG_COMBO_HFILL) { AG_ExpandHoriz(com); }
+	if (flags & AG_COMBO_VFILL) { AG_ExpandVert(com); }
+	
+	AG_ObjectAttach(parent, com);
 	return (com);
 }
 
@@ -202,36 +211,27 @@ Return(AG_Event *event)
 	AG_MutexUnlock(&com->list->lock);
 }
 
-void
-AG_ComboInit(AG_Combo *com, Uint flags, const char *label)
+static void
+Init(void *obj)
 {
-	Uint wflags = 0;
+	AG_Combo *com = obj;
 
-	if (flags & AG_COMBO_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_COMBO_VFILL) { wflags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(com, &agComboOps, wflags);
+	com->flags = 0;
 	com->panel = NULL;
-	com->flags = flags;
 	com->wSaved = 0;
 	com->hSaved = 0;
 	com->wPreList = -1;
 	com->hPreList = -1;
 	
-	com->tbox = AG_TextboxNew(com, AG_TEXTBOX_COMBO, label);
+	com->tbox = AG_TextboxNew(com, AG_TEXTBOX_COMBO, NULL);
 	com->button = AG_ButtonNew(com, AG_BUTTON_STICKY, _(" ... "));
 	AG_ButtonSetPadding(com->button, 1,1,1,1);
 	AG_WidgetSetFocusable(com->button, 0);
 
-	if (flags & AG_COMBO_ANY_TEXT)
-		AG_WidgetDisable(com->tbox);
-
 	com->list = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(com->list, AG_TLIST_EXPAND);
+	AG_ObjectInit(com->list, &agTlistOps);
+	AG_Expand(com->list);
 	
-	if (flags & AG_COMBO_TREE) { com->list->flags |= AG_TLIST_TREE; }
-	if (flags & AG_COMBO_POLL) { com->list->flags |= AG_TLIST_POLL; }
-
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 	AG_SetEvent(com->tbox, "textbox-return", Return, "%p", com);
@@ -330,7 +330,7 @@ const AG_WidgetOps agComboOps = {
 		"AG_Widget:AG_Combo",
 		sizeof(AG_Combo),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

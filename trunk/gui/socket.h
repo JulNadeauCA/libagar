@@ -56,7 +56,6 @@ extern const AG_WidgetOps agSocketOps;
 AG_Socket *AG_SocketNew(void *, Uint);
 AG_Socket *AG_SocketFromBMP(void *, Uint, const char *);
 AG_Socket *AG_SocketFromSurface(void *, Uint, SDL_Surface *);
-void	   AG_SocketInit(AG_Socket *, Uint);
 void	   AG_SocketInsertFn(AG_Socket *,
 	                     int (*)(AG_Socket *, struct ag_icon *));
 void	   AG_SocketRemoveFn(AG_Socket *,

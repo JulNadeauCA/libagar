@@ -22,7 +22,6 @@ typedef struct ag_glview {
 #define AG_GLVIEW_NOMODELVIEW	0x04	/* Don't preserve modelview matrix */
 #define AG_GLVIEW_NOTEXTURE	0x08	/* Don't preserve texture matrix */
 #define AG_GLVIEW_NOCOLOR	0x10	/* Don't preserve color matrix */
-#define AG_GLVIEW_FOCUS		0x20
 #define AG_GLVIEW_EXPAND	(AG_GLVIEW_HFILL|AG_GLVIEW_VFILL)
 
 	int	  wPre, hPre;			/* Initial geometry */
@@ -45,7 +44,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agGLViewOps;
 
 AG_GLView *AG_GLViewNew(void *, Uint);
-void	   AG_GLViewInit(AG_GLView *, Uint);
 void	   AG_GLViewDraw(void *);
 void	   AG_GLViewSizeRequest(void *, AG_SizeReq *);
 int	   AG_GLViewSizeAllocate(void *, const AG_SizeAlloc *);

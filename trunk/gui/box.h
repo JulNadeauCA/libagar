@@ -41,8 +41,6 @@ AG_Box	*AG_BoxNew(void *, enum ag_box_type, Uint);
 #define  AG_BoxNewHoriz(p,f) AG_BoxNew((p),AG_BOX_HORIZ,(f))
 #define  AG_BoxNewVert(p,f) AG_BoxNew((p),AG_BOX_VERT,(f))
 
-void	 AG_BoxInit(AG_Box *, enum ag_box_type, Uint);
-
 void	 AG_BoxSizeRequest(void *, AG_SizeReq *);
 int	 AG_BoxSizeAllocate(void *, const AG_SizeAlloc *);
 

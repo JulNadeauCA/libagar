@@ -19,7 +19,7 @@ struct ag_window;
 
 typedef struct ag_titlebar {
 	AG_Box hb;
-	int flags;
+	Uint flags;
 #define AG_TITLEBAR_NO_CLOSE	0x01
 #define AG_TITLEBAR_NO_MINIMIZE	0x02
 #define AG_TITLEBAR_NO_MAXIMIZE	0x04
@@ -34,8 +34,7 @@ typedef struct ag_titlebar {
 __BEGIN_DECLS
 extern const AG_WidgetOps agTitlebarOps;
 
-AG_Titlebar *AG_TitlebarNew(void *, int);
-void	     AG_TitlebarInit(AG_Titlebar *, int);
+AG_Titlebar *AG_TitlebarNew(void *, Uint);
 void	     AG_TitlebarSetCaption(AG_Titlebar *, const char *);
 __END_DECLS
 

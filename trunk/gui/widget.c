@@ -39,7 +39,7 @@
 SDL_Cursor *agCursorToSet = NULL;
 
 static void
-child_attached(AG_Event *event)
+ChildAttached(AG_Event *event)
 {
 	AG_Widget *pwid = AG_SELF();
 	AG_Widget *wid = AG_SENDER();
@@ -50,27 +50,15 @@ child_attached(AG_Event *event)
 		wid->style = style;
 }
 
-AG_Widget *
-AG_WidgetNew(void *parent, Uint flags)
+static void
+Init(void *obj)
 {
-	AG_Widget *w;
+	AG_Widget *wid = obj;
 
-	w = Malloc(sizeof(AG_Widget));
-	AG_WidgetInit(w, &agWidgetOps, flags);
-	AG_ObjectAttach(parent, w);
-	return (w);
-}
-
-void
-AG_WidgetInit(void *p, const void *wops, Uint flags)
-{
-	AG_Widget *wid = p;
-
-	AG_ObjectInit(wid, "widget", wops);
 	OBJECT(wid)->save_pfx = "/widgets";
 	OBJECT(wid)->flags |= AG_OBJECT_NAME_ONATTACH;
 
-	wid->flags = flags;
+	wid->flags = 0;
 	wid->redraw = 1;
 	wid->cx = -1;
 	wid->cy = -1;
@@ -95,7 +83,7 @@ AG_WidgetInit(void *p, const void *wops, Uint flags)
 	 * Arrange for immediate children to inherit the style settings
 	 * of the parent on attachment.
 	 */
-	AG_SetEvent(wid, "child-attached", child_attached, NULL);
+	AG_SetEvent(wid, "child-attached", ChildAttached, NULL);
 }
 
 /* Traverse the widget tree using a pathname. */
@@ -726,9 +714,9 @@ AG_WidgetUpdateSurface(void *p, int name)
  * (for texture operations in OpenGL mode).
  */
 static void
-Destroy(void *p)
+Destroy(void *obj)
 {
-	AG_Widget *wid = p;
+	AG_Widget *wid = obj;
 	AG_PopupMenu *pm, *pm2;
 	AG_WidgetBinding *bind, *nbind;
 	Uint i;
@@ -1632,13 +1620,12 @@ AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 	return (rv);
 }
 
-
 const AG_WidgetOps agWidgetOps = {
 	{
 		"AG_Widget",
 		sizeof(AG_Widget),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

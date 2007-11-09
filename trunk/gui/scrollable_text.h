@@ -28,9 +28,7 @@ typedef struct ag_scrollable_text {
 
 __BEGIN_DECLS
 extern const AG_WidgetOps agScrollableTextOps;
-
-AG_ScrollableText  *AG_ScrollableTextNew(void *, Uint);
-void		    AG_ScrollableTextInit(AG_ScrollableText *, Uint);
+AG_ScrollableText *AG_ScrollableTextNew(void *, Uint);
 __END_DECLS
 
 #include "close_code.h"

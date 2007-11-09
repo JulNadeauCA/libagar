@@ -34,10 +34,10 @@ enum {
 	NITEMS_GROW =	16
 };
 
-static void	keydown(AG_Event *);
-static void	mousemotion(AG_Event *);
-static void	mousebuttondown(AG_Event *);
-static void	mousebuttonup(AG_Event *);
+static void KeyDown(AG_Event *);
+static void MouseMotion(AG_Event *);
+static void MouseButtonDown(AG_Event *);
+static void MouseButtonUp(AG_Event *);
 
 AG_FixedPlotter *
 AG_FixedPlotterNew(void *parent, enum ag_fixed_plotter_type type, Uint flags)
@@ -45,35 +45,35 @@ AG_FixedPlotterNew(void *parent, enum ag_fixed_plotter_type type, Uint flags)
 	AG_FixedPlotter *fpl;
 
 	fpl = Malloc(sizeof(AG_FixedPlotter));
-	AG_FixedPlotterInit(fpl, type, flags);
+	AG_ObjectInit(fpl, &agFixedPlotterOps);
+	fpl->type = type;
+	fpl->flags |= flags;
+
+	if (flags & AG_FIXED_PLOTTER_HFILL) { AG_ExpandHoriz(fpl); }
+	if (flags & AG_FIXED_PLOTTER_VFILL) { AG_ExpandVert(fpl); }
+
 	AG_ObjectAttach(parent, fpl);
-	if (flags & AG_FIXED_PLOTTER_FOCUS) {
-		AG_WidgetFocus(fpl);
-	}
 	return (fpl);
 }
 
-void
-AG_FixedPlotterInit(AG_FixedPlotter *fpl, enum ag_fixed_plotter_type type,
-    Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE;
+	AG_FixedPlotter *fpl = obj;
+	
+	WIDGET(fpl)->flags |= AG_WIDGET_FOCUSABLE;
 
-	if (flags & AG_FIXED_PLOTTER_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_FIXED_PLOTTER_VFILL) { wflags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(fpl, &agFixedPlotterOps, wflags);
-	fpl->type = type;
-	fpl->flags = flags;
+	fpl->type = AG_FIXED_PLOTTER_LINES;
+	fpl->flags = 0;
 	fpl->xoffs = 0;
 	fpl->yOrigin = 50;
 	fpl->yrange = 100;
 	TAILQ_INIT(&fpl->items);
 
-	AG_SetEvent(fpl, "window-mousemotion", mousemotion, NULL);
-	AG_SetEvent(fpl, "window-keydown", keydown, NULL);
-	AG_SetEvent(fpl, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(fpl, "window-mousebuttondown", mousebuttondown, NULL);
+	AG_SetEvent(fpl, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(fpl, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(fpl, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(fpl, "window-mousebuttondown", MouseButtonDown, NULL);
 }
 
 void
@@ -83,7 +83,7 @@ AG_FixedPlotterSetRange(AG_FixedPlotter *fpl, AG_FixedPlotterValue range)
 }
 
 static void
-keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	AG_FixedPlotter *fpl = AG_SELF();
 	SDLKey key = AG_SDLKEY(1);
@@ -105,7 +105,7 @@ keydown(AG_Event *event)
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	AG_FixedPlotter *fpl = AG_SELF();
 	int xrel = AG_INT(3);
@@ -126,7 +126,7 @@ mousemotion(AG_Event *event)
 }
 
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	AG_FixedPlotter *fpl = AG_SELF();
 
@@ -134,7 +134,7 @@ mousebuttonup(AG_Event *event)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_FixedPlotter *fpl = AG_SELF();
 	int button = AG_INT(1);
@@ -271,7 +271,7 @@ const AG_WidgetOps agFixedPlotterOps = {
 		"AG_Widget:AG_FixedPlotter",
 		sizeof(AG_FixedPlotter),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

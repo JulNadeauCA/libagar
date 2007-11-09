@@ -39,11 +39,13 @@ AG_GLViewNew(void *parent, Uint flags)
 	AG_GLView *glv;
 
 	glv = Malloc(sizeof(AG_GLView));
-	AG_GLViewInit(glv, flags);
+	AG_ObjectInit(glv, &agGLViewOps);
+	glv->flags |= flags;
+
+	if (flags & AG_GLVIEW_HFILL) { AG_ExpandHoriz(glv); }
+	if (flags & AG_GLVIEW_VFILL) { AG_ExpandVert(glv); }
+
 	AG_ObjectAttach(parent, glv);
-	if (flags & AG_GLVIEW_FOCUS) {
-		AG_WidgetFocus(glv);
-	}
 	return (glv);
 }
 
@@ -72,15 +74,12 @@ mousebuttondown(AG_Event *event)
 	AG_WidgetFocus(glv);
 }
 
-void
-AG_GLViewInit(AG_GLView *glv, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE;
+	AG_GLView *glv = obj;
 
-	if (flags & AG_GLVIEW_HFILL) wflags |= AG_WIDGET_HFILL;
-	if (flags & AG_GLVIEW_VFILL) wflags |= AG_WIDGET_VFILL;
-
-	AG_WidgetInit(glv, &agGLViewOps, wflags);
+	WIDGET(glv)->flags |= AG_WIDGET_FOCUSABLE;
 
 	if (!AG_Bool(agConfig, "view.opengl"))
 		fatal("widget requires OpenGL mode");
@@ -88,6 +87,7 @@ AG_GLViewInit(AG_GLView *glv, Uint flags)
 	glv->wPre = 64;
 	glv->hPre = 64;
 
+	glv->flags = 0;
 	glv->draw_ev = NULL;
 	glv->overlay_ev = NULL;
 	glv->scale_ev = NULL;
@@ -259,7 +259,7 @@ const AG_WidgetOps agGLViewOps = {
 		"AG_Widget:AG_GLView",
 		sizeof(AG_GLView),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

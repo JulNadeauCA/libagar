@@ -33,20 +33,36 @@
 
 #include <string.h>
 
+static void SelectUnit(AG_Event *);
+
 AG_Numerical *
 AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *label)
 {
 	AG_Numerical *num;
 
 	num = Malloc(sizeof(AG_Numerical));
-	AG_NumericalInit(num, flags, unit, label);
+	AG_ObjectInit(num, &agNumericalOps);
+
+	if (flags & AG_NUMERICAL_HFILL) { AG_ExpandHoriz(num); }
+	if (flags & AG_NUMERICAL_VFILL) { AG_ExpandVert(num); }
+	
+	if (label != NULL) {
+		AG_TextboxSetLabel(num->input, "%s", label);
+	}
+	if (unit != NULL) {
+		num->units = AG_UComboNew(num, 0);
+		AG_SetEvent(num->units, "ucombo-selected",
+		    SelectUnit, "%p", num);
+		AG_NumericalSetUnitSystem(num, unit);
+		AG_WidgetSetFocusable(num->units, 0);
+	}
+
 	AG_ObjectAttach(parent, num);
 	return (num);
 }
 
-/* Adjust the default range depending on the data type of a new binding. */
 static void
-AdjustRangeForBinding(AG_Event *event)
+Bound(AG_Event *event)
 {
 	AG_Numerical *num = AG_SELF();
 	AG_WidgetBinding *binding = AG_PTR(1);
@@ -360,23 +376,18 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	return (0);
 }
 
-void
-AG_NumericalInit(AG_Numerical *num, Uint flags, const char *unit,
-    const char *label)
+static void
+Init(void *obj)
 {
-	Uint wflags = 0;
+	AG_Numerical *num = obj;
 
-	if (flags & AG_NUMERICAL_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_NUMERICAL_VFILL) { wflags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(num, &agNumericalOps, wflags);
 	AG_WidgetBindDouble(num, "value", &num->value);
 	AG_WidgetBindDouble(num, "min", &num->min);
 	AG_WidgetBindDouble(num, "max", &num->max);
 	
 	num->inc = 1.0;
 	num->value = 0.0;
-	num->input = AG_TextboxNew(num, 0, label);
+	num->input = AG_TextboxNew(num, 0, NULL);
 	num->writeable = 1;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
@@ -384,34 +395,25 @@ AG_NumericalInit(AG_Numerical *num, Uint flags, const char *unit,
 	AG_MutexInitRecursive(&num->lock);
 	AG_TextboxSizeHint(num->input, "88.88");
 	
-	if (unit != NULL) {
-		num->units = AG_UComboNew(num, 0);
-		AG_SetEvent(num->units, "ucombo-selected", SelectUnit,
-		    "%p", num);
-		AG_NumericalSetUnitSystem(num, unit);
-		AG_WidgetSetFocusable(num->units, 0);
-	} else {
-		num->unit = AG_FindUnit("identity");
-		num->units = NULL;
-	}
-
+	num->unit = AG_FindUnit("identity");
+	num->units = NULL;
+	
 	num->incbu = AG_ButtonNew(num, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(num->incbu, 1,1,1,1);
 	AG_WidgetSetFocusable(num->incbu, 0);
-
 	num->decbu = AG_ButtonNew(num, AG_BUTTON_REPEAT, _("-"));
 	AG_ButtonSetPadding(num->decbu, 1,1,1,1);
 	AG_WidgetSetFocusable(num->decbu, 0);
 
 	AG_SetEvent(num, "window-keydown", keydown, NULL);
 	AG_SetEvent(num, "widget-gainfocus", GainedFocus, NULL);
-	AG_SetEvent(num, "widget-bound", AdjustRangeForBinding, NULL);
-	AG_SetEvent(num->input, "textbox-return", UpdateFromText, "%p,%i",
-	    num, 1);
-	AG_SetEvent(num->input, "textbox-changed", UpdateFromText, "%p,%i",
-	    num, 0);
+	AG_SetEvent(num, "widget-bound", Bound, NULL);
 	AG_SetEvent(num->incbu, "button-pushed", IncrementValue, "%p", num);
 	AG_SetEvent(num->decbu, "button-pushed", DecrementValue, "%p", num);
+	AG_SetEvent(num->input, "textbox-return",
+	    UpdateFromText, "%p,%i", num, 1);
+	AG_SetEvent(num->input, "textbox-changed",
+	    UpdateFromText, "%p,%i", num, 0);
 }
 
 void
@@ -849,7 +851,7 @@ const AG_WidgetOps agNumericalOps = {
 		"AG_Widget:AG_Numerical",
 		sizeof(AG_Numerical),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

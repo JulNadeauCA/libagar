@@ -52,20 +52,12 @@ A much more featureful, floating-point plotter is available as
 .Ft "AG_FixedPlotter *"
 .Fn AG_FixedPlotterNew "AG_Widget *parent, enum ag_fixed_plotter_type type" "Uint flags"
 .Pp
-.Ft void
-.Fn AG_FixedPlotterInit "AG_FixedPlotter *fpl" "enum ag_fixed_plotter_type type, Uint flags"
-.Pp
 .nr nS 0
 The
 .Fn AG_FixedPlotterNew
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-.Fn AG_FixedPlotterInit
-initializes a preallocated
-.Nm
-widget.
-.Pp
 The
 .Fa type
 argument is one of:

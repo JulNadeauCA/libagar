@@ -180,13 +180,9 @@ extern int agMouseDblclickDelay;
 extern int agMouseSpinDelay;
 extern int agMouseSpinIval;
 
-AG_Widget *AG_WidgetNew(void *, Uint);
-void	   AG_WidgetInit(void *, const void *, Uint);
 void	   AG_WidgetDraw(void *);
-
 void	   AG_WidgetSizeReq(void *, AG_SizeReq *);
 int	   AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
-
 void	   AG_WidgetSetFocusable(void *, int);
 void	   AG_WidgetSetStyle(void *, AG_Style *);
 
@@ -796,6 +792,16 @@ AG_WidgetSetPointer(void *wid, const char *name, void *np)
 	}
 	*p = np;
 	AG_WidgetUnlockBinding(binding);
+}
+
+static __inline__ void AG_Expand(void *wid) {
+	AGWIDGET(wid)->flags |= AG_WIDGET_EXPAND;
+}
+static __inline__ void AG_ExpandHoriz(void *wid) {
+	AGWIDGET(wid)->flags |= AG_WIDGET_HFILL;
+}
+static __inline__ void AG_ExpandVert(void *wid) {
+	AGWIDGET(wid)->flags |= AG_WIDGET_VFILL;
 }
 
 __END_DECLS

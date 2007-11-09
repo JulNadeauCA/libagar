@@ -35,7 +35,6 @@ AG_Pixmap *AG_PixmapFromBMP(void *, Uint, const char *);
 #if 0
 AG_Pixmap *AG_PixmapFromXCF(void *, Uint, const char *);
 #endif
-void	   AG_PixmapInit(AG_Pixmap *, Uint);
 
 int	   AG_PixmapAddSurface(AG_Pixmap *, SDL_Surface *);
 int	   AG_PixmapAddSurfaceFromBMP(AG_Pixmap *, const char *);

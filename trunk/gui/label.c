@@ -40,7 +40,12 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	const char *p;
 	
 	label = Malloc(sizeof(AG_Label));
-	AG_LabelInit(label, AG_LABEL_POLLED, flags, fmt);
+	AG_ObjectInit(label, &agLabelOps);
+	label->type = AG_LABEL_POLLED;
+	label->text = Strdup(fmt);
+	label->flags |= flags;
+	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
+	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(label); }
 #ifdef THREADS
 	label->poll.lock = NULL;
 #endif
@@ -79,7 +84,12 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 	const char *p;
 	
 	label = Malloc(sizeof(AG_Label));
-	AG_LabelInit(label, AG_LABEL_POLLED_MT, flags, fmt);
+	AG_ObjectInit(label, &agLabelOps);
+	label->type = AG_LABEL_POLLED_MT;
+	label->text = Strdup(fmt);
+	label->flags |= flags;
+	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
+	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(label); }
 #ifdef THREADS
 	label->poll.lock = mutex;
 #endif
@@ -112,19 +122,23 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 AG_Label *
 AG_LabelNewStatic(void *parent, Uint flags, const char *fmt, ...)
 {
-	char *s;
 	AG_Label *label;
 	va_list ap;
 
+	label = Malloc(sizeof(AG_Label));
+	AG_ObjectInit(label, &agLabelOps);
+	label->type = AG_LABEL_STATIC;
+	label->flags |= flags;
+	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
+	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(label); }
 	if (fmt != NULL) {
 		va_start(ap, fmt);
-		Vasprintf(&s, fmt, ap);
+		Vasprintf(&label->text, fmt, ap);
 		va_end(ap);
 	} else {
-		s = NULL;
+		label->text = NULL;
 	}
-	label = Malloc(sizeof(AG_Label));
-	AG_LabelInit(label, AG_LABEL_STATIC, flags|AG_LABEL_NODUP, s);
+
 	AG_ObjectAttach(parent, label);
 	return (label);
 }
@@ -133,12 +147,18 @@ AG_LabelNewStatic(void *parent, Uint flags, const char *fmt, ...)
 AG_Label *
 AG_LabelNewStaticString(void *parent, Uint flags, const char *text)
 {
-	AG_Label *lbl;
+	AG_Label *label;
 	
-	lbl = Malloc(sizeof(AG_Label));
-	AG_LabelInit(lbl, AG_LABEL_STATIC, flags, text);
-	AG_ObjectAttach(parent, lbl);
-	return (lbl);
+	label = Malloc(sizeof(AG_Label));
+	AG_ObjectInit(label, &agLabelOps);
+	label->type = AG_LABEL_STATIC;
+	label->flags |= flags;
+	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
+	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(label); }
+	label->text = (text != NULL) ? Strdup(text) : NULL;
+
+	AG_ObjectAttach(parent, label);
+	return (label);
 }
 
 static void
@@ -219,20 +239,14 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-void
-AG_LabelInit(AG_Label *lbl, enum ag_label_type type, Uint flags,
-    const char *s)
+static void
+Init(void *obj)
 {
-	int wflags = 0;
+	AG_Label *lbl = obj;
 
-	if (flags & AG_LABEL_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_LABEL_VFILL) { wflags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(lbl, &agLabelOps, wflags);
-	lbl->type = type;
-	lbl->flags = flags;
-	lbl->text = (flags & AG_LABEL_NODUP) ? (char *)s :
-	            (s != NULL ? Strdup(s) : NULL);
+	lbl->type = AG_LABEL_STATIC;
+	lbl->flags = 0;
+	lbl->text = NULL;
 	lbl->surface = -1;
 	lbl->surfaceCont = -1;
 	lbl->lPad = 2;
@@ -244,17 +258,9 @@ AG_LabelInit(AG_Label *lbl, enum ag_label_type type, Uint flags,
 	lbl->justify = AG_TEXT_LEFT;
 	SLIST_INIT(&lbl->lflags);
 	AG_MutexInitRecursive(&lbl->lock);
-
-	switch (type) {
-	case AG_LABEL_STATIC:
-		break;
-	case AG_LABEL_POLLED:
-	case AG_LABEL_POLLED_MT:
-/*		AG_LabelSizeHint(lbl, 1, "XXXXXXXXXXXXXXXXX"); */
-		memset(lbl->poll.ptrs, 0, sizeof(void *)*AG_LABEL_MAX_POLLPTRS);
-		lbl->poll.nptrs = 0;
-		break;
-	}
+	
+	memset(lbl->poll.ptrs, 0, sizeof(void *)*AG_LABEL_MAX_POLLPTRS);
+	lbl->poll.nptrs = 0;
 }
 
 void
@@ -731,6 +737,7 @@ Destroy(void *p)
 		lflNext = SLIST_NEXT(lfl, lflags);
 		Free(lfl);
 	}
+	Free(lbl->text);
 	AG_MutexDestroy(&lbl->lock);
 }
 
@@ -754,7 +761,7 @@ const AG_WidgetOps agLabelOps = {
 		"AG_Widget:AG_Label",
 		sizeof(AG_Label),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

@@ -61,9 +61,6 @@ for choosing between different units
 .Fn AG_NumericalNew "AG_Widget *parent, Uint flags, const char *unit" "const char *label"
 .Pp
 .Ft void
-.Fn AG_NumericalInit "AG_Numerical *num, Uint flags, const char *unit" "const char *label"
-.Pp
-.Ft void
 .Fn AG_NumericalSetMin "AG_Numerical *num" "double min_value"
 .Pp
 .Ft void
@@ -88,11 +85,6 @@ for choosing between different units
 The
 .Fn AG_NumericalNew
 function allocates, initializes, and attaches a new
-.Nm
-widget.
-The
-.Fn AG_NumericalInit
-function initializes a preallocated
 .Nm
 widget.
 .Pp

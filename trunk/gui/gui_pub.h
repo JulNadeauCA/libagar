@@ -29,6 +29,7 @@
 #include <agar/gui/mspinbutton.h>
 #include <agar/gui/notebook.h>
 #include <agar/gui/numerical.h>
+#include <agar/gui/objsel.h>
 #include <agar/gui/pane.h>
 #include <agar/gui/pixmap.h>
 #include <agar/gui/radio.h>

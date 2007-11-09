@@ -38,16 +38,24 @@ AG_ObjectSelector *
 AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
     const char *fmt, ...)
 {
-	char label[AG_LABEL_MAX];
 	AG_ObjectSelector *os;
 	va_list ap;
 
-	va_start(ap, fmt);
-	vsnprintf(label, sizeof(label), fmt, ap);
-	va_end(ap);
-
 	os = Malloc(sizeof(AG_ObjectSelector));
-	AG_ObjectSelectorInit(os, label, flags, pobj, root);
+	AG_ObjectInit(os, &agObjectSelectorOps);
+	os->flags |= flags;
+	os->pobj = pobj;
+	os->root = root;
+	
+	if (fmt != NULL) {
+		char label[AG_LABEL_MAX];
+
+		va_start(ap, fmt);
+		vsnprintf(label, sizeof(label), fmt, ap);
+		va_end(ap);
+		AG_TextboxSetLabel(os->com.tbox, "%s", label);
+	}
+
 	AG_ObjectAttach(parent, os);
 	return (os);
 }
@@ -133,7 +141,7 @@ SelectObject(AG_Event *event)
 }
 
 static void
-BindingSet(AG_Event *event)
+Bound(AG_Event *event)
 {
 	AG_ObjectSelector *os = AG_SELF();
 	AG_WidgetBinding *b = AG_PTR(1);
@@ -146,17 +154,20 @@ BindingSet(AG_Event *event)
 	}
 }
 
-void
-AG_ObjectSelectorInit(AG_ObjectSelector *os, const char *label, int flags,
-    void *pobj, void *root)
+static void
+Init(void *obj)
 {
-	AG_ComboInit(&os->com, AG_COMBO_POLL|AG_COMBO_TREE|AG_COMBO_HFILL,
-	    label);
-	AG_ObjectSetOps(os, &agObjectSelectorOps);
+	AG_Combo *com = obj;
+	AG_ObjectSelector *os = obj;
 
-	os->flags = flags;
-	os->pobj = pobj;
-	os->root = root;
+	AG_ExpandHoriz(os);
+
+	com->flags |= AG_COMBO_POLL;
+	com->list->flags |= AG_TLIST_POLL|AG_TLIST_TREE;
+	
+	os->flags = 0;
+	os->pobj = NULL;
+	os->root = NULL;
 	os->type_mask[0] = '*';
 	os->type_mask[1] = '\0';
 
@@ -164,7 +175,7 @@ AG_ObjectSelectorInit(AG_ObjectSelector *os, const char *label, int flags,
 
 	AG_SetEvent(os->com.list, "tlist-poll", PollObjects, "%p", os);
 	AG_SetEvent(&os->com, "combo-selected", SelectObject, "%p", os);
-	AG_SetEvent(os, "widget-bound", BindingSet, NULL);
+	AG_SetEvent(os, "widget-bound", Bound, NULL);
 }
 
 void
@@ -178,7 +189,7 @@ const AG_WidgetOps agObjectSelectorOps = {
 		"AG_Widget:AG_Combo:AG_ObjectSelector",
 		sizeof(AG_ObjectSelector),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

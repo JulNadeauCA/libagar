@@ -35,8 +35,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agMSpinbuttonOps;
 
 AG_MSpinbutton *AG_MSpinbuttonNew(void *, Uint, const char *, const char *);
-void		AG_MSpinbuttonInit(AG_MSpinbutton *, Uint, const char *,
-		                   const char *);
 
 void	AG_MSpinbuttonAddValue(AG_MSpinbutton *, const char *, int);
 void	AG_MSpinbuttonSetValue(AG_MSpinbutton *, const char *, ...);

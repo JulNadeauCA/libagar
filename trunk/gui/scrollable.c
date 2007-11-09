@@ -163,16 +163,12 @@ forward_event(AG_Event *event)
 }
 #endif
 
-void
-AG_ScrollableInit(AG_Scrollable *sa, Uint flags, const void *ops)
+static void
+Init(void *obj)
 {
-	Uint wFlags = 0;
+	AG_Scrollable *sa = obj;
 
-	if (flags & AG_SCROLLABLE_HFILL) { wFlags |= AG_WIDGET_HFILL; }
-	if (flags & AG_SCROLLABLE_VFILL) { wFlags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(sa, ops, wFlags);
-	sa->flags = flags;
+	sa->flags = 0;
 	sa->vbar = AG_ScrollbarNew(sa, AG_SCROLLBAR_VERT, 0);
 	sa->hbar = AG_ScrollbarNew(sa, AG_SCROLLBAR_HORIZ, 0);
 	sa->xOffs = 0;
@@ -203,7 +199,7 @@ const AG_WidgetOps agScrollableOps = {
 		"AG_Widget:AG_Scrollable",
 		sizeof(AG_Scrollable),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		NULL,			/* destroy */
 		NULL,			/* load */

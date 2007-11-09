@@ -37,12 +37,19 @@ AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 	AG_Pixmap *px;
 
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_PixmapInit(px, flags|AG_PIXMAP_FORCE_SIZE);
-	AG_ObjectAttach(parent, px);
-	AG_WidgetMapSurface(px,
-	    SDL_CreateRGBSurface(SDL_SWSURFACE, 0, 0, 8, 0,0,0,0));
+	AG_ObjectInit(px, &agPixmapOps);
+	px->flags |= flags;
+	px->flags |= AG_PIXMAP_FORCE_SIZE;
 	px->pre_w = w;
 	px->pre_h = h;
+
+	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
+	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
+
+	AG_WidgetMapSurface(px,
+	    SDL_CreateRGBSurface(SDL_SWSURFACE, 0, 0, 8, 0,0,0,0));
+	
+	AG_ObjectAttach(parent, px);
 	return (px);
 }
 
@@ -52,7 +59,12 @@ AG_PixmapFromSurface(void *parent, Uint flags, SDL_Surface *su)
 	AG_Pixmap *px;
 
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_PixmapInit(px, flags);
+	AG_ObjectInit(px, &agPixmapOps);
+	px->flags |= flags;
+
+	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
+	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
+	
 	AG_ObjectAttach(parent, px);
 	AG_WidgetMapSurface(px, su);
 	return (px);
@@ -64,10 +76,14 @@ AG_PixmapFromSurfaceCopy(void *parent, Uint flags, SDL_Surface *su)
 	AG_Pixmap *px;
 
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_PixmapInit(px, flags);
+	AG_ObjectInit(px, &agPixmapOps);
+	px->flags |= flags;
+
+	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
+	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
+	
 	AG_ObjectAttach(parent, px);
-	AG_WidgetMapSurface(px, AG_DupSurface(su));
-	/* XXX leak */
+	AG_WidgetMapSurface(px, AG_DupSurface(su));	/* XXX leak */
 	return (px);
 }
 
@@ -79,7 +95,12 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, SDL_Surface *su,
 	SDL_Surface *su2 = NULL;
 
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_PixmapInit(px, flags);
+	AG_ObjectInit(px, &agPixmapOps);
+	px->flags |= flags;
+
+	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
+	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
+	
 	AG_ObjectAttach(parent, px);
 	AG_ScaleSurface(su, w, h, &su2);
 	AG_WidgetMapSurface(px, su2);
@@ -97,7 +118,12 @@ AG_PixmapFromBMP(void *parent, Uint flags, const char *bmpfile)
 		return (NULL);
 	}
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_PixmapInit(px, flags);
+	AG_ObjectInit(px, &agPixmapOps);
+	px->flags |= flags;
+
+	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
+	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
+	
 	AG_ObjectAttach(parent, px);
 	AG_WidgetMapSurface(px, bmp);
 	return (px);
@@ -119,13 +145,14 @@ AG_PixmapFromXCF(void *parent, Uint flags, const char *path)
 	}
 
 	/* XXX hack */
-	AG_ObjectInit(&tmpObj, "tmp", NULL);
+	AG_ObjectInit(&tmpObj, &agObjectOps);
 	tmpObj.gfx = AG_GfxNew(&tmpObj);
 	if (AG_XCFLoad(ds, 0, tmpObj.gfx) == -1)
 		goto fail;
 	
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_PixmapInit(px, flags);
+	AG_ObjectInit(px, &agPixmapOps);
+	px->flags |= flags;
 	AG_ObjectAttach(parent, px);
 	for (i = 0; i < tmpObj.gfx->nsprites; i++) {
 		AG_WidgetMapSurface(px, AG_DupSurface(AG_SPRITE(&tmpObj,i).su));
@@ -181,16 +208,14 @@ AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, SDL_Surface *su, Uint w, Uint h)
 	AG_WidgetReplaceSurface(px, px->n, su2);
 }
 
-void
-AG_PixmapInit(AG_Pixmap *px, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_CLIPPING;
+	AG_Pixmap *px = obj;
 
-	if (flags & AG_PIXMAP_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_PIXMAP_VFILL) { wflags |= AG_WIDGET_VFILL; }
+	WIDGET(px)->flags |= AG_WIDGET_CLIPPING;
 
-	AG_WidgetInit(px, &agPixmapOps, wflags);
-	px->flags = flags;
+	px->flags = 0;
 	px->n = 0;
 	px->s = 0;
 	px->t = 0;
@@ -232,7 +257,7 @@ const AG_WidgetOps agPixmapOps = {
 		"AG_Widget:AG_Pixmap",
 		sizeof(AG_Pixmap),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

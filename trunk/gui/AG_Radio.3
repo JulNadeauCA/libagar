@@ -48,23 +48,14 @@ widget implements a group of radio buttons.
 .Ft AG_Radio *
 .Fn AG_RadioNew "AG_Widget *parent" "Uint flags" "const char *items[]"
 .Pp
-.Ft void
-.Fn AG_RadioInit "AG_Radio *radio" "Uint flags" "const char *items[]"
-.Pp
 .nr nS 0
 The
 .Fn AG_RadioNew
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-The
-.Fn AG_RadioInit
-function initializes a preallocated
-.Nm
-widget.
-The
 .Fa items
-argument is a null-terminated array of strings.
+is a null-terminated array of strings.
 There are currently no
 .Fa flags
 specific to this widget.

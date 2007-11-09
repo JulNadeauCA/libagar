@@ -35,11 +35,13 @@ AG_UComboNew(void *parent, Uint flags)
 	AG_UCombo *com;
 
 	com = Malloc(sizeof(AG_UCombo));
-	AG_UComboInit(com, flags);
+	AG_ObjectInit(com, &agUComboOps);
+	com->flags |= flags;
+
+	if (flags & AG_UCOMBO_HFILL) { AG_ExpandHoriz(com); }
+	if (flags & AG_UCOMBO_VFILL) { AG_ExpandVert(com); }
+
 	AG_ObjectAttach(parent, com);
-	if (flags & AG_UCOMBO_FOCUS) {
-		AG_WidgetFocus(com);
-	}
 	return (com);
 }
 
@@ -50,17 +52,10 @@ AG_UComboNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt,
 	AG_UCombo *com;
 	AG_Event *ev;
 
-	com = Malloc(sizeof(AG_UCombo));
-	AG_UComboInit(com, flags);
-	AG_ObjectAttach(parent, com);
-
+	com = AG_UComboNew(parent, flags);
 	com->list->flags |= AG_TLIST_POLL;
 	ev = AG_SetEvent(com->list, "tlist-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
-	
-	if (flags & AG_UCOMBO_FOCUS) {
-		AG_WidgetFocus(com);
-	}
 	return (com);
 }
 
@@ -149,15 +144,14 @@ SelectedItem(AG_Event *event)
 	Collapse(com);
 }
 
-void
-AG_UComboInit(AG_UCombo *com, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_UNFOCUSED_BUTTONUP;
+	AG_UCombo *com = obj;
 
-	if (flags & AG_UCOMBO_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_UCOMBO_VFILL) { wflags |= AG_WIDGET_VFILL; }
+	WIDGET(com)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
 
-	AG_WidgetInit(com, &agUComboOps, wflags);
+	com->flags = 0;
 	com->panel = NULL;
 	com->wSaved = 0;
 	com->hSaved = 0;
@@ -170,7 +164,9 @@ AG_UComboInit(AG_UCombo *com, Uint flags)
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	
 	com->list = Malloc(sizeof(AG_Tlist));
-	AG_TlistInit(com->list, AG_TLIST_EXPAND);
+	AG_ObjectInit(com->list, &agTlistOps);
+	WIDGET(com->list)->flags |= AG_WIDGET_EXPAND;
+
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 }
 
@@ -232,7 +228,7 @@ const AG_WidgetOps agUComboOps = {
 		"AG_Widget:AG_UCombo",
 		sizeof(AG_UCombo),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

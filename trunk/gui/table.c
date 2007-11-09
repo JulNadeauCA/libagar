@@ -52,11 +52,13 @@ AG_TableNew(void *parent, Uint flags)
 	AG_Table *t;
 
 	t = Malloc(sizeof(AG_Table));
-	AG_TableInit(t, flags);
+	AG_ObjectInit(t, &agTableOps);
+	t->flags |= flags;
+
+	if (flags & AG_TABLE_HFILL) { AG_ExpandHoriz(t); }
+	if (flags & AG_TABLE_VFILL) { AG_ExpandVert(t); }
+
 	AG_ObjectAttach(parent, t);
-	if (flags & AG_TABLE_FOCUS) {
-		AG_WidgetFocus(t);
-	}
 	return (t);
 }
 
@@ -66,32 +68,27 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 {
 	AG_Table *t;
 
-	t = Malloc(sizeof(AG_Table));
-	AG_TableInit(t, flags);
+	t = AG_TableNew(parent, flags);
 	t->flags |= AG_TABLE_POLL;
 	t->poll_ev = AG_SetEvent(t, "table-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(t->poll_ev, fmt);
-
-	AG_ObjectAttach(parent, t);
 	return (t);
 }
 
-void
-AG_TableInit(AG_Table *t, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION|
-	              AG_WIDGET_UNFOCUSED_BUTTONUP;
+	AG_Table *t = obj;
 
-	if (flags & AG_TABLE_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_TABLE_VFILL) { wflags |= AG_WIDGET_VFILL; }
+	WIDGET(t)->flags |= AG_WIDGET_FOCUSABLE|
+	                    AG_WIDGET_UNFOCUSED_MOTION|
+	                    AG_WIDGET_UNFOCUSED_BUTTONUP;
 
-	AG_WidgetInit(t, &agTableOps, wflags);
 	AG_WidgetBind(t, "selected-row", AG_WIDGET_POINTER, &t->selected_row);
 	AG_WidgetBind(t, "selected-col", AG_WIDGET_POINTER, &t->selected_col);
 	AG_WidgetBind(t, "selected-cell", AG_WIDGET_POINTER, &t->selected_cell);
 
-	AG_MutexInitRecursive(&t->lock);
-	t->flags = flags;
+	t->flags = 0;
 	t->selected_row = NULL;
 	t->selected_col = NULL;
 	t->selected_cell = NULL;
@@ -116,6 +113,7 @@ AG_TableInit(AG_Table *t, Uint flags)
 	t->dblClickedRow = -1;
 	t->dblClickedCol = -1;
 	SLIST_INIT(&t->popups);
+	AG_MutexInitRecursive(&t->lock);
 	
 	AG_SetEvent(t, "window-mousebuttondown", mousebuttondown, NULL);
 	AG_SetEvent(t, "window-mousebuttonup", mousebuttonup, NULL);
@@ -138,9 +136,9 @@ AG_TableSizeHint(AG_Table *t, int w, int nrows)
 }
 
 static void
-Destroy(void *p)
+Destroy(void *obj)
 {
-	AG_Table *t = p;
+	AG_Table *t = obj;
 	AG_TablePopup *tp, *tpn;
 	Uint m, n;
 	
@@ -518,8 +516,7 @@ AG_TableSetPopup(AG_Table *t, int m, int n)
 	tp->m = m;
 	tp->n = n;
 	tp->panel = NULL;
-	tp->menu = Malloc(sizeof(AG_Menu));
-	AG_MenuInit(tp->menu, 0);
+	tp->menu = AG_MenuNew(NULL, 0);
 	tp->item = tp->menu->root;			/* XXX redundant */
 	SLIST_INSERT_HEAD(&t->popups, tp, popups);
 	return (tp->item);
@@ -1485,7 +1482,7 @@ const AG_WidgetOps agTableOps = {
 		"AG_Widget:AG_Table",
 		sizeof(AG_Table),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

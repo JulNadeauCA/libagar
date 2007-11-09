@@ -38,13 +38,18 @@ AG_GraphNew(void *parent, Uint flags)
 	AG_Graph *gf;
 
 	gf = Malloc(sizeof(AG_Graph));
-	AG_GraphInit(gf, flags);
+	AG_ObjectInit(gf, &agGraphOps);
+	gf->flags |= flags;
+
+	if (flags & AG_GRAPH_HFILL) { AG_ExpandHoriz(gf); }
+	if (flags & AG_GRAPH_VFILL) { AG_ExpandVert(gf); }
+
 	AG_ObjectAttach(parent, gf);
 	return (gf);
 }
 
 static void
-keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	AG_Graph *gf = AG_SELF();
 	int keysym = AG_INT(1);
@@ -100,7 +105,7 @@ MouseOverEdge(AG_GraphEdge *edge, int x, int y)
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	AG_Graph *gf = AG_SELF();
 	int x = AG_INT(1);
@@ -142,7 +147,7 @@ mousemotion(AG_Event *event)
 }
 
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	AG_Graph *gf = AG_SELF();
 	int button = AG_INT(1);
@@ -252,7 +257,7 @@ SetVertexStyle(AG_Event *event)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Graph *gf = AG_SELF();
 	int button = AG_INT(1);
@@ -346,16 +351,14 @@ mousebuttondown(AG_Event *event)
 	}
 }
 
-void
-AG_GraphInit(AG_Graph *gf, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_CLIPPING|AG_WIDGET_FOCUSABLE;
+	AG_Graph *gf = obj;
 
-	if (flags & AG_GRAPH_HFILL) wflags |= AG_WIDGET_HFILL;
-	if (flags & AG_GRAPH_VFILL) wflags |= AG_WIDGET_VFILL;
+	WIDGET(gf)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetInit(gf, &agGraphOps, wflags);
-	gf->flags = flags;
+	gf->flags = 0;
 	gf->wPre = 128;
 	gf->hPre = 128;
 	gf->xOffs = 0;
@@ -387,10 +390,10 @@ AG_GraphInit(AG_Graph *gf, Uint flags)
 	AG_WidgetBind(gf->vbar, "visible", AG_WIDGET_INT, &WIDGET(gf)->h);
 #endif
 
-	AG_SetEvent(gf, "window-keydown", keydown, NULL);
-	AG_SetEvent(gf, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(gf, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(gf, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(gf, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(gf, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(gf, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(gf, "window-mousemotion", MouseMotion, NULL);
 }
 
 void
@@ -793,7 +796,7 @@ const AG_WidgetOps agGraphOps = {
 		"AG_Widget:AG_Graph",
 		sizeof(AG_Graph),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

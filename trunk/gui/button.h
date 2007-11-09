@@ -57,8 +57,6 @@ AG_Button *AG_ButtonNewFlag8(void *, Uint, const char *, Uint8 *, Uint8);
 AG_Button *AG_ButtonNewFlag16(void *, Uint, const char *, Uint16 *, Uint16);
 AG_Button *AG_ButtonNewFlag32(void *, Uint, const char *, Uint32 *, Uint32);
 
-void	   AG_ButtonInit(AG_Button *, Uint, const char *);
-
 void	   AG_ButtonSetPadding(AG_Button *, int, int, int, int);
 #define	AG_ButtonSetPaddingLeft(b,v)   AG_ButtonSetPadding((b),(v),-1,-1,-1)
 #define	AG_ButtonSetPaddingRight(b,v)  AG_ButtonSetPadding((b),-1,(v),-1,-1)

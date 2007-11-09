@@ -35,7 +35,6 @@
 #include <core/config.h>
 #include <core/util.h>
 #include <core/dir.h>
-#include <core/typesw.h>
 
 #include "window.h"
 #include "primitive.h"
@@ -165,7 +164,8 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 
 	agView = Malloc(sizeof(AG_Display));
-	AG_ObjectInit(agView, "_agView", &agDisplayOps);
+	AG_ObjectInit(agView, &agDisplayOps);
+	AG_ObjectSetName(agView, "_agView");
 
 	agView->winop = AG_WINOP_NONE;
 	agView->ndirty = 0;
@@ -1383,8 +1383,7 @@ AG_ProcessEvent(SDL_Event *ev)
 			AG_Window *win;
 			int x, y;
 
-			me = Malloc(sizeof(AG_Menu));
-			AG_MenuInit(me, 0);
+			me = AG_MenuNew(NULL, 0);
 			mi = me->itemSel = AG_MenuAddItem(me, NULL);
 
 			TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq,

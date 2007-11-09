@@ -34,15 +34,13 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agSpinbuttonOps;
 
 AG_Spinbutton	*AG_SpinbuttonNew(void *, Uint, const char *);
-void		 AG_SpinbuttonInit(AG_Spinbutton *, Uint, const char *);
-
-void	AG_SpinbuttonAddValue(AG_Spinbutton *, int);
-void	AG_SpinbuttonSetValue(AG_Spinbutton *, ...);
-void	AG_SpinbuttonSetMin(AG_Spinbutton *, int);
-void	AG_SpinbuttonSetMax(AG_Spinbutton *, int);
-void	AG_SpinbuttonSetRange(AG_Spinbutton *, int, int);
-void	AG_SpinbuttonSetIncrement(AG_Spinbutton *, int);
-void	AG_SpinbuttonSetWriteable(AG_Spinbutton *, int);
+void		 AG_SpinbuttonAddValue(AG_Spinbutton *, int);
+void		 AG_SpinbuttonSetValue(AG_Spinbutton *, ...);
+void		 AG_SpinbuttonSetMin(AG_Spinbutton *, int);
+void		 AG_SpinbuttonSetMax(AG_Spinbutton *, int);
+void		 AG_SpinbuttonSetRange(AG_Spinbutton *, int, int);
+void		 AG_SpinbuttonSetIncrement(AG_Spinbutton *, int);
+void		 AG_SpinbuttonSetWriteable(AG_Spinbutton *, int);
 __END_DECLS
 
 #include "close_code.h"

@@ -104,8 +104,7 @@ extern AG_Menu *agAppMenu;
 extern AG_Window *agAppMenuWin;
 
 AG_Menu	  *AG_MenuNew(void *, Uint);
-#define	   AG_MenuNewGlobal(flags) AG_MenuNew(NULL,(flags))
-void	   AG_MenuInit(AG_Menu *, Uint);
+AG_Menu	  *AG_MenuNewGlobal(Uint);
 void 	   AG_MenuScale(void *, int, int);
 void	   AG_MenuDraw(void *);
 
@@ -190,8 +189,6 @@ AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, SDL_Surface *,
 	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),(mtx))
 #define AG_MenuUintFlags(mi,t,i,fp,fl,inv) \
 	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),NULL)
-
-void AG_MenuViewInit(void *, AG_Window *, AG_Menu *, AG_MenuItem *);
 
 /* Legacy interfaces */
 #define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)

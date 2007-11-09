@@ -62,9 +62,6 @@ dereferenced on rendering.
 .Fn AG_LabelNewPolledMT "AG_Widget *parent" "Uint flags" "AG_Mutex *mutex" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_LabelInit "AG_Label *label" "enum ag_label_type type" "Uint flags" "const char *text"
-.Pp
-.Ft "void"
 .Fn AG_LabelSetPadding "AG_Label *label" "int left" "int right" "int top" "int bottom"
 .Pp
 .Ft "void"
@@ -98,28 +95,6 @@ The
 .Fn AG_LabelNewPolledMT
 variant accepts a pointer to a mutex that will be automatically acquired
 and release as the widget accesses the referenced data.
-.Pp
-The alternate
-.Fn AG_LabelInit
-function initializes a preallocated
-.Nm
-widget.
-.Pp
-The
-.Fa type
-argument is one of:
-.Pp
-.Bd -literal
-enum ag_label_type {
-	AG_LABEL_STATIC,		/* Static text */
-	AG_LABEL_POLLED,		/* Polling */
-	AG_LABEL_POLLED_MT		/* Polling (with mutex) */
-};
-.Ed
-.Pp
-There are currently no
-.Fa flags
-specific to this widget.
 .Pp
 The
 .Fn AG_LabelSetPadding

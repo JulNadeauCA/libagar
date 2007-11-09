@@ -63,9 +63,6 @@ structure.
 .Fn AG_UComboNewPolled "AG_Widget *parent" "Uint flags" "AG_EventFn fn" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_UComboInit "AG_UCombo *com" "Uint flags"
-.Pp
-.Ft "void"
 .Fn AG_UComboSizeHint "AG_UCombo *com" "const char *text" "int nitems"
 .Pp
 .Ft "void"
@@ -75,10 +72,6 @@ structure.
 The
 .Fn AG_UComboNew
 function allocates, initializes, and attaches a new
-.Nm
-widget.
-.Fn AG_UComboInit
-initializes a preallocated
 .Nm
 widget.
 There are currently no

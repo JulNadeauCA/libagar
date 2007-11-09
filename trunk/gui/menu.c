@@ -42,35 +42,51 @@ AG_MenuNew(void *parent, Uint flags)
 	AG_Menu *m;
 
 	m = Malloc(sizeof(AG_Menu));
-	AG_MenuInit(m, flags);
-	if (parent != NULL) {
-		AG_ObjectAttach(parent, m);
-	} else {
-		if (agAppMenu != NULL) {
-			AG_ViewDetach(agAppMenuWin);
-			AG_ObjectDestroy(agAppMenu);
-			Free(agAppMenu);
-		}
-		m->flags |= AG_MENU_GLOBAL;
-		WIDGET(m)->flags |= AG_WIDGET_HFILL;
-		AG_MenuSetPadding(m, 4, 4, -1, -1);
+	AG_ObjectInit(m, &agMenuOps);
+	m->flags |= flags;
 
-		agAppMenu = m;
-		agAppMenuWin = AG_WindowNewNamed(AG_WINDOW_PLAIN|
-		                                 AG_WINDOW_KEEPBELOW|
-						 AG_WINDOW_DENYFOCUS,
-						 "_agAppMenu");
-		AG_ObjectAttach(agAppMenuWin, m);
-		AG_WindowSetPadding(agAppMenuWin, 0, 0, 0, 0);
-		AG_WindowShow(agAppMenuWin);
+	if (flags & AG_MENU_HFILL) { AG_ExpandHoriz(m); }
+	if (flags & AG_MENU_VFILL) { AG_ExpandVert(m); }
+
+	AG_ObjectAttach(parent, m);
+	return (m);
+}
+
+AG_Menu *
+AG_MenuNewGlobal(Uint flags)
+{
+	AG_Menu *m;
+
+	m = Malloc(sizeof(AG_Menu));
+	AG_ObjectInit(m, &agMenuOps);
+	m->flags |= flags;
+
+	if (agAppMenu != NULL) {
+		AG_ViewDetach(agAppMenuWin);
+		AG_ObjectDestroy(agAppMenu);
+		Free(agAppMenu);
 	}
+	m->flags |= AG_MENU_GLOBAL;
+	AG_MenuSetPadding(m, 4, 4, -1, -1);
+	
+	if (flags & AG_MENU_VFILL) {
+		AG_ExpandVert(m);
+	}
+	AG_ExpandHoriz(m);
+
+	agAppMenu = m;
+	agAppMenuWin = AG_WindowNewNamed(AG_WINDOW_PLAIN|AG_WINDOW_KEEPBELOW|
+					 AG_WINDOW_DENYFOCUS,
+					 "_agAppMenu");
+	AG_ObjectAttach(agAppMenuWin, m);
+	AG_WindowSetPadding(agAppMenuWin, 0, 0, 0, 0);
+	AG_WindowShow(agAppMenuWin);
 	return (m);
 }
 
 AG_Window *
 AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
 {
-	AG_MenuView *mview;
 	AG_Window *win;
 
 	AG_MenuUpdateItem(item);
@@ -83,10 +99,12 @@ AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
 	AG_WindowSetCaption(win, "win-popup");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 
-	mview = Malloc(sizeof(AG_MenuView));
-	AG_MenuViewInit(mview, win, m, item);
-	AG_ObjectAttach(win, mview);
-	item->view = mview;
+	item->view = Malloc(sizeof(AG_MenuView));
+	AG_ObjectInit(item->view, &agMenuViewOps);
+	item->view->panel = win;
+	item->view->pmenu = m;
+	item->view->pitem = item;
+	AG_ObjectAttach(win, item->view);
 
 	AG_WindowShow(win);
 	AG_WindowSetGeometry(win, x, y, -1, -1);
@@ -324,19 +342,17 @@ CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 	return (mi);
 }
 
-void
-AG_MenuInit(AG_Menu *m, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_UNFOCUSED_MOTION|
-	              AG_WIDGET_UNFOCUSED_BUTTONUP|
-	              AG_WIDGET_IGNORE_PADDING|
-		      AG_WIDGET_CLIPPING;
+	AG_Menu *m = obj;
 
-	if (flags & AG_MENU_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_MENU_VFILL) { wflags |= AG_WIDGET_VFILL; }
+	WIDGET(m)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
+	                    AG_WIDGET_UNFOCUSED_BUTTONUP|
+	                    AG_WIDGET_IGNORE_PADDING|
+	                    AG_WIDGET_CLIPPING;
 
-	AG_WidgetInit(m, &agMenuOps, wflags);
-
+	m->flags = 0;
 	m->lPad = 5;
 	m->rPad = 5;
 	m->tPad = 2;
@@ -345,7 +361,6 @@ AG_MenuInit(AG_Menu *m, Uint flags)
 	m->rPadLbl = 7;
 	m->tPadLbl = 3;
 	m->bPadLbl = 3;
-	m->flags = flags;
 
 	m->curState = 1;
 	m->selecting = 0;
@@ -813,8 +828,7 @@ AG_PopupNew(void *pwid)
 	AG_PopupMenu *pm;
 
 	pm = Malloc(sizeof(AG_PopupMenu));
-	pm->menu = Malloc(sizeof(AG_Menu));
-	AG_MenuInit(pm->menu, 0);
+	pm->menu = AG_MenuNew(NULL, 0);
 	pm->item = pm->menu->itemSel = AG_MenuAddItem(pm->menu, NULL);
 	/* XXX redundant */
 	pm->win = NULL;
@@ -870,7 +884,7 @@ const AG_WidgetOps agMenuOps = {
 		"AG_Widget:AG_Menu",
 		sizeof(AG_Menu),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

@@ -38,7 +38,7 @@ AG_IconNew(void)
 	AG_Icon *icon;
 
 	icon = Malloc(sizeof(AG_Icon));
-	AG_IconInit(icon, 0);
+	AG_ObjectInit(icon, &agIconOps);
 	return (icon);
 }
 
@@ -48,7 +48,7 @@ AG_IconFromSurface(SDL_Surface *su)
 	AG_Icon *icon;
 
 	icon = Malloc(sizeof(AG_Icon));
-	AG_IconInit(icon, 0);
+	AG_ObjectInit(icon, &agIconOps);
 	AG_IconSetSurface(icon, su);
 	return (icon);
 }
@@ -64,15 +64,18 @@ AG_IconFromBMP(const char *bmpfile)
 		return (NULL);
 	}
 	icon = Malloc(sizeof(AG_Icon));
-	AG_IconInit(icon, 0);
+	AG_ObjectInit(icon, &agIconOps);
 	AG_IconSetSurfaceNODUP(icon, bmp);
 	return (icon);
 }
 
-void
-AG_IconInit(AG_Icon *icon, Uint flags)
+static void
+Init(void *obj)
 {
-	AG_WidgetInit(icon, &agIconOps, AG_WIDGET_FOCUSABLE);
+	AG_Icon *icon = obj;
+
+	WIDGET(icon)->flags |= AG_WIDGET_FOCUSABLE;
+
 	icon->flags = 0;
 	icon->surface = -1;
 	icon->wDND = NULL;
@@ -80,9 +83,9 @@ AG_IconInit(AG_Icon *icon, Uint flags)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Icon *icon = p;
+	AG_Icon *icon = obj;
 
 	if (icon->surface != -1) {
 		r->w = WSURFACE(icon,icon->surface)->w;
@@ -91,7 +94,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	if (a->w < 1 ||
 	    a->h < 1) {
@@ -101,9 +104,9 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Icon *icon = p;
+	AG_Icon *icon = obj;
 
 	AG_WidgetBlitSurface(icon, icon->surface, 0, 0);
 }
@@ -135,7 +138,7 @@ const AG_WidgetOps agIconOps = {
 		"AG_Widget:AG_Icon",
 		sizeof(AG_Icon),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

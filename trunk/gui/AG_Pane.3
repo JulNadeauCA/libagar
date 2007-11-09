@@ -55,9 +55,6 @@ to zero size.
 .Fn AG_PaneNew "AG_Widget *parent" "enum ag_pane_type type" "Uint flags"
 .Pp
 .Ft "void"
-.Fn AG_PaneInit "AG_Pane *pane" "Uint flags"
-.Pp
-.Ft "void"
 .Fn AG_PaneAttachBox "AG_Pane *pane" "int which" "AG_Box *box"
 .Pp
 .Ft "void"
@@ -78,12 +75,9 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-.Fn AG_PaneInit
-initializes a preallocated
-.Nm
-widget, where
+The
 .Fa type
-is one of:
+argument is one of:
 .Pp
 .Bd -literal
 enum ag_pane_type {

@@ -22,9 +22,7 @@ typedef struct ag_dummy {
 
 __BEGIN_DECLS
 extern const AG_WidgetOps agDummyOps;
-
-AG_Dummy  *AG_DummyNew(void *, Uint, const char *);
-void	   AG_DummyInit(AG_Dummy *, Uint, const char *);
+AG_Dummy *AG_DummyNew(void *, Uint, const char *);
 __END_DECLS
 
 #include "close_code.h"

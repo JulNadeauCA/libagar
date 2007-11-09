@@ -22,7 +22,6 @@ typedef struct ag_scrollbar {
 #define AG_SCROLLBAR_HFILL	0x01
 #define AG_SCROLLBAR_VFILL	0x02
 #define AG_SCROLLBAR_FOCUSABLE	0x04
-#define AG_SCROLLBAR_FOCUS	0x10
 #define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
 	int value;			/* Default value binding */
 	int min, max;			/* Default range binding */
@@ -38,9 +37,7 @@ typedef struct ag_scrollbar {
 
 __BEGIN_DECLS
 extern const AG_WidgetOps agScrollbarOps;
-
-AG_Scrollbar	*AG_ScrollbarNew(void *, enum ag_scrollbar_type, Uint);
-void		 AG_ScrollbarInit(AG_Scrollbar *, enum ag_scrollbar_type, Uint);
+AG_Scrollbar *AG_ScrollbarNew(void *, enum ag_scrollbar_type, Uint);
 
 static __inline__ void
 AG_ScrollbarSetBarSize(AG_Scrollbar *sb, int bsize)

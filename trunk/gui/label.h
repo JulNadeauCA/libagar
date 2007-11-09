@@ -38,8 +38,7 @@ typedef struct ag_label {
 #define AG_LABEL_VFILL		0x02	/* Fill vertical space */
 #define AG_LABEL_NOMINSIZE	0x04	/* No minimum enforced size */
 #define AG_LABEL_PARTIAL	0x10	/* Partial mode (RO) */
-#define AG_LABEL_NODUP		0x20	/* Don't copy string in LabelInit() */
-#define AG_LABEL_REGEN		0x40	/* Regenerate surface at next draw */
+#define AG_LABEL_REGEN		0x20	/* Regenerate surface at next draw */
 #define AG_LABEL_EXPAND		(AG_LABEL_HFILL|AG_LABEL_VFILL)
 	AG_Mutex lock;
 	char *text;			/* Text buffer */
@@ -66,7 +65,6 @@ AG_Label *AG_LabelNewStatic(void *, Uint, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 3, 4);
 AG_Label *AG_LabelNewStaticString(void *, Uint, const char *);
 
-void	AG_LabelInit(AG_Label *, enum ag_label_type, Uint, const char *);
 void	AG_LabelString(AG_Label *, const char *);
 void	AG_LabelText(AG_Label *, const char *, ...)
 	    FORMAT_ATTRIBUTE(printf, 2, 3)

@@ -46,7 +46,12 @@ AG_FileDlgNew(void *parent, Uint flags)
 	AG_FileDlg *fd;
 
 	fd = Malloc(sizeof(AG_FileDlg));
-	AG_FileDlgInit(fd, flags);
+	AG_ObjectInit(fd, &agFileDlgOps);
+	fd->flags |= flags;
+	if (flags & AG_FILEDLG_HFILL) { AG_ExpandHoriz(fd); }
+	if (flags & AG_FILEDLG_VFILL) { AG_ExpandVert(fd); }
+	if (flags & AG_FILEDLG_MULTI) { fd->tlFiles->flags |= AG_TLIST_MULTI; }
+
 	AG_ObjectAttach(parent, fd);
 	return (fd);
 }
@@ -56,10 +61,8 @@ AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 {
 	AG_FileDlg *fd;
 
-	fd = Malloc(sizeof(AG_FileDlg));
-	AG_FileDlgInit(fd, flags);
+	fd = AG_FileDlgNew(parent, flags);
 	AG_FileDlgSetDirectoryMRU(fd, mruKey, AG_String(agConfig,"save-path"));
-	AG_ObjectAttach(parent, fd);
 	return (fd);
 }
 
@@ -607,16 +610,12 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 	}
 }
 
-void
-AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = 0;
+	AG_FileDlg *fd = obj;
 
-	if (flags & AG_FILEDLG_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_FILEDLG_VFILL) { wflags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(fd, &agFileDlgOps, wflags);
-	fd->flags = flags;
+	fd->flags = 0;
 	fd->cfile[0] = '\0';
 	fd->dirMRU = NULL;
 	if (AG_GetCWD(fd->cwd, sizeof(fd->cwd)) == -1) {
@@ -626,21 +625,18 @@ AG_FileDlgInit(AG_FileDlg *fd, Uint flags)
 	TAILQ_INIT(&fd->types);
 
 	fd->hPane = AG_PaneNewHoriz(fd, AG_PANE_EXPAND);
-
 	fd->tlDirs = AG_TlistNew(fd->hPane->div[0], AG_TLIST_EXPAND);
-	fd->tlFiles = AG_TlistNew(fd->hPane->div[1], AG_TLIST_EXPAND|
-	    ((flags & AG_FILEDLG_MULTI) ? AG_TLIST_MULTI : 0));
-
+	fd->tlFiles = AG_TlistNew(fd->hPane->div[1], AG_TLIST_EXPAND);
 	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL,
 	    _("Directory: %s"), &fd->cwd[0]);
 	AG_LabelSizeHint(fd->lbCwd, 1,
 	    _("Directory: XXXXXXXXXXXXX"));
 
-	fd->tbFile = AG_TextboxNew(fd, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
-	    _("File: "));
+	fd->tbFile = AG_TextboxNew(fd, AG_TEXTBOX_HFILL, _("File: "));
 	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
 	AG_TlistSizeHint(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
 	AG_TlistSizeHint(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
+	AG_WidgetFocus(fd->tbFile);
 
 	fd->btnOk = AG_ButtonNew(fd, 0, _("OK"));
 	fd->btnCancel = AG_ButtonNew(fd, 0, _("Cancel"));
@@ -679,9 +675,9 @@ AG_FileDlgCancelAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 }
 
 static void
-Destroy(void *p)
+Destroy(void *obj)
 {
-	AG_FileDlg *fd = p;
+	AG_FileDlg *fd = obj;
 	AG_FileType *ft, *ft2;
 	AG_FileOption *fo, *fo2;
 	Uint i;
@@ -955,7 +951,7 @@ const AG_WidgetOps agFileDlgOps = {
 		"AG_Widget:AG_FileDlg",
 		sizeof(AG_FileDlg),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

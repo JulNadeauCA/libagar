@@ -33,21 +33,37 @@
 
 #include <string.h>
 
+static void SelectedUnit(AG_Event *);
+static void InitUnitSystem(AG_FSpinbutton *, const char *);
+
 AG_FSpinbutton *
 AG_FSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *label)
 {
 	AG_FSpinbutton *fsu;
 
 	fsu = Malloc(sizeof(AG_FSpinbutton));
-	AG_FSpinbuttonInit(fsu, flags, unit, label);
+	AG_ObjectInit(fsu, &agFSpinbuttonOps);
+
+	if (!(flags & AG_FSPINBUTTON_NOHFILL)) { AG_ExpandHoriz(fsu); }
+	if (  flags & AG_FSPINBUTTON_VFILL) { AG_ExpandVert(fsu); }
+
+	if (label != NULL) {
+		AG_TextboxSetLabel(fsu->input, "%s", label);
+	}
+	if (unit != NULL) {
+		fsu->units = AG_UComboNew(fsu, 0);
+		AG_SetEvent(fsu->units, "ucombo-selected",
+		    SelectedUnit, "%p", fsu);
+		InitUnitSystem(fsu, unit);
+		AG_WidgetSetFocusable(fsu->units, 0);
+	}
+
 	AG_ObjectAttach(parent, fsu);
 	return (fsu);
 }
 
-
-/* Adjust the default range depending on the data type of a new binding. */
 static void
-binding_changed(AG_Event *event)
+Bound(AG_Event *event)
 {
 	AG_FSpinbutton *fsu = AG_SELF();
 	AG_WidgetBinding *binding = AG_PTR(1);
@@ -135,7 +151,7 @@ binding_changed(AG_Event *event)
 }
 
 static void
-key_pressed(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	AG_FSpinbutton *fsu = AG_SELF();
 	int keysym = AG_INT(1);
@@ -153,7 +169,7 @@ key_pressed(AG_Event *event)
 }
 
 static void
-changed(AG_Event *event)
+TextChanged(AG_Event *event)
 {
 	AG_FSpinbutton *fsu = AG_PTR(1);
 	int unfocus = AG_INT(2);
@@ -198,7 +214,7 @@ changed(AG_Event *event)
 }
 
 static void
-increment_pressed(AG_Event *event)
+Increment(AG_Event *event)
 {
 	AG_FSpinbutton *fsu = AG_PTR(1);
 
@@ -208,7 +224,7 @@ increment_pressed(AG_Event *event)
 }
 
 static void
-decrement_pressed(AG_Event *event)
+Decrement(AG_Event *event)
 {
 	AG_FSpinbutton *fsu = AG_PTR(1);
 	
@@ -217,24 +233,24 @@ decrement_pressed(AG_Event *event)
 	AG_MutexUnlock(&fsu->lock);
 }
 
-static void
-update_unit_button(AG_FSpinbutton *fsu)
+static __inline__ void
+UpdateUnitButton(AG_FSpinbutton *fsu)
 {
 	AG_ButtonText(fsu->units->button, "%s", AG_UnitAbbr(fsu->unit));
 }
 
 static void
-selected_unit(AG_Event *event)
+SelectedUnit(AG_Event *event)
 {
 	AG_FSpinbutton *fsu = AG_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
 
 	fsu->unit = (const AG_Unit *)ti->p1;
-	update_unit_button(fsu);
+	UpdateUnitButton(fsu);
 }
 
 static void
-init_unit_system(AG_FSpinbutton *fsu, const char *unit_key)
+InitUnitSystem(AG_FSpinbutton *fsu, const char *unit_key)
 {
 	const AG_Unit *unit = NULL;
 	const AG_Unit *ugroup = NULL;
@@ -256,7 +272,7 @@ init_unit_system(AG_FSpinbutton *fsu, const char *unit_key)
 		fatal("unknown unit: `%s'", unit_key);
 	}
 	fsu->unit = unit;
-	update_unit_button(fsu);
+	UpdateUnitButton(fsu);
 
 	AG_MutexLock(&fsu->units->list->lock);
 	AG_TlistDeselectAll(fsu->units->list);
@@ -271,38 +287,25 @@ init_unit_system(AG_FSpinbutton *fsu, const char *unit_key)
 	AG_MutexUnlock(&fsu->units->list->lock);
 }
 
-void
-AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
-    const char *label)
+static void
+Init(void *obj)
 {
-	Uint wflags = 0;
+	AG_FSpinbutton *fsu = obj;
 
-	if ((flags & AG_FSPINBUTTON_NOHFILL)==0) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_FSPINBUTTON_VFILL) { wflags |= AG_WIDGET_VFILL; }
-
-	AG_WidgetInit(fsu, &agFSpinbuttonOps, wflags);
 	AG_WidgetBind(fsu, "value", AG_WIDGET_DOUBLE, &fsu->value);
 	AG_WidgetBind(fsu, "min", AG_WIDGET_DOUBLE, &fsu->min);
 	AG_WidgetBind(fsu, "max", AG_WIDGET_DOUBLE, &fsu->max);
 	
 	fsu->inc = 1.0;
 	fsu->value = 0.0;
-	fsu->input = AG_TextboxNew(fsu, AG_TEXTBOX_FLT_ONLY, label);
+	fsu->input = AG_TextboxNew(fsu, AG_TEXTBOX_FLT_ONLY, NULL);
 	fsu->writeable = 1;
 	strlcpy(fsu->format, "%g", sizeof(fsu->format));
 	AG_MutexInit(&fsu->lock);
 	AG_TextboxSizeHint(fsu->input, "88.88");
 	
-	if (unit != NULL) {
-		fsu->units = AG_UComboNew(fsu, 0);
-		AG_SetEvent(fsu->units, "ucombo-selected", selected_unit,
-		    "%p", fsu);
-		init_unit_system(fsu, unit);
-		AG_WidgetSetFocusable(fsu->units, 0);
-	} else {
-		fsu->unit = AG_FindUnit("identity");
-		fsu->units = NULL;
-	}
+	fsu->unit = AG_FindUnit("identity");
+	fsu->units = NULL;
 
 	fsu->incbu = AG_ButtonNew(fsu, AG_BUTTON_REPEAT, _("+"));
 	AG_ButtonSetPadding(fsu->incbu, 1,1,1,1);
@@ -312,12 +315,12 @@ AG_FSpinbuttonInit(AG_FSpinbutton *fsu, Uint flags, const char *unit,
 	AG_ButtonSetPadding(fsu->decbu, 1,1,1,1);
 	AG_WidgetSetFocusable(fsu->incbu, 0);
 
-	AG_SetEvent(fsu, "widget-bound", binding_changed, NULL);
-	AG_SetEvent(fsu, "window-keydown", key_pressed, NULL);
-	AG_SetEvent(fsu->input, "textbox-return", changed, "%p,%i", fsu, 1);
-	AG_SetEvent(fsu->input, "textbox-changed", changed, "%p,%i", fsu, 0);
-	AG_SetEvent(fsu->incbu, "button-pushed", increment_pressed, "%p", fsu);
-	AG_SetEvent(fsu->decbu, "button-pushed", decrement_pressed, "%p", fsu);
+	AG_SetEvent(fsu, "widget-bound", Bound, NULL);
+	AG_SetEvent(fsu, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(fsu->input, "textbox-return", TextChanged, "%p,%i",fsu,1);
+	AG_SetEvent(fsu->input, "textbox-changed", TextChanged, "%p,%i",fsu,0);
+	AG_SetEvent(fsu->incbu, "button-pushed", Increment, "%p",fsu);
+	AG_SetEvent(fsu->decbu, "button-pushed", Decrement, "%p",fsu);
 }
 
 void
@@ -625,7 +628,7 @@ AG_FSpinbuttonSelectUnit(AG_FSpinbutton *fsu, const char *uname)
 		if (strcmp(unit->key, uname) == 0) {
 			it->selected++;
 			fsu->unit = unit;
-			update_unit_button(fsu);
+			UpdateUnitButton(fsu);
 			break;
 		}
 	}
@@ -663,7 +666,7 @@ const AG_WidgetOps agFSpinbuttonOps = {
 		"AG_Widget:AG_FSpinbutton",
 		sizeof(AG_FSpinbutton),
 		{ 0,0 },
-		NULL,			/* init */
+		Init,
 		NULL,			/* free */
 		Destroy,
 		NULL,			/* load */

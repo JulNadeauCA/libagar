@@ -37,7 +37,13 @@ AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)
 	AG_Pane *pa;
 
 	pa = Malloc(sizeof(AG_Pane));
-	AG_PaneInit(pa, type, flags);
+	AG_ObjectInit(pa, &agPaneOps);
+	pa->type = type;
+	pa->flags |= flags;
+
+	if (flags & AG_PANE_HFILL) { AG_ExpandHoriz(pa); }
+	if (flags & AG_PANE_VFILL) { AG_ExpandVert(pa); }
+
 	AG_ObjectAttach(parent, pa);
 	return (pa);
 }
@@ -50,7 +56,7 @@ OverDivControl(AG_Pane *pa, int pos)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Pane *pa = AG_SELF();
 	int button = AG_INT(1);
@@ -85,7 +91,7 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	AG_Pane *pa = AG_SELF();
 	int x = AG_INT(1);
@@ -132,7 +138,7 @@ mousemotion(AG_Event *event)
 }
 
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	AG_Pane *pa = AG_SELF();
 
@@ -142,25 +148,19 @@ mousebuttonup(AG_Event *event)
 	}
 }
 
-void
-AG_PaneInit(AG_Pane *pa, enum ag_pane_type type, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = 0;
+	AG_Pane *pa = obj;
 	int i;
-
-	if (flags & AG_PANE_HFILL) wflags |= AG_WIDGET_HFILL;
-	if (flags & AG_PANE_VFILL) wflags |= AG_WIDGET_VFILL;
-
-	AG_WidgetInit(pa, &agPaneOps, wflags);
 
 	WIDGET(pa)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
 			     AG_WIDGET_UNFOCUSED_MOTION;
-	AG_ObjectSetOps(pa, &agPaneOps);
 
-	pa->type = type;
-	pa->flags = flags|AG_PANE_INITSCALE;
-	pa->div[0] = AG_BoxNew(pa, AG_BOX_VERT, AG_PANE_FRAME?AG_BOX_FRAME:0);
-	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, AG_PANE_FRAME?AG_BOX_FRAME:0);
+	pa->type = AG_PANE_VERT;
+	pa->flags = AG_PANE_INITSCALE;
+	pa->div[0] = AG_BoxNew(pa, AG_BOX_VERT, AG_BOX_FRAME);
+	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, AG_BOX_FRAME);
 	pa->dx = 0;
 	pa->rx = -1;
 	pa->dmoving = 0;
@@ -175,9 +175,9 @@ AG_PaneInit(AG_Pane *pa, enum ag_pane_type type, Uint flags)
 #endif
 	}
 
-	AG_SetEvent(pa, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(pa, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(pa, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(pa, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(pa, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(pa, "window-mousemotion", MouseMotion, NULL);
 }
 
 void
@@ -378,7 +378,7 @@ const AG_WidgetOps agPaneOps = {
 		"AG_Widget:AG_Pane",
 		sizeof(AG_Pane),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

@@ -47,7 +47,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agComboOps;
 
 AG_Combo *AG_ComboNew(void *, Uint, const char *);
-void AG_ComboInit(AG_Combo *, Uint, const char *);
 void AG_ComboSizeHint(AG_Combo *, const char *, int);
 void AG_ComboSizeHintPixels(AG_Combo *, int, int);
 void AG_ComboSelect(AG_Combo *, AG_TlistItem *);

@@ -25,20 +25,15 @@ typedef struct ag_separator {
 
 __BEGIN_DECLS
 extern const AG_WidgetOps agSeparatorOps;
-extern const AG_WidgetOps agSeparatorInvisibleOps;
 
 AG_Separator *AG_SeparatorNew(void *, enum ag_separator_type);
 AG_Separator *AG_SeparatorNewInv(void *, enum ag_separator_type);
+void          AG_SeparatorSetPadding(AG_Separator *, Uint);
 
 #define AG_SeparatorNewHoriz(p) AG_SeparatorNew((p),AG_SEPARATOR_HORIZ)
 #define AG_SeparatorNewVert(p) AG_SeparatorNew((p),AG_SEPARATOR_VERT)
 #define AG_SeparatorNewHorizInv(p) AG_SeparatorNewInv((p),AG_SEPARATOR_HORIZ)
 #define AG_SeparatorNewVertInv(p) AG_SeparatorNewInv((p),AG_SEPARATOR_VERT)
-
-void	      AG_SeparatorInit(AG_Separator *, enum ag_separator_type, int);
-void	      AG_SeparatorDraw(void *);
-void	      AG_SeparatorScale(void *, int, int);
-void          AG_SeparatorSetPadding(AG_Separator *, Uint);
 __END_DECLS
 
 #include "close_code.h"

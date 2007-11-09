@@ -37,7 +37,12 @@ AG_ScrollableTextNew(void *parent, Uint flags)
 	AG_ScrollableText *st;
 
 	st = Malloc(sizeof(AG_ScrollableText));
-	AG_ScrollableTextInit(st, flags);
+	AG_ObjectInit(st, &agScrollableTextOps);
+	st->flags |= flags;
+	
+	if (flags & AG_SCROLLABLE_TEXT_HFILL) { AG_ExpandHoriz(st); }
+	if (flags & AG_SCROLLABLE_TEXT_VFILL) { AG_ExpandVert(st); }
+
 	AG_ObjectAttach(parent, st);
 	return (st);
 }
@@ -71,16 +76,12 @@ Draw(void *p)
 	AG_ScrollableDrawEnd(&st->sa);
 }
 
-void
-AG_ScrollableTextInit(AG_ScrollableText *st, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wFlags = 0;
+	AG_ScrollableText *st = obj;
 
-	if (flags & AG_SCROLLABLE_TEXT_HFILL) { wFlags |= AG_WIDGET_HFILL; }
-	if (flags & AG_SCROLLABLE_TEXT_VFILL) { wFlags |= AG_WIDGET_VFILL; }
-
-	AG_ScrollableInit(&st->sa, 0, &agScrollableTextOps);
-	st->flags = flags;
+	st->flags = 0;
 	st->surface = -1;
 	st->text = NULL;
 	st->text_len = 0;
@@ -99,7 +100,7 @@ const AG_WidgetOps agScrollableTextOps = {
 		"AG_Widget:AG_Scrollable:AG_ScrollableText",
 		sizeof(AG_ScrollableText),
 		{ 0,0 },
-		NULL,				/* init */
+		Init,
 		NULL,				/* free */
 		Destroy,
 		NULL,				/* load */

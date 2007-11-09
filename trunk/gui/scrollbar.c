@@ -36,9 +36,9 @@ enum ag_button_which {
 	AG_BUTTON_SCROLL = 3
 };
 
-static void mousebuttonup(AG_Event *);
-static void mousebuttondown(AG_Event *);
-static void mousemotion(AG_Event *);
+static void MouseButtonUp(AG_Event *);
+static void MouseButtonDown(AG_Event *);
+static void MouseMotion(AG_Event *);
 
 AG_Scrollbar *
 AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
@@ -46,42 +46,44 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 	AG_Scrollbar *sb;
 
 	sb = Malloc(sizeof(AG_Scrollbar));
-	AG_ScrollbarInit(sb, type, flags);
+	AG_ObjectInit(sb, &agScrollbarOps);
+	sb->type = type;
+	sb->flags |= flags;
+
+	if (flags & AG_SCROLLBAR_HFILL) { AG_ExpandHoriz(sb); }
+	if (flags & AG_SCROLLBAR_VFILL) { AG_ExpandVert(sb); }
+
 	AG_ObjectAttach(parent, sb);
-	if (flags & AG_SCROLLBAR_FOCUS) {
-		AG_WidgetFocus(sb);
-	}
 	return (sb);
 }
 
-void
-AG_ScrollbarInit(AG_Scrollbar *sb, enum ag_scrollbar_type type, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_UNFOCUSED_BUTTONUP|AG_WIDGET_UNFOCUSED_MOTION;
+	AG_Scrollbar *sb = obj;
 
-	if (flags & AG_SCROLLBAR_HFILL) { wflags |= AG_WIDGET_HFILL; }
-	if (flags & AG_SCROLLBAR_VFILL) { wflags |= AG_WIDGET_VFILL; }
+	WIDGET(sb)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
+	                     AG_WIDGET_UNFOCUSED_MOTION;
 
-	AG_WidgetInit(sb, &agScrollbarOps, wflags);
 	AG_WidgetBindInt(sb, "value", &sb->value);
 	AG_WidgetBindInt(sb, "min", &sb->min);
 	AG_WidgetBindInt(sb, "max", &sb->max);
 	AG_WidgetBindInt(sb, "visible", &sb->visible);
 
-	sb->flags = flags;
+	sb->type = AG_SCROLLBAR_HORIZ;
+	sb->flags = 0;
 	sb->value = 0;
 	sb->min = 0;
 	sb->max = 0;
 	sb->visible = 0;
-	sb->type = type;
 	sb->curbutton = AG_BUTTON_NONE;
 	sb->bw = 15;				/* XXX resolution-dependent */
 	sb->barSz = 30;
 	sb->arrowSz = 9;
 
-	AG_SetEvent(sb, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(sb, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(sb, "window-mousemotion", mousemotion, NULL);
+	AG_SetEvent(sb, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(sb, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(sb, "window-mousemotion", MouseMotion, NULL);
 }
 
 /* Clicked or dragged mouse to coord, so adjust value */
@@ -111,7 +113,7 @@ MoveBar(AG_Scrollbar *sb, int x, int totalsize)
 }
 
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
@@ -124,7 +126,7 @@ mousebuttonup(AG_Event *event)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int button = AG_INT(1);
@@ -169,7 +171,7 @@ mousebuttondown(AG_Event *event)
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int x = (sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(1) : AG_INT(2);
@@ -289,7 +291,7 @@ const AG_WidgetOps agScrollbarOps = {
 		"AG_Widget:AG_Scrollbar",
 		sizeof(AG_Scrollbar),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		NULL,		/* destroy */
 		NULL,		/* load */

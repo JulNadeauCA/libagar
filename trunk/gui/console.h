@@ -34,7 +34,6 @@ typedef struct ag_console {
 	Uint flags;
 #define AG_CONSOLE_HFILL	0x01	/* Fill available width */
 #define AG_CONSOLE_VFILL	0x02	/* Fill available height */
-#define AG_CONSOLE_FOCUS	0x04	/* Focus button automatically */
 #define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
@@ -50,8 +49,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps agConsoleOps;
 
 AG_Console     *AG_ConsoleNew(void *, Uint);
-void		AG_ConsoleInit(AG_Console *, Uint);
-
 void		AG_ConsoleSetPadding(AG_Console *, int);
 AG_ConsoleLine *AG_ConsoleAppendLine(AG_Console *, const char *);
 AG_ConsoleLine *AG_ConsoleMsg(AG_Console *, const char *, ...)
