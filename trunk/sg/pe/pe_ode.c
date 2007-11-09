@@ -39,12 +39,9 @@
 #include "pe_ode.h"
 
 static void
-Init(void *obj, const char *name)
+Init(void *obj)
 {
-	PE_Ode *pe = obj;
-
-	PE_Init(pe, name);
-	AG_ObjectSetOps(pe, &peOps);
+/*	PE_Ode *pe = obj; */
 }
 
 static void

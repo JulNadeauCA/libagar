@@ -54,13 +54,19 @@ SK_ViewNew(void *parent, SK *sk, Uint flags)
 	SK_View *skv;
 
 	skv = Malloc(sizeof(SK_View));
-	SK_ViewInit(skv, sk, flags);
+	AG_ObjectInit(skv, &skViewOps);
+	skv->flags |= flags;
+	skv->sk = sk;
+	
+	if (flags & SK_VIEW_HFILL) WIDGET(skv)->flags |= AG_WIDGET_HFILL;
+	if (flags & SK_VIEW_VFILL) WIDGET(skv)->flags |= AG_WIDGET_VFILL;
+
 	AG_ObjectAttach(parent, skv);
 	return (skv);
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	SK_View *skv = AG_SELF();
 	SK_Tool *tool = skv->curtool;
@@ -97,7 +103,7 @@ out:
 }
 
 static void
-mousebuttondown(AG_Event *event)
+MouseButtonDown(AG_Event *event)
 {
 	SK_View *skv = AG_SELF();
 	SK_Tool *tool = SK_CURTOOL(skv);
@@ -162,7 +168,7 @@ out:
 }
 
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	SK_View *skv = AG_SELF();
 	SK_Tool *tool = SK_CURTOOL(skv);
@@ -213,20 +219,18 @@ out:
 	AG_MutexUnlock(&skv->sk->lock);
 }
 
-void
-SK_ViewInit(SK_View *skv, SK *sk, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint wflags = AG_WIDGET_FOCUSABLE;
+	SK_View *skv = obj;
 
-	if (flags & SK_VIEW_HFILL) wflags |= AG_WIDGET_HFILL;
-	if (flags & SK_VIEW_VFILL) wflags |= AG_WIDGET_VFILL;
+	WIDGET(skv)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetInit(skv, &skViewOps, wflags);
-	
 	if (!AG_Bool(agConfig, "view.opengl"))
 		fatal("widget requires OpenGL mode");
 
-	skv->sk = sk;
+	skv->flags = 0;
+	skv->sk = NULL;
 	skv->predraw_ev = NULL;
 	skv->postdraw_ev = NULL;
 	skv->scale_ev = NULL;
@@ -250,17 +254,17 @@ SK_ViewInit(SK_View *skv, SK *sk, Uint flags)
 	skv->mProj = MatIdentity();
 	TAILQ_INIT(&skv->tools);
 
-	AG_SetEvent(skv, "window-mousemotion", mousemotion, NULL);
-	AG_SetEvent(skv, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(skv, "window-mousebuttonup", mousebuttonup, NULL);
+	AG_SetEvent(skv, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(skv, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(skv, "window-mousebuttonup", MouseButtonUp, NULL);
 	
 	SK_ViewZoom(skv, 1.0/10.0);
 }
 
 static void
-Destroy(void *p)
+Destroy(void *obj)
 {
-	SK_View *skv = p;
+	SK_View *skv = obj;
 	SK_Tool *tool, *toolNext;
 
 	for (tool = TAILQ_FIRST(&skv->tools);
@@ -612,7 +616,7 @@ const AG_WidgetOps skViewOps = {
 		"AG_Widget:SK_View",
 		sizeof(SK_View),
 		{ 0,0 },
-		NULL,		/* init */
+		Init,
 		NULL,		/* free */
 		Destroy,
 		NULL,		/* load */

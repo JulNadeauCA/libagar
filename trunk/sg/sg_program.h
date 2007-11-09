@@ -22,7 +22,6 @@ typedef struct sg_program {
 __BEGIN_DECLS
 extern const AG_ObjectOps sgProgramOps;
 
-void	 SG_ProgramInit(void *, const char *);
 void	 SG_ProgramInstall(SG_Program *, SG_View *);
 void	 SG_ProgramDeinstall(SG_Program *, SG_View *);
 void	 SG_ProgramBind(SG_Program *, SG_View *);

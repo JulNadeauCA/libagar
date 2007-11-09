@@ -72,17 +72,17 @@ SG_MaterialNew(void *parent, const char *name)
 	SG_Material *mat;
 
 	mat = Malloc(sizeof(SG_Material));
-	SG_MaterialInit(mat, name);
-	SG_NodeAttach(parent, mat);
+	AG_ObjectInit(mat, &sgMaterialOps);
+	AG_ObjectSetName(mat, "%s", name);
+	AG_ObjectAttach(parent, mat);
 	return (mat);
 }
 
-void
-SG_MaterialInit(void *obj, const char *name)
+static void
+Init(void *obj)
 {
 	SG_Material *mat = obj;
 
-	AG_ObjectInit(mat, name, &sgMaterialOps);
 	mat->flags = 0;
 	mat->emissive = SG_ColorRGB(0.0, 0.0, 0.0);
 	mat->ambient = SG_ColorRGB(0.2, 0.2, 0.2);
@@ -295,8 +295,8 @@ PollPrograms(AG_Event *event)
 	AG_TlistEnd(tl);
 }
 
-void *
-SG_MaterialEdit(void *obj)
+static void *
+Edit(void *obj)
 {
 	SG_Material *mat = obj;
 	AG_Window *win;
@@ -426,12 +426,12 @@ const AG_ObjectOps sgMaterialOps = {
 	"SG_Material",
 	sizeof(SG_Material),
 	{ 0,0 },
-	SG_MaterialInit,
+	Init,
 	NULL,			/* free */
 	NULL,			/* destroy */
 	Load,
 	Save,
-	SG_MaterialEdit
+	Edit
 };
 
 #endif /* HAVE_OPENGL */

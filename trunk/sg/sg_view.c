@@ -40,7 +40,13 @@ SG_ViewNew(void *parent, SG *sg, Uint flags)
 	SG_View *sv;
 
 	sv = Malloc(sizeof(SG_View));
-	SG_ViewInit(sv, sg, flags);
+	AG_ObjectInit(sv, &sgViewOps);
+	sv->flags |= flags;
+	sv->sg = sg;
+
+	if (flags & SG_VIEW_HFILL) WIDGET(sv)->flags |= AG_WIDGET_HFILL;
+	if (flags & SG_VIEW_VFILL) WIDGET(sv)->flags |= AG_WIDGET_VFILL;
+
 	AG_ObjectAttach(parent, sv);
 	return (sv);
 }
@@ -494,7 +500,7 @@ SG_ViewSetCamera(SG_View *sv, SG_Camera *cam)
 }
 
 static void
-SG_ViewAttached(AG_Event *event)
+Attached(AG_Event *event)
 {
 	SG_Camera *cam;
 	SG_View *sv = AG_SELF();
@@ -558,31 +564,25 @@ TranslateZTimeout(void *obj, Uint32 ival, void *arg)
 	return (ival > sv->trans_vel_max ? ival-sv->trans_vel_accel : ival);
 }
 
-void
-SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
+static void
+Init(void *obj)
 {
-	Uint glvflags = AG_GLVIEW_FOCUS;
+	SG_View *sv = obj;
+	AG_GLView *glv = obj;
 
-	if (flags & SG_VIEW_HFILL) { glvflags |= AG_GLVIEW_HFILL; }
-	if (flags & SG_VIEW_VFILL) { glvflags |= AG_GLVIEW_VFILL; }
+	AG_GLViewDrawFn(glv, ViewDraw, "%p", sv);
+	AG_GLViewOverlayFn(glv, ViewOverlay, "%p", sv);
+	AG_GLViewScaleFn(glv, ViewScale, "%p", sv);
+	AG_GLViewMotionFn(glv, ViewMotion, "%p", sv);
+	AG_GLViewButtondownFn(glv, ViewButtondown, "%p", sv);
+	AG_GLViewKeydownFn(glv, ViewKeydown, "%p", sv);
+	AG_GLViewKeyupFn(glv, ViewKeyup, "%p", sv);
 
-	AG_GLViewInit(AGGLVIEW(sv), glvflags);
-	AG_GLViewDrawFn(AGGLVIEW(sv), ViewDraw, "%p", sv);
-	AG_GLViewOverlayFn(AGGLVIEW(sv), ViewOverlay, "%p", sv);
-	AG_GLViewScaleFn(AGGLVIEW(sv), ViewScale, "%p", sv);
-	AG_GLViewMotionFn(AGGLVIEW(sv), ViewMotion, "%p", sv);
-	AG_GLViewButtondownFn(AGGLVIEW(sv), ViewButtondown, "%p", sv);
-	AG_GLViewKeydownFn(AGGLVIEW(sv), ViewKeydown, "%p", sv);
-	AG_GLViewKeyupFn(AGGLVIEW(sv), ViewKeyup, "%p", sv);
-	AG_ObjectSetOps(sv, &sgViewOps);
-
-	sv->flags = flags;
-	sv->sg = sg;
+	sv->flags = 0;
+	sv->sg = NULL;
 	sv->cam = NULL;
 	sv->editPane = NULL;
 	sv->popup = NULL;
-
-	AG_SetEvent(sv, "attached", SG_ViewAttached, NULL);
 
 	sv->mouse.rsens = VecGet(0.002, 0.002, 0.002);
 	sv->mouse.tsens = VecGet(0.01, 0.01, 0.5);
@@ -607,6 +607,8 @@ SG_ViewInit(SG_View *sv, SG *sg, Uint flags)
 	AG_SetTimeout(&sv->to_trans_x, TranslateXTimeout, NULL, 0);
 	AG_SetTimeout(&sv->to_trans_y, TranslateYTimeout, NULL, 0);
 	AG_SetTimeout(&sv->to_trans_z, TranslateZTimeout, NULL, 0);
+	
+	AG_SetEvent(sv, "attached", Attached, NULL);
 }
 
 void
@@ -640,7 +642,7 @@ const AG_WidgetOps sgViewOps = {
 		sizeof(SG_View),
 		{ 0,0 },
 		NULL,		/* init */
-		NULL,		/* free */
+		Init,
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */

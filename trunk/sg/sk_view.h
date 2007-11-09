@@ -55,7 +55,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps skViewOps;
 
 SK_View	  *SK_ViewNew(void *, struct sk *, Uint);
-void	   SK_ViewInit(SK_View *, struct sk *, Uint);
 void	   SK_ViewZoom(SK_View *, SG_Real);
 void	   SK_ViewReshape(SK_View *);
 

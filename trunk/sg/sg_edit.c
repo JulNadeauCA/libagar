@@ -275,7 +275,7 @@ NodeInfo(AG_Event *event)
 {
 	SG_Node *node = AG_PTR(2);
 	AG_Window *win;
-	AG_Matview *mv;
+	SG_Matview *mv;
 	AG_Table *tbl;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
@@ -296,8 +296,8 @@ NodeInfo(AG_Event *event)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 	ntab = AG_NotebookAddTab(nb, _("T-matrix"), AG_BOX_VERT);
 	{
-		mv = AG_MatviewNew(ntab, &node->T, 0);
-		AG_MatviewSetNumericalFmt(mv, "%.06f");
+		mv = SG_MatviewNew(ntab, &node->T, 0);
+		SG_MatviewSetNumericalFmt(mv, "%.06f");
 		AG_TextSize("-0.000000", &mv->ent_w, &mv->ent_h);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Children"), AG_BOX_VERT);
@@ -413,9 +413,8 @@ SG_Edit(void *p)
 	AG_WindowSetPaddingTop(win, 0);
 	AG_WindowSetSpacing(win, 0);
 
-	sv = Malloc(sizeof(SG_View));
-	SG_ViewInit(sv, sg, SG_VIEW_EXPAND);
-	
+	sv = SG_ViewNew(NULL, sg, SG_VIEW_EXPAND);
+
 	menu = AG_MenuNew(win, AG_MENU_HFILL);
 	pitem = AG_MenuAddItem(menu, _("File"));
 	{

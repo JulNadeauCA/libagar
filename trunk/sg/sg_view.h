@@ -62,8 +62,6 @@ __BEGIN_DECLS
 extern const AG_WidgetOps sgViewOps;
 
 SG_View	*SG_ViewNew(void *, struct sg *, Uint);
-void	 SG_ViewInit(SG_View *, struct sg *, Uint);
-
 void	 SG_ViewKeydownFn(SG_View *, AG_EventFn, const char *, ...);
 void	 SG_ViewKeyupFn(SG_View *, AG_EventFn, const char *, ...);
 void	 SG_ViewButtondownFn(SG_View *, AG_EventFn, const char *, ...);
