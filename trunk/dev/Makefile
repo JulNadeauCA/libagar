@@ -10,7 +10,6 @@ LIB_LINKS=	ag_core ag_gui SDL opengl32 glu32
 SRCS=	dev.c browser.c screenshot.c server.c timeouts.c uniconv.c \
 	view_params.c widget_browser.c cpuinfo.c config.c object.c
 
-CFLAGS+=-I.. ${SDL_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS} \
-	${PTHREADS_XOPEN_CFLAGS}
+CFLAGS+=-I.. ${SDL_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS}
 
 include ${TOP}/mk/build.lib.mk
