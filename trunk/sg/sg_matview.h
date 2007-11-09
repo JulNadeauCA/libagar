@@ -13,26 +13,32 @@
 
 #include "begin_code.h"
 
-typedef struct ag_matview {
+enum sg_matview_mode {
+	SG_MATVIEW_GREYSCALE,
+	SG_MATVIEW_NUMERICAL
+};
+
+typedef struct sg_matview {
 	struct ag_widget wid;
 	SG_Matrix *mat;			/* Matrix to view */
 	Uint flags;
+	enum sg_matview_mode mode;	/* Display mode */
 	int ent_w, ent_h;		/* Size of entry */
 	const char *numfmt;		/* Numerical entry format */
 	int pre_m, pre_n;		/* SizeHint dimensions */
 	int hspace, vspace;		/* Spacing between entries */
 	int xoffs, yoffs;		/* Display offset */
 	int scale;			/* Scale (for graphic rendering) */
-	AG_Scrollbar *hbar, *vbar; /* Display scrollbars */
-} AG_Matview;
+	AG_Scrollbar *hbar, *vbar;	/* Display scrollbars */
+} SG_Matview;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agMatviewOps;
+extern const AG_WidgetOps sgMatviewOps;
 
-AG_Matview *AG_MatviewNew(void *, SG_Matrix *, Uint);
-void	    AG_MatviewInit(AG_Matview *, SG_Matrix *, Uint);
-void	    AG_MatviewSizeHint(AG_Matview *, const char *, Uint, Uint);
-void	    AG_MatviewSetNumericalFmt(AG_Matview *, const char *);
+SG_Matview *SG_MatviewNew(void *, SG_Matrix *, Uint);
+void	    SG_MatviewSizeHint(SG_Matview *, const char *, Uint, Uint);
+void	    SG_MatviewSetNumericalFmt(SG_Matview *, const char *);
+void	    SG_MatviewSetDisplayMode(SG_Matview *, enum sg_matview_mode);
 __END_DECLS
 
 #include "close_code.h"
