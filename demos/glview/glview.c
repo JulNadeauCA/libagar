@@ -14,7 +14,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-static GLdouble spin = 0.0, vz = -5.0;
+static GLdouble spin = 0.0, vz = -5.0, spin2 = 0.0;
 static GLfloat material[4] = { 0.0, 0.5, 0.0, 1.0 };
 
 /* Widget resize callback function. */
@@ -44,6 +44,7 @@ MyDrawFunction(AG_Event *event)
 	{
 		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material);
 		glRotatef(spin, 1.0, 0.0, 1.0);
+		glRotatef(-spin2, 0.0, 0.0, 1.0);
 		q = gluNewQuadric();
 		gluCylinder(q, 1.0, 0.0, 1.0, 20, 2);
 		
@@ -59,6 +60,9 @@ MyDrawFunction(AG_Event *event)
 	
 	spin = (spin + 2.0);
 	if (spin > 360.0) { spin -= 360.0; }
+	
+	spin2 = (spin2 + 4.0);
+	if (spin2 > 360.0) { spin2 -= 360.0; }
 }
 
 /*
