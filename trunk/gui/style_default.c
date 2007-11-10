@@ -303,7 +303,8 @@ PaneVertDivider(void *pa, int x, int y, int w, int isMoving)
 static void
 RadioGroupBackground(void *rad, AG_Rect r)
 {
-	AG_DrawFrame(rad, r, 1, AG_COLOR(FRAME_COLOR));
+	AG_DrawFrame(rad, r, AG_WidgetFocused(rad) ? -1 : 1,
+	    AG_COLOR(FRAME_COLOR));
 }
 
 /* Radio button */
