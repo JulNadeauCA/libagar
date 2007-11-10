@@ -277,6 +277,7 @@ CoreSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
 		nOffs = cs->offs + offs;
 		break;
 	case AG_SEEK_END:
+	default:
 		nOffs = cs->size - offs;
 		break;
 	}
