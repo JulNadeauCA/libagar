@@ -195,11 +195,6 @@ CreateWindow(void)
 		
 		ntab = AG_NotebookAddTab(nb, "Graph", AG_BOX_VERT);
 		{
-			const char *radio_items[] = {
-				"Points",
-				"Lines",
-				NULL
-			};
 			AG_Radio *rad;
 			AG_FixedPlotter *g;
 			AG_FixedPlotterItem *sinplot, *cosplot;
@@ -228,9 +223,12 @@ CreateWindow(void)
 
 			/*
 			 * Radio displays a group of radio buttons. It can
-			 * bind to an integer value.
+			 * bind to an integer value. In this case we bind it
+			 * to the "type" enum of the FixedPlotter.
 			 */
-			rad = AG_RadioNew(ntab, AG_RADIO_HFILL, radio_items);
+			rad = AG_RadioNew(ntab, AG_RADIO_HFILL, NULL);
+			AG_RadioAddItemHK(rad, SDLK_p, "Points");
+			AG_RadioAddItemHK(rad, SDLK_l, "Lines");
 			AG_WidgetBindInt(rad, "value", &g->type);
 		}
 		
