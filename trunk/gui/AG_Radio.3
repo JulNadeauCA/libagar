@@ -38,15 +38,27 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget implements a group of radio buttons.
+widget implements a group of "radio" buttons.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft AG_Radio *
+.Ft "AG_Radio *"
 .Fn AG_RadioNew "AG_Widget *parent" "Uint flags" "const char *items[]"
+.Pp
+.Ft void
+.Fn AG_RadioItemsFromArray "AG_Radio *radio" "const char *items[]"
+.Pp
+.Ft int
+.Fn AG_RadioAddItem "AG_Radio *radio" "const char *format" "..."
+.Pp
+.Ft int
+.Fn AG_RadioAddItemHK "AG_Radio *radio" "SDLKey hotkey" "const char *format" "..."
+.Pp
+.Ft void
+.Fn AG_RadioClearItems "AG_Radio *radio"
 .Pp
 .nr nS 0
 The
@@ -54,11 +66,27 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
+If
 .Fa items
-is a null-terminated array of strings.
+is not NULL, it should point to a NULL-terminated array of strings.
 There are currently no
 .Fa flags
 specific to this widget.
+.Pp
+The
+.Fn AG_RadioItemsFromArray
+function inserts a set of radio buttons from the given NULL-terminated
+array of strings.
+If there are already buttons in the group, they are preserved.
+.Pp
+.Fn AG_RadioAddItem
+inserts a single radio button.
+The
+.Fn AG_RadioAddItemHK
+variant also assigns a hotkey to the button.
+.Pp
+.Fn AG_RadioClearItems
+removes all radio buttons from the group.
 .Sh BINDINGS
 The
 .Nm

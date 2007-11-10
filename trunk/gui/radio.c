@@ -32,30 +32,103 @@
 AG_Radio *
 AG_RadioNew(void *parent, Uint flags, const char **itemText)
 {
-	const char *s, **pItems = itemText;
 	AG_Radio *rad;
-	int i, w;
 
 	rad = Malloc(sizeof(AG_Radio));
 	AG_ObjectInit(rad, &agRadioOps);
 	rad->flags |= flags;
-	rad->itemText = itemText;
 
 	if (flags & AG_RADIO_HFILL) { AG_ExpandHoriz(rad); }
 	if (flags & AG_RADIO_VFILL) { AG_ExpandVert(rad); }
 
-	/* Count the items and compute the size requisition */
-	for (rad->nitems = 0; (s = *pItems++) != NULL; rad->nitems++)
-		;;
-	rad->labels = Malloc(sizeof(int)*rad->nitems);
-	for (i = 0; i < rad->nitems; i++) {
-		rad->labels[i] = -1;
-		AG_TextSize(rad->itemText[i], &w, NULL);
-		if (w > rad->max_w) { rad->max_w = w; }
+	if (itemText != NULL) {
+		AG_RadioItemsFromArray(rad, itemText);
 	}
-
 	AG_ObjectAttach(parent, rad);
 	return (rad);
+}
+
+/* Create a set of items from an array of strings. */
+void
+AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
+{
+	const char *s, **pItems;
+	AG_RadioItem *ri;
+	int i, w;
+
+	for (i = 0, pItems = itemText;
+	     (s = *pItems++) != NULL;
+	     i++) {
+		rad->items = Realloc(rad->items, (rad->nItems+1) *
+		                                 sizeof(AG_RadioItem));
+		ri = &rad->items[rad->nItems++];
+		strlcpy(ri->text, s, sizeof(ri->text));
+		ri->surface = -1;
+		ri->hotkey = SDLK_UNKNOWN;
+		AG_TextSize(s, &w, NULL);
+		if (w > rad->max_w) { rad->max_w = w; }
+	}
+}
+
+/* Create a radio item and return its index. */
+int
+AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
+{
+	AG_RadioItem *ri;
+	va_list ap;
+	int w;
+
+	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
+	ri = &rad->items[rad->nItems];
+	ri->surface = -1;
+	ri->hotkey = SDLK_UNKNOWN;
+	va_start(ap, fmt);
+	vsnprintf(ri->text, sizeof(ri->text), fmt, ap);
+	va_end(ap);
+
+	AG_TextSize(ri->text, &w, NULL);
+	if (w > rad->max_w) { rad->max_w = w; }
+
+	return (rad->nItems++);
+}
+
+/* Create a radio item and return its index (with hotkey). */
+int
+AG_RadioAddItemHK(AG_Radio *rad, SDLKey hotkey, const char *fmt, ...)
+{
+	AG_RadioItem *ri;
+	va_list ap;
+	int w;
+
+	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
+	ri = &rad->items[rad->nItems];
+	ri->surface = -1;
+	ri->hotkey = hotkey;
+	va_start(ap, fmt);
+	vsnprintf(ri->text, sizeof(ri->text), fmt, ap);
+	va_end(ap);
+
+	AG_TextSize(ri->text, &w, NULL);
+	if (w > rad->max_w) { rad->max_w = w; }
+
+	return (rad->nItems++);
+}
+
+/* Remove all radio items */
+void
+AG_RadioClearItems(AG_Radio *rad)
+{
+	int i;
+
+	for (i = 0; i < rad->nItems; i++) {
+		if (rad->items[i].surface != -1)
+			AG_WidgetUnmapSurface(rad, rad->items[i].surface);
+	}
+
+	Free(rad->items);
+	rad->items = Malloc(sizeof(AG_RadioItem));
+	rad->nItems = 0;
+	rad->max_w = 0;
 }
 
 static void
@@ -69,20 +142,22 @@ Draw(void *p)
 	STYLE(rad)->RadioGroupBackground(rad,
 	    AG_RECT(0, 0, WIDTH(rad), HEIGHT(rad)));
 	val = AG_WidgetInt(rad, "value");
-	for (i = 0; i < rad->nitems;
+	AG_PushTextState();
+	for (i = 0; i < rad->nItems;
 	     i++, y += (rad->radius*2 + rad->ySpacing)) {
+		AG_RadioItem *ri = &rad->items[i];
+
 		STYLE(rad)->RadioButton(rad, x, y,
 		    (i == val),
 		    (i == rad->oversel));
-		if (rad->labels[i] == -1) {
-			AG_PushTextState();
+		if (ri->surface == -1) {
 			AG_TextColor(RADIO_TXT_COLOR);
-			rad->labels[i] = AG_WidgetMapSurface(rad,
-			    AG_TextRender(_(rad->itemText[i])));
-			AG_PopTextState();
+			ri->surface = AG_WidgetMapSurface(rad,
+			    AG_TextRender(ri->text));
 		}
-		AG_WidgetBlitSurface(rad, rad->labels[i], x, y);
+		AG_WidgetBlitSurface(rad, ri->surface, x, y);
 	}
+	AG_PopTextState();
 }
 
 static void
@@ -90,7 +165,7 @@ Destroy(void *p)
 {
 	AG_Radio *rad = p;
 
-	Free(rad->labels);
+	Free(rad->items);
 }
 
 static void
@@ -98,14 +173,14 @@ SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Radio *rad = p;
 
-	if (rad->nitems == 0) {
+	if (rad->nItems == 0) {
 		r->w = 0;
 		r->h = 0;
 	} else {
 		r->w = rad->xPadding*2 + rad->xSpacing*2 + rad->radius*2 +
 		       rad->max_w;
-		r->h = rad->yPadding*2 + rad->nitems*rad->radius*2 +
-		       (rad->nitems-1)*rad->ySpacing;
+		r->h = rad->yPadding*2 + rad->nItems*rad->radius*2 +
+		       (rad->nItems-1)*rad->ySpacing;
 	}
 }
 
@@ -116,8 +191,8 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	
 	if (a->w < rad->xPadding*2 + rad->xSpacing*2 + rad->radius*2 +
 	    rad->max_w ||
-	    a->h < rad->yPadding*2 + rad->nitems*rad->radius*2 +
-	           (rad->nitems-1)*rad->ySpacing) {
+	    a->h < rad->yPadding*2 + rad->nItems*rad->radius*2 +
+	           (rad->nItems-1)*rad->ySpacing) {
 		WIDGET(rad)->flags |= AG_WIDGET_CLIPPING;
 	} else {
 		WIDGET(rad)->flags &= ~(AG_WIDGET_CLIPPING);
@@ -147,8 +222,8 @@ MouseButtonDown(AG_Event *event)
 	switch (button) {
 	case SDL_BUTTON_LEFT:
 		selNew = ((y - rad->yPadding)/(rad->radius*2 + rad->ySpacing));
-		if (selNew >= rad->nitems) {
-			selNew = rad->nitems - 1;
+		if (selNew >= rad->nItems) {
+			selNew = rad->nItems - 1;
 		} else if (selNew < 0) {
 			selNew = 0;
 		}
@@ -171,13 +246,14 @@ KeyDown(AG_Event *event)
 	AG_WidgetBinding *valueb;
 	int keysym = AG_INT(1);
 	int *sel, selNew = -1;
+	int i;
 
 	valueb = AG_WidgetGetBinding(rad, "value", &sel);
 	switch ((SDLKey)keysym) {
 	case SDLK_DOWN:
 		selNew = *sel;
-		if (++selNew >= rad->nitems)
-			selNew = rad->nitems-1;
+		if (++selNew >= rad->nItems)
+			selNew = rad->nItems-1;
 		break;
 	case SDLK_UP:
 		selNew = *sel;
@@ -185,6 +261,13 @@ KeyDown(AG_Event *event)
 			selNew = 0;
 		break;
 	default:
+		for (i = 0; i < rad->nItems; i++) {
+			if (rad->items[i].hotkey != SDLK_UNKNOWN &&
+			    rad->items[i].hotkey == keysym) {
+				selNew = i;
+				break;
+			}
+		}
 		break;
 	}
 	if (selNew != -1 && selNew != *sel) {
@@ -212,6 +295,8 @@ Init(void *obj)
 	rad->xSpacing = 7;
 	rad->ySpacing = 2;
 	rad->radius = 6;
+	rad->items = NULL;
+	rad->nItems = 0;
 
 	AG_SetEvent(rad, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(rad, "window-keydown", KeyDown, NULL);
