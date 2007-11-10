@@ -390,6 +390,10 @@ ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
 					a = 255;
 					break;
 				default:
+					r = 0;
+					g = 0;
+					b = 0;
+					a = 255;
 					break;
 				}
 
