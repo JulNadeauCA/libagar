@@ -16,8 +16,8 @@ SUBDIR=	fixedres \
 
 SUBDIR+=sgview \
 	linear \
-	lorenz \
-	velcurve \
+	plot3 \
+	plot2 \
 	catastrophe
 
 all: configure all-subdir
