@@ -202,7 +202,6 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_InitInput(0);
 	AG_SetRefreshRate(fps);
 
 	/* Configure some useful hotkeys. */

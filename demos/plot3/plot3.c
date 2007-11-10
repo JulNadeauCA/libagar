@@ -155,7 +155,6 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_InitInput(0);
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
@@ -177,8 +176,8 @@ main(int argc, char *argv[])
 	AG_WindowShow(win);
 
 	/* Reposition the default camera. */
-	SG_Translate3(sv->cam, 10.0, 0.0, -100.0);
-	SG_Rotatevd(sv->cam, 180.0, VecI());
+	//SG_Translate3(sv->cam, 10.0, 0.0, -100.0);
+	//SG_Rotatevd(sv->cam, 180.0, VecI());
 
 	AG_EventLoop();
 	AG_Destroy();
