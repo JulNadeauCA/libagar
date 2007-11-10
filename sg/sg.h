@@ -161,7 +161,7 @@ extern Uint         sgElementsCnt;
 __BEGIN_DECLS
 extern const AG_ObjectOps sgOps;
 
-int	 SG_InitSubsystem(void);
+void	 SG_InitSubsystem(void);
 void	 SG_DestroySubsystem(void);
 #define  SG_InitEngine SG_InitSubsystem
 #define  SG_DestroyEngine SG_DestroySubsystem

@@ -71,7 +71,7 @@ SG_NodeOfClassGeneral(SG_Node *node, const char *cn)
 	return (1);
 }
 
-int
+void
 SG_InitSubsystem(void)
 {
 	SG_VectorInitEngine();
@@ -101,7 +101,6 @@ SG_InitSubsystem(void)
 	AG_AtExitFunc(SG_DestroySubsystem);
 #endif
 	sgIcon_Init();
-	return (0);
 }
 
 void
@@ -114,11 +113,8 @@ SG_New(void *parent, const char *name)
 {
 	SG *sg;
 	
-	if (sgElementsCnt == 0) {
-		if (SG_InitSubsystem() == -1 ||
-		    SK_InitSubsystem() == -1)
-			fatal("SG: %s", AG_GetError());
-	}
+	if (sgElementsCnt == 0)
+		AG_FatalError("SG is not initialized, use SG_InitSubsystem()");
 
 	sg = Malloc(sizeof(SG));
 	AG_ObjectInit(sg, &sgOps);
