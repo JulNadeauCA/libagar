@@ -280,7 +280,7 @@ main(int argc, char *argv[])
 	SG *sg;
 	SG_Voxel *vol;
 
-	if (AG_InitCore("velcurve-demo", 0) == -1) {
+	if (AG_InitCore("plot2-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
