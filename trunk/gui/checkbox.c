@@ -240,7 +240,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 	
 	if (cb->labelTxt != NULL) {
 		AG_TextSize(cb->labelTxt, &r->w, NULL);
-		r->w += cb->spacing;
+		r->w += agTextFontHeight + cb->spacing;
 	}
 }
 
