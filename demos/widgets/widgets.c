@@ -40,6 +40,8 @@ CreateWindow(void)
 	div1 = pane->div[0];
 	div2 = pane->div[1];
 	{
+		AG_Label *lbl;
+
 		/* The Pixmap widget displays a raster surface. */
 		AG_PixmapFromBMP(div1, 0, "agar.bmp");
 	
@@ -49,8 +51,10 @@ CreateWindow(void)
 		 * for details).
 		 */
 		AG_LabelNewStatic(div1, 0, "This is a static label");
-		AG_LabelNewPolled(div2, 0, "This is a polled label (x=%i)",
-		    &pane->dx);
+		lbl = AG_LabelNewPolled(div2, 0,
+		    "This is a polled label (x=%i)", &pane->dx);
+		AG_LabelSizeHint(lbl, 1,
+		    "This is a polled label (x=1234)");
 	}
 
 	/*
