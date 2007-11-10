@@ -120,6 +120,7 @@ AG_InitGUI(Uint flags)
 {
 	char path[MAXPATHLEN];
 	const void **ops;
+	int i, n, njoys;
 
 	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)
 		AG_RegisterClass(*ops);
@@ -140,5 +141,21 @@ AG_InitGUI(Uint flags)
 	if (AG_TextInit() == -1) {
 		return (-1);
 	}
+
+	/* Initialize the input devices. */
+	SDL_EnableUNICODE(agKbdUnicode);
+	if (AG_Bool(agConfig, "input.joysticks")) {
+		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
+			n = SDL_NumJoysticks();
+			for (i = 0, njoys = 0; i < n; i++) {
+				if (SDL_JoystickOpen(i) != NULL)
+					njoys++;
+			}
+			if (njoys > 0)
+				SDL_JoystickEventState(SDL_ENABLE);
+		}
+	}
+	return (0);
+
 	return (0);
 }

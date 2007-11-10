@@ -115,29 +115,6 @@ AG_InitCore(const char *progname, Uint flags)
 	return (0);
 }
 
-/* Initialize graphics and input devices. */
-int
-AG_InitInput(Uint flags)
-{
-	int i, n, njoys;
-
-	SDL_EnableUNICODE(agKbdUnicode || (flags & AG_FORCE_UNICODE));
-
-	if (AG_Bool(agConfig, "input.joysticks") ||
-	    (flags & AG_FORCE_JOYSTICK)) {
-		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
-			n = SDL_NumJoysticks();
-			for (i = 0, njoys = 0; i < n; i++) {
-				if (SDL_JoystickOpen(i) != NULL)
-					njoys++;
-			}
-			if (njoys > 0)
-				SDL_JoystickEventState(SDL_ENABLE);
-		}
-	}
-	return (0);
-}
-
 #ifdef NETWORK
 int
 AG_InitNetwork(Uint flags)
