@@ -107,7 +107,7 @@ SK_NodeOfClass(void *pNode, const char *cname)
  * Register the SK classes with the Agar object system, and also register
  * the default SK node classes.
  */
-int
+void
 SK_InitSubsystem(void)
 {
 	AG_RegisterClass(&skViewOps);
@@ -118,7 +118,6 @@ SK_InitSubsystem(void)
 	SK_RegisterClass(&skLineOps);
 	SK_RegisterClass(&skCircleOps);
 	SK_RegisterClass(&skDimensionOps);
-	return (0);
 }
 
 void
@@ -131,10 +130,8 @@ SK_New(void *parent, const char *name)
 {
 	SK *sk;
 	
-	if (skElementsCnt == 0) {
-		if (SK_InitSubsystem() == -1)
-			fatal("%s", AG_GetError());
-	}
+	if (skElementsCnt == 0)
+		AG_FatalError("SK is not initialized, use SK_InitSubsystem()");
 
 	sk = Malloc(sizeof(SK));
 	AG_ObjectInit(sk, &skOps);

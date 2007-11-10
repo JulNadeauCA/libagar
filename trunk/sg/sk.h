@@ -192,7 +192,7 @@ extern const char *skConstraintNames[];
 __BEGIN_DECLS
 extern const AG_ObjectOps skOps;
 
-int	 SK_InitSubsystem(void);
+void	 SK_InitSubsystem(void);
 void	 SK_DestroySubsystem(void);
 
 SK	*SK_New(void *, const char *);
