@@ -43,6 +43,7 @@
 #include "label.h"
 #include "menu.h"
 #include "mfspinbutton.h"
+#include "mpane.h"
 #include "mspinbutton.h"
 #include "notebook.h"
 #include "numerical.h"
@@ -92,6 +93,7 @@ const void *agGUIClasses[] = {
 	&agMenuOps,
 	&agMenuViewOps,
 	&agMFSpinbuttonOps,
+	&agMPaneOps,
 	&agMSpinbuttonOps,
 	&agNotebookOps,
 	&agNotebookTabOps,
