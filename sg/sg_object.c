@@ -182,7 +182,7 @@ SG_EdgeRehash(void *pso, Uint nedges_new)
 	Uint nedges_old = so->nedgetbl;
 	Uint i;
 
-	dprintf("Rehashing for %u->%u edges\n", nedges_old, nedges_new);
+/*	dprintf("Rehashing for %u->%u edges\n", nedges_old, nedges_new); */
 
 	so->edgetbl = Realloc(so->edgetbl, nedges_new*sizeof(SG_EdgeEnt));
 	so->nedgetbl = nedges_new;
