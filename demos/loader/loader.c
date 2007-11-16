@@ -47,7 +47,7 @@ CreateWindow(void)
 	win = AG_WindowNew(0);
 
 	/* Create the file loader widget. */
-	fd = AG_FileDlgNewMRU(win, "loader.mru.images", AG_FILEDLG_EXPAND);
+	fd = AG_FileDlgNew(win, AG_FILEDLG_EXPAND);
 	
 	/* Set a default filename. */
 	AG_FileDlgSetFilename(fd, "sample.bmp");
