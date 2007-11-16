@@ -305,7 +305,7 @@ DEV_ObjectEdit(void *p)
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 	
-		AG_LabelNewStatic(ntab, 0, _("Class: %s"), ob->ops->type);
+		AG_LabelNewStatic(ntab, 0, _("Class: %s"), ob->cls->name);
 		AG_CheckboxSetFromFlags(ntab, &ob->flags, devObjectFlags);
 
 		AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &agLinkageLock,

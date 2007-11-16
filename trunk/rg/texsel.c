@@ -38,7 +38,7 @@ RG_TextureSelectorNew(void *parent, RG_Tileset *tset, Uint flags)
 	RG_TextureSelector *ts;
 
 	ts = Malloc(sizeof(RG_TextureSelector));
-	AG_ObjectInit(ts, &rgTextureSelectorOps);
+	AG_ObjectInit(ts, &rgTextureSelectorClass);
 	ts->flags |= flags;
 	ts->tset = tset;
 	AG_ObjectAttach(parent, ts);
@@ -110,7 +110,7 @@ Init(void *obj)
 	    sizeof(ts->texname));
 }
 
-const AG_WidgetOps rgTextureSelectorOps = {
+const AG_WidgetClass rgTextureSelectorClass = {
 	{
 		"AG_Widget:AG_Tlist:AG_TextureSelector",
 		sizeof(AG_Tlist),

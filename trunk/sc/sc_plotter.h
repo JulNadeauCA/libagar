@@ -115,7 +115,7 @@ typedef struct sc_plotter {
 } SC_Plotter;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps scPlotterOps;
+extern const AG_WidgetClass scPlotterClass;
 
 SC_Plotter	*SC_PlotterNew(void *, Uint);
 void	 	 SC_PlotterSizeHint(SC_Plotter *, Uint, Uint);

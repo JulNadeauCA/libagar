@@ -44,7 +44,7 @@ typedef struct vg_view {
 #define VGVIEW(p) ((VG_View *)(p))
 
 __BEGIN_DECLS
-extern const AG_WidgetOps vgViewOps;
+extern const AG_WidgetClass vgViewClass;
 
 VG_View	  *VG_ViewNew(void *, VG *, Uint);
 void	   VG_ViewReshape(VG_View *);

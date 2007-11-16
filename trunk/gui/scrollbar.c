@@ -46,7 +46,7 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 	AG_Scrollbar *sb;
 
 	sb = Malloc(sizeof(AG_Scrollbar));
-	AG_ObjectInit(sb, &agScrollbarOps);
+	AG_ObjectInit(sb, &agScrollbarClass);
 	sb->type = type;
 	sb->flags |= flags;
 
@@ -286,7 +286,7 @@ Draw(void *p)
 #endif
 }
 
-const AG_WidgetOps agScrollbarOps = {
+const AG_WidgetClass agScrollbarClass = {
 	{
 		"AG_Widget:AG_Scrollbar",
 		sizeof(AG_Scrollbar),

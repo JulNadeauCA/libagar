@@ -169,7 +169,7 @@ typedef struct map {
 } MAP;
 
 __BEGIN_DECLS
-extern const AG_ObjectOps mapOps;
+extern const AG_ObjectClass mapClass;
 
 void	 MAP_InitSubsystem(void);
 

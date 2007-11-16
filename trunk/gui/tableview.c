@@ -77,7 +77,7 @@ AG_TableviewNew(void *parent, Uint flags, AG_TableviewDataFn data_callback,
 	AG_Tableview *tv;
 
 	tv = Malloc(sizeof(AG_Tableview));
-	AG_ObjectInit(tv, &agTableviewOps);
+	AG_ObjectInit(tv, &agTableviewClass);
 	tv->data_callback = data_callback;
 	tv->sort_callback = sort_callback;
 
@@ -1421,7 +1421,7 @@ AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
 	row->cell[cell].image = AG_TextRender(row->cell[cell].text);
 }
 
-const AG_WidgetOps agTableviewOps = {
+const AG_WidgetClass agTableviewClass = {
 	{
 		"AG_Widget:AG_Tableview",
 		sizeof(AG_Tableview),

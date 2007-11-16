@@ -109,8 +109,8 @@ void
 SC_InitSubsystem(void)
 {
 /*	AG_PropRegister(&scVectorOps); */
-	AG_RegisterClass(&scPlotterOps);
-	AG_RegisterClass(&scMatviewOps);
+	AG_RegisterClass(&scPlotterClass);
+	AG_RegisterClass(&scMatviewClass);
 }
 
 void

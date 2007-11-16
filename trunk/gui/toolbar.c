@@ -38,7 +38,7 @@ AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 	int i;
 
 	bar = Malloc(sizeof(AG_Toolbar));
-	AG_ObjectInit(bar, &agToolbarOps);
+	AG_ObjectInit(bar, &agToolbarClass);
 	bar->flags |= flags;
 	bar->type = type;
 
@@ -338,7 +338,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-const AG_WidgetOps agToolbarOps = {
+const AG_WidgetClass agToolbarClass = {
 	{
 		"AG_Widget:AG_Box:AG_Toolbar",
 		sizeof(AG_Toolbar),

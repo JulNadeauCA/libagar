@@ -21,7 +21,7 @@ typedef struct ag_dummy {
 } AG_Dummy;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agDummyOps;
+extern const AG_WidgetClass agDummyClass;
 AG_Dummy *AG_DummyNew(void *, Uint, const char *);
 __END_DECLS
 

@@ -47,7 +47,7 @@ AG_ButtonNew(void *parent, Uint flags, const char *caption)
 	AG_Button *bu;
 
 	bu = Malloc(sizeof(AG_Button));
-	AG_ObjectInit(bu, &agButtonOps);
+	AG_ObjectInit(bu, &agButtonClass);
 	bu->text = (caption != NULL) ? Strdup(caption) : NULL;
 	bu->flags |= flags;
 
@@ -588,7 +588,7 @@ AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 	bu->flags &= ~AG_BUTTON_TEXT_NODUP;
 }
 
-const AG_WidgetOps agButtonOps = {
+const AG_WidgetClass agButtonClass = {
 	{
 		"AG_Widget:AG_Button",
 		sizeof(AG_Button),

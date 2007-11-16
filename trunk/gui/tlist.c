@@ -50,7 +50,7 @@ AG_TlistNew(void *parent, Uint flags)
 	AG_Tlist *tl;
 
 	tl = Malloc(sizeof(AG_Tlist));
-	AG_ObjectInit(tl, &agTlistOps);
+	AG_ObjectInit(tl, &agTlistClass);
 	tl->flags |= flags;
 
 	if (flags & AG_TLIST_HFILL) { AG_ExpandHoriz(tl); }
@@ -1212,7 +1212,7 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 	tp->panel = AG_MenuExpand(m, tp->item, x+4, y+4);
 }
 
-const AG_WidgetOps agTlistOps = {
+const AG_WidgetClass agTlistClass = {
 	{
 		"AG_Widget:AG_Tlist",
 		sizeof(AG_Tlist),

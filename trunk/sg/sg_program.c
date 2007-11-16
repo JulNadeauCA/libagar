@@ -89,7 +89,7 @@ SG_ProgramUnbind(SG_Program *prog, SG_View *view)
 		SG_PROGRAM_OPS(prog)->unbind(prog, view);
 }
 
-const AG_ObjectOps sgProgramOps = {
+const AG_ObjectClass sgProgramClass = {
 	"SG_Program",
 	sizeof(SG_Program),
 	{ 0,0 },

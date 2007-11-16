@@ -23,7 +23,7 @@ typedef struct pe_ode {
 } PE_Ode;
 
 __BEGIN_DECLS
-extern const PE_Ops peOdeOps;
+extern const PE_Class peOdeClass;
 
 PE_Ode *PE_OdeNew(void *, const char *);
 __END_DECLS

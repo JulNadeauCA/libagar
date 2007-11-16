@@ -42,7 +42,7 @@ AG_CheckboxNew(void *parent, Uint flags, const char *label)
 	AG_Checkbox *cb;
 
 	cb = Malloc(sizeof(AG_Checkbox));
-	AG_ObjectInit(cb, &agCheckboxOps);
+	AG_ObjectInit(cb, &agCheckboxClass);
 	cb->flags |= flags;
 	if (label != NULL) {
 		cb->labelTxt = Strdup(label);
@@ -342,7 +342,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	AG_WidgetUnlockBinding(stateb);
 }
 
-const AG_WidgetOps agCheckboxOps = {
+const AG_WidgetClass agCheckboxClass = {
 	{
 		"AG_Widget:AG_Checkbox",
 		sizeof(AG_Checkbox),

@@ -11,8 +11,8 @@
 
 #include "begin_code.h"
 
-typedef struct map_actor_ops {
-	struct ag_object_ops ops;
+typedef struct map_actor_class {
+	struct ag_object_class _inherit;
 	void (*map)(void *, void *);
 	void (*unmap)(void *, void *);
 	void (*update)(void *, void *);
@@ -25,7 +25,7 @@ typedef struct map_actor_ops {
 	void (*joyball)(void *, int dev, int ball, int xrel, int yrel);
 	void (*joyhat)(void *, int dev, int hat, int value);
 	void (*joybutton)(void *, int dev, int button, int state);
-} MAP_ActorOps;
+} MAP_ActorClass;
 
 typedef struct map_actor {
 	struct ag_object obj;
@@ -56,10 +56,10 @@ typedef struct map_actor {
 } MAP_Actor;
 
 #define MAP_ACTOR(ob) ((MAP_Actor *)(ob))
-#define MAP_ACTOR_OPS(ob) ((MAP_ActorOps *)AGOBJECT(ob)->ops)
+#define MAP_ACTOR_OPS(ob) ((MAP_ActorClass *)AGOBJECT(ob)->cls)
 
 __BEGIN_DECLS
-extern const AG_ObjectOps mapActorOps;
+extern const AG_ObjectClass mapActorClass;
 
 void	MAP_ActorInit(void *, const char *);
 void   *MAP_ActorEdit(void *);

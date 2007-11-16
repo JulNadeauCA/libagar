@@ -45,7 +45,7 @@ AG_HSVPalNew(void *parent, Uint flags)
 	AG_HSVPal *pal;
 
 	pal = Malloc(sizeof(AG_HSVPal));
-	AG_ObjectInit(pal, &agHSVPalOps);
+	AG_ObjectInit(pal, &agHSVPalClass);
 	pal->flags |= flags;
 
 	if (flags & AG_HSVPAL_HFILL) { AG_ExpandHoriz(pal); }
@@ -873,7 +873,7 @@ Draw(void *p)
 	    AG_COLOR(HSVPAL_BAR1_COLOR));
 }
 
-const AG_WidgetOps agHSVPalOps = {
+const AG_WidgetClass agHSVPalClass = {
 	{
 		"AG_Widget:AG_HSVPal",
 		sizeof(AG_HSVPal),

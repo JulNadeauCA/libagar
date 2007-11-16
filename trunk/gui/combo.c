@@ -34,7 +34,7 @@ AG_ComboNew(void *parent, Uint flags, const char *label)
 	AG_Combo *com;
 
 	com = Malloc(sizeof(AG_Combo));
-	AG_ObjectInit(com, &agComboOps);
+	AG_ObjectInit(com, &agComboClass);
 	com->flags |= flags;
 
 	if (label != NULL) {
@@ -229,7 +229,7 @@ Init(void *obj)
 	AG_WidgetSetFocusable(com->button, 0);
 
 	com->list = Malloc(sizeof(AG_Tlist));
-	AG_ObjectInit(com->list, &agTlistOps);
+	AG_ObjectInit(com->list, &agTlistClass);
 	AG_Expand(com->list);
 	
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
@@ -324,7 +324,7 @@ AG_ComboSizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-const AG_WidgetOps agComboOps = {
+const AG_WidgetClass agComboClass = {
 	{
 		"AG_Widget:AG_Combo",
 		sizeof(AG_Combo),

@@ -28,12 +28,12 @@ typedef struct ag_size_alloc {
 	int x, y;			/* Allocated position in pixels */
 } AG_SizeAlloc;
 
-typedef struct ag_widget_ops {
-	const AG_ObjectOps ops;
+typedef struct ag_widget_class {
+	const AG_ObjectClass _inherit;
 	void (*draw)(void *);
 	void (*size_request)(void *, AG_SizeReq *);
 	int  (*size_allocate)(void *, const AG_SizeAlloc *);
-} AG_WidgetOps;
+} AG_WidgetClass;
 
 typedef enum ag_widget_binding_type {
 	AG_WIDGET_NONE,
@@ -137,7 +137,7 @@ typedef struct ag_widget {
 } AG_Widget;
 
 #define AGWIDGET(wi)			((AG_Widget *)(wi))
-#define AGWIDGET_OPS(wi)		((AG_WidgetOps *)OBJECT(wi)->ops)
+#define AGWIDGET_OPS(wi)		((AG_WidgetClass *)OBJECT(wi)->cls)
 #define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
 #define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
@@ -173,7 +173,7 @@ typedef struct ag_widget {
 struct ag_window;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agWidgetOps;
+extern const AG_WidgetClass agWidgetClass;
 extern int agKbdDelay;
 extern int agKbdRepeat;
 extern int agMouseDblclickDelay;

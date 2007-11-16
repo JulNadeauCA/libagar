@@ -68,6 +68,12 @@ const char *nsLogLevelNames[] = {
 };
 #endif
 
+void
+NS_InitSubsystem(Uint flags)
+{
+	AG_RegisterClass(&nsServerClass);
+}
+
 NS_Server *
 NS_ServerNew(void *parent, Uint flags, const char *name, const char *proto,
     const char *protoVer, const char *port)
@@ -75,7 +81,7 @@ NS_ServerNew(void *parent, Uint flags, const char *name, const char *proto,
 	NS_Server *ns;
 
 	ns = Malloc(sizeof(NS_Server));
-	AG_ObjectInit(ns, &nsServerOps);
+	AG_ObjectInit(ns, &nsServerClass);
 	AG_ObjectSetName(ns, "%s", name);
 	ns->flags |= flags;
 	NS_ServerSetProtocol(ns, proto, protoVer);
@@ -717,7 +723,7 @@ NS_Listen(NS_Server *ns)
 	return (0);
 }
 
-const AG_ObjectOps nsServerOps = {
+const AG_ObjectClass nsServerClass = {
 	"NS_Server",
 	sizeof(NS_Server),
 	{ 0,0 },
@@ -729,7 +735,7 @@ const AG_ObjectOps nsServerOps = {
 	NULL			/* edit */
 };
 
-const AG_ObjectOps nsClientOps = {
+const AG_ObjectClass nsClientClass = {
 	"NS_Client",
 	sizeof(NS_Client),
 	{ 0,0 },

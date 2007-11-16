@@ -36,7 +36,7 @@ AG_FixedNew(void *parent, Uint flags)
 	AG_Fixed *fx;
 
 	fx = Malloc(sizeof(AG_Fixed));
-	AG_ObjectInit(fx, &agFixedOps);
+	AG_ObjectInit(fx, &agFixedClass);
 	fx->flags |= flags;
 
 	if (flags & AG_FIXED_HFILL) { AG_ExpandHoriz(fx); }
@@ -181,7 +181,7 @@ AG_FixedDel(AG_Fixed *fx, void *child)
 	UpdateWindow(fx);
 }
 
-const AG_WidgetOps agFixedOps = {
+const AG_WidgetClass agFixedClass = {
 	{
 		"AG_Widget:AG_Fixed",
 		sizeof(AG_Fixed),

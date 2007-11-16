@@ -41,7 +41,7 @@ AG_ConsoleNew(void *parent, Uint flags)
 	AG_Console *cons;
 
 	cons = Malloc(sizeof(AG_Console));
-	AG_ObjectInit(cons, &agConsoleOps);
+	AG_ObjectInit(cons, &agConsoleClass);
 	cons->flags |= flags;
 
 	if (flags & AG_CONSOLE_HFILL) { AG_ExpandHoriz(cons); }
@@ -238,7 +238,7 @@ AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
 	ln->icon = icon;
 }
 
-const AG_WidgetOps agConsoleOps = {
+const AG_WidgetClass agConsoleClass = {
 	{
 		"AG_Widget:AG_Console",
 		sizeof(AG_Console),

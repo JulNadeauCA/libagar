@@ -54,7 +54,7 @@ SK_ViewNew(void *parent, SK *sk, Uint flags)
 	SK_View *skv;
 
 	skv = Malloc(sizeof(SK_View));
-	AG_ObjectInit(skv, &skViewOps);
+	AG_ObjectInit(skv, &skViewClass);
 	skv->flags |= flags;
 	skv->sk = sk;
 	
@@ -609,7 +609,7 @@ SK_ViewCloseEditPane(SK_View *skv)
 	skv->editPane = NULL;
 }
 
-const AG_WidgetOps skViewOps = {
+const AG_WidgetClass skViewClass = {
 	{
 		"AG_Widget:SK_View",
 		sizeof(SK_View),

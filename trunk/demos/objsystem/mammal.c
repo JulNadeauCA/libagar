@@ -66,7 +66,7 @@ Edit(void *obj)
 }
 
 /* Class description */
-const AG_ObjectOps MammalOps = {
+const AG_ObjectClass MammalClass = {
 	"Animal:Mammal",	/* Our class. We inherit from "Animal". */
 	sizeof(Mammal),		/* Size of structure */
 	{ 0,0 },		/* Dataset version */

@@ -10,7 +10,7 @@ static AG_Object obj;
 
 static void InitObj(void)
 {
-	AG_ObjectInitStatic(&obj, &agObjectOps);
+	AG_ObjectInitStatic(&obj, &agObjectClass);
 	AG_SetEvent(&obj, "object-foo-event", NULL, NULL);
 	AG_SetEvent(&obj, "object-bar-event", NULL, "%i%i%i%i", 1,2,3,4);
 	AG_SetEvent(&obj, "object-baz-event", NULL, "%f%f%f%f%d%d%d%d%p%p%p%p",

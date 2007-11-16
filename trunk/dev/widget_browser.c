@@ -219,7 +219,7 @@ WidgetParams(AG_Event *event)
 		AG_WidgetBindString(tb, "string", OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
 		AG_LabelNewStatic(nTab, 0, _("Class: %s"),
-		    OBJECT(wid)->ops->type);
+		    OBJECT(wid)->cls->name);
 		AG_SeparatorNewHoriz(nTab);
 		AG_CheckboxSetFromFlags(nTab, &wid->flags, flagDescr);
 	}

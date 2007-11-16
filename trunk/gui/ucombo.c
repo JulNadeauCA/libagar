@@ -35,7 +35,7 @@ AG_UComboNew(void *parent, Uint flags)
 	AG_UCombo *com;
 
 	com = Malloc(sizeof(AG_UCombo));
-	AG_ObjectInit(com, &agUComboOps);
+	AG_ObjectInit(com, &agUComboClass);
 	com->flags |= flags;
 
 	if (flags & AG_UCOMBO_HFILL) { AG_ExpandHoriz(com); }
@@ -164,7 +164,7 @@ Init(void *obj)
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	
 	com->list = Malloc(sizeof(AG_Tlist));
-	AG_ObjectInit(com->list, &agTlistOps);
+	AG_ObjectInit(com->list, &agTlistClass);
 	WIDGET(com->list)->flags |= AG_WIDGET_EXPAND;
 
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
@@ -222,7 +222,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-const AG_WidgetOps agUComboOps = {
+const AG_WidgetClass agUComboClass = {
 	{
 		"AG_Widget:AG_UCombo",
 		sizeof(AG_UCombo),

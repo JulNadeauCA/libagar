@@ -37,7 +37,7 @@ AG_PaneNew(void *parent, enum ag_pane_type type, Uint flags)
 	AG_Pane *pa;
 
 	pa = Malloc(sizeof(AG_Pane));
-	AG_ObjectInit(pa, &agPaneOps);
+	AG_ObjectInit(pa, &agPaneClass);
 	pa->type = type;
 	pa->flags |= flags;
 
@@ -372,7 +372,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-const AG_WidgetOps agPaneOps = {
+const AG_WidgetClass agPaneClass = {
 	{
 		"AG_Widget:AG_Pane",
 		sizeof(AG_Pane),

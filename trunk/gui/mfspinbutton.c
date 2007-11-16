@@ -41,7 +41,7 @@ AG_MFSpinbuttonNew(void *parent, Uint flags, const char *unit, const char *sep,
 	AG_MFSpinbutton *fsu;
 
 	fsu = Malloc(sizeof(AG_MFSpinbutton));
-	AG_ObjectInit(fsu, &agMFSpinbuttonOps);
+	AG_ObjectInit(fsu, &agMFSpinbuttonClass);
 	fsu->sep = sep;
 	
 	if (!(flags & AG_MFSPINBUTTON_NOHFILL))	{ AG_ExpandHoriz(fsu); }
@@ -654,7 +654,7 @@ AG_MFSpinbuttonSetRange(AG_MFSpinbutton *fsu, double min, double max)
 	AG_MutexUnlock(&fsu->lock);
 }
 
-const AG_WidgetOps agMFSpinbuttonOps = {
+const AG_WidgetClass agMFSpinbuttonClass = {
 	{
 		"AG_Widget:AG_MFSpinbutton",
 		sizeof(AG_MFSpinbutton),

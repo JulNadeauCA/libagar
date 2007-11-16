@@ -513,7 +513,7 @@ AG_GfxUnused(void *p)
 int
 AG_GfxLoad(AG_Object *ob)
 {
-	extern const AG_ObjectOps agObjectOps;
+	extern const AG_ObjectClass agObjectClass;
 	AG_Gfx *gfx = ob->gfx;
 	char path[MAXPATHLEN];
 	AG_DataSource *buf;
@@ -527,7 +527,8 @@ AG_GfxLoad(AG_Object *ob)
 		AG_SetError("%s: %s", path, AG_GetError());
 		return (-1);
 	}
-	if (AG_ReadVersion(buf, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
+	if (AG_ReadVersion(buf, agObjectClass.type, &agObjectClass.ver, NULL)
+	    == -1)
 		goto fail;
 
 	AG_ReadUint32(buf);				/* Skip data offs */

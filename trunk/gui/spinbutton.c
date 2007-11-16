@@ -39,7 +39,7 @@ AG_SpinbuttonNew(void *parent, Uint flags, const char *label)
 	AG_Spinbutton *sbu;
 
 	sbu = Malloc(sizeof(AG_Spinbutton));
-	AG_ObjectInit(sbu, &agSpinbuttonOps);
+	AG_ObjectInit(sbu, &agSpinbuttonClass);
 	
 	if (label != NULL) {
 		AG_TextboxSetLabel(sbu->input, "%s", label);
@@ -518,7 +518,7 @@ AG_SpinbuttonSetWriteable(AG_Spinbutton *sbu, int writeable)
 	AG_MutexUnlock(&sbu->lock);
 }
 
-const AG_WidgetOps agSpinbuttonOps = {
+const AG_WidgetClass agSpinbuttonClass = {
 	{
 		"AG_Widget:AG_Spinbutton",
 		sizeof(AG_Spinbutton),

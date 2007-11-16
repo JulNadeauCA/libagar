@@ -31,6 +31,7 @@ typedef struct nc_result {
 } NC_Result;
 
 __BEGIN_DECLS
+void       	 NC_InitSubsystem(Uint);
 void	 	 NC_Init(NC_Session *, const char *, const char *);
 void		 NC_Destroy(NC_Session *);
 int		 NC_Connect(NC_Session *, const char *, const char *,

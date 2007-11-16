@@ -62,11 +62,11 @@ extern const char *rgTileSnapModes[];
 void
 RG_InitSubsystem(void)
 {
-	AG_RegisterClass(&rgTileviewOps);
-	AG_RegisterClass(&rgAnimviewOps);
-	AG_RegisterClass(&rgTextureSelectorOps);
+	AG_RegisterClass(&rgTileviewClass);
+	AG_RegisterClass(&rgAnimviewClass);
+	AG_RegisterClass(&rgTextureSelectorClass);
 	
-	AG_RegisterClass(&rgTilesetOps);
+	AG_RegisterClass(&rgTilesetClass);
 
 	rgIcon_Init();
 }
@@ -82,7 +82,7 @@ RG_TilesetNew(void *parent, const char *name, Uint flags)
 	RG_Tileset *ts;
 
 	ts = Malloc(sizeof(RG_Tileset));
-	AG_ObjectInit(ts, &rgTilesetOps);
+	AG_ObjectInit(ts, &rgTilesetClass);
 	AG_ObjectSetName(ts, "%s", name);
 	ts->flags |= flags;
 
@@ -1859,7 +1859,7 @@ Edit(void *p)
 }
 #endif /* EDITION */
 
-const AG_ObjectOps rgTilesetOps = {
+const AG_ObjectClass rgTilesetClass = {
 	"RG_Tileset",
 	sizeof(RG_Tileset),
 	{ 8, 0 },

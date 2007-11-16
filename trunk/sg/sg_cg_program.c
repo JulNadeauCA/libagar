@@ -226,7 +226,7 @@ Unbind(void *p, SG_View *view)
 	cgGLUnbindProgram(prog->instProf);
 }
 
-const SG_ProgramOps sgCgProgramOps = {
+const SG_ProgramClass sgCgProgramClass = {
 	{
 		"SG_Program:SG_CgProgram",
 		sizeof(SG_CgProgram),

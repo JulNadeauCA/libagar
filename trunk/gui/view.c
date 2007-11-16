@@ -129,7 +129,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	Uint32 screenflags = 0;
 	int depth;
 
-	AG_RegisterClass(&agDisplayOps);
+	AG_RegisterClass(&agDisplayClass);
 
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
 		AG_SetError("SDL_INIT_VIDEO: %s", SDL_GetError());
@@ -164,7 +164,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 
 	agView = Malloc(sizeof(AG_Display));
-	AG_ObjectInit(agView, &agDisplayOps);
+	AG_ObjectInit(agView, &agDisplayClass);
 	AG_ObjectSetName(agView, "_agView");
 
 	agView->winop = AG_WINOP_NONE;
@@ -1472,7 +1472,7 @@ AG_MouseGetState(int *x, int *y)
 	return (rv);
 }
 
-const AG_ObjectOps agDisplayOps = {
+const AG_ObjectClass agDisplayClass = {
 	"AG_Display",
 	sizeof(AG_Display),
 	{ 0,0 },

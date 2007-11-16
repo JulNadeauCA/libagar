@@ -145,17 +145,17 @@ is used to change the focus to the next widget.
 The
 .Nm
 class overloads
-.Ft AG_ObjectOps
+.Ft AG_ObjectClass
 with the
-.Ft AG_WidgetOps
+.Ft AG_WidgetClass
 structure:
 .Bd -literal
 typedef struct ag_widget_ops {
-	const AG_ObjectOps ops;
+	const AG_ObjectClass inherit;
 	void (*draw)(void *p);
 	void (*size_request)(void *, AG_SizeReq *);
 	int  (*size_allocate)(void *, const AG_SizeAlloc *);
-} AG_WidgetOps;
+} AG_WidgetClass;
 .Ed
 .Pp
 The
@@ -958,6 +958,10 @@ The widget no longer holds focus.
 .It Fn widget-bound "AG_WidgetBinding *binding"
 A widget binding has been added or modified.
 .El
+.Sh EXAMPLES
+See
+.Pa demos/widgets
+in the Agar source distribution.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_View 3 ,

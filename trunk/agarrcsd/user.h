@@ -29,7 +29,7 @@ typedef struct user {
 	TAILQ_ENTRY(user) userl;		/* Entry in flat list */
 } User;
 
-extern const AG_ObjectOps UserOps;
+extern const AG_ObjectClass UserClass;
 
 void UserTblInit(void);
 void UserTblRehash(void);

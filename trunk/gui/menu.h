@@ -98,8 +98,8 @@ typedef struct ag_menu_view {
 } AG_MenuView;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agMenuOps;
-extern const AG_WidgetOps agMenuViewOps;
+extern const AG_WidgetClass agMenuClass;
+extern const AG_WidgetClass agMenuViewClass;
 extern AG_Menu *agAppMenu;
 extern AG_Window *agAppMenuWin;
 

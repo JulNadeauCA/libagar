@@ -46,8 +46,8 @@ typedef struct ag_notebook {
 } AG_Notebook;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agNotebookOps;
-extern const AG_WidgetOps agNotebookTabOps;
+extern const AG_WidgetClass agNotebookClass;
+extern const AG_WidgetClass agNotebookTabClass;
 
 AG_Notebook *AG_NotebookNew(void *, Uint);
 void AG_NotebookSetPadding(AG_Notebook *, int);

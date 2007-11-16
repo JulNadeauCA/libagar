@@ -45,7 +45,7 @@ typedef struct sg_material {
 } SG_Material;
 
 __BEGIN_DECLS
-extern const AG_ObjectOps sgMaterialOps;
+extern const AG_ObjectClass sgMaterialClass;
 
 SG_Material	*SG_MaterialNew(void *, const char *);
 void		 SG_MaterialBind(SG_Material *, SG_View *);

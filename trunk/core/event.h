@@ -51,7 +51,7 @@ typedef union evarg {
  
 #define AG_OBJECT(v,t) \
  (AG_ObjectIsClass(event->argv[v].p,(t)))?event->argv[v].p:\
-  AG_ObjectMismatch(OBJECT(event->argv[v].p)->ops->type,(t))
+  AG_ObjectMismatch(OBJECT(event->argv[v].p)->cls->name,(t))
 
 #else /* !DEBUG */
 

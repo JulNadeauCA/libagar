@@ -65,7 +65,7 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 	AG_Textbox *tb;
 
 	tb = Malloc(sizeof(AG_Textbox));
-	AG_ObjectInit(tb, &agTextboxOps);
+	AG_ObjectInit(tb, &agTextboxClass);
 
 	if (flags & AG_TEXTBOX_HFILL) { AG_ExpandHoriz(tb); }
 	if (flags & AG_TEXTBOX_VFILL) { AG_ExpandVert(tb); }
@@ -914,7 +914,7 @@ Init(void *obj)
 	AG_SetTimeout(&tbox->cblink_to, BlinkTimeout, NULL, 0);
 }
 
-const AG_WidgetOps agTextboxOps = {
+const AG_WidgetClass agTextboxClass = {
 	{
 		"AG_Widget:AG_Textbox",
 		sizeof(AG_Textbox),

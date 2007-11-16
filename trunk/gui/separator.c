@@ -35,7 +35,7 @@ AG_SeparatorNew(void *parent, enum ag_separator_type type)
 	AG_Separator *sep;
 
 	sep = Malloc(sizeof(AG_Separator));
-	AG_ObjectInit(sep, &agSeparatorOps);
+	AG_ObjectInit(sep, &agSeparatorClass);
 	sep->type = type;
 	sep->visible = 1;
 
@@ -54,7 +54,7 @@ AG_SeparatorNewInv(void *parent, enum ag_separator_type type)
 	AG_Separator *sep;
 
 	sep = Malloc(sizeof(AG_Separator));
-	AG_ObjectInit(sep, &agSeparatorOps);
+	AG_ObjectInit(sep, &agSeparatorClass);
 	sep->type = type;
 	sep->visible = 0;
 
@@ -122,7 +122,7 @@ AG_SeparatorSetPadding(AG_Separator *sep, Uint pixels)
 	sep->padding = pixels;
 }
 
-const AG_WidgetOps agSeparatorOps = {
+const AG_WidgetClass agSeparatorClass = {
 	{
 		"AG_Widget:AG_Separator",
 		sizeof(AG_Separator),

@@ -83,8 +83,8 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
 	/* Register the Agar object classes which we implement. */
-	AG_RegisterClass(&AnimalOps);
-	AG_RegisterClass(&MammalOps);
+	AG_RegisterClass(&AnimalClass);
+	AG_RegisterClass(&MammalClass);
 
 	/* Load the entire VFS */
 	AG_ObjectLoad(agWorld);

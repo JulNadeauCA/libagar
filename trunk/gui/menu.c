@@ -42,7 +42,7 @@ AG_MenuNew(void *parent, Uint flags)
 	AG_Menu *m;
 
 	m = Malloc(sizeof(AG_Menu));
-	AG_ObjectInit(m, &agMenuOps);
+	AG_ObjectInit(m, &agMenuClass);
 	m->flags |= flags;
 
 	if (flags & AG_MENU_HFILL) { AG_ExpandHoriz(m); }
@@ -58,7 +58,7 @@ AG_MenuNewGlobal(Uint flags)
 	AG_Menu *m;
 
 	m = Malloc(sizeof(AG_Menu));
-	AG_ObjectInit(m, &agMenuOps);
+	AG_ObjectInit(m, &agMenuClass);
 	m->flags |= flags;
 
 	if (agAppMenu != NULL) {
@@ -99,7 +99,7 @@ AG_MenuExpand(AG_Menu *m, AG_MenuItem *item, int x, int y)
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 
 	item->view = Malloc(sizeof(AG_MenuView));
-	AG_ObjectInit(item->view, &agMenuViewOps);
+	AG_ObjectInit(item->view, &agMenuViewClass);
 	item->view->panel = win;
 	item->view->pmenu = m;
 	item->view->pitem = item;
@@ -877,7 +877,7 @@ AG_PopupDestroy(void *pWid, AG_PopupMenu *pm)
 	Free(pm);
 }
 
-const AG_WidgetOps agMenuOps = {
+const AG_WidgetClass agMenuClass = {
 	{
 		"AG_Widget:AG_Menu",
 		sizeof(AG_Menu),

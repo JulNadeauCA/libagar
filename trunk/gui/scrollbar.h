@@ -36,7 +36,7 @@ typedef struct ag_scrollbar {
 #define AGSCROLLBAR(p) ((AG_Scrollbar *)p)
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agScrollbarOps;
+extern const AG_WidgetClass agScrollbarClass;
 AG_Scrollbar *AG_ScrollbarNew(void *, enum ag_scrollbar_type, Uint);
 
 static __inline__ void

@@ -48,7 +48,7 @@ SG_MatviewNew(void *parent, SG_Matrix *mat, Uint flags)
 	SG_Matview *mv;
 
 	mv = Malloc(sizeof(SG_Matview));
-	AG_ObjectInit(mv, &sgMatviewOps);
+	AG_ObjectInit(mv, &sgMatviewClass);
 	mv->flags |= flags;
 	mv->mat = mat;
 	AG_ObjectAttach(parent, mv);
@@ -276,7 +276,7 @@ Draw(void *obj)
 	}
 }
 
-const AG_WidgetOps sgMatviewOps = {
+const AG_WidgetClass sgMatviewClass = {
 	{
 		"AG_Widget:SG_Matview",
 		sizeof(SG_Matview),

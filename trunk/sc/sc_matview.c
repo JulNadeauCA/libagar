@@ -37,7 +37,7 @@ SC_MatviewNew(void *parent, SC_Matrix *mat, Uint flags)
 	SC_Matview *mv;
 
 	mv = Malloc(sizeof(SC_Matview));
-	AG_ObjectInit(mv, &scMatviewOps);
+	AG_ObjectInit(mv, &scMatviewClass);
 	mv->flags |= flags;
 	if (mat != NULL) {
 		SC_MatviewSetMatrix(mv, mat);
@@ -275,7 +275,7 @@ Draw(void *obj)
 	}
 }
 
-const AG_WidgetOps scMatviewOps = {
+const AG_WidgetClass scMatviewClass = {
 	{
 		"AG_Widget:SC_Matview",
 		sizeof(SC_Matview),

@@ -68,13 +68,13 @@ int mapSmoothScaling = 0;
 void
 MAP_InitSubsystem(void)
 {
-	extern const AG_ObjectOps mapActorOps;
+	extern const AG_ObjectClass mapActorClass;
 
-	AG_RegisterClass(&mapOps);
-	AG_RegisterClass(&mapActorOps);
-	AG_RegisterClass(&mapEditorOps);
-	AG_RegisterClass(&mapEditorPseudoOps);
-	AG_RegisterClass(&mapViewOps);
+	AG_RegisterClass(&mapClass);
+	AG_RegisterClass(&mapActorClass);
+	AG_RegisterClass(&mapEditorClass);
+	AG_RegisterClass(&mapEditorPseudoClass);
+	AG_RegisterClass(&mapViewClass);
 
 	mapIcon_Init();
 }
@@ -327,7 +327,7 @@ MAP_Resize(MAP *m, Uint w, Uint h)
 	AG_MutexLock(&m->lock);
 
 	/* Save the nodes to a temporary map, to preserve dependencies. */
-	AG_ObjectInitStatic(&tm, &mapOps);
+	AG_ObjectInitStatic(&tm, &mapClass);
 
 	if (MAP_AllocNodes(&tm, m->mapw, m->maph) == -1) {
 		goto fail;
@@ -391,7 +391,7 @@ MAP_New(void *parent, const char *name)
 	MAP *m;
 
 	m = Malloc(sizeof(MAP));
-	AG_ObjectInit(m, &mapOps);
+	AG_ObjectInit(m, &mapClass);
 	AG_ObjectSetName(m, "%s", name);
 	AG_ObjectAttach(parent, m);
 	return (m);
@@ -2011,7 +2011,7 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 	mh = sprite->h/MAPTILESZ + 1;
 
 	fragmap = Malloc(sizeof(MAP));
-	AG_ObjectInit(fragmap, &mapOps);
+	AG_ObjectInit(fragmap, &mapClass);
 	if (MAP_AllocNodes(fragmap, mw, mh) == -1)
 		fatal("%s", AG_GetError());
 
@@ -3036,7 +3036,7 @@ Edit(void *p)
 }
 #endif /* EDITION */
 
-const AG_ObjectOps mapOps = {
+const AG_ObjectClass mapClass = {
 	"MAP",
 	sizeof(MAP),
 	{ 11, 0 },

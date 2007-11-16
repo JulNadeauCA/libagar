@@ -270,7 +270,7 @@ AG_RcsImport(AG_Object *ob)
 	    "object-type=%s\n"
 	    "object-size=%lu\n"
 	    "object-digest=%s\n\n",
-	    &objdir[1], ob->name, ob->ops->type,
+	    &objdir[1], ob->name, ob->cls->name,
 	    (Ulong)len, digest) == -1)
 		goto fail_close;
 	
@@ -382,7 +382,7 @@ AG_RcsCommit(AG_Object *ob)
 	    "object-type=%s\n"
 	    "object-size=%lu\n"
 	    "object-digest=%s\n\n",
-	    &objdir[1], ob->name, ob->ops->type,
+	    &objdir[1], ob->name, ob->cls->name,
 	    (Ulong)len, digest) == -1)
 		goto fail_close;
 	
@@ -482,9 +482,9 @@ AG_RcsUpdate(AG_Object *ob)
 	case AG_RCS_DESYNCH:
 		break;
 	}
-	if (strcmp(type, ob->ops->type) != 0) {
+	if (strcmp(type, ob->cls->name) != 0) {
 		AG_SetError(_("Repository has different object type (%s/%s)"),
-		    type, ob->ops->type);
+		    type, ob->cls->name);
 		goto fail;
 	}
 
@@ -494,7 +494,7 @@ AG_RcsUpdate(AG_Object *ob)
 			                   "object-type=%s\n"
 					   "revision=%u\n",
 					   &objdir[1], ob->name,
-					   ob->ops->type, repo_rev);
+					   ob->cls->name, repo_rev);
 	if (res == NULL || res->argc < 1) {
 		AG_SetError("RCS update error: %s", AG_GetError());
 		goto fail;
@@ -769,7 +769,7 @@ AG_RcsCheckout(const char *path)
 	char *buf, *s;
 	Uint rev = 0;
 	AG_Object *obj;
-	const AG_ObjectOps *cl;
+	const AG_ObjectClass *cl;
 
 	if (AG_RcsConnect() == -1)
 		goto fail;
@@ -838,10 +838,10 @@ AG_RcsCheckout(const char *path)
 			goto fail;
 		}
 	} else {
-		if (strcmp(type, obj->ops->type) != 0) {
+		if (strcmp(type, obj->cls->name) != 0) {
 			AG_SetError(
 			    "%s: existing object of different type (%s)",
-			    localpath, obj->ops->type);
+			    localpath, obj->cls->name);
 			goto fail;
 		}
 	}

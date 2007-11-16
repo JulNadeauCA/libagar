@@ -39,7 +39,7 @@ AG_GLViewNew(void *parent, Uint flags)
 	AG_GLView *glv;
 
 	glv = Malloc(sizeof(AG_GLView));
-	AG_ObjectInit(glv, &agGLViewOps);
+	AG_ObjectInit(glv, &agGLViewClass);
 	glv->flags |= flags;
 
 	if (flags & AG_GLVIEW_HFILL) { AG_ExpandHoriz(glv); }
@@ -254,7 +254,7 @@ AG_GLViewDraw(void *p)
 		glv->overlay_ev->handler(glv->overlay_ev);
 }
 
-const AG_WidgetOps agGLViewOps = {
+const AG_WidgetClass agGLViewClass = {
 	{
 		"AG_Widget:AG_GLView",
 		sizeof(AG_GLView),

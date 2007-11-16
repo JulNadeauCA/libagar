@@ -94,7 +94,7 @@ MAP_NodeselBeginMove(MAP_View *mv)
 	MAP *mTmp = &mv->esel.map;
 	int sx, sy, x, y;
 
-	AG_ObjectInitStatic(mTmp, &mapOps);
+	AG_ObjectInitStatic(mTmp, &mapClass);
 
 	if (MAP_AllocNodes(mTmp, mv->esel.w, mv->esel.h) == -1) {
 		goto fail;

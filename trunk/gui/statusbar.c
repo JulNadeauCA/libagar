@@ -35,7 +35,7 @@ AG_StatusbarNew(void *parent, Uint flags)
 	AG_Statusbar *sbar;
 
 	sbar = Malloc(sizeof(AG_Statusbar));
-	AG_ObjectInit(sbar, &agStatusbarOps);
+	AG_ObjectInit(sbar, &agStatusbarClass);
 	AG_ExpandHoriz(sbar);
 	AG_ObjectAttach(parent, sbar);
 	return (sbar);
@@ -69,13 +69,13 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 	lab = sbar->labels[sbar->nlabels];
 
 	if (type == AG_LABEL_STATIC) {
-		AG_ObjectInit(lab, &agLabelOps);
+		AG_ObjectInit(lab, &agLabelClass);
 		lab->type = AG_LABEL_STATIC;
 		va_start(ap, fmt);
 		Vasprintf(&lab->text, fmt, ap);
 		va_end(ap);
 	} else {
-		AG_ObjectInit(lab, &agLabelOps);
+		AG_ObjectInit(lab, &agLabelClass);
 		lab->type = AG_LABEL_POLLED;
 		lab->text = Strdup(fmt);
 	}
@@ -110,7 +110,7 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 	return (sbar->labels[sbar->nlabels++]);
 }
 
-const AG_WidgetOps agStatusbarOps = {
+const AG_WidgetClass agStatusbarClass = {
 	{
 		"AG_Widget:AG_Box:AG_Statusbar",
 		sizeof(AG_Statusbar),

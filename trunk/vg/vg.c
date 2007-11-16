@@ -76,7 +76,7 @@ static int vgInited = 0;
 void
 VG_InitSubsystem(void)
 {
-	AG_RegisterClass(&vgViewOps);
+	AG_RegisterClass(&vgViewClass);
 
 	vgIcon_Init();
 }
