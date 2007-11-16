@@ -641,8 +641,8 @@ const AG_WidgetOps sgViewOps = {
 		"AG_Widget:AG_GLView:SG_View",
 		sizeof(SG_View),
 		{ 0,0 },
-		NULL,		/* init */
 		Init,
+		NULL,		/* reinit */
 		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
