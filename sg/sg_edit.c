@@ -112,6 +112,7 @@ EditNode(AG_Event *event)
 
 	if (sgv->editPane != NULL) {
 		AG_ObjectDetach(sgv->editPane);
+		sgv->editPane = NULL;
 	}
 	if (node->ops->edit == NULL) {
 		return;
