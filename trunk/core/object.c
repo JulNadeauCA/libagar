@@ -971,8 +971,8 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	}
 	AG_ObjectFreeDeps(ob);
 
-	(void)AG_ReadUint32(ds);				/* Data offs */
-	if (ver.minor < 1) { (void)AG_ReadUint32(ds); }		/* Gfx offs */
+	/* Skip dataset offset */
+	(void)AG_ReadUint32(ds);
 
 	/* Read and verify the generic object flags. */
 	flags_save = ob->flags;
@@ -1078,7 +1078,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	AG_Object *ob = p;
 	AG_DataSource *ds;
 	off_t dataOffs;
-	AG_Version ver;
+	AG_Version version;
 	const AG_ObjectOps **hier;
 	int i, nHier;
 	
@@ -1112,24 +1112,25 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		*dataFound = 0;
 		return (-1);
 	}
-	if (AG_ReadVersion(ds, agObjectOps.type, &agObjectOps.ver, &ver) == -1)
+	if (AG_ReadVersion(ds, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
 		goto fail;
 
-	dataOffs = (off_t)AG_ReadUint32(ds);		/* User data offset */
-	if (ver.minor < 1) { (void)AG_ReadUint32(ds); }	/* Gfx offs */
+	/* Write dataset offset */
+	dataOffs = (off_t)AG_ReadUint32(ds);
 	AG_Seek(ds, dataOffs, AG_SEEK_SET);
 
 	if (OBJECT_RESIDENT(ob)) {
 		AG_ObjectFreeDataset(ob);
 	}
+	if (AG_ReadVersion(ds, ob->ops->type, &ob->ops->ver, &version) == -1) {
+		goto fail;
+	}
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = 0; i < nHier; i++) {
-			if (hier[i]->load == NULL) {
+			if (hier[i]->load == NULL)
 				continue;
-			}
-			if (hier[i]->load(ob, ds) == -1) {
+			if (hier[i]->load(ob, ds, &version) == -1)
 				goto fail;
-			}
 		}
 		Free(hier);
 	} else {
@@ -1311,11 +1312,11 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 
 	/* Save the dataset. */
 	AG_WriteUint32At(ds, AG_Tell(ds), dataOffs);
+	AG_WriteVersion(ds, ob->ops->type, &ob->ops->ver);
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = 0; i < nHier; i++) {
-			if (hier[i]->save == NULL) {
+			if (hier[i]->save == NULL)
 				continue;
-			}
 			if (hier[i]->save(ob, ds) == -1)
 				goto fail;
 		}

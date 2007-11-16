@@ -82,14 +82,11 @@ Init(void *obj)
 }
 
 static int
-Load(void *p, AG_DataSource *buf)
+Load(void *p, AG_DataSource *buf, const AG_Version *ver)
 {
 	User *u = p;
 	Uint32 i, count;
 	
-	if (AG_ReadObjectVersion(buf, u, NULL) == -1)
-		return (-1);
-
 	AG_CopyString(u->name, buf, sizeof(u->name));
 	AG_CopyString(u->pass, buf, sizeof(u->pass));
 	AG_CopyString(u->real_name, buf, sizeof(u->real_name));
@@ -107,7 +104,6 @@ Save(void *p, AG_DataSource *buf)
 	User *u = p;
 	FILE *f;
 
-	AG_WriteObjectVersion(buf, u);
 	AG_WriteString(buf, u->name);
 	AG_WriteString(buf, u->pass);
 	AG_WriteString(buf, u->real_name);

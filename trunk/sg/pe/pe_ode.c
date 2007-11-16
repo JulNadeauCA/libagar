@@ -50,22 +50,16 @@ Destroy(void *obj)
 }
 
 static int
-Load(void *obj, AG_DataSource *buf)
+Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 {
-	PE_Ode *pe = obj;
-
-	if (AG_ReadObjectVersion(buf, pe, NULL) != 0) {
-		return (-1);
-	}
+/*	PE_Ode *pe = obj; */
 	return (0);
 }
 
 static int
 Save(void *obj, AG_DataSource *buf)
 {
-	PE_Ode *pe = obj;
-
-	AG_WriteObjectVersion(buf, pe);
+/*	PE_Ode *pe = obj; */
 	return (0);
 }
 

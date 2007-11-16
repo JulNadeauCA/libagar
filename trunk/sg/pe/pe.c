@@ -44,13 +44,10 @@ Init(void *obj)
 }
 
 static int
-Load(void *obj, AG_DataSource *buf)
+Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 {
 	PE *pe = obj;
 
-	if (AG_ReadObjectVersion(buf, pe, NULL) != 0) {
-		return (-1);
-	}
 	pe->flags = (Uint)AG_ReadUint32(buf);
 	return (0);
 }
@@ -60,7 +57,6 @@ Save(void *obj, AG_DataSource *buf)
 {
 	PE *pe = obj;
 
-	AG_WriteObjectVersion(buf, pe);
 	AG_WriteUint32(buf, (Uint32)pe->flags);
 	return (0);
 }

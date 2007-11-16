@@ -73,13 +73,10 @@ Destroy(void *obj)
 }
 
 static int
-Load(void *obj, AG_DataSource *buf)
+Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 {
 	SG_CgProgram *prog = obj;
 
-	if (AG_ReadObjectVersion(buf, prog, NULL) != 0) {
-		return (-1);
-	}
 	prog->type = (int)AG_ReadUint32(buf);
 	return (0);
 }
@@ -89,7 +86,6 @@ Save(void *obj, AG_DataSource *buf)
 {
 	SG_CgProgram *prog = obj;
 
-	AG_WriteObjectVersion(buf, prog);
 	AG_WriteUint32(buf, (Uint32)prog->type);
 	return (0);
 }

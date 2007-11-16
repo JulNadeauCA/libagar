@@ -152,22 +152,17 @@ AG_ConfigInit(AG_Config *cfg)
 }
 
 static int
-Load(void *p, AG_DataSource *ds)
+Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 {
-	AG_Version ver;
-
-	if (AG_ReadVersion(ds, agConfigOps.type, &agConfigOps.ver, &ver) != 0)
-		return (-1);
-
 #ifdef DEBUG
 	agDebugLvl = AG_ReadUint8(ds);
 #else
 	(void)AG_ReadUint8(ds);
 #endif
-	if (ver.minor < 2) { (void)AG_ReadUint8(ds); } /* agServerMode */
+	if (ver->minor < 2) { (void)AG_ReadUint8(ds); } /* agServerMode */
 	agIdleThresh = (int)AG_ReadUint8(ds);
-	if (ver.minor >= 3) { agWindowAnySize = (int)AG_ReadUint8(ds); }
-	if (ver.minor >= 4) { agMsgDelay = (int)AG_ReadUint32(ds); }
+	if (ver->minor >= 3) { agWindowAnySize = (int)AG_ReadUint8(ds); }
+	if (ver->minor >= 4) { agMsgDelay = (int)AG_ReadUint32(ds); }
 	agTextComposition = AG_ReadUint8(ds);
 	agTextBidi = AG_ReadUint8(ds);
 	agKbdUnicode = AG_ReadUint8(ds);
@@ -178,7 +173,7 @@ Load(void *p, AG_DataSource *ds)
 	agMouseSpinIval = (int)AG_ReadUint16(ds);
 	agScreenshotQuality = (int)AG_ReadUint8(ds);
 	agTextTabWidth = (int)AG_ReadUint16(ds);
-	if (ver.minor >= 1) { agTextAntialiasing = AG_ReadUint8(ds); }
+	if (ver->minor >= 1) { agTextAntialiasing = AG_ReadUint8(ds); }
 
 	agRcsMode = (int)AG_ReadUint8(ds);
 	AG_CopyString(agRcsHostname, ds, sizeof(agRcsHostname));
@@ -191,8 +186,6 @@ Load(void *p, AG_DataSource *ds)
 static int
 Save(void *p, AG_DataSource *ds)
 {
-	AG_WriteVersion(ds, agConfigOps.type, &agConfigOps.ver);
-
 #ifdef DEBUG
 	AG_WriteUint8(ds, (Uint8)agDebugLvl);
 #else

@@ -24,16 +24,16 @@ struct ag_event;
 
 /* Generic object operation vector */
 typedef struct ag_object_ops {
-	const char *type;				/* Class name */
-	size_t size;					/* Structure size */
-	AG_Version ver;					/* Version numbers */
+	const char *type;			/* Class name */
+	size_t size;				/* Structure size */
+	AG_Version ver;				/* Version numbers */
 
-	void (*init)(void *);				/* Initialize */
-	void (*reinit)(void *);				/* Free dataset */
-	void (*destroy)(void *);			/* Free resources */
-	int (*load)(void *, AG_DataSource *);		/* Load from network */
-	int (*save)(void *, AG_DataSource *);		/* Save to network */
-	void *(*edit)(void *);				/* Edit object */
+	void (*init)(void *);
+	void (*reinit)(void *);
+	void (*destroy)(void *);
+	int (*load)(void *, AG_DataSource *, const AG_Version *); 
+	int (*save)(void *, AG_DataSource *);
+	void *(*edit)(void *);
 } AG_ObjectOps;
 
 /* Dependency with respect to another object. */
