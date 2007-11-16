@@ -6,7 +6,7 @@ typedef struct ag_object AG_Config;
 extern AG_Config *agConfig;
 
 __BEGIN_DECLS
-extern const AG_ObjectOps agConfigOps;
+extern const AG_ObjectClass agConfigClass;
 
 extern int agKbdUnicode, agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval;

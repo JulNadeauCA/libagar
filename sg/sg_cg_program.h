@@ -27,7 +27,7 @@ typedef struct sg_cg_program {
 } SG_CgProgram;
 
 __BEGIN_DECLS
-extern const SG_ProgramOps sgCgProgramOps;
+extern const SG_ProgramClass sgCgProgramClass;
 extern CGcontext sgCgProgramCtx;
 
 SG_CgProgram *SG_CgProgramNew(void *, const char *);

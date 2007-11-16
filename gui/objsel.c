@@ -42,7 +42,7 @@ AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
 	va_list ap;
 
 	os = Malloc(sizeof(AG_ObjectSelector));
-	AG_ObjectInit(os, &agObjectSelectorOps);
+	AG_ObjectInit(os, &agObjectSelectorClass);
 	os->flags |= flags;
 	os->pobj = pobj;
 	os->root = root;
@@ -184,7 +184,7 @@ AG_ObjectSelectorMaskType(AG_ObjectSelector *os, const char *type)
 	strlcpy(os->type_mask, type, sizeof(os->type_mask));
 }
 
-const AG_WidgetOps agObjectSelectorOps = {
+const AG_WidgetClass agObjectSelectorClass = {
 	{
 		"AG_Widget:AG_Combo:AG_ObjectSelector",
 		sizeof(AG_ObjectSelector),

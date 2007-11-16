@@ -116,7 +116,6 @@ auth_pubkey(NS_Server *serv, void *p)
 int
 main(int argc, char *argv[])
 {
-	extern const AG_ObjectOps UserOps;
 	char *host = NULL;
 	char *port = "6785";
 	char *dir = _PATH_DATA;
@@ -156,7 +155,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	AG_RegisterClass(&UserOps);
+	AG_RegisterClass(&UserClass);
 
 	if (adminflag) {
 		/* Set up administrator interface. */

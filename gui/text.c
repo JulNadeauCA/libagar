@@ -226,7 +226,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		goto out;
 
 	font = Malloc(sizeof(AG_Font));
-	AG_ObjectInit(font, &agFontOps);
+	AG_ObjectInit(font, &agFontClass);
 	AG_ObjectSetName(font, "%s", name);
 
 	font->size = ptsize;
@@ -1636,7 +1636,7 @@ AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
 	}
 }
 
-const AG_ObjectOps agFontOps = {
+const AG_ObjectClass agFontClass = {
 	"AG_Font",
 	sizeof(AG_Font),
 	{ 0, 0 },

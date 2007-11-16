@@ -25,7 +25,7 @@ AG_DummyNew(void *parent, Uint flags, const char *caption)
 
 	/* Create a new instance of the AG_Dummy class */
 	dum = Malloc(sizeof(AG_Dummy));
-	AG_ObjectInit(dum, &agDummyOps);
+	AG_ObjectInit(dum, &agDummyClass);
 
 	/* Set some constructor arguments */
 	dum->flags |= flags;
@@ -249,10 +249,10 @@ Save(void *obj, AG_DataSource *ds)
 }
 
 /*
- * This structure describes our widget class. It inherits from the
- * AG_ObjectOps structure. Any of the function members may be NULL.
+ * This structure describes our widget class. It inherits from AG_ObjectClass.
+ * Any of the function members may be NULL.
  */
-const AG_WidgetOps agDummyOps = {
+const AG_WidgetClass agDummyClass = {
 	{
 		"AG_Widget:AG_Dummy",	/* Name of class */
 		sizeof(AG_Dummy),	/* Size of structure */

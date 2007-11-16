@@ -44,7 +44,7 @@ typedef struct ag_combo {
 	AG_TLIST_FOREACH_ITEM((p),(com)->list, it, type)
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agComboOps;
+extern const AG_WidgetClass agComboClass;
 
 AG_Combo *AG_ComboNew(void *, Uint, const char *);
 void AG_ComboSizeHint(AG_Combo *, const char *, int);

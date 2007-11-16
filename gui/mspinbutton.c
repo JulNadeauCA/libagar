@@ -38,7 +38,7 @@ AG_MSpinbuttonNew(void *parent, Uint flags, const char *sep, const char *label)
 	AG_MSpinbutton *sbu;
 
 	sbu = Malloc(sizeof(AG_MSpinbutton));
-	AG_ObjectInit(sbu, &agMSpinbuttonOps);
+	AG_ObjectInit(sbu, &agMSpinbuttonClass);
 	sbu->sep = sep;
 
 	if (!(flags & AG_MSPINBUTTON_NOHFILL))	{ AG_ExpandHoriz(sbu); }
@@ -636,7 +636,7 @@ AG_MSpinbuttonSetWriteable(AG_MSpinbutton *sbu, int writeable)
 	AG_MutexUnlock(&sbu->lock);
 }
 
-const AG_WidgetOps agMSpinbuttonOps = {
+const AG_WidgetClass agMSpinbuttonClass = {
 	{
 		"AG_Widget:AG_MSpinbutton",
 		sizeof(AG_MSpinbutton),

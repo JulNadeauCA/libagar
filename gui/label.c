@@ -40,7 +40,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	const char *p;
 	
 	label = Malloc(sizeof(AG_Label));
-	AG_ObjectInit(label, &agLabelOps);
+	AG_ObjectInit(label, &agLabelClass);
 	label->type = AG_LABEL_POLLED;
 	label->text = Strdup(fmt);
 	label->flags |= flags;
@@ -84,7 +84,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 	const char *p;
 	
 	label = Malloc(sizeof(AG_Label));
-	AG_ObjectInit(label, &agLabelOps);
+	AG_ObjectInit(label, &agLabelClass);
 	label->type = AG_LABEL_POLLED_MT;
 	label->text = Strdup(fmt);
 	label->flags |= flags;
@@ -126,7 +126,7 @@ AG_LabelNewStatic(void *parent, Uint flags, const char *fmt, ...)
 	va_list ap;
 
 	label = Malloc(sizeof(AG_Label));
-	AG_ObjectInit(label, &agLabelOps);
+	AG_ObjectInit(label, &agLabelClass);
 	label->type = AG_LABEL_STATIC;
 	label->flags |= flags;
 	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
@@ -150,7 +150,7 @@ AG_LabelNewStaticString(void *parent, Uint flags, const char *text)
 	AG_Label *label;
 	
 	label = Malloc(sizeof(AG_Label));
-	AG_ObjectInit(label, &agLabelOps);
+	AG_ObjectInit(label, &agLabelClass);
 	label->type = AG_LABEL_STATIC;
 	label->flags |= flags;
 	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
@@ -381,7 +381,7 @@ static void
 label_objt(AG_Label *label, char *s, size_t len, int ri)
 {
 	AG_Object *ob = LABEL_ARG(AG_Object *);
-	snprintf(s, len, "%s", ob->ops->type);
+	snprintf(s, len, "%s", ob->cls->name);
 }
 
 static void
@@ -756,7 +756,7 @@ AG_LabelFlagNew(AG_Label *lbl, Uint idx, const char *text,
 	SLIST_INSERT_HEAD(&lbl->lflags, lfl, lflags);
 }
 
-const AG_WidgetOps agLabelOps = {
+const AG_WidgetClass agLabelClass = {
 	{
 		"AG_Widget:AG_Label",
 		sizeof(AG_Label),

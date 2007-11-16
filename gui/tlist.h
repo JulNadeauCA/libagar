@@ -97,7 +97,7 @@ typedef struct ag_tlist {
 #define AG_TLIST_ITEM(n) AG_TlistSelectedItemPtr(AG_PTR(n))
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agTlistOps;
+extern const AG_WidgetClass agTlistClass;
 
 AG_Tlist *AG_TlistNew(void *, Uint);
 AG_Tlist *AG_TlistNewPolled(void *, Uint, AG_EventFn, const char *, ...);

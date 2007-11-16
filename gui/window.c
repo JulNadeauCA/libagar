@@ -54,7 +54,7 @@ AG_WindowNew(Uint flags)
 	Uint titlebarFlags = 0;
 
 	win = Malloc(sizeof(AG_Window));
-	AG_ObjectInit(win, &agWindowOps);
+	AG_ObjectInit(win, &agWindowClass);
 	AG_ObjectSetName(win, "win-generic");
 	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
 
@@ -1408,7 +1408,7 @@ AG_WindowUpdateCaption(AG_Window *win)
 		AG_TitlebarSetCaption(win->tbar, win->caption);
 }
 
-const AG_WidgetOps agWindowOps = {
+const AG_WidgetClass agWindowClass = {
 	{
 		"AG_Widget:AG_Window",
 		sizeof(AG_Window),

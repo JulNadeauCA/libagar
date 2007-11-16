@@ -40,7 +40,7 @@ RG_TileviewNew(void *parent, RG_Tileset *ts, Uint flags)
 	RG_Tileview *tv;
 
 	tv = Malloc(sizeof(RG_Tileview));
-	AG_ObjectInit(tv, &rgTileviewOps);
+	AG_ObjectInit(tv, &rgTileviewClass);
 	tv->ts = ts;
 	tv->flags |= flags;
 
@@ -1800,7 +1800,7 @@ RG_TileviewGenericMenu(RG_Tileview *tv, AG_MenuItem *mi)
 	    &tv->flags, RG_TILEVIEW_NO_TILING, 1);
 }
 
-const AG_WidgetOps rgTileviewOps = {
+const AG_WidgetClass rgTileviewClass = {
 	{
 		"AG_Widget:RG_Tileview",
 		sizeof(RG_Tileview),

@@ -42,7 +42,7 @@ typedef struct ag_mpane {
 } AG_MPane;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agMPaneOps;
+extern const AG_WidgetClass agMPaneClass;
 
 AG_MPane *AG_MPaneNew(void *, enum ag_mpane_layout, Uint);
 void      AG_MPaneSetLayout(AG_MPane *, enum ag_mpane_layout);

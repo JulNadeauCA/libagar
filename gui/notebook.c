@@ -37,7 +37,7 @@ AG_NotebookNew(void *parent, Uint flags)
 	AG_Notebook *nb;
 
 	nb = Malloc(sizeof(AG_Notebook));
-	AG_ObjectInit(nb, &agNotebookOps);
+	AG_ObjectInit(nb, &agNotebookClass);
 	nb->flags |= flags;
 	
 	if (flags & AG_NOTEBOOK_HFILL) { AG_ExpandHoriz(nb); }
@@ -229,7 +229,7 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	AG_NotebookTab *tab;
 
 	tab = Malloc(sizeof(AG_NotebookTab));
-	AG_ObjectInit(tab, &agNotebookTabOps);
+	AG_ObjectInit(tab, &agNotebookTabClass);
 	AG_BoxSetType(&tab->box, btype);
 	AG_Expand(tab);
 
@@ -304,7 +304,7 @@ AG_NotebookSetTabVisibility(AG_Notebook *nb, int flag)
 	}
 }
 
-const AG_WidgetOps agNotebookOps = {
+const AG_WidgetClass agNotebookClass = {
 	{
 		"AG_Widget:AG_Notebook",
 		sizeof(AG_Notebook),
@@ -321,7 +321,7 @@ const AG_WidgetOps agNotebookOps = {
 	SizeAllocate
 };
 
-const AG_WidgetOps agNotebookTabOps = {
+const AG_WidgetClass agNotebookTabClass = {
 	{
 		"AG_Widget:AG_Box:AG_NotebookTab",
 		sizeof(AG_NotebookTab),

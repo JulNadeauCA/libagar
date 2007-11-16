@@ -63,6 +63,12 @@ int ncWarnOnReconnect = 1;		/* Warn on reconnection */
 int ncReconnectAttempts = 4;		/* Connection retries */
 int ncReconnectIval = 2;		/* Interval between retries (secs) */
 
+void
+NC_InitSubsystem(Uint flags)
+{
+	AG_RegisterClass(&nsClientClass);
+}
+
 int
 NC_Write(NC_Session *client, const char *fmt, ...)
 {

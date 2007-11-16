@@ -47,7 +47,6 @@
 
 #include "agarpaint.h"
 
-extern const AG_ObjectOps rgTilesetOps;
 static AG_Menu *appMenu = NULL;
 static RG_Tileset *tsFocused = NULL;
 
@@ -118,7 +117,7 @@ CreateEditionWindow(RG_Tileset *ts)
 	extern AG_Menu *agAppMenu;
 	AG_Window *win;
 
-	win = rgTilesetOps.edit(ts);
+	win = rgTilesetClass.edit(ts);
 	AG_SetEvent(win, "window-close", SaveChangesDlg, "%p", ts);
 	AG_AddEvent(win, "window-gainfocus", WindowGainedFocus, "%p", ts);
 	AG_AddEvent(win, "window-lostfocus", WindowLostFocus, "%p", ts);
@@ -136,7 +135,7 @@ NewTileset(AG_Event *event)
 {
 	RG_Tileset *ts;
 
-	ts = AG_ObjectNew(agWorld, NULL, &rgTilesetOps);
+	ts = AG_ObjectNew(agWorld, NULL, &rgTilesetClass);
 	CreateEditionWindow(ts);
 }
 
@@ -146,7 +145,7 @@ OpenTilesetAGT(AG_Event *event)
 	char *path = AG_STRING(1);
 	RG_Tileset *ts;
 
-	ts = AG_ObjectNew(agWorld, NULL, &rgTilesetOps);
+	ts = AG_ObjectNew(agWorld, NULL, &rgTilesetClass);
 	if (AG_ObjectLoadFromFile(ts, path) == -1) {
 		AG_TextMsgFromError();
 		AG_ObjectDetach(ts);
@@ -636,7 +635,7 @@ main(int argc, char *argv[])
 	for (i = optind; i < argc; i++) {
 		RG_Tileset *ts;
 
-		ts = AG_ObjectNew(agWorld, NULL, &rgTilesetOps);
+		ts = AG_ObjectNew(agWorld, NULL, &rgTilesetClass);
 		if (AG_ObjectLoadFromFile(ts, argv[i]) == 0) {
 			AG_ObjectSetArchivePath(ts, argv[i]);
 			CreateEditionWindow(ts);

@@ -66,7 +66,7 @@ ginsert_pane(void *p, void *con)
 	
 	if ((it = AG_TlistSelectedItem(mv->lib_tl)) != NULL) {
 		AG_LabelNewStatic(con, 0, _("Object: %s (%s)"),
-		    OBJECT(it->p1)->name, OBJECT(it->p1)->ops->type);
+		    OBJECT(it->p1)->name, OBJECT(it->p1)->cls->name);
 	}
 	
 	AG_LabelNewStatic(con, 0, _("Snap to: "));

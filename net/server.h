@@ -72,9 +72,10 @@ typedef struct ns_client {
 } NS_Client;
 
 __BEGIN_DECLS
-extern const AG_ObjectOps nsServerOps;
-extern const AG_ObjectOps nsClientOps;
+extern const AG_ObjectClass nsServerClass;
+extern const AG_ObjectClass nsClientClass;
 
+void       NS_InitSubsystem(Uint);
 NS_Server *NS_ServerNew(void *, Uint, const char *, const char *, const char *,
 	                const char *);
 void	   NS_ServerSetProtocol(NS_Server *, const char *, const char *);

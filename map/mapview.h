@@ -117,7 +117,7 @@ typedef struct map_view {
 #define AGMPIXSZ(mv)	AGMCAM(mv).pixsz
 
 __BEGIN_DECLS
-extern const AG_WidgetOps mapViewOps;
+extern const AG_WidgetClass mapViewClass;
 
 MAP_View *MAP_ViewNew(void *, MAP *, Uint, struct ag_toolbar *,
                       struct ag_statusbar *);

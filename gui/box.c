@@ -36,7 +36,7 @@ AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 	AG_Box *box;
 
 	box = Malloc(sizeof(AG_Box));
-	AG_ObjectInit(box, &agBoxOps);
+	AG_ObjectInit(box, &agBoxClass);
 
 	box->type = type;
 	box->flags |= flags;
@@ -305,7 +305,7 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 	AG_MutexUnlock(&box->lock);
 }
 
-const AG_WidgetOps agBoxOps = {
+const AG_WidgetClass agBoxClass = {
 	{
 		"AG_Widget:AG_Box",
 		sizeof(AG_Box),

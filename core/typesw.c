@@ -32,17 +32,17 @@
 
 #include <string.h>
 
-extern const AG_ObjectOps agObjectOps;
+extern const AG_ObjectClass agObjectClass;
 
-AG_ObjectOps **agClassTbl = NULL;
+AG_ObjectClass **agClassTbl = NULL;
 int            agClassCount = 0;
 
 void
 AG_InitClassTbl(void)
 {
-	agClassTbl = Malloc(sizeof(AG_ObjectOps *));
+	agClassTbl = Malloc(sizeof(AG_ObjectClass *));
 	agClassCount = 0;
-	AG_RegisterClass(&agObjectOps);
+	AG_RegisterClass(&agObjectClass);
 }
 
 void
@@ -57,6 +57,6 @@ void
 AG_RegisterClass(const void *cl)
 {
 	agClassTbl = Realloc(agClassTbl,
-	    (agClassCount+1)*sizeof(AG_ObjectOps *));
-	agClassTbl[agClassCount++] = (AG_ObjectOps *)cl;
+	    (agClassCount+1)*sizeof(AG_ObjectClass *));
+	agClassTbl[agClassCount++] = (AG_ObjectClass *)cl;
 }

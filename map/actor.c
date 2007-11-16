@@ -394,7 +394,7 @@ Edit(void *p)
 }
 #endif /* EDITION */
 
-const AG_ObjectOps mapActorOps = {
+const AG_ObjectClass mapActorClass = {
 	"MAP_Actor",
 	sizeof(MAP_Actor),
 	{ 0, 0 },

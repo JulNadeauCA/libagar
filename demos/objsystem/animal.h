@@ -10,7 +10,7 @@ typedef struct animal {
 } Animal;
 
 __BEGIN_DECLS
-extern const AG_ObjectOps AnimalOps;
+extern const AG_ObjectClass AnimalClass;
 Animal *AnimalNew(void *, const char *);
 __END_DECLS
 

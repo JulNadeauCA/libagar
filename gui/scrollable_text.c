@@ -37,7 +37,7 @@ AG_ScrollableTextNew(void *parent, Uint flags)
 	AG_ScrollableText *st;
 
 	st = Malloc(sizeof(AG_ScrollableText));
-	AG_ObjectInit(st, &agScrollableTextOps);
+	AG_ObjectInit(st, &agScrollableTextClass);
 	st->flags |= flags;
 	
 	if (flags & AG_SCROLLABLE_TEXT_HFILL) { AG_ExpandHoriz(st); }
@@ -95,7 +95,7 @@ Destroy(void *p)
 	Free(st->text);
 }
 
-const AG_WidgetOps agScrollableTextOps = {
+const AG_WidgetClass agScrollableTextClass = {
 	{
 		"AG_Widget:AG_Scrollable:AG_ScrollableText",
 		sizeof(AG_ScrollableText),

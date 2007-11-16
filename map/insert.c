@@ -52,7 +52,7 @@ insert_init(void *p)
 	ins->replace_mode = 0;
 	ins->angle = 0;
 
-	AG_ObjectInitStatic(&ins->mTmp, &mapOps);
+	AG_ObjectInitStatic(&ins->mTmp, &mapClass);
 	ins->mvTmp = NULL;
 
 	MAP_ToolPushStatus(ins,

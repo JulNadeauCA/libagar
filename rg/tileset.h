@@ -75,7 +75,7 @@ typedef struct rg_tileset {
 #endif
 
 __BEGIN_DECLS
-extern const AG_ObjectOps rgTilesetOps;
+extern const AG_ObjectClass rgTilesetClass;
 
 void	 	 RG_InitSubsystem(void);
 void		 RG_DestroySubsystem(void);

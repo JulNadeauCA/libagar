@@ -79,7 +79,7 @@ typedef struct ag_window {
 #define AG_WINDOW_FOCUSED(w) (TAILQ_LAST(&agView->windows, ag_windowq) == (w))
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agWindowOps;
+extern const AG_WidgetClass agWindowClass;
 
 AG_Window *AG_WindowNew(Uint);
 AG_Window *AG_WindowNewNamed(Uint, const char *, ...)

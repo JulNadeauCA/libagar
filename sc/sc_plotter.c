@@ -45,7 +45,7 @@ SC_PlotterNew(void *parent, Uint flags)
 	SC_Plotter *pl;
 
 	pl = Malloc(sizeof(SC_Plotter));
-	AG_ObjectInit(pl, &scPlotterOps);
+	AG_ObjectInit(pl, &scPlotterClass);
 	pl->flags |= flags;
 	
 	if (flags & SC_PLOTTER_HFILL) WIDGET(pl)->flags |= AG_WIDGET_HFILL;
@@ -932,7 +932,7 @@ SC_PlotterSetDefaultScale(SC_Plotter *ptr, SC_Real xScale, SC_Real yScale)
 	ptr->yScale = yScale;
 }
 
-const AG_WidgetOps scPlotterOps = {
+const AG_WidgetClass scPlotterClass = {
 	{
 		"AG_Widget:SC_Plotter",
 		sizeof(SC_Plotter),

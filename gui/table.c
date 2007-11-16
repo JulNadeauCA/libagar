@@ -52,7 +52,7 @@ AG_TableNew(void *parent, Uint flags)
 	AG_Table *t;
 
 	t = Malloc(sizeof(AG_Table));
-	AG_ObjectInit(t, &agTableOps);
+	AG_ObjectInit(t, &agTableClass);
 	t->flags |= flags;
 
 	if (flags & AG_TABLE_HFILL) { AG_ExpandHoriz(t); }
@@ -1476,7 +1476,7 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 	return (0);
 }
 
-const AG_WidgetOps agTableOps = {
+const AG_WidgetClass agTableClass = {
 	{
 		"AG_Widget:AG_Table",
 		sizeof(AG_Table),

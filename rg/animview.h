@@ -38,7 +38,7 @@ typedef struct rg_anim_view {
 } RG_Animview;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps rgAnimviewOps;
+extern const AG_WidgetClass rgAnimviewClass;
 
 RG_Animview	*RG_AnimviewNew(void *);
 void		 RG_AnimviewSizeHint(RG_Animview *, int, int);

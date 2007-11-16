@@ -38,7 +38,7 @@ AG_GraphNew(void *parent, Uint flags)
 	AG_Graph *gf;
 
 	gf = Malloc(sizeof(AG_Graph));
-	AG_ObjectInit(gf, &agGraphOps);
+	AG_ObjectInit(gf, &agGraphClass);
 	gf->flags |= flags;
 
 	if (flags & AG_GRAPH_HFILL) { AG_ExpandHoriz(gf); }
@@ -791,7 +791,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 	Free(vSorted);
 }
 
-const AG_WidgetOps agGraphOps = {
+const AG_WidgetClass agGraphClass = {
 	{
 		"AG_Widget:AG_Graph",
 		sizeof(AG_Graph),

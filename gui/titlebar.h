@@ -32,7 +32,7 @@ typedef struct ag_titlebar {
 } AG_Titlebar;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agTitlebarOps;
+extern const AG_WidgetClass agTitlebarClass;
 
 AG_Titlebar *AG_TitlebarNew(void *, Uint);
 void	     AG_TitlebarSetCaption(AG_Titlebar *, const char *);

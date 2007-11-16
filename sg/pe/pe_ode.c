@@ -87,7 +87,7 @@ DetachObject(void *obj, SG_Object *so)
 {
 }
 
-const PE_Ops peOdeOps = {
+const PE_Class peOdeClass = {
 	{
 		"PE:PE_Ode",
 		sizeof(PE_Ode),

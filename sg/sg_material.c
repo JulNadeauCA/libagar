@@ -72,7 +72,7 @@ SG_MaterialNew(void *parent, const char *name)
 	SG_Material *mat;
 
 	mat = Malloc(sizeof(SG_Material));
-	AG_ObjectInit(mat, &sgMaterialOps);
+	AG_ObjectInit(mat, &sgMaterialClass);
 	AG_ObjectSetName(mat, "%s", name);
 	AG_ObjectAttach(parent, mat);
 	return (mat);
@@ -417,7 +417,7 @@ SG_MaterialUnbind(SG_Material *mat, SG_View *view)
 	}
 }
 
-const AG_ObjectOps sgMaterialOps = {
+const AG_ObjectClass sgMaterialClass = {
 	"SG_Material",
 	sizeof(SG_Material),
 	{ 0,0 },

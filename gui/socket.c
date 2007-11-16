@@ -46,7 +46,7 @@ AG_SocketNew(void *parent, Uint flags)
 	AG_Socket *sock;
 
 	sock = Malloc(sizeof(AG_Socket));
-	AG_ObjectInit(sock, &agSocketOps);
+	AG_ObjectInit(sock, &agSocketClass);
 	sock->flags |= flags;
 	
 	if (flags & AG_SOCKET_HFILL) { AG_ExpandHoriz(sock); }
@@ -518,7 +518,7 @@ AG_SocketRemoveIcon(AG_Socket *sock)
 	sock->icon = NULL;
 }
 
-const AG_WidgetOps agSocketOps = {
+const AG_WidgetClass agSocketClass = {
 	{
 		"AG_Widget:AG_Socket",
 		sizeof(AG_Socket),

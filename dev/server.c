@@ -310,7 +310,7 @@ cmd_world_find(NS_Server *ns, NS_Command *cmd, AG_Object *pob, int depth)
 	AG_Object *cob;
 
 	NS_ListString(ns, "%s", pob->name);
-	NS_ListString(ns, "%s", pob->ops->type);
+	NS_ListString(ns, "%s", pob->cls->name);
 	NS_ListString(ns, "0x%08x", pob->flags);
 
 	TAILQ_FOREACH(cob, &pob->children, cobjs) {
@@ -348,7 +348,7 @@ DEV_DebugServerStart(void)
 	int rv;
 
 	if (!server_inited) {
-		AG_ObjectInitStatic(&server, &nsServerOps);
+		AG_ObjectInitStatic(&server, &nsServerClass);
 		AG_ObjectSetName(&server, "_DebugServer");
 		NS_ServerSetProtocol(&server, "agar-debug", PROTO_VERSION);
 		NS_ServerBind(&server, NULL, DEFAULT_PORT);

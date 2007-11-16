@@ -288,7 +288,7 @@ user_activate(NS_Command *cmd, void *p)
 	}
 
 	u = Malloc(sizeof(User));
-	AG_ObjectInit(u, &UserOps);
+	AG_ObjectInit(u, &UserClass);
 	AG_ObjectSetName(u, "%s", name);
 	strlcpy(u->name, name, sizeof(u->name));
 	if (SetInfosFromCommand(cmd, u) == -1)
@@ -350,7 +350,7 @@ Edit(void *p)
 	return (win);
 }
 
-const AG_ObjectOps UserOps = {
+const AG_ObjectClass UserClass = {
 	"User",
 	sizeof(User),
 	{ 8, 0 },

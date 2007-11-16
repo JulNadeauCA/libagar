@@ -38,8 +38,7 @@
 #include <string.h>
 
 void
-AG_FeatureInit(void *p, RG_Tileset *ts, int flags,
-    const RG_FeatureOps *ops)
+AG_FeatureInit(void *p, RG_Tileset *ts, int flags, const RG_FeatureOps *ops)
 {
 	RG_Feature *ft = p;
 	RG_Feature *oft;

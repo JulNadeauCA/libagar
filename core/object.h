@@ -23,8 +23,8 @@
 struct ag_event;
 
 /* Generic object operation vector */
-typedef struct ag_object_ops {
-	const char *type;			/* Class name */
+typedef struct ag_object_class {
+	const char *name;			/* Class name */
 	size_t size;				/* Structure size */
 	AG_Version ver;				/* Version numbers */
 
@@ -34,7 +34,7 @@ typedef struct ag_object_ops {
 	int (*load)(void *, AG_DataSource *, const AG_Version *); 
 	int (*save)(void *, AG_DataSource *);
 	void *(*edit)(void *);
-} AG_ObjectOps;
+} AG_ObjectClass;
 
 /* Dependency with respect to another object. */
 typedef struct ag_object_dep {
@@ -51,7 +51,7 @@ typedef struct ag_object {
 	char name[AG_OBJECT_NAME_MAX];	/* Object ID (unique in parent) */
 	char *archivePath;		/* Path to archive (app-specific) */
 	char *save_pfx;			/* Prefix for default save paths */
-	const AG_ObjectOps *ops;	/* Object class data */
+	const AG_ObjectClass *cls;	/* Object class data */
 	Uint flags;
 #define AG_OBJECT_RELOAD_PROPS	 0x0001	/* Don't free props before load */
 #define AG_OBJECT_NON_PERSISTENT 0x0002	/* Never include in saves */
@@ -102,8 +102,8 @@ enum ag_object_checksum_alg {
 				 AG_OBJECT_NON_PERSISTENT) == 0)
 #define AGOBJECT_DEBUG(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
 
-#define AGOBJECT_INITIALIZER(ob, name, pfx, ops) {		\
-		(name),(pfx),(ops),0,				\
+#define AGOBJECT_INITIALIZER(ob, name, pfx, cls) {		\
+		(name),(pfx),(cls),0,				\
 		AG_MUTEX_INITIALIZER,				\
 		NULL, 0, 0, 					\
 		TAILQ_HEAD_INITIALIZER((ob)->events),		\
@@ -137,8 +137,8 @@ enum ag_object_checksum_alg {
 #define OBJECT_RESIDENT(ob)	AGOBJECT_RESIDENT(ob)
 #define OBJECT_PERSISTENT(ob)	AGOBJECT_PERSISTENT(ob)
 #define OBJECT_DEBUG(ob) 	AGOBJECT_DEBUG(ob)
-#define OBJECT_INITIALIZER(obj,n,pfx,ops) \
-	AGOBJECT_INITIALIZER((obj),(n),(pfx),(ops))
+#define OBJECT_INITIALIZER(obj,n,pfx,cls) \
+	AGOBJECT_INITIALIZER((obj),(n),(pfx),(cls))
 #define OBJECT_FOREACH_CHILD(var,ob,type) \
 	AGOBJECT_FOREACH_CHILD((var),(ob),type)
 #define OBJECT_FOREACH_CHILD_REVERSE(var,ob,type) \
@@ -151,9 +151,9 @@ enum ag_object_checksum_alg {
 #define AG_ObjectUnlock(ob) AG_MutexUnlock(&(ob)->lock)
 
 __BEGIN_DECLS
-extern const AG_ObjectOps agObjectOps;
+extern const AG_ObjectClass agObjectClass;
 
-void	*AG_ObjectNew(void *, const char *, const AG_ObjectOps *);
+void	*AG_ObjectNew(void *, const char *, const AG_ObjectClass *);
 void	 AG_ObjectAttach(void *, void *);
 int	 AG_ObjectAttachToNamed(const char *, void *);
 void	 AG_ObjectDetach(void *);
@@ -184,10 +184,10 @@ void		 AG_ObjectSetName(void *, const char *, ...)
 void		 AG_ObjectSetArchivePath(void *, const char *);
 void		 AG_ObjectGetArchivePath(void *, char *, size_t)
 		                         BOUNDED_ATTRIBUTE(__string__, 2, 3);
-void		 AG_ObjectSetOps(void *, const void *);
+void		 AG_ObjectSetClass(void *, const void *);
 
 int	 AG_ObjectIsClassGeneral(const AG_Object *, const char *);
-int	 AG_ObjectGetInheritHier(void *, const AG_ObjectOps ***, int *);
+int	 AG_ObjectGetInheritHier(void *, const AG_ObjectClass ***, int *);
 
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
@@ -224,7 +224,7 @@ int	 	 AG_ObjectFindDep(const void *, Uint32, void **);
 void		 AG_ObjectDelDep(void *, const void *);
 Uint32		 AG_ObjectEncodeName(const void *, const void *);
 void		*AG_ObjectEdit(void *);
-void		 AG_ObjectGenName(AG_Object *, const AG_ObjectOps *, char *,
+void		 AG_ObjectGenName(AG_Object *, const AG_ObjectClass *, char *,
 		                  size_t);
 
 /* Lock/unlock the property table of an object. */
@@ -256,14 +256,14 @@ AG_ObjectIsClass(const void *p, const char *cname)
 	}
 	/* Optimize for simplest case (no wildcards). */
 	if (nwild == 0) {
-		return (strncmp(obj->ops->type, cname, c - &cname[0]) == 0);
+		return (strncmp(obj->cls->name, cname, c - &cname[0]) == 0);
 	}
 	/* Optimize for single-wildcard cases. */
 	if (nwild == 1) {
 		for (c = &cname[0]; *c != '\0'; c++) {
 			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
 				if (c == &cname[0] ||
-				    strncmp(obj->ops->type, cname,
+				    strncmp(obj->cls->name, cname,
 				            c - &cname[0]) == 0)
 					return (1);
 			}
@@ -307,7 +307,7 @@ AG_ObjectFindParent(void *obj, const char *name, const char *type)
 		if (po == NULL) {
 			return (NULL);
 		}
-		if ((type == NULL || strcmp(po->ops->type, type) == 0) &&
+		if ((type == NULL || strcmp(po->cls->name, type) == 0) &&
 		    (name == NULL || strcmp(po->name, name) == 0)) {
 			return ((void *)po);
 		}

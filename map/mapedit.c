@@ -49,13 +49,13 @@ int mapDefaultBrushHeight = 9;
 void
 MAP_EditorInit(void)
 {
-	AG_ObjectInitStatic(&mapEditor, &mapEditorOps);
+	AG_ObjectInitStatic(&mapEditor, &mapEditorClass);
 	AG_ObjectSetName(&mapEditor, "_mapEditor");
 	OBJECT(&mapEditor)->flags |= AG_OBJECT_RELOAD_PROPS;
 	OBJECT(&mapEditor)->save_pfx = "/_mapEditor";
 
 	/* Attach a pseudo-object for dependency keeping purposes. */
-	AG_ObjectInitStatic(&mapEditor.pseudo, &mapEditorPseudoOps);
+	AG_ObjectInitStatic(&mapEditor.pseudo, &mapEditorPseudoClass);
 	AG_ObjectSetName(&mapEditor.pseudo, "_mapEditor");
 	OBJECT(&mapEditor.pseudo)->flags |= (AG_OBJECT_NON_PERSISTENT|
 	                                     AG_OBJECT_INDESTRUCTIBLE);
@@ -66,7 +66,7 @@ MAP_EditorInit(void)
 	 * Use AG_OBJECT_READONLY to avoid circular reference in case a user
 	 * attempts to paste contents of the copy buffer into itself.
 	 */
-	AG_ObjectInitStatic(&mapEditor.copybuf, &mapOps);
+	AG_ObjectInitStatic(&mapEditor.copybuf, &mapClass);
 	AG_ObjectSetName(&mapEditor.copybuf, "_mapClipboard");
 	OBJECT(&mapEditor.copybuf)->flags |= (AG_OBJECT_NON_PERSISTENT|
 	                                      AG_OBJECT_INDESTRUCTIBLE|
@@ -165,7 +165,7 @@ ConfigEditor(void *p)
 	return (win);
 }
 
-const AG_ObjectOps mapEditorPseudoOps = {
+const AG_ObjectClass mapEditorPseudoClass = {
 	"MAP_EditorPseudo",
 	sizeof(AG_Object),
 	{ 0, 0 },
@@ -177,7 +177,7 @@ const AG_ObjectOps mapEditorPseudoOps = {
 	ConfigEditor
 };
 
-const AG_ObjectOps mapEditorOps = {
+const AG_ObjectClass mapEditorClass = {
 	"MAP_Editor",
 	sizeof(AG_Object),
 	{ 0, 0 },

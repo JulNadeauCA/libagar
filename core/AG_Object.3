@@ -49,10 +49,10 @@ to be archived to different forms of persistent storage in an efficient manner.
 .nr nS 1
 .Pp
 .Ft "AG_Object *"
-.Fn AG_ObjectNew "AG_Object *parent" "const char *name" "const AG_ObjectOps *ops"
+.Fn AG_ObjectNew "AG_Object *parent" "const char *name" "const AG_ObjectClass *cls"
 .Pp
 .Ft "void"
-.Fn AG_ObjectInit "AG_Object *obj" "const AG_ObjectOps *ops"
+.Fn AG_ObjectInit "AG_Object *obj" "const AG_ObjectClass *cls"
 .Pp
 .Ft "void"
 .Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
@@ -85,7 +85,7 @@ to be archived to different forms of persistent storage in an efficient manner.
 .Fn AG_ObjectSetName "AG_Object *obj" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_ObjectSetOps "AG_Object *obj" "const AG_ObjectOps *ops"
+.Fn AG_ObjectSetClass "AG_Object *obj" "const AG_ObjectClass *cls"
 .Pp
 .nr nS 0
 The
@@ -125,22 +125,22 @@ The
 .Fa ops
 argument describes the object class.
 It is a pointer to a
-.Ft AG_ObjectOps
+.Ft AG_ObjectClass
 structure:
 .Pp
 .Bd -literal
 typedef struct ag_object_ops {
-	const char *name;                          /* Class name */
-	size_t size;                               /* Size of structure */
-	AG_Version ver;                            /* Version numbers */
+	const char *name;        /* Class name */
+	size_t size;             /* Size of structure */
+	AG_Version ver;          /* Version numbers */
 
-	void (*init)(void *obj);                     /* Initialize */
-	void (*reinit)(void *obj);                   /* Free dataset */
-	void (*destroy)(void *obj);                  /* Release */
-	int  (*load)(void *obj, AG_DataSource *buf); /* Load dataset */
-	int  (*save)(void *obj, AG_DataSource *buf); /* Save dataset */
-	void *(*edit)(void *obj);                    /* Edit dataset */
-} AG_ObjectOps;
+	void (*init)(void *obj);
+	void (*reinit)(void *obj);
+	void (*destroy)(void *obj);
+	int  (*load)(void *obj, AG_DataSource *buf, const AG_Version *ver);
+	int  (*save)(void *obj, AG_DataSource *buf);
+	void *(*edit)(void *obj);
+} AG_ObjectClass;
 .Ed
 .Pp
 The
@@ -384,16 +384,17 @@ They are no-ops if thread support is disabled.
 changes the name of the given object.
 If the object is attached to a VFS, it is assumed to be locked.
 .Pp
-.Fn AG_ObjectSetOps
+.Fn AG_ObjectSetClass
 changes the generic operation vector (pointer to
-.Ft AG_ObjectOps
+.Ft AG_ObjectClass
 structure) associated with the given object.
+This function is not thread-safe.
 .Sh CLASS INFORMATION
 .nr nS 1
 .Ft "void"
-.Fn AG_RegisterClass "const AG_ObjectOps *ops" "int icon"
+.Fn AG_RegisterClass "const AG_ObjectClass *ops" "int icon"
 .Pp
-.Ft "AG_ObjectOps *"
+.Ft "AG_ObjectClass *"
 .Fn AG_FindType "const char *name"
 .Pp
 .Ft "int"
@@ -733,71 +734,9 @@ is the pathname of the file.
 .El
 .Sh EXAMPLES
 .Pp
-The following C code defines an new object class named
-.Sq MyClass :
-.Bd -literal
-	typedef struct my_class {
-		struct ag_object inherit;
-		int foo, bar;
-	} MyClass;
-
-	static void
-	Init(void *obj)
-	{
-		MyClass *my = obj;
-		my->foo = 0;
-		my->bar = 0;
-	}
-	
-	const AG_ObjectOps MyClassOps = {
-		"MyClass",
-		sizeof(MyClass),
-		{ 1,0 },
-		Init,
-		NULL,	/* reinit */
-		NULL,	/* destroy */
-		NULL,	/* load */
-		NULL,	/* save */
-		NULL	/* edit */
-	};
-.Ed
-.Pp
-The following C code implements a subclass of
-.Sq MyClass :
-.Bd -literal
-	typedef struct my_subclass {
-		struct my_class inherit;
-		char *baz;
-	} MySubclass;
-	
-	static void
-	Init(void *obj)
-	{
-		MySubclass *my = obj;
-		my->baz = "Baz";
-	}
-	
-	const AG_ObjectOps MySubclassOps = {
-		"MyClass:MySubclass",
-		sizeof(MySubclass),
-		{ 1,0 },
-		Init,
-		NULL,	/* reinit */
-		NULL,	/* destroy */
-		NULL,	/* load */
-		NULL,	/* save */
-		NULL	/* edit */
-	};
-.Ed
-.Pp
-The following code will create an initialized instance of
-.Sq MySubclass :
-.Bd -literal
-	MySubclass *my;
-	
-	my = Malloc(sizeof(MySubclass));
-	AG_ObjectInit(my, &MySubclassOps);
-.Ed
+See
+.Pa demos/objsystem
+in the Agar source distribution.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,

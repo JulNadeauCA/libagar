@@ -45,7 +45,7 @@ AG_FixedPlotterNew(void *parent, enum ag_fixed_plotter_type type, Uint flags)
 	AG_FixedPlotter *fpl;
 
 	fpl = Malloc(sizeof(AG_FixedPlotter));
-	AG_ObjectInit(fpl, &agFixedPlotterOps);
+	AG_ObjectInit(fpl, &agFixedPlotterClass);
 	fpl->type = type;
 	fpl->flags |= flags;
 
@@ -266,7 +266,7 @@ Destroy(void *p)
 	AG_FixedPlotterFreeItems((AG_FixedPlotter *)p);
 }
 
-const AG_WidgetOps agFixedPlotterOps = {
+const AG_WidgetClass agFixedPlotterClass = {
 	{
 		"AG_Widget:AG_FixedPlotter",
 		sizeof(AG_FixedPlotter),

@@ -52,7 +52,7 @@ typedef struct sk_view {
 #define SKVIEW(p) ((SK_View *)(p))
 
 __BEGIN_DECLS
-extern const AG_WidgetOps skViewOps;
+extern const AG_WidgetClass skViewClass;
 
 SK_View	  *SK_ViewNew(void *, struct sk *, Uint);
 void	   SK_ViewZoom(SK_View *, SG_Real);

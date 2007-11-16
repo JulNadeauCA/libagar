@@ -159,7 +159,7 @@ extern Uint         sgElementsCnt;
 #endif
 
 __BEGIN_DECLS
-extern const AG_ObjectOps sgOps;
+extern const AG_ObjectClass sgClass;
 
 void	 SG_InitSubsystem(void);
 void	 SG_DestroySubsystem(void);

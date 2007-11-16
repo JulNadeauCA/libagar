@@ -74,7 +74,7 @@ main(int argc, char *argv[])
 	AG_WindowShow(DEV_Browser());
 
 	/* Create a generic object instance. */
-	obj = AG_ObjectNew(agWorld, "Foo", &agObjectOps);
+	obj = AG_ObjectNew(agWorld, "Foo", &agObjectClass);
 
 	/* Create one property of every type. */
 	AG_SetBool(obj, "my-boolean1", 0);

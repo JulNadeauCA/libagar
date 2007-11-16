@@ -31,7 +31,7 @@ typedef struct ag_ucombo {
 } AG_UCombo;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agUComboOps;
+extern const AG_WidgetClass agUComboClass;
 
 AG_UCombo *AG_UComboNew(void *, Uint);
 AG_UCombo *AG_UComboNewPolled(void *, Uint, AG_EventFn, const char *, ...);

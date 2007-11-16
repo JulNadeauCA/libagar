@@ -46,7 +46,7 @@ typedef struct ag_console {
 } AG_Console;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agConsoleOps;
+extern const AG_WidgetClass agConsoleClass;
 
 AG_Console     *AG_ConsoleNew(void *, Uint);
 void		AG_ConsoleSetPadding(AG_Console *, int);

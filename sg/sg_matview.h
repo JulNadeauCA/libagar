@@ -33,7 +33,7 @@ typedef struct sg_matview {
 } SG_Matview;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps sgMatviewOps;
+extern const AG_WidgetClass sgMatviewClass;
 
 SG_Matview *SG_MatviewNew(void *, SG_Matrix *, Uint);
 void	    SG_MatviewSizeHint(SG_Matview *, const char *, Uint, Uint);

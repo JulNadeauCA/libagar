@@ -45,7 +45,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-const AG_ObjectOps agObjectOps = {
+const AG_ObjectClass agObjectClass = {
 	"AG_Object",
 	sizeof(AG_Object),
 	{ 7, 1 },
@@ -73,16 +73,16 @@ int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
 int agObjectBackups = 1;	   /* Backup object save files. */
 
 void
-AG_ObjectInit(void *p, const void *opsp)
+AG_ObjectInit(void *p, const void *cls)
 {
 	AG_Object *ob = p;
-	const AG_ObjectOps **hier;
+	const AG_ObjectClass **hier;
 	int i, nHier;
 
 	ob->name[0] = '\0';
 	ob->save_pfx = "/world";
 	ob->archivePath = NULL;
-	ob->ops = (opsp != NULL) ? opsp : &agObjectOps;
+	ob->cls = (cls != NULL) ? cls : &agObjectClass;
 	ob->parent = NULL;
 	ob->flags = 0;
 	ob->nevents = 0;
@@ -107,21 +107,21 @@ AG_ObjectInit(void *p, const void *opsp)
 }
 
 void
-AG_ObjectInitStatic(void *p, const void *opsp)
+AG_ObjectInitStatic(void *p, const void *cls)
 {
-	AG_ObjectInit(p, opsp);
+	AG_ObjectInit(p, cls);
 	OBJECT(p)->flags |= AG_OBJECT_STATIC;
 }
 
 /* Create a new object instance and mark it resident. */
 void *
-AG_ObjectNew(void *parent, const char *name, const AG_ObjectOps *ops)
+AG_ObjectNew(void *parent, const char *name, const AG_ObjectClass *cls)
 {
 	char nameGen[AG_OBJECT_NAME_MAX];
 	AG_Object *obj;
 
 	if (name == NULL) {
-		AG_ObjectGenName(parent, ops, nameGen, sizeof(nameGen));
+		AG_ObjectGenName(parent, cls, nameGen, sizeof(nameGen));
 	} else {
 		if (parent != NULL &&
 		    AG_ObjectFindChild(parent, name) != NULL) {
@@ -131,8 +131,8 @@ AG_ObjectNew(void *parent, const char *name, const AG_ObjectOps *ops)
 		}
 	}
 	
-	obj = Malloc(ops->size);
-	AG_ObjectInit(obj, ops);
+	obj = Malloc(cls->size);
+	AG_ObjectInit(obj, cls);
 	AG_ObjectSetName(obj, "%s", (name != NULL) ? name : nameGen);
 
 	obj->flags |= AG_OBJECT_RESIDENT;
@@ -150,7 +150,7 @@ AG_ObjectIsClassGeneral(const AG_Object *obj, const char *cn)
 	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
 
 	strlcpy(cname, cn, sizeof(cname));
-	strlcpy(nname, obj->ops->type, sizeof(nname));
+	strlcpy(nname, obj->cls->name, sizeof(nname));
 	cp = cname;
 	np = nname;
 	while ((c = AG_Strsep(&cp, ":")) != NULL &&
@@ -184,7 +184,7 @@ AG_ObjectFreeDataset(void *p)
 {
 	AG_Object *ob = p;
 	int preserveDeps;
-	const AG_ObjectOps **hier;
+	const AG_ObjectClass **hier;
 	int i, nHier;
 
 	AG_MutexLock(&ob->lock);
@@ -344,7 +344,7 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	AG_LockLinkage();
 	
 	if (chld->flags & AG_OBJECT_NAME_ONATTACH) {
-		AG_ObjectGenName(parent, chld->ops,
+		AG_ObjectGenName(parent, chld->cls,
 		    chld->name, sizeof(chld->name));
 	}
 	TAILQ_INSERT_TAIL(&parent->children, chld, cobjs);
@@ -630,23 +630,23 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
  * hierarchy of an object.
  */
 int
-AG_ObjectGetInheritHier(void *obj, const AG_ObjectOps ***ops, int *nOps)
+AG_ObjectGetInheritHier(void *obj, const AG_ObjectClass ***hier, int *nHier)
 {
 	char cname[AG_OBJECT_TYPE_MAX], *c;
-	const AG_ObjectOps *cl;
+	const AG_ObjectClass *cl;
 	int i, stop = 0;
 
-	if (AGOBJECT(obj)->ops->type[0] == '\0') {
-		(*nOps) = 0;
+	if (AGOBJECT(obj)->cls->name[0] == '\0') {
+		(*nHier) = 0;
 		return (0);
 	}
-	(*nOps) = 1;
-	strlcpy(cname, AGOBJECT(obj)->ops->type, sizeof(cname));
+	(*nHier) = 1;
+	strlcpy(cname, AGOBJECT(obj)->cls->name, sizeof(cname));
 	for (c = &cname[0]; *c != '\0'; c++) {
 		if (*c == ':')
-			(*nOps)++;
+			(*nHier)++;
 	}
-	*ops = Malloc((*nOps)*sizeof(AG_ObjectOps *));
+	*hier = Malloc((*nHier)*sizeof(AG_ObjectClass *));
 	i = 0;
 	for (c = &cname[0];; c++) {
 		if (*c != ':' && *c != '\0') {
@@ -658,11 +658,11 @@ AG_ObjectGetInheritHier(void *obj, const AG_ObjectOps ***ops, int *nOps)
 			*c = '\0';
 		}
 		if ((cl = AG_FindClass(cname)) == NULL) {
-			Free(*ops);
+			Free(*hier);
 			return (-1);
 		}
 		*c = ':';
-		(*ops)[i++] = cl;
+		(*hier)[i++] = cl;
 		
 		if (stop)
 			break;
@@ -678,7 +678,7 @@ void
 AG_ObjectDestroy(void *p)
 {
 	AG_Object *ob = p;
-	const AG_ObjectOps **hier;
+	const AG_ObjectClass **hier;
 	int i, nHier;
 
 #ifdef DEBUG
@@ -740,14 +740,14 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 		strlcat(path, AG_PATHSEP, path_len);
 		strlcat(path, ob->name, path_len);
 		strlcat(path, ".", path_len);
-		strlcat(path, ob->ops->type, path_len);
+		strlcat(path, ob->cls->name, path_len);
 
 		if (AG_FileExists(path))
 			return (0);
 	}
 	AG_SetError(_("The %s%s%c%s.%s file is not in load-path."),
 	    ob->save_pfx != NULL ? ob->save_pfx : "",
-	    obj_name, AG_PATHSEPC, ob->name, ob->ops->type);
+	    obj_name, AG_PATHSEPC, ob->name, ob->cls->name);
 	return (-1);
 }
 
@@ -958,7 +958,8 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		AG_SetError("%s: %s", path, AG_GetError());
 		goto fail_unlock;
 	}
-	if (AG_ReadVersion(ds, agObjectOps.type, &agObjectOps.ver, &ver) == -1)
+	if (AG_ReadVersion(ds, agObjectClass.name, &agObjectClass.ver, &ver)
+	    == -1)
 		goto fail;
 
 	/*
@@ -1020,7 +1021,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			 * XXX TODO Allow these cases to be handled by a
 			 * special callback function.
 			 */
-			if (strcmp(eob->ops->type, classID) != 0) {
+			if (strcmp(eob->cls->name, classID) != 0) {
 				fatal("existing object of different type");
 			}
 			if (!OBJECT_PERSISTENT(eob)) {
@@ -1030,7 +1031,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 				goto fail;
 			}
 		} else {
-			const AG_ObjectOps *cl;
+			const AG_ObjectClass *cl;
 
 			if ((cl = AG_FindClass(classID)) == NULL) {
 				AG_SetError("%s: %s", ob->name, AG_GetError());
@@ -1079,7 +1080,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	AG_DataSource *ds;
 	off_t dataOffs;
 	AG_Version version;
-	const AG_ObjectOps **hier;
+	const AG_ObjectClass **hier;
 	int i, nHier;
 	
 	if (!OBJECT_PERSISTENT(ob)) {
@@ -1112,7 +1113,8 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		*dataFound = 0;
 		return (-1);
 	}
-	if (AG_ReadVersion(ds, agObjectOps.type, &agObjectOps.ver, NULL) == -1)
+	if (AG_ReadVersion(ds, agObjectClass.name, &agObjectClass.ver, NULL)
+	    == -1)
 		goto fail;
 
 	/* Write dataset offset */
@@ -1122,7 +1124,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	if (OBJECT_RESIDENT(ob)) {
 		AG_ObjectFreeDataset(ob);
 	}
-	if (AG_ReadVersion(ds, ob->ops->type, &ob->ops->ver, &version) == -1) {
+	if (AG_ReadVersion(ds, ob->cls->name, &ob->cls->ver, &version) == -1) {
 		goto fail;
 	}
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
@@ -1198,7 +1200,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	AG_ObjectDep *dep;
 	int pagedTemporarily;
 	int dataFound;
-	const AG_ObjectOps **hier;
+	const AG_ObjectClass **hier;
 	int i, nHier;
 
 	AG_LockLinkage();
@@ -1260,7 +1262,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 			strlcat(path, AG_PATHSEP, sizeof(path));
 			strlcat(path, ob->name, sizeof(path));
 			strlcat(path, ".", sizeof(path));
-			strlcat(path, ob->ops->type, sizeof(path));
+			strlcat(path, ob->cls->name, sizeof(path));
 		}
 	}
 	debug(DEBUG_STATE, "%s: Saving to %s\n", ob->name, path);
@@ -1273,7 +1275,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	if ((ds = AG_OpenFile(path, "wb")) == NULL)
 		goto fail_reinit;
 
-	AG_WriteVersion(ds, agObjectOps.type, &agObjectOps.ver);
+	AG_WriteVersion(ds, agObjectClass.name, &agObjectClass.ver);
 
 	dataOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);					/* Data offs */
@@ -1305,14 +1307,14 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 			continue;
 		}
 		AG_WriteString(ds, child->name);
-		AG_WriteString(ds, child->ops->type);
+		AG_WriteString(ds, child->cls->name);
 		count++;
 	}
 	AG_WriteUint32At(ds, count, countOffs);
 
 	/* Save the dataset. */
 	AG_WriteUint32At(ds, AG_Tell(ds), dataOffs);
-	AG_WriteVersion(ds, ob->ops->type, &ob->ops->ver);
+	AG_WriteVersion(ds, ob->cls->name, &ob->cls->ver);
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = 0; i < nHier; i++) {
 			if (hier[i]->save == NULL)
@@ -1386,11 +1388,11 @@ AG_ObjectSetArchivePath(void *p, const char *path)
 	AG_MutexUnlock(&ob->lock);
 }
 
-/* Override an object's ops; thread unsafe. */
+/* Override an object's class; thread unsafe. */
 void
-AG_ObjectSetOps(void *p, const void *ops)
+AG_ObjectSetClass(void *p, const void *cls)
 {
-	OBJECT(p)->ops = ops;
+	OBJECT(p)->cls = cls;
 }
 
 /* Add a new dependency or increment the reference count on one. */
@@ -1594,12 +1596,12 @@ AG_ObjectDuplicate(void *p, const char *newName)
 {
 	char nameSave[AG_OBJECT_NAME_MAX];
 	AG_Object *ob = p;
-	const AG_ObjectOps *ops = ob->ops;
+	const AG_ObjectClass *cls = ob->cls;
 	AG_Object *dob;
 
-	dob = Malloc(ops->size);
+	dob = Malloc(cls->size);
 	AG_MutexLock(&ob->lock);
-	AG_ObjectInit(dob, ops);
+	AG_ObjectInit(dob, cls);
 	AG_ObjectSetName(dob, "%s", newName);
 	if (AG_ObjectPageIn(ob) == -1) {
 		goto fail;
@@ -1801,7 +1803,7 @@ changed:
 
 /* Generate an object name that is unique in the given parent object. */
 void
-AG_ObjectGenName(AG_Object *pobj, const AG_ObjectOps *ops, char *name,
+AG_ObjectGenName(AG_Object *pobj, const AG_ObjectClass *cls, char *name,
     size_t len)
 {
 	char tname[AG_OBJECT_TYPE_MAX];
@@ -1809,10 +1811,10 @@ AG_ObjectGenName(AG_Object *pobj, const AG_ObjectOps *ops, char *name,
 	AG_Object *ch;
 	char *s;
 	
-	if ((s = strrchr(ops->type, ':')) != NULL && s[1] != '\0') {
+	if ((s = strrchr(cls->name, ':')) != NULL && s[1] != '\0') {
 		strlcpy(tname, &s[1], sizeof(tname));
 	} else {
-		strlcpy(tname, ops->type, sizeof(tname));
+		strlcpy(tname, cls->name, sizeof(tname));
 	}
 	tname[0] = (char)toupper(tname[0]);
 tryname:

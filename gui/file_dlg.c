@@ -46,7 +46,7 @@ AG_FileDlgNew(void *parent, Uint flags)
 	AG_FileDlg *fd;
 
 	fd = Malloc(sizeof(AG_FileDlg));
-	AG_ObjectInit(fd, &agFileDlgOps);
+	AG_ObjectInit(fd, &agFileDlgClass);
 	fd->flags |= flags;
 	if (flags & AG_FILEDLG_HFILL) { AG_ExpandHoriz(fd); }
 	if (flags & AG_FILEDLG_VFILL) { AG_ExpandVert(fd); }
@@ -945,7 +945,7 @@ AG_FileOptionString(AG_FileType *ft, const char *key)
 	return (fo != NULL) ? fo->data.s : "";
 }
 
-const AG_WidgetOps agFileDlgOps = {
+const AG_WidgetClass agFileDlgClass = {
 	{
 		"AG_Widget:AG_FileDlg",
 		sizeof(AG_FileDlg),

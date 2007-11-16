@@ -77,14 +77,14 @@ SG_InitSubsystem(void)
 	SG_VectorInitEngine();
 	SG_MatrixInitEngine();
 
-	AG_RegisterClass(&sgViewOps);
-	AG_RegisterClass(&sgMatviewOps);
+	AG_RegisterClass(&sgViewClass);
+	AG_RegisterClass(&sgMatviewClass);
 
-	AG_RegisterClass(&sgOps);
-	AG_RegisterClass(&sgMaterialOps);
-	AG_RegisterClass(&sgProgramOps);
+	AG_RegisterClass(&sgClass);
+	AG_RegisterClass(&sgMaterialClass);
+	AG_RegisterClass(&sgProgramClass);
 #ifdef HAVE_CG
-	AG_RegisterClass(&sgCgProgramOps);
+	AG_RegisterClass(&sgCgProgramClass);
 #endif
 
 	SG_RegisterClass(&sgDummyOps);
@@ -117,7 +117,7 @@ SG_New(void *parent, const char *name)
 		AG_FatalError("SG is not initialized, use SG_InitSubsystem()");
 
 	sg = Malloc(sizeof(SG));
-	AG_ObjectInit(sg, &sgOps);
+	AG_ObjectInit(sg, &sgClass);
 	AG_ObjectSetName(sg, "%s", name);
 	AG_ObjectAttach(parent, sg);
 	return (sg);
@@ -520,7 +520,7 @@ SG_RenderNode(SG *sg, SG_Node *node, SG_View *view)
 	SG_LoadMatrixGL(&Tsave);
 }
 
-const AG_ObjectOps sgOps = {
+const AG_ObjectClass sgClass = {
 	"SG",
 	sizeof(SG),
 	{ 1,0 },

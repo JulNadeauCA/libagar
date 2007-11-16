@@ -70,7 +70,7 @@ static void
 CreateObject(AG_Event *event)
 {
 	char name[AG_OBJECT_NAME_MAX];
-	AG_ObjectOps *cl = AG_PTR(1);
+	AG_ObjectClass *cl = AG_PTR(1);
 	AG_Textbox *name_tb = AG_PTR(2);
 	AG_Tlist *tlObjs = AG_PTR(3);
 	AG_Window *dlg_win = AG_PTR(4);
@@ -233,7 +233,7 @@ DEV_BrowserOpenData(void *p)
 		return;
 	}
 	
-	if (ob->ops->edit == NULL)
+	if (ob->cls->edit == NULL)
 		return;
 
 	if (OBJECT_PERSISTENT(ob) &&
@@ -260,7 +260,7 @@ DEV_BrowserOpenData(void *p)
 		}
 		AG_PostEvent(NULL, ob, "edit-post-load", NULL);
 	}
-	if ((win = ob->ops->edit(ob)) == NULL) {
+	if ((win = ob->cls->edit(ob)) == NULL) {
 		goto fail;
 	}
 	AG_PostEvent(NULL, ob, "edit-open", NULL);
@@ -355,14 +355,14 @@ DEV_BrowserSaveTo(void *p, const char *name)
 
 	ext[0] = '*';
 	ext[1] = '.';
-	strlcpy(&ext[2], ob->ops->type, sizeof(ext)-2);
+	strlcpy(&ext[2], ob->cls->name, sizeof(ext)-2);
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
 	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_SAVE| AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, ExportObject, "%p,%p", ob, win);
-	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->ops->type);
+	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
 	AG_WindowShow(win);
 }
 
@@ -376,14 +376,14 @@ DEV_BrowserLoadFrom(void *p, const char *name)
 
 	ext[0] = '*';
 	ext[1] = '.';
-	strlcpy(&ext[2], ob->ops->type, sizeof(ext)-2);
+	strlcpy(&ext[2], ob->cls->name, sizeof(ext)-2);
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
 	fd = AG_FileDlgNewMRU(win, "dev.mru.object-import",
 	    AG_FILEDLG_CLOSEWIN|AG_FILEDLG_LOAD|AG_FILEDLG_EXPAND);
 	AG_FileDlgAddType(fd, name, ext, ImportObject, "%p,%p", ob, win);
-	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->ops->type);
+	AG_FileDlgSetFilename(fd, "%s.%s", ob->name, ob->cls->name);
 	AG_WindowShow(win);
 }
 
@@ -402,7 +402,7 @@ ObjectOp(AG_Event *event)
 
 		switch (op) {
 		case OBJEDIT_EDIT_DATA:
-			if (ob->ops->edit != NULL) {
+			if (ob->cls->edit != NULL) {
 				DEV_BrowserOpenData(ob);
 			} else {
 				AG_TextTmsg(AG_MSG_ERROR, 750,
@@ -461,7 +461,7 @@ ObjectOp(AG_Event *event)
 					    ob->name);
 					break;
 				}
-				AG_ObjectGenName(ob->parent, ob->ops, dupName,
+				AG_ObjectGenName(ob->parent, ob->cls, dupName,
 				    sizeof(dupName));
 				if ((dob = AG_ObjectDuplicate(ob, dupName))
 				    == NULL) {
@@ -705,7 +705,7 @@ static void
 CreateObjectDlg(AG_Event *event)
 {
 	AG_Window *win;
-	AG_ObjectOps *cl = AG_PTR(1);
+	AG_ObjectClass *cl = AG_PTR(1);
 	AG_Window *pwin = AG_PTR(2);
 	AG_Tlist *tlParents;
 	AG_Box *bo;
@@ -713,12 +713,12 @@ CreateObjectDlg(AG_Event *event)
 	AG_Checkbox *cb;
 
 	win = AG_WindowNew(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE);
-	AG_WindowSetCaption(win, _("New %s object"), cl->type);
+	AG_WindowSetCaption(win, _("New %s object"), cl->name);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		AG_LabelNewStatic(bo, 0, _("Type: %s"), cl->type);
+		AG_LabelNewStatic(bo, 0, _("Type: %s"), cl->name);
 		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL, _("Name: "));
 		AG_WidgetFocus(tb);
 	}
@@ -915,10 +915,10 @@ DEV_Browser(void)
 		mi_objs = AG_MenuAction(mi, _("New object"), NULL,
 		    NULL, NULL);
 		for (i = 0; i < agClassCount; i++) {
-			if (strncmp(agClassTbl[i]->type, "AG_", 3) == 0) {
+			if (strncmp(agClassTbl[i]->name, "AG_", 3) == 0) {
 				continue;
 			}
-			strlcpy(label, agClassTbl[i]->type, sizeof(label));
+			strlcpy(label, agClassTbl[i]->name, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
 			AG_MenuAction(mi_objs, label, NULL,
 			    CreateObjectDlg, "%p,%p", agClassTbl[i], win);
@@ -1118,7 +1118,7 @@ DEV_PostLoadDataCallback(AG_Event *event)
 			AG_ViewDetach(oent->win);
 
 			AG_PostEvent(NULL, oent->obj, "edit-open", NULL);
-			oent->win = obj->ops->edit(obj);
+			oent->win = obj->cls->edit(obj);
 			AG_WindowShow(oent->win);
 			AG_SetEvent(oent->win, "window-close",
 			    SaveChangesDlg, "%p", oent);

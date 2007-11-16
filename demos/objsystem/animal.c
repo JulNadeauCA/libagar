@@ -20,7 +20,7 @@ AnimalNew(void *parent, const char *name)
 	Animal *animal;
 
 	animal = AG_Malloc(sizeof(Animal));
-	AG_ObjectInit(animal, &AnimalOps);	/* Will invoke Init() */
+	AG_ObjectInit(animal, &AnimalClass);	/* Will invoke Init() */
 	AG_ObjectAttach(parent, animal);
 	return (animal);
 }
@@ -136,11 +136,11 @@ Edit(void *obj)
 
 /*
  * This structure describes our class. Note that it is possible for classes
- * to inherit from AG_ObjectOps.
+ * to inherit from AG_ObjectClass.
  *
  * Any of the function members may be NULL.
  */
-const AG_ObjectOps AnimalOps = {
+const AG_ObjectClass AnimalClass = {
 	"Animal",		/* Name of class */
 	sizeof(Animal),		/* Size of structure */
 	{ 0,0 },		/* Dataset version */

@@ -38,7 +38,7 @@ AG_IconNew(void)
 	AG_Icon *icon;
 
 	icon = Malloc(sizeof(AG_Icon));
-	AG_ObjectInit(icon, &agIconOps);
+	AG_ObjectInit(icon, &agIconClass);
 	return (icon);
 }
 
@@ -48,7 +48,7 @@ AG_IconFromSurface(SDL_Surface *su)
 	AG_Icon *icon;
 
 	icon = Malloc(sizeof(AG_Icon));
-	AG_ObjectInit(icon, &agIconOps);
+	AG_ObjectInit(icon, &agIconClass);
 	AG_IconSetSurface(icon, su);
 	return (icon);
 }
@@ -64,7 +64,7 @@ AG_IconFromBMP(const char *bmpfile)
 		return (NULL);
 	}
 	icon = Malloc(sizeof(AG_Icon));
-	AG_ObjectInit(icon, &agIconOps);
+	AG_ObjectInit(icon, &agIconClass);
 	AG_IconSetSurfaceNODUP(icon, bmp);
 	return (icon);
 }
@@ -133,7 +133,7 @@ AG_IconSetSurfaceNODUP(AG_Icon *icon, SDL_Surface *su)
 	}
 }
 
-const AG_WidgetOps agIconOps = {
+const AG_WidgetClass agIconClass = {
 	{
 		"AG_Widget:AG_Icon",
 		sizeof(AG_Icon),

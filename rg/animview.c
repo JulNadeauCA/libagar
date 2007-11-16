@@ -34,7 +34,7 @@ RG_AnimviewNew(void *parent)
 	RG_Animview *av;
 
 	av = Malloc(sizeof(RG_Animview));
-	AG_ObjectInit(av, &rgAnimviewOps);
+	AG_ObjectInit(av, &rgAnimviewClass);
 	AG_ObjectAttach(parent, av);
 	return (av);
 }
@@ -282,7 +282,7 @@ RG_AnimviewSetAnimation(RG_Animview *av, RG_Anim *anim)
 	av->ranim.h = anim->h;
 }
 
-const AG_WidgetOps rgAnimviewOps = {
+const AG_WidgetClass rgAnimviewClass = {
 	{
 		"AG_Widget:RG_Animview",
 		sizeof(RG_Animview),

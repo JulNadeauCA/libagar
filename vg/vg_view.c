@@ -51,7 +51,7 @@ VG_ViewNew(void *parent, VG *vg, Uint flags)
 	VG_View *vv;
 
 	vv = Malloc(sizeof(VG_View));
-	AG_ObjectInit(vv, &vgViewOps);
+	AG_ObjectInit(vv, &vgViewClass);
 	vv->flags |= flags;
 	vv->vg = vg;
 	
@@ -426,7 +426,7 @@ VG_ViewSetDefaultTool(VG_View *vv, VG_Tool *tool)
 	vv->deftool = tool;
 }
 
-const AG_WidgetOps vgViewOps = {
+const AG_WidgetClass vgViewClass = {
 	{
 		"AG_Widget:VG_View",
 		sizeof(VG_View),

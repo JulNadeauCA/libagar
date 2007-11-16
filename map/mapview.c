@@ -67,7 +67,7 @@ MAP_ViewNew(void *parent, MAP *m, Uint flags, struct ag_toolbar *toolbar,
 	MAP_View *mv;
 
 	mv = Malloc(sizeof(MAP_View));
-	AG_ObjectInit(mv, &mapViewOps);
+	AG_ObjectInit(mv, &mapViewClass);
 	mv->flags |= flags;
 	mv->map = m;
 	mv->toolbar = toolbar;
@@ -1459,7 +1459,7 @@ MAP_ViewStatus(MAP_View *mv, const char *fmt, ...)
 	    AG_TextRender(status));
 }
 
-const AG_WidgetOps mapViewOps = {
+const AG_WidgetClass mapViewClass = {
 	{
 		"AG_Widget:MAP_View",
 		sizeof(MAP_View),

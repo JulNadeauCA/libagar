@@ -110,9 +110,9 @@ SK_NodeOfClass(void *pNode, const char *cname)
 void
 SK_InitSubsystem(void)
 {
-	AG_RegisterClass(&skViewOps);
+	AG_RegisterClass(&skViewClass);
+	AG_RegisterClass(&skClass);
 
-	AG_RegisterClass(&skOps);
 	SK_RegisterClass(&skDummyOps);
 	SK_RegisterClass(&skPointOps);
 	SK_RegisterClass(&skLineOps);
@@ -134,7 +134,7 @@ SK_New(void *parent, const char *name)
 		AG_FatalError("SK is not initialized, use SK_InitSubsystem()");
 
 	sk = Malloc(sizeof(SK));
-	AG_ObjectInit(sk, &skOps);
+	AG_ObjectInit(sk, &skClass);
 	AG_ObjectSetName(sk, "%s", name);
 	AG_ObjectAttach(parent, sk);
 	return (sk);
@@ -1422,7 +1422,7 @@ SK_SetStatus(SK *sk, SK_Status status, const char *fmt, ...)
 	va_end(ap);
 }
 
-const AG_ObjectOps skOps = {
+const AG_ObjectClass skClass = {
 	"SK",
 	sizeof(SK),
 	{ 0,0 },

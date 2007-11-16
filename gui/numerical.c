@@ -41,7 +41,7 @@ AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *label)
 	AG_Numerical *num;
 
 	num = Malloc(sizeof(AG_Numerical));
-	AG_ObjectInit(num, &agNumericalOps);
+	AG_ObjectInit(num, &agNumericalClass);
 
 	if (flags & AG_NUMERICAL_HFILL) { AG_ExpandHoriz(num); }
 	if (flags & AG_NUMERICAL_VFILL) { AG_ExpandVert(num); }
@@ -846,7 +846,7 @@ AG_NumericalGetUint64(AG_Numerical *num)
 }
 #endif /* HAVE_64BIT */
 
-const AG_WidgetOps agNumericalOps = {
+const AG_WidgetClass agNumericalClass = {
 	{
 		"AG_Widget:AG_Numerical",
 		sizeof(AG_Numerical),

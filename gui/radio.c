@@ -35,7 +35,7 @@ AG_RadioNew(void *parent, Uint flags, const char **itemText)
 	AG_Radio *rad;
 
 	rad = Malloc(sizeof(AG_Radio));
-	AG_ObjectInit(rad, &agRadioOps);
+	AG_ObjectInit(rad, &agRadioClass);
 	rad->flags |= flags;
 
 	if (flags & AG_RADIO_HFILL) { AG_ExpandHoriz(rad); }
@@ -303,7 +303,7 @@ Init(void *obj)
 	AG_SetEvent(rad, "window-mousemotion", MouseMotion, NULL);
 }
 
-const AG_WidgetOps agRadioOps = {
+const AG_WidgetClass agRadioClass = {
 	{
 		"AG_Widget:AG_Radio",
 		sizeof(AG_Radio),

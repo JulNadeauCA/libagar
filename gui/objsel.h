@@ -25,7 +25,7 @@ typedef struct ag_object_selector {
 } AG_ObjectSelector;
 
 __BEGIN_DECLS
-extern const AG_WidgetOps agObjectSelectorOps;
+extern const AG_WidgetClass agObjectSelectorClass;
 
 AG_ObjectSelector *AG_ObjectSelectorNew(void *, int, void *, void *,
 		                        const char *, ...)

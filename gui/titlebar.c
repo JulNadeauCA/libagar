@@ -78,7 +78,7 @@ AG_TitlebarNew(void *parent, Uint flags)
 	AG_Titlebar *tbar;
 
 	tbar = Malloc(sizeof(AG_Titlebar));
-	AG_ObjectInit(tbar, &agTitlebarOps);
+	AG_ObjectInit(tbar, &agTitlebarClass);
 	tbar->flags |= flags;
 	
 	if ((flags & AG_TITLEBAR_NO_MAXIMIZE) == 0)
@@ -193,7 +193,7 @@ AG_TitlebarSetCaption(AG_Titlebar *tbar, const char *caption)
 	AG_LabelText(tbar->label, (caption == NULL) ? "" : caption);
 }
 
-const AG_WidgetOps agTitlebarOps = {
+const AG_WidgetClass agTitlebarClass = {
 	{
 		"AG_Widget:AG_Box:AG_Titlebar",
 		sizeof(AG_Titlebar),

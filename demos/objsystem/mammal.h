@@ -10,7 +10,7 @@ typedef struct mammal {
 } Mammal;
 
 __BEGIN_DECLS
-extern const AG_ObjectOps MammalOps;
+extern const AG_ObjectClass MammalClass;
 __END_DECLS
 
 #include "close_code.h"

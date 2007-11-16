@@ -100,12 +100,12 @@ AG_InitCore(const char *progname, Uint flags)
 	}
 
 	AG_InitClassTbl();
-	AG_RegisterClass(&agConfigOps);
+	AG_RegisterClass(&agConfigClass);
 
 	agConfig = Malloc(sizeof(AG_Config));
 	AG_ConfigInit(agConfig);
 
-	agWorld = AG_ObjectNew(NULL, "world", &agObjectOps);
+	agWorld = AG_ObjectNew(NULL, "world", &agObjectClass);
 	AG_ObjectRemain(agWorld, AG_OBJECT_REMAIN_DATA);
 	
 	AG_ObjectLoad(agConfig);

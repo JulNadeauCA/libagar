@@ -75,7 +75,7 @@ PE_DetachObject(PE *pe, SG_Object *so)
 		PE_OPS(pe)->detachObject(pe, so);
 }
 
-const AG_ObjectOps peOps = {
+const AG_ObjectClass peClass = {
 	"PE",
 	sizeof(PE),
 	{ 0,0 },

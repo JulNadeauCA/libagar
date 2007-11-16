@@ -37,7 +37,7 @@ AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 	AG_Pixmap *px;
 
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_ObjectInit(px, &agPixmapOps);
+	AG_ObjectInit(px, &agPixmapClass);
 	px->flags |= flags;
 	px->flags |= AG_PIXMAP_FORCE_SIZE;
 	px->pre_w = w;
@@ -59,7 +59,7 @@ AG_PixmapFromSurface(void *parent, Uint flags, SDL_Surface *su)
 	AG_Pixmap *px;
 
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_ObjectInit(px, &agPixmapOps);
+	AG_ObjectInit(px, &agPixmapClass);
 	px->flags |= flags;
 
 	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
@@ -76,7 +76,7 @@ AG_PixmapFromSurfaceCopy(void *parent, Uint flags, SDL_Surface *su)
 	AG_Pixmap *px;
 
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_ObjectInit(px, &agPixmapOps);
+	AG_ObjectInit(px, &agPixmapClass);
 	px->flags |= flags;
 
 	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
@@ -95,7 +95,7 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, SDL_Surface *su,
 	SDL_Surface *su2 = NULL;
 
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_ObjectInit(px, &agPixmapOps);
+	AG_ObjectInit(px, &agPixmapClass);
 	px->flags |= flags;
 
 	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
@@ -118,7 +118,7 @@ AG_PixmapFromBMP(void *parent, Uint flags, const char *bmpfile)
 		return (NULL);
 	}
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_ObjectInit(px, &agPixmapOps);
+	AG_ObjectInit(px, &agPixmapClass);
 	px->flags |= flags;
 
 	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
@@ -145,13 +145,13 @@ AG_PixmapFromXCF(void *parent, Uint flags, const char *path)
 	}
 
 	/* XXX hack */
-	AG_ObjectInit(&tmpObj, &agObjectOps);
+	AG_ObjectInit(&tmpObj, &agObjectClass);
 	tmpObj.gfx = AG_GfxNew(&tmpObj);
 	if (AG_XCFLoad(ds, 0, tmpObj.gfx) == -1)
 		goto fail;
 	
 	px = Malloc(sizeof(AG_Pixmap));
-	AG_ObjectInit(px, &agPixmapOps);
+	AG_ObjectInit(px, &agPixmapClass);
 	px->flags |= flags;
 	AG_ObjectAttach(parent, px);
 	for (i = 0; i < tmpObj.gfx->nsprites; i++) {
@@ -252,7 +252,7 @@ Draw(void *p)
 		AG_WidgetBlitSurface(px, px->n, px->s, px->t);
 }
 
-const AG_WidgetOps agPixmapOps = {
+const AG_WidgetClass agPixmapClass = {
 	{
 		"AG_Widget:AG_Pixmap",
 		sizeof(AG_Pixmap),

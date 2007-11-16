@@ -40,7 +40,7 @@ SG_ViewNew(void *parent, SG *sg, Uint flags)
 	SG_View *sv;
 
 	sv = Malloc(sizeof(SG_View));
-	AG_ObjectInit(sv, &sgViewOps);
+	AG_ObjectInit(sv, &sgViewClass);
 	sv->flags |= flags;
 	sv->sg = sg;
 
@@ -636,7 +636,7 @@ SG_ViewMotionFn(SG_View *sv, AG_EventFn fn, const char *fmt, ...)
 {
 }
 
-const AG_WidgetOps sgViewOps = {
+const AG_WidgetClass sgViewClass = {
 	{
 		"AG_Widget:AG_GLView:SG_View",
 		sizeof(SG_View),
