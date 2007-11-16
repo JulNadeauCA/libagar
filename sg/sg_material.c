@@ -97,19 +97,14 @@ Init(void *obj)
 }
 
 static int
-Load(void *obj, AG_DataSource *buf)
+Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 {
-	if (AG_ReadVersion(buf, sgMaterialOps.type, &sgMaterialOps.ver, NULL)
-	    != 0)
-		return (-1);
-
 	return (0);
 }
 
 static int
 Save(void *obj, AG_DataSource *buf)
 {
-	AG_WriteVersion(buf, sgMaterialOps.type, &sgMaterialOps.ver);
 	return (0);
 }
 

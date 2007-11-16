@@ -44,13 +44,10 @@ Init(void *obj)
 }
 
 static int
-Load(void *obj, AG_DataSource *buf)
+Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 {
 	SG_Program *prog = obj;
 
-	if (AG_ReadObjectVersion(buf, prog, NULL) != 0) {
-		return (-1);
-	}
 	prog->flags = (Uint)AG_ReadUint32(buf);
 	return (0);
 }
@@ -60,7 +57,6 @@ Save(void *obj, AG_DataSource *buf)
 {
 	SG_Program *prog = obj;
 
-	AG_WriteObjectVersion(buf, prog);
 	AG_WriteUint32(buf, (Uint32)prog->flags);
 	return (0);
 }

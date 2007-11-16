@@ -212,16 +212,12 @@ Destroy(void *obj)
 }
 
 static int
-Load(void *obj, AG_DataSource *buf)
+Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 {
 	RG_Tileset *ts = obj;
 	RG_Pixmap *px;
 	Uint32 count, i;
 
-	if (AG_ReadVersion(buf, rgTilesetOps.type, &rgTilesetOps.ver, NULL)
-	    != 0)
-		return (-1);
-	
 	AG_MutexLock(&ts->lock);
 	AG_CopyString(ts->tmpl, buf, sizeof(ts->tmpl));
 	ts->flags = AG_ReadUint32(buf);
@@ -429,7 +425,6 @@ Save(void *obj, AG_DataSource *buf)
 	RG_Feature *ft;
 	RG_Texture *tex;
 
-	AG_WriteVersion(buf, rgTilesetOps.type, &rgTilesetOps.ver);
 	AG_MutexLock(&ts->lock);
 	AG_WriteString(buf, ts->tmpl);
 	AG_WriteUint32(buf, ts->flags);

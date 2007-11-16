@@ -1112,16 +1112,13 @@ MAP_DetachActor(MAP *m, MAP_Actor *a)
 }
 
 static int
-Load(void *ob, AG_DataSource *buf)
+Load(void *ob, AG_DataSource *buf, const AG_Version *ver)
 {
 	MAP *m = ob;
 	Uint32 w, h, origin_x, origin_y;
 	int i, x, y;
 	MAP_Actor *a;
 	
-	if (AG_ReadVersion(buf, mapOps.type, &mapOps.ver, NULL) != 0)
-		return (-1);
-
 	AG_MutexLock(&m->lock);
 	m->flags = (Uint)AG_ReadUint32(buf) & AG_MAP_SAVED_FLAGS;
 	w = AG_ReadUint32(buf);
@@ -1311,8 +1308,6 @@ Save(void *p, AG_DataSource *buf)
 {
 	MAP *m = p;
 	int i, x, y;
-	
-	AG_WriteVersion(buf, mapOps.type, &mapOps.ver);
 	
 	AG_MutexLock(&m->lock);
 

@@ -63,15 +63,12 @@ Destroy(void *obj)
 }
 
 static int
-Load(void *obj, AG_DataSource *buf)
+Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 {
 	MAP_Actor *a = obj;
 #if 0
 	MAP *m;
 #endif
-	if (AG_ReadVersion(buf, mapActorOps.type, &mapActorOps.ver, NULL) != 0)
-		return (-1);
-
 	AG_MutexLock(&a->lock);
 #if 0
 	if (a->parent != NULL) {
@@ -125,8 +122,6 @@ static int
 Save(void *obj, AG_DataSource *buf)
 {
 	MAP_Actor *a = obj;
-
-	AG_WriteVersion(buf, mapActorOps.type, &mapActorOps.ver);
 
 	AG_MutexLock(&a->lock);
 	AG_WriteUint32(buf, (Uint32)a->type);

@@ -333,7 +333,6 @@ Save(void *obj, AG_DataSource *buf)
 	Uint32 count;
 	off_t offs;
 	
-	AG_WriteObjectVersion(buf, sk);
 	AG_MutexLock(&sk->lock);
 	
 	AG_WriteUint32(buf, sk->flags);
@@ -450,16 +449,13 @@ SK_LoadNodeGeneric(SK *sk, SK_Node **rnode, AG_DataSource *buf)
 }
 
 static int
-Load(void *obj, AG_DataSource *buf)
+Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 {
 	char unitKey[AG_UNIT_KEY_MAX];
 	SK *sk = obj;
 	Uint32 i, count;
 	SK_Constraint *ct;
 	
-	if (AG_ReadObjectVersion(buf, sk, NULL) == -1)
-		return (-1);
-
 	AG_MutexLock(&sk->lock);
 	sk->flags = (Uint)AG_ReadUint32(buf);
 	AG_CopyString(unitKey, buf, sizeof(unitKey));

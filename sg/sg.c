@@ -233,7 +233,6 @@ Save(void *obj, AG_DataSource *buf)
 	SG *sg = obj;
 	int rv = 0;
 	
-	AG_WriteVersion(buf, "SG", &sgOps.ver);
 	AG_MutexLock(&sg->lock);
 	AG_WriteUint32(buf, sg->flags);
 	rv = SG_NodeSave(sg, sg->root, buf);
@@ -280,14 +279,11 @@ SG_NodeSave(SG *sg, SG_Node *node, AG_DataSource *buf)
 }
 
 static int
-Load(void *obj, AG_DataSource *buf)
+Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 {
 	SG *sg = obj;
 	int rv;
 	
-	if (AG_ReadVersion(buf, "SG", &sgOps.ver, NULL) == -1)
-		return (-1);
-
 	AG_MutexLock(&sg->lock);
 	sg->flags = (Uint)AG_ReadUint32(buf);
 	rv = SG_NodeLoad(sg, &sg->root, buf);
