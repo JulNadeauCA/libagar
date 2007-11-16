@@ -229,8 +229,8 @@ Destroy(void *obj)
  * The object system will automatically invoke the load routines of
  * the parent beforehand.
  */
-int
-Load(void *obj, AG_DataSource *ds)
+static int
+Load(void *obj, AG_DataSource *ds, const AG_Version *ver)
 {
 	return (0);
 }
@@ -242,7 +242,7 @@ Load(void *obj, AG_DataSource *ds)
  * The object system will automatically invoke the save routines of
  * the parent beforehand.
  */
-int
+static int
 Save(void *obj, AG_DataSource *ds)
 {
 	return (0);
