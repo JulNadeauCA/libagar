@@ -105,6 +105,7 @@ CreateWindow(void)
 	 * (using the AG_Tlist(3) widget).
 	 */
 	com = AG_ComboNew(div1, AG_COMBO_HFILL, "Combo: ");
+	AG_ComboSizeHint(com, "Item #00 ", 10);
 
 	/* UCombo is a variant of Combo which looks like a single button. */
 	ucom = AG_UComboNew(div1, AG_UCOMBO_HFILL);
