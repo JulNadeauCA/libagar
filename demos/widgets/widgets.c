@@ -170,16 +170,6 @@ CreateWindow(void)
 
 		nb = AG_NotebookNew(div2, AG_NOTEBOOK_EXPAND);
 
-		ntab = AG_NotebookAddTab(nb, "Color", AG_BOX_VERT);
-		{
-			/*
-			 * HSVPal is an HSV color picker widget which can
-			 * bind to RGB(A) or HSV(A) vectors (integral or real)
-			 * or 32-bit pixel values (of a given format).
-			 */
-			AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-		}
-		
 		ntab = AG_NotebookAddTab(nb, "Table", AG_BOX_VERT);
 		{
 			/*
@@ -236,18 +226,31 @@ CreateWindow(void)
 		ntab = AG_NotebookAddTab(nb, "Tlist", AG_BOX_VERT);
 		{
 			AG_Tlist *tl;
+			AG_TlistItem *ti;
 
 			/*
 			 * The Tlist widget displays either lists or trees.
 			 * For flat, polled lists, it is more efficient to use
 			 * a Table with a single column, however.
 			 */
-			tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
-			AG_TlistAdd(tl, NULL, "Foo");
-			AG_TlistAdd(tl, NULL, "Bar");
-			AG_TlistAdd(tl, NULL, "Baz");
+			tl = AG_TlistNew(ntab, AG_TLIST_EXPAND|AG_TLIST_TREE);
+			ti = AG_TlistAdd(tl, NULL, "Foo");
+			ti->depth = 0;
+			ti = AG_TlistAdd(tl, NULL, "Bar");
+			ti->depth = 1;
+			ti = AG_TlistAdd(tl, NULL, "Baz");
+			ti->depth = 2;
 		}
 		
+		ntab = AG_NotebookAddTab(nb, "Color", AG_BOX_VERT);
+		{
+			/*
+			 * HSVPal is an HSV color picker widget which can
+			 * bind to RGB(A) or HSV(A) vectors (integral or real)
+			 * or 32-bit pixel values (of a given format).
+			 */
+			AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
+		}
 	}
 
 #if 0
