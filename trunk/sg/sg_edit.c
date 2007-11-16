@@ -36,7 +36,6 @@
 #include <gui/notebook.h>
 #include <gui/tlist.h>
 #include <gui/pane.h>
-#include <gui/mpane.h>
 #include <gui/file_dlg.h>
 #include <gui/table.h>
 #include <gui/box.h>
@@ -449,7 +448,6 @@ SG_Edit(void *p)
 		AG_NotebookTab *ntab;
 		AG_Tlist *tl;
 		AG_Pane *vp;
-		AG_MPane *mp;
 
 		vp = AG_PaneNew(hp->div[0], AG_PANE_VERT,
 		    AG_PANE_EXPAND|AG_PANE_DIV1FILL);
@@ -474,8 +472,7 @@ SG_Edit(void *p)
 			WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		}
 
-		mp = AG_MPaneNew(hp->div[1], AG_MPANE1, AG_MPANE_EXPAND);
-		AG_ObjectAttach(mp->panes[0], sv);
+		AG_ObjectAttach(hp->div[1], sv);
 		if ((sv->cam = SG_FindNode(sg, "Camera0")) == NULL) {
 			AG_TextMsg(AG_MSG_ERROR, "Cannot find Camera0!");
 		}
