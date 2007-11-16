@@ -1,7 +1,7 @@
 TOP=	../..
 include Makefile.config
 
-PROG=	objmgr
+PROG=	objsystem
 SRCS=	objmgr.c animal.c mammal.c
 
 CFLAGS+=${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS} -I.
