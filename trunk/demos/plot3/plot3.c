@@ -177,7 +177,7 @@ main(int argc, char *argv[])
 	AG_WindowShow(win);
 
 	/* Reposition the default camera. */
-	SG_Translate3(sv->cam, 10.0, 0.0, -100.0);
+	SG_Translate3(sv->cam, 10.0, 0.0, -20.0);
 	SG_Rotatevd(sv->cam, 180.0, VecI());
 
 	AG_EventLoop();
