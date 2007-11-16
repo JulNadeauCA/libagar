@@ -915,6 +915,9 @@ DEV_Browser(void)
 		mi_objs = AG_MenuAction(mi, _("New object"), NULL,
 		    NULL, NULL);
 		for (i = 0; i < agClassCount; i++) {
+			if (strncmp(agClassTbl[i]->type, "AG_", 3) == 0) {
+				continue;
+			}
 			strlcpy(label, agClassTbl[i]->type, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
 			AG_MenuAction(mi_objs, label, NULL,
