@@ -2,7 +2,7 @@ TOP=	..
 include ${TOP}/Makefile.config
 
 SUBDIR=	fixedres \
-	objmgr \
+	objsystem \
 	focusing \
 	loader \
 	table \
