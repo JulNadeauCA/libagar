@@ -231,10 +231,10 @@ MenuItemBackground(void *mv, AG_Rect r, int xIcon, void *iconObj,
 			    &c[0], &c[1], &c[2]);
 			c[3] = 64;
 			AG_DrawFrame(mv,
-			    AG_RECT(r.x, r.y+2, r.h, r.h-2), 1,
+			    AG_RECT(xIcon, r.y+2, r.h, r.h-2), 1,
 			    AG_COLOR(MENU_OPTION_COLOR));
 			AG_DrawRectBlended(mv,
-			    AG_RECT(r.x, r.y+2, r.h, r.h-2),
+			    AG_RECT(xIcon, r.y+2, r.h, r.h-2),
 			    c, AG_ALPHA_SRC);
 		}
 	}
