@@ -1,7 +1,8 @@
 /*	Public domain	*/
 /*
- * This application demonstrates the use of the Object Browser that
- * is part of the Agar-DEV library.
+ * This application demonstrates the basic functionality of the Agar
+ * object system. It uses the "Object Browser" which is part of the
+ * Agar-DEV library.
  */
 
 #include <agar/core.h>
@@ -10,6 +11,9 @@
 
 #include <string.h>
 #include <unistd.h>
+
+#include "animal.h"
+#include "mammal.h"
 
 int
 main(int argc, char *argv[])
@@ -78,7 +82,11 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
-	/* Reload the previous state. */
+	/* Register the Agar object classes which we implement. */
+	AG_RegisterClass(&AnimalOps);
+	AG_RegisterClass(&MammalOps);
+
+	/* Load the entire VFS */
 	AG_ObjectLoad(agWorld);
 
 	/* Initialize the DEV library and display the object browser. */
