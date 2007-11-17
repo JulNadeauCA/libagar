@@ -1,0 +1,309 @@
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 16, 2007
+.Dt AG_DATASOURCE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_DataSource
+.Nd agar data source access
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+structure provides a generic interface to different data sources.
+Built-in sources include
+.Ft AG_FileSource
+for file access,
+.Ft AG_CoreSource
+for memory access and
+.Ft AG_ConstCoreSource
+for constant memory access.
+.Pp
+.Sh INTERFACE
+.nr nS 1
+.Ft "AG_DataSource *"
+.Fn AG_OpenFile "const char *path" "const char *mode"
+.Pp
+.Ft "AG_DataSource *"
+.Fn AG_OpenFileHandle "FILE *f"
+.Pp
+.Ft "AG_DataSource *"
+.Fn AG_OpenCore "void *p" "size_t size"
+.Pp
+.Ft "AG_DataSource *"
+.Fn AG_OpenConstCore "const void *p" "size_t size"
+.Pp
+.Ft "void"
+.Fn AG_CloseFile "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_CloseFileHandle "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_CloseCore "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_CloseConstCore "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_CloseDataSource "AG_DataSource *ds"
+.Pp
+.Ft "AG_IOStatus"
+.Fn AG_Read "AG_DataSource *ds" "void *buf" "size_t size" "size_t nmemb"
+.Pp
+.Ft "AG_IOStatus"
+.Fn AG_ReadAt "AG_DataSource *ds" "void *buf" "size_t size" "size_t nmemb" "off_t pos"
+.Pp
+.Ft "AG_IOStatus"
+.Fn AG_Write "AG_DataSource *ds" "const void *buf" "size_t size" "size_t nmemb"
+.Pp
+.Ft "AG_IOStatus"
+.Fn AG_WriteAt "AG_DataSource *ds" "const void *buf" "size_t size" "size_t nmemb" "off_t pos"
+.Pp
+.Ft "off_t"
+.Fn AG_Tell "AG_DataSource *ds"
+.Pp
+.Ft "int"
+.Fn AG_Seek "AG_DataSource *ds" "off_t offs" "enum ag_seek_mode mode"
+.Pp
+.Ft "void"
+.Fn AG_LockDataSource "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_UnlockDataSource "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_SetByteOrder "AG_DataSource *ds" "enum ag_byte_order order"
+.Pp
+.Ft "void"
+.Fn AG_DataSourceInit "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_DataSourceDestroy "AG_DataSource *ds"
+.Pp
+.nr nS 0
+The
+.Fn AG_OpenFile
+function opens the file at
+.Fa path ,
+where
+.Fa mode
+is a
+.Xr fopen 3 
+style mode string.
+.Fn AG_OpenFileHandle
+creates a data source for a previously opened file.
+.Pp
+The
+.Fn AG_OpenCore
+and
+.Fn AG_OpenConstCore
+functions create data sources for the region of memory
+.Fa p
+of
+.Fa size
+bytes.
+.Pp
+.Fn AG_CloseFile ,
+.Fn AG_CloseFileHandle ,
+.Fn AG_CloseCore
+and
+.Fn AG_CloseConstCore
+close a data source of the given type.
+Alternatively,
+.Fn AG_CloseDataSource
+can be used to close any type of source.
+.Pp
+.Fn AG_Read
+reads
+.Fa nmemb
+items of
+.Fa size
+bytes from the data source into
+.Fa buf .
+The
+.Fn AG_ReadAt
+variant reads from the given position
+.Fa pos .
+.Pp
+.Fn AG_Write
+writes
+.Fa nmemb
+items of
+.Fa size
+bytes
+.Fa buf
+into the data source.
+The
+.Fn AG_WriteAt
+variant writes to the given position
+.Fa pos .
+.Pp
+.Fn AG_Tell
+returns the current position in the data source.
+If the underlying data source does not support this operation, a value
+of 0 is returned.
+.Pp
+.Fn AG_Seek
+seeks to the given position in the data source, where
+.Fa mode
+is one of:
+.Bd -literal
+	enum ag_seek_mode {
+		AG_SEEK_SET,	/* Relative to beginning */
+		AG_SEEK_CUR,	/* Relative to current position */
+		AG_SEEK_END	/* Relative to end */
+	};
+.Ed
+.Pp
+The
+.Fn AG_LockDataSource
+and
+.Fn AG_UnlockDataSource
+functions acquire and release the exclusive lock protecting this data
+source, and are no-ops if thread support is disabled.
+.Pp
+.Fn AG_SetByteOrder
+configures the byte order to be used by integer read/write operations.
+.Fa order
+may be one of:
+.Bd -literal
+	enum ag_byte_order {
+		AG_BIG_ENDIAN,
+		AG_LITTLE_ENDIAN
+	};
+.Ed
+.Pp
+The
+.Fn AG_DataSourceInit
+and
+.Fn AG_DataSourceDestroy
+functions are used when implementing new data source types.
+They are used internally by the
+.Fn AG_Open*
+and
+.Fn AG_Close*
+functions.
+.Sh IMPLEMENTING NEW SOURCES
+Implementing a new data source is simply a matter of inheriting from the
+.Va AG_DataSource
+structure and configuring a number of low-level I/O functions (any of which
+can be set to NULL if not applicable to the data source).
+.Pp
+Public members of the
+.Nm
+structure include:
+.Bd -literal
+typedef struct ag_data_source {
+	AG_Mutex lock;			/* Lock on all operations */
+	enum ag_byte_order byte_order;	/* Byte order of source */
+	size_t wrLast;			/* Last write count (bytes) */
+	size_t rdLast;			/* Last read count (bytes) */
+	size_t wrTotal;			/* Total write count (bytes) */
+	size_t rdTotal;			/* Total read count (bytes) */
+
+	AG_IOStatus (*read)(struct ag_data_source *, void *buf,
+	                    size_t size, size_t nmemb, size_t *rv);
+	AG_IOStatus (*read_at)(struct ag_data_source *, void *buf,
+	                       size_t size, size_t nmemb, off_t pos,
+	                       size_t *rv);
+	AG_IOStatus (*write)(struct ag_data_source *, const void *buf,
+	                     size_t size, size_t nmemb, size_t *rv);
+	AG_IOStatus (*write_at)(struct ag_data_source *, const void *buf,
+	                        size_t size, size_t nmemb, off_t pos,
+	                        size_t *rv);
+	off_t       (*tell)(struct ag_data_source *);
+	int         (*seek)(struct ag_data_source *, off_t offs,
+	                    enum ag_seek_mode mode);
+	void        (*close)(struct ag_data_source *);
+} AG_DataSource;
+.Ed
+.Pp
+The
+.Va byte_order
+setting affects integer read operations.
+.Pp
+The
+.Va wrLast ,
+.Va rdLast ,
+.Va wrTotal
+and
+.Va rdTotal
+fields keep count of the read/written bytes, and are automatically
+incremented by the generic
+.Nm
+calls.
+.Pp
+The
+.Va read
+operation reads 
+.Fa nmemb
+items of
+.Fa size
+bytes from the data source and into
+.Fa buf ,
+returning the total number of bytes read into
+.Fa rv .
+The
+.Va read_at
+variant reads data at a specified offset.
+.Pp
+The
+.Va write
+operation writes
+.Fa nmemb
+items of
+.Fa size
+bytes from
+.Fa buf
+to the data source, returning the total number of bytes written into
+.Fa rv .
+The
+.Va write_at
+variant writes the data at a specified offset.
+.Pp
+.Va tell
+returns the current offset.
+.Pp
+.Va seek
+moves to the specified offset and returns 0 on success and -1 on failure.
+.Pp
+.Va close
+closes the data source.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Version 3
+.Sh HISTORY
+A similar interface called
+.Sq AG_Netbuf
+first appeared in Agar 1.0.
+The current
+.Nm
+interface appeared in Agar 1.3.

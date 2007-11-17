@@ -16,7 +16,7 @@ SRCS=	config.c core.c error.c event.c object.c prop.c rcs.c \
 	file.c
 
 MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 AG_Timeout.3 \
-	AG_Config.3 AG_Version.3
+	AG_Config.3 AG_Version.3 AG_DataSource.3
 MAN5=	AG_DEN.5
 
 CFLAGS+=-I.. ${SDL_CFLAGS} ${PTHREADS_XOPEN_CFLAGS}
