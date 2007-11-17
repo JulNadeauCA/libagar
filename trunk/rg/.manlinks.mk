@@ -1,7 +1,5 @@
 MANLINKS+=RG_Tileview.3:RG_TileviewNew.3
 CATLINKS+=RG_Tileview.cat3:RG_TileviewNew.cat3
-MANLINKS+=RG_Tileview.3:RG_TileviewInit.3
-CATLINKS+=RG_Tileview.cat3:RG_TileviewInit.cat3
 MANLINKS+=RG_Tileview.3:RG_TileviewSetTile.3
 CATLINKS+=RG_Tileview.cat3:RG_TileviewSetTile.cat3
 MANLINKS+=RG_Tileview.3:RG_TileviewSetZoom.3
