@@ -49,7 +49,7 @@ AG_SeparatorNew(void *parent, enum ag_separator_type type)
 }
 
 AG_Separator *
-AG_SeparatorNewInv(void *parent, enum ag_separator_type type)
+AG_SpacerNew(void *parent, enum ag_separator_type type)
 {
 	AG_Separator *sep;
 
