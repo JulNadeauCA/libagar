@@ -365,7 +365,7 @@ DEV_DebugServerStart(void)
 		NS_RegCmd(&server, "world", cmd_world, NULL);
 		server_inited = 1;
 	}
-	if ((rv = AG_ThreadCreate(&listenTh, NULL, ServerLoop, NULL)) != 0) {
+	if ((rv = AG_ThreadCreate(&listenTh, ServerLoop, NULL)) != 0) {
 		AG_TextMsg(AG_MSG_ERROR, "AG_ThreadCreate: %s", strerror(rv));
 		return (-1);
 	}

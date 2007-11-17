@@ -68,7 +68,7 @@ extern pthread_mutexattr_t agRecursiveMutexAttr;
 
 #endif /* DEBUG */
 
-#define AG_ThreadCreate(t,a,f,arg) pthread_create((t),(a),(f),(arg))
+#define AG_ThreadCreate(t,f,arg) pthread_create((t),NULL,(f),(arg))
 #define AG_ThreadJoin(t,vp) pthread_join((t),(vp))
 #define AG_ThreadExit(p) pthread_exit(p)
 #define AG_MutexTrylock(m) pthread_mutex_trylock(m)
@@ -77,7 +77,6 @@ extern pthread_mutexattr_t agRecursiveMutexAttr;
 #define AG_ThreadKeyGet(k) pthread_getspecific(k)
 #define AG_ThreadKeySet(k,v) pthread_setspecific((k),(v))
 #define AG_ThreadSigMask(how,n,o) pthread_sigmask((how),(n),(o))
-#define AG_ThreadSigWait(set,sig) pthread_sigwait((set),(sig))
 #define AG_ThreadKill(thread,signo) pthread_kill((thread),(signo))
 
 #else /* !THREADS */
@@ -102,7 +101,7 @@ typedef int AG_Cond;
 #define AG_CondTimedWait(cd,m,t)
 #define AG_ThreadCancel(thread,valptr)
 
-#define AG_ThreadCreate(thread,attr,func,arg) fatal("no THREADS")
+#define AG_ThreadCreate(thread,func,arg) fatal("no THREADS")
 #define AG_ThreadJoin(thread,valptr) fatal("no THREADS")
 #define AG_ThreadExit(p)
 #define AG_MutexTrylock(m)
@@ -111,7 +110,6 @@ typedef int AG_Cond;
 #define AG_ThreadKeyGet(k)
 #define AG_ThreadKeySet(k,v)
 #define AG_ThreadSigMask(how,newmask,oldmask)
-#define AG_ThreadSigWait(set,sig)
 #define AG_ThreadKill(thread,signo)
 
 #undef HAVE_PTHREADS

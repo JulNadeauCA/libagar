@@ -256,7 +256,7 @@ out1:
 static void
 Connect(AG_Event *event)
 {
-	if (AG_ThreadCreate(&thread, NULL, XmitThread, NULL) != 0) {
+	if (AG_ThreadCreate(&thread, XmitThread, NULL) != 0) {
 		AG_TextMsg(AG_MSG_ERROR, "Failed to create thread!");
 	}
 }
