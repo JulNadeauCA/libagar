@@ -57,7 +57,7 @@ typedef struct rg_anim_frame {
 typedef struct rg_anim {
 	char name[RG_ANIMATION_NAME_MAX];	/* User identifier */
 	Uint32 main_id;				/* Default ID mapping */
-	int flags;
+	Uint flags;
 #define RG_ANIM_SRCALPHA	0x01
 #define RG_ANIM_SRCCOLORKEY	0x02
 #define RG_ANIM_DUPED_FLAGS	(RG_ANIM_SRCALPHA|RG_ANIM_SRCCOLORKEY)
@@ -90,7 +90,7 @@ typedef struct rg_anim_variant {
 #endif
 
 __BEGIN_DECLS
-void RG_AnimInit(RG_Anim *, struct rg_tileset *, const char *, int);
+void RG_AnimInit(RG_Anim *, struct rg_tileset *, const char *, Uint);
 void RG_AnimDestroy(RG_Anim *);
 int  RG_AnimLoad(RG_Anim *, AG_DataSource *);
 void RG_AnimSave(RG_Anim *, AG_DataSource *);
