@@ -32,6 +32,18 @@
 
 #include "actor.h"
 
+MAP_Actor *
+MAP_ActorNew(void *parent, const char *name)
+{
+	MAP_Actor *ma;
+
+	ma = Malloc(sizeof(MAP_Actor));
+	AG_ObjectInit(ma, &mapActorClass);
+	AG_ObjectSetName(ma, "%s", name);
+	AG_ObjectAttach(parent, ma);
+	return (ma);
+}
+
 static void
 Init(void *obj)
 {
@@ -191,7 +203,7 @@ MoveNodes(MAP_Actor *a, int xo, int yo)
 }
 
 void
-MAP_ActorMoveTiles(void *obj, int xo, int yo)
+MAP_ActorMoveTile(void *obj, int xo, int yo)
 {
 	MAP_Actor *a = obj;
 	MAP *m = a->parent;
@@ -260,12 +272,12 @@ MAP_ActorSetTile(void *obj, int x, int y, int l0, RG_Tileset *ts,
 {
 	MAP_Actor *a = obj;
 
-	MAP_ActorUnmapTiles(a);
-	return (MAP_ActorMapTiles(a, x, y, l0, ts, name));
+	MAP_ActorUnmapTile(a);
+	return (MAP_ActorMapTile(a, x, y, l0, ts, name));
 }
 
 int
-MAP_ActorMapTiles(void *obj, int X0, int Y0, int L0, RG_Tileset *ts,
+MAP_ActorMapTile(void *obj, int X0, int Y0, int L0, RG_Tileset *ts,
     const char *name)
 {
 	MAP_Actor *a = obj;
@@ -339,7 +351,7 @@ out:
 }
 
 void
-MAP_ActorUnmapTiles(void *obj)
+MAP_ActorUnmapTile(void *obj)
 {
 	MAP_Actor *a = obj;
 	MAP *m = a->parent;

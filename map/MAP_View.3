@@ -28,7 +28,7 @@
 .Dd August 20, 2002
 .Dt MAP_VIEW 3
 .Os
-.ds vT Agar API Reference
+.ds vT Agar-MAP API Reference
 .ds oS Agar 1.3
 .Sh NAME
 .Nm MAP_View
@@ -41,9 +41,9 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget renders part of a
+widget efficiently renders part of a
 .Xr MAP 3
-structure.
+structure and provides generic interfaces for edition tools.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft MAP_View *
@@ -292,11 +292,11 @@ widget generates the following events:
 The user double clicked over the given tile.
 .El
 .Sh SEE ALSO
-.Xr AG_Intro 3 ,
-.Xr AG_DataSource 3 ,
+.Xr MAP 3 ,
+.Xr MAP_Actor 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3 ,
-.Xr MAP 3
+.Xr AG_DataSource 3
 .Sh HISTORY
 The
 .Nm
