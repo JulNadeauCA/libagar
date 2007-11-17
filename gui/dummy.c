@@ -15,8 +15,9 @@
 #include "label.h"
 
 /*
- * This is a generic constructor function. It is customary of Agar FooNew()
- * functions to allocate, initialize and attach an instance of the class.
+ * This is a generic constructor function. It is completely optional, but
+ * customary of FooNew() functions to allocate, initialize and attach an
+ * instance of the class.
  */
 AG_Dummy *
 AG_DummyNew(void *parent, Uint flags, const char *caption)
@@ -101,7 +102,7 @@ Draw(void *p)
 	 * for more information on styles.
 	 */
 	AG_DrawBox(dum,
-	    AG_RECT(0, 0, WIDGET(dum)->w, WIDGET(dum)->h), 1,
+	    AG_RECT(0, 0, AGWIDGET(dum)->w, AGWIDGET(dum)->h), 1,
 	    AG_COLOR(BUTTON_COLOR));
 
 	/*
@@ -186,7 +187,7 @@ Init(void *obj)
 	AG_Dummy *dum = obj;
 
 	/* Allow this widget to grab focus. */
-	WIDGET(dum)->flags |= AG_WIDGET_FOCUSABLE;
+	AGWIDGET(dum)->flags |= AG_WIDGET_FOCUSABLE;
 
 	/* Initialize the parent widget structure. */
 	dum->flags = 0;
