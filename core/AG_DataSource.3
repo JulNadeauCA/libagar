@@ -298,7 +298,6 @@ moves to the specified offset and returns 0 on success and -1 on failure.
 .Va close
 closes the data source.
 .Sh INTEGER OPERATIONS
-.Pp
 The following functions read and write integer values using the byte order
 specified for the data source.
 .Pp
@@ -393,7 +392,6 @@ The 64-bit types are only available if
 .Dv HAVE_64BIT
 is defined.
 .Sh FLOATING POINT OPERATIONS
-.Pp
 The following routines read and write floating-point numbers in IEEE.754
 representation.
 .Pp
@@ -448,7 +446,6 @@ functions are available only if
 .Dv HAVE_LONG_DOUBLE
 is defined.
 .Sh STRING OPERATIONS
-.Pp
 The following functions read and write arbitrary strings, and are commonly
 used for text.
 The encoding of the strings is simply an unsigned 32-bit integer byte count,
