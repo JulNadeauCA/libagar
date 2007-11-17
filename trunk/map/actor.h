@@ -61,13 +61,12 @@ typedef struct map_actor {
 __BEGIN_DECLS
 extern const AG_ObjectClass mapActorClass;
 
-void	MAP_ActorInit(void *, const char *);
-void   *MAP_ActorEdit(void *);
-void	MAP_ActorUpdate(void *);
-int	MAP_ActorSetTile(void *, int, int, int, RG_Tileset *, const char *);
-int	MAP_ActorMapTiles(void *, int, int, int, RG_Tileset *, const char *);
-void	MAP_ActorUnmapTiles(void *);
-void	MAP_ActorMoveTiles(void *, int, int);
+MAP_Actor *MAP_ActorNew(void *, const char *);
+void	   MAP_ActorUpdate(void *);
+int	   MAP_ActorSetTile(void *, int, int, int, RG_Tileset *, const char *);
+int	   MAP_ActorMapTile(void *, int, int, int, RG_Tileset *, const char *);
+void	   MAP_ActorUnmapTile(void *);
+void	   MAP_ActorMoveTile(void *, int, int);
 __END_DECLS
 
 #include "close_code.h"
