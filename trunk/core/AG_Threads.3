@@ -1,0 +1,221 @@
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 16, 2007
+.Dt AG_THREADS 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_Threads
+.Nd agar threads interface
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+If compiled with thread support, Agar provides a generic, portable interface
+to some underlying threads API (e.g., POSIX threads).
+.Sh MUTEXES
+.Pp
+Mutexes (MUTual EXclusion devices) are commonly used to protect shared
+data structure against concurrent modifications.
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn AG_MutexInit "AG_Mutex *mutex"
+.Pp
+.Ft "void"
+.Fn AG_MutexInitRecursive "AG_Mutex *mutex"
+.Pp
+.Ft "void"
+.Fn AG_MutexDestroy "AG_Mutex *mutex"
+.Pp
+.Ft "void"
+.Fn AG_MutexLock "AG_Mutex *mutex"
+.Pp
+.Ft "int"
+.Fn AG_MutexTrylock "AG_Mutex *mutex"
+.Pp
+.Ft "void"
+.Fn AG_MutexUnlock "AG_Mutex *mutex"
+.Pp
+.nr nS 0
+The
+.Fn AG_MutexInit
+function initializes a mutex structure.
+The
+.Fn AG_MutexInitRecursive
+variant initializes a mutex which allows multiple
+.Fn AG_MutexLock
+using a reference count.
+.Pp
+.Fn AG_MutexDestroy
+frees all resources allocated for a mutex.
+.Pp
+.Fn AG_MutexLock
+and
+.Fn AG_MutexUnlock
+respectively acquire and release a mutex.
+.Pp
+.Fn AG_MutexTrylock
+tries to acquire a mutex without blocking and immediately returns 0 on success
+and -1 on failure.
+.Pp
+All of these functions except
+.Fn AG_MutexTrylock
+will raise a fatal condition if an error is encountered.
+.Sh CONDITION VARIABLES
+.nr nS 1
+.Ft "void"
+.Fn AG_CondInit "AG_Cond *cv"
+.Pp
+.Ft "void"
+.Fn AG_CondDestroy "AG_Cond *cv"
+.Pp
+.Ft "void"
+.Fn AG_CondBroadcast "AG_Cond *cv"
+.Pp
+.Ft "void"
+.Fn AG_CondSignal "AG_Cond *cv"
+.Pp
+.Ft "void"
+.Fn AG_CondWait "AG_Cond *cv" "AG_Mutex *m"
+.Pp
+.Ft "void"
+.Fn AG_CondTimedWait "AG_Cond *cv" "AG_Mutex *m" "const struct timespec *t"
+.Pp
+.nr nS 0
+.Fn AG_CondInit
+initializes a condition variable structure.
+.Fn AG_CondDestroy
+releases resources allocated for a condition variable.
+.Pp
+.Fn AG_CondBroadcast
+unblock all threads which are currently blocked waiting on
+.Fa cv .
+.Fn AG_CondSignal
+unblocks at least one thread currently blocked waiting on
+.Fa cv .
+.Pp
+.Fn AG_CondWait
+blocks the calling thread until
+.Fa cv
+is signaled.
+The
+.Fn AG_CondTimedWait
+variant will not block for more than the specified amount of time.
+.Pp
+All of these functions will raise a fatal condition if an error is encountered.
+.Sh THREADS
+.nr nS 1
+.Ft int
+.Fn AG_ThreadCreate "AG_Thread *th" "void (*fn)(void *arg)" "void *arg"
+.Pp
+.Ft void
+.Fn AG_ThreadCancel "AG_Thread th"
+.Pp
+.Ft int
+.Fn AG_ThreadJoin "AG_Thread th" "void **exitVal"
+.Pp
+.Ft void
+.Fn AG_ThreadExit "void *exitVal"
+.Pp
+.Ft int
+.Fn AG_ThreadKill "AG_Thread th" "int signal"
+.Pp
+.nr nS 0
+.Fn AG_ThreadCreate
+creates a new thread executing
+.Fa fn .
+The optional argument
+.Fa arg
+is passed to
+.Fa fn .
+On success,
+.Fn AG_ThreadCreate
+initializes the
+.Fa th
+structure and returns 0.
+.Pp
+.Fn AG_ThreadCancel
+requests that the specified thread be cancelled.
+If the given thread is invalid, a fatal error is raised.
+.Pp
+.Fn AG_ThreadJoin
+suspends the execution of the current thread until 
+.Fa th
+terminates.
+When it does, the value passed to 
+.Fn AG_ThreadExit
+is made available in
+.Fa exitVal
+and
+.Fn AG_ThreadJoin
+returns 0.
+.Pp
+.Fn AG_ThreadExit
+terminates the current thread.
+.Fa exitVal
+is an optional user pointer.
+.Pp
+.Fn AG_ThreadKill
+sends a signal to the specified thread.
+.Pp
+.Sh THREAD-SPECIFIC VARIABLES
+.nr nS 1
+.Ft int
+.Fn AG_ThreadKeyCreate "AG_ThreadKey *key"
+.Pp
+.Ft void
+.Fn AG_ThreadKeyDelete "AG_ThreadKey key"
+.Pp
+.Ft "void *"
+.Fn AG_ThreadKeyGet "AG_ThreadKey key"
+.Pp
+.Ft "void *"
+.Fn AG_ThreadKeySet "AG_ThreadKey key" "const void *value"
+.Pp
+.nr nS 0
+.Fn AG_ThreadKeyCreate
+initializes a thread-specific value described by the
+.Fa key
+structure.
+.Fn AG_ThreadKeyDelete
+releases resources allocated for a key.
+.Pp
+.Fn AG_ThreadKeyGet
+returns the thread-specific value associated with
+.Fa key .
+.Pp
+.Fn AG_ThreadKeySet
+sets a thread-specific value with
+.Fa key .
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Object 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.0
