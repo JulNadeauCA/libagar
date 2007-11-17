@@ -152,7 +152,6 @@ echo "    --enable-debug                 Include debugging code [no]"
 echo "    --with-gl                      OpenGL rendering support [default: check]"
 echo "    --with-jpeg                    JPEG screenshot support [default: no]"
 echo "    --with-freetype                GUI: Enable FreeType support [default: check]"
-echo "    --with-ode                     SG: ODE physics interface [default: check]"
 echo "    --with-cg                      SG: CG shader support [default: check]"
 echo "    --with-sse                     SSE/SSE2/SSE3 optimizations [default: check]"
 echo "    --with-sse-inline              Inline SSE operations [default: no]"
@@ -2956,101 +2955,6 @@ echo "#undef HAVE_JPEG" > config/have_jpeg.h
 	fi
 else
 echo "#undef HAVE_JPEG" > config/have_jpeg.h
-fi
-if [ "${with_ode}" != "no" ]
- then
-echo -n "checking for ODE (http://www.ode.org/)..."
-echo -n "checking for ODE (http://www.ode.org/)..." >> config.log
-ODE_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/ode-config" ]; then
-		ODE_VERSION=`${path}/ode-config --version`
-	fi
-done
-ODE_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/ode-config" ]; then
-		ODE_CFLAGS=`${path}/ode-config --cflags`
-	fi
-done
-ODE_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/ode-config" ]; then
-		ODE_LIBS=`${path}/ode-config --libs`
-	fi
-done
-if [ "${ODE_VERSION}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
-echo -n "checking whether ODE works..."
-echo -n "checking whether ODE works..." >> config.log
-cat << EOT > conftest.c
-#include <ode/ode.h>
-
-int main(int argc, char *argv[]) {
-	dWorldID world;
-	dJointGroupID jgroup;
-
-	world = dWorldCreate();
-	jgroup = dJointGroupCreate(10000);
-	dWorldSetGravity(world, 0, 0, -0.5);
-
-	dJointGroupDestroy(jgroup);
-	dWorldDestroy(world);
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o $testdir/conftest conftest.c ${ODE_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${ODE_CFLAGS} -o $testdir/conftest conftest.c ${ODE_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-compile="ok"
-HAVE_ODE="yes"
-echo "HAVE_ODE=$HAVE_ODE" >> Makefile.config
-echo "#ifndef HAVE_ODE" > config/have_ode.h
-echo "#define HAVE_ODE \"$HAVE_ODE\"" >> config/have_ode.h
-echo "#endif" >> config/have_ode.h
-else
-echo "no"
-echo "no" >> config.log
-compile="failed"
-HAVE_ODE="no"
-echo "HAVE_ODE=$HAVE_ODE" >> Makefile.config
-echo "#undef HAVE_ODE" > config/have_ode.h
-fi;
-rm -f $testdir/conftest conftest.c
-if [ "${HAVE_ODE}" != "no" ]; then
-echo "ODE_CFLAGS=$ODE_CFLAGS" >> Makefile.config
-echo "ODE_LIBS=$ODE_LIBS" >> Makefile.config
-echo "#ifndef ODE_CFLAGS" > config/ode_cflags.h
-echo "#define ODE_CFLAGS \"$ODE_CFLAGS\"" >> config/ode_cflags.h
-echo "#endif" >> config/ode_cflags.h
-echo "#ifndef ODE_LIBS" > config/ode_libs.h
-echo "#define ODE_LIBS \"$ODE_LIBS\"" >> config/ode_libs.h
-echo "#endif" >> config/ode_libs.h
-fi;
-else
-echo "no"
-echo "no" >> config.log
-echo "#undef HAVE_ODE" > config/have_ode.h
-fi;
-	if [ "${HAVE_ODE}" != "yes" ]
- then
-		if [ "${with_ode}" = "yes" ]
- then
-			echo "*"
-			echo "* --with-ode was requested, but ODE was not"
-			echo "* found on this system."
-			echo "*"
-			exit 1
-		else
-echo "#undef HAVE_ODE" > config/have_ode.h
-		fi
-	fi
-else
-echo "#undef HAVE_ODE" > config/have_ode.h
 fi
 if [ "${with_cg}" != "no" ]
  then
