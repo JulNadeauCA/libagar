@@ -53,7 +53,7 @@ static const char *insnNames[] = {
 };
 
 void
-RG_AnimInit(RG_Anim *ani, RG_Tileset *ts, const char *name, int flags)
+RG_AnimInit(RG_Anim *ani, RG_Tileset *ts, const char *name, Uint flags)
 {
 	strlcpy(ani->name, name, sizeof(ani->name));
 	ani->main_id = 0;
