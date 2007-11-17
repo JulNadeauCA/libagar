@@ -1,0 +1,173 @@
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 16, 2007
+.Dt AG_ERROR 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_Error
+.Nd agar error handling
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+This manual page describes the error handling system which is used by
+all Agar libraries, and available to applications as well.
+.Sh ERROR RETURNS
+.nr nS 1
+.Ft "const char *"
+.Fn AG_GetError "void"
+.Pp
+.Ft void
+.Fn AG_SetError "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_FatalError "const char *fmt" "..."
+.Pp
+.nr nS 0
+The
+.Fn AG_GetError
+function returns the error message string last set by
+.Fn AG_SetError .
+.Pp
+the
+.Fn AG_SetError
+function sets the error message string using a
+.Xr printf 3
+like format string.
+.Pp
+If Agar was compiled with thread support, both
+.Fn AG_SetError
+and
+.Fn AG_GetError
+use thread-specific data keys to achieve thread safety.
+.Pp
+The
+.Fn AG_FatalError
+function outputs the given error message to the user and causes abnormal
+termination of the program.
+.Sh DEBUG ROUTINES
+.nr nS 1
+.Ft void
+.Fn AG_Verbose "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_DebugPrintf "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_Debug "int mask" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_DebugN "int mask" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_DebugObj "AG_Object *obj" "const char *fmt" "..."
+.Pp
+.nr nS 0
+These functions output a string to the debugging console used by the
+application (usually
+.Xr stdio 3 ) .
+.Pp
+.Fn AG_Verbose
+outputs a string if the global
+.Va agVerbose
+variable is set.
+.Pp
+.Fn AG_DebugPrintf
+outputs a string if debugging was enabled at compile time, and the
+global
+.Va agDebugLvl
+is greater than zero.
+.Pp
+.Fn AG_Debug
+outputs a string and a newline if debugging was enabled and
+.Va agDebugLvl
+contains the bits described by
+.Fa mask .
+The
+.Fn AG_DebugN
+variant does not output a newline.
+.Pp
+.Fn AG_DebugObj
+outputs a string if the given object
+.Fa obj
+has the
+.Dv AG_OBJECT_DEBUG
+flag set.
+The name of the object is prefixed to the string.
+.Sh ERROR WRAPPERS
+.nr nS 1
+.Ft "void *"
+.Fn AG_Malloc "size_t len"
+.Pp
+.Ft "void *"
+.Fn AG_Realloc "void *p" "size_t len"
+.Pp
+.Ft void
+.Fn AG_Free "void *p"
+.Pp
+.Ft "char *"
+.Fn AG_Strdup "const char *s"
+.Pp
+.nr nS 0
+The
+.Ft AG_Malloc
+function calls
+.Xr malloc 3
+and raises a fatal error if the memory cannot be allocated.
+It is a good practice to use this wrapper only when allocating structures
+and other fixed-size items.
+.Pp
+.Ft AG_Realloc
+calls
+.Xr realloc 3
+and raises a fatal error if the memory cannot be allocated.
+If
+.Fa p
+is NULL, it calls
+.Xr malloc 3
+instead.
+.Pp
+.Ft AG_Free
+calls
+.Xr free 3 .
+If
+.Fa p
+is NULL, it is a no-op.
+.Pp
+.Fn AG_Strdup
+duplicates a string
+.Fa s
+and raises a fatal error if memory cannot be allocated for the duplicate.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Object 3 ,
+.Xr AG_Threads 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.0
