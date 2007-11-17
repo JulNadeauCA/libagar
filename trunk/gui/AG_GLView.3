@@ -40,10 +40,11 @@ The
 .Nm
 widget provides a low-level OpenGL context.
 .Pp
-If high-level scene rendering capabilities are required, see
-.Xr SG 3
-and
-.Xr SG_View 3 .
+If needed, the Agar-SG library can provide higher-level scene rendering
+capabilities (see
+.Xr SG_View 3 ,
+which inherits from
+.Nm ) .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -148,7 +149,7 @@ The
 .Nm
 widget reacts to the following events:
 .Pp
-.Bl -tag -compact -width 25n
+.Bl -tag -compact -width "widget-moved "
 .It widget-moved
 Projection matrix is recomputed and the
 .Va scale

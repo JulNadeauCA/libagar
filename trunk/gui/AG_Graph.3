@@ -38,7 +38,7 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget displays a graph (as in graph theory).
+widget displays a graph.
 A graph is composed of vertices
 (or
 .Sq nodes )
@@ -49,9 +49,10 @@ Labels and colors can be associated with edges or vertices.
 .Pp
 The
 .Nm
-widget will try to position the vertices in the view in order to minimize
-the number of edges crossing each other.
-The user can also move vertices manually.
+widget will attempt to position the vertices in the view in order to minimize
+the number of edges crossing each other, but this is a NP-complete problem.
+The user can also move vertices manually, or they can be placed
+programmatically.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -63,6 +64,7 @@ The user can also move vertices manually.
 .Pp
 .Ft "void"
 .Fn AG_GraphSizeHint "AG_Graph *graph" "Uint width" "Uint height"
+.Pp
 .nr nS 0
 The
 .Fn AG_GraphNew
