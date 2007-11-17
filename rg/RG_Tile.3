@@ -42,6 +42,13 @@ The
 structure describes a graphical surface generated from a set of instructions
 or
 .Sq elements .
+.Pp
+Note: Unless you need to generate or manipulate tiles programmatically, you
+do not need to use this interface.
+Libraries such as
+.Xr MAP 3
+use this interface to display graphics.
+.Pp
 The following types of elements are implemented:
 .Bl -tag -width "RG_TILE_PIXMAP "
 .It RG_TILE_PIXMAP
@@ -121,7 +128,7 @@ The
 .Fn RG_TileNew
 function allocates, initializes, and attaches a new
 .Nm
-tile of
+of
 .Fa width
 by
 .Fa height
