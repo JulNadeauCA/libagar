@@ -297,6 +297,220 @@ moves to the specified offset and returns 0 on success and -1 on failure.
 .Pp
 .Va close
 closes the data source.
+.Sh INTEGER OPERATIONS
+.Pp
+The following functions read and write integer values using the byte order
+specified for the data source.
+.Pp
+.nr nS 1
+.Ft Uint8
+.Fn AG_ReadUint8 "AG_DataSource *ds"
+.Pp
+.Ft Sint8
+.Fn AG_ReadSint8 "AG_DataSource *ds"
+.Pp
+.Ft Uint16
+.Fn AG_ReadUint16 "AG_DataSource *ds"
+.Pp
+.Ft Sint16
+.Fn AG_ReadSint16 "AG_DataSource *ds"
+.Pp
+.Ft Uint32
+.Fn AG_ReadUint32 "AG_DataSource *ds"
+.Pp
+.Ft Sint32
+.Fn AG_ReadSint32 "AG_DataSource *ds"
+.Pp
+.Ft Uint64
+.Fn AG_ReadUint64 "AG_DataSource *ds"
+.Pp
+.Ft Sint64
+.Fn AG_ReadSint64 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn AG_WriteUint8 "AG_DataSource *ds" "Uint8 value"
+.Pp
+.Ft void
+.Fn AG_WriteSint8 "AG_DataSource *ds" "Sint8 value"
+.Pp
+.Ft void
+.Fn AG_WriteUint16 "AG_DataSource *ds" "Uint16 value"
+.Pp
+.Ft void
+.Fn AG_WriteSint16 "AG_DataSource *ds" "Sint16 value"
+.Pp
+.Ft void
+.Fn AG_WriteUint32 "AG_DataSource *ds" "Uint32 value"
+.Pp
+.Ft void
+.Fn AG_WriteSint32 "AG_DataSource *ds" "Sint32 value"
+.Pp
+.Ft void
+.Fn AG_WriteUint64 "AG_DataSource *ds" "Uint64 value"
+.Pp
+.Ft void
+.Fn AG_WriteSint64 "AG_DataSource *ds" "Sint64 value"
+.Pp
+.Ft void
+.Fn AG_WriteUint8At "AG_DataSource *ds" "Uint8 value" "off_t offs"
+.Pp
+.Ft void
+.Fn AG_WriteSint8At "AG_DataSource *ds" "Sint8 value" "off_t offs"
+.Pp
+.Ft void
+.Fn AG_WriteUint16At "AG_DataSource *ds" "Uint16 value" "off_t offs"
+.Pp
+.Ft void
+.Fn AG_WriteSint16At "AG_DataSource *ds" "Sint16 value" "off_t offs"
+.Pp
+.Ft void
+.Fn AG_WriteUint32At "AG_DataSource *ds" "Uint32 value" "off_t offs"
+.Pp
+.Ft void
+.Fn AG_WriteSint32At "AG_DataSource *ds" "Sint32 value" "off_t offs"
+.Pp
+.Ft void
+.Fn AG_WriteUint64At "AG_DataSource *ds" "Uint64 value" "off_t offs"
+.Pp
+.Ft void
+.Fn AG_WriteSint64At "AG_DataSource *ds" "Sint64 value" "off_t offs"
+.Pp
+.nr nS 0
+.Pp
+The
+.Fn AG_Read[SU]intN
+functions read and return an integer value of N bits from the data source.
+.Pp
+The
+.Fn AG_Write[SU]intN
+functions write an integer value of N bits to the data source.
+The
+.Fn AG_Write[SU]intNAt
+variants write the integer at a specified position.
+.Pp
+If any of these functions encounter an I/O error, a fatal error is raised.
+The 64-bit types are only available if
+.Dv HAVE_64BIT
+is defined.
+.Sh FLOATING POINT OPERATIONS
+.Pp
+The following routines read and write floating-point numbers in IEEE.754
+representation.
+.Pp
+.nr nS 1
+.Ft "float"
+.Fn AG_ReadFloat "AG_DataSource *ds"
+.Pp
+.Ft "double"
+.Fn AG_ReadDouble "AG_DataSource *ds"
+.Pp
+.Ft "long double"
+.Fn AG_ReadLongDouble "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_WriteFloat "AG_DataSource *ds" "float f"
+.Pp
+.Ft "void"
+.Fn AG_WriteFloatAt "AG_DataSource *ds" "float f" "off_t pos"
+.Pp
+.Ft "void"
+.Fn AG_WriteDouble "AG_DataSource *ds" "double f"
+.Pp
+.Ft "void"
+.Fn AG_WriteDoubleAt "AG_DataSource *ds" "double f" "off_t pos"
+.Pp
+.Ft "void"
+.Fn AG_WriteLongDouble "AG_DataSource *ds" "long double f"
+.Pp
+.Ft "void"
+.Fn AG_WriteLongDoubleAt "AG_DataSource *ds" "long double f" "off_t pos"
+.Pp
+.nr nS 0
+.Fn AG_ReadFloat ,
+.Fn AG_ReadDouble
+and
+.Fn AG_ReadLongDouble
+read a floating-point value from the data source.
+.Pp
+.Fn AG_WriteFloat ,
+.Fn AG_WriteDouble
+and
+.Fn AG_WriteLongDouble
+write a floating-point value to the data source.
+The
+.Fn AG_Write*At
+variants write the value at a given position.
+.Pp
+If any of these functions encounter an I/O error, a fatal error is raised.
+The
+.Fa "long double"
+functions are available only if
+.Dv HAVE_LONG_DOUBLE
+is defined.
+.Sh STRING OPERATIONS
+.Pp
+The following functions read and write arbitrary strings, and are commonly
+used for text.
+The encoding of the strings is simply an unsigned 32-bit integer byte count,
+followed by the string.
+The encoding may or may not include a terminating NUL.
+.Pp
+.nr nS 1
+.Ft "char *"
+.Fn AG_ReadStringLen "AG_DataSource *ds" "size_t maxsize"
+.Pp
+.Ft "char *"
+.Fn AG_ReadString "AG_DataSource *ds"
+.Pp
+.Ft "char *"
+.Fn AG_ReadNulStringLen "AG_DataSource *ds" "size_t maxsize"
+.Pp
+.Ft "char *"
+.Fn AG_ReadNulString "AG_DataSource *ds"
+.Pp
+.Ft size_t
+.Fn AG_CopyString "char *buf" "AG_DataSource *ds" "size buf_size"
+.Pp
+.Ft size_t
+.Fn AG_CopyNulString "char *buf" "AG_DataSource *ds" "size buf_size"
+.Pp
+.Ft void
+.Fn AG_WriteString "AG_DataSource *ds" "const char *s"
+.Pp
+.nr nS 0
+.Pp
+The
+.Fn AG_ReadStringLen
+function reads a string of up to
+.Fa maxsize
+bytes and returns a dynamically allocated, NUL-terminated copy of the string.
+.Fn AG_ReadString
+implicitely limits the string to
+.Dv AG_LOAD_STRING_MAX
+bytes.
+.Pp
+.Fn AG_CopyString
+copies the string directly into a fixed-size buffer
+.Fa buf
+of
+.Fa buf_size
+bytes and NUL-terminates it.
+.Fn AG_CopyString
+returns the number of bytes that would have been copied were
+.Fa buf_size
+unlimited.
+.Pp
+The
+.Fn AG_ReadNulString ,
+.Fn AG_ReadNulStringLen
+and
+.Fn AG_CopyNulString
+variants handle the case where the encoding of the string is NUL-terminated.
+.Pp
+The
+.Fn AG_WriteString
+function writes a string to a data source, where the encoding is not
+NUL-terminated.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Version 3
