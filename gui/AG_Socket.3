@@ -1,0 +1,201 @@
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 17, 2007
+.Dt AG_SOCKET 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_Socket
+.Nd agar socket widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget is a place holder for one or more drag-and-droppable
+.Xr AG_Icon 3
+widgets (or subclasses of it).
+.Nm
+also provides a boolean
+.Sq state
+binding and a numerical
+.Sq count
+binding.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_Socket *"
+.Fn AG_SocketNew "AG_Widget *parent" "Uint flags"
+.Pp
+.Ft "AG_Socket *"
+.Fn AG_SocketFromSurface "AG_Widget *parent" "Uint flags" "SDL_Surface *surface"
+.Pp
+.Ft "AG_Socket *"
+.Fn AG_SocketFromBMP "AG_Widget *parent" "Uint flags" "const char *file"
+.Pp
+.Ft void
+.Fn AG_SocketInsertFn "AG_Socket *socket" "int (*fn)(AG_Socket *, AG_Icon *)"
+.Pp
+.Ft void
+.Fn AG_SocketRemoveFn "AG_Socket *socket" "void (*fn)(AG_Socket *, AG_Icon *)"
+.Pp
+.Ft void
+.Fn AG_SocketSetPadding "AG_Socket *socket" "int left" "int right" "int top" "int bottom"
+.Pp
+.Ft void
+.Fn AG_SocketBgRect "AG_Socket *socket" "Uint width" "Uint height"
+.Pp
+.Ft void
+.Fn AG_SocketBgCircle "AG_Socket *socket" "Uint radius"
+.Pp
+.Ft void
+.Fn AG_SocketBgPixmap "AG_Socket *socket" "SDL_Surface *s"
+.Pp
+.Ft void
+.Fn AG_SocketBgPixmapNODUP "AG_Socket *socket" "SDL_Surface *s"
+.Pp
+.nr nS 0
+The
+.Fn AG_SocketNew
+function allocates, initializes, and attaches a new
+.Nm
+widget.
+The
+.Fn AG_SocketFromSurface
+and
+.Fn AG_SocketFromBMP
+variants also set a background image for the socket, typically used to show
+the type of icons that can be drag-and-dropped onto the socket.
+The
+.Fa flags
+may include:
+.Pp
+.Bl -tag -width "AG_SOCKET_STICKY_STATE "
+.It AG_SOCKET_STICKY_STATE
+Mouse click should toggle the boolean state.
+.El
+.Pp
+The
+.Fn AG_SocketInsertFn
+function configures a callback routine
+.Fn fn
+that will be invoked whenever the user tries to drop an icon onto the
+socket.
+A pointer to the socket and the icon being dropped will be passed to that
+function.
+Typically, this routine will use
+.Fn AG_SocketInsertIcon
+to assign the icon to the socket.
+If
+.Fn fn
+returns 1, the drag-and-drop item will be destroyed.
+.Pp
+The
+.Fn AG_SocketRemoveFn
+function registers a callback routine that will be invoked before an icon
+is removed from a socket.
+.Pp
+The
+.Fn AG_SocketSetPadding
+function sets the padding around the socket's icon area in pixels.
+.Pp
+.Fn AG_SocketBgRect
+configures the socket to use a rectangular shape of the given
+dimensions in pixels.
+.Pp
+.Fn AG_SocketBgCircle
+arranges for the socket to use a circular shape of the given radius in pixels.
+.Pp
+.Fn AG_SocketBgPixmap
+uses the given surface as background image.
+The
+.Fn AG_SocketBgPixmapNODUP
+variant prevents the surface from being copied.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebuttondown "
+.It window-mousemotion
+Toggle the
+.Dv AG_SOCKET_MOUSEOVER
+flag and raise the
+.Sq socket-mouseoverlap
+event whenever the cursor moves in and out of the socket area.
+If the cursor moves out of the area (and
+.Dv AG_SOCKET_STICKY_STATE
+is not set), the boolean state reverts to 0.
+.It window-mousebuttondown
+Set the boolean state of the socket to 1.
+If the socket contains an icon, start the drag-and-drop process.
+.It window-mousebuttonup
+Set the boolean state of the socket back to 0, unless the
+.Dv AG_SOCKET_STICKY_STATE
+flag is set.
+.El
+.Pp
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn socket-mouseoverlap "int state"
+Cursor has moved inside or outside socket area.
+.It Fn socket-click "int state"
+User has clicked on the socket area.
+.El
+.Sh BINDINGS
+The
+.Nm
+widget provides the following bindings.
+.Pp
+.Bl -tag -compact -width "BOOL *state "
+.It Va BOOL *state
+A generic boolean state associated with the socket.
+.It Va INT *count
+A generic "count" associated with the socket.
+Typically used when the socket contains a stack of items.
+.Sh EXAMPLES
+See
+.Pa demos/sockets
+in the Agar source distribution.
+.Sh SEE ALSO
+.Xr AG_Button 3 ,
+.Xr AG_Pixmap 3 ,
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.
