@@ -282,7 +282,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			evNew->argv[evNew->argc].p = sndr;
 			evNew->argt[evNew->argc] = AG_EVARG_POINTER;
 			evNew->argn[evNew->argc] = "_sender";
-			AG_ThreadCreate(&th, NULL, EventThread, evNew);
+			AG_ThreadCreate(&th, EventThread, evNew);
 		} else
 #endif /* THREADS */
 		{
@@ -455,7 +455,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 		evNew->argv[evNew->argc].p = sndr;
 		evNew->argt[evNew->argc] = AG_EVARG_POINTER;
 		evNew->argn[evNew->argc] = "_sender";
-		AG_ThreadCreate(&th, NULL, EventThread, evNew);
+		AG_ThreadCreate(&th, EventThread, evNew);
 	} else
 #endif /* THREADS */
 	{
