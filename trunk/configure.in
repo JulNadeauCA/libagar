@@ -4,7 +4,7 @@
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: no]")
 REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
-REGISTER("--with-ode",		"SG: ODE physics interface [default: check]")
+#REGISTER("--with-ode",		"SG: ODE physics interface [default: check]")
 REGISTER("--with-cg",		"SG: CG shader support [default: check]")
 REGISTER("--with-sse",		"SSE/SSE2/SSE3 optimizations [default: check]")
 REGISTER("--with-sse-inline",	"Inline SSE operations [default: no]")
@@ -158,22 +158,22 @@ else
 fi
 
 # Enable ODE interface in Agar-SG if libode is found.
-if [ "${with_ode}" != "no" ]; then
-	CHECK(ode)
-	if [ "${HAVE_ODE}" != "yes" ]; then
-		if [ "${with_ode}" = "yes" ]; then
-			echo "*"
-			echo "* --with-ode was requested, but ODE was not"
-			echo "* found on this system."
-			echo "*"
-			exit 1
-		else
-			HUNDEF(HAVE_ODE)
-		fi
-	fi
-else
-	HUNDEF(HAVE_ODE)
-fi
+#if [ "${with_ode}" != "no" ]; then
+#	CHECK(ode)
+#	if [ "${HAVE_ODE}" != "yes" ]; then
+#		if [ "${with_ode}" = "yes" ]; then
+#			echo "*"
+#			echo "* --with-ode was requested, but ODE was not"
+#			echo "* found on this system."
+#			echo "*"
+#			exit 1
+#		else
+#			HUNDEF(HAVE_ODE)
+#		fi
+#	fi
+#else
+#	HUNDEF(HAVE_ODE)
+#fi
 
 # Enable CG support in Agar-SG if Cg toolkit is found.
 if [ "${with_cg}" != "no" ]; then
