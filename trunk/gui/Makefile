@@ -26,7 +26,8 @@ MAN3=	AG_View.3 AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_FSpinbutton.3 AG_UCombo.3 AG_Spinbutton.3 AG_Units.3 AG_HSVPal.3 \
 	AG_Menu.3 AG_SizeSpec.3 AG_Table.3 AG_Pane.3 AG_MPane.3 AG_Fixed.3 \
 	AG_Pixmap.3 AG_Colors.3 AG_Notebook.3 AG_Toolbar.3 AG_FileDlg.3 \
-	AG_Console.3 AG_GLView.3 AG_Graph.3 AG_Icon.3 AG_Socket.3
+	AG_Console.3 AG_GLView.3 AG_Graph.3 AG_Icon.3 AG_Socket.3 \
+	AG_Separator.3
 
 CFLAGS+=-I.. ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} \
 	${JPEG_CFLAGS}
