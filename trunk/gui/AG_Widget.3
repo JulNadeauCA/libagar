@@ -868,7 +868,7 @@ was unlimited.
 .Fn AG_WidgetFind "AG_Display *view" "const char *name"
 .Pp
 .Ft "void"
-.Fn AG_WidgetSetStyle "AG_Widget *widget" "AG_Style *style"
+.Fn AG_SetStyle "AG_Widget *widget" "AG_Style *style"
 .Pp
 .nr nS 0
 The
@@ -877,7 +877,7 @@ function searches for a given widget by name, given an absolute path,
 and returns a pointer to the widget or NULL.
 .Pp
 The
-.Fn AG_WidgetSetStyle
+.Fn AG_SetStyle
 function changes the style/theme associated with a widget.
 See
 .Xr AG_Style 3
