@@ -116,7 +116,11 @@ Draw(void *p)
 	AG_Rect r;
 	int idx = 0;
 
-	STYLE(nb)->NotebookBackground(nb, nb->bar_h);
+	r.x = 0;
+	r.y = nb->bar_h;
+	r.w = WIDTH(nb);
+	r.h = HEIGHT(nb);
+	STYLE(nb)->NotebookBackground(nb, r);
 
 	if (nb->flags & AG_NOTEBOOK_HIDE_TABS) {
 		return;

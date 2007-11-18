@@ -250,11 +250,9 @@ MenuItemSeparator(void *mv, int x1, int x2, int y, int h)
 
 /* Background for Notebook widget */
 static void
-NotebookBackground(void *nb, int y1)
+NotebookBackground(void *nb, AG_Rect r)
 {
-	AG_DrawRectFilled(nb,
-	    AG_RECT(0, y1, WIDTH(nb), HEIGHT(nb)-y1),
-	    AG_COLOR(NOTEBOOK_SEL_COLOR));
+	AG_DrawRectFilled(nb, r, AG_COLOR(NOTEBOOK_SEL_COLOR));
 }
 
 /* Background for individual notebook tab */
@@ -486,11 +484,9 @@ SocketOverlay(AG_Socket *sock, int highlight)
 
 /* Background for table widgets */
 static void
-TableBackground(void *tbl, int x, int y, int w, int h)
+TableBackground(void *tbl, AG_Rect r)
 {
-	AG_DrawBox(tbl,
-	    AG_RECT(x, y, w, h), -1,
-	    AG_COLOR(TABLE_COLOR));
+	AG_DrawBox(tbl, r, -1, AG_COLOR(TABLE_COLOR));
 }
 
 /* Background for table column headers */

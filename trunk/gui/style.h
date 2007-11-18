@@ -22,7 +22,7 @@ typedef struct ag_style {
 	void (*TitlebarBackground)(void *, int isPressed, int isFocused);
 	void (*ButtonBackground)(void *, int isPressed);
 	void (*ButtonTextOffset)(void *, int isPressed, int *x, int *y);
-	void (*BoxFrame)(void *, int);
+	void (*BoxFrame)(void *, int depth);
 	void (*CheckboxButton)(void *, int state);
 	void (*ConsoleBackground)(void *, Uint32 bg);
 	void (*FixedPlotterBackground)(void *, int showAxis, Uint32 yOffs);
@@ -32,7 +32,7 @@ typedef struct ag_style {
 	void (*MenuItemBackground)(void *, AG_Rect r, int xIcon, void *iconObj,
 	                           int icon, int isSelected, int boolState);
 	void (*MenuItemSeparator)(void *, int x1, int x2, int y, int h);
-	void (*NotebookBackground)(void *, int y1);
+	void (*NotebookBackground)(void *, AG_Rect r);
 	void (*NotebookTabBackground)(void *, AG_Rect r, int idx,
 	                              int isSelected);
 	void (*PaneHorizDivider)(void *, int x, int y, int w, int isMoving);
@@ -47,7 +47,7 @@ typedef struct ag_style {
 	void (*SeparatorVert)(struct ag_separator *);
 	void (*SocketBackground)(struct ag_socket *);
 	void (*SocketOverlay)(struct ag_socket *, int highlight);
-	void (*TableBackground)(void *, int, int, int, int);
+	void (*TableBackground)(void *, AG_Rect r);
 	void (*TableColumnHeaderBackground)(void *, int idx, AG_Rect r,
 	                                    int isSelected);
 	void (*TableRowBackground)(void *, AG_Rect r, int isSelected);
@@ -60,7 +60,6 @@ typedef struct ag_style {
 
 __BEGIN_DECLS
 extern AG_Style agStyleDefault;
-void AG_InitDefaultStyle(void);
 void AG_SetStyle(void *, AG_Style *);
 __END_DECLS
 

@@ -692,6 +692,7 @@ Draw(void *p)
 	Uint i;
 	int y, update = 0;
 	const int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
+	AG_Rect rBg;
 
 	AG_MutexLock(&tv->lock);
 	
@@ -704,7 +705,11 @@ Draw(void *p)
 		update = 1;
 	
 	/* Draw the background box */
-	STYLE(tv)->TableBackground(tv, 0, 0, WIDTH(tv), HEIGHT(tv));
+	rBg.x = 0;
+	rBg.y = 0;
+	rBg.w = WIDTH(tv);
+	rBg.h = HEIGHT(tv);
+	STYLE(tv)->TableBackground(tv, rBg);
 	
 	/* draw row selection hilites */
 	y = tv->head_height;
