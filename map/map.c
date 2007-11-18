@@ -1104,7 +1104,7 @@ MAP_DetachActor(MAP *m, MAP_Actor *a)
 	AG_ObjectCancelTimeouts(a, 0);		/* XXX hook? */
 
 	if (AG_ObjectIsClass(m, "MAP:*")) {
-		MAP_ActorUnmapTiles(a);
+		MAP_ActorUnmapTile(a);
 	}
 	AG_ObjectDelDep(m, a);
 	a->parent = NULL;
