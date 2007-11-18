@@ -16,6 +16,12 @@
 #define AG_TABLE_TXT_MAX 128
 #define AG_TABLE_FMT_MAX 16
 #define AG_TABLE_COL_NAME_MAX 48
+	
+enum ag_table_selmode {
+	AG_TABLE_SEL_ROWS,	/* Select entire rows */
+	AG_TABLE_SEL_CELLS,	/* Select individual cells */
+	AG_TABLE_SEL_COLS	/* Select entire columns */
+};
 
 typedef struct ag_table_popup {
 	int m, n;				/* Row/column (-1 = all) */
@@ -101,11 +107,7 @@ typedef struct ag_table {
 #define AG_TABLE_REDRAW_CELLS	0x04	/* Redraw the cells */
 #define AG_TABLE_POLL		0x08	/* Table is polled */
 #define AG_TABLE_MULTIMODE	(AG_TABLE_MULTI|AG_TABLE_MULTITOGGLE)
-	enum ag_table_selmode {
-		AG_TABLE_SEL_ROWS,	/* Select entire rows */
-		AG_TABLE_SEL_CELLS,	/* Select individual cells */
-		AG_TABLE_SEL_COLS	/* Select entire columns */
-	} selmode;
+	enum ag_table_selmode selmode;	/* Selection mode */
 	void *selected_row;		/* Default `selected-row' binding */
 	void *selected_col;		/* Default `selected-col' binding */
 	void *selected_cell;		/* Default `selected-cell' binding */
