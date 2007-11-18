@@ -51,12 +51,12 @@ AG_GLViewNew(void *parent, Uint flags)
 
 /* Initialize an OpenGL matrix to identity. GL must be locked. */
 static void
-SetIdentity(GLdouble *M, GLenum which)
+SetIdentity(GLfloat *M, GLenum which)
 {
 	glMatrixMode(which);
 	glPushMatrix();
 	glLoadIdentity();
-	glGetDoublev(which, M);
+	glGetFloatv(which, M);
 	glPopMatrix();
 }
 
@@ -188,9 +188,9 @@ AG_GLViewReshape(AG_GLView *glv)
 	if (glv->scale_ev != NULL) {
 		glv->scale_ev->handler(glv->scale_ev);
 	}
-	glGetDoublev(GL_PROJECTION_MATRIX, glv->mProjection);
-	glGetDoublev(GL_MODELVIEW_MATRIX, glv->mModelview);
-	glGetDoublev(GL_TEXTURE_MATRIX, glv->mTexture);
+	glGetFloatv(GL_PROJECTION_MATRIX, glv->mProjection);
+	glGetFloatv(GL_MODELVIEW_MATRIX, glv->mModelview);
+	glGetFloatv(GL_TEXTURE_MATRIX, glv->mTexture);
 	
 	glMatrixMode(GL_PROJECTION);	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
@@ -228,15 +228,15 @@ AG_GLViewDraw(void *p)
 
 	glMatrixMode(GL_TEXTURE);
 	glPushMatrix();
-	glLoadMatrixd(glv->mTexture);
+	glLoadMatrixf(glv->mTexture);
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glLoadMatrixd(glv->mProjection);
+	glLoadMatrixf(glv->mProjection);
 		
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glLoadMatrixd(glv->mModelview);
+	glLoadMatrixf(glv->mModelview);
 	
 	if (glv->draw_ev != NULL)
 		glv->draw_ev->handler(glv->draw_ev);
