@@ -184,7 +184,6 @@ void	   AG_WidgetDraw(void *);
 void	   AG_WidgetSizeReq(void *, AG_SizeReq *);
 int	   AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
 void	   AG_WidgetSetFocusable(void *, int);
-void	   AG_WidgetSetStyle(void *, AG_Style *);
 
 void		  AG_WidgetFocus(void *);
 void		  AG_WidgetUnfocus(void *);

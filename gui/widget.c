@@ -185,12 +185,6 @@ AG_WidgetSetFocusable(void *p, int flag)
 	}
 }
 
-void
-AG_WidgetSetStyle(void *p, AG_Style *style)
-{
-	AGWIDGET(p)->style = style;
-}
-
 int
 AG_WidgetCopyBinding(void *w1, const char *n1, void *w2, const char *n2)
 {
