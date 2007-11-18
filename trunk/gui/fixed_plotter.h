@@ -39,7 +39,7 @@ typedef struct ag_fixed_plotter {
 	struct ag_widget wid;
 
 	enum ag_fixed_plotter_type type;
-	int flags;
+	Uint flags;
 #define AG_FIXED_PLOTTER_SCROLL	0x01	/* Scroll if the end is not visible */
 #define AG_FIXED_PLOTTER_XAXIS	0x02	/* Display X axis */
 #define AG_FIXED_PLOTTER_HFILL	0x04

@@ -370,6 +370,13 @@ contents using an external widget.
 .It Fn dir-selected "void"
 The given directory was selected.
 .El
+.Sh STRUCTURE DATA
+.Bl -tag -width "char cfile[MAXPATHLEN] "
+.It Ft char cwd[MAXPATHLEN]
+Absolute path of current working directory.
+.It Ft char cfile[MAXPATHLEN]
+Absolute path of last selected file.
+.El
 .Sh EXAMPLES
 See
 .Pa demos/loader

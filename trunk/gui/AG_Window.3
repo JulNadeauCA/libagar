@@ -458,6 +458,19 @@ Calls to
 .Fn AG_WindowSetGeometry
 will not raise this event.
 .El
+.Sh STRUCTURE DATA
+.Bl -tag -width "AG_Titlebar *tbar "
+.It Ft int visible
+Visiblity flag (read-only, set by
+.Fn AG_WindowShow
+and
+.Fn AG_WindowHide ) .
+.It Ft AG_Titlebar *tbar
+Pointer to Titlebar object or NULL.
+See
+.Xr AG_Titlebar 3
+(read-only).
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3

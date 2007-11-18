@@ -106,6 +106,16 @@ partitions from scratch.
 The
 .Nm
 widget neither reacts to nor generates any event.
+.Sh STRUCTURE DATA
+.Bl -tag -compact -width "enum ag_mpane_layout layout "
+.It Ft enum ag_mpane_layout layout
+Layout as set by
+.Fn AG_MPaneSetLayout .
+.It Ft AG_Box *panes[]
+The container widgets
+.It Ft Uint npanes
+Number of containers for current layout.
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Box 3 ,

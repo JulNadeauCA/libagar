@@ -39,11 +39,11 @@
 The Agar
 .Nm
 interface provides low-level video functions to the Agar GUI.
-Every display manages a list of
-.Xr AG_Window 3
-objects for use by the GUI (see the
+Every display is described by the
+.Nm
+structure, and is associated with a set of GUI windows (see the
 .Dq WINDOW SYSTEM
-section below for more details).
+section).
 .Pp
 The
 .Nm
@@ -430,9 +430,25 @@ The
 functions looks for a window identified by
 .Fa name
 and return NULL if there is no such window.
-.Sh BUGS
-Work is currently being done to support graphics backends other than SDL
-and OpenGL, with multiple displays.
+.Sh STRUCTURE DATA
+.Bl -tag -width "TAILQ windows "
+.It Ft int w, h
+Dimensions of the display in pixels.
+.It Ft int depth
+Color depth of the display in bits per pixel.
+.It Ft int rCur
+Current refresh rate.
+Meaning is dependent on the type of event loop being used.
+.It Ft Uint rNom
+Nominal refresh rate.
+Meaning is dependent on the type of event loop being used.
+.It Ft AG_Mutex lock
+Lock on GUI window lists.
+.It Ft TAILQ windows
+List of
+.Xr AG_Window 3
+objects associated with display.
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Window 3 ,

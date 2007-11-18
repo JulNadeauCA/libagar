@@ -159,6 +159,24 @@ operation is invoked.
 The
 .Nm
 widget does not generate any event.
+.Sh STRUCTURE DATA
+.Bl -tag -width "float mProjection[16] "
+.It Ft float mProjection[16]
+Projection matrix (4x4, column-major) to automatically load every time the
+.Nm
+is drawn.
+Defaults to identity.
+.It Ft float mModelview[16]
+Modelview matrix (4x4, column-major) to automatically load every time the
+.Nm
+is drawn.
+Defaults to identity.
+.It Ft float mTexture[16]
+Texture matrix (4x4, column-major) to automatically load every time the
+.Nm
+is drawn.
+Defaults to identity.
+.El
 .Sh EXAMPLES
 See the
 .Pa glview
