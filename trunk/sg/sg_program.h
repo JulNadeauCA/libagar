@@ -4,7 +4,7 @@
 #define _AGAR_SG_PROGRAM_H_
 
 typedef struct sg_program_class {
-	struct ag_object_class inherit;
+	struct ag_object_class _inherit;
 	int  (*install)(void *, SG_View *);
 	void (*deinstall)(void *, SG_View *);
 	void (*bind)(void *, SG_View *);
