@@ -99,7 +99,7 @@ ParseItemCount(const char *buf, unsigned int *ip)
 	char *endp;
 	long lval;
 
-	strlcpy(numbuf, buf, sizeof(numbuf));
+	Strlcpy(numbuf, buf, sizeof(numbuf));
 	errno = 0;
 	lval = strtol(numbuf, &endp, 10);
 	if (numbuf[0] == '\0' || endp[0] != '\0') {
@@ -150,7 +150,7 @@ NC_Query(NC_Session *client, const char *fmt, ...)
 
 	va_start(ap, fmt);
 	vsnprintf(req, sizeof(req), fmt, ap);
-	strlcat(req, "\n", sizeof(req));
+	Strlcat(req, "\n", sizeof(req));
 	va_end(ap);
 
 sendreq:
@@ -357,10 +357,10 @@ NC_Reconnect(NC_Session *client)
 	char pass_save[NC_PASSWORD_MAX];
 	int try, retries;
 
-	strlcpy(host_save, client->host, sizeof(host_save));
-	strlcpy(port_save, client->port, sizeof(port_save));
-	strlcpy(user_save, client->user, sizeof(user_save));
-	strlcpy(pass_save, client->pass, sizeof(pass_save));
+	Strlcpy(host_save, client->host, sizeof(host_save));
+	Strlcpy(port_save, client->port, sizeof(port_save));
+	Strlcpy(user_save, client->user, sizeof(user_save));
+	Strlcpy(pass_save, client->pass, sizeof(pass_save));
 
 	if (ncWarnOnReconnect)
 		fprintf(stderr, "%s: reconnecting...\n", AG_GetError());
@@ -489,7 +489,7 @@ ProtoNegotiate(NC_Session *client)
 		AG_SetError("Server did not respond");
 		return (-1);
 	}
-	strlcpy(client->server_proto, client->read.buf,
+	Strlcpy(client->server_proto, client->read.buf,
 	    sizeof(client->server_proto));
 
 	if (NC_Write(client, "%s\n", client->client_proto) == -1 ||
@@ -525,10 +525,10 @@ NC_Connect(NC_Session *client, const char *host, const char *port,
 			AG_SetError("Who are you?");
 			return (-1);
 		}
-		strlcpy(file, pwd->pw_dir, sizeof(file));
-		strlcat(file, "/.", sizeof(file));
-		strlcat(file, client->name, sizeof(file));
-		strlcat(file, "rc", sizeof(file));
+		Strlcpy(file, pwd->pw_dir, sizeof(file));
+		Strlcat(file, "/.", sizeof(file));
+		Strlcat(file, client->name, sizeof(file));
+		Strlcat(file, "rc", sizeof(file));
 
 		if ((f = fopen(file, "r")) == NULL) {
 			AG_SetError("%s: %s", file, strerror(errno));
@@ -584,10 +584,10 @@ NC_Connect(NC_Session *client, const char *host, const char *port,
 		goto fail_resolution;
 	}
 	client->sock = s;
-	strlcpy(client->host, host, sizeof(client->host));
-	strlcpy(client->port, port, sizeof(client->port));
-	strlcpy(client->user, user, sizeof(client->user));
-	strlcpy(client->pass, pass, sizeof(client->pass));
+	Strlcpy(client->host, host, sizeof(client->host));
+	Strlcpy(client->port, port, sizeof(client->port));
+	Strlcpy(client->user, user, sizeof(client->user));
+	Strlcpy(client->pass, pass, sizeof(client->pass));
 
 	/* Negotiate the protocol version and authenticate. */
 	if (ProtoNegotiate(client) == -1 ||
@@ -629,9 +629,9 @@ NC_Init(NC_Session *client, const char *name, const char *ver)
 	client->read.len = 0;
 	client->server_proto[0] = '\0';
 
-	strlcpy(client->client_proto, name, sizeof(client->client_proto));
-	strlcat(client->client_proto, " ", sizeof(client->client_proto));
-	strlcat(client->client_proto, ver, sizeof(client->client_proto));
+	Strlcpy(client->client_proto, name, sizeof(client->client_proto));
+	Strlcat(client->client_proto, " ", sizeof(client->client_proto));
+	Strlcat(client->client_proto, ver, sizeof(client->client_proto));
 }
 
 void

@@ -421,8 +421,8 @@ label_flags(AG_Label *label, char *s, size_t len, int ri)
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &label->lflags, lflags) {
 		if (lfl->idx == ri && *flags & (Uint)lfl->v) {
-			if (s[0] != '\0') { strlcat(s, ", ", len); }
-			strlcat(s, lfl->text, len);
+			if (s[0] != '\0') { Strlcat(s, ", ", len); }
+			Strlcat(s, lfl->text, len);
 		}
 	}
 }
@@ -437,8 +437,8 @@ label_flags8(AG_Label *label, char *s, size_t len, int ri)
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &label->lflags, lflags) {
 		if (lfl->idx == ri && *flags & (Uint8)lfl->v) {
-			if (s[0] != '\0') { strlcat(s, ", ", len); }
-			strlcat(s, lfl->text, len);
+			if (s[0] != '\0') { Strlcat(s, ", ", len); }
+			Strlcat(s, lfl->text, len);
 		}
 	}
 }
@@ -452,8 +452,8 @@ label_flags16(AG_Label *label, char *s, size_t len, int ri)
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &label->lflags, lflags) {
 		if (lfl->idx == ri && *flags & (Uint16)lfl->v) {
-			if (s[0] != '\0') { strlcat(s, ", ", len); }
-			strlcat(s, lfl->text, len);
+			if (s[0] != '\0') { Strlcat(s, ", ", len); }
+			Strlcat(s, lfl->text, len);
 		}
 	}
 }
@@ -467,8 +467,8 @@ label_flags32(AG_Label *label, char *s, size_t len, int ri)
 	s[0] = '\0';
 	SLIST_FOREACH(lfl, &label->lflags, lflags) {
 		if (lfl->idx == ri && *flags & (Uint32)lfl->v) {
-			if (s[0] != '\0') { strlcat(s, ", ", len); }
-			strlcat(s, lfl->text, len);
+			if (s[0] != '\0') { Strlcat(s, ", ", len); }
+			Strlcat(s, lfl->text, len);
 		}
 	}
 }
@@ -525,35 +525,35 @@ DrawPolled(AG_Label *label)
 						snprintf(s2, sizeof(s2),
 						    "%lld", (long long)
 						    LABEL_ARG(Sint64));
-						strlcat(s, s2, sizeof(s));
+						Strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'o':
 						snprintf(s2, sizeof(s2),
 						    "%llo", (unsigned long long)
 						    LABEL_ARG(Uint64));
-						strlcat(s, s2, sizeof(s));
+						Strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'u':
 						snprintf(s2, sizeof(s2),
 						    "%llu", (unsigned long long)
 						    LABEL_ARG(Uint64));
-						strlcat(s, s2, sizeof(s));
+						Strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'x':
 						snprintf(s2, sizeof(s2),
 						    "%llx", (unsigned long long)
 						    LABEL_ARG(Uint64));
-						strlcat(s, s2, sizeof(s));
+						Strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'X':
 						snprintf(s2, sizeof(s2),
 						    "%llX", (unsigned long long)
 						    LABEL_ARG(Uint64));
-						strlcat(s, s2, sizeof(s));
+						Strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					}
@@ -564,7 +564,7 @@ DrawPolled(AG_Label *label)
 			case 'd':
 			case 'i':
 				snprintf(s2, sizeof(s2), "%d", LABEL_ARG(int));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'D':
@@ -572,72 +572,72 @@ DrawPolled(AG_Label *label)
 				if (LABEL_ARG(int) < 0) {
 					snprintf(s2, sizeof(s2), "%d",
 					    LABEL_ARG(int));
-					strlcat(s, s2, sizeof(s));
+					Strlcat(s, s2, sizeof(s));
 					ri++;
 				} else if (LABEL_ARG(int) > 0) {
 					snprintf(s2, sizeof(s2), "+%d",
 					    LABEL_ARG(int));
-					strlcat(s, s2, sizeof(s));
+					Strlcat(s, s2, sizeof(s));
 					ri++;
 				}
 				break;
 			case 'o':
 				snprintf(s2, sizeof(s2), "%o",
 				    LABEL_ARG(unsigned int));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'u':
 				snprintf(s2, sizeof(s2), "%u",
 				    LABEL_ARG(unsigned int));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'x':
 				snprintf(s2, sizeof(s2), "%x",
 				    LABEL_ARG(unsigned int));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'X':
 				snprintf(s2, sizeof(s2), "%X",
 				    LABEL_ARG(unsigned int));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'c':
 				s2[0] = LABEL_ARG(char);
 				s2[1] = '\0';
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 's':
-				strlcat(s, &LABEL_ARG(char), sizeof(s));
+				Strlcat(s, &LABEL_ARG(char), sizeof(s));
 				ri++;
 				break;
 			case 'p':
 				snprintf(s2, sizeof(s2), "%p",
 				    LABEL_ARG(void *));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'f':
 				snprintf(s2, sizeof(s2), "%.2f",
 				    LABEL_ARG(float));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'F':
 				snprintf(s2, sizeof(s2), "%.2f",
 				    LABEL_ARG(double));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 #if 0
 			case 'G':
 				snprintf(s2, sizeof(s2), "%.2f",
 				    LABEL_ARG(long double));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 #endif
@@ -648,7 +648,7 @@ DrawPolled(AG_Label *label)
 						continue;
 					fmts[i].func(label, s2, sizeof(s2), ri);
 					fmtp += fmts[i].fmt_len;
-					strlcat(s, s2, sizeof(s));
+					Strlcat(s, s2, sizeof(s));
 					ri++;
 					break;
 				}
@@ -656,14 +656,14 @@ DrawPolled(AG_Label *label)
 			case '%':
 				s2[0] = '%';
 				s2[1] = '\0';
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				break;
 			}
 			fmtp++;
 		} else {
 			s2[0] = *fmtp;
 			s2[1] = '\0';
-			strlcat(s, s2, sizeof(s));
+			Strlcat(s, s2, sizeof(s));
 		}
 	}
 

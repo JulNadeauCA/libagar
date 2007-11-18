@@ -1008,8 +1008,8 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 	int x;
 
 	AG_StringCopy(agConfig, "save-path", path, sizeof(path));
-	strlcat(path, AG_PATHSEP, sizeof(path));
-	strlcat(path, "screenshot", sizeof(path));
+	Strlcat(path, AG_PATHSEP, sizeof(path));
+	Strlcat(path, "screenshot", sizeof(path));
 	if (AG_MkDir(path) == -1 && errno != EEXIST) {
 		AG_SetError("mkdir %s: %s", path, strerror(errno));
 		return (-1);
@@ -1041,7 +1041,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 		break;
 	}
 	if (path_save != NULL)
-		strlcpy(path_save, path, MAXPATHLEN);
+		Strlcpy(path_save, path, MAXPATHLEN);
 
 	if ((fp = fdopen(fd, "wb")) == NULL) {
 		AG_SetError("fdopen: %s", strerror(errno));

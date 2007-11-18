@@ -131,7 +131,7 @@ TextReturn(AG_Event *event)
 	char *tp = &text[0], *s;
 
 	stringb = AG_WidgetGetBinding(sbu->input, "string", &s);
-	strlcpy(text, s, sizeof(text));
+	Strlcpy(text, s, sizeof(text));
 
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "xvalue", atoi(s));
@@ -154,7 +154,7 @@ TextChanged(AG_Event *event)
 	char *tp = &text[0], *s;
 
 	stringb = AG_WidgetGetBinding(sbu->input, "string", &s);
-	strlcpy(text, s, sizeof(text));
+	Strlcpy(text, s, sizeof(text));
 
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "xvalue", atoi(s));

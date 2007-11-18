@@ -139,7 +139,7 @@ AG_GetSystemTempDir(char *buf, size_t len)
 #ifdef _WIN32
 	return (GetTempPath((DWORD)len, buf) == 0) ? -1 : 0;
 #else
-	strlcpy(buf, "/tmp/", len);
+	Strlcpy(buf, "/tmp/", len);
 	return (0);
 #endif
 }

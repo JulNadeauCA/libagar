@@ -810,7 +810,7 @@ AG_TextboxCopyString(AG_Textbox *tbox, char *dst, size_t dst_size)
 	char *text;
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &text);
-	rv = strlcpy(dst, text, dst_size);
+	rv = Strlcpy(dst, text, dst_size);
 	AG_WidgetUnlockBinding(stringb);
 	return (rv);
 }

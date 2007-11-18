@@ -73,7 +73,7 @@ AG_WriteVersion(AG_DataSource *ds, const char *name, const AG_Version *ver)
 	char nbuf[AG_VERSION_NAME_MAX];
 
 	memset(nbuf, '!', sizeof(nbuf));
-	strlcpy(nbuf, name, sizeof(nbuf));
+	Strlcpy(nbuf, name, sizeof(nbuf));
 	if (AG_Write(ds, nbuf, sizeof(nbuf), 1) != 0) { AG_FatalError(NULL); }
 	AG_WriteUint32(ds, ver->major);
 	AG_WriteUint32(ds, ver->minor);

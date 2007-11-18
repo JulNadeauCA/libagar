@@ -104,9 +104,9 @@ AG_RefreshListing(AG_FileDlg *fd)
 	for (i = 0; i < dir->nents; i++) {
 		char path[FILENAME_MAX];
 		
-		strlcpy(path, fd->cwd, sizeof(path));
-		strlcat(path, AG_PATHSEP, sizeof(path));
-		strlcat(path, dir->ents[i], sizeof(path));
+		Strlcpy(path, fd->cwd, sizeof(path));
+		Strlcat(path, AG_PATHSEP, sizeof(path));
+		Strlcat(path, dir->ents[i], sizeof(path));
 
 		if (AG_FileDlgAtRoot(fd) && strcmp(dir->ents[i], "..")==0) {
 			continue;
@@ -531,7 +531,7 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 		}
 	} else if (dir[0] == '.' && dir[1] == '.' && dir[2] == '\0') {
 		if (!AG_FileDlgAtRoot(fd)) {
-			strlcpy(ncwd, fd->cwd, sizeof(ncwd));
+			Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
 			if ((c = strrchr(ncwd, AG_PATHSEPC)) != NULL) {
 				*c = '\0';
 			}
@@ -541,14 +541,14 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 			}
 		}
 	} else if (dir[0] != AG_PATHSEPC) {
-		strlcpy(ncwd, fd->cwd, sizeof(ncwd));
+		Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
 		if (!(ncwd[0] == AG_PATHSEPC &&
 		      ncwd[1] == '\0')) {
-			strlcat(ncwd, AG_PATHSEP, sizeof(ncwd));
+			Strlcat(ncwd, AG_PATHSEP, sizeof(ncwd));
 		}
-		strlcat(ncwd, dir, sizeof(ncwd));
+		Strlcat(ncwd, dir, sizeof(ncwd));
 	} else {
-		strlcpy(ncwd, dir, sizeof(ncwd));
+		Strlcpy(ncwd, dir, sizeof(ncwd));
 	}
 	
 	if (AG_GetFileInfo(ncwd, &info) == -1) {
@@ -562,7 +562,7 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 		AG_SetError(_("%s: Permission denied"), ncwd);
 		return (-1);
 	}
-	if (strlcpy(fd->cwd, ncwd, sizeof(fd->cwd)) >= sizeof(fd->cwd)) {
+	if (Strlcpy(fd->cwd, ncwd, sizeof(fd->cwd)) >= sizeof(fd->cwd)) {
 		AG_SetError(_("Path is too large: `%s'"), ncwd);
 		return (-1);
 	}
@@ -599,13 +599,13 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 
 	AG_TextboxPrintf(fd->tbFile, "%s", file);
 	if (file[0] == '/') {
-		strlcpy(fd->cfile, file, sizeof(fd->cfile));
+		Strlcpy(fd->cfile, file, sizeof(fd->cfile));
 	} else {
-		strlcpy(fd->cfile, fd->cwd, sizeof(fd->cfile));
+		Strlcpy(fd->cfile, fd->cwd, sizeof(fd->cfile));
 		if (!AG_FileDlgAtRoot(fd)) {
-			strlcat(fd->cfile, AG_PATHSEP, sizeof(fd->cfile));
+			Strlcat(fd->cfile, AG_PATHSEP, sizeof(fd->cfile));
 		}
-		strlcat(fd->cfile, file, sizeof(fd->cfile));
+		Strlcat(fd->cfile, file, sizeof(fd->cfile));
 	}
 }
 
@@ -896,7 +896,7 @@ AG_FileOptionNewString(AG_FileType *ft, const char *descr, const char *key,
 	fto->key = key;
 	fto->unit = NULL;
 	fto->type = AG_FILEDLG_STRING;
-	strlcpy(fto->data.s, dflt, sizeof(fto->data.s));
+	Strlcpy(fto->data.s, dflt, sizeof(fto->data.s));
 	TAILQ_INSERT_TAIL(&ft->opts, fto, opts);
 	return (fto);
 }

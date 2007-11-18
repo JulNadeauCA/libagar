@@ -39,16 +39,16 @@ static void T_Vsnprintf4(void) {
 	do_vsnprintf("%d %d %s %s", 1, 1, STRING64, STRING64);
 }
 static void T_Strlcpy64(void) {
-	strlcpy(buf1, STRING64, sizeof(buf1));
+	AG_Strlcpy(buf1, STRING64, sizeof(buf1));
 }
 static void T_Strlcat64(void) {
-	strlcat(buf1, STRING64, sizeof(buf1));
+	AG_Strlcat(buf1, STRING64, sizeof(buf1));
 }
 static void T_Strlcpy1k(void) {
-	strlcpy(buf1, buf2, sizeof(buf1));
+	AG_Strlcpy(buf1, buf2, sizeof(buf1));
 }
 static void T_Strlcat1k(void) {
-	strlcat(buf1, buf2, sizeof(buf1));
+	AG_Strlcat(buf1, buf2, sizeof(buf1));
 }
 static void T_Snprintf64(void) {
 	snprintf(buf1, sizeof(buf1), STRING64);

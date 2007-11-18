@@ -342,13 +342,13 @@ ServerLoop(NS_Server *ns)
 		exit(1);
 	}
 
-	strlcpy(tmp, "auth:", sizeof(tmp));
+	Strlcpy(tmp, "auth:", sizeof(tmp));
 	for (i = 0; i < ns->nAuthModes; i++) {
-		strlcat(tmp, ns->authModes[i].name, sizeof(tmp));
+		Strlcat(tmp, ns->authModes[i].name, sizeof(tmp));
 		if (i < ns->nAuthModes)
-			strlcat(tmp, ",", sizeof(tmp));
+			Strlcat(tmp, ",", sizeof(tmp));
 	}
-	strlcat(tmp, "\n", sizeof(tmp));
+	Strlcat(tmp, "\n", sizeof(tmp));
 	fputs(tmp, stdout);
 
 	if (fgets(tmp, sizeof(tmp), stdin) == NULL) {
@@ -399,7 +399,7 @@ ServerLoop(NS_Server *ns)
 		if (seq++ == 0) {
 			/* Initiate a new request. */
 			NS_InitCommand(&ncmd);
-			if (strlcpy(ncmd.name, buf, sizeof(ncmd.name)) >=
+			if (Strlcpy(ncmd.name, buf, sizeof(ncmd.name)) >=
 			    sizeof(ncmd.name)) {
 				NS_DestroyCommand(&ncmd);
 				Free(lbuf);
@@ -418,7 +418,7 @@ ServerLoop(NS_Server *ns)
 			narg->size = sizeof(value);
 
 			*value = '\0';
-			if (strlcpy(narg->key, buf, sizeof(narg->key)) >=
+			if (Strlcpy(narg->key, buf, sizeof(narg->key)) >=
 			    sizeof(narg->key)) {
 				NS_DestroyCommand(&ncmd);
 				Free(lbuf);

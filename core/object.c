@@ -149,8 +149,8 @@ AG_ObjectIsClassGeneral(const AG_Object *obj, const char *cn)
 	char cname[AG_OBJECT_TYPE_MAX], *cp, *c;
 	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
 
-	strlcpy(cname, cn, sizeof(cname));
-	strlcpy(nname, obj->cls->name, sizeof(nname));
+	Strlcpy(cname, cn, sizeof(cname));
+	Strlcpy(nname, obj->cls->name, sizeof(nname));
 	cp = cname;
 	np = nname;
 	while ((c = AG_Strsep(&cp, ":")) != NULL &&
@@ -250,7 +250,7 @@ AG_ObjectCopyName(const void *obj, char *path, size_t path_len)
 	path[0] = '/';
 	path[1] = '\0';
 	if (ob != agWorld)
-		strlcat(path, ob->name, path_len);
+		Strlcat(path, ob->name, path_len);
 
 	AG_LockLinkage();
 	if (ob != agWorld && ob->parent != agWorld && ob->parent != NULL) {
@@ -363,7 +363,7 @@ AG_ObjectAttachToNamed(const char *path, void *child)
 	void *parent;
 	char *p;
 
-	if (strlcpy(ppath, path, sizeof(ppath)) >= sizeof(ppath)) {
+	if (Strlcpy(ppath, path, sizeof(ppath)) >= sizeof(ppath)) {
 		AG_SetError("path too big");
 		goto fail;
 	}
@@ -423,7 +423,7 @@ AG_ObjectSearchPath(const AG_Object *parent, const char *name)
 	char *s;
 	AG_Object *child;
 
-	strlcpy(node_name, name, sizeof(node_name));
+	Strlcpy(node_name, name, sizeof(node_name));
 
 	if ((s = strchr(node_name, '/')) != NULL) {
 		*s = '\0';
@@ -641,7 +641,7 @@ AG_ObjectGetInheritHier(void *obj, const AG_ObjectClass ***hier, int *nHier)
 		return (0);
 	}
 	(*nHier) = 1;
-	strlcpy(cname, AGOBJECT(obj)->cls->name, sizeof(cname));
+	Strlcpy(cname, AGOBJECT(obj)->cls->name, sizeof(cname));
 	for (c = &cname[0]; *c != '\0'; c++) {
 		if (*c == ':')
 			(*nHier)++;
@@ -722,7 +722,7 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 	char *dir;
 
 	if (ob->archivePath != NULL) {
-		strlcpy(path, ob->archivePath, path_len);
+		Strlcpy(path, ob->archivePath, path_len);
 		return (0);
 	}
 
@@ -732,15 +732,15 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 	for (dir = AG_Strsep(&loadpathp, ":");
 	     dir != NULL;
 	     dir = AG_Strsep(&loadpathp, ":")) {
-	     	strlcpy(path, dir, path_len);
+	     	Strlcpy(path, dir, path_len);
 		if (ob->save_pfx != NULL) {
-			strlcat(path, ob->save_pfx, path_len);
+			Strlcat(path, ob->save_pfx, path_len);
 		}
-		strlcat(path, obj_name, path_len);
-		strlcat(path, AG_PATHSEP, path_len);
-		strlcat(path, ob->name, path_len);
-		strlcat(path, ".", path_len);
-		strlcat(path, ob->cls->name, path_len);
+		Strlcat(path, obj_name, path_len);
+		Strlcat(path, AG_PATHSEP, path_len);
+		Strlcat(path, ob->name, path_len);
+		Strlcat(path, ".", path_len);
+		Strlcat(path, ob->cls->name, path_len);
 
 		if (AG_FileExists(path))
 			return (0);
@@ -768,13 +768,13 @@ AG_ObjectCopyDirname(const void *p, char *path, size_t path_len)
 	     dir = AG_Strsep(&loadpathp, ":")) {
 		char tmp_path[MAXPATHLEN];
 
-	     	strlcpy(tmp_path, dir, sizeof(tmp_path));
+	     	Strlcpy(tmp_path, dir, sizeof(tmp_path));
 		if (ob->save_pfx != NULL) {
-			strlcat(tmp_path, ob->save_pfx, sizeof(tmp_path));
+			Strlcat(tmp_path, ob->save_pfx, sizeof(tmp_path));
 		}
-		strlcat(tmp_path, obj_name, sizeof(tmp_path));
+		Strlcat(tmp_path, obj_name, sizeof(tmp_path));
 		if (AG_FileExists(tmp_path)) {
-			strlcpy(path, tmp_path, path_len);
+			Strlcpy(path, tmp_path, path_len);
 			return (0);
 		}
 	}
@@ -943,10 +943,10 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
 
 	if (pPath != NULL) {
-		strlcpy(path, pPath, sizeof(path));
+		Strlcpy(path, pPath, sizeof(path));
 	} else {
 		if (ob->archivePath != NULL) {
-			strlcpy(path, ob->archivePath, sizeof(path));
+			Strlcpy(path, ob->archivePath, sizeof(path));
 		} else {
 			if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
 				goto fail_unlock;
@@ -1094,10 +1094,10 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	*dataFound = 1;
 
 	if (pPath != NULL) {
-		strlcpy(path, pPath, sizeof(path));
+		Strlcpy(path, pPath, sizeof(path));
 	} else {
 		if (ob->archivePath != NULL) {
-			strlcpy(path, ob->archivePath, sizeof(path));
+			Strlcpy(path, ob->archivePath, sizeof(path));
 		} else {
 			if (AG_ObjectCopyFilename(ob, path, sizeof(path))
 			    == -1) {
@@ -1155,8 +1155,8 @@ BackupObjectFile(void *p, const char *orig)
 	char path[MAXPATHLEN];
 
 	if (AG_FileExists(orig)) {
-		strlcpy(path, orig, sizeof(path));
-		strlcat(path, ".bak", sizeof(path));
+		Strlcpy(path, orig, sizeof(path));
+		Strlcat(path, ".bak", sizeof(path));
 		rename(orig, path);
 	}
 }
@@ -1213,15 +1213,15 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	AG_ObjectCopyName(ob, name, sizeof(name));
 
 	if (pPath != NULL) {
-		strlcpy(path, pPath, sizeof(path));
+		Strlcpy(path, pPath, sizeof(path));
 	} else if (ob->archivePath == NULL) {
 		/* Create the save directory if needed. */
-		strlcpy(pathDir, AG_String(agConfig,"save-path"),
+		Strlcpy(pathDir, AG_String(agConfig,"save-path"),
 		    sizeof(pathDir));
 		if (ob->save_pfx != NULL) {
-			strlcat(pathDir, ob->save_pfx, sizeof(pathDir));
+			Strlcat(pathDir, ob->save_pfx, sizeof(pathDir));
 		}
-		strlcat(pathDir, name, sizeof(pathDir));
+		Strlcat(pathDir, name, sizeof(pathDir));
 		if (AG_FileExists(pathDir) == 0 &&
 		    AG_MkPath(pathDir) == -1)
 			goto fail_lock;
@@ -1256,13 +1256,13 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 
 	if (pPath == NULL) {
 		if (ob->archivePath != NULL) {
-			strlcpy(path, ob->archivePath, sizeof(path));
+			Strlcpy(path, ob->archivePath, sizeof(path));
 		} else {
-			strlcpy(path, pathDir, sizeof(path));
-			strlcat(path, AG_PATHSEP, sizeof(path));
-			strlcat(path, ob->name, sizeof(path));
-			strlcat(path, ".", sizeof(path));
-			strlcat(path, ob->cls->name, sizeof(path));
+			Strlcpy(path, pathDir, sizeof(path));
+			Strlcat(path, AG_PATHSEP, sizeof(path));
+			Strlcat(path, ob->name, sizeof(path));
+			Strlcat(path, ".", sizeof(path));
+			Strlcat(path, ob->cls->name, sizeof(path));
 		}
 	}
 	debug(DEBUG_STATE, "%s: Saving to %s\n", ob->name, path);
@@ -1373,7 +1373,7 @@ AG_ObjectGetArchivePath(void *p, char *buf, size_t buf_len)
 	AG_Object *ob = p;
 
 	AG_MutexLock(&ob->lock);
-	strlcpy(buf, ob->archivePath, buf_len);
+	Strlcpy(buf, ob->archivePath, buf_len);
 	AG_MutexUnlock(&ob->lock);
 }
 
@@ -1612,8 +1612,8 @@ AG_ObjectDuplicate(void *p, const char *newName)
 
 	/* Save the state of the original object using the new name. */
 	/* XXX Save to temp location!! */
-	strlcpy(nameSave, ob->name, sizeof(nameSave));
-	strlcpy(ob->name, dob->name, sizeof(ob->name));
+	Strlcpy(nameSave, ob->name, sizeof(nameSave));
+	Strlcpy(ob->name, dob->name, sizeof(ob->name));
 	if (AG_ObjectSave(ob) == -1) {
 		AG_ObjectPageOut(ob);
 		goto fail;
@@ -1624,11 +1624,11 @@ AG_ObjectDuplicate(void *p, const char *newName)
 	if (AG_ObjectLoad(dob) == -1) {
 		goto fail;
 	}
-	strlcpy(ob->name, nameSave, sizeof(ob->name));
+	Strlcpy(ob->name, nameSave, sizeof(ob->name));
 	AG_MutexUnlock(&ob->lock);
 	return (dob);
 fail:
-	strlcpy(ob->name, nameSave, sizeof(ob->name));
+	Strlcpy(ob->name, nameSave, sizeof(ob->name));
 	AG_MutexUnlock(&ob->lock);
 	AG_ObjectDestroy(dob);
 	return (NULL);
@@ -1760,9 +1760,9 @@ AG_ObjectChanged(void *p)
 	if ((fLast = fopen(pathLast, "r")) == NULL)
 		return (1);
 
-	strlcpy(pathCur, AG_String(agConfig,"tmp-path"), sizeof(pathCur));
-	strlcat(pathCur, "/_chg.", sizeof(pathCur));
-	strlcat(pathCur, ob->name, sizeof(pathCur));
+	Strlcpy(pathCur, AG_String(agConfig,"tmp-path"), sizeof(pathCur));
+	Strlcat(pathCur, "/_chg.", sizeof(pathCur));
+	Strlcat(pathCur, ob->name, sizeof(pathCur));
 	if (AG_ObjectSaveToFile(ob, pathCur) == -1) {
 		dprintf("%s: %s\n", ob->name, AG_GetError());
 		fclose(fLast);
@@ -1812,9 +1812,9 @@ AG_ObjectGenName(AG_Object *pobj, const AG_ObjectClass *cls, char *name,
 	char *s;
 	
 	if ((s = strrchr(cls->name, ':')) != NULL && s[1] != '\0') {
-		strlcpy(tname, &s[1], sizeof(tname));
+		Strlcpy(tname, &s[1], sizeof(tname));
 	} else {
-		strlcpy(tname, cls->name, sizeof(tname));
+		Strlcpy(tname, cls->name, sizeof(tname));
 	}
 	tname[0] = (char)toupper(tname[0]);
 tryname:

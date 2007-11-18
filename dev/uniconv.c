@@ -205,7 +205,7 @@ SelectUnicodeRange(AG_Event *event)
 			char s[4];
             
 			snprintf(s, sizeof(s), "%x", (unsigned char)*c);
-			strlcat(utf8seq, s, sizeof(utf8seq));
+			Strlcat(utf8seq, s, sizeof(utf8seq));
 		}
 		snprintf(text[1], sizeof(text[1]), "%s", utf8seq);
         

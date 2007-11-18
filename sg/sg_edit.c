@@ -171,8 +171,8 @@ ListLibraryItems(AG_Tlist *tl, const char *cname, int depth)
 			it = AG_TlistAdd(tl, sgIconNode.s, "%s", ops->name);
 			it->p1 = ops;
 			it->depth = depth;
-			strlcpy(subname, ops->name, sizeof(subname));
-			strlcat(subname, ":*", sizeof(subname));
+			Strlcpy(subname, ops->name, sizeof(subname));
+			Strlcat(subname, ":*", sizeof(subname));
 			ListLibraryItems(tl, subname, depth+1);
 		}
 	}

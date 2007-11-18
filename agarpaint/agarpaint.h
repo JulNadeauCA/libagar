@@ -31,6 +31,8 @@ typedef unsigned long Ulong;
 
 #define Malloc AG_Malloc
 #define Free AG_Free
+#define Strlcpy AG_Strlcpy
+#define Strlcat AG_Strlcat
 
 #ifndef MAXPATHLEN
 #define MAXPATHLEN 1024

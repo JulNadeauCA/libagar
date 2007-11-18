@@ -181,7 +181,7 @@ Init(void *obj)
 void
 AG_ObjectSelectorMaskType(AG_ObjectSelector *os, const char *type)
 {
-	strlcpy(os->type_mask, type, sizeof(os->type_mask));
+	Strlcpy(os->type_mask, type, sizeof(os->type_mask));
 }
 
 const AG_WidgetClass agObjectSelectorClass = {

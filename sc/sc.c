@@ -61,7 +61,7 @@ SC_VectorPrintProp(char *buf, size_t len, void *obj, AG_Prop *prop)
 	buf[0] = '\0';
 	for (i = 1; i <= v->m; i++) {
 		snprintf(ent, sizeof(ent), "%f ", v->mat[i][1]);
-		if (strlcat(buf, ent, sizeof(buf)) >= sizeof(buf))
+		if (Strlcat(buf, ent, sizeof(buf)) >= sizeof(buf))
 			return;
 	}
 }

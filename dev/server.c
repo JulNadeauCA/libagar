@@ -202,13 +202,13 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	jpeg_set_defaults(&jcomp);
 	jpeg_set_quality(&jcomp, jpegQuality, TRUE);
 #ifdef HAVE_MKSTEMP
-	strlcpy(tmp, "/tmp/agarXXXXXXXX", sizeof(tmp));
+	Strlcpy(tmp, "/tmp/agarXXXXXXXX", sizeof(tmp));
 	if ((fd = mkstemp(tmp)) == -1) {
 		AG_SetError("mkstemp %s: %s", tmp, strerror(errno));
 		return (-1);
 	}
 #else
-	strlcpy(tmp, ".agarsurface.tmp", sizeof(tmp));
+	Strlcpy(tmp, ".agarsurface.tmp", sizeof(tmp));
 	if ((fd = open(tmp, O_RDWR|O_CREAT|O_EXCL)) == -1) {
 		AG_SetError("mkstemp %s: %s", tmp, strerror(errno));
 		return (-1);

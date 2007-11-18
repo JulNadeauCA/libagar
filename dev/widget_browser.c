@@ -52,13 +52,13 @@ FindWidgets(AG_Widget *wid, AG_Tlist *widtl, int depth)
 	char text[AG_TLIST_LABEL_MAX];
 	AG_TlistItem *it;
 
-	strlcpy(text, OBJECT(wid)->name, sizeof(text));
+	Strlcpy(text, OBJECT(wid)->name, sizeof(text));
 	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
 		AG_Window *win = (AG_Window *)wid;
 
-		strlcat(text, " (", sizeof(text));
-		strlcat(text, win->caption, sizeof(text));
-		strlcat(text, ")", sizeof(text));
+		Strlcat(text, " (", sizeof(text));
+		Strlcat(text, win->caption, sizeof(text));
+		Strlcat(text, ")", sizeof(text));
 	}
 	it = AG_TlistAddPtr(widtl, NULL, text, wid);
 	it->depth = depth;
@@ -87,7 +87,7 @@ FindWindows(AG_Tlist *tl, AG_Window *win, int depth)
 	if (strcmp(win->caption, "win-popup") == 0)
 		return;
 
-	strlcpy(text, win->caption, sizeof(text));
+	Strlcpy(text, win->caption, sizeof(text));
 	it = AG_TlistAdd(tl, NULL, "%s (%s)", win->caption,
 	    OBJECT(win)->name);
 	it->p1 = win;

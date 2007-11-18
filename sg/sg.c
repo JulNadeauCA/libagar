@@ -57,8 +57,8 @@ SG_NodeOfClassGeneral(SG_Node *node, const char *cn)
 	char cname[SG_CLASS_MAX], *cp, *c;
 	char nname[SG_CLASS_MAX], *np, *s;
 
-	strlcpy(cname, cn, sizeof(cname));
-	strlcpy(nname, node->ops->name, sizeof(nname));
+	Strlcpy(cname, cn, sizeof(cname));
+	Strlcpy(nname, node->ops->name, sizeof(nname));
 	cp = cname;
 	np = nname;
 	while ((c = strsep(&cp, ":")) != NULL &&
@@ -177,7 +177,7 @@ SG_NodeInit(void *np, const char *name, const void *ops, Uint flags)
 {
 	SG_Node *n = np;
 
-	strlcpy(n->name, name, sizeof(n->name));
+	Strlcpy(n->name, name, sizeof(n->name));
 	n->flags = flags;
 	n->ops = (const SG_NodeOps *)ops;
 	n->sg = NULL;

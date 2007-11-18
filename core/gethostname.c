@@ -36,7 +36,7 @@
 int
 gethostname(char *name, size_t namelen)
 {
-	strlcpy(name, "unknown", namelen);
+	Strlcpy(name, "unknown", namelen);
 	return (0);
 }
 

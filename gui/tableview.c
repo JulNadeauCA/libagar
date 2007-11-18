@@ -231,7 +231,7 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 	if (label == NULL) {
 		col->label[0] = '\0';
 	} else {
-		strlcpy(col->label, label, sizeof(col->label));
+		Strlcpy(col->label, label, sizeof(col->label));
 	}
 	AG_TextColor(TABLEVIEW_HTXT_COLOR);
 	col->label_img = AG_TextRender(col->label);

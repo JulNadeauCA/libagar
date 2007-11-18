@@ -110,7 +110,7 @@ NS_CommandCopyString(char *dst, NS_Command *cmd, const char *key,
 	char *src;
 
 	src = NS_CommandString(cmd, key);
-	if (strlcpy(dst, src, dstlen) >= dstlen)
+	if (Strlcpy(dst, src, dstlen) >= dstlen)
 		nsCommandErrorString = "argument is too big";
 }
 

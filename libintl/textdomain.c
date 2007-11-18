@@ -62,10 +62,10 @@ textdomain(domainname)
 
 	/* empty string sets the value back to the default */
 	if (!*domainname) {
-		strlcpy(__current_domainname, DEFAULT_DOMAINNAME,
+		Strlcpy(__current_domainname, DEFAULT_DOMAINNAME,
 		    sizeof(__current_domainname));
 	} else {
-		strlcpy(__current_domainname, domainname,
+		Strlcpy(__current_domainname, domainname,
 		    sizeof(__current_domainname));
 	}
 	return __current_domainname;
@@ -104,8 +104,8 @@ bindtextdomain(domainname, dirname)
 		__bindings = p;
 	}
 
-	strlcpy(p->path, dirname, sizeof(p->path));
-	strlcpy(p->domainname, domainname, sizeof(p->domainname));
+	Strlcpy(p->path, dirname, sizeof(p->path));
+	Strlcpy(p->domainname, domainname, sizeof(p->domainname));
 	p->mohandle.mo.mo_magic = 0; /* invalidate current mapping */
 
 	/* LINTED const cast */

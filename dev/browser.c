@@ -355,7 +355,7 @@ DEV_BrowserSaveTo(void *p, const char *name)
 
 	ext[0] = '*';
 	ext[1] = '.';
-	strlcpy(&ext[2], ob->cls->name, sizeof(ext)-2);
+	Strlcpy(&ext[2], ob->cls->name, sizeof(ext)-2);
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Save %s to..."), ob->name);
@@ -376,7 +376,7 @@ DEV_BrowserLoadFrom(void *p, const char *name)
 
 	ext[0] = '*';
 	ext[1] = '.';
-	strlcpy(&ext[2], ob->cls->name, sizeof(ext)-2);
+	Strlcpy(&ext[2], ob->cls->name, sizeof(ext)-2);
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Load %s from..."), ob->name);
@@ -617,9 +617,9 @@ PollObjectsFind(AG_Tlist *tl, AG_Object *pob, int depth)
 	AG_Object *cob;
 	AG_TlistItem *it;
 
-	strlcpy(label, pob->name, sizeof(label));
+	Strlcpy(label, pob->name, sizeof(label));
 	if (OBJECT_RESIDENT(pob)) {
-		strlcat(label, _(" (resident)"), sizeof(label));
+		Strlcat(label, _(" (resident)"), sizeof(label));
 	}
 	it = AG_TlistAddPtr(tl, AG_ObjectIcon(pob), label, pob);
 	it->depth = depth;
@@ -918,7 +918,7 @@ DEV_Browser(void)
 			if (strncmp(agClassTbl[i]->name, "AG_", 3) == 0) {
 				continue;
 			}
-			strlcpy(label, agClassTbl[i]->name, sizeof(label));
+			Strlcpy(label, agClassTbl[i]->name, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
 			AG_MenuAction(mi_objs, label, NULL,
 			    CreateObjectDlg, "%p,%p", agClassTbl[i], win);

@@ -288,7 +288,7 @@ DEV_ScreenshotUploader(void)
 
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
-		strlcpy(status, _("Idle"), sizeof(status));
+		Strlcpy(status, _("Idle"), sizeof(status));
 		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &xmit_lock,
 		    _("Status: %s."), &status);
 		AG_LabelSizeHint(lbl, 1,

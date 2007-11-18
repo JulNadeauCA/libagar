@@ -559,7 +559,7 @@ AG_TlistAddPtr(AG_Tlist *tl, SDL_Surface *iconsrc, const char *text,
 
 	it = AllocItem(tl, iconsrc);
 	it->p1 = p1;
-	strlcpy(it->text, text, sizeof(it->text));
+	Strlcpy(it->text, text, sizeof(it->text));
 
 	InsertItem(tl, it, 0);
 	return (it);
@@ -628,7 +628,7 @@ AG_TlistAddPtrHead(AG_Tlist *tl, SDL_Surface *icon, const char *text,
 
 	it = AllocItem(tl, icon);
 	it->p1 = p1;
-	strlcpy(it->text, text, sizeof(it->text));
+	Strlcpy(it->text, text, sizeof(it->text));
 
 	InsertItem(tl, it, 1);
 	return (it);

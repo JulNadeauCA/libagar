@@ -108,7 +108,7 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 	}
 	if (prop == NULL) {
 		prop = Malloc(sizeof(AG_Prop));
-		strlcpy(prop->key, key, sizeof(prop->key));
+		Strlcpy(prop->key, key, sizeof(prop->key));
 		prop->type = type;
 		prop->writeFn.wUint = NULL;
 		prop->readFn.rUint = NULL;
@@ -237,7 +237,7 @@ AG_FindProp(const char *spec, int type, void *rval)
 	char *s = &sb[0], *objname, *propname;
 	void *obj;
 
-	strlcpy(sb, spec, sizeof(sb));
+	Strlcpy(sb, spec, sizeof(sb));
 	objname = AG_Strsep(&s, ":");
 	propname = AG_Strsep(&s, ":");
 	if (objname == NULL || propname == NULL ||
@@ -255,8 +255,8 @@ int
 AG_PropPath(char *dst, size_t size, const void *obj, const char *prop_name)
 {
 	if (AG_ObjectCopyName(obj, dst, size) == -1 ||
-	    strlcat(dst, ":", size) >= size ||
-	    strlcat(dst, prop_name, size) >= size) {
+	    Strlcat(dst, ":", size) >= size ||
+	    Strlcat(dst, prop_name, size) >= size) {
 		AG_SetError("String overflow");
 		return (-1);
 	}
@@ -475,7 +475,7 @@ AG_PropPrint(char *s, size_t len, void *obj, const char *pname)
 
 	pr = AG_GetProp(obj, pname, -1, NULL);
 	if (pr == NULL) {
-		strlcpy(s, "(?prop)", len);
+		Strlcpy(s, "(?prop)", len);
 		return;
 	}
 	switch (pr->type) {
@@ -507,10 +507,10 @@ AG_PropPrint(char *s, size_t len, void *obj, const char *pname)
 	case AG_PROP_STRING:	snprintf(s, len, "\"%s\"", pr->data.s);	break;
 	case AG_PROP_POINTER:	snprintf(s, len, "->%p", pr->data.p);	break;
 	case AG_PROP_BOOL:
-		strlcpy(s, pr->data.i ? "true" : "false", len);
+		Strlcpy(s, pr->data.i ? "true" : "false", len);
 		break;
 	default:
-		strlcat(s, "(?prop-type)", len);
+		Strlcat(s, "(?prop-type)", len);
 		break;
 	}
 }
@@ -524,7 +524,7 @@ AG_StringCopy(void *p, const char *key, char *buf, size_t bufsize)
 	if (AG_GetProp(p, key, AG_PROP_STRING, &s) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	sl = strlcpy(buf, s, bufsize);
+	sl = Strlcpy(buf, s, bufsize);
 	AG_UnlockProps(p);
 	return (sl);
 }
@@ -539,7 +539,7 @@ AG_FindStringCopy(const char *key, char *buf, size_t bufsize)
 	if (AG_FindProp(key, AG_PROP_STRING, &s) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	sl = strlcpy(buf, s, bufsize);
+	sl = Strlcpy(buf, s, bufsize);
 	return (sl);
 }
 

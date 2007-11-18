@@ -95,7 +95,7 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 	char *s;
 	AG_Object *chld;
 
-	strlcpy(node_name, name, sizeof(node_name));
+	Strlcpy(node_name, name, sizeof(node_name));
 	if ((s = strchr(node_name, '/')) != NULL) {
 		*s = '\0';
 	}
@@ -204,7 +204,7 @@ AG_WidgetCopyBinding(void *w1, const char *n1, void *w2, const char *n2)
 
 	switch (b1->type) {
 	case AG_WIDGET_PROP:
-		strlcpy(b1->data.prop, b2->data.prop, sizeof(b1->data.prop));
+		Strlcpy(b1->data.prop, b2->data.prop, sizeof(b1->data.prop));
 		break;
 	case AG_WIDGET_STRING:
 		b1->data.size = b2->data.size;
@@ -365,7 +365,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 		binding->p1 = p1;
 		switch (type) {
 		case AG_WIDGET_PROP:
-			strlcpy(binding->data.prop, prop,
+			Strlcpy(binding->data.prop, prop,
 			    sizeof(binding->data.prop));
 			break;
 		case AG_WIDGET_STRING:
@@ -387,13 +387,13 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 	}
 
 	binding = Malloc(sizeof(AG_WidgetBinding));
-	strlcpy(binding->name, name, sizeof(binding->name));
+	Strlcpy(binding->name, name, sizeof(binding->name));
 	binding->type = type;
 	binding->p1 = p1;
 	binding->mutex = NULL;
 	switch (type) {
 	case AG_WIDGET_PROP:
-		strlcpy(binding->data.prop, prop, sizeof(binding->data.prop));
+		Strlcpy(binding->data.prop, prop, sizeof(binding->data.prop));
 		break;
 	case AG_WIDGET_STRING:
 		binding->data.size = size;
@@ -1420,7 +1420,7 @@ AG_WidgetParseSizeSpec(const char *spec_text, int *w)
 	char spec[256];
 	char *p;
 
-	strlcpy(spec, spec_text, sizeof(spec));
+	Strlcpy(spec, spec_text, sizeof(spec));
 	for (p = &spec[0]; (p[0] != '\0' && p[1] != '\0'); p++) {
 		break;
 	}
@@ -1595,7 +1595,7 @@ AG_WidgetSetString(void *wid, const char *name, const char *ns)
 	if ((binding = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
 		fatal("%s", AG_GetError());
 	}
-	strlcpy(s, ns, binding->data.size);
+	Strlcpy(s, ns, binding->data.size);
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -1609,7 +1609,7 @@ AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 	if ((b = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
 		fatal("%s", AG_GetError());
 	}
-	rv = strlcpy(dst, s, dst_size);
+	rv = Strlcpy(dst, s, dst_size);
 	AG_WidgetUnlockBinding(b);
 	return (rv);
 }

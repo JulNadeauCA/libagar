@@ -196,8 +196,8 @@ AG_DenImportFile(AG_Den *den, int ind, const char *name, const char *lang,
 	fclose(f);
 
 	memb = &den->members[ind];
-	strlcpy(memb->name, name, sizeof(memb->name));
-	strlcpy(memb->lang, lang, sizeof(memb->lang));
+	Strlcpy(memb->name, name, sizeof(memb->name));
+	Strlcpy(memb->lang, lang, sizeof(memb->lang));
 	memb->offs = offs;
 	memb->size = size;
 	return (0);

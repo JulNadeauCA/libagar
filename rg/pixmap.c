@@ -71,7 +71,7 @@ tryname:
 
 	px = Malloc(sizeof(RG_Pixmap));
 	RG_PixmapInit(px, ts, flags);
-	strlcpy(px->name, name, sizeof(px->name));
+	Strlcpy(px->name, name, sizeof(px->name));
 	TAILQ_INSERT_TAIL(&ts->pixmaps, px, pixmaps);
 	return (px);
 }
@@ -325,7 +325,7 @@ CreateBrush(AG_Event *event)
 	pbr = RG_PixmapAddBrush(px, btype, spx);
 	AG_TextboxCopyString(tb, pbr->name, sizeof(pbr->name));
 	if (pbr->name[0] == '\0') {
-		strlcpy(pbr->name, spx->name, sizeof(pbr->name));
+		Strlcpy(pbr->name, spx->name, sizeof(pbr->name));
 	}
 	if (AG_WidgetInt(cb_oneshot, "state")) {
 		pbr->flags |= RG_PIXMAP_BRUSH_ONESHOT;

@@ -391,7 +391,7 @@ Init(void *obj)
 	num->writeable = 1;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
-	strlcpy(num->format, "%g", sizeof(num->format));
+	Strlcpy(num->format, "%g", sizeof(num->format));
 	AG_MutexInitRecursive(&num->lock);
 	AG_TextboxSizeHint(num->input, "88.88");
 	
@@ -659,7 +659,7 @@ AG_NumericalSetPrecision(AG_Numerical *num, const char *mode,
 	num->format[0] = '%';
 	num->format[1] = '.';
 	snprintf(&num->format[2], sizeof(num->format)-2, "%d", precision);
-	strlcat(num->format, mode, sizeof(num->format));
+	Strlcat(num->format, mode, sizeof(num->format));
 	AG_MutexUnlock(&num->lock);
 }
 

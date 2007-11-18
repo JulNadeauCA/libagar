@@ -300,7 +300,7 @@ Init(void *obj)
 	fsu->value = 0.0;
 	fsu->input = AG_TextboxNew(fsu, AG_TEXTBOX_FLT_ONLY, NULL);
 	fsu->writeable = 1;
-	strlcpy(fsu->format, "%g", sizeof(fsu->format));
+	Strlcpy(fsu->format, "%g", sizeof(fsu->format));
 	AG_MutexInit(&fsu->lock);
 	AG_TextboxSizeHint(fsu->input, "88.88");
 	
@@ -611,7 +611,7 @@ AG_FSpinbuttonSetPrecision(AG_FSpinbutton *fsu, const char *mode,
 	fsu->format[0] = '%';
 	fsu->format[1] = '.';
 	snprintf(&fsu->format[2], sizeof(fsu->format)-2, "%d", precision);
-	strlcat(fsu->format, mode, sizeof(fsu->format));
+	Strlcat(fsu->format, mode, sizeof(fsu->format));
 	AG_MutexUnlock(&fsu->lock);
 }
 

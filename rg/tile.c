@@ -150,7 +150,7 @@ tryname:
 void
 RG_TileInit(RG_Tile *t, RG_Tileset *ts, const char *name)
 {
-	strlcpy(t->name, name, sizeof(t->name));
+	Strlcpy(t->name, name, sizeof(t->name));
 	t->clname[0] = '\0';
 	t->main_id = 0;
 	t->flags = 0;
@@ -326,7 +326,7 @@ RG_TileAddFeature(RG_Tile *t, const char *name, void *ft, int x, int y)
 
 	tel = Malloc(sizeof(RG_TileElement));
 	if (name != NULL) {
-		strlcpy(tel->name, name, sizeof(tel->name));
+		Strlcpy(tel->name, name, sizeof(tel->name));
 	} else {
 		GenerateElementName(tel, t, RG_FEATURE(ft)->name);
 	}
@@ -371,7 +371,7 @@ RG_TileAddPixmap(RG_Tile *t, const char *name, RG_Pixmap *px, int x, int y)
 
 	tel = Malloc(sizeof(RG_TileElement));
 	if (name != NULL) {
-		strlcpy(tel->name, name, sizeof(tel->name));
+		Strlcpy(tel->name, name, sizeof(tel->name));
 	} else {
 		GenerateElementName(tel, t, px->name);
 	}
@@ -395,7 +395,7 @@ RG_TileAddSketch(RG_Tile *t, const char *name, RG_Sketch *sk, int x, int y)
 
 	tel = Malloc(sizeof(RG_TileElement));
 	if (name != NULL) {
-		strlcpy(tel->name, name, sizeof(tel->name));
+		Strlcpy(tel->name, name, sizeof(tel->name));
 	} else {
 		GenerateElementName(tel, t, sk->name);
 	}

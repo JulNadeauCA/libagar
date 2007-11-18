@@ -62,7 +62,7 @@ AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
 		rad->items = Realloc(rad->items, (rad->nItems+1) *
 		                                 sizeof(AG_RadioItem));
 		ri = &rad->items[rad->nItems++];
-		strlcpy(ri->text, s, sizeof(ri->text));
+		Strlcpy(ri->text, s, sizeof(ri->text));
 		ri->surface = -1;
 		ri->hotkey = SDLK_UNKNOWN;
 		AG_TextSize(s, &w, NULL);
