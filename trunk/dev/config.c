@@ -262,7 +262,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		AG_WidgetBindUint16(msb,"yvalue", &agView->h);
 		AG_MSpinbuttonSetRange(msb, 320, 4096);
 #endif
-		AG_SeparatorNewHorizInv(tab);
+		AG_SpacerNewHoriz(tab);
 
 		sbu = AG_SpinbuttonNew(tab, 0, _("Screenshot quality (%): "));
 		AG_WidgetBindInt(sbu,"value", &agScreenshotQuality);
@@ -282,7 +282,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
 		    "config.text.antialiasing");
 		
-		AG_SeparatorNewHorizInv(tab);
+		AG_SpacerNewHoriz(tab);
 
 		cbox = AG_CheckboxNew(tab, 0, _("Unicode keyboard input"));
 		AG_WidgetBindInt(cbox,"state", &agKbdUnicode);
@@ -294,7 +294,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		cbox = AG_CheckboxNew(tab, 0, _("Edit text left to right"));
 		AG_WidgetBindInt(cbox,"state", &agTextBidi);
 		
-		AG_SeparatorNewHorizInv(tab);
+		AG_SpacerNewHoriz(tab);
 		
 		sbu = AG_SpinbuttonNew(tab, 0, _("Double click delay (ms): "));
 		AG_WidgetBindInt(sbu,"value", &agMouseDblclickDelay);
@@ -407,7 +407,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		cb = AG_CheckboxNew(tab, 0, _("Enable RCS"));
 		AG_WidgetBindInt(cb,"state", &agRcsMode);
 
-		AG_SeparatorNewHorizInv(tab);
+		AG_SpacerNewHoriz(tab);
 
 		tb = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Server hostname: "));
