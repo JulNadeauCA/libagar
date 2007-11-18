@@ -33,9 +33,9 @@ typedef struct ag_glview {
 	AG_Event *btndown_ev, *btnup_ev;	/* Mouse button events */
 	AG_Event *motion_ev;			/* Mouse motion event */
 
-	double mProjection[16];			/* Projection matrix to load */
-	double mModelview[16];			/* Modelview matrix to load */
-	double mTexture[16];			/* Texture matrix to load */
+	float mProjection[16];			/* Projection matrix to load */
+	float mModelview[16];			/* Modelview matrix to load */
+	float mTexture[16];			/* Texture matrix to load */
 } AG_GLView;
 
 #define AGGLVIEW(p) ((AG_GLView *)(p))
