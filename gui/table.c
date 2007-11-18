@@ -392,10 +392,14 @@ static void
 Draw(void *p)
 {
 	AG_Table *t = p;
-	AG_Rect rCell;
+	AG_Rect rCell, rBg;
 	int n, m;
 
-	STYLE(t)->TableBackground(t, 0, 0, t->wTbl, HEIGHT(t));
+	rBg.x = 0;
+	rBg.y = 0;
+	rBg.w = t->wTbl;
+	rBg.h = HEIGHT(t);
+	STYLE(t)->TableBackground(t, rBg);
 
 	AG_MutexLock(&t->lock);
 	t->moffs = AG_WidgetInt(t->vbar, "value");
