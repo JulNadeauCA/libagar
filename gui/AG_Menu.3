@@ -302,6 +302,17 @@ widget does not generate any event.
 The
 .Nm
 widget does not provide any binding.
+.Sh STRUCTURE DATA
+.Bl -tag -width "AG_MenuItem *itemSel "
+.It Ft AG_MenuItem *root
+The root menu item.
+.It Ft AG_MenuItem *itemSel
+The currently selected top-level item.
+Top-level items are attached directly to
+.Va root .
+.It Ft int selecting
+Selection is in progress if set to 1 (read-only).
+.El
 .Sh EXAMPLES
 The following code fragment creates a menu with an action item, a boolean
 item and two bitmask items.
@@ -331,8 +342,8 @@ item = AG_MenuAddItem(menu, "File");
 	AG_MenuAction(item, "Say hello", NULL, hello, "%s", "world");
 	AG_MenuSeparator(item);
 	AG_MenuIntBool(item, "Some flag", NULL, &someflag, 0);
-	AG_MenuUint16_bool(item, "Foo flag", NULL, &flags, FOO_FLAG, 0);
-	AG_MenuUint16_bool(item, "Bar flag", NULL, &flags, BAR_FLAG, 0);
+	AG_MenuInt16Flags(item, "Foo", NULL, &flags, FOO_FLAG, 0);
+	AG_MenuInt16Flags(item, "Bar", NULL, &flags, BAR_FLAG, 0);
 	AG_MenuSeparator(item);
 	AG_MenuAction(item, "Quit", myQuitIcon, quit_app, NULL);
 }

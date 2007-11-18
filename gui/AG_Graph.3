@@ -170,7 +170,51 @@ Pan or move selected vertices.
 The
 .Nm
 widget does not generate any event.
+.Sh STRUCTURE DATA
+.Bl -tag -compact -width "int xOffs, yOffs "
+.It Ft int xOffs, yOffs
+Display offset in pixels.
+.It Ft Uint nvertices
+Vertex count
+.It Ft Uint nedges
+Edge count
+.It Ft TAILQ vertices
+List of
+.Ft AG_GraphVertex
+structures (see below).
+.It Ft TAILQ edges
+List of
+.Ft AG_GraphEdge
+structures (see below).
+.El
 .Pp
+For the
+.Ft AG_GraphVertex
+structure:
+.Pp
+.Bl -tag -compact -width "void *userPtr "
+.It Ft int x, y
+Pixel coordinates of vertex in the graph.
+.It Ft Uint w, h
+Bounding box for graphical representation of the vertex.
+.It Ft void *userPtr
+Generic user pointer.
+.It Ft TAILQ edges
+List of
+.Xr AG_GraphEdge 3
+objects connected to this vertex.
+.El
+.Pp
+For the
+.Ft AG_GraphEdge
+structure:
+.Pp
+.Bl -tag -compact -width "AG_GraphVertex *v1, *v2 "
+.It Ft AG_GraphVertex *v1, *v2
+Vertices connected by edge
+.It Ft void *userPtr
+User pointer
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,

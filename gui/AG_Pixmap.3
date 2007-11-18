@@ -173,6 +173,13 @@ The default is [0,0].
 The
 .Nm
 widget neither reacts to nor generates any event.
+.Sh STRUCTURE DATA
+.Bl -tag -width "int s, t "
+.It Ft int s, t
+Source surface coordinates.
+Can be set using
+.Fn AG_PixmapSetCoords .
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Fixed 3 ,
@@ -186,7 +193,7 @@ demo in the Agar distribution illustrates the use of
 .Xr AG_Fixed 3
 and
 .Nm
-in a game interface.
+in a game-style interface.
 .Sh HISTORY
 The
 .Nm

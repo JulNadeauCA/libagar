@@ -77,7 +77,7 @@ may include:
 .It AG_FIXED_PLOTTER_SCROLL
 Always scroll to the end of the plot if it is not visible.
 .It AG_FIXED_PLOTTER_XAXIS
-Display the X-axis  line.
+Display the X-axis line.
 .El
 .Sh PLOTTING
 .nr nS 1
@@ -127,6 +127,12 @@ Start moving.
 The
 .Nm
 widget does not generate any event.
+.Sh STRUCTURE DATA
+.Bl -tag -width "enum ag_fixed_plotter_type type "
+.It Ft enum ag_fixed_plotter_type type
+Drawing method, initially set by
+.Fn AG_FixedPlotterNew .
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,

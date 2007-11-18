@@ -29,7 +29,7 @@ typedef struct ag_size_alloc {
 } AG_SizeAlloc;
 
 typedef struct ag_widget_class {
-	const AG_ObjectClass _inherit;
+	struct ag_object_class _inherit;
 	void (*draw)(void *);
 	void (*size_request)(void *, AG_SizeReq *);
 	int  (*size_allocate)(void *, const AG_SizeAlloc *);

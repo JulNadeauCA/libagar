@@ -84,74 +84,14 @@ section of the widget's manual page.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
-.Sh FLAGS
+.Sh CLASS OPERATIONS
 The
-.Va flags
-member of the
-.Nm
-structure accepts the following flags:
-.Bl -tag -width "AG_WIDGET_UNFOCUSED_BUTTONDOWN "
-.It AG_WIDGET_HFILL
-Hint to container widgets that in a vertical packing, this widget can expand
-to fill all remaining space.
-.It AG_WIDGET_VFILL
-Hint to container widgets that in a horizontal packing, this widget can expand
-to fill all remaining space.
-.It AG_WIDGET_CLIPPING
-Automatically set a temporary clipping rectangle to surround the widget
-area during rendering.
-Note that widgets can also request clipping rectangles using
-.Fn AG_WidgetPushClipRect
-and
-.Fn AG_WidgetPopClipRect .
-.It AG_WIDGET_HIDE
-Disable rendering of this widget (does not affect widget's children).
-.It AG_WIDGET_DISABLED
-Meaning is widget-specific but it generally disables user input.
-Flag is read-only and must be set via
-.Fn AG_WidgetDisable
-and
-.Fn AG_WidgetEnable 
-(see
-.Dq INPUT STATE
-section below for more details).
-.It AG_WIDGET_FOCUSABLE
-The widget can grab the focus.
-.It AG_WIDGET_UNFOCUSED_MOTION
-Receive
-.Sq window-mousemotion
-events unconditionally (focus is required by default).
-.It AG_WIDGET_UNFOCUSED_BUTTONUP
-Receive
-.Sq window-mousebuttonup
-events unconditionally (focus is required by default).
-.It AG_WIDGET_UNFOCUSED_BUTTONDOWN
-Receive
-.Sq window-mousebuttonup
-events unconditionally (focus is required by default).
-.It AG_WIDGET_CATCH_TAB
-When the user presses the
-.Dv TAB
-key, generate normal
-.Sq window-keydown
-and
-.Sq window-keyup
-events.
-Without this flag,
-.Dv TAB
-is used to change the focus to the next widget.
-.El
-.Sh OPERATIONS
-The
-.Nm
-class overloads
-.Ft AG_ObjectClass
-with the
 .Ft AG_WidgetClass
-structure:
+structure adds some operations to
+.Ft AG_ObjectClass :
 .Bd -literal
-typedef struct ag_widget_ops {
-	const AG_ObjectClass inherit;
+typedef struct ag_widget_class {
+	struct ag_object_class _inherit;
 	void (*draw)(void *p);
 	void (*size_request)(void *, AG_SizeReq *);
 	int  (*size_allocate)(void *, const AG_SizeAlloc *);
@@ -338,6 +278,12 @@ and
 .Fa y
 are inside the widget area.
 .Sh BLITTING SURFACES
+These functions manage blitting of graphical surfaces.
+They are designed specifically for use in GUI widgets.
+They must be called from the
+.Fa draw
+functions of widgets exclusively and may not be used in any other context.
+.Pp
 .nr nS 1
 .Ft void
 .Fn AG_WidgetBlit "AG_Widget *widget" "SDL_Surface *src" "int x" "int y"
@@ -411,6 +357,11 @@ and
 .Fa rs
 set to NULL).
 .Sh RENDERING AND PRIMITIVES
+These functions are designed specifically for use in GUI widgets.
+They must be called from the
+.Fa draw
+functions of widgets exclusively and may not be used in any other context.
+.Pp
 .nr nS 1
 .Ft void
 .Fn AG_WidgetPushClipRect "AG_Widget *widget" "int x" "int y" "Uint w" "Uint h"
@@ -506,11 +457,10 @@ typedef enum ag_blend_func {
 } AG_BlendFn;
 .Ed
 .Sh GRAPHICS PRIMITIVES
-All of the following functions must be called from widget
-.Va draw
-functions.
-These primitives are designed specifically for use in GUI widgets, and are
-not safe to invoke from any other context.
+These primitives are designed specifically for use in GUI widgets.
+They must be called from the
+.Fa draw
+functions of widgets exclusively and may not be used in any other context.
 .Pp
 The coordinates for all of the
 .Fn AG_Draw*
@@ -958,6 +908,82 @@ The widget no longer holds focus.
 .It Fn widget-bound "AG_WidgetBinding *binding"
 A widget binding has been added or modified.
 .El
+.Sh STRUCTURE DATA
+.Bl -tag -width "int cx2, cy2 "
+.It Ft Uint flags
+Option flags (see
+.Dq FLAGS
+section below).
+.It Ft int x, y
+Pixel coordinates of the widget relative to its parent.
+.It Ft int w, h
+Dimensions of the widget in pixels.
+.It Ft int cx, cy
+Absolute view coordinates of the upper left corner of the widget.
+.It Ft int cx2, cy2
+Absolute view coordinates of the lower right corner of the widget.
+.It Ft int redraw
+If
+.Dv AG_WIDGET_STATIC
+is set, a value of 1 causes the widget to be redrawn.
+.El
+.Sh FLAGS
+The
+.Va flags
+member of the
+.Nm
+structure accepts the following flags:
+.Bl -tag -width "AG_WIDGET_UNFOCUSED_BUTTONDOWN "
+.It AG_WIDGET_HFILL
+Hint to container widgets that in a vertical packing, this widget can expand
+to fill all remaining space.
+.It AG_WIDGET_VFILL
+Hint to container widgets that in a horizontal packing, this widget can expand
+to fill all remaining space.
+.It AG_WIDGET_CLIPPING
+Automatically set a temporary clipping rectangle to surround the widget
+area during rendering.
+Note that widgets can also request clipping rectangles using
+.Fn AG_WidgetPushClipRect
+and
+.Fn AG_WidgetPopClipRect .
+.It AG_WIDGET_HIDE
+Disable rendering of this widget (does not affect widget's children).
+.It AG_WIDGET_DISABLED
+Meaning is widget-specific but it generally disables user input.
+Flag is read-only and must be set via
+.Fn AG_WidgetDisable
+and
+.Fn AG_WidgetEnable 
+(see
+.Dq INPUT STATE
+section below for more details).
+.It AG_WIDGET_FOCUSABLE
+The widget can grab the focus.
+.It AG_WIDGET_UNFOCUSED_MOTION
+Receive
+.Sq window-mousemotion
+events unconditionally (focus is required by default).
+.It AG_WIDGET_UNFOCUSED_BUTTONUP
+Receive
+.Sq window-mousebuttonup
+events unconditionally (focus is required by default).
+.It AG_WIDGET_UNFOCUSED_BUTTONDOWN
+Receive
+.Sq window-mousebuttonup
+events unconditionally (focus is required by default).
+.It AG_WIDGET_CATCH_TAB
+When the user presses the
+.Dv TAB
+key, generate normal
+.Sq window-keydown
+and
+.Sq window-keyup
+events.
+Without this flag,
+.Dv TAB
+is used to change the focus to the next widget.
+.El
 .Sh EXAMPLES
 See
 .Pa demos/widgets
@@ -970,6 +996,3 @@ in the Agar source distribution.
 The
 .Nm
 interface first appeared in Agar 1.0.
-.Sh BUGS
-Atomic widget binding operations require the use of mutexes, read-write locks
-are not yet supported.

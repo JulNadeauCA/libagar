@@ -101,6 +101,7 @@ Ignore the preferred sizes and divide into two equal parts.
 .It AG_PANE_FORCE_DIV
 Don't allow the user to move the divider.
 .El
+.Pp
 If
 .Dv AG_PANE_FRAME
 is set, the depth of the frame can be adjusted by invoking
@@ -148,6 +149,17 @@ Move the separator, resizing the partitions.
 The
 .Nm
 widget does not generate any event.
+.Sh STRUCTURE DATA
+.Bl -tag -width "AG_Box *div[2] "
+.It Ft AG_Box *div[2]
+Division containers (assuming that
+.Fn AG_PaneAttachBox
+was not used).
+.It Ft int dmoving
+Divider is currently being moved by the user (read-only).
+.It Ft int dx
+Actual divider position (read-only)
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Box 3 ,

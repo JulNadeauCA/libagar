@@ -38,11 +38,12 @@ typedef struct ag_tlist_item {
 	int argc;
 	Uint8 depth;				/* Depth in tree */
 	Uint8 flags;
-#define AG_TLIST_VISIBLE_CHILDREN 0x01	/* Child items visible (tree) */
+#define AG_TLIST_EXPANDED	  0x01	/* Child items visible (tree) */
 #define AG_TLIST_HAS_CHILDREN	  0x02	/* Child items exist (tree) */
 #define AG_TLIST_DYNICON	  0x04	/* Use a copy of iconsrc */
 #define AG_TLIST_NO_SELECT	  0x08	/* Item is not selectable */
 #define AG_TLIST_NO_POPUP	  0x10	/* Disable popups for item */
+#define AG_TLIST_VISIBLE_CHILDREN AG_TLIST_EXPANDED
 
 	TAILQ_ENTRY(ag_tlist_item) items;	/* Items in list */
 	TAILQ_ENTRY(ag_tlist_item) selitems;	/* Saved selection state */

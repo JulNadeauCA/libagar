@@ -181,6 +181,13 @@ The string is about to be modified.
 .It Fn textbox-postchg "void"
 The string was just modified.
 .El
+.Sh STRUCTURE DATA
+.Bl -tag -compact -width "int offs "
+.It Ft int pos
+Current cursor position (must never exceed the string length).
+.It Ft int offs
+Index of first visible character.
+.El
 .Sh EXAMPLES
 The following code fragment binds a
 .Nm

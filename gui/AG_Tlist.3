@@ -428,6 +428,55 @@ or
 .Dv AG_TLIST_MULTITOGGLE
 flags are in use.
 .El
+.Sh STRUCTURE DATA
+.Bl -tag -compact -width "TLIST items "
+.It Ft TLIST items
+List of all
+.Ft AG_TlistItem
+objects (list itself is read-only, items are not).
+.It Ft int nitems
+Count of items in the list (read-only).
+.El
+.Pp
+For the
+.Ft AG_TlistItem
+structure:
+.Pp
+.Bl -tag -compact -width "const char *cat "
+.It Ft int selected
+Selection flag.
+.It Ft void *p1
+User pointer.
+.It Ft const char *cat
+User "category" string.
+Usage is application-specific, typically used for popup menus.
+.It Ft char text[]
+Text string to display.
+Limited to
+.Dv AG_TLIST_LABEL_MAX
+bytes.
+.It Ft int depth
+Depth in tree (only applicable if
+.Dv AG_TLIST_TREE
+is set).
+.It Ft Uint8 flags
+Item flags (see
+.Dq ITEM FLAGS
+section below).
+.El
+.Sh ITEM FLAGS
+.Bl -tag -width "AG_TLIST_MULTITOGGLE "
+.It AG_TLIST_EXPANDED
+Indicates that the child items should be displayed (the
+.Dv AG_TLIST_TREE
+flag must be set).
+.It AG_TLIST_HAS_CHILDREN
+Indicates that this item has a non-zero number of child items.
+.It AG_TLIST_NO_SELECT
+Disallow user selection of this item.
+.It AG_TLIST_NO_POPUP
+If popup menus are in effect, disable popups for this item.
+.El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
