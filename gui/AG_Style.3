@@ -1,0 +1,286 @@
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 18, 2007
+.Dt AG_STYLE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_Style
+.Nd agar themeing interface
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+structure describes a "style" (or "theme") to be associated with GUI widgets,
+using a set of functions which we refer to as "style operations".
+Different widgets in a same display can be linked with different themes.
+.Pp
+While the low-level
+.Xr AG_Widget 3
+primitives (i.e., the
+.Fn AG_Draw*
+functions) are mainly concerned with generic entities such as lines,
+rectangles and circles,
+.Nm
+is concerned with high-level cosmetic operations, such as rendering "the
+background of a button in a given state".
+Style operations tend to target specific classes of widget, but many of them
+are generic.
+For example,
+.Fn TableBackground
+is used by all widgets displaying tabular data.
+.Pp
+Widget implementors are encouraged to use style operations for all rendering
+operations that are purely cosmetic.
+New style operations can be added without breaking previous themes.
+.Pp
+Style operations generally perform vector drawing operations or blit fixed
+pixmaps in specific patterns.
+The default theme uses vector drawing exclusively.
+Vector drawing is recommended when resolution independence is a requirement.
+.Sh INTERFACE
+.nr nS 1
+.Ft "void"
+.Fn AG_SetStyle "void *object" "AG_Style *style"
+.Pp
+.nr nS 0
+The
+.Fn AG_SetStyle
+function accepts an
+.Xr AG_View 3
+or
+.Xr AG_Widget 3
+as the
+.Fa object
+argument.
+If the argument is a view, all
+.Xr AG_Window 3
+objects attached to that view will inherit the style by default.
+If the argument is a widget, any child widget attached to it will also
+inherit its style.
+.Sh STYLE OPERATIONS
+.Bl -tag -width 2n
+.It Fn init "AG_Style *style"
+Initialization function.
+.It Fn destroy "AG_Style *style"
+Destructor function.
+.It Fn WindowBackground "AG_Window *window"
+Draw background for windows (that do not have the
+.Dv AG_WINDOW_NOBACKGROUND
+flag set).
+.It Fn WindowBorders "AG_Window *window"
+Draw borders around windows (that do not have the
+.Dv AG_WINDOW_NOBORDERS
+flag set).
+The default theme uses the standard
+.Va agColorsBorder
+array (and
+.Va agColorsBorderSize )
+but it is optional.
+.It Fn TitlebarBackground "AG_Widget *widget" "int isPressed" "int isFocused"
+Draw background of a titlebar widget.
+.It Fn ButtonBackground "AG_Widget *widget" "int isPressed"
+Draw background of a button.
+.It Fn ButtonTextOffset "AG_Widget *widget" "int isPressed" "int *x" "int *y"
+Return an offset to assign to button labels into
+.Fa x
+and
+.Fa y .
+.It Fn BoxFrame "AG_Widget *widget" "int depth"
+Draw background for generic box-style containers, where
+.Fa depth
+is given in pixels.
+.It Fn CheckboxButton "int state"
+Draw a checkbox button.
+.It Fn ConsoleBackground "AG_Widget *widget" "Uint32 bgColor"
+Draw background for text console display widgets.
+.Fa bgColor
+is a color in
+.Va agViewFmt
+format.
+.It Fn FixedPlotterBackground "AG_Widget *widget" "int showAxis" "Uint32 yOffs"
+Draw background for single-axis plots.
+.It Fn MenuRootBackground "AG_Widget *widget" "AG_Rect r"
+Draw background for root menu displays.
+.It Fn MenuRootSelectedItemBackground "AG_Widget *widget" "AG_Rect r"
+Draw background for selected root menu items.
+.It Fn MenuBackground "AG_Widget *widget" "AG_Rect r"
+Draw background for menu views.
+.It Fn MenuItemBackground "AG_Widget *widget" "AG_Rect r" "int xIcon" "AG_Widget *iconObj" "int icon" "int isSelected" "int boolState"
+Draw background for an individual item in a menu view.
+.Fa xIcon
+is the x-coordinate of the icon to display.
+.Fa iconObj
+is the widget that contains the icon mapping.
+.It Fn MenuItemSeparator "AG_Widget *widget" "int x1" "int x2" "int y" "int h"
+Draw a horizontal separator between menu item.
+.Fa x1
+and
+.Fa x2
+are the line endpoints,
+.Fa y
+is the y-coordinate of the line and
+.Fa h
+is the total height of the separator.
+.It Fn NotebookBackground "AG_Widget *widget" "AG_Rect r"
+Draw the background for
+.Xr AG_Notebook 3
+style widgets.
+.It Fn NotebookTabBackground "AG_Widget *widget" "AG_Rect r" "int idx" "int isSelected"
+Draw the background for a notebook tab.
+.Fa idx
+indicates the index of the tab.
+.Fa isSelected
+is 1 if this is the currently active tab.
+.It Fn PaneHorizDivider "AG_Widget *widget" "int x" "int y" "int w" "int isMoving"
+Draw the background for a horizontal divider.
+.Fa isMoving
+indicates whether the user is currently moving the divider.
+.It Fn PaneVertDivider "AG_Widget *widget" "int x" "int y" "int w" "int isMoving"
+Draw the background for a vertical divider.
+.Fa isMoving
+indicates whether the user is currently moving the divider.
+.It Fn RadioGroupBackground "AG_Widget *widget" "AG_Rect r"
+Draw the background for a group of radio buttons.
+.It Fn RadioButton "AG_Radio *radio" "int x" "int y" "int selected" "int overlap"
+Draw an individual
+.Xr AG_Radio 3 
+button.
+.Fa x
+and
+.Fa y
+are the upper-left coordinates of the button.
+.Fa selected
+is 1 if the button is currently selected.
+.Fa overlap
+is 1 if the cursor is over the button.
+.It Fn ScrollbarBackground "AG_Widget *widget"
+Draw the background for scrollbar widgets.
+.It Fn ScrollbarVertButtons "AG_Scrollbar *scrollbar" "int y" "int h"
+Draw the three buttons of vertical
+.Xr AG_Scrollbar 3
+widgets.
+.Fa y
+is the upper coordinate of the center (slider) button and
+.Fa h
+is its height.
+.It Fn ScrollbarHorizButtons "AG_Scrollbar *scrollbar" "int x" "int w"
+Draw the three buttons of horizontal
+.Xr AG_Scrollbar 3
+widgets.
+.Fa x
+is the left coordinate of the center (slider) button and
+.Fa w
+is its width.
+.It Fn SeparatorHoriz "AG_Widget *widget"
+Draw horizontal
+.Xr AG_Separator 3
+widgets.
+.It Fn SeparatorVert "AG_Widget *widget"
+Draw vertical
+.Xr AG_Separator 3
+widgets.
+.It Fn SocketBackground "AG_Socket *socket"
+Draw the background of
+.Xr AG_Socket 3
+widgets.
+The function must repect the
+.Va bgType
+value of the socket.
+.It Fn SocketOverlay "AG_Socket *socket" "int highlight"
+Draw over
+.Xr AG_Socket 3
+widgets.
+Usually, a rectangle or circle is drawn when
+.Fa highlight
+is 1.
+.It Fn TableBackground "AG_Widget *widget" "AG_Rect r"
+Draw background for tabular displays such as
+.Xr AG_Table 3 .
+.It Fn TableColumnHeaderBackground "AG_Widget *widget" "int idx" "AG_Rect r" "int isSelected"
+Draw background for a column header cell.
+.Fa idx
+is the index of the column.
+.Fa isSelected
+is 1 if the column is selected.
+.It Fn TableRowBackground "AG_Widget *widget" "AG_Rect r" "int isSelected"
+Draw the background of an entire table row.
+.Fa isSelected
+is 1 if the row is selected.
+.It Fn TableCellBackground "AG_Widget *widget" "AG_Rect r" "int isSelected"
+Draw the background of an individual table cell.
+.Fa isSelected
+is 1 if the cell is selected.
+.It Fn ListBackground "AG_Widget *widget" "AG_Rect r"
+Draw the background of list displays such as
+.Xr AG_Tlist 3 .
+.It Fn ListItemBackground "AG_Widget *widget" "AG_Rect r" "int isSelected"
+Draw the background of individual list items.
+.Fa isSelected
+is 1 if the item is selected.
+.It Fn TreeSubnodeIndicator "AG_Widget *widget" "AG_Rect r" "int isExpanded"
+Draw a symbol (typically a "+" inside of a square) to indicate that the given
+tree item contains child items
+.Fa isExpanded
+is 1 if the child items are visible.
+.El
+.Sh EXAMPLES
+The easiest way to start a new theme is to simply copy
+.Pa gui/style_default.c
+from the Agar source distribution, remove the static initializer for
+.Va agStyleDefault
+and use an initialization function that overrides individual operations
+instead, so that the theme will continue to work as new operations as
+added:
+.Pp
+.Bd -literal
+AG_Style myStyle = agStyleDefault;
+
+void
+InitMyStyle(AG_Style *s)
+{
+	s->name = "MyStyle";
+	s->version.maj = 1;
+	s->version.min = 1;
+	s->init = InitMyStyle;
+	s->destroy = NULL;
+	s->WindowBackground = MyWindowBackground;
+	s->WindowBorders = MyWindowBorders;
+	...
+}
+.Ed
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.3.
