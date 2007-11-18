@@ -35,39 +35,61 @@ Agar is a set of libraries for developing graphical applications that are
 portable to numerous platforms.
 .Pp
 .Sh AGAR-CORE
-Agar-Core implements a simple and generic object system to facilitate
-object-oriented programming in C.
+Agar-Core implements the
+.Xr AG_Object 3
+object system and provides portable interfaces to some operating system
+services.
 .Pp
-.Bl -tag -width "AG_Timeout(3) " -compact
+.Bl -tag -width "AG_DataSource(3) " -compact
+.It Xr AG_Config 3
+Manage Agar configuration settings.
 .It Xr AG_Core 3
 Core Agar library initialization.
+.It Xr AG_DataSource 3 
+Generic interface to different data sources.
+.It Xr AG_Error 3
+Error handling in Agar.
 .It Xr AG_Object 3
-Object linkage, memory management, persistence, dependencies and events.
+The Agar object system.
 .It Xr AG_Event 3
 Event handling for objects.
 .It Xr AG_Prop 3
 Generic runtime properties for objects.
-.It Xr AG_View 3
-Interface to the graphics display.
+.It Xr AG_Threads 3
+Portable threads interface.
 .It Xr AG_Timeout 3
 Timing-related routines.
+.It Xr AG_Version 3
+Datafile versioning functions.
 .El
 .Sh AGAR-GUI
-Agar-GUI implements a set of widget and a built-in window system.
-Applications can be compiled with runtime support for both SDL and
-OpenGL display modes.
+Agar-GUI implements a set of widget and a built-in window system that are
+independent of the underlying graphics API.
 .Pp
 .Bl -tag -width "AG_Window(3) " -compact
+.It Xr AG_Colors 3
+Color scheme interface.
+.It Xr AG_Style 3
+The high-level themeing API.
 .It Xr AG_Text 3
-High-level interface to font engine (FreeType or bitmap).
+Interface to font engine (i.e., FreeType or bitmap fonts).
 .It Xr AG_Units 3
 Conversion between different unit systems.
+.It Xr AG_View 3
+Low-level interface to the graphics display.
 .It Xr AG_Widget 3
 Generic widget interface.
 .It Xr AG_Window 3
 Basic window widget; interface to built-in window manager.
 .El
 .Sh AGAR-GUI WIDGETS
+These are the standard Agar widget classes.
+The widget API is open, so libraries and applications will frequently
+implement new widgets (inheriting from existing widget classes is made
+possible by the
+.Xr AG_Object 3
+system).
+.Pp
 .Bl -tag -width "AG_ObjectSelector(3) " -compact
 .It Xr AG_Box 3
 Horizontal/vertical widget container.
@@ -77,22 +99,27 @@ Generic push-button widget (boolean bindings).
 Generic checkbox widget (boolean bindings).
 .It Xr AG_Combo 3
 Text input/drop-down menu widget.
+.It Xr AG_Console 3
+Scrollable text console widget.
 .It Xr AG_FileDlg 3
 File selection widget.
 .It Xr AG_Fixed 3
 Container for fixed position/geometry widgets.
-.It Xr AG_Numerical 3
-Numerical input / spinbutton widget for floating-point and integer
-values.
 .It Xr AG_GLView 3
-OpenGL context widget.
+Low-level OpenGL context widget.
+.It Xr AG_Graph 3
+Graph display widget.
 .It Xr AG_FixedPlotter 3
-Plot a set of integral values.
+Plotter for integral values.
 .It Xr AG_HBox 3
 Alternate interface to
 .Xr AG_Box 3 .
 .It Xr AG_HSVPal 3
 Hue/saturation/value color picker widget.
+.It Xr AG_Icon 3
+Drag-and-droppable object that can be inserted into
+.Xr AG_Socket 3
+widgets.
 .It Xr AG_Label 3
 Display a string of text (static or polled).
 .It Xr AG_MFSpinbutton 3
@@ -107,6 +134,9 @@ Matrix viewer widget.
 Menu widget.
 .It Xr AG_Notebook 3
 Notebook widget.
+.It Xr AG_Numerical 3
+Numerical input / spinbutton widget for floating-point and integer
+values.
 .It Xr AG_ObjectSelector 3
 Selector for
 .Xr AG_Object 3
@@ -125,6 +155,10 @@ Simple radio group widget (integer bindings).
 Horizontal or vertical scrollbar (integral range and value bindings).
 .It Xr AG_Separator 3
 Cosmetic separator widget.
+.It Xr AG_Socket 3
+Placeholder for drag-and-droppable
+.Xr AG_Icon 3
+objects.
 .It Xr AG_Spinbutton 3
 Spinbutton widget for integer values.
 Superceded by
@@ -164,8 +198,8 @@ Viewpoint object.
 Light source object.
 .It Xr SG_Matrix 3
 Optimized 4x4 matrix routines.
-.It Xr SG_Vector 3
-Optimized vector routines.
+.\" .It Xr SG_Vector 3
+.\" Optimized vector routines.
 .It Xr SG_View 3
 Scene visualization widget.
 .It Xr SK 3
@@ -203,35 +237,36 @@ Tile reference with texturing settings.
 Animation generated from a set of instructions.
 .It Xr RG_Pixmap 3
 Graphical surface used internally.
-.It Xr RG_Sketch 3
-Vector drawing used internally.
+.\" .It Xr RG_Sketch 3
+.\" Vector drawing used internally.
 .It Xr RG_Feature 3
 Generic graphical operation framework.
 .It Xr RG_Tileview 3
 Widget for graphics edition, generic tool framework with undo.
-.It Xr RG_Animview 3
-Widget for displaying animations.
+.\" .It Xr RG_Animview 3
+.\" Widget for displaying animations.
 .El
-.Sh AGAR-SC
-Agar-SC is a set of tools commonly needed in simulations, such as basic
-linear algebra routines, a parallel solver for large, sparse matrices and
-a set of useful visualization widgets.
-.Pp
-.Bl -tag -width "SC_Matview(3) " -compact
-.It Xr SC_Matrix 3
-Routines for m-by-n matrices.
-.It Xr SC_Vector 3
-Routines for vectors.
-.It Xr SC_Matview 3
-Matrix visualization widget.
-.It Xr SC_Plotter 3
-Widget for plotting functions and derivatives.
-.El
+.\" .Sh AGAR-SC
+.\" Agar-SC is a set of tools commonly needed in simulations, such as basic
+.\" linear algebra routines, a parallel solver for large, sparse matrices and
+.\" a set of useful visualization widgets.
+.\" .Pp
+.\" .Bl -tag -width "SC_Matview(3) " -compact
+.\" .It Xr SC_Matrix 3
+.\" Routines for m-by-n matrices.
+.\" .It Xr SC_Vector 3
+.\" Routines for vectors.
+.\" .It Xr SC_Matview 3
+.\" Matrix visualization widget.
+.\" .It Xr SC_Plotter 3
+.\" Widget for plotting functions and derivatives.
+.\" .El
 .Sh AGAR-MAP
 Agar-MAP is a 2D tiling library aimed at isometric games, platform games
 and scrollers.
+It depends on Agar-RG for graphics.
 .Pp
-.Bl -tag -width "SC_Matview(3) " -compact
+.Bl -tag -width "MAP_Actor(3) " -compact
 .It Xr MAP 3
 The basic 2D map object.
 .It Xr MAP_Actor 3
@@ -239,17 +274,17 @@ Dynamic map object.
 .It Xr MAP_View 3
 Map visualization and edition widget.
 .El
-.Sh AGAR-NET
-Agar-NET is a network communication package which includes a portable,
-thread-safe client library along with a server framework.
-The server framework supports two models of operation: multi-process and
-multi-thread.
-Agar-NET provides support for multiple authentication methods, structured
-queries, sessions and efficient data streaming to a large number of clients.
-.Pp
-.Bl -tag -width "NS(3) " -compact
-.It Xr NC 3
-The network client library.
-.It Xr NS 3
-The server library.
-.El
+.\" .Sh AGAR-NET
+.\" Agar-NET is a network communication package which includes a portable,
+.\" thread-safe client library along with a server framework.
+.\" The server framework supports two models of operation: multi-process and
+.\" multi-thread.
+.\" Agar-NET provides support for multiple authentication methods, structured
+.\" queries, sessions and efficient data streaming to a large number of clients.
+.\" .Pp
+.\" .Bl -tag -width "NS(3) " -compact
+.\" .It Xr NC 3
+.\" The network client library.
+.\" .It Xr NS 3
+.\" The server library.
+.\" .El

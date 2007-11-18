@@ -170,7 +170,8 @@ AG_SetString(agConfig, "font-path", "%s/Library/Fonts:/Library/Fonts:"
 #elif _WIN32
 AG_SetString(agConfig, "font-path", "c:\\windows\\fonts");
 #else
-AG_SetString(agConfig, "font-path", "%s/.fonts:/usr/X11R6/lib/X11/fonts/TTF",
+AG_SetString(agConfig, "font-path", "%s/.fonts:"
+                                    "/usr/X11R6/lib/X11/fonts/TTF",
                                     getenv("HOME"));
 #endif
 .Ed
