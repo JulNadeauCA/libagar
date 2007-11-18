@@ -142,7 +142,7 @@ AG_LoadBitmapGlyph(SDL_Surface *su, const char *lbl, void *p)
 	AG_Font *font = p;
 
 	if (font->nglyphs == 0) {
-		strlcpy(font->bspec, lbl, sizeof(font->bspec));
+		Strlcpy(font->bspec, lbl, sizeof(font->bspec));
 	}
 	font->bglyphs = Realloc(font->bglyphs,
 	                        (font->nglyphs+1)*sizeof(SDL_Surface *));
@@ -205,7 +205,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	int i;
 
 	if (pname != NULL) {
-		strlcpy(name, pname, sizeof(name));
+		Strlcpy(name, pname, sizeof(name));
 	} else {
 		AG_StringCopy(agConfig, "font.face", name, sizeof(name));
 	}
@@ -524,7 +524,7 @@ AG_TextRenderGlyph(Uint32 ch)
 		Uint32 ucs[2];
 
 		gl = Malloc(sizeof(AG_Glyph));
-		strlcpy(gl->fontname, OBJECT(state->font)->name,
+		Strlcpy(gl->fontname, OBJECT(state->font)->name,
 		    sizeof(gl->fontname));
 		gl->fontsize = state->font->size;
 		gl->color = state->color;
@@ -1289,7 +1289,7 @@ AG_TextParseFontSpec(const char *fontspec)
 	char buf[128];
 	char *fs, *s, *c;
 
-	strlcpy(buf, fontspec, sizeof(buf));
+	Strlcpy(buf, fontspec, sizeof(buf));
 	fs = &buf[0];
 
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
@@ -1430,8 +1430,8 @@ AG_TextWarning(const char *key, const char *format, ...)
 	va_list args;
 	int val;
 	
-	strlcpy(propKey, "warn.", sizeof(propKey));
-	strlcat(propKey, key, sizeof(propKey));
+	Strlcpy(propKey, "warn.", sizeof(propKey));
+	Strlcat(propKey, key, sizeof(propKey));
 	
 	if (AG_GetProp(agConfig, propKey, AG_PROP_BOOL, &val) != NULL &&
 	    val == 1)

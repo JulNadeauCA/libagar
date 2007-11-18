@@ -111,7 +111,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	if (ev == NULL) {
 		ev = Malloc(sizeof(AG_Event));
 		if (name != NULL) {
-			strlcpy(ev->name, name, sizeof(ev->name));
+			Strlcpy(ev->name, name, sizeof(ev->name));
 		} else {
 			/* XXX use something faster */
 			snprintf(ev->name, sizeof(ev->name), "__%u",
@@ -147,7 +147,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 
 	ev = Malloc(sizeof(AG_Event));
 	if (name != NULL) {
-		strlcpy(ev->name, name, sizeof(ev->name));
+		Strlcpy(ev->name, name, sizeof(ev->name));
 	} else {
 		snprintf(ev->name, sizeof(ev->name), "__%u", ob->nevents);
 	}

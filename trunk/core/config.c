@@ -96,16 +96,16 @@ AG_ConfigInit(AG_Config *cfg)
 
 	/* Set the save directory path and create it as needed. */
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-	strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
-	strlcat(udatadir, AG_PATHSEP, sizeof(udatadir));
-	strlcat(udatadir, ".", sizeof(udatadir));
-	strlcat(udatadir, agProgName, sizeof(udatadir));
+	Strlcpy(udatadir, pwd->pw_dir, sizeof(udatadir));
+	Strlcat(udatadir, AG_PATHSEP, sizeof(udatadir));
+	Strlcat(udatadir, ".", sizeof(udatadir));
+	Strlcat(udatadir, agProgName, sizeof(udatadir));
 #else
 	udatadir[0] = '.';
-	strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
+	Strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
 #endif
-	strlcpy(tmpdir, udatadir, sizeof(tmpdir));
-	strlcat(tmpdir, "/tmp", sizeof(tmpdir));
+	Strlcpy(tmpdir, udatadir, sizeof(tmpdir));
+	Strlcat(tmpdir, "/tmp", sizeof(tmpdir));
 	
 	if (AG_FileExists(udatadir) == 0 && AG_MkDir(udatadir) != 0)
 		fatal("%s: %s", udatadir, AG_GetError());
@@ -228,18 +228,18 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	for (dir = AG_Strsep(&pathp, ":");
 	     dir != NULL;
 	     dir = AG_Strsep(&pathp, ":")) {
-		strlcpy(file, dir, sizeof(file));
+		Strlcpy(file, dir, sizeof(file));
 
 		if (name[0] != AG_PATHSEPC) {
-			strlcat(file, AG_PATHSEP, sizeof(file));
+			Strlcat(file, AG_PATHSEP, sizeof(file));
 		}
-		strlcat(file, name, sizeof(file));
+		Strlcat(file, name, sizeof(file));
 		if (ext != NULL) {
-			strlcat(file, ".", sizeof(file));
-			strlcat(file, ext, sizeof(file));
+			Strlcat(file, ".", sizeof(file));
+			Strlcat(file, ext, sizeof(file));
 		}
 		if ((rv = AG_FileExists(file)) == 1) {
-			if (strlcpy(path, file, path_len) >= path_len) {
+			if (Strlcpy(path, file, path_len) >= path_len) {
 				AG_SetError(_("The search path is too big."));
 				return (-1);
 			}

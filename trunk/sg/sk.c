@@ -64,8 +64,8 @@ SK_NodeOfClassGeneral(SK_Node *node, const char *cn)
 	char cname[SK_TYPE_NAME_MAX], *cp, *c;
 	char nname[SK_TYPE_NAME_MAX], *np, *s;
 
-	strlcpy(cname, cn, sizeof(cname));
-	strlcpy(nname, node->ops->name, sizeof(nname));
+	Strlcpy(cname, cn, sizeof(cname));
+	Strlcpy(nname, node->ops->name, sizeof(nname));
 	cp = cname;
 	np = nname;
 	while ((c = strsep(&cp, ":")) != NULL &&
@@ -177,7 +177,7 @@ Init(void *obj)
 	TAILQ_INIT(&sk->insns);
 	sk->uLen = AG_FindUnit("mm");
 	sk->status = SK_WELL_CONSTRAINED;
-	strlcpy(sk->statusText, _("New sketch"), sizeof(sk->statusText));
+	Strlcpy(sk->statusText, _("New sketch"), sizeof(sk->statusText));
 	sk->nSolutions = 0;
 
 #ifdef EDITION

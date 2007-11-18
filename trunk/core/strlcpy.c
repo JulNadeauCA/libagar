@@ -17,11 +17,8 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <config/have_strlcpy.h>
-
-#ifndef HAVE_STRLCPY
-
 #include <core/core.h>
+
 #include "strlcpy.h"
 
 /*
@@ -30,7 +27,7 @@
  * Returns strlen(src); if retval >= siz, truncation occurred.
  */
 size_t
-strlcpy(char *dst, const char *src, size_t siz)
+AG_Strlcpy(char *dst, const char *src, size_t siz)
 {
 	char *d = dst;
 	const char *s = src;
@@ -55,5 +52,3 @@ strlcpy(char *dst, const char *src, size_t siz)
 
 	return (s - src - 1);	/* count does not include NUL */
 }
-
-#endif /* !HAVE_STRLCPY */

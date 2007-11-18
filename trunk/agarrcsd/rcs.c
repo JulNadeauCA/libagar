@@ -23,9 +23,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/strlcpy.h>
-#include <agar/core/strlcat.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -154,14 +151,14 @@ rcs_commit(NS_Server *ns, NS_Command *cmd, void *p)
 	    objtype, objname) == -1)
 		return (-1);
 
-	strlcpy(filepath, dirpath, sizeof(filepath));
-	strlcat(filepath, "/", sizeof(filepath));
-	strlcat(filepath, objname, sizeof(filepath));
-	strlcat(filepath, ".", sizeof(filepath));
-	strlcat(filepath, objtype, sizeof(filepath));
-	strlcat(filepath, ".", sizeof(filepath));
+	Strlcpy(filepath, dirpath, sizeof(filepath));
+	Strlcat(filepath, "/", sizeof(filepath));
+	Strlcat(filepath, objname, sizeof(filepath));
+	Strlcat(filepath, ".", sizeof(filepath));
+	Strlcat(filepath, objtype, sizeof(filepath));
+	Strlcat(filepath, ".", sizeof(filepath));
 	snprintf(revno, sizeof(revno), "%u", rev);
-	strlcat(filepath, revno, sizeof(filepath));
+	Strlcat(filepath, revno, sizeof(filepath));
 
 	if ((fd = open(filepath, O_CREAT|O_WRONLY|O_EXCL, 0644)) == -1) {
 		AG_SetError("%s: %s", filepath, strerror(errno));
@@ -245,14 +242,14 @@ rcs_update(NS_Server *ns, NS_Command *cmd, void *p)
 		return (-1);
 	}
 	
-	strlcpy(filepath, dirpath, sizeof(filepath));
-	strlcat(filepath, "/", sizeof(filepath));
-	strlcat(filepath, objname, sizeof(filepath));
-	strlcat(filepath, ".", sizeof(filepath));
-	strlcat(filepath, objtype, sizeof(filepath));
-	strlcat(filepath, ".", sizeof(filepath));
+	Strlcpy(filepath, dirpath, sizeof(filepath));
+	Strlcat(filepath, "/", sizeof(filepath));
+	Strlcat(filepath, objname, sizeof(filepath));
+	Strlcat(filepath, ".", sizeof(filepath));
+	Strlcat(filepath, objtype, sizeof(filepath));
+	Strlcat(filepath, ".", sizeof(filepath));
 	snprintf(revtext, sizeof(revtext), "%u", rev);
-	strlcat(filepath, revtext, sizeof(filepath));
+	Strlcat(filepath, revtext, sizeof(filepath));
 
 	NS_Log(NS_INFO, "sending %s", filepath);
 
@@ -328,9 +325,9 @@ rcs_listdir(NS_Server *ns, const char *dirname, const char *path)
 			continue;
 		}
 		if ((sb.st_mode & S_IFDIR) == S_IFDIR) {
-			strlcpy(subpath, path, sizeof(subpath));
-			strlcat(subpath, "/", sizeof(subpath));
-			strlcat(subpath, dent->d_name, sizeof(subpath));
+			Strlcpy(subpath, path, sizeof(subpath));
+			Strlcat(subpath, "/", sizeof(subpath));
+			Strlcat(subpath, dent->d_name, sizeof(subpath));
 			rcs_listdir(ns, dent->d_name, subpath);
 		}
 	}
@@ -367,8 +364,8 @@ rcs_log(NS_Server *ns, NS_Command *cmd, void *p)
 	if ((dirpath = parse_path(cmd, "object-path")) == NULL) {
 		return (-1);
 	}
-	strlcpy(path, dirpath, sizeof(path));
-	strlcat(path, "/.RCSInfo", sizeof(path));
+	Strlcpy(path, dirpath, sizeof(path));
+	Strlcat(path, "/.RCSInfo", sizeof(path));
 
 	if ((f = fopen(path, "r")) == NULL) {
 		AG_SetError("%s: %s", path, strerror(errno));

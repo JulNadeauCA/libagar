@@ -938,7 +938,7 @@ tryname2:
 					break;
 				}
 				if (!isdigit(*np)) {
-					strlcat(ins_tile_name, "_",
+					Strlcat(ins_tile_name, "_",
 					    sizeof(ins_tile_name));
 					break;
 				}
@@ -1045,7 +1045,7 @@ tryname2:
 					break;
 				}
 				if (!isdigit(*np)) {
-					strlcat(ins_texture_name, "_",
+					Strlcat(ins_texture_name, "_",
 					    sizeof(ins_texture_name));
 					break;
 				}
@@ -1112,7 +1112,7 @@ tryname2:
 					break;
 				}
 				if (!isdigit(*np)) {
-					strlcat(ins_anim_name, "_",
+					Strlcat(ins_anim_name, "_",
 					    sizeof(ins_anim_name));
 					break;
 				}
@@ -1313,7 +1313,7 @@ tryname1:
 	RG_TileInit(t2, ts, name);
 	RG_TileScale(ts, t2, t1->su->w, t1->su->h, t1->flags);
 	t2->su->format->alpha = t1->su->format->alpha;
-	strlcpy(t2->clname, t1->clname, sizeof(t2->clname));
+	Strlcpy(t2->clname, t1->clname, sizeof(t2->clname));
 
 	t2->xOrig = t1->xOrig;
 	t2->yOrig = t1->yOrig;

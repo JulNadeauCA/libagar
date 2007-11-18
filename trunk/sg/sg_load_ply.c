@@ -434,7 +434,7 @@ SG_ObjectLoadPLY(void *obj, const char *path, Uint flags)
 			}
 
 			el = Malloc(sizeof(struct ply_element));
-			strlcpy(el->name, v1, sizeof(el->name));
+			Strlcpy(el->name, v1, sizeof(el->name));
 			el->count = count;
 			TAILQ_INIT(&el->props);
 			TAILQ_INSERT_TAIL(&ply.elements, el, elements);
@@ -466,7 +466,7 @@ SG_ObjectLoadPLY(void *obj, const char *path, Uint flags)
 					Free(prop);
 					goto fail;
 				}
-				strlcpy(prop->name, v4, sizeof(prop->name));
+				Strlcpy(prop->name, v4, sizeof(prop->name));
 				prop->list = 1;
 			} else {
 				if ((prop->type = GetPropType(v1)) == -1 ||
@@ -474,7 +474,7 @@ SG_ObjectLoadPLY(void *obj, const char *path, Uint flags)
 					Free(prop);
 					goto fail;
 				}
-				strlcpy(prop->name, v2, sizeof(prop->name));
+				Strlcpy(prop->name, v2, sizeof(prop->name));
 				prop->list = 0;
 			}
 			TAILQ_INSERT_TAIL(&cur_el->props, prop, props);

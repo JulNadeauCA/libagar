@@ -209,19 +209,19 @@ RG_TransformChainPrint(const RG_TransformChain *xchain, char *buf,
 				break;
 		}
 		if (i < rgTransformsCount) {
-			strlcat(buf, "+", buf_size);
-			strlcat(buf, rgTransforms[i].name, buf_size);
+			Strlcat(buf, "+", buf_size);
+			Strlcat(buf, rgTransforms[i].name, buf_size);
 			for (j = 0; j < tr->nargs; j++) {
 				char num[32];
 
 				snprintf(num, sizeof(num), "(%lu)",
 				    (unsigned long)tr->args[i]);
-				strlcat(buf, num, buf_size);
+				Strlcat(buf, num, buf_size);
 			}
 		}
 	}
 	if (!TAILQ_EMPTY(xchain))
-		strlcat(buf, "\n", buf_size);
+		Strlcat(buf, "\n", buf_size);
 }
 
 void

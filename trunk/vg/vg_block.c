@@ -46,7 +46,7 @@ VG_BeginBlock(VG *vg, const char *name, int flags)
 	VG_Block *vgb;
 
 	vgb = Malloc(sizeof(VG_Block));
-	strlcpy(vgb->name, name, sizeof(vgb->name));
+	Strlcpy(vgb->name, name, sizeof(vgb->name));
 	vgb->flags = flags;
 	vgb->pos.x = 0;
 	vgb->pos.y = 0;

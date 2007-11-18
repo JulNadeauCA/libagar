@@ -315,25 +315,25 @@ PrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
 		snprintf(buf, bufsz, c->fmt, *(Sint8 *)c->data.p);
 		break;
 	case AG_CELL_STRING:
-		strlcpy(buf, c->data.s, bufsz);
+		Strlcpy(buf, c->data.s, bufsz);
 		break;
 	case AG_CELL_PSTRING:
-		strlcpy(buf, (char *)c->data.p, bufsz);
+		Strlcpy(buf, (char *)c->data.p, bufsz);
 		break;
 	case AG_CELL_FN_TXT:
 		c->fnTxt(c->data.p, buf, bufsz);
 		break;
 	case AG_CELL_FN_SU:
-		strlcpy(buf, "<image>", bufsz);
+		Strlcpy(buf, "<image>", bufsz);
 		break;
 	case AG_CELL_POINTER:
 		snprintf(buf, bufsz, c->fmt, c->data.p);
 		break;
 	case AG_CELL_NULL:
 		if (c->fmt[0] == '\0') {
-			strlcpy(buf, "<null>", bufsz);
+			Strlcpy(buf, "<null>", bufsz);
 		} else {
-			strlcpy(buf, c->fmt, bufsz);
+			Strlcpy(buf, c->fmt, bufsz);
 		}
 		break;
 	}
@@ -1224,7 +1224,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	t->cols = Realloc(t->cols, (t->n+1)*sizeof(AG_TableCol));
 	tc = &t->cols[t->n];
 	if (name != NULL) {
-		strlcpy(tc->name, name, sizeof(tc->name));
+		Strlcpy(tc->name, name, sizeof(tc->name));
 	} else {
 		tc->name[0] = '\0';
 	}
@@ -1289,7 +1289,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	va_list ap;
 	Uint n;
 
-	strlcpy(fmt, fmtp, sizeof(fmt));
+	Strlcpy(fmt, fmtp, sizeof(fmt));
 
 	va_start(ap, fmtp);
 	t->cells = Realloc(t->cells, (t->m+1)*sizeof(AG_TableCell));
@@ -1301,7 +1301,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		int infmt = 0;
 
 		AG_TableInitCell(t, c);
-		strlcpy(c->fmt, s, sizeof(c->fmt));
+		Strlcpy(c->fmt, s, sizeof(c->fmt));
 		for (sc = &s[0]; *sc != '\0'; sc++) {
 			if (*sc == '%') {
 				infmt = 1;
@@ -1363,7 +1363,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				c->type = AG_CELL_PSTRING;
 			} else {
 				c->type = AG_CELL_STRING;
-				strlcpy(c->data.s, va_arg(ap, char *),
+				Strlcpy(c->data.s, va_arg(ap, char *),
 				    sizeof(c->data.s));
 			}
 			break;

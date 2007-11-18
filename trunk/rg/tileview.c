@@ -1627,7 +1627,7 @@ Draw(void *p)
 				}
 			}
 			
-			strlcpy(status, _("Editing node attributes"),
+			Strlcpy(status, _("Editing node attributes"),
 			    sizeof(status));
 			DrawStatusText(tv, status);
 		}
@@ -1669,29 +1669,29 @@ Draw(void *p)
 				}
 			}
 			
-			strlcpy(status, _("Editing node layers"),
+			Strlcpy(status, _("Editing node layers"),
 			    sizeof(status));
 			DrawStatusText(tv, status);
 			AG_PopTextState();
 		}
 		break;
 	case RG_TILEVIEW_FEATURE_EDIT:
-		strlcpy(status, _("Editing feature: "), sizeof(status));
-		strlcat(status, tv->tv_feature.ft->name, sizeof(status));
+		Strlcpy(status, _("Editing feature: "), sizeof(status));
+		Strlcat(status, tv->tv_feature.ft->name, sizeof(status));
 		DrawStatusText(tv, status);
 		break;
 	case RG_TILEVIEW_SKETCH_EDIT:
-		strlcpy(status, _("Editing sketch: "), sizeof(status));
-		strlcat(status, tv->tv_sketch.sk->name, sizeof(status));
+		Strlcpy(status, _("Editing sketch: "), sizeof(status));
+		Strlcat(status, tv->tv_sketch.sk->name, sizeof(status));
 		DrawStatusText(tv, status);
 		break;
 	case RG_TILEVIEW_PIXMAP_EDIT:
 		{
 			extern const char *pixmap_state_names[];
 
-			strlcpy(status, _("Editing pixmap: "), sizeof(status));
-			strlcat(status, tv->tv_pixmap.px->name, sizeof(status));
-			strlcat(status, pixmap_state_names[tv->tv_pixmap.state],
+			Strlcpy(status, _("Editing pixmap: "), sizeof(status));
+			Strlcat(status, tv->tv_pixmap.px->name, sizeof(status));
+			Strlcat(status, pixmap_state_names[tv->tv_pixmap.state],
 			    sizeof(status));
 			DrawStatusText(tv, status);
 		}

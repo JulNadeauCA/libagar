@@ -134,9 +134,9 @@ AG_InitGUI(Uint flags)
 	agIcon_Init();
 
 	/* Try to load a color scheme from the default path. */
-	strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
-	strlcat(path, AG_PATHSEP, sizeof(path));
-	strlcat(path, "gui-colors.acs", sizeof(path));
+	Strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
+	Strlcat(path, AG_PATHSEP, sizeof(path));
+	Strlcat(path, "gui-colors.acs", sizeof(path));
 	(void)AG_ColorsLoad(path);
 	
 	/* Initialize the font engine. */

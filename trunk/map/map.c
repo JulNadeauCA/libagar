@@ -400,7 +400,7 @@ MAP_New(void *parent, const char *name)
 void
 MAP_InitLayer(MAP_Layer *lay, const char *name)
 {
-	strlcpy(lay->name, name, sizeof(lay->name));
+	Strlcpy(lay->name, name, sizeof(lay->name));
 	lay->visible = 1;
 	lay->xinc = 1;
 	lay->yinc = 1;
@@ -410,7 +410,7 @@ MAP_InitLayer(MAP_Layer *lay, const char *name)
 void
 MAP_InitCamera(MAP_Camera *cam, const char *name)
 {
-	strlcpy(cam->name, name, sizeof(cam->name));
+	Strlcpy(cam->name, name, sizeof(cam->name));
 	cam->x = 0;
 	cam->y = 0;
 	cam->flags = 0;
@@ -521,7 +521,7 @@ MAP_PushLayer(MAP *m, const char *name)
 	if (name[0] == '\0') {
 		snprintf(layname, sizeof(layname), _("Layer %u"), m->nlayers);
 	} else {
-		strlcpy(layname, name, sizeof(layname));
+		Strlcpy(layname, name, sizeof(layname));
 	}
 
 	if (m->nlayers+1 > MAP_LAYERS_MAX) {
@@ -2556,9 +2556,9 @@ MoveLayer(AG_Event *event)
 	}
 	lay1 = &m->layers[l1];
 	lay2 = &m->layers[l2];
-	strlcpy(tmp, lay1->name, sizeof(tmp));
-	strlcpy(lay1->name, lay2->name, sizeof(lay1->name));
-	strlcpy(lay2->name, tmp, sizeof(lay2->name));
+	Strlcpy(tmp, lay1->name, sizeof(tmp));
+	Strlcpy(lay1->name, lay2->name, sizeof(lay1->name));
+	Strlcpy(lay2->name, tmp, sizeof(lay2->name));
 
 	for (y = 0; y < m->maph; y++) {
 		for (x = 0; x < m->mapw; x++) {

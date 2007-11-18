@@ -260,7 +260,7 @@ GetLabelText(SK_Dimension *dim, char *text, size_t text_len)
 		break;
 	}
 	if (SK_ConstrainedNodes(&sk->ctGraph, dim->n1, dim->n2) == NULL)
-		strlcat(text, _(" (REF)"), text_len);
+		Strlcat(text, _(" (REF)"), text_len);
 }
 
 void
@@ -286,7 +286,7 @@ SK_DimensionDraw(void *p, SK_View *skv)
 	wLbl = (SG_Real)wText * skv->wPixel;
 	hLbl = (SG_Real)hText * skv->hPixel;
 	if (strcmp(text, dim->text) != 0) {
-		strlcpy(dim->text, text, sizeof(dim->text));
+		Strlcpy(dim->text, text, sizeof(dim->text));
 		SK_DimensionRedraw(dim, skv);
 	}
 

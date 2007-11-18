@@ -115,8 +115,8 @@ ListLibraryItems(AG_Tlist *tl, const char *cname, int depth)
 			it = AG_TlistAdd(tl, NULL, "%s", ops->name);
 			it->p1 = ops;
 			it->depth = depth;
-			strlcpy(subname, ops->name, sizeof(subname));
-			strlcat(subname, ":*", sizeof(subname));
+			Strlcpy(subname, ops->name, sizeof(subname));
+			Strlcat(subname, ":*", sizeof(subname));
 			ListLibraryItems(tl, subname, depth+1);
 		}
 	}
@@ -386,7 +386,7 @@ PollConstraints(AG_Event *event)
 			    SG_Degrees(ct->ct_angle));
 			break;
 		default:
-			strlcpy(ctName, _(skConstraintNames[ct->type]),
+			Strlcpy(ctName, _(skConstraintNames[ct->type]),
 			    sizeof(ctName));
 			break;
 		}

@@ -129,8 +129,8 @@ main(int argc, char *argv[])
 		printf("\n");
 	}
 
-	strlcpy(den->hint, hint, sizeof(den->hint));
-	strlcpy(den->name, name, sizeof(den->name));
+	Strlcpy(den->hint, hint, sizeof(den->hint));
+	Strlcpy(den->name, name, sizeof(den->name));
 	den->author = strdup(author);
 	den->copyright = strdup(copy);
 	den->descr = strdup(descr);

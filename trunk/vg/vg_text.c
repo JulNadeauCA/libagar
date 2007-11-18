@@ -74,7 +74,7 @@ VG_PrintfP(VG *vg, const char *fmt, ...)
 	va_list ap;
 	
 	if (fmt != NULL) {
-		strlcpy(vge->vg_text.text, fmt, sizeof(vge->vg_text.text));
+		Strlcpy(vge->vg_text.text, fmt, sizeof(vge->vg_text.text));
 	} else {
 		vge->vg_text.text[0] = '\0';
 		return;
@@ -133,7 +133,7 @@ VG_Printf(VG *vg, const char *fmt, ...)
 static void
 omega(char *s, size_t len, int n)
 {
-	strlcat(s, "omega", len);
+	Strlcat(s, "omega", len);
 }
 
 static const struct {
@@ -223,49 +223,49 @@ VG_TextRenderLabel(VG *vg, VG_Element *vge)
 			case 'd':
 			case 'i':
 				snprintf(s2, sizeof(s2), "%d", TEXT_ARG(int));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'o':
 				snprintf(s2, sizeof(s2), "%o", TEXT_ARG(Uint));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'u':
 				snprintf(s2, sizeof(s2), "%u", TEXT_ARG(Uint));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'x':
 				snprintf(s2, sizeof(s2), "%x", TEXT_ARG(Uint));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'X':
 				snprintf(s2, sizeof(s2), "%X", TEXT_ARG(Uint));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'c':
 				s2[0] = TEXT_ARG(char);
 				s2[1] = '\0';
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 's':
-				strlcat(s, &TEXT_ARG(char), sizeof(s));
+				Strlcat(s, &TEXT_ARG(char), sizeof(s));
 				ri++;
 				break;
 			case 'p':
 				snprintf(s2, sizeof(s2), "%p",
 				    TEXT_ARG(void *));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'f':
 				snprintf(s2, sizeof(s2), "%.2f",
 				    TEXT_ARG(float));
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case '[':
@@ -276,7 +276,7 @@ VG_TextRenderLabel(VG *vg, VG_Element *vge)
 					}
 					fmtp += fmts[i].fmt_len;
 					fmts[i].func(s2, sizeof(s2), ri);
-					strlcat(s, s2, sizeof(s));
+					Strlcat(s, s2, sizeof(s));
 					ri++;
 					break;
 				}
@@ -284,14 +284,14 @@ VG_TextRenderLabel(VG *vg, VG_Element *vge)
 			case '%':
 				s2[0] = '%';
 				s2[1] = '\0';
-				strlcat(s, s2, sizeof(s));
+				Strlcat(s, s2, sizeof(s));
 				break;
 			}
 			fmtp++;
 		} else {
 			s2[0] = *fmtp;
 			s2[1] = '\0';
-			strlcat(s, s2, sizeof(s));
+			Strlcat(s, s2, sizeof(s));
 		}
 	}
 	if (vge->vg_text.su != NULL) {

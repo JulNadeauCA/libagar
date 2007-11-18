@@ -81,7 +81,7 @@ PollDeps(AG_Event *event)
 		if (dep->obj != NULL) {
 			AG_ObjectCopyName(dep->obj, path, sizeof(path));
 		} else {
-			strlcpy(path, "(NULL)", sizeof(path));
+			Strlcpy(path, "(NULL)", sizeof(path));
 		}
 		if (dep->count == AG_OBJECT_DEP_MAX) {
 			snprintf(label, sizeof(label), "%s (wired)", path);
@@ -129,8 +129,8 @@ PollEvents(AG_Event *event)
 			char *argn = ev->argn[i];
 
 			if (argn[0] != '\0') {
-				strlcat(args, argn, sizeof(args));
-				strlcat(args, "=", sizeof(args));
+				Strlcat(args, argn, sizeof(args));
+				Strlcat(args, "=", sizeof(args));
 			}
 			switch (ev->argt[i]) {
 			case AG_EVARG_POINTER:
@@ -169,12 +169,12 @@ PollEvents(AG_Event *event)
 				    ev->argv[i].f);
 				break;
 			}
-			strlcat(args, arg, sizeof(args));
+			Strlcat(args, arg, sizeof(args));
 			if (i < ev->argc-1) {
-				strlcat(args, ", ", sizeof(args));
+				Strlcat(args, ", ", sizeof(args));
 			}
 		}
-		strlcat(args, ")", sizeof(args));
+		Strlcat(args, ")", sizeof(args));
 
 		AG_TlistAdd(tl, NULL, "%s%s%s %s", ev,
 		    (ev->flags & AG_EVENT_ASYNC) ? " <async>" : "",
@@ -193,7 +193,7 @@ RenameObject(AG_Event *event)
 
 	if (AG_ObjectPageIn(ob) == 0) {
 		AG_ObjectUnlinkDatafiles(ob);
-		strlcpy(ob->name, tb->string, sizeof(ob->name));
+		Strlcpy(ob->name, tb->string, sizeof(ob->name));
 		AG_ObjectPageOut(ob);
 	}
 	AG_PostEvent(NULL, ob, "renamed", NULL);

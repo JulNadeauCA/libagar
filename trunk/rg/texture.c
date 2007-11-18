@@ -42,7 +42,7 @@
 void
 RG_TextureInit(RG_Texture *tex, RG_Tileset *ts, const char *name)
 {
-	strlcpy(tex->name, name, sizeof(tex->name));
+	Strlcpy(tex->name, name, sizeof(tex->name));
 	tex->tileset[0] = '\0';
 	tex->tile[0] = '\0';
 	tex->t = NULL;
@@ -166,7 +166,7 @@ SelectSourceTile(AG_Event *event)
 	AG_TlistItem *it = AG_PTR(2);
 	RG_Tile *t = it->p1;
 
-	strlcpy(tex->tile, t->name, sizeof(tex->tile));
+	Strlcpy(tex->tile, t->name, sizeof(tex->tile));
 }
 
 AG_Window *

@@ -23,8 +23,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/strlcpy.h>
-#include <agar/core/strlcat.h>
 #include <sys/types.h>
 
 #include <stdio.h>
@@ -78,7 +76,7 @@ Init(void *obj)
 	u->country[0] = '\0';
 	u->comments[0] = '\0';
 	u->flags = 0;
-	strlcpy(u->lang, "en", sizeof(u->lang));
+	Strlcpy(u->lang, "en", sizeof(u->lang));
 }
 
 static int
@@ -190,16 +188,16 @@ SetInfosFromCommand(NS_Command *cmd, User *u)
 	if (!UserEmailValid(u->email))
 		return (-1);
 
-	strlcpy(u->pass, pass, sizeof(u->pass));
-	strlcpy(u->real_name, real_name, sizeof(u->real_name));
-	strlcpy(u->email, email, sizeof(u->email));
-	strlcpy(u->country, country, sizeof(u->country));
+	Strlcpy(u->pass, pass, sizeof(u->pass));
+	Strlcpy(u->real_name, real_name, sizeof(u->real_name));
+	Strlcpy(u->email, email, sizeof(u->email));
+	Strlcpy(u->country, country, sizeof(u->country));
 	NS_CommandCopyString(u->comments, cmd, "comments", sizeof(u->comments));
 
 	if (lang != NULL && lang[0] != '\0' && strlen(lang) == 2) {
-		strlcpy(u->lang, lang, sizeof(u->lang));
+		Strlcpy(u->lang, lang, sizeof(u->lang));
 	} else {
-		strlcpy(u->lang, UserLangDefault, sizeof(u->lang));
+		Strlcpy(u->lang, UserLangDefault, sizeof(u->lang));
 	}
 
 	u->flags &= ~(USER_SETTABLE_FLAGS);
@@ -290,7 +288,7 @@ user_activate(NS_Command *cmd, void *p)
 	u = Malloc(sizeof(User));
 	AG_ObjectInit(u, &UserClass);
 	AG_ObjectSetName(u, "%s", name);
-	strlcpy(u->name, name, sizeof(u->name));
+	Strlcpy(u->name, name, sizeof(u->name));
 	if (SetInfosFromCommand(cmd, u) == -1)
 		goto fail;
 

@@ -107,7 +107,7 @@ VG_Init(VG *vg, int flags)
 		vgInited = 1;
 	}
 
-	strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
+	Strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;
 	vg->scale = 1;
 
@@ -986,7 +986,7 @@ VG_CreateStyle(VG *vg, enum vg_style_type type, const char *name)
 	VG_Style *vgs;
 
 	vgs = Malloc(sizeof(VG_Style));
-	strlcpy(vgs->name, name, sizeof(vgs->name));
+	Strlcpy(vgs->name, name, sizeof(vgs->name));
 	vgs->type = type;
 	vgs->color = SDL_MapRGB(vg->fmt, 250, 250, 250);
 	switch (vgs->type) {
@@ -1081,7 +1081,7 @@ VG_PushLayer(VG *vg, const char *name)
 	                                 sizeof(VG_Layer));
 	vgl = &vg->layers[vg->nlayers];
 	vg->nlayers++;
-	strlcpy(vgl->name, name, sizeof(vgl->name));
+	Strlcpy(vgl->name, name, sizeof(vgl->name));
 	vgl->visible = 1;
 	vgl->alpha = 255;
 	vgl->color = SDL_MapRGB(vg->fmt, 255, 255, 255);

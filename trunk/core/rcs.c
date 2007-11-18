@@ -114,7 +114,7 @@ AG_RcsGetWorkingRev(AG_Object *ob, Uint *pRev)
 	FILE *f;
 
 	AG_ObjectCopyFilename(ob, path, sizeof(path));
-	strlcat(path, ".revision", sizeof(path));
+	Strlcat(path, ".revision", sizeof(path));
 
 	/* TODO locking */
 	if ((f = fopen(path, "r")) == NULL) {
@@ -150,7 +150,7 @@ AG_RcsSetWorkingRev(AG_Object *ob, Uint rev)
 	FILE *f;
 
 	AG_ObjectCopyFilename(ob, path, sizeof(path));
-	strlcat(path, ".revision", sizeof(path));
+	Strlcat(path, ".revision", sizeof(path));
 	
 	/* TODO locking */
 	if ((f = fopen(path, "w")) == NULL) {
@@ -198,9 +198,9 @@ AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
 		} else if (strcmp(key, "r") == 0) {
 			*repo_rev = (Uint)strtol(val, NULL, 10);
 		} else if (strcmp(key, "t") == 0 && type != NULL) {
-			strlcpy(type, val, AG_OBJECT_TYPE_MAX);
+			Strlcpy(type, val, AG_OBJECT_TYPE_MAX);
 		} else if (strcmp(key, "n") == 0 && name != NULL) {
-			strlcpy(type, val, AG_OBJECT_NAME_MAX);
+			Strlcpy(type, val, AG_OBJECT_NAME_MAX);
 		}
 	}
 
@@ -796,16 +796,16 @@ AG_RcsCheckout(const char *path)
 		
 		switch (key[0]) {
 		case 'd':
-			strlcpy(digest, val, AG_OBJECT_DIGEST_MAX);
+			Strlcpy(digest, val, AG_OBJECT_DIGEST_MAX);
 			break;
 		case 'r':
 			rev = (Uint)strtol(val, NULL, 10);
 			break;
 		case 't':
-			strlcpy(type, val, AG_OBJECT_TYPE_MAX);
+			Strlcpy(type, val, AG_OBJECT_TYPE_MAX);
 			break;
 		case 'n':
-			strlcpy(name, val, AG_OBJECT_NAME_MAX);
+			Strlcpy(name, val, AG_OBJECT_NAME_MAX);
 			break;
 		}
 	}
@@ -815,7 +815,7 @@ AG_RcsCheckout(const char *path)
 	/* Create the working copy if it does not exist. */
 	localpath[0] = '/';
 	localpath[1] = '\0';
-	strlcat(localpath, path, sizeof(localpath));
+	Strlcat(localpath, path, sizeof(localpath));
 	if ((obj = AG_ObjectFind(localpath)) == NULL) {
 		AG_TextTmsg(AG_MSG_INFO, 750,
 		    _("Creating working copy of %s (%s)."),

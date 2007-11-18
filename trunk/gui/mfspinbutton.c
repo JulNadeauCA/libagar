@@ -119,7 +119,7 @@ TextChanged(AG_Event *event)
 	char *tp = &text[0], *s;
 
 	stringb = AG_WidgetGetBinding(fsu->input, "string", &s);
-	strlcpy(text, s, sizeof(text));
+	Strlcpy(text, s, sizeof(text));
 
 	if ((s = AG_Strsep(&tp, fsu->sep)) != NULL) {
 		AG_MFSpinbuttonSetValue(fsu, "xvalue",
@@ -249,7 +249,7 @@ Init(void *obj)
 	fsu->input = AG_TextboxNew(fsu, 0, NULL);
 	fsu->writeable = 1;
 	fsu->sep = ",";
-	strlcpy(fsu->format, "%g", sizeof(fsu->format));
+	Strlcpy(fsu->format, "%g", sizeof(fsu->format));
 	AG_MutexInitRecursive(&fsu->lock);
 	AG_TextboxSizeHint(fsu->input, "888.88");
 	

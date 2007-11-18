@@ -169,7 +169,7 @@ fail:
 		return lname;
 	}
 
-	strlcpy(buf, lname, sizeof(buf));
+	Strlcpy(buf, lname, sizeof(buf));
 	m = strrchr(buf, '@');
 	if (m)
 		*m++ = '\0';
@@ -190,27 +190,27 @@ fail:
 			if (c) {
 				snprintf(tmp, sizeof(tmp), "%s_%s.%s@%s",
 				    l, t, c, m); 
-				strlcat(result, tmp, sizeof(result));
-				strlcat(result, ":", sizeof(result));
+				Strlcat(result, tmp, sizeof(result));
+				Strlcat(result, ":", sizeof(result));
 			}
 			snprintf(tmp, sizeof(tmp), "%s_%s@%s", l, t, m); 
-			strlcat(result, tmp, sizeof(result));
-			strlcat(result, ":", sizeof(result));
+			Strlcat(result, tmp, sizeof(result));
+			Strlcat(result, ":", sizeof(result));
 		}
 		snprintf(tmp, sizeof(tmp), "%s@%s", l, m); 
-		strlcat(result, tmp, sizeof(result));
-		strlcat(result, ":", sizeof(result));
+		Strlcat(result, tmp, sizeof(result));
+		Strlcat(result, ":", sizeof(result));
 	}
 	if (t) {
 		if (c) {
 			snprintf(tmp, sizeof(tmp), "%s_%s.%s", l, t, c); 
-			strlcat(result, tmp, sizeof(result));
-			strlcat(result, ":", sizeof(result));
+			Strlcat(result, tmp, sizeof(result));
+			Strlcat(result, ":", sizeof(result));
 		}
-		strlcat(result, tmp, sizeof(result));
-		strlcat(result, ":", sizeof(result));
+		Strlcat(result, tmp, sizeof(result));
+		Strlcat(result, ":", sizeof(result));
 	}
-	strlcat(result, l, sizeof(result));
+	Strlcat(result, l, sizeof(result));
 
 	return result;
 }
@@ -249,14 +249,14 @@ lookup_mofile(buf, len, dir, lpath, category, domainname, db)
 			continue;
 #endif
 
-		strlcpy(buf, dir, len);
-		strlcat(buf, "/", len);
-		strlcat(buf, p, len);
-		strlcat(buf, "/", len);
-		strlcat(buf, category, len);
-		strlcat(buf, "/", len);
-		strlcat(buf, domainname, len);
-		strlcat(buf, ".mo", len);
+		Strlcpy(buf, dir, len);
+		Strlcat(buf, "/", len);
+		Strlcat(buf, p, len);
+		Strlcat(buf, "/", len);
+		Strlcat(buf, category, len);
+		Strlcat(buf, "/", len);
+		Strlcat(buf, domainname, len);
+		Strlcat(buf, ".mo", len);
 
 		if (stat(buf, &st) < 0)
 			continue;
@@ -567,17 +567,17 @@ dcngettext(domainname, msgid1, msgid2, n, category)
 	if (language && locale) {
 		if (strlen(language) + strlen(locale) + 2 > sizeof(lpath))
 			goto fail;
-		strlcpy(lpath, language, sizeof(lpath));
-		strlcat(lpath, ":", sizeof(lpath));
-		strlcat(lpath, locale, sizeof(lpath));
+		Strlcpy(lpath, language, sizeof(lpath));
+		Strlcat(lpath, ":", sizeof(lpath));
+		Strlcat(lpath, locale, sizeof(lpath));
 	} else if (language) {
 		if (strlen(language) + 1 > sizeof(lpath))
 			goto fail;
-		strlcpy(lpath, language, sizeof(lpath));
+		Strlcpy(lpath, language, sizeof(lpath));
 	} else if (locale) {
 		if (strlen(locale) + 1 > sizeof(lpath))
 			goto fail;
-		strlcpy(lpath, locale, sizeof(lpath));
+		Strlcpy(lpath, locale, sizeof(lpath));
 	} else
 		goto fail;
 
@@ -617,7 +617,7 @@ dcngettext(domainname, msgid1, msgid2, n, category)
 		goto fail;
 	}
 
-	strlcpy(olpath, lpath, sizeof(olpath));
+	Strlcpy(olpath, lpath, sizeof(olpath));
 
 found:
 	v = lookup(msgid, db);

@@ -298,9 +298,9 @@ AG_ColorsSaveDefault(void)
 	char path[MAXPATHLEN];
 
 	if (AG_String(agConfig, "save-path") != NULL) {
-		strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
-		strlcat(path, AG_PATHSEP, sizeof(path));
-		strlcat(path, "gui-colors.acs", sizeof(path));
+		Strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
+		Strlcat(path, AG_PATHSEP, sizeof(path));
+		Strlcat(path, "gui-colors.acs", sizeof(path));
 		if (AG_ColorsSave(path) == -1)
 			return (-1);
 	}

@@ -152,8 +152,8 @@ AG_OpenDir(const char *path)
 		DWORD rv;
 		char dpath[MAXPATHLEN];
 
-		strlcpy(dpath, path, sizeof(dpath));
-		strlcat(dpath, "\\*", sizeof(dpath));
+		Strlcpy(dpath, path, sizeof(dpath));
+		Strlcat(dpath, "\\*", sizeof(dpath));
 		if ((h = FindFirstFile(dpath, &fdata))==INVALID_HANDLE_VALUE) {
 			AG_SetError("Invalid file handle (%d)",
 			    GetLastError());

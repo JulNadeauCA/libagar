@@ -17,11 +17,8 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <config/have_strlcat.h>
-
-#ifndef HAVE_STRLCAT
-
 #include <core/core.h>
+
 #include "strlcat.h"
 
 #include <string.h>
@@ -34,7 +31,7 @@
  * If retval >= siz, truncation occurred.
  */
 size_t
-strlcat(char *dst, const char *src, size_t siz)
+AG_Strlcat(char *dst, const char *src, size_t siz)
 {
 	char *d = dst;
 	const char *s = src;
@@ -61,6 +58,3 @@ strlcat(char *dst, const char *src, size_t siz)
 
 	return (dlen + (s - src));	/* count does not include NUL */
 }
-
-#endif /* !HAVE_STRLCAT */
-

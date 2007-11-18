@@ -23,9 +23,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <agar/core/strlcpy.h>
-#include <agar/core/strlcat.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -77,8 +74,8 @@ rcsinfo_get_revision(const char *dirpath, u_int *revp, char *author,
 	FILE *f;
 	int found = 0;
 
-	strlcpy(path, dirpath, sizeof(path));
-	strlcat(path, "/.RCSInfo", sizeof(path));
+	Strlcpy(path, dirpath, sizeof(path));
+	Strlcat(path, "/.RCSInfo", sizeof(path));
 
 	if ((f = fopen(path, "r")) == NULL) {
 		AG_SetError("%s: %s", path, strerror(errno));
@@ -117,15 +114,15 @@ rcsinfo_get_revision(const char *dirpath, u_int *revp, char *author,
 			char *msg_txt = strsep(&bufp, ":");
 
 			if (author != NULL)
-				strlcpy(author, author_txt, RCSINFO_AUTHOR_MAX);
+				Strlcpy(author, author_txt, RCSINFO_AUTHOR_MAX);
 			if (digest != NULL)
-				strlcpy(digest, digest_txt, RCSINFO_DIGEST_MAX);
+				Strlcpy(digest, digest_txt, RCSINFO_DIGEST_MAX);
 			if (type_txt != NULL)
-				strlcpy(type, type_txt, RCSINFO_TYPE_MAX);
+				Strlcpy(type, type_txt, RCSINFO_TYPE_MAX);
 			if (name_txt != NULL)
-				strlcpy(name, name_txt, RCSINFO_NAME_MAX);
+				Strlcpy(name, name_txt, RCSINFO_NAME_MAX);
 			if (msg != NULL)
-				strlcpy(msg, msg_txt, RCSINFO_MSG_MAX);
+				Strlcpy(msg, msg_txt, RCSINFO_MSG_MAX);
 
 			found++;
 			break;
@@ -153,8 +150,8 @@ rcsinfo_add_revision(const char *dirpath, struct user *u, u_int *rev,
 	char path[MAXPATHLEN];
 	FILE *f;
 
-	strlcpy(path, dirpath, sizeof(path));
-	strlcat(path, "/.RCSInfo", sizeof(path));
+	Strlcpy(path, dirpath, sizeof(path));
+	Strlcat(path, "/.RCSInfo", sizeof(path));
 
 	if (stat(path, &sb) == -1) {
 		if ((f = fopen(path, "w")) == NULL) {

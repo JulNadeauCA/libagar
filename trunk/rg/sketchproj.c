@@ -126,7 +126,7 @@ select_sketch(AG_Event *event)
 	struct rg_sketchproj *sproj = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(3);
 
-	strlcpy(sproj->sketch, it->text, sizeof(sproj->sketch));
+	Strlcpy(sproj->sketch, it->text, sizeof(sproj->sketch));
 }
 
 AG_Window *

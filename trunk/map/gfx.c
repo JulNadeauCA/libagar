@@ -177,7 +177,7 @@ AG_SpriteSetName(AG_Gfx *gfx, Uint32 s, const char *name)
 {
 	AG_Sprite *spr = &gfx->sprites[s];
 
-	strlcpy(spr->name, name, sizeof(spr->name));
+	Strlcpy(spr->name, name, sizeof(spr->name));
 }
 
 void
@@ -185,7 +185,7 @@ AG_SpriteSetClass(AG_Gfx *gfx, Uint32 s, const char *name)
 {
 	AG_Sprite *spr = &gfx->sprites[s];
 
-	strlcpy(spr->clname, name, sizeof(spr->clname));
+	Strlcpy(spr->clname, name, sizeof(spr->clname));
 }
 
 /*

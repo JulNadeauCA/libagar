@@ -1397,7 +1397,7 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 	vsnprintf(s, sizeof(s), fmt, ap);
 	va_end(ap);
 	
-	strlcpy(win->caption, s, sizeof(win->caption));
+	Strlcpy(win->caption, s, sizeof(win->caption));
 	AG_WindowUpdateCaption(win);
 }
 
