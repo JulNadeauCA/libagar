@@ -593,6 +593,7 @@ AG_ViewAttach(void *child)
 	if (win->flags & AG_WINDOW_FOCUSONATTACH) {
 		AG_WindowFocus(win);
 	}
+	AG_SetStyle(win, agView->style);
 	AG_MutexUnlock(&agView->lock);
 }
 
