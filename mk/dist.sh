@@ -33,14 +33,20 @@ rm -fR `find ${PROJ}-${VER} \( -name .svn \
 
 tar -f ${DISTFILE}.tar -c ${PROJ}-${VER}
 gzip -f ${DISTFILE}.tar
+zip -r ${DISTFILE}.zip ${PROJ}-${VER}
+
 openssl md5 ${DISTFILE}.tar.gz > ${DISTFILE}.tar.gz.md5
 openssl rmd160 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
 openssl sha1 ${DISTFILE}.tar.gz >> ${DISTFILE}.tar.gz.md5
+openssl md5 ${DISTFILE}.zip > ${DISTFILE}.zip.md5
+openssl rmd160 ${DISTFILE}.zip >> ${DISTFILE}.zip.md5
+openssl sha1 ${DISTFILE}.zip >> ${DISTFILE}.zip.md5
 gpg -ab ${DISTFILE}.tar.gz
+gpg -ab ${DISTFILE}.zip
 
 if [ "$1" = "commit" -o "$1" = "snapshot" ]; then
 	echo "uploading"
-	scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc} ${RUSER}@${HOST}:www/$PHASE.csoft.org/${PROJ}
+	scp -C ${DISTFILE}.{tar.gz,tar.gz.md5,tar.gz.asc,zip,zip.md5,zip.asc} ${RUSER}@${HOST}:www/$PHASE.csoft.org/${PROJ}
 
 	echo "notifying ${PROJ}-announce@"
 	TMP=`mktemp /tmp/${PROJ}announceXXXXXXXX`
@@ -59,6 +65,9 @@ It is now available for download from ${PHASE}.csoft.org.
 	http://${PHASE}.csoft.org/${PROJ}/${PROJ}-${VER}.tar.gz
 	http://${PHASE}.csoft.org/${PROJ}/${PROJ}-${VER}.tar.gz.asc
 	http://${PHASE}.csoft.org/${PROJ}/${PROJ}-${VER}.tar.gz.md5
+	http://${PHASE}.csoft.org/${PROJ}/${PROJ}-${VER}.zip
+	http://${PHASE}.csoft.org/${PROJ}/${PROJ}-${VER}.zip.asc
+	http://${PHASE}.csoft.org/${PROJ}/${PROJ}-${VER}.zip.md5
 
 Binary packages are also available from the ${PROJ} website:
 
@@ -85,6 +94,9 @@ La distribution source est téléchargable à partir de ${PHASE}.csoft.org:
 	http://$PHASE.csoft.org/${PROJ}/${PROJ}-${VER}.tar.gz
 	http://$PHASE.csoft.org/${PROJ}/${PROJ}-${VER}.tar.gz.asc
 	http://$PHASE.csoft.org/${PROJ}/${PROJ}-${VER}.tar.gz.md5
+	http://$PHASE.csoft.org/${PROJ}/${PROJ}-${VER}.zip
+	http://$PHASE.csoft.org/${PROJ}/${PROJ}-${VER}.zip.asc
+	http://$PHASE.csoft.org/${PROJ}/${PROJ}-${VER}.zip.md5
 
 Des paquets binaires sont également disponibles sur le site de ${PROJ}:
 
