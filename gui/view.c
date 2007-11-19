@@ -41,6 +41,7 @@
 #include "cursors.h"
 #include "colors.h"
 #include "menu.h"
+#include "text.h"
 #ifdef DEBUG
 #include "label.h"
 #include "fixed_plotter.h"
@@ -483,7 +484,8 @@ AG_ResizeDisplay(int w, int h)
 		TAILQ_FOREACH(win, &agView->windows, windows)
 			FreeWidgetResourcesGL(WIDGET(win));
 	}
-#endif /* HAVE_OPENGL */
+	AG_FreeGlyphCache();
+#endif
 
 	/* XXX set a minimum! */
 	if ((su = SDL_SetVideoMode(w, h, 0, flags)) == NULL) {
