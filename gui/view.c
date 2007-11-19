@@ -484,7 +484,7 @@ AG_ResizeDisplay(int w, int h)
 		TAILQ_FOREACH(win, &agView->windows, windows)
 			FreeWidgetResourcesGL(WIDGET(win));
 	}
-	AG_FreeGlyphCache();
+	AG_ClearGlyphCache();
 #endif
 
 	/* XXX set a minimum! */
