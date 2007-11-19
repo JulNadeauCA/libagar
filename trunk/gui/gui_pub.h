@@ -18,6 +18,7 @@
 #include <agar/gui/fspinbutton.h>
 #include <agar/gui/fixed_plotter.h>
 #include <agar/gui/glview.h>
+#include <agar/gui/graph.h>
 #include <agar/gui/hbox.h>
 #include <agar/gui/hsvpal.h>
 #include <agar/gui/icon.h>
