@@ -14,12 +14,6 @@ SUBDIR=	fixedres \
 	sockets \
 	glview
 
-SUBDIR+=sgview \
-	linear \
-	plot3 \
-	plot2 \
-	catastrophe
-
 all: configure all-subdir
 clean: prereq clean-subdir
 cleandir: prereq cleandir-subdir
