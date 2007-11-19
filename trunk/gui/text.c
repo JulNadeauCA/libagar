@@ -457,21 +457,12 @@ AG_TextInit(void)
 }
 
 void
-AG_TextDestroy(void)
+AG_ClearGlyphCache(void)
 {
-	AG_Font *font, *nextfont;
 	int i;
+	AG_Glyph *gl, *ngl;
 
-#ifdef GLYPH_GC
-	AG_LockTimeouts(NULL);
-	if (AG_TimeoutIsScheduled(NULL, &glyphGcTo)) {
-		AG_DelTimeout(NULL, &glyphGcTo);
-	}
-	AG_UnlockTimeouts(NULL);
-#endif
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
-		AG_Glyph *gl, *ngl;
-
 		for (gl = SLIST_FIRST(&agGlyphCache[i].glyphs);
 		     gl != SLIST_END(&agGlyphCache[i].glyphs);
 		     gl = ngl) {
@@ -480,6 +471,21 @@ AG_TextDestroy(void)
 		}
 		SLIST_INIT(&agGlyphCache[i].glyphs);
 	}
+}
+
+void
+AG_TextDestroy(void)
+{
+	AG_Font *font, *nextfont;
+
+#ifdef GLYPH_GC
+	AG_LockTimeouts(NULL);
+	if (AG_TimeoutIsScheduled(NULL, &glyphGcTo)) {
+		AG_DelTimeout(NULL, &glyphGcTo);
+	}
+	AG_UnlockTimeouts(NULL);
+#endif
+	AG_ClearGlyphCache();
 	
 	for (font = SLIST_FIRST(&fonts);
 	     font != SLIST_END(&fonts);

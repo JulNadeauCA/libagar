@@ -163,6 +163,7 @@ void AG_TextPromptDouble(const char *, const char *, double, double,
 
 AG_Glyph *AG_TextRenderGlyph(Uint32);
 void	  AG_TextUnusedGlyph(AG_Glyph *);
+void	  AG_ClearGlyphCache(void);
 
 void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
                   int, enum ag_text_justify, enum ag_text_valign);
