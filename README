@@ -8,32 +8,23 @@ What is it?
 -----------
 Agar is a type of sugar polymer obtained from seaweed and red algae. Agar
 becomes gelatinous in water and is primarly used as a culture medium for
-microbiological work. Agar is also an extensive toolkit for graphical
-applications.
+microbiological work. Agar is also an extensive toolkit for portable
+graphical applications.
 
-Agar is most well-known for its GUI library, Agar-GUI, which is being used
-by games, game edition tools, CAD and scientific applications.
-
-Included in this distribution are the core Agar library (Agar-Core) which
-focuses on an object system providing archiving (virtual filesystem),
-events/timers, dependency management and memory management. Optional
-features of Agar-Core include graphical edition facilities and a network
-revision control system specific to Agar objects (used for faciliating
-team development of complex datasets).
-
-This distribution also includes a number of independent libraries:
+The Agar source distribution includes a number of libraries, listed below.
+For more information on them, go to http://libagar.org/.
 
 Name		Description			Link against
 ----		-----------			------------
-Agar-Core	Object system			`agar-config --libs`
+Agar-Core	Object system, portability	`agar-config --libs`
 Agar-GUI	Graphical user interface	`agar-config --libs`
-Agar-MAP	2D game levels (w/ edition)	`agar-map-config --libs`
-Agar-NET	Networking facilities		`agar-net-config --libs`
-Agar-RG		2D graphic rendering/edition	`agar-rg-config --libs`
 Agar-SG		3D engine (scene graph)		`agar-sg-config --libs`
-Agar-VG		Vector display engine		`agar-vg-config --libs`
-Agar-SC		Scientific computing routines	`agar-sc-config --libs`
 Agar-DEV	Developer tools			`agar-dev-config --libs`
+Agar-VG		Vector display engine		`agar-vg-config --libs`
+Agar-RG		2D graphic rendering/edition	`agar-rg-config --libs`
+Agar-SC		Scientific computing routines	`agar-sc-config --libs`
+Agar-NET	Networking facilities		`agar-net-config --libs`
+Agar-MAP	2D game levels/edition		`agar-map-config --libs`
 
 Availability
 ------------
