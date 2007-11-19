@@ -44,7 +44,7 @@ extern AG_CPUInfo agCPU;
 void AG_GetCPUInfo(AG_CPUInfo *);
 __END_DECLS
 
-#ifdef _AGAR_INTERNAL
+#if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CPUINFO)
 #define HasMMX()	(agCPU.ext & AG_EXT_MMX)
 #define HasMMXEXT()	(agCPU.ext & AG_EXT_MMX_EXT)
 #define Has3DNOW()	(agCPU.ext & AG_EXT_3DNOW)
