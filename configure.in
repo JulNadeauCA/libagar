@@ -61,6 +61,7 @@ CHECK(x11)
 CHECK(signal)
 CHECK(setjmp)
 CHECK(strtoll)
+CHECK(altivec)
 
 C_DEFINE(_AGAR_INTERNAL)
 C_DEFINE(_BSD_SOURCE)
