@@ -123,6 +123,53 @@ AG_X11_ErrorHandler(Display *disp, XErrorEvent *event)
 }
 #endif
 
+#ifdef HAVE_OPENGL
+static void
+InitGL(void)
+{
+	int red, blue, green, alpha, depth, bsize;
+	Uint8 bR, bG, bB;
+#if 0
+	float lineW[2];
+#endif
+
+	SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
+	SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &green);
+	SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &blue);
+	SDL_GL_GetAttribute(SDL_GL_ALPHA_SIZE, &alpha);
+	SDL_GL_GetAttribute(SDL_GL_BUFFER_SIZE, &bsize);
+	SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth);
+
+	AG_SetInt(agConfig, "view.gl.depth", depth);
+	AG_SetInt(agConfig, "view.gl.red_size", red);
+	AG_SetInt(agConfig, "view.gl.green_size", green);
+	AG_SetInt(agConfig, "view.gl.blue_size", blue);
+	AG_SetInt(agConfig, "view.gl.alpha_size", alpha);
+	AG_SetInt(agConfig, "view.gl.buffer_size", bsize);
+
+	glViewport(0, 0, agView->w, agView->h);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glOrtho(0, agView->w, agView->h, 0, -1.0, 1.0);
+
+	SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &bR, &bG, &bB);
+	glClearColor(bR/255.0, bG/255.0, bB/255.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	glShadeModel(GL_FLAT);
+		
+	glEnable(GL_TEXTURE_2D);
+#if 0
+	glEnable(GL_LINE_SMOOTH);
+	glGetFloatv(GL_LINE_WIDTH_RANGE, lineW);
+	glLineWidth(lineW[0]);
+#endif
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DITHER);
+	glDisable(GL_BLEND);
+}
+#endif /* HAVE_OPENGL */
+
 int
 AG_InitVideo(int w, int h, int bpp, Uint flags)
 {
@@ -256,50 +303,13 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		int red, blue, green, alpha, depth, bsize;
-		Uint8 bR, bG, bB;
-#if 0
-		float lineW[2];
-#endif
-
 		if (agVerbose) {
 			Verbose("\tGL Version: %s\n", glGetString(GL_VERSION));
 			Verbose("\tGL Vendor: %s\n", glGetString(GL_VENDOR));
 			Verbose("\tGL Renderer: %s\n",
 			    glGetString(GL_RENDERER));
 		}
-		SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
-		SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &green);
-		SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &blue);
-		SDL_GL_GetAttribute(SDL_GL_ALPHA_SIZE, &alpha);
-		SDL_GL_GetAttribute(SDL_GL_BUFFER_SIZE, &bsize);
-		SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth);
-
-		AG_SetInt(agConfig, "view.gl.depth", depth);
-		AG_SetInt(agConfig, "view.gl.red_size", red);
-		AG_SetInt(agConfig, "view.gl.green_size", green);
-		AG_SetInt(agConfig, "view.gl.blue_size", blue);
-		AG_SetInt(agConfig, "view.gl.alpha_size", alpha);
-		AG_SetInt(agConfig, "view.gl.buffer_size", bsize);
-
-		glViewport(0, 0, agView->w, agView->h);
-		glOrtho(0, agView->w, agView->h, 0, -1.0, 1.0);
-
-		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &bR, &bG, &bB);
-		glClearColor(bR/255.0, bG/255.0, bB/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-		glShadeModel(GL_FLAT);
-		
-		glEnable(GL_TEXTURE_2D);
-#if 0
-		glEnable(GL_LINE_SMOOTH);
-		glGetFloatv(GL_LINE_WIDTH_RANGE, lineW);
-		glLineWidth(lineW[0]);
-#endif
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DITHER);
-		glDisable(GL_BLEND);
+		InitGL();
 	} else
 #endif /* HAVE_OPENGL */
 	{
@@ -492,11 +502,7 @@ AG_ResizeDisplay(int w, int h)
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		glViewport(0, 0, w, h);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glOrtho(0, w, h, 0, -1.0, 1.0);
-
+		InitGL();
 		TAILQ_FOREACH(win, &agView->windows, windows)
 			RegenWidgetResourcesGL(WIDGET(win));
 	} else

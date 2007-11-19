@@ -1520,9 +1520,14 @@ AG_WidgetRegenResourcesGL(AG_Widget *wid)
 {
 	Uint i;
 
-	for (i = 0; i < wid->nsurfaces; i++)
-		wid->textures[i] = AG_SurfaceTexture(wid->surfaces[i],
-		    &wid->texcoords[i*4]);
+	for (i = 0; i < wid->nsurfaces; i++)  {
+		if (wid->surfaces[i] != NULL) {
+			wid->textures[i] = AG_SurfaceTexture(wid->surfaces[i],
+			    &wid->texcoords[i*4]);
+		} else {
+			wid->textures[i] = 0;
+		}
+	}
 }
 #endif /* HAVE_OPENGL */
 
