@@ -10,7 +10,6 @@ SUBDIR=	 agar-config \
 	 gui \
 	 vg agar-vg-config \
 	 rg agar-rg-config \
-	 sg agar-sg-config \
 	 map agar-map-config \
 	 sc agar-sc-config \
 	 net agar-net-config \
@@ -86,9 +85,6 @@ install-includes:
 		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/rg/rg_pub.h \
 		   ${INCLDIR}/agar/rg.h; \
-		echo "${INSTALL_INCL} sg/sg_pub.h ${INCLDIR}/agar/sg.h"; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/sg/sg_pub.h \
-		   ${INCLDIR}/agar/sg.h; \
 		echo "${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/net/net_pub.h \
 		   ${INCLDIR}/agar/net.h; \
@@ -112,8 +108,6 @@ install-includes:
 		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h; \
 		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h"; \
 		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h; \
-		echo "${INSTALL_INCL} sg/sg_pub.h ${INCLDIR}/agar/sg.h"; \
-		${SUDO} ${INSTALL_INCL} sg/sg_pub.h ${INCLDIR}/agar/sg.h; \
 		echo "${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h"; \
 		${SUDO} ${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h; \
 		echo "${INSTALL_INCL} map/map_pub.h ${INCLDIR}/agar/map.h"; \

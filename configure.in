@@ -4,14 +4,6 @@
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: no]")
 REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
-#REGISTER("--with-ode",		"SG: ODE physics interface [default: check]")
-REGISTER("--with-cg",		"SG: CG shader support [default: check]")
-REGISTER("--with-sse",		"SSE/SSE2/SSE3 optimizations [default: check]")
-REGISTER("--with-sse-inline",	"Inline SSE operations [default: no]")
-REGISTER("--with-sse2-inline",	"Inline SSE2 operations [default: no]")
-REGISTER("--with-sse3-inline",	"Inline SSE3 operations [default: no]")
-REGISTER("--with-altivec",	"AltiVec optimizations [default: check]")
-REGISTER("--with-altivec-inline", "Inline AltiVec operations [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: no]")
 REGISTER("--enable-utf8",	"Unicode text/input support [default: yes]")
 REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
@@ -153,120 +145,6 @@ if [ "${with_jpeg}" != "no" ]; then
 	fi
 else
 	HUNDEF(HAVE_JPEG)
-fi
-
-# Enable ODE interface in Agar-SG if libode is found.
-#if [ "${with_ode}" != "no" ]; then
-#	CHECK(ode)
-#	if [ "${HAVE_ODE}" != "yes" ]; then
-#		if [ "${with_ode}" = "yes" ]; then
-#			echo "*"
-#			echo "* --with-ode was requested, but ODE was not"
-#			echo "* found on this system."
-#			echo "*"
-#			exit 1
-#		else
-#			HUNDEF(HAVE_ODE)
-#		fi
-#	fi
-#else
-#	HUNDEF(HAVE_ODE)
-#fi
-
-# Enable CG support in Agar-SG if Cg toolkit is found.
-if [ "${with_cg}" != "no" ]; then
-	CHECK(cg)
-	if [ "${HAVE_CG}" != "yes" ]; then
-		if [ "${with_cg}" = "yes" ]; then
-			echo "*"
-			echo "* --with-cg was requested, but Cg was not"
-			echo "* found on this system."
-			echo "*"
-			exit 1
-		else
-			HUNDEF(HAVE_CG)
-		fi
-	fi
-else
-	HUNDEF(HAVE_CG)
-fi
-
-# Enable (optional) SSE optimizations if compiler supports intrinsics.
-if [ "${with_sse}" = "yes" ]; then
-	CHECK(sse)
-	if [ "${HAVE_SSE}" != "yes" ]; then
-		if [ "${with_sse}" = "yes" ]; then
-			echo "*"
-			echo "* --with-sse was requested, but SSE intrinsics"
-			echo "* not supported by compiler"
-			echo "*"
-			exit 1
-		else
-			HUNDEF(HAVE_SSE)
-			HUNDEF(INLINE_SSE)
-			HUNDEF(INLINE_SSE2)
-			HUNDEF(INLINE_SSE3)
-		fi
-	else
-		if [ "${with_sse_inline}" = "yes" ]; then
-			HDEFINE(INLINE_SSE, 1)
-		else
-			HUNDEF(INLINE_SSE)
-		fi
-		if [ "${HAVE_SSE2}" = "yes" ]; then
-			if [ "${with_sse2_inline}" = "yes" ]; then
-				HDEFINE(INLINE_SSE2, 1)
-			else
-				HUNDEF(INLINE_SSE2)
-			fi
-		else
-			HUNDEF(INLINE_SSE2)
-		fi
-		if [ "${HAVE_SSE3}" = "yes" ]; then
-			if [ "${with_sse3_inline}" = "yes" ]; then
-				HDEFINE(INLINE_SSE3, 1)
-			else
-				HUNDEF(INLINE_SSE3)
-			fi
-		else
-			HUNDEF(INLINE_SSE3)
-		fi
-	fi
-else
-	HUNDEF(HAVE_SSE)
-	HUNDEF(HAVE_SSE2)
-	HUNDEF(HAVE_SSE3)
-	HUNDEF(INLINE_SSE)
-	HUNDEF(INLINE_SSE2)
-	HUNDEF(INLINE_SSE3)
-fi
-
-# Enable (optional) AltiVec optimizations if compiler supports intrinsics.
-if [ "${with_altivec}" = "yes" ]; then
-	CHECK(altivec)
-	if [ "${HAVE_ALTIVEC}" != "yes" ]; then
-		if [ "${with_altivec}" = "yes" ]; then
-			echo "*"
-			echo "* --with-altivec was requested, but AltiVec"
-			echo "* is not supported by compiler"
-			echo "*"
-			exit 1
-		else
-			HUNDEF(HAVE_ALTIVEC)
-			HUNDEF(HAVE_ALTIVEC_H)
-			HUNDEF(INLINE_ALTIVEC)
-		fi
-	else
-		if [ "${with_altivec_inline}" = "yes" ]; then
-			HDEFINE(INLINE_ALTIVEC, 1)
-		else
-			HUNDEF(INLINE_ALTIVEC)
-		fi
-	fi
-else
-	HUNDEF(HAVE_ALTIVEC)
-	HUNDEF(HAVE_ALTIVEC_H)
-	HUNDEF(INLINE_ALTIVEC)
 fi
 
 # Enable network support if system supports getaddrinfo().

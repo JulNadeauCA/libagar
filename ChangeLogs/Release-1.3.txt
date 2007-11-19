@@ -6,8 +6,6 @@ Here are some of the notable changes since Agar 1.2 in no particular order.
 This excludes the numerous cosmetic changes that were made. For a complete
 list of all changes, see ChangeLog-1.3.txt.
 
-- Merged Agar-SG (http://hypertriton.com/agar-sg/) into the main Agar source
-  distribution as a separate library.
 - Merged Agar-MAP (http://hypertriton.com/agar-map/) into the main Agar source
   distribution as a separate library.
 - Merged Agar-NET (http://hypertriton.com/agar-net/) into the main Agar source
@@ -34,14 +32,8 @@ list of all changes, see ChangeLog-1.3.txt.
        applications). This is useful for consoles and platforms where files
        are inconvenient (such as Windows when using Cygwin/MSYS build).
 - MAP: Implemented MAP_Actor object.
-- SG: Added Voxel node.
-- SG: Implemented keyboard navigation and overlay display in SG_View(3).
 - RG: Added static tile/animation tables, so that external objects can
       rely on names not changing as items are added or removed.
-- SG: Faster matrix inversion routine.
-- SG: The Light and Camera nodes now use their standard node positions and
-      directions.
-- SG: Implement SG_GetNodeTransformInverse().
 - CORE: Simplify class registration with AG_RegisterClass().
 - GUI: In AG_FileDlg(3), use stat(2) where available to determine if files
        are accessible, instead of open(2) which may cause problems with large
@@ -58,10 +50,8 @@ list of all changes, see ChangeLog-1.3.txt.
 - Change the way internal headers are included so that the build process
   no longer requires symlinks. This fixes non-concurrent building on
   platforms such as MSYS.
-- SG: Allow persistent node<->node references in SK(3).
 - Move from csoft-mk to our new build system, BSDBuild
   (http://hypertriton.com/bsdbuild/). 
-- SG: Implement generic geometric constraint solving in SK(3).
 - GUI: Eliminate some subtle differences (mostly off-by-ones) in the way
        primitives are rendered in OpenGL vs SDL mode.
 - GUI: Implement AG_LABEL_NOMINSIZE flag in AG_Label(3), and use it by
@@ -87,10 +77,8 @@ list of all changes, see ChangeLog-1.3.txt.
 - GUI: Implement AG_Graph(3) widget which displays graphs (as in vertices
        and edges). The autoplacer algorithm is still very crude.
 - GUI: Add various convenient variants for widget constructor functions.
-- SG: Implement two and four dimensional vector functions.
 - GUI: AG_WidgetEnable() and AG_WidgetDisable() is now the preferred way of
        setting widget states.
-- SG: Implement proximity queries and snapping to nearby points in editor.
 - GUI: Add more precise left/right/top/bottom padding and spacing parameters
        to various widgets.
 - CORE: Add "sender" argument to AG_ForwardEvent().
@@ -107,7 +95,6 @@ list of all changes, see ChangeLog-1.3.txt.
 - GUI: Introduce AG_Numerical(3) as a replacement for both AG_FSpinbutton(3)
        and AG_Spinbutton(3), that can handle both integral and floating-point
        bindings.
-- SG: Implement Annot class and Dimension annotations in SK(3).
 - GUI: In AG_Menu(3), store items a single tree instead of multiple trees;
        improve dynamic item support; implement item "state" flag.
 - GUI: Provide AG_FileDlgCheck(Read|Write)Access() functions, provide means
