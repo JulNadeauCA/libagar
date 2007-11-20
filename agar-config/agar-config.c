@@ -38,7 +38,6 @@
 
 #include <config/have_freetype.h>
 #include <config/have_opengl.h>
-#include <config/have_glu.h>
 #include <config/have_jpeg.h>
 #include <config/have_math.h>
 #include <config/have_pthreads.h>
@@ -56,10 +55,6 @@
 #ifdef HAVE_OPENGL
 #include <config/opengl_libs.h>
 #include <config/opengl_cflags.h>
-#endif
-#ifdef HAVE_GLU
-#include <config/glu_libs.h>
-#include <config/glu_cflags.h>
 #endif
 #ifdef HAVE_JPEG
 #include <config/jpeg_libs.h>
@@ -108,9 +103,6 @@ main(int argc, char *argv[])
 #ifdef OPENGL_CFLAGS
 			printf("%s ", OPENGL_CFLAGS);
 #endif
-#ifdef GLU_CFLAGS
-			printf("%s ", GLU_CFLAGS);
-#endif
 #ifdef MATH_CFLAGS
 			printf("%s ", MATH_CFLAGS);
 #endif
@@ -138,9 +130,6 @@ main(int argc, char *argv[])
 #endif
 #ifdef OPENGL_LIBS
 			printf("%s ", OPENGL_LIBS);
-#endif
-#ifdef GLU_LIBS
-			printf("%s ", GLU_LIBS);
 #endif
 #ifdef MATH_LIBS
 			printf("%s ", MATH_LIBS);

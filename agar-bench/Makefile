@@ -4,7 +4,7 @@ include ./Makefile.config
 PROG=		agar-bench
 PROG_TYPE=	"GUI"
 PROG_GUID=	"8CECE971-4D10-4787-B8CF-349F58861C95"
-PROG_LINKS=	ag_core ag_gui ag_sg SDL opengl32 glu32
+PROG_LINKS=	ag_core ag_gui ag_sg SDL opengl32
 VERSION=	1.0
 
 SRCS=		agar-bench.c generic.c pixelops.c primitives.c surfaceops.c \
