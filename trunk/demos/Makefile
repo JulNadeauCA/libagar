@@ -12,7 +12,8 @@ SUBDIR=	fixedres \
 	objprops \
 	unitconv \
 	sockets \
-	glview
+	glview \
+	gunpowder
 
 all: configure all-subdir
 clean: prereq clean-subdir
