@@ -1009,7 +1009,12 @@ echo "#undef GLU_LIBS" > config/glu_libs.h
 fi;
 if [ "${HAVE_AGAR}" != "yes" -o "${HAVE_OPENGL}" != "yes" ]
  then
-	echo "This demo requires Agar and OpenGL."
+	echo "This demo requires the Agar library and OpenGL."
+	exit 1
+fi
+if [ "${HAVE_GLU}" != "yes" ]
+ then
+	echo "This demo requires the GLU library."
 	exit 1
 fi
 CFLAGS="$CFLAGS -I$SRC"

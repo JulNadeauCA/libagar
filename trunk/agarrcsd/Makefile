@@ -4,7 +4,7 @@ include Makefile.config
 PROG=		agarrcsd
 PROG_TYPE=	"DAEMON"
 PROG_GUID=	"45170011-03CA-40f2-BA07-D954E3C61CA2"
-PROG_LINKS=	ag_core ag_gui ag_net ag_dev SDL opengl32 glu32
+PROG_LINKS=	ag_core ag_gui ag_net ag_dev SDL opengl32
 
 SRCS=	agarrcsd.c user.c mkpath.c rcsinfo.c rcs.c fgetln.c
 MAN8=	agarrcsd.8
