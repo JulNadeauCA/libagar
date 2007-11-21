@@ -44,6 +44,7 @@
 #include "tileview.h"
 #include "texsel.h"
 #include "icons.h"
+#include "rg_math.h"
 
 #include <string.h>
 
@@ -74,8 +75,8 @@ RG_SketchScale(RG_Sketch *sk, int w, int h, float scale, int x, int y)
 {
 	VG *vg = sk->vg;
 #if 0
-	double xoffs = (float)x/(float)RG_TILESZ/scale;
-	double yoffs = (float)y/(float)RG_TILESZ/scale;
+	float xoffs = (float)x/(float)RG_TILESZ/scale;
+	float yoffs = (float)y/(float)RG_TILESZ/scale;
 #endif
 	SDL_Rect r;
 
@@ -412,7 +413,7 @@ UpdateCircleRadius(AG_Event *event)
 {
 	VG_Element *vge = AG_PTR(2);
 
-	vge->vg_circle.radius = sqrt(
+	vge->vg_circle.radius = Sqrt(
 	    pow(vge->vtx[1].x - vge->vtx[0].x, 2) +
 	    pow(vge->vtx[1].y - vge->vtx[0].y, 2));
 }
@@ -504,8 +505,8 @@ RG_SketchUnselect(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 void
-RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
-    double x, double y, int button)
+RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
+    int button)
 {
 	RG_Sketch *sk = tel->tel_sketch.sk;
 	VG *vg = sk->vg;
@@ -584,8 +585,8 @@ RG_SketchButtondown(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 void
-RG_SketchButtonup(RG_Tileview *tv, RG_TileElement *tel,
-    double x, double y, int button)
+RG_SketchButtonup(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
+    int button)
 {
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {
@@ -599,8 +600,8 @@ RG_SketchButtonup(RG_Tileview *tv, RG_TileElement *tel,
 }
 
 void
-RG_SketchMotion(RG_Tileview *tv, RG_TileElement *tel, double x, double y,
-    double xrel, double yrel, int state)
+RG_SketchMotion(RG_Tileview *tv, RG_TileElement *tel, float x, float y,
+    float xrel, float yrel, int state)
 {
 	if (tv->cur_tool != NULL &&
 	    tv->cur_tool->flags & TILEVIEW_SKETCH_TOOL) {

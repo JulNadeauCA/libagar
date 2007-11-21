@@ -55,12 +55,12 @@ void		   RG_SketchUnselect(struct rg_tileview *, RG_TileElement *,
 void RG_SketchKeyDown(struct rg_tileview *, RG_TileElement *, int, int);
 void RG_SketchKeyUp(struct rg_tileview *, RG_TileElement *, int, int);
 int  RG_SketchWheel(struct rg_tileview *, RG_TileElement *, int);
-void RG_SketchButtondown(struct rg_tileview *, RG_TileElement *, double, double,
+void RG_SketchButtondown(struct rg_tileview *, RG_TileElement *, float, float,
 			 int);
-void RG_SketchButtonup(struct rg_tileview *, RG_TileElement *, double, double,
+void RG_SketchButtonup(struct rg_tileview *, RG_TileElement *, float, float,
                        int);
-void RG_SketchMotion(struct rg_tileview *, RG_TileElement *, double, double,
-		     double, double, int);
+void RG_SketchMotion(struct rg_tileview *, RG_TileElement *, float, float,
+		     float, float, int);
 
 void RG_SketchBeginUndoBlk(RG_Sketch *);
 void RG_SketchUndo(struct rg_tileview *, RG_TileElement *);

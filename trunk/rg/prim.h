@@ -24,7 +24,7 @@ void RG_BlendRGB(SDL_Surface *, int, int, enum rg_prim_blend_mode,
 	            Uint8, Uint8, Uint8, Uint8);
 void RG_Circle2(struct rg_tile *, int, int, int);
 void RG_Line(struct rg_tile *, int, int, int, int);
-void RG_WuLine(struct rg_tile *, double, double, double, double);
+void RG_WuLine(struct rg_tile *, float, float, float, float);
 void RG_HLine(struct rg_tile *, int, int, int, Uint32);
 
 static __inline__ void

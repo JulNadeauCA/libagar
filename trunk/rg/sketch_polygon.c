@@ -185,7 +185,7 @@ edit(void *p)
 }
 
 static void
-mousebuttondown(void *p, RG_Sketch *sk, double x, double y, int button)
+mousebuttondown(void *p, RG_Sketch *sk, float x, float y, int button)
 {
 	struct polygon_tool *pt = p;
 	VG *vg = sk->vg;
@@ -228,8 +228,7 @@ mousebuttondown(void *p, RG_Sketch *sk, double x, double y, int button)
 }
 
 static void
-mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
-    double yrel)
+mousemotion(void *p, RG_Sketch *sk, float x, float y, float xrel, float yrel)
 {
 	struct polygon_tool *pt = p;
 
