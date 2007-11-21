@@ -1,5 +1,10 @@
 /*	Public domain	*/
+/*
+ * Main internal Agar-Core header file. External applications and libraries
+ * should use <agar/core.h> instead.
+ */
 
+#ifdef _AGAR_INTERNAL
 #ifndef _AGAR_CORE_CORE_H_
 #define _AGAR_CORE_CORE_H_
 
@@ -91,7 +96,6 @@ typedef unsigned long Ulong;
 #include <core/asprintf.h>
 #include <core/vasprintf.h>
 #include <core/strsep.h>
-#include <core/math.h>
 
 #include <core/data_source.h>
 #include <core/load_integral.h>
@@ -135,6 +139,19 @@ typedef unsigned long Ulong;
 #define AG_PATHSEP "/"
 #endif
 
+#ifndef MIN
+#define	MIN(a,b) (((a)<(b))?(a):(b))
+#endif
+#ifndef MAX
+#define	MAX(a,b) (((a)>(b))?(a):(b))
+#endif
+#ifndef MIN3
+#define	MIN3(a,b,c) MIN((a),MIN((b),(c)))
+#endif
+#ifndef MAX3
+#define	MAX3(a,b,c) MAX((a),MAX((b),(c)))
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(disable: 4018)
 #pragma warning(disable: 4267)
@@ -142,4 +159,6 @@ typedef unsigned long Ulong;
 #endif
 
 #include <core/core_init.h>
+
 #endif /* !_AGAR_CORE_CORE_H_ */
+#endif /* _AGAR_INTERNAL */
