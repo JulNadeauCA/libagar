@@ -955,8 +955,8 @@ void
 VG_LoadRotate(VG_Matrix *m, float tdeg)
 {
 	float theta = (tdeg/360.0)*(2.0*VG_PI);
-	float rcos = cosf(theta);
-	float rsin = sinf(theta);
+	float rcos = VG_Cos(theta);
+	float rsin = VG_Sin(theta);
 
 	m->m[0][0] = +rcos;
 	m->m[0][1] = -rsin;

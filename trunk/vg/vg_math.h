@@ -8,9 +8,27 @@
 #define VG_DotProd2(ax,ay,bx,by) \
 	((ax)*(bx) + (ay)*(by))
 #define VG_Norm2(ax,ay) \
-	sqrtf(VG_DotProd2((ax),(ay),(ax),(ay)))
+	VG_Sqrt(VG_DotProd2((ax),(ay),(ax),(ay)))
 #define VG_Distance2(ax,ay,bx,by) \
 	VG_Norm2((float)((ax)-(bx)),(float)((ay)-(by)))
+
+
+#if __STDC_VERSION__ >= 199901L
+#define VG_Sin(x) sinf(x)
+#define VG_Cos(x) cosf(x)
+#define VG_Tan(x) tanf(x)
+#define VG_Mod(x,y) fmodf((x),(y))
+#define VG_Sqrt(x) sqrtf(x)
+#define VG_Atan2(y,x) atan2f((y),(x))
+#else
+#define VG_Sin(x) ((float)sin((double)x))
+#define VG_Cos(x) ((float)cos((double)x))
+#define VG_Tan(x) ((float)tan((double)x))
+#define VG_Mod(x,y) ((float)fmod((double)(x),(double)(y)))
+#define VG_Sqrt(x) ((float)sqrt((double)x))
+#define VG_Atan2(y,x) ((float)atan2((double)(y),(double)(x)))
+#endif
+
 #define	VG_PI 3.14159265358979323846
 
 __BEGIN_DECLS
