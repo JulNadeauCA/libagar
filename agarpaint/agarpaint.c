@@ -209,7 +209,7 @@ SaveTilesetToIconsHdr(AG_Event *event)
 	char *pkgName = AG_FileOptionString(ft,"pkg-name");
 	int cppDecls =  AG_FileOptionBool(ft,"cpp-decls");
 	int beginCode =  AG_FileOptionBool(ft,"begin-code");
-	int w, h, count;
+	int w, h, count = 0;
 	RG_Tile *t;
 	FILE *f;
 	Uint8 *src;
