@@ -35,6 +35,7 @@
 #include "config/have_agar_dev.h"
 #include "config/version.h"
 #include "config/release.h"
+#include "config/have_getopt.h"
 
 #ifdef HAVE_AGAR_DEV
 #include <agar/dev.h>
@@ -633,7 +634,7 @@ main(int argc, char *argv[])
 #ifdef HAVE_GETOPT
 	for (i = optind; i < argc; i++) {
 #else
-	for (i = 0; i < argc; i++) {
+	for (i = 1; i < argc; i++) {
 #endif
 		RG_Tileset *ts;
 
