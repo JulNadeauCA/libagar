@@ -636,7 +636,11 @@ main(int argc, char *argv[])
 	Splash();
 #endif
 
+#ifdef HAVE_GETOPT
 	for (i = optind; i < argc; i++) {
+#else
+	for (i = 0; i < argc; i++) {
+#endif
 		RG_Tileset *ts;
 
 		ts = AG_ObjectNew(agWorld, NULL, &rgTilesetClass);
