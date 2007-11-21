@@ -7,7 +7,7 @@ LIB=		ag_gui
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
-LIB_LINKS=	ag_core SDL opengl32
+LIB_LINKS=	ag_core_static SDL opengl32
 
 SRCS=	gui.c view.c widget.c window.c keycodes.c keysyms.c style.c iconmgr.c \
 	colors.c cursors.c ttf.c text.c unicode.c ucslcpy.c ucslcat.c ucssep.c \
