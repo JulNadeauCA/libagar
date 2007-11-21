@@ -33,6 +33,7 @@
 #include "vg.h"
 #include "vg_primitive.h"
 #include "vg_view.h"
+#include "vg_math.h"
 #include "icons.h"
 #include "icons_data.h"
 
@@ -768,7 +769,7 @@ VG_VertexVint2(VG *vg, float x, float px1, float py1, float px2, float py2)
 
 	if (y1 < y2) { m = y1; y1 = y2; y2 = m; x3 = x2; }
 	if (x1 < x2) { m = x1; x1 = x2; x2 = m; }
-	m = fabsf(y2-y1)/fabsf(x2-x1);
+	m = Fabs(y2-y1)/Fabs(x2-x1);
 
 	vtx = VG_AllocVertex(vg->cur_vge);
 	vtx->x = x;
@@ -954,9 +955,9 @@ VG_Translate(VG *vg, float x, float y)
 void
 VG_LoadRotate(VG_Matrix *m, float tdeg)
 {
-	float theta = (tdeg/360.0)*(2.0*VG_PI);
-	float rcos = VG_Cos(theta);
-	float rsin = VG_Sin(theta);
+	float theta = Radians(tdeg);
+	float rcos = Cos(theta);
+	float rsin = Sin(theta);
 
 	m->m[0][0] = +rcos;
 	m->m[0][1] = -rsin;

@@ -27,13 +27,11 @@
  */
 
 #include <core/core.h>
-#include <core/util.h>
-
 #include <gui/view.h>
 
 #include "vg.h"
-#include "vg_math.h"
 #include "vg_primitive.h"
+#include "vg_math.h"
 
 #include <string.h>
 
@@ -293,7 +291,7 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 
 	SDL_GetRGBA(color, vg->fmt, &r, &g, &b, &a);
 
-	if (fabsf(xd) > fabsf(yd)) {			/* Horizontal */
+	if (Fabs(xd) > Fabs(yd)) {			/* Horizontal */
 		if (x1 > x2) {
 			float tmp;
 			
@@ -306,16 +304,16 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 		grad = yd/xd;
 
 		/* End point 1 */
-		xEnd = AG_Truncf(x1+0.5f);
+		xEnd = Truncf(x1+0.5f);
 		yEnd = y1 + grad*(xEnd-x1);
 
-		xgap = AG_FracInvf(x1+0.5f);
+		xgap = FracInvf(x1+0.5f);
 
 		ix1 = (int)xEnd;
 		iy1 = (int)(yEnd+0.5f);
 
-		lum1 = AG_FracInvf(yEnd)*xgap;
-		lum2 = AG_Fracf(yEnd)*xgap;
+		lum1 = FracInvf(yEnd)*xgap;
+		lum2 = Fracf(yEnd)*xgap;
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1, r, g, b,
 		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1+1, r, g, b,
@@ -324,16 +322,16 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 		yf = yEnd+grad;
 
 		/* End point 2 */
-		xEnd = AG_Truncf(x2+0.5f);
+		xEnd = Truncf(x2+0.5f);
 		yEnd = y2 + grad*(xEnd-x2);
 
-		xgap = AG_FracInvf(x2-0.5f);
+		xgap = FracInvf(x2-0.5f);
 
 		ix2 = (int)xEnd;
 		iy2 = (int)yEnd;
 
-		lum1 = AG_FracInvf(yEnd)*xgap;
-		lum2 = AG_Fracf(yEnd)*xgap;
+		lum1 = FracInvf(yEnd)*xgap;
+		lum2 = Fracf(yEnd)*xgap;
 
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
 		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
@@ -342,11 +340,11 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 
 		/* Main loop */
 		for (x = (ix1+1); x < ix2; x++) {
-			lum1 = AG_FracInvf(yf);
-			lum2 = AG_Fracf(yf);
+			lum1 = FracInvf(yf);
+			lum2 = Fracf(yf);
 
 			if (thick == 1) {
-				focus = (1.0 - fabsf((lum1 - lum2)));
+				focus = (1.0 - Fabs((lum1 - lum2)));
 				lum1 += 0.3*focus;
 				lum2 += 0.3*focus;
 				AG_BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf,
@@ -384,16 +382,16 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 		grad = xd/yd;
 
 		/* End point 1 */
-		yEnd = AG_Truncf(y1+0.5f);
+		yEnd = Truncf(y1+0.5f);
 		xEnd = x1 + grad*(yEnd-y1);
 
-		ygap = AG_FracInvf(y1+0.5f);
+		ygap = FracInvf(y1+0.5f);
 
 		iy1 = (int)yEnd;
 		ix1 = (int)(xEnd+0.5f);
 
-		lum1 = AG_FracInvf(yEnd)*ygap;
-		lum2 = AG_Fracf(yEnd)*ygap;
+		lum1 = FracInvf(yEnd)*ygap;
+		lum2 = Fracf(yEnd)*ygap;
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1, r, g, b,
 		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix1, iy1+1, r, g, b,
@@ -402,16 +400,16 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 		xf = xEnd + grad;
 
 		/* End point 2 */
-		yEnd = AG_Truncf(y2+0.5f);
+		yEnd = Truncf(y2+0.5f);
 		xEnd = x2 + grad*(yEnd-y2);
 
-		xgap = AG_FracInvf(y2-0.5f);
+		xgap = FracInvf(y2-0.5f);
 
 		iy2 = (int)yEnd;
 		ix2 = (int)xEnd;
 
-		lum1 = AG_FracInvf(yEnd)*xgap;
-		lum2 = AG_Fracf(yEnd)*xgap;
+		lum1 = FracInvf(yEnd)*xgap;
+		lum2 = Fracf(yEnd)*xgap;
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2, r, g, b,
 		    (Uint8)(lum1*255), AG_ALPHA_OVERLAY);
 		AG_BLEND_RGBA2_CLIPPED(vg->su, ix2, iy2+1, r, g, b,
@@ -419,11 +417,11 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 
 		/* Main loop */
 		for (y = (iy1+1); y < iy2; y++) {
-			lum1 = AG_FracInvf(xf);
-			lum2 = AG_Fracf(xf);
+			lum1 = FracInvf(xf);
+			lum2 = Fracf(xf);
 
 			if (thick == 1) {
-				focus = (1.0 - fabsf((lum1 - lum2)));
+				focus = (1.0 - Fabs((lum1 - lum2)));
 				lum1 += 0.3*focus;
 				lum2 += 0.3*focus;
 				AG_BLEND_RGBA2_CLIPPED(vg->su, (int)xf, y,

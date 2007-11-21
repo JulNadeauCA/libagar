@@ -13,7 +13,7 @@ SRCS=	vg.c vg_block.c vg_circle.c vg_arc.c vg_line.c vg_mask.c \
 
 #MAN3=	vg.3
 
-CFLAGS+=-I.. ${SDL_CFLAGS}
+CFLAGS+=-I.. ${SDL_CFLAGS} ${MATH_CFLAGS}
 
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk

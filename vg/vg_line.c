@@ -29,6 +29,7 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
+#include "vg_math.h"
 #include "icons.h"
 
 void
@@ -148,7 +149,7 @@ VG_LineMagnitude(float Ax, float Ay, float Bx, float By)
 	float vx = Bx - Ax;
 	float vy = By - Ay;
 
-	return (VG_Sqrt(vx*vx + vy*vy));
+	return (Sqrt(vx*vx + vy*vy));
 }
 
 float

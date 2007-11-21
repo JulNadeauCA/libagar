@@ -46,7 +46,6 @@ struct vg_element;
 #include "close_code.h"
 
 #ifdef _AGAR_INTERNAL
-#include <vg/vg_math.h>
 #include <vg/vg_snap.h>
 #include <vg/vg_ortho.h>
 #include <vg/vg_origin.h>
@@ -58,7 +57,6 @@ struct vg_element;
 #include <vg/vg_mask.h>
 #include <vg/vg_polygon.h>
 #else
-#include <agar/vg/vg_math.h>
 #include <agar/vg/vg_snap.h>
 #include <agar/vg/vg_ortho.h>
 #include <agar/vg/vg_origin.h>

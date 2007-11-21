@@ -29,6 +29,7 @@
 
 #include "vg.h"
 #include "vg_primitive.h"
+#include "vg_math.h"
 #include "icons.h"
 
 static void
@@ -70,7 +71,7 @@ static float
 VG_PointIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	if (vge->nvtx >= 1) {
-		float d = VG_Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
+		float d = Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
 		*x = vge->vtx[0].x;
 		*y = vge->vtx[0].y;
 		return (d);
