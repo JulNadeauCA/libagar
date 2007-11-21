@@ -24,7 +24,6 @@
  */
 
 #include <core/core.h>
-#include <core/util.h>
 
 #include "widget.h"
 #include "window.h"
@@ -32,6 +31,7 @@
 #include "menu.h"
 #include "primitive.h"
 #include "notebook.h"
+#include "gui_math.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -864,10 +864,10 @@ AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 			texcoord = &srcwid->texcoords[name*4];
 		} else {
 			texcoord = &tmptexcoord[0];
-			texcoord[0] = (GLfloat)rs->x/AG_PowOf2i(rs->x);
-			texcoord[1] = (GLfloat)rs->y/AG_PowOf2i(rs->y);
-			texcoord[2] = (GLfloat)rs->w/AG_PowOf2i(rs->w);
-			texcoord[3] = (GLfloat)rs->h/AG_PowOf2i(rs->h);
+			texcoord[0] = (GLfloat)rs->x/PowOf2i(rs->x);
+			texcoord[1] = (GLfloat)rs->y/PowOf2i(rs->y);
+			texcoord[2] = (GLfloat)rs->w/PowOf2i(rs->w);
+			texcoord[3] = (GLfloat)rs->h/PowOf2i(rs->h);
 		}
 
 		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);

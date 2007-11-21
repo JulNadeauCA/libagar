@@ -30,7 +30,7 @@ MAN3=	AG_View.3 AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Separator.3 AG_Numerical.3 AG_Style.3
 
 CFLAGS+=-I.. ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} \
-	${JPEG_CFLAGS}
+	${JPEG_CFLAGS} ${MATH_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk

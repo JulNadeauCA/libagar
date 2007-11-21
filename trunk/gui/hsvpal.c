@@ -29,9 +29,9 @@
 #include <rg/prim.h>					/* XXX depends on rg */
 
 #include "hsvpal.h"
-
 #include "primitive.h"
 #include "fspinbutton.h"
+#include "gui_math.h"
 
 #include <string.h>
 
@@ -302,7 +302,7 @@ UpdateHue(AG_HSVPal *pal, int x, int y)
 {
 	float h;
 
-	h = atan2f((float)y, (float)x);
+	h = Atan2((float)y, (float)x);
 	if (h < 0) {
 		h += (float)(2*AG_PI);
 	}
@@ -698,8 +698,8 @@ RenderPalette(AG_HSVPal *pal)
 		pc = SDL_MapRGB(agVideoFmt, r, g, b);
 
 		for (i = 0; i < pal->circle.width; i++) {
-			x = (pal->circle.rout - i)*cos(h);
-			y = (pal->circle.rout - i)*sin(h);
+			x = (pal->circle.rout - i)*Cos(h);
+			y = (pal->circle.rout - i)*Sin(h);
 
 			AG_PUT_PIXEL2(pal->surface,
 			    pal->circle.x+x,
@@ -788,8 +788,8 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 
 	pal->triangle.x = a->w/2;
 	pal->triangle.y = pal->circle.y+pal->circle.width-pal->circle.rout;
-	pal->triangle.h = pal->circle.rin*sin((37.0/360.0)*(2*AG_PI)) -
-			  pal->circle.rin*sin((270.0/360.0)*(2*AG_PI));
+	pal->triangle.h = pal->circle.rin*Sin((37.0/360.0)*(2*AG_PI)) -
+			  pal->circle.rin*Sin((270.0/360.0)*(2*AG_PI));
 	
 	pal->selcircle_r = pal->circle.width/2 - 4;
 
@@ -830,8 +830,8 @@ Draw(void *p)
 
 	/* Indicate the current selection. */
 	AG_DrawCircle(pal,
-	    pal->circle.x + (pal->circle.rin + pal->circle.width/2)*cos(cur_h),
-	    pal->circle.y + (pal->circle.rin + pal->circle.width/2)*sin(cur_h),
+	    pal->circle.x + (pal->circle.rin + pal->circle.width/2)*Cos(cur_h),
+	    pal->circle.y + (pal->circle.rin + pal->circle.width/2)*Sin(cur_h),
 	    pal->selcircle_r,
 	    AG_COLOR(HSVPAL_CIRCLE_COLOR));
 	

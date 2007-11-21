@@ -33,7 +33,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/util.h>
 #include <core/dir.h>
 
 #include "window.h"
@@ -46,8 +45,8 @@
 #include "label.h"
 #include "fixed_plotter.h"
 #endif
+#include "gui_math.h"
 
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -823,8 +822,8 @@ AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 	Uint8 salpha = sourcesu->format->alpha;
 	int w, h;
 
-	w = AG_PowOf2i(sourcesu->w);
-	h = AG_PowOf2i(sourcesu->h);
+	w = PowOf2i(sourcesu->w);
+	h = PowOf2i(sourcesu->h);
 
 	/* Create a surface with the masks expected by OpenGL. */
 	texsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
@@ -872,8 +871,8 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 	Uint8 salpha = sourcesu->format->alpha;
 	int w, h;
 	
-	w = AG_PowOf2i(sourcesu->w);
-	h = AG_PowOf2i(sourcesu->h);
+	w = PowOf2i(sourcesu->w);
+	h = PowOf2i(sourcesu->h);
 
 	/* The size of OpenGL surfaces must be a power of two. */
 	if (texcoord != NULL) {
@@ -1187,7 +1186,7 @@ AG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 	}
 	
 	hv = h/60.0F;
-	iv = floor(hv);
+	iv = Floor(hv);
 	var[0] = v * (1.0F - s);
 	var[1] = v * (1.0F - s*(hv - iv));
 	var[2] = v * (1.0F - s*(1.0F - (hv - iv)));
