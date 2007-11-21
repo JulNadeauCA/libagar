@@ -1,5 +1,12 @@
 /*	Public domain	*/
 
+#ifdef _AGAR_INTERNAL
+# include <config/have_math.h>
+# ifdef HAVE_MATH
+#  include <math.h>
+# endif
+#endif
+
 #define SC_FLOAT	0x01
 #define SC_DOUBLE	0x02
 #define SC_LONG_DOUBLE	0x04

@@ -10,6 +10,6 @@ LIB_LINKS=	ag_core ag_gui SDL opengl32
 SRCS=	sc_math.c sc_matrix.c sc_vector.c sc_ivector.c sc_gaussj.c sc_lu.c \
 	sc_matview.c sc_plotter.c sc.c sc_gui.c
 
-CFLAGS+=-I.. ${SDL_CFLAGS} ${AGAR_CFLAGS}
+CFLAGS+=-I.. ${SDL_CFLAGS} ${AGAR_CFLAGS} ${MATH_CFLAGS}
 
 include ${TOP}/mk/build.lib.mk
