@@ -33,8 +33,8 @@
 #include <gui/textbox.h>
 
 #include "vg.h"
-#include "vg_math.h"
 #include "vg_primitive.h"
+#include "vg_math.h"
 #include "icons.h"
 
 #include <string.h>
@@ -130,10 +130,10 @@ VG_RotateBlock(VG *vg, VG_Block *vgb, float theta)
 			float x, y, r, theta;
 
 			VG_Abs2Rel(vg, &vge->vtx[i], &x, &y);
-			r = VG_Sqrt(x*x + y*y);
-			theta = VG_Atan2(y,x) + vgb->theta;
-			x = r*VG_Cos(theta);
-			y = r*VG_Sin(theta);
+			r = Sqrt(x*x + y*y);
+			theta = Atan2(y,x) + vgb->theta;
+			x = r*Cos(theta);
+			y = r*Sin(theta);
 			VG_Rel2Abs(vg, x, y, &vge->vtx[i]);
 		}
 	}

@@ -77,7 +77,7 @@ VG_CircleIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 	if (vge->nvtx < 1) {
 		return (AG_FLT_MAX);
 	}
-	d = VG_Distance2(vge->vtx[0].x, vge->vtx[0].y, *x, *y) -
+	d = Distance2(vge->vtx[0].x, vge->vtx[0].y, *x, *y) -
 	    vge->vg_circle.radius;
 	return (d);
 }

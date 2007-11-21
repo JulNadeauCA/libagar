@@ -29,6 +29,7 @@
 
 #include "vg.h"
 #include "vg_text.h"
+#include "vg_math.h"
 #include "icons.h"
 
 #include <stdarg.h>
@@ -334,7 +335,7 @@ VG_TextIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 	if (vge->nvtx < 1 || vge->vg_text.su == NULL)
 		return (AG_FLT_MAX);
 
-	d = VG_Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
+	d = Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
 	*x = vge->vtx[0].x;
 	*y = vge->vtx[0].y;
 	return (d);
