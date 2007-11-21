@@ -105,13 +105,13 @@ rcsinfo_get_revision(const char *dirpath, u_int *revp, char *author,
 			buf = lbuf;
 		}
 		
-		if ((rev_txt = strsep(&bufp, ":")) != NULL &&
+		if ((rev_txt = AG_Strsep(&bufp, ":")) != NULL &&
 		    (u_int)strtol(rev_txt, NULL, 10) == *revp) {
-			char *author_txt = strsep(&bufp, ":");
-			char *type_txt = strsep(&bufp, ":");
-			char *name_txt = strsep(&bufp, ":");
-			char *digest_txt = strsep(&bufp, ":");
-			char *msg_txt = strsep(&bufp, ":");
+			char *author_txt = AG_Strsep(&bufp, ":");
+			char *type_txt = AG_Strsep(&bufp, ":");
+			char *name_txt = AG_Strsep(&bufp, ":");
+			char *digest_txt = AG_Strsep(&bufp, ":");
+			char *msg_txt = AG_Strsep(&bufp, ":");
 
 			if (author != NULL)
 				Strlcpy(author, author_txt, RCSINFO_AUTHOR_MAX);
