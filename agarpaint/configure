@@ -759,6 +759,48 @@ if [ "${compile}" = "ok" ]; then
 	CFLAGS="$CFLAGS -mno-cygwin"
 	echo "CFLAGS=$CFLAGS" >> Makefile.config
 fi
+echo -n "checking for the getopt() function..."
+echo -n "checking for the getopt() function..." >> config.log
+cat << EOT > conftest.c
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+	int c, x;
+	while ((c = getopt(argc, argv, "foo")) != -1) {
+		extern char *optarg;
+		extern int optind, opterr, optopt;
+		if (optarg != NULL) { x = 1; }
+		if (optind > 0) { x = 2; }
+		if (opterr > 0) { x = 3; }
+		if (optopt > 0) { x = 4; }
+	}
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f $testdir/conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_GETOPT="yes"
+echo "#ifndef HAVE_GETOPT" > config/have_getopt.h
+echo "#define HAVE_GETOPT \"$HAVE_GETOPT\"" >> config/have_getopt.h
+echo "#endif" >> config/have_getopt.h
+else
+echo "no"
+echo "no" >> config.log
+HAVE_GETOPT="no"
+echo "#undef HAVE_GETOPT" > config/have_getopt.h
+fi;
 echo -n "checking for Agar (http://libagar.org/)..."
 echo -n "checking for Agar (http://libagar.org/)..." >> config.log
 AGAR_VERSION=""
