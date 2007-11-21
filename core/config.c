@@ -255,7 +255,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	return (-1);
 }
 
-const AG_ObjectClass agConfigClass = {
+AG_ObjectClass agConfigClass = {
 	"AG_Config",
 	sizeof(AG_Config),
 	{ 9, 4 },

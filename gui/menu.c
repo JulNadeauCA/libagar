@@ -877,7 +877,7 @@ AG_PopupDestroy(void *pWid, AG_PopupMenu *pm)
 	Free(pm);
 }
 
-const AG_WidgetClass agMenuClass = {
+AG_WidgetClass agMenuClass = {
 	{
 		"AG_Widget:AG_Menu",
 		sizeof(AG_Menu),

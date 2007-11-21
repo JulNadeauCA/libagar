@@ -305,7 +305,7 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 	AG_MutexUnlock(&box->lock);
 }
 
-const AG_WidgetClass agBoxClass = {
+AG_WidgetClass agBoxClass = {
 	{
 		"AG_Widget:AG_Box",
 		sizeof(AG_Box),

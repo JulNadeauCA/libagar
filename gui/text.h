@@ -89,7 +89,7 @@ typedef struct ag_static_font {
 } AG_StaticFont;
 
 __BEGIN_DECLS
-extern const AG_ObjectClass agFontClass;
+extern AG_ObjectClass agFontClass;
 extern AG_Font *agDefaultFont;
 extern int agTextFontHeight;
 extern int agTextFontAscent;

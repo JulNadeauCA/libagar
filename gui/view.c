@@ -1481,7 +1481,7 @@ AG_MouseGetState(int *x, int *y)
 	return (rv);
 }
 
-const AG_ObjectClass agDisplayClass = {
+AG_ObjectClass agDisplayClass = {
 	"AG_Display",
 	sizeof(AG_Display),
 	{ 0,0 },

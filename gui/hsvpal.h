@@ -54,7 +54,7 @@ typedef struct ag_hsvpal {
 } AG_HSVPal;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agHSVPalClass;
+extern AG_WidgetClass agHSVPalClass;
 AG_HSVPal *AG_HSVPalNew(void *, Uint);
 __END_DECLS
 

@@ -184,7 +184,7 @@ AG_ObjectSelectorMaskType(AG_ObjectSelector *os, const char *type)
 	Strlcpy(os->type_mask, type, sizeof(os->type_mask));
 }
 
-const AG_WidgetClass agObjectSelectorClass = {
+AG_WidgetClass agObjectSelectorClass = {
 	{
 		"AG_Widget:AG_Combo:AG_ObjectSelector",
 		sizeof(AG_ObjectSelector),

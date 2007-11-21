@@ -18,8 +18,8 @@ typedef struct map_editor {
 } MAP_Editor;
 
 __BEGIN_DECLS
-extern const AG_ObjectClass mapEditorClass;
-extern const AG_ObjectClass mapEditorPseudoClass;
+extern AG_ObjectClass mapEditorClass;
+extern AG_ObjectClass mapEditorPseudoClass;
 extern MAP_Editor mapEditor;
 
 void	 MAP_EditorInit(void);

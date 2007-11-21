@@ -253,7 +253,7 @@ Save(void *obj, AG_DataSource *ds)
  * This structure describes our widget class. It inherits from AG_ObjectClass.
  * Any of the function members may be NULL.
  */
-const AG_WidgetClass agDummyClass = {
+AG_WidgetClass agDummyClass = {
 	{
 		"AG_Widget:AG_Dummy",	/* Name of class */
 		sizeof(AG_Dummy),	/* Size of structure */

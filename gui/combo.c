@@ -324,7 +324,7 @@ AG_ComboSizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-const AG_WidgetClass agComboClass = {
+AG_WidgetClass agComboClass = {
 	{
 		"AG_Widget:AG_Combo",
 		sizeof(AG_Combo),

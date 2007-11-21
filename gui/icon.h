@@ -25,7 +25,7 @@ typedef struct ag_icon {
 } AG_Icon;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agIconClass;
+extern AG_WidgetClass agIconClass;
 
 AG_Icon *AG_IconNew(void);
 AG_Icon *AG_IconFromSurface(SDL_Surface *);

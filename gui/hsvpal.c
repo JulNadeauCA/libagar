@@ -873,7 +873,7 @@ Draw(void *p)
 	    AG_COLOR(HSVPAL_BAR1_COLOR));
 }
 
-const AG_WidgetClass agHSVPalClass = {
+AG_WidgetClass agHSVPalClass = {
 	{
 		"AG_Widget:AG_HSVPal",
 		sizeof(AG_HSVPal),

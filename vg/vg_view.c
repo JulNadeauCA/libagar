@@ -426,7 +426,7 @@ VG_ViewSetDefaultTool(VG_View *vv, VG_Tool *tool)
 	vv->deftool = tool;
 }
 
-const AG_WidgetClass vgViewClass = {
+AG_WidgetClass vgViewClass = {
 	{
 		"AG_Widget:VG_View",
 		sizeof(VG_View),

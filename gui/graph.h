@@ -81,7 +81,7 @@ typedef struct ag_graph {
 } AG_Graph;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agGraphClass;
+extern AG_WidgetClass agGraphClass;
 
 AG_Graph	*AG_GraphNew(void *, Uint);
 void		 AG_GraphFreeVertices(AG_Graph *);

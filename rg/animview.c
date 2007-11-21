@@ -282,7 +282,7 @@ RG_AnimviewSetAnimation(RG_Animview *av, RG_Anim *anim)
 	av->ranim.h = anim->h;
 }
 
-const AG_WidgetClass rgAnimviewClass = {
+AG_WidgetClass rgAnimviewClass = {
 	{
 		"AG_Widget:RG_Animview",
 		sizeof(RG_Animview),

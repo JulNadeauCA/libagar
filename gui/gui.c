@@ -71,7 +71,7 @@
 #include "icons_data.h"
 #include "text.h"
 
-const void *agGUIClasses[] = {
+void *agGUIClasses[] = {
 	&agWidgetClass,
 	&agWindowClass,
 	&agFontClass,
@@ -121,7 +121,7 @@ int
 AG_InitGUI(Uint flags)
 {
 	char path[MAXPATHLEN];
-	const void **ops;
+	void **ops;
 	int i, n, njoys;
 
 	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)

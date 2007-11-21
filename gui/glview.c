@@ -254,7 +254,7 @@ AG_GLViewDraw(void *p)
 		glv->overlay_ev->handler(glv->overlay_ev);
 }
 
-const AG_WidgetClass agGLViewClass = {
+AG_WidgetClass agGLViewClass = {
 	{
 		"AG_Widget:AG_GLView",
 		sizeof(AG_GLView),

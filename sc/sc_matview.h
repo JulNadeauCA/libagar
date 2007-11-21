@@ -35,7 +35,7 @@ typedef struct sc_matview {
 } SC_Matview;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass scMatviewClass;
+extern AG_WidgetClass scMatviewClass;
 
 SC_Matview *SC_MatviewNew(void *, struct sc_matrix *, Uint);
 void	    SC_MatviewSizeHint(SC_Matview *, const char *, Uint, Uint);

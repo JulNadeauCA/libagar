@@ -34,7 +34,7 @@ typedef struct ag_box {
 #define AGBOX(p) ((AG_Box *)(p))
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agBoxClass;
+extern AG_WidgetClass agBoxClass;
 
 AG_Box	*AG_BoxNew(void *, enum ag_box_type, Uint);
 #define  AG_BoxNewHoriz(p,f) AG_BoxNew((p),AG_BOX_HORIZ,(f))

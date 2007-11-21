@@ -275,7 +275,7 @@ Draw(void *obj)
 	}
 }
 
-const AG_WidgetClass scMatviewClass = {
+AG_WidgetClass scMatviewClass = {
 	{
 		"AG_Widget:SC_Matview",
 		sizeof(SC_Matview),

@@ -914,7 +914,7 @@ Init(void *obj)
 	AG_SetTimeout(&tbox->cblink_to, BlinkTimeout, NULL, 0);
 }
 
-const AG_WidgetClass agTextboxClass = {
+AG_WidgetClass agTextboxClass = {
 	{
 		"AG_Widget:AG_Textbox",
 		sizeof(AG_Textbox),

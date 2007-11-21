@@ -24,7 +24,7 @@ typedef struct ag_statusbar {
 } AG_Statusbar;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agStatusbarClass;
+extern AG_WidgetClass agStatusbarClass;
 
 AG_Statusbar *AG_StatusbarNew(void *, Uint);
 AG_Label     *AG_StatusbarAddLabel(AG_Statusbar *, enum ag_label_type,

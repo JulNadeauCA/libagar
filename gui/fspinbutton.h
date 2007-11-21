@@ -39,7 +39,7 @@ typedef struct ag_fspinbutton {
 } AG_FSpinbutton;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agFSpinbuttonClass;
+extern AG_WidgetClass agFSpinbuttonClass;
 
 AG_FSpinbutton *AG_FSpinbuttonNew(void *, Uint, const char *, const char *);
 void		AG_FSpinbuttonSizeHint(AG_FSpinbutton *, const char *);

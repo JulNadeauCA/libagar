@@ -303,7 +303,7 @@ Init(void *obj)
 	AG_SetEvent(rad, "window-mousemotion", MouseMotion, NULL);
 }
 
-const AG_WidgetClass agRadioClass = {
+AG_WidgetClass agRadioClass = {
 	{
 		"AG_Widget:AG_Radio",
 		sizeof(AG_Radio),

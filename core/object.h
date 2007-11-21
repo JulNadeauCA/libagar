@@ -51,7 +51,7 @@ typedef struct ag_object {
 	char name[AG_OBJECT_NAME_MAX];	/* Object ID (unique in parent) */
 	char *archivePath;		/* Path to archive (app-specific) */
 	char *save_pfx;			/* Prefix for default save paths */
-	const AG_ObjectClass *cls;	/* Object class data */
+	AG_ObjectClass *cls;		/* Object class data */
 	Uint flags;
 #define AG_OBJECT_RELOAD_PROPS	 0x0001	/* Don't free props before load */
 #define AG_OBJECT_NON_PERSISTENT 0x0002	/* Never include in saves */
@@ -151,16 +151,16 @@ enum ag_object_checksum_alg {
 #define AG_ObjectUnlock(ob) AG_MutexUnlock(&(ob)->lock)
 
 __BEGIN_DECLS
-extern const AG_ObjectClass agObjectClass;
+extern AG_ObjectClass agObjectClass;
 
-void	*AG_ObjectNew(void *, const char *, const AG_ObjectClass *);
+void	*AG_ObjectNew(void *, const char *, AG_ObjectClass *);
 void	 AG_ObjectAttach(void *, void *);
 int	 AG_ObjectAttachToNamed(const char *, void *);
 void	 AG_ObjectDetach(void *);
 void	 AG_ObjectMove(void *, void *);
 
-void	 AG_ObjectInit(void *, const void *);
-void	 AG_ObjectInitStatic(void *, const void *);
+void	 AG_ObjectInit(void *, void *);
+void	 AG_ObjectInitStatic(void *, void *);
 void	 AG_ObjectFreeDataset(void *);
 void	 AG_ObjectRemain(void *, int);
 int	 AG_ObjectCopyName(const void *, char *, size_t)
@@ -184,10 +184,10 @@ void		 AG_ObjectSetName(void *, const char *, ...)
 void		 AG_ObjectSetArchivePath(void *, const char *);
 void		 AG_ObjectGetArchivePath(void *, char *, size_t)
 		                         BOUNDED_ATTRIBUTE(__string__, 2, 3);
-void		 AG_ObjectSetClass(void *, const void *);
+void		 AG_ObjectSetClass(void *, void *);
 
 int	 AG_ObjectIsClassGeneral(const AG_Object *, const char *);
-int	 AG_ObjectGetInheritHier(void *, const AG_ObjectClass ***, int *);
+int	 AG_ObjectGetInheritHier(void *, AG_ObjectClass ***, int *);
 
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
@@ -224,7 +224,7 @@ int	 	 AG_ObjectFindDep(const void *, Uint32, void **);
 void		 AG_ObjectDelDep(void *, const void *);
 Uint32		 AG_ObjectEncodeName(const void *, const void *);
 void		*AG_ObjectEdit(void *);
-void		 AG_ObjectGenName(AG_Object *, const AG_ObjectClass *, char *,
+void		 AG_ObjectGenName(AG_Object *, AG_ObjectClass *, char *,
 		                  size_t);
 
 /* Lock/unlock the property table of an object. */

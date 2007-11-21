@@ -32,7 +32,7 @@
 
 #include <string.h>
 
-extern const AG_ObjectClass agObjectClass;
+extern AG_ObjectClass agObjectClass;
 
 AG_ObjectClass **agClassTbl = NULL;
 int            agClassCount = 0;
@@ -54,9 +54,9 @@ AG_DestroyClassTbl(void)
 }
 
 void
-AG_RegisterClass(const void *cl)
+AG_RegisterClass(void *cls)
 {
 	agClassTbl = Realloc(agClassTbl,
 	    (agClassCount+1)*sizeof(AG_ObjectClass *));
-	agClassTbl[agClassCount++] = (AG_ObjectClass *)cl;
+	agClassTbl[agClassCount++] = (AG_ObjectClass *)cls;
 }

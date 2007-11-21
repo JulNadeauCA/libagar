@@ -33,7 +33,7 @@ typedef struct ag_scrollable {
 #define AGSCROLLABLE(p) ((AG_Scrollable *)p)
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agScrollableClass;
+extern AG_WidgetClass agScrollableClass;
 
 void AG_ScrollableDrawBegin(AG_Scrollable *);
 void AG_ScrollableDrawEnd(AG_Scrollable *);

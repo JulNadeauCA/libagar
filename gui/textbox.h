@@ -66,7 +66,7 @@ typedef struct ag_textbox {
 } AG_Textbox;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agTextboxClass;
+extern AG_WidgetClass agTextboxClass;
 
 AG_Textbox *AG_TextboxNew(void *, Uint, const char *);
 void	    AG_TextboxSizeHint(AG_Textbox *, const char *);

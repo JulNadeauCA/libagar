@@ -513,7 +513,7 @@ AG_GfxUnused(void *p)
 int
 AG_GfxLoad(AG_Object *ob)
 {
-	extern const AG_ObjectClass agObjectClass;
+	extern AG_ObjectClass agObjectClass;
 	AG_Gfx *gfx = ob->gfx;
 	char path[MAXPATHLEN];
 	AG_DataSource *buf;

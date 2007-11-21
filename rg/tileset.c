@@ -1859,7 +1859,7 @@ Edit(void *p)
 }
 #endif /* EDITION */
 
-const AG_ObjectClass rgTilesetClass = {
+AG_ObjectClass rgTilesetClass = {
 	"RG_Tileset",
 	sizeof(RG_Tileset),
 	{ 8, 0 },

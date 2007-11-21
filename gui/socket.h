@@ -51,7 +51,7 @@ typedef struct ag_socket {
 } AG_Socket;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agSocketClass;
+extern AG_WidgetClass agSocketClass;
 
 AG_Socket *AG_SocketNew(void *, Uint);
 AG_Socket *AG_SocketFromBMP(void *, Uint, const char *);

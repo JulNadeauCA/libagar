@@ -24,7 +24,7 @@ typedef struct ag_separator {
 } AG_Separator;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agSeparatorClass;
+extern AG_WidgetClass agSeparatorClass;
 
 AG_Separator *AG_SeparatorNew(void *, enum ag_separator_type);
 AG_Separator *AG_SpacerNew(void *, enum ag_separator_type);

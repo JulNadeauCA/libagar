@@ -35,7 +35,7 @@ typedef struct ag_radio {
 } AG_Radio;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agRadioClass;
+extern AG_WidgetClass agRadioClass;
 
 AG_Radio *AG_RadioNew(void *, Uint, const char *[]);
 void      AG_RadioItemsFromArray(AG_Radio *, const char **);

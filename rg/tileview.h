@@ -235,7 +235,7 @@ typedef struct rg_tileview {
     (y)*(tv)->pxsz)
 
 __BEGIN_DECLS
-extern const AG_WidgetClass rgTileviewClass;
+extern AG_WidgetClass rgTileviewClass;
 
 RG_Tileview	*RG_TileviewNew(void *, RG_Tileset *, Uint);
 RG_TileviewTool *RG_TileviewRegTool(RG_Tileview *, const void *);

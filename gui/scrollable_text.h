@@ -27,7 +27,7 @@ typedef struct ag_scrollable_text {
 } AG_ScrollableText;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agScrollableTextClass;
+extern AG_WidgetClass agScrollableTextClass;
 AG_ScrollableText *AG_ScrollableTextNew(void *, Uint);
 __END_DECLS
 

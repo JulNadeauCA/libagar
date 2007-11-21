@@ -404,7 +404,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-const AG_WidgetClass agMenuViewClass = {
+AG_WidgetClass agMenuViewClass = {
 	{
 		"AG_Widget:AG_MenuView",
 		sizeof(AG_MenuView),

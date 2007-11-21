@@ -165,7 +165,7 @@ ConfigEditor(void *p)
 	return (win);
 }
 
-const AG_ObjectClass mapEditorPseudoClass = {
+AG_ObjectClass mapEditorPseudoClass = {
 	"MAP_EditorPseudo",
 	sizeof(AG_Object),
 	{ 0, 0 },
@@ -177,7 +177,7 @@ const AG_ObjectClass mapEditorPseudoClass = {
 	ConfigEditor
 };
 
-const AG_ObjectClass mapEditorClass = {
+AG_ObjectClass mapEditorClass = {
 	"MAP_Editor",
 	sizeof(AG_Object),
 	{ 0, 0 },

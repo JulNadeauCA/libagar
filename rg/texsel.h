@@ -21,7 +21,7 @@ typedef struct rg_texture_selector {
 } RG_TextureSelector;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass rgTextureSelectorClass;
+extern AG_WidgetClass rgTextureSelectorClass;
 RG_TextureSelector *RG_TextureSelectorNew(void *, RG_Tileset *, Uint);
 __END_DECLS
 

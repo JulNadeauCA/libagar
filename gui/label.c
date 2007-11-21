@@ -756,7 +756,7 @@ AG_LabelFlagNew(AG_Label *lbl, Uint idx, const char *text,
 	SLIST_INSERT_HEAD(&lbl->lflags, lfl, lflags);
 }
 
-const AG_WidgetClass agLabelClass = {
+AG_WidgetClass agLabelClass = {
 	{
 		"AG_Widget:AG_Label",
 		sizeof(AG_Label),
