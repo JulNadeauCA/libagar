@@ -130,7 +130,7 @@ VG_RotateBlock(VG *vg, VG_Block *vgb, float theta)
 			float x, y, r, theta;
 
 			VG_Abs2Rel(vg, &vge->vtx[i], &x, &y);
-			r = hypotf(x,y);
+			r = sqrtf(x*x + y*y);
 			theta = atan2f(y,x) + vgb->theta;
 			x = r*cosf(theta);
 			y = r*sinf(theta);
