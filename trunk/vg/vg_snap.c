@@ -73,10 +73,6 @@ void
 VG_SnapPoint(VG *vg, float *x, float *y)
 {
 	switch (vg->snap_mode) {
-	case VG_NEAREST_INTEGER:
-		if (x != NULL) *x = rint(*x);
-		if (y != NULL) *y = rint(*y);
-		break;
 	case VG_GRID:
 		VG_SnapToGrid(vg, x, y);
 		break;
@@ -156,8 +152,6 @@ VG_SnapToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
 	                                        AG_TOOLBAR_STICKY);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 0,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_FREE_POSITIONING);
-	AG_ToolbarButtonIcon(snbar, vgIconSnapRint.s, 0,
-	    snap_to, "%p,%p,%i", snbar, vg, VG_NEAREST_INTEGER);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapGrid.s, 1,
 	    snap_to, "%p,%p,%i", snbar, vg, VG_GRID);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapEndpt.s, 0,
@@ -185,8 +179,6 @@ VG_SnapMenu(AG_Menu *m, AG_MenuItem *mi, VG *vg)
 	    snap_to_m, "%p,%i", vg, VG_FREE_POSITIONING);
 	AG_MenuAction(mi, _("Grid"), vgIconSnapGrid.s,
 	    snap_to_m, "%p,%i", vg, VG_GRID);
-	AG_MenuAction(mi, _("Nearest integer"), vgIconSnapRint.s,
-	    snap_to_m, "%p,%i", vg, VG_NEAREST_INTEGER);
 	
 	AG_MenuSeparator(mi);
 
