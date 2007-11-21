@@ -25,7 +25,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/util.h>
 
 #include <rg/tileset.h>
 
@@ -60,6 +59,8 @@
 #include "icons.h"
 #include "icons_data.h"
 #endif /* EDITION */
+
+#include "map_math.h"
 
 #include <string.h>
 
@@ -1828,17 +1829,17 @@ draw:
 		if (debug_su) {
 			texcoord[0] = 0.0;
 			texcoord[1] = 0.0;
-			texcoord[2] = (GLfloat)su->w / AG_PowOf2i(su->w);
-			texcoord[3] = (GLfloat)su->h / AG_PowOf2i(su->h);
+			texcoord[2] = (GLfloat)su->w / PowOf2i(su->w);
+			texcoord[3] = (GLfloat)su->h / PowOf2i(su->h);
 		} else
 #endif
 		{
 			texcoord[0] = (GLfloat)r->r_gfx.rs.x;
 			texcoord[1] = (GLfloat)r->r_gfx.rs.y;
 			texcoord[2] = (GLfloat)r->r_gfx.rs.w /
-			                       AG_PowOf2i(r->r_gfx.rs.w);
+			                       PowOf2i(r->r_gfx.rs.w);
 			texcoord[3] = (GLfloat)r->r_gfx.rs.h /
-			                       AG_PowOf2i(r->r_gfx.rs.h);
+			                       PowOf2i(r->r_gfx.rs.h);
 		}
 		if (tilesz != MAPTILESZ) {
 			rd.x = rx + r->r_gfx.xcenter*tilesz/MAPTILESZ +
