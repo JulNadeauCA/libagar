@@ -1273,6 +1273,10 @@ echo "#define SHAREDIR \"$SHAREDIR\"" >> config/sharedir.h
 echo "#endif" >> config/sharedir.h
 CFLAGS="$CFLAGS -I$SRC"
 echo "CFLAGS=$CFLAGS" >> Makefile.config
+CFLAGS="$CFLAGS -I$SRC"
+CXXFLAGS="$CXXFLAGS -I$SRC"
+echo "CFLAGS=$CFLAGS" >> Makefile.config
+echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
 if [ "${enable_warnings}" = "yes" ]
  then
 CFLAGS="$CFLAGS -Wall"

@@ -13,7 +13,7 @@ PROG_LINKS=	ag_core ag_gui ag_map ag_rg ag_vg ag_dev SDL opengl32
 SRCS=	agarpaint.c
 SHARE=	agarpaint.bmp
 
-CFLAGS+=${AGAR_CFLAGS} ${AGAR_MAP_CFLAGS} ${AGAR_RG_CFLAGS} ${AGAR_VG_CFLAGS} ${AGAR_DEV_CFLAGS} -I.
+CFLAGS+=${AGAR_CFLAGS} ${AGAR_MAP_CFLAGS} ${AGAR_RG_CFLAGS} ${AGAR_VG_CFLAGS} ${AGAR_DEV_CFLAGS}
 LIBS+=	${AGAR_LIBS} ${AGAR_MAP_LIBS} ${AGAR_RG_LIBS} ${AGAR_VG_LIBS} ${AGAR_DEV_LIBS}
 
 all: all-subdir ${PROG}

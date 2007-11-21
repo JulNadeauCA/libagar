@@ -43,6 +43,9 @@
 
 #include <string.h>
 #include <errno.h>
+#ifdef HAVE_GETOPT
+#include <unistd.h>
+#endif
 
 #include "agarpaint.h"
 
@@ -542,11 +545,12 @@ Splash(void)
 int
 main(int argc, char *argv[])
 {
-	int i, c, fps = 25;
+	int i, fps = 25, debug = 0;
 	const char *fontSpec = NULL;
-#ifdef HAVE_AGAR_DEV
-	int debug = 0;
+#ifdef HAVE_GETOPT
+	int c;
 #endif
+
 	if (AG_InitCore("agarpaint", AG_CORE_VERBOSE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
@@ -554,6 +558,7 @@ main(int argc, char *argv[])
 #ifdef HAVE_OPENGL
 	AG_SetBool(agConfig, "view.opengl", 1);
 #endif
+#ifdef HAVE_GETOPT
 	while ((c = getopt(argc, argv, "?dvfFgGr:t:")) != -1) {
 		extern char *optarg;
 
@@ -580,11 +585,9 @@ main(int argc, char *argv[])
 		case 't':
 			fontSpec = optarg;
 			break;
-#ifdef HAVE_AGAR_DEV
 		case 'd':
 			debug = 1;
 			break;
-#endif
 		case '?':
 		default:
 			printf("%s [-vfFgGd] [-t font,size,flags] [-r fps]\n",
@@ -592,6 +595,8 @@ main(int argc, char *argv[])
 			exit(0);
 		}
 	}
+#endif /* HAVE_GETOPT */
+
 	if (fontSpec != NULL) {
 		AG_TextParseFontSpec(fontSpec);
 	}

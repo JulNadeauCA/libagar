@@ -7,6 +7,8 @@ HDEFINE(VERSION, "1.1")
 HDEFINE(RELEASE, "The Ecstatic Spiral to Hell")
 
 CHECK(cc)
+CHECK(getopt)
+
 REQUIRE(agar, 1.3)
 REQUIRE(agar-vg, 1.3)
 REQUIRE(agar-rg, 1.3)
@@ -33,6 +35,9 @@ fi
 MDEFINE(SHAREDIR, "\${PREFIX}/share/agarpaint")
 HDEFINE(SHAREDIR, "$PREFIX/share/agarpaint")
 MDEFINE(CFLAGS, "$CFLAGS -I$SRC")
+
+C_INCDIR($SRC)
+C_NO_SECURE_WARNINGS()
 
 if [ "${enable_warnings}" = "yes" ]; then
 	C_OPTION(-Wall)
