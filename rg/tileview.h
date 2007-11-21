@@ -103,10 +103,9 @@ typedef struct rg_tileview_bitmap_tool_ops {
 
 typedef struct rg_tileview_sketch_tool_ops {
 	struct rg_tileview_tool_ops ops;
-	void (*mousebuttondown)(void *, RG_Sketch *, double, double, int);
-	void (*mousebuttonup)(void *, RG_Sketch *, double, double, int);
-	void (*mousemotion)(void *, RG_Sketch *, double, double, double,
-	                    double);
+	void (*mousebuttondown)(void *, RG_Sketch *, float, float, int);
+	void (*mousebuttonup)(void *, RG_Sketch *, float, float, int);
+	void (*mousemotion)(void *, RG_Sketch *, float, float, float, float);
 	int (*mousewheel)(void *, RG_Sketch *, int);
 	void (*keydown)(void *, RG_Sketch *, int, int);
 	void (*keyup)(void *, RG_Sketch *, int, int);

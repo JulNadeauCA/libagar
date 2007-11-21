@@ -44,7 +44,7 @@ RG_TransformRotate(struct map_item *r, int angle)
 	Uint32 angles = (Uint32)angle;
 	RG_Transform *tr;
 	SDL_Surface *su;
-	double rad, theta;
+	float rad, theta;
 
 	switch (r->type) {
 	case MAP_ITEM_TILE:
@@ -57,16 +57,16 @@ RG_TransformRotate(struct map_item *r, int angle)
 		return (NULL);
 	}
 
-	rad = hypot(
+	rad = Hypot(
 	    r->r_gfx.xorigin - su->w/2,
 	    r->r_gfx.yorigin - su->h/2);
-	theta = atan2(
+	theta = Atan2(
 	    r->r_gfx.yorigin - su->w/2,
 	    r->r_gfx.xorigin - su->h/2);
 
-	theta += ((float)angle/360.0)*(2.0*AG_PI);
-	r->r_gfx.xorigin = rad*cos(theta) + su->w/2;
-	r->r_gfx.yorigin = rad*sin(theta) + su->h/2;
+	theta += ((float)angle/360.0)*(2.0*RG_PI);
+	r->r_gfx.xorigin = rad*Cos(theta) + su->w/2;
+	r->r_gfx.yorigin = rad*Sin(theta) + su->h/2;
 
 	TAILQ_FOREACH(tr, &r->transforms, transforms) {
 		if (tr->type == RG_TRANSFORM_ROTATE) {

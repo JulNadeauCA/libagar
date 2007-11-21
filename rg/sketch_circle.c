@@ -34,6 +34,7 @@
 
 #include "tileset.h"
 #include "tileview.h"
+#include "rg_math.h"
 
 struct circle_tool {
 	RG_TileviewTool tool;
@@ -56,7 +57,7 @@ init(void *p)
 }
 
 static void
-mousebuttondown(void *p, RG_Sketch *sk, double x, double y, int button)
+mousebuttondown(void *p, RG_Sketch *sk, float x, float y, int button)
 {
 	struct circle_tool *ct = p;
 	VG *vg = sk->vg;
@@ -89,8 +90,7 @@ mousebuttondown(void *p, RG_Sketch *sk, double x, double y, int button)
 }
 
 static void
-mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
-    double yrel)
+mousemotion(void *p, RG_Sketch *sk, float x, float y, float xrel, float yrel)
 {
 	struct circle_tool *ct = p;
 
@@ -98,8 +98,8 @@ mousemotion(void *p, RG_Sketch *sk, double x, double y, double xrel,
 		ct->cur_radius->x = x;
 		ct->cur_radius->y = y;
 		ct->cur_circle->vg_circle.radius =
-		    sqrt(pow(x - sk->vg->origin[2].x, 2) +
-		         pow(y - sk->vg->origin[2].y, 2));
+		    Hypot(x - sk->vg->origin[2].x,
+		          y - sk->vg->origin[2].y);
 	} else {
 		sk->vg->origin[2].x = x;
 		sk->vg->origin[2].y = y;

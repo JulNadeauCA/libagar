@@ -12,7 +12,7 @@ SRCS=	tileset.c tileview.c tile.c feature.c fill.c pixmap.c prim.c sketch.c \
 	sketchproj.c texture.c texsel.c transform.c animview.c
 MAN3=	RG_Anim.3 RG_Feature.3 RG_Pixmap.3 RG_Tile.3 RG_Tileset.3 RG_Tileview.3
 
-CFLAGS+=-I.. ${SDL_CFLAGS}
+CFLAGS+=-I.. ${SDL_CFLAGS} ${MATH_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
