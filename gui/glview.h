@@ -61,6 +61,6 @@ void	   AG_GLViewButtonupFn(AG_GLView *, AG_EventFn, const char *, ...);
 void	   AG_GLViewMotionFn(AG_GLView *, AG_EventFn, const char *, ...);
 __END_DECLS
 
-#endif /* HAVE_OPENGL */
 #include "close_code.h"
+#endif /* HAVE_OPENGL */
 #endif /* _AGAR_WIDGET_GLVIEW_H_ */
