@@ -14,7 +14,6 @@
 
 enum vg_snap_mode {
 	VG_FREE_POSITIONING,	/* No positional restriction */
-	VG_NEAREST_INTEGER,	/* Round to nearest integer */
 	VG_GRID,		/* Snap to grid */
 	VG_ENDPOINT,		/* Snap to endpoints */
 	VG_ENDPOINT_DISTANCE,	/* Snap to given distance from endpoint */
