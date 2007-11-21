@@ -180,7 +180,7 @@ sendreq:
 	/* Parse the list/item size specification. */
 	res = Malloc(sizeof(NC_Result));
 	bufp = &client->read.buf[2];
-	for (i = 0; (s = strsep(&bufp, ":")) != NULL; i++) {
+	for (i = 0; (s = AG_Strsep(&bufp, ":")) != NULL; i++) {
 		if (s[0] == '\0') {
 			break;
 		}
@@ -538,14 +538,14 @@ NC_Connect(NC_Session *client, const char *host, const char *port,
 		fclose(f);
 
 		fbufp = fbuf;
-		while ((s = strsep(&fbufp, "\n")) != NULL) {
+		while ((s = AG_Strsep(&fbufp, "\n")) != NULL) {
 			const char *lv, *rv;
 
 			if (s[0] == '#' )
 				continue;
 			
-			if ((lv = strsep(&s, ":=")) == NULL ||
-			    (rv = strsep(&s, ":=")) == NULL)
+			if ((lv = AG_Strsep(&s, ":=")) == NULL ||
+			    (rv = AG_Strsep(&s, ":=")) == NULL)
 				continue;
 			
 			if (strcasecmp(lv, "host") == 0) host = rv;
