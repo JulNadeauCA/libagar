@@ -616,12 +616,6 @@ main(int argc, char *argv[])
 	RG_InitSubsystem();
 	MAP_InitSubsystem();
 
-	/* Initialize default application settings. */
-	if (AG_ObjectLoad(agWorld) == -1) {
-		AG_ObjectSave(agConfig);
-		AG_ObjectSave(agWorld);
-	}
-
 	/* Create the application menu. */ 
 	appMenu = AG_MenuNewGlobal(0);
 	AG_MenuDynamicItem(appMenu->root, "File", NULL, FileMenu, NULL);
