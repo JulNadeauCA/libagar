@@ -42,7 +42,6 @@
 /* #define SPLASH */
 
 #include <string.h>
-#include <unistd.h>
 #include <errno.h>
 
 #include "agarpaint.h"
