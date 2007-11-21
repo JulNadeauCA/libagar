@@ -1,7 +1,10 @@
 TOP=	..
 include Makefile.config
 
-PROJECT=	"AgarPaint"
+PROJECT=	"agarpaint"
+PROJDIR=	ProjectFiles
+PROJINCLUDES=	configure.lua
+
 PROG=		agarpaint
 PROG_TYPE=	"GUI"
 PROG_GUID=	"68DBFDA9-4965-4cca-8348-38409D8587A6"
