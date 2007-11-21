@@ -32,6 +32,7 @@
 #include "widget.h"
 #include "window.h"
 #include "primitive.h"
+#include "gui_math.h"
 
 AG_PrimitiveOps agPrim;
 
@@ -1059,8 +1060,8 @@ CircleGL(void *p, int x, int y, int radius, Uint32 color)
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(r, g, b);
 	for (i = 0; i < nedges; i++) {
-		glVertex2f(wid->cx + x + radius*cos((2*AG_PI*i)/nedges),
-		           wid->cy + y + radius*sin((2*AG_PI*i)/nedges));
+		glVertex2f(wid->cx + x + radius*Cos((2*AG_PI*i)/nedges),
+		           wid->cy + y + radius*Sin((2*AG_PI*i)/nedges));
 	}
 	glEnd();
 }
@@ -1078,10 +1079,10 @@ Circle2GL(void *p, int x, int y, int radius, Uint32 color)
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(r, g, b);
 	for (i = 0; i < nedges; i++) {
-		glVertex2f(wid->cx + x + radius*cos((2*AG_PI*i)/nedges),
-		           wid->cy + y + radius*sin((2*AG_PI*i)/nedges));
-		glVertex2f(wid->cx + x + (radius+1)*cos((2*AG_PI*i)/nedges),
-		           wid->cy + y + (radius+1)*sin((2*AG_PI*i)/nedges));
+		glVertex2f(wid->cx + x + radius*Cos((2*AG_PI*i)/nedges),
+		           wid->cy + y + radius*Sin((2*AG_PI*i)/nedges));
+		glVertex2f(wid->cx + x + (radius+1)*Cos((2*AG_PI*i)/nedges),
+		           wid->cy + y + (radius+1)*Sin((2*AG_PI*i)/nedges));
 	}
 	glEnd();
 }

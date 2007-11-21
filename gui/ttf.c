@@ -41,6 +41,7 @@
 
 #include "unicode.h"
 #include "ttf.h"
+#include "gui_math.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -275,7 +276,7 @@ LoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached, int want)
 			cached->maxx += font->glyph_overhang;
 		}
 		if (font->style & TTF_STYLE_ITALIC) {
-			cached->maxx += (int)ceil(font->glyph_italics);
+			cached->maxx += (int)Ceil(font->glyph_italics);
 		}
 		cached->stored |= TTF_CACHED_METRICS;
 	}
@@ -342,7 +343,7 @@ LoadGlyph(AG_TTFFont *font, Uint32 ch, AG_TTFGlyph *cached, int want)
 		if (font->style & TTF_STYLE_ITALIC) {
 			int bump;
 			
-			bump = (int)ceil(font->glyph_italics);
+			bump = (int)Ceil(font->glyph_italics);
 			dst->pitch += bump;
 			dst->width += bump;
 		}

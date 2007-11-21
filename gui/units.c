@@ -26,6 +26,7 @@
 #include <core/core.h>
 
 #include "units.h"
+#include "gui_math.h"
 
 #include <string.h>
 
@@ -125,7 +126,7 @@ AG_BestUnit(const AG_Unit ugroup[], double n)
 	}
 	for (unit = &ugroup[0]; unit->key != NULL; unit++) {
 		if (n/unit->divider >= 1.0) {
-			diff = fabs(n-unit->divider);
+			diff = Fabs(n-unit->divider);
 			if (diff < smallest) {
 				smallest = diff;
 				bestunit = unit;

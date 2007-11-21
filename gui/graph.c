@@ -28,6 +28,7 @@
 #include "graph.h"
 #include "primitive.h"
 #include "menu.h"
+#include "gui_math.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -720,8 +721,8 @@ PlaceVertex(AG_Graph *gf, AG_GraphVertex *vtx, AG_GraphVertex **vSorted,
 			continue;
 		}
 		for (;;) {
-			ox = (int)(r*cosf(theta));
-			oy = (int)(r*sinf(theta));
+			ox = (int)(r*Cos(theta));
+			oy = (int)(r*Sin(theta));
 			if (VertexAtCoords(gf, ox, oy) == NULL) {
 				PlaceVertex(gf, oVtx, vSorted, ox, oy);
 				break;
