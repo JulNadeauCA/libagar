@@ -568,7 +568,7 @@ mousebuttondown(AG_Event *event)
 		} else {
 			x -= pal->circle.x;
 			y -= pal->circle.y;
-			r = hypot((float)x, (float)y);
+			r = Hypot((float)x, (float)y);
 
 			if (r > (float)pal->circle.rin) {
 				UpdateHue(pal, x, y);
