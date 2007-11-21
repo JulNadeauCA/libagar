@@ -26,7 +26,7 @@ typedef struct ag_fixed {
 } AG_Fixed;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agFixedClass;
+extern AG_WidgetClass agFixedClass;
 
 AG_Fixed *AG_FixedNew(void *, Uint);
 void	  AG_FixedSizeHint(AG_Fixed *, int, int);

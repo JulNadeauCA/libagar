@@ -406,7 +406,7 @@ Edit(void *p)
 }
 #endif /* EDITION */
 
-const AG_ObjectClass mapActorClass = {
+AG_ObjectClass mapActorClass = {
 	"MAP_Actor",
 	sizeof(MAP_Actor),
 	{ 0, 0 },

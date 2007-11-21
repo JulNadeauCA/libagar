@@ -932,7 +932,7 @@ SC_PlotterSetDefaultScale(SC_Plotter *ptr, SC_Real xScale, SC_Real yScale)
 	ptr->yScale = yScale;
 }
 
-const AG_WidgetClass scPlotterClass = {
+AG_WidgetClass scPlotterClass = {
 	{
 		"AG_Widget:SC_Plotter",
 		sizeof(SC_Plotter),

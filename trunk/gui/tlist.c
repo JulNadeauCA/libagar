@@ -1212,7 +1212,7 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 	tp->panel = AG_MenuExpand(m, tp->item, x+4, y+4);
 }
 
-const AG_WidgetClass agTlistClass = {
+AG_WidgetClass agTlistClass = {
 	{
 		"AG_Widget:AG_Tlist",
 		sizeof(AG_Tlist),

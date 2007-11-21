@@ -133,7 +133,7 @@ AG_IconSetSurfaceNODUP(AG_Icon *icon, SDL_Surface *su)
 	}
 }
 
-const AG_WidgetClass agIconClass = {
+AG_WidgetClass agIconClass = {
 	{
 		"AG_Widget:AG_Icon",
 		sizeof(AG_Icon),

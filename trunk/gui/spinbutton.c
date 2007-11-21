@@ -518,7 +518,7 @@ AG_SpinbuttonSetWriteable(AG_Spinbutton *sbu, int writeable)
 	AG_MutexUnlock(&sbu->lock);
 }
 
-const AG_WidgetClass agSpinbuttonClass = {
+AG_WidgetClass agSpinbuttonClass = {
 	{
 		"AG_Widget:AG_Spinbutton",
 		sizeof(AG_Spinbutton),

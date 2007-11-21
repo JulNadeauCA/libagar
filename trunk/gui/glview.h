@@ -41,7 +41,7 @@ typedef struct ag_glview {
 #define AGGLVIEW(p) ((AG_GLView *)(p))
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agGLViewClass;
+extern AG_WidgetClass agGLViewClass;
 
 AG_GLView *AG_GLViewNew(void *, Uint);
 void	   AG_GLViewDraw(void *);

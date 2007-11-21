@@ -41,7 +41,7 @@ typedef struct ag_numerical {
 } AG_Numerical;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agNumericalClass;
+extern AG_WidgetClass agNumericalClass;
 
 AG_Numerical *AG_NumericalNew(void *, Uint, const char *, const char *);
 void          AG_NumericalSizeHint(AG_Numerical *, const char *);

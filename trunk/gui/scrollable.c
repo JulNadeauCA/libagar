@@ -194,7 +194,7 @@ Init(void *obj)
 #endif
 }
 
-const AG_WidgetClass agScrollableClass = {
+AG_WidgetClass agScrollableClass = {
 	{
 		"AG_Widget:AG_Scrollable",
 		sizeof(AG_Scrollable),

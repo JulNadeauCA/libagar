@@ -181,7 +181,7 @@ AG_FixedDel(AG_Fixed *fx, void *child)
 	UpdateWindow(fx);
 }
 
-const AG_WidgetClass agFixedClass = {
+AG_WidgetClass agFixedClass = {
 	{
 		"AG_Widget:AG_Fixed",
 		sizeof(AG_Fixed),

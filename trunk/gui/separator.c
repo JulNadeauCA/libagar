@@ -122,7 +122,7 @@ AG_SeparatorSetPadding(AG_Separator *sep, Uint pixels)
 	sep->padding = pixels;
 }
 
-const AG_WidgetClass agSeparatorClass = {
+AG_WidgetClass agSeparatorClass = {
 	{
 		"AG_Widget:AG_Separator",
 		sizeof(AG_Separator),

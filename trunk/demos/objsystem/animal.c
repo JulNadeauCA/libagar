@@ -140,7 +140,7 @@ Edit(void *obj)
  *
  * Any of the function members may be NULL.
  */
-const AG_ObjectClass AnimalClass = {
+AG_ObjectClass AnimalClass = {
 	"Animal",		/* Name of class */
 	sizeof(Animal),		/* Size of structure */
 	{ 0,0 },		/* Dataset version */

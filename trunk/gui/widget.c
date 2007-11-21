@@ -1619,7 +1619,7 @@ AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 	return (rv);
 }
 
-const AG_WidgetClass agWidgetClass = {
+AG_WidgetClass agWidgetClass = {
 	{
 		"AG_Widget",
 		sizeof(AG_Widget),

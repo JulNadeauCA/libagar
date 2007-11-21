@@ -1800,7 +1800,7 @@ RG_TileviewGenericMenu(RG_Tileview *tv, AG_MenuItem *mi)
 	    &tv->flags, RG_TILEVIEW_NO_TILING, 1);
 }
 
-const AG_WidgetClass rgTileviewClass = {
+AG_WidgetClass rgTileviewClass = {
 	{
 		"AG_Widget:RG_Tileview",
 		sizeof(RG_Tileview),

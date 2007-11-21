@@ -32,7 +32,7 @@ typedef struct ag_mspinbutton {
 } AG_MSpinbutton;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agMSpinbuttonClass;
+extern AG_WidgetClass agMSpinbuttonClass;
 
 AG_MSpinbutton *AG_MSpinbuttonNew(void *, Uint, const char *, const char *);
 

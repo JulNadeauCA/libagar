@@ -286,7 +286,7 @@ Draw(void *p)
 #endif
 }
 
-const AG_WidgetClass agScrollbarClass = {
+AG_WidgetClass agScrollbarClass = {
 	{
 		"AG_Widget:AG_Scrollbar",
 		sizeof(AG_Scrollbar),

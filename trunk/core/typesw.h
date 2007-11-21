@@ -10,9 +10,9 @@ extern int              agClassCount;
 
 void	 AG_InitClassTbl(void);
 void	 AG_DestroyClassTbl(void);
-void	 AG_RegisterClass(const void *);
+void	 AG_RegisterClass(void *);
 
-static __inline__ const AG_ObjectClass *
+static __inline__ AG_ObjectClass *
 AG_FindClass(const char *name)
 {
 	int i;

@@ -25,7 +25,7 @@ typedef struct ag_pixmap {
 } AG_Pixmap;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agPixmapClass;
+extern AG_WidgetClass agPixmapClass;
 
 AG_Pixmap *AG_PixmapNew(void *, Uint, Uint, Uint);
 AG_Pixmap *AG_PixmapFromSurface(void *, Uint, SDL_Surface *);

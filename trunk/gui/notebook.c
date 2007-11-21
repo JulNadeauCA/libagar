@@ -308,7 +308,7 @@ AG_NotebookSetTabVisibility(AG_Notebook *nb, int flag)
 	}
 }
 
-const AG_WidgetClass agNotebookClass = {
+AG_WidgetClass agNotebookClass = {
 	{
 		"AG_Widget:AG_Notebook",
 		sizeof(AG_Notebook),
@@ -325,7 +325,7 @@ const AG_WidgetClass agNotebookClass = {
 	SizeAllocate
 };
 
-const AG_WidgetClass agNotebookTabClass = {
+AG_WidgetClass agNotebookTabClass = {
 	{
 		"AG_Widget:AG_Box:AG_NotebookTab",
 		sizeof(AG_NotebookTab),

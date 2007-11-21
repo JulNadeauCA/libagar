@@ -84,7 +84,7 @@ typedef struct ag_file_dlg {
 } AG_FileDlg;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agFileDlgClass;
+extern AG_WidgetClass agFileDlgClass;
 
 AG_FileDlg *AG_FileDlgNew(void *, Uint);
 AG_FileDlg *AG_FileDlgNewMRU(void *, const char *, Uint);

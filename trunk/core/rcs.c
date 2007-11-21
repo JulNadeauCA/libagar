@@ -769,7 +769,7 @@ AG_RcsCheckout(const char *path)
 	char *buf, *s;
 	Uint rev = 0;
 	AG_Object *obj;
-	const AG_ObjectClass *cl;
+	AG_ObjectClass *cl;
 
 	if (AG_RcsConnect() == -1)
 		goto fail;

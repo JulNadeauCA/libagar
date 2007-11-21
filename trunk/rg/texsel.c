@@ -110,7 +110,7 @@ Init(void *obj)
 	    sizeof(ts->texname));
 }
 
-const AG_WidgetClass rgTextureSelectorClass = {
+AG_WidgetClass rgTextureSelectorClass = {
 	{
 		"AG_Widget:AG_Tlist:AG_TextureSelector",
 		sizeof(AG_Tlist),

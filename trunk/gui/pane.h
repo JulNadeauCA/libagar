@@ -42,7 +42,7 @@ typedef struct ag_pane {
 } AG_Pane;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agPaneClass;
+extern AG_WidgetClass agPaneClass;
 
 AG_Pane	*AG_PaneNew(void *, enum ag_pane_type, Uint);
 #define	 AG_PaneNewHoriz(p,f) AG_PaneNew((p),AG_PANE_HORIZ,(f))

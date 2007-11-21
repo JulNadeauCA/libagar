@@ -588,7 +588,7 @@ AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 	bu->flags &= ~AG_BUTTON_TEXT_NODUP;
 }
 
-const AG_WidgetClass agButtonClass = {
+AG_WidgetClass agButtonClass = {
 	{
 		"AG_Widget:AG_Button",
 		sizeof(AG_Button),

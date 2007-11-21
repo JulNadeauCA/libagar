@@ -266,7 +266,7 @@ Destroy(void *p)
 	AG_FixedPlotterFreeItems((AG_FixedPlotter *)p);
 }
 
-const AG_WidgetClass agFixedPlotterClass = {
+AG_WidgetClass agFixedPlotterClass = {
 	{
 		"AG_Widget:AG_FixedPlotter",
 		sizeof(AG_FixedPlotter),

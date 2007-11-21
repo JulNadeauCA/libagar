@@ -1408,7 +1408,7 @@ AG_WindowUpdateCaption(AG_Window *win)
 		AG_TitlebarSetCaption(win->tbar, win->caption);
 }
 
-const AG_WidgetClass agWindowClass = {
+AG_WidgetClass agWindowClass = {
 	{
 		"AG_Widget:AG_Window",
 		sizeof(AG_Window),

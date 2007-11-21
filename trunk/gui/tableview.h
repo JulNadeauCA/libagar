@@ -156,7 +156,7 @@ typedef struct ag_tableview {
 #define AG_TABLEVIEW_STATIC_ROW	0x01	/* Don't update row dynamically */
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agTableviewClass;
+extern AG_WidgetClass agTableviewClass;
 
 AG_Tableview	*AG_TableviewNew(void *, Uint, AG_TableviewDataFn,
 		                 AG_TableviewSortFn);

@@ -56,7 +56,7 @@ typedef struct ag_label {
 } AG_Label;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agLabelClass;
+extern AG_WidgetClass agLabelClass;
 
 AG_Label *AG_LabelNewPolled(void *, Uint, const char *, ...);
 AG_Label *AG_LabelNewPolledMT(void *, Uint, AG_Mutex *, const char *, ...)

@@ -723,7 +723,7 @@ NS_Listen(NS_Server *ns)
 	return (0);
 }
 
-const AG_ObjectClass nsServerClass = {
+AG_ObjectClass nsServerClass = {
 	"NS_Server",
 	sizeof(NS_Server),
 	{ 0,0 },
@@ -735,7 +735,7 @@ const AG_ObjectClass nsServerClass = {
 	NULL			/* edit */
 };
 
-const AG_ObjectClass nsClientClass = {
+AG_ObjectClass nsClientClass = {
 	"NS_Client",
 	sizeof(NS_Client),
 	{ 0,0 },

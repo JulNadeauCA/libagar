@@ -1459,7 +1459,7 @@ MAP_ViewStatus(MAP_View *mv, const char *fmt, ...)
 	    AG_TextRender(status));
 }
 
-const AG_WidgetClass mapViewClass = {
+AG_WidgetClass mapViewClass = {
 	{
 		"AG_Widget:MAP_View",
 		sizeof(MAP_View),

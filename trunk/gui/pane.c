@@ -372,7 +372,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-const AG_WidgetClass agPaneClass = {
+AG_WidgetClass agPaneClass = {
 	{
 		"AG_Widget:AG_Pane",
 		sizeof(AG_Pane),

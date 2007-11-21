@@ -791,7 +791,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 	Free(vSorted);
 }
 
-const AG_WidgetClass agGraphClass = {
+AG_WidgetClass agGraphClass = {
 	{
 		"AG_Widget:AG_Graph",
 		sizeof(AG_Graph),

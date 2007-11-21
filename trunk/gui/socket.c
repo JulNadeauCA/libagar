@@ -518,7 +518,7 @@ AG_SocketRemoveIcon(AG_Socket *sock)
 	sock->icon = NULL;
 }
 
-const AG_WidgetClass agSocketClass = {
+AG_WidgetClass agSocketClass = {
 	{
 		"AG_Widget:AG_Socket",
 		sizeof(AG_Socket),

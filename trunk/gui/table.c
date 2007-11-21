@@ -1480,7 +1480,7 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 	return (0);
 }
 
-const AG_WidgetClass agTableClass = {
+AG_WidgetClass agTableClass = {
 	{
 		"AG_Widget:AG_Table",
 		sizeof(AG_Table),

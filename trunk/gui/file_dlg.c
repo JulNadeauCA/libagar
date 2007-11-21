@@ -945,7 +945,7 @@ AG_FileOptionString(AG_FileType *ft, const char *key)
 	return (fo != NULL) ? fo->data.s : "";
 }
 
-const AG_WidgetClass agFileDlgClass = {
+AG_WidgetClass agFileDlgClass = {
 	{
 		"AG_Widget:AG_FileDlg",
 		sizeof(AG_FileDlg),

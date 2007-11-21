@@ -193,7 +193,7 @@ AG_TitlebarSetCaption(AG_Titlebar *tbar, const char *caption)
 	AG_LabelText(tbar->label, (caption == NULL) ? "" : caption);
 }
 
-const AG_WidgetClass agTitlebarClass = {
+AG_WidgetClass agTitlebarClass = {
 	{
 		"AG_Widget:AG_Box:AG_Titlebar",
 		sizeof(AG_Titlebar),

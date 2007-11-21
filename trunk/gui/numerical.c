@@ -846,7 +846,7 @@ AG_NumericalGetUint64(AG_Numerical *num)
 }
 #endif /* HAVE_64BIT */
 
-const AG_WidgetClass agNumericalClass = {
+AG_WidgetClass agNumericalClass = {
 	{
 		"AG_Widget:AG_Numerical",
 		sizeof(AG_Numerical),

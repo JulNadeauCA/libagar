@@ -45,7 +45,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-const AG_ObjectClass agObjectClass = {
+AG_ObjectClass agObjectClass = {
 	"AG_Object",
 	sizeof(AG_Object),
 	{ 7, 1 },
@@ -73,10 +73,10 @@ int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
 int agObjectBackups = 1;	   /* Backup object save files. */
 
 void
-AG_ObjectInit(void *p, const void *cls)
+AG_ObjectInit(void *p, void *cls)
 {
 	AG_Object *ob = p;
-	const AG_ObjectClass **hier;
+	AG_ObjectClass **hier;
 	int i, nHier;
 
 	ob->name[0] = '\0';
@@ -107,7 +107,7 @@ AG_ObjectInit(void *p, const void *cls)
 }
 
 void
-AG_ObjectInitStatic(void *p, const void *cls)
+AG_ObjectInitStatic(void *p, void *cls)
 {
 	AG_ObjectInit(p, cls);
 	OBJECT(p)->flags |= AG_OBJECT_STATIC;
@@ -115,7 +115,7 @@ AG_ObjectInitStatic(void *p, const void *cls)
 
 /* Create a new object instance and mark it resident. */
 void *
-AG_ObjectNew(void *parent, const char *name, const AG_ObjectClass *cls)
+AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cls)
 {
 	char nameGen[AG_OBJECT_NAME_MAX];
 	AG_Object *obj;
@@ -184,7 +184,7 @@ AG_ObjectFreeDataset(void *p)
 {
 	AG_Object *ob = p;
 	int preserveDeps;
-	const AG_ObjectClass **hier;
+	AG_ObjectClass **hier;
 	int i, nHier;
 
 	AG_MutexLock(&ob->lock);
@@ -344,8 +344,8 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	AG_LockLinkage();
 	
 	if (chld->flags & AG_OBJECT_NAME_ONATTACH) {
-		AG_ObjectGenName(parent, chld->cls,
-		    chld->name, sizeof(chld->name));
+		AG_ObjectGenName(parent, chld->cls, chld->name,
+		    sizeof(chld->name));
 	}
 	TAILQ_INSERT_TAIL(&parent->children, chld, cobjs);
 	chld->parent = parent;
@@ -630,10 +630,10 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
  * hierarchy of an object.
  */
 int
-AG_ObjectGetInheritHier(void *obj, const AG_ObjectClass ***hier, int *nHier)
+AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
 {
 	char cname[AG_OBJECT_TYPE_MAX], *c;
-	const AG_ObjectClass *cl;
+	AG_ObjectClass *cl;
 	int i, stop = 0;
 
 	if (AGOBJECT(obj)->cls->name[0] == '\0') {
@@ -678,7 +678,7 @@ void
 AG_ObjectDestroy(void *p)
 {
 	AG_Object *ob = p;
-	const AG_ObjectClass **hier;
+	AG_ObjectClass **hier;
 	int i, nHier;
 
 #ifdef DEBUG
@@ -1031,7 +1031,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 				goto fail;
 			}
 		} else {
-			const AG_ObjectClass *cl;
+			AG_ObjectClass *cl;
 
 			if ((cl = AG_FindClass(classID)) == NULL) {
 				AG_SetError("%s: %s", ob->name, AG_GetError());
@@ -1080,7 +1080,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	AG_DataSource *ds;
 	off_t dataOffs;
 	AG_Version version;
-	const AG_ObjectClass **hier;
+	AG_ObjectClass **hier;
 	int i, nHier;
 	
 	if (!OBJECT_PERSISTENT(ob)) {
@@ -1200,7 +1200,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	AG_ObjectDep *dep;
 	int pagedTemporarily;
 	int dataFound;
-	const AG_ObjectClass **hier;
+	AG_ObjectClass **hier;
 	int i, nHier;
 
 	AG_LockLinkage();
@@ -1390,7 +1390,7 @@ AG_ObjectSetArchivePath(void *p, const char *path)
 
 /* Override an object's class; thread unsafe. */
 void
-AG_ObjectSetClass(void *p, const void *cls)
+AG_ObjectSetClass(void *p, void *cls)
 {
 	OBJECT(p)->cls = cls;
 }
@@ -1596,7 +1596,7 @@ AG_ObjectDuplicate(void *p, const char *newName)
 {
 	char nameSave[AG_OBJECT_NAME_MAX];
 	AG_Object *ob = p;
-	const AG_ObjectClass *cls = ob->cls;
+	AG_ObjectClass *cls = ob->cls;
 	AG_Object *dob;
 
 	dob = Malloc(cls->size);
@@ -1803,8 +1803,7 @@ changed:
 
 /* Generate an object name that is unique in the given parent object. */
 void
-AG_ObjectGenName(AG_Object *pobj, const AG_ObjectClass *cls, char *name,
-    size_t len)
+AG_ObjectGenName(AG_Object *pobj, AG_ObjectClass *cls, char *name, size_t len)
 {
 	char tname[AG_OBJECT_TYPE_MAX];
 	Uint i = 0;

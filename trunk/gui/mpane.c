@@ -151,7 +151,7 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 	mp->layout = layout;
 }
 
-const AG_WidgetClass agMPaneClass = {
+AG_WidgetClass agMPaneClass = {
 	{
 		"AG_Widget:AG_Box:AG_MPane",
 		sizeof(AG_MPane),

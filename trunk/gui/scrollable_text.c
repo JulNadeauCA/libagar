@@ -95,7 +95,7 @@ Destroy(void *p)
 	Free(st->text);
 }
 
-const AG_WidgetClass agScrollableTextClass = {
+AG_WidgetClass agScrollableTextClass = {
 	{
 		"AG_Widget:AG_Scrollable:AG_ScrollableText",
 		sizeof(AG_ScrollableText),

@@ -1642,7 +1642,7 @@ AG_TextAlign(int *x, int *y, int wArea, int hArea, int wText, int hText,
 	}
 }
 
-const AG_ObjectClass agFontClass = {
+AG_ObjectClass agFontClass = {
 	"AG_Font",
 	sizeof(AG_Font),
 	{ 0, 0 },

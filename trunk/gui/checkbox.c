@@ -342,7 +342,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	AG_WidgetUnlockBinding(stateb);
 }
 
-const AG_WidgetClass agCheckboxClass = {
+AG_WidgetClass agCheckboxClass = {
 	{
 		"AG_Widget:AG_Checkbox",
 		sizeof(AG_Checkbox),

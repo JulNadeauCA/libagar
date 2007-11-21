@@ -222,7 +222,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-const AG_WidgetClass agUComboClass = {
+AG_WidgetClass agUComboClass = {
 	{
 		"AG_Widget:AG_UCombo",
 		sizeof(AG_UCombo),

@@ -252,7 +252,7 @@ Draw(void *p)
 		AG_WidgetBlitSurface(px, px->n, px->s, px->t);
 }
 
-const AG_WidgetClass agPixmapClass = {
+AG_WidgetClass agPixmapClass = {
 	{
 		"AG_Widget:AG_Pixmap",
 		sizeof(AG_Pixmap),

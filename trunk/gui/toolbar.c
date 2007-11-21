@@ -338,7 +338,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-const AG_WidgetClass agToolbarClass = {
+AG_WidgetClass agToolbarClass = {
 	{
 		"AG_Widget:AG_Box:AG_Toolbar",
 		sizeof(AG_Toolbar),

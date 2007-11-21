@@ -1426,7 +1426,7 @@ AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
 	row->cell[cell].image = AG_TextRender(row->cell[cell].text);
 }
 
-const AG_WidgetClass agTableviewClass = {
+AG_WidgetClass agTableviewClass = {
 	{
 		"AG_Widget:AG_Tableview",
 		sizeof(AG_Tableview),

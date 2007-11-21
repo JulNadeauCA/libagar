@@ -348,7 +348,7 @@ Edit(void *p)
 	return (win);
 }
 
-const AG_ObjectClass UserClass = {
+AG_ObjectClass UserClass = {
 	"User",
 	sizeof(User),
 	{ 8, 0 },

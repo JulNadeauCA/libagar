@@ -49,10 +49,10 @@ to be archived to different forms of persistent storage in an efficient manner.
 .nr nS 1
 .Pp
 .Ft "AG_Object *"
-.Fn AG_ObjectNew "AG_Object *parent" "const char *name" "const AG_ObjectClass *cls"
+.Fn AG_ObjectNew "AG_Object *parent" "const char *name" "AG_ObjectClass *cls"
 .Pp
 .Ft "void"
-.Fn AG_ObjectInit "AG_Object *obj" "const AG_ObjectClass *cls"
+.Fn AG_ObjectInit "AG_Object *obj" "AG_ObjectClass *cls"
 .Pp
 .Ft "void"
 .Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
@@ -85,7 +85,7 @@ to be archived to different forms of persistent storage in an efficient manner.
 .Fn AG_ObjectSetName "AG_Object *obj" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_ObjectSetClass "AG_Object *obj" "const AG_ObjectClass *cls"
+.Fn AG_ObjectSetClass "AG_Object *obj" "AG_ObjectClass *cls"
 .Pp
 .nr nS 0
 The
@@ -392,7 +392,7 @@ This function is not thread-safe.
 .Sh CLASS INFORMATION
 .nr nS 1
 .Ft "void"
-.Fn AG_RegisterClass "const AG_ObjectClass *ops" "int icon"
+.Fn AG_RegisterClass "AG_ObjectClass *ops" "int icon"
 .Pp
 .Ft "AG_ObjectClass *"
 .Fn AG_FindType "const char *name"

@@ -173,7 +173,7 @@ typedef struct ag_widget {
 struct ag_window;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agWidgetClass;
+extern AG_WidgetClass agWidgetClass;
 extern int agKbdDelay;
 extern int agKbdRepeat;
 extern int agMouseDblclickDelay;

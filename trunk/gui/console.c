@@ -238,7 +238,7 @@ AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
 	ln->icon = icon;
 }
 
-const AG_WidgetClass agConsoleClass = {
+AG_WidgetClass agConsoleClass = {
 	{
 		"AG_Widget:AG_Console",
 		sizeof(AG_Console),

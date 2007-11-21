@@ -137,7 +137,7 @@ typedef struct ag_table {
 } AG_Table;
 
 __BEGIN_DECLS
-extern const AG_WidgetClass agTableClass;
+extern AG_WidgetClass agTableClass;
 
 AG_Table *AG_TableNew(void *, Uint);
 AG_Table *AG_TableNewPolled(void *, Uint, void (*fn)(AG_Event *),

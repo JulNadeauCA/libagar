@@ -59,7 +59,7 @@ typedef struct map_actor {
 #define MAP_ACTOR_OPS(ob) ((MAP_ActorClass *)AGOBJECT(ob)->cls)
 
 __BEGIN_DECLS
-extern const AG_ObjectClass mapActorClass;
+extern AG_ObjectClass mapActorClass;
 
 MAP_Actor *MAP_ActorNew(void *, const char *);
 void	   MAP_ActorUpdate(void *);

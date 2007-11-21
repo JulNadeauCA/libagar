@@ -82,13 +82,13 @@ AG_WriteVersion(AG_DataSource *ds, const char *name, const AG_Version *ver)
 int
 AG_ReadObjectVersion(AG_DataSource *ds, void *p, AG_Version *pver)
 {
-	const AG_ObjectClass *cls = OBJECT(p)->cls;
+	AG_ObjectClass *cls = OBJECT(p)->cls;
 	return (AG_ReadVersion(ds, cls->name, &cls->ver, pver));
 }
 
 void
 AG_WriteObjectVersion(AG_DataSource *ds, void *p)
 {
-	const AG_ObjectClass *cls = OBJECT(p)->cls;
+	AG_ObjectClass *cls = OBJECT(p)->cls;
 	AG_WriteVersion(ds, cls->name, &cls->ver);
 }

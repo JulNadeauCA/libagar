@@ -68,7 +68,7 @@ int mapSmoothScaling = 0;
 void
 MAP_InitSubsystem(void)
 {
-	extern const AG_ObjectClass mapActorClass;
+	extern AG_ObjectClass mapActorClass;
 
 	AG_RegisterClass(&mapClass);
 	AG_RegisterClass(&mapActorClass);
@@ -3036,7 +3036,7 @@ Edit(void *p)
 }
 #endif /* EDITION */
 
-const AG_ObjectClass mapClass = {
+AG_ObjectClass mapClass = {
 	"MAP",
 	sizeof(MAP),
 	{ 11, 0 },

@@ -661,7 +661,7 @@ AG_FSpinbuttonSetRange(AG_FSpinbutton *fsu, double min, double max)
 	AG_MutexUnlock(&fsu->lock);
 }
 
-const AG_WidgetClass agFSpinbuttonClass = {
+AG_WidgetClass agFSpinbuttonClass = {
 	{
 		"AG_Widget:AG_FSpinbutton",
 		sizeof(AG_FSpinbutton),
