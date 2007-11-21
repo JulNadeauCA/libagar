@@ -43,12 +43,12 @@ VG_SnapToGrid(VG *vg, float *x, float *y)
 	float r;
 
 	if (x != NULL) {
-		r = remainderf(*x, vg->grid_gap);
+		r = VG_Mod(*x, vg->grid_gap);
 		*x -= r;
 		if (r > 0.5) { *x += vg->grid_gap; }
 	}
 	if (y != NULL) {
-		r = remainderf(*y, vg->grid_gap);
+		r = VG_Mod(*y, vg->grid_gap);
 		*y -= r;
 		if (r > 0.5) { *y += vg->grid_gap; }
 	}

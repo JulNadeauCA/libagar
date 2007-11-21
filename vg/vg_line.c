@@ -148,7 +148,7 @@ VG_LineMagnitude(float Ax, float Ay, float Bx, float By)
 	float vx = Bx - Ax;
 	float vy = By - Ay;
 
-	return (sqrtf(vx*vx + vy*vy));
+	return (VG_Sqrt(vx*vx + vy*vy));
 }
 
 float
