@@ -37,7 +37,7 @@ PREMAKEFLAGS?=
 PROJECT?=
 PROJDIR?=	${TOP}/ProjectFiles
 PROJFILESEXTRA?=
-PROJINCLUDES=	${TOP}/configure.lua
+PROJINCLUDES?=	${TOP}/configure.lua
 
 PROJTARGETS=	windows:cb-gcc \
 		windows:vs6 \
@@ -80,17 +80,22 @@ proj: proj-subdir
 			echo "mv -f config/.svn config.svn.ORIG"; \
 			mv -f config/.svn config.svn.ORIG; \
 		        echo "config" >> .projfiles2.out; \
+			CONFIGFOUND=yes; \
+		else \
+		        CONFIGFOUND=no; \
 		fi; \
 		rm -f ${PROJDIR}/$$_tgtproj-$$_tgtos.zip; \
 		cat .projfiles2.out | ${ZIP} ${ZIPFLAGS} \
 		    ${PROJDIR}/$$_tgtproj-$$_tgtos.zip -@; \
-		echo "mv -f config.svn.ORIG config/.svn"; \
-		mv -f config.svn.ORIG config/.svn; \
-		echo "mv -f config config.$$_tgtos"; \
-		mv -f config config.$$_tgtos; \
-		if [ -e "config.ORIG" ]; then \
-			echo "mv -f config.ORIG config"; \
-			mv -f config.ORIG config; \
+		if [ "$$CONFIGFOUND" = "yes" ]; then \
+		    echo "mv -f config.svn.ORIG config/.svn"; \
+		    mv -f config.svn.ORIG config/.svn; \
+		    echo "mv -f config config.$$_tgtos"; \
+		    mv -f config config.$$_tgtos; \
+		    if [ -e "config.ORIG" ]; then \
+			    echo "mv -f config.ORIG config"; \
+			    mv -f config.ORIG config; \
+		    fi; \
 		fi; \
 		rm `cat .projfiles.out`; \
 	    done; \
