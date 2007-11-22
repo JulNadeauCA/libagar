@@ -958,8 +958,8 @@ int main(int argc, char *argv[])
 	TAILQ_INSERT_HEAD(&fooq, &foo1, foos);
 	TAILQ_FOREACH(pfoo, &fooq, foos) { }
 	TAILQ_FOREACH_REVERSE(pfoo, &fooq, fooqname, foos) { }
-	for (pfoo = TAILQ_FIRST(&foo1);
-	     pfoo != TAILQ_END(&foo1);
+	for (pfoo = TAILQ_FIRST(&fooq);
+	     pfoo != TAILQ_END(&fooq);
 		 pfoo = pfoo_next) {
 		pfoo_next = TAILQ_NEXT(pfoo,foos);
 	}
@@ -1096,8 +1096,8 @@ echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >> Makefile.config
 echo "#undef _MK_HAVE_LIMITS_H" > config/_mk_have_limits_h.h
 fi;
 rm -f $testdir/conftest conftest.c
-echo -n "checking for BSD-style __progname..."
-echo -n "checking for BSD-style __progname..." >> config.log
+echo -n "checking for the __progname variable..."
+echo -n "checking for the __progname variable..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 int
@@ -1431,97 +1431,8 @@ echo "no" >> config.log
 HAVE_STRSEP="no"
 echo "#undef HAVE_STRSEP" > config/have_strsep.h
 fi;
-echo -n "checking for an asprintf() function..."
-echo -n "checking for an asprintf() function..." >> config.log
-cat << EOT > conftest.c
-#include <stdio.h>
-
-int
-main(int argc, char *argv[])
-{
-	char *buf;
-
-	if (asprintf(&buf, "foo %s", "bar") == 0) {
-		free(buf);
-	    return (0);
-	}
-	return (1);
-}
-
-EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_ASPRINTF="yes"
-echo "#ifndef HAVE_ASPRINTF" > config/have_asprintf.h
-echo "#define HAVE_ASPRINTF \"$HAVE_ASPRINTF\"" >> config/have_asprintf.h
-echo "#endif" >> config/have_asprintf.h
-else
-echo "no"
-echo "no" >> config.log
-HAVE_ASPRINTF="no"
-echo "#undef HAVE_ASPRINTF" > config/have_asprintf.h
-fi;
-echo -n "checking for a vasprintf() function..."
-echo -n "checking for a vasprintf() function..." >> config.log
-cat << EOT > conftest.c
-#include <stdio.h>
-#include <stdarg.h>
-
-int
-testprintf(const char *fmt, ...)
-{
-	va_list args;
-	char *buf;
-
-	va_start(args, fmt);
-	if (vasprintf(&buf, "%s", args) == -1) {
-		return (-1);
-	}
-	va_end(args);
-
-	free(buf);
-	return (0);
-}
-
-int
-main(int argc, char *argv[])
-{
-	return (testprintf("foo %s", "bar"));
-}
-
-EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_VASPRINTF="yes"
-echo "#ifndef HAVE_VASPRINTF" > config/have_vasprintf.h
-echo "#define HAVE_VASPRINTF \"$HAVE_VASPRINTF\"" >> config/have_vasprintf.h
-echo "#endif" >> config/have_vasprintf.h
-else
-echo "no"
-echo "no" >> config.log
-HAVE_VASPRINTF="no"
-echo "#undef HAVE_VASPRINTF" > config/have_vasprintf.h
-fi;
-echo -n "checking for a snprintf() function..."
-echo -n "checking for a snprintf() function..." >> config.log
+echo -n "checking for the snprintf() function..."
+echo -n "checking for the snprintf() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 
@@ -1529,7 +1440,6 @@ int
 main(int argc, char *argv[])
 {
 	char buf[16];
-
 	(void)snprintf(buf, sizeof(buf), "foo");
 	return (0);
 }
@@ -1556,8 +1466,8 @@ echo "no" >> config.log
 HAVE_SNPRINTF="no"
 echo "#undef HAVE_SNPRINTF" > config/have_snprintf.h
 fi;
-echo -n "checking for a vsnprintf() function..."
-echo -n "checking for a vsnprintf() function..." >> config.log
+echo -n "checking for the vsnprintf() function..."
+echo -n "checking for the vsnprintf() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 #include <stdarg.h>
@@ -1567,12 +1477,10 @@ testfmt(const char *fmt, ...)
 {
 	char buf[16];
 	va_list ap;
-	
 	va_start(ap, fmt);
 	(void)vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 }
-
 int
 main(int argc, char *argv[])
 {
@@ -1601,6 +1509,56 @@ echo "no"
 echo "no" >> config.log
 HAVE_VSNPRINTF="no"
 echo "#undef HAVE_VSNPRINTF" > config/have_vsnprintf.h
+fi;
+echo -n "checking for a vasprintf() function..."
+echo -n "checking for a vasprintf() function..." >> config.log
+cat << EOT > conftest.c
+#ifdef __linux__
+#define _GNU_SOURCE
+#endif
+#include <stdio.h>
+#include <stdarg.h>
+
+int
+testprintf(const char *fmt, ...)
+{
+	va_list args;
+	char *buf;
+
+	va_start(args, fmt);
+	if (vasprintf(&buf, "%s", args) == -1) {
+		return (-1);
+	}
+	va_end(args);
+	return (0);
+}
+int
+main(int argc, char *argv[])
+{
+	return (testprintf("foo %s", "bar"));
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f $testdir/conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_VASPRINTF="yes"
+echo "#ifndef HAVE_VASPRINTF" > config/have_vasprintf.h
+echo "#define HAVE_VASPRINTF \"$HAVE_VASPRINTF\"" >> config/have_vasprintf.h
+echo "#endif" >> config/have_vasprintf.h
+else
+echo "no"
+echo "no" >> config.log
+HAVE_VASPRINTF="no"
+echo "#undef HAVE_VASPRINTF" > config/have_vasprintf.h
 fi;
 echo -n "checking for a setlocale() function..."
 echo -n "checking for a setlocale() function..." >> config.log
@@ -2903,8 +2861,8 @@ echo "#undef HAVE_JPEG" > config/have_jpeg.h
 fi
 if [ "${enable_network}" = "yes" ]
  then
-echo -n "checking for a getaddrinfo() function..."
-echo -n "checking for a getaddrinfo() function..." >> config.log
+echo -n "checking for the getaddrinfo() function..."
+echo -n "checking for the getaddrinfo() function..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sys/socket.h>
