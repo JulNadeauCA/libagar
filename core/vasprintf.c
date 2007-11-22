@@ -1,5 +1,3 @@
-/*	$Csoft: vasprintf.c,v 1.5 2004/06/18 03:11:22 vedge Exp $	*/
-
 /*
  * Copyright (c) 2002, 2003, 2004, 2005 CubeSoft Communications, Inc.
  * <http://www.csoft.org>
@@ -27,14 +25,20 @@
  */
 
 #include <config/have_vasprintf.h>
+#include <config/_mk_have_sys_types_h.h>
 
-#include <core/core.h>
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#define _GNU_SOURCE
+#endif
 
-#include "vasprintf.h"
-
+#ifdef _MK_HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+
+#include "vasprintf.h"
 
 int
 AG_Vasprintf(char **ret, const char *fmt, va_list ap)
@@ -57,6 +61,6 @@ AG_Vasprintf(char **ret, const char *fmt, va_list ap)
 	*ret = buf;
 	return (size);
 #else
-	return (vasprintf(ret, fmt, ap));
+	return vasprintf(ret, fmt, ap);
 #endif
 }

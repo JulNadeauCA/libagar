@@ -56,11 +56,11 @@
  *    acceptable.  Consider stealing from mutt or enlightenment.
  **************************************************************/
 
-#include <config/have_snprintf.h>
-#ifndef HAVE_SNPRINTF
+#include <config/have_vsnprintf.h>
+#ifndef HAVE_VSNPRINTF
 
 #include <core/core.h>
-#include "snprintf.h"
+#include "vsnprintf.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -662,15 +662,11 @@ dopr_outch(char *buffer, size_t *currlen, size_t maxlen, char c)
 }
 
 int 
-AG_Snprintf(char *str, size_t count, const char *fmt, ...)
+AG_Vsnprintf(char *str, size_t count, const char *fmt, va_list ap)
 {
-	va_list ap;
-
-	va_start(ap, fmt);
 	str[0] = 0;
 	dopr(str, count, fmt, ap);
-	va_end(ap);
 	return (strlen(str));
 }
 
-#endif /* HAVE_SNPRINTF */
+#endif /* HAVE_VSNPRINTF */
