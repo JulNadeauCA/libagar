@@ -2,6 +2,13 @@
 
 #ifndef _AGAR_CORE_ERROR_PUB_H_
 #define _AGAR_CORE_ERROR_PUB_H_
+
+#ifdef _AGAR_INTERNAL
+#include <config/free_null_is_a_noop.h>
+#else
+#include <agar/config/free_null_is_a_noop.h>
+#endif
+
 #include "begin_code.h"
 __BEGIN_DECLS
 void		 AG_InitError(void);
@@ -57,15 +64,16 @@ AG_Realloc(void *pOld, size_t len)
 	return (pNew);
 }
 
+#ifdef FREE_NULL_IS_A_NOOP
+#define AG_Free(p) free(p)
+#else
 static __inline__ void
 AG_Free(void *p)
 {
-	/* XXX redundant on some systems */
-	if (p == NULL) {
-		return;
-	}
-	free(p);
+	if (p != NULL)
+		free(p);
 }
+#endif /* FREE_NULL_IS_A_NOOP */
 
 __END_DECLS
 
