@@ -778,7 +778,7 @@ AG_TextboxPrintf(AG_Textbox *tbox, const char *fmt, ...)
 	stringb = AG_WidgetGetBinding(tbox, "string", &text);
 	if (fmt != NULL && fmt[0] != '\0') {
 		va_start(args, fmt);
-		vsnprintf(text, stringb->data.size, fmt, args);
+		Vsnprintf(text, stringb->data.size, fmt, args);
 		va_end(args);
 		tbox->pos = strlen(text);
 	} else {

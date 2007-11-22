@@ -369,44 +369,44 @@ UpdateTextbox(AG_MFSpinbutton *num)
 	valueb = AG_WidgetGetBinding(num, "xvalue", &value);
 	switch (valueb->vtype) {
 	case AG_WIDGET_DOUBLE:
-		snprintf(sx, sizeof(sx), num->format,
+		Snprintf(sx, sizeof(sx), num->format,
 		    AG_Base2Unit(*(double *)value, num->unit));
 		break;
 	case AG_WIDGET_FLOAT:
-		snprintf(sx, sizeof(sx), num->format,
+		Snprintf(sx, sizeof(sx), num->format,
 		    AG_Base2Unit(*(float *)value, num->unit));
 		break;
 	case AG_WIDGET_INT:
-		snprintf(sx, sizeof(sx), "%d", *(int *)value);
+		Snprintf(sx, sizeof(sx), "%d", *(int *)value);
 		break;
 	case AG_WIDGET_UINT:
-		snprintf(sx, sizeof(sx), "%u", *(Uint *)value);
+		Snprintf(sx, sizeof(sx), "%u", *(Uint *)value);
 		break;
 	case AG_WIDGET_UINT8:
-		snprintf(sx, sizeof(sx), "%u", *(Uint8 *)value);
+		Snprintf(sx, sizeof(sx), "%u", *(Uint8 *)value);
 		break;
 	case AG_WIDGET_SINT8:
-		snprintf(sx, sizeof(sx), "%d", *(Sint8 *)value);
+		Snprintf(sx, sizeof(sx), "%d", *(Sint8 *)value);
 		break;
 	case AG_WIDGET_UINT16:
-		snprintf(sx, sizeof(sx), "%u", *(Uint16 *)value);
+		Snprintf(sx, sizeof(sx), "%u", *(Uint16 *)value);
 		break;
 	case AG_WIDGET_SINT16:
-		snprintf(sx, sizeof(sx), "%d", *(Sint16 *)value);
+		Snprintf(sx, sizeof(sx), "%d", *(Sint16 *)value);
 		break;
 	case AG_WIDGET_UINT32:
-		snprintf(sx, sizeof(sx), "%u", *(Uint32 *)value);
+		Snprintf(sx, sizeof(sx), "%u", *(Uint32 *)value);
 		break;
 	case AG_WIDGET_SINT32:
-		snprintf(sx, sizeof(sx), "%d", *(Sint32 *)value);
+		Snprintf(sx, sizeof(sx), "%d", *(Sint32 *)value);
 		break;
 #ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:
-		snprintf(sx, sizeof(sx), "%llu",
+		Snprintf(sx, sizeof(sx), "%llu",
 		    (unsigned long long)(*(Uint64 *)value));
 		break;
 	case AG_WIDGET_SINT64:
-		snprintf(sx, sizeof(sx), "%lld",
+		Snprintf(sx, sizeof(sx), "%lld",
 		    (long long)(*(Sint64 *)value));
 		break;
 #endif
@@ -417,44 +417,44 @@ UpdateTextbox(AG_MFSpinbutton *num)
 	valueb = AG_WidgetGetBinding(num, "yvalue", &value);
 	switch (valueb->vtype) {
 	case AG_WIDGET_DOUBLE:
-		snprintf(sy, sizeof(sy), num->format,
+		Snprintf(sy, sizeof(sy), num->format,
 		    AG_Base2Unit(*(double *)value, num->unit));
 		break;
 	case AG_WIDGET_FLOAT:
-		snprintf(sy, sizeof(sy), num->format,
+		Snprintf(sy, sizeof(sy), num->format,
 		    AG_Base2Unit(*(float *)value, num->unit));
 		break;
 	case AG_WIDGET_INT:
-		snprintf(sy, sizeof(sy), "%d", *(int *)value);
+		Snprintf(sy, sizeof(sy), "%d", *(int *)value);
 		break;
 	case AG_WIDGET_UINT:
-		snprintf(sy, sizeof(sy), "%u", *(Uint *)value);
+		Snprintf(sy, sizeof(sy), "%u", *(Uint *)value);
 		break;
 	case AG_WIDGET_UINT8:
-		snprintf(sy, sizeof(sy), "%u", *(Uint8 *)value);
+		Snprintf(sy, sizeof(sy), "%u", *(Uint8 *)value);
 		break;
 	case AG_WIDGET_SINT8:
-		snprintf(sy, sizeof(sy), "%d", *(Sint8 *)value);
+		Snprintf(sy, sizeof(sy), "%d", *(Sint8 *)value);
 		break;
 	case AG_WIDGET_UINT16:
-		snprintf(sy, sizeof(sy), "%u", *(Uint16 *)value);
+		Snprintf(sy, sizeof(sy), "%u", *(Uint16 *)value);
 		break;
 	case AG_WIDGET_SINT16:
-		snprintf(sy, sizeof(sy), "%d", *(Sint16 *)value);
+		Snprintf(sy, sizeof(sy), "%d", *(Sint16 *)value);
 		break;
 	case AG_WIDGET_UINT32:
-		snprintf(sy, sizeof(sy), "%u", *(Uint32 *)value);
+		Snprintf(sy, sizeof(sy), "%u", *(Uint32 *)value);
 		break;
 	case AG_WIDGET_SINT32:
-		snprintf(sy, sizeof(sy), "%d", *(Sint32 *)value);
+		Snprintf(sy, sizeof(sy), "%d", *(Sint32 *)value);
 		break;
 #ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:
-		snprintf(sy, sizeof(sy), "%llu",
+		Snprintf(sy, sizeof(sy), "%llu",
 		    (unsigned long long)(*(Uint64 *)value));
 		break;
 	case AG_WIDGET_SINT64:
-		snprintf(sy, sizeof(sy), "%lld",
+		Snprintf(sy, sizeof(sy), "%lld",
 		    (long long)(*(Uint64 *)value));
 		break;
 #endif
@@ -600,7 +600,7 @@ AG_MFSpinbuttonSetPrecision(AG_MFSpinbutton *fsu, const char *mode,
     int precision)
 {
 	AG_MutexLock(&fsu->lock);
-	snprintf(fsu->format, sizeof(fsu->format), "%%.%d%s", precision, mode);
+	Snprintf(fsu->format, sizeof(fsu->format), "%%.%d%s", precision, mode);
 	AG_MutexUnlock(&fsu->lock);
 }
 

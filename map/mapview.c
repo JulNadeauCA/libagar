@@ -1451,7 +1451,7 @@ MAP_ViewStatus(MAP_View *mv, const char *fmt, ...)
 		return;
 
 	va_start(ap, fmt);
-	vsnprintf(status, sizeof(status), fmt, ap);
+	Vsnprintf(status, sizeof(status), fmt, ap);
 	va_end(ap);
 
 	AG_TextColor(TEXT_COLOR);

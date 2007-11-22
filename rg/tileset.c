@@ -907,7 +907,7 @@ InsertTile(AG_Event *event)
 	if (ins_tile_name[0] == '\0') {
 		Uint nameno = 0;
 tryname1:
-		snprintf(ins_tile_name, sizeof(ins_tile_name), _("Tile #%d"),
+		Snprintf(ins_tile_name, sizeof(ins_tile_name), _("Tile #%d"),
 		    nameno);
 		TAILQ_FOREACH(t, &ts->tiles, tiles) {
 			if (strcmp(t->name, ins_tile_name) == 0)
@@ -933,7 +933,7 @@ tryname2:
 				if (*np == '#' && *(np+1) != '\0') {
 					np++;
 					num = atoi(np) + 1;
-					snprintf(np, sizeof(ins_tile_name) -
+					Snprintf(np, sizeof(ins_tile_name) -
 					    (np-ins_tile_name)-1, "%d", num);
 					break;
 				}
@@ -1014,7 +1014,7 @@ InsertTexture(AG_Event *event)
 	if (ins_texture_name[0] == '\0') {
 		Uint nameno = 0;
 tryname1:
-		snprintf(ins_texture_name, sizeof(ins_texture_name),
+		Snprintf(ins_texture_name, sizeof(ins_texture_name),
 		    _("Texture #%d"), nameno);
 		TAILQ_FOREACH(tex, &ts->textures, textures) {
 			if (strcmp(tex->name, ins_texture_name) == 0)
@@ -1040,7 +1040,7 @@ tryname2:
 				if (*np == '#' && *(np+1) != '\0') {
 					np++;
 					num = atoi(np) + 1;
-					snprintf(np, sizeof(ins_texture_name) -
+					Snprintf(np, sizeof(ins_texture_name) -
 					    (np-ins_texture_name)-1, "%d", num);
 					break;
 				}
@@ -1081,7 +1081,7 @@ InsertAnim(AG_Event *event)
 	if (ins_anim_name[0] == '\0') {
 		Uint nameno = 0;
 tryname1:
-		snprintf(ins_anim_name, sizeof(ins_anim_name),
+		Snprintf(ins_anim_name, sizeof(ins_anim_name),
 		    _("Animation #%d"), nameno);
 		TAILQ_FOREACH(ani, &ts->animations, animations) {
 			if (strcmp(ani->name, ins_anim_name) == 0)
@@ -1107,7 +1107,7 @@ tryname2:
 				if (*np == '#' && *(np+1) != '\0') {
 					np++;
 					num = atoi(np) + 1;
-					snprintf(np, sizeof(ins_anim_name) -
+					Snprintf(np, sizeof(ins_anim_name) -
 					    (np-ins_anim_name)-1, "%d", num);
 					break;
 				}
@@ -1306,7 +1306,7 @@ TileDup(RG_Tileset *ts, RG_Tile *t1)
 
 	t2 = Malloc(sizeof(RG_Tile));
 tryname1:
-	snprintf(name, sizeof(name), _("Copy #%d of %s"), ncopy++, t1->name);
+	Snprintf(name, sizeof(name), _("Copy #%d of %s"), ncopy++, t1->name);
 	if (RG_TilesetFindTile(ts, name) != NULL) {
 		goto tryname1;
 	}
@@ -1336,7 +1336,7 @@ tryname1:
 			px2 = Malloc(sizeof(RG_Pixmap));
 			RG_PixmapInit(px2, ts, 0);
 tryname2:
-			snprintf(px2->name, sizeof(px2->name),
+			Snprintf(px2->name, sizeof(px2->name),
 			    _("Copy #%d of %s"), ncopy++, px1->name);
 			if (RG_TilesetFindPixmap(ts, px2->name) != NULL) {
 				goto tryname2;
@@ -1581,7 +1581,7 @@ DupSelPixmaps(AG_Event *event)
 		px2 = Malloc(sizeof(RG_Pixmap));
 		RG_PixmapInit(px2, ts, 0);
 tryname:
-		snprintf(px2->name, sizeof(px2->name), _("Copy #%d of %s"),
+		Snprintf(px2->name, sizeof(px2->name), _("Copy #%d of %s"),
 		    ncopy++, px1->name);
 		if (RG_TilesetFindPixmap(ts, px2->name) != NULL)
 			goto tryname;

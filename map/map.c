@@ -520,7 +520,7 @@ MAP_PushLayer(MAP *m, const char *name)
 	char layname[MAP_LAYER_NAME_MAX];
 
 	if (name[0] == '\0') {
-		snprintf(layname, sizeof(layname), _("Layer %u"), m->nlayers);
+		Snprintf(layname, sizeof(layname), _("Layer %u"), m->nlayers);
 	} else {
 		Strlcpy(layname, name, sizeof(layname));
 	}
@@ -1760,7 +1760,7 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 #endif
 		} else {
 #if defined(DEBUG) || defined(EDITION)
-			snprintf(num, sizeof(num), "(s%u)", (Uint)r->r_tile.id);
+			Snprintf(num, sizeof(num), "(s%u)", (Uint)r->r_tile.id);
 			AG_TextColorRGBA(250,250,50,150);
 			su = AG_TextRender(num);
 			debug_su++;
@@ -1779,7 +1779,7 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 #endif
 		} else {
 #if defined(DEBUG) || defined(EDITION)
-			snprintf(num, sizeof(num), "(a%u)", r->r_anim.id);
+			Snprintf(num, sizeof(num), "(a%u)", r->r_anim.id);
 			AG_TextColorRGBA(250,250,50,150);
 			su = AG_TextRender(num);
 			debug_su++;

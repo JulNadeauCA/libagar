@@ -91,7 +91,7 @@ AG_WindowNewNamed(Uint flags, const char *fmt, ...)
 
 	AG_MutexLock(&agView->lock);
 	va_start(ap, fmt);
-	vsnprintf(name, sizeof(name), fmt, ap);
+	Vsnprintf(name, sizeof(name), fmt, ap);
 	va_end(ap);
 	for (c = &name[0]; *c != '\0'; c++) {
 		if (*c == '/')
@@ -1394,7 +1394,7 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 		return;
 #endif
 	va_start(ap, fmt);
-	vsnprintf(s, sizeof(s), fmt, ap);
+	Vsnprintf(s, sizeof(s), fmt, ap);
 	va_end(ap);
 	
 	Strlcpy(win->caption, s, sizeof(win->caption));

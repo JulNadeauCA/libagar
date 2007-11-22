@@ -125,7 +125,7 @@ XmitLoop(int fd)
 			break;
 		}
 
-		snprintf(status, sizeof(status), _("Transmitting frame %d"),
+		Snprintf(status, sizeof(status), _("Transmitting frame %d"),
 		    nframe);
 
 		if (!agView->opengl) {
@@ -199,7 +199,7 @@ XmitThread(void *p)
 	}
 
 	AG_MutexLock(&xmit_lock);
-	snprintf(status, sizeof(status), _("Connecting to %s:%s.."),
+	Snprintf(status, sizeof(status), _("Connecting to %s:%s.."),
 	    host, port);
 	AG_MutexUnlock(&xmit_lock);
 
@@ -210,7 +210,7 @@ XmitThread(void *p)
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", host,
 		    gai_strerror(rv));
 		AG_MutexLock(&xmit_lock);
-		snprintf(status, sizeof(status), "%s", gai_strerror(rv));
+		Snprintf(status, sizeof(status), "%s", gai_strerror(rv));
 		AG_MutexUnlock(&xmit_lock);
 		goto out1;
 	}
@@ -234,13 +234,13 @@ XmitThread(void *p)
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", host, cause);
 
 		AG_MutexLock(&xmit_lock);
-		snprintf(status, sizeof(status), "%s: %s", host, cause);
+		Snprintf(status, sizeof(status), "%s: %s", host, cause);
 		AG_MutexUnlock(&xmit_lock);
 		goto out2;
 	}
 
 	AG_MutexLock(&xmit_lock);
-	snprintf(status, sizeof(status), _("Connected to %s"), host);
+	Snprintf(status, sizeof(status), _("Connected to %s"), host);
 	AG_MutexUnlock(&xmit_lock);
 
 	XmitLoop(sock);
@@ -266,7 +266,7 @@ Disconnect(AG_Event *event)
 {
 	AG_MutexLock(&xmit_lock);
 	aflag++;
-	snprintf(status, sizeof(status), _("Disconnected"));
+	Snprintf(status, sizeof(status), _("Disconnected"));
 	AG_MutexUnlock(&xmit_lock);
 }
 

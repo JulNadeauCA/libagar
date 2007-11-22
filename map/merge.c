@@ -148,7 +148,7 @@ merge_create_brush(AG_Event *event)
 		return;
 	}
 	
-	snprintf(m_name, sizeof(m_name), "brush(%s)", brush_name);
+	Snprintf(m_name, sizeof(m_name), "brush(%s)", brush_name);
 	if (AG_TlistFindText(brushes_tl, m_name) != NULL) {
 		AG_TextMsg(AG_MSG_ERROR, _("A `%s' brush exists."), m_name);
 		return;
@@ -216,7 +216,7 @@ merge_remove_brush(AG_Event *event)
 			AG_Object *brush = it->p1;
 			AG_Window *win;
 
-			snprintf(wname, sizeof(wname),
+			Snprintf(wname, sizeof(wname),
 			    "win-mapedit-tool-merge-%s",
 			    OBJECT(brush)->name);
 			if ((win = AG_FindWindow(wname)) != NULL) {

@@ -308,7 +308,7 @@ poll_blocks(AG_Event *event)
 		VG_Rect rext;
 
 		VG_BlockExtent(vg, vgb, &rext);
-		snprintf(name, sizeof(name),
+		Snprintf(name, sizeof(name),
 		    "%s (%.2f,%.2f; \xce\xb8=%.2f; ext=%.2f,%.2f %.2fx%.2f)",
 		    vgb->name, vgb->pos.x, vgb->pos.y, vgb->theta,
 		    rext.x, rext.y, rext.w, rext.h);

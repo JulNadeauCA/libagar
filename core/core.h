@@ -93,7 +93,6 @@ typedef unsigned long Ulong;
 #include <core/strlcat.h>
 #include <core/snprintf.h>
 #include <core/vsnprintf.h>
-#include <core/asprintf.h>
 #include <core/vasprintf.h>
 #include <core/strsep.h>
 

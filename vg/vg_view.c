@@ -370,7 +370,7 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 			}
 		}
 #endif
-		snprintf(vv->status, sizeof(vv->status), "Tool: %s",
+		Snprintf(vv->status, sizeof(vv->status), "Tool: %s",
 		    ntool->ops->name);
 	} else {
 		vv->status[0] = '\0';

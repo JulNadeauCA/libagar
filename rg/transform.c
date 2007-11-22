@@ -214,7 +214,7 @@ RG_TransformChainPrint(const RG_TransformChain *xchain, char *buf,
 			for (j = 0; j < tr->nargs; j++) {
 				char num[32];
 
-				snprintf(num, sizeof(num), "(%lu)",
+				Snprintf(num, sizeof(num), "(%lu)",
 				    (unsigned long)tr->args[i]);
 				Strlcat(buf, num, buf_size);
 			}

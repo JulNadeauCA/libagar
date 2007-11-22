@@ -224,7 +224,7 @@ AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	vsnprintf(ge->labelTxt, sizeof(ge->labelTxt), fmt, ap);
+	Vsnprintf(ge->labelTxt, sizeof(ge->labelTxt), fmt, ap);
 	va_end(ap);
 
 	if (ge->labelSu >= 0) {
@@ -633,7 +633,7 @@ AG_GraphVertexLabel(AG_GraphVertex *vtx, const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	vsnprintf(vtx->labelTxt, sizeof(vtx->labelTxt), fmt, ap);
+	Vsnprintf(vtx->labelTxt, sizeof(vtx->labelTxt), fmt, ap);
 	va_end(ap);
 
 	if (vtx->labelSu >= 0) {

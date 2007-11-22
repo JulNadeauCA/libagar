@@ -114,7 +114,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 			Strlcpy(ev->name, name, sizeof(ev->name));
 		} else {
 			/* XXX use something faster */
-			snprintf(ev->name, sizeof(ev->name), "__%u",
+			Snprintf(ev->name, sizeof(ev->name), "__%u",
 			    ob->nevents);
 		}
 		TAILQ_INSERT_TAIL(&ob->events, ev, events);
@@ -149,7 +149,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	if (name != NULL) {
 		Strlcpy(ev->name, name, sizeof(ev->name));
 	} else {
-		snprintf(ev->name, sizeof(ev->name), "__%u", ob->nevents);
+		Snprintf(ev->name, sizeof(ev->name), "__%u", ob->nevents);
 	}
 	ev->flags = 0;
 	ev->argv[0].p = ob;

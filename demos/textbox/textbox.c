@@ -33,7 +33,7 @@ UpdateText(void *obj, Uint32 ival, void *arg)
 	AG_Textbox *textbox = arg;
 
 	if (!AG_WidgetFocused(textbox)) {
-		snprintf(polledString, sizeof(polledString), "Tick: %lu",
+		Snprintf(polledString, sizeof(polledString), "Tick: %lu",
 		    (unsigned long)SDL_GetTicks());
 	}
 	return (ival);

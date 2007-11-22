@@ -254,65 +254,65 @@ PrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
 	switch (c->type) {
 	case AG_CELL_INT:
 	case AG_CELL_UINT:
-		snprintf(buf, bufsz, c->fmt, c->data.i);
+		Snprintf(buf, bufsz, c->fmt, c->data.i);
 		break;
 	case AG_CELL_LONG:
 	case AG_CELL_ULONG:
-		snprintf(buf, bufsz, c->fmt, c->data.l);
+		Snprintf(buf, bufsz, c->fmt, c->data.l);
 		break;
 	case AG_CELL_PINT:
-		snprintf(buf, bufsz, c->fmt, *(int *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(int *)c->data.p);
 		break;
 	case AG_CELL_PUINT:
-		snprintf(buf, bufsz, c->fmt, *(Uint *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(Uint *)c->data.p);
 		break;
 	case AG_CELL_PLONG:
-		snprintf(buf, bufsz, c->fmt, *(long *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(long *)c->data.p);
 		break;
 	case AG_CELL_PULONG:
-		snprintf(buf, bufsz, c->fmt, *(Ulong *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(Ulong *)c->data.p);
 		break;
 	case AG_CELL_FLOAT:
-		snprintf(buf, bufsz, c->fmt, (float)c->data.f);
+		Snprintf(buf, bufsz, c->fmt, (float)c->data.f);
 		break;
 	case AG_CELL_PFLOAT:
-		snprintf(buf, bufsz, c->fmt, *(float *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(float *)c->data.p);
 		break;
 	case AG_CELL_DOUBLE:
-		snprintf(buf, bufsz, c->fmt, c->data.f);
+		Snprintf(buf, bufsz, c->fmt, c->data.f);
 		break;
 	case AG_CELL_PDOUBLE:
-		snprintf(buf, bufsz, c->fmt, *(double *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(double *)c->data.p);
 		break;
 #ifdef HAVE_64BIT
 	case AG_CELL_INT64:
 	case AG_CELL_UINT64:
-		snprintf(buf, bufsz, c->fmt, c->data.f);
+		Snprintf(buf, bufsz, c->fmt, c->data.f);
 		break;
 	case AG_CELL_PUINT64:
-		snprintf(buf, bufsz, c->fmt, *(Uint64 *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(Uint64 *)c->data.p);
 		break;
 	case AG_CELL_PINT64:
-		snprintf(buf, bufsz, c->fmt, *(Sint64 *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(Sint64 *)c->data.p);
 		break;
 #endif
 	case AG_CELL_PUINT32:
-		snprintf(buf, bufsz, c->fmt, *(Uint32 *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(Uint32 *)c->data.p);
 		break;
 	case AG_CELL_PSINT32:
-		snprintf(buf, bufsz, c->fmt, *(Sint32 *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(Sint32 *)c->data.p);
 		break;
 	case AG_CELL_PUINT16:
-		snprintf(buf, bufsz, c->fmt, *(Uint16 *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(Uint16 *)c->data.p);
 		break;
 	case AG_CELL_PSINT16:
-		snprintf(buf, bufsz, c->fmt, *(Sint16 *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(Sint16 *)c->data.p);
 		break;
 	case AG_CELL_PUINT8:
-		snprintf(buf, bufsz, c->fmt, *(Uint8 *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(Uint8 *)c->data.p);
 		break;
 	case AG_CELL_PSINT8:
-		snprintf(buf, bufsz, c->fmt, *(Sint8 *)c->data.p);
+		Snprintf(buf, bufsz, c->fmt, *(Sint8 *)c->data.p);
 		break;
 	case AG_CELL_STRING:
 		Strlcpy(buf, c->data.s, bufsz);
@@ -327,7 +327,7 @@ PrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
 		Strlcpy(buf, "<image>", bufsz);
 		break;
 	case AG_CELL_POINTER:
-		snprintf(buf, bufsz, c->fmt, c->data.p);
+		Snprintf(buf, bufsz, c->fmt, c->data.p);
 		break;
 	case AG_CELL_NULL:
 		if (c->fmt[0] == '\0') {

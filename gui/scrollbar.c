@@ -274,7 +274,7 @@ Draw(void *p)
 		SDL_Surface *txt;
 		char label[32];
 
-		snprintf(label, sizeof(label), "%d/%d/%d", val, min, max);
+		Snprintf(label, sizeof(label), "%d/%d/%d", val, min, max);
 		AG_TextColor(TEXT_COLOR);
 		txt = AG_TextRender(label);
 		AG_WidgetBlit(sb, txt,

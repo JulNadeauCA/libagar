@@ -13,16 +13,6 @@ static float flt = 1.0, dbl = 1.0;
 
 
 static void
-do_vsnprintf(const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsnprintf(buf1, sizeof(buf1), fmt, ap);
-	va_end(ap);
-}
-
-static void
 do_valist(int d, ...)
 {
 	va_list ap;
@@ -32,11 +22,8 @@ do_valist(int d, ...)
 	va_end(ap);
 }
 
-static void T_Valist(void) { do_valist(1, 2); }
-static void T_Vsnprintf64(void) { do_vsnprintf(STRING64); }
-
-static void T_Vsnprintf4(void) {
-	do_vsnprintf("%d %d %s %s", 1, 1, STRING64, STRING64);
+static void T_Valist(void) {
+	do_valist(1, 2);
 }
 static void T_Strlcpy64(void) {
 	AG_Strlcpy(buf1, STRING64, sizeof(buf1));
@@ -63,8 +50,6 @@ static struct testfn_ops testfns[] = {
  { "strlcat(1k)", NULL, NULL, T_Strlcat1k },
  { "strlcpy(64B)", NULL, NULL, T_Strlcpy64 },
  { "strlcat(64B)", NULL, NULL, T_Strlcat64 },
- { "vsnprintf(64B)", NULL, NULL, T_Vsnprintf64 },
- { "vsnprintf(%d,%d,%s,%s)", NULL, NULL, T_Vsnprintf4 },
  { "snprintf(64B)", NULL, NULL, T_Snprintf64 },
  { "snprintf(%d,%d,%s,%s)", NULL, NULL, T_Snprintf4 },
 };

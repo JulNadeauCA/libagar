@@ -700,7 +700,7 @@ SC_PlotLabelNew(SC_Plot *pl, enum sc_plot_label_type type, Uint x, Uint y,
 	plbl->y = y;
 
 	va_start(args, fmt);
-	vsnprintf(plbl->text, sizeof(plbl->text), fmt, args);
+	Vsnprintf(plbl->text, sizeof(plbl->text), fmt, args);
 	va_end(args);
 
 	AG_PushTextState();
@@ -720,7 +720,7 @@ SC_PlotLabelSetText(SC_Plot *pl, SC_PlotLabel *plbl, const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-	vsnprintf(plbl->text, sizeof(plbl->text), fmt, args);
+	Vsnprintf(plbl->text, sizeof(plbl->text), fmt, args);
 	va_end(args);
 
 	AG_WidgetUnmapSurface(pl->plotter, plbl->text_surface);
@@ -740,7 +740,7 @@ SC_PlotLabelReplace(SC_Plot *pl, enum sc_plot_label_type type, Uint x, Uint y,
 	va_list args;
 	
 	va_start(args, fmt);
-	vsnprintf(text, sizeof(text), fmt, args);
+	Vsnprintf(text, sizeof(text), fmt, args);
 	va_end(args);
 
 	TAILQ_FOREACH(plbl, &pl->labels, labels) {
@@ -888,7 +888,7 @@ SC_PlotSetLabel(SC_Plot *pl, const char *fmt, ...)
 	va_list args;
 	
 	va_start(args, fmt);
-	vsnprintf(pl->label_txt, sizeof(pl->label_txt), fmt, args);
+	Vsnprintf(pl->label_txt, sizeof(pl->label_txt), fmt, args);
 	va_end(args);
 
 	SC_PlotUpdateLabel(pl);

@@ -45,7 +45,7 @@ AG_FeatureInit(void *p, RG_Tileset *ts, int flags, const RG_FeatureOps *ops)
 	Uint featno = 0;
 	
 tryname:
-	snprintf(ft->name, sizeof(ft->name), "%s #%d", ops->type, featno);
+	Snprintf(ft->name, sizeof(ft->name), "%s #%d", ops->type, featno);
 	TAILQ_FOREACH(oft, &ts->features, features) {
 		if (strcmp(oft->name, ft->name) == 0)
 			break;

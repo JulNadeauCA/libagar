@@ -51,7 +51,7 @@ AG_ObjectSelectorNew(void *parent, int flags, void *pobj, void *root,
 		char label[AG_LABEL_MAX];
 
 		va_start(ap, fmt);
-		vsnprintf(label, sizeof(label), fmt, ap);
+		Vsnprintf(label, sizeof(label), fmt, ap);
 		va_end(ap);
 		AG_TextboxSetLabel(os->com.tbox, "%s", label);
 	}

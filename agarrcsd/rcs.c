@@ -157,7 +157,7 @@ rcs_commit(NS_Server *ns, NS_Command *cmd, void *p)
 	Strlcat(filepath, ".", sizeof(filepath));
 	Strlcat(filepath, objtype, sizeof(filepath));
 	Strlcat(filepath, ".", sizeof(filepath));
-	snprintf(revno, sizeof(revno), "%u", rev);
+	Snprintf(revno, sizeof(revno), "%u", rev);
 	Strlcat(filepath, revno, sizeof(filepath));
 
 	if ((fd = open(filepath, O_CREAT|O_WRONLY|O_EXCL, 0644)) == -1) {
@@ -248,7 +248,7 @@ rcs_update(NS_Server *ns, NS_Command *cmd, void *p)
 	Strlcat(filepath, ".", sizeof(filepath));
 	Strlcat(filepath, objtype, sizeof(filepath));
 	Strlcat(filepath, ".", sizeof(filepath));
-	snprintf(revtext, sizeof(revtext), "%u", rev);
+	Snprintf(revtext, sizeof(revtext), "%u", rev);
 	Strlcat(filepath, revtext, sizeof(filepath));
 
 	NS_Log(NS_INFO, "sending %s", filepath);

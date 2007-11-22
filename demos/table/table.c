@@ -26,7 +26,7 @@ my_custom_cell_txt_fn(void *p, char *s, size_t len)
 {
 	AG_TableCell *cell = p;
 	
-	snprintf(s, len, "Ticks: %lu",
+	Snprintf(s, len, "Ticks: %lu",
 	    (unsigned long)SDL_GetTicks());
 }
 

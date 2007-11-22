@@ -29,6 +29,10 @@ configure:
 	cat configure.in | mkconfigure > configure
 	chmod 755 configure
 
+configure.windows:
+	cat configure.in | mkconfigure --emul-os=windows > configure.windows
+	chmod 755 configure.windows
+
 cleandir-config:
 	rm -fr config config.log Makefile.config .projfiles.out .projfiles2.out
 	touch Makefile.config

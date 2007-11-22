@@ -1035,7 +1035,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 	for (;;) {
 		char file[MAXPATHLEN];
 
-		snprintf(file, sizeof(file), "%s/%s%u.jpg", path, agProgName,
+		Snprintf(file, sizeof(file), "%s/%s%u.jpg", path, agProgName,
 		    seq++);
 		if ((fd = open(file, O_WRONLY|O_CREAT|O_EXCL, 0600)) == -1) {
 			if (errno == EEXIST) {

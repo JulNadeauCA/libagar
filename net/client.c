@@ -77,7 +77,7 @@ NC_Write(NC_Session *client, const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	vsnprintf(req, sizeof(req), fmt, ap);
+	Vsnprintf(req, sizeof(req), fmt, ap);
 	va_end(ap);
 
 	len = strlen(req);
@@ -149,7 +149,7 @@ NC_Query(NC_Session *client, const char *fmt, ...)
 	}
 
 	va_start(ap, fmt);
-	vsnprintf(req, sizeof(req), fmt, ap);
+	Vsnprintf(req, sizeof(req), fmt, ap);
 	Strlcat(req, "\n", sizeof(req));
 	va_end(ap);
 
@@ -258,7 +258,7 @@ NC_QueryBinary(NC_Session *client, const char *fmt, ...)
 
 	/* Issue the request. */
 	va_start(ap, fmt);
-	vsnprintf(req, sizeof(req), fmt, ap);
+	Vsnprintf(req, sizeof(req), fmt, ap);
 	va_end(ap);
 sendreq:
 	if (NC_Write(client, "%s\n\n", req) == -1) {
