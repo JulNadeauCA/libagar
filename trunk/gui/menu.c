@@ -430,7 +430,7 @@ AG_MenuSection(AG_MenuItem *pitem, const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	vsnprintf(text, sizeof(text), fmt, ap);
+	Vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 
 	mi = CreateItem(pitem, text, NULL);

@@ -477,7 +477,7 @@ AG_ObjectFindF(const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	vsnprintf(path, sizeof(path), fmt, ap);
+	Vsnprintf(path, sizeof(path), fmt, ap);
 	va_end(ap);
 #ifdef DEBUG
 	if (path[0] != '/')
@@ -1355,7 +1355,7 @@ AG_ObjectSetName(void *p, const char *fmt, ...)
 
 	if (fmt != NULL) {
 		va_start(ap, fmt);
-		vsnprintf(ob->name, sizeof(ob->name), fmt, ap);
+		Vsnprintf(ob->name, sizeof(ob->name), fmt, ap);
 		va_end(ap);
 	} else {
 		ob->name[0] = '\0';
@@ -1711,7 +1711,7 @@ AG_ObjectCopyDigest(const void *ob, size_t *len, char *digest)
 	    AG_ObjectCopyChecksum(ob, AG_OBJECT_RMD160, rmd160) == 0) {
 		return (-1);
 	}
-	if (snprintf(digest, AG_OBJECT_DIGEST_MAX, "(md5|%s sha1|%s rmd160|%s)",
+	if (Snprintf(digest, AG_OBJECT_DIGEST_MAX, "(md5|%s sha1|%s rmd160|%s)",
 	    md5, sha1, rmd160) >= AG_OBJECT_DIGEST_MAX) {
 		AG_SetError("Digest is too big.");
 		return (-1);
@@ -1817,7 +1817,7 @@ AG_ObjectGenName(AG_Object *pobj, AG_ObjectClass *cls, char *name, size_t len)
 	}
 	tname[0] = (char)toupper(tname[0]);
 tryname:
-	snprintf(name, len, "%s #%u", tname, i);
+	Snprintf(name, len, "%s #%u", tname, i);
 	if (pobj != NULL) {
 		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
 			if (strcmp(ch->name, name) == 0)

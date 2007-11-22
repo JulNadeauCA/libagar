@@ -84,9 +84,9 @@ PollDeps(AG_Event *event)
 			Strlcpy(path, "(NULL)", sizeof(path));
 		}
 		if (dep->count == AG_OBJECT_DEP_MAX) {
-			snprintf(label, sizeof(label), "%s (wired)", path);
+			Snprintf(label, sizeof(label), "%s (wired)", path);
 		} else {
-			snprintf(label, sizeof(label), "%s (%u)", path,
+			Snprintf(label, sizeof(label), "%s (%u)", path,
 			    (Uint)dep->count);
 		}
 		AG_TlistAddPtr(tl, AG_ObjectIcon(dep->obj), label, dep);
@@ -134,38 +134,38 @@ PollEvents(AG_Event *event)
 			}
 			switch (ev->argt[i]) {
 			case AG_EVARG_POINTER:
-				snprintf(arg, sizeof(arg), "%p", ev->argv[i].p);
+				Snprintf(arg, sizeof(arg), "%p", ev->argv[i].p);
 				break;
 			case AG_EVARG_STRING:
-				snprintf(arg, sizeof(arg), "\"%s\"",
+				Snprintf(arg, sizeof(arg), "\"%s\"",
 				    ev->argv[i].s);
 				break;
 			case AG_EVARG_UCHAR:
 			case AG_EVARG_CHAR:
-				snprintf(arg, sizeof(arg), "'%c'",
+				Snprintf(arg, sizeof(arg), "'%c'",
 				    (Uchar)ev->argv[i].i);
 				break;
 			case AG_EVARG_INT:
-				snprintf(arg, sizeof(arg), "%d", ev->argv[i].i);
+				Snprintf(arg, sizeof(arg), "%d", ev->argv[i].i);
 				break;
 			case AG_EVARG_UINT:
-				snprintf(arg, sizeof(arg), "%u",
+				Snprintf(arg, sizeof(arg), "%u",
 				    (Uint)ev->argv[i].i);
 				break;
 			case AG_EVARG_LONG:
-				snprintf(arg, sizeof(arg), "%li",
+				Snprintf(arg, sizeof(arg), "%li",
 				    ev->argv[i].li);
 				break;
 			case AG_EVARG_ULONG:
-				snprintf(arg, sizeof(arg), "%li",
+				Snprintf(arg, sizeof(arg), "%li",
 				    (Ulong)ev->argv[i].li);
 				break;
 			case AG_EVARG_FLOAT:
-				snprintf(arg, sizeof(arg), "<%g>",
+				Snprintf(arg, sizeof(arg), "<%g>",
 				    ev->argv[i].f);
 				break;
 			case AG_EVARG_DOUBLE:
-				snprintf(arg, sizeof(arg), "<%g>",
+				Snprintf(arg, sizeof(arg), "<%g>",
 				    ev->argv[i].f);
 				break;
 			}

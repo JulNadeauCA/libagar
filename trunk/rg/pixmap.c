@@ -64,7 +64,7 @@ RG_PixmapNew(RG_Tileset *ts, const char *pName, int flags)
 	RG_Pixmap *px;
 
 tryname:
-	snprintf(name, sizeof(name), _("%s #%d"),
+	Snprintf(name, sizeof(name), _("%s #%d"),
 	    (pName != NULL) ? pName : _("Pixmap"), no++);
 	if (RG_TilesetFindPixmap(ts, name) != NULL)
 		goto tryname;

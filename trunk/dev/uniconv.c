@@ -197,17 +197,17 @@ SelectUnicodeRange(AG_Event *event)
 		unitext[0] = i;
 		AG_ExportUnicode(AG_UNICODE_TO_UTF8, utf8text, unitext,
 		    sizeof(unitext));
-		snprintf(text[0], sizeof(text[0]), "%s", utf8text);
+		Snprintf(text[0], sizeof(text[0]), "%s", utf8text);
         
 		/* prep column 1 */
 		utf8seq[0] = '\0';
 		for (c = &utf8text[0]; *c != '\0'; c++) {
 			char s[4];
             
-			snprintf(s, sizeof(s), "%x", (unsigned char)*c);
+			Snprintf(s, sizeof(s), "%x", (unsigned char)*c);
 			Strlcat(utf8seq, s, sizeof(utf8seq));
 		}
-		snprintf(text[1], sizeof(text[1]), "%s", utf8seq);
+		Snprintf(text[1], sizeof(text[1]), "%s", utf8seq);
         
 		AG_TableviewRowAdd(tv, 0, NULL, NULL, i,
 		    0, text[0],

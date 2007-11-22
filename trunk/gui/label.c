@@ -336,37 +336,37 @@ AG_LabelString(AG_Label *lbl, const char *s)
 static void
 label_uint8(AG_Label *label, char *s, size_t len, int ri)
 {
-	snprintf(s, len, "%u", LABEL_ARG(Uint8));
+	Snprintf(s, len, "%u", LABEL_ARG(Uint8));
 }
 
 static void
 label_sint8(AG_Label *label, char *s, size_t len, int ri)
 {
-	snprintf(s, len, "%d", LABEL_ARG(Sint8));
+	Snprintf(s, len, "%d", LABEL_ARG(Sint8));
 }
 
 static void
 label_uint16(AG_Label *label, char *s, size_t len, int ri)
 {
-	snprintf(s, len, "%u", LABEL_ARG(Uint16));
+	Snprintf(s, len, "%u", LABEL_ARG(Uint16));
 }
 
 static void
 label_sint16(AG_Label *label, char *s, size_t len, int ri)
 {
-	snprintf(s, len, "%d", LABEL_ARG(Sint16));
+	Snprintf(s, len, "%d", LABEL_ARG(Sint16));
 }
 
 static void
 label_uint32(AG_Label *label, char *s, size_t len, int ri)
 {
-	snprintf(s, len, "%u", LABEL_ARG(Uint32));
+	Snprintf(s, len, "%u", LABEL_ARG(Uint32));
 }
 
 static void
 label_sint32(AG_Label *label, char *s, size_t len, int ri)
 {
-	snprintf(s, len, "%d", LABEL_ARG(Sint32));
+	Snprintf(s, len, "%d", LABEL_ARG(Sint32));
 }
 
 static void
@@ -374,42 +374,42 @@ label_obj(AG_Label *label, char *s, size_t len, int ri)
 {
 	AG_Object *ob = LABEL_ARG(AG_Object *);
 
-	snprintf(s, len, "%s", ob != NULL ? ob->name : "(null)");
+	Snprintf(s, len, "%s", ob != NULL ? ob->name : "(null)");
 }
 
 static void
 label_objt(AG_Label *label, char *s, size_t len, int ri)
 {
 	AG_Object *ob = LABEL_ARG(AG_Object *);
-	snprintf(s, len, "%s", ob->cls->name);
+	Snprintf(s, len, "%s", ob->cls->name);
 }
 
 static void
 label_wxh(AG_Label *label, char *s, size_t len, int ri)
 {
 	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
-	snprintf(s, len, "%ux%u", rd->w, rd->h);
+	Snprintf(s, len, "%ux%u", rd->w, rd->h);
 }
 
 static void
 label_xy(AG_Label *label, char *s, size_t len, int ri)
 {
 	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
-	snprintf(s, len, "%d,%d", rd->x, rd->y);
+	Snprintf(s, len, "%d,%d", rd->x, rd->y);
 }
 
 static void
 label_rect(AG_Label *label, char *s, size_t len, int ri)
 {
 	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
-	snprintf(s, len, "%ux%u at %d,%d", rd->w, rd->h, rd->x, rd->y);
+	Snprintf(s, len, "%ux%u at %d,%d", rd->w, rd->h, rd->x, rd->y);
 }
 
 static void
 label_int_bool(AG_Label *label, char *s, size_t len, int ri)
 {
 	int *flag = &LABEL_ARG(int);
-	snprintf(s, len, "%s", *flag ? _("yes") : _("no"));
+	Snprintf(s, len, "%s", *flag ? _("yes") : _("no"));
 }
 
 static void
@@ -522,35 +522,35 @@ DrawPolled(AG_Label *label)
 					switch (*(fmtp+3)) {
 					case 'd':
 					case 'i':
-						snprintf(s2, sizeof(s2),
+						Snprintf(s2, sizeof(s2),
 						    "%lld", (long long)
 						    LABEL_ARG(Sint64));
 						Strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'o':
-						snprintf(s2, sizeof(s2),
+						Snprintf(s2, sizeof(s2),
 						    "%llo", (unsigned long long)
 						    LABEL_ARG(Uint64));
 						Strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'u':
-						snprintf(s2, sizeof(s2),
+						Snprintf(s2, sizeof(s2),
 						    "%llu", (unsigned long long)
 						    LABEL_ARG(Uint64));
 						Strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'x':
-						snprintf(s2, sizeof(s2),
+						Snprintf(s2, sizeof(s2),
 						    "%llx", (unsigned long long)
 						    LABEL_ARG(Uint64));
 						Strlcat(s, s2, sizeof(s));
 						ri++;
 						break;
 					case 'X':
-						snprintf(s2, sizeof(s2),
+						Snprintf(s2, sizeof(s2),
 						    "%llX", (unsigned long long)
 						    LABEL_ARG(Uint64));
 						Strlcat(s, s2, sizeof(s));
@@ -563,44 +563,44 @@ DrawPolled(AG_Label *label)
 #endif /* HAVE_64BIT */
 			case 'd':
 			case 'i':
-				snprintf(s2, sizeof(s2), "%d", LABEL_ARG(int));
+				Snprintf(s2, sizeof(s2), "%d", LABEL_ARG(int));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'D':
 			case 'I':
 				if (LABEL_ARG(int) < 0) {
-					snprintf(s2, sizeof(s2), "%d",
+					Snprintf(s2, sizeof(s2), "%d",
 					    LABEL_ARG(int));
 					Strlcat(s, s2, sizeof(s));
 					ri++;
 				} else if (LABEL_ARG(int) > 0) {
-					snprintf(s2, sizeof(s2), "+%d",
+					Snprintf(s2, sizeof(s2), "+%d",
 					    LABEL_ARG(int));
 					Strlcat(s, s2, sizeof(s));
 					ri++;
 				}
 				break;
 			case 'o':
-				snprintf(s2, sizeof(s2), "%o",
+				Snprintf(s2, sizeof(s2), "%o",
 				    LABEL_ARG(unsigned int));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'u':
-				snprintf(s2, sizeof(s2), "%u",
+				Snprintf(s2, sizeof(s2), "%u",
 				    LABEL_ARG(unsigned int));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'x':
-				snprintf(s2, sizeof(s2), "%x",
+				Snprintf(s2, sizeof(s2), "%x",
 				    LABEL_ARG(unsigned int));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'X':
-				snprintf(s2, sizeof(s2), "%X",
+				Snprintf(s2, sizeof(s2), "%X",
 				    LABEL_ARG(unsigned int));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
@@ -616,26 +616,26 @@ DrawPolled(AG_Label *label)
 				ri++;
 				break;
 			case 'p':
-				snprintf(s2, sizeof(s2), "%p",
+				Snprintf(s2, sizeof(s2), "%p",
 				    LABEL_ARG(void *));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'f':
-				snprintf(s2, sizeof(s2), "%.2f",
+				Snprintf(s2, sizeof(s2), "%.2f",
 				    LABEL_ARG(float));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'F':
-				snprintf(s2, sizeof(s2), "%.2f",
+				Snprintf(s2, sizeof(s2), "%.2f",
 				    LABEL_ARG(double));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 #if 0
 			case 'G':
-				snprintf(s2, sizeof(s2), "%.2f",
+				Snprintf(s2, sizeof(s2), "%.2f",
 				    LABEL_ARG(long double));
 				Strlcat(s, s2, sizeof(s));
 				ri++;

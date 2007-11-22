@@ -693,7 +693,7 @@ PollGfx(AG_Event *event)
 			char label[AG_TLIST_LABEL_MAX];
 			AG_TlistItem *it;
 
-			snprintf(label, sizeof(label), "%u ticks\n",
+			Snprintf(label, sizeof(label), "%u ticks\n",
 			    csp->last_drawn);
 			MAP_TransformPrint(&csp->transforms, label,
 			    sizeof(label));

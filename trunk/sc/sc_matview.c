@@ -191,14 +191,14 @@ DrawNumerical(void *p)
 		     n <= M->n && x < WIDGET(mv)->w;
 		     n++, x += (mv->ent_w + mv->hspace)) {
 			if (m == 0) {
-				snprintf(text, sizeof(text), "%d", n);
+				Snprintf(text, sizeof(text), "%d", n);
 			} else if (n == 0) {
-				snprintf(text, sizeof(text), "%d", m);
+				Snprintf(text, sizeof(text), "%d", m);
 			} else {
 				AG_DrawBox(mv,
 				    AG_RECT(x, y, mv->ent_w, mv->ent_h), -1,
 				    AG_COLOR(FRAME_COLOR));
-				snprintf(text, sizeof(text), mv->numfmt,
+				Snprintf(text, sizeof(text), mv->numfmt,
 				    M->mat[m][n]);
 			}
 			AG_TextColor(TEXT_COLOR);

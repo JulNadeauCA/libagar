@@ -160,7 +160,7 @@ NS_Log(enum ns_log_lvl loglvl, const char *fmt, ...)
 	vsyslog(nsSyslogLevels[loglvl], fmt, ap)
 #else
 # ifdef HAVE_SYSLOG
-	vsnprintf(msg, sizeof(msg), fmt, ap);
+	Vsnprintf(msg, sizeof(msg), fmt, ap);
 	syslog(nsSyslogLevels[loglvl], "%s", msg);
 # else
 	fprintf(stderr, "[%s] ", nsLogLevelNames[loglvl]);
@@ -329,7 +329,7 @@ ServerLoop(NS_Server *ns)
 	int seq = 0;
 	int i;
 
-	snprintf(prot, sizeof(prot), "%s %s\n", ns->protoName, ns->protoVer);
+	Snprintf(prot, sizeof(prot), "%s %s\n", ns->protoName, ns->protoVer);
 	fputs(prot, stdout);
 	fflush(stdout);
 	
@@ -453,7 +453,7 @@ NS_Logout(NS_Server *ns, int rv, const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	vsnprintf(buf, sizeof(buf), fmt, ap);
+	Vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 	NS_Message(ns, 1, "%s", buf);
 	exit(rv);

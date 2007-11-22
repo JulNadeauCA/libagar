@@ -658,7 +658,7 @@ AG_NumericalSetPrecision(AG_Numerical *num, const char *mode,
 	AG_MutexLock(&num->lock);
 	num->format[0] = '%';
 	num->format[1] = '.';
-	snprintf(&num->format[2], sizeof(num->format)-2, "%d", precision);
+	Snprintf(&num->format[2], sizeof(num->format)-2, "%d", precision);
 	Strlcat(num->format, mode, sizeof(num->format));
 	AG_MutexUnlock(&num->lock);
 }

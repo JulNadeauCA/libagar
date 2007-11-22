@@ -85,7 +85,7 @@ AG_RcsConnect(void)
 	char port[12];
 
 	if (++connected == 1) {
-		snprintf(port, sizeof(port), "%u", agRcsPort);
+		Snprintf(port, sizeof(port), "%u", agRcsPort);
 		if (NC_Connect(&rcs_client, agRcsHostname, port,
 		    agRcsUsername, agRcsPassword) == -1) {
 			AG_SetError("RCS connection: %s", AG_GetError());

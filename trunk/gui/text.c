@@ -1335,7 +1335,7 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	va_list args;
 
 	va_start(args, format);
-	vsnprintf(msg, sizeof(msg), format, args);
+	Vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
@@ -1363,7 +1363,7 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 	va_list args;
 
 	va_start(args, format);
-	vsnprintf(msg, sizeof(msg), format, args);
+	Vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
@@ -1399,7 +1399,7 @@ AG_TextInfo(const char *fmt, ...)
 		return;
 
 	va_start(args, fmt);
-	vsnprintf(msg, sizeof(msg), fmt, args);
+	Vsnprintf(msg, sizeof(msg), fmt, args);
 	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
@@ -1444,7 +1444,7 @@ AG_TextWarning(const char *key, const char *format, ...)
 		return;
 
 	va_start(args, format);
-	vsnprintf(msg, sizeof(msg), format, args);
+	Vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
@@ -1477,7 +1477,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	Uint i;
 
 	va_start(ap, fmt);
-	vsnprintf(text, sizeof(text), fmt, ap);
+	Vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
@@ -1507,7 +1507,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	AG_FSpinbutton *fsb;
 
 	va_start(args, format);
-	vsnprintf(msg, sizeof(msg), format, args);
+	Vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);
@@ -1545,7 +1545,7 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	AG_Textbox *tb;
 
 	va_start(args, msgfmt);
-	vsnprintf(msg, sizeof(msg), msgfmt, args);
+	Vsnprintf(msg, sizeof(msg), msgfmt, args);
 	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE);

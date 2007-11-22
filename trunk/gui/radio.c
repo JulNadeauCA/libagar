@@ -83,7 +83,7 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 	ri->surface = -1;
 	ri->hotkey = SDLK_UNKNOWN;
 	va_start(ap, fmt);
-	vsnprintf(ri->text, sizeof(ri->text), fmt, ap);
+	Vsnprintf(ri->text, sizeof(ri->text), fmt, ap);
 	va_end(ap);
 
 	AG_TextSize(ri->text, &w, NULL);
@@ -105,7 +105,7 @@ AG_RadioAddItemHK(AG_Radio *rad, SDLKey hotkey, const char *fmt, ...)
 	ri->surface = -1;
 	ri->hotkey = hotkey;
 	va_start(ap, fmt);
-	vsnprintf(ri->text, sizeof(ri->text), fmt, ap);
+	Vsnprintf(ri->text, sizeof(ri->text), fmt, ap);
 	va_end(ap);
 
 	AG_TextSize(ri->text, &w, NULL);

@@ -485,7 +485,7 @@ RG_SketchUnselect(RG_Tileview *tv, RG_TileElement *tel,
 	AG_Window *win;
 
 	TAILQ_FOREACH(win, &agView->windows, windows) {
-		snprintf(name, sizeof(name), "win-%s-%p-%p", sk->name, tel,
+		Snprintf(name, sizeof(name), "win-%s-%p-%p", sk->name, tel,
 		    vge);
 		if (strcmp(name, OBJECT(win)->name) == 0) {
 			AG_ViewDetach(win);

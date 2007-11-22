@@ -188,22 +188,22 @@ fail:
 	if (m) {
 		if (t) {
 			if (c) {
-				snprintf(tmp, sizeof(tmp), "%s_%s.%s@%s",
+				Snprintf(tmp, sizeof(tmp), "%s_%s.%s@%s",
 				    l, t, c, m); 
 				Strlcat(result, tmp, sizeof(result));
 				Strlcat(result, ":", sizeof(result));
 			}
-			snprintf(tmp, sizeof(tmp), "%s_%s@%s", l, t, m); 
+			Snprintf(tmp, sizeof(tmp), "%s_%s@%s", l, t, m); 
 			Strlcat(result, tmp, sizeof(result));
 			Strlcat(result, ":", sizeof(result));
 		}
-		snprintf(tmp, sizeof(tmp), "%s@%s", l, m); 
+		Snprintf(tmp, sizeof(tmp), "%s@%s", l, m); 
 		Strlcat(result, tmp, sizeof(result));
 		Strlcat(result, ":", sizeof(result));
 	}
 	if (t) {
 		if (c) {
-			snprintf(tmp, sizeof(tmp), "%s_%s.%s", l, t, c); 
+			Snprintf(tmp, sizeof(tmp), "%s_%s.%s", l, t, c); 
 			Strlcat(result, tmp, sizeof(result));
 			Strlcat(result, ":", sizeof(result));
 		}

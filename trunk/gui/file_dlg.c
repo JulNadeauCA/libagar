@@ -594,7 +594,7 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 	va_list ap;
 	
 	va_start(ap, fmt);
-	vsnprintf(file, sizeof(file), fmt, ap);
+	Vsnprintf(file, sizeof(file), fmt, ap);
 	va_end(ap);
 
 	AG_TextboxPrintf(fd->tbFile, "%s", file);

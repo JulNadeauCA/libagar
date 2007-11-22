@@ -117,7 +117,7 @@ VG_Printf(VG *vg, const char *fmt, ...)
 
 	if (fmt != NULL) {
 		va_start(args, fmt);
-		vsnprintf(vge->vg_text.text, sizeof(vge->vg_text.text), fmt,
+		Vsnprintf(vge->vg_text.text, sizeof(vge->vg_text.text), fmt,
 		    args);
 		va_end(args);
 	} else {
@@ -223,27 +223,27 @@ VG_TextRenderLabel(VG *vg, VG_Element *vge)
 			switch (*(fmtp+1)) {
 			case 'd':
 			case 'i':
-				snprintf(s2, sizeof(s2), "%d", TEXT_ARG(int));
+				Snprintf(s2, sizeof(s2), "%d", TEXT_ARG(int));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'o':
-				snprintf(s2, sizeof(s2), "%o", TEXT_ARG(Uint));
+				Snprintf(s2, sizeof(s2), "%o", TEXT_ARG(Uint));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'u':
-				snprintf(s2, sizeof(s2), "%u", TEXT_ARG(Uint));
+				Snprintf(s2, sizeof(s2), "%u", TEXT_ARG(Uint));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'x':
-				snprintf(s2, sizeof(s2), "%x", TEXT_ARG(Uint));
+				Snprintf(s2, sizeof(s2), "%x", TEXT_ARG(Uint));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'X':
-				snprintf(s2, sizeof(s2), "%X", TEXT_ARG(Uint));
+				Snprintf(s2, sizeof(s2), "%X", TEXT_ARG(Uint));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
@@ -258,13 +258,13 @@ VG_TextRenderLabel(VG *vg, VG_Element *vge)
 				ri++;
 				break;
 			case 'p':
-				snprintf(s2, sizeof(s2), "%p",
+				Snprintf(s2, sizeof(s2), "%p",
 				    TEXT_ARG(void *));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'f':
-				snprintf(s2, sizeof(s2), "%.2f",
+				Snprintf(s2, sizeof(s2), "%.2f",
 				    TEXT_ARG(float));
 				Strlcat(s, s2, sizeof(s));
 				ri++;

@@ -128,7 +128,7 @@ RG_TileNew(RG_Tileset *ts, const char *pName, Uint16 w, Uint16 h, Uint flags)
 	RG_Tile *t;
 
 tryname:
-	snprintf(name, sizeof(name), _("%s #%d"),
+	Snprintf(name, sizeof(name), _("%s #%d"),
 	    (pName != NULL) ? pName : _("Tile"), no++);
 	if (RG_TilesetFindTile(ts, name) != NULL)
 		goto tryname;
@@ -294,7 +294,7 @@ GenerateElementName(RG_TileElement *tel, RG_Tile *t, const char *fname)
 	Uint elno = 0;
 
 tryname:
-	snprintf(tel->name, sizeof(tel->name), "%s <#%u>", fname,
+	Snprintf(tel->name, sizeof(tel->name), "%s <#%u>", fname,
 	    elno);
 	TAILQ_FOREACH(oel, &t->elements, elements) {
 		if (strcmp(oel->name, tel->name) == 0)
@@ -958,7 +958,7 @@ CreatePixmap(AG_Event *event)
 	px = Malloc(sizeof(RG_Pixmap));
 	RG_PixmapInit(px, tv->ts, 0);
 tryname:
-	snprintf(px->name, sizeof(px->name), "pixmap #%u", pixno);
+	Snprintf(px->name, sizeof(px->name), "pixmap #%u", pixno);
 	TAILQ_FOREACH(opx, &tv->ts->pixmaps, pixmaps) {
 		if (strcmp(opx->name, px->name) == 0)
 			break;
@@ -1004,7 +1004,7 @@ CreateSketch(AG_Event *event)
 	sk = Malloc(sizeof(RG_Sketch));
 	RG_SketchInit(sk, tv->ts, 0);
 tryname:
-	snprintf(sk->name, sizeof(sk->name), "sketch #%u", skno);
+	Snprintf(sk->name, sizeof(sk->name), "sketch #%u", skno);
 	TAILQ_FOREACH(osk, &tv->ts->sketches, sketches) {
 		if (strcmp(osk->name, sk->name) == 0)
 			break;

@@ -479,33 +479,33 @@ AG_PropPrint(char *s, size_t len, void *obj, const char *pname)
 		return;
 	}
 	switch (pr->type) {
-	case AG_PROP_UINT:	snprintf(s, len, "%u", pr->data.u);	break;
-	case AG_PROP_INT:	snprintf(s, len, "%d", pr->data.i);	break;
-	case AG_PROP_UINT8:	snprintf(s, len, "%u", pr->data.u8);	break;
-	case AG_PROP_SINT8:	snprintf(s, len, "%d", pr->data.s8);	break;
-	case AG_PROP_UINT16:	snprintf(s, len, "%u", pr->data.u16);	break;
-	case AG_PROP_SINT16:	snprintf(s, len, "%d", pr->data.s16);	break;
+	case AG_PROP_UINT:	Snprintf(s, len, "%u", pr->data.u);	break;
+	case AG_PROP_INT:	Snprintf(s, len, "%d", pr->data.i);	break;
+	case AG_PROP_UINT8:	Snprintf(s, len, "%u", pr->data.u8);	break;
+	case AG_PROP_SINT8:	Snprintf(s, len, "%d", pr->data.s8);	break;
+	case AG_PROP_UINT16:	Snprintf(s, len, "%u", pr->data.u16);	break;
+	case AG_PROP_SINT16:	Snprintf(s, len, "%d", pr->data.s16);	break;
 	case AG_PROP_UINT32:
-		snprintf(s, len, "%lu", (unsigned long)pr->data.u32);
+		Snprintf(s, len, "%lu", (unsigned long)pr->data.u32);
 		break;
 	case AG_PROP_SINT32:
-		snprintf(s, len, "%ld", (long)pr->data.s32);
+		Snprintf(s, len, "%ld", (long)pr->data.s32);
 		break;
 #ifdef HAVE_64BIT
-	case AG_PROP_UINT64:	snprintf(s, len, "%llu",
+	case AG_PROP_UINT64:	Snprintf(s, len, "%llu",
 				(unsigned long long)pr->data.u64);
 				break;
-	case AG_PROP_SINT64:	snprintf(s, len, "%lld",
+	case AG_PROP_SINT64:	Snprintf(s, len, "%lld",
 				(long long)pr->data.s64);
 				break;
 #endif	
-	case AG_PROP_FLOAT:	snprintf(s, len, "%f", pr->data.f);	break;
-	case AG_PROP_DOUBLE:	snprintf(s, len, "%f", pr->data.d);	break;
+	case AG_PROP_FLOAT:	Snprintf(s, len, "%f", pr->data.f);	break;
+	case AG_PROP_DOUBLE:	Snprintf(s, len, "%f", pr->data.d);	break;
 #ifdef HAVE_LONG_DOUBLE
-	case AG_PROP_LONG_DOUBLE: snprintf(s, len, "%Lf", pr->data.ld); break;
+	case AG_PROP_LONG_DOUBLE: Snprintf(s, len, "%Lf", pr->data.ld); break;
 #endif
-	case AG_PROP_STRING:	snprintf(s, len, "\"%s\"", pr->data.s);	break;
-	case AG_PROP_POINTER:	snprintf(s, len, "->%p", pr->data.p);	break;
+	case AG_PROP_STRING:	Snprintf(s, len, "\"%s\"", pr->data.s);	break;
+	case AG_PROP_POINTER:	Snprintf(s, len, "->%p", pr->data.p);	break;
 	case AG_PROP_BOOL:
 		Strlcpy(s, pr->data.i ? "true" : "false", len);
 		break;

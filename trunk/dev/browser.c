@@ -877,7 +877,7 @@ RepoRenameDlg(AG_Event *event)
 	if ((it = AG_TlistSelectedItem(tl)) == NULL)
 		return;
 	
-	snprintf(prompt, sizeof(prompt), _("Rename %s to:"), it->text);
+	Snprintf(prompt, sizeof(prompt), _("Rename %s to:"), it->text);
 	AG_TextPromptString(prompt, RepoRenameObject, "%p,%s", tl, it->text);
 }
 

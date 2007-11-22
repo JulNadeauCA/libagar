@@ -610,7 +610,7 @@ AG_FSpinbuttonSetPrecision(AG_FSpinbutton *fsu, const char *mode,
 	AG_MutexLock(&fsu->lock);
 	fsu->format[0] = '%';
 	fsu->format[1] = '.';
-	snprintf(&fsu->format[2], sizeof(fsu->format)-2, "%d", precision);
+	Snprintf(&fsu->format[2], sizeof(fsu->format)-2, "%d", precision);
 	Strlcat(fsu->format, mode, sizeof(fsu->format));
 	AG_MutexUnlock(&fsu->lock);
 }

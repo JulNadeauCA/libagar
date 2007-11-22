@@ -575,7 +575,7 @@ AG_TlistAdd(AG_Tlist *tl, SDL_Surface *iconsrc, const char *fmt, ...)
 	it->p1 = NULL;
 
 	va_start(args, fmt);
-	vsnprintf(it->text, sizeof(it->text), fmt, args);
+	Vsnprintf(it->text, sizeof(it->text), fmt, args);
 	va_end(args);
 
 	InsertItem(tl, it, 0);

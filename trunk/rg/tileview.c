@@ -1652,7 +1652,7 @@ Draw(void *p)
 					int l = RG_TILE_LAYER2(t,nx,ny);
 					Uint8 c[4] = { 255, 255, 255, 128 };
 
-					snprintf(text, sizeof(text), "%s%d",
+					Snprintf(text, sizeof(text), "%s%d",
 					    (l > 0) ? "+" : "", l);
 					AG_TextColorRGB(0, 0, 0);
 					tsu = AG_TextRender(text);
