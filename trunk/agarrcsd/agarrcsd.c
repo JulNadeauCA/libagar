@@ -83,8 +83,8 @@ auth_password(NS_Server *serv, void *p)
 	if (fgets(buf, sizeof(buf), stdin) == NULL)
 		return (-1);
 
-	if ((name = AG_Strsep(&pBuf, ":")) == NULL ||
-	    (pass = AG_Strsep(&pBuf, ":")) == NULL) {
+	if ((name = Strsep(&pBuf, ":")) == NULL ||
+	    (pass = Strsep(&pBuf, ":")) == NULL) {
 		return (-1);
 	}
 	end = strlen(pass)-1;
