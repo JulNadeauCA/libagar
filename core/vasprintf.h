@@ -9,5 +9,4 @@ int AG_Vasprintf(char **, const char *, va_list);
 #ifdef __cplusplus
 }
 #endif
-__END_DECLS
 
