@@ -31,6 +31,7 @@
 # include <agar/config/_mk_have_unsigned_typedefs.h>
 # define _AGAR_HAVE_UNSIGNED_TYPEDEFS_
 #endif
+
 #ifndef HAVE_BOUNDED_ATTRIBUTE
 # include <agar/config/have_bounded_attribute.h>
 # define _AGAR_HAVE_BOUNDED_ATTRIBUTE_
@@ -122,3 +123,20 @@
 #endif
 
 #include <agar/core/cpuinfo.h>	/* For agCPU structure */
+
+#if !defined(AG_BIG_ENDIAN) && !defined(AG_LITTLE_ENDIAN)
+# define AG_BIG_ENDIAN 4321
+# define AG_LITTLE_ENDIAN 1234
+# include <agar/config/_mk_big_endian.h>
+# include <agar/config/_mk_little_endian.h>
+# if defined(_MK_BIG_ENDIAN)
+#  define AG_BYTEORDER AG_BIG_ENDIAN
+# elif defined(_MK_LITTLE_ENDIAN)
+#  define AG_BYTEORDER AG_LITTLE_ENDIAN
+# else
+#  error "Byte order is unknown"
+# endif
+# undef _MK_BIG_ENDIAN
+# undef _MK_LITTLE_ENDIAN
+#endif /* !AG_BIG_ENDIAN && !AG_LITTLE_ENDIAN */
+

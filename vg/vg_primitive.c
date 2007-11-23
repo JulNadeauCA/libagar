@@ -144,7 +144,7 @@ VG_HLinePrimitive(VG *vg, int px1, int px2, int py, Uint32 c)
 		pDst = (Uint8 *)su->pixels + y*su->pitch + x1*3;
 		pEnd = pDst + dx*3;
 		while (pDst < pEnd) {
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 			pDst[0] = (c >>16) & 0xff;
 			pDst[1] = (c >>8) & 0xff;
 			pDst[2] = c & 0xff;

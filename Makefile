@@ -3,7 +3,7 @@ include ${TOP}/Makefile.config
 
 PROJECT=	"Agar"
 PROJECT_GUID=	"93733df2-c743-489e-bc9f-f22aee00d787"
-PROJECT_ADD=	config
+PROJECT_FLAVORS=gl threads freetype
 
 SUBDIR=	 agar-config \
 	 core \

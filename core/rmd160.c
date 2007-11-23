@@ -168,9 +168,7 @@ RMD160Transform(Uint32 state[5], const Uint8 block[RMD160_BLOCK_LENGTH])
 {
 	Uint32 a, b, c, d, e, aa, bb, cc, dd, ee, t, x[16];
 
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-	memcpy(x, block, RMD160_BLOCK_LENGTH);
-#else
+#ifdef AG_BIG_ENDIAN
 	int i;
 
 	for (i = 0; i < 16; i++)
@@ -179,6 +177,8 @@ RMD160Transform(Uint32 state[5], const Uint8 block[RMD160_BLOCK_LENGTH])
 		    (Uint32)(block[i*4 + 1]) <<  8 |
 		    (Uint32)(block[i*4 + 2]) << 16 |
 		    (Uint32)(block[i*4 + 3]) << 24);
+#else
+	memcpy(x, block, RMD160_BLOCK_LENGTH);
 #endif
 
 	a = state[0];

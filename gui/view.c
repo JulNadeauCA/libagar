@@ -272,7 +272,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		goto fail;
 	}
 	agView->stmpl = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
  	    0xff000000,
 	    0x00ff0000,
 	    0x0000ff00,
@@ -827,7 +827,7 @@ AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 
 	/* Create a surface with the masks expected by OpenGL. */
 	texsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 		0xff000000,
 		0x00ff0000,
 		0x0000ff00,
@@ -884,7 +884,7 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 
 	/* Create a surface with the masks expected by OpenGL. */
 	texsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 		0xff000000,
 		0x00ff0000,
 		0x0000ff00,

@@ -292,7 +292,7 @@ CoreSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
 void
 AG_DataSourceInit(AG_DataSource *ds)
 {
-	ds->byte_order = AG_BIG_ENDIAN;
+	ds->byte_order = AG_BYTEORDER_BE;
 	ds->rdLast = 0;
 	ds->wrLast = 0;
 	ds->rdTotal = 0;
