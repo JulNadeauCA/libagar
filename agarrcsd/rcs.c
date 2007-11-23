@@ -392,12 +392,12 @@ rcs_log(NS_Server *ns, NS_Command *cmd, void *p)
 			buf = lbuf;
 		}
 		
-		rev = AG_Strsep(&bufp, ":");
-		author = AG_Strsep(&bufp, ":");
-		type = AG_Strsep(&bufp, ":");
-		name = AG_Strsep(&bufp, ":");
-		digest = AG_Strsep(&bufp, ":");
-		msg = AG_Strsep(&bufp, ":");
+		rev = Strsep(&bufp, ":");
+		author = Strsep(&bufp, ":");
+		type = Strsep(&bufp, ":");
+		name = Strsep(&bufp, ":");
+		digest = Strsep(&bufp, ":");
+		msg = Strsep(&bufp, ":");
 		if (rev == NULL || author == NULL || type == NULL ||
 		    name == NULL || digest == NULL || msg == NULL)
 			continue;
