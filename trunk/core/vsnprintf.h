@@ -17,5 +17,7 @@
 # include <stdio.h>
 # define AG_Vsnprintf vsnprintf
 #else
+__BEGIN_DECLS
 int AG_Vsnprintf(char *, size_t, const char *, va_list);
+__END_DECLS
 #endif
