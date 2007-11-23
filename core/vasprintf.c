@@ -38,7 +38,9 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "core_begin.h"
 #include "vasprintf.h"
+#include "core_close.h"
 
 int
 AG_Vasprintf(char **ret, const char *fmt, va_list ap)

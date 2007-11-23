@@ -20,5 +20,7 @@
 #  define AG_Snprintf snprintf
 # endif
 #else
+__BEGIN_DECLS
 int AG_Snprintf(char *, size_t, const char *, ...);
+__END_DECLS
 #endif
