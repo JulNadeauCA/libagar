@@ -121,7 +121,7 @@ VG_Init(VG *vg, int flags)
 		if (flags & VG_RLEACCEL)	sflags |= SDL_RLEACCEL;
 
 		vg->su = SDL_CreateRGBSurface(sflags, 16, 16, 32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 		    0xff000000,
 		    0x00ff0000,
 		    0x0000ff00,

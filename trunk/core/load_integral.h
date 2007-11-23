@@ -38,20 +38,20 @@ AG_ReadUint16(AG_DataSource *ds)
 	Uint16 i;
 
 	if (AG_Read(ds, &i, sizeof(i), 1) != 0) { AG_FatalError(NULL); }
-	return ((ds->byte_order == AG_BIG_ENDIAN) ?
+	return ((ds->byte_order == AG_BYTEORDER_BE) ?
 	    SDL_SwapBE16(i) : SDL_SwapLE16(i));
 }
 static __inline__ void
 AG_WriteUint16(AG_DataSource *ds, Uint16 u16)
 {
-	Uint16 i = (ds->byte_order == AG_BIG_ENDIAN) ?
+	Uint16 i = (ds->byte_order == AG_BYTEORDER_BE) ?
 	    SDL_SwapBE16(u16) : SDL_SwapLE16(u16);
 	if (AG_Write(ds, &i, sizeof(i), 1) != 0) { AG_FatalError(NULL); }
 }
 static __inline__ void
 AG_WriteUint16At(AG_DataSource *ds, Uint16 u16, off_t pos)
 {
-	Uint16 i = (ds->byte_order == AG_BIG_ENDIAN) ?
+	Uint16 i = (ds->byte_order == AG_BYTEORDER_BE) ?
 	    SDL_SwapBE16(u16) : SDL_SwapLE16(u16);
 	if (AG_WriteAt(ds, &i, sizeof(i), 1, pos) != 0) { AG_FatalError(NULL); }
 }
@@ -61,20 +61,20 @@ AG_ReadUint32(AG_DataSource *ds)
 	Uint32 i;
 
 	if (AG_Read(ds, &i, sizeof(i), 1) != 0) { AG_FatalError(NULL); }
-	return ((ds->byte_order == AG_BIG_ENDIAN) ?
+	return ((ds->byte_order == AG_BYTEORDER_BE) ?
 	    SDL_SwapBE32(i) : SDL_SwapLE32(i));
 }
 static __inline__ void
 AG_WriteUint32(AG_DataSource *ds, Uint32 u32)
 {
-	Uint32 i = (ds->byte_order == AG_BIG_ENDIAN) ?
+	Uint32 i = (ds->byte_order == AG_BYTEORDER_BE) ?
 	    SDL_SwapBE32(u32) : SDL_SwapLE32(u32);
 	if (AG_Write(ds, &i, sizeof(i), 1) != 0) { AG_FatalError(NULL); }
 }
 static __inline__ void
 AG_WriteUint32At(AG_DataSource *ds, Uint32 u32, off_t pos)
 {
-	Uint32 i = (ds->byte_order == AG_BIG_ENDIAN) ?
+	Uint32 i = (ds->byte_order == AG_BYTEORDER_BE) ?
 	    SDL_SwapBE32(u32) : SDL_SwapLE32(u32);
 	if (AG_WriteAt(ds, &i, sizeof(i), 1, pos) != 0) { AG_FatalError(NULL); }
 }
@@ -85,20 +85,20 @@ AG_ReadUint64(AG_DataSource *ds)
 {
 	Uint64 i;
 	if (AG_Read(ds, &i, sizeof(i), 1) != 0) { AG_FatalError(NULL); }
-	return ((ds->byte_order == AG_BIG_ENDIAN) ?
+	return ((ds->byte_order == AG_BYTEORDER_BE) ?
 	    SDL_SwapBE64(i) : SDL_SwapLE64(i));
 }
 static __inline__ void
 AG_WriteUint64(AG_DataSource *ds, Uint64 u64)
 {
-	Uint64 i = (ds->byte_order == AG_BIG_ENDIAN) ?
+	Uint64 i = (ds->byte_order == AG_BYTEORDER_BE) ?
 	    SDL_SwapBE64(u64) : SDL_SwapLE64(u64);
 	if (AG_Write(ds, &i, sizeof(i), 1) != 0) { AG_FatalError(NULL); }
 }
 static __inline__ void
 AG_WriteUint64At(AG_DataSource *ds, Uint64 u64, off_t pos)
 {
-	Uint64 i = (ds->byte_order == AG_BIG_ENDIAN) ?
+	Uint64 i = (ds->byte_order == AG_BYTEORDER_BE) ?
 	    SDL_SwapBE64(u64) : SDL_SwapLE64(u64);
 	if (AG_WriteAt(ds, &i, sizeof(i), 1, pos) != 0) { AG_FatalError(NULL); }
 }

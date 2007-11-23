@@ -371,7 +371,7 @@ ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
 			for (x = tx; x < tx+ox; x++) {
 				switch (hier->bpp) {
 				case 4:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 					r = (*(Uint32 *)p & 0xff000000)>>24;
 					g = (*(Uint32 *)p & 0x00ff0000)>>16;
 					b = (*(Uint32 *)p & 0x0000ff00)>>8;
@@ -403,7 +403,7 @@ ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
 					*(Uint32 *)dst = color;
 					break;
 				case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 					dst[0] = (color>>16) & 0xff;
 					dst[1] = (color>>8) & 0xff;
 					dst[2] = color & 0xff;
@@ -461,7 +461,7 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 	int i;
 
 	su = SDL_CreateRGBSurface(SDL_SWSURFACE, head->w, head->h, 32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 	    0xff000000,
 	    0x00ff0000,
 	    0x0000ff00,

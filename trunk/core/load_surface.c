@@ -95,7 +95,7 @@ AG_WriteSurface(AG_DataSource *ds, SDL_Surface *su)
 				AG_WriteUint32(ds, *(Uint32 *)src);
 				break;
 			case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 				AG_WriteUint32(ds,
 				    (src[0] << 16) +
 				    (src[1] << 8) +
@@ -203,7 +203,7 @@ AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 			case 3:
 				{
 					Uint32 c = AG_ReadUint32(ds);
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 					dst[0] = (c >> 16) & 0xff;
 					dst[1] = (c >> 8) & 0xff;
 					dst[2] = c & 0xff;

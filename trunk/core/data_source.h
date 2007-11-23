@@ -5,8 +5,8 @@
 #include "begin_code.h"
 
 enum ag_byte_order {
-	AG_BIG_ENDIAN,
-	AG_LITTLE_ENDIAN
+	AG_BYTEORDER_BE,
+	AG_BYTEORDER_LE
 };
 enum ag_seek_mode {
 	AG_SEEK_SET,

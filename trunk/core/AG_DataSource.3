@@ -196,10 +196,19 @@ configures the byte order to be used by integer read/write operations.
 may be one of:
 .Bd -literal
 	enum ag_byte_order {
-		AG_BIG_ENDIAN,
-		AG_LITTLE_ENDIAN
+		AG_BYTEORDER_BE,
+		AG_BYTEORDER_LE
 	};
 .Ed
+.Pp
+You can use
+.Dv AG_BYTEORDER ,
+as defined by the Agar headers, to determine the byte order of the current
+architecture.
+The define evaluates to
+.Dv AG_BIG_ENDIAN
+or
+.Dv AG_LITTLE_ENDIAN .
 .Pp
 The
 .Fn AG_DataSourceInit

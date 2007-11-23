@@ -37,7 +37,7 @@ VG_PutPixel(VG *vg, int x, int y, Uint32 c)
 		*(Uint32 *)d = c;
 		break;
 	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 		d[0] = (c>>16) & 0xff;
 		d[1] = (c>>8) & 0xff;
 		d[2] = c & 0xff;	

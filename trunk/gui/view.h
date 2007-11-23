@@ -108,7 +108,7 @@ case 2:					\
 #endif
 
 #ifdef VIEW_24BPP
-# if SDL_BYTEORDER == SDL_BIG_ENDIAN
+# if AG_BYTEORDER == AG_BIG_ENDIAN
 #  define AG_VIEW_PUT_PIXEL24(dst, c)	\
 case 3:					\
 	(dst)[0] = ((c)>>16) & 0xff;	\
@@ -309,7 +309,7 @@ AG_GetPixel(SDL_Surface *s, Uint8 *pSrc)
 	case 4:
 		return (*(Uint32 *)pSrc);
 	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 		return ((pSrc[0] << 16) +
 		        (pSrc[1] << 8) +
 		         pSrc[2]);
@@ -332,7 +332,7 @@ AG_PutPixel(SDL_Surface *s, Uint8 *pDst, Uint32 cDst)
 		*(Uint32 *)pDst = cDst;
 		break;
 	case 3:
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 		pDst[0] = (cDst>>16) & 0xff;
 		pDst[1] = (cDst>>8) & 0xff;
 		pDst[2] = cDst & 0xff;
