@@ -135,8 +135,6 @@ list of all changes, see ChangeLog-1.3.txt.
 - Merge ag_compat library into ag_core.
 - Remove a preposterous amount of unused variables throughout the Agar code.
 - Add a number of portability fixes for proper compilation under Visual Studio.
-- Provide our own test for 64-bit support (HAVE_64BIT), use that instead of
-  SDL_HAS_64BIT_TYPE.
 - MAP: Fix crash bug when resizing node attribute grids.
 - RG: Fix alpha blending of controls in OpenGL mode.
 - CORE: Replace AG_Netbuf with a new API called AG_DataSource, which allows
