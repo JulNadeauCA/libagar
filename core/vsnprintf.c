@@ -61,9 +61,7 @@
 
 #include <core/core.h>
 
-#include "core_begin.h"
 #include "vsnprintf.h"
-#include "core_close.h"
 
 #include <ctype.h>
 
