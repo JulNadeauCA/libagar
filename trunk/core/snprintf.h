@@ -27,5 +27,4 @@ int AG_Snprintf(char *, size_t, const char *, ...);
 # ifdef __cplusplus
 }
 # endif
-__END_DECLS
 #endif /* !HAVE_SNPRINTF */
