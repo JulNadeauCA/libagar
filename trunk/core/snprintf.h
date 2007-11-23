@@ -20,7 +20,12 @@
 #  define AG_Snprintf snprintf
 # endif
 #else
-__BEGIN_DECLS
+# ifdef __cplusplus
+extern "C" {
+# endif
 int AG_Snprintf(char *, size_t, const char *, ...);
+# ifdef __cplusplus
+}
+# endif
 __END_DECLS
-#endif
+#endif /* !HAVE_SNPRINTF */

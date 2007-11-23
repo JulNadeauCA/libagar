@@ -17,7 +17,11 @@
 # include <stdio.h>
 # define AG_Vsnprintf vsnprintf
 #else
-__BEGIN_DECLS
+# ifdef __cplusplus
+extern "C" {
+# endif
 int AG_Vsnprintf(char *, size_t, const char *, va_list);
-__END_DECLS
+# ifdef __cplusplus
+}
+# endif
 #endif

@@ -59,9 +59,7 @@
 #include <config/have_snprintf.h>
 #ifndef HAVE_SNPRINTF
 
-#include "core_begin.h"
 #include "snprintf.h"
-#include "core_close.h"
 
 #include <ctype.h>
 #include <stdarg.h>
