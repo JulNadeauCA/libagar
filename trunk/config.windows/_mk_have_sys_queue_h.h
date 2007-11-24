@@ -1,1 +1,0 @@
-#undef _MK_HAVE_SYS_QUEUE_H
