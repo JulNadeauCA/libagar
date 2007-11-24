@@ -2323,7 +2323,6 @@ main(int argc, char *argv[])
 	return (1);
 #endif
 }
-bad
 
 EOT
 echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
@@ -2373,7 +2372,6 @@ main(int argc, char *argv[])
 	return (1);
 #endif
 }
-bad
 
 EOT
 echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
@@ -2457,9 +2455,11 @@ if [ "${compile}" = "failed" ]; then
 echo "Unable to determine byte order"
 exit 1
 fi;
-if [ "${_MK_LITTLE_ENDIAN}" = "yes" ]; then
-_MK_BIG_ENDIAN="no"
-echo "#undef _MK_BIG_ENDIAN" > config/_mk_big_endian.h
+if [ "${_MK_LITTLE_ENDIAN}" = "no" ]; then
+_MK_BIG_ENDIAN="yes"
+echo "#ifndef _MK_BIG_ENDIAN" > config/_mk_big_endian.h
+echo "#define _MK_BIG_ENDIAN \"$_MK_BIG_ENDIAN\"" >> config/_mk_big_endian.h
+echo "#endif" >> config/_mk_big_endian.h
 fi;
 fi;
 fi;
