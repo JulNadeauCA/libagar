@@ -1,1 +1,0 @@
-#undef HAVE_LONG_DOUBLE
