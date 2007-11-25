@@ -7,12 +7,10 @@
 
 #include <agar/core.h>
 #include <agar/gui.h>
+#include <agar/gui/opengl.h>
 
 #include <string.h>
 #include <unistd.h>
-
-#include <GL/gl.h>
-#include <GL/glu.h>
 
 static GLdouble spin = 0.0, vz = -5.0, spin2 = 0.0;
 static GLfloat material[4] = { 0.0, 0.5, 0.0, 1.0 };
