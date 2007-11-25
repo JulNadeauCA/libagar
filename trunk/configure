@@ -3067,22 +3067,34 @@ echo "#endif" >> config/have_pthread_mutex_recursive_np.h
 else
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
 fi;
-	if [ "${HAVE_PTHREADS}" = "yes" ]
+	if [ "${HAVE_PTHREADS}" = "yes" -o "${HAVE_PTHREADS_XOPEN}" = "yes" ]
+	then
+		if [ "${HAVE_PTHREADS_XOPEN}" = "no" -a
+		     "${HAVE_PTHREADS_MUTEX_RECURSIVE}" = "no" -a 
+		     "${HAVE_PTHREADS_MUTEX_RECURSIVE_NP}" = "no" ]
  then
+			echo "*"
+			echo "* --enable-threads was requested, but your"
+			echo "* pthreads implementation does not support"
+			echo "* recursive mutexes"
+			echo "*"
+			exit 1
+		fi
 THREADS="1"
 echo "#ifndef THREADS" > config/threads.h
 echo "#define THREADS \"$THREADS\"" >> config/threads.h
 echo "#endif" >> config/threads.h
 	else
 		echo "*"
-		echo "* --enable-threads was requested, but a POSIX threads"
-		echo "* library was not found."
+		echo "* --enable-threads was requested, but no POSIX threads"
+		echo "* library was found"
 		echo "*"
 		exit 1
 	fi
 else
 echo "#undef THREADS" > config/threads.h
 echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
+echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
 PTHREADS_CFLAGS=""""
 echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
 PTHREADS_LIBS=""""
