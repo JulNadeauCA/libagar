@@ -31,20 +31,22 @@
 #include <config/localedir.h>
 #include <config/version.h>
 #include <config/network.h>
-#include <config/have_pthreads_xopen.h>
-#include <config/have_pthread_mutex_recursive.h>
-#include <config/have_pthread_mutex_recursive_np.h>
+
+#ifdef THREADS
+# include <config/have_pthreads_xopen.h>
+# include <config/have_pthread_mutex_recursive.h>
+# include <config/have_pthread_mutex_recursive_np.h>
+#endif
 
 #include <core/core.h>
 #include <core/config.h>
+#ifdef NETWORK
+# include <core/rcs.h>
+#endif
 
 #include <stdio.h>
-
-#ifdef NETWORK
-#include <core/rcs.h>
-#endif
 #ifdef HAVE_SETLOCALE
-#include <locale.h>
+# include <locale.h>
 #endif
 
 #ifdef THREADS
@@ -82,18 +84,17 @@ AG_InitCore(const char *progname, Uint flags)
 
 #ifdef THREADS
 	pthread_mutexattr_init(&agRecursiveMutexAttr);
-#if defined(HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
+# if defined(HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE_NP);
-#elif defined(HAVE_PTHREAD_MUTEX_RECURSIVE) || defined(HAVE_PTHREADS_XOPEN)
+# else
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE);
-#else
-#error "THREADS options requires recursive mutexes"
-#endif
+# endif
 	AG_MutexInitRecursive(&agLinkageLock);
 	AG_MutexInitRecursive(&agTimingLock);
-#endif
+#endif /* THREADS */
+
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
 		AG_SetError("SDL_Init: %s", SDL_GetError());
 		return (-1);
