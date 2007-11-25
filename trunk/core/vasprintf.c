@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "vasprintf.h"
 
@@ -49,14 +50,19 @@ AG_Vasprintf(char **ret, const char *fmt, va_list ap)
 	size_t buflen;
 
 	buflen = strlen(fmt) + 128;
-	buf = Malloc(buflen);
+	if ((buf = malloc(buflen)) == NULL) {
+		return (-1);
+	}
 	size = vsprintf(buf, fmt, ap);
 	if ((size_t)size <= buflen) {
 		*ret = buf;
 		return (size);
 	}
 
-	buf = Realloc(buf, size+1);
+	if ((buf = realloc(buf, size+1)) == NULL) {
+		free(buf);
+		return (-1);
+	}
 	size = vsprintf(buf, fmt, ap);
 	*ret = buf;
 	return (size);
