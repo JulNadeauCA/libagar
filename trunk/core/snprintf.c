@@ -64,6 +64,7 @@
 
 #include <ctype.h>
 #include <stdarg.h>
+#include <string.h>
 
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
@@ -335,13 +336,16 @@ dopr(char *buffer, size_t maxlen, const char *format, va_list args)
 				strvalue = va_arg(args, char *);
 				if (max < 0)  {
 					/* ie, no max */
-					max = maxlen;
+					max = (int)maxlen;
 				}
 				fmtstr(buffer, &currlen, maxlen, strvalue,
 				    flags, min, max);
 				break;
 			case 'p':
 				strvalue = va_arg(args, void *);
+#ifdef _MSC_VER
+#pragma warning(disable: 4311)
+#endif
 				fmtint(buffer, &currlen, maxlen,
 				    (long)strvalue, 16, min, max, flags);
 				break;
@@ -350,24 +354,24 @@ dopr(char *buffer, size_t maxlen, const char *format, va_list args)
 					short int *num;
 
 					num = va_arg(args, short int *);
-					*num = currlen;
+					*num = (short int)currlen;
 				} else if (cflags == DP_C_LONG) {
 					long int *num;
 
 					num = va_arg(args, long int *);
-					*num = currlen;
+					*num = (long int)currlen;
 #ifdef HAVE_LONG_LONG
 				} else if (cflags == DP_C_LONG_LONG) {
 					long long *num;
 
 					num = va_arg(args, long long *);
-					*num = currlen;
+					*num = (long long)currlen;
 #endif
 				} else {
 					int *num;
 
 					num = va_arg(args, int *);
-					*num = currlen;
+					*num = (int)currlen;
 				}
 				break;
 			case '%':
@@ -533,7 +537,7 @@ pow10(int exp)
 static long 
 round(long double value)
 {
-	long intpart = value;
+	long intpart = (long)value;
 
 	value -= intpart;
 	if (value >= 0.5)
@@ -574,7 +578,7 @@ fmtfp(char *buffer, size_t *currlen, size_t maxlen, long double fvalue,
 	else if (flags & DP_F_SPACE)
 		signvalue = ' ';
 
-	intpart = ufvalue;
+	intpart = (long)ufvalue;
 
 	/* 
 	 * Sorry, we only support 9 digits past the decimal because of our 
@@ -588,9 +592,9 @@ fmtfp(char *buffer, size_t *currlen, size_t maxlen, long double fvalue,
 	 */
 	fracpart = round((pow10 (max)) * (ufvalue - intpart));
 
-	if (fracpart >= pow10 (max)) {
+	if (fracpart >= (long)pow10(max)) {
 		intpart++;
-		fracpart -= pow10 (max);
+		fracpart -= (long)pow10(max);
 	}
 
 	/* Convert integer part */
@@ -680,7 +684,7 @@ AG_Snprintf(char *str, size_t count, const char *fmt, ...)
 	str[0] = 0;
 	dopr(str, count, fmt, ap);
 	va_end(ap);
-	return (strlen(str));
+	return (int)strlen(str);
 }
 
 #endif /* HAVE_SNPRINTF */
