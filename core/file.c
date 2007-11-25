@@ -27,14 +27,16 @@
  */
 
 #ifdef _WIN32
-#include <windows.h>
-#undef SLIST_ENTRY
+# include <core/queue_close.h>			/* Conflicts */
+# include <windows.h>
+# include <core/queue_close.h>
+# include <core/queue.h>
 #else
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <unistd.h>
+# include <string.h>
+# include <errno.h>
 #endif
 
 #include <stdio.h>
