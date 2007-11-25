@@ -1,0 +1,1106 @@
+.\"	$OpenBSD: queue.3,v 1.42 2006/01/12 17:01:15 jmc Exp $
+.\"	$NetBSD: queue.3,v 1.4 1995/07/03 00:25:36 mycroft Exp $
+.\"
+.\" Copyright (c) 1993 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"	@(#)queue.3	8.1 (Berkeley) 12/13/93
+.\"
+.Dd December 13, 1993
+.Dt AG_QUEUE 3
+.Os
+.Sh NAME
+.Nm AG_Queue
+.Nd "agar implementation of singly-linked lists, doubly-linked lists, simple queues, tail queues, and circular queues"
+.Sh SYNOPSIS
+.Fd #define _USE_AGAR_QUEUE /* For versions without AG_ prefix */
+.Fd #include <agar/core.h>
+.Pp
+.Sh DESCRIPTION
+These macros define and operate on five types of data structures:
+singly-linked lists, simple queues, lists, tail queues, and circular queues.
+All five structures support the following functionality:
+.Pp
+.Bl -enum -compact -offset indent
+.It
+Insertion of a new entry at the head of the list.
+.It
+Insertion of a new entry after any element in the list.
+.It
+Removal of an entry from the head of the list.
+.It
+Forward traversal through the list.
+.El
+.Pp
+Singly-linked lists are the simplest of the five data structures
+and support only the above functionality.
+Singly-linked lists are ideal for applications with large datasets
+and few or no removals, or for implementing a LIFO queue.
+.Pp
+Simple queues add the following functionality:
+.Pp
+.Bl -enum -compact -offset indent
+.It
+Entries can be added at the end of a list.
+.El
+.Pp
+However:
+.Pp
+.Bl -enum -compact -offset indent
+.It
+All list insertions must specify the head of the list.
+.It
+Each head entry requires two pointers rather than one.
+.It
+Code size is about 15% greater and operations run about 20% slower
+than singly-linked lists.
+.El
+.Pp
+Simple queues are ideal for applications with large datasets and
+few or no removals, or for implementing a FIFO queue.
+.Pp
+All doubly linked types of data structures (lists, tail queues, and circle
+queues) additionally allow:
+.Pp
+.Bl -enum -compact -offset indent
+.It
+Insertion of a new entry before any element in the list.
+.It
+Removal of any entry in the list.
+.El
+.Pp
+However:
+.Pp
+.Bl -enum -compact -offset indent
+.It
+Each element requires two pointers rather than one.
+.It
+Code size and execution time of operations (except for removal) is about
+twice that of the singly-linked data-structures.
+.El
+.Pp
+Lists are the simplest of the doubly linked data structures and support
+only the above functionality over singly-linked lists.
+.Pp
+Tail queues add the following functionality:
+.Pp
+.Bl -enum -compact -offset indent
+.It
+Entries can be added at the end of a list.
+.It
+They may be traversed backwards, at a cost.
+.El
+.Pp
+However:
+.Pp
+.Bl -enum -compact -offset indent
+.It
+All list insertions and removals must specify the head of the list.
+.It
+Each head entry requires two pointers rather than one.
+.It
+Code size is about 15% greater and operations run about 20% slower
+than singly-linked lists.
+.El
+.Pp
+Circular queues add the following functionality:
+.Pp
+.Bl -enum -compact -offset indent
+.It
+Entries can be added at the end of a list.
+.It
+They may be traversed backwards, from tail to head.
+.El
+.Pp
+However:
+.Pp
+.Bl -enum -compact -offset indent
+.It
+All list insertions and removals must specify the head of the list.
+.It
+Each head entry requires two pointers rather than one.
+.It
+The termination condition for traversal is more complex.
+.It
+Code size is about 40% greater and operations run about 45% slower than lists.
+.El
+.Pp
+In the macro definitions,
+.Fa TYPE
+is the name tag of a user defined structure that must contain a field of type
+.Li AG_SLIST_ENTRY ,
+.Li AG_LIST_ENTRY ,
+.Li AG_SIMPLEQ_ENTRY ,
+.Li AG_TAILQ_ENTRY ,
+or
+.Li AG_CIRCLEQ_ENTRY ,
+named
+.Fa NAME .
+The argument
+.Fa HEADNAME
+is the name tag of a user defined structure that must be declared
+using the macros
+.Fn AG_SLIST_HEAD ,
+.Fn AG_LIST_HEAD ,
+.Fn AG_SIMPLEQ_HEAD ,
+.Fn AG_TAILQ_HEAD ,
+or
+.Fn AG_CIRCLEQ_HEAD .
+See the examples below for further explanation of how these macros are used.
+.Sh SINGLY-LINKED LISTS
+.nr nS 1
+.Fn AG_SLIST_ENTRY "TYPE"
+.Pp
+.Fn AG_SLIST_HEAD "HEADNAME" "TYPE"
+.Pp
+.Fn AG_SLIST_HEAD_INITIALIZER "AG_SLIST_HEAD head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_SLIST_FIRST "AG_SLIST_HEAD *head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_SLIST_NEXT "struct TYPE *listelm" "AG_SLIST_ENTRY NAME"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_SLIST_END "AG_SLIST_HEAD *head"
+.Pp
+.Ft "bool"
+.Fn AG_SLIST_EMPTY "AG_SLIST_HEAD *head"
+.Pp
+.Fn AG_SLIST_FOREACH "VARNAME" "AG_SLIST_HEAD *head" "AG_SLIST_ENTRY NAME"
+.Pp
+.Fn AG_SLIST_FOREACH_PREVPTR "VARNAME" "VARNAMEP" "AG_SLIST_HEAD *head" "AG_SLIST_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_SLIST_INIT "AG_SLIST_HEAD *head"
+.Pp
+.Ft void
+.Fn AG_SLIST_INSERT_AFTER "struct TYPE *listelm" "struct TYPE *elm" "AG_SLIST_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_SLIST_INSERT_HEAD "AG_SLIST_HEAD *head" "struct TYPE *elm" "AG_SLIST_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_SLIST_REMOVE_HEAD "AG_SLIST_HEAD *head" "AG_SLIST_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_SLIST_REMOVE_NEXT "AG_SLIST_HEAD *head" "struct TYPE *elm" "AG_SLIST_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_SLIST_REMOVE "AG_SLIST_HEAD *head" "struct TYPE *elm" "TYPE" "AG_SLIST_ENTRY NAME"
+.Pp
+.nr nS 0
+A singly-linked list is headed by a structure defined by the
+.Fn AG_SLIST_HEAD
+macro.
+This structure contains a single pointer to the first element on the list.
+The elements are singly linked for minimum space and pointer manipulation
+overhead at the expense of O(n) removal for arbitrary elements.
+New elements can be added to the list after an existing element or
+at the head of the list.
+A
+.Fa AG_SLIST_HEAD
+structure is declared as follows:
+.Bd -literal -offset indent
+AG_SLIST_HEAD(HEADNAME, TYPE) head;
+.Ed
+.Pp
+where
+.Fa HEADNAME
+is the name of the structure to be defined, and struct
+.Fa TYPE
+is the type of the elements to be linked into the list.
+A pointer to the head of the list can later be declared as:
+.Bd -literal -offset indent
+struct HEADNAME *headp;
+.Ed
+.Pp
+(The names
+.Li head
+and
+.Li headp
+are user selectable.)
+.Pp
+The
+.Fa HEADNAME
+facility is often not used, leading to the following bizarre code:
+.Bd -literal -offset indent
+AG_SLIST_HEAD(, TYPE) head, *headp;
+.Ed
+.Pp
+The
+.Fn AG_SLIST_ENTRY
+macro declares a structure that connects the elements in the list.
+.Pp
+The
+.Fn AG_SLIST_INIT
+macro initializes the list referenced by
+.Fa head .
+.Pp
+The list can also be initialized statically by using the
+.Fn AG_SLIST_HEAD_INITIALIZER
+macro like this:
+.Bd -literal -offset indent
+AG_SLIST_HEAD(HEADNAME, TYPE) head = AG_SLIST_HEAD_INITIALIZER(head);
+.Ed
+.Pp
+The
+.Fn AG_SLIST_INSERT_HEAD
+macro inserts the new element
+.Fa elm
+at the head of the list.
+.Pp
+The
+.Fn AG_SLIST_INSERT_AFTER
+macro inserts the new element
+.Fa elm
+after the element
+.Fa listelm .
+.Pp
+The
+.Fn AG_SLIST_REMOVE_HEAD
+macro removes the first element of the list pointed by
+.Fa head .
+.Pp
+The
+.Fn AG_SLIST_REMOVE_NEXT
+macro removes the list element immediately following
+.Fa elm .
+.Pp
+The
+.Fn AG_SLIST_REMOVE
+macro removes the element
+.Fa elm
+of the list pointed by
+.Fa head .
+.Pp
+The
+.Fn AG_SLIST_FIRST
+and
+.Fn AG_SLIST_NEXT
+macros can be used to traverse the list:
+.Bd -literal -offset indent
+for (np = AG_SLIST_FIRST(&head);
+     np != NULL;
+     np = AG_SLIST_NEXT(np, NAME))
+.Ed
+.Pp
+Or, for simplicity, one can use the
+.Fn AG_SLIST_FOREACH
+macro:
+.Bd -literal -offset indent
+AG_SLIST_FOREACH(np, head, NAME)
+.Ed
+.Pp
+The
+.Fn AG_SLIST_FOREACH_PREVPTR
+macro is similar to
+.Fn AG_SLIST_FOREACH
+except that it stores a pointer to the previous element in
+.Fa VARNAMEP .
+This provides access to the previous element while traversing the list,
+as one would have with a doubly-linked list.
+.Pp
+The
+.Fn AG_SLIST_EMPTY
+macro should be used to check whether a simple list is empty.
+.Sh SINGLY-LINKED LIST EXAMPLE
+.Bd -literal
+AG_SLIST_HEAD(listhead, entry) head;
+struct entry {
+	...
+	AG_SLIST_ENTRY(entry) entries;	/* Simple list. */
+	...
+} *n1, *n2, *np;
+
+AG_SLIST_INIT(&head);			/* Initialize simple list. */
+
+n1 = malloc(sizeof(struct entry));	/* Insert at the head. */
+AG_SLIST_INSERT_HEAD(&head, n1, entries);
+
+n2 = malloc(sizeof(struct entry));	/* Insert after. */
+AG_SLIST_INSERT_AFTER(n1, n2, entries);
+
+AG_SLIST_FOREACH(np, &head, entries)	/* Forward traversal. */
+	np-> ...
+
+while (!AG_SLIST_EMPTY(&head))		/* Delete. */
+	AG_SLIST_REMOVE_HEAD(&head, entries);
+.Ed
+.Sh LISTS
+.nr nS 1
+.Fn AG_LIST_ENTRY "TYPE"
+.Pp
+.Fn AG_LIST_HEAD "HEADNAME" "TYPE"
+.Pp
+.Fn AG_LIST_HEAD_INITIALIZER "AG_LIST_HEAD head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_LIST_FIRST "AG_LIST_HEAD *head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_LIST_NEXT "struct TYPE *listelm" "AG_LIST_ENTRY NAME"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_LIST_END "AG_LIST_HEAD *head"
+.Pp
+.Ft "bool"
+.Fn AG_LIST_EMPTY "AG_LIST_HEAD *head"
+.Pp
+.Fn AG_LIST_FOREACH "VARNAME" "AG_LIST_HEAD *head" "AG_LIST_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_LIST_INIT "AG_LIST_HEAD *head"
+.Pp
+.Ft void
+.Fn AG_LIST_INSERT_AFTER "struct TYPE *listelm" "struct TYPE *elm" "AG_LIST_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_LIST_INSERT_BEFORE "struct TYPE *listelm" "struct TYPE *elm" "AG_LIST_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_LIST_INSERT_HEAD "AG_LIST_HEAD *head" "struct TYPE *elm" "AG_LIST_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_LIST_REMOVE "struct TYPE *elm" "AG_LIST_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_LIST_REPLACE "struct TYPE *elm" "struct TYPE *elm2" "AG_LIST_ENTRY NAME"
+.Pp
+.nr nS 0
+A list is headed by a structure defined by the
+.Fn AG_LIST_HEAD
+macro.
+This structure contains a single pointer to the first element on the list.
+The elements are doubly linked so that an arbitrary element can be
+removed without traversing the list.
+New elements can be added to the list after an existing element,
+before an existing element, or at the head of the list.
+A
+.Fa AG_LIST_HEAD
+structure is declared as follows:
+.Bd -literal -offset indent
+AG_LIST_HEAD(HEADNAME, TYPE) head;
+.Ed
+.Pp
+where
+.Fa HEADNAME
+is the name of the structure to be defined, and struct
+.Fa TYPE
+is the type of the elements to be linked into the list.
+A pointer to the head of the list can later be declared as:
+.Bd -literal -offset indent
+struct HEADNAME *headp;
+.Ed
+.Pp
+(The names
+.Li head
+and
+.Li headp
+are user selectable.)
+.Pp
+The
+.Fa HEADNAME
+facility is often not used, leading to the following bizarre code:
+.Bd -literal -offset indent
+AG_LIST_HEAD(, TYPE) head, *headp;
+.Ed
+.Pp
+The
+.Fn AG_LIST_ENTRY
+macro declares a structure that connects the elements in the list.
+.Pp
+The
+.Fn AG_LIST_INIT
+macro initializes the list referenced by
+.Fa head .
+.Pp
+The list can also be initialized statically by using the
+.Fn AG_LIST_HEAD_INITIALIZER
+macro like this:
+.Bd -literal -offset indent
+AG_LIST_HEAD(HEADNAME, TYPE) head = AG_LIST_HEAD_INITIALIZER(head);
+.Ed
+.Pp
+The
+.Fn AG_LIST_INSERT_HEAD
+macro inserts the new element
+.Fa elm
+at the head of the list.
+.Pp
+The
+.Fn AG_LIST_INSERT_AFTER
+macro inserts the new element
+.Fa elm
+after the element
+.Fa listelm .
+.Pp
+The
+.Fn AG_LIST_INSERT_BEFORE
+macro inserts the new element
+.Fa elm
+before the element
+.Fa listelm .
+.Pp
+The
+.Fn AG_LIST_REMOVE
+macro removes the element
+.Fa elm
+from the list.
+.Pp
+The
+.Fn AG_LIST_REPLACE
+macro replaces the list element
+.Fa elm
+with the new element
+.Fa elm2 .
+.Pp
+The
+.Fn AG_LIST_FIRST
+and
+.Fn AG_LIST_NEXT
+macros can be used to traverse the list:
+.Bd -literal -offset indent
+for (np = AG_LIST_FIRST(&head);
+     np != NULL;
+     np = AG_LIST_NEXT(np, NAME))
+.Ed
+.Pp
+Or, for simplicity, one can use the
+.Fn AG_LIST_FOREACH
+macro:
+.Bd -literal -offset indent
+AG_LIST_FOREACH(np, head, NAME)
+.Ed
+.Pp
+The
+.Fn AG_LIST_EMPTY
+macro should be used to check whether a list is empty.
+.Sh LIST EXAMPLE
+.Bd -literal
+AG_LIST_HEAD(listhead, entry) head;
+struct entry {
+	...
+	AG_LIST_ENTRY(entry) entries;	/* List. */
+	...
+} *n1, *n2, *np;
+
+AG_LIST_INIT(&head);			/* Initialize list. */
+
+n1 = malloc(sizeof(struct entry));	/* Insert at the head. */
+AG_LIST_INSERT_HEAD(&head, n1, entries);
+
+n2 = malloc(sizeof(struct entry));	/* Insert after. */
+AG_LIST_INSERT_AFTER(n1, n2, entries);
+
+n2 = malloc(sizeof(struct entry));	/* Insert before. */
+AG_LIST_INSERT_BEFORE(n1, n2, entries);
+					/* Forward traversal. */
+AG_LIST_FOREACH(np, &head, entries)
+	np-> ...
+
+while (!AG_LIST_EMPTY(&head))		/* Delete. */
+	AG_LIST_REMOVE(AG_LIST_FIRST(&head), entries);
+.Ed
+.Sh SIMPLE QUEUES
+.nr nS 1
+.Fn AG_SIMPLEQ_ENTRY "TYPE"
+.Pp
+.Fn AG_SIMPLEQ_HEAD "HEADNAME" "TYPE"
+.Pp
+.Fn AG_SIMPLEQ_HEAD_INITIALIZER "AG_SIMPLEQ_HEAD head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_SIMPLEQ_FIRST "AG_SIMPLEQ_HEAD *head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_SIMPLEQ_NEXT "struct TYPE *listelm" "AG_SIMPLEQ_ENTRY NAME"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_SIMPLEQ_END "AG_SIMPLEQ_HEAD *head"
+.Pp
+.Ft void
+.Fn AG_SIMPLEQ_INIT "AG_SIMPLEQ_HEAD *head"
+.Pp
+.Ft void
+.Fn AG_SIMPLEQ_INSERT_HEAD "AG_SIMPLEQ_HEAD *head" "struct TYPE *elm" "AG_SIMPLEQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_SIMPLEQ_INSERT_TAIL "AG_SIMPLEQ_HEAD *head" "struct TYPE *elm" "AG_SIMPLEQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_SIMPLEQ_INSERT_AFTER "AG_SIMPLEQ_HEAD *head" "struct TYPE *listelm" "struct TYPE *elm" "AG_SIMPLEQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_SIMPLEQ_REMOVE_HEAD "AG_SIMPLEQ_HEAD *head" "AG_SIMPLEQ_ENTRY NAME"
+.Pp
+.nr nS 0
+A simple queue is headed by a structure defined by the
+.Fn AG_SIMPLEQ_HEAD
+macro.
+This structure contains a pair of pointers, one to the first element in the
+simple queue and the other to the last element in the simple queue.
+The elements are singly linked.
+New elements can be added to the queue after an existing element,
+at the head of the queue or at the tail of the queue.
+A
+.Fa AG_SIMPLEQ_HEAD
+structure is declared as follows:
+.Bd -literal -offset indent
+AG_SIMPLEQ_HEAD(HEADNAME, TYPE) head;
+.Ed
+.Pp
+where
+.Fa HEADNAME
+is the name of the structure to be defined, and struct
+.Fa TYPE
+is the type of the elements to be linked into the queue.
+A pointer to the head of the queue can later be declared as:
+.Bd -literal -offset indent
+struct HEADNAME *headp;
+.Ed
+.Pp
+(The names
+.Li head
+and
+.Li headp
+are user selectable.)
+.Pp
+The
+.Fn AG_SIMPLEQ_ENTRY
+macro declares a structure that connects the elements in
+the queue.
+.Pp
+The
+.Fn AG_SIMPLEQ_INIT
+macro initializes the queue referenced by
+.Fa head .
+.Pp
+The queue can also be initialized statically by using the
+.Fn AG_SIMPLEQ_HEAD_INITIALIZER
+macro like this:
+.Bd -literal -offset indent
+AG_SIMPLEQ_HEAD(HEADNAME, TYPE) head =
+    AG_SIMPLEQ_HEAD_INITIALIZER(head);
+.Ed
+.Pp
+The
+.Fn AG_SIMPLEQ_INSERT_HEAD
+macro inserts the new element
+.Fa elm
+at the head of the queue.
+.Pp
+The
+.Fn AG_SIMPLEQ_INSERT_TAIL
+macro inserts the new element
+.Fa elm
+at the end of the queue.
+.Pp
+The
+.Fn AG_SIMPLEQ_INSERT_AFTER
+macro inserts the new element
+.Fa elm
+after the element
+.Fa listelm .
+.Pp
+The
+.Fn AG_SIMPLEQ_REMOVE_HEAD
+macro removes the first element
+from the queue.
+.Pp
+The
+.Fn AG_SIMPLEQ_FIRST
+and
+.Fn AG_SIMPLEQ_NEXT
+macros can be used to traverse the queue.
+The
+.Fn AG_SIMPLEQ_FOREACH
+is used for queue traversal:
+.Bd -literal -offset indent
+AG_SIMPLEQ_FOREACH(np, head, NAME)
+.Ed
+.Pp
+The
+.Fn AG_SIMPLEQ_EMPTY
+macro should be used to check whether a list is empty.
+.Sh SIMPLE QUEUE EXAMPLE
+.Bd -literal
+AG_SIMPLEQ_HEAD(listhead, entry) head = AG_SIMPLEQ_HEAD_INITIALIZER(head);
+struct entry {
+	...
+	AG_SIMPLEQ_ENTRY(entry) entries;	/* Simple queue. */
+	...
+} *n1, *n2, *np;
+
+n1 = malloc(sizeof(struct entry));	/* Insert at the head. */
+AG_SIMPLEQ_INSERT_HEAD(&head, n1, entries);
+
+n2 = malloc(sizeof(struct entry));	/* Insert after. */
+AG_SIMPLEQ_INSERT_AFTER(&head, n1, n2, entries);
+
+n2 = malloc(sizeof(struct entry));	/* Insert at the tail. */
+AG_SIMPLEQ_INSERT_TAIL(&head, n2, entries);
+					/* Forward traversal. */
+AG_SIMPLEQ_FOREACH(np, &head, entries)
+	np-> ...
+					/* Delete. */
+while (!AG_SIMPLEQ_EMPTY(&head))
+	AG_SIMPLEQ_REMOVE_HEAD(&head, entries);
+.Ed
+.Sh TAIL QUEUES
+.nr nS 1
+.Fn AG_TAILQ_ENTRY "TYPE"
+.Pp
+.Fn AG_TAILQ_HEAD "HEADNAME" "TYPE"
+.Pp
+.Fn AG_TAILQ_HEAD_INITIALIZER "AG_TAILQ_HEAD head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_TAILQ_FIRST "AG_TAILQ_HEAD *head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_TAILQ_NEXT "struct TYPE *listelm" "AG_TAILQ_ENTRY NAME"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_TAILQ_END "AG_TAILQ_HEAD *head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_TAILQ_LAST "AG_TAILQ_HEAD *head" "HEADNAME NAME"
+.Pp
+.Fn AG_TAILQ_PREV "struct TYPE *listelm" "HEADNAME NAME" "AG_TAILQ_ENTRY NAME"
+.Pp
+.Ft "bool"
+.Fn AG_TAILQ_EMPTY "AG_TAILQ_HEAD *head"
+.Pp
+.Fn AG_TAILQ_FOREACH "VARNAME" "AG_TAILQ_HEAD *head" "AG_TAILQ_ENTRY NAME"
+.Pp
+.Fn AG_TAILQ_FOREACH_REVERSE "VARNAME" "AG_TAILQ_HEAD *head" "HEADNAME" "AG_TAILQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_TAILQ_INIT "AG_TAILQ_HEAD *head"
+.Pp
+.Ft void
+.Fn AG_TAILQ_INSERT_AFTER "AG_TAILQ_HEAD *head" "struct TYPE *listelm" "struct TYPE *elm" "AG_TAILQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_TAILQ_INSERT_BEFORE "struct TYPE *listelm" "struct TYPE *elm" "AG_TAILQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_TAILQ_INSERT_HEAD "AG_TAILQ_HEAD *head" "struct TYPE *elm" "AG_TAILQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_TAILQ_INSERT_TAIL "AG_TAILQ_HEAD *head" "struct TYPE *elm" "AG_TAILQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_TAILQ_REMOVE "AG_TAILQ_HEAD *head" "struct TYPE *elm" "AG_TAILQ_ENTRY NAME"
+.Pp
+.nr nS 0
+A tail queue is headed by a structure defined by the
+.Fn AG_TAILQ_HEAD
+macro.
+This structure contains a pair of pointers,
+one to the first element in the tail queue and the other to
+the last element in the tail queue.
+The elements are doubly linked so that an arbitrary element can be
+removed without traversing the tail queue.
+New elements can be added to the queue after an existing element,
+before an existing element, at the head of the queue, or at the end
+of the queue.
+A
+.Fa AG_TAILQ_HEAD
+structure is declared as follows:
+.Bd -literal -offset indent
+AG_TAILQ_HEAD(HEADNAME, TYPE) head;
+.Ed
+.Pp
+where
+.Fa HEADNAME
+is the name of the structure to be defined, and struct
+.Fa TYPE
+is the type of the elements to be linked into the tail queue.
+A pointer to the head of the tail queue can later be declared as:
+.Bd -literal -offset indent
+struct HEADNAME *headp;
+.Ed
+.Pp
+(The names
+.Li head
+and
+.Li headp
+are user selectable.)
+.Pp
+The
+.Fn AG_TAILQ_ENTRY
+macro declares a structure that connects the elements in
+the tail queue.
+.Pp
+The
+.Fn AG_TAILQ_INIT
+macro initializes the tail queue referenced by
+.Fa head .
+.Pp
+The tail queue can also be initialized statically by using the
+.Fn AG_TAILQ_HEAD_INITIALIZER
+macro.
+.Pp
+The
+.Fn AG_TAILQ_INSERT_HEAD
+macro inserts the new element
+.Fa elm
+at the head of the tail queue.
+.Pp
+The
+.Fn AG_TAILQ_INSERT_TAIL
+macro inserts the new element
+.Fa elm
+at the end of the tail queue.
+.Pp
+The
+.Fn AG_TAILQ_INSERT_AFTER
+macro inserts the new element
+.Fa elm
+after the element
+.Fa listelm .
+.Pp
+The
+.Fn AG_TAILQ_INSERT_BEFORE
+macro inserts the new element
+.Fa elm
+before the element
+.Fa listelm .
+.Pp
+The
+.Fn AG_TAILQ_REMOVE
+macro removes the element
+.Fa elm
+from the tail queue.
+.Pp
+.Fn AG_TAILQ_FOREACH
+and
+.Fn AG_TAILQ_FOREACH_REVERSE
+are used for traversing a tail queue.
+.Fn AG_TAILQ_FOREACH
+starts at the first element and proceeds towards the last.
+.Fn AG_TAILQ_FOREACH_REVERSE
+starts at the last element and proceeds towards the first.
+.Bd -literal -offset indent
+AG_TAILQ_FOREACH(np, &head, NAME)
+AG_TAILQ_FOREACH_REVERSE(np, &head, HEADNAME, NAME)
+.Ed
+.Pp
+The
+.Fn AG_TAILQ_FIRST ,
+.Fn AG_TAILQ_NEXT ,
+.Fn AG_TAILQ_LAST
+and
+.Fn AG_TAILQ_PREV
+macros can be used to manually traverse a tail queue or an arbitrary part of
+one.
+.Pp
+The
+.Fn AG_TAILQ_EMPTY
+macro should be used to check whether a tail queue is empty.
+.Sh TAIL QUEUE EXAMPLE
+.Bd -literal
+AG_TAILQ_HEAD(tailhead, entry) head;
+struct entry {
+	...
+	AG_TAILQ_ENTRY(entry) entries;	/* Tail queue. */
+	...
+} *n1, *n2, *np;
+
+AG_TAILQ_INIT(&head);			/* Initialize queue. */
+
+n1 = malloc(sizeof(struct entry));	/* Insert at the head. */
+AG_TAILQ_INSERT_HEAD(&head, n1, entries);
+
+n1 = malloc(sizeof(struct entry));	/* Insert at the tail. */
+AG_TAILQ_INSERT_TAIL(&head, n1, entries);
+
+n2 = malloc(sizeof(struct entry));	/* Insert after. */
+AG_TAILQ_INSERT_AFTER(&head, n1, n2, entries);
+
+n2 = malloc(sizeof(struct entry));	/* Insert before. */
+AG_TAILQ_INSERT_BEFORE(n1, n2, entries);
+					/* Forward traversal. */
+AG_TAILQ_FOREACH(np, &head, entries)
+	np-> ...
+					/* Manual forward traversal. */
+for (np = n2; np != NULL; np = AG_TAILQ_NEXT(np, entries))
+	np-> ...
+					/* Delete. */
+while (np = AG_TAILQ_FIRST(&head))
+	AG_TAILQ_REMOVE(&head, np, entries);
+.Ed
+.Sh CIRCULAR QUEUES
+.nr nS 1
+.Fn AG_CIRCLEQ_ENTRY "TYPE"
+.Pp
+.Fn AG_CIRCLEQ_HEAD "HEADNAME" "TYPE"
+.Pp
+.Fn AG_CIRCLEQ_HEAD_INITIALIZER "AG_CIRCLEQ_HEAD head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_CIRCLEQ_FIRST "AG_CIRCLEQ_HEAD *head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_CIRCLEQ_LAST "AG_CIRCLEQ_HEAD *head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_CIRCLEQ_END "AG_CIRCLEQ_HEAD *head"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_CIRCLEQ_NEXT "struct TYPE *listelm" "AG_CIRCLEQ_ENTRY NAME"
+.Pp
+.Ft "struct TYPE *"
+.Fn AG_CIRCLEQ_PREV "struct TYPE *listelm" "AG_CIRCLEQ_ENTRY NAME"
+.Pp
+.Ft "bool"
+.Fn AG_CIRCLEQ_EMPTY "AG_CIRCLEQ_HEAD *head"
+.Pp
+.Fn AG_CIRCLEQ_FOREACH "VARNAME" "AG_CIRCLEQ_HEAD *head" "AG_CIRCLEQ_ENTRY NAME"
+.Pp
+.Fn AG_CIRCLEQ_FOREACH_REVERSE "VARNAME" "AG_CIRCLEQ_HEAD *head" "AG_CIRCLEQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_CIRCLEQ_INIT "AG_CIRCLEQ_HEAD *head"
+.Pp
+.Ft void
+.Fn AG_CIRCLEQ_INSERT_AFTER "AG_CIRCLEQ_HEAD *head" "struct TYPE *listelm" "struct TYPE *elm" "AG_CIRCLEQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_CIRCLEQ_INSERT_BEFORE "AG_CIRCLEQ_HEAD *head" "struct TYPE *listelm" "struct TYPE *elm" "AG_CIRCLEQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_CIRCLEQ_INSERT_HEAD "AG_CIRCLEQ_HEAD *head" "struct TYPE *elm" "AG_CIRCLEQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_CIRCLEQ_INSERT_TAIL "AG_CIRCLEQ_HEAD *head" "struct TYPE *elm" "AG_CIRCLEQ_ENTRY NAME"
+.Pp
+.Ft void
+.Fn AG_CIRCLEQ_REMOVE "AG_CIRCLEQ_HEAD *head" "struct TYPE *elm" "AG_CIRCLEQ_ENTRY NAME"
+.Pp
+.nr nS 0
+A circular queue is headed by a structure defined by the
+.Fn AG_CIRCLEQ_HEAD
+macro.
+This structure contains a pair of pointers,
+one to the first element in the circular queue and the other to the
+last element in the circular queue.
+The elements are doubly linked so that an arbitrary element can be
+removed without traversing the queue.
+New elements can be added to the queue after an existing element,
+before an existing element, at the head of the queue, or at the end
+of the queue.
+A
+.Fa AG_CIRCLEQ_HEAD
+structure is declared as follows:
+.Bd -literal -offset indent
+AG_CIRCLEQ_HEAD(HEADNAME, TYPE) head;
+.Ed
+.Pp
+where
+.Fa HEADNAME
+is the name of the structure to be defined, and struct
+.Fa TYPE
+is the type of the elements to be linked into the circular queue.
+A pointer to the head of the circular queue can later be declared as:
+.Bd -literal -offset indent
+struct HEADNAME *headp;
+.Ed
+.Pp
+(The names
+.Li head
+and
+.Li headp
+are user selectable.)
+.Pp
+The
+.Fn AG_CIRCLEQ_ENTRY
+macro declares a structure that connects the elements in the circular queue.
+.Pp
+The
+.Fn AG_CIRCLEQ_INIT
+macro initializes the circular queue referenced by
+.Fa head .
+.Pp
+The circular queue can also be initialized statically by using the
+.Fn AG_CIRCLEQ_HEAD_INITIALIZER
+macro.
+.Pp
+The
+.Fn AG_CIRCLEQ_INSERT_HEAD
+macro inserts the new element
+.Fa elm
+at the head of the circular queue.
+.Pp
+The
+.Fn AG_CIRCLEQ_INSERT_TAIL
+macro inserts the new element
+.Fa elm
+at the end of the circular queue.
+.Pp
+The
+.Fn AG_CIRCLEQ_INSERT_AFTER
+macro inserts the new element
+.Fa elm
+after the element
+.Fa listelm .
+.Pp
+The
+.Fn AG_CIRCLEQ_INSERT_BEFORE
+macro inserts the new element
+.Fa elm
+before the element
+.Fa listelm .
+.Pp
+The
+.Fn AG_CIRCLEQ_REMOVE
+macro removes the element
+.Fa elm
+from the circular queue.
+.Pp
+The
+.Fn AG_CIRCLEQ_FIRST ,
+.Fn AG_CIRCLEQ_LAST ,
+.Fn AG_CIRCLEQ_END ,
+.Fn AG_CIRCLEQ_NEXT
+and
+.Fn AG_CIRCLEQ_PREV
+macros can be used to traverse a circular queue.
+The
+.Fn AG_CIRCLEQ_FOREACH
+is used for circular queue forward traversal:
+.Bd -literal -offset indent
+AG_CIRCLEQ_FOREACH(np, head, NAME)
+.Ed
+.Pp
+The
+.Fn AG_CIRCLEQ_FOREACH_REVERSE
+macro acts like
+.Fn AG_CIRCLEQ_FOREACH
+but traverses the circular queue backwards.
+.Pp
+The
+.Fn AG_CIRCLEQ_EMPTY
+macro should be used to check whether a circular queue is empty.
+.Sh CIRCULAR QUEUE EXAMPLE
+.Bd -literal
+AG_CIRCLEQ_HEAD(circleq, entry) head;
+struct entry {
+	...
+	AG_CIRCLEQ_ENTRY(entry) entries;	/* Circular queue. */
+	...
+} *n1, *n2, *np;
+
+AG_CIRCLEQ_INIT(&head);			/* Initialize circular queue. */
+
+n1 = malloc(sizeof(struct entry));	/* Insert at the head. */
+AG_CIRCLEQ_INSERT_HEAD(&head, n1, entries);
+
+n1 = malloc(sizeof(struct entry));	/* Insert at the tail. */
+AG_CIRCLEQ_INSERT_TAIL(&head, n1, entries);
+
+n2 = malloc(sizeof(struct entry));	/* Insert after. */
+AG_CIRCLEQ_INSERT_AFTER(&head, n1, n2, entries);
+
+n2 = malloc(sizeof(struct entry));	/* Insert before. */
+AG_CIRCLEQ_INSERT_BEFORE(&head, n1, n2, entries);
+					/* Forward traversal. */
+AG_CIRCLEQ_FOREACH(np, &head, entries)
+	np-> ...
+					/* Reverse traversal. */
+AG_CIRCLEQ_FOREACH_REVERSE(np, &head, entries)
+	np-> ...
+					/* Delete. */
+while (!AG_CIRCLEQ_EMPTY(&head))
+	AG_CIRCLEQ_REMOVE(&head, AG_CIRCLEQ_FIRST(&head), entries);
+.Ed
+.Sh NOTES
+It is an error to assume the next and previous fields are preserved
+after an element has been removed from a list or queue.
+Using any macro (except the various forms of insertion) on an element
+removed from a list or queue is incorrect.
+An example of erroneous usage is removing the same element twice.
+.Pp
+The
+.Fn AG_SLIST_END ,
+.Fn AG_LIST_END ,
+.Fn AG_SIMPLEQ_END
+and
+.Fn AG_TAILQ_END
+macros are provided for symmetry with
+.Fn AG_CIRCLEQ_END .
+They expand to
+.Dv NULL
+and don't serve any useful purpose.
+.Pp
+Trying to free a list in the following way is a common error:
+.Bd -literal -offset indent
+AG_LIST_FOREACH(var, head, entry)
+	free(var);
+free(head);
+.Ed
+.Pp
+Since
+.Va var
+is free'd, the
+.Fn FOREACH
+macro refers to a pointer that may have been reallocated already.
+Proper code needs a second variable.
+.Bd -literal -offset indent
+for (var = AG_LIST_FIRST(head);
+     var != AG_LIST_END(head);
+     var = nxt) {
+	nxt = AG_LIST_NEXT(var, entry);
+	free(var);
+}
+AG_LIST_INIT(head);	/* to put the list back in order */
+.Ed
+.Pp
+A similar situation occurs when the current element is deleted
+from the list.
+Correct code saves a pointer to the next element in the list before
+removing the element:
+.Bd -literal -offset indent
+for (var = AG_LIST_FIRST(head);
+     var != AG_LIST_END(head);
+     var = nxt) {
+	nxt = AG_LIST_NEXT(var, entry);
+	if (some_condition) {
+		AG_LIST_REMOVE(var, entry);
+		some_function(var);
+	}
+}
+.Ed
+.Sh HISTORY
+The
+.Nm
+macros first appeared in Agar 1.0 and are based on the
+.Bx 4.4
+queue macros in
+.Pa sys/queue.h .
