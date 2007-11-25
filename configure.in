@@ -195,17 +195,19 @@ fi
 # Enable threads support if POSIX threads are available.
 if [ "${enable_threads}" != "no" ]; then
 	CHECK(pthreads)
-	if [ "${HAVE_PTHREADS}" = "yes" -o "${HAVE_PTHREADS_XOPEN}" = "yes" ];
+	if [ "${HAVE_PTHREADS}" = "yes" ];
 	then
-		if [ "${HAVE_PTHREADS_XOPEN}" = "no" -a
-		     "${HAVE_PTHREADS_MUTEX_RECURSIVE}" = "no" -a 
-		     "${HAVE_PTHREADS_MUTEX_RECURSIVE_NP}" = "no" ]; then
+		if [ "${HAVE_PTHREADS_XOPEN}" = "no" ]; then
+		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "no" ]; then
+		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "no" ]; then
 			echo "*"
 			echo "* --enable-threads was requested, but your"
 			echo "* pthreads implementation does not support"
 			echo "* recursive mutexes"
 			echo "*"
 			exit 1
+		fi
+		fi
 		fi
 		HDEFINE(THREADS, 1)
 	else
