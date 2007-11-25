@@ -4,7 +4,7 @@
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: no]")
 REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
-REGISTER("--enable-threads",	"Thread safety [default: no]")
+REGISTER("--enable-threads",	"Thread safety [default: check]")
 REGISTER("--enable-utf8",	"Unicode text/input support [default: yes]")
 REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
 REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
