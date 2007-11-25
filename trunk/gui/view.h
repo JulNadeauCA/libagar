@@ -431,10 +431,5 @@ AG_RECT(int x, int y, int w, int h)
 }
 __END_DECLS
 
-#ifdef _AGAR_INTERNAL
-#define POINT AG_POINT
-#define RECT AG_RECT
-#endif
-
 #include "close_code.h"
 #endif	/* _AGAR_GUI_VIEW_H_ */
