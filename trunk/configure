@@ -2485,6 +2485,10 @@ fi;
 	fi
 else
 echo "#undef HAVE_FREETYPE" > config/have_freetype.h
+FREETYPE_CFLAGS=""""
+echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >> Makefile.config
+FREETYPE_LIBS=""""
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >> Makefile.config
 fi
 if [ "${with_gl}" != "no" ]
  then
@@ -2602,6 +2606,10 @@ echo "#undef HAVE_OPENGL" > config/have_opengl.h
 	fi
 else
 echo "#undef HAVE_OPENGL" > config/have_opengl.h
+OPENGL_CFLAGS=""""
+echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >> Makefile.config
+OPENGL_LIBS=""""
+echo "OPENGL_LIBS=$OPENGL_LIBS" >> Makefile.config
 fi
 if [ "${with_jpeg}" != "no" ]
  then
@@ -2712,6 +2720,10 @@ echo "#undef HAVE_JPEG" > config/have_jpeg.h
 	fi
 else
 echo "#undef HAVE_JPEG" > config/have_jpeg.h
+JPEG_CFLAGS=""""
+echo "JPEG_CFLAGS=$JPEG_CFLAGS" >> Makefile.config
+JPEG_LIBS=""""
+echo "JPEG_LIBS=$JPEG_LIBS" >> Makefile.config
 fi
 if [ "${enable_network}" = "yes" ]
  then
@@ -2780,6 +2792,7 @@ echo "#undef NETWORK" > config/network.h
 	fi
 else
 echo "#undef NETWORK" > config/network.h
+echo "#undef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
 fi
 if [ "${enable_server}" = "yes" ]
  then
@@ -2803,6 +2816,7 @@ echo "#undef SERVER" > config/server.h
 	fi
 else
 echo "#undef SERVER" > config/server.h
+echo "#undef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
 fi
 if [ "${enable_threads}" != "no" ]
  then
@@ -3068,6 +3082,15 @@ echo "#endif" >> config/threads.h
 	fi
 else
 echo "#undef THREADS" > config/threads.h
+echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
+PTHREADS_CFLAGS=""""
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
+PTHREADS_LIBS=""""
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
+PTHREADS_XOPEN_CFLAGS=""""
+echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >> Makefile.config
+PTHREADS_XOPEN_LIBS=""""
+echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >> Makefile.config
 	if [ "${enable_warnings}" = "yes" ]
  then
 CFLAGS="$CFLAGS -Wno-unused"
@@ -3090,10 +3113,6 @@ HISTORICAL_UNITS="1"
 echo "#ifndef HISTORICAL_UNITS" > config/historical_units.h
 echo "#define HISTORICAL_UNITS \"$HISTORICAL_UNITS\"" >> config/historical_units.h
 echo "#endif" >> config/historical_units.h
-EDITION="1"
-echo "#ifndef EDITION" > config/edition.h
-echo "#define EDITION \"$EDITION\"" >> config/edition.h
-echo "#endif" >> config/edition.h
 if [ "${enable_8bpp}" != "no" ]
  then
 VIEW_8BPP="1"
