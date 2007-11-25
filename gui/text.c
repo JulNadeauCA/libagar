@@ -62,7 +62,6 @@
  */
 
 #include <config/have_freetype.h>
-#include <config/have_opengl.h>
 #include <config/utf8.h>
 
 #include <core/core.h>
@@ -90,6 +89,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <errno.h>
+
+#include "opengl.h"
 
 #include "icons.h"
 #include "fonts.h"

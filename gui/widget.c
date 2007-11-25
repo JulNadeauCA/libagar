@@ -33,6 +33,8 @@
 #include "notebook.h"
 #include "gui_math.h"
 
+#include "opengl.h"
+
 #include <stdarg.h>
 #include <string.h>
 
@@ -968,6 +970,59 @@ AG_WidgetBlitSurfaceGL(void *pWidget, int name, float w, float h)
 	}
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
 }
+
+/* Emulate 32-bit putpixel behavior */
+void
+AG_WidgetPutPixel32_GL(void *p, int x, int y, Uint32 color)
+{
+	Uint8 r, g, b;
+
+	SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
+	glBegin(GL_POINTS);
+	glColor3ub(r, g, b);
+	glVertex2s(x, y);
+	glEnd();
+}
+
+/* Emulate RGB putpixel behavior */
+void
+AG_WidgetPutPixelRGB_GL(void *p, int x, int y, Uint8 r, Uint8 g, Uint8 b)
+{
+	glBegin(GL_POINTS);
+	glColor3ub(r, g, b);
+	glVertex2s(x, y);
+	glEnd();
+}
+
+/*
+ * Release the OpenGL resources associated with a widget.
+ * GL lock must be held.
+ */
+void
+AG_WidgetFreeResourcesGL(AG_Widget *wid)
+{
+	glDeleteTextures(wid->nsurfaces, (GLuint *)wid->textures);
+	memset(wid->textures, 0, wid->nsurfaces*sizeof(Uint));
+}
+
+/*
+ * Regenerate the OpenGL textures associated with a widget.
+ * GL lock must be held.
+ */
+void
+AG_WidgetRegenResourcesGL(AG_Widget *wid)
+{
+	Uint i;
+
+	for (i = 0; i < wid->nsurfaces; i++)  {
+		if (wid->surfaces[i] != NULL) {
+			wid->textures[i] = AG_SurfaceTexture(wid->surfaces[i],
+			    &wid->texcoords[i*4]);
+		} else {
+			wid->textures[i] = 0;
+		}
+	}
+}
 #endif /* HAVE_OPENGL */
 
 /* Clear the AG_WIDGET_FOCUSED bit from a widget and its descendents. */
@@ -1498,38 +1553,6 @@ AG_WidgetHiddenRecursive(void *p)
 	}
 	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
 }
-
-#ifdef HAVE_OPENGL
-/*
- * Release the OpenGL resources associated with a widget.
- * GL lock must be held.
- */
-void
-AG_WidgetFreeResourcesGL(AG_Widget *wid)
-{
-	glDeleteTextures(wid->nsurfaces, (GLuint *)wid->textures);
-	memset(wid->textures, 0, wid->nsurfaces*sizeof(Uint));
-}
-
-/*
- * Regenerate the OpenGL textures associated with a widget.
- * GL lock must be held.
- */
-void
-AG_WidgetRegenResourcesGL(AG_Widget *wid)
-{
-	Uint i;
-
-	for (i = 0; i < wid->nsurfaces; i++)  {
-		if (wid->surfaces[i] != NULL) {
-			wid->textures[i] = AG_SurfaceTexture(wid->surfaces[i],
-			    &wid->texcoords[i*4]);
-		} else {
-			wid->textures[i] = 0;
-		}
-	}
-}
-#endif /* HAVE_OPENGL */
 
 static void *
 FindAtPoint(AG_Widget *parent, const char *type, int x, int y)

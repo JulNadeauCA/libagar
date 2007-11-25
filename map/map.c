@@ -62,6 +62,8 @@
 
 #include "map_math.h"
 
+#include <gui/opengl.h>
+
 #include <string.h>
 
 int mapSmoothScaling = 0;

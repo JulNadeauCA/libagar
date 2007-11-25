@@ -36,6 +36,7 @@
 #include <config/version.h>
 #include <config/release.h>
 #include <config/have_jpeg.h>
+#include <config/have_opengl.h>
 
 #include <core/core.h>
 #include <core/config.h>

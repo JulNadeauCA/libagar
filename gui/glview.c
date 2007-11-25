@@ -25,11 +25,13 @@
 
 #include <core/core.h>
 
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
 
 #include <core/config.h>
 
 #include "glview.h"
+#include "opengl.h"
 
 #include <stdarg.h>
 

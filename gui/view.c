@@ -27,7 +27,6 @@
  * Low-level interface between the GUI and video display.
  */
 
-#include <config/have_opengl.h>
 #include <config/have_jpeg.h>
 #include <config/have_x11.h>
 
@@ -56,6 +55,8 @@
 #undef HAVE_STDLIB_H		/* Work around SDL.h retardation */
 #include <jpeglib.h>
 #endif
+
+#include "opengl.h"
 
 /*
  * Force synchronous X11 events. Reduces performance, but useful for

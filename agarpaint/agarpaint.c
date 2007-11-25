@@ -556,9 +556,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-#ifdef HAVE_OPENGL
 	AG_SetBool(agConfig, "view.opengl", 1);
-#endif
 #ifdef HAVE_GETOPT
 	while ((c = getopt(argc, argv, "?dvfFgGr:t:")) != -1) {
 		extern char *optarg;
@@ -572,14 +570,12 @@ main(int argc, char *argv[])
 		case 'F':
 			AG_SetBool(agConfig, "view.full-screen", 0);
 			break;
-#ifdef HAVE_OPENGL
 		case 'g':
 			AG_SetBool(agConfig, "view.opengl", 1);
 			break;
 		case 'G':
 			AG_SetBool(agConfig, "view.opengl", 0);
 			break;
-#endif
 		case 'r':
 			fps = atoi(optarg);
 			break;

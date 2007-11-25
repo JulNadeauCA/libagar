@@ -8,7 +8,6 @@
 #ifndef _AGAR_CORE_CORE_H_
 #define _AGAR_CORE_CORE_H_
 
-#include <config/have_opengl.h>
 #include <config/enable_nls.h>
 #include <config/threads.h>
 #include <config/edition.h>
@@ -45,14 +44,6 @@ typedef unsigned long Ulong;
 #endif
 #include <string.h>
 #include <stdio.h>
-
-#ifdef HAVE_OPENGL
-# ifdef __APPLE__
-#  include <OpenGL/gl.h>
-# else
-#  include <GL/gl.h>
-# endif
-#endif
 
 #ifdef HAVE_BOUNDED_ATTRIBUTE
 #define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))

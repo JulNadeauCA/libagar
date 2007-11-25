@@ -22,14 +22,5 @@
 #include <agar/core/typesw.h>
 #include <agar/core/core_init.h>
 
-#include <agar/config/have_opengl.h>
-#ifdef HAVE_OPENGL
-# ifdef __APPLE__
-#  include <OpenGL/gl.h>
-# else
-#  include <GL/gl.h>
-# endif
-#endif
-
 #include <agar/core/core_close.h>
 #endif

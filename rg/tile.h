@@ -2,6 +2,13 @@
 
 #ifndef _AGAR_RG_TILE_H_
 #define _AGAR_RG_TILE_H_
+
+#ifdef _AGAR_INTERNAL
+# include <config/have_opengl.h>
+#else
+# include <agar/config/have_opengl.h>
+#endif
+
 #include "begin_code.h"
 
 #define RG_TILE_NAME_MAX	 128

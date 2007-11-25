@@ -30,6 +30,7 @@
 #include <core/load_surface.h>
 
 #include <gui/view.h>
+#include <gui/opengl.h>
 
 #include <string.h>
 #include <stdarg.h>

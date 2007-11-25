@@ -37,6 +37,8 @@
 #include "refsel.h"
 #include "tools.h"
 
+#include <gui/opengl.h>
+
 #include <stdarg.h>
 #include <string.h>
 

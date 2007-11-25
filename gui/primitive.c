@@ -33,6 +33,7 @@
 #include "window.h"
 #include "primitive.h"
 #include "gui_math.h"
+#include "opengl.h"
 
 AG_PrimitiveOps agPrim;
 

@@ -35,6 +35,7 @@
 #include "keycodes.h"
 #include "primitive.h"
 #include "unicode.h"
+#include "opengl.h"
 
 #include <string.h>
 #include <stdarg.h>
