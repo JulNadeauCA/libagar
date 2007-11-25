@@ -77,7 +77,7 @@ typedef struct rg_tileview_ctrl {
 	AG_Event *buttondown;
 	int xoffs, yoffs;
 
-	TAILQ_ENTRY(rg_tileview_ctrl) ctrls;
+	AG_TAILQ_ENTRY(rg_tileview_ctrl) ctrls;
 } RG_TileviewCtrl;
 
 typedef struct rg_tileview_tool_ops {
@@ -120,7 +120,7 @@ typedef struct rg_tileview_tool {
 #define TILEVIEW_SKETCH_TOOL	0x04	/* Call in vector edition mode */
 #define TILEVIEW_PIXMAP_TOOL	0x08	/* Call in pixmap edition mode */
 	AG_Window *win;
-	TAILQ_ENTRY(rg_tileview_tool) tools;
+	AG_TAILQ_ENTRY(rg_tileview_tool) tools;
 } RG_TileviewTool;
 
 enum rg_tileview_state {
@@ -222,8 +222,8 @@ typedef struct rg_tileview {
 		Uint8 r, g, b, a;		/* Current color */
 		Uint32 pc;			/* (for binding controls) */
 	} c;
-	TAILQ_HEAD(,rg_tileview_ctrl) ctrls;	/* Binding controls */
-	TAILQ_HEAD(,rg_tileview_tool) tools;	/* Edition tools */
+	AG_TAILQ_HEAD(,rg_tileview_ctrl) ctrls;	/* Binding controls */
+	AG_TAILQ_HEAD(,rg_tileview_tool) tools;	/* Edition tools */
 	RG_TileviewTool *cur_tool;		/* Current tool */
 } RG_Tileview;
 

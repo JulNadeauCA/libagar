@@ -32,7 +32,7 @@ typedef struct rg_sketch {
 	float h, s, v, a;
 	struct rg_sketch_undoblk *ublks;
 	Uint nublks, curblk;
-	TAILQ_ENTRY(rg_sketch) sketches;
+	AG_TAILQ_ENTRY(rg_sketch) sketches;
 } RG_Sketch;
 
 __BEGIN_DECLS

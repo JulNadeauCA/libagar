@@ -28,7 +28,7 @@ typedef struct ag_table_popup {
 	AG_Menu *menu;
 	AG_MenuItem *item;
 	AG_Window *panel;
-	SLIST_ENTRY(ag_table_popup) popups;
+	AG_SLIST_ENTRY(ag_table_popup) popups;
 } AG_TablePopup;
 
 typedef struct ag_table_cell {
@@ -133,7 +133,7 @@ typedef struct ag_table {
 	int dblClickedRow;
 	int dblClickedCol;
 
-	SLIST_HEAD(,ag_table_popup) popups; /* Registered popup menus */
+	AG_SLIST_HEAD(,ag_table_popup) popups; /* Registered popup menus */
 } AG_Table;
 
 __BEGIN_DECLS

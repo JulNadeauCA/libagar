@@ -34,7 +34,6 @@ MDEFINE(PSDIR, "\${PREFIX}/share/agar/doc")
 
 CHECK(cc)
 CHECK(sys_types)
-CHECK(sys_queue)
 CHECK(stdlib_h)
 CHECK(unistd_h)
 CHECK(limits_h)

@@ -33,14 +33,14 @@ typedef struct rg_feature_sketch {
 	struct rg_sketch *sk;
 	int x, y;
 	int visible;
-	TAILQ_ENTRY(rg_feature_sketch) sketches;
+	AG_TAILQ_ENTRY(rg_feature_sketch) sketches;
 } RG_FeatureSketch;
 
 typedef struct rg_feature_pixmap {
 	struct rg_pixmap *px;
 	int x, y;
 	int visible;
-	TAILQ_ENTRY(rg_feature_pixmap) pixmaps;
+	AG_TAILQ_ENTRY(rg_feature_pixmap) pixmaps;
 } RG_FeaturePixmap;
 
 typedef struct rg_feature {
@@ -49,9 +49,9 @@ typedef struct rg_feature {
 	struct rg_tileset *ts;
 	int flags;
 	Uint nrefs;
-	TAILQ_HEAD(,rg_feature_sketch) sketches;
-	TAILQ_HEAD(,rg_feature_pixmap) pixmaps;
-	TAILQ_ENTRY(rg_feature) features;
+	AG_TAILQ_HEAD(,rg_feature_sketch) sketches;
+	AG_TAILQ_HEAD(,rg_feature_pixmap) pixmaps;
+	AG_TAILQ_ENTRY(rg_feature) features;
 } RG_Feature;
 
 #define RG_FEATURE(f) ((RG_Feature *)(f))

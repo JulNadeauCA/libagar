@@ -30,18 +30,18 @@ typedef struct ag_cached_sprite {
 #endif
 	Uint32 last_drawn;			/* Time last draw occured */
 	struct ag_transformq transforms;	/* Applied transforms */
-	SLIST_ENTRY(ag_cached_sprite) sprites;
+	AG_SLIST_ENTRY(ag_cached_sprite) sprites;
 } AG_CachedSprite;
 
 typedef struct ag_cached_anim {
 	struct ag_anim *anim;			/* Modified anim */
 	Uint32 last_drawn;			/* Time last draw occured */
 	struct ag_transformq transforms;	/* Applied transforms */
-	SLIST_ENTRY(ag_cached_anim) anims;
+	AG_SLIST_ENTRY(ag_cached_anim) anims;
 } AG_CachedAnim;
 
 typedef struct ag_anim_cache {
-	SLIST_HEAD(,ag_cached_anim) anims;
+	AG_SLIST_HEAD(,ag_cached_anim) anims;
 } AG_AnimCache;
 
 enum ag_gfx_snap_mode {
@@ -66,7 +66,7 @@ typedef struct ag_sprite {
 	Uint texture;
 	float texcoords[4];
 #endif
-	SLIST_HEAD(,ag_cached_sprite) csprites; /* Transform cache */
+	AG_SLIST_HEAD(,ag_cached_sprite) csprites; /* Transform cache */
 } AG_Sprite;
 
 typedef struct ag_gfx {

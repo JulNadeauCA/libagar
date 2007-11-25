@@ -1,11 +1,5 @@
 /*	Public domain	*/
 
-#if 0
-#ifndef _MK_HAVE_SYS_QUEUE_H
-#include <agar/core/queue_close.h>
-#endif
-#endif
-
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 # undef Uchar
 # undef Uint
@@ -40,10 +34,6 @@
 #ifdef _AGAR_HAVE_UNISTD_H_
 # undef _AGAR_HAVE_UNISTD_H_
 # undef _MK_HAVE_UNISTD_H
-#endif
-#ifdef _AGAR_HAVE_SYS_QUEUE_H_
-# undef _AGAR_HAVE_SYS_QUEUE_H_
-# undef _MK_HAVE_SYS_QUEUE_H
 #endif
 #ifdef _AGAR_HAVE_UNSIGNED_TYPEDEFS_
 # undef _AGAR_HAVE_UNSIGNED_TYPEDEFS_

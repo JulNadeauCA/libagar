@@ -25,10 +25,10 @@ typedef struct ag_fixed_plotter_item {
 	Uint32 maxvals;
 	Uint32 limit;
 	struct ag_fixed_plotter *fpl;			/* Back pointer */
-	TAILQ_ENTRY(ag_fixed_plotter_item) items;
+	AG_TAILQ_ENTRY(ag_fixed_plotter_item) items;
 } AG_FixedPlotterItem;
 
-TAILQ_HEAD(ag_fixed_plotter_itemq, ag_fixed_plotter_item);
+AG_TAILQ_HEAD(ag_fixed_plotter_itemq, ag_fixed_plotter_item);
 
 enum ag_fixed_plotter_type {
 	AG_FIXED_PLOTTER_POINTS,

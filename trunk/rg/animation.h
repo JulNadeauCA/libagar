@@ -40,7 +40,7 @@ typedef struct rg_anim_insn {
 #define in_disPx args.disPx
 #define in_rotPx args.rotPx
 #endif
-	TAILQ_ENTRY(rg_anim_insn) insns;
+	AG_TAILQ_ENTRY(rg_anim_insn) insns;
 } RG_AnimInsn;
 
 /* Generated animation frame */
@@ -71,8 +71,8 @@ typedef struct rg_anim {
 	Uint	     nframes;
 	Uint	     gframe;			/* Current frame (global) */
 
-	SLIST_HEAD(,rg_anim_variant) vars;	/* Transformed variants */
-	TAILQ_ENTRY(rg_anim) animations;
+	AG_SLIST_HEAD(,rg_anim_variant) vars;	/* Transformed variants */
+	AG_TAILQ_ENTRY(rg_anim) animations;
 } RG_Anim;
 
 /* Cached, transformed animation variant */
@@ -80,7 +80,7 @@ typedef struct rg_anim_variant {
 	RG_TransformChain transforms;		/* Applied transforms */
 	RG_Anim *anim;				/* Transformed anim */
 	Uint32 last_drawn;			/* Time last draw occured */
-	SLIST_ENTRY(rg_anim_variant) vars;
+	AG_SLIST_ENTRY(rg_anim_variant) vars;
 } RG_AnimVariant;
 
 #ifdef DEBUG

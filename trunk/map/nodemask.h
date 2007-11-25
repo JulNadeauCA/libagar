@@ -14,7 +14,7 @@ enum map_nodemask_type {
 	AG_NODEMASK_RECTANGLE		/* Rectangular region */
 };
 
-typedef TAILQ_HEAD(map_nodemaskq, map_nodemask) MAP_NodeMaskQ;
+typedef AG_TAILQ_HEAD(map_nodemaskq, map_nodemask) MAP_NodeMaskQ;
 
 typedef struct map_nodemask {
 	enum map_nodemask_type type;
@@ -31,7 +31,7 @@ typedef struct map_nodemask {
 	} params;
 #define nm_bitmap	params.bitmap
 #define nm_poly		params.poly
-	TAILQ_ENTRY(map_nodemask) masks;
+	AG_TAILQ_ENTRY(map_nodemask) masks;
 } MAP_NodeMask;
 
 __BEGIN_DECLS

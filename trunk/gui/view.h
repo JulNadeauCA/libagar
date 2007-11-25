@@ -21,7 +21,7 @@
 
 struct ag_window;
 struct ag_style;
-TAILQ_HEAD(ag_windowq, ag_window);
+AG_TAILQ_HEAD(ag_windowq, ag_window);
 
 typedef struct ag_point {
 	int x, y;

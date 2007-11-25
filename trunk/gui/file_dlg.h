@@ -42,16 +42,16 @@ typedef struct ag_file_type_option {
 		struct { double val, min, max; } dbl;
 		char s[128];
 	} data;
-	TAILQ_ENTRY(ag_file_type_option) opts;
+	AG_TAILQ_ENTRY(ag_file_type_option) opts;
 } AG_FileOption;
 
 typedef struct ag_file_type {
 	const char *descr;			/* Description */
 	char **exts;				/* Filename extensions */
 	Uint nexts;
-	AG_Event *action;			/* Action (save/load) */
-	TAILQ_HEAD(,ag_file_type_option) opts;	/* Type-specific options */
-	TAILQ_ENTRY(ag_file_type) types;
+	AG_Event *action;			  /* Action (save/load) */
+	AG_TAILQ_HEAD(,ag_file_type_option) opts; /* Type-specific options */
+	AG_TAILQ_ENTRY(ag_file_type) types;
 } AG_FileType;
 
 typedef struct ag_file_dlg {
@@ -80,7 +80,7 @@ typedef struct ag_file_dlg {
 	AG_Event *cancelAction;			/* Cancel action */
 	char *dirMRU;				/* MRU Directory */
 	void *optsCtr;				/* Container widget for opts */
-	TAILQ_HEAD(,ag_file_type) types;	/* File type handlers */
+	AG_TAILQ_HEAD(,ag_file_type) types;	/* File type handlers */
 } AG_FileDlg;
 
 __BEGIN_DECLS
