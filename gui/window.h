@@ -70,13 +70,13 @@ typedef struct ag_window {
 	int savx, savy;				/* Saved coordinates (px) */
 	int savw, savh;				/* Saved geometry (px) */
 	
-	TAILQ_HEAD(,ag_window) subwins;		/* Sub-windows */
-	TAILQ_ENTRY(ag_window) windows;		/* Active window list */
-	TAILQ_ENTRY(ag_window) swins;		/* Sub-window list */
-	TAILQ_ENTRY(ag_window) detach;		/* Zombie window list */
+	AG_TAILQ_HEAD(,ag_window) subwins;		/* Sub-windows */
+	AG_TAILQ_ENTRY(ag_window) windows;		/* Active window list */
+	AG_TAILQ_ENTRY(ag_window) swins;		/* Sub-window list */
+	AG_TAILQ_ENTRY(ag_window) detach;		/* Zombie window list */
 } AG_Window;
 
-#define AG_WINDOW_FOCUSED(w) (TAILQ_LAST(&agView->windows, ag_windowq) == (w))
+#define AG_WINDOW_FOCUSED(w) (AG_TAILQ_LAST(&agView->windows,ag_windowq)==(w))
 
 __BEGIN_DECLS
 extern AG_WidgetClass agWindowClass;

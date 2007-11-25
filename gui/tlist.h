@@ -23,7 +23,7 @@ typedef struct ag_tlist_popup {
 	AG_Menu *menu;
 	AG_MenuItem *item;
 	AG_Window *panel;
-	TAILQ_ENTRY(ag_tlist_popup) popups;
+	AG_TAILQ_ENTRY(ag_tlist_popup) popups;
 } AG_TlistPopup;
 
 typedef struct ag_tlist_item {
@@ -45,11 +45,11 @@ typedef struct ag_tlist_item {
 #define AG_TLIST_NO_POPUP	  0x10	/* Disable popups for item */
 #define AG_TLIST_VISIBLE_CHILDREN AG_TLIST_EXPANDED
 
-	TAILQ_ENTRY(ag_tlist_item) items;	/* Items in list */
-	TAILQ_ENTRY(ag_tlist_item) selitems;	/* Saved selection state */
+	AG_TAILQ_ENTRY(ag_tlist_item) items;	/* Items in list */
+	AG_TAILQ_ENTRY(ag_tlist_item) selitems;	/* Saved selection state */
 } AG_TlistItem;
 
-TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item);
+AG_TAILQ_HEAD(ag_tlist_itemq, ag_tlist_item);
 
 typedef struct ag_tlist {
 	struct ag_widget wid;
@@ -78,7 +78,7 @@ typedef struct ag_tlist {
 	int nitems;			/* Current item count */
 	int nvisitems;			/* Visible item count */
 	AG_Scrollbar *sbar;		/* Vertical scrollbar */
-	TAILQ_HEAD(,ag_tlist_popup) popups; /* Popup menus */
+	AG_TAILQ_HEAD(,ag_tlist_popup) popups; /* Popup menus */
 	int (*compare_fn)(const AG_TlistItem *, const AG_TlistItem *);
 	AG_Event *popupEv;
 	AG_Event *changedEv;
@@ -86,13 +86,13 @@ typedef struct ag_tlist {
 } AG_Tlist;
 
 #define AG_TLIST_FOREACH(it, tl) \
-	TAILQ_FOREACH(it, &(tl)->items, items)
+	AG_TAILQ_FOREACH(it, &(tl)->items, items)
 
 #define AG_TLIST_FOREACH_ITEM(p, tl, it, type)				\
-	for((it) = TAILQ_FIRST(&(tl)->items),				\
+	for((it) = AG_TAILQ_FIRST(&(tl)->items),			\
 	     (p) = (it)!=NULL ? (struct type *)(it)->p1 : NULL;		\
-	    (it) != TAILQ_END(&(tl)->children) && (it)->p1 != NULL;	\
-	    (it) = TAILQ_NEXT((it), cobjs),				\
+	    (it) != AG_TAILQ_END(&(tl)->children) && (it)->p1 != NULL;	\
+	    (it) = AG_TAILQ_NEXT((it), cobjs),				\
 	     (p) = (it)!=NULL ? (struct type *)(it)->p1 : NULL)
 
 #define AG_TLIST_ITEM(n) AG_TlistSelectedItemPtr(AG_PTR(n))
@@ -150,7 +150,7 @@ AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
 {
 	AG_TlistItem *sit;
 
-	TAILQ_FOREACH(sit, &tl->selitems, selitems) {
+	AG_TAILQ_FOREACH(sit, &tl->selitems, selitems) {
 		if (tl->compare_fn(sit, cit))
 			break;
 	}

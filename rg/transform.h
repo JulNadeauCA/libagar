@@ -14,14 +14,14 @@ enum rg_transform_type {
 	RG_TRANSFORM_RGB_INVERT
 };
 
-typedef TAILQ_HEAD(rg_transformq, rg_transform) RG_TransformChain;
+typedef AG_TAILQ_HEAD(rg_transformq, rg_transform) RG_TransformChain;
 
 typedef struct rg_transform {
 	enum rg_transform_type type;
 	SDL_Surface *(*func)(SDL_Surface *, int, Uint32 *);
 	Uint32 *args;
 	int nargs;
-	TAILQ_ENTRY(rg_transform) transforms;
+	AG_TAILQ_ENTRY(rg_transform) transforms;
 } RG_Transform;
 
 struct rg_transform_ops {

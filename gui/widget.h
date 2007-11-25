@@ -85,7 +85,7 @@ typedef struct ag_widget_binding {
 		size_t size;			/* Size (for STRING) */
 		Uint32 bitmask;			/* Bitmask (for FLAG) */
 	} data;
-	SLIST_ENTRY(ag_widget_binding) bindings;
+	AG_SLIST_ENTRY(ag_widget_binding) bindings;
 } AG_WidgetBinding;
 
 struct ag_popup_menu;
@@ -131,9 +131,9 @@ typedef struct ag_widget {
 	float *texcoords;		/* Cached texture coordinates */
 #endif
 
-	AG_Mutex bindings_lock;			 /* Lock on all bindings */
-	SLIST_HEAD(,ag_widget_binding) bindings; /* List of variable bindings */
-	SLIST_HEAD(,ag_popup_menu) menus;	 /* Managed menus */
+	AG_Mutex bindings_lock;			 	/* Lock on bindings */
+	AG_SLIST_HEAD(,ag_widget_binding) bindings;	/* Binding data */
+	AG_SLIST_HEAD(,ag_popup_menu) menus;		/* Managed menus */
 } AG_Widget;
 
 #define AGWIDGET(wi)			((AG_Widget *)(wi))

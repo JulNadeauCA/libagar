@@ -37,7 +37,7 @@ typedef struct vg_view {
 	} mouse;
 	VG_Tool *curtool;			/* Selected tool */
 	VG_Tool *deftool;			/* Default tool if any */
-	TAILQ_HEAD(, vg_tool) tools;		/* Map edition tools */
+	AG_TAILQ_HEAD(,vg_tool) tools;		/* Map edition tools */
 	char status[128];			/* Status text buffer */
 } VG_View;
 

@@ -163,7 +163,7 @@ typedef struct vg_style {
 #define vg_line_st	vg_style_args.vg_line_style
 #define vg_text_st	vg_style_args.vg_text_style
 #define vg_fill_st	vg_style_args.vg_fill_style
-	TAILQ_ENTRY(vg_style) styles;
+	AG_TAILQ_ENTRY(vg_style) styles;
 } VG_Style;
 
 typedef struct vg_matrix {
@@ -206,8 +206,8 @@ typedef struct vg_element {
 #define vg_mask	    vg_args.vg_mask
 #define vg_polygon  vg_args.vg_polygon
 #endif
-	TAILQ_ENTRY(vg_element) vgbmbs;	/* Entry in block element list */
-	TAILQ_ENTRY(vg_element) vges;	/* Entry in global element list */
+	AG_TAILQ_ENTRY(vg_element) vgbmbs; /* Entry in block element list */
+	AG_TAILQ_ENTRY(vg_element) vges;   /* Entry in global element list */
 } VG_Element;
 
 typedef struct vg {
@@ -258,9 +258,9 @@ typedef struct vg {
 	int *ints;			/* Used for scan conversion */
 	Uint nints;
 
-	TAILQ_HEAD(,vg_element) vges;	/* Elements in drawing */
-	TAILQ_HEAD(,vg_block) blocks;	/* Blocks in drawing */
-	TAILQ_HEAD(,vg_style) styles;	/* Global default styles */
+	AG_TAILQ_HEAD(,vg_element) vges;	/* Elements in drawing */
+	AG_TAILQ_HEAD(,vg_block) blocks;	/* Blocks in drawing */
+	AG_TAILQ_HEAD(,vg_style) styles;	/* Global default styles */
 } VG;
 
 #define VG_RASXF(vg,cx) ((cx)*(vg)->scale + (vg)->origin[0].x*(vg)->scale)

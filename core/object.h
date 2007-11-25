@@ -42,10 +42,10 @@ typedef struct ag_object_dep {
 	struct ag_object *obj;		/* Resolved object */
 	Uint32		  count;	/* Reference count */
 #define AG_OBJECT_DEP_MAX (0xffffffff-2) /* If reached, stay resident */
-	TAILQ_ENTRY(ag_object_dep) deps;
+	AG_TAILQ_ENTRY(ag_object_dep) deps;
 } AG_ObjectDep;
 
-TAILQ_HEAD(ag_objectq, ag_object);
+AG_TAILQ_HEAD(ag_objectq, ag_object);
 
 typedef struct ag_object {
 	char name[AG_OBJECT_NAME_MAX];	/* Object ID (unique in parent) */
@@ -79,16 +79,16 @@ typedef struct ag_object {
 
 	AG_Mutex lock;
 	Uint nevents;				/* Number of event handlers */
-	TAILQ_HEAD(,ag_event) events;		/* Event handlers */
-	TAILQ_HEAD(,ag_prop) props;		/* Generic property table */
-	CIRCLEQ_HEAD(,ag_timeout) timeouts;	/* Timers tied to object */
+	AG_TAILQ_HEAD(,ag_event) events;	/* Event handlers */
+	AG_TAILQ_HEAD(,ag_prop) props;		/* Generic property table */
+	AG_CIRCLEQ_HEAD(,ag_timeout) timeouts;	/* Timers tied to object */
 
 	/* Uses linkage_lock */
-	TAILQ_HEAD(,ag_object_dep) deps; /* Object dependencies */
+	AG_TAILQ_HEAD(,ag_object_dep) deps; /* Object dependencies */
 	struct ag_objectq children;	 /* Child objects */
 	void *parent;			 /* Back reference to parent object */
-	TAILQ_ENTRY(ag_object) cobjs;	 /* Entry in child object queue */
-	TAILQ_ENTRY(ag_object) tobjs;	 /* Entry in timeout queue */
+	AG_TAILQ_ENTRY(ag_object) cobjs; /* Entry in child object queue */
+	AG_TAILQ_ENTRY(ag_object) tobjs; /* Entry in timeout queue */
 } AG_Object;
 
 enum ag_object_checksum_alg {
@@ -106,18 +106,18 @@ enum ag_object_checksum_alg {
 		(name),(pfx),(cls),0,				\
 		AG_MUTEX_INITIALIZER,				\
 		NULL, 0, 0, 					\
-		TAILQ_HEAD_INITIALIZER((ob)->events),		\
-		TAILQ_HEAD_INITIALIZER((ob)->props),		\
-		CIRCLEQ_HEAD_INITIALIZER((ob)->timeouts),	\
-		TAILQ_HEAD_INITIALIZER((ob)->deps),		\
-		TAILQ_HEAD_INITIALIZER((ob)->children),		\
+		AG_TAILQ_HEAD_INITIALIZER((ob)->events),	\
+		AG_TAILQ_HEAD_INITIALIZER((ob)->props),		\
+		AG_CIRCLEQ_HEAD_INITIALIZER((ob)->timeouts),	\
+		AG_TAILQ_HEAD_INITIALIZER((ob)->deps),		\
+		AG_TAILQ_HEAD_INITIALIZER((ob)->children),	\
 		NULL						\
 	}
 
 #define AGOBJECT_FOREACH_CHILD(var, ob, type)				\
-	for((var) = (struct type *)TAILQ_FIRST(&AGOBJECT(ob)->children); \
-	    (var) != (struct type *)TAILQ_END(&AGOBJECT(ob)->children); \
-	    (var) = (struct type *)TAILQ_NEXT(AGOBJECT(var), cobjs))
+	for((var) = (struct type *)AG_TAILQ_FIRST(&AGOBJECT(ob)->children); \
+	    (var) != (struct type *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
+	    (var) = (struct type *)AG_TAILQ_NEXT(AGOBJECT(var), cobjs))
 
 #define AGOBJECT_FOREACH_CLASS(var, ob, type, subclass)			\
 	AGOBJECT_FOREACH_CHILD(var,ob,type)				\
@@ -126,10 +126,10 @@ enum ag_object_checksum_alg {
 		} else
 
 #define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, type)			\
-	for((var) = (struct type *)TAILQ_LAST(&AGOBJECT(ob)->children, \
+	for((var) = (struct type *)AG_TAILQ_LAST(&AGOBJECT(ob)->children, \
 	    ag_objectq); \
-	    (var) != (struct type *)TAILQ_END(&AGOBJECT(ob)->children); \
-	    (var) = (struct type *)TAILQ_PREV(AGOBJECT(var), ag_objectq, \
+	    (var) != (struct type *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
+	    (var) = (struct type *)AG_TAILQ_PREV(AGOBJECT(var), ag_objectq, \
 	    cobjs))
 
 #ifdef _AGAR_INTERNAL

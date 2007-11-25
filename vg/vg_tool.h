@@ -38,9 +38,9 @@ typedef struct vg_tool {
 	AG_Window *win;				/* Edition window (if any) */
 	AG_Widget *pane;			/* Edition pane (if any) */
 	AG_Button *trigger;			/* Trigger button (XXX) */
-	SLIST_HEAD(,vg_tool_keybinding) kbindings;
-	SLIST_HEAD(,vg_tool_mousebinding) mbindings;
-	TAILQ_ENTRY(vg_tool) tools;
+	AG_SLIST_HEAD(,vg_tool_keybinding) kbindings;
+	AG_SLIST_HEAD(,vg_tool_mousebinding) mbindings;
+	AG_TAILQ_ENTRY(vg_tool) tools;
 } VG_Tool;
 
 typedef struct vg_tool_keybinding {
@@ -49,7 +49,7 @@ typedef struct vg_tool_keybinding {
 	int edit;
 	int (*func)(VG_Tool *, SDLKey k, int s, void *);
 	void *arg;
-	SLIST_ENTRY(vg_tool_keybinding) kbindings;
+	AG_SLIST_ENTRY(vg_tool_keybinding) kbindings;
 } VG_ToolKeyBinding;
 
 typedef struct vg_tool_mousebinding {
@@ -57,7 +57,7 @@ typedef struct vg_tool_mousebinding {
 	int edit;
 	int (*func)(VG_Tool *, int b, int s, float x, float y, void *);
 	void *arg;
-	SLIST_ENTRY(vg_tool_mousebinding) mbindings;
+	AG_SLIST_ENTRY(vg_tool_mousebinding) mbindings;
 } VG_ToolMouseBinding;
 
 #define VGTOOL(t) ((VG_Tool *)(t))

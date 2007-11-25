@@ -44,7 +44,7 @@ typedef struct ag_glyph {
 	Uint texture;			/* Rendered texture */
 	float texcoord[4];
 #endif
-	SLIST_ENTRY(ag_glyph) glyphs;
+	AG_SLIST_ENTRY(ag_glyph) glyphs;
 } AG_Glyph;
 
 /* Cached font */
@@ -68,7 +68,7 @@ typedef struct ag_font {
 	Uint nglyphs;			/* Bitmap glyph count */
 	Uint32 c0, c1;			/* Bitmap glyph range */
 
-	SLIST_ENTRY(ag_font) fonts;
+	AG_SLIST_ENTRY(ag_font) fonts;
 } AG_Font;
 
 /* State variables for text rendering. */

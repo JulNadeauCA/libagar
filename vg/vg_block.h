@@ -16,8 +16,8 @@ typedef struct vg_block {
 	VG_Vtx origin;			/* Block origin */
 	float theta;			/* Angle of rotation */
 	int selected;
-	TAILQ_HEAD(,vg_element) vges;
-	TAILQ_ENTRY(vg_block) vgbs;
+	AG_TAILQ_HEAD(,vg_element) vges;
+	AG_TAILQ_ENTRY(vg_block) vgbs;
 } VG_Block;
 
 struct ag_window;

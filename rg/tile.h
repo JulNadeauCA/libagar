@@ -52,10 +52,10 @@ typedef struct rg_tile_element {
 #define tel_pixmap  data.pixmap
 #define tel_sketch  data.sketch
 #endif
-	TAILQ_ENTRY(rg_tile_element) elements;
+	AG_TAILQ_ENTRY(rg_tile_element) elements;
 } RG_TileElement;
 
-TAILQ_HEAD(rg_tile_elementq, rg_tile_element);
+AG_TAILQ_HEAD(rg_tile_elementq, rg_tile_element);
 
 typedef struct rg_tile {
 	char name[RG_TILE_NAME_MAX];	/* User description */
@@ -92,8 +92,8 @@ typedef struct rg_tile {
 	/* Pixel blending function */
 	void (*blend_fn)(struct rg_tile *, SDL_Surface *, SDL_Rect *);
 
-	SLIST_HEAD(,rg_tile_variant) vars;	/* Cached variants */
-	TAILQ_ENTRY(rg_tile) tiles;
+	AG_SLIST_HEAD(,rg_tile_variant) vars;	/* Cached variants */
+	AG_TAILQ_ENTRY(rg_tile) tiles;
 } RG_Tile;
 
 /* Cached, transformed tile variant */
@@ -105,7 +105,7 @@ typedef struct rg_tile_variant {
 	float texcoords[4];
 #endif
 	Uint32 last_drawn;		/* Time last draw occured */
-	SLIST_ENTRY(rg_tile_variant) vars;
+	AG_SLIST_ENTRY(rg_tile_variant) vars;
 } RG_TileVariant;
 
 #define RG_TILE_ATTR2(t,x,y) (t)->attrs[(y)*(t)->nw + (x)]

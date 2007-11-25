@@ -23,10 +23,6 @@
 # include <agar/config/_mk_have_unistd_h.h>
 # define _AGAR_HAVE_UNISTD_H_
 #endif
-#ifndef _AGAR_HAVE_SYS_QUEUE_H
-# include <agar/config/_mk_have_sys_queue_h.h>
-# define _AGAR_HAVE_SYS_QUEUE_H_
-#endif
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 # include <agar/config/_mk_have_unsigned_typedefs.h>
 # define _AGAR_HAVE_UNSIGNED_TYPEDEFS_
@@ -116,13 +112,8 @@
 #define _AGAR_DEFINED_MAXPATHLEN_
 #endif
 
-#ifdef _AGAR_HAVE_SYS_QUEUE_H
-#include <sys/queue.h>
-#else
-#include <agar/core/queue.h>
-#endif
-
-#include <agar/core/cpuinfo.h>	/* For agCPU structure */
+#include <agar/core/queue.h>	/* For FOO_ENTRY macros */
+#include <agar/core/cpuinfo.h>	/* For arch extension defines */
 
 #if !defined(AG_BIG_ENDIAN) && !defined(AG_LITTLE_ENDIAN)
 # define AG_BIG_ENDIAN 4321

@@ -92,7 +92,7 @@ typedef struct ag_event {
 	int 	 argt[AG_EVENT_ARGS_MAX];
 	char	*argn[AG_EVENT_ARGS_MAX];
 	AG_Timeout timeout;
-	TAILQ_ENTRY(ag_event) events;
+	AG_TAILQ_ENTRY(ag_event) events;
 } AG_Event;
 
 typedef void (*AG_EventFn)(AG_Event *);

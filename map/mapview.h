@@ -28,7 +28,7 @@ struct ag_scrollbar;
 typedef struct map_view_draw_cb {
 	void (*func)(struct map_view *, void *);
 	void *p;
-	SLIST_ENTRY(map_view_draw_cb) draw_cbs;
+	AG_SLIST_ENTRY(map_view_draw_cb) draw_cbs;
 } MAP_ViewDrawCb;
 
 typedef struct map_view {
@@ -107,8 +107,8 @@ typedef struct map_view {
 	MAP_Tool *curtool;		/* Selected tool */
 	MAP_Tool *deftool;		/* Default tool if any */
 
-	TAILQ_HEAD(, map_tool) tools;		    /* Map edition tools */
-	SLIST_HEAD(, map_view_draw_cb) draw_cbs;    /* Post-draw callbacks */
+	AG_TAILQ_HEAD(, map_tool) tools;	       /* Map edition tools */
+	AG_SLIST_HEAD(, map_view_draw_cb) draw_cbs;    /* Post-draw callbacks */
 } MAP_View;
 
 #define AGMCAM(mv)	(mv)->map->cameras[(mv)->cam]

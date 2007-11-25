@@ -81,13 +81,7 @@ typedef unsigned long Ulong;
 #endif
 
 #include <core/error.h>
-
-#include <config/_mk_have_sys_queue_h.h>
-#ifdef _MK_HAVE_SYS_QUEUE_H
-#include <sys/queue.h>
-#else
 #include <core/queue.h>
-#endif
 
 #include <core/strlcpy.h>
 #include <core/strlcat.h>

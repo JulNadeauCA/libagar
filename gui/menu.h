@@ -83,7 +83,7 @@ typedef struct ag_popup_menu {
 	AG_Menu *menu;
 	AG_MenuItem *item;
 	AG_Window *win;
-	SLIST_ENTRY(ag_popup_menu) menus;
+	AG_SLIST_ENTRY(ag_popup_menu) menus;
 } AG_PopupMenu;
 
 typedef struct ag_menu_view {

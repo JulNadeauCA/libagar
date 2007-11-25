@@ -71,13 +71,13 @@ typedef struct map_item {
 	} nref;
 	RG_TransformChain transforms;		/* Graphical transformations */
 	MAP_NodeMaskQ masks;			/* Collision detection masks */
-	TAILQ_ENTRY(map_item) nrefs;		/* Node's reference stack */
+	AG_TAILQ_ENTRY(map_item) nrefs;		/* Node's reference stack */
 #define r_tile		nref.tile
 #define r_anim		nref.anim
 #define r_warp		nref.warp
 } MAP_Item;
 
-TAILQ_HEAD(map_itemq, map_item);
+AG_TAILQ_HEAD(map_itemq, map_item);
 
 typedef struct map_node {
 	struct map_itemq nrefs;		/* Items on this node */
@@ -165,7 +165,7 @@ typedef struct map {
 	Uint nblks;
 	Uint curblk;
 	Uint nmods;
-	TAILQ_HEAD(, map_actor) actors;	/* Active objects */
+	AG_TAILQ_HEAD(, map_actor) actors;	/* Active objects */
 } MAP;
 
 __BEGIN_DECLS

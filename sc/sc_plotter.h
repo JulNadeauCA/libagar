@@ -37,7 +37,7 @@ typedef struct sc_plot_label {
 	enum sc_plot_label_type type;		/* Packing alignment */
 	Uint x;					/* X position (or -1) */
 	Uint y;					/* Y position (or -1) */
-	TAILQ_ENTRY(sc_plot_label) labels;
+	AG_TAILQ_ENTRY(sc_plot_label) labels;
 } SC_PlotLabel;
 
 typedef struct sc_plot {
@@ -83,8 +83,8 @@ typedef struct sc_plot {
 	SC_Real xScale, yScale;		/* Scaling factors */
 	int xOffs, yOffs;		/* Offset in display */
 	int xLabel, yLabel;		/* Item position */
-	TAILQ_HEAD(,sc_plot_label) labels; /* User labels */
-	TAILQ_ENTRY(sc_plot) plots;
+	AG_TAILQ_HEAD(,sc_plot_label) labels; /* User labels */
+	AG_TAILQ_ENTRY(sc_plot) plots;
 } SC_Plot;
 
 typedef struct sc_plotter {
@@ -111,7 +111,7 @@ typedef struct sc_plotter {
 	Uint32 colors[SC_PLOTTER_NDEFCOLORS];	/* Default plot color */
 	int curColor;				/* Current default color */
 	AG_Scrollbar *hbar, *vbar;	/* Display scrollbars */
-	TAILQ_HEAD(,sc_plot) plots;	/* Plots in this view */
+	AG_TAILQ_HEAD(,sc_plot) plots;	/* Plots in this view */
 } SC_Plotter;
 
 __BEGIN_DECLS

@@ -25,7 +25,7 @@ enum ag_notebook_tab_alignment {
 typedef struct ag_notebook_tab {
 	struct ag_box box;
 	int label;
-	TAILQ_ENTRY(ag_notebook_tab) tabs;
+	AG_TAILQ_ENTRY(ag_notebook_tab) tabs;
 } AG_NotebookTab;
 
 typedef struct ag_notebook {
@@ -42,7 +42,7 @@ typedef struct ag_notebook {
 	int spacing, padding;		/* Spacing for tabs */
 	AG_Font *tabFont;		/* Font for tab labels */
 	struct ag_notebook_tab *sel_tab;
-	TAILQ_HEAD(,ag_notebook_tab) tabs;
+	AG_TAILQ_HEAD(,ag_notebook_tab) tabs;
 } AG_Notebook;
 
 __BEGIN_DECLS

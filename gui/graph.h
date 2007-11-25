@@ -40,8 +40,8 @@ typedef struct ag_graph_vertex {
 	struct ag_graph_edge **edges;		/* Back pointers to edges */
 	Uint nedges;
 	struct ag_graph *graph;			/* Back pointer to graph */
-	TAILQ_ENTRY(ag_graph_vertex) vertices;
-	TAILQ_ENTRY(ag_graph_vertex) sorted;	/* For autoplacer */
+	AG_TAILQ_ENTRY(ag_graph_vertex) vertices;
+	AG_TAILQ_ENTRY(ag_graph_vertex) sorted;	/* For autoplacer */
 } AG_GraphVertex;
 
 typedef struct ag_graph_edge {
@@ -56,7 +56,7 @@ typedef struct ag_graph_edge {
 	AG_GraphVertex *v1, *v2;		/* Connected vertices */
 	void *userPtr;				/* User pointer */
 	struct ag_graph *graph;			/* Back pointer to graph */
-	TAILQ_ENTRY(ag_graph_edge) edges;
+	AG_TAILQ_ENTRY(ag_graph_edge) edges;
 } AG_GraphEdge;
 
 typedef struct ag_graph {
@@ -73,8 +73,8 @@ typedef struct ag_graph {
 	int xMin, xMax, yMin, yMax;	/* Display boundaries */
 	AG_Scrollbar *hbar, *vbar;	/* Scrollbars for panning */
 
-	TAILQ_HEAD(,ag_graph_vertex) vertices;	/* Graph vertices */
-	TAILQ_HEAD(,ag_graph_edge) edges;	/* Graph edges */
+	AG_TAILQ_HEAD(,ag_graph_vertex) vertices;	/* Graph vertices */
+	AG_TAILQ_HEAD(,ag_graph_edge) edges;		/* Graph edges */
 	Uint nvertices, nedges;	
 	int pxMin, pxMax, pyMin, pyMax;		/* Bounds of last cluster
 						   (for autoplacer) */

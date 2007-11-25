@@ -120,7 +120,7 @@ typedef struct ag_prop {
 		char	*(*rString)(void *, struct ag_prop *);
 		void	*(*rPointer)(void *, struct ag_prop *);
 	} readFn;
-	TAILQ_ENTRY(ag_prop) props;
+	AG_TAILQ_ENTRY(ag_prop) props;
 } AG_Prop;
 
 #define AG_SetUintWrFn(prop,fn) (prop)->writeFn.wUint = (fn)

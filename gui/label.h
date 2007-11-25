@@ -27,7 +27,7 @@ struct ag_label_flag {
 	const char *text;		/* Label text */
 	Uint32 v;			/* Bitmask */
 	enum ag_widget_binding_type type;
-	SLIST_ENTRY(ag_label_flag) lflags;
+	AG_SLIST_ENTRY(ag_label_flag) lflags;
 };
 
 typedef struct ag_label {
@@ -52,7 +52,7 @@ typedef struct ag_label {
 		void *ptrs[AG_LABEL_MAX_POLLPTRS]; /* Pointers to polled data */
 		int nptrs;
 	} poll;
-	SLIST_HEAD(,ag_label_flag) lflags;	/* Label flag descriptions */
+	AG_SLIST_HEAD(,ag_label_flag) lflags;	/* Label flag descriptions */
 } AG_Label;
 
 __BEGIN_DECLS

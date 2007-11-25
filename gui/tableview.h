@@ -53,7 +53,7 @@ typedef struct ag_tableview_col {
 	int w;					/* Column width */
 } AG_TableviewCol;
 
-TAILQ_HEAD(ag_tableview_rowq, ag_tableview_row);
+AG_TAILQ_HEAD(ag_tableview_rowq, ag_tableview_row);
 
 typedef struct ag_tableview_row {
 	AG_TableviewRowID rid;
@@ -67,8 +67,8 @@ typedef struct ag_tableview_row {
 	struct ag_tableview_row *parent;
 	struct ag_tableview_rowq children;
 	void *userp;
-	TAILQ_ENTRY(ag_tableview_row) siblings;
-	TAILQ_ENTRY(ag_tableview_row) backstore;
+	AG_TAILQ_ENTRY(ag_tableview_row) siblings;
+	AG_TAILQ_ENTRY(ag_tableview_row) backstore;
 } AG_TableviewRow;
 
 typedef struct ag_tableview {

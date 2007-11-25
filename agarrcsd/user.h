@@ -25,8 +25,8 @@ typedef struct user {
 #define USER_EMAIL_NOTICES	0x04		/* Send email notices */
 #define USER_SETTABLE_FLAGS	(USER_EMAIL_NOTICES)
 
-	TAILQ_ENTRY(user) usert;		/* Entry in hash table */
-	TAILQ_ENTRY(user) userl;		/* Entry in flat list */
+	AG_TAILQ_ENTRY(user) usert;		/* Entry in hash table */
+	AG_TAILQ_ENTRY(user) userl;		/* Entry in flat list */
 } User;
 
 extern AG_ObjectClass UserClass;

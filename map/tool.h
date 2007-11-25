@@ -46,9 +46,9 @@ typedef struct map_tool {
 	struct ag_widget *pane;		/* Edition pane (if any) */
 	struct ag_button *trigger;	/* Trigger button (XXX) */
 
-	SLIST_HEAD(,map_tool_keybinding) kbindings;
-	SLIST_HEAD(,map_tool_mousebinding) mbindings;
-	TAILQ_ENTRY(map_tool) tools;
+	AG_SLIST_HEAD(,map_tool_keybinding) kbindings;
+	AG_SLIST_HEAD(,map_tool_mousebinding) mbindings;
+	AG_TAILQ_ENTRY(map_tool) tools;
 } MAP_Tool;
 
 typedef struct map_tool_keybinding {
@@ -57,7 +57,7 @@ typedef struct map_tool_keybinding {
 	int edit;
 	int (*func)(MAP_Tool *, SDLKey k, int s, void *);
 	void *arg;
-	SLIST_ENTRY(map_tool_keybinding) kbindings;
+	AG_SLIST_ENTRY(map_tool_keybinding) kbindings;
 } MAP_ToolKeyBinding;
 
 typedef struct map_tool_mousebinding {
@@ -65,7 +65,7 @@ typedef struct map_tool_mousebinding {
 	int edit;
 	int (*func)(MAP_Tool *, int b, int s, int x, int y, void *);
 	void *arg;
-	SLIST_ENTRY(map_tool_mousebinding) mbindings;
+	AG_SLIST_ENTRY(map_tool_mousebinding) mbindings;
 } MAP_ToolMouseBinding;
 
 #define TOOL(t) ((MAP_Tool *)(t))

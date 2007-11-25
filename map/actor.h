@@ -52,7 +52,7 @@ typedef struct map_actor {
 	} data;
 #define g_map data.map
 #define g_scene data.scene
-	TAILQ_ENTRY(map_actor) actors;
+	AG_TAILQ_ENTRY(map_actor) actors;
 } MAP_Actor;
 
 #define MAP_ACTOR(ob) ((MAP_Actor *)(ob))

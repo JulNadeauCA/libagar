@@ -58,12 +58,12 @@ typedef struct rg_tileset {
 	RG_Anim **animtbl;		/* Animation ID mappings */
 	Uint	nanimtbl;
 
-	TAILQ_HEAD(, rg_tile) tiles;
-	TAILQ_HEAD(, rg_sketch) sketches;
-	TAILQ_HEAD(, rg_pixmap) pixmaps;
-	TAILQ_HEAD(, rg_feature) features;
-	TAILQ_HEAD(, rg_anim) animations;
-	TAILQ_HEAD(, rg_texture) textures;
+	AG_TAILQ_HEAD(, rg_tile) tiles;
+	AG_TAILQ_HEAD(, rg_sketch) sketches;
+	AG_TAILQ_HEAD(, rg_pixmap) pixmaps;
+	AG_TAILQ_HEAD(, rg_feature) features;
+	AG_TAILQ_HEAD(, rg_anim) animations;
+	AG_TAILQ_HEAD(, rg_texture) textures;
 } RG_Tileset;
 
 #ifdef DEBUG

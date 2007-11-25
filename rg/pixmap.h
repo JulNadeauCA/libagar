@@ -46,7 +46,7 @@ typedef struct rg_brush {
 					   in the same pass */
 	char px_name[RG_PIXMAP_NAME_MAX];	/* Pixmap reference */
 	struct rg_pixmap *px;				/* Resolved pixmap */
-	TAILQ_ENTRY(rg_brush) brushes;
+	AG_TAILQ_ENTRY(rg_brush) brushes;
 } RG_Brush;
 
 typedef struct rg_pixmap {
@@ -62,8 +62,8 @@ typedef struct rg_pixmap {
 	float h, s, v, a;			/* Current pixel value */
 	RG_Brush *curbrush;			/* Current brush */
 	enum rg_pixmap_blend_mode blend_mode;	/* Current blending method */
-	TAILQ_HEAD(, rg_brush) brushes;	/* Brush references */
-	TAILQ_ENTRY(rg_pixmap) pixmaps;
+	AG_TAILQ_HEAD(, rg_brush) brushes;	/* Brush references */
+	AG_TAILQ_ENTRY(rg_pixmap) pixmaps;
 } RG_Pixmap;
 
 __BEGIN_DECLS
