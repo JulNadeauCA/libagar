@@ -10,6 +10,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <agar/core/snprintf.h>
+
 /* This function is called to sort the elements of a column. */
 static int
 my_sort_fn(const void *p1, const void *p2)
@@ -26,7 +28,7 @@ my_custom_cell_txt_fn(void *p, char *s, size_t len)
 {
 	AG_TableCell *cell = p;
 	
-	Snprintf(s, len, "Ticks: %lu",
+	AG_Snprintf(s, len, "Ticks: %lu",
 	    (unsigned long)SDL_GetTicks());
 }
 

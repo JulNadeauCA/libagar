@@ -6,6 +6,8 @@
 #include <agar/core.h>
 #include <agar/gui.h>
 
+#include <agar/core/snprintf.h>
+
 #include <string.h>
 #include <unistd.h>
 
@@ -33,7 +35,7 @@ UpdateText(void *obj, Uint32 ival, void *arg)
 	AG_Textbox *textbox = arg;
 
 	if (!AG_WidgetFocused(textbox)) {
-		Snprintf(polledString, sizeof(polledString), "Tick: %lu",
+		AG_Snprintf(polledString, sizeof(polledString), "Tick: %lu",
 		    (unsigned long)SDL_GetTicks());
 	}
 	return (ival);
