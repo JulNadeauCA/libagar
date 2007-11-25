@@ -37,31 +37,69 @@ PREMAKEFLAGS?=
 PROJECT?=
 PROJDIR?=	${TOP}/ProjectFiles
 PROJFILESEXTRA?=
-PROJINCLUDES?=	${TOP}/configure.lua
+PROJINCLUDES?=${TOP}/configure.lua
 
-PROJTARGETS=	windows:cb-gcc \
-		windows:vs6 \
-		windows:vs2002 \
-		windows:vs2003 \
-		windows:vs2005
+PROJFILES?=	windows:i386:cb-gcc:: \
+		windows:i386:vs6:: \
+		windows:i386:vs2002:: \
+		windows:i386:vs2003:: \
+		windows:i386:vs2005::
 
 proj: proj-subdir
 	@if [ "${PROJECT}" = "" ]; then \
+	    echo "Checking ${PROJINCLUDES}"; \
+	    for INCL in ${PROJINCLUDES}; do \
+	        if [ ! -e "$$INCL" ]; then \
+	            echo "Missing $$INCL; generating"; \
+	            (cd ${TOP} && cat configure.in | mkconfigure \
+	             --emul-os=windows --emul-arch=i386 >/dev/null); \
+	        fi; \
+	    done; \
 	    cat Makefile | ${MKPROJFILES} ${PROJINCLUDES} > ${PREMAKEOUT};\
 	else \
 	    if [ ! -d "${PROJDIR}" ]; then \
 	    	echo "mkdir -p ${PROJDIR}"; \
 	    	mkdir -p ${PROJDIR}; \
 	    fi; \
-	    for TGT in ${PROJTARGETS}; do \
+	    for TGT in ${PROJFILES}; do \
 	        _tgtos=`echo $$TGT |awk -F: '{print $$1}' `; \
-	        _tgtproj=`echo $$TGT |awk -F: '{print $$2}' `; \
+	        _tgtarch=`echo $$TGT |awk -F: '{print $$2}' `; \
+	        _tgtproj=`echo $$TGT |awk -F: '{print $$3}' `; \
+	        _tgtflav=`echo $$TGT |awk -F: '{print $$4}' `; \
+	        _tgtopts=`echo $$TGT |awk -F: '{print $$5}'|sed 's/,/ /g'`; \
 		echo "Target: $$_tgtos ($$_tgtproj)"; \
+		echo "Target flavor: $$_tgtflav"; \
+		echo "Target options: $$_tgtopts"; \
+		rm -fR config; \
+		cat configure.in | \
+		    mkconfigure --emul-os=$$_tgtos --emul-arch=$$_tgtarch > \
+		    configure.tmp; \
+		if [ $$? != 0 ]; then \
+			echo "mkconfigure failed"; \
+			rm -fR configure.tmp configure.lua; \
+			exit 1; \
+		fi; \
+		/bin/sh ./configure.tmp $$_tgtopts; \
+		if [ $$? != 0 ]; then \
+			echo "configure failed"; \
+			echo -n > Makefile.config; \
+			exit 1; \
+		fi; \
+		rm -f configure.tmp config.log; \
+		echo -n >Makefile.config; \
 	        perl ${TOP}/mk/cmpfiles.pl; \
+	        echo "cat Makefile | ${MKPROJFILES} ${PROJINCLUDES} > \
+		    ${PREMAKEOUT}";\
 	        cat Makefile | ${MKPROJFILES} ${PROJINCLUDES} > ${PREMAKEOUT};\
-	        echo "${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} --os $$_tgtos --target $$_tgtproj"; \
-	        ${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} --os $$_tgtos --target $$_tgtproj;\
-		rm -f premake.lua; \
+	        echo "${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} \
+		    --os $$_tgtos --target $$_tgtproj"; \
+	        ${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} \
+		    --os $$_tgtos --target $$_tgtproj; \
+		if [ $$? != 0 ]; then \
+			echo "premake failed"; \
+			exit 1; \
+		fi; \
+		rm -f premake.lua configure.lua; \
 	        perl ${TOP}/mk/cmpfiles.pl added > .projfiles.out; \
 		cp -f .projfiles.out .projfiles2.out; \
 	        rm .cmpfiles.out; \
@@ -70,34 +108,12 @@ proj: proj-subdir
 		        echo "$$EXTRA" >> .projfiles2.out; \
 		    done; \
 		fi; \
-		if [ -e "config.$$_tgtos" ]; then \
-			if [ -e "config" ]; then \
-				echo "mv -f config config.ORIG"; \
-				mv -f config config.ORIG; \
-			fi; \
-			echo "mv -f config.$$_tgtos config"; \
-			mv -f config.$$_tgtos config; \
-			echo "mv -f config/.svn config.svn.ORIG"; \
-			mv -f config/.svn config.svn.ORIG; \
-		        echo "config" >> .projfiles2.out; \
-			CONFIGFOUND=yes; \
-		else \
-		        CONFIGFOUND=no; \
-		fi; \
+	        echo "config" >> .projfiles2.out; \
 		rm -f ${PROJDIR}/$$_tgtproj-$$_tgtos.zip; \
 		cat .projfiles2.out | ${ZIP} ${ZIPFLAGS} \
-		    ${PROJDIR}/$$_tgtproj-$$_tgtos.zip -@; \
-		if [ "$$CONFIGFOUND" = "yes" ]; then \
-		    echo "mv -f config.svn.ORIG config/.svn"; \
-		    mv -f config.svn.ORIG config/.svn; \
-		    echo "mv -f config config.$$_tgtos"; \
-		    mv -f config config.$$_tgtos; \
-		    if [ -e "config.ORIG" ]; then \
-			    echo "mv -f config.ORIG config"; \
-			    mv -f config.ORIG config; \
-		    fi; \
-		fi; \
+		    ${PROJDIR}/$$_tgtproj-$$_tgtos-$$_tgtarch$$_tgtflav.zip -@;\
 		rm `cat .projfiles.out`; \
+		rm -fR config; \
 	    done; \
 	fi
 
