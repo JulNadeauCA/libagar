@@ -291,14 +291,12 @@ main(int argc, char *argv[])
 		case 'F':
 			AG_SetBool(agConfig, "view.full-screen", 0);
 			break;
-#ifdef HAVE_OPENGL
 		case 'g':
 			AG_SetBool(agConfig, "view.opengl", 1);
 			break;
 		case 'G':
 			AG_SetBool(agConfig, "view.opengl", 0);
 			break;
-#endif
 		case 'r':
 			fps = atoi(optarg);
 			break;

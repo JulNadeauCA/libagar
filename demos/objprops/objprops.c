@@ -44,14 +44,12 @@ main(int argc, char *argv[])
 		switch (c) {
 		case 'v':
 			exit(0);
-#ifdef HAVE_OPENGL
 		case 'g':
 			AG_SetBool(agConfig, "view.opengl", 1);
 			break;
 		case 'G':
 			AG_SetBool(agConfig, "view.opengl", 0);
 			break;
-#endif
 		case '?':
 		default:
 			printf("%s [-vgG]\n", agProgName);
