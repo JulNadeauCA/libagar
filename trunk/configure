@@ -1741,253 +1741,6 @@ echo "no" >> config.log
 HAVE_RMD160="no"
 echo "#undef HAVE_RMD160" > config/have_rmd160.h
 fi;
-echo -n "checking for POSIX threads..."
-echo -n "checking for POSIX threads..." >> config.log
-PTHREADS_CFLAGS=""
-PTHREADS_LIBS="-lpthread"
-cat << EOT > conftest.c
-#include <pthread.h>
-#include <signal.h>
-void *start_routine(void *arg) { return (NULL); }
-int main(int argc, char *argv[])
-{
-	pthread_mutex_t mutex;
-	pthread_t thread;
-	pthread_mutex_init(&mutex, NULL);
-	pthread_mutex_lock(&mutex);
-	pthread_mutex_unlock(&mutex);
-	pthread_mutex_destroy(&mutex);
-	pthread_create(&thread, NULL, start_routine, NULL);
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-compile="ok"
-HAVE_PTHREADS="yes"
-echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
-echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
-echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >> config/have_pthreads.h
-echo "#endif" >> config/have_pthreads.h
-else
-echo "no"
-echo "no" >> config.log
-compile="failed"
-HAVE_PTHREADS="no"
-echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
-echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
-fi;
-rm -f $testdir/conftest conftest.c
-if [ "${HAVE_PTHREADS}" = "yes" ]; then
-CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
-echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
-echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
-echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
-echo "#endif" >> config/pthreads_cflags.h
-echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
-echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
-echo "#endif" >> config/pthreads_libs.h
-else
-echo -n "checking for -pthread..."
-echo -n "checking for -pthread..." >> config.log
-PTHREADS_LIBS="-pthread"
-cat << EOT > conftest.c
-#include <pthread.h>
-#include <signal.h>
-void *start_routine(void *arg) { return (NULL); }
-int main(int argc, char *argv[])
-{
-	pthread_mutex_t mutex;
-	pthread_t thread;
-	pthread_mutex_init(&mutex, NULL);
-	pthread_mutex_lock(&mutex);
-	pthread_mutex_unlock(&mutex);
-	pthread_mutex_destroy(&mutex);
-	pthread_create(&thread, NULL, start_routine, NULL);
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-compile="ok"
-HAVE_PTHREADS="yes"
-echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
-echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
-echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >> config/have_pthreads.h
-echo "#endif" >> config/have_pthreads.h
-else
-echo "no"
-echo "no" >> config.log
-compile="failed"
-HAVE_PTHREADS="no"
-echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
-echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
-fi;
-rm -f $testdir/conftest conftest.c
-if [ "${HAVE_PTHREADS}" = "yes" ]; then
-CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
-echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
-echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
-echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
-echo "#endif" >> config/pthreads_cflags.h
-echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
-echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
-echo "#endif" >> config/pthreads_libs.h
-fi;
-fi;
-echo -n "checking for the X/Open Threads Extension..."
-echo -n "checking for the X/Open Threads Extension..." >> config.log
-if [ "${SYSTEM}" = "FreeBSD" ]; then
-PTHREADS_XOPEN_CFLAGS=""
-else
-PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-fi;
-PTHREADS_XOPEN_LIBS="-lpthread"
-cat << EOT > conftest.c
-#include <pthread.h>
-#include <signal.h>
-
-int main(int argc, char *argv[])
-{
-	pthread_mutex_t mutex;
-	pthread_mutexattr_t mutexattr;
-	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&mutex, &mutexattr);
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-compile="ok"
-HAVE_PTHREADS_XOPEN="yes"
-echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >> Makefile.config
-echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
-echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
-echo "#endif" >> config/have_pthreads_xopen.h
-else
-echo "no"
-echo "no" >> config.log
-compile="failed"
-HAVE_PTHREADS_XOPEN="no"
-echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >> Makefile.config
-echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
-fi;
-rm -f $testdir/conftest conftest.c
-if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
-echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >> Makefile.config
-echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >> Makefile.config
-echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
-echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
-echo "#endif" >> config/have_pthreads_xopen.h
-echo "#ifndef PTHREADS_XOPEN_CFLAGS" > config/pthreads_xopen_cflags.h
-echo "#define PTHREADS_XOPEN_CFLAGS \"$PTHREADS_XOPEN_CFLAGS\"" >> config/pthreads_xopen_cflags.h
-echo "#endif" >> config/pthreads_xopen_cflags.h
-echo "#ifndef PTHREADS_XOPEN_LIBS" > config/pthreads_xopen_libs.h
-echo "#define PTHREADS_XOPEN_LIBS \"$PTHREADS_XOPEN_LIBS\"" >> config/pthreads_xopen_libs.h
-echo "#endif" >> config/pthreads_xopen_libs.h
-else
-echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
-fi;
-echo -n "checking for PTHREAD_MUTEX_RECURSIVE..."
-echo -n "checking for PTHREAD_MUTEX_RECURSIVE..." >> config.log
-cat << EOT > conftest.c
-#include <pthread.h>
-#include <signal.h>
-int main(int argc, char *argv[])
-{
-	pthread_mutex_t mutex;
-	pthread_mutexattr_t mutexattr;
-	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
-	pthread_mutex_init(&mutex, &mutexattr);
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-compile="ok"
-HAVE_PTHREAD_MUTEX_RECURSIVE="yes"
-echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >> Makefile.config
-echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
-echo "#endif" >> config/have_pthread_mutex_recursive.h
-else
-echo "no"
-echo "no" >> config.log
-compile="failed"
-HAVE_PTHREAD_MUTEX_RECURSIVE="no"
-echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >> Makefile.config
-echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
-fi;
-rm -f $testdir/conftest conftest.c
-if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "yes" ]; then
-echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
-echo "#endif" >> config/have_pthread_mutex_recursive.h
-else
-echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
-fi;
-echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..."
-echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..." >> config.log
-cat << EOT > conftest.c
-#include <pthread.h>
-#include <signal.h>
-int main(int argc, char *argv[])
-{
-	pthread_mutex_t mutex;
-	pthread_mutexattr_t mutexattr;
-	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP);
-	pthread_mutex_init(&mutex, &mutexattr);
-	return (0);
-}
-
-EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
-echo "yes"
-echo "yes" >> config.log
-compile="ok"
-HAVE_PTHREAD_MUTEX_RECURSIVE_NP="yes"
-echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >> Makefile.config
-echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
-echo "#endif" >> config/have_pthread_mutex_recursive_np.h
-else
-echo "no"
-echo "no" >> config.log
-compile="failed"
-HAVE_PTHREAD_MUTEX_RECURSIVE_NP="no"
-echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >> Makefile.config
-echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-fi;
-rm -f $testdir/conftest conftest.c
-if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "yes" ]; then
-echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
-echo "#endif" >> config/have_pthread_mutex_recursive_np.h
-else
-echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
-fi;
 echo -n "checking for the X window system..."
 echo -n "checking for the X window system..." >> config.log
 x11_found_includes="no"
@@ -2782,8 +2535,9 @@ fi;
 		echo "* Agar needs FreeType in order to display vector-based"
 		echo "* fonts. If you would like to use Agar's bitmap font, "
 		echo "* rerun configure with the --without-freetype option."
-		echo "* (note that the bundled bitmap font can only display"
-		echo "* ASCII characters)."
+		echo "*"
+		echo "* Note that the bundled bitmap font can only display"
+		echo "* ASCII characters of low quality."
 		echo "*"
 		exit 1
 	fi
@@ -3108,8 +2862,255 @@ echo "#undef SERVER" > config/server.h
 else
 echo "#undef SERVER" > config/server.h
 fi
-if [ "${enable_threads}" = "yes" ]
+if [ "${enable_threads}" != "no" ]
  then
+echo -n "checking for POSIX threads..."
+echo -n "checking for POSIX threads..." >> config.log
+PTHREADS_CFLAGS=""
+PTHREADS_LIBS="-lpthread"
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+void *start_routine(void *arg) { return (NULL); }
+int main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_t thread;
+	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_lock(&mutex);
+	pthread_mutex_unlock(&mutex);
+	pthread_mutex_destroy(&mutex);
+	pthread_create(&thread, NULL, start_routine, NULL);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREADS="yes"
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
+echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
+echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >> config/have_pthreads.h
+echo "#endif" >> config/have_pthreads.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREADS="no"
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
+echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_PTHREADS}" = "yes" ]; then
+CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
+echo "CFLAGS=$CFLAGS" >> Makefile.config
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
+echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
+echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
+echo "#endif" >> config/pthreads_cflags.h
+echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
+echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
+echo "#endif" >> config/pthreads_libs.h
+else
+echo -n "checking for -pthread..."
+echo -n "checking for -pthread..." >> config.log
+PTHREADS_LIBS="-pthread"
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+void *start_routine(void *arg) { return (NULL); }
+int main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_t thread;
+	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_lock(&mutex);
+	pthread_mutex_unlock(&mutex);
+	pthread_mutex_destroy(&mutex);
+	pthread_create(&thread, NULL, start_routine, NULL);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREADS="yes"
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
+echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
+echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >> config/have_pthreads.h
+echo "#endif" >> config/have_pthreads.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREADS="no"
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
+echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_PTHREADS}" = "yes" ]; then
+CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
+echo "CFLAGS=$CFLAGS" >> Makefile.config
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
+echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
+echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
+echo "#endif" >> config/pthreads_cflags.h
+echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
+echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
+echo "#endif" >> config/pthreads_libs.h
+fi;
+fi;
+echo -n "checking for the X/Open Threads Extension..."
+echo -n "checking for the X/Open Threads Extension..." >> config.log
+if [ "${SYSTEM}" = "FreeBSD" ]; then
+PTHREADS_XOPEN_CFLAGS=""
+else
+PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
+fi;
+PTHREADS_XOPEN_LIBS="-lpthread"
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+
+int main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t mutexattr;
+	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&mutex, &mutexattr);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREADS_XOPEN="yes"
+echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >> Makefile.config
+echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
+echo "#endif" >> config/have_pthreads_xopen.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREADS_XOPEN="no"
+echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >> Makefile.config
+echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
+echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >> Makefile.config
+echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >> Makefile.config
+echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
+echo "#endif" >> config/have_pthreads_xopen.h
+echo "#ifndef PTHREADS_XOPEN_CFLAGS" > config/pthreads_xopen_cflags.h
+echo "#define PTHREADS_XOPEN_CFLAGS \"$PTHREADS_XOPEN_CFLAGS\"" >> config/pthreads_xopen_cflags.h
+echo "#endif" >> config/pthreads_xopen_cflags.h
+echo "#ifndef PTHREADS_XOPEN_LIBS" > config/pthreads_xopen_libs.h
+echo "#define PTHREADS_XOPEN_LIBS \"$PTHREADS_XOPEN_LIBS\"" >> config/pthreads_xopen_libs.h
+echo "#endif" >> config/pthreads_xopen_libs.h
+else
+echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+fi;
+echo -n "checking for PTHREAD_MUTEX_RECURSIVE..."
+echo -n "checking for PTHREAD_MUTEX_RECURSIVE..." >> config.log
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+int main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t mutexattr;
+	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&mutex, &mutexattr);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREAD_MUTEX_RECURSIVE="yes"
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >> Makefile.config
+echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
+echo "#endif" >> config/have_pthread_mutex_recursive.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREAD_MUTEX_RECURSIVE="no"
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >> Makefile.config
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "yes" ]; then
+echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
+echo "#endif" >> config/have_pthread_mutex_recursive.h
+else
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+fi;
+echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..."
+echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..." >> config.log
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+int main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t mutexattr;
+	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE_NP);
+	pthread_mutex_init(&mutex, &mutexattr);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREAD_MUTEX_RECURSIVE_NP="yes"
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >> Makefile.config
+echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
+echo "#endif" >> config/have_pthread_mutex_recursive_np.h
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREAD_MUTEX_RECURSIVE_NP="no"
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >> Makefile.config
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "yes" ]; then
+echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
+echo "#endif" >> config/have_pthread_mutex_recursive_np.h
+else
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+fi;
 	if [ "${HAVE_PTHREADS}" = "yes" ]
  then
 THREADS="1"
