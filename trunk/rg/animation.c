@@ -139,9 +139,9 @@ RG_AnimInsertFrame(RG_Anim *ani, SDL_Surface *sNew)
 	Uint32 sflags = SDL_SWSURFACE;
 	RG_AnimFrame *fr;
 
-#if defined(DEBUG) || defined(EDITION)
+#ifdef DEBUG
 	if ((ani->nframes+1) >= RG_ANIMATION_FRAMES_MAX)
-		fatal("%s: too many frames", ani->name);
+		AG_FatalError("%s: Too many frames", ani->name);
 #endif
 
 	if (ani->flags & RG_ANIM_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
@@ -160,7 +160,8 @@ RG_AnimInsertFrame(RG_Anim *ani, SDL_Surface *sNew)
 		    ts->fmt->Bmask,
 		    ts->fmt->Amask);
 		if (fr->su == NULL) {
-			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+			AG_FatalError("SDL_CreateRGBSurface: %s",
+			    SDL_GetError());
 		}
 	}
 	fr->delay = 0;
@@ -328,8 +329,6 @@ RG_AnimGenerate(RG_Anim *ani)
 		}
 	}
 }
-
-#ifdef EDITION
 
 static void
 EditClose(AG_Event *event)
@@ -691,4 +690,3 @@ RG_AnimEdit(RG_Anim *ani)
 	ani->nrefs++;
 	return (win);
 }
-#endif /* EDITION */

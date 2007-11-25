@@ -84,8 +84,7 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 	AG_MutexLock(&a->lock);
 #if 0
 	if (a->parent != NULL) {
-		dprintf("reattaching %s to %s\n", OBJECT(a)->name,
-		    OBJECT(a->parent)->name);
+		Debug(a, "Reattaching to %s\n", OBJECT(a->parent)->name);
 		m = a->parent;
 		AG_MutexLock(&m->lock);
 		MAP_DetachActor(m, a);
@@ -121,8 +120,7 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 #if 0
 	if (m != NULL) {
 		MAP_DetachActor(m, a);
-		dprintf("reattached %s to %s\n", OBJECT(a)->name,
-		    OBJECT(m)->name);
+		Debug(a, "Reattached to %s\n", OBJECT(m)->name);
 		AG_MutexUnlock(&m->lock);
 	}
 #endif
@@ -378,7 +376,6 @@ MAP_ActorUnmapTile(void *obj)
 	}
 }
 
-#ifdef EDITION
 static void *
 Edit(void *p)
 {
@@ -404,7 +401,6 @@ Edit(void *p)
 
 	return (win);
 }
-#endif /* EDITION */
 
 AG_ObjectClass mapActorClass = {
 	"MAP_Actor",
@@ -415,9 +411,5 @@ AG_ObjectClass mapActorClass = {
 	Destroy,
 	Load,
 	Save,
-#ifdef EDITION
 	Edit
-#else
-	NULL
-#endif
 };

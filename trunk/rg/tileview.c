@@ -845,7 +845,7 @@ RG_TileviewAddCtrl(RG_Tileview *tv, enum rg_tileview_ctrl_type type,
 				    double *, void *);
 				break;
 			default:
-				fatal("bad format");
+				AG_FatalError("RG_TileviewAddCtrl: Bad format");
 			}
 			fmt++;
 			break;
@@ -901,7 +901,7 @@ out:
 	}
 	return (ctrl);
 missingvals:
-	fatal("missing values");
+	AG_FatalError("RG_TileviewAddCtrl: Missing values");
 	return (NULL);
 }
 
@@ -963,7 +963,7 @@ RG_TileviewSetZoom(RG_Tileview *tv, int z2, int adj_offs)
 	    t->su->format->Rmask, t->su->format->Gmask,
 	    t->su->format->Bmask, t->su->format->Amask);
 	if (tv->scaled == NULL) {
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	tv->scaled->format->alpha = t->su->format->alpha;
 	tv->scaled->format->colorkey = t->su->format->colorkey;
@@ -1751,7 +1751,8 @@ RG_TileviewSelectTool(RG_Tileview *tv, RG_TileviewTool *tvt)
 
 #ifdef DEBUG
 	if (pwin == NULL)
-		fatal("%s has no parent window", OBJECT(tv)->name);
+		AG_FatalError("RG_TileviewSelectTool: %s has no parent window",
+		    OBJECT(tv)->name);
 #endif
 
 	if (tv->cur_tool != NULL && tv->cur_tool->win != NULL) {

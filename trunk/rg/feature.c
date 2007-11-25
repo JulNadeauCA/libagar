@@ -126,11 +126,6 @@ AG_FeatureDestroy(RG_Feature *ft)
 	RG_FeatureSketch *fsk, *nfsk;
 	RG_FeaturePixmap *fpx, *nfpx;
 
-#ifdef DEBUG
-	if (ft->nrefs > 0)
-		dprintf("%s is referenced\n", ft->name);
-#endif
-
 	if (ft->ops->destroy != NULL)
 		ft->ops->destroy(ft);
 

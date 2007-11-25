@@ -1195,7 +1195,7 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 
 #if 0
 	if (AG_WidgetParentWindow(tl) == NULL)
-		fatal("%s is unattached", OBJECT(tl)->name);
+		AG_FatalError("AG_Tlist: %s is unattached", OBJECT(tl)->name);
 #endif
 	AG_MouseGetState(&x, &y);
 

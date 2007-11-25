@@ -38,14 +38,6 @@
 
 const AG_Version agPropTblVer = { 2, 0 };
 
-#ifdef DEBUG
-#define DEBUG_STATE	0x01
-#define DEBUG_SET	0x02
-
-int	agPropDebugLvl = 0;
-#define agDebugLvl agPropDebugLvl
-#endif
-
 #if 0
 AG_PropOps *agPropOps = NULL;
 Uint        agPropOpsCnt = 0;
@@ -112,7 +104,6 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 		prop->type = type;
 		prop->writeFn.wUint = NULL;
 		prop->readFn.rUint = NULL;
-		debug_n(DEBUG_SET, "%s: (new) => ", key);
 	} else {
 		modify++;
 	}
@@ -150,7 +141,7 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 	case AG_PROP_SINT64:	PROP_SET(wSint64, s64, Sint64, int);	break;
 #endif
 	default:
-		fatal("bad prop type: %d", type);
+		AG_FatalError("AG_SetProp: No such type: %d", type);
 	}
 	va_end(ap);
 
@@ -387,7 +378,6 @@ AG_PropSave(void *p, AG_DataSource *ds)
 	TAILQ_FOREACH(prop, &ob->props, props) {
 		AG_WriteString(ds, (char *)prop->key);
 		AG_WriteUint32(ds, prop->type);
-		debug(DEBUG_STATE, "%s -> %s\n", ob->name, prop->key);
 		switch (prop->type) {
 		case AG_PROP_BOOL:
 			c = (prop->data.i == 1) ? 1 : 0;

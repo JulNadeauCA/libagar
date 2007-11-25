@@ -130,7 +130,6 @@ ginsert_effect(void *p, MAP_Node *n)
 	go = it->p1;
 
 	if (go->parent != NULL) {
-		dprintf("detaching from %s\n", OBJECT(go->parent)->name);
 		TAILQ_REMOVE(&go->parent->actors, go, actors);
 		MAP_DetachActor(go->parent, go);
 	}

@@ -29,7 +29,7 @@
 
 #define AssertSameLength(A, B) \
 	if (((A)->m != (B)->m) || ((A)->n != 1) || ((B)->n != 1)) \
-		fatal("different vector length (v1=%u, v2=%u)", \
+		AG_FatalError("Different vector length (v1=%u, v2=%u)", \
 		    (A)->m, (B)->m);
 
 SC_Vector *

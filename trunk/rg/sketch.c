@@ -83,7 +83,6 @@ RG_SketchScale(RG_Sketch *sk, int w, int h, float scale, int x, int y)
 	r.w = (w == -1) ? vg->rDst.w : w;
 	r.h = (h == -1) ? vg->rDst.h : h;
 
-	dprintf("scale = %d x %d (%f)\n", r.w, r.h, scale);
 	VG_Scale(vg, r.w, r.h, scale*RG_TILESZ);
 #if 0
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
@@ -395,7 +394,6 @@ RG_SketchUndo(RG_Tileview *tv, RG_TileElement *tel)
 #if 0
 	for (i = 0; i < ublk->nmods; i++) {
 		RG_SketchMod *mod = &ublk->mods[i];
-		dprintf("undo mod %p\n", mod);
 	}
 #endif
 	sk->curblk--;

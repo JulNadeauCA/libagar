@@ -280,7 +280,7 @@ AG_LabelSetSurface(AG_Label *lbl, SDL_Surface *su)
 {
 #ifdef DEBUG
 	if (lbl->type != AG_LABEL_STATIC)
-		fatal("label is not static");
+		AG_FatalError("AG_LabelSetSurface: Label is not static");
 #endif
 	AG_MutexLock(&lbl->lock);
 	AG_WidgetReplaceSurface(lbl, 0, su);

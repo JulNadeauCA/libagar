@@ -63,7 +63,7 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 
 #ifdef DEBUG
 	if (sbar->nlabels+1 >= AG_STATUSBAR_MAX_LABELS)
-		fatal("too many labels");
+		AG_FatalError("AG_StatusbarAddLabel: Too many labels");
 #endif
 	sbar->labels[sbar->nlabels] = Malloc(sizeof(AG_Label));
 	lab = sbar->labels[sbar->nlabels];

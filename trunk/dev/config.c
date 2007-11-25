@@ -109,11 +109,7 @@ SetUnicodeKbd(AG_Event *event)
 {
 	int enable = AG_INT(1);
 
-	if (SDL_EnableUNICODE(enable)) {
-		dprintf("disabled unicode translation\n");
-	} else {
-		dprintf("enabled unicode translation\n");
-	}
+	SDL_EnableUNICODE(enable);
 }
 
 static void

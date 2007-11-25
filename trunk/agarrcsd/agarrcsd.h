@@ -25,13 +25,6 @@ typedef unsigned int Uint;
 #define Vasprintf AG_Vasprintf
 #define Strsep AG_Strsep
 
-#include <config/debug.h>
-#ifdef DEBUG
-# define dprintf(fmt, args...)	printf("%s: " fmt, __FUNCTION__ , ##args)
-#else
-# define dprintf(fmt, args...)
-#endif
-
 #include "user.h"
 
 extern struct user *user;

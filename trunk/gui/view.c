@@ -100,20 +100,12 @@ static SLIST_HEAD(,ag_global_key) agGlobalKeys =
     SLIST_HEAD_INITIALIZER(&agGlobalKeys);
 
 #ifdef DEBUG
-
-#define DEBUG_KEY_EVENTS	0x01
-#define DEBUG_JOY_EVENTS	0x02
-#define	agDebugLvl		agViewDebugLvl
-int	agViewDebugLvl = 0;
-
-int	agEventAvg = 0;		/* Number of events in last frame */
-int	agIdleAvg = 0;		/* Measured SDL_Delay() granularity */
-
+int agEventAvg = 0;		/* Number of events in last frame */
+int agIdleAvg = 0;		/* Measured SDL_Delay() granularity */
 AG_Window *agPerfWindow;
 static AG_FixedPlotter *agPerfGraph;
 static AG_FixedPlotterItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
-
-#endif /* DEBUG */
+#endif
 
 #if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
 static int
@@ -192,7 +184,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		AG_SetBool(agConfig, "view.opengl", 1);
 #else
 		if ((flags & AG_VIDEO_OPENGL_OR_SDL) == 0)
-			fatal("Agar OpenGL support is not compiled in");
+			AG_FatalError("Agar OpenGL support is not compiled in");
 #endif
 	}
 	
@@ -286,7 +278,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 #endif
 	);
 	if (agView->stmpl == NULL) {
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	agVideoFmt = agView->v->format;
 	agSurfaceFmt = agView->stmpl->format;
@@ -697,7 +689,8 @@ AG_ScaleSurface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 		    ss->format->Bmask,
 		    ss->format->Amask);
 		if (*ds == NULL) {
-			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+			AG_FatalError("SDL_CreateRGBSurface: %s",
+			    SDL_GetError());
 		}
 		(*ds)->format->alpha = ss->format->alpha;
 		(*ds)->format->colorkey = ss->format->colorkey;
@@ -841,7 +834,7 @@ AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 #endif
 	);
 	if (texsu == NULL)
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
 	
 	/* Copy the source surface onto the GL texture surface. */
 	SDL_SetAlpha(sourcesu, 0, 0);
@@ -898,7 +891,7 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 #endif
 	    );
 	if (texsu == NULL)
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
 
 	/* Copy the source surface onto the GL texture surface. */
 	SDL_SetAlpha(sourcesu, 0, 0);
@@ -1426,22 +1419,11 @@ AG_ProcessEvent(SDL_Event *ev)
 		}
 		/* FALLTHROUGH */
 	case SDL_KEYUP:
-		debug(DEBUG_KEY_EVENTS,
-		    "SDL_KEY%s keysym=%d u=%04x state=%s\n",
-		    (ev->key.type == SDL_KEYUP) ? "UP" : "DOWN",
-		    (int)ev->key.keysym.sym, ev->key.keysym.unicode,
-		    (ev->key.state == SDL_PRESSED) ?
-		    "PRESSED" : "RELEASED");
 		AG_WindowEvent(ev);
 		break;
 	case SDL_JOYAXISMOTION:
 	case SDL_JOYBUTTONDOWN:
 	case SDL_JOYBUTTONUP:
-		debug(DEBUG_JOY_EVENTS, "SDL_JOY%s\n",
-		    (ev->type == SDL_JOYAXISMOTION) ? "AXISMOTION" :
-		    (ev->type == SDL_JOYBUTTONDOWN) ? "BUTTONDOWN" :
-		    (ev->type == SDL_JOYBUTTONUP) ? "BUTTONUP" :
-		    "???");
 		AG_WindowEvent(ev);
 		break;
 	case SDL_VIDEORESIZE:

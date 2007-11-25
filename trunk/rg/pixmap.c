@@ -220,7 +220,7 @@ RG_PixmapScale(RG_Pixmap *px, int w, int h, int xoffs, int yoffs)
 	    ts->fmt->Bmask,
 	    ts->fmt->Amask);
 	if (nsu == NULL)
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
 
 	/* Copy the old surface over. */
 	if (px->su != NULL) {
@@ -582,7 +582,7 @@ RG_PixmapRedo(RG_Tileview *tv, RG_TileElement *tel)
 {
 #if 0
 	RG_Pixmap *px = tel->tel_pixmap.px;
-	dprintf("redo (curblk=%d )\n", px->curblk);
+	printf("redo (curblk=%d )\n", px->curblk);
 #endif
 }
 

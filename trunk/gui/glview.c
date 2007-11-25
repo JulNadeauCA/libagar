@@ -84,7 +84,7 @@ Init(void *obj)
 	WIDGET(glv)->flags |= AG_WIDGET_FOCUSABLE;
 
 	if (!AG_Bool(agConfig, "view.opengl"))
-		fatal("widget requires OpenGL mode");
+		AG_FatalError("AG_GLView requires OpenGL");
 
 	glv->wPre = 64;
 	glv->hPre = 64;

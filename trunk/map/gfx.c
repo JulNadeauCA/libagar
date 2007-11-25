@@ -560,7 +560,7 @@ AG_GfxLoad(AG_Object *ob)
 			int x, y;
 
 			AG_SpriteGetNodeAttrs(spr, &nw, &nh);
-			dprintf("%s: %d,%d attributes\n", ob->name, nw, nh);
+			Debug(ob, "Loading %dx%d attribute map\n", nw, nh);
 			spr->attrs = Realloc(spr->attrs, nw*nh*sizeof(Uint));
 			spr->layers = Realloc(spr->layers, nw*nh*sizeof(int));
 			for (y = 0; y < nh; y++) {

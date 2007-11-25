@@ -603,7 +603,7 @@ GetCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	len = strlen(s);
 	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL)
-		fatal("%s", AG_GetError());
+		AG_FatalError("AG_Textbox: %s", AG_GetError());
 
 	for (i = 0; i < len; i++) {
 		if (s[i] == '\n')
@@ -673,7 +673,7 @@ GetCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
 			break;
 		}
 		default:
-			fatal("Unknown font format");
+			AG_FatalError("AG_Textbox: Unknown font format");
 		}
 	}
 	AG_WidgetUnlockBinding(stringb);

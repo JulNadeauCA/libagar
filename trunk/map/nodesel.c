@@ -261,7 +261,8 @@ MAP_NodeselPaste(MAP_Tool *t, SDLKey key, int state, void *arg)
 		}
 	}
 
-	dprintf("[%dx%d] at [%d,%d]\n", copybuf->mapw, copybuf->maph, dx, dy);
+	Debug(m, "Pasting [%dx%d] map at [%d,%d]\n", copybuf->mapw,
+	    copybuf->maph, dx, dy);
 
 	for (sy = 0, dy = mv->esel.y;
 	     sy < copybuf->maph && dy < m->maph;
@@ -286,8 +287,8 @@ MAP_NodeselKill(MAP_Tool *t, SDLKey key, int state, void *arg)
 	if (!mv->esel.set)
 		return (0);
 	
-	dprintf("[%d,%d]+[%d,%d]\n", mv->esel.x, mv->esel.y, mv->esel.w,
-	    mv->esel.h);
+	Debug(m, "Deleting region [%d,%d]+[%d,%d]\n", mv->esel.x, mv->esel.y,
+	    mv->esel.w, mv->esel.h);
 
 	for (y = mv->esel.y; y < mv->esel.y + mv->esel.h; y++) {
 		for (x = mv->esel.x; x < mv->esel.x + mv->esel.w; x++) {

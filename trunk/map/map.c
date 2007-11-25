@@ -34,7 +34,6 @@
 #include "insert.h"
 #include "tools.h"
 
-#ifdef EDITION
 #include "mapedit.h"
 #include "mapview.h"
 
@@ -58,7 +57,6 @@
 
 #include "icons.h"
 #include "icons_data.h"
-#endif /* EDITION */
 
 #include "map_math.h"
 
@@ -475,6 +473,9 @@ MAP_InitModBlks(MAP *m)
 static void
 Init(void *obj)
 {
+	extern int mapEditorInited;			/* mapedit.c */
+	extern int mapDefaultWidth;
+	extern int mapDefaultHeight;
 	MAP *m = obj;
 
 	m->flags = 0;
@@ -497,22 +498,13 @@ Init(void *obj)
 	MAP_InitCamera(&m->cameras[0], _("Camera 0"));
 	MAP_InitModBlks(m);
 
-#ifdef EDITION
-	{
-		extern int mapEditorInited;			/* mapedit.c */
-		extern int mapDefaultWidth;
-		extern int mapDefaultHeight;
-	
-		if (!mapEditorInited) {
-			mapEditorInited = 1;
-			MAP_EditorInit();
-		}
-
-		MAP_AllocNodes(m, mapDefaultWidth, mapDefaultHeight);
-		m->origin.x = mapDefaultWidth/2;
-		m->origin.y = mapDefaultHeight/2;
+	if (!mapEditorInited) {
+		mapEditorInited = 1;
+		MAP_EditorInit();
 	}
-#endif
+	MAP_AllocNodes(m, mapDefaultWidth, mapDefaultHeight);
+	m->origin.x = mapDefaultWidth/2;
+	m->origin.y = mapDefaultHeight/2;
 }
 
 /* Create a new layer. */
@@ -557,7 +549,8 @@ MAP_ItemSetTile(MAP_Item *r, MAP *map, RG_Tileset *ts, Uint32 tile_id)
 	} else {
 		AG_ObjectAddDep(map, ts);
 		if (AG_ObjectPageIn(ts) == -1)
-			fatal("paging tileset: %s", AG_GetError());
+			AG_FatalError("MAP_ItemSetTile: Paging tileset: %s",
+			    AG_GetError());
 	}
 	r->r_tile.obj = ts;
 	r->r_tile.id = tile_id;
@@ -604,7 +597,8 @@ MAP_ItemSetAnim(MAP_Item *r, MAP *map, RG_Tileset *ts, Uint32 anim_id)
 	if (ts != NULL) {
 		AG_ObjectAddDep(map, ts);
 		if (AG_ObjectPageIn(ts) == -1)
-			fatal("paging tileset: %s", AG_GetError());
+			AG_FatalError("MAP_ItemSetAnim: Paging tileset: %s",
+			    AG_GetError());
 	}
 
 	r->r_anim.obj = ts;
@@ -1211,8 +1205,11 @@ Load(void *ob, AG_DataSource *buf, const AG_Version *ver)
 
 	/* Attach the actor objects. */
 	TAILQ_FOREACH(a, &m->actors, actors) {
-		dprintf("%s: attaching %s at %d,%d,%d\n", OBJECT(m)->name,
+		Debug(m, "Attaching actor %s at %d,%d,%d\n",
 		     OBJECT(a)->name, a->g_map.x, a->g_map.y,
+		     a->g_map.l0);
+		Debug(a, "Attached to map %s at %d,%d,%d\n",
+		     OBJECT(m)->name, a->g_map.x, a->g_map.y,
 		     a->g_map.l0);
 		MAP_AttachActor(m, a);
 	}
@@ -1258,7 +1255,6 @@ MAP_ItemSave(MAP *m, AG_DataSource *buf, MAP_Item *r)
 		AG_WriteUint8(buf, r->r_warp.dir);
 		break;
 	default:
-		dprintf("not saving %d node\n", r->type);
 		break;
 	}
 	if (r->type == MAP_ITEM_TILE || r->type == MAP_ITEM_ANIM) {
@@ -1470,7 +1466,8 @@ RenderTileItem(MAP_Item *r, RG_Tile *tile, SDL_Surface **pSurface,
 		     tile->su->format->Bmask,
 		     tile->su->format->Amask);
 		if (var->su == NULL) {
-			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+			AG_FatalError("SDL_CreateRGBSurface: %s",
+			    SDL_GetError());
 		}
 		AG_CopySurfaceAsIs(tile->su, var->su);
 
@@ -1570,7 +1567,8 @@ RenderAnimItem(MAP_Item *r, RG_Anim *anim, SDL_Surface **pSurface,
 			    frame->su->format->Bmask,
 			    frame->su->format->Amask);
 			if (xsu == NULL) {
-				fatal("SDL_CreateSurface: %s", SDL_GetError());
+				AG_FatalError("SDL_CreateSurface: %s",
+				    SDL_GetError());
 			}
 			frame_no = RG_AnimInsertFrame(var->anim, xsu);
 			vframe = &var->anim->frames[frame_no];
@@ -1740,10 +1738,8 @@ MAP_ItemExtent(MAP *m, MAP_Item *r, SDL_Rect *rd, int cam)
 void
 MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 {
-#if defined(DEBUG) || defined(EDITION)
 	char num[16];
 	int debug_su = 0;
-#endif
 #ifdef HAVE_OPENGL
 	Uint texture = 0;
 #endif
@@ -1761,15 +1757,11 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 			RenderTileItem(r, tile, &su, NULL);
 #endif
 		} else {
-#if defined(DEBUG) || defined(EDITION)
 			Snprintf(num, sizeof(num), "(s%u)", (Uint)r->r_tile.id);
 			AG_TextColorRGBA(250,250,50,150);
 			su = AG_TextRender(num);
 			debug_su++;
 			goto draw;
-#else
-			return;
-#endif
 		}
 		break;
 	case MAP_ITEM_ANIM:
@@ -1780,13 +1772,11 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 			RenderAnimItem(r, anim, &su, NULL);
 #endif
 		} else {
-#if defined(DEBUG) || defined(EDITION)
 			Snprintf(num, sizeof(num), "(a%u)", r->r_anim.id);
 			AG_TextColorRGBA(250,250,50,150);
 			su = AG_TextRender(num);
 			debug_su++;
 			goto draw;
-#endif
 		}
 		break;
 	default:				/* Not a drawable */
@@ -1812,12 +1802,9 @@ draw:
 			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion -
 			    r->r_gfx.yorigin;
 
-#if defined(DEBUG) || defined(EDITION)
 			if (debug_su) {
 				SDL_BlitSurface(su, NULL, agView->v, &rd);
-			} else
-#endif
-			{
+			} else {
 				SDL_BlitSurface(su, &r->r_gfx.rs, agView->v,
 				    &rd);
 			}
@@ -1827,15 +1814,12 @@ draw:
 		GLfloat texcoord[4];
 		SDL_Rect rd;
 
-#if defined(DEBUG) || defined(EDITION)
 		if (debug_su) {
 			texcoord[0] = 0.0;
 			texcoord[1] = 0.0;
 			texcoord[2] = (GLfloat)su->w / PowOf2i(su->w);
 			texcoord[3] = (GLfloat)su->h / PowOf2i(su->h);
-		} else
-#endif
-		{
+		} else {
 			texcoord[0] = (GLfloat)r->r_gfx.rs.x;
 			texcoord[1] = (GLfloat)r->r_gfx.rs.y;
 			texcoord[2] = (GLfloat)r->r_gfx.rs.w /
@@ -1878,10 +1862,8 @@ draw:
 #endif /* HAVE_OPENGL */
 	}
 
-#if defined(DEBUG) || defined(EDITION)
 	if (debug_su)
 		SDL_FreeSurface(su);
-#endif
 }
 
 /* Create a new undo block at the current level. */
@@ -2016,7 +1998,7 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 	fragmap = Malloc(sizeof(MAP));
 	AG_ObjectInit(fragmap, &mapClass);
 	if (MAP_AllocNodes(fragmap, mw, mh) == -1)
-		fatal("%s", AG_GetError());
+		AG_FatalError("MAP_AllocNodes: %s", AG_GetError());
 
 	for (y = 0, my = 0; y < sprite->h; y += MAPTILESZ, my++) {
 		for (x = 0, mx = 0; x < sprite->w; x += MAPTILESZ, mx++) {
@@ -2047,7 +2029,7 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 			    sprite->format->Bmask,
 			    sprite->format->Amask);
 			if (su == NULL)
-				fatal("SDL_CreateRGBSurface: %s",
+				AG_FatalError("SDL_CreateRGBSurface: %s",
 				    SDL_GetError());
 			
 			/* Copy the fragment as-is. */
@@ -2077,8 +2059,6 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 	return (fragmap);
 }
 #endif
-
-#ifdef EDITION
 
 /* Create a new map view. */
 static void
@@ -3037,7 +3017,6 @@ Edit(void *p)
 	AG_WidgetFocus(mv);
 	return (win);
 }
-#endif /* EDITION */
 
 AG_ObjectClass mapClass = {
 	"MAP",
@@ -3048,9 +3027,5 @@ AG_ObjectClass mapClass = {
 	Destroy,
 	Load,
 	Save,
-#ifdef EDITION
 	Edit
-#else
-	NULL
-#endif
 };

@@ -10,7 +10,6 @@
 
 #include <config/enable_nls.h>
 #include <config/threads.h>
-#include <config/edition.h>
 #include <config/network.h>
 #include <config/have_bounded_attribute.h>
 #include <config/have_format_attribute.h>

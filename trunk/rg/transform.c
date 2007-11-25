@@ -349,7 +349,7 @@ RG_TransformRotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 	    sOrig->format->Bmask,
 	    sOrig->format->Amask);
 	if (sNew == NULL)
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
 
 	switch (theta) {
 	case 90:

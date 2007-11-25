@@ -57,17 +57,6 @@ AG_ObjectClass agObjectClass = {
 	NULL	/* edit */
 };
 	
-#ifdef DEBUG
-#define DEBUG_STATE	0x01
-#define DEBUG_DEPS	0x04
-#define DEBUG_DEPRESV	0x08
-#define DEBUG_LINKAGE	0x10
-#define DEBUG_GC	0x20
-
-int	agObjectDebugLvl = DEBUG_STATE|DEBUG_DEPRESV;
-#define agDebugLvl agObjectDebugLvl
-#endif
-
 int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
 int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
 int agObjectBackups = 1;	   /* Backup object save files. */
@@ -101,7 +90,7 @@ AG_ObjectInit(void *p, void *cls)
 		}
 		Free(hier);
 	} else {
-		AG_FatalError("ObjectInit: %s", AG_GetError());
+		AG_FatalError("AG_ObjectInit: %s", AG_GetError());
 	}
 	ob->flags &= ~(AG_OBJECT_RESIDENT);
 }
@@ -200,7 +189,8 @@ AG_ObjectFreeDataset(void *p)
 		}
 		Free(hier);
 	} else {
-		AG_FatalError("%s: %s", ob->name, AG_GetError());
+		AG_FatalError("AG_ObjectFreeDataset: %s: %s", ob->name,
+		    AG_GetError());
 	}
 	ob->flags &= ~(AG_OBJECT_RESIDENT);
 	if (!preserveDeps)
@@ -325,7 +315,7 @@ AG_ObjectMove(void *childp, void *newparentp)
 	AG_PostEvent(nparent, child, "attached", NULL);
 	AG_PostEvent(oparent, child, "moved", "%p", nparent);
 
-	debug(DEBUG_LINKAGE, "%s: %s -> %s\n", child->name, oparent->name,
+	Debug(child, "ObjectMove(): Moving from %s to %s\n", oparent->name,
 	    nparent->name);
 
 	AG_UnlockLinkage();
@@ -407,8 +397,7 @@ AG_ObjectDetach(void *childp)
 	child->parent = NULL;
 	AG_PostEvent(parent, child, "detached", NULL);
 	AG_PostEvent(child, parent, "child-detached", NULL);
-	debug(DEBUG_LINKAGE, "%s: detached from %s\n", child->name,
-	    parent->name);
+	Debug(child, "Detached from %s\n", parent->name);
 
 	AG_MutexUnlock(&child->lock);
 	AG_UnlockLinkage();
@@ -453,7 +442,7 @@ AG_ObjectFind(const char *name)
 
 #ifdef DEBUG
 	if (name[0] != '/')
-		fatal("not an absolute path: `%s'", name);
+		AG_FatalError("AG_ObjectFind: Not an absolute path: %s", name);
 #endif
 	if (name[0] == '/' && name[1] == '\0')
 		return (agWorld);
@@ -481,7 +470,7 @@ AG_ObjectFindF(const char *fmt, ...)
 	va_end(ap);
 #ifdef DEBUG
 	if (path[0] != '/')
-		fatal("not an absolute path: `%s'", path);
+		AG_FatalError("AG_ObjectFindF: Not an absolute path: %s", path);
 #endif
 	AG_LockLinkage();
 	rv = AG_ObjectSearchPath(agWorld, &path[1]);
@@ -545,7 +534,7 @@ AG_ObjectFreeChildren(AG_Object *pob)
 	     cob != TAILQ_END(&pob->children);
 	     cob = ncob) {
 		ncob = TAILQ_NEXT(cob, cobjs);
-		debug(DEBUG_GC, "%s: freeing %s\n", pob->name, cob->name);
+		Debug(pob, "Freeing child %s\n", cob->name);
 		AG_ObjectDetach(cob);
 		AG_ObjectDestroy(cob);
 	}
@@ -609,7 +598,7 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if ((ev->flags & AG_EVENT_SCHEDULED) &&
 		    (ev->timeout.flags & flags)) {
-			dprintf("%s: cancelling scheduled `%s'\n", ob->name,
+			Debug(ob, "Cancelling scheduled event <%s>\n",
 			    ev->name);
 			AG_DelTimeout(ob, &ev->timeout);
 			ev->flags &= ~(AG_EVENT_SCHEDULED);
@@ -683,9 +672,10 @@ AG_ObjectDestroy(void *p)
 
 #ifdef DEBUG
 	if (ob->parent != NULL) {
-		fatal("%s attached to %p", ob->name, ob->parent);
+		AG_FatalError("AG_ObjectDestroy: %s still attached to %p",
+		    ob->name, ob->parent);
 	}
-	debug(DEBUG_GC, "destroy %s\n", ob->name);
+	Debug(ob, "Destroying\n");
 #endif
 	AG_ObjectCancelTimeouts(ob, 0);
 	AG_ObjectFreeChildren(ob);
@@ -889,19 +879,19 @@ AG_ObjectResolveDeps(void *p)
 	AG_ObjectDep *dep;
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
-		debug_n(DEBUG_DEPRESV, "%s: depends on %s...", ob->name,
-		    dep->path);
+		Debug(ob, "Resolving dependency: %s...\n", dep->path);
 		if (dep->obj != NULL) {
-			debug_n(DEBUG_DEPRESV, "already resolved\n");
+			Debug(ob, "Already resolved\n");
 			continue;
 		}
 		if ((dep->obj = AG_ObjectFind(dep->path)) == NULL) {
-			debug_n(DEBUG_DEPRESV, "unexisting\n");
+			Debug(ob, "Failed to resolve!\n");
 			AG_SetError(_("%s: Cannot resolve dependency `%s'"),
 			    ob->name, dep->path);
 			return (-1);
 		}
-		debug_n(DEBUG_DEPRESV, "%p (%s)\n", dep->obj, dep->obj->name);
+		Debug(ob, "Dependency resolves to %p (%s)\n", dep->obj,
+		    dep->obj->name);
 		Free(dep->path);
 		dep->path = NULL;
 	}
@@ -952,7 +942,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 				goto fail_unlock;
 		}
 	}
-	debug(DEBUG_STATE, "%s: Loading GENERIC from %s\n", ob->name, path);
+	Debug(ob, "Loading generic data from %s\n", path);
 
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
@@ -994,7 +984,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		dep->obj = NULL;
 		dep->count = 0;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
-		debug(DEBUG_DEPS, "%s: depends on `%s'\n", ob->name, dep->path);
+		Debug(ob, "Dependency: %s\n", dep->path);
 	}
 
 	/* Decode the generic properties. */
@@ -1022,10 +1012,12 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			 * special callback function.
 			 */
 			if (strcmp(eob->cls->name, classID) != 0) {
-				fatal("existing object of different type");
+				AG_FatalError("AG_ObjectLoad: Existing object "
+				              "of different type in archive");
 			}
 			if (!OBJECT_PERSISTENT(eob)) {
-				fatal("existing non-persistent object");
+				AG_FatalError("AG_ObjectLoad: Existing "
+				              "non-persistent object");
 			}
 			if (AG_ObjectLoadGeneric(eob) == -1) {
 				goto fail;
@@ -1036,7 +1028,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			if ((cl = AG_FindClass(classID)) == NULL) {
 				AG_SetError("%s: %s", ob->name, AG_GetError());
 				if (agObjectIgnoreUnknownObjs) {
-					dprintf("%s; ignoring\n",
+					Debug(ob, "%s; ignoring",
 					    AG_GetError());
 					continue;
 				} else {
@@ -1106,7 +1098,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 			}
 		}
 	}
-	debug(DEBUG_STATE, "%s: Loading DATA from %s\n", ob->name, path);
+	Debug(ob, "Loading dataset from %s\n", path);
 
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
@@ -1136,7 +1128,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		}
 		Free(hier);
 	} else {
-		AG_FatalError("%s: %s", ob->name, AG_GetError());
+		AG_FatalError("AG_ObjectLoad: %s: %s", ob->name, AG_GetError());
 	}
 	ob->flags |= AG_OBJECT_RESIDENT;
 	AG_CloseFile(ds);
@@ -1265,7 +1257,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 			Strlcat(path, ob->cls->name, sizeof(path));
 		}
 	}
-	debug(DEBUG_STATE, "%s: Saving to %s\n", ob->name, path);
+	Debug(ob, "Saving object to %s\n", path);
 
 	if (agObjectBackups) {
 		BackupObjectFile(ob, path);
@@ -1324,7 +1316,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 		}
 		Free(hier);
 	} else {
-		AG_FatalError("%s: %s", ob->name, AG_GetError());
+		AG_FatalError("AG_ObjectSave: %s: %s", ob->name, AG_GetError());
 	}
 
 	AG_CloseFile(ds);
@@ -1407,16 +1399,15 @@ AG_ObjectAddDep(void *p, void *depobj)
 			break;
 	}
 	if (dep != NULL) {
-		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
+		Debug(ob, "Increment dependency on %s (#%u)\n",
 		    OBJECT(depobj)->name, (Uint)dep->count);
 		if (++dep->count > AG_OBJECT_DEP_MAX) {
-			fprintf(stderr, "%s: wiring %s dep (too many refs)\n",
-			    ob->name, OBJECT(depobj)->name);
+			Debug(ob, "Wiring dependency: %s (too many refs!)\n",
+			    OBJECT(depobj)->name);
 			dep->count = AG_OBJECT_DEP_MAX;
 		}
 	} else {
-		debug(DEBUG_DEPS, "%s: +[%s]\n", ob->name,
-		    OBJECT(depobj)->name);
+		Debug(ob, "Create dependency on %s\n", OBJECT(depobj)->name);
 		dep = Malloc(sizeof(AG_ObjectDep));
 		dep->obj = depobj;
 		dep->count = 1;
@@ -1480,7 +1471,7 @@ AG_ObjectEncodeName(const void *p, const void *depobjp)
 		if (dep->obj == depobj)
 			return (i);
 	}
-	fatal("%s: no such dep", depobj->name);
+	AG_FatalError("AG_ObjectEncodeName: %s: No such dep", depobj->name);
 	return (0);
 }
 
@@ -1499,7 +1490,7 @@ AG_ObjectDelDep(void *p, const void *depobj)
 			break;
 	}
 	if (dep == NULL) {
-		dprintf("%s: no such dep: %s\n", ob->name,
+		Debug(ob, "Attempt to remove invalid dep: %s\n",
 		    OBJECT(depobj)->name);
 		return;
 	}
@@ -1509,7 +1500,7 @@ AG_ObjectDelDep(void *p, const void *depobj)
 
 	if ((dep->count-1) == 0) {
 		if ((ob->flags & AG_OBJECT_PRESERVE_DEPS) == 0) {
-			debug(DEBUG_DEPS, "%s: -[%s]\n", ob->name,
+			Debug(ob, "Remove dependency on %s\n",
 			    OBJECT(depobj)->name);
 			TAILQ_REMOVE(&ob->deps, dep, deps);
 			Free(dep);
@@ -1517,9 +1508,9 @@ AG_ObjectDelDep(void *p, const void *depobj)
 			dep->count = 0;
 		}
 	} else if (dep->count == 0) {
-		fatal("neg ref count");
+		AG_FatalError("AG_ObjectDelDep: Negative refcount");
 	} else {
-		debug(DEBUG_DEPS, "%s: [%s/%u]\n", ob->name,
+		Debug(ob, "Decrement dependency on %s (#%u)\n",
 		    OBJECT(depobj)->name, (Uint)dep->count);
 		dep->count--;
 	}
@@ -1729,7 +1720,6 @@ AG_ObjectChangedAll(void *p)
 	AG_Object *ob = p, *cob;
 
 	if (AG_ObjectChanged(ob) == 1) {
-		dprintf("%s: modified\n", ob->name);
 		return (1);
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
@@ -1764,12 +1754,10 @@ AG_ObjectChanged(void *p)
 	Strlcat(pathCur, "/_chg.", sizeof(pathCur));
 	Strlcat(pathCur, ob->name, sizeof(pathCur));
 	if (AG_ObjectSaveToFile(ob, pathCur) == -1) {
-		dprintf("%s: %s\n", ob->name, AG_GetError());
 		fclose(fLast);
 		return (1);
 	}
 	if ((fCur = fopen(pathCur, "r")) == NULL) {
-		dprintf("%s: %s\n", pathCur, strerror(errno));
 		fclose(fLast);
 		return (1);
 	}

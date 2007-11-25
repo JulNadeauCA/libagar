@@ -31,7 +31,7 @@
 
 #define assert_same_length(A, B) \
 	if ((A)->n != (B)->n) \
-		fatal("different vector length")
+		AG_FatalError("different vector length")
 
 SC_Ivector *
 SC_IvectorNew(Uint n)

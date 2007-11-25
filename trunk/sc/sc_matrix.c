@@ -29,7 +29,8 @@
 
 #define assert_same_dimensions(A, B) \
 	if ((A)->m != (B)->m || (A)->n != (B)->n) \
-	    fatal("matrix A = %dx%d, B = %dx%d", (A)->m, (A)->n, (B)->m, (B)->n)
+	    AG_FatalError("matrix A = %dx%d, B = %dx%d", (A)->m, (A)->n, \
+	        (B)->m, (B)->n)
 
 /* Allocate a new, uninitialized matrix of m rows by n columns. */
 SC_Matrix *
@@ -95,7 +96,7 @@ SC_MatrixSetIdentity(SC_Matrix *M)
 	Uint m, n;
 
 	if (!SC_MatrixIsSquare(M))
-		fatal("not a square matrix");
+		AG_FatalError("SC_MatrixSetIdentity: Not a square matrix");
 
 	for (m = 1; m <= M->m; m++)
 		for (n = 1; n <= M->n; n++)
@@ -413,7 +414,7 @@ SC_MatrixTranspose(const SC_Matrix *A, SC_Matrix *At)
 	if (At != NULL) {
 #ifdef DEBUG
 		if (At->m != A->n || At->n != A->m)
-			fatal("matrix has incorrect dimensions");
+			AG_FatalError("SC_MatrixTranspose: Bad dimensions");
 #endif
 		T = At;
 	} else {
@@ -436,7 +437,7 @@ SC_MatrixTrace(const SC_Matrix *A)
 	Uint n;
 
 	if (!SC_MatrixIsSquare(A))
-		fatal("not a square matrix");
+		AG_FatalError("SC_MatrixTrace: Not a square matrix");
 
 	for (n = 1; n <= A->n; n++) {
 		sum += A->mat[n][n];
@@ -454,9 +455,10 @@ SC_MatrixMulv(const SC_Matrix *A, const SC_Matrix *B, SC_Matrix *C)
 	Uint i, j, k;
 
 	if (A->n != B->m)
-		fatal("A(n)=%d != B(m)=%d", A->n, B->m);
+		AG_FatalError("SC_MatrixMulv: A(n)=%d != B(m)=%d", A->n, B->m);
 	if (C->m != A->n || C->n != B->n)
-		fatal("C=%dx%d != %dx%d", C->m, C->n, A->n, B->n);
+		AG_FatalError("SC_MatrixMulv: C=%dx%d != %dx%d", C->m, C->n,
+		    A->n, B->n);
 
 	for (i = 1; i <= A->m; i++) {
 		for (j = 1; j <= B->n; j++) {
