@@ -136,31 +136,32 @@ else
 fi
 if [ "${help}" = "yes" ]; then
 echo "Usage: ./configure [args]"
-echo "    --prefix                       Installation prefix [/usr/local]"
-echo "    --sysconfdir                   System-wide configuration prefix [/etc]"
-echo "    --sharedir                     Share prefix [$PREFIX/share]"
-echo "    --localedir                    Locale prefix [$PREFIX/share/locale]"
-echo "    --srcdir                       Source tree for concurrent build [.]"
-echo "    --testdir                      Directory in which to execute tests [.]"
-echo "    --help                         Display this message"
-echo "    --enable-nls                   Native Language Support [no]"
-echo "    --with-gettext                 Use gettext tools (msgmerge, ...) [check]"
-echo "    --with-libtool                 Specify path to libtool [check]"
-echo "    --with-manpages                Manual pages (-mdoc) [yes]"
-echo "    --with-docs                    Printable docs (-me/tbl/eqn/pic/refer) [no]"
-echo "    --enable-debug                 Include debugging code [no]"
-echo "    --with-gl                      OpenGL rendering support [default: check]"
-echo "    --with-jpeg                    JPEG screenshot support [default: no]"
-echo "    --with-freetype                GUI: Enable FreeType support [default: check]"
-echo "    --enable-threads               Thread safety [default: no]"
-echo "    --enable-utf8                  Unicode text/input support [default: yes]"
-echo "    --enable-8bpp                  Support for 8 bpp display [default: yes]"
-echo "    --enable-16bpp                 Support for 16 bpp display [default: yes]"
-echo "    --enable-24bpp                 Support for 24 bpp display [default: yes]"
-echo "    --enable-32bpp                 Support for 32 bpp display [default: yes]"
-echo "    --enable-warnings              Suggested compiler warnings [default: no]"
-echo "    --enable-network               Build network client library [default: check]"
-echo "    --enable-server                Build network server library [default: no]"
+echo "    --prefix                  Installation prefix [/usr/local]"
+echo "    --sysconfdir              System-wide configuration prefix [/etc]"
+echo "    --sharedir                Share prefix [$PREFIX/share]"
+echo "    --localedir               Locale prefix [$PREFIX/share/locale]"
+echo "    --srcdir                  Source tree for concurrent build [.]"
+echo "    --testdir                 Directory in which to execute tests [.]"
+echo "    --help                    Display this message"
+echo "    --enable-nls              Native Language Support [no]"
+echo "    --with-gettext            Use gettext tools (msgmerge, ...) [check]"
+echo "    --with-libtool            Specify path to libtool [check]"
+echo "    --with-manpages           Manual pages (-mdoc) [yes]"
+echo "    --with-manlinks           Manual pages links for functions [no]"
+echo "    --with-docs               Printable docs (-me/tbl/eqn/pic/refer) [no]"
+echo "    --enable-debug            Include debugging code [no]"
+echo "    --with-gl                 OpenGL rendering support [default: check]"
+echo "    --with-jpeg               JPEG screenshot support [default: no]"
+echo "    --with-freetype           GUI: Enable FreeType support [default: check]"
+echo "    --enable-threads          Thread safety [default: no]"
+echo "    --enable-utf8             Unicode text/input support [default: yes]"
+echo "    --enable-8bpp             Support for 8 bpp display [default: yes]"
+echo "    --enable-16bpp            Support for 16 bpp display [default: yes]"
+echo "    --enable-24bpp            Support for 24 bpp display [default: yes]"
+echo "    --enable-32bpp            Support for 32 bpp display [default: yes]"
+echo "    --enable-warnings         Suggested compiler warnings [default: no]"
+echo "    --enable-network          Build network client library [default: check]"
+echo "    --enable-server           Build network server library [default: no]"
 exit 1
 fi
 
@@ -196,7 +197,8 @@ fi
 if [ "${HAVE_MANDOC}" = "no" ]; then
 	if [ "${with_manpages}" = "yes" ]; then
 		echo "*"
-		echo "* --with-manpages requested, but nroff/mandoc not found."
+		echo "* --with-manpages was requested, but either the nroff(1)"
+		echo "* utility or the mdoc(7) macro package was not found."
 		echo "*"
 		exit 1
 	fi
@@ -208,6 +210,10 @@ else
 	if [ "${with_manpages}" = "no" ]; then
 		echo "NOMAN=yes" >> Makefile.config
 		echo "NOMANLINKS=yes" >> Makefile.config
+	else
+		if [ "${with_manlinks}" != "yes" ]; then
+			echo "NOMANLINKS=yes" >> Makefile.config
+		fi
 	fi
 fi
 
