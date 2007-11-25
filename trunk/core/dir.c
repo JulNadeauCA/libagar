@@ -58,12 +58,14 @@
 #include <sys/types.h>
 
 #ifdef _WIN32
-#include <windows.h>
-#undef SLIST_ENTRY
+# include <core/queue_close.h>			/* Conflicts */
+# include <windows.h>
+# include <core/queue_close.h>
+# include <core/queue.h>
 #else
-#include <sys/stat.h>
-#include <dirent.h>
-#include <unistd.h>
+# include <sys/stat.h>
+# include <dirent.h>
+# include <unistd.h>
 #endif
 
 #include <string.h>
