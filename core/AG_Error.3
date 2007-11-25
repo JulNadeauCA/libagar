@@ -76,16 +76,7 @@ termination of the program.
 .Fn AG_Verbose "const char *fmt" "..."
 .Pp
 .Ft void
-.Fn AG_DebugPrintf "const char *fmt" "..."
-.Pp
-.Ft void
-.Fn AG_Debug "int mask" "const char *fmt" "..."
-.Pp
-.Ft void
-.Fn AG_DebugN "int mask" "const char *fmt" "..."
-.Pp
-.Ft void
-.Fn AG_DebugObj "AG_Object *obj" "const char *fmt" "..."
+.Fn AG_Debug "AG_Object *obj" "const char *fmt" "..."
 .Pp
 .nr nS 0
 These functions output a string to the debugging console used by the
@@ -97,25 +88,11 @@ outputs a string if the global
 .Va agVerbose
 variable is set.
 .Pp
-.Fn AG_DebugPrintf
-outputs a string if debugging was enabled at compile time, and the
-global
-.Va agDebugLvl
-is greater than zero.
-.Pp
-.Fn AG_Debug
-outputs a string and a newline if debugging was enabled and
-.Va agDebugLvl
-contains the bits described by
-.Fa mask .
 The
-.Fn AG_DebugN
-variant does not output a newline.
-.Pp
-.Fn AG_DebugObj
-outputs a string if the given object
-.Fa obj
-has the
+.Fn AG_Debug
+function outputs a string on the debugging console of
+.Fa obj ,
+assuming it has the
 .Dv AG_OBJECT_DEBUG
 flag set.
 The name of the object is prefixed to the string.

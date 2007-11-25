@@ -60,7 +60,7 @@ SubmenuTimeout(void *obj, Uint32 ival, void *arg)
 
 #ifdef DEBUG
 	if (item != mview->pitem->sel_subitem)
-		fatal("subitem");
+		AG_FatalError("AG_Menu: Subitem mismatch in timeout");
 #endif
 	AG_MenuExpand(m, item, WIDGET(mview)->cx2, 
 	                     WIDGET(mview)->cy+item->y);

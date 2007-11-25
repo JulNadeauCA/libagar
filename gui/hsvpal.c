@@ -814,7 +814,8 @@ Draw(void *p)
 		    WIDGET(pal)->w, WIDGET(pal)->h, 32,
 		    agVideoFmt->Rmask, agVideoFmt->Gmask, agVideoFmt->Bmask, 0);
 		if (pal->surface == NULL) {
-			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+			AG_FatalError("SDL_CreateRGBSurface: %s",
+			    SDL_GetError());
 		}
 		pal->cTile = SDL_MapRGB(pal->surface->format, 140, 140, 140);
 		RenderPalette(pal);

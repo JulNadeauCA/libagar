@@ -164,7 +164,7 @@ AG_WidgetFind(AG_Display *view, const char *name)
 
 #ifdef DEBUG
 	if (name[0] != '/')
-		fatal("not an absolute path: `%s'", name);
+		AG_FatalError("WidgetFind: Not an absolute path: %s", name);
 #endif
 	AG_LockLinkage();
 	rv = WidgetFindPath(OBJECT(view), &name[1]);
@@ -271,7 +271,7 @@ GetVirtualBindingType(AG_WidgetBinding *binding)
 	case AG_WIDGET_PROP:
 		if ((prop = AG_GetProp(binding->p1, binding->data.prop, -1,
 		    NULL)) == NULL) {
-			fatal("%s", AG_GetError());
+			AG_FatalError("%s", AG_GetError());
 		}
 		switch (prop->type) {
 		case AG_PROP_BOOL:
@@ -504,7 +504,7 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 		case AG_WIDGET_PROP:			/* Convert */
 			if ((prop = AG_GetProp(binding->p1, binding->data.prop,
 			    -1, NULL)) == NULL) {
-				fatal("%s", AG_GetError());
+				AG_FatalError("%s", AG_GetError());
 			}
 			switch (prop->type) {
 			case AG_PROP_BOOL:
@@ -1087,7 +1087,7 @@ AG_WidgetFocus(void *p)
 			break;
 #if 0
 		if ((pwid->flags & AG_WIDGET_FOCUSABLE) == 0) {
-			dprintf("parent (%s) is not focusable\n",
+			Debug(wid, "Parent (%s) is not focusable\n",
 			    OBJECT(pwid)->name);
 			break;
 		}
@@ -1621,7 +1621,7 @@ AG_WidgetSetString(void *wid, const char *name, const char *ns)
 	char *s;
 
 	if ((binding = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
-		fatal("%s", AG_GetError());
+		AG_FatalError("%s", AG_GetError());
 	}
 	Strlcpy(s, ns, binding->data.size);
 	AG_WidgetUnlockBinding(binding);
@@ -1635,7 +1635,7 @@ AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 	size_t rv;
 
 	if ((b = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
-		fatal("%s", AG_GetError());
+		AG_FatalError("%s", AG_GetError());
 	}
 	rv = Strlcpy(dst, s, dst_size);
 	AG_WidgetUnlockBinding(b);

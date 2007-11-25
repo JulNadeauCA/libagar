@@ -95,12 +95,11 @@ MAP_ViewControl(MAP_View *mv, const char *slot, void *obj)
 {
 #ifdef DEBUG
 	if (!AG_ObjectIsClass(obj, "MAP_Actor:*"))
-		fatal("%s: not an actor", OBJECT(obj)->name);
+		AG_FatalError("MAP_ViewControl: %s is not a MAP_Actor",
+		    OBJECT(obj)->name);
 #endif
 	mv->actor = (MAP_Actor *)obj;
 }
-
-#ifdef EDITION
 
 void
 MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
@@ -219,7 +218,6 @@ MAP_ViewSetDefaultTool(MAP_View *mv, MAP_Tool *tool)
 {
 	mv->deftool = tool;
 }
-#endif /* EDITION */
 
 void
 MAP_ViewRegDrawCb(MAP_View *mv,
@@ -577,7 +575,6 @@ draw_layer:
 					    AG_COLOR(MAPVIEW_RSEL_COLOR));
 				}
 			}
-#ifdef EDITION
 			if ((mv->flags & MAP_VIEW_EDIT) == 0)
 				continue;
 				
@@ -613,14 +610,12 @@ draw_layer:
 				esel_w = AGMTILESZ(mv)*mv->esel.w;
 				esel_h = AGMTILESZ(mv)*mv->esel.h;
 			}
-#endif /* EDITION */
 		}
 	}
 next_layer:
 	if (++layer < m->nlayers)
 		goto draw_layer;			/* Draw next layer */
 
-#ifdef EDITION
 	/* Draw the node grid. */
 	if (mv->flags & MAP_VIEW_GRID) {
 		int rx2 = rx;
@@ -650,8 +645,6 @@ next_layer:
 	    (mv->cx != -1 && mv->cy != -1)) {
 		DrawMapCursor(mv);
 	}
-#endif /* EDITION */
-
 out:
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {

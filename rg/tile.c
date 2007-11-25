@@ -210,7 +210,7 @@ RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags)
 	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
 	    ts->fmt->Rmask, ts->fmt->Gmask, ts->fmt->Bmask, ts->fmt->Amask);
 	if (t->su == NULL)
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
 }
 
 void
@@ -669,8 +669,6 @@ RG_TileDestroy(RG_Tile *t)
 		Free(var);
 	}
 }
-
-#ifdef EDITION
 
 static void
 GeoCtrlButtonUp(AG_Event *event)
@@ -2024,5 +2022,3 @@ RG_TileCloseMenu(RG_Tileview *tv)
 	tv->menu_item = NULL;
 	tv->menu_win = NULL;
 }
-
-#endif /* EDITION */

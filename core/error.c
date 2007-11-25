@@ -101,36 +101,7 @@ AG_GetError(void)
 }
 
 void
-AG_DebugPrintf(const char *fmt, ...)
-{
-#ifdef DEBUG
-	if (agDebugLvl > 0) {
-		va_list args;
-
-		va_start(args, fmt);
-		vprintf(fmt, args);
-		va_end(args);
-	}
-#endif
-}
-
-void
-AG_Debug(int mask, const char *fmt, ...)
-{
-#ifdef DEBUG
-	if (agDebugLvl & mask) {
-		va_list args;
-
-		va_start(args, fmt);
-		vprintf(fmt, args);
-		printf("\n");
-		va_end(args);
-	}
-#endif
-}
-
-void
-AG_DebugObj(void *obj, const char *fmt, ...)
+AG_Debug(void *obj, const char *fmt, ...)
 {
 #ifdef DEBUG
 	if (OBJECT_DEBUG(obj)) {
@@ -140,20 +111,6 @@ AG_DebugObj(void *obj, const char *fmt, ...)
 		printf("%s: ", OBJECT(obj)->name);
 		vprintf(fmt, args);
 		printf("\n");
-		va_end(args);
-	}
-#endif
-}
-
-void
-AG_DebugN(int mask, const char *fmt, ...)
-{
-#ifdef DEBUG
-	if (agDebugLvl & mask) {
-		va_list args;
-
-		va_start(args, fmt);
-		vfprintf(stderr, fmt, args);
 		va_end(args);
 	}
 #endif
@@ -189,14 +146,15 @@ AG_FatalError(const char *fmt, ...)
 	abort();
 }
 
-void *AG_PtrMismatch(void) { fatal("pointer type mismatch"); return (NULL); }
-int AG_IntMismatch(void) { fatal("integer type mismatch"); return (0); }
-float AG_FloatMismatch(void) { fatal("real type mismatch"); return (0.0); }
+void *AG_PtrMismatch(void) { AG_FatalError("AG_PTR mismatch"); return (NULL); }
+int AG_IntMismatch(void) { AG_FatalError("AG_INT mismatch"); return (0); }
+float AG_FloatMismatch(void) { AG_FatalError("AG_FLOAT mismatch");
+                               return (0.0); }
 
 void *
 AG_ObjectMismatch(const char *t1, const char *t2)
 {
-	fatal("object type mismatch (%s != %s)", t1, t2);
+	AG_FatalError("Object type mismatch (%s != %s)", t1, t2);
 	return (NULL);
 }
 

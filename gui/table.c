@@ -768,7 +768,6 @@ ColumnLeftClick(AG_Table *tbl, int px)
 		if (x > x1 && x < x2) {
 			if ((x2 - x) < COLUMN_RESIZE_RANGE) {
 				if (tbl->nResizing == -1) {
-//					dprintf("now resizing col%d\n", n);
 					tbl->nResizing = n;
 				}
 			} else {
@@ -969,7 +968,6 @@ mousebuttonup(AG_Event *event)
 	switch (button) {
 	case SDL_BUTTON_LEFT:
 		if (t->nResizing >= 0) {
-//			dprintf("no longer resizing col%d\n", t->nResizing);
 			t->nResizing = -1;
 		}
 		break;
@@ -1079,7 +1077,6 @@ LostFocus(AG_Event *event)
 	AG_CancelEvent(t, "dblclick-row-expire");
 	AG_CancelEvent(t, "dblclick-col-expire");
 	if (t->nResizing >= 0) {
-//		dprintf("lost focus: no longer resizing col%d\n", t->nResizing);
 		t->nResizing = -1;
 	}
 	AG_MutexUnlock(&t->lock);

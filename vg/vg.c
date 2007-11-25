@@ -134,7 +134,8 @@ VG_Init(VG *vg, int flags)
 #endif
 		);
 		if (vg->su == NULL) {
-			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+			AG_FatalError("SDL_CreateRGBSurface: %s",
+			    SDL_GetError());
 		}
 		vg->fmt = vg->su->format;
 	}
@@ -306,7 +307,8 @@ void
 VG_Scale(VG *vg, int w, int h, float scale)
 {
 #ifdef DEBUG
-	if (scale < 0.0) { fatal("neg scale"); }
+	if (scale < 0.0)
+		AG_FatalError("VG_Scale: Negative scale factor");
 #endif
 	vg->scale = scale;
 	vg->rDst.w = w;
@@ -325,7 +327,8 @@ VG_Scale(VG *vg, int w, int h, float scale)
 		if ((vg->su = SDL_CreateRGBSurface(sFlags,
 		    vg->rDst.w, vg->rDst.h, depth,
 		    Rmask, Gmask, Bmask, Amask)) == NULL) {
-			fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+			AG_FatalError("SDL_CreateRGBSurface: %s",
+			    SDL_GetError());
 		}
 		vg->fmt = vg->su->format;
 		if (vg->rDst.x >= vg->su->w) { vg->rDst.x = vg->su->w-1; }
@@ -721,7 +724,7 @@ VG_PopVertex(VG *vg)
 		return (NULL);
 #ifdef DEBUG
 	if (vge->nvtx-1 < 0)
-		fatal("neg nvtx");
+		AG_FatalError("VG_PopVertex: Negative vertex count");
 #endif
 	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(VG_Vtx));
 	return ((vge->nvtx > 0) ? &vge->vtx[vge->nvtx-1] : NULL);
@@ -736,7 +739,7 @@ VG_PopMatrix(VG *vg)
 		return (NULL);
 #ifdef DEBUG
 	if (vge->ntrans-1 < 0)
-		fatal("neg ntrans");
+		AG_FatalError("VG_PopMatrix: Negative matrix count");
 #endif
 	vge->trans = Realloc(vge->trans, (--vge->ntrans)*sizeof(VG_Matrix));
 	return ((vge->ntrans > 0) ? &vge->trans[vge->ntrans-1] : NULL);

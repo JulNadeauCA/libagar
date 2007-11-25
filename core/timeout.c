@@ -133,7 +133,7 @@ AG_DelTimeout(void *p, AG_Timeout *to)
 		}
 	}
 	if (oto == NULL) {
-		dprintf("%s: %p is not scheduled\n", ob->name, to);
+		Debug(ob, "DelTimeout: No such timeout %p\n", to);
 	}
 	AG_UnlockTimeouts(ob);
 }

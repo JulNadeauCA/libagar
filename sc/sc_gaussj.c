@@ -22,7 +22,7 @@ SC_InvertGaussJordan(SC_Matrix *A, SC_Matrix *B)
 	SC_Real big, dum, pivinv, tmp;
 
 	if (!SC_MatrixIsSquare(A))
-		fatal("not a square matrix");
+		AG_FatalError("SC_InvertGaussJordan: Not a square matrix");
 
 	virow = SC_IvectorNew(A->n);
 	vicol = SC_IvectorNew(A->n);
@@ -45,7 +45,10 @@ SC_InvertGaussJordan(SC_Matrix *A, SC_Matrix *B)
 							icol = k;
 						}
 					} else if (vipiv->vec[k] > 1)
-						fatal("singular matrix");
+						AG_FatalError("SC_Invert"
+						              "GaussJordan: "
+							      "Singular "
+							      "matrix");
 				}
 			}
 		}
@@ -61,7 +64,7 @@ SC_InvertGaussJordan(SC_Matrix *A, SC_Matrix *B)
 		vicol->vec[i] = icol;
 
 		if (A->mat[icol][icol] == 0.0)
-			fatal("singular matrix");
+			AG_FatalError("SC_InvertGaussJordan: Singular matrix");
 
 		pivinv = 1.0/A->mat[icol][icol];
 		A->mat[icol][icol] = 1.0;

@@ -125,7 +125,7 @@ AG_ToolbarRow(AG_Toolbar *bar, int row)
 {
 #ifdef DEBUG
 	if (row < 0 || row >= bar->nRows)
-		fatal("no such row %d", row);
+		AG_FatalError("no such row %d", row);
 #endif
 	bar->curRow = row;
 }

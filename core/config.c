@@ -108,9 +108,9 @@ AG_ConfigInit(AG_Config *cfg)
 	Strlcat(tmpdir, "/tmp", sizeof(tmpdir));
 	
 	if (AG_FileExists(udatadir) == 0 && AG_MkDir(udatadir) != 0)
-		fatal("%s: %s", udatadir, AG_GetError());
+		AG_FatalError("%s: %s", udatadir, AG_GetError());
 	if (AG_FileExists(tmpdir) == 0 && AG_MkDir(tmpdir) != 0)
-		fatal("%s: %s", tmpdir, AG_GetError());
+		AG_FatalError("%s: %s", tmpdir, AG_GetError());
 	
 	AG_SetString(cfg, "save-path", "%s", udatadir);
 	AG_SetString(cfg, "tmp-path", "%s", tmpdir);

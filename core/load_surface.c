@@ -64,13 +64,13 @@ AG_WriteSurface(AG_DataSource *ds, SDL_Surface *su)
 	AG_WriteUint8(ds, su->format->alpha);
 	AG_WriteUint32(ds, su->format->colorkey);
 #if 0
-	dprintf("saving %dx%dx%d bpp%s%s surface\n", su->w, su->h,
+	printf("saving %dx%dx%d bpp%s%s surface\n", su->w, su->h,
 	    su->format->BitsPerPixel,
 	    (su->flags & SDL_SRCALPHA) ? " alpha" : "",
 	    (su->flags & SDL_SRCCOLORKEY) ? " colorkey" : "");
-	dprintf("masks: %08x,%08x,%08x,%08x\n", su->format->Rmask,
+	printf("masks: %08x,%08x,%08x,%08x\n", su->format->Rmask,
 	    su->format->Gmask, su->format->Bmask, su->format->Amask);
-	dprintf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
+	printf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
 	    su->format->alpha);
 #endif
 	if (su->format->BitsPerPixel == 8) {
@@ -158,12 +158,12 @@ AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 	su->format->alpha = AG_ReadUint8(ds);
 	su->format->colorkey = AG_ReadUint32(ds);
 #if 0	
-	dprintf("loading %dx%dx%d bpp%s%s%s surface\n", w, h, depth,
+	printf("loading %dx%dx%d bpp%s%s%s surface\n", w, h, depth,
 	    grayscale ? " grayscale" : "",
 	    (flags & SDL_SRCALPHA) ? " alpha" : "",
 	    (flags & SDL_SRCCOLORKEY) ? " colorkey" : "");
-	dprintf("masks: %08x,%08x,%08x,%08x\n", Rmask, Gmask, Bmask, Amask);
-	dprintf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
+	printf("masks: %08x,%08x,%08x,%08x\n", Rmask, Gmask, Bmask, Amask);
+	printf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
 	    su->format->alpha);
 #endif
 	if (depth == 8) {

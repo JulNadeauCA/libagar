@@ -270,8 +270,6 @@ VG_BlockClosest(VG *vg, float x, float y)
 	return (closest_vge != NULL ? closest_vge->block : NULL);
 }
 
-#ifdef EDITION
-
 static void
 destroy_block(AG_Event *event)
 {
@@ -354,4 +352,3 @@ VG_BlockEditor(VG *vg)
 	}
 	return (win);
 }
-#endif /* EDITION */

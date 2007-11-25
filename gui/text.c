@@ -435,7 +435,7 @@ AG_TextInit(void)
 		agFreetype = 0;
 	}
 	if ((agDefaultFont = AG_FetchFont(NULL, -1, -1)) == NULL) {
-		fatal("%s", AG_GetError());
+		AG_FatalError("%s", AG_GetError());
 	}
 	agTextFontHeight = agDefaultFont->height;
 	agTextFontAscent = agDefaultFont->ascent;
@@ -572,7 +572,7 @@ AG_PushTextState(void)
 {
 	AG_MutexLock(&agTextLock);
 	if ((curState+1) >= AG_TEXT_STATES_MAX) {
-		fatal("Text state stack overflow");
+		AG_FatalError("Text state stack overflow");
 	}
 	state = &states[++curState];
 	InitTextState();
@@ -585,7 +585,7 @@ AG_PopTextState(void)
 {
 	AG_MutexLock(&agTextLock);
 	if (curState == 0) {
-		fatal("No text state to pop");
+		AG_FatalError("No text state to pop");
 	}
 	state = &states[--curState];
 	AG_MutexUnlock(&agTextLock);
@@ -1159,7 +1159,7 @@ TextRenderBitmap(const Uint32 *ucs)
 	    agSurfaceFmt->Gmask,
 	    agSurfaceFmt->Bmask, 0);
 	if (su == NULL) {
-		fatal("CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError("CreateRGBSurface: %s", SDL_GetError());
 	}
 
 	line = 0;

@@ -241,7 +241,7 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	len = AG_UCS4Len(ucs4);
 #ifdef DEBUG
 	if (tbox->pos < 0 || tbox->pos > len)
-		fatal("bad position");
+		AG_FatalError("TextInsertUTF8: Bad position");
 #endif
 	if (agKbdUnicode) {
 		if (uch == 0) {
@@ -263,12 +263,13 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	/* Ensure the new character(s) fit inside the buffer. */
 	/* XXX use utf8 size for space efficiency */
 	if (len+nchars >= stringb->data.size/sizeof(Uint32)) {
-		dprintf("character does not fit into buffer\n");
+		Debug(tbox, "New character does not fit into buffer (%d)\n",
+		    (int)(len+nchars));
 		goto skip;
 	}
 	if (tbox->pos == len) {					/* Append */
 #if 0
-		dprintf("append at %d/%d\n", (int)tbox->pos, (int)len);
+		Debug(tbox, "Append at %d/%d\n", (int)tbox->pos, (int)len);
 #endif
 		if (agKbdUnicode) {
 			if (uch != 0) {
@@ -285,7 +286,7 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		}
 	} else {						/* Insert */
 #if 0
-		dprintf("insert at %d/%d\n", (int)tbox->pos, (int)len);
+		Debug(tbox, "Insert at %d/%d\n", (int)tbox->pos, (int)len);
 #endif
 		memmove(&ucs4[tbox->pos+nchars], &ucs4[tbox->pos],
 		       (len - tbox->pos)*sizeof(Uint32));
@@ -306,7 +307,7 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	}
 out:
 #if 0
-	dprintf("NUL terminating at %d+%d (sz=%d)\n", (int)len, (int)nchars,
+	Debug(tbox, "NUL terminating at %d+%d (sz=%d)\n", (int)len, (int)nchars,
 	    (int)stringb->data.size);
 #endif
 	ucs4[len+nchars] = '\0';
@@ -337,7 +338,7 @@ DeleteUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		goto skip;
 #ifdef DEBUG
 	if (tbox->pos < 0 || tbox->pos > len)
-		fatal("bad position");
+		AG_FatalError("TextDeleteUTF8: Bad position");
 #endif
 	switch (keysym) {
 	case SDLK_BACKSPACE:
@@ -520,7 +521,7 @@ InsertASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	}
 #ifdef DEBUG
 	if (tbox->pos < 0 || tbox->pos > len)
-		fatal("bad position");
+		AG_FatalError("TextInsertASCII: Bad position");
 #endif
 
 	if ((len+1)+1 >= stringb->data.size)
@@ -559,7 +560,7 @@ DeleteASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		goto skip;
 #ifdef DEBUG
 	if (tbox->pos < 0 || tbox->pos > len)
-		fatal("bad position");
+		AG_FatalError("TextDeleteASCII: Bad position");
 #endif
 	switch (keysym) {
 	case SDLK_BACKSPACE:

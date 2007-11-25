@@ -28,9 +28,7 @@
 
 #include <gui/toolbar.h>
 #include <gui/button.h>
-#ifdef EDITION
 #include <gui/menu.h>
-#endif
 
 #include "vg.h"
 #include "vg_math.h"

@@ -3,24 +3,8 @@
 #ifndef _AGAR_CORE_ERROR_H_
 #define _AGAR_CORE_ERROR_H_
 
-#include <stdio.h>	/* XXX for fprintf, abort */
-#include <stdlib.h>
-
 #ifdef _AGAR_INTERNAL
 #include <config/debug.h>
-#else
-#include <agar/config/debug.h>
-#endif
-
-#ifdef __GNUC__
-#define fatal(fmt, args...)						\
-	do {								\
-		fprintf(stderr, "%s: " fmt, __FUNCTION__ , ##args);	\
-		fprintf(stderr, "\n");					\
-		abort();						\
-	} while (0)
-#else
-#define fatal AG_FatalError
 #endif
 
 #define Malloc(len) AG_Malloc(len)
@@ -43,37 +27,14 @@
 #define Verbose AG_Verbose
 
 #ifdef DEBUG
-#ifdef __GNUC__
-# define dprintf(fmt,args...) printf("%s: " fmt, __FUNCTION__ , ##args)
-# define debug(mask,fmt,args...) \
- if(agDebugLvl&(mask)) printf("%s: " fmt, __FUNCTION__ , ##args)
-# define debug_n(mask,fmt,args...) \
- if(agDebugLvl&(mask)) fprintf(stderr, fmt, ##args)
-# define Debug(obj,fmt,args...) \
- if(OBJECT_DEBUG(obj) || agDebugLvl > 0) \
-   printf("%s: %s: " fmt, OBJECT(obj)->name, __FUNCTION__ , ##args)
+# define Debug AG_Debug
 #else
-# define dprintf AG_DebugPrintf
-# define deprintf AG_DebugPrintf
-# define debug AG_Debug
-# define debug_n AG_DebugN
-# define Debug AG_DebugObj
-#endif
-#else
-#if defined(__GNUC__)
-# define dprintf(arg...) ((void)0)
-# define deprintf(arg...) ((void)0)
-# define debug(level, arg...) ((void)0)
-# define debug_n(level, arg...) ((void)0)
-# define Debug(obj, arg...) ((void)0)
-#else
-# define dprintf AG_DebugPrintf
-# define deprintf AG_DebugPrintf
-# define debug AG_Debug
-# define debug_n AG_Debug
-# define Debug AG_DebugObj
-#endif
-#endif
+# ifdef __GNUC__
+#  define Debug(obj, arg...) ((void)0)
+# else
+#  define Debug AG_Debug
+# endif
+#endif /* DEBUG */
 
 #include "begin_code.h"
 #ifdef DEBUG

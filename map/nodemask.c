@@ -193,8 +193,6 @@ MAP_NodeMaskBitmap(MAP *m, MAP_NodeMask *mask, void *pobj, Uint32 offs)
 void
 MAP_NodeMaskVertex(MAP_NodeMask *mask, Uint32 x, Uint32 y)
 {
-	dprintf("%u,%u\n", x, y);
-
 	if (mask->nm_poly.vertices == NULL) {
 		mask->nm_poly.vertices = Malloc(2*sizeof(Uint32));
 		mask->nm_poly.nvertices = 0;

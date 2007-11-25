@@ -277,7 +277,7 @@ NS_RegCmd(NS_Server *ns, const char *name, NS_CommandFn fn, void *arg)
 	ns->cmds[ns->ncmds].fn = fn;
 	ns->cmds[ns->ncmds].arg = arg;
 	ns->ncmds++;
-	Debug(ns, "registered function: %s (%p)", name, arg);
+	Debug(ns, "Registered function: %s (%p)", name, arg);
 }
 
 /* Register an authentication method. */
@@ -290,7 +290,7 @@ NS_RegAuthMode(NS_Server *ns, const char *name, NS_AuthFn fn, void *arg)
 	ns->authModes[ns->nAuthModes].fn = fn;
 	ns->authModes[ns->nAuthModes].arg = arg;
 	ns->nAuthModes++;
-	Debug(ns, "registered auth: %s (%p)", name, arg);
+	Debug(ns, "Registered authmode: %s (%p)", name, arg);
 }
 
 static void

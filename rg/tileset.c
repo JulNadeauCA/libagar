@@ -115,7 +115,7 @@ Init(void *obj)
 	    agSurfaceFmt->Amask);
 
 	if (ts->icon == NULL) {
-		fatal("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
 	}
 	ts->fmt = ts->icon->format;
 	ts->flags = 0;
@@ -252,6 +252,7 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 
 	/* Load the features. */
 	count = AG_ReadUint32(buf);
+	Debug(ts, "Loading %u features\n", count);
 	for (i = 0; i < count; i++) {
 		const RG_FeatureOps **ftops;
 		char name[RG_FEATURE_NAME_MAX];
@@ -270,9 +271,9 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 				break;
 		}
 		if (*ftops == NULL) {
-			dprintf("%s: unimplemented feature: %s; "
-			        "skipping %lu bytes.\n", name, type,
-				(Ulong)len);
+			Debug(ts, "Unimplemented feature: %s (class=%s); "
+			          "skipping %lu bytes.\n", name, type,
+				  (Ulong)len);
 			AG_Seek(buf, len-4, AG_SEEK_CUR);
 			continue;
 		}
@@ -290,7 +291,7 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 	
 	/* Load the tiles. */
 	count = AG_ReadUint32(buf);
-	dprintf("%u tiles\n", count);
+	Debug(ts, "Loading %u tiles\n", count);
 	for (i = 0; i < count; i++) {
 		char name[RG_TILE_NAME_MAX];
 		RG_Tile *t;
@@ -311,6 +312,7 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 
 	/* Load the animation information. */
 	count = AG_ReadUint32(buf);
+	Debug(ts, "Loading %u animations\n", count);
 	for (i = 0; i < count; i++) {
 		char name[RG_ANIMATION_NAME_MAX];
 		RG_Anim *ani;
@@ -330,6 +332,7 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 	
 	/* Load the textures. */
 	count = AG_ReadUint32(buf);
+	Debug(ts, "Loading %u textures\n", count);
 	for (i = 0; i < count; i++) {
 		char name[RG_TEXTURE_NAME_MAX];
 		RG_Texture *tex;
@@ -347,39 +350,37 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 
 	/* Load and resolve the static tile and animation mappings. */
 	ts->ntiletbl = AG_ReadUint32(buf);
-	printf("%s: tiletbl: %u entries\n", OBJECT(ts)->name,
-	    (Uint)ts->ntiletbl);
+	Debug(ts, "Tiletbl has %u entries\n", (Uint)ts->ntiletbl);
 	ts->tiletbl = Realloc(ts->tiletbl, ts->ntiletbl*sizeof(RG_Tile *));
 	for (i = 0; i < ts->ntiletbl; i++) {
 		char name[RG_TILE_NAME_MAX];
 
 		AG_CopyString(name, buf, sizeof(name));
-		printf("tile mapping %u: <%s>\n", i, name);
+		Debug(ts, "Tile mapping %u: <%s>\n", i, name);
 		if (name[0] == '\0') {
 			ts->tiletbl[i] = NULL;
 		} else {
 			if ((ts->tiletbl[i] = RG_TilesetFindTile(ts, name))
 			    == NULL) {
-				fatal("%s: bad tile mapping: %s (%u)",
+				AG_FatalError("%s: Bad tile mapping: %s (%u)",
 				    OBJECT(ts)->name, name, (Uint)i);
 			}
 		}
 	}
 	ts->nanimtbl = AG_ReadUint32(buf);
-	printf("%s: animtbl(%p): %u anims\n", OBJECT(ts)->name, ts->animtbl,
-	    (Uint)ts->nanimtbl);
+	Debug(ts, "Animtbl has %u entries\n", (Uint)ts->nanimtbl);
 	ts->animtbl = Realloc(ts->animtbl, ts->nanimtbl*sizeof(RG_Anim *));
 	for (i = 0; i < ts->nanimtbl; i++) {
 		char name[RG_ANIMATION_NAME_MAX];
 
 		AG_CopyString(name, buf, sizeof(name));
-		printf("anim mapping %u: <%s>\n", i, name);
+		Debug(ts, "Anim mapping %u: <%s>\n", i, name);
 		if (name[0] == '\0') {
 			ts->animtbl[i] = NULL;
 		} else {
 			if ((ts->animtbl[i] = RG_TilesetFindAnim(ts, name))
 			    == NULL) {
-				fatal("%s: bad anim mapping: %s (%u)",
+				AG_FatalError("%s: Bad anim mapping: %s (%u)",
 				    OBJECT(ts)->name, name, (Uint)i);
 			}
 		}
@@ -402,7 +403,8 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 				}
 			}
 			if (ppx == NULL)
-				fatal("%s: bad pixmap ref", pbr->px_name);
+				AG_FatalError("%s: Bad pixmap ref",
+				    pbr->px_name);
 		}
 	}
 	AG_MutexUnlock(&ts->lock);
@@ -479,7 +481,7 @@ Save(void *obj, AG_DataSource *buf)
 		count++;
 	}
 	AG_WriteUint32At(buf, count, offs);
-	dprintf("saved %u tiles\n", count);
+	Debug(ts, "Saved %u tiles\n", count);
 	
 	/* Save the animation information. */
 	count = 0;
@@ -492,6 +494,7 @@ Save(void *obj, AG_DataSource *buf)
 		count++;
 	}
 	AG_WriteUint32At(buf, count, offs);
+	Debug(ts, "Saved %u animations\n", count);
 	
 	/* Save the textures. */
 	count = 0;
@@ -503,6 +506,7 @@ Save(void *obj, AG_DataSource *buf)
 		count++;
 	}
 	AG_WriteUint32At(buf, count, offs);
+	Debug(ts, "Saved %u textures\n", count);
 
 	/* Save the static tile and animation mappings. */
 	AG_WriteUint32(buf, ts->ntiletbl);
@@ -515,6 +519,8 @@ Save(void *obj, AG_DataSource *buf)
 		AG_WriteString(buf, (ts->animtbl[i]->name != NULL) ?
 		                     ts->animtbl[i]->name : "");
 	}
+	Debug(ts, "Saved %u tiletbl and %u animtbl entries\n",
+	    ts->ntiletbl, ts->nanimtbl);
 
 	AG_MutexUnlock(&ts->lock);
 	return (0);
@@ -629,8 +635,6 @@ RG_TilesetFindAnim(RG_Tileset *ts, const char *name)
 	}
 	return (ani);
 }
-
-#ifdef EDITION
 
 static void
 PollGraphics(AG_Event *event)
@@ -1857,7 +1861,6 @@ Edit(void *p)
 	}
 	return (win);
 }
-#endif /* EDITION */
 
 AG_ObjectClass rgTilesetClass = {
 	"RG_Tileset",
@@ -1868,9 +1871,5 @@ AG_ObjectClass rgTilesetClass = {
 	Destroy,
 	Load,
 	Save,
-#ifdef EDITION
 	Edit
-#else
-	NULL
-#endif
 };

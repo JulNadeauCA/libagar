@@ -125,9 +125,9 @@ AG_ExecEventFn(void *obj, AG_Event *ev)
 __END_DECLS
 
 #ifdef DEBUG
-#define AG_EVENT_DEFAULT_CASE() default: fatal("bad event arg spec");
+#define AG_EVENT_DEFAULT_CASE() default: AG_FatalError("Bad event arg spec");
 #define AG_EVENT_BOUNDARY_CHECK(ev) \
-  if ((ev)->argc >= AG_EVENT_ARGS_MAX-1) fatal("excess event args");
+  if ((ev)->argc >= AG_EVENT_ARGS_MAX-1) AG_FatalError("Excess event args");
 #else
 #define AG_EVENT_DEFAULT_CASE() default: break;
 #define AG_EVENT_BOUNDARY_CHECK(ev)

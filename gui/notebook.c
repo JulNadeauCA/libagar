@@ -272,7 +272,7 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 
 #ifdef DEBUG
 	if (pwin == NULL)
-		fatal("no window is attached");
+		AG_FatalError("AG_Notebook: No window is attached");
 #endif
 	if (nb->sel_tab != NULL) {
 		AG_WidgetHiddenRecursive(nb->sel_tab);

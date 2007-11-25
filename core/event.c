@@ -35,15 +35,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-#ifdef DEBUG
-#define DEBUG_EVENTS		0x01
-#define DEBUG_ASYNC		0x02
-#define DEBUG_PROPAGATION	0x04
-#define DEBUG_SCHED		0x08
-#define	agDebugLvl		agEventDebugLvl
-int	agEventDebugLvl = 0;
-#endif
-
 static void PropagateEvent(AG_Object *, AG_Object *, AG_Event *);
 
 const char *agEvArgTypeNames[] = {
@@ -69,16 +60,14 @@ SchedEventTimeout(void *p, Uint32 ival, void *arg)
 	AG_Object *ob = p;
 	AG_Event *ev = arg;
 	
-	debug(DEBUG_SCHED, "%s: timeout `%s' (ival=%u)\n", ob->name,
-	    ev->name, (Uint)ival);
+	Debug(ob, "Event <%s> timeout (%u ticks)\n", ev->name, (Uint)ival);
 	ev->flags &= ~(AG_EVENT_SCHEDULED);
 
 	/* Propagate event to children. */
 	if (ev->flags & AG_EVENT_PROPAGATE) {
 		AG_Object *child;
 			
-		debug(DEBUG_PROPAGATION, "%s: propagate %s (timeout)\n",
-		    ob->name, ev->name);
+		Debug(ob, "Propagate <%s> (timeout)\n", ev->name);
 		AG_LockLinkage();
 		OBJECT_FOREACH_CHILD(child, ob, ag_object) {
 			PropagateEvent(ob, child, ev);
@@ -230,19 +219,18 @@ EventThread(void *p)
 	AG_Object *chld;
 
 	if (eev->flags & AG_EVENT_PROPAGATE) {
-		debug(DEBUG_PROPAGATION, "%s: propagate %s (async)\n",
-		    rcvr->name, eev->name);
+		Debug(rcvr, "Propagate <%s> (async)\n", eev->name);
 		AG_LockLinkage();
 		OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
 			PropagateEvent(rcvr, chld, eev);
 		}
 		AG_UnlockLinkage();
 	}
-	debug(DEBUG_ASYNC, "%s: %s begin\n", rcvr->name, eev->name);
+	Debug(rcvr, "BEGIN event thread for <%s>\n", eev->name);
 	if (eev->handler != NULL) {
 		eev->handler(eev);
 	}
-	debug(DEBUG_ASYNC, "%s: %s end\n", rcvr->name, eev->name);
+	Debug(rcvr, "CLOSE event thread for <%s>\n", eev->name);
 	Free(eev);
 	return (NULL);
 }
@@ -263,8 +251,8 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	AG_Event *ev;
 	AG_Object *chld;
 
-	debug(DEBUG_EVENTS, "%s: %s -> %s\n", evname,
-	    (sndr != NULL) ? sndr->name : "NULL", rcvr->name);
+	Debug(rcvr, "Event <%s> posted from %s\n", evname,
+	    sndr?sndr->name:"NULL");
 
 	AG_MutexLock(&rcvr->lock);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
@@ -295,9 +283,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			tmpev.argn[tmpev.argc] = "_sender";
 
 			if (tmpev.flags & AG_EVENT_PROPAGATE) {
-				debug(DEBUG_PROPAGATION,
-				    "%s: propagate %s (post)\n",
-				    rcvr->name, evname);
+				Debug(rcvr, "Propagate <%s> (post)\n", evname);
 				AG_LockLinkage();
 				OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
 					PropagateEvent(rcvr, chld, &tmpev);
@@ -323,9 +309,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
 	
-	debug(DEBUG_SCHED, "%s: sched `%s' (in %u ticks)\n", rcvr->name,
-	    evname, (Uint)ticks);
-
+	Debug(rcvr, "Schedule <%s> in %u ticks\n", evname, (Uint)ticks);
 	AG_LockTiming();
 	AG_MutexLock(&rcvr->lock);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
@@ -336,7 +320,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 		goto fail;
 	}
 	if (ev->flags & AG_EVENT_SCHEDULED) {
-		debug(DEBUG_SCHED, "%s: resched `%s'\n", rcvr->name, evname);
+		Debug(rcvr, "Reschedule <%s>\n", evname);
 		AG_DelTimeout(rcvr, &ev->timeout);
 	}
 	ev->argc = ev->argc0;
@@ -361,12 +345,9 @@ AG_ReschedEvent(void *p, const char *evname, Uint32 ticks)
 	AG_Object *ob = p;
 	AG_Event *ev;
 
-	debug(DEBUG_SCHED, "%s: resched `%s' (%u ticks)\n", ob->name, evname,
-	    (Uint)ticks);
-
+	Debug(ob, "Reschedule <%s> in %u ticks\n", evname, (Uint)ticks);
 	AG_LockTiming();
 	AG_MutexLock(&ob->lock);
-
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(evname, ev->name) == 0)
 			break;
@@ -407,8 +388,7 @@ AG_CancelEvent(void *p, const char *evname)
 		goto fail;
 	}
 	if (ev->flags & AG_EVENT_SCHEDULED) {
-		debug(DEBUG_SCHED, "%s: cancelled timeout %s (cancel)\n",
-		    ob->name, evname);
+		Debug(ob, "Cancelled timeout <%s> (cancel)\n", evname);
 		AG_DelTimeout(ob, &ev->timeout);
 		rv++;
 		ev->flags &= ~(AG_EVENT_SCHEDULED);
@@ -435,7 +415,9 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 	AG_Object *chld;
 	AG_Event *ev;
 
-	debug(DEBUG_EVENTS, "%s event to %s\n", event->name, rcvr->name);
+	Debug(rcvr, "Event <%s> forwarded from %s\n", event->name,
+	    sndr?sndr->name:"NULL");
+
 	AG_MutexLock(&rcvr->lock);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
 		if (strcmp(event->name, ev->name) == 0)
@@ -468,8 +450,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 		tmpev.argn[tmpev.argc] = "_sender";
 
 		if (ev->flags & AG_EVENT_PROPAGATE) {
-			debug(DEBUG_PROPAGATION, "%s: propagate %s (forward)\n",
-			    rcvr->name, event->name);
+			Debug(rcvr, "Propagate <%s> (forward)\n", event->name);
 			AG_LockLinkage();
 			OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
 				PropagateEvent(rcvr, chld, ev);
