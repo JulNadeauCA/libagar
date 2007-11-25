@@ -1,4 +1,3 @@
-/*	$Csoft: agar-bench.c,v 1.8 2005/10/06 10:29:18 vedge Exp $	*/
 /*	Public domain	*/
 
 #include <agar/core.h>
@@ -282,14 +281,12 @@ main(int argc, char *argv[])
 		case 'F':
 			AG_SetBool(agConfig, "view.full-screen", 0);
 			break;
-#ifdef HAVE_OPENGL
 		case 'g':
 			AG_SetBool(agConfig, "view.opengl", 1);
 			break;
 		case 'G':
 			AG_SetBool(agConfig, "view.opengl", 0);
 			break;
-#endif
 		case 'w':
 			AG_SetUint16(agConfig, "view.w", atoi(optarg));
 			break;
@@ -307,13 +304,9 @@ main(int argc, char *argv[])
 			break;
 		case '?':
 		default:
-			printf("%s [-vfF] [-w width] [-h height] [-r fps]"
-			       " [-t font,size,flags] [-T font-path]",
+			printf("%s [-vfFgG] [-w width] [-h height] [-r fps]"
+			       " [-t font,size,flags] [-T font-path]\n",
 			    agProgName);
-#ifdef HAVE_OPENGL
-			printf(" [-gG]");
-#endif
-			printf("\n");
 			exit(0);
 		}
 	}

@@ -32,6 +32,8 @@
 #include <config/network.h>
 #include <config/threads.h>
 #include <config/have_jpeg.h>
+#include <config/have_opengl.h>
+
 #if defined(NETWORK) && defined(THREADS) && defined(HAVE_JPEG)
 
 #include <sys/types.h>

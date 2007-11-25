@@ -49,6 +49,8 @@
 
 #include "dev.h"
 
+#include <gui/opengl.h>
+
 AG_Window *devConfigWindow = NULL;
 
 static AG_Window *DEV_ConfigWindow(AG_Config *);

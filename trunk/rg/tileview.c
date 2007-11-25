@@ -31,6 +31,8 @@
 #include "tileview.h"
 #include "icons.h"
 
+#include <gui/opengl.h>
+
 #include <stdarg.h>
 #include <string.h>
 

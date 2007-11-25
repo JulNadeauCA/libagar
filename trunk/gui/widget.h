@@ -201,16 +201,19 @@ void	 AG_WidgetUpdateSurface(void *, int);
 #define	 AG_WidgetUnmapSurface(w, n) \
 	 AG_WidgetReplaceSurface((w),(n),NULL)
 
-#ifdef HAVE_OPENGL
-void	 AG_WidgetFreeResourcesGL(AG_Widget *);
-void	 AG_WidgetRegenResourcesGL(AG_Widget *);
-#endif
-
 void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
 void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
 #define  AG_WidgetBlitSurface(p,n,x,y) \
 	 AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
+
+#ifdef HAVE_OPENGL
 void	 AG_WidgetBlitSurfaceGL(void *, int, float, float);
+void	 AG_WidgetPutPixel32_GL(void *, int, int, Uint32);
+void	 AG_WidgetPutPixelRGB_GL(void *, int, int, Uint8, Uint8, Uint8);
+void	 AG_WidgetFreeResourcesGL(AG_Widget *);
+void	 AG_WidgetRegenResourcesGL(AG_Widget *);
+#endif
+
 void	 AG_WidgetPushClipRect(void *, int, int, int, int);
 void	 AG_WidgetPopClipRect(void *);
 int	 AG_WidgetIsOcculted(AG_Widget *);
@@ -340,12 +343,7 @@ AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 		return;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		Uint8 r, g, b;
-		SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
-		glBegin(GL_POINTS);
-		glColor3ub(r, g, b);
-		glVertex2s(vx, vy);
-		glEnd();
+		AG_WidgetPutPixel32_GL(p, vx, vy, color);
 	} else
 #endif
 		AG_PUT_PIXEL2(agView->v, vx, vy, color);
@@ -361,13 +359,7 @@ AG_WidgetPutPixel32OrClip(void *p, int wx, int wy, Uint32 color)
 		return;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		Uint8 r, g, b;
-
-		SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
-		glBegin(GL_POINTS);
-		glColor3ub(r, g, b);
-		glVertex2s(vx, vy);
-		glEnd();
+		AG_WidgetPutPixel32_GL(p, vx, vy, color);
 	} else
 #endif
 		AG_PUT_PIXEL2(agView->v, vx, vy, color);
@@ -383,10 +375,7 @@ AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 		return;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		glBegin(GL_POINTS);
-		glColor3ub(r, g, b);
-		glVertex2s(vx, vy);
-		glEnd();
+		AG_WidgetPutPixelRGB_GL(p, vx, vy, r, g, b);
 	} else
 #endif
 		AG_PUT_PIXEL2(agView->v, vx, vy, SDL_MapRGB(agVideoFmt, r,g,b));
@@ -402,10 +391,7 @@ AG_WidgetPutPixelRGBOrClip(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 		return;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		glBegin(GL_POINTS);
-		glColor3ub(r, g, b);
-		glVertex2s(vx, vy);
-		glEnd();
+		AG_WidgetPutPixelRGB_GL(p, wx, wy, r, g, b);
 	} else
 #endif
 		AG_PUT_PIXEL2(agView->v, vx, vy, SDL_MapRGB(agVideoFmt, r,g,b));
