@@ -72,14 +72,13 @@ install-includes:
 	    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 	    INSTALL_INCL="${INSTALL_INCL}" \
 	    ${FIND} . -type d \! -name .svn \
-	    -exec ${SH} mk/install-includes.sh "{}" "${INCLDIR}/agar/{}" \;
+	    -exec ${SH} mk/install-includes.sh {} ${INCLDIR}/agar \;
 	@if [ "${SRC}" != "" ]; then \
 		(cd ${SRC} && ${SUDO} env \
 		    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 		    INSTALL_INCL="${INSTALL_INCL}" \
 		    ${FIND} . -type d \! -name .svn \
-		    -exec ${SH} mk/install-includes.sh "{}" \
-		    "${INCLDIR}/agar/{}" \;); \
+		    -exec ${SH} mk/install-includes.sh {} ${INCLDIR}/agar \;); \
 		echo "${INSTALL_INCL} core_pub.h ${INCLDIR}/agar/core.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/core/core_pub.h \
 		    ${INCLDIR}/agar/core.h; \
