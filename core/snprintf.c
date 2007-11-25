@@ -57,6 +57,7 @@
  **************************************************************/
 
 #include <config/have_snprintf.h>
+#include <config/have_long_long.h>
 #ifndef HAVE_SNPRINTF
 
 #include "snprintf.h"
@@ -235,8 +236,10 @@ dopr(char *buffer, size_t maxlen, const char *format, va_list args)
 					value = va_arg(args, int);
 				} else if (cflags == DP_C_LONG) {
 					value = va_arg(args, long int);
+#ifdef HAVE_LONG_LONG
 				} else if (cflags == DP_C_LONG_LONG) {
 					value = va_arg(args, long long);
+#endif
 				} else {
 					value = va_arg(args, int);
 				}
@@ -249,9 +252,11 @@ dopr(char *buffer, size_t maxlen, const char *format, va_list args)
 					value = va_arg(args, unsigned int);
 				} else if (cflags == DP_C_LONG) {
 					value = va_arg(args, unsigned long int);
+#ifdef HAVE_LONG_LONG
 				} else if (cflags == DP_C_LONG_LONG) {
 					value = va_arg(args,
 					    unsigned long long);
+#endif
 				} else {
 					value = va_arg(args, unsigned int);
 				}
@@ -264,9 +269,11 @@ dopr(char *buffer, size_t maxlen, const char *format, va_list args)
 					value = va_arg(args, unsigned int);
 				} else if (cflags == DP_C_LONG) {
 					value = va_arg(args, unsigned long int);
+#ifdef HAVE_LONG_LONG
 				} else if (cflags == DP_C_LONG_LONG) {
 					value = va_arg(args,
 					    unsigned long long);
+#endif
 				} else {
 					value = va_arg(args, unsigned int);
 				}
@@ -281,9 +288,11 @@ dopr(char *buffer, size_t maxlen, const char *format, va_list args)
 					value = va_arg(args, unsigned int);
 				} else if (cflags == DP_C_LONG) {
 					value = va_arg(args, unsigned long int);
+#ifdef HAVE_LONG_LONG
 				} else if (cflags == DP_C_LONG_LONG) {
 					value = va_arg(args,
 					    unsigned long long);
+#endif
 				} else {
 					value = va_arg(args, unsigned int);
 				}
@@ -347,11 +356,13 @@ dopr(char *buffer, size_t maxlen, const char *format, va_list args)
 
 					num = va_arg(args, long int *);
 					*num = currlen;
+#ifdef HAVE_LONG_LONG
 				} else if (cflags == DP_C_LONG_LONG) {
 					long long *num;
 
 					num = va_arg(args, long long *);
 					*num = currlen;
+#endif
 				} else {
 					int *num;
 
