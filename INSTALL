@@ -1,22 +1,25 @@
 
 Prerequisites
 -------------
-Agar requires the Software DirectMedia Layer (http://www.libsdl.org/)
-library.
+Agar currently requires the SDL (http://www.libsdl.org/). Note: this
+requirement will be removed Agar-1.4, as SDL code will be moved to a
+module.
 
 Options
 -------
 - The FreeType library (http://www.freetype.org/) is required for high
   quality font rendering. If compiled without FreeType, Agar will revert
-  to a simple bitmap font engine.
+  to a simple bitmap font engine. The bitmap font bundled with Agar only
+  includes the ASCII range.
 
-- The GL rendering mode requires OpenGL.
+- The GL rendering mode requires OpenGL. Agar can be compiled with runtime
+  support for both SDL and OpenGL modes.
 
-- The screenshot feature requires the jpeg library, available from
-  ftp://ftp.uu.net/graphics/jpeg/.
+- The optional "screenshot" feature requires the jpeg library, available
+  from ftp://ftp.uu.net/graphics/jpeg/.
 
 - Threads support (--enable-threads) requires a POSIX threads interface
-  which conforms to SUSv2 (ie. recursive mutexes are needed).
+  which conforms to SUSv2 (i.e., recursive mutexes are needed).
 
 Installation
 ------------
@@ -55,4 +58,3 @@ Makefile is modified.
    $ make depend && make
    # make install
 
-$Csoft: INSTALL,v 1.19 2005/01/31 04:36:59 vedge Exp $

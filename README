@@ -8,23 +8,26 @@ What is it?
 -----------
 Agar is a type of sugar polymer obtained from seaweed and red algae. Agar
 becomes gelatinous in water and is primarly used as a culture medium for
-microbiological work. Agar is also an extensive toolkit for portable
-graphical applications.
+microbiological work. Agar is also the name of an open source toolkit for
+portable graphical applications.
 
-The Agar source distribution includes a number of libraries, listed below.
-For more information on them, go to http://libagar.org/.
+Agar consists of two libraries: Agar-Core and Agar-GUI. Agar-Core implements
+an object system and portability interfaces. Agar-GUI is an extensive GUI
+toolkit designed to work with anything that has a display and a pointing
+device (or keyboard). Currently, it provides drivers for SDL and OpenGL.
 
-Name		Description			Link against
-----		-----------			------------
-Agar-Core	Object system, portability	`agar-config --libs`
-Agar-GUI	Graphical user interface	`agar-config --libs`
-Agar-SG		3D engine (scene graph)		`agar-sg-config --libs`
-Agar-DEV	Developer tools			`agar-dev-config --libs`
+This distribution also includes other useful libraries based on Agar, but
+you will need to link explicitely against them:
+
+Agar-DEV	Developer/debugging tools	`agar-dev-config --libs`
 Agar-VG		Vector display engine		`agar-vg-config --libs`
 Agar-RG		2D graphic rendering/edition	`agar-rg-config --libs`
 Agar-SC		Scientific computing routines	`agar-sc-config --libs`
-Agar-NET	Networking facilities		`agar-net-config --libs`
 Agar-MAP	2D game levels/edition		`agar-map-config --libs`
+
+Other libraries distributed separatedly include Agar-SG, a 3D geometry
+and graphics engine, available from http://hypertriton.com/agar-sg/ and
+cadtools, available from http://hypertriton.com/cadtools/.
 
 Availability
 ------------
@@ -33,13 +36,17 @@ at http://libagar.org/.
 
 Portability
 -----------
-Thanks to SDL, Agar is portable to many different platforms, including
-FreeBSD, IRIX, Linux, MacOS Classic, MacOS X, NetBSD, OpenBSD and Windows.
+Agar is portable to many different platforms, including FreeBSD, IRIX,
+Linux, MacOS Classic, MacOS X, NetBSD, OpenBSD and Windows. It is also
+compatible with various consoles such as the GP2x, Nintendo Gamecube/Wii,
+Sony Playstation2 and Nintendo DS.
+
 For the list of official ports, see http://libagar.org/portable.html.
 
 License
 -------
-Agar is freely distributable under the terms of a revised BSD license.
+Agar is freely distributable under the terms of the "new" BSD license
+(no advertising clause).
 
 Acknowledgements
 ----------------
