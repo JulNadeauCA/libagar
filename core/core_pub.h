@@ -4,7 +4,12 @@
 #define _AGAR_CORE_PUBLIC_H_
 #include <agar/core/core_begin.h>
 
-#include <agar/core/error_pub.h>
+#include <agar/core/error.h>
+#ifdef _USE_AGAR_STD
+# include <agar/core/snprintf.h>
+# include <agar/core/vsnprintf.h>
+# include <agar/core/vasprintf.h>
+#endif
 
 #include <agar/core/data_source.h>
 #include <agar/core/load_den.h>
