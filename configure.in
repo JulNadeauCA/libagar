@@ -104,6 +104,8 @@ if [ "${with_freetype}" != "no" ]; then
 	fi
 else
 	HUNDEF(HAVE_FREETYPE)
+	MDEFINE(FREETYPE_CFLAGS, "")
+	MDEFINE(FREETYPE_LIBS, "")
 fi
 
 # Enable OpenGL support if an OpenGL library is found.
@@ -124,6 +126,8 @@ if [ "${with_gl}" != "no" ]; then
 	fi
 else
 	HUNDEF(HAVE_OPENGL)
+	MDEFINE(OPENGL_CFLAGS, "")
+	MDEFINE(OPENGL_LIBS, "")
 fi
 
 # Enable JPEG support if libjpeg is found.
@@ -142,6 +146,8 @@ if [ "${with_jpeg}" != "no" ]; then
 	fi
 else
 	HUNDEF(HAVE_JPEG)
+	MDEFINE(JPEG_CFLAGS, "")
+	MDEFINE(JPEG_LIBS, "")
 fi
 
 # Enable network support if system supports getaddrinfo().
@@ -162,6 +168,7 @@ if [ "${enable_network}" = "yes" ]; then
 	fi
 else
 	HUNDEF(NETWORK)
+	HUNDEF(HAVE_GETADDRINFO)
 fi
 
 # Enable network server code only if requested explicitely.
@@ -182,22 +189,40 @@ if [ "${enable_server}" = "yes" ]; then
 	fi
 else
 	HUNDEF(SERVER)
+	HUNDEF(HAVE_GETADDRINFO)
 fi
 
 # Enable threads support if POSIX threads are available.
 if [ "${enable_threads}" != "no" ]; then
 	CHECK(pthreads)
-	if [ "${HAVE_PTHREADS}" = "yes" ]; then
+	if [ "${HAVE_PTHREADS}" = "yes" -o "${HAVE_PTHREADS_XOPEN}" = "yes" ];
+	then
+		if [ "${HAVE_PTHREADS_XOPEN}" = "no" -a
+		     "${HAVE_PTHREADS_MUTEX_RECURSIVE}" = "no" -a 
+		     "${HAVE_PTHREADS_MUTEX_RECURSIVE_NP}" = "no" ]; then
+			echo "*"
+			echo "* --enable-threads was requested, but your"
+			echo "* pthreads implementation does not support"
+			echo "* recursive mutexes"
+			echo "*"
+			exit 1
+		fi
 		HDEFINE(THREADS, 1)
 	else
 		echo "*"
-		echo "* --enable-threads was requested, but a POSIX threads"
-		echo "* library was not found."
+		echo "* --enable-threads was requested, but no POSIX threads"
+		echo "* library was found"
 		echo "*"
 		exit 1
 	fi
 else
 	HUNDEF(THREADS)
+	HUNDEF(HAVE_PTHREADS)
+	HUNDEF(HAVE_PTHREADS_XOPEN)
+	MDEFINE(PTHREADS_CFLAGS, "")
+	MDEFINE(PTHREADS_LIBS, "")
+	MDEFINE(PTHREADS_XOPEN_CFLAGS, "")
+	MDEFINE(PTHREADS_XOPEN_LIBS, "")
 	#
 	# Lock macros expand to no-ops when compiled !THREADS, which may
 	# result in unused variables in some places.
@@ -220,9 +245,6 @@ HUNDEF(ASTRONOMICAL_UNITS)
 
 # Enable conversion of historical units.
 HDEFINE(HISTORICAL_UNITS, 1)
-
-# Enable generic edition features. XXX
-HDEFINE(EDITION, 1)
 
 # Support 8/16/24/32bpp video displays by default.
 # Disable unused modes to reduce code size and gain some cycles.
