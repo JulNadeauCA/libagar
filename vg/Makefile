@@ -5,7 +5,8 @@ LIB=		ag_vg
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"6d009edb-c66a-46e8-a1dd-b6f653db6327"
-LIB_LINKS=	ag_core_static ag_gui_static SDL opengl32
+LIB_LINKS=	ag_core_static ag_gui_static pthreads \
+		SDL opengl freetype
 
 SRCS=	vg.c vg_block.c vg_circle.c vg_arc.c vg_line.c vg_mask.c \
 	vg_origin.c vg_ortho.c vg_point.c vg_primitive.c vg_snap.c \

@@ -5,7 +5,7 @@ LIB=		ag_core
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"9d6bb497-1d2a-4ac0-9f7b-7be68b9077e8"
-LIB_LINKS=	SDL
+LIB_LINKS=	pthreads SDL
 
 SRCS=	config.c core.c error.c event.c object.c prop.c rcs.c \
 	timeout.c typesw.c cpuinfo.c load_color.c load_den.c \
