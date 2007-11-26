@@ -23,24 +23,20 @@ Options
 
 Installation
 ------------
-1) Execute the configure script (use `./configure --help' for options).
-   $ ./configure
+1) Execute the configure script (use `./configure --help' for options;
+   in particular, you may want to use --without-manpages to speed up the
+   build if you do not want manual pages).
+    $ ./configure
 
-2) Build the dependencies with the `depend' target.
-   $ make depend
+2) Compile the libraries and executables.
+    $ make depend all
+    # make install
 
-3) Compile the libs, binaries, archives and man pages (if nroff(1) is there).
-   $ make
+3) Let the developers know of your success/failure.
+    $ cat config.log | mail -s "compiles fine" compile@libagar.org
 
-4) Install the libs, binaries, data files and manual pages.
-   # make install
-
-5) Let the developers know of the success or failure you encountered.
-   $ cat config.log | \
-     mail -s "compiles and runs ok" report@agar.csoft.org
-
-Concurrent building
--------------------
+Alternative method: Concurrent building
+---------------------------------------
 It is possible to build Agar outside of the source directory. Developers
 will generally prefer this method, since it results in a faster build,
 does not clutter the source directories with object files and facilitates
@@ -48,13 +44,15 @@ testing on multiple machines using network filesystems. The inconvenient
 of concurrent building is that configure needs to be rerun whenever a
 Makefile is modified.
 
-1) Create the build directory.
-   $ mkdir w-agar; cd w-agar
+1) Create the build directory. When available, a memory filesystem is
+   a good location to build from.
+    $ mkdir w-agar
+    $ cd w-agar
 
 2) Run configure from the source directory with --srcdir.
-   $ ~/agar-sources/configure --srcdir=$HOME/agar-sources [...]
+    $ ~/agar-sources/configure --srcdir=$HOME/agar-sources [...]
 
-3) Build Agar as with the standard method.
-   $ make depend && make
-   # make install
+3) Now build the libraries and executables as you normally would.
+    $ make depend && make
+    # make install
 
