@@ -35,7 +35,7 @@ PREMAKEOUT?=	premake.lua
 PREMAKEFLAGS?=
 
 PROJECT?=
-PROJDIR?=	${TOP}/ProjectFiles
+PROJDIR?=	ProjectFiles
 PROJFILESEXTRA?=
 PROJINCLUDES?=${TOP}/configure.lua
 
@@ -55,7 +55,7 @@ proj: proj-subdir
 	             --emul-os=windows --emul-arch=i386 >/dev/null); \
 	        fi; \
 	    done; \
-	    cat Makefile | ${MKPROJFILES} ${PROJINCLUDES} > ${PREMAKEOUT};\
+	    cat Makefile | ${MKPROJFILES} "" ${PROJINCLUDES} > ${PREMAKEOUT};\
 	else \
 	    if [ ! -d "${PROJDIR}" ]; then \
 	    	echo "mkdir -p ${PROJDIR}"; \
@@ -88,9 +88,10 @@ proj: proj-subdir
 		rm -f configure.tmp config.log; \
 		echo -n >Makefile.config; \
 	        perl ${TOP}/mk/cmpfiles.pl; \
-	        echo "cat Makefile | ${MKPROJFILES} ${PROJINCLUDES} > \
-		    ${PREMAKEOUT}";\
-	        cat Makefile | ${MKPROJFILES} ${PROJINCLUDES} > ${PREMAKEOUT};\
+	        echo "cat Makefile | ${MKPROJFILES} "$$_tgtflav" \
+		    ${PROJINCLUDES} > ${PREMAKEOUT}";\
+	        cat Makefile | ${MKPROJFILES} "$$_tgtflav" \
+		    ${PROJINCLUDES} > ${PREMAKEOUT};\
 	        echo "${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} \
 		    --os $$_tgtos --target $$_tgtproj"; \
 	        ${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} \
@@ -99,7 +100,6 @@ proj: proj-subdir
 			echo "premake failed"; \
 			exit 1; \
 		fi; \
-		rm -f premake.lua configure.lua; \
 	        perl ${TOP}/mk/cmpfiles.pl added > .projfiles.out; \
 		cp -f .projfiles.out .projfiles2.out; \
 	        rm .cmpfiles.out; \
