@@ -795,13 +795,7 @@ TextSizeFT(const Uint32 *ucs, int *w, int *h, Uint **wLines, Uint *nLines)
 		}
 		glyph = ftFont->current;
 
-		/* Prevent texture wrapping with first glyph. */
-		if ((ch == &ucs[0]) && (glyph->minx < 0)) {
-			z -= glyph->minx;
-		}
 		z = x + glyph->minx;
-		/* XXX ???? */
-		
 		if (minx > z) { minx = z; }
 		if (minxLine > z) { minxLine = z; }
 
