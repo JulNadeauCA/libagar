@@ -6,14 +6,21 @@ REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 HDEFINE(VERSION, "1.1")
 HDEFINE(RELEASE, "The Ecstatic Spiral to Hell")
 
+C_DEFINE(_USE_AGAR_QUEUE)
+
 CHECK(cc)
 CHECK(getopt)
 
-REQUIRE(agar, 1.3)
-REQUIRE(agar-vg, 1.3)
-REQUIRE(agar-rg, 1.3)
-REQUIRE(agar-map, 1.3)
-REQUIRE(agar-dev, 1.3)
+CHECK(pthreads)
+CHECK(sdl)
+CHECK(opengl)
+CHECK(freetype)
+
+CHECK(agar, 1.3)
+CHECK(agar-vg, 1.3)
+CHECK(agar-rg, 1.3)
+CHECK(agar-map, 1.3)
+CHECK(agar-dev, 1.3)
 
 if [ "${HAVE_AGAR}" != "yes" ]; then
 	echo "This application requires Agar."

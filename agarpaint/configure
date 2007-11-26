@@ -342,6 +342,12 @@ echo "#ifndef RELEASE" > config/release.h
 echo "#define RELEASE \"$RELEASE\"" >> config/release.h
 echo "#endif" >> config/release.h
 echo "hdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
+CFLAGS="$CFLAGS -D_USE_AGAR_QUEUE"
+CXXFLAGS="$CXXFLAGS -D_USE_AGAR_QUEUE"
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
