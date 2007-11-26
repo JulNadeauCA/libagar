@@ -1,8 +1,9 @@
 TOP=	../..
 include Makefile.config
 
-PROG=	glview
-SRCS=	glview.c
+PROG=		glview
+SRCS=		glview.c
+PROG_LINKS=	glu
 
 CFLAGS+=${AGAR_CFLAGS} ${OPENGL_CFLAGS} ${GLU_CFLAGS} -I.
 LIBS+=	${AGAR_LIBS} ${OPENGL_LIBS} ${GLU_LIBS}
