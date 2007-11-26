@@ -346,44 +346,58 @@ VERSION="11182007"
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION \"$VERSION\"" >> config/version.h
 echo "#endif" >> config/version.h
+echo "hdefs[\"VERSION\"] = \"$VERSION\"" >>configure.lua
 RELEASE="The Birth Of An Era Obscured By Sulfur And Flames"
 echo "#ifndef RELEASE" > config/release.h
 echo "#define RELEASE \"$RELEASE\"" >> config/release.h
 echo "#endif" >> config/release.h
+echo "hdefs[\"RELEASE\"] = \"$RELEASE\"" >>configure.lua
 SHAREDIR="\${PREFIX}/share/agar"
-echo "SHAREDIR=$SHAREDIR" >> Makefile.config
+echo "SHAREDIR=$SHAREDIR" >>Makefile.config
+echo "mdefs[\"SHAREDIR\"] = \"$SHAREDIR\"" >>configure.lua
 SHAREDIR="$PREFIX/share/agar"
 echo "#ifndef SHAREDIR" > config/sharedir.h
 echo "#define SHAREDIR \"$SHAREDIR\"" >> config/sharedir.h
 echo "#endif" >> config/sharedir.h
+echo "hdefs[\"SHAREDIR\"] = \"$SHAREDIR\"" >>configure.lua
 LOCALEDIR="\${PREFIX}/share/agar/locale"
-echo "LOCALEDIR=$LOCALEDIR" >> Makefile.config
+echo "LOCALEDIR=$LOCALEDIR" >>Makefile.config
+echo "mdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
 LOCALEDIR="$PREFIX/share/agar/locale"
 echo "#ifndef LOCALEDIR" > config/localedir.h
 echo "#define LOCALEDIR \"$LOCALEDIR\"" >> config/localedir.h
 echo "#endif" >> config/localedir.h
+echo "hdefs[\"LOCALEDIR\"] = \"$LOCALEDIR\"" >>configure.lua
 TTFDIR="\${PREFIX}/share/agar/fonts"
-echo "TTFDIR=$TTFDIR" >> Makefile.config
+echo "TTFDIR=$TTFDIR" >>Makefile.config
+echo "mdefs[\"TTFDIR\"] = \"$TTFDIR\"" >>configure.lua
 TTFDIR="$PREFIX/share/agar/fonts"
 echo "#ifndef TTFDIR" > config/ttfdir.h
 echo "#define TTFDIR \"$TTFDIR\"" >> config/ttfdir.h
 echo "#endif" >> config/ttfdir.h
+echo "hdefs[\"TTFDIR\"] = \"$TTFDIR\"" >>configure.lua
 LIBDIR="\${PREFIX}/lib"
-echo "LIBDIR=$LIBDIR" >> Makefile.config
+echo "LIBDIR=$LIBDIR" >>Makefile.config
+echo "mdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
 LIBDIR="$PREFIX/lib"
 echo "#ifndef LIBDIR" > config/libdir.h
 echo "#define LIBDIR \"$LIBDIR\"" >> config/libdir.h
 echo "#endif" >> config/libdir.h
+echo "hdefs[\"LIBDIR\"] = \"$LIBDIR\"" >>configure.lua
 INCLDIR="\${PREFIX}/include/agar"
-echo "INCLDIR=$INCLDIR" >> Makefile.config
+echo "INCLDIR=$INCLDIR" >>Makefile.config
+echo "mdefs[\"INCLDIR\"] = \"$INCLDIR\"" >>configure.lua
 INCLDIR="$PREFIX/include/agar"
 echo "#ifndef INCLDIR" > config/incldir.h
 echo "#define INCLDIR \"$INCLDIR\"" >> config/incldir.h
 echo "#endif" >> config/incldir.h
+echo "hdefs[\"INCLDIR\"] = \"$INCLDIR\"" >>configure.lua
 MANDIR="\${PREFIX}/share/man"
-echo "MANDIR=$MANDIR" >> Makefile.config
+echo "MANDIR=$MANDIR" >>Makefile.config
+echo "mdefs[\"MANDIR\"] = \"$MANDIR\"" >>configure.lua
 PSDIR="\${PREFIX}/share/agar/doc"
-echo "PSDIR=$PSDIR" >> Makefile.config
+echo "PSDIR=$PSDIR" >>Makefile.config
+echo "mdefs[\"PSDIR\"] = \"$PSDIR\"" >>configure.lua
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
@@ -432,17 +446,21 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_CC_WARNINGS="yes"
-echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >> Makefile.config
+echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
+echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 echo "#ifndef HAVE_CC_WARNINGS" > config/have_cc_warnings.h
 echo "#define HAVE_CC_WARNINGS \"$HAVE_CC_WARNINGS\"" >> config/have_cc_warnings.h
 echo "#endif" >> config/have_cc_warnings.h
+echo "hdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_CC_WARNINGS="no"
-echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >> Makefile.config
-echo "#undef HAVE_CC_WARNINGS" > config/have_cc_warnings.h
+echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
+echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
+echo "#undef HAVE_CC_WARNINGS" >config/have_cc_warnings.h
+echo "hdefs[\"HAVE_CC_WARNINGS\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
@@ -470,17 +488,21 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_IEEE754="yes"
-echo "HAVE_IEEE754=$HAVE_IEEE754" >> Makefile.config
+echo "HAVE_IEEE754=$HAVE_IEEE754" >>Makefile.config
+echo "mdefs[\"HAVE_IEEE754\"] = \"$HAVE_IEEE754\"" >>configure.lua
 echo "#ifndef HAVE_IEEE754" > config/have_ieee754.h
 echo "#define HAVE_IEEE754 \"$HAVE_IEEE754\"" >> config/have_ieee754.h
 echo "#endif" >> config/have_ieee754.h
+echo "hdefs[\"HAVE_IEEE754\"] = \"$HAVE_IEEE754\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_IEEE754="no"
-echo "HAVE_IEEE754=$HAVE_IEEE754" >> Makefile.config
-echo "#undef HAVE_IEEE754" > config/have_ieee754.h
+echo "HAVE_IEEE754=$HAVE_IEEE754" >>Makefile.config
+echo "mdefs[\"HAVE_IEEE754\"] = \"$HAVE_IEEE754\"" >>configure.lua
+echo "#undef HAVE_IEEE754" >config/have_ieee754.h
+echo "hdefs[\"HAVE_IEEE754\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 echo -n "checking __bounded__ attribute..."
@@ -503,17 +525,21 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_BOUNDED_ATTRIBUTE="yes"
-echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >> Makefile.config
+echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
 echo "#ifndef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
 echo "#define HAVE_BOUNDED_ATTRIBUTE \"$HAVE_BOUNDED_ATTRIBUTE\"" >> config/have_bounded_attribute.h
 echo "#endif" >> config/have_bounded_attribute.h
+echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_BOUNDED_ATTRIBUTE="no"
-echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >> Makefile.config
-echo "#undef HAVE_BOUNDED_ATTRIBUTE" > config/have_bounded_attribute.h
+echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_BOUNDED_ATTRIBUTE" >config/have_bounded_attribute.h
+echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 echo -n "checking __format__ attribute..."
@@ -542,17 +568,21 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_FORMAT_ATTRIBUTE="yes"
-echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >> Makefile.config
+echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
 echo "#ifndef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
 echo "#define HAVE_FORMAT_ATTRIBUTE \"$HAVE_FORMAT_ATTRIBUTE\"" >> config/have_format_attribute.h
 echo "#endif" >> config/have_format_attribute.h
+echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_FORMAT_ATTRIBUTE="no"
-echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >> Makefile.config
-echo "#undef HAVE_FORMAT_ATTRIBUTE" > config/have_format_attribute.h
+echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_FORMAT_ATTRIBUTE" >config/have_format_attribute.h
+echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 echo -n "checking __nonnull__ attribute..."
@@ -579,16 +609,20 @@ if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_NONNULL_ATTRIBUTE="yes"
-echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >> Makefile.config
+echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
 echo "#ifndef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
 echo "#define HAVE_NONNULL_ATTRIBUTE \"$HAVE_NONNULL_ATTRIBUTE\"" >> config/have_nonnull_attribute.h
 echo "#endif" >> config/have_nonnull_attribute.h
+echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_NONNULL_ATTRIBUTE="no"
-echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >> Makefile.config
-echo "#undef HAVE_NONNULL_ATTRIBUTE" > config/have_nonnull_attribute.h
+echo "HAVE_NONNULL_ATTRIBUTE=$HAVE_NONNULL_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_NONNULL_ATTRIBUTE" >config/have_nonnull_attribute.h
+echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 echo -n "checking __aligned__ attribute..."
 echo -n "checking __aligned__ attribute..." >> config.log
@@ -612,16 +646,20 @@ if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_ALIGNED_ATTRIBUTE="yes"
-echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >> Makefile.config
+echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
 echo "#ifndef HAVE_ALIGNED_ATTRIBUTE" > config/have_aligned_attribute.h
 echo "#define HAVE_ALIGNED_ATTRIBUTE \"$HAVE_ALIGNED_ATTRIBUTE\"" >> config/have_aligned_attribute.h
 echo "#endif" >> config/have_aligned_attribute.h
+echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_ALIGNED_ATTRIBUTE="no"
-echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >> Makefile.config
-echo "#undef HAVE_ALIGNED_ATTRIBUTE" > config/have_aligned_attribute.h
+echo "HAVE_ALIGNED_ATTRIBUTE=$HAVE_ALIGNED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_ALIGNED_ATTRIBUTE" >config/have_aligned_attribute.h
+echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 echo -n "checking __packed__ attribute..."
 echo -n "checking __packed__ attribute..." >> config.log
@@ -645,16 +683,20 @@ if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_PACKED_ATTRIBUTE="yes"
-echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >> Makefile.config
+echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
 echo "#ifndef HAVE_PACKED_ATTRIBUTE" > config/have_packed_attribute.h
 echo "#define HAVE_PACKED_ATTRIBUTE \"$HAVE_PACKED_ATTRIBUTE\"" >> config/have_packed_attribute.h
 echo "#endif" >> config/have_packed_attribute.h
+echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_PACKED_ATTRIBUTE="no"
-echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >> Makefile.config
-echo "#undef HAVE_PACKED_ATTRIBUTE" > config/have_packed_attribute.h
+echo "HAVE_PACKED_ATTRIBUTE=$HAVE_PACKED_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_PACKED_ATTRIBUTE" >config/have_packed_attribute.h
+echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 echo -n "checking for long double..."
 echo -n "checking for long double..." >> config.log
@@ -684,11 +726,13 @@ HAVE_LONG_DOUBLE="yes"
 echo "#ifndef HAVE_LONG_DOUBLE" > config/have_long_double.h
 echo "#define HAVE_LONG_DOUBLE \"$HAVE_LONG_DOUBLE\"" >> config/have_long_double.h
 echo "#endif" >> config/have_long_double.h
+echo "hdefs[\"HAVE_LONG_DOUBLE\"] = \"$HAVE_LONG_DOUBLE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_LONG_DOUBLE="no"
-echo "#undef HAVE_LONG_DOUBLE" > config/have_long_double.h
+echo "#undef HAVE_LONG_DOUBLE" >config/have_long_double.h
+echo "hdefs[\"HAVE_LONG_DOUBLE\"] = nil" >>configure.lua
 fi;
 echo -n "checking for long long..."
 echo -n "checking for long long..." >> config.log
@@ -719,11 +763,13 @@ HAVE_LONG_LONG="yes"
 echo "#ifndef HAVE_LONG_LONG" > config/have_long_long.h
 echo "#define HAVE_LONG_LONG \"$HAVE_LONG_LONG\"" >> config/have_long_long.h
 echo "#endif" >> config/have_long_long.h
+echo "hdefs[\"HAVE_LONG_LONG\"] = \"$HAVE_LONG_LONG\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_LONG_LONG="no"
-echo "#undef HAVE_LONG_LONG" > config/have_long_long.h
+echo "#undef HAVE_LONG_LONG" >config/have_long_long.h
+echo "hdefs[\"HAVE_LONG_LONG\"] = nil" >>configure.lua
 fi;
 echo -n "checking for cygwin environment..."
 echo -n "checking for cygwin environment..." >> config.log
@@ -754,16 +800,20 @@ if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_CYGWIN="yes"
-echo "HAVE_CYGWIN=$HAVE_CYGWIN" >> Makefile.config
+echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
+echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
 echo "#ifndef HAVE_CYGWIN" > config/have_cygwin.h
 echo "#define HAVE_CYGWIN \"$HAVE_CYGWIN\"" >> config/have_cygwin.h
 echo "#endif" >> config/have_cygwin.h
+echo "hdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_CYGWIN="no"
-echo "HAVE_CYGWIN=$HAVE_CYGWIN" >> Makefile.config
-echo "#undef HAVE_CYGWIN" > config/have_cygwin.h
+echo "HAVE_CYGWIN=$HAVE_CYGWIN" >>Makefile.config
+echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
+echo "#undef HAVE_CYGWIN" >config/have_cygwin.h
+echo "hdefs[\"HAVE_CYGWIN\"] = nil" >>configure.lua
 fi;
 echo -n "checking for mingw environment..."
 echo -n "checking for mingw environment..." >> config.log
@@ -794,16 +844,20 @@ if [ "${compile}" = "ok" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_MINGW="yes"
-echo "HAVE_MINGW=$HAVE_MINGW" >> Makefile.config
+echo "HAVE_MINGW=$HAVE_MINGW" >>Makefile.config
+echo "mdefs[\"HAVE_MINGW\"] = \"$HAVE_MINGW\"" >>configure.lua
 echo "#ifndef HAVE_MINGW" > config/have_mingw.h
 echo "#define HAVE_MINGW \"$HAVE_MINGW\"" >> config/have_mingw.h
 echo "#endif" >> config/have_mingw.h
+echo "hdefs[\"HAVE_MINGW\"] = \"$HAVE_MINGW\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_MINGW="no"
-echo "HAVE_MINGW=$HAVE_MINGW" >> Makefile.config
-echo "#undef HAVE_MINGW" > config/have_mingw.h
+echo "HAVE_MINGW=$HAVE_MINGW" >>Makefile.config
+echo "mdefs[\"HAVE_MINGW\"] = \"$HAVE_MINGW\"" >>configure.lua
+echo "#undef HAVE_MINGW" >config/have_mingw.h
+echo "hdefs[\"HAVE_MINGW\"] = nil" >>configure.lua
 fi;
 if [ "${compile}" = "ok" ]; then
 	CFLAGS="$CFLAGS -mno-cygwin"
@@ -827,17 +881,21 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 _MK_HAVE_SYS_TYPES_H="yes"
-echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >> Makefile.config
+echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.lua
 echo "#ifndef _MK_HAVE_SYS_TYPES_H" > config/_mk_have_sys_types_h.h
 echo "#define _MK_HAVE_SYS_TYPES_H \"$_MK_HAVE_SYS_TYPES_H\"" >> config/_mk_have_sys_types_h.h
 echo "#endif" >> config/_mk_have_sys_types_h.h
+echo "hdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 _MK_HAVE_SYS_TYPES_H="no"
-echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >> Makefile.config
-echo "#undef _MK_HAVE_SYS_TYPES_H" > config/_mk_have_sys_types_h.h
+echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.lua
+echo "#undef _MK_HAVE_SYS_TYPES_H" >config/_mk_have_sys_types_h.h
+echo "hdefs[\"_MK_HAVE_SYS_TYPES_H\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${_MK_HAVE_SYS_TYPES_H}" = "yes" ]; then
@@ -861,17 +919,21 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_64BIT="yes"
-echo "HAVE_64BIT=$HAVE_64BIT" >> Makefile.config
+echo "HAVE_64BIT=$HAVE_64BIT" >>Makefile.config
+echo "mdefs[\"HAVE_64BIT\"] = \"$HAVE_64BIT\"" >>configure.lua
 echo "#ifndef HAVE_64BIT" > config/have_64bit.h
 echo "#define HAVE_64BIT \"$HAVE_64BIT\"" >> config/have_64bit.h
 echo "#endif" >> config/have_64bit.h
+echo "hdefs[\"HAVE_64BIT\"] = \"$HAVE_64BIT\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_64BIT="no"
-echo "HAVE_64BIT=$HAVE_64BIT" >> Makefile.config
-echo "#undef HAVE_64BIT" > config/have_64bit.h
+echo "HAVE_64BIT=$HAVE_64BIT" >>Makefile.config
+echo "mdefs[\"HAVE_64BIT\"] = \"$HAVE_64BIT\"" >>configure.lua
+echo "#undef HAVE_64BIT" >config/have_64bit.h
+echo "hdefs[\"HAVE_64BIT\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 echo -n "checking for conflicting typedefs..."
@@ -894,21 +956,26 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 _MK_HAVE_UNSIGNED_TYPEDEFS="yes"
-echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >> Makefile.config
+echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
 echo "#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
 echo "#define _MK_HAVE_UNSIGNED_TYPEDEFS \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >> config/_mk_have_unsigned_typedefs.h
 echo "#endif" >> config/_mk_have_unsigned_typedefs.h
+echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 _MK_HAVE_UNSIGNED_TYPEDEFS="no"
-echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >> Makefile.config
-echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
+echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
+echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" >config/_mk_have_unsigned_typedefs.h
+echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 else
-echo "#undef HAVE_64BIT" > config/have_64bit.h
+echo "#undef HAVE_64BIT" >config/have_64bit.h
+echo "hdefs[\"HAVE_64BIT\"] = nil" >>configure.lua
 echo -n "checking for conflicting typedefs..."
 echo -n "checking for conflicting typedefs..." >> config.log
 cat << EOT > conftest.c
@@ -928,17 +995,21 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 _MK_HAVE_UNSIGNED_TYPEDEFS="yes"
-echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >> Makefile.config
+echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
 echo "#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
 echo "#define _MK_HAVE_UNSIGNED_TYPEDEFS \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >> config/_mk_have_unsigned_typedefs.h
 echo "#endif" >> config/_mk_have_unsigned_typedefs.h
+echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 _MK_HAVE_UNSIGNED_TYPEDEFS="no"
-echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >> Makefile.config
-echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" > config/_mk_have_unsigned_typedefs.h
+echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
+echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" >config/_mk_have_unsigned_typedefs.h
+echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 fi;
@@ -960,17 +1031,21 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 _MK_HAVE_STDLIB_H="yes"
-echo "_MK_HAVE_STDLIB_H=$_MK_HAVE_STDLIB_H" >> Makefile.config
+echo "_MK_HAVE_STDLIB_H=$_MK_HAVE_STDLIB_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_STDLIB_H\"] = \"$_MK_HAVE_STDLIB_H\"" >>configure.lua
 echo "#ifndef _MK_HAVE_STDLIB_H" > config/_mk_have_stdlib_h.h
 echo "#define _MK_HAVE_STDLIB_H \"$_MK_HAVE_STDLIB_H\"" >> config/_mk_have_stdlib_h.h
 echo "#endif" >> config/_mk_have_stdlib_h.h
+echo "hdefs[\"_MK_HAVE_STDLIB_H\"] = \"$_MK_HAVE_STDLIB_H\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 _MK_HAVE_STDLIB_H="no"
-echo "_MK_HAVE_STDLIB_H=$_MK_HAVE_STDLIB_H" >> Makefile.config
-echo "#undef _MK_HAVE_STDLIB_H" > config/_mk_have_stdlib_h.h
+echo "_MK_HAVE_STDLIB_H=$_MK_HAVE_STDLIB_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_STDLIB_H\"] = \"$_MK_HAVE_STDLIB_H\"" >>configure.lua
+echo "#undef _MK_HAVE_STDLIB_H" >config/_mk_have_stdlib_h.h
+echo "hdefs[\"_MK_HAVE_STDLIB_H\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 echo -n "checking for <unistd.h>..."
@@ -994,17 +1069,21 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 _MK_HAVE_UNISTD_H="yes"
-echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >> Makefile.config
+echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_UNISTD_H\"] = \"$_MK_HAVE_UNISTD_H\"" >>configure.lua
 echo "#ifndef _MK_HAVE_UNISTD_H" > config/_mk_have_unistd_h.h
 echo "#define _MK_HAVE_UNISTD_H \"$_MK_HAVE_UNISTD_H\"" >> config/_mk_have_unistd_h.h
 echo "#endif" >> config/_mk_have_unistd_h.h
+echo "hdefs[\"_MK_HAVE_UNISTD_H\"] = \"$_MK_HAVE_UNISTD_H\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 _MK_HAVE_UNISTD_H="no"
-echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >> Makefile.config
-echo "#undef _MK_HAVE_UNISTD_H" > config/_mk_have_unistd_h.h
+echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_UNISTD_H\"] = \"$_MK_HAVE_UNISTD_H\"" >>configure.lua
+echo "#undef _MK_HAVE_UNISTD_H" >config/_mk_have_unistd_h.h
+echo "hdefs[\"_MK_HAVE_UNISTD_H\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 echo -n "checking for <limits.h>..."
@@ -1031,17 +1110,21 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 _MK_HAVE_LIMITS_H="yes"
-echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >> Makefile.config
+echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_LIMITS_H\"] = \"$_MK_HAVE_LIMITS_H\"" >>configure.lua
 echo "#ifndef _MK_HAVE_LIMITS_H" > config/_mk_have_limits_h.h
 echo "#define _MK_HAVE_LIMITS_H \"$_MK_HAVE_LIMITS_H\"" >> config/_mk_have_limits_h.h
 echo "#endif" >> config/_mk_have_limits_h.h
+echo "hdefs[\"_MK_HAVE_LIMITS_H\"] = \"$_MK_HAVE_LIMITS_H\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 _MK_HAVE_LIMITS_H="no"
-echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >> Makefile.config
-echo "#undef _MK_HAVE_LIMITS_H" > config/_mk_have_limits_h.h
+echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >>Makefile.config
+echo "mdefs[\"_MK_HAVE_LIMITS_H\"] = \"$_MK_HAVE_LIMITS_H\"" >>configure.lua
+echo "#undef _MK_HAVE_LIMITS_H" >config/_mk_have_limits_h.h
+echo "hdefs[\"_MK_HAVE_LIMITS_H\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 echo -n "checking for the __progname variable..."
@@ -1072,11 +1155,13 @@ HAVE_PROGNAME="yes"
 echo "#ifndef HAVE_PROGNAME" > config/have_progname.h
 echo "#define HAVE_PROGNAME \"$HAVE_PROGNAME\"" >> config/have_progname.h
 echo "#endif" >> config/have_progname.h
+echo "hdefs[\"HAVE_PROGNAME\"] = \"$HAVE_PROGNAME\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_PROGNAME="no"
-echo "#undef HAVE_PROGNAME" > config/have_progname.h
+echo "#undef HAVE_PROGNAME" >config/have_progname.h
+echo "hdefs[\"HAVE_PROGNAME\"] = nil" >>configure.lua
 fi;
 echo -n "checking for free(NULL) is a no-op..."
 echo -n "checking for free(NULL) is a no-op..." >> config.log
@@ -1095,8 +1180,10 @@ echo "no (compile failed)"
 echo "no (compile failed)" >> config.log
 compile="failed"
 FREE_NULL_IS_A_NOOP="no"
-echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >> Makefile.config
-echo "#undef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
+echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >>Makefile.config
+echo "mdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
+echo "#undef FREE_NULL_IS_A_NOOP" >config/free_null_is_a_noop.h
+echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = nil" >>configure.lua
 else
 compile="ok"
 (cd $testdir && ./conftest) >> config.log
@@ -1104,16 +1191,20 @@ if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 FREE_NULL_IS_A_NOOP="yes"
-echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >> Makefile.config
+echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >>Makefile.config
+echo "mdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
 echo "#ifndef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
 echo "#define FREE_NULL_IS_A_NOOP \"$FREE_NULL_IS_A_NOOP\"" >> config/free_null_is_a_noop.h
 echo "#endif" >> config/free_null_is_a_noop.h
+echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
 else
 echo "no (exec failed)"
 echo "no (exec failed)" >> config.log
 FREE_NULL_IS_A_NOOP="no"
-echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >> Makefile.config
-echo "#undef FREE_NULL_IS_A_NOOP" > config/free_null_is_a_noop.h
+echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >>Makefile.config
+echo "mdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
+echo "#undef FREE_NULL_IS_A_NOOP" >config/free_null_is_a_noop.h
+echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = nil" >>configure.lua
 fi;
 fi;
 rm -f $testdir/conftest conftest.c
@@ -1140,30 +1231,39 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_MATH="yes"
-echo "HAVE_MATH=$HAVE_MATH" >> Makefile.config
+echo "HAVE_MATH=$HAVE_MATH" >>Makefile.config
+echo "mdefs[\"HAVE_MATH\"] = \"$HAVE_MATH\"" >>configure.lua
 echo "#ifndef HAVE_MATH" > config/have_math.h
 echo "#define HAVE_MATH \"$HAVE_MATH\"" >> config/have_math.h
 echo "#endif" >> config/have_math.h
+echo "hdefs[\"HAVE_MATH\"] = \"$HAVE_MATH\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_MATH="no"
-echo "HAVE_MATH=$HAVE_MATH" >> Makefile.config
-echo "#undef HAVE_MATH" > config/have_math.h
+echo "HAVE_MATH=$HAVE_MATH" >>Makefile.config
+echo "mdefs[\"HAVE_MATH\"] = \"$HAVE_MATH\"" >>configure.lua
+echo "#undef HAVE_MATH" >config/have_math.h
+echo "hdefs[\"HAVE_MATH\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_MATH}" = "yes" ]; then
-echo "MATH_CFLAGS=$MATH_CFLAGS" >> Makefile.config
-echo "MATH_LIBS=$MATH_LIBS" >> Makefile.config
+echo "MATH_CFLAGS=$MATH_CFLAGS" >>Makefile.config
+echo "mdefs[\"MATH_CFLAGS\"] = \"$MATH_CFLAGS\"" >>configure.lua
+echo "MATH_LIBS=$MATH_LIBS" >>Makefile.config
+echo "mdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
 echo "#ifndef MATH_CFLAGS" > config/math_cflags.h
 echo "#define MATH_CFLAGS \"$MATH_CFLAGS\"" >> config/math_cflags.h
 echo "#endif" >> config/math_cflags.h
+echo "hdefs[\"MATH_CFLAGS\"] = \"$MATH_CFLAGS\"" >>configure.lua
 echo "#ifndef MATH_LIBS" > config/math_libs.h
 echo "#define MATH_LIBS \"$MATH_LIBS\"" >> config/math_libs.h
 echo "#endif" >> config/math_libs.h
+echo "hdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
 else
-echo "#undef MATH_LIBS" > config/math_libs.h
+echo "#undef MATH_LIBS" >config/math_libs.h
+echo "hdefs[\"MATH_LIBS\"] = nil" >>configure.lua
 fi;
 echo -n "checking for a gethostname() function..."
 echo -n "checking for a gethostname() function..." >> config.log
@@ -1197,11 +1297,13 @@ HAVE_GETHOSTNAME="yes"
 echo "#ifndef HAVE_GETHOSTNAME" > config/have_gethostname.h
 echo "#define HAVE_GETHOSTNAME \"$HAVE_GETHOSTNAME\"" >> config/have_gethostname.h
 echo "#endif" >> config/have_gethostname.h
+echo "hdefs[\"HAVE_GETHOSTNAME\"] = \"$HAVE_GETHOSTNAME\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_GETHOSTNAME="no"
-echo "#undef HAVE_GETHOSTNAME" > config/have_gethostname.h
+echo "#undef HAVE_GETHOSTNAME" >config/have_gethostname.h
+echo "hdefs[\"HAVE_GETHOSTNAME\"] = nil" >>configure.lua
 fi;
 echo -n "checking for a getpwuid() function..."
 echo -n "checking for a getpwuid() function..." >> config.log
@@ -1235,11 +1337,13 @@ HAVE_GETPWUID="yes"
 echo "#ifndef HAVE_GETPWUID" > config/have_getpwuid.h
 echo "#define HAVE_GETPWUID \"$HAVE_GETPWUID\"" >> config/have_getpwuid.h
 echo "#endif" >> config/have_getpwuid.h
+echo "hdefs[\"HAVE_GETPWUID\"] = \"$HAVE_GETPWUID\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_GETPWUID="no"
-echo "#undef HAVE_GETPWUID" > config/have_getpwuid.h
+echo "#undef HAVE_GETPWUID" >config/have_getpwuid.h
+echo "hdefs[\"HAVE_GETPWUID\"] = nil" >>configure.lua
 fi;
 echo -n "checking for a getuid() function..."
 echo -n "checking for a getuid() function..." >> config.log
@@ -1272,11 +1376,13 @@ HAVE_GETUID="yes"
 echo "#ifndef HAVE_GETUID" > config/have_getuid.h
 echo "#define HAVE_GETUID \"$HAVE_GETUID\"" >> config/have_getuid.h
 echo "#endif" >> config/have_getuid.h
+echo "hdefs[\"HAVE_GETUID\"] = \"$HAVE_GETUID\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_GETUID="no"
-echo "#undef HAVE_GETUID" > config/have_getuid.h
+echo "#undef HAVE_GETUID" >config/have_getuid.h
+echo "hdefs[\"HAVE_GETUID\"] = nil" >>configure.lua
 fi;
 echo -n "checking for a getenv() function..."
 echo -n "checking for a getenv() function..." >> config.log
@@ -1305,11 +1411,13 @@ HAVE_GETENV="yes"
 echo "#ifndef HAVE_GETENV" > config/have_getenv.h
 echo "#define HAVE_GETENV \"$HAVE_GETENV\"" >> config/have_getenv.h
 echo "#endif" >> config/have_getenv.h
+echo "hdefs[\"HAVE_GETENV\"] = \"$HAVE_GETENV\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_GETENV="no"
-echo "#undef HAVE_GETENV" > config/have_getenv.h
+echo "#undef HAVE_GETENV" >config/have_getenv.h
+echo "hdefs[\"HAVE_GETENV\"] = nil" >>configure.lua
 fi;
 echo -n "checking for setenv() and unsetenv() functions..."
 echo -n "checking for setenv() and unsetenv() functions..." >> config.log
@@ -1340,11 +1448,13 @@ HAVE_SETENV="yes"
 echo "#ifndef HAVE_SETENV" > config/have_setenv.h
 echo "#define HAVE_SETENV \"$HAVE_SETENV\"" >> config/have_setenv.h
 echo "#endif" >> config/have_setenv.h
+echo "hdefs[\"HAVE_SETENV\"] = \"$HAVE_SETENV\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_SETENV="no"
-echo "#undef HAVE_SETENV" > config/have_setenv.h
+echo "#undef HAVE_SETENV" >config/have_setenv.h
+echo "hdefs[\"HAVE_SETENV\"] = nil" >>configure.lua
 fi;
 echo -n "checking for a strsep() function..."
 echo -n "checking for a strsep() function..." >> config.log
@@ -1373,11 +1483,13 @@ HAVE_STRSEP="yes"
 echo "#ifndef HAVE_STRSEP" > config/have_strsep.h
 echo "#define HAVE_STRSEP \"$HAVE_STRSEP\"" >> config/have_strsep.h
 echo "#endif" >> config/have_strsep.h
+echo "hdefs[\"HAVE_STRSEP\"] = \"$HAVE_STRSEP\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_STRSEP="no"
-echo "#undef HAVE_STRSEP" > config/have_strsep.h
+echo "#undef HAVE_STRSEP" >config/have_strsep.h
+echo "hdefs[\"HAVE_STRSEP\"] = nil" >>configure.lua
 fi;
 echo -n "checking for the snprintf() function..."
 echo -n "checking for the snprintf() function..." >> config.log
@@ -1408,11 +1520,13 @@ HAVE_SNPRINTF="yes"
 echo "#ifndef HAVE_SNPRINTF" > config/have_snprintf.h
 echo "#define HAVE_SNPRINTF \"$HAVE_SNPRINTF\"" >> config/have_snprintf.h
 echo "#endif" >> config/have_snprintf.h
+echo "hdefs[\"HAVE_SNPRINTF\"] = \"$HAVE_SNPRINTF\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_SNPRINTF="no"
-echo "#undef HAVE_SNPRINTF" > config/have_snprintf.h
+echo "#undef HAVE_SNPRINTF" >config/have_snprintf.h
+echo "hdefs[\"HAVE_SNPRINTF\"] = nil" >>configure.lua
 fi;
 echo -n "checking for the vsnprintf() function..."
 echo -n "checking for the vsnprintf() function..." >> config.log
@@ -1452,11 +1566,13 @@ HAVE_VSNPRINTF="yes"
 echo "#ifndef HAVE_VSNPRINTF" > config/have_vsnprintf.h
 echo "#define HAVE_VSNPRINTF \"$HAVE_VSNPRINTF\"" >> config/have_vsnprintf.h
 echo "#endif" >> config/have_vsnprintf.h
+echo "hdefs[\"HAVE_VSNPRINTF\"] = \"$HAVE_VSNPRINTF\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_VSNPRINTF="no"
-echo "#undef HAVE_VSNPRINTF" > config/have_vsnprintf.h
+echo "#undef HAVE_VSNPRINTF" >config/have_vsnprintf.h
+echo "hdefs[\"HAVE_VSNPRINTF\"] = nil" >>configure.lua
 fi;
 echo -n "checking for a vasprintf() function..."
 echo -n "checking for a vasprintf() function..." >> config.log
@@ -1502,11 +1618,13 @@ HAVE_VASPRINTF="yes"
 echo "#ifndef HAVE_VASPRINTF" > config/have_vasprintf.h
 echo "#define HAVE_VASPRINTF \"$HAVE_VASPRINTF\"" >> config/have_vasprintf.h
 echo "#endif" >> config/have_vasprintf.h
+echo "hdefs[\"HAVE_VASPRINTF\"] = \"$HAVE_VASPRINTF\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_VASPRINTF="no"
-echo "#undef HAVE_VASPRINTF" > config/have_vasprintf.h
+echo "#undef HAVE_VASPRINTF" >config/have_vasprintf.h
+echo "hdefs[\"HAVE_VASPRINTF\"] = nil" >>configure.lua
 fi;
 echo -n "checking for a setlocale() function..."
 echo -n "checking for a setlocale() function..." >> config.log
@@ -1536,11 +1654,13 @@ HAVE_SETLOCALE="yes"
 echo "#ifndef HAVE_SETLOCALE" > config/have_setlocale.h
 echo "#define HAVE_SETLOCALE \"$HAVE_SETLOCALE\"" >> config/have_setlocale.h
 echo "#endif" >> config/have_setlocale.h
+echo "hdefs[\"HAVE_SETLOCALE\"] = \"$HAVE_SETLOCALE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_SETLOCALE="no"
-echo "#undef HAVE_SETLOCALE" > config/have_setlocale.h
+echo "#undef HAVE_SETLOCALE" >config/have_setlocale.h
+echo "hdefs[\"HAVE_SETLOCALE\"] = nil" >>configure.lua
 fi;
 echo -n "checking for the arc4random() random number generator..."
 echo -n "checking for the arc4random() random number generator..." >> config.log
@@ -1572,11 +1692,13 @@ HAVE_ARC4RANDOM="yes"
 echo "#ifndef HAVE_ARC4RANDOM" > config/have_arc4random.h
 echo "#define HAVE_ARC4RANDOM \"$HAVE_ARC4RANDOM\"" >> config/have_arc4random.h
 echo "#endif" >> config/have_arc4random.h
+echo "hdefs[\"HAVE_ARC4RANDOM\"] = \"$HAVE_ARC4RANDOM\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_ARC4RANDOM="no"
-echo "#undef HAVE_ARC4RANDOM" > config/have_arc4random.h
+echo "#undef HAVE_ARC4RANDOM" >config/have_arc4random.h
+echo "hdefs[\"HAVE_ARC4RANDOM\"] = nil" >>configure.lua
 fi;
 echo -n "checking for MD5 functions..."
 echo -n "checking for MD5 functions..." >> config.log
@@ -1609,11 +1731,13 @@ HAVE_MD5="yes"
 echo "#ifndef HAVE_MD5" > config/have_md5.h
 echo "#define HAVE_MD5 \"$HAVE_MD5\"" >> config/have_md5.h
 echo "#endif" >> config/have_md5.h
+echo "hdefs[\"HAVE_MD5\"] = \"$HAVE_MD5\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_MD5="no"
-echo "#undef HAVE_MD5" > config/have_md5.h
+echo "#undef HAVE_MD5" >config/have_md5.h
+echo "hdefs[\"HAVE_MD5\"] = nil" >>configure.lua
 fi;
 echo -n "checking for SHA1 functions..."
 echo -n "checking for SHA1 functions..." >> config.log
@@ -1646,11 +1770,13 @@ HAVE_SHA1="yes"
 echo "#ifndef HAVE_SHA1" > config/have_sha1.h
 echo "#define HAVE_SHA1 \"$HAVE_SHA1\"" >> config/have_sha1.h
 echo "#endif" >> config/have_sha1.h
+echo "hdefs[\"HAVE_SHA1\"] = \"$HAVE_SHA1\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_SHA1="no"
-echo "#undef HAVE_SHA1" > config/have_sha1.h
+echo "#undef HAVE_SHA1" >config/have_sha1.h
+echo "hdefs[\"HAVE_SHA1\"] = nil" >>configure.lua
 fi;
 echo -n "checking for RMD160 functions..."
 echo -n "checking for RMD160 functions..." >> config.log
@@ -1683,11 +1809,13 @@ HAVE_RMD160="yes"
 echo "#ifndef HAVE_RMD160" > config/have_rmd160.h
 echo "#define HAVE_RMD160 \"$HAVE_RMD160\"" >> config/have_rmd160.h
 echo "#endif" >> config/have_rmd160.h
+echo "hdefs[\"HAVE_RMD160\"] = \"$HAVE_RMD160\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_RMD160="no"
-echo "#undef HAVE_RMD160" > config/have_rmd160.h
+echo "#undef HAVE_RMD160" >config/have_rmd160.h
+echo "hdefs[\"HAVE_RMD160\"] = nil" >>configure.lua
 fi;
 echo -n "checking for the X window system..."
 echo -n "checking for the X window system..." >> config.log
@@ -1759,31 +1887,41 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_X11="yes"
-echo "HAVE_X11=$HAVE_X11" >> Makefile.config
+echo "HAVE_X11=$HAVE_X11" >>Makefile.config
+echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
 echo "#ifndef HAVE_X11" > config/have_x11.h
 echo "#define HAVE_X11 \"$HAVE_X11\"" >> config/have_x11.h
 echo "#endif" >> config/have_x11.h
+echo "hdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_X11="no"
-echo "HAVE_X11=$HAVE_X11" >> Makefile.config
-echo "#undef HAVE_X11" > config/have_x11.h
+echo "HAVE_X11=$HAVE_X11" >>Makefile.config
+echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
+echo "#undef HAVE_X11" >config/have_x11.h
+echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_X11}" != "" ]; then
 echo "#ifndef X11_CFLAGS" > config/x11_cflags.h
 echo "#define X11_CFLAGS \"$X11_CFLAGS\"" >> config/x11_cflags.h
 echo "#endif" >> config/x11_cflags.h
+echo "hdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
 echo "#ifndef X11_LIBS" > config/x11_libs.h
 echo "#define X11_LIBS \"$X11_LIBS\"" >> config/x11_libs.h
 echo "#endif" >> config/x11_libs.h
-echo "X11_CFLAGS=$X11_CFLAGS" >> Makefile.config
-echo "X11_LIBS=$X11_LIBS" >> Makefile.config
+echo "hdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
+echo "X11_CFLAGS=$X11_CFLAGS" >>Makefile.config
+echo "mdefs[\"X11_CFLAGS\"] = \"$X11_CFLAGS\"" >>configure.lua
+echo "X11_LIBS=$X11_LIBS" >>Makefile.config
+echo "mdefs[\"X11_LIBS\"] = \"$X11_LIBS\"" >>configure.lua
 else
-echo "#undef X11_CFLAGS" > config/x11_cflags.h
-echo "#undef X11_LIBS" > config/x11_libs.h
+echo "#undef X11_CFLAGS" >config/x11_cflags.h
+echo "hdefs[\"X11_CFLAGS\"] = nil" >>configure.lua
+echo "#undef X11_LIBS" >config/x11_libs.h
+echo "hdefs[\"X11_LIBS\"] = nil" >>configure.lua
 fi;
 echo -n "checking for the signal() function..."
 echo -n "checking for the signal() function..." >> config.log
@@ -1819,11 +1957,13 @@ _MK_HAVE_SIGNAL="yes"
 echo "#ifndef _MK_HAVE_SIGNAL" > config/_mk_have_signal.h
 echo "#define _MK_HAVE_SIGNAL \"$_MK_HAVE_SIGNAL\"" >> config/_mk_have_signal.h
 echo "#endif" >> config/_mk_have_signal.h
+echo "hdefs[\"_MK_HAVE_SIGNAL\"] = \"$_MK_HAVE_SIGNAL\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 _MK_HAVE_SIGNAL="no"
-echo "#undef _MK_HAVE_SIGNAL" > config/_mk_have_signal.h
+echo "#undef _MK_HAVE_SIGNAL" >config/_mk_have_signal.h
+echo "hdefs[\"_MK_HAVE_SIGNAL\"] = nil" >>configure.lua
 fi;
 echo -n "checking for setjmp() and longjmp()..."
 echo -n "checking for setjmp() and longjmp()..." >> config.log
@@ -1856,11 +1996,13 @@ _MK_HAVE_SETJMP="yes"
 echo "#ifndef _MK_HAVE_SETJMP" > config/_mk_have_setjmp.h
 echo "#define _MK_HAVE_SETJMP \"$_MK_HAVE_SETJMP\"" >> config/_mk_have_setjmp.h
 echo "#endif" >> config/_mk_have_setjmp.h
+echo "hdefs[\"_MK_HAVE_SETJMP\"] = \"$_MK_HAVE_SETJMP\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 _MK_HAVE_SETJMP="no"
-echo "#undef _MK_HAVE_SETJMP" > config/_mk_have_setjmp.h
+echo "#undef _MK_HAVE_SETJMP" >config/_mk_have_setjmp.h
+echo "hdefs[\"_MK_HAVE_SETJMP\"] = nil" >>configure.lua
 fi;
 echo -n "checking for a strtoll() function..."
 echo -n "checking for a strtoll() function..." >> config.log
@@ -1894,11 +2036,13 @@ _MK_HAVE_STRTOLL="yes"
 echo "#ifndef _MK_HAVE_STRTOLL" > config/_mk_have_strtoll.h
 echo "#define _MK_HAVE_STRTOLL \"$_MK_HAVE_STRTOLL\"" >> config/_mk_have_strtoll.h
 echo "#endif" >> config/_mk_have_strtoll.h
+echo "hdefs[\"_MK_HAVE_STRTOLL\"] = \"$_MK_HAVE_STRTOLL\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 _MK_HAVE_STRTOLL="no"
-echo "#undef _MK_HAVE_STRTOLL" > config/_mk_have_strtoll.h
+echo "#undef _MK_HAVE_STRTOLL" >config/_mk_have_strtoll.h
+echo "hdefs[\"_MK_HAVE_STRTOLL\"] = nil" >>configure.lua
 fi;
 echo -n "checking for AltiVec (with <altivec.h>)..."
 echo -n "checking for AltiVec (with <altivec.h>)..." >> config.log
@@ -1932,28 +2076,35 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_ALTIVEC="yes"
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
+echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 echo "#ifndef HAVE_ALTIVEC" > config/have_altivec.h
 echo "#define HAVE_ALTIVEC \"$HAVE_ALTIVEC\"" >> config/have_altivec.h
 echo "#endif" >> config/have_altivec.h
+echo "hdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_ALTIVEC="no"
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
-echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
+echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
+echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
+echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
-echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >> Makefile.config
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
 HAVE_ALTIVEC_H=""
 echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
 echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
 echo "#endif" >> config/altivec_cflags.h
+echo "hdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
 echo "#ifndef HAVE_ALTIVEC_H" > config/have_altivec_h.h
 echo "#define HAVE_ALTIVEC_H \"$HAVE_ALTIVEC_H\"" >> config/have_altivec_h.h
 echo "#endif" >> config/have_altivec_h.h
+echo "hdefs[\"HAVE_ALTIVEC_H\"] = \"$HAVE_ALTIVEC_H\"" >>configure.lua
 else
 echo -n "checking for AltiVec (without <altivec.h>)..."
 echo -n "checking for AltiVec (without <altivec.h>)..." >> config.log
@@ -1981,30 +2132,39 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_ALTIVEC="yes"
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
+echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 echo "#ifndef HAVE_ALTIVEC" > config/have_altivec.h
 echo "#define HAVE_ALTIVEC \"$HAVE_ALTIVEC\"" >> config/have_altivec.h
 echo "#endif" >> config/have_altivec.h
+echo "hdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_ALTIVEC="no"
-echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >> Makefile.config
-echo "#undef HAVE_ALTIVEC" > config/have_altivec.h
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
+echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
+echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
+echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
-echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >> Makefile.config
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
 echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
 echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
 echo "#endif" >> config/altivec_cflags.h
+echo "hdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
 else
-echo "#undef ALTIVEC_CFLAGS" > config/altivec_cflags.h
+echo "#undef ALTIVEC_CFLAGS" >config/altivec_cflags.h
+echo "hdefs[\"ALTIVEC_CFLAGS\"] = nil" >>configure.lua
 ALTIVEC_CFLAGS=""
-echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >> Makefile.config
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
 fi;
-echo "#undef HAVE_ALTIVEC_H" > config/have_altivec_h.h
+echo "#undef HAVE_ALTIVEC_H" >config/have_altivec_h.h
+echo "hdefs[\"HAVE_ALTIVEC_H\"] = nil" >>configure.lua
 fi;
 echo -n "checking for byte order..."
 echo -n "checking for byte order..." >> config.log
@@ -2033,8 +2193,10 @@ echo "no (compile failed)"
 echo "no (compile failed)" >> config.log
 compile="failed"
 _MK_BIG_ENDIAN="no"
-echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >> Makefile.config
-echo "#undef _MK_BIG_ENDIAN" > config/_mk_big_endian.h
+echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
+echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
+echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
 else
 compile="ok"
 (cd $testdir && ./conftest) >> config.log
@@ -2042,22 +2204,27 @@ if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 _MK_BIG_ENDIAN="yes"
-echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >> Makefile.config
+echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
 echo "#ifndef _MK_BIG_ENDIAN" > config/_mk_big_endian.h
 echo "#define _MK_BIG_ENDIAN \"$_MK_BIG_ENDIAN\"" >> config/_mk_big_endian.h
 echo "#endif" >> config/_mk_big_endian.h
+echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
 else
 echo "no (exec failed)"
 echo "no (exec failed)" >> config.log
 _MK_BIG_ENDIAN="no"
-echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >> Makefile.config
-echo "#undef _MK_BIG_ENDIAN" > config/_mk_big_endian.h
+echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
+echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
+echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
 fi;
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${_MK_BIG_ENDIAN}" = "yes" ]; then
 _MK_LITTLE_ENDIAN="no"
-echo "#undef _MK_LITTLE_ENDIAN" > config/_mk_little_endian.h
+echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 else
 echo -n "checking for LITTLE_ENDIAN..."
 echo -n "checking for LITTLE_ENDIAN..." >> config.log
@@ -2082,8 +2249,10 @@ echo "no (compile failed)"
 echo "no (compile failed)" >> config.log
 compile="failed"
 _MK_LITTLE_ENDIAN="no"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >> Makefile.config
-echo "#undef _MK_LITTLE_ENDIAN" > config/_mk_little_endian.h
+echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 else
 compile="ok"
 (cd $testdir && ./conftest) >> config.log
@@ -2091,22 +2260,27 @@ if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 _MK_LITTLE_ENDIAN="yes"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >> Makefile.config
+echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
 echo "#ifndef _MK_LITTLE_ENDIAN" > config/_mk_little_endian.h
 echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >> config/_mk_little_endian.h
 echo "#endif" >> config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
 else
 echo "no (exec failed)"
 echo "no (exec failed)" >> config.log
 _MK_LITTLE_ENDIAN="no"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >> Makefile.config
-echo "#undef _MK_LITTLE_ENDIAN" > config/_mk_little_endian.h
+echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 fi;
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${_MK_LITTLE_ENDIAN}" = "yes" ]; then
 _MK_BIG_ENDIAN="no"
-echo "#undef _MK_BIG_ENDIAN" > config/_mk_big_endian.h
+echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
+echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
 else
 echo -n "checking for little endian byte order..."
 echo -n "checking for little endian byte order..." >> config.log
@@ -2130,8 +2304,10 @@ echo "no (compile failed)"
 echo "no (compile failed)" >> config.log
 compile="failed"
 _MK_LITTLE_ENDIAN="no"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >> Makefile.config
-echo "#undef _MK_LITTLE_ENDIAN" > config/_mk_little_endian.h
+echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 else
 compile="ok"
 (cd $testdir && ./conftest) >> config.log
@@ -2139,16 +2315,20 @@ if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
 _MK_LITTLE_ENDIAN="yes"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >> Makefile.config
+echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
 echo "#ifndef _MK_LITTLE_ENDIAN" > config/_mk_little_endian.h
 echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >> config/_mk_little_endian.h
 echo "#endif" >> config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
 else
 echo "no (exec failed)"
 echo "no (exec failed)" >> config.log
 _MK_LITTLE_ENDIAN="no"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >> Makefile.config
-echo "#undef _MK_LITTLE_ENDIAN" > config/_mk_little_endian.h
+echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 fi;
 fi;
 rm -f $testdir/conftest conftest.c
@@ -2161,40 +2341,55 @@ _MK_BIG_ENDIAN="yes"
 echo "#ifndef _MK_BIG_ENDIAN" > config/_mk_big_endian.h
 echo "#define _MK_BIG_ENDIAN \"$_MK_BIG_ENDIAN\"" >> config/_mk_big_endian.h
 echo "#endif" >> config/_mk_big_endian.h
+echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
 fi;
 fi;
 fi;
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 CFLAGS="$CFLAGS -D_BSD_SOURCE"
 CXXFLAGS="$CXXFLAGS -D_BSD_SOURCE"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 CFLAGS="$CFLAGS -I$SRC"
 CXXFLAGS="$CXXFLAGS -I$SRC"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 if [ "${enable_warnings}" = "yes" ]
  then
 CFLAGS="$CFLAGS -Wall"
 CXXFLAGS="$CXXFLAGS -Wall"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 CFLAGS="$CFLAGS -Werror"
 CXXFLAGS="$CXXFLAGS -Werror"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 CFLAGS="$CFLAGS -Wmissing-prototypes"
 CXXFLAGS="$CXXFLAGS -Wmissing-prototypes"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 WNO_UNINITIALIZED="-Wno-uninitialized"
-echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >> Makefile.config
+echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >>Makefile.config
+echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
 else
 WNO_UNINITIALIZED=""""
-echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >> Makefile.config
+echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >>Makefile.config
+echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
 fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
@@ -2304,28 +2499,36 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_SDL="yes"
-echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
+echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
+echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 echo "#ifndef HAVE_SDL" > config/have_sdl.h
 echo "#define HAVE_SDL \"$HAVE_SDL\"" >> config/have_sdl.h
 echo "#endif" >> config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_SDL="no"
-echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
-echo "#undef HAVE_SDL" > config/have_sdl.h
+echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
+echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
+echo "#undef HAVE_SDL" >config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SDL}" != "no" ]; then
-echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
-echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
+echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
+echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
+echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
 echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> config/sdl_cflags.h
 echo "#endif" >> config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
 echo "#ifndef SDL_LIBS" > config/sdl_libs.h
 echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
 echo "#endif" >> config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 else
 echo -n "checking whether SDL works (with X11 libs)..."
 echo -n "checking whether SDL works (with X11 libs)..." >> config.log
@@ -2352,39 +2555,52 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_SDL="yes"
-echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
+echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
+echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 echo "#ifndef HAVE_SDL" > config/have_sdl.h
 echo "#define HAVE_SDL \"$HAVE_SDL\"" >> config/have_sdl.h
 echo "#endif" >> config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_SDL="no"
-echo "HAVE_SDL=$HAVE_SDL" >> Makefile.config
-echo "#undef HAVE_SDL" > config/have_sdl.h
+echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
+echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
+echo "#undef HAVE_SDL" >config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SDL}" != "no" ]; then
-echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
-echo "SDL_LIBS=$SDL_LIBS" >> Makefile.config
+echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
+echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
+echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 echo "#ifndef SDL_CFLAGS" > config/sdl_cflags.h
 echo "#define SDL_CFLAGS \"$SDL_CFLAGS\"" >> config/sdl_cflags.h
 echo "#endif" >> config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
 echo "#ifndef SDL_LIBS" > config/sdl_libs.h
 echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
 echo "#endif" >> config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 else
-echo "#undef SDL_CFLAGS" > config/sdl_cflags.h
-echo "#undef SDL_LIBS" > config/sdl_libs.h
+echo "#undef SDL_CFLAGS" >config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef SDL_LIBS" >config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
 fi;
 fi;
 else
 echo "no"
 echo "no" >> config.log
-echo "#undef HAVE_SDL" > config/have_sdl.h
-echo "#undef SDL_CFLAGS" > config/sdl_cflags.h
-echo "#undef SDL_LIBS" > config/sdl_libs.h
+echo "#undef HAVE_SDL" >config/have_sdl.h
+echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+echo "#undef SDL_CFLAGS" >config/sdl_cflags.h
+echo "hdefs[\"SDL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef SDL_LIBS" >config/sdl_libs.h
+echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
 fi;
 if [ "${HAVE_SDL}" != "yes" ]
  then
@@ -2446,34 +2662,45 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_FREETYPE="yes"
-echo "HAVE_FREETYPE=$HAVE_FREETYPE" >> Makefile.config
+echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
+echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
 echo "#ifndef HAVE_FREETYPE" > config/have_freetype.h
 echo "#define HAVE_FREETYPE \"$HAVE_FREETYPE\"" >> config/have_freetype.h
 echo "#endif" >> config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_FREETYPE="no"
-echo "HAVE_FREETYPE=$HAVE_FREETYPE" >> Makefile.config
-echo "#undef HAVE_FREETYPE" > config/have_freetype.h
+echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
+echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
+echo "#undef HAVE_FREETYPE" >config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 echo "#ifndef FREETYPE_CFLAGS" > config/freetype_cflags.h
 echo "#define FREETYPE_CFLAGS \"$FREETYPE_CFLAGS\"" >> config/freetype_cflags.h
 echo "#endif" >> config/freetype_cflags.h
+echo "hdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
 echo "#ifndef FREETYPE_LIBS" > config/freetype_libs.h
 echo "#define FREETYPE_LIBS \"$FREETYPE_LIBS\"" >> config/freetype_libs.h
 echo "#endif" >> config/freetype_libs.h
-echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >> Makefile.config
-echo "FREETYPE_LIBS=$FREETYPE_LIBS" >> Makefile.config
+echo "hdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
+echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
+echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 else
-echo "#undef FREETYPE_CFLAGS" > config/freetype_cflags.h
-echo "#undef FREETYPE_LIBS" > config/freetype_libs.h
+echo "#undef FREETYPE_CFLAGS" >config/freetype_cflags.h
+echo "hdefs[\"FREETYPE_CFLAGS\"] = nil" >>configure.lua
+echo "#undef FREETYPE_LIBS" >config/freetype_libs.h
+echo "hdefs[\"FREETYPE_LIBS\"] = nil" >>configure.lua
 fi;
 else
-echo "#undef HAVE_FREETYPE" > config/have_freetype.h
+echo "#undef HAVE_FREETYPE" >config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 echo "no"
 echo "no" >> config.log
 fi;
@@ -2490,11 +2717,14 @@ fi;
 		exit 1
 	fi
 else
-echo "#undef HAVE_FREETYPE" > config/have_freetype.h
+echo "#undef HAVE_FREETYPE" >config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 FREETYPE_CFLAGS=""""
-echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >> Makefile.config
+echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
+echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
 FREETYPE_LIBS=""""
-echo "FREETYPE_LIBS=$FREETYPE_LIBS" >> Makefile.config
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
+echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 fi
 if [ "${with_gl}" != "no" ]
  then
@@ -2568,36 +2798,47 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_OPENGL="yes"
-echo "HAVE_OPENGL=$HAVE_OPENGL" >> Makefile.config
+echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
+echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
 echo "#ifndef HAVE_OPENGL" > config/have_opengl.h
 echo "#define HAVE_OPENGL \"$HAVE_OPENGL\"" >> config/have_opengl.h
 echo "#endif" >> config/have_opengl.h
+echo "hdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_OPENGL="no"
-echo "HAVE_OPENGL=$HAVE_OPENGL" >> Makefile.config
-echo "#undef HAVE_OPENGL" > config/have_opengl.h
+echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
+echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
+echo "#undef HAVE_OPENGL" >config/have_opengl.h
+echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_OPENGL}" = "yes" ]; then
-echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >> Makefile.config
-echo "OPENGL_LIBS=$OPENGL_LIBS" >> Makefile.config
+echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
+echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
+echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
+echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 echo "#ifndef OPENGL_CFLAGS" > config/opengl_cflags.h
 echo "#define OPENGL_CFLAGS \"$OPENGL_CFLAGS\"" >> config/opengl_cflags.h
 echo "#endif" >> config/opengl_cflags.h
+echo "hdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
 echo "#ifndef OPENGL_LIBS" > config/opengl_libs.h
 echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >> config/opengl_libs.h
 echo "#endif" >> config/opengl_libs.h
+echo "hdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 else
-echo "#undef OPENGL_CFLAGS" > config/opengl_cflags.h
-echo "#undef OPENGL_LIBS" > config/opengl_libs.h
+echo "#undef OPENGL_CFLAGS" >config/opengl_cflags.h
+echo "hdefs[\"OPENGL_CFLAGS\"] = nil" >>configure.lua
+echo "#undef OPENGL_LIBS" >config/opengl_libs.h
+echo "hdefs[\"OPENGL_LIBS\"] = nil" >>configure.lua
 fi;
 	if [ "${HAVE_OPENGL}" = "yes" ]
  then
 SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
-echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
+echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
+echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
 	else
 		if [ "${with_gl}" = "yes" ]
  then
@@ -2607,15 +2848,19 @@ echo "SDL_CFLAGS=$SDL_CFLAGS" >> Makefile.config
 			echo "*"
 			exit 1
 		else
-echo "#undef HAVE_OPENGL" > config/have_opengl.h
+echo "#undef HAVE_OPENGL" >config/have_opengl.h
+echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 		fi
 	fi
 else
-echo "#undef HAVE_OPENGL" > config/have_opengl.h
+echo "#undef HAVE_OPENGL" >config/have_opengl.h
+echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 OPENGL_CFLAGS=""""
-echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >> Makefile.config
+echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
+echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
 OPENGL_LIBS=""""
-echo "OPENGL_LIBS=$OPENGL_LIBS" >> Makefile.config
+echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
+echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 fi
 if [ "${with_jpeg}" != "no" ]
  then
@@ -2680,34 +2925,45 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_JPEG="yes"
-echo "HAVE_JPEG=$HAVE_JPEG" >> Makefile.config
+echo "HAVE_JPEG=$HAVE_JPEG" >>Makefile.config
+echo "mdefs[\"HAVE_JPEG\"] = \"$HAVE_JPEG\"" >>configure.lua
 echo "#ifndef HAVE_JPEG" > config/have_jpeg.h
 echo "#define HAVE_JPEG \"$HAVE_JPEG\"" >> config/have_jpeg.h
 echo "#endif" >> config/have_jpeg.h
+echo "hdefs[\"HAVE_JPEG\"] = \"$HAVE_JPEG\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_JPEG="no"
-echo "HAVE_JPEG=$HAVE_JPEG" >> Makefile.config
-echo "#undef HAVE_JPEG" > config/have_jpeg.h
+echo "HAVE_JPEG=$HAVE_JPEG" >>Makefile.config
+echo "mdefs[\"HAVE_JPEG\"] = \"$HAVE_JPEG\"" >>configure.lua
+echo "#undef HAVE_JPEG" >config/have_jpeg.h
+echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_JPEG}" != "" ]; then
-echo "JPEG_CFLAGS=$JPEG_CFLAGS" >> Makefile.config
-echo "JPEG_LIBS=$JPEG_LIBS" >> Makefile.config
+echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
+echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
+echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
+echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 echo "#ifndef JPEG_CFLAGS" > config/jpeg_cflags.h
 echo "#define JPEG_CFLAGS \"$JPEG_CFLAGS\"" >> config/jpeg_cflags.h
 echo "#endif" >> config/jpeg_cflags.h
+echo "hdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
 echo "#ifndef JPEG_LIBS" > config/jpeg_libs.h
 echo "#define JPEG_LIBS \"$JPEG_LIBS\"" >> config/jpeg_libs.h
 echo "#endif" >> config/jpeg_libs.h
+echo "hdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 else
-echo "#undef JPEG_CFLAGS" > config/jpeg_cflags.h
-echo "#undef JPEG_LIBS" > config/jpeg_libs.h
+echo "#undef JPEG_CFLAGS" >config/jpeg_cflags.h
+echo "hdefs[\"JPEG_CFLAGS\"] = nil" >>configure.lua
+echo "#undef JPEG_LIBS" >config/jpeg_libs.h
+echo "hdefs[\"JPEG_LIBS\"] = nil" >>configure.lua
 fi;
 else
-echo "#undef HAVE_JPEG" > config/have_jpeg.h
+echo "#undef HAVE_JPEG" >config/have_jpeg.h
+echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 echo "no"
 echo "no" >> config.log
 fi;
@@ -2721,15 +2977,19 @@ fi;
 			echo "*"
 			exit 1
 		else
-echo "#undef HAVE_JPEG" > config/have_jpeg.h
+echo "#undef HAVE_JPEG" >config/have_jpeg.h
+echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 		fi
 	fi
 else
-echo "#undef HAVE_JPEG" > config/have_jpeg.h
+echo "#undef HAVE_JPEG" >config/have_jpeg.h
+echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 JPEG_CFLAGS=""""
-echo "JPEG_CFLAGS=$JPEG_CFLAGS" >> Makefile.config
+echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
+echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
 JPEG_LIBS=""""
-echo "JPEG_LIBS=$JPEG_LIBS" >> Makefile.config
+echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
+echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 fi
 if [ "${enable_network}" = "yes" ]
  then
@@ -2772,11 +3032,13 @@ HAVE_GETADDRINFO="yes"
 echo "#ifndef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
 echo "#define HAVE_GETADDRINFO \"$HAVE_GETADDRINFO\"" >> config/have_getaddrinfo.h
 echo "#endif" >> config/have_getaddrinfo.h
+echo "hdefs[\"HAVE_GETADDRINFO\"] = \"$HAVE_GETADDRINFO\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 HAVE_GETADDRINFO="no"
-echo "#undef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
+echo "#undef HAVE_GETADDRINFO" >config/have_getaddrinfo.h
+echo "hdefs[\"HAVE_GETADDRINFO\"] = nil" >>configure.lua
 fi;
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]
  then
@@ -2784,6 +3046,7 @@ NETWORK="1"
 echo "#ifndef NETWORK" > config/network.h
 echo "#define NETWORK \"$NETWORK\"" >> config/network.h
 echo "#endif" >> config/network.h
+echo "hdefs[\"NETWORK\"] = \"$NETWORK\"" >>configure.lua
 	else
 		if [ "${enable_network}" = "yes" ]
  then
@@ -2793,12 +3056,15 @@ echo "#endif" >> config/network.h
 			echo "*"
 			exit 1
 		else
-echo "#undef NETWORK" > config/network.h
+echo "#undef NETWORK" >config/network.h
+echo "hdefs[\"NETWORK\"] = nil" >>configure.lua
 		fi
 	fi
 else
-echo "#undef NETWORK" > config/network.h
-echo "#undef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
+echo "#undef NETWORK" >config/network.h
+echo "hdefs[\"NETWORK\"] = nil" >>configure.lua
+echo "#undef HAVE_GETADDRINFO" >config/have_getaddrinfo.h
+echo "hdefs[\"HAVE_GETADDRINFO\"] = nil" >>configure.lua
 fi
 if [ "${enable_server}" = "yes" ]
  then
@@ -2808,6 +3074,7 @@ SERVER="1"
 echo "#ifndef SERVER" > config/server.h
 echo "#define SERVER \"$SERVER\"" >> config/server.h
 echo "#endif" >> config/server.h
+echo "hdefs[\"SERVER\"] = \"$SERVER\"" >>configure.lua
 	else
 		if [ "${enable_server}" = "yes" ]
  then
@@ -2817,12 +3084,15 @@ echo "#endif" >> config/server.h
 			echo "*"
 			exit 1
 		else
-echo "#undef SERVER" > config/server.h
+echo "#undef SERVER" >config/server.h
+echo "hdefs[\"SERVER\"] = nil" >>configure.lua
 		fi
 	fi
 else
-echo "#undef SERVER" > config/server.h
-echo "#undef HAVE_GETADDRINFO" > config/have_getaddrinfo.h
+echo "#undef SERVER" >config/server.h
+echo "hdefs[\"SERVER\"] = nil" >>configure.lua
+echo "#undef HAVE_GETADDRINFO" >config/have_getaddrinfo.h
+echo "hdefs[\"HAVE_GETADDRINFO\"] = nil" >>configure.lua
 fi
 if [ "${enable_threads}" != "no" ]
  then
@@ -2854,30 +3124,39 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_PTHREADS="yes"
-echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
 echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >> config/have_pthreads.h
 echo "#endif" >> config/have_pthreads.h
+echo "hdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_PTHREADS="no"
-echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
-echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
+echo "#undef HAVE_PTHREADS" >config/have_pthreads.h
+echo "hdefs[\"HAVE_PTHREADS\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
-echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >>Makefile.config
+echo "mdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >>Makefile.config
+echo "mdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
 echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
 echo "#endif" >> config/pthreads_cflags.h
+echo "hdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
 echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
 echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
 echo "#endif" >> config/pthreads_libs.h
+echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 else
 echo -n "checking for -pthread..."
 echo -n "checking for -pthread..." >> config.log
@@ -2906,30 +3185,39 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_PTHREADS="yes"
-echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
 echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >> config/have_pthreads.h
 echo "#endif" >> config/have_pthreads.h
+echo "hdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_PTHREADS="no"
-echo "HAVE_PTHREADS=$HAVE_PTHREADS" >> Makefile.config
-echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
+echo "#undef HAVE_PTHREADS" >config/have_pthreads.h
+echo "hdefs[\"HAVE_PTHREADS\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
-echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >>Makefile.config
+echo "mdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >>Makefile.config
+echo "mdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
 echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
 echo "#endif" >> config/pthreads_cflags.h
+echo "hdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
 echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
 echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
 echo "#endif" >> config/pthreads_libs.h
+echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 fi;
 fi;
 echo -n "checking for the X/Open Threads Extension..."
@@ -2961,33 +3249,43 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_PTHREADS_XOPEN="yes"
-echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >> Makefile.config
+echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
 echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
 echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
 echo "#endif" >> config/have_pthreads_xopen.h
+echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_PTHREADS_XOPEN="no"
-echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >> Makefile.config
-echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
+echo "#undef HAVE_PTHREADS_XOPEN" >config/have_pthreads_xopen.h
+echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
-echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >> Makefile.config
-echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >> Makefile.config
+echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
+echo "mdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
+echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >>Makefile.config
+echo "mdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
 echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
 echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
 echo "#endif" >> config/have_pthreads_xopen.h
+echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
 echo "#ifndef PTHREADS_XOPEN_CFLAGS" > config/pthreads_xopen_cflags.h
 echo "#define PTHREADS_XOPEN_CFLAGS \"$PTHREADS_XOPEN_CFLAGS\"" >> config/pthreads_xopen_cflags.h
 echo "#endif" >> config/pthreads_xopen_cflags.h
+echo "hdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
 echo "#ifndef PTHREADS_XOPEN_LIBS" > config/pthreads_xopen_libs.h
 echo "#define PTHREADS_XOPEN_LIBS \"$PTHREADS_XOPEN_LIBS\"" >> config/pthreads_xopen_libs.h
 echo "#endif" >> config/pthreads_xopen_libs.h
+echo "hdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
 else
-echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#undef HAVE_PTHREADS_XOPEN" >config/have_pthreads_xopen.h
+echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = nil" >>configure.lua
 fi;
 echo -n "checking for PTHREAD_MUTEX_RECURSIVE..."
 echo -n "checking for PTHREAD_MUTEX_RECURSIVE..." >> config.log
@@ -3011,25 +3309,31 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_PTHREAD_MUTEX_RECURSIVE="yes"
-echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >> Makefile.config
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
 echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
 echo "#endif" >> config/have_pthread_mutex_recursive.h
+echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_PTHREAD_MUTEX_RECURSIVE="no"
-echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >> Makefile.config
-echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" >config/have_pthread_mutex_recursive.h
+echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
 echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
 echo "#endif" >> config/have_pthread_mutex_recursive.h
+echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
 else
-echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" >config/have_pthread_mutex_recursive.h
+echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = nil" >>configure.lua
 fi;
 echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..."
 echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..." >> config.log
@@ -3053,25 +3357,31 @@ echo "yes"
 echo "yes" >> config.log
 compile="ok"
 HAVE_PTHREAD_MUTEX_RECURSIVE_NP="yes"
-echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >> Makefile.config
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
 echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
 echo "#endif" >> config/have_pthread_mutex_recursive_np.h
+echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
 compile="failed"
 HAVE_PTHREAD_MUTEX_RECURSIVE_NP="no"
-echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >> Makefile.config
-echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >config/have_pthread_mutex_recursive_np.h
+echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
 echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
 echo "#endif" >> config/have_pthread_mutex_recursive_np.h
+echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
 else
-echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
+echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >config/have_pthread_mutex_recursive_np.h
+echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = nil" >>configure.lua
 fi;
 	if [ "${HAVE_PTHREADS}" = "yes" ]
 	then
@@ -3094,6 +3404,7 @@ THREADS="1"
 echo "#ifndef THREADS" > config/threads.h
 echo "#define THREADS \"$THREADS\"" >> config/threads.h
 echo "#endif" >> config/threads.h
+echo "hdefs[\"THREADS\"] = \"$THREADS\"" >>configure.lua
 	else
 		echo "*"
 		echo "* --enable-threads was requested, but no POSIX threads"
@@ -3102,23 +3413,32 @@ echo "#endif" >> config/threads.h
 		exit 1
 	fi
 else
-echo "#undef THREADS" > config/threads.h
-echo "#undef HAVE_PTHREADS" > config/have_pthreads.h
-echo "#undef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#undef THREADS" >config/threads.h
+echo "hdefs[\"THREADS\"] = nil" >>configure.lua
+echo "#undef HAVE_PTHREADS" >config/have_pthreads.h
+echo "hdefs[\"HAVE_PTHREADS\"] = nil" >>configure.lua
+echo "#undef HAVE_PTHREADS_XOPEN" >config/have_pthreads_xopen.h
+echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = nil" >>configure.lua
 PTHREADS_CFLAGS=""""
-echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >> Makefile.config
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >>Makefile.config
+echo "mdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
 PTHREADS_LIBS=""""
-echo "PTHREADS_LIBS=$PTHREADS_LIBS" >> Makefile.config
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >>Makefile.config
+echo "mdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 PTHREADS_XOPEN_CFLAGS=""""
-echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >> Makefile.config
+echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
+echo "mdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
 PTHREADS_XOPEN_LIBS=""""
-echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >> Makefile.config
+echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >>Makefile.config
+echo "mdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
 	if [ "${enable_warnings}" = "yes" ]
  then
 CFLAGS="$CFLAGS -Wno-unused"
 CXXFLAGS="$CXXFLAGS -Wno-unused"
-echo "CFLAGS=$CFLAGS" >> Makefile.config
-echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 	fi
 fi
 if [ "${enable_utf8}" != "no" ]
@@ -3127,22 +3447,28 @@ UTF8="1"
 echo "#ifndef UTF8" > config/utf8.h
 echo "#define UTF8 \"$UTF8\"" >> config/utf8.h
 echo "#endif" >> config/utf8.h
+echo "hdefs[\"UTF8\"] = \"$UTF8\"" >>configure.lua
 else
-echo "#undef UTF8" > config/utf8.h
+echo "#undef UTF8" >config/utf8.h
+echo "hdefs[\"UTF8\"] = nil" >>configure.lua
 fi
-echo "#undef ASTRONOMICAL_UNITS" > config/astronomical_units.h
+echo "#undef ASTRONOMICAL_UNITS" >config/astronomical_units.h
+echo "hdefs[\"ASTRONOMICAL_UNITS\"] = nil" >>configure.lua
 HISTORICAL_UNITS="1"
 echo "#ifndef HISTORICAL_UNITS" > config/historical_units.h
 echo "#define HISTORICAL_UNITS \"$HISTORICAL_UNITS\"" >> config/historical_units.h
 echo "#endif" >> config/historical_units.h
+echo "hdefs[\"HISTORICAL_UNITS\"] = \"$HISTORICAL_UNITS\"" >>configure.lua
 if [ "${enable_8bpp}" != "no" ]
  then
 VIEW_8BPP="1"
 echo "#ifndef VIEW_8BPP" > config/view_8bpp.h
 echo "#define VIEW_8BPP \"$VIEW_8BPP\"" >> config/view_8bpp.h
 echo "#endif" >> config/view_8bpp.h
+echo "hdefs[\"VIEW_8BPP\"] = \"$VIEW_8BPP\"" >>configure.lua
 else
-echo "#undef VIEW_8BPP" > config/view_8bpp.h
+echo "#undef VIEW_8BPP" >config/view_8bpp.h
+echo "hdefs[\"VIEW_8BPP\"] = nil" >>configure.lua
 fi
 if [ "${enable_16bpp}" != "no" ]
  then
@@ -3150,8 +3476,10 @@ VIEW_16BPP="1"
 echo "#ifndef VIEW_16BPP" > config/view_16bpp.h
 echo "#define VIEW_16BPP \"$VIEW_16BPP\"" >> config/view_16bpp.h
 echo "#endif" >> config/view_16bpp.h
+echo "hdefs[\"VIEW_16BPP\"] = \"$VIEW_16BPP\"" >>configure.lua
 else
-echo "#undef VIEW_16BPP" > config/view_16bpp.h
+echo "#undef VIEW_16BPP" >config/view_16bpp.h
+echo "hdefs[\"VIEW_16BPP\"] = nil" >>configure.lua
 fi
 if [ "${enable_24bpp}" != "no" ]
  then
@@ -3159,8 +3487,10 @@ VIEW_24BPP="1"
 echo "#ifndef VIEW_24BPP" > config/view_24bpp.h
 echo "#define VIEW_24BPP \"$VIEW_24BPP\"" >> config/view_24bpp.h
 echo "#endif" >> config/view_24bpp.h
+echo "hdefs[\"VIEW_24BPP\"] = \"$VIEW_24BPP\"" >>configure.lua
 else
-echo "#undef VIEW_24BPP" > config/view_24bpp.h
+echo "#undef VIEW_24BPP" >config/view_24bpp.h
+echo "hdefs[\"VIEW_24BPP\"] = nil" >>configure.lua
 fi
 if [ "${enable_32bpp}" != "no" ]
  then
@@ -3168,8 +3498,10 @@ VIEW_32BPP="1"
 echo "#ifndef VIEW_32BPP" > config/view_32bpp.h
 echo "#define VIEW_32BPP \"$VIEW_32BPP\"" >> config/view_32bpp.h
 echo "#endif" >> config/view_32bpp.h
+echo "hdefs[\"VIEW_32BPP\"] = \"$VIEW_32BPP\"" >>configure.lua
 else
-echo "#undef VIEW_32BPP" > config/view_32bpp.h
+echo "#undef VIEW_32BPP" >config/view_32bpp.h
+echo "hdefs[\"VIEW_32BPP\"] = nil" >>configure.lua
 fi
 echo "Don't forget to run \"make depend\"."
 echo "Don't forget to run \"make depend\"." >> config.log
