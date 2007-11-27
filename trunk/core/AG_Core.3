@@ -42,6 +42,9 @@ the initialization of SDL (and possibly OpenGL), the selection of the video
 mode, the font engine and other subsystems.
 .Pp
 .nr nS 1
+.Ft "void"
+.Fn AG_GetVersion "AG_AgarVersion *ver"
+.Pp
 .Ft "int"
 .Fn AG_InitCore "const char *progname" "Uint flags"
 .Pp
@@ -94,6 +97,38 @@ event onto the event queue.
 The
 .Fn AG_Destroy
 function immediately frees all resources allocated by Agar.
+.Pp
+.Sh AGAR VERSION INFORMATION
+.nr nS 1
+.Ft void
+.Fn AG_GetVersion "AG_AgarVersion *ver"
+.Pp
+.Ft bool
+.Fn AG_VERSION_ATLEAST "int major" "int minor" "int patchlevel"
+.Pp
+.nr nS 0
+The
+.Fn AG_GetVersion
+function fills an
+.Ft AG_AgarVersion
+structure with version information:
+.Bd -literal
+typedef struct ag_agar_version {
+	int major;
+	int minor;
+	int patch;
+	const char *release;
+} AG_AgarVersion;
+.Ed
+.Pp
+Agar does not need to have been previously initialized for
+.Fn AG_GetVersion
+to work.
+.Pp
+The
+.Fn AG_VERSION_ATLEAST
+macro evaluates to true if the current Agar version is equal to, or exceeds
+the given version number.
 .Sh SEE ALSO
 .Xr AG_Object 3 ,
 .Xr AG_View 3 ,
