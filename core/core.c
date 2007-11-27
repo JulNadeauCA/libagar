@@ -31,6 +31,7 @@
 #include <config/localedir.h>
 #include <config/version.h>
 #include <config/network.h>
+#include <config/release.h>
 
 #ifdef THREADS
 # include <config/have_pthreads_xopen.h>
@@ -171,4 +172,13 @@ AG_Destroy(void)
 	AG_DestroyClassTbl();
 	SDL_Quit();
 	exit(0);
+}
+
+void
+AG_GetVersion(AG_AgarVersion *ver)
+{
+	ver->major = AGAR_MAJOR_VERSION;
+	ver->minor = AGAR_MINOR_VERSION;
+	ver->patch = AGAR_PATCHLEVEL;
+	ver->release = RELEASE;
 }

@@ -87,6 +87,7 @@ typedef unsigned long Ulong;
 #include <core/load_version.h>
 #include <core/load_color.h>
 
+#include <core/version.h>
 #include <core/object.h>
 #include <core/event.h>
 #include <core/cpuinfo.h>

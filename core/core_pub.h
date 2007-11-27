@@ -20,6 +20,7 @@
 #include <agar/core/load_surface.h>
 #include <agar/core/load_version.h>
 
+#include <agar/core/version.h>
 #include <agar/core/object.h>
 #include <agar/core/event.h>
 #include <agar/core/config.h>
