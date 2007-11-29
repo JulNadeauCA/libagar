@@ -2,6 +2,7 @@ TOP=	../..
 include Makefile.config
 
 PROJECT=	"objsystem"
+PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"85CA41FA-DD75-4136-8200-3AF5F3D7B6AF"
 PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
