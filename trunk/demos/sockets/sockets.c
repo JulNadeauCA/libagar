@@ -8,7 +8,6 @@
 #include <agar/gui.h>
 
 #include <string.h>
-#include <unistd.h>
 
 enum {
 	HELMET_SOCKET,
@@ -72,7 +71,9 @@ CreateGameMenu(void)
 	AG_Icon *helmet, *sword, *axe;
 	int i;
 
-	/* Create a fixed-size window with a Fixed container. */
+	/*
+	 * Create a fixed-size window with a Fixed container.
+	 */
 	win = AG_WindowNewNamed(AG_WINDOW_PLAIN, "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 	AG_WindowSetGeometry(win,
@@ -102,7 +103,10 @@ CreateGameMenu(void)
 		    SDL_MapRGB(pixmaps[i]->format, 0, 255, 0));
 	}
 
-	/* Create some empty sockets. */
+	/*
+	 * Create some empty sockets.
+	 */
+
 	sock = AG_SocketFromSurface(fx, 0, pixmaps[HELMET_SOCKET]);
 	AG_SocketInsertFn(sock, InsertHelmet);
 	AG_FixedMove(fx, sock, 200, 32);
@@ -113,7 +117,10 @@ CreateGameMenu(void)
 	AG_FixedMove(fx, sock, 242, 32);
 	AG_FixedSize(fx, sock, 32, 32);
 
-	/* Create some icons. */
+	/*
+	 * Create some icons.
+	 */
+
 	helmet = AG_IconFromSurface(pixmaps[HELMET]);
 	AG_SetString(helmet, "item-type", "helmet");
 	sword = AG_IconFromSurface(pixmaps[SWORD]);
@@ -121,7 +128,10 @@ CreateGameMenu(void)
 	axe = AG_IconFromSurface(pixmaps[AXE]);
 	AG_SetString(axe, "item-type", "weapon");
 
-	/* Create some populated sockets. */
+	/*
+	 * Create some populated sockets.
+	 */
+
 	sock = AG_SocketFromSurface(fx, 0, pixmaps[HELMET_SOCKET]);
 	AG_SocketInsertFn(sock, InsertHelmet);
 	AG_FixedMove(fx, sock, 332, 32);
@@ -146,37 +156,9 @@ CreateGameMenu(void)
 int
 main(int argc, char *argv[])
 {
-	int c, i, fps = -1;
-	char *s;
-
 	if (AG_InitCore("sockets-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
-	}
-	AG_SetBool(agConfig, "view.opengl", 1);
-	while ((c = getopt(argc, argv, "?vfFgGr:")) != -1) {
-		extern char *optarg;
-
-		switch (c) {
-		case 'v':
-			exit(0);
-		case 'f':
-			AG_SetBool(agConfig, "view.full-screen", 1);
-			break;
-		case 'F':
-			AG_SetBool(agConfig, "view.full-screen", 0);
-			break;
-		case 'G':
-			AG_SetBool(agConfig, "view.opengl", 0);
-			break;
-		case 'r':
-			fps = atoi(optarg);
-			break;
-		case '?':
-		default:
-			printf("%s [-vfFgG] [-r fps]\n", agProgName);
-			exit(0);
-		}
 	}
 	if (AG_InitVideo(640, 480, 32, 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
@@ -192,8 +174,4 @@ main(int argc, char *argv[])
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
-fail:
-	AG_Destroy();
-	return (1);
 }
-

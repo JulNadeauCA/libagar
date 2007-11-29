@@ -9,8 +9,6 @@
 #include <agar/core.h>
 #include <agar/gui.h>
 
-#include <unistd.h>
-
 static void
 mousemotion(AG_Event *event)
 {
@@ -99,57 +97,19 @@ CreateWindow(void)
 int
 main(int argc, char *argv[])
 {
-	int c, i, fps = -1;
-	char *s;
-
 	if (AG_InitCore("focusing-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-
-	while ((c = getopt(argc, argv, "?vfFgGr:")) != -1) {
-		extern char *optarg;
-
-		switch (c) {
-		case 'v':
-			exit(0);
-		case 'f':
-			AG_SetBool(agConfig, "view.full-screen", 1);
-			break;
-		case 'F':
-			AG_SetBool(agConfig, "view.full-screen", 0);
-			break;
-		case 'g':
-			AG_SetBool(agConfig, "view.opengl", 1);
-			break;
-		case 'G':
-			AG_SetBool(agConfig, "view.opengl", 0);
-			break;
-		case 'r':
-			fps = atoi(optarg);
-			break;
-		case '?':
-		default:
-			printf("%s [-vfFgG] [-r fps]\n", agProgName);
-			exit(0);
-		}
-	}
-
 	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
-	
 	CreateWindow();
-
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
-fail:
-	AG_Destroy();
-	return (1);
 }
 

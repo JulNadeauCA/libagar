@@ -1,13 +1,13 @@
 /*	Public domain	*/
 /*
  * This application displays a bunch of Agar-GUI widgets. It is useful for
- * customizing color schemes.
+ * testing new themes (see AG_Style(3)). If you have libjpeg installed, F8
+ * will generate a screenshot.
  */
 
 #include <agar/core.h>
 #include <agar/gui.h>
 
-#include <unistd.h>
 #include <math.h>
 
 static void
@@ -278,72 +278,21 @@ int
 main(int argc, char *argv[])
 {
 	int c, i, fps = -1;
-	int w = 640, h = 480;
 
 	if (AG_InitCore("widgets-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-
-	while ((c = getopt(argc, argv, "?vfFgGr:w:h:bB")) != -1) {
-		extern char *optarg;
-
-		switch (c) {
-		case 'v':
-			exit(0);
-		case 'f':
-			AG_SetBool(agConfig, "view.full-screen", 1);
-			break;
-		case 'F':
-			AG_SetBool(agConfig, "view.full-screen", 0);
-			break;
-		case 'g':
-			AG_SetBool(agConfig, "view.opengl", 1);
-			break;
-		case 'G':
-			AG_SetBool(agConfig, "view.opengl", 0);
-			break;
-		case 'r':
-			fps = atoi(optarg);
-			break;
-		case 'w':
-			w = atoi(optarg);
-			break;
-		case 'h':
-			h = atoi(optarg);
-			break;
-		case 'b':
-			AG_SetBool(agConfig, "font.freetype", 0);
-			AG_SetString(agConfig, "font-face", "minimal.xcf");
-			AG_SetInt(agConfig, "font-size", 11);
-			break;
-		case 'B':
-			AG_SetBool(agConfig, "font.freetype", 1);
-			AG_SetString(agConfig, "font-face", "Vera.ttf");
-			break;
-		case '?':
-		default:
-			printf("%s [-vfFgGbB] [-r fps]\n", agProgName);
-			exit(0);
-		}
-	}
-
-	/* Initialize the display. Respond to keyboard/mouse events. */
-	if (AG_InitVideo(w, h, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
 	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
-	
 	CreateWindow();
-
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
-fail:
-	AG_Destroy();
-	return (1);
 }
 

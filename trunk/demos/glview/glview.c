@@ -10,7 +10,6 @@
 #include <agar/gui/opengl.h>
 
 #include <string.h>
-#include <unistd.h>
 
 #include <GL/glu.h>
 
@@ -153,8 +152,7 @@ CreateMainWindow(void)
 int
 main(int argc, char *argv[])
 {
-	int c, i, fps = -1;
-	int wDisplay = 640, hDisplay = 480;
+	int c, i;
 	char *s;
 
 	if (AG_InitCore("glview-demo", 0) == -1) {
@@ -162,67 +160,21 @@ main(int argc, char *argv[])
 		return (1);
 	}
 
-	while ((c = getopt(argc, argv, "?vfFbBt:r:w:h:")) != -1) {
-		extern char *optarg;
-
-		switch (c) {
-		case 'v':
-			exit(0);
-		case 'f':
-			AG_SetBool(agConfig, "view.full-screen", 1);
-			break;
-		case 'F':
-			AG_SetBool(agConfig, "view.full-screen", 0);
-			break;
-		case 'r':
-			fps = atoi(optarg);
-			break;
-		case 'b':
-			AG_SetBool(agConfig, "font.freetype", 0);
-			break;
-		case 'B':
-			AG_SetBool(agConfig, "font.freetype", 1);
-			break;
-		case 't':
-			AG_TextParseFontSpec(optarg);
-			break;
-		case 'w':
-			wDisplay = atoi(optarg);
-			break;
-		case 'h':
-			hDisplay = atoi(optarg);
-			break;
-		case '?':
-		default:
-			printf("%s [-vfFbB] [-w width] [-h height] "
-			        "[-r fps] [-t fontspec]\n", agProgName);
-			exit(0);
-		}
-	}
-
 	/* Pass AG_VIDEO_OPENGL flag to require an OpenGL display. */
-	if (AG_InitVideo(wDisplay, hDisplay, 32,
-	    AG_VIDEO_OPENGL|AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitVideo(640, 480, 32, AG_VIDEO_OPENGL|AG_VIDEO_RESIZABLE)
+	    == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_SetRefreshRate(fps);
-
-	/* Configure some useful hotkeys. */
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
 	/* Set a black background. */
 	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0,0,0);
 
-	/* Create the main window. */
 	CreateMainWindow();
-
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
-fail:
-	AG_Destroy();
-	return (1);
 }
 

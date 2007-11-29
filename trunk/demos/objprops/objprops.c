@@ -9,7 +9,6 @@
 #include <agar/dev.h>
 
 #include <string.h>
-#include <unistd.h>
 
 static Uint32
 ReadTicks(void *p, AG_Prop *prop)
@@ -37,30 +36,10 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-
-	while ((c = getopt(argc, argv, "?vgG")) != -1) {
-		extern char *optarg;
-
-		switch (c) {
-		case 'v':
-			exit(0);
-		case 'g':
-			AG_SetBool(agConfig, "view.opengl", 1);
-			break;
-		case 'G':
-			AG_SetBool(agConfig, "view.opengl", 0);
-			break;
-		case '?':
-		default:
-			printf("%s [-vgG]\n", agProgName);
-			exit(0);
-		}
-	}
 	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	AG_SetRefreshRate(-1);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
