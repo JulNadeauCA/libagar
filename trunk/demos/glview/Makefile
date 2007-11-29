@@ -1,6 +1,11 @@
 TOP=	../..
 include Makefile.config
 
+PROJECT=	"glview"
+PROG_TYPE=	"GUI"
+PROG_GUID=	"B22C8324-AB8E-417e-9459-9FA0698D45D7"
+PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
+
 PROG=		glview
 SRCS=		glview.c
 PROG_LINKS=	glu
