@@ -2,6 +2,7 @@ TOP=	../..
 include Makefile.config
 
 PROJECT=	"fixedres"
+PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"35A9469C-FAB5-4993-BCCC-C70374898B29"
 PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
