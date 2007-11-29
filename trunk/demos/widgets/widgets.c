@@ -27,7 +27,7 @@ CreateWindow(void)
 	 * is simply a container widget that packs its children vertically.
 	 */
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Widgets demo");
+	AG_WindowSetCaption(win, "Some Agar-GUI widgets");
 	
 	/*
 	 * Pane provides two Box containers which can be resized using
@@ -117,46 +117,52 @@ CreateWindow(void)
 	}
 
 	/*
-	 * FSpinbutton can bind to an integral or floating-point number.
-	 * It also provides built-in unit conversion. Spinbutton is a
-	 * variant which handles integer values only and provides no unit
-	 * conversion.
+	 * Numerical binds to an integral or floating-point number.
+	 * It can also provides built-in unit conversion (see AG_Units(3)).
 	 */
-	AG_FSpinbuttonNew(div1, 0, "cm", "Real number: ");
-	AG_SpinbuttonNew(div1, 0, "Integer: ");
+	{
+		AG_Numerical *num;
+		static float myFloat = 1.0;
+		static int myMin = 0, myMax = 10, myInt = 1;
+
+		num = AG_NumericalNew(div1, AG_NUMERICAL_HFILL, "cm", "Real: ");
+		AG_WidgetBindFloat(num, "value", &myFloat);
+		num = AG_NumericalNew(div1, AG_NUMERICAL_HFILL, NULL, "Int: ");
+		AG_WidgetBindInt(num, "value", &myInt);
+	}
 
 	/*
-	 * MFSpinbutton and MSpinbutton are variants used to conveniently
-	 * edit two values, such as 2D coordinates.
-	 */
-	AG_MFSpinbuttonNew(div1, 0, "mm", "x", "Dimensions: ");
-	AG_MSpinbuttonNew(div1, 0, ",", "Coordinates: ");
-
-	/*
-	 * Textbox is a single-line text edition widget. It can bind to
-	 * a fixed-size buffer containing a string with UTF-8 sequences.
+	 * Textbox is a single or multiline text edition widget. It can bind
+	 * to a fixed-size buffer and supports UTF-8.
 	 */
 	AG_TextboxNew(div1, AG_TEXTBOX_HFILL, "Enter text: ");
 
 	/*
 	 * Scrollbar provides three bindings, "value", "min" and "max",
-	 * which we can bind to integers.
+	 * which we can bind to integers. Progressbar has a very similar
+	 * interface.
 	 */
 	{
-		static int value = 127;
+		static int myVal = 50, myMin = 0, myMax = 200;
 		AG_Scrollbar *sb;
 		AG_Statusbar *st;
+		AG_ProgressBar *pb;
 
 		sb = AG_ScrollbarNew(div1, AG_SCROLLBAR_HORIZ,
 		    AG_SCROLLBAR_HFILL|AG_SCROLLBAR_FOCUSABLE);
-		AG_WidgetSetInt(sb, "min", 0);
-		AG_WidgetSetInt(sb, "max", 255);
-		AG_WidgetBindInt(sb, "value", &value);
-	
+		AG_WidgetBindInt(sb, "min", &myMin);
+		AG_WidgetBindInt(sb, "max", &myMax);
+		AG_WidgetBindInt(sb, "value", &myVal);
+
+		pb = AG_ProgressBarNewHoriz(div1, AG_PROGRESS_BAR_SHOW_PCT);
+		AG_WidgetBindInt(pb, "min", &myMin);
+		AG_WidgetBindInt(pb, "max", &myMax);
+		AG_WidgetBindInt(pb, "value", &myVal);
+
 		/* Statusbar displays one or more AG_Label(3) objects. */
 		st = AG_StatusbarNew(div1, 0);
 		AG_StatusbarAddLabel(st, AG_LABEL_POLLED, "Value = %d",
-		    &value);
+		    &myVal);
 	}
 
 	/*
@@ -234,11 +240,11 @@ CreateWindow(void)
 			 * a Table with a single column, however.
 			 */
 			tl = AG_TlistNew(ntab, AG_TLIST_EXPAND|AG_TLIST_TREE);
-			ti = AG_TlistAdd(tl, NULL, "Foo");
+			ti = AG_TlistAdd(tl, agIconDoc.s, "Foo");
 			ti->depth = 0;
-			ti = AG_TlistAdd(tl, NULL, "Bar");
+			ti = AG_TlistAdd(tl, agIconDoc.s, "Bar");
 			ti->depth = 1;
-			ti = AG_TlistAdd(tl, NULL, "Baz");
+			ti = AG_TlistAdd(tl, agIconDoc.s, "Baz");
 			ti->depth = 2;
 		}
 		
