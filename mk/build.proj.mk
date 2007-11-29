@@ -45,6 +45,8 @@ PROJFILES?=	windows:i386:cb-gcc:: \
 		windows:i386:vs2003:: \
 		windows:i386:vs2005::
 
+CLEANFILES+=	premake.lua configure.lua
+
 proj: proj-subdir
 	@if [ "${PROJECT}" = "" ]; then \
 	    echo "Checking ${PROJINCLUDES}"; \
@@ -113,7 +115,7 @@ proj: proj-subdir
 		cat .projfiles2.out | ${ZIP} ${ZIPFLAGS} \
 		    ${PROJDIR}/$$_tgtproj-$$_tgtos-$$_tgtarch$$_tgtflav.zip -@;\
 		rm `cat .projfiles.out`; \
-		rm -fR config; \
+		rm -fR config .projfiles.out .projfiles2.out; \
 	    done; \
 	fi
 

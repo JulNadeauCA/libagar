@@ -57,6 +57,7 @@ POBJS?=none
 SHOBJS?=none
 CONF?=none
 CONFDIR?=
+CLEANFILES?=
 
 all: all-subdir ${PROG}
 install: install-prog install-subdir
