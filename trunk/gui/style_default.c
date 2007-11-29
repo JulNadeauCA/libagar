@@ -342,6 +342,16 @@ RadioButton(AG_Radio *rad, int x, int y, int selected, int over)
 	}
 }
 
+/* Background for ProgressBar */
+static void
+ProgressBarBackground(void *pb)
+{
+	AG_DrawBox(pb,
+	    AG_RECT(0, 0, WIDTH(pb), HEIGHT(pb)), -1,
+	    AG_COLOR(FRAME_COLOR));
+}
+
+
 /* Background for Scrollbar */
 static void
 ScrollbarBackground(void *sb)
@@ -598,6 +608,7 @@ AG_Style agStyleDefault = {
 	PaneVertDivider,
 	RadioGroupBackground,
 	RadioButton,
+	ProgressBarBackground,
 	ScrollbarBackground,
 	ScrollbarVertButtons,
 	ScrollbarHorizButtons,

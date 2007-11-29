@@ -33,6 +33,7 @@
 #include <agar/gui/objsel.h>
 #include <agar/gui/pane.h>
 #include <agar/gui/pixmap.h>
+#include <agar/gui/progress_bar.h>
 #include <agar/gui/radio.h>
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/separator.h>
