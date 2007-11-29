@@ -215,17 +215,35 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "double *value"
-.It Va double *value
+.Bl -tag -compact -width "double *value, *min, *max "
+.It Va double *value, *min, *max
 Real number (double-precision).
-.It Va float *value
+.It Va float *value, *min, *max
 Real number (single-precision).
-.It Va int *value
+.It Va int *value, *min, *max
 Integer value.
-.It Va Uint *value
+.It Va Uint *value, *min, *max
 Unsigned integer value.
-.It Va Uint8 *value
+.It Va Uint8 *value, *min, *max
 Unsigned 8-bit value.
+.It Va Uint16 *value, *min, *max
+Unsigned 16-bit value.
+.It Va Uint32 *value, *min, *max
+Unsigned 32-bit value.
+.It Va Uint64 *value, *min, *max
+Unsigned 64-bit value (only if
+.Dv HAVE_64BIT
+is defined).
+.It Va Sint8 *value, *min, *max
+Signed 8-bit value.
+.It Va Sint16 *value, *min, *max
+Signed 16-bit value.
+.It Va Sint32 *value, *min, *max
+Signed 32-bit value.
+.It Va Sint64 *value, *min, *max
+Signed 64-bit value (only if
+.Dv HAVE_64BIT
+is defined).
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
