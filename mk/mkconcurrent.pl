@@ -31,6 +31,7 @@ $COOKIE = ".mkconcurrent_$$";
 @DIRS = ();
 $BUILD = '';
 @MKFILES = (
+	'Makefile.proj',
 	'\.mk$',
 	'\.inc$',
 	'^mkdep$',
