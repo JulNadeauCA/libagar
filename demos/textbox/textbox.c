@@ -9,7 +9,6 @@
 #include <agar/core/snprintf.h>
 
 #include <string.h>
-#include <unistd.h>
 
 static char polledString[128] = { '\0' };
 
@@ -102,73 +101,18 @@ CreateTextbox(void)
 int
 main(int argc, char *argv[])
 {
-	int c, i, fps = -1;
-	char *s;
-
 	if (AG_InitCore("textbox-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-
-	while ((c = getopt(argc, argv, "?vfFgGr:bBt:T:")) != -1) {
-		extern char *optarg;
-
-		switch (c) {
-		case 'v':
-			exit(0);
-		case 'f':
-			AG_SetBool(agConfig, "view.full-screen", 1);
-			break;
-		case 'F':
-			AG_SetBool(agConfig, "view.full-screen", 0);
-			break;
-		case 'g':
-			AG_SetBool(agConfig, "view.opengl", 1);
-			break;
-		case 'G':
-			AG_SetBool(agConfig, "view.opengl", 0);
-			break;
-		case 'r':
-			fps = atoi(optarg);
-			break;
-		case 'b':
-			AG_SetBool(agConfig, "font.freetype", 0);
-			AG_SetString(agConfig, "font-face", "minimal.xcf");
-			AG_SetInt(agConfig, "font-size", 11);
-			break;
-		case 'B':
-			AG_SetBool(agConfig, "font.freetype", 1);
-			AG_SetString(agConfig, "font-face", "Vera.ttf");
-			break;
-		case 't':
-			AG_TextParseFontSpec(optarg);
-			break;
-		case 'T':
-			AG_SetString(agConfig, "font-path", "%s", optarg);
-			break;
-		case '?':
-		default:
-			printf("%s [-vfFgGbB] [-t font] [-T fontpath] "
-			          "[-r fps]\n", agProgName);
-			exit(0);
-		}
-	}
-
 	if (AG_InitVideo(420, 340, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_SetRefreshRate(fps);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
-	
 	CreateTextbox();
-
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
-fail:
-	AG_Destroy();
-	return (1);
 }
-

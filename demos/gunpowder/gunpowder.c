@@ -8,7 +8,6 @@
 #include <agar/gui.h>
 
 #include <string.h>
-#include <unistd.h>
 
 double kno3 = 15.0;
 double c = 3.0;
@@ -114,14 +113,10 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
-	AG_SetRefreshRate(-1);
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	CreateUI();
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
-fail:
-	AG_Destroy();
-	return (1);
 }
 
