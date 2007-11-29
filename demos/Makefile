@@ -15,7 +15,7 @@ SUBDIR=	fixedres \
 	glview \
 	gunpowder
 
-all: configure all-subdir
+all: all-subdir
 clean: prereq clean-subdir
 cleandir: prereq cleandir-subdir
 install: install-subdir
