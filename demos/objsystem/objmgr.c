@@ -17,9 +17,6 @@
 int
 main(int argc, char *argv[])
 {
-	int c, i, fps = -1;
-	char *s;
-
 	if (AG_InitCore("objmgr-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);

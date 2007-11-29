@@ -277,8 +277,6 @@ CreateWindow(void)
 int
 main(int argc, char *argv[])
 {
-	int c, i, fps = -1;
-
 	if (AG_InitCore("widgets-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
