@@ -2,7 +2,6 @@ TOP=	..
 include Makefile.config
 
 PROJECT=	"agarpaint"
-PROJDIR=	ProjectFiles
 PROJINCLUDES=	configure.lua
 
 PROG=		agarpaint
