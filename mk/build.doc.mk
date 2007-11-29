@@ -45,6 +45,8 @@ REFERDB?=
 PS2PDF?=	ps2pdf13
 PS2PDFFLAGS?=
 
+CLEANFILES?=
+
 all: all-subdir ${DOCPS} ${DOCPDF}
 install: install-doc-dirs install-doc install-subdir
 deinstall: deinstall-subdir
@@ -77,6 +79,10 @@ ${DOCPDF}: ${DOCPS}
 
 clean-doc:
 	rm -f ${DOCPS} ${DOCPDF}
+	@if [ "${CLEANFILES}" != "" ]; then \
+	    echo "rm -f ${CLEANFILES}"; \
+	    rm -f ${CLEANFILES}; \
+	fi
 
 .PHONY: install deinstall clean cleandir regress depend
 .PHONY: clean-doc

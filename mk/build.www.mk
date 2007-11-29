@@ -39,6 +39,7 @@ DEF_LANGUAGE?=	en
 XSL?=		${XSLDIR}/ml.xsl
 MKDEPS=		build.www.mk build.subdir.mk build.common.mk hstrip.pl
 HTMLDIR?=	none
+CLEANFILES?=
 
 all: ${HTML} all-subdir
 clean: clean-www clean-subdir
@@ -110,6 +111,10 @@ clean-www:
 			rm -f $$F.$$LANG.* $$F.$$LANG; \
 		done; \
 	done
+	@if [ "${CLEANFILES}" != "" ]; then \
+	    echo "rm -f ${CLEANFILES}"; \
+	    rm -f ${CLEANFILES}; \
+	fi
 
 install-www:
 	@if [ "${HTMLDIR}" = "none" ]; then \

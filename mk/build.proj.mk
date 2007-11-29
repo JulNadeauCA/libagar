@@ -38,6 +38,9 @@ PROJECT?=
 PROJDIR?=	ProjectFiles
 PROJFILESEXTRA?=
 PROJINCLUDES?=${TOP}/configure.lua
+PROJFILELIST=	.projfiles2.out
+PROJPREPKG?=
+PROJPOSTPKG?=
 
 PROJFILES?=	windows:i386:cb-gcc:: \
 		windows:i386:vs6:: \
@@ -103,19 +106,29 @@ proj: proj-subdir
 			exit 1; \
 		fi; \
 	        perl ${TOP}/mk/cmpfiles.pl added > .projfiles.out; \
-		cp -f .projfiles.out .projfiles2.out; \
+		cp -f .projfiles.out ${PROJFILELIST}; \
 	        rm .cmpfiles.out; \
 		if [ "${PROJFILESEXTRA}" != "" ]; then \
 	            for EXTRA in ${PROJFILESEXTRA}; do \
-		        echo "$$EXTRA" >> .projfiles2.out; \
+		        echo "$$EXTRA" >> ${PROJFILELIST}; \
 		    done; \
 		fi; \
-	        echo "config" >> .projfiles2.out; \
+	        echo "config" >> ${PROJFILELIST}; \
 		rm -f ${PROJDIR}/$$_tgtproj-$$_tgtos.zip; \
-		cat .projfiles2.out | ${ZIP} ${ZIPFLAGS} \
+		if [ "${PROJPREPKG}" != "" ]; then \
+			echo "${MAKE} ${PROJPREPKG}"; \
+			env PROJ_OS=$$_tgtos PROJ_ARCH=$$_tgtarch \
+			    PROJ_IDE=$$_tgtproj ${MAKE} ${PROJPREPKG}; \
+		fi; \
+		cat ${PROJFILELIST} | ${ZIP} ${ZIPFLAGS} \
 		    ${PROJDIR}/$$_tgtproj-$$_tgtos-$$_tgtarch$$_tgtflav.zip -@;\
+		if [ "${PROJECT_POSTPKG}" != "" ]; then \
+			echo "${MAKE} ${PROJECT_POSTPKG}"; \
+			env PROJ_OS=$$_tgtos PROJ_ARCH=$$_tgtarch \
+			    PROJ_IDE=$$_tgtproj ${MAKE} ${PROJPOSTPKG}; \
+		fi; \
 		rm `cat .projfiles.out`; \
-		rm -fR config .projfiles.out .projfiles2.out; \
+		rm -fR config .projfiles.out ${PROJFILELIST}; \
 	    done; \
 	fi
 
