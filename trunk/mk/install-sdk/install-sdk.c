@@ -27,39 +27,25 @@
 #include <stdio.h>
 #include <string.h>
 
+#define INSTALL_DIR "C:\\Program Files\\Agar"
+
 int
-main(int argc, char *argv[])
+InstallLibs(const char *dir)
 {
-	char *dir = "C:\\Program Files\\Agar";
-	char subdir[1024];
-	HANDLE h;
+	char dest[1024];
+	char *c, *dstFile;
 	WIN32_FIND_DATA fdata;
 	DWORD rv;
-
-	if (argc > 1) {
-		dir = argv[1];
-	}
-	printf("Installing Agar SDK into %s\n", dir);
-
-	CreateDirectory(dir, NULL);
-	sprintf(subdir, "%s/include", dir);
-	CreateDirectory(subdir, NULL);
-	sprintf(subdir, "%s/lib", dir);
-	CreateDirectory(subdir, NULL);
-	sprintf(subdir, "%s/bin", dir);
-	CreateDirectory(subdir, NULL);
+	HANDLE h;
 
 	if ((h = FindFirstFile(".\\*", &fdata)) == INVALID_HANDLE_VALUE) {
 		printf("Invalid file handle (%d)\n", GetLastError());
-		exit(1);
+		return (-1);
 	}
 	while (FindNextFile(h, &fdata) != 0) {
-		char *dstFile, *c;
-		char dest[1024];
-
-		if ((dstFile = strdup(fdata.cFileName)) == NULL) {
+		if ((dstFile = _strdup(fdata.cFileName)) == NULL) {
 			printf("Out of memory\n");
-			exit(1);
+			return (-1);
 		}
 		if ((c = strrchr(dstFile, '_')) != NULL &&
 		    strcmp(c, "_static.lib") == 0) {
@@ -71,11 +57,11 @@ main(int argc, char *argv[])
 			free(dstFile);
 			continue;
 		}
-		sprintf(dest, "%s/lib/%s", dir, dstFile);
+		sprintf_s(dest, sizeof(dest), "%s\\lib\\%s", dir, dstFile);
 		printf("%s -> %s\n", fdata.cFileName, dest);
 		if (CopyFile(fdata.cFileName, dest, 0) == 0) {
-			printf("%s: copy failed\n", dest);
-			exit(1);
+			printf("%s: CopyFile() failed\n", dest);
+			return (-1);
 		}
 		free(dstFile);
 	}
@@ -83,8 +69,145 @@ main(int argc, char *argv[])
 	FindClose(h);
 	if (rv != ERROR_NO_MORE_FILES) {
 		printf("FindNextFile Error (%lu)\n", rv);
+		return (-1);
+	}
+	return (0);
+}
+
+int
+InstallIncludes(const char *srcDir, const char *dstDir)
+{
+	char path[1024], dest[1024], filename[1024];
+	char *c;
+	WIN32_FIND_DATA fdata;
+	DWORD attrs, rv;
+	HANDLE h;
+	
+	CreateDirectory(dstDir, NULL);
+	printf("> %s\n", srcDir);
+	sprintf_s(path, sizeof(path), "%s\\*", srcDir);
+	if ((h = FindFirstFile(path, &fdata)) == INVALID_HANDLE_VALUE) {
+		printf("Invalid file handle (%d)\n", GetLastError());
+		return (-1);
+	}
+	while (FindNextFile(h, &fdata) != 0) {
+		if (fdata.cFileName[0] == '.') {
+			continue;
+		}
+		if (strcmp(srcDir, ".") == 0) {
+			sprintf_s(path, sizeof(path), "%s", fdata.cFileName);
+		} else {
+			sprintf_s(path, sizeof(path), "%s\\%s", srcDir,
+			    fdata.cFileName);
+		}
+		if ((attrs = GetFileAttributes(path)) ==
+		    INVALID_FILE_ATTRIBUTES) {
+			printf("GetFileAttributes(%s) failed\n", path);
+			continue;
+		}
+		if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
+			sprintf_s(dest, sizeof(dest), "%s\\%s", dstDir,
+			    fdata.cFileName);
+			if (InstallIncludes(path, dest) == -1) {
+				return (-1);
+			}
+			continue;
+		}
+		if ((c = strrchr(path, '.')) == NULL ||
+		    c[1] != 'h' || c[2] != '\0') {
+			continue;
+		}
+
+		sprintf_s(filename, sizeof(filename), "%s", fdata.cFileName);
+		if ((c = strrchr(filename, '_')) != NULL &&
+		    strcmp(c, "_pub.h") == 0) {
+			c[0] = '.'; c[1] = 'h'; c[2] = '\0';
+			sprintf_s(dest, sizeof(dest), "%s\\%s", dstDir,
+			    filename);
+		} else {
+			sprintf_s(dest, sizeof(dest), "%s\\%s", dstDir,
+			    filename);
+		}
+
+		printf("%s -> %s\n", path, dest);
+		if (CopyFile(path, dest, 0) == 0) {
+			printf("%s: CopyFile() failed\n", dest);
+			return (-1);
+		}
+	}
+	rv = GetLastError();
+	FindClose(h);
+	if (rv != ERROR_NO_MORE_FILES) {
+		printf("FindNextFile Error (%lu)\n", rv);
+		return (-1);
+	}
+	return (0);
+}
+
+int
+RemoveEmptyDirs(const char *dir)
+{
+	char path[1024];
+	WIN32_FIND_DATA fdata;
+	DWORD attrs, rv;
+	HANDLE h;
+	
+	sprintf_s(path, sizeof(path), "%s\\*", dir);
+	if ((h = FindFirstFile(path, &fdata)) == INVALID_HANDLE_VALUE) {
+		printf("Invalid file handle (%d)\n", GetLastError());
+		return (-1);
+	}
+	while (FindNextFile(h, &fdata) != 0) {
+		if (fdata.cFileName[0] == '.') {
+			continue;
+		}
+		sprintf_s(path, sizeof(path), "%s\\%s", dir, fdata.cFileName);
+		if ((attrs = GetFileAttributes(path)) ==
+		    INVALID_FILE_ATTRIBUTES) {
+			printf("GetFileAttributes(%s) failed\n", path);
+			continue;
+		}
+		if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
+			if (RemoveEmptyDirs(path) == -1)
+				return (-1);
+		}
+	}
+	rv = GetLastError();
+	FindClose(h);
+	if (rv != ERROR_NO_MORE_FILES) {
+		printf("FindNextFile Error (%lu)\n", rv);
+		return (-1);
+	}
+	RemoveDirectory(dir);
+	return (0);
+}
+
+int
+main(int argc, char *argv[])
+{
+	char *dir = INSTALL_DIR;
+	char libdir[1024], incldir[1024];
+
+	if (argc > 1) {
+		dir = argv[1];
+	}
+	printf("Installing Agar SDK into %s\n", dir);
+
+	CreateDirectory(dir, NULL);
+	sprintf_s(incldir, sizeof(incldir), "%s\\include", dir);
+	CreateDirectory(incldir, NULL);
+	sprintf_s(libdir, sizeof(libdir), "%s\\lib", dir);
+	CreateDirectory(libdir, NULL);
+
+	if (InstallLibs(dir) == -1) {
+		printf("Failed to install libraries\n");
 		exit(1);
 	}
+	if (InstallIncludes(".", incldir) == -1) {
+		printf("Failed to install includes\n");
+		exit(1);
+	}
+	RemoveEmptyDirs(incldir);
 	exit(0);
 }
 
