@@ -36,6 +36,7 @@ POTFILES?=	POTFILES
 SRC?=		..
 POS?=
 MOS?=
+CLEANFILES?=
 
 .SUFFIXES: .c .po .pox .mo
 
@@ -92,9 +93,13 @@ ${DOMAIN}.pot: ${POTFILES}
 	fi
 
 clean-po:
-	if [ "${POTFILES}" != "" -o "${MOS}" != "" ]; then \
+	@if [ "${POTFILES}" != "" -o "${MOS}" != "" ]; then \
 		echo "rm -f ${POTFILES} ${MOS}"; \
 		rm -f ${POTFILES} ${MOS}; \
+	fi
+	@if [ "${CLEANFILES}" != "" ]; then \
+	    echo "rm -f ${CLEANFILES}"; \
+	    rm -f ${CLEANFILES}; \
 	fi
 
 install-po:

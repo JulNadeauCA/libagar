@@ -50,6 +50,7 @@ MANS=${MAN1} ${MAN2} ${MAN3} ${MAN4} ${MAN5} ${MAN6} ${MAN7} ${MAN8} ${MAN9}
 MANLINKS?=
 NOMAN?=
 NOMANLINKS?=
+CLEANFILES?=
 
 all: all-subdir preformat-man
 install: install-man-dirs install-man install-subdir
@@ -259,6 +260,10 @@ clean-man:
 	     else \
 	         rm -f ${CATMAN9}; \
 	     fi; \
+	fi
+	@if [ "${CLEANFILES}" != "" ]; then \
+	    echo "rm -f ${CLEANFILES}"; \
+	    rm -f ${CLEANFILES}; \
 	fi
 
 install-man-dirs:

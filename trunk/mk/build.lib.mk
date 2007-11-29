@@ -70,6 +70,7 @@ OBJS?=none
 SHOBJS?=none
 INCL?=none
 INCLDIR?=
+CLEANFILES?=
 
 all: all-subdir lib${LIB}.a lib${LIB}.la
 install: install-lib install-subdir
