@@ -19,7 +19,7 @@ SUBDIR=	 agar-config \
 	 po
 
 all: all-subdir
-clean: clean-subdir
+clean: clean-config clean-subdir
 cleandir: cleandir-config cleandir-subdir
 install: install-subdir install-includes
 deinstall: deinstall-subdir deinstall-includes
@@ -29,6 +29,9 @@ regress: regress-subdir
 configure:
 	cat configure.in | mkconfigure > configure
 	chmod 755 configure
+
+clean-config:
+	rm -f configure.lua
 
 cleandir-config:
 	rm -fr config config.log Makefile.config .projfiles.out .projfiles2.out
