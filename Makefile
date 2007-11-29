@@ -3,8 +3,8 @@ include ${TOP}/Makefile.config
 
 PROJECT=	"Agar"
 PROJECT_GUID=	"93733df2-c743-489e-bc9f-f22aee00d787"
-PROJPREPKG=	project-prepkg
-PROJPOSTPKG=	project-postpkg
+PROJPREPKG=	pre-package
+PROJPOSTPKG=	post-package
 
 include ${TOP}/Makefile.proj
 
@@ -136,27 +136,47 @@ deinstall-includes:
 		    | ${SUDO} ${SH}); \
 	fi
 
-project-prepkg:
-	@if [ "${PROJ_OS}" = "windows" ]; then \
+pre-package:
+	@if [ "${PKG_OS}" = "windows" ]; then \
 		cp -f ${TOP}/mk/install-sdk/install-sdk.exe .; \
 		echo '<meta http-equiv="refresh" content="1;url=http://libagar.org/docs/compile-msvc.html" />' > VisualC.html; \
 		echo "install-sdk.exe" >> ${PROJFILELIST}; \
 		if [ -e "`which unix2dos 2>/dev/null`" ]; then \
+			V=`perl mk/get-version.pl`; \
 			unix2dos -n README README.txt; \
 			unix2dos -n INSTALL INSTALL.txt; \
+			unix2dos -n ChangeLogs/Release-$$V RELEASE-$$V.txt; \
+			unix2dos -n mk/LICENSE.txt LICENSE.txt; \
+			unix2dos -n gui/fonts/Vera-Copyright.txt \
+			    LICENSE-Vera.txt; \
+			cp -f mk/agar-logo.png Logo.png; \
 			echo "README.txt" >> ${PROJFILELIST}; \
 			echo "INSTALL.txt" >> ${PROJFILELIST}; \
+			echo "RELEASE-$$V.txt" >> ${PROJFILELIST}; \
+			echo "LICENSE.txt" >> ${PROJFILELIST}; \
+			echo "LICENSE-Vera.txt" >> ${PROJFILELIST}; \
+			echo "Logo.png" >> ${PROJFILELIST}; \
 		fi; \
+	else \
+		V=`perl mk/get-version.pl`; \
+		cp ChangeLogs/Release-$$V RELEASE-$$V; \
+		cp ChangeLogs/ChangeLog-$$V ChangeLog-$$V; \
+		cp mk/LICENSE.txt LICENSE; \
+		cp gui/fonts/Vera-Copyright.txt LICENSE-Vera; \
+		cp mk/agar-logo.png Logo.png; \
 	fi
 
-project-postpkg:
-	@if [ "${PROJ_OS}" = "windows" ]; then \
+post-package:
+	@if [ "${PKG_OS}" = "windows" ]; then \
 		rm -f install-sdk.exe README.txt INSTALL.txt VisualC.html; \
+		rm -f RELEASE-*.txt LICENSE.txt License-Vera.txt Logo.png; \
+	else \
+		rm -f Release-* ChangeLog-* LICENSE LICENSE-Vera Logo.png; \
 	fi
 
 .PHONY: clean cleandir install deinstall depend regress
 .PHONY: configure cleandir-config package snapshot release fastclean
-.PHONY: install-includes deinstall-includes project-prepkg project-postpkg
+.PHONY: install-includes deinstall-includes pre-package post-package
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk
