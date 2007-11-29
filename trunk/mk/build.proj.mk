@@ -117,15 +117,15 @@ proj: proj-subdir
 		rm -f ${PROJDIR}/$$_tgtproj-$$_tgtos.zip; \
 		if [ "${PROJPREPKG}" != "" ]; then \
 			echo "${MAKE} ${PROJPREPKG}"; \
-			env PROJ_OS=$$_tgtos PROJ_ARCH=$$_tgtarch \
-			    PROJ_IDE=$$_tgtproj ${MAKE} ${PROJPREPKG}; \
+			env PKG_OS=$$_tgtos PKG_ARCH=$$_tgtarch \
+			    PKG_IDE=$$_tgtproj ${MAKE} ${PROJPREPKG}; \
 		fi; \
 		cat ${PROJFILELIST} | ${ZIP} ${ZIPFLAGS} \
 		    ${PROJDIR}/$$_tgtproj-$$_tgtos-$$_tgtarch$$_tgtflav.zip -@;\
-		if [ "${PROJECT_POSTPKG}" != "" ]; then \
-			echo "${MAKE} ${PROJECT_POSTPKG}"; \
-			env PROJ_OS=$$_tgtos PROJ_ARCH=$$_tgtarch \
-			    PROJ_IDE=$$_tgtproj ${MAKE} ${PROJPOSTPKG}; \
+		if [ "${PROJPOSTPKG}" != "" ]; then \
+			echo "${MAKE} ${PROJPOSTPKG}"; \
+			env PKG_OS=$$_tgtos PKG_ARCH=$$_tgtarch \
+			    PKG_IDE=$$_tgtproj ${MAKE} ${PROJPOSTPKG}; \
 		fi; \
 		rm `cat .projfiles.out`; \
 		rm -fR config .projfiles.out ${PROJFILELIST}; \
