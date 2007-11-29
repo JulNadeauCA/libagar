@@ -3,6 +3,8 @@ include ${TOP}/Makefile.config
 
 PROJECT=	"Agar"
 PROJECT_GUID=	"93733df2-c743-489e-bc9f-f22aee00d787"
+PROJPREPKG=	project-prepkg
+PROJPOSTPKG=	project-postpkg
 
 include ${TOP}/Makefile.proj
 
@@ -134,9 +136,27 @@ deinstall-includes:
 		    | ${SUDO} ${SH}); \
 	fi
 
+project-prepkg:
+	@if [ "${PROJ_OS}" = "windows" ]; then \
+		cp -f ${TOP}/mk/install-sdk/install-sdk.exe .; \
+		echo '<meta http-equiv="refresh" content="1;url=http://libagar.org/docs/compile-msvc.html" />' > VisualC.html; \
+		echo "install-sdk.exe" >> ${PROJFILELIST}; \
+		if [ -e "`which unix2dos 2>/dev/null`" ]; then \
+			unix2dos -n README README.txt; \
+			unix2dos -n INSTALL INSTALL.txt; \
+			echo "README.txt" >> ${PROJFILELIST}; \
+			echo "INSTALL.txt" >> ${PROJFILELIST}; \
+		fi; \
+	fi
+
+project-postpkg:
+	@if [ "${PROJ_OS}" = "windows" ]; then \
+		rm -f install-sdk.exe README.txt INSTALL.txt VisualC.html; \
+	fi
+
 .PHONY: clean cleandir install deinstall depend regress
 .PHONY: configure cleandir-config package snapshot release fastclean
-.PHONY: install-includes deinstall-includes
+.PHONY: install-includes deinstall-includes project-prepkg project-postpkg
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk
