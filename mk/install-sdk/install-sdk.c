@@ -41,17 +41,17 @@ main(int argc, char *argv[])
 	}
 	printf("Installing Agar SDK into %s\n", dir);
 
-	CreateDirectory(dir);
+	CreateDirectory(dir, NULL);
 	sprintf(subdir, "%s/include", dir);
-	CreateDirectory(subdir);
+	CreateDirectory(subdir, NULL);
 	sprintf(subdir, "%s/lib", dir);
-	CreateDirectory(subdir);
+	CreateDirectory(subdir, NULL);
 	sprintf(subdir, "%s/bin", dir);
-	CreateDirectory(subdir);
+	CreateDirectory(subdir, NULL);
 
 	if ((h = FindFirstFile(".\\*", &fdata)) == INVALID_HANDLE_VALUE) {
-		AG_SetError("Invalid file handle (%d)", GetLastError());
-		goto fail;
+		printf("Invalid file handle (%d)\n", GetLastError());
+		exit(1);
 	}
 	while (FindNextFile(h, &fdata) != 0) {
 		char *dstFile, *c;
@@ -63,7 +63,7 @@ main(int argc, char *argv[])
 		}
 		if ((c = strrchr(dstFile, '_')) != NULL &&
 		    strcmp(c, "_static.lib") == 0) {
-			c[0] = '.'; c[1] = 'd'; c[2] = 'l'; c[3] = 'l';
+			c[0] = '.'; c[1] = 'l'; c[2] = 'i'; c[3] = 'b';
 			c[4] = '\0';
 		} else if ((c = strrchr(dstFile, '.')) != NULL &&
 		    strcmp(c, ".dll") == 0) {
@@ -71,9 +71,9 @@ main(int argc, char *argv[])
 			free(dstFile);
 			continue;
 		}
-		sprintf(dest, "%s/%s", dir, dstFile);
+		sprintf(dest, "%s/lib/%s", dir, dstFile);
 		printf("%s -> %s\n", fdata.cFileName, dest);
-		if (CopyFile(fdata.cFileName, dest) == 0) {
+		if (CopyFile(fdata.cFileName, dest, 0) == 0) {
 			printf("%s: copy failed\n", dest);
 			exit(1);
 		}
@@ -82,9 +82,9 @@ main(int argc, char *argv[])
 	rv = GetLastError();
 	FindClose(h);
 	if (rv != ERROR_NO_MORE_FILES) {
-		AG_SetError("FindNextFileError (%lu)", rv);
-		goto fail;
+		printf("FindNextFile Error (%lu)\n", rv);
+		exit(1);
 	}
-	return (0);
+	exit(0);
 }
 
