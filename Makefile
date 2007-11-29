@@ -3,14 +3,8 @@ include ${TOP}/Makefile.config
 
 PROJECT=	"Agar"
 PROJECT_GUID=	"93733df2-c743-489e-bc9f-f22aee00d787"
-PROJFILES=	windows:i386:cb-gcc:: \
-		windows:i386:vs6:: \
-		windows:i386:vs2002:: \
-		windows:i386:vs2003:: \
-		windows:i386:vs2005:: \
-		windows:i386:vs2005:-nofreetype:--without-freetype \
-		windows:i386:vs2005:-nothreads:--disable-threads \
-		windows:i386:vs2005:-nofreetype,nothreads:--without-freetype,--disable-threads
+
+include ${TOP}/Makefile.proj
 
 SUBDIR=	 agar-config \
 	 core \
