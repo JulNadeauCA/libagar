@@ -122,7 +122,7 @@ InstallIncludes(const char *srcDir, const char *dstDir)
 		if ((c = strrchr(filename, '_')) != NULL &&
 		    strcmp(c, "_pub.h") == 0) {
 			c[0] = '.'; c[1] = 'h'; c[2] = '\0';
-			sprintf_s(dest, sizeof(dest), "%s\\%s", dstDir,
+			sprintf_s(dest, sizeof(dest), "%s\\..\\%s", dstDir,
 			    filename);
 		} else {
 			sprintf_s(dest, sizeof(dest), "%s\\%s", dstDir,
@@ -196,6 +196,9 @@ main(int argc, char *argv[])
 	CreateDirectory(dir, NULL);
 	sprintf_s(incldir, sizeof(incldir), "%s\\include", dir);
 	CreateDirectory(incldir, NULL);
+	sprintf_s(incldir, sizeof(incldir), "%s\\include\\agar", dir);
+	CreateDirectory(incldir, NULL);
+
 	sprintf_s(libdir, sizeof(libdir), "%s\\lib", dir);
 	CreateDirectory(libdir, NULL);
 
