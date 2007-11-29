@@ -40,7 +40,13 @@ prereq:
 		touch $$D/Makefile.config; \
 	done
 
-.PHONY: clean cleandir install deinstall depend configure configure-scripts prereq
+proj:
+	for D in ${SUBDIR}; do \
+		echo "==> $$D"; \
+		(cd $$D && ${MAKE} proj); \
+	done
+
+.PHONY: clean cleandir install deinstall depend configure configure-scripts prereq proj
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk
