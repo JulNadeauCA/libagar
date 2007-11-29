@@ -2,8 +2,8 @@
 Prerequisites
 -------------
 Agar currently requires the SDL (http://www.libsdl.org/). Note: this
-requirement will be removed Agar-1.4, as SDL code will be moved to a
-module.
+requirement will be dropped Agar-1.4, as SDL code will be moved to a
+specific module.
 
 Options
 -------
@@ -15,34 +15,41 @@ Options
 - The GL rendering mode requires OpenGL. Agar can be compiled with runtime
   support for both SDL and OpenGL modes.
 
-- The optional "screenshot" feature requires the jpeg library, available
-  from ftp://ftp.uu.net/graphics/jpeg/.
-
 - Threads support (--enable-threads) requires a POSIX threads interface
   which conforms to SUSv2 (i.e., recursive mutexes are needed).
 
-Installation
-------------
-1) Execute the configure script (use `./configure --help' for options;
-   in particular, you may want to use --without-manpages to speed up the
-   build if you do not want manual pages).
+Installation under Unix
+-----------------------
+1) Execute the configure script. See `./configure --help' for options.
     $ ./configure
 
 2) Compile the libraries and executables.
     $ make depend all
     # make install
 
-3) Let the developers know of your success/failure.
+3) Let the developers know of your success/failure. If you happen to run
+   into trouble, please set a valid return address so we can respond.
     $ cat config.log | mail -s "compiles fine" compile@libagar.org
 
-Alternative method: Concurrent building
----------------------------------------
-It is possible to build Agar outside of the source directory. Developers
-will generally prefer this method, since it results in a faster build,
-does not clutter the source directories with object files and facilitates
-testing on multiple machines using network filesystems. The inconvenient
-of concurrent building is that configure needs to be rerun whenever a
-Makefile is modified.
+Installation under SGI IRIX
+---------------------------
+Under IRIX, we recommend using gcc3 (or SGI cc) because of gcc 2.95 issues
+with varargs. There are .tardist packages for gcc3, SDL and freetype
+available from: http://www.nekochan.net/.
+
+Installation under Windows
+--------------------------
+Under Windows, Agar can be compiled under Microsoft Visual Studio, Cygwin
+and MSYS. We also provide precompiled DLL and LIB files. See "Platform 
+specific notes" section of the Agar website at http://libagar.org/docs/
+for more information.
+
+Concurrent building
+-------------------
+Under Unix, it is possible to build Agar outside of the source directory.
+Developers will generally prefer this method, since it results in a faster
+build, does not clutter the source directories with object files and
+facilitates testing on multiple machines using network filesystems.
 
 1) Create the build directory. When available, a memory filesystem is
    a good location to build from.
