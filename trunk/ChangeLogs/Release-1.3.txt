@@ -146,4 +146,5 @@ list of all changes, see ChangeLog-1.3.txt.
 - The manual pages now include a "STRUCTURE DATA" section for structures that
   make some of their members public; suggestion by Julien Clement.
 - GUI: Introduce AG_Rect structure.
+- GUI: New widget: AG_ProgressBar(3).
 
