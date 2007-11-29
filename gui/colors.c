@@ -123,6 +123,7 @@ const char *agColorNames[] = {
 	N_("Socket"),
 	N_("Socket label"),
 	N_("Socket highlight"),
+	N_("Progress bar"),
 };
 
 void
@@ -208,6 +209,7 @@ AG_ColorsInit(void)
 	agColors[SOCKET_COLOR] = agColors[FRAME_COLOR];
 	agColors[SOCKET_LABEL_COLOR] = agColors[TEXT_COLOR];
 	agColors[SOCKET_HIGHLIGHT_COLOR] = SDL_MapRGB(agVideoFmt, 200, 0, 0);
+	agColors[PROGRESS_BAR_COLOR] = SDL_MapRGB(agVideoFmt, 50, 50, 120);
 
 	agColorsBorder[0] = SDL_MapRGB(agVideoFmt, 92, 92, 92);
 	agColorsBorder[1] = SDL_MapRGB(agVideoFmt, 80, 80, 75);

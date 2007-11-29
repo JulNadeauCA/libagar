@@ -50,6 +50,7 @@
 #include "objsel.h"
 #include "pane.h"
 #include "pixmap.h"
+#include "progress_bar.h"
 #include "radio.h"
 #include "scrollbar.h"
 #include "separator.h"
@@ -101,6 +102,7 @@ void *agGUIClasses[] = {
 	&agObjectSelectorClass,
 	&agPaneClass,
 	&agPixmapClass,
+	&agProgressBarClass,
 	&agRadioClass,
 	&agScrollbarClass,
 	&agSeparatorClass,
