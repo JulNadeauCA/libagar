@@ -4,6 +4,8 @@
 #	Public domain
 
 PROJ=agar
+MAILLIST_EN=${PROJ}-announce@lists.csoft.org
+MAILLIST_FR=${PROJ}-announce-fr@lists.csoft.org
 VER=`perl mk/get-version.pl`
 REL=`perl mk/get-release.pl`
 DISTFILE=${PROJ}-${VER}
@@ -52,7 +54,7 @@ if [ "$1" = "commit" -o "$1" = "snapshot" ]; then
 	TMP=`mktemp /tmp/${PROJ}announceXXXXXXXX`
 	cat > $TMP << EOF
 From: Julien Nadeau <vedge@hypertriton.com>
-To: ${PROJ}-announce@lists.csoft.net
+To: ${MAILLIST_EN}
 Subject: ${PROJ}-${VER} (${REL}) released
 X-Mailer: dist.sh
 X-PGP-Key: 206C63E6
@@ -74,14 +76,19 @@ Binary packages are also available from the ${PROJ} website:
 	http://hypertriton.com/${PROJ}/download.html.
 
 Your comments, suggestions and bug reports are most welcome.
+
 EOF
+	if [ -e "Release-${VER}.txt" ]; then
+		echo "appending release notes"
+		cat Release-${VER}.txt >> $TMP;
+	fi
 	cat $TMP | ${MAILER}
 
 	echo "notifying ${PROJ}-announce-fr@"
 	TMP=`mktemp /tmp/${PROJ}announceXXXXXXXX`
 	cat > $TMP << EOF
 From: Julien Nadeau <vedge@hypertriton.com>
-To: ${PROJ}-announce@lists.csoft.net
+To: ${MAILLIST_FR}
 Subject: Nouvelle version: ${PROJ} ${VER} (${REL})
 X-Mailer: announce.sh
 X-PGP-Key: 206C63E6
@@ -105,6 +112,10 @@ Des paquets binaires sont également disponibles sur le site de ${PROJ}:
 Vos commentaires, suggestions et signalements de bogues sont, comme
 toujours, fortement appréciés.
 EOF
+	if [ -e "Release-${VER}.txt" ]; then
+		echo "appending release notes"
+		cat Release-${VER}.txt >> $TMP;
+	fi
 	cat $TMP | ${MAILER}
 	rm -f $TMP
 fi
