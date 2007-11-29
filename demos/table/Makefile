@@ -1,6 +1,11 @@
 TOP=	../..
 include Makefile.config
 
+PROJECT=	"table"
+PROG_TYPE=	"GUI"
+PROG_GUID=	"A95B56E7-00FD-4390-9D87-E69F2C101BDF"
+PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
+
 PROG=	table
 SRCS=	table.c
 
