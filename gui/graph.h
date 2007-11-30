@@ -20,15 +20,17 @@
 
 struct ag_graph_edge;
 
+enum ag_graph_vertex_style {	/* Vertex style */
+	AG_GRAPH_RECTANGLE,	/* Rectangular box */
+	AG_GRAPH_CIRCLE,	/* Circle */
+};
+
 typedef struct ag_graph_vertex {
 	char labelTxt[AG_GRAPH_LABEL_MAX]; /* Label text */
 	int  labelSu;			/* Text surface handle */
 	Uint32 labelColor;		/* Text color (surfaceFmt) */
 	Uint32 bgColor;			/* Background color (surfaceFmt) */
-	enum ag_graph_vertex_style {	/* Vertex style */
-		AG_GRAPH_RECTANGLE,	/* Rectangular box */
-		AG_GRAPH_CIRCLE,	/* Circle */
-	} style;
+	enum ag_graph_vertex_style style; /* Vertex style */
 	Uint flags;
 #define AG_GRAPH_MOUSEOVER	0x01
 #define AG_GRAPH_SELECTED	0x02
