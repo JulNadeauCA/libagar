@@ -13,7 +13,8 @@ SUBDIR=	fixedres \
 	unitconv \
 	sockets \
 	glview \
-	gunpowder
+	gunpowder \
+	cplusplus
 
 all: all-subdir
 clean: prereq clean-subdir
