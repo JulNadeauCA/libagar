@@ -7,16 +7,17 @@
 struct ag_window;
 struct ag_toolbar;
 
+enum rg_fill_type {
+	FILL_SOLID,
+	FILL_HGRADIENT,
+	FILL_VGRADIENT,
+	FILL_CGRADIENT,
+	FILL_PATTERN
+};
+
 struct rg_fill_feature {
 	RG_Feature ft;
-
-	enum fill_type {
-		FILL_SOLID,
-		FILL_HGRADIENT,
-		FILL_VGRADIENT,
-		FILL_CGRADIENT,
-		FILL_PATTERN
-	} type;
+	enum rg_fill_type type;
 	Uint8 alpha;
 	union {
 		struct {

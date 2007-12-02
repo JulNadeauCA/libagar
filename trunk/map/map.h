@@ -112,12 +112,14 @@ typedef struct map_camera {
 	int pixsz;				/* Scaled pixel size */
 } MAP_Camera;
 
+enum map_mod_type {
+	AG_MAPMOD_NODECHG,
+	AG_MAPMOD_LAYERADD,
+	AG_MAPMOD_LAYERDEL
+};
+
 typedef struct map_mod {
-	enum {
-		AG_MAPMOD_NODECHG,
-		AG_MAPMOD_LAYERADD,
-		AG_MAPMOD_LAYERDEL
-	} type;
+	enum map_mod_type type;
 	union {
 		struct {
 			MAP_Node node;

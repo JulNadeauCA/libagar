@@ -77,7 +77,7 @@ RG_FillLoad(void *p, AG_DataSource *buf)
 	if (AG_ReadVersion(buf, "RG_Feature:RG_Fill", &rgFillVer, NULL) == -1)
 		return (-1);
 
-	f->type = (enum fill_type)AG_ReadUint8(buf);
+	f->type = (enum rg_fill_type)AG_ReadUint8(buf);
 	switch (f->type) {
 	case FILL_SOLID:
 		f->f_solid.c = AG_ReadColor(buf, ts->fmt);

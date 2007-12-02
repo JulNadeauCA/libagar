@@ -140,9 +140,9 @@ __END_DECLS
 	(eev)->argn[(eev)->argc] = (aname);			\
 	(eev)->argc++;						\
 }
-#define AG_EVENT_INS_ARG(eev,ap,tname,member,type) { 		\
+#define AG_EVENT_INS_ARG(eev,ap,tname,member,t) { 		\
 	AG_EVENT_BOUNDARY_CHECK(eev)				\
-	(eev)->argv[(eev)->argc].member = va_arg(ap, type);	\
+	(eev)->argv[(eev)->argc].member = va_arg(ap, t);	\
 	(eev)->argt[(eev)->argc] = (tname);			\
 	(eev)->argn[(eev)->argc] = "";				\
 	(eev)->argc++;						\

@@ -40,8 +40,8 @@ typedef struct ag_combo {
 
 #define AG_COMBO_FOREACH(it, com) \
 	AG_TLIST_FOREACH(it, (com)->list)
-#define AG_COMBO_FOREACH_ITEM(p, com, it, type) \
-	AG_TLIST_FOREACH_ITEM((p),(com)->list, it, type)
+#define AG_COMBO_FOREACH_ITEM(p, com, it, t) \
+	AG_TLIST_FOREACH_ITEM((p),(com)->list, it, t)
 
 __BEGIN_DECLS
 extern AG_WidgetClass agComboClass;

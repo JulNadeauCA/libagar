@@ -37,7 +37,9 @@ typedef struct ag_scrollbar {
 
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollbarClass;
+
 AG_Scrollbar *AG_ScrollbarNew(void *, enum ag_scrollbar_type, Uint);
+int           AG_ScrollbarVisible(AG_Scrollbar *);
 
 static __inline__ void
 AG_ScrollbarSetBarSize(AG_Scrollbar *sb, int bsize)
@@ -48,30 +50,6 @@ static __inline__ void
 AG_ScrollbarGetBarSize(AG_Scrollbar *sb, int *bsize)
 {
 	*bsize = sb->barSz;
-}
-
-static __inline__ int
-AG_ScrollbarVisible(AG_Scrollbar *sb)
-{
-	int min, max;
-
-	switch (sb->type) {
-	case AG_SCROLLBAR_VERT:
-		if (AGWIDGET(sb)->w < sb->bw ||
-		    AGWIDGET(sb)->h < sb->bw*2 + sb->barSz) {
-			return (0);
-		}
-		break;
-	case AG_SCROLLBAR_HORIZ:
-		if (AGWIDGET(sb)->w < sb->bw*2 + sb->barSz ||
-		    AGWIDGET(sb)->h < sb->bw) {
-			return (0);
-		}
-		break;
-	}
-	min = AG_WidgetInt(sb, "min");
-	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
-	return (max > 0 && max >= min);
 }
 __END_DECLS
 
