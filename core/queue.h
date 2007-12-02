@@ -84,17 +84,17 @@
 /*
  * Singly-linked List definitions.
  */
-#define AG_SLIST_HEAD(name, type)					\
+#define AG_SLIST_HEAD(name, t)						\
 struct name {								\
-	struct type *slh_first;	/* first element */			\
+	struct t *slh_first;	/* first element */			\
 }
  
 #define	AG_SLIST_HEAD_INITIALIZER(head)					\
 	{ NULL }
  
-#define AG_SLIST_ENTRY(type)						\
+#define AG_SLIST_ENTRY(t)						\
 struct {								\
-	struct type *sle_next;	/* next element */			\
+	struct t *sle_next;	/* next element */			\
 }
  
 /*
@@ -131,12 +131,12 @@ struct {								\
 	(head)->slh_first = (head)->slh_first->field.sle_next;		\
 } while (0)
 
-#define AG_SLIST_REMOVE(head, elm, type, field) do {			\
+#define AG_SLIST_REMOVE(head, elm, t, field) do {			\
 	if ((head)->slh_first == (elm)) {				\
 		AG_SLIST_REMOVE_HEAD((head), field);			\
 	}								\
 	else {								\
-		struct type *curelm = (head)->slh_first;		\
+		struct t *curelm = (head)->slh_first;			\
 		while( curelm->field.sle_next != (elm) )		\
 			curelm = curelm->field.sle_next;		\
 		curelm->field.sle_next =				\
@@ -147,18 +147,18 @@ struct {								\
 /*
  * List definitions.
  */
-#define AG_LIST_HEAD(name, type)					\
+#define AG_LIST_HEAD(name, t)						\
 struct name {								\
-	struct type *lh_first;	/* first element */			\
+	struct t *lh_first;	/* first element */			\
 }
 
 #define AG_LIST_HEAD_INITIALIZER(head)					\
 	{ NULL }
 
-#define AG_LIST_ENTRY(type)						\
+#define AG_LIST_ENTRY(t)						\
 struct {								\
-	struct type *le_next;	/* next element */			\
-	struct type **le_prev;	/* address of previous next element */	\
+	struct t *le_next;	/* next element */			\
+	struct t **le_prev;	/* address of previous next element */	\
 }
 
 /*
@@ -221,18 +221,18 @@ struct {								\
 /*
  * Simple queue definitions.
  */
-#define AG_SIMPLEQ_HEAD(name, type)					\
+#define AG_SIMPLEQ_HEAD(name, t)					\
 struct name {								\
-	struct type *sqh_first;	/* first element */			\
-	struct type **sqh_last;	/* addr of last next element */		\
+	struct t *sqh_first;	/* first element */			\
+	struct t **sqh_last;	/* addr of last next element */		\
 }
 
 #define AG_SIMPLEQ_HEAD_INITIALIZER(head)				\
 	{ NULL, &(head).sqh_first }
 
-#define AG_SIMPLEQ_ENTRY(type)						\
+#define AG_SIMPLEQ_ENTRY(t)						\
 struct {								\
-	struct type *sqe_next;	/* next element */			\
+	struct t *sqe_next;	/* next element */			\
 }
 
 /*
@@ -282,19 +282,19 @@ struct {								\
 /*
  * Tail queue definitions.
  */
-#define AG_TAILQ_HEAD(name, type)					\
+#define AG_TAILQ_HEAD(name, t)						\
 struct name {								\
-	struct type *tqh_first;	/* first element */			\
-	struct type **tqh_last;	/* addr of last next element */		\
+	struct t *tqh_first;	/* first element */			\
+	struct t **tqh_last;	/* addr of last next element */		\
 }
 
 #define AG_TAILQ_HEAD_INITIALIZER(head)					\
 	{ NULL, &(head).tqh_first }
 
-#define AG_TAILQ_ENTRY(type)						\
+#define AG_TAILQ_ENTRY(t)						\
 struct {								\
-	struct type *tqe_next;	/* next element */			\
-	struct type **tqe_prev;	/* address of previous next element */	\
+	struct t *tqe_next;	/* next element */			\
+	struct t **tqe_prev;	/* address of previous next element */	\
 }
 
 /* 
@@ -385,19 +385,19 @@ struct {								\
 /*
  * Circular queue definitions.
  */
-#define AG_CIRCLEQ_HEAD(name, type)					\
+#define AG_CIRCLEQ_HEAD(name, t)					\
 struct name {								\
-	struct type *cqh_first;		/* first element */		\
-	struct type *cqh_last;		/* last element */		\
+	struct t *cqh_first;		/* first element */		\
+	struct t *cqh_last;		/* last element */		\
 }
 
 #define AG_CIRCLEQ_HEAD_INITIALIZER(head)				\
 	{ AG_CIRCLEQ_END(&head), AG_CIRCLEQ_END(&head) }
 
-#define AG_CIRCLEQ_ENTRY(type)						\
+#define AG_CIRCLEQ_ENTRY(t)						\
 struct {								\
-	struct type *cqe_next;		/* next element */		\
-	struct type *cqe_prev;		/* previous element */		\
+	struct t *cqe_next;		/* next element */		\
+	struct t *cqe_prev;		/* previous element */		\
 }
 
 /*

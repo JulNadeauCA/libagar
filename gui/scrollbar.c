@@ -86,6 +86,30 @@ Init(void *obj)
 	AG_SetEvent(sb, "window-mousemotion", MouseMotion, NULL);
 }
 
+int
+AG_ScrollbarVisible(AG_Scrollbar *sb)
+{
+	int min, max;
+
+	switch (sb->type) {
+	case AG_SCROLLBAR_VERT:
+		if (AGWIDGET(sb)->w < sb->bw ||
+		    AGWIDGET(sb)->h < sb->bw*2 + sb->barSz) {
+			return (0);
+		}
+		break;
+	case AG_SCROLLBAR_HORIZ:
+		if (AGWIDGET(sb)->w < sb->bw*2 + sb->barSz ||
+		    AGWIDGET(sb)->h < sb->bw) {
+			return (0);
+		}
+		break;
+	}
+	min = AG_WidgetInt(sb, "min");
+	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
+	return (max > 0 && max >= min);
+}
+
 /* Clicked or dragged mouse to coord, so adjust value */
 static void
 MoveBar(AG_Scrollbar *sb, int x, int totalsize)

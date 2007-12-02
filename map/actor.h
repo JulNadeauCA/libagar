@@ -27,17 +27,19 @@ typedef struct map_actor_class {
 	void (*joybutton)(void *, int dev, int button, int state);
 } MAP_ActorClass;
 
+enum map_actor_type {
+	AG_ACTOR_NONE,
+	AG_ACTOR_MAP,
+	AG_ACTOR_SCENE
+};
+
 typedef struct map_actor {
 	struct ag_object obj;
 	AG_Mutex lock;
 	int flags;
 #define AG_ACTOR_SAVED_FLAGS	0x00
 	MAP *parent;			/* Parent map (or NULL) */
-	enum map_actor_type {
-		AG_ACTOR_NONE,
-		AG_ACTOR_MAP,
-		AG_ACTOR_SCENE
-	} type;
+	enum map_actor_type type;
 	union {
 		struct {
 			int x, y, l0, l1;	/* Destination position */

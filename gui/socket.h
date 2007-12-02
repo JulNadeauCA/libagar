@@ -15,6 +15,12 @@
 
 struct ag_icon;
 
+enum ag_socket_bg_type {
+	AG_SOCKET_PIXMAP,	/* Pixmap background */
+	AG_SOCKET_RECT,		/* Generic rectangular background */
+	AG_SOCKET_CIRCLE	/* Generic circular background */
+};
+
 typedef struct ag_socket {
 	struct ag_widget wid;
 	int state;			/* Default boolean state binding */
@@ -25,11 +31,7 @@ typedef struct ag_socket {
 #define AG_SOCKET_EXPAND	(AG_SOCKET_HFILL|AG_SOCKET_VFILL)
 #define AG_SOCKET_MOUSEOVER	0x04
 #define AG_SOCKET_STICKY_STATE	0x08
-	enum ag_socket_bg_type {
-		AG_SOCKET_PIXMAP,	/* Pixmap background */
-		AG_SOCKET_RECT,		/* Generic rectangular background */
-		AG_SOCKET_CIRCLE	/* Generic circular background */
-	} bgType;
+	enum ag_socket_bg_type bgType;
 	union {
 		struct {
 			int s;		/* Pixmap surface handle */

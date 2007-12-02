@@ -25,17 +25,19 @@
 
 #include "begin_code.h"
 
+enum ag_file_type_option_type {
+	AG_FILEDLG_BOOL,
+	AG_FILEDLG_INT,
+	AG_FILEDLG_FLOAT,
+	AG_FILEDLG_DOUBLE,
+	AG_FILEDLG_STRING
+};
+
 typedef struct ag_file_type_option {
 	const char *descr;
 	const char *key;
 	const char *unit;
-	enum {
-		AG_FILEDLG_BOOL,
-		AG_FILEDLG_INT,
-		AG_FILEDLG_FLOAT,
-		AG_FILEDLG_DOUBLE,
-		AG_FILEDLG_STRING
-	} type;
+	enum ag_file_type_option_type type;
 	union {
 		struct { int val, min, max; } i;
 		struct { float val, min, max; } flt;

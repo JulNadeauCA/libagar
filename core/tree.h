@@ -54,9 +54,9 @@
  * The maximum height of a red-black tree is 2lg (n+1).
  */
 
-#define SPLAY_HEAD(name, type)						\
+#define SPLAY_HEAD(name, t)						\
 struct name {								\
-	struct type *sph_root; /* root of the tree */			\
+	struct t *sph_root; /* root of the tree */			\
 }
 
 #define SPLAY_INITIALIZER(root)						\
@@ -66,10 +66,10 @@ struct name {								\
 	(root)->sph_root = NULL;					\
 } while (0)
 
-#define SPLAY_ENTRY(type)						\
+#define SPLAY_ENTRY(t)							\
 struct {								\
-	struct type *spe_left; /* left element */			\
-	struct type *spe_right; /* right element */			\
+	struct t *spe_left; /* left element */				\
+	struct t *spe_right; /* right element */			\
 }
 
 #define SPLAY_LEFT(elm, field)		(elm)->field.spe_left
@@ -111,15 +111,15 @@ struct {								\
 
 /* Generates prototypes and inline functions */
 
-#define SPLAY_PROTOTYPE(name, type, field, cmp)				\
-void name##_SPLAY(struct name *, struct type *);			\
+#define SPLAY_PROTOTYPE(name, t, field, cmp)				\
+void name##_SPLAY(struct name *, struct t *);				\
 void name##_SPLAY_MINMAX(struct name *, int);				\
-struct type *name##_SPLAY_INSERT(struct name *, struct type *);		\
-struct type *name##_SPLAY_REMOVE(struct name *, struct type *);		\
+struct t *name##_SPLAY_INSERT(struct name *, struct t *);		\
+struct t *name##_SPLAY_REMOVE(struct name *, struct t *);		\
 									\
 /* Finds the node with the same key as elm */				\
-static __inline struct type *						\
-name##_SPLAY_FIND(struct name *head, struct type *elm)			\
+static __inline struct t *						\
+name##_SPLAY_FIND(struct name *head, struct t *elm)			\
 {									\
 	if (SPLAY_EMPTY(head))						\
 		return(NULL);						\
@@ -129,8 +129,8 @@ name##_SPLAY_FIND(struct name *head, struct type *elm)			\
 	return (NULL);							\
 }									\
 									\
-static __inline struct type *						\
-name##_SPLAY_NEXT(struct name *head, struct type *elm)			\
+static __inline struct t *						\
+name##_SPLAY_NEXT(struct name *head, struct t *elm)			\
 {									\
 	name##_SPLAY(head, elm);					\
 	if (SPLAY_RIGHT(elm, field) != NULL) {				\
@@ -143,7 +143,7 @@ name##_SPLAY_NEXT(struct name *head, struct type *elm)			\
 	return (elm);							\
 }									\
 									\
-static __inline struct type *						\
+static __inline struct t *						\
 name##_SPLAY_MIN_MAX(struct name *head, int val)			\
 {									\
 	name##_SPLAY_MINMAX(head, val);					\
@@ -153,9 +153,9 @@ name##_SPLAY_MIN_MAX(struct name *head, int val)			\
 /* Main splay operation.
  * Moves node close to the key of elm to top
  */
-#define SPLAY_GENERATE(name, type, field, cmp)				\
-struct type *								\
-name##_SPLAY_INSERT(struct name *head, struct type *elm)		\
+#define SPLAY_GENERATE(name, t, field, cmp)				\
+struct t *								\
+name##_SPLAY_INSERT(struct name *head, struct t *elm)			\
 {									\
     if (SPLAY_EMPTY(head)) {						\
 	    SPLAY_LEFT(elm, field) = SPLAY_RIGHT(elm, field) = NULL;	\
@@ -178,10 +178,10 @@ name##_SPLAY_INSERT(struct name *head, struct type *elm)		\
     return (NULL);							\
 }									\
 									\
-struct type *								\
-name##_SPLAY_REMOVE(struct name *head, struct type *elm)		\
+struct t *								\
+name##_SPLAY_REMOVE(struct name *head, struct t *elm)			\
 {									\
-	struct type *__tmp;						\
+	struct t *__tmp;						\
 	if (SPLAY_EMPTY(head))						\
 		return (NULL);						\
 	name##_SPLAY(head, elm);					\
@@ -200,9 +200,9 @@ name##_SPLAY_REMOVE(struct name *head, struct type *elm)		\
 }									\
 									\
 void									\
-name##_SPLAY(struct name *head, struct type *elm)			\
+name##_SPLAY(struct name *head, struct t *elm)				\
 {									\
-	struct type __node, *__left, *__right, *__tmp;			\
+	struct t __node, *__left, *__right, *__tmp;			\
 	int __comp;							\
 \
 	SPLAY_LEFT(&__node, field) = SPLAY_RIGHT(&__node, field) = NULL;\
@@ -239,7 +239,7 @@ name##_SPLAY(struct name *head, struct type *elm)			\
  */									\
 void name##_SPLAY_MINMAX(struct name *head, int __comp) \
 {									\
-	struct type __node, *__left, *__right, *__tmp;			\
+	struct t __node, *__left, *__right, *__tmp;			\
 \
 	SPLAY_LEFT(&__node, field) = SPLAY_RIGHT(&__node, field) = NULL;\
 	__left = __right = &__node;					\
@@ -288,9 +288,9 @@ void name##_SPLAY_MINMAX(struct name *head, int __comp) \
 	     (x) = SPLAY_NEXT(name, head, x))
 
 /* Macros that define a red-back tree */
-#define RB_HEAD(name, type)						\
+#define RB_HEAD(name, t)						\
 struct name {								\
-	struct type *rbh_root; /* root of the tree */			\
+	struct t *rbh_root; /* root of the tree */			\
 }
 
 #define RB_INITIALIZER(root)						\
@@ -302,11 +302,11 @@ struct name {								\
 
 #define RB_BLACK	0
 #define RB_RED		1
-#define RB_ENTRY(type)							\
+#define RB_ENTRY(t)							\
 struct {								\
-	struct type *rbe_left;		/* left element */		\
-	struct type *rbe_right;		/* right element */		\
-	struct type *rbe_parent;	/* parent element */		\
+	struct t *rbe_left;		/* left element */		\
+	struct t *rbe_right;		/* right element */		\
+	struct t *rbe_parent;		/* parent element */		\
 	int rbe_color;			/* node color */		\
 }
 
@@ -371,24 +371,24 @@ struct {								\
 } while (0)
 
 /* Generates prototypes and inline functions */
-#define RB_PROTOTYPE(name, type, field, cmp)				\
-void name##_RB_INSERT_COLOR(struct name *, struct type *);	\
-void name##_RB_REMOVE_COLOR(struct name *, struct type *, struct type *);\
-struct type *name##_RB_REMOVE(struct name *, struct type *);		\
-struct type *name##_RB_INSERT(struct name *, struct type *);		\
-struct type *name##_RB_FIND(struct name *, struct type *);		\
-struct type *name##_RB_NEXT(struct name *, struct type *);		\
-struct type *name##_RB_MINMAX(struct name *, int);			\
+#define RB_PROTOTYPE(name, t, field, cmp)				\
+void name##_RB_INSERT_COLOR(struct name *, struct t *);			\
+void name##_RB_REMOVE_COLOR(struct name *, struct t *, struct t *);	\
+struct t *name##_RB_REMOVE(struct name *, struct t *);			\
+struct t *name##_RB_INSERT(struct name *, struct t *);			\
+struct t *name##_RB_FIND(struct name *, struct t *);			\
+struct t *name##_RB_NEXT(struct name *, struct t *);			\
+struct t *name##_RB_MINMAX(struct name *, int);				\
 									\
 
 /* Main rb operation.
  * Moves node close to the key of elm to top
  */
-#define RB_GENERATE(name, type, field, cmp)				\
+#define RB_GENERATE(name, t, field, cmp)				\
 void									\
-name##_RB_INSERT_COLOR(struct name *head, struct type *elm)		\
+name##_RB_INSERT_COLOR(struct name *head, struct t *elm)		\
 {									\
-	struct type *parent, *gparent, *tmp;				\
+	struct t *parent, *gparent, *tmp;				\
 	while ((parent = RB_PARENT(elm, field)) &&			\
 	    RB_COLOR(parent, field) == RB_RED) {			\
 		gparent = RB_PARENT(parent, field);			\
@@ -430,9 +430,9 @@ name##_RB_INSERT_COLOR(struct name *head, struct type *elm)		\
 }									\
 									\
 void									\
-name##_RB_REMOVE_COLOR(struct name *head, struct type *parent, struct type *elm) \
+name##_RB_REMOVE_COLOR(struct name *head, struct t *parent, struct t *elm) \
 {									\
-	struct type *tmp;						\
+	struct t *tmp;							\
 	while ((elm == NULL || RB_COLOR(elm, field) == RB_BLACK) &&	\
 	    elm != RB_ROOT(head)) {					\
 		if (RB_LEFT(parent, field) == elm) {			\
@@ -452,7 +452,7 @@ name##_RB_REMOVE_COLOR(struct name *head, struct type *parent, struct type *elm)
 			} else {					\
 				if (RB_RIGHT(tmp, field) == NULL ||	\
 				    RB_COLOR(RB_RIGHT(tmp, field), field) == RB_BLACK) {\
-					struct type *oleft;		\
+					struct t *oleft;		\
 					if ((oleft = RB_LEFT(tmp, field)))\
 						RB_COLOR(oleft, field) = RB_BLACK;\
 					RB_COLOR(tmp, field) = RB_RED;	\
@@ -484,7 +484,7 @@ name##_RB_REMOVE_COLOR(struct name *head, struct type *parent, struct type *elm)
 			} else {					\
 				if (RB_LEFT(tmp, field) == NULL ||	\
 				    RB_COLOR(RB_LEFT(tmp, field), field) == RB_BLACK) {\
-					struct type *oright;		\
+					struct t *oright;		\
 					if ((oright = RB_RIGHT(tmp, field)))\
 						RB_COLOR(oright, field) = RB_BLACK;\
 					RB_COLOR(tmp, field) = RB_RED;	\
@@ -505,17 +505,17 @@ name##_RB_REMOVE_COLOR(struct name *head, struct type *parent, struct type *elm)
 		RB_COLOR(elm, field) = RB_BLACK;			\
 }									\
 									\
-struct type *								\
-name##_RB_REMOVE(struct name *head, struct type *elm)			\
+struct t *								\
+name##_RB_REMOVE(struct name *head, struct t *elm)			\
 {									\
-	struct type *child, *parent, *old = elm;			\
+	struct t *child, *parent, *old = elm;				\
 	int color;							\
 	if (RB_LEFT(elm, field) == NULL)				\
 		child = RB_RIGHT(elm, field);				\
 	else if (RB_RIGHT(elm, field) == NULL)				\
 		child = RB_LEFT(elm, field);				\
 	else {								\
-		struct type *left;					\
+		struct t *left;						\
 		elm = RB_RIGHT(elm, field);				\
 		while ((left = RB_LEFT(elm, field)))			\
 			elm = left;					\
@@ -573,11 +573,11 @@ color:									\
 }									\
 									\
 /* Inserts a node into the RB tree */					\
-struct type *								\
-name##_RB_INSERT(struct name *head, struct type *elm)			\
+struct t *								\
+name##_RB_INSERT(struct name *head, struct t *elm)			\
 {									\
-	struct type *tmp;						\
-	struct type *parent = NULL;					\
+	struct t *tmp;							\
+	struct t *parent = NULL;					\
 	int comp = 0;							\
 	tmp = RB_ROOT(head);						\
 	while (tmp) {							\
@@ -604,10 +604,10 @@ name##_RB_INSERT(struct name *head, struct type *elm)			\
 }									\
 									\
 /* Finds the node with the same key as elm */				\
-struct type *								\
-name##_RB_FIND(struct name *head, struct type *elm)			\
+struct t *								\
+name##_RB_FIND(struct name *head, struct t *elm)			\
 {									\
-	struct type *tmp = RB_ROOT(head);				\
+	struct t *tmp = RB_ROOT(head);					\
 	int comp;							\
 	while (tmp) {							\
 		comp = cmp(elm, tmp);					\
@@ -621,8 +621,8 @@ name##_RB_FIND(struct name *head, struct type *elm)			\
 	return (NULL);							\
 }									\
 									\
-struct type *								\
-name##_RB_NEXT(struct name *head, struct type *elm)			\
+struct t *								\
+name##_RB_NEXT(struct name *head, struct t *elm)			\
 {									\
 	if (RB_RIGHT(elm, field)) {					\
 		elm = RB_RIGHT(elm, field);				\
@@ -642,11 +642,11 @@ name##_RB_NEXT(struct name *head, struct type *elm)			\
 	return (elm);							\
 }									\
 									\
-struct type *								\
+struct t *								\
 name##_RB_MINMAX(struct name *head, int val)				\
 {									\
-	struct type *tmp = RB_ROOT(head);				\
-	struct type *parent = NULL;					\
+	struct t *tmp = RB_ROOT(head);					\
+	struct t *parent = NULL;					\
 	while (tmp) {							\
 		parent = tmp;						\
 		if (val < 0)						\

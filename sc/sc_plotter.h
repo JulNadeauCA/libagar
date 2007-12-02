@@ -40,21 +40,25 @@ typedef struct sc_plot_label {
 	AG_TAILQ_ENTRY(sc_plot_label) labels;
 } SC_PlotLabel;
 
+enum sc_plot_type {
+	SC_PLOT_POINTS,		/* Individual points */
+	SC_PLOT_LINEAR,		/* Linear interpolation */
+	SC_PLOT_CUBIC_SPLINE,	/* Cubic spline interpolation */
+	SC_PLOT_VECTORS		/* Vector arrows/cones */
+};
+
+enum sc_plot_source {
+	SC_PLOT_MANUALLY,	/* Don't update automatically */
+	SC_PLOT_FROM_PROP,	/* Numerical object property */
+	SC_PLOT_FROM_REAL,	/* SC_Real variable */
+	SC_PLOT_FROM_INT,	/* Integer variable */
+	SC_PLOT_FROM_COMPONENT,	/* Single vector/matrix component */
+	SC_PLOT_DERIVATIVE	/* Derivative of other plot */
+};
+
 typedef struct sc_plot {
-	enum sc_plot_type {
-		SC_PLOT_POINTS,		/* Individual points */
-		SC_PLOT_LINEAR,		/* Linear interpolation */
-		SC_PLOT_CUBIC_SPLINE,	/* Cubic spline interpolation */
-		SC_PLOT_VECTORS		/* Vector arrows/cones */
-	} type;
-	enum sc_plot_source {
-		SC_PLOT_MANUALLY,	/* Don't update automatically */
-		SC_PLOT_FROM_PROP,	/* Numerical object property */
-		SC_PLOT_FROM_REAL,	/* SC_Real variable */
-		SC_PLOT_FROM_INT,	/* Integer variable */
-		SC_PLOT_FROM_COMPONENT,	/* Single vector/matrix component */
-		SC_PLOT_DERIVATIVE	/* Derivative of other plot */
-	} src_type;
+	enum sc_plot_type type;
+	enum sc_plot_source src_type;
 	union {
 		const char *prop;	/* Property path */
 		SC_Real *real;		/* Pointer to real value */
@@ -87,15 +91,17 @@ typedef struct sc_plot {
 	AG_TAILQ_ENTRY(sc_plot) plots;
 } SC_Plot;
 
+enum sc_plotter_type {
+	SC_PLOT_2D,		/* 2D Cartesian */
+	SC_PLOT_POLAR,		/* 2D Polar */
+	SC_PLOT_SMITH,		/* Smith Chart */
+	SC_PLOT_3D,		/* 3D Cartesian */
+	SC_PLOT_SPHERICAL	/* 3D Spherical */
+};
+
 typedef struct sc_plotter {
 	struct ag_widget wid;
-	enum sc_plotter_type {
-		SC_PLOT_2D,		/* 2D Cartesian */
-		SC_PLOT_POLAR,		/* 2D Polar */
-		SC_PLOT_SMITH,		/* Smith Chart */
-		SC_PLOT_3D,		/* 3D Cartesian */
-		SC_PLOT_SPHERICAL	/* 3D Spherical */
-	} type;
+	enum sc_plotter_type type;
 	Uint flags;
 #define SC_PLOTTER_HFILL	0x01
 #define SC_PLOTTER_VFILL	0x02

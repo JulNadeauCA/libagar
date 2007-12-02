@@ -114,22 +114,22 @@ enum ag_object_checksum_alg {
 		NULL						\
 	}
 
-#define AGOBJECT_FOREACH_CHILD(var, ob, type)				\
-	for((var) = (struct type *)AG_TAILQ_FIRST(&AGOBJECT(ob)->children); \
-	    (var) != (struct type *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
-	    (var) = (struct type *)AG_TAILQ_NEXT(AGOBJECT(var), cobjs))
+#define AGOBJECT_FOREACH_CHILD(var, ob, t)				\
+	for((var) = (struct t *)AG_TAILQ_FIRST(&AGOBJECT(ob)->children); \
+	    (var) != (struct t *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
+	    (var) = (struct t *)AG_TAILQ_NEXT(AGOBJECT(var), cobjs))
 
-#define AGOBJECT_FOREACH_CLASS(var, ob, type, subclass)			\
-	AGOBJECT_FOREACH_CHILD(var,ob,type)				\
+#define AGOBJECT_FOREACH_CLASS(var, ob, t, subclass)			\
+	AGOBJECT_FOREACH_CHILD(var,ob,t)				\
 		if (!AG_ObjectIsClass(var,(subclass))) {		\
 			continue;					\
 		} else
 
-#define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, type)			\
-	for((var) = (struct type *)AG_TAILQ_LAST(&AGOBJECT(ob)->children, \
+#define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, t)			\
+	for((var) = (struct t *)AG_TAILQ_LAST(&AGOBJECT(ob)->children, \
 	    ag_objectq); \
-	    (var) != (struct type *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
-	    (var) = (struct type *)AG_TAILQ_PREV(AGOBJECT(var), ag_objectq, \
+	    (var) != (struct t *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
+	    (var) = (struct t *)AG_TAILQ_PREV(AGOBJECT(var), ag_objectq, \
 	    cobjs))
 
 #ifdef _AGAR_INTERNAL
@@ -139,12 +139,12 @@ enum ag_object_checksum_alg {
 #define OBJECT_DEBUG(ob) 	AGOBJECT_DEBUG(ob)
 #define OBJECT_INITIALIZER(obj,n,pfx,cls) \
 	AGOBJECT_INITIALIZER((obj),(n),(pfx),(cls))
-#define OBJECT_FOREACH_CHILD(var,ob,type) \
-	AGOBJECT_FOREACH_CHILD((var),(ob),type)
-#define OBJECT_FOREACH_CHILD_REVERSE(var,ob,type) \
-	AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),type)
-#define OBJECT_FOREACH_CLASS(var,ob,type,subclass) \
-	AGOBJECT_FOREACH_CLASS((var),(ob),(type),(subclass))
+#define OBJECT_FOREACH_CHILD(var,ob,t) \
+	AGOBJECT_FOREACH_CHILD((var),(ob),t)
+#define OBJECT_FOREACH_CHILD_REVERSE(var,ob,t) \
+	AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),t)
+#define OBJECT_FOREACH_CLASS(var,ob,t,subclass) \
+	AGOBJECT_FOREACH_CLASS((var),(ob),(t),(subclass))
 #endif /* _AGAR_INTERNAL */
 
 #define AG_ObjectLock(ob) AG_MutexLock(&(ob)->lock)
@@ -297,7 +297,7 @@ AG_ObjectRoot(const void *p)
  * The linkage must be locked.
  */
 static __inline__ void *
-AG_ObjectFindParent(void *obj, const char *name, const char *type)
+AG_ObjectFindParent(void *obj, const char *name, const char *t)
 {
 	AG_Object *ob = AGOBJECT(obj);
 
@@ -307,7 +307,7 @@ AG_ObjectFindParent(void *obj, const char *name, const char *type)
 		if (po == NULL) {
 			return (NULL);
 		}
-		if ((type == NULL || strcmp(po->cls->name, type) == 0) &&
+		if ((t == NULL || strcmp(po->cls->name, t) == 0) &&
 		    (name == NULL || strcmp(po->name, name) == 0)) {
 			return ((void *)po);
 		}

@@ -88,12 +88,12 @@ typedef struct ag_tlist {
 #define AG_TLIST_FOREACH(it, tl) \
 	AG_TAILQ_FOREACH(it, &(tl)->items, items)
 
-#define AG_TLIST_FOREACH_ITEM(p, tl, it, type)				\
+#define AG_TLIST_FOREACH_ITEM(p, tl, it, t)				\
 	for((it) = AG_TAILQ_FIRST(&(tl)->items),			\
-	     (p) = (it)!=NULL ? (struct type *)(it)->p1 : NULL;		\
+	     (p) = (it)!=NULL ? (struct t *)(it)->p1 : NULL;		\
 	    (it) != AG_TAILQ_END(&(tl)->children) && (it)->p1 != NULL;	\
 	    (it) = AG_TAILQ_NEXT((it), cobjs),				\
-	     (p) = (it)!=NULL ? (struct type *)(it)->p1 : NULL)
+	     (p) = (it)!=NULL ? (struct t *)(it)->p1 : NULL)
 
 #define AG_TLIST_ITEM(n) AG_TlistSelectedItemPtr(AG_PTR(n))
 

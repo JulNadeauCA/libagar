@@ -45,15 +45,7 @@ void	 RG_TransformChainDestroy(RG_TransformChain *);
 void	 RG_TransformChainPrint(const RG_TransformChain *, char *, size_t)
 	                        BOUNDED_ATTRIBUTE(__string__, 2, 3);
 void	 RG_TransformChainDup(const RG_TransformChain *, RG_TransformChain *);
-
-static __inline__ int
-RG_TransformCompare(const RG_Transform *xf1, const RG_Transform *xf2)
-{
-	return (xf1->type == xf2->type &&
-	        xf1->nargs == xf2->nargs &&
-		(xf1->nargs == 0 ||
-		 memcmp(xf1->args, xf2->args, xf1->nargs*sizeof(Uint32)) == 0));
-}
+int	 RG_TransformCompare(const RG_Transform *, const RG_Transform *);
 __END_DECLS
 
 #include "close_code.h"
