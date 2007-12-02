@@ -75,7 +75,7 @@ Init(void *obj)
 	
 	WIDGET(bar)->flags |= AG_WIDGET_IGNORE_PADDING;
 
-	switch (type) {
+	switch (bar->type) {
 	case AG_TOOLBAR_HORIZ:
 		AG_BoxSetType(box, AG_BOX_VERT);
 		WIDGET(bar)->flags |= AG_WIDGET_HFILL;

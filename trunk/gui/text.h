@@ -19,7 +19,7 @@ struct ag_button;
 enum ag_font_type {
 	AG_FONT_VECTOR,		/* Vectorial font */
 	AG_FONT_BITMAP		/* Series of pixmaps */
-} type;
+};
 
 enum ag_text_justify {
 	AG_TEXT_LEFT,
