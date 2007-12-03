@@ -12,6 +12,7 @@ DISTFILE=${PROJ}-${VER}
 HOST=resin.csoft.net
 RUSER=vedge
 MAILER="sendmail -t"
+HOMEPAGE=http://libagar.org
 
 if [ "$1" = "snapshot" ]; then
 	PHASE=beta
@@ -73,7 +74,7 @@ It is now available for download from ${PHASE}.csoft.org.
 
 Binary packages are also available from the ${PROJ} website:
 
-	http://hypertriton.com/${PROJ}/download.html.
+	${HOMEPAGE}/download.html
 
 Your comments, suggestions and bug reports are most welcome.
 
@@ -90,7 +91,7 @@ EOF
 From: Julien Nadeau <vedge@hypertriton.com>
 To: ${MAILLIST_FR}
 Subject: Nouvelle version: ${PROJ} ${VER} (${REL})
-X-Mailer: announce.sh
+X-Mailer: dist.sh
 X-PGP-Key: 206C63E6
 
 Il me fait plaisir d'annoncer la sortie officielle de ${PROJ} ${VER}
@@ -107,7 +108,7 @@ La distribution source est téléchargable à partir de ${PHASE}.csoft.org:
 
 Des paquets binaires sont également disponibles sur le site de ${PROJ}:
 
-	http://hypertriton.com/${PROJ}/download.html.fr.
+	${HOMEPAGE}/download.html.fr
 
 Vos commentaires, suggestions et signalements de bogues sont, comme
 toujours, fortement appréciés.
