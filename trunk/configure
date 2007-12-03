@@ -146,6 +146,7 @@ echo "    --help                    Display this message"
 echo "    --enable-nls              Native Language Support [no]"
 echo "    --with-gettext            Use gettext tools (msgmerge, ...) [check]"
 echo "    --with-libtool            Specify path to libtool [check]"
+echo "    --with-cygwin             Add cygwin dependencies under cygwin [no]"
 echo "    --with-manpages           Manual pages (-mdoc) [yes]"
 echo "    --with-manlinks           Manual pages links for functions [no]"
 echo "    --with-docs               Printable docs (-me/tbl/eqn/pic/refer) [no]"
@@ -466,15 +467,14 @@ rm -f $testdir/conftest conftest.c
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
-echo -n "checking for floating point types..."
-echo -n "checking for floating point types..." >> config.log
+echo -n "checking for IEEE754 floating point..."
+echo -n "checking for IEEE754 floating point..." >> config.log
 cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
 {
 	float f = 1.5;
 	double d = 2.5;
-
 	f = 0;
 	d = 0;
 	return (0);
@@ -815,53 +815,11 @@ echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
 echo "#undef HAVE_CYGWIN" >config/have_cygwin.h
 echo "hdefs[\"HAVE_CYGWIN\"] = nil" >>configure.lua
 fi;
-echo -n "checking for mingw environment..."
-echo -n "checking for mingw environment..." >> config.log
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <windows.h>
-
-int
-main(int argc, char *argv[]) {
-	struct stat sb;
-	DWORD rv;
-	rv = GetFileAttributes("foo");
-	stat("foo", &sb);
-	return (0);
-}
-
-EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_MINGW="yes"
-echo "HAVE_MINGW=$HAVE_MINGW" >>Makefile.config
-echo "mdefs[\"HAVE_MINGW\"] = \"$HAVE_MINGW\"" >>configure.lua
-echo "#ifndef HAVE_MINGW" > config/have_mingw.h
-echo "#define HAVE_MINGW \"$HAVE_MINGW\"" >> config/have_mingw.h
-echo "#endif" >> config/have_mingw.h
-echo "hdefs[\"HAVE_MINGW\"] = \"$HAVE_MINGW\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_MINGW="no"
-echo "HAVE_MINGW=$HAVE_MINGW" >>Makefile.config
-echo "mdefs[\"HAVE_MINGW\"] = \"$HAVE_MINGW\"" >>configure.lua
-echo "#undef HAVE_MINGW" >config/have_mingw.h
-echo "hdefs[\"HAVE_MINGW\"] = nil" >>configure.lua
-fi;
-if [ "${compile}" = "ok" ]; then
-	CFLAGS="$CFLAGS -mno-cygwin"
-	echo "CFLAGS=$CFLAGS" >> Makefile.config
+	if [ "${with_cygwin}" != "yes" ]; then
+		CFLAGS="$CFLAGS -mno-cygwin"
+		echo "CFLAGS=$CFLAGS" >> Makefile.config
+	fi
 fi
 echo -n "checking for <sys/types.h>..."
 echo -n "checking for <sys/types.h>..." >> config.log
@@ -1419,8 +1377,8 @@ HAVE_GETENV="no"
 echo "#undef HAVE_GETENV" >config/have_getenv.h
 echo "hdefs[\"HAVE_GETENV\"] = nil" >>configure.lua
 fi;
-echo -n "checking for setenv() and unsetenv() functions..."
-echo -n "checking for setenv() and unsetenv() functions..." >> config.log
+echo -n "checking for setenv() and unsetenv()..."
+echo -n "checking for setenv() and unsetenv()..." >> config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
 int
