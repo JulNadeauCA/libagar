@@ -10284,3 +10284,4 @@ Changed paths:
 always use our bundled strlcpy() and strlcat() to avoid pain due to
 conflicting defines on some systems.
 
+(r6943)
