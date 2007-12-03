@@ -7,7 +7,7 @@
 
 #define AGAR_MAJOR_VERSION	1
 #define AGAR_MINOR_VERSION	3
-#define AGAR_PATCHLEVEL		0
+#define AGAR_PATCHLEVEL		1
 
 typedef struct ag_agar_version {
 	int major;
