@@ -1,0 +1,45 @@
+------------------------------------------------------------------------
+r6943 | vedge | 2007-12-01 23:37:23 -0400 (Sat, 01 Dec 2007) | 2 lines
+Changed paths:
+   M /trunk/gui/text.h
+   M /trunk/gui/toolbar.c
+
+typo
+
+------------------------------------------------------------------------
+r6944 | vedge | 2007-12-01 23:42:13 -0400 (Sat, 01 Dec 2007) | 2 lines
+Changed paths:
+   M /trunk/core/event.h
+   M /trunk/core/object.h
+   M /trunk/core/queue.h
+   M /trunk/core/tree.h
+   M /trunk/gui/combo.h
+   M /trunk/gui/file_dlg.h
+   M /trunk/gui/scrollbar.c
+   M /trunk/gui/scrollbar.h
+   M /trunk/gui/socket.h
+   M /trunk/gui/table.h
+   M /trunk/gui/tlist.h
+   M /trunk/map/actor.h
+   M /trunk/map/map.h
+   M /trunk/rg/fill.c
+   M /trunk/rg/fill.h
+   M /trunk/rg/transform.c
+   M /trunk/rg/transform.h
+   M /trunk/sc/sc_plotter.h
+
+avoid enum decls in struct; un-inline some functions.
+
+------------------------------------------------------------------------
+r6945 | vedge | 2007-12-02 05:28:42 -0400 (Sun, 02 Dec 2007) | 2 lines
+Changed paths:
+   M /trunk/demos/Makefile
+   A /trunk/demos/cplusplus
+   A /trunk/demos/cplusplus/Makefile
+   A /trunk/demos/cplusplus/configure
+   A /trunk/demos/cplusplus/configure.in
+   A /trunk/demos/cplusplus/cplusplus.cpp
+
+test for c++
+
+(r6947)
