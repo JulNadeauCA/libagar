@@ -84,7 +84,10 @@ static NS_Server server;
 static int server_inited = 0;
 static AG_Thread listenTh;
 static int servRunning = 0;
+
+#ifdef HAVE_JPEG
 static int jpegQuality = 75;
+#endif
 
 static void
 PollClients(AG_Event *event)
