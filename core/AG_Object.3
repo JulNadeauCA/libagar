@@ -55,6 +55,9 @@ to be archived to different forms of persistent storage in an efficient manner.
 .Fn AG_ObjectInit "AG_Object *obj" "AG_ObjectClass *cls"
 .Pp
 .Ft "void"
+.Fn AG_ObjectInitstatic "AG_Object *obj" "AG_ObjectClass *cls"
+.Pp
+.Ft "void"
 .Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
 .Pp
 .Ft "void"
@@ -112,6 +115,12 @@ The
 function initializes an object of the specified class, invoking the
 .Fn init
 operation of every class in the inheritance hierarchy.
+The
+.Fn AG_ObjectInitStatic
+variant automatically sets the
+.Dv AG_OBJECT_STATIC
+flag (see below).
+.Pp
 The
 .Fa name
 string identifies this object instance.
@@ -392,18 +401,15 @@ This function is not thread-safe.
 .Sh CLASS INFORMATION
 .nr nS 1
 .Ft "void"
-.Fn AG_RegisterClass "AG_ObjectClass *ops" "int icon"
+.Fn AG_RegisterClass "AG_ObjectClass *ops"
 .Pp
 .Ft "AG_ObjectClass *"
-.Fn AG_FindType "const char *name"
+.Fn AG_FindClass "const char *name"
 .Pp
 .Ft "int"
 .Fn AG_ObjectIsClass "AG_Object *obj" "const char *class_pattern"
 .Pp
 .Fn AGOBJECT_FOREACH_CLASS "AG_Object *child_obj" "AG_Object *parent_obj" "TYPE type" "const char *class_pattern"
-.Pp
-.Ft "SDL_Surface *"
-.Fn AG_ObjectIcon "AG_Object *p"
 .Pp
 .nr nS 0
 The
@@ -415,14 +421,9 @@ This table contains all the information needed by
 .Fn AG_ObjectLoad
 to load previously saved objects from disk or network and completely
 recreate them in memory.
-The
-.Fa icon
-argument is an
-.Xr AG_IconMgr 3
-icon name.
 .Pp
 The
-.Fn AG_FindType
+.Fn AG_FindClass
 function queries the object type table for the given class
 .Fa name
 and returns a pointer to the object's class information structure.
@@ -454,9 +455,6 @@ AGOBJECT_FOREACH_CLASS(my_obj, parent_obj, my_class, "MyClass") {
 	    AGOBJECT(my_obj)->name);
 }
 .Ed
-.Pp
-.Fn AG_ObjectIcon
-returns a surface for the icon associated with the given class.
 .Sh DEPENDENCIES
 .nr nS 1
 .Ft "int"
