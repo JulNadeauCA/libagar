@@ -185,37 +185,16 @@ which displays a button instead of a text input.
 Alternate interface to
 .Xr AG_Box 3 .
 .El
-.Sh AGAR-SG
-Agar-SG is a generic 3D geometry and graphics rendering engine.
-Given an input of geometrical and scene information, Agar-SG is designed
-to provide efficient space partitioning, high-quality rendering from any
-viewpoint and generic solving of geometrical constraints between entities.
 .Pp
-.Bl -tag -width "SG_Matrix(3) " -compact
-.It Xr SG 3
-Scene graph object.
-.It Xr SG_Camera 3
-Viewpoint object.
-.It Xr SG_Light 3
-Light source object.
-.It Xr SG_Matrix 3
-Optimized 4x4 matrix routines.
-.\" .It Xr SG_Vector 3
-.\" Optimized vector routines.
-.It Xr SG_View 3
-Scene visualization widget.
-.It Xr SK 3
-Dimensioned 2D sketch with geometrical constraints.
-.El
-.\" .Sh AGAR-VG
-.\" Agar-VG is a simple 2D vector graphics library which allows developers
-.\" to specify hierarchical sketches consisting of elements such as lines, curves
-.\" and text, with associated linear transformations.
-.\" It is well suited to applications such as technical simulations; applications
-.\" requiring dimensioned, constrained vector drawings should use the
-.\" .Xr SK 3
-.\" object instead.
-.\" .Pp
+.Sh AGAR-VG
+Agar-VG is a simple 2D vector graphics library which allows developers
+to specify hierarchical sketches consisting of elements such as lines, curves
+and text, with associated linear transformations.
+It is well suited to applications such as technical simulations; applications
+requiring dimensioned, constrained vector drawings should use the
+.Xr SK 3
+object instead.
+.Pp
 .\" .Bl -tag -width "VG_View(3) " -compact
 .\" .It Xr VG 3
 .\" Vector drawing object.
@@ -248,21 +227,6 @@ Widget for graphics edition, generic tool framework with undo.
 .\" .It Xr RG_Animview 3
 .\" Widget for displaying animations.
 .El
-.\" .Sh AGAR-SC
-.\" Agar-SC is a set of tools commonly needed in simulations, such as basic
-.\" linear algebra routines, a parallel solver for large, sparse matrices and
-.\" a set of useful visualization widgets.
-.\" .Pp
-.\" .Bl -tag -width "SC_Matview(3) " -compact
-.\" .It Xr SC_Matrix 3
-.\" Routines for m-by-n matrices.
-.\" .It Xr SC_Vector 3
-.\" Routines for vectors.
-.\" .It Xr SC_Matview 3
-.\" Matrix visualization widget.
-.\" .It Xr SC_Plotter 3
-.\" Widget for plotting functions and derivatives.
-.\" .El
 .Sh AGAR-MAP
 Agar-MAP is a 2D tiling library aimed at isometric games, platform games
 and scrollers.
@@ -276,17 +240,12 @@ Dynamic map object.
 .It Xr MAP_View 3
 Map visualization and edition widget.
 .El
-.\" .Sh AGAR-NET
-.\" Agar-NET is a network communication package which includes a portable,
-.\" thread-safe client library along with a server framework.
-.\" The server framework supports two models of operation: multi-process and
-.\" multi-thread.
-.\" Agar-NET provides support for multiple authentication methods, structured
-.\" queries, sessions and efficient data streaming to a large number of clients.
-.\" .Pp
-.\" .Bl -tag -width "NS(3) " -compact
-.\" .It Xr NC 3
-.\" The network client library.
-.\" .It Xr NS 3
-.\" The server library.
-.\" .El
+.Sh OTHER LIBRARIES BASED ON AGAR
+.Bl -tag -width "Agar-SG "
+.It Agar-SG
+Agar-SG is a generic 3D geometry and graphics rendering engine.
+Given an input of geometrical and scene information, Agar-SG is designed
+to provide efficient space partitioning, high-quality rendering from any
+viewpoint and generic solving of geometrical constraints between entities.
+For more information, see: http://hypertriton.com/agar-sg/
+.El
