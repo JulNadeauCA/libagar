@@ -141,6 +141,7 @@ pre-package:
 		cp -f ${TOP}/mk/install-sdk/install-sdk.exe .; \
 		echo '<meta http-equiv="refresh" content="1;url=http://libagar.org/docs/compile-msvc.html" />' > VisualC.html; \
 		echo "install-sdk.exe" >> ${PROJFILELIST}; \
+		echo "VisualC.html" >> ${PROJFILELIST}; \
 		if [ -e "`which unix2dos 2>/dev/null`" ]; then \
 			V=`perl mk/get-version.pl`; \
 			unix2dos -n README README.txt; \
