@@ -14,7 +14,7 @@ FAKEDIR=	/tmp/pkg-${PKGNAME}
 RELENGDIR=	${SRCDIR}/Packages/${OS}-${ARCH}${FLAVOR}
 PLATFORM?=	unix
 
-all: pre-build do-build package
+all: pre-build do-build package sign
 
 pre-build:
 	mkdir ${BUILDDIR}
@@ -23,7 +23,8 @@ pre-build:
 
 package:
 	(cd ${FAKEDIR} && \
-	 cp -f ${SRCDIR}/{README,LICENSE} ${PKGNAME} && \
+	 cp -f ${SRCDIR}/README ${PKGNAME} && \
+	 cp -f ${SRCDIR}/mk/LICENSE.txt ${PKGNAME}/LICENSE && \
 	 cp -f ${SRCDIR}/gui/fonts/Vera-Copyright.txt ${PKGNAME}/LICENSE-Vera && \
 	 cp -f ${SRCDIR}/mk/agar-logo.png ${PKGNAME} && \
 	 cp -f ${RELENGDIR}/README.* ${PKGNAME} && \
@@ -34,12 +35,13 @@ package:
 	 cp -f ${RELENGDIR}/agar-config.sh ${PKGNAME} && \
 	 tar -f ${PKGNAME}.tar -c ${PKGNAME} && \
 	 gzip -f ${PKGNAME}.tar && \
-	 gpg -ab ${PKGNAME}.tar.gz && \
-	 cp -f ${PKGNAME}.tar.gz ${PKGNAME}.tar.gz.asc ${RELENGDIR})
+	 cp -f ${PKGNAME}.tar.gz ${RELENGDIR})
 
+sign:
+	 gpg -ab ${PKGNAME}.tar.gz
 
 clean:
 	rm -fR ${BUILDDIR}
 	rm -fR ${FAKEDIR}
 
-.PHONY: pre-build package do-build clean
+.PHONY: pre-build package sign do-build clean
