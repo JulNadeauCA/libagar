@@ -11,7 +11,7 @@ VERSION=	`(cd ${SRCDIR} && perl mk/get-version.pl)`
 RELEASE=	`(cd ${SRCDIR} && perl mk/get-release.pl)`
 BUILDDIR=	/tmp/w-${PKGNAME}
 FAKEDIR=	/tmp/pkg-${PKGNAME}
-RELENGDIR=	${SRCDIR}/Packages/${OS}-${ARCH}
+RELENGDIR=	${SRCDIR}/Packages/${OS}-${ARCH}${FLAVOR}
 PLATFORM?=	unix
 
 all: pre-build do-build package
