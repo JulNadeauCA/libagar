@@ -14,7 +14,7 @@ FAKEDIR=	/tmp/pkg-${PKGNAME}
 RELENGDIR=	${SRCDIR}/Packages/${OS}-${ARCH}${FLAVOR}
 PLATFORM?=	unix
 
-all: pre-build do-build package sign
+all: pre-build do-build package
 
 pre-build:
 	mkdir ${BUILDDIR}
