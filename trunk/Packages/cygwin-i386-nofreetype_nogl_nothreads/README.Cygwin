@@ -1,0 +1,25 @@
+    _       _       _     ___
+  / _ \   / _ \   / _ \  |  _ \ 
+ | |_| | | (_| | | |_| | | |_) |  / Cygwin
+ |_| |_|  \__, | |_| |_| |_| |_|
+          |___/                 
+
+This is a binary release of the Agar graphics toolkit, compiled for Windows
+under the i386 architecture without thread safety. It has been compiled with
+GCC 3 in the Cygwin environment. The -mno-cygwin flag was used so that the
+resulting binaries do not require Cygwin itself.
+
+Agar binaries compiled under Microsoft Visual C++ are also available from
+the download page: http://libagar.org/download.html.
+
+This package requires the SDL library. It has been tested with SDL compiled
+from source under Cygwin. This package has no OpenGL support and no FreeType
+dependency, so Agar will revert to a low quality bitmap font engine, and the
+bundled bitmap font can only display ASCII characters.
+
+To install this package, run the installation script:
+
+	$ ./install
+
+For more information about Agar, visit http://libagar.org/.
+
