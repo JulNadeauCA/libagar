@@ -37,6 +37,7 @@ if [ "${HOST_ARCH}" = "x86_64" ]; then	HOST_ARCH="amd64";	fi
 if [ "${HOST_ARCH}" = "i486" ]; then	HOST_ARCH="i386";	fi
 if [ "${HOST_ARCH}" = "i586" ]; then	HOST_ARCH="i386";	fi
 if [ "${HOST_ARCH}" = "i686" ]; then	HOST_ARCH="i386";	fi
+if [ "${HOST_ARCH}" = "mips" ]; then	HOST_ARCH="mipsel";	fi
 
 if [ "$1" = "--dir" ]; then
 	if [ "$2" = "" ]; then
