@@ -33,12 +33,14 @@ if [ "${HOST_OS}" = "Linux" ]; then	HOST_OS="linux";	fi
 if [ "${HOST_OS}" = "IRIX" ]; then	HOST_OS="irix";		fi
 if [ "${HOST_OS}" = "IRIX64" ]; then	HOST_OS="irix";		fi
 if [ "${HOST_OS}" = "CYGWIN_NT-5.1" ]; then HOST_OS="cygwin";	fi
+if [ "${HOST_OS}" = "Darwin" ]; then	HOST_OS="darwin";	fi
 
 if [ "${HOST_ARCH}" = "x86_64" ]; then	HOST_ARCH="amd64";	fi
 if [ "${HOST_ARCH}" = "i486" ]; then	HOST_ARCH="i386";	fi
 if [ "${HOST_ARCH}" = "i586" ]; then	HOST_ARCH="i386";	fi
 if [ "${HOST_ARCH}" = "i686" ]; then	HOST_ARCH="i386";	fi
 if [ "${HOST_ARCH}" = "mips" ]; then	HOST_ARCH="mipsel";	fi
+if [ "${HOST_ARCH}" = "Power Macintosh" ]; then	HOST_ARCH="powerpc"; fi
 
 if [ "$1" = "--dir" ]; then
 	if [ "$2" = "" ]; then
