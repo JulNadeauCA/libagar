@@ -1,0 +1,20 @@
+    _       _       _     ___
+  / _ \   / _ \   / _ \  |  _ \ 
+ | |_| | | (_| | | |_| | | |_) |  / Linux
+ |_| |_|  \__, | |_| |_| |_| |_|
+          |___/                 
+
+This is a binary release of the Agar graphics toolkit, compiled for Linux
+under the i386 architecture with thread safety enabled.
+
+This package requires SDL and OpenGL. If you would like to use Agar without
+OpenGL, look for alternative binary packages (or simply compile Agar from
+source). This package does not use FreeType, so Agar will use a low-quality
+bitmap font engine. The bundled bitmap font only includes the ASCII range.
+
+To install this package, run the installation script:
+
+	$ ./install
+
+For more information about Agar, visit http://libagar.org/.
+
