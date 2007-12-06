@@ -1,0 +1,19 @@
+    _       _       _     ___
+  / _ \   / _ \   / _ \  |  _ \ 
+ | |_| | | (_| | | |_| | | |_) |  / Linux
+ |_| |_|  \__, | |_| |_| |_| |_|
+          |___/                 
+
+This is a binary release of the Agar graphics toolkit, compiled for Linux
+under the amd64 architecture with thread safety enabled.
+
+This package requires SDL and the OpenGL libraries. It does not require
+FreeType, and uses an internal bitmap-based font engine instead. The
+included bitmap font only includes the ASCII range.
+
+To install this package, run the installation script:
+
+	$ ./install
+
+For more information about Agar, visit http://libagar.org/.
+
