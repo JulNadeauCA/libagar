@@ -148,6 +148,7 @@ Draw(void *p)
 		rd.h = WIDGET(pb)->h;
 		break;
 	case AG_PROGRESS_BAR_HORIZ:
+	default:
 		wAvail = WIDGET(pb)->w - pb->pad*2;
 		rd.x = pb->pad;
 		rd.y = pb->pad;
