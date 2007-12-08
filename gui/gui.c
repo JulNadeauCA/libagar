@@ -38,6 +38,7 @@
 #include "fspinbutton.h"
 #include "fixed_plotter.h"
 #include "glview.h"
+#include "graph.h"
 #include "hsvpal.h"
 #include "icon.h"
 #include "label.h"
@@ -85,6 +86,7 @@ void *agGUIClasses[] = {
 	&agFixedClass,
 	&agFSpinbuttonClass,
 	&agFixedPlotterClass,
+	&agGraphClass,
 #ifdef HAVE_OPENGL
 	&agGLViewClass,
 #endif
