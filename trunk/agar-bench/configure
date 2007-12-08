@@ -332,6 +332,21 @@ else
 	echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 fi
 
+CFLAGS="$CFLAGS -D_USE_AGAR_MATH"
+CXXFLAGS="$CXXFLAGS -D_USE_AGAR_MATH"
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
+CFLAGS="$CFLAGS -I$SRC"
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+CFLAGS="$CFLAGS -DHAVE_RDTSC"
+CXXFLAGS="$CXXFLAGS -DHAVE_RDTSC"
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
+echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 echo -n "checking for a usable C compiler..."
 echo -n "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
@@ -877,6 +892,11 @@ HAVE_PCTR="no"
 echo "#undef HAVE_PCTR" >config/have_pctr.h
 echo "hdefs[\"HAVE_PCTR\"] = nil" >>configure.lua
 fi;
+if [ "${HAVE_AGAR}" != "yes" ]
+ then
+	echo "This program requires Agar installed on your system."
+	exit 1
+fi
 if [ "${enable_static}" = "yes" ]
  then
 LDFLAGS="-static"
