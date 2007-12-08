@@ -5,12 +5,11 @@ PROG=		agar-bench
 PROG_TYPE=	"GUI"
 PROG_GUID=	"8CECE971-4D10-4787-B8CF-349F58861C95"
 PROG_LINKS=	ag_core ag_gui
-VERSION=	1.0
 
 SRCS=		agar-bench.c generic.c pixelops.c primitives.c surfaceops.c \
-		memops.c misc.c events.c sg.c
+		memops.c misc.c events.c
 
-CFLAGS+=${AGAR_CFLAGS} ${AGAR_SG_CFLAGS} -I. -DHAVE_RDTSC -DVERSION=\"${VERSION}\" -D_USE_AGAR_MATH
+CFLAGS+=${AGAR_CFLAGS} ${AGAR_SG_CFLAGS}
 LIBS+=	${AGAR_LIBS} ${AGAR_SG_LIBS}
 
 all: all-subdir ${PROG}

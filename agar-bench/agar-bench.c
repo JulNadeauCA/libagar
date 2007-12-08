@@ -1,7 +1,6 @@
 /*	Public domain	*/
 
 #include <agar/core.h>
-#include <agar/sg.h>
 
 #include "agar-bench.h"
 
@@ -23,7 +22,6 @@ extern struct test_ops surfaceops_test;
 extern struct test_ops memops_test;
 extern struct test_ops misc_test;
 extern struct test_ops events_test;
-extern struct test_ops sg_test;
 
 struct test_ops *tests[] = {
 	&pixelops_test,
@@ -31,8 +29,7 @@ struct test_ops *tests[] = {
 	&surfaceops_test,
 	&memops_test,
 	&misc_test,
-	&events_test,
-	&sg_test,
+	&events_test
 };
 int ntests = sizeof(tests) / sizeof(tests[0]);
 
@@ -167,7 +164,8 @@ SaveToCSV(AG_Event *event)
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, strerror(errno));
 		return;
 	}
-	fprintf(f, "Agar Benchmark %s\n", VERSION);
+	fprintf(f, "Benchmark for Agar %d.%d.%d\n", AGAR_MAJOR_VERSION,
+	    AGAR_MINOR_VERSION, AGAR_PATCHLEVEL);
 	fprintf(f, "Test: %s%s\n", test->name,
 	    (test->flags&TEST_SDL) ? " (SDL-only)" :
 	    (test->flags&TEST_GL) ? " (GL-only)" : "");
@@ -311,15 +309,13 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1 ||
-	    AG_InitInput(0) == -1) {
+	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	AG_SetRefreshRate(fps);
-	SG_InitEngine();
 
 	MainWindow();
 
