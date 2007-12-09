@@ -157,6 +157,7 @@ void	 	  SC_PlotUpdateLabel(SC_Plot *);
 void		  SC_PlotSetScale(SC_Plot *, SC_Real, SC_Real);
 void		  SC_PlotSetXoffs(SC_Plot *, int);
 void		  SC_PlotSetYoffs(SC_Plot *, int);
+
 void		  SC_PlotReal(SC_Plot *, SC_Real);
 void	 	  SC_PlotRealv(SC_Plot *, Uint, const SC_Real *);
 void		  SC_PlotVector(SC_Plot *, const SC_Vector *);
