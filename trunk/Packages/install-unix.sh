@@ -33,7 +33,7 @@ if [ "${HOST_OS}" = "Linux" ]; then	HOST_OS="linux";	fi
 if [ "${HOST_OS}" = "IRIX" ]; then	HOST_OS="irix";		fi
 if [ "${HOST_OS}" = "IRIX64" ]; then	HOST_OS="irix";		fi
 if [ "${HOST_OS}" = "CYGWIN_NT-5.1" ]; then HOST_OS="cygwin";	fi
-if [ "${HOST_OS}" = "Darwin" ]; then	HOST_OS="darwin";	fi
+if [ "${HOST_OS}" = "Darwin" ]; then	HOST_OS="macosx";	fi
 
 if [ "${HOST_ARCH}" = "x86_64" ]; then	HOST_ARCH="amd64";	fi
 if [ "${HOST_ARCH}" = "i486" ]; then	HOST_ARCH="i386";	fi
@@ -209,6 +209,13 @@ if [ "${AGARCONFIG}" = "no" ]; then
 	echo "WARNING: The agar-config program cannot be found in your PATH."
 	echo "If you want agar applications to compile, you will need to"
 	echo "add the ${PREFIX}/bin directory to your PATH."
+fi
+
+if [ "${AR_OS}" = "macosx" ]; then
+	for FILE in `ls -1 lib/*.a`; do
+		echo "ranlib ${PREFIX}/$FILE"
+		ranlib ${PREFIX}/$FILE
+	done
 fi
 
 echo "${PROJNAME} was installed successfully into ${PREFIX}."
