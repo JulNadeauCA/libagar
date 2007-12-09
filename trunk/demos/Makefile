@@ -15,7 +15,8 @@ SUBDIR=	fixedres \
 	glview \
 	gunpowder \
 	cplusplus \
-	doublebuf
+	doublebuf \
+	plotting
 
 all: all-subdir
 clean: prereq clean-subdir
