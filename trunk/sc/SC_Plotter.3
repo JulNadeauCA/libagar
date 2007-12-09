@@ -1,0 +1,372 @@
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd December 8, 2007
+.Dt SC_PLOTER 3
+.Os
+.ds vT Agar-SC API Reference
+.ds oS Agar-SC 1.3
+.Sh NAME
+.Nm SC_Plotter
+.Nd agar plotter widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/sc.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widgets displays one or more functions or their derivatives.
+Labels can also be associated with specific values.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh PLOTTER INTERFACE
+.nr nS 1
+.Ft "SC_Plotter *"
+.Fn SC_PlotterNew "AG_Widget *parent" "Uint flags"
+.Pp
+.Ft void
+.Fn SC_PlotterSizeHint "SC_Plotter *plotter" "Uint w" " Uint h"
+.Pp
+.Ft void
+.Fn SC_PlotterSetDefaultFont "SC_Plotter *plotter" "const char *face" "int size"
+.Pp
+.Ft void
+.Fn SC_PlotterSetDefaultColor "SC_Plotter *plotter" "int which" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft void
+.Fn SC_PlotterSetDefaultScale "SC_Plotter *plotter" "SC_Real xScale" "SC_Real yScale"
+.Pp
+.Ft void
+.Fn SC_PlotterUpdate "SC_Plotter *plotter"
+.Pp
+.Ft 
+.Pp
+.nr nS 0
+The
+.Fn SC_PlotterNew
+function allocates, initializes, and attaches a new
+.Nm
+widget.
+There are currently no
+.Fa flags
+specific to this widget.
+.Pp
+.Fn SC_PlotterSizeHint
+requests an initial sizing in pixels.
+.Pp
+.Fn SC_PlotterSetDefaultFont
+sets the default font for new labels.
+.Pp
+.Fn SC_PlotterSetDefaultColor
+sets the default color for new plots.
+.Pp
+.Fn SC_PlotterSetDefaultScale
+sets the default X and Y scaling factors to use for new plots.
+.Pp
+The
+.Fn SC_PlotterUpdate
+function updates all of the automatic plots (i.e., plots created by the
+.Fn SC_PlotFrom*
+functions).
+.Sh PLOT INTERFACE
+.nr nS 1
+.Ft "SC_Plot *"
+.Fn SC_PlotNew "SC_Plotter *plotter" "enum sc_plot_type type"
+.Pp
+.Ft "SC_Plot *"
+.Fn SC_PlotFromReal "SC_Plotter *plotter" "enum sc_plot_type type" "SC_Real *v"
+.Pp
+.Ft "SC_Plot *"
+.Fn SC_PlotFromInt "SC_Plotter *plotter" "enum sc_plot_type type" "int *v"
+.Pp
+.Ft "SC_Plot *"
+.Fn SC_PlotFromProp "SC_Plotter *plotter" "enum sc_plot_type type" "const char *label" "const char *propName"
+.Pp
+.Ft "SC_Plot *"
+.Fn SC_PlotFromDerivative "SC_Plotter *plotter" "enum sc_plot_type type" "SC_Plot *otherPlot"
+.Pp
+.Ft void
+.Fn SC_PlotClear "SC_Plot *plot"
+.Pp
+.Ft void
+.Fn SC_PlotReal "SC_Plot *plot" "SC_Real v"
+.Pp
+.Ft void
+.Fn SC_PlotRealv "SC_Plot *plot" "Uint nitems" "const SC_Real *items"
+.Pp
+.Ft void
+.Fn SC_PlotVector "SC_Plot *plot" "SC_Vector v"
+.Pp
+.Ft void
+.Fn SC_PlotVectorv "SC_Plot *plot" "Uint nitems" "const SC_Vector *items"
+.Pp
+.Ft void
+.Fn SC_PlotSettings "SC_Plot *plot"
+.Pp
+.Ft void
+.Fn SC_PlotSetColor "SC_Plot *plot" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft void
+.Fn SC_PlotSetLabel "SC_Plot *plot" "const char *text" "..."
+.Pp
+.Ft void
+.Fn SC_PlotSetScale "SC_Plot *plot" "SC_Real xScale" "SC_Real yScale"
+.Pp
+.Ft void
+.Fn SC_PlotSetXoffs "SC_Plot *plot" "int xOffs"
+.Pp
+.Ft void
+.Fn SC_PlotSetYoffs "SC_Plot *plot" "int yOffs"
+.Pp
+.nr nS 0
+The
+.Fn SC_PlotNew
+function creates a new "manual" plot and attaches it to
+.Fa plotter .
+The data of manual plots need to be entered using one of the
+.Fn SC_PlotReal ,
+.Fn SC_PlotRealv ,
+.Fn SC_PlotVector
+and
+.Fn SC_PlotVectorv
+functions.
+The
+.Fa type
+argument defines the display style for the plot:
+.Bd -literal
+enum sc_plot_type {
+	SC_PLOT_POINTS,		/* Individual points */
+	SC_PLOT_LINEAR,		/* Linear interpolation */
+	SC_PLOT_CUBIC_SPLINE,	/* Cubic spline interpolation */
+	SC_PLOT_VECTORS		/* Vector arrows/cones */
+};
+.Ed
+.Pp
+.Fn SC_PlotFromReal
+and
+.Fn SC_PlotFromInt
+create a new plot that will automatically (on call to
+.Fn SC_PlotterUpdate )
+gather data from the given
+.Ft SC_Real
+or
+.Ft int
+variable.
+.Pp
+.Fn SC_PlotFromProp
+is similar to
+.Fn SC_PlotFromReal
+and
+.Fn SC_PlotFromInt ,
+except that the value is fetched from the given Agar property (which is
+described as a string referencing a VFS object and a property name).
+Recognized property types include
+.Dv AG_PROP_FLOAT ,
+.Dv AG_PROP_DOUBLE ,
+.Dv AG_PROP_INT
+and
+.Dv AG_PROP_UINT
+(see
+.Xr AG_Prop 3
+for more information on Agar property tables).
+.Pp
+The
+.Fn SC_PlotFromDerivative
+function plots the derivative of
+.Fa otherPlot .
+When displaying derivatives, you will usually want to increase the Y scaling
+factor accordingly.
+.Pp
+.Fn SC_PlotClear
+reinitializes the dataset of the given plot to the empty set.
+.Pp
+The
+.Fn SC_PlotReal
+and
+.Fn SC_PlotRealv
+functions insert one or more real values into the dataset of the given plot,
+assuming it is a manual plot created by
+.Fn SC_PlotNew .
+Similarly,
+.Fn SC_PlotVector
+and
+.Fn SC_PlotVectorv
+insert one or more vector values into the given plot.
+.Pp
+.Fn SC_PlotSettings
+creates a window which allow the user to tweak the plot settings.
+.Pp
+.Fn SC_PlotSetColor
+changes the color of the given plot using the given RGB triplet.
+.Pp
+.Fn SC_PlotSetLabel
+changes the label string describing the given plot.
+The
+.Fn SC_PlotUpdateLabel
+function should be called whenever the label string associated with the
+given plot is changed directly.
+.Pp
+.Fn SC_PloySetScale
+sets the X and Y scaling factors for the given plot.
+If a parameter is exactly 0.0, it is ignored.
+.Pp
+.Fn SC_PlotSetXoffs
+and
+.Fn SC_PlotSetYoffs
+set the X and Y offsets of the plot display.
+.Sh PLOT LABEL INTERFACE
+.nr nS 1
+.Ft "SC_PlotLabel *"
+.Fn SC_PlotLabelNew "SC_Plot *plot" "enum sc_plot_label_type type" "Uint x" "Uint y" "const char *text" "..."
+.Pp
+.Ft void
+.Fn SC_PlotLabelSetText "SC_Plot *plot" "SC_PlotLabel *label" "const char *text" "..."
+.Pp
+.Ft "SC_PlotLabel *"
+.Fn SC_PlotLabelReplace "SC_Plot *plot" "enum sc_plot_label_type type" "Uint x" "Uint y" "const char *text" "..."
+.Pp
+.nr nS 0
+The
+.Fn SC_PlotLabelNew
+function creates a new label associated with the given plot.
+Possible values for
+.Fa type
+include:
+.Bl -tag -width "SC_LABEL_OVERLAY "
+.It SC_LABEL_X
+Label will be positioned relative to a given X value.
+This feature is very useful when displaying timing diagrams.
+.It SC_LABEL_Y
+Label will be positioned relative to a given Y value.
+.It SC_LABEL_FREE
+Label will not be positioned relative to any specific value, and the user
+can move the label with the mouse.
+.It SC_LABEL_OVERLAY
+Label will not be positioned relative to any specific value, and the user
+cannot move the label.
+.El
+.Pp
+The
+.Fa x
+and
+.Fa y
+arguments define the initial position of the label (the exact meaning of these
+coordinates depends on
+.Fa type ) .
+.Pp
+.Fn SC_PlotLabelSetText
+changes the text associated with the given label.
+.Pp
+.Fn SC_PlotLabelReplace
+searches for an existing label containing the same text, and if a match is
+found, replaces that label with a new label, preserving the position of the
+previous label.
+If no match is found, a new label is created.
+The label may be positioned at a different location than specified, in order
+to avoid overlapping labels.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebuttondown "
+.It window-mousemotion
+The X and Y offsets of selected plots is moved.
+.It window-mousebuttonup
+.It window-mousebuttondown
+Click on any of the plot labels select the plot.
+Multiple plots can be selected by holding the CTRL key.
+Right-click on a plot label shows a popup menu.
+Mouse wheel adjusts the Y scaling factor of selected plots by some value.
+.It window-keyup
+.It window-keydown
+Keys '0' and '1' set the Y scaling factor to 1.0.
+Keys '=' and '-' increase and decrease the Y scaling factor by some value.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
+.Sh STRUCTURE DATA
+.Pp
+For the
+.Fa SC_Plotter
+object:
+.Pp
+.Bl -tag -compact -width "SC_Vector *vMin, *vMax "
+.It Ft int xMax
+Maximum X for real-valued plots.
+.It Ft SC_Real yMin, yMax
+Extrema of real-valued plots
+.It Ft SC_Vector *vMin, *vMax
+Extrema of vector-valued plots
+.It Ft int xOffs, yOffs
+Global display offset
+.It Ft SC_Real xScale, yScale
+X and Y scaling factors
+.It Ft TAILQ plots
+List of
+.Ft SC_Plot
+structures.
+.El
+.Pp
+For the
+.Fa SC_Plot
+structure:
+.Pp
+.Bl -tag -compact -width "SC_Real xScale, yScale "
+.It Ft Uint n
+Number of values in plot
+.It Ft char label_text[]
+Label text (must call
+.Fn SC_PlotterUpdateLabel
+if updated manually)
+.It Ft int xOffs, yOffs
+X and Y display offsets.
+.It Ft int xLabel, yLabel
+Position of plot label display.
+.El
+.Sh EXAMPLES
+See the
+.Pa plotting
+demo in the Agar
+.Pa demos
+directory.
+.Sh SEE ALSO
+.Xr AG_FixedPlotter 3 ,
+.Xr AG_Intro 3 ,
+.Xr AG_Prop 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3 ,
+.Xr SC_Math 3 ,
+.Xr SC_Vector 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.3.
