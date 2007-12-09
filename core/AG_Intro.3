@@ -26,13 +26,15 @@
 .Dt AG_INTRO 3
 .Os
 .ds vT Agar API Reference
-.ds oS Agar 1.0
+.ds oS Agar 1.3
 .Sh NAME
 .Nm AG_Intro
 .Nd agar introduction
 .Sh DESCRIPTION
-Agar is a set of libraries for developing graphical applications that are
-portable to numerous platforms.
+Agar is a portable graphical application toolkit.
+It consists of two libraries: Agar-Core and Agar-GUI.
+The Agar source distribution also includes other useful graphics-related
+libraries.
 .Pp
 .Sh AGAR-CORE
 Agar-Core implements the
@@ -186,6 +188,14 @@ Alternate interface to
 .Xr AG_Box 3 .
 .El
 .Pp
+.Sh AGAR-SC
+The Agar-SC library implements math functions and widgets aimed at
+scientific and engineering applications.
+.Pp
+.Bl -tag -width "SC_Plotter(3) " -compact
+.It Xr SC_Plotter 3
+Displays one or more real/vector-valued plots.
+.El
 .Sh AGAR-VG
 Agar-VG is a simple 2D vector graphics library which allows developers
 to specify hierarchical sketches consisting of elements such as lines, curves
@@ -194,6 +204,8 @@ It is well suited to applications such as technical simulations; applications
 requiring dimensioned, constrained vector drawings should use the
 .Xr SK 3
 object instead.
+.Pp
+(Agar-VG is not yet documented)
 .Pp
 .\" .Bl -tag -width "VG_View(3) " -compact
 .\" .It Xr VG 3
@@ -239,13 +251,4 @@ The basic 2D map object.
 Dynamic map object.
 .It Xr MAP_View 3
 Map visualization and edition widget.
-.El
-.Sh OTHER LIBRARIES BASED ON AGAR
-.Bl -tag -width "Agar-SG "
-.It Agar-SG
-Agar-SG is a generic 3D geometry and graphics rendering engine.
-Given an input of geometrical and scene information, Agar-SG is designed
-to provide efficient space partitioning, high-quality rendering from any
-viewpoint and generic solving of geometrical constraints between entities.
-For more information, see: http://hypertriton.com/agar-sg/
 .El
