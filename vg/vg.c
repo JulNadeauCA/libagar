@@ -88,7 +88,7 @@ VG_DestroySubsystem(void)
 }
 
 VG *
-VG_New(int flags)
+VG_New(Uint flags)
 {
 	VG *vg;
 
@@ -98,7 +98,7 @@ VG_New(int flags)
 }
 
 void
-VG_Init(VG *vg, int flags)
+VG_Init(VG *vg, Uint flags)
 {
 	Uint32 sflags = SDL_SWSURFACE|SDL_RLEACCEL;
 	int i;

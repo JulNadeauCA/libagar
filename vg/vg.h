@@ -138,7 +138,7 @@ typedef struct vg_filling_style {
 typedef struct vg_text_style {
 	char face[VG_FONT_FACE_MAX];
 	int size;
-	int flags;
+	Uint flags;
 #define VG_FONT_BOLD		0x01		/* Bold style */
 #define VG_FONT_ITALIC		0x02		/* Italic style */
 #define VG_FONT_UNDERLINE	0x04		/* Underlined */
@@ -284,8 +284,8 @@ __BEGIN_DECLS
 void	 VG_InitSubsystem(void);
 void	 VG_DestroySubsystem(void);
 
-VG	*VG_New(int);
-void	 VG_Init(VG *, int);
+VG	*VG_New(Uint);
+void	 VG_Init(VG *, Uint);
 void	 VG_Destroy(VG *);
 void	 VG_Reinit(VG *);
 void	 VG_Save(VG *, AG_DataSource *);
