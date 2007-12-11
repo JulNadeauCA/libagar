@@ -8,16 +8,19 @@ PROJPOSTPKG=	post-package
 
 include ${TOP}/Makefile.proj
 
-SUBDIR=	 core agar-core-config \
-	 gui agar-config \
-	 vg agar-vg-config \
-	 rg agar-rg-config \
-	 map agar-map-config \
-	 sc agar-sc-config \
-	 net agar-net-config \
-	 dev agar-dev-config \
-	 libintl \
-	 po
+SUBDIR=	core \
+	agar-core-config \
+	${SUBDIR_GUI_CONF} \
+	net agar-net-config \
+	libintl \
+	po
+
+SUBDIR_GUI= gui agar-config \
+	    vg agar-vg-config \
+	    rg agar-rg-config \
+	    map agar-map-config \
+	    sc agar-sc-config \
+	    dev agar-dev-config
 
 all: all-subdir
 clean: clean-config clean-subdir

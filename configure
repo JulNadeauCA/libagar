@@ -179,6 +179,7 @@ echo "    --enable-32bpp            Support for 32 bpp display [default: yes]"
 echo "    --enable-warnings         Suggested compiler warnings [default: no]"
 echo "    --enable-network          Build network client library [default: check]"
 echo "    --enable-server           Build network server library [default: no]"
+echo "    --enable-gui              Build Agar-GUI [default: yes]"
 exit 1
 fi
 
@@ -2555,12 +2556,17 @@ fi;
 if [ "${HAVE_SDL}" != "yes" ]
  then
 	echo "*"
-	echo "* Agar requires the SDL library. Please install it and try again."
-	echo "* You can download SDL from: http://www.libsdl.org/."
+	echo "* Agar-GUI requires the SDL library. You can download it "
+	echo "* from: http://www.libsdl.org/"
 	echo "*"
 	exit 1
 fi
-if [ "${with_freetype}" != "no" ]
+if [ "${enable_gui}" != "no" ]
+ then
+SUBDIR_GUI_CONF="\${SUBDIR_GUI}"
+echo "SUBDIR_GUI_CONF=$SUBDIR_GUI_CONF" >>Makefile.config
+echo "mdefs[\"SUBDIR_GUI_CONF\"] = \"$SUBDIR_GUI_CONF\"" >>configure.lua
+	if [ "${with_freetype}" != "no" ]
  then
 echo -n "checking for FreeType (http://www.freetype.org)..."
 echo -n "checking for FreeType (http://www.freetype.org)..." >> config.log
@@ -2654,19 +2660,19 @@ echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 echo "no"
 echo "no" >> config.log
 fi;
-	if [ "${HAVE_FREETYPE}" != "yes" ]
+		if [ "${HAVE_FREETYPE}" != "yes" ]
  then
-		echo "*"
-		echo "* Agar needs FreeType in order to display vector-based"
-		echo "* fonts. If you would like to use Agar's bitmap font, "
-		echo "* rerun configure with the --without-freetype option."
-		echo "*"
-		echo "* Note that the bundled bitmap font can only display"
-		echo "* ASCII characters of low quality."
-		echo "*"
-		exit 1
-	fi
-else
+			echo "*"
+			echo "* Agar needs FreeType to display vector fonts."
+			echo "* If you would like to use a low-quality bitmap "
+			echo "* font engine, pass the --without-freetype flag."
+			echo "*"
+			echo "* Note that the bundled bitmap font only includes"
+			echo "* the ASCII range."
+			echo "*"
+			exit 1
+		fi
+	else
 echo "#undef HAVE_FREETYPE" >config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 FREETYPE_CFLAGS=""""
@@ -2675,8 +2681,8 @@ echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
 FREETYPE_LIBS=""""
 echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
 echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
-fi
-if [ "${with_gl}" != "no" ]
+	fi
+	if [ "${with_gl}" != "no" ]
  then
 echo -n "checking for OpenGL (http://www.opengl.org)..."
 echo -n "checking for OpenGL (http://www.opengl.org)..." >> config.log
@@ -2784,25 +2790,25 @@ echo "hdefs[\"OPENGL_CFLAGS\"] = nil" >>configure.lua
 echo "#undef OPENGL_LIBS" >config/opengl_libs.h
 echo "hdefs[\"OPENGL_LIBS\"] = nil" >>configure.lua
 fi;
-	if [ "${HAVE_OPENGL}" = "yes" ]
+		if [ "${HAVE_OPENGL}" = "yes" ]
  then
 SDL_CFLAGS="$SDL_CFLAGS $OPENGL_CFLAGS"
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
-	else
-		if [ "${with_gl}" = "yes" ]
- then
-			echo "*"
-			echo "* --with-gl was requested, but OpenGL was not"
-			echo "* found on this system."
-			echo "*"
-			exit 1
 		else
+			if [ "${with_gl}" = "yes" ]
+ then
+				echo "*"
+				echo "* --with-gl was explicitely requested, "
+				echo "* but OpenGL was not found."
+				echo "*"
+				exit 1
+			else
 echo "#undef HAVE_OPENGL" >config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
+			fi
 		fi
-	fi
-else
+	else
 echo "#undef HAVE_OPENGL" >config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 OPENGL_CFLAGS=""""
@@ -2811,8 +2817,8 @@ echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
 OPENGL_LIBS=""""
 echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
 echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
-fi
-if [ "${with_jpeg}" != "no" ]
+	fi
+	if [ "${with_jpeg}" != "no" ]
  then
 echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
 echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log
@@ -2917,21 +2923,50 @@ echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 echo "no"
 echo "no" >> config.log
 fi;
-	if [ "${HAVE_JPEG}" != "yes" ]
+		if [ "${HAVE_JPEG}" != "yes" ]
  then
-		if [ "${with_jpeg}" = "yes" ]
+			if [ "${with_jpeg}" = "yes" ]
  then
-			echo "*"
-			echo "* --with-jpeg was requested, but libjpeg was not"
-			echo "* found on this system."
-			echo "*"
-			exit 1
-		else
+				echo "*"
+				echo "* --with-jpeg was explicitely requested, "
+				echo "* but libjpeg was not found."
+				echo "*"
+				exit 1
+			else
 echo "#undef HAVE_JPEG" >config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
+			fi
 		fi
+	else
+echo "#undef HAVE_JPEG" >config/have_jpeg.h
+echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
+JPEG_CFLAGS=""""
+echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
+echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
+JPEG_LIBS=""""
+echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
+echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 	fi
 else
+SUBDIR_GUI_CONF=""""
+echo "SUBDIR_GUI_CONF=$SUBDIR_GUI_CONF" >>Makefile.config
+echo "mdefs[\"SUBDIR_GUI_CONF\"] = \"$SUBDIR_GUI_CONF\"" >>configure.lua
+echo "#undef HAVE_FREETYPE" >config/have_freetype.h
+echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
+FREETYPE_CFLAGS=""""
+echo "FREETYPE_CFLAGS=$FREETYPE_CFLAGS" >>Makefile.config
+echo "mdefs[\"FREETYPE_CFLAGS\"] = \"$FREETYPE_CFLAGS\"" >>configure.lua
+FREETYPE_LIBS=""""
+echo "FREETYPE_LIBS=$FREETYPE_LIBS" >>Makefile.config
+echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
+echo "#undef HAVE_OPENGL" >config/have_opengl.h
+echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
+OPENGL_CFLAGS=""""
+echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
+echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
+OPENGL_LIBS=""""
+echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
+echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 echo "#undef HAVE_JPEG" >config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 JPEG_CFLAGS=""""
@@ -3344,7 +3379,7 @@ fi;
 			echo "*"
 			echo "* --enable-threads was requested, but your"
 			echo "* pthreads implementation does not support"
-			echo "* recursive mutexes"
+			echo "* recursive mutexes."
 			echo "*"
 			exit 1
 		fi
