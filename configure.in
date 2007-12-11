@@ -1,4 +1,3 @@
-# $Csoft: configure.in,v 1.88 2005/05/08 02:10:27 vedge Exp $
 # Public domain
 
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
@@ -25,12 +24,8 @@ MDEFINE(LOCALEDIR, "\${PREFIX}/share/agar/locale")
 HDEFINE(LOCALEDIR, "$PREFIX/share/agar/locale")
 MDEFINE(TTFDIR, "\${PREFIX}/share/agar/fonts")
 HDEFINE(TTFDIR, "$PREFIX/share/agar/fonts")
-MDEFINE(LIBDIR, "\${PREFIX}/lib")
-HDEFINE(LIBDIR, "$PREFIX/lib")
 MDEFINE(INCLDIR, "\${PREFIX}/include/agar")
 HDEFINE(INCLDIR, "$PREFIX/include/agar")
-MDEFINE(MANDIR, "\${PREFIX}/share/man")
-MDEFINE(PSDIR, "\${PREFIX}/share/agar/doc")
 
 CHECK(cc)
 CHECK(sys_types)
