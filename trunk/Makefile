@@ -8,9 +8,8 @@ PROJPOSTPKG=	post-package
 
 include ${TOP}/Makefile.proj
 
-SUBDIR=	 agar-config \
-	 core \
-	 gui \
+SUBDIR=	 core agar-core-config \
+	 gui agar-config \
 	 vg agar-vg-config \
 	 rg agar-rg-config \
 	 map agar-map-config \
