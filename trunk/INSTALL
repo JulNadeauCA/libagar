@@ -44,6 +44,13 @@ and MSYS. We also provide precompiled DLL and LIB files. See "Platform
 specific notes" section of the Agar website at http://libagar.org/docs/
 for more information.
 
+Installing only Agar-Core
+-------------------------
+Some command-line applications and daemons use the object system implemented
+in Agar-Core, but don't need graphics capabilities. You can compile Agar-Core
+without Agar-GUI and its related dependencies using the "--disable-gui" option
+to ./configure, and compile your application using `agar-core-config`.
+
 Concurrent building
 -------------------
 Under Unix, it is possible to build Agar outside of the source directory.
