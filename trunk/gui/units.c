@@ -165,6 +165,9 @@ const AG_Unit agIdentityUnit[] = {
 /* Units of length/distance */
 const AG_Unit agLengthUnits[] = {
 	{ "Ang", "\xc3\x85", N_("\xc3\x85ngstroms"), 1e-10,	NULL },
+	{ "fm", "", N_("Femtometres"),		1e-15,		NULL },
+	{ "pm", "", N_("Picometres"),		1e-12,		NULL },
+	{ "nm", "", N_("Nanometres"),		1e-9,		NULL },
 	{ "um", "\xc2\xb5", N_("Microns"),	1e-6,		NULL },
 	{ "mil", "", N_("Mils"),		25e-6,		NULL },
 	{ "mm", "", N_("Millimeters"),		1e-3,		NULL },
@@ -176,9 +179,14 @@ const AG_Unit agLengthUnits[] = {
 	{ "m", "", N_("Meters"),		1.0,		NULL },
 	{ "km", "", N_("Kilometers"),		1000,		NULL },
 	{ "mi", "", N_("Miles"),		1609.344,	NULL },
+#ifdef ASTRONOMICAL_UNITS
+	{ "A.U", "", N_("Astronomical units"),	159598073000.0,		NULL },
+	{ "L.Y", "", N_("Light years"),		946075309081900.0,	NULL },
+	{ "P.S", "", N_("Parsecs"),		3085678e10,		NULL },
+#endif
+#ifdef HISTORICAL_UNITS
 	{ "N.M", "", N_("Nautical miles"),	1852,		NULL },
 	{ "N.L", "", N_("Nautical leagues"),	5556,		NULL },
-#ifdef HISTORICAL_UNITS
 	{ "lnk", "", N_("Links"),		0.201168,	NULL },
 	{ "span", "", N_("Spans"),		0.2286,		NULL },
 	{ "cbt", "", N_("Cubits"),		0.4572,		NULL },
@@ -188,11 +196,6 @@ const AG_Unit agLengthUnits[] = {
 	{ "cha", "", N_("Chains"),		20.1168,	NULL },
 	{ "fur", "", N_("Furlongs"),		201.167981,	NULL },
 	{ "cbl", "", N_("Cable lengths"),	219.456,	NULL },
-#endif
-#ifdef ASTRONOMICAL_UNITS
-	{ "A.U", "", N_("Astronomical units"),	159598073000.0,		NULL },
-	{ "L.Y", "", N_("Light years"),		946075309081900.0,	NULL },
-	{ "P.S", "", N_("Parsecs"),		3085678e10,		NULL },
 #endif
 	{ NULL,	NULL, NULL,			0, NULL }
 };
