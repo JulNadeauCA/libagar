@@ -121,10 +121,10 @@ EOF
 	rm -f $TMP
 fi
 
-echo "**************************************************"
-echo "TODO: Update en.wikipedia.org/wiki/Agar (software)"
-echo "TODO: Update fr.wikipedia.org/wiki/Agar (moteur)"
-echo "TODO: Update http://devmaster.net/engines/list.php"
-echo "TODO: Update SourceForge"
-echo "**************************************************"
+echo "*********************************************************"
+echo "TODO: Update http://en.wikipedia.org/wiki/Agar (software)"
+echo "TODO: Update http://fr.wikipedia.org/wiki/Agar (moteur)"
+echo "TODO: Update http://sourceforge.net/projects/agar/"
+echo "TODO: Update http://freshmeat.net/projects/agar/"
+echo "*********************************************************"
 
