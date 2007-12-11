@@ -12,6 +12,7 @@ REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
 REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 REGISTER("--enable-network",	"Build network client library [default: check]")
 REGISTER("--enable-server",	"Build network server library [default: no]")
+REGISTER("--enable-gui",	"Build Agar-GUI [default: yes]")
 
 # Agar version
 HDEFINE(VERSION, "1.3.1")
@@ -76,70 +77,89 @@ fi
 CHECK(sdl, 1.2.0)
 if [ "${HAVE_SDL}" != "yes" ]; then
 	echo "*"
-	echo "* Agar requires the SDL library. Please install it and try again."
-	echo "* You can download SDL from: http://www.libsdl.org/."
+	echo "* Agar-GUI requires the SDL library. You can download it "
+	echo "* from: http://www.libsdl.org/"
 	echo "*"
 	exit 1
 fi
 
-# Enable Freetype support if the Freetype library is found.
-# If FreeType is unavailable, Agar will fall back to bitmap fonts.
-if [ "${with_freetype}" != "no" ]; then
-	CHECK(freetype, 7.0.1)
-	if [ "${HAVE_FREETYPE}" != "yes" ]; then
-		echo "*"
-		echo "* Agar needs FreeType in order to display vector-based"
-		echo "* fonts. If you would like to use Agar's bitmap font, "
-		echo "* rerun configure with the --without-freetype option."
-		echo "*"
-		echo "* Note that the bundled bitmap font can only display"
-		echo "* ASCII characters of low quality."
-		echo "*"
-		exit 1
+#
+# Check GUI-specific dependencies.
+#
+if [ "${enable_gui}" != "no" ]; then
+	MDEFINE(SUBDIR_GUI_CONF, "\${SUBDIR_GUI}")
+
+	# Enable Freetype support if the Freetype library is found. Otherwise
+	# fall back to the bitmap font engine.
+	if [ "${with_freetype}" != "no" ]; then
+		CHECK(freetype, 7.0.1)
+		if [ "${HAVE_FREETYPE}" != "yes" ]; then
+			echo "*"
+			echo "* Agar needs FreeType to display vector fonts."
+			echo "* If you would like to use a low-quality bitmap "
+			echo "* font engine, pass the --without-freetype flag."
+			echo "*"
+			echo "* Note that the bundled bitmap font only includes"
+			echo "* the ASCII range."
+			echo "*"
+			exit 1
+		fi
+	else
+		HUNDEF(HAVE_FREETYPE)
+		MDEFINE(FREETYPE_CFLAGS, "")
+		MDEFINE(FREETYPE_LIBS, "")
+	fi
+
+	# Enable OpenGL support if an OpenGL library is found.
+	if [ "${with_gl}" != "no" ]; then
+		CHECK(opengl)
+		if [ "${HAVE_OPENGL}" = "yes" ]; then
+			MDEFINE(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS")
+		else
+			if [ "${with_gl}" = "yes" ]; then
+				echo "*"
+				echo "* --with-gl was explicitely requested, "
+				echo "* but OpenGL was not found."
+				echo "*"
+				exit 1
+			else
+				HUNDEF(HAVE_OPENGL)
+			fi
+		fi
+	else
+		HUNDEF(HAVE_OPENGL)
+		MDEFINE(OPENGL_CFLAGS, "")
+		MDEFINE(OPENGL_LIBS, "")
+	fi
+
+	# Enable JPEG support if libjpeg is found (only used for screenshots).
+	if [ "${with_jpeg}" != "no" ]; then
+		CHECK(jpeg)
+		if [ "${HAVE_JPEG}" != "yes" ]; then
+			if [ "${with_jpeg}" = "yes" ]; then
+				echo "*"
+				echo "* --with-jpeg was explicitely requested, "
+				echo "* but libjpeg was not found."
+				echo "*"
+				exit 1
+			else
+				HUNDEF(HAVE_JPEG)
+			fi
+		fi
+	else
+		HUNDEF(HAVE_JPEG)
+		MDEFINE(JPEG_CFLAGS, "")
+		MDEFINE(JPEG_LIBS, "")
 	fi
 else
+	MDEFINE(SUBDIR_GUI_CONF, "")
+
 	HUNDEF(HAVE_FREETYPE)
 	MDEFINE(FREETYPE_CFLAGS, "")
 	MDEFINE(FREETYPE_LIBS, "")
-fi
-
-# Enable OpenGL support if an OpenGL library is found.
-if [ "${with_gl}" != "no" ]; then
-	CHECK(opengl)
-	if [ "${HAVE_OPENGL}" = "yes" ]; then
-		MDEFINE(SDL_CFLAGS, "$SDL_CFLAGS $OPENGL_CFLAGS")
-	else
-		if [ "${with_gl}" = "yes" ]; then
-			echo "*"
-			echo "* --with-gl was requested, but OpenGL was not"
-			echo "* found on this system."
-			echo "*"
-			exit 1
-		else
-			HUNDEF(HAVE_OPENGL)
-		fi
-	fi
-else
 	HUNDEF(HAVE_OPENGL)
 	MDEFINE(OPENGL_CFLAGS, "")
 	MDEFINE(OPENGL_LIBS, "")
-fi
-
-# Enable JPEG support if libjpeg is found.
-if [ "${with_jpeg}" != "no" ]; then
-	CHECK(jpeg)
-	if [ "${HAVE_JPEG}" != "yes" ]; then
-		if [ "${with_jpeg}" = "yes" ]; then
-			echo "*"
-			echo "* --with-jpeg was requested, but libjpeg was not"
-			echo "* found on this system."
-			echo "*"
-			exit 1
-		else
-			HUNDEF(HAVE_JPEG)
-		fi
-	fi
-else
 	HUNDEF(HAVE_JPEG)
 	MDEFINE(JPEG_CFLAGS, "")
 	MDEFINE(JPEG_LIBS, "")
@@ -198,7 +218,7 @@ if [ "${enable_threads}" != "no" ]; then
 			echo "*"
 			echo "* --enable-threads was requested, but your"
 			echo "* pthreads implementation does not support"
-			echo "* recursive mutexes"
+			echo "* recursive mutexes."
 			echo "*"
 			exit 1
 		fi
@@ -265,4 +285,3 @@ if [ "${enable_32bpp}" != "no" ]; then
 else
 	HUNDEF(VIEW_32BPP)
 fi
-

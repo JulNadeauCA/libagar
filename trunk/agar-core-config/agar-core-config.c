@@ -39,6 +39,8 @@
 #include <config/pthreads_libs.h>
 #include <config/pthreads_cflags.h>
 #endif
+#include <config/sdl_libs.h>
+#include <config/sdl_cflags.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -67,6 +69,9 @@ main(int argc, char *argv[])
 			printf("%s\n", LOCALEDIR);
 		} else if (strcmp(argv[i], "--cflags") == 0) {
 			printf("-I%s ", INCLDIR);
+#ifdef SDL_CFLAGS
+			printf("%s ", SDL_CFLAGS);
+#endif
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_CFLAGS);
 #endif
@@ -76,6 +81,9 @@ main(int argc, char *argv[])
 			printf("-lag_core ");
 #ifdef ENABLE_NLS
 			printf("-lag_intl ");
+#endif
+#ifdef SDL_LIBS
+			printf("%s ", SDL_LIBS);
 #endif
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_LIBS);
