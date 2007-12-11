@@ -53,17 +53,15 @@ See: http://libagar.org/credits.html.
 
 Other libraries based on Agar
 -----------------------------
-This distribution includes some useful libraries based on Agar, listed
-below. In order to use these libraries, you will need to explicitely link
-your application against them.
+Here are some useful libraries are based on Agar-Core and Agar-GUI. Some of
+them are bundled with this source distribution, but you need to explicitely
+link your application against them.
 
-	Agar-DEV	Developer/debugging tools
-	Agar-VG		Vector display engine
-	Agar-SC		Scientific computing utilities
-	Agar-RG		2D graphic rendering/edition
-	Agar-MAP	2D game levels/edition
-
-Other libraries distributed separatedly include Agar-SG, a 3D geometry
-and graphics engine, available from http://hypertriton.com/agar-sg/ and
-the cadtools API, available from http://hypertriton.com/cadtools/.
+Agar-DEV	Developer/debugging tools (bundled, use `agar-dev-config`)
+Agar-VG		Vector graphics library (bundled, use `agar-vg-config`)
+Agar-SC		Scientific computing utilities (bundled, use `agar-sc-config`)
+Agar-RG		2D graphic rendering/edition (bundled, use `agar-rg-config`)
+Agar-MAP	2D game levels/edition (bundled, use `agar-map-config`)
+FreeSG		3D engine (see http://freesg.org/)
+CADTools	CAD/CAM libraries (see http://hypertriton.com/cadtools/)
 
