@@ -68,7 +68,7 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 	tb = Malloc(sizeof(AG_Textbox));
 	AG_ObjectInit(tb, &agTextboxClass);
 
-	if (flags & AG_TEXTBOX_HFILL) { AG_ExpandHoriz(tb); }
+	if ((flags & AG_TEXTBOX_NO_HFILL) == 0) { AG_ExpandHoriz(tb); }
 	if (flags & AG_TEXTBOX_VFILL) { AG_ExpandVert(tb); }
 	if (flags & AG_TEXTBOX_READONLY) { AG_WidgetDisable(tb); }
 	if (tb->flags & AG_TEXTBOX_MULTILINE) { EnableMultiline(tb); }

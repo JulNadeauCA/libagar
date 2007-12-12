@@ -39,6 +39,7 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_CATCH_TAB	 0x0800	/* Enter literal tabs into text
 					   instead of cycling focus */
 #define AG_TEXTBOX_CURSOR_MOVING 0x1000	/* Cursor is being moved */
+#define AG_TEXTBOX_NO_HFILL	 0x2000
 
 	int wPre, hPre;			/* Size hint */
 	int boxPadX, boxPadY;		/* Padding around textbox */
