@@ -43,7 +43,7 @@ AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *label)
 	num = Malloc(sizeof(AG_Numerical));
 	AG_ObjectInit(num, &agNumericalClass);
 
-	if (flags & AG_NUMERICAL_HFILL) { AG_ExpandHoriz(num); }
+	if ((flags & AG_NUMERICAL_NO_HFILL) == 0) { AG_ExpandHoriz(num); }
 	if (flags & AG_NUMERICAL_VFILL) { AG_ExpandVert(num); }
 	
 	if (label != NULL) {
@@ -393,7 +393,7 @@ Init(void *obj)
 	num->hUnitSel = 0;
 	Strlcpy(num->format, "%g", sizeof(num->format));
 	AG_MutexInitRecursive(&num->lock);
-	AG_TextboxSizeHint(num->input, "88.88");
+	AG_TextboxSizeHint(num->input, "8888.88");
 	
 	num->unit = AG_FindUnit("identity");
 	num->units = NULL;

@@ -24,6 +24,7 @@ typedef struct ag_numerical {
 	Uint flags;
 #define AG_NUMERICAL_HFILL	0x01
 #define AG_NUMERICAL_VFILL	0x02
+#define AG_NUMERICAL_NO_HFILL	0x04
 
 	AG_Mutex lock;
 	double value;			/* Default value binding */
