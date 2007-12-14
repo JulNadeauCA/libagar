@@ -864,6 +864,9 @@ have been copied if
 was unlimited.
 .Sh MISCELLANEOUS
 .nr nS 1
+.Ft "AG_Window *"
+.Fn AG_WidgetParentWindow "AG_Widget *widget"
+.Pp
 .Ft "AG_Widget *"
 .Fn AG_WidgetFind "AG_Display *view" "const char *name"
 .Pp
@@ -871,9 +874,14 @@ was unlimited.
 .Fn AG_SetStyle "AG_Widget *widget" "AG_Style *style"
 .Pp
 .nr nS 0
-The
+.Fn AG_WidgetParentWindow
+searches the parent objects of the given widget for an
+.Xr AG_Window 3
+(or a subclass of it).
+If one is found, it is returned, otherwise the function returns NULL.
+.Pp
 .Fn AG_WidgetFind
-function searches for a given widget by name, given an absolute path,
+searches for a given widget by name, given an absolute path,
 and returns a pointer to the widget or NULL.
 .Pp
 The
