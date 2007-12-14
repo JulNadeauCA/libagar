@@ -187,7 +187,7 @@ unnecessary text rendering (and texture uploads in OpenGL mode).
 .Sh COLUMN FUNCTIONS
 .nr nS 1
 .Ft "int"
-.Fn AG_TableAddCol "AG_Table *tbl" "const char *name" "const char *size_spec" "int (*sort_fn)(const AG_TableCell *, const AG_TableCell *))
+.Fn AG_TableAddCol "AG_Table *tbl" "const char *name" "const char *size_spec" "int (*sort_fn)(const void *, const void *))
 .Pp
 .Ft "void"
 .Fn AG_TableSelectCol "AG_Table *tbl" "int col"
@@ -219,6 +219,9 @@ The
 .Fa sort_fn
 argument, if not NULL, is the sorting function to use for items of this
 column.
+The two arguments are of the
+.Fn AG_TableCell
+type.
 .Pp
 The
 .Fn AG_TableSelectCol
