@@ -428,7 +428,7 @@ PressedCancel(AG_Event *event)
 	
 		if ((pwin = AG_WidgetParentWindow(fd)) != NULL) {
 /*			AG_PostEvent(NULL, pwin, "window-close", NULL); */
-/*			AG_ViewDetach(pwin); */
+			AG_ViewDetach(pwin);
 		}
 	}
 }
