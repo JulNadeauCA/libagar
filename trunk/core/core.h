@@ -70,6 +70,20 @@ typedef unsigned long Ulong;
 # endif
 #endif
 
+#define AG_BIG_ENDIAN 4321
+#define AG_LITTLE_ENDIAN 1234
+#include <config/_mk_big_endian.h>
+#include <config/_mk_little_endian.h>
+#if defined(_MK_BIG_ENDIAN)
+# define AG_BYTEORDER AG_BIG_ENDIAN
+#elif defined(_MK_LITTLE_ENDIAN)
+# define AG_BYTEORDER AG_LITTLE_ENDIAN
+#else
+# error "Byte order is unknown"
+#endif
+#undef _MK_BIG_ENDIAN
+#undef _MK_LITTLE_ENDIAN
+
 #include <core/error.h>
 #include <core/queue.h>
 
@@ -135,20 +149,6 @@ typedef unsigned long Ulong;
 #ifndef MAX3
 #define	MAX3(a,b,c) MAX((a),MAX((b),(c)))
 #endif
-
-#define AG_BIG_ENDIAN 4321
-#define AG_LITTLE_ENDIAN 1234
-#include <config/_mk_big_endian.h>
-#include <config/_mk_little_endian.h>
-#if defined(_MK_BIG_ENDIAN)
-# define AG_BYTEORDER AG_BIG_ENDIAN
-#elif defined(_MK_LITTLE_ENDIAN)
-# define AG_BYTEORDER AG_LITTLE_ENDIAN
-#else
-# error "Byte order is unknown"
-#endif
-#undef _MK_BIG_ENDIAN
-#undef _MK_LITTLE_ENDIAN
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4018)
