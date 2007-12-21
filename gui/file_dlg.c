@@ -297,6 +297,7 @@ FileSelected(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_TlistItem *ti;
+	char *ext;
 
 	AG_MutexLock(&tl->lock);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
@@ -304,6 +305,31 @@ FileSelected(AG_Event *event)
 		AG_PostEvent(NULL, fd, "file-selected", "%s", fd->cfile);
 	}
 	AG_MutexUnlock(&tl->lock);
+
+	if ((ext = strrchr(fd->cfile, '.')) != NULL) {
+		AG_MutexLock(&fd->comTypes->list->lock);
+		TAILQ_FOREACH(ti, &fd->comTypes->list->items, items) {
+			AG_FileType *ft = ti->p1;
+			char *ftext;
+			Uint i;
+
+			for (i = 0; i < ft->nexts; i++) {
+				if ((ftext = strrchr(ft->exts[i], '.'))
+				    == NULL) {
+					continue;
+				}
+				if (strcasecmp(ftext, ext) == 0)
+					break;
+			}
+			if (i < ft->nexts) {
+				AG_ComboSelect(fd->comTypes, ti);
+				AG_PostEvent(NULL, fd->comTypes,
+				    "combo-selected", "%p", ti);
+				break;
+			}
+		}
+		AG_MutexUnlock(&fd->comTypes->list->lock);
+	}
 }
 
 static void
