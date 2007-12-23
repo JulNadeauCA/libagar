@@ -165,8 +165,8 @@ AG_Destroy(void)
 	AG_ObjectDestroy(agWorld);
 	AG_ObjectDestroy(agConfig);
 
-/*	AG_MutexDestroy(&agLinkageLock); */
 	AG_MutexDestroy(&agTimingLock);
+	AG_MutexDestroy(&agLinkageLock);
 
 	AG_DestroyError();
 	AG_DestroyClassTbl();
