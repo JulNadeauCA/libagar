@@ -159,8 +159,10 @@ wait:
 	SDL_Delay(1);
 	AG_LockTimeouts(ob);
 	CIRCLEQ_FOREACH(oto, &ob->timeouts, timeouts) {
-		if (oto == to)
+		if (oto == to) {
+			AG_UnlockTimeouts(ob);
 			goto wait;
+		}
 	}
 	AG_UnlockTimeouts(ob);
 	return (0);
