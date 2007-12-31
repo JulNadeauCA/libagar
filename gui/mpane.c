@@ -72,6 +72,8 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 	AG_Pane *vp, *hp, *dp;
 	Uint pflags = AG_PANE_EXPAND|AG_PANE_DIV;
 
+	AG_ObjectLock(mp);
+
 	if (mp->flags & AG_MPANE_FORCE_DIV)
 		pflags |= AG_PANE_FORCE_DIV;
 
@@ -149,6 +151,8 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 		break;
 	}
 	mp->layout = layout;
+	
+	AG_ObjectUnlock(mp);
 }
 
 AG_WidgetClass agMPaneClass = {

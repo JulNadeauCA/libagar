@@ -67,9 +67,11 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	AG_Event *ev;
 
 	tl = AG_TlistNew(parent, flags);
+	AG_ObjectLock(tl);
 	tl->flags |= AG_TLIST_POLL;
 	ev = AG_SetEvent(tl, "tlist-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
+	AG_ObjectUnlock(tl);
 	return (tl);
 }
 
@@ -83,7 +85,6 @@ KeyTimeout(AG_Event *event)
 	AG_WidgetBinding *offsetb;
 	int *offset;
 
-	AG_MutexLock(&tl->lock);
 	offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
 	switch (keysym) {
 	case SDLK_UP:
@@ -137,7 +138,6 @@ KeyTimeout(AG_Event *event)
 		break;
 	}
 	AG_WidgetUnlockBinding(offsetb);
-	AG_MutexUnlock(&tl->lock);
 
 	tl->keymoved++;
 	AG_ReschedEvent(tl, "key-tick", agKbdRepeat);
@@ -148,9 +148,7 @@ DoubleClickTimeout(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 
-	AG_MutexLock(&tl->lock);
 	tl->dblclicked = NULL;
-	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -191,7 +189,6 @@ Init(void *obj)
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
-	AG_MutexInitRecursive(&tl->lock);
 
 	AG_SetEvent(tl->sbar, "scrollbar-changed", ScrollbarChanged, "%p", tl);
 	AG_SetEvent(tl, "window-mousebuttondown", MouseButtonDown, NULL);
@@ -206,15 +203,19 @@ Init(void *obj)
 void
 AG_TlistSizeHint(AG_Tlist *tl, const char *text, int nitems)
 {
+	AG_ObjectLock(tl);
 	AG_TextSize(text, &tl->wHint, NULL);
 	tl->hHint = (tl->item_h+2)*nitems;
+	AG_ObjectUnlock(tl);
 }
 
 void
 AG_TlistSizeHintPixels(AG_Tlist *tl, int w, int nitems)
 {
+	AG_ObjectLock(tl);
 	tl->wHint = w;
 	tl->hHint = (tl->item_h+2)*nitems;
+	AG_ObjectUnlock(tl);
 }
 
 static void
@@ -243,7 +244,6 @@ Destroy(void *p)
 		AG_ObjectDestroy(tp->menu);
 		Free(tp);
 	}
-	AG_MutexDestroy(&tl->lock);
 }
 
 static void
@@ -294,7 +294,6 @@ Draw(void *p)
 	STYLE(tl)->ListBackground(tl,
 	    AG_RECT(0, 0, WIDTH(tl), HEIGHT(tl)));
 
-	AG_MutexLock(&tl->lock);
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
@@ -341,10 +340,12 @@ Draw(void *p)
 			AG_DrawLineH(tl, 0, WIDTH(tl), y,
 			    AG_COLOR(TLIST_LINE_COLOR));
 	}
-	AG_MutexUnlock(&tl->lock);
 }
 
-/* Adjust the scrollbar offset according to the number of visible items. */
+/*
+ * Adjust the scrollbar offset according to the number of visible items.
+ * Tlist must be locked.
+ */
 static void
 UpdateListScrollbar(AG_Tlist *tl)
 {
@@ -405,11 +406,9 @@ AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 	int *offset;
 	int nitems;
 
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 	TAILQ_REMOVE(&tl->items, it, items);
 	nitems = --tl->nitems;
-	AG_MutexUnlock(&tl->lock);
-
 	FreeItem(tl, it);
 
 	/* Update the scrollbar range and offset accordingly. */
@@ -421,6 +420,7 @@ AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 		*offset = 0;
 	}
 	AG_WidgetUnlockBinding(offsetb);
+	AG_ObjectUnlock(tl);
 }
 
 /* Clear the items on the list, save the selections if polling. */
@@ -429,7 +429,7 @@ AG_TlistClear(AG_Tlist *tl)
 {
 	AG_TlistItem *it, *nit;
 	
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 
 	for (it = TAILQ_FIRST(&tl->items);
 	     it != TAILQ_END(&tl->items);
@@ -448,7 +448,7 @@ AG_TlistClear(AG_Tlist *tl)
 	/* Preserve the offset value, for polling. */
 	AG_WidgetSetInt(tl->sbar, "max", 0);
 
-	AG_MutexUnlock(&tl->lock);
+	AG_ObjectUnlock(tl);
 }
 
 int
@@ -483,7 +483,9 @@ void
 AG_TlistSetCompareFn(AG_Tlist *tl,
     int (*fn)(const AG_TlistItem *, const AG_TlistItem *))
 {
+	AG_ObjectLock(tl);
 	tl->compare_fn = fn;
+	AG_ObjectUnlock(tl);
 }
 
 /* Restore previous item selection state. */
@@ -491,6 +493,8 @@ void
 AG_TlistRestore(AG_Tlist *tl)
 {
 	AG_TlistItem *sit, *cit, *nsit;
+
+	AG_ObjectLock(tl);
 
 	for (sit = TAILQ_FIRST(&tl->selitems);
 	     sit != TAILQ_END(&tl->selitems);
@@ -514,6 +518,7 @@ AG_TlistRestore(AG_Tlist *tl)
 	TAILQ_INIT(&tl->selitems);
 
 	UpdateListScrollbar(tl);
+	AG_ObjectUnlock(tl);
 }
 
 /*
@@ -537,17 +542,16 @@ AllocItem(AG_Tlist *tl, SDL_Surface *iconsrc)
 	return (it);
 }
 
+/* The Tlist must be locked. */
 static __inline__ void
 InsertItem(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 {
-	AG_MutexLock(&tl->lock);
 	if (ins_head) {
 		TAILQ_INSERT_HEAD(&tl->items, it, items);
 	} else {
 		TAILQ_INSERT_TAIL(&tl->items, it, items);
 	}
 	AG_WidgetSetInt(tl->sbar, "max", ++tl->nitems);
-	AG_MutexUnlock(&tl->lock);
 }
 
 /* Add an item to the list. */
@@ -557,11 +561,12 @@ AG_TlistAddPtr(AG_Tlist *tl, SDL_Surface *iconsrc, const char *text,
 {
 	AG_TlistItem *it;
 
+	AG_ObjectLock(tl);
 	it = AllocItem(tl, iconsrc);
 	it->p1 = p1;
 	Strlcpy(it->text, text, sizeof(it->text));
-
 	InsertItem(tl, it, 0);
+	AG_ObjectUnlock(tl);
 	return (it);
 }
 
@@ -571,14 +576,14 @@ AG_TlistAdd(AG_Tlist *tl, SDL_Surface *iconsrc, const char *fmt, ...)
 	AG_TlistItem *it;
 	va_list args;
 	
+	AG_ObjectLock(tl);
 	it = AllocItem(tl, iconsrc);
 	it->p1 = NULL;
-
 	va_start(args, fmt);
 	Vsnprintf(it->text, sizeof(it->text), fmt, args);
 	va_end(args);
-
 	InsertItem(tl, it, 0);
+	AG_ObjectUnlock(tl);
 	return (it);
 }
 
@@ -626,11 +631,12 @@ AG_TlistAddPtrHead(AG_Tlist *tl, SDL_Surface *icon, const char *text,
 {
 	AG_TlistItem *it;
 
+	AG_ObjectLock(tl);
 	it = AllocItem(tl, icon);
 	it->p1 = p1;
 	Strlcpy(it->text, text, sizeof(it->text));
-
 	InsertItem(tl, it, 1);
+	AG_ObjectUnlock(tl);
 	return (it);
 }
 
@@ -640,7 +646,7 @@ AG_TlistSelectPtr(AG_Tlist *tl, void *p)
 {
 	AG_TlistItem *it;
 
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
@@ -653,7 +659,7 @@ AG_TlistSelectPtr(AG_Tlist *tl, void *p)
 			break;
 		}
 	}
-	AG_MutexUnlock(&tl->lock);
+	AG_ObjectUnlock(tl);
 	return (it);
 }
 
@@ -663,7 +669,7 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 {
 	AG_TlistItem *it;
 
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
@@ -677,7 +683,7 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 			break;
 		}
 	}
-	AG_MutexUnlock(&tl->lock);
+	AG_ObjectUnlock(tl);
 	return (it);
 }
 
@@ -685,19 +691,21 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 void
 AG_TlistSelect(AG_Tlist *tl, AG_TlistItem *it)
 {
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
 	}
 	SelectItem(tl, it);
-	AG_MutexUnlock(&tl->lock);
+	AG_ObjectUnlock(tl);
 }
 
 /* Clear the selection flag on an item. */
 void
 AG_TlistDeselect(AG_Tlist *tl, AG_TlistItem *it)
 {
+	AG_ObjectLock(tl);
 	DeselectItem(tl, it);
+	AG_ObjectUnlock(tl);
 }
 
 /* Set the selection flag on all items. */
@@ -706,11 +714,11 @@ AG_TlistSelectAll(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		SelectItem(tl, it);
 	}
-	AG_MutexUnlock(&tl->lock);
+	AG_ObjectUnlock(tl);
 }
 
 /* Unset the selection flag on all items. */
@@ -719,13 +727,14 @@ AG_TlistDeselectAll(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		DeselectItem(tl, it);
 	}
-	AG_MutexUnlock(&tl->lock);
+	AG_ObjectUnlock(tl);
 }
 
+/* The Tlist must be locked. */
 static void
 SelectItem(AG_Tlist *tl, AG_TlistItem *it)
 {
@@ -747,6 +756,7 @@ SelectItem(AG_Tlist *tl, AG_TlistItem *it)
 	AG_WidgetUnlockBinding(selectedb);
 }
 
+/* The Tlist must be locked. */
 static void
 DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 {
@@ -777,13 +787,11 @@ MouseButtonDown(AG_Event *event)
 	AG_TlistItem *ti;
 	int tind;
 
-	AG_MutexLock(&tl->lock);
-
 	tind = (AG_WidgetInt(tl->sbar, "value") + y/tl->item_h) + 1;
 
 	/* XXX use array */
 	if ((ti = AG_TlistFindByIndex(tl, tind)) == NULL)
-		goto out;
+		return;
 
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
@@ -826,12 +834,12 @@ MouseButtonDown(AG_Event *event)
 				} else {
 					ti->flags |=  AG_TLIST_VISIBLE_CHILDREN;
 				}
-				goto out;
+				return;
 			}
 		}
 
 		if (ti->flags & AG_TLIST_NO_SELECT) {
-			goto out;
+			return;
 		}
 		/*
 		 * Handle range selections.
@@ -849,7 +857,7 @@ MouseButtonDown(AG_Event *event)
 				nitems++;
 			}
 			if (oind == -1) {
-				goto out;
+				return;
 			}
 			if (oind < tind) {			  /* Forward */
 				i = 0;
@@ -910,7 +918,7 @@ MouseButtonDown(AG_Event *event)
 		break;
 	case SDL_BUTTON_RIGHT:
 		if (ti->flags & AG_TLIST_NO_POPUP) {
-			goto out;
+			return;
 		}
 		if (tl->popupEv != NULL) {
 			AG_PostEvent(NULL, tl, tl->popupEv->name, NULL);
@@ -931,13 +939,11 @@ MouseButtonDown(AG_Event *event)
 			}
 			if (tp != NULL) {
 				PopupMenu(tl, tp);
-				goto out;
+				return;
 			}
 		}
 		break;
 	}
-out:
-	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -946,7 +952,6 @@ KeyDown(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	int keysym = AG_INT(1);
 
-	AG_MutexLock(&tl->lock);
 	switch (keysym) {
 	case SDLK_UP:
 	case SDLK_DOWN:
@@ -957,7 +962,6 @@ KeyDown(AG_Event *event)
 	default:
 		break;
 	}
-	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -966,7 +970,6 @@ KeyUp(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	int keysym = AG_INT(1);
 
-	AG_MutexLock(&tl->lock);
 	switch (keysym) {
 	case SDLK_UP:
 	case SDLK_DOWN:
@@ -981,7 +984,6 @@ KeyUp(AG_Event *event)
 	default:
 		break;
 	}
-	AG_MutexUnlock(&tl->lock);
 }
 
 static void
@@ -989,12 +991,14 @@ ScrollbarChanged(AG_Event *event)
 {
 	AG_Tlist *tl = AG_PTR(1);
 
+	AG_ObjectLock(tl);
 	UpdateListScrollbar(tl);
+	AG_ObjectUnlock(tl);
 }
 
 /*
- * Return the item at the given index.
- * The tlist must be locked.
+ * Return the item at the given index. Result is only valid as long as
+ * the Tlist is locked.
  */
 AG_TlistItem *
 AG_TlistFindByIndex(AG_Tlist *tl, int index)
@@ -1002,95 +1006,129 @@ AG_TlistFindByIndex(AG_Tlist *tl, int index)
 	AG_TlistItem *it;
 	int i = 0;
 
+	AG_ObjectLock(tl);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (++i == index)
+		if (++i == index) {
+			AG_ObjectUnlock(tl);
 			return (it);
+		}
 	}
+	AG_ObjectUnlock(tl);
 	return (NULL);
 }
 
 /*
- * Return the first selected item.
- * The tlist must be locked.
+ * Return the first selected item. Result is only valid as long as the Tlist
+ * is locked.
  */
 AG_TlistItem *
 AG_TlistSelectedItem(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 
+	AG_ObjectLock(tl);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->selected)
+		if (it->selected) {
+			AG_ObjectUnlock(tl);
 			return (it);
+		}
 	}
+	AG_ObjectUnlock(tl);
 	return (NULL);
 }
 
 /*
- * Return the user pointer of the first selected item.
- * The tlist must be locked.
+ * Return the user pointer of the first selected item. Result is only valid
+ * as long as the Tlist is locked.
  */
 void *
 AG_TlistSelectedItemPtr(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
+	void *rv;
 
+	AG_ObjectLock(tl);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->selected)
-			return (it->p1);
+		if (it->selected) {
+			rv = it->p1;
+			AG_ObjectUnlock(tl);
+			return (rv);
+		}
 	}
+	AG_ObjectUnlock(tl);
 	return (NULL);
 }
 
 /*
- * Return the pointer associated with the first selected item.
- * The tlist must be locked.
+ * Return the pointer associated with the first selected item. Result is only
+ * valid as long as the Tlist is locked.
  */
 void *
 AG_TlistFindPtr(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
+	void *rv;
 
+	AG_ObjectLock(tl);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->selected)
-			return (it->p1);
+		if (it->selected) {
+			rv = it->p1;
+			AG_ObjectUnlock(tl);
+			return (rv);
+		}
 	}
+	AG_ObjectUnlock(tl);
 	return (NULL);
 }
 
 /*
- * Return the first item matching a text string.
- * The tlist must be locked.
+ * Return the first item matching a text string. Result is only valid as long
+ * as the Tlist is locked.
  */
 AG_TlistItem *
 AG_TlistFindText(AG_Tlist *tl, const char *text)
 {
 	AG_TlistItem *it;
 
+	AG_ObjectLock(tl);
 	TAILQ_FOREACH(it, &tl->items, items) {
-		if (strcmp(it->text, text) == 0)
+		if (strcmp(it->text, text) == 0) {
+			AG_ObjectUnlock(tl);
 			return (it);
+		}
 	}
+	AG_ObjectUnlock(tl);
 	return (NULL);
 }
 
 /*
- * Return the first item on the list.
- * The tlist must be locked.
+ * Return the first item on the list. Result is only valid as long as
+ * the Tlist is locked.
  */
 AG_TlistItem *
 AG_TlistFirstItem(AG_Tlist *tl)
 {
-	return (TAILQ_FIRST(&tl->items));
+	AG_TlistItem *it;
+
+	AG_ObjectLock(tl);
+	it = TAILQ_FIRST(&tl->items);
+	AG_ObjectUnlock(tl);
+	return (it);
 }
 
 /*
- * Return the last item on the list.
- * The tlist must be locked.
+ * Return the last item on the list. Result is only valid as long as
+ * the Tlist is locked.
  */
 AG_TlistItem *
 AG_TlistLastItem(AG_Tlist *tl)
 {
-	return (TAILQ_LAST(&tl->items, ag_tlist_itemq));
+	AG_TlistItem *it;
+
+	AG_ObjectLock(tl);
+	it = TAILQ_LAST(&tl->items, ag_tlist_itemq);
+	AG_ObjectUnlock(tl);
+	return (it);
 }
 
 /* Set the height to use for item display. */
@@ -1099,7 +1137,7 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 {
 	AG_TlistItem *it;
 
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 	tl->item_h = ih;
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->icon != -1) {
@@ -1110,10 +1148,10 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 			AG_WidgetReplaceSurface(tl, it->icon, scaled);
 		}
 	}
-	AG_MutexUnlock(&tl->lock);
+	AG_ObjectUnlock(tl);
 }
 
-/* Update the icon associated with an item. */
+/* Update the icon associated with an item. The Tlist must be locked. */
 static void
 UpdateItemIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 {
@@ -1139,36 +1177,38 @@ UpdateItemIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 void
 AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 {
+	AG_ObjectLock(tl);
 	it->flags |= AG_TLIST_DYNICON;
 	UpdateItemIcon(tl, it, iconsrc);
+	AG_ObjectUnlock(tl);
 }
 
 void
 AG_TlistSetDblClickFn(AG_Tlist *tl, void (*ev)(AG_Event *), const char *fmt,
     ...)
 {
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 	tl->dblClickEv = AG_SetEvent(tl, NULL, ev, NULL);
 	AG_EVENT_GET_ARGS(tl->dblClickEv, fmt);
-	AG_MutexUnlock(&tl->lock);
+	AG_ObjectUnlock(tl);
 }
 
 void
 AG_TlistSetPopupFn(AG_Tlist *tl, void (*ev)(AG_Event *), const char *fmt, ...)
 {
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 	tl->popupEv = AG_SetEvent(tl, NULL, ev, NULL);
 	AG_EVENT_GET_ARGS(tl->popupEv, fmt);
-	AG_MutexUnlock(&tl->lock);
+	AG_ObjectUnlock(tl);
 }
 
 void
 AG_TlistSetChangedFn(AG_Tlist *tl, void (*ev)(AG_Event *), const char *fmt, ...)
 {
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(tl);
 	tl->changedEv = AG_SetEvent(tl, NULL, ev, NULL);
 	AG_EVENT_GET_ARGS(tl->changedEv, fmt);
-	AG_MutexUnlock(&tl->lock);
+	AG_ObjectUnlock(tl);
 }
 
 /* Create a new popup menu for items of the given class. */
@@ -1183,10 +1223,13 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 	tp->menu = AG_MenuNew(NULL, 0);
 	tp->item = tp->menu->root;		/* XXX redundant */
 
+	AG_ObjectLock(tl);
 	TAILQ_INSERT_TAIL(&tl->popups, tp, popups);
+	AG_ObjectUnlock(tl);
 	return (tp->item);
 }
 
+/* The Tlist must be locked. */
 static void
 PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 {

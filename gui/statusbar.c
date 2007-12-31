@@ -61,6 +61,7 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 	va_list ap;
 	const char *p;
 
+	AG_ObjectLock(sbar);
 #ifdef DEBUG
 	if (sbar->nlabels+1 >= AG_STATUSBAR_MAX_LABELS)
 		AG_FatalError("AG_StatusbarAddLabel: Too many labels");
@@ -107,7 +108,9 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 		va_end(ap);
 	}
 	AG_ObjectAttach(&sbar->box, lab);
-	return (sbar->labels[sbar->nlabels++]);
+	lab = sbar->labels[sbar->nlabels++];
+	AG_ObjectUnlock(sbar);
+	return (lab);
 }
 
 AG_WidgetClass agStatusbarClass = {

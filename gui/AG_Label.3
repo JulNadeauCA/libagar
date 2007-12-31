@@ -208,25 +208,12 @@ section below).
 .Ft void
 .Fn AG_LabelString "AG_Label *label" "const char *s"
 .Pp
-.Ft void
-.Fn AG_LabelSetSurface "AG_Label *label" "SDL_Surface *su"
-.Pp
 .nr nS 0
 The functions
 .Fn AG_LabelText
 and
 .Fn AG_LabelString
 change the text displayed by the label.
-.Pp
-.Fn AG_LabelSetSurface
-arranges for a copy of the given surface to be used as the label.
-Note it is usually preferable to display graphics using the
-.Xr AG_Pixmap 3
-widget instead of
-.Nm .
-If the
-.Fa su
-argument is NULL, the widget will not display anything.
 .Pp
 .Sh BITMASK DESCRIPTIONS
 .nr nS 1

@@ -119,7 +119,9 @@ Draw(void *p)
 void
 AG_SeparatorSetPadding(AG_Separator *sep, Uint pixels)
 {
+	AG_ObjectLock(sep);
 	sep->padding = pixels;
+	AG_ObjectUnlock(sep);
 }
 
 AG_WidgetClass agSeparatorClass = {

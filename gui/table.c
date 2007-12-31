@@ -69,9 +69,11 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 	AG_Table *t;
 
 	t = AG_TableNew(parent, flags);
+	AG_ObjectLock(t);
 	t->flags |= AG_TABLE_POLL;
 	t->poll_ev = AG_SetEvent(t, "table-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(t->poll_ev, fmt);
+	AG_ObjectUnlock(t);
 	return (t);
 }
 
@@ -113,7 +115,6 @@ Init(void *obj)
 	t->dblClickedRow = -1;
 	t->dblClickedCol = -1;
 	SLIST_INIT(&t->popups);
-	AG_MutexInitRecursive(&t->lock);
 	
 	AG_SetEvent(t, "window-mousebuttondown", mousebuttondown, NULL);
 	AG_SetEvent(t, "window-mousebuttonup", mousebuttonup, NULL);
@@ -131,8 +132,10 @@ Init(void *obj)
 void
 AG_TableSizeHint(AG_Table *t, int w, int nrows)
 {
+	AG_ObjectLock(t);
 	if (w != -1) { t->prew = w; }
 	if (nrows != -1) { t->preh = nrows*agTextFontHeight; }
+	AG_ObjectUnlock(t);
 }
 
 static void
@@ -158,8 +161,6 @@ Destroy(void *obj)
 		AG_TablePoolFree(t, n);
 	}
 	Free(t->cols);
-
-	AG_MutexDestroy(&t->lock);
 }
 
 static void
@@ -340,7 +341,7 @@ PrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
 }
 
 static __inline__ void
-AG_TableDrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
+DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 {
 	char txt[AG_TABLE_TXT_MAX];
 
@@ -401,7 +402,6 @@ Draw(void *p)
 	rBg.h = HEIGHT(t);
 	STYLE(t)->TableBackground(t, rBg);
 
-	AG_MutexLock(&t->lock);
 	t->moffs = AG_WidgetInt(t->vbar, "value");
 	if (t->poll_ev != NULL) {
 		t->poll_ev->handler(t->poll_ev);
@@ -444,7 +444,7 @@ Draw(void *p)
 
 			STYLE(t)->TableCellBackground(t, rCell,
 			    t->cells[m][n].selected);
-			AG_TableDrawCell(t, &t->cells[m][n], &rCell);
+			DrawCell(t, &t->cells[m][n], &rCell);
 			rCell.y += t->row_h;
 		}
 		AG_DrawLineH(t, 0, t->wTbl, rCell.y,
@@ -467,7 +467,6 @@ Draw(void *p)
 		    AG_COLOR(TABLE_LINE_COLOR));
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
-	AG_MutexUnlock(&t->lock);
 }
 
 /*
@@ -479,6 +478,8 @@ AG_TableUpdateScrollbars(AG_Table *t)
 {
 	AG_WidgetBinding *maxb, *offsetb;
 	int *max, *offset;
+
+	AG_ObjectLock(t);
 
 	t->mVis = WIDGET(t)->h / t->row_h;
 
@@ -502,16 +503,20 @@ AG_TableUpdateScrollbars(AG_Table *t)
 	}
 	AG_WidgetUnlockBinding(offsetb);
 	AG_WidgetUnlockBinding(maxb);
+	AG_ObjectUnlock(t);
 }
 
 AG_MenuItem *
 AG_TableSetPopup(AG_Table *t, int m, int n)
 {
 	AG_TablePopup *tp;
+	AG_MenuItem *rv;
 
+	AG_ObjectLock(t);
 	SLIST_FOREACH(tp, &t->popups, popups) {
 		if (tp->m == m && tp->n == n) {
 			AG_MenuItemFree(tp->item);
+			AG_ObjectUnlock(t);
 			return (tp->item);
 		}
 	}
@@ -522,35 +527,39 @@ AG_TableSetPopup(AG_Table *t, int m, int n)
 	tp->menu = AG_MenuNew(NULL, 0);
 	tp->item = tp->menu->root;			/* XXX redundant */
 	SLIST_INSERT_HEAD(&t->popups, tp, popups);
-	return (tp->item);
+	rv = tp->item;
+	AG_ObjectUnlock(t);
+
+	return (rv);
 }
 
 void
 AG_TableSetRowDblClickFn(AG_Table *tbl, AG_EventFn ev, const char *fmt, ...)
 {
-	AG_MutexLock(&tbl->lock);
+	AG_ObjectLock(tbl);
 	tbl->dblClickRowEv = AG_SetEvent(tbl, NULL, ev, NULL);
 	AG_EVENT_GET_ARGS(tbl->dblClickRowEv, fmt);
-	AG_MutexUnlock(&tbl->lock);
+	AG_ObjectUnlock(tbl);
 }
 
 void
 AG_TableSetColDblClickFn(AG_Table *tbl, AG_EventFn ev, const char *fmt, ...)
 {
-	AG_MutexLock(&tbl->lock);
+	AG_ObjectLock(tbl);
 	tbl->dblClickColEv = AG_SetEvent(tbl, NULL, ev, NULL);
 	AG_EVENT_GET_ARGS(tbl->dblClickColEv, fmt);
-	AG_MutexUnlock(&tbl->lock);
+	AG_ObjectUnlock(tbl);
 }
 
 void
 AG_TableRedrawCells(AG_Table *t)
 {
-	AG_MutexLock(&t->lock);
+	AG_ObjectLock(t);
 	t->flags |= AG_TABLE_REDRAW_CELLS;
-	AG_MutexUnlock(&t->lock);
+	AG_ObjectUnlock(t);
 }
 
+/* Table must be locked. */
 void
 AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 {
@@ -558,6 +567,7 @@ AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 		AG_WidgetUnmapSurface(t, c->surface);
 }
 
+/* Table must be locked. */
 int
 AG_TablePoolAdd(AG_Table *t, Uint m, Uint n)
 {
@@ -568,6 +578,7 @@ AG_TablePoolAdd(AG_Table *t, Uint m, Uint n)
 	return (tc->mpool++);
 }
 
+/* Table must be locked. */
 void
 AG_TablePoolFree(AG_Table *t, Uint n)
 {
@@ -582,13 +593,16 @@ AG_TablePoolFree(AG_Table *t, Uint n)
 	tc->mpool = 0;
 }
 
-/* Clear the items on the table and save the selection state. */
+/*
+ * Clear the items on the table and save the selection state. The function
+ * returns with the table locked.
+ */
 void
 AG_TableBegin(AG_Table *t)
 {
 	Uint m, n;
 
-	AG_MutexLock(&t->lock);
+	AG_ObjectLock(t);
 	/* Copy the existing cells to the column pools and free the table. */
 	for (m = 0; m < t->m; m++) {
 		for (n = 0; n < t->n; n++) {
@@ -670,7 +684,7 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 
 /*
  * Restore the selection state and recuperate the surfaces of matching
- * items in the column pool.
+ * items in the column pool. The function unlocks the table.
  */
 void
 AG_TableEnd(AG_Table *t)
@@ -699,7 +713,7 @@ AG_TableEnd(AG_Table *t)
 		tc->mpool = 0;
 	}
 	AG_TableUpdateScrollbars(t);
-	AG_MutexUnlock(&t->lock);
+	AG_ObjectUnlock(t);
 }
 
 static __inline__ int
@@ -716,6 +730,7 @@ SelectingRange(AG_Table *t)
 	        (SDL_GetModState() & KMOD_SHIFT));
 }
 
+/* Table must be locked. */
 static void
 ShowPopup(AG_Table *tbl, AG_TablePopup *tp)
 {
@@ -730,6 +745,7 @@ ShowPopup(AG_Table *tbl, AG_TablePopup *tp)
 	tp->panel = AG_MenuExpand(tp->menu, tp->item, x+4, y+4);
 }
 
+/* Table must be locked. */
 static void
 ColumnRightClick(AG_Table *t, int px)
 {
@@ -754,6 +770,7 @@ ColumnRightClick(AG_Table *t, int px)
 	}
 }
 
+/* Table must be locked. */
 static void
 ColumnLeftClick(AG_Table *tbl, int px)
 {
@@ -804,6 +821,7 @@ cont:
 	}
 }
 
+/* Table must be locked. */
 static void
 CellLeftClick(AG_Table *tbl, int mc, int x)
 {
@@ -857,6 +875,7 @@ CellLeftClick(AG_Table *tbl, int mc, int x)
 	}
 }
 
+/* Table must be locked. */
 static void
 CellRightClick(AG_Table *t, int m, int px)
 {
@@ -881,6 +900,7 @@ CellRightClick(AG_Table *t, int m, int px)
 	}
 }
 
+/* Table must be locked. */
 static __inline__ int
 OverColumn(AG_Table *t, int y)
 {
@@ -899,7 +919,6 @@ mousebuttondown(AG_Event *event)
 	int y = AG_INT(3);
 	int m;
 
-	AG_MutexLock(&t->lock);
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
 		{
@@ -956,7 +975,6 @@ mousebuttondown(AG_Event *event)
 	}
 out:
 	AG_WidgetFocus(t);
-	AG_MutexUnlock(&t->lock);
 }
 
 static void
@@ -980,7 +998,6 @@ keydown(AG_Event *event)
 	AG_Table *t = AG_SELF();
 	int keysym = AG_INT(1);
 
-	AG_MutexLock(&t->lock);
 	switch (keysym) {
 	case SDLK_UP:
 	case SDLK_DOWN:
@@ -992,9 +1009,9 @@ keydown(AG_Event *event)
 	default:
 		break;
 	}
-	AG_MutexUnlock(&t->lock);
 }
 
+/* Table must be locked. */
 static int
 OverColumnResizeControl(AG_Table *t, int px)
 {
@@ -1029,7 +1046,6 @@ mousemotion(AG_Event *event)
 	if (x < 0 || y < 0 || x >= WIDGET(t)->w || y >= WIDGET(t)->h)
 		return;
 
-	AG_MutexLock(&t->lock);
 	if (t->nResizing >= 0 && (Uint)t->nResizing < t->n) {
 		AG_TableCol *tc = &t->cols[t->nResizing];
 
@@ -1044,7 +1060,6 @@ mousemotion(AG_Event *event)
 		    OverColumnResizeControl(t, x))
 			AG_SetCursor(AG_HRESIZE_CURSOR);
 	}
-	AG_MutexUnlock(&t->lock);
 }
 
 static void
@@ -1053,7 +1068,6 @@ keyup(AG_Event *event)
 	AG_Table *t = AG_SELF();
 	int keysym = AG_INT(1);
 
-	AG_MutexLock(&t->lock);
 	switch (keysym) {
 	case SDLK_UP:
 	case SDLK_DOWN:
@@ -1064,7 +1078,6 @@ keyup(AG_Event *event)
 	default:
 		break;
 	}
-	AG_MutexUnlock(&t->lock);
 }
 
 static void
@@ -1072,14 +1085,11 @@ LostFocus(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 
-	AG_MutexLock(&t->lock);
 	AG_CancelEvent(t, "key-tick");
 	AG_CancelEvent(t, "dblclick-row-expire");
 	AG_CancelEvent(t, "dblclick-col-expire");
-	if (t->nResizing >= 0) {
+	if (t->nResizing >= 0)
 		t->nResizing = -1;
-	}
-	AG_MutexUnlock(&t->lock);
 }
 
 int
@@ -1087,10 +1097,14 @@ AG_TableRowSelected(AG_Table *t, Uint m)
 {
 	Uint n;
 
+	AG_ObjectLock(t);
 	for (n = 0; n < t->n; n++) {
-		if (t->cells[m][n].selected)
+		if (t->cells[m][n].selected) {
+			AG_ObjectUnlock(t);
 			return (1);
+		}
 	}
+	AG_ObjectUnlock(t);
 	return (0);
 }
 
@@ -1099,8 +1113,11 @@ AG_TableSelectRow(AG_Table *t, Uint m)
 {
 	Uint n;
 
-	for (n = 0; n < t->n; n++)
+	AG_ObjectLock(t);
+	for (n = 0; n < t->n; n++) {
 		t->cells[m][n].selected = 1;
+	}
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -1108,8 +1125,11 @@ AG_TableDeselectRow(AG_Table *t, Uint m)
 {
 	Uint n;
 
-	for (n = 0; n < t->n; n++)
+	AG_ObjectLock(t);
+	for (n = 0; n < t->n; n++) {
 		t->cells[m][n].selected = 0;
+	}
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -1117,10 +1137,12 @@ AG_TableSelectAllRows(AG_Table *t)
 {
 	Uint m, n;
 
+	AG_ObjectLock(t);
 	for (n = 0; n < t->n; n++) {
 		for (m = 0; m < t->m; m++)
 			t->cells[m][n].selected = 1;
 	}
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -1128,10 +1150,12 @@ AG_TableDeselectAllRows(AG_Table *t)
 {
 	Uint m, n;
 
+	AG_ObjectLock(t);
 	for (n = 0; n < t->n; n++) {
 		for (m = 0; m < t->m; m++)
 			t->cells[m][n].selected = 0;
 	}
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -1139,8 +1163,11 @@ AG_TableSelectAllCols(AG_Table *t)
 {
 	Uint n;
 
-	for (n = 0; n < t->n; n++)
+	AG_ObjectLock(t);
+	for (n = 0; n < t->n; n++) {
 		t->cols[n].selected = 1;
+	}
+	AG_ObjectUnlock(t);
 }
 
 void
@@ -1148,8 +1175,11 @@ AG_TableDeselectAllCols(AG_Table *t)
 {
 	Uint n;
 
-	for (n = 0; n < t->n; n++)
+	AG_ObjectLock(t);
+	for (n = 0; n < t->n; n++) {
 		t->cols[n].selected = 0;
+	}
+	AG_ObjectUnlock(t);
 }
 
 static void
@@ -1159,7 +1189,6 @@ KeyboardScroll(AG_Event *event)
 	SDLKey keysym = AG_SDLKEY(1);
 	int m;
 	
-	AG_MutexLock(&t->lock);
 	switch (keysym) {
 	case SDLK_UP:
 		for (m = 0; m < t->m; m++) {
@@ -1185,7 +1214,6 @@ KeyboardScroll(AG_Event *event)
 		break;
 	}
 	AG_ReschedEvent(t, "kbdscroll", agKbdRepeat);
-	AG_MutexUnlock(&t->lock);
 }
 
 static void
@@ -1193,9 +1221,7 @@ ExpireRowDblClick(AG_Event *event)
 {
 	AG_Table *tbl = AG_SELF();
 
-	AG_MutexLock(&tbl->lock);
 	tbl->dblClickedRow = -1;
-	AG_MutexUnlock(&tbl->lock);
 }
 
 static void
@@ -1203,9 +1229,7 @@ ExpireColDblClick(AG_Event *event)
 {
 	AG_Table *tbl = AG_SELF();
 
-	AG_MutexLock(&tbl->lock);
 	tbl->dblClickedCol = -1;
-	AG_MutexUnlock(&tbl->lock);
 }
 
 int
@@ -1215,7 +1239,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	AG_TableCol *tc, *lc;
 	Uint m, n;
 
-	AG_MutexLock(&t->lock);
+	AG_ObjectLock(t);
 
 	/* Initialize the column information structure. */
 	t->cols = Realloc(t->cols, (t->n+1)*sizeof(AG_TableCol));
@@ -1264,7 +1288,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 		AG_TableInitCell(t, &t->cells[m][t->n]);
 	}
 	n = t->n++;
-	AG_MutexUnlock(&t->lock);
+	AG_ObjectUnlock(t);
 	return (n);
 }
 
@@ -1284,9 +1308,11 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 {
 	char fmt[64], *sp = &fmt[0];
 	va_list ap;
-	Uint n;
+	Uint n, rv;
 
 	Strlcpy(fmt, fmtp, sizeof(fmt));
+
+	AG_ObjectLock(t);
 
 	va_start(ap, fmtp);
 	t->cells = Realloc(t->cells, (t->m+1)*sizeof(AG_TableCell));
@@ -1444,7 +1470,10 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 		}
 	}
 	va_end(ap);
-	return (t->m++);
+
+	rv = t->m++;
+	AG_ObjectUnlock(t);
+	return (rv);
 }
 
 int
@@ -1453,7 +1482,7 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 	char txt[AG_TABLE_TXT_MAX];
 	Uint m, n;
 
-	AG_MutexLock(&t->lock);
+	AG_ObjectLock(t);
 	for (n = 0; n < t->n; n++) {
 		if (t->cols[n].name[0] == '\0') {
 			continue;
@@ -1473,7 +1502,7 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 		}
 		fputc('\n', f);
 	}
-	AG_MutexUnlock(&t->lock);
+	AG_ObjectUnlock(t);
 	return (0);
 }
 

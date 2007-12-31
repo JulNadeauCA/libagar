@@ -114,7 +114,6 @@ Init(void *obj)
 	tv->locked = 0;
 	tv->sort = 0;
 	tv->polled = 0;
-	AG_MutexInitRecursive(&tv->lock);
 
 	tv->head_height = tv->header ? agTextFontHeight : 0;
 	tv->row_height = agTextFontHeight+2;
@@ -186,10 +185,13 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 	AG_TableviewCol *col = NULL;
 	Uint i;
 
-	if (tv->locked || cid == ID_INVALID)
+	if (cid == ID_INVALID)
 		return (NULL);
 
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
+
+	if (tv->locked)
+		return (NULL);
 
 	/* column identifier must be unique */
 	for (i = 0; i < tv->columncount; i++) {
@@ -253,7 +255,7 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 
 	tv->visible.dirty = 1;
 out:
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 	return (col);
 }
 
@@ -262,7 +264,7 @@ AG_TableviewColSelect(AG_Tableview *tv, AG_TableviewColID cid)
 {
 	Uint i, ind = -1, valid = 0;
 
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
 
         /* check if cid is valid */
         for (i = 0; i < tv->columncount; i++) {
@@ -276,15 +278,15 @@ AG_TableviewColSelect(AG_Tableview *tv, AG_TableviewColID cid)
 	if (valid) {
 		tv->column[ind].mousedown = 1;
 	}
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 }
 
 void
 AG_TableviewSetUpdate(AG_Tableview *tv, Uint ms)
 {
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
 	tv->visible.redraw_rate = ms;
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 }
 
 AG_TableviewRow *
@@ -296,13 +298,12 @@ AG_TableviewRowAddFn(AG_Tableview *tv, int flags,
 	va_list ap;
 	AG_TableviewColID cid;
 
-	AG_MutexLock(&tv->lock);
-
+	AG_ObjectLock(tv);
 	tv->locked = 1;
 
 	/* verify the row identifier is not in use */
 	if (row_get(&tv->children, rid)) {
-		AG_MutexUnlock(&tv->lock);
+		AG_ObjectUnlock(tv);
 		return (NULL);
 	}
 	row = Malloc(sizeof(AG_TableviewRow));
@@ -367,12 +368,12 @@ AG_TableviewRowAddFn(AG_Tableview *tv, int flags,
 		tv->expandedrows++;
 
 	tv->visible.dirty = 1;
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 	return (row);
 }
 
 static void
-tableview_row_destroy(AG_Tableview *tv, AG_TableviewRow *row)
+DestroyRow(AG_Tableview *tv, AG_TableviewRow *row)
 {
 	int i;
 
@@ -392,7 +393,7 @@ AG_TableviewRowDel(AG_Tableview *tv, AG_TableviewRow *row)
 	if (row == NULL)
 		return;
 
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
 
 	/* first remove children */
 	row1 = TAILQ_FIRST(&row->children);
@@ -415,10 +416,10 @@ AG_TableviewRowDel(AG_Tableview *tv, AG_TableviewRow *row)
 		TAILQ_INSERT_TAIL(&tv->backstore, row, backstore);
 		goto out;
 	}
-	tableview_row_destroy(tv, row);
+	DestroyRow(tv, row);
 out:
 	tv->visible.dirty = 1;
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 }
 
 void
@@ -426,7 +427,7 @@ AG_TableviewRowDelAll(AG_Tableview *tv)
 {
 	AG_TableviewRow *row1, *row2;
 
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
 	row1 = TAILQ_FIRST(&tv->children);
 	while (row1 != NULL) {
 		row2 = TAILQ_NEXT(row1, siblings);
@@ -437,7 +438,7 @@ AG_TableviewRowDelAll(AG_Tableview *tv)
 	
 	tv->expandedrows = 0;
 	tv->visible.dirty = 1;
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 }
 
 void
@@ -446,7 +447,7 @@ AG_TableviewRowRestoreAll(AG_Tableview *tv)
 	AG_TableviewRow *row, *nrow, *srow;
 	int i;
 
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
 		
 	for (row = TAILQ_FIRST(&tv->backstore);
 	     row != TAILQ_END(&tv->backstore);
@@ -461,33 +462,33 @@ AG_TableviewRowRestoreAll(AG_Tableview *tv)
 			if (i == tv->columncount)
 				srow->selected = row->selected;
 		}
-		tableview_row_destroy(tv, row);
+		DestroyRow(tv, row);
 	}
 	TAILQ_INIT(&tv->backstore);
 
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 }
 
 void
 AG_TableviewRowSelect(AG_Tableview *tv, AG_TableviewRow *row)
 {
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
 	if (!tv->selmulti) {
 		AG_TableviewRowDeselectAll(tv, NULL);
 	}
 	row->selected = 1;
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 }
 
+/* Return value is only valid as long as Tableview is locked. */
 AG_TableviewRow *
 AG_TableviewRowGet(AG_Tableview *tv, AG_TableviewRowID rid)
 {
 	AG_TableviewRow *row;
 
-	/* XXX pointless lock */
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
 	row = row_get(&tv->children, rid);
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 	return (row);
 }
 
@@ -497,32 +498,31 @@ AG_TableviewRowSelectAll(AG_Tableview *tv, AG_TableviewRow *root)
 	if (!tv->selmulti)
 		return;
 
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
 	if (root == NULL) {
 		select_all(&tv->children);
 	} else {
 		select_all(&root->children);
 	}
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 }
 
 void
 AG_TableviewRowDeselectAll(AG_Tableview *tv, AG_TableviewRow *root)
 {
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
 	if (root == NULL) {
 		deselect_all(&tv->children);
 	} else {
 		deselect_all(&root->children);
 	}
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 }
 
 void
 AG_TableviewRowExpand(AG_Tableview *tv, AG_TableviewRow *in)
 {
-	AG_MutexLock(&tv->lock);
-	
+	AG_ObjectLock(tv);
 	if (!in->expanded) {
 		in->expanded = 1;
 		if (visible(in)) {
@@ -531,15 +531,13 @@ AG_TableviewRowExpand(AG_Tableview *tv, AG_TableviewRow *in)
 			tv->visible.dirty = 1;
 		}
 	}
-	
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 }
 
 void
 AG_TableviewRowCollapse(AG_Tableview *tv, AG_TableviewRow *in)
 {
-	AG_MutexLock(&tv->lock);
-	
+	AG_ObjectLock(tv);
 	if (in->expanded) {
 		in->expanded = 0;
 		if (visible(in)) {
@@ -548,8 +546,7 @@ AG_TableviewRowCollapse(AG_Tableview *tv, AG_TableviewRow *in)
 			tv->visible.dirty = 1;
 		}
 	}
-	
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 }
 
 static void
@@ -560,7 +557,6 @@ Destroy(void *p)
 	AG_TableviewRowDelAll(tv);
 	Free(tv->column);
 	Free(tv->visible.items);
-	AG_MutexDestroy(&tv->lock);
 }
 
 static void
@@ -569,15 +565,11 @@ SizeRequest(void *p, AG_SizeReq *r)
 	AG_Tableview *tv = p;
 	int i;
 
-	AG_MutexLock(&tv->lock);
-
 	r->w = tv->prew + tv->sbar_v->bw;
 	r->h = tv->preh + (tv->sbar_h == NULL ? 0 : tv->sbar_h->bw);
-
 	for (i = 0; i < tv->columncount; i++) {
 		r->w += tv->column[i].w;
 	}
-	AG_MutexUnlock(&tv->lock);
 }
 
 static int
@@ -587,8 +579,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	Uint rows_per_view, i;
 	AG_SizeAlloc aBar;
 
-	AG_MutexLock(&tv->lock);
-	
 	/* Size vertical scroll bar. */
 	aBar.x = a->w - tv->sbar_v->bw;
 	aBar.y = 0;
@@ -680,8 +670,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		tv->visible.count = rows_per_view;
 		tv->visible.dirty = 1;
 	}
-
-	AG_MutexUnlock(&tv->lock);
 	return (0);
 }
 
@@ -694,8 +682,6 @@ Draw(void *p)
 	const int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
 	AG_Rect rBg;
 
-	AG_MutexLock(&tv->lock);
-	
 	/* before we draw, update if needed */
 	if (tv->visible.dirty)
 		view_changed(tv);
@@ -726,16 +712,13 @@ Draw(void *p)
 	/* draw columns */
 	foreach_visible_column(tv, draw_column, &update, NULL);
 
-	if (update) {
+	if (update)
 		tv->visible.redraw_last = SDL_GetTicks();
-	}
-	AG_MutexUnlock(&tv->lock);
 }
 
 /*
- * *********************** INTERNAL FUNCTIONS ***********************
- * 
- * we assume appropriate mutexes are locked.
+ * Internal functions. We assume that the Tableview has been locked by
+ * the caller.
  */
 
 /*
@@ -913,14 +896,14 @@ AG_TableviewRowSelected(AG_Tableview *tv)
 {
 	AG_TableviewRow *row;
 
-	AG_MutexLock(&tv->lock);
+	AG_ObjectLock(tv);
 	TAILQ_FOREACH(row, &tv->children, siblings) {
 		if (row->selected) {
-			AG_MutexUnlock(&tv->lock);
+			AG_ObjectUnlock(tv);
 			return (row);
 		}
 	}
-	AG_MutexUnlock(&tv->lock);
+	AG_ObjectUnlock(tv);
 	return (NULL);
 }
 
@@ -1305,7 +1288,6 @@ mousebuttondown(AG_Event *event)
 
 	AG_WidgetFocus(tv);
 
-	AG_MutexLock(&tv->lock);
 	if (tv->header && coord_y < tv->head_height) {
 		/* a mouse down on the column header */
 		foreach_visible_column(tv, clicked_header, &coord_x, NULL);
@@ -1313,7 +1295,6 @@ mousebuttondown(AG_Event *event)
 		/* a mouse down in the body */
 		foreach_visible_column(tv, clicked_row, &coord_x, &coord_y);
 	}
-	AG_MutexUnlock(&tv->lock);
 }
 
 static void
@@ -1329,14 +1310,10 @@ dblclick_expire(AG_Event *event)
 {
 	AG_Tableview *tv = AG_SELF();
 
-	AG_MutexLock(&tv->lock);
-
 	/* the user hasn't clicked again, so cancel the double click */
 	tv->dblclicked = 0;
 
 	/* XXX - if the cursor remains in the cell, activate a click-to-edit */
-
-	AG_MutexUnlock(&tv->lock);
 }
 
 /* XXX - this seems to be called after every click.. */
@@ -1413,6 +1390,8 @@ AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
 {
 	va_list args;
 
+	AG_ObjectLock(tv);
+
 	if (row->cell[cell].image != NULL) {
 		SDL_FreeSurface(row->cell[cell].image);
 	}
@@ -1424,6 +1403,8 @@ AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
 
 	AG_TextColor(TABLEVIEW_CTXT_COLOR);
 	row->cell[cell].image = AG_TextRender(row->cell[cell].text);
+	
+	AG_ObjectUnlock(tv);
 }
 
 AG_WidgetClass agTableviewClass = {

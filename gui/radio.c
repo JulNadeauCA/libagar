@@ -55,7 +55,8 @@ AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
 	const char *s, **pItems;
 	AG_RadioItem *ri;
 	int i, w;
-
+	
+	AG_ObjectLock(rad);
 	for (i = 0, pItems = itemText;
 	     (s = *pItems++) != NULL;
 	     i++) {
@@ -68,6 +69,7 @@ AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
 		AG_TextSize(s, &w, NULL);
 		if (w > rad->max_w) { rad->max_w = w; }
 	}
+	AG_ObjectUnlock(rad);
 }
 
 /* Create a radio item and return its index. */
@@ -76,8 +78,9 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 {
 	AG_RadioItem *ri;
 	va_list ap;
-	int w;
+	int w, rv;
 
+	AG_ObjectLock(rad);
 	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
 	ri = &rad->items[rad->nItems];
 	ri->surface = -1;
@@ -88,8 +91,10 @@ AG_RadioAddItem(AG_Radio *rad, const char *fmt, ...)
 
 	AG_TextSize(ri->text, &w, NULL);
 	if (w > rad->max_w) { rad->max_w = w; }
+	rv = rad->nItems++;
 
-	return (rad->nItems++);
+	AG_ObjectUnlock(rad);
+	return (rv);
 }
 
 /* Create a radio item and return its index (with hotkey). */
@@ -98,8 +103,9 @@ AG_RadioAddItemHK(AG_Radio *rad, SDLKey hotkey, const char *fmt, ...)
 {
 	AG_RadioItem *ri;
 	va_list ap;
-	int w;
+	int w, rv;
 
+	AG_ObjectLock(rad);
 	rad->items = Realloc(rad->items, (rad->nItems+1)*sizeof(AG_RadioItem));
 	ri = &rad->items[rad->nItems];
 	ri->surface = -1;
@@ -110,8 +116,10 @@ AG_RadioAddItemHK(AG_Radio *rad, SDLKey hotkey, const char *fmt, ...)
 
 	AG_TextSize(ri->text, &w, NULL);
 	if (w > rad->max_w) { rad->max_w = w; }
+	rv = rad->nItems++;
 
-	return (rad->nItems++);
+	AG_ObjectUnlock(rad);
+	return (rv);
 }
 
 /* Remove all radio items */
@@ -120,15 +128,16 @@ AG_RadioClearItems(AG_Radio *rad)
 {
 	int i;
 
+	AG_ObjectLock(rad);
 	for (i = 0; i < rad->nItems; i++) {
 		if (rad->items[i].surface != -1)
 			AG_WidgetUnmapSurface(rad, rad->items[i].surface);
 	}
-
 	Free(rad->items);
 	rad->items = Malloc(sizeof(AG_RadioItem));
 	rad->nItems = 0;
 	rad->max_w = 0;
+	AG_ObjectUnlock(rad);
 }
 
 static void

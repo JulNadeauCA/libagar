@@ -23,7 +23,6 @@ typedef struct ag_mspinbutton {
 	const char *sep;			/* x/y value separator */
 	int xvalue, yvalue;			/* Default x/y bindings */
 	int min, max;				/* Default range bindings */
-	AG_Mutex lock;
 	int inc;				/* Increment for buttons */
 	int writeable;				/* 0 = read-only */
 	AG_Textbox *input;

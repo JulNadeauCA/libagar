@@ -78,7 +78,9 @@ Init(void *obj)
 void
 AG_ProgressBarSetWidth(AG_ProgressBar *pb, int width)
 {
+	AG_ObjectLock(pb);
 	pb->width = width;
+	AG_ObjectUnlock(pb);
 }
 
 static void
@@ -114,12 +116,15 @@ AG_ProgressBarPercent(AG_ProgressBar *pb)
 {
 	int min, max, val;
 
+	AG_ObjectLock(pb);
 	min = AG_WidgetInt(pb, "min");
 	max = AG_WidgetInt(pb, "max");
 	val = AG_WidgetInt(pb, "value");
+	AG_ObjectUnlock(pb);
+
 	if (val < min) { val = min; }
 	if (val > max) { val = max; }
-
+	
 	return val*100/(max - min);
 }
 

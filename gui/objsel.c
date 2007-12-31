@@ -91,7 +91,7 @@ FindObjects(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 	}
 	if (!TAILQ_EMPTY(&pob->children)) {
 		it->flags |= AG_TLIST_HAS_CHILDREN;
-		if (AG_ObjectRoot(pob) == pob)
+		if (pob->parent == NULL)
 			it->flags |= AG_TLIST_VISIBLE_CHILDREN;
 	}
 	if ((it->flags & AG_TLIST_HAS_CHILDREN)) {
@@ -107,9 +107,11 @@ PollObjects(AG_Event *event)
 	AG_ObjectSelector *os = AG_PTR(1);
 
 	AG_TlistClear(tl);
-	AG_LockLinkage();
+	AG_ObjectLock(os);
+	AG_LockVFS(os->root);
 	FindObjects(os, tl, os->root, 0);
-	AG_UnlockLinkage();
+	AG_UnlockVFS(os->root);
+	AG_ObjectUnlock(os);
 	AG_TlistRestore(tl);
 }
 
@@ -181,7 +183,9 @@ Init(void *obj)
 void
 AG_ObjectSelectorMaskType(AG_ObjectSelector *os, const char *type)
 {
+	AG_ObjectLock(os);
 	Strlcpy(os->type_mask, type, sizeof(os->type_mask));
+	AG_ObjectUnlock(os);
 }
 
 AG_WidgetClass agObjectSelectorClass = {

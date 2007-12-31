@@ -93,17 +93,8 @@ Init(void *obj)
 	nb->padding = -1;
 	nb->tabFont = AG_FetchFont(NULL, agDefaultFont->size-1, 0);
 	TAILQ_INIT(&nb->tabs);
-	AG_MutexInitRecursive(&nb->lock);
 
 	AG_SetEvent(nb, "window-mousebuttondown", MouseButtonDown, NULL);
-}
-
-static void
-Destroy(void *p)
-{
-	AG_Notebook *nb = p;
-
-	AG_MutexDestroy(&nb->lock);
 }
 
 static void
@@ -126,6 +117,14 @@ Draw(void *p)
 		return;
 	}
 	TAILQ_FOREACH(tab, &nb->tabs, tabs) {
+		if (tab->label == -1) {
+			AG_PushTextState();
+			AG_TextFont(nb->tabFont);
+			AG_TextColor(NOTEBOOK_TXT_COLOR);
+			tab->label = AG_WidgetMapSurface(nb,
+			    AG_TextRender(tab->labelText));
+			AG_PopTextState();
+		}
 		r.x = x;
 		r.y = y;
 		r.w = WSURFACE(nb,tab->label)->w + SPACING*2;
@@ -147,7 +146,6 @@ SizeRequest(void *p, AG_SizeReq *r)
 	AG_NotebookTab *tab;
 	AG_SizeReq rTab;
 
-	AG_MutexLock(&nb->lock);
 	if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0) {
 		nb->bar_h = agTextFontHeight + SPACING*2;
 		nb->bar_w = SPACING*2;
@@ -163,11 +161,11 @@ SizeRequest(void *p, AG_SizeReq *r)
 		nb->cont_w = MAX(nb->cont_w,rTab.w);
 		nb->cont_h = MAX(nb->cont_h,rTab.h);
 		if ((nb->flags & AG_NOTEBOOK_HIDE_TABS) == 0)
-			nb->bar_w += WSURFACE(nb,tab->label)->w + SPACING*2;
+			nb->bar_w += SPACING*2;
+			/* + WSURFACE(nb,tab->label)->w */
 	}
 	r->h = nb->cont_h + nb->bar_h;
 	r->w = MAX(nb->cont_w, nb->bar_w);
-	AG_MutexUnlock(&nb->lock);
 }
 
 static int
@@ -177,9 +175,8 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_NotebookTab *tab;
 	AG_SizeAlloc aTab;
 
-	AG_MutexLock(&nb->lock);
 	if (a->h < nb->bar_h) {
-		goto fail;
+		return (-1);
 	}
 	if ((tab = nb->sel_tab) != NULL) {
 		aTab.x = 0;
@@ -188,43 +185,39 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aTab.h = a->h - nb->bar_h;
 		AG_WidgetSizeAlloc(tab, &aTab);
 	}
-	AG_MutexUnlock(&nb->lock);
 	return (0);
-fail:
-	AG_MutexUnlock(&nb->lock);
-	return (-1);
 }
 
 void
 AG_NotebookSetTabAlignment(AG_Notebook *nb, enum ag_notebook_tab_alignment ta)
 {
-	AG_MutexLock(&nb->lock);
+	AG_ObjectLock(nb);
 	nb->tab_align = ta;
-	AG_MutexUnlock(&nb->lock);
+	AG_ObjectUnlock(nb);
 }
 
 void
 AG_NotebookSetSpacing(AG_Notebook *nb, int spacing)
 {
-	AG_MutexLock(&nb->lock);
+	AG_ObjectLock(nb);
 	nb->spacing = spacing;
-	AG_MutexUnlock(&nb->lock);
+	AG_ObjectUnlock(nb);
 }
 
 void
 AG_NotebookSetTabFont(AG_Notebook *nb, AG_Font *font)
 {
-	AG_MutexLock(&nb->lock);
+	AG_ObjectLock(nb);
 	nb->tabFont = font;
-	AG_MutexUnlock(&nb->lock);
+	AG_ObjectUnlock(nb);
 }
 
 void
 AG_NotebookSetPadding(AG_Notebook *nb, int padding)
 {
-	AG_MutexLock(&nb->lock);
+	AG_ObjectLock(nb);
 	nb->padding = padding;
-	AG_MutexUnlock(&nb->lock);
+	AG_ObjectUnlock(nb);
 }
 
 AG_NotebookTab *
@@ -237,43 +230,48 @@ AG_NotebookAddTab(AG_Notebook *nb, const char *label, enum ag_box_type btype)
 	AG_BoxSetType(&tab->box, btype);
 	AG_Expand(tab);
 
+	AG_ObjectLock(nb);
+
 	if (nb->padding >= 0)
 		AG_BoxSetPadding(&tab->box, nb->padding);
 	if (nb->spacing >= 0)
 		AG_BoxSetSpacing(&tab->box, nb->spacing);
 
-	AG_PushTextState();
-	AG_TextFont(nb->tabFont);
-	AG_TextColor(NOTEBOOK_TXT_COLOR);
-	tab->label = AG_WidgetMapSurface(nb, AG_TextRender(label));
-	AG_PopTextState();
+	Strlcpy(tab->labelText, label, sizeof(tab->labelText));
+	tab->label = -1;
 
 	TAILQ_INSERT_TAIL(&nb->tabs, tab, tabs);
-	if (TAILQ_FIRST(&nb->tabs) == tab) {
+	if (TAILQ_FIRST(&nb->tabs) == tab)
 		AG_NotebookSelectTab(nb, tab);
-	}
+	
+	AG_ObjectUnlock(nb);
 	return (tab);
 }
 
 void
 AG_NotebookDelTab(AG_Notebook *nb, AG_NotebookTab *tab)
 {
+	AG_ObjectLock(nb);
 	TAILQ_REMOVE(&nb->tabs, tab, tabs);
 	AG_WidgetUnmapSurface(nb, tab->label);
 	AG_ObjectDestroy(tab);
+	AG_ObjectUnlock(nb);
 }
 
 void
 AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 {
-	AG_Window *pwin = AG_WidgetParentWindow(nb);
+	AG_Window *pwin;
 	AG_SizeReq rTab;
 	AG_SizeAlloc aTab;
 
-#ifdef DEBUG
-	if (pwin == NULL)
-		AG_FatalError("AG_Notebook: No window is attached");
-#endif
+	AG_LockVFS(agView);
+	AG_ObjectLock(nb);
+
+	if ((pwin = AG_WidgetParentWindow(nb)) == NULL) {
+		/* AG_FatalError("AG_Notebook: No window is attached"); */
+		goto out;
+	}
 	if (nb->sel_tab != NULL) {
 		AG_WidgetHiddenRecursive(nb->sel_tab);
 		AG_ObjectDetach(nb->sel_tab);
@@ -281,7 +279,7 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	}
 	if (tab == NULL) {
 		nb->sel_tab = NULL;
-		return;
+		goto out;
 	}
 	AG_ObjectAttach(nb, tab);
 	nb->sel_tab = tab;
@@ -293,19 +291,24 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	aTab.h = WIDGET(nb)->h - nb->bar_h;
 	AG_WidgetSizeAlloc(tab, &aTab);
 	AG_WidgetShownRecursive(tab);
-
+	
 	AG_WindowUpdate(pwin);
 /* 	AG_WidgetFocus(tab); */
+out:
+	AG_ObjectUnlock(nb);
+	AG_UnlockVFS(agView);
 }
 
 void
 AG_NotebookSetTabVisibility(AG_Notebook *nb, int flag)
 {
+	AG_ObjectLock(nb);
 	if (flag) {
 		nb->flags &= ~(AG_NOTEBOOK_HIDE_TABS);
 	} else {
 		nb->flags |= AG_NOTEBOOK_HIDE_TABS;
 	}
+	AG_ObjectUnlock(nb);
 }
 
 AG_WidgetClass agNotebookClass = {
@@ -314,11 +317,11 @@ AG_WidgetClass agNotebookClass = {
 		sizeof(AG_Notebook),
 		{ 0,0 },
 		Init,
-		NULL,			/* free */
-		Destroy,
-		NULL,			/* load */
-		NULL,			/* save */
-		NULL			/* edit */
+		NULL,		/* free */
+		NULL,		/* destroy */
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
 	},
 	Draw,
 	SizeRequest,

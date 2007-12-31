@@ -26,7 +26,6 @@ typedef struct ag_numerical {
 #define AG_NUMERICAL_VFILL	0x02
 #define AG_NUMERICAL_NO_HFILL	0x04
 
-	AG_Mutex lock;
 	double value;			/* Default value binding */
 	double min, max;		/* Default range bindings */
 	double inc;			/* Increment for buttons */

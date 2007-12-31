@@ -125,10 +125,13 @@ typedef struct ag_widget {
 	SDL_Surface **surfaces;		/* Registered surfaces */
 	Uint *surfaceFlags;		/* Surface flags */
 #define AG_WIDGET_SURFACE_NODUP	0x01	/* Don't free on destroy */
+#define AG_WIDGET_SURFACE_REGEN	0x02	/* Texture needs to be regenerated */
 	Uint nsurfaces;
 #ifdef HAVE_OPENGL
 	Uint *textures;			/* Cached OpenGL textures */
 	float *texcoords;		/* Cached texture coordinates */
+	Uint *textureGC;		/* Textures queued for deletion */
+	Uint nTextureGC;
 #endif
 
 	AG_Mutex bindings_lock;			 	/* Lock on bindings */
@@ -200,6 +203,13 @@ void	 AG_WidgetReplaceSurfaceNODUP(void *, int, SDL_Surface *);
 void	 AG_WidgetUpdateSurface(void *, int);
 #define	 AG_WidgetUnmapSurface(w, n) \
 	 AG_WidgetReplaceSurface((w),(n),NULL)
+#ifdef HAVE_OPENGL
+# define AG_WidgetUpdateSurface(wid,name) do { \
+	 AGWIDGET(wid)->surfaceFlags[(name)] |= AG_WIDGET_SURFACE_REGEN; \
+} while (0)
+#else
+# define AG_WidgetUpdateSurface(wid,name)
+#endif
 
 void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
 void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
@@ -291,13 +301,17 @@ AG_WidgetUnlockBinding(AG_WidgetBinding *bind)
 static __inline__ void
 AG_WidgetEnable(void *p)
 {
+	AG_ObjectLock(p);
 	AGWIDGET(p)->flags &= ~(AG_WIDGET_DISABLED);
+	AG_ObjectUnlock(p);
 }
 
 static __inline__ void
 AG_WidgetDisable(void *p)
 {
+	AG_ObjectLock(p);
 	AGWIDGET(p)->flags |= AG_WIDGET_DISABLED;
+	AG_ObjectUnlock(p);
 }
 
 static __inline__ int
@@ -779,16 +793,27 @@ AG_WidgetSetPointer(void *wid, const char *name, void *np)
 	AG_WidgetUnlockBinding(binding);
 }
 
-static __inline__ void AG_Expand(void *wid) {
+static __inline__ void
+AG_Expand(void *wid)
+{
+	AG_ObjectLock(wid);
 	AGWIDGET(wid)->flags |= AG_WIDGET_EXPAND;
+	AG_ObjectUnlock(wid);
 }
-static __inline__ void AG_ExpandHoriz(void *wid) {
+static __inline__ void
+AG_ExpandHoriz(void *wid)
+{
+	AG_ObjectLock(wid);
 	AGWIDGET(wid)->flags |= AG_WIDGET_HFILL;
+	AG_ObjectUnlock(wid);
 }
-static __inline__ void AG_ExpandVert(void *wid) {
+static __inline__ void
+AG_ExpandVert(void *wid)
+{
+	AG_ObjectLock(wid);
 	AGWIDGET(wid)->flags |= AG_WIDGET_VFILL;
+	AG_ObjectUnlock(wid);
 }
-
 __END_DECLS
 
 #include "close_code.h"

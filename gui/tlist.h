@@ -68,7 +68,6 @@ typedef struct ag_tlist {
 	int wHint, hHint;		/* Size hint */
 	int wSpace;			/* Icon/text spacing */
 
-	AG_Mutex lock;
 	int item_h;			/* Item height */
 	int icon_w;			/* Item icon width */
 	void *dblclicked;		/* Used by double click */

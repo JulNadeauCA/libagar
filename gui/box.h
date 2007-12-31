@@ -19,7 +19,6 @@ enum ag_box_type {
 typedef struct ag_box {
 	struct ag_widget wid;
 	enum ag_box_type type;
-	AG_Mutex lock;
 	Uint flags;
 #define AG_BOX_HOMOGENOUS	0x01	/* Divide space evenly */
 #define AG_BOX_HFILL		0x02	/* Expand to fill available width */

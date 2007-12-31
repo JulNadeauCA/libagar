@@ -79,7 +79,6 @@ typedef struct ag_tableview {
 	AG_Scrollbar *sbar_h;		/* Horizontal scrollbar */
 	//AG_Textbox *editbox;		/* Cell edition widget */
 	
-	AG_Mutex lock;
 	AG_TableviewDataFn data_callback;	/* Callback to get cell data */
 	AG_TableviewSortFn sort_callback;	/* Callback to compare */
 	

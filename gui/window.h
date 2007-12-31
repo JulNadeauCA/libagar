@@ -61,7 +61,6 @@ typedef struct ag_window {
 	char caption[AG_WINDOW_CAPTION_MAX];	/* Window caption */
 	int visible;				/* Window is visible */
 
-	AG_Mutex lock;
 	struct ag_titlebar *tbar;		/* Titlebar (if any) */
 	enum ag_window_alignment alignment;	/* Initial position */
 	int spacing;				/* Default spacing (px) */

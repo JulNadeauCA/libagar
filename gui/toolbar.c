@@ -104,6 +104,7 @@ StickyUpdate(AG_Event *event)
 	AG_Button *oBtn;
 	int i;
 
+	AG_ObjectLock(bar);
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(oBtn, bar->rows[i], ag_button) {
 			int *state;
@@ -118,16 +119,19 @@ StickyUpdate(AG_Event *event)
 			AG_WidgetUnlockBinding(stateb);
 		}
 	}
+	AG_ObjectUnlock(bar);
 }
 
 void
 AG_ToolbarRow(AG_Toolbar *bar, int row)
 {
+	AG_ObjectLock(bar);
 #ifdef DEBUG
 	if (row < 0 || row >= bar->nRows)
 		AG_FatalError("no such row %d", row);
 #endif
 	bar->curRow = row;
+	AG_ObjectUnlock(bar);
 }
 
 AG_Button *
@@ -136,6 +140,9 @@ AG_ToolbarButtonIcon(AG_Toolbar *bar, SDL_Surface *icon, int def,
 {
 	AG_Button *bu;
 	AG_Event *ev;
+
+	AG_LockVFS(agView);
+	AG_ObjectLock(bar);
 
 	bu = AG_ButtonNew(bar->rows[bar->curRow], 0, NULL);
 	AG_ButtonSurface(bu, icon);
@@ -150,6 +157,9 @@ AG_ToolbarButtonIcon(AG_Toolbar *bar, SDL_Surface *icon, int def,
 	if (bar->flags & (AG_TOOLBAR_STICKY|AG_TOOLBAR_MULTI_STICKY)) {
 		AG_AddEvent(bu, "button-pushed", StickyUpdate, "%p", bar);
 	}
+	
+	AG_ObjectUnlock(bar);
+	AG_UnlockVFS(agView);
 	return (bu);
 }
 
@@ -159,6 +169,9 @@ AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
 {
 	AG_Button *bu;
 	AG_Event *ev;
+	
+	AG_LockVFS(agView);
+	AG_ObjectLock(bar);
 
 	bu = AG_ButtonNew(bar->rows[bar->curRow], 0, text);
 	AG_ButtonSetFocusable(bu, 0);
@@ -172,14 +185,21 @@ AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
 	if (bar->flags & (AG_TOOLBAR_STICKY|AG_TOOLBAR_MULTI_STICKY)) {
 		AG_AddEvent(bu, "button-pushed", StickyUpdate, "%p", bar);
 	}
+	
+	AG_ObjectUnlock(bar);
+	AG_UnlockVFS(agView);
 	return (bu);
 }
 
 void
 AG_ToolbarSeparator(AG_Toolbar *bar)
 {
+	AG_LockVFS(agView);
+	AG_ObjectLock(bar);
 	AG_SeparatorNew(bar->rows[bar->curRow], bar->type == AG_TOOLBAR_HORIZ ?
 	    AG_SEPARATOR_VERT : AG_SEPARATOR_HORIZ);
+	AG_ObjectUnlock(bar);
+	AG_UnlockVFS(agView);
 }
 
 void
@@ -213,6 +233,7 @@ AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 	AG_Button *b;
 	int i, *state;
 
+	AG_ObjectLock(bar);
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
 			stateb = AG_WidgetGetBinding(b, "state", &state);
@@ -221,6 +242,7 @@ AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 			AG_WidgetUnlockBinding(stateb);
 		}
 	}
+	AG_ObjectUnlock(bar);
 }
 
 void
@@ -230,6 +252,7 @@ AG_ToolbarSelectAll(AG_Toolbar *bar)
 	AG_Button *b;
 	int i, *state;
 
+	AG_ObjectLock(bar);
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
 			stateb = AG_WidgetGetBinding(b, "state", &state);
@@ -238,6 +261,7 @@ AG_ToolbarSelectAll(AG_Toolbar *bar)
 			AG_WidgetUnlockBinding(stateb);
 		}
 	}
+	AG_ObjectUnlock(bar);
 }
 
 void
@@ -247,6 +271,7 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 	AG_Button *b;
 	int i, *state;
 
+	AG_ObjectLock(bar);
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
 			stateb = AG_WidgetGetBinding(b, "state", &state);
@@ -255,6 +280,7 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 			AG_WidgetUnlockBinding(stateb);
 		}
 	}
+	AG_ObjectUnlock(bar);
 }
 
 static void

@@ -47,8 +47,9 @@ typedef struct ag_display {
 	SDL_Rect *dirty;		/* Video rectangles to update */
 	Uint	 ndirty;
 	Uint  maxdirty;
-	AG_Mutex lock_gl;		/* Lock on OpenGL context */
-	AG_Mutex lock;
+	
+	/* XXX We should just use the object VFS instead of a list */
+
 	struct ag_windowq windows;	/* Windows in view */
 	struct ag_windowq detach;	/* Windows to free */
 	struct ag_window *winToFocus;	/* Give focus to this window,
@@ -262,14 +263,9 @@ void		 AG_FlipSurface(Uint8 *, int, int);
 
 /* OpenGL-specific operations */
 #ifdef HAVE_OPENGL
-#define AG_LockGL()	 AG_MutexLock(&agView->lock_gl)
-#define AG_UnlockGL()	 AG_MutexUnlock(&agView->lock_gl)
 Uint		 	 AG_SurfaceTexture(SDL_Surface *, float *);
 void		 	 AG_UpdateTexture(SDL_Surface *, int);
 SDL_Surface		*AG_CaptureGLView(void);
-#else
-#define	AG_LockGL()
-#define	AG_UnlockGL()
 #endif
 
 /* Event processing */

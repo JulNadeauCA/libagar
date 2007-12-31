@@ -29,6 +29,7 @@
 #include "primitive.h"
 #include "icons.h"
 
+/* Widget must be locked. */
 static void
 SelectItem(AG_MenuItem *pitem, AG_MenuItem *subitem)
 {
@@ -302,6 +303,9 @@ Draw(void *p)
 		
 		AG_MenuUpdateItem(item);
 
+		if (item->icon == -1 && item->iconSrc != NULL) {
+			item->icon = AG_WidgetMapSurface(m, item->iconSrc);
+		}
 		STYLE(mview)->MenuItemBackground(mview, r, x, m, item->icon,
 		    (item == pitem->sel_subitem && item->state == 1),
 		    (item->value != -1) ? item->value : GetItemBoolValue(item));

@@ -58,15 +58,6 @@ Init(void *obj)
 	box->depth = -1;
 	box->padding = 4;
 	box->spacing = 2;
-	AG_MutexInitRecursive(&box->lock);
-}
-
-static void
-Destroy(void *obj)
-{
-	AG_Box *box = obj;
-
-	AG_MutexDestroy(&box->lock);
 }
 
 static void
@@ -117,7 +108,6 @@ AG_BoxSizeRequest(void *obj, AG_SizeReq *r)
 	int wMax = 0, hMax = 0;
 	int nWidgets, totArea;
 
-	AG_MutexLock(&box->lock);
 	nWidgets = CountChildWidgets(box, &totArea);
 	r->w = box->padding*2;
 	r->h = box->padding*2;
@@ -148,7 +138,6 @@ AG_BoxSizeRequest(void *obj, AG_SizeReq *r)
 			break;
 		}
 	}
-	AG_MutexUnlock(&box->lock);
 }
 
 static int
@@ -211,15 +200,14 @@ AG_BoxSizeAllocate(void *obj, const AG_SizeAlloc *a)
 	int nWidgets, totFixed;
 	int wAvail, hAvail;
 
-	AG_MutexLock(&box->lock);
 	if ((nWidgets = CountChildWidgets(box, &totFixed)) == 0) {
-		goto out;
+		return (0);
 	}
 	if (box->flags & AG_BOX_HOMOGENOUS) {
 		if (SizeAllocateHomogenous(box, a, nWidgets) == -1) {
-			goto fail;
+			return (-1);
 		}
-		goto out;
+		return (0);
 	}
 	wAvail = a->w - box->padding*2;
 	hAvail = a->h - box->padding*2;
@@ -246,48 +234,43 @@ AG_BoxSizeAllocate(void *obj, const AG_SizeAlloc *a)
 			break;
 		}
 	}
-out:
-	AG_MutexUnlock(&box->lock);
 	return (0);
-fail:
-	AG_MutexUnlock(&box->lock);
-	return (-1);
 }
 
 void
 AG_BoxSetHomogenous(AG_Box *box, int enable)
 {
-	AG_MutexLock(&box->lock);
+	AG_ObjectLock(box);
 	if (enable) {
 		box->flags |= AG_BOX_HOMOGENOUS;
 	} else {
 		box->flags &= ~(AG_BOX_HOMOGENOUS);
 	}
-	AG_MutexUnlock(&box->lock);
+	AG_ObjectUnlock(box);
 }
 
 void
 AG_BoxSetPadding(AG_Box *box, int padding)
 {
-	AG_MutexLock(&box->lock);
+	AG_ObjectLock(box);
 	box->padding = padding;
-	AG_MutexUnlock(&box->lock);
+	AG_ObjectUnlock(box);
 }
 
 void
 AG_BoxSetSpacing(AG_Box *box, int spacing)
 {
-	AG_MutexLock(&box->lock);
+	AG_ObjectLock(box);
 	box->spacing = spacing;
-	AG_MutexUnlock(&box->lock);
+	AG_ObjectUnlock(box);
 }
 
 void
 AG_BoxSetDepth(AG_Box *box, int depth)
 {
-	AG_MutexLock(&box->lock);
+	AG_ObjectLock(box);
 	box->depth = depth;
-	AG_MutexUnlock(&box->lock);
+	AG_ObjectUnlock(box);
 }
 
 void
@@ -295,14 +278,14 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 {
 	AG_SizeAlloc a;
 
-	AG_MutexLock(&box->lock);
+	AG_ObjectLock(box);
 	box->type = type;
 	a.x = WIDGET(box)->x;
 	a.y = WIDGET(box)->y;
 	a.w = WIDGET(box)->w;
 	a.h = WIDGET(box)->h;
 	AG_BoxSizeAllocate(box, &a);
-	AG_MutexUnlock(&box->lock);
+	AG_ObjectUnlock(box);
 }
 
 AG_WidgetClass agBoxClass = {
@@ -312,7 +295,7 @@ AG_WidgetClass agBoxClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* free */
-		Destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

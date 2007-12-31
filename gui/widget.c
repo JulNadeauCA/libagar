@@ -79,6 +79,8 @@ Init(void *obj)
 #ifdef HAVE_OPENGL
 	wid->textures = NULL;
 	wid->texcoords = NULL;
+	wid->textureGC = NULL;
+	wid->nTextureGC = 0;
 #endif
 
 	/*
@@ -122,7 +124,12 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 	} else if (AG_ObjectIsClass(parent, "AG_Widget:AG_Notebook:*")) {
 		AG_Notebook *book = (AG_Notebook *)parent;
 		AG_NotebookTab *tab;
-
+		/*
+		 * This hack allows Notebook tabs to be treated as
+		 * separate objects, even though they are not attached
+		 * to the widget hierarchy.
+		 */
+		AG_ObjectLock(book);
 		TAILQ_FOREACH(tab, &book->tabs, tabs) {
 			if (strcmp(OBJECT(tab)->name, node_name) != 0) {
 				continue;
@@ -130,13 +137,17 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 			if ((s = strchr(name, '/')) != NULL) {
 				rv = WidgetFindPath(OBJECT(tab), &s[1]);
 				if (rv != NULL) {
+					AG_ObjectUnlock(book);
 					return (rv);
 				} else {
+					AG_ObjectUnlock(book);
 					return (NULL);
 				}
 			}
+			AG_ObjectUnlock(book);
 			return (tab);
 		}
+		AG_ObjectUnlock(book);
 	} else {
 		TAILQ_FOREACH(chld, &parent->children, cobjs) {
 			if (strcmp(chld->name, node_name) != 0) {
@@ -156,7 +167,10 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 	return (NULL);
 }
 
-/* Find a widget by name. */
+/*
+ * Find a widget by name. Return value is only valid as long as the
+ * View VFS is locked.
+ */
 void *
 AG_WidgetFind(AG_Display *view, const char *name)
 {
@@ -166,9 +180,9 @@ AG_WidgetFind(AG_Display *view, const char *name)
 	if (name[0] != '/')
 		AG_FatalError("WidgetFind: Not an absolute path: %s", name);
 #endif
-	AG_LockLinkage();
+	AG_LockVFS(view);
 	rv = WidgetFindPath(OBJECT(view), &name[1]);
-	AG_UnlockLinkage();
+	AG_UnlockVFS(view);
 	if (rv == NULL) {
 		AG_SetError(_("The widget `%s' does not exist."), name);
 	}
@@ -180,11 +194,13 @@ AG_WidgetSetFocusable(void *p, int flag)
 {
 	AG_Widget *wid = p;
 
+	AG_ObjectLock(wid);
 	if (flag) {
 		wid->flags |= AG_WIDGET_FOCUSABLE;
 	} else {
 		wid->flags &= ~(AG_WIDGET_FOCUSABLE);
 	}
+	AG_ObjectUnlock(wid);
 }
 
 int
@@ -358,6 +374,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 	}
 	va_end(ap);
 
+	AG_ObjectLock(wid);
 	AG_MutexLock(&wid->bindings_lock);
 	SLIST_FOREACH(binding, &wid->bindings, bindings) {
 		if (strcmp(binding->name, name) != 0) {
@@ -385,6 +402,7 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 		binding->vtype = GetVirtualBindingType(binding);
 		AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
 		AG_MutexUnlock(&wid->bindings_lock);
+		AG_ObjectUnlock(wid);
 		return (binding);
 	}
 
@@ -410,17 +428,18 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 		break;
 	}
 	binding->vtype = GetVirtualBindingType(binding);
-
 	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
 	AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
 	AG_MutexUnlock(&wid->bindings_lock);
+	AG_ObjectUnlock(wid);
 	return (binding);
 }
 
 /*
  * Lookup a binding and copy its data to pointers passed as arguments.
- * The caller should invoke AG_WidgetUnlockBinding() when done reading/writing
- * the data.
+ *
+ * This function locks any locking device associated with the binding, so the
+ * caller must invoke AG_WidgetUnlockBinding() when done accessing the the data.
  */
 AG_WidgetBinding *
 AG_WidgetGetBinding(void *widp, const char *name, ...)
@@ -581,25 +600,32 @@ AG_WidgetBindingChanged(AG_WidgetBinding *bind)
 		AG_Object *pobj = bind->p1;
 		AG_Prop *prop;
 
+		AG_ObjectLock(pobj);
 		if ((prop = AG_GetProp(pobj, bind->data.prop, -1, NULL))
 		    != NULL) {
 			AG_PostEvent(NULL, pobj, "prop-modified", "%p", prop);
 		}
+		AG_ObjectUnlock(pobj);
 	}
 }
 
 /*
- * Register a surface with the given widget. In OpenGL mode, generate
- * a texture as well.
+ * Register a surface with the given widget. In OpenGL mode, a texture will
+ * be generated when the surface is first blitted.
  *
- * The surface is not duplicated, but will be freed automatically with the
- * widget unless the NODUP flag is set.
+ * The surface is not duplicated, but will be freed automatically along
+ * with other widget data unless the NODUP flag is set.
+ *
+ * Safe to call in any context, but the returned name is only valid as long
+ * as the widget is locked.
  */
 int
 AG_WidgetMapSurface(void *p, SDL_Surface *su)
 {
 	AG_Widget *wid = p;
 	int i, idx = -1;
+		
+	AG_ObjectLock(wid);
 
 	for (i = 0; i < wid->nsurfaces; i++) {
 		if (wid->surfaces[i] == NULL) {
@@ -624,24 +650,20 @@ AG_WidgetMapSurface(void *p, SDL_Surface *su)
 	}
 	wid->surfaces[idx] = su;
 	wid->surfaceFlags[idx] = 0;
-
 #ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		GLuint texname;
-
-		AG_LockGL();
-		texname = (su == NULL) ? 0 :
-		    AG_SurfaceTexture(su, &wid->texcoords[idx*4]);
-		wid->textures[idx] = texname;
-		AG_UnlockGL();
-	}
+	if (agView->opengl)
+		wid->textures[idx] = 0;
 #endif
+	AG_ObjectUnlock(wid);
 	return (idx);
 }
 
 /*
  * Variant of WidgetMapSurface() that sets the NODUP flag such that
  * the surface is not freed automatically with the widget.
+ *
+ * Safe to call in any context, but the returned name is only valid as long
+ * as the widget is locked.
  */
 int
 AG_WidgetMapSurfaceNODUP(void *p, SDL_Surface *su)
@@ -649,39 +671,42 @@ AG_WidgetMapSurfaceNODUP(void *p, SDL_Surface *su)
 	AG_Widget *wid = p;
 	int name;
 
+	AG_ObjectLock(wid);
 	name = AG_WidgetMapSurface(wid, su);
 	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
+	AG_ObjectUnlock(wid);
 	return (name);
 }
 
 /*
- * Replace the contents of a registered surface, and regenerate
- * the matching texture in OpenGL mode. Unless NODUP is set, the
- * current source surface is freed.
+ * Replace the contents of a mapped surface. Unless NODUP is set, the current
+ * source surface is freed.
+ *
+ * This is safe to call in any context, with the drawback that in OpenGL mode,
+ * the previous texture cannot be deleted immediately and is instead queued
+ * for future deletion within rendering context.
  */
 void
 AG_WidgetReplaceSurface(void *p, int name, SDL_Surface *su)
 {
 	AG_Widget *wid = p;
 
+	AG_ObjectLock(wid);
 	if (wid->surfaces[name] != NULL) {
 		if (!WSURFACE_NODUP(wid,name))
 			SDL_FreeSurface(wid->surfaces[name]);
 	}
 	wid->surfaces[name] = su;
 	wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_NODUP);
-
 #ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		AG_LockGL();
-		if (wid->textures[name] != 0) {
-			glDeleteTextures(1, (GLuint *)&wid->textures[name]);
-		}
-		wid->textures[name] = (su == NULL) ? 0 :
-		    AG_SurfaceTexture(su, &wid->texcoords[name*4]);
-		AG_UnlockGL();
+	if (agView->opengl && wid->textures[name] != 0) {
+		wid->textureGC = Realloc(wid->textureGC, (wid->nTextureGC+1)*
+		                                         sizeof(Uint));
+		wid->textureGC[wid->nTextureGC++] = wid->textures[name];
+		wid->textures[name] = 0;	/* Will be regenerated */
 	}
 #endif
+	AG_ObjectUnlock(wid);
 }
 
 /* Variant of WidgetReplaceSurface() that sets the NODUP flag. */
@@ -690,24 +715,27 @@ AG_WidgetReplaceSurfaceNODUP(void *p, int name, SDL_Surface *su)
 {
 	AG_Widget *wid = p;
 
+	AG_ObjectLock(wid);
 	AG_WidgetReplaceSurface(wid, name, su);
 	wid->surfaceFlags[name] |= AG_WIDGET_SURFACE_NODUP;
+	AG_ObjectUnlock(wid);
 }
 
-void
-AG_WidgetUpdateSurface(void *p, int name)
+/* Remove surfaces which were previously queued for deletion. */
+static void
+DeleteQueuedTextures(AG_Widget *wid)
 {
-#ifdef HAVE_OPENGL
-	AG_Widget *wid = p;
+	Uint i;
 
-	if (agView->opengl)
-		AG_UpdateTexture(wid->surfaces[name], wid->textures[name]);
-#endif
+	for (i = 0; i < wid->nTextureGC; i++) {
+		glDeleteTextures(1, (GLuint *)&wid->textureGC[i]);
+	}
+	wid->nTextureGC = 0;
 }
 
 /*
- * Note: Widget objects must be destroyed in event handler context
- * (for texture operations in OpenGL mode).
+ * NOTE: Texture operations are involved so this is only safe to invoke
+ * in rendering context.
  */
 static void
 Destroy(void *obj)
@@ -723,21 +751,23 @@ Destroy(void *obj)
 		pm2 = SLIST_NEXT(pm, menus);
 		AG_PopupDestroy(NULL, pm);
 	}
+
+	if (wid->textureGC > 0) {
+		DeleteQueuedTextures(wid);
+	}
 	for (i = 0; i < wid->nsurfaces; i++) {
 		if (wid->surfaces[i] != NULL && !WSURFACE_NODUP(wid,i))
 			SDL_FreeSurface(wid->surfaces[i]);
 #ifdef HAVE_OPENGL
-		/* XXX TODO Queue this operation? */
 		if (agView->opengl) {
-			AG_LockGL();
 			if (wid->textures[i] != 0) {
 				glDeleteTextures(1,
 				    (GLuint *)&wid->textures[i]);
 			}
-			AG_UnlockGL();
 		}
 #endif
 	}
+
 	Free(wid->surfaces);
 	Free(wid->surfaceFlags);
 
@@ -745,6 +775,7 @@ Destroy(void *obj)
 	if (agView->opengl) {
 		Free(wid->textures);
 		Free(wid->texcoords);
+		Free(wid->textureGC);
 	}
 #endif
 
@@ -761,7 +792,7 @@ Destroy(void *obj)
  * Perform a software blit from a source surface to the display, at
  * coordinates relative to the widget, using clipping.
  *
- * Only safe to call from widget rendering context.
+ * Only safe to call from rendering context.
  */
 void
 AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
@@ -830,40 +861,53 @@ AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 	}
 }
 
+static __inline__ void
+UpdateTexture(AG_Widget *wid, int name)
+{
+	if (wid->textures[name] == 0) {
+		wid->textures[name] = AG_SurfaceTexture(wid->surfaces[name],
+		    &wid->texcoords[name*4]);
+	} else if (wid->surfaceFlags[name] & AG_WIDGET_SURFACE_REGEN) {
+		wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_REGEN);
+		AG_UpdateTexture(wid->surfaces[name], wid->textures[name]);
+	}
+}
+
 /*
- * Perform a hardware or software blit from a registered surface to the display
+ * Perform a hardware or software blit from a mapped surface to the display
  * at coordinates relative to the widget, using clipping.
  * 
- * Only safe to call from widget rendering context.
+ * Only safe to call from rendering context.
  */
 void
-AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
+AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, SDL_Rect *rs, int x, int y)
 {
-	AG_Widget *wid = p;
-	AG_Widget *srcwid = srcp;
-	SDL_Surface *su = srcwid->surfaces[name];
+	AG_Widget *wDst = pDst;
+	AG_Widget *wSrc = pSrc;
+	SDL_Surface *su = wSrc->surfaces[name];
 	SDL_Rect rd;
 
 	if (name == -1 || su == NULL)
 		return;
 
-	rd.x = wid->cx + x;
-	rd.y = wid->cy + y;
-	rd.w = su->w <= wid->w ? su->w : wid->w;		/* Clip */
-	rd.h = su->h <= wid->h ? su->h : wid->h;		/* Clip */
+	rd.x = wDst->cx + x;
+	rd.y = wDst->cy + y;
+	rd.w = su->w <= wDst->w ? su->w : wDst->w;		/* Clip */
+	rd.h = su->h <= wDst->h ? su->h : wDst->h;		/* Clip */
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		GLfloat tmptexcoord[4];
-		GLuint texture = srcwid->textures[name];
 		GLfloat *texcoord;
-		int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
 		GLboolean blend_sv;
 		GLint blend_sfactor, blend_dfactor;
 		GLfloat texenvmode;
+		int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
+
+		UpdateTexture(wSrc, name);
 
 		if (rs == NULL) {
-			texcoord = &srcwid->texcoords[name*4];
+			texcoord = &wSrc->texcoords[name*4];
 		} else {
 			texcoord = &tmptexcoord[0];
 			texcoord[0] = (GLfloat)rs->x/PowOf2i(rs->x);
@@ -884,7 +928,7 @@ AG_WidgetBlitFrom(void *p, void *srcp, int name, SDL_Rect *rs, int x, int y)
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 	
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, wSrc->textures[name]);
 		glBegin(GL_TRIANGLE_STRIP);
 		{
 			glTexCoord2f(texcoord[0], texcoord[1]);
@@ -924,15 +968,17 @@ void
 AG_WidgetBlitSurfaceGL(void *pWidget, int name, float w, float h)
 {
 	AG_Widget *wid = pWidget;
-	GLuint glname;
+	GLuint texname;
 	GLfloat *texcoord;
 	GLboolean blend_sv;
 	GLint blend_sfactor, blend_dfactor;
 	GLfloat texenvmode;
 	SDL_Surface *su = wid->surfaces[name];
 	int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
+	
+	UpdateTexture(wid, name);
 
-	glname = wid->textures[name];
+	texname = wid->textures[name];
 	texcoord = &wid->texcoords[name*4];
 	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -945,7 +991,7 @@ AG_WidgetBlitSurfaceGL(void *pWidget, int name, float w, float h)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 	
-	glBindTexture(GL_TEXTURE_2D, glname);
+	glBindTexture(GL_TEXTURE_2D, texname);
 	glBegin(GL_TRIANGLE_STRIP);
 	{
 		glTexCoord2f(texcoord[2],	texcoord[1]);
@@ -1001,8 +1047,10 @@ AG_WidgetPutPixelRGB_GL(void *p, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 void
 AG_WidgetFreeResourcesGL(AG_Widget *wid)
 {
+	AG_ObjectLock(wid);
 	glDeleteTextures(wid->nsurfaces, (GLuint *)wid->textures);
 	memset(wid->textures, 0, wid->nsurfaces*sizeof(Uint));
+	AG_ObjectUnlock(wid);
 }
 
 /*
@@ -1014,6 +1062,7 @@ AG_WidgetRegenResourcesGL(AG_Widget *wid)
 {
 	Uint i;
 
+	AG_ObjectLock(wid);
 	for (i = 0; i < wid->nsurfaces; i++)  {
 		if (wid->surfaces[i] != NULL) {
 			wid->textures[i] = AG_SurfaceTexture(wid->surfaces[i],
@@ -1022,6 +1071,7 @@ AG_WidgetRegenResourcesGL(AG_Widget *wid)
 			wid->textures[i] = 0;
 		}
 	}
+	AG_ObjectUnlock(wid);
 }
 #endif /* HAVE_OPENGL */
 
@@ -1031,16 +1081,21 @@ AG_WidgetUnfocus(void *p)
 {
 	AG_Widget *wid = p, *cwid;
 
+	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_FOCUSED) {
 		wid->flags &= ~(AG_WIDGET_FOCUSED);
 		AG_PostEvent(NULL, wid, "widget-lostfocus", NULL);
 	}
-
-	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		AG_WidgetUnfocus(cwid);
+	}
+	AG_ObjectUnlock(wid);
 }
 
-/* Find the parent window of a widget. */
+/*
+ * Find the parent window of a widget. Result is only valid as long as
+ * the View VFS is locked.
+ */
 AG_Window *
 AG_WidgetParentWindow(void *p)
 {
@@ -1050,10 +1105,12 @@ AG_WidgetParentWindow(void *p)
 	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*"))
 		return ((AG_Window *)wid);
 
+	AG_LockVFS(agView);
 	while ((pwid = OBJECT(pwid)->parent) != NULL) {
 		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*"))
 			break;
 	}
+	AG_UnlockVFS(agView);
 	return ((AG_Window *)pwid);
 }
 
@@ -1064,19 +1121,22 @@ AG_WidgetFocus(void *p)
 	AG_Widget *wid = p, *pwid = wid, *fwid;
 	AG_Window *pwin;
 
+	AG_LockVFS(agView);
+	AG_ObjectLock(wid);
+
 	if ((wid->flags & AG_WIDGET_FOCUSABLE) == 0)
-		return;
+		goto out;
 
 	/* See if this widget is already focused. */
 	if ((fwid = AG_WidgetFindFocused(wid)) != NULL &&
 	    (fwid == wid))
-		return;
+		goto out;
 
 	/* Remove focus from other widgets inside this window. */
 	pwin = AG_WidgetParentWindow(wid);
 	if (pwin != NULL) {
 		if (pwin->flags & AG_WINDOW_DENYFOCUS) {
-			return;
+			goto out;
 		}
 		AG_WidgetUnfocus(pwin);
 	}
@@ -1086,6 +1146,7 @@ AG_WidgetFocus(void *p)
 		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*"))
 			break;
 #if 0
+		/* XXX */
 		if ((pwid->flags & AG_WIDGET_FOCUSABLE) == 0) {
 			Debug(wid, "Parent (%s) is not focusable\n",
 			    OBJECT(pwid)->name);
@@ -1096,9 +1157,15 @@ AG_WidgetFocus(void *p)
 		AG_PostEvent(OBJECT(pwid)->parent, pwid, "widget-gainfocus",
 		    NULL);
 	} while ((pwid = OBJECT(pwid)->parent) != NULL);
+out:
+	AG_ObjectUnlock(wid);
+	AG_UnlockVFS(agView);
 }
 
-/* Evaluate whether a given widget is at least partially visible. */
+/*
+ * Evaluate whether a given widget is at least partially visible. The Widget
+ * and the view must be locked.
+ */
 /* TODO optimize on a per window basis */
 int
 AG_WidgetIsOcculted(AG_Widget *wid)
@@ -1127,14 +1194,19 @@ AG_WidgetIsOcculted(AG_Widget *wid)
 void
 AG_SetCursor(int cursor)
 {
-	if (agCursorToSet == NULL)
+	AG_LockVFS(agView);
+	if (agCursorToSet == NULL) {
 		agCursorToSet = agCursors[cursor];
+	}
+	AG_UnlockVFS(agView);
 }
 
 void
 AG_UnsetCursor(void)
 {
+	AG_LockVFS(agView);
 	agCursorToSet = agDefaultCursor;
+	AG_UnlockVFS(agView);
 }
 
 /*
@@ -1226,9 +1298,14 @@ AG_WidgetDraw(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *chld;
 
-	if (wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE))
-		return;
+	AG_ObjectLock(wid);
 
+	if (wid->textureGC > 0) {
+		DeleteQueuedTextures(wid);
+	}
+	if (wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE)) {
+		goto out;
+	}
 	if (((wid->flags & AG_WIDGET_STATIC)==0 || wid->redraw) &&
 	    !AG_WidgetIsOcculted(wid) &&
 	    WIDGET_OPS(wid)->draw != NULL &&
@@ -1251,6 +1328,8 @@ AG_WidgetDraw(void *p)
 
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
 		AG_WidgetDraw(chld);
+out:
+	AG_ObjectUnlock(wid);
 }
 
 static void
@@ -1271,14 +1350,20 @@ AG_WidgetSizeReq(void *w, AG_SizeReq *r)
 {
 	r->w = 0;
 	r->h = 0;
-	if (WIDGET_OPS(w)->size_request != NULL)
+
+	AG_ObjectLock(w);
+	if (WIDGET_OPS(w)->size_request != NULL) {
 		WIDGET_OPS(w)->size_request(w, r);
+	}
+	AG_ObjectUnlock(w);
 }
 
 int
 AG_WidgetSizeAlloc(void *p, AG_SizeAlloc *a)
 {
 	AG_Widget *w = p;
+
+	AG_ObjectLock(w);
 
 	if (a->w < 0 || a->h < 0) {
 		a->w = 0;
@@ -1292,20 +1377,25 @@ AG_WidgetSizeAlloc(void *p, AG_SizeAlloc *a)
 	if (WIDGET_OPS(w)->size_allocate != NULL) {
 		if (WIDGET_OPS(w)->size_allocate(w, a) == -1) {
 			w->flags |= AG_WIDGET_UNDERSIZE;
-			return (-1);
+			goto fail;
 		} else {
 			w->flags &= ~(AG_WIDGET_UNDERSIZE);
 		}
 	}
+
+	AG_ObjectUnlock(w);
 	return (0);
+fail:
+	AG_ObjectUnlock(w);
+	return (-1);
 }
 
 /*
  * Blend with the pixel at widget-relative x,y coordinates, with clipping
  * to display area.
  *
- * Must be invoked from widget rendering context. In SDL mode, the
- * display surface must be locked.
+ * Must be invoked from rendering context. In SDL mode, the display surface
+ * must be locked.
  */
 void
 AG_WidgetBlendPixelRGBA(void *p, int wx, int wy, Uint8 c[4], AG_BlendFn fn)
@@ -1363,7 +1453,7 @@ AG_WidgetBlendPixelRGBA(void *p, int wx, int wy, Uint8 c[4], AG_BlendFn fn)
 
 /*
  * Post a mousemotion event to widgets that either hold focus or have the
- * AG_WIDGET_UNFOCUSED_MOTION flag set.
+ * AG_WIDGET_UNFOCUSED_MOTION flag set. View must be locked.
  */
 void
 AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
@@ -1371,21 +1461,24 @@ AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
 {
 	AG_Widget *cwid;
 
+	AG_ObjectLock(wid);
 	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetFocused(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
 		AG_PostEvent(NULL, wid, "window-mousemotion",
 		    "%i, %i, %i, %i, %i", x-wid->cx, y-wid->cy,
 		    xrel, yrel, state);
 		if (wid->flags & AG_WIDGET_PRIO_MOTION)
-			return;
+			goto out;
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
 		AG_WidgetMouseMotion(win, cwid, x, y, xrel, yrel, state);
+out:
+	AG_ObjectUnlock(wid);
 }
 
 /*
  * Post a mousebuttonup event to widgets that either hold focus or have the
- * AG_WIDGET_UNFOCUSED_BUTTONUP flag set.
+ * AG_WIDGET_UNFOCUSED_BUTTONUP flag set. View must be locked.
  */
 void
 AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
@@ -1393,30 +1486,35 @@ AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
 {
 	AG_Widget *cwid;
 
+	AG_ObjectLock(wid);
 	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetFocused(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
 		AG_PostEvent(NULL, wid,  "window-mousebuttonup", "%i, %i, %i",
 		    button, x-wid->cx, y-wid->cy);
 	}
-	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		AG_WidgetMouseButtonUp(win, cwid, button, x, y);
+	}
+	AG_ObjectUnlock(wid);
 }
 
-/* Process a mousebuttondown event. */
+/* Process a mousebuttondown event. View must be locked. */
 int
 AG_WidgetMouseButtonDown(AG_Window *win, AG_Widget *wid, int button,
     int x, int y)
 {
 	AG_Widget *cwid;
 	AG_Event *ev;
+	
+	AG_ObjectLock(wid);
 
 	/* Search for a better match. */
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		if (AG_WidgetMouseButtonDown(win, cwid, button, x, y))
-			return (1);
+			goto match;
 	}
 	if (!AG_WidgetArea(wid, x, y)) {
-		return (0);
+		goto out;
 	}
 	TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
 		if (strcmp(ev->name, "window-mousebuttondown") == 0)
@@ -1425,47 +1523,71 @@ AG_WidgetMouseButtonDown(AG_Window *win, AG_Widget *wid, int button,
 	if (ev != NULL) {
 		AG_PostEvent(NULL, wid, "window-mousebuttondown", "%i, %i, %i",
 		    button, x-wid->cx, y-wid->cy);
-		return (1);
+		goto match;
 	}
+out:
+	AG_ObjectUnlock(wid);
 	return (0);
+match:
+	AG_ObjectUnlock(wid);
+	return (1);
 }
 
-/* Search for a focused widget inside a window. */
+/*
+ * Search for a focused widget inside a window. Return value is only valid
+ * as long as the View VFS is locked.
+ */
 AG_Widget *
 AG_WidgetFindFocused(void *p)
 {
 	AG_Widget *wid = p;
 	AG_Widget *cwid, *fwid;
 
-	if (!AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*") &&
-	    (wid->flags & AG_WIDGET_FOCUSED) == 0)
-		return (NULL);
+	AG_LockVFS(agView);
+	AG_ObjectLock(wid);
 
+	if (!AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*") &&
+	    (wid->flags & AG_WIDGET_FOCUSED) == 0) {
+		goto fail;
+	}
 	/* Search for a better match. */
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
-		if ((fwid = AG_WidgetFindFocused(cwid)) != NULL)
+		if ((fwid = AG_WidgetFindFocused(cwid)) != NULL) {
+			AG_ObjectUnlock(wid);
+			AG_UnlockVFS(agView);
 			return (fwid);
+		}
 	}
+
+	AG_ObjectUnlock(wid);
+	AG_UnlockVFS(agView);
 	return (wid);
+fail:
+	AG_ObjectUnlock(wid);
+	AG_UnlockVFS(agView);
+	return (NULL);
 }
 
-/*
- * Cache the absolute view coordinates of a widget and its descendents.
- * The view must be locked.
- */
+/* Compute the absolute view coordinates of a widget and its descendents. */
 void
 AG_WidgetUpdateCoords(void *parent, int x, int y)
 {
 	AG_Widget *pwid = parent, *cwid;
 
+	AG_LockVFS(pwid);
+	AG_ObjectLock(pwid);
 	pwid->cx = x;
 	pwid->cy = y;
 	pwid->cx2 = x + pwid->w;
 	pwid->cy2 = y + pwid->h;
+
 	AG_PostEvent(NULL, pwid, "widget-moved", NULL);
 
-	OBJECT_FOREACH_CHILD(cwid, pwid, ag_widget)
+	OBJECT_FOREACH_CHILD(cwid, pwid, ag_widget) {
 		AG_WidgetUpdateCoords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);
+	}
+	AG_ObjectUnlock(pwid);
+	AG_UnlockVFS(pwid);
 }
 
 /* Parse a generic size specification. */
@@ -1532,10 +1654,16 @@ AG_WidgetShownRecursive(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *chld;
 
+	AG_LockVFS(agView);
+	AG_ObjectLock(wid);
+
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		AG_WidgetShownRecursive(chld);
 	}
 	AG_PostEvent(NULL, wid, "widget-shown", NULL);
+	
+	AG_ObjectUnlock(wid);
+	AG_UnlockVFS(agView);
 }
 
 /*
@@ -1548,10 +1676,16 @@ AG_WidgetHiddenRecursive(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *chld;
 
+	AG_LockVFS(agView);
+	AG_ObjectLock(wid);
+	
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
 		AG_WidgetHiddenRecursive(chld);
 	}
 	AG_PostEvent(NULL, wid, "widget-hidden", NULL);
+	
+	AG_ObjectUnlock(wid);
+	AG_UnlockVFS(agView);
 }
 
 static void *
@@ -1571,16 +1705,24 @@ FindAtPoint(AG_Widget *parent, const char *type, int x, int y)
 	return (NULL);
 }
 
+/*
+ * Search for widgets of the specified class enclosing the given point.
+ * Result is only accurate as long as the View VFS is locked.
+ */
 void *
 AG_WidgetFindPoint(const char *type, int x, int y)
 {
 	AG_Window *win;
 	void *p;
-	
+
+	AG_LockVFS(agView);
 	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
-		if ((p = FindAtPoint(WIDGET(win), type, x, y)) != NULL)
+		if ((p = FindAtPoint(WIDGET(win), type, x, y)) != NULL) {
+			AG_UnlockVFS(agView);
 			return (p);
+		}
 	}
+	AG_UnlockVFS(agView);
 	return (NULL);
 }
 
@@ -1601,16 +1743,24 @@ FindRectOverlap(AG_Widget *parent, const char *type, int x, int y, int w, int h)
 	return (NULL);
 }
 
+/*
+ * Search for widgets of the specified class enclosing the given rectangle.
+ * Result is only accurate as long as the View VFS is locked.
+ */
 void *
 AG_WidgetFindRect(const char *type, int x, int y, int w, int h)
 {
 	AG_Window *win;
 	void *p;
 	
+	AG_LockVFS(agView);
 	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
-		if ((p = FindRectOverlap(WIDGET(win), type, x,y,w,h)) != NULL)
+		if ((p = FindRectOverlap(WIDGET(win), type, x,y,w,h)) != NULL) {
+			AG_UnlockVFS(agView);
 			return (p);
+		}
 	}
+	AG_UnlockVFS(agView);
 	return (NULL);
 }
 

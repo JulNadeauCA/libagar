@@ -18,11 +18,9 @@
 typedef struct ag_textbox {
 	struct ag_widget wid;
 	
-	char string[AG_TEXTBOX_STRING_MAX];	/* Default string binding */
-
-	AG_Mutex     lock;
-	char	    *labelText;			/* label text */
-	int	     label;			/* Label surface mapping */
+	char  string[AG_TEXTBOX_STRING_MAX];	/* Default string binding */
+	char *labelText;			/* label text */
+	int   label;				/* Label surface mapping */
 
 	Uint flags;
 #define AG_TEXTBOX_MULTILINE	 0x0001

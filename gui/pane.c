@@ -74,20 +74,23 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 {
 	AG_Window *pwin;
 	AG_SizeAlloc a;
+	int dxNew;
 
+	AG_ObjectLock(pa);
 	pa->dx = dx;
-
 	a.x = WIDGET(pa)->x;
 	a.y = WIDGET(pa)->y;
 	a.w = WIDGET(pa)->w;
 	a.h = WIDGET(pa)->h;
 	AG_WidgetSizeAlloc(pa, &a);
+	dxNew = pa->dx;
+	AG_ObjectUnlock(pa);
 	
 	if ((pwin = AG_WidgetParentWindow(pa)) != NULL) {
 		AG_WidgetUpdateCoords(pwin, WIDGET(pwin)->x,
 		                            WIDGET(pwin)->y);
 	}
-	return (pa->dx);
+	return (dxNew);
 }
 
 static void
@@ -183,25 +186,34 @@ Init(void *obj)
 void
 AG_PaneSetDividerWidth(AG_Pane *pa, int wDiv)
 {
+	AG_ObjectLock(pa);
 	pa->wDiv = wDiv;
+	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneSetDivisionPacking(AG_Pane *pa, int which, enum ag_box_type packing)
 {
+	AG_ObjectLock(pa);
 	AG_BoxSetType(pa->div[which], packing);
+	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneSetDivisionMin(AG_Pane *pa, int which, int minw, int minh)
 {
+	AG_ObjectLock(pa);
 	pa->minw[which] = minw;
 	pa->minh[which] = minh;
+	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
 {
+	AG_ObjectLock(pa);
+	AG_ObjectLock(box);
+
 	/* XXX */
 #if 0
 	if (pa->div[which] != NULL) {
@@ -212,13 +224,18 @@ AG_PaneAttachBox(AG_Pane *pa, int which, AG_Box *box)
 #endif
 	AG_ObjectAttach(pa->div[which], box);
 	WIDGET(box)->flags |= AG_WIDGET_EXPAND;
+	
+	AG_ObjectUnlock(box);
+	AG_ObjectUnlock(pa);
 }
 
 void
 AG_PaneAttachBoxes(AG_Pane *pa, AG_Box *box1, AG_Box *box2)
 {
+	AG_ObjectLock(pa);
 	AG_PaneAttachBox(pa, 0, box1);
 	AG_PaneAttachBox(pa, 1, box2);
+	AG_ObjectUnlock(pa);
 }
 
 static void

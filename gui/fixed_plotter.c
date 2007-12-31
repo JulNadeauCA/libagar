@@ -79,7 +79,9 @@ Init(void *obj)
 void
 AG_FixedPlotterSetRange(AG_FixedPlotter *fpl, AG_FixedPlotterValue range)
 {
+	AG_ObjectLock(fpl);
 	fpl->yrange = range;
+	AG_ObjectUnlock(fpl);
 }
 
 static void
@@ -221,13 +223,18 @@ AG_FixedPlotterCurve(AG_FixedPlotter *fpl, const char *name,
 	gi->nvals = 0;
 	gi->fpl = fpl;
 	gi->limit = limit>0 ? limit : (0xffffffff-1);
+
+	AG_ObjectLock(fpl);
 	TAILQ_INSERT_HEAD(&fpl->items, gi, items);
+	AG_ObjectUnlock(fpl);
 	return (gi);
 }
 
 void
 AG_FixedPlotterDatum(AG_FixedPlotterItem *gi, AG_FixedPlotterValue val)
 {
+	AG_ObjectLock(gi->fpl);
+	
 	gi->vals[gi->nvals] = val;
 
 	if (gi->nvals+1 >= gi->limit) {
@@ -243,6 +250,8 @@ AG_FixedPlotterDatum(AG_FixedPlotterItem *gi, AG_FixedPlotterValue val)
 		}
 		gi->nvals++;
 	}
+	
+	AG_ObjectUnlock(gi->fpl);
 }
 
 void
@@ -250,6 +259,7 @@ AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 {
 	AG_FixedPlotterItem *git, *nextgit;
 	
+	AG_ObjectLock(fpl);
 	for (git = TAILQ_FIRST(&fpl->items);
 	     git != TAILQ_END(&fpl->items);
 	     git = nextgit) {
@@ -258,6 +268,7 @@ AG_FixedPlotterFreeItems(AG_FixedPlotter *fpl)
 		Free(git);
 	}
 	TAILQ_INIT(&fpl->items);
+	AG_ObjectUnlock(fpl);
 }
 
 static void
