@@ -120,6 +120,17 @@ do
 	esac
 done
 
+if [ -e "/bin/echo" ]; then
+    /bin/echo -n ""
+    if [ $? = 0 ]; then
+    	ECHO_N="/bin/echo -n"
+    else
+    	ECHO_N="echo -n"
+    fi
+else
+    ECHO_N="echo -n"
+fi
+
 if [ "${prefix}" != "" ]; then
     PREFIX="$prefix"
 else
@@ -393,8 +404,8 @@ echo "#ifndef INCLDIR" > config/incldir.h
 echo "#define INCLDIR \"$INCLDIR\"" >> config/incldir.h
 echo "#endif" >> config/incldir.h
 echo "hdefs[\"INCLDIR\"] = \"$INCLDIR\"" >>configure.lua
-echo -n "checking for a usable C compiler..."
-echo -n "checking for a usable C compiler..." >> config.log
+$ECHO_N "checking for a usable C compiler..."
+$ECHO_N "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/cc" ]; then
@@ -428,8 +439,8 @@ fi
 echo "yes"
 rm -f cc-test cc-test.c
 TEST_CFLAGS=""
-echo -n "checking for compiler warnings..."
-echo -n "checking for compiler warnings..." >> config.log
+$ECHO_N "checking for compiler warnings..."
+$ECHO_N "checking for compiler warnings..." >> config.log
 cat << EOT > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 
@@ -461,8 +472,8 @@ rm -f $testdir/conftest conftest.c
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
-echo -n "checking for IEEE754 floating point..."
-echo -n "checking for IEEE754 floating point..." >> config.log
+$ECHO_N "checking for IEEE754 floating point..."
+$ECHO_N "checking for IEEE754 floating point..." >> config.log
 cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
@@ -499,8 +510,8 @@ echo "#undef HAVE_IEEE754" >config/have_ieee754.h
 echo "hdefs[\"HAVE_IEEE754\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
-echo -n "checking __bounded__ attribute..."
-echo -n "checking __bounded__ attribute..." >> config.log
+$ECHO_N "checking __bounded__ attribute..."
+$ECHO_N "checking __bounded__ attribute..." >> config.log
 cat << EOT > conftest.c
 void foo(char *, int) __attribute__ ((__bounded__(__string__,1,2)));
 void foo(char *a, int c) { }
@@ -536,8 +547,8 @@ echo "#undef HAVE_BOUNDED_ATTRIBUTE" >config/have_bounded_attribute.h
 echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
-echo -n "checking __format__ attribute..."
-echo -n "checking __format__ attribute..." >> config.log
+$ECHO_N "checking __format__ attribute..."
+$ECHO_N "checking __format__ attribute..." >> config.log
 cat << EOT > conftest.c
 #include <stdarg.h>
 void foo1(char *, ...)
@@ -579,8 +590,8 @@ echo "#undef HAVE_FORMAT_ATTRIBUTE" >config/have_format_attribute.h
 echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
-echo -n "checking __nonnull__ attribute..."
-echo -n "checking __nonnull__ attribute..." >> config.log
+$ECHO_N "checking __nonnull__ attribute..."
+$ECHO_N "checking __nonnull__ attribute..." >> config.log
 cat << EOT > conftest.c
 void foo(char *) __attribute__((__nonnull__ (1)));
 void foo(char *a) { }
@@ -618,8 +629,8 @@ echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configu
 echo "#undef HAVE_NONNULL_ATTRIBUTE" >config/have_nonnull_attribute.h
 echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
-echo -n "checking __aligned__ attribute..."
-echo -n "checking __aligned__ attribute..." >> config.log
+$ECHO_N "checking __aligned__ attribute..."
+$ECHO_N "checking __aligned__ attribute..." >> config.log
 cat << EOT > conftest.c
 int main(int argc, char *argv[])
 {
@@ -655,8 +666,8 @@ echo "mdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configu
 echo "#undef HAVE_ALIGNED_ATTRIBUTE" >config/have_aligned_attribute.h
 echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
-echo -n "checking __packed__ attribute..."
-echo -n "checking __packed__ attribute..." >> config.log
+$ECHO_N "checking __packed__ attribute..."
+$ECHO_N "checking __packed__ attribute..." >> config.log
 cat << EOT > conftest.c
 int main(int argc, char *argv[])
 {
@@ -692,8 +703,8 @@ echo "mdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure
 echo "#undef HAVE_PACKED_ATTRIBUTE" >config/have_packed_attribute.h
 echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
-echo -n "checking for long double..."
-echo -n "checking for long double..." >> config.log
+$ECHO_N "checking for long double..."
+$ECHO_N "checking for long double..." >> config.log
 cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
@@ -728,8 +739,8 @@ HAVE_LONG_DOUBLE="no"
 echo "#undef HAVE_LONG_DOUBLE" >config/have_long_double.h
 echo "hdefs[\"HAVE_LONG_DOUBLE\"] = nil" >>configure.lua
 fi;
-echo -n "checking for long long..."
-echo -n "checking for long long..." >> config.log
+$ECHO_N "checking for long long..."
+$ECHO_N "checking for long long..." >> config.log
 cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
@@ -765,8 +776,8 @@ HAVE_LONG_LONG="no"
 echo "#undef HAVE_LONG_LONG" >config/have_long_long.h
 echo "hdefs[\"HAVE_LONG_LONG\"] = nil" >>configure.lua
 fi;
-echo -n "checking for cygwin environment..."
-echo -n "checking for cygwin environment..." >> config.log
+$ECHO_N "checking for cygwin environment..."
+$ECHO_N "checking for cygwin environment..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -815,8 +826,8 @@ if [ "${compile}" = "ok" ]; then
 		echo "CFLAGS=$CFLAGS" >> Makefile.config
 	fi
 fi
-echo -n "checking for <sys/types.h>..."
-echo -n "checking for <sys/types.h>..." >> config.log
+$ECHO_N "checking for <sys/types.h>..."
+$ECHO_N "checking for <sys/types.h>..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
@@ -851,8 +862,8 @@ echo "hdefs[\"_MK_HAVE_SYS_TYPES_H\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 if [ "${_MK_HAVE_SYS_TYPES_H}" = "yes" ]; then
-echo -n "checking for 64-bit types..."
-echo -n "checking for 64-bit types..." >> config.log
+$ECHO_N "checking for 64-bit types..."
+$ECHO_N "checking for 64-bit types..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
@@ -888,8 +899,8 @@ echo "#undef HAVE_64BIT" >config/have_64bit.h
 echo "hdefs[\"HAVE_64BIT\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
-echo -n "checking for conflicting typedefs..."
-echo -n "checking for conflicting typedefs..." >> config.log
+$ECHO_N "checking for conflicting typedefs..."
+$ECHO_N "checking for conflicting typedefs..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
@@ -928,8 +939,8 @@ rm -f $testdir/conftest conftest.c
 else
 echo "#undef HAVE_64BIT" >config/have_64bit.h
 echo "hdefs[\"HAVE_64BIT\"] = nil" >>configure.lua
-echo -n "checking for conflicting typedefs..."
-echo -n "checking for conflicting typedefs..." >> config.log
+$ECHO_N "checking for conflicting typedefs..."
+$ECHO_N "checking for conflicting typedefs..." >> config.log
 cat << EOT > conftest.c
 int main(int argc, char *argv[]) {
 	Uchar foo = 0;
@@ -965,8 +976,8 @@ echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
 fi;
-echo -n "checking for <stdlib.h>..."
-echo -n "checking for <stdlib.h>..." >> config.log
+$ECHO_N "checking for <stdlib.h>..."
+$ECHO_N "checking for <stdlib.h>..." >> config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
 int main(int argc, char *argv[]) {
@@ -1000,8 +1011,8 @@ echo "#undef _MK_HAVE_STDLIB_H" >config/_mk_have_stdlib_h.h
 echo "hdefs[\"_MK_HAVE_STDLIB_H\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
-echo -n "checking for <unistd.h>..."
-echo -n "checking for <unistd.h>..." >> config.log
+$ECHO_N "checking for <unistd.h>..."
+$ECHO_N "checking for <unistd.h>..." >> config.log
 cat << EOT > conftest.c
 #include <unistd.h>
 int main(int argc, char *argv[]) {
@@ -1038,8 +1049,8 @@ echo "#undef _MK_HAVE_UNISTD_H" >config/_mk_have_unistd_h.h
 echo "hdefs[\"_MK_HAVE_UNISTD_H\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
-echo -n "checking for <limits.h>..."
-echo -n "checking for <limits.h>..." >> config.log
+$ECHO_N "checking for <limits.h>..."
+$ECHO_N "checking for <limits.h>..." >> config.log
 cat << EOT > conftest.c
 #include <limits.h>
 
@@ -1079,8 +1090,8 @@ echo "#undef _MK_HAVE_LIMITS_H" >config/_mk_have_limits_h.h
 echo "hdefs[\"_MK_HAVE_LIMITS_H\"] = nil" >>configure.lua
 fi;
 rm -f $testdir/conftest conftest.c
-echo -n "checking for the __progname variable..."
-echo -n "checking for the __progname variable..." >> config.log
+$ECHO_N "checking for the __progname variable..."
+$ECHO_N "checking for the __progname variable..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 int
@@ -1115,8 +1126,8 @@ HAVE_PROGNAME="no"
 echo "#undef HAVE_PROGNAME" >config/have_progname.h
 echo "hdefs[\"HAVE_PROGNAME\"] = nil" >>configure.lua
 fi;
-echo -n "checking for free(NULL) is a no-op..."
-echo -n "checking for free(NULL) is a no-op..." >> config.log
+$ECHO_N "checking for free(NULL) is a no-op..."
+$ECHO_N "checking for free(NULL) is a no-op..." >> config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
 int main(int argc, char *argv[]) {
@@ -1160,8 +1171,8 @@ echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = nil" >>configure.lua
 fi;
 fi;
 rm -f $testdir/conftest conftest.c
-echo -n "checking for the C math library..."
-echo -n "checking for the C math library..." >> config.log
+$ECHO_N "checking for the C math library..."
+$ECHO_N "checking for the C math library..." >> config.log
 MATH_LIBS="-lm"
 MATH_CFLAGS=""
 cat << EOT > conftest.c
@@ -1217,8 +1228,8 @@ else
 echo "#undef MATH_LIBS" >config/math_libs.h
 echo "hdefs[\"MATH_LIBS\"] = nil" >>configure.lua
 fi;
-echo -n "checking for a gethostname() function..."
-echo -n "checking for a gethostname() function..." >> config.log
+$ECHO_N "checking for a gethostname() function..."
+$ECHO_N "checking for a gethostname() function..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <unistd.h>
@@ -1257,8 +1268,8 @@ HAVE_GETHOSTNAME="no"
 echo "#undef HAVE_GETHOSTNAME" >config/have_gethostname.h
 echo "hdefs[\"HAVE_GETHOSTNAME\"] = nil" >>configure.lua
 fi;
-echo -n "checking for a getpwuid() function..."
-echo -n "checking for a getpwuid() function..." >> config.log
+$ECHO_N "checking for a getpwuid() function..."
+$ECHO_N "checking for a getpwuid() function..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <pwd.h>
@@ -1297,8 +1308,8 @@ HAVE_GETPWUID="no"
 echo "#undef HAVE_GETPWUID" >config/have_getpwuid.h
 echo "hdefs[\"HAVE_GETPWUID\"] = nil" >>configure.lua
 fi;
-echo -n "checking for a getuid() function..."
-echo -n "checking for a getuid() function..." >> config.log
+$ECHO_N "checking for a getuid() function..."
+$ECHO_N "checking for a getuid() function..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <unistd.h>
@@ -1336,8 +1347,8 @@ HAVE_GETUID="no"
 echo "#undef HAVE_GETUID" >config/have_getuid.h
 echo "hdefs[\"HAVE_GETUID\"] = nil" >>configure.lua
 fi;
-echo -n "checking for a getenv() function..."
-echo -n "checking for a getenv() function..." >> config.log
+$ECHO_N "checking for a getenv() function..."
+$ECHO_N "checking for a getenv() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
 int
@@ -1371,8 +1382,8 @@ HAVE_GETENV="no"
 echo "#undef HAVE_GETENV" >config/have_getenv.h
 echo "hdefs[\"HAVE_GETENV\"] = nil" >>configure.lua
 fi;
-echo -n "checking for setenv() and unsetenv()..."
-echo -n "checking for setenv() and unsetenv()..." >> config.log
+$ECHO_N "checking for setenv() and unsetenv()..."
+$ECHO_N "checking for setenv() and unsetenv()..." >> config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
 int
@@ -1408,8 +1419,8 @@ HAVE_SETENV="no"
 echo "#undef HAVE_SETENV" >config/have_setenv.h
 echo "hdefs[\"HAVE_SETENV\"] = nil" >>configure.lua
 fi;
-echo -n "checking for a strsep() function..."
-echo -n "checking for a strsep() function..." >> config.log
+$ECHO_N "checking for a strsep() function..."
+$ECHO_N "checking for a strsep() function..." >> config.log
 cat << EOT > conftest.c
 #include <string.h>
 int
@@ -1443,8 +1454,8 @@ HAVE_STRSEP="no"
 echo "#undef HAVE_STRSEP" >config/have_strsep.h
 echo "hdefs[\"HAVE_STRSEP\"] = nil" >>configure.lua
 fi;
-echo -n "checking for the snprintf() function..."
-echo -n "checking for the snprintf() function..." >> config.log
+$ECHO_N "checking for the snprintf() function..."
+$ECHO_N "checking for the snprintf() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 
@@ -1480,8 +1491,8 @@ HAVE_SNPRINTF="no"
 echo "#undef HAVE_SNPRINTF" >config/have_snprintf.h
 echo "hdefs[\"HAVE_SNPRINTF\"] = nil" >>configure.lua
 fi;
-echo -n "checking for the vsnprintf() function..."
-echo -n "checking for the vsnprintf() function..." >> config.log
+$ECHO_N "checking for the vsnprintf() function..."
+$ECHO_N "checking for the vsnprintf() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 #include <stdarg.h>
@@ -1526,8 +1537,8 @@ HAVE_VSNPRINTF="no"
 echo "#undef HAVE_VSNPRINTF" >config/have_vsnprintf.h
 echo "hdefs[\"HAVE_VSNPRINTF\"] = nil" >>configure.lua
 fi;
-echo -n "checking for a vasprintf() function..."
-echo -n "checking for a vasprintf() function..." >> config.log
+$ECHO_N "checking for a vasprintf() function..."
+$ECHO_N "checking for a vasprintf() function..." >> config.log
 cat << EOT > conftest.c
 #ifdef __linux__
 #define _GNU_SOURCE
@@ -1578,8 +1589,8 @@ HAVE_VASPRINTF="no"
 echo "#undef HAVE_VASPRINTF" >config/have_vasprintf.h
 echo "hdefs[\"HAVE_VASPRINTF\"] = nil" >>configure.lua
 fi;
-echo -n "checking for a setlocale() function..."
-echo -n "checking for a setlocale() function..." >> config.log
+$ECHO_N "checking for a setlocale() function..."
+$ECHO_N "checking for a setlocale() function..." >> config.log
 cat << EOT > conftest.c
 #include <locale.h>
 
@@ -1614,8 +1625,8 @@ HAVE_SETLOCALE="no"
 echo "#undef HAVE_SETLOCALE" >config/have_setlocale.h
 echo "hdefs[\"HAVE_SETLOCALE\"] = nil" >>configure.lua
 fi;
-echo -n "checking for the arc4random() random number generator..."
-echo -n "checking for the arc4random() random number generator..." >> config.log
+$ECHO_N "checking for the arc4random() random number generator..."
+$ECHO_N "checking for the arc4random() random number generator..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <stdlib.h>
@@ -1652,8 +1663,8 @@ HAVE_ARC4RANDOM="no"
 echo "#undef HAVE_ARC4RANDOM" >config/have_arc4random.h
 echo "hdefs[\"HAVE_ARC4RANDOM\"] = nil" >>configure.lua
 fi;
-echo -n "checking for MD5 functions..."
-echo -n "checking for MD5 functions..." >> config.log
+$ECHO_N "checking for MD5 functions..."
+$ECHO_N "checking for MD5 functions..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <md5.h>
@@ -1691,8 +1702,8 @@ HAVE_MD5="no"
 echo "#undef HAVE_MD5" >config/have_md5.h
 echo "hdefs[\"HAVE_MD5\"] = nil" >>configure.lua
 fi;
-echo -n "checking for SHA1 functions..."
-echo -n "checking for SHA1 functions..." >> config.log
+$ECHO_N "checking for SHA1 functions..."
+$ECHO_N "checking for SHA1 functions..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sha1.h>
@@ -1730,8 +1741,8 @@ HAVE_SHA1="no"
 echo "#undef HAVE_SHA1" >config/have_sha1.h
 echo "hdefs[\"HAVE_SHA1\"] = nil" >>configure.lua
 fi;
-echo -n "checking for RMD160 functions..."
-echo -n "checking for RMD160 functions..." >> config.log
+$ECHO_N "checking for RMD160 functions..."
+$ECHO_N "checking for RMD160 functions..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <rmd160.h>
@@ -1769,8 +1780,8 @@ HAVE_RMD160="no"
 echo "#undef HAVE_RMD160" >config/have_rmd160.h
 echo "hdefs[\"HAVE_RMD160\"] = nil" >>configure.lua
 fi;
-echo -n "checking for the X window system..."
-echo -n "checking for the X window system..." >> config.log
+$ECHO_N "checking for the X window system..."
+$ECHO_N "checking for the X window system..." >> config.log
 x11_found_includes="no"
 x11_found_libs="no"
 if [ -d /usr/include/X11/X11 ]; then
@@ -1875,8 +1886,8 @@ echo "hdefs[\"X11_CFLAGS\"] = nil" >>configure.lua
 echo "#undef X11_LIBS" >config/x11_libs.h
 echo "hdefs[\"X11_LIBS\"] = nil" >>configure.lua
 fi;
-echo -n "checking for the signal() function..."
-echo -n "checking for the signal() function..." >> config.log
+$ECHO_N "checking for the signal() function..."
+$ECHO_N "checking for the signal() function..." >> config.log
 cat << EOT > conftest.c
 #include <signal.h>
 
@@ -1917,8 +1928,8 @@ _MK_HAVE_SIGNAL="no"
 echo "#undef _MK_HAVE_SIGNAL" >config/_mk_have_signal.h
 echo "hdefs[\"_MK_HAVE_SIGNAL\"] = nil" >>configure.lua
 fi;
-echo -n "checking for setjmp() and longjmp()..."
-echo -n "checking for setjmp() and longjmp()..." >> config.log
+$ECHO_N "checking for setjmp() and longjmp()..."
+$ECHO_N "checking for setjmp() and longjmp()..." >> config.log
 cat << EOT > conftest.c
 #include <setjmp.h>
 
@@ -1956,8 +1967,8 @@ _MK_HAVE_SETJMP="no"
 echo "#undef _MK_HAVE_SETJMP" >config/_mk_have_setjmp.h
 echo "hdefs[\"_MK_HAVE_SETJMP\"] = nil" >>configure.lua
 fi;
-echo -n "checking for a strtoll() function..."
-echo -n "checking for a strtoll() function..." >> config.log
+$ECHO_N "checking for a strtoll() function..."
+$ECHO_N "checking for a strtoll() function..." >> config.log
 cat << EOT > conftest.c
 #include <stdlib.h>
 
@@ -1996,8 +2007,8 @@ _MK_HAVE_STRTOLL="no"
 echo "#undef _MK_HAVE_STRTOLL" >config/_mk_have_strtoll.h
 echo "hdefs[\"_MK_HAVE_STRTOLL\"] = nil" >>configure.lua
 fi;
-echo -n "checking for AltiVec (with <altivec.h>)..."
-echo -n "checking for AltiVec (with <altivec.h>)..." >> config.log
+$ECHO_N "checking for AltiVec (with <altivec.h>)..."
+$ECHO_N "checking for AltiVec (with <altivec.h>)..." >> config.log
 if [ "$SYSTEM" = "Darwin" ]; then
 ALTIVEC_CFLAGS="-faltivec -maltivec"
 ALTIVEC_CHECK_CFLAGS="-D_DARWIN_C_SOURCE"
@@ -2064,8 +2075,8 @@ echo "#define HAVE_ALTIVEC_H \"$HAVE_ALTIVEC_H\"" >> config/have_altivec_h.h
 echo "#endif" >> config/have_altivec_h.h
 echo "hdefs[\"HAVE_ALTIVEC_H\"] = \"$HAVE_ALTIVEC_H\"" >>configure.lua
 else
-echo -n "checking for AltiVec (without <altivec.h>)..."
-echo -n "checking for AltiVec (without <altivec.h>)..." >> config.log
+$ECHO_N "checking for AltiVec (without <altivec.h>)..."
+$ECHO_N "checking for AltiVec (without <altivec.h>)..." >> config.log
 cat << EOT > conftest.c
 float a[4] = { 1,2,3,4 };
 float b[4] = { 5,6,7,8 };
@@ -2124,12 +2135,12 @@ fi;
 echo "#undef HAVE_ALTIVEC_H" >config/have_altivec_h.h
 echo "hdefs[\"HAVE_ALTIVEC_H\"] = nil" >>configure.lua
 fi;
-echo -n "checking for byte order..."
-echo -n "checking for byte order..." >> config.log
+$ECHO_N "checking for byte order..."
+$ECHO_N "checking for byte order..." >> config.log
 echo ""
 echo "" >> config.log
-echo -n "checking for BIG_ENDIAN..."
-echo -n "checking for BIG_ENDIAN..." >> config.log
+$ECHO_N "checking for BIG_ENDIAN..."
+$ECHO_N "checking for BIG_ENDIAN..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sys/param.h>
@@ -2184,8 +2195,8 @@ _MK_LITTLE_ENDIAN="no"
 echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
 echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 else
-echo -n "checking for LITTLE_ENDIAN..."
-echo -n "checking for LITTLE_ENDIAN..." >> config.log
+$ECHO_N "checking for LITTLE_ENDIAN..."
+$ECHO_N "checking for LITTLE_ENDIAN..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sys/param.h>
@@ -2240,8 +2251,8 @@ _MK_BIG_ENDIAN="no"
 echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
 echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
 else
-echo -n "checking for little endian byte order..."
-echo -n "checking for little endian byte order..." >> config.log
+$ECHO_N "checking for little endian byte order..."
+$ECHO_N "checking for little endian byte order..." >> config.log
 cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
@@ -2360,8 +2371,8 @@ else
 echo "#undef LOCKDEBUG" >config/lockdebug.h
 echo "hdefs[\"LOCKDEBUG\"] = nil" >>configure.lua
 fi
-echo -n "checking for SDL (http://www.libsdl.org)..."
-echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
+$ECHO_N "checking for SDL (http://www.libsdl.org)..."
+$ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
 if [ "${SYSTEM}" = "Darwin" ]; then
 SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
@@ -2444,8 +2455,8 @@ fi;
 if [ "${SDL_VERSION}" != "" ]; then
 echo "yes"
 echo "yes" >> config.log
-echo -n "checking whether SDL works..."
-echo -n "checking whether SDL works..." >> config.log
+$ECHO_N "checking whether SDL works..."
+$ECHO_N "checking whether SDL works..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 #include <SDL.h>
@@ -2499,8 +2510,8 @@ echo "#define SDL_LIBS \"$SDL_LIBS\"" >> config/sdl_libs.h
 echo "#endif" >> config/sdl_libs.h
 echo "hdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
 else
-echo -n "checking whether SDL works (with X11 libs)..."
-echo -n "checking whether SDL works (with X11 libs)..." >> config.log
+$ECHO_N "checking whether SDL works (with X11 libs)..."
+$ECHO_N "checking whether SDL works (with X11 libs)..." >> config.log
 SDL_LIBS="${SDL_LIBS} -L/usr/X11R6/lib -lX11 -lXext -lXrandr -lXrender"
 cat << EOT > conftest.c
 #include <stdio.h>
@@ -2586,8 +2597,8 @@ echo "SUBDIR_GUI_CONF=$SUBDIR_GUI_CONF" >>Makefile.config
 echo "mdefs[\"SUBDIR_GUI_CONF\"] = \"$SUBDIR_GUI_CONF\"" >>configure.lua
 	if [ "${with_freetype}" != "no" ]
  then
-echo -n "checking for FreeType (http://www.freetype.org)..."
-echo -n "checking for FreeType (http://www.freetype.org)..." >> config.log
+$ECHO_N "checking for FreeType (http://www.freetype.org)..."
+$ECHO_N "checking for FreeType (http://www.freetype.org)..." >> config.log
 FREETYPE_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
@@ -2612,8 +2623,8 @@ fi;
 if [ "${FREETYPE_VERSION}" != "" ]; then
 echo "yes"
 echo "yes" >> config.log
-echo -n "checking whether FreeType works..."
-echo -n "checking whether FreeType works..." >> config.log
+$ECHO_N "checking whether FreeType works..."
+$ECHO_N "checking whether FreeType works..." >> config.log
 cat << EOT > conftest.c
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -2702,8 +2713,8 @@ echo "mdefs[\"FREETYPE_LIBS\"] = \"$FREETYPE_LIBS\"" >>configure.lua
 	fi
 	if [ "${with_gl}" != "no" ]
  then
-echo -n "checking for OpenGL (http://www.opengl.org)..."
-echo -n "checking for OpenGL (http://www.opengl.org)..." >> config.log
+$ECHO_N "checking for OpenGL (http://www.opengl.org)..."
+$ECHO_N "checking for OpenGL (http://www.opengl.org)..." >> config.log
 GL_CFLAGS=""
 GL_LIBS=""
 if [ -d "/usr/include/X11/GL" ]; then
@@ -2838,8 +2849,8 @@ echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 	fi
 	if [ "${with_jpeg}" != "no" ]
  then
-echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
-echo -n "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log
+$ECHO_N "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..."
+$ECHO_N "checking for libjpeg (ftp://ftp.uu.net/graphics/jpeg/)..." >> config.log
 JPEG_CFLAGS=""
 if [ -f "/usr/local/include/jpeglib.h" ]; then
 JPEG_CFLAGS="-I/usr/local/include"
@@ -2864,8 +2875,8 @@ fi;
 if [ "${JPEG_CFLAGS}" != "" ]; then
 echo "ok"
 echo "ok" >> config.log
-echo -n "checking whether libjpeg works..."
-echo -n "checking whether libjpeg works..." >> config.log
+$ECHO_N "checking whether libjpeg works..."
+$ECHO_N "checking whether libjpeg works..." >> config.log
 cat << EOT > conftest.c
 #include <stdio.h>
 #include <jpeglib.h>
@@ -2996,8 +3007,8 @@ echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 fi
 if [ "${enable_network}" = "yes" ]
  then
-echo -n "checking for the getaddrinfo() function..."
-echo -n "checking for the getaddrinfo() function..." >> config.log
+$ECHO_N "checking for the getaddrinfo() function..."
+$ECHO_N "checking for the getaddrinfo() function..." >> config.log
 cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -3099,8 +3110,8 @@ echo "hdefs[\"HAVE_GETADDRINFO\"] = nil" >>configure.lua
 fi
 if [ "${enable_threads}" != "no" ]
  then
-echo -n "checking for POSIX threads..."
-echo -n "checking for POSIX threads..." >> config.log
+$ECHO_N "checking for POSIX threads..."
+$ECHO_N "checking for POSIX threads..." >> config.log
 PTHREADS_CFLAGS=""
 PTHREADS_LIBS="-lpthread"
 cat << EOT > conftest.c
@@ -3161,8 +3172,8 @@ echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
 echo "#endif" >> config/pthreads_libs.h
 echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 else
-echo -n "checking for -pthread..."
-echo -n "checking for -pthread..." >> config.log
+$ECHO_N "checking for -pthread..."
+$ECHO_N "checking for -pthread..." >> config.log
 PTHREADS_LIBS="-pthread"
 cat << EOT > conftest.c
 #include <pthread.h>
@@ -3223,8 +3234,8 @@ echo "#endif" >> config/pthreads_libs.h
 echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 fi;
 fi;
-echo -n "checking for the X/Open Threads Extension..."
-echo -n "checking for the X/Open Threads Extension..." >> config.log
+$ECHO_N "checking for the X/Open Threads Extension..."
+$ECHO_N "checking for the X/Open Threads Extension..." >> config.log
 if [ "${SYSTEM}" = "FreeBSD" ]; then
 PTHREADS_XOPEN_CFLAGS=""
 else
@@ -3290,8 +3301,8 @@ else
 echo "#undef HAVE_PTHREADS_XOPEN" >config/have_pthreads_xopen.h
 echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = nil" >>configure.lua
 fi;
-echo -n "checking for PTHREAD_MUTEX_RECURSIVE..."
-echo -n "checking for PTHREAD_MUTEX_RECURSIVE..." >> config.log
+$ECHO_N "checking for PTHREAD_MUTEX_RECURSIVE..."
+$ECHO_N "checking for PTHREAD_MUTEX_RECURSIVE..." >> config.log
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
@@ -3338,8 +3349,8 @@ else
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" >config/have_pthread_mutex_recursive.h
 echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = nil" >>configure.lua
 fi;
-echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..."
-echo -n "checking for PTHREAD_MUTEX_RECURSIVE_NP..." >> config.log
+$ECHO_N "checking for PTHREAD_MUTEX_RECURSIVE_NP..."
+$ECHO_N "checking for PTHREAD_MUTEX_RECURSIVE_NP..." >> config.log
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
