@@ -41,15 +41,14 @@ UpdateText(void *obj, Uint32 ival, void *arg)
 }
 
 static void
-CreateTextbox(void)
+SingleLineExample(void)
 {
 	AG_Timeout myTimer;
 	AG_Window *win;
 	AG_Textbox *textbox;
-	const char *myText;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Textbox Example");
+	AG_WindowSetCaption(win, "Single-line Example");
 
 	/*
 	 * Create a single-line Textbox and handle the return key with the
@@ -58,8 +57,23 @@ CreateTextbox(void)
 	 */
 	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Static string: ");
 	AG_TextboxSizeHint(textbox, "XXXXXXXXXXX");
+	AG_TextboxPrintf(textbox, "Hello");
 	AG_SetEvent(textbox, "textbox-return", ReturnPressed, NULL);
 	AG_WidgetFocus(textbox);
+
+	/* Bind checkboxes to some flags. */
+	AG_CheckboxNewFlag(win, &textbox->flags, AG_TEXTBOX_PASSWORD,
+	    "Password input");
+	AG_CheckboxNewFlag(win, &AGWIDGET(textbox)->flags, AG_WIDGET_DISABLED,
+	    "Disabled input");
+	AG_CheckboxNewFlag(win, &textbox->flags, AG_TEXTBOX_INT_ONLY,
+	    "Force integer input");
+	AG_CheckboxNewFlag(win, &textbox->flags, AG_TEXTBOX_FLT_ONLY,
+	    "Force float input");
+	AG_CheckboxNewFlag(win, &textbox->flags, AG_TEXTBOX_BLINK_ON,
+	    "Cursor is visible");
+
+	AG_SeparatorNewHoriz(win);
 
 	/*
 	 * Use a `string' binding to edit the contents of a sized buffer. We
@@ -82,23 +96,38 @@ CreateTextbox(void)
 	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Polled string: <%s>",
 	    &polledString);
 
+	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
+	AG_WindowShow(win);
+}
+
+static void
+MultiLineExample(void)
+{
+	AG_Window *win;
+	AG_Textbox *textbox;
+	const char *someText;
+
+	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, "Multiline Example");
+
 	/*
 	 * Create a multiline textbox and configure it to process the
 	 * tab key (which normally is used to cycle focus).
 	 */
-	AG_SeparatorNewHoriz(win);
 	AG_LabelNewStatic(win, 0, "Multiline string:");
 	textbox = AG_TextboxNew(win,
 	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND|AG_TEXTBOX_CATCH_TAB,
 	    NULL);
-	myText = "struct {\n"
+	someText = "struct {\n"
 	         "\tint foo;\n"
 	         "\tint bar;\n"
 	         "}\n";
-	AG_TextboxSizeHint(textbox, myText);
-	AG_TextboxPrintf(textbox, "%s", myText);
+	AG_TextboxPrintf(textbox, "%s", someText);
 
 	AG_WindowShow(win);
+	AG_WindowSetGeometry(win,
+	    agView->w/2 - 75, agView->h/2 - 75,
+	    150, 150);
 }
 
 int
@@ -114,7 +143,8 @@ main(int argc, char *argv[])
 	}
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
-	CreateTextbox();
+	MultiLineExample();
+	SingleLineExample();
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
