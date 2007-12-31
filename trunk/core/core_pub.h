@@ -4,6 +4,7 @@
 #define _AGAR_CORE_PUBLIC_H_
 #include <agar/core/core_begin.h>
 
+#include <agar/core/core_init.h>
 #include <agar/core/error.h>
 #ifdef _USE_AGAR_STD
 # include <agar/core/snprintf.h>
@@ -26,7 +27,6 @@
 #include <agar/core/config.h>
 #include <agar/core/rcs.h>
 #include <agar/core/typesw.h>
-#include <agar/core/core_init.h>
 
 #include <agar/core/core_close.h>
 #endif
