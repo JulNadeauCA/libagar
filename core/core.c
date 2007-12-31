@@ -98,12 +98,13 @@ AG_InitCore(const char *progname, Uint flags)
 
 	AG_InitClassTbl();
 	AG_RegisterClass(&agConfigClass);
+	
+	AG_InitTimeouts();
 
 	agConfig = Malloc(sizeof(AG_Config));
 	AG_ConfigInit(agConfig);
 	AG_ObjectLoad(agConfig);
 
-	AG_InitTimeouts();
 #ifdef NETWORK
 	AG_InitNetwork(0);
 #endif
