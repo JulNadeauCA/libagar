@@ -123,7 +123,7 @@ static const char *agTextMsgTitles[] = {
 	N_("Information")
 };
 
-AG_Mutex agTextLock = AG_MUTEX_INITIALIZER;
+AG_Mutex agTextLock;
 static SLIST_HEAD(ag_fontq, ag_font) fonts = SLIST_HEAD_INITIALIZER(&fonts);
 AG_Font *agDefaultFont = NULL;
 
@@ -366,23 +366,24 @@ InitTextState(void)
 	state->justify = AG_TEXT_LEFT;
 }
 
+/* Must be invoked in rendering context. */
 static void
 FreeGlyph(AG_Glyph *gl)
 {
 	SDL_FreeSurface(gl->su);
 #ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		AG_LockGL();
+	if (agView->opengl)
 		glDeleteTextures(1, (GLuint *)&gl->texture);
-		AG_UnlockGL();
-	}
 #endif
 	Free(gl);
 }
 
 #ifdef GLYPH_GC
 
-/* Perform garbage collection of unused glyphs */
+/*
+ * Perform garbage collection of unused glyphs. Must be invoked in rendering
+ * context.
+ */
 static Uint32
 GlyphGC(void *obj, Uint32 ival, void *arg)
 {
@@ -411,6 +412,8 @@ int
 AG_TextInit(void)
 {
 	int i;
+
+	AG_MutexInitRecursive(&agTextLock);
 
 #ifdef HAVE_FREETYPE
 	if (AG_Bool(agConfig, "font.freetype")) {
@@ -457,6 +460,7 @@ AG_TextInit(void)
 	return (0);
 }
 
+/* Clear the glyph cache. Must be invoked in rendering context. */
 void
 AG_ClearGlyphCache(void)
 {
@@ -502,6 +506,7 @@ AG_TextDestroy(void)
 	if (agFreetype)
 		AG_TTFDestroy();
 #endif
+	AG_MutexDestroy(&agTextLock);
 }
 
 static __inline__ Uint
