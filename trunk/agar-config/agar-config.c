@@ -68,6 +68,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#if defined(__APPLE__) || defined(__MACOSX__)
+#include <AvailabilityMacros.h>
+#endif
+
 int
 main(int argc, char *argv[])
 {
@@ -139,6 +143,9 @@ main(int argc, char *argv[])
 #endif
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_LIBS);
+#endif
+#if (defined(__APPLE__) || defined(__MACOSX__)) && defined(MAC_OS_X_VERSION_10_5)
+			printf("-dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib");
 #endif
 			printf("\n");
 		}
