@@ -167,19 +167,20 @@ echo "    --with-manpages           Manual pages (-mdoc) [yes]"
 echo "    --with-manlinks           Manual pages links for functions [no]"
 echo "    --with-docs               Printable docs (-me/tbl/eqn/pic/refer) [no]"
 echo "    --enable-debug            Include debugging code [no]"
-echo "    --with-gl                 OpenGL rendering support [default: check]"
-echo "    --with-jpeg               JPEG screenshot support [default: no]"
-echo "    --with-freetype           GUI: Enable FreeType support [default: check]"
+echo "    --enable-lockdebug        Expensive threads debugging [default: no]"
+echo "    --enable-warnings         Suggested compiler warnings [default: no]"
 echo "    --enable-threads          Thread safety [default: check]"
+echo "    --enable-gui              Build Agar-GUI [default: yes]"
 echo "    --enable-utf8             Unicode text/input support [default: yes]"
 echo "    --enable-8bpp             Support for 8 bpp display [default: yes]"
 echo "    --enable-16bpp            Support for 16 bpp display [default: yes]"
 echo "    --enable-24bpp            Support for 24 bpp display [default: yes]"
 echo "    --enable-32bpp            Support for 32 bpp display [default: yes]"
-echo "    --enable-warnings         Suggested compiler warnings [default: no]"
 echo "    --enable-network          Build network client library [default: check]"
 echo "    --enable-server           Build network server library [default: no]"
-echo "    --enable-gui              Build Agar-GUI [default: yes]"
+echo "    --with-gl                 OpenGL rendering support [default: check]"
+echo "    --with-jpeg               JPEG screenshot support [default: no]"
+echo "    --with-freetype           GUI: Enable FreeType support [default: check]"
 exit 1
 fi
 
@@ -350,7 +351,7 @@ echo "#ifndef SYSCONFDIR" > config/sysconfdir.h
 echo "#define SYSCONFDIR \"${SYSCONFDIR}\"" >> config/sysconfdir.h
 echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 
-VERSION="1.3.1"
+VERSION="1.3.2"
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION \"$VERSION\"" >> config/version.h
 echo "#endif" >> config/version.h
@@ -1999,8 +2000,14 @@ echo -n "checking for AltiVec (with <altivec.h>)..."
 echo -n "checking for AltiVec (with <altivec.h>)..." >> config.log
 if [ "$SYSTEM" = "Darwin" ]; then
 ALTIVEC_CFLAGS="-faltivec -maltivec"
+ALTIVEC_CHECK_CFLAGS="-D_DARWIN_C_SOURCE"
+echo "ALTIVEC_CHECK_CFLAGS=$ALTIVEC_CHECK_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CHECK_CFLAGS\"] = \"$ALTIVEC_CHECK_CFLAGS\"" >>configure.lua
 else
 ALTIVEC_CFLAGS="-mabi=altivec -maltivec"
+ALTIVEC_CHECK_CFLAGS=""
+echo "ALTIVEC_CHECK_CFLAGS=$ALTIVEC_CHECK_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CHECK_CFLAGS\"] = \"$ALTIVEC_CHECK_CFLAGS\"" >>configure.lua
 fi;
 cat << EOT > conftest.c
 #include <altivec.h>
@@ -2341,6 +2348,17 @@ else
 WNO_UNINITIALIZED=""""
 echo "WNO_UNINITIALIZED=$WNO_UNINITIALIZED" >>Makefile.config
 echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
+fi
+if [ "${enable_lockdebug}" = "yes" ]
+ then
+LOCKDEBUG="1"
+echo "#ifndef LOCKDEBUG" > config/lockdebug.h
+echo "#define LOCKDEBUG \"$LOCKDEBUG\"" >> config/lockdebug.h
+echo "#endif" >> config/lockdebug.h
+echo "hdefs[\"LOCKDEBUG\"] = \"$LOCKDEBUG\"" >>configure.lua
+else
+echo "#undef LOCKDEBUG" >config/lockdebug.h
+echo "hdefs[\"LOCKDEBUG\"] = nil" >>configure.lua
 fi
 echo -n "checking for SDL (http://www.libsdl.org)..."
 echo -n "checking for SDL (http://www.libsdl.org)..." >> config.log
