@@ -572,12 +572,12 @@ RG_TilesetFindPixmap(RG_Tileset *ts, const char *name)
 }
 
 RG_Pixmap *
-RG_TilesetResvPixmap(const char *tsname, const char *pxname)
+RG_TilesetResvPixmap(void *vfsRoot, const char *tsname, const char *pxname)
 {
 	RG_Pixmap *px;
 	RG_Tileset *ts;
 
-	if ((ts = AG_ObjectFind(tsname)) == NULL) {
+	if ((ts = AG_ObjectFind(vfsRoot, tsname)) == NULL) {
 		AG_SetError("%s: no such tileset", tsname);
 		return (NULL);
 	}
@@ -597,12 +597,12 @@ RG_TilesetResvPixmap(const char *tsname, const char *pxname)
 }
 
 RG_Tile *
-RG_TilesetResvTile(const char *tsname, const char *tname)
+RG_TilesetResvTile(void *vfsRoot, const char *tsname, const char *tname)
 {
 	RG_Tileset *ts;
 	RG_Tile *t;
 
-	if ((ts = AG_ObjectFind(tsname)) == NULL) {
+	if ((ts = AG_ObjectFind(vfsRoot, tsname)) == NULL) {
 		AG_SetError("%s: no such tileset", tsname);
 		return (NULL);
 	}
@@ -682,8 +682,8 @@ PollTextures(AG_Event *event)
 		RG_Tile *t;
 
 		if (tex->tileset[0] != '\0' && tex->tile[0] != '\0' &&
-		    (t = RG_TilesetResvTile(tex->tileset, tex->tile))
-		     != NULL) {
+		    (t = RG_TilesetResvTile(OBJECT(ts)->root, tex->tileset,
+		     tex->tile)) != NULL) {
 			it = AG_TlistAdd(tl, NULL, "%s (<%s> %ux%u)",
 			    tex->name, t->name, t->su->w, t->su->h);
 			AG_TlistSetIcon(tl, it, t->su);
@@ -1065,7 +1065,7 @@ tryname2:
 	ins_texture_name[0] = '\0';
 	AG_ViewDetach(dlgwin);
 	
-	if ((win = RG_TextureEdit(tex)) != NULL) {
+	if ((win = RG_TextureEdit(OBJECT(ts)->root, tex)) != NULL) {
 		AG_WindowAttach(pwin, win);
 		AG_WindowShow(win);
 	}
@@ -1449,7 +1449,8 @@ EditSelTextures(AG_Event *event)
 		if (!it->selected) {
 			continue;
 		}
-		if ((win = RG_TextureEdit((RG_Texture *)it->p1)) != NULL) {
+		if ((win = RG_TextureEdit(OBJECT(ts)->root,
+		    (RG_Texture *)it->p1)) != NULL) {
 			AG_WindowAttach(pwin, win);
 			AG_WindowShow(win);
 		}

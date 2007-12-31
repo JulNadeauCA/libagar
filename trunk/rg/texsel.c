@@ -59,8 +59,8 @@ PollTextures(AG_Event *event)
 		RG_Tile *t;
 
 		if (tex->tileset[0] != '\0' && tex->tile[0] != '\0' &&
-		    (t = RG_TilesetResvTile(tex->tileset, tex->tile))
-		     != NULL) {
+		    (t = RG_TilesetResvTile(OBJECT(ts->tset)->root,
+		     tex->tileset, tex->tile)) != NULL) {
 			it = AG_TlistAdd(tl, NULL, "%s (<%s> %ux%u)",
 			    tex->name, t->name, t->su->w, t->su->h);
 			it->cat = "texture";

@@ -85,8 +85,8 @@ RG_Tile		*RG_TilesetFindTile(RG_Tileset *, const char *);
 RG_Sketch	*RG_TilesetFindSketch(RG_Tileset *, const char *);
 RG_Pixmap	*RG_TilesetFindPixmap(RG_Tileset *, const char *);
 RG_Anim		*RG_TilesetFindAnim(RG_Tileset *, const char *);
-RG_Pixmap	*RG_TilesetResvPixmap(const char *, const char *);
-RG_Tile		*RG_TilesetResvTile(const char *, const char *);
+RG_Pixmap	*RG_TilesetResvPixmap(void *, const char *, const char *);
+RG_Tile		*RG_TilesetResvTile(void *, const char *, const char *);
 
 static __inline__ int
 RG_LookupTile(RG_Tileset *ts, Uint32 id, RG_Tile **t)

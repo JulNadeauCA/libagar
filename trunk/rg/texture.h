@@ -34,7 +34,7 @@ void RG_TextureDestroy(RG_Texture *);
 int  RG_TextureLoad(RG_Texture *, AG_DataSource *);
 void RG_TextureSave(RG_Texture *, AG_DataSource *);
 RG_Texture *RG_TextureFind(struct rg_tileset *, const char *);
-struct ag_window *RG_TextureEdit(RG_Texture *);
+struct ag_window *RG_TextureEdit(void *, RG_Texture *);
 __END_DECLS
 
 #include "close_code.h"

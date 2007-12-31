@@ -93,7 +93,8 @@ RG_TextureFind(RG_Tileset *ts, const char *texname)
 			break;
 	}
 	if (tex == NULL ||
-	   (tex->t = RG_TilesetResvTile(tex->tileset, tex->tile)) == NULL) {
+	   (tex->t = RG_TilesetResvTile(OBJECT(ts)->root, tex->tileset, 
+	    tex->tile)) == NULL) {
 		return (NULL);
 	}
 	return (tex);
@@ -114,6 +115,7 @@ find_tilesets(AG_Tlist *tl, AG_Object *pob, int depth)
 		find_tilesets(tl, cob, depth+1);
 }
 
+#if 0
 static void
 PollTilesets(AG_Event *event)
 {
@@ -125,19 +127,21 @@ PollTilesets(AG_Event *event)
 	AG_UnlockLinkage();
 	AG_TlistRestore(tl);
 }
+#endif
 
 static void
 PollSourceTiles(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
-	RG_Texture *tex = AG_PTR(1);
+	AG_Object *vfsRoot = AG_PTR(1);
+	RG_Texture *tex = AG_PTR(2);
 	RG_Tileset *ts;
 	RG_Tile *t;
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
 	if (tex->tileset[0] != '\0' &&
-	    (ts = AG_ObjectFind(tex->tileset)) != NULL &&
+	    (ts = AG_ObjectFind(vfsRoot, tex->tileset)) != NULL &&
 	    AG_ObjectIsClass(ts, "RG_Tileset:*")) {
 		TAILQ_FOREACH(t, &ts->tiles, tiles) {
 			it = AG_TlistAdd(tl, NULL, t->name);
@@ -170,7 +174,7 @@ SelectSourceTile(AG_Event *event)
 }
 
 AG_Window *
-RG_TextureEdit(RG_Texture *tex)
+RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 {
 	const char *wrapModes[] ={
 		N_("Repeat"),
@@ -199,13 +203,15 @@ RG_TextureEdit(RG_Texture *tex)
 
 	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL|AG_COMBO_FOCUS,
 	    _("Tileset: "));
+#if 0
 	AG_SetEvent(com->list, "tlist-poll", PollTilesets, NULL);
+#endif
 	AG_SetEvent(com, "combo-selected", SelectTileset, "%p", tex);
 	AG_ComboSelectText(com, tex->tileset);
 	AG_TextboxPrintf(com->tbox, "%s", tex->tileset);
 
 	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_EXPAND);
-	AG_SetEvent(tl, "tlist-poll", PollSourceTiles, "%p", tex);
+	AG_SetEvent(tl, "tlist-poll", PollSourceTiles, "%p,%p", vfsRoot, tex);
 	AG_SetEvent(tl, "tlist-selected", SelectSourceTile, "%p", tex);
 	AG_TlistSelectText(tl, tex->tile);
 

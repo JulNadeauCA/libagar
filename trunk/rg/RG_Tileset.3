@@ -121,10 +121,10 @@ defined.
 .Fn RG_TilesetFindPixmap "RG_Tileset *tileset" "const char *name"
 .Pp
 .Ft "RG_Tile *"
-.Fn RG_TilesetResvTile "const char *tileset_name" "const char *name"
+.Fn RG_TilesetResvTile "RG_Tileset *tileset" "const char *tileset_name" "const char *name"
 .Pp
 .Ft "RG_Pixmap *"
-.Fn RG_TilesetResvPixmap "const char *tileset_name" "const char *name"
+.Fn RG_TilesetResvPixmap "RG_Tileset *tileset" "const char *tileset_name" "const char *name"
 .Pp
 .nr nS 0
 The
@@ -153,7 +153,7 @@ search for the given resource using the user-provided name string,
 returning a pointer to the element on success and NULL on failure.
 The
 .Fn RG_TilesetResv*
-variants use a path name for the
+variants use the VFS path name for the
 .Nm
 object itself.
 .Sh SEE ALSO
