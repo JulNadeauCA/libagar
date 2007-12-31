@@ -82,7 +82,6 @@ CreateTextbox(void)
 	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Polled string: <%s>",
 	    &polledString);
 
-#if 0
 	/*
 	 * Create a multiline textbox and configure it to process the
 	 * tab key (which normally is used to cycle focus).
@@ -98,7 +97,6 @@ CreateTextbox(void)
 	         "}\n";
 	AG_TextboxSizeHint(textbox, myText);
 	AG_TextboxPrintf(textbox, "%s", myText);
-#endif
 
 	AG_WindowShow(win);
 }
