@@ -1,5 +1,13 @@
 /*	Public domain	*/
 
+#ifndef DEBUG
+# include <agar/config/debug.h>
+# define _AGAR_DEBUG_
+#endif
+#ifndef LOCKDEBUG
+# include <agar/config/lockdebug.h>
+# define _AGAR_LOCKDEBUG_
+#endif
 #ifndef THREADS
 # include <agar/config/threads.h>
 # define _AGAR_THREADS_

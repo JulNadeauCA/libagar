@@ -15,6 +15,18 @@
 # undef _AGAR_DEFINED_MAXPATHLEN_
 # undef MAXPATHLEN
 #endif
+#ifdef _AGAR_DEBUG_
+# undef _AGAR_DEBUG_
+# undef DEBUG
+#endif
+#ifdef _AGAR_LOCKDEBUG_
+# undef _AGAR_LOCKDEBUG_
+# undef LOCKDEBUG
+#endif
+#ifdef _AGAR_THREADS_
+# undef _AGAR_THREADS_
+# undef THREADS
+#endif
 #ifdef _AGAR_THREADS_
 # undef _AGAR_THREADS_
 # undef THREADS

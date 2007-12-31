@@ -8,9 +8,11 @@
 #ifndef _AGAR_CORE_CORE_H_
 #define _AGAR_CORE_CORE_H_
 
-#include <config/enable_nls.h>
+#include <config/debug.h>
+#include <config/lockdebug.h>
 #include <config/threads.h>
 #include <config/network.h>
+#include <config/enable_nls.h>
 #include <config/have_bounded_attribute.h>
 #include <config/have_format_attribute.h>
 #include <config/have_nonnull_attribute.h>
@@ -84,6 +86,7 @@ typedef unsigned long Ulong;
 #undef _MK_BIG_ENDIAN
 #undef _MK_LITTLE_ENDIAN
 
+#include <core/core_init.h>
 #include <core/error.h>
 #include <core/queue.h>
 
@@ -155,8 +158,6 @@ typedef unsigned long Ulong;
 #pragma warning(disable: 4267)
 #pragma warning(disable: 4244)
 #endif
-
-#include <core/core_init.h>
 
 #endif /* !_AGAR_CORE_CORE_H_ */
 #endif /* _AGAR_INTERNAL */
