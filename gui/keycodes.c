@@ -239,10 +239,10 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	stringb = AG_WidgetGetBinding(tbox, "string", &utf8);
 	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, utf8);
 	len = AG_UCS4Len(ucs4);
-#ifdef DEBUG
-	if (tbox->pos < 0 || tbox->pos > len)
-		AG_FatalError("TextInsertUTF8: Bad position");
-#endif
+
+	if (tbox->pos < 0) { tbox->pos = 0; }
+	if (tbox->pos > len) { tbox->pos = len; }
+
 	if (agKbdUnicode) {
 		if (uch == 0) {
 			goto skip;
