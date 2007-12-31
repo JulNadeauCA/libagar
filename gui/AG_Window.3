@@ -265,6 +265,7 @@ The
 .Fn AG_WindowSetGeometry
 function allows manual modification of a window's position and size in terms
 of pixels.
+If a parameter is specified as -1, its current value is preserved.
 It should be invoked after the window's child widgets are created, otherwise
 no minimum geometry will be enforced when the window is later resized.
 .Pp
