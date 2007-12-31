@@ -14,7 +14,6 @@
 typedef struct map_editor {
 	AG_Object obj;
 	MAP copybuf;		/* Copy/paste buffer */
-	AG_Object pseudo;	/* Pseudo-object (for depkeeping) */
 } MAP_Editor;
 
 __BEGIN_DECLS
