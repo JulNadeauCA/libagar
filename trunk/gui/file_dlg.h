@@ -25,6 +25,8 @@
 
 #include "begin_code.h"
 
+struct ag_file_dlg;
+
 enum ag_file_type_option_type {
 	AG_FILEDLG_BOOL,
 	AG_FILEDLG_INT,
@@ -48,6 +50,7 @@ typedef struct ag_file_type_option {
 } AG_FileOption;
 
 typedef struct ag_file_type {
+	struct ag_file_dlg *fd;
 	const char *descr;			/* Description */
 	char **exts;				/* Filename extensions */
 	Uint nexts;
@@ -64,8 +67,9 @@ typedef struct ag_file_dlg {
 					   if "Cancel" is pressed */
 #define AG_FILEDLG_LOAD		  0x004	/* File must exist and be readable */
 #define AG_FILEDLG_SAVE		  0x008	/* File must be writeable */
-#define AG_FILEDLG_HFILL	  0x010
-#define AG_FILEDLG_VFILL	  0x020
+#define AG_FILEDLG_ASYNC	  0x010	/* Separate thread for load/save fn */
+#define AG_FILEDLG_HFILL	  0x100
+#define AG_FILEDLG_VFILL	  0x200
 #define AG_FILEDLG_EXPAND	  (AG_FILEDLG_HFILL|AG_FILEDLG_VFILL)
 
 	char cwd[MAXPATHLEN];			/* Current working directory */

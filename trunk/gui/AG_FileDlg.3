@@ -95,6 +95,9 @@ The selected file must exist and be readable or an error is returned to
 the user.
 .It AG_FILEDLG_SAVE
 The selected file must be writeable or an error is returned to the user.
+.It AG_FILEDLG_ASYNC
+Load/save routines will be executed in a separate thread.
+This flag is available only if agar was compiled with threads support.
 .El
 .Pp
 The working directory can be set manually with the
