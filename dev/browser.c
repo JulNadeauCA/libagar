@@ -70,10 +70,11 @@ static void
 CreateObject(AG_Event *event)
 {
 	char name[AG_OBJECT_NAME_MAX];
-	AG_ObjectClass *cl = AG_PTR(1);
-	AG_Textbox *name_tb = AG_PTR(2);
-	AG_Tlist *tlObjs = AG_PTR(3);
-	AG_Window *dlg_win = AG_PTR(4);
+	AG_Object *vfsRoot = AG_PTR(1);
+	AG_ObjectClass *cl = AG_PTR(2);
+	AG_Textbox *name_tb = AG_PTR(3);
+	AG_Tlist *tlObjs = AG_PTR(4);
+	AG_Window *dlg_win = AG_PTR(5);
 	AG_TlistItem *it;
 	AG_Object *pobj;
 	void *nobj;
@@ -81,13 +82,13 @@ CreateObject(AG_Event *event)
 	if ((it = AG_TlistSelectedItem(tlObjs)) != NULL) {
 		pobj = it->p1;
 	} else {
-		pobj = agWorld;
+		pobj = vfsRoot;
 	}
 	AG_TextboxCopyString(name_tb, name, sizeof(name));
 	AG_ViewDetach(dlg_win);
 
 	if (name[0] == '\0')
-		AG_ObjectGenName(agWorld, cl, name, sizeof(name));
+		AG_ObjectGenName(vfsRoot, cl, name, sizeof(name));
 
 	nobj = Malloc(cl->size);
 	AG_ObjectInit(nobj, cl);
@@ -390,9 +391,10 @@ DEV_BrowserLoadFrom(void *p, const char *name)
 static void
 ObjectOp(AG_Event *event)
 {
-	AG_Tlist *tl = AG_PTR(1);
+	void *vfsRoot = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
+	int op = AG_INT(3);
 	AG_TlistItem *it;
-	int op = AG_INT(2);
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		AG_Object *ob = it->p1;
@@ -455,7 +457,7 @@ ObjectOp(AG_Event *event)
 				char dupName[AG_OBJECT_NAME_MAX];
 				AG_Object *dob;
 
-				if (ob == agWorld || !OBJECT_PERSISTENT(ob)) {
+				if (ob == vfsRoot || !OBJECT_PERSISTENT(ob)) {
 					AG_TextMsg(AG_MSG_ERROR,
 					    _("%s: cannot duplicate."),
 					    ob->name);
@@ -477,13 +479,13 @@ ObjectOp(AG_Event *event)
 			AG_ObjectMoveDown(ob);
 			break;
 		case OBJEDIT_FREE_DATASET:
-			if (it->p1 == agWorld) {
+			if (it->p1 == vfsRoot) {
 				continue;
 			}
 			AG_ObjectFreeDataset(ob);
 			break;
 		case OBJEDIT_DESTROY:
-			if (it->p1 == agWorld) {
+			if (it->p1 == vfsRoot) {
 				continue;
 			}
 			if (AG_ObjectInUse(ob)) {
@@ -646,11 +648,11 @@ PollObjects(AG_Event *event)
 	AG_Object *dob = AG_PTR(2);
 	AG_TlistItem *it;
 
-	AG_LockLinkage();
+	AG_LockVFS(pob);
 	AG_TlistClear(tl);
 	PollObjectsFind(tl, pob, 0);
 	AG_TlistRestore(tl);
-	AG_UnlockLinkage();
+	AG_UnlockVFS(pob);
 
 	if (AG_TlistSelectedItem(tl) == NULL) {
 		TAILQ_FOREACH(it, &tl->items, items) {
@@ -705,8 +707,9 @@ static void
 CreateObjectDlg(AG_Event *event)
 {
 	AG_Window *win;
-	AG_ObjectClass *cl = AG_PTR(1);
-	AG_Window *pwin = AG_PTR(2);
+	AG_Object *vfsRoot = AG_PTR(1);
+	AG_ObjectClass *cl = AG_PTR(2);
+	AG_Window *pwin = AG_PTR(3);
 	AG_Tlist *tlParents;
 	AG_Box *bo;
 	AG_Textbox *tb;
@@ -733,7 +736,7 @@ CreateObjectDlg(AG_Event *event)
 
 		tlParents = AG_TlistNewPolled(bo,
 		    AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND,
-		    PollObjects, "%p,%p", agWorld, lastSelectedParent);
+		    PollObjects, "%p,%p", vfsRoot, lastSelectedParent);
 		AG_TlistSizeHint(tlParents, "XXXXXXXXXXXXXXXXXXX", 5);
 		AG_WidgetBind(tlParents, "selected", AG_WIDGET_POINTER,
 		    &lastSelectedParent);
@@ -747,11 +750,12 @@ CreateObjectDlg(AG_Event *event)
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
-		AG_ButtonNewFn(bo, 0, _("OK"), CreateObject, "%p,%p,%p,%p",
-		    cl, tb, tlParents, win);
-		AG_SetEvent(tb, "textbox-return", CreateObject, "%p,%p,%p,%p",
-		    cl, tb, tlParents, win);
-		
+		AG_ButtonNewFn(bo, 0, _("OK"),
+		    CreateObject, "%p,%p,%p,%p,%p", vfsRoot, cl, tb, tlParents,
+		    win);
+		AG_SetEvent(tb, "textbox-return",
+		    CreateObject, "%p,%p,%p,%p,%p", vfsRoot, cl, tb, tlParents,
+		    win);
 		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
@@ -807,14 +811,15 @@ out:
 static void
 UpdateFromRepo(AG_Event *event)
 {
-	AG_Tlist *tl = AG_PTR(1);
+	void *vfsRoot = AG_PTR(1);
+	AG_Tlist *tl = AG_PTR(2);
 	AG_TlistItem *it;
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected)
 			continue;
 
-		if (AG_RcsCheckout(it->text) == -1) {
+		if (AG_RcsCheckout(vfsRoot, it->text) == -1) {
 			AG_TextMsg(AG_MSG_ERROR, "%s: %s", it->text,
 			    AG_GetError());
 		}
@@ -885,7 +890,7 @@ RepoRenameDlg(AG_Event *event)
 
 /* Create the object browser window. */
 AG_Window *
-DEV_Browser(void)
+DEV_Browser(void *vfsRoot)
 {
 	AG_Window *win;
 	AG_Tlist *tlObjs;
@@ -895,16 +900,16 @@ DEV_Browser(void)
 	AG_NotebookTab *ntab;
 
 	win = AG_WindowNewNamed(0, "DEV_Browser");
-	AG_WindowSetCaption(win, _("Object Browser"));
+	AG_WindowSetCaption(win, "%s", OBJECT(vfsRoot)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_UPPER_LEFT, 0);
 	
 	tlObjs = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
 	                           AG_TLIST_EXPAND);
 	AG_TlistSizeHint(tlObjs, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 10);
 	AG_SetEvent(tlObjs, "tlist-poll",
-	    PollObjects, "%p,%p", agWorld, NULL);
+	    PollObjects, "%p,%p", vfsRoot, NULL);
 	AG_SetEvent(tlObjs, "tlist-dblclick",
-	    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_DATA);
+	    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_EDIT_DATA);
 
 	me = AG_MenuNew(win, AG_MENU_HFILL);
 	mi = AG_MenuAddItem(me, _("File"));
@@ -921,15 +926,16 @@ DEV_Browser(void)
 			Strlcpy(label, agClassTbl[i]->name, sizeof(label));
 			label[0] = (char)toupper((int)label[0]);
 			AG_MenuAction(mi_objs, label, NULL,
-			    CreateObjectDlg, "%p,%p", agClassTbl[i], win);
+			    CreateObjectDlg, "%p,%p,%p", vfsRoot, agClassTbl[i],
+			    win);
 		}
 
 		AG_MenuSeparator(mi);
 
-		AG_MenuAction(mi, _("Load full state"), agIconLoad.s,
-		    LoadObject, "%p", agWorld);
-		AG_MenuAction(mi, _("Save full state"), agIconSave.s,
-		    SaveObject, "%p", agWorld);
+		AG_MenuAction(mi, _("Load VFS"), agIconLoad.s,
+		    LoadObject, "%p", vfsRoot);
+		AG_MenuAction(mi, _("Save VFS"), agIconSave.s,
+		    SaveObject, "%p", vfsRoot);
 		
 		AG_MenuSeparator(mi);
 		
@@ -939,20 +945,22 @@ DEV_Browser(void)
 	mi = AG_MenuAddItem(me, _("Edit"));
 	{
 		AG_MenuAction(mi, _("Edit object data..."), NULL,
-		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_DATA);
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+		    OBJEDIT_EDIT_DATA);
 		AG_MenuAction(mi, _("Edit generic information..."), NULL,
-		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_GENERIC);
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+		    OBJEDIT_EDIT_GENERIC);
 		
 		AG_MenuSeparator(mi);
 			
 		AG_MenuAction(mi, _("Duplicate"), NULL,
-		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_DUP);
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_DUP);
 		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
-		    SDLK_u, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
-		    OBJEDIT_MOVE_UP);
+		    SDLK_u, KMOD_SHIFT,
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_MOVE_UP);
 		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
-		    SDLK_d, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
-		    OBJEDIT_MOVE_DOWN);
+		    SDLK_d, KMOD_SHIFT,
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_MOVE_DOWN);
 
 		AG_MenuSeparator(mi);
 
@@ -964,18 +972,21 @@ DEV_Browser(void)
 	mi = AG_MenuAddItem(me, _("Repository"));
 	{
 		AG_MenuAction(mi, _("Commit"), agIconLoad.s,
-		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_COMMIT);
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_RCS_COMMIT);
 		AG_MenuAction(mi, _("Update"), agIconLoad.s,
-		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_UPDATE);
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_RCS_UPDATE);
 		AG_MenuAction(mi, _("Import"), agIconSave.s,
-		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_IMPORT);
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_RCS_IMPORT);
 		AG_MenuSeparator(mi);
 		AG_MenuAction(mi, _("Commit all"), agIconSave.s,
-		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_COMMIT_ALL);
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+		    OBJEDIT_RCS_COMMIT_ALL);
 		AG_MenuAction(mi, _("Update all"), agIconLoad.s,
-		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_UPDATE_ALL);
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+		    OBJEDIT_RCS_UPDATE_ALL);
 		AG_MenuAction(mi, _("Import all"), agIconSave.s,
-		    ObjectOp, "%p, %i", tlObjs, OBJEDIT_RCS_IMPORT_ALL);
+		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+		    OBJEDIT_RCS_IMPORT_ALL);
 	}
 #endif /* NETWORK */
 	
@@ -997,20 +1008,26 @@ DEV_Browser(void)
 		mi = AG_TlistSetPopup(tlObjs, "object");
 		{
 			AG_MenuAction(mi, _("Edit object..."), NULL,
-			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_DATA);
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+			    OBJEDIT_EDIT_DATA);
 			AG_MenuAction(mi, _("Edit object information..."), NULL,
-			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EDIT_GENERIC);
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+			    OBJEDIT_EDIT_GENERIC);
 
 			AG_MenuSeparator(mi);
 			
 			AG_MenuAction(mi, _("Load"), agIconLoad.s,
-			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_LOAD);
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+			    OBJEDIT_LOAD);
 			AG_MenuAction(mi, _("Save"), agIconSave.s,
-			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_SAVE);
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+			    OBJEDIT_SAVE);
 			AG_MenuAction(mi, _("Save all"), agIconSave.s,
-			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_SAVE_ALL);
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+			    OBJEDIT_SAVE_ALL);
 			AG_MenuAction(mi, _("Save to..."), agIconSave.s,
-			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_EXPORT);
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+			    OBJEDIT_EXPORT);
 
 #ifdef NETWORK
 			if (agRcsMode) {
@@ -1019,48 +1036,52 @@ DEV_Browser(void)
 				mi2 = AG_MenuAction(mi, _("Repository"),
 				    agIconLoad.s, NULL, NULL);
 				AG_MenuAction(mi2, _("Commit"), agIconLoad.s,
-				    ObjectOp, "%p, %i", tlObjs,
+				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 				    OBJEDIT_RCS_COMMIT);
 				AG_MenuAction(mi2, _("Update"), agIconLoad.s,
-				    ObjectOp, "%p, %i", tlObjs,
+				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 				    OBJEDIT_RCS_UPDATE);
 				AG_MenuAction(mi2, _("Import"), agIconLoad.s,
-				    ObjectOp, "%p, %i", tlObjs,
+				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 				    OBJEDIT_RCS_IMPORT);
 		
 				AG_MenuSeparator(mi2);
 				
 				AG_MenuAction(mi2, _("Commit all"),
 				    agIconLoad.s,
-				    ObjectOp, "%p, %i", tlObjs,
+				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 				    OBJEDIT_RCS_COMMIT_ALL);
 				AG_MenuAction(mi2, _("Update all"),
 				    agIconLoad.s,
-				    ObjectOp, "%p, %i", tlObjs,
+				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 				    OBJEDIT_RCS_UPDATE_ALL);
 				AG_MenuAction(mi2, _("Import all"),
 				    agIconSave.s,
-				    ObjectOp, "%p, %i", tlObjs,
+				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 				    OBJEDIT_RCS_IMPORT_ALL);
 			}
 #endif /* NETWORK */
 			AG_MenuSeparator(mi);
 			
 			AG_MenuAction(mi, _("Duplicate"), NULL,
-			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_DUP);
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs, OBJEDIT_DUP);
 			AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
-			    SDLK_u, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
+			    SDLK_u, KMOD_SHIFT,
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 			    OBJEDIT_MOVE_UP);
 			AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
-			    SDLK_d, KMOD_SHIFT, ObjectOp, "%p, %i", tlObjs,
+			    SDLK_d, KMOD_SHIFT,
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 			    OBJEDIT_MOVE_DOWN);
 			
 			AG_MenuSeparator(mi);
 			
 			AG_MenuAction(mi, _("Free dataset"), NULL,
-			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_FREE_DATASET);
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+			    OBJEDIT_FREE_DATASET);
 			AG_MenuAction(mi, _("Destroy"), agIconTrash.s,
-			    ObjectOp, "%p, %i", tlObjs, OBJEDIT_DESTROY);
+			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
+			    OBJEDIT_DESTROY);
 		}
 	}
 
@@ -1077,7 +1098,7 @@ DEV_Browser(void)
 		mi = AG_TlistSetPopup(tl, "object");
 		{
 			AG_MenuAction(mi, _("Update from repository"),
-			    agIconLoad.s, UpdateFromRepo, "%p", tl);
+			    agIconLoad.s, UpdateFromRepo, "%p,%p", vfsRoot, tl);
 			AG_MenuAction(mi, _("Delete from repository"),
 			    agIconTrash.s, DeleteFromRepo, "%p", tl);
 			AG_MenuAction(mi, _("Rename"), NULL,
@@ -1168,12 +1189,13 @@ AbortQuit(AG_Event *event)
 static void
 DEV_QuitCallback(AG_Event *event)
 {
+	AG_Object *vfsRoot = AG_PTR(1);
 	AG_Window *win;
 	AG_Box *bo;
 	
 	agTerminating = 1;
 
-	if (!AG_ObjectChangedAll(agWorld)) {
+	if (!AG_ObjectChangedAll(vfsRoot)) {
 		SDL_Event nev;
 
 		nev.type = SDL_USEREVENT;
@@ -1200,15 +1222,15 @@ DEV_QuitCallback(AG_Event *event)
 }
 
 void
-DEV_BrowserInit(void)
+DEV_BrowserInit(void *vfsRoot)
 {
 	TAILQ_INIT(&dobjs);
 	TAILQ_INIT(&gobjs);
 
-	AG_AddEvent(agWorld, "object-post-load-data", DEV_PostLoadDataCallback,
+	AG_AddEvent(vfsRoot, "object-post-load-data", DEV_PostLoadDataCallback,
 	    NULL);
-	AG_AddEvent(agWorld, "object-page-out", DEV_PageOutCallback, NULL);
-	AG_AddEvent(agWorld, "quit", DEV_QuitCallback, NULL);
+	AG_AddEvent(vfsRoot, "object-page-out", DEV_PageOutCallback, NULL);
+	AG_AddEvent(vfsRoot, "quit", DEV_QuitCallback, "%p", vfsRoot);
 }
 
 void

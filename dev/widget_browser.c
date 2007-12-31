@@ -113,11 +113,11 @@ PollWindows(AG_Event *event)
 	AG_Window *win;
 
 	AG_TlistClear(tl);
-	AG_MutexLock(&agView->lock);
+	AG_LockVFS(agView);
 	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
 		FindWindows(tl, win, 0);
 	}
-	AG_MutexUnlock(&agView->lock);
+	AG_UnlockVFS(agView);
 	AG_TlistRestore(tl);
 }
 
@@ -249,7 +249,8 @@ WidgetParams(AG_Event *event)
 		AG_SetEvent(tb, "textbox-postchg", UpdateWindowCaption,
 		    "%p", ww);
 
-		lbl = AG_LabelNewPolledMT(nTab, AG_LABEL_HFILL, &ww->lock,
+		lbl = AG_LabelNewPolledMT(nTab, AG_LABEL_HFILL,
+		    &OBJECT(ww)->lock,
 		    "Flags: <%[flags]>", &ww->flags);
 		AG_SeparatorNewHoriz(nTab);
 		AG_CheckboxSetFromFlags(nTab, &ww->flags, flagDescr);

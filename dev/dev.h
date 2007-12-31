@@ -34,8 +34,8 @@ AG_Window *DEV_DisplaySettings(void);
 AG_Window *DEV_GuiDebugger(void);
 AG_Window *DEV_CPUInfo(void);
 
-AG_Window *DEV_Browser(void);
-void	   DEV_BrowserInit(void);
+AG_Window *DEV_Browser(void *);
+void	   DEV_BrowserInit(void *);
 void	   DEV_BrowserDestroy(void);
 void	   DEV_BrowserOpenData(void *);
 void	   DEV_BrowserCloseData(void *);

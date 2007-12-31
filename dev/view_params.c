@@ -57,8 +57,9 @@ DEV_DisplaySettings(void)
 		AG_LabelNewStatic(vb, 0, _("OpenGL mode: %s"),
 		    agView->opengl ? _("yes") : _("no"));
 
-		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
-		    "%dx%d", &agView->w, &agView->h);
+		/* XXX thread unsafe */
+		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL, "%dx%d",
+		    &agView->w, &agView->h);
 
 		AG_LabelNewStatic(vb, 0, _("Depth: %dbpp"),
 		    (int)agVideoInfo->vfmt->BitsPerPixel);
@@ -71,20 +72,20 @@ DEV_DisplaySettings(void)
 		AG_LabelNewStatic(vb, 0, _("Alpha: %d"),
 		    agVideoInfo->vfmt->alpha);
 
-		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
+		/* XXX thread unsafe */
+		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
 		    _("Window op: %d (%p)"),
 		    &agView->winop, &agView->winSelected);
 		AG_LabelSizeHint(lbl, 1, _("Window op: 000 (0x00000000)"));
-		
-		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
-		    _("Refresh rate (effective): %d"),
-		    &agView->rCur);
+	
+		/* XXX thread unsafe */
+		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
+		    _("Refresh rate (effective): %d"), agView->rCur);
 		AG_LabelSizeHint(lbl, 1,
 		    _("Refresh rate (effective): 000"));
 
-		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &agView->lock,
-		    _("Refresh rate (nominal): %d"),
-		    &agView->rNom);
+		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
+		    _("Refresh rate (nominal): %d"), &agView->rNom);
 		AG_LabelSizeHint(lbl, 1,
 		    _("Refresh rate (nominal): 000"));
 	}

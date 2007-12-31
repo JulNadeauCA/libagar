@@ -112,6 +112,7 @@ SetUnicodeKbd(AG_Event *event)
 	SDL_EnableUNICODE(enable);
 }
 
+/* Must be invoked from main event/rendering context. */
 static void
 SetColor(AG_Event *event)
 {
@@ -125,9 +126,7 @@ SetColor(AG_Event *event)
 		if (agView->opengl) {
 			Uint8 r, g, b;
 			SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
-			AG_LockGL();
 			glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
-			AG_UnlockGL();
 		} else
 #endif
 		{

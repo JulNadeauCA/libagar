@@ -74,7 +74,7 @@ PollDeps(AG_Event *event)
 	AG_ObjectDep *dep;
 
 	AG_TlistClear(tl);
-	AG_LockLinkage();
+	AG_LockVFS(ob);
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		char label[AG_TLIST_LABEL_MAX];
 	
@@ -91,7 +91,7 @@ PollDeps(AG_Event *event)
 		}
 		AG_TlistAddPtr(tl, AG_ObjectIcon(dep->obj), label, dep);
 	}
-	AG_UnlockLinkage();
+	AG_UnlockVFS(ob);
 	AG_TlistRestore(tl);
 }
 
@@ -110,6 +110,22 @@ PollProps(AG_Event *event)
 	}
 	AG_TlistRestore(tl);
 }
+
+#ifdef THREADS
+static void
+PollLocks(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	AG_Object *ob = AG_PTR(1);
+	int i;
+	
+	AG_TlistClear(tl);
+	for (i = 0; i < ob->nlockinfo; i++) {
+		AG_TlistAdd(tl, NULL, "%s", ob->lockinfo[i]);
+	}
+	AG_TlistRestore(tl);
+}
+#endif /* THREADS */
 
 static void
 PollEvents(AG_Event *event)
@@ -307,9 +323,10 @@ DEV_ObjectEdit(void *p)
 	
 		AG_LabelNewStatic(ntab, 0, _("Class: %s"), ob->cls->name);
 		AG_CheckboxSetFromFlags(ntab, &ob->flags, devObjectFlags);
-
+#if 0
 		AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &agLinkageLock,
 		    _("Parent: %[obj]"), &ob->parent);
+#endif
 		AG_LabelNewStatic(ntab, 0, _("Save prefix: %s"),
 		    ob->save_pfx != NULL ? ob->save_pfx : AG_PATHSEP);
 
@@ -376,5 +393,13 @@ DEV_ObjectEdit(void *p)
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_SetEvent(tl, "tlist-poll", PollProps, "%p", ob);
 	}
+	
+#ifdef THREADS
+	ntab = AG_NotebookAddTab(nb, _("Locks"), AG_BOX_VERT);
+	{
+		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
+		AG_SetEvent(tl, "tlist-poll", PollLocks, "%p", ob);
+	}
+#endif
 	return (win);
 }

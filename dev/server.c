@@ -283,14 +283,14 @@ static int
 cmd_view_fmt(NS_Server *ns, NS_Command *cmd, void *p)
 {
 	NS_BeginList(ns);
-	AG_MutexLock(&agView->lock);
+	AG_LockVFS(agView);
 	NS_ListString(ns, "opengl:%d", agView->opengl);
 	NS_ListString(ns, "geom:%u:%u", agView->w, agView->h);
 	NS_ListString(ns, "bpp:%u", agVideoInfo->vfmt->BitsPerPixel);
 	NS_ListString(ns, "rmask:%08x", agVideoInfo->vfmt->Rmask);
 	NS_ListString(ns, "gmask:%08x", agVideoInfo->vfmt->Gmask);
 	NS_ListString(ns, "bmask:%08x", agVideoInfo->vfmt->Bmask);
-	AG_MutexUnlock(&agView->lock);
+	AG_UnlockVFS(agView);
 	NS_EndList(ns);
 	return (0);
 }
@@ -300,16 +300,17 @@ static int
 cmd_refresh(NS_Server *ns, NS_Command *cmd, void *p)
 {
 	NS_BeginList(ns);
-	AG_MutexLock(&agView->lock);
+	AG_LockVFS(agView);
 	NS_ListString(ns, "%d", agView->rCur);
 	NS_ListString(ns, "%d", agView->rNom);
-	AG_MutexUnlock(&agView->lock);
+	AG_UnlockVFS(agView);
 	NS_EndList(ns);
 	return (0);
 }
 
+#if 0
 static void
-cmd_world_find(NS_Server *ns, NS_Command *cmd, AG_Object *pob, int depth)
+cmd_scan_vfs(NS_Server *ns, NS_Command *cmd, AG_Object *pob, int depth)
 {
 	AG_Object *cob;
 
@@ -318,21 +319,22 @@ cmd_world_find(NS_Server *ns, NS_Command *cmd, AG_Object *pob, int depth)
 	NS_ListString(ns, "0x%08x", pob->flags);
 
 	TAILQ_FOREACH(cob, &pob->children, cobjs) {
-		cmd_world_find(ns, cmd, cob, depth+1);
+		cmd_scan_vfs(ns, cmd, cob, depth+1);
 	}
 }
 
 /* Return information about the current virtual filesystem. */
 static int
-cmd_world(NS_Server *ns, NS_Command *cmd, void *p)
+cmd_scan_vfs(NS_Server *ns, NS_Command *cmd, void *p)
 {
 	NS_BeginList(ns);
 	AG_LockLinkage();
-	cmd_world_find(ns, cmd, agWorld, 0);
+	cmd_scan_vfs(ns, cmd, agWorld, 0);
 	AG_UnlockLinkage();
 	NS_EndList(ns);
 	return (0);
 }
+#endif
 
 static void *
 ServerLoop(void *p)
@@ -366,7 +368,9 @@ DEV_DebugServerStart(void)
 		NS_RegCmd(&server, "screen", cmd_surface, agView->v);
 		NS_RegCmd(&server, "view-fmt", cmd_view_fmt, NULL);
 		NS_RegCmd(&server, "refresh", cmd_refresh, NULL);
-		NS_RegCmd(&server, "world", cmd_world, NULL);
+#if 0
+		NS_RegCmd(&server, "scan-vfs", cmd_scan_vfs, NULL);
+#endif
 		server_inited = 1;
 	}
 	if ((rv = AG_ThreadCreate(&listenTh, ServerLoop, NULL)) != 0) {
