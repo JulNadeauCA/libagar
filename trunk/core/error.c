@@ -101,16 +101,26 @@ AG_GetError(void)
 }
 
 void
-AG_Debug(void *obj, const char *fmt, ...)
+AG_Debug(void *p, const char *fmt, ...)
 {
 #ifdef DEBUG
-	if (OBJECT_DEBUG(obj)) {
-		va_list args;
+	char path[128];
+	AG_Object *obj = p;
+	va_list args;
+	FILE *f;
+	
+	if (OBJECT_DEBUG(obj) || agDebugLvl >= 10) {
+		Strlcpy(path, obj->name, sizeof(path));
+		Strlcat(path, ".debug", sizeof(path));
 
 		va_start(args, fmt);
-		printf("%s: ", OBJECT(obj)->name);
-		vprintf(fmt, args);
-		printf("\n");
+		if (agDebugLvl >= 10 && (f = fopen(path, "a")) != NULL) {
+			vfprintf(f, fmt, args);
+			fclose(f);
+		} else {
+			printf("%s: ", OBJECT(obj)->name);
+			vprintf(fmt, args);
+		}
 		va_end(args);
 	}
 #endif
