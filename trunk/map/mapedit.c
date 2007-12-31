@@ -54,25 +54,6 @@ MAP_EditorInit(void)
 	OBJECT(&mapEditor)->flags |= AG_OBJECT_RELOAD_PROPS;
 	OBJECT(&mapEditor)->save_pfx = "/_mapEditor";
 
-	/* Attach a pseudo-object for dependency keeping purposes. */
-	AG_ObjectInitStatic(&mapEditor.pseudo, &mapEditorPseudoClass);
-	AG_ObjectSetName(&mapEditor.pseudo, "_mapEditor");
-	OBJECT(&mapEditor.pseudo)->flags |= (AG_OBJECT_NON_PERSISTENT|
-	                                     AG_OBJECT_INDESTRUCTIBLE);
-	AG_ObjectAttach(agWorld, &mapEditor.pseudo);
-
-	/*
-	 * Allocate the copy/paste buffer.
-	 * Use AG_OBJECT_READONLY to avoid circular reference in case a user
-	 * attempts to paste contents of the copy buffer into itself.
-	 */
-	AG_ObjectInitStatic(&mapEditor.copybuf, &mapClass);
-	AG_ObjectSetName(&mapEditor.copybuf, "_mapClipboard");
-	OBJECT(&mapEditor.copybuf)->flags |= (AG_OBJECT_NON_PERSISTENT|
-	                                      AG_OBJECT_INDESTRUCTIBLE|
-					      AG_OBJECT_READONLY);
-	AG_ObjectAttach(&mapEditor.pseudo, &mapEditor.copybuf);
-
 	/* Initialize the default tunables. */
 	AG_SetUint32(&mapEditor, "default-map-width", 12);
 	AG_SetUint32(&mapEditor, "default-map-height", 8);

@@ -2249,6 +2249,7 @@ EditMapParameters(AG_Event *event)
 	AG_WindowShow(win);
 }
 
+#if 0
 /* Scan VFS for objects we can use as library items. */
 static void
 PollLibsFind(AG_Tlist *tl, AG_Object *pob, int depth)
@@ -2315,6 +2316,7 @@ PollLibs(AG_Event *event)
 	AG_UnlockLinkage();
 	AG_TlistRestore(tl);
 }
+#endif
 
 /* Select a library item. */
 static void
@@ -2903,7 +2905,9 @@ Edit(void *p)
 		{
 			tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_TREE|
 			                       AG_TLIST_EXPAND);
+#if 0
 			AG_SetEvent(tl, "tlist-poll", PollLibs, "%p", agWorld);
+#endif
 			AG_SetEvent(tl, "tlist-changed", SelectLib, "%p", mv);
 			mv->lib_tl = tl;
 			WIDGET(tl)->flags &= ~(AG_WIDGET_FOCUSABLE);
