@@ -11,7 +11,7 @@
 using namespace std;
 
 int
-main()
+main(int argc, char *argv[])
 {
 	if (AG_InitCore("cplusplus-demo", 0) == -1) {
 		cerr << AG_GetError() << endl;
