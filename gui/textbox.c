@@ -191,10 +191,12 @@ GainedFocus(AG_Event *event)
 {
 	AG_Textbox *tb = AG_SELF();
 
+	AG_LockTimeouts(tb);
 	AG_DelTimeout(tb, &tb->delay_to);
 	AG_DelTimeout(tb, &tb->repeat_to);
 	AG_ReplaceTimeout(tb, &tb->cblink_to, agTextBlinkRate);
 	tb->flags |= AG_TEXTBOX_BLINK_ON;
+	AG_UnlockTimeouts(tb);
 }
 
 static void
@@ -297,7 +299,6 @@ Draw(void *p)
 	x = xStart;
 	tbox->xMax = 0;
 	tbox->yMax = 1;
-	tbox->yVis = WIDTH(tbox)/agTextFontLineSkip;
 	
 	for (i = 0; i <= len; i++) {
 		AG_Glyph *gl;
@@ -323,8 +324,9 @@ Draw(void *p)
 			if ((tbox->yMax - 1) >= tbox->y) {
 				y += agTextFontLineSkip;
 			}
-			tbox->xMax = MAX(tbox->xMax, x - xStart +
-			                 tbox->boxPadX*2);
+			tbox->xMax = MAX(tbox->xMax,
+			                 (x - xStart) +
+					 (WIDTH(tbox) - tbox->wAvail));
 			x = xStart;
 			tbox->yMax++;
 			continue;
@@ -372,20 +374,17 @@ Draw(void *p)
 			break;
 	}
 	if (tbox->yMax == 1) {
-		tbox->xMax = x - xStart + tbox->boxPadX*2;
+		tbox->xMax = (x - xStart) +
+		             (WIDTH(tbox) - tbox->wAvail);
 	}
 	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
 		int bw;
 
-#if 0
-		AG_ScrollbarSetBarSize(tbox->vBar,
-		    ((HEIGHT(tbox)-agTextFontLineSkip)/agTextFontLineSkip)* 
-		     (HEIGHT(tbox) - tbox->vBar->bw*2)/tbox->yMax);
-#endif
+		AG_ScrollbarSetBarSize(tbox->vBar, 10);
 
 		bw = WIDTH(tbox) - HEIGHT(tbox->hBar)*2 - WIDTH(tbox->vBar);
 		AG_ScrollbarSetBarSize(tbox->hBar,
-		    tbox->xMax < WIDTH(tbox) ? WIDTH(tbox) :
+		    tbox->xMax < tbox->wAvail ? tbox->wAvail :
 		    bw - abs(tbox->xMax - bw));
 	}
 	AG_WidgetUnlockBinding(stringb);
@@ -425,7 +424,18 @@ out:
 void
 AG_TextboxSizeHint(AG_Textbox *tbox, const char *text)
 {
+	AG_ObjectLock(tbox);
 	AG_TextSize(text, &tbox->wPre, &tbox->hPre);
+	AG_ObjectUnlock(tbox);
+}
+
+void
+AG_TextboxSizeHintPixels(AG_Textbox *tbox, Uint w, Uint h)
+{
+	AG_ObjectLock(tbox);
+	tbox->wPre = w;
+	tbox->hPre = h;
+	AG_ObjectUnlock(tbox);
 }
 
 static void
@@ -487,6 +497,9 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	} else {
 		tbox->wLbl = wLbl;
 	}
+	
+	tbox->wAvail = a->w - tbox->boxPadX*2;
+	tbox->hAvail = a->h - tbox->boxPadY*2;
 
 	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
 		AG_SizeReq rBar;
@@ -508,7 +521,15 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aBar.w = d;
 		aBar.h = a->h - d;
 		AG_WidgetSizeAlloc(tbox->vBar, &aBar);
+
+		tbox->wAvail -= WIDGET(tbox->vBar)->w;
+		tbox->hAvail -= WIDGET(tbox->hBar)->h;
 	}
+	if (tbox->wAvail < 0) { tbox->wAvail = 0; }
+	if (tbox->hAvail < 0) { tbox->hAvail = 0; }
+
+	tbox->yVis = tbox->hAvail/agTextFontLineSkip;
+
 	return (0);
 }
 
@@ -887,6 +908,8 @@ Init(void *obj)
 	tbox->hPre = agTextFontHeight;
 	tbox->label = -1;
 	tbox->labelText = NULL;
+	tbox->wAvail = 0;
+	tbox->hAvail = 0;
 	
 	tbox->hBar = NULL;
 	tbox->vBar = NULL;

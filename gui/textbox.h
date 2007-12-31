@@ -42,6 +42,7 @@ typedef struct ag_textbox {
 	int wPre, hPre;			/* Size hint */
 	int boxPadX, boxPadY;		/* Padding around textbox */
 	int lblPadL, lblPadR;		/* Padding around label */
+	int wAvail, hAvail;		/* Available display area for text */
 	int wLbl;			/* Label width to display */
 	int pos;			/* Cursor position */
 	int offs;			/* Display offset */
@@ -69,6 +70,7 @@ extern AG_WidgetClass agTextboxClass;
 
 AG_Textbox *AG_TextboxNew(void *, Uint, const char *);
 void	    AG_TextboxSizeHint(AG_Textbox *, const char *);
+void	    AG_TextboxSizeHintPixels(AG_Textbox *, Uint, Uint);
 #define     AG_TextboxPrescale AG_TextboxSizeHint
 
 void	 AG_TextboxSetPassword(AG_Textbox *, int);
