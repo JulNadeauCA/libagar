@@ -71,11 +71,12 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 	if ((flags & AG_TEXTBOX_NO_HFILL) == 0) { AG_ExpandHoriz(tb); }
 	if (flags & AG_TEXTBOX_VFILL) { AG_ExpandVert(tb); }
 	if (flags & AG_TEXTBOX_READONLY) { AG_WidgetDisable(tb); }
-	if (tb->flags & AG_TEXTBOX_MULTILINE) { EnableMultiline(tb); }
-
+	if (flags & AG_TEXTBOX_MULTILINE) { EnableMultiline(tb); }
 	if (flags & AG_TEXTBOX_CATCH_TAB) {
 		WIDGET(tb)->flags |= AG_WIDGET_CATCH_TAB;
 	}
+	tb->flags |= flags;
+
 	if (label != NULL) {
 		tb->labelText = Strdup(label);
 	}
@@ -215,7 +216,6 @@ Destroy(void *p)
 	AG_Textbox *tbox = p;
 
 	Free(tbox->labelText);
-	AG_MutexDestroy(&tbox->lock);
 }
 
 static void
@@ -520,15 +520,12 @@ KeyDown(AG_Event *event)
 	int keymod = AG_INT(2);
 	Uint32 unicode = (Uint32)AG_INT(3);		/* XXX use AG_UINT32 */
 
-	if (AG_WidgetDisabled(tbox))
-		return;
-
-	if ((tbox->flags & AG_TEXTBOX_CATCH_TAB) == 0 &&
-	    keysym == SDLK_TAB) {
+	if (AG_WidgetDisabled(tbox)) {
 		return;
 	}
-
-	AG_MutexLock(&tbox->lock);
+	if ((tbox->flags & AG_TEXTBOX_CATCH_TAB) == 0 &&
+	    keysym == SDLK_TAB)
+		return;
 
 	tbox->repeat.key = keysym;
 	tbox->repeat.mod = keymod;
@@ -543,8 +540,6 @@ KeyDown(AG_Event *event)
 		AG_DelTimeout(tbox, &tbox->delay_to);
 	}
 	AG_UnlockTimeouts(tbox);
-	
-	AG_MutexUnlock(&tbox->lock);
 }
 
 static void
@@ -553,8 +548,6 @@ KeyUp(AG_Event *event)
 	AG_Textbox *tb = AG_SELF();
 	SDLKey keysym = AG_SDLKEY(1);
 	
-	AG_MutexLock(&tb->lock);
-
 	AG_LockTimeouts(tb);
 	AG_DelTimeout(tb, &tb->repeat_to);
 	AG_DelTimeout(tb, &tb->delay_to);
@@ -568,7 +561,6 @@ KeyUp(AG_Event *event)
 		}
 		AG_PostEvent(NULL, tb, "textbox-return", NULL);
 	}
-	AG_MutexUnlock(&tb->lock);
 }
 
 #define ON_LINE(my,y) \
@@ -685,6 +677,7 @@ in:
 #undef ON_LINE
 #undef ON_CHAR
 
+/* Textbox must be locked. */
 static void
 MoveCursorToCoords(AG_Textbox *tbox, int mx, int my)
 {
@@ -692,7 +685,6 @@ MoveCursorToCoords(AG_Textbox *tbox, int mx, int my)
 	AG_WidgetBinding *stringb;
 	char *s;
 
-	AG_MutexLock(&tbox->lock);
 	rv = GetCursorPosition(tbox, mx, my, &tbox->pos);
 	if (rv == -1) {
 		tbox->pos = 0;
@@ -701,7 +693,6 @@ MoveCursorToCoords(AG_Textbox *tbox, int mx, int my)
 		tbox->pos = strlen(s);
 		AG_WidgetUnlockBinding(stringb);
 	}
-	AG_MutexUnlock(&tbox->lock);
 }
 
 static void
@@ -775,7 +766,7 @@ AG_TextboxPrintf(AG_Textbox *tbox, const char *fmt, ...)
 	va_list args;
 	char *text;
 
-	AG_MutexLock(&tbox->lock);
+	AG_ObjectLock(tbox);
 	stringb = AG_WidgetGetBinding(tbox, "string", &text);
 	if (fmt != NULL && fmt[0] != '\0') {
 		va_start(args, fmt);
@@ -787,7 +778,7 @@ AG_TextboxPrintf(AG_Textbox *tbox, const char *fmt, ...)
 		tbox->pos = 0;
 	}
 	AG_WidgetUnlockBinding(stringb);
-	AG_MutexUnlock(&tbox->lock);
+	AG_ObjectUnlock(tbox);
 }
 
 char *
@@ -796,9 +787,11 @@ AG_TextboxDupString(AG_Textbox *tbox)
 	AG_WidgetBinding *stringb;
 	char *s, *sd;
 
+	AG_ObjectLock(tbox);
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 	sd = Strdup(s);
 	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(tbox);
 	return (sd);
 }
 
@@ -810,9 +803,11 @@ AG_TextboxCopyString(AG_Textbox *tbox, char *dst, size_t dst_size)
 	size_t rv;
 	char *text;
 
+	AG_ObjectLock(tbox);
 	stringb = AG_WidgetGetBinding(tbox, "string", &text);
 	rv = Strlcpy(dst, text, dst_size);
 	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(tbox);
 	return (rv);
 }
 
@@ -824,9 +819,11 @@ AG_TextboxInt(AG_Textbox *tbox)
 	char *text;
 	int i;
 
+	AG_ObjectLock(tbox);
 	stringb = AG_WidgetGetBinding(tbox, "string", &text);
 	i = atoi(text);
 	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(tbox);
 	return (i);
 }
 
@@ -834,13 +831,13 @@ AG_TextboxInt(AG_Textbox *tbox)
 void
 AG_TextboxSetPassword(AG_Textbox *tbox, int pw)
 {
-	AG_MutexLock(&tbox->lock);
+	AG_ObjectLock(tbox);
 	if (pw) {
 		tbox->flags |= AG_TEXTBOX_PASSWORD;
 	} else {
 		tbox->flags &= ~(AG_TEXTBOX_PASSWORD);
 	}
-	AG_MutexUnlock(&tbox->lock);
+	AG_ObjectUnlock(tbox);
 }
 
 /* Change the label text. */
@@ -849,7 +846,7 @@ AG_TextboxSetLabel(AG_Textbox *tbox, const char *fmt, ...)
 {
 	va_list ap;
 	
-	AG_MutexLock(&tbox->lock);
+	AG_ObjectLock(tbox);
 
 	va_start(ap, fmt);
 	Free(tbox->labelText);
@@ -860,7 +857,7 @@ AG_TextboxSetLabel(AG_Textbox *tbox, const char *fmt, ...)
 		AG_WidgetUnmapSurface(tbox, tbox->label);
 		tbox->label = -1;
 	}
-	AG_MutexUnlock(&tbox->lock);
+	AG_ObjectUnlock(tbox);
 }
 
 static void
@@ -890,7 +887,6 @@ Init(void *obj)
 	tbox->hPre = agTextFontHeight;
 	tbox->label = -1;
 	tbox->labelText = NULL;
-	AG_MutexInitRecursive(&tbox->lock);
 	
 	tbox->hBar = NULL;
 	tbox->vBar = NULL;
