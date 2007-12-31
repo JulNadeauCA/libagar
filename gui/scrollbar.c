@@ -96,13 +96,13 @@ AG_ScrollbarVisible(AG_Scrollbar *sb)
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:
 		if (AGWIDGET(sb)->w < sb->bw ||
-		    AGWIDGET(sb)->h < sb->bw*2 + sb->barSz) {
+		    AGWIDGET(sb)->h < sb->bw*2) {
 			rv = 0;
 			goto out;
 		}
 		break;
 	case AG_SCROLLBAR_HORIZ:
-		if (AGWIDGET(sb)->w < sb->bw*2 + sb->barSz ||
+		if (AGWIDGET(sb)->w < sb->bw*2 ||
 		    AGWIDGET(sb)->h < sb->bw) {
 			rv = 0;
 			goto out;
@@ -289,6 +289,9 @@ Draw(void *p)
 			if (sb->bw+x+size > WIDGET(sb)->h - sb->bw)
 				x = WIDGET(sb)->h - sb->bw*2 - size;
 		}
+		if (AGWIDGET(sb)->h < sb->bw*2 + sb->barSz) {
+			size = 0;
+		}
 		STYLE(sb)->ScrollbarVertButtons(sb, x, size);
 		break;
 	case AG_SCROLLBAR_HORIZ:
@@ -301,6 +304,9 @@ Draw(void *p)
 			size = sb->barSz;
 			if (sb->bw+x+size > WIDGET(sb)->w - sb->bw)
 				x = WIDGET(sb)->w - sb->bw*2 - size;
+		}
+		if (AGWIDGET(sb)->w < sb->bw*2 + sb->barSz) {
+			size = 0;
 		}
 		STYLE(sb)->ScrollbarHorizButtons(sb, x, size);
 		break;
