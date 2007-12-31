@@ -4,11 +4,9 @@
 #define _AGAR_CORE_ERROR_H_
 
 #ifdef _AGAR_INTERNAL
-# include <config/debug.h>
-# include <config/free_null_is_a_noop.h>
+#include <config/free_null_is_a_noop.h>
 #else
-# include <agar/config/debug.h>
-# include <agar/config/free_null_is_a_noop.h>
+#include <agar/config/free_null_is_a_noop.h>
 #endif
 
 #include <stdlib.h>
