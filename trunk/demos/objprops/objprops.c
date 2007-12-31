@@ -10,6 +10,9 @@
 
 #include <string.h>
 
+/* This will be the root of our virtual filesystem. */
+AG_Object vfsRoot;
+
 static Uint32
 ReadTicks(void *p, AG_Prop *prop)
 {
@@ -43,15 +46,22 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
-	/* Reload the previous state, initialize the object manager. */
-	AG_ObjectLoad(agWorld);
+	/*
+	 * Initialize our virtual filesystem root and load its contents if it
+	 * was previously saved to disk. This structure was not malloc'ed so
+	 * we must use AG_ObjectInitStatic(). We use NULL as the class so the
+	 * generic AG_Object(3) class will be used.
+	 */
+	AG_ObjectInitStatic(&vfsRoot, NULL);
+	AG_ObjectSetName(&vfsRoot, "My VFS");
+	(void)AG_ObjectLoad(&vfsRoot);
 
 	/* Initialize Agar-DEV and show the object browser. */
 	DEV_InitSubsystem(0);
-	AG_WindowShow(DEV_Browser());
+	AG_WindowShow(DEV_Browser(&vfsRoot));
 
 	/* Create a generic object instance. */
-	obj = AG_ObjectNew(agWorld, "Foo", &agObjectClass);
+	obj = AG_ObjectNew(&vfsRoot, "Foo", &agObjectClass);
 
 	/* Create one property of every type. */
 	AG_SetBool(obj, "my-boolean1", 0);

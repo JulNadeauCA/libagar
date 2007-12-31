@@ -65,6 +65,9 @@ CreateTextbox(void)
 	 * Use a `string' binding to edit the contents of a sized buffer. We
 	 * have to pass the size of the buffer along with a pointer to it to
 	 * the AG_WidgetBind() function.
+	 *
+	 * If this were a multithreaded application, the buffer could be
+	 * protected with a mutex and we would use AG_WidgetBindMp().
 	 */
 	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Polled string: ");
 	AG_TextboxSizeHint(textbox, "Tick: 000000");
@@ -74,11 +77,12 @@ CreateTextbox(void)
 	/* Use a timer to update the text buffer periodically. */
 	AG_SetTimeout(&myTimer, UpdateText, textbox, 0);
 	AG_AddTimeout(NULL, &myTimer, 250);
-	
+
 	/* Create a polled label to display the actual buffer contents. */
 	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Polled string: <%s>",
 	    &polledString);
 
+#if 0
 	/*
 	 * Create a multiline textbox and configure it to process the
 	 * tab key (which normally is used to cycle focus).
@@ -94,6 +98,7 @@ CreateTextbox(void)
 	         "}\n";
 	AG_TextboxSizeHint(textbox, myText);
 	AG_TextboxPrintf(textbox, "%s", myText);
+#endif
 
 	AG_WindowShow(win);
 }
