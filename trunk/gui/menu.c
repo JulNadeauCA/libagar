@@ -35,6 +35,7 @@
 
 AG_Menu *agAppMenu = NULL;
 AG_Window *agAppMenuWin = NULL;
+AG_Mutex agAppMenuLock = AG_MUTEX_INITIALIZER;
 
 AG_Menu *
 AG_MenuNew(void *parent, Uint flags)
@@ -43,6 +44,7 @@ AG_MenuNew(void *parent, Uint flags)
 
 	m = Malloc(sizeof(AG_Menu));
 	AG_ObjectInit(m, &agMenuClass);
+
 	m->flags |= flags;
 
 	if (flags & AG_MENU_HFILL) { AG_ExpandHoriz(m); }
@@ -59,12 +61,16 @@ AG_MenuNewGlobal(Uint flags)
 
 	m = Malloc(sizeof(AG_Menu));
 	AG_ObjectInit(m, &agMenuClass);
+
 	m->flags |= flags;
+
+	AG_MutexLock(&agAppMenuLock);
 
 	if (agAppMenu != NULL) {
 		AG_ViewDetach(agAppMenuWin);
 		AG_ObjectDestroy(agAppMenu);
 	}
+	
 	m->flags |= AG_MENU_GLOBAL;
 	AG_MenuSetPadding(m, 4, 4, -1, -1);
 	
@@ -80,6 +86,8 @@ AG_MenuNewGlobal(Uint flags)
 	AG_ObjectAttach(agAppMenuWin, m);
 	AG_WindowSetPadding(agAppMenuWin, 0, 0, 0, 0);
 	AG_WindowShow(agAppMenuWin);
+	
+	AG_MutexUnlock(&agAppMenuLock);
 	return (m);
 }
 
@@ -118,6 +126,7 @@ AG_MenuCollapse(AG_Menu *m, AG_MenuItem *item)
 	if (item == NULL)
 		return;
 
+	AG_ObjectLock(m);
 	for (i = 0; i < item->nsubitems; i++) {
 		if (item->subitems[i].nsubitems > 0)
 			AG_MenuCollapse(m, &item->subitems[i]);
@@ -128,24 +137,29 @@ AG_MenuCollapse(AG_Menu *m, AG_MenuItem *item)
 		AG_ViewDetach(item->view->panel);
 		item->view = NULL;
 	}
+	AG_ObjectUnlock(m);
 }
 
 void
 AG_MenuSetPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
 {
+	AG_ObjectLock(m);
 	if (lPad != -1) { m->lPad = lPad; }
 	if (rPad != -1) { m->rPad = rPad; }
 	if (tPad != -1) { m->tPad = tPad; }
 	if (bPad != -1) { m->bPad = bPad; }
+	AG_ObjectUnlock(m);
 }
 
 void
 AG_MenuSetLabelPadding(AG_Menu *m, int lPad, int rPad, int tPad, int bPad)
 {
+	AG_ObjectLock(m);
 	if (lPad != -1) { m->lPadLbl = lPad; }
 	if (rPad != -1) { m->rPadLbl = rPad; }
 	if (tPad != -1) { m->tPadLbl = tPad; }
 	if (bPad != -1) { m->bPadLbl = bPad; }
+	AG_ObjectUnlock(m);
 }
 
 static void
@@ -277,7 +291,7 @@ attached(AG_Event *event)
 		AG_WindowSetPadding(pwin, -1, -1, 0, pwin->bPad);
 }
 
-/* Generic constructor for menu items. */
+/* Generic constructor for menu items. Menu must be locked. */
 static AG_MenuItem *
 CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 {
@@ -320,15 +334,17 @@ CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 	mi->lblDisabled = -1;
 	mi->value = -1;
 	mi->flags = 0;
+	mi->icon = -1;
 
 	if (icon != NULL) {
 		if (pitem != NULL) {
 			/* Request that the parent allocate space for icons. */
 			pitem->flags |= AG_MENU_ITEM_ICONS;
 		}
-		mi->icon = AG_WidgetMapSurface(mi->pmenu, AG_DupSurface(icon));
+		/* TODO: NODUP */
+		mi->iconSrc = AG_DupSurface(icon);
 	} else {
-		mi->icon = -1;
+		mi->iconSrc = NULL;
 	}
 
 	/* If this is the application menu, resize its window. */
@@ -376,10 +392,11 @@ Init(void *obj)
 	AG_SetEvent(m, "attached", attached, NULL);
 }
 
-/* Select a different menu item icon. */
+/* Change the icon associated with a menu item. */
 void
 AG_MenuSetIcon(AG_MenuItem *mi, SDL_Surface *icon)
 {
+	AG_ObjectLock(mi->pmenu);
 	if (mi->icon == -1) {
 		mi->icon = (icon != NULL) ?
 		    AG_WidgetMapSurface(mi->pmenu, AG_DupSurface(icon)) : -1;
@@ -387,6 +404,7 @@ AG_MenuSetIcon(AG_MenuItem *mi, SDL_Surface *icon)
 		AG_WidgetReplaceSurface(mi->pmenu, mi->icon,
 		    icon != NULL ? AG_DupSurface(icon) : NULL);
 	}
+	AG_ObjectUnlock(mi->pmenu);
 }
 
 /* Change menu item text. */
@@ -394,6 +412,8 @@ void
 AG_MenuSetLabel(AG_MenuItem *mi, const char *fmt, ...)
 {
 	va_list ap;
+	
+	AG_ObjectLock(mi->pmenu);
 
 	va_start(ap, fmt);
 	Free(mi->text);
@@ -408,6 +428,8 @@ AG_MenuSetLabel(AG_MenuItem *mi, const char *fmt, ...)
 		mi->lblDisabled = -1;
 		AG_WidgetUnmapSurface(mi->pmenu, mi->lblDisabled);
 	}
+	
+	AG_ObjectUnlock(mi->pmenu);
 }
 
 /* Create a menu separator. */
@@ -416,8 +438,10 @@ AG_MenuSeparator(AG_MenuItem *pitem)
 {
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, NULL, NULL);
 	mi->flags |= AG_MENU_ITEM_NOSELECT|AG_MENU_ITEM_SEPARATOR;
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -433,8 +457,10 @@ AG_MenuSection(AG_MenuItem *pitem, const char *fmt, ...)
 	Vsnprintf(text, sizeof(text), fmt, ap);
 	va_end(ap);
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, NULL);
 	mi->flags |= AG_MENU_ITEM_NOSELECT;
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -446,9 +472,11 @@ AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, icon);
 	mi->poll = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->poll, fmt);
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -460,11 +488,13 @@ AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, icon);
 	mi->key_equiv = key;
 	mi->key_mod = kmod;
 	mi->poll = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->poll, fmt);
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -472,18 +502,25 @@ AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 void
 AG_MenuSetPollFn(AG_MenuItem *mi, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(mi->pmenu);
 	if (mi->poll != NULL) {
 		AG_UnsetEvent(mi->pmenu, mi->poll->name);
 	}
 	mi->poll = AG_SetEvent(mi->pmenu, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->poll, fmt);
+	AG_ObjectUnlock(mi->pmenu);
 }
 
 /* Create a menu item without any associated action. */
 AG_MenuItem *
 AG_MenuNode(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 {
-	return CreateItem(pitem, text, icon);
+	AG_MenuItem *node;
+
+	AG_ObjectLock(pitem->pmenu);
+	node = CreateItem(pitem, text, icon);
+	AG_ObjectUnlock(pitem->pmenu);
+	return (node);
 }
 
 /* Create a menu item associated with a function. */
@@ -494,9 +531,11 @@ AG_MenuAction(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, icon);
 	mi->clickFn = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->clickFn, fmt);
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -507,11 +546,13 @@ AG_MenuActionKb(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, icon);
 	mi->key_equiv = key;
 	mi->key_mod = kmod;
 	mi->clickFn = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->clickFn, fmt);
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -524,6 +565,9 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text,
 	AG_MenuItem *mi;
 	AG_Button *bu;
 	AG_Event *btn_ev;
+	
+	AG_ObjectLock(pitem->pmenu);
+	AG_ObjectLock(tbar);
 
 	bu = AG_ButtonNew(tbar->rows[0], 0, NULL);
 	AG_ButtonSurfaceNODUP(bu, icon);
@@ -536,6 +580,9 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text,
 	mi->key_mod = kmod;
 	mi->clickFn = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->clickFn, fmt);
+	
+	AG_ObjectUnlock(tbar);
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -545,11 +592,13 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 {
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT_BOOL;
 	mi->bind_p = (void *)boolp;
 	mi->bind_invert = inv;
 	mi->bind_lock = lock;
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -559,11 +608,13 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 {
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT8_BOOL;
 	mi->bind_p = (void *)boolp;
 	mi->bind_invert = inv;
 	mi->bind_lock = lock;
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -573,12 +624,14 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 {
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
 	mi->bind_invert = inv;
 	mi->bind_lock = lock;
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -588,12 +641,14 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 {
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT8_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
 	mi->bind_invert = inv;
 	mi->bind_lock = lock;
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -603,12 +658,14 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 {
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT16_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
 	mi->bind_invert = inv;
 	mi->bind_lock = lock;
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -618,12 +675,14 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 {
 	AG_MenuItem *mi;
 
+	AG_ObjectLock(pitem->pmenu);
 	mi = CreateItem(pitem, text, icon);
 	mi->bind_type = AG_MENU_INT32_FLAGS;
 	mi->bind_p = (void *)flagsp;
 	mi->bind_flags = flags;
 	mi->bind_invert = inv;
 	mi->bind_lock = lock;
+	AG_ObjectUnlock(pitem->pmenu);
 	return (mi);
 }
 
@@ -633,20 +692,22 @@ AG_MenuItemFreeChildren(AG_MenuItem *mi)
 {
 	int i;
 
+	AG_ObjectLock(mi->pmenu);
 	for (i = 0; i < mi->nsubitems; i++) {
 		AG_MenuItemFree(&mi->subitems[i]);
 	}
 	Free(mi->subitems);
 	mi->subitems = NULL;
 	mi->nsubitems = 0;
+	AG_ObjectUnlock(mi->pmenu);
 }
 
 /* Free an item as well as its subitems. */
 void
 AG_MenuItemFree(AG_MenuItem *mi)
 {
+	AG_ObjectLock(mi->pmenu);
 	AG_MenuItemFreeChildren(mi);
-
 	if (mi->lblEnabled != -1) {
 		AG_WidgetUnmapSurface(mi->pmenu, mi->lblEnabled);
 		mi->lblEnabled = -1;
@@ -660,6 +721,7 @@ AG_MenuItemFree(AG_MenuItem *mi)
 		mi->icon = -1;
 	}
 	Free(mi->text);
+	AG_ObjectUnlock(mi->pmenu);
 }
 
 static void
@@ -674,16 +736,20 @@ Destroy(void *p)
 void
 AG_MenuUpdateItem(AG_MenuItem *mi)
 {
+	AG_ObjectLock(mi->pmenu);
 	if (mi->poll != NULL) {
 		AG_MenuItemFreeChildren(mi);
 		AG_PostEvent(mi, mi->pmenu, mi->poll->name, NULL);
 	}
+	AG_ObjectUnlock(mi->pmenu);
 }
 
 void
 AG_MenuState(AG_MenuItem *mi, int state)
 {
+	AG_ObjectLock(mi->pmenu);
 	mi->pmenu->curState = state;
+	AG_ObjectUnlock(mi->pmenu);
 }
 
 static void
@@ -831,7 +897,10 @@ AG_PopupNew(void *pwid)
 	pm->item = pm->menu->itemSel = AG_MenuAddItem(pm->menu, NULL);
 	/* XXX redundant */
 	pm->win = NULL;
+
+	AG_ObjectLock(wid);
 	SLIST_INSERT_HEAD(&wid->menus, pm, menus);
+	AG_ObjectUnlock(wid);
 	return (pm);
 }
 
@@ -840,33 +909,41 @@ AG_PopupShow(AG_PopupMenu *pm)
 {
 	int x, y;
 
+	AG_ObjectLock(pm->menu);
 	AG_PopupHide(pm);
 	SDL_GetMouseState(&x, &y);
 	pm->win = AG_MenuExpand(pm->menu, pm->item, x, y);
+	AG_ObjectUnlock(pm->menu);
 }
 
 void
 AG_PopupShowAt(AG_PopupMenu *pm, int x, int y)
 {
+	AG_ObjectLock(pm->menu);
 	AG_PopupHide(pm);
 	pm->win = AG_MenuExpand(pm->menu, pm->item, x, y);
+	AG_ObjectUnlock(pm->menu);
 }
 
 void
 AG_PopupHide(AG_PopupMenu *pm)
 {
+	AG_ObjectLock(pm->menu);
 	if (pm->win != NULL) {
 		AG_MenuCollapse(pm->menu, pm->item);
 		pm->win = NULL;
 	}
+	AG_ObjectUnlock(pm->menu);
 }
 
 void
 AG_PopupDestroy(void *pWid, AG_PopupMenu *pm)
 {
-	if (pWid != NULL)
+	if (pWid != NULL) {
+		AG_ObjectLock(pWid);
 		SLIST_REMOVE(&WIDGET(pWid)->menus, pm, ag_popup_menu, menus);
-
+		AG_ObjectUnlock(pWid);
+	}
 	if (pm->menu != NULL) {
 		AG_MenuCollapse(pm->menu, pm->item);
 		AG_ObjectDestroy(pm->menu);

@@ -40,7 +40,6 @@ typedef struct ag_label {
 #define AG_LABEL_PARTIAL	0x10	/* Partial mode (RO) */
 #define AG_LABEL_REGEN		0x20	/* Regenerate surface at next draw */
 #define AG_LABEL_EXPAND		(AG_LABEL_HFILL|AG_LABEL_VFILL)
-	AG_Mutex lock;
 	char *text;			/* Text buffer */
 	int surface;			/* Label surface */
 	int surfaceCont;		/* [...] surface */
@@ -70,7 +69,6 @@ void	AG_LabelText(AG_Label *, const char *, ...)
 	    FORMAT_ATTRIBUTE(printf, 2, 3)
 	    NONNULL_ATTRIBUTE(2);
 
-void	 AG_LabelSetSurface(AG_Label *, SDL_Surface *);
 void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
 void	 AG_LabelJustify(AG_Label *, enum ag_text_justify);
 #define	 AG_LabelSetPaddingLeft(lbl,v)   AG_LabelSetPadding((lbl),(v),-1,-1,-1)

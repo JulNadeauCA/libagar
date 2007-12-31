@@ -22,7 +22,8 @@ typedef struct ag_menu_item {
 	char *text;			/* Label text */
 	int lblEnabled;			/* Label surface (enabled) */
 	int lblDisabled;		/* Label surface (disabled) */
-	int icon;			/* Icon name */
+	int icon;			/* Icon surface mapping */
+	SDL_Surface *iconSrc;		/* Icon surface source */
 	int value;			/* Default bool value binding */
 	int state;			/* Default state flag binding */
 

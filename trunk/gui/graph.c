@@ -163,6 +163,7 @@ MouseButtonUp(AG_Event *event)
 	}
 }
 
+/* Widget must be locked */
 AG_GraphEdge *
 AG_GraphEdgeFind(AG_Graph *gf, void *userPtr)
 {
@@ -181,9 +182,11 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 {
 	AG_GraphEdge *edge;
 
+	AG_ObjectLock(gf);
 	TAILQ_FOREACH(edge, &gf->edges, edges) {
 		if (edge->v1 == v1 && edge->v2 == v2) {
 			AG_SetError(_("Existing edge"));
+			AG_ObjectUnlock(gf);
 			return (NULL);
 		}
 	}
@@ -206,6 +209,8 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	                                           sizeof(AG_GraphEdge *));
 	edge->v1->edges[edge->v1->nedges++] = edge;
 	edge->v2->edges[edge->v2->nedges++] = edge;
+
+	AG_ObjectUnlock(gf);
 	return (edge);
 }
 
@@ -222,7 +227,9 @@ void
 AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
 {
 	va_list ap;
-
+	
+	AG_ObjectLock(ge->graph);
+	
 	va_start(ap, fmt);
 	Vsnprintf(ge->labelTxt, sizeof(ge->labelTxt), fmt, ap);
 	va_end(ap);
@@ -234,18 +241,24 @@ AG_GraphEdgeLabel(AG_GraphEdge *ge, const char *fmt, ...)
 	AG_TextColor32(ge->labelColor);
 	ge->labelSu = AG_WidgetMapSurface(ge->graph,
 	    AG_TextRender(ge->labelTxt));
+	
+	AG_ObjectUnlock(ge->graph);
 }
 
 void
 AG_GraphEdgeColorLabel(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 {
+	AG_ObjectLock(edge->graph);
 	edge->labelColor = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	AG_ObjectUnlock(edge->graph);
 }
 
 void
 AG_GraphEdgeColor(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 {
+	AG_ObjectLock(edge->graph);
 	edge->edgeColor = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	AG_ObjectUnlock(edge->graph);
 }
 
 static void
@@ -403,6 +416,8 @@ AG_GraphFreeVertices(AG_Graph *gf)
 	AG_GraphVertex *vtx, *vtxNext;
 	AG_GraphEdge *edge, *edgeNext;
 
+	AG_ObjectLock(gf);
+	
 	for (vtx = TAILQ_FIRST(&gf->vertices);
 	     vtx != TAILQ_END(&gf->vertices);
 	     vtx = vtxNext) {
@@ -424,6 +439,8 @@ AG_GraphFreeVertices(AG_Graph *gf)
 	gf->yMin = 0;
 	gf->yMax = 0;
 	gf->flags &= ~(AG_GRAPH_DRAGGING);
+	
+	AG_ObjectUnlock(gf);
 }
 
 static void
@@ -435,8 +452,10 @@ Destroy(void *p)
 void
 AG_GraphSizeHint(AG_Graph *gf, Uint w, Uint h)
 {
+	AG_ObjectLock(gf);
 	gf->wPre = w;
 	gf->hPre = h;
+	AG_ObjectUnlock(gf);
 }
 
 static void
@@ -568,6 +587,7 @@ Draw(void *p)
 	}
 }
 
+/* Graph must be locked. */
 AG_GraphVertex *
 AG_GraphVertexFind(AG_Graph *gf, void *userPtr)
 {
@@ -600,8 +620,12 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 	vtx->userPtr = userPtr;
 	vtx->edges = NULL;
 	vtx->nedges = 0;
+
+	AG_ObjectLock(gf);
 	TAILQ_INSERT_TAIL(&gf->vertices, vtx, vertices);
 	gf->nvertices++;
+	AG_ObjectUnlock(gf);
+
 	return (vtx);
 }
 
@@ -618,19 +642,25 @@ AG_GraphVertexFree(AG_GraphVertex *vtx)
 void
 AG_GraphVertexColorLabel(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 {
+	AG_ObjectLock(vtx->graph);
 	vtx->labelColor = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	AG_ObjectUnlock(vtx->graph);
 }
 
 void
 AG_GraphVertexColorBG(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 {
+	AG_ObjectLock(vtx->graph);
 	vtx->bgColor = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	AG_ObjectUnlock(vtx->graph);
 }
 
 void
 AG_GraphVertexLabel(AG_GraphVertex *vtx, const char *fmt, ...)
 {
 	va_list ap;
+	
+	AG_ObjectLock(vtx->graph);
 
 	va_start(ap, fmt);
 	Vsnprintf(vtx->labelTxt, sizeof(vtx->labelTxt), fmt, ap);
@@ -642,12 +672,16 @@ AG_GraphVertexLabel(AG_GraphVertex *vtx, const char *fmt, ...)
 	AG_TextColor32(vtx->labelColor);
 	vtx->labelSu = AG_WidgetMapSurface(vtx->graph,
 	    AG_TextRender(vtx->labelTxt));
+	
+	AG_ObjectUnlock(vtx->graph);
 }
 
 void
 AG_GraphVertexPosition(AG_GraphVertex *vtx, int x, int y)
 {
 	AG_Graph *gf = vtx->graph;
+	
+	AG_ObjectLock(gf);
 
 	vtx->x = x;
 	vtx->y = y;
@@ -656,19 +690,25 @@ AG_GraphVertexPosition(AG_GraphVertex *vtx, int x, int y)
 	if (y < gf->yMin) { gf->yMin = y; }
 	if (x > gf->xMax) { gf->xMax = x; }
 	if (y > gf->yMax) { gf->yMax = y; }
+	
+	AG_ObjectUnlock(gf);
 }
 
 void
 AG_GraphVertexSize(AG_GraphVertex *vtx, Uint w, Uint h)
 {
+	AG_ObjectLock(vtx->graph);
 	vtx->w = w;
 	vtx->h = h;
+	AG_ObjectUnlock(vtx->graph);
 }
 
 void
 AG_GraphVertexStyle(AG_GraphVertex *vtx, enum ag_graph_vertex_style style)
 {
+	AG_ObjectLock(vtx->graph);
 	vtx->style = style;
+	AG_ObjectUnlock(vtx->graph);
 }
 
 static int 
@@ -746,9 +786,13 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 	AG_GraphVertex **vSorted, *vtx;
 	int nSorted = 0, i;
 	int tx, ty;
+	
+	AG_ObjectLock(gf);
 
-	if (gf->nvertices == 0 || gf->nedges == 0)
+	if (gf->nvertices == 0 || gf->nedges == 0) {
+		AG_ObjectUnlock(gf);
 		return;
+	}
 
 	/* Sort the vertices based on their number of connected edges. */
 	vSorted = Malloc(gf->nvertices*sizeof(AG_GraphVertex *));
@@ -789,6 +833,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 			continue;
 		}
 	}
+	AG_ObjectUnlock(gf);
 	Free(vSorted);
 }
 

@@ -274,6 +274,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	AG_WidgetBinding *stateb;
 	void *p;
 
+	AG_ObjectLock(cb);
 	stateb = AG_WidgetGetBinding(cb, "state", &p);
 	switch (stateb->vtype) {
 	case AG_WIDGET_BOOL:
@@ -340,6 +341,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	}
 	AG_WidgetBindingChanged(stateb);
 	AG_WidgetUnlockBinding(stateb);
+	AG_ObjectUnlock(cb);
 }
 
 AG_WidgetClass agCheckboxClass = {

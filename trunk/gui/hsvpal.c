@@ -36,6 +36,7 @@
 #include <string.h>
 
 static float cH = 0.0, cS = 0.0, cV = 0.0, cA = 0.0;	/* Copy buffer */
+static AG_Mutex CopyLock = AG_MUTEX_INITIALIZER;
 
 static void RenderPalette(AG_HSVPal *);
 
@@ -399,10 +400,12 @@ ShowRGBValue(AG_Event *event)
 	AG_HSVPal *pal = AG_PTR(1);
 	Uint8 r, g, b;
 	float h, s, v;
-	
+
+	AG_ObjectLock(pal);
 	h = AG_WidgetFloat(pal, "hue");
 	s = AG_WidgetFloat(pal, "saturation");
 	v = AG_WidgetFloat(pal, "value");
+	AG_ObjectUnlock(pal);
 
 	AG_HSV2RGB(h, s, v, &r, &g, &b);
 	AG_TextMsg(AG_MSG_INFO, "%.2f,%.2f,%.2f -> %u,%u,%u", h, s, v, r, g, b);
@@ -485,13 +488,16 @@ static void
 SetComplementaryColor(AG_Event *event)
 {
 	AG_HSVPal *pal = AG_PTR(1);
-	float hue = AG_WidgetFloat(pal, "hue");
+	float hue;
 
+	AG_ObjectLock(pal);
+	hue = AG_WidgetFloat(pal, "hue");
 	AG_WidgetSetFloat(pal, "hue", ((int)hue+180) % 359);
 	UpdatePixelFromHSVA(pal);
 	pal->flags |= AG_HSVPAL_DIRTY;
 	AG_PostEvent(NULL, pal, "h-changed", NULL);
 	AG_PostEvent(NULL, pal, "sv-changed", NULL);
+	AG_ObjectUnlock(pal);
 }
 
 static void
@@ -499,10 +505,14 @@ CopyColor(AG_Event *event)
 {
 	AG_HSVPal *pal = AG_PTR(1);
 	
+	AG_ObjectLock(pal);
+	AG_MutexLock(&CopyLock);
 	cH = AG_WidgetFloat(pal, "hue");
 	cS = AG_WidgetFloat(pal, "saturation");
 	cV = AG_WidgetFloat(pal, "value");
 	cA = AG_WidgetFloat(pal, "alpha");
+	AG_MutexUnlock(&CopyLock);
+	AG_ObjectUnlock(pal);
 }
 
 static void
@@ -510,14 +520,21 @@ PasteColor(AG_Event *event)
 {
 	AG_HSVPal *pal = AG_PTR(1);
 
+	AG_ObjectLock(pal);
+
+	AG_MutexLock(&CopyLock);
 	AG_WidgetSetFloat(pal, "hue", cH);
 	AG_WidgetSetFloat(pal, "saturation", cS);
 	AG_WidgetSetFloat(pal, "value", cV);
 	AG_WidgetSetFloat(pal, "alpha", cA);
+	AG_MutexUnlock(&CopyLock);
+	
 	UpdatePixelFromHSVA(pal);
 	pal->flags |= AG_HSVPAL_DIRTY;
 	AG_PostEvent(NULL, pal, "h-changed", NULL);
 	AG_PostEvent(NULL, pal, "sv-changed", NULL);
+
+	AG_ObjectUnlock(pal);
 }
 
 static void
@@ -620,7 +637,7 @@ mousemotion(AG_Event *event)
 }
 
 static void
-binding_changed(AG_Event *event)
+bound(AG_Event *event)
 {
 	AG_HSVPal *hsv = AG_SELF();
 	AG_WidgetBinding *bind = AG_PTR(1);
@@ -674,7 +691,7 @@ Init(void *obj)
 	AG_SetEvent(pal, "window-mousebuttonup", mousebuttonup, NULL);
 	AG_SetEvent(pal, "window-mousebuttondown", mousebuttondown, NULL);
 	AG_SetEvent(pal, "window-mousemotion", mousemotion, NULL);
-	AG_SetEvent(pal, "widget-bound", binding_changed, NULL);
+	AG_SetEvent(pal, "widget-bound", bound, NULL);
 }
 
 static void

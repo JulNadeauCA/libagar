@@ -130,7 +130,7 @@ AG_InitGUI(Uint flags)
 
 	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)
 		AG_RegisterClass(*ops);
-	
+
 	/* Initialize the GUI subsystems. */
 	AG_ColorsInit();
 	AG_InitPrimitives();
@@ -161,7 +161,5 @@ AG_InitGUI(Uint flags)
 				SDL_JoystickEventState(SDL_ENABLE);
 		}
 	}
-	return (0);
-
 	return (0);
 }

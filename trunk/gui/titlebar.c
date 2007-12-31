@@ -89,7 +89,9 @@ AG_TitlebarNew(void *parent, Uint flags)
 		CreateCloseButton(tbar);
 
 	AG_ObjectAttach(parent, tbar);
+	AG_ObjectLock(tbar);
 	tbar->win = (AG_Window *)parent;
+	AG_ObjectUnlock(tbar);
 	return (tbar);
 }
 
@@ -99,11 +101,13 @@ MaximizeWindow(AG_Event *event)
 	AG_Titlebar *tbar = AG_PTR(1);
 	AG_Window *win = tbar->win;
 
+	AG_ObjectLock(win);
 	if (win->flags & AG_WINDOW_MAXIMIZED) {
 		AG_WindowUnmaximize(win);
 	} else {
 		AG_WindowMaximize(win);
 	}
+	AG_ObjectUnlock(win);
 }
 
 static void
@@ -167,11 +171,9 @@ MouseButtonDown(AG_Event *event)
 
 	tbar->pressed = 1;
 
-	AG_MutexLock(&agView->lock);
 	agView->winop = AG_WINOP_MOVE;
 	agView->winToFocus = tbar->win;
 	agView->winSelected = tbar->win;
-	AG_MutexUnlock(&agView->lock);
 }
 
 static void
@@ -181,16 +183,16 @@ MouseButtonUp(AG_Event *event)
 	
 	tbar->pressed = 0;
 	
-	AG_MutexLock(&agView->lock);
 	agView->winop = AG_WINOP_NONE;
 	agView->winSelected = NULL;
-	AG_MutexUnlock(&agView->lock);
 }
 
 void
 AG_TitlebarSetCaption(AG_Titlebar *tbar, const char *caption)
 {
+	AG_ObjectLock(tbar);
 	AG_LabelText(tbar->label, (caption == NULL) ? "" : caption);
+	AG_ObjectUnlock(tbar);
 }
 
 AG_WidgetClass agTitlebarClass = {

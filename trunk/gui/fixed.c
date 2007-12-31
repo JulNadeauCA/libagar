@@ -59,8 +59,10 @@ Init(void *obj)
 void
 AG_FixedSizeHint(AG_Fixed *fx, int w, int h)
 {
+	AG_ObjectLock(fx);
 	fx->wPre = w;
 	fx->hPre = h;
+	AG_ObjectUnlock(fx);
 }
 
 static void
@@ -134,6 +136,9 @@ AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 	AG_SizeReq r;
 	AG_SizeAlloc a;
 
+	AG_ObjectLock(fx);
+	AG_ObjectLock(chld);
+	
 	AG_ObjectAttach(fx, chld);
 	AG_WidgetSizeReq(chld, &r);
 	a.w = r.w;
@@ -142,6 +147,9 @@ AG_FixedPut(AG_Fixed *fx, void *p, int x, int y)
 	a.y = y;
 	AG_WidgetSizeAlloc(chld, &a);
 	UpdateWindow(fx);
+	
+	AG_ObjectUnlock(chld);
+	AG_ObjectUnlock(fx);
 }
 
 void
@@ -150,6 +158,9 @@ AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 	AG_Widget *chld = p;
 	AG_SizeReq r;
 	AG_SizeAlloc a;
+	
+	AG_ObjectLock(fx);
+	AG_ObjectLock(chld);
 
 	AG_WidgetSizeReq(chld, &r);
 	a.w = r.w;
@@ -158,6 +169,9 @@ AG_FixedMove(AG_Fixed *fx, void *p, int x, int y)
 	a.y = (y == -1) ? chld->y : y;
 	AG_WidgetSizeAlloc(chld, &a);
 	UpdateWindow(fx);
+	
+	AG_ObjectUnlock(chld);
+	AG_ObjectUnlock(fx);
 }
 
 void
@@ -165,20 +179,33 @@ AG_FixedSize(AG_Fixed *fx, void *p, int w, int h)
 {
 	AG_Widget *chld = p;
 	AG_SizeAlloc a;
+	
+	AG_ObjectLock(fx);
+	AG_ObjectLock(chld);
 
 	a.w = (w == -1) ? chld->w : w;
 	a.h = (h == -1) ? chld->h : h;
 	a.x = chld->x;
 	a.y = chld->y;
+
 	AG_WidgetSizeAlloc(chld, &a);
 	UpdateWindow(fx);
+
+	AG_ObjectUnlock(chld);
+	AG_ObjectUnlock(fx);
 }
 
 void
-AG_FixedDel(AG_Fixed *fx, void *child)
+AG_FixedDel(AG_Fixed *fx, void *chld)
 {
-	AG_ObjectDetach(child);
+	AG_ObjectLock(fx);
+	AG_ObjectLock(chld);
+	
+	AG_ObjectDetach(chld);
 	UpdateWindow(fx);
+	
+	AG_ObjectUnlock(chld);
+	AG_ObjectUnlock(fx);
 }
 
 AG_WidgetClass agFixedClass = {

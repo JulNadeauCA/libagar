@@ -115,7 +115,6 @@ typedef struct ag_table {
 	void *selected_cell;		/* Default `selected-cell' binding */
 	int prew, preh;			/* Size hint */
 
-	AG_Mutex lock;
 	int wTbl;			/* Width of table display area */
 	int row_h;			/* Row height in pixels */
 	int col_h;			/* Column header height in pixels */

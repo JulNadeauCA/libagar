@@ -101,19 +101,13 @@ typedef struct ag_widget_class {
 The
 .Va draw
 operation (if not NULL) is responsible for rendering the widget.
-If the current display is in OpenGL mode, the
+Throughout the documentation, the
 .Va draw
-function of a widget can issue GL calls, but it is best to use the
-.Fn AG_Draw*
-functions whenever possible.
-When an OpenGL rendering context is needed,
-.Xr AG_GLView 3
-(or the higher-level
-.Xr SG_View 3 )
-widget should be used.
-See the
-.Dq RENDERING AND PRIMITIVES
-section for information about widget rendering.
+operation is referred to as the
+.Sq rendering context ,
+and some functions such as
+.Fn AG_WidgetBlitSurface
+are not safe to invoke in any other context.
 .Pp
 The
 .Va size_request
@@ -255,6 +249,9 @@ The
 .Fn AG_WidgetFindFocused
 function searches the given window for a focused widget and returns a pointer
 to it if it was found, or NULL otherwise.
+With threads, the return value is only valid as long as the
+.Xr AG_View 3
+VFS is locked.
 .Sh COORDINATES
 .nr nS 1
 .Ft int
@@ -280,9 +277,11 @@ are inside the widget area.
 .Sh BLITTING SURFACES
 These functions manage blitting of graphical surfaces.
 They are designed specifically for use in GUI widgets.
-They must be called from the
+The
+.Fn AG_WidgetBlit*
+routines must all be invoked from rendering context (i.e., the
 .Fa draw
-functions of widgets exclusively and may not be used in any other context.
+operation of widgets), and may not be used in any other context.
 .Pp
 .nr nS 1
 .Ft void
@@ -292,10 +291,10 @@ functions of widgets exclusively and may not be used in any other context.
 .Fn AG_WidgetMapSurface "AG_Widget *widget" "SDL_Surface *su"
 .Pp
 .Ft void
-.Fn AG_WidgetUnmapSurface "AG_Widget *widget" "int surface_id"
+.Fn AG_WidgetReplaceSurface "AG_Widget *widget" "int surface_id" "SDL_Surface *newSurface"
 .Pp
 .Ft void
-.Fn AG_WidgetReplaceSurface "AG_Widget *widget" "int surface_id" "SDL_Surface *newSurface"
+.Fn AG_WidgetUnmapSurface "AG_Widget *widget" "int surface_id"
 .Pp
 .Ft void
 .Fn AG_WidgetUpdateSurface "AG_Widget *widget" "int surface_id"
@@ -312,19 +311,40 @@ The
 function performs a software->hardware blit from the SDL surface
 .Fa src
 to the video display at the given widget coordinates.
+.Fn AG_WidgetBlit
+must invoked in rendering context.
 .Pp
 Software to hardware blits are slow, so the
 .Fn AG_WidgetMapSurface
 interface provides a way to take advantage of hardware->hardware blits.
-If a texture unit is available, this function causes the given surface
-to be uploaded to the graphics hardware and a per-widget surface handle
-is returned.
-.Fn AG_WidgetUnmapSurface
-destroys the given surface mapping.
+If a texture unit is available, a hardware texture corresponding to the
+given surface will be used.
+The function returns a surface name.
+Under multithreading,
+.Fn AG_WidgetMapSurface
+may be invoked from any context, but the returned name is only valid as
+long as the widget is locked (see
+.Xr AG_ObjectLock 3 ) .
 .Pp
 .Fn AG_WidgetReplaceSurface
 replaces the contents of a previously-mapped surface with the contents of
 .Fa newSurface .
+.Pp
+.Fn AG_WidgetUnmapSurface
+destroys the given surface mapping.
+It is equivalent to invoking
+.Fn AG_WidgetReplaceSurface
+with a NULL surface.
+The function is safe to use from any context.
+.Pp
+It is important to note that in OpenGL mode,
+.Fn AG_WidgetReplaceSurface
+and
+.Fn AG_WidgetUnmapSurface
+will not immediately delete any previous texture associated with the previous
+surface.
+Instead, it will queue the delete operation for future execution from
+rendering context, as required by thread safety.
 .Pp
 The
 .Fn AG_WidgetUpdateSurface
@@ -344,6 +364,7 @@ onto the destination widget
 at coordinates
 .Fa x ,
 .Fa y .
+This function must be invoked in rendering context.
 .Pp
 The
 .Fn AG_WidgetBlitSurface
@@ -870,6 +891,12 @@ was unlimited.
 .Ft "AG_Widget *"
 .Fn AG_WidgetFind "AG_Display *view" "const char *name"
 .Pp
+.Ft "AG_Widget *"
+.Fn AG_WidgetFindPoint "const char *classMask" "int x" "int y"
+.Pp
+.Ft "AG_Widget *"
+.Fn AG_WidgetFindRect "const char *classMask" "int x" "int y" "int w" "int h"
+.Pp
 .Ft "void"
 .Fn AG_SetStyle "AG_Widget *widget" "AG_Style *style"
 .Pp
@@ -879,10 +906,29 @@ searches the parent objects of the given widget for an
 .Xr AG_Window 3
 (or a subclass of it).
 If one is found, it is returned, otherwise the function returns NULL.
+With threads, the return value is only valid as long as the view is locked
+(see
+.Xr AG_View 3 ) .
 .Pp
 .Fn AG_WidgetFind
 searches for a given widget by name, given an absolute path,
 and returns a pointer to the widget or NULL.
+.Pp
+.Fn AG_WidgetFindPoint
+searches for a widget matching the given class mask enclosing the point
+specified in display (pixel) coordinates.
+The
+.Fn AG_WidgetFindRect
+variant requires that the widget enclose the specified rectangle.
+.Pp
+With threads, the return value of
+.Fn AG_WidgetFind ,
+.Fn AG_WidgetFindPoint
+and
+.Fn AG_WidgetFindRect
+is only accurate as long as the
+.Xr AG_View 3
+VFS is locked.
 .Pp
 The
 .Fn AG_SetStyle

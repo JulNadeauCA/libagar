@@ -68,7 +68,6 @@ Init(void *obj)
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, 0);
 	AG_WidgetBindInt(cons->vBar, "value", &cons->rOffs);
 	AG_WidgetBindInt(cons->vBar, "max", &cons->nLines);
-	AG_MutexInitRecursive(&cons->lock);
 
 	AG_SetEvent(cons, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(cons, "window-keyup", KeyUp, NULL);
@@ -110,12 +109,11 @@ Draw(void *p)
 
 	STYLE(cons)->ConsoleBackground(cons, cons->cBg);
 
-	AG_MutexLock(&cons->lock);
 	if (cons->rOffs >= cons->nLines) {
 		cons->rOffs = cons->nLines-1;
 	}
 	if (cons->nLines == 0) {
-		goto out;
+		return;
 	}
 	for (r = cons->rOffs, y = cons->padding;
 	     r < cons->nLines && y < WIDGET(cons)->h;
@@ -131,8 +129,6 @@ Draw(void *p)
 		AG_WidgetBlitSurface(cons, ln->surface, cons->padding, y);
 		y += WSURFACE(cons,ln->surface)->h + cons->lineskip;
 	}
-out:
-	AG_MutexUnlock(&cons->lock);
 }
 
 static void
@@ -177,9 +173,11 @@ KeyUp(AG_Event *event)
 }
 
 void
-AG_ConsoleSetPadding(AG_Console *bu, int padding)
+AG_ConsoleSetPadding(AG_Console *cons, int padding)
 {
-	bu->padding = padding;
+	AG_ObjectLock(cons);
+	cons->padding = padding;
+	AG_ObjectUnlock(cons);
 }
 
 AG_ConsoleLine *
@@ -187,7 +185,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 {
 	AG_ConsoleLine *ln;
 
-	AG_MutexLock(&cons->lock);
+	AG_ObjectLock(cons);
 
 	cons->lines = Realloc(cons->lines, (cons->nLines+1) *
 				           sizeof(AG_ConsoleLine));
@@ -199,6 +197,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 		ln->text = NULL;
 		ln->len = 0;
 	}
+	ln->cons = cons;
 	ln->selected = 0;
 	ln->p = NULL;
 	ln->font = NULL;
@@ -206,7 +205,7 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	ln->cBg = SDL_MapRGBA(agVideoFmt, 0, 0, 0, 0);
 	ln->cFg = SDL_MapRGB(agVideoFmt, 250, 250, 230);
 	
-	AG_MutexUnlock(&cons->lock);
+	AG_ObjectUnlock(cons);
 	return (ln);
 }
 
@@ -216,26 +215,32 @@ AG_ConsoleMsg(AG_Console *cons, const char *fmt, ...)
 	AG_ConsoleLine *ln;
 	va_list args;
 
-	AG_MutexLock(&cons->lock);
+	AG_ObjectLock(cons);
+
 	ln = AG_ConsoleAppendLine(cons, NULL);
 	va_start(args, fmt);
 	Vasprintf(&ln->text, fmt, args);
 	va_end(args);
 	ln->len = strlen(ln->text);
-	AG_MutexUnlock(&cons->lock);
+	
+	AG_ObjectUnlock(cons);
 	return (ln);
 }
 
 void
 AG_ConsoleMsgPtr(AG_ConsoleLine *ln, void *p)
 {
+	AG_ObjectLock(ln->cons);
 	ln->p = p;
+	AG_ObjectUnlock(ln->cons);
 }
 
 void
 AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
 {
+	AG_ObjectLock(ln->cons);
 	ln->icon = icon;
+	AG_ObjectUnlock(ln->cons);
 }
 
 AG_WidgetClass agConsoleClass = {

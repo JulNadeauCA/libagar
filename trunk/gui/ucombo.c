@@ -53,12 +53,15 @@ AG_UComboNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt,
 	AG_Event *ev;
 
 	com = AG_UComboNew(parent, flags);
+	AG_ObjectLock(com);
 	com->list->flags |= AG_TLIST_POLL;
 	ev = AG_SetEvent(com->list, "tlist-poll", fn, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
+	AG_ObjectUnlock(com);
 	return (com);
 }
 
+/* The UCombo must be locked. */
 static void
 Collapse(AG_UCombo *com)
 {
@@ -87,8 +90,11 @@ ModalClose(AG_Event *event)
 {
 	AG_UCombo *com = AG_PTR(1);
 
-	if (com->panel != NULL)
+	AG_ObjectLock(com);
+	if (com->panel != NULL) {
 		Collapse(com);
+	}
+	AG_ObjectUnlock(com);
 }
 
 static void
@@ -99,6 +105,7 @@ Expand(AG_Event *event)
 	AG_SizeReq rList;
 	int x, y, w, h;
 
+	AG_ObjectLock(com);
 	if (expand) {
 		com->panel = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
 		AG_WindowSetPadding(com->panel, 0, 0, 0, 0);
@@ -124,6 +131,7 @@ Expand(AG_Event *event)
 	} else {
 		Collapse(com);
 	}
+	AG_ObjectUnlock(com);
 }
 
 static void
@@ -133,15 +141,16 @@ SelectedItem(AG_Event *event)
 	AG_UCombo *com = AG_PTR(1);
 	AG_TlistItem *it;
 
-	AG_MutexLock(&tl->lock);
+	AG_ObjectLock(com);
+	AG_ObjectLock(tl);
 	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
 		it->selected++;
 		AG_ButtonText(com->button, "%s", it->text);
 		AG_PostEvent(NULL, com, "ucombo-selected", "%p", it);
 	}
-	AG_MutexUnlock(&tl->lock);
-
 	Collapse(com);
+	AG_ObjectUnlock(tl);
+	AG_ObjectUnlock(com);
 }
 
 static void
@@ -173,15 +182,19 @@ Init(void *obj)
 void
 AG_UComboSizeHint(AG_UCombo *com, const char *text, int h)
 {
+	AG_ObjectLock(com);
 	AG_TextSize(text, &com->wPreList, NULL);
 	com->hPreList = h;
+	AG_ObjectUnlock(com);
 }
 
 void
 AG_UComboSizeHintPixels(AG_UCombo *com, int w, int h)
 {
+	AG_ObjectLock(com);
 	com->wPreList = w;
 	com->hPreList = h;
+	AG_ObjectUnlock(com);
 }
 
 static void
@@ -238,4 +251,3 @@ AG_WidgetClass agUComboClass = {
 	SizeRequest,
 	SizeAllocate
 };
-

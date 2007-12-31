@@ -17,6 +17,8 @@
 
 #define AG_CONSOLE_LINE_MAX	1024
 
+struct ag_console;
+
 typedef struct ag_console_line {
 	char *text;			/* Line text */
 	size_t len;			/* Length not including NUL */
@@ -27,6 +29,7 @@ typedef struct ag_console_line {
 	Uint32 cFg;			/* Foreground color (display fmt) */
 	Uint32 cBg;			/* Background color (display fmt) */
 	void *p;			/* User pointer */
+	struct ag_console *cons;	/* Back pointer to Console */
 } AG_ConsoleLine;
 
 typedef struct ag_console {
@@ -37,7 +40,6 @@ typedef struct ag_console {
 #define AG_CONSOLE_EXPAND	(AG_CONSOLE_HFILL|AG_CONSOLE_VFILL)
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
-	AG_Mutex lock;			/* Lock on buffer content */
 	AG_ConsoleLine *lines;		/* Lines in buffer */
 	Uint nLines;			/* Line count */
 	Uint rOffs;			/* Row display offset */

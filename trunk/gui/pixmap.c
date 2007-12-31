@@ -167,45 +167,84 @@ fail:
 }
 #endif
 
+/*
+ * Map an existing surface. Returned surface ID is valid as long as pixmap
+ * is locked.
+ */
 int
 AG_PixmapAddSurface(AG_Pixmap *px, SDL_Surface *su)
 {
-	return (AG_WidgetMapSurface(px, su));
+	int name;
+
+	AG_ObjectLock(px);
+	name = AG_WidgetMapSurfaceNODUP(px, su);
+	AG_ObjectUnlock(px);
+	return (name);
 }
 
+/*
+ * Map an existing surface from a BMP file. Returned surface ID is valid as
+ * long as pixmap is locked.
+ */
 int
 AG_PixmapAddSurfaceFromBMP(AG_Pixmap *px, const char *path)
 {
 	SDL_Surface *bmp;
+	int name;
 
 	if ((bmp = SDL_LoadBMP(path)) == NULL) {
 		return (-1);
 	}
-	return AG_WidgetMapSurface(px, bmp);
+	AG_ObjectLock(px);
+	name = AG_WidgetMapSurface(px, bmp);
+	AG_ObjectUnlock(px);
+	return (name);
 }
 
+/*
+ * Create a copy of a surface and map it. Returned surface ID is valid as
+ * long as pixmap is locked.
+ */
 int
 AG_PixmapAddSurfaceCopy(AG_Pixmap *px, SDL_Surface *su)
 {
-	return (AG_WidgetMapSurface(px, AG_DupSurface(su)));
+	SDL_Surface *dup;
+	int name;
+
+	dup = AG_DupSurface(su);
+	AG_ObjectLock(px);
+	name = AG_WidgetMapSurface(px, dup);
+	AG_ObjectUnlock(px);
+	return (name);
 }
 
+/*
+ * Create a scaled version of a surface and map it. Returned surface ID
+ * is valid as long as pixmap is locked.
+ */
 int
 AG_PixmapAddSurfaceScaled(AG_Pixmap *px, SDL_Surface *su, Uint w, Uint h)
 {
-	SDL_Surface *su2 = NULL;
+	SDL_Surface *scaled = NULL;
+	int name;
 	
-	AG_ScaleSurface(su, w, h, &su2);
-	return (AG_WidgetMapSurface(px, su2));
+	AG_ScaleSurface(su, w, h, &scaled);
+	AG_ObjectLock(px);
+	name = AG_WidgetMapSurface(px, scaled);
+	AG_ObjectUnlock(px);
+	return (name);
 }
 
+/* Replace the current surface with a scaled version of a surface. */
 void
 AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, SDL_Surface *su, Uint w, Uint h)
 {
-	SDL_Surface *su2 = NULL;
+	SDL_Surface *scaled = NULL;
 
-	AG_ScaleSurface(su, w, h, &su2);
-	AG_WidgetReplaceSurface(px, px->n, su2);
+	AG_ScaleSurface(su, w, h, &scaled);
+	AG_ObjectLock(px);
+	AG_WidgetReplaceSurface(px, px->n, scaled);
+	AG_ObjectUnlock(px);
 }
 
 static void

@@ -24,7 +24,6 @@
 
 typedef struct ag_mfspinbutton {
 	struct ag_widget wid;
-	AG_Mutex lock;
 	double xvalue, yvalue;		/* Default x/y value bindings */
 	double min, max;		/* Default range bindings */
 	double inc;			/* Increment for buttons */

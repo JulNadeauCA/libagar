@@ -958,9 +958,7 @@ Minus(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 
 #ifdef HAVE_OPENGL
 /*
- * OpenGL versions of the primitives. Note that we do not bother using
- * LockGL(), so the primitives are not safe to invoke anywhere outside
- * of widget draw functions.
+ * OpenGL versions of the primitives.
  */
 
 static void

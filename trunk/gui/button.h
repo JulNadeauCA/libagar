@@ -18,6 +18,7 @@ typedef struct ag_button {
 	int state;			/* Default state binding */
 	char *text;			/* Label text */
 	int surface;			/* Label surface handle */
+	SDL_Surface *surfaceSrc;	/* For ButtonSurface() */
 	enum ag_text_justify justify;	/* Label justification */
 	enum ag_text_valign valign;	/* Vertical alignment */
 	Uint flags;
@@ -28,6 +29,7 @@ typedef struct ag_button {
 #define AG_BUTTON_VFILL		0x020	/* Fill available height */
 #define AG_BUTTON_REGEN		0x080	/* Label surface need updating */
 #define AG_BUTTON_TEXT_NODUP	0x100	/* Label text string is static */
+#define AG_BUTTON_SURFACE_NODUP	0x200	/* For ButtonSurfaceNODUP() */
 #define AG_BUTTON_EXPAND	(AG_BUTTON_HFILL|AG_BUTTON_VFILL)
 
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */

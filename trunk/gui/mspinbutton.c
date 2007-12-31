@@ -59,7 +59,6 @@ Bound(AG_Event *event)
 
 	if (strcmp(binding->name, "xvalue") == 0 ||
 	    strcmp(binding->name, "yvalue") == 0) {
-		AG_MutexLock(&sbu->lock);
 		switch (binding->vtype) {
 		case AG_WIDGET_INT:
 			sbu->min = AG_INT_MIN+1;
@@ -94,7 +93,6 @@ Bound(AG_Event *event)
 			sbu->max =  0x7fffffff-1;
 			break;
 		}
-		AG_MutexUnlock(&sbu->lock);
 	}
 }
 
@@ -104,7 +102,6 @@ KeyDown(AG_Event *event)
 	AG_MSpinbutton *sbu = AG_SELF();
 	int keysym = AG_INT(1);
 
-	AG_MutexLock(&sbu->lock);
 	switch (keysym) {
 	case SDLK_LEFT:
 		AG_MSpinbuttonAddValue(sbu, "xvalue", -sbu->inc);
@@ -119,7 +116,6 @@ KeyDown(AG_Event *event)
 		AG_MSpinbuttonAddValue(sbu, "yvalue", sbu->inc);
 		break;
 	}
-	AG_MutexUnlock(&sbu->lock);
 }
 
 static void
@@ -129,6 +125,8 @@ TextReturn(AG_Event *event)
 	AG_MSpinbutton *sbu = AG_PTR(1);
 	AG_WidgetBinding *stringb;
 	char *tp = &text[0], *s;
+
+	AG_ObjectLock(sbu);
 
 	stringb = AG_WidgetGetBinding(sbu->input, "string", &s);
 	Strlcpy(text, s, sizeof(text));
@@ -143,6 +141,8 @@ TextReturn(AG_Event *event)
 
 	AG_PostEvent(NULL, sbu, "mspinbutton-return", NULL);
 	AG_WidgetUnfocus(sbu->input);
+	
+	AG_ObjectUnlock(sbu);
 }
 
 static void
@@ -152,6 +152,8 @@ TextChanged(AG_Event *event)
 	AG_MSpinbutton *sbu = AG_PTR(1);
 	AG_WidgetBinding *stringb;
 	char *tp = &text[0], *s;
+	
+	AG_ObjectLock(sbu);
 
 	stringb = AG_WidgetGetBinding(sbu->input, "string", &s);
 	Strlcpy(text, s, sizeof(text));
@@ -165,6 +167,7 @@ TextChanged(AG_Event *event)
 	AG_WidgetUnlockBinding(stringb);
 
 	AG_PostEvent(NULL, sbu, "mspinbutton-changed", NULL);
+	AG_ObjectUnlock(sbu);
 }
 
 static void
@@ -172,9 +175,9 @@ DecrementY(AG_Event *event)
 {
 	AG_MSpinbutton *sbu = AG_PTR(1);
 
-	AG_MutexLock(&sbu->lock);
+	AG_ObjectLock(sbu);
 	AG_MSpinbuttonAddValue(sbu, "yvalue", -sbu->inc);
-	AG_MutexUnlock(&sbu->lock);
+	AG_ObjectUnlock(sbu);
 }
 
 static void
@@ -182,9 +185,9 @@ IncrementY(AG_Event *event)
 {
 	AG_MSpinbutton *sbu = AG_PTR(1);
 	
-	AG_MutexLock(&sbu->lock);
+	AG_ObjectLock(sbu);
 	AG_MSpinbuttonAddValue(sbu, "yvalue", sbu->inc);
-	AG_MutexUnlock(&sbu->lock);
+	AG_ObjectUnlock(sbu);
 }
 
 static void
@@ -192,9 +195,9 @@ DecrementX(AG_Event *event)
 {
 	AG_MSpinbutton *sbu = AG_PTR(1);
 	
-	AG_MutexLock(&sbu->lock);
+	AG_ObjectLock(sbu);
 	AG_MSpinbuttonAddValue(sbu, "xvalue", -sbu->inc);
-	AG_MutexUnlock(&sbu->lock);
+	AG_ObjectUnlock(sbu);
 }
 
 static void
@@ -202,9 +205,9 @@ IncrementX(AG_Event *event)
 {
 	AG_MSpinbutton *sbu = AG_PTR(1);
 	
-	AG_MutexLock(&sbu->lock);
+	AG_ObjectLock(sbu);
 	AG_MSpinbuttonAddValue(sbu, "xvalue", sbu->inc);
-	AG_MutexUnlock(&sbu->lock);
+	AG_ObjectUnlock(sbu);
 }
 
 static void
@@ -224,7 +227,6 @@ Init(void *obj)
 	sbu->inc = 1;
 	sbu->writeable = 0;
 	sbu->sep = ",";
-	AG_MutexInitRecursive(&sbu->lock);
 	
 	sbu->input = AG_TextboxNew(sbu, 0, NULL);
 	AG_SetEvent(sbu->input, "textbox-return", TextReturn, "%p", sbu);
@@ -255,14 +257,6 @@ Init(void *obj)
 
 	AG_SetEvent(sbu, "widget-bound", Bound, NULL);
 	AG_SetEvent(sbu, "window-keydown", KeyDown, NULL);
-}
-
-static void
-Destroy(void *p)
-{
-	AG_MSpinbutton *sbu = p;
-
-	AG_MutexDestroy(&sbu->lock);
 }
 
 static void
@@ -321,7 +315,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	return (0);
 }
 
-
 static void
 Draw(void *p)
 {
@@ -379,6 +372,7 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 	void *value;
 	int *min, *max;
 
+	AG_ObjectLock(sbu);
 	valueb = AG_WidgetGetBinding(sbu, which, &value);
 	minb = AG_WidgetGetBinding(sbu, "min", &min);
 	maxb = AG_WidgetGetBinding(sbu, "max", &max);
@@ -434,6 +428,7 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 	AG_WidgetUnlockBinding(maxb);
 	AG_WidgetUnlockBinding(minb);
 	AG_WidgetUnlockBinding(valueb);
+	AG_ObjectUnlock(sbu);
 }
 
 void
@@ -444,6 +439,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 	int *min, *max;
 	va_list ap;
 
+	AG_ObjectLock(sbu);
 	valueb = AG_WidgetGetBinding(sbu, which, &value);
 	minb = AG_WidgetGetBinding(sbu, "min", &min);
 	maxb = AG_WidgetGetBinding(sbu, "max", &max);
@@ -565,6 +561,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 	AG_WidgetUnlockBinding(valueb);
 	AG_WidgetUnlockBinding(minb);
 	AG_WidgetUnlockBinding(maxb);
+	AG_ObjectUnlock(sbu);
 }
 
 void
@@ -573,10 +570,12 @@ AG_MSpinbuttonSetMin(AG_MSpinbutton *sbu, int nmin)
 	AG_WidgetBinding *minb;
 	int *min;
 
+	AG_ObjectLock(sbu);
 	minb = AG_WidgetGetBinding(sbu, "min", &min);
 	*min = nmin;
 	AG_WidgetBindingChanged(minb);
 	AG_WidgetUnlockBinding(minb);
+	AG_ObjectUnlock(sbu);
 }
 
 void
@@ -585,10 +584,12 @@ AG_MSpinbuttonSetMax(AG_MSpinbutton *sbu, int nmax)
 	AG_WidgetBinding *maxb;
 	int *max;
 
+	AG_ObjectLock(sbu);
 	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 	*max = nmax;
 	AG_WidgetBindingChanged(maxb);
 	AG_WidgetUnlockBinding(maxb);
+	AG_ObjectUnlock(sbu);
 }
 
 void
@@ -597,6 +598,7 @@ AG_MSpinbuttonSetRange(AG_MSpinbutton *sbu, int nmin, int nmax)
 	AG_WidgetBinding *minb, *maxb;
 	int *min, *max;
 
+	AG_ObjectLock(sbu);
 	minb = AG_WidgetGetBinding(sbu, "min", &min);
 	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 	*min = nmin;
@@ -605,20 +607,21 @@ AG_MSpinbuttonSetRange(AG_MSpinbutton *sbu, int nmin, int nmax)
 	AG_WidgetBindingChanged(maxb);
 	AG_WidgetUnlockBinding(minb);
 	AG_WidgetUnlockBinding(maxb);
+	AG_ObjectUnlock(sbu);
 }
 
 void
 AG_MSpinbuttonSetIncrement(AG_MSpinbutton *sbu, int inc)
 {
-	AG_MutexLock(&sbu->lock);
+	AG_ObjectLock(sbu);
 	sbu->inc = inc;
-	AG_MutexUnlock(&sbu->lock);
+	AG_ObjectUnlock(sbu);
 }
 
 void
 AG_MSpinbuttonSetWriteable(AG_MSpinbutton *sbu, int writeable)
 {
-	AG_MutexLock(&sbu->lock);
+	AG_ObjectLock(sbu);
 	sbu->writeable = writeable;
 	if (writeable) {
 		AG_WidgetEnable(sbu->xincbu);
@@ -633,7 +636,7 @@ AG_MSpinbuttonSetWriteable(AG_MSpinbutton *sbu, int writeable)
 		AG_WidgetDisable(sbu->ydecbu);
 		AG_WidgetDisable(sbu->input);
 	}
-	AG_MutexUnlock(&sbu->lock);
+	AG_ObjectUnlock(sbu);
 }
 
 AG_WidgetClass agMSpinbuttonClass = {
@@ -643,7 +646,7 @@ AG_WidgetClass agMSpinbuttonClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* free */
-		Destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

@@ -41,6 +41,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	
 	label = Malloc(sizeof(AG_Label));
 	AG_ObjectInit(label, &agLabelClass);
+
 	label->type = AG_LABEL_POLLED;
 	label->text = Strdup(fmt);
 	label->flags |= flags;
@@ -85,6 +86,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 	
 	label = Malloc(sizeof(AG_Label));
 	AG_ObjectInit(label, &agLabelClass);
+
 	label->type = AG_LABEL_POLLED_MT;
 	label->text = Strdup(fmt);
 	label->flags |= flags;
@@ -127,6 +129,7 @@ AG_LabelNewStatic(void *parent, Uint flags, const char *fmt, ...)
 
 	label = Malloc(sizeof(AG_Label));
 	AG_ObjectInit(label, &agLabelClass);
+
 	label->type = AG_LABEL_STATIC;
 	label->flags |= flags;
 	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
@@ -151,6 +154,7 @@ AG_LabelNewStaticString(void *parent, Uint flags, const char *text)
 	
 	label = Malloc(sizeof(AG_Label));
 	AG_ObjectInit(label, &agLabelClass);
+
 	label->type = AG_LABEL_STATIC;
 	label->flags |= flags;
 	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
@@ -166,11 +170,10 @@ SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Label *lbl = p;
 	
-	AG_MutexLock(&lbl->lock);
 	if (lbl->flags & AG_LABEL_NOMINSIZE) {
 		r->w = lbl->lPad + lbl->rPad;
 		r->h = agTextFontHeight + lbl->tPad + lbl->bPad;
-		goto out;
+		return;
 	}
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
@@ -189,8 +192,6 @@ SizeRequest(void *p, AG_SizeReq *r)
 		r->h = lbl->hPre + lbl->tPad + lbl->bPad;
 		break;
 	}
-out:
-	AG_MutexUnlock(&lbl->lock);
 }
 
 static int
@@ -205,7 +206,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	 * If the widget area is too small to display the complete
 	 * string, display a "..." at the end of it.
 	 */
-	AG_MutexLock(&lbl->lock);
 	if (lbl->surface != -1) {
 		int clipEnabled;
 
@@ -235,7 +235,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 			lbl->flags &= ~AG_LABEL_PARTIAL;
 		}
 	}
-	AG_MutexUnlock(&lbl->lock);
 	return (0);
 }
 
@@ -257,54 +256,42 @@ Init(void *obj)
 	lbl->hPre = agTextFontHeight;
 	lbl->justify = AG_TEXT_LEFT;
 	SLIST_INIT(&lbl->lflags);
-	AG_MutexInitRecursive(&lbl->lock);
 	
 	memset(lbl->poll.ptrs, 0, sizeof(void *)*AG_LABEL_MAX_POLLPTRS);
 	lbl->poll.nptrs = 0;
 }
 
 void
-AG_LabelSizeHint(AG_Label *lab, Uint nlines, const char *text)
+AG_LabelSizeHint(AG_Label *lbl, Uint nlines, const char *text)
 {
+	AG_ObjectLock(lbl);
 	if (nlines > 0) {
-		AG_TextSize(text, &lab->wPre, NULL);
-		lab->hPre = nlines*agTextFontHeight +
+		AG_TextSize(text, &lbl->wPre, NULL);
+		lbl->hPre = nlines*agTextFontHeight +
 		            (nlines-1)*agTextFontLineSkip;
 	} else {
-		AG_TextSize(text, &lab->wPre, &lab->hPre);
+		AG_TextSize(text, &lbl->wPre, &lbl->hPre);
 	}
-}
-
-void
-AG_LabelSetSurface(AG_Label *lbl, SDL_Surface *su)
-{
-#ifdef DEBUG
-	if (lbl->type != AG_LABEL_STATIC)
-		AG_FatalError("AG_LabelSetSurface: Label is not static");
-#endif
-	AG_MutexLock(&lbl->lock);
-	AG_WidgetReplaceSurface(lbl, 0, su);
-	if (su == NULL) {
-		lbl->surface = -1;
-	}
-	AG_MutexUnlock(&lbl->lock);
+	AG_ObjectUnlock(lbl);
 }
 
 void
 AG_LabelSetPadding(AG_Label *lbl, int lPad, int rPad, int tPad, int bPad)
 {
+	AG_ObjectLock(lbl);
 	if (lPad != -1) { lbl->lPad = lPad; }
 	if (rPad != -1) { lbl->rPad = rPad; }
 	if (tPad != -1) { lbl->tPad = tPad; }
 	if (bPad != -1) { lbl->bPad = bPad; }
+	AG_ObjectUnlock(lbl);
 }
 
 void
 AG_LabelJustify(AG_Label *lbl, enum ag_text_justify justify)
 {
-	AG_MutexLock(&lbl->lock);
+	AG_ObjectLock(lbl);
 	lbl->justify = justify;
-	AG_MutexUnlock(&lbl->lock);
+	AG_ObjectUnlock(lbl);
 }
 
 void
@@ -312,23 +299,23 @@ AG_LabelText(AG_Label *lbl, const char *fmt, ...)
 {
 	va_list ap;
 
-	AG_MutexLock(&lbl->lock);
+	AG_ObjectLock(lbl);
 	Free(lbl->text);
 	va_start(ap, fmt);
 	Vasprintf(&lbl->text, fmt, ap);
 	va_end(ap);
 	lbl->flags |= AG_LABEL_REGEN;
-	AG_MutexUnlock(&lbl->lock);
+	AG_ObjectUnlock(lbl);
 }
 
 void
 AG_LabelString(AG_Label *lbl, const char *s)
 {
-	AG_MutexLock(&lbl->lock);
+	AG_ObjectLock(lbl);
 	Free(lbl->text);
 	lbl->text = Strdup(s);
 	lbl->flags |= AG_LABEL_REGEN;
-	AG_MutexUnlock(&lbl->lock);
+	AG_ObjectUnlock(lbl);
 }
 
 #define LABEL_ARG(_type)	(*(_type *)label->poll.ptrs[ri])
@@ -426,7 +413,6 @@ label_flags(AG_Label *label, char *s, size_t len, int ri)
 		}
 	}
 }
-
 
 static void
 label_flags8(AG_Label *label, char *s, size_t len, int ri)
@@ -680,8 +666,6 @@ Draw(void *p)
 {
 	AG_Label *lbl = p;
 
-	AG_MutexLock(&lbl->lock);
-
 	if (lbl->flags & AG_LABEL_PARTIAL)
 		AG_WidgetPushClipRect(lbl, 0, 0,
 		    WIDGET(lbl)->w - WSURFACE(lbl,lbl->surfaceCont)->w,
@@ -697,8 +681,12 @@ Draw(void *p)
 		} else if (lbl->flags & AG_LABEL_REGEN) {
 			AG_TextJustify(lbl->justify);
 			AG_TextColor(TEXT_COLOR);
-			AG_LabelSetSurface(lbl, (lbl->text == NULL) ? NULL :
-			    AG_TextRender(lbl->text));
+			if (lbl->text != NULL) {
+				AG_WidgetReplaceSurface(lbl, 0,
+				    AG_TextRender(lbl->text));
+			} else {
+				lbl->surface = -1;
+			}
 		}
 		lbl->flags &= ~(AG_LABEL_REGEN);
 		if (lbl->surface != -1) {
@@ -722,7 +710,6 @@ Draw(void *p)
 		    WIDGET(lbl)->w - WSURFACE(lbl,lbl->surfaceCont)->w,
 		    lbl->tPad);
 	}
-	AG_MutexUnlock(&lbl->lock);
 }
 
 static void
@@ -738,7 +725,6 @@ Destroy(void *p)
 		Free(lfl);
 	}
 	Free(lbl->text);
-	AG_MutexDestroy(&lbl->lock);
 }
 
 /* Register a flag description text. */
@@ -748,12 +734,14 @@ AG_LabelFlagNew(AG_Label *lbl, Uint idx, const char *text,
 {
 	struct ag_label_flag *lfl;
 
+	AG_ObjectLock(lbl);
 	lfl = Malloc(sizeof(struct ag_label_flag));
 	lfl->idx = idx;
 	lfl->text = text;
 	lfl->type = type;
 	lfl->v = v;
 	SLIST_INSERT_HEAD(&lbl->lflags, lfl, lflags);
+	AG_ObjectUnlock(lbl);
 }
 
 AG_WidgetClass agLabelClass = {

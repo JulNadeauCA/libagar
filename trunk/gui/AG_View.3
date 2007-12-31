@@ -350,12 +350,9 @@ support, and the current application is in OpenGL mode (as indicated by the
 .Va opengl
 flag of the current display).
 .Pp
-.nr nS 1
-.Ft "void"
-.Fn AG_LockGL "void"
+They must be invoked from the main event/rendering context.
 .Pp
-.Ft "void"
-.Fn AG_UnlockGL "void"
+.nr nS 1
 .Pp
 .Ft "GLuint"
 .Fn AG_SurfaceTexture "SDL_Surface *src" "GLfloat *texcoord"
@@ -367,14 +364,6 @@ flag of the current display).
 .Fn AG_CaptureGLView "void"
 .Pp
 .nr nS 0
-The
-.Fn AG_LockGL
-macro acquires the global lock protecting all OpenGL calls.
-.Fn AG_UnlockGL
-releases that lock.
-If either OpenGL support was not compiled into Agar, or the current application
-is not in OpenGL mode, these macros are no-ops.
-.Pp
 The
 .Fn AG_SurfaceTexture
 function creates an OpenGL texture from

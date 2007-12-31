@@ -98,6 +98,7 @@ struct ag_global_key {
 };
 static SLIST_HEAD(,ag_global_key) agGlobalKeys =
     SLIST_HEAD_INITIALIZER(&agGlobalKeys);
+static AG_Mutex agGlobalKeysLock;
 
 #ifdef DEBUG
 int agEventAvg = 0;		/* Number of events in last frame */
@@ -169,6 +170,8 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	Uint32 screenflags = 0;
 	int depth;
 
+	AG_MutexInitRecursive(&agGlobalKeysLock);
+
 	AG_RegisterClass(&agDisplayClass);
 
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
@@ -220,7 +223,6 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	agView->rCur = 0;
 	TAILQ_INIT(&agView->windows);
 	TAILQ_INIT(&agView->detach);
-	AG_MutexInitRecursive(&agView->lock);
 	
 	depth = bpp > 0 ? bpp : AG_Uint8(agConfig, "view.depth");
 	agView->w = w > 0 ? w : AG_Uint16(agConfig, "view.w");
@@ -247,7 +249,6 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		
 		agView->opengl = 1;
 	}
-	AG_MutexInitRecursive(&agView->lock_gl);
 #endif
 
 	if (agView->w < AG_Uint16(agConfig, "view.min-w") ||
@@ -326,9 +327,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		Uint8 r, g, b;
 
 		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
-		AG_LockGL();
 		glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
-		AG_UnlockGL();
 	} else
 #endif
 	{
@@ -348,10 +347,6 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 #endif
 	return (0);
 fail:
-	AG_MutexDestroy(&agView->lock);
-#ifdef HAVE_OPENGL
-	AG_MutexDestroy(&agView->lock_gl);
-#endif
 	Free(agView);
 	agView = NULL;
 	return (-1);
@@ -375,16 +370,14 @@ AG_DestroyVideo(void)
 	}
 	SDL_FreeSurface(agView->stmpl);
 	Free(agView->dirty);
-	AG_MutexDestroy(&agView->lock);
-#ifdef HAVE_OPENGL
-	AG_MutexDestroy(&agView->lock_gl);
-#endif
 	Free(agView->winModal);
 	Free(agView);
 	
 	AG_ColorsDestroy();
 	AG_CursorsDestroy();
 
+	AG_MutexDestroy(&agGlobalKeysLock);
+	
 	agView = NULL;
 }
 
@@ -398,7 +391,10 @@ AG_BindGlobalKey(SDLKey keysym, SDLMod keymod, void (*fn)(void))
 	gk->keymod = keymod;
 	gk->fn = fn;
 	gk->fn_ev = NULL;
+
+	AG_MutexLock(&agGlobalKeysLock);
 	SLIST_INSERT_HEAD(&agGlobalKeys, gk, gkeys);
+	AG_MutexUnlock(&agGlobalKeysLock);
 }
 
 void
@@ -411,7 +407,10 @@ AG_BindGlobalKeyEv(SDLKey keysym, SDLMod keymod, void (*fn_ev)(AG_Event *))
 	gk->keymod = keymod;
 	gk->fn = NULL;
 	gk->fn_ev = fn_ev;
+	
+	AG_MutexLock(&agGlobalKeysLock);
 	SLIST_INSERT_HEAD(&agGlobalKeys, gk, gkeys);
+	AG_MutexUnlock(&agGlobalKeysLock);
 }
 
 int
@@ -419,13 +418,16 @@ AG_UnbindGlobalKey(SDLKey keysym, SDLMod keymod)
 {
 	struct ag_global_key *gk;
 
+	AG_MutexLock(&agGlobalKeysLock);
 	SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
 		if (gk->keysym == keysym && gk->keymod == keymod) {
 			SLIST_REMOVE(&agGlobalKeys, gk, ag_global_key, gkeys);
+			AG_MutexUnlock(&agGlobalKeysLock);
 			Free(gk);
 			return (0);
 		}
 	}
+	AG_MutexUnlock(&agGlobalKeysLock);
 	AG_SetError(_("No such key binding"));
 	return (-1);
 }
@@ -454,6 +456,10 @@ RegenWidgetResourcesGL(AG_Widget *wid)
 }
 #endif /* HAVE_OPENGL */
 
+/*
+ * Respond to a VIDEORESIZE event. Must be called from event context and
+ * agView VFS must be locked.
+ */
 int
 AG_ResizeDisplay(int w, int h)
 {
@@ -464,8 +470,6 @@ AG_ResizeDisplay(int w, int h)
 	AG_Window *win;
 	SDL_Surface *su;
 	int ow, oh;
-
-	AG_LockGL();
 
 #ifdef HAVE_OPENGL
 	/*
@@ -514,7 +518,7 @@ AG_ResizeDisplay(int w, int h)
 		a.w = WIDGET(win)->w;
 		a.h = WIDGET(win)->h;
 
-		AG_MutexLock(&win->lock);
+		AG_ObjectLock(win);
 
 		if (win->flags & AG_WINDOW_MAXIMIZED) {
 			AG_WindowSetGeometryMax(win);
@@ -536,35 +540,33 @@ AG_ResizeDisplay(int w, int h)
 			AG_WidgetSizeAlloc(win, &a);
 			AG_WindowUpdate(win);
 		}
-		AG_MutexUnlock(&win->lock);
+		AG_ObjectUnlock(win);
 	}
-	AG_UnlockGL();
 	return (0);
 fail:
-	AG_UnlockGL();
 	return (-1);
 }
 
+/*
+ * Respond to a VIDEOEXPOSE event. Must be called from the main event/rendering
+ * context and the View must be locked.
+ */
 void
 AG_ViewVideoExpose(void)
 {
 	AG_Window *win;
 
-	AG_LockGL();
-	AG_MutexLock(&agView->lock);
 	TAILQ_FOREACH(win, &agView->windows, windows) {
-		AG_MutexLock(&win->lock);
+		AG_ObjectLock(win);
 		if (win->visible) {
 			AG_WidgetDraw(win);
 		}
-		AG_MutexUnlock(&win->lock);
+		AG_ObjectUnlock(win);
 	}
-	AG_MutexUnlock(&agView->lock);
 #ifdef HAVE_OPENGL
 	if (agView->opengl)
 		SDL_GL_SwapBuffers();
 #endif
-	AG_UnlockGL();
 }
 
 /* Return the named window or NULL if there is no such window. */
@@ -573,12 +575,12 @@ AG_FindWindow(const char *name)
 {
 	AG_Window *win;
 
-	AG_MutexLock(&agView->lock);
+	AG_LockVFS(agView);
 	TAILQ_FOREACH(win, &agView->windows, windows) {
 		if (strcmp(OBJECT(win)->name, name) == 0)
 			break;
 	}
-	AG_MutexUnlock(&agView->lock);
+	AG_UnlockVFS(agView);
 	return (win);
 }
 
@@ -588,13 +590,15 @@ AG_ViewAttach(void *child)
 {
 	AG_Window *win = child;
 	
-	AG_MutexLock(&agView->lock);
+	AG_LockVFS(agView);
+	AG_ObjectAttach(agView, win);
+	
 	TAILQ_INSERT_TAIL(&agView->windows, win, windows);
 	if (win->flags & AG_WINDOW_FOCUSONATTACH) {
 		AG_WindowFocus(win);
 	}
 	AG_SetStyle(win, agView->style);
-	AG_MutexUnlock(&agView->lock);
+	AG_UnlockVFS(agView);
 }
 
 /*
@@ -607,7 +611,8 @@ AG_ViewDetach(AG_Window *win)
 	AG_Window *subwin, *nsubwin;
 	AG_Window *owin;
 
-	AG_MutexLock(&agView->lock);
+	AG_LockVFS(agView);
+
 	for (subwin = TAILQ_FIRST(&win->subwins);
 	     subwin != TAILQ_END(&win->subwins);
 	     subwin = nsubwin) {
@@ -629,7 +634,7 @@ AG_ViewDetach(AG_Window *win)
 		if (subwin != NULL)
 			TAILQ_REMOVE(&owin->subwins, subwin, swins);
 	}
-	AG_MutexUnlock(&agView->lock);
+	AG_UnlockVFS(agView);
 }
 
 /*
@@ -645,6 +650,7 @@ FreeDetachedWindows(void)
 	     win != TAILQ_END(&agView->detach);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, detach);
+		AG_ObjectDetach(win);
 		AG_ObjectDestroy(win);
 	}
 	TAILQ_INIT(&agView->detach);
@@ -778,7 +784,7 @@ AG_SetAlphaPixels(SDL_Surface *su, Uint8 alpha)
 int
 AG_SetRefreshRate(int fps)
 {
-	AG_MutexLock(&agView->lock);
+	AG_LockVFS(agView);
 
 	if (fps == -1) {
 		Uint fpsNom;
@@ -795,10 +801,10 @@ AG_SetRefreshRate(int fps)
 	agView->rNom = 1000/fps;
 	agView->rCur = 0;
 out:
-	AG_MutexUnlock(&agView->lock);
+	AG_UnlockVFS(agView);
 	return (0);
 fail:
-	AG_MutexUnlock(&agView->lock);
+	AG_UnlockVFS(agView);
 	return (0);
 }
 
@@ -806,7 +812,7 @@ fail:
 
 /*
  * Update the contents of an existing OpenGL texture from a given
- * surface.
+ * surface. Must be called from rendering context.
  */
 void
 AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
@@ -842,12 +848,10 @@ AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 	SDL_SetAlpha(sourcesu, saflags, salpha);
 
 	/* Create the OpenGL texture. */
-	AG_LockGL();
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
 	    GL_UNSIGNED_BYTE, texsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	AG_UnlockGL();
 
 	SDL_FreeSurface(texsu);
 }
@@ -855,6 +859,8 @@ AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 /*
  * Generate an OpenGL texture from a SDL surface.
  * Returns the texture handle and 4 coordinates into texcoord.
+ *
+ * Must be called from widget rendering context only.
  */
 Uint
 AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
@@ -899,7 +905,6 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 	SDL_SetAlpha(sourcesu, saflags, salpha);
 	
 	/* Create the OpenGL texture. */
-	AG_LockGL();
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 #if 0
@@ -912,13 +917,15 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
 	    GL_UNSIGNED_BYTE, texsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	AG_UnlockGL();
 
 	SDL_FreeSurface(texsu);
 	return (texture);
 }
 
-/* Capture the contents of the OpenGL display into a surface */
+/*
+ * Capture the contents of the OpenGL display into a surface. Must be
+ * invoked in rendering context.
+ */
 SDL_Surface *
 AG_CaptureGLView(void)
 {
@@ -927,10 +934,8 @@ AG_CaptureGLView(void)
 
 	pixels = Malloc(agView->w*agView->h*3);
 
-	AG_LockGL();
 	glReadPixels(0, 0, agView->w, agView->h, GL_RGB, GL_UNSIGNED_BYTE,
 	    pixels);
-	AG_UnlockGL();
 
 	AG_FlipSurface(pixels, agView->h, agView->w*3);
 	su = SDL_CreateRGBSurfaceFrom(pixels, agView->w, agView->h, 24,
@@ -1267,29 +1272,25 @@ AG_EventLoop_FixedFPS(void)
 	for (;;) {
 		Tr2 = SDL_GetTicks();
 		if (Tr2-Tr1 >= agView->rNom) {
-			AG_MutexLock(&agView->lock);
+			AG_LockVFS(agView);
 #ifdef HAVE_OPENGL
-			if (agView->opengl) {
-				AG_LockGL();
+			if (agView->opengl)
 				glClear(GL_COLOR_BUFFER_BIT|
 				        GL_DEPTH_BUFFER_BIT);
-			}
 #endif
 			TAILQ_FOREACH(win, &agView->windows, windows) {
-				AG_MutexLock(&win->lock);
+				AG_ObjectLock(win);
 				if (!win->visible) {
-					AG_MutexUnlock(&win->lock);
+					AG_ObjectUnlock(win);
 					continue;
 				}
 				AG_WidgetDraw(win);
-				AG_MutexUnlock(&win->lock);
-
-				if (win->flags & AG_WINDOW_NOUPDATERECT) {
-					continue;
+				if (!(win->flags & AG_WINDOW_NOUPDATERECT)) {
+					AG_QueueVideoUpdate(
+					    WIDGET(win)->x, WIDGET(win)->y,
+					    WIDGET(win)->w, WIDGET(win)->h);
 				}
-				AG_QueueVideoUpdate(
-				    WIDGET(win)->x, WIDGET(win)->y,
-				    WIDGET(win)->w, WIDGET(win)->h);
+				AG_ObjectUnlock(win);
 			}
 			if (agView->ndirty > 0) {
 #ifdef HAVE_OPENGL
@@ -1304,11 +1305,7 @@ AG_EventLoop_FixedFPS(void)
 				}
 				agView->ndirty = 0;
 			}
-#ifdef HAVE_OPENGL
-			if (agView->opengl)
-				AG_UnlockGL();
-#endif
-			AG_MutexUnlock(&agView->lock);
+			AG_UnlockVFS(agView);
 
 			/* Recalibrate the effective refresh rate. */
 			Tr1 = SDL_GetTicks();
@@ -1356,7 +1353,7 @@ UnminimizeWindow(AG_Event *event)
 void
 AG_ProcessEvent(SDL_Event *ev)
 {
-	AG_MutexLock(&agView->lock);
+	AG_LockVFS(agView);
 
 	switch (ev->type) {
 	case SDL_MOUSEMOTION:
@@ -1404,6 +1401,7 @@ AG_ProcessEvent(SDL_Event *ev)
 		{
 			struct ag_global_key *gk;
 
+			AG_MutexLock(&agGlobalKeysLock);
 			SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
 				if (gk->keysym == ev->key.keysym.sym &&
 				    ((gk->keymod == KMOD_NONE &&
@@ -1416,6 +1414,7 @@ AG_ProcessEvent(SDL_Event *ev)
 					}
 				}
 			}
+			AG_MutexUnlock(&agGlobalKeysLock);
 		}
 		/* FALLTHROUGH */
 	case SDL_KEYUP:
@@ -1433,21 +1432,23 @@ AG_ProcessEvent(SDL_Event *ev)
 		AG_ViewVideoExpose();
 		break;
 	case SDL_QUIT:
+#if 0
 		if (!agTerminating &&
 		    AG_FindEventHandler(agWorld, "quit") != NULL) {
 			AG_PostEvent(NULL, agWorld, "quit", NULL);
 			break;
 		}
+#endif
 		/* FALLTHROUGH */
 	case SDL_USEREVENT:
-		AG_MutexUnlock(&agView->lock);
+		AG_UnlockVFS(agView);
 		agTerminating = 1;
 		AG_Destroy();
 		/* NOTREACHED */
 		break;
 	}
 	FreeDetachedWindows();
-	AG_MutexUnlock(&agView->lock);
+	AG_UnlockVFS(agView);
 }
 
 Uint8

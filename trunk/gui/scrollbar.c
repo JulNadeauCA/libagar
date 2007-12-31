@@ -89,28 +89,38 @@ Init(void *obj)
 int
 AG_ScrollbarVisible(AG_Scrollbar *sb)
 {
-	int min, max;
+	int min, max, rv;
+
+	AG_ObjectLock(sb);
 
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:
 		if (AGWIDGET(sb)->w < sb->bw ||
 		    AGWIDGET(sb)->h < sb->bw*2 + sb->barSz) {
-			return (0);
+			rv = 0;
+			goto out;
 		}
 		break;
 	case AG_SCROLLBAR_HORIZ:
 		if (AGWIDGET(sb)->w < sb->bw*2 + sb->barSz ||
 		    AGWIDGET(sb)->h < sb->bw) {
-			return (0);
+			rv = 0;
+			goto out;
 		}
 		break;
 	}
 	min = AG_WidgetInt(sb, "min");
 	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
-	return (max > 0 && max >= min);
+	rv = (max > 0 && max >= min);
+out:
+	AG_ObjectUnlock(sb);
+	return (rv);
 }
 
-/* Clicked or dragged mouse to coord, so adjust value */
+/*
+ * Clicked or dragged mouse to coord, so adjust value.
+ * Widget must be locked.
+ */
 static void
 MoveBar(AG_Scrollbar *sb, int x, int totalsize)
 {
@@ -142,8 +152,9 @@ MouseButtonUp(AG_Event *event)
 	AG_Scrollbar *sb = AG_SELF();
 
 	if (!AG_ScrollbarVisible(sb)) {
-		if (OBJECT(sb)->parent != NULL)
+		if (OBJECT(sb)->parent != NULL) {
 			AG_ForwardEvent(NULL, OBJECT(sb)->parent, event);
+		}
 		return;
 	}
 	sb->curbutton = AG_BUTTON_NONE;
@@ -163,8 +174,9 @@ MouseButtonDown(AG_Event *event)
 		return;
 	}
 	if (!AG_ScrollbarVisible(sb)) {
-		if (OBJECT(sb)->parent != NULL)
+		if (OBJECT(sb)->parent != NULL) {
 			AG_ForwardEvent(NULL, OBJECT(sb)->parent, event);
+		}
 		return;
 	}
 	

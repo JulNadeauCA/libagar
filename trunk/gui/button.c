@@ -493,15 +493,18 @@ keyup(AG_Event *event)
 void
 AG_ButtonSetPadding(AG_Button *bu, int lPad, int rPad, int tPad, int bPad)
 {
+	AG_ObjectLock(bu);
 	if (lPad != -1) { bu->lPad = lPad; }
 	if (rPad != -1) { bu->rPad = rPad; }
 	if (tPad != -1) { bu->tPad = tPad; }
 	if (bPad != -1) { bu->bPad = bPad; }
+	AG_ObjectUnlock(bu);
 }
 
 void
 AG_ButtonSetFocusable(AG_Button *bu, int focusable)
 {
+	AG_ObjectLock(bu);
 	if (focusable) {
 		WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE;
 		WIDGET(bu)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
@@ -509,28 +512,35 @@ AG_ButtonSetFocusable(AG_Button *bu, int focusable)
 		WIDGET(bu)->flags &= ~(AG_WIDGET_FOCUSABLE);
 		WIDGET(bu)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP;
 	}
+	AG_ObjectUnlock(bu);
 }
 
 void
 AG_ButtonSetSticky(AG_Button *bu, int sticky)
 {
+	AG_ObjectLock(bu);
 	if (sticky) {
 		bu->flags |= (AG_BUTTON_STICKY);
 	} else {
 		bu->flags &= ~(AG_BUTTON_STICKY);
 	}
+	AG_ObjectUnlock(bu);
 }
 
 void
 AG_ButtonSetJustification(AG_Button *bu, enum ag_text_justify jus)
 {
+	AG_ObjectLock(bu);
 	bu->justify = jus;
+	AG_ObjectUnlock(bu);
 }
 
 void
 AG_ButtonSetValign(AG_Button *bu, enum ag_text_valign va)
 {
+	AG_ObjectLock(bu);
 	bu->valign = va;
+	AG_ObjectUnlock(bu);
 }
 
 void
@@ -538,26 +548,31 @@ AG_ButtonSurface(AG_Button *bu, SDL_Surface *su)
 {
 	SDL_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
 
+	AG_ObjectLock(bu);
 	if (bu->surface != -1) {
 		AG_WidgetReplaceSurface(bu, bu->surface, suDup);
 	} else {
 		bu->surface = AG_WidgetMapSurface(bu, suDup);
 	}
+	AG_ObjectUnlock(bu);
 }
 
 void
 AG_ButtonSurfaceNODUP(AG_Button *bu, SDL_Surface *su)
 {
+	AG_ObjectLock(bu);
 	if (bu->surface != -1) {
 		AG_WidgetReplaceSurfaceNODUP(bu, bu->surface, su);
 	} else {
 		bu->surface = AG_WidgetMapSurfaceNODUP(bu, su);
 	}
+	AG_ObjectUnlock(bu);
 }
 
 void
 AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 {
+	AG_ObjectLock(bu);
 	if (repeat) {
 		bu->flags |= (AG_BUTTON_REPEAT);
 	} else {
@@ -565,27 +580,32 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 		AG_DelTimeout(bu, &bu->delay_to);
 		bu->flags &= ~(AG_BUTTON_REPEAT);
 	}
+	AG_ObjectUnlock(bu);
 }
 
 void
 AG_ButtonTextNODUP(AG_Button *bu, char *text)
 {
+	AG_ObjectLock(bu);
 	Free(bu->text);
 	bu->text = text;
 	bu->flags |= (AG_BUTTON_REGEN|AG_BUTTON_TEXT_NODUP);
+	AG_ObjectUnlock(bu);
 }
 
 void
 AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 {
 	va_list args;
-	
+
+	AG_ObjectLock(bu);
 	Free(bu->text);
 	va_start(args, fmt);
 	Vasprintf(&bu->text, fmt, args);
 	va_end(args);
 	bu->flags |=  AG_BUTTON_REGEN;
 	bu->flags &= ~AG_BUTTON_TEXT_NODUP;
+	AG_ObjectUnlock(bu);
 }
 
 AG_WidgetClass agButtonClass = {
