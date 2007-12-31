@@ -84,5 +84,4 @@ DEV_ToolMenu(AG_MenuItem *mi)
 void
 DEV_InitSubsystem(Uint flags)
 {
-	DEV_BrowserInit();
 }
