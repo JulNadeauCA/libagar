@@ -637,7 +637,8 @@ SC_PlotPropVal(SC_Plotter *ptr, SC_Plot *pl)
 {
 	AG_Prop *prop;
 
-	if ((prop = AG_FindProp(pl->src.prop, -1, NULL)) == NULL) {
+	if ((prop = AG_FindProp(pl->src.prop.vfs, pl->src.prop.key, -1, NULL))
+	    == NULL) {
 		printf("%s\n", AG_GetError());
 		return (0.0);
 	}
@@ -838,13 +839,14 @@ SC_PlotFromDerivative(SC_Plotter *ptr, enum sc_plot_type type, SC_Plot *plot)
 
 SC_Plot *
 SC_PlotFromProp(SC_Plotter *ptr, enum sc_plot_type type, const char *label,
-    const char *prop)
+    void *vfsRoot, const char *prop)
 {
 	SC_Plot *pl;
 
 	pl = SC_PlotNew(ptr, type);
 	pl->src_type = SC_PLOT_FROM_PROP;
-	pl->src.prop = Strdup(prop);
+	pl->src.prop.vfs = vfsRoot;
+	pl->src.prop.key = Strdup(prop);
 	SC_PlotSetLabel(pl, "%s", label);
 	return (pl);
 }

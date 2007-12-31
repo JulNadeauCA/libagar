@@ -60,7 +60,10 @@ typedef struct sc_plot {
 	enum sc_plot_type type;
 	enum sc_plot_source src_type;
 	union {
-		const char *prop;	/* Property path */
+		struct {
+			void *vfs;	 /* VFS root object */
+			const char *key; /* Property path */
+		} prop;
 		SC_Real *real;		/* Pointer to real value */
 		int *integer;		/* Pointer to integer value */
 		struct {
@@ -142,7 +145,7 @@ SC_PlotLabel	*SC_PlotLabelReplace(SC_Plot *, enum sc_plot_label_type,
 
 void		 SC_PlotClear(SC_Plot *);
 SC_Plot		*SC_PlotFromProp(SC_Plotter *, enum sc_plot_type, const char *,
-		                 const char *);
+		                 void *, const char *);
 SC_Plot		*SC_PlotFromReal(SC_Plotter *, enum sc_plot_type, const char *,
 		                 SC_Real *);
 SC_Plot		*SC_PlotFromInt(SC_Plotter *, enum sc_plot_type, const char *,
