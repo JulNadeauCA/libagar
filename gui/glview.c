@@ -65,7 +65,9 @@ SetIdentity(GLfloat *M, GLenum which)
 static void
 WidgetMoved(AG_Event *event)
 {
-	AG_GLViewReshape(AG_SELF());
+	AG_GLView *glv = AG_SELF();
+
+	glv->flags |= AG_GLVIEW_RESHAPE;
 }
 
 static void
@@ -89,7 +91,7 @@ Init(void *obj)
 	glv->wPre = 64;
 	glv->hPre = 64;
 
-	glv->flags = 0;
+	glv->flags = AG_GLVIEW_INIT_MATRICES;
 	glv->draw_ev = NULL;
 	glv->overlay_ev = NULL;
 	glv->scale_ev = NULL;
@@ -99,12 +101,6 @@ Init(void *obj)
 	glv->btnup_ev = NULL;
 	glv->motion_ev = NULL;
 
-	AG_LockGL();
-	SetIdentity(glv->mProjection, GL_PROJECTION);
-	SetIdentity(glv->mModelview, GL_MODELVIEW);
-	SetIdentity(glv->mTexture, GL_TEXTURE);
-	AG_UnlockGL();
-
 	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
 	AG_SetEvent(glv, "window-mousebuttondown", mousebuttondown, NULL);
 }
@@ -112,64 +108,82 @@ Init(void *obj)
 void
 AG_GLViewSizeHint(AG_GLView *glv, int w, int h)
 {
+	AG_ObjectLock(glv);
 	glv->wPre = w;
 	glv->hPre = h;
+	AG_ObjectUnlock(glv);
 }
 
 void
 AG_GLViewDrawFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(glv);
 	glv->draw_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(glv->draw_ev, fmt);
+	AG_ObjectUnlock(glv);
 }
 
 void
 AG_GLViewOverlayFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(glv);
 	glv->overlay_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(glv->overlay_ev, fmt);
+	AG_ObjectUnlock(glv);
 }
 
 void
 AG_GLViewScaleFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(glv);
 	glv->scale_ev = AG_SetEvent(glv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(glv->scale_ev, fmt);
+	AG_ObjectUnlock(glv);
 }
 
 void
 AG_GLViewKeydownFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(glv);
 	glv->keydown_ev = AG_SetEvent(glv, "window-keydown", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->keydown_ev, fmt);
+	AG_ObjectUnlock(glv);
 }
 
 void
 AG_GLViewKeyupFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(glv);
 	glv->keyup_ev = AG_SetEvent(glv, "window-keyup", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->keyup_ev, fmt);
+	AG_ObjectUnlock(glv);
 }
 
 void
 AG_GLViewButtondownFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(glv);
 	glv->btndown_ev = AG_SetEvent(glv, "window-mousebuttondown", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->btndown_ev, fmt);
+	AG_ObjectUnlock(glv);
 }
 
 void
 AG_GLViewButtonupFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(glv);
 	glv->btnup_ev = AG_SetEvent(glv, "window-mousebuttonup", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->btnup_ev, fmt);
+	AG_ObjectUnlock(glv);
 }
 
 void
 AG_GLViewMotionFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(glv);
 	glv->motion_ev = AG_SetEvent(glv, "window-mousemotion", fn, NULL);
 	AG_EVENT_GET_ARGS(glv->motion_ev, fmt);
+	AG_ObjectUnlock(glv);
 }
 
 /*
@@ -179,8 +193,6 @@ AG_GLViewMotionFn(AG_GLView *glv, AG_EventFn fn, const char *fmt, ...)
 void
 AG_GLViewReshape(AG_GLView *glv)
 {
-	AG_LockGL();
-
 	glMatrixMode(GL_TEXTURE);	glPushMatrix();	glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW);	glPushMatrix();	glLoadIdentity();
 
@@ -197,8 +209,6 @@ AG_GLViewReshape(AG_GLView *glv)
 	glMatrixMode(GL_PROJECTION);	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);	glPopMatrix();
 	glMatrixMode(GL_TEXTURE);	glPopMatrix();
-
-	AG_UnlockGL();
 }
 
 void
@@ -216,7 +226,7 @@ AG_GLViewSizeAllocate(void *p, const AG_SizeAlloc *a)
 	if (a->w < 1 || a->h < 1)
 		return (-1);
 
-	AG_GLViewReshape(glv);
+	glv->flags |= AG_GLVIEW_RESHAPE;
 	return (0);
 }
 
@@ -224,7 +234,18 @@ void
 AG_GLViewDraw(void *p)
 {
 	AG_GLView *glv = p;
-	
+
+	if (glv->flags & AG_GLVIEW_INIT_MATRICES) {
+		glv->flags &= ~(AG_GLVIEW_INIT_MATRICES);
+		SetIdentity(glv->mProjection, GL_PROJECTION);
+		SetIdentity(glv->mModelview, GL_MODELVIEW);
+		SetIdentity(glv->mTexture, GL_TEXTURE);
+	}
+	if (glv->flags & AG_GLVIEW_RESHAPE) {
+		glv->flags &= ~(AG_GLVIEW_RESHAPE);
+		AG_GLViewReshape(glv);
+	}
+
 	glViewport(WIDGET(glv)->cx, agView->h - WIDGET(glv)->cy2,
 	           WIDGET(glv)->w, WIDGET(glv)->h);
 

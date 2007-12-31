@@ -22,6 +22,8 @@ typedef struct ag_glview {
 #define AG_GLVIEW_NOMODELVIEW	0x04	/* Don't preserve modelview matrix */
 #define AG_GLVIEW_NOTEXTURE	0x08	/* Don't preserve texture matrix */
 #define AG_GLVIEW_NOCOLOR	0x10	/* Don't preserve color matrix */
+#define AG_GLVIEW_INIT_MATRICES	0x20	/* For initialization */
+#define AG_GLVIEW_RESHAPE	0x40	/* Matrices have changed */
 #define AG_GLVIEW_EXPAND	(AG_GLVIEW_HFILL|AG_GLVIEW_VFILL)
 
 	int	  wPre, hPre;			/* Initial geometry */

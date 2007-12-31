@@ -58,9 +58,6 @@ which inherits from
 .Fn AG_GLViewSizeHint "AG_GLView *glv" "int w" "int h"
 .Pp
 .Ft void
-.Fn AG_GLViewReshape "AG_GLView *glv"
-.Pp
-.Ft void
 .Fn AG_GLViewDrawFn "AG_GLView *glv" "void (*fn)(AG_Event *)" "const char *args" "..."
 .Pp
 .Ft void
@@ -96,15 +93,6 @@ specific to this widget.
 .Pp
 .Fn AG_GLViewSizeHint
 suggests an initial widget size in pixels.
-.Pp
-The
-.Fn AG_GLViewReshape
-function recomputes the projection matrix used in the GL context and invokes
-the
-.Va scale
-operation.
-.Fn AG_GLViewReshape
-is called automatically when the widget is resized.
 .Pp
 The
 .Fn AG_GLViewDrawFn
