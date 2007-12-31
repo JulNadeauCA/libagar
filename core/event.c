@@ -68,11 +68,11 @@ SchedEventTimeout(void *p, Uint32 ival, void *arg)
 		AG_Object *child;
 			
 		Debug(ob, "Propagate <%s> (timeout)\n", ev->name);
-		AG_LockLinkage();
+		AG_LockVFS(ob);
 		OBJECT_FOREACH_CHILD(child, ob, ag_object) {
 			PropagateEvent(ob, child, ev);
 		}
-		AG_UnlockLinkage();
+		AG_UnlockVFS(ob);
 	}
 
 	/* Invoke the event handler routine. */
@@ -88,7 +88,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	AG_Object *ob = p;
 	AG_Event *ev;
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	if (name != NULL) {
 		TAILQ_FOREACH(ev, &ob->events, events) {
 			if (strcmp(ev->name, name) == 0)
@@ -118,7 +118,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	AG_SetTimeout(&ev->timeout, SchedEventTimeout, ev, 0);
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (ev);
 }
 
@@ -132,7 +132,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	AG_Object *ob = p;
 	AG_Event *ev;
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 
 	ev = Malloc(sizeof(AG_Event));
 	if (name != NULL) {
@@ -152,7 +152,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 
 	TAILQ_INSERT_TAIL(&ob->events, ev, events);
 	ob->nevents++;
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (ev);
 }
 
@@ -163,7 +163,7 @@ AG_UnsetEvent(void *p, const char *name)
 	AG_Object *ob = p;
 	AG_Event *ev;
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(name, ev->name) == 0)
 			break;
@@ -179,7 +179,7 @@ AG_UnsetEvent(void *p, const char *name)
 	ob->nevents--;
 	Free(ev);
 out:
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 }
 
 AG_Event *
@@ -188,12 +188,12 @@ AG_FindEventHandler(void *p, const char *name)
 	AG_Object *ob = p;
 	AG_Event *ev;
 	
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(name, ev->name) == 0)
 			break;
 	}
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (ev);
 }
 
@@ -220,11 +220,11 @@ EventThread(void *p)
 
 	if (eev->flags & AG_EVENT_PROPAGATE) {
 		Debug(rcvr, "Propagate <%s> (async)\n", eev->name);
-		AG_LockLinkage();
+		AG_LockVFS(rcvr);
 		OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
 			PropagateEvent(rcvr, chld, eev);
 		}
-		AG_UnlockLinkage();
+		AG_UnlockVFS(rcvr);
 	}
 	Debug(rcvr, "BEGIN event thread for <%s>\n", eev->name);
 	if (eev->handler != NULL) {
@@ -254,7 +254,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	Debug(rcvr, "Event <%s> posted from %s\n", evname,
 	    sndr?sndr->name:"NULL");
 
-	AG_MutexLock(&rcvr->lock);
+	AG_ObjectLock(rcvr);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
 		if (strcmp(evname, ev->name) != 0)
 			continue;
@@ -284,17 +284,17 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 
 			if (tmpev.flags & AG_EVENT_PROPAGATE) {
 				Debug(rcvr, "Propagate <%s> (post)\n", evname);
-				AG_LockLinkage();
+				AG_LockVFS(rcvr);
 				OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
 					PropagateEvent(rcvr, chld, &tmpev);
 				}
-				AG_UnlockLinkage();
+				AG_UnlockVFS(rcvr);
 			}
 			if (tmpev.handler != NULL)
 				tmpev.handler(&tmpev);
 		}
 	}
-	AG_MutexUnlock(&rcvr->lock);
+	AG_ObjectUnlock(rcvr);
 }
 
 /*
@@ -311,7 +311,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	
 	Debug(rcvr, "Schedule <%s> in %u ticks\n", evname, (Uint)ticks);
 	AG_LockTiming();
-	AG_MutexLock(&rcvr->lock);
+	AG_ObjectLock(rcvr);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
 		if (strcmp(evname, ev->name) == 0)
 			break;
@@ -331,11 +331,11 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	ev->flags |= AG_EVENT_SCHEDULED;
 	AG_AddTimeout(rcvr, &ev->timeout, ticks);
 	AG_UnlockTiming();
-	AG_MutexUnlock(&rcvr->lock);
+	AG_ObjectUnlock(rcvr);
 	return (0);
 fail:
 	AG_UnlockTiming();
-	AG_MutexUnlock(&rcvr->lock);
+	AG_ObjectUnlock(rcvr);
 	return (-1);
 }
 
@@ -347,7 +347,7 @@ AG_ReschedEvent(void *p, const char *evname, Uint32 ticks)
 
 	Debug(ob, "Reschedule <%s> in %u ticks\n", evname, (Uint)ticks);
 	AG_LockTiming();
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(evname, ev->name) == 0)
 			break;
@@ -361,11 +361,11 @@ AG_ReschedEvent(void *p, const char *evname, Uint32 ticks)
 	ev->flags |= AG_EVENT_SCHEDULED;
 	AG_AddTimeout(ob, &ev->timeout, ticks);
 
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	AG_UnlockTiming();
 	return (0);
 fail:
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	AG_UnlockTiming();
 	return (-1);
 }
@@ -379,7 +379,7 @@ AG_CancelEvent(void *p, const char *evname)
 	int rv = 0;
 
 	AG_LockTiming();
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if (strcmp(ev->name, evname) == 0)
 			break;
@@ -394,11 +394,11 @@ AG_CancelEvent(void *p, const char *evname)
 		ev->flags &= ~(AG_EVENT_SCHEDULED);
 	}
 	/* XXX concurrent */
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	AG_UnlockTiming();
 	return (rv);
 fail:
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	AG_UnlockTiming();
 	return (-1);
 }
@@ -418,7 +418,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 	Debug(rcvr, "Event <%s> forwarded from %s\n", event->name,
 	    sndr?sndr->name:"NULL");
 
-	AG_MutexLock(&rcvr->lock);
+	AG_ObjectLock(rcvr);
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
 		if (strcmp(event->name, ev->name) == 0)
 			break;
@@ -451,17 +451,17 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 
 		if (ev->flags & AG_EVENT_PROPAGATE) {
 			Debug(rcvr, "Propagate <%s> (forward)\n", event->name);
-			AG_LockLinkage();
+			AG_LockVFS(rcvr);
 			OBJECT_FOREACH_CHILD(chld, rcvr, ag_object) {
 				PropagateEvent(rcvr, chld, ev);
 			}
-			AG_UnlockLinkage();
+			AG_UnlockVFS(rcvr);
 		}
 		/* XXX AG_EVENT_ASYNC.. */
 		if (ev->handler != NULL)
 			ev->handler(&tmpev);
 	}
 out:
-	AG_MutexUnlock(&rcvr->lock);
+	AG_ObjectUnlock(rcvr);
 }
 

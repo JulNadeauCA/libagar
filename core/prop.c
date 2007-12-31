@@ -145,14 +145,14 @@ AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
 	}
 	va_end(ap);
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	if (!modify) {
 		TAILQ_INSERT_TAIL(&ob->props, prop, props);
 		AG_PostEvent(NULL, ob, "prop-added", "%p", prop);
 	} else {
 		AG_PostEvent(NULL, ob, "prop-modified", "%p", prop);
 	}
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (prop);
 }
 #undef PROP_SET
@@ -178,7 +178,7 @@ AG_GetProp(void *obp, const char *key, int t, void *p)
 	AG_Object *ob = obp;
 	AG_Prop *prop;
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	TAILQ_FOREACH(prop, &ob->props, props) {
 		if ((t >= 0 && t != prop->type) ||
 		    strcmp(key, prop->key) != 0) {
@@ -211,18 +211,21 @@ AG_GetProp(void *obp, const char *key, int t, void *p)
 			AG_SetError("bad prop %d", prop->type);
 			goto fail;
 		}
-		AG_MutexUnlock(&ob->lock);
+		AG_ObjectUnlock(ob);
 		return (prop);
 	}
 	AG_SetError(_("%s: no such property: `%s' (%d)."), ob->name, key, t);
 fail:
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (NULL);
 }
 
-/* Search for a property referenced by a "object-name:prop-name" string. */
+/*
+ * Search for a property referenced by a "object-name:prop-name" string,
+ * relative to the specified VFS.
+ */
 AG_Prop *
-AG_FindProp(const char *spec, int type, void *rval)
+AG_FindProp(void *vfsRoot, const char *spec, int type, void *rval)
 {
 	char sb[AG_OBJECT_PATH_MAX+1+AG_PROP_KEY_MAX];
 	char *s = &sb[0], *objname, *propname;
@@ -236,14 +239,14 @@ AG_FindProp(const char *spec, int type, void *rval)
 		AG_SetError(_("Invalid property path: `%s'"), spec);
 		return (NULL);
 	}
-	if ((obj = AG_ObjectFind(objname)) == NULL) {
+	if ((obj = AG_ObjectFind(vfsRoot, objname)) == NULL) {
 		return (NULL);
 	}
 	return (AG_GetProp(obj, propname, -1, rval));
 }
 
 int
-AG_PropPath(char *dst, size_t size, const void *obj, const char *prop_name)
+AG_PropPath(char *dst, size_t size, void *obj, const char *prop_name)
 {
 	if (AG_ObjectCopyName(obj, dst, size) == -1 ||
 	    Strlcat(dst, ":", size) >= size ||
@@ -263,7 +266,7 @@ AG_PropLoad(void *p, AG_DataSource *ds)
 	if (AG_ReadVersion(ds, "AG_PropTbl", &agPropTblVer, NULL) == -1)
 		return (-1);
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 
 	if ((ob->flags & AG_OBJECT_RELOAD_PROPS) == 0)
 		AG_ObjectFreeProps(ob);
@@ -352,10 +355,10 @@ AG_PropLoad(void *p, AG_DataSource *ds)
 			goto fail;
 		}
 	}
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (0);
 fail:
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (-1);
 }
 
@@ -370,7 +373,7 @@ AG_PropSave(void *p, AG_DataSource *ds)
 	
 	AG_WriteVersion(ds, "AG_PropTbl", &agPropTblVer);
 	
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 
 	count_offs = AG_Tell(ds);			/* Skip count */
 	AG_WriteUint32(ds, 0);
@@ -440,11 +443,11 @@ AG_PropSave(void *p, AG_DataSource *ds)
 		}
 		nprops++;
 	}
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	AG_WriteUint32At(ds, nprops, count_offs);	/* Write count */
 	return (0);
 fail:
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (-1);
 }
 
@@ -520,13 +523,13 @@ AG_StringCopy(void *p, const char *key, char *buf, size_t bufsize)
 }
 
 size_t
-AG_FindStringCopy(const char *key, char *buf, size_t bufsize)
+AG_FindStringCopy(void *vfsRoot, const char *key, char *buf, size_t bufsize)
 {
 	size_t sl;
 	char *s;
 
 	/* XXX thread unsafe */
-	if (AG_FindProp(key, AG_PROP_STRING, &s) == NULL) {
+	if (AG_FindProp(vfsRoot, key, AG_PROP_STRING, &s) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	sl = Strlcpy(buf, s, bufsize);

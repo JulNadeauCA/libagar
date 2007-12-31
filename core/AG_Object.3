@@ -45,7 +45,7 @@ virtual functions, generic properties and per-object management of
 resources such as timers and threads (where available).
 The virtual system allows arbitrary datasets (possibly large and complex ones)
 to be archived to different forms of persistent storage in an efficient manner.
-.Sh INITIALIZATION AND LINKAGE
+.Sh INITIALIZATION AND VFS FUNCTIONS
 .nr nS 1
 .Pp
 .Ft "AG_Object *"
@@ -61,7 +61,7 @@ to be archived to different forms of persistent storage in an efficient manner.
 .Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_ObjectAttachToNamed "const char *parent_path" "AG_Object *child"
+.Fn AG_ObjectAttachToNamed "AG_Object *vfsRoot" "const char *path" "AG_Object *child"
 .Pp
 .Ft "void"
 .Fn AG_ObjectDetach "AG_Object *obj"
@@ -70,19 +70,37 @@ to be archived to different forms of persistent storage in an efficient manner.
 .Fn AG_ObjectMove "AG_Object *obj" "AG_Object *new_parent"
 .Pp
 .Ft "AG_Object *"
-.Fn AG_ObjectRoot "const AG_Object *obj"
+.Fn AG_ObjectRoot "AG_Object *obj"
 .Pp
 .Ft "AG_Object *"
-.Fn AG_ObjectFindParent "const AG_Object *obj" "const char *name" "const char *type"
+.Fn AG_ObjectParent "AG_Object *obj"
+.Pp
+.Ft "AG_Object *"
+.Fn AG_ObjectFind "AG_Object *vfsRoot" "const char *name"
+.Pp
+.Ft "AG_Object *"
+.Fn AG_ObjectFindF "AG_Object *vfsRoot" "const char *fmt" "..."
+.Pp
+.Ft "AG_Object *"
+.Fn AG_ObjectFindParent "AG_Object *obj" "const char *name" "const char *type"
+.Pp
+.Ft "AG_Object *"
+.Fn AG_ObjectFindChild "AG_Object *obj" "const char *name"
 .Pp
 .Ft "int"
-.Fn AG_ObjectCopyName "const AG_Object *obj" "char *pathbuf" "size_t pathbuf_len"
+.Fn AG_ObjectCopyName "AG_Object *obj" "char *pathbuf" "size_t pathbuf_len"
 .Pp
 .Ft "void"
-.Fn AG_LockLinkage "void"
+.Fn AG_ObjectLock "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_UnlockLinkage "void"
+.Fn AG_ObjectUnlock "AG_Object *obj"
+.Pp
+.Ft "void"
+.Fn AG_LockVFS "AG_Object *obj"
+.Pp
+.Ft "void"
+.Fn AG_UnlockVFS "AG_Object *obj"
 .Pp
 .Ft "void"
 .Fn AG_ObjectSetName "AG_Object *obj" "const char *fmt" "..."
@@ -333,8 +351,8 @@ is a no-op.
 .Fn AG_ObjectAttachToNamed
 is a variant of
 .Fn AG_ObjectAttach
-which looks up the parent using
-.Fa parent_path .
+which looks up the parent inside the specified VFS using the pathname
+.Fa path .
 .Pp
 .Fn AG_ObjectMove
 moves
@@ -342,52 +360,86 @@ moves
 from
 .Fa oldparent
 to
-.Fa newparent ,
-raising
+.Fa newparent
+(both must be part of the same VFS).
+.Fn AG_ObjectMove
+raises
 .Fn detached ,
 .Fn attached
 and
 .Fn moved
 events in order.
-Unlike
+Note that unlike with
 .Fn AG_ObjectDetach ,
-.Fn AG_ObjectMove
-does not cancel scheduled timeout events.
+scheduled timeout events are not cancelled automatically.
+.Pp
+.Fn AG_ObjectRoot
+returns a pointer to the root of the VFS which the given object is attached to.
+.Pp
+.Fn AG_ObjectParent
+returns the immediate parent of the given object.
 .Pp
 The
-.Fn AG_ObjectRoot
-function traverses the given object's ancestry and return a pointer to the root
-item.
+.Fn AG_ObjectFind
+and
+.Fn AG_ObjectFindF
+functions perform a pathname lookup on the specified VFS and return the object
+if found, NULL otherwise.
+.Pp
 .Fn AG_ObjectFindParent
-traverse the ancestry until a parent item matches the non-NULL
+searches all parent objects of the given object for one matching the non-NULL
 .Fa name
-and
+or
 .Fa type
-arguments.
-The global object linkage must remain locked throughout the execution of both
-.Fn AG_ObjectRoot
-and
-.Fn AG_ObjectFindParent .
+argument.
+.Pp
+.Fn AG_ObjectFindChild
+performs a name lookup on the immediate children of the specified object and
+return the matching object if found, otherwise NULL.
 .Pp
 The
 .Fn AG_ObjectCopyName
 function copies the absolute pathname of an object instance to a fixed-size
 buffer, returning 0 on success and -1 on failure.
-Note that
-.Fn AG_ObjectCopyName
-must traverse the object's ancestry to generate the pathname, so in thread-safe
-applications,
-.Fn AG_LockLinkage
-should be used (and the pathname will remain safe to use until
-.Fn AG_UnlockLinkage
-is called).
+Under multithreading, the returned pathnames can be considered valid only
+as long as the VFS of the object remains locked.
 .Pp
 The
-.Fn AG_LockLinkage
+.Fn AG_ObjectLock
 and
-.Fn AG_UnlockLinkage
-functions acquire or release the virtual filesystem lock.
-They are no-ops if thread support is disabled.
+.Fn AG_ObjectUnlock
+functions acquire or release the mutex associated with the given object.
+This mutex protects all read/write members of the
+.Nm
+structure, except
+.Fa parent ,
+.Fa root
+and the list of child objects
+.Fa cobjs
+which are all considered part of the virtual filesystem and are instead
+protected by
+.Fn AG_LockVFS .
+.Pp
+In most cases, it is best to use the
+.Fn AG_ObjectLock
+mutex as a general-purpose locking device for subclasses of
+.Nm ,
+because it is guaranteed to be held during processing of events posted to the
+object, or object operations such as
+.Fn load
+and
+.Fn save .
+.Pp
+The
+.Fn AG_LockVFS
+and
+.Fn AG_UnlockVFS
+functions acquire or release the lock protecting the layout of the entire
+virtual system which the given object is part of.
+.Pp
+All lock/unlock functions are turned to no-ops if
+.Dv THREADS
+is not enabled at compile-time.
 .Pp
 .Fn AG_ObjectSetName
 changes the name of the given object.
@@ -458,7 +510,7 @@ AGOBJECT_FOREACH_CLASS(my_obj, parent_obj, my_class, "MyClass") {
 .Sh DEPENDENCIES
 .nr nS 1
 .Ft "int"
-.Fn AG_ObjectInUse "const AG_Object *obj"
+.Fn AG_ObjectInUse "AG_Object *obj"
 .Pp
 .Ft "AG_ObjectDep *"
 .Fn AG_ObjectAddDep "AG_Object *obj" "AG_Object *depobj"
@@ -467,10 +519,10 @@ AGOBJECT_FOREACH_CLASS(my_obj, parent_obj, my_class, "MyClass") {
 .Fn AG_ObjectDelDep "AG_Object *obj" "AG_Object *depobj"
 .Pp
 .Ft "Uint32"
-.Fn AG_ObjectEncodeName "const AG_Object *obj" "const AG_Object *depobj"
+.Fn AG_ObjectEncodeName "AG_Object *obj" "AG_Object *depobj"
 .Pp
 .Ft "int"
-.Fn AG_ObjectFindDep "const AG_Object *obj" "Uint32 ind" "AG_Object **objp"
+.Fn AG_ObjectFindDep "AG_Object *obj" "Uint32 ind" "AG_Object **objp"
 .Pp
 .nr nS 0
 .Fn AG_ObjectInUse
