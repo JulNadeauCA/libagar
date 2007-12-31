@@ -18,23 +18,21 @@ EventLoop(void)
 	for (;;) {
 		Tr2 = SDL_GetTicks();
 		if (Tr2-Tr1 >= agView->rNom) {		/* Time to redraw? */
-			AG_MutexLock(&agView->lock);
+			AG_LockVFS(agView);
 
 			/* Render the GUI windows. */
 			AG_TAILQ_FOREACH(win, &agView->windows, windows) {
-				AG_MutexLock(&win->lock);
-				if (!win->visible) {
-					AG_MutexUnlock(&win->lock);
-					continue;
+				AG_ObjectLock(win);
+				if (win->visible) {
+					AG_WidgetDraw(win);
 				}
-				AG_WidgetDraw(win);
-				AG_MutexUnlock(&win->lock);
+				AG_ObjectUnlock(win);
 			}
 
 			/* Flip the buffers. */
 			SDL_Flip(agView->v);
 
-			AG_MutexUnlock(&agView->lock);
+			AG_UnlockVFS(agView);
 
 			/* Recalibrate the effective refresh rate. */
 			Tr1 = SDL_GetTicks();
@@ -63,6 +61,8 @@ main(int argc, char *argv[])
 	     == -1) {
 		return (1);
 	}
+	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
+
 	win = AG_WindowNew(0);
 	AG_LabelNewStatic(win, 0, "Hello, world!");
 	AG_WindowShow(win);

@@ -14,6 +14,9 @@
 #include "animal.h"
 #include "mammal.h"
 
+/* This will be the root of our virtual filesystem. */
+AG_Object vfsRoot;
+
 int
 main(int argc, char *argv[])
 {
@@ -32,12 +35,23 @@ main(int argc, char *argv[])
 	AG_RegisterClass(&AnimalClass);
 	AG_RegisterClass(&MammalClass);
 
-	/* Load the entire VFS */
-	AG_ObjectLoad(agWorld);
+	/*
+	 * Initialize our virtual filesystem root and load its contents if it
+	 * was previously saved to disk. This structure was not malloc'ed so
+	 * we must use AG_ObjectInitStatic(). We use NULL as the class so the
+	 * generic AG_Object(3) class will be used.
+	 */
+	AG_ObjectInitStatic(&vfsRoot, NULL);
+	AG_ObjectSetName(&vfsRoot, "My VFS");
+	(void)AG_ObjectLoad(&vfsRoot);
 
-	/* Initialize the DEV library and display the object browser. */
+	/*
+	 * Initialize the DEV library. DEV_Browser() is a simple object
+	 * browser that allows the user to browse and manipulate the
+	 * contents of the VFS.
+	 */
 	DEV_InitSubsystem(0);
-	AG_WindowShow(DEV_Browser());
+	AG_WindowShow(DEV_Browser(&vfsRoot));
 	
 	AG_EventLoop();
 	AG_Destroy();
