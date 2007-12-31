@@ -384,10 +384,17 @@ ScrollbarVertButtons(AG_Scrollbar *sb, int y, int h)
 	    AG_COLOR(SCROLLBAR_ARR1_COLOR),
 	    AG_COLOR(SCROLLBAR_ARR2_COLOR));
 	
-	AG_DrawBox(sb,
-	    AG_RECT(0, sb->bw+y, sb->bw, h),
-	    (sb->curbutton == 3) ? -1 : 1,
-	    AG_COLOR(SCROLLBAR_BTN_COLOR));
+	if (h > 0) {
+		AG_DrawBox(sb,
+		    AG_RECT(0, sb->bw+y, sb->bw, h),
+		    (sb->curbutton == 3) ? -1 : 1,
+		    AG_COLOR(SCROLLBAR_BTN_COLOR));
+	} else {
+		AG_DrawBox(sb,
+		    AG_RECT(0, sb->bw, sb->bw, WIDGET(sb)->h - sb->bw*2),
+		    (sb->curbutton == 3) ? -1 : 1,
+		    AG_COLOR(SCROLLBAR_BTN_COLOR));
+	}
 }
 
 /* Buttons of horizontal Scrollbar */
@@ -413,10 +420,17 @@ ScrollbarHorizButtons(AG_Scrollbar *sb, int x, int w)
 	    AG_COLOR(SCROLLBAR_ARR1_COLOR),
 	    AG_COLOR(SCROLLBAR_ARR2_COLOR));
 
-	AG_DrawBox(sb,
-	    AG_RECT(sb->bw+x, 0, w, sb->bw),
-	    (sb->curbutton == 3) ? -1 : 1,
-	    AG_COLOR(SCROLLBAR_BTN_COLOR));
+	if (w > 0) {
+		AG_DrawBox(sb,
+		    AG_RECT(sb->bw+x, 0, w, sb->bw),
+		    (sb->curbutton == 3) ? -1 : 1,
+		    AG_COLOR(SCROLLBAR_BTN_COLOR));
+	} else {
+		AG_DrawBox(sb,
+		    AG_RECT(sb->bw, 0, WIDGET(sb)->w - sb->bw*2, sb->bw),
+		    (sb->curbutton == 3) ? -1 : 1,
+		    AG_COLOR(SCROLLBAR_BTN_COLOR));
+	}
 }
 
 /* Horizontal Separator */
