@@ -57,6 +57,9 @@ encoded characters.
 .Ft void
 .Fn AG_TextboxSizeHint "AG_Textbox *textbox" "const char *text"
 .Pp
+.Ft void
+.Fn AG_TextboxSizeHintPixels "AG_Textbox *textbox" "Uint w" "Uint h"
+.Pp
 .nr nS 0
 The
 .Fn AG_TextboxNew
@@ -104,6 +107,9 @@ requests that the initial geometry of
 is to be sufficient to display the string
 .Fa text
 in its entirety.
+The
+.Fn AG_TextboxSizeHintPixels
+variant accepts arguments in pixels.
 .Sh TEXT MANIPULATION
 .nr nS 1
 .Ft void
