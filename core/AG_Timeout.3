@@ -58,12 +58,16 @@ is the user-supplied pointer passed to
 If the callback function returns a non-zero value, the timeout is automatically
 rescheduled to occur in t+n ticks.
 .Pp
-The
-.Xr AG_Event 3
-interface uses
+Note that the object remains locked throughout the execution of
+.Fn fn
+(see
+.Xr AG_ObjectLock 3 ) .
+.Pp
+Note that
 .Nm
-internally to implement timing-related events (registered using
-.Fn AG_SchedEvent ) .
+is used internally to implement
+.Xr AG_SchedEvent 3 ,
+which is an alternative interface to the one described here.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "void"
@@ -124,17 +128,16 @@ Different types of objects may implement different timing schemes involving
 either real-time or simulated real-time.
 If the
 .Fa obj
-argument is NULL, the callback is not associated with any object and a
-default timing scheme is used.
+argument is NULL, the callback is associated with a global "timer manager"
+object which uses the default timing algorithm.
 .Pp
-With the default timing scheme, a
+With the default timing algorithm, a
 .Dq tick
 is considered to be equivalent to 1 millisecond (as obtained from
 .Xr SDL_GetTicks 3 ) .
 Different timing schemes may assign different meanings to one tick, for
 example a digital simulation could define one tick to be equivalent to
-one nanosecond, and the timing scheme could be made to allow single-stepping.
-On a multiprocessor system, one might consider a multithreaded timing scheme.
+one nanosecond, and provisions could be made to allow single-stepping.
 The
 .Nm
 interface remains consistent across different timing schemes.

@@ -21,7 +21,15 @@ AG_SLIST_HEAD(ag_timeoutq, ag_timeout);
 
 #define AG_TIMEOUT_INITIALIZER { NULL, NULL, 0, 0, 0, 1 }
 
+#define AG_LockTiming() AG_MutexLock(&agTimingLock)
+#define AG_UnlockTiming() AG_MutexUnlock(&agTimingLock)
+
 __BEGIN_DECLS
+extern AG_Mutex agTimingLock;
+
+void	AG_InitTimeouts(void);
+void	AG_DestroyTimeouts(void);
+
 void	AG_SetTimeout(AG_Timeout *, Uint32 (*)(void *, Uint32, void *), void *,
 	              Uint);
 void	AG_ScheduleTimeout(void *, AG_Timeout *, Uint32, int);

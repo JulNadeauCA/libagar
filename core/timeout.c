@@ -33,6 +33,24 @@
 #include "timeout.h"
 
 struct ag_objectq agTimeoutObjQ = TAILQ_HEAD_INITIALIZER(agTimeoutObjQ);
+AG_Object agTimeoutMgr;
+#ifdef THREADS
+AG_Mutex agTimingLock;
+#endif
+
+void
+AG_InitTimeouts(void)
+{
+	AG_MutexInitRecursive(&agTimingLock);
+	AG_ObjectInitStatic(&agTimeoutMgr, NULL);
+}
+
+void
+AG_DestroyTimeouts(void)
+{
+	AG_ObjectDestroy(&agTimeoutMgr);
+	AG_MutexDestroy(&agTimingLock);
+}
 
 /* Initialize a timeout structure. */
 void
@@ -47,19 +65,15 @@ AG_SetTimeout(AG_Timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
 }
 
 /* Schedule the timeout to occur in dt ticks. */
-/* XXX O(n), use a timing wheel instead */
 void
 AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt, int replace)
 {
-	AG_Object *ob = p;
+	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
 	AG_Timeout *to2;
 	Uint32 t = SDL_GetTicks()+dt;
 	int was_empty;
 
-	if (ob == NULL)
-		ob = agWorld;
-
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	was_empty = CIRCLEQ_EMPTY(&ob->timeouts);
 	if (replace) {
 		CIRCLEQ_FOREACH(to2, &ob->timeouts, timeouts) {
@@ -86,7 +100,7 @@ AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt, int replace)
 		TAILQ_INSERT_TAIL(&agTimeoutObjQ, ob, tobjs);
 		AG_UnlockTiming();
 	}
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 }
 
 /*
@@ -96,12 +110,8 @@ AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt, int replace)
 int
 AG_TimeoutIsScheduled(void *p, AG_Timeout *to)
 {
-	AG_Object *ob = p;
 	AG_Object *tob;
 	AG_Timeout *oto;
-
-	if (ob == NULL)
-		ob = agWorld;
 
 	TAILQ_FOREACH(tob, &agTimeoutObjQ, tobjs) {
 		CIRCLEQ_FOREACH(oto, &tob->timeouts, timeouts) {
@@ -116,11 +126,8 @@ AG_TimeoutIsScheduled(void *p, AG_Timeout *to)
 void
 AG_DelTimeout(void *p, AG_Timeout *to)
 {
-	AG_Object *ob = p;
+	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
 	AG_Timeout *oto;
-	
-	if (ob == NULL)
-		ob = agWorld;
 	
 	AG_LockTimeouts(ob);
 	CIRCLEQ_FOREACH(oto, &ob->timeouts, timeouts) {
@@ -145,12 +152,10 @@ AG_DelTimeout(void *p, AG_Timeout *to)
 int
 AG_TimeoutWait(void *p, AG_Timeout *to, Uint32 timeout)
 {
-	AG_Object *ob = p;
+	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
 	AG_Timeout *oto;
 	Uint32 elapsed = 0;
 	
-	if (ob == NULL)
-		ob = agWorld;
 wait:
 	if (timeout > 0 && ++elapsed >= timeout) {
 		AG_SetError(_("Timeout after %u ticks"), (Uint)elapsed);
@@ -210,11 +215,8 @@ pop:
 void
 AG_LockTimeouts(void *p)
 {
-	AG_Object *ob = p;
+	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
 
-	if (ob == NULL) {
-		ob = agWorld;
-	}
 	AG_ObjectLock(ob);
 	AG_LockTiming();
 }
@@ -222,11 +224,8 @@ AG_LockTimeouts(void *p)
 void
 AG_UnlockTimeouts(void *p)
 {
-	AG_Object *ob = p;
+	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
 
-	if (ob == NULL) {
-		ob = agWorld;
-	}
 	AG_UnlockTiming();
 	AG_ObjectUnlock(ob);
 }
