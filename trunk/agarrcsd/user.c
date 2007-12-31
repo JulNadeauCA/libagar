@@ -46,7 +46,7 @@ const char *UserLangDefault = "en";
 void
 UserLink(User *u)
 {
-	AG_ObjectAttach(agWorld, u);
+	AG_ObjectAttach(&UserMgr, u);
 }
 
 void
@@ -247,7 +247,7 @@ user_show(NS_Command *cmd, void *p)
 	int nmatches = 0;
 
 	fputs("0 ", stdout);
-	AGOBJECT_FOREACH_CLASS(u, agWorld, user, "User:*") {
+	AGOBJECT_FOREACH_CLASS(u, &UserMgr, user, "User:*") {
 		fputs(u->name, stdout);
 		fputc(':', stdout);
 		nmatches++;

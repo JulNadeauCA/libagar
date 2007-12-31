@@ -28,3 +28,4 @@ typedef unsigned int Uint;
 #include "user.h"
 
 extern struct user *user;
+extern AG_Object UserMgr;

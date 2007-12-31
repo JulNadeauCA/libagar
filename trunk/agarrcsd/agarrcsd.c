@@ -53,8 +53,9 @@
 #include <agar/dev.h>
 
 volatile int gothup = 0;
-User *user;
-NS_Server *serv;
+AG_Object UserMgr;			/* User manager object */
+User *user;				/* Current user (child context) */
+NS_Server *serv;			/* Server object (child context) */
 
 static void
 sig_hup(int sigraised)
@@ -156,9 +157,10 @@ main(int argc, char *argv[])
 	}
 
 	AG_RegisterClass(&UserClass);
+	
+	AG_ObjectInitStatic(&UserMgr, NULL);
 
 	if (adminflag) {
-		/* Set up administrator interface. */
 		if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
 			fprintf(stderr, "%s\n", AG_GetError());
 			return (-1);
@@ -166,14 +168,13 @@ main(int argc, char *argv[])
 		AG_InitInput(0);
 		AG_SetRefreshRate(-1);
 		AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
-
 		DEV_InitSubsystem(0);
-		DEV_Browser();
+		DEV_Browser(&UserMgr);
 	}
 
-	/* Reload the previous state (including user data). */
-	AG_ObjectLoad(agWorld);
-	AGOBJECT_FOREACH_CLASS(u, agWorld, user, "User:*")
+	/* Load previously saved user data. */
+	AG_ObjectLoad(&UserMgr);
+	AGOBJECT_FOREACH_CLASS(u, &UserMgr, user, "User:*")
 		AG_ObjectLoad(u);
 
 	/* Move to the data directory. */
