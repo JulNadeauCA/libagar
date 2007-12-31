@@ -73,10 +73,16 @@ AG_ObjectInit(void *p, void *cls)
 	ob->archivePath = NULL;
 	ob->cls = (cls != NULL) ? cls : &agObjectClass;
 	ob->parent = NULL;
+	ob->root = ob;
 	ob->flags = 0;
 	ob->nevents = 0;
 
+#ifdef LOCKDEBUG
+	ob->lockinfo = Malloc(sizeof(char *));
+	ob->nlockinfo = 0;
+#endif
 	AG_MutexInitRecursive(&ob->lock);
+	
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
@@ -123,7 +129,6 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cls)
 	obj = Malloc(cls->size);
 	AG_ObjectInit(obj, cls);
 	AG_ObjectSetName(obj, "%s", (name != NULL) ? name : nameGen);
-
 	obj->flags |= AG_OBJECT_RESIDENT;
 	if (parent != NULL) {
 		AG_ObjectAttach(parent, obj);
@@ -157,11 +162,13 @@ AG_ObjectRemain(void *p, int flags)
 {
 	AG_Object *ob = p;
 
+	AG_ObjectLock(ob);
 	if (flags & AG_OBJECT_REMAIN_DATA) {
 		ob->flags |= (AG_OBJECT_REMAIN_DATA|AG_OBJECT_RESIDENT);
 	} else {
 		ob->flags &= ~AG_OBJECT_REMAIN_DATA;
 	}
+	AG_ObjectUnlock(ob);
 }
 
 /*
@@ -176,7 +183,7 @@ AG_ObjectFreeDataset(void *p)
 	AG_ObjectClass **hier;
 	int i, nHier;
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	if (!OBJECT_RESIDENT(ob)) {
 		goto out;
 	}
@@ -196,16 +203,21 @@ AG_ObjectFreeDataset(void *p)
 	if (!preserveDeps)
 		ob->flags &= ~(AG_OBJECT_PRESERVE_DEPS);
 out:
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 }
 
-/* Recursive function to construct absolute object names. */
+/*
+ * Recursive function to construct absolute object names.
+ * The object's VFS must be locked.
+ */
 static int
-AG_ObjectNameSearch(const void *obj, char *path, size_t path_len)
+GenerateObjectPath(void *obj, char *path, size_t path_len)
 {
-	const AG_Object *ob = obj;
+	AG_Object *ob = obj;
 	size_t name_len, cur_len;
 	int rv = 0;
+
+	AG_ObjectLock(ob);
 
 	cur_len = strlen(path)+1;
 	name_len = strlen(ob->name)+1;
@@ -213,6 +225,7 @@ AG_ObjectNameSearch(const void *obj, char *path, size_t path_len)
 	if (sizeof("/")+name_len+sizeof("/")+cur_len >= path_len) {
 		AG_SetError(_("The path exceeds >= %lu bytes."),
 		    (unsigned long)path_len);
+		AG_ObjectUnlock(ob);
 		return (-1);
 	}
 	
@@ -221,9 +234,11 @@ AG_ObjectNameSearch(const void *obj, char *path, size_t path_len)
 	path[0] = '/';
 	memcpy(&path[1], ob->name, name_len-1);	    /* Omit the NUL */
 
-	if (ob->parent != agWorld && ob->parent != NULL)
-		rv = AG_ObjectNameSearch(ob->parent, path, path_len);
-
+	if (ob->parent != ob->root && ob->parent != NULL) {
+		rv = GenerateObjectPath(ob->parent, path, path_len);
+	}
+	
+	AG_ObjectUnlock(ob);
 	return (rv);
 }
 
@@ -232,71 +247,84 @@ AG_ObjectNameSearch(const void *obj, char *path, size_t path_len)
  * The buffer size must be >2 bytes.
  */
 int
-AG_ObjectCopyName(const void *obj, char *path, size_t path_len)
+AG_ObjectCopyName(void *obj, char *path, size_t path_len)
 {
-	const AG_Object *ob = obj;
+	AG_Object *ob = obj;
 	int rv = 0;
 
 	path[0] = '/';
 	path[1] = '\0';
-	if (ob != agWorld)
-		Strlcat(path, ob->name, path_len);
 
-	AG_LockLinkage();
-	if (ob != agWorld && ob->parent != agWorld && ob->parent != NULL) {
-		rv = AG_ObjectNameSearch(ob->parent, path, path_len);
+	AG_LockVFS(ob);
+	AG_ObjectLock(ob);
+	if (ob != ob->root) {
+		Strlcat(path, ob->name, path_len);
 	}
-	AG_UnlockLinkage();
+	if (ob != ob->root && ob->parent != ob->root && ob->parent != NULL) {
+		rv = GenerateObjectPath(ob->parent, path, path_len);
+	}
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
 	return (rv);
 }
 
 /*
  * Search an object and its children for a dependency upon robj.
- * The linkage must be locked.
+ * The object's VFS must be locked.
  */
 static int
-AG_ObjectInUseFind(const void *p, const void *robj)
+FindObjectInUse(void *p, void *robj)
 {
-	const AG_Object *ob = p, *cob;
+	AG_Object *ob = p, *cob;
 	AG_ObjectDep *dep;
 
+	AG_ObjectLock(ob);
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		if (dep->obj == robj &&
 		    robj != ob) {
 			AG_SetError(_("The `%s' object is used by `%s'."),
 			    OBJECT(robj)->name, ob->name);
-			return (1);
+			goto used;
 		}
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
-		if (AG_ObjectInUseFind(cob, robj))
-			return (1);
+		if (FindObjectInUse(cob, robj))
+			goto used;
 	}
+	AG_ObjectUnlock(ob);
 	return (0);
+used:
+	AG_ObjectUnlock(ob);
+	return (1);
 }
 
 /*
  * Return 1 if the given object or one of its children is being referenced.
- * The linkage must be locked.
+ * Return value is only valid as long as the VFS is locked.
  */
 int
-AG_ObjectInUse(const void *p)
+AG_ObjectInUse(void *p)
 {
-	const AG_Object *ob = p, *cob;
+	AG_Object *ob = p, *cob;
 	AG_Object *root;
 
+	AG_LockVFS(ob);
 	root = AG_ObjectRoot(ob);
-	if (AG_ObjectInUseFind(root, ob))
-		return (1);
-
+	if (FindObjectInUse(root, ob)) {
+		goto used;
+	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (AG_ObjectInUse(cob))
-			return (1);
+			goto used;
 	}
+	AG_UnlockVFS(ob);
 	return (0);
+used:
+	AG_UnlockVFS(ob);
+	return (1);
 }
 
-/* Move an object to a different parent. */
+/* Move an object from one parent object to another. */
 void
 AG_ObjectMove(void *childp, void *newparentp)
 {
@@ -304,8 +332,15 @@ AG_ObjectMove(void *childp, void *newparentp)
 	AG_Object *oparent = child->parent;
 	AG_Object *nparent = newparentp;
 
-	AG_LockLinkage();
-
+#ifdef DEBUG
+	if (oparent->root != nparent->root)
+		AG_FatalError("Cannot move objects across VFSes");
+#endif
+	AG_LockVFS(oparent);
+	AG_ObjectLock(oparent);
+	AG_ObjectLock(nparent);
+	AG_ObjectLock(child);
+	
 	TAILQ_REMOVE(&oparent->children, child, cobjs);
 	child->parent = NULL;
 	AG_PostEvent(oparent, child, "detached", NULL);
@@ -315,13 +350,20 @@ AG_ObjectMove(void *childp, void *newparentp)
 	AG_PostEvent(nparent, child, "attached", NULL);
 	AG_PostEvent(oparent, child, "moved", "%p", nparent);
 
-	Debug(child, "ObjectMove(): Moving from %s to %s\n", oparent->name,
-	    nparent->name);
+	Debug(child, "Moving from %s to new parent %s\n",
+	    oparent->name, nparent->name);
+	Debug(oparent, "Detached object: %s (moving to %s)\n",
+	    child->name, nparent->name);
+	Debug(nparent, "Attached object: %s (originally in %s)\n",
+	    child->name, oparent->name);
 
-	AG_UnlockLinkage();
+	AG_ObjectLock(child);
+	AG_ObjectLock(nparent);
+	AG_ObjectLock(oparent);
+	AG_UnlockVFS(oparent);
 }
 
-/* Attach a child object to some parent object. */
+/* Attach an object to another object. */
 void
 AG_ObjectAttach(void *parentp, void *pChld)
 {
@@ -331,23 +373,35 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	if (parent == NULL)
 		return;
 
-	AG_LockLinkage();
-	
+	AG_LockVFS(parent);
+	AG_ObjectLock(parent);
+	AG_ObjectLock(chld);
+
 	if (chld->flags & AG_OBJECT_NAME_ONATTACH) {
 		AG_ObjectGenName(parent, chld->cls, chld->name,
 		    sizeof(chld->name));
 	}
 	TAILQ_INSERT_TAIL(&parent->children, chld, cobjs);
 	chld->parent = parent;
+	chld->root = parent->root;
+
 	AG_PostEvent(parent, chld, "attached", NULL);
 	AG_PostEvent(chld, parent, "child-attached", NULL);
+	
+	Debug(parent, "Attached child object: %s\n", chld->name);
+	Debug(chld, "Attached to new parent: %s\n", parent->name);
 
-	AG_UnlockLinkage();
+	AG_ObjectUnlock(chld);
+	AG_ObjectUnlock(parent);
+	AG_UnlockVFS(parent);
 }
 
-/* Attach a child object to some parent object according to a path. */
+/*
+ * Attach an object to some other object specified by a pathname specific
+ * to the given VFS.
+ */
 int
-AG_ObjectAttachToNamed(const char *path, void *child)
+AG_ObjectAttachToNamed(void *vfsRoot, const char *path, void *child)
 {
 	char ppath[MAXPATHLEN];
 	void *parent;
@@ -355,31 +409,29 @@ AG_ObjectAttachToNamed(const char *path, void *child)
 
 	if (Strlcpy(ppath, path, sizeof(ppath)) >= sizeof(ppath)) {
 		AG_SetError("path too big");
-		goto fail;
+		return (-1);
 	}
 	if ((p = strrchr(ppath, '/')) != NULL) {
 		*p = '\0';
 	} else {
 		AG_SetError("not an absolute path: `%s'", path);
-		goto fail;
+		return (-1);
 	}
 
-	AG_LockLinkage();
+	AG_LockVFS(vfsRoot);
 	if (ppath[0] == '\0') {
-		AG_ObjectAttach(agWorld, child);
+		AG_ObjectAttach(vfsRoot, child);
 	} else {
-		if ((parent = AG_ObjectFind(ppath)) == NULL) {
+		if ((parent = AG_ObjectFind(vfsRoot, ppath)) == NULL) {
 			AG_SetError("%s: cannot attach to `%s': %s",
 			    OBJECT(child)->name, ppath, AG_GetError());
-			goto fail;
+			AG_UnlockVFS(vfsRoot);
+			return (-1);
 		}
 		AG_ObjectAttach(parent, child);
 	}
-	AG_UnlockLinkage();
+	AG_UnlockVFS(vfsRoot);
 	return (0);
-fail:
-	AG_UnlockLinkage();
-	return (-1);
 }
 
 /* Detach a child object from its parent. */
@@ -387,25 +439,32 @@ void
 AG_ObjectDetach(void *childp)
 {
 	AG_Object *child = childp;
+	AG_Object *root = child->root;
 	AG_Object *parent = child->parent;
 
-	AG_LockLinkage();
-	AG_MutexLock(&child->lock);
+	AG_LockVFS(root);
+	AG_ObjectLock(parent);
+	AG_ObjectLock(child);
+
 	AG_ObjectCancelTimeouts(child, AG_CANCEL_ONDETACH);
 
 	TAILQ_REMOVE(&parent->children, child, cobjs);
 	child->parent = NULL;
+	child->root = child;
 	AG_PostEvent(parent, child, "detached", NULL);
 	AG_PostEvent(child, parent, "child-detached", NULL);
-	Debug(child, "Detached from %s\n", parent->name);
 
-	AG_MutexUnlock(&child->lock);
-	AG_UnlockLinkage();
+	Debug(parent, "Detached child object %s\n", child->name);
+	Debug(child, "Detached from parent %s\n", parent->name);
+
+	AG_ObjectUnlock(child);
+	AG_ObjectUnlock(parent);
+	AG_UnlockVFS(root);
 }
 
 /* Traverse the object tree using a pathname. */
 static void *
-AG_ObjectSearchPath(const AG_Object *parent, const char *name)
+FindObjectByName(const AG_Object *parent, const char *name)
 {
 	char node_name[AG_OBJECT_PATH_MAX];
 	void *rv;
@@ -422,7 +481,7 @@ AG_ObjectSearchPath(const AG_Object *parent, const char *name)
 			continue;
 
 		if ((s = strchr(name, '/')) != NULL) {
-			rv = AG_ObjectSearchPath(child, &s[1]);
+			rv = FindObjectByName(child, &s[1]);
 			if (rv != NULL) {
 				return (rv);
 			} else {
@@ -434,9 +493,12 @@ AG_ObjectSearchPath(const AG_Object *parent, const char *name)
 	return (NULL);
 }
 
-/* Search for the named object (absolute path). */
+/*
+ * Search for the named object (absolute path). Return value is only valid
+ * as long as VFS is locked.
+ */
 void *
-AG_ObjectFind(const char *name)
+AG_ObjectFind(void *vfsRoot, const char *name)
 {
 	void *rv;
 
@@ -445,11 +507,11 @@ AG_ObjectFind(const char *name)
 		AG_FatalError("AG_ObjectFind: Not an absolute path: %s", name);
 #endif
 	if (name[0] == '/' && name[1] == '\0')
-		return (agWorld);
+		return (vfsRoot);
 	
-	AG_LockLinkage();
-	rv = AG_ObjectSearchPath(agWorld, &name[1]);
-	AG_UnlockLinkage();
+	AG_LockVFS(vfsRoot);
+	rv = FindObjectByName(vfsRoot, &name[1]);
+	AG_UnlockVFS(vfsRoot);
 
 	if (rv == NULL) {
 		AG_SetError(_("The object `%s' does not exist."), name);
@@ -457,9 +519,12 @@ AG_ObjectFind(const char *name)
 	return (rv);
 }
 
-/* Search for the named object (absolute path). */
+/*
+ * Search for the named object (absolute path), using format string parameter.
+ * Return value is only valid as long as VFS is locked.
+ */
 void *
-AG_ObjectFindF(const char *fmt, ...)
+AG_ObjectFindF(void *vfsRoot, const char *fmt, ...)
 {
 	char path[AG_OBJECT_PATH_MAX];
 	void *rv;
@@ -472,9 +537,9 @@ AG_ObjectFindF(const char *fmt, ...)
 	if (path[0] != '/')
 		AG_FatalError("AG_ObjectFindF: Not an absolute path: %s", path);
 #endif
-	AG_LockLinkage();
-	rv = AG_ObjectSearchPath(agWorld, &path[1]);
-	AG_UnlockLinkage();
+	AG_LockVFS(vfsRoot);
+	rv = FindObjectByName(vfsRoot, &path[1]);
+	AG_UnlockVFS(vfsRoot);
 
 	if (rv == NULL) {
 		AG_SetError(_("The object `%s' does not exist."), path);
@@ -488,6 +553,7 @@ AG_ObjectFreeDeps(AG_Object *ob)
 {
 	AG_ObjectDep *dep, *ndep;
 
+	AG_ObjectLock(ob);
 	for (dep = TAILQ_FIRST(&ob->deps);
 	     dep != TAILQ_END(&ob->deps);
 	     dep = ndep) {
@@ -495,11 +561,12 @@ AG_ObjectFreeDeps(AG_Object *ob)
 		Free(dep);
 	}
 	TAILQ_INIT(&ob->deps);
+	AG_ObjectUnlock(ob);
 }
 
 /*
- * Remove any entry in the object's dependency table (and its children's)
- * with a reference count of zero.
+ * Remove any entry in the object's dependency table with a reference count
+ * of zero. Also applies to the object's children.
  */
 void
 AG_ObjectFreeDummyDeps(AG_Object *ob)
@@ -507,6 +574,7 @@ AG_ObjectFreeDummyDeps(AG_Object *ob)
 	AG_Object *cob;
 	AG_ObjectDep *dep, *ndep;
 
+	AG_ObjectLock(ob);
 	for (dep = TAILQ_FIRST(&ob->deps);
 	     dep != TAILQ_END(&ob->deps);
 	     dep = ndep) {
@@ -516,8 +584,10 @@ AG_ObjectFreeDummyDeps(AG_Object *ob)
 			Free(dep);
 		}
 	}
-	TAILQ_FOREACH(cob, &ob->children, cobjs)
+	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		AG_ObjectFreeDummyDeps(cob);
+	}
+	AG_ObjectUnlock(ob);
 }
 
 /*
@@ -529,7 +599,7 @@ AG_ObjectFreeChildren(AG_Object *pob)
 {
 	AG_Object *cob, *ncob;
 
-	AG_MutexLock(&pob->lock);
+	AG_ObjectLock(pob);
 	for (cob = TAILQ_FIRST(&pob->children);
 	     cob != TAILQ_END(&pob->children);
 	     cob = ncob) {
@@ -539,7 +609,7 @@ AG_ObjectFreeChildren(AG_Object *pob)
 		AG_ObjectDestroy(cob);
 	}
 	TAILQ_INIT(&pob->children);
-	AG_MutexUnlock(&pob->lock);
+	AG_ObjectUnlock(pob);
 }
 
 /* Clear an object's property table. */
@@ -548,7 +618,7 @@ AG_ObjectFreeProps(AG_Object *ob)
 {
 	AG_Prop *prop, *nextprop;
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	for (prop = TAILQ_FIRST(&ob->props);
 	     prop != TAILQ_END(&ob->props);
 	     prop = nextprop) {
@@ -557,7 +627,7 @@ AG_ObjectFreeProps(AG_Object *ob)
 		Free(prop);
 	}
 	TAILQ_INIT(&ob->props);
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 }
 
 /*
@@ -569,7 +639,7 @@ AG_ObjectFreeEvents(AG_Object *ob)
 {
 	AG_Event *eev, *neev;
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	for (eev = TAILQ_FIRST(&ob->events);
 	     eev != TAILQ_END(&ob->events);
 	     eev = neev) {
@@ -581,7 +651,7 @@ AG_ObjectFreeEvents(AG_Object *ob)
 		Free(eev);
 	}
 	TAILQ_INIT(&ob->events);
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 }
 
 /* Cancel any scheduled timeout event associated with the object. */
@@ -593,7 +663,7 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
 	AG_Event *ev;
 
 	AG_LockTiming();
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if ((ev->flags & AG_EVENT_SCHEDULED) &&
@@ -610,7 +680,7 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
 	}
 	CIRCLEQ_INIT(&ob->timeouts);
 
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	AG_UnlockTiming();
 }
 
@@ -701,21 +771,24 @@ AG_ObjectDestroy(void *p)
 		Free(ob);
 }
 
-/* Copy the full pathname to an object's data file to a fixed-size buffer. */
+/*
+ * Copy the full pathname to an object's data file to a fixed-size buffer.
+ * The path is only valid as long as the VFS is locked.
+ */
 /* NOTE: Will return data into path even upon failure. */
 int
-AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
+AG_ObjectCopyFilename(void *p, char *path, size_t path_len)
 {
 	char load_path[MAXPATHLEN], *loadpathp = &load_path[0];
 	char obj_name[AG_OBJECT_PATH_MAX];
-	const AG_Object *ob = p;
+	AG_Object *ob = p;
 	char *dir;
 
+	AG_ObjectLock(ob);
 	if (ob->archivePath != NULL) {
 		Strlcpy(path, ob->archivePath, path_len);
-		return (0);
+		goto out;
 	}
-
 	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
@@ -733,23 +806,31 @@ AG_ObjectCopyFilename(const void *p, char *path, size_t path_len)
 		Strlcat(path, ob->cls->name, path_len);
 
 		if (AG_FileExists(path))
-			return (0);
+			goto out;
 	}
 	AG_SetError(_("The %s%s%c%s.%s file is not in load-path."),
 	    ob->save_pfx != NULL ? ob->save_pfx : "",
 	    obj_name, AG_PATHSEPC, ob->name, ob->cls->name);
+	AG_ObjectUnlock(ob);
 	return (-1);
+out:
+	AG_ObjectUnlock(ob);
+	return (0);
 }
 
-/* Copy the full pathname of an object's data dir to a fixed-size buffer. */
+/*
+ * Copy the full pathname of an object's data dir to a fixed-size buffer.
+ * The path is only valid as long as the VFS is locked.
+ */
 int
-AG_ObjectCopyDirname(const void *p, char *path, size_t path_len)
+AG_ObjectCopyDirname(void *p, char *path, size_t path_len)
 {
 	char load_path[MAXPATHLEN], *loadpathp = &load_path[0];
 	char obj_name[AG_OBJECT_PATH_MAX];
-	const AG_Object *ob = p;
+	AG_Object *ob = p;
 	char *dir;
 
+	AG_ObjectLock(ob);
 	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
@@ -765,11 +846,15 @@ AG_ObjectCopyDirname(const void *p, char *path, size_t path_len)
 		Strlcat(tmp_path, obj_name, sizeof(tmp_path));
 		if (AG_FileExists(tmp_path)) {
 			Strlcpy(path, tmp_path, path_len);
-			return (0);
+			goto out;
 		}
 	}
 	AG_SetError(_("The %s directory is not in load-path."), obj_name);
+	AG_ObjectUnlock(ob);
 	return (-1);
+out:
+	AG_ObjectUnlock(ob);
+	return (0);
 }
 
 /*
@@ -783,7 +868,7 @@ AG_ObjectPageIn(void *p)
 	AG_Object *ob = p;
 	int dataFound;
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	if (!OBJECT_PERSISTENT(ob)) {
 		ob->flags |= AG_OBJECT_RESIDENT;
 		goto out;
@@ -803,10 +888,10 @@ AG_ObjectPageIn(void *p)
 		}
 	}
 out:
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (0);
 fail:
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (-1);
 }
 
@@ -819,17 +904,17 @@ AG_ObjectPageOut(void *p)
 {
 	AG_Object *ob = p;
 	
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	if (!OBJECT_PERSISTENT(ob)) {
-		goto done;
+		goto out;
 	}
 	if (!OBJECT_RESIDENT(ob)) {
 		AG_SetError(_("Object is non-resident"));
 		goto fail;
 	}
 	if (!AG_ObjectInUse(ob)) {
-		if (AG_FindEventHandler(agWorld, "object-page-out") != NULL) {
-			AG_PostEvent(ob, agWorld, "object-page-out", NULL);
+		if (AG_FindEventHandler(ob->root, "object-page-out") != NULL) {
+			AG_PostEvent(ob, ob->root, "object-page-out", NULL);
 		} else {
 			if (AG_ObjectSave(ob) == -1)
 				goto fail;
@@ -837,11 +922,11 @@ AG_ObjectPageOut(void *p)
 		if ((ob->flags & AG_OBJECT_REMAIN_DATA) == 0)
 			AG_ObjectFreeDataset(ob);
 	}
-done:
-	AG_MutexUnlock(&ob->lock);
+out:
+	AG_ObjectUnlock(ob);
 	return (0);
 fail:
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (-1);
 }
 
@@ -852,25 +937,25 @@ AG_ObjectLoadFromFile(void *p, const char *path)
 	AG_Object *ob = p;
 	int dataFound;
 
-	AG_LockLinkage();
-	AG_MutexLock(&ob->lock);
+	AG_LockVFS(ob);
+	AG_ObjectLock(ob);
 	if (AG_ObjectLoadGenericFromFile(ob, path) == -1 ||
 	    AG_ObjectResolveDeps(ob) == -1 ||
 	    AG_ObjectLoadDataFromFile(ob, &dataFound, path) == -1) {
 		goto fail;
 	}
-	AG_MutexUnlock(&ob->lock);
-	AG_UnlockLinkage();
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
 	return (0);
 fail:
-	AG_MutexUnlock(&ob->lock);
-	AG_UnlockLinkage();
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
 	return (-1);
 }
 
 /*
  * Resolve the encoded dependencies of an object and its children.
- * The object linkage must be locked.
+ * The object's VFS must be locked.
  */
 int
 AG_ObjectResolveDeps(void *p)
@@ -878,17 +963,20 @@ AG_ObjectResolveDeps(void *p)
 	AG_Object *ob = p, *cob;
 	AG_ObjectDep *dep;
 
+	AG_ObjectLock(ob);
+
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		Debug(ob, "Resolving dependency: %s...\n", dep->path);
 		if (dep->obj != NULL) {
 			Debug(ob, "Already resolved\n");
 			continue;
 		}
-		if ((dep->obj = AG_ObjectFind(dep->path)) == NULL) {
-			Debug(ob, "Failed to resolve!\n");
+		if ((dep->obj = AG_ObjectFind(ob->root, dep->path)) == NULL) {
+			Debug(ob, "Failed to resolve dependency: %s\n",
+			    dep->path);
 			AG_SetError(_("%s: Cannot resolve dependency `%s'"),
 			    ob->name, dep->path);
-			return (-1);
+			goto fail;
 		}
 		Debug(ob, "Dependency resolves to %p (%s)\n", dep->obj,
 		    dep->obj->name);
@@ -897,21 +985,28 @@ AG_ObjectResolveDeps(void *p)
 	}
 
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
+		AG_ObjectLock(cob);
 		if (!OBJECT_PERSISTENT(cob)) {
+			AG_ObjectUnlock(cob);
 			continue;
 		}
-		if (AG_ObjectResolveDeps(cob) == -1)
-			return (-1);
+		if (AG_ObjectResolveDeps(cob) == -1) {
+			AG_ObjectUnlock(cob);
+			goto fail;
+		}
+		AG_ObjectUnlock(cob);
 	}
+	AG_ObjectUnlock(ob);
 	return (0);
+fail:
+	AG_ObjectUnlock(ob);
+	return (-1);
 }
 
 /*
  * Load the generic part of an object from archive. If the archived
  * object has children, create instances for them and load their
  * generic part as well.
- *
- * The object and linkage must be locked.
  */
 int
 AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
@@ -928,8 +1023,8 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		AG_SetError(_("Object is non-persistent"));
 		return (-1);
 	}
-	AG_LockLinkage();
-	AG_MutexLock(&ob->lock);
+	AG_LockVFS(ob);
+	AG_ObjectLock(ob);
 	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
 
 	if (pPath != NULL) {
@@ -1028,7 +1123,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			if ((cl = AG_FindClass(classID)) == NULL) {
 				AG_SetError("%s: %s", ob->name, AG_GetError());
 				if (agObjectIgnoreUnknownObjs) {
-					Debug(ob, "%s; ignoring",
+					Debug(ob, "%s; ignoring\n",
 					    AG_GetError());
 					continue;
 				} else {
@@ -1045,25 +1140,22 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 				goto fail;
 		}
 	}
-	AG_PostEvent(ob, agWorld, "object-post-load-generic", "%s", path);
+	AG_PostEvent(ob, ob->root, "object-post-load-generic", "%s", path);
 	AG_CloseFile(ds);
-	AG_MutexUnlock(&ob->lock);
-	AG_UnlockLinkage();
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
 	return (0);
 fail:
 	AG_ObjectFreeDataset(ob);
 	AG_ObjectFreeDeps(ob);
 	AG_CloseFile(ds);
 fail_unlock:
-	AG_MutexUnlock(&ob->lock);
-	AG_UnlockLinkage();
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
 	return (-1);
 }
 
-/*
- * Load only the data part of an object archive.
- * The object must be locked.
- */
+/* Load only the dataset part of an object archive. */
 int
 AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 {
@@ -1075,12 +1167,12 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	AG_ObjectClass **hier;
 	int i, nHier;
 	
+	AG_LockVFS(ob);
+	AG_ObjectLock(ob);
 	if (!OBJECT_PERSISTENT(ob)) {
 		AG_SetError(_("Object is non-persistent"));
-		return (-1);
+		goto out;
 	}
-	AG_LockLinkage();
-	AG_MutexLock(&ob->lock);
 	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
 
 	*dataFound = 1;
@@ -1094,7 +1186,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 			if (AG_ObjectCopyFilename(ob, path, sizeof(path))
 			    == -1) {
 				*dataFound = 0;
-				return (-1);
+				goto fail_unlock;
 			}
 		}
 	}
@@ -1103,7 +1195,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
 		*dataFound = 0;
-		return (-1);
+		goto fail_unlock;
 	}
 	if (AG_ReadVersion(ds, agObjectClass.name, &agObjectClass.ver, NULL)
 	    == -1)
@@ -1132,12 +1224,15 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	}
 	ob->flags |= AG_OBJECT_RESIDENT;
 	AG_CloseFile(ds);
-	AG_PostEvent(ob, agWorld, "object-post-load-data", "%s", path);
-	AG_MutexUnlock(&ob->lock);
-	AG_UnlockLinkage();
+	AG_PostEvent(ob, ob->root, "object-post-load-data", "%s", path);
+out:
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
 	return (0);
 fail:
 	AG_CloseFile(ds);
+fail_unlock:
+	AG_UnlockVFS(ob);
 	return (-1);
 }
 
@@ -1159,21 +1254,31 @@ AG_ObjectSaveAll(void *p)
 {
 	AG_Object *obj = p, *cobj;
 
-	AG_LockLinkage();
+	AG_LockVFS(obj);
+	AG_ObjectLock(obj);
+
 	if (AG_ObjectSave(obj) == -1) {
 		goto fail;
 	}
 	TAILQ_FOREACH(cobj, &obj->children, cobjs) {
+		AG_ObjectLock(cobj);
 		if (!OBJECT_PERSISTENT(cobj)) {
+			AG_ObjectUnlock(cobj);
 			continue;
 		}
-		if (AG_ObjectSaveAll(cobj) == -1)
+		if (AG_ObjectSaveAll(cobj) == -1) {
+			AG_ObjectUnlock(cobj);
 			goto fail;
+		}
+		AG_ObjectUnlock(cobj);
 	}
-	AG_UnlockLinkage();
+
+	AG_ObjectUnlock(obj);
+	AG_UnlockVFS(obj);
 	return (0);
 fail:
-	AG_UnlockLinkage();
+	AG_ObjectUnlock(obj);
+	AG_UnlockVFS(obj);
 	return (-1);
 }
 
@@ -1195,8 +1300,8 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	AG_ObjectClass **hier;
 	int i, nHier;
 
-	AG_LockLinkage();
-	AG_MutexLock(&ob->lock);
+	AG_LockVFS(ob);
+	AG_ObjectLock(ob);
 
 	if (!OBJECT_PERSISTENT(ob)) {
 		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
@@ -1321,16 +1426,16 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 
 	AG_CloseFile(ds);
 	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }
-	AG_MutexUnlock(&ob->lock);
-	AG_UnlockLinkage();
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
 	return (0);
 fail:
 	AG_CloseFile(ds);
 fail_reinit:
 	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }
 fail_lock:
-	AG_MutexUnlock(&ob->lock);
-	AG_UnlockLinkage();
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
 	return (-1);
 }
 
@@ -1345,6 +1450,8 @@ AG_ObjectSetName(void *p, const char *fmt, ...)
 	va_list ap;
 	char *c;
 
+	AG_ObjectLock(ob);
+
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		Vsnprintf(ob->name, sizeof(ob->name), fmt, ap);
@@ -1357,16 +1464,22 @@ AG_ObjectSetName(void *p, const char *fmt, ...)
 		if (*c == '/' || *c == '\\')		/* Pathname separator */
 			*c = '_';
 	}
+	
+	AG_ObjectUnlock(ob);
 }
 
+/*
+ * Return the archive path of an object into a fixed buffer. Returned path
+ * is valid as long as the object is locked.
+ */
 void
 AG_ObjectGetArchivePath(void *p, char *buf, size_t buf_len)
 {
 	AG_Object *ob = p;
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	Strlcpy(buf, ob->archivePath, buf_len);
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 }
 
 /* Set the default path to use with ObjectLoad() and ObjectSave(). */
@@ -1375,12 +1488,13 @@ AG_ObjectSetArchivePath(void *p, const char *path)
 {
 	AG_Object *ob = p;
 
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
+	Free(ob->archivePath);
 	ob->archivePath = Strdup(path);
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 }
 
-/* Override an object's class; thread unsafe. */
+/* Change an object's class. This is thread unsafe and should not be used. */
 void
 AG_ObjectSetClass(void *p, void *cls)
 {
@@ -1393,6 +1507,9 @@ AG_ObjectAddDep(void *p, void *depobj)
 {
 	AG_Object *ob = p;
 	AG_ObjectDep *dep;
+
+	AG_ObjectLock(ob);
+	AG_ObjectLock(depobj);
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		if (dep->obj == depobj)
@@ -1413,14 +1530,17 @@ AG_ObjectAddDep(void *p, void *depobj)
 		dep->count = 1;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
 	}
+
+	AG_ObjectUnlock(depobj);
+	AG_ObjectUnlock(ob);
 	return (dep);
 }
 
 /* Resolve a given dependency. */
 int
-AG_ObjectFindDep(const void *p, Uint32 ind, void **objp)
+AG_ObjectFindDep(void *p, Uint32 ind, void **objp)
 {
-	const AG_Object *ob = p;
+	AG_Object *ob = p;
 	AG_ObjectDep *dep;
 	Uint32 i;
 
@@ -1432,20 +1552,22 @@ AG_ObjectFindDep(const void *p, Uint32 ind, void **objp)
 		return (0);
 	}
 
+	AG_ObjectLock(ob);
 	for (dep = TAILQ_FIRST(&ob->deps), i = 2;
 	     dep != TAILQ_END(&ob->deps);
 	     dep = TAILQ_NEXT(dep, deps), i++) {
 		if (i == ind)
 			break;
 	}
-	if (dep != NULL) {
-		*objp = dep->obj;
-		return (0);
+	if (dep == NULL) {
+		AG_SetError(_("Unable to resolve dependency %s:%u."), ob->name, 
+		    (Uint)ind);
+		AG_ObjectUnlock(ob);
+		return (-1);
 	}
-
-	AG_SetError(_("Unable to resolve dependency %s:%u."), ob->name, 
-	    (Uint)ind);
-	return (-1);
+	*objp = dep->obj;
+	AG_ObjectUnlock(ob);
+	return (0);
 }
 
 /*
@@ -1453,9 +1575,9 @@ AG_ObjectFindDep(const void *p, Uint32 ind, void **objp)
  * NULL value and 1 is the parent object itself.
  */
 Uint32
-AG_ObjectEncodeName(const void *p, const void *depobjp)
+AG_ObjectEncodeName(void *p, const void *depobjp)
 {
-	const AG_Object *ob = p;
+	AG_Object *ob = p;
 	const AG_Object *depobj = depobjp;
 	AG_ObjectDep *dep;
 	Uint32 i;
@@ -1465,13 +1587,18 @@ AG_ObjectEncodeName(const void *p, const void *depobjp)
 	} else if (p == depobjp) {
 		return (1);
 	}
+
+	AG_ObjectLock(ob);
 	for (dep = TAILQ_FIRST(&ob->deps), i = 2;
 	     dep != TAILQ_END(&ob->deps);
 	     dep = TAILQ_NEXT(dep, deps), i++) {
-		if (dep->obj == depobj)
+		if (dep->obj == depobj) {
+			AG_ObjectUnlock(ob);
 			return (i);
+		}
 	}
 	AG_FatalError("AG_ObjectEncodeName: %s: No such dep", depobj->name);
+	AG_ObjectUnlock(ob);
 	return (0);
 }
 
@@ -1484,7 +1611,9 @@ AG_ObjectDelDep(void *p, const void *depobj)
 {
 	AG_Object *ob = p;
 	AG_ObjectDep *dep;
-	
+
+	AG_ObjectLock(ob);
+
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
 		if (dep->obj == depobj)
 			break;
@@ -1492,12 +1621,11 @@ AG_ObjectDelDep(void *p, const void *depobj)
 	if (dep == NULL) {
 		Debug(ob, "Attempt to remove invalid dep: %s\n",
 		    OBJECT(depobj)->name);
-		return;
+		goto out;
 	}
-
-	if (dep->count == AG_OBJECT_DEP_MAX)			/* Wired */
-		return;
-
+	if (dep->count == AG_OBJECT_DEP_MAX) {			/* Wired */
+		goto out;
+	}
 	if ((dep->count-1) == 0) {
 		if ((ob->flags & AG_OBJECT_PRESERVE_DEPS) == 0) {
 			Debug(ob, "Remove dependency on %s\n",
@@ -1514,6 +1642,8 @@ AG_ObjectDelDep(void *p, const void *depobj)
 		    OBJECT(depobj)->name, (Uint)dep->count);
 		dep->count--;
 	}
+out:
+	AG_ObjectUnlock(ob);
 }
 
 /* Move an object towards the head of its parent's children list. */
@@ -1523,12 +1653,13 @@ AG_ObjectMoveUp(void *p)
 	AG_Object *ob = p, *prev;
 	AG_Object *parent = ob->parent;
 
-	if (parent == NULL || ob == TAILQ_FIRST(&parent->children))
-		return;
-
-	prev = TAILQ_PREV(ob, ag_objectq, cobjs);
-	TAILQ_REMOVE(&parent->children, ob, cobjs);
-	TAILQ_INSERT_BEFORE(prev, ob, cobjs);
+	AG_LockVFS(parent);
+	if (parent != NULL && ob != TAILQ_FIRST(&parent->children)) {
+		prev = TAILQ_PREV(ob, ag_objectq, cobjs);
+		TAILQ_REMOVE(&parent->children, ob, cobjs);
+		TAILQ_INSERT_BEFORE(prev, ob, cobjs);
+	}
+	AG_UnlockVFS(parent);
 }
 
 /* Move an object towards the tail of its parent's children list. */
@@ -1539,30 +1670,33 @@ AG_ObjectMoveDown(void *p)
 	AG_Object *parent = ob->parent;
 	AG_Object *next = TAILQ_NEXT(ob, cobjs);
 
-	if (parent == NULL || next == NULL)
-		return;
-
-	TAILQ_REMOVE(&parent->children, ob, cobjs);
-	TAILQ_INSERT_AFTER(&parent->children, next, ob, cobjs);
+	AG_LockVFS(parent);
+	if (parent != NULL && next != NULL) {
+		TAILQ_REMOVE(&parent->children, ob, cobjs);
+		TAILQ_INSERT_AFTER(&parent->children, next, ob, cobjs);
+	}
+	AG_UnlockVFS(parent);
 }
 
-/*
- * Change the save prefix of an object and its children.
- * The linkage must be locked.
- */
+/* Change the save prefix of an object and its children. */
 void
 AG_ObjectSetSavePfx(void *p, char *path)
 {
 	AG_Object *ob = p, *cob;
 
+	AG_LockVFS(ob);
+	AG_ObjectLock(ob);
 	ob->save_pfx = path;
-	TAILQ_FOREACH(cob, &ob->children, cobjs)
+	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		AG_ObjectSetSavePfx(cob, path);
+	}
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
 }
 
 /*
  * Remove the data files of an object and its children.
- * The linkage must be locked.
+ * The object's VFS must be locked.
  */
 void
 AG_ObjectUnlinkDatafiles(void *p)
@@ -1570,14 +1704,17 @@ AG_ObjectUnlinkDatafiles(void *p)
 	char path[MAXPATHLEN];
 	AG_Object *ob = p, *cob;
 
-	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == 0)
+	AG_ObjectLock(ob);
+	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == 0) {
 		AG_FileDelete(path);
-
-	TAILQ_FOREACH(cob, &ob->children, cobjs)
+	}
+	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		AG_ObjectUnlinkDatafiles(cob);
-
-	if (AG_ObjectCopyDirname(ob, path, sizeof(path)) == 0)
+	}
+	if (AG_ObjectCopyDirname(ob, path, sizeof(path)) == 0) {
 		AG_RmDir(path);
+	}
+	AG_ObjectUnlock(ob);
 }
 
 /* Duplicate an object and its children. */
@@ -1591,7 +1728,7 @@ AG_ObjectDuplicate(void *p, const char *newName)
 	AG_Object *dob;
 
 	dob = Malloc(cls->size);
-	AG_MutexLock(&ob->lock);
+	AG_ObjectLock(ob);
 	AG_ObjectInit(dob, cls);
 	AG_ObjectSetName(dob, "%s", newName);
 	if (AG_ObjectPageIn(ob) == -1) {
@@ -1616,36 +1753,40 @@ AG_ObjectDuplicate(void *p, const char *newName)
 		goto fail;
 	}
 	Strlcpy(ob->name, nameSave, sizeof(ob->name));
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	return (dob);
 fail:
 	Strlcpy(ob->name, nameSave, sizeof(ob->name));
-	AG_MutexUnlock(&ob->lock);
+	AG_ObjectUnlock(ob);
 	AG_ObjectDestroy(dob);
 	return (NULL);
 }
 
-/* Return a cryptographic digest of an object's most recent archive. */
+/*
+ * Return a cryptographic digest of an object's most recent archive. The
+ * digest is accurate as long as the object is locked.
+ */
 size_t
-AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
+AG_ObjectCopyChecksum(void *p, enum ag_object_checksum_alg alg,
     char *digest)
 {
-	const AG_Object *ob = p;
+	AG_Object *ob = p;
 	char path[MAXPATHLEN];
 	Uchar buf[BUFSIZ];
 	FILE *f;
 	size_t totlen = 0;
 	size_t rv;
-	
+
+	AG_ObjectLock(ob);
+
 	if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1) {
-		return (0);
+		goto fail;
 	}
 	/* TODO locking */
 	if ((f = fopen(path, "r")) == NULL) {
 		AG_SetError("%s: %s", path, strerror(errno));
-		return (0);
+		goto fail;
 	}
-
 	switch (alg) {
 	case AG_OBJECT_MD5:
 		{
@@ -1686,52 +1827,78 @@ AG_ObjectCopyChecksum(const void *p, enum ag_object_checksum_alg alg,
 	}
 	fclose(f);
 
+	AG_ObjectUnlock(ob);
 	return (totlen);
+fail:
+	AG_ObjectUnlock(ob);
+	return (0);
 }
 
-/* Return a set of cryptographic digests for an object's most recent archive. */
+/*
+ * Return a set of cryptographic digests for an object's most recent archive.
+ * The digests are accurate as long as the object is locked.
+ */
 int
-AG_ObjectCopyDigest(const void *ob, size_t *len, char *digest)
+AG_ObjectCopyDigest(void *ob, size_t *len, char *digest)
 {
 	char md5[MD5_DIGEST_STRING_LENGTH];
 	char sha1[SHA1_DIGEST_STRING_LENGTH];
 	char rmd160[RMD160_DIGEST_STRING_LENGTH];
 
+	AG_ObjectLock(ob);
 	if ((*len = AG_ObjectCopyChecksum(ob, AG_OBJECT_MD5, md5)) == 0 ||
 	    AG_ObjectCopyChecksum(ob, AG_OBJECT_SHA1, sha1) == 0 ||
 	    AG_ObjectCopyChecksum(ob, AG_OBJECT_RMD160, rmd160) == 0) {
-		return (-1);
+		goto fail;
 	}
 	if (Snprintf(digest, AG_OBJECT_DIGEST_MAX, "(md5|%s sha1|%s rmd160|%s)",
 	    md5, sha1, rmd160) >= AG_OBJECT_DIGEST_MAX) {
 		AG_SetError("Digest is too big.");
-		return (-1);
+		goto fail;
 	}
+	AG_ObjectUnlock(ob);
 	return (0);
+fail:
+	AG_ObjectUnlock(ob);
+	return (-1);
 }
 
 /*
  * Check whether the dataset of the given object or any of its children are
- * different with respect to the last archive.
+ * different with respect to the last archive. The result is only valid as
+ * long as the object and VFS are locked, and this assumes that no other
+ * application is concurrently accessing the datafiles.
  */
 int
 AG_ObjectChangedAll(void *p)
 {
 	AG_Object *ob = p, *cob;
 
+	AG_LockVFS(ob);
+	AG_ObjectLock(ob);
+
 	if (AG_ObjectChanged(ob) == 1) {
-		return (1);
+		goto changed;
 	}
 	TAILQ_FOREACH(cob, &ob->children, cobjs) {
 		if (AG_ObjectChangedAll(cob) == 1)
-			return (1);
+			goto changed;
 	}
+
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
 	return (0);
+changed:
+	AG_ObjectUnlock(ob);
+	AG_UnlockVFS(ob);
+	return (1);
 }
 
 /*
  * Check whether the dataset of the given object is different with respect
- * to its last archive.
+ * to its last archive. The result is only valid as long as the object is
+ * locked, and this assumes no other application is concurrently accessing
+ * the datafiles.
  */
 int
 AG_ObjectChanged(void *p)
@@ -1743,22 +1910,28 @@ AG_ObjectChanged(void *p)
 	FILE *fLast, *fCur;
 	size_t rvLast, rvCur;
 
-	if (!OBJECT_PERSISTENT(ob) || !OBJECT_RESIDENT(ob))
-		return (0);
-	
-	AG_ObjectCopyFilename(ob, pathLast, sizeof(pathLast));
-	if ((fLast = fopen(pathLast, "r")) == NULL)
-		return (1);
+	AG_ObjectLock(ob);
 
+	if (!OBJECT_PERSISTENT(ob) || !OBJECT_RESIDENT(ob)) {
+		AG_ObjectUnlock(ob);
+		return (0);
+	}
+	AG_ObjectCopyFilename(ob, pathLast, sizeof(pathLast));
+	if ((fLast = fopen(pathLast, "r")) == NULL) {
+		AG_ObjectUnlock(ob);
+		return (1);
+	}
 	Strlcpy(pathCur, AG_String(agConfig,"tmp-path"), sizeof(pathCur));
 	Strlcat(pathCur, "/_chg.", sizeof(pathCur));
 	Strlcat(pathCur, ob->name, sizeof(pathCur));
 	if (AG_ObjectSaveToFile(ob, pathCur) == -1) {
 		fclose(fLast);
+		AG_ObjectUnlock(ob);
 		return (1);
 	}
 	if ((fCur = fopen(pathCur, "r")) == NULL) {
 		fclose(fLast);
+		AG_ObjectUnlock(ob);
 		return (1);
 	}
 	for (;;) {
@@ -1781,15 +1954,21 @@ AG_ObjectChanged(void *p)
 	AG_FileDelete(pathCur);
 	fclose(fCur);
 	fclose(fLast);
+	AG_ObjectUnlock(ob);
 	return (0);
 changed:
 	AG_FileDelete(pathCur);
 	fclose(fCur);
 	fclose(fLast);
+	AG_ObjectUnlock(ob);
 	return (1);
 }
 
-/* Generate an object name that is unique in the given parent object. */
+/*
+ * Generate an object name that is unique in the given parent object. The
+ * name is only guaranteed to remain unique as long as the VFS and parent
+ * object are locked.
+ */
 void
 AG_ObjectGenName(AG_Object *pobj, AG_ObjectClass *cls, char *name, size_t len)
 {
@@ -1807,13 +1986,35 @@ AG_ObjectGenName(AG_Object *pobj, AG_ObjectClass *cls, char *name, size_t len)
 tryname:
 	Snprintf(name, len, "%s #%u", tname, i);
 	if (pobj != NULL) {
+		AG_LockVFS(pobj);
 		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
 			if (strcmp(ch->name, name) == 0)
 				break;
 		}
+		AG_UnlockVFS(pobj);
 		if (ch != NULL) {
 			i++;
 			goto tryname;
 		}
 	}
+}
+
+void
+AG_ObjectLockDebug(AG_Object *ob, const char *info)
+{
+	if (agDebugLvl >= 10) { AG_Debug(ob, "Locking (%s)...", info); }
+	AG_MutexLock(&ob->lock);
+	if (agDebugLvl >= 10) { AG_Debug(ob, "OK\n"); }
+	
+	ob->lockinfo = (const char **)AG_Realloc(ob->lockinfo,
+	    (ob->nlockinfo+1)*sizeof(char *));
+	ob->lockinfo[ob->nlockinfo++] = info;
+}
+
+void
+AG_ObjectUnlockDebug(AG_Object *ob, const char *info)
+{
+	ob->nlockinfo--;
+	AG_MutexUnlock(&ob->lock);
+	if (agDebugLvl >= 10) { AG_Debug(ob, "Unlocked (%s)\n", info); }
 }

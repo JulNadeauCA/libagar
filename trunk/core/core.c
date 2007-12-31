@@ -56,11 +56,8 @@ pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
 
 const char *agProgName = "";
 AG_Config *agConfig;
-AG_Object *agWorld;
 void (*agAtexitFunc)(void) = NULL;
 void (*agAtexitFuncEv)(AG_Event *) = NULL;
-AG_Mutex agLinkageLock;
-AG_Mutex agTimingLock;
 int agVerbose = 0;
 int agTerminating = 0;
 
@@ -92,8 +89,6 @@ AG_InitCore(const char *progname, Uint flags)
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE);
 # endif
-	AG_MutexInitRecursive(&agLinkageLock);
-	AG_MutexInitRecursive(&agTimingLock);
 #endif /* THREADS */
 
 	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
@@ -106,11 +101,9 @@ AG_InitCore(const char *progname, Uint flags)
 
 	agConfig = Malloc(sizeof(AG_Config));
 	AG_ConfigInit(agConfig);
-
-	agWorld = AG_ObjectNew(NULL, "world", &agObjectClass);
-	AG_ObjectRemain(agWorld, AG_OBJECT_REMAIN_DATA);
-	
 	AG_ObjectLoad(agConfig);
+
+	AG_InitTimeouts();
 #ifdef NETWORK
 	AG_InitNetwork(0);
 #endif
@@ -161,13 +154,8 @@ AG_Destroy(void)
 #ifdef NETWORK
 	AG_RcsDestroy();
 #endif
-
-	AG_ObjectDestroy(agWorld);
 	AG_ObjectDestroy(agConfig);
-
-	AG_MutexDestroy(&agTimingLock);
-	AG_MutexDestroy(&agLinkageLock);
-
+	AG_DestroyTimeouts();
 	AG_DestroyError();
 	AG_DestroyClassTbl();
 	SDL_Quit();

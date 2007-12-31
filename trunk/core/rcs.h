@@ -77,7 +77,7 @@ void AG_RcsFreeList(AG_RCSList *);
 
 int AG_RcsDelete(const char *);
 int AG_RcsRename(const char *, const char *);
-int AG_RcsCheckout(const char *);
+int AG_RcsCheckout(void *, const char *);
 #endif /* NETWORK */
 __END_DECLS
 

@@ -540,7 +540,7 @@ AG_RcsImportAll(AG_Object *obj)
 {
 	AG_Object *cobj;
 
-	AG_LockLinkage();
+	AG_LockVFS(obj);
 	if (AG_RcsImport(obj) == -1) {
 		goto fail;
 	}
@@ -551,10 +551,10 @@ AG_RcsImportAll(AG_Object *obj)
 		if (AG_RcsImportAll(cobj) == -1)
 			goto fail;
 	}
-	AG_UnlockLinkage();
+	AG_UnlockVFS(obj);
 	return (0);
 fail:
-	AG_UnlockLinkage();
+	AG_UnlockVFS(obj);
 	return (-1);
 }
 
@@ -563,7 +563,7 @@ AG_RcsUpdateAll(AG_Object *obj)
 {
 	AG_Object *cobj;
 
-	AG_LockLinkage();
+	AG_LockVFS(obj);
 	if (AG_RcsUpdate(obj) == -1) {
 		goto fail;
 	}
@@ -574,10 +574,10 @@ AG_RcsUpdateAll(AG_Object *obj)
 		if (AG_RcsUpdateAll(cobj) == -1)
 			goto fail;
 	}
-	AG_UnlockLinkage();
+	AG_UnlockVFS(obj);
 	return (0);
 fail:
-	AG_UnlockLinkage();
+	AG_UnlockVFS(obj);
 	return (-1);
 }
 
@@ -586,7 +586,7 @@ AG_RcsCommitAll(AG_Object *obj)
 {
 	AG_Object *cobj;
 
-	AG_LockLinkage();
+	AG_LockVFS(obj);
 	if (AG_RcsCommit(obj) == -1) {
 		goto fail;
 	}
@@ -597,10 +597,10 @@ AG_RcsCommitAll(AG_Object *obj)
 		if (AG_RcsCommitAll(cobj) == -1)
 			goto fail;
 	}
-	AG_UnlockLinkage();
+	AG_UnlockVFS(obj);
 	return (0);
 fail:
-	AG_UnlockLinkage();
+	AG_UnlockVFS(obj);
 	return (-1);
 }
 
@@ -760,7 +760,7 @@ AG_RcsRename(const char *from, const char *to)
 }
 
 int
-AG_RcsCheckout(const char *path)
+AG_RcsCheckout(void *vfsRoot, const char *path)
 {
 	char localpath[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
@@ -816,7 +816,7 @@ AG_RcsCheckout(const char *path)
 	localpath[0] = '/';
 	localpath[1] = '\0';
 	Strlcat(localpath, path, sizeof(localpath));
-	if ((obj = AG_ObjectFind(localpath)) == NULL) {
+	if ((obj = AG_ObjectFind(vfsRoot, localpath)) == NULL) {
 		AG_TextTmsg(AG_MSG_INFO, 750,
 		    _("Creating working copy of %s (%s)."),
 		    name, type);
@@ -824,7 +824,7 @@ AG_RcsCheckout(const char *path)
 		obj = Malloc(cl->size);
 		AG_ObjectInit(obj, cl);
 		AG_ObjectSetName(obj, "%s", name);
-		if (AG_ObjectAttachToNamed(localpath, obj) == -1) {
+		if (AG_ObjectAttachToNamed(vfsRoot, localpath, obj) == -1) {
 			AG_ObjectDestroy(obj);
 			goto fail;
 		}
