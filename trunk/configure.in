@@ -1,21 +1,22 @@
 # Public domain
 
-REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
-REGISTER("--with-jpeg",		"JPEG screenshot support [default: no]")
-REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
+REGISTER("--enable-lockdebug",	"Expensive threads debugging [default: no]")
+REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: check]")
+REGISTER("--enable-gui",	"Build Agar-GUI [default: yes]")
 REGISTER("--enable-utf8",	"Unicode text/input support [default: yes]")
 REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
 REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
 REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
-REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 REGISTER("--enable-network",	"Build network client library [default: check]")
 REGISTER("--enable-server",	"Build network server library [default: no]")
-REGISTER("--enable-gui",	"Build Agar-GUI [default: yes]")
+REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
+REGISTER("--with-jpeg",		"JPEG screenshot support [default: no]")
+REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
 
 # Agar version
-HDEFINE(VERSION, "1.3.1")
+HDEFINE(VERSION, "1.3.2")
 HDEFINE(RELEASE, "The Birth Of An Era Obscured By Sulfur And Flames")
 
 # Installation directories
@@ -71,6 +72,12 @@ if [ "${enable_warnings}" = "yes" ]; then
 	MDEFINE(WNO_UNINITIALIZED, "-Wno-uninitialized")
 else
 	MDEFINE(WNO_UNINITIALIZED, "")
+fi
+
+if [ "${enable_lockdebug}" = "yes" ]; then
+	HDEFINE(LOCKDEBUG, 1)
+else
+	HUNDEF(LOCKDEBUG)
 fi
 
 # SDL is required.
