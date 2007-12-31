@@ -33,7 +33,7 @@
 
 #include <core/core.h>
 
-#if defined(__MACOSX__) && defined(__ppc__)
+#if (defined(__APPLE__) || defined(__MACOSX__)) && defined(__ppc__)
 #include <sys/sysctl.h>
 #elif defined(__AMIGAOS4__)
 #include <exec/exec.h>
@@ -247,7 +247,7 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 	}
 #endif /* i386 or x86_64 */
 
-#if defined(__MACOSX__) && defined(__ppc__)
+#if (defined(__APPLE__) || defined(__MACOSX__)) && defined(__ppc__)
 	{
 		int selectors[2] = { CTL_HW, HW_VECTORUNIT };
 		int flag = 0;
