@@ -296,6 +296,7 @@ struct {								\
 	struct t *tqe_next;	/* next element */			\
 	struct t **tqe_prev;	/* address of previous next element */	\
 }
+#define AG_TAILQ_ENTRY_INITIALIZER { NULL, NULL }
 
 /* 
  * tail queue access methods 
