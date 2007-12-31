@@ -50,6 +50,7 @@
 
 #include "agarpaint.h"
 
+static AG_Object editor;
 static AG_Menu *appMenu = NULL;
 static RG_Tileset *tsFocused = NULL;
 
@@ -138,7 +139,7 @@ NewTileset(AG_Event *event)
 {
 	RG_Tileset *ts;
 
-	ts = AG_ObjectNew(agWorld, NULL, &rgTilesetClass);
+	ts = AG_ObjectNew(&editor, NULL, &rgTilesetClass);
 	CreateEditionWindow(ts);
 }
 
@@ -148,7 +149,7 @@ OpenTilesetAGT(AG_Event *event)
 	char *path = AG_STRING(1);
 	RG_Tileset *ts;
 
-	ts = AG_ObjectNew(agWorld, NULL, &rgTilesetClass);
+	ts = AG_ObjectNew(&editor, NULL, &rgTilesetClass);
 	if (AG_ObjectLoadFromFile(ts, path) == -1) {
 		AG_TextMsgFromError();
 		AG_ObjectDetach(ts);
@@ -434,7 +435,7 @@ Quit(AG_Event *event)
 	}
 	agTerminating = 1;
 
-	AGOBJECT_FOREACH_CLASS(ts, agWorld, rg_tileset, "RG_Tileset:*") {
+	AGOBJECT_FOREACH_CLASS(ts, &editor, rg_tileset, "RG_Tileset:*") {
 		if (AG_ObjectChanged(ts))
 			break;
 	}
@@ -612,6 +613,9 @@ main(int argc, char *argv[])
 	RG_InitSubsystem();
 	MAP_InitSubsystem();
 
+	/* Initialize an "editor" object we will use as VFS root. */
+	AG_ObjectInitStatic(&editor, NULL);
+
 	/* Create the application menu. */ 
 	appMenu = AG_MenuNewGlobal(0);
 	AG_MenuDynamicItem(appMenu->root, "File", NULL, FileMenu, NULL);
@@ -633,7 +637,7 @@ main(int argc, char *argv[])
 #endif
 		RG_Tileset *ts;
 
-		ts = AG_ObjectNew(agWorld, NULL, &rgTilesetClass);
+		ts = AG_ObjectNew(&editor, NULL, &rgTilesetClass);
 		if (AG_ObjectLoadFromFile(ts, argv[i]) == 0) {
 			AG_ObjectSetArchivePath(ts, argv[i]);
 			CreateEditionWindow(ts);
