@@ -235,6 +235,9 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 			lbl->flags &= ~AG_LABEL_PARTIAL;
 		}
 	}
+	if (lbl->type == AG_LABEL_POLLED) {
+		WIDGET(lbl)->flags |= AG_WIDGET_CLIPPING;
+	}
 	return (0);
 }
 
@@ -667,9 +670,10 @@ Draw(void *p)
 	AG_Label *lbl = p;
 
 	if (lbl->flags & AG_LABEL_PARTIAL)
-		AG_WidgetPushClipRect(lbl, 0, 0,
-		    WIDGET(lbl)->w - WSURFACE(lbl,lbl->surfaceCont)->w,
-		    WIDGET(lbl)->h);
+		AG_WidgetPushClipRect(lbl,
+		    AG_RECT(0, 0,
+		            WIDGET(lbl)->w - WSURFACE(lbl,lbl->surfaceCont)->w,
+		            WIDGET(lbl)->h));
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
