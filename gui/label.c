@@ -198,45 +198,42 @@ static int
 SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	AG_Label *lbl = p;
+	int wLbl, hLbl;
 	
-	if (a->w < 1 || a->h < 1)
+	if (a->w < 1 || a->h < 1) {
 		return (-1);
-	
-	/*
-	 * If the widget area is too small to display the complete
-	 * string, display a "..." at the end of it.
-	 */
-	if (lbl->surface != -1) {
-		int clipEnabled;
-
-		if (agTextFontHeight+lbl->tPad+lbl->bPad > a->h) {
-			WIDGET(lbl)->flags |= AG_WIDGET_CLIPPING;
-			clipEnabled = 1;
-		} else {
-			WIDGET(lbl)->flags &= ~(AG_WIDGET_CLIPPING);
-			clipEnabled = 0;
-		}
-		if ((WSURFACE(lbl,lbl->surface)->w+lbl->lPad+lbl->rPad) >a->w) {
-			lbl->flags |= AG_LABEL_PARTIAL;
-			if (lbl->surfaceCont == -1) {
-				/* TODO share this between all widgets */
-				AG_TextColor(TEXT_COLOR);
-				lbl->surfaceCont = AG_WidgetMapSurface(lbl,
-				    AG_TextRender(" ... "));
-			}
-			if (WSURFACE(lbl,lbl->surfaceCont)->w > a->w) {
-				if (clipEnabled) {
-					WIDGET(lbl)->flags &=
-					    ~(AG_WIDGET_CLIPPING);
-				}
-				return (-1);
-			}
-		} else {
-			lbl->flags &= ~AG_LABEL_PARTIAL;
-		}
 	}
 	if (lbl->type == AG_LABEL_POLLED) {
 		WIDGET(lbl)->flags |= AG_WIDGET_CLIPPING;
+		return (0);
+	}
+	if (lbl->text == NULL)
+		return (0);
+
+	/*
+	 * If the widget area is too small to display the complete
+	 * string, draw a "..." at the end.
+	 */
+	AG_TextSize(lbl->text, &wLbl, &hLbl);
+
+	if (hLbl+lbl->tPad+lbl->bPad > a->h) {
+		WIDGET(lbl)->flags |= AG_WIDGET_CLIPPING;
+	} else {
+		WIDGET(lbl)->flags &= ~(AG_WIDGET_CLIPPING);
+	}
+	if ((wLbl + lbl->lPad + lbl->rPad) > a->w) {
+		lbl->flags |= AG_LABEL_PARTIAL;
+		WIDGET(lbl)->flags &= ~(AG_WIDGET_CLIPPING);
+		if (lbl->surfaceCont == -1) {
+			/* TODO share this between all widgets */
+			AG_PushTextState();
+			AG_TextColor(TEXT_COLOR);
+			lbl->surfaceCont = AG_WidgetMapSurface(lbl,
+			    AG_TextRender(" ... "));
+			AG_PopTextState();
+		}
+	} else {
+		lbl->flags &= ~AG_LABEL_PARTIAL;
 	}
 	return (0);
 }
@@ -267,11 +264,12 @@ Init(void *obj)
 void
 AG_LabelSizeHint(AG_Label *lbl, Uint nlines, const char *text)
 {
+	int hLbl;
+
 	AG_ObjectLock(lbl);
 	if (nlines > 0) {
-		AG_TextSize(text, &lbl->wPre, NULL);
-		lbl->hPre = nlines*agTextFontHeight +
-		            (nlines-1)*agTextFontLineSkip;
+		AG_TextSize(text, &lbl->wPre, &hLbl);
+		lbl->hPre = nlines*hLbl + (nlines-1)*agTextFontLineSkip;
 	} else {
 		AG_TextSize(text, &lbl->wPre, &lbl->hPre);
 	}
