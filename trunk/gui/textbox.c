@@ -32,7 +32,7 @@
 #include "ttf.h"
 #include "textbox.h"
 
-#include "keycodes.h"
+#include "keymap.h"
 #include "primitive.h"
 #include "unicode.h"
 #include "opengl.h"
@@ -84,12 +84,18 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 	return (tb);
 }
 
+/*
+ * Process a keystroke. May be invoked from the repeat timeout routine or
+ * the keydown handler. If we return 1, the current delay/repeat cycle will
+ * be maintained, otherwise it will be cancelled.
+ */
 static int
 ProcessKey(AG_Textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 {
 	AG_WidgetBinding *stringb;
 	char *s;
-	int i, rv = 0;
+	Uint32 *ucs4;
+	int i, rv = 0, len;
 
 	if (keysym == SDLK_ESCAPE) {
 		return (0);
@@ -119,33 +125,67 @@ ProcessKey(AG_Textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 			}
 		}
 	}
-
+	
 	stringb = AG_WidgetGetBinding(tb, "string", &s);
-	if (tb->pos > stringb->data.size)
-		goto out;
-
-	for (i = 0;; i++) {
-		const struct ag_keycode *kcode = &agKeyCodes[i];
+#ifdef UTF8
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, stringb->data.size);
+	len = AG_UCS4Len(ucs4);
+	if (tb->pos < 0) { tb->pos = 0; }
+	if (tb->pos > len) { tb->pos = len; }
+	for (i = 0; ; i++) {
+		const struct ag_keycode_utf8 *kc = &agKeymapUTF8[i];
 		
-		if (kcode->key != SDLK_LAST &&
-		   (kcode->key != keysym || kcode->func == NULL))
+		if (kc->key != SDLK_LAST &&
+		   (kc->key != keysym || kc->func == NULL)) {
 			continue;
-		
-		if (kcode->key == SDLK_LAST ||
-		    kcode->modmask == 0 || (keymod & kcode->modmask)) {
-		  	if (kcode->clr_compo) {
-				tb->compose = 0;
-			}
+		}
+		if (kc->key == SDLK_LAST ||
+		    kc->modmask == 0 || (keymod & kc->modmask)) {
 			AG_PostEvent(NULL, tb, "textbox-prechg", NULL);
-			rv = kcode->func(tb, keysym, keymod, kcode->arg,
-			    unicode);
+			rv = kc->func(tb, keysym, keymod, unicode, ucs4,
+			    len, stringb->data.size);
 			AG_PostEvent(NULL, tb, "textbox-postchg", NULL);
 			break;
 		}
 	}
-out:
+	if (rv == 1) {
+		AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs4,
+		    stringb->data.size);
+		AG_WidgetBindingChanged(stringb);
+	}
+	free(ucs4);
+
+#else /* !UTF8 */
+
+	len = strlen(s);
+	if (tb->pos < 0) { tb->pos = 0; }
+	if (tb->pos > len) { tb->pos = len; }
+	for (i = 0; ; i++) {
+		const struct ag_keycode_ascii *kc = &agKeymapASCII[i];
+		
+		if (kc->key != SDLK_LAST &&
+		   (kc->key != keysym || kc->func == NULL)) {
+			continue;
+		}
+		if (kc->key == SDLK_LAST ||
+		    kc->modmask == 0 || (keymod & kc->modmask)) {
+			AG_PostEvent(NULL, tb, "textbox-prechg", NULL);
+			rv = kc->func(tb, keysym, keymod, unicode, s,
+			    len, stringb->data.size);
+			AG_PostEvent(NULL, tb, "textbox-postchg", NULL);
+			if (rv == 1) {
+				AG_WidgetBindingChanged(stringb);
+			}
+			break;
+		}
+	}
+	if (rv == 1) {
+		AG_WidgetBindingChanged(stringb);
+	}
+#endif /* UTF8 */
+
 	AG_WidgetUnlockBinding(stringb);
-	return (rv);
+	return (1);
 }
 
 static Uint32
@@ -274,7 +314,7 @@ Draw(void *p)
 
 	stringb = AG_WidgetGetBinding(tbox, "string", &s);
 #ifdef UTF8
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, 0);
 	len = AG_UCS4Len(ucs);
 #else
 	len = strlen(s);
@@ -900,7 +940,6 @@ Init(void *obj)
 	tbox->lblPadR = 2;
 	tbox->wLbl = 0;
 	tbox->flags = AG_TEXTBOX_BLINK_ON;
-	tbox->offs = 0;
 	tbox->pos = 0;
 	tbox->sel_x1 = 0;
 	tbox->sel_x2 = 0;

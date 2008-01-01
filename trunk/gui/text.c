@@ -81,7 +81,7 @@
 #include "button.h"
 #include "ucombo.h"
 #include "fspinbutton.h"
-#include "keycodes.h"
+#include "keymap.h"
 #include "unicode.h"
 #include "checkbox.h"
 
@@ -710,9 +710,9 @@ AG_TextRender(const char *text)
 	SDL_Surface *su;
 	
 #ifdef UTF8
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
 #else
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text, 0);
 #endif
 	su = AG_TextRenderUCS4(ucs);
 	free(ucs);
@@ -1258,9 +1258,9 @@ AG_TextSize(const char *text, int *w, int *h)
 		return;
 	}
 #ifdef UTF8
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
 #else
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text, 0);
 #endif
 	AG_TextSizeUCS4(ucs4, w, h);
 	free(ucs4);
@@ -1276,9 +1276,9 @@ AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 	Uint32 *ucs4;
 
 #ifdef UTF8
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text);
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
 #else
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text);
+	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text, 0);
 #endif
 	AG_TextSizeMultiUCS4(ucs4, w, h, wLines, nLines);
 	free(ucs4);

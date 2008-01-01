@@ -8,7 +8,7 @@ extern AG_Config *agConfig;
 __BEGIN_DECLS
 extern AG_ObjectClass agConfigClass;
 
-extern int agKbdUnicode, agKbdDelay, agKbdRepeat;
+extern int agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval;
 extern int agTextComposition, agTextBidi, agTextAntialiasing, agTextTabWidth,
 	   agTextBlinkRate, agTextAntialiasing, agPageIncrement, agTextSymbols;

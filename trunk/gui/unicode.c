@@ -51,26 +51,30 @@ utf8_length(Uint8 ch)
 	}
 }
 
-/* Return the UCS-4 representation of the given string/encoding. */
+/*
+ * Returns a buffer containing a UCS-4 representation of the given
+ * string/encoding. If len is 0, enough memory to hold the string is
+ * allocated. Otherwise, a buffer of the specified size is allocated.
+ */
 Uint32 *
-AG_ImportUnicode(enum ag_unicode_conv conv, const char *s)
+AG_ImportUnicode(enum ag_unicode_conv conv, const char *s, size_t pLen)
 {
 	Uint32 *ucs;
-	size_t len;
 	size_t i, j;
+	size_t sLen = strlen(s);
+	size_t bufLen = (pLen != 0) ? pLen : (sLen+1);
 
-	len = strlen(s);
-	ucs = Malloc((len+1)*sizeof(Uint32));
+	ucs = Malloc(bufLen*sizeof(Uint32));
 
 	switch (conv) {
 	case AG_UNICODE_FROM_USASCII:
-		for (i = 0; i < len; i++) {
+		for (i = 0; i < sLen; i++) {
 			ucs[i] = ((const unsigned char *)s)[i];
 		}
 		ucs[i] = '\0';
 		break;
 	case AG_UNICODE_FROM_UTF8:
-		for (i = 0, j = 0; i < len; i++, j++) {
+		for (i = 0, j = 0; i < sLen; i++, j++) {
 			switch (utf8_length(s[i])) {
 			case 1:
 				ucs[j] = (Uint32)s[i];

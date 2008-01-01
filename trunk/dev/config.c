@@ -37,7 +37,6 @@
 #include <gui/button.h>
 #include <gui/checkbox.h>
 #include <gui/textbox.h>
-#include <gui/keycodes.h>
 #include <gui/tlist.h>
 #include <gui/mspinbutton.h>
 #include <gui/spinbutton.h>
@@ -282,9 +281,9 @@ DEV_ConfigWindow(AG_Config *cfg)
 		AG_SpacerNewHoriz(tab);
 
 		cbox = AG_CheckboxNew(tab, 0, _("Unicode keyboard input"));
-		AG_WidgetBindInt(cbox,"state", &agKbdUnicode);
+		AG_WidgetBindProp(cbox,"state", agConfig,"input.unicode");
 		AG_SetEvent(cbox, "checkbox-changed", SetUnicodeKbd, NULL);
-
+		
 		cbox = AG_CheckboxNew(tab, 0, _("Built-in key composition"));
 		AG_WidgetBindInt(cbox,"state", &agTextComposition);
 
