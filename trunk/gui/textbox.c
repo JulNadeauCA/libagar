@@ -228,6 +228,7 @@ Draw(void *p)
 	int i, x, xStart, y, dx, dy;
 	size_t len;
 	char *s;
+	AG_Rect rBox;
 #ifdef UTF8
 	Uint32 *ucs;
 #endif
@@ -251,7 +252,8 @@ Draw(void *p)
 	if (tbox->label != -1) {
 		SDL_Surface *lblSu = WSURFACE(tbox,tbox->label);
 	
-		AG_WidgetPushClipRect(tbox, 0, 0, tbox->wLbl, WIDTH(tbox));
+		AG_WidgetPushClipRect(tbox,
+		    AG_RECT(0, 0, tbox->wLbl, WIDTH(tbox)));
 		AG_WidgetBlitSurface(tbox, tbox->label, tbox->lblPadL,
 		    HEIGHT(tbox)/2 - lblSu->h/2);
 		AG_WidgetPopClipRect(tbox);
@@ -277,9 +279,13 @@ Draw(void *p)
 #else
 	len = strlen(s);
 #endif
-	STYLE(tbox)->TextboxBackground(tbox,
-	    AG_RECT(x, 0, WIDTH(tbox)-x-1, HEIGHT(tbox)),
+	rBox.x = x;
+	rBox.y = 0;
+	rBox.w = WIDTH(tbox)-x-1;
+	rBox.h = HEIGHT(tbox);
+	STYLE(tbox)->TextboxBackground(tbox, rBox,
 	    (tbox->flags & AG_TEXTBOX_COMBO));
+
 #ifdef HAVE_OPENGL
 	if (agView->opengl)  {
 		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
@@ -292,9 +298,7 @@ Draw(void *p)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 #endif
-	AG_WidgetPushClipRect(tbox, tbox->boxPadX, tbox->boxPadY,
-	    WIDTH(tbox) - tbox->boxPadX*2,
-	    HEIGHT(tbox) - tbox->boxPadY*2);
+	AG_WidgetPushClipRect(tbox, rBox);
 
 	x = xStart;
 	tbox->xMax = 0;
@@ -378,18 +382,13 @@ Draw(void *p)
 		             (WIDTH(tbox) - tbox->wAvail);
 	}
 	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
-		int bw;
-
 		AG_ScrollbarSetBarSize(tbox->vBar, 10);
-
-		bw = WIDTH(tbox) - HEIGHT(tbox->hBar)*2 - WIDTH(tbox->vBar);
-		AG_ScrollbarSetBarSize(tbox->hBar,
-		    tbox->xMax < tbox->wAvail ? tbox->wAvail :
-		    bw - abs(tbox->xMax - bw));
+		AG_ScrollbarSetBarSize(tbox->hBar, 10);
 	}
 	AG_WidgetUnlockBinding(stringb);
 
 	AG_WidgetPopClipRect(tbox);
+
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		if (blend_sv) {
@@ -522,9 +521,12 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aBar.h = a->h - d;
 		AG_WidgetSizeAlloc(tbox->vBar, &aBar);
 
-		tbox->wAvail -= WIDGET(tbox->vBar)->w;
-		tbox->hAvail -= WIDGET(tbox->hBar)->h;
+		tbox->wAvail -= WIDTH(tbox->vBar);
+		tbox->hAvail -= HEIGHT(tbox->hBar);
+	} else {
+		tbox->wAvail -= tbox->wLbl;
 	}
+
 	if (tbox->wAvail < 0) { tbox->wAvail = 0; }
 	if (tbox->hAvail < 0) { tbox->hAvail = 0; }
 

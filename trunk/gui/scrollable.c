@@ -53,7 +53,7 @@ AG_ScrollableDrawBegin(AG_Scrollable *sa)
 	WIDGET(sa)->cx = WIDGET(sa)->cx + sa->xOffs;
 	WIDGET(sa)->cy = WIDGET(sa)->cy + sa->xOffs;
 
-	AG_WidgetPushClipRect(sa, 0, 0, WIDGET(sa)->w, WIDGET(sa)->h);
+	AG_WidgetPushClipRect(sa, AG_RECT(0, 0, WIDGET(sa)->w, WIDGET(sa)->h));
 }
 
 void

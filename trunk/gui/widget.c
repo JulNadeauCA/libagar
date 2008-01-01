@@ -1214,16 +1214,16 @@ AG_UnsetCursor(void)
  * This is only safe to call from widget draw context.
  */
 void
-AG_WidgetPushClipRect(void *p, int px, int py, int w, int h)
+AG_WidgetPushClipRect(void *p, AG_Rect r)
 {
 	AG_Widget *wid = p;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		GLdouble eq0[4] = { 1, 0, 0, -(wid->cx+px-1) };
-		GLdouble eq1[4] = { 0, 1, 0, -(wid->cy+py-1) };
-		GLdouble eq2[4] = { -1, 0, 0, (wid->cx+px+w) };
-		GLdouble eq3[4] = { 0, -1, 0, (wid->cy+py+h) };
+		GLdouble eq0[4] = { 1, 0, 0, -(wid->cx + r.x - 1) };
+		GLdouble eq1[4] = { 0, 1, 0, -(wid->cy + r.y - 1) };
+		GLdouble eq2[4] = { -1, 0, 0, (wid->cx + r.x + r.w) };
+		GLdouble eq3[4] = { 0, -1, 0, (wid->cy + r.y + r.h) };
 
 		glPushAttrib(GL_TRANSFORM_BIT);
 		glClipPlane(GL_CLIP_PLANE0, eq0);
@@ -1232,40 +1232,42 @@ AG_WidgetPushClipRect(void *p, int px, int py, int w, int h)
 		glClipPlane(GL_CLIP_PLANE3, eq3);
 		glEnable(GL_CLIP_PLANE0);
 		glEnable(GL_CLIP_PLANE1);
-		glEnable(GL_CLIP_PLANE2);
+		glEnable(GL_CLIP_PLANE1);
 		glEnable(GL_CLIP_PLANE3);
 	} else
 #endif
 	{
-		SDL_Rect r;
-		int x = px + wid->cx;
-		int y = py + wid->cy;
+		SDL_Rect rClip;
+		int x = r.x + wid->cx;
+		int y = r.y + wid->cy;
+		int w = r.w;
+		int h = r.h;
 
-		if (x < 0) {
-			x = 0;
-		} else if (x+w > agView->w) {
-			w = agView->w - x;
+		if (r.x < 0) {
+			r.x = 0;
+		} else if (r.x+w > agView->w) {
+			w = agView->w - r.x;
 			if (w < 0) {
 				x = 0;
 				w = agView->w;
 			}
 		}
-		if (y < 0) {
-			y = 0;
+		if (r.y < 0) {
+			r.y = 0;
 		} else if (y+h > agView->h) {
-			h = agView->h - y;
+			h = agView->h - r.y;
 			if (h < 0) {
 				y = 0;
 				h = agView->h;
 			}
 		}
 
-		r.x = x;
-		r.y = y;
-		r.w = w;
-		r.h = h;
+		rClip.x = (Sint16)x;
+		rClip.y = (Sint16)y;
+		rClip.w = (Uint16)w;
+		rClip.h = (Uint16)h;
 		SDL_GetClipRect(agView->v, &wid->rClipSave);
-		SDL_SetClipRect(agView->v, &r);
+		SDL_SetClipRect(agView->v, &rClip);
 	}
 }
 
@@ -1314,7 +1316,8 @@ AG_WidgetDraw(void *p)
 		int clip = 0;
 
 		if (wid->flags & AG_WIDGET_CLIPPING) {
-			AG_WidgetPushClipRect(wid, 0, 0, wid->w, wid->h);
+			AG_WidgetPushClipRect(wid,
+			    AG_RECT(0, 0, wid->w, wid->h));
 			clip = 1;
 		}
 		WIDGET_OPS(wid)->draw(wid);

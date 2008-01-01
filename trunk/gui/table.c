@@ -194,7 +194,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 			AG_TableCol *tc = &t->cols[n];
 		
 			if (tc->flags & AG_TABLE_COL_FILL) {
-				WIDGET(t)->w += COLUMN_MIN_WIDTH;
+				WIDTH(t) += COLUMN_MIN_WIDTH;
 				continue;
 			}
 			r->w += tc->w;
@@ -232,7 +232,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		t->wTbl = 0;
 	} else {
 		WIDGET(t->vbar)->flags &= ~(AG_WIDGET_HIDE);
-		t->wTbl = a->w - WIDGET(t->vbar)->w;
+		t->wTbl = a->w - WIDTH(t->vbar);
 	}
 #if 0
 	if (w != -1 && h != -1) {
@@ -421,14 +421,14 @@ Draw(void *p)
 
 		/* Draw the column header and separator. */
 		if (rCell.x > 0 && rCell.x < t->wTbl) {
-			AG_DrawLineV(t, rCell.x-1, t->col_h-1, WIDGET(t)->h,
+			AG_DrawLineV(t, rCell.x-1, t->col_h-1, HEIGHT(t),
 			    AG_COLOR(TABLE_LINE_COLOR));
 		}
 		STYLE(t)->TableColumnHeaderBackground(t, n,
 		    AG_RECT(rCell.x, 0, cw, t->col_h-1),
 		    col->selected);
 		
-		AG_WidgetPushClipRect(t, rCell.x, 0, cw, WIDGET(t)->h - 2);
+		AG_WidgetPushClipRect(t, AG_RECT(rCell.x, 0, cw, HEIGHT(t)-2));
 		if (col->surface != -1) {
 			AG_WidgetBlitSurface(t, col->surface,
 			    rCell.x + cw/2 - WSURFACE(t,col->surface)->w/2,
@@ -437,7 +437,7 @@ Draw(void *p)
 
 		/* Draw the rows of this column. */
 		for (m = t->moffs, rCell.y = t->row_h;
-		     m < t->m && rCell.y < WIDGET(t)->h;
+		     m < t->m && rCell.y < HEIGHT(t);
 		     m++) {
 			AG_DrawLineH(t, 0, t->wTbl, rCell.y,
 			    AG_COLOR(TABLE_LINE_COLOR));
@@ -455,7 +455,7 @@ Draw(void *p)
 			Uint8 c[4] = { 0, 0, 250, 32 };
 
 			AG_DrawRectBlended(t,
-			    AG_RECT(rCell.x, 0, col->w, WIDGET(t)->h),
+			    AG_RECT(rCell.x, 0, col->w, HEIGHT(t)),
 			    c, AG_ALPHA_SRC);
 		}
 		AG_WidgetPopClipRect(t);
@@ -463,7 +463,7 @@ Draw(void *p)
 	}
 	if (rCell.x > 0 &&
 	    rCell.x < t->wTbl) {
-		AG_DrawLineV(t, rCell.x-1, t->col_h-1, WIDGET(t)->h,
+		AG_DrawLineV(t, rCell.x-1, t->col_h-1, HEIGHT(t),
 		    AG_COLOR(TABLE_LINE_COLOR));
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
@@ -481,7 +481,7 @@ AG_TableUpdateScrollbars(AG_Table *t)
 
 	AG_ObjectLock(t);
 
-	t->mVis = WIDGET(t)->h / t->row_h;
+	t->mVis = HEIGHT(t)/t->row_h;
 
 	maxb = AG_WidgetGetBinding(t->vbar, "max", &max);
 	offsetb = AG_WidgetGetBinding(t->vbar, "value", &offset);
@@ -497,7 +497,7 @@ AG_TableUpdateScrollbars(AG_Table *t)
 	}
 	if (t->m > 0 && t->mVis > 0 && (t->mVis-1) < t->m) {
 		AG_ScrollbarSetBarSize(t->vbar,
-		    (t->mVis-1)*(WIDGET(t->vbar)->h - t->vbar->bw*2) / t->m);
+		    (t->mVis-1)*(HEIGHT(t->vbar) - t->vbar->bw*2) / t->m);
 	} else {
 		AG_ScrollbarSetBarSize(t->vbar, -1);		/* Full range */
 	}
@@ -1043,7 +1043,7 @@ mousemotion(AG_Event *event)
 	int xrel = AG_INT(3);
 	int m;
 
-	if (x < 0 || y < 0 || x >= WIDGET(t)->w || y >= WIDGET(t)->h)
+	if (x < 0 || y < 0 || x >= WIDTH(t) || y >= HEIGHT(t))
 		return;
 
 	if (t->nResizing >= 0 && (Uint)t->nResizing < t->n) {
@@ -1268,7 +1268,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	if (size_spec != NULL) {
 		switch (AG_WidgetParseSizeSpec(size_spec, &tc->w)) {
 		case AG_WIDGET_PERCENT:
-			tc->w = tc->w*(WIDGET(t)->w - t->vbar->bw)/100;
+			tc->w = tc->w*(WIDTH(t) - t->vbar->bw)/100;
 			break;
 		default:
 			break;

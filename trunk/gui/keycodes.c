@@ -229,7 +229,7 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 	size_t len;
 	Uint32 *ucs4;
 	char *utf8;
-	Uint32 ins[2];
+	Uint32 ins[3];
 	int i, nchars;
 	Uint32 uch = ch;
 
@@ -258,19 +258,15 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		ins[0] = InputApplyModifiers((Uint32)keysym, keymod);
 		nchars = 1;
 	}
-	ucs4 = Realloc(ucs4, (len+nchars+1)*sizeof(Uint32));
-	
-	/* Ensure the new character(s) fit inside the buffer. */
+	ins[nchars] = '\0';
 	/* XXX use utf8 size for space efficiency */
+	ucs4 = Realloc(ucs4, (len+nchars+1)*sizeof(Uint32));
 	if (len+nchars >= stringb->data.size/sizeof(Uint32)) {
 		Debug(tbox, "New character does not fit into buffer (%d)\n",
 		    (int)(len+nchars));
 		goto skip;
 	}
 	if (tbox->pos == len) {					/* Append */
-#if 0
-		Debug(tbox, "Append at %d/%d\n", (int)tbox->pos, (int)len);
-#endif
 		if (agKbdUnicode) {
 			if (uch != 0) {
 				for (i = 0; i < nchars; i++)
@@ -284,10 +280,13 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		} else {
 			goto skip;
 		}
-	} else {						/* Insert */
 #if 0
-		Debug(tbox, "Insert at %d/%d\n", (int)tbox->pos, (int)len);
+		if (tbox->xMax >= tbox->wAvail) {
+			AG_TextSizeUCS4(ins, &xInc, NULL);
+			tbox->x += xInc;
+		}
 #endif
+	} else {						/* Insert */
 		memmove(&ucs4[tbox->pos+nchars], &ucs4[tbox->pos],
 		       (len - tbox->pos)*sizeof(Uint32));
 		if (agKbdUnicode) {
@@ -306,10 +305,6 @@ InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, const char *arg,
 		}
 	}
 out:
-#if 0
-	Debug(tbox, "NUL terminating at %d+%d (sz=%d)\n", (int)len, (int)nchars,
-	    (int)stringb->data.size);
-#endif
 	ucs4[len+nchars] = '\0';
 	tbox->pos += nchars;
 	AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs4,
