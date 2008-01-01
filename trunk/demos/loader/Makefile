@@ -10,8 +10,8 @@ PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
 PROG=	loader
 SRCS=	loader.c
 
-CFLAGS+=${AGAR_CFLAGS} -I.
-LIBS+=	${AGAR_LIBS}
+CFLAGS+=${AGAR_CFLAGS} ${SDL_IMAGE_CFLAGS} -I.
+LIBS+=	${AGAR_LIBS} ${SDL_IMAGE_LIBS}
 
 all: all-subdir ${PROG}
 
