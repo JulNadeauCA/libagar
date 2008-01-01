@@ -74,7 +74,7 @@ for notebook-style display.
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
-.Sh INITIALIZATION
+.Sh INTERFACE
 .nr nS 1
 .Ft "AG_Window *"
 .Fn AG_WindowNew "Uint flags"
@@ -123,6 +123,9 @@ for notebook-style display.
 .Pp
 .Ft int
 .Fn AG_WindowFocusNamed "const char *name"
+.Pp
+.Ft void
+.Fn AG_WindowUpdate "AG_Window *win"
 .Pp
 .nr nS 0
 The
@@ -316,6 +319,23 @@ flag set, this function becomes a no-op.
 .Fn AG_WindowFocusNamed
 sets the focus on the window of the given name and returns 0 on success
 or -1 if the window was not found.
+.Pp
+The
+.Fn AG_WindowUpdate
+function calls
+.Xr AG_WidgetSizeAlloc 3
+and
+.Xr AG_WidgetUpdateCoords
+on the given window.
+It must be called after any direct modification of the
+.Va x ,
+.Va y ,
+.Va w
+and
+.Va h
+members of the
+.Nm
+structure.
 .Sh VISIBILITY
 .nr nS 1
 .Ft void

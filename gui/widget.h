@@ -224,7 +224,7 @@ void	 AG_WidgetFreeResourcesGL(AG_Widget *);
 void	 AG_WidgetRegenResourcesGL(AG_Widget *);
 #endif
 
-void	 AG_WidgetPushClipRect(void *, int, int, int, int);
+void	 AG_WidgetPushClipRect(void *, AG_Rect);
 void	 AG_WidgetPopClipRect(void *);
 int	 AG_WidgetIsOcculted(AG_Widget *);
 void	 AG_SetCursor(int);
