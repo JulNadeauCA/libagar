@@ -45,8 +45,7 @@ typedef struct ag_textbox {
 	int wAvail, hAvail;		/* Available display area for text */
 	int wLbl;			/* Label width to display */
 	int pos;			/* Cursor position */
-	int offs;			/* Display offset */
-	int compose;			/* Key for input composition */
+	Uint32 compose;			/* For input composition */
 
 	int sel_x1, sel_x2;		/* Selection points */
 	int sel_edit;			/* Point being edited */

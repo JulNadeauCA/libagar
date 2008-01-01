@@ -117,6 +117,16 @@ Default = 40.
 Attach SDL joystick devices and make joystick events available to
 GUI widgets.
 Default = TRUE.
+.It Va BOOL input.unicode
+Enable Unicode translation of keyboard input.
+Default = TRUE.
+.It Va BOOL input.composition
+Perform composition of multiple characters (e.g., Latin accents) for
+keyboard input.
+This is not needed with window systems (e.g., X11), which already implement
+international keyboard input, but it can be useful with less sophisticated
+platforms.
+Default = Platform-specific.
 .It Va STRING load-path
 Directory containing data files for the
 .Xr AG_Object 3

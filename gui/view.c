@@ -1398,6 +1398,12 @@ AG_ProcessEvent(SDL_Event *ev)
 		}
 		break;
 	case SDL_KEYDOWN:
+#if 0
+		fprintf(stderr, "[DOWN] Key=%d(%c), Mod=%d\n",
+		    (int)ev->key.keysym.sym,
+		    (char)ev->key.keysym.sym,
+		    (int)ev->key.keysym.mod);
+#endif
 		{
 			struct ag_global_key *gk;
 
@@ -1418,6 +1424,12 @@ AG_ProcessEvent(SDL_Event *ev)
 		}
 		/* FALLTHROUGH */
 	case SDL_KEYUP:
+#if 0
+		fprintf(stderr, "[  UP] Key=%d(%c), Mod=%d\n",
+		    (int)ev->key.keysym.sym,
+		    (char)ev->key.keysym.sym,
+		    (int)ev->key.keysym.mod);
+#endif
 		AG_WindowEvent(ev);
 		break;
 	case SDL_JOYAXISMOTION:

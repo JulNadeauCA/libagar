@@ -9,8 +9,10 @@ LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
 LIB_LINKS=	ag_core_static pthreads SDL opengl freetype
 
-SRCS=	gui.c view.c widget.c window.c keycodes.c keysyms.c style.c iconmgr.c \
-	colors.c cursors.c ttf.c text.c unicode.c ucslcpy.c ucslcat.c ucssep.c \
+SRCS=	gui.c view.c widget.c window.c \
+	keymap_ascii.c keymap_utf8.c keymap_compose.c keysyms.c \
+	style.c iconmgr.c colors.c cursors.c ttf.c text.c unicode.c ucslcpy.c \
+	ucslcat.c ucssep.c \
 	style_default.c \
 	box.c label.c button.c checkbox.c textbox.c primitive.c radio.c \
 	fixed_plotter.c tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \

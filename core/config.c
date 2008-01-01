@@ -48,7 +48,6 @@
 #include <pwd.h>
 #endif
 
-int agKbdUnicode = 1;			/* Unicode translation */
 int agKbdDelay = 250;			/* Key repeat delay */
 int agKbdRepeat = 35;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
@@ -93,6 +92,8 @@ AG_ConfigInit(AG_Config *cfg)
 	AG_SetUint8(cfg, "view.depth", 32);
 	AG_SetUint(cfg, "view.nominal-fps", 40);
 	AG_SetBool(cfg, "input.joysticks", 1);
+	AG_SetBool(cfg, "input.unicode", 1);
+	AG_SetBool(cfg, "input.composition", 1);
 
 	/* Set the save directory path and create it as needed. */
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
@@ -165,7 +166,7 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 	if (ver->minor >= 4) { agMsgDelay = (int)AG_ReadUint32(ds); }
 	agTextComposition = AG_ReadUint8(ds);
 	agTextBidi = AG_ReadUint8(ds);
-	agKbdUnicode = AG_ReadUint8(ds);
+	(void)AG_ReadUint8(ds);				/* agKbdUnicode */
 	agKbdDelay = (int)AG_ReadUint32(ds);
 	agKbdRepeat = (int)AG_ReadUint32(ds);
 	agMouseDblclickDelay = (int)AG_ReadUint32(ds);
@@ -196,7 +197,7 @@ Save(void *p, AG_DataSource *ds)
 	AG_WriteUint32(ds, (Uint32)agMsgDelay);
 	AG_WriteUint8(ds, (Uint8)agTextComposition);
 	AG_WriteUint8(ds, (Uint8)agTextBidi);
-	AG_WriteUint8(ds, (Uint8)agKbdUnicode);
+	AG_WriteUint8(ds, 0);				/* agKbdUnicode */
 	AG_WriteUint32(ds, (Uint32)agKbdDelay);
 	AG_WriteUint32(ds, (Uint32)agKbdRepeat);
 	AG_WriteUint32(ds, (Uint32)agMouseDblclickDelay);

@@ -22,7 +22,7 @@
 #include <agar/gui/hbox.h>
 #include <agar/gui/hsvpal.h>
 #include <agar/gui/icon.h>
-#include <agar/gui/keycodes.h>
+#include <agar/gui/keymap.h>
 #include <agar/gui/label.h>
 #include <agar/gui/menu.h>
 #include <agar/gui/mfspinbutton.h>

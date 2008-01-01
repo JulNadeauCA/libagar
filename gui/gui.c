@@ -144,12 +144,13 @@ AG_InitGUI(Uint flags)
 	(void)AG_ColorsLoad(path);
 	
 	/* Initialize the font engine. */
-	if (AG_TextInit() == -1) {
+	if (AG_TextInit() == -1)
 		return (-1);
-	}
 
 	/* Initialize the input devices. */
-	SDL_EnableUNICODE(agKbdUnicode);
+	if (AG_Bool(agConfig, "input.unicode")) {
+		SDL_EnableUNICODE(1);
+	}
 	if (AG_Bool(agConfig, "input.joysticks")) {
 		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
 			n = SDL_NumJoysticks();

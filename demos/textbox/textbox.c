@@ -70,8 +70,6 @@ SingleLineExample(void)
 	    "Force integer input");
 	AG_CheckboxNewFlag(win, &textbox->flags, AG_TEXTBOX_FLT_ONLY,
 	    "Force float input");
-	AG_CheckboxNewFlag(win, &textbox->flags, AG_TEXTBOX_BLINK_ON,
-	    "Cursor is visible");
 
 	AG_SeparatorNewHoriz(win);
 

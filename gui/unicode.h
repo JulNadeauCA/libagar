@@ -11,7 +11,7 @@ enum ag_unicode_conv {
 };
 
 __BEGIN_DECLS
-Uint32	*AG_ImportUnicode(enum ag_unicode_conv, const char *);
+Uint32	*AG_ImportUnicode(enum ag_unicode_conv, const char *, size_t);
 long     AG_ExportUnicode(enum ag_unicode_conv, char *, const Uint32 *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 4);
 size_t	 AG_CopyUnicode(enum ag_unicode_conv, const char *, Uint32 *, size_t);
