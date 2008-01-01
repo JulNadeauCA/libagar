@@ -13,18 +13,39 @@
 static void
 LoadBMP(AG_Event *event)
 {
+	AG_FileDlg *fd = AG_SELF();
 	char *file = AG_STRING(1);
+	AG_FileType *ft = AG_PTR(2);
 	SDL_Surface *bmp;
 	AG_Window *win;
+	Uint8 *pSrc;
+	int i;
 
 	/* Load the bitmap file into a SDL surface. */
 	if ((bmp = SDL_LoadBMP(file)) == NULL) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", file, SDL_GetError());
 		return;
 	}
+	pSrc = (Uint8 *)bmp->pixels;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Image <%s>", file);
+
+	/* We use AG_FileOptionFoo() to retrieve per-type options. */
+	if (AG_FileOptionBool(ft,"bmp.invert")) {
+		for (i = 0; i < bmp->w*bmp->h; i++) {
+			Uint8 r, g, b;
+
+			SDL_GetRGB(AG_GET_PIXEL(bmp,pSrc), bmp->format,
+			    &r, &g, &b);
+			r = 255 - r;
+			g = 255 - g;
+			b = 255 - b;
+			AG_PUT_PIXEL(bmp, pSrc, SDL_MapRGB(bmp->format,
+			    r, g, b));
+			pSrc += bmp->format->BytesPerPixel;
+		}
+	}
 
 	/*
 	 * Add a pixmap widget displaying the bitmap, scaled down to the
@@ -43,6 +64,7 @@ CreateWindow(void)
 {
 	AG_Window *win;
 	AG_FileDlg *fd;
+	AG_FileType *ft;
 
 	win = AG_WindowNew(0);
 
@@ -52,9 +74,20 @@ CreateWindow(void)
 	/* Set a default filename. */
 	AG_FileDlgSetFilename(fd, "sample.bmp");
 
-	/* Register the loader functions. */
-	AG_FileDlgAddType(fd, "Bitmap file", "*.bmp", LoadBMP, NULL);
-	
+	/*
+	 * Register the loader functions. We can assign a set of user
+	 * options to each type.
+	 */
+	ft = AG_FileDlgAddType(fd, "Bitmap file", "*.bmp", LoadBMP, NULL);
+	AG_FileOptionNewBool(ft, "Invert bitmap", "bmp.invert", 0);
+
+	/*
+	 * As different file types are selected, FileDlg will automatically
+	 * create various widgets for per-type options. We specify where those
+	 * widgets will be created here.
+	 */
+	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
+
 	AG_WindowShow(win);
 }
 
