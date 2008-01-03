@@ -58,7 +58,7 @@ UpdateTbl(void *obj, Uint32 ival, void *arg)
 		AG_TableviewRowExpand(tv, row1);
 
 		AG_ObjectLock(ob);
-		CIRCLEQ_FOREACH(to, &ob->timeouts, timeouts) {
+		TAILQ_FOREACH(to, &ob->timeouts, timeouts) {
 			Snprintf(text, sizeof(text), "%p: %u ticks", to,
 			    (Uint)to->ticks);
 			AG_TableviewRowAdd(tv, 0, row1, NULL, id++, 0, text);

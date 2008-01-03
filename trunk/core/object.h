@@ -81,7 +81,7 @@ typedef struct ag_object {
 	Uint nevents;				/* Number of event handlers */
 	AG_TAILQ_HEAD(,ag_event) events;	/* Event handlers */
 	AG_TAILQ_HEAD(,ag_prop) props;		/* Generic property table */
-	AG_CIRCLEQ_HEAD(,ag_timeout) timeouts;	/* Timers tied to object */
+	AG_TAILQ_HEAD(,ag_timeout) timeouts;	/* Timers tied to object */
 
 	AG_TAILQ_HEAD(,ag_object_dep) deps; /* Object dependencies */
 	struct ag_objectq children;	 /* Child objects */

@@ -14,7 +14,7 @@ typedef struct ag_timeout {
 	Uint32 ticks;			/* Expiry time in SDL ticks */
 	Uint32 ival;			/* Interval in ticks */
 
-	AG_CIRCLEQ_ENTRY(ag_timeout) timeouts;	/* Priority queue */
+	AG_TAILQ_ENTRY(ag_timeout) timeouts;	/* Priority queue */
 } AG_Timeout;
 
 AG_SLIST_HEAD(ag_timeoutq, ag_timeout);

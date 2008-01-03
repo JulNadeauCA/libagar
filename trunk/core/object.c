@@ -87,7 +87,7 @@ AG_ObjectInit(void *p, void *cls)
 	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
 	TAILQ_INIT(&ob->props);
-	CIRCLEQ_INIT(&ob->timeouts);
+	TAILQ_INIT(&ob->timeouts);
 	
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = 0; i < nHier; i++) {
@@ -678,7 +678,7 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
 		if (tob == ob)
 			TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
 	}
-	CIRCLEQ_INIT(&ob->timeouts);
+	TAILQ_INIT(&ob->timeouts);
 
 	AG_ObjectUnlock(ob);
 	AG_UnlockTiming();
