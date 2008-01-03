@@ -952,6 +952,12 @@ layer generates the following events:
 The widget is now visible.
 .It Fn widget-hidden "void"
 The widget is no longer visible.
+.It Fn widget-enabled "void"
+Input state has been enabled with
+.Xr AG_WidgetEnable 3 .
+.It Fn widget-disabled "void"
+Input state has been disabled with
+.Xr AG_WidgetDisable 3 .
 .It Fn widget-moved "void"
 The widget (or one of its parents) has been moved.
 .It Fn widget-gainfocus "void"
