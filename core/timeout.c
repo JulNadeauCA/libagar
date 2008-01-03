@@ -74,23 +74,23 @@ AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt, int replace)
 	int was_empty;
 
 	AG_ObjectLock(ob);
-	was_empty = CIRCLEQ_EMPTY(&ob->timeouts);
+	was_empty = TAILQ_EMPTY(&ob->timeouts);
 	if (replace) {
-		CIRCLEQ_FOREACH(to2, &ob->timeouts, timeouts) {
+		TAILQ_FOREACH(to2, &ob->timeouts, timeouts) {
 			if (to == to2) {
-				CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
+				TAILQ_REMOVE(&ob->timeouts, to, timeouts);
 				break;
 			}
 		}
 	}
-	CIRCLEQ_FOREACH(to2, &ob->timeouts, timeouts) {
+	TAILQ_FOREACH(to2, &ob->timeouts, timeouts) {
 		if (dt < to2->ticks) {
-			CIRCLEQ_INSERT_BEFORE(&ob->timeouts, to2, to, timeouts);
+			TAILQ_INSERT_BEFORE(to2, to, timeouts);
 			break;
 		}
 	}
-	if (to2 == CIRCLEQ_END(&ob->timeouts)) {
-		CIRCLEQ_INSERT_HEAD(&ob->timeouts, to, timeouts);
+	if (to2 == TAILQ_END(&ob->timeouts)) {
+		TAILQ_INSERT_HEAD(&ob->timeouts, to, timeouts);
 	}
 	to->ticks = t;
 	to->ival = dt;
@@ -114,7 +114,7 @@ AG_TimeoutIsScheduled(void *p, AG_Timeout *to)
 	AG_Timeout *oto;
 
 	TAILQ_FOREACH(tob, &agTimeoutObjQ, tobjs) {
-		CIRCLEQ_FOREACH(oto, &tob->timeouts, timeouts) {
+		TAILQ_FOREACH(oto, &tob->timeouts, timeouts) {
 			if (oto == to)
 				return (1);
 		}
@@ -130,10 +130,10 @@ AG_DelTimeout(void *p, AG_Timeout *to)
 	AG_Timeout *oto;
 	
 	AG_LockTimeouts(ob);
-	CIRCLEQ_FOREACH(oto, &ob->timeouts, timeouts) {
+	TAILQ_FOREACH(oto, &ob->timeouts, timeouts) {
 		if (oto == to) {
-			CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
-			if (CIRCLEQ_EMPTY(&ob->timeouts)) {
+			TAILQ_REMOVE(&ob->timeouts, to, timeouts);
+			if (TAILQ_EMPTY(&ob->timeouts)) {
 				TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
 			}
 			break;
@@ -163,7 +163,7 @@ wait:
 	}
 	SDL_Delay(1);
 	AG_LockTimeouts(ob);
-	CIRCLEQ_FOREACH(oto, &ob->timeouts, timeouts) {
+	TAILQ_FOREACH(oto, &ob->timeouts, timeouts) {
 		if (oto == to) {
 			AG_UnlockTimeouts(ob);
 			goto wait;
@@ -189,11 +189,11 @@ AG_ProcessTimeout(Uint32 t)
 		 * the past.
 		 */
 pop:
-		if (!CIRCLEQ_EMPTY(&ob->timeouts)) {
-			to = CIRCLEQ_FIRST(&ob->timeouts);
+		if (!TAILQ_EMPTY(&ob->timeouts)) {
+			to = TAILQ_FIRST(&ob->timeouts);
 			if ((int)(to->ticks - t) <= 0) {
-				CIRCLEQ_REMOVE(&ob->timeouts, to, timeouts);
-				if (CIRCLEQ_EMPTY(&ob->timeouts)) {
+				TAILQ_REMOVE(&ob->timeouts, to, timeouts);
+				if (TAILQ_EMPTY(&ob->timeouts)) {
 					TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
 				}
 				to->running++;
