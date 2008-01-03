@@ -302,7 +302,10 @@ static __inline__ void
 AG_WidgetEnable(void *p)
 {
 	AG_ObjectLock(p);
-	AGWIDGET(p)->flags &= ~(AG_WIDGET_DISABLED);
+	if (AGWIDGET(p)->flags & AG_WIDGET_DISABLED) {
+		AGWIDGET(p)->flags &= ~(AG_WIDGET_DISABLED);
+		AG_PostEvent(NULL, p, "widget-enabled", NULL);
+	}
 	AG_ObjectUnlock(p);
 }
 
@@ -310,7 +313,10 @@ static __inline__ void
 AG_WidgetDisable(void *p)
 {
 	AG_ObjectLock(p);
-	AGWIDGET(p)->flags |= AG_WIDGET_DISABLED;
+	if (!(AGWIDGET(p)->flags & AG_WIDGET_DISABLED)) {
+		AGWIDGET(p)->flags |= AG_WIDGET_DISABLED;
+		AG_PostEvent(NULL, p, "widget-disabled", NULL);
+	}
 	AG_ObjectUnlock(p);
 }
 
