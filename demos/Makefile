@@ -21,9 +21,15 @@ SUBDIR=	fixedres \
 all: all-subdir
 clean: prereq clean-subdir
 cleandir: prereq cleandir-subdir
-install: install-subdir
 deinstall: deinstall-subdir
 depend: depend-subdir
+
+install:
+	@echo "*"
+	@echo "* You probably don't want to install the demos on your system,"
+	@echo "* they are meant to be executed from the source directory."
+	@echo "*"
+	@exit 1
 
 configure:
 	for D in ${SUBDIR}; do \
