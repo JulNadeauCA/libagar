@@ -9,6 +9,9 @@
 #include <agar/core/snprintf.h>
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 
 static char polledString[128] = { '\0' };
 
@@ -103,29 +106,36 @@ MultiLineExample(void)
 {
 	AG_Window *win;
 	AG_Textbox *textbox;
-	const char *someText;
+	char *someText;
+	FILE *f;
+	size_t size;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Multiline Example");
 
 	/*
-	 * Create a multiline textbox and configure it to process the
-	 * tab key (which normally is used to cycle focus).
+	 * Create a multiline textbox displaying this file.
 	 */
 	AG_LabelNewStatic(win, 0, "Multiline string:");
 	textbox = AG_TextboxNew(win,
 	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND|AG_TEXTBOX_CATCH_TAB,
 	    NULL);
-	someText = "struct {\n"
-	         "\tint foo;\n"
-	         "\tint bar;\n"
-	         "}\n";
-	AG_TextboxPrintf(textbox, "%s", someText);
+	if ((f = fopen("textbox.c", "r")) != NULL) {
+		fseek(f, 0, SEEK_END); size = ftell(f); fseek(f, 0, SEEK_SET);
+		someText = AG_Malloc(size);
+		someText[0] = '\0';
+		fread(someText, size, 1, f);
+		fclose(f);
+	} else {
+		someText = AG_Strdup(strerror(errno));
+	}
+	AG_WidgetBindString(textbox->ed, "string", someText, size);
+	textbox->ed->pos = 0;
 
 	AG_WindowShow(win);
 	AG_WindowSetGeometry(win,
-	    agView->w/2 - 75, agView->h/2 - 75,
-	    150, 150);
+	    agView->w/2 - 540/2, agView->h/2 - 380/2,
+	    540, 380);
 }
 
 int
@@ -135,12 +145,13 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	if (AG_InitVideo(420, 340, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
+
 	MultiLineExample();
 	SingleLineExample();
 	AG_EventLoop();
