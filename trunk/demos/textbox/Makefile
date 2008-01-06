@@ -10,7 +10,7 @@ PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
 PROG=	textbox
 SRCS=	textbox.c
 
-CFLAGS+=${AGAR_CFLAGS} -I.
+CFLAGS+=${AGAR_CFLAGS}
 LIBS+=	${AGAR_LIBS}
 
 all: all-subdir ${PROG}
