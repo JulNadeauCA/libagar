@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@
 #include "cursors/vresize.xpm"
 #include "cursors/lldiag.xpm"
 #include "cursors/lrdiag.xpm"
+#include "cursors/text.xpm"
 
 #define CURSOR_MAX_W 32
 #define CURSOR_MAX_H 32
@@ -89,6 +90,7 @@ AG_CursorsInit(void)
 	agCursors[AG_VRESIZE_CURSOR] = GenCursor(vresize_xpm, 15, 16);
 	agCursors[AG_LLDIAG_CURSOR] = GenCursor(lldiag_xpm, 16, 15);
 	agCursors[AG_LRDIAG_CURSOR] = GenCursor(lrdiag_xpm, 16, 15);
+	agCursors[AG_TEXT_CURSOR] = GenCursor(text_xpm, 15, 15);
 }
 
 void
