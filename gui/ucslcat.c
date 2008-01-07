@@ -23,8 +23,11 @@
  * Appends src to string dst of size bytes. At most (bytes-1)/sizeof(Uint32)
  * Unicode characters will be copied.
  *
- * Always NUL terminates (unless bytes <= AG_UCS4Len(dst)*sizeof(Uint32)).
- * Returns (AG_UCS4Len(src) + MIN(bytes, AG_UCS4Len(initial dst)))*sizeof(Uint32)
+ * Always NUL terminates (unless bytes <= AG_LengthUCS4(dst)*sizeof(Uint32)).
+ *
+ * Returns (AG_LengthUCS4(src) +
+ *          MIN(bytes, AG_LengthUCS4(initial dst)))*sizeof(Uint32)
+ *
  * If retval >= bytes, truncation occurred.
  */
 size_t
@@ -44,7 +47,7 @@ AG_UCS4Cat(Uint32 *dst, const Uint32 *src, size_t bytes)
 	n = siz - dlen;
 
 	if (n == 0) {
-		return ((dlen + AG_UCS4Len(s))*sizeof(Uint32));
+		return ((dlen + AG_LengthUCS4(s))*sizeof(Uint32));
 	}
 	while (*s != '\0') {
 		if (n != 1) {
