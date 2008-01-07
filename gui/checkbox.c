@@ -52,6 +52,19 @@ AG_CheckboxNew(void *parent, Uint flags, const char *label)
 }
 
 AG_Checkbox *
+AG_CheckboxNewFn(void *parent, Uint flags, const char *label, AG_EventFn fn,
+    const char *fmt, ...)
+{
+	AG_Checkbox *cb;
+	AG_Event *ev;
+
+	cb = AG_CheckboxNew(parent, flags, label);
+	ev = AG_SetEvent(cb, "checkbox-changed", fn, NULL);
+	AG_EVENT_GET_ARGS(ev, fmt);
+	return (cb);
+}
+
+AG_Checkbox *
 AG_CheckboxNewInt(void *parent, Uint flags, int *pVal, const char *label)
 {
 	AG_Checkbox *cb;
