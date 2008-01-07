@@ -48,6 +48,9 @@ widget implements a group of "radio" buttons.
 .Ft "AG_Radio *"
 .Fn AG_RadioNew "AG_Widget *parent" "Uint flags" "const char *items[]"
 .Pp
+.Ft "AG_Radio *"
+.Fn AG_RadioNewFn "AG_Widget *parent" "Uint flags" "const char *items[]" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
 .Ft void
 .Fn AG_RadioItemsFromArray "AG_Radio *radio" "const char *items[]"
 .Pp
@@ -72,6 +75,11 @@ is not NULL, it should point to a NULL-terminated array of strings.
 There are currently no
 .Fa flags
 specific to this widget.
+The
+.Fn AG_RadioNewFn
+constructor also assigns the specified callback function to the
+.Sq radio-changed
+event.
 .Pp
 The
 .Fn AG_RadioItemsFromArray

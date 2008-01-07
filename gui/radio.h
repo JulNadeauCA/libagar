@@ -38,6 +38,8 @@ __BEGIN_DECLS
 extern AG_WidgetClass agRadioClass;
 
 AG_Radio *AG_RadioNew(void *, Uint, const char *[]);
+AG_Radio *AG_RadioNewFn(void *, Uint, const char **, AG_EventFn,
+                        const char *, ...);
 void      AG_RadioItemsFromArray(AG_Radio *, const char **);
 int       AG_RadioAddItem(AG_Radio *, const char *, ...);
 int       AG_RadioAddItemHK(AG_Radio *, SDLKey, const char *, ...);

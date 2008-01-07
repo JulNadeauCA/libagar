@@ -48,6 +48,19 @@ AG_RadioNew(void *parent, Uint flags, const char **itemText)
 	return (rad);
 }
 
+AG_Radio *
+AG_RadioNewFn(void *parent, Uint flags, const char **itemText, AG_EventFn fn,
+    const char *fmt, ...)
+{
+	AG_Radio *rad;
+	AG_Event *ev;
+
+	rad = AG_RadioNew(parent, flags, itemText);
+	ev = AG_SetEvent(rad, "radio-changed", fn, NULL);
+	AG_EVENT_GET_ARGS(ev, fmt);
+	return (rad);
+}
+
 /* Create a set of items from an array of strings. */
 void
 AG_RadioItemsFromArray(AG_Radio *rad, const char **itemText)
