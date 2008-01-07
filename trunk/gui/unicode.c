@@ -30,9 +30,12 @@
 #include <string.h>
 #include <stdio.h>
 
-/* Parse the first byte of a possible UTF8 sequence. */
+/*
+ * Parse the first byte of a possible UTF8 sequence and return the length
+ * of the sequence in bytes (or 1 if there is none).
+ */
 static __inline__ int
-utf8_length(Uint8 ch)
+LengthUTF8(Uint8 ch)
 {
 	if ((ch >> 7) == 0) {
 		return (1);
@@ -75,7 +78,7 @@ AG_ImportUnicode(enum ag_unicode_conv conv, const char *s, size_t pLen)
 		break;
 	case AG_UNICODE_FROM_UTF8:
 		for (i = 0, j = 0; i < sLen; i++, j++) {
-			switch (utf8_length(s[i])) {
+			switch (LengthUTF8(s[i])) {
 			case 1:
 				ucs[j] = (Uint32)s[i];
 				break;
@@ -143,7 +146,7 @@ AG_CopyUnicode(enum ag_unicode_conv conv, const char *s, Uint32 *ucs,
 		return (i);
 	case AG_UNICODE_FROM_UTF8:
 		for (i = 0, j = 0; i < len; i++, j++) {
-			switch (utf8_length(s[i])) {
+			switch (LengthUTF8(s[i])) {
 			case 1:
 				if (i+1 >= ucs_len) {
 					break;
@@ -270,21 +273,6 @@ AG_ExportUnicode(enum ag_unicode_conv conv, char *dst, const Uint32 *ucs,
 	}
 }
 
-/*
- * Return the length of a UCS-4 string in characters, without the
- * terminating NUL.
- */
-size_t
-AG_UCS4Len(const Uint32 *ucs)
-{
-	size_t len;
-
-	for (len = 0; *ucs != '\0'; ucs++) {
-		len++;
-	}
-	return (len);
-}
-
 /* Duplicate a UCS-4 string. */
 Uint32 *
 AG_UCS4Dup(const Uint32 *ucs)
@@ -292,7 +280,7 @@ AG_UCS4Dup(const Uint32 *ucs)
 	size_t buflen;
 	Uint32 *ns;
 	
-	buflen = (AG_UCS4Len(ucs)+1) * sizeof(Uint32);
+	buflen = (AG_LengthUCS4(ucs) + 1)*sizeof(Uint32);
 	ns = Malloc(buflen);
 	memcpy(ns, ucs, buflen);
 	return (ns);

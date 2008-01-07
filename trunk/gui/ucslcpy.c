@@ -24,8 +24,10 @@
  * Unicode characters will be copied.
  *
  * Always NUL terminates (unless bytes == 0).
- * Returns AG_UCS4Len(src)*sizeof(Uint32); if retval >= bytes, truncation
- * occurred.
+ *
+ * Returns AG_LengthUCS4(src)*sizeof(Uint32).
+ *
+ * If retval >= bytes, truncation occurred.
  */
 size_t
 AG_UCS4Copy(Uint32 *dst, const Uint32 *src, size_t bytes)
