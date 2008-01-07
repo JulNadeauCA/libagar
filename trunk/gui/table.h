@@ -131,8 +131,9 @@ typedef struct ag_table {
 	AG_Event *poll_ev;		/* Poll event */
 	AG_Event *dblClickRowEv;	/* Row double click callback */
 	AG_Event *dblClickColEv;	/* Column double click callback */
-	int dblClickedRow;
-	int dblClickedCol;
+	int dblClickedRow;		/* For row double click */
+	int dblClickedCol;		/* For column double click */
+	Uint32 wheelTicks;		/* For wheel acceleration */
 
 	AG_SLIST_HEAD(,ag_table_popup) popups; /* Registered popup menus */
 } AG_Table;

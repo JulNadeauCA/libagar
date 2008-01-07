@@ -114,6 +114,7 @@ Init(void *obj)
 	t->dblClickColEv = NULL;
 	t->dblClickedRow = -1;
 	t->dblClickedCol = -1;
+	t->wheelTicks = 0;
 	SLIST_INIT(&t->popups);
 	
 	AG_SetEvent(t, "window-mousebuttondown", mousebuttondown, NULL);
@@ -922,12 +923,12 @@ mousebuttondown(AG_Event *event)
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
 		{
-			static Uint32 t1 = 0;
 			AG_WidgetBinding *offsb;
 			int *offs;
 
 			offsb = AG_WidgetGetBinding(t->vbar, "value", &offs);
-			if (((*offs) -= AG_WidgetScrollDelta(&t1)) < 0) {
+			(*offs) -= AG_WidgetScrollDelta(&t->wheelTicks);
+			if (*offs < 0) {
 				*offs = 0;
 			}
 			AG_WidgetBindingChanged(offsb);
@@ -936,13 +937,12 @@ mousebuttondown(AG_Event *event)
 		break;
 	case SDL_BUTTON_WHEELDOWN:
 		{
-			static Uint32 t1 = 0;
 			AG_WidgetBinding *offsb;
 			int *offs;
 
 			offsb = AG_WidgetGetBinding(t->vbar, "value", &offs);
-			if (((*offs) += AG_WidgetScrollDelta(&t1)) >
-			    LAST_VISIBLE(t)) {
+			(*offs) += AG_WidgetScrollDelta(&t->wheelTicks);
+			if (*offs > LAST_VISIBLE(t)) {
 				*offs = LAST_VISIBLE(t);
 			}
 			AG_WidgetBindingChanged(offsb);
