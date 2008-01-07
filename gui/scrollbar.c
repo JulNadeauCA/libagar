@@ -29,13 +29,6 @@
 #include "window.h"
 #include "primitive.h"
 
-enum ag_button_which {
-	AG_BUTTON_NONE = 0,
-	AG_BUTTON_UP = 1,
-	AG_BUTTON_DOWN = 2,
-	AG_BUTTON_SCROLL = 3
-};
-
 static void MouseButtonUp(AG_Event *);
 static void MouseButtonDown(AG_Event *);
 static void MouseMotion(AG_Event *);
@@ -76,45 +69,50 @@ Init(void *obj)
 	sb->min = 0;
 	sb->max = 0;
 	sb->visible = 0;
-	sb->curbutton = AG_BUTTON_NONE;
-	sb->bw = 15;				/* XXX resolution-dependent */
-	sb->barSz = 30;
-	sb->arrowSz = 9;
+	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
+	sb->bwDefault = 16;			/* XXX */
+	sb->bw = 16;
+	sb->barSz = 8;
+	sb->buttonIncFn = NULL;
+	sb->buttonDecFn = NULL;
 
 	AG_SetEvent(sb, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(sb, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(sb, "window-mousemotion", MouseMotion, NULL);
 }
 
+/* Return 1 if the scrollbar is any useful for the current values. */
 int
 AG_ScrollbarVisible(AG_Scrollbar *sb)
 {
 	int min, max, rv;
 
 	AG_ObjectLock(sb);
-
-	switch (sb->type) {
-	case AG_SCROLLBAR_VERT:
-		if (AGWIDGET(sb)->w < sb->bw ||
-		    AGWIDGET(sb)->h < sb->bw*2) {
-			rv = 0;
-			goto out;
-		}
-		break;
-	case AG_SCROLLBAR_HORIZ:
-		if (AGWIDGET(sb)->w < sb->bw*2 ||
-		    AGWIDGET(sb)->h < sb->bw) {
-			rv = 0;
-			goto out;
-		}
-		break;
-	}
 	min = AG_WidgetInt(sb, "min");
 	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
 	rv = (max > 0 && max >= min);
-out:
 	AG_ObjectUnlock(sb);
 	return (rv);
+}
+
+/* Set an alternate handler for UP/LEFT button click. */
+void
+AG_ScrollbarSetIncFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
+{
+	AG_ObjectLock(sb);
+	sb->buttonIncFn = AG_SetEvent(sb, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(sb->buttonIncFn, fmt);
+	AG_ObjectUnlock(sb);
+}
+
+/* Set an alternate handler for DOWN/RIGHT button click. */
+void
+AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
+{
+	AG_ObjectLock(sb);
+	sb->buttonDecFn = AG_SetEvent(sb, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(sb->buttonDecFn, fmt);
+	AG_ObjectUnlock(sb);
 }
 
 /*
@@ -128,7 +126,7 @@ MoveBar(AG_Scrollbar *sb, int x, int totalsize)
 	int min, max;
 	int nVal;
 
-	if (sb->curbutton != AG_BUTTON_SCROLL ||
+	if (sb->curBtn != AG_SCROLLBAR_BUTTON_SCROLL ||
 	    sb->barSz == -1) {
 		return;
 	}
@@ -157,7 +155,23 @@ MouseButtonUp(AG_Event *event)
 		}
 		return;
 	}
-	sb->curbutton = AG_BUTTON_NONE;
+	switch (sb->curBtn) {
+	case AG_SCROLLBAR_BUTTON_DEC:
+		if (sb->buttonDecFn != NULL) {
+			AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 0);
+		}
+		break;
+	case AG_SCROLLBAR_BUTTON_INC:
+		if (sb->buttonIncFn != NULL) {
+			AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 0);
+		}
+		break;
+	default:
+		break;
+	}
+	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
+	AG_PostEvent(NULL, sb, "scrollbar-drag-end", "%i",
+	    AG_WidgetInt(sb,"value"));
 }
 
 static void
@@ -165,9 +179,10 @@ MouseButtonDown(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int button = AG_INT(1);
-	int x = (sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(2) : AG_INT(3);
+	int x = (sb->type == AG_SCROLLBAR_HORIZ) ?
+	        AG_INT(2) : AG_INT(3);
 	int totalsize = (sb->type == AG_SCROLLBAR_HORIZ) ?
-		WIDGET(sb)->w : WIDGET(sb)->h;
+		        WIDGET(sb)->w : WIDGET(sb)->h;
 	int min, value, max, nvalue;
 
 	if (button != SDL_BUTTON_LEFT) {
@@ -187,19 +202,26 @@ MouseButtonDown(AG_Event *event)
 	value = AG_WidgetInt(sb, "value");
 	
 	if (x <= sb->bw) {				/* Up button */
-		sb->curbutton = AG_BUTTON_UP;
-		if (value > min) {
-			AG_WidgetSetInt(sb, "value", value - 1);
+		sb->curBtn = AG_SCROLLBAR_BUTTON_DEC;
+		if (sb->buttonDecFn != NULL) {
+			AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 1);
+		} else {
+			if (value > min)
+				AG_WidgetSetInt(sb, "value", value-1);
 		}
 	} else if (x >= totalsize - sb->bw) {		/* Down button */
-		sb->curbutton = AG_BUTTON_DOWN;
-		if (value < max) {
-			AG_WidgetSetInt(sb, "value", value + 1);
+		sb->curBtn = AG_SCROLLBAR_BUTTON_INC;
+		if (sb->buttonIncFn != NULL) {
+			AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 1);
+		} else {
+			if (value < max)
+				AG_WidgetSetInt(sb, "value", value+1);
 		}
 	} else {					/* In between */
-		sb->curbutton = AG_BUTTON_SCROLL;
+		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
 		MoveBar(sb, x, totalsize);
 	}
+	AG_PostEvent(NULL, sb, "scrollbar-drag-begin", "%i", value);
 	
 	/* Generate an event if value changed. */
 	if (value != (nvalue = AG_WidgetInt(sb, "value")))
@@ -232,12 +254,12 @@ SizeRequest(void *p, AG_SizeReq *r)
 
 	switch (sb->type) {
 	case AG_SCROLLBAR_HORIZ:
-		r->w = sb->bw*2;
-		r->h = sb->bw;
+		r->w = sb->bwDefault*2;
+		r->h = sb->bwDefault;
 		break;
 	case AG_SCROLLBAR_VERT:
-		r->w = sb->bw;
-		r->h = sb->bw*2;
+		r->w = sb->bwDefault;
+		r->h = sb->bwDefault*2;
 		break;
 	}
 }
@@ -245,9 +267,28 @@ SizeRequest(void *p, AG_SizeReq *r)
 static int
 SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
+	AG_Scrollbar *sb = p;
+
 	if (a->w < 4 || a->h < 4) {
 		return (-1);
 	}
+	switch (sb->type) {
+	case AG_SCROLLBAR_VERT:
+		if (a->h < sb->bwDefault*2) {
+			sb->bw = a->h/2;
+		} else {
+			sb->bw = sb->bwDefault;
+		}
+		break;
+	case AG_SCROLLBAR_HORIZ:
+		if (a->w < sb->bwDefault*2) {
+			sb->bw = a->w/2;
+		} else {
+			sb->bw = sb->bwDefault;
+		}
+		break;
+	}
+	sb->arrowSz = sb->bw*5/9;
 	return (0);
 }
 
