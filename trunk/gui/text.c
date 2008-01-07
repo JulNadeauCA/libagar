@@ -544,6 +544,23 @@ AG_TextRenderGlyph(Uint32 ch)
 		ucs[0] = ch;
 		ucs[1] = '\0';
 		gl->su = AG_TextRenderUCS4(ucs);
+
+#ifdef HAVE_FREETYPE
+		if (agFreetype) {
+			AG_TTFGlyph *gt;
+
+			if (AG_TTFFindGlyph(state->font->ttf, ch,
+			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) == 0) {
+				gt = ((AG_TTFFont *)state->font->ttf)->current;
+				gl->advance = gt->advance;
+			} else {
+				gl->advance = gl->su->w;
+			}
+		} else
+#endif
+		{
+			gl->advance = gl->su->w;
+		}
 #ifdef HAVE_OPENGL
 		if (agView->opengl)
 			gl->texture = AG_SurfaceTexture(gl->su, gl->texcoord);
@@ -1592,7 +1609,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt)
 		AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, "string", s,
-		    &tb->string[0]);
+		    &tb->ed->string[0]);
 		AG_AddEvent(tb, "textbox-return", AGWINDETACH(win));
 		AG_WidgetFocus(tb);
 	}
@@ -1603,7 +1620,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 		ev = AG_SetEvent(btn, "button-pushed", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt);
 		AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, "string", s,
-		    &tb->string[0]);
+		    &tb->ed->string[0]);
 		AG_AddEvent(btn, "button-pushed", AGWINDETACH(win));
 
 		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
