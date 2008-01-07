@@ -46,6 +46,7 @@ typedef struct ag_glyph {
 	Uint32 nrefs;			/* Reference count */
 	Uint32 lastRef;			/* Ticks since last reference */
 	SDL_Surface *su;		/* Rendered surface */
+	int advance;			/* Pixel advance */
 #ifdef HAVE_OPENGL
 	Uint texture;			/* Rendered texture */
 	float texcoord[4];
