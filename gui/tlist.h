@@ -82,6 +82,7 @@ typedef struct ag_tlist {
 	AG_Event *popupEv;
 	AG_Event *changedEv;
 	AG_Event *dblClickEv;
+	Uint32 wheelTicks;		/* For wheel acceleration */
 } AG_Tlist;
 
 #define AG_TLIST_FOREACH(it, tl) \
