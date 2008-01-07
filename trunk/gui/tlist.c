@@ -186,6 +186,7 @@ Init(void *obj)
 	tl->popupEv = NULL;
 	tl->changedEv = NULL;
 	tl->dblClickEv = NULL;
+	tl->wheelTicks = 0;
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
@@ -796,12 +797,12 @@ MouseButtonDown(AG_Event *event)
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
 		{
-			static Uint32 t = 0;
 			AG_WidgetBinding *offsb;
 			int *offs;
 
 			offsb = AG_WidgetGetBinding(tl->sbar, "value", &offs);
-			if (((*offs) -= AG_WidgetScrollDelta(&t)) < 0) {
+			(*offs) -= AG_WidgetScrollDelta(&tl->wheelTicks);
+			if (*offs < 0) {
 				*offs = 0;
 			}
 			AG_WidgetBindingChanged(offsb);
@@ -810,13 +811,12 @@ MouseButtonDown(AG_Event *event)
 		break;
 	case SDL_BUTTON_WHEELDOWN:
 		{
-			static Uint32 t = 0;
 			AG_WidgetBinding *offsb;
 			int *offs;
 
 			offsb = AG_WidgetGetBinding(tl->sbar, "value", &offs);
-			if (((*offs) += AG_WidgetScrollDelta(&t)) >
-			    (tl->nitems - tl->nvisitems)) {
+			(*offs) += AG_WidgetScrollDelta(&tl->wheelTicks);
+			if (*offs > (tl->nitems - tl->nvisitems)) {
 				*offs = tl->nitems - tl->nvisitems;
 			}
 			AG_WidgetBindingChanged(offsb);
