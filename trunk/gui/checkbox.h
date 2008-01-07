@@ -27,6 +27,8 @@ __BEGIN_DECLS
 extern AG_WidgetClass agCheckboxClass;
 
 AG_Checkbox	*AG_CheckboxNew(void *, Uint, const char *);
+AG_Checkbox	*AG_CheckboxNewFn(void *, Uint, const char *, AG_EventFn,
+                                  const char *, ...);
 AG_Checkbox	*AG_CheckboxNewInt(void *, Uint, int *, const char *);
 AG_Checkbox	*AG_CheckboxNewFlag(void *, Uint *, Uint, const char *);
 AG_Checkbox	*AG_CheckboxNewFlag32(void *, Uint32 *, Uint32, const char *);
