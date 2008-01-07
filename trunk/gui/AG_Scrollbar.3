@@ -38,12 +38,14 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget represents a single value inside a fixed range.
+widget allows the user to control a numerical value within a specified
+range.
+It is typically used for scrolling.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
-.Sh INITIALIZATION
+.Sh INTERFACE
 .nr nS 1
 .Ft "AG_Scrollbar *"
 .Fn AG_ScrollbarNew "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags"
@@ -51,8 +53,17 @@ widget represents a single value inside a fixed range.
 .Ft void
 .Fn AG_ScrollbarSetBarSize "AG_Scrollbar *scrollbar" "int size"
 .Pp
+.Ft int
+.Fn AG_ScrollbarGetBarSize "AG_Scrollbar *scrollbar"
+.Pp
+.Ft int
+.Fn AG_ScrollbarVisible "AG_Scrollbar *scrollbar"
+.Pp
 .Ft void
-.Fn AG_ScrollbarGetBarSize "AG_Scrollbar *scrollbar" "int *sizep"
+.Fn AG_ScrollbarSetIncFn "AG_Scrollbar *scrollbar" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_ScrollbarSetDecFn "AG_Scrollbar *scrollbar" "AG_EventFn fn" "const char *fmt" "..."
 .Pp
 .nr nS 0
 The
@@ -75,14 +86,30 @@ specific to this widget.
 .Pp
 The
 .Fn AG_ScrollbarSetBarSize
-function sets the size of the scrollbar to
-.Fa size ,
-which is usually calculated from the visible area of whatever is being
-scrolled (for example, the number of visible items of a
-.Xr AG_Tlist 3 ) .
+function sets the size of the scrollbar in pixels.
+In scrolling applications, the scrollbar size is usually computed from the
+ratio between the visible area and the total area that can be displayed.
 .Fn AG_ScrollbarGetBarSize
-returns the current size of the scrollbar in
-.Fa sizep .
+returns the current size of the scrollbar.
+.Pp
+.Fn AG_ScrollbarSetButtonSize
+requests a preferred size for the scrollbar buttons.
+.Fn AG_ScrollbarGetButtonSize
+returns the current button size, which may be less than previously requested.
+.Pp
+If the current value of the variables is such that the scrollbar is any useful,
+.Fn AG_ScrollbarVisible
+returns 1, otherwise it returns 0.
+.Pp
+The
+.Fn AG_ScrollbarSetDecFn
+and
+.Fn AG_ScrollbarSetIncFn
+functions configure a callback routine that will be invoked when the user
+presses the decrement (up/left) button and the increment (down/right) buttons.
+A single
+.Ft int
+argument is passed to the callback (1 = pressed, 0 = released).
 .Sh BINDINGS
 The
 .Nm
@@ -116,6 +143,12 @@ widget generates the following events:
 .It Fn scrollbar-changed "int new_value"
 The scrollbar's value has changed to
 .Fa new_value .
+.It Fn scrollbar-drag-begin "int value"
+User is starting to drag the scrollbar, and the current value is
+.Fa value .
+.It Fn scrollbar-drag-end "int value"
+User is done dragging the scrollbar, and the current value is
+.Fa value .
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
