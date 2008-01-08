@@ -46,10 +46,12 @@ MyDrawFunction(AG_Event *event)
 		glRotatef(-spin2, 0.0, 0.0, 1.0);
 		q = gluNewQuadric();
 		gluCylinder(q, 1.0, 0.0, 1.0, 20, 2);
+		gluDeleteQuadric(q);
 		
 		glRotatef(180.0, 0.0, 1.0, 0.0);
 		q = gluNewQuadric();
 		gluCylinder(q, 1.0, 0.0, 1.0, 20, 2);
+		gluDeleteQuadric(q);
 	}
 	glPopMatrix();
 	
@@ -78,7 +80,7 @@ MyOverlayFunction(AG_Event *event)
 	/* Render a text string using the font engine. */
 	AG_PushTextState();
 	AG_TextColorRGB(255, 255, 125);
-	myText = AG_TextFormat("Spin = %.0f degrees, z = %.02f", spin, vz);
+	myText = AG_TextRenderf("Spin = %.0f degrees, z = %.02f", spin, vz);
 	AG_PopTextState();
 
 	/*
