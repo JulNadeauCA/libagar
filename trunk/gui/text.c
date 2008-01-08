@@ -737,15 +737,18 @@ AG_TextRender(const char *text)
 }
 
 SDL_Surface *
-AG_TextFormat(const char *fmt, ...)
+AG_TextRenderf(const char *fmt, ...)
 {
 	char *text;
 	va_list args;
+	SDL_Surface *su;
 
 	va_start(args, fmt);
 	Vasprintf(&text, fmt, args);
 	va_end(args);
-	return (AG_TextRender(text));
+	su = AG_TextRender(text);
+	free(text);
+	return (su);
 }
 
 #ifdef SYMBOLS

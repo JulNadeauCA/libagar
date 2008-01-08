@@ -128,7 +128,8 @@ void	AG_TextBGColorRGBA(Uint8, Uint8, Uint8, Uint8);
 #define	AG_TextColor(name) AG_TextColorVideo32(AG_COLOR(name))
 #define	AG_TextBGColor(name) AG_TextBGColorVideo32(AG_COLOR(name))
 
-SDL_Surface	*AG_TextFormat(const char *, ...);
+SDL_Surface	*AG_TextRenderf(const char *, ...);
+#define          AG_TextFormat AG_TextRenderf
 SDL_Surface	*AG_TextRender(const char *);
 SDL_Surface	*AG_TextRenderUCS4(const Uint32 *);
 void		 AG_TextSize(const char *, int *, int *);

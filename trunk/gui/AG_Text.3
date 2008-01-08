@@ -143,7 +143,7 @@ rendering functions.
 .Fn AG_TextRenderUCS4 "const Uint32 *text"
 .Pp
 .Ft "SDL_Surface *"
-.Fn AG_TextFormat "const char *fmt" "..."
+.Fn AG_TextRenderf "const char *fmt" "..."
 .Pp
 .Ft "SDL_Surface *"
 .Fn AG_TextRenderGlyph "Uint32 uch"
@@ -166,7 +166,7 @@ The
 function renders text to a new, transparent surface.
 The input text may contain UTF-8 sequences.
 The
-.Fn AG_TextFormat
+.Fn AG_TextRenderf
 variant accepts
 .Xr printf 3
 style arguments.
