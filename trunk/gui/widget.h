@@ -245,8 +245,8 @@ AG_WidgetBinding *AG_WidgetBindMp(void *, const char *, AG_Mutex *,
 			          AG_WidgetBindingType, ...);
 AG_WidgetBinding *AG_WidgetGetBinding(void *, const char *, ...);
 void	  	  AG_WidgetBindingChanged(AG_WidgetBinding *);
-int	  	  AG_WidgetCopyBinding(void *, const char *, void *,
-		                       const char *);
+int	  	  AG_WidgetCopyBinding(void *, const char *,
+                                       AG_WidgetBinding *);
 
 #define AG_WidgetBindBool(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_BOOL,(p))
 #define AG_WidgetBindInt(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_INT,(p))

@@ -594,7 +594,7 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Fn AG_WidgetGetBinding "AG_Widget *widget" "const char *binding" "void *res"
 .Pp
 .Ft "int"
-.Fn AG_WidgetCopyBinding "AG_Widget *dst_widget" "const char *dst_binding" "void *src_widget" "const char *src_binding"
+.Fn AG_WidgetCopyBinding "AG_Widget *dst_widget" "const char *dst_binding" "AG_WidgetBinding *src_binding"
 .Pp
 .Ft void
 .Fn AG_WidgetLockBinding "AG_WidgetBinding *binding"
@@ -856,7 +856,7 @@ function copies the data (ie. type, pointer values) of the binding
 .Fa src_binding
 to
 .Fa dst_binding .
-The destination binding must exist.
+The destination binding must already exist.
 The function returns 0 on success, -1 if an error occured.
 .Pp
 .Fn AG_WidgetSet_*
