@@ -360,14 +360,21 @@ AG_DestroyVideo(void)
 	if (agView == NULL)
 		return;
 	
-	AG_TextDestroy();
-
+	for (win = TAILQ_FIRST(&agView->detach);
+	     win != TAILQ_END(&agView->detach);
+	     win = nwin) {
+		nwin = TAILQ_NEXT(win, detach);
+		AG_ObjectDestroy(win);
+	}
 	for (win = TAILQ_FIRST(&agView->windows);
 	     win != TAILQ_END(&agView->windows);
 	     win = nwin) {
 		nwin = TAILQ_NEXT(win, windows);
 		AG_ObjectDestroy(win);
 	}
+
+	AG_TextDestroy();
+
 	SDL_FreeSurface(agView->stmpl);
 	Free(agView->dirty);
 	Free(agView->winModal);
@@ -376,6 +383,7 @@ AG_DestroyVideo(void)
 	AG_ColorsDestroy();
 	AG_CursorsDestroy();
 
+	AG_ClearGlobalKeys();
 	AG_MutexDestroy(&agGlobalKeysLock);
 	
 	agView = NULL;
@@ -430,6 +438,22 @@ AG_UnbindGlobalKey(SDLKey keysym, SDLMod keymod)
 	AG_MutexUnlock(&agGlobalKeysLock);
 	AG_SetError(_("No such key binding"));
 	return (-1);
+}
+
+void
+AG_ClearGlobalKeys(void)
+{
+	struct ag_global_key *gk, *gkNext;
+
+	AG_MutexLock(&agGlobalKeysLock);
+	for (gk = SLIST_FIRST(&agGlobalKeys);
+	     gk != SLIST_END(&agGlobalKeys);
+	     gk = gkNext) {
+		gkNext = SLIST_NEXT(gk, gkeys);
+		Free(gk);
+	}
+	SLIST_INIT(&agGlobalKeys);
+	AG_MutexUnlock(&agGlobalKeysLock);
 }
 
 #ifdef HAVE_OPENGL

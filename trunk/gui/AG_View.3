@@ -72,6 +72,9 @@ a number of utility routines for surface and texture manipulation.
 .Ft int
 .Fn AG_UnbindGlobalKey "SDLKey key" "SDLMod mod"
 .Pp
+.Ft void
+.Fn AG_ClearGlobalKeys "void"
+.Pp
 .nr nS 0
 The
 .Fn AG_InitVideo
@@ -143,6 +146,9 @@ style function.
 .Fn AG_UnbindGlobalKey
 removes the given key mapping, returning 0 on success and -1 if no such
 mapping exists.
+.Pp
+.Fn AG_ClearGlobalKeys
+removes all existing key mappings.
 .Sh GRAPHIC SURFACES
 .nr nS 1
 .Ft "SDL_Surface *"

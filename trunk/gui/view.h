@@ -246,6 +246,7 @@ int		 AG_SetRefreshRate(int);
 void		 AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
 void		 AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
 int		 AG_UnbindGlobalKey(SDLKey, SDLMod);
+void		 AG_ClearGlobalKeys(void);
 
 /* GUI-related */
 void		 AG_ViewVideoExpose(void);
