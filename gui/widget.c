@@ -204,40 +204,37 @@ AG_WidgetSetFocusable(void *p, int flag)
 }
 
 int
-AG_WidgetCopyBinding(void *w1, const char *n1, void *w2, const char *n2)
+AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_WidgetBinding *bSrc)
 {
-	AG_WidgetBinding *b1, *b2;
+	AG_WidgetBinding *bDst;
 
-	if ((b1 = AG_WidgetGetBinding(w1, n1)) == NULL) {
+	if ((bDst = AG_WidgetGetBinding(wDst, nDst)) == NULL) {
 		return (-1);
 	}
-	if ((b2 = AG_WidgetGetBinding(w2, n2)) == NULL) {
-		AG_WidgetUnlockBinding(b1);
-		return (-1);
-	}
-	b1->type = b2->type;
-	b1->vtype = b2->vtype;
-	b1->mutex = b2->mutex;
-	b1->p1 = b2->p1;
+	bDst->type = bSrc->type;
+	bDst->vtype = bSrc->vtype;
+	bDst->mutex = bSrc->mutex;
+	bDst->p1 = bSrc->p1;
 
-	switch (b1->type) {
+	switch (bDst->type) {
 	case AG_WIDGET_PROP:
-		Strlcpy(b1->data.prop, b2->data.prop, sizeof(b1->data.prop));
+		Strlcpy(bDst->data.prop, bSrc->data.prop,
+		    sizeof(bDst->data.prop));
 		break;
 	case AG_WIDGET_STRING:
-		b1->data.size = b2->data.size;
+		bDst->data.size = bSrc->data.size;
 		break;
 	case AG_WIDGET_FLAG:
 	case AG_WIDGET_FLAG8:
 	case AG_WIDGET_FLAG16:
 	case AG_WIDGET_FLAG32:
-		b1->data.bitmask = b2->data.bitmask;
+		bDst->data.bitmask = bSrc->data.bitmask;
 		break;
 	default:
 		break;
 	}
-	AG_WidgetUnlockBinding(b2);
-	AG_WidgetUnlockBinding(b1);
+	AG_PostEvent(NULL, wDst, "widget-bound", "%p", bDst);
+	AG_WidgetUnlockBinding(bDst);
 	return (0);
 }
 
