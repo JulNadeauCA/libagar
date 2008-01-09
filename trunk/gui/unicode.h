@@ -41,7 +41,7 @@ AG_LengthUCS4(const Uint32 *ucs)
  * UCS-4 character in UTF-8.
  */
 static __inline__ int
-AG_CharLengthUTF8(Uint32 ch)
+AG_CharLengthUTF8FromUCS4(Uint32 ch)
 {
 	if      (ch <  0x80)		{ return (1); }
 	else if (ch <  0x800)		{ return (2); }
@@ -49,21 +49,70 @@ AG_CharLengthUTF8(Uint32 ch)
 	else if (ch <  0x200000)	{ return (4); }
 	else if (ch <  0x4000000)	{ return (5); }
 	else if (ch <= 0x7fffffff)	{ return (6); }
-	else				{ return (0); }
+	else				{ AG_FatalError("CharLengthUTF8"); }
 }
 
 /*
  * Return the number of bytes (not including the terminating NUL) that would
- * be needed to encode the given UCS-4 string to UTF-8 format.
+ * be needed to encode the given UCS-4 string in UTF-8.
  */
 static __inline__ size_t
-AG_LengthUTF8(const Uint32 *ucs4)
+AG_LengthUTF8FromUCS4(const Uint32 *ucs4)
 {
 	size_t rv = 0;
 	const Uint32 *c;
 
 	for (c = &ucs4[0]; *c != '\0'; c++) {
-		rv += AG_CharLengthUTF8(*c);
+		rv += AG_CharLengthUTF8FromUCS4(*c);
+	}
+	return (rv);
+}
+
+/*
+ * Parse the first byte of a possible UTF-8 sequence and return the length
+ * of the sequence in bytes (or 1 if there is none).
+ */
+static __inline__ int
+AG_CharLengthUTF8(Uint8 ch)
+{
+	if ((ch >> 7) == 0) {
+		return (1);
+	} else if (((ch & 0xe0) >> 5) == 0x6) {
+		return (2);
+	} else if (((ch & 0xf0) >> 4) == 0xe) {
+		return (3);
+	} else if (((ch & 0xf8) >> 3) == 0x1e) {
+		return (4);
+	} else if (((ch & 0xfc) >> 2) == 0x3e) {
+		return (5);
+	} else if (((ch & 0xfe) >> 1) == 0x7e) {
+		return (6);
+	} else {
+		return (-1);
+	}
+}
+
+/* Return the number of characters in the given UTF-8 string. */
+static __inline__ size_t
+AG_LengthUTF8(const char *s)
+{
+	const char *c = &s[0];
+	size_t rv = 0;
+	int i, cLen;
+
+	if (s[0] == '\0') {
+		return (0);
+	}
+	for (;;) {
+		if ((cLen = AG_CharLengthUTF8(*c)) == -1) {
+			break;
+		}
+		for (i = 0; i < cLen; i++) {
+			if (c[i] == '\0')
+				return (rv);
+		}
+		rv++;
+		c += cLen;
 	}
 	return (rv);
 }
