@@ -298,7 +298,31 @@ WidgetParams(AG_Event *event)
 		AG_SpinbuttonSetMin(sb, 0);
 		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", wp);
 	}
-	
+
+	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Editable:*")) {
+		AG_Editable *ed = (AG_Editable *)wid;
+		AG_Spinbutton *sb;
+		
+		nTab = AG_NotebookAddTab(nb, _("Editable"), AG_BOX_VERT);
+		sb = AG_SpinbuttonNew(nTab, 0, "x: ");
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->x);
+		sb = AG_SpinbuttonNew(nTab, 0, "xMax: ");
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->xMax);
+		sb = AG_SpinbuttonNew(nTab, 0, "y: ");
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->y);
+		sb = AG_SpinbuttonNew(nTab, 0, "yMax: ");
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->yMax);
+		sb = AG_SpinbuttonNew(nTab, 0, "yVis: ");
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->yVis);
+		AG_SeparatorNewHoriz(nTab);
+		sb = AG_SpinbuttonNew(nTab, 0, "pos: ");
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->pos);
+		sb = AG_SpinbuttonNew(nTab, 0, "xCurs: ");
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->xCurs);
+		sb = AG_SpinbuttonNew(nTab, 0, "yCurs: ");
+		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->yCurs);
+	}
+
 	nTab = AG_NotebookAddTab(nb, _("Geometry"), AG_BOX_VERT);
 	{
 		msb = AG_MSpinbuttonNew(nTab, 0, ",", "Container coords: ");
