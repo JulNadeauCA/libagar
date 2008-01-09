@@ -47,6 +47,9 @@ AG_CheckboxNew(void *parent, Uint flags, const char *label)
 	if (label != NULL) {
 		cb->labelTxt = Strdup(label);
 	}
+	if (flags & AG_CHECKBOX_SET) {
+		cb->state = 1;
+	}
 	AG_ObjectAttach(parent, cb);
 	return (cb);
 }
