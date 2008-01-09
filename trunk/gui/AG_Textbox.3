@@ -56,6 +56,12 @@ multiline mode.
 .Fn AG_TextboxSetPassword "AG_Textbox *textbox" "int password"
 .Pp
 .Ft void
+.Fn AG_TextboxSetIntOnly "AG_Editable *ed" "int enable"
+.Pp
+.Ft void
+.Fn AG_TextboxSetFltOnly "AG_Editable *ed" "int enable"
+.Pp
+.Ft void
 .Fn AG_TextboxSetLabel "AG_Textbox *textbox" "const char *fmt" "..."
 .Pp
 .Ft void
@@ -95,9 +101,15 @@ sets this flag.
 Arrange for the widget to abandon its focus when the return key is pressed.
 .It AG_TEXTBOX_INT_ONLY
 Restricts input to valid integers only.
+Use
+.Fn AG_TextboxSetIntOnly
+to change at runtime.
 .It AG_TEXTBOX_FLT_ONLY
 Restricts input to valid floating-point numbers in decimal and scientific
 notation ("inf" and the Unicode symbol for Infinity may also be used).
+Use
+.Fn AG_TextboxSetFltOnly
+to change at runtime.
 .It AG_TEXTBOX_CATCH_TAB
 Cause tabs to be entered literally into the string (by default, the tab
 key moves focus to the next widget).
@@ -116,6 +128,12 @@ function enables (1) or disables (0) password-type input, where characters are
 substituted for
 .Sq *
 in the display.
+.Pp
+.Fn AG_TextboxSetIntOnly
+restricts input to integers (see flags)
+.Fn AG_TextboxSetFltOnly
+restricts input to real numbers (see flags).
+.Pp
 .Pp
 .Fn AG_TextboxSetLabel
 changes the current label text to the specified string.

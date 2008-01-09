@@ -116,7 +116,7 @@ TextChanged(AG_Event *event)
 
 	AG_ObjectLock(fsu);
 
-	stringb = AG_WidgetGetBinding(fsu->input, "string", &s);
+	stringb = AG_WidgetGetBinding(fsu->input->ed, "string", &s);
 	Strlcpy(text, s, sizeof(text));
 
 	if ((s = AG_Strsep(&tp, fsu->sep)) != NULL) {

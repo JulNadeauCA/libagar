@@ -119,7 +119,7 @@ PostChange(AG_Event *event)
 	char *s;
 
 	AG_ObjectLock(sbu);
-	stringb = AG_WidgetGetBinding(sbu->input, "string", &s);
+	stringb = AG_WidgetGetBinding(sbu->input->ed, "string", &s);
 	AG_SpinbuttonSetValue(sbu, atoi(s));
 	AG_WidgetUnlockBinding(stringb);
 	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
