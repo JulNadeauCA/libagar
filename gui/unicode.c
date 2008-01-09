@@ -31,30 +31,6 @@
 #include <stdio.h>
 
 /*
- * Parse the first byte of a possible UTF8 sequence and return the length
- * of the sequence in bytes (or 1 if there is none).
- */
-static __inline__ int
-LengthUTF8(Uint8 ch)
-{
-	if ((ch >> 7) == 0) {
-		return (1);
-	} else if (((ch & 0xe0) >> 5) == 0x6) {
-		return (2);
-	} else if (((ch & 0xf0) >> 4) == 0xe) {
-		return (3);
-	} else if (((ch & 0xf8) >> 3) == 0x1e) {
-		return (4);
-	} else if (((ch & 0xfc) >> 2) == 0x3e) {
-		return (5);
-	} else if (((ch & 0xfe) >> 1) == 0x7e) {
-		return (6);
-	} else {
-		return (-1);
-	}
-}
-
-/*
  * Returns a buffer containing a UCS-4 representation of the given
  * string/encoding. If len is 0, enough memory to hold the string is
  * allocated. Otherwise, a buffer of the specified size is allocated.
@@ -78,7 +54,7 @@ AG_ImportUnicode(enum ag_unicode_conv conv, const char *s, size_t pLen)
 		break;
 	case AG_UNICODE_FROM_UTF8:
 		for (i = 0, j = 0; i < sLen; i++, j++) {
-			switch (LengthUTF8(s[i])) {
+			switch (AG_CharLengthUTF8(s[i])) {
 			case 1:
 				ucs[j] = (Uint32)s[i];
 				break;
@@ -146,7 +122,7 @@ AG_CopyUnicode(enum ag_unicode_conv conv, const char *s, Uint32 *ucs,
 		return (i);
 	case AG_UNICODE_FROM_UTF8:
 		for (i = 0, j = 0; i < len; i++, j++) {
-			switch (LengthUTF8(s[i])) {
+			switch (AG_CharLengthUTF8(s[i])) {
 			case 1:
 				if (i+1 >= ucs_len) {
 					break;
