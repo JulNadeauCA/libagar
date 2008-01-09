@@ -523,7 +523,7 @@ fmtint(char *buffer, size_t *currlen, size_t maxlen, long value, int base,
 }
 
 static long double 
-pow10(int exp)
+snprintf_pow10(int exp)
 {
 	long double result = 1;
 
@@ -535,7 +535,7 @@ pow10(int exp)
 }
 
 static long 
-round(long double value)
+snprintf_round(long double value)
 {
 	long intpart = (long)value;
 
@@ -590,11 +590,11 @@ fmtfp(char *buffer, size_t *currlen, size_t maxlen, long double fvalue,
 	/* We "cheat" by converting the fractional part to integer by
 	 * multiplying by a factor of 10
 	 */
-	fracpart = round((pow10 (max)) * (ufvalue - intpart));
+	fracpart = snprintf_round((snprintf_pow10 (max)) * (ufvalue - intpart));
 
-	if (fracpart >= (long)pow10(max)) {
+	if (fracpart >= (long)snprintf_pow10(max)) {
 		intpart++;
-		fracpart -= (long)pow10(max);
+		fracpart -= (long)snprintf_pow10(max);
 	}
 
 	/* Convert integer part */
