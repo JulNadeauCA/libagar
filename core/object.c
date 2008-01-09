@@ -45,6 +45,8 @@
 #include <fcntl.h>
 #include <string.h>
 
+#include <config/lockdebug.h>
+
 AG_ObjectClass agObjectClass = {
 	"AG_Object",
 	sizeof(AG_Object),
@@ -1999,13 +2001,14 @@ tryname:
 	}
 }
 
+#ifdef LOCKDEBUG
 void
 AG_ObjectLockDebug(AG_Object *ob, const char *info)
 {
 	if (agDebugLvl >= 10) { AG_Debug(ob, "Locking (%s)...", info); }
 	AG_MutexLock(&ob->lock);
 	if (agDebugLvl >= 10) { AG_Debug(ob, "OK\n"); }
-	
+
 	ob->lockinfo = (const char **)AG_Realloc(ob->lockinfo,
 	    (ob->nlockinfo+1)*sizeof(char *));
 	ob->lockinfo[ob->nlockinfo++] = info;
@@ -2018,3 +2021,4 @@ AG_ObjectUnlockDebug(AG_Object *ob, const char *info)
 	AG_MutexUnlock(&ob->lock);
 	if (agDebugLvl >= 10) { AG_Debug(ob, "Unlocked (%s)\n", info); }
 }
+#endif /* LOCKDEBUG */
