@@ -59,6 +59,12 @@ It allows the user to edit UTF-8 encoded text in single-line or multi-line mode.
 .Fn AG_EditableSetPassword "AG_Editable *ed" "int enable"
 .Pp
 .Ft void
+.Fn AG_EditableSetIntOnly "AG_Editable *ed" "int enable"
+.Pp
+.Ft void
+.Fn AG_EditableSetFltOnly "AG_Editable *ed" "int enable"
+.Pp
+.Ft void
 .Fn AG_EditableSizeHint "AG_Editable *ed" "const char *text"
 .Pp
 .Ft void
@@ -82,19 +88,27 @@ display area.
 Enable some important optimizations based on the assumption that the contents
 of the buffer will not change under the widget's feet.
 The default behavior makes no such assumption.
+Use
 .Fn AG_EditableSetStatic
-can change this setting at runtime.
+to change at runtime.
 .It AG_EDITABLE_PASSWORD
 Password-style entry where characters are hidden.
+Use
 .Fn AG_EditableSetPassword
-can change this setting at runtime.
+to change at runtime.
 .It AG_EDITABLE_ABANDON_FOCUS
 Arrange for the widget to abandon its focus when the return key is pressed.
 .It AG_EDITABLE_INT_ONLY
-Restricts input to valid integers only.
+Restricts input to integers only.
+Use
+.Fn AG_EditableSetIntOnly
+to change at runtime.
 .It AG_EDITABLE_FLT_ONLY
-Restricts input to valid floating-point numbers in decimal and scientific
+Restricts input to floating-point numbers in decimal and scientific
 notation ("inf" and the Unicode symbol for Infinity may also be used).
+Use
+.Fn AG_EditableSetFltOnly
+to change at runtime.
 .It AG_EDITABLE_CATCH_TAB
 Cause tabs to be entered literally into the string (by default, the tab
 key moves focus to the next widget).
@@ -127,6 +141,11 @@ function enables or disables password-type input, where characters are
 substituted for
 .Sq *
 in the display.
+.Pp
+.Fn AG_EditableSetIntOnly
+restricts input to integers (see flags)
+.Fn AG_EditableSetFltOnly
+restricts input to real numbers (see flags).
 .Pp
 .Fn AG_EditableSizeHint
 requests that the initial geometry of

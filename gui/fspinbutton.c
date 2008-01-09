@@ -73,75 +73,63 @@ Bound(AG_Event *event)
 		case AG_WIDGET_DOUBLE:
 			fsu->min = -AG_DBL_MAX+1;
 			fsu->max =  AG_DBL_MAX-1;
-			fsu->input->flags |= AG_TEXTBOX_FLT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_INT_ONLY;
+			AG_TextboxSetFltOnly(fsu->input, 1);
 			break;
 		case AG_WIDGET_FLOAT:
 			fsu->min = -AG_FLT_MAX+1;
 			fsu->max =  AG_FLT_MAX-1;
-			fsu->input->flags |= AG_TEXTBOX_FLT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_INT_ONLY;
+			AG_TextboxSetFltOnly(fsu->input, 1);
 			break;
 		case AG_WIDGET_INT:
 			fsu->min = AG_INT_MIN+1;
 			fsu->max = AG_INT_MAX-1;
-			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 		case AG_WIDGET_UINT:
 			fsu->min = 0;
 			fsu->max = AG_UINT_MAX-1;
-			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 		case AG_WIDGET_UINT8:
 			fsu->min = 0;
 			fsu->max = 0xffU;
-			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 		case AG_WIDGET_SINT8:
 			fsu->min = -0x7f+1;
 			fsu->max =  0x7f-1;
-			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 		case AG_WIDGET_UINT16:
 			fsu->min = 0;
 			fsu->max = 0xffffU;
-			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 		case AG_WIDGET_SINT16:
 			fsu->min = -0x7fff+1;
 			fsu->max =  0x7fff-1;
-			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 		case AG_WIDGET_UINT32:
 			fsu->min = 0;
 			fsu->max = 0xffffffffU;
-			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 		case AG_WIDGET_SINT32:
 			fsu->min = -0x7fffffff+1;
 			fsu->max =  0x7fffffff-1;
-			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 #ifdef HAVE_64BIT
 		case AG_WIDGET_UINT64:
 			fsu->min = 0;
 			fsu->max = 0xffffffffffffffffULL;
-			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 		case AG_WIDGET_SINT64:
 			fsu->min = -0x7fffffffffffffffULL+1;
 			fsu->max =  0x7fffffffffffffffULL-1;
-			fsu->input->flags |= AG_TEXTBOX_INT_ONLY;
-			fsu->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 #endif
 		}
@@ -176,7 +164,7 @@ TextChanged(AG_Event *event)
 	AG_ObjectLock(fsu);
 
 	valueb = AG_WidgetGetBinding(fsu, "value", &value);
-	stringb = AG_WidgetGetBinding(fsu->input, "string", &s);
+	stringb = AG_WidgetGetBinding(fsu->input->ed, "string", &s);
 
 	switch (valueb->vtype) {
 	case AG_WIDGET_DOUBLE:

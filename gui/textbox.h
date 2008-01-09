@@ -66,6 +66,8 @@ void        AG_TextboxSetLabel(AG_Textbox *, const char *, ...);
 #define     AG_TextboxSetPassword(tb,flag) \
             AG_EditableSetPassword((tb)->ed,(flag))
 #define     AG_TextboxSetStatic(tb,flag) AG_EditableSetStatic((tb)->ed,(flag))
+#define     AG_TextboxSetFltOnly(tb,flag) AG_EditableSetFltOnly((tb)->ed,(flag))
+#define     AG_TextboxSetIntOnly(tb,flag) AG_EditableSetIntOnly((tb)->ed,(flag))
 
 #define AG_TextboxMapPosition(tb,x,y,pos,abs) \
 	AG_EditableMapPosition((tb)->ed,(x),(y),(pos),(abs))

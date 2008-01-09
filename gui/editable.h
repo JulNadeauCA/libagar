@@ -78,6 +78,8 @@ void         AG_EditableSizeHintPixels(AG_Editable *, Uint, Uint);
 #define      AG_EditablePrescale AG_EditableSizeHint
 void         AG_EditableSetPassword(AG_Editable *, int);
 void         AG_EditableSetStatic(AG_Editable *, int);
+void         AG_EditableSetFltOnly(AG_Editable *, int);
+void         AG_EditableSetIntOnly(AG_Editable *, int);
 
 int  AG_EditableMapPosition(AG_Editable *, int, int, int *, int);
 void AG_EditableMoveCursor(AG_Editable *, int, int, int);

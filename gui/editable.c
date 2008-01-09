@@ -97,6 +97,32 @@ AG_EditableSetStatic(AG_Editable *ed, int flag)
 	AG_ObjectUnlock(ed);
 }
 
+void
+AG_EditableSetFltOnly(AG_Editable *ed, int flag)
+{
+	AG_ObjectLock(ed);
+	if (flag) {
+		ed->flags |= AG_EDITABLE_FLT_ONLY;
+		ed->flags &= ~(AG_EDITABLE_INT_ONLY);
+	} else {
+		ed->flags &= ~(AG_EDITABLE_FLT_ONLY);
+	}
+	AG_ObjectUnlock(ed);
+}
+
+void
+AG_EditableSetIntOnly(AG_Editable *ed, int flag)
+{
+	AG_ObjectLock(ed);
+	if (flag) {
+		ed->flags |= AG_EDITABLE_INT_ONLY;
+		ed->flags &= ~(AG_EDITABLE_FLT_ONLY);
+	} else {
+		ed->flags &= ~(AG_EDITABLE_INT_ONLY);
+	}
+	AG_ObjectUnlock(ed);
+}
+
 /*
  * Process a keystroke. May be invoked from the repeat timeout routine or
  * the keydown handler. If we return 1, the current delay/repeat cycle will

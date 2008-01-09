@@ -72,75 +72,63 @@ Bound(AG_Event *event)
 		case AG_WIDGET_DOUBLE:
 			num->min = -AG_DBL_MAX+1;
 			num->max =  AG_DBL_MAX-1;
-			num->input->flags |= AG_TEXTBOX_FLT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_INT_ONLY;
+			AG_TextboxSetFltOnly(num->input, 1);
 			break;
 		case AG_WIDGET_FLOAT:
 			num->min = -AG_FLT_MAX+1;
 			num->max =  AG_FLT_MAX-1;
-			num->input->flags |= AG_TEXTBOX_FLT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_INT_ONLY;
+			AG_TextboxSetFltOnly(num->input, 1);
 			break;
 		case AG_WIDGET_INT:
 			num->min = AG_INT_MIN+1;
 			num->max = AG_INT_MAX-1;
-			num->input->flags |= AG_TEXTBOX_INT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(num->input, 1);
 			break;
 		case AG_WIDGET_UINT:
 			num->min = 0;
 			num->max = AG_UINT_MAX-1;
-			num->input->flags |= AG_TEXTBOX_INT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(num->input, 1);
 			break;
 		case AG_WIDGET_UINT8:
 			num->min = 0;
 			num->max = 0xffU;
-			num->input->flags |= AG_TEXTBOX_INT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(num->input, 1);
 			break;
 		case AG_WIDGET_SINT8:
 			num->min = -0x7f+1;
 			num->max =  0x7f-1;
-			num->input->flags |= AG_TEXTBOX_INT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(num->input, 1);
 			break;
 		case AG_WIDGET_UINT16:
 			num->min = 0;
 			num->max = 0xffffU;
-			num->input->flags |= AG_TEXTBOX_INT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(num->input, 1);
 			break;
 		case AG_WIDGET_SINT16:
 			num->min = -0x7fff+1;
 			num->max =  0x7fff-1;
-			num->input->flags |= AG_TEXTBOX_INT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(num->input, 1);
 			break;
 		case AG_WIDGET_UINT32:
 			num->min = 0;
 			num->max = 0xffffffffU;
-			num->input->flags |= AG_TEXTBOX_INT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(num->input, 1);
 			break;
 		case AG_WIDGET_SINT32:
 			num->min = -0x7fffffff+1;
 			num->max =  0x7fffffff-1;
-			num->input->flags |= AG_TEXTBOX_INT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(num->input, 1);
 			break;
 #ifdef HAVE_64BIT
 		case AG_WIDGET_UINT64:
 			num->min = 0;
 			num->max = 0xffffffffffffffffULL;
-			num->input->flags |= AG_TEXTBOX_INT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(num->input, 1);
 			break;
 		case AG_WIDGET_SINT64:
 			num->min = -0x7fffffffffffffffULL+1;
 			num->max =  0x7fffffffffffffffULL-1;
-			num->input->flags |= AG_TEXTBOX_INT_ONLY;
-			num->input->flags &= ~AG_TEXTBOX_FLT_ONLY;
+			AG_TextboxSetIntOnly(num->input, 1);
 			break;
 #endif
 		}
@@ -201,7 +189,7 @@ UpdateTextbox(AG_Numerical *num)
 }
 
 static void
-keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	AG_Numerical *num = AG_SELF();
 	int keysym = AG_INT(1);
@@ -222,7 +210,7 @@ GainedFocus(AG_Event *event)
 	AG_Numerical *num = AG_SELF();
 
 	UpdateTextbox(num);
-	AG_WidgetFocus(num->input);
+	AG_WidgetFocus(num->input->ed);
 }
 
 /* Update the numerical value from the textbox. */
@@ -236,7 +224,7 @@ UpdateFromText(AG_Event *event)
 	void *value;
 
 	valueb = AG_WidgetGetBinding(num, "value", &value);
-	stringb = AG_WidgetGetBinding(num->input, "string", &s);
+	stringb = AG_WidgetGetBinding(num->input->ed, "string", &s);
 
 	switch (valueb->vtype) {
 	case AG_WIDGET_DOUBLE:
@@ -384,6 +372,8 @@ Init(void *obj)
 {
 	AG_Numerical *num = obj;
 
+	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE;
+
 	AG_WidgetBindDouble(num, "value", &num->value);
 	AG_WidgetBindDouble(num, "min", &num->min);
 	AG_WidgetBindDouble(num, "max", &num->max);
@@ -407,7 +397,7 @@ Init(void *obj)
 	AG_ButtonSetPadding(num->decbu, 1,1,1,1);
 	AG_WidgetSetFocusable(num->decbu, 0);
 
-	AG_SetEvent(num, "window-keydown", keydown, NULL);
+	AG_SetEvent(num, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(num, "widget-gainfocus", GainedFocus, NULL);
 	AG_SetEvent(num, "widget-bound", Bound, NULL);
 	AG_SetEvent(num->incbu, "button-pushed", IncrementValue, "%p", num);

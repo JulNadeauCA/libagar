@@ -128,7 +128,7 @@ TextReturn(AG_Event *event)
 
 	AG_ObjectLock(sbu);
 
-	stringb = AG_WidgetGetBinding(sbu->input, "string", &s);
+	stringb = AG_WidgetGetBinding(sbu->input->ed, "string", &s);
 	Strlcpy(text, s, sizeof(text));
 
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
@@ -155,7 +155,7 @@ TextChanged(AG_Event *event)
 	
 	AG_ObjectLock(sbu);
 
-	stringb = AG_WidgetGetBinding(sbu->input, "string", &s);
+	stringb = AG_WidgetGetBinding(sbu->input->ed, "string", &s);
 	Strlcpy(text, s, sizeof(text));
 
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
