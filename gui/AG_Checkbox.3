@@ -83,6 +83,15 @@ constructor also assigns the specified callback function to the
 .Sq checkbox-changed
 event.
 .Pp
+Acceptable values for the
+.Fa flags
+argument include:
+.Pp
+.Bl -tag -width "AG_CHECKBOX_SET "
+.It AG_CHECKBOX_SET
+Set the default state binding to 1 on initialization.
+.El
+.Pp
 The
 .Fn AG_CheckboxNewInt
 function binds the default state to a boolean integer.

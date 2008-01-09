@@ -17,6 +17,7 @@ typedef struct ag_checkbox {
 #define AG_CHECKBOX_HFILL	0x01
 #define AG_CHECKBOX_VFILL	0x02
 #define AG_CHECKBOX_EXPAND	(AG_CHECKBOX_HFILL|AG_CHECKBOX_VFILL)
+#define AG_CHECKBOX_SET		0x04
 	int state;
 	char *labelTxt;
 	int label;
