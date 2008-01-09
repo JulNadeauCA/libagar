@@ -15,21 +15,6 @@
 
 static char polledString[128] = { '\0' };
 
-static void
-ReturnPressed(AG_Event *event)
-{
-	AG_Textbox *textbox = AG_SELF();
-	char *s;
-	
-	/*
-	 * Get the current string. Alternatively, AG_TextboxCopyString()
-	 * can be used to copy to a fixed-size buffer.
-	 */
-	s = AG_TextboxDupString(textbox);
-	AG_TextMsg(AG_MSG_INFO, "Entered string: `%s'", s);
-	free(s);
-}
-
 /* Callback function for our test timer. */
 static Uint32
 UpdateText(void *obj, Uint32 ival, void *arg)
@@ -44,6 +29,28 @@ UpdateText(void *obj, Uint32 ival, void *arg)
 }
 
 static void
+DisableInput(AG_Event *event)
+{
+	AG_Textbox *textbox = AG_PTR(1);
+	int flag = AG_INT(2);
+
+	if (flag) {
+		AG_WidgetDisable(textbox);
+	} else {
+		AG_WidgetEnable(textbox);
+	}
+}
+
+static void
+SetStaticFlag(AG_Event *event)
+{
+	AG_Textbox *textbox = AG_PTR(1);
+	int flag = AG_INT(2);
+
+	AG_TextboxSetStatic(textbox, flag);
+}
+
+static void
 SingleLineExample(void)
 {
 	AG_Timeout myTimer;
@@ -54,25 +61,26 @@ SingleLineExample(void)
 	AG_WindowSetCaption(win, "Single-line Example");
 
 	/*
-	 * Create a single-line Textbox and handle the return key with the
-	 * ReturnPressed() function. TextboxSizeHint() requests an initial
-	 * textbox size large enough to display given string entirely.
+	 * Create a single-line Textbox. TextboxSizeHint() requests an initial
+	 * textbox size large enough to display the given string entirely.
 	 */
 	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Static string: ");
 	AG_TextboxSizeHint(textbox, "XXXXXXXXXXX");
 	AG_TextboxPrintf(textbox, "Hello");
-	AG_SetEvent(textbox, "textbox-return", ReturnPressed, NULL);
 	AG_WidgetFocus(textbox);
 
 	/* Bind checkboxes to some flags. */
-	AG_CheckboxNewFlag(win, &textbox->flags, AG_TEXTBOX_PASSWORD,
+	AG_CheckboxNewFn(win, 0, "Disable input", DisableInput, "%p", textbox);
+	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_PASSWORD,
 	    "Password input");
-	AG_CheckboxNewFlag(win, &AGWIDGET(textbox)->flags, AG_WIDGET_DISABLED,
-	    "Disabled input");
-	AG_CheckboxNewFlag(win, &textbox->flags, AG_TEXTBOX_INT_ONLY,
+	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_INT_ONLY,
 	    "Force integer input");
-	AG_CheckboxNewFlag(win, &textbox->flags, AG_TEXTBOX_FLT_ONLY,
+	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_FLT_ONLY,
 	    "Force float input");
+	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_NOEMACS,
+	    "Disable emacs keys");
+	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_NOLATIN1,
+	    "Disable traditional LATIN-1");
 
 	AG_SeparatorNewHoriz(win);
 
@@ -114,23 +122,45 @@ MultiLineExample(void)
 	AG_WindowSetCaption(win, "Multiline Example");
 
 	/*
-	 * Create a multiline textbox displaying this file.
+	 * Create a multiline textbox.
+	 *
+	 * We use the CATCH_TAB flag so that tabs are entered literally in
+	 * the string. The STATIC flag enables important optimizations based
+	 * on the assumption that the string will be edited by this Textbox
+	 * only and will not change under its feet.
 	 */
-	AG_LabelNewStatic(win, 0, "Multiline string:");
 	textbox = AG_TextboxNew(win,
-	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND|AG_TEXTBOX_CATCH_TAB,
+	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND|AG_TEXTBOX_CATCH_TAB|
+	    AG_TEXTBOX_STATIC,
 	    NULL);
+
+	/* Load the contents of this file into a buffer. */
 	if ((f = fopen("textbox.c", "r")) != NULL) {
 		fseek(f, 0, SEEK_END); size = ftell(f); fseek(f, 0, SEEK_SET);
-		someText = AG_Malloc(size);
-		someText[0] = '\0';
+		someText = AG_Malloc(size+1);
 		fread(someText, size, 1, f);
 		fclose(f);
+		someText[size] = '\0';
 	} else {
 		someText = AG_Strdup(strerror(errno));
 	}
-	AG_WidgetBindString(textbox->ed, "string", someText, size);
-	textbox->ed->pos = 0;
+
+	/*
+	 * Bind the buffer's contents to the Textbox. The size argument to
+	 * WidgetBindString() must include space for the terminating NUL.
+	 */
+	AG_WidgetBindString(textbox, "string", someText, size+1);
+	AG_TextboxSetCursorPos(textbox, 0);
+
+	AG_CheckboxNewFn(win, 0, "Disable input",
+	    DisableInput, "%p", textbox);
+	AG_CheckboxNewFn(win, AG_CHECKBOX_SET, "Static optimizations",
+	    SetStaticFlag, "%p", textbox);
+	AG_SeparatorNewHoriz(win);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL,
+	    "Lines: %d", &textbox->ed->yMax);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL,
+	    "Cursor position: %d", &textbox->ed->pos);
 
 	AG_WindowShow(win);
 	AG_WindowSetGeometry(win,
