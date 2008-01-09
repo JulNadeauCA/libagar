@@ -50,6 +50,8 @@
 
 #include "dev.h"
 
+#include <config/lockdebug.h>
+
 const AG_FlagDescr devObjectFlags[] = {
 	{ AG_OBJECT_DEBUG,		N_("Debugging"),		  1 },
 	{ AG_OBJECT_READONLY,		N_("Read-only"),		  1 },
@@ -111,7 +113,7 @@ PollProps(AG_Event *event)
 	AG_TlistRestore(tl);
 }
 
-#ifdef THREADS
+#if defined(THREADS) && defined(LOCKDEBUG)
 static void
 PollLocks(AG_Event *event)
 {
@@ -125,7 +127,7 @@ PollLocks(AG_Event *event)
 	}
 	AG_TlistRestore(tl);
 }
-#endif /* THREADS */
+#endif /* THREADS and LOCKDEBUG */
 
 static void
 PollEvents(AG_Event *event)
@@ -209,7 +211,7 @@ RenameObject(AG_Event *event)
 
 	if (AG_ObjectPageIn(ob) == 0) {
 		AG_ObjectUnlinkDatafiles(ob);
-		Strlcpy(ob->name, tb->string, sizeof(ob->name));
+		Strlcpy(ob->name, tb->ed->string, sizeof(ob->name));
 		AG_ObjectPageOut(ob);
 	}
 	AG_PostEvent(NULL, ob, "renamed", NULL);
@@ -394,7 +396,7 @@ DEV_ObjectEdit(void *p)
 		AG_SetEvent(tl, "tlist-poll", PollProps, "%p", ob);
 	}
 	
-#ifdef THREADS
+#if defined(THREADS) && defined(LOCKDEBUG)
 	ntab = AG_NotebookAddTab(nb, _("Locks"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
