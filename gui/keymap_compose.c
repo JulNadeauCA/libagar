@@ -33,7 +33,7 @@
 #include <core/config.h>
 
 #include "widget.h"
-#include "textbox.h"
+#include "editable.h"
 #include "keymap.h"
 #include "unicode.h"
 
@@ -41,23 +41,23 @@
 #include <string.h>
 
 int
-AG_KeyInputCompose(AG_Textbox *tbox, Uint32 key, Uint32 *ins)
+AG_KeyInputCompose(AG_Editable *ed, Uint32 key, Uint32 *ins)
 {
 	int i;
 
-	if (tbox->compose != 0) {
+	if (ed->compose != 0) {
 		for (i = 0; i < agCompositionMapSize; i++) {
-			if (agCompositionMap[i].comp == tbox->compose &&
+			if (agCompositionMap[i].comp == ed->compose &&
 			    agCompositionMap[i].key == key)
 				break;
 		}
 		if (i < agCompositionMapSize) {		/* Insert composition */
 			ins[0] = agCompositionMap[i].res;
-			tbox->compose = 0;
+			ed->compose = 0;
 			return (1);
 		} else {				/* Insert as-is */
-			tbox->compose = 0;
-			ins[0] = tbox->compose;
+			ed->compose = 0;
+			ins[0] = ed->compose;
 			ins[1] = key;
 			return (2);
 		}
@@ -67,7 +67,7 @@ AG_KeyInputCompose(AG_Textbox *tbox, Uint32 key, Uint32 *ins)
 				break;
 		}
 		if (i < agCompositionMapSize) {		/* Wait until next */
-			tbox->compose = key;
+			ed->compose = key;
 			return (0);
 		} else {
 			ins[0] = key;

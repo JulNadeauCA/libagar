@@ -1,4 +1,4 @@
-.\" Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -22,14 +22,14 @@
 .\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
 .\" POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd August 21, 2002
-.Dt AG_TEXTBOX 3
+.Dd January 8, 2008
+.Dt AG_EDITABLE 3
 .Os
 .ds vT Agar API Reference
-.ds oS Agar 1.0
+.ds oS Agar 1.3
 .Sh NAME
-.Nm AG_Textbox
-.Nd agar text box widget
+.Nm AG_Editable
+.Nd agar text input widget
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -38,114 +38,122 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget allows the user to edit UTF-8 encoded text.
-It provides the basic
-.Xr AG_Editable 3
-interface and adds a built-in text label, cosmetics and scrollbars in
-multiline mode.
+widget provides low-level text input functionality for widgets such as
+.Xr AG_Textbox 3
+and
+.Xr AG_Table 3 .
+It allows the user to edit UTF-8 encoded text in single-line or multi-line mode.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "AG_Textbox *"
-.Fn AG_TextboxNew "AG_Widget *parent" "Uint flags" "const char *label"
+.Ft "AG_Editable *"
+.Fn AG_EditableNew "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft void
-.Fn AG_TextboxSetPassword "AG_Textbox *textbox" "int password"
+.Fn AG_EditableSetStatic "AG_Editable *ed" "int enable"
 .Pp
 .Ft void
-.Fn AG_TextboxSetLabel "AG_Textbox *textbox" "const char *fmt" "..."
+.Fn AG_EditableSetPassword "AG_Editable *ed" "int enable"
 .Pp
 .Ft void
-.Fn AG_TextboxSizeHint "AG_Textbox *textbox" "const char *text"
+.Fn AG_EditableSizeHint "AG_Editable *ed" "const char *text"
 .Pp
 .Ft void
-.Fn AG_TextboxSizeHintPixels "AG_Textbox *textbox" "Uint w" "Uint h"
+.Fn AG_EditableSizeHintPixels "AG_Editable *ed" "Uint w" "Uint h"
 .Pp
 .nr nS 0
 The
-.Fn AG_TextboxNew
+.Fn AG_EditableNew
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-The
-.Fa label
-parameter (if not NULL) defines an optional text label to display left
-of the textbox.
 Acceptable
 .Fa flags
 include:
-.Bl -tag -width "AG_TEXTBOX_ABANDON_FOCUS "
-.It AG_TEXTBOX_MULTILINE
+.Bl -tag -width "AG_EDITABLE_ABANDON_FOCUS "
+.It AG_EDITABLE_MULTILINE
 Causes newlines to be entered literally into the string, and arranges for
 horizontal and vertical scrollbars to appear if the text is larger than the
 display area.
-.It AG_TEXTBOX_STATIC
+.It AG_EDITABLE_STATIC
 Enable some important optimizations based on the assumption that the contents
 of the buffer will not change under the widget's feet.
-The default behavior makes no such assumption, possibly resulting in frequent
-character set conversions.
-.It AG_TEXTBOX_PASSWORD
+The default behavior makes no such assumption.
+.Fn AG_EditableSetStatic
+can change this setting at runtime.
+.It AG_EDITABLE_PASSWORD
 Password-style entry where characters are hidden.
-.Fn AG_TextboxSetPassword
-sets this flag.
-.It AG_TEXTBOX_ABANDON_FOCUS
+.Fn AG_EditableSetPassword
+can change this setting at runtime.
+.It AG_EDITABLE_ABANDON_FOCUS
 Arrange for the widget to abandon its focus when the return key is pressed.
-.It AG_TEXTBOX_INT_ONLY
+.It AG_EDITABLE_INT_ONLY
 Restricts input to valid integers only.
-.It AG_TEXTBOX_FLT_ONLY
+.It AG_EDITABLE_FLT_ONLY
 Restricts input to valid floating-point numbers in decimal and scientific
 notation ("inf" and the Unicode symbol for Infinity may also be used).
-.It AG_TEXTBOX_CATCH_TAB
+.It AG_EDITABLE_CATCH_TAB
 Cause tabs to be entered literally into the string (by default, the tab
 key moves focus to the next widget).
-.It AG_TEXTBOX_NOEMACS
+.It AG_EDITABLE_NOSCROLL
+The view is normally scrolled automatically such that the cursor is always
+visible.
+This flag disables this behavior.
+.It AG_EDITABLE_NOSCROLL_ONCE
+Prevents automatic scrolling like
+.Dv AG_EDITABLE_NOSCROLL ,
+but only for the next rendering cycle.
+.It AG_EDITABLE_NOEMACS
 Disable emacs-style function keys.
-.It AG_TEXTBOX_NOWORDSEEK
+.It AG_EDITABLE_NOWORDSEEK
 Disable the emacs-style ALT-f and ALT-b keys which conflict with traditional
 LATIN-1 combinations.
-.It AG_TEXTBOX_NOLATIN1
+.It AG_EDITABLE_NOLATIN1
 Disable traditional LATIN-1 key combinations.
 .El
 .Pp
 The
-.Fn AG_TextboxSetPassword
-function enables (1) or disables (0) password-type input, where characters are
+.Fn AG_EditableSetStatic
+function enables or disables static optimizations at runtime (see
+.Dv AG_EDITABLE_STATIC
+flag description).
+.Pp
+The
+.Fn AG_EditableSetPassword
+function enables or disables password-type input, where characters are
 substituted for
 .Sq *
 in the display.
 .Pp
-.Fn AG_TextboxSetLabel
-changes the current label text to the specified string.
-.Pp
-.Fn AG_TextboxSizeHint
+.Fn AG_EditableSizeHint
 requests that the initial geometry of
-.Fa textbox
+.Fa ed
 is to be sufficient to display the string
 .Fa text
 in its entirety.
 The
-.Fn AG_TextboxSizeHintPixels
+.Fn AG_EditableSizeHintPixels
 variant accepts arguments in pixels.
 .Sh CURSOR MANIPULATION
 .nr nS 1
 .Ft int
-.Fn AG_TextboxMapPosition "AG_Textbox *textbox" "int x" "int y" "int *pos" "int absolute"
+.Fn AG_EditableMapPosition "AG_Editable *ed" "int x" "int y" "int *pos" "int absolute"
 .Pp
 .Ft int
-.Fn AG_TextboxMoveCursor "AG_Textbox *textbox" "int x" "int y" "int absolute"
+.Fn AG_EditableMoveCursor "AG_Editable *ed" "int x" "int y" "int absolute"
 .Pp
 .Ft int
-.Fn AG_TextboxGetCursorPos "AG_Textbox *textbox"
+.Fn AG_EditableGetCursorPos "AG_Editable *ed"
 .Pp
 .Ft int
-.Fn AG_TextboxSetCursorPos "AG_Textbox *textbox" "int pos"
+.Fn AG_EditableSetCursorPos "AG_Editable *ed" "int pos"
 .Pp
 .nr nS 0
 The
-.Fn AG_TextboxMapPosition
+.Fn AG_EditableMapPosition
 function translates absolute coordinates (such as display coordinates)
 .Fa x
 and
@@ -158,54 +166,57 @@ If
 .Fa absolute
 if 1, y coordinates outside of the widget area are allowed.
 .Pp
-.Fn AG_TextboxGetCursorPos
+.Fn AG_EditableGetCursorPos
 returns the current position of the cursor in the buffer.
 Under multithreading, the return value is only valid as long as the widget is
 locked.
 .Pp
-.Fn AG_TextboxSetCursorPos
+.Fn AG_EditableSetCursorPos
 tries to move the cursor to the specified position in the string, after
 bounds checking is done.
 If
 .Fa pos
 is -1, the cursor is moved to the end of the string.
-.Fn AG_TextboxSetCursorPos
+.Fn AG_EditableSetCursorPos
 returns the new position of the cursor.
 .Sh TEXT MANIPULATION
 .nr nS 1
 .Ft void
-.Fn AG_TextboxPrintf "AG_Textbox *textbox" "const char *fmt" "..."
+.Fn AG_EditablePrintf "AG_Editable *ed" "const char *fmt" "..."
 .Pp
 .Ft void
-.Fn AG_TextboxSetString "AG_Textbox *textbox" "const char *s"
+.Fn AG_EditableSetString "AG_Editable *ed" "const char *s"
 .Pp
 .Ft void
-.Fn AG_TextboxSetStringUCS4 "AG_Textbox *textbox" "const Uint32 *s"
+.Fn AG_EditableSetStringUCS4 "AG_Editable *ed" "const Uint32 *s"
 .Pp
 .Ft void
-.Fn AG_TextboxClearString "AG_Textbox *textbox"
+.Fn AG_EditableClearString "AG_Editable *ed"
 .Pp
 .Ft "char *"
-.Fn AG_TextboxDupString "AG_Textbox *textbox"
+.Fn AG_EditableDupString "AG_Editable *ed"
+.Pp
+.Ft "Uint32 *"
+.Fn AG_EditableDupStringUCS4 "AG_Editable *ed"
 .Pp
 .Ft "size_t"
-.Fn AG_TextboxCopyString "AG_Textbox *textbox" "char *dst" "size_t dst_size"
+.Fn AG_EditableCopyString "AG_Editable *ed" "char *dst" "size_t dst_size"
 .Pp
 .Ft "void"
-.Fn AG_TextboxBufferChanged "AG_Textbox *textbox"
+.Fn AG_EditableBufferChanged "AG_Editable *ed"
 .Pp
 .Ft int
-.Fn AG_TextboxInt "AG_Textbox *textbox"
+.Fn AG_EditableInt "AG_Editable *ed"
 .Pp
 .Ft float
-.Fn AG_TextboxFlt "AG_Textbox *textbox"
+.Fn AG_EditableFlt "AG_Editable *ed"
 .Pp
 .Ft double
-.Fn AG_TextboxDbl "AG_Textbox *textbox"
+.Fn AG_EditableDbl "AG_Editable *ed"
 .Pp
 .nr nS 0
 The
-.Fn AG_TextboxPrintf
+.Fn AG_EditablePrintf
 function uses
 .Xr vsnprintf 3
 to overwrite the contents of the buffer.
@@ -213,21 +224,24 @@ If the
 .Fa fmt
 argument is NULL, a NUL string is assigned instead.
 .Pp
-.Fn AG_TextboxSetString
+.Fn AG_EditableSetString
 overwrites the contents of the buffer with the given string.
 The argument may be NULL to clear the string.
-.Fn AG_TextboxSetStringUCS4
+.Fn AG_EditableSetStringUCS4
 accepts a string in UCS-4 encoding.
 .Pp
-.Fn AG_TextboxClearString
+.Fn AG_EditableClearString
 clears the contents of the buffer.
 .Pp
 The
-.Fn AG_TextboxDupString
-function returns a copy of the text buffer.
+.Fn AG_EditableDupString
+function returns a copy of the text buffer (with terminating NUL).
+The
+.Fn AG_EditableDupStringUCS4
+variant returns an UCS-4 string (also with terminating NUL).
 .Pp
 The
-.Fn AG_TextboxCopyString
+.Fn AG_EditableCopyString
 function copies up to
 .Fa dst_size
 - 1 bytes from the text buffer
@@ -236,18 +250,21 @@ NUL-terminating the result and returning the number of bytes that would
 have been copied if
 .Fa dst_size
 was unlimited.
+The
+.Fn AG_EditableCopyStringUCS4
+variant operates on an UCS-4 buffer instead.
 .Pp
 The
-.Fn AG_TextboxBufferChanged
+.Fn AG_EditableBufferChanged
 function signals an outside change in the buffer contents.
 It is only useful if the
-.Nm AG_TEXTBOX_STATIC
+.Nm AG_EDITABLE_STATIC
 flag is set.
 .Pp
-.Fn AG_TextboxInt ,
-.Fn AG_TextboxFlt
+.Fn AG_EditableInt ,
+.Fn AG_EditableFlt
 and
-.Fn AG_TextboxDbl
+.Fn AG_EditableDbl
 perform conversion of the string contents to
 .Ft int
 .Ft float
@@ -286,13 +303,13 @@ The
 widget generates the following events:
 .Pp
 .Bl -tag -width 2n
-.It Fn textbox-return "void"
+.It Fn editable-return "void"
 Return was pressed and
-.Dv AG_TEXTBOX_MULTILINE
+.Dv AG_EDITABLE_MULTILINE
 is not set.
-.It Fn textbox-prechg "void"
+.It Fn editable-prechg "void"
 The string is about to be modified.
-.It Fn textbox-postchg "void"
+.It Fn editable-postchg "void"
 The string was just modified.
 .El
 .Sh EXAMPLES
@@ -302,34 +319,13 @@ to a string contained in a fixed-size buffer:
 .Pp
 .Bd -literal -offset indent
 char name[32];
-AG_Textbox *tb;
+AG_Editable *ed;
 
-tb = AG_TextboxNew(parent, 0, "Name: ");
-AG_WidgetBindString(tb, "string", name, sizeof(name));
+ed = AG_EditableNew(parent, 0);
+AG_WidgetBindString(ed, "string", name, sizeof(name));
 .Ed
 .Pp
-As is the case with all widgets, a default binding (residing in the widget
-structure) is provided.
-The following code uses
-.Fn AG_TextboxPrintf
-to set the value of the default binding, and
-.Fn AG_TextboxDupString
-to retrieve a pointer to it:
-.Pp
-.Bd -literal -offset indent
-AG_Textbox *tb;
-char *value_ptr;
-
-tb = AG_TextboxNew(parent, 0, "Value: ");
-AG_TextboxPrintf(tb, "Foo");
-value_ptr = AG_TextboxDupString(tb);
-.Ed
-.Pp
-Note that the default binding is limited to
-.Dv AG_TEXTBOX_STRING_MAX
-bytes in size.
-.Pp
-Also see
+See
 .Pa demos/textbox
 in the Agar source distribution.
 .Sh SEE ALSO

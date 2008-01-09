@@ -1,0 +1,1064 @@
+/*
+ * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Low-level single/multi-line text input widget. This is the base widget
+ * used by AG_Textbox(3), editable cells in AG_Table(3), etc.
+ */
+
+#include <core/core.h>
+#include <core/config.h>
+
+#include <config/have_freetype.h>
+#include <config/utf8.h>
+
+#include "ttf.h"
+#include "editable.h"
+
+#include "keymap.h"
+#include "primitive.h"
+#include "unicode.h"
+#include "opengl.h"
+#include "cursors.h"
+
+#include <string.h>
+#include <stdarg.h>
+#include <ctype.h>
+
+AG_Editable *
+AG_EditableNew(void *parent, Uint flags)
+{
+	AG_Editable *ed;
+
+	ed = Malloc(sizeof(AG_Editable));
+	AG_ObjectInit(ed, &agEditableClass);
+
+	if ((flags & AG_EDITABLE_NO_HFILL) == 0)
+		AG_ExpandHoriz(ed);
+	if (flags & AG_EDITABLE_VFILL)
+		AG_ExpandVert(ed);
+	if (flags & AG_EDITABLE_CATCH_TAB)
+		WIDGET(ed)->flags |= AG_WIDGET_CATCH_TAB;
+
+	ed->flags |= flags;
+
+	AG_ObjectAttach(parent, ed);
+	return (ed);
+}
+
+/* Enable or disable password entry mode. */
+void
+AG_EditableSetPassword(AG_Editable *ed, int pw)
+{
+	AG_ObjectLock(ed);
+	if (pw) {
+		ed->flags |= AG_EDITABLE_PASSWORD;
+	} else {
+		ed->flags &= ~(AG_EDITABLE_PASSWORD);
+	}
+	AG_ObjectUnlock(ed);
+}
+
+/* Enable or disable static optimizations. */
+void
+AG_EditableSetStatic(AG_Editable *ed, int flag)
+{
+	AG_ObjectLock(ed);
+	if (flag) {
+		ed->flags |= AG_EDITABLE_STATIC;
+	} else {
+		ed->flags &= ~(AG_EDITABLE_STATIC);
+		Free(ed->ucsBuf);
+		ed->ucsBuf = NULL;
+		ed->ucsLen = 0;
+	}
+	AG_ObjectUnlock(ed);
+}
+
+/*
+ * Process a keystroke. May be invoked from the repeat timeout routine or
+ * the keydown handler. If we return 1, the current delay/repeat cycle will
+ * be maintained, otherwise it will be cancelled.
+ */
+static int
+ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
+{
+	AG_WidgetBinding *stringb;
+	char *s;
+	Uint32 *ucs;
+	int i, rv = 0, len;
+
+	if (keysym == SDLK_ESCAPE) {
+		return (0);
+	}
+	if (keysym == SDLK_RETURN &&
+	   (ed->flags & AG_EDITABLE_MULTILINE) == 0)
+		return (0);
+
+	if (keymod == KMOD_NONE && isprint((int)keysym)) {
+		if ((ed->flags & AG_EDITABLE_INT_ONLY)) {
+			if (keysym != SDLK_MINUS &&
+			    keysym != SDLK_PLUS &&
+			    !isdigit((int)keysym)) {
+				return (0);
+			}
+		} else if ((ed->flags & AG_EDITABLE_FLT_ONLY)) {
+			if (keysym != SDLK_PLUS &&
+			    keysym != SDLK_MINUS &&
+			    keysym != SDLK_PERIOD &&
+			    keysym != SDLK_e &&
+			    keysym != SDLK_i &&
+			    keysym != SDLK_n &&
+			    keysym != SDLK_f &&
+			    keysym != SDLK_a &&
+			    unicode != 0x221e &&	/* Infinity */
+			    !isdigit((int)keysym)) {
+				return (0);
+			}
+		}
+	}
+	
+	stringb = AG_WidgetGetBinding(ed, "string", &s);
+#ifdef UTF8
+	if (ed->flags & AG_EDITABLE_STATIC) {
+		if (ed->ucsBuf == NULL) {
+			ed->ucsBuf = AG_ImportUnicode(AG_UNICODE_FROM_UTF8,
+			    s, stringb->data.size);
+			ed->ucsLen = AG_LengthUCS4(ed->ucsBuf);
+		}
+		ucs = ed->ucsBuf;
+		len = ed->ucsLen;
+	} else {
+		ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s,
+		    stringb->data.size);
+		len = AG_LengthUCS4(ucs);
+	}
+	if (ed->pos < 0) { ed->pos = 0; }
+	if (ed->pos > len) { ed->pos = len; }
+	for (i = 0; ; i++) {
+		const struct ag_keycode_utf8 *kc = &agKeymapUTF8[i];
+		
+		if (kc->key != SDLK_LAST &&
+		   (kc->key != keysym || kc->func == NULL)) {
+			continue;
+		}
+		if (kc->key == SDLK_LAST ||
+		    kc->modmask == 0 || (keymod & kc->modmask)) {
+			AG_PostEvent(NULL, ed, "editable-prechg", NULL);
+			rv = kc->func(ed, keysym, keymod, unicode, ucs,
+			    len, stringb->data.size);
+			AG_PostEvent(NULL, ed, "editable-postchg", NULL);
+			break;
+		}
+	}
+	if (rv == 1) {
+		if (ed->flags & AG_EDITABLE_STATIC) {
+			ed->ucsLen = AG_LengthUCS4(ucs);
+		}
+		AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs,
+		    stringb->data.size);
+		ed->flags |= AG_EDITABLE_MARKPREF;
+		AG_WidgetBindingChanged(stringb);
+	}
+	if (!(ed->flags & AG_EDITABLE_STATIC)) { Free(ucs); }
+
+#else /* !UTF8 */
+
+	len = strlen(s);
+	if (ed->pos < 0) { ed->pos = 0; }
+	if (ed->pos > len) { ed->pos = len; }
+	for (i = 0; ; i++) {
+		const struct ag_keycode_ascii *kc = &agKeymapASCII[i];
+		
+		if (kc->key != SDLK_LAST &&
+		   (kc->key != keysym || kc->func == NULL)) {
+			continue;
+		}
+		if (kc->key == SDLK_LAST ||
+		    kc->modmask == 0 || (keymod & kc->modmask)) {
+			AG_PostEvent(NULL, ed, "editable-prechg", NULL);
+			rv = kc->func(ed, keysym, keymod, unicode, s,
+			    len, stringb->data.size);
+			AG_PostEvent(NULL, ed, "editable-postchg", NULL);
+			if (rv == 1) {
+				AG_WidgetBindingChanged(stringb);
+			}
+			break;
+		}
+	}
+	if (rv == 1) {
+		ed->flags |= AG_EDITABLE_MARKPREF;
+		AG_WidgetBindingChanged(stringb);
+	}
+#endif /* UTF8 */
+
+	AG_WidgetUnlockBinding(stringb);
+	return (1);
+}
+
+static Uint32
+RepeatTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Editable *ed = obj;
+
+	if (ProcessKey(ed, ed->repeatKey, ed->repeatMod, ed->repeatUnicode)
+	    == 0) {
+		return (0);
+	}
+	return (agKbdRepeat);
+}
+
+static Uint32
+DelayTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Editable *ed = obj;
+
+	AG_ReplaceTimeout(ed, &ed->toRepeat, agKbdRepeat);
+	AG_DelTimeout(ed, &ed->toCursorBlink);
+	ed->flags |= AG_EDITABLE_BLINK_ON;
+	return (0);
+}
+
+static Uint32
+BlinkTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Editable *ed = obj;
+
+	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0) {
+		if (ed->flags & AG_EDITABLE_BLINK_ON) {
+			ed->flags &= ~(AG_EDITABLE_BLINK_ON);
+		} else {
+			ed->flags |= AG_EDITABLE_BLINK_ON;
+		}
+	}
+	return (ival);
+}
+
+static void
+GainedFocus(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+
+	AG_LockTimeouts(ed);
+	
+	AG_DelTimeout(ed, &ed->toDelay);
+	AG_DelTimeout(ed, &ed->toRepeat);
+	AG_ReplaceTimeout(ed, &ed->toCursorBlink, agTextBlinkRate);
+	ed->flags |= AG_EDITABLE_BLINK_ON;
+	AG_UnlockTimeouts(ed);
+}
+
+static void
+LostFocus(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+
+	AG_LockTimeouts(ed);
+	AG_DelTimeout(ed, &ed->toDelay);
+	AG_DelTimeout(ed, &ed->toRepeat);
+	AG_DelTimeout(ed, &ed->toCursorBlink);
+	ed->flags &= ~(AG_EDITABLE_BLINK_ON|AG_EDITABLE_CURSOR_MOVING);
+	AG_UnlockTimeouts(ed);
+}
+
+static __inline__ void
+GetStringUCS4(AG_Editable *ed, const char *s, Uint32 **ucs, size_t *len)
+{
+#ifdef UTF8
+	if (ed->flags & AG_EDITABLE_STATIC) {
+		if (ed->ucsBuf == NULL) {
+			ed->ucsBuf = AG_ImportUnicode(AG_UNICODE_FROM_UTF8,s,0);
+			ed->ucsLen = AG_LengthUCS4(ed->ucsBuf);
+		}
+		*ucs = ed->ucsBuf;
+		*len = ed->ucsLen;
+	} else {
+		*ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, 0);
+		*len = AG_LengthUCS4(*ucs);
+	}
+#else
+	*ucs = NULL;
+	*len = strlen(s);
+#endif
+}
+
+static __inline__ void
+FreeStringUCS4(AG_Editable *ed, Uint32 *ucs)
+{
+#ifdef UTF8
+	if (!(ed->flags & AG_EDITABLE_STATIC))
+		Free(ucs);
+#endif
+}
+
+/*
+ * Map mouse coordinates to a position within the string.
+ */
+#define ON_LINE(my,y) \
+	( ((my) >= (y) && (my) <= (y)+agTextFontLineSkip) || \
+	  (!absflag && \
+	   (((my) <= ed->y*agTextFontLineSkip && line == 0) || \
+	    ((my) > (nLines*agTextFontLineSkip) && (line == nLines-1)))) )
+#define ON_CHAR(mx,x,glyph) \
+	((mx) >= (x) && (mx) <= (x)+(glyph)->advance)
+int
+AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
+{
+	AG_WidgetBinding *stringb;
+	AG_Font *font;
+	size_t len;
+	char *s;
+	Uint32 *ucs, ch;
+	int i, x, y, line = 0;
+	int nLines = 1;
+	int yMouse;
+	
+	AG_ObjectLock(ed);
+
+	yMouse = my + ed->y*agTextFontLineSkip;
+	if (yMouse < 0) {
+		AG_ObjectUnlock(ed);
+		return (-1);
+	}
+	x = 0;
+	y = 0;
+
+	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	GetStringUCS4(ed, s, &ucs, &len);
+	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL)
+		AG_FatalError("AG_Editable: %s", AG_GetError());
+
+	for (i = 0; i < len; i++) {
+#ifdef UTF8
+		if (ucs[i] == '\n')
+			nLines++;
+#else
+		if (s[i] == '\n')
+			nLines++;
+#endif
+	}
+	for (i = 0; i < len; i++) {
+#ifdef UTF8
+		ch = ucs[i];
+#else
+		ch = (Uint32)s[i];
+#endif
+		if (mx <= 0 && ON_LINE(yMouse,y)) {
+			*pos = i;
+			goto in;
+		}
+		if (ch == '\n') {
+			if (ON_LINE(yMouse,y) && mx > x) {
+				*pos = i;
+				goto in;
+			}
+			y += agTextFontLineSkip;
+			x = 0;
+			line++;
+			continue;
+		} else if (ch == '\t') {
+			if (ON_LINE(yMouse,y) &&
+			    mx >= x && mx <= x+agTextTabWidth) {
+				*pos = (mx < x + agTextTabWidth/2) ? i : i+1;
+				goto in;
+			}
+			x += agTextTabWidth;
+			continue;
+		}
+		
+		switch (font->type) {
+#ifdef HAVE_FREETYPE
+		case AG_FONT_VECTOR:
+		{
+			AG_TTFFont *ttf = font->ttf;
+			AG_TTFGlyph *glyph;
+
+			if (AG_TTFFindGlyph(ttf, ch,
+			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
+				continue;
+			}
+			glyph = ttf->current;
+
+			if (ON_LINE(yMouse,y) && ON_CHAR(mx,x,glyph)) {
+				*pos = (mx < x+glyph->advance/2) ? i : i+1;
+				goto in;
+			}
+			x += glyph->advance;
+			break;
+		}
+#endif /* HAVE_FREETYPE */
+		case AG_FONT_BITMAP:
+		{
+			AG_Glyph *gl;
+			
+			gl = AG_TextRenderGlyph(ch);
+			if (ON_LINE(yMouse,y) && mx >= x && mx <= x+gl->su->w) {
+				*pos = i;
+				goto in;
+			}
+			x += gl->su->w;
+			AG_TextUnusedGlyph(gl);
+			break;
+		}
+		default:
+			AG_FatalError("AG_Editable: Unknown font format");
+		}
+	}
+	FreeStringUCS4(ed, ucs);
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+	return (1);
+in:
+	FreeStringUCS4(ed, ucs);
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+	return (0);
+}
+#undef ON_LINE
+#undef ON_CHAR
+
+/* Move cursor to the given position in pixels. */
+void
+AG_EditableMoveCursor(AG_Editable *ed, int mx, int my, int absflag)
+{
+	AG_WidgetBinding *stringb;
+	char *s;
+	int rv;
+
+	AG_ObjectLock(ed);
+	rv = AG_EditableMapPosition(ed, mx, my, &ed->pos, absflag);
+	if (rv == -1) {
+		ed->pos = 0;
+	} else if (rv == 1) {
+		stringb = AG_WidgetGetBinding(ed, "string", &s);
+		ed->pos = AG_LengthUTF8(s);
+		AG_WidgetUnlockBinding(stringb);
+	}
+	AG_ObjectUnlock(ed);
+}
+
+/* Return the last cursor position. */
+int
+AG_EditableGetCursorPos(AG_Editable *ed)
+{
+	int rv;
+
+	AG_ObjectLock(ed);
+	rv = ed->pos;
+	AG_ObjectUnlock(ed);
+	return (rv);
+}
+
+/* Set the cursor position (-1 = end of the string) with bounds checking. */
+int
+AG_EditableSetCursorPos(AG_Editable *ed, int pos)
+{
+	AG_WidgetBinding *stringb;
+	size_t len;
+	char *s;
+	int rv;
+
+	AG_ObjectLock(ed);
+	stringb = AG_WidgetGetBinding(ed, "string", &s);
+
+	ed->pos = pos;
+	if (ed->pos < 0) {
+		ed->pos = 0;
+	} else {
+		len = AG_LengthUTF8(s);
+		if (pos == -1 || ed->pos > len)
+			ed->pos = len;
+	}
+	rv = ed->pos;
+
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+	return (rv);
+}
+
+static void
+Draw(void *p)
+{
+	AG_Editable *ed = p;
+	AG_WidgetBinding *stringb;
+	char *s;
+	int i, dx, dy, x, y;
+	Uint32 *ucs;
+	size_t len;
+#ifdef HAVE_OPENGL
+	GLboolean blend_sv;
+	GLint blend_sfactor, blend_dfactor;
+	GLfloat texenvmode;
+#endif
+
+	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	GetStringUCS4(ed, s, &ucs, &len);
+
+#ifdef HAVE_OPENGL
+	if (agView->opengl)  {
+		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
+		glGetBooleanv(GL_BLEND, &blend_sv);
+		glGetIntegerv(GL_BLEND_SRC, &blend_sfactor);
+		glGetIntegerv(GL_BLEND_DST, &blend_dfactor);
+
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+#endif
+	AG_WidgetPushClipRect(ed, AG_RECT(0,0,WIDTH(ed)-1,HEIGHT(ed)-1));
+	AG_PushTextState();
+	AG_TextColor(TEXTBOX_TXT_COLOR);
+	x = 0;
+	y = -ed->y*agTextFontLineSkip;
+	ed->xMax = 10;
+	ed->yMax = 1;
+	for (i = 0; i <= len; i++) {
+		AG_Glyph *gl;
+#ifdef UTF8
+		Uint32 c = ucs[i];
+#else
+		char c = s[i];
+#endif
+
+		if (i == ed->pos && AG_WidgetFocused(ed)) {
+			if ((ed->flags & AG_EDITABLE_BLINK_ON) &&
+			    ed->y >= 0 && ed->y <= ed->yMax-1) {
+				AG_DrawLineV(ed,
+				    x - ed->x, (y + 1),
+				    (y + agTextFontLineSkip - 1),
+				    AG_COLOR(TEXTBOX_CURSOR_COLOR));
+			}
+			ed->xCurs = x;
+			if (ed->flags & AG_EDITABLE_MARKPREF) {
+				ed->flags &= ~(AG_EDITABLE_MARKPREF);
+				ed->xCursPref = x;
+			}
+			ed->yCurs = y/agTextFontLineSkip + ed->y;
+		}
+		if (i == len)
+			break;
+
+		if (c == '\n') {
+			y += agTextFontLineSkip;
+			ed->xMax = MAX(ed->xMax, x+10);
+			ed->yMax++;
+			x = 0;
+			continue;
+		} else if (c == '\t') {
+			x += agTextTabWidth;
+			continue;
+		}
+
+		c = (ed->flags & AG_EDITABLE_PASSWORD) ? '*' : c;
+		gl = AG_TextRenderGlyph(c);
+		dx = WIDGET(ed)->cx + x - ed->x;
+		dy = WIDGET(ed)->cy + y;
+
+		if (!agView->opengl) {
+			SDL_Rect rd;
+			rd.x = dx;
+			rd.y = dy;
+			SDL_BlitSurface(gl->su, NULL, agView->v, &rd);
+		}
+#ifdef HAVE_OPENGL
+		else {
+			glBindTexture(GL_TEXTURE_2D, gl->texture);
+			glBegin(GL_TRIANGLE_STRIP);
+			{
+				glTexCoord2f(gl->texcoord[0], gl->texcoord[1]);
+				glVertex2i(dx, dy);
+				glTexCoord2f(gl->texcoord[2], gl->texcoord[1]);
+				glVertex2i(dx+gl->su->w, dy);
+				glTexCoord2f(gl->texcoord[0], gl->texcoord[3]);
+				glVertex2i(dx, dy+gl->su->h);
+				glTexCoord2f(gl->texcoord[2], gl->texcoord[3]);
+				glVertex2i(dx+gl->su->w, dy+gl->su->h);
+			}
+			glEnd();
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+#endif /* HAVE_OPENGL */
+		x += gl->advance;
+		AG_TextUnusedGlyph(gl);
+	}
+	if (ed->yMax == 1)
+		ed->xMax = x;
+	
+	if ( !(ed->flags & (AG_EDITABLE_NOSCROLL|AG_EDITABLE_NOSCROLL_ONCE)) ) {
+		if (ed->yCurs < ed->y) {
+			ed->y = ed->yCurs;
+			if (ed->y < 0) { ed->y = 0; }
+		} else if (ed->yCurs > ed->y + ed->yVis - 1) {
+			ed->y = ed->yCurs - ed->yVis + 1;
+		}
+		if (ed->xCurs < ed->x) {
+			ed->x = ed->xCurs;
+			if (ed->x < 0) { ed->x = 0; }
+		} else if (ed->xCurs > ed->x + WIDTH(ed) - 10) {
+			ed->x = ed->xCurs - WIDTH(ed) + 10;
+		}
+	} else {
+		if (ed->yCurs < ed->y) {
+			AG_EditableMoveCursor(ed,
+			    ed->xCursPref - ed->x, 1,
+			    0);
+		} else if (ed->yCurs > ed->y + ed->yVis - 1) {
+			AG_EditableMoveCursor(ed,
+			    ed->xCursPref - ed->x,
+			    ed->yVis*agTextFontLineSkip - 1,
+			    0);
+		} else if (ed->xCurs < ed->x+10) {
+			AG_EditableMoveCursor(ed,
+			    ed->x+10,
+			    (ed->yCurs - ed->y)*agTextFontLineSkip + 1,
+			    1);
+		} else if (ed->xCurs > ed->x+WIDTH(ed)-10) {
+			AG_EditableMoveCursor(ed,
+			    ed->x+WIDTH(ed)-10,
+			    (ed->yCurs - ed->y)*agTextFontLineSkip + 1,
+			    1);
+		}
+	}
+	ed->flags &= ~(AG_EDITABLE_NOSCROLL_ONCE);
+	AG_WidgetUnlockBinding(stringb);
+	AG_PopTextState();
+	AG_WidgetPopClipRect(ed);
+
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		if (blend_sv) {
+			glEnable(GL_BLEND);
+		} else {
+			glDisable(GL_BLEND);
+		}
+		glBlendFunc(blend_sfactor, blend_dfactor);
+	}
+#endif
+	FreeStringUCS4(ed, ucs);
+}
+
+void
+AG_EditableSizeHint(AG_Editable *ed, const char *text)
+{
+	AG_ObjectLock(ed);
+	AG_TextSize(text, &ed->wPre, &ed->hPre);
+	AG_ObjectUnlock(ed);
+}
+
+void
+AG_EditableSizeHintPixels(AG_Editable *ed, Uint w, Uint h)
+{
+	AG_ObjectLock(ed);
+	ed->wPre = w;
+	ed->hPre = h;
+	AG_ObjectUnlock(ed);
+}
+
+static void
+SizeRequest(void *p, AG_SizeReq *r)
+{
+	AG_Editable *ed = p;
+
+	r->w = ed->wPre;
+	r->h = ed->hPre;
+}
+
+static int
+SizeAllocate(void *p, const AG_SizeAlloc *a)
+{
+	AG_Editable *ed = p;
+
+	if (a->w < 2 || a->h < 2)
+		return (-1);
+
+	ed->yVis = a->h/agTextFontLineSkip;
+	return (0);
+}
+
+static void
+KeyDown(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+	SDLKey keysym = AG_SDLKEY(1);
+	int keymod = AG_INT(2);
+	Uint32 unicode = (Uint32)AG_INT(3);		/* XXX use AG_UINT32 */
+
+	if (keysym == SDLK_TAB && !(WIDGET(ed)->flags & AG_WIDGET_CATCH_TAB))
+		return;
+
+	ed->repeatKey = keysym;
+	ed->repeatMod = keymod;
+	ed->repeatUnicode = unicode;
+	ed->flags |= AG_EDITABLE_BLINK_ON;
+
+	AG_LockTimeouts(ed);
+	AG_DelTimeout(ed, &ed->toRepeat);
+	if (ProcessKey(ed, keysym, keymod, unicode) == 1) {
+		AG_ReplaceTimeout(ed, &ed->toDelay, agKbdDelay);
+	} else {
+		AG_DelTimeout(ed, &ed->toDelay);
+	}
+	AG_UnlockTimeouts(ed);
+}
+
+static void
+KeyUp(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+	SDLKey keysym = AG_SDLKEY(1);
+	
+	if (ed->repeatKey == keysym) {
+		AG_LockTimeouts(ed);
+		AG_DelTimeout(ed, &ed->toRepeat);
+		AG_DelTimeout(ed, &ed->toDelay);
+		AG_ReplaceTimeout(ed, &ed->toCursorBlink, agTextBlinkRate);
+		AG_UnlockTimeouts(ed);
+	}
+	if (keysym == SDLK_RETURN &&
+	   (ed->flags & AG_EDITABLE_MULTILINE) == 0) {
+		if (ed->flags & AG_EDITABLE_ABANDON_FOCUS) {
+			AG_WidgetUnfocus(ed);
+		}
+		AG_PostEvent(NULL, ed, "editable-return", NULL);
+	}
+}
+
+static void
+MouseButtonDown(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+	int btn = AG_INT(1);
+	int mx = AG_INT(2);
+	int my = AG_INT(3);
+
+	AG_WidgetFocus(ed);
+
+	switch (btn) {
+	case SDL_BUTTON_LEFT:
+		ed->flags |= AG_EDITABLE_CURSOR_MOVING|AG_EDITABLE_BLINK_ON;
+		mx += ed->x;
+		AG_EditableMoveCursor(ed, mx, my, 0);
+		ed->flags |= AG_EDITABLE_MARKPREF;
+		break;
+	case SDL_BUTTON_WHEELUP:
+		ed->flags |= AG_EDITABLE_NOSCROLL_ONCE;
+		ed->y -= AG_WidgetScrollDelta(&ed->wheelTicks);
+		if (ed->y < 0) { ed->y = 0; }
+		break;
+	case SDL_BUTTON_WHEELDOWN:
+		ed->flags |= AG_EDITABLE_NOSCROLL_ONCE;
+		ed->y += AG_WidgetScrollDelta(&ed->wheelTicks);
+		ed->y = MIN(ed->y, ed->yMax - ed->yVis);
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+MouseButtonUp(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+	int btn = AG_INT(1);
+
+	switch (btn) {
+	case SDL_BUTTON_LEFT:
+		ed->flags &= ~(AG_EDITABLE_CURSOR_MOVING);
+		break;
+	default:
+		break;
+	}
+}
+
+static void
+MouseMotion(AG_Event *event)
+{
+	AG_Editable *ed = AG_SELF();
+	int mx = AG_INT(1);
+	int my = AG_INT(2);
+
+	if (mx > 0 && my > 0 && mx < WIDTH(ed) && my < HEIGHT(ed)) {
+		AG_SetCursor(AG_TEXT_CURSOR);
+	}
+	if (!AG_WidgetFocused(ed))
+		return;
+	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0)
+		return;
+
+	mx += ed->x;
+	AG_EditableMoveCursor(ed, mx, my, 1);
+	ed->flags |= AG_EDITABLE_MARKPREF;
+}
+
+/* Overwrite the contents of the buffer with the given UTF-8 string. */
+void
+AG_EditableSetString(AG_Editable *ed, const char *text)
+{
+	AG_WidgetBinding *stringb;
+	char *buf;
+
+	AG_ObjectLock(ed);
+	stringb = AG_WidgetGetBinding(ed, "string", &buf);
+	if (text != NULL) {
+		Strlcpy(buf, text, stringb->data.size);
+		ed->pos = AG_LengthUTF8(text);
+	} else {
+		buf[0] = '\0';
+		ed->pos = 0;
+	}
+	AG_EditableBufferChanged(ed);
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+}
+
+/* Overwrite the contents of the buffer with the given UCS-4 string. */
+void
+AG_EditableSetStringUCS4(AG_Editable *ed, const Uint32 *ucs)
+{
+	AG_WidgetBinding *stringb;
+	char *buf;
+
+	AG_ObjectLock(ed);
+	stringb = AG_WidgetGetBinding(ed, "string", &buf);
+	if (ucs != NULL) {
+		AG_ExportUnicode(AG_UNICODE_TO_UTF8, buf, ucs,
+		    stringb->data.size);
+		ed->pos = (int)AG_LengthUCS4(ucs);
+	} else {
+		buf[0] = '\0';
+		ed->pos = 0;
+	}
+	AG_EditableBufferChanged(ed);
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+}
+
+void
+AG_EditablePrintf(AG_Editable *ed, const char *fmt, ...)
+{
+	AG_WidgetBinding *stringb;
+	va_list args;
+	char *s;
+
+	AG_ObjectLock(ed);
+	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	if (fmt != NULL && fmt[0] != '\0') {
+		va_start(args, fmt);
+		Vsnprintf(s, stringb->data.size, fmt, args);
+		va_end(args);
+		ed->pos = AG_LengthUTF8(s);
+	} else {
+		s[0] = '\0';
+		ed->pos = 0;
+	}
+	AG_EditableBufferChanged(ed);
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+}
+
+/* Return a duplicate of the current string. */
+char *
+AG_EditableDupString(AG_Editable *ed)
+{
+	AG_WidgetBinding *stringb;
+	char *s, *sd;
+
+	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	sd = Strdup(s);
+	AG_WidgetUnlockBinding(stringb);
+	return (sd);
+}
+
+/* Return a duplicate of the current buffer in UCS-4 format. */
+Uint32 *
+AG_EditableDupStringUCS4(AG_Editable *ed)
+{
+	AG_WidgetBinding *stringb;
+	char *s;
+	Uint32 *ucs;
+
+	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, 0);
+	AG_WidgetUnlockBinding(stringb);
+	return (ucs);
+}
+
+/* Copy text to a fixed-size buffer and always NUL-terminate. */
+size_t
+AG_EditableCopyString(AG_Editable *ed, char *dst, size_t dst_size)
+{
+	AG_WidgetBinding *stringb;
+	size_t rv;
+	char *s;
+
+	AG_ObjectLock(ed);
+	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	rv = Strlcpy(dst, s, dst_size);
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+	return (rv);
+}
+
+/* Copy text to a fixed-size buffer and always NUL-terminate. */
+size_t
+AG_EditableCopyStringUCS4(AG_Editable *ed, Uint32 *dst, size_t dst_size)
+{
+	AG_WidgetBinding *stringb;
+	size_t rv;
+	char *s;
+	Uint32 *ucs;
+
+	AG_ObjectLock(ed);
+	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, 0);
+	rv = AG_UCS4Copy(dst, ucs, dst_size);
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+	return (rv);
+}
+
+/* Perform trivial conversion from string to int. */
+int
+AG_EditableInt(AG_Editable *ed)
+{
+	AG_WidgetBinding *stringb;
+	char *text;
+	int i;
+
+	AG_ObjectLock(ed);
+	stringb = AG_WidgetGetBinding(ed, "string", &text);
+	i = atoi(text);
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+	return (i);
+}
+
+/* Perform trivial conversion from string to float . */
+float
+AG_EditableFlt(AG_Editable *ed)
+{
+	AG_WidgetBinding *stringb;
+	char *text;
+	float flt;
+
+	AG_ObjectLock(ed);
+	stringb = AG_WidgetGetBinding(ed, "string", &text);
+	flt = (float)strtod(text, NULL);
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+	return (flt);
+}
+
+/* Perform trivial conversion from string to double. */
+double
+AG_EditableDbl(AG_Editable *ed)
+{
+	AG_WidgetBinding *stringb;
+	char *text;
+	double flt;
+
+	AG_ObjectLock(ed);
+	stringb = AG_WidgetGetBinding(ed, "string", &text);
+	flt = strtod(text, NULL);
+	AG_WidgetUnlockBinding(stringb);
+	AG_ObjectUnlock(ed);
+	return (flt);
+}
+
+static void
+Init(void *obj)
+{
+	AG_Editable *ed = obj;
+
+	WIDGET(ed)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
+
+	AG_WidgetBind(ed, "string", AG_WIDGET_STRING, ed->string,
+	    sizeof(ed->string));
+
+	ed->string[0] = '\0';
+	ed->flags = AG_EDITABLE_BLINK_ON|AG_EDITABLE_MARKPREF;
+	ed->pos = 0;
+	ed->sel_x1 = 0;
+	ed->sel_x2 = 0;
+	ed->sel_edit = 0;
+	ed->compose = 0;
+	ed->wPre = 0;
+	ed->hPre = agTextFontLineSkip;
+	ed->xCurs = 0;
+	ed->yCurs = 0;
+	ed->xCursPref = 0;
+
+	ed->x = 0;
+	ed->xMax = 10;
+	ed->y = 0;
+	ed->yMax = 1;
+	ed->yVis = 1;
+	ed->wheelTicks = 0;
+	ed->repeatKey = 0;
+	ed->repeatMod = KMOD_NONE;
+	ed->repeatUnicode = 0;
+	ed->ucsBuf = NULL;
+	ed->ucsLen = 0;
+
+	AG_SetEvent(ed, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(ed, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(ed, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(ed, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(ed, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(ed, "widget-gainfocus", GainedFocus, NULL);
+	AG_SetEvent(ed, "widget-lostfocus", LostFocus, NULL);
+	AG_SetEvent(ed, "widget-hidden", LostFocus, NULL);
+
+	AG_SetTimeout(&ed->toRepeat, RepeatTimeout, NULL, 0);
+	AG_SetTimeout(&ed->toDelay, DelayTimeout, NULL, 0);
+	AG_SetTimeout(&ed->toCursorBlink, BlinkTimeout, NULL, 0);
+}
+
+static void
+Destroy(void *obj)
+{
+	AG_Editable *ed = obj;
+
+	if (ed->flags & AG_EDITABLE_STATIC)
+		Free(ed->ucsBuf);
+}
+
+AG_WidgetClass agEditableClass = {
+	{
+		"AG_Widget:AG_Editable",
+		sizeof(AG_Editable),
+		{ 0,0 },
+		Init,
+		NULL,		/* free */
+		Destroy,
+		NULL,		/* load */
+		NULL,		/* save */
+		NULL		/* edit */
+	},
+	Draw,
+	SizeRequest,
+	SizeAllocate
+};

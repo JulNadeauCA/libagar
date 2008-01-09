@@ -23,11 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Single or multi-line text input widget. This augments the AG_Editable
+ * class with a built-in label, pixel padding and scrollbars.
+ */
+
 #include <core/core.h>
 #include <core/config.h>
-
-#include <config/have_freetype.h>
-#include <config/utf8.h>
 
 #include "ttf.h"
 #include "textbox.h"
@@ -36,28 +38,27 @@
 #include "primitive.h"
 #include "unicode.h"
 #include "opengl.h"
+#include "window.h"
 
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
 
-extern int agFreetype;
+static void
+BeginDrag(AG_Event *event)
+{
+	AG_Textbox *tb = AG_PTR(1);
+	
+	AG_WidgetFocus(tb->ed);
+	tb->ed->flags |= AG_EDITABLE_NOSCROLL;
+}
 
 static void
-EnableMultiline(AG_Textbox *tbox)
+EndDrag(AG_Event *event)
 {
-	tbox->hBar = AG_ScrollbarNew(tbox, AG_SCROLLBAR_HORIZ, 0);
-	tbox->vBar = AG_ScrollbarNew(tbox, AG_SCROLLBAR_VERT, 0);
+	AG_Textbox *tb = AG_PTR(1);
 
-	AG_WidgetBindInt(tbox->hBar, "min", &tbox->xMin);
-	AG_WidgetBindInt(tbox->hBar, "value", &tbox->x);
-	AG_WidgetBindInt(tbox->hBar, "max", &tbox->xMax);
-	AG_WidgetBindInt(tbox->hBar, "visible", &WIDTH(tbox));
-
-	AG_WidgetBindInt(tbox->vBar, "min",   &tbox->yMin);
-	AG_WidgetBindInt(tbox->vBar, "value", &tbox->y);
-	AG_WidgetBindInt(tbox->vBar, "max",   &tbox->yMax);
-	AG_WidgetBindInt(tbox->vBar, "visible", &tbox->yVis);
+	tb->ed->flags &= ~(AG_EDITABLE_NOSCROLL);
 }
 
 AG_Textbox *
@@ -68,15 +69,54 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 	tb = Malloc(sizeof(AG_Textbox));
 	AG_ObjectInit(tb, &agTextboxClass);
 
-	if ((flags & AG_TEXTBOX_NO_HFILL) == 0) { AG_ExpandHoriz(tb); }
-	if (flags & AG_TEXTBOX_VFILL) { AG_ExpandVert(tb); }
-	if (flags & AG_TEXTBOX_READONLY) { AG_WidgetDisable(tb); }
-	if (flags & AG_TEXTBOX_MULTILINE) { EnableMultiline(tb); }
+	if (!(flags & AG_TEXTBOX_NO_HFILL))
+		AG_ExpandHoriz(tb);
+	if (  flags & AG_TEXTBOX_VFILL)
+		AG_ExpandVert(tb);
+	if (flags & AG_TEXTBOX_READONLY) {
+		AG_WidgetDisable(tb);
+		AG_WidgetDisable(tb->ed);
+	}
+	if (flags & AG_TEXTBOX_PASSWORD)
+		tb->ed->flags |= AG_EDITABLE_PASSWORD;
+	if (flags & AG_TEXTBOX_ABANDON_FOCUS)
+		tb->ed->flags |= AG_EDITABLE_ABANDON_FOCUS;
+	if (flags & AG_TEXTBOX_INT_ONLY)
+		tb->ed->flags |= AG_EDITABLE_INT_ONLY;
+	if (flags & AG_TEXTBOX_FLT_ONLY)
+		tb->ed->flags |= AG_EDITABLE_FLT_ONLY;
 	if (flags & AG_TEXTBOX_CATCH_TAB) {
 		WIDGET(tb)->flags |= AG_WIDGET_CATCH_TAB;
+		WIDGET(tb->ed)->flags |= AG_WIDGET_CATCH_TAB;
 	}
-	tb->flags |= flags;
+	if (flags & AG_TEXTBOX_STATIC)
+		tb->ed->flags |= AG_EDITABLE_STATIC;
+	if (flags & AG_TEXTBOX_NOEMACS)
+		tb->ed->flags |= AG_EDITABLE_NOEMACS;
+	if (flags & AG_TEXTBOX_NOWORDSEEK)
+		tb->ed->flags |= AG_EDITABLE_NOWORDSEEK;
+	if (flags & AG_TEXTBOX_NOLATIN1)
+		tb->ed->flags |= AG_EDITABLE_NOLATIN1;
+		
+	if (flags & AG_TEXTBOX_MULTILINE) {
+		tb->ed->flags |= AG_EDITABLE_MULTILINE;
+		tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ, 0);
+		tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT, 0);
+		AG_WidgetBindInt(tb->hBar, "value", &tb->ed->x);
+		AG_WidgetBindInt(tb->vBar, "value", &tb->ed->y);
+		AG_WidgetBindInt(tb->hBar, "max", &tb->ed->xMax);
+		AG_WidgetBindInt(tb->vBar, "max", &tb->ed->yMax);
+		AG_WidgetBindInt(tb->hBar, "visible", &WIDTH(tb->ed));
+		AG_WidgetBindInt(tb->vBar, "visible", &tb->ed->yVis);
+		AG_SetEvent(tb->hBar, "scrollbar-drag-begin",
+		    BeginDrag, "%p", tb);
+		AG_SetEvent(tb->vBar, "scrollbar-drag-begin",
+		    BeginDrag, "%p", tb);
+		AG_SetEvent(tb->hBar, "scrollbar-drag-end", EndDrag, "%p", tb);
+		AG_SetEvent(tb->vBar, "scrollbar-drag-end", EndDrag, "%p", tb);
+	}
 
+	tb->flags |= flags;
 	if (label != NULL) {
 		tb->labelText = Strdup(label);
 	}
@@ -84,407 +124,78 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 	return (tb);
 }
 
-/*
- * Process a keystroke. May be invoked from the repeat timeout routine or
- * the keydown handler. If we return 1, the current delay/repeat cycle will
- * be maintained, otherwise it will be cancelled.
- */
-static int
-ProcessKey(AG_Textbox *tb, SDLKey keysym, SDLMod keymod, Uint32 unicode)
-{
-	AG_WidgetBinding *stringb;
-	char *s;
-	Uint32 *ucs4;
-	int i, rv = 0, len;
-
-	if (keysym == SDLK_ESCAPE) {
-		return (0);
-	}
-	if (keysym == SDLK_RETURN &&
-	   (tb->flags & AG_TEXTBOX_MULTILINE) == 0)
-		return (0);
-
-	if (keymod == KMOD_NONE && isprint((int)keysym)) {
-		if ((tb->flags & AG_TEXTBOX_INT_ONLY)) {
-			if (keysym != SDLK_MINUS &&
-			    keysym != SDLK_PLUS &&
-			    !isdigit((int)keysym)) {
-				return (0);
-			}
-		} else if ((tb->flags & AG_TEXTBOX_FLT_ONLY)) {
-			if (keysym != SDLK_PLUS &&
-			    keysym != SDLK_MINUS &&
-			    keysym != SDLK_PERIOD &&
-			    keysym != SDLK_e &&
-			    keysym != SDLK_i &&
-			    keysym != SDLK_n &&
-			    keysym != SDLK_f &&
-			    keysym != SDLK_a &&
-			    !isdigit((int)keysym)) {
-				return (0);
-			}
-		}
-	}
-	
-	stringb = AG_WidgetGetBinding(tb, "string", &s);
-#ifdef UTF8
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, stringb->data.size);
-	len = AG_UCS4Len(ucs4);
-	if (tb->pos < 0) { tb->pos = 0; }
-	if (tb->pos > len) { tb->pos = len; }
-	for (i = 0; ; i++) {
-		const struct ag_keycode_utf8 *kc = &agKeymapUTF8[i];
-		
-		if (kc->key != SDLK_LAST &&
-		   (kc->key != keysym || kc->func == NULL)) {
-			continue;
-		}
-		if (kc->key == SDLK_LAST ||
-		    kc->modmask == 0 || (keymod & kc->modmask)) {
-			AG_PostEvent(NULL, tb, "textbox-prechg", NULL);
-			rv = kc->func(tb, keysym, keymod, unicode, ucs4,
-			    len, stringb->data.size);
-			AG_PostEvent(NULL, tb, "textbox-postchg", NULL);
-			break;
-		}
-	}
-	if (rv == 1) {
-		AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs4,
-		    stringb->data.size);
-		AG_WidgetBindingChanged(stringb);
-	}
-	free(ucs4);
-
-#else /* !UTF8 */
-
-	len = strlen(s);
-	if (tb->pos < 0) { tb->pos = 0; }
-	if (tb->pos > len) { tb->pos = len; }
-	for (i = 0; ; i++) {
-		const struct ag_keycode_ascii *kc = &agKeymapASCII[i];
-		
-		if (kc->key != SDLK_LAST &&
-		   (kc->key != keysym || kc->func == NULL)) {
-			continue;
-		}
-		if (kc->key == SDLK_LAST ||
-		    kc->modmask == 0 || (keymod & kc->modmask)) {
-			AG_PostEvent(NULL, tb, "textbox-prechg", NULL);
-			rv = kc->func(tb, keysym, keymod, unicode, s,
-			    len, stringb->data.size);
-			AG_PostEvent(NULL, tb, "textbox-postchg", NULL);
-			if (rv == 1) {
-				AG_WidgetBindingChanged(stringb);
-			}
-			break;
-		}
-	}
-	if (rv == 1) {
-		AG_WidgetBindingChanged(stringb);
-	}
-#endif /* UTF8 */
-
-	AG_WidgetUnlockBinding(stringb);
-	return (1);
-}
-
-static Uint32
-RepeatTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Textbox *tb = obj;
-
-	if (ProcessKey(tb, tb->repeat.key, tb->repeat.mod, tb->repeat.unicode)
-	    == 0) {
-		return (0);
-	}
-	return (agKbdRepeat);
-}
-
-static Uint32
-DelayTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Textbox *tb = obj;
-
-	AG_ReplaceTimeout(tb, &tb->repeat_to, agKbdRepeat);
-	AG_DelTimeout(tb, &tb->cblink_to);
-	tb->flags |= AG_TEXTBOX_BLINK_ON;
-	return (0);
-}
-
-static Uint32
-BlinkTimeout(void *obj, Uint32 ival, void *arg)
-{
-	AG_Textbox *tb = obj;
-
-	if ((tb->flags & AG_TEXTBOX_CURSOR_MOVING) == 0) {
-		if (tb->flags & AG_TEXTBOX_BLINK_ON) {
-			tb->flags &= ~(AG_TEXTBOX_BLINK_ON);
-		} else {
-			tb->flags |= AG_TEXTBOX_BLINK_ON;
-		}
-	}
-	return (ival);
-}
-
-static void
-GainedFocus(AG_Event *event)
-{
-	AG_Textbox *tb = AG_SELF();
-
-	AG_LockTimeouts(tb);
-	AG_DelTimeout(tb, &tb->delay_to);
-	AG_DelTimeout(tb, &tb->repeat_to);
-	AG_ReplaceTimeout(tb, &tb->cblink_to, agTextBlinkRate);
-	tb->flags |= AG_TEXTBOX_BLINK_ON;
-	AG_UnlockTimeouts(tb);
-}
-
-static void
-LostFocus(AG_Event *event)
-{
-	AG_Textbox *tb = AG_SELF();
-
-	AG_LockTimeouts(tb);
-	AG_DelTimeout(tb, &tb->delay_to);
-	AG_DelTimeout(tb, &tb->repeat_to);
-	AG_DelTimeout(tb, &tb->cblink_to);
-	tb->flags &= ~(AG_TEXTBOX_BLINK_ON|AG_TEXTBOX_CURSOR_MOVING);
-	AG_UnlockTimeouts(tb);
-}
-
 static void
 Destroy(void *p)
 {
-	AG_Textbox *tbox = p;
+	AG_Textbox *tb = p;
 
-	Free(tbox->labelText);
+	Free(tb->labelText);
 }
 
 static void
 Draw(void *p)
 {
-	AG_Textbox *tbox = p;
-	AG_WidgetBinding *stringb;
-	int i, x, xStart, y, dx, dy;
-	size_t len;
-	char *s;
+	AG_Textbox *tb = p;
 	AG_Rect rBox;
-#ifdef UTF8
-	Uint32 *ucs;
-#endif
-#ifdef HAVE_OPENGL
-	GLboolean blend_sv;
-	GLint blend_sfactor, blend_dfactor;
-	GLfloat texenvmode;
-#endif
 
-	AG_PushTextState();
-	AG_TextColor(TEXTBOX_TXT_COLOR);
+	if (tb->flags & AG_TEXTBOX_MULTILINE) {
+		rBox.x = 0;
+		rBox.y = 0;
+		rBox.w = WIDTH(tb);
+		rBox.h = HEIGHT(tb);
+	} else {
+		rBox.x = tb->wLbl + tb->lblPadL + tb->lblPadR;
+		rBox.y = 0;
+		rBox.w = WIDTH(tb) - tb->wLbl - tb->lblPadL - tb->lblPadR;
+		rBox.h = HEIGHT(tb);
+	}
+	STYLE(tb)->TextboxBackground(tb, rBox, (tb->flags & AG_TEXTBOX_COMBO));
 
-	if (tbox->labelText != NULL &&
-	    tbox->label == -1) {
+	if (tb->labelText != NULL && tb->label == -1) {
 		AG_PushTextState();
 		AG_TextColor(TEXTBOX_TXT_COLOR);
-		tbox->label = AG_WidgetMapSurface(tbox,
-		    AG_TextRender(tbox->labelText));
+		tb->label = AG_WidgetMapSurface(tb,
+		    AG_TextRender(tb->labelText));
 		AG_PopTextState();
 	}
-	if (tbox->label != -1) {
-		SDL_Surface *lblSu = WSURFACE(tbox,tbox->label);
+	if (tb->label != -1) {
+		SDL_Surface *lblSu = WSURFACE(tb,tb->label);
 	
-		AG_WidgetPushClipRect(tbox,
-		    AG_RECT(0, 0, tbox->wLbl, WIDTH(tbox)));
-		AG_WidgetBlitSurface(tbox, tbox->label, tbox->lblPadL,
-		    HEIGHT(tbox)/2 - lblSu->h/2);
-		AG_WidgetPopClipRect(tbox);
-
-		xStart = tbox->lblPadL + tbox->wLbl + tbox->lblPadR +
-		         tbox->boxPadX;
-		x = xStart - tbox->boxPadX;
-	} else {
-		if (WIDTH(tbox) < (tbox->boxPadX*2 + tbox->lblPadL +
-		                   tbox->lblPadR) ||
-		    HEIGHT(tbox) < (tbox->boxPadY*2))  {
-			goto out;
-		}
-		x = 0;
-		xStart = tbox->boxPadX;
+		AG_WidgetPushClipRect(tb, AG_RECT(0, 0, tb->wLbl, HEIGHT(tb)));
+		AG_WidgetBlitSurface(tb, tb->label,
+		    tb->lblPadL,
+		    HEIGHT(tb)/2 - lblSu->h/2);
+		AG_WidgetPopClipRect(tb);
 	}
-	y = tbox->boxPadY;
+	if (tb->flags & AG_TEXTBOX_MULTILINE) {
+		int d;
 
-	stringb = AG_WidgetGetBinding(tbox, "string", &s);
-#ifdef UTF8
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, 0);
-	len = AG_UCS4Len(ucs);
-#else
-	len = strlen(s);
-#endif
-	rBox.x = x;
-	rBox.y = 0;
-	rBox.w = WIDTH(tbox)-x-1;
-	rBox.h = HEIGHT(tbox);
-	STYLE(tbox)->TextboxBackground(tbox, rBox,
-	    (tbox->flags & AG_TEXTBOX_COMBO));
-
-#ifdef HAVE_OPENGL
-	if (agView->opengl)  {
-		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
-		glGetBooleanv(GL_BLEND, &blend_sv);
-		glGetIntegerv(GL_BLEND_SRC, &blend_sfactor);
-		glGetIntegerv(GL_BLEND_DST, &blend_dfactor);
-
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	}
-#endif
-	AG_WidgetPushClipRect(tbox, rBox);
-
-	x = xStart;
-	tbox->xMax = 0;
-	tbox->yMax = 1;
-	
-	for (i = 0; i <= len; i++) {
-		AG_Glyph *gl;
-#ifdef UTF8
-		Uint32 c = ucs[i];
-#else
-		char c = s[i];
-#endif
-
-		if (i == tbox->pos &&
-		    (tbox->flags & AG_TEXTBOX_BLINK_ON) &&
-		    AG_WidgetEnabled(tbox) &&
-		    AG_WidgetFocused(tbox)) {
-			AG_DrawLineV(tbox,
-			    x - tbox->x, (y + 1),
-			    (y + agTextFontHeight - 2),
-			    AG_COLOR(TEXTBOX_CURSOR_COLOR));
-		}
-		if (i == len)
-			break;
-
-		if (c == '\n') {
-			if ((tbox->yMax - 1) >= tbox->y) {
-				y += agTextFontLineSkip;
-			}
-			tbox->xMax = MAX(tbox->xMax,
-			                 (x - xStart) +
-					 (WIDTH(tbox) - tbox->wAvail));
-			x = xStart;
-			tbox->yMax++;
-			continue;
-		} else if (c == '\t') {
-			x += agTextTabWidth;
-			continue;
-		}
-		if ((tbox->yMax - 1) < tbox->y)
-			continue;
-
-		c = (tbox->flags & AG_TEXTBOX_PASSWORD) ? '*' : c;
-		dx = WIDGET(tbox)->cx + x - tbox->x;
-		dy = WIDGET(tbox)->cy + y;
-		gl = AG_TextRenderGlyph(c);
-
-		if (!agView->opengl) {
-			SDL_Rect rd;
-
-			rd.x = dx;
-			rd.y = dy;
-			x += gl->su->w;
-			SDL_BlitSurface(gl->su, NULL, agView->v, &rd);
-		} else {
-#ifdef HAVE_OPENGL
-			glBindTexture(GL_TEXTURE_2D, gl->texture);
-			glBegin(GL_TRIANGLE_STRIP);
-			{
-				glTexCoord2f(gl->texcoord[0], gl->texcoord[1]);
-				glVertex2i(dx, dy);
-				glTexCoord2f(gl->texcoord[2], gl->texcoord[1]);
-				glVertex2i(dx + gl->su->w, dy);
-				glTexCoord2f(gl->texcoord[0], gl->texcoord[3]);
-				glVertex2i(dx, dy + gl->su->h);
-				glTexCoord2f(gl->texcoord[2], gl->texcoord[3]);
-				glVertex2i(dx + gl->su->w, dy + gl->su->h);
-			}
-			glEnd();
-			glBindTexture(GL_TEXTURE_2D, 0);
-			x += gl->su->w;
-#endif /* HAVE_OPENGL */
-		}
-		AG_TextUnusedGlyph(gl);
-
-		if (y >= HEIGHT(tbox))
-			break;
-	}
-	if (tbox->yMax == 1) {
-		tbox->xMax = (x - xStart) +
-		             (WIDTH(tbox) - tbox->wAvail);
-	}
-	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
-		AG_ScrollbarSetBarSize(tbox->vBar, 10);
-		AG_ScrollbarSetBarSize(tbox->hBar, 10);
-	}
-	AG_WidgetUnlockBinding(stringb);
-
-	AG_WidgetPopClipRect(tbox);
-
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		if (blend_sv) {
-			glEnable(GL_BLEND);
-		} else {
-			glDisable(GL_BLEND);
-		}
-		glBlendFunc(blend_sfactor, blend_dfactor);
-	}
-#endif
-out:
-	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
-		if (tbox->vBar != NULL && AG_ScrollbarVisible(tbox->vBar)) {
-			int d = WIDTH(tbox->vBar);
-
-			AG_DrawBox(tbox,
-			    AG_RECT(WIDTH(tbox)-d, HEIGHT(tbox)-d, d, d), -1,
+		if (tb->vBar != NULL && AG_ScrollbarVisible(tb->vBar)) {
+			d = WIDTH(tb->vBar);
+			AG_DrawBox(tb,
+			    AG_RECT(WIDTH(tb)-d, HEIGHT(tb)-d, d, d), -1,
 			    AG_COLOR(TEXTBOX_COLOR));
-		} else if (tbox->hBar != NULL &&
-		           AG_ScrollbarVisible(tbox->hBar)) {
-			int d = HEIGHT(tbox->hBar);
-
-			AG_DrawBox(tbox,
-			    AG_RECT(WIDTH(tbox)-d, HEIGHT(tbox)-d, d, d), -1,
+		} else if (tb->hBar != NULL && AG_ScrollbarVisible(tb->hBar)) {
+			d = HEIGHT(tb->hBar);
+			AG_DrawBox(tb,
+			    AG_RECT(WIDTH(tb)-d, HEIGHT(tb)-d, d, d), -1,
 			    AG_COLOR(TEXTBOX_COLOR));
 		}
+		AG_WindowUpdate(AG_WidgetParentWindow(tb));
 	}
-	    
-	AG_PopTextState();
-}
-
-void
-AG_TextboxSizeHint(AG_Textbox *tbox, const char *text)
-{
-	AG_ObjectLock(tbox);
-	AG_TextSize(text, &tbox->wPre, &tbox->hPre);
-	AG_ObjectUnlock(tbox);
-}
-
-void
-AG_TextboxSizeHintPixels(AG_Textbox *tbox, Uint w, Uint h)
-{
-	AG_ObjectLock(tbox);
-	tbox->wPre = w;
-	tbox->hPre = h;
-	AG_ObjectUnlock(tbox);
 }
 
 static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Textbox *tbox = p;
+	AG_SizeReq rEd;
 	int wLbl, hLbl;
 
-	r->w = tbox->boxPadX*2 + tbox->wPre;
-	r->h = tbox->boxPadY*2 + tbox->hPre;
+	AG_WidgetSizeReq(tbox->ed, &rEd);
+
+	r->w = tbox->boxPadX*2 + rEd.w;
+	r->h = tbox->boxPadY*2 + rEd.h;
 
 	if (tbox->labelText != NULL) {
 		if (tbox->label != -1) {
@@ -504,324 +215,68 @@ static int
 SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	AG_Textbox *tbox = p;
-	int wLbl, hLbl;
 	int boxPadW = tbox->boxPadX*2;
 	int boxPadH = tbox->boxPadY*2;
 	int lblPadW = tbox->lblPadL + tbox->lblPadR;
+	int wBar = 0, hBar = 0;
+	AG_SizeAlloc aChld;
+	AG_SizeReq r;
+	int d;
 
-	if (tbox->labelText == NULL) {
-		if (a->w < boxPadW ||
-		    a->h < boxPadH)
-			return (-1);
-	}
-	if (a->w < boxPadW + lblPadW ||
-	    a->h < boxPadH)
+	tbox->wLbl = 0;
+	tbox->hLbl = 0;
+
+	if (tbox->labelText == NULL && (a->w < boxPadW || a->h < boxPadH))
 		return (-1);
-		
+	if (a->w < boxPadW + lblPadW || a->h < boxPadH)
+		return (-1);
+
 	if (tbox->label != -1) {
-		wLbl = WSURFACE(tbox,tbox->label)->w;
-		hLbl = WSURFACE(tbox,tbox->label)->h;
+		tbox->wLbl = WSURFACE(tbox,tbox->label)->w;
+		tbox->hLbl = WSURFACE(tbox,tbox->label)->h;
 	} else {
-		AG_TextSize(tbox->labelText, &wLbl, &hLbl);
+		AG_TextSize(tbox->labelText, &tbox->wLbl, &tbox->hLbl);
 	}
-	if (a->w < boxPadW + lblPadW + wLbl + tbox->wPre) {
-		tbox->wLbl = a->w - boxPadW - lblPadW - tbox->wPre;
+	if (a->w < (boxPadW+lblPadW) + tbox->wLbl+tbox->ed->wPre) {
+		tbox->wLbl = a->w - (boxPadW-lblPadW) - tbox->ed->wPre;
 		if (tbox->wLbl <= 0) {
-			if (a->w > boxPadW + lblPadW) {
+			if (a->w > boxPadW+lblPadW) {
 				tbox->wLbl = 0;
 			} else {
 				return (-1);
 			}
 		}
-	} else {
-		tbox->wLbl = wLbl;
 	}
-	
-	tbox->wAvail = a->w - tbox->boxPadX*2;
-	tbox->hAvail = a->h - tbox->boxPadY*2;
-
 	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
-		AG_SizeReq rBar;
-		AG_SizeAlloc aBar;
-		int d;
-
-		AG_WidgetSizeReq(tbox->hBar, &rBar);
-		d = MIN(rBar.h, a->h);
-		aBar.x = 0;
-		aBar.y = a->h - d;
-		aBar.w = a->w - d;
-		aBar.h = d;
-		AG_WidgetSizeAlloc(tbox->hBar, &aBar);
+		AG_WidgetSizeReq(tbox->hBar, &r);
+		d = MIN(r.h, a->h);
+		aChld.x = 0;
+		aChld.y = a->h - d;
+		aChld.w = a->w - d + 1;
+		aChld.h = d;
+		AG_WidgetSizeAlloc(tbox->hBar, &aChld);
+		if (AG_ScrollbarVisible(tbox->hBar))
+			hBar = aChld.h;
 		
-		AG_WidgetSizeReq(tbox->vBar, &rBar);
-		d = MIN(rBar.w, a->w);
-		aBar.x = a->w - d;
-		aBar.y = 0;
-		aBar.w = d;
-		aBar.h = a->h - d;
-		AG_WidgetSizeAlloc(tbox->vBar, &aBar);
-
-		tbox->wAvail -= WIDTH(tbox->vBar);
-		tbox->hAvail -= HEIGHT(tbox->hBar);
-	} else {
-		tbox->wAvail -= tbox->wLbl;
+		AG_WidgetSizeReq(tbox->vBar, &r);
+		d = MIN(r.w, a->w);
+		aChld.x = a->w - d;
+		aChld.y = 0;
+		aChld.w = d;
+		aChld.h = a->h - d + 1;
+		AG_WidgetSizeAlloc(tbox->vBar, &aChld);
+		if (AG_ScrollbarVisible(tbox->vBar))
+			wBar = aChld.w;
 	}
-
-	if (tbox->wAvail < 0) { tbox->wAvail = 0; }
-	if (tbox->hAvail < 0) { tbox->hAvail = 0; }
-
-	tbox->yVis = tbox->hAvail/agTextFontLineSkip;
-
+	aChld.x = lblPadW + tbox->wLbl + tbox->boxPadX;
+	aChld.y = tbox->boxPadY;
+	aChld.w = a->w - boxPadW - aChld.x - wBar;
+	aChld.h = a->h - boxPadH - hBar;
+	AG_WidgetSizeAlloc(tbox->ed, &aChld);
 	return (0);
 }
 
-static void
-KeyDown(AG_Event *event)
-{
-	AG_Textbox *tbox = AG_SELF();
-	SDLKey keysym = AG_SDLKEY(1);
-	int keymod = AG_INT(2);
-	Uint32 unicode = (Uint32)AG_INT(3);		/* XXX use AG_UINT32 */
-
-	if (AG_WidgetDisabled(tbox)) {
-		return;
-	}
-	if ((tbox->flags & AG_TEXTBOX_CATCH_TAB) == 0 &&
-	    keysym == SDLK_TAB)
-		return;
-
-	tbox->repeat.key = keysym;
-	tbox->repeat.mod = keymod;
-	tbox->repeat.unicode = unicode;
-	tbox->flags |= AG_TEXTBOX_BLINK_ON;
-
-	AG_LockTimeouts(tbox);
-	AG_DelTimeout(tbox, &tbox->repeat_to);
-	if (ProcessKey(tbox, keysym, keymod, unicode) == 1) {
-		AG_ReplaceTimeout(tbox, &tbox->delay_to, agKbdDelay);
-	} else {
-		AG_DelTimeout(tbox, &tbox->delay_to);
-	}
-	AG_UnlockTimeouts(tbox);
-}
-
-static void
-KeyUp(AG_Event *event)
-{
-	AG_Textbox *tb = AG_SELF();
-	SDLKey keysym = AG_SDLKEY(1);
-	
-	AG_LockTimeouts(tb);
-	AG_DelTimeout(tb, &tb->repeat_to);
-	AG_DelTimeout(tb, &tb->delay_to);
-	AG_ReplaceTimeout(tb, &tb->cblink_to, agTextBlinkRate);
-	AG_UnlockTimeouts(tb);
-
-	if (keysym == SDLK_RETURN &&
-	   (tb->flags & AG_TEXTBOX_MULTILINE) == 0) {
-		if (tb->flags & AG_TEXTBOX_ABANDON_FOCUS) {
-			AG_WidgetUnfocus(tb);
-		}
-		AG_PostEvent(NULL, tb, "textbox-return", NULL);
-	}
-}
-
-#define ON_LINE(my,y) \
-	( ((my) >= (y) && (my) <= (y)+agTextFontLineSkip) || \
-	  ((my) <= yStart && line == 0) || \
-	  ((my) > (nLines*agTextFontLineSkip) && (line == nLines-1)) )
-#define ON_CHAR(mx,x,glyph) \
-	((mx) >= (x) && (mx) <= (x)+(glyph)->advance)
-
-/* Map mouse coordinates to a position within the string. */
-static int
-GetCursorPosition(AG_Textbox *tbox, int mx, int my, int *pos)
-{
-	AG_WidgetBinding *stringb;
-	AG_Font *font;
-	size_t len;
-	char *s;
-	Uint32 ch;
-	int xStart = tbox->boxPadX;
-	int yStart = tbox->boxPadY;
-	int i, x, y, line = 0;
-	int nLines = 1;
-
-	if (tbox->label != -1)
-		xStart += tbox->lblPadL + tbox->wLbl + tbox->lblPadR;
-	if (AG_WidgetFocused(tbox))
-		xStart++;
-
-	x = xStart;
-	y = yStart;
-
-	stringb = AG_WidgetGetBinding(tbox, "string", &s);
-	len = strlen(s);
-	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL)
-		AG_FatalError("AG_Textbox: %s", AG_GetError());
-
-	for (i = 0; i < len; i++) {
-		if (s[i] == '\n')
-			nLines++;
-	}
-	for (i = 0; i < len; i++) {
-		if (mx <= xStart && ON_LINE(my,y)) {
-			*pos = i;
-			goto in;
-		}
-		if (s[i] == '\n') {
-			if (ON_LINE(my,y) &&
-			    mx > x) {
-				*pos = i;
-				goto in;
-			}
-			y += agTextFontLineSkip;
-			x = xStart;
-			line++;
-			continue;
-		} else if (s[i] == '\t') {
-			if (ON_LINE(my,y) &&
-			    mx >= x && mx <= x+agTextTabWidth) {
-				*pos = (mx < x + agTextTabWidth/2) ? i : i+1;
-				goto in;
-			}
-			x += agTextTabWidth;
-			continue;
-		}
-		
-		ch = (Uint32)s[i];
-		switch (font->type) {
-#ifdef HAVE_FREETYPE
-		case AG_FONT_VECTOR:
-		{
-			AG_TTFFont *ttf = font->ttf;
-			FT_Bitmap *ftbmp;
-			AG_TTFGlyph *glyph;
-
-			if (AG_TTFFindGlyph(ttf, ch,
-			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) != 0) {
-				continue;
-			}
-			glyph = ttf->current;
-			ftbmp = &glyph->bitmap;
-
-			if (ON_LINE(my,y) && ON_CHAR(mx,x,glyph)) {
-				*pos = (mx < x+glyph->advance/2) ? i : i+1;
-				goto in;
-			}
-			x += glyph->advance;
-			break;
-		}
-#endif /* HAVE_FREETYPE */
-		case AG_FONT_BITMAP:
-		{
-			AG_Glyph *gl;
-			
-			gl = AG_TextRenderGlyph(ch);
-			if (ON_LINE(my,y) &&
-			    mx >= x && mx <= x+gl->su->w) {
-				*pos = i;
-				goto in;
-			}
-			x += gl->su->w;
-			AG_TextUnusedGlyph(gl);
-			break;
-		}
-		default:
-			AG_FatalError("AG_Textbox: Unknown font format");
-		}
-	}
-	AG_WidgetUnlockBinding(stringb);
-	return (1);
-in:
-	AG_WidgetUnlockBinding(stringb);
-	return (0);
-}
-#undef ON_LINE
-#undef ON_CHAR
-
-/* Textbox must be locked. */
-static void
-MoveCursorToCoords(AG_Textbox *tbox, int mx, int my)
-{
-	int rv;
-	AG_WidgetBinding *stringb;
-	char *s;
-
-	rv = GetCursorPosition(tbox, mx, my, &tbox->pos);
-	if (rv == -1) {
-		tbox->pos = 0;
-	} else if (rv == 1) {
-		stringb = AG_WidgetGetBinding(tbox, "string", &s);
-		tbox->pos = strlen(s);
-		AG_WidgetUnlockBinding(stringb);
-	}
-}
-
-static void
-MouseButtonDown(AG_Event *event)
-{
-	AG_Textbox *tbox = AG_SELF();
-	int btn = AG_INT(1);
-	int mx = AG_INT(2);
-	int my = AG_INT(3);
-
-	AG_WidgetFocus(tbox);
-
-	switch (btn) {
-	case SDL_BUTTON_LEFT:
-		if (tbox->flags & AG_TEXTBOX_MULTILINE) {
-			if ( (AG_ScrollbarVisible(tbox->hBar) &&
-			      my >= WIDGET(tbox->hBar)->y) ||
-			     (AG_ScrollbarVisible(tbox->vBar) &&
-			      mx >= WIDGET(tbox->vBar)->x))
-				return;
-		}
-		tbox->flags |= AG_TEXTBOX_CURSOR_MOVING|AG_TEXTBOX_BLINK_ON;
-		mx += tbox->x;
-		MoveCursorToCoords(tbox, mx, my);
-		break;
-	default:
-		break;
-	}
-}
-
-static void
-MouseButtonUp(AG_Event *event)
-{
-	AG_Textbox *tbox = AG_SELF();
-	int btn = AG_INT(1);
-
-	switch (btn) {
-	case SDL_BUTTON_LEFT:
-		tbox->flags &= ~(AG_TEXTBOX_CURSOR_MOVING);
-		break;
-	default:
-		break;
-	}
-}
-
-static void
-MouseMotion(AG_Event *event)
-{
-	AG_Textbox *tbox = AG_SELF();
-	int mx = AG_INT(1);
-	int my = AG_INT(2);
-	
-	if ((tbox->flags & AG_TEXTBOX_CURSOR_MOVING) == 0) {
-		return;
-	}
-	mx += tbox->x;
-	if (tbox->flags & AG_TEXTBOX_MULTILINE) {
-		if ( (AG_ScrollbarVisible(tbox->hBar) &&
-		      my >= WIDGET(tbox->hBar)->y) ||
-		     (AG_ScrollbarVisible(tbox->vBar) &&
-		      mx >= WIDGET(tbox->vBar)->x) )
-			return;
-	}
-	MoveCursorToCoords(tbox, mx, my);
-}
-
+/* Set the text from a format string. */
 void
 AG_TextboxPrintf(AG_Textbox *tbox, const char *fmt, ...)
 {
@@ -829,81 +284,22 @@ AG_TextboxPrintf(AG_Textbox *tbox, const char *fmt, ...)
 	va_list args;
 	char *text;
 
-	AG_ObjectLock(tbox);
-	stringb = AG_WidgetGetBinding(tbox, "string", &text);
+	AG_ObjectLock(tbox->ed);
+	stringb = AG_WidgetGetBinding(tbox->ed, "string", &text);
 	if (fmt != NULL && fmt[0] != '\0') {
 		va_start(args, fmt);
 		Vsnprintf(text, stringb->data.size, fmt, args);
 		va_end(args);
-		tbox->pos = strlen(text);
+		tbox->ed->pos = AG_LengthUTF8(text);
 	} else {
 		text[0] = '\0';
-		tbox->pos = 0;
+		tbox->ed->pos = 0;
 	}
+	AG_TextboxBufferChanged(tbox);
 	AG_WidgetUnlockBinding(stringb);
-	AG_ObjectUnlock(tbox);
+	AG_ObjectUnlock(tbox->ed);
 }
 
-char *
-AG_TextboxDupString(AG_Textbox *tbox)
-{
-	AG_WidgetBinding *stringb;
-	char *s, *sd;
-
-	AG_ObjectLock(tbox);
-	stringb = AG_WidgetGetBinding(tbox, "string", &s);
-	sd = Strdup(s);
-	AG_WidgetUnlockBinding(stringb);
-	AG_ObjectUnlock(tbox);
-	return (sd);
-}
-
-/* Copy text to a fixed-size buffer and always NUL-terminate. */
-size_t
-AG_TextboxCopyString(AG_Textbox *tbox, char *dst, size_t dst_size)
-{
-	AG_WidgetBinding *stringb;
-	size_t rv;
-	char *text;
-
-	AG_ObjectLock(tbox);
-	stringb = AG_WidgetGetBinding(tbox, "string", &text);
-	rv = Strlcpy(dst, text, dst_size);
-	AG_WidgetUnlockBinding(stringb);
-	AG_ObjectUnlock(tbox);
-	return (rv);
-}
-
-/* Perform trivial conversion from string to int. */
-int
-AG_TextboxInt(AG_Textbox *tbox)
-{
-	AG_WidgetBinding *stringb;
-	char *text;
-	int i;
-
-	AG_ObjectLock(tbox);
-	stringb = AG_WidgetGetBinding(tbox, "string", &text);
-	i = atoi(text);
-	AG_WidgetUnlockBinding(stringb);
-	AG_ObjectUnlock(tbox);
-	return (i);
-}
-
-/* Enable or disable password mode. */
-void
-AG_TextboxSetPassword(AG_Textbox *tbox, int pw)
-{
-	AG_ObjectLock(tbox);
-	if (pw) {
-		tbox->flags |= AG_TEXTBOX_PASSWORD;
-	} else {
-		tbox->flags &= ~(AG_TEXTBOX_PASSWORD);
-	}
-	AG_ObjectUnlock(tbox);
-}
-
-/* Change the label text. */
 void
 AG_TextboxSetLabel(AG_Textbox *tbox, const char *fmt, ...)
 {
@@ -924,55 +320,81 @@ AG_TextboxSetLabel(AG_Textbox *tbox, const char *fmt, ...)
 }
 
 static void
+MouseButtonDown(AG_Event *event)
+{
+	AG_Textbox *tbox = AG_SELF();
+	AG_WidgetFocus(tbox->ed);
+}
+
+static void
+Disabled(AG_Event *event)
+{
+	AG_Textbox *tbox = AG_SELF();
+	AG_WidgetDisable(tbox->ed);
+}
+
+static void
+Enabled(AG_Event *event)
+{
+	AG_Textbox *tbox = AG_SELF();
+	AG_WidgetEnable(tbox->ed);
+}
+
+static void
+Bound(AG_Event *event)
+{
+	AG_Textbox *tbox = AG_SELF();
+	AG_WidgetBinding *binding = AG_PTR(1);
+
+	if (strcmp(binding->name, "string") == 0)
+		AG_WidgetCopyBinding(tbox->ed, "string", binding);
+}
+
+static void
+EditablePreChg(AG_Event *event)
+{
+	AG_PostEvent(NULL, AG_PTR(1), "textbox-prechg", NULL);
+}
+
+static void
+EditablePostChg(AG_Event *event)
+{
+	AG_PostEvent(NULL, AG_PTR(1), "textbox-prechg", NULL);
+}
+
+static void
+EditableReturn(AG_Event *event)
+{
+	AG_PostEvent(NULL, AG_PTR(1), "textbox-return", NULL);
+}
+
+static void
 Init(void *obj)
 {
 	AG_Textbox *tbox = obj;
 
+	tbox->ed = AG_EditableNew(tbox, 0);
+
 	WIDGET(tbox)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetBind(tbox, "string", AG_WIDGET_STRING, tbox->string,
-	    sizeof(tbox->string));
-
-	tbox->string[0] = '\0';
 	tbox->boxPadX = 2;
 	tbox->boxPadY = 3;
 	tbox->lblPadL = 2;
 	tbox->lblPadR = 2;
 	tbox->wLbl = 0;
-	tbox->flags = AG_TEXTBOX_BLINK_ON;
-	tbox->pos = 0;
-	tbox->sel_x1 = 0;
-	tbox->sel_x2 = 0;
-	tbox->sel_edit = 0;
-	tbox->compose = 0;
-	tbox->wPre = 0;
-	tbox->hPre = agTextFontHeight;
+	tbox->flags = 0;
 	tbox->label = -1;
 	tbox->labelText = NULL;
-	tbox->wAvail = 0;
-	tbox->hAvail = 0;
-	
 	tbox->hBar = NULL;
 	tbox->vBar = NULL;
-	tbox->xMin = 0;
-	tbox->x = 0;
-	tbox->xMax = 10;
-	tbox->yMin = 0;
-	tbox->y = 0;
-	tbox->yMax = 10;
-	tbox->yVis = 1;
 
-	AG_SetEvent(tbox, "window-keydown", KeyDown, NULL);
-	AG_SetEvent(tbox, "window-keyup", KeyUp, NULL);
 	AG_SetEvent(tbox, "window-mousebuttondown", MouseButtonDown, NULL);
-	AG_SetEvent(tbox, "window-mousebuttonup", MouseButtonUp, NULL);
-	AG_SetEvent(tbox, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(tbox, "widget-gainfocus", GainedFocus, NULL);
-	AG_SetEvent(tbox, "widget-lostfocus", LostFocus, NULL);
-	AG_SetEvent(tbox, "widget-hidden", LostFocus, NULL);
-	AG_SetTimeout(&tbox->repeat_to, RepeatTimeout, NULL, 0);
-	AG_SetTimeout(&tbox->delay_to, DelayTimeout, NULL, 0);
-	AG_SetTimeout(&tbox->cblink_to, BlinkTimeout, NULL, 0);
+	AG_SetEvent(tbox, "widget-disabled", Disabled, NULL);
+	AG_SetEvent(tbox, "widget-enabled", Enabled, NULL);
+	AG_SetEvent(tbox, "widget-bound", Bound, NULL);
+	AG_SetEvent(tbox->ed, "editable-prechg", EditablePreChg, "%p", tbox);
+	AG_SetEvent(tbox->ed, "editable-postchg", EditablePostChg, "%p", tbox);
+	AG_SetEvent(tbox->ed, "editable-return", EditableReturn, "%p", tbox);
 }
 
 AG_WidgetClass agTextboxClass = {

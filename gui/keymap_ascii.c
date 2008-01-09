@@ -32,13 +32,14 @@
 #include <core/prop.h>
 
 #include "widget.h"
-#include "textbox.h"
+#include "editable.h"
 #include "keymap.h"
 
 #include <ctype.h>
 #include <string.h>
 
 /* Emulate "shift" key for US keyboard layout. */
+/* XXX move to keymap */
 static Uint32
 EmulateShiftUSKBD(Uint32 key)
 {
@@ -92,13 +93,15 @@ AG_ApplyModifiersASCII(Uint32 key, int kmod)
 }
 
 static int
-InsertASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 unicode,
+InsertASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
     char *s, int len, int lenMax)
 {
 	Uint32 ins[3];
 	int nins, i;
 	char ch;
-
+	
+	if (AG_WidgetDisabled(ed))
+		return (0);
 	if (keysym == 0 || !isascii(keysym))
 		return (0);
 
@@ -107,7 +110,7 @@ InsertASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 unicode,
 	if (ch == '\r') { ch = '\n'; }
 
 	if (AG_Bool(agConfig,"input.composition")) {
-		if ((nins = AG_KeyInputCompose(tbox, (Uint32)ch, ins)) == 0)
+		if ((nins = AG_KeyInputCompose(ed, (Uint32)ch, ins)) == 0)
 			return (0);
 	} else {
 		ins[0] = (Uint32)ch;
@@ -118,54 +121,56 @@ InsertASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 unicode,
 	}
 	ins[nins] = '\0';
 
-	if (tbox->pos == len) {		       			/* Append */
+	if (ed->pos == len) {		       			/* Append */
 		for (i = 0; i < nins+1; i++)
 			s[len+i] = ins[i];
 	} else {						/* Insert */
-		char *p = &s[tbox->pos];
+		char *p = &s[ed->pos];
 		
-		memcpy(&p[nins], &p[0], (len - tbox->pos));
+		memcpy(&p[nins], &p[0], (len - ed->pos));
 		for (i = 0; i < nins; i++) {
 			p[i] = ins[i];
 		}
 		s[len+1] = '\0';
 	}
-	tbox->pos++;
+	ed->pos++;
 	return (1);
 }
 
 static int
-DeleteASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 unicode,
+DeleteASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
     char *s, int len, int lenMax)
 {
 	char *c;
 
+	if (AG_WidgetDisabled(ed))
+		return (0);
 	if (len == 0)
 		return (0);
 
 	switch (keysym) {
 	case SDLK_BACKSPACE:
-		if (tbox->pos == 0) {
+		if (ed->pos == 0) {
 			return (0);
 		}
-		if (tbox->pos == len) { 
+		if (ed->pos == len) { 
 			s[len-1] = '\0';
-			tbox->pos--;
+			ed->pos--;
 			return (1);
 		}
-		tbox->pos--;
+		ed->pos--;
 		break;
 	case SDLK_DELETE:
-		if (tbox->pos == len) {
+		if (ed->pos == len) {
 			s[len-1] = '\0';
-			tbox->pos--;
+			ed->pos--;
 			return (1);
 		}
 		break;
 	default:
 		break;
 	}
-	for (c = &s[tbox->pos]; c[1] != '\0'; c++) {
+	for (c = &s[ed->pos]; c[1] != '\0'; c++) {
 		*c = c[1];
 	}
 	*c = '\0';
@@ -173,79 +178,146 @@ DeleteASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 unicode,
 }
 
 static int
-CursorEndASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
+KillASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
-	tbox->pos = len;
-	return (0);
-}
+	if (AG_WidgetDisabled(ed))
+		return (0);
 
-static int
-KillASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    char *s, int len, int lenMax)
-{
-	/*
-	 * TODO Save to a kill buffer, etc.
-	 */
-	s[tbox->pos] = '\0';
+	/* TODO Save to a kill buffer, etc. */
+	s[ed->pos] = '\0';
 	return (1);
 }
 
 static int
-CursorRightASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
+YankASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
-	if (tbox->pos < len) {
-		tbox->pos++;
+	if (AG_WidgetDisabled(ed))
+		return (0);
+
+	/* TODO */
+	return (1);
+}
+
+static int
+WordBackASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    char *s, int len, int lenMax)
+{
+	/* TODO */
+	ed->flags |= AG_EDITABLE_MARKPREF;
+	return (0);
+}
+
+static int
+WordForwASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    char *s, int len, int lenMax)
+{
+	/* TODO */
+	ed->flags |= AG_EDITABLE_MARKPREF;
+	return (0);
+}
+
+static int
+CursorHomeASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    char *s, int len, int lenMax)
+{
+	ed->pos = 0;
+	ed->flags |= AG_EDITABLE_MARKPREF;
+	return (0);
+}
+
+static int
+CursorEndASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    char *s, int len, int lenMax)
+{
+	ed->pos = len;
+	ed->flags |= AG_EDITABLE_MARKPREF;
+	return (0);
+}
+
+static int
+CursorLeftASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    char *s, int len, int lenMax)
+{
+	if (--ed->pos < 1) {
+		ed->pos = 0;
+	}
+	ed->flags |= AG_EDITABLE_MARKPREF;
+	return (0);
+}
+
+static int
+CursorRightASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    char *s, int len, int lenMax)
+{
+	if (ed->pos < len) {
+		ed->pos++;
+	}
+	ed->flags |= AG_EDITABLE_MARKPREF;
+	return (0);
+}
+
+static int
+CursorUpASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    char *s, int len, int lenMax)
+{
+	char *p;
+
+	if ((p = strrchr(&s[ed->pos], '\n')) != NULL) {
+		ed->pos -= (s - p);
 	}
 	return (0);
 }
 
 static int
-WordBackASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
+CursorDownASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
     char *s, int len, int lenMax)
 {
-	/* TODO */
-	return (0);
-}
+	char *p;
 
-static int
-WordForwASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    char *s, int len, int lenMax)
-{
-	/* TODO */
-	return (0);
-}
-
-static int
-CursorHomeASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    char *s, int len, int lenMax)
-{
-	tbox->pos = 0;
-	return (0);
-}
-
-static int
-CursorLeftASCII(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    char *s, int len, int lenMax)
-{
-	if (--tbox->pos < 1) {
-		tbox->pos = 0;
+	if ((p = strchr(&s[ed->pos], '\n')) != NULL) {
+		ed->pos -= (p - s);
 	}
+	return (0);
+}
+
+static int
+PageUpASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    char *s, int len, int lenMax)
+{
+	AG_EditableMoveCursor(ed, ed->xCurs,
+	    (ed->yCurs - ed->y - ed->yVis*2 + 2)*agTextFontLineSkip + 1,
+	    1);
+	return (0);
+}
+
+static int
+PageDownASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    char *s, int len, int lenMax)
+{
+	AG_EditableMoveCursor(ed, ed->xCurs,
+	    (ed->yCurs - ed->y + ed->yVis*2 - 2)*agTextFontLineSkip + 1,
+	    1);
 	return (0);
 }
 
 const struct ag_keycode_ascii agKeymapASCII[] = {
 	{ SDLK_HOME,		0,		CursorHomeASCII },
 	{ SDLK_a,		KMOD_CTRL,	CursorHomeASCII },
-	{ SDLK_LEFT,		0,		CursorLeftASCII },
-	{ SDLK_BACKSPACE,	0,		DeleteASCII },
-	{ SDLK_DELETE,		0,		DeleteASCII },
 	{ SDLK_END,		0,		CursorEndASCII },
 	{ SDLK_e,		KMOD_CTRL,	CursorEndASCII },
+	{ SDLK_LEFT,		0,		CursorLeftASCII },
+	{ SDLK_RIGHT,		0,		CursorRightASCII },
+	{ SDLK_UP,		0,		CursorUpASCII },
+	{ SDLK_DOWN,		0,		CursorDownASCII },
+	{ SDLK_PAGEUP,		0,		PageUpASCII },
+	{ SDLK_PAGEDOWN,	0,		PageDownASCII },
+	{ SDLK_BACKSPACE,	0,		DeleteASCII },
+	{ SDLK_DELETE,		0,		DeleteASCII },
 	{ SDLK_k,		KMOD_CTRL,	KillASCII },
+	{ SDLK_y,		KMOD_CTRL,	YankASCII },
 	{ SDLK_b,		KMOD_ALT,	WordBackASCII },
 	{ SDLK_f,		KMOD_ALT,	WordForwASCII },
-	{ SDLK_RIGHT,		0,		CursorRightASCII },
 	{ SDLK_LAST,		0,		InsertASCII },
 };

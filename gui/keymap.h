@@ -7,14 +7,14 @@
 struct ag_keycode_ascii {
 	SDLKey key;
 	int modmask;
-	int (*func)(AG_Textbox *, SDLKey ks, int mod, Uint32 ch, char *s,
+	int (*func)(AG_Editable *, SDLKey ks, int mod, Uint32 ch, char *s,
 	            int lenCur, int lenMax);
 };
 
 struct ag_keycode_utf8 {
 	SDLKey key;
 	int modmask;
-	int (*func)(AG_Textbox *, SDLKey ks, int mod, Uint32 ch, Uint32 *ucs4,
+	int (*func)(AG_Editable *, SDLKey ks, int mod, Uint32 ch, Uint32 *ucs4,
 	            int lenCur, int lenMax);
 };
 
@@ -24,14 +24,21 @@ struct ag_key_composition {
 	Uint32 res;		/* Resulting character */
 };
 
+struct ag_key_mapping {
+	SDLKey key;		/* Key */
+	int modmask;		/* Modifier mask */
+	Uint32 unicode;		/* UCS-4 mapping */
+};
+
 __BEGIN_DECLS
 extern const struct ag_keycode_ascii    agKeymapASCII[];
 extern const struct ag_keycode_utf8     agKeymapUTF8[];
+extern const struct ag_key_mapping	agKeymapLATIN1[];
 extern const struct ag_key_composition  agCompositionMap[];
 extern const int                        agCompositionMapSize;
 
 Uint32 AG_ApplyModifiersASCII(Uint32, int);
-int    AG_KeyInputCompose(AG_Textbox *, Uint32, Uint32 *);
+int    AG_KeyInputCompose(AG_Editable *, Uint32, Uint32 *);
 __END_DECLS
 
 #include "close_code.h"
