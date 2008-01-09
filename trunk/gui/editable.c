@@ -107,8 +107,10 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 {
 	AG_WidgetBinding *stringb;
 	char *s;
-	Uint32 *ucs;
 	int i, rv = 0, len;
+#ifdef UTF8
+	Uint32 *ucs;
+#endif
 
 	if (keysym == SDLK_ESCAPE) {
 		return (0);

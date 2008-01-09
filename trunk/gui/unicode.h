@@ -49,7 +49,9 @@ AG_CharLengthUTF8FromUCS4(Uint32 ch)
 	else if (ch <  0x200000)	{ return (4); }
 	else if (ch <  0x4000000)	{ return (5); }
 	else if (ch <= 0x7fffffff)	{ return (6); }
-	else				{ AG_FatalError("CharLengthUTF8"); }
+
+	AG_FatalError("CharLengthUTF8");
+	return (-1);
 }
 
 /*
