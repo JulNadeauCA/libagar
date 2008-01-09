@@ -111,7 +111,7 @@ AG_EditableBufferChanged(AG_Editable *ed)
 {
 	AG_ObjectLock(ed);
 	if (ed->flags & AG_EDITABLE_STATIC) {
-		Free(ed->ucsBuf);
+		free(ed->ucsBuf);
 		ed->ucsBuf = NULL;
 		ed->ucsLen = 0;
 	}
