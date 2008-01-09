@@ -92,7 +92,10 @@ AG_CharLengthUTF8(Uint8 ch)
 	}
 }
 
-/* Return the number of characters in the given UTF-8 string. */
+/*
+ * Return the number of characters in the given UTF-8 string, not counting
+ * the terminating NUL.
+ */
 static __inline__ size_t
 AG_LengthUTF8(const char *s)
 {

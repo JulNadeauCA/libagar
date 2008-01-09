@@ -33,6 +33,7 @@
 #include "checkbox.h"
 #include "combo.h"
 #include "console.h"
+#include "editable.h"
 #include "file_dlg.h"
 #include "fixed.h"
 #include "fspinbutton.h"
@@ -82,6 +83,7 @@ void *agGUIClasses[] = {
 	&agCheckboxClass,
 	&agComboClass,
 	&agConsoleClass,
+	&agEditableClass,
 	&agFileDlgClass,
 	&agFixedClass,
 	&agFSpinbuttonClass,

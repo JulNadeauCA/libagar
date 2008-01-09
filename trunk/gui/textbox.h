@@ -5,83 +5,92 @@
 
 #ifdef _AGAR_INTERNAL
 #include <gui/widget.h>
+#include <gui/editable.h>
 #include <gui/scrollbar.h>
 #else
 #include <agar/gui/widget.h>
+#include <agar/gui/editable.h>
 #include <agar/gui/scrollbar.h>
 #endif
 
 #include "begin_code.h"
 
-#define AG_TEXTBOX_STRING_MAX 1024
+#define AG_TEXTBOX_STRING_MAX AG_EDITABLE_STRING_MAX
 
 typedef struct ag_textbox {
-	struct ag_widget wid;
-	
-	char  string[AG_TEXTBOX_STRING_MAX];	/* Default string binding */
-	char *labelText;			/* label text */
-	int   label;				/* Label surface mapping */
+	struct ag_widget _inherit;
+	struct ag_editable *ed;
+
+	char *labelText;		/* Label text */
+	int   label;			/* Label surface mapping */
 
 	Uint flags;
-#define AG_TEXTBOX_MULTILINE	 0x0001
-#define AG_TEXTBOX_BLINK_ON	 0x0002	/* Cursor blink state (internal) */
-#define AG_TEXTBOX_PASSWORD	 0x0004	/* Password (hidden) input */
-#define AG_TEXTBOX_ABANDON_FOCUS 0x0008	/* Abandon focus on return */
-#define AG_TEXTBOX_COMBO	 0x0010	/* Used by AG_Combo */
-#define AG_TEXTBOX_HFILL	 0x0020
-#define AG_TEXTBOX_VFILL	 0x0040
-#define AG_TEXTBOX_EXPAND	 (AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL)
-#define AG_TEXTBOX_READONLY	 0x0100	/* Equivalent to WidgetDisable() */
-#define AG_TEXTBOX_INT_ONLY	 0x0200	/* Accepts only valid strtol() input */
-#define AG_TEXTBOX_FLT_ONLY	 0x0400	/* Accepts only valid strtof() input */
-#define AG_TEXTBOX_CATCH_TAB	 0x0800	/* Enter literal tabs into text
-					   instead of cycling focus */
-#define AG_TEXTBOX_CURSOR_MOVING 0x1000	/* Cursor is being moved */
-#define AG_TEXTBOX_NO_HFILL	 0x2000
+#define AG_TEXTBOX_MULTILINE     0x00001 /* Enable multiline edition */
+#define AG_TEXTBOX_PASSWORD      0x00004 /* Hide buffer contents */
+#define AG_TEXTBOX_ABANDON_FOCUS 0x00008 /* Lose focus on return */
+#define AG_TEXTBOX_COMBO         0x00010 /* Used by AG_Combo */
+#define AG_TEXTBOX_HFILL         0x00020
+#define AG_TEXTBOX_VFILL         0x00040
+#define AG_TEXTBOX_EXPAND        (AG_TEXTBOX_HFILL|AG_TEXTBOX_VFILL)
+#define AG_TEXTBOX_READONLY      0x00100 /* Equivalent to WidgetDisable() */
+#define AG_TEXTBOX_INT_ONLY      0x00200 /* Accepts only valid strtol() input */
+#define AG_TEXTBOX_FLT_ONLY      0x00400 /* Accepts only valid strtof() input */
+#define AG_TEXTBOX_CATCH_TAB     0x00800 /* Enter literal tabs into text
+					    instead of cycling focus */
+#define AG_TEXTBOX_CURSOR_MOVING 0x01000 /* Cursor is being moved */
+#define AG_TEXTBOX_NO_HFILL      0x02000
+#define AG_TEXTBOX_STATIC        0x04000 /* String binding will not change */
+#define AG_TEXTBOX_NOEMACS       0x08000 /* Disable emacs-style fn keys */
+#define AG_TEXTBOX_NOWORDSEEK    0x10000 /* Disable ALT+b/ALT+f emacs keys */
+#define AG_TEXTBOX_NOLATIN1      0x20000 /* Disable LATIN-1 combinations */
 
-	int wPre, hPre;			/* Size hint */
 	int boxPadX, boxPadY;		/* Padding around textbox */
 	int lblPadL, lblPadR;		/* Padding around label */
-	int wAvail, hAvail;		/* Available display area for text */
-	int wLbl;			/* Label width to display */
-	int pos;			/* Cursor position */
-	Uint32 compose;			/* For input composition */
-
-	int sel_x1, sel_x2;		/* Selection points */
-	int sel_edit;			/* Point being edited */
-
-	AG_Timeout delay_to;		/* Pre-repeat delay timer */
-	AG_Timeout repeat_to;		/* Repeat timer */
-	AG_Timeout cblink_to;		/* Cursor blink timer */
+	int wLbl, hLbl;			/* Label dimensions */
 	AG_Scrollbar *hBar, *vBar;	/* Scrollbars for MULTILINE */
-	int xMin, x, xMax;		/* Horizontal scrollbar range */
-	int yMin, y, yMax, yVis;	/* Vertical scrollbar range */
-
-	struct {
-		SDLKey key;		/* For key repeat */
-		SDLMod mod;
-		Uint32 unicode;
-	} repeat;
 } AG_Textbox;
+
+#define AGTEXTBOX(p) ((AG_Textbox *)(p))
+#ifdef _AGAR_INTERNAL
+#define TEXTBOX(p) AGTEXTBOX(p)
+#endif
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTextboxClass;
 
 AG_Textbox *AG_TextboxNew(void *, Uint, const char *);
-void	    AG_TextboxSizeHint(AG_Textbox *, const char *);
-void	    AG_TextboxSizeHintPixels(AG_Textbox *, Uint, Uint);
-#define     AG_TextboxPrescale AG_TextboxSizeHint
+#define     AG_TextboxSizeHint(tb,text) AG_EditableSizeHint((tb)->ed,(text))
+#define     AG_TextboxSizeHintPixels(tb,w,h) \
+            AG_EditableSizeHint((tb)->ed,(w),(h))
+void        AG_TextboxSetLabel(AG_Textbox *, const char *, ...);
+#define     AG_TextboxSetPassword(tb,flag) \
+            AG_EditableSetPassword((tb)->ed,(flag))
+#define     AG_TextboxSetStatic(tb,flag) AG_EditableSetStatic((tb)->ed,(flag))
 
-void	 AG_TextboxSetPassword(AG_Textbox *, int);
-void	 AG_TextboxSetLabel(AG_Textbox *, const char *, ...);
+#define AG_TextboxMapPosition(tb,x,y,pos,abs) \
+	AG_EditableMapPosition((tb)->ed,(x),(y),(pos),(abs))
+#define AG_TextboxMoveCursor(tb,x,y,abs) \
+	AG_EditableMoveCursor((tb)->ed,(x),(y),(abs))
+#define AG_TextboxGetCursorPos(tb) AG_EditableGetCursorPos((tb)->ed)
+#define AG_TextboxSetCursorPos(tb,pos) AG_EditableSetCursorPos((tb)->ed,(pos))
 
-void	 AG_TextboxPrintf(AG_Textbox *, const char *, ...);
-char	*AG_TextboxDupString(AG_Textbox *);
-size_t	 AG_TextboxCopyString(AG_Textbox *, char *, size_t)
-	                      BOUNDED_ATTRIBUTE(__string__, 2, 3);
-int	 AG_TextboxInt(AG_Textbox *);
+#define AG_TextboxSetString(tb,s) AG_EditableSetString((tb)->ed,(s))
+#define AG_TextboxSetStringUCS4(tb,s) AG_EditableSetStringUCS4((tb)->ed,(s))
+#define	AG_TextboxClearString(tb) AG_EditableSetString((tb)->ed,NULL)
+void    AG_TextboxPrintf(AG_Textbox *, const char *, ...);
+#define AG_TextboxDupString(tb) AG_EditableDupString((tb)->ed)
+#define AG_TextboxDupStringUCS4(tb) AG_EditableDupStringUCS4((tb)->ed)
+#define AG_TextboxCopyString(tb,p,len) AG_EditableCopyString((tb)->ed,(p),(len))
+#define AG_TextboxCopyStringUCS4(tb,p,len) \
+	AG_EditableCopyStringUCS4((tb)->ed,(p),(len))
 
-/* Legacy */
+#define AG_TextboxBufferChanged(tb) AG_EditableBufferChanged((tb)->ed)
+#define AG_TextboxInt(tb) AG_EditableInt((tb)->ed)
+#define AG_TextboxFlt(tb) AG_EditableFlt((tb)->ed)
+#define AG_TextboxDbl(tb) AG_EditableDbl((tb)->ed)
+
+/* Legacy interfaces */
+#define AG_TextboxPrescale AG_TextboxSizeHint
 #define AG_TextboxSetWriteable(tb,flag)	do {	\
 	if (flag) {				\
 	 	AG_WidgetEnable(tb);		\
@@ -89,7 +98,6 @@ int	 AG_TextboxInt(AG_Textbox *);
 		AG_WidgetDisable(tb);		\
 	}					\
 } while (0)
-
 __END_DECLS
 
 #include "close_code.h"

@@ -34,7 +34,7 @@
 #include <core/config.h>
 
 #include "widget.h"
-#include "textbox.h"
+#include "editable.h"
 #include "keymap.h"
 #include "unicode.h"
 
@@ -45,155 +45,183 @@
 static AG_Mutex killRingLock = AG_MUTEX_INITIALIZER;
 #endif
 static Uint32  *killRing = NULL;
-static Uint     killRingLen = 0;
+static size_t	killRingLen = 0;
 
 static int
-InsertUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 ch,
-    Uint32 *ucs4, int len, int lenMax)
+InsertUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 ch,
+    Uint32 *ucs, int len, int bufSize)
 {
 	int unicodeKbd = SDL_EnableUNICODE(-1);
 	Uint32 ins[3];
 	int i, nins;
 	Uint32 uch = ch;
 
+	if (AG_WidgetDisabled(ed) || keysym == 0)
+		return (0);
+
 	if (!unicodeKbd) {
 		uch = AG_ApplyModifiersASCII((Uint32)keysym, keymod);
 	}
+	if (!(ed->flags & AG_EDITABLE_NOLATIN1)) {
+		for (i = 0; ; i++) {
+			const struct ag_key_mapping *km = &agKeymapLATIN1[i];
+
+			if (keysym == km->key) {
+				if (((keymod & KMOD_ALT) &&
+				     (keymod & KMOD_SHIFT) &&
+				     (km->modmask == (KMOD_ALT|KMOD_SHIFT)))) {
+					uch = km->unicode;
+					break;
+				} else if (keymod & KMOD_ALT &&
+				    km->modmask == KMOD_ALT) {
+					uch = km->unicode;
+					break;
+				}
+			} else if (km->key == SDLK_LAST) {
+				break;
+			}
+		}
+	}
+	
 	if (uch == 0) { return (0); }
 	if (uch == '\r') { uch = '\n'; }
 
 	if (AG_Bool(agConfig,"input.composition")) {
-		if ((nins = AG_KeyInputCompose(tbox, uch, ins)) == 0)
+		if ((nins = AG_KeyInputCompose(ed, uch, ins)) == 0)
 			return (0);
 	} else {
 		ins[0] = uch;
 		nins = 1;
 	}
-	if (len+nins >= lenMax/sizeof(Uint32)) {
-		return (0);
-	}
 	ins[nins] = '\0';
 
-	if (tbox->pos == len) {					/* Append */
-		if (unicodeKbd) {
-			for (i = 0; i < nins; i++)
-				ucs4[len+i] = ins[i];
-		} else {
-			if (keysym == 0)
-				return (0);
-			for (i = 0; i < nins; i++)
-				ucs4[len+i] = ins[i];
-		}
-#if 0
-		if (tbox->xMax >= tbox->wAvail) {
-			AG_TextSizeUCS4(ins, &xInc, NULL);
-			tbox->x += xInc;
-		}
-#endif
+	/* We need the expanded UTF-8 length to check bounds. */
+	/* XXX optimize for STATIC */
+	if (AG_LengthUTF8FromUCS4(ucs) + 
+	    AG_LengthUTF8FromUCS4(ins) + 1 >= bufSize)
+		return (0);
+
+	if (ed->pos == len) {					/* Append */
+		for (i = 0; i < nins; i++)
+			ucs[len+i] = ins[i];
 	} else {						/* Insert */
-		memmove(&ucs4[tbox->pos+nins], &ucs4[tbox->pos],
-		       (len - tbox->pos)*sizeof(Uint32));
-		if (unicodeKbd) {
-			for (i = 0; i < nins; i++)
-				ucs4[tbox->pos+i] = ins[i];
-		} else {
-			if (keysym == 0)
-				return (0);
-			for (i = 0; i < nins; i++)
-				ucs4[len+i] = ins[i];
-		}
+		memmove(&ucs[ed->pos+nins], &ucs[ed->pos],
+		       (len - ed->pos)*sizeof(Uint32));
+		for (i = 0; i < nins; i++)
+			ucs[ed->pos+i] = ins[i];
 	}
-	ucs4[len+nins] = '\0';
-	tbox->pos += nins;
+	ucs[len+nins] = '\0';
+	ed->pos += nins;
 	return (1);
 }
 
 static int
-DeleteUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 unicode,
-    Uint32 *ucs4, int len, int lenMax)
+DeleteUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
+    Uint32 *ucs, int len, int bufSize)
 {
 	Uint32 *c;
 
+	if (AG_WidgetDisabled(ed))
+		return (0);
 	if (len == 0)
 		return (0);
 
 	switch (keysym) {
 	case SDLK_BACKSPACE:
-		if (tbox->pos == 0) {
+		if (ed->pos == 0) {
 			return (0);
 		}
-		if (tbox->pos == len) { 
-			ucs4[len-1] = '\0';
-			tbox->pos--;
+		if (ed->pos == len) { 
+			ucs[len-1] = '\0';
+			ed->pos--;
 			return (1);
 		}
-		tbox->pos--;
+		ed->pos--;
 		break;
 	case SDLK_DELETE:
-		if (tbox->pos == len) {
-			ucs4[len-1] = '\0';
-			tbox->pos--;
+		if (ed->pos == len) {
+			ucs[len-1] = '\0';
+			ed->pos--;
 			return (1);
 		}
 		break;
 	default:
 		break;
 	}
-	for (c = &ucs4[tbox->pos]; c[1] != '\0'; c++) {
+	for (c = &ucs[ed->pos]; c < &ucs[len+1]; c++) {
 		*c = c[1];
+		if (*c == '\0')
+			break;
 	}
-	*c = '\0';
 	return (1);
 }
 
 static int
-CursorEndUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    Uint32 *ucs4, int len, int lenMax)
+KillUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
 {
-	tbox->pos = len;
-	return (0);
-}
+	size_t lenKill = 0;
+	Uint32 *c;
+	
+	if (AG_WidgetDisabled(ed)) {
+		return (0);
+	}
+	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
+	    (keysym == SDLK_k) && (keymod & KMOD_CTRL))
+		return (0);
 
-static int
-KillUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    Uint32 *ucs4, int len, int lenMax)
-{
-	int lenPart;
-
-	if ((lenPart = len - tbox->pos) <= 0)
+	for (c = &ucs[ed->pos]; c < &ucs[len]; c++) {
+		if (*c == '\n') {
+			break;
+		}
+		lenKill++;
+	}
+	if (lenKill == 0)
 		return (0);
 
 	AG_MutexLock(&killRingLock);
-	killRing = Realloc(killRing, lenPart*4);
-	memcpy(killRing, &ucs4[tbox->pos], lenPart*4);
-	killRingLen = lenPart;
+	killRing = Realloc(killRing, (lenKill+1)*sizeof(Uint32));
+	memcpy(killRing, &ucs[ed->pos], lenKill*sizeof(Uint32));
+	killRing[lenKill] = '\0';
+	killRingLen = lenKill;
 	AG_MutexUnlock(&killRingLock);
 
-	ucs4[tbox->pos] = '\0';
+	if (ed->pos+lenKill == len) {
+		ucs[ed->pos] = '\0';
+	} else {
+		memmove(&ucs[ed->pos], &ucs[ed->pos+lenKill],
+		    (len-lenKill+1 - ed->pos)*sizeof(Uint32));
+	}
 	return (1);
 }
 
 static int
-YankUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    Uint32 *ucs4, int len, int lenMax)
+YankUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
 {
-	int nCopy;
+	if (AG_WidgetDisabled(ed)) {
+		return (0);
+	}
+	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
+	    (keysym == SDLK_y) && (keymod & KMOD_CTRL))
+		return (0);
 
 	AG_MutexLock(&killRingLock);
 	if (killRing == NULL) {
 		goto nochange;
 	}
-	if ((tbox->pos+killRingLen)*4 >= lenMax) {
-		nCopy = (lenMax-4) - (tbox->pos+killRingLen)*4;
-		if (nCopy < 0)
-			goto nochange;
-	} else {
-		nCopy = killRingLen*4;
+	if (AG_LengthUTF8FromUCS4(ucs) +
+	    AG_LengthUTF8FromUCS4(killRing) + 1 >= bufSize) {
+		/* TODO truncate */
+		goto nochange;
 	}
-
-	memcpy(&ucs4[tbox->pos], killRing, nCopy);
-	ucs4[tbox->pos + nCopy/4] = '\0';
-	tbox->pos += nCopy/4;
+	if (ed->pos < len) {
+		memmove(&ucs[ed->pos+killRingLen], &ucs[ed->pos],
+		    (len - ed->pos)*sizeof(Uint32));
+	}
+	memcpy(&ucs[ed->pos], killRing, killRingLen*sizeof(Uint32));
+	ucs[len+killRingLen] = '\0';
+	ed->pos += killRingLen;
 	AG_MutexUnlock(&killRingLock);
 	return (1);
 nochange:
@@ -202,84 +230,195 @@ nochange:
 }
 
 static int
-CursorRightUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    Uint32 *ucs4, int len, int lenMax)
-{
-	if (tbox->pos < len) {
-		tbox->pos++;
-	}
-	return (0);
-}
-
-static int
-WordBackUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    Uint32 *ucs4, int len, int lenMax)
+WordBackUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
 {
 	Uint32 *c;
 
-	if (tbox->pos > 1 && ucs4[tbox->pos-1] == ' ') {
-		tbox->pos -= 2;
+	if (ed->flags & AG_EDITABLE_NOWORDSEEK)
+		return (0);
+	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
+	    (keysym == SDLK_b) && (keymod & KMOD_ALT))
+		return (0);
+
+	if (ed->pos > 1 && ucs[ed->pos-1] == ' ') {
+		ed->pos -= 2;
 	}
-	for (c = &ucs4[tbox->pos];
-	     c > &ucs4[0] && *c != ' ';
-	     c--, tbox->pos--)
+	for (c = &ucs[ed->pos];
+	     c > &ucs[0] && *c != ' ';
+	     c--, ed->pos--)
 		;;
 	if (*c == ' ') {
-		tbox->pos++;
+		ed->pos++;
 	}
+	ed->flags |= AG_EDITABLE_MARKPREF;
 	return (0);
 }
 
 static int
-WordForwUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    Uint32 *ucs4, int len, int lenMax)
+WordForwUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
+{
+	Uint32 *c;
+	
+	if (ed->flags & AG_EDITABLE_NOWORDSEEK)
+		return (0);
+	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
+	    (keysym == SDLK_f) && (keymod & KMOD_ALT))
+		return (0);
+
+	if (ed->pos == len) {
+		return (0);
+	}
+	if (len > 1 && ucs[ed->pos] == ' ') {
+		ed->pos++;
+	}
+	for (c = &ucs[ed->pos];
+	     *c != '\0' && *c != ' ';
+	     c++, ed->pos++)
+		;;
+	ed->flags |= AG_EDITABLE_MARKPREF;
+	return (0);
+}
+
+static int
+CursorHomeUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
 {
 	Uint32 *c;
 
-	if (tbox->pos == len) {
-		return (1);
+	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
+	    (keysym == SDLK_a) && (keymod & KMOD_CTRL)) {
+		return (0);
 	}
-	if (len > 1 && ucs4[tbox->pos] == ' ') {
-		tbox->pos++;
+	if (ed->flags & AG_EDITABLE_MULTILINE) {
+		if (ed->pos == 0) {
+			return (0);
+		}
+		for (c = &ucs[ed->pos-1];
+		     c >= &ucs[0] && ed->pos >= 0;
+		     c--, ed->pos--) {
+			if (*c == '\n')
+				break;
+		}
+	} else {
+		ed->pos = 0;
 	}
-	for (c = &ucs4[tbox->pos];
-	     *c != '\0' && *c != ' ';
-	     c++, tbox->pos++)
-		;;
+	ed->flags |= AG_EDITABLE_MARKPREF;
 	return (0);
 }
 
 static int
-CursorHomeUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    Uint32 *ucs4, int len, int lenMax)
+CursorEndUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
 {
-	tbox->pos = 0;
+	Uint32 *c;
+
+	if ((ed->flags & AG_EDITABLE_NOEMACS) &&
+	    (keysym == SDLK_e) && (keymod & KMOD_CTRL)) {
+		return (0);
+	}
+	if (ed->flags & AG_EDITABLE_MULTILINE) {
+		if (ed->pos == len || ucs[ed->pos] == '\n') {
+			return (0);
+		}
+		for (c = &ucs[ed->pos+1];
+		     c <= &ucs[len] && ed->pos <= len;
+		     c++, ed->pos++) {
+			if (*c == '\n') {
+				ed->pos++;
+				break;
+			}
+		}
+		if (ed->pos > len) {
+			ed->pos = len;
+		}
+	} else {
+		ed->pos = len;
+	}
+	ed->flags |= AG_EDITABLE_MARKPREF;
 	return (0);
 }
 
 static int
-CursorLeftUTF8(AG_Textbox *tbox, SDLKey keysym, int keymod, Uint32 uch,
-    Uint32 *ucs4, int len, int lenMax)
+CursorLeftUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
 {
-	if (--tbox->pos < 1) {
-		tbox->pos = 0;
+	if (--ed->pos < 1) {
+		ed->pos = 0;
 	}
+	ed->flags |= AG_EDITABLE_MARKPREF;
+	return (0);
+}
+
+static int
+CursorRightUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
+{
+	if (ed->pos < len) {
+		ed->pos++;
+	}
+	ed->flags |= AG_EDITABLE_MARKPREF;
+	return (0);
+}
+
+static int
+CursorUpUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
+{
+	AG_EditableMoveCursor(ed, ed->xCursPref,
+	    (ed->yCurs - ed->y - 1)*agTextFontLineSkip + 1,
+	    1);
+	return (0);
+}
+
+static int
+CursorDownUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
+{
+	AG_EditableMoveCursor(ed, ed->xCursPref,
+	    (ed->yCurs - ed->y + 1)*agTextFontLineSkip + 1,
+	    1);
+	return (0);
+}
+
+static int
+PageUpUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
+{
+	AG_EditableMoveCursor(ed, ed->xCurs,
+	    (ed->yCurs - ed->y - ed->yVis)*agTextFontLineSkip + 1,
+	    1);
+	return (0);
+}
+
+static int
+PageDownUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
+    Uint32 *ucs, int len, int bufSize)
+{
+	AG_EditableMoveCursor(ed, ed->xCurs,
+	    (ed->yCurs - ed->y + ed->yVis)*agTextFontLineSkip + 1,
+	    1);
 	return (0);
 }
 
 const struct ag_keycode_utf8 agKeymapUTF8[] = {
 	{ SDLK_HOME,		0,		CursorHomeUTF8 },
 	{ SDLK_a,		KMOD_CTRL,	CursorHomeUTF8 },
-	{ SDLK_LEFT,		0,		CursorLeftUTF8 },
-	{ SDLK_BACKSPACE,	0,		DeleteUTF8 },
-	{ SDLK_DELETE,		0,		DeleteUTF8 },
 	{ SDLK_END,		0,		CursorEndUTF8 },
 	{ SDLK_e,		KMOD_CTRL,	CursorEndUTF8 },
+	{ SDLK_LEFT,		0,		CursorLeftUTF8 },
+	{ SDLK_RIGHT,		0,		CursorRightUTF8 },
+	{ SDLK_UP,		0,		CursorUpUTF8 },
+	{ SDLK_DOWN,		0,		CursorDownUTF8 },
+	{ SDLK_PAGEUP,		0,		PageUpUTF8 },
+	{ SDLK_PAGEDOWN,	0,		PageDownUTF8 },
+	{ SDLK_BACKSPACE,	0,		DeleteUTF8 },
+	{ SDLK_DELETE,		0,		DeleteUTF8 },
 	{ SDLK_k,		KMOD_CTRL,	KillUTF8 },
 	{ SDLK_y,		KMOD_CTRL,	YankUTF8 },
 	{ SDLK_b,		KMOD_ALT,	WordBackUTF8 },
 	{ SDLK_f,		KMOD_ALT,	WordForwUTF8 },
-	{ SDLK_RIGHT,		0,		CursorRightUTF8 },
 	{ SDLK_LAST,		0,		InsertUTF8 },
 };
 #endif /* UTF8 */
