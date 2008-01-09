@@ -106,8 +106,6 @@ double   AG_EditableDbl(AG_Editable *);
 	}					\
 } while (0)
 
-__END_DECLS
-
 static __inline__ void
 AG_EditableBufferChanged(AG_Editable *ed)
 {
@@ -119,5 +117,7 @@ AG_EditableBufferChanged(AG_Editable *ed)
 	}
 	AG_ObjectUnlock(ed);
 }
+__END_DECLS
+
 #include "close_code.h"
 #endif /* _AGAR_WIDGET_EDITABLE_H_ */
