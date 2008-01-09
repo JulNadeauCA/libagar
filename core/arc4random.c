@@ -34,6 +34,9 @@
 
 #include <fcntl.h>
 #include <stdlib.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 struct arc4_stream {
 	Uint8 i;
