@@ -291,7 +291,7 @@ Init(void *obj)
 	fsu->value = 0.0;
 	fsu->input = AG_TextboxNew(fsu, AG_TEXTBOX_FLT_ONLY, NULL);
 	fsu->writeable = 1;
-	Strlcpy(fsu->format, "%g", sizeof(fsu->format));
+	Strlcpy(fsu->format, "%.02f", sizeof(fsu->format));
 	AG_TextboxSizeHint(fsu->input, "88.88");
 	
 	fsu->unit = AG_FindUnit("identity");
