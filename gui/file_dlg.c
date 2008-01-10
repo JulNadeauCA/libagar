@@ -335,7 +335,7 @@ FileSelected(AG_Event *event)
 				    == NULL) {
 					continue;
 				}
-				if (strcasecmp(ftext, ext) == 0)
+				if (Strcasecmp(ftext, ext) == 0)
 					break;
 			}
 			if (i < ft->nexts) {

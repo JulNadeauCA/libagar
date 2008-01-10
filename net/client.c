@@ -548,10 +548,10 @@ NC_Connect(NC_Session *client, const char *host, const char *port,
 			    (rv = AG_Strsep(&s, ":=")) == NULL)
 				continue;
 			
-			if (strcasecmp(lv, "host") == 0) host = rv;
-			if (strcasecmp(lv, "port") == 0) port = rv;
-			if (strcasecmp(lv, "user") == 0) user = rv;
-			if (strcasecmp(lv, "pass") == 0) pass = rv;
+			if (Strcasecmp(lv, "host") == 0) host = rv;
+			if (Strcasecmp(lv, "port") == 0) port = rv;
+			if (Strcasecmp(lv, "user") == 0) user = rv;
+			if (Strcasecmp(lv, "pass") == 0) pass = rv;
 		}
 	}
 
