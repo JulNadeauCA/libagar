@@ -9,9 +9,7 @@ typedef struct animal {
 	AG_Timeout time;		/* Timer */
 } Animal;
 
-__BEGIN_DECLS
 extern AG_ObjectClass AnimalClass;
 Animal *AnimalNew(void *, const char *);
-__END_DECLS
 
 #include "close_code.h"
