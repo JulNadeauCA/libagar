@@ -821,14 +821,18 @@ MouseButtonDown(AG_Event *event)
 		ed->flags |= AG_EDITABLE_MARKPREF;
 		break;
 	case SDL_BUTTON_WHEELUP:
-		ed->flags |= AG_EDITABLE_NOSCROLL_ONCE;
-		ed->y -= AG_WidgetScrollDelta(&ed->wheelTicks);
-		if (ed->y < 0) { ed->y = 0; }
+		if (ed->flags & AG_EDITABLE_MULTILINE) {
+			ed->flags |= AG_EDITABLE_NOSCROLL_ONCE;
+			ed->y -= AG_WidgetScrollDelta(&ed->wheelTicks);
+			if (ed->y < 0) { ed->y = 0; }
+		}
 		break;
 	case SDL_BUTTON_WHEELDOWN:
-		ed->flags |= AG_EDITABLE_NOSCROLL_ONCE;
-		ed->y += AG_WidgetScrollDelta(&ed->wheelTicks);
-		ed->y = MIN(ed->y, ed->yMax - ed->yVis);
+		if (ed->flags & AG_EDITABLE_MULTILINE) {
+			ed->flags |= AG_EDITABLE_NOSCROLL_ONCE;
+			ed->y += AG_WidgetScrollDelta(&ed->wheelTicks);
+			ed->y = MIN(ed->y, ed->yMax - ed->yVis);
+		}
 		break;
 	default:
 		break;
