@@ -5,7 +5,7 @@ PROJECT=	"objprops"
 PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"49C33F82-EC4D-4993-BA20-F64F80994353"
-PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
+PROG_LINKS=	ag_core ag_gui ag_dev pthreads SDL SDLmain opengl freetype
 
 PROG=	objprops
 SRCS=	objprops.c
