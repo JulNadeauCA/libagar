@@ -536,8 +536,8 @@ SelectedType(AG_Event *event)
 		case AG_FILEDLG_STRING:
 			tbox = AG_TextboxNew(fd->optsCtr, AG_TEXTBOX_HFILL,
 			    fo->descr);
-			AG_WidgetBindString(tbox, "string",
-			    fo->data.s, sizeof(fo->data.s));
+			AG_TextboxBindUTF8(tbox, fo->data.s,
+			    sizeof(fo->data.s));
 			break;
 		default:
 			break;

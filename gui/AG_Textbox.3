@@ -52,6 +52,15 @@ multiline mode.
 .Ft "AG_Textbox *"
 .Fn AG_TextboxNew "AG_Widget *parent" "Uint flags" "const char *label"
 .Pp
+.Ft "void"
+.Fn AG_TextboxBindUTF8 "AG_Textbox *textbox" "char *buffer" "size_t bufferSize"
+.Pp
+.Ft "void"
+.Fn AG_TextboxBindASCII "AG_Textbox *textbox" "char *buffer" "size_t bufferSize"
+.Pp
+.Ft void
+.Fn AG_TextboxSetStatic "AG_Textbox *textbox" "int enable"
+.Pp
 .Ft void
 .Fn AG_TextboxSetPassword "AG_Textbox *textbox" "int password"
 .Pp
@@ -123,9 +132,26 @@ Disable traditional LATIN-1 key combinations.
 .El
 .Pp
 The
+.Fn AG_TextboxBindUTF8
+and
+.Fn AG_TextboxBindASCII
+functions bind the textbox to a text buffer in UTF-8 or plain ASCII encoding,
+respectively.
+The
+.Fa bufferSize
+argument indicates the complete size of the buffer in bytes.
+.Pp
+The
+.Fn AG_TextboxSetStatic
+function enables or disables static optimizations at runtime (see
+.Dv AG_TEXTBOX_STATIC
+flag description).
+.Pp
+.Pp
+The
 .Fn AG_TextboxSetPassword
-function enables (1) or disables (0) password-type input, where characters are
-substituted for
+function enables/disables password-type input, where characters are substituted
+for
 .Sq *
 in the display.
 .Pp
@@ -323,7 +349,7 @@ char name[32];
 AG_Textbox *tb;
 
 tb = AG_TextboxNew(parent, 0, "Name: ");
-AG_WidgetBindString(tb, "string", name, sizeof(name));
+AG_TextboxBindUTF8(tb, name, sizeof(name));
 .Ed
 .Pp
 As is the case with all widgets, a default binding (residing in the widget

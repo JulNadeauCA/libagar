@@ -95,7 +95,7 @@ ComputeSquaredSineConstants(void)
 		                                    (Jmax*Jmax) )) {
 			/* Neither F nor Amax are achievable. */
 			which = "1.3";
-			Ts = cbrt( (SC_PI*L)/(4.0*Jmax) );
+			Ts = pow( (SC_PI*L)/(4.0*Jmax), 1.0/3.0 );
 			Ta = 2.0*Ts;
 			To = Ta;
 		} else {
@@ -115,7 +115,7 @@ ComputeSquaredSineConstants(void)
 		} else if (L < sqrt( (2.0*SC_PI*(F*F*F))/Jmax )) {
 			/* Neither F nor Amax are achievable. */
 			which = "2.2";
-			Ts = cbrt( (SC_PI*L)/(4.0*Jmax) );
+			Ts = pow( (SC_PI*L)/(4.0*Jmax), 1.0/3.0 );
 			Ta = 2.0*Ts;
 			To = Ta;
 		} else {

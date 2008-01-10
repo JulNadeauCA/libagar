@@ -106,7 +106,7 @@ Init(void *obj)
 	ts->flags = 0;
 	ts->texname[0] = '\0';
 
-	AG_WidgetBind(ts, "texture-name", AG_WIDGET_STRING, ts->texname,
+	AG_WidgetBindString(ts, "texture-name", ts->texname,
 	    sizeof(ts->texname));
 }
 

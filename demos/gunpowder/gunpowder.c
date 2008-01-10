@@ -109,7 +109,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	if (AG_InitVideo(250, 170, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitVideo(350, 170, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}

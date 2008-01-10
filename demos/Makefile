@@ -55,7 +55,13 @@ proj:
 		(cd $$D && ${MAKE} proj); \
 	done
 
-.PHONY: clean cleandir install deinstall depend configure configure-scripts prereq proj
+proj-vs2005:
+	for D in ${SUBDIR}; do \
+		echo "==> $$D"; \
+		(cd $$D && unzip ProjectFiles/vs2005-windows-i386.zip); \
+	done
+
+.PHONY: clean cleandir install deinstall depend configure configure-scripts prereq proj proj-vs2005
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk

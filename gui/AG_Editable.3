@@ -52,6 +52,12 @@ It allows the user to edit UTF-8 encoded text in single-line or multi-line mode.
 .Ft "AG_Editable *"
 .Fn AG_EditableNew "AG_Widget *parent" "Uint flags"
 .Pp
+.Ft "void"
+.Fn AG_EditableBindUTF8 "AG_Editable *ed" "char *buffer" "size_t bufferSize"
+.Pp
+.Ft "void"
+.Fn AG_EditableBindASCII "AG_Editable *ed" "char *buffer" "size_t bufferSize"
+.Pp
 .Ft void
 .Fn AG_EditableSetStatic "AG_Editable *ed" "int enable"
 .Pp
@@ -128,6 +134,16 @@ LATIN-1 combinations.
 .It AG_EDITABLE_NOLATIN1
 Disable traditional LATIN-1 key combinations.
 .El
+.Pp
+The
+.Fn AG_EditableBindUTF8
+and
+.Fn AG_EditableBindASCII
+functions bind the widget to a text buffer in UTF-8 or plain ASCII encoding,
+respectively.
+The
+.Fa bufferSize
+argument indicates the complete size of the buffer in bytes.
 .Pp
 The
 .Fn AG_EditableSetStatic
@@ -341,7 +357,7 @@ char name[32];
 AG_Editable *ed;
 
 ed = AG_EditableNew(parent, 0);
-AG_WidgetBindString(ed, "string", name, sizeof(name));
+AG_EditableBindUTF8(ed, name, sizeof(name));
 .Ed
 .Pp
 See

@@ -13,6 +13,11 @@
 
 #define AG_EDITABLE_STRING_MAX 1024
 
+enum ag_editable_encoding {
+	AG_ENCODING_UTF8,
+	AG_ENCODING_ASCII
+};
+
 typedef struct ag_editable {
 	struct ag_widget wid;
 	
@@ -37,6 +42,7 @@ typedef struct ag_editable {
 #define AG_EDITABLE_NOWORDSEEK    0x10000 /* Disable ALT+b/ALT+f emacs keys */
 #define AG_EDITABLE_NOLATIN1      0x20000 /* Disable LATIN-1 combinations */
 
+	enum ag_editable_encoding encoding;  /* Character set of buffer */
 	char string[AG_EDITABLE_STRING_MAX]; /* Default string binding */
 	int wPre, hPre;			/* Size hint */
 	int pos;			/* Cursor position */
@@ -73,6 +79,9 @@ __BEGIN_DECLS
 extern AG_WidgetClass agEditableClass;
 
 AG_Editable *AG_EditableNew(void *, Uint);
+void         AG_EditableBindUTF8(AG_Editable *, char *, size_t);
+void         AG_EditableBindASCII(AG_Editable *, char *, size_t);
+
 void         AG_EditableSizeHint(AG_Editable *, const char *);
 void         AG_EditableSizeHintPixels(AG_Editable *, Uint, Uint);
 #define      AG_EditablePrescale AG_EditableSizeHint

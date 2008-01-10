@@ -1524,12 +1524,11 @@ TileSettingsDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("Tile information: %s"), t->name);
 
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name: "));
-	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, t->name, sizeof(t->name));
+	AG_TextboxBindUTF8(tb, t->name, sizeof(t->name));
 	AG_WidgetFocus(tb);
 
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Class: "));
-	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, t->clname,
-	    sizeof(t->clname));
+	AG_TextboxBindUTF8(tb, t->clname, sizeof(t->clname));
 
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size: "));
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);

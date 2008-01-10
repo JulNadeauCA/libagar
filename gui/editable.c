@@ -67,6 +67,26 @@ AG_EditableNew(void *parent, Uint flags)
 	return (ed);
 }
 
+/* Bind a UTF-8 text buffer to the widget. */
+void
+AG_EditableBindUTF8(AG_Editable *ed, char *buf, size_t bufSize)
+{
+	AG_ObjectLock(ed);
+	AG_WidgetBindString(ed, "string", buf, bufSize);
+	ed->encoding = AG_ENCODING_UTF8;
+	AG_ObjectUnlock(ed);
+}
+
+/* Bind an ASCII text buffer to the widget. */
+void
+AG_EditableBindASCII(AG_Editable *ed, char *buf, size_t bufSize)
+{
+	AG_ObjectLock(ed);
+	AG_WidgetBindString(ed, "string", buf, bufSize);
+	ed->encoding = AG_ENCODING_ASCII;
+	AG_ObjectUnlock(ed);
+}
+
 /* Enable or disable password entry mode. */
 void
 AG_EditableSetPassword(AG_Editable *ed, int pw)
@@ -89,7 +109,10 @@ AG_EditableSetStatic(AG_Editable *ed, int flag)
 		ed->flags |= AG_EDITABLE_STATIC;
 	} else {
 		ed->flags &= ~(AG_EDITABLE_STATIC);
+#if 0
+		/* XXX */
 		Free(ed->ucsBuf);
+#endif
 		ed->ucsBuf = NULL;
 		ed->ucsLen = 0;
 	}
@@ -1029,10 +1052,10 @@ Init(void *obj)
 
 	WIDGET(ed)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
 
-	AG_WidgetBind(ed, "string", AG_WIDGET_STRING, ed->string,
-	    sizeof(ed->string));
-
+	AG_WidgetBindString(ed, "string", ed->string, sizeof(ed->string));
 	ed->string[0] = '\0';
+	ed->encoding = AG_ENCODING_UTF8;
+
 	ed->flags = AG_EDITABLE_BLINK_ON|AG_EDITABLE_MARKPREF;
 	ed->pos = 0;
 	ed->sel_x1 = 0;

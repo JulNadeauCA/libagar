@@ -355,7 +355,7 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		AG_LabelNewStaticString(ntab, 0, _("Texture: "));
 		texsel = RG_TextureSelectorNew(ntab, tv->ts, 0);
 		WIDGET(texsel)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
-		AG_WidgetBind(texsel, "texture-name", AG_WIDGET_STRING,
+		AG_WidgetBindString(texsel, "texture-name",
 		    vge->fill_st.texture, sizeof(vge->fill_st.texture));
 	}
 
