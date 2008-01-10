@@ -6,8 +6,9 @@
 
 #include <agar/core/core_init.h>
 #include <agar/core/error.h>
+#include <agar/core/string_compat.h>
+
 #ifdef _USE_AGAR_STD
-# include <agar/core/string_compat.h>
 # include <agar/core/snprintf.h>
 # include <agar/core/vsnprintf.h>
 # include <agar/core/vasprintf.h>
