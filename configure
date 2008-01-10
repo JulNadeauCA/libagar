@@ -362,7 +362,7 @@ echo "#ifndef SYSCONFDIR" > config/sysconfdir.h
 echo "#define SYSCONFDIR \"${SYSCONFDIR}\"" >> config/sysconfdir.h
 echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 
-VERSION="1.3.2"
+VERSION="1.3.2rc1"
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION \"$VERSION\"" >> config/version.h
 echo "#endif" >> config/version.h
@@ -2592,9 +2592,11 @@ if [ "${HAVE_SDL}" != "yes" ]
 fi
 if [ "${enable_gui}" != "no" ]
  then
-SUBDIR_GUI_CONF="\${SUBDIR_GUI}"
-echo "SUBDIR_GUI_CONF=$SUBDIR_GUI_CONF" >>Makefile.config
-echo "mdefs[\"SUBDIR_GUI_CONF\"] = \"$SUBDIR_GUI_CONF\"" >>configure.lua
+ENABLE_GUI="1"
+echo "#ifndef ENABLE_GUI" > config/enable_gui.h
+echo "#define ENABLE_GUI \"$ENABLE_GUI\"" >> config/enable_gui.h
+echo "#endif" >> config/enable_gui.h
+echo "hdefs[\"ENABLE_GUI\"] = \"$ENABLE_GUI\"" >>configure.lua
 	if [ "${with_freetype}" != "no" ]
  then
 $ECHO_N "checking for FreeType (http://www.freetype.org)..."
@@ -2977,9 +2979,8 @@ echo "JPEG_LIBS=$JPEG_LIBS" >>Makefile.config
 echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 	fi
 else
-SUBDIR_GUI_CONF=""""
-echo "SUBDIR_GUI_CONF=$SUBDIR_GUI_CONF" >>Makefile.config
-echo "mdefs[\"SUBDIR_GUI_CONF\"] = \"$SUBDIR_GUI_CONF\"" >>configure.lua
+echo "#undef ENABLE_GUI" >config/enable_gui.h
+echo "hdefs[\"ENABLE_GUI\"] = nil" >>configure.lua
 echo "#undef HAVE_FREETYPE" >config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 FREETYPE_CFLAGS=""""
