@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,13 +22,249 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+ * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND TODD C. MILLER DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL TODD C. MILLER BE LIABLE
+ * FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 
 #include <core/core.h>
 
-#include "unicode.h"
-
 #include <string.h>
 #include <stdio.h>
+
+/*
+ * Copy src to string dst of size siz.  At most siz-1 characters
+ * will be copied.  Always NUL terminates (unless siz == 0).
+ * Returns strlen(src); if retval >= siz, truncation occurred.
+ */
+size_t
+AG_Strlcpy(char *dst, const char *src, size_t siz)
+{
+	char *d = dst;
+	const char *s = src;
+	size_t n = siz;
+
+	/* Copy as many bytes as will fit */
+	if (n != 0 && --n != 0) {
+		do {
+			if ((*d++ = *s++) == 0) {
+				break;
+			}
+		} while (--n != 0);
+	}
+
+	/* Not enough room in dst, add NUL and traverse rest of src */
+	if (n == 0) {
+		if (siz != 0)
+			*d = '\0';		/* NUL-terminate dst */
+		while (*s++)
+			;
+	}
+
+	return (s - src - 1);	/* count does not include NUL */
+}
+
+/* UCS-4 version of Strlcpy() */
+size_t
+AG_StrlcpyUCS4(Uint32 *dst, const Uint32 *src, size_t bytes)
+{
+	Uint32 *d = dst;
+	const Uint32 *s = src;
+	size_t n = bytes / sizeof(Uint32);
+
+	/* Copy as many characters as will fit. */
+	if (n != 0 && --n != 0) {
+		do {
+			if ((*d++ = *s++) == 0) {
+				break;
+			}
+		} while (--n != 0);
+	}
+
+	/* Not enough room in dst, add NUL and traverse rest of src. */
+	if (n == 0) {
+		if (bytes != 0) {
+			*d = '\0';			 /* NUL-terminate dst */
+		}
+		while (*s++)
+			;
+	}
+
+	return ((s - src - 1) * sizeof(Uint32));      /* Does not include NUL */
+}
+
+/*
+ * Appends src to string dst of size siz (unlike strncat, siz is the
+ * full size of dst, not space left).  At most siz-1 characters
+ * will be copied.  Always NUL terminates (unless siz <= strlen(dst)).
+ * Returns strlen(src) + MIN(siz, strlen(initial dst)).
+ * If retval >= siz, truncation occurred.
+ */
+size_t
+AG_Strlcat(char *dst, const char *src, size_t siz)
+{
+	char *d = dst;
+	const char *s = src;
+	size_t dlen, n = siz;
+
+	/* Find the end of dst and adjust bytes left but don't go past end */
+	while (n-- != 0 && *d != '\0') {
+		d++;
+	}
+	dlen = d - dst;
+	n = siz - dlen;
+
+	if (n == 0) {
+		return (dlen + strlen(s));
+	}
+	while (*s != '\0') {
+		if (n != 1) {
+			*d++ = *s;
+			n--;
+		}
+		s++;
+	}
+	*d = '\0';
+
+	return (dlen + (s - src));	/* count does not include NUL */
+}
+
+/* UCS-4 version of Strlcat() */
+size_t
+AG_StrlcatUCS4(Uint32 *dst, const Uint32 *src, size_t bytes)
+{
+	Uint32 *d = dst;
+	const Uint32 *s = src;
+	size_t siz = bytes / sizeof(Uint32);
+	size_t n = siz;
+	size_t dlen;
+
+	/* Find the end of dst and adjust bytes left but don't go past end. */
+	while (n-- != 0 && *d != '\0') {
+		d++;
+	}
+	dlen = d - dst;
+	n = siz - dlen;
+
+	if (n == 0) {
+		return ((dlen + AG_LengthUCS4(s))*sizeof(Uint32));
+	}
+	while (*s != '\0') {
+		if (n != 1) {
+			*d++ = *s;
+			n--;
+		}
+		s++;
+	}
+	*d = '\0';
+
+	return ((dlen + (s - src))*sizeof(Uint32));   /* Does not include NUL */
+}
+
+/*
+ * Get next token from string *stringp, where tokens are possibly-empty
+ * strings separated by characters from delim.  
+ *
+ * Writes NULs into the string at *stringp to end tokens.
+ * delim need not remain constant from call to call.
+ * On return, *stringp points past the last NUL written (if there might
+ * be further tokens), or is NULL (if there are definitely no more tokens).
+ *
+ * If *stringp is NULL, AG_Strsep returns NULL.
+ */
+char *
+AG_Strsep(char **stringp, const char *delim)
+{
+	char *s;
+	const char *spanp;
+	int c, sc;
+	char *tok;
+
+	if ((s = *stringp) == NULL) {
+		return (NULL);
+	}
+	for (tok = s;;) {
+		c = *s++;
+		spanp = delim;
+		do {
+			if ((sc = *spanp++) == c) {
+				if (c == 0) {
+					s = NULL;
+				} else {
+					s[-1] = 0;
+				}
+				*stringp = s;
+				return (tok);
+			}
+		} while (sc != 0);
+	}
+}
+
+/* UCS-4 version of Strsep() */
+Uint32 *
+AG_StrsepUCS4(Uint32 **stringp, const Uint32 *delim)
+{
+	Uint32 *s;
+	const Uint32 *spanp;
+	Uint32 c, sc;
+	Uint32 *tok;
+
+	if ((s = *stringp) == NULL) {
+		return (NULL);
+	}
+	for (tok = s;;) {
+		c = *s++;
+		spanp = delim;
+		do {
+			if ((sc = *spanp++) == c) {
+				if (c == 0) {
+					s = NULL;
+				} else {
+					s[-1] = 0;
+				}
+				*stringp = s;
+				return (tok);
+			}
+		} while (sc != 0);
+	}
+}
+
+/* Duplicate a string. */
+char *
+AG_Strdup(const char *s)
+{
+	size_t buflen;
+	char *ns;
+	
+	buflen = strlen(s)+1;
+	ns = Malloc(buflen);
+	memcpy(ns, s, buflen);
+	return (ns);
+}
+
+/* Duplicate a UCS-4 string. */
+Uint32 *
+AG_StrdupUCS4(const Uint32 *ucs)
+{
+	size_t buflen;
+	Uint32 *ns;
+	
+	buflen = (AG_LengthUCS4(ucs) + 1)*sizeof(Uint32);
+	ns = Malloc(buflen);
+	memcpy(ns, ucs, buflen);
+	return (ns);
+}
 
 /*
  * Returns a buffer containing a UCS-4 representation of the given
@@ -248,17 +484,3 @@ AG_ExportUnicode(enum ag_unicode_conv conv, char *dst, const Uint32 *ucs,
 		return (-1);
 	}
 }
-
-/* Duplicate a UCS-4 string. */
-Uint32 *
-AG_UCS4Dup(const Uint32 *ucs)
-{
-	size_t buflen;
-	Uint32 *ns;
-	
-	buflen = (AG_LengthUCS4(ucs) + 1)*sizeof(Uint32);
-	ns = Malloc(buflen);
-	memcpy(ns, ucs, buflen);
-	return (ns);
-}
-

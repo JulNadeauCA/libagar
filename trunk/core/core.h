@@ -90,8 +90,7 @@ typedef unsigned long Ulong;
 #include <core/error.h>
 #include <core/queue.h>
 
-#include <core/strlcpy.h>
-#include <core/strlcat.h>
+#include <core/string.h>
 #include <core/snprintf.h>
 #include <core/vsnprintf.h>
 #include <core/vasprintf.h>

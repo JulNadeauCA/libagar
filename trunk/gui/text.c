@@ -82,7 +82,6 @@
 #include "ucombo.h"
 #include "fspinbutton.h"
 #include "keymap.h"
-#include "unicode.h"
 #include "checkbox.h"
 
 #include <string.h>

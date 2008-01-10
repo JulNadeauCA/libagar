@@ -28,7 +28,6 @@
 #include "widget.h"
 #include "editable.h"
 #include "keymap.h"
-#include "unicode.h"
 
 /*
  * Traditional ISO-8859-1 keyboard input mapping to Unicode.

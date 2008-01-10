@@ -17,7 +17,6 @@
 # define Malloc(len) AG_Malloc(len)
 # define Free(p) AG_Free(p)
 # define Realloc(p,len) AG_Realloc((p),(len))
-# define Strdup(s) AG_Strdup(s)
 # define Snprintf AG_Snprintf
 # define Vsnprintf AG_Vsnprintf
 # define Vasprintf(msg, fmt, args) do {				\
@@ -43,7 +42,6 @@ extern int agDebugLvl;
 
 void		 AG_InitError(void);
 void		 AG_DestroyError(void);
-char		*AG_Strdup(const char *);
 const char	*AG_GetError(void);
 void		 AG_SetError(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
