@@ -344,9 +344,9 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 			lum2 = Fracf(yf);
 
 			if (thick == 1) {
-				focus = (1.0 - Fabs((lum1 - lum2)));
-				lum1 += 0.3*focus;
-				lum2 += 0.3*focus;
+				focus = (1.0f - Fabs((lum1 - lum2)));
+				lum1 += 0.3f*focus;
+				lum2 += 0.3f*focus;
 				AG_BLEND_RGBA2_CLIPPED(vg->su, x, (int)yf,
 				    r, g, b, (Uint8)(lum1*255),
 				    AG_ALPHA_OVERLAY);
@@ -421,9 +421,9 @@ VG_WuLinePrimitive(VG *vg, float x1p, float y1p, float x2p, float y2p,
 			lum2 = Fracf(xf);
 
 			if (thick == 1) {
-				focus = (1.0 - Fabs((lum1 - lum2)));
-				lum1 += 0.3*focus;
-				lum2 += 0.3*focus;
+				focus = (1.0f - Fabs((lum1 - lum2)));
+				lum1 += 0.3f*focus;
+				lum2 += 0.3f*focus;
 				AG_BLEND_RGBA2_CLIPPED(vg->su, (int)xf, y,
 				    r, g, b, (Uint8)(lum1*255),
 				    AG_ALPHA_OVERLAY);

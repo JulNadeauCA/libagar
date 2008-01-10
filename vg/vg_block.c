@@ -48,11 +48,11 @@ VG_BeginBlock(VG *vg, const char *name, int flags)
 	vgb = Malloc(sizeof(VG_Block));
 	Strlcpy(vgb->name, name, sizeof(vgb->name));
 	vgb->flags = flags;
-	vgb->pos.x = 0;
-	vgb->pos.y = 0;
-	vgb->origin.x = 0;
-	vgb->origin.y = 0;
-	vgb->theta = 0;
+	vgb->pos.x = 0.0f;
+	vgb->pos.y = 0.0f;
+	vgb->origin.x = 0.0f;
+	vgb->origin.y = 0.0f;
+	vgb->theta = 0.0f;
 	vgb->selected = 0;
 	TAILQ_INIT(&vgb->vges);
 
@@ -260,7 +260,7 @@ VG_BlockClosest(VG *vg, float x, float y)
 		}
 #if 0
 		if (o >= vg->norigin) {
-			VG_AddOrigin(vg, 0.0, 0.0, 0.125,
+			VG_AddOrigin(vg, 0.0, 0.0, 0.125f,
 			    SDL_MapRGB(vg->fmt, 200, 0, 0));
 		}
 		VG_Origin(vg, o, vg->origin[0].x+ix, vg->origin[0].y+iy);

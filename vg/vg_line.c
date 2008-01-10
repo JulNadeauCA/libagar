@@ -161,10 +161,10 @@ VG_ClosestLinePoint(VG *vg, float Ax, float Ay, float Bx, float By,
 
 	mag = VG_LineMagnitude(Bx, By, Ax, Ay);
 	u = ((*Px - Ax)*(Bx - Ax) + (*Py - Ay)*(By - Ay))/(mag*mag);
-	if (u < 0.0) {
+	if (u < 0.0f) {
 		xInt = Ax;
 		yInt = Ay;
-	} else if (u > 1.0) {
+	} else if (u > 1.0f) {
 		xInt = Bx;
 		yInt = By;
 	} else {
@@ -182,7 +182,7 @@ VG_LineIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	float d, dMin = AG_FLT_MAX;
 	float Ax, Ay, Bx, By, Cx, Cy;
-	float ix, iy, mx = 0.0, my = 0.0;
+	float ix, iy, mx = 0.0f, my = 0.0f;
 	int i;
 
 	switch (vge->type) {

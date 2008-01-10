@@ -119,10 +119,10 @@ MouseButtonDown(AG_Event *event)
 		vv->mouse.panning = 1;
 		break;
 	case SDL_BUTTON_WHEELDOWN:
-		VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale-1.0);
+		VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale-1.0f);
 		return;
 	case SDL_BUTTON_WHEELUP:
-		VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale+1.0);
+		VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale+1.0f);
 		return;
 	default:
 		break;
@@ -217,8 +217,8 @@ Init(void *obj)
 	vv->y = 0;
 	vv->status[0] = '\0';
 
-	vv->mouse.x = 0;
-	vv->mouse.y = 0;
+	vv->mouse.x = 0.0f;
+	vv->mouse.y = 0.0f;
 	vv->mouse.panning = 0;
 	vv->curtool = NULL;
 	vv->deftool = NULL;
@@ -375,11 +375,12 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 	} else {
 		vv->status[0] = '\0';
 	}
-
-//	if ((pwin = AG_WidgetParentWindow(vv)) != NULL) {
-//		agView->winToFocus = pwin;
-//		AG_WidgetFocus(vv);
-//	}
+#if 0
+	if ((pwin = AG_WidgetParentWindow(vv)) != NULL) {
+		agView->winToFocus = pwin;
+		AG_WidgetFocus(vv);
+	}
+#endif
 }
 
 VG_Tool *

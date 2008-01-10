@@ -40,7 +40,7 @@ VG_TextInit(VG *vg, VG_Element *vge)
 {
 	vge->vg_text.su = NULL;
 	vge->vg_text.text[0] = '\0';
-	vge->vg_text.angle = 0;
+	vge->vg_text.angle = 0.0f;
 	vge->vg_text.align = VG_ALIGN_MC;
 	vge->vg_text.nptrs = 0;
 }

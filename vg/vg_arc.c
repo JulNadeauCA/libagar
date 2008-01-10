@@ -35,10 +35,10 @@
 static void
 VG_ArcInit(VG *vg, VG_Element *vge)
 {
-	vge->vg_arc.w = 1.0;
-	vge->vg_arc.h = 1.0;
-	vge->vg_arc.s = 0.0;
-	vge->vg_arc.e = 360.0;
+	vge->vg_arc.w = 1.0f;
+	vge->vg_arc.h = 1.0f;
+	vge->vg_arc.s = 0.0f;
+	vge->vg_arc.e = 360.0f;
 }
 
 void
@@ -80,8 +80,8 @@ VG_ArcRender(VG *vg, VG_Element *vge)
 static void
 VG_ArcExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
-	r->x = vge->vtx[0].x - vge->vg_arc.w/2;
-	r->y = vge->vtx[0].y - vge->vg_arc.h/2;
+	r->x = vge->vtx[0].x - vge->vg_arc.w/2.0f;
+	r->y = vge->vtx[0].y - vge->vg_arc.h/2.0f;
 	r->w = vge->vg_arc.w;
 	r->h = vge->vg_arc.h;
 }

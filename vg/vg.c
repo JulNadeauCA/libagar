@@ -110,7 +110,7 @@ VG_Init(VG *vg, Uint flags)
 
 	Strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;
-	vg->scale = 1;
+	vg->scale = 1.0f;
 
 	if (flags & VG_DIRECT) {
 		vg->su = agView->v;
@@ -147,7 +147,7 @@ VG_Init(VG *vg, Uint flags)
 	vg->grid_color = SDL_MapRGB(vg->fmt, 128, 128, 128);
 	vg->selection_color = SDL_MapRGB(vg->fmt, 255, 255, 0);
 	vg->mouseover_color = SDL_MapRGB(vg->fmt, 200, 200, 0);
-	vg->grid_gap = 0.25;
+	vg->grid_gap = 0.25f;
 	vg->origin = Malloc(sizeof(VG_Vtx)*VG_NORIGINS);
 	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS);
 	vg->origin_color = Malloc(sizeof(Uint32)*VG_NORIGINS);
@@ -169,12 +169,12 @@ VG_Init(VG *vg, Uint flags)
 	for (i = 0; i < VG_NORIGINS; i++) {
 		vg->origin[i].x = 0;
 		vg->origin[i].y = 0;
-		vg->origin_radius[i] = 0.0625;
+		vg->origin_radius[i] = 0.0625f;
 		vg->origin_color[i] = SDL_MapRGB(vg->fmt, 0, 0, 180);
 	}
-	vg->origin_radius[0] = 0.25;
-	vg->origin_radius[1] = 0.125;
-	vg->origin_radius[2] = 0.075;
+	vg->origin_radius[0] = 0.25f;
+	vg->origin_radius[1] = 0.125f;
+	vg->origin_radius[2] = 0.075f;
 	vg->origin_color[0] = SDL_MapRGB(vg->fmt, 0, 200, 0);
 	vg->origin_color[1] = SDL_MapRGB(vg->fmt, 0, 150, 0);
 	vg->origin_color[2] = SDL_MapRGB(vg->fmt, 0, 80, 150);
