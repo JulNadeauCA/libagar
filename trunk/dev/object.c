@@ -179,11 +179,11 @@ PollEvents(AG_Event *event)
 				    (Ulong)ev->argv[i].li);
 				break;
 			case AG_EVARG_FLOAT:
-				Snprintf(arg, sizeof(arg), "<%g>",
+				Snprintf(arg, sizeof(arg), "<%.04f>",
 				    ev->argv[i].f);
 				break;
 			case AG_EVARG_DOUBLE:
-				Snprintf(arg, sizeof(arg), "<%g>",
+				Snprintf(arg, sizeof(arg), "<%.04f>",
 				    ev->argv[i].f);
 				break;
 			}
