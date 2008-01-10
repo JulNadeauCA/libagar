@@ -249,9 +249,15 @@ WidgetParams(AG_Event *event)
 		AG_SetEvent(tb, "textbox-postchg", UpdateWindowCaption,
 		    "%p", ww);
 
+#ifdef THREADS
 		lbl = AG_LabelNewPolledMT(nTab, AG_LABEL_HFILL,
 		    &OBJECT(ww)->lock,
 		    "Flags: <%[flags]>", &ww->flags);
+#else
+		lbl = AG_LabelNewPolled(nTab, AG_LABEL_HFILL,
+		    "Flags: <%[flags]>", &ww->flags);
+#endif
+
 		AG_SeparatorNewHoriz(nTab);
 		AG_CheckboxSetFromFlags(nTab, &ww->flags, flagDescr);
 		AG_SeparatorNewHoriz(nTab);

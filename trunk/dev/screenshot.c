@@ -291,8 +291,13 @@ DEV_ScreenshotUploader(void)
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
 		Strlcpy(status, _("Idle"), sizeof(status));
+#ifdef THREADS
 		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &xmit_lock,
 		    _("Status: %s."), &status);
+#else
+		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
+		    _("Status: %s."), &status);
+#endif
 		AG_LabelSizeHint(lbl, 1,
 		    _("Status: Transmitting frame XXXXXXXXXX"));
 
