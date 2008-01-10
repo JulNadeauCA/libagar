@@ -77,7 +77,7 @@ CreateStaticTable(void)
 		AG_TableAddRow(table, "%s:%d:%d", "Foo", i, i*2);
 		
 		/* Display a string and two floating point numbers. */
-		AG_TableAddRow(table, "%s:%.03f:%g", "Bar", 1.0/(float)i,
+		AG_TableAddRow(table, "%s:%.03f:%.02f", "Bar", 1.0/(float)i,
 		    2.0/3.0);
 		
 		/* Provide a custom cell function that returns text. */

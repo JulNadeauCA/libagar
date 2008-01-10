@@ -85,6 +85,16 @@ InsertUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 ch,
 	if (uch == 0) { return (0); }
 	if (uch == '\r') { uch = '\n'; }
 
+	switch (ed->encoding) {
+	case AG_ENCODING_UTF8:
+		break;
+	case AG_ENCODING_ASCII:
+		if (!isascii((int)uch)) {
+			return (0);
+		}
+		break;
+	}
+
 	if (AG_Bool(agConfig,"input.composition")) {
 		if ((nins = AG_KeyInputCompose(ed, uch, ins)) == 0)
 			return (0);
@@ -198,6 +208,8 @@ static int
 YankUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
     Uint32 *ucs, int len, int bufSize)
 {
+	int i;
+
 	if (AG_WidgetDisabled(ed)) {
 		return (0);
 	}
@@ -214,6 +226,17 @@ YankUTF8(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 uch,
 		/* TODO truncate */
 		goto nochange;
 	}
+	switch (ed->encoding) {
+	case AG_ENCODING_UTF8:
+		break;
+	case AG_ENCODING_ASCII:
+		for (i = 0; i < killRingLen; i++) {
+			if (!isascii((int)killRing[i]))
+				goto nochange;
+		}
+		break;
+	}
+
 	if (ed->pos < len) {
 		memmove(&ucs[ed->pos+killRingLen], &ucs[ed->pos],
 		    (len - ed->pos)*sizeof(Uint32));

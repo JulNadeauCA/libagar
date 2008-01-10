@@ -197,8 +197,7 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name: "));
-	AG_WidgetBind(tb, "string", AG_WIDGET_STRING, tex->name,
-	    sizeof(tex->name));
+	AG_TextboxBindUTF8(tb, tex->name, sizeof(tex->name));
 	AG_WidgetFocus(tb);
 
 	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL|AG_COMBO_FOCUS,

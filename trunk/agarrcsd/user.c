@@ -321,23 +321,23 @@ Edit(void *p)
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 1);
 
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Name: ");
-	AG_WidgetBindString(tb, "string", u->name, sizeof(u->name));
+	AG_TextboxBindUTF8(tb, u->name, sizeof(u->name));
 	AG_WidgetFocus(tb);
 
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Password: ");
 	AG_TextboxSetPassword(tb, 1);
-	AG_WidgetBindString(tb, "string", u->pass, sizeof(u->pass));
+	AG_TextboxBindUTF8(tb, u->pass, sizeof(u->pass));
 	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Real name: ");
-	AG_WidgetBindString(tb, "string", u->real_name, sizeof(u->real_name));
+	AG_TextboxBindUTF8(tb, u->real_name, sizeof(u->real_name));
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "E-mail address: ");
-	AG_WidgetBindString(tb, "string", u->email, sizeof(u->email));
+	AG_TextboxBindUTF8(tb, u->email, sizeof(u->email));
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Language (ISO639): ");
-	AG_WidgetBindString(tb, "string", u->lang, sizeof(u->lang));
+	AG_TextboxBindUTF8(tb, u->lang, sizeof(u->lang));
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Country (ISO3166): ");
-	AG_WidgetBindString(tb, "string", u->country, sizeof(u->country));
+	AG_TextboxBindUTF8(tb, u->country, sizeof(u->country));
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Comments: ");
-	AG_WidgetBindString(tb, "string", u->comments, sizeof(u->comments));
+	AG_TextboxBindUTF8(tb, u->comments, sizeof(u->comments));
 
 	cb = AG_CheckboxNew(win, 0, "Write access");
 	AG_WidgetBindFlag(cb, "state", &u->flags, USER_WRITE);

@@ -216,7 +216,7 @@ WidgetParams(AG_Event *event)
 		};
 
 		tb = AG_TextboxNew(nTab, AG_TEXTBOX_HFILL, _("Name: "));
-		AG_WidgetBindString(tb, "string", OBJECT(wid)->name,
+		AG_TextboxBindUTF8(tb, OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
 		AG_LabelNewStatic(nTab, 0, _("Class: %s"),
 		    OBJECT(wid)->cls->name);
@@ -244,8 +244,7 @@ WidgetParams(AG_Event *event)
 		nTab = AG_NotebookAddTab(nb, _("Window"), AG_BOX_VERT);
 
 		tb = AG_TextboxNew(nTab, AG_TEXTBOX_HFILL, _("Caption: "));
-		AG_WidgetBindString(tb, "string", ww->caption,
-		    sizeof(ww->caption));
+		AG_TextboxBindUTF8(tb, ww->caption, sizeof(ww->caption));
 		AG_SetEvent(tb, "textbox-postchg", UpdateWindowCaption,
 		    "%p", ww);
 

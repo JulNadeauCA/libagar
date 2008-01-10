@@ -108,6 +108,16 @@ InsertASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
 	ch = (char)AG_ApplyModifiersASCII((Uint32)keysym, keymod);
 	if (ch == 0) { return (0); }
 	if (ch == '\r') { ch = '\n'; }
+	
+	switch (ed->encoding) {
+	case AG_ENCODING_UTF8:
+		break;
+	case AG_ENCODING_ASCII:
+		if (!isascii((int)ch)) {
+			return (0);
+		}
+		break;
+	}
 
 	if (AG_Bool(agConfig,"input.composition")) {
 		if ((nins = AG_KeyInputCompose(ed, (Uint32)ch, ins)) == 0)

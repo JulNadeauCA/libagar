@@ -69,6 +69,9 @@ void        AG_TextboxSetLabel(AG_Textbox *, const char *, ...);
 #define     AG_TextboxSetFltOnly(tb,flag) AG_EditableSetFltOnly((tb)->ed,(flag))
 #define     AG_TextboxSetIntOnly(tb,flag) AG_EditableSetIntOnly((tb)->ed,(flag))
 
+#define AG_TextboxBindUTF8(tb,p,sz) AG_EditableBindUTF8((tb)->ed,(p),(sz))
+#define AG_TextboxBindASCII(tb,p,sz) AG_EditableBindASCII((tb)->ed,(p),(sz))
+
 #define AG_TextboxMapPosition(tb,x,y,pos,abs) \
 	AG_EditableMapPosition((tb)->ed,(x),(y),(pos),(abs))
 #define AG_TextboxMoveCursor(tb,x,y,abs) \

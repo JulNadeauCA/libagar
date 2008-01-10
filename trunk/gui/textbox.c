@@ -339,15 +339,13 @@ Enabled(AG_Event *event)
 	AG_WidgetEnable(tbox->ed);
 }
 
+#ifdef DEBUG
 static void
 Bound(AG_Event *event)
 {
-	AG_Textbox *tbox = AG_SELF();
-	AG_WidgetBinding *binding = AG_PTR(1);
-
-	if (strcmp(binding->name, "string") == 0)
-		AG_WidgetCopyBinding(tbox->ed, "string", binding);
+	AG_FatalError("Use AG_TextboxBindUTF8() or AG_TextboxBindASCII()");
 }
+#endif
 
 static void
 EditablePreChg(AG_Event *event)
@@ -390,7 +388,9 @@ Init(void *obj)
 	AG_SetEvent(tbox, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(tbox, "widget-disabled", Disabled, NULL);
 	AG_SetEvent(tbox, "widget-enabled", Enabled, NULL);
+#ifdef DEBUG
 	AG_SetEvent(tbox, "widget-bound", Bound, NULL);
+#endif
 	AG_SetEvent(tbox->ed, "editable-prechg", EditablePreChg, "%p", tbox);
 	AG_SetEvent(tbox->ed, "editable-postchg", EditablePostChg, "%p", tbox);
 	AG_SetEvent(tbox->ed, "editable-return", EditableReturn, "%p", tbox);

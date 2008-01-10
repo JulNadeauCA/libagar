@@ -1160,13 +1160,12 @@ InsertTileDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("Create new tile"));
 	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name: "));
-	AG_WidgetBindString(tb, "string", ins_tile_name, sizeof(ins_tile_name));
+	AG_TextboxBindUTF8(tb, ins_tile_name, sizeof(ins_tile_name));
 	AG_SetEvent(tb, "textbox-return", InsertTile, "%p,%p", win, ts);
 	AG_WidgetFocus(tb);
 
 	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT|AG_COMBO_HFILL, _("Class: "));
-	AG_WidgetBindString(com->tbox, "string", ins_tile_class,
-	    sizeof(ins_tile_class));
+	AG_TextboxBindUTF8(com->tbox, ins_tile_class, sizeof(ins_tile_class));
 	if (strcmp(ts->tmpl, "Terrain") == 0) {
 		AG_TlistAdd(com->list, NULL, "Ground");
 		AG_TlistAdd(com->list, NULL, "Rock");
@@ -1213,10 +1212,9 @@ InsertTextureDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("Create a new texture"));
 	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name:"));
-	AG_WidgetBindString(tb, "string", ins_texture_name,
-	    sizeof(ins_texture_name));
-	AG_SetEvent(tb, "textbox-return",
-	    InsertTexture, "%p,%p,%p", win, pwin, ts);
+	AG_TextboxBindUTF8(tb, ins_texture_name, sizeof(ins_texture_name));
+	AG_SetEvent(tb, "textbox-return", InsertTexture, "%p,%p,%p", win,
+	    pwin, ts);
 	AG_WidgetFocus(tb);
 
 	btnbox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
@@ -1248,7 +1246,7 @@ InsertAnimDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("Create new animation"));
 	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name:"));
-	AG_WidgetBindString(tb, "string", ins_anim_name, sizeof(ins_anim_name));
+	AG_TextboxBindUTF8(tb, ins_anim_name, sizeof(ins_anim_name));
 	AG_SetEvent(tb, "textbox-return", InsertAnim, "%p,%p", win, ts);
 	AG_WidgetFocus(tb);
 
@@ -1766,8 +1764,7 @@ Edit(void *p)
 			    DeleteSelTiles, "%p,%p", tlTiles, ts);
 		}
 		com = AG_ComboNew(ntab, AG_COMBO_HFILL, _("Template: "));
-		AG_WidgetBindString(com->tbox, "string", &ts->tmpl,
-		    sizeof(ts->tmpl));
+		AG_TextboxBindUTF8(com->tbox, &ts->tmpl, sizeof(ts->tmpl));
 		AG_TlistAdd(com->list, NULL, "Icons (16x16)");
 		AG_TlistAdd(com->list, NULL, "Icons (32x32)");
 		AG_TlistAdd(com->list, NULL, "Sprite");

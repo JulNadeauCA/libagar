@@ -407,8 +407,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 
 		tb = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Server hostname: "));
-		AG_WidgetBindString(tb,"string", agRcsHostname,
-		    sizeof(agRcsHostname));
+		AG_TextboxBindUTF8(tb, agRcsHostname, sizeof(agRcsHostname));
 	
 		sb = AG_SpinbuttonNew(tab, 0, _("Server port: "));
 		AG_WidgetBindUint(sb,"value", &agRcsPort);
@@ -420,13 +419,13 @@ DEV_ConfigWindow(AG_Config *cfg)
 		{
 			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL,
 			    _("Username: "));
-			AG_WidgetBindString(tb,"string", agRcsUsername,
+			AG_TextboxBindUTF8(tb, agRcsUsername,
 			    sizeof(agRcsUsername));
 
 			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL,
 			    _("Password: "));
 			AG_TextboxSetPassword(tb, 1);
-			AG_WidgetBindString(tb,"string", agRcsPassword,
+			AG_TextboxBindUTF8(tb, agRcsPassword,
 			    sizeof(agRcsPassword));
 		}
 	}
