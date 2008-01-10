@@ -9,8 +9,6 @@ typedef struct mammal {
 	} hairColor;
 } Mammal;
 
-__BEGIN_DECLS
 extern AG_ObjectClass MammalClass;
-__END_DECLS
 
 #include "close_code.h"
