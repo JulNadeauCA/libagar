@@ -34,7 +34,7 @@
 static void
 init(VG *vg, VG_Element *vge)
 {
-	vge->vg_mask.scale = 1.0;
+	vge->vg_mask.scale = 1.0f;
 	vge->vg_mask.visible = 0;
 	vge->vg_mask.p = NULL;
 }

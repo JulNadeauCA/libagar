@@ -35,7 +35,7 @@
 static void
 VG_CircleInit(VG *vg, VG_Element *vge)
 {
-	vge->vg_circle.radius = 0.025;
+	vge->vg_circle.radius = 0.025f;
 }
 
 void
@@ -47,7 +47,7 @@ VG_CircleRadius(VG *vg, float radius)
 void
 VG_CircleDiameter(VG *vg, float diameter)
 {
-	vg->cur_vge->vg_circle.radius = diameter/2;
+	vg->cur_vge->vg_circle.radius = diameter/2.0f;
 }
 
 static void
@@ -65,8 +65,8 @@ VG_CircleExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_circle.radius;
 	r->y = vge->vtx[0].y - vge->vg_circle.radius;
-	r->w = vge->vg_circle.radius*2;
-	r->h = vge->vg_circle.radius*2;
+	r->w = vge->vg_circle.radius*2.0f;
+	r->h = vge->vg_circle.radius*2.0f;
 }
 
 static float
