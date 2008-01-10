@@ -49,7 +49,7 @@ void	   AG_PixmapReplaceSurfaceScaled(AG_Pixmap *, SDL_Surface *, Uint,
 static __inline__ int
 AG_PixmapSetSurface(AG_Pixmap *px, int name)
 {
-	if (name < 0 || name >= AGWIDGET(px)->nsurfaces) {
+	if (name < 0 || name >= (int)AGWIDGET(px)->nsurfaces) {
 		return (-1);
 	}
 	px->n = name;

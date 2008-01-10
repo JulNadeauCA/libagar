@@ -284,19 +284,23 @@ void AG_WidgetHiddenRecursive(void *);
 void AG_WidgetSetString(void *, const char *, const char *);
 size_t AG_WidgetCopyString(void *, const char *, char *, size_t);
 
+#ifdef THREADS
 static __inline__ void
 AG_WidgetLockBinding(AG_WidgetBinding *bind)
 {
 	if (bind->mutex != NULL)
 		AG_MutexLock(bind->mutex);
 }
-
 static __inline__ void
 AG_WidgetUnlockBinding(AG_WidgetBinding *bind)
 {
 	if (bind->mutex != NULL)
 		AG_MutexUnlock(bind->mutex);
 }
+#else
+#define AG_WidgetLockBinding(b)
+#define AG_WidgetUnlockBinding(b)
+#endif /* THREADS */
 
 static __inline__ void
 AG_WidgetEnable(void *p)
