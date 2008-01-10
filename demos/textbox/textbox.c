@@ -13,21 +13,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-static char polledString[128] = { '\0' };
-
-/* Callback function for our test timer. */
-static Uint32
-UpdateText(void *obj, Uint32 ival, void *arg)
-{
-	AG_Textbox *textbox = arg;
-
-	if (!AG_WidgetFocused(textbox)) {
-		AG_Snprintf(polledString, sizeof(polledString), "Tick: %lu",
-		    (unsigned long)SDL_GetTicks());
-	}
-	return (ival);
-}
-
 static void
 DisableInput(AG_Event *event)
 {
@@ -53,7 +38,6 @@ SetStaticFlag(AG_Event *event)
 static void
 SingleLineExample(void)
 {
-	AG_Timeout myTimer;
 	AG_Window *win;
 	AG_Textbox *textbox;
 
@@ -70,6 +54,7 @@ SingleLineExample(void)
 	AG_WidgetFocus(textbox);
 
 	/* Bind checkboxes to some flags. */
+	AG_SeparatorNewHoriz(win);
 	AG_CheckboxNewFn(win, 0, "Disable input", DisableInput, "%p", textbox);
 	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_PASSWORD,
 	    "Password input");
@@ -82,29 +67,6 @@ SingleLineExample(void)
 	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_NOLATIN1,
 	    "Disable traditional LATIN-1");
 
-	AG_SeparatorNewHoriz(win);
-
-	/*
-	 * Use a `string' binding to edit the contents of a sized buffer. We
-	 * have to pass the size of the buffer along with a pointer to it to
-	 * the AG_WidgetBind() function.
-	 *
-	 * If this were a multithreaded application, the buffer could be
-	 * protected with a mutex and we would use AG_WidgetBindMp().
-	 */
-	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Polled string: ");
-	AG_TextboxSizeHint(textbox, "Tick: 000000");
-	AG_WidgetBind(textbox, "string", AG_WIDGET_STRING, polledString,
-	    sizeof(polledString));
-
-	/* Use a timer to update the text buffer periodically. */
-	AG_SetTimeout(&myTimer, UpdateText, textbox, 0);
-	AG_AddTimeout(NULL, &myTimer, 250);
-
-	/* Create a polled label to display the actual buffer contents. */
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Polled string: <%s>",
-	    &polledString);
-
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 	AG_WindowShow(win);
 }
@@ -116,7 +78,7 @@ MultiLineExample(void)
 	AG_Textbox *textbox;
 	char *someText;
 	FILE *f;
-	size_t size;
+	size_t size, bufSize;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Multiline Example");
@@ -134,10 +96,16 @@ MultiLineExample(void)
 	    AG_TEXTBOX_STATIC,
 	    NULL);
 
-	/* Load the contents of this file into a buffer. */
+	/*
+	 * Load the contents of this file into a buffer. Make the buffer a
+	 * bit larger so the user can try entering text.
+	 */
 	if ((f = fopen("textbox.c", "r")) != NULL) {
-		fseek(f, 0, SEEK_END); size = ftell(f); fseek(f, 0, SEEK_SET);
-		someText = AG_Malloc(size+1);
+		fseek(f, 0, SEEK_END);
+		size = ftell(f);
+		fseek(f, 0, SEEK_SET);
+		bufSize = size+1024;
+		someText = AG_Malloc(bufSize);
 		fread(someText, size, 1, f);
 		fclose(f);
 		someText[size] = '\0';
@@ -147,9 +115,9 @@ MultiLineExample(void)
 
 	/*
 	 * Bind the buffer's contents to the Textbox. The size argument to
-	 * WidgetBindString() must include space for the terminating NUL.
+	 * AG_TextboxBindUTF8() must include space for the terminating NUL.
 	 */
-	AG_WidgetBindString(textbox, "string", someText, size+1);
+	AG_TextboxBindUTF8(textbox, someText, bufSize);
 	AG_TextboxSetCursorPos(textbox, 0);
 
 	AG_CheckboxNewFn(win, 0, "Disable input",
