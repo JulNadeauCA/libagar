@@ -49,11 +49,13 @@ SC_MatviewNew(void *parent, SC_Matrix *mat, Uint flags)
 void
 SC_MatviewSetMatrix(SC_Matview *mv, struct sc_matrix *mat)
 {
+	AG_ObjectLock(mv);
 	mv->mat = mat;
 	mv->pre_m = mat->m;
 	mv->pre_n = mat->n;
 	AG_WidgetBind(mv->hbar, "max", AG_WIDGET_INT, &mv->mat->m);
 	AG_WidgetBind(mv->vbar, "max", AG_WIDGET_INT, &mv->mat->n);
+	AG_ObjectUnlock(mv);
 }
 
 static void
@@ -124,21 +126,27 @@ Init(void *obj)
 void
 SC_MatviewSetDisplayMode(SC_Matview *mv, enum sc_matview_mode mode)
 {
+	AG_ObjectLock(mv);
 	mv->mode = mode;
+	AG_ObjectUnlock(mv);
 }
 
 void
 SC_MatviewSetNumericalFmt(SC_Matview *mv, const char *fmt)
 {
+	AG_ObjectLock(mv);
 	mv->numfmt = fmt;
+	AG_ObjectUnlock(mv);
 }
 
 void
 SC_MatviewSizeHint(SC_Matview *mv, const char *text, Uint m, Uint n)
 {
+	AG_ObjectLock(mv);
 	mv->pre_m = m;
 	mv->pre_n = n;
 	AG_TextSize(text, &mv->ent_w, &mv->ent_h);
+	AG_ObjectUnlock(mv);
 }
 
 static void
