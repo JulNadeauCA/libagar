@@ -10,17 +10,15 @@ include ${TOP}/Makefile.proj
 
 SUBDIR=	core \
 	agar-core-config \
-	${SUBDIR_GUI_CONF} \
+	gui agar-config \
+	vg agar-vg-config \
+	rg agar-rg-config \
+	map agar-map-config \
+	sc agar-sc-config \
+	dev agar-dev-config \
 	net agar-net-config \
 	libintl \
 	po
-
-SUBDIR_GUI= gui agar-config \
-	    vg agar-vg-config \
-	    rg agar-rg-config \
-	    map agar-map-config \
-	    sc agar-sc-config \
-	    dev agar-dev-config
 
 all: all-subdir
 clean: clean-config clean-subdir
