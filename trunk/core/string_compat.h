@@ -1,5 +1,8 @@
 /*	Public domain	*/
 
+#ifndef _AGAR_CORE_STRING_COMPAT_H_
+#define _AGAR_CORE_STRING_COMPAT_H_
+
 #ifdef _AGAR_INTERNAL
 #include <config/_mk_have_sys_types_h.h>
 #include <config/have_bounded_attribute.h>
@@ -13,14 +16,6 @@
 #endif
 
 #include "begin_code.h"
-
-#ifndef BOUNDED_ATTRIBUTE
-# ifdef HAVE_BOUNDED_ATTRIBUTE
-#  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
-# else
-#  define BOUNDED_ATTRIBUTE(t, a, b)
-# endif
-#endif
 
 enum ag_unicode_conv {
 	AG_UNICODE_FROM_USASCII,	/* US-ASCII -> UCS-4 */
@@ -159,3 +154,4 @@ __END_DECLS
 #endif
 
 #include "close_code.h"
+#endif /* _AGAR_CORE_STRING_COMPAT_H_ */
