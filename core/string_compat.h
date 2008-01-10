@@ -24,7 +24,7 @@ enum ag_unicode_conv {
 };
 
 __BEGIN_DECLS
-extern Uint8 agStrcasecmpMapASCII[];
+extern const unsigned char agStrcasecmpMapASCII[];
 
 size_t  AG_StrlcpyUCS4(Uint32 *, const Uint32 *, size_t);
 size_t  AG_Strlcpy(char *, const char *, size_t)
@@ -96,7 +96,7 @@ AG_LengthUTF8FromUCS4(const Uint32 *ucs4)
  * of the sequence in bytes (or 1 if there is none).
  */
 static __inline__ int
-AG_CharLengthUTF8(Uint8 ch)
+AG_CharLengthUTF8(unsigned char ch)
 {
 	if ((ch >> 7) == 0) {
 		return (1);
@@ -130,7 +130,7 @@ AG_LengthUTF8(const char *s)
 		return (0);
 	}
 	for (;;) {
-		if ((cLen = AG_CharLengthUTF8(*c)) == -1) {
+		if ((cLen = AG_CharLengthUTF8((unsigned char)*c)) == -1) {
 			break;
 		}
 		for (i = 0; i < cLen; i++) {
@@ -144,11 +144,11 @@ AG_LengthUTF8(const char *s)
 }
 
 static __inline__ int
-AG_Strcasecmp(char *s1, char *s2)
+AG_Strcasecmp(const char *s1, const char *s2)
 {
-	Uint8 *cm = agStrcasecmpMapASCII;
-	Uint8 *us1 = (Uint8 *)s1;
-	Uint8 *us2 = (Uint8 *)s2;
+	const unsigned char *cm = agStrcasecmpMapASCII;
+	const unsigned char *us1 = (const unsigned char *)s1;
+	const unsigned char *us2 = (const unsigned char *)s2;
 
 	while (cm[*us1] == cm[*us2++]) {
 		if (*us1++ == '\0')
@@ -158,11 +158,11 @@ AG_Strcasecmp(char *s1, char *s2)
 }
 
 static __inline__ int
-AG_Strncasecmp(char *s1, char *s2, size_t n)
+AG_Strncasecmp(const char *s1, const char *s2, size_t n)
 {
-	Uint8 *cm = agStrcasecmpMapASCII;
-	Uint8 *us1 = (Uint8 *)s1;
-	Uint8 *us2 = (Uint8 *)s2;
+	const unsigned char *cm = agStrcasecmpMapASCII;
+	const unsigned char *us1 = (const unsigned char *)s1;
+	const unsigned char *us2 = (const unsigned char *)s2;
 
 	while (--n >= 0 && cm[*us1] == cm[*us2++]) {
 		if (*us1++ == '\0')
