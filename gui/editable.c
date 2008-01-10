@@ -39,7 +39,6 @@
 
 #include "keymap.h"
 #include "primitive.h"
-#include "unicode.h"
 #include "opengl.h"
 #include "cursors.h"
 
@@ -962,7 +961,7 @@ AG_EditableCopyStringUCS4(AG_Editable *ed, Uint32 *dst, size_t dst_size)
 	AG_ObjectLock(ed);
 	stringb = AG_WidgetGetBinding(ed, "string", &s);
 	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, 0);
-	rv = AG_UCS4Copy(dst, ucs, dst_size);
+	rv = StrlcpyUCS4(dst, ucs, dst_size);
 	AG_WidgetUnlockBinding(stringb);
 	AG_ObjectUnlock(ed);
 	return (rv);

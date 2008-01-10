@@ -36,7 +36,6 @@
 #include "widget.h"
 #include "editable.h"
 #include "keymap.h"
-#include "unicode.h"
 
 #include <ctype.h>
 #include <string.h>

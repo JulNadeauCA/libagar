@@ -1,8 +1,26 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_UNICODE_H_
-#define _AGAR_UNICODE_H_
+#ifdef _AGAR_INTERNAL
+#include <config/_mk_have_sys_types_h.h>
+#include <config/have_bounded_attribute.h>
+#else
+#include <agar/config/_mk_have_sys_types_h.h>
+#include <agar/config/have_bounded_attribute.h>
+#endif
+
+#ifdef _MK_HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
 #include "begin_code.h"
+
+#ifndef BOUNDED_ATTRIBUTE
+# ifdef HAVE_BOUNDED_ATTRIBUTE
+#  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
+# else
+#  define BOUNDED_ATTRIBUTE(t, a, b)
+# endif
+#endif
 
 enum ag_unicode_conv {
 	AG_UNICODE_FROM_USASCII,	/* US-ASCII -> UCS-4 */
@@ -11,15 +29,21 @@ enum ag_unicode_conv {
 };
 
 __BEGIN_DECLS
+size_t  AG_StrlcpyUCS4(Uint32 *, const Uint32 *, size_t);
+size_t  AG_Strlcpy(char *, const char *, size_t)
+                   BOUNDED_ATTRIBUTE(__string__, 1, 3);
+size_t  AG_StrlcatUCS4(Uint32 *, const Uint32 *, size_t);
+size_t  AG_Strlcat(char *, const char *, size_t)
+                   BOUNDED_ATTRIBUTE(__string__, 1, 3);
+Uint32 *AG_StrsepUCS4(Uint32 **, const Uint32 *);
+char   *AG_Strsep(char **, const char *);
+char   *AG_Strdup(const char *);
+Uint32 *AG_StrdupUCS4(const Uint32 *);
+
 Uint32	*AG_ImportUnicode(enum ag_unicode_conv, const char *, size_t);
 long     AG_ExportUnicode(enum ag_unicode_conv, char *, const Uint32 *, size_t)
 	     BOUNDED_ATTRIBUTE(__string__, 2, 4);
 size_t	 AG_CopyUnicode(enum ag_unicode_conv, const char *, Uint32 *, size_t);
-
-size_t	 AG_UCS4Copy(Uint32 *, const Uint32 *, size_t);
-size_t	 AG_UCS4Cat(Uint32 *, const Uint32 *, size_t);
-Uint32	*AG_UCS4Dup(const Uint32 *);
-Uint32	*AG_UCS4Sep(Uint32 **, const Uint32 *);
 
 /*
  * Return the length of a UCS-4 string in characters, without the
@@ -123,5 +147,15 @@ AG_LengthUTF8(const char *s)
 }
 __END_DECLS
 
+#if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_STD)
+#define Strlcat AG_Strlcat
+#define Strlcpy AG_Strlcpy
+#define Strsep AG_Strsep
+#define Strdup AG_Strdup
+#define StrlcatUCS4 AG_StrlcatUCS4
+#define StrlcpyUCS4 AG_StrlcpyUCS4
+#define StrsepUCS4 AG_StrsepUCS4
+#define StrdupUCS4 AG_StrdupUCS4
+#endif
+
 #include "close_code.h"
-#endif /* _AGAR_UNICODE_H_ */

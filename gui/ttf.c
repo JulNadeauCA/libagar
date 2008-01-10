@@ -39,7 +39,6 @@
 
 #include <core/core.h>
 
-#include "unicode.h"
 #include "ttf.h"
 #include "gui_math.h"
 

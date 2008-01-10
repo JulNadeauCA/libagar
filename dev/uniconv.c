@@ -33,7 +33,6 @@
 #include <gui/window.h>
 #include <gui/combo.h>
 #include <gui/tableview.h>
-#include <gui/unicode.h>
 
 #include "dev.h"
 

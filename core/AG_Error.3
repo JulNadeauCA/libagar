@@ -108,9 +108,6 @@ The name of the object is prefixed to the string.
 .Ft void
 .Fn AG_Free "void *p"
 .Pp
-.Ft "char *"
-.Fn AG_Strdup "const char *s"
-.Pp
 .nr nS 0
 The
 .Ft AG_Malloc
@@ -136,11 +133,6 @@ calls
 If
 .Fa p
 is NULL, it is a no-op.
-.Pp
-.Fn AG_Strdup
-duplicates a string
-.Fa s
-and raises a fatal error if memory cannot be allocated for the duplicate.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,

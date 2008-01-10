@@ -36,7 +36,6 @@
 
 #include "keymap.h"
 #include "primitive.h"
-#include "unicode.h"
 #include "opengl.h"
 #include "window.h"
 

@@ -167,16 +167,3 @@ AG_ObjectMismatch(const char *t1, const char *t2)
 	AG_FatalError("Object type mismatch (%s != %s)", t1, t2);
 	return (NULL);
 }
-
-char *
-AG_Strdup(const char *s)
-{
-	size_t buflen;
-	char *ns;
-	
-	buflen = strlen(s)+1;
-	ns = Malloc(buflen);
-	memcpy(ns, s, buflen);
-	return (ns);
-}
-
