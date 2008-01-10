@@ -24,6 +24,8 @@ enum ag_unicode_conv {
 };
 
 __BEGIN_DECLS
+extern Uint8 agStrcasecmpMapASCII[];
+
 size_t  AG_StrlcpyUCS4(Uint32 *, const Uint32 *, size_t);
 size_t  AG_Strlcpy(char *, const char *, size_t)
                    BOUNDED_ATTRIBUTE(__string__, 1, 3);
@@ -140,6 +142,34 @@ AG_LengthUTF8(const char *s)
 	}
 	return (rv);
 }
+
+static __inline__ int
+AG_Strcasecmp(char *s1, char *s2)
+{
+	Uint8 *cm = agStrcasecmpMapASCII;
+	Uint8 *us1 = (Uint8 *)s1;
+	Uint8 *us2 = (Uint8 *)s2;
+
+	while (cm[*us1] == cm[*us2++]) {
+		if (*us1++ == '\0')
+			return (0);
+	}
+	return (cm[*us1] - cm[*--us2]);
+}
+
+static __inline__ int
+AG_Strncasecmp(char *s1, char *s2, size_t n)
+{
+	Uint8 *cm = agStrcasecmpMapASCII;
+	Uint8 *us1 = (Uint8 *)s1;
+	Uint8 *us2 = (Uint8 *)s2;
+
+	while (--n >= 0 && cm[*us1] == cm[*us2++]) {
+		if (*us1++ == '\0')
+			return (0);
+	}
+	return (n < 0 ? 0 : cm[*us1] - cm[*--us2]);
+}
 __END_DECLS
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_STD)
@@ -147,6 +177,8 @@ __END_DECLS
 #define Strlcpy AG_Strlcpy
 #define Strsep AG_Strsep
 #define Strdup AG_Strdup
+#define Strcasecmp AG_Strcasecmp
+#define Strncasecmp AG_Strncasecmp
 #define StrlcatUCS4 AG_StrlcatUCS4
 #define StrlcpyUCS4 AG_StrlcpyUCS4
 #define StrsepUCS4 AG_StrsepUCS4
