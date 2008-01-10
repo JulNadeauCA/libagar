@@ -144,7 +144,8 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 	   (ed->flags & AG_EDITABLE_MULTILINE) == 0)
 		return (0);
 
-	if (keymod == KMOD_NONE && isprint((int)keysym)) {
+	if (keymod == KMOD_NONE &&
+	    isascii((int)keysym) && isprint((int)keysym)) {
 		if ((ed->flags & AG_EDITABLE_INT_ONLY)) {
 			if (keysym != SDLK_MINUS &&
 			    keysym != SDLK_PLUS &&
@@ -635,11 +636,13 @@ Draw(void *p)
 		ed->xMax = x;
 	
 	if ( !(ed->flags & (AG_EDITABLE_NOSCROLL|AG_EDITABLE_NOSCROLL_ONCE)) ) {
-		if (ed->yCurs < ed->y) {
-			ed->y = ed->yCurs;
-			if (ed->y < 0) { ed->y = 0; }
-		} else if (ed->yCurs > ed->y + ed->yVis - 1) {
-			ed->y = ed->yCurs - ed->yVis + 1;
+		if (ed->flags & AG_EDITABLE_MULTILINE) {
+			if (ed->yCurs < ed->y) {
+				ed->y = ed->yCurs;
+				if (ed->y < 0) { ed->y = 0; }
+			} else if (ed->yCurs > ed->y + ed->yVis - 1) {
+				ed->y = ed->yCurs - ed->yVis + 1;
+			}
 		}
 		if (ed->xCurs < ed->x) {
 			ed->x = ed->xCurs;
@@ -649,14 +652,18 @@ Draw(void *p)
 		}
 	} else {
 		if (ed->yCurs < ed->y) {
-			AG_EditableMoveCursor(ed,
-			    ed->xCursPref - ed->x, 1,
-			    0);
+			if (ed->flags & AG_EDITABLE_MULTILINE) {
+				AG_EditableMoveCursor(ed,
+				    ed->xCursPref - ed->x, 1,
+				    0);
+			}
 		} else if (ed->yCurs > ed->y + ed->yVis - 1) {
-			AG_EditableMoveCursor(ed,
-			    ed->xCursPref - ed->x,
-			    ed->yVis*agTextFontLineSkip - 1,
-			    0);
+			if (ed->flags & AG_EDITABLE_MULTILINE) {
+				AG_EditableMoveCursor(ed,
+				    ed->xCursPref - ed->x,
+				    ed->yVis*agTextFontLineSkip - 1,
+				    0);
+			}
 		} else if (ed->xCurs < ed->x+10) {
 			AG_EditableMoveCursor(ed,
 			    ed->x+10,
