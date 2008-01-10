@@ -68,54 +68,54 @@ ComputeSquaredSineConstants(void)
 	 * sine velocity profile for the given feedrate, under constraints
 	 * of maximum acceleration and maximum jerk.
 	 */
-	if (F >= M_PI_2*((Amax*Amax)/Jmax) ) {
+	if (F >= SC_PI_2*((Amax*Amax)/Jmax) ) {
 		/*
 		 * Feedrate F is achievable by using maximum acceleration
 		 * and maximum jerk.
 		 */
-		if (L >= ( (F*F)/Amax + M_PI_2*((Amax*F)/Jmax) )){
+		if (L >= ( (F*F)/Amax + SC_PI_2*((Amax*F)/Jmax) )){
 			/* Feedrate F is achievable at Amax acceleration. */
 			which = "1.1";
-			Ts = M_PI_2*(Amax/Jmax);
+			Ts = SC_PI_2*(Amax/Jmax);
 			Ta = (F/Amax) + Ts;
 			To = L/F;
-		} else if (L <  ( (F*F)/Amax + M_PI_2*((Amax*F)/Jmax) ) &&
-	      		   L >= ( (M_PI*M_PI)/2.0) * (Amax*Amax*Amax) /
+		} else if (L <  ( (F*F)/Amax + SC_PI_2*((Amax*F)/Jmax) ) &&
+	      		   L >= ( (SC_PI*SC_PI)/2.0) * (Amax*Amax*Amax) /
 			                             (Jmax*Jmax) ) {
 			/* Feedrate F is unachievable, Amax is achievable. */
 			which = "1.2";
-			Ts = M_PI_2*(Amax/Jmax);
-			Ta = (( -M_PI*(Amax*Amax) +
-			       sqrt((M_PI*M_PI)*(Amax*Amax*Amax*Amax) +
+			Ts = SC_PI_2*(Amax/Jmax);
+			Ta = (( -SC_PI*(Amax*Amax) +
+			       sqrt((SC_PI*SC_PI)*(Amax*Amax*Amax*Amax) +
 			            16.0*Amax*(Jmax*Jmax)*L)
 			     ) /
 			     ( 4.0*Jmax*Amax )) + Ts;
 			To = Ta;
-		} else if (L <= ( ((M_PI*M_PI)/2.0)*(Amax*Amax*Amax) /
+		} else if (L <= ( ((SC_PI*SC_PI)/2.0)*(Amax*Amax*Amax) /
 		                                    (Jmax*Jmax) )) {
 			/* Neither F nor Amax are achievable. */
 			which = "1.3";
-			Ts = cbrt( (M_PI*L)/(4.0*Jmax) );
+			Ts = cbrt( (SC_PI*L)/(4.0*Jmax) );
 			Ta = 2.0*Ts;
 			To = Ta;
 		} else {
 			return;
 		}
-	} else if (F < M_PI_2*((Amax*Amax)/Jmax) ) {
+	} else if (F < SC_PI_2*((Amax*Amax)/Jmax) ) {
 		/*
 		 * Feedrate F is achievable without using maximum
 		 * acceleration.
 		 */
-		if (L >= sqrt( (2.0*M_PI*(F*F*F))/Jmax ) ) {
+		if (L >= sqrt( (2.0*SC_PI*(F*F*F))/Jmax ) ) {
 			/* F is achievable, Amax is unachievable. */
 			which = "2.1";
-			Ts = sqrt( (M_PI*F)/(2.0*Jmax) );
+			Ts = sqrt( (SC_PI*F)/(2.0*Jmax) );
 			Ta = 2.0*Ts;
 			To = L/F;
-		} else if (L < sqrt( (2.0*M_PI*(F*F*F))/Jmax )) {
+		} else if (L < sqrt( (2.0*SC_PI*(F*F*F))/Jmax )) {
 			/* Neither F nor Amax are achievable. */
 			which = "2.2";
-			Ts = cbrt( (M_PI*L)/(4.0*Jmax) );
+			Ts = cbrt( (SC_PI*L)/(4.0*Jmax) );
 			Ta = 2.0*Ts;
 			To = Ta;
 		} else {
@@ -126,7 +126,7 @@ ComputeSquaredSineConstants(void)
 	if (uTa != 0.0) { Ta = uTa; }
 	if (uTo != 0.0) { To = uTo; }
 
-	k = M_PI/(2.0*Ts);
+	k = SC_PI/(2.0*Ts);
 	Aref = L/(Ta-Ts)/To;
 	v1 = (Aref/2.0) * (Ts - sin(2.0*k*Ts)/(2.0*k) );
 	v2 = Aref*(Ta - 2.0*Ts) + v1;
