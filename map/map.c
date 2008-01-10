@@ -2221,9 +2221,13 @@ EditMapParameters(AG_Event *event)
 		
 		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
 		    _("Camera: %i"), &mv->cam);
+#ifdef THREADS
 		AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &m->lock,
 		    _("Current layer: %i"), &m->lock, &m->cur_layer);
-
+#else
+		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
+		    _("Current layer: %i"), &m->lock, &m->cur_layer);
+#endif
 		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
 		    _("Cursor position: %ix%i"), &mv->cx, &mv->cy);
 		AG_LabelNewPolled(ntab, AG_LABEL_HFILL,
