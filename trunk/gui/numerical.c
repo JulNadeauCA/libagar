@@ -143,6 +143,7 @@ UpdateTextbox(AG_Numerical *num)
 	void *value;
 
 	valueb = AG_WidgetGetBinding(num, "value", &value);
+	AG_TextboxPrintf(num->input, "vtype=%d", (int)valueb->vtype);
 	switch (valueb->vtype) {
 	case AG_WIDGET_DOUBLE:
 		AG_TextboxPrintf(num->input, num->format,
@@ -384,7 +385,7 @@ Init(void *obj)
 	num->writeable = 1;
 	num->wUnitSel = 0;
 	num->hUnitSel = 0;
-	Strlcpy(num->format, "%g", sizeof(num->format));
+	Strlcpy(num->format, "%.02f", sizeof(num->format));
 	AG_TextboxSizeHint(num->input, "8888.88");
 	
 	num->unit = AG_FindUnit("identity");
