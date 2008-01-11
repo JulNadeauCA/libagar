@@ -1589,42 +1589,6 @@ HAVE_VASPRINTF="no"
 echo "#undef HAVE_VASPRINTF" >config/have_vasprintf.h
 echo "hdefs[\"HAVE_VASPRINTF\"] = nil" >>configure.lua
 fi;
-$ECHO_N "checking for a setlocale() function..."
-$ECHO_N "checking for a setlocale() function..." >> config.log
-cat << EOT > conftest.c
-#include <locale.h>
-
-int
-main(int argc, char *argv[])
-{
-	setlocale(LC_ALL, "");
-	return (0);
-}
-
-EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
-fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_SETLOCALE="yes"
-echo "#ifndef HAVE_SETLOCALE" > config/have_setlocale.h
-echo "#define HAVE_SETLOCALE \"$HAVE_SETLOCALE\"" >> config/have_setlocale.h
-echo "#endif" >> config/have_setlocale.h
-echo "hdefs[\"HAVE_SETLOCALE\"] = \"$HAVE_SETLOCALE\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_SETLOCALE="no"
-echo "#undef HAVE_SETLOCALE" >config/have_setlocale.h
-echo "hdefs[\"HAVE_SETLOCALE\"] = nil" >>configure.lua
-fi;
 $ECHO_N "checking for the arc4random() random number generator..."
 $ECHO_N "checking for the arc4random() random number generator..." >> config.log
 cat << EOT > conftest.c

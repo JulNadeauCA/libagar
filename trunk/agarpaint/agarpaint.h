@@ -12,9 +12,8 @@ typedef unsigned int Uchar;
 typedef unsigned long Ulong;
 #endif
 
-#include <agar/config/enable_nls.h>
-#ifdef ENABLE_NLS
-# include <agar/libintl/libintl.h>
+#if 0
+# include <libintl/libintl.h>
 # define _(String) gettext(String)
 # define gettext_noop(String) (String)
 # define N_(String) gettext_noop(String)

@@ -27,8 +27,6 @@
  * Core initialization routines.
  */
 
-#include <config/have_setlocale.h>
-#include <config/localedir.h>
 #include <config/version.h>
 #include <config/network.h>
 #include <config/release.h>
@@ -44,11 +42,7 @@
 #ifdef NETWORK
 # include <core/rcs.h>
 #endif
-
 #include <stdio.h>
-#ifdef HAVE_SETLOCALE
-# include <locale.h>
-#endif
 
 #ifdef THREADS
 pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
@@ -68,11 +62,7 @@ AG_InitCore(const char *progname, Uint flags)
 		agVerbose = 1;
 
 	agProgName = progname;
-
-#ifdef HAVE_SETLOCALE
-	setlocale(LC_ALL, "");
-#endif
-#ifdef ENABLE_NLS
+#if 0
 	bindtextdomain("agar", LOCALEDIR);
 	textdomain("agar");
 #endif

@@ -26,7 +26,6 @@
 #include <config/version.h>
 #include <config/debug.h>
 #include <config/release.h>
-#include <config/enable_nls.h>
 #include <config/prefix.h>
 #include <config/sysconfdir.h>
 #include <config/incldir.h>
@@ -122,9 +121,6 @@ main(int argc, char *argv[])
 			printf("-lag_gui -lag_core ");
 #ifdef NETWORK
 			printf("-lag_net ");
-#endif
-#ifdef ENABLE_NLS
-			printf("-lag_intl ");
 #endif
 #ifdef SDL_LIBS
 			printf("%s ", SDL_LIBS);

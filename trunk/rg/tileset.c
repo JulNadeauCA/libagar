@@ -1764,7 +1764,7 @@ Edit(void *p)
 			    DeleteSelTiles, "%p,%p", tlTiles, ts);
 		}
 		com = AG_ComboNew(ntab, AG_COMBO_HFILL, _("Template: "));
-		AG_TextboxBindUTF8(com->tbox, &ts->tmpl, sizeof(ts->tmpl));
+		AG_TextboxBindUTF8(com->tbox, ts->tmpl, sizeof(ts->tmpl));
 		AG_TlistAdd(com->list, NULL, "Icons (16x16)");
 		AG_TlistAdd(com->list, NULL, "Icons (32x32)");
 		AG_TlistAdd(com->list, NULL, "Sprite");
