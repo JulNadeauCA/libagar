@@ -1577,7 +1577,7 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
 		tb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, NULL);
-		AG_TextboxBindUTF8(tb, sp, len);
+		AG_TextboxBindUTF8(tb, *sp, len);
 		AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
 		AG_WidgetFocus(tb);
 	}
