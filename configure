@@ -190,7 +190,7 @@ echo "    --enable-32bpp            Support for 32 bpp display [default: yes]"
 echo "    --enable-network          Build network client library [default: check]"
 echo "    --enable-server           Build network server library [default: no]"
 echo "    --with-gl                 OpenGL rendering support [default: check]"
-echo "    --with-jpeg               JPEG screenshot support [default: no]"
+echo "    --with-jpeg               JPEG screenshot support [default: check]"
 echo "    --with-freetype           GUI: Enable FreeType support [default: check]"
 exit 1
 fi

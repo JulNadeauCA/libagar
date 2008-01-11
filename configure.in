@@ -12,7 +12,7 @@ REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
 REGISTER("--enable-network",	"Build network client library [default: check]")
 REGISTER("--enable-server",	"Build network server library [default: no]")
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
-REGISTER("--with-jpeg",		"JPEG screenshot support [default: no]")
+REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
 REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
 
 # Agar version
