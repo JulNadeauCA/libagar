@@ -26,7 +26,6 @@
 #include <config/version.h>
 #include <config/debug.h>
 #include <config/release.h>
-#include <config/enable_nls.h>
 #include <config/prefix.h>
 #include <config/sysconfdir.h>
 #include <config/incldir.h>
@@ -79,9 +78,6 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
 			printf("-lag_core ");
-#ifdef ENABLE_NLS
-			printf("-lag_intl ");
-#endif
 #ifdef SDL_LIBS
 			printf("%s ", SDL_LIBS);
 #endif

@@ -12,7 +12,6 @@
 #include <config/lockdebug.h>
 #include <config/threads.h>
 #include <config/network.h>
-#include <config/enable_nls.h>
 #include <config/have_bounded_attribute.h>
 #include <config/have_format_attribute.h>
 #include <config/have_nonnull_attribute.h>
@@ -110,7 +109,7 @@ typedef unsigned long Ulong;
 
 #include <gui/text.h>
 
-#ifdef ENABLE_NLS
+#if 0
 # include <libintl/libintl.h>
 # define _(String) gettext(String)
 # define gettext_noop(String) (String)

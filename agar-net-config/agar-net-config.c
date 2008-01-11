@@ -24,7 +24,6 @@
  */
 
 #include <config/version.h>
-#include <config/enable_nls.h>
 #include <config/prefix.h>
 #include <config/sysconfdir.h>
 #include <config/incldir.h>
