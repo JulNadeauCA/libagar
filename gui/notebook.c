@@ -91,9 +91,11 @@ Init(void *obj)
 	nb->cont_h = -1;
 	nb->spacing = -1;
 	nb->padding = -1;
-	nb->tabFont = AG_FetchFont(NULL, agDefaultFont->size-1, 0);
+	nb->lblPartial = -1;
+	nb->tabFont = NULL;
 	TAILQ_INIT(&nb->tabs);
-
+	
+	AG_NotebookSetTabFont(nb, AG_FetchFont(NULL, agDefaultFont->size-1, 0));
 	AG_SetEvent(nb, "window-mousebuttondown", MouseButtonDown, NULL);
 }
 
@@ -129,6 +131,26 @@ Draw(void *p)
 		r.y = y;
 		r.w = WSURFACE(nb,tab->label)->w + SPACING*2;
 		r.h = nb->bar_h - SPACING;
+		
+		if (r.x+r.w > WIDTH(nb)) {
+			if ((r.w = WIDTH(nb) - r.x) <=
+			    nb->lblPartialWidth + SPACING*2) {
+				break;
+			}
+			if (nb->lblPartial == -1) {
+				AG_PushTextState();
+				AG_TextFont(nb->tabFont);
+				AG_TextColor(NOTEBOOK_TXT_COLOR);
+				nb->lblPartial = AG_WidgetMapSurface(nb,
+				    AG_TextRender("..."));
+				AG_PopTextState();
+			}
+			STYLE(nb)->NotebookTabBackground(nb, r, idx,
+			    (nb->sel_tab == tab));
+			AG_WidgetBlitSurface(nb, nb->lblPartial, x+SPACING,
+			    y+(r.h/2 - WSURFACE(nb,nb->lblPartial)->h/2));
+			break;
+		}
 
 		STYLE(nb)->NotebookTabBackground(nb, r, idx++,
 		    (nb->sel_tab == tab));
@@ -209,6 +231,7 @@ AG_NotebookSetTabFont(AG_Notebook *nb, AG_Font *font)
 {
 	AG_ObjectLock(nb);
 	nb->tabFont = font;
+	AG_TextSize("...", &nb->lblPartialWidth, NULL);
 	AG_ObjectUnlock(nb);
 }
 
