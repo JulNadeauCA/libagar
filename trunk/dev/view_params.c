@@ -80,7 +80,7 @@ DEV_DisplaySettings(void)
 	
 		/* XXX thread unsafe */
 		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
-		    _("Refresh rate (effective): %d"), agView->rCur);
+		    _("Refresh rate (effective): %d"), &agView->rCur);
 		AG_LabelSizeHint(lbl, 1,
 		    _("Refresh rate (effective): 000"));
 
