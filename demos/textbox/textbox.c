@@ -27,15 +27,6 @@ DisableInput(AG_Event *event)
 }
 
 static void
-SetStaticFlag(AG_Event *event)
-{
-	AG_Textbox *textbox = AG_PTR(1);
-	int flag = AG_INT(2);
-
-	AG_TextboxSetStatic(textbox, flag);
-}
-
-static void
 SingleLineExample(void)
 {
 	AG_Window *win;
@@ -87,13 +78,10 @@ MultiLineExample(void)
 	 * Create a multiline textbox.
 	 *
 	 * We use the CATCH_TAB flag so that tabs are entered literally in
-	 * the string. The STATIC flag enables important optimizations based
-	 * on the assumption that the string will be edited by this Textbox
-	 * only and will not change under its feet.
+	 * the string.
 	 */
 	textbox = AG_TextboxNew(win,
-	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND|AG_TEXTBOX_CATCH_TAB|
-	    AG_TEXTBOX_STATIC,
+	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND|AG_TEXTBOX_CATCH_TAB,
 	    NULL);
 
 	/*
@@ -122,8 +110,6 @@ MultiLineExample(void)
 
 	AG_CheckboxNewFn(win, 0, "Disable input",
 	    DisableInput, "%p", textbox);
-	AG_CheckboxNewFn(win, AG_CHECKBOX_SET, "Static optimizations",
-	    SetStaticFlag, "%p", textbox);
 	AG_SeparatorNewHoriz(win);
 	AG_LabelNewPolled(win, AG_LABEL_HFILL,
 	    "Lines: %d", &textbox->ed->yMax);
