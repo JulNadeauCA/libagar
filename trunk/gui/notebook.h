@@ -43,6 +43,8 @@ typedef struct ag_notebook {
 	int cont_w, cont_h;		/* Dimensions of largest container */
 	int spacing, padding;		/* Spacing for tabs */
 	AG_Font *tabFont;		/* Font for tab labels */
+	int lblPartial;			/* "..." label */
+	int lblPartialWidth;		/* Width of "..." */
 	struct ag_notebook_tab *sel_tab;
 	AG_TAILQ_HEAD(,ag_notebook_tab) tabs;
 } AG_Notebook;
