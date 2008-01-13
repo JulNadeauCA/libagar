@@ -107,6 +107,7 @@ Init(void *obj)
 	sock->icon = NULL;
 	sock->insertFn = NULL;
 	sock->removeFn = NULL;
+	sock->overlayFn = NULL;
 
 	AG_SetEvent(sock, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(sock, "window-mousebuttondown", MouseButtonDown, NULL);
@@ -126,6 +127,18 @@ AG_SocketRemoveFn(AG_Socket *sock, void (*fn)(AG_Socket *, AG_Icon *))
 {
 	AG_ObjectLock(sock);
 	sock->removeFn = fn;
+	AG_ObjectUnlock(sock);
+}
+
+void
+AG_SocketOverlayFn(AG_Socket *sock, AG_EventFn fn, const char *fmt, ...)
+{
+	AG_ObjectLock(sock);
+	if (sock->overlayFn != NULL) {
+		AG_UnsetEvent(sock->overlayFn, sock->overlayFn->name);
+	}
+	sock->overlayFn = AG_SetEvent(sock, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(sock->overlayFn, fmt);
 	AG_ObjectUnlock(sock);
 }
 
@@ -224,7 +237,12 @@ Draw(void *obj)
 	if (sock->icon != NULL) {
 		AG_WidgetBlitSurface(sock->icon, sock->icon->surface, 0, 0);
 	}
-	STYLE(sock)->SocketOverlay(sock, state);
+	if (sock->overlayFn != NULL) {
+		AG_PostEvent(NULL, sock->overlayFn, sock->overlayFn->name,
+		    NULL);
+	} else {
+		STYLE(sock)->SocketOverlay(sock, state);
+	}
 }
 
 static void

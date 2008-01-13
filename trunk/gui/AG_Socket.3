@@ -69,6 +69,9 @@ binding.
 .Fn AG_SocketRemoveFn "AG_Socket *socket" "void (*fn)(AG_Socket *, AG_Icon *)"
 .Pp
 .Ft void
+.Fn AG_SocketOverlayFn "AG_Socket *socket" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft void
 .Fn AG_SocketSetPadding "AG_Socket *socket" "int left" "int right" "int top" "int bottom"
 .Pp
 .Ft void
@@ -123,6 +126,11 @@ The
 .Fn AG_SocketRemoveFn
 function registers a callback routine that will be invoked before an icon
 is removed from a socket.
+.Pp
+The
+.Fn AG_SocketOverlayFn
+registers a routine that will be invoked in rendering context to draw items
+on top of the socket (and any contained icons).
 .Pp
 The
 .Fn AG_SocketSetPadding

@@ -50,6 +50,7 @@ typedef struct ag_socket {
 	/* Callbacks */
 	int (*insertFn)(struct ag_socket *, struct ag_icon *);
 	void (*removeFn)(struct ag_socket *, struct ag_icon *);
+	AG_Event *overlayFn;
 } AG_Socket;
 
 __BEGIN_DECLS
@@ -62,6 +63,7 @@ void	   AG_SocketInsertFn(AG_Socket *,
 	                     int (*)(AG_Socket *, struct ag_icon *));
 void	   AG_SocketRemoveFn(AG_Socket *,
 	                     void (*)(AG_Socket *, struct ag_icon *));
+void       AG_SocketOverlayFn(AG_Socket *, AG_EventFn, const char *, ...);
 
 void	   AG_SocketSetPadding(AG_Socket *, int, int, int, int);
 #define	AG_SocketSetPaddingLeft(b,v)   AG_SocketSetPadding((b),(v),-1,-1,-1)
