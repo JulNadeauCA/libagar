@@ -44,8 +44,28 @@ __BEGIN_DECLS
 extern AG_WidgetClass agNumericalClass;
 
 AG_Numerical *AG_NumericalNew(void *, Uint, const char *, const char *);
-void          AG_NumericalSizeHint(AG_Numerical *, const char *);
+AG_Numerical *AG_NumericalNewDbl(void *, Uint, const char *, const char *,
+                                 double *);
+AG_Numerical *AG_NumericalNewFlt(void *, Uint, const char *, const char *,
+                                 float *);
+AG_Numerical *AG_NumericalNewInt(void *, Uint, const char *, const char *,
+                                 int *);
+AG_Numerical *AG_NumericalNewUint(void *, Uint, const char *, const char *,
+                                  Uint *);
+AG_Numerical *AG_NumericalNewUint8(void *, Uint, const char *, const char *,
+                                   Uint8 *);
+AG_Numerical *AG_NumericalNewSint8(void *, Uint, const char *, const char *,
+                                   Sint8 *);
+AG_Numerical *AG_NumericalNewUint16(void *, Uint, const char *, const char *,
+                                    Uint16 *);
+AG_Numerical *AG_NumericalNewSint16(void *, Uint, const char *, const char *,
+                                    Sint16 *);
+AG_Numerical *AG_NumericalNewUint32(void *, Uint, const char *, const char *,
+                                    Uint32 *);
+AG_Numerical *AG_NumericalNewSint32(void *, Uint, const char *, const char *,
+                                    Sint32 *);
 
+void    AG_NumericalSizeHint(AG_Numerical *, const char *);
 void	AG_NumericalSetValue(AG_Numerical *, double);
 void	AG_NumericalAddValue(AG_Numerical *, double);
 #define AG_NumericalSubValue(num,val) \
@@ -75,8 +95,8 @@ int	AG_NumericalSetUnitSystem(AG_Numerical *, const char *);
 void	AG_NumericalSetPrecision(AG_Numerical *, const char *, int);
 void	AG_NumericalSetWriteable(AG_Numerical *, int);
 
-float	AG_NumericalGetFloat(AG_Numerical *);
-double	AG_NumericalGetDouble(AG_Numerical *);
+float	AG_NumericalGetFlt(AG_Numerical *);
+double	AG_NumericalGetDbl(AG_Numerical *);
 int	AG_NumericalGetInt(AG_Numerical *);
 #define AG_NumericalGetUint(n) ((Uint)AG_NumericalGetInt(n))
 Uint32	AG_NumericalGetUint32(AG_Numerical *);
@@ -85,10 +105,22 @@ Uint32	AG_NumericalGetUint32(AG_Numerical *);
 #define AG_NumericalGetSint8(n) ((Sint8)AG_NumericalGetUint32(n))
 #define AG_NumericalGetSint16(n) ((Sint16)AG_NumericalGetUint32(n))
 #define AG_NumericalGetSint32(n) ((Sint32)AG_NumericalGetUint32(n))
+
 #ifdef HAVE_64BIT
+AG_Numerical *AG_NumericalNewUint64(void *, Uint, const char *, const char *,
+                                    Uint64 *);
+AG_Numerical *AG_NumericalNewSint64(void *, Uint, const char *, const char *,
+                                    Sint64 *);
 Uint64	AG_NumericalGetUint64(AG_Numerical *);
 #define AG_NumericalGetSint64(n) ((Sint64)AG_NumericalGetUint64(n))
 #endif
+
+#ifdef HAVE_LONG_DOUBLE
+AG_Numerical *AG_NumericalNewLongDbl(void *, Uint, const char *, const char *,
+                                     long double *);
+long double   AG_NumericalGetLongDbl(AG_Numerical *);
+#endif
+
 __END_DECLS
 
 #include "close_code.h"

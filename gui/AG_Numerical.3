@@ -60,6 +60,45 @@ for choosing between different units
 .Ft "AG_Numerical *"
 .Fn AG_NumericalNew "AG_Widget *parent, Uint flags, const char *unit" "const char *label"
 .Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewFlt "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "float *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewDbl "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "double *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewLongDbl "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "long double *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewInt "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "int *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewUint "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewUint8 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint8 *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewSint8 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint8 *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewUint16 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint16 *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewSint16 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint16 *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewUint32 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint32 *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewSint32 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint32 *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewUint64 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint64 *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewSint64 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint64 *value"
+.Pp
 .Ft void
 .Fn AG_NumericalSetMin "AG_Numerical *num" "double min_value"
 .Pp
@@ -99,6 +138,19 @@ is NULL, no conversion is done and the unit selector is not shown.
 See
 .Xr AG_Units 3
 for more information.
+.Pp
+The
+.Fn AG_NumericalNew*
+constructors also assign a default
+.Sq value
+binding of the given type.
+.Fn AG_NumericalNewLongDbl
+is only available if
+.Dv AG_HAVE_LONG_DOUBLE
+is defined and
+.Fn AG_NumericalNew[SU]int64
+requires
+.Dv AG_HAVE_64BIT .
 .Pp
 The
 .Fn AG_NumericalSetMin ,
@@ -215,7 +267,9 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "double *value, *min, *max "
+.Bl -tag -compact -width "long double *value, *min, *max "
+.It Va long double *value, *min, *max
+Real number (quad-precision).
 .It Va double *value, *min, *max
 Real number (double-precision).
 .It Va float *value, *min, *max
