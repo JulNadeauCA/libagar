@@ -1971,6 +1971,47 @@ _MK_HAVE_STRTOLL="no"
 echo "#undef _MK_HAVE_STRTOLL" >config/_mk_have_strtoll.h
 echo "hdefs[\"_MK_HAVE_STRTOLL\"] = nil" >>configure.lua
 fi;
+$ECHO_N "checking for a strtold() function..."
+$ECHO_N "checking for a strtold() function..." >> config.log
+cat << EOT > conftest.c
+#define _XOPEN_SOURCE 600
+#include <stdlib.h>
+
+int
+main(int argc, char *argv[])
+{
+	long double ld;
+	char *ep = NULL;
+	char *foo = "1234";
+
+	ld = strtold(foo, &ep, 10);
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f $testdir/conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+echo "yes"
+echo "yes" >> config.log
+_MK_HAVE_STRTOLD="yes"
+echo "#ifndef _MK_HAVE_STRTOLD" > config/_mk_have_strtold.h
+echo "#define _MK_HAVE_STRTOLD \"$_MK_HAVE_STRTOLD\"" >> config/_mk_have_strtold.h
+echo "#endif" >> config/_mk_have_strtold.h
+echo "hdefs[\"_MK_HAVE_STRTOLD\"] = \"$_MK_HAVE_STRTOLD\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+_MK_HAVE_STRTOLD="no"
+echo "#undef _MK_HAVE_STRTOLD" >config/_mk_have_strtold.h
+echo "hdefs[\"_MK_HAVE_STRTOLD\"] = nil" >>configure.lua
+fi;
 $ECHO_N "checking for AltiVec (with <altivec.h>)..."
 $ECHO_N "checking for AltiVec (with <altivec.h>)..." >> config.log
 if [ "$SYSTEM" = "Darwin" ]; then

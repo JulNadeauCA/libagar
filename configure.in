@@ -54,6 +54,7 @@ CHECK(x11)
 CHECK(signal)
 CHECK(setjmp)
 CHECK(strtoll)
+CHECK(strtold)
 CHECK(altivec)
 CHECK(byte_order)
 

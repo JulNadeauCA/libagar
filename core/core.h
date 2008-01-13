@@ -16,6 +16,7 @@
 #include <config/have_format_attribute.h>
 #include <config/have_nonnull_attribute.h>
 #include <config/have_64bit.h>
+#include <config/have_long_double.h>
 
 #include <config/_mk_have_unsigned_typedefs.h>
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS

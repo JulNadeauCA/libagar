@@ -767,6 +767,7 @@ enum ag_widget_binding_type {
 	AG_WIDGET_SINT64,
 	AG_WIDGET_FLOAT,
 	AG_WIDGET_DOUBLE,
+	AG_WIDGET_LONG_DOUBLE,
 	AG_WIDGET_STRING,
 	AG_WIDGET_POINTER,
 	AG_WIDGET_PROP,
@@ -840,6 +841,17 @@ Lock to acquire, or NULL.
 Pointer to the data.
 .El
 .El
+.Pp
+Note that the
+.Dv AG_WIDGET_UINT64
+and
+.Dv AG_WIDGET_SINT64
+types are only implemented if
+.Dv AG_HAVE_64BIT
+is defined, and
+.Dv AG_WIDGET_LONG_DOUBLE
+requires
+.Dv AG_HAVE_LONG_DOUBLE .
 .Pp
 The
 .Fn AG_WidgetGetBinding

@@ -50,13 +50,14 @@ typedef enum ag_widget_binding_type {
 	AG_WIDGET_SINT64,
 	AG_WIDGET_FLOAT,
 	AG_WIDGET_DOUBLE,
+	AG_WIDGET_LONG_DOUBLE,
 	AG_WIDGET_STRING,
 	AG_WIDGET_POINTER,
 	AG_WIDGET_PROP,
 	AG_WIDGET_FLAG,
 	AG_WIDGET_FLAG8,
 	AG_WIDGET_FLAG16,
-	AG_WIDGET_FLAG32
+	AG_WIDGET_FLAG32,
 } AG_WidgetBindingType;
 
 enum ag_widget_sizespec {
@@ -261,6 +262,8 @@ int	  	  AG_WidgetCopyBinding(void *, const char *,
 #define AG_WidgetBindSint64(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_SINT64,(p))
 #define AG_WidgetBindFloat(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_FLOAT,(p))
 #define AG_WidgetBindDouble(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_DOUBLE,(p))
+#define AG_WidgetBindLongDouble(w,b,p) AG_WidgetBind((w),(b),\
+                                       AG_WIDGET_LONG_DOUBLE,(p))
 #define AG_WidgetBindPointer(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_POINTER,(p))
 #define AG_WidgetBindProp(w,b,o,k) AG_WidgetBind((w),(b),AG_WIDGET_PROP,(o),(k))
 #define AG_WidgetBindString(w,b,p,len) AG_WidgetBind((w),(b),AG_WIDGET_STRING,\
