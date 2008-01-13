@@ -23,6 +23,13 @@
 #  define AG_HAVE_64BIT
 # endif
 #endif
+#ifndef _AGAR_HAVE_LONG_DOUBLE_H_
+# include <agar/config/have_long_double.h>
+# define _AGAR_HAVE_LONG_DOUBLE_H_
+# ifdef HAVE_LONG_DOUBLE
+#  define AG_HAVE_LONG_DOUBLE
+# endif
+#endif
 #ifndef _AGAR_HAVE_STDLIB_H
 # include <agar/config/_mk_have_stdlib_h.h>
 # define _AGAR_HAVE_STDLIB_H_

@@ -287,38 +287,26 @@ GetVirtualBindingType(AG_WidgetBinding *binding)
 			AG_FatalError("%s", AG_GetError());
 		}
 		switch (prop->type) {
-		case AG_PROP_BOOL:
-			return (AG_WIDGET_BOOL);
-		case AG_PROP_INT:
-			return (AG_WIDGET_INT);
-		case AG_PROP_UINT8:
-			return (AG_WIDGET_UINT8);
-		case AG_PROP_SINT8:
-			return (AG_WIDGET_SINT8);
-		case AG_PROP_UINT16:
-			return (AG_WIDGET_UINT16);
-		case AG_PROP_SINT16:
-			return (AG_WIDGET_SINT16);
-		case AG_PROP_UINT32:
-			return (AG_WIDGET_UINT32);
-		case AG_PROP_SINT32:
-			return (AG_WIDGET_SINT32);
-#ifdef HAVE_64BIT
-		case AG_PROP_UINT64:
-			return (AG_WIDGET_UINT64);
-		case AG_PROP_SINT64:
-			return (AG_WIDGET_SINT64);
+		case AG_PROP_FLOAT:	return (AG_WIDGET_FLOAT);
+		case AG_PROP_DOUBLE:	return (AG_WIDGET_DOUBLE);
+#ifdef HAVE_LONG_DOUBLE
+		case AG_PROP_LONG_DOUBLE: return (AG_WIDGET_LONG_DOUBLE);
 #endif
-		case AG_PROP_FLOAT:
-			return (AG_WIDGET_FLOAT);
-		case AG_PROP_DOUBLE:
-			return (AG_WIDGET_DOUBLE);
-		case AG_PROP_STRING:
-			return (AG_WIDGET_STRING);
-		case AG_PROP_POINTER:
-			return (AG_WIDGET_POINTER);
-		default:
-			return (-1);
+		case AG_PROP_BOOL:	return (AG_WIDGET_BOOL);
+		case AG_PROP_INT:	return (AG_WIDGET_INT);
+		case AG_PROP_UINT8:	return (AG_WIDGET_UINT8);
+		case AG_PROP_SINT8:	return (AG_WIDGET_SINT8);
+		case AG_PROP_UINT16:	return (AG_WIDGET_UINT16);
+		case AG_PROP_SINT16:	return (AG_WIDGET_SINT16);
+		case AG_PROP_UINT32:	return (AG_WIDGET_UINT32);
+		case AG_PROP_SINT32:	return (AG_WIDGET_SINT32);
+#ifdef HAVE_64BIT
+		case AG_PROP_UINT64:	return (AG_WIDGET_UINT64);
+		case AG_PROP_SINT64:	return (AG_WIDGET_SINT64);
+#endif
+		case AG_PROP_STRING:	return (AG_WIDGET_STRING);
+		case AG_PROP_POINTER:	return (AG_WIDGET_POINTER);
+		default:		return (-1);
 		}
 	default:
 		return (binding->type);
@@ -499,6 +487,11 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 		case AG_WIDGET_DOUBLE:
 			*(double **)res = (double *)binding->p1;
 			break;
+#ifdef HAVE_LONG_DOUBLE
+		case AG_WIDGET_LONG_DOUBLE:
+			*(long double **)res = (long double *)binding->p1;
+			break;
+#endif
 		case AG_WIDGET_STRING:
 			*(char ***)res = (char **)binding->p1;
 			break;
@@ -559,6 +552,12 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 			case AG_PROP_DOUBLE:
 				*(double **)res = (double *)&prop->data.d;
 				break;
+#ifdef HAVE_LONG_DOUBLE
+			case AG_PROP_LONG_DOUBLE:
+				*(long double **)res =
+				    (long double *)&prop->data.ld;
+				break;
+#endif
 			case AG_PROP_STRING:
 				*(char ***)res = (char **)&prop->data.s;
 				break;
