@@ -50,10 +50,10 @@ dereferenced on rendering.
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Label *"
-.Fn AG_LabelNewStatic "AG_Widget *parent" "Uint flags" "const char *fmt" "..."
+.Fn AG_LabelNew "AG_Widget *parent" "Uint flags" "const char *fmt" "..."
 .Pp
 .Ft "AG_Label *"
-.Fn AG_LabelNewStaticString "AG_Widget *parent" "Uint flags" "const char *text"
+.Fn AG_LabelNewString "AG_Widget *parent" "Uint flags" "const char *text"
 .Pp
 .Ft "AG_Label *"
 .Fn AG_LabelNewPolled "AG_Widget *parent" "Uint flags" "const char *fmt" "..."
@@ -72,7 +72,7 @@ dereferenced on rendering.
 .Pp
 .nr nS 0
 The
-.Fn AG_LabelNewStatic
+.Fn AG_LabelNew
 function allocates, initializes and attaches a
 .Nm
 widget initially displaying the given text (which can be changed afterwards -
@@ -80,7 +80,7 @@ see
 .Dq STATIC LABELS
 section below).
 The
-.Fn AG_LabelNewStaticString
+.Fn AG_LabelNewString
 variant accepts a non-formatted string.
 .Pp
 The
@@ -258,7 +258,7 @@ and a polled label:
 	AG_Label *myLbl;
 
 	win = AG_WindowNew(0);
-	AG_LabelNewStatic(win, 0, "Foo");
+	AG_LabelNew(win, 0, "Foo");
 	myLbl = AG_LabelNewPolled(win, 0, "myInt=%i", &myInt);
 	AG_LabelSizeHint(myLbl, 1, "myInt=0000");
 }
