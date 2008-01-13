@@ -63,6 +63,8 @@ AG_Label *AG_LabelNewPolledMT(void *, Uint, AG_Mutex *, const char *, ...)
 AG_Label *AG_LabelNewStatic(void *, Uint, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 3, 4);
 AG_Label *AG_LabelNewStaticString(void *, Uint, const char *);
+#define   AG_LabelNew AG_LabelNewStatic
+#define   AG_LabelNewString AG_LabelNewStaticString
 
 void	AG_LabelString(AG_Label *, const char *);
 void	AG_LabelText(AG_Label *, const char *, ...)
