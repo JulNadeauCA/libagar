@@ -383,6 +383,7 @@ DEV_DebugServerStart(void)
 static void
 StartServer(AG_Event *event)
 {
+	NS_InitSubsystem(0);
 	if (DEV_DebugServerStart() == 0)
 		servRunning = 1;
 }
