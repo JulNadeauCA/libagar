@@ -219,6 +219,7 @@ void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
 
 #ifdef HAVE_OPENGL
 void	 AG_WidgetBlitSurfaceGL(void *, int, float, float);
+void	 AG_WidgetBlitSurfaceFlippedGL(void *, int, float, float);
 void	 AG_WidgetPutPixel32_GL(void *, int, int, Uint32);
 void	 AG_WidgetPutPixelRGB_GL(void *, int, int, Uint8, Uint8, Uint8);
 void	 AG_WidgetFreeResourcesGL(AG_Widget *);

@@ -990,6 +990,63 @@ AG_WidgetBlitSurfaceGL(void *pWidget, int name, float w, float h)
 	glBindTexture(GL_TEXTURE_2D, texname);
 	glBegin(GL_TRIANGLE_STRIP);
 	{
+		glTexCoord2f(texcoord[0],	texcoord[1]);
+		glVertex2f((GLfloat)w,		(GLfloat)h);
+		glTexCoord2f(texcoord[2],	texcoord[1]);
+		glVertex2f(0.0,			(GLfloat)h);
+		glTexCoord2f(texcoord[0],	texcoord[3]);
+		glVertex2f((GLfloat)w,		0.0);
+		glTexCoord2f(texcoord[2],	texcoord[3]);
+		glVertex2f(0.0,			0.0);
+	}
+	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	if (alpha) {
+		if (blend_sv) {
+			glEnable(GL_BLEND);
+		} else {
+			glDisable(GL_BLEND);
+		}
+		glBlendFunc(blend_sfactor, blend_dfactor);
+	}
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
+}
+
+/*
+ * OpenGL-only version of AG_WidgetBlitSurface() without explicit
+ * source or destination rectangle parameter (flipped).
+ */
+void
+AG_WidgetBlitSurfaceFlippedGL(void *pWidget, int name, float w, float h)
+{
+	AG_Widget *wid = pWidget;
+	GLuint texname;
+	GLfloat *texcoord;
+	GLboolean blend_sv;
+	GLint blend_sfactor, blend_dfactor;
+	GLfloat texenvmode;
+	SDL_Surface *su = wid->surfaces[name];
+	int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
+	
+	UpdateTexture(wid, name);
+
+	texname = wid->textures[name];
+	texcoord = &wid->texcoords[name*4];
+	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+	if (alpha) {
+		glGetBooleanv(GL_BLEND, &blend_sv);
+		glGetIntegerv(GL_BLEND_SRC, &blend_sfactor);
+		glGetIntegerv(GL_BLEND_DST, &blend_dfactor);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+	
+	glBindTexture(GL_TEXTURE_2D, texname);
+	glBegin(GL_TRIANGLE_STRIP);
+	{
 		glTexCoord2f(texcoord[2],	texcoord[1]);
 		glVertex2f(0.0,			0.0);
 		glTexCoord2f(texcoord[0],	texcoord[1]);
