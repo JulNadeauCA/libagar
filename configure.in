@@ -16,7 +16,7 @@ REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
 REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
 
 # Agar version
-HDEFINE(VERSION, "1.3.2rc1")
+HDEFINE(VERSION, "1.3.2rc2")
 HDEFINE(RELEASE, "The Birth Of An Era Obscured By Sulfur And Flames")
 
 # Installation directories
