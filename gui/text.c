@@ -998,8 +998,8 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *glyph;
 	const Uint32 *ch;
-	int xStart;
-	int w, h;
+	int xStart, yStart;
+	int w, h, line;
 	SDL_Surface *su;
 	Uint32 pixel;
 	Uint8 *src;
@@ -1027,7 +1027,10 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	dstEnd = (Uint32 *)su->pixels + su->pitch/4 * su->h;
 
 	/* Load and render each character */
-	xStart = 0;
+ 	line = 0;
+ 	xStart = (nLines > 1) ? JustifyOffset(w, wLines[0]) : 0;
+ 	yStart = 0;
+
 	SDL_GetRGB(state->color, agSurfaceFmt, &r, &g, &b);
 	pixel = (r << 16) |
 	        (g <<  8) |
@@ -1035,6 +1038,12 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	SDL_FillRect(su, NULL, pixel);	/* Initialize with fg and 0 alpha */
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
+		if (*ch == '\n') {
+			yStart += font->lineskip;
+			xStart = JustifyOffset(w, wLines[++line]);
+			continue;
+		}
+
 		error = AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
 		                                     TTF_CACHED_PIXMAP);
 		if( error ) {
@@ -1070,7 +1079,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 				continue;
 			}
 			dst = (Uint32 *)su->pixels +
-			      (row+glyph->yoffset) * su->pitch/4 +
+			      (yStart+row+glyph->yoffset) * su->pitch/4 +
 			      xStart + glyph->minx;
 
 			/* Adjust src for pixmaps to account for pitch. */
