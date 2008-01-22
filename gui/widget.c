@@ -1273,10 +1273,10 @@ AG_WidgetPushClipRect(void *p, AG_Rect r)
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		GLdouble eq0[4] = { 1, 0, 0, -(wid->cx + r.x - 1) };
-		GLdouble eq1[4] = { 0, 1, 0, -(wid->cy + r.y - 1) };
-		GLdouble eq2[4] = { -1, 0, 0, (wid->cx + r.x + r.w) };
-		GLdouble eq3[4] = { 0, -1, 0, (wid->cy + r.y + r.h) };
+		GLdouble eq0[4] = {  1,  0,  0, -(wid->cx + r.x) };
+		GLdouble eq1[4] = {  0,  1,  0, -(wid->cy + r.y) };
+		GLdouble eq2[4] = { -1,  0,  0,  (wid->cx + r.x + r.w) };
+		GLdouble eq3[4] = {  0, -1,  0,  (wid->cy + r.y + r.h) };
 
 		glPushAttrib(GL_TRANSFORM_BIT);
 		glClipPlane(GL_CLIP_PLANE0, eq0);
@@ -1285,7 +1285,7 @@ AG_WidgetPushClipRect(void *p, AG_Rect r)
 		glClipPlane(GL_CLIP_PLANE3, eq3);
 		glEnable(GL_CLIP_PLANE0);
 		glEnable(GL_CLIP_PLANE1);
-		glEnable(GL_CLIP_PLANE1);
+		glEnable(GL_CLIP_PLANE2);
 		glEnable(GL_CLIP_PLANE3);
 	} else
 #endif
