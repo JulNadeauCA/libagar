@@ -133,6 +133,8 @@ typedef struct ag_widget {
 	float *texcoords;		/* Cached texture coordinates */
 	Uint *textureGC;		/* Textures queued for deletion */
 	Uint nTextureGC;
+	int clipPlaneState[4];		/* Saved state of clipping planes */
+	double rClipSaveGL[4][4];	/* Saved clipping planes */
 #endif
 
 	AG_Mutex bindings_lock;			 	/* Lock on bindings */
