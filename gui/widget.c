@@ -81,6 +81,10 @@ Init(void *obj)
 	wid->texcoords = NULL;
 	wid->textureGC = NULL;
 	wid->nTextureGC = 0;
+	wid->clipPlaneState[0] = 0;
+	wid->clipPlaneState[1] = 0;
+	wid->clipPlaneState[2] = 0;
+	wid->clipPlaneState[3] = 0;
 #endif
 
 	/*
@@ -1278,7 +1282,34 @@ AG_WidgetPushClipRect(void *p, AG_Rect r)
 		GLdouble eq2[4] = { -1,  0,  0,  (wid->cx + r.x + r.w) };
 		GLdouble eq3[4] = {  0, -1,  0,  (wid->cy + r.y + r.h) };
 
-		glPushAttrib(GL_TRANSFORM_BIT);
+		if (glIsEnabled(GL_CLIP_PLANE0)) {
+			wid->clipPlaneState[0] = 1;
+			glGetClipPlane(GL_CLIP_PLANE0,
+			    (GLdouble *)wid->rClipSaveGL[0]);
+		} else {
+			wid->clipPlaneState[0] = 0;
+		}
+		if (glIsEnabled(GL_CLIP_PLANE1)) {
+			wid->clipPlaneState[1] = 1;
+			glGetClipPlane(GL_CLIP_PLANE1,
+			    (GLdouble *)wid->rClipSaveGL[1]);
+		} else {
+			wid->clipPlaneState[1] = 0;
+		}
+		if (glIsEnabled(GL_CLIP_PLANE2)) {
+			wid->clipPlaneState[2] = 1;
+			glGetClipPlane(GL_CLIP_PLANE2,
+			    (GLdouble *)wid->rClipSaveGL[2]);
+		} else {
+			wid->clipPlaneState[2] = 0;
+		}
+		if (glIsEnabled(GL_CLIP_PLANE3)) {
+			wid->clipPlaneState[3] = 1;
+			glGetClipPlane(GL_CLIP_PLANE3,
+			    (GLdouble *)wid->rClipSaveGL[3]);
+		} else {
+			wid->clipPlaneState[3] = 0;
+		}
 		glClipPlane(GL_CLIP_PLANE0, eq0);
 		glClipPlane(GL_CLIP_PLANE1, eq1);
 		glClipPlane(GL_CLIP_PLANE2, eq2);
@@ -1335,7 +1366,30 @@ AG_WidgetPopClipRect(void *p)
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		glPopAttrib();
+		if (!wid->clipPlaneState[0]) {
+			glDisable(GL_CLIP_PLANE0);
+		} else {
+			glClipPlane(GL_CLIP_PLANE0,
+			    (GLdouble *)wid->rClipSaveGL[0]);
+		}
+		if (!wid->clipPlaneState[1]) {
+			glDisable(GL_CLIP_PLANE1);
+		} else {
+			glClipPlane(GL_CLIP_PLANE1,
+			    (GLdouble *)wid->rClipSaveGL[1]);
+		}
+		if (!wid->clipPlaneState[2]) {
+			glDisable(GL_CLIP_PLANE2);
+		} else {
+			glClipPlane(GL_CLIP_PLANE2,
+			    (GLdouble *)wid->rClipSaveGL[2]);
+		}
+		if (!wid->clipPlaneState[3]) {
+			glDisable(GL_CLIP_PLANE3);
+		} else {
+			glClipPlane(GL_CLIP_PLANE3,
+			    (GLdouble *)wid->rClipSaveGL[3]);
+		}
 	} else
 #endif
 	{
