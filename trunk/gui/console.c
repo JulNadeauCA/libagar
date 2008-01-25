@@ -121,8 +121,10 @@ Draw(void *p)
 		AG_ConsoleLine *ln = &cons->lines[r];
 
 		if (ln->surface == -1) {
-			AG_TextFont(ln->font);
-			AG_TextColor(ln->cFg);
+			if (ln->font != NULL) {
+				AG_TextFont(ln->font);
+			}
+			AG_TextColor32(ln->cFg);
 			su = AG_TextRender(ln->text);
 			ln->surface = AG_WidgetMapSurface(cons, su);
 		}
