@@ -104,26 +104,39 @@ void
 AG_Debug(void *p, const char *fmt, ...)
 {
 #ifdef DEBUG
-	char path[128];
 	AG_Object *obj = p;
 	va_list args;
-	FILE *f;
 	
-	if (OBJECT_DEBUG(obj) || agDebugLvl >= 10) {
-		Strlcpy(path, obj->name, sizeof(path));
-		Strlcat(path, ".debug", sizeof(path));
+	if (obj->debugFn != NULL) {
+		char *buf, *p;
 
 		va_start(args, fmt);
-		if (agDebugLvl >= 10 && (f = fopen(path, "a")) != NULL) {
-			vfprintf(f, fmt, args);
-			fclose(f);
-		} else {
-			printf("%s: ", OBJECT(obj)->name);
-			vprintf(fmt, args);
-		}
+		Vasprintf(&buf, fmt, args);
+		p = &buf[strlen(buf)-1];
+		if (*p == '\n') { *p = '\0'; }
+		obj->debugFn(obj, obj->debugPtr, buf);
+		Free(buf);
 		va_end(args);
+	} else {
+		if (agDebugLvl >= 10 || OBJECT_DEBUG(obj)) {
+			char path[128];
+			FILE *f;
+
+			Strlcpy(path, obj->name, sizeof(path));
+			Strlcat(path, ".debug", sizeof(path));
+			va_start(args, fmt);
+			if (agDebugLvl >= 10 &&
+			    (f = fopen(path, "a")) != NULL) {
+				vfprintf(f, fmt, args);
+				fclose(f);
+			} else {
+				printf("%s: ", OBJECT(obj)->name);
+				vprintf(fmt, args);
+			}
+			va_end(args);
+		}
 	}
-#endif
+#endif /* DEBUG */
 }
 
 void
