@@ -108,6 +108,9 @@ to be archived to different forms of persistent storage in an efficient manner.
 .Ft "void"
 .Fn AG_ObjectSetClass "AG_Object *obj" "AG_ObjectClass *cls"
 .Pp
+.Ft "void"
+.Fn AG_ObjectSetDebugFn "AG_Object *obj" "void (*fn)(void *obj, void *userPtr, void *msg)" "void *userPtr"
+.Pp
 .nr nS 0
 The
 .Fn AG_ObjectNew
@@ -450,6 +453,14 @@ changes the generic operation vector (pointer to
 .Ft AG_ObjectClass
 structure) associated with the given object.
 This function is not thread-safe.
+.Pp
+.Fn AG_ObjectSetDebugFn
+specifies a function to process debug messages (as issued by
+.Xr AG_Debug 3 )
+for the object.
+This function is a no-op unless Agar was compiled with the
+.Dv DEBUG
+option.
 .Sh CLASS INFORMATION
 .nr nS 1
 .Ft "void"

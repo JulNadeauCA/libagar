@@ -83,6 +83,10 @@ AG_ObjectInit(void *p, void *cls)
 	ob->lockinfo = Malloc(sizeof(char *));
 	ob->nlockinfo = 0;
 #endif
+#ifdef DEBUG
+	ob->debugFn = NULL;
+	ob->debugPtr = NULL;
+#endif
 	AG_MutexInitRecursive(&ob->lock);
 	
 	TAILQ_INIT(&ob->deps);
@@ -1468,6 +1472,21 @@ AG_ObjectSetName(void *p, const char *fmt, ...)
 	}
 	
 	AG_ObjectUnlock(ob);
+}
+
+/* Specify a function to invoke in order to process Debug() messages. */
+void
+AG_ObjectSetDebugFn(void *pObj, void (*fn)(void *, void *, const char *),
+    void *pUser)
+{
+#ifdef DEBUG
+	AG_Object *obj = pObj;
+	
+	AG_ObjectLock(obj);
+	obj->debugFn = fn;
+	obj->debugPtr = pUser;
+	AG_ObjectUnlock(obj);
+#endif
 }
 
 /*

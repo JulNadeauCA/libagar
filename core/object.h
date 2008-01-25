@@ -97,6 +97,10 @@ typedef struct ag_object {
 	const char **lockinfo;		/* For lock debugging */
 	Uint nlockinfo;
 #endif
+#ifdef DEBUG
+	void (*debugFn)(void *, void *, const char *);
+	void *debugPtr;
+#endif
 } AG_Object;
 
 enum ag_object_checksum_alg {
@@ -180,6 +184,8 @@ void	 AG_ObjectSetArchivePath(void *, const char *);
 void	 AG_ObjectGetArchivePath(void *, char *, size_t)
 	                         BOUNDED_ATTRIBUTE(__string__, 2, 3);
 void	 AG_ObjectSetClass(void *, void *);
+void	 AG_ObjectSetDebugFn(void *, void (*)(void *, void *, const char *),
+                             void *);
 
 int	 AG_ObjectIsClassGeneral(const AG_Object *, const char *);
 int	 AG_ObjectGetInheritHier(void *, AG_ObjectClass ***, int *);
