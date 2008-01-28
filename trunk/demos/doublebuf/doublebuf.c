@@ -56,7 +56,7 @@ main(int argc, char *argv[])
 	AG_Window *win;
 	AG_Table *tbl;
 
-	if (AG_InitCore("doublebuf", 0) == -1 ||
+	if (AG_InitCore("doublebuf-demo", 0) == -1 ||
 	    AG_InitVideo(640, 480, 32, AG_VIDEO_HWSURFACE|AG_VIDEO_DOUBLEBUF)
 	     == -1) {
 		return (1);
