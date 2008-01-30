@@ -44,12 +44,12 @@
 #ifdef __FLT_MIN__
 # define AG_FLT_MIN __FLT_MIN__
 #else
-# define AG_FLT_MIN 1.17549435e-38f
+# define AG_FLT_MIN 1.175494351e-38f
 #endif
 #ifdef __FLT_MAX__
 # define AG_FLT_MAX __FLT_MAX__
 #else
-# define AG_FLT_MAX 3.40282347e+38f
+# define AG_FLT_MAX 3.402823466e+38f
 #endif
 #ifdef __DBL_MIN__
 # define AG_DBL_MIN __DBL_MIN__
@@ -59,7 +59,7 @@
 #ifdef __DBL_MAX__
 # define AG_DBL_MAX __DBL_MAX__
 #else
-# define AG_DBL_MAX 1.7976931348623157e+308
+# define AG_DBL_MAX 1.7976931348623158e+308
 #endif
 #ifdef HAVE_LONG_DOUBLE
 # ifdef __LDBL_MIN__
