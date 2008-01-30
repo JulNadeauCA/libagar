@@ -801,45 +801,57 @@ Draw(void *p)
 }
 
 static void
+GetItemSize(AG_MenuItem *item, int *w, int *h)
+{
+	AG_Menu *m = item->pmenu;
+	int lbl;
+
+	if (item->lblEnabled != -1) {
+		lbl = item->lblEnabled;
+	} else if (item->lblDisabled != -1) {
+		lbl = item->lblDisabled;
+	} else {
+		lbl = -1;
+	}
+	if (lbl != -1) {
+		*w = WSURFACE(m,lbl)->w;
+		*h = WSURFACE(m,lbl)->h;
+	} else {
+		AG_TextSize(item->text, w, h);
+	}
+	(*w) += m->lPadLbl + m->rPadLbl;
+	(*h) += m->tPadLbl + m->bPadLbl;
+}
+
+static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Menu *m = p;
 	int i, x, y;
 	int wLbl, hLbl;
 
-	x = r->w = m->lPad;
-	y = r->h = m->tPad;
+	x = m->lPad;
+	y = m->tPad;
+	r->h = 0;
+	r->w = x;
 
 	if (m->root == NULL) {
 		return;
 	}
 	for (i = 0; i < m->root->nsubitems; i++) {
-		AG_MenuItem *item = &m->root->subitems[i];
-		int lbl = (item->lblEnabled!=-1) ? item->lblEnabled :
-			  (item->lblDisabled!=-1) ? item->lblDisabled :
-			  -1;
-
-		if (lbl != -1) {
-			wLbl = WSURFACE(m,lbl)->w;
-			hLbl = WSURFACE(m,lbl)->h;
-		} else {
-			AG_TextSize(item->text, &wLbl, &hLbl);
+		GetItemSize(&m->root->subitems[i], &wLbl, &hLbl);
+		if (r->h == 0) {
+			r->h = m->tPad+hLbl+m->bPad;
 		}
-		wLbl += m->lPadLbl + m->rPadLbl;
-		hLbl += m->tPadLbl + m->bPadLbl;
-		item->x = x;
-		item->y = y;
-		x += wLbl + m->lPadLbl + m->rPadLbl;
-		if (r->h < (y + hLbl + m->bPad)) {
-			r->h = y + hLbl + m->bPad;
-		}
-		if (r->w < (x + m->rPad)) {
-			r->w = x + m->rPad;
-		}
-		if (x >= agView->w) {			/* Wrap */
+		if (x+wLbl > agView->w) {			/* Wrap */
 			x = m->lPad;
 			y += hLbl;
+			r->h += hLbl+m->bPad;
 		}
+		if (r->w < MIN(x+wLbl,agView->w)) {
+			r->w = MIN(x+wLbl,agView->w);
+		}
+		x += wLbl;
 	}
 }
 
@@ -848,7 +860,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	AG_Menu *m = p;
 	int wLbl, hLbl;
-	int x, y, lbl, i;
+	int x, y, i;
 	
 	if (WIDGET(m)->w < (m->lPad + m->rPad) ||
 	    WIDGET(m)->h < (m->tPad + m->bPad)) {
@@ -862,27 +874,15 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	for (i = 0; i < m->root->nsubitems; i++) {
 		AG_MenuItem *item = &m->root->subitems[i];
 
-		if (item->lblEnabled != -1) {
-			lbl = item->lblEnabled;
-		} else if (item->lblDisabled != -1) {
-			lbl = item->lblDisabled;
-		} else {
-			lbl = -1;
-		}
-		if (lbl != -1) {
-			wLbl = WSURFACE(m,lbl)->w;
-			hLbl = WSURFACE(m,lbl)->h;
-		} else {
-			AG_TextSize(item->text, &wLbl, &hLbl);
-		}
-		wLbl += m->lPadLbl + m->rPadLbl;
-		hLbl += m->tPadLbl + m->bPadLbl;
+		GetItemSize(item, &wLbl, &hLbl);
 		item->x = x;
 		item->y = y;
-		if ((x += wLbl) >= a->w) {			/* Wrap */
-			x = m->lPad;
+		if (x+wLbl > a->w) {
+			item->x = m->lPad;
+			item->y += hLbl;
 			y += hLbl;
 		}
+		x += wLbl;
 	}
 	return (0);
 }
