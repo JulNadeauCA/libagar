@@ -547,18 +547,28 @@ AG_ResizeDisplay(int w, int h)
 		if (win->flags & AG_WINDOW_MAXIMIZED) {
 			AG_WindowSetGeometryMax(win);
 		} else {
-			if (a.x+a.w > agView->w) {
-				a.x = agView->w - a.w;
-				if (a.x < 0) {
-					a.x = 0;
-					a.w = agView->w;
+			if (win->flags & AG_WINDOW_HMAXIMIZE) {
+				a.x = 0;
+				a.w = agView->w;
+			} else {
+				if (a.x+a.w > agView->w) {
+					a.x = agView->w - a.w;
+					if (a.x < 0) {
+						a.x = 0;
+						a.w = agView->w;
+					}
 				}
 			}
-			if (a.y+a.h > agView->h) {
-				a.y = agView->h - a.h;
-				if (a.y < 0) {
-					a.y = 0;
-					a.h = agView->w;
+			if (win->flags & AG_WINDOW_VMAXIMIZE) {
+				a.y = 0;
+				a.h = agView->h;
+			} else {
+				if (a.y+a.h > agView->h) {
+					a.y = agView->h - a.h;
+					if (a.y < 0) {
+						a.y = 0;
+						a.h = agView->w;
+					}
 				}
 			}
 			AG_WidgetSizeAlloc(win, &a);
