@@ -55,6 +55,8 @@ typedef struct ag_window {
 #define AG_WINDOW_NOBACKGROUND	0x08000	/* Don't fill the background */
 #define AG_WINDOW_NOUPDATERECT	0x10000	/* Don't update rectangle */
 #define AG_WINDOW_FOCUSONATTACH	0x20000	/* Automatic focus on attach */
+#define AG_WINDOW_HMAXIMIZE	0x40000	/* Keep maximized horizontally */
+#define AG_WINDOW_VMAXIMIZE	0x80000	/* Keep maximized vertically */
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
 #define AG_WINDOW_PLAIN		(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS)
 
