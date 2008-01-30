@@ -81,7 +81,8 @@ AG_MenuNewGlobal(Uint flags)
 
 	agAppMenu = m;
 	agAppMenuWin = AG_WindowNewNamed(AG_WINDOW_PLAIN|AG_WINDOW_KEEPBELOW|
-					 AG_WINDOW_DENYFOCUS,
+					 AG_WINDOW_DENYFOCUS|
+					 AG_WINDOW_HMAXIMIZE,
 					 "_agAppMenu");
 	AG_ObjectAttach(agAppMenuWin, m);
 	AG_WindowSetPadding(agAppMenuWin, 0, 0, 0, 0);
