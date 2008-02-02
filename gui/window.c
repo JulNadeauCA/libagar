@@ -1125,7 +1125,6 @@ IconButtonDown(AG_Event *event)
 	WIDGET(icon)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
 	if (icon->flags & AG_ICON_DBLCLICKED) {
-		printf("DBLCLICKED\n");
 		AG_CancelEvent(icon, "dblclick-expire");
 		AG_WindowUnminimize(win);
 		AG_ObjectDetach(win->icon);
@@ -1133,7 +1132,6 @@ IconButtonDown(AG_Event *event)
 		icon->wDND = NULL;
 		icon->flags &= (AG_ICON_DND|AG_ICON_DBLCLICKED);
 	} else {
-		printf("!DBLCLICKED\n");
 		icon->flags |= (AG_ICON_DND|AG_ICON_DBLCLICKED);
 		AG_SchedEvent(NULL, icon, agMouseDblclickDelay,
 		    "dblclick-expire", NULL);
