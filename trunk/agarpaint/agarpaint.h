@@ -1,9 +1,6 @@
 #ifndef _AGARPAINT_H_
 #define _AGARPAINT_H_
 
-#include <agar/core/strlcpy.h>
-#include <agar/core/strlcat.h>
-
 #include <agar/config/_mk_have_unsigned_typedefs.h>
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 #define _MK_HAVE_UNSIGNED_TYPEDEFS
@@ -27,11 +24,6 @@ typedef unsigned long Ulong;
 # define textdomain(d)
 # define bindtextdomain(p, d)
 #endif
-
-#define Malloc AG_Malloc
-#define Free AG_Free
-#define Strlcpy AG_Strlcpy
-#define Strlcat AG_Strlcat
 
 #ifndef MAXPATHLEN
 #define MAXPATHLEN 1024

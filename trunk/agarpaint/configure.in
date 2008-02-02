@@ -7,6 +7,7 @@ HDEFINE(VERSION, "1.1")
 HDEFINE(RELEASE, "The Ecstatic Spiral to Hell")
 
 C_DEFINE(_USE_AGAR_QUEUE)
+C_DEFINE(_USE_AGAR_STD)
 
 CHECK(cc)
 CHECK(getopt)
