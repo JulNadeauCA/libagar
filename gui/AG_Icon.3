@@ -1,4 +1,4 @@
-.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2007-2008 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@ It is commonly used with
 .Sh INITIALIZATION
 .nr nS 1
 .Ft "AG_Icon *"
-.Fn AG_IconNew "void"
+.Fn AG_IconNew "void *parent" "Uint flags"
 .Pp
 .Ft "AG_Icon *"
 .Fn AG_IconFromSurface "SDL_Surface *s"
@@ -64,6 +64,12 @@ It is commonly used with
 .Pp
 .Ft "void"
 .Fn AG_IconSetSurfaceNODUP "AG_Icon *icon" "SDL_Surface *s"
+.Pp
+.Ft "void"
+.Fn AG_IconSetText "AG_Icon *icon" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_IconSetBackgroundFill "AG_Icon *icon" "int enable" "Uint32 color"
 .Pp
 .nr nS 0
 The
@@ -87,6 +93,16 @@ changes the surface associated with an icon.
 The
 .Fn AG_IconSetSurfaceNODUP
 variant does not create a copy of the surface.
+.Pp
+.Fn AG_IconSetText
+sets the text label to be displayed under the icon.
+.Pp
+.Fn AG_IconSetBackgroundFill
+enables or disables background color fill.
+.Fa color
+must be specified in
+.Va agVideoFmt
+pixel format.
 .Sh EVENTS
 The
 .Nm

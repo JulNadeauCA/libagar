@@ -6,9 +6,11 @@
 #ifdef _AGAR_INTERNAL
 #include <gui/widget.h>
 #include <gui/text.h>
+#include <gui/label.h>
 #else
 #include <agar/gui/widget.h>
 #include <agar/gui/text.h>
+#include <agar/gui/label.h>
 #endif
 
 #include "begin_code.h"
@@ -19,25 +21,33 @@ struct ag_socket;
 typedef struct ag_icon {
 	struct ag_widget wid;
 	Uint flags;
+#define AG_ICON_REGEN_LABEL	0x01	/* Update text label */
+#define AG_ICON_DND		0x02	/* Drag-and-drop in progress */
+#define AG_ICON_DBLCLICKED	0x04	/* Double click flag */
+#define AG_ICON_BGFILL		0x08	/* Enable background fill */
 	int surface;			/* Icon surface */
+	char labelTxt[AG_LABEL_MAX];	/* Optional text label */
+	int  labelSurface;		/* Optional label surface */
+	int  labelPad;			/* Icon-label spacing */
 	struct ag_window *wDND;		/* For drag/drop */
 	struct ag_socket *sock;		/* Back pointer to socket */
+	int xSaved, ySaved;		/* Saved coordinates */
+	int wSaved, hSaved;		/* Saved geometry */
+	Uint32 cBackground;		/* Background fill color */
 } AG_Icon;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agIconClass;
 
-AG_Icon *AG_IconNew(void);
+AG_Icon *AG_IconNew(void *, Uint);
 AG_Icon *AG_IconFromSurface(SDL_Surface *);
 AG_Icon *AG_IconFromBMP(const char *);
-
-void    AG_IconSetPadding(AG_Icon *, int, int, int, int);
-#define	AG_IconSetPaddingLeft(b,v)   AG_IconSetPadding((b),(v),-1,-1,-1)
-#define	AG_IconSetPaddingRight(b,v)  AG_IconSetPadding((b),-1,(v),-1,-1)
-#define AG_IconSetPaddingTop(b,v)    AG_IconSetPadding((b),-1,-1,(v),-1)
-#define	AG_IconSetPaddingBottom(b,v) AG_IconSetPadding((b),-1,-1,-1,(v))
-void	AG_IconSetSurface(AG_Icon *, SDL_Surface *);
-void	AG_IconSetSurfaceNODUP(AG_Icon *, SDL_Surface *);
+void	 AG_IconSetSurface(AG_Icon *, SDL_Surface *);
+void	 AG_IconSetSurfaceNODUP(AG_Icon *, SDL_Surface *);
+void	 AG_IconSetText(AG_Icon *, const char *, ...)
+	     FORMAT_ATTRIBUTE(printf, 2, 3)
+	     NONNULL_ATTRIBUTE(2);
+void	 AG_IconSetBackgroundFill(AG_Icon *, int, Uint32);
 __END_DECLS
 
 #include "close_code.h"

@@ -33,12 +33,14 @@
 #include <stdarg.h>
 
 AG_Icon *
-AG_IconNew(void)
+AG_IconNew(void *parent, Uint flags)
 {
 	AG_Icon *icon;
 
 	icon = Malloc(sizeof(AG_Icon));
 	AG_ObjectInit(icon, &agIconClass);
+	icon->flags |= flags;
+	AG_ObjectAttach(parent, icon);
 	return (icon);
 }
 
@@ -80,24 +82,44 @@ Init(void *obj)
 	icon->surface = -1;
 	icon->wDND = NULL;
 	icon->sock = NULL;
+	icon->labelTxt[0] = '\0';
+	icon->labelSurface = -1;
+	icon->labelPad = 4;
+	icon->xSaved = -1;
+	icon->ySaved = -1;
+	icon->wSaved = -1;
+	icon->hSaved = -1;
+	icon->cBackground = 0;
 }
 
 static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Icon *icon = obj;
+	int wLbl, hLbl;
 
-	if (icon->surface != -1) {
-		r->w = WSURFACE(icon,icon->surface)->w;
-		r->h = WSURFACE(icon,icon->surface)->h;
+	if (icon->surface == -1) {
+		r->w = 0;
+		r->h = 0;
+	}
+	r->w = WSURFACE(icon,icon->surface)->w;
+	r->h = WSURFACE(icon,icon->surface)->h;
+	if (icon->labelTxt[0] != '\0') {
+		if (icon->labelSurface != -1) {
+			wLbl = WSURFACE(icon,icon->labelSurface)->w;
+			hLbl = WSURFACE(icon,icon->labelSurface)->h;
+		} else {
+			AG_TextSize(icon->labelTxt, &wLbl, &hLbl);
+		}
+		r->h += icon->labelPad + hLbl;
+		r->w = MAX(r->w, wLbl);
 	}
 }
 
 static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	if (a->w < 1 ||
-	    a->h < 1) {
+	if (a->w < 1 || a->h < 1) {
 		return (-1);
 	}
 	return (0);
@@ -107,8 +129,47 @@ static void
 Draw(void *obj)
 {
 	AG_Icon *icon = obj;
+	int hIcon;
 
-	AG_WidgetBlitSurface(icon, icon->surface, 0, 0);
+	if (icon->surface == -1) {
+		return;
+	}
+	AG_WidgetBlitSurface(icon, icon->surface,
+	    WIDGET(icon)->w/2 - WSURFACE(icon,icon->surface)->w/2,
+	    0);
+	if (icon->labelTxt[0] != '\0') {
+		if (icon->labelSurface != -1 &&
+		    icon->flags & AG_ICON_REGEN_LABEL) {
+			AG_WidgetUnmapSurface(icon, icon->labelSurface);
+			icon->labelSurface = -1;
+		}
+		if (icon->labelSurface == -1) {
+			AG_PushTextState();
+			icon->labelSurface = AG_WidgetMapSurface(icon,
+			    AG_TextRender(icon->labelTxt));
+			AG_PopTextState();
+		}
+		hIcon = WSURFACE(icon,icon->surface)->h;
+		if (icon->flags & AG_ICON_BGFILL) {
+			AG_DrawRectFilled(icon,
+			    AG_RECT(0, hIcon, WIDTH(icon), HEIGHT(icon)-hIcon),
+			    icon->cBackground);
+		}
+		AG_WidgetBlitSurface(icon, icon->labelSurface,
+		    WIDTH(icon)/2 - WSURFACE(icon,icon->labelSurface)->w/2,
+		    WSURFACE(icon,icon->surface)->h + icon->labelPad);
+	}
+}
+
+void
+AG_IconSetBackgroundFill(AG_Icon *icon, int enable, Uint32 color)
+{
+	if (enable) {
+		icon->flags |= AG_ICON_BGFILL;
+	} else {
+		icon->flags &= ~(AG_ICON_BGFILL);
+	}
+	icon->cBackground = color;
 }
 
 void
@@ -133,6 +194,25 @@ AG_IconSetSurfaceNODUP(AG_Icon *icon, SDL_Surface *su)
 		AG_WidgetReplaceSurface(icon, icon->surface, su);
 	} else {
 		icon->surface = AG_WidgetMapSurface(icon, su);
+	}
+	AG_ObjectUnlock(icon);
+}
+
+void
+AG_IconSetText(AG_Icon *icon, const char *fmt, ...)
+{
+	va_list ap;
+
+	AG_ObjectLock(icon);
+	if (fmt == NULL || fmt[0] == '\0') {
+		AG_WidgetUnmapSurface(icon, icon->labelSurface);
+		icon->labelSurface = -1;
+		icon->labelTxt[0] = '\0';
+	} else {
+		va_start(ap, fmt);
+		Vsnprintf(icon->labelTxt, sizeof(icon->labelTxt), fmt, ap);
+		va_end(ap);
+		icon->flags |= AG_ICON_REGEN_LABEL;
 	}
 	AG_ObjectUnlock(icon);
 }
