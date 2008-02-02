@@ -627,7 +627,11 @@ AG_ViewAttach(void *child)
 	AG_LockVFS(agView);
 	AG_ObjectAttach(agView, win);
 	
-	TAILQ_INSERT_TAIL(&agView->windows, win, windows);
+	if (win->flags & AG_WINDOW_KEEPBELOW) {
+		TAILQ_INSERT_HEAD(&agView->windows, win, windows);
+	} else {
+		TAILQ_INSERT_TAIL(&agView->windows, win, windows);
+	}
 	if (win->flags & AG_WINDOW_FOCUSONATTACH) {
 		AG_WindowFocus(win);
 	}
@@ -1376,12 +1380,7 @@ UnminimizeWindow(AG_Event *event)
 {
 	AG_Window *win = AG_PTR(1);
 
-	if (!win->visible) {
-		AG_WindowShow(win);
-		win->flags &= ~(AG_WINDOW_MINIMIZED);
-	} else {
-		AG_WindowFocus(win);
-	}
+	AG_WindowUnminimize(win);
 }
 
 void
