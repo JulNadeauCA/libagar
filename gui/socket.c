@@ -235,7 +235,7 @@ Draw(void *obj)
 	
 	STYLE(sock)->SocketBackground(sock);
 	if (sock->icon != NULL) {
-		AG_WidgetBlitSurface(sock->icon, sock->icon->surface, 0, 0);
+		AGWIDGET_OPS(sock->icon)->draw(sock->icon);
 	}
 	if (sock->overlayFn != NULL) {
 		AG_PostEvent(NULL, sock->overlayFn, sock->overlayFn->name,
