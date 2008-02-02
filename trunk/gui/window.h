@@ -14,6 +14,7 @@
 #define AG_WINDOW_CAPTION_MAX 512
 
 struct ag_titlebar;
+struct ag_icon;
 
 enum ag_window_alignment {
 	AG_WINDOW_UPPER_LEFT,
@@ -71,16 +72,20 @@ typedef struct ag_window {
 	int savx, savy;				/* Saved coordinates (px) */
 	int savw, savh;				/* Saved geometry (px) */
 	
-	AG_TAILQ_HEAD(,ag_window) subwins;		/* Sub-windows */
-	AG_TAILQ_ENTRY(ag_window) windows;		/* Active window list */
-	AG_TAILQ_ENTRY(ag_window) swins;		/* Sub-window list */
-	AG_TAILQ_ENTRY(ag_window) detach;		/* Zombie window list */
+	AG_TAILQ_HEAD(,ag_window) subwins;	/* Sub-windows */
+	AG_TAILQ_ENTRY(ag_window) windows;	/* Active window list */
+	AG_TAILQ_ENTRY(ag_window) swins;	/* Sub-window list */
+	AG_TAILQ_ENTRY(ag_window) detach;	/* Zombie window list */
+
+	struct ag_icon *icon;			/* Window icon */
 } AG_Window;
 
 #define AG_WINDOW_FOCUSED(w) (AG_TAILQ_LAST(&agView->windows,ag_windowq)==(w))
 
 __BEGIN_DECLS
 extern AG_WidgetClass agWindowClass;
+extern int agWindowIconWidth;
+extern int agWindowIconHeight;
 
 AG_Window *AG_WindowNew(Uint);
 AG_Window *AG_WindowNewNamed(Uint, const char *, ...)
@@ -90,6 +95,9 @@ void	 AG_WindowSetCaption(AG_Window *, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf, 2, 3)
 			     NONNULL_ATTRIBUTE(2);
 void	 AG_WindowUpdateCaption(AG_Window *);
+#define  AG_WindowSetIcon(win,su) AG_IconSetSurface((win)->icon,(su))
+#define  AG_WindowSetIconNODUP(win,su) AG_IconSetSurfaceNODUP((win)->icon,(su))
+
 void	 AG_WindowSetSpacing(AG_Window *, int);
 void	 AG_WindowSetPadding(AG_Window *, int, int, int, int);
 #define	 AG_WindowSetPaddingLeft(w,p)   AG_WindowSetPadding((w),(p),-1,-1,-1)
@@ -109,9 +117,11 @@ int	 AG_WindowSetGeometryParam(AG_Window *, int, int, int, int, int);
 
 void	 AG_WindowUpdate(AG_Window *);
 void	 AG_WindowSaveGeometry(AG_Window *);
+int	 AG_WindowRestoreGeometry(AG_Window *);
 void	 AG_WindowMaximize(AG_Window *);
 void	 AG_WindowUnmaximize(AG_Window *);
 void	 AG_WindowMinimize(AG_Window *);
+void	 AG_WindowUnminimize(AG_Window *);
 
 void	 AG_WindowAttach(AG_Window *, AG_Window *);
 void	 AG_WindowDetach(AG_Window *, AG_Window *);

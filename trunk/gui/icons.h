@@ -23,5 +23,6 @@ extern AG_StaticIcon agIconWinMaximize;
 extern AG_StaticIcon agIconMagnifier;
 extern AG_StaticIcon agIconGear;
 extern AG_StaticIcon agIconDocImport;
+extern AG_StaticIcon agIconWindow;
 __END_DECLS
 #include "close_code.h"
