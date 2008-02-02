@@ -86,6 +86,12 @@ for notebook-style display.
 .Fn AG_WindowSetCaption "AG_Window *win" "const char *fmt" "..."
 .Pp
 .Ft "void"
+.Fn AG_WindowSetIcon "AG_Window *win" "SDL_Surface *surface"
+.Pp
+.Ft "void"
+.Fn AG_WindowSetIconNODUP "AG_Window *win" "SDL_Surface *surface"
+.Pp
+.Ft "void"
 .Fn AG_WindowSetCloseAction "AG_Window *win" "int mode"
 .Pp
 .Ft "void"
@@ -110,7 +116,13 @@ for notebook-style display.
 .Fn AG_WindowMaximize "AG_Window *win"
 .Pp
 .Ft "void"
+.Fn AG_WindowUnmaximize "AG_Window *win"
+.Pp
+.Ft "void"
 .Fn AG_WindowMinimize "AG_Window *win"
+.Pp
+.Ft "void"
+.Fn AG_WindowUnminimize "AG_Window *win"
 .Pp
 .Ft void
 .Fn AG_WindowAttach "AG_Window *win" "AG_Window *subwin"
@@ -211,6 +223,21 @@ The string is truncated if its length exceeds
 - 1 bytes.
 .Pp
 The
+.Fn AG_WindowSetIcon
+function configures an alternate icon for the window.
+This icon will be used by Agar's internal window manager whenever the window
+is minimized.
+The given surface will be duplicated and can be of any size, but the recommended
+default size is given by
+.Va agWindowIconWidth
+and
+.Va agWindowIconHeight .
+The
+.Fn AG_WindowSetIconNODUP
+variant does not duplicate the provided surface, which must remain valid until
+the window is destroyed.
+.Pp
+The
 .Fn AG_WindowSetCloseAction
 function changes the current
 .Sq window-close
@@ -288,13 +315,15 @@ sets the geometry to the size of the display, without setting the
 flag.
 .Pp
 .Fn AG_WindowMaximize
-maximizes the window and sets the
-.Dv AG_WINDOW_MAXIMIZED
-flag.
+and
 .Fn AG_WindowMinimize
-minimizes the window and clears the flag.
+maximizes and minimizes the window, respectively.
+.Fn AG_WindowUnmaximize
+and
+.Fn AG_WindowUnminimize
+does the opposite.
 .Pp
-Finally, the
+The
 .Fn AG_WindowAttach
 function arranges for
 .Fa pwin
@@ -498,6 +527,9 @@ See
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Icon 3 ,
+.Xr AG_Cursor 3 ,
+.Xr AG_View 3 ,
 .Xr AG_Widget 3
 .Sh HISTORY
 The

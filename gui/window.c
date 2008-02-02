@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,10 @@
 
 #include "window.h"
 #include "titlebar.h"
+#include "icon.h"
 
 #include "primitive.h"
+#include "icons.h"
 #include "cursors.h"
 
 #include <string.h>
@@ -44,6 +46,8 @@ static void LostFocus(AG_Event *);
 
 int	 agWindowXOutLimit = 32;
 int	 agWindowBotOutLimit = 32;
+int	 agWindowIconWidth = 32;
+int	 agWindowIconHeight = 32;
 
 /* Create a generic window. */
 AG_Window *
@@ -129,7 +133,10 @@ Init(void *obj)
 	win->savh = -1;
 	win->caption[0] = '\0';
 	win->tbar = NULL;
+	win->icon = AG_IconNew(NULL, 0);
 	TAILQ_INIT(&win->subwins);
+	AG_IconSetSurfaceNODUP(win->icon, agIconWindow.s);
+	AG_IconSetBackgroundFill(win->icon, 1, AG_COLOR(BG_COLOR));
 
 	if (!agView->opengl)
 		WIDGET(win)->flags |= AG_WIDGET_CLIPPING;
@@ -1052,6 +1059,13 @@ AG_WindowSaveGeometry(AG_Window *win)
 	win->savh = WIDGET(win)->h;
 }
 
+int
+AG_WindowRestoreGeometry(AG_Window *win)
+{
+	return AG_WindowSetGeometry(win, win->savx, win->savy,
+	                            win->savw, win->savh);
+}
+
 void
 AG_WindowMaximize(AG_Window *win)
 {
@@ -1063,8 +1077,7 @@ AG_WindowMaximize(AG_Window *win)
 void
 AG_WindowUnmaximize(AG_Window *win)
 {
-	if (AG_WindowSetGeometry(win, win->savx, win->savy, win->savw,
-	    win->savh) == 0) {
+	if (AG_WindowRestoreGeometry(win) == 0) {
 		win->flags &= ~(AG_WINDOW_MAXIMIZED);
 		if (!agView->opengl &&
 		    !(win->flags & AG_WINDOW_NOUPDATERECT)) {
@@ -1075,11 +1088,121 @@ AG_WindowUnmaximize(AG_Window *win)
 	}
 }
 
+static void
+IconMotion(AG_Event *event)
+{
+	AG_Icon *icon = AG_SELF();
+	int xRel = AG_INT(3);
+	int yRel = AG_INT(4);
+	AG_Window *wDND = icon->wDND;
+
+	if (icon->flags & AG_ICON_DND) {
+		if (!agView->opengl) {
+			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+			AG_QueueVideoUpdate(
+			    WIDGET(wDND)->x, WIDGET(wDND)->y,
+			    WIDGET(wDND)->w, WIDGET(wDND)->h);
+		}
+		AG_WindowSetGeometryParam(wDND,
+		    WIDGET(wDND)->x + xRel,
+		    WIDGET(wDND)->y + yRel,
+		    WIDGET(wDND)->w,
+		    WIDGET(wDND)->h,
+		    1);
+		icon->xSaved = WIDGET(wDND)->x;
+		icon->ySaved = WIDGET(wDND)->y;
+		icon->wSaved = WIDGET(wDND)->w;
+		icon->hSaved = WIDGET(wDND)->h;
+	}
+}
+
+static void
+IconButtonDown(AG_Event *event)
+{
+	AG_Icon *icon = AG_SELF();
+	AG_Window *win = AG_PTR(1);
+
+	WIDGET(icon)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
+	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
+	if (icon->flags & AG_ICON_DBLCLICKED) {
+		printf("DBLCLICKED\n");
+		AG_CancelEvent(icon, "dblclick-expire");
+		AG_WindowUnminimize(win);
+		AG_ObjectDetach(win->icon);
+		AG_ViewDetach(icon->wDND);
+		icon->wDND = NULL;
+		icon->flags &= (AG_ICON_DND|AG_ICON_DBLCLICKED);
+	} else {
+		printf("!DBLCLICKED\n");
+		icon->flags |= (AG_ICON_DND|AG_ICON_DBLCLICKED);
+		AG_SchedEvent(NULL, icon, agMouseDblclickDelay,
+		    "dblclick-expire", NULL);
+	}
+}
+
+static void
+IconButtonUp(AG_Event *event)
+{
+	AG_Icon *icon = AG_SELF();
+	
+	WIDGET(icon)->flags &= ~(AG_WIDGET_UNFOCUSED_MOTION);
+	WIDGET(icon)->flags &= ~(AG_WIDGET_UNFOCUSED_BUTTONUP);
+	icon->flags &= ~(AG_ICON_DND);
+}
+
+static void
+DoubleClickTimeout(AG_Event *event)
+{
+	AG_Icon *icon = AG_SELF();
+	icon->flags &= ~(AG_ICON_DBLCLICKED);
+}
+
 void
 AG_WindowMinimize(AG_Window *win)
 {
+	AG_Window *wDND;
+	AG_Icon *icon = win->icon;
+
+	if (win->flags & AG_WINDOW_MINIMIZED) {
+		return;
+	}
 	win->flags |= AG_WINDOW_MINIMIZED;
 	AG_WindowHide(win);
+
+	wDND = AG_WindowNew(AG_WINDOW_PLAIN|AG_WINDOW_KEEPBELOW|
+	                    AG_WINDOW_DENYFOCUS|AG_WINDOW_NOBACKGROUND);
+	AG_ObjectAttach(wDND, icon);
+	icon->wDND = wDND;
+	icon->flags &= ~(AG_ICON_DND|AG_ICON_DBLCLICKED);
+
+	AG_SetEvent(icon, "dblclick-expire", DoubleClickTimeout, NULL);
+	AG_SetEvent(icon, "window-mousemotion", IconMotion, NULL);
+	AG_SetEvent(icon, "window-mousebuttonup", IconButtonUp, NULL);
+	AG_SetEvent(icon, "window-mousebuttondown", IconButtonDown, "%p", win);
+
+	if (icon->xSaved != -1) {
+		AG_WindowShow(wDND);
+		AG_WindowSetGeometry(wDND, icon->xSaved, icon->ySaved,
+		                     icon->wSaved, icon->hSaved);
+	} else {
+		AG_WindowSetPosition(wDND, AG_WINDOW_LOWER_LEFT, 1);
+		AG_WindowShow(wDND);
+		icon->xSaved = WIDGET(wDND)->x;
+		icon->ySaved = WIDGET(wDND)->y;
+		icon->wSaved = WIDGET(wDND)->w;
+		icon->hSaved = WIDGET(wDND)->h;
+	}
+}
+
+void
+AG_WindowUnminimize(AG_Window *win)
+{
+	if (!win->visible) {
+		AG_WindowShow(win);
+		win->flags &= ~(AG_WINDOW_MINIMIZED);
+	} else {
+		AG_WindowFocus(win);
+	}
 }
 
 /*
@@ -1432,9 +1555,21 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 void
 AG_WindowUpdateCaption(AG_Window *win)
 {
+	char iconCap[16], *c;
+
 	AG_ObjectLock(win);
 	if (win->tbar != NULL) {
 		AG_TitlebarSetCaption(win->tbar, win->caption);
+		if (Strlcpy(iconCap, win->caption, sizeof(iconCap)) >=
+		    sizeof(iconCap)) {
+			for (c = &iconCap[0]; *c != '\0'; c++) {
+				if (*c == ' ')
+					*c = '\n';
+			}
+			AG_IconSetText(win->icon, "%s...", iconCap);
+		} else {
+			AG_IconSetText(win->icon, "%s", iconCap);
+		}
 	}
 	AG_ObjectUnlock(win);
 }
