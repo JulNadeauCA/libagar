@@ -252,6 +252,10 @@ tree item contains child items
 is 1 if the child items are visible.
 .El
 .Sh EXAMPLES
+See
+.Pa demos/widgets
+for an example of a custom theme.
+.Pp
 The easiest way to start a new theme is to simply copy
 .Pa gui/style_default.c
 from the Agar source distribution, remove the static initializer for
@@ -261,15 +265,16 @@ instead, so that the theme will continue to work as new operations as
 added:
 .Pp
 .Bd -literal
-AG_Style myStyle = agStyleDefault;
+AG_Style myStyle;
 
 void
 InitMyStyle(AG_Style *s)
 {
+	*s = agStyleDefault;
 	s->name = "MyStyle";
 	s->version.maj = 1;
 	s->version.min = 1;
-	s->init = InitMyStyle;
+	s->init = NULL;
 	s->destroy = NULL;
 	s->WindowBackground = MyWindowBackground;
 	s->WindowBorders = MyWindowBorders;
