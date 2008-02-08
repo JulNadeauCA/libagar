@@ -32,13 +32,31 @@
 #include "view.h"
 #include "window.h"
 
+static void
+ApplyStyle(AG_Widget *w, AG_Style *style)
+{
+	AG_Widget *wChld;
+
+	AG_ObjectLock(w);
+	AG_SetStyle(w, style);
+	OBJECT_FOREACH_CHILD(wChld, w, ag_widget) {
+		ApplyStyle(wChld, style);
+	}
+	AG_ObjectUnlock(w);
+}
+
 void
 AG_SetStyle(void *p, AG_Style *style)
 {
 	AG_ObjectLock(p);
 	if (AG_ObjectIsClass(p, "AG_Display")) {
 		AG_Display *disp = (AG_Display *)p;
+		AG_Window *win;
+
 		disp->style = style;
+		TAILQ_FOREACH(win, &disp->windows, windows) {
+			ApplyStyle(AGWIDGET(win), style);
+		}
 	} else {
 		WIDGET(p)->style = style;
 	}
