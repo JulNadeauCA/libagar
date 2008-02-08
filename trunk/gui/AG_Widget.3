@@ -499,6 +499,9 @@ arguments are indices into the global GUI color array (see
 .Fn AG_DrawBoxRounded "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
 .Pp
 .Ft void
+.Fn AG_DrawBoxRoundedTop "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
+.Pp
+.Ft void
 .Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "Uint32 c"
 .Pp
 .Ft void
@@ -534,8 +537,10 @@ indicates the
 in pixels.
 The
 .Fn AG_DrawBoxRounded
-variant renders the two top edges as rounded to the given
+variant renders a box with the edges rounded to the given
 .Fa radius .
+.Fn AG_DrawBoxRoundedTop
+does the same but only for the two top corners of the box.
 .Pp
 .Fn AG_DrawFrame
 draws a 3D-style frame.

@@ -56,8 +56,10 @@ AG_Style agStyleDefault;
 static void
 WindowBackground(AG_Window *win)
 {
+	int hBar = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
+
 	AG_DrawRectFilled(win,
-	    AG_RECT(0, 0, WIDTH(win), HEIGHT(win)),
+	    AG_RECT(0, hBar, WIDTH(win), HEIGHT(win)-hBar),
 	    AG_COLOR(WINDOW_BG_COLOR));
 }
 
@@ -65,38 +67,44 @@ WindowBackground(AG_Window *win)
 static void
 WindowBorders(AG_Window *win)
 {
+	int hBar = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
+	int hWin = HEIGHT(win);
 	int i;
 
 	for (i = 1; i < agColorsBorderSize-1; i++) {
-		AG_DrawLineH(win, i, WIDTH(win)-i, i, agColorsBorder[i-1]);
-		AG_DrawLineH(win, i, WIDTH(win)-i, HEIGHT(win)-i,
+		if (win->tbar == NULL) {
+			AG_DrawLineH(win, i, WIDTH(win)-i, i,
+			    agColorsBorder[i-1]);
+		}
+		AG_DrawLineH(win, i, WIDTH(win)-i, hWin-i,
 		    agColorsBorder[i-1]);
 	}
 	for (i = 1; i < agColorsBorderSize-1; i++) {
-		AG_DrawLineV(win, i-1, i, HEIGHT(win)-i, agColorsBorder[i-1]);
-		AG_DrawLineV(win, WIDTH(win)-i, i, HEIGHT(win)-i,
+		AG_DrawLineV(win, i-1,          hBar+i, hBar+hWin-i,
+		    agColorsBorder[i-1]);
+		AG_DrawLineV(win, WIDTH(win)-i, hBar+i, hBar+hWin-i,
 		    agColorsBorder[i-1]);
 	}
 	/* Indicate the resize controls */
 	if ((win->flags & AG_WINDOW_NOHRESIZE) == 0) {
-		AG_DrawLineV(win, 18, HEIGHT(win)-agColorsBorderSize,
-		    HEIGHT(win)-2, AG_COLOR(WINDOW_LO_COLOR));
-		AG_DrawLineV(win, 19, HEIGHT(win)-agColorsBorderSize,
-		    HEIGHT(win)-2, AG_COLOR(WINDOW_HI_COLOR));
-		AG_DrawLineV(win, WIDTH(win)-19, HEIGHT(win)-agColorsBorderSize,
-		    HEIGHT(win)-2, AG_COLOR(WINDOW_LO_COLOR));
-		AG_DrawLineV(win, WIDTH(win)-18, HEIGHT(win)-agColorsBorderSize,
-		    HEIGHT(win)-2, AG_COLOR(WINDOW_HI_COLOR));
+		AG_DrawLineV(win, 18, hWin-agColorsBorderSize,
+		    hWin-2, AG_COLOR(WINDOW_LO_COLOR));
+		AG_DrawLineV(win, 19, hWin-agColorsBorderSize,
+		    hWin-2, AG_COLOR(WINDOW_HI_COLOR));
+		AG_DrawLineV(win, WIDTH(win)-19, hWin-agColorsBorderSize,
+		    hWin-2, AG_COLOR(WINDOW_LO_COLOR));
+		AG_DrawLineV(win, WIDTH(win)-18, hWin-agColorsBorderSize,
+		    hWin-2, AG_COLOR(WINDOW_HI_COLOR));
 	}
 	if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
-		AG_DrawLineH(win, 2, agColorsBorderSize, HEIGHT(win)-20,
+		AG_DrawLineH(win, 2, agColorsBorderSize, hWin-20,
 		    AG_COLOR(WINDOW_LO_COLOR));
-		AG_DrawLineH(win, 2, agColorsBorderSize, HEIGHT(win)-19,
+		AG_DrawLineH(win, 2, agColorsBorderSize, hWin-19,
 		    AG_COLOR(WINDOW_HI_COLOR));
 		AG_DrawLineH(win, WIDTH(win)-agColorsBorderSize,
-		    WIDTH(win)-2, HEIGHT(win)-20, AG_COLOR(WINDOW_LO_COLOR));
+		    WIDTH(win)-2, hWin-20, AG_COLOR(WINDOW_LO_COLOR));
 		AG_DrawLineH(win, WIDTH(win)-agColorsBorderSize,
-		    WIDTH(win)-2, HEIGHT(win)-19, AG_COLOR(WINDOW_HI_COLOR));
+		    WIDTH(win)-2, hWin-19, AG_COLOR(WINDOW_HI_COLOR));
 	}
 }
 
@@ -259,7 +267,7 @@ NotebookBackground(void *nb, AG_Rect r)
 static void
 NotebookTabBackground(void *nb, AG_Rect r, int idx, int isSelected)
 {
-	AG_DrawBoxRounded(nb, r,
+	AG_DrawBoxRoundedTop(nb, r,
 	    isSelected ? -1 : 1, (int)(agTextFontHeight/1.5),
 	    isSelected ? AG_COLOR(NOTEBOOK_SEL_COLOR) :
 	                 AG_COLOR(NOTEBOOK_BG_COLOR));

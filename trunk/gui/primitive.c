@@ -213,7 +213,7 @@ BoxDitheredFB(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
 
 /* Render a 3D-style box with rounded top edges. */
 static void
-BoxRoundedFB(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
+BoxRoundedTopFB(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 {
 	AG_Widget *wid = p;
 	AG_Rect rd;
@@ -286,6 +286,127 @@ BoxRoundedFB(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 		}
 		x++;
 	}
+	SDL_UnlockSurface(agView->v);
+}
+
+/* Render a 3D-style box with rounded edges. */
+static void
+BoxRoundedFB(void *p, AG_Rect r, int z, int pRad, Uint32 c)
+{
+	AG_Widget *wid = p;
+	int rad = pRad;
+	AG_Rect rd;
+	Uint32 cL, cR, cBg;
+	int v, e, u;
+	int x, y, i;
+	int w1 = r.w - 1;
+	
+	if (rad*2 > r.w || rad*2 > r.h) {
+		rad = MIN(r.w/2, r.h/2);
+	}
+	if (r.w < 4 || r.h < 4)
+		return;
+
+	if (AG_WidgetFocused(wid)) {
+		cBg = ColorShift(c, (z<0) ? agFocusSunkColorShift :
+		                            agFocusRaisedColorShift);
+	} else {
+		cBg = ColorShift(c, (z<0) ? agNofocusSunkColorShift :
+		                            agNofocusRaisedColorShift);
+	}
+	cL = ColorShift(cBg, (z<0) ? agLowColorShift:agHighColorShift);
+	cR = ColorShift(cBg, (z<0) ? agHighColorShift:agLowColorShift);
+	
+	/* Center */
+	rd.x = r.x+rad;
+	rd.y = r.y+rad;
+	rd.w = r.w - rad*2;
+	rd.h = r.h - rad*2;
+	AG_DrawRectFilled(wid, rd, cBg);
+	
+	/* Top */
+	rd.y = r.y;
+	rd.h = rad;
+	AG_DrawRectFilled(wid, rd, cBg);
+	
+	/* Bottom */
+	rd.y = r.h-rad;
+	rd.h = rad;
+	AG_DrawRectFilled(wid, rd, cBg);
+
+	/* Left */
+	rd.x = r.x;
+	rd.y = r.y+rad;
+	rd.w = rad;
+	rd.h = r.h-rad*2;
+	AG_DrawRectFilled(wid, rd, cBg);
+
+	/* Right */
+	rd.x = r.x+r.w-rad;
+	rd.y = r.y+rad;
+	rd.w = rad;
+	rd.h = r.h-rad*2;
+	AG_DrawRectFilled(wid, rd, cBg);
+
+	/* Rounded edges */
+	v = 2*rad - 1;
+	e = 0;
+	u = 0;
+	x = 0;
+	y = rad;
+	SDL_LockSurface(agView->v);
+	while (x <= y) {
+		AG_WidgetPutPixel(wid, r.x+rad-x,    r.y+rad-y,     cL);
+		AG_WidgetPutPixel(wid, r.x+rad-y,    r.y+rad-x,     cL);
+		AG_WidgetPutPixel(wid, r.x-rad+w1+x, r.y+rad-y,     cR);
+		AG_WidgetPutPixel(wid, r.x-rad+w1+y, r.y+rad-x,     cR);
+
+		AG_WidgetPutPixel(wid, r.x+rad-x,    r.y+r.h-rad+y, cL);
+		AG_WidgetPutPixel(wid, r.x+rad-y,    r.y+r.h-rad+x, cL);
+		AG_WidgetPutPixel(wid, r.x-rad+w1+x, r.y+r.h-rad+y, cR);
+		AG_WidgetPutPixel(wid, r.x-rad+w1+y, r.y+r.h-rad+x, cR);
+
+		for (i = 0; i < x; i++) {
+			AG_WidgetPutPixel(wid, r.x+rad-i,    r.y+rad-y, cBg);
+			AG_WidgetPutPixel(wid, r.x-rad+w1+i, r.y+rad-y, cBg);
+			AG_WidgetPutPixel(wid, r.x+rad-i,    r.y+r.h-rad+y,cBg);
+			AG_WidgetPutPixel(wid, r.x-rad+w1+i, r.y+r.h-rad+y,cBg);
+		}
+		for (i = 0; i < y; i++) {
+			AG_WidgetPutPixel(wid,
+			    r.x + rad - i,
+			    r.y + rad - x,
+			    cBg);
+			AG_WidgetPutPixel(wid,
+			    r.x - rad + w1 + i,
+			    r.y + rad - x,
+			    cBg);
+			AG_WidgetPutPixel(wid,
+			    r.x + rad - i,
+			    r.y + r.h - rad + x,
+			    cBg);
+			AG_WidgetPutPixel(wid,
+			    r.x - rad + w1 + i,
+			    r.y + r.h - rad + x,
+			    cBg);
+		}
+		e += u;
+		u += 2;
+		if (v < 2*e) {
+			y--;
+			e -= v;
+			v -= 2;
+		}
+		x++;
+	}
+	
+	/* Contour lines */
+	AG_DrawLineH(wid, r.x+rad,   r.x+r.w-rad,   r.y,         cBg);
+	AG_DrawLineH(wid, r.x+rad/2, r.x+r.w-rad/2, r.y,         cL);
+	AG_DrawLineH(wid, r.x+rad/2, r.x+r.w-rad/2, r.y+r.h,     cR);
+	AG_DrawLineV(wid, r.x,       r.y+rad,       r.y+r.h-rad, cL);
+	AG_DrawLineV(wid, r.x+w1,    r.y+rad,       r.y+r.h-rad, cR);
+
 	SDL_UnlockSurface(agView->v);
 }
 
@@ -1179,13 +1300,63 @@ BoxDitheredGL(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
 	/* TODO */
 }
 
-/* Render a 3D-style box with chamfered top edges. */
+/* Render a 3D-style box with rounded edges. */
 static void
 BoxRoundedGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 {
 	AG_Widget *wid = p;
 	Uint8 red, green, blue;
-	
+
+	/* TODO */
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glTranslatef(wid->cx+r.x, wid->cy+r.y, 0);
+	glBegin(GL_POLYGON);
+	{
+		SDL_GetRGB(cBg, agVideoFmt, &red, &green, &blue);
+		glColor3ub(red, green, blue);
+		glVertex2i(0, r.h);
+		glVertex2i(0, rad);
+		glVertex2i(rad, 0);
+		glVertex2i(r.w-rad, 0);
+		glVertex2i(r.w, rad);
+		glVertex2i(r.w, r.h);
+	}
+	glEnd();
+	if (z >= 0) {
+		glBegin(GL_LINE_STRIP);
+		{
+			SDL_GetRGB(ColorShift(cBg, agHighColorShift),
+			                      agVideoFmt, &red, &green, &blue);
+			glColor3ub(red, green, blue);
+			glVertex2i(0, r.h);
+			glVertex2i(0, rad);
+			glVertex2i(rad, 0);
+		}
+		glEnd();
+		glBegin(GL_LINES);
+		{
+			SDL_GetRGB(ColorShift(cBg, agLowColorShift),
+			                      agVideoFmt, &red, &green, &blue);
+			glColor3ub(red, green, blue);
+			glVertex2i(r.w-1, r.h);
+			glVertex2i(r.w-1, rad);
+		}
+		glEnd();
+	}
+	glPopMatrix();
+}
+
+/* Render a 3D-style box with rounded top edges. */
+static void
+BoxRoundedTopGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
+{
+	AG_Widget *wid = p;
+	Uint8 red, green, blue;
+
+	/* TODO */
+
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef(wid->cx+r.x, wid->cy+r.y, 0);
@@ -1304,6 +1475,7 @@ AG_InitPrimitives(void)
 		agPrim.Circle = CircleGL;
 		agPrim.Circle2 = Circle2GL;
 		agPrim.BoxRounded = BoxRoundedGL;
+		agPrim.BoxRoundedTop = BoxRoundedTopGL;
 		agPrim.BoxDithered = BoxDitheredGL;
 		agPrim.ArrowUp = ArrowUpGL;
 		agPrim.ArrowDown = ArrowDownGL;
@@ -1319,6 +1491,7 @@ AG_InitPrimitives(void)
 		agPrim.Circle = CircleFB;
 		agPrim.Circle2 = Circle2FB;
 		agPrim.BoxRounded = BoxRoundedFB;
+		agPrim.BoxRoundedTop = BoxRoundedTopFB;
 		agPrim.BoxDithered = BoxDitheredFB;
 		agPrim.ArrowUp = ArrowUpFB;
 		agPrim.ArrowDown = ArrowDownFB;
