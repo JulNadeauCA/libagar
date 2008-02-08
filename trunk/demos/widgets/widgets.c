@@ -7,8 +7,11 @@
 
 #include <agar/core.h>
 #include <agar/gui.h>
+#include <agar/dev.h>
 
 #include <math.h>
+
+#include "rounded_style.h"
 
 static void
 CreateWindow(void)
@@ -274,9 +277,42 @@ CreateWindow(void)
 	AG_WindowShow(win);
 }
 
+static void
+Quit(AG_Event *event)
+{
+	SDL_Event nev;
+
+	/* Terminate the application. */
+	nev.type = SDL_USEREVENT;
+	SDL_PushEvent(&nev);
+}
+
+static void
+Preferences(AG_Event *event)
+{
+	DEV_ConfigShow();
+}
+
+static void
+GuiDebugger(AG_Event *event)
+{
+	AG_WindowShow(DEV_GuiDebugger());
+}
+
+static void
+SetTheme(AG_Event *event)
+{
+	AG_Style *style = AG_PTR(1);
+	AG_SetStyle(agView, style);
+}
+
 int
 main(int argc, char *argv[])
 {
+	extern AG_Style myRoundedStyle;
+	AG_Menu *appMenu;
+	AG_MenuItem *m;
+
 	if (AG_InitCore("widgets-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
@@ -287,7 +323,26 @@ main(int argc, char *argv[])
 	}
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
+	
+	/* Initialize the Agar-DEV library. */
+	DEV_InitSubsystem(0);
+
+	/* Initialize our custom theme. */
+	InitMyRoundedStyle(&myRoundedStyle);
+
+	/* Create an application menu. */
+	appMenu = AG_MenuNewGlobal(0);
+	m = AG_MenuNode(appMenu->root, "File", NULL);
+	AG_MenuAction(m, "Preferences...", NULL, Preferences, NULL);
+	AG_MenuAction(m, "GUI Debugger...", NULL, GuiDebugger, NULL);
+	AG_MenuAction(m, "Quit", NULL, Quit, NULL);
+	
+	m = AG_MenuNode(appMenu->root, "Themes", NULL);
+	AG_MenuAction(m, "Default", NULL, SetTheme, "%p", &agStyleDefault);
+	AG_MenuAction(m, "Rounded", NULL, SetTheme, "%p", &myRoundedStyle);
+	
 	CreateWindow();
+
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
