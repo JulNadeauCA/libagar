@@ -8,10 +8,10 @@ PROG_GUID=	"11D6C9FF-522E-43ed-B3EB-92A2C636CCA7"
 PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
 
 PROG=	widgets
-SRCS=	widgets.c
+SRCS=	widgets.c rounded_style.c
 
-CFLAGS+=${AGAR_CFLAGS} -I.
-LIBS+=	${AGAR_LIBS}
+CFLAGS+=${AGAR_DEV_CFLAGS} ${AGAR_CFLAGS} -I.
+LIBS+=	${AGAR_DEV_LIBS} ${AGAR_LIBS}
 
 all: all-subdir ${PROG}
 
