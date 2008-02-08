@@ -305,6 +305,7 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 		goto out;
 	}
 	AG_ObjectAttach(nb, tab);
+	AG_SetStyle(nb, WIDGET(pwin)->style);
 	nb->sel_tab = tab;
 
 	AG_WidgetSizeReq(tab, &rTab);
