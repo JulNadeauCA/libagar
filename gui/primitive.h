@@ -7,6 +7,7 @@
 typedef struct ag_primitive_ops {
 	void (*Box)(void *, AG_Rect r, int z, Uint32 c);
 	void (*BoxRounded)(void *, AG_Rect r, int z, int radius, Uint32 c);
+	void (*BoxRoundedTop)(void *, AG_Rect r, int z, int radius, Uint32 c);
 	void (*BoxDithered)(void *, AG_Rect r, int z, Uint32 c1, Uint32 c2);
 	void (*Frame)(void *, AG_Rect r, int z, Uint32 c);
 	void (*FrameBlended)(void *, AG_Rect r, Uint8 c[4], AG_BlendFn fn);
@@ -35,6 +36,7 @@ extern AG_PrimitiveOps agPrim;
 
 #define AG_DrawBox agPrim.Box
 #define AG_DrawBoxRounded agPrim.BoxRounded
+#define AG_DrawBoxRoundedTop agPrim.BoxRoundedTop
 #define AG_DrawBoxDithered agPrim.BoxDithered
 #define AG_DrawFrame agPrim.Frame
 #define AG_DrawFrameBlended agPrim.FrameBlended
