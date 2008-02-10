@@ -80,9 +80,9 @@ WindowBorders(AG_Window *win)
 		    agColorsBorder[i-1]);
 	}
 	for (i = 1; i < agColorsBorderSize-1; i++) {
-		AG_DrawLineV(win, i-1,          hBar+i, hBar+hWin-i,
+		AG_DrawLineV(win, i-1,          hBar+i, hWin-i,
 		    agColorsBorder[i-1]);
-		AG_DrawLineV(win, WIDTH(win)-i, hBar+i, hBar+hWin-i,
+		AG_DrawLineV(win, WIDTH(win)-i, hBar+i, hWin-i,
 		    agColorsBorder[i-1]);
 	}
 	/* Indicate the resize controls */
