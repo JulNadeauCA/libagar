@@ -356,7 +356,7 @@ EditablePreChg(AG_Event *event)
 static void
 EditablePostChg(AG_Event *event)
 {
-	AG_PostEvent(NULL, AG_PTR(1), "textbox-prechg", NULL);
+	AG_PostEvent(NULL, AG_PTR(1), "textbox-postchg", NULL);
 }
 
 static void
