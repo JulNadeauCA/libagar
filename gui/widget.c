@@ -721,6 +721,7 @@ AG_WidgetReplaceSurfaceNODUP(void *p, int name, SDL_Surface *su)
 	AG_ObjectUnlock(wid);
 }
 
+#ifdef HAVE_OPENGL
 /* Remove surfaces which were previously queued for deletion. */
 static void
 DeleteQueuedTextures(AG_Widget *wid)
@@ -732,6 +733,7 @@ DeleteQueuedTextures(AG_Widget *wid)
 	}
 	wid->nTextureGC = 0;
 }
+#endif
 
 /*
  * NOTE: Texture operations are involved so this is only safe to invoke
@@ -752,9 +754,10 @@ Destroy(void *obj)
 		AG_PopupDestroy(NULL, pm);
 	}
 
-	if (wid->textureGC > 0) {
+#ifdef HAVE_OPENGL
+	if (wid->textureGC > 0)
 		DeleteQueuedTextures(wid);
-	}
+#endif
 	for (i = 0; i < wid->nsurfaces; i++) {
 		if (wid->surfaces[i] != NULL && !WSURFACE_NODUP(wid,i))
 			SDL_FreeSurface(wid->surfaces[i]);
@@ -861,6 +864,7 @@ AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 	}
 }
 
+#ifdef HAVE_OPENGL
 static __inline__ void
 UpdateTexture(AG_Widget *wid, int name)
 {
@@ -872,6 +876,7 @@ UpdateTexture(AG_Widget *wid, int name)
 		AG_UpdateTexture(wid->surfaces[name], wid->textures[name]);
 	}
 }
+#endif
 
 /*
  * Perform a hardware or software blit from a mapped surface to the display
@@ -1409,9 +1414,10 @@ AG_WidgetDraw(void *p)
 
 	AG_ObjectLock(wid);
 
-	if (wid->textureGC > 0) {
+#ifdef HAVE_OPENGL
+	if (wid->textureGC > 0)
 		DeleteQueuedTextures(wid);
-	}
+#endif
 	if (wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE)) {
 		goto out;
 	}
