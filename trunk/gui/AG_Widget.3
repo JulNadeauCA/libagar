@@ -290,8 +290,14 @@ operation of widgets), and may not be used in any other context.
 .Ft int
 .Fn AG_WidgetMapSurface "AG_Widget *widget" "SDL_Surface *su"
 .Pp
+.Ft int
+.Fn AG_WidgetMapSurfaceNODUP "AG_Widget *widget" "SDL_Surface *su"
+.Pp
 .Ft void
 .Fn AG_WidgetReplaceSurface "AG_Widget *widget" "int surface_id" "SDL_Surface *newSurface"
+.Pp
+.Ft void
+.Fn AG_WidgetReplaceSurfaceNODUP "AG_Widget *widget" "int surface_id" "SDL_Surface *newSurface"
 .Pp
 .Ft void
 .Fn AG_WidgetUnmapSurface "AG_Widget *widget" "int surface_id"
@@ -317,9 +323,15 @@ must invoked in rendering context.
 Software to hardware blits are slow, so the
 .Fn AG_WidgetMapSurface
 interface provides a way to take advantage of hardware->hardware blits.
-If a texture unit is available, a hardware texture corresponding to the
-given surface will be used.
-The function returns a surface name.
+It copies the specified surface (possibly creating a hardware texture if
+Agar is using an API such as OpenGL), and returns a name which will be
+used to later reference the surface.
+.Pp
+The
+.Fn AG_WidgetMapSurfaceNODUP
+variant does not copy the given surface, which is assumed to remain valid
+for as long as the widget exists.
+.Pp
 Under multithreading,
 .Fn AG_WidgetMapSurface
 may be invoked from any context, but the returned name is only valid as
@@ -329,6 +341,9 @@ long as the widget is locked (see
 .Fn AG_WidgetReplaceSurface
 replaces the contents of a previously-mapped surface with the contents of
 .Fa newSurface .
+The
+.Fn AG_WidgetReplaceSurfaceNODUP
+variant avoids duplicating the surface.
 .Pp
 .Fn AG_WidgetUnmapSurface
 destroys the given surface mapping.
