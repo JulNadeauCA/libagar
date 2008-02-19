@@ -1,7 +1,6 @@
 /*	Public domain	*/
 /*
- * This application demonstrates the use of the AG_Table widget for
- * displaying the contents of a list.
+ * This application demonstrates some uses for the AG_Table(3) widget.
  */
 
 #include <agar/core.h>
@@ -13,7 +12,7 @@
 
 /* This function is called to sort the elements of a column. */
 static int
-my_sort_fn(const void *p1, const void *p2)
+MyCustomSortFn(const void *p1, const void *p2)
 {
 	const AG_TableCell *c1 = p1;
 	const AG_TableCell *c2 = p2;
@@ -23,12 +22,20 @@ my_sort_fn(const void *p1, const void *p2)
 
 /* This is a custom cell function which returns text into s. */
 static void
-my_custom_cell_txt_fn(void *p, char *s, size_t len)
+MyCustomDynamicTextFn(void *p, char *s, size_t len)
 {
 	AG_TableCell *cell = p;
 	
 	AG_Snprintf(s, len, "Ticks: %lu",
 	    (unsigned long)SDL_GetTicks());
+}
+
+/* This is a custom cell function which returns a surface to display. */
+static SDL_Surface *
+MyCustomSurfaceFn(void *p, int x, int y)
+{
+	/* Return the surface of a built-in icon. */
+	return (agIconLoad.s);
 }
 
 /* This function creates a static table. */
@@ -59,7 +66,7 @@ CreateStaticTable(void)
 	AG_TableAddCol(table, "Some string", "<HIDDEN POINTER>", NULL);
 
 	/* Create another column with a specific sorting function. */
-	AG_TableAddCol(table, "Val", "<8888>", my_sort_fn);
+	AG_TableAddCol(table, "Val", "<8888>", MyCustomSortFn);
 	
 	/* Create a third column using the remaining space. */
 	AG_TableAddCol(table, "Stuff", NULL, NULL);
@@ -80,9 +87,13 @@ CreateStaticTable(void)
 		AG_TableAddRow(table, "%s:%.03f:%.02f", "Bar", 1.0/(float)i,
 		    2.0/3.0);
 		
-		/* Provide a custom cell function that returns text. */
-		AG_TableAddRow(table, "%s:%d:%[Ft]", "Baz", 1,
-		    my_custom_cell_txt_fn);
+		/* Provide a custom function that returns text. */
+		AG_TableAddRow(table, "%s:%d:%[Ft]", "Baz", i,
+		    MyCustomDynamicTextFn);
+		
+		/* Provide a custom function that returns an image. */
+		AG_TableAddRow(table, "%s:%d:%[Fs]", "Foo", i,
+		    MyCustomSurfaceFn);
 	}
 
 	/*
