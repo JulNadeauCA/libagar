@@ -42,7 +42,7 @@ widget displays a set of cells organized in one or more columns.
 Cells can be associated with text, numerical values, pointers to numerical
 values, or custom functions.
 .Nm
-is optimized for tables that must be respecified frequently.
+is optimized for tables that must be rebuilt frequently.
 .Pp
 Individual cells, entire rows or entire columns can be selected indepedently.
 .Pp
@@ -270,7 +270,7 @@ It is possible to mix cells of different types into a same column as long
 as the sorting function of that column can handle them.
 Acceptable specifiers include:
 .Pp
-.Bl -tag -compact -width "%[s8], %[s16], %[s32] "
+.Bl -tag -width "%[s8], %[s16], %[s32] "
 .It %s
 Text string
 .It %i, %d
@@ -294,9 +294,31 @@ Floating-point value (precision modifiers like %.03f are accepted)
 .It %p
 User pointer (usually stored in hidden columns)
 .It %[Ft]
-Custom function which returns a string
+User-specified function of the form:
+.Pp
+.Ft "void"
+.Fn MyTextFn "void *tbl" "char *buf" "size_t len"
+.Pp
+The text copied into
+.Fa buf
+(which is
+.Fa len
+bytes in size) will be displayed in the cell.
 .It %[Fs]
-Custom function which returns a surface
+User-specified function of the form:
+.Pp
+.Ft "SDL_Surface *"
+.Fn MySurfFn "void *tbl" "int x" "int y"
+.Pp
+The returned surface will be displayed in the cell.
+The
+.Fa x
+and
+.Fa y
+parameters can be ignored.
+.Xr SDL_Surface 3 
+.It %[W]
+A widget.
 .El
 .Pp
 The functions
