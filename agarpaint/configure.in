@@ -55,3 +55,15 @@ fi
 if [ "${enable_static}" = "yes" ]; then
 	MDEFINE(LDFLAGS, "-static")
 fi
+
+# Enable NLS if requested explicitely.
+if [ "${enable_nls}" = "yes" ]; then
+	CHECK(gettext)
+	if [ "${HAVE_GETTEXT}" != "yes" ]; then
+		echo "*"
+		echo "* --enable-nls was given but gettext was not found. Try"
+		echo "* running configure again without this option."
+		echo "*"
+		exit 1
+	fi
+fi

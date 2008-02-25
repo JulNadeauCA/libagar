@@ -36,6 +36,8 @@
 #include "config/version.h"
 #include "config/release.h"
 #include "config/have_getopt.h"
+#include "config/enable_nls.h"
+#include "config/localedir.h"
 
 #ifdef HAVE_AGAR_DEV
 #include <agar/dev.h>
@@ -363,7 +365,7 @@ ImportImagesFromXCF(AG_Event *event)
 	if (AG_XCFLoad(buf, 0, LoadTileFromXCF, ts) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
 	} else {
-		AG_TextInfo("Successfully imported XCF image into %s",
+		AG_TextInfo(_("Successfully imported XCF image into %s"),
 		    AGOBJECT(ts)->name);
 	}
 	AG_CloseFile(buf);
@@ -377,12 +379,12 @@ ImportImagesDlg(AG_Event *event)
 	AG_FileDlg *fd;
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Import images...");
+	AG_WindowSetCaption(win, _("Import images..."));
 	fd = AG_FileDlgNewMRU(win, "agarpaint.mru.tilesets",
 	    AG_FILEDLG_LOAD|AG_FILEDLG_CLOSEWIN|AG_FILEDLG_EXPAND);
-	AG_FileDlgAddType(fd, "PC bitmap", "*.bmp",
+	AG_FileDlgAddType(fd, _("PC bitmap"), "*.bmp",
 	    ImportImageFromBMP, "%p", ts);
-	AG_FileDlgAddType(fd, "Gimp XCF layers", "*.xcf",
+	AG_FileDlgAddType(fd, _("Gimp XCF layers"), "*.xcf",
 	    ImportImagesFromXCF, "%p", ts);
 	AG_WindowShow(win);
 }
@@ -397,10 +399,10 @@ SaveTileset(AG_Event *event)
 		return;
 	}
 	if (AG_ObjectSave(ts) == -1) {
-		AG_TextMsg(AG_MSG_ERROR, "Error saving tileset: %s",
+		AG_TextMsg(AG_MSG_ERROR, _("Error saving tileset: %s"),
 		    AG_GetError());
 	} else {
-		AG_TextInfo("Saved tileset %s successfully",
+		AG_TextInfo(_("Saved tileset %s successfully"),
 		    AGOBJECT(ts)->name);
 	}
 }
@@ -446,18 +448,18 @@ Quit(AG_Event *event)
 		    AG_WINDOW_NORESIZE, "QuitCallback")) == NULL) {
 			return;
 		}
-		AG_WindowSetCaption(win, "Exit application?");
+		AG_WindowSetCaption(win, _("Exit application?"));
 		AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 		AG_WindowSetSpacing(win, 8);
 		AG_LabelNewStaticString(win, 0,
-		    "There is at least one tileset with unsaved changes.  "
-	            "Exit application?");
+		    _("There is at least one tileset with unsaved changes.  "
+	              "Exit application?"));
 		box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|
 		                                   AG_VBOX_HFILL);
 		AG_BoxSetSpacing(box, 0);
 		AG_BoxSetPadding(box, 0);
-		AG_ButtonNewFn(box, 0, "Discard changes", ConfirmQuit, NULL);
-		AG_WidgetFocus(AG_ButtonNewFn(box, 0, "Cancel", AbortQuit,
+		AG_ButtonNewFn(box, 0, _("Discard changes"), ConfirmQuit, NULL);
+		AG_WidgetFocus(AG_ButtonNewFn(box, 0, _("Cancel"), AbortQuit,
 		    "%p", win));
 		AG_WindowShow(win);
 	}
@@ -468,21 +470,21 @@ FileMenu(AG_Event *event)
 {
 	AG_MenuItem *m = AG_SENDER();
 
-	AG_MenuActionKb(m, "New", agIconDoc.s, SDLK_n, KMOD_CTRL,
+	AG_MenuActionKb(m, _("New"), agIconDoc.s, SDLK_n, KMOD_CTRL,
 	    NewTileset, NULL);
-	AG_MenuActionKb(m, "Open...", agIconLoad.s, SDLK_o, KMOD_CTRL,
+	AG_MenuActionKb(m, _("Open..."), agIconLoad.s, SDLK_o, KMOD_CTRL,
 	    OpenTilesetDlg, NULL);
 
 	if (tsFocused == NULL) { AG_MenuDisable(m); }
 
-	AG_MenuActionKb(m, "Save", agIconSave.s, SDLK_s, KMOD_CTRL,
+	AG_MenuActionKb(m, _("Save"), agIconSave.s, SDLK_s, KMOD_CTRL,
 	    SaveTileset, "%p", tsFocused);
-	AG_MenuAction(m, "Save as...", agIconSave.s,
+	AG_MenuAction(m, _("Save as..."), agIconSave.s,
 	    SaveTilesetAsDlg, "%p", tsFocused);
 	
 	AG_MenuSeparator(m);
 
-	AG_MenuActionKb(m, "Import images...", agIconDocImport.s,
+	AG_MenuActionKb(m, _("Import images..."), agIconDocImport.s,
 	    SDLK_o, KMOD_CTRL,
 	    ImportImagesDlg, "%p", tsFocused);
 
@@ -553,6 +555,12 @@ main(int argc, char *argv[])
 	int c;
 #endif
 
+#ifdef ENABLE_NLS
+	bindtextdomain("agarpaint", LOCALEDIR);
+	bind_textdomain_codeset("agarpaint", "UTF-8");
+	textdomain("agarpaint");
+#endif
+
 	if (AG_InitCore("agarpaint", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
@@ -618,12 +626,12 @@ main(int argc, char *argv[])
 
 	/* Create the application menu. */ 
 	appMenu = AG_MenuNewGlobal(0);
-	AG_MenuDynamicItem(appMenu->root, "File", NULL, FileMenu, NULL);
-	AG_MenuDynamicItem(appMenu->root, "Edit", NULL, EditMenu, NULL);
+	AG_MenuDynamicItem(appMenu->root, _("File"), NULL, FileMenu, NULL);
+	AG_MenuDynamicItem(appMenu->root, _("Edit"), NULL, EditMenu, NULL);
 #ifdef HAVE_AGAR_DEV
 	if (debug) {
 		DEV_InitSubsystem(0);
-		DEV_ToolMenu(AG_MenuNode(appMenu->root, "Debug", NULL));
+		DEV_ToolMenu(AG_MenuNode(appMenu->root, _("Debug"), NULL));
 	}
 #endif
 #ifdef SPLASH

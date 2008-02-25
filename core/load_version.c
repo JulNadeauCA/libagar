@@ -45,7 +45,7 @@ AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
 
 	if (AG_Read(ds, nbuf, sizeof(nbuf), 1) != 0 ||
 	    strncmp(nbuf, name, nlen) != 0) {
-		AG_SetError("%s: Bad magic", name);
+		AG_SetError(_("%s: Bad signature in data source"), name);
 		return (-1);
 	}
 	major = AG_ReadUint32(ds);
@@ -56,12 +56,12 @@ AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
 		rver->minor = minor;
 	}
 	if (major != ver->major) {
-		AG_SetError("%s: Major differs: v%d.%d != %d.%d.",
+		AG_SetError(_("%s: Major differs: v%d.%d != %d.%d"),
 		    name, major, minor, ver->major, ver->minor);
 		return (-1);
 	}
 	if (minor != ver->minor) {
-		Verbose("%s: Minor differs: v%d.%d != %d.%d.\n",
+		Verbose(_("Warning: %s: Minor differs: v%d.%d != %d.%d\n"),
 		    name, major, minor, ver->major, ver->minor);
 	}
 	return (0);

@@ -19,7 +19,8 @@ MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 AG_Timeout.3 \
 	AG_CPUInfo.3 AG_ByteSwap.3 AG_Queue.3
 MAN5=	AG_DEN.5
 
-CFLAGS+=-I.. ${SDL_CFLAGS} ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS}
+CFLAGS+=-I.. ${SDL_CFLAGS} ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CHECK_CFLAGS} \
+	${GETTEXT_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk

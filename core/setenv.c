@@ -1,5 +1,3 @@
-/*	$Csoft: setenv.c,v 1.6 2003/12/05 01:25:35 vedge Exp $	*/
-
 /*
  * Copyright (c) 1987 Regents of the University of California.
  * All rights reserved.

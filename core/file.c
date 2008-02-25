@@ -1,8 +1,5 @@
-/*	$Csoft: dir.c,v 1.3 2004/04/23 12:44:45 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +49,7 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	FILE *f;
 	
 	if ((attrs = GetFileAttributes(path)) == INVALID_FILE_ATTRIBUTES) {
-		AG_SetError("%s: cannot get attrs", path);
+		AG_SetError(_("%s: Failed to get information"), path);
 		return (-1);
 	}
 	i->flags = 0;
@@ -94,7 +91,8 @@ AG_GetFileInfo(const char *path, AG_FileInfo *i)
 	gid_t gid = getegid();
 
 	if (stat(path, &sb) == -1) {
-		AG_SetError("%s: %s", path, strerror(errno));
+		AG_SetError(_("%s: Failed to get information (%s)"), path,
+		    strerror(errno));
 		return (-1);
 	}
 	i->type = AG_FILE_REGULAR;
@@ -139,7 +137,11 @@ int
 AG_GetSystemTempDir(char *buf, size_t len)
 {
 #ifdef _WIN32
-	return (GetTempPath((DWORD)len, buf) == 0) ? -1 : 0;
+	if (GetTempPath((DWORD)len, buf) == 0) {
+		AG_SetError("GetTempPath() failed");
+		return (-1);
+	}
+	return (0);
 #else
 	Strlcpy(buf, "/tmp/", len);
 	return (0);
@@ -155,8 +157,9 @@ AG_FileExists(const char *path)
 		    GetLastError() == ERROR_PATH_NOT_FOUND) {
 			return (0);
 		} else {
-			AG_SetError("%s: failed (%lu)", path,
-			    (Ulong)GetLastError());
+			AG_SetError(_("%s: Failed to determine existence of "
+			              "file (%lu)"), path,
+				      (Ulong)GetLastError());
 			return (-1);
 		}
 	} else {
@@ -167,7 +170,8 @@ AG_FileExists(const char *path)
 
 	if (stat(path, &sb) == -1) {
 		if (errno != ENOENT) {
-			AG_SetError("%s: %s", path, strerror(errno));
+			AG_SetError(_("%s: Failed to determine existence of "
+			              "file (%s)"), path, strerror(errno));
 			return (-1);
 		}
 		return (0);
@@ -181,9 +185,19 @@ int
 AG_FileDelete(const char *path)
 {
 #ifdef _WIN32
-	return (DeleteFile(path) == 0) ? -1 : 0;
+	if (DeleteFile(path) == 0) {
+		AG_SetError(_("%s: Failed to delete file (%lu)"), path,
+		    (Ulong)GetLastError());
+		return (-1);
+	}
+	return (0);
 #else
-	return unlink(path);
+	if (unlink(path) == -1) {
+		AG_SetError(_("%s: Failed to delete file (%s)"), path,
+		    strerror(errno));
+		return (-1);
+	}
+	return (0);
 #endif
 }
 

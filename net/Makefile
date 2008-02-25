@@ -10,7 +10,7 @@ LIB_LINKS=	ag_core_static pthreads SDL opengl freetype
 SRCS=		command.c server.c client.c fgetln.c
 # MAN3+=	AGN.3
 
-CFLAGS+=-I.. ${SDL_CFLAGS} -D_GNU_SOURCE
+CFLAGS+=-I.. ${SDL_CFLAGS} ${GETTEXT_CFLAGS} -D_GNU_SOURCE
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk

@@ -1,8 +1,5 @@
-/*	$Csoft: gethostname.c,v 1.1 2004/02/26 09:19:38 vedge Exp $	*/
-
 /*
- * Copyright (c) 2003, 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2003-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

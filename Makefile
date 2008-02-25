@@ -15,7 +15,8 @@ SUBDIR=	core agar-core-config \
 	map agar-map-config \
 	sc agar-sc-config \
 	dev agar-dev-config \
-	net agar-net-config
+	net agar-net-config \
+	po
 
 all: all-subdir
 clean: clean-config clean-subdir

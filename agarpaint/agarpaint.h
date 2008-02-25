@@ -9,20 +9,17 @@ typedef unsigned int Uchar;
 typedef unsigned long Ulong;
 #endif
 
-#if 0
-# include <libintl/libintl.h>
+#include <config/enable_nls.h>
+#ifdef ENABLE_NLS
+# include <libintl.h>
 # define _(String) gettext(String)
 # define gettext_noop(String) (String)
 # define N_(String) gettext_noop(String)
 #else
 # undef _
 # undef N_
-# undef textdomain
-# undef bindtextdomain
 # define _(s) (s)
 # define N_(s) (s)
-# define textdomain(d)
-# define bindtextdomain(p, d)
 #endif
 
 #ifndef MAXPATHLEN

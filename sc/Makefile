@@ -12,7 +12,7 @@ SRCS=	sc_math.c sc_matrix.c sc_vector.c sc_ivector.c sc_gaussj.c sc_lu.c \
 
 MAN3=	SC_Plotter.3
 
-CFLAGS+=-I.. ${SDL_CFLAGS} ${AGAR_CFLAGS} ${MATH_CFLAGS}
+CFLAGS+=-I.. ${SDL_CFLAGS} ${AGAR_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk

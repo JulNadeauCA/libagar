@@ -30,6 +30,8 @@
 #include <config/version.h>
 #include <config/network.h>
 #include <config/release.h>
+#include <config/enable_nls.h>
+#include <config/localedir.h>
 
 #ifdef THREADS
 # include <config/have_pthreads_xopen.h>
@@ -62,8 +64,10 @@ AG_InitCore(const char *progname, Uint flags)
 		agVerbose = 1;
 
 	agProgName = progname;
-#if 0
+
+#ifdef ENABLE_NLS
 	bindtextdomain("agar", LOCALEDIR);
+	bind_textdomain_codeset("agar", "UTF-8");
 	textdomain("agar");
 #endif
 

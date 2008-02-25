@@ -37,11 +37,11 @@ AG_ReadStringLen(AG_DataSource *ds, size_t maxlen)
 	char *s;
 
 	if ((len = (size_t)AG_ReadUint32(ds))+1 >= maxlen) {
-		AG_SetError("String overflow");
+		AG_SetError(_("Overflow reading string from data source"));
 		return (NULL);
 	}
 	if ((s = malloc(len+1)) == NULL) {
-		AG_SetError("Out of memory for string");
+		AG_SetError(_("Out of memory for string in data source"));
 		return (NULL);
 	}
 	if (len > 0) {
@@ -59,15 +59,15 @@ AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
 	char *s;
 
 	if ((len = (size_t)AG_ReadUint32(ds)) >= maxlen) {
-		AG_SetError("String overflow");
+		AG_SetError(_("Overflow reading string from data source"));
 		return (NULL);
 	}
 	if (len == 0) {
-		AG_SetError("NULL string");
+		AG_SetError(_("NULL string in data source"));
 		return (NULL);
 	}
 	if ((s = malloc(len)) == NULL) {
-		AG_SetError("Out of memory for string");
+		AG_SetError(_("Out of memory for string in data source"));
 		return (NULL);
 	}
 	if (AG_Read(ds, s, len, 1) != 0) { AG_FatalError(NULL); }
@@ -102,7 +102,7 @@ AG_CopyString(char *dst, AG_DataSource *ds, size_t dst_size)
 	AG_LockDataSource(ds);
 	if ((len = (size_t)AG_ReadUint32(ds)) > (dst_size-1)) {
 #ifdef DEBUG
-		Verbose("0x%x: %lub string truncated to fit %lub\n",
+		Verbose(_("0x%x: %lub string truncated to fit %lub\n"),
 		    (unsigned)AG_Tell(ds), (unsigned long)len,
 		    (unsigned long)dst_size);
 #endif
@@ -134,7 +134,7 @@ AG_CopyNulString(char *dst, AG_DataSource *ds, size_t dst_size)
 	AG_LockDataSource(ds);
 	if ((len = (size_t)AG_ReadUint32(ds)) > dst_size) {
 #ifdef DEBUG
-		Verbose("0x%x: %lub string truncated to fit %lub\n",
+		Verbose(_("0x%x: %lub string truncated to fit %lub\n"),
 		    (unsigned)AG_Tell(ds), (unsigned long)len,
 		    (unsigned long)dst_size);
 #endif

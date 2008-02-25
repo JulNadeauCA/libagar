@@ -479,7 +479,7 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 			break;
 	}
 	if (!found) {
-		AG_SetError("No such unit: %s", unit_key);
+		AG_SetError(_("No such unit: %s"), unit_key);
 		AG_ObjectUnlock(num);
 		return (-1);
 	}

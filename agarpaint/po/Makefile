@@ -1,11 +1,12 @@
-TOP=	..
-include ${TOP}/Makefile.config
+TOP=	../..
+include ../Makefile.config
 
 XGETTEXT_FLAGS=	--no-location --from-code=UTF-8
 
-DOMAIN=	agar
-POS=	fr.po no.po
-MOS=	fr.mo no.mo
+SRC=	..
+DOMAIN= agarpaint
+POS=	fr.po
+MOS=	fr.mo
 
 ENABLE_NLS=yes
 HAVE_GETTEXT=yes

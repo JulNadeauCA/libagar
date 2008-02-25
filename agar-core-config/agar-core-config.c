@@ -34,10 +34,17 @@
 #include <config/localedir.h>
 
 #include <config/have_pthreads.h>
+#include <config/enable_nls.h>
+
 #ifdef HAVE_PTHREADS
 #include <config/pthreads_libs.h>
 #include <config/pthreads_cflags.h>
 #endif
+#ifdef ENABLE_NLS
+#include <config/gettext_libs.h>
+#include <config/gettext_cflags.h>
+#endif
+
 #include <config/sdl_libs.h>
 #include <config/sdl_cflags.h>
 
@@ -74,6 +81,9 @@ main(int argc, char *argv[])
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_CFLAGS);
 #endif
+#ifdef ENABLE_NLS
+			printf("%s ", GETTEXT_CFLAGS);
+#endif
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
@@ -83,6 +93,9 @@ main(int argc, char *argv[])
 #endif
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_LIBS);
+#endif
+#ifdef ENABLE_NLS
+			printf("%s ", GETTEXT_LIBS);
 #endif
 			printf("\n");
 		}

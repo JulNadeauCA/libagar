@@ -1,5 +1,3 @@
-/*	$Csoft: rmd160.c,v 1.1 2005/04/25 07:47:50 vedge Exp $	*/
-
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *
