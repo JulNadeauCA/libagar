@@ -62,6 +62,7 @@ enum ag_table_cell_type {
 	AG_CELL_POINTER,
 	AG_CELL_FN_SU,
 	AG_CELL_FN_TXT,
+	AG_CELL_WIDGET
 };
 
 typedef struct ag_table_cell {
@@ -78,7 +79,8 @@ typedef struct ag_table_cell {
 	} data;
 	char fmt[AG_TABLE_FMT_MAX];		/* Format string */
 	SDL_Surface *(*fnSu)(void *, int, int); /* For AG_CELL_FN_SURFACE */
-	void (*fnTxt)(void *, char *, size_t);	/* For AG_CELL_FN_TEXT */
+	void (*fnTxt)(void *, char *, size_t);	/* For AG_CELL_FN_TXT */
+	AG_Widget *widget;			/* For AG_CELL_WIDGET */
 	int selected;				/* Cell is selected */
 	int surface;				/* Named of mapped surface */
 } AG_TableCell;
