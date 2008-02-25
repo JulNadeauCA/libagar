@@ -244,7 +244,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 				break;
 		}
 		if (i == agBuiltinFontCount) {
-			AG_SetError("No such builtin font: %s", name);
+			AG_SetError(_("No such builtin font: %s"), name);
 			goto fail;
 		}
 		builtin = agBuiltinFonts[i];
@@ -321,13 +321,13 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		    msig == NULL || strcmp(msig, "MAP") != 0 ||
 		    c0 == NULL || c1 == NULL ||
 		    c0[0] == '\0' || c1[0] == '\0') {
-			AG_SetError("Missing bitmap fontspec");
+			AG_SetError(_("Missing bitmap fontspec"));
 			goto fail;
 		}
 		font->c0 = (Uint32)strtol(c0, NULL, 10);
 		font->c1 = (Uint32)strtol(c1, NULL, 10);
 		if (font->nglyphs < (font->c1 - font->c0)) {
-			AG_SetError("Inconsistent bitmap fontspec");
+			AG_SetError(_("Inconsistent bitmap fontspec"));
 			goto fail;
 		}
 

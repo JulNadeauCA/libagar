@@ -3,6 +3,7 @@ include Makefile.config
 
 PROJECT=	"agarpaint"
 PROJINCLUDES=	configure.lua
+SUBDIR=		po
 
 PROG=		agarpaint
 PROG_TYPE=	"GUI"
@@ -13,8 +14,10 @@ PROG_LINKS=	ag_core ag_gui ag_map ag_rg ag_vg ag_dev \
 SRCS=	agarpaint.c
 SHARE=	agarpaint.bmp
 
-CFLAGS+=${AGAR_CFLAGS} ${AGAR_MAP_CFLAGS} ${AGAR_RG_CFLAGS} ${AGAR_VG_CFLAGS} ${AGAR_DEV_CFLAGS}
-LIBS+=	${AGAR_LIBS} ${AGAR_MAP_LIBS} ${AGAR_RG_LIBS} ${AGAR_VG_LIBS} ${AGAR_DEV_LIBS}
+CFLAGS+=${AGAR_CFLAGS} ${AGAR_MAP_CFLAGS} ${AGAR_RG_CFLAGS} ${AGAR_VG_CFLAGS} \
+	${AGAR_DEV_CFLAGS} ${GETTEXT_CFLAGS}
+LIBS+=	${AGAR_LIBS} ${AGAR_MAP_LIBS} ${AGAR_RG_LIBS} ${AGAR_VG_LIBS} \
+	${AGAR_DEV_LIBS} ${GETTEXT_CFLAGS}
 
 all: all-subdir ${PROG}
 

@@ -17,6 +17,7 @@
 #include <config/have_nonnull_attribute.h>
 #include <config/have_64bit.h>
 #include <config/have_long_double.h>
+#include <config/enable_nls.h>
 
 #include <config/_mk_have_unsigned_typedefs.h>
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
@@ -110,21 +111,22 @@ typedef unsigned long Ulong;
 
 #include <gui/text.h>
 
-#if 0
-# include <libintl/libintl.h>
-# define _(String) gettext(String)
-# define gettext_noop(String) (String)
-# define N_(String) gettext_noop(String)
+#ifdef ENABLE_NLS
+# include <libintl.h>
+# define _(String) dgettext("agar",String)
+# ifdef dgettext_noop
+#  define N_(String) dgettext_noop("agar",String)
+# else
+#  define N_(String) (String)
+# endif
 #else
 # undef _
 # undef N_
-# undef textdomain
-# undef bindtextdomain
-# define _(s) (s)
-# define N_(s) (s)
-# define textdomain(d)
-# define bindtextdomain(p, d)
-#endif
+# undef ngettext
+# define _(String) (String)
+# define N_(String) (String)
+# define ngettext(Singular,Plural,Number) ((Number==1)?(Singular):(Plural))
+#endif /* !ENABLE_NLS */
 
 #ifndef MAXPATHLEN
 #define MAXPATHLEN 1024

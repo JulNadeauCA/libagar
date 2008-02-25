@@ -167,7 +167,7 @@ AG_TTFOpenFontFromMemory(const Uint8 *data, size_t size, int ptsize)
 	memset(font, 0, sizeof(AG_TTFFont));
 	if ((rv = FT_New_Memory_Face(ftLibrary, data, size, 0, &font->face))
 	    != 0) {
-		AG_SetError("FreeType error %d", rv);
+		AG_SetError(_("FreeType error %d"), rv);
 		goto fail;
 	}
 	if (InitFontAttributes(font, ptsize) == -1) {

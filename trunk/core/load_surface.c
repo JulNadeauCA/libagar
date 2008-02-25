@@ -139,7 +139,7 @@ AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 
 	encoding = AG_ReadUint32(ds);
 	if (encoding != RAW_ENCODING) {
-		AG_SetError("unsupported encoding");
+		AG_SetError(_("Unsupported surface encoding: %d"), encoding);
 		return (NULL);
 	}
 

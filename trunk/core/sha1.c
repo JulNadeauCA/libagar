@@ -1,6 +1,3 @@
-/*	$Csoft: sha1.c,v 1.1 2005/04/25 07:47:50 vedge Exp $	*/
-/*	$OpenBSD: sha1.c,v 1.19 2004/05/28 15:10:27 millert Exp $	*/
-
 /*
  * SHA-1 in C
  * By Steve Reid <steve@edmweb.com>

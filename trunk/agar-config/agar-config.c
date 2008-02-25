@@ -40,6 +40,7 @@
 #include <config/have_jpeg.h>
 #include <config/have_math.h>
 #include <config/have_pthreads.h>
+#include <config/enable_nls.h>
 
 #include <config/sdl_libs.h>
 #include <config/sdl_cflags.h>
@@ -62,6 +63,10 @@
 #ifdef HAVE_PTHREADS
 #include <config/pthreads_libs.h>
 #include <config/pthreads_cflags.h>
+#endif
+#ifdef ENABLE_NLS
+#include <config/gettext_libs.h>
+#include <config/gettext_cflags.h>
 #endif
 
 #include <stdio.h>
@@ -115,6 +120,9 @@ main(int argc, char *argv[])
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_CFLAGS);
 #endif
+#ifdef ENABLE_NLS
+			printf("%s ", GETTEXT_CFLAGS);
+#endif
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
@@ -139,6 +147,9 @@ main(int argc, char *argv[])
 #endif
 #ifdef HAVE_PTHREADS
 			printf("%s ", PTHREADS_LIBS);
+#endif
+#ifdef ENABLE_NLS
+			printf("%s ", GETTEXT_LIBS);
 #endif
 #if (defined(__APPLE__) || defined(__MACOSX__)) && defined(MAC_OS_X_VERSION_10_5)
 			printf("-dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib");

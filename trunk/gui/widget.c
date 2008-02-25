@@ -585,7 +585,7 @@ out:
 	}
 	AG_MutexUnlock(&wid->bindings_lock);
 
-	AG_SetError("No such widget binding: %s", name);
+	AG_SetError(_("No such widget binding: %s"), name);
 	return (NULL);
 }
 

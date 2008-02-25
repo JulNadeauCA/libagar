@@ -1,8 +1,5 @@
-/*	$Csoft: dir.c,v 1.3 2004/04/23 12:44:45 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -82,7 +79,7 @@ AG_MkDir(const char *dir)
 	if (CreateDirectory(dir, NULL)) {
 		return (0);
 	} else {
-		AG_SetError("%s: cannot create dir (%d)", dir,
+		AG_SetError(_("%s: Failed to create directory (%d)"), dir,
 		    GetLastError());
 		return (-1);
 	}
@@ -90,7 +87,8 @@ AG_MkDir(const char *dir)
 	if (mkdir(dir, 0700) == 0) {
 		return (0);
 	} else {
-		AG_SetError("mk %s: %s", dir, strerror(errno));
+		AG_SetError(_("%s: Failed to create directory (%s)"), dir,
+		    strerror(errno));
 		return (-1);
 	}
 #endif
@@ -103,7 +101,7 @@ AG_RmDir(const char *dir)
 	if (RemoveDirectory(dir)) {
 		return (0);
 	} else {
-		AG_SetError("%s: cannot remove dir (%d)", dir,
+		AG_SetError(_("%s: Failed to remove directory (%d)"), dir,
 		    GetLastError());
 		return (-1);
 	}
@@ -111,7 +109,8 @@ AG_RmDir(const char *dir)
 	if (rmdir(dir) == 0) {
 		return (0);
 	} else {
-		AG_SetError("rm %s: %s", dir, strerror(errno));
+		AG_SetError(_("%s: Failed to remove directory (%s)"), dir,
+		    strerror(errno));
 		return (-1);
 	}
 #endif
@@ -124,7 +123,7 @@ AG_ChDir(const char *dir)
 	if (SetCurrentDirectory(dir)) {
 		return (0);
 	} else {
-		AG_SetError("%s: cannot set cwd (%d)", dir,
+		AG_SetError(_("%s: Failed to change directory (%d)"), dir,
 		    GetLastError());
 		return (-1);
 	}
@@ -132,7 +131,8 @@ AG_ChDir(const char *dir)
 	if (chdir(dir) == 0) {
 		return (0);
 	} else {
-		AG_SetError("cd %s: %s", dir, strerror(errno));
+		AG_SetError(_("%s: Failed to change directory (%s)"), dir,
+		    strerror(errno));
 		return (-1);
 	}
 #endif
@@ -157,7 +157,7 @@ AG_OpenDir(const char *path)
 		Strlcpy(dpath, path, sizeof(dpath));
 		Strlcat(dpath, "\\*", sizeof(dpath));
 		if ((h = FindFirstFile(dpath, &fdata))==INVALID_HANDLE_VALUE) {
-			AG_SetError("Invalid file handle (%d)",
+			AG_SetError(_("Invalid file handle (%d)"),
 			    GetLastError());
 			goto fail;
 		}
@@ -179,7 +179,8 @@ AG_OpenDir(const char *path)
 		struct dirent *dent;
 		
 		if ((dp = opendir(path)) == NULL) {
-			AG_SetError("%s: %s", path, strerror(errno));
+			AG_SetError(_("%s: Failed to open directory (%s)"),
+			    path, strerror(errno));
 			goto fail;
 		}
 		while ((dent = readdir(dp)) != NULL) {
@@ -234,7 +235,7 @@ AG_MkPath(const char *path)
 					goto fail;
 			}
 		} else if (info.type != AG_FILE_DIRECTORY) {
-			AG_SetError("%s: existing non-directory", pathp);
+			AG_SetError(_("%s: Existing file"), pathp);
 			goto fail;
 		}
 
@@ -254,16 +255,19 @@ AG_GetCWD(char *buf, size_t len)
 	DWORD rv;
 
 	if ((rv = GetCurrentDirectory(len, buf)) == 0) {
-		AG_SetError("GetCWD: Error %d", GetLastError());
+		AG_SetError(_("Failed to get current directory (%d)"),
+		    GetLastError());
 		return (-1);
 	} else if (rv > len) {
-		AG_SetError("GetCWD: Buffer too small");
+		AG_SetError(_("Failed to get current directory (%s)"),
+		    _("Path name is too long"));
 		return (-1);
 	}
 	return (0);
 #else
 	if (getcwd(buf, len) == NULL) {
-		AG_SetError("GetCWD: %s", strerror(errno));
+		AG_SetError(_("Failed to get current directory (%s)"),
+		    strerror(errno));
 		return (-1);
 	}
 	return (0);

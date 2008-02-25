@@ -414,13 +414,13 @@ AG_ObjectAttachToNamed(void *vfsRoot, const char *path, void *child)
 	char *p;
 
 	if (Strlcpy(ppath, path, sizeof(ppath)) >= sizeof(ppath)) {
-		AG_SetError("path too big");
+		AG_SetError(_("Path name overflow"));
 		return (-1);
 	}
 	if ((p = strrchr(ppath, '/')) != NULL) {
 		*p = '\0';
 	} else {
-		AG_SetError("not an absolute path: `%s'", path);
+		AG_SetError(_("Not an absolute path: %s"), path);
 		return (-1);
 	}
 
@@ -429,7 +429,7 @@ AG_ObjectAttachToNamed(void *vfsRoot, const char *path, void *child)
 		AG_ObjectAttach(vfsRoot, child);
 	} else {
 		if ((parent = AG_ObjectFind(vfsRoot, ppath)) == NULL) {
-			AG_SetError("%s: cannot attach to `%s': %s",
+			AG_SetError(_("%s: Cannot attach to %s (%s)"),
 			    OBJECT(child)->name, ppath, AG_GetError());
 			AG_UnlockVFS(vfsRoot);
 			return (-1);
@@ -1874,7 +1874,7 @@ AG_ObjectCopyDigest(void *ob, size_t *len, char *digest)
 	}
 	if (Snprintf(digest, AG_OBJECT_DIGEST_MAX, "(md5|%s sha1|%s rmd160|%s)",
 	    md5, sha1, rmd160) >= AG_OBJECT_DIGEST_MAX) {
-		AG_SetError("Digest is too big.");
+		AG_SetError(_("String overflow"));
 		goto fail;
 	}
 	AG_ObjectUnlock(ob);

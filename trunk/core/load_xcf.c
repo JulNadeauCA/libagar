@@ -266,7 +266,7 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 	AG_Read(buf, tile, sizeof(Uint8), len);
 
 	if ((data = malloc(x * y * bpp)) == NULL) {
-		AG_SetError("Out of memory for XCF tile");
+		AG_SetError(_("Out of memory for XCF tile"));
 		return (NULL);
 	}
 	for (i = 0; i < bpp; i++) {
@@ -324,7 +324,7 @@ ReadTile(struct xcf_header *head, AG_DataSource *buf, Uint32 len, int bpp,
 	case XCF_COMPRESSION_RLE:
 		return ReadTileRLE(buf, len, bpp, x, y);
 	}
-	AG_SetError("Unknown XCF compression mode: %d", head->compression);
+	AG_SetError(_("Unknown XCF compression mode: %d"), head->compression);
 	return (NULL);
 }
 
@@ -486,7 +486,7 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 	hier->h = AG_ReadUint32(buf);
 	hier->bpp = AG_ReadUint32(buf);
 	if (hier->bpp != 4 && hier->bpp != 3) {
-		AG_SetError("Cannot handle %dBpp XCF", hier->bpp);
+		AG_SetError(_("Cannot handle %dBpp XCF data"), hier->bpp);
 		Free(hier);
 		return (NULL);
 	}
@@ -588,7 +588,7 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 	head->h = AG_ReadUint32(buf);
 	if (head->w > XCF_WIDTH_MAX ||
 	    head->h > XCF_HEIGHT_MAX) {
-		AG_SetError("Bad XCF geometry: %ux%u", head->w, head->h);
+		AG_SetError(_("Bad XCF geometry: %ux%u"), head->w, head->h);
 		Free(head);
 		return (-1);
 	}

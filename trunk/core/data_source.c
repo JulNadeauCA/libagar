@@ -46,7 +46,7 @@ FileRead(AG_DataSource *ds, void *buf, size_t size, size_t nmemb, size_t *rv)
 	*rv = fread(buf, size, nmemb, f) * size;
 	if (*rv < (nmemb*size)) {
 		if (ferror(f)) {
-			AG_SetError("Read error");
+			AG_SetError(_("Read error"));
 			return (AG_IO_ERROR);
 		} else if (feof(f)) {
 			return (AG_IO_EOF);
@@ -76,7 +76,7 @@ FileReadAt(AG_DataSource *ds, void *buf, size_t size, size_t nmemb, off_t pos,
 			fseek(f, savedPos, SEEK_SET);
 			return (AG_IO_EOF);
 		} else if (ferror(f)) {
-			AG_SetError("Write Error");
+			AG_SetError(_("Write Error"));
 			return (AG_IO_ERROR);
 		}
 	}
@@ -99,7 +99,7 @@ FileWrite(AG_DataSource *ds, const void *buf, size_t size, size_t nmemb,
 	*rv = fwrite(buf, size, nmemb, f) * size;
 	if (*rv < (nmemb*size)) {
 		if (ferror(f)) {
-			AG_SetError("Write error");
+			AG_SetError(_("Write error"));
 			return (AG_IO_ERROR);
 		} else {
 			return (AG_IO_EOF);
@@ -126,7 +126,7 @@ FileWriteAt(AG_DataSource *ds, const void *buf, size_t size, size_t nmemb,
 		if (feof(f)) {
 			return (AG_IO_EOF);
 		} else {
-			AG_SetError("Write Error");
+			AG_SetError(_("Write Error"));
 			return (AG_IO_ERROR);
 		}
 	}
@@ -422,7 +422,7 @@ AG_Read(AG_DataSource *ds, void *ptr, size_t size, size_t nmemb)
 	
 	AG_MutexLock(&ds->lock);
 	if (ds->read == NULL) {
-		AG_SetError("Bad operation");
+		AG_SetError(_("Illegal operation"));
 		return (AG_IO_ERROR);
 	}
 	rv = ds->read(ds, ptr, size, nmemb, &ds->rdLast);
@@ -438,7 +438,7 @@ AG_ReadAt(AG_DataSource *ds, void *ptr, size_t size, size_t nmemb, off_t pos)
 	
 	AG_MutexLock(&ds->lock);
 	if (ds->read_at == NULL) {
-		AG_SetError("Bad operation");
+		AG_SetError(_("Illegal operation"));
 		return (AG_IO_ERROR);
 	}
 	rv = ds->read_at(ds, ptr, size, nmemb, pos, &ds->rdLast);
@@ -454,7 +454,7 @@ AG_Write(AG_DataSource *ds, const void *ptr, size_t size, size_t nmemb)
 	
 	AG_MutexLock(&ds->lock);
 	if (ds->write == NULL) {
-		AG_SetError("Bad operation");
+		AG_SetError(_("Illegal operation"));
 		return (AG_IO_ERROR);
 	}
 	rv = ds->write(ds, ptr, size, nmemb, &ds->wrLast);
@@ -471,7 +471,7 @@ AG_WriteAt(AG_DataSource *ds, const void *ptr, size_t size, size_t nmemb,
 	
 	AG_MutexLock(&ds->lock);
 	if (ds->write_at == NULL) {
-		AG_SetError("Bad operation");
+		AG_SetError(_("Illegal operation"));
 		return (AG_IO_ERROR);
 	}
 	rv = ds->write_at(ds, ptr, size, nmemb, pos, &ds->wrLast);
@@ -497,7 +497,7 @@ AG_Seek(AG_DataSource *ds, off_t pos, enum ag_seek_mode mode)
 	int rv;
 
 	if (ds->seek == NULL) {
-		AG_SetError("Bad operation");
+		AG_SetError(_("Illegal operation"));
 		return (-1);
 	}
 	AG_MutexLock(&ds->lock);
