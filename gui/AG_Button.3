@@ -143,11 +143,9 @@ Acceptable values for the
 .Fa flags
 argument include:
 .Pp
-.Bl -tag -width "AG_BUTTON_MOUSEOVER "
+.Bl -tag -width "AG_BUTTON_STICKY "
 .It AG_BUTTON_STICKY
 Preserve button state.
-.It AG_BUTTON_MOUSEOVER
-Mouse pointer is currently over the button (read-only).
 .It AG_BUTTON_REPEAT
 Repeatedly generate
 .Sq button-pushed
@@ -277,32 +275,23 @@ event:
 .Pp
 .Bd -literal -offset indent
 void
-hello(AG_Event *event)
+MyHandlerFn(AG_Event *event)
 {
-	char *s = AG_STRING(1);
-	AG_TextMsg(AG_MSG_INFO, "Hello, %s!", s);
+	AG_TextMsg(AG_MSG_INFO, "Hello, %s!", AG_STRING(1));
 }
  
 .Li ...
 
-{
-	AG_Button *btn;
-
-	btn = AG_ButtonNew(parent, 0, "Hello");
-	AG_SetEvent(btn, "button-pushed", hello, "%s", "world");
-}
+AG_ButtonNewFn(parent, 0, "Hello", MyHandlerFn, "%s", "world");
 .Ed
 .Pp
 The following code fragment uses buttons to control specific bits in
 a 32-bit word:
 .Bd -literal -offset indent
-AG_Button *btn;
 Uint32 MyFlags = 0;
 
-btn = AG_ButtonNew(parent, AG_BUTTON_STICKY, "Bit 1");
-AG_WidgetBindFlag32(btn, "state", &MyFlags, 0x01);
-btn = AG_ButtonNew(parent, AG_BUTTON_STICKY, "Bit 2");
-AG_WidgetBindFlag32(btn, "state", &MyFlags, 0x02);
+AG_ButtonNewFlag32(parent, 0, "Bit 1", &MyFlags, 0x01);
+AG_ButtonNewFlag32(parent, 0, "Bit 2", &MyFlags, 0x02);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
