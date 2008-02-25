@@ -81,12 +81,13 @@ ${DOMAIN}.pot: ${POTFILES}
 		    --directory=${SRC} --add-comments \
 		    --keyword=_ --keyword=N_ \
 		    --files-from=${POTFILES} ${XGETTEXT_FLAGS} -o $@"; \
-		if [ "${XGETTEXT} --default-domain=${DOMAIN} \
+		${XGETTEXT} --default-domain=${DOMAIN} \
 		    --directory=${SRC} --add-comments \
 		    --keyword=_ --keyword=N_ \
 		    --files-from=${POTFILES} \
-		    ${XGETTEXT_FLAGS} -o $@" != 0 ]; then \
-			echo "skipping $@ (xgettext failed); "; \
+		    ${XGETTEXT_FLAGS} -o $@; \
+		if [ $? != 0 ]; then \
+			echo "${XGETTEXT} returned non-zero status"; \
 		fi; \
 	else \
 		echo "skipping $@ (no gettext)"; \
