@@ -338,6 +338,9 @@ PrintCell(AG_Table *t, AG_TableCell *c, char *buf, size_t bufsz)
 			Strlcpy(buf, c->fmt, bufsz);
 		}
 		break;
+	case AG_CELL_WIDGET:
+		Strlcpy(buf, "<widget>", bufsz);
+		break;
 	}
 }
 
@@ -677,6 +680,9 @@ AG_TableCompareCells(const AG_TableCell *c1, const AG_TableCell *c2)
 			c2->fnTxt(c2->data.p, b2, sizeof(b2));
 			return (strcmp(b1, b2));
 		}
+	case AG_CELL_WIDGET:
+		/* XXX TODO hooks */
+		return (1);
 	case AG_CELL_NULL:
 		return (0);
 	}
@@ -1378,6 +1384,18 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				c->type = AG_CELL_FN_SU;
 				c->fnSu = c->data.p;
 				c->data.p = c;
+			} else if (sc[0] == 'W') {
+				AG_SizeAlloc a;
+				AG_Window *pWin;
+
+				c->type = AG_CELL_WIDGET;
+				c->widget = c->data.p;
+				AG_ObjectAttach(t, c->widget);
+				AG_WidgetSizeAlloc(c->widget, &a);
+				if ((pWin = AG_WidgetParentWindow(t)) != NULL) {
+					AG_WindowUpdate(pWin);
+				}
+				/* TODO specify bindings */
 			}
 		}
 		switch (sc[0]) {
