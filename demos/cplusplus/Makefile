@@ -11,8 +11,9 @@ PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
 PROG=	cplusplus
 SRCS=	cplusplus.cpp
 
-CXXFLAGS+=${AGAR_CFLAGS} -I.
-LIBS+=	${AGAR_LIBS}
+CFLAGS+=   ${AGAR_CFLAGS}
+CXXFLAGS+= ${AGAR_CFLAGS} -I.
+LIBS+=     ${AGAR_LIBS}
 
 all: all-subdir ${PROG}
 
