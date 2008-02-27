@@ -59,7 +59,7 @@ CreateUI(void)
 	AG_Combo *uSel;
 	int i;
 
-	win = AG_WindowNew(0);
+	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_WindowSetCaption(win, "Unit Converter");
 	AG_WindowSetPadding(win, 10, 10, 10, 10);
 	agColors[WINDOW_BG_COLOR] = agColors[BG_COLOR];
@@ -88,7 +88,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	if (AG_InitVideo(400, 300, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitVideo(400, 180, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
