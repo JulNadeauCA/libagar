@@ -11,7 +11,10 @@
 #include "animal.h"
 #include "mammal.h"
 
-/* Initialization routine. */
+/*
+ * Initialization routine. Note that the object system will automatically
+ * invoke the initialization routines of all parent classes first.
+ */
 static void
 Init(void *obj)
 {
@@ -22,7 +25,13 @@ Init(void *obj)
 	mammal->hairColor.v = 0.0;
 }
 
-/* Load routine. */
+/*
+ * Load routine. This operation restores the state of the object from
+ * a data source.
+ *
+ * The object system will automatically invoke the load routines of
+ * the parent beforehand.
+ */
 static int
 Load(void *obj, AG_DataSource *ds, const AG_Version *ver)
 {
@@ -34,7 +43,13 @@ Load(void *obj, AG_DataSource *ds, const AG_Version *ver)
 	return (0);
 }
 
-/* Save routine. */
+/*
+ * Save routine. This operation saves the state of the object to a
+ * data source.
+ *
+ * The object system will automatically invoke the save routines of
+ * the parent beforehand.
+ */
 static int
 Save(void *obj, AG_DataSource *ds)
 {
@@ -51,12 +66,22 @@ static void *
 Edit(void *obj)
 {
 	Mammal *mammal = obj;
-	AG_Window *win;
+	AG_Window *win, *winSuper;
 	AG_HSVPal *pal;
+	AG_ObjectClass *super;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Mammal: %s", AGOBJECT(mammal)->name);
 
+	/* Invoke the "edit" operation of the superclass. */
+	super = AG_ObjectSuperclass(mammal);
+	if (super->edit != NULL) {
+		winSuper = super->edit(mammal);
+		AG_WindowSetPosition(winSuper, AG_WINDOW_UPPER_CENTER, 0);
+		AG_WindowShow(winSuper);
+	}
+
+	/* Allow user to edit paramters specific to this class. */
 	AG_LabelNewStatic(win, 0, "Hair color:");
 	pal = AG_HSVPalNew(win, AG_HSVPAL_EXPAND);
 	AG_WidgetBindFloat(pal, "hue", &mammal->hairColor.h);
