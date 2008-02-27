@@ -214,7 +214,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
 	/* Create a new window. */
-	win = AG_WindowNew(0);
+	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_WindowSetCaption(win, "SC_Plotter example");
 
 	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);

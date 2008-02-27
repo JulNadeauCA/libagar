@@ -125,8 +125,7 @@ CreateMainWindow(void)
 	AG_HSVPal *pal;
 	AG_FSpinbutton *fsb;
 
-	win = AG_WindowNew(0);
-	
+	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	hb = AG_HBoxNew(win, AG_HBOX_EXPAND);
 	{
 		/* Create the AG_GLView widget. */
