@@ -472,6 +472,9 @@ option.
 .Ft "int"
 .Fn AG_ObjectIsClass "AG_Object *obj" "const char *class_pattern"
 .Pp
+.Ft "AG_ObjectClass *"
+.Fn AG_ObjectSuperclass "AG_Object *obj"
+.Pp
 .Fn AGOBJECT_FOREACH_CLASS "AG_Object *child_obj" "AG_Object *parent_obj" "TYPE type" "const char *class_pattern"
 .Pp
 .nr nS 0
@@ -500,8 +503,15 @@ which may contain wildcards such as
 or
 .Dq MyClass:*:MySubclass:* .
 .Pp
+The
+.Fn AG_ObjectSuperclass
+function returns a pointer to the
+.Fa AG_ObjectClass
+structure describing the superclass of the given object (or if the object is
+an instance of the base class, the base class is returned).
+.Pp
 .Fn AGOBJECT_FOREACH_CLASS
-is a convenience macro that iterates
+is a macro that iterates
 .Fa child_obj
 (cast to given
 .Fa type )
