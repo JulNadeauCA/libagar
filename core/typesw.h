@@ -5,9 +5,6 @@
 #include "begin_code.h"
 
 __BEGIN_DECLS
-extern AG_ObjectClass **agClassTbl;
-extern int              agClassCount;
-
 void	 AG_InitClassTbl(void);
 void	 AG_DestroyClassTbl(void);
 void	 AG_RegisterClass(void *);

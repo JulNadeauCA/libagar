@@ -150,6 +150,8 @@ enum ag_object_checksum_alg {
 
 __BEGIN_DECLS
 extern AG_ObjectClass agObjectClass;
+extern AG_ObjectClass **agClassTbl;
+extern int              agClassCount;
 
 void	*AG_ObjectNew(void *, const char *, AG_ObjectClass *);
 void	 AG_ObjectAttach(void *, void *);
@@ -294,6 +296,26 @@ AG_ObjectIsClass(const void *p, const char *cname)
 	}
 	/* Fallback to the general matching algorithm. */
 	return (AG_ObjectIsClassGeneral(obj, cname));
+}
+
+/* Return the superclass of an object. */
+static __inline__ AG_ObjectClass *
+AG_ObjectSuperclass(const void *p)
+{
+	AG_ObjectClass *cls = AGOBJECT(p)->cls;
+	char *end;
+	int i, len;
+
+	if ((end = strrchr(cls->name, ':')) == NULL) {
+		return (AGOBJECT(p)->cls);
+	}
+	len = end - &cls->name[0];
+	for (i = 0; i < agClassCount; i++) {
+		const char *s = agClassTbl[i]->name;
+		if (strncmp(s, cls->name, len) == 0 && s[len] == '\0')
+			return (agClassTbl[i]);
+	}
+	return (NULL);
 }
 
 /*
