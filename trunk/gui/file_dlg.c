@@ -424,6 +424,20 @@ ProcessFilename(char *file, size_t len)
 }
 
 static void
+SetFilename(AG_FileDlg *fd, const char *file)
+{
+	if (file[0] == '/') {
+		Strlcpy(fd->cfile, file, sizeof(fd->cfile));
+	} else {
+		Strlcpy(fd->cfile, fd->cwd, sizeof(fd->cfile));
+		if (!AG_FileDlgAtRoot(fd)) {
+			Strlcat(fd->cfile, AG_PATHSEP, sizeof(fd->cfile));
+		}
+		Strlcat(fd->cfile, file, sizeof(fd->cfile));
+	}
+}
+
+static void
 TextboxChanged(AG_Event *event)
 {
 	char path[MAXPATHLEN];
@@ -432,7 +446,7 @@ TextboxChanged(AG_Event *event)
 
 	AG_ObjectLock(fd);
 	AG_TextboxCopyString(tb, path, sizeof(path));
-	AG_FileDlgSetFilename(fd, "%s", path);
+	SetFilename(fd, path);
 	AG_ObjectUnlock(fd);
 }
 
@@ -673,16 +687,9 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 	va_end(ap);
 
 	AG_ObjectLock(fd);
+	SetFilename(fd, file);
 	AG_TextboxPrintf(fd->tbFile, "%s", file);
-	if (file[0] == '/') {
-		Strlcpy(fd->cfile, file, sizeof(fd->cfile));
-	} else {
-		Strlcpy(fd->cfile, fd->cwd, sizeof(fd->cfile));
-		if (!AG_FileDlgAtRoot(fd)) {
-			Strlcat(fd->cfile, AG_PATHSEP, sizeof(fd->cfile));
-		}
-		Strlcat(fd->cfile, file, sizeof(fd->cfile));
-	}
+	AG_TextboxSetCursorPos(fd->tbFile, -1);
 	AG_ObjectUnlock(fd);
 }
 
