@@ -68,7 +68,7 @@ AG_CheckboxNewFn(void *parent, Uint flags, const char *label, AG_EventFn fn,
 }
 
 AG_Checkbox *
-AG_CheckboxNewInt(void *parent, Uint flags, int *pVal, const char *label)
+AG_CheckboxNewInt(void *parent, int *pVal, const char *label)
 {
 	AG_Checkbox *cb;
 	cb = AG_CheckboxNew(parent, AG_CHECKBOX_HFILL, label);

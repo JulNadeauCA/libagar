@@ -510,7 +510,7 @@ SelectedType(AG_Event *event)
 	TAILQ_FOREACH(fo, &ft->opts, opts) {
 		switch (fo->type) {
 		case AG_FILEDLG_BOOL:
-			AG_CheckboxNewInt(fd->optsCtr, 0, &fo->data.i.val,
+			AG_CheckboxNewInt(fd->optsCtr, &fo->data.i.val,
 			    fo->descr);
 			break;
 		case AG_FILEDLG_INT:
