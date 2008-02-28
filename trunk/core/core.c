@@ -149,7 +149,9 @@ AG_Destroy(void)
 #ifdef NETWORK
 	AG_RcsDestroy();
 #endif
+#if 0
 	AG_ObjectDestroy(agConfig);
+#endif
 	AG_DestroyTimeouts();
 	AG_DestroyError();
 	AG_DestroyClassTbl();
