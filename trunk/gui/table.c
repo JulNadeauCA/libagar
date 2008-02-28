@@ -90,6 +90,7 @@ Init(void *obj)
 	AG_WidgetBind(t, "selected-col", AG_WIDGET_POINTER, &t->selected_col);
 	AG_WidgetBind(t, "selected-cell", AG_WIDGET_POINTER, &t->selected_cell);
 
+	t->sep = ":";
 	t->flags = 0;
 	t->selected_row = NULL;
 	t->selected_col = NULL;
@@ -136,6 +137,15 @@ AG_TableSizeHint(AG_Table *t, int w, int nrows)
 	AG_ObjectLock(t);
 	if (w != -1) { t->prew = w; }
 	if (nrows != -1) { t->preh = nrows*agTextFontHeight; }
+	AG_ObjectUnlock(t);
+}
+
+/* Change the set of recognized field separators (defaults to ":") */
+void
+AG_TableSetSeparator(AG_Table *t, const char *sep)
+{
+	AG_ObjectLock(t);
+	t->sep = sep;
 	AG_ObjectUnlock(t);
 }
 
@@ -371,6 +381,22 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		c->surface = AG_WidgetMapSurface(t,
 		    c->fnSu(c->data.p, rd->x, rd->y));
 		goto blit;
+	case AG_CELL_WIDGET:
+		if (WIDGET_OPS(c->data.p)->draw != NULL) {
+			AG_Widget *W = c->data.p;
+
+			W->x = rd->x;
+			W->y = rd->y;
+			W->w = rd->w;
+			W->h = rd->h;
+			W->cx = WIDGET(t)->cx + rd->x;
+			W->cy = WIDGET(t)->cy + rd->y;
+			W->cx2 = W->cx + W->w;
+			W->cy2 = W->cy + W->h;
+			AGWIDGET_OPS(W)->draw(W);
+		}
+		c->surface = -1;
+		return;
 	case AG_CELL_NULL:
 		if (c->fmt[0] != '\0') {
 			AG_TextColor(TEXT_COLOR);
@@ -1392,10 +1418,8 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				c->widget = c->data.p;
 				AG_ObjectAttach(t, c->widget);
 				AG_WidgetSizeAlloc(c->widget, &a);
-				if ((pWin = AG_WidgetParentWindow(t)) != NULL) {
+				if ((pWin = AG_WidgetParentWindow(t)) != NULL)
 					AG_WindowUpdate(pWin);
-				}
-				/* TODO specify bindings */
 			}
 		}
 		switch (sc[0]) {

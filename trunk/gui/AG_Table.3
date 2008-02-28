@@ -67,6 +67,9 @@ provides tree support, but no multi-column functionality.
 .Ft "void"
 .Fn AG_TableSizeHint "AG_Table *tbl" "int width" "int nrows"
 .Pp
+.Ft "void"
+.Fn AG_TableSetSeparator "AG_Table *tbl" "const char *sep"
+.Pp
 .Ft "AG_MenuItem *"
 .Fn AG_TableSetPopup "AG_Table *tbl" "int row" "int col"
 .Pp
@@ -126,6 +129,11 @@ function requests an initial sizing, where
 is the width in pixels and
 .Fa nrows
 is the number of rows to display.
+.Pp
+.Fn AG_TableSetSeparator
+changes the set of accepted field-separator characters in
+.Fn AG_TableAddRow
+(default is ":").
 .Pp
 The
 .Fn AG_TableSetPopup
@@ -264,10 +272,13 @@ The
 function inserts a new row into the table.
 The
 .Fa fmt
-argument is a colon-separated list of specifiers which define the type
-of individual cells.
-It is possible to mix cells of different types into a same column as long
-as the sorting function of that column can handle them.
+argument describes the individual fields (or cells) of this row.
+By default, the fields are comma-separated (the separator can be changed
+using
+.Fn AG_TableSetSeparator ) .
+Note that it is possible to mix fields of differing types into a same column
+as long as the sorting function of that column can handle the combinations.
+.Pp
 Acceptable specifiers include:
 .Pp
 .Bl -tag -width "%[s8], %[s16], %[s32] "
@@ -318,7 +329,14 @@ and
 parameters can be ignored.
 .Xr SDL_Surface 3 
 .It %[W]
-A widget.
+An arbitrary widget to insert into the table.
+Note that for efficiency reasons,
+.Nm
+is not treated like a standard widget container, so widgets that are
+inserted into the table in this way should not be attached to any parent
+(i.e., when using widget constructor functions, just leave the
+.Fa parent
+argument set to NULL).
 .El
 .Pp
 The functions

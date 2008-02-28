@@ -117,6 +117,7 @@ typedef struct ag_table {
 	void *selected_cell;		/* Default `selected-cell' binding */
 	int prew, preh;			/* Size hint */
 
+	const char *sep;		/* Field separators */
 	int wTbl;			/* Width of table display area */
 	int row_h;			/* Row height in pixels */
 	int col_h;			/* Column header height in pixels */
@@ -148,6 +149,13 @@ AG_Table *AG_TableNewPolled(void *, Uint, void (*fn)(AG_Event *),
  			    const char *, ...);
 void	  AG_TableSizeHint(AG_Table *, int, int);
 #define	  AG_TablePrescale AG_TableSizeHint
+
+void         AG_TableSetSeparator(AG_Table *, const char *);
+AG_MenuItem *AG_TableSetPopup(AG_Table *, int, int);
+void         AG_TableSetRowDblClickFn(AG_Table *, AG_EventFn, const char *,
+                                      ...);
+void         AG_TableSetColDblClickFn(AG_Table *, AG_EventFn, const char *,
+                                      ...);
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
 int	  AG_TablePoolAdd(AG_Table *, Uint, Uint);
@@ -182,10 +190,6 @@ int	  AG_TableCompareCells(const AG_TableCell *, const AG_TableCell *);
 
 int	     AG_TableSaveASCII(AG_Table *, FILE *, char);
 void	     AG_TableUpdateScrollbars(AG_Table *);
-AG_MenuItem *AG_TableSetPopup(AG_Table *, int, int);
-
-void	AG_TableSetRowDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
-void	AG_TableSetColDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
 __END_DECLS
 
 #include "close_code.h"
