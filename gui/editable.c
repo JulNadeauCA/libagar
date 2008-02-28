@@ -536,11 +536,9 @@ AG_EditableSetCursorPos(AG_Editable *ed, int pos)
 
 	ed->pos = pos;
 	if (ed->pos < 0) {
-		ed->pos = 0;
-	} else {
 		len = AG_LengthUTF8(s);
 		if (pos == -1 || ed->pos > len)
-			ed->pos = len;
+			ed->pos = len+1;
 	}
 	rv = ed->pos;
 
