@@ -1,6 +1,17 @@
 /*	Public domain	*/
+
 /*
  * This application demonstrates some uses for the AG_Table(3) widget.
+ *
+ * In EXAMPLE 1, we populate a Table statically and we demonstrate how the
+ * %[Ft] and %[Fn] elements can be used to provide dynamically-updated text
+ * and image cells.
+ *
+ * In EXAMPLE 2, we construct a Table where the rows themselves are
+ * dynamically updated (as opposed to simply the cell values).
+ *
+ * In EXAMPLE 3, we show how arbitrary widgets can be inserted into a Table
+ * and just how conveniently Agar bindings can handle the situation.
  */
 
 #include <agar/core.h>
@@ -10,7 +21,7 @@
 
 #include <agar/core/snprintf.h>
 
-/* This function is called to sort the elements of a column. */
+/* This function is called to sort the elements of a column (Ex.1) */
 static int
 MyCustomSortFn(const void *p1, const void *p2)
 {
@@ -20,7 +31,7 @@ MyCustomSortFn(const void *p1, const void *p2)
 	return (c1->data.i - c2->data.i);
 }
 
-/* This is a custom cell function which returns text into s. */
+/* This is a custom cell function which returns text into s (Ex.1) */
 static void
 MyCustomDynamicTextFn(void *p, char *s, size_t len)
 {
@@ -30,7 +41,7 @@ MyCustomDynamicTextFn(void *p, char *s, size_t len)
 	    (unsigned long)SDL_GetTicks());
 }
 
-/* This is a custom cell function which returns a surface to display. */
+/* This is a custom cell function which returns a surface to display (Ex.1) */
 static SDL_Surface *
 MyCustomSurfaceFn(void *p, int x, int y)
 {
@@ -38,7 +49,10 @@ MyCustomSurfaceFn(void *p, int x, int y)
 	return (agIconLoad.s);
 }
 
-/* This function creates a static table. */
+/*
+ * EXAMPLE 1:
+ * A statically constructed table.
+ */
 static void
 CreateStaticTable(void)
 {
@@ -47,8 +61,9 @@ CreateStaticTable(void)
 	AG_Table *table;
 	int i;
 
+	/* Create our window. */
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Static Table");
+	AG_WindowSetCaption(win, "Example 1: Static Table");
 
 	/*
 	 * Create the table. We could have used the AG_TABLE_MULTI flag if
@@ -87,18 +102,18 @@ CreateStaticTable(void)
 		AG_TableAddRow(table, "%s:%.03f:%.02f", "Bar", 1.0/(float)i,
 		    2.0/3.0);
 		
-		/* Provide a custom function that returns text. */
+		/* The %[Ft] element is a function that returns text. */
 		AG_TableAddRow(table, "%s:%d:%[Ft]", "Baz", i,
 		    MyCustomDynamicTextFn);
 		
-		/* Provide a custom function that returns an image. */
+		/* The %[Fs] element is a function that returns a surface. */
 		AG_TableAddRow(table, "%s:%d:%[Fs]", "Foo", i,
 		    MyCustomSurfaceFn);
 	}
 
 	/*
-	 * It is also possible to associate "hidden" fields with rows. This
-	 * is useful for storing user pointers, for instance.
+	 * It is also possible to insert "hidden" fields in rows. This is
+	 * typically used for user pointers.
 	 */
 	AG_TableAddRow(table, "%s:%d:%i:%p", "Hidden pointer", 1, 1,
 	    (void *)0xdeadbeef);
@@ -106,6 +121,7 @@ CreateStaticTable(void)
 	/* Make sure to call this when you're done adding rows. */
 	AG_TableEnd(table);
 
+	/* Display and resize our window. */
 	AG_WindowShow(win);
 	AG_WindowSetGeometry(win,
 	    agView->w/2 - 320/2,
@@ -113,6 +129,7 @@ CreateStaticTable(void)
 	    320, 240);
 }
 
+/* This is our callback function for updating our dynamic table (Ex.2) */
 static void
 UpdateTable(AG_Event *event)
 {
@@ -134,7 +151,11 @@ UpdateTable(AG_Event *event)
 	}
 }
 
-/* This function creates a polled table. */
+/*
+ * EXAMPLE 2: A dynamically constructed table. As opposed to dynamically
+ * updating cell values, the table is completely recreated at periodic
+ * intervals.
+ */
 static void
 CreatePolledTable(void)
 {
@@ -143,18 +164,108 @@ CreatePolledTable(void)
 	AG_Table *table;
 	int i;
 
+	/* Create our window. */
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Polled Table");
+	AG_WindowSetCaption(win, "Example 2: Polled Table");
 
 	/* Create a polled table. */
 	table = AG_TableNewPolled(win, AG_TABLE_EXPAND, UpdateTable, NULL);
 	AG_TableAddCol(table, "Foo", "<8888>", NULL);
 	AG_TableAddCol(table, "Bar", "<888888888>", NULL);
 
+	/* Display and resize our window. */
 	AG_WindowShow(win);
 	AG_WindowSetGeometry(win,
 	    agView->w/2 - 320/3,
 	    agView->h/2 - 240/3,
+	    320, 240);
+}
+
+/* Report on the status of our test array (Ex.3) */
+static void
+ReportSelectedRows(AG_Event *event)
+{
+	int *MyTable = AG_PTR(1);
+	int i, total = 0;
+
+	for (i = 0; i < 20; i++) {
+		if (MyTable[i] == 1)
+			total++;
+	}
+	AG_TextMsg(AG_MSG_INFO, "%d rows are selected", total);
+}
+
+/* Clear all rows (Ex.3) */
+static void
+ClearAllRows(AG_Event *event)
+{
+	int *MyTable = AG_PTR(1);
+
+	memset(MyTable, 0, 20*sizeof(int));
+}
+
+/*
+ * EXAMPLE 3:
+ * Table with embedded control widgets (%[W] row element).
+ */
+static void
+CreateTableWithControls(void)
+{
+	static int MyTable[20];
+	AG_Window *win;
+	AG_Button *btn;
+	AG_Table *table;
+	AG_Box *box;
+	int i;
+
+	/* Create our window. */
+	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, "Example 3: Table With Embedded Widgets");
+
+	/* Create our table. */
+	table = AG_TableNew(win, AG_TABLE_EXPAND);
+
+	/* Create our columns. */
+	AG_TableAddCol(table, "Widgets", "<Widgets>", NULL);
+	AG_TableAddCol(table, "Items", NULL, NULL);
+
+	/* Initialize our test array. */
+	memset(MyTable, 0, 20*sizeof(int));
+
+	/* Insert the rows. */
+	AG_TableBegin(table);
+	for (i = 0; i < 20; i++) {
+		AG_Button *button;
+
+		/*
+		 * The %[W] specifier allows us to insert an arbitrary widget
+		 * into the table. In this case, we will insert a Checkbox
+		 * bound to an entry in our MyTable array.
+		 *
+		 * It is important to pass NULL as the "parent" argument to
+		 * the widget constructor since TableAddRow() will attach the
+		 * Checkbox to the Table for us.
+		 */
+		button = AG_ButtonNewInt(NULL, AG_BUTTON_STICKY, "Select",
+		    &MyTable[i]);
+		AG_TableAddRow(table, "%[W]:Row %d", button, i);
+	}
+	AG_TableEnd(table);
+
+	/* Provide a function to report on the status of MyTable. */
+	box = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	{
+		AG_ButtonNewFn(box, 0, "Report selected rows",
+		    ReportSelectedRows, "%p", MyTable);
+		AG_ButtonNewFn(box, 0, "Clear rows",
+		    ClearAllRows, "%p", MyTable);
+	}
+
+	/* Display and resize our window. */
+	AG_WindowShow(win);
+	AG_WindowSetGeometry(win,
+	    agView->w/2 - 320/2,
+	    agView->h/2 - 240/2,
 	    320, 240);
 }
 
@@ -174,6 +285,7 @@ main(int argc, char *argv[])
 	
 	CreateStaticTable();
 	CreatePolledTable();
+	CreateTableWithControls();
 
 	AG_EventLoop();
 	AG_Destroy();
