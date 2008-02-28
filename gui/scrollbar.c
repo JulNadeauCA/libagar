@@ -1,15 +1,15 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  * 1. Redistributions of source code must retain the above copyright
- *	  notice, this list of conditions and the following disclaimer.
+ *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
- *	  notice, this list of conditions and the following disclaimer in the
- *	  documentation and/or other materials provided with the distribution.
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -51,6 +51,52 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 }
 
 static void
+Decrement(AG_Scrollbar *sb, int v)
+{
+	int value = AG_WidgetInt(sb, "value");
+	int min = AG_WidgetInt(sb, "min");
+
+	if (value > min)
+		AG_WidgetSetInt(sb, "value", value-v);
+}
+		
+static void
+Increment(AG_Scrollbar *sb, int v)
+{
+	int value = AG_WidgetInt(sb, "value");
+	int max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
+
+	if (value < max)
+		AG_WidgetSetInt(sb, "value", value+v);
+}
+
+static Uint32
+ScrollTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Scrollbar *sb = obj;
+
+	switch (sb->curBtn) {
+	case AG_SCROLLBAR_BUTTON_DEC:
+		Decrement(sb, 1);
+		break;
+	case AG_SCROLLBAR_BUTTON_INC:
+		Increment(sb, 1);
+		break;
+	default:
+		break;
+	}
+	return (agMouseSpinIval);
+}
+
+static void
+LostFocus(AG_Event *event)
+{
+	AG_Scrollbar *sb = AG_SELF();
+
+	AG_DelTimeout(sb, &sb->scrollTo);
+}
+
+static void
 Init(void *obj)
 {
 	AG_Scrollbar *sb = obj;
@@ -79,6 +125,10 @@ Init(void *obj)
 	AG_SetEvent(sb, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(sb, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(sb, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(sb, "widget-lostfocus", LostFocus, NULL);
+	AG_SetEvent(sb, "widget-hidden", LostFocus, NULL);
+
+	AG_SetTimeout(&sb->scrollTo, ScrollTimeout, NULL, 0);
 }
 
 /* Return 1 if the scrollbar is any useful for the current values. */
@@ -115,12 +165,8 @@ AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(sb);
 }
 
-/*
- * Clicked or dragged mouse to coord, so adjust value.
- * Widget must be locked.
- */
 static void
-MoveBar(AG_Scrollbar *sb, int x, int totalsize)
+SetValueFromPos(AG_Scrollbar *sb, int x, int totalsize)
 {
 	int scrArea = totalsize - (sb->bw*2);
 	int min, max;
@@ -155,6 +201,9 @@ MouseButtonUp(AG_Event *event)
 		}
 		return;
 	}
+
+	AG_DelTimeout(sb, &sb->scrollTo);
+
 	switch (sb->curBtn) {
 	case AG_SCROLLBAR_BUTTON_DEC:
 		if (sb->buttonDecFn != NULL) {
@@ -206,26 +255,26 @@ MouseButtonDown(AG_Event *event)
 		if (sb->buttonDecFn != NULL) {
 			AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 1);
 		} else {
-			if (value > min)
-				AG_WidgetSetInt(sb, "value", value-1);
+			Decrement(sb, 1);
 		}
 	} else if (x >= totalsize - sb->bw) {		/* Down button */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_INC;
 		if (sb->buttonIncFn != NULL) {
 			AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 1);
 		} else {
-			if (value < max)
-				AG_WidgetSetInt(sb, "value", value+1);
+			Increment(sb, 1);
 		}
 	} else {					/* In between */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
-		MoveBar(sb, x, totalsize);
+		SetValueFromPos(sb, x, totalsize);
 	}
 	AG_PostEvent(NULL, sb, "scrollbar-drag-begin", "%i", value);
 	
 	/* Generate an event if value changed. */
 	if (value != (nvalue = AG_WidgetInt(sb, "value")))
 		AG_PostEvent(NULL, sb, "scrollbar-changed", "%i", nvalue);
+		
+	AG_ReplaceTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
 }
 
 static void
@@ -244,7 +293,7 @@ MouseMotion(AG_Event *event)
 	}
 #endif
 	if (state & SDL_BUTTON_LMASK)
-		MoveBar(sb, x, totalsize);
+		SetValueFromPos(sb, x, totalsize);
 }
 
 static void
