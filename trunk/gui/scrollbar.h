@@ -41,6 +41,7 @@ typedef struct ag_scrollbar {
 	int arrowSz;			/* Arrow height */
 	AG_Event *buttonIncFn;		/* Alt. handler for increment btns */
 	AG_Event *buttonDecFn;		/* Alt. handler for decrement btns */
+	AG_Timeout scrollTo;		/* Timer for scrolling */
 } AG_Scrollbar;
 
 #define AGSCROLLBAR(p) ((AG_Scrollbar *)p)
