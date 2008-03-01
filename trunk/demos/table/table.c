@@ -272,7 +272,7 @@ CreateTableWithControls(void)
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("table-demo", 0) == -1) {
+	if (AG_InitCore("agar-table-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

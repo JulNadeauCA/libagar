@@ -78,7 +78,7 @@ CreateGameMenu(void)
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("fixedres-demo", 0) == -1) {
+	if (AG_InitCore("agar-fixedres-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

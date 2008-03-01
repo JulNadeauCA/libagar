@@ -35,7 +35,7 @@ main(int argc, char *argv[])
 	int c, i;
 	char *s;
 
-	if (AG_InitCore("objprops-demo", 0) == -1) {
+	if (AG_InitCore("agar-objprops-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

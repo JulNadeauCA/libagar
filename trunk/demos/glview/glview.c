@@ -156,7 +156,7 @@ main(int argc, char *argv[])
 	int c, i;
 	char *s;
 
-	if (AG_InitCore("glview-demo", 0) == -1) {
+	if (AG_InitCore("agar-glview-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
