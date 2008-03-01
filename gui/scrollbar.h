@@ -34,10 +34,10 @@ typedef struct ag_scrollbar {
 	int min, max;			/* Default range bindings */
 	int visible;			/* Subtracts from range */
 	enum ag_scrollbar_type type;	/* Style of scrollbar */
-	int bw;				/* Effective button size */
-	int bwDefault;			/* Default button size */
+	int wButton;			/* Effective button size */
+	int wButtonDef;			/* Default button size */
 	enum ag_scrollbar_button curBtn; /* Active button */
-	int barSz;			/* Scroll bar size */
+	int wBar;			/* Scroll bar size */
 	int arrowSz;			/* Arrow height */
 	AG_Event *buttonIncFn;		/* Alt. handler for increment btns */
 	AG_Event *buttonDecFn;		/* Alt. handler for decrement btns */
@@ -62,7 +62,7 @@ static __inline__ void
 AG_ScrollbarSetBarSize(AG_Scrollbar *sb, int bsize)
 {
 	AG_ObjectLock(sb);
-	sb->barSz = (bsize > 10 || bsize == -1) ? bsize : 10;
+	sb->wBar = (bsize > 10 || bsize == -1) ? bsize : 10;
 	AG_ObjectUnlock(sb);
 }
 
@@ -72,52 +72,24 @@ AG_ScrollbarGetBarSize(AG_Scrollbar *sb)
 	int rv;
 
 	AG_ObjectLock(sb);
-	if (sb->barSz == -1) {
-		rv = (sb->type==AG_SCROLLBAR_VERT) ? WIDGET(sb)->h : WIDGET(sb)->w;
-		rv -= sb->bw*2;
+	if (sb->wBar == -1) {
+		rv = (sb->type == AG_SCROLLBAR_VERT) ? WIDGET(sb)->h :
+		                                       WIDGET(sb)->w;
+		rv -= sb->wButton*2;
 		if (rv < 0) { rv = 0; }
 	} else {
-		rv = sb->barSz;
+		rv = sb->wBar;
 	}
-	AG_ObjectUnlock(sb);
-	return (rv);
-}
-
-static __inline__ int
-AG_ScrollbarGetBarPos(AG_Scrollbar *sb)
-{
-	int pxRange;
-	int rv;
-	int min, max, val;
-
-	AG_ObjectLock(sb);
-	if (sb->barSz == -1) {
-		rv = 0;
-		goto out;
-	}
-	val = AG_WidgetInt(sb, "value");
-	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
-	min = AG_WidgetInt(sb, "min");
-	pxRange = (sb->type==AG_SCROLLBAR_VERT) ? AGWIDGET(sb)->h : AGWIDGET(sb)->w;
-	pxRange -= sb->bw*2;
-	rv = val*pxRange/(max-min);
-	if ((rv + sb->barSz) > pxRange) {
-		rv = pxRange - sb->barSz;
-	}
-	if (rv < 0) {
-		rv = 0;
-	}
-out:
 	AG_ObjectUnlock(sb);
 	return (rv);
 }
 
 static __inline__ void
-AG_ScrollbarSetButtonSize(AG_Scrollbar *sb, int bw)
+AG_ScrollbarSetButtonSize(AG_Scrollbar *sb, int wButton)
 {
 	AG_ObjectLock(sb);
-	sb->bwDefault = bw;
-	sb->bw = bw;
+	sb->wButtonDef = wButton;
+	sb->wButton = wButton;
 	AG_ObjectUnlock(sb);
 }
 static __inline__ int
@@ -125,7 +97,7 @@ AG_ScrollbarGetButtonSize(AG_Scrollbar *sb)
 {
 	int rv;
 	AG_ObjectLock(sb);
-	rv = sb->bw;
+	rv = sb->wButton;
 	AG_ObjectUnlock(sb);
 	return (rv);
 }

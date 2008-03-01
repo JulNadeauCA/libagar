@@ -1374,15 +1374,15 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 
 	if (mv->hbar != NULL) {
 		aBar.x = 0;
-		aBar.y = a->h - mv->hbar->bw;
+		aBar.y = a->h - mv->hbar->wButton;
 		aBar.w = a->w;
-		aBar.h = mv->hbar->bw;
+		aBar.h = mv->hbar->wButton;
 		AG_WidgetSizeAlloc(mv->hbar, &aBar);
 	}
 	if (mv->vbar != NULL) {
 		aBar.x = 0;
 		aBar.y = 0;
-		aBar.w = mv->vbar->bw;
+		aBar.w = mv->vbar->wButton;
 		aBar.h = a->h;
 		AG_WidgetSizeAlloc(mv->vbar, &aBar);
 	}

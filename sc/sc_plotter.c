@@ -421,15 +421,15 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		return (-1);
 
 	aChld.x = 0;
-	aChld.y = a->h - ptr->hbar->bw;
+	aChld.y = a->h - ptr->hbar->wButton;
 	aChld.w = a->w;
-	aChld.h = ptr->hbar->bw;
+	aChld.h = ptr->hbar->wButton;
 	AG_WidgetSizeAlloc(ptr->hbar, &aChld);
 
-	aChld.x = a->w - ptr->vbar->bw;
-	aChld.y = ptr->vbar->bw;
-	aChld.w = ptr->vbar->bw;
-	aChld.h = a->h - ptr->hbar->bw;
+	aChld.x = a->w - ptr->vbar->wButton;
+	aChld.y = ptr->vbar->wButton;
+	aChld.w = ptr->vbar->wButton;
+	aChld.h = a->h - ptr->hbar->wButton;
 	AG_WidgetSizeAlloc(ptr->vbar, &aChld);
 	return (0);
 }
