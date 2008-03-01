@@ -325,7 +325,7 @@ static void
 UpdateXBar(AG_Event *event)
 {
 	SC_Plotter *ptr = AG_PTR(1);
-	int value = AG_INT(2);
+	int value = AG_WidgetInt(ptr->hbar, "value");
 
 	if (value >= ptr->xMax - WIDGET(ptr)->w) {
 		ptr->flags |= SC_PLOTTER_SCROLL;
