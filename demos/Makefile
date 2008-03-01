@@ -16,7 +16,8 @@ SUBDIR=	fixedres \
 	gunpowder \
 	cplusplus \
 	doublebuf \
-	plotting
+	plotting \
+	scrollbar
 
 all: all-subdir
 clean: prereq clean-subdir
