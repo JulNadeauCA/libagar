@@ -73,8 +73,8 @@ AG_ScrollbarGetBarSize(AG_Scrollbar *sb)
 
 	AG_ObjectLock(sb);
 	if (sb->wBar == -1) {
-		rv = (sb->type == AG_SCROLLBAR_VERT) ? WIDGET(sb)->h :
-		                                       WIDGET(sb)->w;
+		rv = (sb->type == AG_SCROLLBAR_VERT) ? AGWIDGET(sb)->h :
+		                                       AGWIDGET(sb)->w;
 		rv -= sb->wButton*2;
 		if (rv < 0) { rv = 0; }
 	} else {
