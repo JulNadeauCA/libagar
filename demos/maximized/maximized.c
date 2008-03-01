@@ -42,7 +42,7 @@ CreateWindow(void)
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("maximized-demo", 0) == -1) {
+	if (AG_InitCore("agar-maximized-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

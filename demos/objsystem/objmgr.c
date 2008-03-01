@@ -20,7 +20,7 @@ AG_Object vfsRoot;
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("objmgr-demo", 0) == -1) {
+	if (AG_InitCore("agar-objsystem-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

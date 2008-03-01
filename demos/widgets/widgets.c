@@ -313,7 +313,7 @@ main(int argc, char *argv[])
 	AG_Menu *appMenu;
 	AG_MenuItem *m;
 
-	if (AG_InitCore("widgets-demo", 0) == -1) {
+	if (AG_InitCore("agar-widgets-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

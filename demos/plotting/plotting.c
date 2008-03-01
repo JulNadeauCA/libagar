@@ -201,7 +201,7 @@ main(int argc, char *argv[])
 	AG_Box *box;
 	int i;
 
-	if (AG_InitCore("plotting-demo", 0) == -1) {
+	if (AG_InitCore("agar-plotting-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

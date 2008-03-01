@@ -125,7 +125,7 @@ MultiLineExample(void)
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("textbox-demo", 0) == -1) {
+	if (AG_InitCore("agar-textbox-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

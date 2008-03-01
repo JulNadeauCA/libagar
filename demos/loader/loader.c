@@ -165,7 +165,7 @@ CreateWindow(void)
 int
 main(int argc, char *argv[])
 {
-	if (AG_InitCore("loader-demo", 0) == -1) {
+	if (AG_InitCore("agar-loader-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
