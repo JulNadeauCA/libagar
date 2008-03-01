@@ -18,7 +18,7 @@ SRCS=	gui.c view.c widget.c window.c style.c style_default.c iconmgr.c \
 	mspinbutton.c mfspinbutton.c statusbar.c menu.c menu_view.c \
 	tableview.c separator.c notebook.c pixmap.c file_dlg.c objsel.c \
 	fixed.c numerical.c table.c glview.c mpane.c pane.c console.c graph.c \
-	scrollable.c scrollable_text.c socket.c icon.c progress_bar.c
+	socket.c icon.c progress_bar.c
 
 MAN3=	AG_View.3 AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Label.3 AG_Radio.3 AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 \
