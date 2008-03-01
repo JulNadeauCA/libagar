@@ -38,9 +38,18 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget allows the user to control a numerical value within a specified
-range.
-It is typically used with scrollable views.
+widget allows the user to control an integer or floating-point value within a
+specified range.
+It is almost always used to control a scrollable view, and it features a
+special
+.Va visible
+binding to faciliate this application.
+.Pp
+For general-purpose edition of numerical values,
+.Xr AG_Slider 3
+or
+.Xr AG_Numerical 3
+are more suitable alternatives.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -49,6 +58,45 @@ It is typically used with scrollable views.
 .nr nS 1
 .Ft "AG_Scrollbar *"
 .Fn AG_ScrollbarNew "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewInt "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "int *val" "int *min" "int *max" "int *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewUint "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Uint *value" "Uint *min" "Uint *max" "Uint *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewUint8 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Uint8 *value" "Uint8 *min" "Uint8 *max" "Uint8 *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewSint8 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Sint8 *value" "Sint8 *min" "Sint8 *max" "Sint8 *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewUint16 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Uint16 *value" "Uint16 *min" "Uint16 *max" "Uint16 *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewSint16 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Sint16 *value" "Sint16 *min" "Sint16 *max" "Sint16 *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewUint32 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Uint32 *value" "Uint32 *min" "Uint32 *max" "Uint32 *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewSint32 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Sint32 *value" "Sint32 *min" "Sint32 *max" "Sint32 *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewUint64 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Uint64 *value" "Uint64 *min" "Uint64 *max" "Uint64 *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewSint64 "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "Sint64 *value" "Sint64 *min" "Sint64 *max" "Sint64 *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewFloat "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "float *value" "float *min" "float *max" "float *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewDouble "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "double *value" "double *min" "double *max" "double *visible"
+.Pp
+.Ft "AG_Scrollbar *"
+.Fn AG_ScrollbarNewLongDouble "AG_Widget *parent" "enum ag_scrollbar_type type" "Uint flags" "long double *value" "long double *min" "long double *max" "long double *visible"
 .Pp
 .Ft void
 .Fn AG_ScrollbarSetBarSize "AG_Scrollbar *scrollbar" "int size"
@@ -64,6 +112,12 @@ It is typically used with scrollable views.
 .Pp
 .Ft void
 .Fn AG_ScrollbarSetDecFn "AG_Scrollbar *scrollbar" "AG_EventFn fn" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_ScrollbarSetIntIncrement "AG_Scrollbar *scrollbar" "int increment"
+.Pp
+.Ft void
+.Fn AG_ScrollbarSetRealIncrement "AG_Scrollbar *scrollbar" "double increment"
 .Pp
 .nr nS 0
 The
@@ -83,6 +137,21 @@ enum ag_scrollbar_type {
 There are currently no
 .Fa flags
 specific to this widget.
+.Pp
+The
+.Fn AG_ScrollbarNew*
+variants create a scrollbar and also bind
+.Va value ,
+.Va min ,
+.Va max ,
+and
+.Va visible
+to the specified non-NULL variables.
+.Fn AG_ScrollbarNewUint16 ,
+.Fn AG_ScrollbarNewSint16
+and
+.Fn AG_ScrollbarNewLongDouble
+are only available on platforms which support these types.
 .Pp
 The
 .Fn AG_ScrollbarSetBarSize
@@ -111,36 +180,58 @@ presses the decrement (up/left) button and the increment (down/right) buttons.
 A single
 .Ft int
 argument is passed to the callback (1 = pressed, 0 = released).
+.Pp
+.Fn AG_ScrollbarSetIntIncrement
+and
+.Fn AG_ScrollbarSetRealIncrement
+define by how much the value is to be incremented/decremented as a result of
+the user clicking on the scrollbar buttons.
+The former is only meaningful with integer bindings, the latter is only
+meaningful with floating-point bindings.
 .Sh BINDINGS
 The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "Uint32 *value, *min, *max, *visible"
-.It Va int *value, *min, *max, *visible
-Position and range
-.It Va Uint *value, *min, *max, *visible
-Unsigned position and range
-.It Va Uint8 *value, *min, *max, *visible
-Unsigned 8-bit position and range
-.It Va Uint16 *value, *min, *max, *visible
-Unsigned 16-bit position and range
-.It Va Uint32 *value, *min, *max, *visible
-Unsigned 32-bit position and range
-.It Va Sint8 *value, *min, *max, *visible
-Signed 8-bit position and range
-.It Va Sint16 *value, *min, *max, *visible
-Signed 16-bit position and range
-.It Va Sint32 *value, *min, *max, *visible
-Signed 32-bit position and range
+.Bl -tag -compact -width "long double *{value,min,max,visible} "
+.It Va float *{value,min,max,visible}
+Single precision position/range
+.It Va double *{value,min,max,visible}
+Double precision position/range
+.It Va long double *{value,min,max,visible}
+Quad precision position/range
+.It Va int *{value,min,max,visible}
+Integer position/range
+.It Va Uint *{value,min,max,visible}
+Unsigned position/range
+.It Va Uint8 *{value,min,max,visible}
+Unsigned 8-bit position/range
+.It Va Uint16 *{value,min,max,visible}
+Unsigned 16-bit position/range
+.It Va Uint32 *{value,min,max,visible}
+Unsigned 32-bit position/range
+.It Va Uint64 *{value,min,max,visible}
+Unsigned 64-bit position/range
+.It Va Sint8 *{value,min,max,visible}
+Signed 8-bit position/range
+.It Va Sint16 *{value,min,max,visible}
+Signed 16-bit position/range
+.It Va Sint32 *{value,min,max,visible}
+Signed 32-bit position/range
+.It Va Uint64 *{value,min,max,visible}
+Signed 64-bit position/range
 .El
 .Pp
-In scrolling applications, the value of the
+The scrollbar is positioned to represent
+.Va value
+inside of the range defined by
+.Va min
+and
+.Va max .
+In scrolling applications,
 .Va visible
-binding is typically used to represent the size of the display area.
-The value of
-.Va visible
-is simply subtracted from the range.
+is typically used to conveniently represent the size of the display area
+(its value is simply subtracted from the range).
 .Pp
 Note that the
 .Va min ,
@@ -149,6 +240,19 @@ and
 .Va visible
 bindings must be of the same type as
 .Va value .
+.Pp
+The
+.Ft Uint64 ,
+.Ft Sint64
+and
+.Ft long double
+types are only available on platforms which support these types.
+The
+.Ft Uint64 ,
+.Ft Sint64
+and
+.Ft long double
+types are only available on platforms which support these types.
 .Sh EVENTS
 The
 .Nm
@@ -156,9 +260,11 @@ widget reacts to the following events:
 .Pp
 .Bl -tag -compact -width 25n
 .It window-mousebuttondown
-Jump to a position or start scrolling.
+Seek to a position or initiate scrolling.
+.It window-mousebuttonup
+Terminate scrolling.
 .It window-mousemotion
-Continue scrolling.
+Execute scrolling.
 .El
 .Pp
 The
@@ -166,15 +272,12 @@ The
 widget generates the following events:
 .Pp
 .Bl -tag -compact -width 2n
-.It Fn scrollbar-changed "int new_value"
-The scrollbar's value has changed to
-.Fa new_value .
-.It Fn scrollbar-drag-begin "int value"
-User is starting to drag the scrollbar, and the current value is
-.Fa value .
-.It Fn scrollbar-drag-end "int value"
-User is done dragging the scrollbar, and the current value is
-.Fa value .
+.It Fn scrollbar-changed "void"
+The scrollbar's value has changed.
+.It Fn scrollbar-drag-begin "void"
+User is starting to drag the scrollbar.
+.It Fn scrollbar-drag-end "void"
+User is done dragging the scrollbar.
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
