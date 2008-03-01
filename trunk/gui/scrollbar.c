@@ -249,7 +249,7 @@ AG_ScrollbarSetRealIncrement(AG_Scrollbar *sb, double inc)
  * is currently <= 0.
  */
 #define GET_POSITION(type)						\
-	if (*(type *)pMin >= *(type *)pMax) {				\
+	if (*(type *)pMin >= (*(type *)pMax) - *(type *)pVis) {		\
 		goto fail;						\
 	}								\
 	*x = (int)(((*(type *)pVal - *(type *)pMin) * sb->extent) /	\
@@ -560,6 +560,7 @@ MouseButtonDown(AG_Event *event)
 		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
 		sb->xOffs = sb->wBar/2;
 		SeekToPosition(sb, x - sb->xOffs);
+		AG_PostEvent(NULL, sb, "scrollbar-drag-begin", NULL);
 	}
 }
 
