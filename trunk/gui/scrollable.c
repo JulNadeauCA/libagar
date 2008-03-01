@@ -80,27 +80,27 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_Scrollable *sa = p;
 	AG_SizeAlloc aBar;
 
-	if (a->w < sa->vbar->bw ||
-	    a->h < sa->vbar->bw*2) {
+	if (a->w < sa->vbar->wButton ||
+	    a->h < sa->vbar->wButton*2) {
 		WIDGET(sa->vbar)->flags |= AG_WIDGET_HIDE;
 	} else {
 		WIDGET(sa->vbar)->flags &= ~(AG_WIDGET_HIDE);
-		aBar.x = a->w - sa->vbar->bw;
+		aBar.x = a->w - sa->vbar->wButton;
 		aBar.y = 0;
-		aBar.w = sa->vbar->bw;
+		aBar.w = sa->vbar->wButton;
 		aBar.h = a->h;
 		AG_WidgetSizeAlloc(sa->vbar, &aBar);
 	}
 	
-	if (a->w < sa->hbar->bw*2 ||
-	    a->h < sa->hbar->bw) {
+	if (a->w < sa->hbar->wButton*2 ||
+	    a->h < sa->hbar->wButton) {
 		WIDGET(sa->hbar)->flags |= AG_WIDGET_HIDE;
 	} else {
 		WIDGET(sa->hbar)->flags &= ~(AG_WIDGET_HIDE);
 		aBar.x = 0;
-		aBar.y = a->h - sa->hbar->bw;
+		aBar.y = a->h - sa->hbar->wButton;
 		aBar.w = a->w;
-		aBar.h = sa->hbar->bw;
+		aBar.h = sa->hbar->wButton;
 		AG_WidgetSizeAlloc(sa->hbar, &aBar);
 	}
 	return (0);

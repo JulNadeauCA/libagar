@@ -243,7 +243,7 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 	if (size != NULL) {
 		switch (AG_WidgetParseSizeSpec(size, &col->w)) {
 		case AG_WIDGET_PERCENT:
-			col->w = col->w*WIDGET(tv)->w/100;
+			col->w = col->w*WIDTH(tv)/100;
 			break;
 		default:
 			break;
@@ -565,8 +565,8 @@ SizeRequest(void *p, AG_SizeReq *r)
 	AG_Tableview *tv = p;
 	int i;
 
-	r->w = tv->prew + tv->sbar_v->bw;
-	r->h = tv->preh + (tv->sbar_h == NULL ? 0 : tv->sbar_h->bw);
+	r->w = tv->prew + tv->sbar_v->wButton;
+	r->h = tv->preh + (tv->sbar_h == NULL ? 0 : tv->sbar_h->wButton);
 	for (i = 0; i < tv->columncount; i++) {
 		r->w += tv->column[i].w;
 	}
@@ -580,10 +580,10 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_SizeAlloc aBar;
 
 	/* Size vertical scroll bar. */
-	aBar.x = a->w - tv->sbar_v->bw;
+	aBar.x = a->w - tv->sbar_v->wButton;
 	aBar.y = 0;
-	aBar.w = tv->sbar_v->bw;
-	aBar.h = a->h - (tv->sbar_h ? tv->sbar_h->bw : 0);
+	aBar.w = tv->sbar_v->wButton;
+	aBar.h = a->h - (tv->sbar_h ? tv->sbar_h->wButton : 0);
 	AG_WidgetSizeAlloc(tv->sbar_v, &aBar);
 
 	/* Size horizontal scroll bar, if enabled. */
@@ -591,23 +591,23 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		int col_w = 0;
 
 		aBar.x = 0;
-		aBar.y = a->h - tv->sbar_h->bw;
-		aBar.w = a->w - tv->sbar_h->bw;
-		aBar.h = tv->sbar_h->bw;
+		aBar.y = a->h - tv->sbar_h->wButton;
+		aBar.w = a->w - tv->sbar_h->wButton;
+		aBar.h = tv->sbar_h->wButton;
 		AG_WidgetSizeAlloc(tv->sbar_v, &aBar);
 
 		for (i = 0; i < tv->columncount; i++) {
 			col_w += tv->column[i].w;
 		}
-		if (col_w > WIDGET(tv->sbar_h)->w) {
-			int scroll = col_w - WIDGET(tv->sbar_h)->w;
+		if (col_w > WIDTH(tv->sbar_h)) {
+			int scroll = col_w - WIDTH(tv->sbar_h);
 
 			AG_WidgetSetInt(tv->sbar_h, "max", scroll);
 			if (AG_WidgetInt(tv->sbar_h, "value") > scroll) {
 				AG_WidgetSetInt(tv->sbar_h, "value", scroll);
 			}
 			AG_ScrollbarSetBarSize(tv->sbar_h,
-			    WIDGET(tv->sbar_h)->w * (a->w - tv->sbar_h->bw*3) / 
+			    WIDTH(tv->sbar_h)*(a->w - tv->sbar_h->wButton*3) / 
 			    col_w);
 		} else {
 			AG_WidgetSetInt(tv->sbar_h, "value", 0);
@@ -629,7 +629,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 			}
 		}
 
-		fill_width = (a->w - WIDGET(tv->sbar_v)->w - nonfill_width) /
+		fill_width = (a->w - WIDTH(tv->sbar_v) - nonfill_width) /
 		             fill_cols;
 
 		for (i = 0; i < tv->columncount; i++) {
@@ -641,7 +641,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	/* Calculate how many rows the view holds. */
 	{
 		int view_height = a->h - (NULL == tv->sbar_h ? 0 :
-				  WIDGET(tv->sbar_h)->h);
+				  HEIGHT(tv->sbar_h));
 
 		if (view_height < tv->head_height) {
 			view_height = tv->head_height;
@@ -679,7 +679,7 @@ Draw(void *p)
 	AG_Tableview *tv = p;
 	Uint i;
 	int y, update = 0;
-	const int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
+	const int view_width = (WIDTH(tv) - WIDTH(tv->sbar_v));
 	AG_Rect rBg;
 
 	/* before we draw, update if needed */
@@ -732,7 +732,7 @@ foreach_visible_column(AG_Tableview *tv, visible_do dothis, void *arg1,
 {
 	int x, first_col, col_width;
 	Uint i;
-	int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
+	int view_width = (WIDTH(tv) - WIDTH(tv->sbar_v));
 	int view_edge = (tv->sbar_h ? AG_WidgetInt(tv->sbar_h, "value") : 0);
 
 	x = 0;
@@ -775,9 +775,9 @@ static void
 view_changed(AG_Tableview *tv)
 {
 	int rows_per_view, max, filled, value;
-	int view_height = WIDGET(tv)->h - (tv->sbar_h != NULL ?
-			                   WIDGET(tv->sbar_h)->h : 0);
-	int scrolling_area = WIDGET(tv->sbar_v)->h - tv->sbar_v->bw*2;
+	int view_height = HEIGHT(tv) - (tv->sbar_h != NULL ?
+	                                HEIGHT(tv->sbar_h) : 0);
+	int scrolling_area = HEIGHT(tv->sbar_v) - tv->sbar_v->wButton*2;
 	Uint i;
 
 	/* cancel double clicks if what's under it changes it */
@@ -1160,7 +1160,7 @@ static int
 draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
     void *arg2)
 {
-	const int view_width = (WIDGET(tv)->w - WIDGET(tv->sbar_v)->w);
+	const int view_width = (WIDTH(tv) - WIDTH(tv->sbar_v));
 	const int *update = (int *)arg1;
 	Uint j, cidx = tv->column[idx].idx;
 	int y;

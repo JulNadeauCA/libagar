@@ -275,7 +275,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	aBar.y = 0;
 	AG_WidgetSizeAlloc(tl->sbar, &aBar);
 
-	if (a->w < rBar.w || a->h < tl->sbar->bw*2) {
+	if (a->w < rBar.w || a->h < tl->sbar->wButton*2) {
 		WIDGET(tl->sbar)->flags |= AG_WIDGET_HIDE;
 	} else {
 		WIDGET(tl->sbar)->flags &= ~(AG_WIDGET_HIDE);
@@ -375,7 +375,7 @@ UpdateListScrollbar(AG_Tlist *tl)
 	if (tl->nitems > 0 && tl->nvisitems > 0 &&
 	    tl->nvisitems < tl->nitems) {
 		AG_ScrollbarSetBarSize(tl->sbar,
-		    tl->nvisitems*(HEIGHT(tl->sbar) - tl->sbar->bw*2) /
+		    tl->nvisitems*(HEIGHT(tl->sbar) - tl->sbar->wButton*2) /
 		    tl->nitems);
 	} else {
 		AG_ScrollbarSetBarSize(tl->sbar, -1);		/* Full range */

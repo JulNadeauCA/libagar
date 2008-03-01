@@ -200,7 +200,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 	int n;
 
 	if (t->prew != -1) {
-		r->w = t->vbar->bw + 2;
+		r->w = t->vbar->wButton + 2;
 		for (n = 0; n < t->n; n++) {
 			AG_TableCol *tc = &t->cols[n];
 		
@@ -222,23 +222,23 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_Table *t = p;
 	AG_SizeAlloc aBar;
 	
-	if (a->w <= t->vbar->bw || a->h <= t->row_h)
+	if (a->w <= t->vbar->wButton || a->h <= t->row_h)
 		return (-1);
 
-	aBar.x = a->w - t->vbar->bw;
+	aBar.x = a->w - t->vbar->wButton;
 	aBar.y = t->col_h - 1;
-	aBar.w = t->vbar->bw;
+	aBar.w = t->vbar->wButton;
 	aBar.h = a->h - t->col_h + 1;
 	AG_WidgetSizeAlloc(t->vbar, &aBar);
 
-	aBar.x = t->vbar->bw + 1;
-	aBar.y = a->h - t->hbar->bw;
-	aBar.w = a->w - t->hbar->bw;
-	aBar.h = t->vbar->bw;
+	aBar.x = t->vbar->wButton + 1;
+	aBar.y = a->h - t->hbar->wButton;
+	aBar.w = a->w - t->hbar->wButton;
+	aBar.h = t->vbar->wButton;
 	AG_WidgetSizeAlloc(t->hbar, &aBar);
 
-	if (a->w < t->vbar->bw ||
-	    a->h < t->vbar->bw*2) {
+	if (a->w < t->vbar->wButton ||
+	    a->h < t->vbar->wButton*2) {
 		WIDGET(t->vbar)->flags |= AG_WIDGET_HIDE;
 		t->wTbl = 0;
 	} else {
@@ -527,7 +527,7 @@ AG_TableUpdateScrollbars(AG_Table *t)
 	}
 	if (t->m > 0 && t->mVis > 0 && (t->mVis-1) < t->m) {
 		AG_ScrollbarSetBarSize(t->vbar,
-		    (t->mVis-1)*(HEIGHT(t->vbar) - t->vbar->bw*2) / t->m);
+		    (t->mVis-1)*(HEIGHT(t->vbar) - t->vbar->wButton*2) / t->m);
 	} else {
 		AG_ScrollbarSetBarSize(t->vbar, -1);		/* Full range */
 	}
@@ -1300,7 +1300,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	if (size_spec != NULL) {
 		switch (AG_WidgetParseSizeSpec(size_spec, &tc->w)) {
 		case AG_WIDGET_PERCENT:
-			tc->w = tc->w*(WIDTH(t) - t->vbar->bw)/100;
+			tc->w = tc->w*(WIDTH(t) - t->vbar->wButton)/100;
 			break;
 		default:
 			break;

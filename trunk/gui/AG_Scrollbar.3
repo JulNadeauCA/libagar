@@ -40,7 +40,7 @@ The
 .Nm
 widget allows the user to control a numerical value within a specified
 range.
-It is typically used for scrolling.
+It is typically used with scrollable views.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -90,16 +90,17 @@ function sets the size of the scrollbar in pixels.
 In scrolling applications, the scrollbar size is usually computed from the
 ratio between the visible area and the total area that can be displayed.
 .Fn AG_ScrollbarGetBarSize
-returns the current size of the scrollbar.
+returns the current size of the scrollbar in pixels.
 .Pp
 .Fn AG_ScrollbarSetButtonSize
 requests a preferred size for the scrollbar buttons.
 .Fn AG_ScrollbarGetButtonSize
 returns the current button size, which may be less than previously requested.
 .Pp
-If the current value of the variables is such that the scrollbar is any useful,
+The
 .Fn AG_ScrollbarVisible
-returns 1, otherwise it returns 0.
+function returns 1 if the current range is such that the scrollbar is useful
+to display, otherwise it returns 0.
 .Pp
 The
 .Fn AG_ScrollbarSetDecFn
@@ -115,14 +116,39 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "int *value"
-.It Va int *value
-Current position
-.It Va int *min
-Minimum value
-.It Va int *max
-Maximum value
+.Bl -tag -compact -width "Uint32 *value, *min, *max, *visible"
+.It Va int *value, *min, *max, *visible
+Position and range
+.It Va Uint *value, *min, *max, *visible
+Unsigned position and range
+.It Va Uint8 *value, *min, *max, *visible
+Unsigned 8-bit position and range
+.It Va Uint16 *value, *min, *max, *visible
+Unsigned 16-bit position and range
+.It Va Uint32 *value, *min, *max, *visible
+Unsigned 32-bit position and range
+.It Va Sint8 *value, *min, *max, *visible
+Signed 8-bit position and range
+.It Va Sint16 *value, *min, *max, *visible
+Signed 16-bit position and range
+.It Va Sint32 *value, *min, *max, *visible
+Signed 32-bit position and range
 .El
+.Pp
+In scrolling applications, the value of the
+.Va visible
+binding is typically used to represent the size of the display area.
+The value of
+.Va visible
+is simply subtracted from the range.
+.Pp
+Note that the
+.Va min ,
+.Va max
+and
+.Va visible
+bindings must be of the same type as
+.Va value .
 .Sh EVENTS
 The
 .Nm

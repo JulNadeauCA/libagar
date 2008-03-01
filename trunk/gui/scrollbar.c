@@ -29,9 +29,13 @@
 #include "window.h"
 #include "primitive.h"
 
+#include "gui_math.h"
+
 static void MouseButtonUp(AG_Event *);
 static void MouseButtonDown(AG_Event *);
 static void MouseMotion(AG_Event *);
+
+#define TOTSIZE(sb) (((sb)->type==AG_SCROLLBAR_VERT) ? HEIGHT(sb) : WIDTH(sb))
 
 AG_Scrollbar *
 AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
@@ -56,8 +60,10 @@ Decrement(AG_Scrollbar *sb, int v)
 	int value = AG_WidgetInt(sb, "value");
 	int min = AG_WidgetInt(sb, "min");
 
-	if (value > min)
+	if (value > min) {
 		AG_WidgetSetInt(sb, "value", value-v);
+		AG_PostEvent(NULL, sb, "scrollbar-changed", "%i", value-v);
+	}
 }
 		
 static void
@@ -66,8 +72,10 @@ Increment(AG_Scrollbar *sb, int v)
 	int value = AG_WidgetInt(sb, "value");
 	int max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
 
-	if (value < max)
+	if (value < max) {
 		AG_WidgetSetInt(sb, "value", value+v);
+		AG_PostEvent(NULL, sb, "scrollbar-changed", "%i", value+v);
+	}
 }
 
 static Uint32
@@ -97,6 +105,30 @@ LostFocus(AG_Event *event)
 }
 
 static void
+BoundValue(AG_Event *event)
+{
+	AG_Scrollbar *sb = AG_SELF();
+	AG_WidgetBinding *bNew = AG_PTR(1);
+	AG_WidgetBinding *bValue;
+	void *pValue;
+
+	/*
+	 * Require that "min", "max" and "visible" be of the same binding
+	 * type as "value" to avoid inefficient conversions. Mixing of types
+	 * can always be implemented if some application requires it.
+	 */
+	if (!strcmp(bNew->name, "min") || !strcmp(bNew->name, "max") ||
+	    !strcmp(bNew->name, "visible")) {
+		bValue = AG_WidgetGetBinding(sb, "value", &pValue);
+		if (bValue->vtype != bNew->vtype) {
+			AG_FatalError("Scrollbar \"%s\" binding type disagree "
+			              "with \"value\" binding", bNew->name);
+		}
+		AG_WidgetUnlockBinding(bValue);
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_Scrollbar *sb = obj;
@@ -116,33 +148,21 @@ Init(void *obj)
 	sb->max = 0;
 	sb->visible = 0;
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
-	sb->bwDefault = 16;			/* XXX */
-	sb->bw = 16;
-	sb->barSz = 8;
+	sb->wButtonDef = 16;			/* XXX */
+	sb->wButton = 16;
+	sb->wBar = 8;
 	sb->buttonIncFn = NULL;
 	sb->buttonDecFn = NULL;
+	sb->xRef = -1;
 
 	AG_SetEvent(sb, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(sb, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(sb, "window-mousemotion", MouseMotion, NULL);
 	AG_SetEvent(sb, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(sb, "widget-hidden", LostFocus, NULL);
+	AG_SetEvent(sb, "widget-bound", BoundValue, NULL);
 
 	AG_SetTimeout(&sb->scrollTo, ScrollTimeout, NULL, 0);
-}
-
-/* Return 1 if the scrollbar is any useful for the current values. */
-int
-AG_ScrollbarVisible(AG_Scrollbar *sb)
-{
-	int min, max, rv;
-
-	AG_ObjectLock(sb);
-	min = AG_WidgetInt(sb, "min");
-	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
-	rv = (max > 0 && max >= min);
-	AG_ObjectUnlock(sb);
-	return (rv);
 }
 
 /* Set an alternate handler for UP/LEFT button click. */
@@ -165,35 +185,123 @@ AG_ScrollbarSetDecFn(AG_Scrollbar *sb, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(sb);
 }
 
-static void
-SetValueFromPos(AG_Scrollbar *sb, int x, int totalsize)
+/* Return the total width/height available for scrolling, in pixels. */
+static __inline__ int
+GetExtent(AG_Scrollbar *sb)
 {
-	int scrArea = totalsize - (sb->bw*2);
-	int min, max;
-	int nVal;
+	return ((sb->type == AG_SCROLLBAR_VERT) ? HEIGHT(sb) : WIDTH(sb)) -
+	       sb->wButton*2 - sb->wBar;
+}
 
-	if (sb->curBtn != AG_SCROLLBAR_BUTTON_SCROLL ||
-	    sb->barSz == -1) {
-		return;
+/*
+ * Return current integer value and range. We subtract the value of the
+ * "visible" binding from the range to accomodate most applications where
+ * the Scrollbar is used to scroll a view of a certain size.
+ */
+static __inline__ void
+GetIntValueRange(AG_Scrollbar *sb, int *min, int *max, int *val)
+{
+	AG_WidgetBinding *bMin, *bMax, *bVis, *bVal;
+	void *pMin, *pMax, *pVal, *pVis;
+
+	bVal = AG_WidgetGetBinding(sb, "value", &pVal);
+	bMin = AG_WidgetGetBinding(sb, "min", &pMin);
+	bMax = AG_WidgetGetBinding(sb, "max", &pMax);
+	bVis = AG_WidgetGetBinding(sb, "visible", &pVis);
+
+	/* We are guaranteed that the types match. */
+	switch (bVal->vtype) {
+	case AG_WIDGET_INT:
+	case AG_WIDGET_UINT:
+		*val = *(int *)pVal;
+		*min = *(int *)pMin;
+		*max = *(int *)pMax - *(int *)pVis;
+		break;
+	case AG_WIDGET_UINT32:
+	case AG_WIDGET_SINT32:
+		*val = (int)(*(Uint32 *)pVal);
+		*min = (int)(*(Uint32 *)pMin);
+		*max = (int)(*(Uint32 *)pMax) - (int)(*(Uint32 *)pVis);
+		break;
+	case AG_WIDGET_UINT16:
+	case AG_WIDGET_SINT16:
+		*val = (int)(*(Uint16 *)pVal);
+		*min = (int)(*(Uint16 *)pMin);
+		*max = (int)(*(Uint16 *)pMax) - (int)(*(Uint16 *)pVis);
+		break;
+	case AG_WIDGET_UINT8:
+	case AG_WIDGET_SINT8:
+		*val = (int)(*(Uint8 *)pVal);
+		*min = (int)(*(Uint8 *)pMin);
+		*max = (int)(*(Uint8 *)pMax) - (int)(*(Uint8 *)pVis);
+		break;
+	default:
+		*val = 0;
+		*min = 0;
+		*max = 0;
+		break;
 	}
-	min = AG_WidgetInt(sb, "min");
-	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
-	
-	if (x <= sb->bw) {				/* Below min */
-		nVal = min;
-	} else if (x >= sb->bw + scrArea) {		/* Above max */
-		nVal = max;
-	} else {					/* Between */
-		nVal = (x - sb->bw)*(max-min+1) / scrArea;
+
+	/*
+	 * Not supposed to happen but if the value gets out of bounds,
+	 * pretend it is not, for the sake of our internal calculations.
+	 */
+	if (*val < *min) {
+		*val = *min;
+	} else if (*val > *max) {
+		*val = *max;
 	}
-	AG_WidgetSetInt(sb, "value", nVal);
-	AG_PostEvent(NULL, sb, "scrollbar-changed", "%i", nVal);
+	AG_WidgetUnlockBinding(bVis);
+	AG_WidgetUnlockBinding(bMax);
+	AG_WidgetUnlockBinding(bMin);
+	AG_WidgetUnlockBinding(bVal);
+}
+
+/* Return 1 if the scrollbar is any useful for the current values. */
+int
+AG_ScrollbarVisible(AG_Scrollbar *sb)
+{
+	int min, max, val, rv;
+
+	AG_ObjectLock(sb);
+	GetIntValueRange(sb, &min, &max, &val);
+	rv = (min < max);
+	AG_ObjectUnlock(sb);
+	return (rv);
+}
+
+/*
+ * Return the current position of the scrollbar, in terms of the position of
+ * the Left (or Top) edge in pixels.
+ */
+static __inline__ int
+GetPosition(AG_Scrollbar *sb, int min, int max, int val, int extent)
+{
+	return (sb->wBar == -1) ? 0 : val*extent/(max-min);
+}
+
+/* Set the value based on an absolute cursor position. */
+static __inline__ void
+SeekToPosition(AG_Scrollbar *sb, int x, int min, int max, int extent)
+{
+	int vNew;
+
+	if (x <= 0) {
+		vNew = min;
+	} else if (x >= extent) {				/* Above max */
+		vNew = max;
+	} else {						/* Between */
+		vNew = x*(max-min)/extent;
+	}
+	AG_WidgetSetInt(sb, "value", vNew);
+	AG_PostEvent(NULL, sb, "scrollbar-changed", "%i", vNew);
 }
 
 static void
 MouseButtonUp(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
+	int min, max, val;
 
 	if (!AG_ScrollbarVisible(sb)) {
 		if (OBJECT(sb)->parent != NULL) {
@@ -201,26 +309,22 @@ MouseButtonUp(AG_Event *event)
 		}
 		return;
 	}
-
+	
 	AG_DelTimeout(sb, &sb->scrollTo);
 
-	switch (sb->curBtn) {
-	case AG_SCROLLBAR_BUTTON_DEC:
-		if (sb->buttonDecFn != NULL) {
-			AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 0);
-		}
-		break;
-	case AG_SCROLLBAR_BUTTON_INC:
-		if (sb->buttonIncFn != NULL) {
-			AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 0);
-		}
-		break;
-	default:
-		break;
+	if (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC && sb->buttonDecFn != NULL) {
+		AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 0);
+	}
+	if (sb->curBtn == AG_SCROLLBAR_BUTTON_INC && sb->buttonIncFn != NULL) {
+		AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 0);
 	}
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
-	AG_PostEvent(NULL, sb, "scrollbar-drag-end", "%i",
-	    AG_WidgetInt(sb,"value"));
+
+	if (sb->xRef != -1) {
+		GetIntValueRange(sb, &min, &max, &val);
+		AG_PostEvent(NULL, sb, "scrollbar-drag-end", "%i", val);
+		sb->xRef = -1;
+	}
 }
 
 static void
@@ -228,11 +332,10 @@ MouseButtonDown(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 	int button = AG_INT(1);
-	int x = (sb->type == AG_SCROLLBAR_HORIZ) ?
-	        AG_INT(2) : AG_INT(3);
-	int totalsize = (sb->type == AG_SCROLLBAR_HORIZ) ?
-		        WIDGET(sb)->w : WIDGET(sb)->h;
-	int min, value, max, nvalue;
+	int x = ((sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(2) : AG_INT(3)) -
+	        sb->wButton;
+	int min, value, max;
+	int extent, pos;
 
 	if (button != SDL_BUTTON_LEFT) {
 		return;
@@ -243,48 +346,63 @@ MouseButtonDown(AG_Event *event)
 		}
 		return;
 	}
-	
 	AG_WidgetFocus(sb);
-
-	min = AG_WidgetInt(sb, "min");
-	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
-	value = AG_WidgetInt(sb, "value");
-	
-	if (x <= sb->bw) {				/* Up button */
+	extent = GetExtent(sb);
+	GetIntValueRange(sb, &min, &max, &value);
+	pos = GetPosition(sb, min, max, value, extent);
+	if (x < 0) {
+		/*
+		 * Click on DECREMENT button. Unless user provided a handler
+		 * function, we decrement once and start the timer.
+		 */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_DEC;
 		if (sb->buttonDecFn != NULL) {
 			AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 1);
 		} else {
 			Decrement(sb, 1);
+			AG_ReplaceTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
 		}
-	} else if (x >= totalsize - sb->bw) {		/* Down button */
+	} else if (x > TOTSIZE(sb) - sb->wButton*2) {
+		/*
+		 * Click on INCREMENT button. Unless user provided a handler
+		 * function, we increment once and start the timer.
+		 */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_INC;
 		if (sb->buttonIncFn != NULL) {
 			AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 1);
 		} else {
 			Increment(sb, 1);
+			AG_ReplaceTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
 		}
-	} else {					/* In between */
+	} else if (x >= pos && x <= (pos + sb->wBar)) {
+		/*
+		 * Click on the scrollbar itself. We don't do anything except
+		 * saving the cursor position which we will use in future
+		 * mousemotion events.
+		 */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
-		SetValueFromPos(sb, x, totalsize);
+		sb->xRef = x - pos;
+		AG_PostEvent(NULL, sb, "scrollbar-drag-begin", "%i", value);
+	} else if (sb->wBar != -1) {
+		/*
+		 * Click outside of scrollbar. We seek to the absolute position
+		 * described by the cursor.
+		 *
+		 * XXX TODO: Provide an option to scroll progressively to the
+		 * position since many users will expect that.
+		 */
+		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
+		sb->xRef = sb->wBar/2;
+		SeekToPosition(sb, x - sb->xRef, min, max, extent);
 	}
-	AG_PostEvent(NULL, sb, "scrollbar-drag-begin", "%i", value);
-	
-	/* Generate an event if value changed. */
-	if (value != (nvalue = AG_WidgetInt(sb, "value")))
-		AG_PostEvent(NULL, sb, "scrollbar-changed", "%i", nvalue);
-		
-	AG_ReplaceTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
 }
 
 static void
 MouseMotion(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
-	int x = (sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(1) : AG_INT(2);
-	int state = AG_INT(5);
-	int totalsize = (sb->type == AG_SCROLLBAR_HORIZ) ?
-		WIDGET(sb)->w : WIDGET(sb)->h;
+	int x, extent, min, max, val;
+
 #if 0	
 	if (!AG_ScrollbarVisible(sb)) {
 		if (OBJECT(sb)->parent != NULL)
@@ -292,8 +410,14 @@ MouseMotion(AG_Event *event)
 		return;
 	}
 #endif
-	if (state & SDL_BUTTON_LMASK)
-		SetValueFromPos(sb, x, totalsize);
+	if (sb->xRef == -1) {
+		return;
+	}
+	x = (sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(1) : AG_INT(2);
+	x -= sb->wButton;
+	extent = GetExtent(sb);
+	GetIntValueRange(sb, &min, &max, &val);
+	SeekToPosition(sb, x - sb->xRef, min, max, extent);
 }
 
 static void
@@ -303,12 +427,12 @@ SizeRequest(void *p, AG_SizeReq *r)
 
 	switch (sb->type) {
 	case AG_SCROLLBAR_HORIZ:
-		r->w = sb->bwDefault*2;
-		r->h = sb->bwDefault;
+		r->w = sb->wButtonDef*2;
+		r->h = sb->wButtonDef;
 		break;
 	case AG_SCROLLBAR_VERT:
-		r->w = sb->bwDefault;
-		r->h = sb->bwDefault*2;
+		r->w = sb->wButtonDef;
+		r->h = sb->wButtonDef*2;
 		break;
 	}
 }
@@ -323,21 +447,21 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	}
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:
-		if (a->h < sb->bwDefault*2) {
-			sb->bw = a->h/2;
+		if (a->h < sb->wButtonDef*2) {
+			sb->wButton = a->h/2;
 		} else {
-			sb->bw = sb->bwDefault;
+			sb->wButton = sb->wButtonDef;
 		}
 		break;
 	case AG_SCROLLBAR_HORIZ:
-		if (a->w < sb->bwDefault*2) {
-			sb->bw = a->w/2;
+		if (a->w < sb->wButtonDef*2) {
+			sb->wButton = a->w/2;
 		} else {
-			sb->bw = sb->bwDefault;
+			sb->wButton = sb->wButtonDef;
 		}
 		break;
 	}
-	sb->arrowSz = sb->bw*5/9;
+	sb->arrowSz = sb->wButton*5/9;
 	return (0);
 }
 
@@ -345,59 +469,29 @@ static void
 Draw(void *p)
 {
 	AG_Scrollbar *sb = p;
-	int min, max, val;
+	int extent, min, max, val;
 	int x, size;
-	int maxcoord;
 
-	if (!AG_ScrollbarVisible(sb)) {
+	GetIntValueRange(sb, &min, &max, &val);
+	if (min >= max)
 		return;
-	}
-	min = AG_WidgetInt(sb, "min");
-	max = AG_WidgetInt(sb, "max") - AG_WidgetInt(sb, "visible");
-	val = AG_WidgetInt(sb, "value");
-	
-	if (val < min) {
-		val = min;
-		AG_WidgetSetInt(sb, "value", min);
-	}
-	if (val > max) {
-		val = max-1;
-		AG_WidgetSetInt(sb, "value", max-1);
-	}
 
 	STYLE(sb)->ScrollbarBackground(sb);
 
+	extent = GetExtent(sb);
+	if (sb->wBar == -1) {
+		x = 0;
+		size = extent;
+	} else {
+		x = val*extent/(max-min);
+		size = sb->wBar;
+		if (size < 0) { size = 0; }
+	}
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:
-		maxcoord = WIDGET(sb)->h - sb->bw*2 - sb->barSz;
-		if (sb->barSz == -1) {
-			x = 0;
-			size = WIDGET(sb)->h - sb->bw*2;
-		} else {
-			x = val * maxcoord / (max-min);
-			size = sb->barSz;
-			if (sb->bw+x+size > WIDGET(sb)->h - sb->bw)
-				x = WIDGET(sb)->h - sb->bw*2 - size;
-		}
-		if (AGWIDGET(sb)->h < sb->bw*2 + sb->barSz) {
-			size = 0;
-		}
 		STYLE(sb)->ScrollbarVertButtons(sb, x, size);
 		break;
 	case AG_SCROLLBAR_HORIZ:
-		maxcoord = WIDGET(sb)->w - sb->bw*2 - sb->barSz;
-		if (sb->barSz == -1) {
-			x = 0;
-			size = WIDGET(sb)->w - sb->bw*2;
-		} else {
-			x = val * maxcoord / (max-min);
-			size = sb->barSz;
-			if (sb->bw+x+size > WIDGET(sb)->w - sb->bw)
-				x = WIDGET(sb)->w - sb->bw*2 - size;
-		}
-		if (AGWIDGET(sb)->w < sb->bw*2 + sb->barSz) {
-			size = 0;
-		}
 		STYLE(sb)->ScrollbarHorizButtons(sb, x, size);
 		break;
 	}
@@ -410,8 +504,8 @@ Draw(void *p)
 		AG_TextColor(TEXT_COLOR);
 		txt = AG_TextRender(label);
 		AG_WidgetBlit(sb, txt,
-		    WIDGET(sb)->w/2 - txt->w/2,
-		    WIDGET(sb)->h/2 - txt->h/2);
+		    WIDTH(sb)/2 - txt->w/2,
+		    HEIGHT(sb)/2 - txt->h/2);
 		SDL_FreeSurface(txt);
 		    
 	}
