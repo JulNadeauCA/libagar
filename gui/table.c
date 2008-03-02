@@ -34,7 +34,7 @@
 
 #define COLUMN_RESIZE_RANGE	10	/* Range in pixels for resize ctrls */
 #define COLUMN_MIN_WIDTH	20	/* Minimum column width in pixels */
-#define LAST_VISIBLE(t) ((t)->m - (t)->mVis + 2)
+#define LAST_VISIBLE(t) ((t)->m - (t)->mVis + 1)
 
 AG_Table *
 AG_TableNew(void *parent, Uint flags)
@@ -333,20 +333,24 @@ blit:
 static void
 ScrollToSelection(AG_Table *t)
 {
-	Uint m, n;
+	Uint m;
+	int offs;
 
-	for (n = 0; n < t->n; n++) {
-		for (m = 0; m < t->m; m++) {
-			if (!t->cells[m][n].selected) {
-				continue;
-			}
-			if (t->moffs > m) {
-				AG_WidgetSetInt(t->vbar, "value", t->moffs-1);
-			} else {
-				AG_WidgetSetInt(t->vbar, "value", t->moffs+1);
-			}
-			return;
+	if (t->n < 1) {
+		return;
+	}
+	for (m = 0; m < t->m; m++) {
+		if (!t->cells[m][0].selected) {
+			continue;
 		}
+		if (t->moffs > m) {
+			AG_WidgetSetInt(t->vbar, "value", m);
+		} else {
+			offs = m - t->mVis + 2;
+			if (offs < 0) { offs = 0; }
+			AG_WidgetSetInt(t->vbar, "value", offs);
+		}
+		return;
 	}
 }
 
@@ -373,6 +377,40 @@ SelectionToScroll(AG_Table *t)
 }
 #endif
 
+static int
+SelectionVisible(AG_Table *t)
+{
+	int n, m, mOffs;
+	int x, y;
+	
+	mOffs = AG_WidgetInt(t->vbar, "value");
+	if (t->poll_ev != NULL) {
+		t->poll_ev->handler(t->poll_ev);
+	}
+	for (n = 0, x = t->xoffs;
+	     n < t->n && x < t->wTbl;
+	     n++) {
+		AG_TableCol *col = &t->cols[n];
+		int cw;
+	
+		if (col->w <= 0) {
+			continue;
+		}
+		cw = ((x + col->w) < t->wTbl) ? col->w: t->wTbl - x;
+		for (m = mOffs, y = t->row_h;
+		     m < MIN(t->m, mOffs+t->mVis) && y < HEIGHT(t);
+		     m++) {
+			if (t->cells[m][n].selected &&
+			    m < (mOffs + t->mVis - 1)) {
+				return (1);
+			}
+			y += t->row_h;
+		}
+		x += col->w;
+	}
+	return (0);
+}
+
 static void
 Draw(void *p)
 {
@@ -390,7 +428,6 @@ Draw(void *p)
 	if (t->poll_ev != NULL) {
 		t->poll_ev->handler(t->poll_ev);
 	}
-	t->flags &= ~(AG_TABLE_SEL_VISIBLE);
 	rCell.h = t->row_h;
 	for (n = 0, rCell.x = t->xoffs;
 	     n < t->n && rCell.x < t->wTbl;
@@ -427,10 +464,6 @@ Draw(void *p)
 			AG_DrawLineH(t, 0, t->wTbl, rCell.y,
 			    AG_COLOR(TABLE_LINE_COLOR));
 
-			if (t->cells[m][n].selected &&
-			    m < (t->moffs+t->mVis-1)) {
-				t->flags |= AG_TABLE_SEL_VISIBLE;
-			}
 			STYLE(t)->TableCellBackground(t, rCell,
 			    t->cells[m][n].selected);
 			DrawCell(t, &t->cells[m][n], &rCell);
@@ -453,11 +486,6 @@ Draw(void *p)
 		    AG_COLOR(TABLE_LINE_COLOR));
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
-
-	if (!(t->flags & AG_TABLE_SEL_VISIBLE)) {
-		if (t->flags & AG_TABLE_SCROLL_TO_SEL)
-			ScrollToSelection(t);
-	}
 }
 
 /*
@@ -909,6 +937,7 @@ static void
 DecrementSelection(AG_Table *t)
 {
 	int m;
+
 	for (m = 0; m < t->m; m++) {
 		if (AG_TableRowSelected(t, m)) {
 			if (m > 0) {
@@ -919,6 +948,9 @@ DecrementSelection(AG_Table *t)
 	}
 	AG_TableDeselectAllRows(t);
 	AG_TableSelectRow(t, (m >= 0) ? m : 0);
+
+	if (!SelectionVisible(t))
+		ScrollToSelection(t);
 }
 
 static void
@@ -937,6 +969,9 @@ IncrementSelection(AG_Table *t)
 	}
 	AG_TableDeselectAllRows(t);
 	AG_TableSelectRow(t, (m < t->m) ? m : t->m - 1);
+	
+	if (!SelectionVisible(t))
+		ScrollToSelection(t);
 }
 
 static void
@@ -1028,13 +1063,11 @@ KeyDown(AG_Event *event)
 
 	switch (keysym) {
 	case SDLK_UP:
-		t->flags |= AG_TABLE_SCROLL_TO_SEL;
 		DecrementSelection(t);
 		AG_DelTimeout(t, &t->incTo);
 		AG_ReplaceTimeout(t, &t->decTo, agKbdDelay);
 		break;
 	case SDLK_DOWN:
-		t->flags |= AG_TABLE_SCROLL_TO_SEL;
 		IncrementSelection(t);
 		AG_DelTimeout(t, &t->decTo);
 		AG_ReplaceTimeout(t, &t->incTo, agKbdDelay);
@@ -1102,11 +1135,9 @@ KeyUp(AG_Event *event)
 	switch (keysym) {
 	case SDLK_UP:
 		AG_DelTimeout(t, &t->decTo);
-		t->flags &= ~(AG_TABLE_SCROLL_TO_SEL);
 		break;
 	case SDLK_DOWN:
 		AG_DelTimeout(t, &t->incTo);
-		t->flags &= ~(AG_TABLE_SCROLL_TO_SEL);
 		break;
 	}
 }

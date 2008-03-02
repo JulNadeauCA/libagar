@@ -60,8 +60,7 @@ typedef struct ag_tlist {
 #define AG_TLIST_TREE		0x010	/* Hack to display trees */
 #define AG_TLIST_HFILL		0x020
 #define AG_TLIST_VFILL		0x040
-#define AG_TLIST_NOSELSTATE	0x100	/* Don't restore previous selection
-					   state after poll operation */
+#define AG_TLIST_NOSELSTATE	0x100	/* Don't preserve sel state in poll */
 #define AG_TLIST_EXPAND		(AG_TLIST_HFILL|AG_TLIST_VFILL)
 
 	void *selected;			/* Default `selected' binding */
