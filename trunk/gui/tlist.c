@@ -75,79 +75,60 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	return (tl);
 }
 
-/* Displace the selection or scroll in response to keyboard events. */
 static void
-KeyTimeout(AG_Event *event)
+DecrementSelection(AG_Tlist *tl)
 {
-	AG_Tlist *tl = AG_SELF();
-	SDLKey keysym = AG_SDLKEY(1);
-	AG_TlistItem *it, *pit;
-	AG_WidgetBinding *offsetb;
+	AG_WidgetBinding *bOffset;
+	AG_TlistItem *it, *itPrev;
 	int *offset;
 
-	offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
-	switch (keysym) {
-	case SDLK_UP:
-		TAILQ_FOREACH(it, &tl->items, items) {
-			if (it->selected &&
-			    (pit = TAILQ_PREV(it, ag_tlist_itemq, items))
-			     != NULL) {
-				DeselectItem(tl, it);
-				SelectItem(tl, pit);
+	bOffset = AG_WidgetGetBinding(tl->sbar, "value", &offset);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->selected &&
+		    (itPrev = TAILQ_PREV(it, ag_tlist_itemq, items)) != NULL) {
+			DeselectItem(tl, it);
+			SelectItem(tl, itPrev);
 #if 1
-				if (--(*offset) < 0) {
-					*offset = 0;
-				}
-				AG_WidgetBindingChanged(offsetb);
-#endif
-				break;
+			if (--(*offset) < 0) {
+				*offset = 0;
 			}
-		}
-		break;
-	case SDLK_DOWN:
-		TAILQ_FOREACH(it, &tl->items, items) {
-			if (it->selected &&
-			    (pit = TAILQ_NEXT(it, items)) != NULL) {
-				DeselectItem(tl, it);
-				SelectItem(tl, pit);
-#if 1
-				if (++(*offset) >
-				    tl->nitems - tl->nvisitems) {
-					*offset = tl->nitems -
-					    tl->nvisitems;
-				}
-				AG_WidgetBindingChanged(offsetb);
+			AG_WidgetBindingChanged(bOffset);
 #endif
-				break;
-			}
+			break;
 		}
-		break;
-	case SDLK_PAGEUP:
-		if ((*offset -= agPageIncrement) < 0) {
-			*offset = 0;
-		}
-		AG_WidgetBindingChanged(offsetb);
-		break;
-	case SDLK_PAGEDOWN:
-		if ((*offset += agPageIncrement) > tl->nitems - tl->nvisitems) {
-			*offset = tl->nitems - tl->nvisitems;
-		}
-		AG_WidgetBindingChanged(offsetb);
-		break;
-	default:
-		break;
 	}
-	AG_WidgetUnlockBinding(offsetb);
+	AG_WidgetUnlockBinding(bOffset);
+}
 
-	tl->keymoved++;
-	AG_ReschedEvent(tl, "key-tick", agKbdRepeat);
+static void
+IncrementSelection(AG_Tlist *tl)
+{
+	AG_WidgetBinding *bOffset;
+	AG_TlistItem *it, *itNext;
+	int *offset;
+
+	bOffset = AG_WidgetGetBinding(tl->sbar, "value", &offset);
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (it->selected &&
+		    (itNext = TAILQ_NEXT(it, items)) != NULL) {
+			DeselectItem(tl, it);
+			SelectItem(tl, itNext);
+#if 1
+			if (++(*offset) > (tl->nitems - tl->nvisitems)) {
+				*offset = (tl->nitems - tl->nvisitems);
+			}
+			AG_WidgetBindingChanged(bOffset);
+#endif
+			break;
+		}
+	}
+	AG_WidgetUnlockBinding(bOffset);
 }
 
 static void
 DoubleClickTimeout(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
-
 	tl->dblclicked = NULL;
 }
 
@@ -155,10 +136,25 @@ static void
 LostFocus(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
-
-	AG_CancelEvent(tl, "key-tick");
+	AG_DelTimeout(tl, &tl->incTo);
+	AG_DelTimeout(tl, &tl->decTo);
 	AG_CancelEvent(tl, "dblclick-expire");
-	tl->keymoved = 0;
+}
+
+static Uint32
+DecrementTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Tlist *tl = obj;
+	DecrementSelection(tl);
+	return (agKbdRepeat);
+}
+
+static Uint32
+IncrementTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Tlist *tl = obj;
+	IncrementSelection(tl);
+	return (agKbdRepeat);
 }
 
 static void
@@ -172,7 +168,6 @@ Init(void *obj)
 
 	tl->flags = 0;
 	tl->selected = NULL;
-	tl->keymoved = 0;
 	tl->wSpace = 4;
 	tl->item_h = agTextFontHeight+2;
 	tl->icon_w = tl->item_h - 4;
@@ -195,10 +190,12 @@ Init(void *obj)
 	AG_SetEvent(tl, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(tl, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(tl, "window-keyup", KeyUp, NULL);
-	AG_SetEvent(tl, "key-tick", KeyTimeout, NULL);
 	AG_SetEvent(tl, "dblclick-expire", DoubleClickTimeout, NULL);
 	AG_SetEvent(tl, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(tl, "widget-hidden", LostFocus, NULL);
+	
+	AG_SetTimeout(&tl->decTo, DecrementTimeout, NULL, 0);
+	AG_SetTimeout(&tl->incTo, IncrementTimeout, NULL, 0);
 }
 
 void
@@ -954,12 +951,16 @@ KeyDown(AG_Event *event)
 
 	switch (keysym) {
 	case SDLK_UP:
-	case SDLK_DOWN:
-	case SDLK_PAGEUP:
-	case SDLK_PAGEDOWN:
-		AG_SchedEvent(NULL, tl, agKbdDelay, "key-tick", "%i", keysym);
+	case SDLK_LEFT:
+		DecrementSelection(tl);
+		AG_DelTimeout(tl, &tl->incTo);
+		AG_ReplaceTimeout(tl, &tl->decTo, agKbdDelay);
 		break;
-	default:
+	case SDLK_DOWN:
+	case SDLK_RIGHT:
+		IncrementSelection(tl);
+		AG_DelTimeout(tl, &tl->decTo);
+		AG_ReplaceTimeout(tl, &tl->incTo, agKbdDelay);
 		break;
 	}
 }
@@ -972,16 +973,10 @@ KeyUp(AG_Event *event)
 
 	switch (keysym) {
 	case SDLK_UP:
-	case SDLK_DOWN:
-	case SDLK_PAGEUP:
-	case SDLK_PAGEDOWN:
-		if (tl->keymoved == 0) {
-			AG_PostEvent(NULL, tl, "key-tick", "%i", keysym);
-		}
-		AG_CancelEvent(tl, "key-tick");
-		tl->keymoved = 0;
+		AG_DelTimeout(tl, &tl->decTo);
 		break;
-	default:
+	case SDLK_DOWN:
+		AG_DelTimeout(tl, &tl->incTo);
 		break;
 	}
 }
