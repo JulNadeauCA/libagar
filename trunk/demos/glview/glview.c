@@ -1,8 +1,9 @@
 /*	Public domain	*/
 /*
  * This program demonstrates the use of Agar's low-level GL context widget,
- * AG_GLView. This widget is part of Agar-GUI, and does not require the
- * higher-level Agar-SG (scene graph) library.
+ * AG_GLView. This widget is part of Agar-GUI. If you want high-leven scene
+ * graph functionality, look into FreeSG (http://freesg.org/), which provides
+ * an Agar widget called SG_View(3).
  */
 
 #include <agar/core.h>
