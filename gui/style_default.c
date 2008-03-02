@@ -575,6 +575,15 @@ TableColumnHeaderBackground(void *tbl, int idx, AG_Rect r, int isSelected)
 	AG_DrawBox(tbl, r, isSelected?-1:1, AG_COLOR(TABLE_COLOR));
 }
 
+/* Background for selected table columns */
+static void
+TableSelectedColumnBackground(void *tbl, int idx, AG_Rect r)
+{
+	Uint8 c[4] = { 0, 0, 250, 32 };
+
+	AG_DrawRectBlended(tbl, r, c, AG_ALPHA_SRC);
+}
+
 /* Background for table rows */
 static void
 TableRowBackground(void *wid, AG_Rect r, int isSelected)
@@ -691,6 +700,7 @@ AG_Style agStyleDefault = {
 	SocketOverlay,
 	TableBackground,
 	TableColumnHeaderBackground,
+	TableSelectedColumnBackground,
 	TableRowBackground,
 	TableCellBackground,
 	TextboxBackground,

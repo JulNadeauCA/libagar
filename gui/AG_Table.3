@@ -120,6 +120,12 @@ Table contents are updated dynamically by the
 .Sq table-poll
 event handler (implied by
 .Fn AG_TableNewPolled ) .
+.It AG_TABLE_SCROLL_TO_SEL
+If the selection is not visible, scroll towards it.
+This flag is writeable, but is automatically set or cleared by keyboard events.
+.It AG_TABLE_HIGHLIGHT_COLS
+Highlight columns that are selected.
+Since column selection is not frequently used, this is not the default.
 .El
 .Pp
 The

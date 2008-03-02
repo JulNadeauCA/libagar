@@ -199,6 +199,22 @@ widgets.
 is the left coordinate of the center (slider) button and
 .Fa w
 is its width.
+.It Fn SliderBackgroundHoriz "AG_Widget *widget"
+Draw the background for a horizontal slider.
+.It Fn SliderBackgroundVert "AG_Widget *widget"
+Draw the background for a vertical slider.
+.It Fn SliderControlHoriz "AG_Widget *widget" "int x" "int w"
+Draw the control for a horizontal slider.
+.Fa x
+is the x-coordinate of the left edge of the control, and
+.Fa w
+is the width of the control in pixels.
+.It Fn SliderControlVert "AG_Widget *widget" "int y" "int h"
+Draw the control for a vertical slider.
+.Fa y
+is the y-coordinate of the top edge of the control, and
+.Fa h
+is the height of the control in pixels.
 .It Fn SeparatorHoriz "AG_Widget *widget"
 Draw horizontal
 .Xr AG_Separator 3
@@ -230,6 +246,10 @@ Draw background for a column header cell.
 is the index of the column.
 .Fa isSelected
 is 1 if the column is selected.
+.It Fn TableSelectedColumnBackground "AG_Widget *widget" "int idx" "AG_Rect r"
+The background for a selected column.
+.Fa idx
+is the index of the column.
 .It Fn TableRowBackground "AG_Widget *widget" "AG_Rect r" "int isSelected"
 Draw the background of an entire table row.
 .Fa isSelected
@@ -289,3 +309,5 @@ InitMyStyle(AG_Style *s)
 The
 .Nm
 interface first appeared in Agar 1.3.
+.Sh BUGS
+This manual page should be divided into categories.
