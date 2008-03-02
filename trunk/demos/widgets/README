@@ -1,0 +1,27 @@
+
+This application displays a couple of Agar-GUI widgets. It is useful for
+testing new themes (see AG_Style(3)), but it does not demonstrate widget
+functionality in any useful way. If you have libjpeg installed, F8 will
+generate a screenshot. Some command-line options are provided:
+
+	-v			Display Agar version/release and exit
+	-g			Force OpenGL graphics driver
+	-s			Force SDL graphics driver
+	-w [width]		Display width in pixels
+	-h [height] 		Display height in pixels
+	-D			Enable heavy debugging output
+	-f			Force full screen mode
+	-r [fps]		Set fixed refresh rate
+	-b			Force use of FreeType font engine
+	-B			Force use of bitmap font engine
+	-T [dir]		Set font loading directory
+	-t [face,pts,flags]	Load an alternate font as default
+	                        (accepted flags include 'b'=bold,
+				'i'=italic and 'U'=uppercase)
+	-d			Instead of the stock event loop, enable
+	                        double buffering and use a custom event
+				loop which uses SDL_Flip().
+	-R			When using windowed graphics drivers,
+	                        don't request that the display window
+				be resizable.
+

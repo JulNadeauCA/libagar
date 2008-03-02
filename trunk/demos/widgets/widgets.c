@@ -4,6 +4,9 @@
  * testing new themes (see AG_Style(3)), but it does not demonstrate widget
  * functionality in any useful way. If you have libjpeg installed, F8 will
  * generate a screenshot.
+ *
+ * See the README file for a description of the various command-line options
+ * available.
  */
 
 #include <agar/core.h>
@@ -16,6 +19,7 @@
 #include "config/have_getopt.h"
 
 #include "rounded_style.h"
+#include "doublebuf.h"
 
 static void
 CreateWindow(void)
@@ -365,10 +369,14 @@ SetTheme(AG_Event *event)
 int
 main(int argc, char *argv[])
 {
+	AG_AgarVersion ver;
 	extern AG_Style myRoundedStyle;
 	AG_Menu *appMenu;
 	AG_MenuItem *m;
+	AG_Window *win;
 	int w = 640, h = 480, fps = -1;
+	int useDoubleBuf = 0;
+	int guiFlags = AG_VIDEO_RESIZABLE;
 
 	/* Initialize Agar-Core. */
 	if (AG_InitCore("agar-widgets-demo", 0) == -1) {
@@ -376,60 +384,83 @@ main(int argc, char *argv[])
 		return (1);
 	}
 	
-	/* Provide some switches. */
+	/* Fetch Agar version information. */
+	AG_GetVersion(&ver);
+
 #ifdef HAVE_GETOPT
 	{
 		int c;
 
-		while ((c = getopt(argc, argv, "?gsw:h:dDvfbBt:T:r:")) != -1) {
+		while ((c = getopt(argc, argv, "?vgsw:h:dDfbBt:T:r:R")) != -1) {
 			extern char *optarg;
 
 			switch (c) {
+			case 'v':
+				/* Display Agar version information */
+				printf("Agar version: %d.%d.%d\n", ver.major, ver.minor,
+				    ver.patch);
+				printf("Release name: \"%s\"\n", ver.release);
+				exit(0);
 			case 'g':
+				/* Force OpenGL mode */
 				AG_SetBool(agConfig, "view.opengl", 1);
 				break;
 			case 's':
+				/* Force SDL mode */
 				AG_SetBool(agConfig, "view.opengl", 0);
 				break;
 			case 'w':
+				/* Set display width in pixels */
 				w = atoi(optarg);
 				break;
 			case 'h':
+				/* Set display height in pixels */
 				h = atoi(optarg);
 				break;
-# ifdef DEBUG
-			case 'd':
-				agDebugLvl = 5;
-				break;
 			case 'D':
+				/* Enable heavy debugging output. */
 				agDebugLvl = 10;
 				break;
-# endif
-			case 'v':
-				exit(0);
+			case 'd':
+				/* Enable custom double-buffering event loop */
+				useDoubleBuf = 1;
+				guiFlags |= AG_VIDEO_DOUBLEBUF;
+				break;
 			case 'f':
+				/* Force full screen */
 				AG_SetBool(agConfig, "view.full-screen", 1);
 				break;
 			case 'r':
+				/* Change default refresh rate */
 				fps = atoi(optarg);
 				break;
 			case 'b':
+				/* Force use of the FreeType font engine */
 				AG_SetBool(agConfig, "font.freetype", 0);
 				break;
 			case 'B':
+				/* Force use of the bitmap font engine */
 				AG_SetBool(agConfig, "font.freetype", 1);
 				break;
 			case 'T':
+				/* Set an alternate font directory */
 				AG_SetString(agConfig, "font-path", "%s",
 				    optarg);
 				break;
 			case 't':
+				/* Change the default font */
 				AG_TextParseFontSpec(optarg);
+				break;
+			case 'R':
+				/* Disable resizable window. */
+				guiFlags &= ~(AG_VIDEO_RESIZABLE);
 				break;
 			case '?':
 			default:
-				printf("%s [-dDvfFbB] [-r fps] [-t fontspec] "
-				       "[-T font-path]\n", agProgName);
+				printf("%s [-vgsDdfbBR] [-r fps] [-t fontspec] "
+				       "[-w width] [-h height] "
+				       "[-T font-path]\n",
+				       agProgName);
 				exit(0);
 			}
 		}
@@ -437,7 +468,7 @@ main(int argc, char *argv[])
 #endif
 	
 	/* Initialize Agar-GUI. */
-	if (AG_InitVideo(w, h, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (AG_InitVideo(w, h, 32, guiFlags) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
@@ -455,32 +486,44 @@ main(int argc, char *argv[])
 	/* Initialize our custom theme. */
 	InitMyRoundedStyle(&myRoundedStyle);
 	
-	/* Display the current graphics driver in use. */
-	{
-		AG_Window *win;
-		
-		win = AG_WindowNew(AG_WINDOW_PLAIN);
-		AG_LabelNew(win, 0, "Graphics driver: %s",
-		    AG_Bool(agConfig,"view.opengl") ? "OpenGL" : "SDL");
-		AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
-		AG_WindowShow(win);
-	}
-
+	/* Display the version and current graphics driver in use. */
+	win = AG_WindowNew(AG_WINDOW_PLAIN);
+	AG_LabelNew(win, 0, "Graphics driver: %s",
+	    AG_Bool(agConfig,"view.opengl") ? "OpenGL" : "SDL");
+	AG_LabelNew(win, 0, "Agar version: %d.%d.%d",
+	    ver.major, ver.minor, ver.patch);
+	AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
+	AG_WindowShow(win);
 
 	/* Create an application menu. */
 	appMenu = AG_MenuNewGlobal(0);
 	m = AG_MenuNode(appMenu->root, "File", NULL);
-	AG_MenuAction(m, "Preferences...", NULL, Preferences, NULL);
-	AG_MenuAction(m, "GUI Debugger...", NULL, GuiDebugger, NULL);
-	AG_MenuAction(m, "Quit", NULL, Quit, NULL);
-	
+	{
+		AG_MenuAction(m, "Preferences...", NULL, Preferences, NULL);
+		AG_MenuAction(m, "GUI Debugger...", NULL, GuiDebugger, NULL);
+		AG_MenuAction(m, "Quit", NULL, Quit, NULL);
+	}
 	m = AG_MenuNode(appMenu->root, "Themes", NULL);
-	AG_MenuAction(m, "Default", NULL, SetTheme, "%p", &agStyleDefault);
-	AG_MenuAction(m, "Rounded", NULL, SetTheme, "%p", &myRoundedStyle);
-	
+	{
+		AG_MenuAction(m, "Default", NULL, SetTheme, "%p", &agStyleDefault);
+		AG_MenuAction(m, "Rounded", NULL, SetTheme, "%p", &myRoundedStyle);
+	}
+
+	/* Create our test window. */
 	CreateWindow();
 
-	AG_EventLoop();
+	if (useDoubleBuf) {
+		/* Use our custom event loop. */
+		printf("Using MyEventLoop_DoubleBuf()\n");
+		if (AG_Bool(agConfig,"view.opengl")) {
+			printf("MyEventLoop_DoubleBuf() requires SDL mode!\n");
+			exit(1);
+		}
+		MyEventLoop_DoubleBuf();
+	} else {
+		/* Use the stock event loop. */
+		AG_EventLoop();
+	}
 	AG_Destroy();
 	return (0);
 }
