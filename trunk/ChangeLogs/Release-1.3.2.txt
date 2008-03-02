@@ -55,5 +55,7 @@ For a complete list of all changes, see ChangeLog-1.3.2.txt.
 - GUI: Fixed text truncation in AG_Titlebar(3).
 - GUI: Implemented AG_ClearGlobalKeys().
 - GUI: Implemented AG_SocketOverlayFn().
+- GUI: Fixed keyboard handling in AG_Table(3) and AG_Tlist(3).
+- GUI: New widget: AG_Slider(3).
 - SC: Added documentation for SC_Plotter(3).
 
