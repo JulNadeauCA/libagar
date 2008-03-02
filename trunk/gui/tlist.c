@@ -75,54 +75,86 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	return (tl);
 }
 
+static int
+SelectionVisible(AG_Tlist *tl)
+{
+	AG_TlistItem *it;
+	int y = 0, i = 0;
+	int offset;
+
+	if (tl->flags & AG_TLIST_POLL) {
+		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
+	}
+	offset = AG_WidgetInt(tl->sbar, "value");
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (i++ < offset)
+			continue;
+		if (y > HEIGHT(tl) - tl->item_h)
+			break;
+
+		if (it->selected) {
+			return (1);
+		}
+		y += tl->item_h;
+	}
+	return (0);
+}
+
+static void
+ScrollToSelection(AG_Tlist *tl)
+{
+	AG_TlistItem *it;
+	int m = 0, offs;
+
+	TAILQ_FOREACH(it, &tl->items, items) {
+		if (!it->selected) {
+			m++;
+			continue;
+		}
+		if (offs > m) {
+			AG_WidgetSetInt(tl->sbar, "value", m);
+		} else {
+			offs = m - tl->nvisitems + 1;
+			if (offs < 0) { offs = 0; }
+			AG_WidgetSetInt(tl->sbar, "value", offs);
+		}
+		return;
+	}
+}
+
 static void
 DecrementSelection(AG_Tlist *tl)
 {
-	AG_WidgetBinding *bOffset;
 	AG_TlistItem *it, *itPrev;
-	int *offset;
 
-	bOffset = AG_WidgetGetBinding(tl->sbar, "value", &offset);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected &&
 		    (itPrev = TAILQ_PREV(it, ag_tlist_itemq, items)) != NULL) {
 			DeselectItem(tl, it);
 			SelectItem(tl, itPrev);
-#if 1
-			if (--(*offset) < 0) {
-				*offset = 0;
-			}
-			AG_WidgetBindingChanged(bOffset);
-#endif
 			break;
 		}
 	}
-	AG_WidgetUnlockBinding(bOffset);
+	if (!SelectionVisible(tl))
+		ScrollToSelection(tl);
 }
 
 static void
 IncrementSelection(AG_Tlist *tl)
 {
-	AG_WidgetBinding *bOffset;
 	AG_TlistItem *it, *itNext;
-	int *offset;
 
-	bOffset = AG_WidgetGetBinding(tl->sbar, "value", &offset);
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->selected &&
 		    (itNext = TAILQ_NEXT(it, items)) != NULL) {
 			DeselectItem(tl, it);
 			SelectItem(tl, itNext);
-#if 1
-			if (++(*offset) > (tl->nitems - tl->nvisitems)) {
-				*offset = (tl->nitems - tl->nvisitems);
-			}
-			AG_WidgetBindingChanged(bOffset);
-#endif
 			break;
 		}
 	}
-	AG_WidgetUnlockBinding(bOffset);
+	if (!SelectionVisible(tl))
+		ScrollToSelection(tl);
 }
 
 static void
@@ -296,7 +328,6 @@ Draw(void *p)
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
 	}
 	offset = AG_WidgetInt(tl->sbar, "value");
-
 	TAILQ_FOREACH(it, &tl->items, items) {
 		int x = 2 + it->depth*tl->icon_w;
 
@@ -951,13 +982,11 @@ KeyDown(AG_Event *event)
 
 	switch (keysym) {
 	case SDLK_UP:
-	case SDLK_LEFT:
 		DecrementSelection(tl);
 		AG_DelTimeout(tl, &tl->incTo);
 		AG_ReplaceTimeout(tl, &tl->decTo, agKbdDelay);
 		break;
 	case SDLK_DOWN:
-	case SDLK_RIGHT:
 		IncrementSelection(tl);
 		AG_DelTimeout(tl, &tl->decTo);
 		AG_ReplaceTimeout(tl, &tl->incTo, agKbdDelay);
