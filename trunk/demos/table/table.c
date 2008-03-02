@@ -140,7 +140,7 @@ UpdateTable(AG_Event *event)
 
 	AG_TableBegin(t);
 	for (i = 0; i < prev; i++) {
-		AG_TableAddRow(t, "%d:%u", i, (unsigned)SDL_GetTicks());
+		AG_TableAddRow(t, "%d:Element %d", i, i);
 	}
 	AG_TableEnd(t);
 
@@ -170,8 +170,8 @@ CreatePolledTable(void)
 
 	/* Create a polled table. */
 	table = AG_TableNewPolled(win, AG_TABLE_EXPAND, UpdateTable, NULL);
-	AG_TableAddCol(table, "Foo", "<8888>", NULL);
-	AG_TableAddCol(table, "Bar", "<888888888>", NULL);
+	AG_TableAddCol(table, "Column 1", "<8888>", NULL);
+	AG_TableAddCol(table, "Column 2", "<888888888>", NULL);
 
 	/* Display and resize our window. */
 	AG_WindowShow(win);
