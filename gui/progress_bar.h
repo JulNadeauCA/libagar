@@ -34,6 +34,8 @@ __BEGIN_DECLS
 extern AG_WidgetClass agProgressBarClass;
 
 AG_ProgressBar *AG_ProgressBarNew(void *, enum ag_progress_bar_type, Uint);
+AG_ProgressBar *AG_ProgressBarNewInt(void *, enum ag_progress_bar_type, Uint,
+                                     int *, int *, int *);
 
 #define AG_ProgressBarNewHoriz(p,flags) \
 	AG_ProgressBarNew((p),AG_PROGRESS_BAR_HORIZ,(flags))
