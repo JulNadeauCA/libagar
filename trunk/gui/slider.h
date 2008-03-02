@@ -71,14 +71,13 @@ AG_Slider *AG_SliderNewUint64(void *, enum ag_slider_type, Uint, Uint64 *,
 AG_Slider *AG_SliderNewSint64(void *, enum ag_slider_type, Uint, Sint64 *,
                               Sint64 *, Sint64 *);
 #endif
-AG_Slider *AG_SliderNewFloat(void *, enum ag_slider_type, Uint, float *,
-                             float *, float *);
-AG_Slider *AG_SliderNewDouble(void *, enum ag_slider_type, Uint, double *,
-                              double *, double *);
+AG_Slider *AG_SliderNewFlt(void *, enum ag_slider_type, Uint, float *,
+                           float *, float *);
+AG_Slider *AG_SliderNewDbl(void *, enum ag_slider_type, Uint, double *,
+                           double *, double *);
 #ifdef HAVE_LONG_DOUBLE
-AG_Slider *AG_SliderNewLongDouble(void *, enum ag_slider_type, Uint,
-                                        long double *, long double *,
-					long double *);
+AG_Slider *AG_SliderNewLongDbl(void *, enum ag_slider_type, Uint,
+                               long double *, long double *, long double *);
 #endif
 
 void AG_SliderSetIntIncrement(AG_Slider *, int);
