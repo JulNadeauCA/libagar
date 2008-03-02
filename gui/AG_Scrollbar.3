@@ -134,9 +134,16 @@ enum ag_scrollbar_type {
 };
 .Ed
 .Pp
-There are currently no
+Acceptable values for the
 .Fa flags
-specific to this widget.
+argument include:
+.Pp
+.Bl -tag -width "AG_SCROLLBAR_FOCUSABLE "
+.It AG_SCROLLBAR_FOCUSABLE
+Allow the scrollbar to gain focus (disabled by default).
+This is equivalent to calling
+.Xr AG_WidgetSetFocusable .
+.El
 .Pp
 The
 .Fn AG_ScrollbarNew*
