@@ -54,6 +54,17 @@ AG_ProgressBarNew(void *parent, enum ag_progress_bar_type type, Uint flags)
 	return (pb);
 }
 
+AG_ProgressBar *
+AG_ProgressBarNewInt(void *parent, enum ag_progress_bar_type type, Uint flags,
+    int *val, int *min, int *max)
+{
+	AG_ProgressBar *pb = AG_ProgressBarNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindInt(pb, "value", val); }
+	if (min != NULL) { AG_WidgetBindInt(pb, "min", min); }
+	if (max != NULL) { AG_WidgetBindInt(pb, "max", max); }
+	return (pb);
+}
+
 static void
 Init(void *obj)
 {
@@ -125,7 +136,7 @@ AG_ProgressBarPercent(AG_ProgressBar *pb)
 	if (val < min) { val = min; }
 	if (val > max) { val = max; }
 	
-	return val*100/(max - min);
+	return (val - min)*100/(max - min);
 }
 
 static void
@@ -148,7 +159,7 @@ Draw(void *p)
 	case AG_PROGRESS_BAR_VERT:
 		wAvail = WIDGET(pb)->h - pb->pad*2;
 		rd.x = pb->pad;
-		rd.y = pb->pad + val*wAvail/(max - min);
+		rd.y = pb->pad + (val - min)*wAvail/(max - min);
 		rd.w = WIDGET(pb)->w - pb->pad*2;
 		rd.h = WIDGET(pb)->h;
 		break;
@@ -157,7 +168,7 @@ Draw(void *p)
 		wAvail = WIDGET(pb)->w - pb->pad*2;
 		rd.x = pb->pad;
 		rd.y = pb->pad;
-		rd.w = val*wAvail/(max - min);
+		rd.w = (val - min)*wAvail/(max - min);
 		rd.h = WIDGET(pb)->h - pb->pad*2;
 		break;
 	}
