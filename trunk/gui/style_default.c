@@ -49,6 +49,7 @@
 #include "notebook.h"
 #include "pane.h"
 #include "radio.h"
+#include "slider.h"
 
 AG_Style agStyleDefault;
 
@@ -369,6 +370,50 @@ ScrollbarBackground(void *sb)
 	    AG_COLOR(SCROLLBAR_COLOR));
 }
 
+/* Background for horizontal Slider */
+static void
+SliderBackgroundHoriz(void *sl)
+{
+	int h = HEIGHT(sl)/3;
+
+	AG_DrawBox(sl,
+	    AG_RECT(0, HEIGHT(sl)/2 - h/2, WIDTH(sl), h), -1,
+	    AG_COLOR(SCROLLBAR_COLOR));
+}
+
+/* Background for vertical Slider */
+static void
+SliderBackgroundVert(void *sl)
+{
+	int w = WIDTH(sl)/3;
+
+	AG_DrawBox(sl,
+	    AG_RECT(WIDTH(sl)/2 - w/2, 0, w, HEIGHT(sl)), -1,
+	    AG_COLOR(SCROLLBAR_COLOR));
+}
+
+/* Control for horizontal Slider */
+static void
+SliderControlHoriz(void *p, int x, int w)
+{
+	AG_Slider *sl = p;
+	AG_DrawBox(sl,
+	    AG_RECT(x, 0, w, HEIGHT(sl)),
+	    sl->ctlPressed ? -1 : 1,
+	    AG_COLOR(SCROLLBAR_BTN_COLOR));
+}
+
+/* Control for vertical Slider */
+static void
+SliderControlVert(void *p, int y, int h)
+{
+	AG_Slider *sl = p;
+	AG_DrawBox(sl,
+	    AG_RECT(0, y, WIDTH(sl), h),
+	    sl->ctlPressed ? -1 : 1,
+	    AG_COLOR(SCROLLBAR_BTN_COLOR));
+}
+
 /* Buttons of vertical Scrollbar */
 static void
 ScrollbarVertButtons(AG_Scrollbar *sb, int y, int h)
@@ -636,6 +681,10 @@ AG_Style agStyleDefault = {
 	ScrollbarBackground,
 	ScrollbarVertButtons,
 	ScrollbarHorizButtons,
+	SliderBackgroundHoriz,
+	SliderBackgroundVert,
+	SliderControlHoriz,
+	SliderControlVert,
 	SeparatorHoriz,
 	SeparatorVert,
 	SocketBackground,

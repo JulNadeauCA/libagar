@@ -44,6 +44,10 @@ typedef struct ag_style {
 	void (*ScrollbarBackground)(void *);
 	void (*ScrollbarVertButtons)(struct ag_scrollbar *, int y, int h);
 	void (*ScrollbarHorizButtons)(struct ag_scrollbar *, int x, int w);
+	void (*SliderBackgroundHoriz)(void *);
+	void (*SliderBackgroundVert)(void *);
+	void (*SliderControlHoriz)(void *, int, int);
+	void (*SliderControlVert)(void *, int, int);
 	void (*SeparatorHoriz)(struct ag_separator *);
 	void (*SeparatorVert)(struct ag_separator *);
 	void (*SocketBackground)(struct ag_socket *);

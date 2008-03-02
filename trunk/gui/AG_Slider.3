@@ -1,0 +1,240 @@
+.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd March 1, 2008
+.Dt AG_SLIDER 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3.2
+.Sh NAME
+.Nm AG_Slider
+.Nd agar slider widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget allows the user to control an integer or floating-point value within a
+specified range, as an alternative to
+.Xr AG_Numerical 3
+and
+.Xr AG_Scrollbar 3 .
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INTERFACE
+.nr nS 1
+.Ft "AG_Slider *"
+.Fn AG_SliderNew "AG_Widget *parent" "enum ag_slider_type type" "Uint flags"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewInt "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "int *val" "int *min" "int *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewUint "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint *value" "Uint *min" "Uint *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewUint8 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint8 *value" "Uint8 *min" "Uint8 *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewSint8 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint8 *value" "Sint8 *min" "Sint8 *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewUint16 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint16 *value" "Uint16 *min" "Uint16 *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewSint16 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint16 *value" "Sint16 *min" "Sint16 *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewUint32 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint32 *value" "Uint32 *min" "Uint32 *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewSint32 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint32 *value" "Sint32 *min" "Sint32 *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewUint64 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint64 *value" "Uint64 *min" "Uint64 *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewSint64 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint64 *value" "Sint64 *min" "Sint64 *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewFloat "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "float *value" "float *min" "float *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewDouble "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "double *value" "double *min" "double *max"
+.Pp
+.Ft "AG_Slider *"
+.Fn AG_SliderNewLongDouble "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "long double *value" "long double *min" "long double *max"
+.Pp
+.Ft void
+.Fn AG_SliderSetIntIncrement "AG_Slider *slider" "int increment"
+.Pp
+.Ft void
+.Fn AG_SliderSetRealIncrement "AG_Slider *slider" "double increment"
+.Pp
+.nr nS 0
+The
+.Fn AG_SliderNew
+function allocates, initializes, and attaches a new
+.Nm
+widget.
+.Fa type
+defines the orientation of the slider:
+.Bd -literal
+enum ag_slider_type {
+	AG_SLIDER_HORIZ,
+	AG_SLIDER_VERT
+};
+.Ed
+.Pp
+There are currently no
+.Fa flags
+specific to this widget.
+.Pp
+The
+.Fn AG_SliderNew*
+variants create a slider and also bind
+.Va value ,
+.Va min
+and
+.Va max
+to the specified non-NULL variables.
+.Fn AG_SliderNewUint16 ,
+.Fn AG_SliderNewSint16
+and
+.Fn AG_SliderNewLongDouble
+are only available on platforms which support these types.
+.Pp
+.Fn AG_SliderSetIntIncrement
+and
+.Fn AG_SliderSetRealIncrement
+define by how much the value is to be incremented/decremented as a result of
+keyboard motion.
+The former is only meaningful with integer bindings, the latter is only
+meaningful with floating-point bindings.
+.Sh BINDINGS
+The
+.Nm
+widget provides the following bindings:
+.Pp
+.Bl -tag -compact -width "long double *{value,min,max} "
+.It Va float *{value,min,max}
+Single precision position/range
+.It Va double *{value,min,max}
+Double precision position/range
+.It Va long double *{value,min,max}
+Quad precision position/range
+.It Va int *{value,min,max}
+Integer position/range
+.It Va Uint *{value,min,max}
+Unsigned position/range
+.It Va Uint8 *{value,min,max}
+Unsigned 8-bit position/range
+.It Va Uint16 *{value,min,max}
+Unsigned 16-bit position/range
+.It Va Uint32 *{value,min,max}
+Unsigned 32-bit position/range
+.It Va Uint64 *{value,min,max}
+Unsigned 64-bit position/range
+.It Va Sint8 *{value,min,max}
+Signed 8-bit position/range
+.It Va Sint16 *{value,min,max}
+Signed 16-bit position/range
+.It Va Sint32 *{value,min,max}
+Signed 32-bit position/range
+.It Va Uint64 *{value,min,max}
+Signed 64-bit position/range
+.El
+.Pp
+The slider is positioned to represent
+.Va value
+inside of the range defined by
+.Va min
+and
+.Va max .
+In scrolling applications,
+.Va visible
+is typically used to conveniently represent the size of the display area
+(its value is simply subtracted from the range).
+.Pp
+Note that the
+.Va min ,
+.Va max
+and
+.Va visible
+bindings must be of the same type as
+.Va value .
+.Pp
+The
+.Ft Uint64 ,
+.Ft Sint64
+and
+.Ft long double
+types are only available on platforms which support these types.
+The
+.Ft Uint64 ,
+.Ft Sint64
+and
+.Ft long double
+types are only available on platforms which support these types.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width 25n
+.It window-mousebuttondown
+Seek to a position or initiate scrolling.
+.It window-mousebuttonup
+Terminate scrolling.
+.It window-mousemotion
+Execute scrolling.
+.El
+.Pp
+The
+.Nm
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn slider-changed "void"
+The slider's value has changed.
+.It Fn slider-drag-begin "void"
+User is starting to drag the slider.
+.It Fn slider-drag-end "void"
+User is done dragging the slider.
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Numerical 3 ,
+.Xr AG_Scrollbar 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.3.2.
