@@ -486,9 +486,6 @@ main(int argc, char *argv[])
 	/* Initialize our custom theme. */
 	InitMyRoundedStyle(&myRoundedStyle);
 
-	/* Load our custom color scheme. */
-	AG_ColorsLoad("green.acs");
-
 	/* Display the version and current graphics driver in use. */
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_LabelNew(win, 0, "Graphics driver: %s",
@@ -514,6 +511,12 @@ main(int argc, char *argv[])
 
 	/* Create our test window. */
 	CreateWindow();
+	
+	/* Load our custom color scheme. */
+	if (AG_ColorsLoad("green.acs") == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "Failed to load color scheme: %s",
+		    AG_GetError());
+	}
 
 	if (useDoubleBuf) {
 		/* Use our custom event loop. */
