@@ -15,7 +15,6 @@ SUBDIR=	fixedres \
 	glview \
 	gunpowder \
 	cplusplus \
-	doublebuf \
 	plotting \
 	scrollbar
 
