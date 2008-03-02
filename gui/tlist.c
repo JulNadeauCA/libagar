@@ -105,19 +105,20 @@ static void
 ScrollToSelection(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
-	int m = 0, offs;
+	int m = 0;
+	int offset = AG_WidgetInt(tl->sbar, "value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected) {
 			m++;
 			continue;
 		}
-		if (offs > m) {
+		if (offset > m) {
 			AG_WidgetSetInt(tl->sbar, "value", m);
 		} else {
-			offs = m - tl->nvisitems + 1;
-			if (offs < 0) { offs = 0; }
-			AG_WidgetSetInt(tl->sbar, "value", offs);
+			offset = m - tl->nvisitems + 1;
+			if (offset < 0) { offset = 0; }
+			AG_WidgetSetInt(tl->sbar, "value", offset);
 		}
 		return;
 	}
