@@ -60,7 +60,7 @@ WindowBackground(AG_Window *win)
 	int hBar = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
 
 	AG_DrawRectFilled(win,
-	    AG_RECT(0, hBar, WIDTH(win), HEIGHT(win)-hBar),
+	    AG_RECT(0, hBar-1, WIDTH(win), HEIGHT(win)-hBar),
 	    AG_COLOR(WINDOW_BG_COLOR));
 }
 
