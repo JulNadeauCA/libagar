@@ -32,16 +32,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-static void mousebuttondown(AG_Event *);
-static void mousebuttonup(AG_Event *);
-static void mousemotion(AG_Event *);
-static void keydown(AG_Event *);
-static void keyup(AG_Event *);
-static void LostFocus(AG_Event *);
-static void KeyboardScroll(AG_Event *);
-static void ExpireRowDblClick(AG_Event *);
-static void ExpireColDblClick(AG_Event *);
-
 #define COLUMN_RESIZE_RANGE	10	/* Range in pixels for resize ctrls */
 #define COLUMN_MIN_WIDTH	20	/* Minimum column width in pixels */
 #define LAST_VISIBLE(t) ((t)->m - (t)->mVis + 2)
@@ -77,60 +67,6 @@ AG_TableNewPolled(void *parent, Uint flags, void (*fn)(AG_Event *),
 	return (t);
 }
 
-static void
-Init(void *obj)
-{
-	AG_Table *t = obj;
-
-	WIDGET(t)->flags |= AG_WIDGET_FOCUSABLE|
-	                    AG_WIDGET_UNFOCUSED_MOTION|
-	                    AG_WIDGET_UNFOCUSED_BUTTONUP;
-
-	AG_WidgetBind(t, "selected-row", AG_WIDGET_POINTER, &t->selected_row);
-	AG_WidgetBind(t, "selected-col", AG_WIDGET_POINTER, &t->selected_col);
-	AG_WidgetBind(t, "selected-cell", AG_WIDGET_POINTER, &t->selected_cell);
-
-	t->sep = ":";
-	t->flags = 0;
-	t->selected_row = NULL;
-	t->selected_col = NULL;
-	t->selected_cell = NULL;
-	t->row_h = agTextFontHeight+2;
-	t->col_h = agTextFontHeight+4;
-	t->prew = -1;				/* Use column size specs */
-	t->preh = 64;
-	t->wTbl = -1;
-	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);
-	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0);
-	t->poll_ev = NULL;
-	t->nResizing = -1;
-	t->cols = NULL;
-	t->cells = NULL;
-	t->n = 0;
-	t->m = 0;
-	t->mVis = 0;
-	t->xoffs = 0;
-	t->poll_ev = NULL;
-	t->dblClickRowEv = NULL;
-	t->dblClickColEv = NULL;
-	t->dblClickedRow = -1;
-	t->dblClickedCol = -1;
-	t->wheelTicks = 0;
-	SLIST_INIT(&t->popups);
-	
-	AG_SetEvent(t, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(t, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(t, "window-mousemotion", mousemotion, NULL);
-	AG_SetEvent(t, "window-keydown", keydown, NULL);
-	AG_SetEvent(t, "window-keyup", keyup, NULL);
-	AG_SetEvent(t, "widget-lostfocus", LostFocus, NULL);
-	AG_SetEvent(t, "widget-hidden", LostFocus, NULL);
-	AG_SetEvent(t, "detached", LostFocus, NULL);
-	AG_SetEvent(t, "kbdscroll", KeyboardScroll, NULL);
-	AG_SetEvent(t, "dblclick-row-expire", ExpireRowDblClick, NULL);
-	AG_SetEvent(t, "dblclick-col-expire", ExpireColDblClick, NULL);
-}
-
 void
 AG_TableSizeHint(AG_Table *t, int w, int nrows)
 {
@@ -147,31 +83,6 @@ AG_TableSetSeparator(AG_Table *t, const char *sep)
 	AG_ObjectLock(t);
 	t->sep = sep;
 	AG_ObjectUnlock(t);
-}
-
-static void
-Destroy(void *obj)
-{
-	AG_Table *t = obj;
-	AG_TablePopup *tp, *tpn;
-	Uint m, n;
-	
-	for (tp = SLIST_FIRST(&t->popups);
-	     tp != SLIST_END(&t->popups);
-	     tp = tpn) {
-		tpn = SLIST_NEXT(tp, popups);
-		AG_ObjectDestroy(tp->menu);
-		Free(tp);
-	}
-	
-	for (m = 0; m < t->m; m++) {
-		for (n = 0; n < t->n; n++)
-			AG_TableFreeCell(t, &t->cells[m][n]);
-	}
-	for (n = 0; n < t->n; n++) {
-		AG_TablePoolFree(t, n);
-	}
-	Free(t->cols);
 }
 
 static void
@@ -749,6 +660,7 @@ AG_TableEnd(AG_Table *t)
 	AG_ObjectUnlock(t);
 }
 
+/* Return true if multiple item selection is enabled. */
 static __inline__ int
 SelectingMultiple(AG_Table *t)
 {
@@ -756,6 +668,7 @@ SelectingMultiple(AG_Table *t)
 	        ((t->flags & AG_TABLE_MULTI) && SDL_GetModState() & KMOD_CTRL));
 }
 
+/* Return true if a range of items are being selected. */
 static __inline__ int
 SelectingRange(AG_Table *t)
 {
@@ -763,7 +676,7 @@ SelectingRange(AG_Table *t)
 	        (SDL_GetModState() & KMOD_SHIFT));
 }
 
-/* Table must be locked. */
+/* Display the popup menu. */
 static void
 ShowPopup(AG_Table *tbl, AG_TablePopup *tp)
 {
@@ -778,7 +691,7 @@ ShowPopup(AG_Table *tbl, AG_TablePopup *tp)
 	tp->panel = AG_MenuExpand(tp->menu, tp->item, x+4, y+4);
 }
 
-/* Table must be locked. */
+/* Right click on a column header; display the column's popup menu. */
 static void
 ColumnRightClick(AG_Table *t, int px)
 {
@@ -803,7 +716,7 @@ ColumnRightClick(AG_Table *t, int px)
 	}
 }
 
-/* Table must be locked. */
+/* Left click on a column header; resize or set the sorting mode. */
 static void
 ColumnLeftClick(AG_Table *tbl, int px)
 {
@@ -854,7 +767,7 @@ cont:
 	}
 }
 
-/* Table must be locked. */
+/* Left click on cell; select the cell. */
 static void
 CellLeftClick(AG_Table *tbl, int mc, int x)
 {
@@ -908,7 +821,7 @@ CellLeftClick(AG_Table *tbl, int mc, int x)
 	}
 }
 
-/* Table must be locked. */
+/* Right click on cell; show the cell's popup menu. */
 static void
 CellRightClick(AG_Table *t, int m, int px)
 {
@@ -933,7 +846,6 @@ CellRightClick(AG_Table *t, int m, int px)
 	}
 }
 
-/* Table must be locked. */
 static __inline__ int
 OverColumn(AG_Table *t, int y)
 {
@@ -944,7 +856,35 @@ OverColumn(AG_Table *t, int y)
 }
 
 static void
-mousebuttondown(AG_Event *event)
+DecrementSelection(AG_Table *t)
+{
+	int m;
+	for (m = 0; m < t->m; m++) {
+		if (AG_TableRowSelected(t, m)) {
+			m--;
+			break;
+		}
+	}
+	AG_TableDeselectAllRows(t);
+	AG_TableSelectRow(t, (m >= 0) ? m : 0);
+}
+
+static void
+IncrementSelection(AG_Table *t)
+{
+	int m;
+	for (m = t->m-1; m >= 0; m--) {
+		if (AG_TableRowSelected(t, m)) {
+			m++;
+			break;
+		}
+	}
+	AG_TableDeselectAllRows(t);
+	AG_TableSelectRow(t, (m < t->m) ? m : t->m - 1);
+}
+
+static void
+MouseButtonDown(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 	int button = AG_INT(1);
@@ -1010,7 +950,7 @@ out:
 }
 
 static void
-mousebuttonup(AG_Event *event)
+MouseButtonUp(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 	int button = AG_INT(1);
@@ -1025,20 +965,21 @@ mousebuttonup(AG_Event *event)
 }
 
 static void
-keydown(AG_Event *event)
+KeyDown(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
 	case SDLK_UP:
-	case SDLK_DOWN:
-	case SDLK_PAGEUP:
-	case SDLK_PAGEDOWN:
-		AG_SchedEvent(NULL, t, agKbdDelay, "kbdscroll", "%i", keysym);
-		AG_PostEvent(NULL, t, "kbdscroll", NULL);
+		DecrementSelection(t);
+		AG_DelTimeout(t, &t->incTo);
+		AG_ReplaceTimeout(t, &t->decTo, agKbdDelay);
 		break;
-	default:
+	case SDLK_DOWN:
+		IncrementSelection(t);
+		AG_DelTimeout(t, &t->decTo);
+		AG_ReplaceTimeout(t, &t->incTo, agKbdDelay);
 		break;
 	}
 }
@@ -1067,7 +1008,7 @@ OverColumnResizeControl(AG_Table *t, int px)
 }
 
 static void
-mousemotion(AG_Event *event)
+MouseMotion(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 	int x = AG_INT(1);
@@ -1095,19 +1036,17 @@ mousemotion(AG_Event *event)
 }
 
 static void
-keyup(AG_Event *event)
+KeyUp(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 	int keysym = AG_INT(1);
 
 	switch (keysym) {
 	case SDLK_UP:
-	case SDLK_DOWN:
-	case SDLK_PAGEUP:
-	case SDLK_PAGEDOWN:
-		AG_CancelEvent(t, "kbdscroll");
+		AG_DelTimeout(t, &t->decTo);
 		break;
-	default:
+	case SDLK_DOWN:
+		AG_DelTimeout(t, &t->incTo);
 		break;
 	}
 }
@@ -1117,7 +1056,8 @@ LostFocus(AG_Event *event)
 {
 	AG_Table *t = AG_SELF();
 
-	AG_CancelEvent(t, "key-tick");
+	AG_DelTimeout(t, &t->incTo);
+	AG_DelTimeout(t, &t->decTo);
 	AG_CancelEvent(t, "dblclick-row-expire");
 	AG_CancelEvent(t, "dblclick-col-expire");
 	if (t->nResizing >= 0)
@@ -1212,40 +1152,6 @@ AG_TableDeselectAllCols(AG_Table *t)
 		t->cols[n].selected = 0;
 	}
 	AG_ObjectUnlock(t);
-}
-
-static void
-KeyboardScroll(AG_Event *event)
-{
-	AG_Table *t = AG_SELF();
-	SDLKey keysym = AG_SDLKEY(1);
-	int m;
-	
-	switch (keysym) {
-	case SDLK_UP:
-		for (m = 0; m < t->m; m++) {
-			if (AG_TableRowSelected(t, m)) {
-				m--;
-				break;
-			}
-		}
-		AG_TableDeselectAllRows(t);
-		AG_TableSelectRow(t, (m >= 0) ? m : 0);
-		break;
-	case SDLK_DOWN:
-		for (m = t->m-1; m >= 0; m--) {
-			if (AG_TableRowSelected(t, m)) {
-				m++;
-				break;
-			}
-		}
-		AG_TableDeselectAllRows(t);
-		AG_TableSelectRow(t, (m < t->m) ? m : t->m - 1);
-		break;
-	default:
-		break;
-	}
-	AG_ReschedEvent(t, "kbdscroll", agKbdRepeat);
 }
 
 static void
@@ -1547,6 +1453,104 @@ AG_TableSaveASCII(AG_Table *t, FILE *f, char sep)
 	AG_ObjectUnlock(t);
 	return (0);
 }
+
+static Uint32
+DecrementTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Table *t = obj;
+	DecrementSelection(t);
+	return (agKbdRepeat);
+}
+
+static Uint32
+IncrementTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Table *t = obj;
+	IncrementSelection(t);
+	return (agKbdRepeat);
+}
+
+static void
+Init(void *obj)
+{
+	AG_Table *t = obj;
+
+	WIDGET(t)->flags |= AG_WIDGET_FOCUSABLE|
+	                    AG_WIDGET_UNFOCUSED_MOTION|
+	                    AG_WIDGET_UNFOCUSED_BUTTONUP;
+
+	AG_WidgetBind(t, "selected-row", AG_WIDGET_POINTER, &t->selected_row);
+	AG_WidgetBind(t, "selected-col", AG_WIDGET_POINTER, &t->selected_col);
+	AG_WidgetBind(t, "selected-cell", AG_WIDGET_POINTER, &t->selected_cell);
+
+	t->sep = ":";
+	t->flags = 0;
+	t->selected_row = NULL;
+	t->selected_col = NULL;
+	t->selected_cell = NULL;
+	t->row_h = agTextFontHeight+2;
+	t->col_h = agTextFontHeight+4;
+	t->prew = -1;				/* Use column size specs */
+	t->preh = 64;
+	t->wTbl = -1;
+	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);
+	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0);
+	t->poll_ev = NULL;
+	t->nResizing = -1;
+	t->cols = NULL;
+	t->cells = NULL;
+	t->n = 0;
+	t->m = 0;
+	t->mVis = 0;
+	t->xoffs = 0;
+	t->poll_ev = NULL;
+	t->dblClickRowEv = NULL;
+	t->dblClickColEv = NULL;
+	t->dblClickedRow = -1;
+	t->dblClickedCol = -1;
+	t->wheelTicks = 0;
+	SLIST_INIT(&t->popups);
+	
+	AG_SetEvent(t, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(t, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(t, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(t, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(t, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(t, "widget-lostfocus", LostFocus, NULL);
+	AG_SetEvent(t, "widget-hidden", LostFocus, NULL);
+	AG_SetEvent(t, "detached", LostFocus, NULL);
+	AG_SetEvent(t, "dblclick-row-expire", ExpireRowDblClick, NULL);
+	AG_SetEvent(t, "dblclick-col-expire", ExpireColDblClick, NULL);
+	
+	AG_SetTimeout(&t->decTo, DecrementTimeout, NULL, 0);
+	AG_SetTimeout(&t->incTo, IncrementTimeout, NULL, 0);
+}
+
+static void
+Destroy(void *obj)
+{
+	AG_Table *t = obj;
+	AG_TablePopup *tp, *tpn;
+	Uint m, n;
+	
+	for (tp = SLIST_FIRST(&t->popups);
+	     tp != SLIST_END(&t->popups);
+	     tp = tpn) {
+		tpn = SLIST_NEXT(tp, popups);
+		AG_ObjectDestroy(tp->menu);
+		Free(tp);
+	}
+	
+	for (m = 0; m < t->m; m++) {
+		for (n = 0; n < t->n; n++)
+			AG_TableFreeCell(t, &t->cells[m][n]);
+	}
+	for (n = 0; n < t->n; n++) {
+		AG_TablePoolFree(t, n);
+	}
+	Free(t->cols);
+}
+
 
 AG_WidgetClass agTableClass = {
 	{
