@@ -304,12 +304,13 @@ AG_ObjectSuperclass(const void *p)
 {
 	AG_ObjectClass *cls = AGOBJECT(p)->cls;
 	char *end;
-	int i, len;
+	size_t len;
+	int i;
 
 	if ((end = strrchr(cls->name, ':')) == NULL) {
 		return (AGOBJECT(p)->cls);
 	}
-	len = end - &cls->name[0];
+	len = (size_t)(end - &cls->name[0]);
 	for (i = 0; i < agClassCount; i++) {
 		const char *s = agClassTbl[i]->name;
 		if (strncmp(s, cls->name, len) == 0 && s[len] == '\0')
