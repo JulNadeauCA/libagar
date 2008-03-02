@@ -71,7 +71,6 @@ typedef struct ag_tlist {
 	int item_h;			/* Item height */
 	int icon_w;			/* Item icon width */
 	void *dblclicked;		/* Used by double click */
-	int  keymoved;			/* Used by key repeat */
 	struct ag_tlist_itemq items;	/* Current Items */
 	struct ag_tlist_itemq selitems;	/* Saved item state */
 	int nitems;			/* Current item count */
@@ -79,9 +78,10 @@ typedef struct ag_tlist {
 	AG_Scrollbar *sbar;		/* Vertical scrollbar */
 	AG_TAILQ_HEAD(,ag_tlist_popup) popups; /* Popup menus */
 	int (*compare_fn)(const AG_TlistItem *, const AG_TlistItem *);
-	AG_Event *popupEv;
-	AG_Event *changedEv;
-	AG_Event *dblClickEv;
+	AG_Event *popupEv;		/* Popup menu hook */
+	AG_Event *changedEv;		/* Selection change hook */
+	AG_Event *dblClickEv;		/* Double click hook */
+	AG_Timeout incTo, decTo;	/* Keyboard motion timers */
 	Uint32 wheelTicks;		/* For wheel acceleration */
 } AG_Tlist;
 
