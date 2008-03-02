@@ -124,34 +124,50 @@ ScrollToSelection(AG_Tlist *tl)
 }
 
 static void
-DecrementSelection(AG_Tlist *tl)
+DecrementSelection(AG_Tlist *tl, int inc)
 {
 	AG_TlistItem *it, *itPrev;
+	int i;
 
-	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->selected &&
-		    (itPrev = TAILQ_PREV(it, ag_tlist_itemq, items)) != NULL) {
-			DeselectItem(tl, it);
-			SelectItem(tl, itPrev);
+	for (i = 0; i < inc; i++) {
+		TAILQ_FOREACH(it, &tl->items, items) {
+			if (!it->selected) {
+				continue;
+			}
+			itPrev = TAILQ_PREV(it, ag_tlist_itemq, items);
+			if (itPrev != NULL) {
+				DeselectItem(tl, it);
+				SelectItem(tl, itPrev);
+			}
 			break;
 		}
+		if (it == NULL && (it = TAILQ_FIRST(&tl->items)) != NULL)
+			SelectItem(tl, it);
 	}
 	if (!SelectionVisible(tl))
 		ScrollToSelection(tl);
 }
 
 static void
-IncrementSelection(AG_Tlist *tl)
+IncrementSelection(AG_Tlist *tl, int inc)
 {
 	AG_TlistItem *it, *itNext;
+	int i;
 
-	TAILQ_FOREACH(it, &tl->items, items) {
-		if (it->selected &&
-		    (itNext = TAILQ_NEXT(it, items)) != NULL) {
-			DeselectItem(tl, it);
-			SelectItem(tl, itNext);
+	for (i = 0; i < inc; i++) {
+		TAILQ_FOREACH(it, &tl->items, items) {
+			if (!it->selected) {
+				continue;
+			}
+			itNext = TAILQ_NEXT(it, items);
+			if (itNext != NULL) {
+				DeselectItem(tl, it);
+				SelectItem(tl, itNext);
+			}
 			break;
 		}
+		if (it == NULL && (it = TAILQ_FIRST(&tl->items)) != NULL)
+			SelectItem(tl, it);
 	}
 	if (!SelectionVisible(tl))
 		ScrollToSelection(tl);
@@ -177,7 +193,11 @@ static Uint32
 DecrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Tlist *tl = obj;
-	DecrementSelection(tl);
+	Uint8 *ks;
+	int numkeys;
+
+	ks = SDL_GetKeyState(&numkeys);
+	DecrementSelection(tl, ks[SDLK_PAGEUP] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 
@@ -185,7 +205,11 @@ static Uint32
 IncrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Tlist *tl = obj;
-	IncrementSelection(tl);
+	Uint8 *ks;
+	int numkeys;
+
+	ks = SDL_GetKeyState(&numkeys);
+	IncrementSelection(tl, ks[SDLK_PAGEDOWN] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 
@@ -982,12 +1006,22 @@ KeyDown(AG_Event *event)
 
 	switch (keysym) {
 	case SDLK_UP:
-		DecrementSelection(tl);
+		DecrementSelection(tl, 1);
 		AG_DelTimeout(tl, &tl->incTo);
 		AG_ReplaceTimeout(tl, &tl->decTo, agKbdDelay);
 		break;
 	case SDLK_DOWN:
-		IncrementSelection(tl);
+		IncrementSelection(tl, 1);
+		AG_DelTimeout(tl, &tl->decTo);
+		AG_ReplaceTimeout(tl, &tl->incTo, agKbdDelay);
+		break;
+	case SDLK_PAGEUP:
+		DecrementSelection(tl, agPageIncrement);
+		AG_DelTimeout(tl, &tl->incTo);
+		AG_ReplaceTimeout(tl, &tl->decTo, agKbdDelay);
+		break;
+	case SDLK_PAGEDOWN:
+		IncrementSelection(tl, agPageIncrement);
 		AG_DelTimeout(tl, &tl->decTo);
 		AG_ReplaceTimeout(tl, &tl->incTo, agKbdDelay);
 		break;
@@ -1002,9 +1036,11 @@ KeyUp(AG_Event *event)
 
 	switch (keysym) {
 	case SDLK_UP:
+	case SDLK_PAGEUP:
 		AG_DelTimeout(tl, &tl->decTo);
 		break;
 	case SDLK_DOWN:
+	case SDLK_PAGEDOWN:
 		AG_DelTimeout(tl, &tl->incTo);
 		break;
 	}
