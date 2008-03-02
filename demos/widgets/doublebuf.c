@@ -1,14 +1,17 @@
+/* Public domain */
 /*
- * This shows the use of a custom event loop with double buffering.
- * Instead of the usual algorithm which builds a list of video regions
- * to update, we use only SDL_Flip().
+ * This is an example custom event loop function that uses double buffering.
+ * Instead of the default AG_EventLoop() which builds a list of video regions
+ * to update, this one uses SDL_Flip().
  */
 
 #include <agar/core.h>
 #include <agar/gui.h>
 
-static void
-EventLoop(void)
+#include "doublebuf.h"
+
+void
+MyEventLoop_DoubleBuf(void)
 {
 	extern struct ag_objectq agTimeoutObjQ;
 	SDL_Event ev;
@@ -48,24 +51,4 @@ EventLoop(void)
 			SDL_Delay(agView->rCur - agIdleThresh);
 		}
 	}
-}
-
-int
-main(int argc, char *argv[])
-{
-	AG_Window *win;
-	AG_Table *tbl;
-
-	if (AG_InitCore("agar-doublebuf-demo", 0) == -1 ||
-	    AG_InitVideo(640, 480, 32, AG_VIDEO_HWSURFACE|AG_VIDEO_DOUBLEBUF)
-	     == -1) {
-		return (1);
-	}
-	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
-
-	win = AG_WindowNew(0);
-	AG_LabelNewStatic(win, 0, "Hello, world!");
-	AG_WindowShow(win);
-	EventLoop();
-	return (0);
 }
