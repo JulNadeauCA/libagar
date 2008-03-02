@@ -40,6 +40,7 @@
 #include <agar/gui/separator.h>
 #include <agar/gui/socket.h>
 #include <agar/gui/spinbutton.h>
+#include <agar/gui/slider.h>
 #include <agar/gui/statusbar.h>
 #include <agar/gui/table.h>
 #include <agar/gui/tableview.h>

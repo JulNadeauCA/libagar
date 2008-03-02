@@ -56,6 +56,7 @@
 #include "radio.h"
 #include "scrollbar.h"
 #include "separator.h"
+#include "slider.h"
 #include "socket.h"
 #include "spinbutton.h"
 #include "statusbar.h"
@@ -110,6 +111,7 @@ void *agGUIClasses[] = {
 	&agRadioClass,
 	&agScrollbarClass,
 	&agSeparatorClass,
+	&agSliderClass,
 	&agSocketClass,
 	&agSpinbuttonClass,
 	&agStatusbarClass,
