@@ -24,6 +24,7 @@
  */
 
 #include <core/core.h>
+#include <core/config.h>
 
 #include "table.h"
 #include "primitive.h"
@@ -141,13 +142,13 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	aBar.w = t->vbar->wButton;
 	aBar.h = a->h - t->col_h + 1;
 	AG_WidgetSizeAlloc(t->vbar, &aBar);
-
+#if 0
 	aBar.x = t->vbar->wButton + 1;
 	aBar.y = a->h - t->hbar->wButton;
 	aBar.w = a->w - t->hbar->wButton;
 	aBar.h = t->vbar->wButton;
 	AG_WidgetSizeAlloc(t->hbar, &aBar);
-
+#endif
 	if (a->w < t->vbar->wButton ||
 	    a->h < t->vbar->wButton*2) {
 		WIDGET(t->vbar)->flags |= AG_WIDGET_HIDE;
@@ -934,27 +935,32 @@ OverColumn(AG_Table *t, int y)
 }
 
 static void
-DecrementSelection(AG_Table *t)
+DecrementSelection(AG_Table *t, int inc)
 {
 	int m;
 
+	if (t->m < 1) {
+		return;
+	}
 	for (m = 0; m < t->m; m++) {
 		if (AG_TableRowSelected(t, m)) {
-			if (m > 0) {
-				m--;
-			}
+			m -= inc;
+			if (m < 0) { m = 0; }
 			break;
 		}
 	}
-	AG_TableDeselectAllRows(t);
-	AG_TableSelectRow(t, (m >= 0) ? m : 0);
-
+	if (m < t->m) {
+		AG_TableDeselectAllRows(t);
+		AG_TableSelectRow(t, m);
+	} else {
+		AG_TableSelectRow(t, 0);
+	}
 	if (!SelectionVisible(t))
 		ScrollToSelection(t);
 }
 
 static void
-IncrementSelection(AG_Table *t)
+IncrementSelection(AG_Table *t, int inc)
 {
 	int m;
 
@@ -963,13 +969,17 @@ IncrementSelection(AG_Table *t)
 	}
 	for (m = t->m-1; m >= 0; m--) {
 		if (AG_TableRowSelected(t, m)) {
-			m++;
+			m += inc;
+			if (m >= t->m) { m = t->m-1; }
 			break;
 		}
 	}
-	AG_TableDeselectAllRows(t);
-	AG_TableSelectRow(t, (m < t->m) ? m : t->m - 1);
-	
+	if (m >= 0) {
+		AG_TableDeselectAllRows(t);
+		AG_TableSelectRow(t, m);
+	} else {
+		AG_TableSelectRow(t, 0);
+	}
 	if (!SelectionVisible(t))
 		ScrollToSelection(t);
 }
@@ -1063,12 +1073,22 @@ KeyDown(AG_Event *event)
 
 	switch (keysym) {
 	case SDLK_UP:
-		DecrementSelection(t);
+		DecrementSelection(t, 1);
 		AG_DelTimeout(t, &t->incTo);
 		AG_ReplaceTimeout(t, &t->decTo, agKbdDelay);
 		break;
 	case SDLK_DOWN:
-		IncrementSelection(t);
+		IncrementSelection(t, 1);
+		AG_DelTimeout(t, &t->decTo);
+		AG_ReplaceTimeout(t, &t->incTo, agKbdDelay);
+		break;
+	case SDLK_PAGEUP:
+		DecrementSelection(t, agPageIncrement);
+		AG_DelTimeout(t, &t->incTo);
+		AG_ReplaceTimeout(t, &t->decTo, agKbdDelay);
+		break;
+	case SDLK_PAGEDOWN:
+		IncrementSelection(t, agPageIncrement);
 		AG_DelTimeout(t, &t->decTo);
 		AG_ReplaceTimeout(t, &t->incTo, agKbdDelay);
 		break;
@@ -1134,9 +1154,11 @@ KeyUp(AG_Event *event)
 
 	switch (keysym) {
 	case SDLK_UP:
+	case SDLK_PAGEUP:
 		AG_DelTimeout(t, &t->decTo);
 		break;
 	case SDLK_DOWN:
+	case SDLK_PAGEDOWN:
 		AG_DelTimeout(t, &t->incTo);
 		break;
 	}
@@ -1557,7 +1579,11 @@ static Uint32
 DecrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Table *t = obj;
-	DecrementSelection(t);
+	Uint8 *ks;
+	int numkeys;
+
+	ks = SDL_GetKeyState(&numkeys);
+	DecrementSelection(t, ks[SDLK_PAGEUP] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 
@@ -1565,7 +1591,11 @@ static Uint32
 IncrementTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Table *t = obj;
-	IncrementSelection(t);
+	Uint8 *ks;
+	int numkeys;
+
+	ks = SDL_GetKeyState(&numkeys);
+	IncrementSelection(t, ks[SDLK_PAGEDOWN] ? agPageIncrement : 1);
 	return (agKbdRepeat);
 }
 
@@ -1593,7 +1623,11 @@ Init(void *obj)
 	t->preh = 64;
 	t->wTbl = -1;
 	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);
+#if 0
 	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0);
+#else
+	t->hbar = NULL;
+#endif
 	t->poll_ev = NULL;
 	t->nResizing = -1;
 	t->cols = NULL;
