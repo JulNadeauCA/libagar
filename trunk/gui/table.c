@@ -331,22 +331,66 @@ blit:
 }
 
 static void
+ScrollToSelection(AG_Table *t)
+{
+	Uint m, n;
+
+	for (n = 0; n < t->n; n++) {
+		for (m = 0; m < t->m; m++) {
+			if (!t->cells[m][n].selected) {
+				continue;
+			}
+			if (t->moffs > m) {
+				AG_WidgetSetInt(t->vbar, "value", t->moffs-1);
+			} else {
+				AG_WidgetSetInt(t->vbar, "value", t->moffs+1);
+			}
+			return;
+		}
+	}
+}
+
+#if 0
+static void
+SelectionToScroll(AG_Table *t)
+{
+	Uint m, n;
+
+	for (n = 0; n < t->n; n++) {
+		for (m = 0; m < t->m; m++) {
+			if (!t->cells[m][n].selected) {
+				continue;
+			}
+			AG_TableDeselectRow(t, m);
+			if (m < t->moffs) {
+				AG_TableSelectRow(t, t->moffs);
+			} else {
+				AG_TableSelectRow(t, t->moffs + t->mVis - 2);
+			}
+			return;
+		}
+	}
+}
+#endif
+
+static void
 Draw(void *p)
 {
 	AG_Table *t = p;
 	AG_Rect rCell, rBg;
 	int n, m;
-
+	
 	rBg.x = 0;
 	rBg.y = 0;
 	rBg.w = t->wTbl;
 	rBg.h = HEIGHT(t);
 	STYLE(t)->TableBackground(t, rBg);
-
+	
 	t->moffs = AG_WidgetInt(t->vbar, "value");
 	if (t->poll_ev != NULL) {
 		t->poll_ev->handler(t->poll_ev);
 	}
+	t->flags &= ~(AG_TABLE_SEL_VISIBLE);
 	rCell.h = t->row_h;
 	for (n = 0, rCell.x = t->xoffs;
 	     n < t->n && rCell.x < t->wTbl;
@@ -378,11 +422,15 @@ Draw(void *p)
 
 		/* Draw the rows of this column. */
 		for (m = t->moffs, rCell.y = t->row_h;
-		     m < t->m && rCell.y < HEIGHT(t);
+		     m < MIN(t->m, t->moffs+t->mVis) && rCell.y < HEIGHT(t);
 		     m++) {
 			AG_DrawLineH(t, 0, t->wTbl, rCell.y,
 			    AG_COLOR(TABLE_LINE_COLOR));
 
+			if (t->cells[m][n].selected &&
+			    m < (t->moffs+t->mVis-1)) {
+				t->flags |= AG_TABLE_SEL_VISIBLE;
+			}
 			STYLE(t)->TableCellBackground(t, rCell,
 			    t->cells[m][n].selected);
 			DrawCell(t, &t->cells[m][n], &rCell);
@@ -392,12 +440,9 @@ Draw(void *p)
 		    AG_COLOR(TABLE_LINE_COLOR));
 
 		/* Indicate column selection. */
-		if (col->selected) {
-			Uint8 c[4] = { 0, 0, 250, 32 };
-
-			AG_DrawRectBlended(t,
-			    AG_RECT(rCell.x, 0, col->w, HEIGHT(t)),
-			    c, AG_ALPHA_SRC);
+		if ((t->flags & AG_TABLE_HIGHLIGHT_COLS) && col->selected) {
+			STYLE(t)->TableSelectedColumnBackground(t, n,
+			    AG_RECT(rCell.x, 0, col->w, HEIGHT(t)));
 		}
 		AG_WidgetPopClipRect(t);
 		rCell.x += col->w;
@@ -408,6 +453,11 @@ Draw(void *p)
 		    AG_COLOR(TABLE_LINE_COLOR));
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
+
+	if (!(t->flags & AG_TABLE_SEL_VISIBLE)) {
+		if (t->flags & AG_TABLE_SCROLL_TO_SEL)
+			ScrollToSelection(t);
+	}
 }
 
 /*
@@ -897,7 +947,7 @@ MouseButtonDown(AG_Event *event)
 	int x = AG_INT(2);
 	int y = AG_INT(3);
 	int m;
-
+	
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
 		{
@@ -932,7 +982,7 @@ MouseButtonDown(AG_Event *event)
 			AG_TableDeselectAllRows(t);
 			goto out;
 		}
-		if (m < 0) {
+		if (m < 0 && y <= t->row_h) {
 			ColumnLeftClick(t, x);
 		} else {
 			CellLeftClick(t, m, x);
@@ -978,11 +1028,13 @@ KeyDown(AG_Event *event)
 
 	switch (keysym) {
 	case SDLK_UP:
+		t->flags |= AG_TABLE_SCROLL_TO_SEL;
 		DecrementSelection(t);
 		AG_DelTimeout(t, &t->incTo);
 		AG_ReplaceTimeout(t, &t->decTo, agKbdDelay);
 		break;
 	case SDLK_DOWN:
+		t->flags |= AG_TABLE_SCROLL_TO_SEL;
 		IncrementSelection(t);
 		AG_DelTimeout(t, &t->decTo);
 		AG_ReplaceTimeout(t, &t->incTo, agKbdDelay);
@@ -1050,9 +1102,11 @@ KeyUp(AG_Event *event)
 	switch (keysym) {
 	case SDLK_UP:
 		AG_DelTimeout(t, &t->decTo);
+		t->flags &= ~(AG_TABLE_SCROLL_TO_SEL);
 		break;
 	case SDLK_DOWN:
 		AG_DelTimeout(t, &t->incTo);
+		t->flags &= ~(AG_TABLE_SCROLL_TO_SEL);
 		break;
 	}
 }
@@ -1076,12 +1130,16 @@ AG_TableRowSelected(AG_Table *t, Uint m)
 	Uint n;
 
 	AG_ObjectLock(t);
+	if (m >= t->m) {
+		goto out;
+	}
 	for (n = 0; n < t->n; n++) {
 		if (t->cells[m][n].selected) {
 			AG_ObjectUnlock(t);
 			return (1);
 		}
 	}
+out:
 	AG_ObjectUnlock(t);
 	return (0);
 }
@@ -1092,8 +1150,10 @@ AG_TableSelectRow(AG_Table *t, Uint m)
 	Uint n;
 
 	AG_ObjectLock(t);
-	for (n = 0; n < t->n; n++) {
-		t->cells[m][n].selected = 1;
+	if (m < t->m) {
+		for (n = 0; n < t->n; n++) {
+			t->cells[m][n].selected = 1;
+		}
 	}
 	AG_ObjectUnlock(t);
 }
@@ -1104,8 +1164,10 @@ AG_TableDeselectRow(AG_Table *t, Uint m)
 	Uint n;
 
 	AG_ObjectLock(t);
-	for (n = 0; n < t->n; n++) {
-		t->cells[m][n].selected = 0;
+	if (m < t->m) {
+		for (n = 0; n < t->n; n++) {
+			t->cells[m][n].selected = 0;
+		}
 	}
 	AG_ObjectUnlock(t);
 }
@@ -1527,7 +1589,7 @@ Init(void *obj)
 	AG_SetEvent(t, "detached", LostFocus, NULL);
 	AG_SetEvent(t, "dblclick-row-expire", ExpireRowDblClick, NULL);
 	AG_SetEvent(t, "dblclick-col-expire", ExpireColDblClick, NULL);
-	
+
 	AG_SetTimeout(&t->decTo, DecrementTimeout, NULL, 0);
 	AG_SetTimeout(&t->incTo, IncrementTimeout, NULL, 0);
 }

@@ -110,6 +110,9 @@ typedef struct ag_table {
 #define AG_TABLE_MULTITOGGLE	0x02	/* Toggle multiple selections */
 #define AG_TABLE_REDRAW_CELLS	0x04	/* Redraw the cells */
 #define AG_TABLE_POLL		0x08	/* Table is polled */
+#define AG_TABLE_SEL_VISIBLE	0x10	/* Selection is visible */
+#define AG_TABLE_SCROLL_TO_SEL	0x20	/* Scroll to selection */
+#define AG_TABLE_HIGHLIGHT_COLS	0x40	/* Highlight column selection */
 #define AG_TABLE_MULTIMODE	(AG_TABLE_MULTI|AG_TABLE_MULTITOGGLE)
 	enum ag_table_selmode selmode;	/* Selection mode */
 	void *selected_row;		/* Default `selected-row' binding */

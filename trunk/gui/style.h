@@ -55,6 +55,7 @@ typedef struct ag_style {
 	void (*TableBackground)(void *, AG_Rect r);
 	void (*TableColumnHeaderBackground)(void *, int idx, AG_Rect r,
 	                                    int isSelected);
+	void (*TableSelectedColumnBackground)(void *, int idx, AG_Rect r);
 	void (*TableRowBackground)(void *, AG_Rect r, int isSelected);
 	void (*TableCellBackground)(void *, AG_Rect r, int isSelected);
 	void (*TextboxBackground)(void *, AG_Rect r, int isCombo);
