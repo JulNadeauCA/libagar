@@ -176,6 +176,11 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	CreateWindow();
+#ifndef HAVE_SDL_IMAGE
+	AG_TextWarning("sdl-image-warning",
+	   "The SDL_image library was not found.\n"
+	   "Without SDL_image, this demo will only load files in .bmp format.");
+#endif
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
