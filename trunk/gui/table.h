@@ -137,6 +137,7 @@ typedef struct ag_table {
 	int dblClickedRow;		/* For row double click */
 	int dblClickedCol;		/* For column double click */
 	Uint32 wheelTicks;		/* For wheel acceleration */
+	AG_Timeout incTo, decTo;	/* Timers for keyboard motion */
 
 	AG_SLIST_HEAD(,ag_table_popup) popups; /* Registered popup menus */
 } AG_Table;
