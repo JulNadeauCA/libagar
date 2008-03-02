@@ -158,7 +158,7 @@ AG_SliderNewSint64(void *parent, enum ag_slider_type type, Uint flags,
 #endif /* HAVE_64BIT */
 
 AG_Slider *
-AG_SliderNewFloat(void *parent, enum ag_slider_type type, Uint flags,
+AG_SliderNewFlt(void *parent, enum ag_slider_type type, Uint flags,
     float *val, float *min, float *max)
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
@@ -169,7 +169,7 @@ AG_SliderNewFloat(void *parent, enum ag_slider_type type, Uint flags,
 }
 
 AG_Slider *
-AG_SliderNewDouble(void *parent, enum ag_slider_type type, Uint flags,
+AG_SliderNewDbl(void *parent, enum ag_slider_type type, Uint flags,
     double *val, double *min, double *max)
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
@@ -181,7 +181,7 @@ AG_SliderNewDouble(void *parent, enum ag_slider_type type, Uint flags,
 
 #ifdef HAVE_LONG_DOUBLE
 AG_Slider *
-AG_SliderNewLongDouble(void *parent, enum ag_slider_type type, Uint flags,
+AG_SliderNewLongDbl(void *parent, enum ag_slider_type type, Uint flags,
     long double *val, long double *min, long double *max)
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
