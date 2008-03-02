@@ -250,6 +250,7 @@ GetPosition(AG_Slider *sl, int *x)
 #ifdef HAVE_LONG_DOUBLE
 	case AG_WIDGET_LONG_DOUBLE: GET_POSITION(long double);	break;
 #endif
+	default: *x = 0; break;
 	} 
 	AG_WidgetUnlockBinding(bMax);
 	AG_WidgetUnlockBinding(bMin);
