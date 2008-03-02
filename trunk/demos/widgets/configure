@@ -1659,6 +1659,50 @@ echo "hdefs[\"AGAR_DEV_CFLAGS\"] = nil" >>configure.lua
 echo "#undef AGAR_DEV_LIBS" >config/agar_dev_libs.h
 echo "hdefs[\"AGAR_DEV_LIBS\"] = nil" >>configure.lua
 fi;
+$ECHO_N "checking for the getopt() function..."
+$ECHO_N "checking for the getopt() function..." >> config.log
+cat << EOT > conftest.c
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+	int c, x;
+	while ((c = getopt(argc, argv, "foo")) != -1) {
+		extern char *optarg;
+		extern int optind, opterr, optopt;
+		if (optarg != NULL) { x = 1; }
+		if (optind > 0) { x = 2; }
+		if (opterr > 0) { x = 3; }
+		if (optopt > 0) { x = 4; }
+	}
+	return (0);
+}
+
+EOT
+compile="ok"
+echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	compile="failed"
+fi
+rm -f $testdir/conftest conftest.c
+if [ "${compile}" = "ok" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_GETOPT="yes"
+echo "#ifndef HAVE_GETOPT" > config/have_getopt.h
+echo "#define HAVE_GETOPT \"$HAVE_GETOPT\"" >> config/have_getopt.h
+echo "#endif" >> config/have_getopt.h
+echo "hdefs[\"HAVE_GETOPT\"] = \"$HAVE_GETOPT\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_GETOPT="no"
+echo "#undef HAVE_GETOPT" >config/have_getopt.h
+echo "hdefs[\"HAVE_GETOPT\"] = nil" >>configure.lua
+fi;
 if [ "${HAVE_AGAR}" != "yes" ]
  then
 	echo "This demo requires Agar installed on your system."
