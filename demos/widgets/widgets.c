@@ -1,15 +1,19 @@
 /*	Public domain	*/
 /*
- * This application displays a bunch of Agar-GUI widgets. It is useful for
- * testing new themes (see AG_Style(3)). If you have libjpeg installed, F8
- * will generate a screenshot.
+ * This application displays a couple of Agar-GUI widgets. It is useful for
+ * testing new themes (see AG_Style(3)), but it does not demonstrate widget
+ * functionality in any useful way. If you have libjpeg installed, F8 will
+ * generate a screenshot.
  */
 
 #include <agar/core.h>
 #include <agar/gui.h>
 #include <agar/dev.h>
 
+#include <stdio.h>
 #include <math.h>
+
+#include "config/have_getopt.h"
 
 #include "rounded_style.h"
 
@@ -23,6 +27,7 @@ CreateWindow(void)
 	AG_Combo *com;
 	AG_UCombo *ucom;
 	AG_Box *div1, *div2;
+	AG_Textbox *tbox;
 	int i;
 
 	/*
@@ -266,6 +271,51 @@ CreateWindow(void)
 			 */
 			AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
 		}
+		
+		ntab = AG_NotebookAddTab(nb, "Text", AG_BOX_VERT);
+		{
+			char *someText;
+			size_t size, bufSize;
+			FILE *f;
+
+			/*
+			 * Textboxes with the MULTILINE flag provide basic
+			 * text edition functionality. The CATCH_TAB flag
+			 * causes the widget to receive TAB key events (which
+			 * are normally used to focus other widget).
+			 */
+			tbox = AG_TextboxNew(ntab, AG_TEXTBOX_EXPAND|
+			                           AG_TEXTBOX_MULTILINE|
+						   AG_TEXTBOX_CATCH_TAB, NULL);
+			AG_WidgetSetFocusable(tbox, 1);
+
+			/*
+			 * Load the contents of this file into a buffer. Make
+			 * the buffer a bit larger so the user can try
+			 * entering text.
+			 */
+			if ((f = fopen("widgets.c", "r")) != NULL) {
+				fseek(f, 0, SEEK_END);
+				size = ftell(f);
+				fseek(f, 0, SEEK_SET);
+				bufSize = size+1024;
+				someText = AG_Malloc(bufSize);
+				fread(someText, size, 1, f);
+				fclose(f);
+				someText[size] = '\0';
+			} else {
+				someText = AG_Strdup("Failed to load "
+				                     "widgets.c");
+			}
+	
+			/*
+			 * Bind the buffer's contents to the Textbox. The
+			 * size argument to AG_TextboxBindUTF8() must include
+			 * space for the terminating NUL.
+			 */
+			AG_TextboxBindUTF8(tbox, someText, bufSize);
+			AG_TextboxSetCursorPos(tbox, 0);
+		}
 	}
 
 #if 0
@@ -318,23 +368,104 @@ main(int argc, char *argv[])
 	extern AG_Style myRoundedStyle;
 	AG_Menu *appMenu;
 	AG_MenuItem *m;
+	int w = 640, h = 480, fps = -1;
 
+	/* Initialize Agar-Core. */
 	if (AG_InitCore("agar-widgets-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
+	
+	/* Provide some switches. */
+#ifdef HAVE_GETOPT
+	{
+		int c;
+
+		while ((c = getopt(argc, argv, "?gsw:h:dDvfbBt:T:r:")) != -1) {
+			extern char *optarg;
+
+			switch (c) {
+			case 'g':
+				AG_SetBool(agConfig, "view.opengl", 1);
+				break;
+			case 's':
+				AG_SetBool(agConfig, "view.opengl", 0);
+				break;
+			case 'w':
+				w = atoi(optarg);
+				break;
+			case 'h':
+				h = atoi(optarg);
+				break;
+# ifdef DEBUG
+			case 'd':
+				agDebugLvl = 5;
+				break;
+			case 'D':
+				agDebugLvl = 10;
+				break;
+# endif
+			case 'v':
+				exit(0);
+			case 'f':
+				AG_SetBool(agConfig, "view.full-screen", 1);
+				break;
+			case 'r':
+				fps = atoi(optarg);
+				break;
+			case 'b':
+				AG_SetBool(agConfig, "font.freetype", 0);
+				break;
+			case 'B':
+				AG_SetBool(agConfig, "font.freetype", 1);
+				break;
+			case 'T':
+				AG_SetString(agConfig, "font-path", "%s",
+				    optarg);
+				break;
+			case 't':
+				AG_TextParseFontSpec(optarg);
+				break;
+			case '?':
+			default:
+				printf("%s [-dDvfFbB] [-r fps] [-t fontspec] "
+				       "[-T font-path]\n", agProgName);
+				exit(0);
+			}
+		}
+	}
+#endif
+	
+	/* Initialize Agar-GUI. */
+	if (AG_InitVideo(w, h, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
+
+	/* Change the default refresh rate. */
+	AG_SetRefreshRate(fps);
+
+	/* Bind some useful accelerator keys. */
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
-	
+
 	/* Initialize the Agar-DEV library. */
 	DEV_InitSubsystem(0);
 
 	/* Initialize our custom theme. */
 	InitMyRoundedStyle(&myRoundedStyle);
+	
+	/* Display the current graphics driver in use. */
+	{
+		AG_Window *win;
+		
+		win = AG_WindowNew(AG_WINDOW_PLAIN);
+		AG_LabelNew(win, 0, "Graphics driver: %s",
+		    AG_Bool(agConfig,"view.opengl") ? "OpenGL" : "SDL");
+		AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
+		AG_WindowShow(win);
+	}
+
 
 	/* Create an application menu. */
 	appMenu = AG_MenuNewGlobal(0);
