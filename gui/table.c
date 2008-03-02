@@ -861,7 +861,9 @@ DecrementSelection(AG_Table *t)
 	int m;
 	for (m = 0; m < t->m; m++) {
 		if (AG_TableRowSelected(t, m)) {
-			m--;
+			if (m > 0) {
+				m--;
+			}
 			break;
 		}
 	}
@@ -873,6 +875,10 @@ static void
 IncrementSelection(AG_Table *t)
 {
 	int m;
+
+	if (t->m < 1) {
+		return;
+	}
 	for (m = t->m-1; m >= 0; m--) {
 		if (AG_TableRowSelected(t, m)) {
 			m++;
