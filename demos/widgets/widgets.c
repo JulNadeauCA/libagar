@@ -485,7 +485,10 @@ main(int argc, char *argv[])
 
 	/* Initialize our custom theme. */
 	InitMyRoundedStyle(&myRoundedStyle);
-	
+
+	/* Load our custom color scheme. */
+	AG_ColorsLoad("green.acs");
+
 	/* Display the version and current graphics driver in use. */
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_LabelNew(win, 0, "Graphics driver: %s",
