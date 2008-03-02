@@ -142,27 +142,31 @@ CreateWindow(void)
 
 	/*
 	 * Scrollbar provides three bindings, "value", "min" and "max",
-	 * which we can bind to integers. Progressbar has a very similar
-	 * interface.
+	 * which we can bind to integers or floating-point variables.
+	 * Progressbar and Slider have similar interfaces.
 	 */
 	{
-		static int myVal = 50, myMin = 0, myMax = 200;
+		static int myVal = 50, myMin = -100, myMax = 100, myVisible = 0;
 		AG_Scrollbar *sb;
+		AG_Slider *sl;
 		AG_Statusbar *st;
 		AG_ProgressBar *pb;
 
-		sb = AG_ScrollbarNew(div1, AG_SCROLLBAR_HORIZ,
-		    AG_SCROLLBAR_HFILL|AG_SCROLLBAR_FOCUSABLE);
-		AG_WidgetBindInt(sb, "min", &myMin);
-		AG_WidgetBindInt(sb, "max", &myMax);
-		AG_WidgetBindInt(sb, "value", &myVal);
+		sb = AG_ScrollbarNewInt(div1, AG_SCROLLBAR_HORIZ,
+		    AG_SCROLLBAR_HFILL|AG_SCROLLBAR_FOCUSABLE,
+		    &myVal, &myMin, &myMax, &myVisible);
+		AG_ScrollbarSetIntIncrement(sb, 10);
 
-		pb = AG_ProgressBarNewHoriz(div1, AG_PROGRESS_BAR_SHOW_PCT);
-		AG_WidgetBindInt(pb, "min", &myMin);
-		AG_WidgetBindInt(pb, "max", &myMax);
-		AG_WidgetBindInt(pb, "value", &myVal);
+		sl = AG_SliderNewInt(div1, AG_SLIDER_HORIZ,
+		    AG_SLIDER_HFILL|AG_SCROLLBAR_FOCUSABLE,
+		    &myVal, &myMin, &myMax);
+		AG_SliderSetIntIncrement(sl, 10);
 
-		/* Statusbar displays one or more AG_Label(3) objects. */
+		pb = AG_ProgressBarNewInt(div1, AG_PROGRESS_BAR_HORIZ,
+		    AG_PROGRESS_BAR_SHOW_PCT,
+		    &myVal, &myMin, &myMax);
+
+		/* Statusbar displays one or more text labels. */
 		st = AG_StatusbarNew(div1, 0);
 		AG_StatusbarAddLabel(st, AG_LABEL_POLLED, "Value = %d",
 		    &myVal);
@@ -248,6 +252,8 @@ CreateWindow(void)
 			ti = AG_TlistAdd(tl, agIconDoc.s, "Bar");
 			ti->depth = 1;
 			ti = AG_TlistAdd(tl, agIconDoc.s, "Baz");
+			ti->depth = 1;
+			ti = AG_TlistAdd(tl, agIconDoc.s, "Bezo");
 			ti->depth = 2;
 		}
 		
