@@ -45,6 +45,7 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 
 	if (flags & AG_SCROLLBAR_HFILL) { AG_ExpandHoriz(sb); }
 	if (flags & AG_SCROLLBAR_VFILL) { AG_ExpandVert(sb); }
+	if (flags & AG_SCROLLBAR_FOCUSABLE) { AG_WidgetSetFocusable(sb, 1); }
 
 	AG_ObjectAttach(parent, sb);
 	return (sb);
@@ -479,6 +480,8 @@ MouseButtonUp(AG_Event *event)
 	}
 	
 	AG_DelTimeout(sb, &sb->scrollTo);
+	AG_DelTimeout(sb, &sb->incTo);
+	AG_DelTimeout(sb, &sb->decTo);
 
 	if (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC && sb->buttonDecFn != NULL) {
 		AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 0);
@@ -527,6 +530,8 @@ MouseButtonDown(AG_Event *event)
 		} else {
 			Decrement(sb, 1);
 			AG_ReplaceTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
+			AG_DelTimeout(sb, &sb->incTo);
+			AG_DelTimeout(sb, &sb->decTo);
 		}
 	} else if (x > TOTSIZE(sb) - sb->wButton*2) {
 		/*
@@ -539,6 +544,8 @@ MouseButtonDown(AG_Event *event)
 		} else {
 			Increment(sb, 1);
 			AG_ReplaceTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
+			AG_DelTimeout(sb, &sb->incTo);
+			AG_DelTimeout(sb, &sb->decTo);
 		}
 	} else if (x >= pos && x <= (pos + sb->wBar)) {
 		/*
@@ -601,11 +608,69 @@ ScrollTimeout(void *obj, Uint32 ival, void *arg)
 }
 
 static void
+KeyDown(AG_Event *event)
+{
+	AG_Scrollbar *sb = AG_SELF();
+	int keysym = AG_INT(1);
+
+	switch (keysym) {
+	case SDLK_UP:
+	case SDLK_LEFT:
+		Decrement(sb, 1);
+		AG_DelTimeout(sb, &sb->incTo);
+		AG_ReplaceTimeout(sb, &sb->decTo, agKbdDelay);
+		break;
+	case SDLK_DOWN:
+	case SDLK_RIGHT:
+		Increment(sb, 1);
+		AG_DelTimeout(sb, &sb->decTo);
+		AG_ReplaceTimeout(sb, &sb->incTo, agKbdDelay);
+		break;
+	}
+}
+
+static void
+KeyUp(AG_Event *event)
+{
+	AG_Scrollbar *sb = AG_SELF();
+	int keysym = AG_INT(1);
+
+	switch (keysym) {
+	case SDLK_UP:
+	case SDLK_LEFT:
+		AG_DelTimeout(sb, &sb->decTo);
+		break;
+	case SDLK_DOWN:
+	case SDLK_RIGHT:
+		AG_DelTimeout(sb, &sb->incTo);
+		break;
+	}
+}
+
+static Uint32
+IncrementTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Scrollbar *sb = obj;
+	Increment(sb, 1);
+	return (agKbdRepeat);
+}
+
+static Uint32
+DecrementTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Scrollbar *sb = obj;
+	Decrement(sb, 1);
+	return (agKbdRepeat);
+}
+
+static void
 LostFocus(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
 	AG_DelTimeout(sb, &sb->scrollTo);
+	AG_DelTimeout(sb, &sb->incTo);
+	AG_DelTimeout(sb, &sb->decTo);
 }
 
 static void
@@ -664,11 +729,15 @@ Init(void *obj)
 	AG_SetEvent(sb, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(sb, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(sb, "window-mousemotion", MouseMotion, NULL);
+	AG_SetEvent(sb, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(sb, "window-keyup", KeyUp, NULL);
 	AG_SetEvent(sb, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(sb, "widget-hidden", LostFocus, NULL);
 	AG_SetEvent(sb, "widget-bound", BoundValue, NULL);
 
 	AG_SetTimeout(&sb->scrollTo, ScrollTimeout, NULL, 0);
+	AG_SetTimeout(&sb->decTo, DecrementTimeout, NULL, 0);
+	AG_SetTimeout(&sb->incTo, IncrementTimeout, NULL, 0);
 }
 
 static void

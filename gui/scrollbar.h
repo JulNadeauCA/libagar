@@ -43,6 +43,7 @@ typedef struct ag_scrollbar {
 	AG_Event *buttonIncFn;		/* Alt. handler for increment btns */
 	AG_Event *buttonDecFn;		/* Alt. handler for decrement btns */
 	AG_Timeout scrollTo;		/* Timer for scrolling */
+	AG_Timeout incTo, decTo;	/* Timer for keyboard motion */
 	int xOffs;			/* Cursor offset for scrolling */
 	int extent;			/* Available area for scrolling */
 	double rInc;			/* Base increment for real bindings */
