@@ -988,6 +988,7 @@ TextRenderFT(const Uint32 *ucs)
 	Free(wLines);
 	return (su);
 empty:
+	Free(wLines);
 	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
 }
 
@@ -1046,9 +1047,9 @@ TextRenderFT_Blended(const Uint32 *ucs)
 
 		error = AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
 		                                     TTF_CACHED_PIXMAP);
-		if( error ) {
+		if (error) {
 			SDL_FreeSurface(su);
-			return NULL;
+			goto empty;
 		}
 		glyph = ftFont->current;
 		/*
@@ -1115,6 +1116,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	Free(wLines);
 	return (su);
 empty:
+	Free(wLines);
 	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
 }
 #endif /* HAVE_FREETYPE */
