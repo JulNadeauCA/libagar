@@ -70,14 +70,11 @@ UpdateWeight(AG_Event *event)
 static void
 CreateUI(void)
 {
-	AG_Timeout myTimer;
 	AG_Window *win;
-	AG_Button *btn;
 	AG_Label *lbl;
-	AG_Numerical *n1, *n2, *n3, *n;
+	AG_Numerical *n;
 	AG_Slider *s1, *s2, *s3;
 	AG_Box *box;
-	int i;
 
 	/* Create a window covering the entire display. */
 	win = AG_WindowNew(AG_WINDOW_PLAIN);

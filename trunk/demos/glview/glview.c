@@ -14,8 +14,8 @@
 
 #include <GL/glu.h>
 
-static GLdouble spin = 0.0, vz = -5.0, spin2 = 0.0;
-static GLfloat material[4] = { 0.0, 0.5, 0.0, 1.0 };
+static GLfloat spin = 0.0f, vz = -5.0f, spin2 = 0.0f;
+static GLfloat material[4] = { 0.0f, 0.5f, 0.0f, 1.0f };
 
 /* Widget resize callback function. */
 static void
@@ -43,13 +43,13 @@ MyDrawFunction(AG_Event *event)
 	glPushMatrix();
 	{
 		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material);
-		glRotatef(spin, 1.0, 0.0, 1.0);
-		glRotatef(-spin2, 0.0, 0.0, 1.0);
+		glRotatef(spin, 1.0f, 0.0f, 1.0f);
+		glRotatef(-spin2, 0.0f, 0.0f, 1.0f);
 		q = gluNewQuadric();
 		gluCylinder(q, 1.0, 0.0, 1.0, 20, 2);
 		gluDeleteQuadric(q);
 		
-		glRotatef(180.0, 0.0, 1.0, 0.0);
+		glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
 		q = gluNewQuadric();
 		gluCylinder(q, 1.0, 0.0, 1.0, 20, 2);
 		gluDeleteQuadric(q);
@@ -60,11 +60,11 @@ MyDrawFunction(AG_Event *event)
 	glDisable(GL_LIGHT0);
 	glDisable(GL_LIGHTING);
 	
-	spin = (spin + 2.0);
-	if (spin > 360.0) { spin -= 360.0; }
+	spin = (spin + 2.0f);
+	if (spin > 360.0f) { spin -= 360.0f; }
 	
-	spin2 = (spin2 + 4.0);
-	if (spin2 > 360.0) { spin2 -= 360.0; }
+	spin2 = (spin2 + 4.0f);
+	if (spin2 > 360.0f) { spin2 -= 360.0f; }
 }
 
 /*
@@ -124,7 +124,6 @@ CreateMainWindow(void)
 	AG_GLView *glv;
 	AG_HBox *hb;
 	AG_HSVPal *pal;
-	AG_FSpinbutton *fsb;
 
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	hb = AG_HBoxNew(win, AG_HBOX_EXPAND);
@@ -154,9 +153,6 @@ CreateMainWindow(void)
 int
 main(int argc, char *argv[])
 {
-	int c, i;
-	char *s;
-
 	if (AG_InitCore("agar-glview-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
