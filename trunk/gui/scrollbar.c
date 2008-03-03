@@ -493,8 +493,8 @@ MouseButtonUp(AG_Event *event)
 	if (sb->curBtn != AG_SCROLLBAR_BUTTON_NONE) {
 		sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
 		sb->xOffs = 0;
-		AG_PostEvent(NULL, sb, "scrollbar-drag-end", NULL);
 	}
+	AG_PostEvent(NULL, sb, "scrollbar-drag-end", NULL);
 }
 
 static void
@@ -555,7 +555,6 @@ MouseButtonDown(AG_Event *event)
 		 */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
 		sb->xOffs = x - pos;
-		AG_PostEvent(NULL, sb, "scrollbar-drag-begin", NULL);
 	} else if (sb->wBar != -1) {
 		/*
 		 * Click outside of scrollbar. We seek to the absolute position
@@ -567,8 +566,8 @@ MouseButtonDown(AG_Event *event)
 		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
 		sb->xOffs = sb->wBar/2;
 		SeekToPosition(sb, x - sb->xOffs);
-		AG_PostEvent(NULL, sb, "scrollbar-drag-begin", NULL);
 	}
+	AG_PostEvent(NULL, sb, "scrollbar-drag-begin", NULL);
 }
 
 static void
