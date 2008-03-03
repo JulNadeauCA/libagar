@@ -303,7 +303,7 @@ static __inline__ AG_ObjectClass *
 AG_ObjectSuperclass(const void *p)
 {
 	AG_ObjectClass *cls = AGOBJECT(p)->cls;
-	char *end;
+	const char *end;
 	size_t len;
 	int i;
 
