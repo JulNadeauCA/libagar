@@ -855,7 +855,7 @@ TextSizeFT(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 		}
 		tm->nLines++;
 	}
-	tm->w = (xMaxLine-xMinLine);
+	tm->w = (xMax-xMin);
 	tm->h = (yMax-yMin);
 }
 
