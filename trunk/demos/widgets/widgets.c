@@ -488,12 +488,19 @@ main(int argc, char *argv[])
 
 	/* Display the version and current graphics driver in use. */
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
-	AG_LabelNew(win, 0, "Graphics driver: %s",
-	    AG_Bool(agConfig,"view.opengl") ? "OpenGL" : "SDL");
-	AG_LabelNew(win, 0, "Agar version: %d.%d.%d",
-	    ver.major, ver.minor, ver.patch);
-	AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
-	AG_WindowShow(win);
+	{
+		AG_Label *lbl;
+
+		lbl = AG_LabelNew(win, 0,
+		    "Agar version: %d.%d.%d\n(%s)\n"
+		    "Graphics driver: %s",
+		    ver.major, ver.minor, ver.patch, ver.release,
+		    AG_Bool(agConfig,"view.opengl") ? "OpenGL" : "SDL");
+		AG_LabelJustify(lbl, AG_TEXT_CENTER);
+
+		AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
+		AG_WindowShow(win);
+	}
 
 	/* Create an application menu. */
 	appMenu = AG_MenuNewGlobal(0);
