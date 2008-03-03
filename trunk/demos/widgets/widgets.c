@@ -223,8 +223,10 @@ CreateWindow(void)
 			sinplot = AG_FixedPlotterCurve(g, "sin", 0,150,0, 0);
 			cosplot = AG_FixedPlotterCurve(g, "cos", 150,150,0, 0);
 			for (f = 0; f < 60; f += 0.3) {
-				AG_FixedPlotterDatum(sinplot, sin(f)*20.0);
-				AG_FixedPlotterDatum(cosplot, cos(f)*20.0);
+				AG_FixedPlotterDatum(sinplot,
+				    (AG_FixedPlotterValue)(sin(f)*10.0));
+				AG_FixedPlotterDatum(cosplot,
+				    (AG_FixedPlotterValue)(cos(f)*10.0));
 				/*
 				 * Insert a Table row for sin(f) and cos(f).
 				 * The directives of the format string are
