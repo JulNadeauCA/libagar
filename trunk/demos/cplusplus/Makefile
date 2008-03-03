@@ -1,12 +1,13 @@
 TOP=	../..
 include Makefile.config
 
-CC=c++
 PROJECT=	"cplusplus"
 PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
-PROG_GUID=	""
+PROG_GUID=	"a6ddd844-8f63-429d-8a04-71d37666b2ae"
 PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
+
+CC=c++
 
 PROG=	cplusplus
 SRCS=	cplusplus.cpp
