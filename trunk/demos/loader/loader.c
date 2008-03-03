@@ -8,11 +8,15 @@
 #include <agar/gui.h>
 
 #include <string.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
+#ifndef _WIN32
 #include "config/have_sdl_image.h"
 #ifdef HAVE_SDL_IMAGE
 #include <SDL_image.h>
+#endif
 #endif
 
 /* Load a Windows bitmap using the built-in SDL_LoadBMP(). */
