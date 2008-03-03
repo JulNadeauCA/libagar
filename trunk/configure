@@ -2813,10 +2813,65 @@ echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >> config/opengl_libs.h
 echo "#endif" >> config/opengl_libs.h
 echo "hdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
 else
+$ECHO_N "checking whether -lGL requires -lm..."
+$ECHO_N "checking whether -lGL requires -lm..." >> config.log
+OPENGL_LIBS="${OPENGL_LIBS} -lm"
+cat << EOT > conftest.c
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
+#include <GL/gl.h>
+#endif
+int main(int argc, char *argv[]) {
+	glFlush();
+	glLoadIdentity();
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_OPENGL="yes"
+echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
+echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
+echo "#ifndef HAVE_OPENGL" > config/have_opengl.h
+echo "#define HAVE_OPENGL \"$HAVE_OPENGL\"" >> config/have_opengl.h
+echo "#endif" >> config/have_opengl.h
+echo "hdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_OPENGL="no"
+echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
+echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
+echo "#undef HAVE_OPENGL" >config/have_opengl.h
+echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_OPENGL}" = "yes" ]; then
+echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
+echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
+echo "OPENGL_LIBS=$OPENGL_LIBS" >>Makefile.config
+echo "mdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
+echo "#ifndef OPENGL_CFLAGS" > config/opengl_cflags.h
+echo "#define OPENGL_CFLAGS \"$OPENGL_CFLAGS\"" >> config/opengl_cflags.h
+echo "#endif" >> config/opengl_cflags.h
+echo "hdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
+echo "#ifndef OPENGL_LIBS" > config/opengl_libs.h
+echo "#define OPENGL_LIBS \"$OPENGL_LIBS\"" >> config/opengl_libs.h
+echo "#endif" >> config/opengl_libs.h
+echo "hdefs[\"OPENGL_LIBS\"] = \"$OPENGL_LIBS\"" >>configure.lua
+else
 echo "#undef OPENGL_CFLAGS" >config/opengl_cflags.h
 echo "hdefs[\"OPENGL_CFLAGS\"] = nil" >>configure.lua
 echo "#undef OPENGL_LIBS" >config/opengl_libs.h
 echo "hdefs[\"OPENGL_LIBS\"] = nil" >>configure.lua
+fi;
 fi;
 		if [ "${HAVE_OPENGL}" = "yes" ]
  then
