@@ -778,6 +778,21 @@ JustifyOffset(int w, int wLine)
 	return (0);
 }
 
+static __inline__ void
+InitMetrics(AG_TextMetrics *tm)
+{
+	tm->w = 0;
+	tm->h = 0;
+	tm->wLines = NULL;
+	tm->nLines = 0;
+}
+
+static __inline__ void
+FreeMetrics(AG_TextMetrics *tm)
+{
+	Free(tm->wLines);
+}
+
 #ifdef HAVE_FREETYPE
 
 /*
@@ -786,31 +801,29 @@ JustifyOffset(int w, int wLine)
  * is returned into wLines, and the number of lines into nLines.
  */
 static void
-TextSizeFT(const Uint32 *ucs, int *w, int *h, Uint **wLines, Uint *nLines)
+TextSizeFT(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 {
 	AG_Font *font = state->font;
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *glyph;
 	const Uint32 *ch;
-	int minx = 0, maxx = 0;
-	int miny = 0, maxy = font->height;
-	int minxLine = 0;
-	int maxxLine = 0;
+	int xMin=0, xMax=0, yMin=0, yMax;
+	int xMinLine=0, xMaxLine=0;
 	int x, z;
 
-	/* Load each character and sum it's bounding box. */
+	/* Compute the sum of the bounding box of the characters. */
+	yMax = font->height;
 	x = 0;
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
-			if (nLines != NULL) {
-				*wLines = Realloc(*wLines,
-				                  ((*nLines)+1)*sizeof(Uint *));
-				(*wLines)[*nLines] = (maxxLine - minxLine);
-				(*nLines)++;
-				minxLine = 0;
-				maxxLine = 0;
+			if (extended) {
+				tm->wLines = Realloc(tm->wLines,
+				    (tm->nLines+2)*sizeof(Uint));
+				tm->wLines[tm->nLines++] = (xMaxLine-xMinLine);
+				xMinLine = 0;
+				xMaxLine = 0;
 			}
-			maxy += font->lineskip;
+			yMax += font->lineskip;
 			x = 0;
 			continue;
 		}
@@ -820,34 +833,30 @@ TextSizeFT(const Uint32 *ucs, int *w, int *h, Uint **wLines, Uint *nLines)
 		glyph = ftFont->current;
 
 		z = x + glyph->minx;
-		if (minx > z) { minx = z; }
-		if (minxLine > z) { minxLine = z; }
+		if (xMin > z) { xMin = z; }
+		if (xMinLine > z) { xMinLine = z; }
 
-		if (ftFont->style & TTF_STYLE_BOLD)
+		if (ftFont->style & TTF_STYLE_BOLD) {
 			x += ftFont->glyph_overhang;
-
-		if (glyph->advance > glyph->maxx) {
-			z = x + glyph->advance;
-		} else {
-			z = x + glyph->maxx;
 		}
-		
-		if (maxx < z) { maxx = z; }
-		if (maxxLine < z) { maxxLine = z; }
-
+		z = x + MAX(glyph->advance,glyph->maxx);
+		if (xMax < z) { xMax = z; }
+		if (xMaxLine < z) { xMaxLine = z; }
 		x += glyph->advance;
 
-		if (glyph->miny < miny) { miny = glyph->miny; }
-		if (glyph->maxy > maxy) { maxy = glyph->maxy; }
+		if (glyph->miny < yMin) { yMin = glyph->miny; }
+		if (glyph->maxy > yMax) { yMax = glyph->maxy; }
 	}
-	if (*ch != '\n' && nLines != NULL) {
-		if (*nLines > 0) {
-			(*wLines)[*nLines] = (maxxLine - minxLine);
+	if (*ch != '\n' && extended) {
+		if (tm->nLines > 0) {
+			tm->wLines = Realloc(tm->wLines,
+			    (tm->nLines+2)*sizeof(Uint));
+			tm->wLines[tm->nLines] = (xMaxLine-xMinLine);
 		}
-		(*nLines)++;
+		tm->nLines++;
 	}
-	if (w != NULL) { *w = (maxx - minx); }
-	if (h != NULL) { *h = (maxy - miny); }
+	tm->w = (xMaxLine-xMinLine);
+	tm->h = (yMax-yMin);
 }
 
 #ifdef SYMBOLS
@@ -883,6 +892,7 @@ TextRenderSymbol(Uint ch, SDL_Surface *su, int x, int y)
 static SDL_Surface *
 TextRenderFT(const Uint32 *ucs)
 {
+	AG_TextMetrics tm;
 	AG_Font *font = state->font;
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *glyph;
@@ -891,46 +901,40 @@ TextRenderFT(const Uint32 *ucs)
 	const Uint32 *ch;
 	Uint8 *src, *dst, a;
 	int row, col;
-	int w, h, line;
+	int line;
 	int xStart, yStart;
-	Uint nLines = 0;
-	Uint *wLines = NULL;
 
-	TextSizeFT(ucs, &w, &h, &wLines, &nLines);
-	if (w <= 0 || h <= 0)
+	InitMetrics(&tm);
+	TextSizeFT(ucs, &tm, 1);
+	if (tm.w <= 0 || tm.h <= 0)
 		goto empty;
 
-	su = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 8, 0, 0, 0, 0);
+	su = SDL_CreateRGBSurface(SDL_SWSURFACE, tm.w, tm.h, 8, 0, 0, 0, 0);
 	if (su == NULL) {
 		Verbose("TextRenderFT: CreateRGBSurface: %s\n", SDL_GetError());
 		goto empty;
 	}
 	palette = su->format->palette;
 
-	SDL_GetRGBA(state->colorBG, agSurfaceFmt,
-	    &palette->colors[0].r,
-	    &palette->colors[0].g,
-	    &palette->colors[0].b,
-	    &a);
+	SDL_GetRGBA(state->colorBG, agSurfaceFmt, &palette->colors[0].r,
+	    &palette->colors[0].g, &palette->colors[0].b, &a);
 	if (a == 0) {
 		SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
 	}
-	SDL_GetRGB(state->color, agSurfaceFmt,
-	    &palette->colors[1].r,
-	    &palette->colors[1].g,
-	    &palette->colors[1].b);
+	SDL_GetRGB(state->color, agSurfaceFmt, &palette->colors[1].r,
+	    &palette->colors[1].g, &palette->colors[1].b);
 
 	/* Load and render each character. */
 	line = 0;
 	yStart = 0;
-	xStart = (nLines > 1) ? JustifyOffset(w,wLines[0]) : 0;
+	xStart = (tm.nLines > 1) ? JustifyOffset(tm.w, tm.wLines[0]) : 0;
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		FT_Bitmap *current = NULL;
 
 		if (*ch == '\n') {
 			yStart += font->lineskip;
-			xStart = JustifyOffset(w,wLines[++line]);
+			xStart = JustifyOffset(tm.w, tm.wLines[++line]);
 			continue;
 		}
 #ifdef SYMBOLS
@@ -979,28 +983,29 @@ TextRenderFT(const Uint32 *ucs)
 		if (row >= su->h) {
 			row = (su->h-1) - ftFont->underline_height;
 		}
-		dst = (Uint8 *)su->pixels + row * su->pitch;
+		dst = (Uint8 *)su->pixels + row*su->pitch;
 		for (row = ftFont->underline_height; row > 0; --row) {
 			memset(dst, 1, su->w);
 			dst += su->pitch;
 		}
 	}
-	Free(wLines);
+	FreeMetrics(&tm);
 	return (su);
 empty:
-	Free(wLines);
-	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
+	FreeMetrics(&tm);
+	return SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0);
 }
 
 static SDL_Surface *
 TextRenderFT_Blended(const Uint32 *ucs)
 {
+	AG_TextMetrics tm;
 	AG_Font *font = state->font;
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *glyph;
 	const Uint32 *ch;
 	int xStart, yStart;
-	int w, h, line;
+	int line;
 	SDL_Surface *su;
 	Uint32 pixel;
 	Uint8 *src;
@@ -1008,15 +1013,15 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	int row, col;
 	FT_Error error;
 	FT_UInt prev_index = 0;
-	Uint nLines = 0;
-	Uint *wLines = NULL;
 	Uint8 r, g, b;
-	
-	TextSizeFT(ucs, &w, &h, &wLines, &nLines);
-	if (w <= 0 || h <= 0)
+	int w;
+
+	InitMetrics(&tm);
+	TextSizeFT(ucs, &tm, 1);
+	if (tm.w <= 0 || tm.h <= 0)
 		goto empty;
 
-	su = SDL_AllocSurface(SDL_SWSURFACE, w, h, 32,
+	su = SDL_AllocSurface(SDL_SWSURFACE, tm.w, tm.h, 32,
 	                      0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 	if (su == NULL) {
 		Verbose("TextRenderFT_Blended: CreateRGBSurface: %s\n",
@@ -1029,19 +1034,17 @@ TextRenderFT_Blended(const Uint32 *ucs)
 
 	/* Load and render each character */
  	line = 0;
- 	xStart = (nLines > 1) ? JustifyOffset(w, wLines[0]) : 0;
+ 	xStart = (tm.nLines > 1) ? JustifyOffset(tm.w, tm.wLines[0]) : 0;
  	yStart = 0;
 
 	SDL_GetRGB(state->color, agSurfaceFmt, &r, &g, &b);
-	pixel = (r << 16) |
-	        (g <<  8) |
-		 b;
+	pixel = (r<<16) | (g<<8) | b;
 	SDL_FillRect(su, NULL, pixel);	/* Initialize with fg and 0 alpha */
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
 			yStart += font->lineskip;
-			xStart = JustifyOffset(w, wLines[++line]);
+			xStart = JustifyOffset(tm.w, tm.wLines[++line]);
 			continue;
 		}
 
@@ -1060,8 +1063,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 		if (w > glyph->maxx - glyph->minx) {
 			w = glyph->maxx - glyph->minx;
 		}
-		if (FT_HAS_KERNING(ftFont->face) &&
-		    prev_index &&
+		if (FT_HAS_KERNING(ftFont->face) && prev_index &&
 		    glyph->index) {
 			FT_Vector delta; 
 
@@ -1113,11 +1115,11 @@ TextRenderFT_Blended(const Uint32 *ucs)
 			dst += su->pitch/4;
 		}
 	}
-	Free(wLines);
+	FreeMetrics(&tm);
 	return (su);
 empty:
-	Free(wLines);
-	return (SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0));
+	FreeMetrics(&tm);
+	return SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0);
 }
 #endif /* HAVE_FREETYPE */
 
@@ -1136,36 +1138,35 @@ GetBitmapGlyph(Uint32 c)
 
 /* Compute the rendered size of UCS-4 text with a bitmap font. */
 static __inline__ void
-TextSizeBitmap(const Uint32 *ucs, int *w, int *h, Uint **wLines, Uint *nLines)
+TextSizeBitmap(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 {
 	const Uint32 *c;
 	SDL_Surface *sGlyph;
 	int wLine = 0;
 
-	if (w != NULL) { *w = 0; }
-	if (h != NULL) { *h = 0; }
 	for (c = &ucs[0]; *c != '\0'; c++) {
 		sGlyph = GetBitmapGlyph(*c);
 		if (*c == '\n') {
-			if (nLines != NULL) {
-				*wLines = Realloc(*wLines,
-				                 ((*nLines)+1)*sizeof(Uint *));
-				(*wLines)[*nLines] = wLine;
-				(*nLines)++;
+			if (extended) {
+				tm->wLines = Realloc(tm->wLines,
+				    (tm->nLines+2)*sizeof(Uint));
+				tm->wLines[tm->nLines++] = wLine;
 				wLine = 0;
 			}
-			if (h != NULL) { *h += state->font->lineskip; }
+			tm->h += state->font->lineskip;
 			continue;
 		}
 		wLine += sGlyph->w;
-		if (w != NULL) { *w += sGlyph->w; }
-		if (h != NULL) { *h = MAX(*h,sGlyph->h); }
+		tm->w += sGlyph->w;
+		tm->h = MAX(tm->h, sGlyph->h);
 	}
-	if (*c != '\n' && nLines != NULL) {
-		if (*nLines > 0) {
-			(*wLines)[*nLines] = wLine;
+	if (*c != '\n' && extended) {
+		if (tm->nLines > 0) {
+			tm->wLines = Realloc(tm->wLines,
+			    (tm->nLines+2)*sizeof(Uint));
+			tm->wLines[tm->nLines] = wLine;
 		}
-		(*nLines)++;
+		tm->nLines++;
 	}
 }
 
@@ -1174,30 +1175,28 @@ TextSizeBitmap(const Uint32 *ucs, int *w, int *h, Uint **wLines, Uint *nLines)
 static SDL_Surface *
 TextRenderBitmap(const Uint32 *ucs)
 {
+	AG_TextMetrics tm;
 	AG_Font *font = state->font;
 	SDL_Rect rd;
-	int w, h, line;
+	int line;
 	const Uint32 *c;
 	SDL_Surface *sGlyph, *su;
-	Uint nLines = 0;
-	Uint *wLines = NULL;
 
-	TextSizeBitmap(ucs, &w, &h, &wLines, &nLines);
-	su = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
-	    agSurfaceFmt->Rmask,
-	    agSurfaceFmt->Gmask,
-	    agSurfaceFmt->Bmask, 0);
-	if (su == NULL) {
+	InitMetrics(&tm);
+	TextSizeBitmap(ucs, &tm, 1);
+
+	su = SDL_CreateRGBSurface(SDL_SWSURFACE, tm.w, tm.h, 32,
+	    agSurfaceFmt->Rmask, agSurfaceFmt->Gmask, agSurfaceFmt->Bmask, 0);
+	if (su == NULL)
 		AG_FatalError("CreateRGBSurface: %s", SDL_GetError());
-	}
 
 	line = 0;
-	rd.x = (nLines > 1) ? JustifyOffset(w,wLines[0]) : 0;
+	rd.x = (tm.nLines > 1) ? JustifyOffset(tm.w, tm.wLines[0]) : 0;
 	rd.y = 0;
 	for (c = &ucs[0]; *c != '\0'; c++) {
 		if (*c == '\n') {
 			rd.y += font->lineskip;
-			rd.x = JustifyOffset(w,wLines[++line]);
+			rd.x = JustifyOffset(tm.w, tm.wLines[++line]);
 			continue;
 		}
 		sGlyph = GetBitmapGlyph(*c);
@@ -1209,6 +1208,8 @@ TextRenderBitmap(const Uint32 *ucs)
 	SDL_SetColorKey(su, SDL_SRCCOLORKEY|SDL_RLEACCEL, 0);
 	SDL_SetAlpha(su, font->bglyphs[0]->flags & (SDL_SRCALPHA|SDL_RLEACCEL),
 	                 font->bglyphs[0]->format->alpha);
+
+	FreeMetrics(&tm);
 	return (su);
 }
 
@@ -1236,18 +1237,24 @@ AG_TextRenderUCS4(const Uint32 *text)
 void
 AG_TextSizeUCS4(const Uint32 *ucs4, int *w, int *h)
 {
+	AG_TextMetrics tm;
+
+	InitMetrics(&tm);
 	switch (state->font->type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
-		TextSizeFT(ucs4, w, h, NULL, NULL);
+		TextSizeFT(ucs4, &tm, 0);
 		break;
 #endif
 	case AG_FONT_BITMAP:
-		TextSizeBitmap(ucs4, w, h, NULL, NULL);
+		TextSizeBitmap(ucs4, &tm, 0);
 		break;
 	default:
 		break;
 	}
+	if (w != NULL) { *w = tm.w; }
+	if (h != NULL) { *h = tm.h; }
+	FreeMetrics(&tm);
 }
 
 /*
@@ -1258,22 +1265,30 @@ void
 AG_TextSizeMultiUCS4(const Uint32 *ucs4, int *w, int *h, Uint **wLines,
     Uint *nLines)
 {
+	AG_TextMetrics tm;
+
+	InitMetrics(&tm);
 	switch (state->font->type) {
 #ifdef HAVE_FREETYPE
 	case AG_FONT_VECTOR:
-		TextSizeFT(ucs4, w, h, wLines, nLines);
+		TextSizeFT(ucs4, &tm, 1);
 		break;
 #endif
 	case AG_FONT_BITMAP:
-		TextSizeBitmap(ucs4, w, h, wLines, nLines);
+		TextSizeBitmap(ucs4, &tm, 1);
 		break;
 	default:
 		break;
 	}
-	if (*nLines == 1) {
-		(*wLines) = Realloc(*wLines, sizeof(Uint *));
-		(*wLines)[0] = *w;
+	if (w != NULL) { *w = tm.w; }
+	if (h != NULL) { *h = tm.h; }
+
+	if (tm.nLines == 1) {
+		tm.wLines = Realloc(tm.wLines, sizeof(Uint));
+		tm.wLines[0] = tm.w;
 	}
+	if (wLines != NULL) { *wLines = tm.wLines; }
+	if (nLines != NULL) { *nLines = tm.nLines; }
 }
 
 /* Return the rendered size in pixels of a text string. */
@@ -1492,6 +1507,33 @@ AG_TextWarning(const char *key, const char *format, ...)
 	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
 	AG_SetBool(agConfig, propKey, 0);
 	AG_WidgetBindProp(cb, "state", agConfig, propKey);
+
+	AG_WindowShow(win);
+}
+
+/* Display an error message. */
+void
+AG_TextError(const char *format, ...)
+{
+	char msg[AG_LABEL_MAX];
+	AG_Window *win;
+	AG_VBox *vb;
+	va_list args;
+
+	va_start(args, format);
+	Vsnprintf(msg, sizeof(msg), format, args);
+	va_end(args);
+
+	win = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
+	    AG_WINDOW_NOMINIMIZE|AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOBORDERS);
+	AG_WindowSetCaption(win, "%s", _(agTextMsgTitles[AG_MSG_ERROR]));
+	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
+
+	vb = AG_VBoxNew(win, 0);
+	AG_LabelNewStaticString(vb, 0, msg);
+
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
+	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
 
 	AG_WindowShow(win);
 }
