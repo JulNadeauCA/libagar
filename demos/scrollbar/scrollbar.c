@@ -15,7 +15,6 @@
 static void
 CreateWindow(void)
 {
-	AG_Scrollbar *sb;
 	AG_Window *win;
 	int vInt = 50000, minInt = -100000, maxInt = 100000, visInt = 0;
 	unsigned vUint = 20, minUint = 10, maxUint = 100, visUint = 0;
