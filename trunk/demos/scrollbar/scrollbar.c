@@ -12,16 +12,17 @@
 
 #include <string.h>
 
+int vInt = 50000, minInt = -100000, maxInt = 100000, visInt = 0;
+unsigned vUint = 20, minUint = 10, maxUint = 100, visUint = 0;
+Sint8 v8 = 100, min8 = -100, max8 = 100, vis8 = 0;
+Uint32 v32 = 1234, min32 = 1, max32 = 1000000, vis32 = 0;
+float vFlt = 1.0, minFlt = 0.0, maxFlt = 10.0, visFlt = 0.0;
+double vDbl = 1.0, minDbl = -1e6, maxDbl = 1e6, visDbl = 0.0;
+
 static void
 CreateWindow(void)
 {
 	AG_Window *win;
-	int vInt = 50000, minInt = -100000, maxInt = 100000, visInt = 0;
-	unsigned vUint = 20, minUint = 10, maxUint = 100, visUint = 0;
-	Sint8 v8 = 100, min8 = -100, max8 = 100, vis8 = 0;
-	Uint32 v32 = 1234, min32 = 1, max32 = 1000000, vis32 = 0;
-	float vFlt = 1.0, minFlt = 0.0, maxFlt = 10.0, visFlt = 0.0;
-	double vDbl = 1.0, minDbl = -1e6, maxDbl = 1e6, visDbl = 0.0;
 
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	
