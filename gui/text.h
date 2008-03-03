@@ -95,6 +95,13 @@ typedef struct ag_static_font {
 	AG_Font *font;			/* Initialized font structure */
 } AG_StaticFont;
 
+/* Measures of rendered text. */
+typedef struct ag_text_metrics {
+	int w, h;			/* Dimensions in pixels */
+	Uint *wLines;			/* Width of each line */
+	Uint  nLines;			/* Total line count */
+} AG_TextMetrics;
+
 __BEGIN_DECLS
 extern AG_ObjectClass agFontClass;
 extern AG_Font *agDefaultFont;
@@ -132,37 +139,42 @@ SDL_Surface	*AG_TextRenderf(const char *, ...);
 #define          AG_TextFormat AG_TextRenderf
 SDL_Surface	*AG_TextRender(const char *);
 SDL_Surface	*AG_TextRenderUCS4(const Uint32 *);
-void		 AG_TextSize(const char *, int *, int *);
-void		 AG_TextSizeMulti(const char *, int *, int *, Uint **, Uint *);
-void		 AG_TextSizeUCS4(const Uint32 *, int *, int *);
-void		 AG_TextSizeMultiUCS4(const Uint32 *, int *, int *, Uint **,
-		                      Uint *);
+
+void	 AG_TextSize(const char *, int *, int *);
+void	 AG_TextSizeMulti(const char *, int *, int *, Uint **, Uint *);
+void	 AG_TextSizeUCS4(const Uint32 *, int *, int *);
+void	 AG_TextSizeMultiUCS4(const Uint32 *, int *, int *, Uint **, Uint *);
 
 void AG_TextMsg(enum ag_text_msg_title, const char *, ...)
-	      FORMAT_ATTRIBUTE(printf, 2, 3)
-	      NONNULL_ATTRIBUTE(2);
+                FORMAT_ATTRIBUTE(printf,2,3)
+		NONNULL_ATTRIBUTE(2);
 void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *, ...)
-	       FORMAT_ATTRIBUTE(printf, 3, 4)
-	       NONNULL_ATTRIBUTE(3);
-void AG_TextWarning(const char *, const char *, ...);
+	         FORMAT_ATTRIBUTE(printf,3,4)
+		 NONNULL_ATTRIBUTE(3);
 void AG_TextInfo(const char *, ...)
-	       FORMAT_ATTRIBUTE(printf, 1, 2)
-	       NONNULL_ATTRIBUTE(1);
+	         FORMAT_ATTRIBUTE(printf,1,2)
+		 NONNULL_ATTRIBUTE(1);
+void AG_TextWarning(const char *, const char *, ...)
+	            FORMAT_ATTRIBUTE(printf,2,3)
+	            NONNULL_ATTRIBUTE(2);
+void AG_TextError(const char *, ...)
+	          FORMAT_ATTRIBUTE(printf,1,2)
+	          NONNULL_ATTRIBUTE(1);
 
 #define AG_TextMsgFromError() \
 	AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError())
 
 void AG_TextEditFloat(double *, double, double, const char *,
 		      const char *, ...)
-		      FORMAT_ATTRIBUTE(printf, 5, 6)
+		      FORMAT_ATTRIBUTE(printf,5,6)
 		      NONNULL_ATTRIBUTE(5);
 void AG_TextEditString(char **, size_t, const char *, ...)
-		       FORMAT_ATTRIBUTE(printf, 3, 4)
+		       FORMAT_ATTRIBUTE(printf,3,4)
 		       NONNULL_ATTRIBUTE(3);
 
 struct ag_window *AG_TextPromptOptions(struct ag_button **, Uint,
 		                       const char *, ...)
-		         	FORMAT_ATTRIBUTE(printf, 3, 4)
+		         	FORMAT_ATTRIBUTE(printf,3,4)
 		          	NONNULL_ATTRIBUTE(3);
 void AG_TextPromptString(const char *, void (*)(AG_Event *),
 		         const char *, ...);
