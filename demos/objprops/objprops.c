@@ -32,8 +32,6 @@ int
 main(int argc, char *argv[])
 {
 	AG_Object *obj;
-	int c, i;
-	char *s;
 
 	if (AG_InitCore("agar-objprops-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
@@ -78,7 +76,7 @@ main(int argc, char *argv[])
 	AG_SetUint64(obj, "my-uint64", 0xfffffffffffffffe);
 	AG_SetSint64(obj, "my-sint64", -4567);
 #endif
-	AG_SetFloat(obj, "my-float", 1.23456);
+	AG_SetFloat(obj, "my-float", 1.2345f);
 	AG_SetDouble(obj, "my-double", 3.14159265358979323846);
 #ifdef HAVE_LONG_DOUBLE
 	AG_SetLongDouble(obj, "my-long-double", 234e-12);

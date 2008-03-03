@@ -39,7 +39,7 @@ CreateGameMenu(void)
 	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
 
 	/* Create the background pixmap from bmp file. */
-	if ((px = AG_PixmapFromBMP(fx, 0, "menubg.bmp")) == NULL) {
+	if ((px = AG_PixmapFromBMP(fx, 0, "Images/menubg.bmp")) == NULL) {
 		fprintf(stderr, "Cannot find menubg.bmp\n", AG_GetError());
 		exit(1);
 	}

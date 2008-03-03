@@ -23,7 +23,8 @@ GetCategories(AG_Tlist *tl)
 		}
 		AG_TextSize(agUnitGroupNames[i], &w, NULL);
 		if (w > wMax) { wMax = w; }
-		AG_TlistAddPtr(tl, NULL, agUnitGroupNames[i], agUnitGroups[i]);
+		AG_TlistAddPtr(tl, NULL, agUnitGroupNames[i],
+		    (void *)agUnitGroups[i]);
 	}
 	AG_TlistSelectText(tl, "Length");
 	AG_TlistEnd(tl);
@@ -51,13 +52,9 @@ SelectCategory(AG_Event *event)
 static void
 CreateUI(void)
 {
-	AG_Timeout myTimer;
 	AG_Window *win;
-	AG_Button *btn;
-	AG_Label *lbl;
 	AG_Numerical *n1, *n2;
 	AG_Combo *uSel;
-	int i;
 
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_WindowSetCaption(win, "Unit Converter");

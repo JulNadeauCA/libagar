@@ -13,9 +13,7 @@ static void
 CreateWindow(void)
 {
 	AG_Window *win;
-	AG_Button *btn;
 	AG_Table *table;
-	AG_Box *box;
 	int i;
 
 	/* Create a window without titlebar or decorations. */
