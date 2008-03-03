@@ -9,7 +9,6 @@
 
 #include <agar/core.h>
 #include <agar/gui.h>
-#include <agar/gui/primitive.h>
 #include <agar/dev.h>
 
 #include "rounded_style.h"

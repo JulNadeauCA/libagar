@@ -7,6 +7,7 @@
 #include <agar/gui/view.h>
 #include <agar/gui/iconmgr.h>
 #include <agar/gui/icons.h>
+#include <agar/gui/primitive.h>
 
 #include <agar/gui/box.h>
 #include <agar/gui/button.h>
