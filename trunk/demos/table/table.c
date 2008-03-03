@@ -57,7 +57,6 @@ static void
 CreateStaticTable(void)
 {
 	AG_Window *win;
-	AG_Button *btn;
 	AG_Table *table;
 	int i;
 
@@ -115,8 +114,7 @@ CreateStaticTable(void)
 	 * It is also possible to insert "hidden" fields in rows. This is
 	 * typically used for user pointers.
 	 */
-	AG_TableAddRow(table, "%s:%d:%i:%p", "Hidden pointer", 1, 1,
-	    (void *)0xdeadbeef);
+	AG_TableAddRow(table, "%s:%d:%i:%p", "Hidden pointer", 1, 1, table);
 	
 	/* Make sure to call this when you're done adding rows. */
 	AG_TableEnd(table);
@@ -160,9 +158,7 @@ static void
 CreatePolledTable(void)
 {
 	AG_Window *win;
-	AG_Button *btn;
 	AG_Table *table;
-	int i;
 
 	/* Create our window. */
 	win = AG_WindowNew(0);
@@ -213,7 +209,6 @@ CreateTableWithControls(void)
 {
 	static int MyTable[20];
 	AG_Window *win;
-	AG_Button *btn;
 	AG_Table *table;
 	AG_Box *box;
 	int i;
