@@ -9,7 +9,6 @@ generate a screenshot. Some command-line options are provided:
 	-s			Force SDL graphics driver
 	-w [width]		Display width in pixels
 	-h [height] 		Display height in pixels
-	-D			Enable heavy debugging output
 	-f			Force full screen mode
 	-r [fps]		Set fixed refresh rate
 	-b			Force use of FreeType font engine
