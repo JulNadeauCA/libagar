@@ -393,7 +393,7 @@ main(int argc, char *argv[])
 	{
 		int c;
 
-		while ((c = getopt(argc, argv, "?vgsw:h:dDfbBt:T:r:R")) != -1) {
+		while ((c = getopt(argc, argv, "?vgsw:h:dfbBt:T:r:R")) != -1) {
 			extern char *optarg;
 
 			switch (c) {
@@ -418,10 +418,6 @@ main(int argc, char *argv[])
 			case 'h':
 				/* Set display height in pixels */
 				h = atoi(optarg);
-				break;
-			case 'D':
-				/* Enable heavy debugging output. */
-				agDebugLvl = 10;
 				break;
 			case 'd':
 				/* Enable custom double-buffering event loop */
