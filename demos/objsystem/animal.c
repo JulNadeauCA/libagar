@@ -122,15 +122,15 @@ Edit(void *obj)
 {
 	Animal *animal = obj;
 	AG_Window *win;
-	AG_Numerical *num;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Animal: %s", AGOBJECT(animal)->name);
 
-	num = AG_NumericalNew(win, AG_NUMERICAL_HFILL, "sec", "Age: ");
-	AG_WidgetBindFloat(num, "value", &animal->age);
-	num = AG_NumericalNew(win, AG_NUMERICAL_HFILL, NULL, "Cell count: ");
-	AG_WidgetBindInt(num, "value", &animal->cellCount);
+	AG_NumericalNewFlt(win, AG_NUMERICAL_HFILL, "sec", "Age: ",
+	    &animal->age);
+	AG_NumericalNewInt(win, AG_NUMERICAL_HFILL, NULL, "Cell count: ",
+	    &animal->cellCount);
+
 	return (win);
 }
 
