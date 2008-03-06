@@ -20,7 +20,7 @@ typedef struct ag_timeout {
 AG_SLIST_HEAD(ag_timeoutq, ag_timeout);
 
 #define AG_TIMEOUT_INITIALIZER { NULL, NULL, 0, 0, 0, 1 }
-#define AG_TIMEOUTS_QUEUED() (!AG_TAILQ_EMPTY(&agTimeoutObjq))
+#define AG_TIMEOUTS_QUEUED() (!AG_TAILQ_EMPTY(&agTimeoutObjQ))
 
 #define AG_LockTiming() AG_MutexLock(&agTimingLock)
 #define AG_UnlockTiming() AG_MutexUnlock(&agTimingLock)
