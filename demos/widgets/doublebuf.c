@@ -13,7 +13,6 @@
 void
 MyEventLoop_DoubleBuf(void)
 {
-	extern struct ag_objectq agTimeoutObjQ;
 	SDL_Event ev;
 	AG_Window *win;
 	Uint32 Tr1 = SDL_GetTicks(), Tr2 = 0;
@@ -45,8 +44,8 @@ MyEventLoop_DoubleBuf(void)
 			}
 		} else if (SDL_PollEvent(&ev) != 0) {
 			AG_ProcessEvent(&ev);
-		} else if (AG_TAILQ_FIRST(&agTimeoutObjQ) != NULL) {
-			AG_ProcessTimeout(Tr2);
+		} else if (AG_TIMEOUTS_QUEUED()) {
+			AG_ProcessTimeouts(Tr2);
 		} else if (agView->rCur > agIdleThresh) {
 			SDL_Delay(agView->rCur - agIdleThresh);
 		}
