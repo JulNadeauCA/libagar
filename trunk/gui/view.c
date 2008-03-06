@@ -1298,7 +1298,6 @@ PerfMonitorInit(void)
 void
 AG_EventLoop_FixedFPS(void)
 {
-	extern struct ag_objectq agTimeoutObjQ;
 	SDL_Event ev;
 	AG_Window *win;
 	Uint32 Tr1, Tr2 = 0;
@@ -1360,8 +1359,8 @@ AG_EventLoop_FixedFPS(void)
 #ifdef DEBUG
 			agEventAvg++;
 #endif
-		} else if (TAILQ_FIRST(&agTimeoutObjQ) != NULL) {     /* Safe */
-			AG_ProcessTimeout(Tr2);
+		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
+			AG_ProcessTimeouts(Tr2);
 		} else if (agView->rCur > agIdleThresh) {
 			SDL_Delay(agView->rCur - agIdleThresh);
 #ifdef DEBUG

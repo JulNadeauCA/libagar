@@ -68,7 +68,7 @@ Note that
 is used internally to implement
 .Xr AG_SchedEvent 3 ,
 which is an alternative interface to the one described here.
-.Sh INITIALIZATION
+.Sh INTERFACE
 .nr nS 1
 .Ft "void"
 .Fn AG_SetTimeout "AG_Timeout *to" "Uint32 (*fn)(void *obj, Uint32 ival, void *arg)" "void *arg, int flags"
@@ -206,6 +206,34 @@ always cancels all scheduled timeouts.
 .Pp
 With a multithreaded timing scheme, cancelling a timeout might imply waiting
 for the termination of a thread (possibly sending it a signal as well).
+.Sh ADVANCING TIME
+.nr nS 1
+.Ft "int"
+.Fn AG_TIMEOUTS_QUEUED "void"
+.Pp
+.Ft "void"
+.Fn AG_ProcessTimeouts "Uint32 ticks"
+.Pp
+.nr nS 0
+The
+.Fn AG_TIMEOUTS_QUEUED
+macro evaluates to 1 if there are possibly timeouts that need to be processed.
+.Pp
+The
+.Fn AG_ProcessTimeouts
+function advances the timing wheel and executes the callback functions of
+expired timeouts.
+The
+.Fa ticks
+argument is the current time in ticks (e.g., as obtained from
+.Xr SDL_GetTicks 3 ) .
+This function intended to be invoked from an event loop function such as
+.Xr AG_EventLoop 3 ,
+in the following way:
+.Bd -literal
+	if (AG_TIMEOUTS_QUEUED())
+		AG_ProcessTimeouts(SDL_GetTicks());
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,

@@ -174,7 +174,7 @@ wait:
 }
 
 void
-AG_ProcessTimeout(Uint32 t)
+AG_ProcessTimeouts(Uint32 t)
 {
 	AG_Timeout *to;
 	AG_Object *ob;

@@ -20,12 +20,14 @@ typedef struct ag_timeout {
 AG_SLIST_HEAD(ag_timeoutq, ag_timeout);
 
 #define AG_TIMEOUT_INITIALIZER { NULL, NULL, 0, 0, 0, 1 }
+#define AG_TIMEOUTS_QUEUED() (!AG_TAILQ_EMPTY(&agTimeoutObjq))
 
 #define AG_LockTiming() AG_MutexLock(&agTimingLock)
 #define AG_UnlockTiming() AG_MutexUnlock(&agTimingLock)
 
 __BEGIN_DECLS
 extern AG_Mutex agTimingLock;
+extern struct ag_objectq agTimeoutObjQ;
 
 void	AG_InitTimeouts(void);
 void	AG_DestroyTimeouts(void);
@@ -38,9 +40,12 @@ int	AG_TimeoutIsScheduled(void *, AG_Timeout *);
 #define AG_ReplaceTimeout(p,to,dt) AG_ScheduleTimeout((p), (to), (dt), 1)
 void	AG_DelTimeout(void *, AG_Timeout *);
 int	AG_TimeoutWait(void *, AG_Timeout *, Uint32);
-void	AG_ProcessTimeout(Uint32);
+void	AG_ProcessTimeouts(Uint32);
 void	AG_LockTimeouts(void *);
 void	AG_UnlockTimeouts(void *);
+
+/* Legacy */
+#define	AG_ProcessTimeout(x) AG_ProcessTimeouts(x)
 __END_DECLS
 
 #include "close_code.h"
