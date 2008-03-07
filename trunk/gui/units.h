@@ -12,7 +12,7 @@
 
 #define AG_UNIT_KEY_MAX	32
 
-typedef struct {
+typedef struct ag_unit {
 	char *key;		/* Key */
 	char *abbr;		/* Symbol */
 	char *name;		/* Long name */
