@@ -1,0 +1,31 @@
+#
+# This file specifies configurations for generating IDE project files. There
+# are too many possible combinations, so we bundle a few commonly used ones,
+# and you can define new configurations by simply appending a line here.
+#
+# To create a new set of project files, simply append your configuration
+# to ${PROJFILES} and use "make proj" to rebuild the project files.
+# 
+# The syntax for ${PROJFILES} entries is:
+# <OS>:<ARCH>:<IDE>:<FLAVOR>:<CONFIGURE-OPTIONS>
+# 
+# You need perl, BSDBuild and Premake on your system to use "make proj".
+# BSDBuild is available from: http://hypertriton.com/bsdbuild and
+# Premake is available from http://premake.sourceforge.net/.
+#
+
+PROJFILES=	windows:i386:vs2005:: \
+		windows:i386:vs2005:-nofreetype:--without-freetype \
+		windows:i386:vs2005:-nothreads:--disable-threads \
+		windows:i386:vs2005:-nofreetype,nothreads:--without-freetype,--disable-threads \
+		windows:i386:vs2003:: \
+		windows:i386:vs2003:-nofreetype:--without-freetype \
+		windows:i386:vs2003:-nothreads:--disable-threads \
+		windows:i386:vs2003:-nofreetype,nothreads:--without-freetype,--disable-threads \
+		windows:i386:vs2002:: \
+		windows:i386:vs2002:-nofreetype,nothreads:--without-freetype,--disable-threads \
+		windows:i386:vs6:: \
+		windows:i386:vs6:-nofreetype,nothreads:--without-freetype,--disable-threads \
+		windows:i386:cb-gcc:: \
+		windows:i386:cb-gcc:-nofreetype,nothreads:--without-freetype,--disable-threads
+

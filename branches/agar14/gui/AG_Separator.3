@@ -1,0 +1,110 @@
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 17, 2007
+.Dt AG_SEPARATOR 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_Separator
+.Nd agar cosmetic separator widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget draws a horizontal or vertical line or spacer.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_Separator *"
+.Fn AG_SeparatorNew "AG_Widget *parent" "enum ag_separator_type type"
+.Pp
+.Ft "AG_Separator *"
+.Fn AG_SpacerNew "AG_Widget *parent" "enum ag_separator_type type"
+.Pp
+.Ft "AG_Separator *"
+.Fn AG_SeparatorNewHoriz "AG_Widget *parent"
+.Pp
+.Ft "AG_Separator *"
+.Fn AG_SeparatorNewVert "AG_Widget *parent"
+.Pp
+.Ft "AG_Separator *"
+.Fn AG_SpacerNewHoriz "AG_Widget *parent"
+.Pp
+.Ft "AG_Separator *"
+.Fn AG_SpacerNewVert "AG_Widget *parent"
+.Pp
+.Ft void
+.Fn AG_SeparatorSetPadding "AG_Separator *sep" "Uint pixels"
+.Pp
+.nr nS 0
+The
+.Fn AG_SeparatorNew
+function creates a new separator that displays a visible line.
+.Fn AG_SpacerNew
+creates a new separator that does not draw a visible line.
+.Fa type
+is one of:
+.Bd -literal
+	enum ag_separator_type {
+		AG_SEPARATOR_HORIZ,
+		AG_SEPARATOR_VERT
+	};
+.Ed
+.Pp
+The
+.Fn AG_SeparatorNewHoriz ,
+.Fn AG_SeparatorNewVert ,
+.Fn AG_SpacerNewHoriz
+and
+.Fn AG_SpacerNewVert
+variants do not take a
+.Fa type
+argument.
+.Pp
+The
+.Fn AG_SeparatorSetPadding
+function sets the padding around the separator line in pixels.
+The total width of the separation will be
+.Va pixels*2 .
+.Sh EVENTS
+The
+.Nm
+widget neither reacts to nor generates any event.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.0.

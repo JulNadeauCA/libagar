@@ -1,0 +1,13 @@
+Agar Benchmark 1.0
+Test: Surface operations (SDL-only)
+Iterations: 4 x 64
+
+Test:Min:Avg:Max:
+DupSurface+Free (32):11.737k:14.458k:14.886k:
+Scale(32->32):3.092k:3.156k:4.778k:
+Scale(32->64):975.673k:978.353k:996.574k:
+Scale(64->32):243.832k:245.363k:247.533k:
+Scale(32->64)+Copy:579.758k:707.897k:721.257k:
+Scale(32->128):3.916139M:3.943689M:3.978434M:
+Scale(128->32):244.122k:245.462k:246.202k:
+Flip(128):47.412k:48.011k:50.409k:

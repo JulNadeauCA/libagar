@@ -1,0 +1,22 @@
+# Public domain
+
+REGISTER("--enable-static",	"Produce a static binary [default: no]")
+
+C_DEFINE(_USE_AGAR_MATH)
+MDEFINE(CFLAGS, "$CFLAGS -I$SRC")
+
+# TODO test
+C_DEFINE(HAVE_RDTSC)
+
+CHECK(cc)
+CHECK(agar, 1.0)
+CHECK(pctr)
+
+if [ "${HAVE_AGAR}" != "yes" ]; then
+	echo "This program requires Agar installed on your system."
+	exit 1
+fi
+
+if [ "${enable_static}" = "yes" ]; then
+	MDEFINE(LDFLAGS, "-static")
+fi

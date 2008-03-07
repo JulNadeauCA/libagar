@@ -1,0 +1,44 @@
+
+Agar-Net - Query-oriented client/server framework
+=================================================
+
+What is it?
+-----------
+Agar-net is a network package that aims to faciliate the development
+of client/server applications. It includes a lightweight client library
+as well as an efficient, privilege-separated server framework.
+
+How does it work?
+-----------------
+Using the client API, client applications will typically connect to an
+agar-net server, authenticate and issue one or more queries.
+
+The server consists of a master process that manages a set of child
+processes. Those processes can either serve network client sessions or
+execute concurrent server tasks. Child processes usually revoke their
+privileges and then communicate with the master process over a socket
+pair using a secure, well-defined protocol.
+
+An agar-net server program defines a set of functions (or commands) which
+may be invoked from a network client. Those functions accept specific
+arguments and return data in a specific format. Some functions are executed
+in the child process, some are executed in the master process - depending
+on the application.
+
+The agar-net server framework uses I/O multiplexing along with buffers
+and non-blocking transfers such that multiple concurrent data streams
+can be supported efficiently and with maximum performance.
+
+Availability
+------------
+The latest version of agar-net is available at http://agar-net.csoft.org/.
+
+Portability
+-----------
+The server side of agar-net requires a POSIX 1003.1g-compliant operating
+system.
+
+License
+-------
+Agar-net is freely distributable under the terms of a BSD license.
+

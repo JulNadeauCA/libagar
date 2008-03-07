@@ -1,0 +1,106 @@
+.\" Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd November 16, 2007
+.Dt AG_BYTESWAP 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_ByteSwap
+.Nd agar byte swapping macros
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core/byteswap.h>
+.Ed
+.Sh DESCRIPTION
+These macros swap the order of bytes in 16-bit, 32-bit and 64-bit words (if
+supported). 
+They are useful when reading or writing data of a specific endianness.
+.Pp
+.nr nS 1
+.Ft "Uint16"
+.Fn AG_Swap16 "Uint16 value"
+.Pp
+.Ft "Uint32"
+.Fn AG_Swap32 "Uint32 value"
+.Pp
+.Ft "Uint64"
+.Fn AG_Swap64 "Uint64 value"
+.Pp
+.Ft "Uint16"
+.Fn AG_SwapLE16 "Uint16 value"
+.Pp
+.Ft "Uint32"
+.Fn AG_SwapLE32 "Uint32 value"
+.Pp
+.Ft "Uint64"
+.Fn AG_SwapLE64 "Uint64 value"
+.Pp
+.Ft "Uint16"
+.Fn AG_SwapBE16 "Uint16 value"
+.Pp
+.Ft "Uint32"
+.Fn AG_SwapBE32 "Uint32 value"
+.Pp
+.Ft "Uint64"
+.Fn AG_SwapBE64 "Uint64 value"
+.Pp
+.nr nS 0
+The functions
+.Fn AG_Swap16 ,
+.Fn AG_Swap32
+and
+.Fn AG_Swap64
+return the given value with the byte order reversed.
+.Pp
+.Fn AG_SwapLE16 ,
+.Fn AG_SwapLE32
+and
+.Fn AG_SwapLE64
+returns the given value with the byte order reversed if the current
+architecture is big-endian.
+On little-endian machines, these functions return the value unchanged.
+.Pp
+.Fn AG_SwapBE16 ,
+.Fn AG_SwapBE32
+and
+.Fn AG_SwapBE64
+returns the given value with the byte order reversed if the current
+architecture is little-endian.
+On big-endian machines, these functions return the value unchanged.
+.Pp
+If 64-bit types are not supported,
+.Fn AG_Swap64 ,
+.Fn AG_SwapLE64
+and
+.Fn AG_SwapBE64
+are not defined.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3
+.Sh HISTORY
+The
+.Nm
+macros first appeared in Agar 1.3

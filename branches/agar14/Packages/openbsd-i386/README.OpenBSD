@@ -1,0 +1,19 @@
+    _       _       _     ___
+  / _ \   / _ \   / _ \  |  _ \ 
+ | |_| | | (_| | | |_| | | |_) |  / OpenBSD
+ |_| |_|  \__, | |_| |_| |_| |_|
+          |___/                 
+
+This is a binary release of the Agar graphics toolkit, compiled for OpenBSD
+under the i386 architecture with thread safety enabled.
+
+This package requires SDL, FreeType and OpenGL. OpenGL comes with the base
+OpenBSD system. SDL and FreeType can be easily installed from the OpenBSD
+ports or packages (look for devel/sdl and print/freetype).
+
+To install this package, run the installation script:
+
+	$ ./install
+
+For more information about Agar, visit http://libagar.org/.
+

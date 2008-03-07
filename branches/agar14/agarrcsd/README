@@ -1,0 +1,34 @@
+
+What is agarrcsd?
+-----------------
+When Agar-Core is compiled with network support (--enable-network), the
+Object system provides a lightweight, built-in revision control system
+which allows Object datasets to be exported, imported and compared
+(possibly graphically) against a remote repository, served by agarrcsd,
+over the network.
+
+See the manual page, agarrcsd(8) for a detailed description of the
+protocol.
+
+What are the system requirements?
+---------------------------------
+agarrcsd requires a POSIX-compliant operating system.
+
+How do I use agarrcsd?
+----------------------
+First create a Unix account for the daemon:
+
+    # useradd -d /var/agarrcsd -m _agarrcsd
+
+To configure the user accounts, start agarrcsd in administrative mode
+(as the _agarrcsd user):
+
+    $ agarrcsd -d /var/agarrcsd -a
+
+When you are done with configuration, start up the daemon:
+
+    $ agarrcsd -d /var/agarrcsd
+
+The server should now be accepting connections from Agar-RCS clients,
+on the default port (6785).
+
