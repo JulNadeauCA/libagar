@@ -15,7 +15,7 @@
  * developers who want to use our "Animal" API directly.
  */
 Animal *
-AnimalNew(void *parent, const char *name)
+AnimalNew(void *parent)
 {
 	Animal *animal;
 
@@ -135,10 +135,8 @@ Edit(void *obj)
 }
 
 /*
- * This structure describes our class. Note that it is possible for classes
- * to inherit from AG_ObjectClass.
- *
- * Any of the function members may be NULL.
+ * This structure describes our class. Any of the function members may be
+ * NULL.
  */
 AG_ObjectClass AnimalClass = {
 	"Animal",		/* Name of class */
