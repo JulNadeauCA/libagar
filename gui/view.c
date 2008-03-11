@@ -123,23 +123,6 @@ InitGL(void)
 {
 	int red, blue, green, alpha, depth, bsize;
 	Uint8 bR, bG, bB;
-#if 0
-	float lineW[2];
-#endif
-
-	SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &red);
-	SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &green);
-	SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &blue);
-	SDL_GL_GetAttribute(SDL_GL_ALPHA_SIZE, &alpha);
-	SDL_GL_GetAttribute(SDL_GL_BUFFER_SIZE, &bsize);
-	SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth);
-
-	AG_SetInt(agConfig, "view.gl.depth", depth);
-	AG_SetInt(agConfig, "view.gl.red_size", red);
-	AG_SetInt(agConfig, "view.gl.green_size", green);
-	AG_SetInt(agConfig, "view.gl.blue_size", blue);
-	AG_SetInt(agConfig, "view.gl.alpha_size", alpha);
-	AG_SetInt(agConfig, "view.gl.buffer_size", bsize);
 
 	glViewport(0, 0, agView->w, agView->h);
 	glMatrixMode(GL_MODELVIEW);
@@ -152,11 +135,6 @@ InitGL(void)
 	glShadeModel(GL_FLAT);
 		
 	glEnable(GL_TEXTURE_2D);
-#if 0
-	glEnable(GL_LINE_SMOOTH);
-	glGetFloatv(GL_LINE_WIDTH_RANGE, lineW);
-	glLineWidth(lineW[0]);
-#endif
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DITHER);
