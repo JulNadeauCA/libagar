@@ -115,9 +115,12 @@ static void
 ChildAttached(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
+	AG_Widget *wid = AG_PTR(1);
 
-	if (win->visible)
+	if (win->visible) {
 		AG_WindowUpdate(win);
+		AG_PostEvent(NULL, wid, "widget-shown", NULL);
+	}
 }
 
 static void
