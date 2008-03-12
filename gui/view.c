@@ -121,7 +121,6 @@ AG_X11_ErrorHandler(Display *disp, XErrorEvent *event)
 static void
 InitGL(void)
 {
-	int red, blue, green, alpha, depth, bsize;
 	Uint8 bR, bG, bB;
 
 	glViewport(0, 0, agView->w, agView->h);
