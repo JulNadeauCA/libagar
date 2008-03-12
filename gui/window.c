@@ -112,6 +112,15 @@ out:
 }
 
 static void
+ChildAttached(AG_Event *event)
+{
+	AG_Window *win = AG_SELF();
+
+	if (win->visible)
+		AG_WindowUpdate(win);
+}
+
+static void
 Init(void *obj)
 {
 	AG_Window *win = obj;
@@ -149,6 +158,7 @@ Init(void *obj)
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(win, "detached", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
+	AG_SetEvent(win, "child-attached", ChildAttached, NULL);
 }
 
 /* Attach a sub-window. */
