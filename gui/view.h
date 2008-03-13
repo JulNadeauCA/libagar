@@ -228,6 +228,7 @@ case 4:					\
 #define AG_VIDEO_BGPOPUPMENU   0x100  /* Set a background popup menu */
 #define AG_VIDEO_OPENGL	       0x200  /* Require OpenGL mode */
 #define AG_VIDEO_OPENGL_OR_SDL 0x400  /* Prefer OpenGL mode */
+#define AG_VIDEO_NOBGCLEAR     0x800  /* Don't clear background on init */
 
 __BEGIN_DECLS
 extern AG_ObjectClass agDisplayClass;
@@ -238,7 +239,9 @@ extern const SDL_VideoInfo *agVideoInfo;
 extern const char *agBlendFuncNames[];
 
 int		 AG_InitVideo(int, int, int, Uint);
+int		 AG_InitVideoSDL(SDL_Surface *, Uint);
 int		 AG_InitGUI(Uint);
+void		 AG_ClearBackground(void);
 
 void		 AG_DestroyVideo(void);
 int		 AG_ResizeDisplay(int, int);

@@ -59,26 +59,16 @@
 #include "opengl.h"
 
 /*
- * Force synchronous X11 events. Reduces performance, but useful for
- * debugging things like accesses to illegal video regions.
- */
-/* #define SYNC_X11_EVENTS */
-
-/*
  * Invert the Y-coordinate in OpenGL mode.
  */
 /* #define OPENGL_INVERTED_Y */
-
-#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
-#include <SDL_syswm.h>
-#include <X11/Xlib.h>
-#endif
 
 AG_Display *agView = NULL;		/* Main view */
 SDL_PixelFormat *agVideoFmt = NULL;	/* Current format of display */
 SDL_PixelFormat *agSurfaceFmt = NULL;	/* Preferred format for surfaces */
 const SDL_VideoInfo *agVideoInfo;	/* Display information */
 int agBgPopupMenu = 0;			/* Background popup menu */
+static int initedGlobals = 0;
 
 const char *agBlendFuncNames[] = {
 	N_("Alpha sum"),
@@ -108,15 +98,6 @@ static AG_FixedPlotter *agPerfGraph;
 static AG_FixedPlotterItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
 #endif
 
-#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
-static int
-AG_X11_ErrorHandler(Display *disp, XErrorEvent *event)
-{
-	Verbose("Caught X11 error!\n");
-	abort();
-}
-#endif
-
 #ifdef HAVE_OPENGL
 static void
 InitGL(void)
@@ -141,23 +122,147 @@ InitGL(void)
 }
 #endif /* HAVE_OPENGL */
 
+void
+AG_ClearBackground(void)
+{
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		Uint8 r, g, b;
+
+		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
+		glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
+	} else
+#endif
+	{
+		SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+		SDL_UpdateRect(agView->v, 0, 0, agView->w, agView->h);
+	}
+}
+
+static void
+InitView(AG_Display *v)
+{
+	AG_ObjectInit(v, &agDisplayClass);
+	AG_ObjectSetName(v, "_agView");
+	v->winop = AG_WINOP_NONE;
+	v->ndirty = 0;
+	v->maxdirty = 4;
+	v->dirty = Malloc(v->maxdirty*sizeof(SDL_Rect));
+	v->opengl = 0;
+	v->winModal = Malloc(sizeof(AG_Window *));
+	v->nModal = 0;
+	v->winSelected = NULL;
+	v->winToFocus = NULL;
+	v->rNom = 16;
+	v->rCur = 0;
+	TAILQ_INIT(&v->windows);
+	TAILQ_INIT(&v->detach);
+}
+
+static void
+InitGlobals(void)
+{
+	if (initedGlobals) {
+		return;
+	}
+	initedGlobals = 1;
+
+	AG_MutexInitRecursive(&agGlobalKeysLock);
+	AG_RegisterClass(&agDisplayClass);
+	agVideoInfo = SDL_GetVideoInfo();
+}
+
+/*
+ * Initialize Agar with an existing SDL/OpenGL display surface. If the
+ * surface has SDL_OPENGL or SDL_OPENGLBLIT set, we assume that OpenGL
+ * primitives are to be used in rendering.
+ */
+int
+AG_InitVideoSDL(SDL_Surface *display, Uint flags)
+{
+	InitGlobals();
+	
+	if (display->w < AG_Uint16(agConfig, "view.min-w") ||
+	    display->h < AG_Uint16(agConfig, "view.min-h")) {
+		AG_SetError(_("The resolution is too small."));
+		return (-1);
+	}
+
+	agView = Malloc(sizeof(AG_Display));
+	InitView(agView);
+	agView->v = display;
+	agView->w = display->w;
+	agView->h = display->h;
+	agView->depth = display->format->BitsPerPixel;
+	agView->rNom = 1000/AG_Uint(agConfig, "view.nominal-fps");
+
+	AG_SetUint8(agConfig, "view.depth", agView->depth);
+	AG_SetUint16(agConfig, "view.w", agView->w);
+	AG_SetUint16(agConfig, "view.h", agView->h);
+	AG_SetBool(agConfig, "view.full-screen", display->flags&SDL_FULLSCREEN);
+	AG_SetBool(agConfig, "view.async-blits", display->flags&SDL_ASYNCBLIT);
+
+	if (display->flags & (SDL_OPENGL|SDL_OPENGLBLIT)) {
+		AG_SetBool(agConfig, "view.opengl", 1);
+		agView->opengl = 1;
+	} else {
+		if (flags & AG_VIDEO_OPENGL) {
+			AG_SetError("AG_VIDEO_OPENGL flag requested, but "
+			            "display surface is missing SDL_OPENGL");
+			goto fail;
+		}
+		AG_SetBool(agConfig, "view.opengl", 0);
+		agView->opengl = 0;
+	}
+
+	agView->stmpl = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32,
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+ 	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+#else
+	    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+#endif
+	);
+	if (agView->stmpl == NULL) {
+		AG_SetError("SDL_CreateRGBSurface: %s", SDL_GetError());
+		return (-1);
+	}
+	agVideoFmt = agView->v->format;
+	agSurfaceFmt = agView->stmpl->format;
+
+#ifdef HAVE_OPENGL
+	if (agView->opengl)
+		InitGL();
+#endif
+	if (AG_InitGUI(0) == -1) {
+		goto fail;
+	}
+	if (flags & AG_VIDEO_BGPOPUPMENU)
+		agBgPopupMenu = 1;
+	if (!(flags & AG_VIDEO_NOBGCLEAR))
+		AG_ClearBackground();
+
+	return (0);
+fail:
+	Free(agView);
+	agView = NULL;
+	return (-1);
+}
+
+/* Initialize Agar with a new video display. */
 int
 AG_InitVideo(int w, int h, int bpp, Uint flags)
 {
 	Uint32 screenflags = 0;
 	int depth;
 
-	AG_MutexInitRecursive(&agGlobalKeysLock);
+	InitGlobals();
 
-	AG_RegisterClass(&agDisplayClass);
-
-	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+	if (!SDL_WasInit(SDL_INIT_VIDEO) &&
+	    SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
 		AG_SetError("SDL_INIT_VIDEO: %s", SDL_GetError());
 		return (-1);
 	}
 	SDL_WM_SetCaption(agProgName, agProgName);
-
-	agVideoInfo = SDL_GetVideoInfo();
 
 	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
 #ifdef HAVE_OPENGL
@@ -179,28 +284,13 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	if (flags & AG_VIDEO_HWPALETTE) { screenflags |= SDL_HWPALETTE; }
 	if (flags & AG_VIDEO_DOUBLEBUF) { screenflags |= SDL_DOUBLEBUF; }
 	if (flags & AG_VIDEO_FULLSCREEN) { screenflags |= SDL_FULLSCREEN; }
-	if (flags & AG_VIDEO_RESIZABLE) { screenflags |= SDL_RESIZABLE; }
 	if (flags & AG_VIDEO_NOFRAME) { screenflags |= SDL_NOFRAME; }
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 
 	agView = Malloc(sizeof(AG_Display));
-	AG_ObjectInit(agView, &agDisplayClass);
-	AG_ObjectSetName(agView, "_agView");
+	InitView(agView);
 
-	agView->winop = AG_WINOP_NONE;
-	agView->ndirty = 0;
-	agView->maxdirty = 4;
-	agView->dirty = Malloc(agView->maxdirty*sizeof(SDL_Rect));
-	agView->opengl = 0;
-	agView->winModal = Malloc(sizeof(AG_Window *));
-	agView->nModal = 0;
-	agView->winSelected = NULL;
-	agView->winToFocus = NULL;
 	agView->rNom = 1000/AG_Uint(agConfig, "view.nominal-fps");
-	agView->rCur = 0;
-	TAILQ_INIT(&agView->windows);
-	TAILQ_INIT(&agView->detach);
-	
 	depth = bpp > 0 ? bpp : AG_Uint8(agConfig, "view.depth");
 	agView->w = w > 0 ? w : AG_Uint16(agConfig, "view.w");
 	agView->h = h > 0 ? h : AG_Uint16(agConfig, "view.h");
@@ -223,7 +313,6 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		
 		agView->opengl = 1;
 	}
 #endif
@@ -244,15 +333,9 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	}
 	agView->stmpl = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
- 	    0xff000000,
-	    0x00ff0000,
-	    0x0000ff00,
-	    0x000000ff
+ 	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
 #else
-	    0x000000ff,
-	    0x0000ff00,
-	    0x00ff0000,
-	    0xff000000
+	    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
 #endif
 	);
 	if (agView->stmpl == NULL) {
@@ -295,33 +378,9 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	if (AG_InitGUI(0) == -1)
 		goto fail;
 
-	/* Initialize the built-in style. */
-	AG_SetStyle(agView, &agStyleDefault);
-
-	/* Fill the background. */
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		Uint8 r, g, b;
-
-		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
-		glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
-	} else
-#endif
-	{
-		SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
-		SDL_UpdateRect(agView->v, 0, 0, agView->w, agView->h);
+	if (!(flags & AG_VIDEO_NOBGCLEAR)) {
+		AG_ClearBackground();
 	}
-#if defined(HAVE_X11) && defined(SYNC_X11_EVENTS)
-	{	
-		SDL_SysWMinfo wminfo;
-		if (SDL_GetWMInfo(&wminfo) &&
-		    wminfo.subsystem == SDL_SYSWM_X11) {
-			Verbose("Enabling synchronous X11 events");
-			XSynchronize(wminfo.info.x11.display, True);
-			XSetErrorHandler(AG_X11_ErrorHandler);
-		}
-	}
-#endif
 	return (0);
 fail:
 	Free(agView);
