@@ -85,11 +85,6 @@ AG_InitCore(const char *progname, Uint flags)
 # endif
 #endif /* THREADS */
 
-	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
-		AG_SetError("SDL_Init: %s", SDL_GetError());
-		return (-1);
-	}
-
 	AG_InitClassTbl();
 	AG_RegisterClass(&agConfigClass);
 	

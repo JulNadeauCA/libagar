@@ -51,6 +51,9 @@ mode, the font engine and other subsystems.
 .Ft "int"
 .Fn AG_InitVideo "int w" "int h" "int depth" "Uint flags"
 .Pp
+.Ft "int"
+.Fn AG_InitVideoSDL "SDL_Surface *display" "Uint flags"
+.Pp
 .Ft "void"
 .Fn AG_AtExitFunc "void (*fn)(void)"
 .Pp
@@ -82,6 +85,14 @@ function sets the video mode, initializes the font engine and GUI
 See
 .Xr AG_View 3
 for more information.
+.Pp
+The
+.Fn AG_InitVideoSDL
+function initializes Agar-GUI to use an existing SDL display surface.
+If the surface has the
+.Dv SDL_OPENGL
+flag set, it is assumed that Agar should render itself using OpenGL
+primitives.
 .Pp
 The
 .Fn AG_AtExitFunc
