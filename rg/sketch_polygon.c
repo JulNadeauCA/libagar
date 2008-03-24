@@ -26,7 +26,6 @@
 #include <core/core.h>
 
 #include <vg/vg.h>
-#include <vg/vg_primitive.h>
 
 #include <gui/window.h>
 #include <gui/box.h>
