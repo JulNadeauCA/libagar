@@ -370,8 +370,9 @@ NC_Reconnect(NC_Session *client)
 	for (try = 0, retries = ncReconnectAttempts;
 	     try < retries;
 	     try++) {
-		if (NC_Connect(client, host_save, port_save, user_save,
-		    pass_save) == 0) {
+		if (NC_Connect(client, host_save, port_save,
+		    user_save[0] != '\0' ? user_save : NULL,
+		    pass_save[0] != '\0' ? pass_save : NULL) == 0) {
 			break;
 		}
 		sleep(ncReconnectIval);
@@ -462,23 +463,40 @@ NC_ReadBinary(NC_Session *client, size_t nbytes)
 }
 
 static int
-Authenticate(NC_Session *client, const char *user, const char *pass)
+AuthPassword(NC_Session *client, const char *user, const char *pass)
 {
 	if (NC_Write(client, "password\n") == -1 ||
 	    NC_Read(client, 32) < 1 ||
 	    strcmp(client->read.buf, "ok-send-auth") != 0) {
-		AG_SetError("Authentication protocol error: `%s'",
-		    client->read.buf);
+		AG_SetError("Protocol error: `%s'", client->read.buf);
 		return (-1);
 	}
 	if (NC_Write(client, "%s:%s\n", user, pass) == -1 ||
 	    NC_Read(client, 32) < 1 ||
 	    strcmp(client->read.buf, "ok") != 0) {
-		AG_SetError("Authentication failed");
+		AG_SetError("Invalid username/password");
 		return (-1);
 	}
 	return (0);
 
+}
+
+static int
+AuthNone(NC_Session *client)
+{
+	if (NC_Write(client, "none\n") == -1 ||
+	    NC_Read(client, 32) < 1 ||
+	    strcmp(client->read.buf, "ok-send-auth") != 0) {
+		AG_SetError("Protocol error: `%s'", client->read.buf);
+		return (-1);
+	}
+	if (NC_Write(client, "nothing\n") == -1 ||
+	    NC_Read(client, 32) < 1 ||
+	    strcmp(client->read.buf, "ok") != 0) {
+		AG_SetError("Auth failed");
+		return (-1);
+	}
+	return (0);
 }
 
 /* Negotiate the protocol version. */
@@ -516,7 +534,7 @@ NC_Connect(NC_Session *client, const char *host, const char *port,
 	int s, rv;
 
 	/* Look in ~/.<app-name>rc for the login information. */
-	if (host == NULL || port == NULL || user == NULL || pass == NULL) {
+	if (host == NULL || port == NULL) {
 		char file[MAXPATHLEN];
 		char *s, *fbufp;
 		FILE *f;
@@ -586,14 +604,32 @@ NC_Connect(NC_Session *client, const char *host, const char *port,
 	client->sock = s;
 	Strlcpy(client->host, host, sizeof(client->host));
 	Strlcpy(client->port, port, sizeof(client->port));
-	Strlcpy(client->user, user, sizeof(client->user));
-	Strlcpy(client->pass, pass, sizeof(client->pass));
+	if (user != NULL) {
+		Strlcpy(client->user, user, sizeof(client->user));
+	} else {
+		client->user[0] = '\0';
+	}
+	if (pass != NULL) {
+		Strlcpy(client->pass, pass, sizeof(client->pass));
+	} else {
+		client->pass[0] = '\0';
+	}
 
 	/* Negotiate the protocol version and authenticate. */
-	if (ProtoNegotiate(client) == -1 ||
-	    Authenticate(client, user, pass) == -1) {
-		AG_SetError("Server error: %s", GetServerError(client));
+	if (ProtoNegotiate(client) == -1) {
+		AG_SetError("Negotiation error: %s", GetServerError(client));
 		goto fail_close;
+	}
+	if (user != NULL && pass != NULL) {
+		if (AuthPassword(client, user, pass) == -1) {
+			AG_SetError("AuthPassword: %s", GetServerError(client));
+			goto fail_close;
+		}
+	} else {
+		if (AuthNone(client) == -1) {
+			AG_SetError("AuthNone: %s", GetServerError(client));
+			goto fail_close;
+		}
 	}
 
 	freeaddrinfo(res0);
