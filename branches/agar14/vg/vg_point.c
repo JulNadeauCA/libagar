@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,33 +23,41 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Point element.
+ */
+
 #include <core/limits.h>
 #include <core/core.h>
 
+#include <gui/widget.h>
+#include <gui/primitive.h>
+
 #include "vg.h"
-#include "vg_primitive.h"
+#include "vg_view.h"
 #include "vg_math.h"
 #include "icons.h"
 
 static void
-VG_PointRender(VG *vg, VG_Element *vge)
+Draw(VG_View *vv, VG_Element *vge)
 {
+	Uint32 c32 = VG_MapColorRGB(vge->color);
 	VG_Vtx *vtx;
 	int rx, ry;
 
 	if (vge->nvtx >= 1) {
 		vtx = &vge->vtx[0];
-		VG_Rcoords2(vg, vtx->x, vtx->y, &rx, &ry);
-		VG_PutPixel(vg, rx, ry-1, vge->color);
-		VG_PutPixel(vg, rx-1, ry, vge->color);
-		VG_PutPixel(vg, rx, ry, vge->color);
-		VG_PutPixel(vg, rx+0, ry, vge->color);
-		VG_PutPixel(vg, rx, ry+1, vge->color);
+		VG_GetViewCoords(vv, vtx->x, vtx->y, &rx, &ry);
+		AG_DrawPixel(vv, rx, ry-1, c32);
+		AG_DrawPixel(vv, rx-1, ry, c32);
+		AG_DrawPixel(vv, rx, ry, c32);
+		AG_DrawPixel(vv, rx+0, ry, c32);
+		AG_DrawPixel(vv, rx, ry+1, c32);
 	}
 }
 
 static void
-VG_PointExtent(VG *vg, VG_Element *vge, VG_Rect *r)
+Extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	if (vge->nvtx >= 1) {
 		VG_Vtx *vtx = &vge->vtx[0];
@@ -68,7 +75,7 @@ VG_PointExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-VG_PointIntersect(VG *vg, VG_Element *vge, float *x, float *y)
+Intersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	if (vge->nvtx >= 1) {
 		float d = Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
@@ -85,7 +92,7 @@ const VG_ElementOps vgPointsOps = {
 	&vgIconPoints,
 	NULL,
 	NULL,
-	VG_PointRender,
-	VG_PointExtent,
-	VG_PointIntersect
+	Draw,
+	Extent,
+	Intersect
 };

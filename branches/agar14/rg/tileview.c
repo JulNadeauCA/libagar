@@ -105,9 +105,11 @@ KeyDown(AG_Event *event)
 	case RG_TILEVIEW_PIXMAP_EDIT:
 		RG_PixmapKeydown(keysym);
 		break;
+#if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
 		RG_SketchKeyDown(tv, tv->tv_sketch.tel, keysym, keymod);
 		break;
+#endif
 	default:
 		break;
 	}
@@ -119,9 +121,11 @@ KeyDown(AG_Event *event)
 			case RG_TILEVIEW_PIXMAP_EDIT:
 				RG_PixmapUndo(tv, tv->tv_pixmap.tel);
 				break;
+#if 0
 			case RG_TILEVIEW_SKETCH_EDIT:
 				RG_SketchUndo(tv, tv->tv_sketch.tel);
 				break;
+#endif
 			default:
 				break;
 			}
@@ -133,9 +137,11 @@ KeyDown(AG_Event *event)
 			case RG_TILEVIEW_PIXMAP_EDIT:
 				RG_PixmapRedo(tv, tv->tv_pixmap.tel);
 				break;
+#if 0
 			case RG_TILEVIEW_SKETCH_EDIT:
 				RG_SketchRedo(tv, tv->tv_sketch.tel);
 				break;
+#endif
 			default:
 				break;
 			}
@@ -167,15 +173,17 @@ KeyUp(AG_Event *event)
 {
 	RG_Tileview *tv = AG_SELF();
 	int keysym = AG_INT(1);
-	int keymod = AG_INT(2);
+/*	int keymod = AG_INT(2); */
 	
 	switch (tv->state) {
 	case RG_TILEVIEW_PIXMAP_EDIT:
 		RG_PixmapKeyup();
 		break;
+#if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
 		RG_SketchKeyUp(tv, tv->tv_sketch.tel, keysym, keymod);
 		break;
+#endif
 	default:
 		break;
 	}
@@ -197,6 +205,7 @@ OverPixmap(RG_TileElement *tel, int x, int y)
 	        y < tel->tel_pixmap.y + tel->tel_pixmap.px->su->h);
 }
 
+#if 0
 static __inline__ int
 OverSketch(RG_TileElement *tel, int x, int y)
 {
@@ -205,6 +214,7 @@ OverSketch(RG_TileElement *tel, int x, int y)
 	        y >= tel->tel_sketch.y &&
 	        y < tel->tel_sketch.y + tel->tel_sketch.sk->vg->su->h);
 }
+#endif
 
 static void
 ToggleAttrib(RG_Tileview *tv, int sx, int sy)
@@ -269,10 +279,12 @@ MouseButtonDown(AG_Event *event)
 	case SDL_BUTTON_WHEELUP:
 		if (tv->state == RG_TILEVIEW_PIXMAP_EDIT) {
 			if (RG_PixmapWheel(tv, tel, 0) == 1)
-				return;
+			return;
+#if 0
 		} else if (tv->state == RG_TILEVIEW_SKETCH_EDIT) {
 			if (RG_SketchWheel(tv, tel, 0) == 1)
 				return;
+#endif
 		}
 		RG_TileviewSetZoom(tv,
 		    tv->zoom<100 ? tv->zoom+5 : tv->zoom+100, 1);
@@ -282,9 +294,11 @@ MouseButtonDown(AG_Event *event)
 		if (tv->state == RG_TILEVIEW_PIXMAP_EDIT) {
 			if (RG_PixmapWheel(tv, tel, 1) == 1)
 				return;
+#if 0
 		} else if (tv->state == RG_TILEVIEW_SKETCH_EDIT) {
 			if (RG_SketchWheel(tv, tel, 1) == 1)
 				return;
+#endif
 		}
 		RG_TileviewSetZoom(tv,
 		    tv->zoom<100 ? tv->zoom-5 : tv->zoom-100, 1);
@@ -332,6 +346,7 @@ MouseButtonDown(AG_Event *event)
 				tv->scrolling++;
 		}
 		break;
+#if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
 		if (button == SDL_BUTTON_RIGHT &&
 		   (tv->flags & RG_TILEVIEW_NO_SCROLLING) == 0) {
@@ -350,6 +365,7 @@ MouseButtonDown(AG_Event *event)
 			return;
 		}
 		break;
+#endif
 	case RG_TILEVIEW_FEATURE_EDIT:
 		if (button == SDL_BUTTON_MIDDLE) {
 			if (tv->tv_feature.ft->ops->menu != NULL) {
@@ -441,6 +457,7 @@ MouseButtonUp(AG_Event *event)
 					    button);
 				}
 				break;
+#if 0
 			case RG_TILEVIEW_SKETCH_EDIT:
 				{
 					RG_TileElement *tel =
@@ -456,6 +473,7 @@ MouseButtonUp(AG_Event *event)
 					    button);
 				}
 				break;
+#endif
 			case RG_TILEVIEW_ATTRIB_EDIT:
 				tv->flags &= ~(RG_TILEVIEW_SET_ATTRIBS);
 				break;
@@ -572,12 +590,14 @@ MoveHandle(RG_Tileview *tv, RG_TileviewCtrl *ctrl, int nhandle,
 		RG_TileviewSetInt(ctrl, 0, RG_TileviewInt(ctrl, 0)+dx);
 		RG_TileviewSetInt(ctrl, 1, RG_TileviewInt(ctrl, 1)+dy);
 		break;
+#if 0
 	case RG_TILEVIEW_VERTEX:
 		RG_TileviewSetDouble(ctrl, 0,
 		    RG_TileviewDouble(ctrl, 0)+VG_VECXF(ctrl->vg,dx));
 		RG_TileviewSetDouble(ctrl, 1,
 		    RG_TileviewDouble(ctrl, 1)+VG_VECYF(ctrl->vg,dy));
 		break;
+#endif
 	default:
 		break;
 	}
@@ -646,6 +666,7 @@ MouseMotion(AG_Event *event)
 				}
 			}
 			break;
+#if 0
 		case RG_TILEVIEW_SKETCH_EDIT:
 			{
 				RG_TileElement *tel = tv->tv_sketch.tel;
@@ -665,6 +686,7 @@ MouseMotion(AG_Event *event)
 				    state);
 			}
 			break;
+#endif
 		case RG_TILEVIEW_ATTRIB_EDIT:
 			if (tv->flags & RG_TILEVIEW_SET_ATTRIBS) {
 				ToggleAttrib(tv, sx, sy);
@@ -872,10 +894,12 @@ out:
 		ctrl->nhandles = 1;
 		if (ctrl->nvals < 1) goto missingvals;
 		break;
+#if 0
 	case RG_TILEVIEW_VERTEX:
 		ctrl->nhandles = 1;
 		if (ctrl->nvals < 1) goto missingvals;
 		break;
+#endif
 	case RG_TILEVIEW_RECTANGLE:
 	case RG_TILEVIEW_RDIMENSIONS:
 		ctrl->nhandles = 6;
@@ -1405,6 +1429,7 @@ DrawControl(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 		}
 		break;
 	case RG_TILEVIEW_VERTEX:
+#if 0
 		{
 			float x = RG_TileviewDouble(ctrl, 0);
 			float y = RG_TileviewDouble(ctrl, 1);
@@ -1417,6 +1442,7 @@ DrawControl(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 			    ctrl->handles[0].y,
 			    2);
 		}
+#endif
 		break;
 	case RG_TILEVIEW_CIRCLE:
 		{
@@ -1511,12 +1537,12 @@ Draw(void *p)
 	if (t == NULL)
 		return;
 
+#if 0
 	if (tv->state == RG_TILEVIEW_SKETCH_EDIT) {
-		RG_Sketch *sk = tv->tv_sketch.sk;
-
-		VG_Rasterize(sk->vg);
+		VG_Rasterize(rv->tv_sketch.sk->vg);
 		t->flags |= RG_TILE_DIRTY;
 	}
+#endif
 	if (tv->flags & RG_TILEVIEW_READONLY) {
 		RG_TileGenerate(t);
 		AG_ScaleSurface(t->su, tv->scaled->w, tv->scaled->h,
@@ -1682,11 +1708,13 @@ Draw(void *p)
 		Strlcat(status, tv->tv_feature.ft->name, sizeof(status));
 		DrawStatusText(tv, status);
 		break;
+#if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
 		Strlcpy(status, _("Editing sketch: "), sizeof(status));
 		Strlcat(status, tv->tv_sketch.sk->name, sizeof(status));
 		DrawStatusText(tv, status);
 		break;
+#endif
 	case RG_TILEVIEW_PIXMAP_EDIT:
 		{
 			extern const char *pixmap_state_names[];

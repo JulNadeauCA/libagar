@@ -5,7 +5,7 @@
 
 struct rg_tileset;
 struct rg_tile;
-struct rg_sketch;
+/* struct rg_sketch; */
 struct rg_pixmap;
 struct rg_feature;
 struct rg_anim;
@@ -17,7 +17,7 @@ struct rg_texture;
 #include <rg/tile.h>
 #include <rg/feature.h>
 #include <rg/pixmap.h>
-#include <rg/sketch.h>
+/* #include <rg/sketch.h> */
 #include <rg/animation.h>
 #include <rg/texture.h>
 #include <rg/prim.h>
@@ -27,7 +27,7 @@ struct rg_texture;
 #include <agar/rg/tile.h>
 #include <agar/rg/feature.h>
 #include <agar/rg/pixmap.h>
-#include <agar/rg/sketch.h>
+/* #include <agar/rg/sketch.h> */
 #include <agar/rg/animation.h>
 #include <agar/rg/texture.h>
 #include <agar/rg/prim.h>
@@ -59,7 +59,9 @@ typedef struct rg_tileset {
 	Uint	nanimtbl;
 
 	AG_TAILQ_HEAD(, rg_tile) tiles;
+#if 0
 	AG_TAILQ_HEAD(, rg_sketch) sketches;
+#endif
 	AG_TAILQ_HEAD(, rg_pixmap) pixmaps;
 	AG_TAILQ_HEAD(, rg_feature) features;
 	AG_TAILQ_HEAD(, rg_anim) animations;
@@ -82,7 +84,9 @@ void		 RG_DestroySubsystem(void);
 
 RG_Tileset	*RG_TilesetNew(void *, const char *, Uint);
 RG_Tile		*RG_TilesetFindTile(RG_Tileset *, const char *);
+#if 0
 RG_Sketch	*RG_TilesetFindSketch(RG_Tileset *, const char *);
+#endif
 RG_Pixmap	*RG_TilesetFindPixmap(RG_Tileset *, const char *);
 RG_Anim		*RG_TilesetFindAnim(RG_Tileset *, const char *);
 RG_Pixmap	*RG_TilesetResvPixmap(void *, const char *, const char *);

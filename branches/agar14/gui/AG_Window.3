@@ -107,6 +107,12 @@ for notebook-style display.
 .Fn AG_WindowSetGeometry "AG_Window *win" "int x" "int y" "int w" "int h"
 .Pp
 .Ft "void"
+.Fn AG_WindowSetGeometryAligned "AG_Window *win" "enum ag_window_alignment alignment" "int w" "int h"
+.Pp
+.Ft "void"
+.Fn AG_WindowSetGeometryAlignedPct "AG_Window *win" "enum ag_window_alignment alignment" "int wPct" "int hPct"
+.Pp
+.Ft "void"
 .Fn AG_WindowSetGeometryBounded "AG_Window *win" "int x" "int y" "int w" "int h"
 .Pp
 .Ft "void"
@@ -274,19 +280,20 @@ function .
 .Pp
 The
 .Fn AG_WindowSetPosition
-function requests an initial window position, which may be one of:
+specifies the method used to compute the initial window position.
+Acceptable values include:
 .Pp
 .Bd -literal
 enum ag_window_alignment {
-	AG_WINDOW_UPPER_LEFT,
-	AG_WINDOW_MIDDLE_LEFT,
-	AG_WINDOW_LOWER_LEFT,
-	AG_WINDOW_UPPER_RIGHT,
-	AG_WINDOW_MIDDLE_RIGHT,
-	AG_WINDOW_LOWER_RIGHT,
-	AG_WINDOW_CENTER,
-	AG_WINDOW_LOWER_CENTER,
-	AG_WINDOW_UPPER_CENTER
+	AG_WINDOW_TL,		/* Top-left */
+	AG_WINDOW_TC,		/* Top-center */
+	AG_WINDOW_TR,		/* Top-right */
+	AG_WINDOW_ML,		/* Middle-left */
+	AG_WINDOW_MC,		/* Middle-center */
+	AG_WINDOW_MR,		/* Middle-right */
+	AG_WINDOW_BL,		/* Bottom-left */
+	AG_WINDOW_BC,		/* Bottom-center */
+	AG_WINDOW_BR		/* Bottom-right */
 };
 .Ed
 .Pp
@@ -297,22 +304,30 @@ each call (depending on the preferred alignment).
 .Pp
 The
 .Fn AG_WindowSetGeometry
-function allows manual modification of a window's position and size in terms
-of pixels.
+assigns a specific position and geometry in pixels to a window, overriding
+the default automatically-computed values.
 If a parameter is specified as -1, its current value is preserved.
-It should be invoked after the window's child widgets are created, otherwise
-no minimum geometry will be enforced when the window is later resized.
 .Pp
-Note that the location and size of the window is not limited by
-.Fn AG_WindowSetGeometry .
+The
+.Fn AG_WindowSetGeometryAligned
+variant assigns the window a specific size in pixels and positions it
+according to the specified window alignment (see description of
+.Fn AG_WindowSetPosition
+for the possible values).
+The parameters of
+.Fn AG_WindowSetGeometryAlignedPct
+are given in percentage of current view area instead of pixels.
+.Pp
 The
 .Fn AG_WindowSetGeometryBounded
-variant does limit the window to the view area.
+variant limits the window to the view area (by default, windows can lie
+outside of the visible area).
 .Pp
+The
 .Fn AG_WindowSetGeometryMax
-sets the geometry to the size of the display, without setting the
+variant sets the geometry to the size of the display (without setting the
 .Dv AG_WINDOW_MAXIMIZED
-flag.
+flag).
 .Pp
 .Fn AG_WindowMaximize
 and

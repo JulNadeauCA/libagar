@@ -101,6 +101,7 @@ typedef struct rg_tileview_bitmap_tool_ops {
 	void (*mousemotion)(void *, int, int, int, int);
 } RG_TileviewBitmapToolOps;
 
+#if 0
 typedef struct rg_tileview_sketch_tool_ops {
 	struct rg_tileview_tool_ops ops;
 	void (*mousebuttondown)(void *, RG_Sketch *, float, float, int);
@@ -110,6 +111,7 @@ typedef struct rg_tileview_sketch_tool_ops {
 	void (*keydown)(void *, RG_Sketch *, int, int);
 	void (*keyup)(void *, RG_Sketch *, int, int);
 } RG_TileviewSketchToolOps;
+#endif
 
 typedef struct rg_tileview_tool {
 	const RG_TileviewToolOps *ops;
@@ -126,7 +128,9 @@ typedef struct rg_tileview_tool {
 enum rg_tileview_state {
 	RG_TILEVIEW_TILE_EDIT,		/* Default edition mode */
 	RG_TILEVIEW_FEATURE_EDIT,	/* A feature is being edited */
+#if 0
 	RG_TILEVIEW_SKETCH_EDIT,	/* A sketch is being edited inline */
+#endif
 	RG_TILEVIEW_PIXMAP_EDIT,	/* A pixmap is being edited inline */
 	RG_TILEVIEW_ATTRIB_EDIT,	/* Node attributes are being edited */
 	RG_TILEVIEW_LAYERS_EDIT		/* Node layers are being edited */
@@ -176,6 +180,7 @@ typedef struct rg_tileview {
 			AG_MenuItem *menu_item;	/* Popup menu item */
 			AG_Window *menu_win;	/* Popup menu window */
 		} feature;
+#if 0
 		struct {
 			RG_TileElement *tel;	/* Sketch element */
 			RG_Sketch *sk;
@@ -185,6 +190,7 @@ typedef struct rg_tileview {
 			AG_MenuItem *menu_item;	/* Popup menu item */
 			AG_Window *menu_win;	/* Popup menu window */
 		} sketch;
+#endif
 		struct {
 			RG_TileElement *tel;	/* Pixmap element */
 			RG_Pixmap *px;

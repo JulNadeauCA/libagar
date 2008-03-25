@@ -1,8 +1,5 @@
-/*	$Csoft: tool.c,v 1.12 2005/10/04 17:34:51 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +21,10 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Base tool class for VG_View.
  */
 
 #include <core/core.h>
@@ -87,7 +88,7 @@ VG_ToolDestroy(VG_Tool *tool)
 }
 
 static void
-VG_ToolWindowClosed(AG_Event *event)
+ToolWindowClosed(AG_Event *event)
 {
 	VG_Tool *tool = AG_PTR(1);
 
@@ -103,7 +104,7 @@ VG_ToolWindow(void *p, const char *name)
 	win = tool->win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _(tool->ops->desc));
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
-	AG_SetEvent(win, "window-close", VG_ToolWindowClosed, "%p", tool);
+	AG_SetEvent(win, "window-close", ToolWindowClosed, "%p", tool);
 	return (win);
 }
 

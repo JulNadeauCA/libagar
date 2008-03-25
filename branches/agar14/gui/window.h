@@ -17,16 +17,26 @@ struct ag_titlebar;
 struct ag_icon;
 
 enum ag_window_alignment {
-	AG_WINDOW_UPPER_LEFT,
-	AG_WINDOW_MIDDLE_LEFT,
-	AG_WINDOW_LOWER_LEFT,
-	AG_WINDOW_UPPER_RIGHT,
-	AG_WINDOW_MIDDLE_RIGHT,
-	AG_WINDOW_LOWER_RIGHT,
-	AG_WINDOW_CENTER,
-	AG_WINDOW_LOWER_CENTER,
-	AG_WINDOW_UPPER_CENTER
+	AG_WINDOW_TL,
+	AG_WINDOW_TC,
+	AG_WINDOW_TR,
+	AG_WINDOW_ML,
+	AG_WINDOW_MC,
+	AG_WINDOW_MR,
+	AG_WINDOW_BL,
+	AG_WINDOW_BC,
+	AG_WINDOW_BR
 };
+
+#define AG_WINDOW_UPPER_LEFT	AG_WINDOW_TL
+#define AG_WINDOW_UPPER_CENTER	AG_WINDOW_TC
+#define AG_WINDOW_UPPER_RIGHT	AG_WINDOW_TR
+#define AG_WINDOW_MIDDLE_LEFT	AG_WINDOW_ML
+#define AG_WINDOW_CENTER	AG_WINDOW_MC
+#define AG_WINDOW_MIDDLE_RIGHT	AG_WINDOW_MR
+#define AG_WINDOW_LOWER_LEFT	AG_WINDOW_BL
+#define AG_WINDOW_LOWER_CENTER	AG_WINDOW_BC
+#define AG_WINDOW_LOWER_RIGHT	AG_WINDOW_BR
 
 enum ag_window_close_action {
 	AG_WINDOW_HIDE,
@@ -108,6 +118,10 @@ void	 AG_WindowSetPadding(AG_Window *, int, int, int, int);
 void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
 void	 AG_WindowSetCloseAction(AG_Window *, enum ag_window_close_action);
 int	 AG_WindowSetGeometryParam(AG_Window *, int, int, int, int, int);
+int	 AG_WindowSetGeometryAligned(AG_Window *, enum ag_window_alignment,
+                                     int, int);
+int	 AG_WindowSetGeometryAlignedPct(AG_Window *, enum ag_window_alignment,
+                                        int, int);
 #define  AG_WindowSetGeometry(win,x,y,w,h) \
 	 AG_WindowSetGeometryParam((win),(x),(y),(w),(h),0)
 #define  AG_WindowSetGeometryBounded(win,x,y,w,h) \

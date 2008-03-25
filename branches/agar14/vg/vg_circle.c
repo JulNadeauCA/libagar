@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,16 +23,23 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Circle element.
+ */
+
 #include <core/limits.h>
 #include <core/core.h>
 
+#include <gui/widget.h>
+#include <gui/primitive.h>
+
 #include "vg.h"
-#include "vg_primitive.h"
+#include "vg_view.h"
 #include "vg_math.h"
 #include "icons.h"
 
 static void
-VG_CircleInit(VG *vg, VG_Element *vge)
+Init(VG *vg, VG_Element *vge)
 {
 	vge->vg_circle.radius = 0.025f;
 }
@@ -51,17 +57,17 @@ VG_CircleDiameter(VG *vg, float diameter)
 }
 
 static void
-VG_CircleRender(VG *vg, VG_Element *vge)
+Draw(VG_View *vv, VG_Element *vge)
 {
-	int rx, ry, radius;
+	int x, y, r;
 
-	VG_Rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &rx, &ry);
-	VG_RLength(vg, vge->vg_circle.radius, &radius);
-	VG_CirclePrimitive(vg, rx, ry, radius, vge->color);
+	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
+	r = (int)(vge->vg_circle.radius*vv->scale);
+	AG_DrawCircle(vv, x, y, r, VG_MapColorRGB(vge->color));
 }
 
 static void
-VG_CircleExtent(VG *vg, VG_Element *vge, VG_Rect *r)
+Extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_circle.radius;
 	r->y = vge->vtx[0].y - vge->vg_circle.radius;
@@ -70,7 +76,7 @@ VG_CircleExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-VG_CircleIntersect(VG *vg, VG_Element *vge, float *x, float *y)
+Intersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	float d;
 
@@ -85,9 +91,9 @@ VG_CircleIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 const VG_ElementOps vgCircleOps = {
 	N_("Circle"),
 	&vgIconCircle,
-	VG_CircleInit,
+	Init,
 	NULL,
-	VG_CircleRender,
-	VG_CircleExtent,
-	VG_CircleIntersect	
+	Draw,
+	Extent,
+	Intersect	
 };

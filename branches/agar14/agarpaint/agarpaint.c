@@ -128,12 +128,9 @@ CreateEditionWindow(RG_Tileset *ts)
 	AG_AddEvent(win, "window-gainfocus", WindowGainedFocus, "%p", ts);
 	AG_AddEvent(win, "window-lostfocus", WindowLostFocus, "%p", ts);
 	AG_AddEvent(win, "window-hidden", WindowLostFocus, "%p", ts);
+	AG_WindowSetGeometry(win, AG_WINDOW_TL, agView->w,
+	    AGWIDGET(agAppMenu)->h);
 	AG_WindowShow(win);
-	AG_WindowSetGeometry(win,
-	    0,
-	    AGWIDGET(agAppMenu)->h,
-	    AGWIDGET(win)->w,
-	    agView->h - AGWIDGET(agAppMenu)->h);
 }
 
 static void

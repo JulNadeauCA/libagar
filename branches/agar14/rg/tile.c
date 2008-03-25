@@ -250,9 +250,11 @@ RG_TileGenerate(RG_Tile *t)
 				t->blend_fn(t, px->su, &rd);
 			}
 			break;
+#if 0
 		case RG_TILE_SKETCH:
 			RG_SketchRender(t, tel);
 			break;
+#endif
 		}
 	}
 
@@ -388,6 +390,7 @@ RG_TileAddPixmap(RG_Tile *t, const char *name, RG_Pixmap *px, int x, int y)
 	return (tel);
 }
 
+#if 0
 RG_TileElement *
 RG_TileAddSketch(RG_Tile *t, const char *name, RG_Sketch *sk, int x, int y)
 {
@@ -411,6 +414,7 @@ RG_TileAddSketch(RG_Tile *t, const char *name, RG_Sketch *sk, int x, int y)
 	t->flags |= RG_TILE_DIRTY;
 	return (tel);
 }
+#endif
 
 void
 RG_TileDelPixmap(RG_Tile *t, RG_Pixmap *px, int destroy)
@@ -434,6 +438,7 @@ RG_TileDelPixmap(RG_Tile *t, RG_Pixmap *px, int destroy)
 	}
 }
 
+#if 0
 void
 RG_TileDelSketch(RG_Tile *t, RG_Sketch *sk, int destroy)
 {
@@ -455,6 +460,7 @@ RG_TileDelSketch(RG_Tile *t, RG_Sketch *sk, int destroy)
 		}
 	}
 }
+#endif
 
 void
 RG_TileSave(RG_Tile *t, AG_DataSource *buf)
@@ -509,6 +515,7 @@ RG_TileSave(RG_Tile *t, AG_DataSource *buf)
 				    (Uint8)tel->tel_pixmap.alpha);
 			}
 			break;
+#if 0
 		case RG_TILE_SKETCH:
 			{
 				RG_Sketch *sk = tel->tel_sketch.sk;
@@ -520,6 +527,7 @@ RG_TileSave(RG_Tile *t, AG_DataSource *buf)
 				    (Uint8)tel->tel_sketch.alpha);
 			}
 			break;
+#endif
 		}
 		nelements++;
 	}
@@ -613,6 +621,7 @@ RG_TileLoad(RG_Tile *t, AG_DataSource *buf)
 				tel->visible = visible;
 			}
 			break;
+#if 0
 		case RG_TILE_SKETCH:
 			{
 				char sk_name[RG_SKETCH_NAME_MAX];
@@ -638,6 +647,7 @@ RG_TileLoad(RG_Tile *t, AG_DataSource *buf)
 				tel->visible = visible;
 			}
 			break;
+#endif
 		default:
 			break;
 		}
@@ -723,6 +733,7 @@ CloseElement(RG_Tileview *tv)
 			tv->tv_pixmap.win = NULL;
 		}
 		break;
+#if 0
 	case RG_TILEVIEW_SKETCH_EDIT:
 		if (tv->tv_sketch.win != NULL) {
 			tv->tv_sketch.ctrl = NULL;
@@ -730,6 +741,7 @@ CloseElement(RG_Tileview *tv)
 			tv->tv_sketch.win = NULL;
 		}
 		break;
+#endif
 	default:
 		if (tv->menu != NULL) {
 			RG_TileCloseMenu(tv);
@@ -800,6 +812,7 @@ PixmapCtrlButtonUp(AG_Event *event)
 	t->flags |= RG_TILE_DIRTY;
 }
 
+#if 0
 static void
 SketchCtrlButtonUp(AG_Event *event)
 {
@@ -817,6 +830,7 @@ SketchCtrlButtonUp(AG_Event *event)
 	}
 	t->flags |= RG_TILE_DIRTY;
 }
+#endif
 
 static void
 OpenElement(RG_Tileview *tv, RG_TileElement *tel)
@@ -906,6 +920,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel)
 			AG_WindowUpdate(pWin);
 		}
 		break;
+#if 0
 	case RG_TILE_SKETCH:
 		{
 			AG_Window *win;
@@ -938,6 +953,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel)
 			AG_WindowUpdate(pWin);
 		}
 		break;
+#endif
 	}
 	tv->edit_mode = 1;
 }
@@ -989,6 +1005,7 @@ tryname:
 	}
 }
 
+#if 0
 static void
 CreateSketch(AG_Event *event)
 {
@@ -1034,6 +1051,7 @@ tryname:
 		}
 	}
 }
+#endif
 
 static void
 AttachPixmap(AG_Event *event)
@@ -1109,6 +1127,7 @@ AttachPixmapDlg(AG_Event *event)
 	AG_WindowShow(win);
 }
 
+#if 0
 static void
 AttachSketch(AG_Event *event)
 {
@@ -1184,6 +1203,7 @@ AttachSketchDlg(AG_Event *event)
 	AG_WindowAttach(AG_WidgetParentWindow(tv), win);
 	AG_WindowShow(win);
 }
+#endif
 
 static void
 SelectFeature(AG_Tlist *tlFeatures, void *fp)
@@ -1224,6 +1244,7 @@ AddFillFeature(AG_Event *event)
 	SelectFeature(tlFeatures, fill);
 }
 
+#if 0
 static void
 AddSketchProjFeature(AG_Event *event)
 {
@@ -1239,6 +1260,7 @@ AddSketchProjFeature(AG_Event *event)
 	OpenElement(tv, tel);
 	SelectFeature(tlFeatures, sproj);
 }
+#endif
 
 static void
 PollFeatures(AG_Event *event)
@@ -1299,7 +1321,7 @@ PollFeatures(AG_Event *event)
 	TAILQ_FOREACH(tel, &t->elements, elements) {
 		if (tel->type == RG_TILE_FEATURE) {
 			RG_Feature *ft = tel->tel_feature.ft;
-			RG_FeatureSketch *fsk;
+/*			RG_FeatureSketch *fsk; */
 			RG_FeaturePixmap *fpx;
 	
 			it = AG_TlistAdd(tl, rgIconObject.s, "%s%s%s",
@@ -1311,13 +1333,13 @@ PollFeatures(AG_Event *event)
 			it->p1 = tel;
 			it->depth = 0;
 
-			if (!TAILQ_EMPTY(&ft->sketches) ||
-			    !TAILQ_EMPTY(&ft->pixmaps)) {
+/*			if (!TAILQ_EMPTY(&ft->sketches) || */
+			if (!TAILQ_EMPTY(&ft->pixmaps)) {
 				it->flags |= AG_TLIST_HAS_CHILDREN;
 			}
 			if (!AG_TlistVisibleChildren(tl, it))
 				continue;
-
+#if 0
 			TAILQ_FOREACH(fsk, &ft->sketches, sketches) {
 				it = AG_TlistAdd(tl, rgIconDrawing.s,
 				    "%s%s%s",
@@ -1328,7 +1350,7 @@ PollFeatures(AG_Event *event)
 				it->cat = "feature-sketch";
 				it->p1 = fsk;
 			}
-
+#endif
 			TAILQ_FOREACH(fpx, &ft->pixmaps, pixmaps) {
 				it = AG_TlistAdd(tl, rgIconPixmap.s,
 				    "%s%s (%d,%d)%s",
@@ -1351,6 +1373,7 @@ PollFeatures(AG_Event *event)
 			it->p1 = tel;
 			it->depth = 0;
 			AG_TlistSetIcon(tl, it, px->su);
+#if 0
 		} else if (tel->type == RG_TILE_SKETCH) {
 			RG_Sketch *sk = tel->tel_sketch.sk;
 			VG *vg = sk->vg;
@@ -1381,6 +1404,7 @@ PollFeatures(AG_Event *event)
 				it->p1 = vge;
 				it->depth = 1;
 			}
+#endif
 		}
 	}
 
@@ -1445,7 +1469,7 @@ DeleteElement(AG_Event *event)
 
 	if ((it = AG_TlistSelectedItem(tlFeatures)) == NULL)
 		return;
-
+#if 0
 	if (tv->state == RG_TILEVIEW_SKETCH_EDIT &&
 	    strcmp(it->cat, "sketch-element") == 0) {
 	    	VG *vg = tv->tv_sketch.sk->vg;
@@ -1455,7 +1479,7 @@ DeleteElement(AG_Event *event)
 		VG_DestroyElement(vg, vge);
 		return;
 	}
-
+#endif
 	tel = it->p1;
 
 	/* XXX check that it's the element being deleted */
@@ -1466,8 +1490,10 @@ DeleteElement(AG_Event *event)
 		RG_TileDelFeature(t, tel->tel_feature.ft, !detach_only);
 	} else if (strcmp(it->cat, "pixmap") == 0) {
 		RG_TileDelPixmap(t, tel->tel_pixmap.px, !detach_only);
+#if 0
 	} else if (strcmp(it->cat, "sketch") == 0) {
 		RG_TileDelSketch(t, tel->tel_sketch.sk, !detach_only);
+#endif
 	}
 
 	t->flags |= RG_TILE_DIRTY;
@@ -1788,23 +1814,19 @@ InitTileFeatureMenu(RG_Tileview *tv, AG_Tlist *tl, AG_Window *win)
 		    SDLK_d, KMOD_SHIFT,
 		    MoveElementDown, "%p,%p", tv, tl);
 	}
-	
+#if 0
 	mi = AG_TlistSetPopup(tl, "sketch");
 	{
 		AG_MenuAction(mi, _("Toggle visibility"), NULL,
 		    ToggleElementVisibility, "%p,%p", tv, tl);
-
 		AG_MenuSeparator(mi);
-
 		AG_MenuAction(mi, _("Edit sketch"), rgIconSketch.s,
 		    EditElement, "%p,%p", tv, tl);
 		AG_MenuAction(mi, _("Detach sketch"), agIconTrash.s,
 		    DeleteElement, "%p,%p,%i", tv, tl, 1);
 		AG_MenuAction(mi, _("Destroy sketch"), agIconTrash.s,
 		    DeleteElement, "%p,%p,%i", tv, tl, 0);
-		
 		AG_MenuSeparator(mi);
-		
 		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
 		    SDLK_u, KMOD_SHIFT,
 		    MoveElementUp, "%p,%p", tv, tl);
@@ -1812,24 +1834,14 @@ InitTileFeatureMenu(RG_Tileview *tv, AG_Tlist *tl, AG_Window *win)
 		    SDLK_d, KMOD_SHIFT,
 		    MoveElementDown, "%p,%p", tv, tl);
 	}
-	
 	mi = AG_TlistSetPopup(tl, "sketch-element");
 	{
 		AG_MenuAction(mi, _("Edit sketch element"), rgIconSketch.s,
 		    EditElement, "%p,%p", tv, tl);
 		AG_MenuAction(mi, _("Delete sketch element"), agIconTrash.s,
 		    DeleteElement, "%p,%p,%i", tv, tl, 1);
-#if 0
-		AG_MenuSeparator(mi);
-		AG_MenuActionKb(mi, _("Move up"), agIconUp.s,
-		    SDLK_u, KMOD_SHIFT,
-		    move_vg_element_up, "%p,%p", tv, tl);
-
-		AG_MenuActionKb(mi, _("Move down"), agIconDown.s,
-		    SDLK_d, KMOD_SHIFT,
-		    move_vg_element_down, "%p,%p", tv, tl);
-#endif
 	}
+#endif
 }
 
 static void
@@ -1875,6 +1887,8 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 	tv = RG_TileviewNew(NULL, ts, 0);
 	RG_TileviewSetTile(tv, t);
 	RG_TileScale(ts, t, t->su->w, t->su->h, t->flags);
+
+#if 0
 	{
 		extern RG_TileviewSketchToolOps sketch_line_ops;
 		extern RG_TileviewSketchToolOps sketch_polygon_ops;
@@ -1884,7 +1898,8 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		RG_TileviewRegTool(tv, &sketch_polygon_ops);
 		RG_TileviewRegTool(tv, &sketch_circle_ops);
 	}
-	
+#endif
+
 	tlFeatures = AG_TlistNew(NULL, AG_TLIST_POLL|AG_TLIST_TREE|
 	                               AG_TLIST_VFILL);
 	AG_TlistSizeHint(tlFeatures, _("FEATURE #00 <#00>"), 5);
@@ -1928,10 +1943,11 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		AG_MenuTool(mi, tbar, _("Fill"), rgIconFill.s,
 		    SDLK_f, KMOD_CTRL|KMOD_SHIFT,
 		    AddFillFeature, "%p,%p", tv, tlFeatures);
-		
+#if 0	
 		AG_MenuActionKb(mi, _("Sketch projection"), rgIconSketchProj.s,
 		    SDLK_s, KMOD_CTRL|KMOD_SHIFT,
 		    AddSketchProjFeature, "%p,%p", tv, tlFeatures);
+#endif
 	}
 
 	mi = AG_MenuAddItem(me, _("View"));
@@ -1949,19 +1965,16 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		    rgIconPixmapAttach.s,
 		    AttachPixmapDlg, "%p,%p", tv, tlFeatures);
 	}
-	
+#if 0
 	mi = AG_MenuAddItem(me, _("Sketches"));
 	{
 		AG_MenuTool(mi, tbar, _("Create sketch..."), rgIconSketch.s,
 		    0, 0,
 		    CreateSketch, "%p,%p", tv, tlFeatures);
-		
 		AG_MenuAction(mi, _("Attach sketch..."), rgIconSketchAttach.s,
 		    AttachSketchDlg, "%p,%p", tv, tlFeatures);
-
-		/* TODO import */
 	}
-
+#endif
 	pane = AG_PaneNewHoriz(win, AG_PANE_EXPAND);
 	{
 		AG_ObjectAttach(pane->div[0], tlFeatures);

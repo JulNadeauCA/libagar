@@ -91,7 +91,7 @@ RG_AnimInsertInsn(RG_Anim *ani, enum rg_anim_insn_type type)
 	insn->type = type;
 	insn->t = NULL;
 	insn->px = NULL;
-	insn->sk = NULL;
+/*	insn->sk = NULL; */
 	insn->delay = 100;
 
 	switch (type) {
@@ -118,7 +118,7 @@ DestroyInsn(RG_AnimInsn *insn)
 {
 	if (insn->t != NULL)	insn->t->nrefs--;
 	if (insn->px != NULL)	insn->px->nrefs--;
-	if (insn->sk != NULL)	insn->sk->nrefs--;
+/*	if (insn->sk != NULL)	insn->sk->nrefs--; */
 }
 
 void

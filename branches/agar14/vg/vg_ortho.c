@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,20 +23,25 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Orthogonal restriction.
+ */
+
 #include <core/core.h>
 
+#include <gui/widget.h>
 #include <gui/toolbar.h>
 #include <gui/button.h>
 
 #include "vg.h"
+#include "vg_view.h"
 #include "vg_math.h"
-#include "vg_primitive.h"
 #include "icons.h"
 
 void
-VG_RestrictOrtho(VG *vg, float *x, float *y)
+VG_RestrictOrtho(VG_View *vv, float *x, float *y)
 {
-	switch (vg->ortho_mode) {
+	switch (vv->ortho_mode) {
 	case VG_HORIZ_ORTHO:
 	case VG_VERT_ORTHO:
 		/* TODO */
@@ -48,26 +52,20 @@ VG_RestrictOrtho(VG *vg, float *x, float *y)
 	}
 }
 
-void
-VG_OrthoRestrictMode(VG *vg, enum vg_ortho_mode mode)
-{
-	vg->ortho_mode = mode;
-}
-
 static void
-select_mode(AG_Event *event)
+SelectMode(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 	AG_Toolbar *tbar = AG_PTR(1);
-	VG *vg = AG_PTR(2);
+	VG_View *vv = AG_PTR(2);
 	int ortho_mode = AG_INT(3);
 
 	AG_ToolbarSelectOnly(tbar, bu);
-	VG_OrthoRestrictMode(vg, ortho_mode);
+	VG_ViewSetOrthoMode(vv, ortho_mode);
 }
 
 AG_Toolbar *
-VG_OrthoRestrictToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
+VG_OrthoRestrictToolbar(void *parent, VG_View *vv, enum ag_toolbar_type ttype)
 {
 	AG_Toolbar *snbar;
 
@@ -75,11 +73,11 @@ VG_OrthoRestrictToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
 	                                        AG_TOOLBAR_STICKY);
 
 	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 1,
-	    select_mode, "%p,%p,%i", snbar, vg, VG_NO_ORTHO);
+	    SelectMode, "%p,%p,%i", snbar, vv, VG_NO_ORTHO);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 0,
-	    select_mode, "%p,%p,%i", snbar, vg, VG_HORIZ_ORTHO);
+	    SelectMode, "%p,%p,%i", snbar, vv, VG_HORIZ_ORTHO);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 0,
-	    select_mode, "%p,%p,%i", snbar, vg, VG_VERT_ORTHO);
+	    SelectMode, "%p,%p,%i", snbar, vv, VG_VERT_ORTHO);
 
 	return (snbar);
 }

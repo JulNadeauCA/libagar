@@ -29,12 +29,14 @@ typedef struct rg_feature_ops {
 	struct ag_window *(*edit)(void *, struct rg_tileview *);
 } RG_FeatureOps;
 
+#if 0
 typedef struct rg_feature_sketch {
 	struct rg_sketch *sk;
 	int x, y;
 	int visible;
 	AG_TAILQ_ENTRY(rg_feature_sketch) sketches;
 } RG_FeatureSketch;
+#endif
 
 typedef struct rg_feature_pixmap {
 	struct rg_pixmap *px;
@@ -49,7 +51,7 @@ typedef struct rg_feature {
 	struct rg_tileset *ts;
 	int flags;
 	Uint nrefs;
-	AG_TAILQ_HEAD(,rg_feature_sketch) sketches;
+/*	AG_TAILQ_HEAD(,rg_feature_sketch) sketches; */
 	AG_TAILQ_HEAD(,rg_feature_pixmap) pixmaps;
 	AG_TAILQ_ENTRY(rg_feature) features;
 } RG_Feature;
@@ -62,8 +64,10 @@ void	AG_FeatureDestroy(RG_Feature *);
 int	RG_FeatureLoad(void *, AG_DataSource *);
 void	RG_FeatureSave(void *, AG_DataSource *);
 
+#if 0
 RG_FeatureSketch *RG_FeatureAddSketch(RG_Feature *, struct rg_sketch *);
 void		  RG_FeatureDelSketch(RG_Feature *, struct rg_sketch *);
+#endif
 
 RG_FeaturePixmap *RG_FeatureAddPixmap(RG_Feature *, struct rg_pixmap *);
 void		  RG_FeatureDelPixmap(RG_Feature *, struct rg_pixmap *);
