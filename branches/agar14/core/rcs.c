@@ -35,6 +35,7 @@
 #include <config/network.h>
 #include <config/version.h>
 
+#include <gui/window.h>
 #include <gui/text.h>
 #include <gui/tlist.h>
 #include <gui/tableview.h>
@@ -54,8 +55,6 @@ int agRcsMode = 0;
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
-
-#include <net/net.h>
 
 static NC_Session rcs_client;
 static int connected = 0;

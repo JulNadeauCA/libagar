@@ -38,6 +38,8 @@
 #define CURSOR_MAX_W 32
 #define CURSOR_MAX_H 32
 
+extern int agViewRemote;
+
 SDL_Cursor *agCursors[AG_LAST_CURSOR];
 SDL_Cursor *agDefaultCursor = NULL;
 
@@ -82,6 +84,15 @@ GenCursor(char *xpm[], int xHot, int yHot)
 void
 AG_CursorsInit(void)
 {
+	int i;
+
+	if (agViewRemote) {
+		for (i = 0; i < AG_LAST_CURSOR; i++) {
+			agCursors[i] = NULL;
+		}
+		agDefaultCursor = NULL;
+		return;
+	}
 	agDefaultCursor = SDL_GetCursor();
 	agCursors[AG_FILL_CURSOR] = GenCursor(fill_xpm, 23, 25);
 	agCursors[AG_ERASE_CURSOR] = GenCursor(erase_xpm, 10, 20);
@@ -98,6 +109,8 @@ AG_CursorsDestroy(void)
 {
 	int i;
 
-	for (i = 0; i < AG_LAST_CURSOR; i++)
-		SDL_FreeCursor(agCursors[i]);
+	if (!agViewRemote) {
+		for (i = 0; i < AG_LAST_CURSOR; i++)
+			SDL_FreeCursor(agCursors[i]);
+	}
 }

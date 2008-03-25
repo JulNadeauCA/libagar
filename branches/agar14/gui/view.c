@@ -64,6 +64,8 @@
 /* #define OPENGL_INVERTED_Y */
 
 AG_Display *agView = NULL;		/* Main view */
+int agViewRemote = 0;			/* Using AgarWM */
+
 SDL_PixelFormat *agVideoFmt = NULL;	/* Current format of display */
 SDL_PixelFormat *agSurfaceFmt = NULL;	/* Preferred format for surfaces */
 const SDL_VideoInfo *agVideoInfo;	/* Display information */
@@ -139,8 +141,8 @@ AG_ClearBackground(void)
 	}
 }
 
-static void
-InitView(AG_Display *v)
+void
+AG_ViewInit(AG_Display *v)
 {
 	AG_ObjectInit(v, &agDisplayClass);
 	AG_ObjectSetName(v, "_agView");
@@ -159,8 +161,8 @@ InitView(AG_Display *v)
 	TAILQ_INIT(&v->detach);
 }
 
-static void
-InitGlobals(void)
+void
+AG_ViewInitGlobals(void)
 {
 	if (initedGlobals) {
 		return;
@@ -180,7 +182,7 @@ InitGlobals(void)
 int
 AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 {
-	InitGlobals();
+	AG_ViewInitGlobals();
 	
 	if (display->w < AG_Uint16(agConfig, "view.min-w") ||
 	    display->h < AG_Uint16(agConfig, "view.min-h")) {
@@ -189,7 +191,7 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 	}
 
 	agView = Malloc(sizeof(AG_Display));
-	InitView(agView);
+	AG_ViewInit(agView);
 	agView->v = display;
 	agView->w = display->w;
 	agView->h = display->h;
@@ -255,7 +257,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	Uint32 screenflags = 0;
 	int depth;
 
-	InitGlobals();
+	AG_ViewInitGlobals();
 
 	if (!SDL_WasInit(SDL_INIT_VIDEO) &&
 	    SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
@@ -288,7 +290,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 
 	agView = Malloc(sizeof(AG_Display));
-	InitView(agView);
+	AG_ViewInit(agView);
 
 	agView->rNom = 1000/AG_Uint(agConfig, "view.nominal-fps");
 	depth = bpp > 0 ? bpp : AG_Uint8(agConfig, "view.depth");

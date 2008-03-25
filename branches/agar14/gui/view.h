@@ -231,6 +231,7 @@ case 4:					\
 #define AG_VIDEO_NOBGCLEAR     0x800  /* Don't clear background on init */
 
 __BEGIN_DECLS
+extern int agViewRemote;
 extern AG_ObjectClass agDisplayClass;
 extern AG_Display *agView;
 extern SDL_PixelFormat *agVideoFmt;
@@ -241,6 +242,8 @@ extern const char *agBlendFuncNames[];
 int		 AG_InitVideo(int, int, int, Uint);
 int		 AG_InitVideoSDL(SDL_Surface *, Uint);
 int		 AG_InitGUI(Uint);
+void		 AG_ViewInit(AG_Display *);
+void		 AG_ViewInitGlobals(void);
 void		 AG_ClearBackground(void);
 
 void		 AG_DestroyVideo(void);

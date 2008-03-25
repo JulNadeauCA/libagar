@@ -83,6 +83,65 @@ AG_WindowNew(Uint flags)
 	return (win);
 }
 
+/* Create a generic window on the specified AgarWM server. */
+AG_Window *
+AG_WindowNewRemote(Uint flags, const char *serverSpec)
+{
+	char spec[128], *s = &spec[0], *host, *port;
+	AG_Window *win;
+	NC_Result *r;
+	Uint titlebarFlags = 0;
+
+	Strlcpy(spec, serverSpec, sizeof(spec));
+	host = Strsep(&s, ":");
+	port = Strsep(&s, ":");
+
+	win = Malloc(sizeof(AG_Window));
+	AG_ObjectInit(win, &agWindowClass);
+	AG_ObjectSetName(win, "win-generic");
+	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
+
+	win->flags |= flags;
+
+	if ((win->flags & AG_WINDOW_NOTITLE) == 0)
+		win->minh += agTextFontHeight;
+	if (win->flags & AG_WINDOW_MODAL)
+		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
+	if (win->flags & AG_WINDOW_NORESIZE)
+		win->flags |= AG_WINDOW_NOMAXIMIZE;
+	if (win->flags & AG_WINDOW_NOCLOSE)
+		titlebarFlags |= AG_TITLEBAR_NO_CLOSE;
+	if (win->flags & AG_WINDOW_NOMINIMIZE)
+		titlebarFlags |= AG_TITLEBAR_NO_MINIMIZE;
+	if (win->flags & AG_WINDOW_NOMAXIMIZE)
+		titlebarFlags |= AG_TITLEBAR_NO_MAXIMIZE;
+	if ((win->flags & AG_WINDOW_NOTITLE) == 0)
+		win->tbar = AG_TitlebarNew(win, titlebarFlags);
+
+	AG_SetEvent(win, "window-close", AGWINDETACH(win));
+
+	fprintf(stderr, "Creating remote window on %s:%s\n", host, port);
+	win->nc = Malloc(sizeof(NC_Session));
+	NC_Init(win->nc, "AgarWM", "1.0-alpha");
+	if (NC_Connect(win->nc, host, port, NULL, NULL) == -1) {
+		return (NULL);
+	}
+	if ((r = NC_Query(win->nc, "WindowNew\n")) == NULL ||
+	    r->argc < 1) {
+		goto fail;
+	}
+	Strlcpy(win->remoteName, r->argv[0], sizeof(win->remoteName));
+	fprintf(stderr, "Created window %s on %s:%s\n",
+	    win->remoteName, host, port);
+	NC_FreeResult(r);
+	return (win);
+fail:
+	NC_Disconnect(win->nc);
+	AG_ObjectDestroy(win);
+	if (r != NULL) { NC_FreeResult(r); }
+	return (NULL);
+}
+
 /* Create a named window */
 AG_Window *
 AG_WindowNewNamed(Uint flags, const char *fmt, ...)
@@ -149,6 +208,9 @@ Init(void *obj)
 	TAILQ_INIT(&win->subwins);
 	AG_IconSetSurfaceNODUP(win->icon, agIconWindow.s);
 	AG_IconSetBackgroundFill(win->icon, 1, AG_COLOR(BG_COLOR));
+#ifdef NETWORK
+	win->nc = NULL;
+#endif
 
 	if (!agView->opengl)
 		WIDGET(win)->flags |= AG_WIDGET_CLIPPING;
@@ -1615,7 +1677,21 @@ AG_WindowSetCaption(AG_Window *win, const char *fmt, ...)
 		Vsnprintf(s, sizeof(s), fmt, ap);
 		va_end(ap);
 		Strlcpy(win->caption, s, sizeof(win->caption));
-		AG_WindowUpdateCaption(win);
+	
+		if (win->nc != NULL) {
+			NC_Result *r;
+
+			fprintf(stderr, "Setting caption on %s\n",
+			    win->remoteName);
+			if ((r = NC_Query(win->nc,
+			    "WindowSetCaption\n"
+			    "win=%s\n"
+			    "caption=%s\n",
+			    win->remoteName,
+			    s)) != NULL) {
+				NC_FreeResult(r);
+			}
+		}
 	}
 	AG_ObjectUnlock(win);
 }

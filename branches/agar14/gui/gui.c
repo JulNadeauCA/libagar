@@ -132,6 +132,38 @@ AG_InitGUI(Uint flags)
 	void **ops;
 	int i, n, njoys;
 
+	if (agView == NULL) {
+		/*
+		 * If we get here, this is probably an AgarWM client program.
+		 * We use the Agar GUI library but we don't have any display.
+		 */
+		AG_ViewInitGlobals();
+		agView = Malloc(sizeof(AG_Display));
+		AG_ViewInit(agView);
+		agView->v = NULL;
+		agView->w = 0;
+		agView->h = 0;
+		agView->depth = 0;
+		agView->opengl = 0;
+		agView->stmpl = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32,
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		 	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+#else
+			    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+#endif
+		);
+		if (agView->stmpl == NULL) {
+			AG_SetError("SDL_CreateRGBSurface: %s", SDL_GetError());
+			return (-1);
+		}
+		agVideoFmt = agView->stmpl->format;
+		agSurfaceFmt = agView->stmpl->format;
+		agViewRemote = 1;
+	} else {
+		agViewRemote = 0;
+	}
+
+	/* Register our built-in widget classes. */
 	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)
 		AG_RegisterClass(*ops);
 
@@ -152,10 +184,10 @@ AG_InitGUI(Uint flags)
 		return (-1);
 
 	/* Initialize the input devices. */
-	if (AG_Bool(agConfig, "input.unicode")) {
+	if (!agViewRemote && AG_Bool(agConfig, "input.unicode")) {
 		SDL_EnableUNICODE(1);
 	}
-	if (AG_Bool(agConfig, "input.joysticks")) {
+	if (!agViewRemote && AG_Bool(agConfig, "input.joysticks")) {
 		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
 			n = SDL_NumJoysticks();
 			for (i = 0, njoys = 0; i < n; i++) {
@@ -169,6 +201,5 @@ AG_InitGUI(Uint flags)
 
 	/* Initialize the built-in theme. */
 	AG_SetStyle(agView, &agStyleDefault);
-
 	return (0);
 }
