@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,11 +23,19 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Text entity.
+ */
+
 #include <core/limits.h>
 #include <core/core.h>
 
+#include <gui/widget.h>
+#include <gui/primitive.h>
+
 #include "vg.h"
 #include "vg_text.h"
+#include "vg_view.h"
 #include "vg_math.h"
 #include "icons.h"
 
@@ -36,7 +43,7 @@
 #include <string.h>
 
 static void
-VG_TextInit(VG *vg, VG_Element *vge)
+Init(VG *vg, VG_Element *vge)
 {
 	vge->vg_text.su = NULL;
 	vge->vg_text.text[0] = '\0';
@@ -46,7 +53,7 @@ VG_TextInit(VG *vg, VG_Element *vge)
 }
 
 static void
-VG_TextDestroy(VG *vg, VG_Element *vge)
+Destroy(VG *vg, VG_Element *vge)
 {
 	if (vge->vg_text.su != NULL)
 		SDL_FreeSurface(vge->vg_text.su);
@@ -147,12 +154,12 @@ static const struct {
 static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
 static void
-align_text(VG *vg, VG_Element *vge, Sint16 *x, Sint16 *y)
+AlignText(VG_View *vv, VG_Element *vge, Sint16 *x, Sint16 *y)
 {
 	SDL_Surface *su = vge->vg_text.su;
 	int vx, vy;
 	
-	VG_Rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &vx, &vy);
+	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &vx, &vy);
 
 	switch (vge->vg_text.align) {
 	case VG_ALIGN_TL:
@@ -197,21 +204,23 @@ align_text(VG *vg, VG_Element *vge, Sint16 *x, Sint16 *y)
 }
 
 static void
-VG_TextRenderLabel(VG *vg, VG_Element *vge)
+DrawLabel(VG_View *vv, VG_Element *vge)
 {
+	Uint32 c32 = VG_MapColorRGB(vge->color);
 	char s[VG_TEXT_MAX];
 	char s2[32];
 	char *fmtp;
 	int i, ri = 0;
 
 	if (vge->vg_text.nptrs == 0) {
-		if (vge->vg_text.su == NULL) {
-			AG_TextFontLookup(vge->text_st.face[0] != '\0' ?
-			                  vge->text_st.face : NULL,
-					  vge->text_st.size, 0),
-			AG_TextColorVideo32(vge->color);
-			vge->vg_text.su = AG_TextRender(vge->vg_text.text);
+		if (vge->vg_text.su != NULL) {
+			SDL_FreeSurface(vge->vg_text.su);
 		}
+		AG_PushTextState();
+		AG_TextFontLookup(vge->text_st.face, vge->text_st.size, 0),
+		AG_TextColorVideo32(c32);
+		vge->vg_text.su = AG_TextRender(vge->vg_text.text);
+		AG_PopTextState();
 		return;
 	}
 
@@ -298,37 +307,45 @@ VG_TextRenderLabel(VG *vg, VG_Element *vge)
 	if (vge->vg_text.su != NULL) {
 		SDL_FreeSurface(vge->vg_text.su);
 	}
-	AG_TextColorVideo32(vge->color);
+	AG_PushTextState();
+	AG_TextFontLookup(vge->text_st.face, vge->text_st.size, 0),
+	AG_TextColorVideo32(c32);
 	vge->vg_text.su = AG_TextRender(s);
+	AG_PopTextState();
 }
 
 static void
-VG_TextRender(VG *vg, VG_Element *vge)
+Draw(VG_View *vv, VG_Element *vge)
 {
 	SDL_Rect rd;
-	
-	VG_TextRenderLabel(vg, vge);
-	align_text(vg, vge, &rd.x, &rd.y);
-	rd.x += vg->rDst.x;
-	rd.y += vg->rDst.y;
-	SDL_BlitSurface(vge->vg_text.su, NULL, vg->su, &rd);
+
+	DrawLabel(vv, vge);
+	AlignText(vv, vge, &rd.x, &rd.y);
+	AG_WidgetBlit(vv, vge->vg_text.su, rd.x, rd.y);
 }
 
 static void
-VG_TextExtent(VG *vg, VG_Element *vge, VG_Rect *r)
+Extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
-	Sint16 rx, ry;
+//	Sint16 rx, ry;
 
-	VG_TextRenderLabel(vg, vge);
-	align_text(vg, vge, &rx, &ry);
-	r->x = VG_VECXF(vg,rx);
-	r->y = VG_VECYF(vg,ry);
-	r->w = VG_VECLENF(vg,vge->vg_text.su->w);
-	r->h = VG_VECLENF(vg,vge->vg_text.su->h);
+	r->x = 0;
+	r->y = 0;
+	r->w = 0;
+	r->h = 0;
+#if 0
+	/* XXX XXX XXX */
+	DrawLabel(vv, vge);
+	AlignText(vv, vge, &rx, &ry);
+	r->x = VG_VcoordX(vv,rx);
+	r->y = VG_VcoordY(vv,ry);
+	r->w = vge->vg_text.su->w/vv->scale;
+	r->h = vge->vg_text.su->h/vv->scale;
+#endif
 }
 
 static float
-VG_TextIntersect(VG *vg, VG_Element *vge, float *x, float *y)
+Intersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	float d;
 
@@ -344,9 +361,9 @@ VG_TextIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 const VG_ElementOps vgTextOps = {
 	N_("Text string"),
 	&vgIconText,
-	VG_TextInit,
-	VG_TextDestroy,
-	VG_TextRender,
-	VG_TextExtent,
-	VG_TextIntersect	
+	Init,
+	Destroy,
+	Draw,
+	Extent,
+	Intersect	
 };

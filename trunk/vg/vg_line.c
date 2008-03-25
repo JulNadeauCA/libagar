@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,102 +23,68 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Line, line strip and line loop elements.
+ */
+
 #include <core/limits.h>
 #include <core/core.h>
 
+#include <gui/widget.h>
+#include <gui/primitive.h>
+
 #include "vg.h"
-#include "vg_primitive.h"
+#include "vg_view.h"
 #include "vg_math.h"
 #include "icons.h"
 
 void
-VG_DrawLineSegments(VG *vg, VG_Element *vge)
+VG_DrawLineSegments(VG_View *vv, VG_Element *vge)
 {
+	Uint32 c32 = VG_MapColorRGB(vge->color);
+	int Ax, Ay, Bx, By;
 	int i;
 
 	for (i = 0; i < vge->nvtx-1; i += 2) {
-		if (vg->flags & VG_ANTIALIAS) {
-			float Ax, Ay, Bx, By;
-
-			VG_VtxCoords2d(vg, vge, i, &Ax, &Ay);
-			VG_VtxCoords2d(vg, vge, i+1, &Bx, &By);
-			VG_WuLinePrimitive(vg, Ax, Ay, Bx, By,
-			    vge->line_st.thickness, vge->color);
-		} else {
-			int Ax, Ay, Bx, By;
-
-			VG_VtxCoords2i(vg, vge, i, &Ax, &Ay);
-			VG_VtxCoords2i(vg, vge, i+1, &Bx, &By);
-			VG_LinePrimitive(vg, Ax, Ay, Bx, By, vge->color);
-		}
+		VG_GetViewCoordsVtx(vv, vge, i,   &Ax,&Ay);
+		VG_GetViewCoordsVtx(vv, vge, i+1, &Bx,&By);
+		AG_DrawLine(vv, Ax,Ay, Bx,By, c32);
 	}
 }
 
 void
-VG_DrawLineStrip(VG *vg, VG_Element *vge)
+VG_DrawLineStrip(VG_View *vv, VG_Element *vge)
 {
+	Uint32 c32 = VG_MapColorRGB(vge->color);
+	int Ax, Ay, Bx, By;
 	int i;
 
-	if (vg->flags & VG_ANTIALIAS) {
-		float Ax, Ay, Bx, By;
-
-		VG_VtxCoords2d(vg, vge, 0, &Ax, &Ay);
-		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2d(vg, vge, i, &Bx, &By);
-			VG_WuLinePrimitive(vg, Ax, Ay, Bx, By,
-			    vge->line_st.thickness, vge->color);
-			Ax = Bx;
-			Ay = By;
-		}
-	} else {
-		int Ax, Ay, Bx, By;
-
-		VG_VtxCoords2i(vg, vge, 0, &Ax, &Ay);
-		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2i(vg, vge, i, &Bx, &By);
-			VG_LinePrimitive(vg, Ax, Ay, Bx, By, vge->color);
-			Ax = Bx;
-			Ay = By;
-		}
+	VG_GetViewCoordsVtx(vv, vge, 0, &Ax,&Ay);
+	for (i = 1; i < vge->nvtx; i++) {
+		VG_GetViewCoordsVtx(vv, vge, i, &Bx,&By);
+		AG_DrawLine(vv, Ax,Ay, Bx,By, c32);
+		Ax = Bx;
+		Ay = By;
 	}
 }
 
 void
-VG_DrawLineLoop(VG *vg, VG_Element *vge)
+VG_DrawLineLoop(VG_View *vv, VG_Element *vge)
 {
-	if (vg->flags & VG_ANTIALIAS) {
-		float Ax, Ay, Bx, By;
-		float Cx, Cy;
-		int i;
+	Uint32 c32 = VG_MapColorRGB(vge->color);
+	int Ax, Ay, Bx, By, Cx, Cy;
+	int i;
 
-		VG_VtxCoords2d(vg, vge, 0, &Ax, &Ay);
-		Cx = Ax;
-		Cy = Ay;
-		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2d(vg, vge, i, &Bx, &By);
-			VG_WuLinePrimitive(vg, Ax, Ay, Bx, By,
-			    vge->line_st.thickness, vge->color);
-			Ax = Bx;
-			Ay = By;
-		}
-		VG_WuLinePrimitive(vg, Cx, Cy, Ax, Ay,
-		    vge->line_st.thickness, vge->color);
-	} else {
-		int Ax, Ay, Bx, By;
-		int Cx, Cy;
-		int i;
-
-		VG_VtxCoords2i(vg, vge, 0, &Ax,&Ay);
-		Cx = Ax;
-		Cy = Ay;
-		for (i = 1; i < vge->nvtx; i++) {
-			VG_VtxCoords2i(vg, vge, i, &Bx,&By);
-			VG_LinePrimitive(vg, Ax,Ay, Bx,By, vge->color);
-			Ax = Bx;
-			Ay = By;
-		}
-		VG_LinePrimitive(vg, Cx,Cy, Ax,Ay, vge->color);
+	VG_GetViewCoordsVtx(vv, vge, 0, &Ax,&Ay);
+	Cx = Ax;
+	Cy = Ay;
+	for (i = 1; i < vge->nvtx; i++) {
+		VG_GetViewCoordsVtx(vv, vge, i, &Bx,&By);
+		AG_DrawLine(vv, Ax,Ay, Bx,By, c32);
+		Ax = Bx;
+		Ay = By;
 	}
+	AG_DrawLine(vv, Cx,Cy, Ax,Ay, c32);
 }
 
 void
@@ -144,7 +109,7 @@ VG_LineExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static __inline__ float
-VG_LineMagnitude(float Ax, float Ay, float Bx, float By)
+Magnitude(float Ax, float Ay, float Bx, float By)
 {
 	float vx = Bx - Ax;
 	float vy = By - Ay;
@@ -159,7 +124,7 @@ VG_ClosestLinePoint(VG *vg, float Ax, float Ay, float Bx, float By,
 	float mag, u;
 	float xInt, yInt;
 
-	mag = VG_LineMagnitude(Bx, By, Ax, Ay);
+	mag = Magnitude(Bx, By, Ax, Ay);
 	u = ((*Px - Ax)*(Bx - Ax) + (*Py - Ay)*(By - Ay))/(mag*mag);
 	if (u < 0.0f) {
 		xInt = Ax;
@@ -171,7 +136,7 @@ VG_ClosestLinePoint(VG *vg, float Ax, float Ay, float Bx, float By,
 		xInt = Ax + u*(Bx - Ax);
 		yInt = Ay + u*(By - Ay);
 	}
-	mag = VG_LineMagnitude(*Px, *Py, xInt, yInt);
+	mag = Magnitude(*Px, *Py, xInt, yInt);
 	*Px = xInt;
 	*Py = yInt;
 	return (mag);

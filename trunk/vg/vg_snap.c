@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,37 +23,44 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Grid and snapping methods.
+ */
+
 #include <core/core.h>
 
+#include <gui/widget.h>
+#include <gui/primitive.h>
 #include <gui/toolbar.h>
 #include <gui/button.h>
 #include <gui/menu.h>
 
 #include "vg.h"
+#include "vg_view.h"
 #include "vg_math.h"
-#include "vg_primitive.h"
 #include "icons.h"
 
 static void
-VG_SnapToGrid(VG *vg, float *x, float *y)
+SnapToGrid(VG_View *vv, float *x, float *y)
 {
 	float r;
 
 	if (x != NULL) {
-		r = VG_Mod(*x, vg->grid_gap);
+		r = VG_Mod(*x, vv->gridIval);
 		*x -= r;
-		if (r > 0.5f) { *x += vg->grid_gap; }
+		if (r > 0.5f) { *x += vv->gridIval; }
 	}
 	if (y != NULL) {
-		r = VG_Mod(*y, vg->grid_gap);
+		r = VG_Mod(*y, vv->gridIval);
 		*y -= r;
-		if (r > 0.5f) { *y += vg->grid_gap; }
+		if (r > 0.5f) { *y += vv->gridIval; }
 	}
 }
 
 static void
-VG_SnapToEndpoint(VG *vg, float *x, float *y)
+SnapToEndpoint(VG_View *vv, float *x, float *y)
 {
+	VG *vg = vv->vg;
 	VG_Element *vge;
 	VG_Vtx *vtx;
 	int i;
@@ -68,14 +74,14 @@ VG_SnapToEndpoint(VG *vg, float *x, float *y)
 }
 
 void
-VG_SnapPoint(VG *vg, float *x, float *y)
+VG_SnapPoint(VG_View *vv, float *x, float *y)
 {
-	switch (vg->snap_mode) {
+	switch (vv->snap_mode) {
 	case VG_GRID:
-		VG_SnapToGrid(vg, x, y);
+		SnapToGrid(vv, x, y);
 		break;
 	case VG_ENDPOINT:
-		VG_SnapToEndpoint(vg, x, y);
+		SnapToEndpoint(vv, x, y);
 		break;
 	case VG_FREE_POSITIONING:
 		break;
@@ -84,117 +90,81 @@ VG_SnapPoint(VG *vg, float *x, float *y)
 	}
 }
 
-void
-VG_SetSnapMode(VG *vg, enum vg_snap_mode mode)
-{
-	vg->snap_mode = mode;
-}
-
-/* XXX cache inefficient */
-void
-VG_DrawGrid(VG *vg)
-{
-	int x, y, xoffs, yoffs;
-	int rlen;
-
-	VG_RLength(vg, vg->grid_gap, &rlen);
-	xoffs = vg->rDst.x % rlen;
-	yoffs = vg->rDst.y % rlen;
-	
-	if (vg->flags & VG_DIRECT) {
-		for (y = yoffs; (y+rlen) < vg->su->h; y += rlen) {
-			for (x = xoffs; (x+rlen) < vg->su->w; x += rlen)
-				VG_PutPixel(vg, x, y, vg->grid_color);
-		}
-	} else {
-		int x2 = vg->rDst.x+vg->rDst.w;
-		int y2 = vg->rDst.y+vg->rDst.h;
-
-		if (vg->rDst.w <= rlen || vg->rDst.h <= rlen) {
-			return;
-		}
-		for (y = vg->rDst.y; (y+rlen) < y2; y += rlen) {
-			for (x = vg->rDst.x; (x+rlen) < x2; x += rlen)
-				VG_PutPixel(vg, x, y, vg->grid_color);
-		}
-	}
-}
-
 static void
-snap_to(AG_Event *event)
+SnapTo(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
 	AG_Toolbar *tbar = AG_PTR(1);
-	VG *vg = AG_PTR(2);
+	VG_View *vv = AG_PTR(2);
 	int snap_mode = AG_INT(3);
 
 	AG_ToolbarSelectOnly(tbar, bu);
-	VG_SetSnapMode(vg, snap_mode);
+	VG_ViewSetSnapMode(vv, snap_mode);
 }
 
 static void
-snap_to_m(AG_Event *event)
+SnapToMenu(AG_Event *event)
 {
-	VG *vg = AG_PTR(1);
+	VG_View *vv = AG_PTR(1);
 	int snap_mode = AG_INT(2);
 
-	VG_SetSnapMode(vg, snap_mode);
+	VG_ViewSetSnapMode(vv, snap_mode);
 }
 
 AG_Toolbar *
-VG_SnapToolbar(void *parent, VG *vg, enum ag_toolbar_type ttype)
+VG_SnapToolbar(void *parent, VG_View *vv, enum ag_toolbar_type ttype)
 {
 	AG_Toolbar *snbar;
 
 	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS|
 	                                        AG_TOOLBAR_STICKY);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 0,
-	    snap_to, "%p,%p,%i", snbar, vg, VG_FREE_POSITIONING);
+	    SnapTo, "%p,%p,%i", snbar, vv, VG_FREE_POSITIONING);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapGrid.s, 1,
-	    snap_to, "%p,%p,%i", snbar, vg, VG_GRID);
+	    SnapTo, "%p,%p,%i", snbar, vv, VG_GRID);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapEndpt.s, 0,
-	    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT);
+	    SnapTo, "%p,%p,%i", snbar, vv, VG_ENDPOINT);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapEndptDist.s, 0,
-	    snap_to, "%p,%p,%i", snbar, vg, VG_ENDPOINT_DISTANCE);
+	    SnapTo, "%p,%p,%i", snbar, vv, VG_ENDPOINT_DISTANCE);
 
 	AG_ToolbarButtonIcon(snbar, vgIconSnapClosest.s, 0,
-	    snap_to, "%p,%p,%i", snbar, vg, VG_CLOSEST_POINT);
+	    SnapTo, "%p,%p,%i", snbar, vv, VG_CLOSEST_POINT);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapCenterPt.s, 0,
-	    snap_to, "%p,%p,%i", snbar, vg, VG_CENTER_POINT);
+	    SnapTo, "%p,%p,%i", snbar, vv, VG_CENTER_POINT);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapMiddlePt.s, 0,
-	    snap_to, "%p,%p,%i", snbar, vg, VG_MIDDLE_POINT);
+	    SnapTo, "%p,%p,%i", snbar, vv, VG_MIDDLE_POINT);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapIntsectAuto.s, 0,
-	    snap_to, "%p,%p,%i", snbar, vg, VG_INTERSECTIONS_AUTO);
+	    SnapTo, "%p,%p,%i", snbar, vv, VG_INTERSECTIONS_AUTO);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapIntsectManual.s, 0,
-	    snap_to, "%p,%p,%i", snbar, vg, VG_INTERSECTIONS_MANUAL);
+	    SnapTo, "%p,%p,%i", snbar, vv, VG_INTERSECTIONS_MANUAL);
 	return (snbar);
 }
 
 void
-VG_SnapMenu(AG_Menu *m, AG_MenuItem *mi, VG *vg)
+VG_SnapMenu(AG_Menu *m, AG_MenuItem *mi, VG_View *vv)
 {
 	AG_MenuAction(mi, _("Free positioning"), vgIconSnapFree.s,
-	    snap_to_m, "%p,%i", vg, VG_FREE_POSITIONING);
+	    SnapToMenu, "%p,%i", vv, VG_FREE_POSITIONING);
 	AG_MenuAction(mi, _("Grid"), vgIconSnapGrid.s,
-	    snap_to_m, "%p,%i", vg, VG_GRID);
+	    SnapToMenu, "%p,%i", vv, VG_GRID);
 	
 	AG_MenuSeparator(mi);
 
 	AG_MenuAction(mi, _("Endpoint"), vgIconSnapEndpt.s,
-	    snap_to_m, "%p,%i", vg, VG_ENDPOINT);
+	    SnapToMenu, "%p,%i", vv, VG_ENDPOINT);
 	AG_MenuAction(mi, _("Distance from endpoint"), vgIconSnapEndptDist.s,
-	    snap_to_m, "%p,%i", vg, VG_ENDPOINT_DISTANCE);
+	    SnapToMenu, "%p,%i", vv, VG_ENDPOINT_DISTANCE);
 	AG_MenuAction(mi, _("Closest point"), vgIconSnapClosest.s,
-	    snap_to_m, "%p,%i", vg, VG_CLOSEST_POINT);
+	    SnapToMenu, "%p,%i", vv, VG_CLOSEST_POINT);
 	AG_MenuAction(mi, _("Center point"), vgIconSnapCenterPt.s,
-	    snap_to_m, "%p,%i", vg, VG_CENTER_POINT);
+	    SnapToMenu, "%p,%i", vv, VG_CENTER_POINT);
 	AG_MenuAction(mi, _("Middle point"), vgIconSnapMiddlePt.s,
-	    snap_to_m, "%p,%i", vg, VG_MIDDLE_POINT);
+	    SnapToMenu, "%p,%i", vv, VG_MIDDLE_POINT);
 
 	AG_MenuSeparator(mi);
 
 	AG_MenuAction(mi, _("Intersections (auto)"), vgIconSnapIntsectAuto.s,
-	    snap_to_m, "%p,%i", vg, VG_INTERSECTIONS_AUTO);
+	    SnapToMenu, "%p,%i", vv, VG_INTERSECTIONS_AUTO);
 	AG_MenuAction(mi, _("Intersections (manual)"),vgIconSnapIntsectManual.s,
-	    snap_to_m, "%p,%i", vg, VG_INTERSECTIONS_MANUAL);
+	    SnapToMenu, "%p,%i", vv, VG_INTERSECTIONS_MANUAL);
 }

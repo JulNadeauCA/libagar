@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,6 +23,11 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Block element. Associated with blocks are groups of entities that remain
+ * rigid under translation and rotation.
+ */
+
 #include <core/limits.h>
 #include <core/core.h>
 
@@ -33,7 +37,6 @@
 #include <gui/textbox.h>
 
 #include "vg.h"
-#include "vg_primitive.h"
 #include "vg_math.h"
 #include "icons.h"
 
@@ -261,7 +264,7 @@ VG_BlockClosest(VG *vg, float x, float y)
 #if 0
 		if (o >= vg->norigin) {
 			VG_AddOrigin(vg, 0.0, 0.0, 0.125f,
-			    SDL_MapRGB(vg->fmt, 200, 0, 0));
+			    VG_GetColorRGB(200,0,0));
 		}
 		VG_Origin(vg, o, vg->origin[0].x+ix, vg->origin[0].y+iy);
 		o++;
@@ -271,7 +274,7 @@ VG_BlockClosest(VG *vg, float x, float y)
 }
 
 static void
-destroy_block(AG_Event *event)
+DestroyBlock(AG_Event *event)
 {
 	VG *vg = AG_PTR(1);
 	AG_Tlist *tl = AG_PTR(2);
@@ -290,7 +293,7 @@ destroy_block(AG_Event *event)
 }
 
 static void
-poll_blocks(AG_Event *event)
+PollBlocks(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	VG *vg = AG_PTR(1);
@@ -342,12 +345,12 @@ VG_BlockEditor(VG *vg)
 	
 	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_MULTI|AG_TLIST_TREE|
 	                      AG_TLIST_EXPAND);
-	AG_SetEvent(tl, "tlist-poll", poll_blocks, "%p", vg);
+	AG_SetEvent(tl, "tlist-poll", PollBlocks, "%p", vg);
 	AG_WidgetFocus(tl);
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
-		AG_ButtonNewFn(bo, 0, _("Destroy"), destroy_block, "%p,%p",
+		AG_ButtonNewFn(bo, 0, _("Destroy"), DestroyBlock, "%p,%p",
 		    vg, tl);
 	}
 	return (win);
