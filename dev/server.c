@@ -42,8 +42,6 @@
 #include <core/config.h>
 #include <core/file.h>
 
-#include <net/net.h>
-
 #include <gui/window.h>
 #include <gui/box.h>
 #include <gui/tlist.h>

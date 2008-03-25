@@ -4,14 +4,28 @@
 #define _AGAR_WIDGET_WINDOW_H_
 
 #ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
+# include <config/network.h>
+# include <gui/widget.h>
+# ifdef NETWORK
+#  include <net/command.h>
+#  include <net/client.h>
+#  include <net/server.h>
+# endif
 #else
-#include <agar/gui/widget.h>
+# include <agar/config/network.h>
+# include <agar/gui/widget.h>
+# ifdef NETWORK
+#  include <agar/net/command.h>
+#  include <agar/net/client.h>
+#  include <agar/net/server.h>
+# endif
 #endif
+
 
 #include "begin_code.h"
 
-#define AG_WINDOW_CAPTION_MAX 512
+#define AG_WINDOW_CAPTION_MAX	512
+#define AG_WINDOW_NAME_MAX	128
 
 struct ag_titlebar;
 struct ag_icon;
@@ -88,6 +102,10 @@ typedef struct ag_window {
 	AG_TAILQ_ENTRY(ag_window) detach;	/* Zombie window list */
 
 	struct ag_icon *icon;			/* Window icon */
+#ifdef NETWORK
+	NC_Session *nc;				/* Remote session */
+	char remoteName[AG_WINDOW_NAME_MAX];	/* Remote window name */
+#endif
 } AG_Window;
 
 #define AG_WINDOW_FOCUSED(w) (AG_TAILQ_LAST(&agView->windows,ag_windowq)==(w))
@@ -100,6 +118,7 @@ extern int agWindowIconHeight;
 AG_Window *AG_WindowNew(Uint);
 AG_Window *AG_WindowNewNamed(Uint, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf, 2, 3);
+AG_Window *AG_WindowNewRemote(Uint, const char *);
 
 void	 AG_WindowSetCaption(AG_Window *, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf, 2, 3)
