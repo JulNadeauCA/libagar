@@ -1,8 +1,5 @@
-/*	$Csoft: vg_mask.c,v 1.6 2005/06/04 04:48:44 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,13 +23,20 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Polygonal mask element.
+ */
+
 #include <core/core.h>
 
+#include <gui/widget.h>
+#include <gui/primitive.h>
+
 #include "vg.h"
-#include "vg_primitive.h"
+#include "vg_view.h"
 
 static void
-init(VG *vg, VG_Element *vge)
+Init(VG *vg, VG_Element *vge)
 {
 	vge->vg_mask.scale = 1.0f;
 	vge->vg_mask.visible = 0;
@@ -40,8 +44,9 @@ init(VG *vg, VG_Element *vge)
 }
 
 static void
-render(VG *vg, VG_Element *vge)
+Draw(VG_View *vv, VG_Element *vge)
 {
+	Uint32 c32 = VG_MapColorRGB(vge->color);
 	int x1, y1, x2, y2;
 	int x0, y0;
 	int i;
@@ -53,16 +58,16 @@ render(VG *vg, VG_Element *vge)
 		/* TODO particle */
 		return;
 	}
-	VG_Rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x1, &y1);
+	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x1, &y1);
 	x0 = x1;
 	y0 = y1;
 	for (i = 1; i < vge->nvtx; i++) {
-		VG_Rcoords2(vg, vge->vtx[i].x, vge->vtx[i].y, &x2, &y2);
-		VG_LinePrimitive(vg, x1, y1, x2, y2, vge->color);
+		VG_GetViewCoords(vv, vge->vtx[i].x, vge->vtx[i].y, &x2, &y2);
+		AG_DrawLine(vv, x1, y1, x2, y2, c32);
 		x1 = x2;
 		y1 = y2;
 	}
-	VG_LinePrimitive(vg, x0, y0, x1, y1, vge->color);
+	AG_DrawLine(vv, x0, y0, x1, y1, c32);
 }
 
 void
@@ -93,10 +98,9 @@ VG_MaskMouseButton(VG *vg, void (*func)(void *, Uint8), void *p)
 const VG_ElementOps vgMaskOps = {
 	N_("Polygonal mask"),
 	NULL,
-	init,
+	Init,
 	NULL,		/* destroy */
-	render,
+	Draw,
 	NULL,		/* extent */
 	NULL		/* intsect */
 };
-

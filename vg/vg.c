@@ -1,8 +1,5 @@
-/*	$Csoft: vg.c,v 1.72 2005/09/27 03:14:13 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,12 +23,16 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Base vector graphics object.
+ */
+
 #include <core/core.h>
 
 #include <gui/view.h>
+#include <gui/primitive.h>
 
 #include "vg.h"
-#include "vg_primitive.h"
 #include "vg_view.h"
 #include "vg_math.h"
 #include "icons.h"
@@ -100,7 +101,6 @@ VG_New(Uint flags)
 void
 VG_Init(VG *vg, Uint flags)
 {
-	Uint32 sflags = SDL_SWSURFACE|SDL_RLEACCEL;
 	int i;
 
 	if (!vgInited) {
@@ -110,57 +110,19 @@ VG_Init(VG *vg, Uint flags)
 
 	Strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;
-	vg->scale = 1.0f;
-
-	if (flags & VG_DIRECT) {
-		vg->su = agView->v;
-		vg->fmt = agVideoFmt;
-	} else {
-		if (flags & VG_ALPHA)		sflags |= SDL_SRCALPHA;
-		if (flags & VG_COLORKEY)	sflags |= SDL_SRCCOLORKEY;
-		if (flags & VG_RLEACCEL)	sflags |= SDL_RLEACCEL;
-
-		vg->su = SDL_CreateRGBSurface(sflags, 16, 16, 32,
-#if AG_BYTEORDER == AG_BIG_ENDIAN
-		    0xff000000,
-		    0x00ff0000,
-		    0x0000ff00,
-		    (flags & VG_ALPHA) ? 0x000000ff : 0x0
-#else
-		    0x000000ff,
-		    0x0000ff00,
-		    0x00ff0000,
-		    (flags & VG_ALPHA) ? 0xff000000 : 0x0
-#endif
-		);
-		if (vg->su == NULL) {
-			AG_FatalError("SDL_CreateRGBSurface: %s",
-			    SDL_GetError());
-		}
-		vg->fmt = vg->su->format;
-	}
-	vg->rDst.x = 0;
-	vg->rDst.y = 0;
-	vg->rDst.w = 32;
-	vg->rDst.h = 32;
-	vg->fill_color = SDL_MapRGBA(vg->fmt, 0, 0, 0, 0);
-	vg->grid_color = SDL_MapRGB(vg->fmt, 128, 128, 128);
-	vg->selection_color = SDL_MapRGB(vg->fmt, 255, 255, 0);
-	vg->mouseover_color = SDL_MapRGB(vg->fmt, 200, 200, 0);
-	vg->grid_gap = 0.25f;
+	vg->fillColor = VG_GetColorRGB(0,0,0);
+	vg->gridColor = VG_GetColorRGB(128,128,128);
+	vg->selectionColor = VG_GetColorRGB(255,255,0);
+	vg->mouseoverColor = VG_GetColorRGB(200,200,0);
 	vg->origin = Malloc(sizeof(VG_Vtx)*VG_NORIGINS);
-	vg->origin_radius = Malloc(sizeof(float)*VG_NORIGINS);
-	vg->origin_color = Malloc(sizeof(Uint32)*VG_NORIGINS);
+	vg->originRadius = Malloc(sizeof(float)*VG_NORIGINS);
+	vg->originColor = Malloc(sizeof(Uint32)*VG_NORIGINS);
 	vg->layers = Malloc(sizeof(VG_Layer));
 	vg->nlayers = 0;
 	vg->cur_layer = 0;
 	vg->cur_block = NULL;
 	vg->cur_vge = NULL;
 	VG_PushLayer(vg, _("Layer 0"));
-	vg->snap_mode = VG_GRID;
-	vg->ortho_mode = VG_NO_ORTHO;
-	vg->preRasterEv = NULL;
-	vg->postRasterEv = NULL;
 	TAILQ_INIT(&vg->vges);
 	TAILQ_INIT(&vg->blocks);
 	TAILQ_INIT(&vg->styles);
@@ -169,33 +131,19 @@ VG_Init(VG *vg, Uint flags)
 	for (i = 0; i < VG_NORIGINS; i++) {
 		vg->origin[i].x = 0;
 		vg->origin[i].y = 0;
-		vg->origin_radius[i] = 0.0625f;
-		vg->origin_color[i] = SDL_MapRGB(vg->fmt, 0, 0, 180);
+		vg->originRadius[i] = 0.0625f;
+		vg->originColor[i] = VG_GetColorRGB(0,0,180);
 	}
-	vg->origin_radius[0] = 0.25f;
-	vg->origin_radius[1] = 0.125f;
-	vg->origin_radius[2] = 0.075f;
-	vg->origin_color[0] = SDL_MapRGB(vg->fmt, 0, 200, 0);
-	vg->origin_color[1] = SDL_MapRGB(vg->fmt, 0, 150, 0);
-	vg->origin_color[2] = SDL_MapRGB(vg->fmt, 0, 80, 150);
+	vg->originRadius[0] = 0.25f;
+	vg->originRadius[1] = 0.125f;
+	vg->originRadius[2] = 0.075f;
+	vg->originColor[0] = VG_GetColorRGB(0,200,0);
+	vg->originColor[1] = VG_GetColorRGB(0,150,0);
+	vg->originColor[2] = VG_GetColorRGB(0,80,150);
 	vg->norigin = VG_NORIGINS;
 
 	vg->ints = NULL;
 	vg->nints = 0;
-}
-
-void
-VG_PreRasterFn(VG *vg, void *obj, AG_EventFn fn, const char *fmt, ...)
-{
-	vg->preRasterEv = AG_SetEvent(obj, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(vg->preRasterEv, fmt);
-}
-
-void
-VG_PostRasterFn(VG *vg, void *obj, AG_EventFn fn, const char *fmt, ...)
-{
-	vg->postRasterEv = AG_SetEvent(obj, NULL, fn, NULL);
-	AG_EVENT_GET_ARGS(vg->postRasterEv, fmt);
 }
 
 void
@@ -263,8 +211,8 @@ void
 VG_Destroy(VG *vg)
 {
 	Free(vg->origin);
-	Free(vg->origin_radius);
-	Free(vg->origin_color);
+	Free(vg->originRadius);
+	Free(vg->originColor);
 	Free(vg->layers);
 
 	VG_DestroyBlocks(vg);
@@ -288,53 +236,10 @@ VG_DestroyElement(VG *vg, VG_Element *vge)
 	VG_FreeElement(vg, vge);
 }
 
-/* Set the default scale factor. */
-void
-VG_DefaultScale(VG *vg, float scale)
-{
-	vg->default_scale = scale;
-}
-
-/* Set the default scale factor. */
-void
-VG_SetGridGap(VG *vg, float gap)
-{
-	vg->grid_gap = gap;
-}
-
-/* Adjust the vg bounding box and scaling factor. */
-void
-VG_Scale(VG *vg, int w, int h, float scale)
-{
-#ifdef DEBUG
-	if (scale < 0.0)
-		AG_FatalError("VG_Scale: Negative scale factor");
-#endif
-	vg->scale = scale;
-	vg->rDst.w = w;
-	vg->rDst.h = h;
-
-	if ((vg->flags & VG_DIRECT) == 0) {
-		Uint32 Rmask = vg->fmt->Rmask;
-		Uint32 Gmask = vg->fmt->Gmask;
-		Uint32 Bmask = vg->fmt->Bmask;
-		Uint32 Amask = vg->fmt->Amask;
-		int depth = vg->fmt->BitsPerPixel;
-		Uint32 sFlags = vg->su->flags & (SDL_SWSURFACE|SDL_SRCALPHA|
-		                                 SDL_SRCCOLORKEY|SDL_RLEACCEL);
-
-		SDL_FreeSurface(vg->su);
-		if ((vg->su = SDL_CreateRGBSurface(sFlags,
-		    vg->rDst.w, vg->rDst.h, depth,
-		    Rmask, Gmask, Bmask, Amask)) == NULL) {
-			AG_FatalError("SDL_CreateRGBSurface: %s",
-			    SDL_GetError());
-		}
-		vg->fmt = vg->su->format;
-		if (vg->rDst.x >= vg->su->w) { vg->rDst.x = vg->su->w-1; }
-		if (vg->rDst.y >= vg->su->h) { vg->rDst.y = vg->su->h-1; }
-	}
-}
+void VG_SetBackgroundColor(VG *vg, VG_Color c) { vg->fillColor = c; }
+void VG_SetGridColor(VG *vg, VG_Color c) { vg->gridColor = c; }
+void VG_SetSelectionColor(VG *vg, VG_Color c) { vg->selectionColor = c; }
+void VG_SetMouseOverColor(VG *vg, VG_Color c) { vg->mouseoverColor = c; }
 
 /*
  * Allocate the given type of element and begin its parametrization.
@@ -356,16 +261,18 @@ VG_Begin(VG *vg, enum vg_element_type eltype)
 	vge->nvtx = 0;
 	vge->trans = NULL;
 	vge->ntrans = 0;
-	vge->color = SDL_MapRGB(vg->fmt, 250, 250, 250);
+	vge->color = VG_GetColorRGB(250,250,250);
 
 	vge->line_st.style = VG_CONTINUOUS;
 	vge->line_st.endpoint_style = VG_SQUARE;
 	vge->line_st.stipple = 0x0;
 	vge->line_st.thickness = 1;
 	vge->line_st.miter_len = 0;
-	vge->text_st.face[0] = '\0';
-	vge->text_st.size = 12;
-	vge->text_st.flags = 0;
+
+	Strlcpy(vge->text_st.face, OBJECT(agDefaultFont)->name,
+	    sizeof(vge->text_st.face));
+	vge->text_st.size = agDefaultFont->size;
+	vge->text_st.flags = agDefaultFont->flags;
 	vge->fill_st.style = VG_SOLID;
 	vge->fill_st.texture[0] = '\0';
 	vge->fill_st.texture_alpha = 255;
@@ -413,12 +320,18 @@ VG_Select(VG *vg, VG_Element *vge)
 
 #ifdef DEBUG
 void
-VG_DrawExtents(VG *vg)
+VG_DrawExtents(VG_View *vv)
 {
+	VG *vg = vv->vg;
 	VG_Rect bbox;
 	VG_Element *vge;
 	VG_Block *vgb;
 	int x, y, w, h;
+	Uint32 cGreen;
+	Uint32 cGrid;
+
+	cGreen = SDL_MapRGB(agVideoFmt, 0,250,0);
+	cGrid = VG_MapColorRGB(vg->gridColor);
 
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		if (vge->ops->bbox != NULL) {
@@ -426,271 +339,21 @@ VG_DrawExtents(VG *vg)
 		} else {
 			continue;
 		}
-		VG_Rcoords2(vg, bbox.x, bbox.y, &x, &y);
-		VG_RLength(vg, bbox.w, &w);
-		VG_RLength(vg, bbox.h, &h);
-		VG_RectPrimitive(vg, x-1, y-1, w+2, h+2, vg->grid_color);
+		VG_GetViewCoords(vv, bbox.x, bbox.y, &x, &y);
+		w = (int)(bbox.w*vv->scale);
+		h = (int)(bbox.h*vv->scale);
+		AG_DrawRectOutline(vv, AG_RECT(x-1, y-1, w+2, h+2), cGrid);
 	}
 	
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
-		Uint32 ext_color = SDL_MapRGB(vg->fmt, 0, 250, 0);
-
 		VG_BlockExtent(vg, vgb, &bbox);
-		VG_Rcoords2(vg, bbox.x, bbox.y, &x, &y);
-		VG_RLength(vg, bbox.w, &w);
-		VG_RLength(vg, bbox.h, &h);
-		VG_RectPrimitive(vg, x-1, y-1, w+2, h+2, ext_color);
+		VG_GetViewCoords(vv, bbox.x, bbox.y, &x, &y);
+		w = (int)(bbox.w*vv->scale);
+		h = (int)(bbox.h*vv->scale);
+		AG_DrawRectOutline(vv, AG_RECT(x-1, y-1, w+2, h+2), cGreen);
 	}
 }
 #endif /* DEBUG */
-
-/* Evaluate the intersection between two rectangles. */
-int
-VG_Rintersect(VG *vg, VG_Rect *r1, VG_Rect *r2, VG_Rect *ixion)
-{
-	float r1xmin, r1xmax, r1ymin, r1ymax;
-	float r2xmin, r2xmax, r2ymin, r2ymax;
-	float ixw, ixh;
-
-	r1xmin = r1->x;
-	r1ymin = r1->y;
-	r1xmax = r1->x+r1->w;
-	r1ymax = r1->y+r1->h;
-
-	r2xmin = r2->x;
-	r2ymin = r2->y;
-	r2xmax = r2->x+r2->w;
-	r2ymax = r2->y+r2->h;
-
-	if (r2xmin > r1xmin)
-		r1xmin = r2xmin;
-	if (r2ymin > r1ymin)
-		r1ymin = r2ymin;
-
-	if (r2xmax < r1xmax)
-		r1xmax = r2xmax;
-	if (r2ymax < r1ymax)
-		r1ymax = r2ymax;
-	
-	ixw = r1xmax - (r1xmin > 0 ? r1xmax-r1xmin : 0);
-	ixh = r1ymax - (r1ymin > 0 ? r1ymax-r1ymin : 0);
-	if (ixion != NULL) {
-		ixion->x = r1xmin;
-		ixion->y = r1ymin;
-		ixion->w = ixw;
-		ixion->h = ixh;
-	}
-	return (ixw > 0 && ixh > 0);
-}
-
-/* Rasterize elements marked dirty and update the affected tiles. */
-void
-VG_Rasterize(VG *vg)
-{
-	Uint32 color_save = 0;			/* XXX -Wuninitialized */
-	VG_Element *vge;
-
-	AG_MutexLock(&vg->lock);
-
-	if (vg->preRasterEv != NULL)
-		vg->preRasterEv->handler(vg->preRasterEv);
-
-	if ((vg->flags & VG_DIRECT) == 0) {
-		SDL_FillRect(vg->su, NULL, vg->fill_color);
-		if (vg->flags & VG_VISGRID)
-			VG_DrawGrid(vg);
-	}
-#ifdef DEBUG
-	if (vg->flags & VG_VISBBOXES)
-		VG_DrawExtents(vg);
-#endif
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		if (vge->mouseover) {
-			Uint8 r, g, b;
-
-			color_save = vge->color;
-			SDL_GetRGB(vge->color, vg->fmt, &r, &g, &b);
-			if (r > 200 && g > 200 && b > 200) {
-				r = 0;
-				g = 255;
-				b = 0;
-			} else {
-				r = MIN(r+50,255);
-				g = MIN(g+50,255);
-				b = MIN(b+50,255);
-			}
-			vge->color = SDL_MapRGB(vg->fmt, r, g, b);
-		}
-
-		vge->ops->draw(vg, vge);
-
-		if (vge->mouseover)
-			vge->color = color_save;
-	}
-	if (vg->flags & VG_VISORIGIN)
-		VG_DrawOrigin(vg);
-	
-	if (vg->postRasterEv != NULL) {
-		vg->postRasterEv->handler(vg->postRasterEv);
-	}
-	AG_MutexUnlock(&vg->lock);
-}
-
-/*
- * Translate a length in pixel to a vg vector magnitude.
- * The vg must be locked.
- */
-void
-VG_VLength(VG *vg, int len, float *vlen)
-{
-	*vlen = (float)(len/vg->scale);
-}
-
-/*
- * Translate tile coordinates to relative vg coordinates, applying
- * positional and orthogonal restrictions as needed.
- * The vg must be locked.
- */
-void
-VG_Vcoords2(VG *vg, int rx, int ry, float *vx, float *vy)
-{
-	*vx = (float)rx/vg->scale - vg->origin[0].x;
-	*vy = (float)ry/vg->scale - vg->origin[0].y;
-	
-	if (vg->snap_mode != VG_FREE_POSITIONING)
-		VG_SnapPoint(vg, vx, vy);
-	if (vg->ortho_mode != VG_NO_ORTHO)
-		VG_RestrictOrtho(vg, vx, vy);
-}
-
-float
-VG_VcoordX(VG *vg, int rx)
-{
-	float vx = (float)rx/vg->scale - vg->origin[0].x;
-	
-	if (vg->snap_mode != VG_FREE_POSITIONING)
-		VG_SnapPoint(vg, &vx, NULL);
-	if (vg->ortho_mode != VG_NO_ORTHO) {
-		VG_RestrictOrtho(vg, &vx, NULL);
-	}
-	return (vx);
-}
-
-float
-VG_VcoordY(VG *vg, int ry)
-{
-	float vy = (float)ry/vg->scale - vg->origin[0].y;
-	
-	if (vg->snap_mode != VG_FREE_POSITIONING)
-		VG_SnapPoint(vg, NULL, &vy);
-	if (vg->ortho_mode != VG_NO_ORTHO) {
-		VG_RestrictOrtho(vg, NULL, &vy);
-	}
-	return (vy);
-}
-
-/*
- * Translate tile coordinates to absolute vg coordinates.
- * The vg must be locked.
- */
-void
-VG_AbsVcoords2(VG *vg, int rx, int ry, float *vx, float *vy)
-{
-	*vx = (float)rx/vg->scale;
-	*vy = (float)ry/vg->scale;
-
-	if (vg->snap_mode != VG_FREE_POSITIONING)
-		VG_SnapPoint(vg, vx, vy);
-}
-
-/*
- * Translate relative vg coordinates to raster coordinates.
- * The vg must be locked.
- */
-void
-VG_Rcoords2(VG *vg, float vx, float vy, int *rx, int *ry)
-{
-	*rx = (int)(vx*vg->scale) + (int)(vg->origin[0].x*vg->scale);
-	*ry = (int)(vy*vg->scale) + (int)(vg->origin[0].y*vg->scale);
-}
-
-/*
- * Translate absolute vg coordinates to integer raster coordinates.
- * The vg must be locked.
- */
-void
-VG_AbsRcoords2(VG *vg, float vx, float vy, int *rx, int *ry)
-{
-	*rx = (int)(vx*vg->scale);
-	*ry = (int)(vy*vg->scale);
-}
-
-/*
- * Translate relative vg coordinates to floating-point raster coordinates.
- * The vg must be locked.
- */
-void
-VG_Rcoords2d(VG *vg, float vx, float vy, float *rx, float *ry)
-{
-	*rx = vx*vg->scale + vg->origin[0].x*vg->scale;
-	*ry = vy*vg->scale + vg->origin[0].y*vg->scale;
-}
-
-/*
- * Translate vertex coordinates to floating-point raster coordinates
- * and apply the transformations.
- *
- * The vg must be locked.
- */
-void
-VG_VtxCoords2d(VG *vg, VG_Element *vge, int vi, float *rx, float *ry)
-{
-	VG_Vtx c;
-	int i;
-
-	c.x = vge->vtx[vi].x;
-	c.y = vge->vtx[vi].y;
-	for (i = 0; i < vge->ntrans; i++) {
-		VG_MultMatrixByVector(&c, &c, &vge->trans[i]);
-	}
-	if (rx != NULL)	*rx = VG_RASXF(vg,c.x);
-	if (ry != NULL)	*ry = VG_RASYF(vg,c.y);
-}
-
-/*
- * Translate vertex coordinates to integral raster coordinates.
- * The vg must be locked.
- */
-void
-VG_VtxCoords2i(VG *vg, VG_Element *vge, int vi, int *rx, int *ry)
-{
-	float x, y;
-
-	VG_VtxCoords2d(vg, vge, vi, &x, &y);
-	if (rx != NULL)	*rx = (int)x;
-	if (ry != NULL)	*ry = (int)y;
-}
-
-/*
- * Translate absolute vg coordinates to floating-point raster coordinates.
- * The vg must be locked.
- */
-void
-VG_AbsRcoords2d(VG *vg, float vx, float vy, float *rx, float *ry)
-{
-	*rx = vx*vg->scale;
-	*ry = vy*vg->scale;
-}
-
-/*
- * Translate the magnitude of a vg vector to the raster equivalent in pixels.
- * The vg must be locked.
- */
-void
-VG_RLength(VG *vg, float len, int *rlen)
-{
-	*rlen = (int)(len*vg->scale);
-}
 
 VG_Vtx *
 VG_AllocVertex(VG_Element *vge)
@@ -992,7 +655,7 @@ VG_CreateStyle(VG *vg, enum vg_style_type type, const char *name)
 	vgs = Malloc(sizeof(VG_Style));
 	Strlcpy(vgs->name, name, sizeof(vgs->name));
 	vgs->type = type;
-	vgs->color = SDL_MapRGB(vg->fmt, 250, 250, 250);
+	vgs->color = VG_GetColorRGB(250,250,250);
 	switch (vgs->type) {
 	case VG_LINE_STYLE:
 		vgs->vg_line_st.style = VG_CONTINUOUS;
@@ -1007,9 +670,10 @@ VG_CreateStyle(VG *vg, enum vg_style_type type, const char *name)
 		vgs->vg_fill_st.texture_alpha = 255;
 		break;
 	case VG_TEXT_STYLE:
-		vgs->vg_text_st.face[0] = '\0';
-		vgs->vg_text_st.size = 12;
-		vgs->vg_text_st.flags = 0;
+		Strlcpy(vgs->vg_text_st.face, OBJECT(agDefaultFont)->name,
+		    sizeof(vgs->vg_text_st.face));
+		vgs->vg_text_st.size = agDefaultFont->size;
+		vgs->vg_text_st.flags = agDefaultFont->flags;
 		break;
 	}
 	TAILQ_INSERT_TAIL(&vg->styles, vgs, styles);
@@ -1054,25 +718,33 @@ VG_SetLayer(VG *vg, int layer)
 	vg->cur_vge->layer = layer;
 }
 
-/* Specify the color of the current element (format-specific). */
+/* Specify the color of the current element (VG color format). */
 void
-VG_Color(VG *vg, Uint32 color)
+VG_Colorv(VG *vg, const VG_Color *c)
 {
-	vg->cur_vge->color = color;
+	vg->cur_vge->color.r = c->r;
+	vg->cur_vge->color.g = c->g;
+	vg->cur_vge->color.b = c->b;
+	vg->cur_vge->color.a = c->a;
 }
 
 /* Specify the color of the current element (RGB triplet). */
 void
-VG_Color3(VG *vg, int r, int g, int b)
+VG_ColorRGB(VG *vg, Uint8 r, Uint8 g, Uint8 b)
 {
-	vg->cur_vge->color = SDL_MapRGB(vg->fmt, r, g, b);
+	vg->cur_vge->color.r = r;
+	vg->cur_vge->color.g = g;
+	vg->cur_vge->color.b = b;
 }
 
 /* Specify the color of the current element (RGB triplet + alpha). */
 void
-VG_Color4(VG *vg, int r, int g, int b, int a)
+VG_ColorRGBA(VG *vg, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-	vg->cur_vge->color = SDL_MapRGBA(vg->fmt, r, g, b, a);
+	vg->cur_vge->color.r = r;
+	vg->cur_vge->color.g = g;
+	vg->cur_vge->color.b = b;
+	vg->cur_vge->color.a = a;
 }
 
 /* Push a new layer onto the layer stack. */
@@ -1088,7 +760,7 @@ VG_PushLayer(VG *vg, const char *name)
 	Strlcpy(vgl->name, name, sizeof(vgl->name));
 	vgl->visible = 1;
 	vgl->alpha = 255;
-	vgl->color = SDL_MapRGB(vg->fmt, 255, 255, 255);
+	vgl->color = VG_GetColorRGB(255,255,255);
 	return (vgl);
 }
 
@@ -1138,21 +810,19 @@ VG_Save(VG *vg, AG_DataSource *buf)
 
 	AG_WriteString(buf, vg->name);
 	AG_WriteUint32(buf, (Uint32)vg->flags);
-	AG_WriteFloat(buf, vg->scale);
-	AG_WriteFloat(buf, vg->default_scale);
-	AG_WriteColor(buf, vg->fmt, vg->fill_color);
-	AG_WriteColor(buf, vg->fmt, vg->grid_color);
-	AG_WriteColor(buf, vg->fmt, vg->selection_color);
-	AG_WriteColor(buf, vg->fmt, vg->mouseover_color);
-	AG_WriteFloat(buf, vg->grid_gap);
+	VG_WriteColor(buf, &vg->fillColor);
+	VG_WriteColor(buf, &vg->gridColor);
+	VG_WriteColor(buf, &vg->selectionColor);
+	VG_WriteColor(buf, &vg->mouseoverColor);
+	AG_WriteFloat(buf, 0.0f);				/* gridIval */
 	AG_WriteUint32(buf, (Uint32)vg->cur_layer);
 
 	/* Save the origin points. */
 	AG_WriteUint32(buf, vg->norigin);
 	for (i = 0; i < vg->norigin; i++) {
 		VG_WriteVertex(buf, &vg->origin[i]);
-		AG_WriteFloat(buf, vg->origin_radius[i]);
-		AG_WriteColor(buf, vg->fmt, vg->origin_color[i]);
+		AG_WriteFloat(buf, vg->originRadius[i]);
+		VG_WriteColor(buf, &vg->originColor[i]);
 	}
 
 	/* Save the layer information. */
@@ -1162,7 +832,7 @@ VG_Save(VG *vg, AG_DataSource *buf)
 
 		AG_WriteString(buf, layer->name);
 		AG_WriteUint8(buf, (Uint8)layer->visible);
-		AG_WriteColor(buf, vg->fmt, layer->color);
+		VG_WriteColor(buf, &layer->color);
 		AG_WriteUint8(buf, layer->alpha);
 	}
 
@@ -1188,7 +858,7 @@ VG_Save(VG *vg, AG_DataSource *buf)
 	TAILQ_FOREACH(vgs, &vg->styles, styles) {
 		AG_WriteString(buf, vgs->name);
 		AG_WriteUint8(buf, (Uint8)vgs->type);
-		AG_WriteColor(buf, vg->fmt, vgs->color);
+		VG_WriteColor(buf, &vgs->color);
 
 		switch (vgs->type) {
 		case VG_LINE_STYLE:
@@ -1225,7 +895,7 @@ VG_Save(VG *vg, AG_DataSource *buf)
 		AG_WriteString(buf, vge->block != NULL ?
 		    vge->block->name : NULL);
 		AG_WriteUint32(buf, (Uint32)vge->layer);
-		AG_WriteColor(buf, vg->fmt, vge->color);
+		VG_WriteColor(buf, &vge->color);
 
 		/* Save the line style information. */
 		AG_WriteUint8(buf, (Uint8)vge->line_st.style);
@@ -1301,17 +971,14 @@ VG_Load(VG *vg, AG_DataSource *buf)
 	AG_MutexLock(&vg->lock);
 	AG_CopyString(vg->name, buf, sizeof(vg->name));
 	vg->flags = AG_ReadUint32(buf);
-	vg->scale = AG_ReadFloat(buf);
-	vg->default_scale = AG_ReadFloat(buf);
-	vg->fill_color = AG_ReadColor(buf, vg->fmt);
-	vg->grid_color = AG_ReadColor(buf, vg->fmt);
-	vg->selection_color = AG_ReadColor(buf, vg->fmt);
-	vg->mouseover_color = AG_ReadColor(buf, vg->fmt);
-	vg->grid_gap = AG_ReadFloat(buf);
+	vg->fillColor = VG_ReadColor(buf);
+	vg->gridColor = VG_ReadColor(buf);
+	vg->selectionColor = VG_ReadColor(buf);
+	vg->mouseoverColor = VG_ReadColor(buf);
+	(void)AG_ReadFloat(buf);				/* gridIval */
 	vg->cur_layer = (int)AG_ReadUint32(buf);
 	vg->cur_block = NULL;
 	vg->cur_vge = NULL;
-	VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale);
 
 	/* Read the origin points. */
 	if ((norigin = AG_ReadUint32(buf)) < 1) {
@@ -1319,13 +986,13 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		goto fail;
 	}
 	vg->origin = Realloc(vg->origin, norigin*sizeof(VG_Vtx));
-	vg->origin_radius = Realloc(vg->origin_radius, norigin*sizeof(float));
-	vg->origin_color = Realloc(vg->origin_color, norigin*sizeof(Uint32));
+	vg->originRadius = Realloc(vg->originRadius, norigin*sizeof(float));
+	vg->originColor = Realloc(vg->originColor, norigin*sizeof(Uint32));
 	vg->norigin = norigin;
 	for (i = 0; i < vg->norigin; i++) {
-		VG_ReadVertex(buf, &vg->origin[i]);
-		vg->origin_radius[i] = AG_ReadFloat(buf);
-		vg->origin_color[i] = AG_ReadColor(buf, vg->fmt);
+		vg->origin[i] = VG_ReadVertex(buf);
+		vg->originRadius[i] = AG_ReadFloat(buf);
+		vg->originColor[i] = VG_ReadColor(buf);
 	}
 
 	/* Read the layer information. */
@@ -1339,7 +1006,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 
 		AG_CopyString(layer->name, buf, sizeof(layer->name));
 		layer->visible = (int)AG_ReadUint8(buf);
-		layer->color = AG_ReadColor(buf, vg->fmt);
+		layer->color = VG_ReadColor(buf);
 		layer->alpha = AG_ReadUint8(buf);
 	}
 	vg->nlayers = nlayers;
@@ -1353,8 +1020,8 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		vgb = Malloc(sizeof(VG_Block));
 		AG_CopyString(vgb->name, buf, sizeof(vgb->name));
 		vgb->flags = (int)AG_ReadUint32(buf);
-		VG_ReadVertex(buf, &vgb->pos);
-		VG_ReadVertex(buf, &vgb->origin);
+		vgb->pos = VG_ReadVertex(buf);
+		vgb->origin = VG_ReadVertex(buf);
 		vgb->theta = AG_ReadFloat(buf);
 		TAILQ_INIT(&vgb->vges);
 		TAILQ_INSERT_TAIL(&vg->blocks, vgb, vgbs);
@@ -1371,7 +1038,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		AG_CopyString(sname, buf, sizeof(sname));
 		type = (enum vg_style_type)AG_ReadUint8(buf);
 		vgs = VG_CreateStyle(vg, type, sname);
-		vgs->color = AG_ReadColor(buf, vg->fmt);
+		vgs->color = VG_ReadColor(buf);
 
 		switch (type) {
 		case VG_LINE_STYLE:
@@ -1412,7 +1079,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		nlayer = (int)AG_ReadUint32(buf);
 
 		vge = VG_Begin(vg, type);
-		vge->color = AG_ReadColor(buf, vg->fmt);
+		vge->color = VG_ReadColor(buf);
 
 		/* Load the line style information. */
 		vge->line_st.style = AG_ReadUint8(buf);
@@ -1437,7 +1104,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		vge->nvtx = (Uint)AG_ReadUint32(buf);
 		vge->vtx = Malloc(vge->nvtx*sizeof(VG_Vtx));
 		for (j = 0; j < vge->nvtx; j++)
-			VG_ReadVertex(buf, &vge->vtx[j]);
+			vge->vtx[j] = VG_ReadVertex(buf);
 
 		/* Load the matrices. */
 		vge->ntrans = (Uint)AG_ReadUint32(buf);
@@ -1515,15 +1182,39 @@ fail:
 }
 
 void
-VG_WriteVertex(AG_DataSource *buf, VG_Vtx *vtx)
+VG_WriteVertex(AG_DataSource *buf, const VG_Vtx *vtx)
 {
 	AG_WriteFloat(buf, vtx->x);
 	AG_WriteFloat(buf, vtx->y);
 }
 
 void
-VG_ReadVertex(AG_DataSource *buf, VG_Vtx *vtx)
+VG_WriteColor(AG_DataSource *buf, const VG_Color *c)
 {
-	vtx->x = AG_ReadFloat(buf);
-	vtx->y = AG_ReadFloat(buf);
+	AG_WriteUint8(buf, c->r);
+	AG_WriteUint8(buf, c->g);
+	AG_WriteUint8(buf, c->b);
+	AG_WriteUint8(buf, c->a);
+}
+
+VG_Vtx
+VG_ReadVertex(AG_DataSource *buf)
+{
+	VG_Vtx v;
+
+	v.x = AG_ReadFloat(buf);
+	v.y = AG_ReadFloat(buf);
+	return (v);
+}
+
+VG_Color
+VG_ReadColor(AG_DataSource *buf)
+{
+	VG_Color c;
+
+	c.r = AG_ReadUint8(buf);
+	c.g = AG_ReadUint8(buf);
+	c.b = AG_ReadUint8(buf);
+	c.a = AG_ReadUint8(buf);
+	return (c);
 }

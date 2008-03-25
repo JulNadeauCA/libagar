@@ -1,4 +1,3 @@
-/*	$Csoft: vg_math.h,v 1.4 2004/05/24 03:32:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_MATH_H_
@@ -75,6 +74,9 @@
 #endif /* _AGAR_INTERNAL or _USE_AGAR_VG_MATH */
 
 __BEGIN_DECLS
+extern int vg_cos_tbl[];
+extern int vg_sin_tbl[];
+
 static __inline__ int
 VG_PowOf2i(int i)
 {

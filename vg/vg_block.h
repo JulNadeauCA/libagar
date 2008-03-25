@@ -1,4 +1,3 @@
-/*	$Csoft: vg_block.h,v 1.8 2005/06/04 04:48:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_BLOCK_H_
