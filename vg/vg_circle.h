@@ -1,4 +1,3 @@
-/*	$Csoft: vg_circle.h,v 1.5 2005/06/04 04:48:44 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_CIRCLE_H_

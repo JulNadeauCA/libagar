@@ -1,4 +1,3 @@
-/*	$Csoft: vg_text.h,v 1.7 2005/06/04 04:48:45 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_TEXT_H_

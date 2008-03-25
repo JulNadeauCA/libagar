@@ -195,13 +195,11 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 {
 	char path[MAXPATHLEN];
 	char name[AG_OBJECT_NAME_MAX];
-	char name_obj[AG_OBJECT_NAME_MAX];
 	int ptsize = (psize >= 0) ? psize : AG_Int(agConfig, "font.size");
 	Uint flags = (pflags >= 0) ? pflags : AG_Uint(agConfig, "font.flags");
 	enum ag_font_type type;
 	AG_StaticFont *builtin;
 	AG_Font *font;
-	char *c;
 	int i;
 
 	if (pname != NULL) {
@@ -209,17 +207,11 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	} else {
 		AG_StringCopy(agConfig, "font.face", name, sizeof(name));
 	}
-	memcpy(name_obj, name, sizeof(name_obj));
-	for (c = &name_obj[0]; *c != '\0'; c++) {
-		if (*c == '.')
-			*c = '_';
-	}
-
 	AG_MutexLock(&agTextLock);
 	SLIST_FOREACH(font, &fonts, fonts) {
 		if (font->size == ptsize &&
 		    font->flags == flags &&
-		    strcmp(OBJECT(font)->name, name_obj) == 0)
+		    strcmp(OBJECT(font)->name, name) == 0)
 			break;
 	}
 	if (font != NULL)

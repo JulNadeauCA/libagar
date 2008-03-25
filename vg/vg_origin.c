@@ -1,8 +1,5 @@
-/*	$Csoft: vg_origin.c,v 1.16 2005/07/30 05:01:34 vedge Exp $	*/
-
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,28 +23,35 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Origin element.
+ */
+
 #include <core/core.h>
 
+#include <gui/widget.h>
+#include <gui/primitive.h>
+
 #include "vg.h"
-#include "vg_primitive.h"
+#include "vg_view.h"
 
 int
-VG_AddOrigin(VG *vg, float x, float y, float radius, Uint32 color)
+VG_AddOrigin(VG *vg, float x, float y, float radius, VG_Color color)
 {
 	int o;
 
 	vg->origin = Realloc(vg->origin,
 	    (vg->norigin+1)*sizeof(VG_Vtx));
-	vg->origin_radius = Realloc(vg->origin_radius,
+	vg->originRadius = Realloc(vg->originRadius,
 	    (vg->norigin+1)*sizeof(float));
-	vg->origin_color = Realloc(vg->origin_color,
+	vg->originColor = Realloc(vg->originColor,
 	    (vg->norigin+1)*sizeof(Uint32));
 
 	o = vg->norigin++;
 	vg->origin[o].x = x;
 	vg->origin[o].y = y;
-	vg->origin_radius[o] = radius;
-	vg->origin_color[o] = color;
+	vg->originRadius[o] = radius;
+	vg->originColor[o] = color;
 	return (o);
 }
 
@@ -100,35 +104,38 @@ VG_Origin(VG *vg, int o, float ox, float oy)
 void
 VG_OriginColor(VG *vg, int o, int r, int g, int b)
 {
-	vg->origin_color[o] = SDL_MapRGB(vg->fmt, r, g, b);
+	vg->originColor[o] = VG_GetColorRGB(r,g,b);
 }
 
 void
 VG_OriginRadius(VG *vg, int o, float r)
 {
-	vg->origin_radius[o] = r;
+	vg->originRadius[o] = r;
 }
 
 void
-VG_DrawOrigin(VG *vg)
+VG_DrawOrigin(VG_View *vv)
 {
-	int rx, ry, radius;
+	VG *vg = vv->vg;
+	int x, y, rPixels;
+	Uint32 c32;
+	float r;
 	int o;
 
 	for (o = 0; o < vg->norigin; o++) {
 		if (o == 0) {
-			VG_AbsRcoords2(vg, vg->origin[o].x, vg->origin[o].y,
-			    &rx, &ry);
+			x = vg->origin[o].x*vv->scale;
+			y = vg->origin[o].y*vv->scale;
 		} else {
-			VG_Rcoords2(vg, vg->origin[o].x, vg->origin[o].y,
-			    &rx, &ry);
+			VG_GetViewCoords(vv, vg->origin[o].x, vg->origin[o].y,
+			    &x, &y);
 		}
-		VG_RLength(vg, vg->origin_radius[o], &radius);
-		VG_CirclePrimitive(vg, rx, ry, radius,
-		    vg->origin_color[o]);
-		VG_LinePrimitive(vg, rx, ry, rx+radius, ry,
-		    vg->origin_color[o]);
-		VG_LinePrimitive(vg, rx, ry, rx, ry+radius,
-		    vg->origin_color[o]);
+		r = vg->originRadius[o];
+		c32 = VG_MapColorRGB(vg->originColor[o]);
+
+		rPixels = (int)(r*vv->scale);
+		AG_DrawCircle(vv, x, y, r, c32);
+		AG_DrawLineH(vv, x, x+rPixels, y, c32);
+		AG_DrawLineV(vv, x, y, y+rPixels, c32);
 	}
 }

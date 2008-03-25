@@ -34,6 +34,9 @@ typedef struct ag_primitive_ops {
 
 extern AG_PrimitiveOps agPrim;
 
+#define AG_DrawPixel AG_WidgetPutPixel
+#define AG_DrawPixelBlended AG_WidgetBlendPixel32
+#define AG_DrawPixelRGB AG_WidgetPutPixelRGB
 #define AG_DrawBox agPrim.Box
 #define AG_DrawBoxRounded agPrim.BoxRounded
 #define AG_DrawBoxRoundedTop agPrim.BoxRoundedTop

@@ -1,4 +1,3 @@
-/*	$Csoft: vg_snap.h,v 1.4 2004/10/06 04:56:08 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_SNAP_H_
@@ -28,12 +27,12 @@ struct ag_menu;
 struct ag_menu_item;
 
 __BEGIN_DECLS
-void		   VG_SnapPoint(struct vg *, float *, float *);
-void		   VG_SetSnapMode(struct vg *, enum vg_snap_mode);
-void	 	   VG_DrawGrid(struct vg *);
-struct ag_toolbar *VG_SnapToolbar(void *, struct vg *, enum ag_toolbar_type);
+void		   VG_SnapPoint(struct vg_view *, float *, float *);
+void	 	   VG_DrawGrid(struct vg_view *);
+struct ag_toolbar *VG_SnapToolbar(void *, struct vg_view *,
+                                  enum ag_toolbar_type);
 void		   VG_SnapMenu(struct ag_menu *, struct ag_menu_item *,
-		               struct vg *);
+		               struct vg_view *);
 __END_DECLS
 
 #include "close_code.h"

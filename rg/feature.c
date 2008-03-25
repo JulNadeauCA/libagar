@@ -58,10 +58,11 @@ tryname:
 	ft->flags = flags;
 	ft->ops = ops;
 	ft->nrefs = 0;
-	TAILQ_INIT(&ft->sketches);
+/*	TAILQ_INIT(&ft->sketches); */
 	TAILQ_INIT(&ft->pixmaps);
 }
 
+#if 0
 RG_FeatureSketch *
 RG_FeatureAddSketch(RG_Feature *ft, RG_Sketch *sk)
 {
@@ -90,6 +91,7 @@ RG_FeatureDelSketch(RG_Feature *ft, RG_Sketch *sk)
 		Free(fsk);
 	}
 }
+#endif
 
 RG_FeaturePixmap *
 RG_FeatureAddPixmap(RG_Feature *ft, RG_Pixmap *px)
@@ -123,19 +125,19 @@ RG_FeatureDelPixmap(RG_Feature *ft, RG_Pixmap *px)
 void
 AG_FeatureDestroy(RG_Feature *ft)
 {
-	RG_FeatureSketch *fsk, *nfsk;
+/*	RG_FeatureSketch *fsk, *nfsk; */
 	RG_FeaturePixmap *fpx, *nfpx;
 
 	if (ft->ops->destroy != NULL)
 		ft->ops->destroy(ft);
-
+#if 0
 	for (fsk = TAILQ_FIRST(&ft->sketches);
 	     fsk != TAILQ_END(&ft->sketches);
 	     fsk = nfsk) {
 		nfsk = TAILQ_NEXT(fsk, sketches);
 		Free(fsk);
 	}
-	
+#endif	
 	for (fpx = TAILQ_FIRST(&ft->pixmaps);
 	     fpx != TAILQ_END(&ft->pixmaps);
 	     fpx = nfpx) {

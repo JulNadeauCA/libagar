@@ -166,5 +166,9 @@ AG_InitGUI(Uint flags)
 				SDL_JoystickEventState(SDL_ENABLE);
 		}
 	}
+
+	/* Initialize the built-in theme. */
+	AG_SetStyle(agView, &agStyleDefault);
+
 	return (0);
 }

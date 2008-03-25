@@ -250,10 +250,9 @@ MainWindow(void)
 		}
 	}
 
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC,
+	    agView->w-20, agView->h-20);
 	AG_WindowShow(win);
-	AG_WindowSetGeometry(win,
-	    10, 10,
-	    agView->w - 20, agView->h - 20);
 }
 
 int

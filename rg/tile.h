@@ -22,7 +22,7 @@ struct ag_window;
 enum rg_tile_element_type {
 	RG_TILE_FEATURE,
 	RG_TILE_PIXMAP,
-	RG_TILE_SKETCH
+/*	RG_TILE_SKETCH */
 };
 
 enum rg_snap_mode {

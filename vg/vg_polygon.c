@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,35 +23,44 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Polygon element.
+ */
+
 #include <core/core.h>
 
+#include <gui/widget.h>
+#include <gui/primitive.h>
+
 #include "vg.h"
-#include "vg_primitive.h"
+#include "vg_view.h"
 #include "icons.h"
 
 static void
-VG_PolygonInit(VG *vg, VG_Element *vge)
+Init(VG *vg, VG_Element *vge)
 {
 	vge->vg_polygon.outline = 0;
 }
 
 static int
-compare_ints(const void *p1, const void *p2)
+CompareInts(const void *p1, const void *p2)
 {
 	return (*(const int *)p1 - *(const int *)p2);
 }
 
 static void
-VG_PolygonRender(VG *vg, VG_Element *vge)
+Draw(VG_View *vv, VG_Element *vge)
 {
+	Uint32 c32 = VG_MapColorRGB(vge->color);
+	VG *vg = vv->vg;
 	int i;
 	int y, x1, y1, x2, y2;
-	int miny, maxy;
+	int ign, miny, maxy;
 	int ind1, ind2;
 	int ints;
 
 	if (vge->nvtx < 3 || vge->vg_polygon.outline) {	/* Draw outline */
-		VG_DrawLineLoop(vg, vge);
+		VG_DrawLineLoop(vv, vge);
 		return;
 	}
 	
@@ -67,12 +75,12 @@ VG_PolygonRender(VG *vg, VG_Element *vge)
 	}
 
 	/* Find Y maxima */
-	VG_VtxCoords2i(vg, vge, 0, NULL, &miny);
+	VG_GetViewCoordsVtx(vv, vge, 0, &ign, &miny);
 	maxy = miny;
 	for (i = 1; i < vge->nvtx; i++) {
 		int vy;
 	
-		VG_VtxCoords2i(vg, vge, i, NULL, &vy);
+		VG_GetViewCoordsVtx(vv, vge, i, &ign, &vy);
 		if (vy < miny) {
 			miny = vy;
 		} else if (vy > maxy) {
@@ -91,14 +99,14 @@ VG_PolygonRender(VG *vg, VG_Element *vge)
 				ind1 = i - 1;
 				ind2 = i;
 			}
-			VG_VtxCoords2i(vg, vge, ind1, NULL, &y1);
-			VG_VtxCoords2i(vg, vge, ind2, NULL, &y2);
+			VG_GetViewCoordsVtx(vv, vge, ind1, &ign, &y1);
+			VG_GetViewCoordsVtx(vv, vge, ind2, &ign, &y2);
 			if (y1 < y2) {
-				VG_VtxCoords2i(vg, vge, ind1, &x1, NULL);
-				VG_VtxCoords2i(vg, vge, ind2, &x2, NULL);
+				VG_GetViewCoordsVtx(vv, vge, ind1, &x1, &ign);
+				VG_GetViewCoordsVtx(vv, vge, ind2, &x2, &ign);
 			} else if (y1 > y2) {
-				VG_VtxCoords2i(vg, vge, ind1, &x2, &y2);
-				VG_VtxCoords2i(vg, vge, ind2, &x1, &y1);
+				VG_GetViewCoordsVtx(vv, vge, ind1, &x2, &y2);
+				VG_GetViewCoordsVtx(vv, vge, ind2, &x1, &y1);
 			} else {
 				continue;
 			}
@@ -109,7 +117,7 @@ VG_PolygonRender(VG *vg, VG_Element *vge)
 				    (x2-x1) + (x1<<16);
 			} 
 		}
-		qsort(vg->ints, ints, sizeof(int), compare_ints);
+		qsort(vg->ints, ints, sizeof(int), CompareInts);
 
 		for (i = 0; i < ints; i += 2) {
 			int xa, xb;
@@ -119,7 +127,7 @@ VG_PolygonRender(VG *vg, VG_Element *vge)
 			xb = vg->ints[i+1] - 1;
 			xb = (xb>>16) + ((xb&0x8000) >> 15);
 
-			VG_HLinePrimitive(vg, xa, xb, y, vge->color);
+			AG_DrawLineH(vv, xa, xb, y, c32);
 		}
 	}
 }
@@ -127,9 +135,9 @@ VG_PolygonRender(VG *vg, VG_Element *vge)
 const VG_ElementOps vgPolygonOps = {
 	N_("Polygon"),
 	&vgIconPolygon,
-	VG_PolygonInit,
+	Init,
 	NULL,				/* destroy */
-	VG_PolygonRender,
+	Draw,
 	VG_LineExtent,			/* (same as line loop) */
 	VG_LineIntersect		/* (same as line loop) */
 };

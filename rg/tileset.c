@@ -100,7 +100,9 @@ Init(void *obj)
 
 	AG_MutexInitRecursive(&ts->lock);
 	TAILQ_INIT(&ts->tiles);
+#if 0
 	TAILQ_INIT(&ts->sketches);
+#endif
 	TAILQ_INIT(&ts->pixmaps);
 	TAILQ_INIT(&ts->features);
 	TAILQ_INIT(&ts->animations);
@@ -131,7 +133,7 @@ FreeDataset(void *obj)
 {
 	RG_Tileset *ts = obj;
 	RG_Tile *t, *nt;
-	RG_Sketch *sk, *nsk;
+/*	RG_Sketch *sk, *nsk; */
 	RG_Pixmap *px, *npx;
 	RG_Feature *ft, *nft;
 	RG_Anim *ani, *nani;
@@ -146,6 +148,7 @@ FreeDataset(void *obj)
 		RG_TileDestroy(t);
 		Free(t);
 	}
+#if 0
 	for (sk = TAILQ_FIRST(&ts->sketches);
 	     sk != TAILQ_END(&ts->sketches);
 	     sk = nsk) {
@@ -153,6 +156,7 @@ FreeDataset(void *obj)
 		RG_SketchDestroy(sk);
 		Free(sk);
 	}
+#endif
 	for (px = TAILQ_FIRST(&ts->pixmaps);
 	     px != TAILQ_END(&ts->pixmaps);
 	     px = npx) {
@@ -183,7 +187,7 @@ FreeDataset(void *obj)
 	}
 	
 	TAILQ_INIT(&ts->tiles);
-	TAILQ_INIT(&ts->sketches);
+/*	TAILQ_INIT(&ts->sketches); */
 	TAILQ_INIT(&ts->pixmaps);
 	TAILQ_INIT(&ts->features);
 	TAILQ_INIT(&ts->animations);
@@ -222,8 +226,11 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 	AG_CopyString(ts->tmpl, buf, sizeof(ts->tmpl));
 	ts->flags = AG_ReadUint32(buf);
 
-	/* Load the vectorial sketches. */
 	count = AG_ReadUint32(buf);
+	if (count != 0)
+		AG_FatalError("Vector sketches not supported");
+#if 0
+	/* Load the vectorial sketches. */
 	for (i = 0; i < count; i++) {
 		RG_Sketch *sk;
 
@@ -235,6 +242,7 @@ Load(void *obj, AG_DataSource *buf, const AG_Version *ver)
 		}
 		TAILQ_INSERT_TAIL(&ts->sketches, sk, sketches);
 	}
+#endif
 
 	/* Load the pixmaps. */
 	count = AG_ReadUint32(buf);
@@ -420,7 +428,7 @@ Save(void *obj, AG_DataSource *buf)
 	RG_Tileset *ts = obj;
 	Uint32 count, i;
 	off_t offs;
-	RG_Sketch *sk;
+/*	RG_Sketch *sk; */
 	RG_Pixmap *px;
 	RG_Anim *ani;
 	RG_Tile *t;
@@ -435,11 +443,13 @@ Save(void *obj, AG_DataSource *buf)
 	count = 0;
 	offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
+#if 0
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
 		RG_SketchSave(sk, buf);
 		count++;
 	}
 	AG_WriteUint32At(buf, count, offs);
+#endif
 
 	/* Save the pixmaps. */
 	count = 0;
@@ -541,6 +551,7 @@ RG_TilesetFindTile(RG_Tileset *ts, const char *name)
 	return (t);
 }
 
+#if 0
 RG_Sketch *
 RG_TilesetFindSketch(RG_Tileset *ts, const char *name)
 {
@@ -555,6 +566,7 @@ RG_TilesetFindSketch(RG_Tileset *ts, const char *name)
 	}
 	return (sk);
 }
+#endif
 
 RG_Pixmap *
 RG_TilesetFindPixmap(RG_Tileset *ts, const char *name)
@@ -642,7 +654,7 @@ PollGraphics(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	RG_Tileset *ts = AG_PTR(1);
 	RG_Pixmap *px;
-	RG_Sketch *sk;
+/*	RG_Sketch *sk; */
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
@@ -655,6 +667,7 @@ PollGraphics(AG_Event *event)
 		it->cat = "pixmap";
 		AG_TlistSetIcon(tl, it, px->su);
 	}
+#if 0
 	TAILQ_FOREACH(sk, &ts->sketches, sketches) {
 		it = AG_TlistAdd(tl, NULL,
 		    "%s (%ux%u %.0f%%) [#%u]", sk->name, sk->vg->su->w,
@@ -663,7 +676,7 @@ PollGraphics(AG_Event *event)
 		it->p1 = sk;
 		AG_TlistSetIcon(tl, it, sk->vg->su);
 	}
-
+#endif
 	AG_MutexUnlock(&ts->lock);
 	AG_TlistRestore(tl);
 }
@@ -751,7 +764,7 @@ PollTiles(AG_Event *event)
 				{
 					RG_Feature *ft =
 					    tel->tel_feature.ft;
-					RG_FeatureSketch *fts;
+/*					RG_FeatureSketch *fts; */
 
 					it = AG_TlistAdd(tl, rgIconObject.s,
 					    "%s [%d,%d] %s", ft->name,
@@ -761,7 +774,7 @@ PollTiles(AG_Event *event)
 					it->depth = 1;
 					it->cat = "tile-feature";
 					it->p1 = tel;
-
+#if 0
 					TAILQ_FOREACH(fts, &ft->sketches,
 					    sketches) {
 						it = AG_TlistAdd(tl,
@@ -775,6 +788,7 @@ PollTiles(AG_Event *event)
 						it->cat = "feature-sketch";
 						it->p1 = fts;
 					}
+#endif
 				}
 				break;
 			case RG_TILE_PIXMAP:
@@ -792,6 +806,7 @@ PollTiles(AG_Event *event)
 					AG_TlistSetIcon(tl, it, px->su);
 				}
 				break;
+#if 0
 			case RG_TILE_SKETCH:
 				{
 					RG_Sketch *sk = tel->tel_sketch.sk;
@@ -806,6 +821,7 @@ PollTiles(AG_Event *event)
 					it->p1 = tel;
 				}
 				break;
+#endif
 			}
 		}
 	}
@@ -1498,6 +1514,7 @@ DeleteSelAnims(AG_Event *event)
 	}
 }
 
+#if 0
 static void
 DeleteSelSketches(AG_Event *event)
 {
@@ -1519,6 +1536,7 @@ DeleteSelSketches(AG_Event *event)
 		Free(sk);
 	}
 }
+#endif
 
 static void
 DeleteSelGraphics(AG_Event *event)
@@ -1537,6 +1555,7 @@ DeleteSelGraphics(AG_Event *event)
 			TAILQ_REMOVE(&ts->pixmaps, px, pixmaps);
 			RG_PixmapDestroy(px);
 			Free(px);
+#if 0
 		} else if (strcmp(it->cat, "sketch") == 0) {
 			RG_Sketch *sk = it->p1;
 	
@@ -1546,6 +1565,7 @@ DeleteSelGraphics(AG_Event *event)
 			TAILQ_REMOVE(&ts->sketches, sk, sketches);
 			RG_SketchDestroy(sk);
 			Free(sk);
+#endif
 		}
 	}
 }
@@ -1784,11 +1804,13 @@ Edit(void *p)
 			    rgIconDuplicate.s,
 			    DupSelPixmaps, "%p,%p", ts, tlGfx);
 		}
+#if 0
 		mi = AG_TlistSetPopup(tlGfx, "sketch");
 		{
 			AG_MenuAction(mi, _("Delete sketch"), agIconTrash.s,
 			    DeleteSelSketches, "%p,%p", ts, tlGfx);
 		}
+#endif
 		bbox = AG_BoxNewHoriz(ntab, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
 			AG_ButtonNewFn(bbox, 0,

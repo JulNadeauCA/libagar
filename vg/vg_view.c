@@ -1,8 +1,5 @@
-/*	$Csoft: vgview.c,v 1.2 2005/10/06 10:41:50 vedge Exp $	*/
-
 /*
- * Copyright (c) 2005-2006 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Visualization widget.
+ */
+
 #include <core/core.h>
 #include <core/config.h>
 
@@ -38,12 +39,6 @@
 #include <gui/view.h>
 #include <gui/window.h>
 #include <gui/primitive.h>
-
-#define VG_VIEW_X(vv,px) VG_VECXF_NOSNAP((vv)->vg,(px)-(vv)->x)
-#define VG_VIEW_Y(vv,py) VG_VECYF_NOSNAP((vv)->vg,(py)-(vv)->y)
-#define VG_VIEW_X_SNAP(vv,px) VG_VECXF((vv)->vg,(px)-(vv)->x)
-#define VG_VIEW_Y_SNAP(vv,py) VG_VECYF((vv)->vg,(py)-(vv)->y)
-#define VG_VIEW_LEN(vv,len) VG_VECLENF((vv)->vg,(len))
 
 VG_View *
 VG_ViewNew(void *parent, VG *vg, Uint flags)
@@ -67,35 +62,36 @@ MouseMotion(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
-	float x, y;
-	float xrel = AG_INT(3);
-	float yrel = AG_INT(4);
+	int xCurs = AG_INT(1);
+	int yCurs = AG_INT(2);
+	float xRel = (float)AG_INT(3);
+	float yRel = (float)AG_INT(4);
 	int state = AG_INT(5);
-	
+	float x, y, xCt, yCt;
+
+	VG_GetVGCoords(vv, xCurs,yCurs, &x,&y);
+	xCt = x;
+	yCt = y;
+
 	if (vv->mouse.panning) {
-		vv->x += xrel;
-		vv->y += yrel;
+		vv->x += xRel;
+		vv->y += yRel;
 		return;
 	}
 	if (tool != NULL && tool->ops->mousemotion != NULL) {
 		if (tool->ops->flags & VG_MOUSEMOTION_NOSNAP) {
-			x = VG_VIEW_X(vv,AG_INT(1));
-			y = VG_VIEW_Y(vv,AG_INT(2));
-		} else {
-			x = VG_VIEW_X_SNAP(vv,AG_INT(1));
-			y = VG_VIEW_Y_SNAP(vv,AG_INT(2));
+			VG_ApplyConstraints(vv, &xCt,&yCt);
 		}
-		if (tool->ops->mousemotion(tool, x, y,
-		    VG_VIEW_LEN(vv,xrel), VG_VIEW_LEN(vv,yrel), state) == 1) {
+		if (tool->ops->mousemotion(tool, xCt, yCt,
+		    (int)(xRel*vv->scale),
+		    (int)(yRel*vv->scale), state) == 1) {
 			vv->mouse.x = x;
 			vv->mouse.y = y;
 			return;
 		}
+	} else {
 		vv->mouse.x = x;
 		vv->mouse.y = y;
-	} else {
-		vv->mouse.x = VG_VIEW_X(vv,AG_INT(1));
-		vv->mouse.y = VG_VIEW_Y(vv,AG_INT(2));
 	}
 }
 
@@ -103,14 +99,17 @@ static void
 MouseButtonDown(AG_Event *event)
 {
 	VG_View *vv = AG_SELF();
-	VG *vg = vv->vg;
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int button = AG_INT(1);
+	int xCurs = AG_INT(2);
+	int yCurs = AG_INT(3);
 	VG_ToolMouseBinding *mb;
-	float x = VG_VIEW_X(vv,AG_INT(2));
-	float y = VG_VIEW_Y(vv,AG_INT(3));
-	float xSn, ySn;
-	
+	float x, y, xCt, yCt;
+
+	VG_GetVGCoords(vv, xCurs,yCurs, &x,&y);
+	xCt = x;
+	yCt = y;
+
 	AG_WidgetFocus(vv);
 	vv->mouse.x = x;
 	vv->mouse.y = y;
@@ -119,23 +118,19 @@ MouseButtonDown(AG_Event *event)
 		vv->mouse.panning = 1;
 		break;
 	case SDL_BUTTON_WHEELDOWN:
-		VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale-1.0f);
+		VG_ViewSetScale(vv, vv->scale-1.5f);
 		return;
 	case SDL_BUTTON_WHEELUP:
-		VG_Scale(vg, vg->rDst.w, vg->rDst.h, vg->scale+1.0f);
+		VG_ViewSetScale(vv, vv->scale+1.5f);
 		return;
 	default:
 		break;
 	}
 	if (tool != NULL && tool->ops->mousebuttondown != NULL) {
 		if (tool->ops->flags & VG_BUTTONDOWN_NOSNAP) {
-			xSn = x;
-			ySn = y;
-		} else {
-			xSn = VG_VIEW_X_SNAP(vv,AG_INT(2));
-			ySn = VG_VIEW_Y_SNAP(vv,AG_INT(3));
+			VG_ApplyConstraints(vv, &xCt,&yCt);
 		}
-		if (tool->ops->mousebuttondown(tool, xSn, ySn, button) == 1)
+		if (tool->ops->mousebuttondown(tool, xCt,yCt, button) == 1)
 			return;
 	}
 	TAILQ_FOREACH(tool, &vv->tools, tools) {
@@ -159,20 +154,20 @@ MouseButtonUp(AG_Event *event)
 	VG_View *vv = AG_SELF();
 	VG_Tool *tool = VG_CURTOOL(vv);
 	int button = AG_INT(1);
-	float x = VG_VIEW_X(vv,AG_INT(2));
-	float y = VG_VIEW_Y(vv,AG_INT(3));
-	float xSn, ySn;
+	int xCurs = AG_INT(2);
+	int yCurs = AG_INT(3);
 	VG_ToolMouseBinding *mb;
+	float x, y, xCt, yCt;
+	
+	VG_GetVGCoords(vv, xCurs,yCurs, &x,&y);
+	xCt = x;
+	yCt = y;
 
 	if (tool != NULL && tool->ops->mousebuttonup != NULL) {
 		if (tool->ops->flags & VG_BUTTONUP_NOSNAP) {
-			xSn = x;
-			ySn = y;
-		} else {
-			xSn = VG_VIEW_X_SNAP(vv,AG_INT(2));
-			ySn = VG_VIEW_Y_SNAP(vv,AG_INT(3));
+			VG_ApplyConstraints(vv, &xCt,&yCt);
 		}
-		if (tool->ops->mousebuttonup(tool, xSn, ySn, button) == 1)
+		if (tool->ops->mousebuttonup(tool, xCt,yCt, button) == 1)
 			return;
 	}
 	TAILQ_FOREACH(tool, &vv->tools, tools) {
@@ -215,18 +210,40 @@ Init(void *obj)
 	vv->motion_ev = NULL;
 	vv->x = 0;
 	vv->y = 0;
-	vv->status[0] = '\0';
-
+	vv->scale = 1.0f;
+	vv->wPixel = 1.0f;
+	vv->snap_mode = VG_GRID;
+	vv->ortho_mode = VG_NO_ORTHO;
+	vv->gridIval = 16.0f;
 	vv->mouse.x = 0.0f;
 	vv->mouse.y = 0.0f;
 	vv->mouse.panning = 0;
 	vv->curtool = NULL;
 	vv->deftool = NULL;
+	vv->status[0] = '\0';
 	TAILQ_INIT(&vv->tools);
 
 	AG_SetEvent(vv, "window-mousemotion", MouseMotion, NULL);
 	AG_SetEvent(vv, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(vv, "window-mousebuttonup", MouseButtonUp, NULL);
+}
+
+void
+VG_ViewSetSnapMode(VG_View *vv, enum vg_snap_mode mode)
+{
+	vv->snap_mode = mode;
+}
+
+void
+VG_ViewSetOrthoMode(VG_View *vv, enum vg_ortho_mode mode)
+{
+	vv->ortho_mode = mode;
+}
+
+void
+VG_ViewSetGridInterval(VG_View *vv, float ival)
+{
+	vv->gridIval = MAX(1.0f,ival);
 }
 
 void
@@ -281,17 +298,33 @@ VG_ViewMotionFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
-	r->w = 32;				/* XXX */
-	r->h = 32;
+	r->w = 16;
+	r->h = 16;
 }
 
 static int
 SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
-	VG_View *vv = p;
-
-	VG_Scale(vv->vg, a->w, a->h, vv->vg->scale);
+	if (a->w < 16 || a->h < 16) {
+		return (-1);
+	}
 	return (0);
+}
+
+static __inline__ void
+DrawGrid(VG_View *vv)
+{
+	int x, y, ival;
+	Uint32 c32;
+
+	ival = vv->gridIval*vv->scale;
+	if (ival < 4)
+		return;
+
+	c32 = VG_MapColorRGB(vv->vg->gridColor);
+	for (y = 0; (y+ival) < HEIGHT(vv); y += ival)
+		for (x = 0; (x+ival) < WIDTH(vv); x += ival)
+			AG_DrawPixel(vv, x, y, c32);
 }
 
 static void
@@ -300,21 +333,52 @@ Draw(void *p)
 	VG_View *vv = p;
 	VG *vg = vv->vg;
 	SDL_Surface *status;
+	VG_Color colorSave;
+	VG_Element *vge;
+
+	AG_DrawRectFilled(vv, AG_RECT(0,0,WIDTH(vv),HEIGHT(vv)),
+	    VG_MapColorRGB(vg->fillColor));
+
+	AG_MutexLock(&vg->lock);
 	
 	if (vv->draw_ev != NULL)
 		vv->draw_ev->handler(vv->draw_ev);
 
-	if (vg->flags & VG_DIRECT) {
-		vg->rDst.x = WIDGET(vv)->cx+vv->x;
-		vg->rDst.y = WIDGET(vv)->cy+vv->y;
-		VG_Rasterize(vg);
-		if (vg->flags & VG_VISGRID)
-			VG_DrawGrid(vg);
-	} else {
-		VG_Rasterize(vg);
-		AG_WidgetBlit(vv, vg->su, vv->x, vv->y);
+	if (vg->flags & VG_VISGRID)
+		DrawGrid(vv);
+	if (vg->flags & VG_VISORIGIN)
+		VG_DrawOrigin(vv);
+#ifdef DEBUG
+	if (vg->flags & VG_VISBBOXES)
+		VG_DrawExtents(vv);
+#endif
+	TAILQ_FOREACH(vge, &vg->vges, vges) {
+		colorSave = vge->color;
+
+		if (vge->mouseover) {
+			/* XXX */
+			if (vge->color.r > 200 &&
+			    vge->color.g > 200 &&
+			    vge->color.b > 200) {
+				vge->color.r = 0;
+				vge->color.g = 255;
+				vge->color.b = 0;
+			} else {
+				vge->color.r = MIN(vge->color.r+50,255);
+				vge->color.g = MIN(vge->color.g+50,255);
+				vge->color.b = MIN(vge->color.b+50,255);
+			}
+		}
+
+		vge->ops->draw(vv, vge);
+
+		if (vge->mouseover)
+			vge->color = colorSave;
 	}
 
+	AG_MutexUnlock(&vg->lock);
+
+	/* XXX */
 	AG_TextColor(TEXT_COLOR);
 	status = AG_TextRender(vv->status);
 	AG_WidgetBlit(vv, status, 0, WIDGET(vv)->h - status->h);
@@ -335,8 +399,7 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 			AG_Widget *wt;
 			AG_Window *pwin;
 
-			OBJECT_FOREACH_CHILD(wt, vv->curtool->pane,
-			    ag_widget) {
+			OBJECT_FOREACH_CHILD(wt, vv->curtool->pane, ag_widget) {
 				AG_ObjectDetach(wt);
 				AG_ObjectDestroy(wt);
 			}
@@ -419,6 +482,13 @@ VG_ViewRegTool(VG_View *vv, const VG_ToolOps *ops, void *p)
 	VG_ToolInit(t);
 	TAILQ_INSERT_TAIL(&vv->tools, t, tools);
 	return (t);
+}
+
+void
+VG_ViewSetScale(VG_View *vv, float scale)
+{
+	vv->scale = MAX(scale,0.001f);
+	vv->wPixel = 1.0/scale;
 }
 
 void

@@ -16,7 +16,8 @@ SUBDIR=	fixedres \
 	gunpowder \
 	cplusplus \
 	plotting \
-	scrollbar
+	scrollbar \
+	initvideosdl
 
 all: all-subdir
 clean: prereq clean-subdir

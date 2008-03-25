@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004, 2005 CubeSoft Communications, Inc.
- * <http://www.csoft.org>
+ * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,16 +23,23 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Circular arc element.
+ */
+
 #include <core/limits.h>
 #include <core/core.h>
 
+#include <gui/widget.h>
+#include <gui/primitive.h>
+
 #include "vg.h"
-#include "vg_primitive.h"
+#include "vg_view.h"
 #include "vg_math.h"
 #include "icons.h"
 
 static void
-VG_ArcInit(VG *vg, VG_Element *vge)
+Init(VG *vg, VG_Element *vge)
 {
 	vge->vg_arc.w = 1.0f;
 	vge->vg_arc.h = 1.0f;
@@ -65,20 +71,38 @@ VG_Arc3Points(VG *vg, VG_Vtx v[3])
 }
 
 static void
-VG_ArcRender(VG *vg, VG_Element *vge)
+Draw(VG_View *vv, VG_Element *vge)
 {
-	int x, y;
-	int w, h;
+	Uint32 c32 = VG_MapColorRGB(vge->color);
+	int a1 = (int)vge->vg_arc.s;
+	int a2 = (int)vge->vg_arc.e;
+	int x, y, w, h;
+	int xPrev = 0, yPrev = 0;
+	int w2 = w/2, h2 = h/2;
+	int a;
 
-	VG_Rcoords2(vg, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
-	VG_RLength(vg, vge->vg_arc.w, &w);
-	VG_RLength(vg, vge->vg_arc.h, &h);
-	VG_ArcPrimitive(vg, x, y, w, h, (int)vge->vg_arc.s, (int)vge->vg_arc.e,
-	    vge->color);
+	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
+	w = (int)(vge->vg_arc.w*vv->scale);
+	h = (int)(vge->vg_arc.h*vv->scale);
+
+	while (a2 < a1)
+		a2 += 360;
+
+	for (a = a1; a <= a2; a++) {
+		int x, y;
+
+		x = ((long)vg_cos_tbl[a % 360]*(long)w2/1024) + x; 
+		y = ((long)vg_sin_tbl[a % 360]*(long)h2/1024) + y;
+		if (a != a1) {
+			AG_DrawLine(vv, xPrev, yPrev, x, y, c32);
+		}
+		xPrev = x;
+		yPrev = y;
+	}
 }
 
 static void
-VG_ArcExtent(VG *vg, VG_Element *vge, VG_Rect *r)
+Extent(VG *vg, VG_Element *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_arc.w/2.0f;
 	r->y = vge->vtx[0].y - vge->vg_arc.h/2.0f;
@@ -87,7 +111,7 @@ VG_ArcExtent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-VG_ArcIntersect(VG *vg, VG_Element *vge, float *x, float *y)
+Intersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	/* TODO */
 	return (AG_FLT_MAX);
@@ -96,20 +120,19 @@ VG_ArcIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 const VG_ElementOps vgArcOps = {
 	N_("Arc"),
 	&vgIconCircle,
-	VG_ArcInit,
+	Init,
 	NULL,
-	VG_ArcRender,
-	VG_ArcExtent,
-	VG_ArcIntersect
+	Draw,
+	Extent,
+	Intersect
 };
 
 const VG_ElementOps vgEllipseOps = {
 	N_("Ellipse"),
 	&vgIconCircle,
-	VG_ArcInit,
+	Init,
 	NULL,
-	VG_ArcRender,
-	VG_ArcExtent,
-	VG_ArcIntersect
+	Draw,
+	Extent,
+	Intersect
 };
-

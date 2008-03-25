@@ -112,6 +112,18 @@ out:
 }
 
 static void
+ChildAttached(AG_Event *event)
+{
+	AG_Window *win = AG_SELF();
+	AG_Widget *wid = AG_PTR(1);
+
+	if (win->visible) {
+		AG_WindowUpdate(win);
+		AG_PostEvent(NULL, wid, "widget-shown", NULL);
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_Window *win = obj;
@@ -149,6 +161,7 @@ Init(void *obj)
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(win, "detached", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
+	AG_SetEvent(win, "child-attached", ChildAttached, NULL);
 }
 
 /* Attach a sub-window. */
@@ -1048,6 +1061,63 @@ AG_WindowSetGeometryParam(AG_Window *win, int x, int y, int w, int h,
 fail:
 	AG_ObjectUnlock(win);
 	return (-1);
+}
+
+/* Assign a window a specific alignment and size in pixels. */
+int
+AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment align,
+    int w, int h)
+{
+	int x, y;
+
+	switch (align) {
+	case AG_WINDOW_TL:
+		x = 0;
+		y = 0;
+		break;
+	case AG_WINDOW_TC:
+		x = agView->w/2 - w/2;
+		y = 0;
+		break;
+	case AG_WINDOW_TR:
+		x = agView->w - w;
+		y = 0;
+		break;
+	case AG_WINDOW_ML:
+		x = 0;
+		y = agView->h/2 - h/2;
+		break;
+	case AG_WINDOW_MC:
+		x = agView->w/2 - w/2;
+		y = agView->h/2 - h/2;
+		break;
+	case AG_WINDOW_MR:
+		x = agView->w - w;
+		y = agView->h/2 - h/2;
+		break;
+	case AG_WINDOW_BL:
+		x = 0;
+		y = agView->h - h;
+		break;
+	case AG_WINDOW_BC:
+		x = agView->w/2 - w/2;
+		y = agView->h - h;
+		break;
+	case AG_WINDOW_BR:
+		x = agView->w - w;
+		y = agView->h - h;
+		break;
+	}
+	return AG_WindowSetGeometry(win, x, y, w, h);
+}
+
+int
+AG_WindowSetGeometryAlignedPct(AG_Window *win, enum ag_window_alignment align,
+    int wPct, int hPct)
+{
+	return AG_WindowSetGeometryAligned(win, align,
+	                                   wPct*agView->w/100,
+	                                   hPct*agView->h/100);
 }
 
 void

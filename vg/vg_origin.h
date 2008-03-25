@@ -1,4 +1,3 @@
-/*	$Csoft: vg_origin.h,v 1.3 2004/05/24 03:32:22 vedge Exp $	*/
 /*	Public domain	*/
 
 #ifndef _AGAR_VG_ORIGIN_H_
@@ -8,11 +7,11 @@
 #define VG_NORIGINS 3
 
 __BEGIN_DECLS
-int	VG_AddOrigin(struct vg *, float, float, float, Uint32);
+int	VG_AddOrigin(struct vg *, float, float, float, VG_Color);
 void	VG_Origin(struct vg *, int, float, float);
 void	VG_OriginColor(struct vg *, int, int, int, int);
 void	VG_OriginRadius(struct vg *, int, float);
-void	VG_DrawOrigin(struct vg *);
+void	VG_DrawOrigin(struct vg_view *);
 __END_DECLS
 
 #include "close_code.h"

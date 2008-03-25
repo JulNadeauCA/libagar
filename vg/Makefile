@@ -9,7 +9,7 @@ LIB_LINKS=	ag_core_static ag_gui_static pthreads \
 		SDL opengl freetype
 
 SRCS=	vg.c vg_block.c vg_circle.c vg_arc.c vg_line.c vg_mask.c \
-	vg_origin.c vg_ortho.c vg_point.c vg_primitive.c vg_snap.c \
+	vg_origin.c vg_ortho.c vg_point.c vg_snap.c \
 	vg_tables.c vg_text.c vg_polygon.c vg_view.c vg_tool.c
 
 #MAN3=	vg.3

@@ -28,7 +28,9 @@ typedef struct rg_anim_insn {
 	enum rg_anim_insn_type type;
 	struct rg_tile *t;		/* Tile reference (for ANIM_*TILE) */
 	struct rg_pixmap *px;		/* Pixmap reference (for ANIM_*PX) */
+#if 0
 	struct rg_sketch *sk;		/* Sketch of path (for ANIM_MOVPX) */
+#endif
 	Uint delay;			/* Delay in milliseconds */
 	union {
 		struct {
