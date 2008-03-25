@@ -1063,6 +1063,63 @@ fail:
 	return (-1);
 }
 
+/* Assign a window a specific alignment and size in pixels. */
+int
+AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment align,
+    int w, int h)
+{
+	int x, y;
+
+	switch (align) {
+	case AG_WINDOW_TL:
+		x = 0;
+		y = 0;
+		break;
+	case AG_WINDOW_TC:
+		x = agView->w/2 - w/2;
+		y = 0;
+		break;
+	case AG_WINDOW_TR:
+		x = agView->w - w;
+		y = 0;
+		break;
+	case AG_WINDOW_ML:
+		x = 0;
+		y = agView->h/2 - h/2;
+		break;
+	case AG_WINDOW_MC:
+		x = agView->w/2 - w/2;
+		y = agView->h/2 - h/2;
+		break;
+	case AG_WINDOW_MR:
+		x = agView->w - w;
+		y = agView->h/2 - h/2;
+		break;
+	case AG_WINDOW_BL:
+		x = 0;
+		y = agView->h - h;
+		break;
+	case AG_WINDOW_BC:
+		x = agView->w/2 - w/2;
+		y = agView->h - h;
+		break;
+	case AG_WINDOW_BR:
+		x = agView->w - w;
+		y = agView->h - h;
+		break;
+	}
+	return AG_WindowSetGeometry(win, x, y, w, h);
+}
+
+int
+AG_WindowSetGeometryAlignedPct(AG_Window *win, enum ag_window_alignment align,
+    int wPct, int hPct)
+{
+	return AG_WindowSetGeometryAligned(win, align,
+	                                   wPct*agView->w/100,
+	                                   hPct*agView->h/100);
+}
+
 void
 AG_WindowSaveGeometry(AG_Window *win)
 {
