@@ -76,9 +76,7 @@ CreateGameMenu(void)
 	 */
 	win = AG_WindowNewNamed(AG_WINDOW_PLAIN, "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
-	AG_WindowSetGeometry(win,
-	    0,		agView->h-128,
-	    agView->w,	128);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_BL, agView->w, 128);
 	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
 
 	fx = AG_FixedNew(win, AG_FIXED_EXPAND);

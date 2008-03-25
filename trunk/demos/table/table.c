@@ -120,11 +120,8 @@ CreateStaticTable(void)
 	AG_TableEnd(table);
 
 	/* Display and resize our window. */
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_BC, 320, 240);
 	AG_WindowShow(win);
-	AG_WindowSetGeometry(win,
-	    agView->w/2 - 320/2,
-	    agView->h/2 - 240/2,
-	    320, 240);
 }
 
 /* This is our callback function for updating our dynamic table (Ex.2) */
@@ -170,11 +167,8 @@ CreatePolledTable(void)
 	AG_TableAddCol(table, "Column 2", "<888888888>", NULL);
 
 	/* Display and resize our window. */
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_ML, 150, 300);
 	AG_WindowShow(win);
-	AG_WindowSetGeometry(win,
-	    agView->w/2 - 320/3,
-	    agView->h/2 - 240/3,
-	    320, 240);
 }
 
 /* Report on the status of our test array (Ex.3) */
@@ -257,11 +251,8 @@ CreateTableWithControls(void)
 	}
 
 	/* Display and resize our window. */
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MR, 200, 300);
 	AG_WindowShow(win);
-	AG_WindowSetGeometry(win,
-	    agView->w/2 - 320/2,
-	    agView->h/2 - 240/2,
-	    320, 240);
 }
 
 int
