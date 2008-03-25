@@ -116,10 +116,8 @@ MultiLineExample(void)
 	AG_LabelNewPolled(win, AG_LABEL_HFILL,
 	    "Cursor position: %d", &textbox->ed->pos);
 
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 540, 380);
 	AG_WindowShow(win);
-	AG_WindowSetGeometry(win,
-	    agView->w/2 - 540/2, agView->h/2 - 380/2,
-	    540, 380);
 }
 
 int
