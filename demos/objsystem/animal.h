@@ -10,6 +10,6 @@ typedef struct animal {
 } Animal;
 
 extern AG_ObjectClass AnimalClass;
-Animal *AnimalNew(void *, const char *);
+Animal *AnimalNew(void *);
 
 #include "close_code.h"
