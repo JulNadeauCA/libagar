@@ -64,7 +64,13 @@ for choosing between different units
 .Fn AG_NumericalNewFlt "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "float *value"
 .Pp
 .Ft "AG_Numerical *"
+.Fn AG_NumericalNewFltR "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "float *value" "float min" "float max"
+.Pp
+.Ft "AG_Numerical *"
 .Fn AG_NumericalNewDbl "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "double *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewDblR "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "double *value" "double min" "double max"
 .Pp
 .Ft "AG_Numerical *"
 .Fn AG_NumericalNewLongDbl "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "long double *value"
@@ -73,7 +79,13 @@ for choosing between different units
 .Fn AG_NumericalNewInt "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "int *value"
 .Pp
 .Ft "AG_Numerical *"
+.Fn AG_NumericalNewIntR "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "int *value" "int min" "int max"
+.Pp
+.Ft "AG_Numerical *"
 .Fn AG_NumericalNewUint "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint *value"
+.Pp
+.Ft "AG_Numerical *"
+.Fn AG_NumericalNewUintR "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint *value" "Uint min" "Uint max"
 .Pp
 .Ft "AG_Numerical *"
 .Fn AG_NumericalNewUint8 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint8 *value"

@@ -77,12 +77,35 @@ AG_NumericalNewDbl(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
+AG_NumericalNewDblR(void *parent, Uint flags, const char *unit,
+    const char *label, double *v, double min, double max)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNew(parent, flags, unit, label);
+	AG_WidgetBindDouble(num, "value", v);
+	AG_NumericalSetMin(num, min);
+	AG_NumericalSetMax(num, max);
+	return (num);
+}
+
+AG_Numerical *
 AG_NumericalNewFlt(void *parent, Uint flags, const char *unit,
     const char *label, float *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
 	AG_WidgetBindFloat(num, "value", v);
+	return (num);
+}
+AG_Numerical *
+AG_NumericalNewFltR(void *parent, Uint flags, const char *unit,
+    const char *label, float *v, float min, float max)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNew(parent, flags, unit, label);
+	AG_WidgetBindFloat(num, "value", v);
+	AG_NumericalSetMin(num, min);
+	AG_NumericalSetMax(num, max);
 	return (num);
 }
 
@@ -108,6 +131,17 @@ AG_NumericalNewInt(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
+AG_NumericalNewIntR(void *parent, Uint flags, const char *unit,
+    const char *label, int *v, int min, int max)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNew(parent, flags, unit, label);
+	AG_WidgetBindInt(num, "value", v);
+	AG_NumericalSetMin(num, min);
+	AG_NumericalSetMax(num, max);
+	return (num);
+}
+AG_Numerical *
 AG_NumericalNewUint(void *parent, Uint flags, const char *unit,
     const char *label, Uint *v)
 {
@@ -116,6 +150,18 @@ AG_NumericalNewUint(void *parent, Uint flags, const char *unit,
 	AG_WidgetBindUint(num, "value", v);
 	return (num);
 }
+AG_Numerical *
+AG_NumericalNewUintR(void *parent, Uint flags, const char *unit,
+    const char *label, Uint *v, Uint min, Uint max)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNew(parent, flags, unit, label);
+	AG_WidgetBindUint(num, "value", v);
+	AG_NumericalSetMin(num, min);
+	AG_NumericalSetMax(num, max);
+	return (num);
+}
+
 AG_Numerical *
 AG_NumericalNewUint8(void *parent, Uint flags, const char *unit,
     const char *label, Uint8 *v)
