@@ -46,12 +46,22 @@ extern AG_WidgetClass agNumericalClass;
 AG_Numerical *AG_NumericalNew(void *, Uint, const char *, const char *);
 AG_Numerical *AG_NumericalNewDbl(void *, Uint, const char *, const char *,
                                  double *);
+AG_Numerical *AG_NumericalNewDblR(void *, Uint, const char *, const char *,
+                                  double *, double, double);
 AG_Numerical *AG_NumericalNewFlt(void *, Uint, const char *, const char *,
                                  float *);
+AG_Numerical *AG_NumericalNewFltR(void *, Uint, const char *, const char *,
+                                 float *, float, float);
+
 AG_Numerical *AG_NumericalNewInt(void *, Uint, const char *, const char *,
                                  int *);
+AG_Numerical *AG_NumericalNewIntR(void *, Uint, const char *, const char *,
+                                  int *, int, int);
 AG_Numerical *AG_NumericalNewUint(void *, Uint, const char *, const char *,
                                   Uint *);
+AG_Numerical *AG_NumericalNewUintR(void *, Uint, const char *, const char *,
+                                  Uint *, Uint, Uint);
+
 AG_Numerical *AG_NumericalNewUint8(void *, Uint, const char *, const char *,
                                    Uint8 *);
 AG_Numerical *AG_NumericalNewSint8(void *, Uint, const char *, const char *,
