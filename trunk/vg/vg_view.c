@@ -79,7 +79,7 @@ MouseMotion(AG_Event *event)
 		return;
 	}
 	if (tool != NULL && tool->ops->mousemotion != NULL) {
-		if (tool->ops->flags & VG_MOUSEMOTION_NOSNAP) {
+		if (!(tool->ops->flags & VG_MOUSEMOTION_NOSNAP)) {
 			VG_ApplyConstraints(vv, &xCt,&yCt);
 		}
 		if (tool->ops->mousemotion(tool, xCt, yCt,
@@ -127,7 +127,7 @@ MouseButtonDown(AG_Event *event)
 		break;
 	}
 	if (tool != NULL && tool->ops->mousebuttondown != NULL) {
-		if (tool->ops->flags & VG_BUTTONDOWN_NOSNAP) {
+		if (!(tool->ops->flags & VG_BUTTONDOWN_NOSNAP)) {
 			VG_ApplyConstraints(vv, &xCt,&yCt);
 		}
 		if (tool->ops->mousebuttondown(tool, xCt,yCt, button) == 1)
@@ -164,7 +164,7 @@ MouseButtonUp(AG_Event *event)
 	yCt = y;
 
 	if (tool != NULL && tool->ops->mousebuttonup != NULL) {
-		if (tool->ops->flags & VG_BUTTONUP_NOSNAP) {
+		if (!(tool->ops->flags & VG_BUTTONUP_NOSNAP)) {
 			VG_ApplyConstraints(vv, &xCt,&yCt);
 		}
 		if (tool->ops->mousebuttonup(tool, xCt,yCt, button) == 1)
@@ -214,7 +214,7 @@ Init(void *obj)
 	vv->wPixel = 1.0f;
 	vv->snap_mode = VG_GRID;
 	vv->ortho_mode = VG_NO_ORTHO;
-	vv->gridIval = 16.0f;
+	vv->gridIval = 4.0f;
 	vv->mouse.x = 0.0f;
 	vv->mouse.y = 0.0f;
 	vv->mouse.panning = 0;
@@ -322,9 +322,10 @@ DrawGrid(VG_View *vv)
 		return;
 
 	c32 = VG_MapColorRGB(vv->vg->gridColor);
-	for (y = 0; (y+ival) < HEIGHT(vv); y += ival)
-		for (x = 0; (x+ival) < WIDTH(vv); x += ival)
+	for (y = vv->y%(ival-1); y < HEIGHT(vv); y += ival) {
+		for (x = vv->x%(ival-1); x < WIDTH(vv); x += ival)
 			AG_DrawPixel(vv, x, y, c32);
+	}
 }
 
 static void

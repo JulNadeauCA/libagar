@@ -111,7 +111,7 @@ VG_Init(VG *vg, Uint flags)
 	Strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;
 	vg->fillColor = VG_GetColorRGB(0,0,0);
-	vg->gridColor = VG_GetColorRGB(128,128,128);
+	vg->gridColor = VG_GetColorRGB(200,200,0);
 	vg->selectionColor = VG_GetColorRGB(255,255,0);
 	vg->mouseoverColor = VG_GetColorRGB(200,200,0);
 	vg->origin = Malloc(sizeof(VG_Vtx)*VG_NORIGINS);
