@@ -243,7 +243,7 @@ VG_ViewSetOrthoMode(VG_View *vv, enum vg_ortho_mode mode)
 void
 VG_ViewSetGridInterval(VG_View *vv, float ival)
 {
-	vv->gridIval = MAX(1.0f,ival);
+	vv->gridIval = ival;
 }
 
 void
@@ -317,13 +317,13 @@ DrawGrid(VG_View *vv)
 	int x, y, ival;
 	Uint32 c32;
 
-	ival = vv->gridIval*vv->scale;
+	ival = (int)(vv->gridIval*vv->scale);
 	if (ival < 4)
 		return;
 
 	c32 = VG_MapColorRGB(vv->vg->gridColor);
-	for (y = vv->y%(ival-1); y < HEIGHT(vv); y += ival) {
-		for (x = vv->x%(ival-1); x < WIDTH(vv); x += ival)
+	for (y = vv->y%ival; y < HEIGHT(vv); y += ival) {
+		for (x = vv->x%ival; x < WIDTH(vv); x += ival)
 			AG_DrawPixel(vv, x, y, c32);
 	}
 }
