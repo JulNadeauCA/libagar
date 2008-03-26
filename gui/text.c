@@ -87,7 +87,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <errno.h>
 
 #include "opengl.h"
 
@@ -170,7 +169,7 @@ GetFontTypeFromSignature(const char *path, enum ag_font_type *pType)
 	FILE *f;
 
 	if ((f = fopen(path, "rb")) == NULL) {
-		AG_SetError("%s: %s", path, strerror(errno));
+		AG_SetError(_("Unable to open %s"), path);
 		return (-1);
 	}
 	if (fread(buf, 13, 1, f) == 13) {

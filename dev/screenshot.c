@@ -40,7 +40,6 @@
 #include <sys/socket.h>
 
 #include <stdio.h>
-#include <errno.h>
 #include <netdb.h>
 #include <string.h>
 #include <unistd.h>
@@ -95,7 +94,7 @@ XmitLoop(int fd)
 	Uint8 *jcopybuf;
 
 	if ((fp = fdopen(fd, "w")) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "fdopen: %s", strerror(errno));
+		AG_TextMsg(AG_MSG_ERROR, "fdopen failed");
 		return;
 	}
 

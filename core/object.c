@@ -41,7 +41,6 @@
 
 #include <stdarg.h>
 #include <ctype.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 
@@ -1805,7 +1804,7 @@ AG_ObjectCopyChecksum(void *p, enum ag_object_checksum_alg alg,
 	}
 	/* TODO locking */
 	if ((f = fopen(path, "r")) == NULL) {
-		AG_SetError("%s: %s", path, strerror(errno));
+		AG_SetError("Unable to open %s", path);
 		goto fail;
 	}
 	switch (alg) {

@@ -45,7 +45,6 @@
 /* #define SPLASH */
 
 #include <string.h>
-#include <errno.h>
 #ifdef HAVE_GETOPT
 #include <unistd.h>
 #endif
@@ -217,7 +216,7 @@ SaveTilesetToIconsHdr(AG_Event *event)
 	char *c;
 
 	if ((f = fopen(path, "w")) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, strerror(errno));
+		AG_TextMsg(AG_MSG_ERROR, _("Unable to open %s"), path);
 		return;
 	}
 	fprintf(f, "/* Agar icon reference file */\n");
@@ -237,7 +236,7 @@ SaveTilesetToIconsHdr(AG_Event *event)
 	if ((c = strrchr(pathData, '.')) != NULL) { *c = '\0'; }
 	Strlcat(pathData, "_data.h", sizeof(pathData));
 	if ((f = fopen(pathData, "w")) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", pathData, strerror(errno));
+		AG_TextMsg(AG_MSG_ERROR, _("Unable to open %s"), pathData);
 		return;
 	}
 	fprintf(f, "/* Agar icon data file */\n");
