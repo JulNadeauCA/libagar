@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <errno.h>
 
 #ifndef MIN
 #define	MIN(a,b) (((a)<(b))?(a):(b))
@@ -161,7 +160,7 @@ SaveToCSV(AG_Event *event)
 	FILE *f;
 
 	if ((f = fopen(path, "w")) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, strerror(errno));
+		AG_TextMsg(AG_MSG_ERROR, "Unable to open %s", path);
 		return;
 	}
 	fprintf(f, "Benchmark for Agar %d.%d.%d\n", AGAR_MAJOR_VERSION,

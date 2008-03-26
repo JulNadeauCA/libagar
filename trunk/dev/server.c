@@ -58,7 +58,6 @@
 
 #include <string.h>
 #include <unistd.h>
-#include <errno.h>
 #include <fcntl.h>
 
 #ifdef HAVE_JPEG
@@ -208,18 +207,18 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 #ifdef HAVE_MKSTEMP
 	Strlcpy(tmp, "/tmp/agarXXXXXXXX", sizeof(tmp));
 	if ((fd = mkstemp(tmp)) == -1) {
-		AG_SetError("mkstemp %s: %s", tmp, strerror(errno));
+		AG_SetError("mkstemp failed (%s)", tmp);
 		return (-1);
 	}
 #else
 	Strlcpy(tmp, ".agarsurface.tmp", sizeof(tmp));
 	if ((fd = open(tmp, O_RDWR|O_CREAT|O_EXCL)) == -1) {
-		AG_SetError("mkstemp %s: %s", tmp, strerror(errno));
+		AG_SetError("mkstemp failed (%s)", tmp);
 		return (-1);
 	}
 #endif
 	if ((ftmp = fdopen(fd, "r+")) == NULL) {
-		AG_SetError("fdopen %s: %s", tmp, strerror(errno));
+		AG_SetError("fdopen failed");
 		return (-1);
 	}
 	jpeg_stdio_dest(&jcomp, ftmp);

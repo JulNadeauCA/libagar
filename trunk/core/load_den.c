@@ -32,7 +32,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
 
 #include <core/load_den.h>
 
@@ -182,7 +181,7 @@ AG_DenImportFile(AG_Den *den, int ind, const char *name, const char *lang,
 	size = 0;
 
 	if ((f = fopen(infile, "rb")) == NULL) {
-		AG_SetError("%s: %s", infile, strerror(errno));
+		AG_SetError("Unable to open %s", infile);
 		return (-1);
 	}
 	for (;;) {

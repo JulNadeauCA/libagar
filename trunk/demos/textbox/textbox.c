@@ -11,7 +11,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 
 static void
 DisableInput(AG_Event *event)
@@ -98,7 +97,7 @@ MultiLineExample(void)
 		fclose(f);
 		someText[size] = '\0';
 	} else {
-		someText = AG_Strdup(strerror(errno));
+		someText = AG_Strdup("(Unable to open textbox.c)");
 	}
 
 	/*

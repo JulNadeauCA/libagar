@@ -34,7 +34,6 @@
 #include <fcntl.h>
 #include <stdarg.h>
 #include <string.h>
-#include <errno.h>
 
 const AG_Version agPropTblVer = { 2, 0 };
 

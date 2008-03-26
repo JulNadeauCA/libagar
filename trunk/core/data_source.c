@@ -31,7 +31,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
 
 /*
  * File operations.
@@ -85,7 +84,7 @@ FileReadAt(AG_DataSource *ds, void *buf, size_t size, size_t nmemb, off_t pos,
 	}
 	return (AG_IO_SUCCESS);
 fail_seek:
-	AG_SetError("fseek: %s", strerror(errno));
+	AG_SetError("fseek: failed");
 	return (AG_IO_ERROR);
 }
 
@@ -135,7 +134,7 @@ FileWriteAt(AG_DataSource *ds, const void *buf, size_t size, size_t nmemb,
 	}
 	return (AG_IO_SUCCESS);
 fail_seek:
-	AG_SetError("fseek: %s", strerror(errno));
+	AG_SetError("fseek failed");
 	return (AG_IO_ERROR);
 }
 
@@ -154,7 +153,7 @@ FileSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
 	    (mode == AG_SEEK_SET) ? SEEK_SET :
 	    (mode == AG_SEEK_CUR) ? SEEK_CUR :
 	    SEEK_END) == -1) {
-		AG_SetError("fseek: %s", strerror(errno));
+		AG_SetError("fseek failed");
 		return (-1);
 	}
 	return (0);
@@ -345,7 +344,7 @@ AG_OpenFile(const char *path, const char *mode)
 	FILE *f;
 
 	if ((f = fopen(path, mode)) == NULL) {
-		AG_SetError("%s: %s", path, strerror(errno));
+		AG_SetError("Unable to open %s", path);
 		return (NULL);
 	}
 	return AG_OpenFileHandle(f);

@@ -48,12 +48,12 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
 #include <fcntl.h>
 
 #ifdef HAVE_JPEG
 #undef HAVE_STDLIB_H		/* Work around SDL.h retardation */
 #include <jpeglib.h>
+#include <errno.h>
 #endif
 
 #include "opengl.h"

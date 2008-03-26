@@ -33,8 +33,6 @@
 #include <signal.h>
 #undef _XOPEN_SOURCE
 
-#include <errno.h>
-
 #include "rwlock.h"
 
 static rwlockattr_t default_rwlockattr = {
