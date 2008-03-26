@@ -83,6 +83,7 @@ const AG_Unit *agUnitGroups[] = {
 	agFrequencyUnits,
 	agPressureUnits,
 	agMetabolicExpenditureUnits,
+	agPercentageUnits,
 };
 const int agnUnitGroups = sizeof(agUnitGroups) / sizeof(agUnitGroups[0]);
 
@@ -491,3 +492,7 @@ const AG_Unit agMetabolicExpenditureUnits[] = {
 	{ NULL, NULL, NULL,					0, NULL }
 };
 
+const AG_Unit agPercentageUnits[] = {
+	{ "%", "", N_("Percent"),	1.0, NULL },
+	{ NULL, NULL, NULL,		0.0, NULL }
+};
