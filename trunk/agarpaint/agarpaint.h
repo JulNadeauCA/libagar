@@ -9,7 +9,7 @@ typedef unsigned int Uchar;
 typedef unsigned long Ulong;
 #endif
 
-#include <config/enable_nls.h>
+#include "config/enable_nls.h"
 #ifdef ENABLE_NLS
 # include <libintl.h>
 # define _(String) gettext(String)
