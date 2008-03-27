@@ -71,23 +71,9 @@ static void
 Init(void *obj)
 {
 	AG_Toolbar *bar = obj;
-	AG_Box *box = obj;
 	
 	WIDGET(bar)->flags |= AG_WIDGET_IGNORE_PADDING;
 
-	switch (bar->type) {
-	case AG_TOOLBAR_HORIZ:
-		AG_BoxSetType(box, AG_BOX_VERT);
-		WIDGET(bar)->flags |= AG_WIDGET_HFILL;
-		break;
-	case AG_TOOLBAR_VERT:
-		AG_BoxSetType(box, AG_BOX_HORIZ);
-		WIDGET(bar)->flags |= AG_WIDGET_VFILL;
-		break;
-	}
-	AG_BoxSetPadding(box, 1);
-	AG_BoxSetSpacing(box, 1);
-	
 	bar->flags = 0;
 	bar->type = AG_TOOLBAR_HORIZ;
 	bar->nRows = 0;
@@ -286,27 +272,56 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
+	AG_Toolbar *tbar = p;
 	AG_Box *box = p;
 	AG_Widget *chld;
 	AG_SizeReq rChld;
-	int wMax = 0, hMax = 0;
-	int nChld = 0;
+	int wMax = 0, hMax = 0, nButtons;
+	int nButtonsMax = 0;
+	int i;
 
 	r->w = box->padding*2;
 	r->h = box->padding*2;
-	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
-		if (chld->flags & AG_WIDGET_HIDE) {
-			continue;
+
+	for (i = 0; i < tbar->nRows; i++) {
+		nButtons = 0;
+		OBJECT_FOREACH_CHILD(chld, tbar->rows[i], ag_widget) {
+			if (chld->flags & AG_WIDGET_HIDE) {
+				continue;
+			}
+			AG_WidgetSizeReq(chld, &rChld);
+			if (rChld.w > wMax) { wMax = rChld.w; }
+			if (rChld.h > hMax) { hMax = rChld.h; }
+			nButtons++;
 		}
-		AG_WidgetSizeReq(chld, &rChld);
-		if (rChld.w > wMax) { wMax = rChld.w; }
-		if (rChld.h > hMax) { hMax = rChld.h; }
-		r->h = MAX(r->h, hMax + box->padding*2);
-		r->w += rChld.w + box->spacing;
-		nChld++;
+ 		if (nButtons > 0) {
+			switch (tbar->type) {
+			case AG_TOOLBAR_HORIZ:
+				r->w -= box->spacing;
+				break;
+			case AG_TOOLBAR_VERT:
+				r->h -= box->spacing;
+				break;
+			}
+			nButtonsMax = MAX(nButtonsMax,nButtons);
+		}
 	}
- 	if (nChld > 0)
-		r->w -= box->spacing;
+	switch (tbar->type) {
+	case AG_TOOLBAR_HORIZ:
+		r->w = nButtonsMax*wMax;
+		r->h = hMax*tbar->nRows + box->padding*2;
+		if (nButtonsMax > 1) {
+			r->w += (nButtonsMax-1)*box->spacing;
+		}
+		break;
+	case AG_TOOLBAR_VERT:
+		r->w = wMax*tbar->nRows + box->padding*2;
+		r->h = nButtonsMax*hMax;
+		if (nButtonsMax > 1) {
+			r->h += (nButtonsMax-1)*box->spacing;
+		}
+		break;
+	}
 }
 
 static int

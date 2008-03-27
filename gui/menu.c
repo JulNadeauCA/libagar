@@ -570,11 +570,16 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text,
 	AG_ObjectLock(pitem->pmenu);
 	AG_ObjectLock(tbar);
 
-	bu = AG_ButtonNew(tbar->rows[0], 0, NULL);
-	AG_ButtonSurfaceNODUP(bu, icon);
+	if (icon != NULL) {
+		bu = AG_ButtonNew(tbar->rows[0], 0, NULL);
+		AG_ButtonSurface(bu, icon);
+	} else {
+		bu = AG_ButtonNew(tbar->rows[0], 0, text);
+	}
 	AG_ButtonSetFocusable(bu, 0);
 	btn_ev = AG_SetEvent(bu, "button-pushed", fn, NULL);
 	AG_EVENT_GET_ARGS(btn_ev, fmt);
+	tbar->nButtons++;
 
 	mi = CreateItem(pitem, text, icon);
 	mi->key_equiv = key;
