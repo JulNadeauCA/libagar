@@ -50,11 +50,11 @@
 #include <string.h>
 
 extern const RG_FeatureOps rgFillOps;
-extern const RG_FeatureOps rgSketchProjOps;
+/* extern const RG_FeatureOps rgSketchProjOps; */
 
 const RG_FeatureOps *feature_tbl[] = {
 	&rgFillOps,
-	&rgSketchProjOps,
+/*	&rgSketchProjOps, */
 	NULL
 };
 extern const char *rgTileSnapModes[];
