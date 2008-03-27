@@ -126,13 +126,3 @@ const VG_ElementOps vgArcOps = {
 	Extent,
 	Intersect
 };
-
-const VG_ElementOps vgEllipseOps = {
-	N_("Ellipse"),
-	&vgIconCircle,
-	Init,
-	NULL,
-	Draw,
-	Extent,
-	Intersect
-};

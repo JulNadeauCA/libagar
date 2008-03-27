@@ -48,7 +48,6 @@ extern const VG_ElementOps vgLineStripOps;
 extern const VG_ElementOps vgLineLoopOps;
 extern const VG_ElementOps vgCircleOps;
 extern const VG_ElementOps vgArcOps;
-extern const VG_ElementOps vgEllipseOps;
 extern const VG_ElementOps vgTextOps;
 extern const VG_ElementOps vgMaskOps;
 extern const VG_ElementOps vgPolygonOps;
@@ -66,7 +65,6 @@ const VG_ElementOps *vgElementTypes[] = {
 	&vgPolygonOps,
 	&vgCircleOps,
 	&vgArcOps,
-	&vgEllipseOps,
 	NULL,			/* Bezier curve */
 	NULL,			/* Bezigon */
 	&vgTextOps,
