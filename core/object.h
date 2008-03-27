@@ -132,7 +132,7 @@ enum ag_object_checksum_alg {
 	    (var) = (struct t *)AG_TAILQ_PREV(AGOBJECT(var), ag_objectq, \
 	    cobjs))
 
-#ifdef _AGAR_INTERNAL
+#if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
 #define OBJECT(ob)		AGOBJECT(ob)
 #define OBJECT_OPS(ob)		AGOBJECT_OPS(ob)
 #define OBJECT_RESIDENT(ob)	AGOBJECT_RESIDENT(ob)
@@ -146,7 +146,7 @@ enum ag_object_checksum_alg {
 	AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),t)
 #define OBJECT_FOREACH_CLASS(var,ob,t,subclass) \
 	AGOBJECT_FOREACH_CLASS((var),(ob),(t),(subclass))
-#endif /* _AGAR_INTERNAL */
+#endif /* _AGAR_INTERNAL || _USE_AGAR_CORE */
 
 __BEGIN_DECLS
 extern AG_ObjectClass agObjectClass;
