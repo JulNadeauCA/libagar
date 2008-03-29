@@ -30,6 +30,8 @@ struct ag_label_flag {
 	AG_SLIST_ENTRY(ag_label_flag) lflags;
 };
 
+struct ag_text_cache;
+
 typedef struct ag_label {
 	struct ag_widget wid;
 	enum ag_label_type type;
@@ -52,6 +54,7 @@ typedef struct ag_label {
 		int nptrs;
 	} poll;
 	AG_SLIST_HEAD(,ag_label_flag) lflags;	/* Label flag descriptions */
+	struct ag_text_cache *tCache;		/* Cache for polled labels */
 } AG_Label;
 
 __BEGIN_DECLS
