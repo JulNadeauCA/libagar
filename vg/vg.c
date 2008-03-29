@@ -253,8 +253,6 @@ VG_Begin(VG *vg, enum vg_element_type eltype)
 	vge->type = eltype;
 	vge->style = NULL;
 	vge->layer = vg->cur_layer;
-	vge->selected = 0;
-	vge->mouseover = 0;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
 	vge->trans = NULL;
@@ -928,17 +926,12 @@ VG_Save(VG *vg, AG_DataSource *buf)
 			AG_WriteFloat(buf, vge->vg_circle.radius);
 			break;
 		case VG_ARC:
-		case VG_ELLIPSE:
 			AG_WriteFloat(buf, vge->vg_arc.w);
 			AG_WriteFloat(buf, vge->vg_arc.h);
 			AG_WriteFloat(buf, vge->vg_arc.s);
 			AG_WriteFloat(buf, vge->vg_arc.e);
 			break;
 		case VG_TEXT:
-			if (vge->vg_text.su != NULL) {
-				SDL_FreeSurface(vge->vg_text.su);
-				vge->vg_text.su = NULL;
-			}
 			AG_WriteString(buf, vge->vg_text.text);
 			AG_WriteFloat(buf, vge->vg_text.angle);
 			AG_WriteUint8(buf, (Uint8)vge->vg_text.align);
@@ -1140,7 +1133,6 @@ VG_Load(VG *vg, AG_DataSource *buf)
 			vge->vg_circle.radius = AG_ReadFloat(buf);
 			break;
 		case VG_ARC:
-		case VG_ELLIPSE:
 			if (vge->nvtx < 1) {
 				AG_SetError("arc nvtx < 1");
 				VG_DestroyElement(vg, vge);

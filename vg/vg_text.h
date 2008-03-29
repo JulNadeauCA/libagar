@@ -8,7 +8,6 @@
 #define VG_TEXT_MAX_PTRS 32
 
 struct vg_text_args {
-	SDL_Surface *su;		/* Text surface */
 	char text[VG_TEXT_MAX];		/* Text buffer */
 	float angle;			/* Angle of rotation (deg) */
 	enum vg_alignment align;	/* Alignment around vertex */

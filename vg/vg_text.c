@@ -45,18 +45,10 @@
 static void
 Init(VG *vg, VG_Element *vge)
 {
-	vge->vg_text.su = NULL;
 	vge->vg_text.text[0] = '\0';
 	vge->vg_text.angle = 0.0f;
 	vge->vg_text.align = VG_ALIGN_MC;
 	vge->vg_text.nptrs = 0;
-}
-
-static void
-Destroy(VG *vg, VG_Element *vge)
-{
-	if (vge->vg_text.su != NULL)
-		SDL_FreeSurface(vge->vg_text.su);
 }
 
 /* Specify the text alignment around the central vertex. */
@@ -108,11 +100,6 @@ VG_PrintfP(VG *vg, const char *fmt, ...)
 		}
 	}
 	va_end(ap);
-	
-	if (vge->vg_text.su != NULL) {
-		SDL_FreeSurface(vge->vg_text.su);
-		vge->vg_text.su = NULL;
-	}
 }
 
 /* Specify static text. */
@@ -129,10 +116,6 @@ VG_Printf(VG *vg, const char *fmt, ...)
 		va_end(args);
 	} else {
 		vge->vg_text.text[0] = '\0';
-	}
-	if (vge->vg_text.su != NULL) {
-		SDL_FreeSurface(vge->vg_text.su);
-		vge->vg_text.su = NULL;
 	}
 }
 
@@ -153,50 +136,39 @@ static const struct {
 };
 static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
-static void
-AlignText(VG_View *vv, VG_Element *vge, Sint16 *x, Sint16 *y)
+static __inline__ void
+AlignText(VG_Element *vge, int *x, int *y, int w, int h)
 {
-	SDL_Surface *su = vge->vg_text.su;
-	int vx, vy;
-	
-	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &vx, &vy);
-
 	switch (vge->vg_text.align) {
 	case VG_ALIGN_TL:
-		*x = (Sint16)vx;
-		*y = (Sint16)vy;
 		break;
 	case VG_ALIGN_TC:
-		*x = (Sint16)vx - su->w/2;
-		*y = (Sint16)vy;
+		(*x) -= w/2;
 		break;
 	case VG_ALIGN_TR:
-		*x = (Sint16)vx - su->w;
-		*y = (Sint16)vy;
+		(*x) -= w;
 		break;
 	case VG_ALIGN_ML:
-		*x = (Sint16)vx;
-		*y = (Sint16)vy - su->h/2;
+		(*y) -= h/2;
 		break;
 	case VG_ALIGN_MC:
-		*x = (Sint16)vx - su->w/2;
-		*y = (Sint16)vy - su->h/2;
+		(*x) -= w/2;
+		(*y) -= h/2;
 		break;
 	case VG_ALIGN_MR:
-		*x = (Sint16)vx - su->w;
-		*y = (Sint16)vy - su->h/2;
+		(*x) -= w;
+		(*y) -= h/2;
 		break;
 	case VG_ALIGN_BL:
-		*x = (Sint16)vx;
-		*y = (Sint16)vy - su->h;
+		(*y) -= h;
 		break;
 	case VG_ALIGN_BC:
-		*x = (Sint16)vx - su->w/2;
-		*y = (Sint16)vy - su->h;
+		(*x) -= w/2;
+		(*y) -= h;
 		break;
 	case VG_ALIGN_BR:
-		*x = (Sint16)vx - su->w;
-		*y = (Sint16)vy - su->h;
+		(*x) -= w;
+		(*y) -= h;
 		break;
 	default:
 		break;
@@ -204,29 +176,16 @@ AlignText(VG_View *vv, VG_Element *vge, Sint16 *x, Sint16 *y)
 }
 
 static void
-DrawLabel(VG_View *vv, VG_Element *vge)
+DrawPolled(VG_View *vv, VG_Element *vge)
 {
-	Uint32 c32 = VG_MapColorRGB(vge->color);
-	char s[VG_TEXT_MAX];
-	char s2[32];
+	char s[VG_TEXT_MAX], s2[32];
 	char *fmtp;
 	int i, ri = 0;
-
-	if (vge->vg_text.nptrs == 0) {
-		if (vge->vg_text.su != NULL) {
-			SDL_FreeSurface(vge->vg_text.su);
-		}
-		AG_PushTextState();
-		AG_TextFontLookup(vge->text_st.face, vge->text_st.size, 0),
-		AG_TextColorVideo32(c32);
-		vge->vg_text.su = AG_TextRender(vge->vg_text.text);
-		AG_PopTextState();
-		return;
-	}
-
+	int x, y, su;
+	
+	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
 	s[0] = '\0';
 	s2[0] = '\0';
-
 	for (fmtp = vge->vg_text.text; *fmtp != '\0'; fmtp++) {
 		if (*fmtp == '%' && *(fmtp+1) != '\0') {
 			switch (*(fmtp+1)) {
@@ -304,24 +263,36 @@ DrawLabel(VG_View *vv, VG_Element *vge)
 			Strlcat(s, s2, sizeof(s));
 		}
 	}
-	if (vge->vg_text.su != NULL) {
-		SDL_FreeSurface(vge->vg_text.su);
-	}
 	AG_PushTextState();
 	AG_TextFontLookup(vge->text_st.face, vge->text_st.size, 0),
-	AG_TextColorVideo32(c32);
-	vge->vg_text.su = AG_TextRender(s);
+	AG_TextColorVideo32(VG_MapColorRGB(vge->color));
+	su = AG_TextCacheInsLookup(vv->tCache, vge->vg_text.text);
+	AlignText(vge, &x, &y, WSURFACE(vv,su)->w, WSURFACE(vv,su)->h);
+	AG_WidgetBlitSurface(vv, su, x, y);
 	AG_PopTextState();
 }
 
 static void
 Draw(VG_View *vv, VG_Element *vge)
 {
-	SDL_Rect rd;
+	int x, y, su;
+	
+	if (vge->vg_text.nptrs > 0) {
+		DrawPolled(vv, vge);
+		return;
+	}
 
-	DrawLabel(vv, vge);
-	AlignText(vv, vge, &rd.x, &rd.y);
-	AG_WidgetBlit(vv, vge->vg_text.su, rd.x, rd.y);
+	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
+
+	AG_PushTextState();
+	AG_TextFontLookup(vge->text_st.face, vge->text_st.size, 0),
+	AG_TextColorVideo32(VG_MapColorRGB(vge->color));
+
+	su = AG_TextCacheInsLookup(vv->tCache, vge->vg_text.text);
+	AlignText(vge, &x,&y, WSURFACE(vv,su)->w, WSURFACE(vv,su)->h);
+	AG_WidgetBlitSurface(vv, su, x,y);
+
+	AG_PopTextState();
 }
 
 static void
@@ -336,7 +307,6 @@ Extent(VG *vg, VG_Element *vge, VG_Rect *r)
 #if 0
 	/* XXX XXX XXX */
 	DrawLabel(vv, vge);
-	AlignText(vv, vge, &rx, &ry);
 	r->x = VG_VcoordX(vv,rx);
 	r->y = VG_VcoordY(vv,ry);
 	r->w = vge->vg_text.su->w/vv->scale;
@@ -349,7 +319,7 @@ Intersect(VG *vg, VG_Element *vge, float *x, float *y)
 {
 	float d;
 
-	if (vge->nvtx < 1 || vge->vg_text.su == NULL)
+	if (vge->nvtx < 1)
 		return (AG_FLT_MAX);
 
 	d = Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
@@ -362,7 +332,7 @@ const VG_ElementOps vgTextOps = {
 	N_("Text string"),
 	&vgIconText,
 	Init,
-	Destroy,
+	NULL,		/* destroy */
 	Draw,
 	Extent,
 	Intersect	

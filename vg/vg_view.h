@@ -6,11 +6,13 @@
 #ifdef _AGAR_INTERNAL
 #include <gui/widget.h>
 #include <gui/menu.h>
+#include <gui/text_cache.h>
 #include <vg/vg.h>
 #include <vg/vg_tool.h>
 #else
 #include <agar/gui/widget.h>
 #include <agar/gui/menu.h>
+#include <agar/gui/text_cache.h>
 #include <agar/vg/vg.h>
 #include <agar/vg/vg_tool.h>
 #endif
@@ -45,6 +47,7 @@ typedef struct vg_view {
 	VG_Tool *deftool;			/* Default tool if any */
 	AG_TAILQ_HEAD(,vg_tool) tools;		/* Map edition tools */
 	char status[128];			/* Status text buffer */
+	AG_TextCache *tCache;			/* Text cache for VG_Text */
 } VG_View;
 
 #define VGVIEW(p) ((VG_View *)(p))

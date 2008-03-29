@@ -88,7 +88,6 @@ enum vg_element_type {
 	VG_POLYGON,		/* Polygon */
 	VG_CIRCLE,		/* Single circle */
 	VG_ARC,			/* Single arc */
-	VG_ELLIPSE,		/* Single ellipse */
 	VG_BEZIER_CURVE,	/* Bezier curve */
 	VG_BEZIGON,		/* Bezigon */
 	VG_TEXT,		/* Text string */
@@ -177,24 +176,25 @@ typedef struct vg_matrix {
 typedef struct vg_element {
 	enum vg_element_type type;
 	const VG_ElementOps *ops;
-	int flags;
-#define VG_ELEMENT_NOSAVE 0x01			/* Don't save with drawing */
-#define VG_ELEMENT_IGNORE_BLK_COLOR 0x02	/* Ignore block color */
+
+	Uint flags;
+#define VG_ELEMENT_NOSAVE	0x01	/* Don't save with drawing */
+#define VG_ELEMENT_SELECTED	0x02	/* Selection flag */
+#define VG_ELEMENT_MOUSEOVER	0x04	/* Mouse overlap flag */
 
 	VG_Block *block;		/* Back pointer to block */
 	VG_Style *style;		/* Default element style */
-	VG_LineStyle line_st;		/* Effective line style */
+	VG_Color  color;		/* Effective foreground color */
+	int       layer;		/* Associated layer */
+	
+	VG_LineStyle    line_st;	/* Effective line style */
 	VG_FillingStyle fill_st;	/* Effective filling style */
-	VG_TextStyle text_st;		/* Effective text style */
-	VG_Color color;			/* Effective foreground color */
-	int layer;			/* Associated layer */
-	int selected;			/* Multiple selection flag */
-	int mouseover;			/* Mouse overlap flag */
+	VG_TextStyle    text_st;	/* Effective text style */
 
-	VG_Vtx	  *vtx;			/* Vertices */
-	Uint	  nvtx;
+	VG_Vtx    *vtx;			/* Vertices */
+	Uint      nvtx;
 	VG_Matrix *trans;		/* Transformation matrices */
-	Uint     ntrans;
+	Uint      ntrans;
 
 	union {
 		struct vg_circle_args vg_circle;
