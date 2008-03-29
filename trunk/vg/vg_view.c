@@ -221,11 +221,21 @@ Init(void *obj)
 	vv->curtool = NULL;
 	vv->deftool = NULL;
 	vv->status[0] = '\0';
+	vv->tCache = AG_TextCacheNew(vv, 128, 16);
 	TAILQ_INIT(&vv->tools);
 
 	AG_SetEvent(vv, "window-mousemotion", MouseMotion, NULL);
 	AG_SetEvent(vv, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(vv, "window-mousebuttonup", MouseButtonUp, NULL);
+}
+
+static void
+Destroy(void *obj)
+{
+	VG_View *vv = obj;
+
+	if (vv->tCache != NULL)
+		AG_TextCacheDestroy(vv->tCache);
 }
 
 void
@@ -333,9 +343,9 @@ Draw(void *p)
 {
 	VG_View *vv = p;
 	VG *vg = vv->vg;
-	SDL_Surface *status;
 	VG_Color colorSave;
 	VG_Element *vge;
+	int su;
 
 	AG_DrawRectFilled(vv, AG_RECT(0,0,WIDTH(vv),HEIGHT(vv)),
 	    VG_MapColorRGB(vg->fillColor));
@@ -356,7 +366,7 @@ Draw(void *p)
 	TAILQ_FOREACH(vge, &vg->vges, vges) {
 		colorSave = vge->color;
 
-		if (vge->mouseover) {
+		if (vge->flags & VG_ELEMENT_MOUSEOVER) {
 			/* XXX */
 			if (vge->color.r > 200 &&
 			    vge->color.g > 200 &&
@@ -373,17 +383,15 @@ Draw(void *p)
 
 		vge->ops->draw(vv, vge);
 
-		if (vge->mouseover)
+		if (vge->flags & VG_ELEMENT_MOUSEOVER)
 			vge->color = colorSave;
 	}
 
 	AG_MutexUnlock(&vg->lock);
 
-	/* XXX */
 	AG_TextColor(TEXT_COLOR);
-	status = AG_TextRender(vv->status);
-	AG_WidgetBlit(vv, status, 0, WIDGET(vv)->h - status->h);
-	SDL_FreeSurface(status);
+	su = AG_TextCacheInsLookup(vv->tCache, vv->status);
+	AG_WidgetBlitSurface(vv, su, 0, HEIGHT(vv)-WSURFACE(vv,su)->h);
 }
 
 void
@@ -505,7 +513,7 @@ AG_WidgetClass vgViewClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* free */
-		NULL,		/* destroy */
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
