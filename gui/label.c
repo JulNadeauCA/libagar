@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
 
 #include "label.h"
 #include "primitive.h"
+#include "text_cache.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -50,6 +51,8 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 #ifdef THREADS
 	label->poll.lock = NULL;
 #endif
+	label->tCache = AG_TextCacheNew(label, 64, 16);
+
 	va_start(ap, fmt);
 	for (p = fmt; *p != '\0'; p++) {
 		if (*p != '%' || *(p+1) == '\0') {
@@ -95,6 +98,8 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 #ifdef THREADS
 	label->poll.lock = mutex;
 #endif
+	label->tCache = AG_TextCacheNew(label, 64, 16);
+
 	va_start(ap, fmt);
 	for (p = fmt; *p != '\0'; p++) {
 		if (*p != '%' || *(p+1) == '\0') {
@@ -255,6 +260,7 @@ Init(void *obj)
 	lbl->wPre = -1;
 	lbl->hPre = agTextFontHeight;
 	lbl->justify = AG_TEXT_LEFT;
+	lbl->tCache = NULL;
 	SLIST_INIT(&lbl->lflags);
 	
 	memset(lbl->poll.ptrs, 0, sizeof(void *)*AG_LABEL_MAX_POLLPTRS);
@@ -490,7 +496,6 @@ DrawPolled(AG_Label *label)
 {
 	char s[AG_LABEL_MAX];
 	char s2[AG_LABEL_MAX];
-	SDL_Surface *ts;
 	char *fmtp;
 	int i, ri = 0;
 
@@ -654,12 +659,16 @@ DrawPolled(AG_Label *label)
 		}
 	}
 
-	/* XXX TODO render directly! */
-	AG_TextJustify(label->justify);
-	AG_TextColor(TEXT_COLOR);
-	ts = AG_TextRender(s);
-	AG_WidgetBlit(label, ts, label->lPad, label->tPad);
-	SDL_FreeSurface(ts);
+	if (label->tCache != NULL) {
+		AG_PushTextState();
+		AG_TextJustify(label->justify);
+		AG_TextColor(TEXT_COLOR);
+		AG_WidgetBlitSurface(label,
+		    AG_TextCacheInsLookup(label->tCache,s),
+		    label->lPad,
+		    label->tPad);
+		AG_PopTextState();
+	}
 }
 
 static void
@@ -667,14 +676,16 @@ Draw(void *p)
 {
 	AG_Label *lbl = p;
 
-	if (lbl->flags & AG_LABEL_PARTIAL)
+	if (lbl->flags & AG_LABEL_PARTIAL) {
 		AG_WidgetPushClipRect(lbl,
 		    AG_RECT(0, 0,
 		            WIDGET(lbl)->w - WSURFACE(lbl,lbl->surfaceCont)->w,
 		            WIDGET(lbl)->h));
+	}
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
+		AG_PushTextState();
 		if (lbl->surface == -1) {
 			AG_TextJustify(lbl->justify);
 			AG_TextColor(TEXT_COLOR);
@@ -690,6 +701,8 @@ Draw(void *p)
 				lbl->surface = -1;
 			}
 		}
+		AG_PopTextState();
+
 		lbl->flags &= ~(AG_LABEL_REGEN);
 		if (lbl->surface != -1) {
 			AG_WidgetBlitSurface(lbl, lbl->surface,
@@ -727,6 +740,9 @@ Destroy(void *p)
 		Free(lfl);
 	}
 	Free(lbl->text);
+
+	if (lbl->tCache != NULL)
+		AG_TextCacheDestroy(lbl->tCache);
 }
 
 /* Register a flag description text. */
