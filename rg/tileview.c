@@ -25,12 +25,12 @@
 
 #include <core/core.h>
 
-#include <gui/view.h>
-#include <gui/primitive.h>
-
 #include "tileview.h"
 #include "icons.h"
 
+#include <gui/view.h>
+#include <gui/primitive.h>
+#include <gui/text_cache.h>
 #include <gui/opengl.h>
 
 #include <stdarg.h>
@@ -775,6 +775,7 @@ Init(void *obj)
 	tv->menu = NULL;
 	tv->menu_item = NULL;
 	tv->menu_win = NULL;
+	tv->tCache = AG_TextCacheNew(tv, 64, 16);
 	TAILQ_INIT(&tv->tools);
 	TAILQ_INIT(&tv->ctrls);
 
@@ -930,7 +931,7 @@ missingvals:
 }
 
 static void
-tileview_free_ctrl(RG_TileviewCtrl *ctrl)
+FreeCtrl(RG_TileviewCtrl *ctrl)
 {
 	Free(ctrl->valtypes);
 	Free(ctrl->vals);
@@ -938,7 +939,7 @@ tileview_free_ctrl(RG_TileviewCtrl *ctrl)
 }
 
 static void
-tileview_free_tool(RG_TileviewTool *t)
+FreeTool(RG_TileviewTool *t)
 {
 	if (t->ops->destroy != NULL) {
 		t->ops->destroy(t);
@@ -950,7 +951,7 @@ void
 RG_TileviewDelCtrl(RG_Tileview *tv, RG_TileviewCtrl *ctrl)
 {
 	TAILQ_REMOVE(&tv->ctrls, ctrl, ctrls);
-	tileview_free_ctrl(ctrl);
+	FreeCtrl(ctrl);
 }
 
 void
@@ -1112,21 +1113,21 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 static void
 DrawStatusText(RG_Tileview *tv, const char *label)
 {
-	SDL_Surface *su;
+	int su;
+	int wSu, hSu;
 
-	/* XXX pointless colorkey blit */
+	AG_PushTextState();
 	AG_TextColor(TILEVIEW_TEXT_COLOR);
-	su = AG_TextRender(label);
+	su = AG_TextCacheInsLookup(tv->tCache, label);
+	wSu = WSURFACE(tv,su)->w;
+	hSu = WSURFACE(tv,su)->h;
+	AG_PopTextState();
+
 	AG_DrawRectFilled(tv,
-	    AG_RECT((su->w >= WIDGET(tv)->w) ? 0 : (WIDGET(tv)->w - su->w - 2),
-	            WIDGET(tv)->h - su->h - 2,
-	            WIDGET(tv)->w,
-	            WIDGET(tv)->h),
+	    AG_RECT((wSu >= WIDTH(tv)) ? 0 : (WIDTH(tv)-wSu-2),
+	            HEIGHT(tv)-hSu-2, WIDTH(tv), HEIGHT(tv)),
 	    AG_COLOR(TILEVIEW_TEXTBG_COLOR));
-	AG_WidgetBlit(tv, su,
-	    WIDGET(tv)->w - su->w - 1,
-	    WIDGET(tv)->h - su->h - 1);
-	SDL_FreeSurface(su);
+	AG_WidgetBlitSurface(tv, su, WIDTH(tv)-wSu-1, HEIGHT(tv)-hSu-1);
 }
 
 void
@@ -1753,14 +1754,15 @@ Destroy(void *p)
 	     ctrl != TAILQ_END(&tv->ctrls);
 	     ctrl = nctrl) {
 		nctrl = TAILQ_NEXT(ctrl, ctrls);
-		tileview_free_ctrl(ctrl);
+		FreeCtrl(ctrl);
 	}
 	for (tool = TAILQ_FIRST(&tv->tools);
 	     tool != TAILQ_END(&tv->tools);
 	     tool = ntool) {
 		ntool = TAILQ_NEXT(tool, tools);
-		tileview_free_tool(tool);
+		FreeTool(tool);
 	}
+	AG_TextCacheDestroy(tv->tCache);
 }
 
 static void

@@ -29,6 +29,7 @@
 #include "window.h"
 #include "primitive.h"
 #include "text.h"
+#include "text_cache.h"
 
 AG_ProgressBar *
 AG_ProgressBarNew(void *parent, enum ag_progress_bar_type type, Uint flags)
@@ -84,6 +85,15 @@ Init(void *obj)
 	pb->max = 100;
 	pb->width = 25;
 	pb->pad = 2;
+	pb->tCache = AG_TextCacheNew(pb, 50, 10);
+}
+
+static void
+Destroy(void *obj)
+{
+	AG_ProgressBar *pb = obj;
+
+	AG_TextCacheDestroy(pb->tCache);
 }
 
 void
@@ -175,18 +185,18 @@ Draw(void *p)
 	AG_DrawRectFilled(pb, rd, AG_COLOR(PROGRESS_BAR_COLOR));
 
 	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT) {
-		SDL_Surface *txt;
-		char label[32];
+		char pctText[32];
+		int su;
 
-		/* XXX inefficient */
-		Snprintf(label, sizeof(label), "%d%%",
+		Snprintf(pctText, sizeof(pctText), "%d%%",
 		    AG_ProgressBarPercent(pb));
+		AG_PushTextState();
 		AG_TextColor(TEXT_COLOR);
-		txt = AG_TextRender(label);
-		AG_WidgetBlit(pb, txt,
-		    WIDGET(pb)->w/2 - txt->w/2,
-		    WIDGET(pb)->h/2 - txt->h/2);
-		SDL_FreeSurface(txt);
+		su = AG_TextCacheInsLookup(pb->tCache, pctText);
+		AG_WidgetBlitSurface(pb, su,
+		    WIDTH(pb)/2  - WSURFACE(pb,su)->w/2,
+		    HEIGHT(pb)/2 - WSURFACE(pb,su)->h/2);
+		AG_PopTextState();
 	}
 }
 
@@ -197,7 +207,7 @@ AG_WidgetClass agProgressBarClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* free */
-		NULL,		/* destroy */
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

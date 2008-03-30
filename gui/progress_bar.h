@@ -16,6 +16,8 @@ enum ag_progress_bar_type {
 	AG_PROGRESS_BAR_VERT
 };
 
+struct ag_text_cache;
+
 typedef struct ag_progress_bar {
 	struct ag_widget wid;
 	Uint flags;
@@ -28,6 +30,7 @@ typedef struct ag_progress_bar {
 	enum ag_progress_bar_type type;	/* Style */
 	int width;			/* Width in pixels */
 	int pad;			/* Padding in pixels */
+	struct ag_text_cache *tCache;	/* For SHOW_PCT */
 } AG_ProgressBar;
 
 __BEGIN_DECLS

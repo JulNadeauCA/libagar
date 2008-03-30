@@ -136,6 +136,8 @@ enum rg_tileview_state {
 	RG_TILEVIEW_LAYERS_EDIT		/* Node layers are being edited */
 };
 
+struct ag_text_cache;
+
 typedef struct rg_tileview {
 	AG_Widget wid;
 	RG_Tileset *ts;
@@ -231,6 +233,7 @@ typedef struct rg_tileview {
 	AG_TAILQ_HEAD(,rg_tileview_ctrl) ctrls;	/* Binding controls */
 	AG_TAILQ_HEAD(,rg_tileview_tool) tools;	/* Edition tools */
 	RG_TileviewTool *cur_tool;		/* Current tool */
+	struct ag_text_cache *tCache;		/* For "status" line */
 } RG_Tileview;
 
 #define RG_TILEVIEW_TOOL(p) ((RG_TileviewTool *)p)
