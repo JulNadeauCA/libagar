@@ -39,6 +39,7 @@
 #include <gui/view.h>
 #include <gui/window.h>
 #include <gui/primitive.h>
+#include <gui/opengl.h>
 
 VG_View *
 VG_ViewNew(void *parent, VG *vg, Uint flags)
@@ -118,10 +119,10 @@ MouseButtonDown(AG_Event *event)
 		vv->mouse.panning = 1;
 		break;
 	case SDL_BUTTON_WHEELDOWN:
-		VG_ViewSetScale(vv, vv->scale-1.5f);
+		VG_ViewSetScale(vv, vv->scale-2.0f);
 		return;
 	case SDL_BUTTON_WHEELUP:
-		VG_ViewSetScale(vv, vv->scale+1.5f);
+		VG_ViewSetScale(vv, vv->scale+2.0f);
 		return;
 	default:
 		break;
@@ -324,17 +325,33 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 static __inline__ void
 DrawGrid(VG_View *vv)
 {
-	int x, y, ival;
+	int x, x0, y, ival;
 	Uint32 c32;
 
-	ival = (int)(vv->gridIval*vv->scale);
-	if (ival < 4)
+	if ((ival = (int)(vv->gridIval*vv->scale)) < 5) {
 		return;
+	}
+	x0 = WIDGET(vv)->cx + vv->x%ival;
+	y = WIDGET(vv)->cy + vv->y%ival;
 
-	c32 = VG_MapColorRGB(vv->vg->gridColor);
-	for (y = vv->y%ival; y < HEIGHT(vv); y += ival) {
-		for (x = vv->x%ival; x < WIDTH(vv); x += ival)
-			AG_DrawPixel(vv, x, y, c32);
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		glBegin(GL_POINTS);
+		glColor3ub(vv->vg->gridColor.r, vv->vg->gridColor.g,
+		           vv->vg->gridColor.b);
+		for (; y < WIDGET(vv)->cy2; y += ival) {
+			for (x = x0; x < WIDGET(vv)->cx2; x += ival)
+				glVertex2s(x, y);
+		}
+		glEnd();
+	} else
+#endif
+	{
+		c32 = VG_MapColorRGB(vv->vg->gridColor);
+		for (; y < WIDGET(vv)->cy2; y += ival) {
+			for (x = x0; x < WIDGET(vv)->cx2; x += ival)
+				AG_DrawPixel(vv, x, y, c32);
+		}
 	}
 }
 
@@ -497,7 +514,7 @@ void
 VG_ViewSetScale(VG_View *vv, float scale)
 {
 	vv->scale = MAX(scale,0.001f);
-	vv->wPixel = 1.0/scale;
+	vv->wPixel = 1.0/vv->scale;
 }
 
 void
