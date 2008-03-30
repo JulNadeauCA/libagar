@@ -232,8 +232,8 @@ MenuItemBackground(void *mv, AG_Rect r, int xIcon, void *iconObj,
 		Uint8 c[4];
 
 		AG_WidgetBlitFrom(mv, iconObj, icon, NULL,
-		    xIcon,
-		    r.y + (r.h/2 - WSURFACE(iconObj,icon)->h/2) + 1);
+		    xIcon + (r.h/2 - WSURFACE(iconObj,icon)->w/2),
+		    r.y   + (r.h/2 - WSURFACE(iconObj,icon)->h/2) + 1);
 
 		if (boolState) {
 			SDL_GetRGB(AG_COLOR(MENU_OPTION_COLOR), agVideoFmt,
