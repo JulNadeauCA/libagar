@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@
 #include <gui/window.h>
 #include <gui/button.h>
 #include <gui/primitive.h>
+#include <gui/text_cache.h>
 
 SC_Matview *
 SC_MatviewNew(void *parent, SC_Matrix *mat, Uint flags)
@@ -111,6 +112,7 @@ Init(void *obj)
 	mv->pre_m = 0;
 	mv->pre_n = 0;
 	mv->numfmt = "%g";
+	mv->tCache = AG_TextCacheNew(mv, 64, 16);
 	
 	AG_WidgetBind(mv->hbar, "value", AG_WIDGET_INT, &mv->xoffs);
 	AG_WidgetBind(mv->vbar, "value", AG_WIDGET_INT, &mv->yoffs);
@@ -121,6 +123,14 @@ Init(void *obj)
 
 	AG_SetEvent(mv, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(mv, "window-mousebuttondown", MouseButtonDown, NULL);
+}
+
+static void
+Destroy(void *obj)
+{
+	SC_Matview *mv = obj;
+
+	AG_TextCacheDestroy(mv->tCache);
 }
 
 void
@@ -185,12 +195,14 @@ DrawNumerical(void *p)
 	SC_Matview *mv = p;
 	SC_Matrix *M = mv->mat;
 	Uint m, n;
-	SDL_Surface *su;
 	int x, y;
 
 	AG_DrawBox(mv,
 	    AG_RECT(0, 0, WIDGET(mv)->w, WIDGET(mv)->h), -1,
 	    AG_COLOR(BG_COLOR));
+
+	AG_PushTextState();
+	AG_TextColor(TEXT_COLOR);
 
 	for (m = 0, y = -mv->yoffs*mv->ent_h;
 	     m <= M->m && y < WIDGET(mv)->h;
@@ -209,12 +221,13 @@ DrawNumerical(void *p)
 				Snprintf(text, sizeof(text), mv->numfmt,
 				    M->mat[m][n]);
 			}
-			AG_TextColor(TEXT_COLOR);
-			su = AG_TextRender(text);
-			AG_WidgetBlit(mv, su, x, y);
-			SDL_FreeSurface(su);
+			AG_WidgetBlitSurface(mv,
+			    AG_TextCacheInsLookup(mv->tCache,text),
+			    x, y);
 		}
 	}
+	
+	AG_PopTextState();
 }
 
 static void
@@ -290,7 +303,7 @@ AG_WidgetClass scMatviewClass = {
 		{ 0,0 },
 		Init,
 		NULL,			/* free */
-		NULL,			/* destroy */
+		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */

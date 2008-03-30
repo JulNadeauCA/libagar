@@ -20,6 +20,8 @@ enum sc_matview_mode {
 	SC_MATVIEW_NUMERICAL
 };
 
+struct ag_text_cache;
+
 typedef struct sc_matview {
 	struct ag_widget wid;
 	struct sc_matrix *mat;		/* Matrix to view */
@@ -32,6 +34,7 @@ typedef struct sc_matview {
 	int xoffs, yoffs;		/* Display offset */
 	int scale;			/* Scale (for graphic rendering) */
 	AG_Scrollbar *hbar, *vbar;	/* Display scrollbars */
+	struct ag_text_cache *tCache;	/* For numerical display */
 } SC_Matview;
 
 __BEGIN_DECLS
