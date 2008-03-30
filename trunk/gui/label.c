@@ -46,7 +46,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	label->type = AG_LABEL_POLLED;
 	label->text = Strdup(fmt);
 	label->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
+	if (!(flags & AG_LABEL_NO_HFILL)) { AG_ExpandHoriz(label); }
 	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(label); }
 #ifdef THREADS
 	label->poll.lock = NULL;
@@ -93,7 +93,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 	label->type = AG_LABEL_POLLED_MT;
 	label->text = Strdup(fmt);
 	label->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
+	if (!(flags & AG_LABEL_NO_HFILL)) { AG_ExpandHoriz(label); }
 	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(label); }
 #ifdef THREADS
 	label->poll.lock = mutex;

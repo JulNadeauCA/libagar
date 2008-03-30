@@ -41,6 +41,7 @@ typedef struct ag_label {
 #define AG_LABEL_NOMINSIZE	0x04	/* No minimum enforced size */
 #define AG_LABEL_PARTIAL	0x10	/* Partial mode (RO) */
 #define AG_LABEL_REGEN		0x20	/* Regenerate surface at next draw */
+#define AG_LABEL_NO_HFILL	0x40
 #define AG_LABEL_EXPAND		(AG_LABEL_HFILL|AG_LABEL_VFILL)
 	char *text;			/* Text buffer */
 	int surface;			/* Label surface */
