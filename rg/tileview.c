@@ -810,8 +810,10 @@ RG_TileviewAddCtrl(RG_Tileview *tv, enum rg_tileview_ctrl_type type,
 	ctrl->vals = Malloc(sizeof(union rg_tileview_val) * strlen(fmt));
 	ctrl->valtypes = Malloc(sizeof(enum tileview_val_type) * strlen(fmt));
 	ctrl->nvals = 0;
+#if 0
 	ctrl->vg = NULL;
 	ctrl->vge = NULL;
+#endif
 	ctrl->motion = NULL;
 	ctrl->buttondown = NULL;
 	ctrl->buttonup = NULL;

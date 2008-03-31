@@ -49,7 +49,7 @@ RG_TextureInit(RG_Texture *tex, RG_Tileset *ts, const char *name)
 	tex->wrap_s = RG_TEXTURE_REPEAT;
 	tex->wrap_t = RG_TEXTURE_REPEAT;
 	tex->flags = 0;
-	tex->blend_func = AG_ALPHA_OVERLAY;
+	tex->blend_func = (int)AG_ALPHA_OVERLAY;
 	tex->alpha = 255;
 }
 
@@ -66,7 +66,7 @@ RG_TextureLoad(RG_Texture *tex, AG_DataSource *buf)
 	tex->flags = (int)AG_ReadUint32(buf);
 	tex->wrap_s = (enum texture_wrap_mode)AG_ReadUint8(buf);
 	tex->wrap_t = (enum texture_wrap_mode)AG_ReadUint8(buf);
-	tex->blend_func = (enum ag_blend_func)AG_ReadUint8(buf);
+	tex->blend_func = (int)AG_ReadUint8(buf);
 	tex->alpha = AG_ReadUint8(buf);
 	return (0);
 }

@@ -28,6 +28,7 @@
  */
 
 #include <core/core.h>
+#include <gui/view.h>
 
 #include "tileset.h"
 #include "texsel.h"
