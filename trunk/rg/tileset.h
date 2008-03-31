@@ -13,7 +13,7 @@ struct rg_texture;
 
 #ifdef _AGAR_INTERNAL
 #include <rg/transform.h>
-#include <vg/vg.h>
+/* #include <vg/vg.h> */
 #include <rg/tile.h>
 #include <rg/feature.h>
 #include <rg/pixmap.h>
@@ -23,7 +23,7 @@ struct rg_texture;
 #include <rg/prim.h>
 #else
 #include <agar/rg/transform.h>
-#include <agar/vg/vg.h>
+/* #include <agar/vg/vg.h> */
 #include <agar/rg/tile.h>
 #include <agar/rg/feature.h>
 #include <agar/rg/pixmap.h>

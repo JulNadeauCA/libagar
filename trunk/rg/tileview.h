@@ -68,10 +68,10 @@ typedef struct rg_tileview_ctrl {
 	Uint			nvals;
 	struct rg_tileview_handle *handles;		/* User handles */
 	Uint			  nhandles;
-
+#if 0
 	VG *vg;					/* For RG_TILEVIEW_VERTEX */
 	VG_Element *vge;
-
+#endif
 	AG_Event *motion;
 	AG_Event *buttonup;
 	AG_Event *buttondown;

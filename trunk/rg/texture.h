@@ -23,7 +23,8 @@ typedef struct rg_texture {
 	int flags;
 	enum texture_wrap_mode wrap_s;		/* Wrap mode for s coordinate */
 	enum texture_wrap_mode wrap_t;		/* Wrap mode for t coordinate */
-	enum ag_blend_func blend_func;		/* Blending function to use */
+	int blend_func;				/* Blending function to use
+						   (ag_blend_func) */
 	Uint8 alpha;				/* Overall alpha value */
 	AG_TAILQ_ENTRY(rg_texture) textures;
 } RG_Texture;
