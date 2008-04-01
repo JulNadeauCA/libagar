@@ -517,10 +517,9 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 			}
 		}
 #endif
-		Snprintf(vv->status, sizeof(vv->status), "Tool: %s",
-		    ntool->ops->name);
+		VG_Status(vv, _("Tool: %s"), ntool->ops->name);
 	} else {
-		vv->status[0] = '\0';
+		VG_Status(vv, NULL);
 	}
 #if 0
 	if ((pwin = AG_WidgetParentWindow(vv)) != NULL) {
@@ -534,7 +533,9 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 void
 VG_ViewSelectToolEv(AG_Event *event)
 {
-	VG_ViewSelectTool(AG_PTR(1),AG_PTR(2),AG_PTR(3));
+	VG_View *vv = AG_PTR(1);
+	AG_WidgetFocus(vv);
+	VG_ViewSelectTool(vv, AG_PTR(2), AG_PTR(3));
 }
 
 /* VG_View must be locked */
@@ -618,6 +619,20 @@ VG_ViewSetDefaultTool(VG_View *vv, VG_Tool *tool)
 	AG_ObjectLock(vv);
 	vv->deftool = tool;
 	AG_ObjectUnlock(vv);
+}
+
+void
+VG_Status(VG_View *vv, const char *fmt, ...)
+{
+	va_list ap;
+
+	if (fmt != NULL) {
+		va_start(ap, fmt);
+		Vsnprintf(vv->status, sizeof(vv->status), fmt, ap);
+		va_end(ap);
+	} else {
+		vv->status[0] = '\0';
+	}
 }
 
 AG_WidgetClass vgViewClass = {

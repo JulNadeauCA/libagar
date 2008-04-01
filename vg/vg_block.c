@@ -267,7 +267,7 @@ DestroyBlock(AG_Event *event)
 		if (it->iconsrc == vgIconBlock.s) {
 			VG_DestroyBlock(vg, (VG_Block *)it->p1);
 		} else if (it->iconsrc == vgIconDrawing.s) {
-			VG_DestroyNode(vg, (VG_Node *)it->p1);
+			VG_Delete(vg, (VG_Node *)it->p1);
 		}
 	}
 }

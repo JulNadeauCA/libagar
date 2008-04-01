@@ -95,7 +95,7 @@ VG_Init(VG *vg, Uint flags)
 
 	vg->flags = flags;
 	vg->fillColor = VG_GetColorRGB(0,0,0);
-	vg->gridColor = VG_GetColorRGB(200,200,0);
+	vg->gridColor = VG_GetColorRGB(110,110,100);
 	vg->selectionColor = VG_GetColorRGB(255,255,0);
 	vg->mouseoverColor = VG_GetColorRGB(200,200,0);
 	vg->layers = NULL;
@@ -183,8 +183,10 @@ VG_Destroy(VG *vg)
 }
 
 void
-VG_DestroyNode(VG *vg, VG_Node *vge)
+VG_Delete(VG *vg, VG_Node *vge)
 {
+	VG_Lock(vg);
+
 	if (vge->block != NULL)
 		TAILQ_REMOVE(&vge->block->nodes, vge, vgbmbs);
 
@@ -193,6 +195,8 @@ VG_DestroyNode(VG *vg, VG_Node *vge)
 
 	TAILQ_REMOVE(&vg->nodes, vge, nodes);
 	VG_FreeNode(vg, vge);
+	
+	VG_Unlock(vg);
 }
 
 void VG_SetBackgroundColor(VG *vg, VG_Color c) { vg->fillColor = c; }
@@ -265,6 +269,37 @@ VG_Select(VG *vg, VG_Node *vge)
 {
 	VG_Lock(vg);
 	vg->curNode = vge;
+}
+
+/* Move an existing vertex. */
+void
+VG_MoveVertex2(VG *vg, Uint idx, float x, float y)
+{
+	VG_Vtx *vtx;
+	VG_Node *vn = vg->curNode;
+
+	if (idx >= vn->nvtx) {
+		return;
+	}
+	vtx = &vn->vtx[idx];
+	vtx->x = x;
+	vtx->y = y;
+	VG_BlockOffset(vg, vtx);
+}
+
+/* Translate an existing vertex. */
+void
+VG_TranslateVertex2(VG *vg, Uint idx, float x, float y)
+{
+	VG_Vtx *vtx;
+	VG_Node *vn = vg->curNode;
+
+	if (idx >= vn->nvtx) {
+		return;
+	}
+	vtx = &vn->vtx[idx];
+	vtx->x += x;
+	vtx->y += y;
 }
 
 VG_Vtx *
@@ -949,7 +984,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		case VG_CIRCLE:
 			if (vge->nvtx < 1) {
 				AG_SetError("circle nvtx < 1");
-				VG_DestroyNode(vg, vge);
+				VG_Delete(vg, vge);
 				goto fail;
 			}
 			vge->vg_circle.radius = AG_ReadFloat(buf);
@@ -957,7 +992,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		case VG_ARC:
 			if (vge->nvtx < 1) {
 				AG_SetError("arc nvtx < 1");
-				VG_DestroyNode(vg, vge);
+				VG_Delete(vg, vge);
 				goto fail;
 			}
 			vge->vg_arc.w = AG_ReadFloat(buf);
@@ -968,7 +1003,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		case VG_TEXT:
 			if (vge->nvtx < 1) {
 				AG_SetError("text nvtx < 1");
-				VG_DestroyNode(vg, vge);
+				VG_Delete(vg, vge);
 				goto fail;
 			}
 			AG_CopyString(vge->vg_text.text, buf,

@@ -272,25 +272,22 @@ void      VG_SetGridColor(VG *, VG_Color);
 void      VG_SetSelectionColor(VG *, VG_Color);
 void      VG_SetMouseOverColor(VG *, VG_Color);
 
-VG_Vtx   *VG_PopVertex(VG *);
-VG_Vtx    VG_ReadVertex(AG_DataSource *);
-void      VG_WriteVertex(AG_DataSource *, const VG_Vtx *);
-VG_Color  VG_ReadColor(AG_DataSource *);
-void      VG_WriteColor(AG_DataSource *, const VG_Color *);
-
-VG_Node  *VG_Begin(VG *, enum vg_node_type);
-void      VG_End(VG *);
-void      VG_Select(VG *, VG_Node *);
-void      VG_DestroyNode(VG *, VG_Node *);
-void      VG_FreeNode(VG *, VG_Node *);
 VG_Style *VG_CreateStyle(VG *, enum vg_style_type, const char *);
 int       VG_SetStyle(VG *, const char *);
 VG_Layer *VG_PushLayer(VG *, const char *);
 void      VG_PopLayer(VG *);
 void	  VG_SetLayer(VG *, int);
+
+VG_Node  *VG_Begin(VG *, enum vg_node_type);
+void      VG_End(VG *);
+void      VG_Select(VG *, VG_Node *);
+void      VG_Delete(VG *, VG_Node *);
+void      VG_FreeNode(VG *, VG_Node *);
+
 void	  VG_Colorv(VG *, const VG_Color *);
 void	  VG_ColorRGB(VG *, Uint8, Uint8, Uint8);
 void	  VG_ColorRGBA(VG *, Uint8, Uint8, Uint8, Uint8);
+
 VG_Vtx	 *VG_Vertex2(VG *, float, float);
 void	  VG_VertexV(VG *, const VG_Vtx *, Uint);
 VG_Vtx	 *VG_VertexVint2(VG *, float x, float x1, float y1, float x2, float y2);
@@ -300,6 +297,9 @@ void	  VG_HLine(VG *, float x1, float x2, float y);
 void	  VG_Rectangle(VG *, float x1, float y1, float x2, float y2);
 void	  VG_VintVLine2(VG *, float x, float y, float x1, float y1, float x2,
 	                float y2);
+void      VG_MoveVertex2(VG *, Uint, float, float);
+void      VG_TranslateVertex2(VG *, Uint, float, float);
+VG_Vtx   *VG_PopVertex(VG *);
 
 void      VG_LoadIdentity(VG *);
 void      VG_Translate(VG *, float, float);
@@ -307,6 +307,11 @@ void      VG_Rotate(VG *, float);
 void      VG_CopyMatrix(VG_Matrix *, const VG_Matrix *);
 void      VG_MultMatrixByMatrix(VG_Matrix *, const VG_Matrix *,
                                 const VG_Matrix *);
+
+VG_Vtx    VG_ReadVertex(AG_DataSource *);
+void      VG_WriteVertex(AG_DataSource *, const VG_Vtx *);
+VG_Color  VG_ReadColor(AG_DataSource *);
+void      VG_WriteColor(AG_DataSource *, const VG_Color *);
 
 static __inline__ void
 VG_Lock(VG *vg)
