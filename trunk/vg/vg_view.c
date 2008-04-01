@@ -531,6 +531,12 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 	AG_ObjectUnlock(vv);
 }
 
+void
+VG_ViewSelectToolEv(AG_Event *event)
+{
+	VG_ViewSelectTool(AG_PTR(1),AG_PTR(2),AG_PTR(3));
+}
+
 /* VG_View must be locked */
 VG_Tool *
 VG_ViewFindTool(VG_View *vv, const char *name)
