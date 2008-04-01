@@ -295,22 +295,19 @@ Draw(VG_View *vv, VG_Node *vge)
 }
 
 static void
-Extent(VG *vg, VG_Node *vge, VG_Rect *r)
+Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
 {
-//	Sint16 rx, ry;
-
-	r->x = 0;
-	r->y = 0;
-	r->w = 0;
-	r->h = 0;
-#if 0
-	/* XXX XXX XXX */
-	DrawLabel(vv, vge);
-	r->x = VG_VcoordX(vv,rx);
-	r->y = VG_VcoordY(vv,ry);
-	r->w = vge->vg_text.su->w/vv->scale;
-	r->h = vge->vg_text.su->h/vv->scale;
-#endif
+	int su;
+	int x, y, w, h;
+	
+	su = AG_TextCacheInsLookup(vv->tCache, vge->vg_text.text);
+	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
+	w = WSURFACE(vv,su)->w;
+	h = WSURFACE(vv,su)->h;
+	AlignText(vge, &x,&y, w,h);
+	VG_GetVGCoords(vv, x,y, &r->x,&r->y);
+	r->w = (float)w/vv->scale;
+	r->h = (float)h/vv->scale;
 }
 
 static float
