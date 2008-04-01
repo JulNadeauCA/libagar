@@ -49,11 +49,13 @@ SnapToGrid(VG_View *vv, float *x, float *y)
 		r = VG_Mod(*x, vv->gridIval);
 		*x -= r;
 		if (r > 0.25f) { *x += vv->gridIval; }
+		else if (r < -0.25f) { *x -= vv->gridIval; }
 	}
 	if (y != NULL) {
 		r = VG_Mod(*y, vv->gridIval);
 		*y -= r;
 		if (r > 0.25f) { *y += vv->gridIval; }
+		else if (r < -0.25f) { *y -= vv->gridIval; }
 	}
 }
 
