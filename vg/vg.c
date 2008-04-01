@@ -42,17 +42,7 @@
 
 const AG_Version vgVer = { 6, 0 };
 
-extern const VG_ElementOps vgPointsOps;
-extern const VG_ElementOps vgLinesOps;
-extern const VG_ElementOps vgLineStripOps;
-extern const VG_ElementOps vgLineLoopOps;
-extern const VG_ElementOps vgCircleOps;
-extern const VG_ElementOps vgArcOps;
-extern const VG_ElementOps vgTextOps;
-extern const VG_ElementOps vgMaskOps;
-extern const VG_ElementOps vgPolygonOps;
-
-const VG_ElementOps *vgElementTypes[] = {
+const VG_NodeOps *vgNodeTypes[] = {
 	&vgPointsOps,
 	&vgLinesOps,
 	&vgLineStripOps,
@@ -67,8 +57,7 @@ const VG_ElementOps *vgElementTypes[] = {
 	&vgArcOps,
 	NULL,			/* Bezier curve */
 	NULL,			/* Bezigon */
-	&vgTextOps,
-	&vgMaskOps,
+	&vgTextOps
 };
 
 static int vgInited = 0;
@@ -99,78 +88,57 @@ VG_New(Uint flags)
 void
 VG_Init(VG *vg, Uint flags)
 {
-	int i;
-
 	if (!vgInited) {
 		VG_InitSubsystem();
 		vgInited = 1;
 	}
 
-	Strlcpy(vg->name, _("Untitled"), sizeof(vg->name));
 	vg->flags = flags;
 	vg->fillColor = VG_GetColorRGB(0,0,0);
 	vg->gridColor = VG_GetColorRGB(200,200,0);
 	vg->selectionColor = VG_GetColorRGB(255,255,0);
 	vg->mouseoverColor = VG_GetColorRGB(200,200,0);
-	vg->origin = Malloc(sizeof(VG_Vtx)*VG_NORIGINS);
-	vg->originRadius = Malloc(sizeof(float)*VG_NORIGINS);
-	vg->originColor = Malloc(sizeof(Uint32)*VG_NORIGINS);
-	vg->layers = Malloc(sizeof(VG_Layer));
+	vg->layers = NULL;
 	vg->nlayers = 0;
-	vg->cur_layer = 0;
-	vg->cur_block = NULL;
-	vg->cur_vge = NULL;
-	VG_PushLayer(vg, _("Layer 0"));
-	TAILQ_INIT(&vg->vges);
+	vg->curLayer = 0;
+	vg->curBlock = NULL;
+	vg->curNode = NULL;
+	vg->ints = NULL;
+	vg->nints = 0;
+	TAILQ_INIT(&vg->nodes);
 	TAILQ_INIT(&vg->blocks);
 	TAILQ_INIT(&vg->styles);
 	AG_MutexInitRecursive(&vg->lock);
-
-	for (i = 0; i < VG_NORIGINS; i++) {
-		vg->origin[i].x = 0;
-		vg->origin[i].y = 0;
-		vg->originRadius[i] = 0.0625f;
-		vg->originColor[i] = VG_GetColorRGB(0,0,180);
-	}
-	vg->originRadius[0] = 0.25f;
-	vg->originRadius[1] = 0.125f;
-	vg->originRadius[2] = 0.075f;
-	vg->originColor[0] = VG_GetColorRGB(0,200,0);
-	vg->originColor[1] = VG_GetColorRGB(0,150,0);
-	vg->originColor[2] = VG_GetColorRGB(0,80,150);
-	vg->norigin = VG_NORIGINS;
-
-	vg->ints = NULL;
-	vg->nints = 0;
+	
+	VG_PushLayer(vg, _("Layer 0"));
 }
 
 void
-VG_FreeElement(VG *vg, VG_Element *vge)
+VG_FreeNode(VG *vg, VG_Node *vge)
 {
 	if (vge->ops->destroy != NULL) {
 		vge->ops->destroy(vg, vge);
 	}
 	Free(vge->vtx);
-	Free(vge->trans);
 	Free(vge);
 }
 
 static void
-VG_DestroyElements(VG *vg)
+FreeNodes(VG *vg)
 {
-	VG_Element *vge, *nvge;
+	VG_Node *vge, *nvge;
 	
-	for (vge = TAILQ_FIRST(&vg->vges);
-	     vge != TAILQ_END(&vg->vges);
+	for (vge = TAILQ_FIRST(&vg->nodes);
+	     vge != TAILQ_END(&vg->nodes);
 	     vge = nvge) {
-		nvge = TAILQ_NEXT(vge, vges);
-		VG_FreeElement(vg, vge);
+		nvge = TAILQ_NEXT(vge, nodes);
+		VG_FreeNode(vg, vge);
 	}
-	TAILQ_INIT(&vg->vges);
+	TAILQ_INIT(&vg->nodes);
 }
 
 static void
-VG_DestroyBlocks(VG *vg)
+FreeBlocks(VG *vg)
 {
 	VG_Block *vgb, *nvgb;
 
@@ -184,7 +152,7 @@ VG_DestroyBlocks(VG *vg)
 }
 
 static void
-VG_DestroyStyles(VG *vg)
+FreeStyles(VG *vg)
 {
 	VG_Style *st, *nst;
 
@@ -200,38 +168,30 @@ VG_DestroyStyles(VG *vg)
 void
 VG_Reinit(VG *vg)
 {
-	VG_DestroyBlocks(vg);
-	VG_DestroyElements(vg);
-	VG_DestroyStyles(vg);
+	FreeBlocks(vg);
+	FreeNodes(vg);
+	FreeStyles(vg);
 }
 
 void
 VG_Destroy(VG *vg)
 {
-	Free(vg->origin);
-	Free(vg->originRadius);
-	Free(vg->originColor);
 	Free(vg->layers);
-
-	VG_DestroyBlocks(vg);
-	VG_DestroyElements(vg);
-	VG_DestroyStyles(vg);
-	AG_MutexDestroy(&vg->lock);
-
 	Free(vg->ints);
+	AG_MutexDestroy(&vg->lock);
 }
 
 void
-VG_DestroyElement(VG *vg, VG_Element *vge)
+VG_DestroyNode(VG *vg, VG_Node *vge)
 {
 	if (vge->block != NULL)
-		TAILQ_REMOVE(&vge->block->vges, vge, vgbmbs);
+		TAILQ_REMOVE(&vge->block->nodes, vge, vgbmbs);
 
-	if (vg->cur_vge == vge)
-		vg->cur_vge = NULL;
+	if (vg->curNode == vge)
+		vg->curNode = NULL;
 
-	TAILQ_REMOVE(&vg->vges, vge, vges);
-	VG_FreeElement(vg, vge);
+	TAILQ_REMOVE(&vg->nodes, vge, nodes);
+	VG_FreeNode(vg, vge);
 }
 
 void VG_SetBackgroundColor(VG *vg, VG_Color c) { vg->fillColor = c; }
@@ -243,20 +203,18 @@ void VG_SetMouseOverColor(VG *vg, VG_Color c) { vg->mouseoverColor = c; }
  * Allocate the given type of element and begin its parametrization.
  * If a block is selected, associate the element with it.
  */
-VG_Element *
-VG_Begin(VG *vg, enum vg_element_type eltype)
+VG_Node *
+VG_Begin(VG *vg, enum vg_node_type nType)
 {
-	VG_Element *vge;
+	VG_Node *vge;
 
-	vge = Malloc(sizeof(VG_Element));
+	vge = Malloc(sizeof(VG_Node));
 	vge->flags = 0;
-	vge->type = eltype;
+	vge->type = nType;
 	vge->style = NULL;
-	vge->layer = vg->cur_layer;
+	vge->layer = vg->curLayer;
 	vge->vtx = NULL;
 	vge->nvtx = 0;
-	vge->trans = NULL;
-	vge->ntrans = 0;
 	vge->color = VG_GetColorRGB(250,250,250);
 
 	vge->line_st.style = VG_CONTINUOUS;
@@ -264,120 +222,54 @@ VG_Begin(VG *vg, enum vg_element_type eltype)
 	vge->line_st.stipple = 0x0;
 	vge->line_st.thickness = 1;
 	vge->line_st.miter_len = 0;
-
-	Strlcpy(vge->text_st.face, OBJECT(agDefaultFont)->name,
-	    sizeof(vge->text_st.face));
-	vge->text_st.size = agDefaultFont->size;
-	vge->text_st.flags = agDefaultFont->flags;
 	vge->fill_st.style = VG_SOLID;
 	vge->fill_st.texture[0] = '\0';
 	vge->fill_st.texture_alpha = 255;
+	vge->text_st.size = agDefaultFont->size;
+	vge->text_st.flags = agDefaultFont->flags;
+	Strlcpy(vge->text_st.face, OBJECT(agDefaultFont)->name,
+	    sizeof(vge->text_st.face));
 
-	AG_MutexLock(&vg->lock);
-	TAILQ_INSERT_TAIL(&vg->vges, vge, vges);
+	VG_Lock(vg);
 
-	if (vg->cur_block != NULL) {
-		TAILQ_INSERT_TAIL(&vg->cur_block->vges, vge, vgbmbs);
-		vge->block = vg->cur_block;
+	TAILQ_INSERT_TAIL(&vg->nodes, vge, nodes);
+	if (vg->curBlock != NULL) {
+		TAILQ_INSERT_TAIL(&vg->curBlock->nodes, vge, vgbmbs);
+		vge->block = vg->curBlock;
 		if (vge->block->flags & VG_BLOCK_NOSAVE)
-			vge->flags |= VG_ELEMENT_NOSAVE;
+			vge->flags |= VG_NODE_NOSAVE;
 	} else {
 		vge->block = NULL;
 	}
-
-	vge->ops = vgElementTypes[eltype];
-	if (vge->ops->init != NULL)
+	vge->ops = vgNodeTypes[nType];
+	if (vge->ops->init != NULL) {
 		vge->ops->init(vg, vge);
-
-	vg->cur_vge = vge;
-	AG_MutexUnlock(&vg->lock);
+	}
+	vg->curNode = vge;
+	VG_LoadIdentity(vg);
 	return (vge);
 }
 
-/*
- * End the parametrization of the current element.
- * The vg must be locked.
- */
+/* End parametrization of the current element. */
 void
 VG_End(VG *vg)
 {
-	vg->cur_vge = NULL;
+	vg->curNode = NULL;
+	VG_Unlock(vg);
 }
 
-/*
- * Select the given element for edition.
- * The vg must be locked.
- */
+/* Select the given element for edition. */
 void
-VG_Select(VG *vg, VG_Element *vge)
+VG_Select(VG *vg, VG_Node *vge)
 {
-	vg->cur_vge = vge;
-}
-
-#ifdef DEBUG
-void
-VG_DrawExtents(VG_View *vv)
-{
-	VG *vg = vv->vg;
-	VG_Rect bbox;
-	VG_Element *vge;
-	VG_Block *vgb;
-	int x, y, w, h;
-	Uint32 cGreen;
-	Uint32 cGrid;
-
-	cGreen = SDL_MapRGB(agVideoFmt, 0,250,0);
-	cGrid = VG_MapColorRGB(vg->gridColor);
-
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		if (vge->ops->bbox != NULL) {
-			vge->ops->bbox(vg, vge, &bbox);
-		} else {
-			continue;
-		}
-		VG_GetViewCoords(vv, bbox.x, bbox.y, &x, &y);
-		w = (int)(bbox.w*vv->scale);
-		h = (int)(bbox.h*vv->scale);
-		AG_DrawRectOutline(vv, AG_RECT(x-1, y-1, w+2, h+2), cGrid);
-	}
-	
-	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
-		VG_BlockExtent(vg, vgb, &bbox);
-		VG_GetViewCoords(vv, bbox.x, bbox.y, &x, &y);
-		w = (int)(bbox.w*vv->scale);
-		h = (int)(bbox.h*vv->scale);
-		AG_DrawRectOutline(vv, AG_RECT(x-1, y-1, w+2, h+2), cGreen);
-	}
-}
-#endif /* DEBUG */
-
-VG_Vtx *
-VG_AllocVertex(VG_Element *vge)
-{
-	if (vge->vtx == NULL) {
-		vge->vtx = Malloc(sizeof(VG_Vtx));
-	} else {
-		vge->vtx = Realloc(vge->vtx, (vge->nvtx+1)*sizeof(VG_Vtx));
-	}
-	return (&vge->vtx[vge->nvtx++]);
-}
-
-VG_Matrix *
-VG_AllocMatrix(VG_Element *vge)
-{
-	if (vge->trans == NULL) {
-		vge->trans = Malloc(sizeof(VG_Matrix));
-	} else {
-		vge->trans = Realloc(vge->trans,
-		    (vge->ntrans+1)*sizeof(VG_Matrix));
-	}
-	return (&vge->trans[vge->ntrans++]);
+	VG_Lock(vg);
+	vg->curNode = vge;
 }
 
 VG_Vtx *
 VG_PopVertex(VG *vg)
 {
-	VG_Element *vge = vg->cur_vge;
+	VG_Node *vge = vg->curNode;
 
 	if (vge->vtx == NULL)
 		return (NULL);
@@ -389,28 +281,13 @@ VG_PopVertex(VG *vg)
 	return ((vge->nvtx > 0) ? &vge->vtx[vge->nvtx-1] : NULL);
 }
 
-VG_Matrix *
-VG_PopMatrix(VG *vg)
-{
-	VG_Element *vge = vg->cur_vge;
-
-	if (vge->trans == NULL)
-		return (NULL);
-#ifdef DEBUG
-	if (vge->ntrans-1 < 0)
-		AG_FatalError("VG_PopMatrix: Negative matrix count");
-#endif
-	vge->trans = Realloc(vge->trans, (--vge->ntrans)*sizeof(VG_Matrix));
-	return ((vge->ntrans > 0) ? &vge->trans[vge->ntrans-1] : NULL);
-}
-
 /* Push a 2D vertex onto the vertex array. */
 VG_Vtx *
 VG_Vertex2(VG *vg, float x, float y)
 {
 	VG_Vtx *vtx;
 
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x;
 	vtx->y = y;
 	VG_BlockOffset(vg, vtx);
@@ -433,7 +310,7 @@ VG_VertexVint2(VG *vg, float x, float px1, float py1, float px2, float py2)
 	if (x1 < x2) { m = x1; x1 = x2; x2 = m; }
 	m = Fabs(y2-y1)/Fabs(x2-x1);
 
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x;
 	vtx->y = m*(x - x3);
 	VG_BlockOffset(vg, vtx);
@@ -455,7 +332,7 @@ VG_VintVLine2(VG *vg, float x, float y, float x1, float y1, float x2, float y2)
 void
 VG_VertexV(VG *vg, const VG_Vtx *svtx, Uint nsvtx)
 {
-	VG_Element *vge = vg->cur_vge;
+	VG_Node *vge = vg->curNode;
 	Uint i;
 	
 	for (i = 0; i < nsvtx; i++) {
@@ -473,12 +350,12 @@ VG_Line(VG *vg, float x1, float y1, float x2, float y2)
 {
 	VG_Vtx *vtx;
 
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x1;
 	vtx->y = y1;
 	VG_BlockOffset(vg, vtx);
 
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x2;
 	vtx->y = y2;
 	VG_BlockOffset(vg, vtx);
@@ -490,11 +367,11 @@ VG_VLine(VG *vg, float x, float y1, float y2)
 {
 	VG_Vtx *vtx;
 
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x;
 	vtx->y = y1;
 	VG_BlockOffset(vg, vtx);
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x;
 	vtx->y = y2;
 	VG_BlockOffset(vg, vtx);
@@ -506,16 +383,17 @@ VG_HLine(VG *vg, float x1, float x2, float y)
 {
 	VG_Vtx *vtx;
 
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x1;
 	vtx->y = y;
 	VG_BlockOffset(vg, vtx);
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x2;
 	vtx->y = y;
 	VG_BlockOffset(vg, vtx);
 }
 
+/* Generate a rectangle. */
 void
 VG_Rectangle(VG *vg, float x1, float y1, float x2, float y2)
 {
@@ -523,34 +401,24 @@ VG_Rectangle(VG *vg, float x1, float y1, float x2, float y2)
 
 	VG_Begin(vg, VG_LINE_LOOP);
 
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x1;
 	vtx->y = y1;
 	VG_BlockOffset(vg, vtx);
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x2;
 	vtx->y = y1;
 	VG_BlockOffset(vg, vtx);
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x2;
 	vtx->y = y2;
 	VG_BlockOffset(vg, vtx);
-	vtx = VG_AllocVertex(vg->cur_vge);
+	vtx = VG_AllocVertex(vg->curNode);
 	vtx->x = x1;
 	vtx->y = y2;
 	VG_BlockOffset(vg, vtx);
 	
 	VG_End(vg);
-}
-
-void
-VG_MultMatrixByVector(VG_Vtx *c, const VG_Vtx *a, const VG_Matrix *T)
-{
-	float ax = a->x;
-	float ay = a->y;
-
-	c->x = ax*T->m[0][0] + ay*T->m[1][0] + T->m[0][2];
-	c->y = ax*T->m[0][1] + ay*T->m[1][1] + T->m[1][2];
 }
 
 void
@@ -579,67 +447,42 @@ VG_MultMatrixByMatrix(VG_Matrix *C, const VG_Matrix *B, const VG_Matrix *A)
 }
 
 void
-VG_LoadIdentity(VG_Matrix *m)
+VG_LoadIdentity(VG *vg)
 {
-	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = 0.0;
-	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = 0.0;
-	m->m[2][0] = 0.0; m->m[2][1] = 0.0; m->m[2][2] = 1.0;
-}
-
-VG_Matrix *
-VG_PushIdentity(VG *vg)
-{
-	VG_Matrix *m;
-
-	m = VG_AllocMatrix(vg->cur_vge);
-	VG_LoadIdentity(m);
-	return (m);
+	VG_Matrix *T = &vg->curNode->T;
+	
+	T->m[0][0] = 1.0; T->m[0][1] = 0.0; T->m[0][2] = 0.0;
+	T->m[1][0] = 0.0; T->m[1][1] = 1.0; T->m[1][2] = 0.0;
+	T->m[2][0] = 0.0; T->m[2][1] = 0.0; T->m[2][2] = 1.0;
 }
 
 void
-VG_LoadTranslate(VG_Matrix *m, float x, float y)
-{
-	m->m[0][0] = 1.0; m->m[0][1] = 0.0; m->m[0][2] = x;
-	m->m[1][0] = 0.0; m->m[1][1] = 1.0; m->m[1][2] = y;
-	m->m[2][0] = 0.0; m->m[2][1] = 0.0; m->m[2][2] = 1.0;
-}
-
-VG_Matrix *
 VG_Translate(VG *vg, float x, float y)
 {
-	VG_Matrix *m;
+	VG_Matrix *T = &vg->curNode->T;
 
-	m = VG_AllocMatrix(vg->cur_vge);
-	VG_LoadTranslate(m, x, y);
-	return (m);
+	T->m[0][0] = 1.0; T->m[0][1] = 0.0; T->m[0][2] = x;
+	T->m[1][0] = 0.0; T->m[1][1] = 1.0; T->m[1][2] = y;
+	T->m[2][0] = 0.0; T->m[2][1] = 0.0; T->m[2][2] = 1.0;
 }
 
 void
-VG_LoadRotate(VG_Matrix *m, float tdeg)
+VG_Rotate(VG *vg, float degs)
 {
-	float theta = Radians(tdeg);
-	float rcos = Cos(theta);
-	float rsin = Sin(theta);
+	VG_Matrix *T = &vg->curNode->T;
+	float theta = Radians(degs);
+	float rCos = Cos(theta);
+	float rSin = Sin(theta);
 
-	m->m[0][0] = +rcos;
-	m->m[0][1] = -rsin;
-	m->m[0][2] = 0.0;
-	m->m[1][0] = +rsin;
-	m->m[1][1] = +rcos;
-	m->m[1][2] = 0.0;
-	m->m[2][0] = 0.0;
-	m->m[2][1] = 0.0;
-	m->m[2][2] = 1.0;
-}
-
-VG_Matrix *
-VG_Rotate(VG *vg, float tdeg)
-{
-	VG_Matrix *m;
-
-	m = VG_AllocMatrix(vg->cur_vge);
-	VG_LoadRotate(m, tdeg);
-	return (m);
+	T->m[0][0] = +rCos;
+	T->m[0][1] = -rSin;
+	T->m[0][2] = 0.0;
+	T->m[1][0] = +rSin;
+	T->m[1][1] = +rCos;
+	T->m[1][2] = 0.0;
+	T->m[2][0] = 0.0;
+	T->m[2][1] = 0.0;
+	T->m[2][2] = 1.0;
 }
 
 /* Create a new global style. */
@@ -672,7 +515,9 @@ VG_CreateStyle(VG *vg, enum vg_style_type type, const char *name)
 		vgs->vg_text_st.flags = agDefaultFont->flags;
 		break;
 	}
+	VG_Lock(vg);
 	TAILQ_INSERT_TAIL(&vg->styles, vgs, styles);
+	VG_Unlock(vg);
 	return (vgs);
 }
 
@@ -680,14 +525,17 @@ VG_CreateStyle(VG *vg, enum vg_style_type type, const char *name)
 int
 VG_SetStyle(VG *vg, const char *name)
 {
-	VG_Element *vge = vg->cur_vge;
+	VG_Node *vge = vg->curNode;
 	VG_Style *st;
 
+	VG_Lock(vg);
 	TAILQ_FOREACH(st, &vg->styles, styles) {
 		if (strcmp(st->name, name) == 0)
 			break;
 	}
 	if (st == NULL) {
+		AG_SetError(_("No such style: %s"), name);
+		VG_Unlock(vg);
 		return (-1);
 	}
 	switch (st->type) {
@@ -704,6 +552,7 @@ VG_SetStyle(VG *vg, const char *name)
 		    sizeof(VG_FillingStyle));
 		break;
 	}
+	VG_Unlock(vg);
 	return (0);
 }
 
@@ -711,36 +560,36 @@ VG_SetStyle(VG *vg, const char *name)
 void
 VG_SetLayer(VG *vg, int layer)
 {
-	vg->cur_vge->layer = layer;
+	vg->curNode->layer = layer;
 }
 
 /* Specify the color of the current element (VG color format). */
 void
 VG_Colorv(VG *vg, const VG_Color *c)
 {
-	vg->cur_vge->color.r = c->r;
-	vg->cur_vge->color.g = c->g;
-	vg->cur_vge->color.b = c->b;
-	vg->cur_vge->color.a = c->a;
+	vg->curNode->color.r = c->r;
+	vg->curNode->color.g = c->g;
+	vg->curNode->color.b = c->b;
+	vg->curNode->color.a = c->a;
 }
 
 /* Specify the color of the current element (RGB triplet). */
 void
 VG_ColorRGB(VG *vg, Uint8 r, Uint8 g, Uint8 b)
 {
-	vg->cur_vge->color.r = r;
-	vg->cur_vge->color.g = g;
-	vg->cur_vge->color.b = b;
+	vg->curNode->color.r = r;
+	vg->curNode->color.g = g;
+	vg->curNode->color.b = b;
 }
 
 /* Specify the color of the current element (RGB triplet + alpha). */
 void
 VG_ColorRGBA(VG *vg, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-	vg->cur_vge->color.r = r;
-	vg->cur_vge->color.g = g;
-	vg->cur_vge->color.b = b;
-	vg->cur_vge->color.a = a;
+	vg->curNode->color.r = r;
+	vg->curNode->color.g = g;
+	vg->curNode->color.b = b;
+	vg->curNode->color.a = a;
 }
 
 /* Push a new layer onto the layer stack. */
@@ -749,6 +598,7 @@ VG_PushLayer(VG *vg, const char *name)
 {
 	VG_Layer *vgl;
 
+	VG_Lock(vg);
 	vg->layers = Realloc(vg->layers, (vg->nlayers+1) *
 	                                 sizeof(VG_Layer));
 	vgl = &vg->layers[vg->nlayers];
@@ -757,6 +607,7 @@ VG_PushLayer(VG *vg, const char *name)
 	vgl->visible = 1;
 	vgl->alpha = 255;
 	vgl->color = VG_GetColorRGB(255,255,255);
+	VG_Unlock(vg);
 	return (vgl);
 }
 
@@ -764,62 +615,55 @@ VG_PushLayer(VG *vg, const char *name)
 void
 VG_PopLayer(VG *vg)
 {
-	if (--vg->nlayers < 1)
+	VG_Lock(vg);
+	if (--vg->nlayers < 1) {
 		vg->nlayers = 1;
+	}
+	VG_Unlock(vg);
 }
 
 static void
-VG_SaveMatrix(VG_Matrix *A, AG_DataSource *buf)
+SaveMatrix(VG_Matrix *A, AG_DataSource *buf)
 {
 	int m, n;
 
-	for (m = 0; m < 3; m++) {
+	for (m = 0; m < 3; m++)
 		for (n = 0; n < 3; n++)
 			AG_WriteFloat(buf, A->m[m][n]);
-	}
 }
 
 static void
-VG_LoadMatrix(VG_Matrix *A, AG_DataSource *buf)
+LoadMatrix(VG_Matrix *A, AG_DataSource *buf)
 {
 	int m, n;
 
-	for (m = 0; m < 3; m++) {
+	for (m = 0; m < 3; m++)
 		for (n = 0; n < 3; n++)
 			A->m[m][n] = AG_ReadFloat(buf);
-	}
 }
 
 void
 VG_Save(VG *vg, AG_DataSource *buf)
 {
-	off_t nblocks_offs, nvges_offs, nstyles_offs;
-	Uint32 nblocks = 0, nvges = 0, nstyles = 0;
+	off_t nblocks_offs, nnodes_offs, nstyles_offs;
+	Uint32 nblocks = 0, nnodes = 0, nstyles = 0;
 	VG_Block *vgb;
 	VG_Style *vgs;
-	VG_Element *vge;
+	VG_Node *vge;
 	int i;
 
 	AG_WriteVersion(buf, "AG_VG", &vgVer);
+	AG_WriteString(buf, "VG");
 
-	AG_MutexLock(&vg->lock);
+	VG_Lock(vg);
 
-	AG_WriteString(buf, vg->name);
 	AG_WriteUint32(buf, (Uint32)vg->flags);
 	VG_WriteColor(buf, &vg->fillColor);
 	VG_WriteColor(buf, &vg->gridColor);
 	VG_WriteColor(buf, &vg->selectionColor);
 	VG_WriteColor(buf, &vg->mouseoverColor);
 	AG_WriteFloat(buf, 0.0f);				/* gridIval */
-	AG_WriteUint32(buf, (Uint32)vg->cur_layer);
-
-	/* Save the origin points. */
-	AG_WriteUint32(buf, vg->norigin);
-	for (i = 0; i < vg->norigin; i++) {
-		VG_WriteVertex(buf, &vg->origin[i]);
-		AG_WriteFloat(buf, vg->originRadius[i]);
-		VG_WriteColor(buf, &vg->originColor[i]);
-	}
+	AG_WriteUint32(buf, (Uint32)vg->curLayer);
 
 	/* Save the layer information. */
 	AG_WriteUint32(buf, vg->nlayers);
@@ -842,7 +686,6 @@ VG_Save(VG *vg, AG_DataSource *buf)
 		AG_WriteString(buf, vgb->name);
 		AG_WriteUint32(buf, (Uint32)vgb->flags);
 		VG_WriteVertex(buf, &vgb->pos);
-		VG_WriteVertex(buf, &vgb->origin);
 		AG_WriteFloat(buf, vgb->theta);
 		nblocks++;
 	}
@@ -881,10 +724,10 @@ VG_Save(VG *vg, AG_DataSource *buf)
 	AG_WriteUint32At(buf, nstyles, nstyles_offs);
 
 	/* Save the vg elements. */
-	nvges_offs = AG_Tell(buf);
+	nnodes_offs = AG_Tell(buf);
 	AG_WriteUint32(buf, 0);
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
-		if (vge->flags & VG_ELEMENT_NOSAVE)
+	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
+		if (vge->flags & VG_NODE_NOSAVE)
 			continue;
 
 		AG_WriteUint32(buf, (Uint32)vge->type);
@@ -915,10 +758,9 @@ VG_Save(VG *vg, AG_DataSource *buf)
 		for (i = 0; i < vge->nvtx; i++)
 			VG_WriteVertex(buf, &vge->vtx[i]);
 		
-		/* Save the transformation matrices. */
-		AG_WriteUint32(buf, (Uint32)vge->ntrans);
-		for (i = 0; i < vge->ntrans; i++)
-			VG_SaveMatrix(&vge->trans[i], buf);
+		/* Save the transformation matrix. */
+		AG_WriteUint32(buf, 1);
+		SaveMatrix(&vge->T, buf);
 
 		/* Save element specific data. */
 		switch (vge->type) {
@@ -936,55 +778,37 @@ VG_Save(VG *vg, AG_DataSource *buf)
 			AG_WriteFloat(buf, vge->vg_text.angle);
 			AG_WriteUint8(buf, (Uint8)vge->vg_text.align);
 			break;
-		case VG_MASK:
-			AG_WriteFloat(buf, vge->vg_mask.scale);
-			AG_WriteUint8(buf, (Uint8)vge->vg_mask.visible);
-			AG_WriteString(buf, NULL);		       /* Pad */
-			break;
 		default:
 			break;
 		}
-		nvges++;
+		nnodes++;
 	}
-	AG_WriteUint32At(buf, nvges, nvges_offs);
-	AG_MutexUnlock(&vg->lock);
+	AG_WriteUint32At(buf, nnodes, nnodes_offs);
+	VG_Unlock(vg);
 }
 
 int
 VG_Load(VG *vg, AG_DataSource *buf)
 {
-	Uint32 norigin, nlayers, nstyles, nelements, nblocks;
+	char name[VG_NAME_MAX];
+	Uint32 nlayers, nstyles, nelements, nblocks;
 	Uint32 i;
 
-	if (AG_ReadVersion(buf, "AG_VG", &vgVer, NULL) != 0)
+	if (AG_ReadVersion(buf, "AG_VG", &vgVer, NULL) != 0) {
 		return (-1);
-
-	AG_MutexLock(&vg->lock);
-	AG_CopyString(vg->name, buf, sizeof(vg->name));
+	}
+	AG_CopyString(name, buf, sizeof(name));			/* Ignore */
+	
+	VG_Lock(vg);
 	vg->flags = AG_ReadUint32(buf);
 	vg->fillColor = VG_ReadColor(buf);
 	vg->gridColor = VG_ReadColor(buf);
 	vg->selectionColor = VG_ReadColor(buf);
 	vg->mouseoverColor = VG_ReadColor(buf);
 	(void)AG_ReadFloat(buf);				/* gridIval */
-	vg->cur_layer = (int)AG_ReadUint32(buf);
-	vg->cur_block = NULL;
-	vg->cur_vge = NULL;
-
-	/* Read the origin points. */
-	if ((norigin = AG_ReadUint32(buf)) < 1) {
-		AG_SetError("norigin < 1");
-		goto fail;
-	}
-	vg->origin = Realloc(vg->origin, norigin*sizeof(VG_Vtx));
-	vg->originRadius = Realloc(vg->originRadius, norigin*sizeof(float));
-	vg->originColor = Realloc(vg->originColor, norigin*sizeof(Uint32));
-	vg->norigin = norigin;
-	for (i = 0; i < vg->norigin; i++) {
-		vg->origin[i] = VG_ReadVertex(buf);
-		vg->originRadius[i] = AG_ReadFloat(buf);
-		vg->originColor[i] = VG_ReadColor(buf);
-	}
+	vg->curLayer = (int)AG_ReadUint32(buf);
+	vg->curBlock = NULL;
+	vg->curNode = NULL;
 
 	/* Read the layer information. */
 	if ((nlayers = AG_ReadUint32(buf)) < 1) {
@@ -1003,7 +827,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 	vg->nlayers = nlayers;
 
 	/* Read the block information. */
-	VG_DestroyBlocks(vg);
+	FreeBlocks(vg);
 	nblocks = AG_ReadUint32(buf);
 	for (i = 0; i < nblocks; i++) {
 		VG_Block *vgb;
@@ -1012,14 +836,13 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		AG_CopyString(vgb->name, buf, sizeof(vgb->name));
 		vgb->flags = (int)AG_ReadUint32(buf);
 		vgb->pos = VG_ReadVertex(buf);
-		vgb->origin = VG_ReadVertex(buf);
 		vgb->theta = AG_ReadFloat(buf);
-		TAILQ_INIT(&vgb->vges);
+		TAILQ_INIT(&vgb->nodes);
 		TAILQ_INSERT_TAIL(&vg->blocks, vgb, vgbs);
 	}
 
 	/* Read the global style information. */
-	VG_DestroyStyles(vg);
+	FreeStyles(vg);
 	nstyles = AG_ReadUint32(buf);
 	for (i = 0; i < nstyles; i++) {
 		char sname[VG_STYLE_NAME_MAX];
@@ -1055,17 +878,17 @@ VG_Load(VG *vg, AG_DataSource *buf)
 	}
 
 	/* Read the vg elements. */
-	VG_DestroyElements(vg);
+	FreeNodes(vg);
 	nelements = AG_ReadUint32(buf);
 	for (i = 0; i < nelements; i++) {
 		char block_id[VG_BLOCK_NAME_MAX];
-		enum vg_element_type type;
-		VG_Element *vge;
+		enum vg_node_type type;
+		VG_Node *vge;
 		VG_Block *block;
 		Uint32 nlayer;
 		int j;
 	
-		type = (enum vg_element_type)AG_ReadUint32(buf);
+		type = (enum vg_node_type)AG_ReadUint32(buf);
 		AG_CopyString(block_id, buf, sizeof(block_id));
 		nlayer = (int)AG_ReadUint32(buf);
 
@@ -1096,13 +919,11 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		vge->vtx = Malloc(vge->nvtx*sizeof(VG_Vtx));
 		for (j = 0; j < vge->nvtx; j++)
 			vge->vtx[j] = VG_ReadVertex(buf);
-
-		/* Load the matrices. */
-		vge->ntrans = (Uint)AG_ReadUint32(buf);
-		vge->trans = Malloc(vge->ntrans*sizeof(VG_Matrix));
-		for (j = 0; j < vge->ntrans; j++)
-			VG_LoadMatrix(&vge->trans[j], buf);
-			
+		
+		/* Load the transformation matrix. */
+		(void)AG_ReadUint32(buf);				/* 1 */
+		LoadMatrix(&vge->T, buf);
+		
 		/* Associate the element with a block if necessary. */
 		if (block_id[0] != '\0') {
 			TAILQ_FOREACH(block, &vg->blocks, vgbs) {
@@ -1118,7 +939,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 			block = NULL;
 		}
 		if (block != NULL) {
-			TAILQ_INSERT_TAIL(&block->vges, vge, vgbmbs);
+			TAILQ_INSERT_TAIL(&block->nodes, vge, vgbmbs);
 			vge->block = block;
 		}
 
@@ -1127,7 +948,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		case VG_CIRCLE:
 			if (vge->nvtx < 1) {
 				AG_SetError("circle nvtx < 1");
-				VG_DestroyElement(vg, vge);
+				VG_DestroyNode(vg, vge);
 				goto fail;
 			}
 			vge->vg_circle.radius = AG_ReadFloat(buf);
@@ -1135,7 +956,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		case VG_ARC:
 			if (vge->nvtx < 1) {
 				AG_SetError("arc nvtx < 1");
-				VG_DestroyElement(vg, vge);
+				VG_DestroyNode(vg, vge);
 				goto fail;
 			}
 			vge->vg_arc.w = AG_ReadFloat(buf);
@@ -1146,7 +967,7 @@ VG_Load(VG *vg, AG_DataSource *buf)
 		case VG_TEXT:
 			if (vge->nvtx < 1) {
 				AG_SetError("text nvtx < 1");
-				VG_DestroyElement(vg, vge);
+				VG_DestroyNode(vg, vge);
 				goto fail;
 			}
 			AG_CopyString(vge->vg_text.text, buf,
@@ -1154,20 +975,15 @@ VG_Load(VG *vg, AG_DataSource *buf)
 			vge->vg_text.angle = AG_ReadFloat(buf);
 			vge->vg_text.align = AG_ReadUint8(buf);
 			break;
-		case VG_MASK:
-			vge->vg_mask.scale = AG_ReadFloat(buf);
-			vge->vg_mask.visible = (int)AG_ReadUint8(buf);
-			AG_ReadString(buf);			       /* Pad */
-			break;
 		default:
 			break;
 		}
 		VG_End(vg);
 	}
-	AG_MutexUnlock(&vg->lock);
+	VG_Unlock(vg);
 	return (0);
 fail:
-	AG_MutexUnlock(&vg->lock);
+	VG_Unlock(vg);
 	return (-1);
 }
 

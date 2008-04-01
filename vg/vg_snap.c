@@ -61,11 +61,11 @@ static void
 SnapToEndpoint(VG_View *vv, float *x, float *y)
 {
 	VG *vg = vv->vg;
-	VG_Element *vge;
+	VG_Node *vge;
 	VG_Vtx *vtx;
 	int i;
 
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
+	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
 		for (i = 0; i < vge->nvtx; i++) {
 			vtx = &vge->vtx[i];
 			/* TODO */
@@ -112,12 +112,12 @@ SnapToMenu(AG_Event *event)
 }
 
 AG_Toolbar *
-VG_SnapToolbar(void *parent, VG_View *vv, enum ag_toolbar_type ttype)
+VG_SnapToolbar(void *parent, VG_View *vv, int type)
 {
 	AG_Toolbar *snbar;
 
-	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS|
-	                                        AG_TOOLBAR_STICKY);
+	snbar = AG_ToolbarNew(parent, (enum ag_toolbar_type)type, 1,
+	    AG_TOOLBAR_HOMOGENOUS|AG_TOOLBAR_STICKY);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 0,
 	    SnapTo, "%p,%p,%i", snbar, vv, VG_FREE_POSITIONING);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapGrid.s, 1,

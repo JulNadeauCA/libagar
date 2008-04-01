@@ -12,6 +12,8 @@
 #define VG_FONT_STYLE_MAX	16
 #define VG_FONT_SIZE_MIN	4
 #define VG_FONT_SIZE_MAX	48
+#define VG_TEXT_MAX	 	256
+#define VG_TEXT_MAX_PTRS 	32
 
 /*
  * T = top	L = left
@@ -45,37 +47,19 @@ typedef struct vg_color {
 
 struct vg;
 struct vg_view;
-struct vg_element;
-
-#include "close_code.h"
+struct vg_node;
+struct vg_block;
+struct ag_static_icon;
 
 #ifdef _AGAR_INTERNAL
-#include <vg/vg_snap.h>
-#include <vg/vg_ortho.h>
-#include <vg/vg_origin.h>
-#include <vg/vg_block.h>
-#include <vg/vg_line.h>
-#include <vg/vg_circle.h>
-#include <vg/vg_arc.h>
-#include <vg/vg_text.h>
-#include <vg/vg_mask.h>
-#include <vg/vg_polygon.h>
+# include <vg/vg_snap.h>
+# include <vg/vg_ortho.h>
 #else
-#include <agar/vg/vg_snap.h>
-#include <agar/vg/vg_ortho.h>
-#include <agar/vg/vg_origin.h>
-#include <agar/vg/vg_block.h>
-#include <agar/vg/vg_line.h>
-#include <agar/vg/vg_circle.h>
-#include <agar/vg/vg_arc.h>
-#include <agar/vg/vg_text.h>
-#include <agar/vg/vg_mask.h>
-#include <agar/vg/vg_polygon.h>
+# include <agar/vg/vg_snap.h>
+# include <agar/vg/vg_ortho.h>
 #endif
 
-#include "begin_code.h"
-
-enum vg_element_type {
+enum vg_node_type {
 	VG_POINTS,		/* Individual points */
 	VG_LINES,		/* Individual line segments */
 	VG_LINE_STRIP,		/* Series of connected line segments */
@@ -95,15 +79,15 @@ enum vg_element_type {
 	VG_LAST
 };
 
-typedef struct vg_element_ops {
+typedef struct vg_node_ops {
 	const char *name;
-	AG_StaticIcon *icon;
-	void (*init)(struct vg *, struct vg_element *);
-	void (*destroy)(struct vg *, struct vg_element *);
-	void (*draw)(struct vg_view *, struct vg_element *);
-	void (*bbox)(struct vg *, struct vg_element *, VG_Rect *);
-	float (*intsect)(struct vg*, struct vg_element *, float *, float *);
-} VG_ElementOps;
+	struct ag_static_icon *icon;
+	void (*init)(struct vg *, struct vg_node *);
+	void (*destroy)(struct vg *, struct vg_node *);
+	void (*draw)(struct vg_view *, struct vg_node *);
+	void (*bbox)(struct vg *, struct vg_node *, VG_Rect *);
+	float (*intsect)(struct vg*, struct vg_node *, float *, float *);
+} VG_NodeOps;
 
 typedef struct vg_layer {
 	char name[VG_LAYER_NAME_MAX];	/* Layer name */
@@ -173,16 +157,16 @@ typedef struct vg_matrix {
 	float m[4][4];
 } VG_Matrix;
 
-typedef struct vg_element {
-	enum vg_element_type type;
-	const VG_ElementOps *ops;
+typedef struct vg_node {
+	enum vg_node_type type;
+	const VG_NodeOps *ops;
 
 	Uint flags;
-#define VG_ELEMENT_NOSAVE	0x01	/* Don't save with drawing */
-#define VG_ELEMENT_SELECTED	0x02	/* Selection flag */
-#define VG_ELEMENT_MOUSEOVER	0x04	/* Mouse overlap flag */
+#define VG_NODE_NOSAVE		0x01	/* Don't save with drawing */
+#define VG_NODE_SELECTED	0x02	/* Selection flag */
+#define VG_NODE_MOUSEOVER	0x04	/* Mouse overlap flag */
 
-	VG_Block *block;		/* Back pointer to block */
+	struct vg_block *block;		/* Back pointer to block */
 	VG_Style *style;		/* Default element style */
 	VG_Color  color;		/* Effective foreground color */
 	int       layer;		/* Associated layer */
@@ -193,15 +177,26 @@ typedef struct vg_element {
 
 	VG_Vtx    *vtx;			/* Vertices */
 	Uint      nvtx;
-	VG_Matrix *trans;		/* Transformation matrices */
-	Uint      ntrans;
+	VG_Matrix T;			/* Transformation matrix */
 
 	union {
-		struct vg_circle_args vg_circle;
-		struct vg_arc_args vg_arc;
-		struct vg_text_args vg_text;
-		struct vg_mask_args vg_mask;
-		struct vg_polygon_args vg_polygon;
+		struct {
+			float radius;
+		} vg_circle;
+		struct {
+			float w, h;
+			float s, e;
+		} vg_arc;
+		struct {
+			char text[VG_TEXT_MAX];		/* Text buffer */
+			float angle;			/* Rotation (degs) */
+			enum vg_alignment align;	/* Alignment */
+			void *ptrs[VG_TEXT_MAX_PTRS];	/* For polling */
+			int  nptrs;
+		} vg_text;
+		struct {
+			int outline;			/* Render outline */
+		} vg_polygon;
 	} vg_args;
 #ifndef _AGAR_VG_PUBLIC
 #define vg_circle   vg_args.vg_circle
@@ -210,18 +205,13 @@ typedef struct vg_element {
 #define vg_mask	    vg_args.vg_mask
 #define vg_polygon  vg_args.vg_polygon
 #endif
-	AG_TAILQ_ENTRY(vg_element) vgbmbs; /* Entry in block element list */
-	AG_TAILQ_ENTRY(vg_element) vges;   /* Entry in global element list */
-} VG_Element;
+	AG_TAILQ_ENTRY(vg_node) nodes;	/* In global node list */
+	AG_TAILQ_ENTRY(vg_node) vgbmbs; /* In block node list */
+} VG_Node;
 
 typedef struct vg {
-	char name[VG_NAME_MAX];		/* Name of drawing */
-
 	Uint flags;
 #define VG_ANTIALIAS	0x01		/* Anti-alias where possible */
-#define VG_VISORIGIN	0x02		/* Display origin points */
-#define VG_VISGRID	0x04		/* Display grid */
-#define VG_VISBBOXES	0x08		/* Display bounding boxes (DEBUG) */
 
 	AG_Mutex lock;
 
@@ -231,92 +221,104 @@ typedef struct vg {
 	VG_Color selectionColor;	/* Selected item/block color */
 	VG_Color mouseoverColor;	/* Mouse overlap item color */
 
-	VG_Vtx	  *origin;		/* Reference points */
-	float	  *originRadius;	/* Reference point radii */
-	VG_Color  *originColor;		/* Reference point colors */
-	Uint32	  norigin;
-
 	VG_Layer *layers;
 	Uint32	 nlayers;
 
-	int	    cur_layer;		/* Layer selected for edition */
-	VG_Block   *cur_block;		/* Block selected for edition */
-	VG_Element *cur_vge;		/* Element selected for edition */
+	int	         curLayer;	/* Layer selected for edition */
+	struct vg_block *curBlock;	/* Block selected for edition */
+	VG_Node         *curNode;	/* Node selected for edition */
 
-	int *ints;			/* For scan conversion */
+	int  *ints;			/* For polygon scan conversion */
 	Uint nints;
 
-	AG_TAILQ_HEAD(,vg_element) vges;	/* Elements in drawing */
+	AG_TAILQ_HEAD(,vg_node) nodes;		/* Nodes in drawing */
 	AG_TAILQ_HEAD(,vg_block) blocks;	/* Blocks in drawing */
 	AG_TAILQ_HEAD(,vg_style) styles;	/* Global default styles */
 } VG;
 
-extern const VG_ElementOps *vgElementTypes[];
+extern const VG_NodeOps *vgNodeTypes[];
+
+#ifdef _AGAR_INTERNAL
+# include <vg/vg_block.h>
+# include <vg/vg_point.h>
+# include <vg/vg_line.h>
+# include <vg/vg_circle.h>
+# include <vg/vg_arc.h>
+# include <vg/vg_text.h>
+# include <vg/vg_polygon.h>
+#else
+# include <agar/vg/vg_block.h>
+# include <agar/vg/vg_point.h>
+# include <agar/vg/vg_line.h>
+# include <agar/vg/vg_circle.h>
+# include <agar/vg/vg_arc.h>
+# include <agar/vg/vg_text.h>
+# include <agar/vg/vg_polygon.h>
+#endif
 
 __BEGIN_DECLS
-void       VG_InitSubsystem(void);
-void       VG_DestroySubsystem(void);
+void      VG_InitSubsystem(void);
+void      VG_DestroySubsystem(void);
 
-VG        *VG_New(Uint);
-void       VG_Init(VG *, Uint);
-void       VG_Destroy(VG *);
-void       VG_Reinit(VG *);
-void       VG_Save(VG *, AG_DataSource *);
-int        VG_Load(VG *, AG_DataSource *);
+VG       *VG_New(Uint);
+void      VG_Init(VG *, Uint);
+void      VG_Destroy(VG *);
+void      VG_Reinit(VG *);
+void      VG_Save(VG *, AG_DataSource *);
+int       VG_Load(VG *, AG_DataSource *);
 
-void       VG_SetBackgroundColor(VG *, VG_Color);
-void       VG_SetGridColor(VG *, VG_Color);
-void       VG_SetSelectionColor(VG *, VG_Color);
-void       VG_SetMouseOverColor(VG *, VG_Color);
+void      VG_SetBackgroundColor(VG *, VG_Color);
+void      VG_SetGridColor(VG *, VG_Color);
+void      VG_SetSelectionColor(VG *, VG_Color);
+void      VG_SetMouseOverColor(VG *, VG_Color);
 
-VG_Vtx    *VG_PopVertex(VG *);
-VG_Vtx    *VG_AllocVertex(VG_Element *);
-VG_Matrix *VG_AllocMatrix(VG_Element *);
-VG_Matrix *VG_PopMatrix(VG *);
-VG_Vtx     VG_ReadVertex(AG_DataSource *);
-void       VG_WriteVertex(AG_DataSource *, const VG_Vtx *);
-VG_Color   VG_ReadColor(AG_DataSource *);
-void       VG_WriteColor(AG_DataSource *, const VG_Color *);
+VG_Vtx   *VG_PopVertex(VG *);
+VG_Vtx    VG_ReadVertex(AG_DataSource *);
+void      VG_WriteVertex(AG_DataSource *, const VG_Vtx *);
+VG_Color  VG_ReadColor(AG_DataSource *);
+void      VG_WriteColor(AG_DataSource *, const VG_Color *);
 
-VG_Layer  *VG_PushLayer(VG *, const char *);
-void       VG_PopLayer(VG *);
+VG_Node  *VG_Begin(VG *, enum vg_node_type);
+void      VG_End(VG *);
+void      VG_Select(VG *, VG_Node *);
+void      VG_DestroyNode(VG *, VG_Node *);
+void      VG_FreeNode(VG *, VG_Node *);
+VG_Style *VG_CreateStyle(VG *, enum vg_style_type, const char *);
+int       VG_SetStyle(VG *, const char *);
+VG_Layer *VG_PushLayer(VG *, const char *);
+void      VG_PopLayer(VG *);
+void	  VG_SetLayer(VG *, int);
+void	  VG_Colorv(VG *, const VG_Color *);
+void	  VG_ColorRGB(VG *, Uint8, Uint8, Uint8);
+void	  VG_ColorRGBA(VG *, Uint8, Uint8, Uint8, Uint8);
+VG_Vtx	 *VG_Vertex2(VG *, float, float);
+void	  VG_VertexV(VG *, const VG_Vtx *, Uint);
+VG_Vtx	 *VG_VertexVint2(VG *, float x, float x1, float y1, float x2, float y2);
+void	  VG_Line(VG *, float x1, float y1, float x2, float y2);
+void	  VG_VLine(VG *, float x, float y1, float y2);
+void	  VG_HLine(VG *, float x1, float x2, float y);
+void	  VG_Rectangle(VG *, float x1, float y1, float x2, float y2);
+void	  VG_VintVLine2(VG *, float x, float y, float x1, float y1, float x2,
+	                float y2);
 
-VG_Element *VG_Begin(VG *, enum vg_element_type);
-void        VG_End(VG *);
-void        VG_Select(VG *, VG_Element *);
-void        VG_DestroyElement(VG *, VG_Element *);
-void        VG_FreeElement(VG *, VG_Element *);
-VG_Style   *VG_CreateStyle(VG *, enum vg_style_type, const char *);
-int         VG_SetStyle(VG *, const char *);
- 
-void	 VG_SetLayer(VG *, int);
-void	 VG_Colorv(VG *, const VG_Color *);
-void	 VG_ColorRGB(VG *, Uint8, Uint8, Uint8);
-void	 VG_ColorRGBA(VG *, Uint8, Uint8, Uint8, Uint8);
-VG_Vtx	*VG_Vertex2(VG *, float, float);
-void	 VG_VertexV(VG *, const VG_Vtx *, Uint);
-VG_Vtx	*VG_VertexVint2(VG *, float x, float x1, float y1, float x2, float y2);
-void	 VG_Line(VG *, float x1, float y1, float x2, float y2);
-void	 VG_VLine(VG *, float x, float y1, float y2);
-void	 VG_HLine(VG *, float x1, float x2, float y);
-void	 VG_VintVLine2(VG *, float x, float y, float x1, float y1, float x2,
-	               float y2);
-void	 VG_Rectangle(VG *, float x1, float y1, float x2, float y2);
+void      VG_LoadIdentity(VG *);
+void      VG_Translate(VG *, float, float);
+void      VG_Rotate(VG *, float);
+void      VG_CopyMatrix(VG_Matrix *, const VG_Matrix *);
+void      VG_MultMatrixByMatrix(VG_Matrix *, const VG_Matrix *,
+                                const VG_Matrix *);
 
-VG_Matrix *VG_PushIdentity(VG *);
-VG_Matrix *VG_Translate(VG *, float, float);
-VG_Matrix *VG_Rotate(VG *, float);
+static __inline__ void
+VG_Lock(VG *vg)
+{
+	AG_MutexLock(&vg->lock);
+}
 
-void VG_LoadIdentity(VG_Matrix *);
-void VG_LoadTranslate(VG_Matrix *, float, float);
-void VG_LoadRotate(VG_Matrix *, float);
-void VG_MultMatrixByVector(VG_Vtx *, const VG_Vtx *, const VG_Matrix *);
-void VG_MultMatrixByMatrix(VG_Matrix *, const VG_Matrix *, const VG_Matrix *);
-void VG_CopyMatrix(VG_Matrix *, const VG_Matrix *);
-
-#ifdef DEBUG
-void VG_DrawExtents(struct vg_view *);
-#endif
+static __inline__ void
+VG_Unlock(VG *vg)
+{
+	AG_MutexUnlock(&vg->lock);
+}
 
 static __inline__ VG_Color
 VG_GetColorRGB(Uint8 r, Uint8 g, Uint8 b)
@@ -333,6 +335,27 @@ static __inline__ Uint32
 VG_MapColorRGB(VG_Color vc)
 {
 	return SDL_MapRGB(agVideoFmt, vc.r, vc.g, vc.b);
+}
+
+static __inline__ VG_Vtx *
+VG_AllocVertex(VG_Node *vge)
+{
+	if (vge->vtx == NULL) {
+		vge->vtx = AG_Malloc(sizeof(VG_Vtx));
+	} else {
+		vge->vtx = AG_Realloc(vge->vtx, (vge->nvtx+1)*sizeof(VG_Vtx));
+	}
+	return (&vge->vtx[vge->nvtx++]);
+}
+
+static __inline__ void
+VG_MultMatrixByVector(VG_Vtx *c, const VG_Vtx *a, const VG_Matrix *T)
+{
+	float ax = a->x;
+	float ay = a->y;
+
+	c->x = ax*T->m[0][0] + ay*T->m[1][0] + T->m[0][2];
+	c->y = ax*T->m[0][1] + ay*T->m[1][1] + T->m[1][2];
 }
 __END_DECLS
 

@@ -43,7 +43,7 @@
 #include <string.h>
 
 static void
-Init(VG *vg, VG_Element *vge)
+Init(VG *vg, VG_Node *vge)
 {
 	vge->vg_text.text[0] = '\0';
 	vge->vg_text.angle = 0.0f;
@@ -55,21 +55,21 @@ Init(VG *vg, VG_Element *vge)
 void
 VG_TextAlignment(VG *vg, enum vg_alignment align)
 {
-	vg->cur_vge->vg_text.align = align;
+	vg->curNode->vg_text.align = align;
 }
 
 /* Specify the angle relative to the central vertex. */
 void
 VG_TextAngle(VG *vg, float angle)
 {
-	vg->cur_vge->vg_text.angle = angle;
+	vg->curNode->vg_text.angle = angle;
 }
 
 /* Specify text with polled values. */
 void
 VG_PrintfP(VG *vg, const char *fmt, ...)
 {
-	VG_Element *vge = vg->cur_vge;
+	VG_Node *vge = vg->curNode;
 	const char *p;
 	va_list ap;
 	
@@ -106,16 +106,15 @@ VG_PrintfP(VG *vg, const char *fmt, ...)
 void
 VG_Printf(VG *vg, const char *fmt, ...)
 {
-	VG_Element *vge = vg->cur_vge;
 	va_list args;
 
 	if (fmt != NULL) {
 		va_start(args, fmt);
-		Vsnprintf(vge->vg_text.text, sizeof(vge->vg_text.text), fmt,
-		    args);
+		Vsnprintf(vg->curNode->vg_text.text,
+		    sizeof(vg->curNode->vg_text.text), fmt, args);
 		va_end(args);
 	} else {
-		vge->vg_text.text[0] = '\0';
+		vg->curNode->vg_text.text[0] = '\0';
 	}
 }
 
@@ -137,7 +136,7 @@ static const struct {
 static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
 
 static __inline__ void
-AlignText(VG_Element *vge, int *x, int *y, int w, int h)
+AlignText(VG_Node *vge, int *x, int *y, int w, int h)
 {
 	switch (vge->vg_text.align) {
 	case VG_ALIGN_TL:
@@ -176,7 +175,7 @@ AlignText(VG_Element *vge, int *x, int *y, int w, int h)
 }
 
 static void
-DrawPolled(VG_View *vv, VG_Element *vge)
+DrawPolled(VG_View *vv, VG_Node *vge)
 {
 	char s[VG_TEXT_MAX], s2[32];
 	char *fmtp;
@@ -273,7 +272,7 @@ DrawPolled(VG_View *vv, VG_Element *vge)
 }
 
 static void
-Draw(VG_View *vv, VG_Element *vge)
+Draw(VG_View *vv, VG_Node *vge)
 {
 	int x, y, su;
 	
@@ -296,7 +295,7 @@ Draw(VG_View *vv, VG_Element *vge)
 }
 
 static void
-Extent(VG *vg, VG_Element *vge, VG_Rect *r)
+Extent(VG *vg, VG_Node *vge, VG_Rect *r)
 {
 //	Sint16 rx, ry;
 
@@ -315,7 +314,7 @@ Extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-Intersect(VG *vg, VG_Element *vge, float *x, float *y)
+Intersect(VG *vg, VG_Node *vge, float *x, float *y)
 {
 	float d;
 
@@ -328,7 +327,7 @@ Intersect(VG *vg, VG_Element *vge, float *x, float *y)
 	return (d);
 }
 
-const VG_ElementOps vgTextOps = {
+const VG_NodeOps vgTextOps = {
 	N_("Text string"),
 	&vgIconText,
 	Init,

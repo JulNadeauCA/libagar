@@ -39,7 +39,7 @@
 #include "icons.h"
 
 static void
-Draw(VG_View *vv, VG_Element *vge)
+Draw(VG_View *vv, VG_Node *vge)
 {
 	Uint32 c32 = VG_MapColorRGB(vge->color);
 	VG_Vtx *vtx;
@@ -57,7 +57,7 @@ Draw(VG_View *vv, VG_Element *vge)
 }
 
 static void
-Extent(VG *vg, VG_Element *vge, VG_Rect *r)
+Extent(VG *vg, VG_Node *vge, VG_Rect *r)
 {
 	if (vge->nvtx >= 1) {
 		VG_Vtx *vtx = &vge->vtx[0];
@@ -75,7 +75,7 @@ Extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-Intersect(VG *vg, VG_Element *vge, float *x, float *y)
+Intersect(VG *vg, VG_Node *vge, float *x, float *y)
 {
 	if (vge->nvtx >= 1) {
 		float d = Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
@@ -87,7 +87,7 @@ Intersect(VG *vg, VG_Element *vge, float *x, float *y)
 	}
 }
 
-const VG_ElementOps vgPointsOps = {
+const VG_NodeOps vgPointsOps = {
 	N_("Point"),
 	&vgIconPoints,
 	NULL,

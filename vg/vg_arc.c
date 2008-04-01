@@ -39,7 +39,7 @@
 #include "icons.h"
 
 static void
-Init(VG *vg, VG_Element *vge)
+Init(VG *vg, VG_Node *vge)
 {
 	vge->vg_arc.w = 1.0f;
 	vge->vg_arc.h = 1.0f;
@@ -50,7 +50,7 @@ Init(VG *vg, VG_Element *vge)
 void
 VG_ArcBox(VG *vg, float w, float h)
 {
-	VG_Element *vge = vg->cur_vge;
+	VG_Node *vge = vg->curNode;
 
 	vge->vg_arc.w = w;
 	vge->vg_arc.h = h;
@@ -59,7 +59,7 @@ VG_ArcBox(VG *vg, float w, float h)
 void
 VG_ArcRange(VG *vg, float s, float e)
 {
-	VG_Element *vge = vg->cur_vge;
+	VG_Node *vge = vg->curNode;
 
 	vge->vg_arc.s = s;
 	vge->vg_arc.e = e;
@@ -71,7 +71,7 @@ VG_Arc3Points(VG *vg, VG_Vtx v[3])
 }
 
 static void
-Draw(VG_View *vv, VG_Element *vge)
+Draw(VG_View *vv, VG_Node *vge)
 {
 	Uint32 c32 = VG_MapColorRGB(vge->color);
 	int a1 = (int)vge->vg_arc.s;
@@ -102,7 +102,7 @@ Draw(VG_View *vv, VG_Element *vge)
 }
 
 static void
-Extent(VG *vg, VG_Element *vge, VG_Rect *r)
+Extent(VG *vg, VG_Node *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_arc.w/2.0f;
 	r->y = vge->vtx[0].y - vge->vg_arc.h/2.0f;
@@ -111,13 +111,13 @@ Extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-Intersect(VG *vg, VG_Element *vge, float *x, float *y)
+Intersect(VG *vg, VG_Node *vge, float *x, float *y)
 {
 	/* TODO */
 	return (AG_FLT_MAX);
 }
 
-const VG_ElementOps vgArcOps = {
+const VG_NodeOps vgArcOps = {
 	N_("Arc"),
 	&vgIconCircle,
 	Init,

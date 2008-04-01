@@ -39,7 +39,7 @@
 #include "icons.h"
 
 static void
-Init(VG *vg, VG_Element *vge)
+Init(VG *vg, VG_Node *vge)
 {
 	vge->vg_circle.radius = 0.025f;
 }
@@ -47,17 +47,17 @@ Init(VG *vg, VG_Element *vge)
 void
 VG_CircleRadius(VG *vg, float radius)
 {
-	vg->cur_vge->vg_circle.radius = radius;
+	vg->curNode->vg_circle.radius = radius;
 }
 
 void
 VG_CircleDiameter(VG *vg, float diameter)
 {
-	vg->cur_vge->vg_circle.radius = diameter/2.0f;
+	vg->curNode->vg_circle.radius = diameter/2.0f;
 }
 
 static void
-Draw(VG_View *vv, VG_Element *vge)
+Draw(VG_View *vv, VG_Node *vge)
 {
 	int x, y, r;
 
@@ -67,7 +67,7 @@ Draw(VG_View *vv, VG_Element *vge)
 }
 
 static void
-Extent(VG *vg, VG_Element *vge, VG_Rect *r)
+Extent(VG *vg, VG_Node *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_circle.radius;
 	r->y = vge->vtx[0].y - vge->vg_circle.radius;
@@ -76,7 +76,7 @@ Extent(VG *vg, VG_Element *vge, VG_Rect *r)
 }
 
 static float
-Intersect(VG *vg, VG_Element *vge, float *x, float *y)
+Intersect(VG *vg, VG_Node *vge, float *x, float *y)
 {
 	float d;
 
@@ -88,7 +88,7 @@ Intersect(VG *vg, VG_Element *vge, float *x, float *y)
 	return (d);
 }
 
-const VG_ElementOps vgCircleOps = {
+const VG_NodeOps vgCircleOps = {
 	N_("Circle"),
 	&vgIconCircle,
 	Init,
