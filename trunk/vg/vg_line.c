@@ -39,7 +39,7 @@
 #include "icons.h"
 
 void
-VG_DrawLineSegments(VG_View *vv, VG_Element *vge)
+VG_DrawLineSegments(VG_View *vv, VG_Node *vge)
 {
 	Uint32 c32 = VG_MapColorRGB(vge->color);
 	int Ax, Ay, Bx, By;
@@ -53,7 +53,7 @@ VG_DrawLineSegments(VG_View *vv, VG_Element *vge)
 }
 
 void
-VG_DrawLineStrip(VG_View *vv, VG_Element *vge)
+VG_DrawLineStrip(VG_View *vv, VG_Node *vge)
 {
 	Uint32 c32 = VG_MapColorRGB(vge->color);
 	int Ax, Ay, Bx, By;
@@ -69,7 +69,7 @@ VG_DrawLineStrip(VG_View *vv, VG_Element *vge)
 }
 
 void
-VG_DrawLineLoop(VG_View *vv, VG_Element *vge)
+VG_DrawLineLoop(VG_View *vv, VG_Node *vge)
 {
 	Uint32 c32 = VG_MapColorRGB(vge->color);
 	int Ax, Ay, Bx, By, Cx, Cy;
@@ -88,7 +88,7 @@ VG_DrawLineLoop(VG_View *vv, VG_Element *vge)
 }
 
 void
-VG_LineExtent(VG *vg, VG_Element *vge, VG_Rect *r)
+VG_LineExtent(VG *vg, VG_Node *vge, VG_Rect *r)
 {
 	float xmin, xmax;
 	float ymin, ymax;
@@ -143,7 +143,7 @@ VG_ClosestLinePoint(VG *vg, float Ax, float Ay, float Bx, float By,
 }
 
 float
-VG_LineIntersect(VG *vg, VG_Element *vge, float *x, float *y)
+VG_LineIntersect(VG *vg, VG_Node *vge, float *x, float *y)
 {
 	float d, dMin = AG_FLT_MAX;
 	float Ax, Ay, Bx, By, Cx, Cy;
@@ -232,7 +232,7 @@ VG_LineIntersect(VG *vg, VG_Element *vge, float *x, float *y)
 	return (dMin);
 }
 
-const VG_ElementOps vgLinesOps = {
+const VG_NodeOps vgLinesOps = {
 	N_("Line"),
 	&vgIconLine,
 	NULL,				/* init */
@@ -241,7 +241,7 @@ const VG_ElementOps vgLinesOps = {
 	VG_LineExtent,
 	VG_LineIntersect
 };
-const VG_ElementOps vgLineStripOps = {
+const VG_NodeOps vgLineStripOps = {
 	N_("Line strip"),
 	&vgIconLine,
 	NULL,				/* init */
@@ -250,7 +250,7 @@ const VG_ElementOps vgLineStripOps = {
 	VG_LineExtent,
 	VG_LineIntersect
 };
-const VG_ElementOps vgLineLoopOps = {
+const VG_NodeOps vgLineLoopOps = {
 	N_("Line loop"),
 	&vgIconLine,
 	NULL,				/* init */

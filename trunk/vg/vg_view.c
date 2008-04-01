@@ -33,13 +33,13 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "vg.h"
-#include "vg_view.h"
-
 #include <gui/view.h>
 #include <gui/window.h>
 #include <gui/primitive.h>
 #include <gui/opengl.h>
+
+#include "vg.h"
+#include "vg_view.h"
 
 VG_View *
 VG_ViewNew(void *parent, VG *vg, Uint flags)
@@ -355,35 +355,70 @@ DrawGrid(VG_View *vv)
 	}
 }
 
+#ifdef DEBUG
+static void
+DrawExtents(VG_View *vv)
+{
+	VG *vg = vv->vg;
+	VG_Rect bbox;
+	VG_Node *vge;
+	VG_Block *vgb;
+	int x, y, w, h;
+	Uint32 cGreen;
+	Uint32 cGrid;
+
+	cGreen = SDL_MapRGB(agVideoFmt, 0,250,0);
+	cGrid = VG_MapColorRGB(vg->gridColor);
+
+	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
+		if (vge->ops->bbox != NULL) {
+			vge->ops->bbox(vg, vge, &bbox);
+		} else {
+			continue;
+		}
+		VG_GetViewCoords(vv, bbox.x, bbox.y, &x, &y);
+		w = (int)(bbox.w*vv->scale);
+		h = (int)(bbox.h*vv->scale);
+		AG_DrawRectOutline(vv, AG_RECT(x-1, y-1, w+2, h+2), cGrid);
+	}
+	
+	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
+		VG_BlockExtent(vg, vgb, &bbox);
+		VG_GetViewCoords(vv, bbox.x, bbox.y, &x, &y);
+		w = (int)(bbox.w*vv->scale);
+		h = (int)(bbox.h*vv->scale);
+		AG_DrawRectOutline(vv, AG_RECT(x-1, y-1, w+2, h+2), cGreen);
+	}
+}
+#endif /* DEBUG */
+
 static void
 Draw(void *p)
 {
 	VG_View *vv = p;
 	VG *vg = vv->vg;
 	VG_Color colorSave;
-	VG_Element *vge;
+	VG_Node *vge;
 	int su;
-
+	
 	AG_DrawRectFilled(vv, AG_RECT(0,0,WIDTH(vv),HEIGHT(vv)),
 	    VG_MapColorRGB(vg->fillColor));
-
-	AG_MutexLock(&vg->lock);
 	
+	VG_Lock(vg);
+
 	if (vv->draw_ev != NULL)
 		vv->draw_ev->handler(vv->draw_ev);
 
-	if (vg->flags & VG_VISGRID)
+	if (vv->flags & VG_VIEW_GRID)
 		DrawGrid(vv);
-	if (vg->flags & VG_VISORIGIN)
-		VG_DrawOrigin(vv);
 #ifdef DEBUG
-	if (vg->flags & VG_VISBBOXES)
-		VG_DrawExtents(vv);
+	if (vv->flags & VG_VIEW_EXTENTS)
+		DrawExtents(vv);
 #endif
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
+	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
 		colorSave = vge->color;
 
-		if (vge->flags & VG_ELEMENT_MOUSEOVER) {
+		if (vge->flags & VG_NODE_MOUSEOVER) {
 			/* XXX */
 			if (vge->color.r > 200 &&
 			    vge->color.g > 200 &&
@@ -400,11 +435,11 @@ Draw(void *p)
 
 		vge->ops->draw(vv, vge);
 
-		if (vge->flags & VG_ELEMENT_MOUSEOVER)
+		if (vge->flags & VG_NODE_MOUSEOVER)
 			vge->color = colorSave;
 	}
 
-	AG_MutexUnlock(&vg->lock);
+	VG_Unlock(vg);
 
 	AG_TextColor(TEXT_COLOR);
 	su = AG_TextCacheInsLookup(vv->tCache, vv->status);

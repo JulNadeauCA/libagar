@@ -37,7 +37,7 @@
 #include "icons.h"
 
 static void
-Init(VG *vg, VG_Element *vge)
+Init(VG *vg, VG_Node *vge)
 {
 	vge->vg_polygon.outline = 0;
 }
@@ -49,7 +49,7 @@ CompareInts(const void *p1, const void *p2)
 }
 
 static void
-Draw(VG_View *vv, VG_Element *vge)
+Draw(VG_View *vv, VG_Node *vge)
 {
 	Uint32 c32 = VG_MapColorRGB(vge->color);
 	VG *vg = vv->vg;
@@ -132,7 +132,7 @@ Draw(VG_View *vv, VG_Element *vge)
 	}
 }
 
-const VG_ElementOps vgPolygonOps = {
+const VG_NodeOps vgPolygonOps = {
 	N_("Polygon"),
 	&vgIconPolygon,
 	Init,

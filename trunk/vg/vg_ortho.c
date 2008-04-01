@@ -65,12 +65,12 @@ SelectMode(AG_Event *event)
 }
 
 AG_Toolbar *
-VG_OrthoRestrictToolbar(void *parent, VG_View *vv, enum ag_toolbar_type ttype)
+VG_OrthoRestrictToolbar(void *parent, VG_View *vv, int type)
 {
 	AG_Toolbar *snbar;
 
-	snbar = AG_ToolbarNew(parent, ttype, 1, AG_TOOLBAR_HOMOGENOUS|
-	                                        AG_TOOLBAR_STICKY);
+	snbar = AG_ToolbarNew(parent, (enum ag_toolbar_type)type, 1,
+	    AG_TOOLBAR_HOMOGENOUS|AG_TOOLBAR_STICKY);
 
 	AG_ToolbarButtonIcon(snbar, vgIconSnapFree.s, 1,
 	    SelectMode, "%p,%p,%i", snbar, vv, VG_NO_ORTHO);

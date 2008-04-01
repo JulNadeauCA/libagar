@@ -4,27 +4,33 @@
 #define _AGAR_VG_VIEW_H_
 
 #ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#include <gui/menu.h>
-#include <gui/text_cache.h>
-#include <vg/vg.h>
-#include <vg/vg_tool.h>
+# include <gui/widget.h>
+# include <gui/button.h>
+# include <gui/menu.h>
+# include <gui/text_cache.h>
+# include <vg/vg.h>
+# include <vg/vg_tool.h>
 #else
-#include <agar/gui/widget.h>
-#include <agar/gui/menu.h>
-#include <agar/gui/text_cache.h>
-#include <agar/vg/vg.h>
-#include <agar/vg/vg_tool.h>
+# include <agar/gui/widget.h>
+# include <agar/gui/button.h>
+# include <agar/gui/menu.h>
+# include <agar/gui/text_cache.h>
+# include <agar/vg/vg.h>
+# include <agar/vg/vg_tool.h>
 #endif
 
 #include "begin_code.h"
 
 typedef struct vg_view {
 	struct ag_widget wid;
+
 	Uint flags;
 #define VG_VIEW_HFILL	0x01
 #define VG_VIEW_VFILL	0x02
+#define VG_VIEW_GRID	0x04			/* Display grid */
+#define VG_VIEW_EXTENTS	0x08			/* Display extents (DEBUG) */
 #define VG_VIEW_EXPAND	(VG_VIEW_HFILL|VG_VIEW_VFILL)
+
 	VG *vg;					/* Vector graphics object */
 	int x, y;				/* Display offset */
 	float scale;				/* Display scaling factor */
@@ -104,31 +110,22 @@ VG_GetViewCoords(VG_View *vv, float vx, float vy, int *x, int *y)
 	*y = (int)(vy*vv->scale) + vv->y;
 }
 
-/*
- * Translate element vertices to floating-point view coordinates after
- * applying the element transformations.
- */
+/* Translate element vertex coords to floating-point view coords. */
 static __inline__ void
-VG_GetViewCoordsVtxFlt(VG_View *vv, VG_Element *vge, int vi, float *x, float *y)
+VG_GetViewCoordsVtxFlt(VG_View *vv, VG_Node *vge, int vi, float *x, float *y)
 {
 	VG_Vtx c;
-	int i;
 
 	c.x = vge->vtx[vi].x;
 	c.y = vge->vtx[vi].y;
-	for (i = 0; i < vge->ntrans; i++) {
-		VG_MultMatrixByVector(&c, &c, &vge->trans[i]);
-	}
+	VG_MultMatrixByVector(&c, &c, &vge->T);
 	*x = c.x*vv->scale + vv->x;
 	*y = c.y*vv->scale + vv->y;
 }
 
-/*
- * Translate element vertices to integer view coordinates after applying the
- * element transformations.
- */
+/* Translate element vertex coords to integer view coords. */
 static __inline__ void
-VG_GetViewCoordsVtx(VG_View *vv, VG_Element *vge, int vi, int *x, int *y)
+VG_GetViewCoordsVtx(VG_View *vv, VG_Node *vge, int vi, int *x, int *y)
 {
 	float vx, vy;
 

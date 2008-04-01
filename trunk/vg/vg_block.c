@@ -53,13 +53,12 @@ VG_BeginBlock(VG *vg, const char *name, int flags)
 	vgb->flags = flags;
 	vgb->pos.x = 0.0f;
 	vgb->pos.y = 0.0f;
-	vgb->origin.x = 0.0f;
-	vgb->origin.y = 0.0f;
 	vgb->theta = 0.0f;
 	vgb->selected = 0;
-	TAILQ_INIT(&vgb->vges);
+	TAILQ_INIT(&vgb->nodes);
 
-	vg->cur_block = vgb;
+	VG_Lock(vg);
+	vg->curBlock = vgb;
 	TAILQ_INSERT_HEAD(&vg->blocks, vgb, vgbs);
 	return (vgb);
 }
@@ -67,14 +66,16 @@ VG_BeginBlock(VG *vg, const char *name, int flags)
 void
 VG_SelectBlock(VG *vg, VG_Block *vgb)
 {
-	vg->cur_block = vgb;
+	VG_Lock(vg);
+	vg->curBlock = vgb;
 }
 
 /* Finish the current block. */
 void
 VG_EndBlock(VG *vg)
 {
-	vg->cur_block = NULL;
+	vg->curBlock = NULL;
+	VG_Unlock(vg);
 }
 
 /* Look up the named block. */
@@ -94,10 +95,10 @@ VG_GetBlock(VG *vg, const char *name)
 void
 VG_MoveBlock(VG *vg, VG_Block *vgb, float x, float y, int layer)
 {
-	VG_Element *vge;
+	VG_Node *vge;
 	int i;
 
-	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
+	TAILQ_FOREACH(vge, &vgb->nodes, vgbmbs) {
 		for (i = 0; i < vge->nvtx; i++) {
 			vge->vtx[i].x -= vgb->pos.x - x;
 			vge->vtx[i].y -= vgb->pos.y - y;
@@ -122,13 +123,13 @@ void
 VG_RotateBlock(VG *vg, VG_Block *vgb, float theta)
 {
 	VG_Block *block_save;
-	VG_Element *vge;
+	VG_Node *vge;
 	Uint32 i;
 
-	block_save = vg->cur_block;
+	block_save = vg->curBlock;
 	VG_SelectBlock(vg, vgb);
 
-	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
+	TAILQ_FOREACH(vge, &vgb->nodes, vgbmbs) {
 		for (i = 0; i < vge->nvtx; i++) {
 			float x, y, r, theta;
 
@@ -149,10 +150,10 @@ VG_BlockExtent(VG *vg, VG_Block *vgb, VG_Rect *ext)
 {
 	float xmin = vgb->pos.x, xmax = vgb->pos.x;
 	float ymin = vgb->pos.y, ymax = vgb->pos.y;
-	VG_Element *vge;
+	VG_Node *vge;
 	VG_Rect r;
 
-	TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
+	TAILQ_FOREACH(vge, &vgb->nodes, vgbmbs) {
 		if (vge->ops->bbox == NULL)
 			continue;
 
@@ -176,9 +177,9 @@ VG_Abs2Rel(VG *vg, const VG_Vtx *vtx, float *x, float *y)
 	*x = vtx->x;
 	*y = vtx->y;
 
-	if (vg->cur_block != NULL) {
-		*x -= vg->cur_block->pos.x;
-		*y -= vg->cur_block->pos.y;
+	if (vg->curBlock != NULL) {
+		*x -= vg->curBlock->pos.x;
+		*y -= vg->curBlock->pos.y;
 	}
 }
 
@@ -189,9 +190,9 @@ VG_Rel2Abs(VG *vg, float x, float y, VG_Vtx *vtx)
 	vtx->x = x;
 	vtx->y = y;
 
-	if (vg->cur_block != NULL) {
-		vtx->x += vg->cur_block->pos.x;
-		vtx->y += vg->cur_block->pos.y;
+	if (vg->curBlock != NULL) {
+		vtx->x += vg->curBlock->pos.x;
+		vtx->y += vg->curBlock->pos.y;
 	}
 }
 
@@ -199,14 +200,14 @@ VG_Rel2Abs(VG *vg, float x, float y, VG_Vtx *vtx)
 void
 VG_DestroyBlock(VG *vg, VG_Block *vgb)
 {
-	VG_Element *vge, *nvge;
+	VG_Node *vge, *nvge;
 
-	for (vge = TAILQ_FIRST(&vgb->vges);
-	     vge != TAILQ_END(&vgb->vges);
+	for (vge = TAILQ_FIRST(&vgb->nodes);
+	     vge != TAILQ_END(&vgb->nodes);
 	     vge = nvge) {
 		nvge = TAILQ_NEXT(vge, vgbmbs);
-		TAILQ_REMOVE(&vg->vges, vge, vges);
-		VG_FreeElement(vg, vge);
+		TAILQ_REMOVE(&vg->nodes, vge, nodes);
+		VG_FreeNode(vg, vge);
 	}
 	TAILQ_REMOVE(&vg->blocks, vgb, vgbs);
 	Free(vgb);
@@ -216,41 +217,28 @@ VG_DestroyBlock(VG *vg, VG_Block *vgb)
 void
 VG_ClearBlock(VG *vg, VG_Block *vgb)
 {
-	VG_Element *vge, *nvge;
+	VG_Node *vge, *nvge;
 
-	for (vge = TAILQ_FIRST(&vgb->vges);
-	     vge != TAILQ_END(&vgb->vges);
+	for (vge = TAILQ_FIRST(&vgb->nodes);
+	     vge != TAILQ_END(&vgb->nodes);
 	     vge = nvge) {
 		nvge = TAILQ_NEXT(vge, vgbmbs);
-		TAILQ_REMOVE(&vg->vges, vge, vges);
-		VG_FreeElement(vg, vge);
+		TAILQ_REMOVE(&vg->nodes, vge, nodes);
+		VG_FreeNode(vg, vge);
 	}
-	TAILQ_INIT(&vgb->vges);
-}
-
-/* Generate absolute vg coordinates for a vertex that's part of a block. */
-void
-VG_BlockOffset(VG *vg, VG_Vtx *vtx)
-{
-	if (vg->cur_block != NULL) {
-		vtx->x += vg->cur_block->pos.x;
-		vtx->y += vg->cur_block->pos.y;
-	}
+	TAILQ_INIT(&vgb->nodes);
 }
 
 /* Return the block closest to the given coordinates. */
 VG_Block *
 VG_BlockClosest(VG *vg, float x, float y)
 {
-	VG_Element *vge;
+	VG_Node *vge;
 	float closest_idx = AG_FLT_MAX, idx;
-	VG_Element *closest_vge = NULL;
+	VG_Node *closest_vge = NULL;
 	float ix, iy;
-#if 0
-	int o = VG_NORIGINS;
-#endif
 
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
+	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
 		if (vge->ops->intsect == NULL || vge->block == NULL) {
 			continue;
 		}
@@ -261,14 +249,6 @@ VG_BlockClosest(VG *vg, float x, float y)
 			closest_idx = idx;
 			closest_vge = vge;
 		}
-#if 0
-		if (o >= vg->norigin) {
-			VG_AddOrigin(vg, 0.0, 0.0, 0.125f,
-			    VG_GetColorRGB(200,0,0));
-		}
-		VG_Origin(vg, o, vg->origin[0].x+ix, vg->origin[0].y+iy);
-		o++;
-#endif
 	}
 	return (closest_vge != NULL ? closest_vge->block : NULL);
 }
@@ -287,7 +267,7 @@ DestroyBlock(AG_Event *event)
 		if (it->iconsrc == vgIconBlock.s) {
 			VG_DestroyBlock(vg, (VG_Block *)it->p1);
 		} else if (it->iconsrc == vgIconDrawing.s) {
-			VG_DestroyElement(vg, (VG_Element *)it->p1);
+			VG_DestroyNode(vg, (VG_Node *)it->p1);
 		}
 	}
 }
@@ -298,11 +278,11 @@ PollBlocks(AG_Event *event)
 	AG_Tlist *tl = AG_SELF();
 	VG *vg = AG_PTR(1);
 	VG_Block *vgb;
-	VG_Element *vge;
+	VG_Node *vge;
 	AG_TlistItem *it;
 
 	AG_TlistClear(tl);
-	AG_MutexLock(&vg->lock);
+	VG_Lock(vg);
 
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 		char name[VG_BLOCK_NAME_MAX];
@@ -315,19 +295,19 @@ PollBlocks(AG_Event *event)
 		    rext.x, rext.y, rext.w, rext.h);
 		it = AG_TlistAddPtr(tl, vgIconBlock.s, name, vgb);
 		it->depth = 0;
-		TAILQ_FOREACH(vge, &vgb->vges, vgbmbs) {
+		TAILQ_FOREACH(vge, &vgb->nodes, vgbmbs) {
 			it = AG_TlistAddPtr(tl, vgIconDrawing.s,
 			    _(vge->ops->name), vge);
 			it->depth = 1;
 		}
 	}
-	TAILQ_FOREACH(vge, &vg->vges, vges) {
+	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
 		it = AG_TlistAddPtr(tl, vgIconDrawing.s, _(vge->ops->name),
 		    vge);
 		it->depth = 1;
 	}
 
-	AG_MutexUnlock(&vg->lock);
+	VG_Unlock(vg);
 	AG_TlistRestore(tl);
 }
 
