@@ -38,6 +38,7 @@
 
 #include "vg.h"
 #include "vg_math.h"
+#include "vg_view.h"
 #include "icons.h"
 
 #include <string.h>
@@ -146,28 +147,27 @@ VG_RotateBlock(VG *vg, VG_Block *vgb, float theta)
 
 /* Calculate the collective extent of the elements in a block. */
 void
-VG_BlockExtent(VG *vg, VG_Block *vgb, VG_Rect *ext)
+VG_BlockExtent(VG_View *vv, VG_Block *vgb, VG_Rect *ext)
 {
-	float xmin = vgb->pos.x, xmax = vgb->pos.x;
-	float ymin = vgb->pos.y, ymax = vgb->pos.y;
-	VG_Node *vge;
+	float xmax = vgb->pos.x;
+	float ymax = vgb->pos.y;
+	VG_Node *vn;
 	VG_Rect r;
 
-	TAILQ_FOREACH(vge, &vgb->nodes, vgbmbs) {
-		if (vge->ops->bbox == NULL)
+	ext->x = vgb->pos.x;
+	ext->y = vgb->pos.y;
+	TAILQ_FOREACH(vn, &vgb->nodes, vgbmbs) {
+		if (vn->ops->extent == NULL) {
 			continue;
-
-		vge->ops->bbox(vg, vge, &r);
-
-		if (r.x < xmin) { xmin = r.x; }
-		if (r.y < ymin) { ymin = r.y; }
+		}
+		vn->ops->extent(vv, vn, &r);
+		if (r.x < ext->x) { ext->x = r.x; }
+		if (r.y < ext->y) { ext->y = r.y; }
 		if (r.x+r.w > xmax) { xmax = r.x+r.w; }
 		if (r.y+r.h > ymax) { ymax = r.y+r.h; }
 	}
-	ext->x = xmin;
-	ext->y = ymin;
-	ext->w = xmax-xmin;
-	ext->h = ymax-ymin;
+	ext->w = xmax - ext->x;
+	ext->h = ymax - ext->y;
 }
 
 /* Convert absolute coordinates to block relative coordinates. */
@@ -286,13 +286,10 @@ PollBlocks(AG_Event *event)
 
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
 		char name[VG_BLOCK_NAME_MAX];
-		VG_Rect rext;
 
-		VG_BlockExtent(vg, vgb, &rext);
 		Snprintf(name, sizeof(name),
-		    "%s (%.2f,%.2f; \xce\xb8=%.2f; ext=%.2f,%.2f %.2fx%.2f)",
-		    vgb->name, vgb->pos.x, vgb->pos.y, vgb->theta,
-		    rext.x, rext.y, rext.w, rext.h);
+		    "%s (%.2f,%.2f; \xce\xb8=%.2f)",
+		    vgb->name, vgb->pos.x, vgb->pos.y, vgb->theta);
 		it = AG_TlistAddPtr(tl, vgIconBlock.s, name, vgb);
 		it->depth = 0;
 		TAILQ_FOREACH(vge, &vgb->nodes, vgbmbs) {

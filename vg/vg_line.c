@@ -88,7 +88,7 @@ VG_DrawLineLoop(VG_View *vv, VG_Node *vge)
 }
 
 void
-VG_LineExtent(VG *vg, VG_Node *vge, VG_Rect *r)
+VG_LineExtent(VG_View *vv, VG_Node *vge, VG_Rect *r)
 {
 	float xmin, xmax;
 	float ymin, ymax;

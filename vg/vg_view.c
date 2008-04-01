@@ -75,8 +75,8 @@ MouseMotion(AG_Event *event)
 	yCt = y;
 
 	if (vv->mouse.panning) {
-		vv->x += xRel;
-		vv->y += yRel;
+		vv->x += (float)xRel;
+		vv->y += (float)yRel;
 		return;
 	}
 	if (tool != NULL && tool->ops->mousemotion != NULL) {
@@ -209,9 +209,11 @@ Init(void *obj)
 	vv->keyup_ev = NULL;
 	vv->btnup_ev = NULL;
 	vv->motion_ev = NULL;
-	vv->x = 0;
-	vv->y = 0;
+	vv->x = 0.0f;
+	vv->y = 0.0f;
 	vv->scale = 1.0f;
+	vv->scaleMin = 1e-6f;
+	vv->scaleMax = 1e6f;
 	vv->wPixel = 1.0f;
 	vv->snap_mode = VG_GRID;
 	vv->ortho_mode = VG_NO_ORTHO;
@@ -242,68 +244,88 @@ Destroy(void *obj)
 void
 VG_ViewSetSnapMode(VG_View *vv, enum vg_snap_mode mode)
 {
+	AG_ObjectLock(vv);
 	vv->snap_mode = mode;
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewSetOrthoMode(VG_View *vv, enum vg_ortho_mode mode)
 {
+	AG_ObjectLock(vv);
 	vv->ortho_mode = mode;
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewSetGridInterval(VG_View *vv, float ival)
 {
+	AG_ObjectLock(vv);
 	vv->gridIval = ival;
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewDrawFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(vv);
 	vv->draw_ev = AG_SetEvent(vv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(vv->draw_ev, fmt);
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewScaleFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(vv);
 	vv->scale_ev = AG_SetEvent(vv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(vv->scale_ev, fmt);
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewKeydownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(vv);
 	vv->keydown_ev = AG_SetEvent(vv, "window-keydown", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->keydown_ev, fmt);
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewKeyupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(vv);
 	vv->keyup_ev = AG_SetEvent(vv, "window-keyup", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->keyup_ev, fmt);
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewButtondownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(vv);
 	vv->btndown_ev = AG_SetEvent(vv, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(vv->btndown_ev, fmt);
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewButtonupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(vv);
 	vv->btnup_ev = AG_SetEvent(vv, "window-mousebuttonup", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->btnup_ev, fmt);
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewMotionFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
+	AG_ObjectLock(vv);
 	vv->motion_ev = AG_SetEvent(vv, "window-mousemotion", fn, NULL);
 	AG_EVENT_GET_ARGS(vv->motion_ev, fmt);
+	AG_ObjectUnlock(vv);
 }
 
 static void
@@ -331,8 +353,8 @@ DrawGrid(VG_View *vv)
 	if ((ival = (int)(vv->gridIval*vv->scale)) < 5) {
 		return;
 	}
-	x0 = WIDGET(vv)->cx + vv->x%ival;
-	y = WIDGET(vv)->cy + vv->y%ival;
+	x0 = WIDGET(vv)->cx + (int)(vv->x)%ival;
+	y = WIDGET(vv)->cy + (int)(vv->y)%ival;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
@@ -360,34 +382,34 @@ static void
 DrawExtents(VG_View *vv)
 {
 	VG *vg = vv->vg;
-	VG_Rect bbox;
+	VG_Rect vExt;
 	VG_Node *vge;
 	VG_Block *vgb;
-	int x, y, w, h;
-	Uint32 cGreen;
-	Uint32 cGrid;
+	AG_Rect rExt;
+	Uint32 cGreen, cRed;
 
 	cGreen = SDL_MapRGB(agVideoFmt, 0,250,0);
-	cGrid = VG_MapColorRGB(vg->gridColor);
+	cRed = SDL_MapRGB(agVideoFmt, 250,0,0);
 
 	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
-		if (vge->ops->bbox != NULL) {
-			vge->ops->bbox(vg, vge, &bbox);
+		if (vge->ops->extent != NULL) {
+			vge->ops->extent(vv, vge, &vExt);
 		} else {
 			continue;
 		}
-		VG_GetViewCoords(vv, bbox.x, bbox.y, &x, &y);
-		w = (int)(bbox.w*vv->scale);
-		h = (int)(bbox.h*vv->scale);
-		AG_DrawRectOutline(vv, AG_RECT(x-1, y-1, w+2, h+2), cGrid);
+		VG_GetViewCoords(vv, vExt.x, vExt.y, &rExt.x, &rExt.y);
+		rExt.w = (int)(vExt.w*vv->scale);
+		rExt.h = (int)(vExt.h*vv->scale);
+		AG_DrawRectOutline(vv, rExt, cRed);
 	}
-	
 	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
-		VG_BlockExtent(vg, vgb, &bbox);
-		VG_GetViewCoords(vv, bbox.x, bbox.y, &x, &y);
-		w = (int)(bbox.w*vv->scale);
-		h = (int)(bbox.h*vv->scale);
-		AG_DrawRectOutline(vv, AG_RECT(x-1, y-1, w+2, h+2), cGreen);
+		VG_BlockExtent(vv, vgb, &vExt);
+		VG_GetViewCoords(vv, vExt.x, vExt.y, &rExt.x, &rExt.y);
+		rExt.x -= 1;
+		rExt.y -= 1;
+		rExt.w = (int)(vExt.w*vv->scale) + 2;
+		rExt.h = (int)(vExt.h*vv->scale) + 2;
+		AG_DrawRectOutline(vv, rExt, cGreen);
 	}
 }
 #endif /* DEBUG */
@@ -449,6 +471,7 @@ Draw(void *p)
 void
 VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 {
+	AG_ObjectLock(vv);
 	if (vv->curtool != NULL) {
 		if (vv->curtool->trigger != NULL) {
 			AG_WidgetSetBool(vv->curtool->trigger, "state", 0);
@@ -505,8 +528,10 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 		AG_WidgetFocus(vv);
 	}
 #endif
+	AG_ObjectUnlock(vv);
 }
 
+/* VG_View must be locked */
 VG_Tool *
 VG_ViewFindTool(VG_View *vv, const char *name)
 {
@@ -519,6 +544,7 @@ VG_ViewFindTool(VG_View *vv, const char *name)
 	return (NULL);
 }
 
+/* VG_View must be locked */
 VG_Tool *
 VG_ViewFindToolByOps(VG_View *vv, const VG_ToolOps *ops)
 {
@@ -540,22 +566,52 @@ VG_ViewRegTool(VG_View *vv, const VG_ToolOps *ops, void *p)
 	t->ops = ops;
 	t->vgv = vv;
 	t->p = p;
+
+	AG_ObjectLock(vv);
 	VG_ToolInit(t);
 	TAILQ_INSERT_TAIL(&vv->tools, t, tools);
+	AG_ObjectUnlock(vv);
 	return (t);
+}
+
+void
+VG_ViewSetScaleMin(VG_View *vv, float scaleMin)
+{
+	AG_ObjectLock(vv);
+	vv->scaleMin = MAX(scaleMin,1e-6f);
+	AG_ObjectUnlock(vv);
+}
+
+void
+VG_ViewSetScaleMax(VG_View *vv, float scaleMax)
+{
+	AG_ObjectLock(vv);
+	vv->scaleMax = scaleMax;
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewSetScale(VG_View *vv, float scale)
 {
-	vv->scale = MAX(scale,0.001f);
+	float scalePrev = vv->scale;
+
+	AG_ObjectLock(vv);
+	vv->scale = scale;
+	if (vv->scale < vv->scaleMin) { vv->scale = vv->scaleMin; }
+	if (vv->scale > vv->scaleMax) { vv->scale = vv->scaleMax; }
+
 	vv->wPixel = 1.0/vv->scale;
+	vv->x *= (vv->scale/scalePrev);
+	vv->y *= (vv->scale/scalePrev);
+	AG_ObjectUnlock(vv);
 }
 
 void
 VG_ViewSetDefaultTool(VG_View *vv, VG_Tool *tool)
 {
+	AG_ObjectLock(vv);
 	vv->deftool = tool;
+	AG_ObjectUnlock(vv);
 }
 
 AG_WidgetClass vgViewClass = {

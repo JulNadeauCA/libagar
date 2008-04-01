@@ -176,6 +176,7 @@ VG_Reinit(VG *vg)
 void
 VG_Destroy(VG *vg)
 {
+	VG_Reinit(vg);
 	Free(vg->layers);
 	Free(vg->ints);
 	AG_MutexDestroy(&vg->lock);
