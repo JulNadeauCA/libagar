@@ -85,7 +85,7 @@ typedef struct vg_node_ops {
 	void (*init)(struct vg *, struct vg_node *);
 	void (*destroy)(struct vg *, struct vg_node *);
 	void (*draw)(struct vg_view *, struct vg_node *);
-	void (*bbox)(struct vg *, struct vg_node *, VG_Rect *);
+	void (*extent)(struct vg_view *, struct vg_node *, VG_Rect *);
 	float (*intsect)(struct vg*, struct vg_node *, float *, float *);
 } VG_NodeOps;
 

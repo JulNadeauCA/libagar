@@ -26,7 +26,7 @@ void		   VG_RotateBlock(struct vg *, VG_Block *, float);
 void		   VG_ClearBlock(struct vg *, VG_Block *);
 void		   VG_DestroyBlock(struct vg *, VG_Block *);
 struct ag_window  *VG_BlockEditor(struct vg *);
-void		   VG_BlockExtent(struct vg *, VG_Block *, VG_Rect *);
+void		   VG_BlockExtent(struct vg_view *, VG_Block *, VG_Rect *);
 void	   	   VG_Abs2Rel(struct vg *, const VG_Vtx *, float *, float *);
 void	 	   VG_Rel2Abs(struct vg *, float, float, VG_Vtx *);
 VG_Block	  *VG_BlockClosest(struct vg *, float, float);

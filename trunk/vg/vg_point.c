@@ -57,15 +57,15 @@ Draw(VG_View *vv, VG_Node *vge)
 }
 
 static void
-Extent(VG *vg, VG_Node *vge, VG_Rect *r)
+Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
 {
 	if (vge->nvtx >= 1) {
 		VG_Vtx *vtx = &vge->vtx[0];
 		
 		r->x = vtx->x-1;
 		r->y = vtx->y-1;
-		r->w = vtx->x+1;
-		r->h = vtx->x+1;
+		r->w = vtx->x+2;
+		r->h = vtx->x+2;
 	} else {
 		r->x = 0;
 		r->y = 0;

@@ -67,7 +67,7 @@ Draw(VG_View *vv, VG_Node *vge)
 }
 
 static void
-Extent(VG *vg, VG_Node *vge, VG_Rect *r)
+Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
 {
 	r->x = vge->vtx[0].x - vge->vg_circle.radius;
 	r->y = vge->vtx[0].y - vge->vg_circle.radius;

@@ -32,8 +32,10 @@ typedef struct vg_view {
 #define VG_VIEW_EXPAND	(VG_VIEW_HFILL|VG_VIEW_VFILL)
 
 	VG *vg;					/* Vector graphics object */
-	int x, y;				/* Display offset */
+	float x, y;				/* Display offset */
 	float scale;				/* Display scaling factor */
+	float scaleMin;				/* Minimum scaling factor */
+	float scaleMax;				/* Maximum scaling factor */
 	float wPixel;				/* Relative pixel size */
 
 	enum vg_snap_mode  snap_mode;		/* Snapping constraint */
@@ -58,15 +60,14 @@ typedef struct vg_view {
 
 #define VGVIEW(p) ((VG_View *)(p))
 
-#define VG_VIEW_X(vv,px) ((px)/(vv)->scale - (vv)->x)
-#define VG_VIEW_Y(vv,py) ((py)/(vv)->scale - (vv)->y)
-
 __BEGIN_DECLS
 extern AG_WidgetClass vgViewClass;
 
 VG_View	*VG_ViewNew(void *, VG *, Uint);
 
 void     VG_ViewSetScale(struct vg_view *, float);
+void     VG_ViewSetScaleMin(struct vg_view *, float);
+void     VG_ViewSetScaleMax(struct vg_view *, float);
 void     VG_ViewSetSnapMode(struct vg_view *, enum vg_snap_mode);
 void     VG_ViewSetOrthoMode(struct vg_view *, enum vg_ortho_mode);
 void     VG_ViewSetGridInterval(struct vg_view *, float);
@@ -85,6 +86,10 @@ VG_Tool *VG_ViewFindToolByOps(VG_View *, const VG_ToolOps *);
 VG_Tool	*VG_ViewRegTool(VG_View *, const VG_ToolOps *, void *);
 void     VG_ViewSetDefaultTool(VG_View *, VG_Tool *);
 
+/*
+ * Apply snapping and orthogonal constraints to given coordinates.
+ * VG_View must be locked.
+ */
 static __inline__ void
 VG_ApplyConstraints(VG_View *vv, float *x, float *y)
 {
@@ -94,7 +99,10 @@ VG_ApplyConstraints(VG_View *vv, float *x, float *y)
 		VG_RestrictOrtho(vv, x, y);
 }
 
-/* Translate View coordinates to VG coordinates. */
+/*
+ * Translate View coordinates to VG coordinates.
+ * VG_View must be locked.
+ */
 static __inline__ void
 VG_GetVGCoords(VG_View *vv, int x, int y, float *vx, float *vy)
 {
@@ -102,7 +110,10 @@ VG_GetVGCoords(VG_View *vv, int x, int y, float *vx, float *vy)
 	*vy = ((float)y - vv->y)/vv->scale;
 }
 
-/* Translate VG coordinates to integer view coordinates. */
+/*
+ * Translate VG coordinates to integer view coordinates.
+ * VG_View must be locked.
+ */
 static __inline__ void
 VG_GetViewCoords(VG_View *vv, float vx, float vy, int *x, int *y)
 {
@@ -110,7 +121,10 @@ VG_GetViewCoords(VG_View *vv, float vx, float vy, int *x, int *y)
 	*y = (int)(vy*vv->scale) + vv->y;
 }
 
-/* Translate element vertex coords to floating-point view coords. */
+/*
+ * Translate element vertex coordinates to floating-point view coordinates.
+ * Both VG and VG_View must be locked.
+ */
 static __inline__ void
 VG_GetViewCoordsVtxFlt(VG_View *vv, VG_Node *vge, int vi, float *x, float *y)
 {
@@ -123,7 +137,10 @@ VG_GetViewCoordsVtxFlt(VG_View *vv, VG_Node *vge, int vi, float *x, float *y)
 	*y = c.y*vv->scale + vv->y;
 }
 
-/* Translate element vertex coords to integer view coords. */
+/*
+ * Translate element vertex coordinates to integer view coordinates.
+ * Both VG and VG_View must be locked.
+ */
 static __inline__ void
 VG_GetViewCoordsVtx(VG_View *vv, VG_Node *vge, int vi, int *x, int *y)
 {
