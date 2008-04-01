@@ -6,11 +6,11 @@ typedef struct ag_cached_text {
 	char *text;				/* Text string */
 	int surface;				/* Surface mapping */
 	Uint32 stamp;				/* Access timestamp */
-	SLIST_ENTRY(ag_cached_text) ents;
+	AG_SLIST_ENTRY(ag_cached_text) ents;
 } AG_CachedText;
 
 typedef struct ag_text_cache_bucket {
-	SLIST_HEAD(,ag_cached_text) ents;
+	AG_SLIST_HEAD(,ag_cached_text) ents;
 } AG_TextCacheBucket;
 
 typedef struct ag_text_cache {
