@@ -145,7 +145,7 @@ enum ag_object_checksum_alg {
 #define OBJECT_FOREACH_CHILD_REVERSE(var,ob,t) \
 	AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),t)
 #define OBJECT_FOREACH_CLASS(var,ob,t,subclass) \
-	AGOBJECT_FOREACH_CLASS((var),(ob),(t),(subclass))
+	AGOBJECT_FOREACH_CLASS((var),(ob),t,(subclass))
 #endif /* _AGAR_INTERNAL || _USE_AGAR_CORE */
 
 __BEGIN_DECLS
