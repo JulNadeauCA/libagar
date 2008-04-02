@@ -39,9 +39,7 @@ AG_ThreadKey agErrorKey;
 char *agErrorKey;
 #endif
 
-#ifdef DEBUG
 int agDebugLvl = 1;				/* Default debug level */
-#endif
 
 void
 AG_InitError(void)

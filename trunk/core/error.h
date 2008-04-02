@@ -36,9 +36,7 @@
 #endif /* _AGAR_INTERNAL or _USE_AGAR_STD */
 
 __BEGIN_DECLS
-#ifdef DEBUG
 extern int agDebugLvl;
-#endif
 
 void		 AG_InitError(void);
 void		 AG_DestroyError(void);
