@@ -16,8 +16,8 @@ REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
 REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
 
 # Agar version
-HDEFINE(VERSION, "1.3.2")
-HDEFINE(RELEASE, "Landscapes Turn To Ash")
+HDEFINE(VERSION, "1.3.3-beta")
+HDEFINE(RELEASE, "Blackened Soil Remains")
 
 # Installation directories
 MDEFINE(SHAREDIR, "\${PREFIX}/share/agar")
