@@ -29,6 +29,7 @@ typedef struct vg_view {
 #define VG_VIEW_VFILL	0x02
 #define VG_VIEW_GRID	0x04			/* Display grid */
 #define VG_VIEW_EXTENTS	0x08			/* Display extents (DEBUG) */
+#define VG_VIEW_BGFILL	0x10			/* Fill background */
 #define VG_VIEW_EXPAND	(VG_VIEW_HFILL|VG_VIEW_VFILL)
 
 	VG *vg;					/* Vector graphics object */

@@ -312,6 +312,8 @@ VG_Vtx    VG_ReadVertex(AG_DataSource *);
 void      VG_WriteVertex(AG_DataSource *, const VG_Vtx *);
 VG_Color  VG_ReadColor(AG_DataSource *);
 void      VG_WriteColor(AG_DataSource *, const VG_Color *);
+float     VG_PointLineDistance(struct vg *, float, float, float, float,
+                               float *,  float *);
 
 static __inline__ void
 VG_Lock(VG *vg)
@@ -336,10 +338,30 @@ VG_GetColorRGB(Uint8 r, Uint8 g, Uint8 b)
 	return (vc);
 }
 
+static __inline__ VG_Color
+VG_GetColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	VG_Color vc;
+	vc.r = r;
+	vc.g = g;
+	vc.b = b;
+	vc.a = a;
+	return (vc);
+}
+
 static __inline__ Uint32
 VG_MapColorRGB(VG_Color vc)
 {
 	return SDL_MapRGB(agVideoFmt, vc.r, vc.g, vc.b);
+}
+
+static __inline__ void
+VG_BlendColors(VG_Color *cDst, VG_Color cSrc)
+{
+	cDst->r = (((cSrc.r - cDst->r)*cSrc.a) >> 8) + cDst->r;
+	cDst->g = (((cSrc.g - cDst->g)*cSrc.a) >> 8) + cDst->g;
+	cDst->b = (((cSrc.b - cDst->b)*cSrc.a) >> 8) + cDst->b;
+	cDst->a = (cDst->a+cSrc.a >= 255) ? 255 : (cDst->a+cSrc.a);
 }
 
 static __inline__ VG_Vtx *

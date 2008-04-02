@@ -38,8 +38,8 @@
 #include "vg_math.h"
 #include "icons.h"
 
-void
-VG_DrawLineSegments(VG_View *vv, VG_Node *vge)
+static void
+DrawSegments(VG_View *vv, VG_Node *vge)
 {
 	Uint32 c32 = VG_MapColorRGB(vge->color);
 	int Ax, Ay, Bx, By;
@@ -52,8 +52,8 @@ VG_DrawLineSegments(VG_View *vv, VG_Node *vge)
 	}
 }
 
-void
-VG_DrawLineStrip(VG_View *vv, VG_Node *vge)
+static void
+DrawStrip(VG_View *vv, VG_Node *vge)
 {
 	Uint32 c32 = VG_MapColorRGB(vge->color);
 	int Ax, Ay, Bx, By;
@@ -68,8 +68,8 @@ VG_DrawLineStrip(VG_View *vv, VG_Node *vge)
 	}
 }
 
-void
-VG_DrawLineLoop(VG_View *vv, VG_Node *vge)
+static void
+DrawLoop(VG_View *vv, VG_Node *vge)
 {
 	Uint32 c32 = VG_MapColorRGB(vge->color);
 	int Ax, Ay, Bx, By, Cx, Cy;
@@ -87,8 +87,8 @@ VG_DrawLineLoop(VG_View *vv, VG_Node *vge)
 	AG_DrawLine(vv, Cx,Cy, Ax,Ay, c32);
 }
 
-void
-VG_LineExtent(VG_View *vv, VG_Node *vge, VG_Rect *r)
+static void
+Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
 {
 	float xmin, xmax;
 	float ymin, ymax;
@@ -108,126 +108,101 @@ VG_LineExtent(VG_View *vv, VG_Node *vge, VG_Rect *r)
 	r->h = ymax-ymin;
 }
 
-static __inline__ float
-Magnitude(float Ax, float Ay, float Bx, float By)
-{
-	float vx = Bx - Ax;
-	float vy = By - Ay;
-
-	return (Sqrt(vx*vx + vy*vy));
-}
-
-float
-VG_ClosestLinePoint(VG *vg, float Ax, float Ay, float Bx, float By,
-    float *Px, float *Py)
-{
-	float mag, u;
-	float xInt, yInt;
-
-	mag = Magnitude(Bx, By, Ax, Ay);
-	u = ((*Px - Ax)*(Bx - Ax) + (*Py - Ay)*(By - Ay))/(mag*mag);
-	if (u < 0.0f) {
-		xInt = Ax;
-		yInt = Ay;
-	} else if (u > 1.0f) {
-		xInt = Bx;
-		yInt = By;
-	} else {
-		xInt = Ax + u*(Bx - Ax);
-		yInt = Ay + u*(By - Ay);
-	}
-	mag = Magnitude(*Px, *Py, xInt, yInt);
-	*Px = xInt;
-	*Py = yInt;
-	return (mag);
-}
-
-float
-VG_LineIntersect(VG *vg, VG_Node *vge, float *x, float *y)
+static float
+ProximityStrip(VG *vg, VG_Node *vge, float *x, float *y)
 {
 	float d, dMin = AG_FLT_MAX;
 	float Ax, Ay, Bx, By, Cx, Cy;
 	float ix, iy, mx = 0.0f, my = 0.0f;
 	int i;
 
-	switch (vge->type) {
-	case VG_LINE_STRIP:
-		Ax = vge->vtx[0].x;
-		Ay = vge->vtx[0].y;
-		for (i = 1; i < vge->nvtx; i++) {
-			Bx = vge->vtx[i].x;
-			By = vge->vtx[i].y;
-			ix = *x;
-			iy = *y;
-			d = VG_ClosestLinePoint(vg, Ax,Ay, Bx,By, &ix,&iy);
-			if (d < dMin) {
-				dMin = d;
-				mx = ix;
-				my = iy;
-			}
-			Ax = Bx;
-			Ay = By;
-		}
-		if (dMin < AG_FLT_MAX) {
-			*x = mx;
-			*y = my;
-		}
-		break;
-	case VG_LINES:
-		for (i = 0; i < vge->nvtx-1; i+=2) {
-			Ax = vge->vtx[i].x;
-			Ay = vge->vtx[i].y;
-			Bx = vge->vtx[i+1].x;
-			By = vge->vtx[i+1].y;
-			ix = *x;
-			iy = *y;
-			d = VG_ClosestLinePoint(vg, Ax,Ay, Bx,By, &ix,&iy);
-			if (d < dMin) {
-				dMin = d;
-				mx = ix;
-				my = iy;
-			}
-		}
-		if (dMin < AG_FLT_MAX) {
-			*x = mx;
-			*y = my;
-		}
-		break;
-	case VG_LINE_LOOP:
-	case VG_POLYGON:
-		Cx = Ax = vge->vtx[0].x;
-		Cy = Ay = vge->vtx[0].y;
-		for (i = 1; i < vge->nvtx; i++) {
-			Bx = vge->vtx[i].x;
-			By = vge->vtx[i].y;
-
-			ix = *x;
-			iy = *y;
-			d = VG_ClosestLinePoint(vg, Ax,Ay, Bx,By, &ix,&iy);
-			if (d < dMin) {
-				dMin = d;
-				mx = ix;
-				my = iy;
-			}
-			Ax = Bx;
-			Ay = By;
-		}
-
+	Ax = vge->vtx[0].x;
+	Ay = vge->vtx[0].y;
+	for (i = 1; i < vge->nvtx; i++) {
+		Bx = vge->vtx[i].x;
+		By = vge->vtx[i].y;
 		ix = *x;
 		iy = *y;
-		d = VG_ClosestLinePoint(vg, Cx,Cy, Ax,Ay, &ix,&iy);
+		d = VG_PointLineDistance(vg, Ax,Ay, Bx,By, &ix,&iy);
 		if (d < dMin) {
 			dMin = d;
 			mx = ix;
 			my = iy;
 		}
-		if (dMin < AG_FLT_MAX) {
-			*x = mx;
-			*y = my;
+		Ax = Bx;
+		Ay = By;
+	}
+	if (dMin < AG_FLT_MAX) {
+		*x = mx;
+		*y = my;
+	}
+	return (dMin);
+}
+
+static float
+ProximitySegments(VG *vg, VG_Node *vge, float *x, float *y)
+{
+	float d, dMin = AG_FLT_MAX;
+	float Ax, Ay, Bx, By, Cx, Cy;
+	float ix, iy, mx = 0.0f, my = 0.0f;
+	int i;
+	
+	for (i = 0; i < vge->nvtx-1; i+=2) {
+		Ax = vge->vtx[i].x;
+		Ay = vge->vtx[i].y;
+		Bx = vge->vtx[i+1].x;
+		By = vge->vtx[i+1].y;
+		ix = *x;
+		iy = *y;
+		d = VG_PointLineDistance(vg, Ax,Ay, Bx,By, &ix,&iy);
+		if (d < dMin) {
+			dMin = d;
+			mx = ix;
+			my = iy;
 		}
-		break;
-	default:
-		break;
+	}
+	if (dMin < AG_FLT_MAX) {
+		*x = mx;
+		*y = my;
+	}
+	return (dMin);
+}
+
+static float
+ProximityLoop(VG *vg, VG_Node *vge, float *x, float *y)
+{
+	float d, dMin = AG_FLT_MAX;
+	float Ax, Ay, Bx, By, Cx, Cy;
+	float ix, iy, mx = 0.0f, my = 0.0f;
+	int i;
+	
+	Cx = Ax = vge->vtx[0].x;
+	Cy = Ay = vge->vtx[0].y;
+	for (i = 1; i < vge->nvtx; i++) {
+		Bx = vge->vtx[i].x;
+		By = vge->vtx[i].y;
+		ix = *x;
+		iy = *y;
+		d = VG_PointLineDistance(vg, Ax,Ay, Bx,By, &ix,&iy);
+		if (d < dMin) {
+			dMin = d;
+			mx = ix;
+			my = iy;
+		}
+		Ax = Bx;
+		Ay = By;
+	}
+	ix = *x;
+	iy = *y;
+	d = VG_PointLineDistance(vg, Cx,Cy, Ax,Ay, &ix,&iy);
+	if (d < dMin) {
+		dMin = d;
+		mx = ix;
+		my = iy;
+	}
+	if (dMin < AG_FLT_MAX) {
+		*x = mx;
+		*y = my;
 	}
 	return (dMin);
 }
@@ -237,25 +212,25 @@ const VG_NodeOps vgLinesOps = {
 	&vgIconLine,
 	NULL,				/* init */
 	NULL,				/* destroy */
-	VG_DrawLineSegments,
-	VG_LineExtent,
-	VG_LineIntersect
+	DrawSegments,
+	Extent,
+	ProximitySegments
 };
 const VG_NodeOps vgLineStripOps = {
 	N_("Line strip"),
 	&vgIconLine,
 	NULL,				/* init */
 	NULL,				/* destroy */
-	VG_DrawLineStrip,
-	VG_LineExtent,
-	VG_LineIntersect
+	DrawStrip,
+	Extent,
+	ProximityStrip
 };
 const VG_NodeOps vgLineLoopOps = {
 	N_("Line loop"),
 	&vgIconLine,
 	NULL,				/* init */
 	NULL,				/* destroy */
-	VG_DrawLineLoop,
-	VG_LineExtent,
-	VG_LineIntersect
+	DrawLoop,
+	Extent,
+	ProximityLoop
 };

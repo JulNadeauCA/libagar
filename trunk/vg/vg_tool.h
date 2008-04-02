@@ -22,6 +22,9 @@ typedef struct vg_tool_ops {
 	void (*init)(void *);
 	void (*destroy)(void *);
 	void (*edit)(void *, void *);
+	void (*predraw)(void *, struct vg_view *);
+	void (*postdraw)(void *, struct vg_view *);
+
 	int (*mousemotion)(void *, float x, float y, float xrel, float yrel,
 	                   int btn);
 	int (*mousebuttondown)(void *, float x, float y, int btn);

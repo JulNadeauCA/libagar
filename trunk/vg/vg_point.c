@@ -75,7 +75,7 @@ Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
 }
 
 static float
-Intersect(VG *vg, VG_Node *vge, float *x, float *y)
+Proximity(VG *vg, VG_Node *vge, float *x, float *y)
 {
 	if (vge->nvtx >= 1) {
 		float d = Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
@@ -94,5 +94,5 @@ const VG_NodeOps vgPointsOps = {
 	NULL,
 	Draw,
 	Extent,
-	Intersect
+	Proximity
 };
