@@ -76,23 +76,22 @@ Draw(VG_View *vv, VG_Node *vge)
 	Uint32 c32 = VG_MapColorRGB(vge->color);
 	int a1 = (int)vge->vg_arc.s;
 	int a2 = (int)vge->vg_arc.e;
-	int x, y, w, h;
+	int x, y, xPos, yPos, w, h, w2, h2;
 	int xPrev = 0, yPrev = 0;
-	int w2 = w/2, h2 = h/2;
 	int a;
 
-	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
+	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &xPos, &yPos);
 	w = (int)(vge->vg_arc.w*vv->scale);
 	h = (int)(vge->vg_arc.h*vv->scale);
+	w2 = w/2;
+	h2 = h/2;
 
 	while (a2 < a1)
 		a2 += 360;
 
 	for (a = a1; a <= a2; a++) {
-		int x, y;
-
-		x = ((long)vg_cos_tbl[a % 360]*(long)w2/1024) + x; 
-		y = ((long)vg_sin_tbl[a % 360]*(long)h2/1024) + y;
+		x = ((long)vg_cos_tbl[a % 360]*(long)w2/1024) + xPos;
+		y = ((long)vg_sin_tbl[a % 360]*(long)h2/1024) + yPos;
 		if (a != a1) {
 			AG_DrawLine(vv, xPrev, yPrev, x, y, c32);
 		}
@@ -111,7 +110,7 @@ Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
 }
 
 static float
-Intersect(VG *vg, VG_Node *vge, float *x, float *y)
+Proximity(VG *vg, VG_Node *vge, float *x, float *y)
 {
 	/* TODO */
 	return (AG_FLT_MAX);
@@ -124,5 +123,5 @@ const VG_NodeOps vgArcOps = {
 	NULL,
 	Draw,
 	Extent,
-	Intersect
+	Proximity
 };

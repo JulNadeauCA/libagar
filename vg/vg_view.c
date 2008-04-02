@@ -200,7 +200,7 @@ Init(void *obj)
 
 	WIDGET(vv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
 
-	vv->flags = 0;
+	vv->flags = VG_VIEW_BGFILL;
 	vv->vg = NULL;
 	vv->draw_ev = NULL;
 	vv->scale_ev = NULL;
@@ -383,7 +383,7 @@ DrawExtents(VG_View *vv)
 {
 	VG *vg = vv->vg;
 	VG_Rect vExt;
-	VG_Node *vge;
+	VG_Node *vn;
 	VG_Block *vgb;
 	AG_Rect rExt;
 	Uint32 cGreen, cRed;
@@ -391,9 +391,9 @@ DrawExtents(VG_View *vv)
 	cGreen = SDL_MapRGB(agVideoFmt, 0,250,0);
 	cRed = SDL_MapRGB(agVideoFmt, 250,0,0);
 
-	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
-		if (vge->ops->extent != NULL) {
-			vge->ops->extent(vv, vge, &vExt);
+	TAILQ_FOREACH(vn, &vg->nodes, nodes) {
+		if (vn->ops->extent != NULL) {
+			vn->ops->extent(vv, vn, &vExt);
 		} else {
 			continue;
 		}
@@ -420,45 +420,41 @@ Draw(void *p)
 	VG_View *vv = p;
 	VG *vg = vv->vg;
 	VG_Color colorSave;
-	VG_Node *vge;
+	VG_Node *vn;
 	int su;
-	
-	AG_DrawRectFilled(vv, AG_RECT(0,0,WIDTH(vv),HEIGHT(vv)),
-	    VG_MapColorRGB(vg->fillColor));
-	
-	VG_Lock(vg);
 
-	if (vv->draw_ev != NULL)
-		vv->draw_ev->handler(vv->draw_ev);
-
+	if (vv->flags & VG_VIEW_BGFILL) {
+		AG_DrawRectFilled(vv, AG_RECT(0,0,WIDTH(vv),HEIGHT(vv)),
+		    VG_MapColorRGB(vg->fillColor));
+	} 
 	if (vv->flags & VG_VIEW_GRID)
 		DrawGrid(vv);
+
+	VG_Lock(vg);
+
+	if (vv->curtool != NULL && vv->curtool->ops->predraw != NULL) {
+		vv->curtool->ops->predraw(vv->curtool, vv);
+	}
+	if (vv->draw_ev != NULL) {
+		vv->draw_ev->handler(vv->draw_ev);
+	}
+	if (vv->curtool != NULL && vv->curtool->ops->postdraw != NULL) {
+		vv->curtool->ops->postdraw(vv->curtool, vv);
+	}
 #ifdef DEBUG
 	if (vv->flags & VG_VIEW_EXTENTS)
 		DrawExtents(vv);
 #endif
-	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
-		colorSave = vge->color;
-
-		if (vge->flags & VG_NODE_MOUSEOVER) {
-			/* XXX */
-			if (vge->color.r > 200 &&
-			    vge->color.g > 200 &&
-			    vge->color.b > 200) {
-				vge->color.r = 0;
-				vge->color.g = 255;
-				vge->color.b = 0;
-			} else {
-				vge->color.r = MIN(vge->color.r+50,255);
-				vge->color.g = MIN(vge->color.g+50,255);
-				vge->color.b = MIN(vge->color.b+50,255);
-			}
+	TAILQ_FOREACH(vn, &vg->nodes, nodes) {
+		colorSave = vn->color;
+		if (vn->flags & VG_NODE_SELECTED) {
+			VG_BlendColors(&vn->color, vg->selectionColor);
 		}
-
-		vge->ops->draw(vv, vge);
-
-		if (vge->flags & VG_NODE_MOUSEOVER)
-			vge->color = colorSave;
+		if (vn->flags & VG_NODE_MOUSEOVER) {
+			VG_BlendColors(&vn->color, vg->mouseoverColor);
+		}
+		vn->ops->draw(vv, vn);
+		vn->color = colorSave;
 	}
 
 	VG_Unlock(vg);

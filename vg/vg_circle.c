@@ -76,7 +76,7 @@ Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
 }
 
 static float
-Intersect(VG *vg, VG_Node *vge, float *x, float *y)
+Proximity(VG *vg, VG_Node *vge, float *x, float *y)
 {
 	float d;
 
@@ -95,5 +95,5 @@ const VG_NodeOps vgCircleOps = {
 	NULL,
 	Draw,
 	Extent,
-	Intersect	
+	Proximity
 };

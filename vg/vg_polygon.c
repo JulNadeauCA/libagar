@@ -49,6 +49,24 @@ CompareInts(const void *p1, const void *p2)
 }
 
 static void
+DrawOutline(VG_View *vv, VG_Node *vge, Uint32 c32)
+{
+	int Ax, Ay, Bx, By, Cx, Cy;
+	int i;
+
+	VG_GetViewCoordsVtx(vv, vge, 0, &Ax,&Ay);
+	Cx = Ax;
+	Cy = Ay;
+	for (i = 1; i < vge->nvtx; i++) {
+		VG_GetViewCoordsVtx(vv, vge, i, &Bx,&By);
+		AG_DrawLine(vv, Ax,Ay, Bx,By, c32);
+		Ax = Bx;
+		Ay = By;
+	}
+	AG_DrawLine(vv, Cx,Cy, Ax,Ay, c32);
+}
+
+static void
 Draw(VG_View *vv, VG_Node *vge)
 {
 	Uint32 c32 = VG_MapColorRGB(vge->color);
@@ -59,8 +77,8 @@ Draw(VG_View *vv, VG_Node *vge)
 	int ind1, ind2;
 	int ints;
 
-	if (vge->nvtx < 3 || vge->vg_polygon.outline) {	/* Draw outline */
-		VG_DrawLineLoop(vv, vge);
+	if (vge->nvtx < 3 || vge->vg_polygon.outline) {
+		DrawOutline(vv, vge, c32);
 		return;
 	}
 	
@@ -132,12 +150,73 @@ Draw(VG_View *vv, VG_Node *vge)
 	}
 }
 
+static void
+Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
+{
+	float xmin, xmax;
+	float ymin, ymax;
+	int i;
+
+	xmin = xmax = vge->vtx[0].x;
+	ymin = ymax = vge->vtx[0].y;
+	for (i = 0; i < vge->nvtx; i++) {
+		if (vge->vtx[i].x < xmin) { xmin = vge->vtx[i].x; }
+		if (vge->vtx[i].y < ymin) { ymin = vge->vtx[i].y; }
+		if (vge->vtx[i].x > xmax) { xmax = vge->vtx[i].x; }
+		if (vge->vtx[i].y > ymax) { ymax = vge->vtx[i].y; }
+	}
+	r->x = xmin;
+	r->y = ymin;
+	r->w = xmax-xmin;
+	r->h = ymax-ymin;
+}
+
+static float
+Proximity(VG *vg, VG_Node *vge, float *x, float *y)
+{
+	float d, dMin = AG_FLT_MAX;
+	float Ax, Ay, Bx, By, Cx, Cy;
+	float ix, iy, mx = 0.0f, my = 0.0f;
+	int i;
+
+	Cx = Ax = vge->vtx[0].x;
+	Cy = Ay = vge->vtx[0].y;
+	for (i = 1; i < vge->nvtx; i++) {
+		Bx = vge->vtx[i].x;
+		By = vge->vtx[i].y;
+
+		ix = *x;
+		iy = *y;
+		d = VG_PointLineDistance(vg, Ax,Ay, Bx,By, &ix,&iy);
+		if (d < dMin) {
+			dMin = d;
+			mx = ix;
+			my = iy;
+		}
+		Ax = Bx;
+		Ay = By;
+	}
+	ix = *x;
+	iy = *y;
+	d = VG_PointLineDistance(vg, Cx,Cy, Ax,Ay, &ix,&iy);
+	if (d < dMin) {
+		dMin = d;
+		mx = ix;
+		my = iy;
+	}
+	if (dMin < AG_FLT_MAX) {
+		*x = mx;
+		*y = my;
+	}
+	return (dMin);
+}
+
 const VG_NodeOps vgPolygonOps = {
 	N_("Polygon"),
 	&vgIconPolygon,
 	Init,
 	NULL,				/* destroy */
 	Draw,
-	VG_LineExtent,			/* (same as line loop) */
-	VG_LineIntersect		/* (same as line loop) */
+	Extent,
+	Proximity
 };

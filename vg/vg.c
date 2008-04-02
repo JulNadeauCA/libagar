@@ -96,8 +96,8 @@ VG_Init(VG *vg, Uint flags)
 	vg->flags = flags;
 	vg->fillColor = VG_GetColorRGB(0,0,0);
 	vg->gridColor = VG_GetColorRGB(110,110,100);
-	vg->selectionColor = VG_GetColorRGB(255,255,0);
-	vg->mouseoverColor = VG_GetColorRGB(200,200,0);
+	vg->selectionColor = VG_GetColorRGBA(0,200,0,150);
+	vg->mouseoverColor = VG_GetColorRGBA(250,250,0,64);
 	vg->layers = NULL;
 	vg->nlayers = 0;
 	vg->curLayer = 0;
@@ -1059,4 +1059,30 @@ VG_ReadColor(AG_DataSource *buf)
 	c.b = AG_ReadUint8(buf);
 	c.a = AG_ReadUint8(buf);
 	return (c);
+}
+
+/* Compute minimal point-line distance. */
+float
+VG_PointLineDistance(VG *vg, float Ax, float Ay, float Bx, float By,
+    float *Px, float *Py)
+{
+	float mag, u;
+	float xInt, yInt;
+
+	mag = Distance2(Bx, By, Ax, Ay);
+	u = ((*Px - Ax)*(Bx - Ax) + (*Py - Ay)*(By - Ay))/(mag*mag);
+	if (u < 0.0f) {
+		xInt = Ax;
+		yInt = Ay;
+	} else if (u > 1.0f) {
+		xInt = Bx;
+		yInt = By;
+	} else {
+		xInt = Ax + u*(Bx - Ax);
+		yInt = Ay + u*(By - Ay);
+	}
+	mag = Distance2(*Px, *Py, xInt, yInt);
+	*Px = xInt;
+	*Py = yInt;
+	return (mag);
 }
