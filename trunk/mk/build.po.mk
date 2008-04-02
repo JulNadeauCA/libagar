@@ -86,9 +86,6 @@ ${DOMAIN}.pot: ${POTFILES}
 		    --keyword=_ --keyword=N_ \
 		    --files-from=${POTFILES} \
 		    ${XGETTEXT_FLAGS} -o $@; \
-		if [ $? != 0 ]; then \
-			echo "${XGETTEXT} returned non-zero status"; \
-		fi; \
 	else \
 		echo "skipping $@ (no gettext)"; \
 	fi
