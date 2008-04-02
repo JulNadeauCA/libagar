@@ -28,6 +28,7 @@
  */
 
 #include <core/core.h>
+#include <core/limits.h>
 
 #include <gui/widget.h>
 #include <gui/primitive.h>
