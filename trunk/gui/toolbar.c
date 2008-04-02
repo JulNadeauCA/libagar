@@ -62,7 +62,8 @@ AG_ToolbarNew(void *parent, enum ag_toolbar_type type, int nRows, Uint flags)
 		AG_BoxSetSpacing(bar->rows[i], 1);
 		bar->nRows++;
 	}
-
+	AG_BoxSetPadding(AGBOX(bar), 0);
+	AG_BoxSetSpacing(AGBOX(bar), 0);
 	AG_ObjectAttach(parent, bar);
 	return (bar);
 }
