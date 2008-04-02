@@ -17,6 +17,15 @@ SUBDIR=	core agar-core-config \
 	dev agar-dev-config \
 	net agar-net-config \
 	po
+	
+INCDIRS=gui \
+	core \
+	rg \
+	vg \
+	map \
+	sc \
+	dev \
+	net
 
 all: all-subdir
 clean: clean-config clean-subdir
@@ -65,59 +74,51 @@ fastclean:
 install-includes:
 	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}
 	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}/agar
-	${SUDO} env \
-	    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
-	    INSTALL_INCL="${INSTALL_INCL}" \
-	    ${FIND} . -type d \! -name .svn \
-	    -exec ${SH} mk/install-includes.sh {} ${INCLDIR}/agar \;
 	@if [ "${SRC}" != "" ]; then \
-		(cd ${SRC} && ${SUDO} env \
+		(cd ${SRC} && for DIR in ${INCDIRS}; do \
+		    echo "mk/install-includes.sh $$DIR"; \
+		    ${SUDO} env \
+		        INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
+		        INSTALL_INCL="${INSTALL_INCL}" \
+		        ${SH} mk/install-includes.sh $$DIR ${INCLDIR}/agar; \
+		done); \
+		echo "mk/install-includes.sh config"; \
+		${SUDO} env \
 		    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 		    INSTALL_INCL="${INSTALL_INCL}" \
-		    ${FIND} . -type d \! -name .svn \
-		    -exec ${SH} mk/install-includes.sh {} ${INCLDIR}/agar \;); \
-		echo "${INSTALL_INCL} core_pub.h ${INCLDIR}/agar/core.h"; \
+		    ${SH} mk/install-includes.sh config ${INCLDIR}/agar; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/core/core_pub.h \
 		    ${INCLDIR}/agar/core.h; \
-		echo "${INSTALL_INCL} gui_pub.h ${INCLDIR}/agar/gui.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/gui/gui_pub.h \
 		    ${INCLDIR}/agar/gui.h; \
-		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/vg/vg_pub.h \
 		    ${INCLDIR}/agar/vg.h; \
-		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/rg/rg_pub.h \
 		   ${INCLDIR}/agar/rg.h; \
-		echo "${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/net/net_pub.h \
 		   ${INCLDIR}/agar/net.h; \
-		echo "${INSTALL_INCL} map/map_pub.h ${INCLDIR}/agar/map.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/map/map_pub.h \
 		   ${INCLDIR}/agar/map.h; \
-		echo "${INSTALL_INCL} sc/sc_pub.h ${INCLDIR}/agar/sc.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/sc/sc_pub.h \
 		   ${INCLDIR}/agar/sc.h; \
-		echo "${INSTALL_INCL} dev/dev_pub.h ${INCLDIR}/agar/dev.h"; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/dev/dev_pub.h \
 		   ${INCLDIR}/agar/dev.h; \
 	else \
-		echo "${INSTALL_INCL} core/core_pub.h \
-		    ${INCLDIR}/agar/core.h"; \
+		for DIR in ${INCDIRS} config; do \
+		    echo "mk/install-includes.sh $$DIR"; \
+		    ${SUDO} env \
+		    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
+		    INSTALL_INCL="${INSTALL_INCL}" \
+		    ${SH} mk/install-includes.sh $$DIR ${INCLDIR}/agar; \
+		done; \
 		${SUDO} ${INSTALL_INCL} core/core_pub.h \
 		    ${INCLDIR}/agar/core.h; \
-		echo "${INSTALL_INCL} gui/gui_pub.h ${INCLDIR}/agar/gui.h"; \
 		${SUDO} ${INSTALL_INCL} gui/gui_pub.h ${INCLDIR}/agar/gui.h; \
-		echo "${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h"; \
 		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h; \
-		echo "${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h"; \
 		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h; \
-		echo "${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h"; \
 		${SUDO} ${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h; \
-		echo "${INSTALL_INCL} map/map_pub.h ${INCLDIR}/agar/map.h"; \
 		${SUDO} ${INSTALL_INCL} map/map_pub.h ${INCLDIR}/agar/map.h; \
-		echo "${INSTALL_INCL} sc/sc_pub.h ${INCLDIR}/agar/sc.h"; \
 		${SUDO} ${INSTALL_INCL} sc/sc_pub.h ${INCLDIR}/agar/sc.h; \
-		echo "${INSTALL_INCL} dev/dev_pub.h ${INCLDIR}/agar/dev.h"; \
 		${SUDO} ${INSTALL_INCL} dev/dev_pub.h ${INCLDIR}/agar/dev.h; \
 	fi
 
