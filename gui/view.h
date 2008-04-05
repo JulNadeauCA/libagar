@@ -241,7 +241,7 @@ extern const char *agBlendFuncNames[];
 int		 AG_InitVideo(int, int, int, Uint);
 int		 AG_InitVideoSDL(SDL_Surface *, Uint);
 int		 AG_InitGUI(Uint);
-int		 AG_DestroyGUI(Uint);
+void		 AG_DestroyGUI(void);
 void		 AG_ClearBackground(void);
 
 void		 AG_DestroyVideo(void);
