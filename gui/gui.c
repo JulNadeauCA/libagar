@@ -132,6 +132,7 @@ AG_InitGUI(Uint flags)
 	void **ops;
 	int i, n, njoys;
 
+	/* Register the built-in widget classes. */
 	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)
 		AG_RegisterClass(*ops);
 
@@ -171,4 +172,17 @@ AG_InitGUI(Uint flags)
 	AG_SetStyle(agView, &agStyleDefault);
 
 	return (0);
+}
+
+void
+AG_DestroyGUI(void)
+{
+	/* Destroy the GUI subsystems. */
+	AG_TextDestroy();
+	AG_CursorsDestroy();
+	AG_ColorsDestroy();
+
+	/* Unregister the built-in widget classes. */
+	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)
+		AG_UnregisterClass(*ops);
 }
