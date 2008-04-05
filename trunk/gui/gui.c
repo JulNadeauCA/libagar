@@ -177,6 +177,8 @@ AG_InitGUI(Uint flags)
 void
 AG_DestroyGUI(void)
 {
+	void **ops;
+
 	/* Destroy the GUI subsystems. */
 	AG_TextDestroy();
 	AG_CursorsDestroy();
