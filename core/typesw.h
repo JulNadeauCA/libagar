@@ -8,6 +8,7 @@ __BEGIN_DECLS
 void	 AG_InitClassTbl(void);
 void	 AG_DestroyClassTbl(void);
 void	 AG_RegisterClass(void *);
+void     AG_UnregisterClass(void *);
 
 static __inline__ AG_ObjectClass *
 AG_FindClass(const char *name)
