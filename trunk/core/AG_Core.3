@@ -37,9 +37,8 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-These functions are responsible for the initialization of Agar's internals,
-the initialization of SDL (and possibly OpenGL), the selection of the video
-mode, the font engine and other subsystems.
+These functions are responsible for the initialization of Agar's internals
+and subsystems.
 .Pp
 .nr nS 1
 .Ft "void"
@@ -54,6 +53,9 @@ mode, the font engine and other subsystems.
 .Ft "int"
 .Fn AG_InitVideoSDL "SDL_Surface *display" "Uint flags"
 .Pp
+.Ft "int"
+.Fn AG_InitGUI "Uint flags"
+.Pp
 .Ft "void"
 .Fn AG_AtExitFunc "void (*fn)(void)"
 .Pp
@@ -62,6 +64,9 @@ mode, the font engine and other subsystems.
 .Pp
 .Ft "void"
 .Fn AG_Destroy "void"
+.Pp
+.Ft "void"
+.Fn AG_DestroyGUI "void"
 .Pp
 .nr nS 0
 The
@@ -80,19 +85,28 @@ functions are optional.
 .Pp
 The
 .Fn AG_InitVideo
-function sets the video mode, initializes the font engine and GUI
-(requires Agar-GUI).
-See
-.Xr AG_View 3
-for more information.
+function sets the video mode, initializes the font engine and GUI system.
 .Pp
 The
 .Fn AG_InitVideoSDL
-function initializes Agar-GUI to use an existing SDL display surface.
-If the surface has the
+function initializes the GUI system to use an existing SDL display surface.
+Note that if the specified surface has the
 .Dv SDL_OPENGL
 flag set, it is assumed that Agar should render itself using OpenGL
 primitives.
+.Pp
+The
+.Fn AG_InitGUI
+function initializes the Agar GUI system.
+This involves registering the widget classes, initializing the global tables
+(e.g., colors, primitives, cursors, icons), the themes, as well as the font
+engine and the input devices.
+.Fn AG_InitVideo
+and
+.Fn AG_InitVideoSDL
+invoke
+.Fn AG_InitGUI ,
+so it is rarely used directly.
 .Pp
 The
 .Fn AG_AtExitFunc
@@ -108,6 +122,12 @@ event onto the event queue.
 The
 .Fn AG_Destroy
 function immediately frees all resources allocated by Agar.
+.Pp
+.Fn AG_DestroyGUI
+frees all resources allocated by the Agar GUI system.
+Being implicitely invoked from
+.Fn AG_Destroy ,
+it is rarely used directly.
 .Pp
 .Sh AGAR VERSION INFORMATION
 .nr nS 1
