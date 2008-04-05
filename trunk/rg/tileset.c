@@ -65,7 +65,6 @@ RG_InitSubsystem(void)
 	AG_RegisterClass(&rgTileviewClass);
 	AG_RegisterClass(&rgAnimviewClass);
 	AG_RegisterClass(&rgTextureSelectorClass);
-	
 	AG_RegisterClass(&rgTilesetClass);
 
 	rgIcon_Init();
@@ -74,6 +73,10 @@ RG_InitSubsystem(void)
 void
 RG_DestroySubsystem(void)
 {
+	AG_UnregisterClass(&rgTileviewClass);
+	AG_UnregisterClass(&rgAnimviewClass);
+	AG_UnregisterClass(&rgTextureSelectorClass);
+	AG_UnregisterClass(&rgTilesetClass);
 }
 
 RG_Tileset *

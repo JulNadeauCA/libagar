@@ -66,11 +66,11 @@
 
 int mapSmoothScaling = 0;
 
+extern AG_ObjectClass mapActorClass;
+
 void
 MAP_InitSubsystem(void)
 {
-	extern AG_ObjectClass mapActorClass;
-
 	AG_RegisterClass(&mapClass);
 	AG_RegisterClass(&mapActorClass);
 	AG_RegisterClass(&mapEditorClass);
@@ -78,6 +78,16 @@ MAP_InitSubsystem(void)
 	AG_RegisterClass(&mapViewClass);
 
 	mapIcon_Init();
+}
+
+void
+MAP_DestroySubsystem(void)
+{
+	AG_UnregisterClass(&mapClass);
+	AG_UnregisterClass(&mapActorClass);
+	AG_UnregisterClass(&mapEditorClass);
+	AG_UnregisterClass(&mapEditorPseudoClass);
+	AG_UnregisterClass(&mapViewClass);
 }
 
 void

@@ -176,6 +176,7 @@ __BEGIN_DECLS
 extern AG_ObjectClass mapClass;
 
 void	 MAP_InitSubsystem(void);
+void	 MAP_DestroySubsystem(void);
 
 MAP	*MAP_New(void *, const char *);
 int	 MAP_AllocNodes(MAP *, Uint, Uint);

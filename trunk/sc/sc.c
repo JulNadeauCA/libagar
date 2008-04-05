@@ -116,4 +116,6 @@ SC_InitSubsystem(void)
 void
 SC_DestroySubsystem(void)
 {
+	AG_UnregisterClass(&scPlotterClass);
+	AG_UnregisterClass(&scMatviewClass);
 }
