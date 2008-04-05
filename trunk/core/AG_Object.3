@@ -466,6 +466,9 @@ option.
 .Ft "void"
 .Fn AG_RegisterClass "AG_ObjectClass *ops"
 .Pp
+.Ft "void"
+.Fn AG_UnregisterClass "AG_ObjectClass *ops"
+.Pp
 .Ft "AG_ObjectClass *"
 .Fn AG_FindClass "const char *name"
 .Pp
@@ -483,10 +486,13 @@ The
 function is used to register a new object class (described by
 .Fa ops )
 in the object class table.
-This table contains all the information needed by
+This table contains, notably, all the information needed by
 .Fn AG_ObjectLoad
 to load previously saved objects from disk or network and completely
 recreate them in memory.
+.Pp
+.Fn AG_UnregisterClass
+removes the specified entry from the object class table.
 .Pp
 The
 .Fn AG_FindClass

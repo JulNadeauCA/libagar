@@ -60,3 +60,23 @@ AG_RegisterClass(void *cls)
 	    (agClassCount+1)*sizeof(AG_ObjectClass *));
 	agClassTbl[agClassCount++] = (AG_ObjectClass *)cls;
 }
+
+void
+AG_UnregisterClass(void *p)
+{
+	AG_ObjectClass *cls = p;
+	int i;
+
+	for (i = 0; i < agClassCount; i++) {
+		if (agClassTbl[i] == cls)
+			break;
+	}
+	if (i == agClassCount) {
+		return;
+	}
+	if (i < agClassCount-1) {
+		memmove(&agClassTbl[i], &agClassTbl[i+1],
+		    (agClassCount-1)*sizeof(AG_ObjectClass *));
+	}
+	agClassCount--;
+}
