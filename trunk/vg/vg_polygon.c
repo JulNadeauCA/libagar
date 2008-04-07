@@ -24,7 +24,7 @@
  */
 
 /*
- * Polygon element.
+ * Polygon entity.
  */
 
 #include <core/core.h>
@@ -32,15 +32,59 @@
 
 #include <gui/widget.h>
 #include <gui/primitive.h>
+#ifdef HAVE_OPENGL
+#include <gui/opengl.h>
+#endif
 
 #include "vg.h"
 #include "vg_view.h"
 #include "icons.h"
 
 static void
-Init(VG *vg, VG_Node *vge)
+Init(void *p)
 {
-	vge->vg_polygon.outline = 0;
+	VG_Polygon *vp = p;
+
+	vp->outline = 0;
+	vp->pts = NULL;
+	vp->nPts = 0;
+	vp->ints = NULL;
+	vp->nInts = 0;
+}
+
+static int
+Load(void *p, AG_DataSource *ds, const AG_Version *ver)
+{
+	VG_Polygon *vp = p;
+	Uint i;
+
+	vp->outline = (int)AG_ReadUint8(ds);
+	vp->nPts = (Uint)AG_ReadUint8(ds);
+	for (i = 0; i < vp->nPts; i++) {
+		VG_ReadRef(ds, vp, "Point");
+	}
+	return (0);
+}
+
+static void
+Save(void *p, AG_DataSource *ds)
+{
+	VG_Polygon *vp = p;
+	Uint i;
+
+	AG_WriteUint8(ds, (Uint8)vp->outline);
+	AG_WriteUint8(ds, (Uint8)vp->nPts);
+	for (i = 0; i < vp->nPts; i++)
+		VG_WriteRef(ds, vp->pts[i]);
+}
+
+static void
+Destroy(void *p)
+{
+	VG_Polygon *vp = p;
+
+	Free(vp->pts);
+	Free(vp->ints);
 }
 
 static int
@@ -50,16 +94,20 @@ CompareInts(const void *p1, const void *p2)
 }
 
 static void
-DrawOutline(VG_View *vv, VG_Node *vge, Uint32 c32)
+DrawOutline(VG_Polygon *vp, VG_View *vv)
 {
+	Uint32 c32 = VG_MapColorRGB(VGNODE(vp)->color);
 	int Ax, Ay, Bx, By, Cx, Cy;
 	int i;
 
-	VG_GetViewCoordsVtx(vv, vge, 0, &Ax,&Ay);
+	if (vp->nPts < 2) {
+		return;
+	}
+	VG_GetViewCoords(vv, VG_PointPos(vp->pts[0]), &Ax,&Ay);
 	Cx = Ax;
 	Cy = Ay;
-	for (i = 1; i < vge->nvtx; i++) {
-		VG_GetViewCoordsVtx(vv, vge, i, &Bx,&By);
+	for (i = 1; i < vp->nPts; i++) {
+		VG_GetViewCoords(vv, VG_PointPos(vp->pts[i]), &Bx,&By);
 		AG_DrawLine(vv, Ax,Ay, Bx,By, c32);
 		Ax = Bx;
 		Ay = By;
@@ -68,38 +116,31 @@ DrawOutline(VG_View *vv, VG_Node *vge, Uint32 c32)
 }
 
 static void
-Draw(VG_View *vv, VG_Node *vge)
+DrawFB(VG_Polygon *vp, VG_View *vv)
 {
-	Uint32 c32 = VG_MapColorRGB(vge->color);
-	VG *vg = vv->vg;
-	int i;
+	Uint32 c32 = VG_MapColorRGB(VGNODE(vp)->color);
 	int y, x1, y1, x2, y2;
 	int ign, miny, maxy;
-	int ind1, ind2;
-	int ints;
+	int i, i1, i2;
+	int nInts;
 
-	if (vge->nvtx < 3 || vge->vg_polygon.outline) {
-		DrawOutline(vv, vge, c32);
-		return;
-	}
-	
-	if (vg->ints == NULL) {
-		vg->ints = Malloc(vge->nvtx*sizeof(int));
-		vg->nints = vge->nvtx;
+	if (vp->ints == NULL) {
+		vp->ints = Malloc(vp->nPts*sizeof(int));
+		vp->nInts = vp->nPts;
 	} else {
-		if (vge->nvtx > vg->nints) {
-			vg->ints = Realloc(vg->ints, vge->nvtx*sizeof(int));
-			vg->nints = vge->nvtx;
+		if (vp->nPts > vp->nInts) {
+			vp->ints = Realloc(vp->ints, vp->nPts*sizeof(int));
+			vp->nInts = vp->nPts;
 		}
 	}
 
 	/* Find Y maxima */
-	VG_GetViewCoordsVtx(vv, vge, 0, &ign, &miny);
+	VG_GetViewCoords(vv, VG_PointPos(vp->pts[0]), &ign, &miny);
 	maxy = miny;
-	for (i = 1; i < vge->nvtx; i++) {
+	for (i = 1; i < vp->nPts; i++) {
 		int vy;
 	
-		VG_GetViewCoordsVtx(vv, vge, i, &ign, &vy);
+		VG_GetViewCoords(vv, VG_PointPos(vp->pts[i]), &ign, &vy);
 		if (vy < miny) {
 			miny = vy;
 		} else if (vy > maxy) {
@@ -109,115 +150,177 @@ Draw(VG_View *vv, VG_Node *vge)
 
 	/* Find the intersections. */
 	for (y = miny; y <= maxy; y++) {
-		ints = 0;
-		for (i = 0; i < vge->nvtx; i++) {
+		nInts = 0;
+		for (i = 0; i < vp->nPts; i++) {
 			if (i == 0) {
-				ind1 = vge->nvtx - 1;
-				ind2 = 0;
+				i1 = vp->nPts - 1;
+				i2 = 0;
 			} else {
-				ind1 = i - 1;
-				ind2 = i;
+				i1 = i - 1;
+				i2 = i;
 			}
-			VG_GetViewCoordsVtx(vv, vge, ind1, &ign, &y1);
-			VG_GetViewCoordsVtx(vv, vge, ind2, &ign, &y2);
+			VG_GetViewCoords(vv, VG_PointPos(vp->pts[i1]),
+			    &ign, &y1);
+			VG_GetViewCoords(vv, VG_PointPos(vp->pts[i2]),
+			    &ign, &y2);
 			if (y1 < y2) {
-				VG_GetViewCoordsVtx(vv, vge, ind1, &x1, &ign);
-				VG_GetViewCoordsVtx(vv, vge, ind2, &x2, &ign);
+				VG_GetViewCoords(vv, VG_PointPos(vp->pts[i1]),
+				    &x1, &ign);
+				VG_GetViewCoords(vv, VG_PointPos(vp->pts[i2]),
+				    &x2, &ign);
 			} else if (y1 > y2) {
-				VG_GetViewCoordsVtx(vv, vge, ind1, &x2, &y2);
-				VG_GetViewCoordsVtx(vv, vge, ind2, &x1, &y1);
+				VG_GetViewCoords(vv, VG_PointPos(vp->pts[i1]),
+				    &x2, &y2);
+				VG_GetViewCoords(vv, VG_PointPos(vp->pts[i2]),
+				    &x1, &y1);
 			} else {
 				continue;
 			}
 			if (((y >= y1) && (y < y2)) ||
 			    ((y == maxy) && (y > y1) && (y <= y2))) {
-				vg->ints[ints++] =
+				vp->ints[nInts++] =
 				    (((y-y1)<<16) / (y2-y1)) *
 				    (x2-x1) + (x1<<16);
 			} 
 		}
-		qsort(vg->ints, ints, sizeof(int), CompareInts);
+		qsort(vp->ints, nInts, sizeof(int), CompareInts);
 
-		for (i = 0; i < ints; i += 2) {
+		for (i = 0; i < nInts; i += 2) {
 			int xa, xb;
 
-			xa = vg->ints[i] + 1;
+			xa = vp->ints[i] + 1;
 			xa = (xa>>16) + ((xa&0x8000) >> 15);
-			xb = vg->ints[i+1] - 1;
+			xb = vp->ints[i+1] - 1;
 			xb = (xb>>16) + ((xb&0x8000) >> 15);
-
 			AG_DrawLineH(vv, xa, xb, y, c32);
 		}
 	}
 }
 
 static void
-Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
+Draw(void *p, VG_View *vv)
 {
-	float xmin, xmax;
-	float ymin, ymax;
+	VG_Polygon *vp = p;
+	VG_Vector v;
 	int i;
 
-	xmin = xmax = vge->vtx[0].x;
-	ymin = ymax = vge->vtx[0].y;
-	for (i = 0; i < vge->nvtx; i++) {
-		if (vge->vtx[i].x < xmin) { xmin = vge->vtx[i].x; }
-		if (vge->vtx[i].y < ymin) { ymin = vge->vtx[i].y; }
-		if (vge->vtx[i].x > xmax) { xmax = vge->vtx[i].x; }
-		if (vge->vtx[i].y > ymax) { ymax = vge->vtx[i].y; }
+	if (vp->nPts < 3 || vp->outline) {
+		DrawOutline(vp, vv);
+		return;
 	}
-	r->x = xmin;
-	r->y = ymin;
-	r->w = xmax-xmin;
-	r->h = ymax-ymin;
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		VG_Color *c = &VGNODE(vp)->color;
+		glBegin(GL_POLYGON);
+		glColor3ub(c->r, c->g, c->b);
+		for (i = 0; i < vp->nPts; i++) {
+			v = VG_PointPos(vp->pts[i]);
+			glVertex2f(v.x, v.y);
+		}
+		glEnd();
+	} else
+#endif
+	{
+		DrawFB(vp, vv);
+	}
+}
+
+static void
+Extent(void *p, VG_View *vv, VG_Rect *r)
+{
+	VG_Polygon *vp = p;
+	float xMin, xMax;
+	float yMin, yMax;
+	int i;
+	VG_Vector v;
+
+	if (vp->nPts < 1) {
+		r->x = 0;
+		r->y = 0;
+		r->w = 0;
+		r->h = 0;
+		return;
+	}
+	xMin = xMax = vp->pts[0]->x;
+	yMin = yMax = vp->pts[0]->y;
+	for (i = 0; i < vp->nPts; i++) {
+		v = VG_PointPos(vp->pts[i]);
+		if (v.x < xMin) { xMin = v.x; }
+		if (v.y < yMin) { yMin = v.y; }
+		if (v.x > xMax) { xMax = v.x; }
+		if (v.y > yMax) { yMax = v.y; }
+	}
+	r->x = xMin;
+	r->y = yMin;
+	r->w = xMax-xMin;
+	r->h = yMax-yMin;
 }
 
 static float
-Proximity(VG *vg, VG_Node *vge, float *x, float *y)
+PointProximity(void *p, VG_Vector *vPt)
 {
-	float d, dMin = AG_FLT_MAX;
-	float Ax, Ay, Bx, By, Cx, Cy;
-	float ix, iy, mx = 0.0f, my = 0.0f;
+	VG_Polygon *vp = p;
+	float d, dMin;
+	VG_Vector vInt, A, B, C, m;
 	int i;
 
-	Cx = Ax = vge->vtx[0].x;
-	Cy = Ay = vge->vtx[0].y;
-	for (i = 1; i < vge->nvtx; i++) {
-		Bx = vge->vtx[i].x;
-		By = vge->vtx[i].y;
+	if (vp->nPts < 1)
+		return (AG_FLT_MAX);
 
-		ix = *x;
-		iy = *y;
-		d = VG_PointLineDistance(vg, Ax,Ay, Bx,By, &ix,&iy);
+	dMin = AG_FLT_MAX;
+	m.x = 0.0f;
+	m.y = 0.0f;
+	C.x = A.x = vp->pts[0]->x;
+	C.y = A.y = vp->pts[0]->y;
+	for (i = 1; i < vp->nPts; i++) {
+		B.x = vp->pts[i]->x;
+		B.y = vp->pts[i]->y;
+
+		vInt = *vPt;
+		d = VG_PointLineDistance(A, B, &vInt);
 		if (d < dMin) {
 			dMin = d;
-			mx = ix;
-			my = iy;
+			m = vInt;
 		}
-		Ax = Bx;
-		Ay = By;
+		A = B;
 	}
-	ix = *x;
-	iy = *y;
-	d = VG_PointLineDistance(vg, Cx,Cy, Ax,Ay, &ix,&iy);
+	vInt = *vPt;
+	d = VG_PointLineDistance(C, A, &vInt);
 	if (d < dMin) {
 		dMin = d;
-		mx = ix;
-		my = iy;
+		m = vInt;
 	}
 	if (dMin < AG_FLT_MAX) {
-		*x = mx;
-		*y = my;
+		vPt->x = m.x;
+		vPt->y = m.y;
 	}
 	return (dMin);
+}
+
+static void
+Delete(void *p)
+{
+	VG_Polygon *vp = p;
+	Uint i;
+
+	for (i = 0; i < vp->nPts; i++) {
+		if (VG_DelRef(vp, vp->pts[i]) == 0)
+			VG_Delete(vp->pts[i]);
+	}
 }
 
 const VG_NodeOps vgPolygonOps = {
 	N_("Polygon"),
 	&vgIconPolygon,
+	sizeof(VG_Polygon),
 	Init,
-	NULL,				/* destroy */
+	Destroy,
+	Load,
+	Save,
 	Draw,
 	Extent,
-	Proximity
+	PointProximity,
+	NULL,			/* lineProximity */
+	Delete,
+	NULL			/* moveNode */
 };

@@ -28,13 +28,13 @@
  */
 
 #include <core/core.h>
+#include <core/limits.h>
 
 #include <gui/view.h>
 #include <gui/primitive.h>
 
 #include "vg.h"
 #include "vg_view.h"
-#include "vg_math.h"
 #include "icons.h"
 #include "icons_data.h"
 
@@ -42,30 +42,23 @@
 
 const AG_Version vgVer = { 6, 0 };
 
-const VG_NodeOps *vgNodeTypes[] = {
-	&vgPointsOps,
-	&vgLinesOps,
-	&vgLineStripOps,
-	&vgLineLoopOps,
-	NULL,			/* triangles */
-	NULL,			/* triangle strip */
-	NULL,			/* triangle fan */
-	NULL,			/* quads */
-	NULL,			/* quad strip */
-	&vgPolygonOps,
-	&vgCircleOps,
-	&vgArcOps,
-	NULL,			/* Bezier curve */
-	NULL,			/* Bezigon */
-	&vgTextOps
-};
-
-static int vgInited = 0;
+const VG_NodeOps **vgNodeClasses;
+Uint               vgNodeClassCount;
 
 void
 VG_InitSubsystem(void)
 {
+	vgNodeClasses = NULL;
+	vgNodeClassCount = 0;
+
 	AG_RegisterClass(&vgViewClass);
+
+	VG_RegisterClass(&vgPointOps);
+	VG_RegisterClass(&vgLineOps);
+	VG_RegisterClass(&vgPolygonOps);
+	VG_RegisterClass(&vgCircleOps);
+	VG_RegisterClass(&vgArcOps);
+	VG_RegisterClass(&vgTextOps);
 
 	vgIcon_Init();
 }
@@ -73,6 +66,11 @@ VG_InitSubsystem(void)
 void
 VG_DestroySubsystem(void)
 {
+	Free(vgNodeClasses);
+	vgNodeClasses = NULL;
+	vgNodeClassCount = 0;
+
+	AG_UnregisterClass(&vgViewClass);
 }
 
 VG *
@@ -88,89 +86,76 @@ VG_New(Uint flags)
 void
 VG_Init(VG *vg, Uint flags)
 {
-	if (!vgInited) {
-		VG_InitSubsystem();
-		vgInited = 1;
-	}
+	VG_Point *ptRoot;
 
 	vg->flags = flags;
+	vg->gridIval = 8.0f;
+	vg->colors = NULL;
+	vg->nColors = 0;
 	vg->fillColor = VG_GetColorRGB(0,0,0);
 	vg->gridColor = VG_GetColorRGB(110,110,100);
 	vg->selectionColor = VG_GetColorRGBA(0,200,0,150);
 	vg->mouseoverColor = VG_GetColorRGBA(250,250,0,64);
 	vg->layers = NULL;
-	vg->nlayers = 0;
-	vg->curLayer = 0;
-	vg->curBlock = NULL;
-	vg->curNode = NULL;
-	vg->ints = NULL;
-	vg->nints = 0;
+	vg->nLayers = 0;
 	TAILQ_INIT(&vg->nodes);
-	TAILQ_INIT(&vg->blocks);
-	TAILQ_INIT(&vg->styles);
 	AG_MutexInitRecursive(&vg->lock);
 	
+	vg->T = Malloc(sizeof(VG_Matrix));
+	vg->nT = 1;
+	vg->T[0] = VG_MatrixIdentity();
+
 	VG_PushLayer(vg, _("Layer 0"));
+	
+	ptRoot = VG_PointNew(NULL, VGVECTOR(0.0f,0.0f));
+	vg->root = VGNODE(ptRoot);
+	vg->root->vg = vg;
 }
 
 void
-VG_FreeNode(VG *vg, VG_Node *vge)
+VG_NodeDestroy(VG_Node *vn)
 {
-	if (vge->ops->destroy != NULL) {
-		vge->ops->destroy(vg, vge);
-	}
-	Free(vge->vtx);
-	Free(vge);
-}
+	VG_Node *vnChld, *vnNext;
 
-static void
-FreeNodes(VG *vg)
-{
-	VG_Node *vge, *nvge;
+	for (vnChld = TAILQ_FIRST(&vn->cNodes);
+	     vnChld != TAILQ_END(&vn->cNodes);
+	     vnChld = vnNext) {
+		vnNext = TAILQ_NEXT(vnChld, tree);
+		VG_NodeDestroy(vnChld);
+	}
+	TAILQ_INIT(&vn->cNodes);
 	
-	for (vge = TAILQ_FIRST(&vg->nodes);
-	     vge != TAILQ_END(&vg->nodes);
-	     vge = nvge) {
-		nvge = TAILQ_NEXT(vge, nodes);
-		VG_FreeNode(vg, vge);
+	if (vn->ops->destroy != NULL) {
+		vn->ops->destroy(vn);
 	}
-	TAILQ_INIT(&vg->nodes);
+	Free(vn);
 }
 
-static void
-FreeBlocks(VG *vg)
+/* Reinitialize the tree of entities. */
+void
+VG_ReinitNodes(VG *vg)
 {
-	VG_Block *vgb, *nvgb;
+	VG_Node *vnChld, *vnNext;
 
-	for (vgb = TAILQ_FIRST(&vg->blocks);
-	     vgb != TAILQ_END(&vg->blocks);
-	     vgb = nvgb) {
-		nvgb = TAILQ_NEXT(vgb, vgbs);
-		Free(vgb);
+	for (vnChld = TAILQ_FIRST(&vg->root->cNodes);
+	     vnChld != TAILQ_END(&vg->root->cNodes);
+	     vnChld = vnNext) {
+		vnNext = TAILQ_NEXT(vnChld, tree);
+		VG_NodeDestroy(vnChld);
 	}
-	TAILQ_INIT(&vg->blocks);
-}
-
-static void
-FreeStyles(VG *vg)
-{
-	VG_Style *st, *nst;
-
-	for (st = TAILQ_FIRST(&vg->styles);
-	     st != TAILQ_END(&vg->styles);
-	     st = nst) {
-		nst = TAILQ_NEXT(st, styles);
-		Free(st);
-	}
-	TAILQ_INIT(&vg->styles);
+	TAILQ_INIT(&vg->root->cNodes);
 }
 
 void
 VG_Reinit(VG *vg)
 {
-	FreeBlocks(vg);
-	FreeNodes(vg);
-	FreeStyles(vg);
+	VG_ReinitNodes(vg);
+	
+	if (vg->colors != NULL) {
+		Free(vg->colors);
+		vg->colors = NULL;
+	}
+	vg->nColors = 0;
 }
 
 void
@@ -178,25 +163,108 @@ VG_Destroy(VG *vg)
 {
 	VG_Reinit(vg);
 	Free(vg->layers);
-	Free(vg->ints);
 	AG_MutexDestroy(&vg->lock);
 }
 
 void
-VG_Delete(VG *vg, VG_Node *vge)
+VG_RegisterClass(const VG_NodeOps *vnOps)
 {
+	vgNodeClasses = Realloc(vgNodeClasses,
+	    (vgNodeClassCount+1)*sizeof(VG_NodeOps *));
+	vgNodeClasses[vgNodeClassCount++] = vnOps;
+}
+
+void
+VG_UnregisterClass(const VG_NodeOps *vnOps)
+{
+	int i;
+
+	for (i = 0; i < vgNodeClassCount; i++) {
+		if (vgNodeClasses[i] == vnOps)
+			break;
+	}
+	if (i == vgNodeClassCount) {
+		return;
+	}
+	if (i < vgNodeClassCount-1) {
+		memmove(&vgNodeClasses[i], &vgNodeClasses[i+1],
+		    (vgNodeClassCount-1)*sizeof(VG_NodeOps *));
+	}
+	vgNodeClassCount--;
+}
+
+
+/* Lookup a node class by name. */
+const VG_NodeOps *
+VG_LookupClass(const char *name)
+{
+	Uint i;
+
+	for (i = 0; i < vgNodeClassCount; i++) {
+		const VG_NodeOps *vnOps = vgNodeClasses[i];
+		if (strcmp(vnOps->name, name) == 0)
+			return (vnOps);
+	}
+	AG_SetError("Invalid node type: %s", name);
+	return (NULL);
+}
+
+/* Detach and free the specified node. */
+int
+VG_Delete(void *pVn)
+{
+	VG_Node *vn = pVn;
+	VG *vg = vn->vg;
+
 	VG_Lock(vg);
-
-	if (vge->block != NULL)
-		TAILQ_REMOVE(&vge->block->nodes, vge, vgbmbs);
-
-	if (vg->curNode == vge)
-		vg->curNode = NULL;
-
-	TAILQ_REMOVE(&vg->nodes, vge, nodes);
-	VG_FreeNode(vg, vge);
-	
+	if (vn->nDeps > 0) {
+		AG_SetError("%s%u is in use", vn->ops->name, vn->handle);
+		goto fail;
+	}
+	if (vn->ops->deleteNode != NULL) {
+		vn->ops->deleteNode(vn);
+	}
+	if (vn->parent != NULL) {
+		TAILQ_REMOVE(&vn->parent->cNodes, vn, tree);
+	}
+	TAILQ_REMOVE(&vg->nodes, vn, list);
+	VG_NodeDestroy(vn);
 	VG_Unlock(vg);
+	return (0);
+fail:
+	VG_Unlock(vg);
+	return (-1);
+}
+
+void
+VG_AddRef(void *p, void *pRef)
+{
+	VG_Node *vn = p;
+
+	vn->refs = Realloc(vn->refs, (vn->nRefs*sizeof(VG_Node *)));
+	vn->refs[vn->nRefs++] = VGNODE(pRef);
+	VGNODE(pRef)->nDeps++;
+}
+
+Uint
+VG_DelRef(void *pVn, void *pRef)
+{
+	VG_Node *vn = pVn;
+	int i;
+
+	for (i = 0; i < vn->nRefs; i++) {
+		if (vn->refs[i] == VGNODE(pRef))
+			break;
+	}
+	if (i == vn->nRefs) {
+		AG_FatalError("No such reference");
+	}
+	if (i < vn->nRefs-1) {
+		memmove(&vn->refs[i], &vn->refs[i+1],
+		    (vn->nRefs-1)*sizeof(VG_Node *));
+	}
+	vn->nRefs--;
+	return (--VGNODE(pRef)->nDeps);
 }
 
 void VG_SetBackgroundColor(VG *vg, VG_Color c) { vg->fillColor = c; }
@@ -204,428 +272,119 @@ void VG_SetGridColor(VG *vg, VG_Color c) { vg->gridColor = c; }
 void VG_SetSelectionColor(VG *vg, VG_Color c) { vg->selectionColor = c; }
 void VG_SetMouseOverColor(VG *vg, VG_Color c) { vg->mouseoverColor = c; }
 
+void
+VG_NodeInit(void *p, const VG_NodeOps *vnOps)
+{
+	VG_Node *vn = p;
+
+	vn->ops = vnOps;
+	vn->handle = 0;
+	vn->sym[0] = '\0';
+	vn->flags = 0;
+	vn->layer = 0;
+	vn->color = VG_GetColorRGB(250,250,250);
+	vn->parent = NULL;
+	vn->vg = NULL;
+	vn->refs = NULL;
+	vn->nRefs = 0;
+	vn->nDeps = 0;
+	vn->T = VG_MatrixIdentity();
+	TAILQ_INIT(&vn->cNodes);
+
+	if (vn->ops->init != NULL)
+		vn->ops->init(vn);
+}
+
+static __inline__ Uint32
+GenNodeName(VG *vg, const char *type)
+{
+	Uint32 name = 1;
+
+	while (VG_FindNode(vg, name, type) != NULL) {
+		if (++name >= VG_HANDLE_MAX)
+			AG_FatalError("Out of node names");
+	}
+	return (name);
+}
+
 /*
- * Allocate the given type of element and begin its parametrization.
- * If a block is selected, associate the element with it.
+ * Attach the specified node to a new parent. If the node has no
+ * name assigned (handle=0), one is generated.
  */
-VG_Node *
-VG_Begin(VG *vg, enum vg_node_type nType)
-{
-	VG_Node *vge;
-
-	vge = Malloc(sizeof(VG_Node));
-	vge->flags = 0;
-	vge->type = nType;
-	vge->style = NULL;
-	vge->layer = vg->curLayer;
-	vge->vtx = NULL;
-	vge->nvtx = 0;
-	vge->color = VG_GetColorRGB(250,250,250);
-
-	vge->line_st.style = VG_CONTINUOUS;
-	vge->line_st.endpoint_style = VG_SQUARE;
-	vge->line_st.stipple = 0x0;
-	vge->line_st.thickness = 1;
-	vge->line_st.miter_len = 0;
-	vge->fill_st.style = VG_SOLID;
-	vge->fill_st.texture[0] = '\0';
-	vge->fill_st.texture_alpha = 255;
-	vge->text_st.size = agDefaultFont->size;
-	vge->text_st.flags = agDefaultFont->flags;
-	Strlcpy(vge->text_st.face, OBJECT(agDefaultFont)->name,
-	    sizeof(vge->text_st.face));
-
-	VG_Lock(vg);
-
-	TAILQ_INSERT_TAIL(&vg->nodes, vge, nodes);
-	if (vg->curBlock != NULL) {
-		TAILQ_INSERT_TAIL(&vg->curBlock->nodes, vge, vgbmbs);
-		vge->block = vg->curBlock;
-		if (vge->block->flags & VG_BLOCK_NOSAVE)
-			vge->flags |= VG_NODE_NOSAVE;
-	} else {
-		vge->block = NULL;
-	}
-	vge->ops = vgNodeTypes[nType];
-	if (vge->ops->init != NULL) {
-		vge->ops->init(vg, vge);
-	}
-	vg->curNode = vge;
-	VG_LoadIdentity(vg);
-	return (vge);
-}
-
-/* End parametrization of the current element. */
 void
-VG_End(VG *vg)
+VG_NodeAttach(void *pParent, void *pChld)
 {
-	vg->curNode = NULL;
-	VG_Unlock(vg);
-}
+	VG_Node *parent = pParent;
+	VG_Node *chld = pChld;
+	VG *vg;
 
-/* Select the given element for edition. */
-void
-VG_Select(VG *vg, VG_Node *vge)
-{
-	VG_Lock(vg);
-	vg->curNode = vge;
-}
-
-/* Move an existing vertex. */
-void
-VG_MoveVertex2(VG *vg, Uint idx, float x, float y)
-{
-	VG_Vtx *vtx;
-	VG_Node *vn = vg->curNode;
-
-	if (idx >= vn->nvtx) {
+	if (parent == NULL) {
+		chld->parent = NULL;
+		chld->vg = NULL;
 		return;
 	}
-	vtx = &vn->vtx[idx];
-	vtx->x = x;
-	vtx->y = y;
-	VG_BlockOffset(vg, vtx);
-}
-
-/* Translate an existing vertex. */
-void
-VG_TranslateVertex2(VG *vg, Uint idx, float x, float y)
-{
-	VG_Vtx *vtx;
-	VG_Node *vn = vg->curNode;
-
-	if (idx >= vn->nvtx) {
-		return;
-	}
-	vtx = &vn->vtx[idx];
-	vtx->x += x;
-	vtx->y += y;
-}
-
-VG_Vtx *
-VG_PopVertex(VG *vg)
-{
-	VG_Node *vge = vg->curNode;
-
-	if (vge->vtx == NULL)
-		return (NULL);
-#ifdef DEBUG
-	if (vge->nvtx-1 < 0)
-		AG_FatalError("VG_PopVertex: Negative vertex count");
-#endif
-	vge->vtx = Realloc(vge->vtx, (--vge->nvtx)*sizeof(VG_Vtx));
-	return ((vge->nvtx > 0) ? &vge->vtx[vge->nvtx-1] : NULL);
-}
-
-/* Push a 2D vertex onto the vertex array. */
-VG_Vtx *
-VG_Vertex2(VG *vg, float x, float y)
-{
-	VG_Vtx *vtx;
-
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x;
-	vtx->y = y;
-	VG_BlockOffset(vg, vtx);
-	return (vtx);
-}
-
-/*
- * Push a vertex at the intersection point between a given line (x1,y1,x2,y2)
- * and a vertical line at x.
- */
-VG_Vtx *
-VG_VertexVint2(VG *vg, float x, float px1, float py1, float px2, float py2)
-{
-	float x1 = px1, x2 = px2;
-	float y1 = py1, y2 = py2;
-	float m, x3 = x1;
-	VG_Vtx *vtx;
-
-	if (y1 < y2) { m = y1; y1 = y2; y2 = m; x3 = x2; }
-	if (x1 < x2) { m = x1; x1 = x2; x2 = m; }
-	m = Fabs(y2-y1)/Fabs(x2-x1);
-
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x;
-	vtx->y = m*(x - x3);
-	VG_BlockOffset(vg, vtx);
-	return (vtx);
-}
-
-/*
- * Push a vertical line onto the vertex array with endpoints at (x,y) and
- * the intersection point with a given line (x1,y1,x2,y2).
- */
-void
-VG_VintVLine2(VG *vg, float x, float y, float x1, float y1, float x2, float y2)
-{
-	VG_VertexVint2(vg, x, x1, y1, x2, y2);
-	VG_Vertex2(vg, x, y);
-}
-
-/* Push a series of vertices onto the vertex array. */
-void
-VG_VertexV(VG *vg, const VG_Vtx *svtx, Uint nsvtx)
-{
-	VG_Node *vge = vg->curNode;
-	Uint i;
-	
-	for (i = 0; i < nsvtx; i++) {
-		VG_Vtx *vtx;
-
-		vtx = VG_AllocVertex(vge);
-		memcpy(vtx, &svtx[i], sizeof(VG_Vtx));
-		VG_BlockOffset(vg, vtx);
-	}
-}
-
-/* Push two vertices onto the vertex array. */
-void
-VG_Line(VG *vg, float x1, float y1, float x2, float y2)
-{
-	VG_Vtx *vtx;
-
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x1;
-	vtx->y = y1;
-	VG_BlockOffset(vg, vtx);
-
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x2;
-	vtx->y = y2;
-	VG_BlockOffset(vg, vtx);
-}
-
-/* Push the two endpoints of a vertical line onto the vertex array. */
-void
-VG_VLine(VG *vg, float x, float y1, float y2)
-{
-	VG_Vtx *vtx;
-
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x;
-	vtx->y = y1;
-	VG_BlockOffset(vg, vtx);
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x;
-	vtx->y = y2;
-	VG_BlockOffset(vg, vtx);
-}
-
-/* Push the two endpoints of a horizontal line onto the vertex array. */
-void
-VG_HLine(VG *vg, float x1, float x2, float y)
-{
-	VG_Vtx *vtx;
-
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x1;
-	vtx->y = y;
-	VG_BlockOffset(vg, vtx);
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x2;
-	vtx->y = y;
-	VG_BlockOffset(vg, vtx);
-}
-
-/* Generate a rectangle. */
-void
-VG_Rectangle(VG *vg, float x1, float y1, float x2, float y2)
-{
-	VG_Vtx *vtx;
-
-	VG_Begin(vg, VG_LINE_LOOP);
-
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x1;
-	vtx->y = y1;
-	VG_BlockOffset(vg, vtx);
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x2;
-	vtx->y = y1;
-	VG_BlockOffset(vg, vtx);
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x2;
-	vtx->y = y2;
-	VG_BlockOffset(vg, vtx);
-	vtx = VG_AllocVertex(vg->curNode);
-	vtx->x = x1;
-	vtx->y = y2;
-	VG_BlockOffset(vg, vtx);
-	
-	VG_End(vg);
-}
-
-void
-VG_CopyMatrix(VG_Matrix *B, const VG_Matrix *A)
-{
-	int m, n;
-
-	for (m = 0; m < 3; m++)
-		for (n = 0; n < 3; n++)
-			B->m[m][n] = A->m[m][n];
-}
-
-void
-VG_MultMatrixByMatrix(VG_Matrix *C, const VG_Matrix *B, const VG_Matrix *A)
-{
-	VG_Matrix R;
-	int m, n;
-
-	for (m = 0; m < 3; m++) {
-		for (n = 0; n < 3; n++)
-			R.m[m][n] = B->m[m][0]*A->m[0][n] +
-			            B->m[m][1]*A->m[1][n] +
-			            B->m[m][2]*A->m[2][n];
-	}
-	VG_CopyMatrix(C, &R);
-}
-
-void
-VG_LoadIdentity(VG *vg)
-{
-	VG_Matrix *T = &vg->curNode->T;
-	
-	T->m[0][0] = 1.0; T->m[0][1] = 0.0; T->m[0][2] = 0.0;
-	T->m[1][0] = 0.0; T->m[1][1] = 1.0; T->m[1][2] = 0.0;
-	T->m[2][0] = 0.0; T->m[2][1] = 0.0; T->m[2][2] = 1.0;
-}
-
-void
-VG_Translate(VG *vg, float x, float y)
-{
-	VG_Matrix *T = &vg->curNode->T;
-
-	T->m[0][0] = 1.0; T->m[0][1] = 0.0; T->m[0][2] = x;
-	T->m[1][0] = 0.0; T->m[1][1] = 1.0; T->m[1][2] = y;
-	T->m[2][0] = 0.0; T->m[2][1] = 0.0; T->m[2][2] = 1.0;
-}
-
-void
-VG_Rotate(VG *vg, float degs)
-{
-	VG_Matrix *T = &vg->curNode->T;
-	float theta = Radians(degs);
-	float rCos = Cos(theta);
-	float rSin = Sin(theta);
-
-	T->m[0][0] = +rCos;
-	T->m[0][1] = -rSin;
-	T->m[0][2] = 0.0;
-	T->m[1][0] = +rSin;
-	T->m[1][1] = +rCos;
-	T->m[1][2] = 0.0;
-	T->m[2][0] = 0.0;
-	T->m[2][1] = 0.0;
-	T->m[2][2] = 1.0;
-}
-
-/* Create a new global style. */
-VG_Style *
-VG_CreateStyle(VG *vg, enum vg_style_type type, const char *name)
-{
-	VG_Style *vgs;
-
-	vgs = Malloc(sizeof(VG_Style));
-	Strlcpy(vgs->name, name, sizeof(vgs->name));
-	vgs->type = type;
-	vgs->color = VG_GetColorRGB(250,250,250);
-	switch (vgs->type) {
-	case VG_LINE_STYLE:
-		vgs->vg_line_st.style = VG_CONTINUOUS;
-		vgs->vg_line_st.endpoint_style = VG_SQUARE;
-		vgs->vg_line_st.stipple = 0x0;
-		vgs->vg_line_st.thickness = 1;
-		vgs->vg_line_st.miter_len = 0;
-		break;
-	case VG_FILL_STYLE:
-		vgs->vg_fill_st.style = VG_SOLID;
-		vgs->vg_fill_st.texture[0] = '\0';
-		vgs->vg_fill_st.texture_alpha = 255;
-		break;
-	case VG_TEXT_STYLE:
-		Strlcpy(vgs->vg_text_st.face, OBJECT(agDefaultFont)->name,
-		    sizeof(vgs->vg_text_st.face));
-		vgs->vg_text_st.size = agDefaultFont->size;
-		vgs->vg_text_st.flags = agDefaultFont->flags;
-		break;
-	}
-	VG_Lock(vg);
-	TAILQ_INSERT_TAIL(&vg->styles, vgs, styles);
-	VG_Unlock(vg);
-	return (vgs);
-}
-
-/* Associate the given style with the current element. */
-int
-VG_SetStyle(VG *vg, const char *name)
-{
-	VG_Node *vge = vg->curNode;
-	VG_Style *st;
+	chld->vg = parent->vg;
+	vg = chld->vg;
 
 	VG_Lock(vg);
-	TAILQ_FOREACH(st, &vg->styles, styles) {
-		if (strcmp(st->name, name) == 0)
-			break;
+	if (chld->handle == 0) {
+		chld->handle = GenNodeName(vg, chld->ops->name);
 	}
-	if (st == NULL) {
-		AG_SetError(_("No such style: %s"), name);
-		VG_Unlock(vg);
-		return (-1);
-	}
-	switch (st->type) {
-	case VG_LINE_STYLE:
-		memcpy(&vge->line_st, &st->vg_line_st,
-		    sizeof(VG_LineStyle));
-		break;
-	case VG_TEXT_STYLE:
-		memcpy(&vge->text_st, &st->vg_text_st,
-		    sizeof(VG_TextStyle));
-		break;
-	case VG_FILL_STYLE:
-		memcpy(&vge->fill_st, &st->vg_fill_st,
-		    sizeof(VG_FillingStyle));
-		break;
-	}
+	chld->parent = parent;
+	TAILQ_INSERT_TAIL(&vg->nodes, chld, list);
+	TAILQ_INSERT_TAIL(&parent->cNodes, chld, tree);
 	VG_Unlock(vg);
-	return (0);
 }
 
-/* Specify the layer# to associate with the current element. */
+/* Detach the specified node from its current parent. */
 void
-VG_SetLayer(VG *vg, int layer)
+VG_NodeDetach(void *p)
 {
-	vg->curNode->layer = layer;
+	VG_Node *vn = p;
+	VG *vg = vn->vg;
+
+	VG_Lock(vg);
+	if (vn->parent != NULL) {
+		TAILQ_REMOVE(&vn->parent->cNodes, vn, tree);
+	}
+	TAILQ_REMOVE(&vg->nodes, vn, list);
+	VG_NodeDestroy(vn);
+	VG_Unlock(vg);
 }
 
-/* Specify the color of the current element (VG color format). */
 void
-VG_Colorv(VG *vg, const VG_Color *c)
+VG_SetLayer(void *pNode, int layer)
 {
-	vg->curNode->color.r = c->r;
-	vg->curNode->color.g = c->g;
-	vg->curNode->color.b = c->b;
-	vg->curNode->color.a = c->a;
+	VGNODE(pNode)->layer = layer;
 }
 
-/* Specify the color of the current element (RGB triplet). */
 void
-VG_ColorRGB(VG *vg, Uint8 r, Uint8 g, Uint8 b)
+VG_SetColorv(void *pNode, const VG_Color *c)
 {
-	vg->curNode->color.r = r;
-	vg->curNode->color.g = g;
-	vg->curNode->color.b = b;
+	VG_Node *vn = pNode;
+	vn->color.r = c->r;
+	vn->color.g = c->g;
+	vn->color.b = c->b;
+	vn->color.a = c->a;
 }
 
-/* Specify the color of the current element (RGB triplet + alpha). */
 void
-VG_ColorRGBA(VG *vg, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+VG_SetColorRGB(void *pNode, Uint8 r, Uint8 g, Uint8 b)
 {
-	vg->curNode->color.r = r;
-	vg->curNode->color.g = g;
-	vg->curNode->color.b = b;
-	vg->curNode->color.a = a;
+	VG_Node *vn = pNode;
+	vn->color.r = r;
+	vn->color.g = g;
+	vn->color.b = b;
+}
+
+void
+VG_SetColorRGBA(void *pNode, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	VG_Node *vn = pNode;
+	vn->color.r = r;
+	vn->color.g = g;
+	vn->color.b = b;
+	vn->color.a = a;
 }
 
 /* Push a new layer onto the layer stack. */
@@ -635,10 +394,10 @@ VG_PushLayer(VG *vg, const char *name)
 	VG_Layer *vgl;
 
 	VG_Lock(vg);
-	vg->layers = Realloc(vg->layers, (vg->nlayers+1) *
+	vg->layers = Realloc(vg->layers, (vg->nLayers+1) *
 	                                 sizeof(VG_Layer));
-	vgl = &vg->layers[vg->nlayers];
-	vg->nlayers++;
+	vgl = &vg->layers[vg->nLayers];
+	vg->nLayers++;
 	Strlcpy(vgl->name, name, sizeof(vgl->name));
 	vgl->visible = 1;
 	vgl->alpha = 255;
@@ -652,369 +411,195 @@ void
 VG_PopLayer(VG *vg)
 {
 	VG_Lock(vg);
-	if (--vg->nlayers < 1) {
-		vg->nlayers = 1;
+	if (--vg->nLayers < 1) {
+		vg->nLayers = 1;
 	}
 	VG_Unlock(vg);
 }
 
 static void
-SaveMatrix(VG_Matrix *A, AG_DataSource *buf)
+SaveMatrix(VG_Matrix *A, AG_DataSource *ds)
 {
 	int m, n;
 
 	for (m = 0; m < 3; m++)
 		for (n = 0; n < 3; n++)
-			AG_WriteFloat(buf, A->m[m][n]);
+			AG_WriteFloat(ds, A->m[m][n]);
 }
 
 static void
-LoadMatrix(VG_Matrix *A, AG_DataSource *buf)
+LoadMatrix(VG_Matrix *A, AG_DataSource *ds)
 {
 	int m, n;
 
 	for (m = 0; m < 3; m++)
 		for (n = 0; n < 3; n++)
-			A->m[m][n] = AG_ReadFloat(buf);
+			A->m[m][n] = AG_ReadFloat(ds);
+}
+
+static void
+SaveNode(VG *vg, VG_Node *vn, AG_DataSource *ds)
+{
+	off_t nNodesOffs;
+	Uint32 nNodes = 0;
+	VG_Node *vnChld;
+
+	if (vn->flags & VG_NODE_NOSAVE)
+		return;
+
+	AG_WriteString(ds, vn->ops->name);
+	AG_WriteString(ds, vn->sym);
+	AG_WriteUint32(ds, (Uint32)vn->handle);
+	AG_WriteUint32(ds, (Uint32)vn->flags);
+	AG_WriteUint32(ds, (Uint32)vn->layer);
+	VG_WriteColor(ds, &vn->color);
+	SaveMatrix(&vn->T, ds);
+
+	if (vn->ops->save != NULL)
+		vn->ops->save(vn, ds);
+	
+	/* Save the entities. */
+	nNodesOffs = AG_Tell(ds);
+	AG_WriteUint32(ds, 0);
+	TAILQ_FOREACH(vnChld, &vn->cNodes, tree) {
+		SaveNode(vg, vnChld, ds);
+		nNodes++;
+	}
+	AG_WriteUint32At(ds, nNodes, nNodesOffs);
 }
 
 void
-VG_Save(VG *vg, AG_DataSource *buf)
+VG_Save(VG *vg, AG_DataSource *ds)
 {
-	off_t nblocks_offs, nnodes_offs, nstyles_offs;
-	Uint32 nblocks = 0, nnodes = 0, nstyles = 0;
-	VG_Block *vgb;
-	VG_Style *vgs;
-	VG_Node *vge;
-	int i;
+	off_t nNodesOffs;
+	Uint32 nNodes = 0;
+	VG_Node *vn;
+	Uint i;
 
-	AG_WriteVersion(buf, "AG_VG", &vgVer);
-	AG_WriteString(buf, "VG");
+	AG_WriteVersion(ds, "Agar-VG", &vgVer);
+	AG_WriteString(ds, "VG");				/* name */
 
 	VG_Lock(vg);
 
-	AG_WriteUint32(buf, (Uint32)vg->flags);
-	VG_WriteColor(buf, &vg->fillColor);
-	VG_WriteColor(buf, &vg->gridColor);
-	VG_WriteColor(buf, &vg->selectionColor);
-	VG_WriteColor(buf, &vg->mouseoverColor);
-	AG_WriteFloat(buf, 0.0f);				/* gridIval */
-	AG_WriteUint32(buf, (Uint32)vg->curLayer);
+	AG_WriteUint32(ds, (Uint32)vg->flags);
+	VG_WriteColor(ds, &vg->fillColor);
+	VG_WriteColor(ds, &vg->gridColor);
+	VG_WriteColor(ds, &vg->selectionColor);
+	VG_WriteColor(ds, &vg->mouseoverColor);
+	AG_WriteFloat(ds, 0.0f);				/* gridIval */
 
 	/* Save the layer information. */
-	AG_WriteUint32(buf, vg->nlayers);
-	for (i = 0; i < vg->nlayers; i++) {
+	AG_WriteUint32(ds, (Uint32)vg->nLayers);
+	for (i = 0; i < vg->nLayers; i++) {
 		VG_Layer *layer = &vg->layers[i];
 
-		AG_WriteString(buf, layer->name);
-		AG_WriteUint8(buf, (Uint8)layer->visible);
-		VG_WriteColor(buf, &layer->color);
-		AG_WriteUint8(buf, layer->alpha);
+		AG_WriteString(ds, layer->name);
+		AG_WriteUint8(ds, (Uint8)layer->visible);
+		VG_WriteColor(ds, &layer->color);
+		AG_WriteUint8(ds, layer->alpha);
 	}
 
-	/* Save the block information. */
-	nblocks_offs = AG_Tell(buf);
-	AG_WriteUint32(buf, 0);
-	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
-		if (vgb->flags & VG_BLOCK_NOSAVE)
-			continue;
-
-		AG_WriteString(buf, vgb->name);
-		AG_WriteUint32(buf, (Uint32)vgb->flags);
-		VG_WriteVertex(buf, &vgb->pos);
-		AG_WriteFloat(buf, vgb->theta);
-		nblocks++;
+	/* Save the color table. */
+	AG_WriteUint32(ds, (Uint32)vg->nColors);
+	for (i = 0; i < vg->nColors; i++) {
+		VG_IndexedColor *vic = &vg->colors[i];
+		AG_WriteString(ds, vic->name);
+		VG_WriteColor(ds, &vic->color);
 	}
-	AG_WriteUint32At(buf, nblocks, nblocks_offs);
 
-	/* Save the global style information. */
-	nstyles_offs = AG_Tell(buf);
-	AG_WriteUint32(buf, 0);
-	TAILQ_FOREACH(vgs, &vg->styles, styles) {
-		AG_WriteString(buf, vgs->name);
-		AG_WriteUint8(buf, (Uint8)vgs->type);
-		VG_WriteColor(buf, &vgs->color);
-
-		switch (vgs->type) {
-		case VG_LINE_STYLE:
-			AG_WriteUint8(buf, (Uint8)vgs->vg_line_st.style);
-			AG_WriteUint8(buf,
-			    (Uint8)vgs->vg_line_st.endpoint_style);
-			AG_WriteUint16(buf, vgs->vg_line_st.stipple);
-			AG_WriteUint8(buf, vgs->vg_line_st.thickness);
-			AG_WriteUint8(buf, vgs->vg_line_st.miter_len);
-			break;
-		case VG_FILL_STYLE:
-			AG_WriteUint8(buf, (Uint8)vgs->vg_fill_st.style);
-			AG_WriteString(buf, vgs->vg_fill_st.texture);
-			AG_WriteUint8(buf, vgs->vg_fill_st.texture_alpha);
-			break;
-		case VG_TEXT_STYLE:
-			AG_WriteString(buf, vgs->vg_text_st.face);
-			AG_WriteUint8(buf, (Uint8)vgs->vg_text_st.size);
-			AG_WriteUint32(buf, (Uint32)vgs->vg_text_st.flags);
-			break;
-		}
-		nstyles++;
+	/* Save the entities. */
+	nNodesOffs = AG_Tell(ds);
+	AG_WriteUint32(ds, 0);
+	TAILQ_FOREACH(vn, &vg->root->cNodes, tree) {
+		SaveNode(vg, vn, ds);
+		nNodes++;
 	}
-	AG_WriteUint32At(buf, nstyles, nstyles_offs);
-
-	/* Save the vg elements. */
-	nnodes_offs = AG_Tell(buf);
-	AG_WriteUint32(buf, 0);
-	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
-		if (vge->flags & VG_NODE_NOSAVE)
-			continue;
-
-		AG_WriteUint32(buf, (Uint32)vge->type);
-		AG_WriteString(buf, vge->block != NULL ?
-		    vge->block->name : NULL);
-		AG_WriteUint32(buf, (Uint32)vge->layer);
-		VG_WriteColor(buf, &vge->color);
-
-		/* Save the line style information. */
-		AG_WriteUint8(buf, (Uint8)vge->line_st.style);
-		AG_WriteUint8(buf, (Uint8)vge->line_st.endpoint_style);
-		AG_WriteUint16(buf, vge->line_st.stipple);
-		AG_WriteUint8(buf, vge->line_st.thickness);
-		AG_WriteUint8(buf, vge->line_st.miter_len);
-
-		/* Save the filling style information. */
-		AG_WriteUint8(buf, (Uint8)vge->fill_st.style);
-		AG_WriteString(buf, vge->fill_st.texture);
-		AG_WriteUint8(buf, vge->fill_st.texture_alpha);
-		
-		/* Save the text style information. */
-		AG_WriteString(buf, vge->text_st.face);
-		AG_WriteUint8(buf, (Uint8)vge->text_st.size);
-		AG_WriteUint32(buf, (Uint32)vge->text_st.flags);
-
-		/* Save the vertices. */
-		AG_WriteUint32(buf, (Uint32)vge->nvtx);
-		for (i = 0; i < vge->nvtx; i++)
-			VG_WriteVertex(buf, &vge->vtx[i]);
-		
-		/* Save the transformation matrix. */
-		AG_WriteUint32(buf, 1);
-		SaveMatrix(&vge->T, buf);
-
-		/* Save element specific data. */
-		switch (vge->type) {
-		case VG_CIRCLE:
-			AG_WriteFloat(buf, vge->vg_circle.radius);
-			break;
-		case VG_ARC:
-			AG_WriteFloat(buf, vge->vg_arc.w);
-			AG_WriteFloat(buf, vge->vg_arc.h);
-			AG_WriteFloat(buf, vge->vg_arc.s);
-			AG_WriteFloat(buf, vge->vg_arc.e);
-			break;
-		case VG_TEXT:
-			AG_WriteString(buf, vge->vg_text.text);
-			AG_WriteFloat(buf, vge->vg_text.angle);
-			AG_WriteUint8(buf, (Uint8)vge->vg_text.align);
-			break;
-		default:
-			break;
-		}
-		nnodes++;
-	}
-	AG_WriteUint32At(buf, nnodes, nnodes_offs);
+	AG_WriteUint32At(ds, nNodes, nNodesOffs);
 	VG_Unlock(vg);
 }
 
-int
-VG_Load(VG *vg, AG_DataSource *buf)
+static int
+LoadNode(VG *vg, VG_Node *vnParent, AG_DataSource *ds, const AG_Version *dsVer)
 {
-	char name[VG_NAME_MAX];
-	Uint32 nlayers, nstyles, nelements, nblocks;
-	Uint32 i;
-
-	if (AG_ReadVersion(buf, "AG_VG", &vgVer, NULL) != 0) {
+	char type[VG_TYPE_NAME_MAX];
+	VG_Node *vn;
+	const VG_NodeOps *vnOps;
+	Uint32 i, nNodes;
+	
+	AG_CopyString(type, ds, sizeof(type));
+	if ((vnOps = VG_LookupClass(type)) == NULL) {
 		return (-1);
 	}
-	AG_CopyString(name, buf, sizeof(name));			/* Ignore */
+	vn = Malloc(vnOps->size);
+	VG_NodeInit(vn, vnOps);
+	AG_CopyString(vn->sym, ds, sizeof(vn->sym));
+	vn->handle = AG_ReadUint32(ds);
+	vn->flags = AG_ReadUint32(ds);
+	vn->layer = (int)AG_ReadUint32(ds);
+	vn->color = VG_ReadColor(ds);
+	LoadMatrix(&vn->T, ds);
+	VG_NodeAttach(vnParent, vn);
+
+	if (vn->ops->load != NULL &&
+	    vn->ops->load(vn, ds, dsVer) == -1)
+		return (-1);
+
+	nNodes = AG_ReadUint32(ds);
+	for (i = 0; i < nNodes; i++) {
+		if (LoadNode(vg, vn, ds, dsVer) == -1)
+			return (-1);
+	}
+	return (0);
+}
+
+int
+VG_Load(VG *vg, AG_DataSource *ds)
+{
+	char name[VG_NAME_MAX];
+	AG_Version dsVer;
+	Uint32 i, nColors, nNodes;
+
+	if (AG_ReadVersion(ds, "Agar-VG", &vgVer, &dsVer) != 0) {
+		return (-1);
+	}
+	AG_CopyString(name, ds, sizeof(name));			/* Ignore */
 	
 	VG_Lock(vg);
-	vg->flags = AG_ReadUint32(buf);
-	vg->fillColor = VG_ReadColor(buf);
-	vg->gridColor = VG_ReadColor(buf);
-	vg->selectionColor = VG_ReadColor(buf);
-	vg->mouseoverColor = VG_ReadColor(buf);
-	(void)AG_ReadFloat(buf);				/* gridIval */
-	vg->curLayer = (int)AG_ReadUint32(buf);
-	vg->curBlock = NULL;
-	vg->curNode = NULL;
+	vg->flags = AG_ReadUint32(ds);
+	vg->fillColor = VG_ReadColor(ds);
+	vg->gridColor = VG_ReadColor(ds);
+	vg->selectionColor = VG_ReadColor(ds);
+	vg->mouseoverColor = VG_ReadColor(ds);
+	(void)AG_ReadFloat(ds);				/* gridIval */
 
 	/* Read the layer information. */
-	if ((nlayers = AG_ReadUint32(buf)) < 1) {
-		AG_SetError("missing vg layer 0");
-		goto fail;
-	}
-	vg->layers = Realloc(vg->layers, nlayers*sizeof(VG_Layer));
-	for (i = 0; i < nlayers; i++) {
+	vg->nLayers = (Uint)AG_ReadUint32(ds);
+	vg->layers = Realloc(vg->layers, vg->nLayers*sizeof(VG_Layer));
+	for (i = 0; i < vg->nLayers; i++) {
 		VG_Layer *layer = &vg->layers[i];
 
-		AG_CopyString(layer->name, buf, sizeof(layer->name));
-		layer->visible = (int)AG_ReadUint8(buf);
-		layer->color = VG_ReadColor(buf);
-		layer->alpha = AG_ReadUint8(buf);
-	}
-	vg->nlayers = nlayers;
-
-	/* Read the block information. */
-	FreeBlocks(vg);
-	nblocks = AG_ReadUint32(buf);
-	for (i = 0; i < nblocks; i++) {
-		VG_Block *vgb;
-
-		vgb = Malloc(sizeof(VG_Block));
-		AG_CopyString(vgb->name, buf, sizeof(vgb->name));
-		vgb->flags = (int)AG_ReadUint32(buf);
-		vgb->pos = VG_ReadVertex(buf);
-		vgb->theta = AG_ReadFloat(buf);
-		TAILQ_INIT(&vgb->nodes);
-		TAILQ_INSERT_TAIL(&vg->blocks, vgb, vgbs);
+		AG_CopyString(layer->name, ds, sizeof(layer->name));
+		layer->visible = (int)AG_ReadUint8(ds);
+		layer->color = VG_ReadColor(ds);
+		layer->alpha = AG_ReadUint8(ds);
 	}
 
-	/* Read the global style information. */
-	FreeStyles(vg);
-	nstyles = AG_ReadUint32(buf);
-	for (i = 0; i < nstyles; i++) {
-		char sname[VG_STYLE_NAME_MAX];
-		enum vg_style_type type;
-		VG_Style *vgs;
-
-		AG_CopyString(sname, buf, sizeof(sname));
-		type = (enum vg_style_type)AG_ReadUint8(buf);
-		vgs = VG_CreateStyle(vg, type, sname);
-		vgs->color = VG_ReadColor(buf);
-
-		switch (type) {
-		case VG_LINE_STYLE:
-			vgs->vg_line_st.style = AG_ReadUint8(buf);
-			vgs->vg_line_st.endpoint_style = AG_ReadUint8(buf);
-			vgs->vg_line_st.stipple = AG_ReadUint16(buf);
-			vgs->vg_line_st.thickness = AG_ReadUint8(buf);
-			vgs->vg_line_st.miter_len = AG_ReadUint8(buf);
-			break;
-		case VG_FILL_STYLE:
-			vgs->vg_fill_st.style = AG_ReadUint8(buf);
-			AG_CopyString(vgs->vg_fill_st.texture, buf,
-			    sizeof(vgs->vg_fill_st.texture));
-			vgs->vg_fill_st.texture_alpha = AG_ReadUint8(buf);
-			break;
-		case VG_TEXT_STYLE:
-			AG_CopyString(vgs->vg_text_st.face, buf,
-			    sizeof(vgs->vg_text_st.face));
-			vgs->vg_text_st.size = (int)AG_ReadUint8(buf);
-			vgs->vg_text_st.flags = (int)AG_ReadUint32(buf);
-			break;
-		}
+	/* Read the color table. */
+	nColors = AG_ReadUint32(ds);
+	vg->colors = Malloc(nColors*sizeof(VG_IndexedColor *));
+	vg->nColors = nColors;
+	for (i = 0; i < nColors; i++) {
+		VG_IndexedColor *vic = &vg->colors[i];
+		AG_CopyString(vic->name, ds, sizeof(vic->name));
+		vic->color = VG_ReadColor(ds);
 	}
 
-	/* Read the vg elements. */
-	FreeNodes(vg);
-	nelements = AG_ReadUint32(buf);
-	for (i = 0; i < nelements; i++) {
-		char block_id[VG_BLOCK_NAME_MAX];
-		enum vg_node_type type;
-		VG_Node *vge;
-		VG_Block *block;
-		Uint32 nlayer;
-		int j;
-	
-		type = (enum vg_node_type)AG_ReadUint32(buf);
-		AG_CopyString(block_id, buf, sizeof(block_id));
-		nlayer = (int)AG_ReadUint32(buf);
-
-		vge = VG_Begin(vg, type);
-		vge->color = VG_ReadColor(buf);
-
-		/* Load the line style information. */
-		vge->line_st.style = AG_ReadUint8(buf);
-		vge->line_st.endpoint_style = AG_ReadUint8(buf);
-		vge->line_st.stipple = AG_ReadUint16(buf);
-		vge->line_st.thickness = AG_ReadUint8(buf);
-		vge->line_st.miter_len = AG_ReadUint8(buf);
-
-		/* Load the filling style information. */
-		vge->fill_st.style = AG_ReadUint8(buf);
-		AG_CopyString(vge->fill_st.texture, buf,
-		    sizeof(vge->fill_st.texture));
-		vge->fill_st.texture_alpha = AG_ReadUint8(buf);
-
-		/* Load the text style information. */
-		AG_CopyString(vge->text_st.face, buf,
-		    sizeof(vge->text_st.face));
-		vge->text_st.size = (int)AG_ReadUint8(buf);
-		vge->text_st.flags = (int)AG_ReadUint32(buf);
-
-		/* Load the vertices. */
-		vge->nvtx = (Uint)AG_ReadUint32(buf);
-		vge->vtx = Malloc(vge->nvtx*sizeof(VG_Vtx));
-		for (j = 0; j < vge->nvtx; j++)
-			vge->vtx[j] = VG_ReadVertex(buf);
-		
-		/* Load the transformation matrix. */
-		(void)AG_ReadUint32(buf);				/* 1 */
-		LoadMatrix(&vge->T, buf);
-		
-		/* Associate the element with a block if necessary. */
-		if (block_id[0] != '\0') {
-			TAILQ_FOREACH(block, &vg->blocks, vgbs) {
-				if (strcmp(block->name, block_id) == 0)
-					break;
-			}
-			if (block == NULL) {
-				AG_SetError("unexisting vg block: %s",
-				    block_id);
-				goto fail;
-			}
-		} else {
-			block = NULL;
-		}
-		if (block != NULL) {
-			TAILQ_INSERT_TAIL(&block->nodes, vge, vgbmbs);
-			vge->block = block;
-		}
-
-		/* Load element specific data. */
-		switch (vge->type) {
-		case VG_CIRCLE:
-			if (vge->nvtx < 1) {
-				AG_SetError("circle nvtx < 1");
-				VG_Delete(vg, vge);
-				goto fail;
-			}
-			vge->vg_circle.radius = AG_ReadFloat(buf);
-			break;
-		case VG_ARC:
-			if (vge->nvtx < 1) {
-				AG_SetError("arc nvtx < 1");
-				VG_Delete(vg, vge);
-				goto fail;
-			}
-			vge->vg_arc.w = AG_ReadFloat(buf);
-			vge->vg_arc.h = AG_ReadFloat(buf);
-			vge->vg_arc.s = AG_ReadFloat(buf);
-			vge->vg_arc.e = AG_ReadFloat(buf);
-			break;
-		case VG_TEXT:
-			if (vge->nvtx < 1) {
-				AG_SetError("text nvtx < 1");
-				VG_Delete(vg, vge);
-				goto fail;
-			}
-			AG_CopyString(vge->vg_text.text, buf,
-			    sizeof(vge->vg_text.text));
-			vge->vg_text.angle = AG_ReadFloat(buf);
-			vge->vg_text.align = AG_ReadUint8(buf);
-			break;
-		default:
-			break;
-		}
-		VG_End(vg);
+	/* Read the entities. */
+	VG_ReinitNodes(vg);
+	nNodes = AG_ReadUint32(ds);
+	for (i = 0; i < nNodes; i++) {
+		if (LoadNode(vg, vg->root, ds, &dsVer) == -1)
+			goto fail;
 	}
 	VG_Unlock(vg);
 	return (0);
@@ -1024,65 +609,102 @@ fail:
 }
 
 void
-VG_WriteVertex(AG_DataSource *buf, const VG_Vtx *vtx)
+VG_WriteVector(AG_DataSource *ds, const VG_Vector *vtx)
 {
-	AG_WriteFloat(buf, vtx->x);
-	AG_WriteFloat(buf, vtx->y);
+	AG_WriteFloat(ds, vtx->x);
+	AG_WriteFloat(ds, vtx->y);
 }
 
 void
-VG_WriteColor(AG_DataSource *buf, const VG_Color *c)
+VG_WriteColor(AG_DataSource *ds, const VG_Color *c)
 {
-	AG_WriteUint8(buf, c->r);
-	AG_WriteUint8(buf, c->g);
-	AG_WriteUint8(buf, c->b);
-	AG_WriteUint8(buf, c->a);
+	AG_WriteUint8(ds, c->r);
+	AG_WriteUint8(ds, c->g);
+	AG_WriteUint8(ds, c->b);
+	AG_WriteUint8(ds, c->a);
 }
 
-VG_Vtx
-VG_ReadVertex(AG_DataSource *buf)
+VG_Vector
+VG_ReadVector(AG_DataSource *ds)
 {
-	VG_Vtx v;
+	VG_Vector v;
 
-	v.x = AG_ReadFloat(buf);
-	v.y = AG_ReadFloat(buf);
+	v.x = AG_ReadFloat(ds);
+	v.y = AG_ReadFloat(ds);
 	return (v);
 }
 
 VG_Color
-VG_ReadColor(AG_DataSource *buf)
+VG_ReadColor(AG_DataSource *ds)
 {
 	VG_Color c;
 
-	c.r = AG_ReadUint8(buf);
-	c.g = AG_ReadUint8(buf);
-	c.b = AG_ReadUint8(buf);
-	c.a = AG_ReadUint8(buf);
+	c.r = AG_ReadUint8(ds);
+	c.g = AG_ReadUint8(ds);
+	c.b = AG_ReadUint8(ds);
+	c.a = AG_ReadUint8(ds);
 	return (c);
 }
 
-/* Compute minimal point-line distance. */
-float
-VG_PointLineDistance(VG *vg, float Ax, float Ay, float Bx, float By,
-    float *Px, float *Py)
+void
+VG_WriteRef(AG_DataSource *ds, void *p)
 {
-	float mag, u;
-	float xInt, yInt;
+	VG_Node *vn = p;
 
-	mag = Distance2(Bx, By, Ax, Ay);
-	u = ((*Px - Ax)*(Bx - Ax) + (*Py - Ay)*(By - Ay))/(mag*mag);
-	if (u < 0.0f) {
-		xInt = Ax;
-		yInt = Ay;
-	} else if (u > 1.0f) {
-		xInt = Bx;
-		yInt = By;
-	} else {
-		xInt = Ax + u*(Bx - Ax);
-		yInt = Ay + u*(By - Ay);
+	AG_WriteString(ds, vn->ops->name);
+	AG_WriteUint32(ds, vn->handle);
+}
+
+void *
+VG_ReadRef(AG_DataSource *ds, void *pNode, const char *expType)
+{
+	VG_Node *vn = pNode;
+	char rType[VG_TYPE_NAME_MAX];
+	Uint32 handle;
+	void *vnFound;
+
+	AG_CopyString(rType, ds, sizeof(rType));
+	handle = AG_ReadUint32(ds);
+
+	if (expType != NULL) {
+		if (strcmp(rType, expType) != 0) {
+			AG_FatalError("Unexpected reference type: %s "
+			              "(expecting %s)", rType, expType);
+		}
 	}
-	mag = Distance2(*Px, *Py, xInt, yInt);
-	*Px = xInt;
-	*Py = yInt;
-	return (mag);
+	if ((vnFound = VG_FindNode(vn->vg, handle, rType)) == NULL) {
+		AG_FatalError("Bad reference: %s%u", rType, (Uint)handle);
+	}
+	VG_AddRef(vn, vnFound);
+	return (vnFound);
+}
+
+/* Return the element closest to the given point. */
+void *
+VG_PointProximity(VG *vg, const char *type, const VG_Vector *vPt, VG_Vector *vC,
+    void *ignoreNode)
+{
+	VG_Node *node, *nodeClosest = NULL;
+	float distClosest = AG_FLT_MAX, p;
+	VG_Vector v, vClosest = VGVECTOR(AG_FLT_MAX,AG_FLT_MAX);
+
+	TAILQ_FOREACH(node, &vg->nodes, list) {
+		if (node == ignoreNode ||
+		    node->ops->pointProximity == NULL) {
+			continue;
+		}
+		if (type != NULL &&
+		    strcmp(node->ops->name, type) != 0) {
+			continue;
+		}
+		v = *vPt;
+		p = node->ops->pointProximity(node, &v);
+		if (p < distClosest) {
+			distClosest = p;
+			nodeClosest = node;
+			vClosest = v;
+		}
+	}
+	*vC = vClosest;
+	return (nodeClosest);
 }

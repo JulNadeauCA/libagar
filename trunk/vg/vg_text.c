@@ -34,49 +34,68 @@
 #include <gui/primitive.h>
 
 #include "vg.h"
-#include "vg_text.h"
 #include "vg_view.h"
-#include "vg_math.h"
 #include "icons.h"
 
 #include <stdarg.h>
 #include <string.h>
 
 static void
-Init(VG *vg, VG_Node *vge)
+Init(void *p)
 {
-	vge->vg_text.text[0] = '\0';
-	vge->vg_text.angle = 0.0f;
-	vge->vg_text.align = VG_ALIGN_MC;
-	vge->vg_text.nptrs = 0;
+	VG_Text *vt = p;
+
+	vt->text[0] = '\0';
+	vt->angle = 0.0f;
+	vt->align = VG_ALIGN_MC;
+	vt->nPtrs = 0;
+	vt->fontSize = agDefaultFont->size;
+	vt->fontFlags = agDefaultFont->flags;
+	Strlcpy(vt->fontFace, OBJECT(agDefaultFont)->name,
+	    sizeof(vt->fontFace));
 }
 
-/* Specify the text alignment around the central vertex. */
-void
-VG_TextAlignment(VG *vg, enum vg_alignment align)
+static int
+Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 {
-	vg->curNode->vg_text.align = align;
+	VG_Text *vt = p;
+
+	vt->p = VG_ReadRef(ds, vt, "Point");
+	vt->align = (enum vg_alignment)AG_ReadUint8(ds);
+	vt->angle = AG_ReadFloat(ds);
+	AG_CopyString(vt->fontFace, ds, sizeof(vt->fontFace));
+	vt->fontSize = (int)AG_ReadUint8(ds);
+	vt->fontFlags = (Uint)AG_ReadUint16(ds);
+	AG_CopyString(vt->text, ds, sizeof(vt->text));
+	vt->nPtrs = 0;
+	return (0);
 }
 
-/* Specify the angle relative to the central vertex. */
-void
-VG_TextAngle(VG *vg, float angle)
+static void
+Save(void *p, AG_DataSource *ds)
 {
-	vg->curNode->vg_text.angle = angle;
+	VG_Text *vt = p;
+
+	VG_WriteRef(ds, vt->p);
+	AG_WriteUint8(ds, (Uint8)vt->align);
+	AG_WriteFloat(ds, vt->angle);
+	AG_WriteString(ds, vt->fontFace);
+	AG_WriteUint8(ds, (Uint8)vt->fontSize);
+	AG_WriteUint16(ds, (Uint16)vt->fontFlags);
+	AG_WriteString(ds, vt->text);
 }
 
 /* Specify text with polled values. */
 void
-VG_PrintfP(VG *vg, const char *fmt, ...)
+VG_TextPrintfP(VG_Text *vt, const char *fmt, ...)
 {
-	VG_Node *vge = vg->curNode;
 	const char *p;
 	va_list ap;
 	
 	if (fmt != NULL) {
-		Strlcpy(vge->vg_text.text, fmt, sizeof(vge->vg_text.text));
+		Strlcpy(vt->text, fmt, sizeof(vt->text));
 	} else {
-		vge->vg_text.text[0] = '\0';
+		vt->text[0] = '\0';
 		return;
 	}
 
@@ -90,11 +109,10 @@ VG_PrintfP(VG *vg, const char *fmt, ...)
 			case '%':
 				break;
 			default:
-				if (vge->vg_text.nptrs >= VG_TEXT_MAX_PTRS) {
+				if (vt->nPtrs >= VG_TEXT_MAX_PTRS) {
 					break;
 				}
-				vge->vg_text.ptrs[vge->vg_text.nptrs++] =
-				    va_arg(ap, void *);
+				vt->ptrs[vt->nPtrs++] = va_arg(ap, void *);
 				break;
 			}
 		}
@@ -104,41 +122,23 @@ VG_PrintfP(VG *vg, const char *fmt, ...)
 
 /* Specify static text. */
 void
-VG_Printf(VG *vg, const char *fmt, ...)
+VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 {
-	va_list args;
+	va_list ap;
 
 	if (fmt != NULL) {
-		va_start(args, fmt);
-		Vsnprintf(vg->curNode->vg_text.text,
-		    sizeof(vg->curNode->vg_text.text), fmt, args);
-		va_end(args);
+		va_start(ap, fmt);
+		Vsnprintf(vt->text, sizeof(vt->text), fmt, ap);
+		va_end(ap);
 	} else {
-		vg->curNode->vg_text.text[0] = '\0';
+		vt->text[0] = '\0';
 	}
 }
 
-#define TEXT_ARG(_type) (*(_type *)vge->vg_text.ptrs[ri])
-
-static void
-omega(char *s, size_t len, int n)
-{
-	Strlcat(s, "omega", len);
-}
-
-static const struct {
-	char	 *fmt;
-	size_t	  fmt_len;
-	void	(*func)(char *, size_t, int);
-} fmts[] = {
-	{ "omega", sizeof("omega"), omega },
-};
-static const int nfmts = sizeof(fmts) / sizeof(fmts[0]);
-
 static __inline__ void
-AlignText(VG_Node *vge, int *x, int *y, int w, int h)
+AlignText(VG_Text *vt, int *x, int *y, int w, int h)
 {
-	switch (vge->vg_text.align) {
+	switch (vt->align) {
 	case VG_ALIGN_TL:
 		break;
 	case VG_ALIGN_TC:
@@ -174,80 +174,68 @@ AlignText(VG_Node *vge, int *x, int *y, int w, int h)
 	}
 }
 
+#define TARG(_type) (*(_type *)vt->ptrs[ri])
+
 static void
-DrawPolled(VG_View *vv, VG_Node *vge)
+DrawPolled(VG_Text *vt, VG_View *vv)
 {
+	VG_Node *vn = VGNODE(vt);
 	char s[VG_TEXT_MAX], s2[32];
 	char *fmtp;
-	int i, ri = 0;
+	int  ri = 0;
 	int x, y, su;
 	
-	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
+	VG_GetViewCoords(vv, VG_PointPos(vt->p), &x, &y);
 	s[0] = '\0';
 	s2[0] = '\0';
-	for (fmtp = vge->vg_text.text; *fmtp != '\0'; fmtp++) {
+	for (fmtp = &vt->text[0]; *fmtp != '\0'; fmtp++) {
 		if (*fmtp == '%' && *(fmtp+1) != '\0') {
 			switch (*(fmtp+1)) {
 			case 'd':
 			case 'i':
-				Snprintf(s2, sizeof(s2), "%d", TEXT_ARG(int));
+				Snprintf(s2, sizeof(s2), "%d", TARG(int));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'o':
-				Snprintf(s2, sizeof(s2), "%o", TEXT_ARG(Uint));
+				Snprintf(s2, sizeof(s2), "%o", TARG(Uint));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'u':
-				Snprintf(s2, sizeof(s2), "%u", TEXT_ARG(Uint));
+				Snprintf(s2, sizeof(s2), "%u", TARG(Uint));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'x':
-				Snprintf(s2, sizeof(s2), "%x", TEXT_ARG(Uint));
+				Snprintf(s2, sizeof(s2), "%x", TARG(Uint));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'X':
-				Snprintf(s2, sizeof(s2), "%X", TEXT_ARG(Uint));
+				Snprintf(s2, sizeof(s2), "%X", TARG(Uint));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 'c':
-				s2[0] = TEXT_ARG(char);
+				s2[0] = TARG(char);
 				s2[1] = '\0';
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
 			case 's':
-				Strlcat(s, &TEXT_ARG(char), sizeof(s));
-				ri++;
-				break;
-			case 'p':
-				Snprintf(s2, sizeof(s2), "%p",
-				    TEXT_ARG(void *));
-				Strlcat(s, s2, sizeof(s));
+				Strlcat(s, &TARG(char), sizeof(s));
 				ri++;
 				break;
 			case 'f':
-				Snprintf(s2, sizeof(s2), "%.2f",
-				    TEXT_ARG(float));
+				Snprintf(s2, sizeof(s2), "%.2f", TARG(float));
 				Strlcat(s, s2, sizeof(s));
 				ri++;
 				break;
-			case '[':
-				for (i = 0; i < nfmts; i++) {
-					if (strncmp(fmts[i].fmt, fmtp+2,
-					    fmts[i].fmt_len-1) != 0) {
-						continue;
-					}
-					fmtp += fmts[i].fmt_len;
-					fmts[i].func(s2, sizeof(s2), ri);
-					Strlcat(s, s2, sizeof(s));
-					ri++;
-					break;
-				}
+			case 'F':
+				Snprintf(s2, sizeof(s2), "%.2f", TARG(double));
+				Strlcat(s, s2, sizeof(s));
+				ri++;
 				break;
 			case '%':
 				s2[0] = '%';
@@ -263,73 +251,94 @@ DrawPolled(VG_View *vv, VG_Node *vge)
 		}
 	}
 	AG_PushTextState();
-	AG_TextFontLookup(vge->text_st.face, vge->text_st.size, 0),
-	AG_TextColorVideo32(VG_MapColorRGB(vge->color));
-	su = AG_TextCacheInsLookup(vv->tCache, vge->vg_text.text);
-	AlignText(vge, &x, &y, WSURFACE(vv,su)->w, WSURFACE(vv,su)->h);
+	AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags),
+	AG_TextColorVideo32(VG_MapColorRGB(vn->color));
+	su = AG_TextCacheInsLookup(vv->tCache, vt->text);
+	AlignText(vt, &x, &y, WSURFACE(vv,su)->w, WSURFACE(vv,su)->h);
 	AG_WidgetBlitSurface(vv, su, x, y);
 	AG_PopTextState();
 }
 
+#undef TARG
+
 static void
-Draw(VG_View *vv, VG_Node *vge)
+Draw(void *p, VG_View *vv)
 {
+	VG_Text *vt = p;
 	int x, y, su;
 	
-	if (vge->vg_text.nptrs > 0) {
-		DrawPolled(vv, vge);
+	if (vt->nPtrs > 0) {
+		DrawPolled(vt, vv);
 		return;
 	}
 
-	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
+	VG_GetViewCoords(vv, VG_PointPos(vt->p), &x, &y);
 
 	AG_PushTextState();
-	AG_TextFontLookup(vge->text_st.face, vge->text_st.size, 0),
-	AG_TextColorVideo32(VG_MapColorRGB(vge->color));
+	AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags),
+	AG_TextColorVideo32(VG_MapColorRGB(VGNODE(vt)->color));
 
-	su = AG_TextCacheInsLookup(vv->tCache, vge->vg_text.text);
-	AlignText(vge, &x,&y, WSURFACE(vv,su)->w, WSURFACE(vv,su)->h);
+	su = AG_TextCacheInsLookup(vv->tCache, vt->text);
+	AlignText(vt, &x, &y, WSURFACE(vv,su)->w, WSURFACE(vv,su)->h);
 	AG_WidgetBlitSurface(vv, su, x,y);
 
 	AG_PopTextState();
 }
 
 static void
-Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
+Extent(void *p, VG_View *vv, VG_Rect *r)
 {
-	int su;
+	VG_Text *vt = p;
 	int x, y, w, h;
+	VG_Vector vRect;
+	int su;
 	
-	su = AG_TextCacheInsLookup(vv->tCache, vge->vg_text.text);
-	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
+	su = AG_TextCacheInsLookup(vv->tCache, vt->text);
+	VG_GetViewCoords(vv, VG_PointPos(vt->p), &x, &y);
 	w = WSURFACE(vv,su)->w;
 	h = WSURFACE(vv,su)->h;
-	AlignText(vge, &x,&y, w,h);
-	VG_GetVGCoords(vv, x,y, &r->x,&r->y);
+	AlignText(vt, &x, &y, w, h);
+	VG_GetVGCoords(vv, x,y, &vRect);
+	r->x = vRect.x;
+	r->y = vRect.y;
 	r->w = (float)w/vv->scale;
 	r->h = (float)h/vv->scale;
 }
 
 static float
-Intersect(VG *vg, VG_Node *vge, float *x, float *y)
+PointProximity(void *p, VG_Vector *vPt)
 {
+	VG_Text *vt = p;
+	VG_Vector vPos = VG_PointPos(vt->p);
 	float d;
 
-	if (vge->nvtx < 1)
-		return (AG_FLT_MAX);
-
-	d = Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
-	*x = vge->vtx[0].x;
-	*y = vge->vtx[0].y;
+	d = VG_Distance(*vPt, vPos);
+	vPt->x = vPos.x;
+	vPt->y = vPos.y;
 	return (d);
 }
 
+static void
+Delete(void *p)
+{
+	VG_Text *vt = p;
+
+	if (VG_DelRef(vt, vt->p) == 0)
+		VG_Delete(vt->p);
+}
+
 const VG_NodeOps vgTextOps = {
-	N_("Text string"),
+	N_("Text label"),
 	&vgIconText,
+	sizeof(VG_Text),
 	Init,
-	NULL,		/* destroy */
+	NULL,			/* destroy */
+	Load,
+	Save,
 	Draw,
 	Extent,
-	Intersect	
+	PointProximity,
+	NULL,			/* lineProximity */
+	Delete,
+	NULL			/* moveNode */
 };

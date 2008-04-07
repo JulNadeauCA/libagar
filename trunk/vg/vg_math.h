@@ -3,18 +3,14 @@
 #ifndef _AGAR_VG_MATH_H_
 #define _AGAR_VG_MATH_H_
 
-#if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_VG_MATH)
-# ifdef _AGAR_INTERNAL
-#  include <config/have_math.h>
-# else
-#  include <agar/config/have_math.h>
-# endif
-# ifdef HAVE_MATH
-#  include <math.h>
-# endif
+#ifdef _AGAR_INTERNAL
+# include <config/have_math.h>
+#else
+# include <agar/config/have_math.h>
 #endif
-
-#include "begin_code.h"
+#ifdef HAVE_MATH
+# include <math.h>
+#endif
 
 #ifdef M_PI
 # define VG_PI M_PI
@@ -48,44 +44,26 @@
 
 #define VG_Degrees(x) ((x)/(2.0*VG_PI)*360.0)
 #define VG_Radians(x) (((x)/360.0)*(2.0*VG_PI))
-#define VG_DotProd2(ax,ay,bx,by) ((ax)*(bx) + (ay)*(by))
-#define VG_Norm2(ax,ay) \
-	VG_Sqrt(VG_DotProd2((ax),(ay),(ax),(ay)))
-#define VG_Distance2(ax,ay,bx,by) \
-	VG_Norm2((float)((ax)-(bx)),(float)((ay)-(by)))
-
-#define VG_Truncf(d) ((int)floor(d))
-#define VG_Fracf(d) ((d) - floor(d))
-#define VG_FracInvf(d) (1 - ((d) - floor(d)))
+#define VGVECTOR(x,y) VG_GetVector((x),(y))
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_VG_MATH)
-#define Sin(x) VG_Sin(x)
-#define Cos(x) VG_Cos(x)
-#define Tan(x) VG_Tan(x)
-#define Mod(x,y) VG_Mod((x),(y))
-#define Sqrt(x) VG_Sqrt(x)
-#define Atan2(y,x) VG_Atan2((y),(x))
-#define Floor(x) VG_Floor(x)
-#define Ceil(x) VG_Ceil(x)
-#define Fabs(x) VG_Fabs(x)
-#define Hypot(x) VG_Hypot(x)
-
-#define Degrees(x) VG_Degrees(x)
-#define Radians(x) VG_Radians(x)
-#define DotProd2(ax,ay,bx,by) VG_DotProd2((ax),(ay),(bx),(by))
-#define DotNorm2(ax,ay) VG_Norm2((ax),(ay))
-#define Distance2(ax,ay,bx,by) VG_Distance2((ax),(ay),(bx),(by))
-
-#define PowOf2i(x) VG_PowOf2i(x)
-#define Truncf(x) VG_Truncf(x)
-#define Fracf(x) VG_Fracf(x)
-#define FracInvf(x) VG_FracInvf(x)
+# define Sin(x) VG_Sin(x)
+# define Cos(x) VG_Cos(x)
+# define Tan(x) VG_Tan(x)
+# define Mod(x,y) VG_Mod((x),(y))
+# define Sqrt(x) VG_Sqrt(x)
+# define Atan2(y,x) VG_Atan2((y),(x))
+# define Floor(x) VG_Floor(x)
+# define Ceil(x) VG_Ceil(x)
+# define Fabs(x) VG_Fabs(x)
+# define Hypot(x) VG_Hypot(x)
 #endif /* _AGAR_INTERNAL or _USE_AGAR_VG_MATH */
 
 __BEGIN_DECLS
 extern int vg_cos_tbl[];
 extern int vg_sin_tbl[];
 
+#if 0
 static __inline__ int
 VG_PowOf2i(int i)
 {
@@ -93,7 +71,124 @@ VG_PowOf2i(int i)
 	while (val < i) { val <<= 1; }
 	return (val);
 }
+#endif
+
+/*
+ * Basic vector operations
+ */
+static __inline__ VG_Vector
+VG_GetVector(float x, float y)
+{
+	VG_Vector v;
+	v.x = x;
+	v.y = y;
+	return (v);
+}
+static __inline__ VG_Vector
+VG_Add(VG_Vector v1, VG_Vector v2)
+{
+	VG_Vector v3;
+	v3.x = v1.x + v2.x;
+	v3.y = v1.y + v2.y;
+	return (v3);
+}
+static __inline__ VG_Vector
+VG_Sub(VG_Vector v1, VG_Vector v2)
+{
+	VG_Vector v3;
+	v3.x = v1.x - v2.x;
+	v3.y = v1.y - v2.y;
+	return (v3);
+}
+static __inline__ VG_Vector
+VG_ScaleVector(float a, VG_Vector v)
+{
+	VG_Vector av;
+	av.x = a*v.x;
+	av.y = a*v.y;
+	return (av);
+}
+static __inline__ float
+VG_DotProd(VG_Vector v1, VG_Vector v2)
+{
+	return (v1.x*v2.x + v1.y*v2.y);
+}
+static __inline__ float
+VG_Length(VG_Vector v)
+{
+	return VG_Sqrt(VG_DotProd(v,v));
+}
+static __inline__ float
+VG_Distance(VG_Vector v1, VG_Vector v2)
+{
+	return VG_Length(VG_Sub(v1,v2));
+}
+
+/* Compute minimal point-line distance. */
+static __inline__ float
+VG_PointLineDistance(VG_Vector A, VG_Vector B, VG_Vector *pt)
+{
+	float mag, u;
+	VG_Vector vInt;
+
+	mag = VG_Distance(B, A);
+	u = ((pt->x - A.x)*(B.x - A.x) + (pt->y - A.y)*(B.y - A.y))/(mag*mag);
+	if (u < 0.0f) {
+		vInt = A;
+	} else if (u > 1.0f) {
+		vInt = B;
+	} else {
+		vInt.x = A.x + u*(B.x - A.x);
+		vInt.y = A.y + u*(B.y - A.y);
+	}
+	mag = VG_Distance(*pt, vInt);
+	pt->x = vInt.x;
+	pt->y = vInt.y;
+	return (mag);
+}
+
+/*
+ * Compute the intersection point between a given line (v1,v2) and a
+ * vertical line at X.
+ */
+static __inline__ VG_Vector
+VG_IntersectLineV(float x, VG_Vector v1, VG_Vector v2)
+{
+	float x1 = v1.x, x2 = v2.x;
+	float y1 = v1.y, y2 = v2.y;
+	float m, x3 = x1;
+	VG_Vector v;
+
+	if (y1 < y2) { m = y1; y1 = y2; y2 = m; x3 = x2; }
+	if (x1 < x2) { m = x1; x1 = x2; x2 = m; }
+	m = VG_Fabs(y2-y1)/VG_Fabs(x2-x1);
+	v.x = x;
+	v.y = m*(x - x3);
+	return (v);
+}
+
+/*
+ * Basic matrix operations.
+ */
+static __inline__ VG_Matrix
+VG_MatrixIdentity(void)
+{
+	VG_Matrix T;
+	T.m[0][0] = 1.0; T.m[0][1] = 0.0; T.m[0][2] = 0.0;
+	T.m[1][0] = 0.0; T.m[1][1] = 1.0; T.m[1][2] = 0.0;
+	T.m[2][0] = 0.0; T.m[2][1] = 0.0; T.m[2][2] = 1.0;
+	return (T);
+}
+static __inline__ void
+VG_MultMatrixByVector(VG_Vector *c, const VG_Vector *a, const VG_Matrix *T)
+{
+	float ax = a->x;
+	float ay = a->y;
+
+	c->x = ax*T->m[0][0] + ay*T->m[1][0] + T->m[0][2];
+	c->y = ax*T->m[0][1] + ay*T->m[1][1] + T->m[1][2];
+}
+
 __END_DECLS
 
-#include "close_code.h"
 #endif /* _AGAR_VG_MATH_H_ */

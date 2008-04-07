@@ -33,6 +33,7 @@ typedef struct vg_view {
 #define VG_VIEW_EXPAND	(VG_VIEW_HFILL|VG_VIEW_VFILL)
 
 	VG *vg;					/* Vector graphics object */
+
 	float x, y;				/* Display offset */
 	float scale;				/* Display scaling factor */
 	float scaleMin;				/* Minimum scaling factor */
@@ -94,23 +95,34 @@ void     VG_Status(VG_View *, const char *, ...)
  * VG_View must be locked.
  */
 static __inline__ void
-VG_ApplyConstraints(VG_View *vv, float *x, float *y)
+VG_ApplyConstraints(VG_View *vv, VG_Vector *pos)
 {
 	if (vv->snap_mode != VG_FREE_POSITIONING)
-		VG_SnapPoint(vv, x, y);
+		VG_SnapPoint(vv, pos);
 	if (vv->ortho_mode != VG_NO_ORTHO)
-		VG_RestrictOrtho(vv, x, y);
+		VG_RestrictOrtho(vv, pos);
 }
 
 /*
- * Translate View coordinates to VG coordinates.
+ * Translate integer View coordinates to VG coordinates.
  * VG_View must be locked.
  */
 static __inline__ void
-VG_GetVGCoords(VG_View *vv, int x, int y, float *vx, float *vy)
+VG_GetVGCoords(VG_View *vv, int x, int y, VG_Vector *v)
 {
-	*vx = ((float)x - vv->x)/vv->scale;
-	*vy = ((float)y - vv->y)/vv->scale;
+	v->x = ((float)x - vv->x)/vv->scale;
+	v->y = ((float)y - vv->y)/vv->scale;
+}
+
+/*
+ * Translate floating-point View coordinates to VG coordinates.
+ * VG_View must be locked.
+ */
+static __inline__ void
+VG_GetVGCoordsFlt(VG_View *vv, VG_Vector pos, VG_Vector *v)
+{
+	v->x = (pos.x - vv->x)/vv->scale;
+	v->y = (pos.y - vv->y)/vv->scale;
 }
 
 /*
@@ -118,40 +130,10 @@ VG_GetVGCoords(VG_View *vv, int x, int y, float *vx, float *vy)
  * VG_View must be locked.
  */
 static __inline__ void
-VG_GetViewCoords(VG_View *vv, float vx, float vy, int *x, int *y)
+VG_GetViewCoords(VG_View *vv, VG_Vector v, int *x, int *y)
 {
-	*x = (int)(vx*vv->scale) + vv->x;
-	*y = (int)(vy*vv->scale) + vv->y;
-}
-
-/*
- * Translate element vertex coordinates to floating-point view coordinates.
- * Both VG and VG_View must be locked.
- */
-static __inline__ void
-VG_GetViewCoordsVtxFlt(VG_View *vv, VG_Node *vge, int vi, float *x, float *y)
-{
-	VG_Vtx c;
-
-	c.x = vge->vtx[vi].x;
-	c.y = vge->vtx[vi].y;
-	VG_MultMatrixByVector(&c, &c, &vge->T);
-	*x = c.x*vv->scale + vv->x;
-	*y = c.y*vv->scale + vv->y;
-}
-
-/*
- * Translate element vertex coordinates to integer view coordinates.
- * Both VG and VG_View must be locked.
- */
-static __inline__ void
-VG_GetViewCoordsVtx(VG_View *vv, VG_Node *vge, int vi, int *x, int *y)
-{
-	float vx, vy;
-
-	VG_GetViewCoordsVtxFlt(vv, vge, vi, &vx, &vy);
-	*x = (int)vx;
-	*y = (int)vy;
+	*x = (int)(v.x*vv->scale) + vv->x;
+	*y = (int)(v.y*vv->scale) + vv->y;
 }
 __END_DECLS
 

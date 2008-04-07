@@ -9,6 +9,6 @@ enum vg_ortho_mode {
 struct ag_toolbar;
 
 __BEGIN_DECLS
-void		   VG_RestrictOrtho(struct vg_view *, float *, float *);
+void		   VG_RestrictOrtho(struct vg_view *, VG_Vector *);
 struct ag_toolbar *VG_OrthoRestrictToolbar(void *, struct vg_view *, int);
 __END_DECLS

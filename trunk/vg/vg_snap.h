@@ -16,7 +16,7 @@ struct ag_menu;
 struct ag_menu_item;
 
 __BEGIN_DECLS
-void		   VG_SnapPoint(struct vg_view *, float *, float *);
+void		   VG_SnapPoint(struct vg_view *, VG_Vector *);
 void	 	   VG_DrawGrid(struct vg_view *);
 struct ag_toolbar *VG_SnapToolbar(void *, struct vg_view *, int);
 void		   VG_SnapMenu(struct ag_menu *, struct ag_menu_item *,

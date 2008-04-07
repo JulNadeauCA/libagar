@@ -37,59 +37,36 @@
 
 #include "vg.h"
 #include "vg_view.h"
-#include "vg_math.h"
 #include "icons.h"
 
 static void
-SnapToGrid(VG_View *vv, float *x, float *y)
+SnapToGrid(VG_View *vv, VG_Vector *pos)
 {
 	float r;
+	float i2 = vv->gridIval/2.0f;
 
-	if (x != NULL) {
-		r = VG_Mod(*x, vv->gridIval);
-		*x -= r;
-		if (r > 0.25f) { *x += vv->gridIval; }
-		else if (r < -0.25f) { *x -= vv->gridIval; }
-	}
-	if (y != NULL) {
-		r = VG_Mod(*y, vv->gridIval);
-		*y -= r;
-		if (r > 0.25f) { *y += vv->gridIval; }
-		else if (r < -0.25f) { *y -= vv->gridIval; }
-	}
-}
-
-static void
-SnapToEndpoint(VG_View *vv, float *x, float *y)
-{
-	VG *vg = vv->vg;
-	VG_Node *vge;
-	VG_Vtx *vtx;
-	int i;
-
-	TAILQ_FOREACH(vge, &vg->nodes, nodes) {
-		for (i = 0; i < vge->nvtx; i++) {
-			vtx = &vge->vtx[i];
-			/* TODO */
-		}
-	}
+	r = VG_Mod(pos->x, vv->gridIval);
+	pos->x -= r;
+	if (r > i2) { pos->x += vv->gridIval; }
+	else if (r < -i2) { pos->x -= vv->gridIval; }
+	
+	r = VG_Mod(pos->y, vv->gridIval);
+	pos->y -= r;
+	if (r > i2) { pos->y += vv->gridIval; }
+	else if (r < -i2) { pos->y -= vv->gridIval; }
 }
 
 void
-VG_SnapPoint(VG_View *vv, float *x, float *y)
+VG_SnapPoint(VG_View *vv, VG_Vector *pos)
 {
 	switch (vv->snap_mode) {
 	case VG_GRID:
-		SnapToGrid(vv, x, y);
-		break;
-	case VG_ENDPOINT:
-		SnapToEndpoint(vv, x, y);
-		break;
-	case VG_FREE_POSITIONING:
+		SnapToGrid(vv, pos);
 		break;
 	default:
 		break;
 	}
+	/* TODO ... */
 }
 
 static void
