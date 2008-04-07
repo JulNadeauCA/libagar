@@ -272,7 +272,7 @@ VG_FindNode(VG *vg, Uint32 handle, const char *type)
 static __inline__ void
 VG_PushMatrix(VG *vg)
 {
-	vg->T = Realloc(vg->T, (vg->nT+1)*sizeof(VG_Matrix));
+	vg->T = AG_Realloc(vg->T, (vg->nT+1)*sizeof(VG_Matrix));
 	memcpy(&vg->T[vg->nT], &vg->T[vg->nT-1], sizeof(VG_Matrix));
 	vg->nT++;
 }
