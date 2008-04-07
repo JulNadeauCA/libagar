@@ -34,7 +34,7 @@ VG_PolygonSetOutline(VG_Polygon *vP, int flag)
 static __inline__ void
 VG_PolygonVertex(VG_Polygon *vP, VG_Point *pt)
 {
-	vP->pts = Realloc(vP->pts, (vP->nPts+1)*sizeof(VG_Point *));
+	vP->pts = AG_Realloc(vP->pts, (vP->nPts+1)*sizeof(VG_Point *));
 	vP->pts[vP->nPts++] = pt;
 	VG_AddRef(vP, pt);
 }
