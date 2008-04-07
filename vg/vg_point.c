@@ -35,64 +35,91 @@
 
 #include "vg.h"
 #include "vg_view.h"
-#include "vg_math.h"
 #include "icons.h"
 
 static void
-Draw(VG_View *vv, VG_Node *vge)
+Init(void *p)
 {
-	Uint32 c32 = VG_MapColorRGB(vge->color);
-	VG_Vtx *vtx;
-	int rx, ry;
+	VG_Point *pt = p;
 
-	if (vge->nvtx >= 1) {
-		vtx = &vge->vtx[0];
-		VG_GetViewCoords(vv, vtx->x, vtx->y, &rx, &ry);
-		AG_DrawPixel(vv, rx, ry-1, c32);
-		AG_DrawPixel(vv, rx-1, ry, c32);
-		AG_DrawPixel(vv, rx, ry, c32);
-		AG_DrawPixel(vv, rx+0, ry, c32);
-		AG_DrawPixel(vv, rx, ry+1, c32);
-	}
+	pt->x = 0.0f;
+	pt->y = 0.0f;
+}
+
+static int
+Load(void *p, AG_DataSource *ds, const AG_Version *ver)
+{
+	VG_Point *vp = p;
+
+	vp->x = AG_ReadFloat(ds);
+	vp->y = AG_ReadFloat(ds);
+	return (0);
 }
 
 static void
-Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
+Save(void *p, AG_DataSource *ds)
 {
-	if (vge->nvtx >= 1) {
-		VG_Vtx *vtx = &vge->vtx[0];
-		
-		r->x = vtx->x-1;
-		r->y = vtx->y-1;
-		r->w = vtx->x+2;
-		r->h = vtx->x+2;
-	} else {
-		r->x = 0;
-		r->y = 0;
-		r->w = 0;
-		r->h = 0;
-	}
+	VG_Point *vp = p;
+
+	AG_WriteFloat(ds, vp->x);
+	AG_WriteFloat(ds, vp->y);
+}
+
+static void
+Draw(void *p, VG_View *vv)
+{
+	VG_Point *pt = p;
+	Uint32 c32 = VG_MapColorRGB(VGNODE(pt)->color);
+	int x, y;
+
+	VG_GetViewCoords(vv, VG_PointPos(pt), &x, &y);
+	AG_DrawCircle(vv, x, y, 2, c32);
+}
+
+static void
+Extent(void *p, VG_View *vv, VG_Rect *r)
+{
+	VG_Point *pt = p;
+
+	r->x = pt->x;
+	r->y = pt->y;
+	r->w = 0;
+	r->h = 0;
 }
 
 static float
-Proximity(VG *vg, VG_Node *vge, float *x, float *y)
+PointProximity(void *p, VG_Vector *vPt)
 {
-	if (vge->nvtx >= 1) {
-		float d = Distance2(*x, *y, vge->vtx[0].x, vge->vtx[0].y);
-		*x = vge->vtx[0].x;
-		*y = vge->vtx[0].y;
-		return (d);
-	} else {
-		return (AG_FLT_MAX);
-	}
+	VG_Point *pt = p;
+	float d;
+
+	d = VG_Distance(VG_PointPos(pt), *vPt);
+	vPt->x = pt->x;
+	vPt->y = pt->y;
+	return (d);
 }
 
-const VG_NodeOps vgPointsOps = {
+static void
+Move(void *p, VG_Vector vCurs, VG_Vector vRel)
+{
+	VG_Point *pt = p;
+
+	pt->x = vCurs.x;
+	pt->y = vCurs.y;
+}
+
+const VG_NodeOps vgPointOps = {
 	N_("Point"),
 	&vgIconPoints,
-	NULL,
-	NULL,
+	sizeof(VG_Point),
+	Init,
+	NULL,			/* destroy */
+	Load,
+	Save,
 	Draw,
 	Extent,
-	Proximity
+	PointProximity,
+	NULL,			/* lineProximity */
+	NULL,			/* deleteNode */
+	Move
 };

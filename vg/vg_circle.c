@@ -35,65 +35,106 @@
 
 #include "vg.h"
 #include "vg_view.h"
-#include "vg_math.h"
 #include "icons.h"
 
 static void
-Init(VG *vg, VG_Node *vge)
+Init(void *p)
 {
-	vge->vg_circle.radius = 0.025f;
+	VG_Circle *vc = p;
+
+	vc->p = NULL;
+	vc->r = 0.025f;
 }
 
-void
-VG_CircleRadius(VG *vg, float radius)
+static int
+Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 {
-	vg->curNode->vg_circle.radius = radius;
-}
+	VG_Circle *vc = p;
 
-void
-VG_CircleDiameter(VG *vg, float diameter)
-{
-	vg->curNode->vg_circle.radius = diameter/2.0f;
+	vc->p = VG_ReadRef(ds, vc, "Point");
+	vc->r = AG_ReadFloat(ds);
+	return (0);
 }
 
 static void
-Draw(VG_View *vv, VG_Node *vge)
+Save(void *p, AG_DataSource *ds)
 {
+	VG_Circle *vc= p;
+
+	VG_WriteRef(ds, vc->p);
+	AG_WriteFloat(ds, vc->r);
+}
+
+static void
+Draw(void *p, VG_View *vv)
+{
+	VG_Circle *vc = p;
+	VG_Vector vCenter = VG_PointPos(vc->p);
 	int x, y, r;
 
-	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &x, &y);
-	r = (int)(vge->vg_circle.radius*vv->scale);
-	AG_DrawCircle(vv, x, y, r, VG_MapColorRGB(vge->color));
+	VG_GetViewCoords(vv, vCenter, &x, &y);
+	r = (int)(vc->r*vv->scale);
+	AG_DrawCircle(vv, x, y, r, VG_MapColorRGB(VGNODE(vc)->color));
 }
 
 static void
-Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
+Extent(void *p, VG_View *vv, VG_Rect *r)
 {
-	r->x = vge->vtx[0].x - vge->vg_circle.radius;
-	r->y = vge->vtx[0].y - vge->vg_circle.radius;
-	r->w = vge->vg_circle.radius*2.0f;
-	r->h = vge->vg_circle.radius*2.0f;
+	VG_Circle *vc = p;
+	VG_Vector vCenter = VG_PointPos(vc->p);
+
+	r->x = vCenter.x - vc->r;
+	r->y = vCenter.y - vc->r;
+	r->w = vc->r*2.0f;
+	r->h = vc->r*2.0f;
 }
 
 static float
-Proximity(VG *vg, VG_Node *vge, float *x, float *y)
+PointProximity(void *p, VG_Vector *vPt)
 {
+	VG_Circle *vc = p;
+	VG_Vector vCenter = VG_PointPos(vc->p);
+	float theta = Atan2(vPt->y - vCenter.y,
+	                    vPt->x - vCenter.x);
+	VG_Vector vNear;
 	float d;
 
-	if (vge->nvtx < 1) {
-		return (AG_FLT_MAX);
-	}
-	d = Distance2(vge->vtx[0].x, vge->vtx[0].y, *x, *y) -
-	    vge->vg_circle.radius;
+	vNear.x = vCenter.x + vc->r*Cos(theta);
+	vNear.y = vCenter.y + vc->r*Sin(theta);
+	d = VG_Distance(*vPt, vNear);
+	*vPt = vNear;
 	return (d);
+}
+
+static void
+Delete(void *p)
+{
+	VG_Circle *vc = p;
+
+	if (VG_DelRef(vc, vc->p) == 0)
+		VG_Delete(vc->p);
+}
+
+static void
+Move(void *p, VG_Vector vCurs, VG_Vector vRel)
+{
+	VG_Circle *vc = p;
+
+	vc->r = VG_Distance(VG_PointPos(vc->p), vCurs);
 }
 
 const VG_NodeOps vgCircleOps = {
 	N_("Circle"),
 	&vgIconCircle,
+	sizeof(VG_Circle),
 	Init,
-	NULL,
+	NULL,			/* destroy */
+	Load,
+	Save,
 	Draw,
 	Extent,
-	Proximity
+	PointProximity,
+	NULL,			/* lineProximity */
+	Delete,
+	Move
 };

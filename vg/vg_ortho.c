@@ -35,21 +35,12 @@
 
 #include "vg.h"
 #include "vg_view.h"
-#include "vg_math.h"
 #include "icons.h"
 
 void
-VG_RestrictOrtho(VG_View *vv, float *x, float *y)
+VG_RestrictOrtho(VG_View *vv, VG_Vector *pos)
 {
-	switch (vv->ortho_mode) {
-	case VG_HORIZ_ORTHO:
-	case VG_VERT_ORTHO:
-		/* TODO */
-		break;
-	case VG_NO_ORTHO:
-	default:
-		break;
-	}
+	/* TODO */
 }
 
 static void

@@ -25,12 +25,11 @@ typedef struct vg_tool_ops {
 	void (*predraw)(void *, struct vg_view *);
 	void (*postdraw)(void *, struct vg_view *);
 
-	int (*mousemotion)(void *, float x, float y, float xrel, float yrel,
-	                   int btn);
-	int (*mousebuttondown)(void *, float x, float y, int btn);
-	int (*mousebuttonup)(void *, float x, float y, int btn);
-	int (*keydown)(void *, int ksym, int kmod);
-	int (*keyup)(void *, int ksym, int kmod);
+	int (*mousemotion)(void *, VG_Vector vPos, VG_Vector vRel, int buttons);
+	int (*mousebuttondown)(void *, VG_Vector vPos, int button);
+	int (*mousebuttonup)(void *, VG_Vector vPos, int button);
+	int (*keydown)(void *, int ksym, int kmod, int unicode);
+	int (*keyup)(void *, int ksym, int kmod, int unicode);
 } VG_ToolOps;
 
 typedef struct vg_tool {
@@ -40,6 +39,7 @@ typedef struct vg_tool {
 	AG_Window *win;				/* Edition window (if any) */
 	AG_Widget *pane;			/* Edition pane (if any) */
 	AG_Button *trigger;			/* Trigger button (XXX) */
+	VG_Vector vCursor;			/* Last cursor position */
 	AG_SLIST_HEAD(,vg_tool_keybinding) kbindings;
 	AG_SLIST_HEAD(,vg_tool_mousebinding) mbindings;
 	AG_TAILQ_ENTRY(vg_tool) tools;

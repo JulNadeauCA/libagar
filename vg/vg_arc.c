@@ -35,63 +35,63 @@
 
 #include "vg.h"
 #include "vg_view.h"
-#include "vg_math.h"
 #include "icons.h"
 
 static void
-Init(VG *vg, VG_Node *vge)
+Init(void *p)
 {
-	vge->vg_arc.w = 1.0f;
-	vge->vg_arc.h = 1.0f;
-	vge->vg_arc.s = 0.0f;
-	vge->vg_arc.e = 360.0f;
+	VG_Arc *va = p;
+
+	va->p = NULL;
+	va->r = 0.5f;
+	va->a1 = 0.0f;
+	va->a2 = 360.0f;
 }
 
-void
-VG_ArcBox(VG *vg, float w, float h)
+static int
+Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 {
-	VG_Node *vge = vg->curNode;
+	VG_Arc *va = p;
 
-	vge->vg_arc.w = w;
-	vge->vg_arc.h = h;
-}
-
-void
-VG_ArcRange(VG *vg, float s, float e)
-{
-	VG_Node *vge = vg->curNode;
-
-	vge->vg_arc.s = s;
-	vge->vg_arc.e = e;
-}
-
-void
-VG_Arc3Points(VG *vg, VG_Vtx v[3])
-{
+	va->p = VG_ReadRef(ds, va, "Point");
+	va->r = AG_ReadFloat(ds);
+	va->a1 = AG_ReadFloat(ds);
+	va->a2 = AG_ReadFloat(ds);
+	return (0);
 }
 
 static void
-Draw(VG_View *vv, VG_Node *vge)
+Save(void *p, AG_DataSource *ds)
 {
-	Uint32 c32 = VG_MapColorRGB(vge->color);
-	int a1 = (int)vge->vg_arc.s;
-	int a2 = (int)vge->vg_arc.e;
-	int x, y, xPos, yPos, w, h, w2, h2;
+	VG_Arc *va = p;
+
+	VG_WriteRef(ds, va->p);
+	AG_WriteFloat(ds, va->r);
+	AG_WriteFloat(ds, va->a1);
+	AG_WriteFloat(ds, va->a2);
+}
+
+static void
+Draw(void *p, VG_View *vv)
+{
+	VG_Arc *va = p;
+	Uint32 c32 = VG_MapColorRGB(VGNODE(va)->color);
+	int a1 = (int)va->a1;
+	int a2 = (int)va->a2;
+	long r = (long)va->r;
+	int x, y, xPos, yPos;
 	int xPrev = 0, yPrev = 0;
+	VG_Vector vCenter = VG_PointPos(va->p);
 	int a;
 
-	VG_GetViewCoords(vv, vge->vtx[0].x, vge->vtx[0].y, &xPos, &yPos);
-	w = (int)(vge->vg_arc.w*vv->scale);
-	h = (int)(vge->vg_arc.h*vv->scale);
-	w2 = w/2;
-	h2 = h/2;
+	VG_GetViewCoords(vv, vCenter, &xPos, &yPos);
 
-	while (a2 < a1)
+	while (a2 < a1) {
 		a2 += 360;
-
+	}
 	for (a = a1; a <= a2; a++) {
-		x = ((long)vg_cos_tbl[a % 360]*(long)w2/1024) + xPos;
-		y = ((long)vg_sin_tbl[a % 360]*(long)h2/1024) + yPos;
+		x = ((long)vg_cos_tbl[a % 360]*(long)r/1024) + xPos;
+		y = ((long)vg_sin_tbl[a % 360]*(long)r/1024) + yPos;
 		if (a != a1) {
 			AG_DrawLine(vv, xPrev, yPrev, x, y, c32);
 		}
@@ -101,27 +101,69 @@ Draw(VG_View *vv, VG_Node *vge)
 }
 
 static void
-Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
+Extent(void *p, VG_View *vv, VG_Rect *r)
 {
-	r->x = vge->vtx[0].x - vge->vg_arc.w/2.0f;
-	r->y = vge->vtx[0].y - vge->vg_arc.h/2.0f;
-	r->w = vge->vg_arc.w;
-	r->h = vge->vg_arc.h;
+	VG_Arc *va = p;
+	VG_Vector vCenter = VG_PointPos(va->p);
+
+	/* XXX */
+	r->x = vCenter.x - va->r;
+	r->y = vCenter.y - va->r;
+	r->w = va->r*2;
+	r->h = va->r*2;
 }
 
 static float
-Proximity(VG *vg, VG_Node *vge, float *x, float *y)
+PointProximity(void *p, VG_Vector *vPt)
 {
-	/* TODO */
-	return (AG_FLT_MAX);
+	VG_Arc *va = p;
+	VG_Vector vCenter = VG_PointPos(va->p);
+	float a1 = VG_Radians(va->a1);
+	float a2 = VG_Radians(va->a2);
+	float d, theta;
+
+	theta = Atan2(vPt->y - vCenter.y,
+	              vPt->x - vCenter.x);
+	if (theta < a1) {
+		theta = a1;
+	} else if (theta > a2) {
+		theta = a2;
+	}
+	d = VG_Distance(vCenter, *vPt) - va->r;
+	vPt->x = vCenter.x + va->r*Cos(theta);
+	vPt->y = vCenter.y + va->r*Sin(theta);
+	return (d);
+}
+
+static void
+Delete(void *p)
+{
+	VG_Arc *va = p;
+
+	if (VG_DelRef(va, va->p) == 0)
+		VG_Delete(va->p);
+}
+
+static void
+Move(void *p, VG_Vector vCurs, VG_Vector vRel)
+{
+	VG_Arc *va = p;
+
+	va->r = VG_Distance(VG_PointPos(va->p), vCurs);
 }
 
 const VG_NodeOps vgArcOps = {
 	N_("Arc"),
-	&vgIconCircle,
+	&vgIconBezier,
+	sizeof(VG_Arc),
 	Init,
-	NULL,
+	NULL,			/* destroy */
+	Load,
+	Save,
 	Draw,
 	Extent,
-	Proximity
+	PointProximity,
+	NULL,			/* lineProximity */
+	Delete,
+	Move
 };

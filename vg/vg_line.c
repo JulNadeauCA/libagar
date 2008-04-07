@@ -24,7 +24,7 @@
  */
 
 /*
- * Line, line strip and line loop elements.
+ * Line entity.
  */
 
 #include <core/limits.h>
@@ -35,202 +35,114 @@
 
 #include "vg.h"
 #include "vg_view.h"
-#include "vg_math.h"
 #include "icons.h"
 
 static void
-DrawSegments(VG_View *vv, VG_Node *vge)
+Init(void *p)
 {
-	Uint32 c32 = VG_MapColorRGB(vge->color);
-	int Ax, Ay, Bx, By;
-	int i;
+	VG_Line *vl = p;
 
-	for (i = 0; i < vge->nvtx-1; i += 2) {
-		VG_GetViewCoordsVtx(vv, vge, i,   &Ax,&Ay);
-		VG_GetViewCoordsVtx(vv, vge, i+1, &Bx,&By);
-		AG_DrawLine(vv, Ax,Ay, Bx,By, c32);
-	}
+	vl->p1 = NULL;
+	vl->p2 = NULL;
+	vl->endPt = VG_LINE_SQUARE;
+	vl->stipple = 0xffff;
+	vl->miterLen = 0;
+	vl->thickness = 1;
+}
+
+static int
+Load(void *p, AG_DataSource *ds, const AG_Version *ver)
+{
+	VG_Line *vl = p;
+
+	vl->p1 = VG_ReadRef(ds, vl, "Point");
+	vl->p2 = VG_ReadRef(ds, vl, "Point");
+	vl->endPt = (enum vg_line_endpoint)AG_ReadUint8(ds);
+	vl->stipple = AG_ReadUint16(ds);
+	vl->miterLen = AG_ReadUint8(ds);
+	vl->thickness = AG_ReadUint8(ds);
+	return (0);
 }
 
 static void
-DrawStrip(VG_View *vv, VG_Node *vge)
+Save(void *p, AG_DataSource *ds)
 {
-	Uint32 c32 = VG_MapColorRGB(vge->color);
-	int Ax, Ay, Bx, By;
-	int i;
+	VG_Line *vl = p;
 
-	VG_GetViewCoordsVtx(vv, vge, 0, &Ax,&Ay);
-	for (i = 1; i < vge->nvtx; i++) {
-		VG_GetViewCoordsVtx(vv, vge, i, &Bx,&By);
-		AG_DrawLine(vv, Ax,Ay, Bx,By, c32);
-		Ax = Bx;
-		Ay = By;
-	}
+	VG_WriteRef(ds, vl->p1);
+	VG_WriteRef(ds, vl->p2);
+	AG_WriteUint8(ds, (Uint8)vl->endPt);
+	AG_WriteUint16(ds, vl->stipple);
+	AG_WriteUint8(ds, vl->miterLen);
+	AG_WriteUint8(ds, vl->thickness);
 }
 
 static void
-DrawLoop(VG_View *vv, VG_Node *vge)
+Draw(void *p, VG_View *vv)
 {
-	Uint32 c32 = VG_MapColorRGB(vge->color);
-	int Ax, Ay, Bx, By, Cx, Cy;
-	int i;
+	VG_Line *vl = p;
+	Uint32 c32 = VG_MapColorRGB(VGNODE(vl)->color);
+	int x1, y1, x2, y2;
 
-	VG_GetViewCoordsVtx(vv, vge, 0, &Ax,&Ay);
-	Cx = Ax;
-	Cy = Ay;
-	for (i = 1; i < vge->nvtx; i++) {
-		VG_GetViewCoordsVtx(vv, vge, i, &Bx,&By);
-		AG_DrawLine(vv, Ax,Ay, Bx,By, c32);
-		Ax = Bx;
-		Ay = By;
-	}
-	AG_DrawLine(vv, Cx,Cy, Ax,Ay, c32);
+	VG_GetViewCoords(vv, VG_PointPos(vl->p1), &x1, &y1);
+	VG_GetViewCoords(vv, VG_PointPos(vl->p2), &x2, &y2);
+
+	/* XXX TODO: endpoint style */
+	AG_DrawLine(vv, x1,y1, x2,y2, c32);
 }
 
 static void
-Extent(VG_View *vv, VG_Node *vge, VG_Rect *r)
+Extent(void *p, VG_View *vv, VG_Rect *r)
 {
-	float xmin, xmax;
-	float ymin, ymax;
-	int i;
+	VG_Line *vl = p;
+	VG_Vector p1, p2;
 
-	xmin = xmax = vge->vtx[0].x;
-	ymin = ymax = vge->vtx[0].y;
-	for (i = 0; i < vge->nvtx; i++) {
-		if (vge->vtx[i].x < xmin) { xmin = vge->vtx[i].x; }
-		if (vge->vtx[i].y < ymin) { ymin = vge->vtx[i].y; }
-		if (vge->vtx[i].x > xmax) { xmax = vge->vtx[i].x; }
-		if (vge->vtx[i].y > ymax) { ymax = vge->vtx[i].y; }
-	}
-	r->x = xmin;
-	r->y = ymin;
-	r->w = xmax-xmin;
-	r->h = ymax-ymin;
+	p1 = VG_PointPos(vl->p1);
+	p2 = VG_PointPos(vl->p2);
+
+	r->x = MIN(p1.x, p2.x);
+	r->y = MIN(p1.y, p2.y);
+	r->w = MAX(p1.x, p2.x) - r->x;
+	r->h = MAX(p1.y, p2.y) - r->y;
 }
 
 static float
-ProximityStrip(VG *vg, VG_Node *vge, float *x, float *y)
+PointProximity(void *p, VG_Vector *vPt)
 {
-	float d, dMin = AG_FLT_MAX;
-	float Ax, Ay, Bx, By, Cx, Cy;
-	float ix, iy, mx = 0.0f, my = 0.0f;
-	int i;
+	VG_Line *vl = p;
+	VG_Vector v1 = VG_PointPos(vl->p1);
+	VG_Vector v2 = VG_PointPos(vl->p2);
 
-	Ax = vge->vtx[0].x;
-	Ay = vge->vtx[0].y;
-	for (i = 1; i < vge->nvtx; i++) {
-		Bx = vge->vtx[i].x;
-		By = vge->vtx[i].y;
-		ix = *x;
-		iy = *y;
-		d = VG_PointLineDistance(vg, Ax,Ay, Bx,By, &ix,&iy);
-		if (d < dMin) {
-			dMin = d;
-			mx = ix;
-			my = iy;
-		}
-		Ax = Bx;
-		Ay = By;
-	}
-	if (dMin < AG_FLT_MAX) {
-		*x = mx;
-		*y = my;
-	}
-	return (dMin);
+	return VG_PointLineDistance(v1, v2, vPt);
 }
 
-static float
-ProximitySegments(VG *vg, VG_Node *vge, float *x, float *y)
+static void
+Delete(void *p)
 {
-	float d, dMin = AG_FLT_MAX;
-	float Ax, Ay, Bx, By, Cx, Cy;
-	float ix, iy, mx = 0.0f, my = 0.0f;
-	int i;
-	
-	for (i = 0; i < vge->nvtx-1; i+=2) {
-		Ax = vge->vtx[i].x;
-		Ay = vge->vtx[i].y;
-		Bx = vge->vtx[i+1].x;
-		By = vge->vtx[i+1].y;
-		ix = *x;
-		iy = *y;
-		d = VG_PointLineDistance(vg, Ax,Ay, Bx,By, &ix,&iy);
-		if (d < dMin) {
-			dMin = d;
-			mx = ix;
-			my = iy;
-		}
-	}
-	if (dMin < AG_FLT_MAX) {
-		*x = mx;
-		*y = my;
-	}
-	return (dMin);
+	VG_Line *vl = p;
+
+	if (VG_DelRef(vl, vl->p1) == 0) { VG_Delete(vl->p1); }
+	if (VG_DelRef(vl, vl->p2) == 0) { VG_Delete(vl->p2); }
 }
 
-static float
-ProximityLoop(VG *vg, VG_Node *vge, float *x, float *y)
+static void
+Move(void *p, VG_Vector vCurs, VG_Vector vRel)
 {
-	float d, dMin = AG_FLT_MAX;
-	float Ax, Ay, Bx, By, Cx, Cy;
-	float ix, iy, mx = 0.0f, my = 0.0f;
-	int i;
-	
-	Cx = Ax = vge->vtx[0].x;
-	Cy = Ay = vge->vtx[0].y;
-	for (i = 1; i < vge->nvtx; i++) {
-		Bx = vge->vtx[i].x;
-		By = vge->vtx[i].y;
-		ix = *x;
-		iy = *y;
-		d = VG_PointLineDistance(vg, Ax,Ay, Bx,By, &ix,&iy);
-		if (d < dMin) {
-			dMin = d;
-			mx = ix;
-			my = iy;
-		}
-		Ax = Bx;
-		Ay = By;
-	}
-	ix = *x;
-	iy = *y;
-	d = VG_PointLineDistance(vg, Cx,Cy, Ax,Ay, &ix,&iy);
-	if (d < dMin) {
-		dMin = d;
-		mx = ix;
-		my = iy;
-	}
-	if (dMin < AG_FLT_MAX) {
-		*x = mx;
-		*y = my;
-	}
-	return (dMin);
+	/* TODO */
 }
 
-const VG_NodeOps vgLinesOps = {
+const VG_NodeOps vgLineOps = {
 	N_("Line"),
 	&vgIconLine,
-	NULL,				/* init */
-	NULL,				/* destroy */
-	DrawSegments,
+	sizeof(VG_Line),
+	Init,
+	NULL,			/* destroy */
+	Load,
+	Save,
+	Draw,
 	Extent,
-	ProximitySegments
-};
-const VG_NodeOps vgLineStripOps = {
-	N_("Line strip"),
-	&vgIconLine,
-	NULL,				/* init */
-	NULL,				/* destroy */
-	DrawStrip,
-	Extent,
-	ProximityStrip
-};
-const VG_NodeOps vgLineLoopOps = {
-	N_("Line loop"),
-	&vgIconLine,
-	NULL,				/* init */
-	NULL,				/* destroy */
-	DrawLoop,
-	Extent,
-	ProximityLoop
+	PointProximity,
+	NULL,			/* lineProximity */
+	Delete,
+	Move
 };

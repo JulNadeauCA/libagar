@@ -1,9 +1,31 @@
 /*	Public domain	*/
 
+typedef struct vg_arc {
+	struct vg_node _inherit;
+	VG_Point *p;			/* Centerpoint */
+	float r;			/* Arc radius */
+	float a1;			/* Start angle (degs) */
+	float a2;			/* End angle (degs) */
+} VG_Arc;
+
+#define VGARC(p) ((VG_Arc *)(p))
+
 __BEGIN_DECLS
 extern const VG_NodeOps vgArcOps;
 
-void VG_ArcBox(struct vg *, float, float);
-void VG_ArcRange(struct vg *, float, float);
-void VG_Arc3Points(struct vg *, VG_Vtx v[3]);
+static __inline__ VG_Arc *
+VG_ArcNew(void *pNode, VG_Point *pCenter, float r, float a1, float a2)
+{
+	VG_Arc *va;
+
+	va = AG_Malloc(sizeof(VG_Arc));
+	VG_NodeInit(va, &vgArcOps);
+	va->p = pCenter;
+	va->r = r;
+	va->a1 = a1;
+	va->a2 = a2;
+	VG_AddRef(va, pCenter);
+	VG_NodeAttach(pNode, va);
+	return (va);
+}
 __END_DECLS

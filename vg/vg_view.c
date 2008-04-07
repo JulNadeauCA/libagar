@@ -68,24 +68,27 @@ MouseMotion(AG_Event *event)
 	float xRel = (float)AG_INT(3);
 	float yRel = (float)AG_INT(4);
 	int state = AG_INT(5);
-	float x, y, xCt, yCt;
-
-	VG_GetVGCoords(vv, xCurs,yCurs, &x,&y);
-	xCt = x;
-	yCt = y;
+	float x, y;
+	VG_Vector vCt;
 
 	if (vv->mouse.panning) {
 		vv->x += (float)xRel;
 		vv->y += (float)yRel;
 		return;
 	}
+
+	VG_GetVGCoords(vv, xCurs,yCurs, &vCt);
+	x = vCt.x;
+	y = vCt.y;
+
 	if (tool != NULL && tool->ops->mousemotion != NULL) {
 		if (!(tool->ops->flags & VG_MOUSEMOTION_NOSNAP)) {
-			VG_ApplyConstraints(vv, &xCt,&yCt);
+			VG_ApplyConstraints(vv, &vCt);
 		}
-		if (tool->ops->mousemotion(tool, xCt, yCt,
-		    (int)(xRel*vv->scale),
-		    (int)(yRel*vv->scale), state) == 1) {
+		tool->vCursor = vCt;
+		if (tool->ops->mousemotion(tool, vCt,
+		    VG_ScaleVector(1.0f/vv->scale,VGVECTOR(xRel,yRel)),
+		    state) == 1) {
 			vv->mouse.x = x;
 			vv->mouse.y = y;
 			return;
@@ -105,11 +108,12 @@ MouseButtonDown(AG_Event *event)
 	int xCurs = AG_INT(2);
 	int yCurs = AG_INT(3);
 	VG_ToolMouseBinding *mb;
-	float x, y, xCt, yCt;
+	float x, y;
+	VG_Vector vCt;
 
-	VG_GetVGCoords(vv, xCurs,yCurs, &x,&y);
-	xCt = x;
-	yCt = y;
+	VG_GetVGCoords(vv, xCurs,yCurs, &vCt);
+	x = vCt.x;
+	y = vCt.y;
 
 	AG_WidgetFocus(vv);
 	vv->mouse.x = x;
@@ -129,9 +133,9 @@ MouseButtonDown(AG_Event *event)
 	}
 	if (tool != NULL && tool->ops->mousebuttondown != NULL) {
 		if (!(tool->ops->flags & VG_BUTTONDOWN_NOSNAP)) {
-			VG_ApplyConstraints(vv, &xCt,&yCt);
+			VG_ApplyConstraints(vv, &vCt);
 		}
-		if (tool->ops->mousebuttondown(tool, xCt,yCt, button) == 1)
+		if (tool->ops->mousebuttondown(tool, vCt, button) == 1)
 			return;
 	}
 	TAILQ_FOREACH(tool, &vv->tools, tools) {
@@ -158,17 +162,18 @@ MouseButtonUp(AG_Event *event)
 	int xCurs = AG_INT(2);
 	int yCurs = AG_INT(3);
 	VG_ToolMouseBinding *mb;
-	float x, y, xCt, yCt;
+	float x, y;
+	VG_Vector vCt;
 	
-	VG_GetVGCoords(vv, xCurs,yCurs, &x,&y);
-	xCt = x;
-	yCt = y;
+	VG_GetVGCoords(vv, xCurs,yCurs, &vCt);
+	x = vCt.x;
+	y = vCt.y;
 
 	if (tool != NULL && tool->ops->mousebuttonup != NULL) {
 		if (!(tool->ops->flags & VG_BUTTONUP_NOSNAP)) {
-			VG_ApplyConstraints(vv, &xCt,&yCt);
+			VG_ApplyConstraints(vv, &vCt);
 		}
-		if (tool->ops->mousebuttonup(tool, xCt,yCt, button) == 1)
+		if (tool->ops->mousebuttonup(tool, vCt, button) == 1)
 			return;
 	}
 	TAILQ_FOREACH(tool, &vv->tools, tools) {
@@ -191,6 +196,47 @@ MouseButtonUp(AG_Event *event)
 	if (vv->btnup_ev != NULL)
 		AG_PostEvent(NULL, vv, vv->btnup_ev->name, "%i,%f,%f",
 		    button, x, y);
+}
+
+static void
+KeyDown(AG_Event *event)
+{
+	VG_View *vv = AG_SELF();
+	VG_Tool *tool = VG_CURTOOL(vv);
+	int keysym = AG_INT(1);
+	int keymod = AG_INT(2);
+	int unicode = AG_INT(3);
+	
+	if (tool != NULL && tool->ops->keydown != NULL) {
+		if (tool->ops->keydown(tool, keysym, keymod, unicode) == 1)
+			return;
+	}
+	/* TODO panning, etc... */
+}
+
+static void
+KeyUp(AG_Event *event)
+{
+	VG_View *vv = AG_SELF();
+	VG_Tool *tool = VG_CURTOOL(vv);
+	int keysym = AG_INT(1);
+	int keymod = AG_INT(2);
+	int unicode = AG_INT(3);
+	
+	if (tool != NULL && tool->ops->keyup != NULL) {
+		if (tool->ops->keyup(tool, keysym, keymod, unicode) == 1)
+			return;
+	}
+	/* TODO panning, etc... */
+}
+
+static void
+OnShow(AG_Event *event)
+{
+	VG_View *vv = AG_SELF();
+
+	vv->x = AGWIDGET(vv)->w/2.0f;
+	vv->y = AGWIDGET(vv)->h/2.0f;
 }
 
 static void
@@ -230,6 +276,9 @@ Init(void *obj)
 	AG_SetEvent(vv, "window-mousemotion", MouseMotion, NULL);
 	AG_SetEvent(vv, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(vv, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(vv, "window-keydown", KeyDown, NULL);
+	AG_SetEvent(vv, "window-keyup", KeyUp, NULL);
+	AG_SetEvent(vv, "widget-shown", OnShow, NULL);
 }
 
 static void
@@ -353,11 +402,10 @@ DrawGrid(VG_View *vv)
 	if ((ival = (int)(vv->gridIval*vv->scale)) < 5) {
 		return;
 	}
-	x0 = WIDGET(vv)->cx + (int)(vv->x)%ival;
-	y = WIDGET(vv)->cy + (int)(vv->y)%ival;
-
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
+		x0 = WIDGET(vv)->cx + (int)(vv->x)%ival;
+		y = WIDGET(vv)->cy + (int)(vv->y)%ival;
 		glBegin(GL_POINTS);
 		glColor3ub(vv->vg->gridColor.r, vv->vg->gridColor.g,
 		           vv->vg->gridColor.b);
@@ -369,6 +417,8 @@ DrawGrid(VG_View *vv)
 	} else
 #endif
 	{
+		x0 = (int)(vv->x)%ival;
+		y = (int)(vv->y)%ival;
 		c32 = VG_MapColorRGB(vv->vg->gridColor);
 		for (; y < WIDGET(vv)->cy2; y += ival) {
 			for (x = x0; x < WIDGET(vv)->cx2; x += ival)
@@ -379,48 +429,58 @@ DrawGrid(VG_View *vv)
 
 #ifdef DEBUG
 static void
-DrawExtents(VG_View *vv)
+DrawNodeExtent(VG_Node *vn, VG_View *vv)
 {
-	VG *vg = vv->vg;
 	VG_Rect vExt;
-	VG_Node *vn;
-	VG_Block *vgb;
 	AG_Rect rExt;
-	Uint32 cGreen, cRed;
+	VG_Vector v;
 
-	cGreen = SDL_MapRGB(agVideoFmt, 0,250,0);
-	cRed = SDL_MapRGB(agVideoFmt, 250,0,0);
-
-	TAILQ_FOREACH(vn, &vg->nodes, nodes) {
-		if (vn->ops->extent != NULL) {
-			vn->ops->extent(vv, vn, &vExt);
-		} else {
-			continue;
-		}
-		VG_GetViewCoords(vv, vExt.x, vExt.y, &rExt.x, &rExt.y);
-		rExt.w = (int)(vExt.w*vv->scale);
-		rExt.h = (int)(vExt.h*vv->scale);
-		AG_DrawRectOutline(vv, rExt, cRed);
+	if (vn->ops->extent == NULL) {
+		return;
 	}
-	TAILQ_FOREACH(vgb, &vg->blocks, vgbs) {
-		VG_BlockExtent(vv, vgb, &vExt);
-		VG_GetViewCoords(vv, vExt.x, vExt.y, &rExt.x, &rExt.y);
-		rExt.x -= 1;
-		rExt.y -= 1;
-		rExt.w = (int)(vExt.w*vv->scale) + 2;
-		rExt.h = (int)(vExt.h*vv->scale) + 2;
-		AG_DrawRectOutline(vv, rExt, cGreen);
-	}
+	vn->ops->extent(vn, vv, &vExt);
+	v.x = vExt.x;
+	v.y = vExt.y;
+	VG_GetViewCoords(vv, v, &rExt.x, &rExt.y);
+	rExt.w = (int)(vExt.w*vv->scale);
+	rExt.h = (int)(vExt.h*vv->scale);
+	AG_DrawRectOutline(vv, rExt, SDL_MapRGB(agVideoFmt, 250, 0, 0));
 }
 #endif /* DEBUG */
+
+static void
+DrawNode(VG *vg, VG_Node *vn, VG_View *vv)
+{
+	VG_Node *vnChld;
+	VG_Color colorSave;
+
+	VG_PushMatrix(vg);
+	VG_MultMatrix(&vg->T[vg->nT-1], &vn->T);
+
+	TAILQ_FOREACH(vnChld, &vn->cNodes, tree)
+		DrawNode(vg, vnChld, vv);
+#ifdef DEBUG
+	if (vv->flags & VG_VIEW_EXTENTS)
+		DrawNodeExtent(vn, vv);
+#endif
+	colorSave = vn->color;
+	if (vn->flags & VG_NODE_SELECTED) {
+		VG_BlendColors(&vn->color, vg->selectionColor);
+	}
+	if (vn->flags & VG_NODE_MOUSEOVER) {
+		VG_BlendColors(&vn->color, vg->mouseoverColor);
+	}
+	vn->ops->draw(vn, vv);
+	vn->color = colorSave;
+
+	VG_PopMatrix(vg);
+}
 
 static void
 Draw(void *p)
 {
 	VG_View *vv = p;
 	VG *vg = vv->vg;
-	VG_Color colorSave;
-	VG_Node *vn;
 	int su;
 
 	if (vv->flags & VG_VIEW_BGFILL) {
@@ -432,30 +492,16 @@ Draw(void *p)
 
 	VG_Lock(vg);
 
-	if (vv->curtool != NULL && vv->curtool->ops->predraw != NULL) {
+	if (vv->curtool != NULL && vv->curtool->ops->predraw != NULL)
 		vv->curtool->ops->predraw(vv->curtool, vv);
-	}
-	if (vv->draw_ev != NULL) {
+
+	if (vv->draw_ev != NULL)
 		vv->draw_ev->handler(vv->draw_ev);
-	}
-	if (vv->curtool != NULL && vv->curtool->ops->postdraw != NULL) {
+
+	if (vv->curtool != NULL && vv->curtool->ops->postdraw != NULL)
 		vv->curtool->ops->postdraw(vv->curtool, vv);
-	}
-#ifdef DEBUG
-	if (vv->flags & VG_VIEW_EXTENTS)
-		DrawExtents(vv);
-#endif
-	TAILQ_FOREACH(vn, &vg->nodes, nodes) {
-		colorSave = vn->color;
-		if (vn->flags & VG_NODE_SELECTED) {
-			VG_BlendColors(&vn->color, vg->selectionColor);
-		}
-		if (vn->flags & VG_NODE_MOUSEOVER) {
-			VG_BlendColors(&vn->color, vg->mouseoverColor);
-		}
-		vn->ops->draw(vv, vn);
-		vn->color = colorSave;
-	}
+
+	DrawNode(vg, vg->root, vv);
 
 	VG_Unlock(vg);
 
