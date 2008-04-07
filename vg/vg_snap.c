@@ -101,11 +101,11 @@ VG_SnapToolbar(void *parent, VG_View *vv, int type)
 	    SnapTo, "%p,%p,%i", snbar, vv, VG_FREE_POSITIONING);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapGrid.s, 1,
 	    SnapTo, "%p,%p,%i", snbar, vv, VG_GRID);
+#if 0
 	AG_ToolbarButtonIcon(snbar, vgIconSnapEndpt.s, 0,
 	    SnapTo, "%p,%p,%i", snbar, vv, VG_ENDPOINT);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapEndptDist.s, 0,
 	    SnapTo, "%p,%p,%i", snbar, vv, VG_ENDPOINT_DISTANCE);
-
 	AG_ToolbarButtonIcon(snbar, vgIconSnapClosest.s, 0,
 	    SnapTo, "%p,%p,%i", snbar, vv, VG_CLOSEST_POINT);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapCenterPt.s, 0,
@@ -116,6 +116,7 @@ VG_SnapToolbar(void *parent, VG_View *vv, int type)
 	    SnapTo, "%p,%p,%i", snbar, vv, VG_INTERSECTIONS_AUTO);
 	AG_ToolbarButtonIcon(snbar, vgIconSnapIntsectManual.s, 0,
 	    SnapTo, "%p,%p,%i", snbar, vv, VG_INTERSECTIONS_MANUAL);
+#endif
 	return (snbar);
 }
 
