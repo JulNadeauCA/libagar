@@ -111,6 +111,7 @@ extern int agTextFontDescent;
 extern int agTextFontLineSkip;
 extern int agFreetype;
 extern int agGlyphGC;
+extern AG_TextState *agTextState;
 
 int	 AG_TextInit(void);
 void	 AG_TextParseFontSpec(const char *);
@@ -187,6 +188,18 @@ void	  AG_ClearGlyphCache(void);
 
 void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
                   int, enum ag_text_justify, enum ag_text_valign);
+		    
+static __inline__ int
+AG_TextStateCompare(const AG_TextState *s1, const AG_TextState *s2)
+{
+	if (s1->font == s2->font &&
+	    s1->color == s2->color &&
+	    s1->colorBG == s2->colorBG &&
+	    s1->justify == s2->justify) {
+		return (0);
+	}
+	return (1);
+}
 __END_DECLS
 
 #include "close_code.h"
