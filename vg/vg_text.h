@@ -9,9 +9,8 @@
 
 typedef struct vg_text {
 	struct vg_node _inherit;
-	VG_Point *p;			/* Position */
-	enum vg_alignment align;	/* Text alignment around point */
-	float angle;			/* Text rotation (degs) */
+	VG_Point *p1, *p2;		/* Position line */
+	enum vg_alignment align;	/* Text alignment around line */
 
 	char fontFace[VG_FONT_FACE_MAX]; /* Font face */
 	int  fontSize;			 /* Font size */
@@ -32,17 +31,19 @@ __BEGIN_DECLS
 extern const VG_NodeOps vgTextOps;
 
 void VG_TextPrintf(VG_Text *, const char *, ...);
-void VG_TextPrintfP(VG_Text *, const char *, ...);
+void VG_TextPrintfPolled(VG_Text *, const char *, ...);
 
 static __inline__ VG_Text *
-VG_TextNew(void *pNode, VG_Point *pt)
+VG_TextNew(void *pNode, VG_Point *p1, VG_Point *p2)
 {
 	VG_Text *vt;
 
 	vt = AG_Malloc(sizeof(VG_Text));
 	VG_NodeInit(vt, &vgTextOps);
-	vt->p = pt;
-	VG_AddRef(vt, pt);
+	vt->p1 = p1;
+	vt->p2 = p2;
+	VG_AddRef(vt, p1);
+	VG_AddRef(vt, p2);
 	VG_NodeAttach(pNode, vt);
 	return (vt);
 }
@@ -51,11 +52,6 @@ static __inline__ void
 VG_TextAlignment(VG_Text *vt, enum vg_alignment align)
 {
 	vt->align = align;
-}
-static __inline__ void
-VG_TextAngle(VG_Text *vt, float angle)
-{
-	vt->angle = angle;
 }
 static __inline__ void
 VG_TextFontFace(VG_Text *vt, const char *face)

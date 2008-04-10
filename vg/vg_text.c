@@ -32,6 +32,7 @@
 
 #include <gui/widget.h>
 #include <gui/primitive.h>
+#include <gui/opengl.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -45,14 +46,14 @@ Init(void *p)
 {
 	VG_Text *vt = p;
 
+	vt->p1 = NULL;
+	vt->p2 = NULL;
 	vt->text[0] = '\0';
-	vt->angle = 0.0f;
 	vt->align = VG_ALIGN_MC;
 	vt->nPtrs = 0;
 	vt->fontSize = agDefaultFont->size;
 	vt->fontFlags = agDefaultFont->flags;
-	Strlcpy(vt->fontFace, OBJECT(agDefaultFont)->name,
-	    sizeof(vt->fontFace));
+	vt->fontFace[0] = '\0';
 }
 
 static int
@@ -60,9 +61,9 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 {
 	VG_Text *vt = p;
 
-	vt->p = VG_ReadRef(ds, vt, "Point");
+	vt->p1 = VG_ReadRef(ds, vt, "Point");
+	vt->p2 = VG_ReadRef(ds, vt, "Point");
 	vt->align = (enum vg_alignment)AG_ReadUint8(ds);
-	vt->angle = AG_ReadFloat(ds);
 	AG_CopyString(vt->fontFace, ds, sizeof(vt->fontFace));
 	vt->fontSize = (int)AG_ReadUint8(ds);
 	vt->fontFlags = (Uint)AG_ReadUint16(ds);
@@ -76,9 +77,9 @@ Save(void *p, AG_DataSource *ds)
 {
 	VG_Text *vt = p;
 
-	VG_WriteRef(ds, vt->p);
+	VG_WriteRef(ds, vt->p1);
+	VG_WriteRef(ds, vt->p2);
 	AG_WriteUint8(ds, (Uint8)vt->align);
-	AG_WriteFloat(ds, vt->angle);
 	AG_WriteString(ds, vt->fontFace);
 	AG_WriteUint8(ds, (Uint8)vt->fontSize);
 	AG_WriteUint16(ds, (Uint16)vt->fontFlags);
@@ -87,7 +88,7 @@ Save(void *p, AG_DataSource *ds)
 
 /* Specify text with polled values. */
 void
-VG_TextPrintfP(VG_Text *vt, const char *fmt, ...)
+VG_TextPrintfPolled(VG_Text *vt, const char *fmt, ...)
 {
 	const char *p;
 	va_list ap;
@@ -135,43 +136,48 @@ VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 	}
 }
 
-static __inline__ void
-AlignText(VG_Text *vt, int *x, int *y, int w, int h)
+static void
+DrawText(VG_Text *vt, const char *s, VG_View *vv)
 {
-	switch (vt->align) {
-	case VG_ALIGN_TL:
-		break;
-	case VG_ALIGN_TC:
-		(*x) -= w/2;
-		break;
-	case VG_ALIGN_TR:
-		(*x) -= w;
-		break;
-	case VG_ALIGN_ML:
-		(*y) -= h/2;
-		break;
-	case VG_ALIGN_MC:
-		(*x) -= w/2;
-		(*y) -= h/2;
-		break;
-	case VG_ALIGN_MR:
-		(*x) -= w;
-		(*y) -= h/2;
-		break;
-	case VG_ALIGN_BL:
-		(*y) -= h;
-		break;
-	case VG_ALIGN_BC:
-		(*x) -= w/2;
-		(*y) -= h;
-		break;
-	case VG_ALIGN_BR:
-		(*x) -= w;
-		(*y) -= h;
-		break;
-	default:
-		break;
+	VG_Vector v1, v2, vMid;
+	int x, y, w, h;
+	int su;
+
+	AG_PushTextState();
+	if (vt->fontFace[0] != '\0' ||
+	    vt->fontSize != agDefaultFont->size ||
+	    vt->fontFlags != agDefaultFont->flags) {
+		AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags);
 	}
+	AG_TextColorVideo32(VG_MapColorRGB(VGNODE(vt)->color));
+
+	su = AG_TextCacheInsLookup(vv->tCache, s);
+	w = WSURFACE(vv,su)->w;
+	h = WSURFACE(vv,su)->h;
+
+	v1 = VG_PointPos(vt->p1);
+	v2 = VG_PointPos(vt->p2);
+	vMid.x = v1.x + (v2.x - v1.x)/2.0f;
+	vMid.y = v1.y + (v2.y - v1.y)/2.0f;
+	VG_GetViewCoords(vv, vMid, &x, &y);
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		glPushMatrix();
+		glTranslatef((float)(WIDGET(vv)->cx + x),
+		             (float)(WIDGET(vv)->cy + y),
+			     0.0f);
+		glRotatef(VG_Degrees(VG_Atan2(v1.y-v2.y, v1.x-v2.x)),
+		    0.0f, 0.0f, 1.0f);
+		AG_WidgetBlitSurfaceGL(vv, su, w, h);
+		glPopMatrix();
+	} else
+#endif
+	{
+		AG_WidgetBlitSurface(vv, su,
+		    x - w/2,
+		    y - h/2);
+	}
+	AG_PopTextState();
 }
 
 #define TARG(_type) (*(_type *)vt->ptrs[ri])
@@ -179,15 +185,11 @@ AlignText(VG_Text *vt, int *x, int *y, int w, int h)
 static void
 DrawPolled(VG_Text *vt, VG_View *vv)
 {
-	VG_Node *vn = VGNODE(vt);
 	char s[VG_TEXT_MAX], s2[32];
 	char *fmtp;
-	int  ri = 0;
-	int x, y, su;
+	int ri = 0;
 	
-	VG_GetViewCoords(vv, VG_PointPos(vt->p), &x, &y);
 	s[0] = '\0';
-	s2[0] = '\0';
 	for (fmtp = &vt->text[0]; *fmtp != '\0'; fmtp++) {
 		if (*fmtp == '%' && *(fmtp+1) != '\0') {
 			switch (*(fmtp+1)) {
@@ -250,13 +252,7 @@ DrawPolled(VG_Text *vt, VG_View *vv)
 			Strlcat(s, s2, sizeof(s));
 		}
 	}
-	AG_PushTextState();
-	AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags),
-	AG_TextColorVideo32(VG_MapColorRGB(vn->color));
-	su = AG_TextCacheInsLookup(vv->tCache, vt->text);
-	AlignText(vt, &x, &y, WSURFACE(vv,su)->w, WSURFACE(vv,su)->h);
-	AG_WidgetBlitSurface(vv, su, x, y);
-	AG_PopTextState();
+	DrawText(vt, s, vv);
 }
 
 #undef TARG
@@ -265,56 +261,47 @@ static void
 Draw(void *p, VG_View *vv)
 {
 	VG_Text *vt = p;
-	int x, y, su;
 	
 	if (vt->nPtrs > 0) {
 		DrawPolled(vt, vv);
-		return;
+	} else {
+		DrawText(vt, vt->text, vv);
 	}
-
-	VG_GetViewCoords(vv, VG_PointPos(vt->p), &x, &y);
-
-	AG_PushTextState();
-	AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags),
-	AG_TextColorVideo32(VG_MapColorRGB(VGNODE(vt)->color));
-
-	su = AG_TextCacheInsLookup(vv->tCache, vt->text);
-	AlignText(vt, &x, &y, WSURFACE(vv,su)->w, WSURFACE(vv,su)->h);
-	AG_WidgetBlitSurface(vv, su, x,y);
-
-	AG_PopTextState();
 }
 
 static void
 Extent(void *p, VG_View *vv, VG_Rect *r)
 {
 	VG_Text *vt = p;
-	int x, y, w, h;
-	VG_Vector vRect;
+	float wText, hText;
+	VG_Vector v1, v2;
 	int su;
-	
+
 	su = AG_TextCacheInsLookup(vv->tCache, vt->text);
-	VG_GetViewCoords(vv, VG_PointPos(vt->p), &x, &y);
-	w = WSURFACE(vv,su)->w;
-	h = WSURFACE(vv,su)->h;
-	AlignText(vt, &x, &y, w, h);
-	VG_GetVGCoords(vv, x,y, &vRect);
-	r->x = vRect.x;
-	r->y = vRect.y;
-	r->w = (float)w/vv->scale;
-	r->h = (float)h/vv->scale;
+	v1 = VG_PointPos(vt->p1);
+	v2 = VG_PointPos(vt->p2);
+	wText = (float)WSURFACE(vv,su)->w/vv->scale;
+	hText = (float)WSURFACE(vv,su)->h/vv->scale;
+
+	r->x = MIN(v1.x,v2.x) - wText/2.0f;
+	r->y = MIN(v1.y,v2.y) - hText/2.0f;
+	r->w = MAX(v1.x,v2.x) - r->x + hText/2.0f;
+	r->h = MAX(v1.y,v2.y) - r->y + hText/2.0f;
 }
 
 static float
 PointProximity(void *p, VG_Vector *vPt)
 {
 	VG_Text *vt = p;
-	VG_Vector vPos = VG_PointPos(vt->p);
+	VG_Vector v1 = VG_PointPos(vt->p1);
+/*	VG_Vector v2 = VG_PointPos(vt->p2); */
 	float d;
 
-	d = VG_Distance(*vPt, vPos);
-	vPt->x = vPos.x;
-	vPt->y = vPos.y;
+	/* XXX TODO: Handle rotation */
+
+	d = VG_Distance(*vPt, v1);
+	vPt->x = v1.x;
+	vPt->y = v1.y;
 	return (d);
 }
 
@@ -323,8 +310,10 @@ Delete(void *p)
 {
 	VG_Text *vt = p;
 
-	if (VG_DelRef(vt, vt->p) == 0)
-		VG_Delete(vt->p);
+	if (VG_DelRef(vt, vt->p1) == 0)
+		VG_Delete(vt->p1);
+	if (VG_DelRef(vt, vt->p2) == 0)
+		VG_Delete(vt->p2);
 }
 
 const VG_NodeOps vgTextOps = {
