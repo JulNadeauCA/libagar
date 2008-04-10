@@ -182,8 +182,8 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 {
 	InitGlobals();
 	
-	if (display->w < AG_Uint16(agConfig, "view.min-w") ||
-	    display->h < AG_Uint16(agConfig, "view.min-h")) {
+	if (display->w < AG_GetUint16(agConfig,"view.min-w") ||
+	    display->h < AG_GetUint16(agConfig,"view.min-h")) {
 		AG_SetError(_("The resolution is too small."));
 		return (-1);
 	}
@@ -194,7 +194,7 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 	agView->w = display->w;
 	agView->h = display->h;
 	agView->depth = display->format->BitsPerPixel;
-	agView->rNom = 1000/AG_Uint(agConfig, "view.nominal-fps");
+	agView->rNom = 1000/AG_GetUint(agConfig, "view.nominal-fps");
 
 	AG_SetUint8(agConfig, "view.depth", agView->depth);
 	AG_SetUint16(agConfig, "view.w", agView->w);
@@ -290,14 +290,14 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	agView = Malloc(sizeof(AG_Display));
 	InitView(agView);
 
-	agView->rNom = 1000/AG_Uint(agConfig, "view.nominal-fps");
-	depth = bpp > 0 ? bpp : AG_Uint8(agConfig, "view.depth");
-	agView->w = w > 0 ? w : AG_Uint16(agConfig, "view.w");
-	agView->h = h > 0 ? h : AG_Uint16(agConfig, "view.h");
+	agView->rNom = 1000/AG_GetUint(agConfig,"view.nominal-fps");
+	depth = bpp > 0 ? bpp : AG_GetUint8(agConfig,"view.depth");
+	agView->w = w > 0 ? w : AG_GetUint16(agConfig,"view.w");
+	agView->h = h > 0 ? h : AG_GetUint16(agConfig,"view.h");
 
-	if (AG_Bool(agConfig, "view.full-screen"))
+	if (AG_GetBool(agConfig,"view.full-screen"))
 		screenflags |= SDL_FULLSCREEN;
-	if (AG_Bool(agConfig, "view.async-blits"))
+	if (AG_GetBool(agConfig,"view.async-blits"))
 		screenflags |= SDL_HWSURFACE|SDL_ASYNCBLIT;
 
 	agView->depth = SDL_VideoModeOK(agView->w, agView->h, depth,
@@ -306,7 +306,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		screenflags |= SDL_HWPALETTE;
 	
 #ifdef HAVE_OPENGL
-	if (AG_Bool(agConfig, "view.opengl")) {
+	if (AG_GetBool(agConfig,"view.opengl")) {
 		screenflags |= SDL_OPENGL;
 		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
@@ -317,8 +317,8 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	}
 #endif
 
-	if (agView->w < AG_Uint16(agConfig, "view.min-w") ||
-	    agView->h < AG_Uint16(agConfig, "view.min-h")) {
+	if (agView->w < AG_GetUint16(agConfig,"view.min-w") ||
+	    agView->h < AG_GetUint16(agConfig,"view.min-h")) {
 		AG_SetError(_("The resolution is too small."));
 		goto fail;
 	}
@@ -1087,7 +1087,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 	JSAMPROW row[1];
 	int x;
 
-	AG_StringCopy(agConfig, "save-path", path, sizeof(path));
+	AG_GetStringCopy(agConfig, "save-path", path, sizeof(path));
 	Strlcat(path, AG_PATHSEP, sizeof(path));
 	Strlcat(path, "screenshot", sizeof(path));
 	if (AG_MkDir(path) == -1 && errno != EEXIST) {

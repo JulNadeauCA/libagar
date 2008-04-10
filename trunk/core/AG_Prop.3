@@ -90,55 +90,55 @@ enum ag_prop_type {
 .Fn AG_UnlockProps "void *obj"
 .Pp
 .Ft int
-.Fn AG_Bool "void *obj" "const char *key"
+.Fn AG_GetBool "void *obj" "const char *key"
 .Pp
 .Ft "Uint"
-.Fn AG_Uint "void *obj" "const char *key"
+.Fn AG_GetUint "void *obj" "const char *key"
 .Pp
 .Ft int
-.Fn AG_Int "void *obj" "const char *key"
+.Fn AG_GetInt "void *obj" "const char *key"
 .Pp
 .Ft Uint8
-.Fn AG_Uint8 "void *obj" "const char *key"
+.Fn AG_GetUint8 "void *obj" "const char *key"
 .Pp
 .Ft Sint8
-.Fn AG_Sint8 "void *obj" "const char *key"
+.Fn AG_GetSint8 "void *obj" "const char *key"
 .Pp
 .Ft Uint16
-.Fn AG_Uint16 "void *obj" "const char *key"
+.Fn AG_GetUint16 "void *obj" "const char *key"
 .Pp
 .Ft Sint16
-.Fn AG_Sint16 "void *obj" "const char *key"
+.Fn AG_GetSint16 "void *obj" "const char *key"
 .Pp
 .Ft Uint32
-.Fn AG_Uint32 "void *obj" "const char *key"
+.Fn AG_GetUint32 "void *obj" "const char *key"
 .Pp
 .Ft Sint32
-.Fn AG_Sint32 "void *obj" "const char *key"
+.Fn AG_GetSint32 "void *obj" "const char *key"
 .Pp
 .Ft Uint64
-.Fn AG_Uint64 "void *obj" "const char *key"
+.Fn AG_GetUint64 "void *obj" "const char *key"
 .Pp
 .Ft Sint64
-.Fn AG_Sint64 "void *obj" "const char *key"
+.Fn AG_GetSint64 "void *obj" "const char *key"
 .Pp
 .Ft float
-.Fn AG_Float "void *obj" "const char *key"
+.Fn AG_GetFloat "void *obj" "const char *key"
 .Pp
 .Ft double
-.Fn AG_Double "void *obj" "const char *key"
+.Fn AG_GetDouble "void *obj" "const char *key"
 .Pp
 .Ft "long double"
-.Fn AG_LongDouble "void *obj" "const char *key"
+.Fn AG_GetLongDouble "void *obj" "const char *key"
 .Pp
 .Ft "char *"
-.Fn AG_String "void *obj" "const char *key"
+.Fn AG_GetString "void *obj" "const char *key"
 .Pp
 .Ft size_t
-.Fn AG_StringCopy "void *obj" "const char *key" "char *dst" "size_t dst_size"
+.Fn AG_GetStringCopy "void *obj" "const char *key" "char *dst" "size_t dst_size"
 .Pp
 .Ft "void *"
-.Fn AG_Pointer "void *obj" "const char *key"
+.Fn AG_GetPointer "void *obj" "const char *key"
 .Pp
 .nr nS 0
 The
@@ -176,15 +176,15 @@ functions all look for a property named
 and return the associated value, raising a fatal condition if there is
 no match.
 Note that
-.Fn AG_Uint64 ,
-.Fn AG_Sint64
+.Fn AG_GetUint64 ,
+.Fn AG_GetSint64
 and
-.Fn AG_LongDouble
+.Fn AG_GetLongDouble
 are not available on all platforms.
 .Pp
-.Fn AG_String
+.Fn AG_GetString
 returns a copy of the string.
-.Fn AG_StringCopy
+.Fn AG_GetStringCopy
 copies up to
 .Fa dst_size
 - 1 characters from the value of a string property to

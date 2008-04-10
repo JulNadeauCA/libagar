@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,17 +37,35 @@
 
 const AG_Version agPropTblVer = { 2, 0 };
 
-#if 0
-AG_PropOps *agPropOps = NULL;
-Uint        agPropOpsCnt = 0;
+const AG_PropClass **agPropClasses = NULL;
+Uint                 agPropClassCount = 0;
 
 void
-AG_PropRegister(const AG_PropOps *ops)
+AG_RegisterPropClass(const AG_PropClass *pc)
 {
-	agPropOps = Realloc(agPropOps, (agPropOpsCnt+1)*sizeof(AG_PropOps *));
-	agPropOps[agPropOpsCnt++] = ops;
+	agPropClasses = Realloc(agPropClasses,
+	    (agPropClassCount+1)*sizeof(AG_PropClass *));
+	agPropClasses[agPropClassCount++] = pc;
 }
-#endif
+
+void
+AG_UnregisterPropClass(const AG_PropClass *pc)
+{
+	int i;
+
+	for (i = 0; i < agPropClassCount; i++) {
+		if (agPropClasses[i] == pc)
+			break;
+	}
+	if (i == agPropClassCount) {
+		return;
+	}
+	if (i < agPropClassCount-1) {
+		memmove(&agPropClasses[i], &agPropClasses[i+1],
+		    (agPropClassCount-1)*sizeof(AG_PropClass *));
+	}
+	agPropClassCount--;
+}
 
 /* Return the copy of a property. */
 AG_Prop *
@@ -245,7 +263,7 @@ AG_FindProp(void *vfsRoot, const char *spec, int type, void *rval)
 }
 
 int
-AG_PropPath(char *dst, size_t size, void *obj, const char *prop_name)
+AG_PropCopyPath(char *dst, size_t size, void *obj, const char *prop_name)
 {
 	if (AG_ObjectCopyName(obj, dst, size) == -1 ||
 	    Strlcat(dst, ":", size) >= size ||
@@ -508,7 +526,7 @@ AG_PropPrint(char *s, size_t len, void *obj, const char *pname)
 }
 
 size_t
-AG_StringCopy(void *p, const char *key, char *buf, size_t bufsize)
+AG_GetStringCopy(void *p, const char *key, char *buf, size_t bufsize)
 {
 	size_t sl;
 	char *s;
@@ -518,20 +536,6 @@ AG_StringCopy(void *p, const char *key, char *buf, size_t bufsize)
 	}
 	sl = Strlcpy(buf, s, bufsize);
 	AG_UnlockProps(p);
-	return (sl);
-}
-
-size_t
-AG_FindStringCopy(void *vfsRoot, const char *key, char *buf, size_t bufsize)
-{
-	size_t sl;
-	char *s;
-
-	/* XXX thread unsafe */
-	if (AG_FindProp(vfsRoot, key, AG_PROP_STRING, &s) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	sl = Strlcpy(buf, s, bufsize);
 	return (sl);
 }
 

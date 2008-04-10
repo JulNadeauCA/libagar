@@ -143,7 +143,7 @@ AG_InitGUI(Uint flags)
 	agIcon_Init();
 
 	/* Try to load a color scheme from the default path. */
-	Strlcpy(path, AG_String(agConfig, "save-path"), sizeof(path));
+	Strlcpy(path, AG_GetString(agConfig,"save-path"), sizeof(path));
 	Strlcat(path, AG_PATHSEP, sizeof(path));
 	Strlcat(path, "gui-colors.acs", sizeof(path));
 	(void)AG_ColorsLoad(path);
@@ -153,10 +153,10 @@ AG_InitGUI(Uint flags)
 		return (-1);
 
 	/* Initialize the input devices. */
-	if (AG_Bool(agConfig, "input.unicode")) {
+	if (AG_GetBool(agConfig,"input.unicode")) {
 		SDL_EnableUNICODE(1);
 	}
-	if (AG_Bool(agConfig, "input.joysticks")) {
+	if (AG_GetBool(agConfig,"input.joysticks")) {
 		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
 			n = SDL_NumJoysticks();
 			for (i = 0, njoys = 0; i < n; i++) {

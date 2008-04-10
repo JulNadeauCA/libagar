@@ -64,7 +64,8 @@ AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 	AG_FileDlg *fd;
 
 	fd = AG_FileDlgNew(parent, flags);
-	AG_FileDlgSetDirectoryMRU(fd, mruKey, AG_String(agConfig,"save-path"));
+	AG_FileDlgSetDirectoryMRU(fd, mruKey,
+	    AG_GetString(agConfig,"save-path"));
 	return (fd);
 }
 

@@ -119,7 +119,7 @@ InsertASCII(AG_Editable *ed, SDLKey keysym, int keymod, Uint32 unicode,
 		break;
 	}
 
-	if (AG_Bool(agConfig,"input.composition")) {
+	if (AG_GetBool(agConfig,"input.composition")) {
 		if ((nins = AG_KeyInputCompose(ed, (Uint32)ch, ins)) == 0)
 			return (0);
 	} else {

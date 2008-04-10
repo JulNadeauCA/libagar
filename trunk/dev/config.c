@@ -319,29 +319,29 @@ DEV_ConfigWindow(AG_Config *cfg)
 	{
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Temporary dir: "));
-		AG_StringCopy(agConfig, "tmp-path", path, sizeof(path));
+		AG_GetStringCopy(agConfig, "tmp-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "tmp-path");
 
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Data save dir: "));
-		AG_StringCopy(agConfig, "save-path", path, sizeof(path));
+		AG_GetStringCopy(agConfig, "save-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "save-path");
 	
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
 		    _("Data load path: "));
-		AG_StringCopy(agConfig, "load-path", path, sizeof(path));
+		AG_GetStringCopy(agConfig, "load-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "load-path");
 	
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Font path: "));
-		AG_StringCopy(agConfig, "font-path", path, sizeof(path));
+		AG_GetStringCopy(agConfig, "font-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
 		
 		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Den path: "));
-		AG_StringCopy(agConfig, "den-path", path, sizeof(path));
+		AG_GetStringCopy(agConfig, "den-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "den-path");
 	}

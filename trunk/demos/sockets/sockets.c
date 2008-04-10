@@ -22,7 +22,7 @@ SDL_Surface *pixmaps[4];
 static int
 InsertHelmet(AG_Socket *sock, AG_Icon *icon)
 {
-	if (strcmp(AG_String(icon,"item-type"), "helmet") == 0) {
+	if (strcmp(AG_GetString(icon,"item-type"), "helmet") == 0) {
 		if (icon->sock != NULL) {
 			AG_SocketRemoveIcon(icon->sock);
 		}
@@ -37,7 +37,7 @@ InsertHelmet(AG_Socket *sock, AG_Icon *icon)
 static int
 InsertWeapon(AG_Socket *sock, AG_Icon *icon)
 {
-	if (strcmp(AG_String(icon,"item-type"), "weapon") == 0) {
+	if (strcmp(AG_GetString(icon,"item-type"), "weapon") == 0) {
 		if (icon->sock != NULL) {
 			AG_SocketRemoveIcon(icon->sock);
 		}
