@@ -294,15 +294,9 @@ PointProximity(void *p, VG_Vector *vPt)
 {
 	VG_Text *vt = p;
 	VG_Vector v1 = VG_PointPos(vt->p1);
-/*	VG_Vector v2 = VG_PointPos(vt->p2); */
-	float d;
+	VG_Vector v2 = VG_PointPos(vt->p2);
 
-	/* XXX TODO: Handle rotation */
-
-	d = VG_Distance(*vPt, v1);
-	vPt->x = v1.x;
-	vPt->y = v1.y;
-	return (d);
+	return VG_PointLineDistance(v1, v2, vPt);
 }
 
 static void
