@@ -980,6 +980,8 @@ AG_WidgetBlitSurfaceGL(void *pWidget, int name, float w, float h)
 	GLfloat texenvmode;
 	SDL_Surface *su = wid->surfaces[name];
 	int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
+	float w2 = w/2.0f;
+	float h2 = h/2.0f;
 	
 	UpdateTexture(wid, name);
 
@@ -1000,13 +1002,13 @@ AG_WidgetBlitSurfaceGL(void *pWidget, int name, float w, float h)
 	glBegin(GL_TRIANGLE_STRIP);
 	{
 		glTexCoord2f(texcoord[0],	texcoord[1]);
-		glVertex2f((GLfloat)w,		(GLfloat)h);
+		glVertex2f(w2,			h2);
 		glTexCoord2f(texcoord[2],	texcoord[1]);
-		glVertex2f(0.0,			(GLfloat)h);
+		glVertex2f(-w2,			h2);
 		glTexCoord2f(texcoord[0],	texcoord[3]);
-		glVertex2f((GLfloat)w,		0.0);
+		glVertex2f(w2,			-h2);
 		glTexCoord2f(texcoord[2],	texcoord[3]);
-		glVertex2f(0.0,			0.0);
+		glVertex2f(-w2,			-h2);
 	}
 	glEnd();
 	glBindTexture(GL_TEXTURE_2D, 0);
