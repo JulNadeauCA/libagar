@@ -493,7 +493,7 @@ main(int argc, char *argv[])
 		    "Agar version: %d.%d.%d\n(%s)\n"
 		    "Graphics driver: %s",
 		    ver.major, ver.minor, ver.patch, ver.release,
-		    AG_Bool(agConfig,"view.opengl") ? "OpenGL" : "SDL");
+		    AG_GetBool(agConfig,"view.opengl") ? "OpenGL" : "SDL");
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 
 		AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
@@ -526,7 +526,7 @@ main(int argc, char *argv[])
 	if (useDoubleBuf) {
 		/* Use our custom event loop. */
 		printf("Using MyEventLoop_DoubleBuf()\n");
-		if (AG_Bool(agConfig,"view.opengl")) {
+		if (AG_GetBool(agConfig,"view.opengl")) {
 			printf("MyEventLoop_DoubleBuf() requires SDL mode!\n");
 			exit(1);
 		}

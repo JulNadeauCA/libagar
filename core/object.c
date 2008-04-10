@@ -794,7 +794,7 @@ AG_ObjectCopyFilename(void *p, char *path, size_t path_len)
 		Strlcpy(path, ob->archivePath, path_len);
 		goto out;
 	}
-	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
+	AG_GetStringCopy(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
 	for (dir = AG_Strsep(&loadpathp, ":");
@@ -836,7 +836,7 @@ AG_ObjectCopyDirname(void *p, char *path, size_t path_len)
 	char *dir;
 
 	AG_ObjectLock(ob);
-	AG_StringCopy(agConfig, "load-path", load_path, sizeof(load_path));
+	AG_GetStringCopy(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
 	for (dir = AG_Strsep(&loadpathp, ":");
@@ -1318,7 +1318,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 		Strlcpy(path, pPath, sizeof(path));
 	} else if (ob->archivePath == NULL) {
 		/* Create the save directory if needed. */
-		Strlcpy(pathDir, AG_String(agConfig,"save-path"),
+		Strlcpy(pathDir, AG_GetString(agConfig,"save-path"),
 		    sizeof(pathDir));
 		if (ob->save_pfx != NULL) {
 			Strlcat(pathDir, ob->save_pfx, sizeof(pathDir));
@@ -1941,7 +1941,7 @@ AG_ObjectChanged(void *p)
 		AG_ObjectUnlock(ob);
 		return (1);
 	}
-	Strlcpy(pathCur, AG_String(agConfig,"tmp-path"), sizeof(pathCur));
+	Strlcpy(pathCur, AG_GetString(agConfig,"tmp-path"), sizeof(pathCur));
 	Strlcat(pathCur, "/_chg.", sizeof(pathCur));
 	Strlcat(pathCur, ob->name, sizeof(pathCur));
 	if (AG_ObjectSaveToFile(ob, pathCur) == -1) {

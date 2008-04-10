@@ -24,36 +24,61 @@ enum ag_prop_type {
 	AG_PROP_SINT16		= 5,
 	AG_PROP_UINT32		= 6,
 	AG_PROP_SINT32		= 7,
-	AG_PROP_UINT64		= 8,	/* Optional */
-	AG_PROP_SINT64		= 9,	/* Optional */
+	AG_PROP_UINT64		= 8,	/* MD */
+	AG_PROP_SINT64		= 9,	/* MD */
 	AG_PROP_FLOAT		= 10,
 	AG_PROP_DOUBLE		= 11,
-	AG_PROP_LONG_DOUBLE	= 12,	/* Optional */
+	AG_PROP_LONG_DOUBLE	= 12,	/* MD */
 	AG_PROP_STRING		= 13,
 	AG_PROP_POINTER		= 14,
 	AG_PROP_BOOL		= 15,
-	AG_PROP_EXT_FIRST	= 100,		/* Official extensions */
-	AG_PROP_EXT_LAST	= 10000,
-	AG_PROP_PVT_START	= 10001,	/* Application extensions */
-	AG_PROP_PVT_END		= 65535
+	/*
+	 * Extensions implemented outside of Agar
+	 */
+	AG_PROP_REAL		= 100,	/* M: Real number */
+	AG_PROP_RANGE		= 101,	/* M: Interval */
+	AG_PROP_COMPLEX		= 102,	/* M: Complex number */
+	AG_PROP_QUAT		= 103,	/* M: Quaternion */
+	AG_PROP_RECTANGULAR	= 104,	/* M: Rectangular coordinates */
+	AG_PROP_POLAR		= 105,	/* M: Polar coordinates */
+	AG_PROP_PARABOLIC	= 106,	/* M: Parabolic coordinates */
+	AG_PROP_SPHERICAL	= 107,	/* M: Spherical coordinates */
+	AG_PROP_CYLINDRICAL	= 108,	/* M: Cylindrical coordinates */
+	AG_PROP_COLOR		= 109,	/* M: Vector in RGBA color space */
+	AG_PROP_VECTOR		= 120,	/* M: Vector in Rn */
+	AG_PROP_VECTOR2		= 121,	/* M: Vector in R2 */
+	AG_PROP_VECTOR3		= 122,	/* M: Vector in R3 */
+	AG_PROP_VECTOR4		= 123,	/* M: Vector in R4 */
+	AG_PROP_MATRIX		= 130,	/* M: mxn matrix */
+	AG_PROP_MATRIX22	= 131,	/* M: 2x2 matrix */
+	AG_PROP_MATRIX33	= 132,	/* M: 3x3 matrix */
+	AG_PROP_MATRIX44	= 133,	/* M: 4x4 matrix */
+	/*
+	 * Application extensions
+	 */
+	AG_PROP_PRIVATE		= 10001,
 };
 
-#if 0
-struct ag_prop_ops {
-	enum ag_prop_type type;
-	const char *descr;
-	void (*set_val)(void *obj, AG_Prop *prop, void *arg);
-	void *(*get_val)(void *obj, AG_Prop *prop);
-	void (*print_val)(char *buf, size_t len, void *obj, AG_Prop *prop);
-	int (*compare)(AG_Prop *, AG_Prop *);
-	void *(*load)(void *obj, AG_Prop *, AG_DataSource *);
-	void (*save)(void *obj, AG_Prop *, AG_DataSource *);
-} AG_PropOps;
-#endif
+struct ag_object;
+struct ag_prop;
+
+typedef struct ag_prop_class {
+	Uint type;
+	size_t size;
+
+	int   (*set)(struct ag_object *obj, struct ag_prop *prop, void *val);
+	int   (*get)(struct ag_object *obj, struct ag_prop *prop, void **pVal);
+	void  (*print)(char *buf, size_t len, struct ag_object *obj,
+	               struct ag_prop *prop);
+	int   (*compare)(struct ag_prop *, struct ag_prop *);
+	void *(*load)(struct ag_object *obj, struct ag_prop *, AG_DataSource *);
+	void  (*save)(struct ag_object *obj, struct ag_prop *, AG_DataSource *);
+} AG_PropClass;
 
 typedef struct ag_prop {
-	char key[AG_PROP_KEY_MAX];
-	int type;
+	char key[AG_PROP_KEY_MAX];		/* Property name */
+	Uint type;				/* Property class */
+	void *obj;				/* Back pointer to object */
 	union {
 		unsigned u;
 		int	 i;
@@ -158,6 +183,12 @@ typedef struct ag_prop {
 #define AG_SetPointerRdFn(prop,fn) (prop)->readFn.rPointer = (fn)
 
 __BEGIN_DECLS
+extern const AG_PropClass **agPropClasses;
+extern Uint                 agPropClassCount ;
+
+void     AG_RegisterPropClass(const AG_PropClass *);
+void     AG_UnregisterPropClass(const AG_PropClass *);
+
 int	 AG_PropLoad(void *, AG_DataSource *);
 int	 AG_PropSave(void *, AG_DataSource *);
 void	 AG_PropDestroy(AG_Prop *);
@@ -167,14 +198,18 @@ AG_Prop	*AG_SetProp(void *, const char *, enum ag_prop_type, ...);
 AG_Prop	 *AG_GetProp(void *, const char *, int, void *);
 AG_Prop	 *AG_FindProp(void *, const char *, int, void *);
 void	  AG_PropPrint(char *, size_t, void *, const char *)
-		               BOUNDED_ATTRIBUTE(__string__, 1, 2);
-int	  AG_PropPath(char *, size_t, void *, const char *)
-		              BOUNDED_ATTRIBUTE(__string__, 1, 2);
-size_t	  AG_StringCopy(void *, const char *, char *, size_t);
-size_t	  AG_FindStringCopy(void *, const char *, char *, size_t);
+		       BOUNDED_ATTRIBUTE(__string__, 1, 2);
+int	  AG_PropCopyPath(char *, size_t, void *, const char *)
+		          BOUNDED_ATTRIBUTE(__string__, 1, 2);
+size_t	  AG_GetStringCopy(void *, const char *, char *, size_t);
 AG_Prop  *AG_SetString(void *, const char *, const char *, ...);
 
-static __inline__ AG_Prop *AG_SetUint(void *ob, const char *key, Uint i) {
+/********************
+ * Get/Set Routines *
+ ********************/
+
+static __inline__ AG_Prop *
+AG_SetUint(void *ob, const char *key, Uint i) {
 	return (AG_SetProp(ob, key, AG_PROP_UINT, i));
 }
 static __inline__ AG_Prop *AG_SetInt(void *ob, const char *key, int i) {
@@ -229,195 +264,104 @@ static __inline__ AG_Prop *AG_SetPointer(void *ob, const char *key, void *p) {
 static __inline__ AG_Prop *AG_SetBool(void *ob, const char *key, int i) {
 	return (AG_SetProp(ob, key, AG_PROP_BOOL, i));
 }
-static __inline__ Uint AG_Uint(void *p, const char *key) {
+static __inline__ Uint AG_GetUint(void *p, const char *key) {
 	Uint i;
 	if (AG_GetProp(p, key, AG_PROP_UINT, (Uint *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Uint AG_FindUint(void *vfsRoot, const char *key) {
-	Uint i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_UINT, (Uint *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
-static __inline__ int AG_Int(void *p, const char *key) {
+static __inline__ int AG_GetInt(void *p, const char *key) {
 	int i;
 	if (AG_GetProp(p, key, AG_PROP_INT, (int *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ int AG_FindInt(void *vfsRoot, const char *key) {
-	int i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_INT, (int *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
-static __inline__ int AG_Bool(void *p, const char *key) {
+static __inline__ int AG_GetBool(void *p, const char *key) {
 	int i;
 	if (AG_GetProp(p, key, AG_PROP_BOOL, (int *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ int AG_FindBool(void *vfsRoot, const char *key) {
-	int i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_BOOL, (int *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
-static __inline__ Uint8 AG_Uint8(void *p, const char *key) {
+static __inline__ Uint8 AG_GetUint8(void *p, const char *key) {
 	Uint8 i;
 	if (AG_GetProp(p, key, AG_PROP_UINT8, (Uint8 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Uint8 AG_FindUint8(void *vfsRoot, const char *key) {
-	Uint8 i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_UINT8, (Uint8 *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
-static __inline__ Sint8 AG_Sint8(void *p, const char *key) {
+static __inline__ Sint8 AG_GetSint8(void *p, const char *key) {
 	Sint8 i;
 	if (AG_GetProp(p, key, AG_PROP_SINT8, (Sint8 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Sint8 AG_FindSint8(void *vfsRoot, const char *key) {
-	Sint8 i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_SINT8, (Sint8 *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
-static __inline__ Uint16 AG_Uint16(void *p, const char *key) {
+static __inline__ Uint16 AG_GetUint16(void *p, const char *key) {
 	Uint16 i;
 	if (AG_GetProp(p, key, AG_PROP_UINT16, (Uint16 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Uint16 AG_FindUint16(void *vfsRoot, const char *key) {
-	Uint16 i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_UINT16, (Uint16 *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
-static __inline__ Sint16 AG_Sint16(void *p, const char *key) {
+static __inline__ Sint16 AG_GetSint16(void *p, const char *key) {
 	Sint16 i;
 	if (AG_GetProp(p, key, AG_PROP_SINT16, (Sint16 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Sint16 AG_FindSint16(void *vfsRoot, const char *key) {
-	Sint16 i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_SINT16, (Sint16 *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
-static __inline__ Uint32 AG_Uint32(void *p, const char *key) {
+static __inline__ Uint32 AG_GetUint32(void *p, const char *key) {
 	Uint32 i;
 	if (AG_GetProp(p, key, AG_PROP_UINT32, (Uint32 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Uint32 AG_FindUint32(void *vfsRoot, const char *key) {
-	Uint32 i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_UINT32, (Uint32 *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
-static __inline__ Sint32 AG_Sint32(void *p, const char *key) {
+static __inline__ Sint32 AG_GetSint32(void *p, const char *key) {
 	Sint32 i;
 	if (AG_GetProp(p, key, AG_PROP_SINT32, (Sint32 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Sint32 AG_FindSint32(void *vfsRoot, const char *key) {
-	Sint32 i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_SINT32, (Sint32 *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
 
 #ifdef HAVE_64BIT
-static __inline__ Uint64 AG_Uint64(void *p, const char *key) {
+static __inline__ Uint64 AG_GetUint64(void *p, const char *key) {
 	Uint64 i;
 	if (AG_GetProp(p, key, AG_PROP_UINT64, (Uint64 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Sint64 AG_Sint64(void *p, const char *key) {
+static __inline__ Sint64 AG_GetSint64(void *p, const char *key) {
 	Sint64 i;
 	if (AG_GetProp(p, key, AG_PROP_SINT64, (Sint64 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Uint64 AG_FindUint64(void *vfsRoot, const char *key) {
-	Uint64 i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_UINT64, (Uint64 *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
-static __inline__ Sint64 AG_FindSint64(void *vfsRoot, const char *key) {
-	Sint64 i;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_SINT64, (Sint64 *)&i) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (i);
-}
 #endif /* HAVE_64BIT */
 
-static __inline__ float AG_Float(void *p, const char *key) {
+static __inline__ float AG_GetFloat(void *p, const char *key) {
 	float f;
 	if (AG_GetProp(p, key, AG_PROP_FLOAT, (float *)&f) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (f);
 }
-static __inline__ float AG_FindFloat(void *vfsRoot, const char *key) {
-	float f;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_FLOAT, (float *)&f) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (f);
-}
-static __inline__ double AG_Double(void *p, const char *key) {
+static __inline__ double AG_GetDouble(void *p, const char *key) {
 	double d;
 	if (AG_GetProp(p, key, AG_PROP_DOUBLE, (double *)&d) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (d);
 }
-static __inline__ double AG_FindDouble(void *vfsRoot, const char *key) {
-	double d;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_DOUBLE, (double *)&d) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (d);
-}
 
 #ifdef HAVE_LONG_DOUBLE
-static __inline__ long double AG_LongDouble(void *p, const char *key) {
+static __inline__ long double AG_GetLongDouble(void *p, const char *key) {
 	long double d;
 	if (AG_GetProp(p, key, AG_PROP_LONG_DOUBLE, (long double *)&d)
 	    == NULL) {
@@ -425,40 +369,18 @@ static __inline__ long double AG_LongDouble(void *p, const char *key) {
 	}
 	return (d);
 }
-static __inline__ long double AG_FindLongDouble(void *vfsRoot, const char *key){
-	long double d;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_LONG_DOUBLE, (long double *)&d)
-	    == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (d);
-}
 #endif /* HAVE_LONG_DOUBLE */
 
-static __inline__ char *AG_String(void *p, const char *key) {
+static __inline__ char *AG_GetString(void *p, const char *key) {
 	char *s;
 	if (AG_GetProp(p, key, AG_PROP_STRING, (char *)&s) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (s);
 }
-static __inline__ char *AG_FindString(void *vfsRoot, const char *key) {
-	char *s;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_STRING, (char *)&s) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (s);
-}
-static __inline__ void * AG_Pointer(void *p, const char *key) {
+static __inline__ void *AG_GetPointer(void *p, const char *key) {
 	void *np;
 	if (AG_GetProp(p, key, AG_PROP_POINTER, (void *)&np) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	return (np);
-}
-static __inline__ void * AG_FindPointer(void *vfsRoot, const char *key) {
-	void *np;
-	if (AG_FindProp(vfsRoot, key, AG_PROP_POINTER, (void *)&np) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (np);

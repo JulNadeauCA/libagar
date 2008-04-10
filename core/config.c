@@ -224,7 +224,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	char *dir, *pathp = path;
 	int rv;
 
-	AG_StringCopy(agConfig, path_key, path, path_len);
+	AG_GetStringCopy(agConfig, path_key, path, path_len);
 
 	for (dir = AG_Strsep(&pathp, ":");
 	     dir != NULL;
@@ -250,7 +250,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 			return (-1);
 		}
 	}
-	AG_StringCopy(agConfig, path_key, path, path_len);
+	AG_GetStringCopy(agConfig, path_key, path, path_len);
 	AG_SetError(_("Cannot find %s.%s (in <%s>:%s)."), name,
 	    (ext != NULL) ? ext : "", path_key, path);
 	return (-1);

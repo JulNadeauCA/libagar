@@ -370,7 +370,7 @@ main(int argc, char *argv[])
 		    "Agar version: %d.%d.%d\n(%s)\n"
 		    "Graphics driver: %s",
 		    ver.major, ver.minor, ver.patch, ver.release,
-		    AG_Bool(agConfig,"view.opengl") ? "OpenGL" : "SDL");
+		    AG_GetBool(agConfig,"view.opengl") ? "OpenGL" : "SDL");
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 
 		AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
