@@ -214,6 +214,9 @@ and the width in pixels of each line in the array
 .Ft "void"
 .Fn AG_TextEditString "char **buf" "size_t len" "const char *format" "..."
 .Pp
+.Ft "void"
+.Fn "AG_TextPromptString" "const char *prompt" "void (*ok_fn)(AG_Event *)" "const char *fmt" "..."
+.Pp
 .nr nS 0
 The
 .Fn AG_TextMsg
@@ -282,6 +285,16 @@ displays a dialog asking for a string, where
 is a pointer to the string buffer, and
 .Fa len
 is the size of the buffer.
+.Pp
+The
+.Fn AG_TextPromptString
+creates a modal dialog asking the user for a text string.
+Once the user confirms the entry, the
+.Fn ok_fn
+callback is invoked (see
+.Xr AG_Event 3
+for details on the argument format).
+The entered string is the last argument on the stack.
 .Sh MISCELLANEOUS
 .nr nS 1
 .Ft void
