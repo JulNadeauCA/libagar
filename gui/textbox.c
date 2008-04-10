@@ -366,6 +366,13 @@ EditableReturn(AG_Event *event)
 }
 
 static void
+GainFocus(AG_Event *event)
+{
+	AG_Textbox *tb = AG_SELF();
+	AG_WidgetFocus(tb->ed);
+}
+
+static void
 Init(void *obj)
 {
 	AG_Textbox *tbox = obj;
@@ -391,6 +398,8 @@ Init(void *obj)
 #ifdef DEBUG
 	AG_SetEvent(tbox, "widget-bound", Bound, NULL);
 #endif
+	AG_SetEvent(tbox, "widget-gainfocus", GainFocus, NULL);
+	
 	AG_SetEvent(tbox->ed, "editable-prechg", EditablePreChg, "%p", tbox);
 	AG_SetEvent(tbox->ed, "editable-postchg", EditablePostChg, "%p", tbox);
 	AG_SetEvent(tbox->ed, "editable-return", EditableReturn, "%p", tbox);
