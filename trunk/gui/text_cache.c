@@ -117,7 +117,8 @@ AG_TextCacheInsLookup(AG_TextCache *tc, const char *text)
 	h = AG_TextCacheHash(tc, text);
 	bucket = &tc->buckets[h];
 	SLIST_FOREACH(ct, &bucket->ents, ents) {
-		if (strcmp(ct->text, text) == 0)
+		if (strcmp(ct->text, text) == 0 &&
+		    AG_TextStateCompare(&ct->state, agTextState) == 0)
 			break;
 	}
 	if (ct == NULL) {
@@ -126,6 +127,7 @@ AG_TextCacheInsLookup(AG_TextCache *tc, const char *text)
 		ct->surface = AG_WidgetMapSurface(tc->widget,
 		    AG_TextRender(text));
 		ct->stamp = SDL_GetTicks();
+		ct->state = *agTextState;
 		tc->curEnts++;
 		SLIST_INSERT_HEAD(&bucket->ents, ct, ents);
 

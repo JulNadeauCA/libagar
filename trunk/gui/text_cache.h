@@ -6,6 +6,7 @@ typedef struct ag_cached_text {
 	char *text;				/* Text string */
 	int surface;				/* Surface mapping */
 	Uint32 stamp;				/* Access timestamp */
+	AG_TextState state;			/* Text rendering state */
 	AG_SLIST_ENTRY(ag_cached_text) ents;
 } AG_CachedText;
 
