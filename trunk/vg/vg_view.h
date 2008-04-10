@@ -132,8 +132,19 @@ VG_GetVGCoordsFlt(VG_View *vv, VG_Vector pos, VG_Vector *v)
 static __inline__ void
 VG_GetViewCoords(VG_View *vv, VG_Vector v, int *x, int *y)
 {
-	*x = (int)(v.x*vv->scale) + vv->x;
-	*y = (int)(v.y*vv->scale) + vv->y;
+	*x = (int)(v.x*vv->scale + vv->x);
+	*y = (int)(v.y*vv->scale + vv->y);
+}
+
+/*
+ * Translate VG coordinates to floating-point view coordinates.
+ * VG_View must be locked.
+ */
+static __inline__ void
+VG_GetViewCoordsFlt(VG_View *vv, VG_Vector v, float *x, float *y)
+{
+	*x = v.x*vv->scale + vv->x;
+	*y = v.y*vv->scale + vv->y;
 }
 __END_DECLS
 
