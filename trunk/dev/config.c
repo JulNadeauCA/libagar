@@ -148,6 +148,7 @@ DEV_ConfigShow(void)
 		} else {
 			AG_WindowShow(devConfigWindow);
 		}
+		return;
 	}
 	devConfigWindow = DEV_ConfigWindow(agConfig);
 	AG_WindowShow(devConfigWindow);
