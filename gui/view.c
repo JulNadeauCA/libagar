@@ -1597,6 +1597,38 @@ AG_PixelFormatIndexed(int bpp)
 	return (pf);
 }
 
+AG_PixelFormat *
+AG_PixelFormatDup(const AG_PixelFormat *pf)
+{
+	AG_PixelFormat *pfd;
+
+	pfd = Malloc(sizeof(AG_PixelFormat));
+	if (pf->palette != NULL) {
+		pfd->palette = Malloc(pf->palette->ncolors*sizeof(AG_Color));
+		memcpy(pfd->palette->colors, pf->palette->colors,
+		    pf->palette->ncolors*sizeof(AG_Color));
+	} else {
+		pfd->palette = NULL;
+	}
+	pfd->BitsPerPixel = pf->BitsPerPixel;
+	pfd->BytesPerPixel = pf->BytesPerPixel;
+	pfd->Rloss = pf->Rloss;
+	pfd->Gloss = pf->Gloss;
+	pfd->Bloss = pf->Bloss;
+	pfd->Aloss = pf->Aloss;
+	pfd->Rshift = pf->Rshift;
+	pfd->Gshift = pf->Gshift;
+	pfd->Bshift = pf->Bshift;
+	pfd->Ashift = pf->Ashift;
+	pfd->Rmask = pf->Rmask;
+	pfd->Gmask = pf->Gmask;
+	pfd->Bmask = pf->Bmask;
+	pfd->Amask = pf->Amask;
+	pfd->colorkey = pf->colorkey;
+	pfd->alpha = pf->alpha;
+	return (pfd);
+}
+
 void
 AG_PixelFormatFree(AG_PixelFormat *fmt)
 {

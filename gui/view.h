@@ -298,6 +298,7 @@ void AG_HSV2RGB(float, float, float, Uint8 *, Uint8 *, Uint8 *);
 AG_PixelFormat *AG_PixelFormatRGB(int, Uint32, Uint32, Uint32);
 AG_PixelFormat *AG_PixelFormatRGBA(int, Uint32, Uint32, Uint32, Uint32);
 AG_PixelFormat *AG_PixelFormatIndexed(int);
+AG_PixelFormat *AG_PixelFormatDup(const AG_PixelFormat *);
 void            AG_PixelFormatFree(AG_PixelFormat *);
 
 AG_Surface     *AG_SurfaceNew(Uint, Uint, AG_PixelFormat *, Uint);
