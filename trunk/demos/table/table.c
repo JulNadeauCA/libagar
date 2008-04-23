@@ -228,12 +228,12 @@ CreateTableWithControls(void)
 
 		/*
 		 * The %[W] specifier allows us to insert an arbitrary widget
-		 * into the table. In this case, we will insert a Checkbox
+		 * into the table. In this case, we will insert a Button
 		 * bound to an entry in our MyTable array.
 		 *
 		 * It is important to pass NULL as the "parent" argument to
-		 * the widget constructor since TableAddRow() will attach the
-		 * Checkbox to the Table for us.
+		 * ButtonNew() since TableAddRow() will attach the Button to
+		 * the Table for us.
 		 */
 		button = AG_ButtonNewInt(NULL, AG_BUTTON_STICKY, "Select",
 		    &MyTable[i]);
