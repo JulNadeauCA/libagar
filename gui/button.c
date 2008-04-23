@@ -544,9 +544,9 @@ AG_ButtonSetValign(AG_Button *bu, enum ag_text_valign va)
 }
 
 void
-AG_ButtonSurface(AG_Button *bu, SDL_Surface *su)
+AG_ButtonSurface(AG_Button *bu, AG_Surface *su)
 {
-	SDL_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
+	AG_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
 
 	AG_ObjectLock(bu);
 	if (bu->surface != -1) {
@@ -558,7 +558,7 @@ AG_ButtonSurface(AG_Button *bu, SDL_Surface *su)
 }
 
 void
-AG_ButtonSurfaceNODUP(AG_Button *bu, SDL_Surface *su)
+AG_ButtonSurfaceNODUP(AG_Button *bu, AG_Surface *su)
 {
 	AG_ObjectLock(bu);
 	if (bu->surface != -1) {

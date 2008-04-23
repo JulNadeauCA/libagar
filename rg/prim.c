@@ -35,7 +35,7 @@ RG_ColorRGB(RG_Tile *t, Uint8 r, Uint8 g, Uint8 b)
 	t->c.r = r;
 	t->c.g = g;
 	t->c.b = b;
-	t->pc = SDL_MapRGB(t->su->format, r, g, b);
+	t->pc = AG_MapRGB(t->su->format, r,g,b);
 }
 
 void
@@ -44,33 +44,33 @@ RG_ColorRGBA(RG_Tile *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	t->c.r = r;
 	t->c.g = g;
 	t->c.b = b;
-	t->pc = SDL_MapRGBA(t->su->format, r, g, b, a);
+	t->pc = AG_MapRGBA(t->su->format, r,g,b,a);
 }
 
 void
 RG_ColorHSV(RG_Tile *t, float h, float s, float v)
 {
 	AG_HSV2RGB(h, s, v, &t->c.r, &t->c.g, &t->c.b);
-	t->pc = SDL_MapRGB(t->su->format, t->c.r, t->c.g, t->c.b);
+	t->pc = AG_MapRGB(t->su->format, t->c.r, t->c.g, t->c.b);
 }
 
 void
 RG_ColorHSVA(RG_Tile *t, float h, float s, float v, Uint8 a)
 {
 	AG_HSV2RGB(h, s, v, &t->c.r, &t->c.g, &t->c.b);
-	t->pc = SDL_MapRGBA(t->su->format, t->c.r, t->c.g, t->c.b, a);
+	t->pc = AG_MapRGBA(t->su->format, t->c.r, t->c.g, t->c.b, a);
 }
 
 void
 RG_ColorUint32(RG_Tile *t, Uint32 pc)
 {
-	SDL_GetRGB(pc, t->su->format, &t->c.r, &t->c.g, &t->c.b);
+	AG_GetRGB(pc, t->su->format, &t->c.r, &t->c.g, &t->c.b);
 	t->pc = pc;
 }
 
 /* Blend the pixel at t:[x,y] with the given RGBA value. */
 void
-RG_BlendRGB(SDL_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
+RG_BlendRGB(AG_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
     Uint8 sR, Uint8 sG, Uint8 sB, Uint8 sA)
 {
 	Uint8 dR, dG, dB, dA;
@@ -82,7 +82,7 @@ RG_BlendRGB(SDL_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
 	}
 	pDst = (Uint8 *)su->pixels + y*su->pitch + (x << 2);
 	if (*(Uint32 *)pDst != su->format->colorkey) {
-		SDL_GetRGBA(*(Uint32 *)pDst, su->format, &dR, &dG, &dB, &dA);
+		AG_GetRGBA(*(Uint32 *)pDst, su->format, &dR,&dG,&dB,&dA);
 
 		switch (mode) {
 		case RG_PRIM_OVERLAY_ALPHA:
@@ -90,28 +90,28 @@ RG_BlendRGB(SDL_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
 			if (alpha > 255) {
 				alpha = 255;
 			}
-			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
+			*(Uint32 *)pDst = AG_MapRGBA(su->format,
 			    (((sR - dR) * sA) >> 8) + dR,
 			    (((sG - dG) * sA) >> 8) + dG,
 			    (((sB - dB) * sA) >> 8) + dB,
 			    (Uint8)alpha);
 			break;
 		case RG_PRIM_AVERAGE_ALPHA:
-			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
+			*(Uint32 *)pDst = AG_MapRGBA(su->format,
 			    (((sR - dR) * sA) >> 8) + dR,
 			    (((sG - dG) * sA) >> 8) + dG,
 			    (((sB - dB) * sA) >> 8) + dB,
 			    (Uint8)((dA*sA)/2));
 			break;
 		case RG_PRIM_SRC_ALPHA:
-			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
+			*(Uint32 *)pDst = AG_MapRGBA(su->format,
 			    (((sR - dR) * sA) >> 8) + dR,
 			    (((sG - dG) * sA) >> 8) + dG,
 			    (((sB - dB) * sA) >> 8) + dB,
 			    (Uint8)(sA));
 			break;
 		case RG_PRIM_DST_ALPHA:
-			*(Uint32 *)pDst = SDL_MapRGBA(su->format,
+			*(Uint32 *)pDst = AG_MapRGBA(su->format,
 			    (((sR - dR) * sA) >> 8) + dR,
 			    (((sG - dG) * sA) >> 8) + dG,
 			    (((sB - dB) * sA) >> 8) + dB,
@@ -119,7 +119,7 @@ RG_BlendRGB(SDL_Surface *su, int x, int y, enum rg_prim_blend_mode mode,
 			break;
 		}
 	} else {
-		*(Uint32 *)pDst = SDL_MapRGBA(su->format, sR, sG, sB, sA);
+		*(Uint32 *)pDst = AG_MapRGBA(su->format, sR,sG,sB,sA);
 	}
 }
 
@@ -256,7 +256,7 @@ RG_WuLine(RG_Tile *t, float x1p, float y1p, float x2p, float y2p)
 	xd = x2 - x1;
 	yd = y2 - y1;
 
-	SDL_GetRGBA(t->pc, t->ts->fmt, &r, &g, &b, &a);
+	AG_GetRGBA(t->pc, t->ts->fmt, &r,&g,&b,&a);
 
 	if (Fabs(xd) > Fabs(yd)) {			/* Horizontal */
 		if (x1 > x2) {

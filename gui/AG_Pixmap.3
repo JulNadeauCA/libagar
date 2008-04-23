@@ -61,13 +61,13 @@ from a timer with
 .Fn AG_PixmapNew "AG_Widget *parent" "Uint flags" "Uint width" "Uint height"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromSurface "AG_Widget *parent" "Uint flags" "SDL_Surface *src"
+.Fn AG_PixmapFromSurface "AG_Widget *parent" "Uint flags" "AG_Surface *src"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromSurfaceCopy "AG_Widget *parent" "Uint flags" "SDL_Surface *src"
+.Fn AG_PixmapFromSurfaceCopy "AG_Widget *parent" "Uint flags" "AG_Surface *src"
 .Pp
 .Ft "AG_Pixmap *"
-.Fn AG_PixmapFromSurfaceScaled "AG_Widget *parent" "Uint flags" "SDL_Surface *src" "int width" "int height"
+.Fn AG_PixmapFromSurfaceScaled "AG_Widget *parent" "Uint flags" "AG_Surface *src" "int width" "int height"
 .Pp
 .Ft "AG_Pixmap *"
 .Fn AG_PixmapFromBMP "AG_Widget *parent" "Uint flags" "const char *path"
@@ -98,11 +98,11 @@ that of the source image.
 .Pp
 .Fn AG_PixmapFromSurface
 maps an existing
-.Xr SDL_Surface 3 ,
+.Xr AG_Surface 3 ,
 which must remain valid until the widget is destroyed.
 .Fn AG_PixmapFromSurfaceCopy
 creates a copy of the given
-.Ft SDL_Surface
+.Ft AG_Surface
 that will be freed automatically along with the widget instance.
 .Fn AG_PixmapFromSurfaceScaled
 uses a rescaled copy of the given surface.
@@ -115,13 +115,13 @@ to load from a Gimp XCF file.
 .Sh CHANGING SURFACES
 .nr nS 1
 .Ft "int"
-.Fn AG_PixmapAddSurface "AG_Pixmap *pixmap" "SDL_Surface *surface"
+.Fn AG_PixmapAddSurface "AG_Pixmap *pixmap" "AG_Surface *surface"
 .Pp
 .Ft "int"
-.Fn AG_PixmapAddSurfaceCopy "AG_Pixmap *pixmap" "SDL_Surface *surface"
+.Fn AG_PixmapAddSurfaceCopy "AG_Pixmap *pixmap" "AG_Surface *surface"
 .Pp
 .Ft "int"
-.Fn AG_PixmapAddSurfaceScaled "AG_Pixmap *pixmap" "SDL_Surface *surface" "int width" "int height"
+.Fn AG_PixmapAddSurfaceScaled "AG_Pixmap *pixmap" "AG_Surface *surface" "int width" "int height"
 .Pp
 .Ft "void"
 .Fn AG_PixmapSetSurface "AG_Pixmap *pixmap" "int surface_name"
@@ -183,6 +183,7 @@ Can be set using
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Fixed 3 ,
+.Xr AG_Surface 3 ,
 .Xr AG_View 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3

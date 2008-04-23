@@ -75,8 +75,8 @@ static void
 MyOverlayFunction(AG_Event *event)
 {
 	AG_GLView *glv = AG_SELF();
-	Uint32 myColor = SDL_MapRGB(agVideoFmt, 255, 255, 255);
-	SDL_Surface *myText;
+	Uint32 myColor = AG_MapRGB(agVideoFmt, 255,255,255);
+	AG_Surface *myText;
 
 	/* Render a text string using the font engine. */
 	AG_PushTextState();
@@ -93,7 +93,7 @@ MyOverlayFunction(AG_Event *event)
 	    0,
 	    AGWIDGET(glv)->h - agTextFontHeight);
 
-	SDL_FreeSurface(myText);
+	AG_SurfaceFree(myText);
 }
 
 /* Mouse click callback function. */
@@ -168,7 +168,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
 	/* Set a black background. */
-	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0,0,0);
+	agColors[WINDOW_BG_COLOR] = AG_MapRGB(agVideoFmt, 0,0,0);
 
 	CreateMainWindow();
 	AG_EventLoop();

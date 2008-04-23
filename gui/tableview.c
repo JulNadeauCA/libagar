@@ -332,7 +332,7 @@ AG_TableviewRowAddFn(AG_Tableview *tv, int flags,
 					free(row->cell[i].text);
 				}
 				if (row->cell[i].image != NULL) {
-					SDL_FreeSurface(row->cell[i].image);
+					AG_SurfaceFree(row->cell[i].image);
 				}
 				row->cell[i].text = (data != NULL) ?
 				                    Strdup((char *)data) :
@@ -378,7 +378,7 @@ DestroyRow(AG_Tableview *tv, AG_TableviewRow *row)
 	int i;
 
 	for (i = 0; i < tv->columncount; i++) {
-		SDL_FreeSurface(row->cell[i].image);
+		AG_SurfaceFree(row->cell[i].image);
 		free(row->cell[i].text);
 	}
 	Free(row->cell);
@@ -989,7 +989,7 @@ render_dyncolumn(AG_Tableview *tv, Uint idx)
 			continue;
 
 		if (row->cell[cidx].image != NULL)
-			SDL_FreeSurface(row->cell[cidx].image);
+			AG_SurfaceFree(row->cell[cidx].image);
 
 		celltext = tv->data_callback(tv, tv->column[idx].cid, row->rid);
 		AG_TextColor(TABLEVIEW_CTXT_COLOR);
@@ -1393,7 +1393,7 @@ AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
 	AG_ObjectLock(tv);
 
 	if (row->cell[cell].image != NULL) {
-		SDL_FreeSurface(row->cell[cell].image);
+		AG_SurfaceFree(row->cell[cell].image);
 	}
 	Free(row->cell[cell].text);
 

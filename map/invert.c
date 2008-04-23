@@ -98,7 +98,7 @@ effect(void *p, MAP_Node *n)
 }
 
 static int
-cursor(void *p, SDL_Rect *rd)
+cursor(void *p, AG_Rect *rd)
 {
 	Uint8 c[4] = { 255, 255, 255, 64 };
 

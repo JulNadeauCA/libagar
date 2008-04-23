@@ -23,7 +23,7 @@ typedef struct ag_menu_item {
 	int lblEnabled;			/* Label surface (enabled) */
 	int lblDisabled;		/* Label surface (disabled) */
 	int icon;			/* Icon surface mapping */
-	SDL_Surface *iconSrc;		/* Icon surface source */
+	AG_Surface *iconSrc;		/* Icon surface source */
 	int value;			/* Default bool value binding */
 	int state;			/* Default state flag binding */
 
@@ -135,7 +135,7 @@ void	 AG_MenuSetLabelPadding(AG_Menu *, int, int, int, int);
 #define	 AG_MenuSetLabelPaddingBottom(m,v) \
 	 AG_MenuSetLabelPadding((m),-1,-1,-1,(v))
 
-void AG_MenuSetIcon(AG_MenuItem *, SDL_Surface *);
+void AG_MenuSetIcon(AG_MenuItem *, AG_Surface *);
 void AG_MenuSetLabel(AG_MenuItem *, const char *, ...);
 void AG_MenuSetPollFn(AG_MenuItem *, AG_EventFn, const char *, ...);
 void AG_MenuUpdateItem(AG_MenuItem *);
@@ -144,32 +144,32 @@ void	     AG_MenuState(AG_MenuItem *, int);
 #define      AG_MenuDisable(m) AG_MenuState((m),0)
 #define      AG_MenuEnable(m) AG_MenuState((m),1)
 
-AG_MenuItem *AG_MenuNode(AG_MenuItem *, const char *, SDL_Surface *);
+AG_MenuItem *AG_MenuNode(AG_MenuItem *, const char *, AG_Surface *);
 AG_MenuItem *AG_MenuSeparator(AG_MenuItem *);
 AG_MenuItem *AG_MenuSection(AG_MenuItem *, const char *, ...);
-AG_MenuItem *AG_MenuAction(AG_MenuItem *, const char *, SDL_Surface *,
+AG_MenuItem *AG_MenuAction(AG_MenuItem *, const char *, AG_Surface *,
 			   AG_EventFn, const char *, ...);
-AG_MenuItem *AG_MenuActionKb(AG_MenuItem *, const char *, SDL_Surface *,
+AG_MenuItem *AG_MenuActionKb(AG_MenuItem *, const char *, AG_Surface *,
                              SDLKey, SDLMod, AG_EventFn, const char *, ...);
 AG_MenuItem *AG_MenuTool(AG_MenuItem *, AG_Toolbar *, const char *,
-                         SDL_Surface *, SDLKey, SDLMod, AG_EventFn,
+                         AG_Surface *, SDLKey, SDLMod, AG_EventFn,
 			 const char *, ...);
-AG_MenuItem *AG_MenuDynamicItem(AG_MenuItem *, const char *, SDL_Surface *,
+AG_MenuItem *AG_MenuDynamicItem(AG_MenuItem *, const char *, AG_Surface *,
                                 AG_EventFn, const char *, ...);
-AG_MenuItem *AG_MenuDynamicItemKb(AG_MenuItem *, const char *, SDL_Surface *,
+AG_MenuItem *AG_MenuDynamicItemKb(AG_MenuItem *, const char *, AG_Surface *,
                                   SDLKey, SDLMod, AG_EventFn, const char *,
 				  ...);
-AG_MenuItem *AG_MenuIntBoolMp(AG_MenuItem *, const char *, SDL_Surface *,
+AG_MenuItem *AG_MenuIntBoolMp(AG_MenuItem *, const char *, AG_Surface *,
                               int *, int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt8BoolMp(AG_MenuItem *, const char *, SDL_Surface *,
+AG_MenuItem *AG_MenuInt8BoolMp(AG_MenuItem *, const char *, AG_Surface *,
                                Uint8 *, int, AG_Mutex *);
-AG_MenuItem *AG_MenuIntFlagsMp(AG_MenuItem *, const char *, SDL_Surface *,
+AG_MenuItem *AG_MenuIntFlagsMp(AG_MenuItem *, const char *, AG_Surface *,
                                int *, int, int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt8FlagsMp(AG_MenuItem *, const char *, SDL_Surface *,
+AG_MenuItem *AG_MenuInt8FlagsMp(AG_MenuItem *, const char *, AG_Surface *,
                                 Uint8 *, Uint8, int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt16FlagsMp(AG_MenuItem *, const char *, SDL_Surface *,
+AG_MenuItem *AG_MenuInt16FlagsMp(AG_MenuItem *, const char *, AG_Surface *,
                                  Uint16 *, Uint16, int, AG_Mutex *);
-AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, SDL_Surface *,
+AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, AG_Surface *,
                                  Uint32 *, Uint32, int, AG_Mutex *);
 
 #define	AG_MenuIntBool(mi,t,i,p,inv) \

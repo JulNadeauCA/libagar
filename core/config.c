@@ -41,6 +41,8 @@
 #include <core/dir.h>
 #include <core/file.h>
 
+#include <gui/view.h>
+#include <gui/text.h>
 #include <gui/window.h>
 
 #include <string.h>

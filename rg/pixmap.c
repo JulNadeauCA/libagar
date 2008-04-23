@@ -25,6 +25,9 @@
 
 #include <core/arc4random.h>
 #include <core/core.h>
+
+#include <gui/view.h>
+
 #include <core/load_surface.h>
 
 #include <gui/cursors.h>
@@ -190,7 +193,7 @@ RG_PixmapDestroy(RG_Pixmap *px)
 	int i;
 
 	if (px->su != NULL)
-		SDL_FreeSurface(px->su);
+		AG_SurfaceFree(px->su);
 
 	for (i = 0; i < px->nublks; i++) {
 		Free(px->ublks[i].mods);
@@ -210,35 +213,27 @@ void
 RG_PixmapScale(RG_Pixmap *px, int w, int h, int xoffs, int yoffs)
 {
 	RG_Tileset *ts = px->ts;
-	SDL_Surface *nsu;
+	AG_Surface *nsu;
 
 	/* Create the new surface. */
-	nsu = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA,
-	    w, h, ts->fmt->BitsPerPixel,
-	    ts->fmt->Rmask,
-	    ts->fmt->Gmask,
-	    ts->fmt->Bmask,
-	    ts->fmt->Amask);
-	if (nsu == NULL)
-		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
+	if ((nsu = RG_SurfaceStd(ts, w, h, AG_SRCALPHA)) == NULL)
+		AG_FatalError(NULL);
 
 	/* Copy the old surface over. */
 	if (px->su != NULL) {
-		SDL_Rect rd;
+		AG_Rect rd;
 
-		SDL_SetAlpha(nsu, px->su->flags &
-		    (SDL_SRCALPHA|SDL_RLEACCEL),
+		AG_SetAlpha(nsu, px->su->flags&(AG_SRCALPHA|AG_RLEACCEL),
 		    px->su->format->alpha);
-		SDL_SetColorKey(nsu, px->su->flags &
-		    (SDL_SRCCOLORKEY|SDL_RLEACCEL),
+		AG_SetColorKey(nsu, px->su->flags&(AG_SRCCOLORKEY|AG_RLEACCEL),
 		    px->su->format->colorkey);
 
-		SDL_SetAlpha(px->su, 0, 0);
-		SDL_SetColorKey(px->su, 0, 0);
+		AG_SetAlpha(px->su, 0, 0);
+		AG_SetColorKey(px->su, 0, 0);
 		rd.x = xoffs;
 		rd.y = yoffs;
-		SDL_BlitSurface(px->su, NULL, nsu, &rd);
-		SDL_FreeSurface(px->su);
+		AG_SurfaceBlit(px->su, NULL, nsu, &rd);
+		AG_SurfaceFree(px->su);
 	}
 	px->su = nsu;
 }
@@ -565,13 +560,12 @@ RG_PixmapUndo(RG_Tileview *tv, RG_TileElement *tel)
 	if (px->curblk-1 <= 0)
 		return;
 
-	if (SDL_MUSTLOCK(tv->scaled)) { SDL_LockSurface(tv->scaled); }
+	AG_SurfaceLock(tv->scaled);
 	for (i = 0; i < ublk->nmods; i++) {
 		RG_PixmapMod *mod = &ublk->mods[i];
-
 		RG_PutPixel(px->su, mod->x, mod->y, mod->val);
 	}
-	if (SDL_MUSTLOCK(tv->scaled)) { SDL_UnlockSurface(tv->scaled); }
+	AG_SurfaceUnlock(tv->scaled);
 
 	px->curblk--;
 	tv->tile->flags |= RG_TILE_DIRTY;
@@ -618,17 +612,17 @@ RG_PixmapPutPixel(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 		mod->x = (Uint16)x;
 		mod->y = (Uint16)y;
 	
-		SDL_LockSurface(px->su);
+		AG_SurfaceLock(px->su);
 		pSrc = (Uint8 *)px->su->pixels + y*px->su->pitch +
 		                                x*px->su->format->BytesPerPixel;
 		mod->val = *(Uint32 *)pSrc;
-		SDL_UnlockSurface(px->su);
+		AG_SurfaceUnlock(px->su);
 	}
 
 	/* Plot the pixel on the pixmap and update the scaled display. */
 	/* XXX use background caching to avoid regen for alpha pixels */
 	
-	SDL_GetRGBA(pixel, px->su->format, &r, &g, &b, &a);
+	AG_GetRGBA(pixel, px->su->format, &r,&g,&b,&a);
 
 	switch (px->blend_mode) {
 	case RG_PIXMAP_NO_BLENDING:
@@ -673,7 +667,7 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
 	RG_Brush *br = px->curbrush;
-	SDL_Surface *brsu = br->px->su;
+	AG_Surface *brsu = br->px->su;
 	Uint8 *pBrush = brsu->pixels;
 	Uint8 r, g, b, specA;
 	int x, y, dx, dy;
@@ -688,9 +682,7 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 		specA = 255;
 	}
 
-	if (SDL_MUSTLOCK(brsu)) {
-		SDL_LockSurface(brsu);
-	}
+	AG_SurfaceLock(brsu);
 	for (y = 0, dy = y0; y < brsu->h; y++, dy++) {
 		for (x = 0, dx = x0; x < brsu->w; x++, dx++) {
 			Uint32 Px, brPx;
@@ -715,14 +707,13 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 
 			switch (br->type) {
 			case RG_PIXMAP_BRUSH_MONO:
-				SDL_GetRGB(specPx, brsu->format, &r, &g, &b);
+				AG_GetRGB(specPx, brsu->format, &r,&g,&b);
 				break;
 			case RG_PIXMAP_BRUSH_RGB:
-				SDL_GetRGB(brPx, brsu->format, &r, &g, &b);
+				AG_GetRGB(brPx, brsu->format, &r,&g,&b);
 				break;
 			}
-			Px = SDL_MapRGBA(brsu->format, r, g, b,
-			    (specA + brA)/2);
+			Px = AG_MapRGBA(brsu->format, r,g,b, (specA+brA)/2);
 
 			/* TODO use a specific mod type */
 			if (brA != 0)
@@ -730,8 +721,7 @@ RG_PixmapApplyBrush(RG_Tileview *tv, RG_TileElement *tel,
 				    br->flags & RG_PIXMAP_BRUSH_ONESHOT);
 		}
 	}
-	if (SDL_MUSTLOCK(brsu))
-		SDL_UnlockSurface(brsu);
+	AG_SurfaceUnlock(brsu);
 }
 
 int
@@ -804,14 +794,14 @@ pixmap_apply(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 		RG_PixmapApplyBrush(tv, tel,
 		    x - px->curbrush->px->xorig,
 		    y - px->curbrush->px->yorig,
-		    SDL_MapRGBA(px->su->format, r, g, b, a));
+		    AG_MapRGBA(px->su->format, r,g,b,a));
 
 		if (erase_mode) {
 			px->curbrush->type = btype_save;
 		}
 	} else {
-		RG_PixmapPutPixel(tv, tel, x, y,
-		    SDL_MapRGBA(px->su->format, r, g, b, a), 1);
+		RG_PixmapPutPixel(tv, tel, x,y,
+		    AG_MapRGBA(px->su->format, r,g,b,a), 1);
 	}
 	
 	if (erase_mode)
@@ -826,19 +816,19 @@ RG_PixmapSourcePixel(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 	Uint32 cSrc;
 
 	if (pixmap_source) {
-		SDL_LockSurface(px->su);
+		AG_SurfaceLock(px->su);
 		pSrc = (Uint8 *)px->su->pixels +
 		     y*px->su->pitch +
 		     x*px->su->format->BytesPerPixel;
 		cSrc = *(Uint32 *)pSrc;
-		SDL_UnlockSurface(px->su);
+		AG_SurfaceUnlock(px->su);
 	} else {
-		SDL_LockSurface(tv->tile->su);
+		AG_SurfaceLock(tv->tile->su);
 		pSrc = (Uint8 *)tv->tile->su->pixels +
 		     (tel->tel_pixmap.y+y)*tv->tile->su->pitch +
 		     (tel->tel_pixmap.x+x)*tv->tile->su->format->BytesPerPixel;
 		cSrc = *(Uint32 *)pSrc;
-		SDL_UnlockSurface(tv->tile->su);
+		AG_SurfaceUnlock(tv->tile->su);
 	}
 	return (cSrc);
 }
@@ -851,19 +841,19 @@ RG_PixmapSourceRGBA(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 	Uint8 *pSrc;
 
 	if (pixmap_source) {
-		SDL_LockSurface(px->su);
+		AG_SurfaceLock(px->su);
 		pSrc = (Uint8 *)px->su->pixels +
 		     y*px->su->pitch +
 		     x*px->su->format->BytesPerPixel;
-		SDL_GetRGBA(*(Uint32 *)pSrc, px->su->format, r, g, b, a);
-		SDL_UnlockSurface(px->su);
+		AG_GetRGBA(*(Uint32 *)pSrc, px->su->format, r,g,b,a);
+		AG_SurfaceUnlock(px->su);
 	} else {
-		SDL_LockSurface(tv->tile->su);
+		AG_SurfaceLock(tv->tile->su);
 		pSrc = (Uint8 *)tv->tile->su->pixels +
 		     (tel->tel_pixmap.y+y)*tv->tile->su->pitch +
 		     (tel->tel_pixmap.x+x)*tv->tile->su->format->BytesPerPixel;
-		SDL_GetRGBA(*(Uint32 *)pSrc, tv->tile->su->format, r, g, b, a);
-		SDL_UnlockSurface(tv->tile->su);
+		AG_GetRGBA(*(Uint32 *)pSrc, tv->tile->su->format, r,g,b,a);
+		AG_SurfaceUnlock(tv->tile->su);
 	}
 }
 
@@ -936,7 +926,7 @@ pixmap_fill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 	} else {
 		AG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
 	}
-	cFill = SDL_MapRGBA(px->su->format, r, g, b, a);
+	cFill = AG_MapRGBA(px->su->format, r,g,b,a);
 	fill_ortho(tv, tel, x, y, cOrig, cFill);
 	tv->tile->flags |= RG_TILE_DIRTY;
 }
@@ -961,7 +951,7 @@ pixmap_randfill(RG_Tileview *tv, RG_TileElement *tel, int x, int y)
 	} else {
 		AG_HSV2RGB(px->h, px->s, px->v, &r, &g, &b);
 	}
-	cFill = SDL_MapRGBA(px->su->format, r, g, b, a);
+	cFill = AG_MapRGBA(px->su->format, r,g,b,a);
 	randfill_ortho(tv, tel, x, y, cOrig, cFill, &bit, &rand);
 	tv->tile->flags |= RG_TILE_DIRTY;
 }

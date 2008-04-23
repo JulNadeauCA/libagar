@@ -111,16 +111,15 @@ Init(void *obj)
 	TAILQ_INIT(&ts->animations);
 	TAILQ_INIT(&ts->textures);
 
-	ts->icon = SDL_CreateRGBSurface(
-	    SDL_SWSURFACE|SDL_SRCALPHA|SDL_SRCCOLORKEY,
-	    32, 32, agSurfaceFmt->BitsPerPixel,
+	ts->icon = AG_SurfaceRGBA(32,32, agSurfaceFmt->BitsPerPixel,
+	    AG_SRCALPHA|AG_SRCCOLORKEY,
 	    agSurfaceFmt->Rmask,
 	    agSurfaceFmt->Gmask,
 	    agSurfaceFmt->Bmask,
 	    agSurfaceFmt->Amask);
 
 	if (ts->icon == NULL) {
-		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError(NULL);
 	}
 	ts->fmt = ts->icon->format;
 	ts->flags = 0;
@@ -213,7 +212,7 @@ Destroy(void *obj)
 	RG_Tileset *ts = obj;
 
 	AG_MutexDestroy(&ts->lock);
-	SDL_FreeSurface(ts->icon);
+	AG_SurfaceFree(ts->icon);
 	Free(ts->tiletbl);
 	Free(ts->animtbl);
 }
@@ -1363,14 +1362,14 @@ tryname2:
 				goto tryname2;
 			}
 			RG_PixmapScale(px2, px1->su->w, px1->su->h, 0, 0);
-			SDL_LockSurface(px1->su);
-			SDL_LockSurface(px2->su);
+			AG_SurfaceLock(px1->su);
+			AG_SurfaceLock(px2->su);
 			memcpy((Uint8 *)px2->su->pixels,
 			    (Uint8 *)px1->su->pixels,
 			    px1->su->h*px1->su->pitch +
 			    px1->su->w*px1->su->format->BytesPerPixel);
-			SDL_UnlockSurface(px2->su);
-			SDL_UnlockSurface(px1->su);
+			AG_SurfaceUnlock(px2->su);
+			AG_SurfaceUnlock(px1->su);
 
 			e2 = RG_TileAddPixmap(t2, e1->name, px2,
 			    e1->tel_pixmap.x, e1->tel_pixmap.y);
@@ -1615,15 +1614,15 @@ tryname:
 		RG_PixmapScale(px2, px1->su->w, px1->su->h, 0, 0);
 		TAILQ_INSERT_TAIL(&ts->pixmaps, px2, pixmaps);
 
-		SDL_LockSurface(px1->su);
-		SDL_LockSurface(px2->su);
+		AG_SurfaceLock(px1->su);
+		AG_SurfaceLock(px2->su);
 		memcpy(
 		    (Uint8 *)px2->su->pixels,
 		    (Uint8 *)px1->su->pixels,
 		    px1->su->h*px1->su->pitch +
 		    px1->su->w*px1->su->format->BytesPerPixel);
-		SDL_UnlockSurface(px2->su);
-		SDL_UnlockSurface(px1->su);
+		AG_SurfaceUnlock(px2->su);
+		AG_SurfaceUnlock(px1->su);
 	}
 }
 

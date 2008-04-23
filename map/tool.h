@@ -27,7 +27,7 @@ typedef struct map_tool_ops {
 	void (*destroy)(void *);
 	void (*edit_pane)(void *, void *);
 	void (*edit)(void *);
-	int (*cursor)(void *, SDL_Rect *);
+	int (*cursor)(void *, AG_Rect *);
 	int (*effect)(void *, MAP_Node *);
 	int (*mousemotion)(void *, int x, int y, int xrel, int yrel, int btn);
 	int (*mousebuttondown)(void *, int x, int y, int btn);

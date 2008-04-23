@@ -28,6 +28,7 @@
 #include "radio.h"
 #include "window.h"
 #include "primitive.h"
+#include "text.h"
 
 AG_Radio *
 AG_RadioNew(void *parent, Uint flags, const char **itemText)

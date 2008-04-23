@@ -64,7 +64,7 @@ Init(void *obj)
 	cons->lineskip = agTextFontLineSkip - agTextFontHeight;
 	cons->nLines = 0;
 	cons->rOffs = 0;
-	cons->cBg = SDL_MapRGB(agVideoFmt, 0, 0, 0);
+	cons->cBg = AG_MapRGB(agVideoFmt, 0,0,0);
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, 0);
 	AG_WidgetBindInt(cons->vBar, "value", &cons->rOffs);
 	AG_WidgetBindInt(cons->vBar, "max", &cons->nLines);
@@ -103,7 +103,7 @@ static void
 Draw(void *p)
 {
 	AG_Console *cons = p;
-	SDL_Surface *su;
+	AG_Surface *su;
 	Uint r;
 	int y;
 
@@ -204,8 +204,8 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	ln->p = NULL;
 	ln->font = NULL;
 	ln->surface = -1;
-	ln->cBg = SDL_MapRGBA(agVideoFmt, 0, 0, 0, 0);
-	ln->cFg = SDL_MapRGB(agVideoFmt, 250, 250, 230);
+	ln->cBg = AG_MapRGBA(agVideoFmt, 0,0,0,0);
+	ln->cFg = AG_MapRGB(agVideoFmt, 250,250,230);
 	
 	AG_ObjectUnlock(cons);
 	return (ln);

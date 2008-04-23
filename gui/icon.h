@@ -40,10 +40,10 @@ __BEGIN_DECLS
 extern AG_WidgetClass agIconClass;
 
 AG_Icon *AG_IconNew(void *, Uint);
-AG_Icon *AG_IconFromSurface(SDL_Surface *);
+AG_Icon *AG_IconFromSurface(AG_Surface *);
 AG_Icon *AG_IconFromBMP(const char *);
-void	 AG_IconSetSurface(AG_Icon *, SDL_Surface *);
-void	 AG_IconSetSurfaceNODUP(AG_Icon *, SDL_Surface *);
+void	 AG_IconSetSurface(AG_Icon *, AG_Surface *);
+void	 AG_IconSetSurfaceNODUP(AG_Icon *, AG_Surface *);
 void	 AG_IconSetText(AG_Icon *, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 2, 3)
 	     NONNULL_ATTRIBUTE(2);

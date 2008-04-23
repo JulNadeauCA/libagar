@@ -129,7 +129,7 @@ Effect(void *p, MAP_Node *n)
 }
 
 static int
-Cursor(void *p, SDL_Rect *rd)
+Cursor(void *p, AG_Rect *rd)
 {
 	Uint8 c[4] = { 255, 0, 0, 64 };
 

@@ -70,9 +70,10 @@
 #ifdef HAVE_FREETYPE
 #include "ttf.h"
 #endif
+#include "view.h"
+
 #include <core/load_xcf.h>
 
-#include "view.h"
 #include "window.h"
 #include "vbox.h"
 #include "box.h"
@@ -137,7 +138,7 @@ static AG_Timeout glyphGcTo = AG_TIMEOUT_INITIALIZER; /* For glyph GC */
 
 /* Load an individual glyph from a bitmap font file. */
 static void
-AG_LoadBitmapGlyph(SDL_Surface *su, const char *lbl, void *p)
+LoadBitmapGlyph(AG_Surface *su, const char *lbl, void *p)
 {
 	AG_Font *font = p;
 
@@ -145,7 +146,7 @@ AG_LoadBitmapGlyph(SDL_Surface *su, const char *lbl, void *p)
 		Strlcpy(font->bspec, lbl, sizeof(font->bspec));
 	}
 	font->bglyphs = Realloc(font->bglyphs,
-	                        (font->nglyphs+1)*sizeof(SDL_Surface *));
+	                        (font->nglyphs+1)*sizeof(AG_Surface *));
 	font->bglyphs[font->nglyphs++] = su;
 }
 
@@ -157,7 +158,7 @@ DestroyFont(void *obj)
 
 	if (!agFreetype) {
 		for (i = 0; i < font->nglyphs; i++) {
-			SDL_FreeSurface(font->bglyphs[i]);
+			AG_SurfaceFree(font->bglyphs[i]);
 		}
 		Free(font->bglyphs);
 	}
@@ -296,10 +297,10 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		}
 
 		font->type = AG_FONT_BITMAP;
-		font->bglyphs = Malloc(32*sizeof(SDL_Surface *));
+		font->bglyphs = Malloc(32*sizeof(AG_Surface *));
 		font->nglyphs = 0;
 
-		if (AG_XCFLoad(ds, 0, AG_LoadBitmapGlyph, font) == -1) {
+		if (AG_XCFLoad(ds, 0, LoadBitmapGlyph, font) == -1) {
 			goto fail;
 		}
 		AG_CloseDataSource(ds);
@@ -352,8 +353,8 @@ static void
 InitTextState(void)
 {
 	agTextState->font = agDefaultFont;
-	agTextState->color = SDL_MapRGB(agSurfaceFmt, 255,255,255);
-	agTextState->colorBG = SDL_MapRGBA(agSurfaceFmt, 0,0,0,0);
+	agTextState->color = AG_MapRGB(agSurfaceFmt, 255,255,255);
+	agTextState->colorBG = AG_MapRGBA(agSurfaceFmt, 0,0,0,0);
 	agTextState->justify = AG_TEXT_LEFT;
 }
 
@@ -361,7 +362,7 @@ InitTextState(void)
 static void
 FreeGlyph(AG_Glyph *gl)
 {
-	SDL_FreeSurface(gl->su);
+	AG_SurfaceFree(gl->su);
 #ifdef HAVE_OPENGL
 	if (agView->opengl)
 		glDeleteTextures(1, (GLuint *)&gl->texture);
@@ -414,7 +415,6 @@ AG_TextInit(void)
 			AG_SetUint(agConfig, "font.flags", 0);
 		}
 		if (AG_TTFInit() == -1) {
-			AG_SetError("AG_TTFInit: %s", SDL_GetError());
 			return (-1);
 		}
 		agFreetype = 1;
@@ -659,7 +659,7 @@ void
 AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->color = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	agTextState->color = AG_MapRGB(agSurfaceFmt, r,g,b);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -668,7 +668,7 @@ void
 AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->color = SDL_MapRGBA(agSurfaceFmt, r, g, b, a);
+	agTextState->color = AG_MapRGBA(agSurfaceFmt, r, g, b, a);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -695,7 +695,7 @@ void
 AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	agTextState->colorBG = AG_MapRGB(agSurfaceFmt, r,g,b);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -704,7 +704,7 @@ void
 AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	AG_MutexLock(&agTextLock);
-	agTextState->colorBG = SDL_MapRGBA(agSurfaceFmt, r, g, b, a);
+	agTextState->colorBG = AG_MapRGBA(agSurfaceFmt, r,g,b,a);
 	AG_MutexUnlock(&agTextLock);
 }
 
@@ -712,11 +712,11 @@ AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
  * Allocate a transparent surface and render text from a standard C string
  * (possibly with UTF-8 sequences), onto it.
  */
-SDL_Surface *
+AG_Surface *
 AG_TextRender(const char *text)
 {
 	Uint32 *ucs;
-	SDL_Surface *su;
+	AG_Surface *su;
 	
 #ifdef UTF8
 	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
@@ -728,12 +728,12 @@ AG_TextRender(const char *text)
 	return (su);
 }
 
-SDL_Surface *
+AG_Surface *
 AG_TextRenderf(const char *fmt, ...)
 {
 	char *text;
 	va_list args;
-	SDL_Surface *su;
+	AG_Surface *su;
 
 	va_start(args, fmt);
 	Vasprintf(&text, fmt, args);
@@ -744,7 +744,7 @@ AG_TextRenderf(const char *fmt, ...)
 }
 
 #ifdef SYMBOLS
-static __inline__ SDL_Surface *
+static __inline__ AG_Surface *
 GetSymbolSurface(Uint32 ch)
 {
 	switch (ch) {
@@ -854,9 +854,9 @@ TextSizeFT(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 
 #ifdef SYMBOLS
 static int
-TextRenderSymbol(Uint ch, SDL_Surface *su, int x, int y)
+TextRenderSymbol(Uint ch, AG_Surface *su, int x, int y)
 {
-	SDL_Surface *sym;
+	AG_Surface *sym;
 	int row;
 
 	if ((sym = GetSymbolSurface(ch)) == NULL) {
@@ -882,15 +882,15 @@ TextRenderSymbol(Uint ch, SDL_Surface *su, int x, int y)
 #endif
 
 /* Render UCS-4 text to a new surface using FreeType. */
-static SDL_Surface *
+static AG_Surface *
 TextRenderFT(const Uint32 *ucs)
 {
 	AG_TextMetrics tm;
 	AG_Font *font = agTextState->font;
 	AG_TTFFont *ftFont = font->ttf;
 	AG_TTFGlyph *glyph;
-	SDL_Surface *su;
-	SDL_Palette *palette;
+	AG_Surface *su;
+	AG_Palette *pal;
 	const Uint32 *ch;
 	Uint8 *src, *dst, a;
 	int row, col;
@@ -902,20 +902,24 @@ TextRenderFT(const Uint32 *ucs)
 	if (tm.w <= 0 || tm.h <= 0)
 		goto empty;
 
-	su = SDL_CreateRGBSurface(SDL_SWSURFACE, tm.w, tm.h, 8, 0, 0, 0, 0);
-	if (su == NULL) {
-		Verbose("TextRenderFT: CreateRGBSurface: %s\n", SDL_GetError());
+	if ((su = AG_SurfaceIndexed(tm.w, tm.h, AG_SWSURFACE, 8)) == NULL) {
+		Verbose("TextRenderFT: %s\n", AG_GetError());
 		goto empty;
 	}
-	palette = su->format->palette;
+	pal = su->format->palette;
 
-	SDL_GetRGBA(agTextState->colorBG, agSurfaceFmt, &palette->colors[0].r,
-	    &palette->colors[0].g, &palette->colors[0].b, &a);
+	AG_GetRGBA(agTextState->colorBG, agSurfaceFmt,
+	    &pal->colors[0].r,
+	    &pal->colors[0].g,
+	    &pal->colors[0].b,
+	    &a);
 	if (a == 0) {
-		SDL_SetColorKey(su, SDL_SRCCOLORKEY, 0);
+		AG_SetColorKey(su, AG_SRCCOLORKEY, 0);
 	}
-	SDL_GetRGB(agTextState->color, agSurfaceFmt, &palette->colors[1].r,
-	    &palette->colors[1].g, &palette->colors[1].b);
+	AG_GetRGB(agTextState->color, agSurfaceFmt,
+	    &pal->colors[1].r,
+	    &pal->colors[1].g,
+	    &pal->colors[1].b);
 
 	/* Load and render each character. */
 	line = 0;
@@ -986,10 +990,10 @@ TextRenderFT(const Uint32 *ucs)
 	return (su);
 empty:
 	FreeMetrics(&tm);
-	return SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0);
+	return AG_SurfaceEmpty();
 }
 
-static SDL_Surface *
+static AG_Surface *
 TextRenderFT_Blended(const Uint32 *ucs)
 {
 	AG_TextMetrics tm;
@@ -999,7 +1003,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	const Uint32 *ch;
 	int xStart, yStart;
 	int line;
-	SDL_Surface *su;
+	AG_Surface *su;
 	Uint32 pixel;
 	Uint8 *src;
 	Uint32 *dst, *dstEnd;
@@ -1014,11 +1018,13 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	if (tm.w <= 0 || tm.h <= 0)
 		goto empty;
 
-	su = SDL_AllocSurface(SDL_SWSURFACE, tm.w, tm.h, 32,
-	                      0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+	su = AG_SurfaceRGBA(tm.w, tm.h, 32, 0,
+	    0x00ff0000,
+	    0x0000ff00,
+	    0x000000ff,
+	    0xff000000);
 	if (su == NULL) {
-		Verbose("TextRenderFT_Blended: CreateRGBSurface: %s\n",
-		    SDL_GetError());
+		Verbose("TextRenderFT_Blended: %s\n", AG_GetError());
 		goto empty;
 	}
 
@@ -1030,9 +1036,9 @@ TextRenderFT_Blended(const Uint32 *ucs)
  	xStart = (tm.nLines > 1) ? JustifyOffset(tm.w, tm.wLines[0]) : 0;
  	yStart = 0;
 
-	SDL_GetRGB(agTextState->color, agSurfaceFmt, &r, &g, &b);
+	AG_GetRGB(agTextState->color, agSurfaceFmt, &r,&g,&b);
 	pixel = (r<<16) | (g<<8) | b;
-	SDL_FillRect(su, NULL, pixel);	/* Initialize with fg and 0 alpha */
+	AG_FillRect(su, NULL, pixel);	/* Initialize with fg and 0 alpha */
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
@@ -1044,7 +1050,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 		error = AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
 		                                     TTF_CACHED_PIXMAP);
 		if (error) {
-			SDL_FreeSurface(su);
+			AG_SurfaceFree(su);
 			goto empty;
 		}
 		glyph = ftFont->current;
@@ -1112,11 +1118,11 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	return (su);
 empty:
 	FreeMetrics(&tm);
-	return SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0);
+	return AG_SurfaceEmpty();
 }
 #endif /* HAVE_FREETYPE */
 
-static __inline__ SDL_Surface *
+static __inline__ AG_Surface *
 GetBitmapGlyph(Uint32 c)
 {
 	if ((agTextState->font->flags & AG_FONT_UPPERCASE) &&
@@ -1134,7 +1140,7 @@ static __inline__ void
 TextSizeBitmap(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 {
 	const Uint32 *c;
-	SDL_Surface *sGlyph;
+	AG_Surface *sGlyph;
 	int wLine = 0;
 
 	for (c = &ucs[0]; *c != '\0'; c++) {
@@ -1165,23 +1171,21 @@ TextSizeBitmap(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 
 /* Render UCS-4 text to a new surface using a bitmap font. */
 /* TODO: blend colors */
-static SDL_Surface *
+static AG_Surface *
 TextRenderBitmap(const Uint32 *ucs)
 {
 	AG_TextMetrics tm;
 	AG_Font *font = agTextState->font;
-	SDL_Rect rd;
+	AG_Rect rd;
 	int line;
 	const Uint32 *c;
-	SDL_Surface *sGlyph, *su;
+	AG_Surface *sGlyph, *su;
 
 	InitMetrics(&tm);
 	TextSizeBitmap(ucs, &tm, 1);
 
-	su = SDL_CreateRGBSurface(SDL_SWSURFACE, tm.w, tm.h, 32,
-	    agSurfaceFmt->Rmask, agSurfaceFmt->Gmask, agSurfaceFmt->Bmask, 0);
-	if (su == NULL)
-		AG_FatalError("CreateRGBSurface: %s", SDL_GetError());
+	if ((su = AG_SurfaceStdRGB(tm.w, tm.h)) == NULL)
+		AG_FatalError(NULL);
 
 	line = 0;
 	rd.x = (tm.nLines > 1) ? JustifyOffset(tm.w, tm.wLines[0]) : 0;
@@ -1195,19 +1199,20 @@ TextRenderBitmap(const Uint32 *ucs)
 		sGlyph = GetBitmapGlyph(*c);
 		rd.w = sGlyph->w;
 		rd.h = sGlyph->h;
-		SDL_BlitSurface(sGlyph, NULL, su, &rd);
+		AG_SurfaceBlit(sGlyph, NULL, su, &rd);
 		rd.x += sGlyph->w;
 	}
-	SDL_SetColorKey(su, SDL_SRCCOLORKEY|SDL_RLEACCEL, 0);
-	SDL_SetAlpha(su, font->bglyphs[0]->flags & (SDL_SRCALPHA|SDL_RLEACCEL),
-	                 font->bglyphs[0]->format->alpha);
+	AG_SetColorKey(su, AG_SRCCOLORKEY|AG_RLEACCEL, 0);
+	AG_SetAlpha(su,
+	    font->bglyphs[0]->flags & (AG_SRCALPHA|AG_RLEACCEL),
+	    font->bglyphs[0]->format->alpha);
 
 	FreeMetrics(&tm);
 	return (su);
 }
 
 /* Render an UCS-4 text string onto a new 8-bit surface. */
-SDL_Surface *
+AG_Surface *
 AG_TextRenderUCS4(const Uint32 *text)
 {
 	switch (agTextState->font->type) {
@@ -1222,7 +1227,7 @@ AG_TextRenderUCS4(const Uint32 *text)
 	case AG_FONT_BITMAP:
 		return TextRenderBitmap(text);
 	default:
-		return SDL_CreateRGBSurface(SDL_SWSURFACE,0,0,8,0,0,0,0);
+		return AG_SurfaceEmpty();
 	}
 }
 

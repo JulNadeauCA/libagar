@@ -54,7 +54,7 @@ typedef struct rg_pixmap {
 	int flags;
 	int xorig, yorig;		/* Pixmap origin point */
 	struct rg_tileset *ts;		/* Back pointer to tileset */
-	SDL_Surface *su;		/* Pixmap surface */
+	AG_Surface *su;			/* Pixmap surface */
 	Uint nrefs;			/* Number of tile references */
 	struct rg_pixmap_undoblk *ublks; /* Undo blocks */
 	Uint nublks, curblk;

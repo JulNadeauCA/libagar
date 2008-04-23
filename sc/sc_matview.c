@@ -257,20 +257,20 @@ DrawGreyscale(void *p)
 		     n <= A->n && x < WIDGET(mv)->w;
 		     n++, x += mv->scale) {
 		     	SC_Real dv = A->mat[m][n];
-			SDL_Rect rd;
+			AG_Rect rd;
 			Uint32 c;
 			Uint8 v;
 
 			if (dv == HUGE_VAL) {
-				c = SDL_MapRGB(agVideoFmt, 200, 0, 0);
+				c = AG_MapRGB(agVideoFmt, 200,0,0);
 			} else {
 				if (dv >= 0.0) {
 					v = 128 + (Uint8)(dv*128.0/big);
-					c = SDL_MapRGB(agVideoFmt, v, 0, 0);
+					c = AG_MapRGB(agVideoFmt, v,0,0);
 				} else {
 					v = 128 + (Uint8)((1.0/dv)*128.0 /
 					    (1.0/small));
-					c = SDL_MapRGB(agVideoFmt, 0, 0, v);
+					c = AG_MapRGB(agVideoFmt, 0,0,v);
 				}
 			}
 			if (dv != 0.0) {
@@ -278,7 +278,7 @@ DrawGreyscale(void *p)
 				rd.y = WIDGET(mv)->cy+y;
 				rd.w = mv->scale;
 				rd.h = mv->scale;
-				SDL_FillRect(agView->v, &rd, c);
+				AG_FillRect(agView->v, &rd, c);
 			}
 		}
 	}

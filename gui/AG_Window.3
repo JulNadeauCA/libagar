@@ -43,8 +43,8 @@ itself derived from the
 .Xr AG_Widget 3
 structure and attached to a
 .Xr AG_View 3 .
-Currently there is only one view; multiple views will be supported when
-SDL implements multiple displays.
+Currently there is only one view; multiple views will be supported in
+the Agar-1.4 release.
 By default, the container behavior of
 .Nm
 is similar to
@@ -86,10 +86,10 @@ for notebook-style display.
 .Fn AG_WindowSetCaption "AG_Window *win" "const char *fmt" "..."
 .Pp
 .Ft "void"
-.Fn AG_WindowSetIcon "AG_Window *win" "SDL_Surface *surface"
+.Fn AG_WindowSetIcon "AG_Window *win" "AG_Surface *surface"
 .Pp
 .Ft "void"
-.Fn AG_WindowSetIconNODUP "AG_Window *win" "SDL_Surface *surface"
+.Fn AG_WindowSetIconNODUP "AG_Window *win" "AG_Surface *surface"
 .Pp
 .Ft "void"
 .Fn AG_WindowSetCloseAction "AG_Window *win" "int mode"

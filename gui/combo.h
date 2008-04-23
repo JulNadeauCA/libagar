@@ -54,8 +54,8 @@ AG_TlistItem *AG_ComboSelectPointer(AG_Combo *, void *);
 AG_TlistItem *AG_ComboSelectText(AG_Combo *, const char *);
 void AG_ComboSetButtonText(AG_Combo *, const char *);
 void AG_ComboSetButtonTextNODUP(AG_Combo *, char *);
-void AG_ComboSetButtonSurface(AG_Combo *, SDL_Surface *);
-void AG_ComboSetButtonSurfaceNODUP(AG_Combo *, SDL_Surface *);
+void AG_ComboSetButtonSurface(AG_Combo *, AG_Surface *);
+void AG_ComboSetButtonSurfaceNODUP(AG_Combo *, AG_Surface *);
 
 void AG_ComboSizeRequest(void *, AG_SizeReq *);
 int  AG_ComboSizeAllocate(void *, const AG_SizeAlloc *);

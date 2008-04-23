@@ -264,13 +264,13 @@ AG_ComboSetButtonTextNODUP(AG_Combo *com, char *text)
 }
 
 void
-AG_ComboSetButtonSurface(AG_Combo *com, SDL_Surface *su)
+AG_ComboSetButtonSurface(AG_Combo *com, AG_Surface *su)
 {
 	AG_ButtonSurface(com->button, su);
 }
 
 void
-AG_ComboSetButtonSurfaceNODUP(AG_Combo *com, SDL_Surface *su)
+AG_ComboSetButtonSurfaceNODUP(AG_Combo *com, AG_Surface *su)
 {
 	AG_ButtonSurfaceNODUP(com->button, su);
 }

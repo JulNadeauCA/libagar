@@ -64,8 +64,8 @@
 /* #define OPENGL_INVERTED_Y */
 
 AG_Display *agView = NULL;		/* Main view */
-SDL_PixelFormat *agVideoFmt = NULL;	/* Current format of display */
-SDL_PixelFormat *agSurfaceFmt = NULL;	/* Preferred format for surfaces */
+AG_PixelFormat *agVideoFmt = NULL;	/* Current format of display */
+AG_PixelFormat *agSurfaceFmt = NULL;	/* Preferred format for surfaces */
 const SDL_VideoInfo *agVideoInfo;	/* Display information */
 int agBgPopupMenu = 0;			/* Background popup menu */
 static int initedGlobals = 0;
@@ -109,7 +109,7 @@ InitGL(void)
 	glLoadIdentity();
 	glOrtho(0, agView->w, agView->h, 0, -1.0, 1.0);
 
-	SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &bR, &bG, &bB);
+	AG_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &bR, &bG, &bB);
 	glClearColor(bR/255.0, bG/255.0, bB/255.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glShadeModel(GL_FLAT);
@@ -129,7 +129,7 @@ AG_ClearBackground(void)
 	if (agView->opengl) {
 		Uint8 r, g, b;
 
-		SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
+		AG_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
 		glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
 	} else
 #endif
@@ -215,7 +215,7 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 		agView->opengl = 0;
 	}
 
-	agView->stmpl = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32,
+	agView->stmpl = AG_SurfaceRGBA(1,1, 32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
  	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
 #else
@@ -223,7 +223,6 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 #endif
 	);
 	if (agView->stmpl == NULL) {
-		AG_SetError("SDL_CreateRGBSurface: %s", SDL_GetError());
 		return (-1);
 	}
 	agVideoFmt = agView->v->format;
@@ -331,7 +330,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		    agView->w, agView->h, agView->depth, SDL_GetError());
 		goto fail;
 	}
-	agView->stmpl = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 32,
+	agView->stmpl = AG_SurfaceRGBA(1,1, 32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
  	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
 #else
@@ -339,7 +338,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 #endif
 	);
 	if (agView->stmpl == NULL) {
-		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError(NULL);
 	}
 	agVideoFmt = agView->v->format;
 	agSurfaceFmt = agView->stmpl->format;
@@ -411,7 +410,7 @@ AG_DestroyVideo(void)
 
 	AG_TextDestroy();
 
-	SDL_FreeSurface(agView->stmpl);
+	AG_SurfaceFree(agView->stmpl);
 	Free(agView->dirty);
 	Free(agView->winModal);
 	Free(agView);
@@ -731,12 +730,12 @@ FreeDetachedWindows(void)
 }
 
 /* Return a newly allocated surface containing a copy of ss. */
-SDL_Surface *
-AG_DupSurface(SDL_Surface *ss)
+AG_Surface *
+AG_DupSurface(AG_Surface *ss)
 {
-	SDL_Surface *rs;
+	AG_Surface *rs;
 
-	rs = SDL_ConvertSurface(ss, ss->format, SDL_SWSURFACE |
+	rs = (AG_Surface *)SDL_ConvertSurface(ss, ss->format, SDL_SWSURFACE |
 	    (ss->flags & (SDL_SRCCOLORKEY|SDL_SRCALPHA|SDL_RLEACCEL)));
 	if (rs == NULL) {
 		AG_SetError("SDL_ConvertSurface: %s", SDL_GetError());
@@ -750,9 +749,11 @@ AG_DupSurface(SDL_Surface *ss)
 /*
  * Allocate a new surface containing a pixmap of ss scaled to wxh.
  * The source surface must not be locked by the calling thread.
+ *
+ * XXX very primitive and inefficient
  */
-void
-AG_ScaleSurface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
+int
+AG_ScaleSurface(AG_Surface *ss, Uint16 w, Uint16 h, AG_Surface **ds)
 {
 	Uint8 r1, g1, b1, a1;
 	Uint8 *pDst;
@@ -760,17 +761,10 @@ AG_ScaleSurface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 	int same_fmt;
 
 	if (*ds == NULL) {
-		*ds = SDL_CreateRGBSurface(
-		    ss->flags & (SDL_SWSURFACE|SDL_SRCALPHA|SDL_SRCCOLORKEY),
-		    w, h,
-		    ss->format->BitsPerPixel,
-		    ss->format->Rmask,
-		    ss->format->Gmask,
-		    ss->format->Bmask,
-		    ss->format->Amask);
+		*ds = AG_SurfaceNew(w, h, ss->format,
+		    ss->flags & (AG_SWSURFACE|AG_SRCALPHA|AG_SRCCOLORKEY));
 		if (*ds == NULL) {
-			AG_FatalError("SDL_CreateRGBSurface: %s",
-			    SDL_GetError());
+			return (-1);
 		}
 		(*ds)->format->alpha = ss->format->alpha;
 		(*ds)->format->colorkey = ss->format->colorkey;
@@ -781,25 +775,12 @@ AG_ScaleSurface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 	}
 
 	if (ss->w == w && ss->h == h) {
-		Uint32 saflags = ss->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
-		Uint8 salpha = ss->format->alpha;
-		Uint32 sckflags = ss->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
-		Uint32 sckey = ss->format->colorkey;
-
-		SDL_SetAlpha(ss, 0, 0);
-		SDL_SetColorKey(ss, 0, 0);
-		SDL_BlitSurface(ss, NULL, *ds, NULL);
-		SDL_SetAlpha(ss, saflags, salpha);
-		SDL_SetColorKey(ss, sckflags, sckey);
-		return;
+		AG_SurfaceCopy(*ds, ss);
+		return (0);
 	}
 
-	if (SDL_MUSTLOCK(ss))
-		SDL_LockSurface(ss);
-	if (SDL_MUSTLOCK((*ds)))
-		SDL_LockSurface(*ds);
-
-	/* XXX only efficient when shrinking; inefficient when expanding */
+	AG_SurfaceLock(ss);
+	AG_SurfaceLock(*ds);
 	pDst = (Uint8 *)(*ds)->pixels;
 	for (y = 0; y < (*ds)->h; y++) {
 		for (x = 0; x < (*ds)->w; x++) {
@@ -812,29 +793,27 @@ AG_ScaleSurface(SDL_Surface *ss, Uint16 w, Uint16 h, SDL_Surface **ds)
 			if (same_fmt) {
 				cDst = cSrc;
 			} else {
-				SDL_GetRGBA(cSrc, ss->format,
+				AG_GetRGBA(cSrc, ss->format,
 				    &r1, &g1, &b1, &a1);
-				cDst = SDL_MapRGBA((*ds)->format,
+				cDst = AG_MapRGBA((*ds)->format,
 				    r1, g1, b1, a1);
 			}
 			AG_PUT_PIXEL((*ds), pDst, cDst);
 			pDst += (*ds)->format->BytesPerPixel;
 		}
 	}
-	if (SDL_MUSTLOCK((*ds)))
-		SDL_UnlockSurface(*ds);
-	if (SDL_MUSTLOCK(ss))
-		SDL_UnlockSurface(ss);
+	AG_SurfaceUnlock(*ds);
+	AG_SurfaceUnlock(ss);
+	return (0);
 }
 
 /* Set the alpha value of all pixels in a surface where a != 0. */
 void
-AG_SetAlphaPixels(SDL_Surface *su, Uint8 alpha)
+AG_SetAlphaPixels(AG_Surface *su, Uint8 alpha)
 {
 	int x, y;
 
-	if (SDL_MUSTLOCK(su))
-		SDL_LockSurface(su);
+	AG_SurfaceLock(su);
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
 			Uint8 *dst = (Uint8 *)su->pixels +
@@ -842,17 +821,16 @@ AG_SetAlphaPixels(SDL_Surface *su, Uint8 alpha)
 			    x*su->format->BytesPerPixel;
 			Uint8 r, g, b, a;
 
-			SDL_GetRGBA(*(Uint32 *)dst, su->format, &r, &g, &b, &a);
+			AG_GetRGBA(*(Uint32 *)dst, su->format, &r, &g, &b, &a);
 
 			if (a != 0)
 				a = alpha;
 
 			AG_PUT_PIXEL(su, dst,
-			    SDL_MapRGBA(su->format, r, g, b, a));
+			    AG_MapRGBA(su->format, r, g, b, a));
 		}
 	}
-	if (SDL_MUSTLOCK(su))
-		SDL_UnlockSurface(su);
+	AG_SurfaceUnlock(su);
 }
 
 int
@@ -889,18 +867,19 @@ fail:
  * surface. Must be called from rendering context.
  */
 void
-AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
+AG_UpdateTexture(AG_Surface *sourcesu, int texture)
 {
-	SDL_Surface *texsu;
-	Uint32 saflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
-	Uint8 salpha = sourcesu->format->alpha;
+	AG_Surface *texsu;
 	int w, h;
 
+	/*
+	 * Convert to the GL_RGBA/GL_UNSIGNED_BYTE format and adjust for
+	 * power-of-two dimensions.
+	 * TODO check for GL_ARB_texture_non_power_of_two.
+	 */
 	w = PowOf2i(sourcesu->w);
 	h = PowOf2i(sourcesu->h);
-
-	/* Create a surface with the masks expected by OpenGL. */
-	texsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
+	texsu = AG_SurfaceRGBA(w,h, 32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 		0xff000000,
 		0x00ff0000,
@@ -913,51 +892,42 @@ AG_UpdateTexture(SDL_Surface *sourcesu, int texture)
 		0xff000000
 #endif
 	);
-	if (texsu == NULL)
-		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
-	
-	/* Copy the source surface onto the GL texture surface. */
-	SDL_SetAlpha(sourcesu, 0, 0);
-	SDL_BlitSurface(sourcesu, NULL, texsu, NULL);
-	SDL_SetAlpha(sourcesu, saflags, salpha);
+	if (texsu == NULL) {
+		AG_FatalError(NULL);
+	}
+	AG_SurfaceCopy(texsu, sourcesu);
 
-	/* Create the OpenGL texture. */
+	/* Upload as an OpenGL texture. */
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
 	    GL_UNSIGNED_BYTE, texsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	SDL_FreeSurface(texsu);
+	AG_SurfaceFree(texsu);
 }
 
 /*
- * Generate an OpenGL texture from a SDL surface.
+ * Generate an OpenGL texture from an Agar surface.
  * Returns the texture handle and 4 coordinates into texcoord.
  *
  * Must be called from widget rendering context only.
  */
 Uint
-AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
+AG_SurfaceTexture(AG_Surface *sourcesu, float *texcoord)
 {
-	SDL_Surface *texsu;
+	AG_Surface *texsu;
+	int w = PowOf2i(sourcesu->w);
+	int h = PowOf2i(sourcesu->h);
 	GLuint texture;
-	Uint32 saflags = sourcesu->flags & (SDL_SRCALPHA|SDL_RLEACCEL);
-	Uint8 salpha = sourcesu->format->alpha;
-	int w, h;
-	
-	w = PowOf2i(sourcesu->w);
-	h = PowOf2i(sourcesu->h);
 
-	/* The size of OpenGL surfaces must be a power of two. */
+	/* Convert to the GL_RGBA/GL_UNSIGNED_BYTE format. */
 	if (texcoord != NULL) {
 		texcoord[0] = 0.0f;
 		texcoord[1] = 0.0f;
 		texcoord[2] = (GLfloat)sourcesu->w / w;
 		texcoord[3] = (GLfloat)sourcesu->h / h;
 	}
-
-	/* Create a surface with the masks expected by OpenGL. */
-	texsu = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32,
+	texsu = AG_SurfaceRGBA(w,h, 32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 		0xff000000,
 		0x00ff0000,
@@ -970,15 +940,12 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 		0xff000000
 #endif
 	    );
-	if (texsu == NULL)
-		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
-
-	/* Copy the source surface onto the GL texture surface. */
-	SDL_SetAlpha(sourcesu, 0, 0);
-	SDL_BlitSurface(sourcesu, NULL, texsu, NULL);
-	SDL_SetAlpha(sourcesu, saflags, salpha);
+	if (texsu == NULL) {
+		AG_FatalError(NULL);
+	}
+	AG_SurfaceCopy(texsu, sourcesu);
 	
-	/* Create the OpenGL texture. */
+	/* Upload as an OpenGL texture. */
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 #if 0
@@ -992,7 +959,7 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
 	    GL_UNSIGNED_BYTE, texsu->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	SDL_FreeSurface(texsu);
+	AG_SurfaceFree(texsu);
 	return (texture);
 }
 
@@ -1000,25 +967,17 @@ AG_SurfaceTexture(SDL_Surface *sourcesu, float *texcoord)
  * Capture the contents of the OpenGL display into a surface. Must be
  * invoked in rendering context.
  */
-SDL_Surface *
+AG_Surface *
 AG_CaptureGLView(void)
 {
 	Uint8 *pixels;
-	SDL_Surface *su;
 
 	pixels = Malloc(agView->w*agView->h*3);
-
 	glReadPixels(0, 0, agView->w, agView->h, GL_RGB, GL_UNSIGNED_BYTE,
 	    pixels);
-
 	AG_FlipSurface(pixels, agView->h, agView->w*3);
-	su = SDL_CreateRGBSurfaceFrom(pixels, agView->w, agView->h, 24,
-	    agView->w*3,
-	    0x000000ff,
-	    0x0000ff00,
-	    0x00ff0000,
-	    0);
-	return (su);
+	return AG_SurfaceFromPixelsRGBA(pixels, agView->w, agView->h, 0, 24,
+	    agView->w*3, 0x000000ff, 0x0000ff00, 0x00ff0000);
 }
 #endif /* HAVE_OPENGL */
 
@@ -1029,7 +988,7 @@ AG_CaptureGLView(void)
  * Clipping is not done; the destination surface must be locked.
  */
 void
-AG_BlendPixelRGBA(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
+AG_BlendPixelRGBA(AG_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
     Uint8 sA, AG_BlendFn func)
 {
 	Uint32 cDst;
@@ -1037,11 +996,10 @@ AG_BlendPixelRGBA(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
 	int alpha = 0;
 
 	cDst = AG_GET_PIXEL(s, pDst);
-	if ((s->flags & SDL_SRCCOLORKEY) && (cDst == s->format->colorkey)) {
-	 	AG_PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format,
-		    sR, sG, sB, sA));
+	if ((s->flags & AG_SRCCOLORKEY) && (cDst == s->format->colorkey)) {
+	 	AG_PUT_PIXEL(s, pDst, AG_MapRGBA(s->format, sR,sG,sB,sA));
 	} else {
-		SDL_GetRGBA(cDst, s->format, &dR, &dG, &dB, &dA);
+		AG_GetRGBA(cDst, s->format, &dR, &dG, &dB, &dA);
 		switch (func) {
 		case AG_ALPHA_OVERLAY:	alpha = dA+sA; break;
 		case AG_ALPHA_SRC:	alpha = sA; break;
@@ -1050,7 +1008,7 @@ AG_BlendPixelRGBA(SDL_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
 		case AG_ALPHA_ONE_MINUS_SRC: alpha = 1-sA; break;
 		}
 		alpha = (alpha < 0) ? 0 : (alpha > 255) ? 255 : alpha;
-		AG_PUT_PIXEL(s, pDst, SDL_MapRGBA(s->format,
+		AG_PUT_PIXEL(s, pDst, AG_MapRGBA(s->format,
 		    (((sR - dR) * sA) >> 8) + dR,
 		    (((sG - dG) * sA) >> 8) + dG,
 		    (((sB - dB) * sA) >> 8) + dB,
@@ -1073,10 +1031,10 @@ AG_ViewCapture(void)
 
 /* Dump a surface to a JPEG image. */
 int
-AG_DumpSurface(SDL_Surface *pSu, char *path_save)
+AG_DumpSurface(AG_Surface *pSu, char *path_save)
 {
 #ifdef HAVE_JPEG
-	SDL_Surface *su;
+	AG_Surface *su;
 	char path[MAXPATHLEN];
 	struct jpeg_error_mgr jerrmgr;
 	struct jpeg_compress_struct jcomp;
@@ -1151,8 +1109,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 		Uint8 r, g, b;
 
 		for (x = agView->w; x > 0; x--) {
-			SDL_GetRGB(AG_GET_PIXEL(su, pSrc), su->format,
-			    &r, &g, &b);
+			AG_GetRGB(AG_GET_PIXEL(su,pSrc), su->format, &r,&g,&b);
 			*pDst++ = r;
 			*pDst++ = g;
 			*pDst++ = b;
@@ -1170,7 +1127,7 @@ AG_DumpSurface(SDL_Surface *pSu, char *path_save)
 out:
 #ifdef HAVE_OPENGL
 	if (agView->opengl && su != pSu)
-		SDL_FreeSurface(su);
+		AG_SurfaceFree(su);
 #endif
 	return (0);
 #else
@@ -1542,6 +1499,278 @@ AG_MouseGetState(int *x, int *y)
 		*y = agView->h - *y;
 #endif
 	return (rv);
+}
+
+#define COMPUTE_SHIFTLOSS(mask, shift, loss) \
+	shift = 0; \
+	loss = 8; \
+	if (mask != 0) { \
+		for (m = mask ; (m & 0x01) == 0; m >>= 1) { \
+			shift++; \
+		} \
+		while ((m & 0x01) != 0) { \
+			loss--; \
+			m >>= 1; \
+		} \
+	}
+
+/* Specify a packed-pixel format from three 32-bit bitmasks. */
+AG_PixelFormat *
+AG_PixelFormatRGB(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
+{
+	AG_PixelFormat *pf;
+	Uint32 m;
+
+	pf = Malloc(sizeof(AG_PixelFormat));
+	pf->alpha = AG_ALPHA_OPAQUE;
+	pf->BitsPerPixel = bpp;
+	pf->BytesPerPixel = (bpp+7)/8;
+	pf->palette = NULL;
+	pf->Rmask = Rmask;
+	pf->Gmask = Gmask;
+	pf->Bmask = Bmask;
+	pf->Amask = 0x00000000;
+	COMPUTE_SHIFTLOSS(pf->Rmask, pf->Rshift, pf->Rloss);
+	COMPUTE_SHIFTLOSS(pf->Gmask, pf->Gshift, pf->Gloss);
+	COMPUTE_SHIFTLOSS(pf->Bmask, pf->Bshift, pf->Bloss);
+	return (pf);
+}
+
+/* Specify a packed-pixel format from four 32-bit bitmasks. */
+AG_PixelFormat *
+AG_PixelFormatRGBA(int bpp, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
+    Uint32 Amask)
+{
+	AG_PixelFormat *pf;
+	Uint32 m;
+
+	pf = Malloc(sizeof(AG_PixelFormat));
+	pf->alpha = AG_ALPHA_OPAQUE;
+	pf->BitsPerPixel = bpp;
+	pf->BytesPerPixel = (bpp+7)/8;
+	pf->palette = NULL;
+	pf->Rmask = Rmask;
+	pf->Gmask = Gmask;
+	pf->Bmask = Bmask;
+	pf->Amask = Amask;
+	COMPUTE_SHIFTLOSS(pf->Rmask, pf->Rshift, pf->Rloss);
+	COMPUTE_SHIFTLOSS(pf->Gmask, pf->Gshift, pf->Gloss);
+	COMPUTE_SHIFTLOSS(pf->Bmask, pf->Bshift, pf->Bloss);
+	COMPUTE_SHIFTLOSS(pf->Amask, pf->Ashift, pf->Aloss);
+	return (pf);
+}
+
+/*
+ * Specify an indexed pixel format. If bpp=2, the palette is initialized to
+ * [0 = white] and [1 = black], otherwise the palette is initialized to all
+ * black.
+ */
+AG_PixelFormat *
+AG_PixelFormatIndexed(int bpp)
+{
+	AG_PixelFormat *pf;
+	AG_Palette *pal;
+
+	pf = Malloc(sizeof(AG_PixelFormat));
+	pf->alpha = AG_ALPHA_OPAQUE;
+	pf->BitsPerPixel = bpp;
+	pf->BytesPerPixel = (bpp+7)/8;
+	
+	pal = pf->palette = Malloc(sizeof(AG_Palette));
+	pal->ncolors = 1<<bpp;
+	pal->colors = Malloc(pal->ncolors*sizeof(AG_Color));
+	
+	if (bpp == 2) {
+		pal->colors[0].r = 255;
+		pal->colors[0].g = 255;
+		pal->colors[0].b = 255;
+		pal->colors[1].r = 0;
+		pal->colors[1].g = 0;
+		pal->colors[1].b = 0;
+	} else {
+		memset(pal->colors, 0, pal->ncolors*sizeof(AG_Color));
+	}
+
+	pf->Rmask = pf->Gmask = pf->Bmask = pf->Amask = 0;
+	pf->Rloss = pf->Gloss = pf->Bloss = pf->Aloss = 8;
+	pf->Rshift = pf->Gshift = pf->Bshift = pf->Ashift = 0;
+	return (pf);
+}
+
+void
+AG_PixelFormatFree(AG_PixelFormat *fmt)
+{
+	Free(fmt->palette);
+	free(fmt);
+}
+
+#undef COMPUTE_SHIFTLOSS
+
+static __inline__ Uint32
+SDLFlags(Uint flags)
+{
+	Uint32 sdlFlags = SDL_SWSURFACE;
+	if (flags & AG_HWSURFACE) { sdlFlags |= SDL_HWSURFACE; }
+	if (flags & AG_SRCCOLORKEY) { sdlFlags |= SDL_SRCCOLORKEY; }
+	if (flags & AG_SRCALPHA) { sdlFlags |= SDL_SRCALPHA; }
+	return (sdlFlags);
+}
+
+/* Create a new surface of the specified pixel format. */
+AG_Surface *
+AG_SurfaceNew(Uint w, Uint h, AG_PixelFormat *fmt, Uint flags)
+{
+	AG_Surface *s;
+
+	s = (AG_Surface *)SDL_CreateRGBSurface(SDLFlags(flags), w, h,
+	    fmt->BitsPerPixel,
+	    fmt->Rmask, fmt->Gmask, fmt->Bmask, fmt->Amask);
+	if (s == NULL) {
+		AG_SetError("SDL_CreateRGBSurface(%ux%ux%u): %s", w, h,
+		    fmt->BitsPerPixel, SDL_GetError());
+		return (NULL);
+	}
+	if (fmt->palette != NULL) {
+		SDL_SetPalette((SDL_Surface *)s, SDL_LOGPAL,
+		    (SDL_Color *)fmt->palette, 0, fmt->palette->ncolors);
+	}
+	return (s);
+}
+
+/* Create an empty surface. */
+AG_Surface *
+AG_SurfaceEmpty(void)
+{
+	return (AG_Surface *)SDL_CreateRGBSurface(SDL_SWSURFACE, 0,0,8,0,0,0,0);
+}
+
+/* Create a new surface of the specified pixel format. */
+AG_Surface *
+AG_SurfaceIndexed(Uint w, Uint h, int bpp, Uint flags)
+{
+	AG_Surface *s;
+
+	s = (AG_Surface *)SDL_CreateRGBSurface(SDLFlags(flags), w,h, bpp,
+	    0,0,0,0);
+	if (s == NULL) {
+		AG_SetError("SDL_CreateRGBSurface(%ux%ux%u): %s", w, h, bpp,
+		    SDL_GetError());
+		return (NULL);
+	}
+	return (s);
+}
+
+/* Create a new surface with the specified RGB pixel-packing format. */
+AG_Surface *
+AG_SurfaceRGB(Uint w, Uint h, int bpp, Uint flags, Uint32 Rmask, Uint32 Gmask,
+    Uint32 Bmask)
+{
+	AG_Surface *s;
+
+	s = (AG_Surface *)SDL_CreateRGBSurface(SDLFlags(flags), w,h, bpp,
+	    Rmask,Gmask,Bmask,0);
+	if (s == NULL) {
+		AG_SetError("SDL_CreateRGBSurface(%ux%ux%u): %s", w, h, bpp,
+		    SDL_GetError());
+		return (NULL);
+	}
+	return (s);
+}
+
+/* Create a new surface with the specified RGB pixel-packing format. */
+AG_Surface *
+AG_SurfaceRGBA(Uint w, Uint h, int bpp, Uint flags, Uint32 Rmask, Uint32 Gmask,
+    Uint32 Bmask, Uint32 Amask)
+{
+	AG_Surface *s;
+
+	s = (AG_Surface *)SDL_CreateRGBSurface(SDLFlags(flags), w,h, bpp,
+	    Rmask,Gmask,Bmask,Amask);
+	if (s == NULL) {
+		AG_SetError("SDL_CreateRGBSurface(%ux%ux%u): %s", w, h, bpp,
+		    SDL_GetError());
+		return (NULL);
+	}
+	return (s);
+}
+
+/* Create a new surface from pixel data in the specified packed RGB format. */
+AG_Surface *
+AG_SurfaceFromPixelsRGB(void *pixels, Uint w, Uint h, int bpp, int pitch,
+    Uint32 Rmask, Uint32 Gmask, Uint32 Bmask)
+{
+	AG_Surface *s;
+
+	s = (AG_Surface *)SDL_CreateRGBSurfaceFrom(pixels, (int)w, (int)h,
+	    bpp, pitch, Rmask, Gmask, Bmask, 0);
+	return (s);
+}
+
+/* Create a new surface from pixel data in the specified packed RGBA format. */
+AG_Surface *
+AG_SurfaceFromPixelsRGBA(void *pixels, Uint w, Uint h, int bpp, int pitch,
+    Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask)
+{
+	AG_Surface *s;
+
+	s = (AG_Surface *)SDL_CreateRGBSurfaceFrom(pixels, (int)w, (int)h,
+	    bpp, pitch, Rmask, Gmask, Bmask, Amask);
+	return (s);
+}
+
+/* Create a new surface from a .bmp file. */
+AG_Surface *
+AG_SurfaceFromBMP(const char *path)
+{
+	AG_Surface *s;
+
+	if ((s = (AG_Surface *)SDL_LoadBMP(path)) == NULL) {
+		AG_SetError("SDL_LoadBMP(%s): %s", path, SDL_GetError());
+		return (NULL);
+	}
+	return (s);
+}
+
+AG_Surface *
+AG_SurfaceFromSDL(AG_Surface *su)
+{
+	return AG_DupSurface(su);
+}
+
+SDL_Surface *
+AG_SurfaceToSDL(AG_Surface *su)
+{
+	return (SDL_Surface *)AG_DupSurface(su);
+}
+
+AG_Surface *
+AG_SurfaceFromSurface(AG_Surface *su, AG_PixelFormat *fmt, Uint flags)
+{
+	return (AG_Surface *)SDL_ConvertSurface(su, fmt, SDLFlags(flags));
+}
+
+void
+AG_SurfaceCopy(AG_Surface *ds, AG_Surface *ss)
+{
+	SDL_Surface *dsSDL = (SDL_Surface *)ds;
+	SDL_Surface *ssSDL = (SDL_Surface *)ss;
+	Uint32 aflagsSave = ssSDL->flags & (AG_SRCALPHA|AG_RLEACCEL);
+	Uint8 alphaSave = ssSDL->format->alpha;
+	Uint32 cflagsSave = ssSDL->flags & (SDL_SRCCOLORKEY|SDL_RLEACCEL);
+	Uint32 ckeySave = ssSDL->format->colorkey;
+
+	SDL_SetAlpha(ssSDL, 0, 0);
+	SDL_SetColorKey(ssSDL, 0, 0);
+	SDL_BlitSurface(ssSDL, NULL, dsSDL, NULL);
+	SDL_SetAlpha(ssSDL, aflagsSave, alphaSave);
+	SDL_SetColorKey(ssSDL, cflagsSave, ckeySave);
+}
+
+/* Free the specified surface. */
+void
+AG_SurfaceFree(AG_Surface *s)
+{
+	SDL_FreeSurface((SDL_Surface *)s);
 }
 
 AG_ObjectClass agDisplayClass = {

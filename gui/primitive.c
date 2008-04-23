@@ -970,13 +970,13 @@ static void
 RectFilledFB(void *p, AG_Rect r, Uint32 color)
 {
 	AG_Widget *wid = p;
-	SDL_Rect rd;
+	AG_Rect rd;
 
 	rd.x = wid->cx+r.x;
 	rd.y = wid->cy+r.y;
 	rd.w = r.w;
 	rd.h = r.h;
-	SDL_FillRect(agView->v, &rd, color);
+	AG_FillRect(agView->v, &rd, color);
 }
 
 /* Render an alpha blended rectangle. */
@@ -1092,7 +1092,7 @@ LineGL(void *p, int px1, int py1, int px2, int py2, Uint32 color)
 	int y2 = wid->cy + py2;
 	Uint8 r, g, b;
 
-	SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
+	AG_GetRGB(color, agVideoFmt, &r,&g,&b);
 	glBegin(GL_LINES);
 	glColor3ub(r, g, b);
 	glVertex2s(x1, y1);
@@ -1107,7 +1107,7 @@ LineHGL(void *p, int x1, int x2, int py, Uint32 color)
 	int y = wid->cy + py;
 	Uint8 r, g, b;
 
-	SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
+	AG_GetRGB(color, agVideoFmt, &r,&g,&b);
 	glBegin(GL_LINES);
 	glColor3ub(r, g, b);
 	glVertex2s(wid->cx + x1, y);
@@ -1122,7 +1122,7 @@ LineVGL(void *p, int px, int y1, int y2, Uint32 color)
 	int x = wid->cx + px;
 	Uint8 r, g, b;
 
-	SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
+	AG_GetRGB(color, agVideoFmt, &r,&g,&b);
 	glBegin(GL_LINES);
 	glColor3ub(r, g, b);
 	glVertex2s(x, wid->cy + y1);
@@ -1175,7 +1175,7 @@ CircleGL(void *p, int x, int y, int radius, Uint32 color)
 	int i;
 	Uint8 r, g, b;
 	
-	SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
+	AG_GetRGB(color, agVideoFmt, &r,&g,&b);
 
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(r, g, b);
@@ -1194,7 +1194,7 @@ Circle2GL(void *p, int x, int y, int radius, Uint32 color)
 	int i;
 	Uint8 r, g, b;
 	
-	SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
+	AG_GetRGB(color, agVideoFmt, &r,&g,&b);
 
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(r, g, b);
@@ -1231,7 +1231,7 @@ RectGL(void *p, AG_Rect r, Uint32 color)
 		if (y2 > wid->cy+wid->h)
 			y2 = wid->cy+wid->h;
 	}
-	SDL_GetRGB(color, agVideoFmt, &red, &green, &blue);
+	AG_GetRGB(color, agVideoFmt, &red,&green,&blue);
 	glBegin(GL_POLYGON);
 	glColor3ub(red, green, blue);
 	glVertex2i(x1, y1);
@@ -1314,7 +1314,7 @@ BoxRoundedGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 	glTranslatef(wid->cx+r.x, wid->cy+r.y, 0);
 	glBegin(GL_POLYGON);
 	{
-		SDL_GetRGB(cBg, agVideoFmt, &red, &green, &blue);
+		AG_GetRGB(cBg, agVideoFmt, &red,&green,&blue);
 		glColor3ub(red, green, blue);
 		glVertex2i(0, r.h);
 		glVertex2i(0, rad);
@@ -1327,8 +1327,8 @@ BoxRoundedGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 	if (z >= 0) {
 		glBegin(GL_LINE_STRIP);
 		{
-			SDL_GetRGB(ColorShift(cBg, agHighColorShift),
-			                      agVideoFmt, &red, &green, &blue);
+			AG_GetRGB(ColorShift(cBg, agHighColorShift),
+			                      agVideoFmt, &red,&green,&blue);
 			glColor3ub(red, green, blue);
 			glVertex2i(0, r.h);
 			glVertex2i(0, rad);
@@ -1337,8 +1337,8 @@ BoxRoundedGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 		glEnd();
 		glBegin(GL_LINES);
 		{
-			SDL_GetRGB(ColorShift(cBg, agLowColorShift),
-			                      agVideoFmt, &red, &green, &blue);
+			AG_GetRGB(ColorShift(cBg, agLowColorShift),
+			                      agVideoFmt, &red,&green,&blue);
 			glColor3ub(red, green, blue);
 			glVertex2i(r.w-1, r.h);
 			glVertex2i(r.w-1, rad);
@@ -1362,7 +1362,7 @@ BoxRoundedTopGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 	glTranslatef(wid->cx+r.x, wid->cy+r.y, 0);
 	glBegin(GL_POLYGON);
 	{
-		SDL_GetRGB(cBg, agVideoFmt, &red, &green, &blue);
+		AG_GetRGB(cBg, agVideoFmt, &red,&green,&blue);
 		glColor3ub(red, green, blue);
 		glVertex2i(0, r.h);
 		glVertex2i(0, rad);
@@ -1375,8 +1375,8 @@ BoxRoundedTopGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 	if (z >= 0) {
 		glBegin(GL_LINE_STRIP);
 		{
-			SDL_GetRGB(ColorShift(cBg, agHighColorShift),
-			                      agVideoFmt, &red, &green, &blue);
+			AG_GetRGB(ColorShift(cBg, agHighColorShift),
+			                     agVideoFmt, &red,&green,&blue);
 			glColor3ub(red, green, blue);
 			glVertex2i(0, r.h);
 			glVertex2i(0, rad);
@@ -1385,8 +1385,8 @@ BoxRoundedTopGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 		glEnd();
 		glBegin(GL_LINES);
 		{
-			SDL_GetRGB(ColorShift(cBg, agLowColorShift),
-			                      agVideoFmt, &red, &green, &blue);
+			AG_GetRGB(ColorShift(cBg, agLowColorShift),
+			                     agVideoFmt, &red,&green,&blue);
 			glColor3ub(red, green, blue);
 			glVertex2i(r.w-1, r.h);
 			glVertex2i(r.w-1, rad);
@@ -1402,7 +1402,7 @@ ArrowUpGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 	AG_Widget *wid = p;
 	Uint8 r, g, b;
 
-	SDL_GetRGB(c1, agVideoFmt, &r, &g, &b);
+	AG_GetRGB(c1, agVideoFmt, &r,&g,&b);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef(wid->cx, wid->cy, 0);
@@ -1423,7 +1423,7 @@ ArrowDownGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 	AG_Widget *wid = p;
 	Uint8 r, g, b;
 
-	SDL_GetRGB(c1, agVideoFmt, &r, &g, &b);
+	AG_GetRGB(c1, agVideoFmt, &r,&g,&b);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef(wid->cx, wid->cy, 0);

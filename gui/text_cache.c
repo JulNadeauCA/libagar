@@ -26,6 +26,8 @@
 #include <core/core.h>
 #include <core/config.h>
 
+#include "view.h"
+#include "text.h"
 #include "widget.h"
 #include "text_cache.h"
 

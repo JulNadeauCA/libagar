@@ -63,7 +63,7 @@ RG_SketchProjInit(void *p, RG_Tileset *ts, int flags)
 
 	AG_FeatureInit(sproj, ts, flags, &rgSketchProjOps);
 	sproj->alpha = 255;
-	sproj->color = SDL_MapRGB(ts->fmt, 0, 0, 0);
+	sproj->color = AG_MapRGB(ts->fmt, 0,0,0);
 	sproj->sketch[0] = '\0';
 }
 

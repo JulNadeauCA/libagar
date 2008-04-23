@@ -19,22 +19,22 @@
 #endif
 #endif
 
-/* Load a Windows bitmap using the built-in SDL_LoadBMP(). */
+/* Load a Windows bitmap using the built-in AG_SurfaceFromBMP(). */
 static void
 LoadBMP(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_SELF();
 	char *file = AG_STRING(1);
 	AG_FileType *ft = AG_PTR(2);
-	SDL_Surface *bmp;
+	AG_Surface *bmp;
 	AG_Window *win;
 	Uint8 *pSrc;
 	char *title;
 	int i;
 
 	/* Load the bitmap file into a SDL surface. */
-	if ((bmp = SDL_LoadBMP(file)) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", file, SDL_GetError());
+	if ((bmp = AG_SurfaceFromBMP(file)) == NULL) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", file, AG_GetError());
 		return;
 	}
 	pSrc = (Uint8 *)bmp->pixels;
@@ -52,13 +52,12 @@ LoadBMP(AG_Event *event)
 		for (i = 0; i < bmp->w*bmp->h; i++) {
 			Uint8 r, g, b;
 
-			SDL_GetRGB(AG_GET_PIXEL(bmp,pSrc), bmp->format,
-			    &r, &g, &b);
+			AG_GetRGB(AG_GET_PIXEL(bmp,pSrc), bmp->format,
+			    &r,&g,&b);
 			r = 255 - r;
 			g = 255 - g;
 			b = 255 - b;
-			AG_PUT_PIXEL(bmp, pSrc, SDL_MapRGB(bmp->format,
-			    r, g, b));
+			AG_PUT_PIXEL(bmp, pSrc, AG_MapRGB(bmp->format, r,g,b));
 			pSrc += bmp->format->BytesPerPixel;
 		}
 	}
@@ -71,7 +70,7 @@ LoadBMP(AG_Event *event)
 	    (bmp->w < (agView->w - 16)) ? bmp->w : agView->w - 16,
 	    (bmp->h < (agView->h - 40)) ? bmp->h : agView->h - 40);
 
-	SDL_FreeSurface(bmp);
+	AG_SurfaceFree(bmp);
 	AG_WindowShow(win);
 }
 
@@ -85,6 +84,7 @@ LoadIMG(AG_Event *event)
 	char *file = AG_STRING(1);
 	AG_FileType *ft = AG_PTR(2);
 	SDL_Surface *img;
+	AG_Surface *aImg;
 	AG_Window *win;
 	char *title;
 	int i;
@@ -106,7 +106,8 @@ LoadIMG(AG_Event *event)
 	 * Add a pixmap widget displaying the bitmap, scaled down to the
 	 * maximum view size if needed.
 	 */
-	AG_PixmapFromSurfaceScaled(win, 0, img,
+	aImg = AG_SurfaceFromSDL(img);
+	AG_PixmapFromSurfaceScaled(win, 0, aImg,
 	    (img->w < (agView->w - 16)) ? img->w : agView->w - 16,
 	    (img->h < (agView->h - 40)) ? img->h : agView->h - 40);
 	SDL_FreeSurface(img);

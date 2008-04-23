@@ -57,7 +57,7 @@ binding.
 .Fn AG_SocketNew "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft "AG_Socket *"
-.Fn AG_SocketFromSurface "AG_Widget *parent" "Uint flags" "SDL_Surface *surface"
+.Fn AG_SocketFromSurface "AG_Widget *parent" "Uint flags" "AG_Surface *s"
 .Pp
 .Ft "AG_Socket *"
 .Fn AG_SocketFromBMP "AG_Widget *parent" "Uint flags" "const char *file"
@@ -81,10 +81,10 @@ binding.
 .Fn AG_SocketBgCircle "AG_Socket *socket" "Uint radius"
 .Pp
 .Ft void
-.Fn AG_SocketBgPixmap "AG_Socket *socket" "SDL_Surface *s"
+.Fn AG_SocketBgPixmap "AG_Socket *socket" "AG_Surface *s"
 .Pp
 .Ft void
-.Fn AG_SocketBgPixmapNODUP "AG_Socket *socket" "SDL_Surface *s"
+.Fn AG_SocketBgPixmapNODUP "AG_Socket *socket" "AG_Surface *s"
 .Pp
 .nr nS 0
 The
@@ -205,6 +205,7 @@ Icon in socket or NULL (read-only).
 .Sh SEE ALSO
 .Xr AG_Button 3 ,
 .Xr AG_Pixmap 3 ,
+.Xr AG_Surface 3 ,
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3

@@ -44,7 +44,7 @@ void		 AG_ToolbarScale(void *, int, int);
 void	 	 AG_ToolbarRow(AG_Toolbar *, int);
 AG_Button	*AG_ToolbarButton(AG_Toolbar *, const char *, int,
 		                  void (*)(AG_Event *), const char *, ...);
-AG_Button	*AG_ToolbarButtonIcon(AG_Toolbar *, SDL_Surface *, int,
+AG_Button	*AG_ToolbarButtonIcon(AG_Toolbar *, AG_Surface *, int,
 		                      void (*)(AG_Event *), const char *, ...);
 void	 	 AG_ToolbarSeparator(AG_Toolbar *);
 void		 AG_ToolbarSelect(AG_Toolbar *, AG_Button *);

@@ -79,7 +79,7 @@ keydown(AG_Event *event)
 static __inline__ int
 MouseOverPlotItem(SC_Plotter *ptr, SC_Plot *pl, int x, int y)
 {
-	SDL_Surface *lbl;
+	AG_Surface *lbl;
 	
 	if (pl->label < 0) { return (0); }
 	lbl = WSURFACE(ptr,pl->label);
@@ -358,22 +358,22 @@ Init(void *obj)
 	TAILQ_INIT(&ptr->plots);
 
 	ptr->curColor = 0;
-	ptr->colors[0] = SDL_MapRGB(agSurfaceFmt, 255, 255, 255);
-	ptr->colors[1] = SDL_MapRGB(agSurfaceFmt, 0, 250, 0); 
-	ptr->colors[2] = SDL_MapRGB(agSurfaceFmt, 250, 250, 0);
-	ptr->colors[3] = SDL_MapRGB(agSurfaceFmt, 0, 118, 163);
-	ptr->colors[4] = SDL_MapRGB(agSurfaceFmt, 175, 143, 44);
-	ptr->colors[5] = SDL_MapRGB(agSurfaceFmt, 169, 172, 182);
-	ptr->colors[6] = SDL_MapRGB(agSurfaceFmt, 255, 255, 255);
-	ptr->colors[7] = SDL_MapRGB(agSurfaceFmt, 59, 122, 87);
-	ptr->colors[8] = SDL_MapRGB(agSurfaceFmt, 163, 151, 180);
-	ptr->colors[9] = SDL_MapRGB(agSurfaceFmt, 249, 234, 243);
-	ptr->colors[10] = SDL_MapRGB(agSurfaceFmt, 157, 229, 255);
-	ptr->colors[11] = SDL_MapRGB(agSurfaceFmt, 223, 190, 111);
-	ptr->colors[12] = SDL_MapRGB(agSurfaceFmt, 79, 168, 61);
-	ptr->colors[13] = SDL_MapRGB(agSurfaceFmt, 234, 147, 115);
-	ptr->colors[14] = SDL_MapRGB(agSurfaceFmt, 127, 255, 212);
-	ptr->colors[15] = SDL_MapRGB(agSurfaceFmt, 218, 99, 4);
+	ptr->colors[0] = AG_MapRGB(agSurfaceFmt, 255, 255, 255);
+	ptr->colors[1] = AG_MapRGB(agSurfaceFmt, 0, 250, 0); 
+	ptr->colors[2] = AG_MapRGB(agSurfaceFmt, 250, 250, 0);
+	ptr->colors[3] = AG_MapRGB(agSurfaceFmt, 0, 118, 163);
+	ptr->colors[4] = AG_MapRGB(agSurfaceFmt, 175, 143, 44);
+	ptr->colors[5] = AG_MapRGB(agSurfaceFmt, 169, 172, 182);
+	ptr->colors[6] = AG_MapRGB(agSurfaceFmt, 255, 255, 255);
+	ptr->colors[7] = AG_MapRGB(agSurfaceFmt, 59, 122, 87);
+	ptr->colors[8] = AG_MapRGB(agSurfaceFmt, 163, 151, 180);
+	ptr->colors[9] = AG_MapRGB(agSurfaceFmt, 249, 234, 243);
+	ptr->colors[10] = AG_MapRGB(agSurfaceFmt, 157, 229, 255);
+	ptr->colors[11] = AG_MapRGB(agSurfaceFmt, 223, 190, 111);
+	ptr->colors[12] = AG_MapRGB(agSurfaceFmt, 79, 168, 61);
+	ptr->colors[13] = AG_MapRGB(agSurfaceFmt, 234, 147, 115);
+	ptr->colors[14] = AG_MapRGB(agSurfaceFmt, 127, 255, 212);
+	ptr->colors[15] = AG_MapRGB(agSurfaceFmt, 218, 99, 4);
 	
 	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, 0);
 	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, 0);
@@ -461,7 +461,7 @@ Draw(void *p)
 		int y, py = y0+pl->yOffs+ptr->yOffs;
 
 		if (pl->label >= 0) {
-			SDL_Surface *su = WSURFACE(ptr,pl->label);
+			AG_Surface *su = WSURFACE(ptr,pl->label);
 
 			if (pl->flags & SC_PLOT_SELECTED) {
 				AG_DrawRectOutline(ptr,
@@ -516,14 +516,14 @@ Draw(void *p)
 			continue;
 		}
 		TAILQ_FOREACH(plbl, &pl->labels, labels) {
-			SDL_Surface *su = WSURFACE(ptr,plbl->text_surface);
+			AG_Surface *su = WSURFACE(ptr,plbl->text_surface);
 			int xLbl, yLbl;
 			Uint8 colLine[4];
 			Uint8 colBG[4];
 
-			SDL_GetRGB(AG_COLOR(GRAPH_BG_COLOR), agVideoFmt,
+			AG_GetRGB(AG_COLOR(GRAPH_BG_COLOR), agVideoFmt,
 			    &colBG[0], &colBG[1], &colBG[2]);
-			SDL_GetRGBA(pl->color, agSurfaceFmt,
+			AG_GetRGBA(pl->color, agSurfaceFmt,
 			    &colLine[0], &colLine[1], &colLine[2], &colLine[3]);
 			colLine[3] /= 2;
 			colBG[3] = 200;
@@ -766,7 +766,7 @@ SC_PlotLabelReplace(SC_Plot *pl, enum sc_plot_label_type type, Uint x, Uint y,
 	} else {
 		Uint nx = x;
 		Uint ny = y;
-		SDL_Surface *su;
+		AG_Surface *su;
 reposition:
 		/* Do what we can to avoid overlapping labels */
 		TAILQ_FOREACH(plbl, &pl->labels, labels) {
@@ -881,7 +881,7 @@ SC_PlotFromInt(SC_Plotter *ptr, enum sc_plot_type type, const char *label,
 void
 SC_PlotSetColor(SC_Plot *pl, Uint8 r, Uint8 g, Uint8 b)
 {
-	pl->color = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	pl->color = AG_MapRGB(agSurfaceFmt, r,g,b);
 }
 
 void
@@ -924,7 +924,7 @@ SC_PlotterSetDefaultFont(SC_Plotter *ptr, const char *face, int size)
 void
 SC_PlotterSetDefaultColor(SC_Plotter *ptr, int i, Uint8 r, Uint8 g, Uint8 b)
 {
-	ptr->colors[i] = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	ptr->colors[i] = AG_MapRGB(agSurfaceFmt, r,g,b);
 }
 
 void

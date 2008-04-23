@@ -78,7 +78,7 @@ typedef struct ag_table_cell {
 #endif
 	} data;
 	char fmt[AG_TABLE_FMT_MAX];		/* Format string */
-	SDL_Surface *(*fnSu)(void *, int, int); /* For AG_CELL_FN_SURFACE */
+	AG_Surface *(*fnSu)(void *, int, int);  /* For AG_CELL_FN_SURFACE */
 	void (*fnTxt)(void *, char *, size_t);	/* For AG_CELL_FN_TXT */
 	AG_Widget *widget;			/* For AG_CELL_WIDGET */
 	int selected;				/* Cell is selected */

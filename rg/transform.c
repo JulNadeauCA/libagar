@@ -40,11 +40,11 @@ const int rgTransformsCount;
  * any existing rotation is removed.
  */
 RG_Transform *
-RG_TransformRotate(struct map_item *r, int angle)
+TransformRotate(struct map_item *r, int angle)
 {
 	Uint32 angles = (Uint32)angle;
 	RG_Transform *tr;
-	SDL_Surface *su;
+	AG_Surface *su;
 	float rad, theta;
 
 	switch (r->type) {
@@ -297,8 +297,8 @@ RG_TransformSave(AG_DataSource *buf, const RG_Transform *xf)
 }
 
 /* Flip a surface horizontally. */
-static SDL_Surface *
-RG_TransformMirror(SDL_Surface *su, int argc, Uint32 *argv)
+static AG_Surface *
+TransformMirror(AG_Surface *su, int argc, Uint32 *argv)
 {
 	Uint8 *row, *rowp;
 	Uint8 *fb = su->pixels;
@@ -319,8 +319,8 @@ RG_TransformMirror(SDL_Surface *su, int argc, Uint32 *argv)
 }
 
 /* Flip a surface vertically. */
-static SDL_Surface *
-RG_TransformFlip(SDL_Surface *su, int argc, Uint32 *argv)
+static AG_Surface *
+TransformFlip(AG_Surface *su, int argc, Uint32 *argv)
 {
 	size_t totsize = su->h*su->pitch;
 	Uint8 *row, *rowbuf;
@@ -340,27 +340,27 @@ RG_TransformFlip(SDL_Surface *su, int argc, Uint32 *argv)
 }
 
 /* Rotate a surface by the given number of degrees. */
-static SDL_Surface *
-RG_TransformRotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
+static AG_Surface *
+TransformRotate(AG_Surface *sOrig, int argc, Uint32 *argv)
 {
-	SDL_Surface *sNew;
+	AG_Surface *sNew;
 	Uint32 theta = argv[0];
 	int x, y;
 	int xp, yp;
 	int swapdims = (theta == 90 || theta == 270);
 
-	sNew = SDL_CreateRGBSurface(SDL_SWSURFACE |
-	    (sOrig->flags&(SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
+	sNew = AG_SurfaceRGBA(
 	    swapdims ? sOrig->h : sOrig->w,
 	    swapdims ? sOrig->w : sOrig->h,
 	    sOrig->format->BitsPerPixel,
+	    (sOrig->flags & (AG_SRCALPHA|AG_SRCCOLORKEY|AG_RLEACCEL)),
 	    sOrig->format->Rmask,
 	    sOrig->format->Gmask,
 	    sOrig->format->Bmask,
 	    sOrig->format->Amask);
-	if (sNew == NULL)
-		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
-
+	if (sNew == NULL) {
+		AG_FatalError(NULL);
+	}
 	switch (theta) {
 	case 90:
 		for (y = 0; y < sOrig->h; y++) {
@@ -394,8 +394,8 @@ RG_TransformRotate(SDL_Surface *sOrig, int argc, Uint32 *argv)
 }
 
 /* Invert the colors of a surface. */
-static SDL_Surface *
-RG_TransformInvertRGB(SDL_Surface *su, int argc, Uint32 *argv)
+static AG_Surface *
+TransformInvertRGB(AG_Surface *su, int argc, Uint32 *argv)
 {
 	size_t size = su->w*su->h;
 	Uint8 *p = su->pixels;
@@ -403,11 +403,8 @@ RG_TransformInvertRGB(SDL_Surface *su, int argc, Uint32 *argv)
 	int i;
 
 	for (i = 0; i < size; i++) {
-		SDL_GetRGBA(AG_GET_PIXEL(su, p), su->format, &r, &g, &b, &a);
-		AG_PUT_PIXEL(su, p, SDL_MapRGBA(su->format,
-		    255 - r,
-		    255 - g,
-		    255 - b,
+		AG_GetRGBA(AG_GET_PIXEL(su,p), su->format, &r,&g,&b,&a);
+		AG_PUT_PIXEL(su, p, AG_MapRGBA(su->format, 255-r, 255-g, 255-b,
 		    a));
 		p += su->format->BytesPerPixel;
 	}
@@ -415,10 +412,10 @@ RG_TransformInvertRGB(SDL_Surface *su, int argc, Uint32 *argv)
 }
 
 const struct rg_transform_ops rgTransforms[] = {
-	{ "mirror",	RG_TRANSFORM_MIRROR,		RG_TransformMirror },
-	{ "flip",	RG_TRANSFORM_FLIP,		RG_TransformFlip },
-	{ "rotate",	RG_TRANSFORM_ROTATE,		RG_TransformRotate },
-	{ "rgb-invert",	RG_TRANSFORM_RGB_INVERT,	RG_TransformInvertRGB }
+	{ "mirror",	RG_TRANSFORM_MIRROR,		TransformMirror },
+	{ "flip",	RG_TRANSFORM_FLIP,		TransformFlip },
+	{ "rotate",	RG_TRANSFORM_ROTATE,		TransformRotate },
+	{ "rgb-invert",	RG_TRANSFORM_RGB_INVERT,	TransformInvertRGB }
 };
 const int rgTransformsCount = sizeof(rgTransforms) / sizeof(rgTransforms[0]);
 

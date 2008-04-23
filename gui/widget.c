@@ -620,7 +620,7 @@ AG_WidgetBindingChanged(AG_WidgetBinding *bind)
  * as the widget is locked.
  */
 int
-AG_WidgetMapSurface(void *p, SDL_Surface *su)
+AG_WidgetMapSurface(void *p, AG_Surface *su)
 {
 	AG_Widget *wid = p;
 	int i, idx = -1;
@@ -635,7 +635,7 @@ AG_WidgetMapSurface(void *p, SDL_Surface *su)
 	}
 	if (i == wid->nsurfaces) {
 		wid->surfaces = Realloc(wid->surfaces,
-		    (wid->nsurfaces+1)*sizeof(SDL_Surface *));
+		    (wid->nsurfaces+1)*sizeof(AG_Surface *));
 		wid->surfaceFlags = Realloc(wid->surfaceFlags,
 		    (wid->nsurfaces+1)*sizeof(Uint));
 #ifdef HAVE_OPENGL
@@ -666,7 +666,7 @@ AG_WidgetMapSurface(void *p, SDL_Surface *su)
  * as the widget is locked.
  */
 int
-AG_WidgetMapSurfaceNODUP(void *p, SDL_Surface *su)
+AG_WidgetMapSurfaceNODUP(void *p, AG_Surface *su)
 {
 	AG_Widget *wid = p;
 	int name;
@@ -687,14 +687,14 @@ AG_WidgetMapSurfaceNODUP(void *p, SDL_Surface *su)
  * for future deletion within rendering context.
  */
 void
-AG_WidgetReplaceSurface(void *p, int name, SDL_Surface *su)
+AG_WidgetReplaceSurface(void *p, int name, AG_Surface *su)
 {
 	AG_Widget *wid = p;
 
 	AG_ObjectLock(wid);
 	if (wid->surfaces[name] != NULL) {
 		if (!WSURFACE_NODUP(wid,name))
-			SDL_FreeSurface(wid->surfaces[name]);
+			AG_SurfaceFree(wid->surfaces[name]);
 	}
 	wid->surfaces[name] = su;
 	wid->surfaceFlags[name] &= ~(AG_WIDGET_SURFACE_NODUP);
@@ -711,7 +711,7 @@ AG_WidgetReplaceSurface(void *p, int name, SDL_Surface *su)
 
 /* Variant of WidgetReplaceSurface() that sets the NODUP flag. */
 void
-AG_WidgetReplaceSurfaceNODUP(void *p, int name, SDL_Surface *su)
+AG_WidgetReplaceSurfaceNODUP(void *p, int name, AG_Surface *su)
 {
 	AG_Widget *wid = p;
 
@@ -760,7 +760,7 @@ Destroy(void *obj)
 #endif
 	for (i = 0; i < wid->nsurfaces; i++) {
 		if (wid->surfaces[i] != NULL && !WSURFACE_NODUP(wid,i))
-			SDL_FreeSurface(wid->surfaces[i]);
+			AG_SurfaceFree(wid->surfaces[i]);
 #ifdef HAVE_OPENGL
 		if (agView->opengl) {
 			if (wid->textures[i] != 0) {
@@ -798,10 +798,10 @@ Destroy(void *obj)
  * Only safe to call from rendering context.
  */
 void
-AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
+AG_WidgetBlit(void *p, AG_Surface *srcsu, int x, int y)
 {
 	AG_Widget *wid = p;
-	SDL_Rect rd;
+	AG_Rect rd;
 
 	rd.x = wid->cx + x;
 	rd.y = wid->cy + y;
@@ -812,7 +812,7 @@ AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 	if (agView->opengl) {
 		GLuint texture;
 		GLfloat texcoord[4];
-		int alpha = (srcsu->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY));
+		int alpha = (srcsu->flags & (AG_SRCALPHA|AG_SRCCOLORKEY));
 		GLboolean blend_sv;
 		GLint blend_sfactor, blend_dfactor;
 		GLfloat texenvmode;
@@ -860,7 +860,7 @@ AG_WidgetBlit(void *p, SDL_Surface *srcsu, int x, int y)
 	} else
 #endif /* HAVE_OPENGL */
 	{
-		SDL_BlitSurface(srcsu, NULL, agView->v, &rd);
+		AG_SurfaceBlit(srcsu, NULL, agView->v, &rd);
 	}
 }
 
@@ -885,12 +885,12 @@ UpdateTexture(AG_Widget *wid, int name)
  * Only safe to call from rendering context.
  */
 void
-AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, SDL_Rect *rs, int x, int y)
+AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, AG_Rect *rs, int x, int y)
 {
 	AG_Widget *wDst = pDst;
 	AG_Widget *wSrc = pSrc;
-	SDL_Surface *su = wSrc->surfaces[name];
-	SDL_Rect rd;
+	AG_Surface *su = wSrc->surfaces[name];
+	AG_Rect rd;
 
 	if (name == -1 || su == NULL)
 		return;
@@ -907,7 +907,7 @@ AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, SDL_Rect *rs, int x, int y)
 		GLboolean blend_sv;
 		GLint blend_sfactor, blend_dfactor;
 		GLfloat texenvmode;
-		int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
+		int alpha = su->flags & (AG_SRCALPHA|AG_SRCCOLORKEY);
 
 		UpdateTexture(wSrc, name);
 
@@ -960,7 +960,7 @@ AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, SDL_Rect *rs, int x, int y)
 	} else
 #endif /* HAVE_OPENGL */
 	{
-		SDL_BlitSurface(su, rs, agView->v, &rd);
+		AG_SurfaceBlit(su, rs, agView->v, &rd);
 	}
 }
 
@@ -978,8 +978,8 @@ AG_WidgetBlitSurfaceGL(void *pWidget, int name, float w, float h)
 	GLboolean blend_sv;
 	GLint blend_sfactor, blend_dfactor;
 	GLfloat texenvmode;
-	SDL_Surface *su = wid->surfaces[name];
-	int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
+	AG_Surface *su = wid->surfaces[name];
+	int alpha = su->flags & (AG_SRCALPHA|AG_SRCCOLORKEY);
 	float w2 = w/2.0f;
 	float h2 = h/2.0f;
 	
@@ -1037,8 +1037,8 @@ AG_WidgetBlitSurfaceFlippedGL(void *pWidget, int name, float w, float h)
 	GLboolean blend_sv;
 	GLint blend_sfactor, blend_dfactor;
 	GLfloat texenvmode;
-	SDL_Surface *su = wid->surfaces[name];
-	int alpha = su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY);
+	AG_Surface *su = wid->surfaces[name];
+	int alpha = su->flags & (AG_SRCALPHA|AG_SRCCOLORKEY);
 	
 	UpdateTexture(wid, name);
 
@@ -1087,7 +1087,7 @@ AG_WidgetPutPixel32_GL(void *p, int x, int y, Uint32 color)
 {
 	Uint8 r, g, b;
 
-	SDL_GetRGB(color, agVideoFmt, &r, &g, &b);
+	AG_GetRGB(color, agVideoFmt, &r,&g,&b);
 	glBegin(GL_POINTS);
 	glColor3ub(r, g, b);
 	glVertex2s(x, y);
@@ -1328,37 +1328,31 @@ AG_WidgetPushClipRect(void *p, AG_Rect r)
 	} else
 #endif
 	{
-		SDL_Rect rClip;
-		int x = r.x + wid->cx;
-		int y = r.y + wid->cy;
-		int w = r.w;
-		int h = r.h;
+		AG_Rect rClip = AG_RECT(r.x + wid->cx,
+		                        r.y + wid->cy,
+					r.w, r.h);
 
-		if (r.x < 0) {
-			r.x = 0;
-		} else if (r.x+w > agView->w) {
-			w = agView->w - r.x;
-			if (w < 0) {
-				x = 0;
-				w = agView->w;
+		if (rClip.x < 0) {
+			rClip.x = 0;
+		} else if (rClip.x+rClip.w > agView->w) {
+			rClip.w = agView->w - rClip.x;
+			if (rClip.w < 0) {
+				rClip.x = 0;
+				rClip.w = agView->w;
 			}
 		}
-		if (r.y < 0) {
-			r.y = 0;
-		} else if (y+h > agView->h) {
-			h = agView->h - r.y;
-			if (h < 0) {
-				y = 0;
-				h = agView->h;
+		if (rClip.y < 0) {
+			rClip.y = 0;
+		} else if (rClip.y+rClip.h > agView->h) {
+			rClip.h = agView->h - rClip.y;
+			if (rClip.h < 0) {
+				rClip.y = 0;
+				rClip.h = agView->h;
 			}
 		}
 
-		rClip.x = (Sint16)x;
-		rClip.y = (Sint16)y;
-		rClip.w = (Uint16)w;
-		rClip.h = (Uint16)h;
-		SDL_GetClipRect(agView->v, &wid->rClipSave);
-		SDL_SetClipRect(agView->v, &rClip);
+		AG_GetClipRect(agView->v, &wid->rClipSave);
+		AG_SetClipRect(agView->v, &rClip);
 	}
 }
 
@@ -1400,7 +1394,7 @@ AG_WidgetPopClipRect(void *p)
 	} else
 #endif
 	{
-		SDL_SetClipRect(agView->v, &wid->rClipSave);
+		AG_SetClipRect(agView->v, &wid->rClipSave);
 	}
 }
 

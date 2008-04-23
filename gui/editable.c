@@ -34,8 +34,10 @@
 #include <config/have_freetype.h>
 #include <config/utf8.h>
 
+#include "view.h"
 #include "ttf.h"
 #include "editable.h"
+#include "text.h"
 
 #include "keymap.h"
 #include "primitive.h"
@@ -627,10 +629,10 @@ Draw(void *p)
 		dy = WIDGET(ed)->cy + y;
 
 		if (!agView->opengl) {
-			SDL_Rect rd;
+			AG_Rect rd;
 			rd.x = dx;
 			rd.y = dy;
-			SDL_BlitSurface(gl->su, NULL, agView->v, &rd);
+			AG_SurfaceBlit(gl->su, NULL, agView->v, &rd);
 		}
 #ifdef HAVE_OPENGL
 		else {

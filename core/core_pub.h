@@ -20,7 +20,6 @@
 #include <agar/core/load_integral.h>
 #include <agar/core/load_real.h>
 #include <agar/core/load_string.h>
-#include <agar/core/load_surface.h>
 #include <agar/core/load_version.h>
 
 #include <agar/core/version.h>

@@ -811,7 +811,7 @@ Draw(void *p)
 	}
 #if 0
 	{
-		SDL_Surface *txt;
+		AG_Surface *txt;
 		char label[32];
 
 		Snprintf(label, sizeof(label), "%d/%d/%d", val, min, max);
@@ -820,7 +820,7 @@ Draw(void *p)
 		AG_WidgetBlit(sb, txt,
 		    WIDTH(sb)/2 - txt->w/2,
 		    HEIGHT(sb)/2 - txt->h/2);
-		SDL_FreeSurface(txt);
+		AG_SurfaceFree(txt);
 		    
 	}
 #endif

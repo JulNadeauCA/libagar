@@ -285,19 +285,19 @@ operation of widgets), and may not be used in any other context.
 .Pp
 .nr nS 1
 .Ft void
-.Fn AG_WidgetBlit "AG_Widget *widget" "SDL_Surface *src" "int x" "int y"
+.Fn AG_WidgetBlit "AG_Widget *widget" "AG_Surface *src" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_WidgetMapSurface "AG_Widget *widget" "SDL_Surface *su"
+.Fn AG_WidgetMapSurface "AG_Widget *widget" "AG_Surface *su"
 .Pp
 .Ft int
-.Fn AG_WidgetMapSurfaceNODUP "AG_Widget *widget" "SDL_Surface *su"
+.Fn AG_WidgetMapSurfaceNODUP "AG_Widget *widget" "AG_Surface *su"
 .Pp
 .Ft void
-.Fn AG_WidgetReplaceSurface "AG_Widget *widget" "int surface_id" "SDL_Surface *newSurface"
+.Fn AG_WidgetReplaceSurface "AG_Widget *widget" "int surface_id" "AG_Surface *newSurface"
 .Pp
 .Ft void
-.Fn AG_WidgetReplaceSurfaceNODUP "AG_Widget *widget" "int surface_id" "SDL_Surface *newSurface"
+.Fn AG_WidgetReplaceSurfaceNODUP "AG_Widget *widget" "int surface_id" "AG_Surface *newSurface"
 .Pp
 .Ft void
 .Fn AG_WidgetUnmapSurface "AG_Widget *widget" "int surface_id"
@@ -306,7 +306,7 @@ operation of widgets), and may not be used in any other context.
 .Fn AG_WidgetUpdateSurface "AG_Widget *widget" "int surface_id"
 .Pp
 .Ft void
-.Fn AG_WidgetBlitFrom "AG_Widget *dstWidget" "AG_Widget *srcWidget" "int surface_id" "SDL_Rect *rs" "int x" "int y"
+.Fn AG_WidgetBlitFrom "AG_Widget *dstWidget" "AG_Widget *srcWidget" "int surface_id" "AG_Rect *rs" "int x" "int y"
 .Pp
 .Ft void
 .Fn AG_WidgetBlitSurface "AG_Widget *widget" "int surface_id" "int x" "int y"
@@ -314,11 +314,14 @@ operation of widgets), and may not be used in any other context.
 .nr nS 0
 The
 .Fn AG_WidgetBlit
-function performs a software->hardware blit from the SDL surface
+function performs a software->hardware blit from the surface
 .Fa src
 to the video display at the given widget coordinates.
 .Fn AG_WidgetBlit
 must invoked in rendering context.
+See
+.Xr AG_Surface 3
+for more information on the Agar surface structure.
 .Pp
 Software to hardware blits are slow, so the
 .Fn AG_WidgetMapSurface
@@ -436,11 +439,12 @@ function creates a clipping rectangle over the given area (given in
 widget coordinates).
 The current clipping rectangle is saved and can be restored by calling
 .Fn AG_WidgetPopClipRect .
-In SDL mode, the temporary rectangle is set by
-.Xr SDL_SetClipRect 3 .
-In OpenGL mode,
+The method of clipping depends on the underlying graphics API.
+For instance, in SDL mode, the temporary rectangle is set by
+.Xr SDL_SetClipRect 3
+and
 .Xr glClipPlane 3
-is used.
+is used in OpenGL mode.
 It is not safe to call these two functions anywhere outside of a widget
 .Va draw
 operation.
@@ -1082,6 +1086,7 @@ See
 in the Agar source distribution.
 .Sh SEE ALSO
 .Xr AG_Style 3 ,
+.Xr AG_Surface 3 ,
 .Xr AG_View 3 ,
 .Xr AG_Window 3
 .Sh HISTORY

@@ -314,17 +314,17 @@ ImportImageFromBMP(AG_Event *event)
 {
 	RG_Tileset *ts = AG_PTR(1);
 	char *path = AG_STRING(2);
-	SDL_Surface *bmp;
+	AG_Surface *bmp;
 	RG_Tile *t;
 	RG_Pixmap *px;
 
-	if ((bmp = SDL_LoadBMP(path)) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, SDL_GetError());
+	if ((bmp = AG_SurfaceFromBMP(path)) == NULL) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
 		return;
 	}
 	px = RG_PixmapNew(ts, "Bitmap", 0);
-	px->su = SDL_ConvertSurface(bmp, ts->fmt, 0);
-	SDL_FreeSurface(bmp);
+	px->su = AG_SurfaceFromSurface(bmp, ts->fmt, 0);
+	AG_SurfaceFree(bmp);
 	
 	t = RG_TileNew(ts, "Bitmap", px->su->w, px->su->h, RG_TILE_SRCALPHA);
 	RG_TileAddPixmap(t, NULL, px, 0, 0);
@@ -332,14 +332,14 @@ ImportImageFromBMP(AG_Event *event)
 }
 
 static void
-LoadTileFromXCF(SDL_Surface *xcf, const char *lbl, void *p)
+LoadTileFromXCF(AG_Surface *xcf, const char *lbl, void *p)
 {
 	RG_Tileset *ts = p;
 	RG_Pixmap *px;
 	RG_Tile *t;
 
 	px = RG_PixmapNew(ts, lbl, 0);
-	px->su = SDL_ConvertSurface(xcf, ts->fmt, 0);
+	px->su = AG_SurfaceFromSurface(xcf, ts->fmt, 0);
 
 	t = RG_TileNew(ts, lbl, xcf->w, xcf->h, RG_TILE_SRCALPHA);
 	RG_TileAddPixmap(t, NULL, px, 0, 0);

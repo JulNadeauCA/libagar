@@ -491,12 +491,13 @@ ClampToView(AG_Window *win)
 static void
 Move(AG_Window *win, SDL_MouseMotionEvent *motion)
 {
-	SDL_Rect oldpos, newpos, rfill1, rfill2;
+	AG_Rect rPrev, rNew;
+	SDL_Rect rFill1, rFill2;
 
-	oldpos.x = WIDGET(win)->x;
-	oldpos.y = WIDGET(win)->y;
-	oldpos.w = WIDGET(win)->w;
-	oldpos.h = WIDGET(win)->h;
+	rPrev.x = WIDGET(win)->x;
+	rPrev.y = WIDGET(win)->y;
+	rPrev.w = WIDGET(win)->w;
+	rPrev.h = WIDGET(win)->h;
 
 	WIDGET(win)->x += motion->xrel;
 	WIDGET(win)->y += motion->yrel;
@@ -506,43 +507,43 @@ Move(AG_Window *win, SDL_MouseMotionEvent *motion)
 
 	/* Update the background. */
 	/* XXX TODO Avoid drawing over KEEPABOVE windows */
-	newpos.x = WIDGET(win)->x;
-	newpos.y = WIDGET(win)->y;
-	newpos.w = WIDGET(win)->w;
-	newpos.h = WIDGET(win)->h;
-	rfill1.w = 0;
-	rfill2.w = 0;
-	if (newpos.x > oldpos.x) {		/* Right */
-		rfill1.x = oldpos.x;
-		rfill1.y = oldpos.y;
-		rfill1.w = newpos.x - oldpos.x;
-		rfill1.h = newpos.h;
-	} else if (newpos.x < oldpos.x) {	/* Left */
-		rfill1.x = newpos.x + newpos.w;
-		rfill1.y = newpos.y;
-		rfill1.w = oldpos.x - newpos.x;
-		rfill1.h = oldpos.h;
+	rNew.x = WIDGET(win)->x;
+	rNew.y = WIDGET(win)->y;
+	rNew.w = WIDGET(win)->w;
+	rNew.h = WIDGET(win)->h;
+	rFill1.w = 0;
+	rFill2.w = 0;
+	if (rNew.x > rPrev.x) {		/* Right */
+		rFill1.x = rPrev.x;
+		rFill1.y = rPrev.y;
+		rFill1.w = rNew.x - rPrev.x;
+		rFill1.h = rNew.h;
+	} else if (rNew.x < rPrev.x) {	/* Left */
+		rFill1.x = rNew.x + rNew.w;
+		rFill1.y = rNew.y;
+		rFill1.w = rPrev.x - rNew.x;
+		rFill1.h = rPrev.h;
 	}
-	if (newpos.y > oldpos.y) {		/* Downward */
-		rfill2.x = oldpos.x;
-		rfill2.y = oldpos.y;
-		rfill2.w = newpos.w;
-		rfill2.h = newpos.y - oldpos.y;
-	} else if (newpos.y < oldpos.y) {	/* Upward */
-		rfill2.x = oldpos.x;
-		rfill2.y = newpos.y + newpos.h;
-		rfill2.w = oldpos.w;
-		rfill2.h = oldpos.y - newpos.y;
+	if (rNew.y > rPrev.y) {		/* Downward */
+		rFill2.x = rPrev.x;
+		rFill2.y = rPrev.y;
+		rFill2.w = rNew.w;
+		rFill2.h = rNew.y - rPrev.y;
+	} else if (rNew.y < rPrev.y) {	/* Upward */
+		rFill2.x = rPrev.x;
+		rFill2.y = rNew.y + rNew.h;
+		rFill2.w = rPrev.w;
+		rFill2.h = rPrev.y - rNew.y;
 	}
 	if (!agView->opengl &&
 	    !(win->flags & AG_WINDOW_NOUPDATERECT)) {
-		if (rfill1.w > 0) {
-			SDL_FillRect(agView->v, &rfill1, AG_COLOR(BG_COLOR));
-			SDL_UpdateRects(agView->v, 1, &rfill1);
+		if (rFill1.w > 0) {
+			SDL_FillRect(agView->v, &rFill1, AG_COLOR(BG_COLOR));
+			SDL_UpdateRects(agView->v, 1, &rFill1);
 		}
-		if (rfill2.w > 0) {
-			SDL_FillRect(agView->v, &rfill2, AG_COLOR(BG_COLOR));
-			SDL_UpdateRects(agView->v, 1, &rfill2);
+		if (rFill2.w > 0) {
+			SDL_FillRect(agView->v, &rFill2, AG_COLOR(BG_COLOR));
+			SDL_UpdateRects(agView->v, 1, &rFill2);
 		}
 	}
 	AG_PostEvent(NULL, win, "window-user-move", "%d,%d",

@@ -146,12 +146,12 @@ RG_SketchDrawPolygon(RG_Tile *t, VG *vg, VG_Element *vge)
 				break;
 			case VG_TEXTURED:
 				for (xi = xa; xi < xb; xi++) {
-					SDL_GetRGB(AG_GET_PIXEL2(tex->t->su,
+					AG_GetRGB(AG_GET_PIXEL2(tex->t->su,
 					    (xi % tex->t->su->w),
 					    (y % tex->t->su->h)),
-					    tex->t->su->format, &r, &g, &b);
+					    tex->t->su->format, &r,&g,&b);
 					AG_PUT_PIXEL2_CLIPPED(vg->su, xi, y,
-					    SDL_MapRGB(vg->fmt, r, g, b));
+					    AG_MapRGB(vg->fmt, r,g,b));
 				}
 				break;
 			}

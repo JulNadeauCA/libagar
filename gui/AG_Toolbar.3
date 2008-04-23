@@ -58,7 +58,7 @@ The buttons may be arranged in multiple rows.
 .Fn AG_ToolbarButton "AG_Toolbar *toolbar" "const char *text" "int enable_default" "void (*fn)(AG_Event *)" "const char *fmt" "..."
 .Pp
 .Ft "AG_Button *"
-.Fn AG_ToolbarButtonIcon "AG_Toolbar *toolbar" "SDL_Surface *icon" "int enable_default" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Fn AG_ToolbarButtonIcon "AG_Toolbar *toolbar" "AG_Surface *icon" "int enable_default" "void (*fn)(AG_Event *)" "const char *fmt" "..."
 .Pp
 .Ft "void"
 .Fn AG_ToolbarSeparator "AG_Toolbar *toolbar"
@@ -164,6 +164,7 @@ Current row, as selected by
 .Xr AG_Box 3 ,
 .Xr AG_Button 3 ,
 .Xr AG_Event 3 ,
+.Xr AG_Surface 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY

@@ -4,7 +4,6 @@
 #include "agar-bench.h"
 #include <agar/gui/primitive.h>
 
-static SDL_Surface *su;
 static AG_Widget wid;
 
 static void

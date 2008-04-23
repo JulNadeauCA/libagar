@@ -73,6 +73,8 @@ independent of the underlying graphics API.
 Color scheme interface.
 .It Xr AG_Style 3
 The high-level themeing API.
+.It Xr AG_Surface 3
+Graphics surfaces.
 .It Xr AG_Text 3
 Interface to font engine (i.e., FreeType or bitmap fonts).
 .It Xr AG_Units 3
@@ -84,7 +86,7 @@ Generic widget interface.
 .It Xr AG_Window 3
 Basic window widget; interface to built-in window manager.
 .El
-.Sh AGAR-GUI WIDGETS
+.Sh STANDARD WIDGETS
 These are the standard Agar widget classes.
 The widget API is open, so libraries and applications will frequently
 implement new widgets (inheriting from existing widget classes is made
@@ -103,6 +105,8 @@ Generic checkbox widget (boolean bindings).
 Text input/drop-down menu widget.
 .It Xr AG_Console 3
 Scrollable text console widget.
+.It Xr AG_Editable 3
+Low-level text edition widget (string bindings, UTF-8 supported).
 .It Xr AG_FileDlg 3
 File selection widget.
 .It Xr AG_Fixed 3
@@ -144,7 +148,7 @@ Selector for
 .Xr AG_Object 3
 trees.
 .It Xr AG_Palette 3
-Edit a RGB color value (Uint32/SDL_PixelFormat bindings). Obsoleted
+Edit a RGB color value (Uint32/AG_PixelFormat bindings). Obsoleted
 by
 .Xr AG_HSVPal 3 .
 .It Xr AG_Pane 3
@@ -190,22 +194,14 @@ Alternate interface to
 .Xr AG_Box 3 .
 .El
 .Pp
-.Sh AGAR-SC
-The Agar-SC library implements math functions and widgets aimed at
-scientific and engineering applications.
-.Pp
-.Bl -tag -width "SC_Plotter(3) " -compact
-.It Xr SC_Plotter 3
-Displays one or more real/vector-valued plots.
-.El
 .Sh AGAR-VG
 Agar-VG is a simple 2D vector graphics library which allows developers
 to specify hierarchical sketches consisting of elements such as lines, curves
 and text, with associated linear transformations.
 It is well suited to applications such as technical simulations; applications
-requiring dimensioned, constrained vector drawings should use the
+requiring dimensioned, constrained vector drawings should use the FreeSG
 .Xr SK 3
-object instead.
+library instead (http://freesg.org/).
 .Pp
 (Agar-VG is not yet documented)
 .Pp
@@ -254,3 +250,5 @@ Dynamic map object.
 .It Xr MAP_View 3
 Map visualization and edition widget.
 .El
+.Sh FREESG
+See http://freesg.org/ for more details.

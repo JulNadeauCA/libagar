@@ -236,7 +236,7 @@ MenuItemBackground(void *mv, AG_Rect r, int xIcon, void *iconObj,
 		    r.y   + (r.h/2 - WSURFACE(iconObj,icon)->h/2) + 1);
 
 		if (boolState) {
-			SDL_GetRGB(AG_COLOR(MENU_OPTION_COLOR), agVideoFmt,
+			AG_GetRGB(AG_COLOR(MENU_OPTION_COLOR), agVideoFmt,
 			    &c[0], &c[1], &c[2]);
 			c[3] = 64;
 			AG_DrawFrame(mv,

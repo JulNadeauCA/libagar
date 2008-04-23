@@ -103,7 +103,7 @@ ginsert_mousemotion(void *p, int x, int y, int xrel, int yrel, int btn)
 }
 
 static int
-ginsert_cursor(void *p, SDL_Rect *rd)
+ginsert_cursor(void *p, AG_Rect *rd)
 {
 #if 0
 	struct ginsert_tool *ins = p;

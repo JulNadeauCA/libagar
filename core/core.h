@@ -109,8 +109,6 @@ typedef unsigned long Ulong;
 #include <core/cpuinfo.h>
 #include <core/typesw.h>
 
-#include <gui/text.h>
-
 #ifdef ENABLE_NLS
 # include <libintl.h>
 # define _(String) dgettext("agar",String)

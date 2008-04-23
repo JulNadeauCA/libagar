@@ -94,7 +94,7 @@ static __inline__ int
 MouseOverEdge(AG_GraphEdge *edge, int x, int y)
 {
 	int lx, ly;
-	SDL_Surface *lbl;
+	AG_Surface *lbl;
 
 	if (edge->labelSu == -1) {
 		return (0);
@@ -193,8 +193,8 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	edge = Malloc(sizeof(AG_GraphEdge));
 	edge->labelTxt[0] = '\0';
 	edge->labelSu = -1;
-	edge->edgeColor = SDL_MapRGB(agSurfaceFmt, 0,0,0);
-	edge->labelColor = SDL_MapRGB(agSurfaceFmt, 0,0,0);
+	edge->edgeColor = AG_MapRGB(agSurfaceFmt, 0,0,0);
+	edge->labelColor = AG_MapRGB(agSurfaceFmt, 0,0,0);
 	edge->flags = 0;
 	edge->v1 = v1;
 	edge->v2 = v2;
@@ -249,7 +249,7 @@ void
 AG_GraphEdgeColorLabel(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(edge->graph);
-	edge->labelColor = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	edge->labelColor = AG_MapRGB(agSurfaceFmt, r,g,b);
 	AG_ObjectUnlock(edge->graph);
 }
 
@@ -257,7 +257,7 @@ void
 AG_GraphEdgeColor(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(edge->graph);
-	edge->edgeColor = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	edge->edgeColor = AG_MapRGB(agSurfaceFmt, r,g,b);
 	AG_ObjectUnlock(edge->graph);
 }
 
@@ -492,7 +492,7 @@ Draw(void *p)
 	AG_DrawRectOutline(gf,
 	    AG_RECT(gf->pxMin - gf->xOffs, gf->pyMin - gf->yOffs, 
 	            gf->pxMax - gf->pxMin, gf->pyMax - gf->pyMin),
-	    SDL_MapRGB(agVideoFmt, 128, 128, 128)); 
+	    AG_MapRGB(agVideoFmt, 128,128,128)); 
 
 	/* Draw the edges */
 	TAILQ_FOREACH(edge, &gf->edges, edges) {
@@ -507,7 +507,7 @@ Draw(void *p)
 		    edge->edgeColor);
 
 		if (edge->labelSu >= 0) {
-			SDL_Surface *su = WSURFACE(gf,edge->labelSu);
+			AG_Surface *su = WSURFACE(gf,edge->labelSu);
 			int lblX, lblY;
 
 			GetEdgeLabelCoords(edge, &lblX, &lblY);
@@ -539,13 +539,13 @@ Draw(void *p)
 
 	/* Draw the vertices. */
 	TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
-		SDL_Surface *lbl = WSURFACE(gf,vtx->labelSu);
+		AG_Surface *lbl = WSURFACE(gf,vtx->labelSu);
 
 		if (vtx->flags & AG_GRAPH_HIDDEN) {
 			continue;
 		}
-		SDL_GetRGBA(vtx->bgColor, agSurfaceFmt,
-		    &bg[0], &bg[1], &bg[2], &bg[3]);
+		AG_GetRGBA(vtx->bgColor, agSurfaceFmt,
+		    &bg[0],&bg[1],&bg[2],&bg[3]);
 		switch (vtx->style) {
 		case AG_GRAPH_RECTANGLE:
 			AG_DrawRectBlended(gf,
@@ -560,7 +560,7 @@ Draw(void *p)
 				            vtx->y - vtx->h/2 - gf->yOffs - 1,
 				            vtx->w + 2,
 				            vtx->h + 2),
-				    SDL_MapRGB(agVideoFmt, 0,0,255));
+				    AG_MapRGB(agVideoFmt, 0,0,255));
 			}
 			if (vtx->flags & AG_GRAPH_MOUSEOVER) {
 				AG_DrawRectOutline(gf,
@@ -568,7 +568,7 @@ Draw(void *p)
 				            vtx->y - vtx->h/2 - gf->yOffs - 2,
 				            vtx->w + 4,
 				            vtx->h + 4),
-				    SDL_MapRGB(agVideoFmt, 255,0,0));
+				    AG_MapRGB(agVideoFmt, 255,0,0));
 			}
 			break;
 		case AG_GRAPH_CIRCLE:
@@ -608,8 +608,8 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 	vtx = Malloc(sizeof(AG_GraphVertex));
 	vtx->labelTxt[0] = '\0';
 	vtx->labelSu = -1;
-	vtx->labelColor = SDL_MapRGB(agSurfaceFmt, 0,0,0);
-	vtx->bgColor = SDL_MapRGBA(agSurfaceFmt, 255,255,255,128);
+	vtx->labelColor = AG_MapRGB(agSurfaceFmt, 0,0,0);
+	vtx->bgColor = AG_MapRGBA(agSurfaceFmt, 255,255,255,128);
 	vtx->style = AG_GRAPH_RECTANGLE;
 	vtx->flags = 0;
 	vtx->x = 0;
@@ -643,7 +643,7 @@ void
 AG_GraphVertexColorLabel(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(vtx->graph);
-	vtx->labelColor = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	vtx->labelColor = AG_MapRGB(agSurfaceFmt, r,g,b);
 	AG_ObjectUnlock(vtx->graph);
 }
 
@@ -651,7 +651,7 @@ void
 AG_GraphVertexColorBG(AG_GraphVertex *vtx, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_ObjectLock(vtx->graph);
-	vtx->bgColor = SDL_MapRGB(agSurfaceFmt, r, g, b);
+	vtx->bgColor = AG_MapRGB(agSurfaceFmt, r,g,b);
 	AG_ObjectUnlock(vtx->graph);
 }
 

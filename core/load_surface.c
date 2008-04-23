@@ -29,6 +29,8 @@
 
 #include <core/core.h>
 
+#include <gui/view.h>
+
 #include "load_surface.h"
 #include "load_version.h"
 
@@ -43,7 +45,7 @@ enum {
 };
 
 void
-AG_WriteSurface(AG_DataSource *ds, SDL_Surface *su)
+AG_WriteSurface(AG_DataSource *ds, AG_Surface *su)
 {
 	Uint8 *src;
 	int x, y;
@@ -52,7 +54,7 @@ AG_WriteSurface(AG_DataSource *ds, SDL_Surface *su)
 	AG_WriteUint32(ds, RAW_ENCODING);
 
 	AG_WriteUint32(ds, su->flags &
-	    (SDL_SRCCOLORKEY|SDL_SRCALPHA|SDL_RLEACCEL));
+	    (AG_SRCCOLORKEY|AG_SRCALPHA|AG_RLEACCEL));
 	AG_WriteUint16(ds, su->w);
 	AG_WriteUint16(ds, su->h);
 	AG_WriteUint8(ds, su->format->BitsPerPixel);
@@ -66,8 +68,8 @@ AG_WriteSurface(AG_DataSource *ds, SDL_Surface *su)
 #if 0
 	printf("saving %dx%dx%d bpp%s%s surface\n", su->w, su->h,
 	    su->format->BitsPerPixel,
-	    (su->flags & SDL_SRCALPHA) ? " alpha" : "",
-	    (su->flags & SDL_SRCCOLORKEY) ? " colorkey" : "");
+	    (su->flags & AG_SRCALPHA) ? " alpha" : "",
+	    (su->flags & AG_SRCCOLORKEY) ? " colorkey" : "");
 	printf("masks: %08x,%08x,%08x,%08x\n", su->format->Rmask,
 	    su->format->Gmask, su->format->Bmask, su->format->Amask);
 	printf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
@@ -84,9 +86,7 @@ AG_WriteSurface(AG_DataSource *ds, SDL_Surface *su)
 		}
 	}
 
-	if (SDL_MUSTLOCK(su))
-		SDL_LockSurface(su);
-
+	AG_SurfaceLock(su);
 	src = (Uint8 *)su->pixels;
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
@@ -118,14 +118,13 @@ AG_WriteSurface(AG_DataSource *ds, SDL_Surface *su)
 			src += su->format->BytesPerPixel;
 		}
 	}
-	if (SDL_MUSTLOCK(su))
-		SDL_UnlockSurface(su);
+	AG_SurfaceUnlock(su);
 }
 
-SDL_Surface *
-AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
+AG_Surface *
+AG_ReadSurface(AG_DataSource *ds, AG_PixelFormat *pixfmt)
 {
-	SDL_Surface *su;
+	AG_Surface *su;
 	Uint32 encoding;
 	Uint32 flags;
 	Uint16 w, h;
@@ -142,7 +141,6 @@ AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 		AG_SetError(_("Unsupported surface encoding: %d"), encoding);
 		return (NULL);
 	}
-
 	flags = AG_ReadUint32(ds);
 	w = AG_ReadUint16(ds);
 	h = AG_ReadUint16(ds);
@@ -153,25 +151,24 @@ AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 	Bmask = AG_ReadUint32(ds);
 	Amask = AG_ReadUint32(ds);
 
-	su = SDL_CreateRGBSurface(flags|SDL_SWSURFACE, w, h, depth,
-	    Rmask, Gmask, Bmask, Amask);
+	su = AG_SurfaceRGBA(w, h, depth, flags, Rmask,Gmask,Bmask,Amask);
 	su->format->alpha = AG_ReadUint8(ds);
 	su->format->colorkey = AG_ReadUint32(ds);
 #if 0	
 	printf("loading %dx%dx%d bpp%s%s%s surface\n", w, h, depth,
 	    grayscale ? " grayscale" : "",
-	    (flags & SDL_SRCALPHA) ? " alpha" : "",
-	    (flags & SDL_SRCCOLORKEY) ? " colorkey" : "");
+	    (flags & AG_SRCALPHA) ? " alpha" : "",
+	    (flags & AG_SRCCOLORKEY) ? " colorkey" : "");
 	printf("masks: %08x,%08x,%08x,%08x\n", Rmask, Gmask, Bmask, Amask);
 	printf("colorkey=%08x, alpha=%02x\n", su->format->colorkey,
 	    su->format->alpha);
 #endif
 	if (depth == 8) {
-		SDL_Color *colors;
+		AG_Color *colors;
 		Uint32 i, ncolors;
 
 		ncolors = AG_ReadUint32(ds);
-		colors = Malloc(ncolors*sizeof(SDL_Color));
+		colors = Malloc(ncolors*sizeof(AG_Color));
 
 		if (grayscale) {
 			for (i = 0; i < ncolors; i++) {
@@ -186,13 +183,11 @@ AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 				colors[i].b = AG_ReadUint8(ds);
 			}
 		}
-		SDL_SetPalette(su, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, ncolors);
+		AG_SetPalette(su, AG_LOGPAL|AG_PHYSPAL, colors, 0, ncolors);
 		Free(colors);
 	}
 	
-	if (SDL_MUSTLOCK(su))
-		SDL_LockSurface(su);
-
+	AG_SurfaceLock(su);
 	dst = (Uint8 *)su->pixels;
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
@@ -225,9 +220,6 @@ AG_ReadSurface(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 			dst += su->format->BytesPerPixel;
 		}
 	}
-	
-	if (SDL_MUSTLOCK(su)) {
-		SDL_UnlockSurface(su);
-	}
+	AG_SurfaceUnlock(su);
 	return (su);
 }

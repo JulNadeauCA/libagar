@@ -179,7 +179,7 @@ typedef struct map_tool {
 	void (*destroy)(MAP_Tool *t);
 	int  (*load)(MAP_Tool *t, AG_DataSource *ds);
 	int  (*save)(MAP_Tool *t, AG_DataSource *ds);
-	int  (*cursor)(MAP_Tool *t, SDL_Rect *r);
+	int  (*cursor)(MAP_Tool *t, AG_Rect *r);
 	void (*effect)(MAP_Tool *t, MAP_Node *n);
 	int (*mousemotion)(MAP_Tool *t, int x, int y, int xrel,
 	                  int yrel, int xo, int yo, int xorel,
@@ -206,7 +206,7 @@ The
 .Fn cursor
 operation is expected to draw the current cursor at the screen coordinates
 given by the
-.Xr SDL_Rect
+.Xr AG_Rect
 argument.
 .Pp
 The

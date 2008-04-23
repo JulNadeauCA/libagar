@@ -1,0 +1,293 @@
+.\" Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd April 21, 2008
+.Dt AG_SURFACE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_Surface
+.Nd agar graphic surface
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+structure is a basic raster graphics surface.
+It supports all
+.Em packed
+pixel formats which encode pixels in 32-bit or less and allow components to be
+retrieved via masks.
+.Em Indexed
+(or
+.Sq palletized )
+pixel formats up to 8-bit per pixel are also supported.
+.Pp
+Additional features of
+.Nm
+include colorkeying and alpha-blending with per-pixel and/or per-surface
+alpha information.
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "AG_Surface *"
+.Fn AG_SurfaceNew "Uint w" "Uint h" "AG_PixelFormat *fmt" "Uint flags"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceEmpty "void"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceStdRGB "Uint w" "Uint h"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceStdRGBA "Uint w" "Uint h"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceVideoRGB "Uint w" "Uint h"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceVideoRGBA "Uint w" "Uint h"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceIndexed "Uint w" "Uint h" "int bitsPerPixel" "Uint flags"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceRGB "Uint w" "Uint h" "int bitsPerPixel" "Uint flags" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceRGBA "Uint w" "Uint h" "int bitsPerPixel" "Uint flags" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask" "Uint32 Amask"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceFromPixelsRGB "void *pixels" "Uint w" "Uint h" "int bitsPerPixel" "int pitch" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceFromPixelsRGBA "void *pixels" "Uint w" "Uint h" "int bitsPerPixel" "int pitch" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask" "Uint32 Amask"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceFromBMP "const char *path"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_SurfaceFromSDL "SDL_Surface *surface"
+.Pp
+.Ft void
+.Fn AG_SurfaceFree "AG_Surface *surface"
+.Pp
+.nr nS 0
+The
+.Fn AG_SurfaceNew
+function allocates and initializes a new
+.Nm
+of the specified dimensions
+.Fa w ,
+.Fa h
+(given in pixels).
+.Fa fmt
+is a pointer to a
+.Ft AG_PixelFormat
+structure describing the way pixels are to be encoded in memory (see
+.Dq PIXEL FORMATS
+section below).
+Acceptable
+.Fa flags
+include:
+.Bl -tag -width "AG_SRCCOLORKEY "
+.It AG_HWSURFACE
+Under some platforms, it is possible to perform accelerated copies between two
+surfaces in video memory.
+This flag advises that the surface should be created in video memory.
+.It AG_SRCCOLORKEY
+Enable colorkeying.
+During blit operations, colorkeying inhibits the copy of all pixels matching
+the colorkey value of the source surface.
+The
+.Fn AG_SetColorKey
+function also sets or clears this flag.
+.It AG_SRCALPHA
+Enable alpha blending.
+During blit operations, this flag enables blending of pixels in the source
+and destination surfaces based on the alpha component of the source pixel.
+.Fn AG_SetAlpha
+function also sets or clears this flag.
+.El
+.Pp
+The
+.Fn AG_SurfaceEmpty
+function creates a new 0x0 pixel surface.
+Blitting such an empty surface is a no-op.
+.Pp
+.Fn AG_SurfaceStdRGB
+and
+.Fn AG_SurfaceStdRGBA
+create a surface in the recommended
+.Sq standard
+format, as determined by Agar on initialization time.
+Usually, this is a packed-pixel format with an alpha component.
+.Pp
+.Fn AG_SurfaceVideoRGB
+and
+.Fn AG_SurfaceVideoRGBA
+create a surface with the same depth and masks as the current video display.
+If the current display mode is not raster-based, the Agar
+.Sq standard
+format is used instead.
+.Pp
+The
+.Fn AG_SurfaceIndexed
+function creates a new surface of
+.Fa w
+by
+.Fa h
+pixels using indexed pixel format.
+This involves the allocation of a palette.
+The size of this palette is determined by
+.Fa bitsPerPixel.
+All entries in the palette are initialized to black, except in the 2-bpp
+case, where color 0 is initialized to white and color 1 is initialized to
+black.
+.Pp
+The
+.Fn AG_SurfaceRGB
+function creates a new surface of
+.Fa w
+by
+.Fa h
+pixels using the specified packed-pixel format.
+In memory, pixels are encoded as contiguous blocks of
+.Fa bitsPerPixel
+bits, and the bitmasks specified in
+.Fa [RGB]mask
+are used to retrieve the individual red, green and blue components.
+The
+.Fn AG_SurfaceRGBA
+variant adds an alpha-channel component.
+.Pp
+.Fn AG_SurfaceFromPixelsRGB 
+and
+.Fn AG_SurfaceFromPixelsRGBA
+create a new surface from existing pixel data in the specified format.
+.Pp
+.Fn AG_SurfaceFromBMP
+loads the contents of a .bmp file into a new surface.
+.Pp
+If Agar was compiled with
+.Dv HAVE_SDL ,
+the
+.Fn AG_SurfaceFromSDL
+function converts a
+.Xr SDL_Surface 3
+to a newly-allocated
+.Nm
+structure.
+.Pp
+The
+.Fn AG_SurfaceFree
+function releases all resources allocated by the given surface.
+.Sh SURFACE OPERATIONS
+.nr nS 1
+.Ft void
+.Fn AG_SurfaceCopy "AG_Surface *dest" "AG_Surface *src"
+.Pp
+.Ft void
+.Fn AG_SurfaceLock "AG_Surface *surface"
+.Pp
+.Ft void
+.Fn AG_SurfaceUnlock "AG_Surface *surface"
+.nr nS 0
+.Pp
+The
+.Fn AG_SurfaceCopy
+function copies the contents of surface
+.Fa src
+onto
+.Fa dst .
+The raw pixel data is copied, so alpha and colorkey parameters are ignored.
+.Pp
+.Fn AG_SurfaceLock
+and
+.Fn AG_SurfaceUnlock
+protect the raw pixel data against both reading and writing.
+.Sh PIXEL FORMATS
+.nr nS 1
+.Ft "AG_PixelFormat *"
+.Fn AG_PixelFormatRGB "Uint8 bitsPerPixel" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask"
+.Pp
+.Ft "AG_PixelFormat *"
+.Fn AG_PixelFormatRGBA "Uint8 bitsPerPixel" "Uint32 Rmask" "Uint32 Gmask" "Uint32 Bmask" "Uint32 Amask"
+.Pp
+.Ft "AG_PixelFormat *"
+.Fn AG_PixelFormatIndexed "Uint8 bitsPerPixel"
+.Pp
+.Ft "void"
+.Fn AG_PixelFormatFree "AG_PixelFormat *format"
+.Pp
+.nr nS 0
+The
+.Fn AG_PixelFormatRGB
+and
+.Fn AG_PixelFormatRGBA
+functions allocate a new structure describing packed-pixel encoding with RGB
+or RGBA components.
+The
+.Fa [RGBA]mask
+arguments specify the bitmasks used to retrieve the individual components from
+memory.
+.Pp
+.Fn AG_PixelFormatIndexed
+creates a new pixel-format structure for indexed pixel encoding.
+This involves allocating a new palette.
+The size of this palette is determined by
+.Fa bitsPerPixel ,
+and all palette entries are initialized to black.
+If 2 bpp is given, the first entry is initialized to white (255,255,255) and
+the second entry to black (0,0,0).
+.Sh STRUCTURE DATA
+.Bl -tag -width "AG_PixelFormat *format "
+.It Ft Uint flags
+(Read-only) Current surface flags (see
+.Dq INITIALIZATION
+section).
+.It Ft AG_PixelFormat *format
+(Read-only) The surface's pixel encoding (see
+.Dq PIXEL FORMATS
+section).
+.It Ft int w, h
+(Read-only) Dimensions of the surface in pixels.
+.It Ft void *pixels
+Pointer to raw pixel data.
+You must invoke
+.Fn AG_SurfaceLock
+prior to reading or writing this data, and you must invoke
+.Fn AG_SurfaceUnlock
+when you are done.
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.

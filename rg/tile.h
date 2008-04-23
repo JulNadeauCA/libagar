@@ -69,7 +69,7 @@ typedef struct rg_tile {
 	char clname[RG_TILE_CLASS_MAX];	/* Category (application-specific) */
 	Uint32 main_id;			/* Default ID mapping */
 	struct rg_tileset *ts;
-	SDL_Surface *su;		/* Generated surface */
+	AG_Surface *su;			/* Generated surface */
 #ifdef HAVE_OPENGL
 	Uint texture;			/* Cached texture */
 	float texcoords[4];
@@ -84,7 +84,7 @@ typedef struct rg_tile {
 #define RG_TILE_SRCALPHA	0x02	/* Alpha source */
 #define RG_TILE_DIRTY		0x04	/* Mark for redraw */
 	Uint nrefs;			/* Reference count */
-	SDL_Color c;			/* Current RGB color (edition) */
+	AG_Color c;			/* Current RGB color (edition) */
 	Uint32 pc;			/* Current pixel value (edition) */
 	struct {
 		int w;			/* Line width */
@@ -97,7 +97,7 @@ typedef struct rg_tile {
 	struct rg_tile_elementq elements;	/* Elements to combine */
 
 	/* Pixel blending function */
-	void (*blend_fn)(struct rg_tile *, SDL_Surface *, SDL_Rect *);
+	void (*blend_fn)(struct rg_tile *, AG_Surface *, AG_Rect *);
 
 	AG_SLIST_HEAD(,rg_tile_variant) vars;	/* Cached variants */
 	AG_TAILQ_ENTRY(rg_tile) tiles;
@@ -106,7 +106,7 @@ typedef struct rg_tile {
 /* Cached, transformed tile variant */
 typedef struct rg_tile_variant {
 	RG_TransformChain transforms;	/* Applied transforms */
-	SDL_Surface *su;		/* Cached resulting surface */
+	AG_Surface *su;			/* Cached resulting surface */
 #ifdef HAVE_OPENGL
 	Uint texture;			/* Cached texture */
 	float texcoords[4];

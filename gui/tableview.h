@@ -48,7 +48,7 @@ typedef struct ag_tableview_col {
 	int dynamic :1;
 
 	char label[AG_TABLEVIEW_LABEL_MAX];	/* Header text */
-	SDL_Surface *label_img;			/* Rendered header text */
+	AG_Surface *label_img;			/* Rendered header text */
 	int label_id;
 	int w;					/* Column width */
 } AG_TableviewCol;
@@ -59,7 +59,7 @@ typedef struct ag_tableview_row {
 	AG_TableviewRowID rid;
 	struct ag_tableview_cell {
 		char *text;
-		SDL_Surface *image;
+		AG_Surface *image;
 	} *cell;
 	int selected : 1;
 	int expanded : 1;

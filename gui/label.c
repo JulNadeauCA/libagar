@@ -381,21 +381,21 @@ label_objt(AG_Label *label, char *s, size_t len, int ri)
 static void
 label_wxh(AG_Label *label, char *s, size_t len, int ri)
 {
-	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
+	AG_Rect *rd = &LABEL_ARG(AG_Rect);
 	Snprintf(s, len, "%ux%u", rd->w, rd->h);
 }
 
 static void
 label_xy(AG_Label *label, char *s, size_t len, int ri)
 {
-	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
+	AG_Rect *rd = &LABEL_ARG(AG_Rect);
 	Snprintf(s, len, "%d,%d", rd->x, rd->y);
 }
 
 static void
 label_rect(AG_Label *label, char *s, size_t len, int ri)
 {
-	SDL_Rect *rd = &LABEL_ARG(SDL_Rect);
+	AG_Rect *rd = &LABEL_ARG(AG_Rect);
 	Snprintf(s, len, "%ux%u at %d,%d", rd->w, rd->h, rd->x, rd->y);
 }
 

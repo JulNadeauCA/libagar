@@ -122,7 +122,7 @@ AG_ToolbarRow(AG_Toolbar *bar, int row)
 }
 
 AG_Button *
-AG_ToolbarButtonIcon(AG_Toolbar *bar, SDL_Surface *icon, int def,
+AG_ToolbarButtonIcon(AG_Toolbar *bar, AG_Surface *icon, int def,
     void (*handler)(AG_Event *), const char *fmt, ...)
 {
 	AG_Button *bu;
