@@ -57,6 +57,7 @@ const char *agUnitGroupNames[] = {
 	N_("Frequency"),
 	N_("Pressure"),
 	N_("Human metabolic expenditure"),
+	N_("Percentage"),
 	NULL
 };
 const AG_Unit *agUnitGroups[] = {
