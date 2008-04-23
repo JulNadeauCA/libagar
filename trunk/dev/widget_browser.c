@@ -144,8 +144,7 @@ PollSurfaces(AG_Event *event)
 
 	AG_TlistBegin(tl);
 	for (i = 0; i < wid->nsurfaces; i++) {
-		SDL_Surface *su = WSURFACE(wid,i);
-
+		AG_Surface *su = WSURFACE(wid,i);
 		AG_TlistAdd(tl, su, "Surface%u (%ux%u, %ubpp)",
 		    i, su->w, su->h, su->format->BitsPerPixel);
 	}

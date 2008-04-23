@@ -69,7 +69,7 @@ typedef struct rg_anim {
 typedef struct rg_anim_frame {
 	Uint name;
 	Uint delay;
-	SDL_Surface *su;
+	AG_Surface *su;
 #ifdef HAVE_OPENGL
 	Uint texture;
 #endif
@@ -101,7 +101,7 @@ typedef struct rg_anim_variant {
 .Fn RG_AnimRemoveInsn "RG_Anim *anim" "Uint insn"
 .Pp
 .Ft "Uint"
-.Fn RG_AnimInsertFrame "RG_Anim *anim" "SDL_Surface *s"
+.Fn RG_AnimInsertFrame "RG_Anim *anim" "AG_Surface *s"
 .Pp
 .Ft "void"
 .Fn RG_AnimRemoveFrame "RG_Anim *anim" "Uint frame"

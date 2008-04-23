@@ -345,7 +345,7 @@ Init(void *obj)
 	mv->col.g = 255;
 	mv->col.b = 255;
 	mv->col.a = 32;
-	mv->col.pixval = SDL_MapRGB(agVideoFmt, 255, 255, 255);
+	mv->col.pixval = AG_MapRGB(agVideoFmt, 255,255,255);
 
 	AG_SetEvent(mv, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(mv, "widget-hidden", LostFocus, NULL);
@@ -409,7 +409,7 @@ GetNodeCoords(MAP_View *mv, int *x, int *y)
 static void
 DrawMapCursor(MAP_View *mv)
 {
-	SDL_Rect rd;
+	AG_Rect rd;
 
 	rd.w = AGMTILESZ(mv);
 	rd.h = AGMTILESZ(mv);
@@ -420,10 +420,8 @@ DrawMapCursor(MAP_View *mv)
 		AG_MouseGetState(&msx, &msy);
 		rd.x = msx;
 		rd.y = msy;
-		if (!agView->opengl) {
-			SDL_BlitSurface(mapIconCursor.s, NULL,
-			    agView->v, &rd);
-		}
+		if (!agView->opengl)
+			AG_SurfaceBlit(mapIconCursor.s, NULL, agView->v, &rd);
 #endif
 		return;
 	}
@@ -468,7 +466,7 @@ Draw(void *p)
 	int layer = 0;
 	int esel_x = -1, esel_y = -1, esel_w = -1, esel_h = -1;
 	int msel_x = -1, msel_y = -1, msel_w = -1, msel_h = -1;
-	SDL_Rect rExtent;
+	AG_Rect rExtent;
 #ifdef HAVE_OPENGL
 	GLboolean blend_save;
 	GLint blend_sfactor;

@@ -57,7 +57,7 @@ AG_SocketNew(void *parent, Uint flags)
 }
 
 AG_Socket *
-AG_SocketFromSurface(void *parent, Uint flags, SDL_Surface *su)
+AG_SocketFromSurface(void *parent, Uint flags, AG_Surface *su)
 {
 	AG_Socket *sock;
 	
@@ -70,10 +70,9 @@ AG_Socket *
 AG_SocketFromBMP(void *parent, Uint flags, const char *bmpfile)
 {
 	AG_Socket *sock;
-	SDL_Surface *bmp;
+	AG_Surface *bmp;
 	
-	if ((bmp = SDL_LoadBMP(bmpfile)) == NULL) {
-		AG_SetError("%s: %s", bmpfile, SDL_GetError());
+	if ((bmp = AG_SurfaceFromBMP(bmpfile)) == NULL) {
 		return (NULL);
 	}
 	sock = AG_SocketNew(parent, flags);
@@ -507,9 +506,9 @@ AG_SocketBgCircle(AG_Socket *sock, Uint r)
 }
 
 void
-AG_SocketBgPixmap(AG_Socket *sock, SDL_Surface *su)
+AG_SocketBgPixmap(AG_Socket *sock, AG_Surface *su)
 {
-	SDL_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
+	AG_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
 
 	AG_ObjectLock(sock);
 	sock->bgType = AG_SOCKET_PIXMAP;
@@ -518,7 +517,7 @@ AG_SocketBgPixmap(AG_Socket *sock, SDL_Surface *su)
 }
 
 void
-AG_SocketBgPixmapNODUP(AG_Socket *sock, SDL_Surface *su)
+AG_SocketBgPixmapNODUP(AG_Socket *sock, AG_Surface *su)
 {
 	AG_ObjectLock(sock);
 	sock->bgType = AG_SOCKET_PIXMAP;

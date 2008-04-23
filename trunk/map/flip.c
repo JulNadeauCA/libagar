@@ -114,7 +114,7 @@ MouseButtonDown(void *p, int xmap, int ymap, int b)
 }
 
 static int
-Cursor(void *p, SDL_Rect *rd)
+Cursor(void *p, AG_Rect *rd)
 {
 	Uint8 c[4] = { 255, 255, 0, 64 };
 

@@ -26,6 +26,8 @@
 #include <core/core.h>
 #include <core/config.h>
 
+#include "view.h"
+
 #include <rg/prim.h>					/* XXX depends on rg */
 
 #include "hsvpal.h"
@@ -112,7 +114,7 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 {
 	Uint8 r, g, b, a;
 	AG_WidgetBinding *bFormat, *bv;
-	SDL_PixelFormat **pFormat;
+	AG_PixelFormat **pFormat;
 	void *v;
 
 	AG_HSV2RGB(AG_WidgetFloat(pal, "hue"),
@@ -176,7 +178,7 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 	}
 	
 	bFormat = AG_WidgetGetBinding(pal, "pixel-format", &pFormat);
-	AG_WidgetSetUint32(pal, "pixel", SDL_MapRGBA(*pFormat, r, g, b, a));
+	AG_WidgetSetUint32(pal, "pixel", AG_MapRGBA(*pFormat, r,g,b,a));
 	AG_WidgetUnlockBinding(bFormat);
 }
 
@@ -186,11 +188,11 @@ UpdateHSVFromPixel(AG_HSVPal *hsv, Uint32 pixel)
 	Uint8 r, g, b, a;
 	float h, s, v;
 	AG_WidgetBinding *bFormat;
-	SDL_PixelFormat **pFormat;
+	AG_PixelFormat **pFormat;
 	
 	bFormat = AG_WidgetGetBinding(hsv, "pixel-format", &pFormat);
-	SDL_GetRGBA(pixel, *pFormat, &r, &g, &b, &a);
-	AG_RGB2HSV(r, g, b, &h, &s, &v);
+	AG_GetRGBA(pixel, *pFormat, &r,&g,&b,&a);
+	AG_RGB2HSV(r, g, b, &h,&s,&v);
 	AG_WidgetSetFloat(hsv, "hue", h);
 	AG_WidgetSetFloat(hsv, "saturation", s);
 	AG_WidgetSetFloat(hsv, "value", v);
@@ -678,7 +680,7 @@ Init(void *obj)
 	pal->s = 0.0;
 	pal->v = 0.0;
 	pal->a = 1.0;
-	pal->pixel = SDL_MapRGBA(agVideoFmt, 0, 0, 0, 255);
+	pal->pixel = AG_MapRGBA(agVideoFmt, 0,0,0,255);
 	pal->circle.spacing = 10;
 	pal->circle.width = 20;
 	pal->state = AG_HSVPAL_SEL_NONE;
@@ -701,18 +703,18 @@ RenderPalette(AG_HSVPal *pal)
 	Uint32 pc;
 	Uint8 r, g, b, a, da;
 	int x, y, i;
-	SDL_Rect rd;
+	AG_Rect rd;
 
 	cur_h = (AG_WidgetFloat(pal, "hue")/360) * 2*AG_PI;
 	cur_s = AG_WidgetFloat(pal, "saturation");
 	cur_v = AG_WidgetFloat(pal, "value");
 
-	SDL_LockSurface(pal->surface);
+	AG_SurfaceLock(pal->surface);
 
 	/* Render the circle of hues. */
 	for (h = 0.0; h < 2*AG_PI; h += pal->circle.dh) {
 		AG_HSV2RGB((h/(2*AG_PI)*360.0), 1.0, 1.0, &r, &g, &b);
-		pc = SDL_MapRGB(agVideoFmt, r, g, b);
+		pc = AG_MapRGB(agVideoFmt, r,g,b);
 
 		for (i = 0; i < pal->circle.width; i++) {
 			x = (pal->circle.rout - i)*Cos(h);
@@ -734,7 +736,7 @@ RenderPalette(AG_HSVPal *pal)
 			AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, sat,
 			    1.0 - ((float)x/(float)pal->triangle.h),
 			    &r, &g, &b);
-			pc = SDL_MapRGB(agVideoFmt, r, g, b);
+			pc = AG_MapRGB(agVideoFmt, r,g,b);
 			AG_PUT_PIXEL2(pal->surface,
 			    pal->triangle.x + x - y/2,
 			    pal->triangle.y + y,
@@ -754,7 +756,7 @@ RenderPalette(AG_HSVPal *pal)
 			rd.h = 8;
 			rd.x = pal->rAlpha.x+x;
 			rd.y = pal->rAlpha.y+y;
-			SDL_FillRect(pal->surface, &rd, pal->cTile);
+			AG_FillRect(pal->surface, &rd, pal->cTile);
 		}
 		y += 8;
 		for (x = 8; x < pal->rAlpha.w; x+=16) {
@@ -762,7 +764,7 @@ RenderPalette(AG_HSVPal *pal)
 			rd.h = 8;
 			rd.x = pal->rAlpha.x+x;
 			rd.y = pal->rAlpha.y+y;
-			SDL_FillRect(pal->surface, &rd, pal->cTile);
+			AG_FillRect(pal->surface, &rd, pal->cTile);
 		}
 	}
 	AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, cur_s, cur_v, &r, &g, &b);
@@ -774,7 +776,7 @@ RenderPalette(AG_HSVPal *pal)
 			a = x*255/pal->surface->w;
 		}
 	}
-	SDL_UnlockSurface(pal->surface);
+	AG_SurfaceUnlock(pal->surface);
 }
 
 static void
@@ -827,14 +829,11 @@ Draw(void *p)
 
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
-		pal->surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
-		    WIDGET(pal)->w, WIDGET(pal)->h, 32,
-		    agVideoFmt->Rmask, agVideoFmt->Gmask, agVideoFmt->Bmask, 0);
+		pal->surface = AG_SurfaceVideoRGB(WIDTH(pal), HEIGHT(pal));
 		if (pal->surface == NULL) {
-			AG_FatalError("SDL_CreateRGBSurface: %s",
-			    SDL_GetError());
+			AG_FatalError(NULL);
 		}
-		pal->cTile = SDL_MapRGB(pal->surface->format, 140, 140, 140);
+		pal->cTile = AG_MapRGB(pal->surface->format, 140,140,140);
 		RenderPalette(pal);
 		AG_WidgetReplaceSurface(pal, 0, pal->surface);
 	}
@@ -871,7 +870,7 @@ Draw(void *p)
 	AG_HSV2RGB((cur_h*360.0)/(2*AG_PI), cur_s, cur_v, &r, &g, &b);
 	AG_DrawRectFilled(pal,
 	    AG_RECT(pal->rAlpha.x, pal->rAlpha.y, pal->rAlpha.w, 8),
-	    SDL_MapRGB(agVideoFmt, r, g, b));
+	    AG_MapRGB(agVideoFmt, r,g,b));
 
 	/* Draw the alpha bar. */
 	AG_DrawLineV(pal,

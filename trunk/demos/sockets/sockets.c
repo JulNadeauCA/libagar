@@ -16,7 +16,7 @@ enum {
 	SWORD,
 	AXE
 };
-SDL_Surface *pixmaps[4];
+AG_Surface *pixmaps[4];
 
 /* Callback for helmet sockets */
 static int
@@ -77,7 +77,7 @@ CreateGameMenu(void)
 	win = AG_WindowNewNamed(AG_WINDOW_PLAIN, "game-menu");
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_BL, agView->w, 128);
-	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
+	agColors[WINDOW_BG_COLOR] = AG_MapRGB(agVideoFmt, 0,0,0);
 
 	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
 	if ((px = AG_PixmapFromBMP(fx, 0, "Images/menubg.bmp")) == NULL) {
@@ -91,14 +91,14 @@ CreateGameMenu(void)
 	AG_FixedPut(fx, lbl, 20, 32);
 
 	/* Load some pixmaps */
-	pixmaps[HELMET_SOCKET] = SDL_LoadBMP("Images/helmet-socket.bmp");
-	pixmaps[WEAPON_SOCKET] = SDL_LoadBMP("Images/sword-socket.bmp");
-	pixmaps[HELMET] = SDL_LoadBMP("Images/helmet.bmp");
-	pixmaps[SWORD] = SDL_LoadBMP("Images/sword.bmp");
-	pixmaps[AXE] = SDL_LoadBMP("Images/axe.bmp");
+	pixmaps[HELMET_SOCKET] = AG_SurfaceFromBMP("Images/helmet-socket.bmp");
+	pixmaps[WEAPON_SOCKET] = AG_SurfaceFromBMP("Images/sword-socket.bmp");
+	pixmaps[HELMET] = AG_SurfaceFromBMP("Images/helmet.bmp");
+	pixmaps[SWORD] = AG_SurfaceFromBMP("Images/sword.bmp");
+	pixmaps[AXE] = AG_SurfaceFromBMP("Images/axe.bmp");
 	for (i = 0; i < 5; i++) {
-		SDL_SetColorKey(pixmaps[i], SDL_SRCCOLORKEY,
-		    SDL_MapRGB(pixmaps[i]->format, 0, 255, 0));
+		AG_SetColorKey(pixmaps[i], AG_SRCCOLORKEY,
+		    AG_MapRGB(pixmaps[i]->format, 0,255,0));
 	}
 
 	/*

@@ -18,7 +18,7 @@ typedef AG_TAILQ_HEAD(rg_transformq, rg_transform) RG_TransformChain;
 
 typedef struct rg_transform {
 	enum rg_transform_type type;
-	SDL_Surface *(*func)(SDL_Surface *, int, Uint32 *);
+	AG_Surface *(*func)(AG_Surface *, int, Uint32 *);
 	Uint32 *args;
 	int nargs;
 	AG_TAILQ_ENTRY(rg_transform) transforms;
@@ -27,7 +27,7 @@ typedef struct rg_transform {
 struct rg_transform_ops {
 	char *name;
 	enum rg_transform_type type;
-	SDL_Surface *(*func)(SDL_Surface *, int, Uint32 *);
+	AG_Surface *(*func)(AG_Surface *, int, Uint32 *);
 };
 
 __BEGIN_DECLS

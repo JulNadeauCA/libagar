@@ -32,6 +32,7 @@
 #include <config/have_ieee754.h>
 
 #include <core/core.h>
+#include <gui/view.h>
 #include <core/load_xcf.h>
 
 #include <string.h>
@@ -334,7 +335,7 @@ ReadTile(struct xcf_header *head, AG_DataSource *buf, Uint32 len, int bpp,
 
 static int
 ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
-    struct xcf_header *head, struct xcf_level *level, SDL_Surface *su,
+    struct xcf_header *head, struct xcf_level *level, AG_Surface *su,
     int *aflags)
 {
 	int tx = 0, ty = 0;
@@ -397,7 +398,7 @@ ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
 					break;
 				}
 
-				color = SDL_MapRGBA(su->format, r, g, b, a);
+				color = AG_MapRGBA(su->format, r,g,b,a);
 				switch (su->format->BytesPerPixel) {
 				case 4:
 					*(Uint32 *)dst = color;
@@ -451,16 +452,16 @@ ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
 	return (0);
 }
 
-static SDL_Surface *
+static AG_Surface *
 ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
     struct xcf_layer *layer)
 {
 	struct xcf_hierarchy *hier;
-	SDL_Surface *su;
+	AG_Surface *su;
 	int aflags = 0;
 	int i;
 
-	su = SDL_CreateRGBSurface(SDL_SWSURFACE, head->w, head->h, 32,
+	su = AG_SurfaceRGBA(head->w, head->h, 32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 	    0xff000000,
 	    0x00ff0000,
@@ -473,10 +474,8 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 	    0xff000000
 #endif
 	);
-	if (su == NULL) {
-		AG_SetError("SDL_CreateRGBSurface: %s", SDL_GetError());
+	if (su == NULL)
 		return (NULL);
-	}
 
 	/* Read the hierarchy. */
 	AG_Seek(buf, xcfoffs+layer->hierarchy_offset, AG_SEEK_SET);
@@ -540,7 +539,7 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 			Free(hier);
 			Free(level->tile_offsets);
 			Free(level);
-			SDL_FreeSurface(su);
+			AG_SurfaceFree(su);
 			return (NULL);				/* LEAK */
 		}
 		Free(level->tile_offsets);
@@ -552,10 +551,10 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 	/* Adjust the alpha/colorkey properties of the surface. */
 	{	
 		Uint8 oldalpha = su->format->alpha;
-		SDL_SetAlpha(su, 0, 0);
-		SDL_SetColorKey(su, 0, 0);
+		AG_SetAlpha(su, 0, 0);
+		AG_SetColorKey(su, 0, 0);
 		if (aflags & (XCF_ALPHA_ALPHA|XCF_ALPHA_TRANSPARENT))
-			SDL_SetAlpha(su, SDL_SRCALPHA, oldalpha);
+			AG_SetAlpha(su, AG_SRCALPHA, oldalpha);
 	}
 	return (su);
 }
@@ -566,7 +565,7 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
  */
 int
 AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
-    void (*add_layer_fn)(SDL_Surface *, const char *, void *), void *arg)
+    void (*add_layer_fn)(AG_Surface *, const char *, void *), void *arg)
 {
 	char magic[14];
 	struct xcf_header *head;
@@ -641,7 +640,7 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 	for (i = offsets; i > 0; i--) {
 		struct xcf_layer *layer;
 		struct xcf_prop prop;
-		SDL_Surface *su;
+		AG_Surface *su;
 
 		AG_Seek(buf, xcf_offs+head->layer_offstable[i-1], AG_SEEK_SET);
 		layer = Malloc(sizeof(struct xcf_layer));

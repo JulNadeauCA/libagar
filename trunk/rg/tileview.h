@@ -60,8 +60,8 @@ typedef struct rg_tileview_handle {
 typedef struct rg_tileview_ctrl {
 	enum rg_tileview_ctrl_type type;
 
-	SDL_Color c, cIna, cEna, cOver, cHigh, cLow;
-	Uint8	  a, aIna, aEna, aOver;
+	AG_Color c, cIna, cEna, cOver, cHigh, cLow;
+	Uint8    a, aIna, aEna, aOver;
 
 	enum tileview_val_type	*valtypes;		/* Entry types */
 	union rg_tileview_val	*vals;			/* Values/pointers */
@@ -149,7 +149,7 @@ typedef struct rg_tileview {
 	int xms, yms;			/* Cursor coords in surface (pixels) */
 	int xsub, ysub;			/* Cursor subpixel coords (v.pixels) */
 	int xorig, yorig;		/* Origin used when moving controls */
-	SDL_Surface *scaled;		/* Scaled surface */
+	AG_Surface *scaled;		/* Scaled surface */
 	int scrolling;
 	int flags;
 #define RG_TILEVIEW_NO_SCROLLING 0x01	/* Disable right click scrolling */
@@ -254,7 +254,7 @@ void RG_TileviewSetAutoRefresh(RG_Tileview *, int, int);
 
 void RG_TileviewColor3i(RG_Tileview *, Uint8, Uint8, Uint8);
 void RG_TileviewColor4i(RG_Tileview *, Uint8, Uint8, Uint8, Uint8);
-void RG_TileviewSDLColor(RG_Tileview *, SDL_Color *, Uint8);
+void RG_TileviewSDLColor(RG_Tileview *, AG_Color *, Uint8);
 void RG_TileviewAlpha(RG_Tileview *, Uint8);
 
 void RG_TileviewPixel2i(RG_Tileview *, int, int);
@@ -284,10 +284,8 @@ RG_TileviewScaledPixel(RG_Tileview *tv, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 	if (sx < 0 || sy < 0 || sx >= tv->scaled->w || sy >= tv->scaled->h) {
 		return;
 	}
-	pixel = SDL_MapRGB(tv->scaled->format, r, g, b);
-	if (SDL_MUSTLOCK(tv->scaled)) {
-		SDL_LockSurface(tv->scaled);
-	}
+	pixel = AG_MapRGB(tv->scaled->format, r,g,b);
+	AG_SurfaceLock(tv->scaled);
 	if (tv->pxsz == 1) {
 		dst = (Uint8 *)tv->scaled->pixels + y*tv->scaled->pitch +
 		    x*tv->scaled->format->BytesPerPixel;
@@ -306,9 +304,7 @@ RG_TileviewScaledPixel(RG_Tileview *tv, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 			dst += tv->scaled->pitch - tv->pxlen;
 		}
 	}
-	if (SDL_MUSTLOCK(tv->scaled)) {
-		SDL_UnlockSurface(tv->scaled);
-	}
+	AG_SurfaceUnlock(tv->scaled);
 	AG_WidgetUpdateSurface(tv, 0);
 }
 

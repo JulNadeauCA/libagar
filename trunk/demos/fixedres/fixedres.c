@@ -36,7 +36,7 @@ CreateGameMenu(void)
 	 * Set the window background color to black since the background
 	 * pixmap has rounded edges.
 	 */
-	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 0, 0, 0);
+	agColors[WINDOW_BG_COLOR] = AG_MapRGB(agVideoFmt, 0,0,0);
 
 	/* Create the background pixmap from bmp file. */
 	if ((px = AG_PixmapFromBMP(fx, 0, "Images/menubg.bmp")) == NULL) {

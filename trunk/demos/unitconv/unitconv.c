@@ -93,7 +93,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 	
 	CreateUI();
-	agColors[WINDOW_BG_COLOR] = SDL_MapRGB(agVideoFmt, 60, 60, 60);
+	agColors[WINDOW_BG_COLOR] = AG_MapRGB(agVideoFmt, 60,60,60);
 
 	AG_EventLoop();
 	AG_Destroy();

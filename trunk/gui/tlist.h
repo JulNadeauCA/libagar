@@ -28,7 +28,7 @@ typedef struct ag_tlist_popup {
 
 typedef struct ag_tlist_item {
 	int selected;				/* Effective selection */
-	SDL_Surface *iconsrc;			/* Source icon (or NULL) */
+	AG_Surface *iconsrc;			/* Source icon (or NULL) */
 	int icon;				/* Cached icon surface */
 	void *p1;				/* User-supplied pointer */
 	const char *cat;			/* User-supplied category */
@@ -107,15 +107,15 @@ void		AG_TlistSizeHintPixels(AG_Tlist *, int, int);
 #define		AG_TlistPrescale AG_TlistSizeHint
 
 void		AG_TlistSetItemHeight(AG_Tlist *, int);
-void		AG_TlistSetIcon(AG_Tlist *, AG_TlistItem *, SDL_Surface *);
+void		AG_TlistSetIcon(AG_Tlist *, AG_TlistItem *, AG_Surface *);
 
 void	       AG_TlistSetArgs(AG_TlistItem *, const char *, ...);
 void	       AG_TlistDel(AG_Tlist *, AG_TlistItem *);
 void	       AG_TlistClear(AG_Tlist *);
 void	       AG_TlistRestore(AG_Tlist *);
-AG_TlistItem  *AG_TlistAdd(AG_Tlist *, SDL_Surface *, const char *, ...);
-AG_TlistItem  *AG_TlistAddPtr(AG_Tlist *, SDL_Surface *, const char *, void *);
-AG_TlistItem  *AG_TlistAddPtrHead(AG_Tlist *, SDL_Surface *, const char *,
+AG_TlistItem  *AG_TlistAdd(AG_Tlist *, AG_Surface *, const char *, ...);
+AG_TlistItem  *AG_TlistAddPtr(AG_Tlist *, AG_Surface *, const char *, void *);
+AG_TlistItem  *AG_TlistAddPtrHead(AG_Tlist *, AG_Surface *, const char *,
 	                         void *);
 void		 AG_TlistSelect(AG_Tlist *, AG_TlistItem *);
 void		 AG_TlistDeselect(AG_Tlist *, AG_TlistItem *);

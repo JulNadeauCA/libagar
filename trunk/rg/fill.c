@@ -64,8 +64,8 @@ RG_FillInit(void *p, RG_Tileset *ts, int flags)
 	AG_FeatureInit(f, ts, flags, &rgFillOps);
 	f->type = FILL_SOLID;
 	f->alpha = 255;
-	f->f_gradient.c1 = SDL_MapRGB(ts->fmt, 0, 0, 0);
-	f->f_gradient.c2 = SDL_MapRGB(ts->fmt, 0, 0, 0);
+	f->f_gradient.c1 = AG_MapRGB(ts->fmt, 0,0,0);
+	f->f_gradient.c2 = AG_MapRGB(ts->fmt, 0,0,0);
 }
 
 int
@@ -184,29 +184,29 @@ void
 RG_FillApply(void *p, RG_Tile *t, int x, int y)
 {
 	struct rg_fill_feature *fi = p;
-	SDL_Surface *su = t->su;
+	AG_Surface *su = t->su;
 	Uint8 r1, g1, b1;
 	Uint8 r2, g2, b2;
 	
-	SDL_GetRGB(fi->f_gradient.c1, t->ts->fmt, &r1, &g1, &b1);
-	SDL_GetRGB(fi->f_gradient.c2, t->ts->fmt, &r2, &g2, &b2);
+	AG_GetRGB(fi->f_gradient.c1, t->ts->fmt, &r1,&g1,&b1);
+	AG_GetRGB(fi->f_gradient.c2, t->ts->fmt, &r2,&g2,&b2);
 
 	switch (fi->type) {
 	case FILL_SOLID:
-		SDL_GetRGB(fi->f_solid.c, t->ts->fmt, &r1, &g1, &b1);
-		SDL_FillRect(su, NULL, SDL_MapRGBA(t->ts->fmt, r1, g1, b1,
-		    fi->alpha));
+		AG_GetRGB(fi->f_solid.c, t->ts->fmt, &r1, &g1, &b1);
+		AG_FillRect(su, NULL,
+		    AG_MapRGBA(t->ts->fmt, r1,g1,b1, fi->alpha));
 		break;
 	case FILL_HGRADIENT:
 		{
 			int x, y;
 		
-			SDL_LockSurface(su);
+			AG_SurfaceLock(su);
 			for (y = 0; y < su->h; y++) {
 				Uint32 c;
 				Uint8 a = (Uint8)(su->h-y)*255/su->h;
 
-				c = SDL_MapRGB(t->ts->fmt,
+				c = AG_MapRGB(t->ts->fmt,
 				    (((r1 - r2) * a) >> 8) + r2,
 				    (((g1 - g2) * a) >> 8) + g2,
 				    (((b1 - b2) * a) >> 8) + b2);
@@ -214,7 +214,7 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 				for (x = 0; x < su->w; x++) {
 					if (fi->alpha == 255) {
 						RG_PutPixel(t->su, x, y,
-						    SDL_MapRGB(t->su->format,
+						    AG_MapRGB(t->su->format,
 						    (((r1 - r2)*a) >> 8) + r2,
 						    (((g1 - g2)*a) >> 8) + g2,
 						    (((b1 - b2)*a) >> 8) + b2));
@@ -228,14 +228,14 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 					}
 				}
 			}
-			SDL_UnlockSurface(su);
+			AG_SurfaceUnlock(su);
 		}
 		break;
 	case FILL_VGRADIENT:
 		{
 			int x, y;
 		
-			SDL_LockSurface(su);
+			AG_SurfaceLock(su);
 			for (y = 0; y < su->h; y++) {
 				for (x = 0; x < su->w; x++) {
 					Uint8 a = (su->h-x)*255/su->h;
@@ -248,7 +248,7 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 					    fi->alpha);
 				}
 			}
-			SDL_UnlockSurface(su);
+			AG_SurfaceUnlock(su);
 		}
 		break;
 	case FILL_CGRADIENT:
@@ -257,10 +257,9 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 			int x = su->w/2;
 			int y = su->h/2;
 		
-			SDL_LockSurface(su);
+			AG_SurfaceLock(su);
 			for (i = 0; i < r; i++) {
 				Uint8 a = (r-i)*255/r;
-			
 				RG_ColorRGBA(t,
 				    (((r1 - r2) * a) >> 8) + r2,
 				    (((g1 - g2) * a) >> 8) + g2,
@@ -268,7 +267,7 @@ RG_FillApply(void *p, RG_Tile *t, int x, int y)
 				    fi->alpha);
 				RG_Circle2(t, x, y, i);
 			}
-			SDL_UnlockSurface(su);
+			AG_SurfaceUnlock(su);
 		}
 		break;
 	default:
@@ -285,25 +284,25 @@ InvertColors(AG_Event *event)
 
 	switch (fi->type) {
 	case FILL_SOLID:
-		SDL_GetRGB(fi->f_solid.c, ts->fmt, &r, &g, &b);
+		AG_GetRGB(fi->f_solid.c, ts->fmt, &r,&g,&b);
 		r = 255 - r;
 		g = 255 - g;
 		b = 255 - b;
-		fi->f_solid.c = SDL_MapRGB(ts->fmt, r, g, b);
+		fi->f_solid.c = AG_MapRGB(ts->fmt, r,g,b);
 		break;
 	case FILL_HGRADIENT:
 	case FILL_VGRADIENT:
 	case FILL_CGRADIENT:
-		SDL_GetRGB(fi->f_gradient.c1, ts->fmt, &r, &g, &b);
+		AG_GetRGB(fi->f_gradient.c1, ts->fmt, &r,&g,&b);
 		r = 255 - r;
 		g = 255 - g;
 		b = 255 - b;
-		fi->f_gradient.c1 = SDL_MapRGB(ts->fmt, r, g, b);
-		SDL_GetRGB(fi->f_gradient.c2, ts->fmt, &r, &g, &b);
+		fi->f_gradient.c1 = AG_MapRGB(ts->fmt, r,g,b);
+		AG_GetRGB(fi->f_gradient.c2, ts->fmt, &r,&g,&b);
 		r = 255 - r;
 		g = 255 - g;
 		b = 255 - b;
-		fi->f_gradient.c2 = SDL_MapRGB(ts->fmt, r, g, b);
+		fi->f_gradient.c2 = AG_MapRGB(ts->fmt, r,g,b);
 		break;
 	default:
 		break;

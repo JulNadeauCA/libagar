@@ -415,7 +415,7 @@ MAP_InitLayer(MAP_Layer *lay, const char *name)
 	lay->visible = 1;
 	lay->xinc = 1;
 	lay->yinc = 1;
-	lay->alpha = SDL_ALPHA_OPAQUE;
+	lay->alpha = AG_ALPHA_OPAQUE;
 }
 
 void
@@ -742,7 +742,7 @@ MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn, int dlayer)
 		dr->r_gfx.ymotion = sr->r_gfx.ymotion;
 		dr->r_gfx.xorigin = sr->r_gfx.xorigin;
 		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
-		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(SDL_Rect));
+		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(AG_Rect));
 		break;
 	case MAP_ITEM_ANIM:
 		dr = MAP_NodeAddAnim(dm, dn, sr->r_anim.obj, sr->r_anim.id);
@@ -752,7 +752,7 @@ MAP_NodeCopyItem(const MAP_Item *sr, MAP *dm, MAP_Node *dn, int dlayer)
 		dr->r_gfx.ymotion = sr->r_gfx.ymotion;
 		dr->r_gfx.xorigin = sr->r_gfx.xorigin;
 		dr->r_gfx.yorigin = sr->r_gfx.yorigin;
-		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(SDL_Rect));
+		memcpy(&dr->r_gfx.rs, &sr->r_gfx.rs, sizeof(AG_Rect));
 		break;
 	case MAP_ITEM_WARP:
 		dr = MAP_NodeAddWarpPoint(dm, dn, sr->r_warp.map, sr->r_warp.x,
@@ -1370,7 +1370,7 @@ Save(void *p, AG_DataSource *buf)
 /* Render surface s, scaled to rx,ry pixels. */
 /* XXX extremely inefficient; temporary until we implement 2xSAI */
 static void
-BlitSurfaceScaled(MAP *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry, int cam)
+BlitSurfaceScaled(MAP *m, AG_Surface *s, AG_Rect *rs, int rx, int ry, int cam)
 {
 	int x, y, sx, sy;
 	Uint8 r1, g1, b1, a1;
@@ -1382,10 +1382,8 @@ BlitSurfaceScaled(MAP *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry, int cam)
 	Uint hSrc = (Uint)(rs->h*tilesz/MAPTILESZ);
 	int same_fmt = AG_SamePixelFmt(s, agView->v);
 
-	if (SDL_MUSTLOCK(s)) {
-		SDL_LockSurface(s);
-	}
-	SDL_LockSurface(agView->v);
+	AG_SurfaceLock(s);
+	AG_SurfaceLock(agView->v);
 	
 	for (y = 0; y < hSrc; y++) {
 		if ((sy = (y+ySrc)*MAPTILESZ/tilesz) >= s->h)
@@ -1399,12 +1397,12 @@ BlitSurfaceScaled(MAP *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry, int cam)
 			    sy*s->pitch +
 			    sx*s->format->BytesPerPixel);
 			
-			if ((s->flags & SDL_SRCCOLORKEY) &&
+			if ((s->flags & AG_SRCCOLORKEY) &&
 			    c == s->format->colorkey)
 				continue;
 		
-			if (s->flags & SDL_SRCALPHA) {
-				SDL_GetRGBA(c, s->format, &r1, &g1, &b1, &a1);
+			if (s->flags & AG_SRCALPHA) {
+				AG_GetRGBA(c, s->format, &r1,&g1,&b1,&a1);
 				AG_BLEND_RGBA2_CLIPPED(agView->v, rx+x, ry+y,
 				    r1, g1, b1, a1, AG_ALPHA_OVERLAY);
 			} else {
@@ -1412,18 +1410,15 @@ BlitSurfaceScaled(MAP *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry, int cam)
 					AG_VIEW_PUT_PIXEL2_CLIPPED(rx+x, ry+y,
 					    c);
 				} else {
-					SDL_GetRGB(c, s->format,
-					    &r1, &g1, &b1);
+					AG_GetRGB(c, s->format, &r1,&g1,&b1);
 					AG_VIEW_PUT_PIXEL2_CLIPPED(rx+x, ry+y,
-					    SDL_MapRGB(agVideoFmt, r1, g1, b1));
+					    AG_MapRGB(agVideoFmt, r1,g1,b1));
 				}
 			}
 		}
 	}
-	if (SDL_MUSTLOCK(s)) {
-		SDL_UnlockSurface(s);
-	}
-	SDL_UnlockSurface(agView->v);
+	AG_SurfaceUnlock(s);
+	AG_SurfaceUnlock(agView->v);
 }
 					
 /*
@@ -1431,7 +1426,7 @@ BlitSurfaceScaled(MAP *m, SDL_Surface *s, SDL_Rect *rs, int rx, int ry, int cam)
  * apply, perform a cache lookup/insert.
  */
 static __inline__ void
-RenderTileItem(MAP_Item *r, RG_Tile *tile, SDL_Surface **pSurface,
+RenderTileItem(MAP_Item *r, RG_Tile *tile, AG_Surface **pSurface,
     Uint *pTexture)
 {
 	RG_TileVariant *var;
@@ -1461,30 +1456,28 @@ RenderTileItem(MAP_Item *r, RG_Tile *tile, SDL_Surface **pSurface,
 	}
 	if (var == NULL) {
 		RG_Transform *xf;
-		SDL_Surface *xsu;
+		AG_Surface *xsu;
 		
 		var = Malloc(sizeof(RG_TileVariant));
 		TAILQ_INIT(&var->transforms);
 		RG_TransformChainDup(&r->transforms, &var->transforms);
 		var->last_drawn = SDL_GetTicks();
-		var->su = SDL_CreateRGBSurface(SDL_SWSURFACE |
-		    (tile->su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY|
-		                        SDL_RLEACCEL)),
-		     tile->su->w, tile->su->h, tile->su->format->BitsPerPixel,
-		     tile->su->format->Rmask,
-		     tile->su->format->Gmask,
-		     tile->su->format->Bmask,
-		     tile->su->format->Amask);
+		var->su = AG_SurfaceRGBA(
+		    tile->su->w, tile->su->h, tile->su->format->BitsPerPixel,
+		    tile->su->flags & (AG_SRCALPHA|AG_SRCCOLORKEY|AG_RLEACCEL),
+		    tile->su->format->Rmask,
+		    tile->su->format->Gmask,
+		    tile->su->format->Bmask,
+		    tile->su->format->Amask);
 		if (var->su == NULL) {
-			AG_FatalError("SDL_CreateRGBSurface: %s",
-			    SDL_GetError());
+			AG_FatalError(NULL);
 		}
-		AG_CopySurfaceAsIs(tile->su, var->su);
+		AG_SurfaceCopy(var->su, tile->su);
 
 		TAILQ_FOREACH(xf, &r->transforms, transforms) {
 			xsu = xf->func(var->su, xf->nargs, xf->args);
 			if (xsu != var->su) {
-				SDL_FreeSurface(var->su);
+				AG_SurfaceFree(var->su);
 				var->su = xsu;
 			}
 		}
@@ -1512,7 +1505,7 @@ RenderTileItem(MAP_Item *r, RG_Tile *tile, SDL_Surface **pSurface,
  * entry in the anim transformation cache, or allocate a new one.
  */
 static void
-RenderAnimItem(MAP_Item *r, RG_Anim *anim, SDL_Surface **pSurface,
+RenderAnimItem(MAP_Item *r, RG_Anim *anim, AG_Surface **pSurface,
     Uint *pTexture)
 {
 	RG_Tileset *ts = r->r_anim.obj;
@@ -1562,33 +1555,32 @@ RenderAnimItem(MAP_Item *r, RG_Anim *anim, SDL_Surface **pSurface,
 
 		for (i = 0; i < anim->nframes; i++) {
 			RG_AnimFrame *vframe;
-			SDL_Surface *xsu;
+			AG_Surface *xsu;
 			Uint32 frame_no;
 
 			/* Duplicate the original frame surface. */
 			frame = &anim->frames[i];
-			xsu = SDL_CreateRGBSurface(SDL_SWSURFACE|
-			    (frame->su->flags&(SDL_SRCALPHA|SDL_SRCCOLORKEY|
-			                       SDL_RLEACCEL)),
+			xsu = AG_SurfaceRGBA(
 			    frame->su->w, frame->su->h,
 			    frame->su->format->BitsPerPixel,
+			    frame->su->flags & (AG_SRCALPHA|AG_SRCCOLORKEY|
+			                        AG_RLEACCEL),
 			    frame->su->format->Rmask,
 			    frame->su->format->Gmask,
 			    frame->su->format->Bmask,
 			    frame->su->format->Amask);
 			if (xsu == NULL) {
-				AG_FatalError("SDL_CreateSurface: %s",
-				    SDL_GetError());
+				AG_FatalError(NULL);
 			}
 			frame_no = RG_AnimInsertFrame(var->anim, xsu);
 			vframe = &var->anim->frames[frame_no];
-			AG_CopySurfaceAsIs(frame->su, vframe->su);
+			AG_SurfaceCopy(vframe->su, frame->su);
 
 			/* Apply the transform chain. */
 			TAILQ_FOREACH(xf, &r->transforms, transforms) {
 				xsu = xf->func(vframe->su, xf->nargs, xf->args);
 				if (xsu != vframe->su) {
-					SDL_FreeSurface(vframe->su);
+					AG_SurfaceFree(vframe->su);
 					vframe->su = xsu;
 				}
 			}
@@ -1614,7 +1606,7 @@ static MAP_Item *
 LocateItem(MAP *m, MAP_Node *node, int xoffs, int yoffs, int xd, int yd,
     int ncam)
 {
-	SDL_Rect rExt;
+	AG_Rect rExt;
 	MAP_Item *r;
 
 	TAILQ_FOREACH_REVERSE(r, &node->nrefs, map_itemq, nrefs) {
@@ -1713,7 +1705,7 @@ MAP_ItemLocate(MAP *m, int xMap, int yMap, int ncam)
  * the origin of the the node.
  */
 int
-MAP_ItemExtent(MAP *m, MAP_Item *r, SDL_Rect *rd, int cam)
+MAP_ItemExtent(MAP *m, MAP_Item *r, AG_Rect *rd, int cam)
 {
 	int tilesz = m->cameras[cam].tilesz;
 
@@ -1753,7 +1745,7 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 #ifdef HAVE_OPENGL
 	Uint texture = 0;
 #endif
-	SDL_Surface *su;
+	AG_Surface *su;
 	int tilesz = m->cameras[cam].tilesz;
 	RG_Tile *tile;
 	RG_Anim *anim;
@@ -1805,7 +1797,7 @@ draw:
 
 			BlitSurfaceScaled(m, su, &r->r_gfx.rs, dx, dy, cam);
 		} else {
-			SDL_Rect rd;
+			AG_Rect rd;
 
 			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion -
 			    r->r_gfx.xorigin;
@@ -1813,16 +1805,16 @@ draw:
 			    r->r_gfx.yorigin;
 
 			if (debug_su) {
-				SDL_BlitSurface(su, NULL, agView->v, &rd);
+				AG_SurfaceBlit(su, NULL, agView->v, &rd);
 			} else {
-				SDL_BlitSurface(su, &r->r_gfx.rs, agView->v,
+				AG_SurfaceBlit(su, &r->r_gfx.rs, agView->v,
 				    &rd);
 			}
 		}
 	} else {
 #ifdef HAVE_OPENGL
 		GLfloat texcoord[4];
-		SDL_Rect rd;
+		AG_Rect rd;
 
 		if (debug_su) {
 			texcoord[0] = 0.0;
@@ -1873,7 +1865,7 @@ draw:
 	}
 
 	if (debug_su)
-		SDL_FreeSurface(su);
+		AG_SurfaceFree(su);
 }
 
 /* Create a new undo block at the current level. */
@@ -1990,12 +1982,12 @@ MAP_ModLayerAdd(MAP *m, int l)
 #if 0
 /* Break a surface into tile-sized fragments and generate a map. */
 MAP *
-AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
+AG_GenerateMapFromSurface(AG_Gfx *gfx, AG_Surface *sprite)
 {
 	char mapname[AG_OBJECT_NAME_MAX];
 	int x, y, mx, my;
 	Uint mw, mh;
-	SDL_Rect sd, rd;
+	AG_Rect sd, rd;
 	MAP *fragmap;
 
 	sd.w = MAPTILESZ;
@@ -2012,11 +2004,11 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 
 	for (y = 0, my = 0; y < sprite->h; y += MAPTILESZ, my++) {
 		for (x = 0, mx = 0; x < sprite->w; x += MAPTILESZ, mx++) {
-			SDL_Surface *su;
-			Uint32 saflags = sprite->flags & (SDL_SRCALPHA|
-			                                  SDL_RLEACCEL);
-			Uint32 sckflags = sprite->flags & (SDL_SRCCOLORKEY|
-			                                   SDL_RLEACCEL);
+			AG_Surface *su;
+			Uint32 saflags = sprite->flags & (AG_SRCALPHA|
+			                                  AG_RLEACCEL);
+			Uint32 sckflags = sprite->flags & (AG_SRCCOLORKEY|
+			                                   AG_RLEACCEL);
 			Uint8 salpha = sprite->format->alpha;
 			Uint32 scolorkey = sprite->format->colorkey;
 			MAP_Node *node = &fragmap->map[my][mx];
@@ -2030,35 +2022,33 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, SDL_Surface *sprite)
 				fh = sprite->h - y;
 
 			/* Allocate a surface for the fragment. */
-			su = SDL_CreateRGBSurface(SDL_SWSURFACE |
+			su = AG_SurfaceRGBA(fw, fh,
+			    sprite->format->BitsPerPixel,
 			    (sprite->flags &
-			    (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
-			    fw, fh, sprite->format->BitsPerPixel,
+			     (AG_SRCALPHA|AG_SRCCOLORKEY|AG_RLEACCEL)),
 			    sprite->format->Rmask,
 			    sprite->format->Gmask,
 			    sprite->format->Bmask,
 			    sprite->format->Amask);
-			if (su == NULL)
-				AG_FatalError("SDL_CreateRGBSurface: %s",
-				    SDL_GetError());
-			
+			if (su == NULL) {
+				AG_FatalError(NULL);
+			}
 			/* Copy the fragment as-is. */
-			SDL_SetAlpha(sprite, 0, 0);
-			SDL_SetColorKey(sprite, 0, 0);
+			AG_SetAlpha(sprite, 0, 0);
+			AG_SetColorKey(sprite, 0, 0);
 			sd.x = x;
 			sd.y = y;
-			SDL_BlitSurface(sprite, &sd, su, &rd);
+			AG_SurfaceBlit(sprite, &sd, su, &rd);
 			nsprite = AG_GfxAddTile(gfx, su);
-			SDL_SetAlpha(sprite, saflags, salpha);
-			SDL_SetColorKey(sprite, sckflags, scolorkey);
+			AG_SetAlpha(sprite, saflags, salpha);
+			AG_SetColorKey(sprite, sckflags, scolorkey);
 
 			/*
 			 * Enable alpha blending if there are any pixels
 			 * with a non-opaque alpha channel on the surface.
 			 */
 			if (AG_HasTransparency(su))
-				SDL_SetAlpha(su, SDL_SRCALPHA,
-				    su->format->alpha);
+				AG_SetAlpha(su, AG_SRCALPHA, su->format->alpha);
 
 			/* Map the sprite as a NULL reference. */
 			MAP_NodeAddTile(fragmap, node, NULL, nsprite);

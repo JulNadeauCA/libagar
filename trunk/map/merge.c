@@ -327,7 +327,7 @@ merge_save(MAP_Tool *t, AG_DataSource *buf)
 }
 
 static int
-merge_cursor(MAP_Tool *t, SDL_Rect *rd)
+merge_cursor(MAP_Tool *t, AG_Rect *rd)
 {
 	MAP_View *mv = t->mv;
 	MAP_Item *r;

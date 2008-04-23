@@ -40,7 +40,7 @@ static void FreeItem(AG_Tlist *, AG_TlistItem *);
 static void SelectItem(AG_Tlist *, AG_TlistItem *);
 static void DeselectItem(AG_Tlist *, AG_TlistItem *);
 static void PopupMenu(AG_Tlist *, AG_TlistPopup *);
-static void UpdateItemIcon(AG_Tlist *, AG_TlistItem *, SDL_Surface *);
+static void UpdateItemIcon(AG_Tlist *, AG_TlistItem *, AG_Surface *);
 static void UpdateListScrollbar(AG_Tlist *);
 static void ScrollbarChanged(AG_Event *);
 
@@ -367,10 +367,12 @@ Draw(void *p)
 
 		if (it->iconsrc != NULL) {
 			if (it->icon == -1) {
-				SDL_Surface *scaled = NULL;
+				AG_Surface *scaled = NULL;
 
-				AG_ScaleSurface(it->iconsrc,
-				    tl->icon_w, tl->item_h, &scaled);
+				if (AG_ScaleSurface(it->iconsrc,
+				    tl->icon_w, tl->item_h, &scaled) == -1) {
+					AG_FatalError(NULL);
+				}
 				it->icon = AG_WidgetMapSurface(tl, scaled);
 			}
 			AG_WidgetBlitSurface(tl, it->icon, x, y);
@@ -445,7 +447,7 @@ FreeItem(AG_Tlist *tl, AG_TlistItem *it)
 		AG_WidgetUnmapSurface(tl, it->label);
 	}
 	if (it->flags & AG_TLIST_DYNICON && it->iconsrc != NULL) {
-		SDL_FreeSurface(it->iconsrc);
+		AG_SurfaceFree(it->iconsrc);
 	}
 	if (it->icon != -1) {
 		AG_WidgetUnmapSurface(tl, it->icon);
@@ -580,7 +582,7 @@ AG_TlistRestore(AG_Tlist *tl)
  * XXX allocate from a pool, especially for polled items.
  */
 static __inline__ AG_TlistItem *
-AllocItem(AG_Tlist *tl, SDL_Surface *iconsrc)
+AllocItem(AG_Tlist *tl, AG_Surface *iconsrc)
 {
 	AG_TlistItem *it;
 
@@ -610,7 +612,7 @@ InsertItem(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 
 /* Add an item to the list. */
 AG_TlistItem *
-AG_TlistAddPtr(AG_Tlist *tl, SDL_Surface *iconsrc, const char *text,
+AG_TlistAddPtr(AG_Tlist *tl, AG_Surface *iconsrc, const char *text,
     void *p1)
 {
 	AG_TlistItem *it;
@@ -625,7 +627,7 @@ AG_TlistAddPtr(AG_Tlist *tl, SDL_Surface *iconsrc, const char *text,
 }
 
 AG_TlistItem *
-AG_TlistAdd(AG_Tlist *tl, SDL_Surface *iconsrc, const char *fmt, ...)
+AG_TlistAdd(AG_Tlist *tl, AG_Surface *iconsrc, const char *fmt, ...)
 {
 	AG_TlistItem *it;
 	va_list args;
@@ -680,7 +682,7 @@ AG_TlistSetArgs(AG_TlistItem *it, const char *fmt, ...)
 }
 
 AG_TlistItem *
-AG_TlistAddPtrHead(AG_Tlist *tl, SDL_Surface *icon, const char *text,
+AG_TlistAddPtrHead(AG_Tlist *tl, AG_Surface *icon, const char *text,
     void *p1)
 {
 	AG_TlistItem *it;
@@ -1202,10 +1204,12 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 	tl->item_h = ih;
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (it->icon != -1) {
-			SDL_Surface *scaled = NULL;
+			AG_Surface *scaled = NULL;
 
-			AG_ScaleSurface(it->iconsrc,
-			    tl->item_h-1, tl->item_h-1, &scaled);
+			if (AG_ScaleSurface(it->iconsrc,
+			    tl->item_h-1, tl->item_h-1, &scaled) == -1) {
+				AG_FatalError(NULL);
+			}
 			AG_WidgetReplaceSurface(tl, it->icon, scaled);
 		}
 	}
@@ -1214,11 +1218,11 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 
 /* Update the icon associated with an item. The Tlist must be locked. */
 static void
-UpdateItemIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
+UpdateItemIcon(AG_Tlist *tl, AG_TlistItem *it, AG_Surface *iconsrc)
 {
 	if (it->flags & AG_TLIST_DYNICON) {
 		if (it->iconsrc != NULL) {
-			SDL_FreeSurface(it->iconsrc);
+			AG_SurfaceFree(it->iconsrc);
 		}
 		if (iconsrc != NULL) {
 			it->iconsrc = AG_DupSurface(iconsrc);
@@ -1236,7 +1240,7 @@ UpdateItemIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
 }
 
 void
-AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, SDL_Surface *iconsrc)
+AG_TlistSetIcon(AG_Tlist *tl, AG_TlistItem *it, AG_Surface *iconsrc)
 {
 	AG_ObjectLock(tl);
 	it->flags |= AG_TLIST_DYNICON;

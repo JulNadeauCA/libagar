@@ -28,13 +28,14 @@
  */
 
 #include <core/core.h>
+#include <gui/view.h>
 
 void
 AG_WriteColor(AG_DataSource *ds, SDL_PixelFormat *pixfmt, Uint32 color)
 {
 	Uint8 r, g, b, a;
 
-	SDL_GetRGBA(color, pixfmt, &r, &g, &b, &a);
+	AG_GetRGBA(color, pixfmt, &r,&g,&b,&a);
 	AG_WriteUint8(ds, r);
 	AG_WriteUint8(ds, g);
 	AG_WriteUint8(ds, b);
@@ -50,5 +51,5 @@ AG_ReadColor(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 	g = AG_ReadUint8(ds);
 	b = AG_ReadUint8(ds);
 	a = AG_ReadUint8(ds);
-	return (SDL_MapRGBA(pixfmt, r, g, b, a));
+	return AG_MapRGBA(pixfmt, r,g,b,a);
 }

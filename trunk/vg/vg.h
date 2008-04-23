@@ -229,7 +229,7 @@ VG_GetColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 static __inline__ Uint32
 VG_MapColorRGB(VG_Color vc)
 {
-	return SDL_MapRGB(agVideoFmt, vc.r, vc.g, vc.b);
+	return AG_MapRGB(agVideoFmt, vc.r, vc.g, vc.b);
 }
 
 static __inline__ void

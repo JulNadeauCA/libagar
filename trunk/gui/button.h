@@ -18,7 +18,7 @@ typedef struct ag_button {
 	int state;			/* Default state binding */
 	char *text;			/* Label text */
 	int surface;			/* Label surface handle */
-	SDL_Surface *surfaceSrc;	/* For ButtonSurface() */
+	AG_Surface *surfaceSrc;		/* For ButtonSurface() */
 	enum ag_text_justify justify;	/* Label justification */
 	enum ag_text_valign valign;	/* Vertical alignment */
 	Uint flags;
@@ -68,8 +68,8 @@ void	   AG_ButtonSetFocusable(AG_Button *, int);
 void	   AG_ButtonSetSticky(AG_Button *, int);
 void	   AG_ButtonJustify(AG_Button *, enum ag_text_justify);
 void	   AG_ButtonSetValign(AG_Button *, enum ag_text_valign);
-void	   AG_ButtonSurface(AG_Button *, SDL_Surface *);
-void	   AG_ButtonSurfaceNODUP(AG_Button *, SDL_Surface *);
+void	   AG_ButtonSurface(AG_Button *, AG_Surface *);
+void	   AG_ButtonSurfaceNODUP(AG_Button *, AG_Surface *);
 void	   AG_ButtonSetRepeatMode(AG_Button *, int);
 
 void	   AG_ButtonText(AG_Button *, const char *, ...)

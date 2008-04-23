@@ -35,6 +35,7 @@
 #include <config/network.h>
 #include <config/version.h>
 
+#include <gui/view.h>
 #include <gui/text.h>
 #include <gui/tlist.h>
 #include <gui/tableview.h>

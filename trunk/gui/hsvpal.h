@@ -26,8 +26,8 @@ typedef struct ag_hsvpal {
 
 	float h, s, v, a;		/* Default bindings */
 	Uint32 pixel;			/* Calculated pixel */
-	SDL_Rect rAlpha;		/* Alpha selector rectangle */
-	SDL_Surface *surface;		/* Cached surface */
+	AG_Rect rAlpha;			/* Alpha selector rectangle */
+	AG_Surface *surface;		/* Cached surface */
 	int selcircle_r;		/* Radius of selection circles */
 	struct {
 		int x, y;		/* Origin for circle of hues */

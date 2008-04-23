@@ -28,19 +28,19 @@ __BEGIN_DECLS
 extern AG_WidgetClass agPixmapClass;
 
 AG_Pixmap *AG_PixmapNew(void *, Uint, Uint, Uint);
-AG_Pixmap *AG_PixmapFromSurface(void *, Uint, SDL_Surface *);
-AG_Pixmap *AG_PixmapFromSurfaceCopy(void *, Uint, SDL_Surface *);
-AG_Pixmap *AG_PixmapFromSurfaceScaled(void *, Uint, SDL_Surface *, Uint, Uint);
+AG_Pixmap *AG_PixmapFromSurface(void *, Uint, AG_Surface *);
+AG_Pixmap *AG_PixmapFromSurfaceCopy(void *, Uint, AG_Surface *);
+AG_Pixmap *AG_PixmapFromSurfaceScaled(void *, Uint, AG_Surface *, Uint, Uint);
 AG_Pixmap *AG_PixmapFromBMP(void *, Uint, const char *);
 #if 0
 AG_Pixmap *AG_PixmapFromXCF(void *, Uint, const char *);
 #endif
 
-int	   AG_PixmapAddSurface(AG_Pixmap *, SDL_Surface *);
+int	   AG_PixmapAddSurface(AG_Pixmap *, AG_Surface *);
 int	   AG_PixmapAddSurfaceFromBMP(AG_Pixmap *, const char *);
-int	   AG_PixmapAddSurfaceCopy(AG_Pixmap *, SDL_Surface *);
-int	   AG_PixmapAddSurfaceScaled(AG_Pixmap *, SDL_Surface *, Uint, Uint);
-void	   AG_PixmapReplaceSurfaceScaled(AG_Pixmap *, SDL_Surface *, Uint,
+int	   AG_PixmapAddSurfaceCopy(AG_Pixmap *, AG_Surface *);
+int	   AG_PixmapAddSurfaceScaled(AG_Pixmap *, AG_Surface *, Uint, Uint);
+void	   AG_PixmapReplaceSurfaceScaled(AG_Pixmap *, AG_Surface *, Uint,
 		                         Uint);
 
 #define AG_PixmapReplaceSurface(px,su)	AG_WidgetReplaceSurface((px),(px)->n,su)

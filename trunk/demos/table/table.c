@@ -42,7 +42,7 @@ MyCustomDynamicTextFn(void *p, char *s, size_t len)
 }
 
 /* This is a custom cell function which returns a surface to display (Ex.1) */
-static SDL_Surface *
+static AG_Surface *
 MyCustomSurfaceFn(void *p, int x, int y)
 {
 	/* Return the surface of a built-in icon. */

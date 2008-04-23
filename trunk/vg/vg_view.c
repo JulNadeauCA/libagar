@@ -444,7 +444,7 @@ DrawNodeExtent(VG_Node *vn, VG_View *vv)
 	VG_GetViewCoords(vv, v, &rExt.x, &rExt.y);
 	rExt.w = (int)(vExt.w*vv->scale);
 	rExt.h = (int)(vExt.h*vv->scale);
-	AG_DrawRectOutline(vv, rExt, SDL_MapRGB(agVideoFmt, 250, 0, 0));
+	AG_DrawRectOutline(vv, rExt, AG_MapRGB(agVideoFmt, 250,0,0));
 }
 #endif /* DEBUG */
 

@@ -76,7 +76,7 @@ GenCursor(char *xpm[], int xHot, int yHot)
 			}
 		}
 	}
-	return (SDL_CreateCursor(data, mask, w, h, xHot, yHot));
+	return SDL_CreateCursor(data, mask, w, h, xHot, yHot);
 }
 
 void

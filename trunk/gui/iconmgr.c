@@ -30,6 +30,8 @@
 #include <core/core.h>
 #include <core/config.h>
 
+#include <gui/view.h>
+
 #include <core/load_den.h>
 #include <core/load_xcf.h>
 
@@ -47,10 +49,8 @@ AG_InitStaticIcon(AG_StaticIcon *icon)
 	Uint8 *dst;
 	int x, y;
 
-	icon->s = SDL_CreateRGBSurface(SDL_SWSURFACE, icon->w, icon->h,
-	    agSurfaceFmt->BitsPerPixel,
-	    icon->Rmask, icon->Gmask,
-	    icon->Bmask, icon->Amask);
+	icon->s = AG_SurfaceRGBA(icon->w, icon->h, agSurfaceFmt->BitsPerPixel,
+	    0, icon->Rmask, icon->Gmask, icon->Bmask, icon->Amask);
 	
 	src = &icon->data[0];
 	dst = icon->s->pixels;
@@ -64,7 +64,7 @@ AG_InitStaticIcon(AG_StaticIcon *icon)
 }
 
 /* Return the icon associated with an object class, if any. */
-SDL_Surface *
+AG_Surface *
 AG_ObjectIcon(void *p)
 {
 	/* TODO */

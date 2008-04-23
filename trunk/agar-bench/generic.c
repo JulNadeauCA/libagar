@@ -5,46 +5,34 @@
 
 #include "agar-bench.h"
 
-SDL_Surface *surface;
-SDL_Surface *surface64;
-SDL_Surface *surface128;
+AG_Surface *surface;
+AG_Surface *surface64;
+AG_Surface *surface128;
 
 void
 InitSurface(void)
 {
-	surface = SDL_CreateRGBSurface(SDL_SWSURFACE, 32, 32, 32,
-	    agVideoFmt->Rmask,
-	    agVideoFmt->Gmask,
-	    agVideoFmt->Bmask,
-	    0);
-	surface64 = SDL_CreateRGBSurface(SDL_SWSURFACE, 64, 64, 32,
-	    agVideoFmt->Rmask,
-	    agVideoFmt->Gmask,
-	    agVideoFmt->Bmask,
-	    0);
-	surface128 = SDL_CreateRGBSurface(SDL_SWSURFACE, 128, 128, 32,
-	    agVideoFmt->Rmask,
-	    agVideoFmt->Gmask,
-	    agVideoFmt->Bmask,
-	    0);
+	surface = AG_SurfaceVideoRGB(32,32);
+	surface64 = AG_SurfaceVideoRGB(64,64);
+	surface128 = AG_SurfaceVideo(128,128);
 }
 
 void
 FreeSurface(void)
 {
-	SDL_FreeSurface(surface);
-	SDL_FreeSurface(surface64);
-	SDL_FreeSurface(surface128);
+	AG_SurfaceFree(surface);
+	AG_SurfaceFree(surface64);
+	AG_SurfaceFree(surface128);
 }
 
 void
 LockView(void)
 {
-	SDL_LockSurface(agView->v);
+	AG_SurfaceLock(agView->v);
 }
 
 void
 UnlockView(void)
 {
-	SDL_UnlockSurface(agView->v);
+	AG_SurfaceUnlock(agView->v);
 }

@@ -25,7 +25,7 @@ typedef struct rg_anim_view {
 	float speed;				/* Delay multiplier */
 	Uint frame;				/* Current frame */
 	Uint pre_w, pre_h;			/* SizeHint geometry */
-	SDL_Rect ranim;				/* Preview rectangle */
+	AG_Rect ranim;				/* Preview rectangle */
 	struct {
 		AG_Button *play;
 		AG_Button *pause;

@@ -981,16 +981,15 @@ RG_TileviewSetZoom(RG_Tileview *tv, int z2, int adj_offs)
 	if (tv->pxsz < 1)
 		tv->pxsz = 1;
 
-	tv->scaled = SDL_CreateRGBSurface(
-	    SDL_SWSURFACE|
-	    (t->su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
+	tv->scaled = AG_SurfaceRGBA(
 	    z2>=100 ? t->su->w*tv->pxsz : t->su->w*z2/100,
 	    z2>=100 ? t->su->h*tv->pxsz : t->su->h*z2/100,
 	    t->su->format->BitsPerPixel,
+	    (t->su->flags & (SDL_SRCALPHA|SDL_SRCCOLORKEY|SDL_RLEACCEL)),
 	    t->su->format->Rmask, t->su->format->Gmask,
 	    t->su->format->Bmask, t->su->format->Amask);
 	if (tv->scaled == NULL) {
-		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
+		AG_FatalError(NULL);
 	}
 	tv->scaled->format->alpha = t->su->format->alpha;
 	tv->scaled->format->colorkey = t->su->format->colorkey;
@@ -1138,7 +1137,7 @@ RG_TileviewColor3i(RG_Tileview *tv, Uint8 r, Uint8 g, Uint8 b)
 	tv->c.r = r;
 	tv->c.g = g;
 	tv->c.b = b;
-	tv->c.pc = SDL_MapRGB(agVideoFmt, r, g, b);
+	tv->c.pc = AG_MapRGB(agVideoFmt, r,g,b);
 }
 
 void
@@ -1148,24 +1147,24 @@ RG_TileviewColor4i(RG_Tileview *tv, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	tv->c.g = g;
 	tv->c.b = b;
 	tv->c.a = a;
-	tv->c.pc = SDL_MapRGBA(agVideoFmt, r, g, b, a);
+	tv->c.pc = AG_MapRGBA(agVideoFmt, r,g,b,a);
 }
 
 void
-RG_TileviewSDLColor(RG_Tileview *tv, SDL_Color *c, Uint8 a)
+RG_TileviewSDLColor(RG_Tileview *tv, AG_Color *c, Uint8 a)
 {
 	tv->c.r = c->r;
 	tv->c.g = c->g;
 	tv->c.b = c->b;
 	tv->c.a = a;
-	tv->c.pc = SDL_MapRGBA(agVideoFmt, c->r, c->g, c->b, a);
+	tv->c.pc = AG_MapRGBA(agVideoFmt, c->r, c->g, c->b, a);
 }
 
 void
 RG_TileviewAlpha(RG_Tileview *tv, Uint8 a)
 {
 	tv->c.a = a;
-	tv->c.pc = SDL_MapRGBA(agVideoFmt, tv->c.r, tv->c.g, tv->c.b, a);
+	tv->c.pc = AG_MapRGBA(agVideoFmt, tv->c.r, tv->c.g, tv->c.b, a);
 }
 
 /* Must be called from widget draw context. */
@@ -1534,7 +1533,7 @@ Draw(void *p)
 	RG_Tileview *tv = p;
 	RG_Tile *t = tv->tile;
 	RG_TileviewCtrl *ctrl;
-	SDL_Rect rsrc, rdst;
+	AG_Rect rsrc, rdst;
 	int x, y, n;
 
 	if (t == NULL)
@@ -1548,15 +1547,19 @@ Draw(void *p)
 #endif
 	if (tv->flags & RG_TILEVIEW_READONLY) {
 		RG_TileGenerate(t);
-		AG_ScaleSurface(t->su, tv->scaled->w, tv->scaled->h,
-		    &tv->scaled);
+		if (AG_ScaleSurface(t->su, tv->scaled->w, tv->scaled->h,
+		    &tv->scaled) == -1) {
+			AG_FatalError(NULL);
+		}
 		AG_WidgetUpdateSurface(tv, 0);
 	} else {
 		if (t->flags & RG_TILE_DIRTY) {
 			t->flags &= ~RG_TILE_DIRTY;
 			RG_TileGenerate(t);
-			AG_ScaleSurface(t->su, tv->scaled->w, tv->scaled->h,
-			    &tv->scaled);
+			if (AG_ScaleSurface(t->su, tv->scaled->w, tv->scaled->h,
+			    &tv->scaled) == -1) {
+				AG_FatalError(NULL);
+			}
 			AG_WidgetUpdateSurface(tv, 0);
 		}
 	}
@@ -1679,7 +1682,7 @@ Draw(void *p)
 				for (x = 0, nx = 0;
 				     x < tw;
 				     x += tsz, nx++) {
-					SDL_Surface *tsu;
+					AG_Surface *tsu;
 					int l = RG_TILE_LAYER2(t,nx,ny);
 					Uint8 c[4] = { 255, 255, 255, 128 };
 
@@ -1696,7 +1699,7 @@ Draw(void *p)
 					    tv->xoffs+x,
 					    tv->yoffs+y);
 					
-					SDL_FreeSurface(tsu);
+					AG_SurfaceFree(tsu);
 				}
 			}
 			

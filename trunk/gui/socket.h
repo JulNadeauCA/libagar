@@ -58,7 +58,7 @@ extern AG_WidgetClass agSocketClass;
 
 AG_Socket *AG_SocketNew(void *, Uint);
 AG_Socket *AG_SocketFromBMP(void *, Uint, const char *);
-AG_Socket *AG_SocketFromSurface(void *, Uint, SDL_Surface *);
+AG_Socket *AG_SocketFromSurface(void *, Uint, AG_Surface *);
 void	   AG_SocketInsertFn(AG_Socket *,
 	                     int (*)(AG_Socket *, struct ag_icon *));
 void	   AG_SocketRemoveFn(AG_Socket *,
@@ -73,8 +73,8 @@ void	   AG_SocketSetPadding(AG_Socket *, int, int, int, int);
 
 void AG_SocketBgRect(AG_Socket *, Uint, Uint);
 void AG_SocketBgCircle(AG_Socket *, Uint);
-void AG_SocketBgPixmap(AG_Socket *, SDL_Surface *);
-void AG_SocketBgPixmapNODUP(AG_Socket *, SDL_Surface *);
+void AG_SocketBgPixmap(AG_Socket *, AG_Surface *);
+void AG_SocketBgPixmapNODUP(AG_Socket *, AG_Surface *);
 
 void AG_SocketInsertIcon(AG_Socket *, struct ag_icon *);
 void AG_SocketRemoveIcon(AG_Socket *);

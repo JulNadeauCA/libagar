@@ -53,7 +53,7 @@ typedef struct map_item {
 		Sint16 xcenter, ycenter;	/* Centering offsets */
 		Sint16 xmotion, ymotion;	/* Motion offsets */
 		Sint16 xorigin, yorigin;	/* Origin point */
-		SDL_Rect rs;			/* Source rectangle */
+		AG_Rect rs;			/* Source rectangle */
 	} r_gfx;
 	union {
 		struct {
@@ -207,7 +207,7 @@ void	 MAP_ItemSetLayer(MAP_Item *, int);
 void	 MAP_ItemDestroy(MAP *, MAP_Item *);
 int	 MAP_ItemLoad(MAP *, AG_DataSource *, MAP_Node *, MAP_Item **);
 void	 MAP_ItemSave(MAP *, AG_DataSource *, MAP_Item *);
-int	 MAP_ItemExtent(MAP *, MAP_Item *, SDL_Rect *, int);
+int	 MAP_ItemExtent(MAP *, MAP_Item *, AG_Rect *, int);
 void	 MAP_ItemDraw(MAP *, MAP_Item *, int, int, int);
 void	 MAP_ItemSetTile(MAP_Item *, MAP *, RG_Tileset *, Uint32);
 void	 MAP_ItemSetAnim(MAP_Item *, MAP *, RG_Tileset *, Uint32);

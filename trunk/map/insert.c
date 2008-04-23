@@ -267,7 +267,7 @@ insert_effect(void *p, MAP_Node *node)
 }
 
 static int
-insert_cursor(void *p, SDL_Rect *rd)
+insert_cursor(void *p, AG_Rect *rd)
 {
 	struct map_insert_tool *ins = p;
 	MAP_View *mv = TOOL(ins)->mv;

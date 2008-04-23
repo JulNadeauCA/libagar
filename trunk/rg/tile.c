@@ -25,6 +25,10 @@
 
 #include <core/core.h>
 #include <core/config.h>
+
+#include <gui/view.h>
+#include <gui/text.h>
+
 #include <core/load_surface.h>
 #include <core/load_xcf.h>
 
@@ -65,7 +69,7 @@ const char *rgTileSnapModes[] = {
  * alpha of each pixel.
  */
 static void
-BlendOverlayAlpha(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
+BlendOverlayAlpha(RG_Tile *t, AG_Surface *su, AG_Rect *rd)
 {
 	Uint sx, sy, dx, dy;
 	Uint8 *pSrc, *pDst;
@@ -73,8 +77,8 @@ BlendOverlayAlpha(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
 	Uint8 dR, dG, dB, dA;
 	int alpha;
 
-	SDL_LockSurface(su);
-	SDL_LockSurface(t->su);
+	AG_SurfaceLock(su);
+	AG_SurfaceUnlock(t->su);
 	for (sy = 0, dy = rd->y; sy < su->h; sy++, dy++) {
 		for (sx = 0, dx = rd->x; sx < su->w; sx++, dx++) {
 			if (AG_CLIPPED_PIXEL(t->su, dx, dy))
@@ -89,16 +93,16 @@ BlendOverlayAlpha(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
 					(dx << 2);
 
 			if (*(Uint32 *)pDst != t->su->format->colorkey) {
-				SDL_GetRGBA(*(Uint32 *)pDst, t->su->format,
-				    &dR, &dG, &dB, &dA);
-				SDL_GetRGBA(*(Uint32 *)pSrc, su->format,
-				    &sR, &sG, &sB, &sA);
+				AG_GetRGBA(*(Uint32 *)pDst, t->su->format,
+				    &dR,&dG,&dB,&dA);
+				AG_GetRGBA(*(Uint32 *)pSrc, su->format,
+				    &sR,&sG,&sB,&sA);
 
 				alpha = dA + sA;
 				if (alpha > 255) {
 					alpha = 255;
 				}
-				*(Uint32 *)pDst = SDL_MapRGBA(t->su->format,
+				*(Uint32 *)pDst = AG_MapRGBA(t->su->format,
 				    (((sR - dR) * sA) >> 8) + dR,
 				    (((sG - dG) * sA) >> 8) + dG,
 				    (((sB - dB) * sA) >> 8) + dB,
@@ -108,15 +112,15 @@ BlendOverlayAlpha(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
 			}
 		}
 	}
-	SDL_UnlockSurface(t->su);
-	SDL_UnlockSurface(su);
+	AG_SurfaceUnlock(t->su);
+	AG_SurfaceUnlock(su);
 }
 
 #if 0
 static void
-BlendSDL(RG_Tile *t, SDL_Surface *su, SDL_Rect *rd)
+BlendSDL(RG_Tile *t, AG_Surface *su, AG_Rect *rd)
 {
-	SDL_BlitSurface(su, NULL, t->su, rd);
+	AG_SurfaceBlit(su, NULL, t->su, rd);
 }
 #endif
 
@@ -170,7 +174,7 @@ RG_TileInit(RG_Tile *t, RG_Tileset *ts, const char *name)
 void
 RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags)
 {
-	Uint32 sflags = SDL_SWSURFACE;
+	Uint sFlags = 0;
 	int wNew, hNew;
 	int x, y;
 	Uint *nAttrs;
@@ -201,16 +205,14 @@ RG_TileScale(RG_Tileset *ts, RG_Tile *t, Uint16 w, Uint16 h, Uint flags)
 	t->nh = hNew;
 
 	if (flags & RG_TILE_SRCCOLORKEY) {
-		sflags |= SDL_SRCCOLORKEY;
+		sFlags |= AG_SRCCOLORKEY;
 	}
 	if (flags & RG_TILE_SRCALPHA) {
-		sflags |= SDL_SRCALPHA;
+		sFlags |= AG_SRCALPHA;
 	}
 	t->flags = flags|RG_TILE_DIRTY;
-	t->su = SDL_CreateRGBSurface(sflags, w, h, ts->fmt->BitsPerPixel,
-	    ts->fmt->Rmask, ts->fmt->Gmask, ts->fmt->Bmask, ts->fmt->Amask);
-	if (t->su == NULL)
-		AG_FatalError("SDL_CreateRGBSurface: %s", SDL_GetError());
+	if ((t->su = RG_SurfaceStd(ts, w, h, sFlags)) == NULL)
+		AG_FatalError(NULL);
 }
 
 void
@@ -218,10 +220,10 @@ RG_TileGenerate(RG_Tile *t)
 {
 	RG_TileElement *tel;
 	
-	SDL_SetAlpha(t->su, SDL_SRCALPHA, t->ts->fmt->alpha);
+	AG_SetAlpha(t->su, AG_SRCALPHA, t->ts->fmt->alpha);
 
 	/* TODO check for opaque fill features/pixmaps first */
-	SDL_FillRect(t->su, NULL, SDL_MapRGBA(t->su->format, 0, 0, 0, 0));
+	AG_FillRect(t->su, NULL, AG_MapRGBA(t->su->format, 0,0,0,0));
 
 	TAILQ_FOREACH(tel, &t->elements, elements) {
 		if (!tel->visible) {
@@ -241,7 +243,7 @@ RG_TileGenerate(RG_Tile *t)
 		case RG_TILE_PIXMAP:
 			{
 				RG_Pixmap *px = tel->tel_pixmap.px;
-				SDL_Rect rd;
+				AG_Rect rd;
 
 				rd.x = tel->tel_pixmap.x;
 				rd.y = tel->tel_pixmap.y;
@@ -260,32 +262,31 @@ RG_TileGenerate(RG_Tile *t)
 
 	if ((t->flags & RG_TILE_SRCALPHA) == 0 &&
 	    (t->flags & RG_TILE_SRCCOLORKEY)) {
-		SDL_Surface *su = t->su;
+		AG_Surface *su = t->su;
 		Uint i, size = su->w*su->h;
 		Uint8 *p = su->pixels;
 		Uint8 r, g, b, a;
 
-		SDL_LockSurface(su);
+		AG_SurfaceLock(su);
 		for (i = 0; i < size; i++) {
-			SDL_GetRGBA(AG_GET_PIXEL(su,p), su->format,
-			    &r, &g, &b, &a);
+			AG_GetRGBA(AG_GET_PIXEL(su,p), su->format, &r,&g,&b,&a);
 			if (a == 0) {
 				AG_PUT_PIXEL(su, p, su->format->colorkey);
 			} else {
 				AG_PUT_PIXEL(su, p,
-				    SDL_MapRGBA(su->format, r, g, b, a));
+				    AG_MapRGBA(su->format, r,g,b,a));
 			}
 			p += su->format->BytesPerPixel;
 		}
-		SDL_UnlockSurface(su);
+		AG_SurfaceUnlock(su);
 		
-		SDL_SetAlpha(t->su, 0, 0);
-		SDL_SetColorKey(t->su, SDL_SRCCOLORKEY, t->ts->fmt->colorkey);
+		AG_SetAlpha(t->su, 0, 0);
+		AG_SetColorKey(t->su, AG_SRCCOLORKEY, t->ts->fmt->colorkey);
 	} else if ((t->flags & (RG_TILE_SRCCOLORKEY|RG_TILE_SRCALPHA)) == 0) {
-		SDL_SetAlpha(t->su, 0, 0);
-		SDL_SetColorKey(t->su, 0, 0);
+		AG_SetAlpha(t->su, 0, 0);
+		AG_SetColorKey(t->su, 0, 0);
 	} else {
-		SDL_SetColorKey(t->su, SDL_SRCCOLORKEY, t->ts->fmt->colorkey);
+		AG_SetColorKey(t->su, AG_SRCCOLORKEY, t->ts->fmt->colorkey);
 	}
 }
 
@@ -664,7 +665,7 @@ RG_TileDestroy(RG_Tile *t)
 
 	Free(t->attrs);
 	Free(t->layers);
-	SDL_FreeSurface(t->su);
+	AG_SurfaceFree(t->su);
 	
 	for (tel = TAILQ_FIRST(&t->elements);
 	     tel != TAILQ_END(&t->elements);
@@ -1694,18 +1695,18 @@ ImportBMP(AG_Event *event)
 	RG_Tile *t = AG_PTR(1);
 	RG_Tileview *tv = AG_PTR(2);
 	char *path = AG_STRING(3);
-	SDL_Surface *bmp;
+	AG_Surface *bmp;
 	RG_Pixmap *px;
 
-	if ((bmp = SDL_LoadBMP(path)) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, SDL_GetError());
+	if ((bmp = AG_SurfaceFromBMP(path)) == NULL) {
+		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
 		return;
 	}
 	px = RG_PixmapNew(t->ts, "Bitmap", 0);
-	px->su = SDL_ConvertSurface(bmp, t->ts->fmt, 0);
+	px->su = AG_SurfaceFromSurface(bmp, t->ts->fmt, 0);
 	OpenElement(tv, RG_TileAddPixmap(t, NULL, px, 0, 0));
 	RG_TileGenerate(t);
-	SDL_FreeSurface(bmp);
+	AG_SurfaceFree(bmp);
 
 	AG_TextInfo(_("Bitmap imported successfully (%ux%u)"),
 	    t->su->w, t->su->h);
@@ -1734,12 +1735,15 @@ ExportBMP(AG_Event *event)
 {
 	RG_Tile *t = AG_PTR(1);
 	char *path = AG_STRING(2);
+	SDL_Surface *sSDL;
 
-	if (SDL_SaveBMP(t->su, path) == -1) {
+	sSDL = AG_SurfaceToSDL(t->su);
+	if (SDL_SaveBMP(sSDL, path) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, SDL_GetError());
 	} else {
 		AG_TextInfo(_("%s successfully exported to %s"), t->name, path);
 	}
+	SDL_FreeSurface(sSDL);
 }
 
 static void

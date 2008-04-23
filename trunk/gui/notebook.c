@@ -60,7 +60,7 @@ MouseButtonDown(AG_Event *event)
 		int tx = SPACING;
 
 		TAILQ_FOREACH(tab, &nb->tabs, tabs) {
-			SDL_Surface *label = WSURFACE(nb,tab->label);
+			AG_Surface *label = WSURFACE(nb,tab->label);
 
 #if 0
 			if (tx+label->w+SPACING*2 > WIDGET(nb)->w)

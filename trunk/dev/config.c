@@ -124,7 +124,7 @@ SetColor(AG_Event *event)
 #ifdef HAVE_OPENGL
 		if (agView->opengl) {
 			Uint8 r, g, b;
-			SDL_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r, &g, &b);
+			AG_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r,&g,&b);
 			glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
 		} else
 #endif

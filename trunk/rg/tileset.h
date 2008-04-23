@@ -12,6 +12,7 @@ struct rg_anim;
 struct rg_texture;
 
 #ifdef _AGAR_INTERNAL
+#include <gui/view.h>
 #include <rg/transform.h>
 /* #include <vg/vg.h> */
 #include <rg/tile.h>
@@ -22,6 +23,7 @@ struct rg_texture;
 #include <rg/texture.h>
 #include <rg/prim.h>
 #else
+#include <agar/gui/view.h>
 #include <agar/rg/transform.h>
 /* #include <agar/vg/vg.h> */
 #include <agar/rg/tile.h>
@@ -49,8 +51,8 @@ typedef struct rg_tileset {
 	struct ag_object obj;
 	AG_Mutex lock;
 	char tmpl[RG_TEMPLATE_NAME_MAX];
-	SDL_PixelFormat *fmt;
-	SDL_Surface *icon;
+	AG_PixelFormat *fmt;
+	AG_Surface *icon;
 	int flags;
 
 	RG_Tile **tiletbl;		/* Tile ID mappings */
@@ -91,6 +93,13 @@ RG_Pixmap	*RG_TilesetFindPixmap(RG_Tileset *, const char *);
 RG_Anim		*RG_TilesetFindAnim(RG_Tileset *, const char *);
 RG_Pixmap	*RG_TilesetResvPixmap(void *, const char *, const char *);
 RG_Tile		*RG_TilesetResvTile(void *, const char *, const char *);
+
+static __inline__ AG_Surface *
+RG_SurfaceStd(RG_Tileset *ts, Uint w, Uint h, Uint flags)
+{
+	return AG_SurfaceRGBA(w, h, ts->fmt->BitsPerPixel, flags,
+	    ts->fmt->Rmask, ts->fmt->Gmask, ts->fmt->Bmask, ts->fmt->Amask);
+}
 
 static __inline__ int
 RG_LookupTile(RG_Tileset *ts, Uint32 id, RG_Tile **t)

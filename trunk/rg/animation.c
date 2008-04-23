@@ -24,6 +24,7 @@
  */
 
 #include <core/core.h>
+#include <gui/view.h>
 #include <core/load_surface.h>
 
 #include <gui/window.h>
@@ -96,7 +97,7 @@ RG_AnimInsertInsn(RG_Anim *ani, enum rg_anim_insn_type type)
 
 	switch (type) {
 	case RG_ANIM_TILE:
-		insn->in_tile.alpha = SDL_ALPHA_OPAQUE;
+		insn->in_tile.alpha = AG_ALPHA_OPAQUE;
 		break;
 	case RG_ANIM_DISPX:
 		insn->in_disPx.dx = 0;
@@ -133,10 +134,10 @@ RG_AnimRemoveInsn(RG_Anim *ani, Uint insn)
 }
 
 Uint
-RG_AnimInsertFrame(RG_Anim *ani, SDL_Surface *sNew)
+RG_AnimInsertFrame(RG_Anim *ani, AG_Surface *sNew)
 {
 	RG_Tileset *ts = ani->tileset;
-	Uint32 sflags = SDL_SWSURFACE;
+	Uint32 sFlags = 0;
 	RG_AnimFrame *fr;
 
 #ifdef DEBUG
@@ -144,8 +145,8 @@ RG_AnimInsertFrame(RG_Anim *ani, SDL_Surface *sNew)
 		AG_FatalError("%s: Too many frames", ani->name);
 #endif
 
-	if (ani->flags & RG_ANIM_SRCCOLORKEY)	sflags |= SDL_SRCCOLORKEY;
-	if (ani->flags & RG_ANIM_SRCALPHA)	sflags |= SDL_SRCALPHA;
+	if (ani->flags & RG_ANIM_SRCCOLORKEY)	sFlags |= AG_SRCCOLORKEY;
+	if (ani->flags & RG_ANIM_SRCALPHA)	sFlags |= AG_SRCALPHA;
 
 	ani->frames = Realloc(ani->frames,
 	    (ani->nframes+1)*sizeof(RG_AnimFrame));
@@ -153,16 +154,9 @@ RG_AnimInsertFrame(RG_Anim *ani, SDL_Surface *sNew)
 	if (sNew != NULL) {
 		fr->su = sNew;
 	} else {
-		fr->su = SDL_CreateRGBSurface(sflags, ani->w, ani->h,
-		    ts->fmt->BitsPerPixel,
-		    ts->fmt->Rmask,
-		    ts->fmt->Gmask,
-		    ts->fmt->Bmask,
-		    ts->fmt->Amask);
-		if (fr->su == NULL) {
-			AG_FatalError("SDL_CreateRGBSurface: %s",
-			    SDL_GetError());
-		}
+		if ((fr->su = RG_SurfaceStd(ts, ani->w, ani->h, sFlags))
+		    == NULL)
+			AG_FatalError(NULL);
 	}
 	fr->delay = 0;
 	fr->name = ani->nframes++;
@@ -172,7 +166,7 @@ RG_AnimInsertFrame(RG_Anim *ani, SDL_Surface *sNew)
 static void
 FreeFrame(RG_AnimFrame *fr)
 {
-	SDL_FreeSurface(fr->su);
+	AG_SurfaceFree(fr->su);
 }
 
 void
@@ -319,8 +313,10 @@ RG_AnimGenerate(RG_Anim *ani)
 		case RG_ANIM_TILE:
 			if (insn->t != NULL && insn->t->su != NULL) {
 				fr = &ani->frames[RG_AnimInsertFrame(ani,NULL)];
-				AG_ScaleSurface(insn->t->su, ani->w, ani->h,
-				    &fr->su);
+				if (AG_ScaleSurface(insn->t->su, ani->w, ani->h,
+				    &fr->su) == -1) {
+					AG_FatalError(NULL);
+				}
 				fr->delay = insn->delay;
 			}
 			break;
@@ -433,8 +429,8 @@ PollTiles(AG_Event *event)
 	TAILQ_FOREACH(t, &ts->tiles, tiles) {
 		it = AG_TlistAdd(tl, NULL, "%s (%ux%u)%s%s", t->name,
 		    t->su->w, t->su->h,
-		    (t->su->flags & SDL_SRCALPHA) ? " alpha" : "",
-		    (t->su->flags & SDL_SRCCOLORKEY) ? " colorkey" : "");
+		    (t->su->flags & AG_SRCALPHA) ? " alpha" : "",
+		    (t->su->flags & AG_SRCCOLORKEY) ? " colorkey" : "");
 		it->p1 = t;
 		AG_TlistSetIcon(tl, it, t->su);
 	}

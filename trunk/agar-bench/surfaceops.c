@@ -6,10 +6,10 @@
 static void
 T_DupSurface(void)
 {
-	SDL_Surface *dup;
+	AG_Surface *dup;
 
 	dup = AG_DupSurface(surface);
-	SDL_FreeSurface(dup);
+	AG_SurfaceFree(dup);
 }
 
 static void T_Scale32To32(void) {
@@ -33,10 +33,10 @@ static void T_Flip128(void) {
 }
 
 static void T_Scale32To64Copy(void) {
-	SDL_Surface *s2 = NULL;
+	AG_Surface *s2 = NULL;
 
 	AG_ScaleSurface(surface, 64, 64, &s2);
-	SDL_FreeSurface(s2);
+	AG_SurfaceFree(s2);
 }
 
 static struct testfn_ops testfns[] = {

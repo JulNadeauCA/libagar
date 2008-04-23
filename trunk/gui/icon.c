@@ -45,7 +45,7 @@ AG_IconNew(void *parent, Uint flags)
 }
 
 AG_Icon *
-AG_IconFromSurface(SDL_Surface *su)
+AG_IconFromSurface(AG_Surface *su)
 {
 	AG_Icon *icon;
 
@@ -59,10 +59,9 @@ AG_Icon *
 AG_IconFromBMP(const char *bmpfile)
 {
 	AG_Icon *icon;
-	SDL_Surface *bmp;
+	AG_Surface *bmp;
 
-	if ((bmp = SDL_LoadBMP(bmpfile)) == NULL) {
-		AG_SetError("%s: %s", bmpfile, SDL_GetError());
+	if ((bmp = AG_SurfaceFromBMP(bmpfile)) == NULL) {
 		return (NULL);
 	}
 	icon = Malloc(sizeof(AG_Icon));
@@ -173,9 +172,9 @@ AG_IconSetBackgroundFill(AG_Icon *icon, int enable, Uint32 color)
 }
 
 void
-AG_IconSetSurface(AG_Icon *icon, SDL_Surface *su)
+AG_IconSetSurface(AG_Icon *icon, AG_Surface *su)
 {
-	SDL_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
+	AG_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
 
 	AG_ObjectLock(icon);
 	if (icon->surface != -1) {
@@ -187,7 +186,7 @@ AG_IconSetSurface(AG_Icon *icon, SDL_Surface *su)
 }
 
 void
-AG_IconSetSurfaceNODUP(AG_Icon *icon, SDL_Surface *su)
+AG_IconSetSurfaceNODUP(AG_Icon *icon, AG_Surface *su)
 {
 	AG_ObjectLock(icon);
 	if (icon->surface != -1) {

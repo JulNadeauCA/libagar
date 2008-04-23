@@ -14,7 +14,7 @@ struct ag_object;
 struct ag_gfx;
 
 typedef struct ag_anim {
-	SDL_Surface **frames;
+	AG_Surface **frames;
 #ifdef HAVE_OPENGL
 	Uint *textures;
 	float texcoords[4];
@@ -25,7 +25,7 @@ typedef struct ag_anim {
 } AG_Anim;
 
 typedef struct ag_cached_sprite {
-	SDL_Surface *su;
+	AG_Surface *su;
 #ifdef HAVE_OPENGL
 	Uint texture;
 	float texcoords[4];
@@ -59,7 +59,7 @@ typedef struct ag_sprite {
 	char clname[AG_SPRITE_CLASS_MAX];
 	struct ag_gfx *pgfx;
 	Uint32 index;
-	SDL_Surface *su;
+	AG_Surface *su;
 	int xOrig, yOrig;			/* Origin point */
 	enum ag_gfx_snap_mode snap_mode; 	/* Default snapping mode */
 	Uint *attrs;				/* Default node attributes */
@@ -109,7 +109,7 @@ __BEGIN_DECLS
 AG_Gfx	*AG_GfxNew(void *);
 void	 AG_GfxInit(AG_Gfx *);
 void	 AG_GfxDestroy(AG_Gfx *);
-int	 AG_HasTransparency(SDL_Surface *);
+int	 AG_HasTransparency(AG_Surface *);
 int	 AG_GfxLoad(struct ag_object *);
 int	 AG_GfxSave(struct ag_object *, AG_DataSource *);
 void	 AG_GfxUsed(void *);
@@ -118,9 +118,9 @@ int	 AG_GfxLoadFromDEN(void *, const char *);
 
 void		 AG_GfxAllocSprites(AG_Gfx *, Uint32);
 void		 AG_GfxAllocAnims(AG_Gfx *, Uint32);
-Uint32		 AG_GfxAddSprite(AG_Gfx *, SDL_Surface *);
+Uint32		 AG_GfxAddSprite(AG_Gfx *, AG_Surface *);
 Uint32		 AG_GfxAddAnim(AG_Gfx *);
-Uint32		 AG_GfxAddAnimFrame(AG_Anim *, SDL_Surface *);
+Uint32		 AG_GfxAddAnimFrame(AG_Anim *, AG_Surface *);
 
 void	 AG_SpriteInit(AG_Gfx *, Uint32);
 int	 AG_SpriteFind(AG_Gfx *, const char *, Uint32 *);
@@ -129,7 +129,7 @@ void	 AG_AnimInit(AG_Gfx *, Uint32);
 void	 AG_AnimDestroy(AG_Gfx *, Uint32);
 void	 AG_SpriteSetName(AG_Gfx *, Uint32, const char *);
 void	 AG_SpriteSetClass(AG_Gfx *, Uint32, const char *);
-void	 AG_SpriteSetSurface(AG_Gfx *, Uint32, SDL_Surface *);
+void	 AG_SpriteSetSurface(AG_Gfx *, Uint32, AG_Surface *);
 void	 AG_SpriteSetOrigin(AG_Sprite *, int, int);
 void	 AG_SpriteSetSnapMode(AG_Sprite *, enum ag_gfx_snap_mode);
 void	 AG_SpriteUpdate(AG_Sprite *);

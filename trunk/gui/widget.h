@@ -120,10 +120,10 @@ typedef struct ag_widget {
 	int cx, cy, cx2, cy2;		/* Cached view coords (optimization) */
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
-	SDL_Rect rClipSave;		/* Saved clipping rectangle */
+	AG_Rect rClipSave;		/* Saved clipping rectangle */
 	AG_Style *style;		/* Style (inherited from parent) */
 
-	SDL_Surface **surfaces;		/* Registered surfaces */
+	AG_Surface **surfaces;		/* Registered surfaces */
 	Uint *surfaceFlags;		/* Surface flags */
 #define AG_WIDGET_SURFACE_NODUP	0x01	/* Don't free on destroy */
 #define AG_WIDGET_SURFACE_REGEN	0x02	/* Texture needs to be regenerated */
@@ -199,10 +199,10 @@ void		 *AG_WidgetFindRect(const char *, int, int, int, int);
 void		  AG_WidgetUpdateCoords(void *, int, int);
 struct ag_window *AG_WidgetParentWindow(void *);
 
-int	 AG_WidgetMapSurface(void *, SDL_Surface *);
-int	 AG_WidgetMapSurfaceNODUP(void *, SDL_Surface *);
-void	 AG_WidgetReplaceSurface(void *, int, SDL_Surface *);
-void	 AG_WidgetReplaceSurfaceNODUP(void *, int, SDL_Surface *);
+int	 AG_WidgetMapSurface(void *, AG_Surface *);
+int	 AG_WidgetMapSurfaceNODUP(void *, AG_Surface *);
+void	 AG_WidgetReplaceSurface(void *, int, AG_Surface *);
+void	 AG_WidgetReplaceSurfaceNODUP(void *, int, AG_Surface *);
 void	 AG_WidgetUpdateSurface(void *, int);
 #define	 AG_WidgetUnmapSurface(w, n) \
 	 AG_WidgetReplaceSurface((w),(n),NULL)
@@ -214,8 +214,8 @@ void	 AG_WidgetUpdateSurface(void *, int);
 # define AG_WidgetUpdateSurface(wid,name)
 #endif
 
-void	 AG_WidgetBlit(void *, SDL_Surface *, int, int);
-void	 AG_WidgetBlitFrom(void *, void *, int, SDL_Rect *, int, int);
+void	 AG_WidgetBlit(void *, AG_Surface *, int, int);
+void	 AG_WidgetBlitFrom(void *, void *, int, AG_Rect *, int, int);
 #define  AG_WidgetBlitSurface(p,n,x,y) \
 	 AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
 
@@ -369,14 +369,14 @@ AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 	int vx = wid->cx+wx;
 	int vy = wid->cy+wy;
 	
-	if (AG_CLIPPED_PIXEL(agView->v, vx, vy))
+	if (AG_CLIPPED_PIXEL(agView->v, vx,vy))
 		return;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		AG_WidgetPutPixel32_GL(p, vx, vy, color);
+		AG_WidgetPutPixel32_GL(p, vx,vy, color);
 	} else
 #endif
-		AG_PUT_PIXEL2(agView->v, vx, vy, color);
+		AG_PUT_PIXEL2(agView->v, vx,vy, color);
 }
 
 static __inline__ void
@@ -385,14 +385,14 @@ AG_WidgetPutPixel32OrClip(void *p, int wx, int wy, Uint32 color)
 	AG_Widget *wid = AGWIDGET(p);
 	int vx = wid->cx+wx, vy = wid->cy+wy;
 	
-	if (!AG_WidgetArea(wid, vx, vy))
+	if (!AG_WidgetArea(wid, vx,vy))
 		return;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		AG_WidgetPutPixel32_GL(p, vx, vy, color);
+		AG_WidgetPutPixel32_GL(p, vx,vy, color);
 	} else
 #endif
-		AG_PUT_PIXEL2(agView->v, vx, vy, color);
+		AG_PUT_PIXEL2(agView->v, vx,vy, color);
 }
 
 static __inline__ void
@@ -401,14 +401,14 @@ AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 	AG_Widget *wid = AGWIDGET(p);
 	int vx = wid->cx+wx, vy = wid->cy+wy;
 	
-	if (AG_CLIPPED_PIXEL(agView->v, vx, vy))
+	if (AG_CLIPPED_PIXEL(agView->v, vx,vy))
 		return;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		AG_WidgetPutPixelRGB_GL(p, vx, vy, r, g, b);
+		AG_WidgetPutPixelRGB_GL(p, vx,vy, r,g,b);
 	} else
 #endif
-		AG_PUT_PIXEL2(agView->v, vx, vy, SDL_MapRGB(agVideoFmt, r,g,b));
+		AG_PUT_PIXEL2(agView->v, vx,vy, AG_MapRGB(agVideoFmt, r,g,b));
 }
 
 static __inline__ void
@@ -417,14 +417,14 @@ AG_WidgetPutPixelRGBOrClip(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 	AG_Widget *wid = AGWIDGET(p);
 	int vx = wid->cx+wx, vy = wid->cy+wy;
 	
-	if (!AG_WidgetArea(wid, vx, vy))
+	if (!AG_WidgetArea(wid, vx,vy))
 		return;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		AG_WidgetPutPixelRGB_GL(p, wx, wy, r, g, b);
+		AG_WidgetPutPixelRGB_GL(p, wx,wy, r,g,b);
 	} else
 #endif
-		AG_PUT_PIXEL2(agView->v, vx, vy, SDL_MapRGB(agVideoFmt, r,g,b));
+		AG_PUT_PIXEL2(agView->v, vx,vy, AG_MapRGB(agVideoFmt, r,g,b));
 }
 
 static __inline__ void
@@ -432,8 +432,8 @@ AG_WidgetBlendPixel32(void *p, int wx, int wy, Uint32 pixel, AG_BlendFn fn)
 {
 	Uint8 c[4];
 
-	SDL_GetRGBA(pixel, agSurfaceFmt, &c[0], &c[1], &c[2], &c[3]);
-	AG_WidgetBlendPixelRGBA(p, wx, wy, c, fn);
+	AG_GetRGBA(pixel, agSurfaceFmt, &c[0],&c[1],&c[2],&c[3]);
+	AG_WidgetBlendPixelRGBA(p, wx,wy, c, fn);
 }
 
 #define AG_WidgetBool AG_WidgetInt

@@ -180,7 +180,7 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	static struct jpeg_error_mgr jerrmgr;
 	static struct jpeg_compress_struct jcomp;
 	char tmp[sizeof("/tmp/")+FILENAME_MAX];
-	SDL_Surface *su = pSu;
+	AG_Surface *su = pSu;
 	Uint8 *jcopybuf;
 	int i, nshots = 1;
 	size_t len;
@@ -223,9 +223,7 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 	}
 	jpeg_stdio_dest(&jcomp, ftmp);
 	jcopybuf = Malloc(su->w*3);
-	if (SDL_MUSTLOCK(su)) {
-		SDL_LockSurface(su);
-	}
+	AG_SurfaceLock(su);
 	for (i = 0; i < nshots; i++) {
 		JSAMPROW row[1];
 		int x;
@@ -238,8 +236,8 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 			Uint8 r, g, b;
 
 			for (x = agView->w; x > 0; x--) {
-				SDL_GetRGB(AG_GET_PIXEL(su, pSrc), su->format,
-				    &r, &g, &b);
+				AG_GetRGB(AG_GET_PIXEL(su,pSrc), su->format,
+				    &r,&g,&b);
 				*pDst++ = r;
 				*pDst++ = g;
 				*pDst++ = b;
@@ -250,12 +248,10 @@ cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 		}
 		jpeg_finish_compress(&jcomp);
 	}
-	if (SDL_MUSTLOCK(su)) {
-		SDL_UnlockSurface(su);
-	}
+	AG_SurfaceUnlock(su);
 #ifdef HAVE_OPENGL
 	if (agView->opengl && su != pSu)
-		SDL_FreeSurface(su);
+		AG_SurfaceFree(su);
 #endif
 
 	/* Send the JPEG data to the client. */

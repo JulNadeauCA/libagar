@@ -34,6 +34,7 @@
 #include "ttf.h"
 #include "textbox.h"
 
+#include "text.h"
 #include "keymap.h"
 #include "primitive.h"
 #include "opengl.h"
@@ -158,7 +159,7 @@ Draw(void *p)
 		AG_PopTextState();
 	}
 	if (tb->label != -1) {
-		SDL_Surface *lblSu = WSURFACE(tb,tb->label);
+		AG_Surface *lblSu = WSURFACE(tb,tb->label);
 	
 		AG_WidgetPushClipRect(tb, AG_RECT(0, 0, tb->wLbl, HEIGHT(tb)));
 		AG_WidgetBlitSurface(tb, tb->label,

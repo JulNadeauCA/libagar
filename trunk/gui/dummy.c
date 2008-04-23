@@ -60,8 +60,8 @@ SizeRequest(void *p, AG_SizeReq *r)
 	} else {
 		/*
 		 * We can use the geometry of the rendered surface. The
-		 * WSURFACE() macro returns the SDL_Surface given a
-		 * Widget surface handle.
+		 * WSURFACE() macro returns the AG_Surface given a Widget
+		 * surface handle.
 		 */
 		r->w = WSURFACE(dum,dum->mySurface)->w;
 		r->h = WSURFACE(dum,dum->mySurface)->h;
@@ -111,7 +111,7 @@ Draw(void *p)
 	 * only when necessary.
 	 */
 	if (dum->mySurface == -1) {
-		SDL_Surface *mySurface;
+		AG_Surface *mySurface;
 
 		mySurface = AG_TextRender("Foo");
 		dum->mySurface = AG_WidgetMapSurface(dum, mySurface);

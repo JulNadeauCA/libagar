@@ -217,7 +217,7 @@ AG_FixedPlotterCurve(AG_FixedPlotter *fpl, const char *name,
 
  	gi = Malloc(sizeof(AG_FixedPlotterItem));
 	Strlcpy(gi->name, name, sizeof(gi->name));
-	gi->color = SDL_MapRGB(agVideoFmt, r, g, b);
+	gi->color = AG_MapRGB(agVideoFmt, r,g,b);
 	gi->vals = Malloc(NITEMS_INIT*sizeof(AG_FixedPlotterValue));
 	gi->maxvals = NITEMS_INIT;
 	gi->nvals = 0;

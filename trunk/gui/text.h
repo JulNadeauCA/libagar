@@ -45,7 +45,7 @@ typedef struct ag_glyph {
 	Uint32 ch;			/* Unicode character */
 	Uint32 nrefs;			/* Reference count */
 	Uint32 lastRef;			/* Ticks since last reference */
-	SDL_Surface *su;		/* Rendered surface */
+	AG_Surface *su;			/* Rendered surface */
 	int advance;			/* Pixel advance */
 #ifdef HAVE_OPENGL
 	Uint texture;			/* Rendered texture */
@@ -71,7 +71,7 @@ typedef struct ag_font {
 
 	void *ttf;			/* TTF object */
 	char bspec[32];			/* Bitmap font specification */
-	SDL_Surface **bglyphs;		/* Bitmap glyphs */
+	AG_Surface **bglyphs;		/* Bitmap glyphs */
 	Uint nglyphs;			/* Bitmap glyph count */
 	Uint32 c0, c1;			/* Bitmap glyph range */
 
@@ -136,10 +136,10 @@ void	AG_TextBGColorRGBA(Uint8, Uint8, Uint8, Uint8);
 #define	AG_TextColor(name) AG_TextColorVideo32(AG_COLOR(name))
 #define	AG_TextBGColor(name) AG_TextBGColorVideo32(AG_COLOR(name))
 
-SDL_Surface	*AG_TextRenderf(const char *, ...);
-#define          AG_TextFormat AG_TextRenderf
-SDL_Surface	*AG_TextRender(const char *);
-SDL_Surface	*AG_TextRenderUCS4(const Uint32 *);
+AG_Surface *AG_TextRenderf(const char *, ...);
+#define     AG_TextFormat AG_TextRenderf
+AG_Surface *AG_TextRender(const char *);
+AG_Surface *AG_TextRenderUCS4(const Uint32 *);
 
 void	 AG_TextSize(const char *, int *, int *);
 void	 AG_TextSizeMulti(const char *, int *, int *, Uint **, Uint *);

@@ -51,7 +51,7 @@ It is commonly used with
 .Fn AG_IconNew "void *parent" "Uint flags"
 .Pp
 .Ft "AG_Icon *"
-.Fn AG_IconFromSurface "SDL_Surface *s"
+.Fn AG_IconFromSurface "AG_Surface *s"
 .Pp
 .Ft "AG_Icon *"
 .Fn AG_IconFromBMP "const char *filename"
@@ -60,10 +60,10 @@ It is commonly used with
 .Fn AG_IconSetPadding "AG_Icon *icon" "int left" "int right" "int top" "int bottom"
 .Pp
 .Ft "void"
-.Fn AG_IconSetSurface "AG_Icon *icon" "SDL_Surface *s"
+.Fn AG_IconSetSurface "AG_Icon *icon" "AG_Surface *s"
 .Pp
 .Ft "void"
-.Fn AG_IconSetSurfaceNODUP "AG_Icon *icon" "SDL_Surface *s"
+.Fn AG_IconSetSurfaceNODUP "AG_Icon *icon" "AG_Surface *s"
 .Pp
 .Ft "void"
 .Fn AG_IconSetText "AG_Icon *icon" "const char *fmt" "..."
@@ -113,6 +113,7 @@ See
 in the Agar source distribution.
 .Sh SEE ALSO
 .Xr AG_Socket 3 ,
+.Xr AG_Surface 3 ,
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3

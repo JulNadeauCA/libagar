@@ -86,7 +86,7 @@ structure are as follows:
 typedef struct rg_tile {
 	char name[RG_TILE_NAME_MAX];    /* User description */
 	char clname[RG_TILE_CLASS_MAX]; /* Category (app-specific) */
-	SDL_Surface *su;                /* Generated surface */
+	AG_Surface *su;                 /* Generated surface */
 	int xOrig, yOrig;               /* Origin coordinates */
 	enum rg_snap_mode {
 		RG_SNAP_NONE,           /* No snapping */

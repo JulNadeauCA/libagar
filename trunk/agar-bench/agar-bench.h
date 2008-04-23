@@ -27,7 +27,7 @@ struct test_ops {
 					   
 };
 
-extern SDL_Surface *surface, *surface64, *surface128;
+extern AG_Surface *surface, *surface64, *surface128;
 
 void InitSurface(void);
 void FreeSurface(void);

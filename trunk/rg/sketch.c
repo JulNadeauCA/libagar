@@ -78,7 +78,7 @@ RG_SketchScale(RG_Sketch *sk, int w, int h, float scale, int x, int y)
 	float xoffs = (float)x/(float)RG_TILESZ/scale;
 	float yoffs = (float)y/(float)RG_TILESZ/scale;
 #endif
-	SDL_Rect r;
+	AG_Rect r;
 
 	r.w = (w == -1) ? vg->rDst.w : w;
 	r.h = (h == -1) ? vg->rDst.h : h;
@@ -141,9 +141,9 @@ RG_SketchRender(RG_Tile *t, RG_TileElement *tel)
 	RG_Sketch *sk = tel->tel_sketch.sk;
 	VG *vg = sk->vg;
 	VG_Element *vge;
-	SDL_Rect rd;
+	AG_Rect rd;
 
-	SDL_FillRect(vg->su, NULL, vg->fill_color);
+	AG_FillRect(vg->su, NULL, vg->fill_color);
 	
 	if (vg->flags & VG_VISGRID)
 		VG_DrawGrid(vg);

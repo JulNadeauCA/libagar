@@ -116,7 +116,7 @@ FreeSpriteTransforms(AG_Sprite *spr)
 			ntrans = TAILQ_NEXT(trans, transforms);
 			MAP_TransformDestroy(trans);
 		}
-		SDL_FreeSurface(csprite->su);
+		AG_SurfaceFree(csprite->su);
 		Free(csprite);
 	}
 	SLIST_INIT(&spr->csprites);
@@ -145,7 +145,7 @@ AG_SpriteDestroy(AG_Gfx *gfx, Uint32 s)
 	AG_Sprite *spr = &gfx->sprites[s];
 
 	if (spr->su != NULL) {
-		SDL_FreeSurface(spr->su);
+		AG_SurfaceFree(spr->su);
 		spr->su = NULL;
 	}
 	if (spr->attrs != NULL) {
@@ -192,7 +192,7 @@ AG_SpriteSetClass(AG_Gfx *gfx, Uint32 s, const char *name)
  * destroy the transform cache. The previous surface is freed if any.
  */
 void
-AG_SpriteSetSurface(AG_Gfx *gfx, Uint32 s, SDL_Surface *su)
+AG_SpriteSetSurface(AG_Gfx *gfx, Uint32 s, AG_Surface *su)
 {
 	AG_Sprite *spr = &gfx->sprites[s];
 
@@ -284,7 +284,7 @@ AG_GfxAllocAnims(AG_Gfx *gfx, Uint32 n)
 
 /* Allocate and initialize a new sprite at the end of the array. */
 Uint32
-AG_GfxAddSprite(AG_Gfx *gfx, SDL_Surface *su)
+AG_GfxAddSprite(AG_Gfx *gfx, AG_Surface *su)
 {
 	AG_Sprite *spr;
 	
@@ -300,7 +300,7 @@ AG_GfxAddSprite(AG_Gfx *gfx, SDL_Surface *su)
  * return 1 if there are any.
  */
 int
-AG_HasTransparency(SDL_Surface *su)
+AG_HasTransparency(AG_Surface *su)
 {
 	int x, y;
 	int rv = 0;
@@ -309,19 +309,16 @@ AG_HasTransparency(SDL_Surface *su)
 	if (su->format->Amask == 0x0)
 		return (0);
 
-	if (SDL_MUSTLOCK(su)) {
-		SDL_LockSurface(su);
-	}
+	AG_SurfaceLock(su);
 	pSrc = (Uint8 *)su->pixels;
-
 	for (y = 0; y < su->h; y++) {
 		for (x = 0; x < su->w; x++) {
 			Uint8 r, g, b, a;
 
-			SDL_GetRGBA(AG_GET_PIXEL(su, pSrc), su->format,
-			    &r, &g, &b, &a);
+			AG_GetRGBA(AG_GET_PIXEL(su, pSrc), su->format,
+			    &r,&g,&b,&a);
 
-			if (a != SDL_ALPHA_OPAQUE) {
+			if (a != AG_ALPHA_OPAQUE) {
 				rv = 1;
 				goto out;
 			}
@@ -330,9 +327,7 @@ AG_HasTransparency(SDL_Surface *su)
 		}
 	}
 out:
-	if (SDL_MUSTLOCK(su)) {
-		SDL_UnlockSurface(su);
-	}
+	AG_SurfaceUnlock(su);
 	return (rv);
 }
 
@@ -366,7 +361,7 @@ FreeAnim(AG_Anim *anim)
 	Uint32 i;
 
 	for (i = 0; i < anim->nframes; i++) {
-		SDL_FreeSurface(anim->frames[i]);
+		AG_SurfaceFree(anim->frames[i]);
 	}
 	Free(anim->frames);
 }
@@ -417,16 +412,16 @@ AG_GfxDestroy(AG_Gfx *gfx)
 
 /* Insert a frame into an animation. */
 Uint32
-AG_GfxAddAnimFrame(AG_Anim *anim, SDL_Surface *surface)
+AG_GfxAddAnimFrame(AG_Anim *anim, AG_Surface *surface)
 {
 	if (anim->frames == NULL) {
-		anim->frames = Malloc(FRAMES_INIT*sizeof(SDL_Surface *));
+		anim->frames = Malloc(FRAMES_INIT*sizeof(AG_Surface *));
 		anim->maxframes = FRAMES_INIT;
 		anim->nframes = 0;
 	} else if (anim->nframes+1 > anim->maxframes) {
 		anim->maxframes += FRAMES_GROW;
 		anim->frames = Realloc(anim->frames,
-		    anim->maxframes*sizeof(SDL_Surface *));
+		    anim->maxframes*sizeof(AG_Surface *));
 	}
 	anim->frames[anim->nframes++] = surface;
 	return (anim->nframes);
@@ -581,7 +576,7 @@ AG_GfxLoad(AG_Object *ob)
 		anim->frame = AG_ReadUint32(buf);
 		anim->nframes = AG_ReadUint32(buf);
 		anim->frames = Realloc(anim->frames, anim->nframes *
-				                     sizeof(SDL_Surface *));
+				                     sizeof(AG_Surface *));
 		for (j = 0; j < anim->nframes; j++)
 			anim->frames[j] = AG_ReadSurface(buf, agVideoFmt);
 	}
@@ -670,7 +665,7 @@ PollGfx(AG_Event *event)
 	AG_TlistAdd(tl, NULL, "(%u references)", gfx->used);
 	for (i = 0; i < gfx->nsprites; i++) {
 		AG_Sprite *spr = &gfx->sprites[i];
-		SDL_Surface *su = spr->su;
+		AG_Surface *su = spr->su;
 		AG_CachedSprite *csp;
 
 		if (su != NULL) {

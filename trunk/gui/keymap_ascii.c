@@ -34,6 +34,7 @@
 #include "widget.h"
 #include "editable.h"
 #include "keymap.h"
+#include "text.h"
 
 #include <ctype.h>
 #include <string.h>

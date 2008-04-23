@@ -294,7 +294,7 @@ attached(AG_Event *event)
 
 /* Generic constructor for menu items. Menu must be locked. */
 static AG_MenuItem *
-CreateItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
+CreateItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 {
 	AG_MenuItem *mi;
 
@@ -395,7 +395,7 @@ Init(void *obj)
 
 /* Change the icon associated with a menu item. */
 void
-AG_MenuSetIcon(AG_MenuItem *mi, SDL_Surface *icon)
+AG_MenuSetIcon(AG_MenuItem *mi, AG_Surface *icon)
 {
 	AG_ObjectLock(mi->pmenu);
 	if (mi->icon == -1) {
@@ -467,7 +467,7 @@ AG_MenuSection(AG_MenuItem *pitem, const char *fmt, ...)
 
 /* Create a dynamically-updated menu item. */
 AG_MenuItem *
-AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
     AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
@@ -483,7 +483,7 @@ AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 
 /* Create a dynamically-updated menu item with a keyboard binding. */
 AG_MenuItem *
-AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+AG_MenuDynamicItemKb(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
     SDLKey key, SDLMod kmod, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
@@ -514,7 +514,7 @@ AG_MenuSetPollFn(AG_MenuItem *mi, AG_EventFn fn, const char *fmt, ...)
 
 /* Create a menu item without any associated action. */
 AG_MenuItem *
-AG_MenuNode(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
+AG_MenuNode(AG_MenuItem *pitem, const char *text, AG_Surface *icon)
 {
 	AG_MenuItem *node;
 
@@ -526,7 +526,7 @@ AG_MenuNode(AG_MenuItem *pitem, const char *text, SDL_Surface *icon)
 
 /* Create a menu item associated with a function. */
 AG_MenuItem *
-AG_MenuAction(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+AG_MenuAction(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
     AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
@@ -541,7 +541,7 @@ AG_MenuAction(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuActionKb(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+AG_MenuActionKb(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
     SDLKey key, SDLMod kmod, AG_EventFn fn, const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
@@ -559,7 +559,7 @@ AG_MenuActionKb(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 
 AG_MenuItem *
 AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text,
-    SDL_Surface *icon, SDLKey key, SDLMod kmod, void (*fn)(AG_Event *),
+    AG_Surface *icon, SDLKey key, SDLMod kmod, void (*fn)(AG_Event *),
     const char *fmt, ...)
 {
 	AG_Menu *m = pitem->pmenu;
@@ -593,7 +593,7 @@ AG_MenuTool(AG_MenuItem *pitem, AG_Toolbar *tbar, const char *text,
 }
 
 AG_MenuItem *
-AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
     int *boolp, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -609,7 +609,7 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
     Uint8 *boolp, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -625,7 +625,7 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
     int *flagsp, int flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -642,7 +642,7 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
     Uint8 *flagsp, Uint8 flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -659,7 +659,7 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
+AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
     Uint16 *flagsp, Uint16 flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;
@@ -676,7 +676,7 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon,
 }
 
 AG_MenuItem *
-AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, SDL_Surface *icon, 
+AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon, 
     Uint32 *flagsp, Uint32 flags, int inv, AG_Mutex *lock)
 {
 	AG_MenuItem *mi;

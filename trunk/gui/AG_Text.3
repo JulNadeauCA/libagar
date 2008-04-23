@@ -136,16 +136,16 @@ functions assign a background color for the surfaces returned by the
 rendering functions.
 .Sh RENDERING
 .nr nS 1
-.Ft "SDL_Surface *"
+.Ft "AG_Surface *"
 .Fn AG_TextRender "const char *text"
 .Pp
-.Ft "SDL_Surface *"
+.Ft "AG_Surface *"
 .Fn AG_TextRenderUCS4 "const Uint32 *text"
 .Pp
-.Ft "SDL_Surface *"
+.Ft "AG_Surface *"
 .Fn AG_TextRenderf "const char *fmt" "..."
 .Pp
-.Ft "SDL_Surface *"
+.Ft "AG_Surface *"
 .Fn AG_TextRenderGlyph "Uint32 uch"
 .Pp
 .Ft "void"
@@ -336,6 +336,7 @@ The meaning of this parameter is specific to the underlying font engine.
 .Xr AG_Radio 3 ,
 .Xr AG_Spinbutton 3 ,
 .Xr AG_Statusbar 3 ,
+.Xr AG_Surface 3 ,
 .Xr AG_FSpinbutton 3 ,
 .Xr AG_MFSpinbutton 3 ,
 .Xr AG_Textbox 3 ,

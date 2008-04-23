@@ -29,6 +29,7 @@
 
 #include "window.h"
 #include "primitive.h"
+#include "text.h"
 
 #include <stdarg.h>
 #include <string.h>

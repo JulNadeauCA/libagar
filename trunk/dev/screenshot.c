@@ -90,7 +90,7 @@ XmitLoop(int fd)
 {
 	int nframe = 0;
 	FILE *fp;
-	SDL_Surface *su;
+	AG_Surface *su;
 	Uint8 *jcopybuf;
 
 	if ((fp = fdopen(fd, "w")) == NULL) {
@@ -148,8 +148,8 @@ XmitLoop(int fd)
 			Uint8 r, g, b;
 
 			for (x = agView->w; x > 0; x--) {
-				SDL_GetRGB(AG_GET_PIXEL(su, pSrc), su->format,
-				    &r, &g, &b);
+				AG_GetRGB(AG_GET_PIXEL(su,pSrc), su->format,
+				    &r,&g,&b);
 				*pDst++ = r;
 				*pDst++ = g;
 				*pDst++ = b;
@@ -163,7 +163,7 @@ XmitLoop(int fd)
 
 #ifdef HAVE_OPENGL
 		if (agView->opengl)
-			SDL_FreeSurface(su);
+			AG_SurfaceFree(su);
 #endif
 
 		SDL_Delay(xmit_delay);

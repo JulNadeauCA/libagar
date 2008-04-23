@@ -46,15 +46,13 @@ AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
 	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 
-	AG_WidgetMapSurface(px,
-	    SDL_CreateRGBSurface(SDL_SWSURFACE, 0, 0, 8, 0,0,0,0));
-	
+	AG_WidgetMapSurface(px, AG_SurfaceEmpty());
 	AG_ObjectAttach(parent, px);
 	return (px);
 }
 
 AG_Pixmap *
-AG_PixmapFromSurface(void *parent, Uint flags, SDL_Surface *su)
+AG_PixmapFromSurface(void *parent, Uint flags, AG_Surface *su)
 {
 	AG_Pixmap *px;
 
@@ -71,7 +69,7 @@ AG_PixmapFromSurface(void *parent, Uint flags, SDL_Surface *su)
 }
 
 AG_Pixmap *
-AG_PixmapFromSurfaceCopy(void *parent, Uint flags, SDL_Surface *su)
+AG_PixmapFromSurfaceCopy(void *parent, Uint flags, AG_Surface *su)
 {
 	AG_Pixmap *px;
 
@@ -88,11 +86,11 @@ AG_PixmapFromSurfaceCopy(void *parent, Uint flags, SDL_Surface *su)
 }
 
 AG_Pixmap *
-AG_PixmapFromSurfaceScaled(void *parent, Uint flags, SDL_Surface *su,
+AG_PixmapFromSurfaceScaled(void *parent, Uint flags, AG_Surface *su,
     Uint w, Uint h)
 {
 	AG_Pixmap *px;
-	SDL_Surface *su2 = NULL;
+	AG_Surface *su2 = NULL;
 
 	px = Malloc(sizeof(AG_Pixmap));
 	AG_ObjectInit(px, &agPixmapClass);
@@ -102,7 +100,9 @@ AG_PixmapFromSurfaceScaled(void *parent, Uint flags, SDL_Surface *su,
 	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
 	
 	AG_ObjectAttach(parent, px);
-	AG_ScaleSurface(su, w, h, &su2);
+	if (AG_ScaleSurface(su, w, h, &su2) == -1) {
+		AG_FatalError(NULL);
+	}
 	AG_WidgetMapSurface(px, su2);
 	return (px);
 }
@@ -111,10 +111,9 @@ AG_Pixmap *
 AG_PixmapFromBMP(void *parent, Uint flags, const char *bmpfile)
 {
 	AG_Pixmap *px;
-	SDL_Surface *bmp;
+	AG_Surface *bmp;
 
-	if ((bmp = SDL_LoadBMP(bmpfile)) == NULL) {
-		AG_SetError("%s: %s", bmpfile, SDL_GetError());
+	if ((bmp = AG_SurfaceFromBMP(bmpfile)) == NULL) {
 		return (NULL);
 	}
 	px = Malloc(sizeof(AG_Pixmap));
@@ -135,7 +134,7 @@ AG_PixmapFromXCF(void *parent, Uint flags, const char *path)
 {
 	AG_Object tmpObj;
 	AG_Pixmap *px;
-	SDL_Surface *su;
+	AG_Surface *su;
 	AG_DataSource *ds;
 	Uint i;
 	
@@ -172,7 +171,7 @@ fail:
  * is locked.
  */
 int
-AG_PixmapAddSurface(AG_Pixmap *px, SDL_Surface *su)
+AG_PixmapAddSurface(AG_Pixmap *px, AG_Surface *su)
 {
 	int name;
 
@@ -189,10 +188,10 @@ AG_PixmapAddSurface(AG_Pixmap *px, SDL_Surface *su)
 int
 AG_PixmapAddSurfaceFromBMP(AG_Pixmap *px, const char *path)
 {
-	SDL_Surface *bmp;
+	AG_Surface *bmp;
 	int name;
 
-	if ((bmp = SDL_LoadBMP(path)) == NULL) {
+	if ((bmp = AG_SurfaceFromBMP(path)) == NULL) {
 		return (-1);
 	}
 	AG_ObjectLock(px);
@@ -206,9 +205,9 @@ AG_PixmapAddSurfaceFromBMP(AG_Pixmap *px, const char *path)
  * long as pixmap is locked.
  */
 int
-AG_PixmapAddSurfaceCopy(AG_Pixmap *px, SDL_Surface *su)
+AG_PixmapAddSurfaceCopy(AG_Pixmap *px, AG_Surface *su)
 {
-	SDL_Surface *dup;
+	AG_Surface *dup;
 	int name;
 
 	dup = AG_DupSurface(su);
@@ -223,12 +222,14 @@ AG_PixmapAddSurfaceCopy(AG_Pixmap *px, SDL_Surface *su)
  * is valid as long as pixmap is locked.
  */
 int
-AG_PixmapAddSurfaceScaled(AG_Pixmap *px, SDL_Surface *su, Uint w, Uint h)
+AG_PixmapAddSurfaceScaled(AG_Pixmap *px, AG_Surface *su, Uint w, Uint h)
 {
-	SDL_Surface *scaled = NULL;
+	AG_Surface *scaled = NULL;
 	int name;
 	
-	AG_ScaleSurface(su, w, h, &scaled);
+	if (AG_ScaleSurface(su, w, h, &scaled) == -1) {
+		AG_FatalError(NULL);
+	}
 	AG_ObjectLock(px);
 	name = AG_WidgetMapSurface(px, scaled);
 	AG_ObjectUnlock(px);
@@ -237,11 +238,13 @@ AG_PixmapAddSurfaceScaled(AG_Pixmap *px, SDL_Surface *su, Uint w, Uint h)
 
 /* Replace the current surface with a scaled version of a surface. */
 void
-AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, SDL_Surface *su, Uint w, Uint h)
+AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, AG_Surface *su, Uint w, Uint h)
 {
-	SDL_Surface *scaled = NULL;
+	AG_Surface *scaled = NULL;
 
-	AG_ScaleSurface(su, w, h, &scaled);
+	if (AG_ScaleSurface(su, w, h, &scaled) == -1) {
+		AG_FatalError(NULL);
+	}
 	AG_ObjectLock(px);
 	AG_WidgetReplaceSurface(px, px->n, scaled);
 	AG_ObjectUnlock(px);
