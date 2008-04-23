@@ -1441,6 +1441,10 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				AG_SizeAlloc a;
 				AG_Window *pWin;
 
+				a.x = 0;
+				a.y = 0;
+				a.w = WIDTH(t);
+				a.h = HEIGHT(t);
 				c->type = AG_CELL_WIDGET;
 				c->widget = c->data.p;
 				AG_ObjectAttach(t, c->widget);
