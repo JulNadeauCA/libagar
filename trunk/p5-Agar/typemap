@@ -1,0 +1,16 @@
+TYPEMAP
+Agar::Window		T_PTROBJ
+Agar::Surface		T_PTROBJ
+Agar::PixelFormat	T_PTROBJ
+Uint8			T_U_CHAR
+Sint8			T_CHAR
+Uint16			T_UV
+Sint16			T_IV
+Uint32			T_UV
+Sint32			T_IV
+Uint8 *			T_PTR
+Sint8 *			T_PTR
+Uint16 *		T_PTR
+Sint16 *		T_PTR
+Uint32 *		T_PTR
+Sint32 *		T_PTR
