@@ -1,0 +1,15 @@
+Agar.pm
+Agar.xs
+Agar/PixelFormat.pm
+Agar/Surface.pm
+Agar/Window.pm
+foo.pl
+Makefile.PL
+MANIFEST			This list of files
+perl_agar.h
+PixelFormat.xs
+README
+Surface.xs
+t/test.t
+typemap
+Window.xs
