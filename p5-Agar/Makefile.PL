@@ -3,13 +3,12 @@
 use strict;
 use ExtUtils::MakeMaker qw(WriteMakefile prompt);
 use Getopt::Long qw(GetOptions);
-use Config;
 
 # Look for Agar using agar-config.
 my $cflags = `agar-config --cflags`;
 my $libs = `agar-config --libs`;
 if ($? != 0) {
-	die "Agar library is not installed; See http://libagar.org/.";
+	die "Agar library is not installed; See http://libagar.org/";
 }
 chomp($cflags);
 chomp($libs);
