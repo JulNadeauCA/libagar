@@ -142,7 +142,7 @@ Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
 
 Copyright (c) 2008 Hypertriton, Inc. All rights reserved.
 This program is free software; you can redistribute it and/or modify it
-under the same terms as Agar itself.
+under the same terms as Perl itself.
 
 =head1 SEE ALSO
 

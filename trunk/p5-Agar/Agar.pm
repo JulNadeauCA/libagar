@@ -46,32 +46,32 @@ routines and globals.
 
 =over 4
 
-=item B<InitCore> - Agar::InitCore([%options])
+=item B<Agar::InitCore([%options])>
 
 Initialize the Agar-Core library. At this point, there is no video or GUI
 specific code involved (see L</CORE OPTIONS>).
 
-=item B<InitVideo> - Agar::InitVideo(width, height, depth, [%options])
+=item B<Agar::InitVideo($width,$height,$depth,[%options])>
 
 Initialize the Agar-GUI library and create a new video display of the
 specified dimensions in pixels, and depth in bits per pixel (see
 L</VIDEO OPTIONS>).
 
-=item B<Version> - Agar::Version()
+=item B<Agar::Version>
 
 Return a scalar value containing the version number of the installed
 Agar library.
 
-=item B<Release> - Agar::Release()
+=item B<Agar::Release>
 
 Return the codename of the installed Agar release.
 
-=item B<SetError> - Agar::SetError($string)
+=item B<Agar::SetError($string)>
 
 Set the Agar error string. When Agar is compiled for multithreading,
 this is actually a thread-specific value.
 
-=item B<GetError> - Agar::GetError()
+=item B<Agar::GetError>
 
 Return the Agar error string. This is a scalar value which can contain
 UTF-8 characters.
@@ -165,10 +165,10 @@ Julien Nadeau E<lt>F<vedge@hypertriton.com>E<gt>
 
 Copyright (c) 2008 Hypertriton, Inc. All rights reserved.
 This program is free software; you can redistribute it and/or modify it
-under the same terms as Agar itself.
+under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar::Surface>, L<Agar::PixelFormat>, L<http://libagar.org/>
+L<Agar::Surface>, L<Agar::PixelFormat>, L<Agar::Window>, L<http://libagar.org/>
 
 =cut
