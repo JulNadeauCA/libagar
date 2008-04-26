@@ -112,9 +112,9 @@ List contents are updated dynamically by the
 event handler (implied by
 .Fn AG_TlistNewPolled ) .
 Note that it is necessary to use
-.Fn AG_TlistClear
+.Fn AG_TlistBegin
 and
-.Fn AG_TlistRestore
+.Fn AG_TlistEnd
 when updating a dynamic list.
 .It AG_TLIST_TREE
 List contents are organized in a tree structure.
@@ -175,10 +175,10 @@ value of 0 to indicate deselection and 1 to indicate selection.
 .Fn AG_TlistDel "AG_Tlist *tlist" "AG_TlistItem *item"
 .Pp
 .Ft "void"
-.Fn AG_TlistClear "AG_Tlist *tlist"
+.Fn AG_TlistBegin "AG_Tlist *tlist"
 .Pp
 .Ft "void"
-.Fn AG_TlistRestore "AG_Tlist *tlist"
+.Fn AG_TlistEnd "AG_Tlist *tlist"
 .Pp
 .Ft "void"
 .Fn AG_TlistSelect "AG_Tlist *tlist" "AG_TlistItem *item"
@@ -252,13 +252,12 @@ from its parent
 .Nm tlist .
 .Pp
 The
-.Fn AG_TlistClear
+.Fn AG_TlistBegin
 function removes all items attached to
 .Fa tlist ,
 but remembers the selected items.
-.Fn AG_TlistRestore
-compares each item against the previous selections and restores
-the
+.Fn AG_TlistEnd
+compares each item against the previous selections and restores the
 .Va selected
 flag accordingly.
 .Pp
@@ -477,6 +476,34 @@ Disallow user selection of this item.
 .It AG_TLIST_NO_POPUP
 If popup menus are in effect, disable popups for this item.
 .El
+.Sh EXAMPLES
+The following code fragment creates a dynamic list, constructed from an
+existing data structure:
+.Bd -literal
+void
+PollMyStructure(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	MyStructure *s = AG_PTR(1);
+	int i;
+
+	AG_TlistBegin(tl);
+	for (i = 0; i < s->nItems; i++) {
+		AG_TlistAdd(tl, NULL, "%s", s->itemName);
+	}
+	AG_TlistEnd(tl);
+}
+
+void
+CreateGUI(MyStructure *s)
+{
+	AG_TlistNewPolled(NULL, 0, PollMyStructure, "%p", s);
+}
+.Ed
+.Pp
+See
+.Pa demos/widgets
+in the Agar source distribution for more examples.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
