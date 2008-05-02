@@ -241,8 +241,9 @@ Extent(void *p, VG_View *vv, VG_Rect *r)
 		r->h = 0;
 		return;
 	}
-	xMin = xMax = vp->pts[0]->x;
-	yMin = yMax = vp->pts[0]->y;
+	v = VG_PointPos(vp->pts[0]);
+	xMin = xMax = v.x;
+	yMin = yMax = v.y;
 	for (i = 0; i < vp->nPts; i++) {
 		v = VG_PointPos(vp->pts[i]);
 		if (v.x < xMin) { xMin = v.x; }
@@ -270,12 +271,9 @@ PointProximity(void *p, VG_Vector *vPt)
 	dMin = AG_FLT_MAX;
 	m.x = 0.0f;
 	m.y = 0.0f;
-	C.x = A.x = vp->pts[0]->x;
-	C.y = A.y = vp->pts[0]->y;
+	C = A = VG_PointPos(vp->pts[0]);
 	for (i = 1; i < vp->nPts; i++) {
-		B.x = vp->pts[i]->x;
-		B.y = vp->pts[i]->y;
-
+		B = VG_PointPos(vp->pts[i]);
 		vInt = *vPt;
 		d = VG_PointLineDistance(A, B, &vInt);
 		if (d < dMin) {

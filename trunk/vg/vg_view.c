@@ -494,15 +494,12 @@ Draw(void *p)
 
 	if (vv->curtool != NULL && vv->curtool->ops->predraw != NULL)
 		vv->curtool->ops->predraw(vv->curtool, vv);
-
 	if (vv->draw_ev != NULL)
 		vv->draw_ev->handler(vv->draw_ev);
-
 	if (vv->curtool != NULL && vv->curtool->ops->postdraw != NULL)
 		vv->curtool->ops->postdraw(vv->curtool, vv);
 
 	DrawNode(vg, vg->root, vv);
-
 	VG_Unlock(vg);
 
 	AG_TextColor(TEXT_COLOR);

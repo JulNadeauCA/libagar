@@ -2,7 +2,6 @@
 
 typedef struct vg_point {
 	struct vg_node _inherit;
-	float x, y;
 } VG_Point;
 
 #define VGPOINT(p) ((VG_Point *)(p))
@@ -17,12 +16,11 @@ extern const VG_NodeOps vgPointOps;
 static __inline__ VG_Vector
 VG_PointPos(VG_Point *pt)
 {
-	VG *vg = VGNODE(pt)->vg;
-	VG_Vector v;
+	VG_Matrix T;
+	VG_Vector v = { 0.0f, 0.0f };
 
-	v.x = pt->x;
-	v.y = pt->y;
-	VG_MultMatrixByVector(&v, &v, &vg->T[vg->nT-1]);
+	VG_NodeTransform(pt, &T);
+	VG_MultMatrixByVector(&v, &v, &T);
 	return (v);
 }
 
@@ -33,8 +31,7 @@ VG_PointNew(void *pNode, VG_Vector pos)
 
 	vp = AG_Malloc(sizeof(VG_Point));
 	VG_NodeInit(vp, &vgPointOps);
-	vp->x = pos.x;
-	vp->y = pos.y;
+	VG_Translate(vp, pos);
 	VG_NodeAttach(pNode, vp);
 	return (vp);
 }

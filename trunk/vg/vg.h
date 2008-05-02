@@ -101,6 +101,7 @@ typedef struct vg_node {
 	AG_TAILQ_HEAD(,vg_node) cNodes;	/* Child nodes */
 	AG_TAILQ_ENTRY(vg_node) tree;	/* Entry in tree */
 	AG_TAILQ_ENTRY(vg_node) list;	/* Entry in global list */
+	AG_TAILQ_ENTRY(vg_node) reverse; /* For VG_NodeTransform() */
 } VG_Node;
 
 #define VGNODE(p) ((VG_Node *)(p))
@@ -162,6 +163,7 @@ void      VG_NodeDestroy(VG_Node *);
 int       VG_Delete(void *);
 void      VG_AddRef(void *, void *);
 Uint      VG_DelRef(void *, void *);
+void      VG_NodeTransform(void *, VG_Matrix *);
 
 void      VG_SetBackgroundColor(VG *, VG_Color);
 void      VG_SetGridColor(VG *, VG_Color);
@@ -185,6 +187,7 @@ void     *VG_ReadRef(AG_DataSource *, void *, const char *);
 
 void     *VG_PointProximity(VG *, const char *, const VG_Vector *, VG_Vector *,
                             void *);
+VG_Matrix VG_MatrixInvert(VG_Matrix);
 
 static __inline__ void
 VG_Lock(VG *vg)
@@ -287,20 +290,25 @@ VG_PopMatrix(VG *vg)
 	vg->nT--;
 }
 
-/* Multiply the given matrix by another one. */
+/* Load identity matrix for the given node. */
 static __inline__ void
-VG_MultMatrix(VG_Matrix *T, const VG_Matrix *A)
+VG_LoadIdentity(void *pNode)
 {
-	VG_Matrix R;
-	int m, n;
+	VG_Node *vn = pNode;
+	
+	vn->T.m[0][0] = 1.0f;	vn->T.m[0][1] = 0.0f;	vn->T.m[0][2] = 0.0f;
+	vn->T.m[1][0] = 0.0f;	vn->T.m[1][1] = 1.0f;	vn->T.m[1][2] = 0.0f;
+	vn->T.m[2][0] = 0.0f;	vn->T.m[2][1] = 0.0f;	vn->T.m[2][2] = 1.0f;
+}
 
-	for (m = 0; m < 3; m++) {
-		for (n = 0; n < 3; n++)
-			R.m[m][n] = T->m[m][0]*A->m[0][n] +
-			            T->m[m][1]*A->m[1][n] +
-			            T->m[m][2]*A->m[2][n];
-	}
-	memcpy(T, &R, sizeof(VG_Matrix));
+/* Move the given node. */
+static __inline__ void
+VG_SetPosition(void *pNode, VG_Vector v)
+{
+	VG_Node *vn = pNode;
+	
+	vn->T.m[0][2] = v.x;
+	vn->T.m[1][2] = v.y;
 }
 
 /* Translate the given node. */
@@ -310,9 +318,9 @@ VG_Translate(void *pNode, VG_Vector v)
 	VG_Node *vn = pNode;
 	VG_Matrix T;
 	
-	T.m[0][0] = 1.0;	T.m[0][1] = 0.0;	T.m[0][2] = v.x;
-	T.m[1][0] = 0.0;	T.m[1][1] = 1.0;	T.m[1][2] = v.y;
-	T.m[2][0] = 0.0;	T.m[2][1] = 0.0;	T.m[2][2] = 1.0;
+	T.m[0][0] = 1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = v.x;
+	T.m[1][0] = 0.0f;	T.m[1][1] = 1.0f;	T.m[1][2] = v.y;
+	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
 
 	VG_MultMatrix(&vn->T, &T);
 }

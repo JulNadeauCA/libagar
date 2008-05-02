@@ -104,7 +104,7 @@ VG_Init(VG *vg, Uint flags)
 	vg->T = Malloc(sizeof(VG_Matrix));
 	vg->nT = 1;
 	vg->T[0] = VG_MatrixIdentity();
-
+	
 	VG_PushLayer(vg, _("Layer 0"));
 	
 	ptRoot = VG_PointNew(NULL, VGVECTOR(0.0f,0.0f));
@@ -707,4 +707,62 @@ VG_PointProximity(VG *vg, const char *type, const VG_Vector *vPt, VG_Vector *vC,
 	}
 	*vC = vClosest;
 	return (nodeClosest);
+}
+
+/*
+ * Compute the product of the transform matrices of the given node and its
+ * parents in order. T is initialized to identity.
+ */
+void
+VG_NodeTransform(void *p, VG_Matrix *T)
+{
+	VG_Node *node = p;
+	VG_Node *cNode = node;
+	TAILQ_HEAD(,vg_node) rNodes = TAILQ_HEAD_INITIALIZER(rNodes);
+
+	/*
+	 * Build a list of parent nodes and multiply their matrices in order
+	 * (ugly but faster than computing the product of their inverses).
+	 */
+	while (cNode != NULL) {
+		TAILQ_INSERT_HEAD(&rNodes, cNode, reverse);
+		if (cNode->parent == NULL) {
+			break;
+		}
+		cNode = cNode->parent;
+	}
+	*T = VG_MatrixIdentity();
+	TAILQ_FOREACH(cNode, &rNodes, reverse)
+		VG_MultMatrix(T, &cNode->T);
+}
+
+VG_Matrix
+VG_MatrixInvert(VG_Matrix A)
+{
+	VG_Matrix B;
+	float det, detInv;
+	int i, j;
+
+	B.m[0][0] = A.m[1][1]*A.m[2][2] - A.m[1][2]*A.m[2][1];
+	B.m[0][1] = A.m[0][2]*A.m[2][1] - A.m[0][1]*A.m[2][2];
+	B.m[0][2] = A.m[0][1]*A.m[1][2] - A.m[0][2]*A.m[1][1];
+	B.m[1][0] = A.m[1][2]*A.m[2][0] - A.m[1][0]*A.m[2][2];
+	B.m[1][1] = A.m[0][0]*A.m[2][2] - A.m[0][2]*A.m[2][0];
+	B.m[1][2] = A.m[0][2]*A.m[1][0] - A.m[0][0]*A.m[1][2];
+	B.m[2][0] = A.m[1][0]*A.m[2][1] - A.m[1][1]*A.m[2][0];
+	B.m[2][1] = A.m[0][1]*A.m[2][0] - A.m[0][0]*A.m[2][1];
+	B.m[2][2] = A.m[0][0]*A.m[1][1] - A.m[0][1]*A.m[1][0];
+
+	det = A.m[0][0]*B.m[0][0] +
+	      A.m[0][1]*B.m[1][0] +
+	      A.m[0][2]*B.m[2][0];
+	if (Fabs(det) <= 1e-6f)
+		AG_FatalError("Singular matrix");
+
+	detInv = 1.0/det;
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 3; j++)
+			B.m[i][j] *= detInv;
+	}
+	return (B);
 }
