@@ -38,34 +38,6 @@
 #include "icons.h"
 
 static void
-Init(void *p)
-{
-	VG_Point *pt = p;
-
-	pt->x = 0.0f;
-	pt->y = 0.0f;
-}
-
-static int
-Load(void *p, AG_DataSource *ds, const AG_Version *ver)
-{
-	VG_Point *vp = p;
-
-	vp->x = AG_ReadFloat(ds);
-	vp->y = AG_ReadFloat(ds);
-	return (0);
-}
-
-static void
-Save(void *p, AG_DataSource *ds)
-{
-	VG_Point *vp = p;
-
-	AG_WriteFloat(ds, vp->x);
-	AG_WriteFloat(ds, vp->y);
-}
-
-static void
 Draw(void *p, VG_View *vv)
 {
 	VG_Point *pt = p;
@@ -80,9 +52,10 @@ static void
 Extent(void *p, VG_View *vv, VG_Rect *r)
 {
 	VG_Point *pt = p;
+	VG_Vector pos = VG_PointPos(pt);
 
-	r->x = pt->x;
-	r->y = pt->y;
+	r->x = pos.x;
+	r->y = pos.y;
 	r->w = 0;
 	r->h = 0;
 }
@@ -91,11 +64,11 @@ static float
 PointProximity(void *p, VG_Vector *vPt)
 {
 	VG_Point *pt = p;
+	VG_Vector pos = VG_PointPos(pt);
 	float d;
 
-	d = VG_Distance(VG_PointPos(pt), *vPt);
-	vPt->x = pt->x;
-	vPt->y = pt->y;
+	d = VG_Distance(pos, *vPt);
+	*vPt = pos;
 	return (d);
 }
 
@@ -104,18 +77,17 @@ Move(void *p, VG_Vector vCurs, VG_Vector vRel)
 {
 	VG_Point *pt = p;
 
-	pt->x = vCurs.x;
-	pt->y = vCurs.y;
+	VG_Translate(pt, vRel);
 }
 
 const VG_NodeOps vgPointOps = {
 	N_("Point"),
 	&vgIconPoints,
 	sizeof(VG_Point),
-	Init,
+	NULL,			/* init */
 	NULL,			/* destroy */
-	Load,
-	Save,
+	NULL,			/* load */
+	NULL,			/* save */
 	Draw,
 	Extent,
 	PointProximity,

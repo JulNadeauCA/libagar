@@ -180,6 +180,20 @@ VG_MatrixIdentity(void)
 	return (T);
 }
 static __inline__ void
+VG_MultMatrix(VG_Matrix *T, const VG_Matrix *A)
+{
+	VG_Matrix R;
+	int m, n;
+
+	for (m = 0; m < 3; m++) {
+		for (n = 0; n < 3; n++)
+			R.m[m][n] = T->m[m][0]*A->m[0][n] +
+			            T->m[m][1]*A->m[1][n] +
+			            T->m[m][2]*A->m[2][n];
+	}
+	memcpy(T, &R, sizeof(VG_Matrix));
+}
+static __inline__ void
 VG_MultMatrixByVector(VG_Vector *c, const VG_Vector *a, const VG_Matrix *T)
 {
 	float ax = a->x;
