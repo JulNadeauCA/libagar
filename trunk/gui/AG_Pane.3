@@ -54,6 +54,12 @@ to zero size.
 .Ft "AG_Pane *"
 .Fn AG_PaneNew "AG_Widget *parent" "enum ag_pane_type type" "Uint flags"
 .Pp
+.Ft "AG_Pane *"
+.Fn AG_PaneNewHoriz "AG_Widget *parent" "Uint flags"
+.Pp
+.Ft "AG_Pane *"
+.Fn AG_PaneNewVert "AG_Widget *parent" "Uint flags"
+.Pp
 .Ft "void"
 .Fn AG_PaneAttachBox "AG_Pane *pane" "int which" "AG_Box *box"
 .Pp
