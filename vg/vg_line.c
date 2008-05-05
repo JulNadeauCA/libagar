@@ -55,8 +55,12 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 {
 	VG_Line *vl = p;
 
-	vl->p1 = VG_ReadRef(ds, vl, "Point");
-	vl->p2 = VG_ReadRef(ds, vl, "Point");
+	if ((vl->p1 = VG_ReadRef(ds, vl, "Point")) == NULL) {
+		return (-1);
+	}
+	if ((vl->p2 = VG_ReadRef(ds, vl, "Point")) == NULL) {
+		return (-1);
+	}
 	vl->endPt = (enum vg_line_endpoint)AG_ReadUint8(ds);
 	vl->stipple = AG_ReadUint16(ds);
 	vl->miterLen = AG_ReadUint8(ds);

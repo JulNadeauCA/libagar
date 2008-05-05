@@ -60,8 +60,10 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 
 	vp->outline = (int)AG_ReadUint8(ds);
 	vp->nPts = (Uint)AG_ReadUint8(ds);
+	vp->pts = Malloc(vp->nPts*sizeof(VG_Point *));
 	for (i = 0; i < vp->nPts; i++) {
-		VG_ReadRef(ds, vp, "Point");
+		if ((vp->pts[i] = VG_ReadRef(ds, vp, "Point")) == NULL)
+			return (-1);
 	}
 	return (0);
 }

@@ -51,7 +51,9 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 {
 	VG_Circle *vc = p;
 
-	vc->p = VG_ReadRef(ds, vc, "Point");
+	if ((vc->p = VG_ReadRef(ds, vc, "Point")) == NULL) {
+		return (-1);
+	}
 	vc->r = AG_ReadFloat(ds);
 	return (0);
 }

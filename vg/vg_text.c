@@ -61,8 +61,10 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 {
 	VG_Text *vt = p;
 
-	vt->p1 = VG_ReadRef(ds, vt, "Point");
-	vt->p2 = VG_ReadRef(ds, vt, "Point");
+	if ((vt->p1 = VG_ReadRef(ds, vt, "Point")) == NULL ||
+	    (vt->p2 = VG_ReadRef(ds, vt, "Point")) == NULL)
+		return (-1);
+
 	vt->align = (enum vg_alignment)AG_ReadUint8(ds);
 	AG_CopyString(vt->fontFace, ds, sizeof(vt->fontFace));
 	vt->fontSize = (int)AG_ReadUint8(ds);
@@ -311,7 +313,7 @@ Delete(void *p)
 }
 
 const VG_NodeOps vgTextOps = {
-	N_("Text label"),
+	N_("Text"),
 	&vgIconText,
 	sizeof(VG_Text),
 	Init,

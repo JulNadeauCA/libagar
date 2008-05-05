@@ -53,7 +53,9 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 {
 	VG_Arc *va = p;
 
-	va->p = VG_ReadRef(ds, va, "Point");
+	if ((va->p = VG_ReadRef(ds, va, "Point")) == NULL) {
+		return (-1);
+	}
 	va->r = AG_ReadFloat(ds);
 	va->a1 = AG_ReadFloat(ds);
 	va->a2 = AG_ReadFloat(ds);
