@@ -187,6 +187,8 @@ void     *VG_ReadRef(AG_DataSource *, void *, const char *);
 
 void     *VG_PointProximity(VG *, const char *, const VG_Vector *, VG_Vector *,
                             void *);
+void     *VG_PointProximityMax(VG *, const char *, const VG_Vector *,
+                               VG_Vector *, void *, float);
 VG_Matrix VG_MatrixInvert(VG_Matrix);
 
 static __inline__ void

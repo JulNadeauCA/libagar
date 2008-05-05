@@ -438,7 +438,7 @@ LoadMatrix(VG_Matrix *A, AG_DataSource *ds)
 }
 
 static void
-SaveNode(VG *vg, VG_Node *vn, AG_DataSource *ds)
+SaveNodeGeneric(VG *vg, VG_Node *vn, AG_DataSource *ds)
 {
 	off_t nNodesOffs;
 	Uint32 nNodes = 0;
@@ -455,17 +455,29 @@ SaveNode(VG *vg, VG_Node *vn, AG_DataSource *ds)
 	VG_WriteColor(ds, &vn->color);
 	SaveMatrix(&vn->T, ds);
 
-	if (vn->ops->save != NULL)
-		vn->ops->save(vn, ds);
-	
 	/* Save the entities. */
 	nNodesOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);
 	TAILQ_FOREACH(vnChld, &vn->cNodes, tree) {
-		SaveNode(vg, vnChld, ds);
+		SaveNodeGeneric(vg, vnChld, ds);
 		nNodes++;
 	}
 	AG_WriteUint32At(ds, nNodes, nNodesOffs);
+}
+
+static int
+SaveNodeData(VG *vg, VG_Node *vn, AG_DataSource *ds)
+{
+	VG_Node *vnChld;
+
+	TAILQ_FOREACH(vnChld, &vn->cNodes, tree) {
+		if (SaveNodeData(vg, vnChld, ds) == -1)
+			return (-1);
+	}
+	if (vn->ops->save != NULL) {
+		vn->ops->save(vn, ds);
+	}
+	return (0);
 }
 
 void
@@ -511,15 +523,16 @@ VG_Save(VG *vg, AG_DataSource *ds)
 	nNodesOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);
 	TAILQ_FOREACH(vn, &vg->root->cNodes, tree) {
-		SaveNode(vg, vn, ds);
+		SaveNodeGeneric(vg, vn, ds);
 		nNodes++;
 	}
 	AG_WriteUint32At(ds, nNodes, nNodesOffs);
+	SaveNodeData(vg, vg->root, ds);
 	VG_Unlock(vg);
 }
 
 static int
-LoadNode(VG *vg, VG_Node *vnParent, AG_DataSource *ds, const AG_Version *dsVer)
+LoadNodeGeneric(VG *vg, VG_Node *vnParent, AG_DataSource *ds)
 {
 	char type[VG_TYPE_NAME_MAX];
 	VG_Node *vn;
@@ -540,14 +553,28 @@ LoadNode(VG *vg, VG_Node *vnParent, AG_DataSource *ds, const AG_Version *dsVer)
 	LoadMatrix(&vn->T, ds);
 	VG_NodeAttach(vnParent, vn);
 
-	if (vn->ops->load != NULL &&
-	    vn->ops->load(vn, ds, dsVer) == -1)
-		return (-1);
-
 	nNodes = AG_ReadUint32(ds);
 	for (i = 0; i < nNodes; i++) {
-		if (LoadNode(vg, vn, ds, dsVer) == -1)
+		if (LoadNodeGeneric(vg, vn, ds) == -1)
 			return (-1);
+	}
+	return (0);
+}
+
+static int
+LoadNodeData(VG *vg, VG_Node *vn, AG_DataSource *ds, const AG_Version *dsVer)
+{
+	VG_Node *vnChld;
+
+	TAILQ_FOREACH(vnChld, &vn->cNodes, tree) {
+		if (LoadNodeData(vg, vnChld, ds, dsVer) == -1)
+			return (-1);
+	}
+	if (vn->ops->load != NULL &&
+	    vn->ops->load(vn, ds, dsVer) == -1) {
+		AG_SetError("%s%u: %s", vn->ops->name, vn->handle,
+		    AG_GetError());
+		return (-1);
 	}
 	return (0);
 }
@@ -598,8 +625,11 @@ VG_Load(VG *vg, AG_DataSource *ds)
 	VG_ReinitNodes(vg);
 	nNodes = AG_ReadUint32(ds);
 	for (i = 0; i < nNodes; i++) {
-		if (LoadNode(vg, vg->root, ds, &dsVer) == -1)
+		if (LoadNodeGeneric(vg, vg->root, ds) == -1)
 			goto fail;
+	}
+	if (LoadNodeData(vg, vg->root, ds, &dsVer) == -1) {
+		goto fail;
 	}
 	VG_Unlock(vg);
 	return (0);
@@ -668,12 +698,15 @@ VG_ReadRef(AG_DataSource *ds, void *pNode, const char *expType)
 
 	if (expType != NULL) {
 		if (strcmp(rType, expType) != 0) {
-			AG_FatalError("Unexpected reference type: %s "
-			              "(expecting %s)", rType, expType);
+			AG_SetError("Unexpected reference type: %s "
+			            "(expecting %s)", rType, expType);
+			return (NULL);
 		}
 	}
 	if ((vnFound = VG_FindNode(vn->vg, handle, rType)) == NULL) {
-		AG_FatalError("Bad reference: %s%u", rType, (Uint)handle);
+		AG_SetError("Reference to unexisting item: %s%u", rType,
+		    (Uint)handle);
+		return (NULL);
 	}
 	VG_AddRef(vn, vnFound);
 	return (vnFound);
@@ -705,7 +738,44 @@ VG_PointProximity(VG *vg, const char *type, const VG_Vector *vPt, VG_Vector *vC,
 			vClosest = v;
 		}
 	}
-	*vC = vClosest;
+	if (vC != NULL) {
+		*vC = vClosest;
+	}
+	return (nodeClosest);
+}
+
+/*
+ * Return the element closest to the given point, ignoring all elements
+ * beyond a specified distance.
+ */
+void *
+VG_PointProximityMax(VG *vg, const char *type, const VG_Vector *vPt,
+    VG_Vector *vC, void *ignoreNode, float distMax)
+{
+	VG_Node *node, *nodeClosest = NULL;
+	float distClosest = AG_FLT_MAX, p;
+	VG_Vector v, vClosest = VGVECTOR(AG_FLT_MAX,AG_FLT_MAX);
+
+	TAILQ_FOREACH(node, &vg->nodes, list) {
+		if (node == ignoreNode ||
+		    node->ops->pointProximity == NULL) {
+			continue;
+		}
+		if (type != NULL &&
+		    strcmp(node->ops->name, type) != 0) {
+			continue;
+		}
+		v = *vPt;
+		p = node->ops->pointProximity(node, &v);
+		if (p < distMax && p < distClosest) {
+			distClosest = p;
+			nodeClosest = node;
+			vClosest = v;
+		}
+	}
+	if (vC != NULL) {
+		*vC = vClosest;
+	}
 	return (nodeClosest);
 }
 
