@@ -34,20 +34,11 @@ depend:	${DPADD} depend-subdir
 	@files="${SRCS}"; \
 	if [ "$$files" != "" -a "$$files" != "none" ]; then \
 	    if [ "${BUILD}" != "" ]; then \
-	    	if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
-	   	     env CC=${CC} ${MKDEP} -a -l ${MKDEP} ${CFLAGS} -I${BUILD} \
-	       	         $$files; \
-		else \
-	   	     env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} -I${BUILD} \
-	       	         $$files; \
-		fi; \
+	   	env CC=${CC} ${MKDEP} ${CFLAGS} -I${BUILD} $$files; \
+	   	env CC=${CC} ${MKDEP} -a -l ${CFLAGS} -I${BUILD} $$files; \
 	    else \
-	    	if [ "${LIB}" != "" -a "${LIB_SHARED}" = "Yes" ]; then \
-	        	env CC=${CC} ${MKDEP} -a -l ${MKDEP} ${CFLAGS} \
-			    $$files; \
-		else \
-	        	env CC=${CC} ${MKDEP} -a ${MKDEP} ${CFLAGS} $$files; \
-		fi; \
+	   	env CC=${CC} ${MKDEP} ${CFLAGS} $$files; \
+	   	env CC=${CC} ${MKDEP} -a -l ${CFLAGS} $$files; \
 	    fi; \
 	fi
 

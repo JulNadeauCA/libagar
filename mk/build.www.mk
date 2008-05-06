@@ -38,8 +38,12 @@ LANGUAGES?=	en fr
 DEF_LANGUAGE?=	en
 XSL?=		${XSLDIR}/ml.xsl
 MKDEPS=		build.www.mk build.subdir.mk build.common.mk hstrip.pl
-HTMLDIR?=	none
 CLEANFILES?=
+HTMLDIR?=	none
+HTML?=
+
+HTML_OVERWRITE?=	No
+HTML_INSTSOURCE?=	Yes
 
 all: ${HTML} all-subdir
 clean: clean-www clean-subdir
@@ -120,13 +124,12 @@ install-www:
 	@if [ "${HTMLDIR}" = "none" ]; then \
 		exit 0; \
 	fi
-	@for F in ${HTML}; do \
-		rm -f $$F; \
-        	if [ ! -d "${HTMLDIR}" ]; then \
-			echo "${INSTALL_DATA_DIR} ${HTMLDIR}"; \
-			${SUDO} ${INSTALL_DATA_DIR} ${HTMLDIR}; \
-		fi; \
-        	if [ ! -d "${HTMLDIR}/mk" ]; then \
+	@if [ ! -d "${HTMLDIR}" ]; then \
+		echo "${INSTALL_DATA_DIR} ${HTMLDIR}"; \
+		${SUDO} ${INSTALL_DATA_DIR} ${HTMLDIR}; \
+	fi
+	@if [ "${HTML_INSTSOURCE}" = "Yes" ]; then \
+		if [ ! -d "${HTMLDIR}/mk" ]; then \
 			echo "${INSTALL_DATA_DIR} ${HTMLDIR}/mk"; \
 			${SUDO} ${INSTALL_DATA_DIR} ${HTMLDIR}/mk; \
 		fi; \
@@ -134,33 +137,37 @@ install-www:
 			echo "${INSTALL_DATA} ${TOP}/mk/$$MK ${HTMLDIR}/mk"; \
 			${SUDO} ${INSTALL_DATA} ${TOP}/mk/$$MK ${HTMLDIR}/mk; \
 		done; \
-        	if [ ! -d "${HTMLDIR}/xsl" ]; then \
+       		if [ ! -d "${HTMLDIR}/xsl" ]; then \
 			echo "${INSTALL_DATA_DIR} ${HTMLDIR}/xsl"; \
 			${SUDO} ${INSTALL_DATA_DIR} ${HTMLDIR}/xsl; \
 		fi; \
 		for XSL in ${XSL}; do \
 			if [ -e "${HTMLDIR}/xsl/$$XSL" \
-			     -a "${OVERWRITE}" = "" ]; then \
+			     -a "${HTML_OVERWRITE}" = "" ]; then \
 				echo "xsl/$$XSL: exists; preserving"; \
 			else \
 				echo "${INSTALL_DATA} $$XSL ${HTMLDIR}/xsl"; \
 				${SUDO} ${INSTALL_DATA} $$XSL ${HTMLDIR}/xsl; \
 			fi; \
 		done; \
-        	if [ ! -d "${HTMLDIR}/m4" ]; then \
+		if [ ! -d "${HTMLDIR}/m4" ]; then \
 			echo "${INSTALL_DATA_DIR} ${HTMLDIR}/m4"; \
 			${SUDO} ${INSTALL_DATA_DIR} ${HTMLDIR}/m4; \
 		fi; \
 		(cd m4; for M4IN in `ls -1 *.m4`; do \
 			if [ -e "${HTMLDIR}/m4/$$M4IN" \
-			     -a "${OVERWRITE}" = "" ]; then \
+			     -a "${HTML_OVERWRITE}" = "" ]; then \
 				echo "m4/$$M4IN: exists; preserving"; \
 			else \
 				echo "${INSTALL_DATA} $$M4IN ${HTMLDIR}/m4"; \
 				${SUDO} ${INSTALL_DATA} $$M4IN ${HTMLDIR}/m4; \
 			fi; \
 		done); \
-		if [ ! -e "${HTMLDIR}/Makefile" ]; then \
+	fi
+	@for F in ${HTML}; do \
+		rm -f $$F; \
+		if [ "${HTML_INSTSOURCE}" = "Yes" -a \
+		     ! -e "${HTMLDIR}/Makefile" ]; then \
 			echo "TOP=." > Makefile.prep; \
 			echo "HTML=${HTML}" >> Makefile.prep; \
 			echo "HTMLDIR=none" >> Makefile.prep; \
@@ -178,16 +185,18 @@ install-www:
 			    ${HTMLDIR}/Makefile; \
 			rm -f Makefile.prep; \
 		fi; \
-		export SF=`echo $$F |sed s,.html$$,.htm,`; \
-		if [ -e "${HTMLDIR}/$$SF" \
-		     -a "${OVERWRITE}" = "" ]; then \
-			echo "$$SF exists; preserving"; \
-		else \
-			echo "${INSTALL_DATA} $$SF ${HTMLDIR}"; \
-			${SUDO} ${INSTALL_DATA} $$SF ${HTMLDIR}; \
+		if [ "${HTML_INSTSOURCE}" = "Yes" ]; then \
+			export SF=`echo $$F |sed s,.html$$,.htm,`; \
+			if [ -e "${HTMLDIR}/$$SF" \
+			     -a "${HTML_OVERWRITE}" = "" ]; then \
+				echo "$$SF exists; preserving"; \
+			else \
+				echo "${INSTALL_DATA} $$SF ${HTMLDIR}"; \
+				${SUDO} ${INSTALL_DATA} $$SF ${HTMLDIR}; \
+			fi; \
 		fi; \
 		if [ -e "${HTMLDIR}/$$F.var" \
-		     -a "${OVERWRITE}" = "" ]; then \
+		     -a "${HTML_OVERWRITE}" = "" ]; then \
 			echo "$$F.var exists; preserving"; \
 		else \
 			echo "${INSTALL_DATA} $$F.var ${HTMLDIR}"; \
@@ -196,7 +205,7 @@ install-www:
 		for LANG in ${LANGUAGES}; do \
 			for ENC in `ls -1 $$F.$$LANG*`; do \
 			    if [ -e "${HTMLDIR}/$$ENC" \
-			         -a "${OVERWRITE}" = "" ]; then \
+			         -a "${HTML_OVERWRITE}" = "" ]; then \
 				    echo "$$ENC exists; preserving"; \
 			    else \
 				    echo "${INSTALL_DATA} $$ENC ${HTMLDIR}"; \
