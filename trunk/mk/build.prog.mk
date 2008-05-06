@@ -56,8 +56,12 @@ OBJS?=none
 POBJS?=none
 SHOBJS?=none
 CONF?=none
-CONFDIR?=
+CONF_OVERWRITE?=No
 CLEANFILES?=
+
+CTAGS?=
+CTAGSFLAGS?=
+DPADD+=prog-tags
 
 all: all-subdir ${PROG}
 install: install-prog install-subdir
@@ -282,7 +286,7 @@ clean-prog:
 	fi
 
 cleandir-prog:
-	rm -f core *.core config.log .depend
+	rm -f core *.core config.log .depend tags
 	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
 	if [ -e "Makefile.config" ]; then echo -n >Makefile.config; fi
 
@@ -324,22 +328,29 @@ install-prog:
 	    fi; \
 	fi
 	@if [ "${CONF}" != "none" ]; then \
-            if [ ! -d "${CONFDIR}" ]; then \
-                echo "${INSTALL_DATA_DIR} ${CONFDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${CONFDIR}; \
+            if [ ! -d "${SYSCONFDIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${SYSCONFDIR}"; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${SYSCONFDIR}; \
             fi; \
-	    echo "+----------------"; \
-	    echo "| The following configuration files have been preserved."; \
-	    echo "| You may want to compare them to the current sample files.";\
-	    echo "|"; \
-            for F in ${CONF}; do \
-	        if [ -e "${CONFDIR}/$$F" ]; then \
-          	      echo "| - $$F"; \
-		else \
-         	       ${SUDO} ${INSTALL_DATA} $$F ${CONFDIR}; \
-		fi; \
-            done; \
-	    echo "+----------------"; \
+	    if [ "${CONF_OVERWRITE}" != "Yes" ]; then \
+	        echo "+----------------"; \
+	        echo "| The following configuration files exist and "; \
+	        echo "| will not be overwritten:"; \
+	        echo "|"; \
+	        for F in ${CONF}; do \
+	            if [ -e "${SYSCONFDIR}/$$F" ]; then \
+	                echo "| - $$F"; \
+	            else \
+	                ${SUDO} ${INSTALL_DATA} $$F ${SYSCONFDIR}; \
+	            fi; \
+	        done; \
+	        echo "+----------------"; \
+	    else \
+	        for F in ${CONF}; do \
+	            echo "${INSTALL_DATA} $$F ${SYSCONFDIR}"; \
+	            ${SUDO} ${INSTALL_DATA} $$F ${SYSCONFDIR}; \
+	        done; \
+	    fi; \
 	fi
 
 deinstall-prog:
@@ -356,9 +367,13 @@ deinstall-prog:
 	@if [ "${CONF}" != "none" ]; then \
 	    echo "+----------------"; \
 	    echo "| To completely deinstall ${PROG} you need to perform."; \
-	    echo "| this step as root:"; \
+	    echo "| the following steps as root:"; \
 	    echo "|"; \
-	    echo "|           rm -fR ${CONFDIR}"; \
+	    for F in ${CONF}; do \
+	        if [ -e "${SYSCONFDIR}/$$F" ]; then \
+	            echo "| rm -f $$F"; \
+	        fi; \
+	    done; \
 	    echo "|"; \
 	    echo "| Do not do this if you plan on re-installing ${PROG}"; \
 	    echo "| at some future time."; \
@@ -367,9 +382,21 @@ deinstall-prog:
 
 none:
 
+prog-tags:
+	-@if [ "${CTAGS}" != "" ]; then \
+	    if [ "${SRC}" != "" ]; then \
+	        (cd ${SRC}; \
+		 echo "${CTAGS} ${CTAGSFLAGS} -R"; \
+	         ${CTAGS} ${CTAGSFLAGS} -R); \
+	    else \
+	        echo "${CTAGS} ${CTAGSFLAGS} -R"; \
+	        ${CTAGS} ${CTAGSFLAGS} -R; \
+	    fi; \
+	fi
+
 .PHONY: install deinstall clean cleandir regress depend
 .PHONY: install-prog deinstall-prog clean-prog cleandir-prog
-.PHONY: _prog_objs _prog_pobjs none
+.PHONY: _prog_objs _prog_pobjs prog-tags none
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.dep.mk
