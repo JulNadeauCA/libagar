@@ -9,21 +9,6 @@ typedef struct vg_point {
 __BEGIN_DECLS
 extern const VG_NodeOps vgPointOps;
 
-/*
- * Return the absolute position of a point as transformed by the
- * current VG viewing matrix.
- */
-static __inline__ VG_Vector
-VG_PointPos(VG_Point *pt)
-{
-	VG_Matrix T;
-	VG_Vector v = { 0.0f, 0.0f };
-
-	VG_NodeTransform(pt, &T);
-	VG_MultMatrixByVector(&v, &v, &T);
-	return (v);
-}
-
 static __inline__ VG_Point *
 VG_PointNew(void *pNode, VG_Vector pos)
 {

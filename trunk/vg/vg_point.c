@@ -44,7 +44,7 @@ Draw(void *p, VG_View *vv)
 	Uint32 c32 = VG_MapColorRGB(VGNODE(pt)->color);
 	int x, y;
 
-	VG_GetViewCoords(vv, VG_PointPos(pt), &x, &y);
+	VG_GetViewCoords(vv, VG_Pos(pt), &x, &y);
 	AG_DrawCircle(vv, x, y, 2, c32);
 }
 
@@ -52,7 +52,7 @@ static void
 Extent(void *p, VG_View *vv, VG_Rect *r)
 {
 	VG_Point *pt = p;
-	VG_Vector pos = VG_PointPos(pt);
+	VG_Vector pos = VG_Pos(pt);
 
 	r->x = pos.x;
 	r->y = pos.y;
@@ -64,7 +64,7 @@ static float
 PointProximity(void *p, VG_Vector *vPt)
 {
 	VG_Point *pt = p;
-	VG_Vector pos = VG_PointPos(pt);
+	VG_Vector pos = VG_Pos(pt);
 	float d;
 
 	d = VG_Distance(pos, *vPt);
