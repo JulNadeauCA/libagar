@@ -457,7 +457,7 @@ DrawNode(VG *vg, VG_Node *vn, VG_View *vv)
 	VG_PushMatrix(vg);
 	VG_MultMatrix(&vg->T[vg->nT-1], &vn->T);
 
-	TAILQ_FOREACH(vnChld, &vn->cNodes, tree)
+	VG_FOREACH_CHLD(vnChld, vn, vg_node)
 		DrawNode(vg, vnChld, vv);
 #ifdef DEBUG
 	if (vv->flags & VG_VIEW_EXTENTS)

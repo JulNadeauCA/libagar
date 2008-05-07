@@ -140,6 +140,25 @@ extern Uint               vgNodeClassCount;
 # include <agar/vg/vg_math.h>
 #endif
 
+#define VG_FOREACH_NODE(node, vg, ntype)				\
+	for((node) = (struct ntype *)AG_TAILQ_FIRST(&(vg)->nodes);	\
+	    (node) != (struct ntype *)AG_TAILQ_END(&(vg)->nodes);	\
+	    (node) = (struct ntype *)AG_TAILQ_NEXT(VGNODE(node),list))
+#define VG_FOREACH_NODE_CLASS(node, vg, ntype, cn)			\
+	VG_FOREACH_NODE(node,vg,ntype)					\
+		if (!VG_NodeIsClass(VGNODE(node),(cn))) {		\
+			continue;					\
+		} else
+#define VG_FOREACH_CHLD(node, pnode, ntype)				\
+	for((node) = (struct ntype *)AG_TAILQ_FIRST(&(pnode)->cNodes);	\
+	    (node) != (struct ntype *)AG_TAILQ_END(&(pnode)->cNodes);	\
+	    (node) = (struct ntype *)AG_TAILQ_NEXT(VGNODE(node),tree))
+#define VG_FOREACH_CHLD_CLASS(node, pnode, ntype, cn)			\
+	VG_FOREACH_CHLD(node,pnode,ntype)				\
+		if (!VG_NodeIsClass(VGNODE(node),(cn))) {		\
+			continue;					\
+		} else
+
 __BEGIN_DECLS
 void      VG_InitSubsystem(void);
 void      VG_DestroySubsystem(void);
@@ -367,6 +386,17 @@ static __inline__ void
 VG_Unselect(void *pNode)
 {
 	VGNODE(pNode)->flags |= VG_NODE_SELECTED;
+}
+
+static __inline__ VG_Vector
+VG_Pos(void *node)
+{
+	VG_Matrix T;
+	VG_Vector v = { 0.0f, 0.0f };
+
+	VG_NodeTransform(node, &T);
+	VG_MultMatrixByVector(&v, &v, &T);
+	return (v);
 }
 __END_DECLS
 

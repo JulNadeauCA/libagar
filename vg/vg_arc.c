@@ -83,7 +83,7 @@ Draw(void *p, VG_View *vv)
 	long r = (long)va->r;
 	int x, y, xPos, yPos;
 	int xPrev = 0, yPrev = 0;
-	VG_Vector vCenter = VG_PointPos(va->p);
+	VG_Vector vCenter = VG_Pos(va->p);
 	int a;
 
 	VG_GetViewCoords(vv, vCenter, &xPos, &yPos);
@@ -106,7 +106,7 @@ static void
 Extent(void *p, VG_View *vv, VG_Rect *r)
 {
 	VG_Arc *va = p;
-	VG_Vector vCenter = VG_PointPos(va->p);
+	VG_Vector vCenter = VG_Pos(va->p);
 
 	/* XXX */
 	r->x = vCenter.x - va->r;
@@ -119,7 +119,7 @@ static float
 PointProximity(void *p, VG_Vector *vPt)
 {
 	VG_Arc *va = p;
-	VG_Vector vCenter = VG_PointPos(va->p);
+	VG_Vector vCenter = VG_Pos(va->p);
 	float a1 = VG_Radians(va->a1);
 	float a2 = VG_Radians(va->a2);
 	float d, theta;
@@ -151,7 +151,7 @@ Move(void *p, VG_Vector vCurs, VG_Vector vRel)
 {
 	VG_Arc *va = p;
 
-	va->r = VG_Distance(VG_PointPos(va->p), vCurs);
+	va->r = VG_Distance(VG_Pos(va->p), vCurs);
 }
 
 const VG_NodeOps vgArcOps = {

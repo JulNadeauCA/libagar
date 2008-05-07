@@ -458,7 +458,7 @@ SaveNodeGeneric(VG *vg, VG_Node *vn, AG_DataSource *ds)
 	/* Save the entities. */
 	nNodesOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);
-	TAILQ_FOREACH(vnChld, &vn->cNodes, tree) {
+	VG_FOREACH_CHLD(vnChld, vn, vg_node) {
 		SaveNodeGeneric(vg, vnChld, ds);
 		nNodes++;
 	}
@@ -470,7 +470,7 @@ SaveNodeData(VG *vg, VG_Node *vn, AG_DataSource *ds)
 {
 	VG_Node *vnChld;
 
-	TAILQ_FOREACH(vnChld, &vn->cNodes, tree) {
+	VG_FOREACH_CHLD(vnChld, vn, vg_node) {
 		if (SaveNodeData(vg, vnChld, ds) == -1)
 			return (-1);
 	}
@@ -522,7 +522,7 @@ VG_Save(VG *vg, AG_DataSource *ds)
 	/* Save the entities. */
 	nNodesOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);
-	TAILQ_FOREACH(vn, &vg->root->cNodes, tree) {
+	VG_FOREACH_CHLD(vn, vg->root, vg_node) {
 		SaveNodeGeneric(vg, vn, ds);
 		nNodes++;
 	}
@@ -566,7 +566,7 @@ LoadNodeData(VG *vg, VG_Node *vn, AG_DataSource *ds, const AG_Version *dsVer)
 {
 	VG_Node *vnChld;
 
-	TAILQ_FOREACH(vnChld, &vn->cNodes, tree) {
+	VG_FOREACH_CHLD(vnChld, vn, vg_node) {
 		if (LoadNodeData(vg, vnChld, ds, dsVer) == -1)
 			return (-1);
 	}
@@ -717,31 +717,31 @@ void *
 VG_PointProximity(VG *vg, const char *type, const VG_Vector *vPt, VG_Vector *vC,
     void *ignoreNode)
 {
-	VG_Node *node, *nodeClosest = NULL;
+	VG_Node *vn, *vnClosest = NULL;
 	float distClosest = AG_FLT_MAX, p;
 	VG_Vector v, vClosest = VGVECTOR(AG_FLT_MAX,AG_FLT_MAX);
 
-	TAILQ_FOREACH(node, &vg->nodes, list) {
-		if (node == ignoreNode ||
-		    node->ops->pointProximity == NULL) {
+	VG_FOREACH_NODE(vn, vg, vg_node) {
+		if (vn == ignoreNode ||
+		    vn->ops->pointProximity == NULL) {
 			continue;
 		}
 		if (type != NULL &&
-		    strcmp(node->ops->name, type) != 0) {
+		    strcmp(vn->ops->name, type) != 0) {
 			continue;
 		}
 		v = *vPt;
-		p = node->ops->pointProximity(node, &v);
+		p = vn->ops->pointProximity(vn, &v);
 		if (p < distClosest) {
 			distClosest = p;
-			nodeClosest = node;
+			vnClosest = vn;
 			vClosest = v;
 		}
 	}
 	if (vC != NULL) {
 		*vC = vClosest;
 	}
-	return (nodeClosest);
+	return (vnClosest);
 }
 
 /*
@@ -752,31 +752,31 @@ void *
 VG_PointProximityMax(VG *vg, const char *type, const VG_Vector *vPt,
     VG_Vector *vC, void *ignoreNode, float distMax)
 {
-	VG_Node *node, *nodeClosest = NULL;
+	VG_Node *vn, *vnClosest = NULL;
 	float distClosest = AG_FLT_MAX, p;
 	VG_Vector v, vClosest = VGVECTOR(AG_FLT_MAX,AG_FLT_MAX);
 
-	TAILQ_FOREACH(node, &vg->nodes, list) {
-		if (node == ignoreNode ||
-		    node->ops->pointProximity == NULL) {
+	VG_FOREACH_NODE(vn, vg, vg_node) {
+		if (vn == ignoreNode ||
+		    vn->ops->pointProximity == NULL) {
 			continue;
 		}
 		if (type != NULL &&
-		    strcmp(node->ops->name, type) != 0) {
+		    strcmp(vn->ops->name, type) != 0) {
 			continue;
 		}
 		v = *vPt;
-		p = node->ops->pointProximity(node, &v);
+		p = vn->ops->pointProximity(vn, &v);
 		if (p < distMax && p < distClosest) {
 			distClosest = p;
-			nodeClosest = node;
+			vnClosest = vn;
 			vClosest = v;
 		}
 	}
 	if (vC != NULL) {
 		*vC = vClosest;
 	}
-	return (nodeClosest);
+	return (vnClosest);
 }
 
 /*

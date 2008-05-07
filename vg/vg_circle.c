@@ -71,7 +71,7 @@ static void
 Draw(void *p, VG_View *vv)
 {
 	VG_Circle *vc = p;
-	VG_Vector vCenter = VG_PointPos(vc->p);
+	VG_Vector vCenter = VG_Pos(vc->p);
 	int x, y, r;
 
 	VG_GetViewCoords(vv, vCenter, &x, &y);
@@ -83,7 +83,7 @@ static void
 Extent(void *p, VG_View *vv, VG_Rect *r)
 {
 	VG_Circle *vc = p;
-	VG_Vector vCenter = VG_PointPos(vc->p);
+	VG_Vector vCenter = VG_Pos(vc->p);
 
 	r->x = vCenter.x - vc->r;
 	r->y = vCenter.y - vc->r;
@@ -95,7 +95,7 @@ static float
 PointProximity(void *p, VG_Vector *vPt)
 {
 	VG_Circle *vc = p;
-	VG_Vector vCenter = VG_PointPos(vc->p);
+	VG_Vector vCenter = VG_Pos(vc->p);
 	float theta = Atan2(vPt->y - vCenter.y,
 	                    vPt->x - vCenter.x);
 	VG_Vector vNear;
@@ -122,7 +122,7 @@ Move(void *p, VG_Vector vCurs, VG_Vector vRel)
 {
 	VG_Circle *vc = p;
 
-	vc->r = VG_Distance(VG_PointPos(vc->p), vCurs);
+	vc->r = VG_Distance(VG_Pos(vc->p), vCurs);
 }
 
 const VG_NodeOps vgCircleOps = {

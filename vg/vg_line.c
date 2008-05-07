@@ -88,8 +88,8 @@ Draw(void *p, VG_View *vv)
 	Uint32 c32 = VG_MapColorRGB(VGNODE(vl)->color);
 	int x1, y1, x2, y2;
 
-	VG_GetViewCoords(vv, VG_PointPos(vl->p1), &x1, &y1);
-	VG_GetViewCoords(vv, VG_PointPos(vl->p2), &x2, &y2);
+	VG_GetViewCoords(vv, VG_Pos(vl->p1), &x1, &y1);
+	VG_GetViewCoords(vv, VG_Pos(vl->p2), &x2, &y2);
 
 	/* XXX TODO: endpoint style */
 	AG_DrawLine(vv, x1,y1, x2,y2, c32);
@@ -101,8 +101,8 @@ Extent(void *p, VG_View *vv, VG_Rect *r)
 	VG_Line *vl = p;
 	VG_Vector p1, p2;
 
-	p1 = VG_PointPos(vl->p1);
-	p2 = VG_PointPos(vl->p2);
+	p1 = VG_Pos(vl->p1);
+	p2 = VG_Pos(vl->p2);
 
 	r->x = MIN(p1.x, p2.x);
 	r->y = MIN(p1.y, p2.y);
@@ -114,8 +114,8 @@ static float
 PointProximity(void *p, VG_Vector *vPt)
 {
 	VG_Line *vl = p;
-	VG_Vector v1 = VG_PointPos(vl->p1);
-	VG_Vector v2 = VG_PointPos(vl->p2);
+	VG_Vector v1 = VG_Pos(vl->p1);
+	VG_Vector v2 = VG_Pos(vl->p2);
 
 	return VG_PointLineDistance(v1, v2, vPt);
 }

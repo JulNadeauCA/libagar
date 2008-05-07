@@ -105,11 +105,11 @@ DrawOutline(VG_Polygon *vp, VG_View *vv)
 	if (vp->nPts < 2) {
 		return;
 	}
-	VG_GetViewCoords(vv, VG_PointPos(vp->pts[0]), &Ax,&Ay);
+	VG_GetViewCoords(vv, VG_Pos(vp->pts[0]), &Ax,&Ay);
 	Cx = Ax;
 	Cy = Ay;
 	for (i = 1; i < vp->nPts; i++) {
-		VG_GetViewCoords(vv, VG_PointPos(vp->pts[i]), &Bx,&By);
+		VG_GetViewCoords(vv, VG_Pos(vp->pts[i]), &Bx,&By);
 		AG_DrawLine(vv, Ax,Ay, Bx,By, c32);
 		Ax = Bx;
 		Ay = By;
@@ -137,12 +137,12 @@ DrawFB(VG_Polygon *vp, VG_View *vv)
 	}
 
 	/* Find Y maxima */
-	VG_GetViewCoords(vv, VG_PointPos(vp->pts[0]), &ign, &miny);
+	VG_GetViewCoords(vv, VG_Pos(vp->pts[0]), &ign, &miny);
 	maxy = miny;
 	for (i = 1; i < vp->nPts; i++) {
 		int vy;
 	
-		VG_GetViewCoords(vv, VG_PointPos(vp->pts[i]), &ign, &vy);
+		VG_GetViewCoords(vv, VG_Pos(vp->pts[i]), &ign, &vy);
 		if (vy < miny) {
 			miny = vy;
 		} else if (vy > maxy) {
@@ -161,19 +161,17 @@ DrawFB(VG_Polygon *vp, VG_View *vv)
 				i1 = i - 1;
 				i2 = i;
 			}
-			VG_GetViewCoords(vv, VG_PointPos(vp->pts[i1]),
-			    &ign, &y1);
-			VG_GetViewCoords(vv, VG_PointPos(vp->pts[i2]),
-			    &ign, &y2);
+			VG_GetViewCoords(vv, VG_Pos(vp->pts[i1]), &ign, &y1);
+			VG_GetViewCoords(vv, VG_Pos(vp->pts[i2]), &ign, &y2);
 			if (y1 < y2) {
-				VG_GetViewCoords(vv, VG_PointPos(vp->pts[i1]),
+				VG_GetViewCoords(vv, VG_Pos(vp->pts[i1]),
 				    &x1, &ign);
-				VG_GetViewCoords(vv, VG_PointPos(vp->pts[i2]),
+				VG_GetViewCoords(vv, VG_Pos(vp->pts[i2]),
 				    &x2, &ign);
 			} else if (y1 > y2) {
-				VG_GetViewCoords(vv, VG_PointPos(vp->pts[i1]),
+				VG_GetViewCoords(vv, VG_Pos(vp->pts[i1]),
 				    &x2, &y2);
-				VG_GetViewCoords(vv, VG_PointPos(vp->pts[i2]),
+				VG_GetViewCoords(vv, VG_Pos(vp->pts[i2]),
 				    &x1, &y1);
 			} else {
 				continue;
@@ -216,7 +214,7 @@ Draw(void *p, VG_View *vv)
 		glBegin(GL_POLYGON);
 		glColor3ub(c->r, c->g, c->b);
 		for (i = 0; i < vp->nPts; i++) {
-			v = VG_PointPos(vp->pts[i]);
+			v = VG_Pos(vp->pts[i]);
 			glVertex2f(v.x, v.y);
 		}
 		glEnd();
@@ -243,11 +241,11 @@ Extent(void *p, VG_View *vv, VG_Rect *r)
 		r->h = 0;
 		return;
 	}
-	v = VG_PointPos(vp->pts[0]);
+	v = VG_Pos(vp->pts[0]);
 	xMin = xMax = v.x;
 	yMin = yMax = v.y;
 	for (i = 0; i < vp->nPts; i++) {
-		v = VG_PointPos(vp->pts[i]);
+		v = VG_Pos(vp->pts[i]);
 		if (v.x < xMin) { xMin = v.x; }
 		if (v.y < yMin) { yMin = v.y; }
 		if (v.x > xMax) { xMax = v.x; }
@@ -273,9 +271,9 @@ PointProximity(void *p, VG_Vector *vPt)
 	dMin = AG_FLT_MAX;
 	m.x = 0.0f;
 	m.y = 0.0f;
-	C = A = VG_PointPos(vp->pts[0]);
+	C = A = VG_Pos(vp->pts[0]);
 	for (i = 1; i < vp->nPts; i++) {
-		B = VG_PointPos(vp->pts[i]);
+		B = VG_Pos(vp->pts[i]);
 		vInt = *vPt;
 		d = VG_PointLineDistance(A, B, &vInt);
 		if (d < dMin) {

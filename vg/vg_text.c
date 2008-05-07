@@ -157,8 +157,8 @@ DrawText(VG_Text *vt, const char *s, VG_View *vv)
 	w = WSURFACE(vv,su)->w;
 	h = WSURFACE(vv,su)->h;
 
-	v1 = VG_PointPos(vt->p1);
-	v2 = VG_PointPos(vt->p2);
+	v1 = VG_Pos(vt->p1);
+	v2 = VG_Pos(vt->p2);
 	vMid.x = v1.x + (v2.x - v1.x)/2.0f;
 	vMid.y = v1.y + (v2.y - v1.y)/2.0f;
 	VG_GetViewCoords(vv, vMid, &x, &y);
@@ -280,8 +280,8 @@ Extent(void *p, VG_View *vv, VG_Rect *r)
 	int su;
 
 	su = AG_TextCacheInsLookup(vv->tCache, vt->text);
-	v1 = VG_PointPos(vt->p1);
-	v2 = VG_PointPos(vt->p2);
+	v1 = VG_Pos(vt->p1);
+	v2 = VG_Pos(vt->p2);
 	wText = (float)WSURFACE(vv,su)->w/vv->scale;
 	hText = (float)WSURFACE(vv,su)->h/vv->scale;
 
@@ -295,8 +295,8 @@ static float
 PointProximity(void *p, VG_Vector *vPt)
 {
 	VG_Text *vt = p;
-	VG_Vector v1 = VG_PointPos(vt->p1);
-	VG_Vector v2 = VG_PointPos(vt->p2);
+	VG_Vector v1 = VG_Pos(vt->p1);
+	VG_Vector v2 = VG_Pos(vt->p2);
 
 	return VG_PointLineDistance(v1, v2, vPt);
 }
