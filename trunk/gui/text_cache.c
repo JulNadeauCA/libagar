@@ -84,7 +84,7 @@ static void
 ExpireEntries(AG_TextCache *tc)
 {
 	AG_CachedText *ct;
-	u_int i, j;
+	Uint i, j;
 
 	for (i = 0; i < tc->nToExpire; i++) {
 		tc->toExpire[i] = NULL;
