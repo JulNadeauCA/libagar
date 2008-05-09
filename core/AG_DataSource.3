@@ -40,12 +40,17 @@ The
 structure provides a generic interface to different data sources.
 Built-in sources include
 .Ft AG_FileSource
-for file access,
+for files,
 .Ft AG_CoreSource
-for memory access and
+for fixed-size memory,
+.Ft AG_AutoCoreSource
+for automatically-allocated memory and
 .Ft AG_ConstCoreSource
-for constant memory access.
+for read-only memory.
 .Pp
+Creating a new class of data source simply can be done by overloading the
+.Nm
+structure.
 .Sh INTERFACE
 .nr nS 1
 .Ft "AG_DataSource *"
