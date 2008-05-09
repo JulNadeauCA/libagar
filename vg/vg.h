@@ -61,8 +61,8 @@ typedef struct vg_node_ops {
 	void  (*save)(void *, AG_DataSource *);
 	void  (*draw)(void *, struct vg_view *);
 	void  (*extent)(void *, struct vg_view *, VG_Rect *);
-	float (*pointProximity)(void *, VG_Vector *);
-	float (*lineProximity)(void *, VG_Vector *);
+	float (*pointProximity)(void *, struct vg_view *, VG_Vector *);
+	float (*lineProximity)(void *, struct vg_view *, VG_Vector *);
 	void  (*deleteNode)(void *);
 	void  (*moveNode)(void *, VG_Vector, VG_Vector);
 } VG_NodeOps;
@@ -150,8 +150,8 @@ extern Uint               vgNodeClassCount;
 			continue;					\
 		} else
 #define VG_FOREACH_CHLD(node, pnode, ntype)				\
-	for((node) = (struct ntype *)AG_TAILQ_FIRST(&(pnode)->cNodes);	\
-	    (node) != (struct ntype *)AG_TAILQ_END(&(pnode)->cNodes);	\
+	for((node) = (struct ntype *)AG_TAILQ_FIRST(&VGNODE(pnode)->cNodes); \
+	    (node) != (struct ntype *)AG_TAILQ_END(&VGNODE(pnode)->cNodes); \
 	    (node) = (struct ntype *)AG_TAILQ_NEXT(VGNODE(node),tree))
 #define VG_FOREACH_CHLD_CLASS(node, pnode, ntype, cn)			\
 	VG_FOREACH_CHLD(node,pnode,ntype)				\
@@ -178,7 +178,7 @@ void              VG_UnregisterClass(const VG_NodeOps *);
 void      VG_NodeInit(void *, const VG_NodeOps *);
 void      VG_NodeAttach(void *, void *);
 void      VG_NodeDetach(void *);
-void      VG_NodeDestroy(VG_Node *);
+void      VG_NodeDestroy(void *);
 int       VG_Delete(void *);
 void      VG_AddRef(void *, void *);
 Uint      VG_DelRef(void *, void *);
@@ -204,10 +204,10 @@ void      VG_WriteColor(AG_DataSource *, const VG_Color *);
 void      VG_WriteRef(AG_DataSource *, void *);
 void     *VG_ReadRef(AG_DataSource *, void *, const char *);
 
-void     *VG_PointProximity(VG *, const char *, const VG_Vector *, VG_Vector *,
-                            void *);
-void     *VG_PointProximityMax(VG *, const char *, const VG_Vector *,
-                               VG_Vector *, void *, float);
+void     *VG_PointProximity(struct vg_view *, const char *, const VG_Vector *,
+                            VG_Vector *, void *);
+void     *VG_PointProximityMax(struct vg_view *, const char *,
+                               const VG_Vector *, VG_Vector *, void *, float);
 VG_Matrix VG_MatrixInvert(VG_Matrix);
 
 static __inline__ void

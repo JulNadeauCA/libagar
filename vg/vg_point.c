@@ -61,7 +61,7 @@ Extent(void *p, VG_View *vv, VG_Rect *r)
 }
 
 static float
-PointProximity(void *p, VG_Vector *vPt)
+PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
 {
 	VG_Point *pt = p;
 	VG_Vector pos = VG_Pos(pt);

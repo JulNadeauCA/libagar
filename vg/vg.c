@@ -110,11 +110,13 @@ VG_Init(VG *vg, Uint flags)
 	ptRoot = VG_PointNew(NULL, VGVECTOR(0.0f,0.0f));
 	vg->root = VGNODE(ptRoot);
 	vg->root->vg = vg;
+	vg->root->handle = 1;
 }
 
 void
-VG_NodeDestroy(VG_Node *vn)
+VG_NodeDestroy(void *p)
 {
+	VG_Node *vn = p;
 	VG_Node *vnChld, *vnNext;
 
 	for (vnChld = TAILQ_FIRST(&vn->cNodes);
@@ -137,6 +139,9 @@ VG_ReinitNodes(VG *vg)
 {
 	VG_Node *vnChld, *vnNext;
 
+	if (vg->root == NULL) {
+		return;
+	}
 	for (vnChld = TAILQ_FIRST(&vg->root->cNodes);
 	     vnChld != TAILQ_END(&vg->root->cNodes);
 	     vnChld = vnNext) {
@@ -241,7 +246,7 @@ VG_AddRef(void *p, void *pRef)
 {
 	VG_Node *vn = p;
 
-	vn->refs = Realloc(vn->refs, (vn->nRefs*sizeof(VG_Node *)));
+	vn->refs = Realloc(vn->refs, (vn->nRefs+1)*sizeof(VG_Node *));
 	vn->refs[vn->nRefs++] = VGNODE(pRef);
 	VGNODE(pRef)->nDeps++;
 }
@@ -312,31 +317,36 @@ GenNodeName(VG *vg, const char *type)
  * name assigned (handle=0), one is generated.
  */
 void
-VG_NodeAttach(void *pParent, void *pChld)
+VG_NodeAttach(void *pParent, void *pNode)
 {
-	VG_Node *parent = pParent;
-	VG_Node *chld = pChld;
+	VG_Node *vnParent = pParent;
+	VG_Node *vn = pNode;
 	VG *vg;
 
-	if (parent == NULL) {
-		chld->parent = NULL;
-		chld->vg = NULL;
+	if (vnParent == NULL) {
+		vn->parent = NULL;
+		vn->vg = NULL;
 		return;
 	}
-	chld->vg = parent->vg;
-	vg = chld->vg;
+	vg = vnParent->vg;
 
 	VG_Lock(vg);
-	if (chld->handle == 0) {
-		chld->handle = GenNodeName(vg, chld->ops->name);
+	
+	if (vn->handle == 0) {
+		vn->handle = GenNodeName(vg, vn->ops->name);
 	}
-	chld->parent = parent;
-	TAILQ_INSERT_TAIL(&vg->nodes, chld, list);
-	TAILQ_INSERT_TAIL(&parent->cNodes, chld, tree);
+	vn->parent = vnParent;
+	TAILQ_INSERT_TAIL(&vnParent->cNodes, vn, tree);
+	TAILQ_INSERT_TAIL(&vg->nodes, vn, list);
+	vn->vg = vg;
 	VG_Unlock(vg);
 }
 
-/* Detach the specified node from its current parent. */
+/*
+ * Detach the specified node from its current parent. The node itself
+ * and all of its children are also detached from the VG. No reference
+ * checking is done.
+ */
 void
 VG_NodeDetach(void *p)
 {
@@ -346,9 +356,9 @@ VG_NodeDetach(void *p)
 	VG_Lock(vg);
 	if (vn->parent != NULL) {
 		TAILQ_REMOVE(&vn->parent->cNodes, vn, tree);
+		vn->parent = NULL;
 	}
 	TAILQ_REMOVE(&vg->nodes, vn, list);
-	VG_NodeDestroy(vn);
 	VG_Unlock(vg);
 }
 
@@ -714,9 +724,10 @@ VG_ReadRef(AG_DataSource *ds, void *pNode, const char *expType)
 
 /* Return the element closest to the given point. */
 void *
-VG_PointProximity(VG *vg, const char *type, const VG_Vector *vPt, VG_Vector *vC,
-    void *ignoreNode)
+VG_PointProximity(VG_View *vv, const char *type, const VG_Vector *vPt,
+    VG_Vector *vC, void *ignoreNode)
 {
+	VG *vg = vv->vg;
 	VG_Node *vn, *vnClosest = NULL;
 	float distClosest = AG_FLT_MAX, p;
 	VG_Vector v, vClosest = VGVECTOR(AG_FLT_MAX,AG_FLT_MAX);
@@ -731,7 +742,7 @@ VG_PointProximity(VG *vg, const char *type, const VG_Vector *vPt, VG_Vector *vC,
 			continue;
 		}
 		v = *vPt;
-		p = vn->ops->pointProximity(vn, &v);
+		p = vn->ops->pointProximity(vn, vv, &v);
 		if (p < distClosest) {
 			distClosest = p;
 			vnClosest = vn;
@@ -749,9 +760,10 @@ VG_PointProximity(VG *vg, const char *type, const VG_Vector *vPt, VG_Vector *vC,
  * beyond a specified distance.
  */
 void *
-VG_PointProximityMax(VG *vg, const char *type, const VG_Vector *vPt,
+VG_PointProximityMax(VG_View *vv, const char *type, const VG_Vector *vPt,
     VG_Vector *vC, void *ignoreNode, float distMax)
 {
+	VG *vg = vv->vg;
 	VG_Node *vn, *vnClosest = NULL;
 	float distClosest = AG_FLT_MAX, p;
 	VG_Vector v, vClosest = VGVECTOR(AG_FLT_MAX,AG_FLT_MAX);
@@ -766,7 +778,7 @@ VG_PointProximityMax(VG *vg, const char *type, const VG_Vector *vPt,
 			continue;
 		}
 		v = *vPt;
-		p = vn->ops->pointProximity(vn, &v);
+		p = vn->ops->pointProximity(vn, vv, &v);
 		if (p < distMax && p < distClosest) {
 			distClosest = p;
 			vnClosest = vn;
