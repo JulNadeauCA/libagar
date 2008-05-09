@@ -208,6 +208,7 @@ void 	 AG_ObjectCancelTimeouts(void *, Uint);
 
 int	 AG_ObjectPageIn(void *);
 int	 AG_ObjectPageOut(void *);
+int	 AG_ObjectSerialize(void *, AG_DataSource *);
 int	 AG_ObjectSaveToFile(void *, const char *);
 #define	 AG_ObjectSave(p) AG_ObjectSaveToFile((p),NULL)
 int	 AG_ObjectSaveAll(void *);
