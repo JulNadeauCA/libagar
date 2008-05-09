@@ -695,6 +695,12 @@ flag set).
 .Fn AG_ObjectSaveAll "AG_Object *obj"
 .Pp
 .Ft "int"
+.Fn AG_ObjectSaveToFile "AG_Object *obj" "const char *path"
+.Pp
+.Ft "int"
+.Fn AG_ObjectSerialize "AG_Object *obj" "AG_DataSource *ds"
+.Pp
+.Ft "int"
 .Fn AG_ObjectPageIn "AG_Object *obj"
 .Pp
 .Ft "int"
@@ -736,17 +742,25 @@ This functionality requires that all classes be registered with
 .Pp
 The
 .Fn AG_ObjectSave
-function creates an archive of the given AG_Object in the save
-directory (the
+function creates an archive of the given object in the default location
+(i.e., the
 .Sq save-path
-config setting).
+setting of
+.Xr AG_Config 3 ) .
 .Fn AG_ObjectSave
 invokes the
 .Fn load
 operation of every class in the inheritance hierarchy of the object.
 The
 .Fn AG_ObjectSaveAll
-variant also saves child objects.
+variant also saves the entire tree of child objects.
+.Pp
+.Fn AG_ObjectSaveToFile
+archives the given object to the specified file.
+.Pp
+.Fn AG_ObjectSerialize
+writes an archive of the given object to the specified
+.Xr AG_DataSource 3 .
 .Pp
 The
 .Fn AG_ObjectPageIn

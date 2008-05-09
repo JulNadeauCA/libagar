@@ -1287,6 +1287,79 @@ fail:
 	return (-1);
 }
 
+/* Serialize an object to an arbitrary AG_DataSource(3). */
+int
+AG_ObjectSerialize(void *p, AG_DataSource *ds)
+{
+	AG_Object *ob = p;
+	off_t countOffs, dataOffs;
+	Uint32 count;
+	AG_Object *child;
+	AG_ObjectDep *dep;
+	AG_ObjectClass **hier;
+	int i, nHier;
+
+	AG_ObjectLock(ob);
+
+	/* Header */
+	AG_WriteVersion(ds, agObjectClass.name, &agObjectClass.ver);
+	dataOffs = AG_Tell(ds);
+	AG_WriteUint32(ds, 0);					/* Data offs */
+	AG_WriteUint32(ds, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
+
+	/* Dependency table */
+	countOffs = AG_Tell(ds);
+	AG_WriteUint32(ds, 0);
+	for (dep = TAILQ_FIRST(&ob->deps), count = 0;
+	     dep != TAILQ_END(&ob->deps);
+	     dep = TAILQ_NEXT(dep, deps), count++) {
+		char depName[AG_OBJECT_PATH_MAX];
+		
+		AG_ObjectCopyName(dep->obj, depName, sizeof(depName));
+		AG_WriteString(ds, depName);
+	}
+	AG_WriteUint32At(ds, count, countOffs);
+
+	/* Property table */
+	if (AG_PropSave(ob, ds) == -1)
+		goto fail;
+	
+	/* Table of child objects */
+	countOffs = AG_Tell(ds);
+	AG_WriteUint32(ds, 0);
+	count = 0;
+	TAILQ_FOREACH(child, &ob->children, cobjs) {
+		if (!OBJECT_PERSISTENT(child)) {
+			continue;
+		}
+		AG_WriteString(ds, child->name);
+		AG_WriteString(ds, child->cls->name);
+		count++;
+	}
+	AG_WriteUint32At(ds, count, countOffs);
+
+	/* Dataset */
+	AG_WriteUint32At(ds, AG_Tell(ds), dataOffs);
+	AG_WriteVersion(ds, ob->cls->name, &ob->cls->ver);
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
+		for (i = 0; i < nHier; i++) {
+			if (hier[i]->save == NULL)
+				continue;
+			if (hier[i]->save(ob, ds) == -1)
+				goto fail;
+		}
+		Free(hier);
+	} else {
+		AG_FatalError("AG_ObjectSave: %s: %s", ob->name, AG_GetError());
+	}
+
+	AG_ObjectUnlock(ob);
+	return (0);
+fail:
+	AG_ObjectUnlock(ob);
+	return (-1);
+}
+
 /* Archive an object to a file. */
 int
 AG_ObjectSaveToFile(void *p, const char *pPath)
@@ -1296,21 +1369,15 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	char name[AG_OBJECT_PATH_MAX];
 	AG_Object *ob = p;
 	AG_DataSource *ds;
-	AG_Object *child;
-	off_t countOffs, dataOffs;
-	Uint32 count;
-	AG_ObjectDep *dep;
 	int pagedTemporarily;
 	int dataFound;
-	AG_ObjectClass **hier;
-	int i, nHier;
 
 	AG_LockVFS(ob);
 	AG_ObjectLock(ob);
 
 	if (!OBJECT_PERSISTENT(ob)) {
 		AG_SetError(_("The `%s' object is non-persistent."), ob->name);
-		goto fail_lock;
+		goto fail_unlock;
 	}
 	AG_ObjectCopyName(ob, name, sizeof(name));
 
@@ -1326,7 +1393,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 		Strlcat(pathDir, name, sizeof(pathDir));
 		if (AG_FileExists(pathDir) == 0 &&
 		    AG_MkPath(pathDir) == -1)
-			goto fail_lock;
+			goto fail_unlock;
 	}
 
 	/*
@@ -1348,7 +1415,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 				AG_SetError("Failed to load non-resident "
 				            "object for save: %s",
 				    AG_GetError());
-				goto fail_lock;
+				goto fail_unlock;
 			}
 		}
 		pagedTemporarily = 1;
@@ -1374,61 +1441,12 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	} else {
 		AG_FileDelete(path);
 	}
-	if ((ds = AG_OpenFile(path, "wb")) == NULL)
-		goto fail_reinit;
-
-	AG_WriteVersion(ds, agObjectClass.name, &agObjectClass.ver);
-
-	dataOffs = AG_Tell(ds);
-	AG_WriteUint32(ds, 0);					/* Data offs */
-	AG_WriteUint32(ds, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
-
-	/* Encode the object dependencies. */
-	countOffs = AG_Tell(ds);
-	AG_WriteUint32(ds, 0);
-	for (dep = TAILQ_FIRST(&ob->deps), count = 0;
-	     dep != TAILQ_END(&ob->deps);
-	     dep = TAILQ_NEXT(dep, deps), count++) {
-		char dep_name[AG_OBJECT_PATH_MAX];
-		
-		AG_ObjectCopyName(dep->obj, dep_name, sizeof(dep_name));
-		AG_WriteString(ds, dep_name);
+	if ((ds = AG_OpenFile(path, "wb")) == NULL) {
+		goto fail_free;
 	}
-	AG_WriteUint32At(ds, count, countOffs);
-
-	/* Encode the generic properties. */
-	if (AG_PropSave(ob, ds) == -1)
+	if (AG_ObjectSerialize(ob, ds) == -1) {
 		goto fail;
-	
-	/* Save the list of child objects. */
-	countOffs = AG_Tell(ds);
-	AG_WriteUint32(ds, 0);
-	count = 0;
-	TAILQ_FOREACH(child, &ob->children, cobjs) {
-		if (!OBJECT_PERSISTENT(child)) {
-			continue;
-		}
-		AG_WriteString(ds, child->name);
-		AG_WriteString(ds, child->cls->name);
-		count++;
 	}
-	AG_WriteUint32At(ds, count, countOffs);
-
-	/* Save the dataset. */
-	AG_WriteUint32At(ds, AG_Tell(ds), dataOffs);
-	AG_WriteVersion(ds, ob->cls->name, &ob->cls->ver);
-	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
-		for (i = 0; i < nHier; i++) {
-			if (hier[i]->save == NULL)
-				continue;
-			if (hier[i]->save(ob, ds) == -1)
-				goto fail;
-		}
-		Free(hier);
-	} else {
-		AG_FatalError("AG_ObjectSave: %s: %s", ob->name, AG_GetError());
-	}
-
 	AG_CloseFile(ds);
 	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }
 	AG_ObjectUnlock(ob);
@@ -1436,9 +1454,9 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 	return (0);
 fail:
 	AG_CloseFile(ds);
-fail_reinit:
+fail_free:
 	if (pagedTemporarily) { AG_ObjectFreeDataset(ob); }
-fail_lock:
+fail_unlock:
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
 	return (-1);
