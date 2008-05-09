@@ -76,10 +76,12 @@ AG_DataSource *AG_OpenFile(const char *, const char *);
 AG_DataSource *AG_OpenFileHandle(FILE *);
 AG_DataSource *AG_OpenCore(void *, size_t);
 AG_DataSource *AG_OpenConstCore(const void *, size_t);
+AG_DataSource *AG_OpenAutoCore(void);
 void           AG_CloseFile(AG_DataSource *);
 #define        AG_CloseFileHandle(ds) AG_CloseFile(ds)
 void           AG_CloseCore(AG_DataSource *);
 #define        AG_CloseConstCore(ds) AG_CloseCore(ds)
+void           AG_CloseAutoCore(AG_DataSource *);
 
 AG_IOStatus    AG_Read(AG_DataSource *, void *, size_t, size_t);
 AG_IOStatus    AG_ReadAt(AG_DataSource *, void *, size_t, size_t, off_t);

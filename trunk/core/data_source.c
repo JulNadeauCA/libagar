@@ -169,13 +169,9 @@ CoreRead(AG_DataSource *ds, void *buf, size_t msize, size_t nmemb, size_t *rv)
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 	size_t size = msize*nmemb;
 
-	if (cs->offs >= cs->size) {
-		*rv = 0;
-		return (AG_IO_EOF);
-	}
 	if (cs->offs+size >= cs->size) {
-		*rv = cs->size - cs->offs;
-		memcpy(buf, &cs->data[cs->offs], *rv);
+		AG_SetError("EOF (%u+%u >= %u)", (Uint)cs->offs, (Uint)size,
+		    (Uint)cs->size);
 		return (AG_IO_EOF);
 	}
 	memcpy(buf, &cs->data[cs->offs], size);
@@ -195,13 +191,9 @@ CoreReadAt(AG_DataSource *ds, void *buf, size_t msize, size_t nmemb, off_t pos,
 		AG_SetError("Bad position");
 		return (AG_IO_ERROR);
 	}
-	if (pos >= cs->size) {
-		*rv = 0;
-		return (AG_IO_EOF);
-	}
 	if (pos+size >= cs->size) {
-		*rv = cs->size - pos;
-		memcpy(buf, &cs->data[pos], *rv);
+		AG_SetError("EOF (%u+%u >= %u)", (Uint)pos, (Uint)size,
+		    (Uint)cs->size);
 		return (AG_IO_EOF);
 	}
 	memcpy(buf, &cs->data[pos], size);
@@ -216,18 +208,28 @@ CoreWrite(AG_DataSource *ds, const void *buf, size_t msize, size_t nmemb,
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 	size_t size = msize*nmemb;
 
-	if (cs->offs >= cs->size) {
-		*rv = 0;
-		return (AG_IO_EOF);
-	}
 	if (cs->offs+size >= cs->size) {
-		*rv = cs->size - cs->offs;
-		memcpy(&cs->data[cs->offs], buf, *rv);
+		AG_SetError("EOF");
 		return (AG_IO_EOF);
 	}
 	memcpy(&cs->data[cs->offs], buf, size);
 	*rv = size;
 	cs->offs += size;
+	return (AG_IO_SUCCESS);
+}
+
+static AG_IOStatus
+CoreAutoWrite(AG_DataSource *ds, const void *buf, size_t msize, size_t nmemb,
+    size_t *rv)
+{
+	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
+	size_t size = msize*nmemb;
+
+	cs->data = Realloc(cs->data, (cs->size+size));
+	memcpy(&cs->data[cs->offs], buf, size);
+	cs->size += size;
+	cs->offs += size;
+	*rv = size;
 	return (AG_IO_SUCCESS);
 }
 
@@ -242,14 +244,29 @@ CoreWriteAt(AG_DataSource *ds, const void *buf, size_t msize, size_t nmemb,
 		AG_SetError("Bad position");
 		return (AG_IO_ERROR);
 	}
-	if (pos >= cs->size) {
-		*rv = 0;
+	if (pos+size >= cs->size) {
+		AG_SetError("EOF");
 		return (AG_IO_EOF);
 	}
+	memcpy(&cs->data[pos], buf, size);
+	*rv = size;
+	return (AG_IO_SUCCESS);
+}
+
+static AG_IOStatus
+CoreAutoWriteAt(AG_DataSource *ds, const void *buf, size_t msize, size_t nmemb,
+    off_t pos, size_t *rv)
+{
+	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
+	size_t size = msize*nmemb;
+
+	if (pos < 0) {
+		AG_SetError("Bad position");
+		return (AG_IO_ERROR);
+	}
 	if (pos+size >= cs->size) {
-		*rv = cs->size - pos;
-		memcpy(&cs->data[pos], buf, *rv);
-		return (AG_IO_EOF);
+		cs->data = Realloc(cs->data, (pos+size));
+		cs->size = pos+size;
 	}
 	memcpy(&cs->data[pos], buf, size);
 	*rv = size;
@@ -390,6 +407,26 @@ AG_OpenConstCore(const void *data, size_t size)
 	return (&cs->ds);
 }
 
+AG_DataSource *
+AG_OpenAutoCore(void)
+{
+	AG_CoreSource *cs;
+
+	cs = Malloc(sizeof(AG_CoreSource));
+	AG_DataSourceInit(&cs->ds);
+	cs->data = NULL;
+	cs->size = 0;
+	cs->offs = 0;
+	cs->ds.read = CoreRead;
+	cs->ds.read_at = CoreReadAt;
+	cs->ds.write = CoreAutoWrite;
+	cs->ds.write_at = CoreAutoWriteAt;
+	cs->ds.tell = CoreTell;
+	cs->ds.seek = CoreSeek;
+	cs->ds.close = AG_CloseAutoCore;
+	return (&cs->ds);
+}
+
 void
 AG_SetByteOrder(AG_DataSource *ds, enum ag_byte_order order)
 {
@@ -411,6 +448,13 @@ AG_CloseFile(AG_DataSource *ds)
 void
 AG_CloseCore(AG_DataSource *ds)
 {
+	AG_DataSourceDestroy(ds);
+}
+
+void
+AG_CloseAutoCore(AG_DataSource *ds)
+{
+	Free(AG_CORE_SOURCE(ds)->data);
 	AG_DataSourceDestroy(ds);
 }
 
