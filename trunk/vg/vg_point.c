@@ -40,12 +40,20 @@
 static void
 Draw(void *p, VG_View *vv)
 {
-	VG_Point *pt = p;
-	Uint32 c32 = VG_MapColorRGB(VGNODE(pt)->color);
-	int x, y;
+	if (vv->flags & VG_VIEW_CONSTRUCTION) {
+		VG_Point *pt = p;
+		Uint32 c32 = VG_MapColorRGB(VGNODE(pt)->color);
+		int x, y, i;
 
-	VG_GetViewCoords(vv, VG_Pos(pt), &x, &y);
-	AG_DrawCircle(vv, x, y, 2, c32);
+		VG_GetViewCoords(vv, VG_Pos(pt), &x, &y);
+		AG_DrawPixel(vv, x, y, c32);
+		for (i = 0; i < 3; i++) {
+			AG_DrawPixel(vv, x-i, y, c32);
+			AG_DrawPixel(vv, x+i, y, c32);
+			AG_DrawPixel(vv, x, y-i, c32);
+			AG_DrawPixel(vv, x, y+i, c32);
+		}
+	}
 }
 
 static void
