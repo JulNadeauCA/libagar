@@ -368,22 +368,24 @@ AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 	AG_Widget *wid = AGWIDGET(p);
 	int vx = wid->cx+wx;
 	int vy = wid->cy+wy;
-	
-	if (AG_CLIPPED_PIXEL(agView->v, vx,vy))
-		return;
+
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		AG_WidgetPutPixel32_GL(p, vx,vy, color);
 	} else
 #endif
-		AG_PUT_PIXEL2(agView->v, vx,vy, color);
+	{
+		if (!AG_CLIPPED_PIXEL(agView->v, vx,vy))
+			AG_PUT_PIXEL2(agView->v, vx,vy, color);
+	}
 }
 
 static __inline__ void
 AG_WidgetPutPixel32OrClip(void *p, int wx, int wy, Uint32 color)
 {
 	AG_Widget *wid = AGWIDGET(p);
-	int vx = wid->cx+wx, vy = wid->cy+wy;
+	int vx = wid->cx+wx;
+	int vy = wid->cy+wy;
 	
 	if (!AG_WidgetArea(wid, vx,vy))
 		return;
@@ -399,16 +401,17 @@ static __inline__ void
 AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_Widget *wid = AGWIDGET(p);
-	int vx = wid->cx+wx, vy = wid->cy+wy;
+	int vx = wid->cx+wx;
+	int vy = wid->cy+wy;
 	
-	if (AG_CLIPPED_PIXEL(agView->v, vx,vy))
-		return;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		AG_WidgetPutPixelRGB_GL(p, vx,vy, r,g,b);
 	} else
 #endif
-		AG_PUT_PIXEL2(agView->v, vx,vy, AG_MapRGB(agVideoFmt, r,g,b));
+	if (!AG_CLIPPED_PIXEL(agView->v, vx, vy)) {
+		AG_PUT_PIXEL2(agView->v, vx,vy, AG_MapRGB(agVideoFmt,r,g,b));
+	}
 }
 
 static __inline__ void
