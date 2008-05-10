@@ -61,6 +61,7 @@ DEV_DisplaySettings(void)
 		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL, "%dx%d",
 		    &agView->w, &agView->h);
 
+#if 0
 		AG_LabelNewStatic(vb, 0, _("Depth: %dbpp"),
 		    (int)agVideoInfo->vfmt->BitsPerPixel);
 		AG_LabelNewStatic(vb, 0, _("Video masks: %08x,%08x,%08x"),
@@ -71,6 +72,7 @@ DEV_DisplaySettings(void)
 		    (Uint)agVideoInfo->vfmt->colorkey);
 		AG_LabelNewStatic(vb, 0, _("Alpha: %d"),
 		    agVideoInfo->vfmt->alpha);
+#endif
 
 		/* XXX thread unsafe */
 		lbl = AG_LabelNewPolled(vb, AG_LABEL_HFILL,
