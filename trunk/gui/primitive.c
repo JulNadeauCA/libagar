@@ -984,44 +984,15 @@ static void
 RectBlendedFB(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 {
 	AG_Widget *wid = p;
-	Uint8 *pView;
-	int x, y, yinc, d;
-	int w = r.w;
-	int h = r.h;
-	int x1 = r.x;
-	int y1 = r.y;
+	int x, y;
 
-	if (x1 < 0) {
-		if (x1+w >= 0) {
-			w += x1;
-			x1 = 0;
-		} else {
-			return;
-		}
-	}
-	if (y1 < 0) {
-		if (y1+h >= 0) {
-			h += y1;
-			y1 = 0;
-		} else {
-			return;
-		}
-	}
-	if ((d = (wid->cx+x1+w - wid->cx2)) > 0) { w -= d; }
-	if ((d = (wid->cy+y1+h - wid->cy2)) > 0) { h -= d; }
-
-	pView = (Uint8 *)agView->v->pixels +
-	    (wid->cy+y1)*agView->v->pitch +
-	    (wid->cx+x1)*agVideoFmt->BytesPerPixel;
-	yinc = agView->v->pitch - w*agVideoFmt->BytesPerPixel;
-
-	for (y = 0; y < h; y++) {
-		for (x = 0; x < w; x++) {
-			AG_BLEND_RGBA(agView->v, pView, c[0], c[1], c[2], c[3],
+	for (y = 0; y < r.h; y++) {
+		for (x = 0; x < r.w; x++) {
+			AG_BLEND_RGBA2(agView->v,
+			    wid->cx+r.x+x, wid->cy+r.y+y,
+			    c[0], c[1], c[2], c[3],
 			    func);
-			pView += agVideoFmt->BytesPerPixel;
 		}
-		pView += yinc;
 	}
 }
 
