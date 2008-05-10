@@ -881,7 +881,6 @@ MouseButtonDown(AG_Event *event)
 	case SDL_BUTTON_LEFT:
 		/* Expand the children if the user clicked on the [+] sign. */
 		if (ti->flags & AG_TLIST_HAS_CHILDREN) {
-			x -= 7;
 			if (x >= ti->depth*tl->icon_w &&
 			    x <= (ti->depth+1)*tl->icon_w) {
 				if (ti->flags & AG_TLIST_VISIBLE_CHILDREN) {
