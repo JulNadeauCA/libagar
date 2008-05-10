@@ -460,7 +460,7 @@ SaveNodeGeneric(VG *vg, VG_Node *vn, AG_DataSource *ds)
 	AG_WriteString(ds, vn->ops->name);
 	AG_WriteString(ds, vn->sym);
 	AG_WriteUint32(ds, (Uint32)vn->handle);
-	AG_WriteUint32(ds, (Uint32)vn->flags);
+	AG_WriteUint32(ds, (Uint32)(vn->flags & VG_NODE_SAVED_FLAGS));
 	AG_WriteUint32(ds, (Uint32)vn->layer);
 	VG_WriteColor(ds, &vn->color);
 	SaveMatrix(&vn->T, ds);

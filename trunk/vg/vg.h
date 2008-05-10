@@ -87,6 +87,7 @@ typedef struct vg_node {
 #define VG_NODE_NOSAVE		0x01	/* Don't save with drawing */
 #define VG_NODE_SELECTED	0x02	/* Selection flag */
 #define VG_NODE_MOUSEOVER	0x04	/* Mouse overlap flag */
+#define VG_NODE_SAVED_FLAGS	0
 
 	struct vg      *vg;		/* Back pointer to VG */
 	struct vg_node *parent;		/* Back pointer to parent node */
