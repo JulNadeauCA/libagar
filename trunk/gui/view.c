@@ -270,6 +270,8 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		if ((flags & AG_VIDEO_OPENGL_OR_SDL) == 0)
 			AG_FatalError("Agar OpenGL support is not compiled in");
 #endif
+	} else {
+		AG_SetBool(agConfig, "view.opengl", 0);
 	}
 	
 	if (flags & AG_VIDEO_HWSURFACE) {
