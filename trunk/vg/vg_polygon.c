@@ -226,35 +226,27 @@ Draw(void *p, VG_View *vv)
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Rect *r)
+Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 {
 	VG_Polygon *vp = p;
-	float xMin, xMax;
-	float yMin, yMax;
-	int i;
 	VG_Vector v;
+	int i;
 
 	if (vp->nPts < 1) {
-		r->x = 0;
-		r->y = 0;
-		r->w = 0;
-		r->h = 0;
+		a->x = b->x = 0;
+		a->y = b->y = 0;
 		return;
 	}
 	v = VG_Pos(vp->pts[0]);
-	xMin = xMax = v.x;
-	yMin = yMax = v.y;
+	a->x = b->x = v.x;
+	a->y = b->y = v.y;
 	for (i = 0; i < vp->nPts; i++) {
 		v = VG_Pos(vp->pts[i]);
-		if (v.x < xMin) { xMin = v.x; }
-		if (v.y < yMin) { yMin = v.y; }
-		if (v.x > xMax) { xMax = v.x; }
-		if (v.y > yMax) { yMax = v.y; }
+		if (v.x < a->x) { a->x = v.x; }
+		if (v.y < a->y) { a->y = v.y; }
+		if (v.x > b->x) { b->x = v.x; }
+		if (v.y > b->y) { b->y = v.y; }
 	}
-	r->x = xMin;
-	r->y = yMin;
-	r->w = xMax-xMin;
-	r->h = yMax-yMin;
 }
 
 static float

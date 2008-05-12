@@ -431,19 +431,17 @@ DrawGrid(VG_View *vv)
 static void
 DrawNodeExtent(VG_Node *vn, VG_View *vv)
 {
-	VG_Rect vExt;
 	AG_Rect rExt;
-	VG_Vector v;
+	VG_Vector a, b;
 
 	if (vn->ops->extent == NULL) {
 		return;
 	}
-	vn->ops->extent(vn, vv, &vExt);
-	v.x = vExt.x;
-	v.y = vExt.y;
-	VG_GetViewCoords(vv, v, &rExt.x, &rExt.y);
-	rExt.w = (int)(vExt.w*vv->scale);
-	rExt.h = (int)(vExt.h*vv->scale);
+	vn->ops->extent(vn, vv, &a, &b);
+
+	VG_GetViewCoords(vv, a, &rExt.x, &rExt.y);
+	rExt.w = (int)((b.x - a.x)*vv->scale);
+	rExt.h = (int)((b.y - a.y)*vv->scale);
 	AG_DrawRectOutline(vv, rExt, AG_MapRGB(agVideoFmt, 250,0,0));
 }
 #endif /* DEBUG */

@@ -60,7 +60,7 @@ typedef struct vg_node_ops {
 	int   (*load)(void *, AG_DataSource *, const AG_Version *);
 	void  (*save)(void *, AG_DataSource *);
 	void  (*draw)(void *, struct vg_view *);
-	void  (*extent)(void *, struct vg_view *, VG_Rect *);
+	void  (*extent)(void *, struct vg_view *, VG_Vector *, VG_Vector *);
 	float (*pointProximity)(void *, struct vg_view *, VG_Vector *);
 	float (*lineProximity)(void *, struct vg_view *, VG_Vector *);
 	void  (*deleteNode)(void *);
