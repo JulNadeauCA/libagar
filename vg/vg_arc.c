@@ -103,16 +103,15 @@ Draw(void *p, VG_View *vv)
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Rect *r)
+Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 {
 	VG_Arc *va = p;
 	VG_Vector vCenter = VG_Pos(va->p);
 
-	/* XXX */
-	r->x = vCenter.x - va->r;
-	r->y = vCenter.y - va->r;
-	r->w = va->r*2;
-	r->h = va->r*2;
+	a->x = vCenter.x - va->r;
+	a->y = vCenter.y - va->r;
+	b->x = vCenter.x + va->r;
+	b->y = vCenter.y + va->r;
 }
 
 static float

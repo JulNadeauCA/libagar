@@ -272,7 +272,7 @@ Draw(void *p, VG_View *vv)
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Rect *r)
+Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 {
 	VG_Text *vt = p;
 	float wText, hText;
@@ -285,10 +285,10 @@ Extent(void *p, VG_View *vv, VG_Rect *r)
 	wText = (float)WSURFACE(vv,su)->w/vv->scale;
 	hText = (float)WSURFACE(vv,su)->h/vv->scale;
 
-	r->x = MIN(v1.x,v2.x) - wText/2.0f;
-	r->y = MIN(v1.y,v2.y) - hText/2.0f;
-	r->w = MAX(v1.x,v2.x) - r->x + hText/2.0f;
-	r->h = MAX(v1.y,v2.y) - r->y + hText/2.0f;
+	a->x = MIN(v1.x,v2.x) - wText/2.0f;
+	a->y = MIN(v1.y,v2.y) - hText/2.0f;
+	b->x = MAX(v1.x,v2.x) + hText/2.0f;
+	b->y = MAX(v1.y,v2.y) + hText/2.0f;
 }
 
 static float

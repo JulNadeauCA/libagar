@@ -57,15 +57,13 @@ Draw(void *p, VG_View *vv)
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Rect *r)
+Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 {
 	VG_Point *pt = p;
 	VG_Vector pos = VG_Pos(pt);
 
-	r->x = pos.x;
-	r->y = pos.y;
-	r->w = 0;
-	r->h = 0;
+	*a = pos;
+	*b = pos;
 }
 
 static float

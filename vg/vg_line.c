@@ -96,18 +96,17 @@ Draw(void *p, VG_View *vv)
 }
 
 static void
-Extent(void *p, VG_View *vv, VG_Rect *r)
+Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 {
 	VG_Line *vl = p;
 	VG_Vector p1, p2;
 
 	p1 = VG_Pos(vl->p1);
 	p2 = VG_Pos(vl->p2);
-
-	r->x = MIN(p1.x, p2.x);
-	r->y = MIN(p1.y, p2.y);
-	r->w = MAX(p1.x, p2.x) - r->x;
-	r->h = MAX(p1.y, p2.y) - r->y;
+	a->x = MIN(p1.x, p2.x);
+	a->y = MIN(p1.y, p2.y);
+	b->x = MAX(p1.x, p2.x);
+	b->y = MAX(p1.y, p2.y);
 }
 
 static float
