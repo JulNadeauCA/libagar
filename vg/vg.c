@@ -300,8 +300,8 @@ VG_NodeInit(void *p, const VG_NodeOps *vnOps)
 		vn->ops->init(vn);
 }
 
-static __inline__ Uint32
-GenNodeName(VG *vg, const char *type)
+Uint32
+VG_GenNodeName(VG *vg, const char *type)
 {
 	Uint32 name = 1;
 
@@ -333,7 +333,7 @@ VG_NodeAttach(void *pParent, void *pNode)
 	VG_Lock(vg);
 	
 	if (vn->handle == 0) {
-		vn->handle = GenNodeName(vg, vn->ops->name);
+		vn->handle = VG_GenNodeName(vg, vn->ops->name);
 	}
 	vn->parent = vnParent;
 	TAILQ_INSERT_TAIL(&vnParent->cNodes, vn, tree);
