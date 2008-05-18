@@ -113,12 +113,9 @@ typedef struct vg {
 
 	AG_Mutex lock;
 
-	float gridIval;			/* Minimal grid interval */
-
 	VG_IndexedColor *colors;	/* Global color table */
 	Uint            nColors;	/* Color count */
 	VG_Color        fillColor;	/* Background color */
-	VG_Color        gridColor;	/* Grid color */
 	VG_Color        selectionColor;	/* Selected item/block color */
 	VG_Color        mouseoverColor;	/* Mouse overlap item color */
 
@@ -187,7 +184,6 @@ void      VG_NodeTransform(void *, VG_Matrix *);
 Uint32    VG_GenNodeName(VG *, const char *);
 
 void      VG_SetBackgroundColor(VG *, VG_Color);
-void      VG_SetGridColor(VG *, VG_Color);
 void      VG_SetSelectionColor(VG *, VG_Color);
 void      VG_SetMouseOverColor(VG *, VG_Color);
 

@@ -40,36 +40,6 @@
 #include "icons.h"
 
 static void
-SnapToGrid(VG_View *vv, VG_Vector *pos)
-{
-	float r;
-	float i2 = vv->gridIval/2.0f;
-
-	r = VG_Mod(pos->x, vv->gridIval);
-	pos->x -= r;
-	if (r > i2) { pos->x += vv->gridIval; }
-	else if (r < -i2) { pos->x -= vv->gridIval; }
-	
-	r = VG_Mod(pos->y, vv->gridIval);
-	pos->y -= r;
-	if (r > i2) { pos->y += vv->gridIval; }
-	else if (r < -i2) { pos->y -= vv->gridIval; }
-}
-
-void
-VG_SnapPoint(VG_View *vv, VG_Vector *pos)
-{
-	switch (vv->snap_mode) {
-	case VG_GRID:
-		SnapToGrid(vv, pos);
-		break;
-	default:
-		break;
-	}
-	/* TODO ... */
-}
-
-static void
 SnapTo(AG_Event *event)
 {
 	AG_Button *bu = AG_SELF();
@@ -127,7 +97,7 @@ VG_SnapMenu(AG_Menu *m, AG_MenuItem *mi, VG_View *vv)
 	    SnapToMenu, "%p,%i", vv, VG_FREE_POSITIONING);
 	AG_MenuAction(mi, _("Grid"), vgIconSnapGrid.s,
 	    SnapToMenu, "%p,%i", vv, VG_GRID);
-	
+#if 0
 	AG_MenuSeparator(mi);
 
 	AG_MenuAction(mi, _("Endpoint"), vgIconSnapEndpt.s,
@@ -147,4 +117,5 @@ VG_SnapMenu(AG_Menu *m, AG_MenuItem *mi, VG_View *vv)
 	    SnapToMenu, "%p,%i", vv, VG_INTERSECTIONS_AUTO);
 	AG_MenuAction(mi, _("Intersections (manual)"),vgIconSnapIntsectManual.s,
 	    SnapToMenu, "%p,%i", vv, VG_INTERSECTIONS_MANUAL);
+#endif
 }

@@ -19,7 +19,20 @@
 # include <agar/vg/vg_tool.h>
 #endif
 
+#define VG_GRIDS_MAX 4
+
 #include "begin_code.h"
+
+enum vg_grid_type {
+	VG_GRID_POINTS,
+	VG_GRID_LINES
+};
+
+typedef struct vg_grid {
+	enum vg_grid_type type;
+	int ival;			/* Interval (pixels, power of two) */
+	VG_Color color;			/* Display color */
+} VG_Grid;
 
 typedef struct vg_view {
 	struct ag_widget wid;
@@ -27,15 +40,16 @@ typedef struct vg_view {
 	Uint flags;
 #define VG_VIEW_HFILL		0x01
 #define VG_VIEW_VFILL		0x02
-#define VG_VIEW_GRID		0x04	/* Display grid */
-#define VG_VIEW_EXTENTS		0x08	/* Display extents (DEBUG) */
-#define VG_VIEW_BGFILL		0x10	/* Fill background */
-#define VG_VIEW_CONSTRUCTION	0x20	/* Display construction geometry */
+#define VG_VIEW_GRID		0x04		/* Display grid */
+#define VG_VIEW_EXTENTS		0x08		/* Display extents (DEBUG) */
+#define VG_VIEW_BGFILL		0x10		/* Fill background */
+#define VG_VIEW_CONSTRUCTION	0x20		/* Construction geometry */
 #define VG_VIEW_EXPAND	(VG_VIEW_HFILL|VG_VIEW_VFILL)
 
 	VG *vg;					/* Vector graphics object */
 
 	float x, y;				/* Display offset */
+	int scaleIdx;				/* Scaling factor index */
 	float scale;				/* Display scaling factor */
 	float scaleMin;				/* Minimum scaling factor */
 	float scaleMax;				/* Maximum scaling factor */
@@ -43,7 +57,8 @@ typedef struct vg_view {
 
 	enum vg_snap_mode  snap_mode;		/* Snapping constraint */
 	enum vg_ortho_mode ortho_mode;		/* Orthogonal constraint */
-	float gridIval;				/* Grid interval */
+	VG_Grid grid[VG_GRIDS_MAX];		/* Grid settings */
+	Uint nGrids;
 
 	AG_Event *draw_ev;			/* Draw callback */
 	AG_Event *scale_ev;			/* Scaling/movement event */
@@ -62,17 +77,20 @@ typedef struct vg_view {
 } VG_View;
 
 #define VGVIEW(p) ((VG_View *)(p))
+#define VG_SKIP_CONSTRAINTS(vv) (SDL_GetModState() & (KMOD_SHIFT|KMOD_CTRL))
+#define VG_SELECT_MULTI(vv) (SDL_GetModState() & (KMOD_CTRL))
 
 __BEGIN_DECLS
 extern AG_WidgetClass vgViewClass;
 
 VG_View	*VG_ViewNew(void *, VG *, Uint);
-void     VG_ViewSetScale(struct vg_view *, float);
+void     VG_ViewSetScale(struct vg_view *, int);
 void     VG_ViewSetScaleMin(struct vg_view *, float);
 void     VG_ViewSetScaleMax(struct vg_view *, float);
 void     VG_ViewSetSnapMode(struct vg_view *, enum vg_snap_mode);
 void     VG_ViewSetOrthoMode(struct vg_view *, enum vg_ortho_mode);
-void     VG_ViewSetGridInterval(struct vg_view *, float);
+void     VG_ViewSetGrid(struct vg_view *, int, enum vg_grid_type, int,
+                        VG_Color);
 
 void     VG_ViewDrawFn(VG_View *, AG_EventFn, const char *, ...);
 void     VG_ViewScaleFn(VG_View *, AG_EventFn, const char *, ...);
@@ -92,16 +110,69 @@ void     VG_Status(VG_View *, const char *, ...)
 	    FORMAT_ATTRIBUTE(printf, 2, 3);
 
 /*
- * Apply snapping and orthogonal constraints to given coordinates.
+ * Apply snapping constraints to given coordinates.
  * VG_View must be locked.
  */
 static __inline__ void
 VG_ApplyConstraints(VG_View *vv, VG_Vector *pos)
 {
-	if (vv->snap_mode != VG_FREE_POSITIONING)
-		VG_SnapPoint(vv, pos);
-	if (vv->ortho_mode != VG_NO_ORTHO)
-		VG_RestrictOrtho(vv, pos);
+	VG_Grid *grid;
+	float r, ival2;
+	
+	switch (vv->snap_mode) {
+	case VG_GRID:
+		grid = &vv->grid[0];
+		ival2 = grid->ival>>1;
+
+		r = VG_Mod(pos->x, grid->ival);
+		pos->x -= r;
+		if (r > ival2) { pos->x += grid->ival; }
+		else if (r < -ival2) { pos->x -= grid->ival; }
+	
+		r = VG_Mod(pos->y, grid->ival);
+		pos->y -= r;
+		if (r > ival2) { pos->y += grid->ival; }
+		else if (r < -ival2) { pos->y -= grid->ival; }
+		break;
+	default:
+		break;
+	}
+}
+
+/*
+ * Apply snapping constraints to given relative coordinates.
+ * VG_View must be locked.
+ */
+static __inline__ void
+VG_ApplyConstraintsRelative(VG_View *vv, VG_Vector vOrig, VG_Vector *v,
+    VG_Vector *vDiff)
+{
+	VG_Grid *grid;
+	float ival2;
+
+	*vDiff = VG_Sub(*v, vOrig);
+	switch (vv->snap_mode) {
+	case VG_GRID:
+		grid = &vv->grid[0];
+		ival2 = (float)(grid->ival/2);
+		if (vDiff->x > ival2) {
+			vDiff->x = (float)grid->ival;
+		} else if (vDiff->x < -ival2) {
+			vDiff->x = (float)-grid->ival;
+		} else {
+			vDiff->x = 0.0f;
+		}
+		if (vDiff->y > ival2) {
+			vDiff->y = (float)grid->ival;
+		} else if (vDiff->y < -ival2) {
+			vDiff->y = (float)-grid->ival;
+		} else {
+			vDiff->y = 0.0f;
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 /*
