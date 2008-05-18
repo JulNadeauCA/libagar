@@ -184,6 +184,7 @@ int       VG_Delete(void *);
 void      VG_AddRef(void *, void *);
 Uint      VG_DelRef(void *, void *);
 void      VG_NodeTransform(void *, VG_Matrix *);
+Uint32    VG_GenNodeName(VG *, const char *);
 
 void      VG_SetBackgroundColor(VG *, VG_Color);
 void      VG_SetGridColor(VG *, VG_Color);

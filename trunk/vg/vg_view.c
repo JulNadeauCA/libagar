@@ -123,10 +123,10 @@ MouseButtonDown(AG_Event *event)
 		vv->mouse.panning = 1;
 		break;
 	case SDL_BUTTON_WHEELDOWN:
-		VG_ViewSetScale(vv, vv->scale-2.0f);
+		VG_ViewSetScale(vv, vv->scale-0.1f);
 		return;
 	case SDL_BUTTON_WHEELUP:
-		VG_ViewSetScale(vv, vv->scale+2.0f);
+		VG_ViewSetScale(vv, vv->scale+0.1f);
 		return;
 	default:
 		break;
@@ -263,7 +263,7 @@ Init(void *obj)
 	vv->wPixel = 1.0f;
 	vv->snap_mode = VG_GRID;
 	vv->ortho_mode = VG_NO_ORTHO;
-	vv->gridIval = 4.0f;
+	vv->gridIval = 16.0f;
 	vv->mouse.x = 0.0f;
 	vv->mouse.y = 0.0f;
 	vv->mouse.panning = 0;
