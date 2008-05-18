@@ -89,11 +89,9 @@ VG_Init(VG *vg, Uint flags)
 	VG_Point *ptRoot;
 
 	vg->flags = flags;
-	vg->gridIval = 8.0f;
 	vg->colors = NULL;
 	vg->nColors = 0;
 	vg->fillColor = VG_GetColorRGB(0,0,0);
-	vg->gridColor = VG_GetColorRGB(110,110,100);
 	vg->selectionColor = VG_GetColorRGBA(0,200,0,150);
 	vg->mouseoverColor = VG_GetColorRGBA(250,250,0,64);
 	vg->layers = NULL;
@@ -273,7 +271,6 @@ VG_DelRef(void *pVn, void *pRef)
 }
 
 void VG_SetBackgroundColor(VG *vg, VG_Color c) { vg->fillColor = c; }
-void VG_SetGridColor(VG *vg, VG_Color c) { vg->gridColor = c; }
 void VG_SetSelectionColor(VG *vg, VG_Color c) { vg->selectionColor = c; }
 void VG_SetMouseOverColor(VG *vg, VG_Color c) { vg->mouseoverColor = c; }
 
@@ -505,7 +502,7 @@ VG_Save(VG *vg, AG_DataSource *ds)
 
 	AG_WriteUint32(ds, (Uint32)vg->flags);
 	VG_WriteColor(ds, &vg->fillColor);
-	VG_WriteColor(ds, &vg->gridColor);
+	VG_WriteColor(ds, &vg->fillColor);			/* gridColor */
 	VG_WriteColor(ds, &vg->selectionColor);
 	VG_WriteColor(ds, &vg->mouseoverColor);
 	AG_WriteFloat(ds, 0.0f);				/* gridIval */
@@ -599,12 +596,12 @@ VG_Load(VG *vg, AG_DataSource *ds)
 	if (AG_ReadVersion(ds, "Agar-VG", &vgVer, &dsVer) != 0) {
 		return (-1);
 	}
-	AG_CopyString(name, ds, sizeof(name));			/* Ignore */
+	AG_CopyString(name, ds, sizeof(name));		/* Ignore */
 	
 	VG_Lock(vg);
 	vg->flags = AG_ReadUint32(ds);
 	vg->fillColor = VG_ReadColor(ds);
-	vg->gridColor = VG_ReadColor(ds);
+	(void)VG_ReadColor(ds);				/* gridColor */
 	vg->selectionColor = VG_ReadColor(ds);
 	vg->mouseoverColor = VG_ReadColor(ds);
 	(void)AG_ReadFloat(ds);				/* gridIval */

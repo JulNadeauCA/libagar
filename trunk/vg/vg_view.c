@@ -41,6 +41,12 @@
 #include "vg.h"
 #include "vg_view.h"
 
+static const float scaleFactors[17] = {
+	1.0f, 2.0f, 4.0f, 6.0f, 8.0f, 10.0f, 12.0f, 16.0f, 18.0f,
+	20.0f, 22.0f, 24.0f, 32.0f, 34.0f, 36.0f, 38.0f, 40.0f
+};
+const int nScaleFactors = 17;
+
 VG_View *
 VG_ViewNew(void *parent, VG *vg, Uint flags)
 {
@@ -123,10 +129,16 @@ MouseButtonDown(AG_Event *event)
 		vv->mouse.panning = 1;
 		break;
 	case SDL_BUTTON_WHEELDOWN:
-		VG_ViewSetScale(vv, vv->scale-0.1f);
+		if (vv->scaleIdx-1 >= 0) {
+			VG_ViewSetScale(vv, --vv->scaleIdx);
+			VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
+		}
 		return;
 	case SDL_BUTTON_WHEELUP:
-		VG_ViewSetScale(vv, vv->scale+0.1f);
+		if (vv->scaleIdx+1 < nScaleFactors) {
+			VG_ViewSetScale(vv, ++vv->scaleIdx);
+			VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
+		}
 		return;
 	default:
 		break;
@@ -257,13 +269,17 @@ Init(void *obj)
 	vv->motion_ev = NULL;
 	vv->x = 0.0f;
 	vv->y = 0.0f;
-	vv->scale = 1.0f;
-	vv->scaleMin = 1e-6f;
+	vv->scaleIdx = 0;
+	vv->scale = scaleFactors[0];
+	vv->scaleMin = 1.0f;
 	vv->scaleMax = 1e6f;
 	vv->wPixel = 1.0f;
 	vv->snap_mode = VG_GRID;
 	vv->ortho_mode = VG_NO_ORTHO;
-	vv->gridIval = 16.0f;
+	vv->grid[0].type = VG_GRID_POINTS;
+	vv->grid[0].ival = 16;
+	vv->grid[0].color = VG_GetColorRGB(100, 100, 100);
+	vv->nGrids = 1;
 	vv->mouse.x = 0.0f;
 	vv->mouse.y = 0.0f;
 	vv->mouse.panning = 0;
@@ -307,10 +323,13 @@ VG_ViewSetOrthoMode(VG_View *vv, enum vg_ortho_mode mode)
 }
 
 void
-VG_ViewSetGridInterval(VG_View *vv, float ival)
+VG_ViewSetGrid(VG_View *vv, int idx, enum vg_grid_type type, int ival,
+    VG_Color color)
 {
 	AG_ObjectLock(vv);
-	vv->gridIval = ival;
+	vv->grid[idx].type = type;
+	vv->grid[idx].ival = ival;
+	vv->grid[idx].color = color;
 	AG_ObjectUnlock(vv);
 }
 
@@ -394,21 +413,22 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static __inline__ void
-DrawGrid(VG_View *vv)
+DrawGrid(VG_View *vv, const VG_Grid *grid)
 {
-	int x, x0, y, ival;
-	Uint32 c32;
+	int x, x0, y;
+	int ival;
 
-	if ((ival = (int)(vv->gridIval*vv->scale)) < 5) {
+	if (grid->ival < 4) {
 		return;
 	}
+	ival = (int)(grid->ival/vv->wPixel);
+	
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		x0 = WIDGET(vv)->cx + (int)(vv->x)%ival;
 		y = WIDGET(vv)->cy + (int)(vv->y)%ival;
 		glBegin(GL_POINTS);
-		glColor3ub(vv->vg->gridColor.r, vv->vg->gridColor.g,
-		           vv->vg->gridColor.b);
+		glColor3ub(grid->color.r, grid->color.g, grid->color.b);
 		for (; y < WIDGET(vv)->cy2; y += ival) {
 			for (x = x0; x < WIDGET(vv)->cx2; x += ival)
 				glVertex2s(x, y);
@@ -417,9 +437,11 @@ DrawGrid(VG_View *vv)
 	} else
 #endif
 	{
+		Uint32 c32;
+
 		x0 = (int)(vv->x)%ival;
 		y = (int)(vv->y)%ival;
-		c32 = VG_MapColorRGB(vv->vg->gridColor);
+		c32 = VG_MapColorRGB(grid->color);
 		for (; y < WIDGET(vv)->cy2; y += ival) {
 			for (x = x0; x < WIDGET(vv)->cx2; x += ival)
 				AG_DrawPixel(vv, x, y, c32);
@@ -479,14 +501,16 @@ Draw(void *p)
 {
 	VG_View *vv = p;
 	VG *vg = vv->vg;
-	int su;
+	int su, i;
 
 	if (vv->flags & VG_VIEW_BGFILL) {
 		AG_DrawRectFilled(vv, AG_RECT(0,0,WIDTH(vv),HEIGHT(vv)),
 		    VG_MapColorRGB(vg->fillColor));
 	} 
-	if (vv->flags & VG_VIEW_GRID)
-		DrawGrid(vv);
+	if (vv->flags & VG_VIEW_GRID) {
+		for (i = 0; i < vv->nGrids; i++)
+			DrawGrid(vv, &vv->grid[i]);
+	}
 
 	VG_Lock(vg);
 
@@ -635,12 +659,16 @@ VG_ViewSetScaleMax(VG_View *vv, float scaleMax)
 }
 
 void
-VG_ViewSetScale(VG_View *vv, float scale)
+VG_ViewSetScale(VG_View *vv, int idx)
 {
 	float scalePrev = vv->scale;
-
+	
+	if (idx < 0) { idx = 0; }
+	else if (idx >= nScaleFactors) { idx = nScaleFactors-1; }
+	
 	AG_ObjectLock(vv);
-	vv->scale = scale;
+	vv->scaleIdx = idx;
+	vv->scale = scaleFactors[idx];
 	if (vv->scale < vv->scaleMin) { vv->scale = vv->scaleMin; }
 	if (vv->scale > vv->scaleMax) { vv->scale = vv->scaleMax; }
 
