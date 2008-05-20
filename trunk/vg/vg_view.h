@@ -140,42 +140,6 @@ VG_ApplyConstraints(VG_View *vv, VG_Vector *pos)
 }
 
 /*
- * Apply snapping constraints to given relative coordinates.
- * VG_View must be locked.
- */
-static __inline__ void
-VG_ApplyConstraintsRelative(VG_View *vv, VG_Vector vOrig, VG_Vector *v,
-    VG_Vector *vDiff)
-{
-	VG_Grid *grid;
-	float ival2;
-
-	*vDiff = VG_Sub(*v, vOrig);
-	switch (vv->snap_mode) {
-	case VG_GRID:
-		grid = &vv->grid[0];
-		ival2 = (float)(grid->ival/2);
-		if (vDiff->x > ival2) {
-			vDiff->x = (float)grid->ival;
-		} else if (vDiff->x < -ival2) {
-			vDiff->x = (float)-grid->ival;
-		} else {
-			vDiff->x = 0.0f;
-		}
-		if (vDiff->y > ival2) {
-			vDiff->y = (float)grid->ival;
-		} else if (vDiff->y < -ival2) {
-			vDiff->y = (float)-grid->ival;
-		} else {
-			vDiff->y = 0.0f;
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-/*
  * Translate integer View coordinates to VG coordinates.
  * VG_View must be locked.
  */
