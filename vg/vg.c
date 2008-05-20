@@ -93,7 +93,7 @@ VG_Init(VG *vg, Uint flags)
 	vg->nColors = 0;
 	vg->fillColor = VG_GetColorRGB(0,0,0);
 	vg->selectionColor = VG_GetColorRGBA(0,200,0,150);
-	vg->mouseoverColor = VG_GetColorRGBA(250,250,0,64);
+	vg->mouseoverColor = VG_GetColorRGBA(250,250,0,100);
 	vg->layers = NULL;
 	vg->nLayers = 0;
 	TAILQ_INIT(&vg->nodes);
