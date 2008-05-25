@@ -109,6 +109,7 @@ VG_Init(VG *vg, Uint flags)
 	vg->root = VGNODE(ptRoot);
 	vg->root->vg = vg;
 	vg->root->handle = 1;
+	VG_SetColorRGB(vg->root, 0, 150, 0);
 }
 
 void
