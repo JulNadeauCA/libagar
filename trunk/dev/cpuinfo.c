@@ -31,8 +31,8 @@
 
 #include <gui/window.h>
 #include <gui/label.h>
-#include <gui/checkbox.h>
 #include <gui/separator.h>
+#include <gui/tlist.h>
 
 #include "dev.h"
 	
@@ -72,13 +72,14 @@ DEV_CPUInfo(void)
 {
 	AG_Window *win;
 	AG_FlagDescr *fd;
+	AG_Tlist *tl;
 
-	if ((win = AG_WindowNewNamed(AG_WINDOW_NORESIZE, "DEV_CPUInfo"))
-	    == NULL) {
+	if ((win = AG_WindowNewNamed(0, "DEV_CPUInfo")) == NULL) {
 		return (NULL);
 	}
 	AG_WindowSetCaption(win, _("CPU Information"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_CENTER, 30, 70);
 
 	AG_LabelNewStatic(win, 0, _("Architecture: %s"),
 	    agCPU.arch[0] != '\0' ? agCPU.arch : "unknown");
@@ -88,13 +89,11 @@ DEV_CPUInfo(void)
 
 	AG_SeparatorNewHoriz(win);
 
-	for (fd = &archExtns[0]; fd->bitmask != 0; fd++) {
-		if ((agCPU.ext & fd->bitmask) == 0)
-			fd->writeable = 0;
-	}
-
 	AG_LabelNewStatic(win, 0, _("Architecture Extensions:"));
-	AG_CheckboxSetFromFlags32(win, &agCPU.ext, archExtns);
-
+	tl = AG_TlistNew(win, AG_TLIST_EXPAND);
+	for (fd = &archExtns[0]; fd->bitmask != 0; fd++) {
+		if (agCPU.ext & fd->bitmask)
+			AG_TlistAdd(tl, NULL, "%s", fd->descr);
+	}
 	return (win);
 }
