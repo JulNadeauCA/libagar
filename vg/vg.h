@@ -320,9 +320,9 @@ VG_LoadIdentity(void *pNode)
 	vn->T.m[2][0] = 0.0f;	vn->T.m[2][1] = 0.0f;	vn->T.m[2][2] = 1.0f;
 }
 
-/* Move the given node. */
+/* Set the position of the given node relative to its parent. */
 static __inline__ void
-VG_SetPosition(void *pNode, VG_Vector v)
+VG_SetPositionInParent(void *pNode, VG_Vector v)
 {
 	VG_Node *vn = pNode;
 	
@@ -386,6 +386,23 @@ VG_Unselect(void *pNode)
 	VGNODE(pNode)->flags |= VG_NODE_SELECTED;
 }
 
+static __inline__ void
+VG_SelectAll(VG *vg)
+{
+	VG_Node *vn;
+	AG_TAILQ_FOREACH(vn, &vg->nodes, list)
+		vn->flags |= VG_NODE_SELECTED;
+}
+
+static __inline__ void
+VG_UnselectAll(VG *vg)
+{
+	VG_Node *vn;
+	AG_TAILQ_FOREACH(vn, &vg->nodes, list)
+		vn->flags &= ~(VG_NODE_SELECTED);
+}
+
+/* Return the effective position of the given node relative to the origin. */
 static __inline__ VG_Vector
 VG_Pos(void *node)
 {
@@ -395,6 +412,22 @@ VG_Pos(void *node)
 	VG_NodeTransform(node, &T);
 	VG_MultMatrixByVector(&v, &v, &T);
 	return (v);
+}
+
+/* Set the position of the given node relative to the schematic origin. */
+static __inline__ void
+VG_SetPosition(void *pNode, VG_Vector v)
+{
+	VG_Node *vn = pNode;
+	VG_Vector vParent;
+
+	vn->T.m[0][2] = v.x;
+	vn->T.m[1][2] = v.y;
+	if (vn->parent != NULL) {
+		vParent = VG_Pos(vn->parent);
+		vn->T.m[0][2] -= vParent.x;
+		vn->T.m[1][2] -= vParent.y;
+	}
 }
 __END_DECLS
 

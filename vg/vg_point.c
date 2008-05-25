@@ -79,11 +79,9 @@ PointProximity(void *p, VG_View *vv, VG_Vector *vPt)
 }
 
 static void
-Move(void *p, VG_Vector vCurs, VG_Vector vRel)
+Move(void *p, VG_Vector vPos, VG_Vector vRel)
 {
-	VG_Point *pt = p;
-
-	VG_Translate(pt, vRel);
+	VG_SetPosition(p, vPos);
 }
 
 const VG_NodeOps vgPointOps = {
