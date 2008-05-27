@@ -277,7 +277,7 @@ Init(void *obj)
 	vv->snap_mode = VG_GRID;
 	vv->ortho_mode = VG_NO_ORTHO;
 	vv->grid[0].type = VG_GRID_POINTS;
-	vv->grid[0].ival = 16;
+	vv->grid[0].ival = 8;
 	vv->grid[0].color = VG_GetColorRGB(100, 100, 100);
 	vv->nGrids = 1;
 	vv->mouse.x = 0.0f;
