@@ -58,6 +58,7 @@ AG_TextCacheDestroy(AG_TextCache *tc)
 	Uint i;
 	AG_CachedText *ct;
 
+	fprintf(stderr, "TextCache: freeing %d buckets\n", tc->nBuckets);
 	for (i = 0; i < tc->nBuckets; i++) {
 		SLIST_FOREACH(ct, &tc->buckets[i].ents, ents) {
 			AG_WidgetUnmapSurface(tc->widget, ct->surface);
