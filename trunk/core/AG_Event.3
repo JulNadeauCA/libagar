@@ -75,16 +75,23 @@ Two special arguments are
 When Agar is compiled with
 .Dv DEBUG ,
 those macros perform type checking.
-.Sh EVENT LOOP
+.Sh EVENT LOOPS
+.nr nS 1
+.Ft "void"
+.Fn AG_EventLoop_FixedFPS "void"
+.Pp
+.Ft "void"
+.Fn AG_EventLoop "void"
+.nr nS 0
+.Pp
 The event loop of an Agar application typically waits for events, invokes
 GUI rendering routines and processes timer events.
-Since there is no general solution, developers will often use a custom event
-loop function.
-Agar supports this by providing a simple interface to the GUI and event
-subsystems.
-.Pp
-Agar also provides a generic event loop function called
-.Fn AG_EventLoop_FixedFPS .
+It is possible to use a custom event loop routine, but for most
+applications, Agar's stock event loop routine,
+.Fn AG_EventLoop_FixedFPS
+(or just
+.Fn AG_EventLoop )
+is suitable.
 It performs the following:
 .Pp
 .Bl -tag -width "SDL event processing "
