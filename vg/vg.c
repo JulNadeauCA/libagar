@@ -292,6 +292,7 @@ VG_NodeInit(void *p, const VG_NodeOps *vnOps)
 	vn->nRefs = 0;
 	vn->nDeps = 0;
 	vn->T = VG_MatrixIdentity();
+	vn->p = NULL;
 	TAILQ_INIT(&vn->cNodes);
 
 	if (vn->ops->init != NULL)

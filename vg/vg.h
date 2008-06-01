@@ -98,11 +98,13 @@ typedef struct vg_node {
 	VG_Color  color;		/* Element color */
 	int       layer;		/* Layer index */
 	VG_Matrix T;			/* Transformation matrix */
+	void     *p;			/* User pointer */
 
 	AG_TAILQ_HEAD(,vg_node) cNodes;	/* Child nodes */
 	AG_TAILQ_ENTRY(vg_node) tree;	/* Entry in tree */
 	AG_TAILQ_ENTRY(vg_node) list;	/* Entry in global list */
 	AG_TAILQ_ENTRY(vg_node) reverse; /* For VG_NodeTransform() */
+	AG_TAILQ_ENTRY(vg_node) user;	/* Entry in user list */
 } VG_Node;
 
 #define VGNODE(p) ((VG_Node *)(p))
