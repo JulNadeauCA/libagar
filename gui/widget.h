@@ -151,7 +151,7 @@ typedef struct ag_widget {
 					 AG_WIDGET_SURFACE_NODUP)
 #define AGSTYLE(p)			 AGWIDGET(p)->style
 
-#ifdef _AGAR_INTERNAL
+#if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_GUI)
 #define WIDGET(wi)			AGWIDGET(wi)
 #define WIDGET_OPS(wi)			AGWIDGET_OPS(wi)
 #define WSURFACE(wi,ind)		AGWIDGET_SURFACE((wi),(ind))
@@ -161,7 +161,7 @@ typedef struct ag_widget {
 #define STYLE(p)                        AGSTYLE(p)
 #define WIDTH(p)			AGWIDGET(p)->w
 #define HEIGHT(p)			AGWIDGET(p)->h
-#endif /* _AGAR_INTERNAL */
+#endif /* _AGAR_INTERNAL or _USE_AGAR_GUI */
 
 #define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
 #define AG_WidgetDisabled(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)
