@@ -406,6 +406,7 @@ main(int argc, char *argv[])
 			case 'g':
 				/* Force OpenGL mode */
 				AG_SetBool(agConfig, "view.opengl", 1);
+				guiFlags |= AG_VIDEO_OPENGL;
 				break;
 			case 's':
 				/* Force SDL mode */
