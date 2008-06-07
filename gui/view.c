@@ -1437,9 +1437,8 @@ AG_ProcessEvent(SDL_Event *ev)
 			AG_MutexLock(&agGlobalKeysLock);
 			SLIST_FOREACH(gk, &agGlobalKeys, gkeys) {
 				if (gk->keysym == ev->key.keysym.sym &&
-				    ((gk->keymod == KMOD_NONE &&
-				      ev->key.keysym.mod == KMOD_NONE) ||
-				      ev->key.keysym.mod & gk->keymod)) {
+				    (gk->keymod == KMOD_NONE ||
+				     ev->key.keysym.mod & gk->keymod)) {
 					if (gk->fn != NULL) {
 						gk->fn();
 					} else if (gk->fn_ev != NULL) {
