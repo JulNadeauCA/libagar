@@ -282,6 +282,47 @@ function inserts a horizontal menu separator.
 .Pp
 .Fn AG_MenuSection
 creates a non-selectable item displaying the given text.
+.Sh POPUP MENUS
+.nr nS 1
+.Ft "AG_PopupMenu *"
+.Fn AG_PopupNew "AG_Widget *widget"
+.Pp
+.Ft void
+.Fn AG_PopupShow "AG_PopupMenu *pm"
+.Pp
+.Ft void
+.Fn AG_PopupShowAt "AG_PopupMenu *pm" "int x" "int y"
+.Pp
+.Ft void
+.Fn AG_PopupHide "AG_PopupMenu *pm"
+.Pp
+.Ft void
+.Fn AG_PopupDestroy "AG_Widget *widget" "AG_PopupMenu *pm"
+.Pp
+.nr nS 0
+The
+.Fn AG_PopupNew
+function creates a new popup menu and associates it with the specified widget.
+This association will cause the popup menu to be automatically freed when the
+given widget is destroyed.
+.Pp
+Once a popup menu is created, new items can be inserted using the
+.Va item
+member of the
+.Ft AG_PopupMenu
+structure as parent.
+.Pp
+.Fn AG_PopupShow
+displays the popup menu at the current mouse cursor coordinates.
+.Fn AG_PopupShowAt
+displays the popup menu at the specified display coordinates.
+.Fn AG_PopupHide
+hides the popup menu from the user.
+.Pp
+.Fn AG_PopupDestroy
+detaches the specified popup menu from its associated widget, and releases
+its allocated resources.
+This function is automatically invoked whenever a widget is destroyed.
 .Sh EVENTS
 The
 .Nm
