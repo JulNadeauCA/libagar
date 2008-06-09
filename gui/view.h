@@ -573,10 +573,10 @@ __END_DECLS
 
 #ifdef _AGAR_INTERNAL
 # include <gui/iconmgr.h>
-# include <core/load_surface.h>
+# include <gui/load_surface.h>
 #else
 # include <agar/gui/iconmgr.h>
-# include <agar/core/load_surface.h>
+# include <agar/gui/load_surface.h>
 #endif
 
 #endif	/* _AGAR_GUI_VIEW_H_ */

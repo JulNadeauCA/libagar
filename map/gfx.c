@@ -26,11 +26,11 @@
 #include <core/core.h>
 #include <core/config.h>
 #include <core/load_den.h>
-#include <core/load_xcf.h>
-#include <core/load_surface.h>
 
 #include <gui/view.h>
 #include <gui/opengl.h>
+#include <gui/load_surface.h>
+#include <gui/load_xcf.h>
 
 #include <string.h>
 #include <stdarg.h>

@@ -139,7 +139,7 @@ VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 }
 
 static void
-DrawText(VG_Text *vt, const char *s, VG_View *vv)
+RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
 {
 	VG_Vector v1, v2, vMid;
 	int x, y, w, h;
@@ -185,7 +185,7 @@ DrawText(VG_Text *vt, const char *s, VG_View *vv)
 #define TARG(_type) (*(_type *)vt->ptrs[ri])
 
 static void
-DrawPolled(VG_Text *vt, VG_View *vv)
+RenderTextPolled(VG_Text *vt, VG_View *vv)
 {
 	char s[VG_TEXT_MAX], s2[32];
 	char *fmtp;
@@ -254,7 +254,7 @@ DrawPolled(VG_Text *vt, VG_View *vv)
 			Strlcat(s, s2, sizeof(s));
 		}
 	}
-	DrawText(vt, s, vv);
+	RenderTextStatic(vt, s, vv);
 }
 
 #undef TARG
@@ -265,9 +265,9 @@ Draw(void *p, VG_View *vv)
 	VG_Text *vt = p;
 	
 	if (vt->nPtrs > 0) {
-		DrawPolled(vt, vv);
+		RenderTextPolled(vt, vv);
 	} else {
-		DrawText(vt, vt->text, vv);
+		RenderTextStatic(vt, vt->text, vv);
 	}
 }
 

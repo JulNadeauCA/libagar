@@ -28,9 +28,8 @@
 
 #include <gui/view.h>
 #include <gui/text.h>
-
-#include <core/load_surface.h>
-#include <core/load_xcf.h>
+#include <gui/load_surface.h>
+#include <gui/load_xcf.h>
 
 #include <gui/window.h>
 #include <gui/box.h>

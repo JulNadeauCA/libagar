@@ -72,7 +72,7 @@
 #endif
 #include "view.h"
 
-#include <core/load_xcf.h>
+#include "load_xcf.h"
 
 #include "window.h"
 #include "vbox.h"
