@@ -25,9 +25,8 @@
 
 #include <core/core.h>
 #if 0
-#include <core/load_xcf.h>
+#include "load_xcf.h"
 #endif
-
 #include "pixmap.h"
 #include "primitive.h"
 

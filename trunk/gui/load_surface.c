@@ -28,11 +28,10 @@
  */
 
 #include <core/core.h>
+#include <core/load_version.h>
 
-#include <gui/view.h>
-
+#include "view.h"
 #include "load_surface.h"
-#include "load_version.h"
 
 const AG_Version agSurfaceVer = { 0, 0 };
 

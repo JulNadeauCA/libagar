@@ -32,8 +32,9 @@
 #include <config/have_ieee754.h>
 
 #include <core/core.h>
-#include <gui/view.h>
-#include <core/load_xcf.h>
+
+#include "view.h"
+#include "load_xcf.h"
 
 #include <string.h>
 

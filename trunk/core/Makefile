@@ -9,8 +9,8 @@ LIB_LINKS=	pthreads SDL
 
 SRCS=	config.c core.c error.c event.c object.c prop.c rcs.c \
 	timeout.c typesw.c cpuinfo.c load_color.c load_den.c \
-	data_source.c load_string.c load_surface.c load_version.c \
-	load_xcf.c setenv.c snprintf.c vsnprintf.c vasprintf.c \
+	data_source.c load_string.c load_version.c \
+	setenv.c snprintf.c vsnprintf.c vasprintf.c \
 	gethostname.c arc4random.c dir.c md5.c sha1.c rmd160.c \
 	file.c string_compat.c
 
