@@ -35,8 +35,8 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "iconmgr.h"
 #include "view.h"
+#include "iconmgr.h"
 #include "load_xcf.h"
 
 /* Compile surfaces/textures for the given static icon. */
