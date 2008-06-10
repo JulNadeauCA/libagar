@@ -37,6 +37,8 @@ AG_TextCacheNew(void *widget, Uint nBuckets, Uint nToExpire)
 	AG_TextCache *tc;
 	Uint i;
 
+	fprintf(stderr, "TextCacheNew(): %d buckets, %d expire queue\n",
+	    nBuckets, nToExpire);
 	tc = Malloc(sizeof(AG_TextCache));
 	tc->widget = widget;
 	tc->curEnts = 0;
@@ -58,7 +60,7 @@ AG_TextCacheDestroy(AG_TextCache *tc)
 	Uint i;
 	AG_CachedText *ct;
 
-	fprintf(stderr, "TextCache: freeing %d buckets\n", tc->nBuckets);
+	fprintf(stderr, "TextCacheDestroy: freeing %d buckets\n", tc->nBuckets);
 	for (i = 0; i < tc->nBuckets; i++) {
 		SLIST_FOREACH(ct, &tc->buckets[i].ents, ents) {
 			AG_WidgetUnmapSurface(tc->widget, ct->surface);
@@ -74,6 +76,8 @@ AG_TextCacheDestroy(AG_TextCache *tc)
 static __inline__ void
 DeleteEntry(AG_TextCache *tc, Uint h, AG_CachedText *ct)
 {
+	fprintf(stderr, "TextCache: removing entry #%u (\"%s\")\n", h,
+	    ct->text);
 	SLIST_REMOVE(&tc->buckets[h].ents, ct, ag_cached_text, ents);
 	AG_WidgetUnmapSurface(tc->widget, ct->surface);
 	free(ct->text);
@@ -118,6 +122,7 @@ AG_TextCacheInsLookup(AG_TextCache *tc, const char *text)
 	Uint h;
 
 	h = AG_TextCacheHash(tc, text);
+	fprintf(stderr, "TextCacheLookup: string \"%s\" = %u...", text, h);
 	bucket = &tc->buckets[h];
 	SLIST_FOREACH(ct, &bucket->ents, ents) {
 		if (strcmp(ct->text, text) == 0 &&
@@ -125,6 +130,7 @@ AG_TextCacheInsLookup(AG_TextCache *tc, const char *text)
 			break;
 	}
 	if (ct == NULL) {
+		fprintf(stderr, "MISS (ent %u)\n", tc->curEnts+1);
 		ct = Malloc(sizeof(AG_TextCache));
 		ct->text = Strdup(text);
 		ct->surface = AG_WidgetMapSurface(tc->widget,
@@ -134,10 +140,14 @@ AG_TextCacheInsLookup(AG_TextCache *tc, const char *text)
 		tc->curEnts++;
 		SLIST_INSERT_HEAD(&bucket->ents, ct, ents);
 
-		if (tc->curEnts > tc->nBuckets)
+		if (tc->curEnts > tc->nBuckets) {
+			fprintf(stderr, "TextCache: Expiring entries "
+			    "(%u > %u)...\n", tc->curEnts, tc->nBuckets);
 			ExpireEntries(tc);
+		}
 	} else {
 		ct->stamp = SDL_GetTicks();
+		fprintf(stderr, "HIT (%u)\n", ct->stamp);
 	}
 	return (ct->surface);
 }
