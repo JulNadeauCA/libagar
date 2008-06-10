@@ -39,7 +39,7 @@
 # define VG_Floor(x) ((float)floor((double)x))
 # define VG_Ceil(x) ((float)ceil((double)x))
 # define VG_Fabs(x) ((float)fabs((double)x))
-# define VG_Hypot(x,y) ((float)hypotf((double)(x),(double)(y)))
+# define VG_Hypot(x,y) ((float)hypot((double)(x),(double)(y)))
 #endif /* C99 */
 
 #define VG_Degrees(x) ((x)/(2.0*VG_PI)*360.0)
