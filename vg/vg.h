@@ -236,6 +236,7 @@ VG_GetColorRGB(Uint8 r, Uint8 g, Uint8 b)
 	vc.g = g;
 	vc.b = b;
 	vc.a = 255;
+	vc.idx = -1;
 	return (vc);
 }
 
@@ -247,6 +248,7 @@ VG_GetColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	vc.g = g;
 	vc.b = b;
 	vc.a = a;
+	vc.idx = -1;
 	return (vc);
 }
 
