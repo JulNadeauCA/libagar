@@ -286,7 +286,7 @@ Init(void *obj)
 	vv->curtool = NULL;
 	vv->deftool = NULL;
 	vv->status[0] = '\0';
-	vv->tCache = AG_TextCacheNew(vv, 128, 16);
+	vv->tCache = agTextCache ? AG_TextCacheNew(vv, 128, 16) : NULL;
 	TAILQ_INIT(&vv->tools);
 
 	AG_SetEvent(vv, "window-mousemotion", MouseMotion, NULL);
@@ -525,8 +525,19 @@ Draw(void *p)
 	VG_Unlock(vg);
 
 	AG_TextColor(TEXT_COLOR);
-	su = AG_TextCacheInsLookup(vv->tCache, vv->status);
-	AG_WidgetBlitSurface(vv, su, 0, HEIGHT(vv)-WSURFACE(vv,su)->h);
+	if (agTextCache) {
+		su = AG_TextCacheInsLookup(vv->tCache, vv->status);
+		AG_WidgetBlitSurface(vv, su,
+		    0,
+		    HEIGHT(vv) - WSURFACE(vv,su)->h);
+	} else {
+		AG_Surface *suTmp;
+		suTmp = AG_TextRender(vv->status);
+		AG_WidgetBlit(vv, suTmp,
+		    0,
+		    HEIGHT(vv) - suTmp->h);
+		AG_SurfaceFree(suTmp);
+	}
 }
 
 void

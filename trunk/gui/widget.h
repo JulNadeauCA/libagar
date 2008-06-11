@@ -220,6 +220,7 @@ void	 AG_WidgetBlitFrom(void *, void *, int, AG_Rect *, int, int);
 	 AG_WidgetBlitFrom((p),(p),(n),NULL,(x),(y))
 
 #ifdef HAVE_OPENGL
+void	 AG_WidgetBlitGL(void *, AG_Surface *, float, float);
 void	 AG_WidgetBlitSurfaceGL(void *, int, float, float);
 void	 AG_WidgetBlitSurfaceFlippedGL(void *, int, float, float);
 void	 AG_WidgetPutPixel32_GL(void *, int, int, Uint32);

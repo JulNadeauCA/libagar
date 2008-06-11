@@ -24,6 +24,7 @@
  */
 
 #include <core/core.h>
+#include <core/config.h>
 
 #include "sc_matview.h"
 
@@ -112,7 +113,7 @@ Init(void *obj)
 	mv->pre_m = 0;
 	mv->pre_n = 0;
 	mv->numfmt = "%g";
-	mv->tCache = AG_TextCacheNew(mv, 64, 16);
+	mv->tCache = agTextCache ? AG_TextCacheNew(mv, 64, 16) : NULL;
 	
 	AG_WidgetBind(mv->hbar, "value", AG_WIDGET_INT, &mv->xoffs);
 	AG_WidgetBind(mv->vbar, "value", AG_WIDGET_INT, &mv->yoffs);
@@ -130,7 +131,8 @@ Destroy(void *obj)
 {
 	SC_Matview *mv = obj;
 
-	AG_TextCacheDestroy(mv->tCache);
+	if (mv->tCache != NULL)
+		AG_TextCacheDestroy(mv->tCache);
 }
 
 void
@@ -221,9 +223,16 @@ DrawNumerical(void *p)
 				Snprintf(text, sizeof(text), mv->numfmt,
 				    M->mat[m][n]);
 			}
-			AG_WidgetBlitSurface(mv,
-			    AG_TextCacheInsLookup(mv->tCache,text),
-			    x, y);
+			if (agTextCache) {
+				AG_WidgetBlitSurface(mv,
+				    AG_TextCacheInsLookup(mv->tCache,text),
+				    x, y);
+			} else {
+				SDL_Surface *suTmp;
+				suTmp = AG_TextRender(text);
+				AG_WidgetBlit(mv, suTmp, x, y);
+				AG_SurfaceFree(suTmp);
+			}
 		}
 	}
 	

@@ -29,6 +29,7 @@
 
 #include <core/limits.h>
 #include <core/core.h>
+#include <core/config.h>
 
 #include <gui/widget.h>
 #include <gui/primitive.h>
@@ -144,6 +145,7 @@ RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
 	VG_Vector v1, v2, vMid;
 	int x, y, w, h;
 	int su;
+	SDL_Surface *suTmp;
 
 	AG_PushTextState();
 	if (vt->fontFace[0] != '\0' ||
@@ -153,9 +155,15 @@ RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
 	}
 	AG_TextColorVideo32(VG_MapColorRGB(VGNODE(vt)->color));
 
-	su = AG_TextCacheInsLookup(vv->tCache, s);
-	w = WSURFACE(vv,su)->w;
-	h = WSURFACE(vv,su)->h;
+	if (agTextCache) {
+		su = AG_TextCacheInsLookup(vv->tCache, s);
+		w = WSURFACE(vv,su)->w;
+		h = WSURFACE(vv,su)->h;
+	} else {
+		suTmp = AG_TextRender(s);
+		w = suTmp->w;
+		h = suTmp->h;
+	}
 
 	v1 = VG_Pos(vt->p1);
 	v2 = VG_Pos(vt->p2);
@@ -170,14 +178,26 @@ RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
 			     0.0f);
 		glRotatef(VG_Degrees(VG_Atan2(v1.y-v2.y, v1.x-v2.x)),
 		    0.0f, 0.0f, 1.0f);
-		AG_WidgetBlitSurfaceGL(vv, su, w, h);
+		if (agTextCache) {
+			AG_WidgetBlitSurfaceGL(vv, su, w, h);
+		} else {
+			AG_WidgetBlitGL(vv, suTmp, w, h);
+			AG_SurfaceFree(suTmp);
+		}
 		glPopMatrix();
 	} else
 #endif
 	{
-		AG_WidgetBlitSurface(vv, su,
-		    x - w/2,
-		    y - h/2);
+		if (agTextCache) {
+			AG_WidgetBlitSurface(vv, su,
+			    x - w/2,
+			    y - h/2);
+		} else {
+			AG_WidgetBlitGL(vv, suTmp,
+			    x - w/2,
+			    y - h/2);
+			AG_SurfaceFree(suTmp);
+		}
 	}
 	AG_PopTextState();
 }
@@ -277,13 +297,25 @@ Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 	VG_Text *vt = p;
 	float wText, hText;
 	VG_Vector v1, v2;
+	AG_Surface *suTmp;
 	int su;
 
-	su = AG_TextCacheInsLookup(vv->tCache, vt->text);
+	if (agTextCache) {
+		su = AG_TextCacheInsLookup(vv->tCache, vt->text);
+		wText = (float)WSURFACE(vv,su)->w/vv->scale;
+		hText = (float)WSURFACE(vv,su)->h/vv->scale;
+	} else {
+		suTmp = AG_TextRender(vt->text);
+		wText = (float)suTmp->w/vv->scale;
+		hText = (float)suTmp->h/vv->scale;
+	}
+
 	v1 = VG_Pos(vt->p1);
 	v2 = VG_Pos(vt->p2);
-	wText = (float)WSURFACE(vv,su)->w/vv->scale;
-	hText = (float)WSURFACE(vv,su)->h/vv->scale;
+	
+	if (!agTextCache) {
+		AG_SurfaceFree(suTmp);
+	}
 
 	a->x = MIN(v1.x,v2.x) - wText/2.0f;
 	a->y = MIN(v1.y,v2.y) - hText/2.0f;
