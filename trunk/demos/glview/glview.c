@@ -1,9 +1,12 @@
 /*	Public domain	*/
 /*
- * This program demonstrates the use of Agar's low-level GL context widget,
- * AG_GLView. This widget is part of Agar-GUI. If you want high-leven scene
- * graph functionality, look into FreeSG (http://freesg.org/), which provides
- * an Agar widget called SG_View(3).
+ * This program demonstrates the use of Agar's low-level OpenGL context
+ * widget, AG_GLView.
+ *
+ * AG_GLView is only concerned with saving/restoring visualization matrices
+ * and the relevant OpenGL states. For high-level scene graph functionality,
+ * you may be interested in FreeSG (http://freesg.org/), which provides a
+ * general-purpose Agar visualization widget (SG_View).
  */
 
 #include <agar/core.h>
@@ -27,7 +30,10 @@ MyScaleFunction(AG_Event *event)
 	gluPerspective(60.0, 1.0, 0.01, 100.0);
 }
 
-/* Draw callback function. */
+/*
+ * Rendering function. This routine renders our scene. Any GL command,
+ * with the exception of glViewport(), can be issued here.
+ */
 static void
 MyDrawFunction(AG_Event *event)
 {
