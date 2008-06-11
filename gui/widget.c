@@ -796,6 +796,7 @@ Destroy(void *obj)
  * coordinates relative to the widget, using clipping.
  *
  * Only safe to call from rendering context.
+ * XXX glDrawPixels() is probably faster.
  */
 void
 AG_WidgetBlit(void *p, AG_Surface *srcsu, int x, int y)
@@ -965,6 +966,64 @@ AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, AG_Rect *rs, int x, int y)
 }
 
 #ifdef HAVE_OPENGL
+/*
+ * OpenGL-only version of AG_WidgetBlit() without explicit source or
+ * destination rectangle parameter.
+ *
+ * Only safe to call from rendering context.
+ * XXX glDrawPixels() is probably faster.
+ */
+void
+AG_WidgetBlitGL(void *pWidget, AG_Surface *su, float w, float h)
+{
+	GLuint texname;
+	GLfloat texcoord[4];
+	GLboolean blend_sv;
+	GLint blend_sfactor, blend_dfactor;
+	GLfloat texenvmode;
+	int alpha = su->flags & (AG_SRCALPHA|AG_SRCCOLORKEY);
+	float w2 = w/2.0f;
+	float h2 = h/2.0f;
+
+	texname = AG_SurfaceTexture(su, texcoord);
+	glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+	if (alpha) {
+		glGetBooleanv(GL_BLEND, &blend_sv);
+		glGetIntegerv(GL_BLEND_SRC, &blend_sfactor);
+		glGetIntegerv(GL_BLEND_DST, &blend_dfactor);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+	
+	glBindTexture(GL_TEXTURE_2D, texname);
+	glBegin(GL_TRIANGLE_STRIP);
+	{
+		glTexCoord2f(texcoord[0],	texcoord[1]);
+		glVertex2f(w2,			h2);
+		glTexCoord2f(texcoord[2],	texcoord[1]);
+		glVertex2f(-w2,			h2);
+		glTexCoord2f(texcoord[0],	texcoord[3]);
+		glVertex2f(w2,			-h2);
+		glTexCoord2f(texcoord[2],	texcoord[3]);
+		glVertex2f(-w2,			-h2);
+	}
+	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDeleteTextures(1, &texname);
+
+	if (alpha) {
+		if (blend_sv) {
+			glEnable(GL_BLEND);
+		} else {
+			glDisable(GL_BLEND);
+		}
+		glBlendFunc(blend_sfactor, blend_dfactor);
+	}
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texenvmode);
+}
+
 /*
  * OpenGL-only version of AG_WidgetBlitSurface() without explicit
  * source or destination rectangle parameter.

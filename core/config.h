@@ -11,7 +11,8 @@ extern AG_ObjectClass agConfigClass;
 extern int agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval;
 extern int agTextComposition, agTextBidi, agTextAntialiasing, agTextTabWidth,
-	   agTextBlinkRate, agTextAntialiasing, agPageIncrement, agTextSymbols;
+	   agTextBlinkRate, agTextAntialiasing, agTextCache, agPageIncrement,
+	   agTextSymbols;
 extern int agIdleThresh;
 extern int agScreenshotQuality;
 extern int agWindowAnySize;

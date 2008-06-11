@@ -59,6 +59,7 @@ int agMouseSpinIval = 50;		/* Spinbutton repeat interval */
 int agTextComposition = 1;		/* Built-in input composition */
 int agTextBidi = 0;			/* Bidirectionnal text display */
 int agTextAntialiasing = 1;		/* Use font antialiasing */
+int agTextCache = 0;			/* Dynamic text cache */
 int agTextTabWidth = 40;		/* Tab width (px) */
 int agTextBlinkRate = 250;		/* Cursor blink rate (ms) */
 int agTextSymbols = 1;			/* Process special symbols in text */

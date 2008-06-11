@@ -24,6 +24,7 @@
  */
 
 #include <core/core.h>
+#include <core/config.h>
 
 #include "label.h"
 #include "primitive.h"
@@ -51,7 +52,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 #ifdef THREADS
 	label->poll.lock = NULL;
 #endif
-	label->tCache = AG_TextCacheNew(label, 64, 16);
+	label->tCache = agTextCache ? AG_TextCacheNew(label, 64, 16) : NULL;
 
 	va_start(ap, fmt);
 	for (p = fmt; *p != '\0'; p++) {
@@ -98,7 +99,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 #ifdef THREADS
 	label->poll.lock = mutex;
 #endif
-	label->tCache = AG_TextCacheNew(label, 64, 16);
+	label->tCache = agTextCache ? AG_TextCacheNew(label, 64, 16) : NULL;
 
 	va_start(ap, fmt);
 	for (p = fmt; *p != '\0'; p++) {
@@ -663,10 +664,17 @@ DrawPolled(AG_Label *label)
 		AG_PushTextState();
 		AG_TextJustify(label->justify);
 		AG_TextColor(TEXT_COLOR);
-		AG_WidgetBlitSurface(label,
-		    AG_TextCacheInsLookup(label->tCache,s),
-		    label->lPad,
-		    label->tPad);
+		if (agTextCache) {
+			AG_WidgetBlitSurface(label,
+			    AG_TextCacheInsLookup(label->tCache,s),
+			    label->lPad,
+			    label->tPad);
+		} else {
+			AG_Surface *suTmp;
+			suTmp = AG_TextRender(s);
+			AG_WidgetBlit(label, suTmp, label->lPad, label->tPad);
+			AG_SurfaceFree(suTmp);
+		}
 		AG_PopTextState();
 	}
 }
