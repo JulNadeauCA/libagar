@@ -660,23 +660,21 @@ DrawPolled(AG_Label *label)
 		}
 	}
 
-	if (label->tCache != NULL) {
-		AG_PushTextState();
-		AG_TextJustify(label->justify);
-		AG_TextColor(TEXT_COLOR);
-		if (agTextCache) {
-			AG_WidgetBlitSurface(label,
-			    AG_TextCacheInsLookup(label->tCache,s),
-			    label->lPad,
-			    label->tPad);
-		} else {
-			AG_Surface *suTmp;
-			suTmp = AG_TextRender(s);
-			AG_WidgetBlit(label, suTmp, label->lPad, label->tPad);
-			AG_SurfaceFree(suTmp);
-		}
-		AG_PopTextState();
+	AG_PushTextState();
+	AG_TextJustify(label->justify);
+	AG_TextColor(TEXT_COLOR);
+	if (agTextCache) {
+		AG_WidgetBlitSurface(label,
+		    AG_TextCacheInsLookup(label->tCache,s),
+		    label->lPad,
+		    label->tPad);
+	} else {
+		AG_Surface *suTmp;
+		suTmp = AG_TextRender(s);
+		AG_WidgetBlit(label, suTmp, label->lPad, label->tPad);
+		AG_SurfaceFree(suTmp);
 	}
+	AG_PopTextState();
 }
 
 static void
