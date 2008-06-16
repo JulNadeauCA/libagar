@@ -839,8 +839,21 @@ process:
 			}
 			/* FALLTHROUGH */
 		case SDL_KEYDOWN:
-			/* XXX */
-			switch (ev->key.keysym.sym) {
+			switch (ev->type) {
+			case SDL_KEYUP:
+				AG_WidgetUnfocusedKeyUp(WIDGET(win),
+				    (int)ev->key.keysym.sym,
+				    (int)ev->key.keysym.mod,
+				    (int)ev->key.keysym.unicode);
+				break;
+			case SDL_KEYDOWN:
+				AG_WidgetUnfocusedKeyDown(WIDGET(win),
+				    (int)ev->key.keysym.sym,
+				    (int)ev->key.keysym.mod,
+				    (int)ev->key.keysym.unicode);
+				break;
+			}
+			switch (ev->key.keysym.sym) {		/* XXX */
 			case SDLK_LSHIFT:
 			case SDLK_RSHIFT:
 			case SDLK_LALT:

@@ -1624,7 +1624,7 @@ AG_WidgetBlendPixelRGBA(void *p, int wx, int wy, Uint8 c[4], AG_BlendFn fn)
 
 /*
  * Post a mousemotion event to widgets that either hold focus or have the
- * AG_WIDGET_UNFOCUSED_MOTION flag set. View must be locked.
+ * UNFOCUSED_MOTION flag set. View must be locked.
  */
 void
 AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
@@ -1649,7 +1649,7 @@ out:
 
 /*
  * Post a mousebuttonup event to widgets that either hold focus or have the
- * AG_WIDGET_UNFOCUSED_BUTTONUP flag set. View must be locked.
+ * UNFOCUSED_BUTTONUP flag set. View must be locked.
  */
 void
 AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
@@ -1702,6 +1702,46 @@ out:
 match:
 	AG_ObjectUnlock(wid);
 	return (1);
+}
+
+/*
+ * Post a keyup event to widgets with the UNFOCUSED_KEYUP flag set.
+ * View must be locked.
+ */
+void
+AG_WidgetUnfocusedKeyUp(AG_Widget *wid, int ksym, int kmod, int unicode)
+{
+	AG_Widget *cwid;
+
+	AG_ObjectLock(wid);
+	if (wid->flags & AG_WIDGET_UNFOCUSED_KEYUP) {
+		AG_PostEvent(NULL, wid,  "window-keyup", "%i, %i, %i",
+		    ksym, kmod, unicode);
+	}
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
+		AG_WidgetUnfocusedKeyUp(cwid, ksym, kmod, unicode);
+	}
+	AG_ObjectUnlock(wid);
+}
+
+/*
+ * Post a keydown event to widgets with the UNFOCUSED_KEYDOWN flag set.
+ * View must be locked.
+ */
+void
+AG_WidgetUnfocusedKeyDown(AG_Widget *wid, int ksym, int kmod, int unicode)
+{
+	AG_Widget *cwid;
+
+	AG_ObjectLock(wid);
+	if (wid->flags & AG_WIDGET_UNFOCUSED_KEYDOWN) {
+		AG_PostEvent(NULL, wid,  "window-keydown", "%i, %i, %i",
+		    ksym, kmod, unicode);
+	}
+	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
+		AG_WidgetUnfocusedKeyDown(cwid, ksym, kmod, unicode);
+	}
+	AG_ObjectUnlock(wid);
 }
 
 /*
