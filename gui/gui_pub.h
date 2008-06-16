@@ -47,6 +47,7 @@
 #include <agar/gui/tableview.h>
 #include <agar/gui/text.h>
 #include <agar/gui/textbox.h>
+#include <agar/gui/text_cache.h>
 #include <agar/gui/tlist.h>
 #include <agar/gui/toolbar.h>
 #include <agar/gui/ucombo.h>
