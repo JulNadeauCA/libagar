@@ -114,6 +114,8 @@ typedef struct ag_widget {
 #define AG_WIDGET_UNDERSIZE		0x4000 /* Size allocation failed */
 #define AG_WIDGET_IGNORE_PADDING	0x8000 /* Ignore container padding
 					          (container-specific) */
+#define AG_WIDGET_UNFOCUSED_KEYDOWN	0x10000 /* All mousebuttondown events */
+#define AG_WIDGET_UNFOCUSED_KEYUP	0x20000 /* All mousebuttondown events */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int redraw;			/* Redraw flag (for WIDGET_STATIC) */
@@ -243,6 +245,8 @@ void  AG_WidgetMouseMotion(struct ag_window *, AG_Widget *, int, int, int,
 	                   int, int);
 void  AG_WidgetMouseButtonUp(struct ag_window *, AG_Widget *, int, int, int);
 int   AG_WidgetMouseButtonDown(struct ag_window *, AG_Widget *, int, int, int);
+void  AG_WidgetUnfocusedKeyUp(AG_Widget *, int, int, int);
+void  AG_WidgetUnfocusedKeyDown(AG_Widget *, int, int, int);
 
 AG_WidgetBinding *AG_WidgetBind(void *, const char *,
 	                        AG_WidgetBindingType, ...);
