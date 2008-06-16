@@ -17,7 +17,8 @@ SUBDIR=	fixedres \
 	cplusplus \
 	plotting \
 	scrollbar \
-	initvideosdl
+	initvideosdl \
+	keyevents
 
 all: all-subdir
 clean: prereq clean-subdir
