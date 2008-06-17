@@ -25,11 +25,8 @@
 
 #include <agar/core.h>
 #include <agar/gui.h>
+#include <agar/gui/load_xcf.h>
 #include <agar/map.h>
-
-#include <agar/core/core_begin.h>
-#include <agar/core/load_xcf.h>
-#include <agar/core/core_close.h>
 
 #include "config/sharedir.h"
 #include "config/have_agar_dev.h"
