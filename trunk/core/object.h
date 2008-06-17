@@ -9,7 +9,7 @@
 #define AG_OBJECT_DIGEST_MAX 170
 
 #define AGOBJECT(ob) ((struct ag_object *)(ob))
-#define AGOBJECT_OPS(obj) ((struct ag_object_ops *)(AGOBJECT(obj)->ops))
+#define AGOBJECT_CLASS(obj) ((struct ag_object_class *)(AGOBJECT(obj)->cls))
 
 #ifdef _AGAR_INTERNAL
 #include <core/timeout.h>
@@ -134,7 +134,7 @@ enum ag_object_checksum_alg {
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
 #define OBJECT(ob)		AGOBJECT(ob)
-#define OBJECT_OPS(ob)		AGOBJECT_OPS(ob)
+#define OBJECT_CLASS(ob)	AGOBJECT_CLASS(ob)
 #define OBJECT_RESIDENT(ob)	AGOBJECT_RESIDENT(ob)
 #define OBJECT_PERSISTENT(ob)	AGOBJECT_PERSISTENT(ob)
 #define OBJECT_DEBUG(ob) 	AGOBJECT_DEBUG(ob)
