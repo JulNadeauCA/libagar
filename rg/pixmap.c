@@ -1029,8 +1029,6 @@ RG_PixmapButtondown(RG_Tileview *tv, RG_TileElement *tel,
 			tv->tv_pixmap.state = RG_TVPIXMAP_HORIZONTAL;
 		} else if (keystate[SDLK_v]) {
 			tv->tv_pixmap.state = RG_TVPIXMAP_VERTICAL;
-		} else if (keystate[SDLK_d]) {
-			tv->tv_pixmap.state = RG_TVPIXMAP_DIAGONAL;
 		} else {
 			tv->tv_pixmap.state = RG_TVPIXMAP_FREEHAND;
 		}
@@ -1054,7 +1052,6 @@ RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
     int xrel, int yrel, int state)
 {
 	Uint8 *ks = SDL_GetKeyState(NULL);
-	int d, x2, y2;
 
 	if (ks[SDLK_f]) {
 		AG_SetCursor(AG_FILL_CURSOR);
@@ -1073,28 +1070,6 @@ RG_PixmapMotion(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 		return;
 	case RG_TVPIXMAP_HORIZONTAL:
 		pixmap_apply(tv, tel, x, tv->tv_pixmap.yorig);
-		return;
-	case RG_TVPIXMAP_DIAGONAL:
-		if (y < tv->tv_pixmap.yorig) {
-			d = tv->tv_pixmap.xorig - x;
-			if (x < tv->tv_pixmap.xorig) {
-				x2 = tv->tv_pixmap.xorig - d;
-				y2 = tv->tv_pixmap.yorig - d;
-			} else {
-				x2 = tv->tv_pixmap.xorig - d;
-				y2 = tv->tv_pixmap.yorig + d;
-			}
-		} else {
-			d = tv->tv_pixmap.xorig - x;
-			if (x < tv->tv_pixmap.xorig) {
-				x2 = tv->tv_pixmap.xorig - d;
-				y2 = tv->tv_pixmap.yorig + d;
-			} else {
-				x2 = tv->tv_pixmap.xorig - d;
-				y2 = tv->tv_pixmap.yorig - d;
-			}
-		}
-		pixmap_apply(tv, tel, x2, y2);
 		return;
 	default:
 		break;

@@ -38,7 +38,7 @@ struct rg_texture;
 #include "begin_code.h"
 
 #ifndef RG_TILESZ
-#define RG_TILESZ 32
+#define RG_TILESZ 16
 #endif
 #define RG_TEMPLATE_NAME_MAX	24
 #define RG_TILESET_NAME_MAX	32	/* MAX({TILE,SKETCH,PIXMAP}_NAME_MAX) */
