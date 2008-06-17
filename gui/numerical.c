@@ -104,8 +104,8 @@ AG_NumericalNewFltR(void *parent, Uint flags, const char *unit,
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
 	AG_WidgetBindFloat(num, "value", v);
-	AG_NumericalSetMin(num, min);
-	AG_NumericalSetMax(num, max);
+	AG_NumericalSetMin(num, (double)min);
+	AG_NumericalSetMax(num, (double)max);
 	return (num);
 }
 
@@ -137,8 +137,8 @@ AG_NumericalNewIntR(void *parent, Uint flags, const char *unit,
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
 	AG_WidgetBindInt(num, "value", v);
-	AG_NumericalSetMin(num, min);
-	AG_NumericalSetMax(num, max);
+	AG_NumericalSetMin(num, (double)min);	/* XXX */
+	AG_NumericalSetMax(num, (double)max);
 	return (num);
 }
 AG_Numerical *
@@ -157,8 +157,8 @@ AG_NumericalNewUintR(void *parent, Uint flags, const char *unit,
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
 	AG_WidgetBindUint(num, "value", v);
-	AG_NumericalSetMin(num, min);
-	AG_NumericalSetMax(num, max);
+	AG_NumericalSetMin(num, (double)min);	/* XXX */
+	AG_NumericalSetMax(num, (double)max);
 	return (num);
 }
 
@@ -208,12 +208,34 @@ AG_NumericalNewUint32(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 AG_Numerical *
+AG_NumericalNewUint32R(void *parent, Uint flags, const char *unit,
+    const char *label, Uint32 *v, Uint32 min, Uint32 max)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNew(parent, flags, unit, label);
+	AG_WidgetBindUint32(num, "value", v);
+	AG_NumericalSetMin(num, (double)min);	/* XXX */
+	AG_NumericalSetMax(num, (double)max);
+	return (num);
+}
+AG_Numerical *
 AG_NumericalNewSint32(void *parent, Uint flags, const char *unit,
     const char *label, Sint32 *v)
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
 	AG_WidgetBindSint32(num, "value", v);
+	return (num);
+}
+AG_Numerical *
+AG_NumericalNewSint32R(void *parent, Uint flags, const char *unit,
+    const char *label, Sint32 *v, Sint32 min, Sint32 max)
+{
+	AG_Numerical *num;
+	num = AG_NumericalNew(parent, flags, unit, label);
+	AG_WidgetBindSint32(num, "value", v);
+	AG_NumericalSetMin(num, (double)min);	/* XXX */
+	AG_NumericalSetMax(num, (double)max);
 	return (num);
 }
 

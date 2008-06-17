@@ -74,6 +74,10 @@ AG_Numerical *AG_NumericalNewUint32(void *, Uint, const char *, const char *,
                                     Uint32 *);
 AG_Numerical *AG_NumericalNewSint32(void *, Uint, const char *, const char *,
                                     Sint32 *);
+AG_Numerical *AG_NumericalNewUint32R(void *, Uint, const char *, const char *,
+                                    Uint32 *, Uint32, Uint32);
+AG_Numerical *AG_NumericalNewSint32R(void *, Uint, const char *, const char *,
+                                    Sint32 *, Sint32, Sint32);
 
 void    AG_NumericalSizeHint(AG_Numerical *, const char *);
 void	AG_NumericalSetValue(AG_Numerical *, double);
