@@ -227,7 +227,7 @@ Init(void *obj)
 	tl->selected = NULL;
 	tl->wSpace = 4;
 	tl->item_h = agTextFontHeight+2;
-	tl->icon_w = tl->item_h - 4;
+	tl->icon_w = 16;
 	tl->dblclicked = NULL;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
@@ -1206,7 +1206,7 @@ AG_TlistSetItemHeight(AG_Tlist *tl, int ih)
 			AG_Surface *scaled = NULL;
 
 			if (AG_ScaleSurface(it->iconsrc,
-			    tl->item_h-1, tl->item_h-1, &scaled) == -1) {
+			    tl->item_h, tl->item_h, &scaled) == -1) {
 				AG_FatalError(NULL);
 			}
 			AG_WidgetReplaceSurface(tl, it->icon, scaled);
