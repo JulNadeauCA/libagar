@@ -750,7 +750,7 @@ Init(void *obj)
 	WIDGET(tv)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL|
 	                     AG_WIDGET_FOCUSABLE|
 	                     AG_WIDGET_CLIPPING;
-	tv->flags = RG_TILEVIEW_NO_EXTENT|RG_TILEVIEW_NO_GRID;
+	tv->flags = RG_TILEVIEW_NO_EXTENT|RG_TILEVIEW_NO_TILING;
 	tv->ts = NULL;
 	tv->tile = NULL;
 	tv->scaled = NULL;

@@ -832,7 +832,7 @@ PollTiles(AG_Event *event)
 }
 
 static char ins_tile_name[RG_TILE_NAME_MAX];
-static char ins_tile_class[RG_TILE_CLASS_MAX];
+/* static char ins_tile_class[RG_TILE_CLASS_MAX]; */
 static char ins_texture_name[RG_TEXTURE_NAME_MAX];
 static char ins_anim_name[RG_TILE_NAME_MAX];
 static int ins_tile_w = RG_TILESZ;
@@ -1169,7 +1169,7 @@ InsertTileDlg(AG_Event *event)
 	AG_MSpinbutton *msb;
 	AG_Checkbox *cb;
 	AG_Radio *rad;
-	AG_Combo *com;
+/*	AG_Combo *com; */
 
 	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
 	    AG_WINDOW_NOMINIMIZE, "rg-instiledlg")) == NULL) {
@@ -1179,16 +1179,13 @@ InsertTileDlg(AG_Event *event)
 	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name: "));
 	AG_TextboxBindUTF8(tb, ins_tile_name, sizeof(ins_tile_name));
+	AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXX");
 	AG_SetEvent(tb, "textbox-return", InsertTile, "%p,%p", win, ts);
 	AG_WidgetFocus(tb);
-
+#if 0
 	com = AG_ComboNew(win, AG_COMBO_ANY_TEXT|AG_COMBO_HFILL, _("Class: "));
 	AG_TextboxBindUTF8(com->tbox, ins_tile_class, sizeof(ins_tile_class));
-	if (strcmp(ts->tmpl, "Terrain") == 0) {
-		AG_TlistAdd(com->list, NULL, "Ground");
-		AG_TlistAdd(com->list, NULL, "Rock");
-	}
-
+#endif
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size: "));
 	AG_WidgetBindInt(msb, "xvalue", &ins_tile_w);
 	AG_WidgetBindInt(msb, "yvalue", &ins_tile_h);
@@ -1231,6 +1228,7 @@ InsertTextureDlg(AG_Event *event)
 	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name:"));
 	AG_TextboxBindUTF8(tb, ins_texture_name, sizeof(ins_texture_name));
+	AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXX");
 	AG_SetEvent(tb, "textbox-return", InsertTexture, "%p,%p,%p", win,
 	    pwin, ts);
 	AG_WidgetFocus(tb);
@@ -1265,6 +1263,7 @@ InsertAnimDlg(AG_Event *event)
 	
 	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name:"));
 	AG_TextboxBindUTF8(tb, ins_anim_name, sizeof(ins_anim_name));
+	AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXX");
 	AG_SetEvent(tb, "textbox-return", InsertAnim, "%p,%p", win, ts);
 	AG_WidgetFocus(tb);
 
