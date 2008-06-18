@@ -129,7 +129,6 @@ int	 AG_WindowSetGeometryAlignedPct(AG_Window *, enum ag_window_alignment,
 #define	 AG_WindowSetGeometryMax(win) \
 	 AG_WindowSetGeometry((win),0,0,agView->w,agView->h)
 
-void	 AG_WindowUpdate(AG_Window *);
 void	 AG_WindowSaveGeometry(AG_Window *);
 int	 AG_WindowRestoreGeometry(AG_Window *);
 void	 AG_WindowMaximize(AG_Window *);
@@ -159,6 +158,24 @@ void	 AG_WindowCloseGenEv(AG_Event *);
 #define AGWINDETACH(win)	AG_WindowDetachGenEv, "%p", (win)
 #define AGWINHIDE(win)		AG_WindowHideGenEv, "%p", (win)
 #define AGWINCLOSE(win)		AG_WindowCloseGenEv, "%p", (win)
+
+static __inline__ void
+AG_WindowUpdate(AG_Window *win)
+{
+	AG_SizeAlloc a;
+	
+	if (win == NULL) {
+		return;
+	}
+	if (AGWIDGET(win)->x != -1 && AGWIDGET(win)->y != -1) {
+		a.x = AGWIDGET(win)->x;
+		a.y = AGWIDGET(win)->y;
+		a.w = AGWIDGET(win)->w;
+		a.h = AGWIDGET(win)->h;
+		AG_WidgetSizeAlloc(win, &a);
+	}
+	AG_WidgetUpdateCoords(win, AGWIDGET(win)->x, AGWIDGET(win)->y);
+}
 __END_DECLS
 
 #include "close_code.h"

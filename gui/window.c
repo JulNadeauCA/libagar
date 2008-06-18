@@ -951,24 +951,6 @@ outf:
 	return (rv);
 }
 
-void
-AG_WindowUpdate(AG_Window *win)
-{
-	AG_SizeAlloc a;
-	
-	if (win == NULL) {
-		return;
-	}
-	if (WIDGET(win)->x != -1 && WIDGET(win)->y != -1) {
-		a.x = WIDGET(win)->x;
-		a.y = WIDGET(win)->y;
-		a.w = WIDGET(win)->w;
-		a.h = WIDGET(win)->h;
-		AG_WidgetSizeAlloc(win, &a);
-	}
-	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
-}
-
 /* 
  * Set window coordinates and geometry. This should be used instead of
  * a direct WidgetSizeAlloc() since it redraws portions of the window
