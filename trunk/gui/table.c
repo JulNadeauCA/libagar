@@ -1439,7 +1439,6 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				c->data.p = c;
 			} else if (sc[0] == 'W') {
 				AG_SizeAlloc a;
-				AG_Window *pWin;
 
 				a.x = 0;
 				a.y = 0;
@@ -1449,8 +1448,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				c->widget = c->data.p;
 				AG_ObjectAttach(t, c->widget);
 				AG_WidgetSizeAlloc(c->widget, &a);
-				if ((pWin = AG_WidgetParentWindow(t)) != NULL)
-					AG_WindowUpdate(pWin);
+				AG_WindowUpdate(AG_ParentWindow(t));
 			}
 		}
 		switch (sc[0]) {

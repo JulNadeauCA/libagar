@@ -156,8 +156,7 @@ UpdateWindow(AG_Event *event)
 {
 	AG_Window *win = AG_PTR(1);
 
-	if (win != NULL)
-		AG_WindowUpdate(win);
+	AG_WindowUpdate(win);
 }
 
 static void
@@ -287,7 +286,7 @@ WidgetParams(AG_Event *event)
 
 	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Box:*")) {
 		AG_Box *box = (AG_Box *)wid;
-		AG_Window *wp = AG_WidgetParentWindow(box);
+		AG_Window *wp = AG_ParentWindow(box);
 		AG_Spinbutton *sb;
 		
 		nTab = AG_NotebookAddTab(nb, _("Box"), AG_BOX_VERT);

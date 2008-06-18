@@ -60,17 +60,9 @@ VG_ToolDestroy(VG_Tool *tool)
 		AG_ViewDetach(tool->win);
 	
 	if (tool->pane != NULL) {
-		AG_Window *pwin;
-		AG_Widget *wt;
-
-		OBJECT_FOREACH_CHILD(wt, tool->pane, ag_widget) {
-			AG_ObjectDetach(wt);
-			AG_ObjectDestroy(wt);
-		}
-		if ((pwin = AG_WidgetParentWindow(tool->pane)) != NULL)
-			AG_WindowUpdate(pwin);
+		AG_ObjectFreeChildren(tool->pane);
+		AG_WindowUpdate(AG_ParentWindow(tool->pane));
 	}
-	
 	for (kbinding = SLIST_FIRST(&tool->kbindings);
 	     kbinding != SLIST_END(&tool->kbindings);
 	     kbinding = nkbinding) {

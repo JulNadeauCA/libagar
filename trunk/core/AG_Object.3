@@ -576,7 +576,7 @@ the meaning of which is object-specific.
 .Fn AG_ObjectFindDep
 tries to resolve the given 32-bit dependency identifier, return 0 on success
 and -1 on failure.
-.Sh GARBAGE COLLECTION
+.Sh RELEASING RESOURCES
 .nr nS 1
 .Ft "void"
 .Fn AG_ObjectDestroy "AG_Object *obj"
@@ -648,7 +648,7 @@ invokes
 and
 .Fn AG_ObjectFreeChildren ,
 but these functions may be called directly in order to destroy and reinitialize
-the event handler list, the property table and the child instances,
+the event handler list, the property table and destroy the child objects,
 respectively.
 .Pp
 In addition to reinitializing the event handler table,
@@ -656,11 +656,9 @@ In addition to reinitializing the event handler table,
 also cancels scheduled events.
 .Pp
 .Fn AG_ObjectFreeChildren
-invokes
-.Xr free 3
-on an object's children (except those with the
-.Dv AG_OBJECT_STATIC
-flag set), assuming that none of them are in use.
+releases all resources allocated by child objects, under the specified parent
+object.
+The function assumes that none of the child objects are currently in use.
 .Pp
 .Fn AG_ObjectFreeDummyDeps
 removes entries in the dependency table where the reference count is zero

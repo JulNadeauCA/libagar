@@ -922,7 +922,7 @@ was unlimited.
 .Sh MISCELLANEOUS
 .nr nS 1
 .Ft "AG_Window *"
-.Fn AG_WidgetParentWindow "AG_Widget *widget"
+.Fn AG_ParentWindow "AG_Widget *widget"
 .Pp
 .Ft "AG_Widget *"
 .Fn AG_WidgetFind "AG_Display *view" "const char *name"
@@ -937,7 +937,7 @@ was unlimited.
 .Fn AG_SetStyle "AG_Widget *widget" "AG_Style *style"
 .Pp
 .nr nS 0
-.Fn AG_WidgetParentWindow
+.Fn AG_ParentWindow
 searches the parent objects of the given widget for an
 .Xr AG_Window 3
 (or a subclass of it).

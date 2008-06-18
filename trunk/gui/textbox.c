@@ -181,7 +181,7 @@ Draw(void *p)
 			    AG_RECT(WIDTH(tb)-d, HEIGHT(tb)-d, d, d), -1,
 			    AG_COLOR(TEXTBOX_COLOR));
 		}
-		AG_WindowUpdate(AG_WidgetParentWindow(tb));
+		AG_WindowUpdate(AG_ParentWindow(tb));
 	}
 }
 

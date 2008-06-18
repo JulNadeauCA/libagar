@@ -1220,7 +1220,7 @@ AG_WidgetUnfocus(void *p)
  * the View VFS is locked.
  */
 AG_Window *
-AG_WidgetParentWindow(void *p)
+AG_ParentWindow(void *p)
 {
 	AG_Widget *wid = p;
 	AG_Widget *pwid = wid;

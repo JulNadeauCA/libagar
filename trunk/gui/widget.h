@@ -199,7 +199,8 @@ AG_Widget	 *AG_WidgetFindFocused(void *);
 void		 *AG_WidgetFindPoint(const char *, int, int);
 void		 *AG_WidgetFindRect(const char *, int, int, int, int);
 void		  AG_WidgetUpdateCoords(void *, int, int);
-struct ag_window *AG_WidgetParentWindow(void *);
+struct ag_window *AG_ParentWindow(void *);
+#define		  AG_WidgetParentWindow(w) AG_ParentWindow(w)
 
 int	 AG_WidgetMapSurface(void *, AG_Surface *);
 int	 AG_WidgetMapSurfaceNODUP(void *, AG_Surface *);
