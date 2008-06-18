@@ -199,7 +199,7 @@ void	 AG_ObjectDestroy(void *);
 void	 AG_ObjectUnlinkDatafiles(void *);
 void	 AG_ObjectSetSavePfx(void *, char *);
 
-void	 AG_ObjectFreeChildren(AG_Object *);
+void	 AG_ObjectFreeChildren(void *);
 void	 AG_ObjectFreeProps(AG_Object *);
 void 	 AG_ObjectFreeEvents(AG_Object *);
 void	 AG_ObjectFreeDeps(AG_Object *);

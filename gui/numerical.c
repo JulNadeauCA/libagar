@@ -531,7 +531,6 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	const AG_Unit *ugroup = NULL;
 	int found = 0, i;
 	int w, h, nUnits = 0;
-	AG_Window *pWin;
 
 	AG_ObjectLock(num);
 
@@ -587,9 +586,7 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	
 	AG_ObjectUnlock(num);
 	
-	if ((pWin = AG_WidgetParentWindow(num))) {
-		AG_WindowUpdate(pWin);
-	}
+	AG_WindowUpdate(AG_ParentWindow(num));
 	return (0);
 }
 

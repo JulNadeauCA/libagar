@@ -595,13 +595,34 @@ AG_ObjectFreeDummyDeps(AG_Object *ob)
 	AG_ObjectUnlock(ob);
 }
 
+static void
+FreeChildObject(AG_Object *obj)
+{
+	AG_Object *cob, *ncob;
+
+	Debug(obj, "Freeing children\n");
+
+	AG_ObjectLock(obj);
+	for (cob = TAILQ_FIRST(&obj->children);
+	     cob != TAILQ_END(&obj->children);
+	     cob = ncob) {
+		ncob = TAILQ_NEXT(cob, cobjs);
+		FreeChildObject(cob);
+	}
+	AG_ObjectUnlock(obj);
+
+	AG_ObjectDetach(obj);
+	AG_ObjectDestroy(obj);
+}
+
 /*
- * Detach the child objects, and free them, assuming that none of them
- * are currently in use.
+ * Detach and free all child objects under the specified object. None of
+ * the child objects must currently be in use.
  */
 void
-AG_ObjectFreeChildren(AG_Object *pob)
+AG_ObjectFreeChildren(void *p)
 {
+	AG_Object *pob = p;
 	AG_Object *cob, *ncob;
 
 	AG_ObjectLock(pob);
@@ -609,9 +630,7 @@ AG_ObjectFreeChildren(AG_Object *pob)
 	     cob != TAILQ_END(&pob->children);
 	     cob = ncob) {
 		ncob = TAILQ_NEXT(cob, cobjs);
-		Debug(pob, "Freeing child %s\n", cob->name);
-		AG_ObjectDetach(cob);
-		AG_ObjectDestroy(cob);
+		FreeChildObject(cob);
 	}
 	TAILQ_INIT(&pob->children);
 	AG_ObjectUnlock(pob);

@@ -455,16 +455,12 @@ SelectInsnTile(AG_Event *event)
 static void
 EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 {
-	AG_Widget *child;
 	AG_Spinbutton *sb;
 	AG_MSpinbutton *msb;
 	AG_Combo *com;
 	RG_Tileview *tv;
 
-	OBJECT_FOREACH_CHILD(child, box, ag_widget) {
-		AG_ObjectDetach(child);
-		AG_ObjectDestroy(child);
-	}
+	AG_ObjectFreeChildren(box);
 
 	switch (insn->type) {
 	case RG_ANIM_TILE:
@@ -512,31 +508,27 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SpinbuttonSetIncrement(sb, 50);
 
-	AG_WindowUpdate(AG_WidgetParentWindow(box));
+	AG_WindowUpdate(AG_ParentWindow(box));
 }
 
 static void
 EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 {
-	AG_Widget *child;
 	AG_Spinbutton *sb;
 	AG_Pixmap *pix;
 
-	OBJECT_FOREACH_CHILD(child, box, ag_widget) {
-		AG_ObjectDetach(child);
-		AG_ObjectDestroy(child);
-	}
-	
+	AG_ObjectFreeChildren(box);
+
 	ani->gframe = fr->name;
 
 	pix = AG_PixmapFromSurfaceCopy(box, 0, AG_DupSurface(fr->su));
-	
+
 	sb = AG_SpinbuttonNew(box, 0, _("Delay (ms): "));
 	AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &fr->delay);
 	AG_SpinbuttonSetMin(sb, 0);
 	AG_SpinbuttonSetIncrement(sb, 50);
 
-	AG_WindowUpdate(AG_WidgetParentWindow(box));
+	AG_WindowUpdate(AG_ParentWindow(box));
 }
 
 static void

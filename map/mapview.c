@@ -114,18 +114,8 @@ MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
 			AG_WindowHide(mv->curtool->win);
 		}
 		if (mv->curtool->pane != NULL) {
-			AG_Widget *wt;
-			AG_Window *pwin;
-
-			OBJECT_FOREACH_CHILD(wt, mv->curtool->pane,
-			    ag_widget) {
-				AG_ObjectDetach(wt);
-				AG_ObjectDestroy(wt);
-			}
-			if ((pwin = AG_WidgetParentWindow(mv->curtool->pane))
-			    != NULL) {
-				AG_WindowUpdate(pwin);
-			}
+			AG_ObjectFreeChildren(mv->curtool->pane);
+			AG_WindowUpdate(AG_ParentWindow(mv->curtool->pane));
 		}
 		mv->curtool->mv = NULL;
 
@@ -148,18 +138,13 @@ MAP_ViewSelectTool(MAP_View *mv, MAP_Tool *ntool, void *p)
 			AG_WindowShow(ntool->win);
 		}
 		if (ntool->pane != NULL && ntool->ops->edit_pane != NULL) {
-			AG_Window *pwin;
-
 			ntool->ops->edit_pane(ntool, ntool->pane);
-			if ((pwin = AG_WidgetParentWindow(mv->curtool->pane))
-			    != NULL) {
-				AG_WindowUpdate(pwin);
-			}
+			AG_WindowUpdate(AG_ParentWindow(mv->curtool->pane));
 		}
 		MAP_ToolUpdateStatus(ntool);
 	}
 
-	if ((pwin = AG_WidgetParentWindow(mv)) != NULL) {
+	if ((pwin = AG_ParentWindow(mv)) != NULL) {
 		agView->winToFocus = pwin;
 		AG_WidgetFocus(mv);
 	}

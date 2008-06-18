@@ -510,18 +510,15 @@ SelectedType(AG_Event *event)
 	AG_FileOption *fo;
 	AG_Numerical *num;
 	AG_Textbox *tbox;
-	AG_Widget *chld;
-	AG_Window *pWin;
 
 	AG_ObjectLock(fd);
 	if (fd->optsCtr == NULL) {
 		AG_ObjectUnlock(fd);
 		return;
 	}
-	OBJECT_FOREACH_CHILD(chld, fd->optsCtr, ag_widget) {
-		AG_ObjectDetach(chld);
-		AG_ObjectDestroy(chld);
-	}
+
+	AG_ObjectFreeChildren(fd->optsCtr);
+	
 	TAILQ_FOREACH(fo, &ft->opts, opts) {
 		switch (fo->type) {
 		case AG_FILEDLG_BOOL:
@@ -560,8 +557,7 @@ SelectedType(AG_Event *event)
 	}
 	AG_ObjectUnlock(fd);
 
-	if ((pWin = AG_WidgetParentWindow(fd)) != NULL)
-		AG_WindowUpdate(pWin);
+	AG_WindowUpdate(AG_ParentWindow(fd));
 }
 
 static void

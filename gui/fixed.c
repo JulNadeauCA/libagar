@@ -122,11 +122,8 @@ Draw(void *obj)
 static __inline__ void
 UpdateWindow(AG_Fixed *fx)
 {
-	AG_Window *pwin;
-
-	if ((fx->flags & AG_FIXED_NO_UPDATE) == 0 &&
-	    (pwin = AG_WidgetParentWindow(fx)) != NULL)
-		AG_WindowUpdate(pwin);
+	if (!(fx->flags & AG_FIXED_NO_UPDATE))
+		AG_WindowUpdate(AG_ParentWindow(fx));
 }
 
 void

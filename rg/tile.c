@@ -781,7 +781,7 @@ CloseElement(RG_Tileview *tv)
 
 	if (tv->tel_tbar != NULL) {
 		AG_ObjectDetach(tv->tel_tbar);
-		AG_WindowUpdate(AG_WidgetParentWindow(tv->tel_tbar));
+		AG_WindowUpdate(AG_ParentWindow(tv->tel_tbar));
 		AG_ObjectDestroy(tv->tel_tbar);
 		tv->tel_tbar = NULL;
 	}
