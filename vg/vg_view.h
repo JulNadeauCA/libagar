@@ -74,6 +74,8 @@ typedef struct vg_view {
 	AG_TAILQ_HEAD(,vg_tool) tools;		/* Map edition tools */
 	char status[128];			/* Status text buffer */
 	AG_TextCache *tCache;			/* Text cache for VG_Text */
+	AG_Widget **editAreas;			/* User-specified container */
+	Uint       nEditAreas;
 } VG_View;
 
 #define VGVIEW(p) ((VG_View *)(p))
@@ -108,6 +110,7 @@ VG_Tool	*VG_ViewRegTool(VG_View *, const VG_ToolOps *, void *);
 void     VG_ViewSetDefaultTool(VG_View *, VG_Tool *);
 void     VG_Status(VG_View *, const char *, ...)
 	    FORMAT_ATTRIBUTE(printf, 2, 3);
+Uint     VG_ViewAddEditArea(VG_View *, void *);
 
 /*
  * Apply snapping constraints to given coordinates.

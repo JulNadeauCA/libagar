@@ -287,6 +287,8 @@ Init(void *obj)
 	vv->deftool = NULL;
 	vv->status[0] = '\0';
 	vv->tCache = agTextCache ? AG_TextCacheNew(vv, 128, 16) : NULL;
+	vv->editAreas = NULL;
+	vv->nEditAreas = 0;
 	TAILQ_INIT(&vv->tools);
 
 	AG_SetEvent(vv, "window-mousemotion", MouseMotion, NULL);
@@ -552,17 +554,8 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 			AG_WindowHide(vv->curtool->win);
 		}
 		if (vv->curtool->pane != NULL) {
-			AG_Widget *wt;
-			AG_Window *pwin;
-
-			OBJECT_FOREACH_CHILD(wt, vv->curtool->pane, ag_widget) {
-				AG_ObjectDetach(wt);
-				AG_ObjectDestroy(wt);
-			}
-			if ((pwin = AG_WidgetParentWindow(vv->curtool->pane))
-			    != NULL) {
-				AG_WindowUpdate(pwin);
-			}
+			AG_ObjectFreeChildren(vv->curtool->pane);
+			AG_WindowUpdate(AG_ParentWindow(vv->curtool->pane));
 		}
 		vv->curtool->vgv = NULL;
 	}
@@ -580,13 +573,8 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 		}
 #if 0
 		if (ntool->pane != NULL && ntool->ops->edit != NULL) {
-			AG_Window *pwin;
-
 			ntool->ops->edit(ntool, ntool->pane);
-			if ((pwin = AG_WidgetParentWindow(vv->curtool->pane))
-			    != NULL) {
-				AG_WindowUpdate(pwin);
-			}
+			AG_WindowUpdate(AG_ParentWindow(vv->curtool->pane));
 		}
 #endif
 		VG_Status(vv, _("Tool: %s"), ntool->ops->name);
@@ -594,8 +582,8 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 		VG_Status(vv, NULL);
 	}
 #if 0
-	if ((pwin = AG_WidgetParentWindow(vv)) != NULL) {
-		agView->winToFocus = pwin;
+	if ((pWin = AG_ParentWindow(vv)) != NULL) {
+		agView->winToFocus = pWin;
 		AG_WidgetFocus(vv);
 	}
 #endif
@@ -702,6 +690,7 @@ VG_Status(VG_View *vv, const char *fmt, ...)
 {
 	va_list ap;
 
+	AG_ObjectLock(vv);
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		Vsnprintf(vv->status, sizeof(vv->status), fmt, ap);
@@ -709,6 +698,21 @@ VG_Status(VG_View *vv, const char *fmt, ...)
 	} else {
 		vv->status[0] = '\0';
 	}
+	AG_ObjectUnlock(vv);
+}
+
+Uint
+VG_ViewAddEditArea(VG_View *vv, void *widget)
+{
+	Uint name;
+
+	AG_ObjectLock(vv);
+	vv->editAreas = Realloc(vv->editAreas, (vv->nEditAreas+1) *
+	                                       sizeof(AG_Widget *));
+	name = vv->nEditAreas++;
+	vv->editAreas[name] = widget;
+	AG_ObjectUnlock(vv);
+	return (name);
 }
 
 AG_WidgetClass vgViewClass = {
