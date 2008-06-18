@@ -76,6 +76,18 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
+Shown(AG_Event *event)
+{
+	AG_Notebook *nb = AG_SELF();
+
+	if (nb->sel_tab != NULL) {
+		AG_NotebookSelectTab(nb, nb->sel_tab);
+	} else if (!TAILQ_EMPTY(&nb->tabs)) {
+		AG_NotebookSelectTab(nb, TAILQ_FIRST(&nb->tabs));
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_Notebook *nb = obj;
@@ -97,6 +109,7 @@ Init(void *obj)
 	
 	AG_NotebookSetTabFont(nb, AG_FetchFont(NULL, agDefaultFont->size-1, 0));
 	AG_SetEvent(nb, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(nb, "widget-shown", Shown, NULL);
 }
 
 static void
