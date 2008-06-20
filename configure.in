@@ -229,9 +229,11 @@ if [ "${enable_threads}" != "no" ]; then
 	CHECK(pthreads)
 	if [ "${HAVE_PTHREADS}" = "yes" ];
 	then
+		HDEFINE(THREADS, 1)
 		if [ "${HAVE_PTHREADS_XOPEN}" = "no" ]; then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "no" ]; then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "no" ]; then
+			HUNDEF(THREADS)
 			if [ "${enable_threads}" = "yes" ]; then
 				echo "*"
 				echo "* --enable-threads was given, but your"
@@ -245,8 +247,8 @@ if [ "${enable_threads}" != "no" ]; then
 		fi
 		fi
 		fi
-		HDEFINE(THREADS, 1)
 	else
+		HUNDEF(THREADS)
 		if [ "${enable_threads}" = "yes" ]; then
 			echo "*"
 			echo "* --enable-threads was given, but no pthreads"
