@@ -99,6 +99,9 @@ function requests an initial widget size in pixels.
 .Ft "AG_GraphVertex *"
 .Fn AG_GraphVertexNew "AG_Graph *graph" "void *userPtr"
 .Pp
+.Ft "AG_GraphVertex *"
+.Fn AG_GraphVertexFind "AG_Graph *graph" "void *userPtr"
+.Pp
 .Ft "void"
 .Fn AG_GraphVertexLabel "AG_GraphVertex *vertex" "const char *fmt" "..."
 .Pp
@@ -114,12 +117,19 @@ function requests an initial widget size in pixels.
 .Ft "void"
 .Fn AG_GraphVertexPosition "AG_GraphVertex *vertex" "int x" "int y"
 .Pp
+.Ft "void"
+.Fn AG_GraphVertexPopupMenu "AG_GraphVertex *vertex" "AG_PopupMenu *pm"
+.Pp
 .nr nS 0
 The
 .Fn AG_GraphVertexNew
 function creates a new vertex in the specified graph.
 .Fa userPtr
 is an optional user pointer to associate with the vertex.
+.Pp
+.Fn AG_GraphVertexFind
+returns the vertex matching the specified user pointer, or NULL if no
+match exists.
 .Pp
 The
 .Fn AG_GraphVertexLabel
@@ -136,10 +146,17 @@ changes the default size of the node item.
 .Pp
 .Fn AG_GraphVertexPosition
 moves the node item to the given position in the view.
+.Pp
+.Fn AG_GraphVertexPopupMenu
+arranges for the given popup menu to be displayed when the user right clicks
+on the vertex.
 .Sh EDGES
 .nr nS 1
 .Ft "AG_GraphEdge *"
-.Fn AG_GraphEdgeNew "AG_Graph *graph" "AG_GraphVertex *v1" "AG_GraphVertex *v2"
+.Fn AG_GraphEdgeNew "AG_Graph *graph" "AG_GraphVertex *v1" "AG_GraphVertex *v2" "void *userPtr"
+.Pp
+.Ft "AG_GraphEdge *"
+.Fn AG_GraphEdgeFind "AG_Graph *graph" "void *userPtr"
 .Pp
 .Ft "void"
 .Fn AG_GraphEdgeLabel "AG_GraphEdge *edge" "const char *fmt" "..."
@@ -150,6 +167,9 @@ moves the node item to the given position in the view.
 .Ft "void"
 .Fn AG_GraphEdgeColor "AG_GraphEdge *edge" "Uint8 r" "Uint8 g" "Uint8 b"
 .Pp
+.Ft "void"
+.Fn AG_GraphEdgePopupMenu "AG_GraphEdge *edge" "AG_PopupMenu *menu"
+.Pp
 .nr nS 0
 The
 .Fn AG_GraphEdgeNew
@@ -159,6 +179,12 @@ and
 .Fa v2 .
 If the two vertices are already connected by an edge, the function fails
 and returns NULL.
+.Fa userPtr
+is an optional user pointer to associated with the edge.
+.Pp
+.Fn AG_GraphEdgeFind
+returns the vertex matching the specified user pointer, or NULL if no
+match exists.
 .Pp
 The
 .Fn AG_GraphEdgeLabel
@@ -168,6 +194,9 @@ sets the text label to display along the given edge.
 sets the color of the text label.
 .Fn AG_GraphEdgeColor
 sets the color of the line representing the edge.
+.Fn AG_GraphEdgePopupMenu
+arranges for the given popup menu to be displayed when the user right clicks
+on the edge.
 .Sh EVENTS
 The
 .Nm
@@ -187,7 +216,17 @@ Pan or move selected vertices.
 .Pp
 The
 .Nm
-widget does not generate any event.
+widget generates the following events:
+.Pp
+.Bl -tag -compact -width 2n
+.It Fn graph-vertex-selected "AG_GraphVertex *vtx"
+The specified vertex is now selected.
+.It Fn graph-vertex-unselected "AG_GraphVertex *vtx"
+The specified vertex is no longer selected.
+.It Fn graph-edge-selected "AG_GraphEdge *edge"
+The specified edge is now selected.
+.It Fn graph-edge-unselected "AG_GraphEdge *edge"
+The specified edge is no longer selected.
 .Sh STRUCTURE DATA
 .Bl -tag -compact -width "int xOffs, yOffs "
 .It Ft int xOffs, yOffs
@@ -235,6 +274,7 @@ User pointer
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Menu 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY
