@@ -176,7 +176,6 @@ echo "    --with-libtool            Specify path to libtool [bundled]"
 echo "    --with-cygwin             Add cygwin dependencies under cygwin [no]"
 echo "    --with-manpages           Manual pages (-mdoc) [yes]"
 echo "    --with-manlinks           Manual pages links for functions [no]"
-echo "    --with-ctags              Automatically generate tag files [no]"
 echo "    --with-docs               Printable docs (-me/tbl/eqn/pic/refer) [no]"
 echo "    --enable-debug            Include debugging code [no]"
 echo "    --enable-lockdebug        Expensive threads debugging [default: no]"
@@ -285,19 +284,17 @@ echo "ENABLE_NLS=${ENABLE_NLS}" >> Makefile.config
 echo "HAVE_GETTEXT=${HAVE_GETTEXT}" >> Makefile.config
 
 CTAGS=""
-if [ "${with_ctags}" = "yes" ]; then
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}/ectags" ]; then
+		CTAGS="${path}/ectags"
+	fi
+done
+if [ "${CTAGS}" = "" ]; then
 	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/ectags" ]; then
-			CTAGS="${path}/ectags"
+		if [ -x "${path}/ctags" ]; then
+			CTAGS="${path}/ctags"
 		fi
 	done
-	if [ "${CTAGS}" = "" ]; then
-		for path in `echo $PATH | sed 's/:/ /g'`; do
-			if [ -x "${path}/ctags" ]; then
-				CTAGS="${path}/ctags"
-			fi
-		done
-	fi
 fi
 echo "CTAGS=${CTAGS}" >> Makefile.config
 
@@ -2773,7 +2770,7 @@ fi;
 if [ "$SYSTEM" = "Darwin" ]; then
 OPENGL_CFLAGS=""
 OPENGL_LIBS="-framework OpenGL"
-elif [ "$HAVE_MINGW" = "yes" ]; then
+elif [ -e "/usr/lib/w32api/libopengl32.a" ]; then
 OPENGL_CFLAGS=""
 OPENGL_LIBS="-lopengl32"
 else
@@ -2952,6 +2949,10 @@ echo "ok" >> config.log
 $ECHO_N "checking whether libjpeg works..."
 $ECHO_N "checking whether libjpeg works..." >> config.log
 cat << EOT > conftest.c
+#ifdef _WIN32
+#error "libjpeg conflicts with windows.h"
+#endif
+
 #include <stdio.h>
 #include <jpeglib.h>
 
@@ -3475,12 +3476,19 @@ echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = nil" >>configure.lua
 fi;
 	if [ "${HAVE_PTHREADS}" = "yes" ]
 	then
+THREADS="1"
+echo "#ifndef THREADS" > config/threads.h
+echo "#define THREADS \"$THREADS\"" >> config/threads.h
+echo "#endif" >> config/threads.h
+echo "hdefs[\"THREADS\"] = \"$THREADS\"" >>configure.lua
 		if [ "${HAVE_PTHREADS_XOPEN}" = "no" ]
  then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "no" ]
  then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "no" ]
  then
+echo "#undef THREADS" >config/threads.h
+echo "hdefs[\"THREADS\"] = nil" >>configure.lua
 			if [ "${enable_threads}" = "yes" ]
  then
 				echo "*"
@@ -3495,12 +3503,9 @@ fi;
 		fi
 		fi
 		fi
-THREADS="1"
-echo "#ifndef THREADS" > config/threads.h
-echo "#define THREADS \"$THREADS\"" >> config/threads.h
-echo "#endif" >> config/threads.h
-echo "hdefs[\"THREADS\"] = \"$THREADS\"" >>configure.lua
 	else
+echo "#undef THREADS" >config/threads.h
+echo "hdefs[\"THREADS\"] = nil" >>configure.lua
 		if [ "${enable_threads}" = "yes" ]
  then
 			echo "*"
