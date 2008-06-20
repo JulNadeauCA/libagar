@@ -4,11 +4,9 @@
 #define _AGAR_GUI_GRAPH_H_
 
 #ifdef _AGAR_INTERNAL
-#include <sc/sc.h>
 #include <gui/widget.h>
 #include <gui/scrollbar.h>
 #else
-#include <agar/sc/sc.h>
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
 #endif
