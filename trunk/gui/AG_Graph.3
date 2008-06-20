@@ -71,17 +71,33 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-There currently no
+The
 .Fa flags
-specific to this widget.
+may include:
 .Pp
+.Bl -tag -width "AG_GRAPH_NO_SELECT "
+.It AG_GRAPH_NO_MOVE
+User cannot move vertices.
+.It AG_GRAPH_NO_SELECT
+User cannot select vertices.
+.It AG_GRAPH_NO_MENUS
+Disable popup menus.
+.It AG_GRAPH_READONLY
+Implies
+.Dv AG_GRAPH_NO_MOVE ,
+.Dv AG_GRAPH_NO_SELECT
+and
+.Dv AG_GRAPH_NO_MENUS .
+.El
+.Pp
+The
 .Fn AG_GraphSizeHint
-requests an initial widget size in pixels.
+function requests an initial widget size in pixels.
 .Pp
 .Sh VERTICES
 .nr nS 1
 .Ft "AG_GraphVertex *"
-.Fn AG_GraphVertexNew "AG_Graph *graph"
+.Fn AG_GraphVertexNew "AG_Graph *graph" "void *userPtr"
 .Pp
 .Ft "void"
 .Fn AG_GraphVertexLabel "AG_GraphVertex *vertex" "const char *fmt" "..."
@@ -102,6 +118,8 @@ requests an initial widget size in pixels.
 The
 .Fn AG_GraphVertexNew
 function creates a new vertex in the specified graph.
+.Fa userPtr
+is an optional user pointer to associate with the vertex.
 .Pp
 The
 .Fn AG_GraphVertexLabel

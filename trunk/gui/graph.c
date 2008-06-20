@@ -289,6 +289,9 @@ MouseButtonDown(AG_Event *event)
 		gf->flags |= AG_GRAPH_PANNING;
 		break;
 	case SDL_BUTTON_LEFT:
+		if (gf->flags & AG_GRAPH_NO_SELECT) {
+			break;
+		}
 		if (mod & (KMOD_CTRL|KMOD_SHIFT)) {
 			TAILQ_FOREACH(edge, &gf->edges, edges) {
 				if (!MouseOverEdge(edge, x, y)) {
@@ -332,9 +335,14 @@ MouseButtonDown(AG_Event *event)
 				vtx->flags |= AG_GRAPH_SELECTED;
 			}
 		}
-		gf->flags |= AG_GRAPH_DRAGGING;
+		if (!(gf->flags & AG_GRAPH_NO_MOVE)) {
+			gf->flags |= AG_GRAPH_DRAGGING;
+		}
 		break;
 	case SDL_BUTTON_RIGHT:
+		if (gf->flags & AG_GRAPH_NO_MENUS) {
+			break;
+		}
 		TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
 			if (!MouseOverVertex(vtx, x, y)) {
 				continue;

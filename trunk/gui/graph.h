@@ -68,8 +68,14 @@ typedef struct ag_graph {
 #define AG_GRAPH_VFILL		0x02
 #define AG_GRAPH_EXPAND		(AG_GRAPH_HFILL|AG_GRAPH_VFILL)
 #define AG_GRAPH_SCROLL		0x04
-#define AG_GRAPH_DRAGGING	0x08
-#define AG_GRAPH_PANNING	0x10
+#define AG_GRAPH_DRAGGING	0x08	/* Vertex is being moved (readonly) */
+#define AG_GRAPH_PANNING	0x10	/* View is being panned (readonly) */
+#define AG_GRAPH_NO_MOVE	0x20	/* User cannot move vertices */
+#define AG_GRAPH_NO_SELECT	0x40	/* User cannot select vertices */
+#define AG_GRAPH_NO_MENUS	0x80	/* Disable popup menus */
+#define AG_GRAPH_READONLY	(AG_GRAPH_NO_MOVE|AG_GRAPH_NO_SELECT| \
+                         	 AG_GRAPH_NO_MENUS)
+
 	int wPre, hPre;			/* Requested geometry */
 	int xOffs, yOffs;		/* Display offset */
 	int xMin, xMax, yMin, yMax;	/* Display boundaries */
