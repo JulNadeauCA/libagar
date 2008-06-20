@@ -19,6 +19,7 @@
 #define AG_GRAPH_LABEL_MAX	64
 
 struct ag_graph_edge;
+struct ag_popup_menu;
 
 enum ag_graph_vertex_style {	/* Vertex style */
 	AG_GRAPH_RECTANGLE,	/* Rectangular box */
@@ -44,6 +45,7 @@ typedef struct ag_graph_vertex {
 	struct ag_graph *graph;			/* Back pointer to graph */
 	AG_TAILQ_ENTRY(ag_graph_vertex) vertices;
 	AG_TAILQ_ENTRY(ag_graph_vertex) sorted;	/* For autoplacer */
+	struct ag_popup_menu *popupMenu;
 } AG_GraphVertex;
 
 typedef struct ag_graph_edge {
@@ -59,6 +61,7 @@ typedef struct ag_graph_edge {
 	void *userPtr;				/* User pointer */
 	struct ag_graph *graph;			/* Back pointer to graph */
 	AG_TAILQ_ENTRY(ag_graph_edge) edges;
+	struct ag_popup_menu *popupMenu;
 } AG_GraphEdge;
 
 typedef struct ag_graph {
@@ -105,6 +108,8 @@ void		AG_GraphVertexPosition(AG_GraphVertex *, int, int);
 void		AG_GraphVertexSize(AG_GraphVertex *, Uint, Uint);
 void		AG_GraphVertexStyle(AG_GraphVertex *,
 		                    enum ag_graph_vertex_style);
+void		AG_GraphVertexPopupMenu(AG_GraphVertex *,
+		                        struct ag_popup_menu *);
 
 AG_GraphEdge	*AG_GraphEdgeNew(AG_Graph *, AG_GraphVertex *,
 		                 AG_GraphVertex *, void *);
@@ -113,6 +118,7 @@ AG_GraphEdge	*AG_GraphEdgeFind(AG_Graph *, void *);
 void		 AG_GraphEdgeLabel(AG_GraphEdge *, const char *, ...);
 void		 AG_GraphEdgeColorLabel(AG_GraphEdge *, Uint8, Uint8, Uint8);
 void		 AG_GraphEdgeColor(AG_GraphEdge *, Uint8, Uint8, Uint8);
+void		 AG_GraphEdgePopupMenu(AG_GraphEdge *, struct ag_popup_menu *);
 
 void		 AG_GraphAutoPlace(AG_Graph *, Uint, Uint);
 __END_DECLS

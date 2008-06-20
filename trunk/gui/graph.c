@@ -261,6 +261,14 @@ AG_GraphEdgeColor(AG_GraphEdge *edge, Uint8 r, Uint8 g, Uint8 b)
 	AG_ObjectUnlock(edge->graph);
 }
 
+void
+AG_GraphEdgePopupMenu(AG_GraphEdge *edge, struct ag_popup_menu *pm)
+{
+	AG_ObjectLock(edge->graph);
+	edge->popupMenu = pm;
+	AG_ObjectUnlock(edge->graph);
+}
+
 static void
 SetVertexStyle(AG_Event *event)
 {
@@ -268,6 +276,34 @@ SetVertexStyle(AG_Event *event)
 	int style = AG_INT(2);
 
 	AG_GraphVertexStyle(vtx, (enum ag_graph_vertex_style)style);
+}
+
+static void
+UnselectEdge(AG_Graph *gf, AG_GraphEdge *edge)
+{
+	edge->flags &= ~(AG_GRAPH_SELECTED);
+	AG_PostEvent(NULL, gf, "graph-edge-unselected", "%p", edge);
+}
+
+static void
+SelectEdge(AG_Graph *gf, AG_GraphEdge *edge)
+{
+	edge->flags |= AG_GRAPH_SELECTED;
+	AG_PostEvent(NULL, gf, "graph-edge-selected", "%p", edge);
+}
+
+static void
+UnselectVertex(AG_Graph *gf, AG_GraphVertex *vtx)
+{
+	vtx->flags &= ~(AG_GRAPH_SELECTED);
+	AG_PostEvent(NULL, gf, "graph-vertex-unselected", "%p", vtx);
+}
+
+static void
+SelectVertex(AG_Graph *gf, AG_GraphVertex *vtx)
+{
+	vtx->flags |= AG_GRAPH_SELECTED;
+	AG_PostEvent(NULL, gf, "graph-vertex-selected", "%p", vtx);
 }
 
 static void
@@ -298,9 +334,9 @@ MouseButtonDown(AG_Event *event)
 					continue;
 				}
 				if (edge->flags & AG_GRAPH_SELECTED) {
-					edge->flags &= ~AG_GRAPH_SELECTED;
+					UnselectEdge(gf, edge);
 				} else {
-					edge->flags |= AG_GRAPH_SELECTED;
+					SelectEdge(gf, edge);
 				}
 			}
 			TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
@@ -308,9 +344,9 @@ MouseButtonDown(AG_Event *event)
 					continue;
 				}
 				if (vtx->flags & AG_GRAPH_SELECTED) {
-					vtx->flags &= ~AG_GRAPH_SELECTED;
+					UnselectVertex(gf, vtx);
 				} else {
-					vtx->flags |= AG_GRAPH_SELECTED;
+					SelectVertex(gf, vtx);
 				}
 			}
 		} else {
@@ -320,9 +356,9 @@ MouseButtonDown(AG_Event *event)
 			}
 			if (edge != NULL) {
 				TAILQ_FOREACH(edge2, &gf->edges, edges) {
-					edge2->flags &= ~AG_GRAPH_SELECTED;
+					UnselectEdge(gf, edge2);
 				}
-				edge->flags |= AG_GRAPH_SELECTED;
+				SelectEdge(gf, edge);
 			}
 			TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
 				if (MouseOverVertex(vtx, x, y))
@@ -330,9 +366,9 @@ MouseButtonDown(AG_Event *event)
 			}
 			if (vtx != NULL) {
 				TAILQ_FOREACH(vtx2, &gf->vertices, vertices) {
-					vtx2->flags &= ~AG_GRAPH_SELECTED;
+					UnselectVertex(gf, vtx2);
 				}
-				vtx->flags |= AG_GRAPH_SELECTED;
+				SelectVertex(gf, vtx);
 			}
 		}
 		if (!(gf->flags & AG_GRAPH_NO_MOVE)) {
@@ -347,25 +383,36 @@ MouseButtonDown(AG_Event *event)
 			if (!MouseOverVertex(vtx, x, y)) {
 				continue;
 			}
-			pm = AG_PopupNew(gf);
-			AG_MenuUintFlags(pm->item, _("Hide vertex"), NULL,
-			    &vtx->flags, AG_GRAPH_HIDDEN, 1);
-			AG_MenuSeparator(pm->item);
-			AG_MenuAction(pm->item, _("Rectangular"), NULL,
-			    SetVertexStyle, "%p,%i", vtx, AG_GRAPH_RECTANGLE);
-			AG_MenuAction(pm->item, _("Circular"), NULL,
-			    SetVertexStyle, "%p,%i", vtx, AG_GRAPH_CIRCLE);
-			AG_PopupShow(pm);
+			if (vtx->popupMenu != NULL) {
+				AG_PopupShow(vtx->popupMenu);
+			} else {
+				pm = AG_PopupNew(gf);
+				AG_MenuUintFlags(pm->item, _("Hide vertex"),
+				    NULL,
+				    &vtx->flags, AG_GRAPH_HIDDEN, 1);
+				AG_MenuSeparator(pm->item);
+				AG_MenuAction(pm->item, _("Rectangular"), NULL,
+				    SetVertexStyle, "%p,%i", vtx,
+				    AG_GRAPH_RECTANGLE);
+				AG_MenuAction(pm->item, _("Circular"), NULL,
+				    SetVertexStyle, "%p,%i", vtx,
+				    AG_GRAPH_CIRCLE);
+				AG_PopupShow(pm);
+			}
 			break;
 		}
 		TAILQ_FOREACH(edge, &gf->edges, edges) {
 			if (!MouseOverEdge(edge, x, y)) {
 				continue;
 			}
-			pm = AG_PopupNew(gf);
-			AG_MenuUintFlags(pm->item, _("Hide edge"), NULL,
-			    &edge->flags, AG_GRAPH_HIDDEN, 1);
-			AG_PopupShow(pm);
+			if (edge->popupMenu != NULL) {
+				AG_PopupShow(edge->popupMenu);
+			} else {
+				pm = AG_PopupNew(gf);
+				AG_MenuUintFlags(pm->item, _("Hide edge"), NULL,
+				    &edge->flags, AG_GRAPH_HIDDEN, 1);
+				AG_PopupShow(pm);
+			}
 			break;
 		}
 	default:
@@ -716,6 +763,14 @@ AG_GraphVertexStyle(AG_GraphVertex *vtx, enum ag_graph_vertex_style style)
 {
 	AG_ObjectLock(vtx->graph);
 	vtx->style = style;
+	AG_ObjectUnlock(vtx->graph);
+}
+
+void
+AG_GraphVertexPopupMenu(AG_GraphVertex *vtx, struct ag_popup_menu *pm)
+{
+	AG_ObjectLock(vtx->graph);
+	vtx->popupMenu = pm;
 	AG_ObjectUnlock(vtx->graph);
 }
 
