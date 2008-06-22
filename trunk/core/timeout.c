@@ -139,9 +139,6 @@ AG_DelTimeout(void *p, AG_Timeout *to)
 			break;
 		}
 	}
-	if (oto == NULL) {
-		Debug(ob, "DelTimeout: No such timeout %p\n", to);
-	}
 	AG_UnlockTimeouts(ob);
 }
 
