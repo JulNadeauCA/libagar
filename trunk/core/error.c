@@ -116,26 +116,15 @@ AG_Debug(void *p, const char *fmt, ...)
 		Free(buf);
 		va_end(args);
 	} else {
-		if (agDebugLvl >= 2 || OBJECT_DEBUG(obj)) {
-			if (agDebugLvl >= 5) {
-				char path[128];
-				FILE *f;
-
-				Strlcpy(path, obj->name, sizeof(path));
-				Strlcat(path, ".debug", sizeof(path));
-				va_start(args, fmt);
-				if (agDebugLvl >= 10 &&
-				    (f = fopen(path, "a")) != NULL) {
-					vfprintf(f, fmt, args);
-					fclose(f);
-				}
-				va_end(args);
-			} else {
-				va_start(args, fmt);
+		if (agDebugLvl >= 1 || OBJECT_DEBUG(obj)) {
+			va_start(args, fmt);
+			if (OBJECT(obj)->name[0] != '\0') {
 				printf("%s: ", OBJECT(obj)->name);
-				vprintf(fmt, args);
-				va_end(args);
+			} else {
+				printf("<%p>: ", obj);
 			}
+			vprintf(fmt, args);
+			va_end(args);
 		}
 	}
 #endif /* DEBUG */
