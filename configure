@@ -180,6 +180,8 @@ echo "    --with-ctags              Automatically generate tag files [no]"
 echo "    --with-docs               Printable docs (-me/tbl/eqn/pic/refer) [no]"
 echo "    --enable-debug            Include debugging code [no]"
 echo "    --enable-lockdebug        Expensive threads debugging [default: no]"
+echo "    --enable-objdebug         Object system debugging [default: no]"
+echo "    --enable-eventdebug       Event system debugging [default: no]"
 echo "    --enable-warnings         Suggested compiler warnings [default: no]"
 echo "    --enable-threads          Thread safety [default: check]"
 echo "    --enable-gui              Build Agar-GUI [default: yes]"
@@ -2381,6 +2383,28 @@ echo "hdefs[\"LOCKDEBUG\"] = \"$LOCKDEBUG\"" >>configure.lua
 else
 echo "#undef LOCKDEBUG" >config/lockdebug.h
 echo "hdefs[\"LOCKDEBUG\"] = nil" >>configure.lua
+fi
+if [ "${enable_objdebug}" = "yes" ]
+ then
+OBJDEBUG="1"
+echo "#ifndef OBJDEBUG" > config/objdebug.h
+echo "#define OBJDEBUG \"$OBJDEBUG\"" >> config/objdebug.h
+echo "#endif" >> config/objdebug.h
+echo "hdefs[\"OBJDEBUG\"] = \"$OBJDEBUG\"" >>configure.lua
+else
+echo "#undef OBJDEBUG" >config/objdebug.h
+echo "hdefs[\"OBJDEBUG\"] = nil" >>configure.lua
+fi
+if [ "${enable_eventdebug}" = "yes" ]
+ then
+EVENTDEBUG="1"
+echo "#ifndef EVENTDEBUG" > config/eventdebug.h
+echo "#define EVENTDEBUG \"$EVENTDEBUG\"" >> config/eventdebug.h
+echo "#endif" >> config/eventdebug.h
+echo "hdefs[\"EVENTDEBUG\"] = \"$EVENTDEBUG\"" >>configure.lua
+else
+echo "#undef EVENTDEBUG" >config/eventdebug.h
+echo "hdefs[\"EVENTDEBUG\"] = nil" >>configure.lua
 fi
 $ECHO_N "checking for SDL (http://www.libsdl.org)..."
 $ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
