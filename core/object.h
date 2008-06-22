@@ -66,6 +66,7 @@ typedef struct ag_object {
 #define AG_OBJECT_REMAIN_DATA	 0x0400	/* Keep user data resident */
 #define AG_OBJECT_DEBUG		 0x0800	/* Enable debugging */
 #define AG_OBJECT_NAME_ONATTACH	 0x1000	/* Generate name on attach */
+#define AG_OBJECT_CHLD_AUTOSAVE	 0x2000 /* Include child obj data in archive */
 #define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_RELOAD_PROPS|\
  				 AG_OBJECT_INDESTRUCTIBLE|\
 				 AG_OBJECT_PRESERVE_DEPS|\
@@ -209,6 +210,7 @@ void 	 AG_ObjectCancelTimeouts(void *, Uint);
 int	 AG_ObjectPageIn(void *);
 int	 AG_ObjectPageOut(void *);
 int	 AG_ObjectSerialize(void *, AG_DataSource *);
+int	 AG_ObjectUnserialize(void *, AG_DataSource *);
 int	 AG_ObjectSaveToFile(void *, const char *);
 #define	 AG_ObjectSave(p) AG_ObjectSaveToFile((p),NULL)
 int	 AG_ObjectSaveAll(void *);
