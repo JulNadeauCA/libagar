@@ -326,6 +326,11 @@ Request that
 .Fn AG_ObjectAttach
 calls automatically generates a name for the child object being attached.
 The name will be unique in the parent.
+.It Dv AG_OBJECT_CHLD_AUTOSAVE
+Arrange for child objects to be automatically saved along with the object
+when
+.Fn AG_ObjectSave*
+is invoked.
 .El
 .Pp
 Objects are organized in a tree structure.
@@ -699,6 +704,9 @@ flag set).
 .Fn AG_ObjectSerialize "AG_Object *obj" "AG_DataSource *ds"
 .Pp
 .Ft "int"
+.Fn AG_ObjectUnserialize "AG_Object *obj" "AG_DataSource *ds"
+.Pp
+.Ft "int"
 .Fn AG_ObjectPageIn "AG_Object *obj"
 .Pp
 .Ft "int"
@@ -758,7 +766,13 @@ archives the given object to the specified file.
 .Pp
 .Fn AG_ObjectSerialize
 writes an archive of the given object to the specified
-.Xr AG_DataSource 3 .
+.Xr AG_DataSource 3 ,
+and
+.Fn AG_ObjectUnserialize
+reads an archive of the given object.
+Note that the
+.Dv AG_OBJECT_CHLD_AUTOSAVE
+feature will not work with these functions.
 .Pp
 The
 .Fn AG_ObjectPageIn

@@ -45,6 +45,7 @@
 #include <string.h>
 
 #include <config/lockdebug.h>
+#include <config/objdebug.h>
 
 AG_ObjectClass agObjectClass = {
 	"AG_Object",
@@ -355,13 +356,14 @@ AG_ObjectMove(void *childp, void *newparentp)
 	AG_PostEvent(nparent, child, "attached", NULL);
 	AG_PostEvent(oparent, child, "moved", "%p", nparent);
 
+#ifdef OBJDEBUG
 	Debug(child, "Moving from %s to new parent %s\n",
 	    oparent->name, nparent->name);
 	Debug(oparent, "Detached object: %s (moving to %s)\n",
 	    child->name, nparent->name);
 	Debug(nparent, "Attached object: %s (originally in %s)\n",
 	    child->name, oparent->name);
-
+#endif
 	AG_ObjectLock(child);
 	AG_ObjectLock(nparent);
 	AG_ObjectLock(oparent);
@@ -392,10 +394,11 @@ AG_ObjectAttach(void *parentp, void *pChld)
 
 	AG_PostEvent(parent, chld, "attached", NULL);
 	AG_PostEvent(chld, parent, "child-attached", NULL);
-	
+
+#ifdef OBJDEBUG
 	Debug(parent, "Attached child object: %s\n", chld->name);
 	Debug(chld, "Attached to new parent: %s\n", parent->name);
-
+#endif
 	AG_ObjectUnlock(chld);
 	AG_ObjectUnlock(parent);
 	AG_UnlockVFS(parent);
@@ -459,9 +462,10 @@ AG_ObjectDetach(void *childp)
 	AG_PostEvent(parent, child, "detached", NULL);
 	AG_PostEvent(child, parent, "child-detached", NULL);
 
+#ifdef OBJDEBUG
 	Debug(parent, "Detached child object %s\n", child->name);
 	Debug(child, "Detached from parent %s\n", parent->name);
-
+#endif
 	AG_ObjectUnlock(child);
 	AG_ObjectUnlock(parent);
 	AG_UnlockVFS(root);
@@ -600,8 +604,9 @@ FreeChildObject(AG_Object *obj)
 {
 	AG_Object *cob, *ncob;
 
+#ifdef OBJDEBUG
 	Debug(obj, "Freeing children\n");
-
+#endif
 	AG_ObjectLock(obj);
 	for (cob = TAILQ_FIRST(&obj->children);
 	     cob != TAILQ_END(&obj->children);
@@ -692,8 +697,10 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if ((ev->flags & AG_EVENT_SCHEDULED) &&
 		    (ev->timeout.flags & flags)) {
+#ifdef OBJDEBUG
 			Debug(ob, "Cancelling scheduled event <%s>\n",
 			    ev->name);
+#endif
 			AG_DelTimeout(ob, &ev->timeout);
 			ev->flags &= ~(AG_EVENT_SCHEDULED);
 		}
@@ -764,7 +771,7 @@ AG_ObjectDestroy(void *p)
 	AG_ObjectClass **hier;
 	int i, nHier;
 
-#ifdef DEBUG
+#ifdef OBJDEBUG
 	if (ob->parent != NULL) {
 		AG_FatalError("AG_ObjectDestroy: %s still attached to %p",
 		    ob->name, ob->parent);
@@ -990,20 +997,21 @@ AG_ObjectResolveDeps(void *p)
 	AG_ObjectLock(ob);
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
-		Debug(ob, "Resolving dependency: %s...\n", dep->path);
+#ifdef OBJDEBUG
+		Debug(ob, "Resolving dependency: %s\n", dep->path);
+#endif
 		if (dep->obj != NULL) {
-			Debug(ob, "Already resolved\n");
 			continue;
 		}
 		if ((dep->obj = AG_ObjectFind(ob->root, dep->path)) == NULL) {
-			Debug(ob, "Failed to resolve dependency: %s\n",
-			    dep->path);
 			AG_SetError(_("%s: Cannot resolve dependency `%s'"),
 			    ob->name, dep->path);
 			goto fail;
 		}
+#ifdef OBJDEBUG
 		Debug(ob, "Dependency resolves to %p (%s)\n", dep->obj,
 		    dep->obj->name);
+#endif
 		Free(dep->path);
 		dep->path = NULL;
 	}
@@ -1061,8 +1069,9 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 				goto fail_unlock;
 		}
 	}
+#ifdef OBJDEBUG
 	Debug(ob, "Loading generic data from %s\n", path);
-
+#endif
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
 		goto fail_unlock;
@@ -1103,7 +1112,9 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		dep->obj = NULL;
 		dep->count = 0;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
+#ifdef OBJDEBUG
 		Debug(ob, "Dependency: %s\n", dep->path);
+#endif
 	}
 
 	/* Decode the generic properties. */
@@ -1147,8 +1158,10 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			if ((cl = AG_FindClass(classID)) == NULL) {
 				AG_SetError("%s: %s", ob->name, AG_GetError());
 				if (agObjectIgnoreUnknownObjs) {
+#ifdef OBJDEBUG
 					Debug(ob, "%s; ignoring\n",
 					    AG_GetError());
+#endif
 					continue;
 				} else {
 					goto fail;
@@ -1187,7 +1200,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	AG_Object *ob = p;
 	AG_DataSource *ds;
 	off_t dataOffs;
-	AG_Version version;
+	AG_Version ver;
 	AG_ObjectClass **hier;
 	int i, nHier;
 	
@@ -1214,8 +1227,9 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 			}
 		}
 	}
+#ifdef OBJDEBUG
 	Debug(ob, "Loading dataset from %s\n", path);
-
+#endif
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
 		AG_SetError("%s: %s", path, AG_GetError());
 		*dataFound = 0;
@@ -1225,21 +1239,21 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 	    == -1)
 		goto fail;
 
-	/* Write dataset offset */
+	/* Seek to dataset offset */
 	dataOffs = (off_t)AG_ReadUint32(ds);
 	AG_Seek(ds, dataOffs, AG_SEEK_SET);
 
 	if (OBJECT_RESIDENT(ob)) {
 		AG_ObjectFreeDataset(ob);
 	}
-	if (AG_ReadVersion(ds, ob->cls->name, &ob->cls->ver, &version) == -1) {
+	if (AG_ReadVersion(ds, ob->cls->name, &ob->cls->ver, &ver) == -1) {
 		goto fail;
 	}
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
 		for (i = 0; i < nHier; i++) {
 			if (hier[i]->load == NULL)
 				continue;
-			if (hier[i]->load(ob, ds, &version) == -1)
+			if (hier[i]->load(ob, ds, &ver) == -1)
 				goto fail;
 		}
 		Free(hier);
@@ -1344,18 +1358,22 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 		goto fail;
 	
 	/* Table of child objects */
-	countOffs = AG_Tell(ds);
-	AG_WriteUint32(ds, 0);
-	count = 0;
-	TAILQ_FOREACH(child, &ob->children, cobjs) {
-		if (!OBJECT_PERSISTENT(child)) {
-			continue;
+	if (ob->flags & AG_OBJECT_CHLD_AUTOSAVE) {
+		countOffs = AG_Tell(ds);
+		AG_WriteUint32(ds, 0);
+		count = 0;
+		TAILQ_FOREACH(child, &ob->children, cobjs) {
+			if (!OBJECT_PERSISTENT(child)) {
+				continue;
+			}
+			AG_WriteString(ds, child->name);
+			AG_WriteString(ds, child->cls->name);
+			count++;
 		}
-		AG_WriteString(ds, child->name);
-		AG_WriteString(ds, child->cls->name);
-		count++;
+		AG_WriteUint32At(ds, count, countOffs);
+	} else {
+		AG_WriteUint32(ds, 0);
 	}
-	AG_WriteUint32At(ds, count, countOffs);
 
 	/* Dataset */
 	AG_WriteUint32At(ds, AG_Tell(ds), dataOffs);
@@ -1375,6 +1393,92 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	AG_ObjectUnlock(ob);
 	return (0);
 fail:
+	AG_ObjectUnlock(ob);
+	return (-1);
+}
+
+/*
+ * Unserialize a single object from an arbitrary AG_DataSource(3). The
+ * archived object must not have any child objects attached.
+ */
+int
+AG_ObjectUnserialize(void *p, AG_DataSource *ds)
+{
+	char path[MAXPATHLEN];
+	AG_Version ver;
+	AG_Object *ob = p;
+	AG_ObjectDep *dep;
+	Uint32 count, i;
+	Uint flags, flags_save;
+	AG_ObjectClass **hier;
+	int nHier;
+	
+	AG_ObjectLock(ob);
+	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
+
+	/* Header */
+	if (AG_ReadVersion(ds, agObjectClass.name, &agObjectClass.ver, NULL)
+	    == -1) {
+		goto fail;
+	}
+	(void)AG_ReadUint32(ds);			/* Dataset offset */
+
+	flags_save = ob->flags;
+	flags = (int)AG_ReadUint32(ds);
+	if (flags & (AG_OBJECT_NON_PERSISTENT|AG_OBJECT_RESIDENT|
+	             AG_OBJECT_WAS_RESIDENT)) {
+		AG_SetError("%s: inconsistent flags (0x%08x)", ob->name,
+		    flags);
+		goto fail;
+	}
+	ob->flags = flags | (flags_save & AG_OBJECT_WAS_RESIDENT);
+
+	/* Dependency table (to be resolved later) */
+	count = AG_ReadUint32(ds);
+	for (i = 0; i < count; i++) {
+		dep = Malloc(sizeof(AG_ObjectDep));
+		dep->path = AG_ReadString(ds);
+		dep->obj = NULL;
+		dep->count = 0;
+		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
+#ifdef OBJDEBUG
+		Debug(ob, "Dependency: %s\n", dep->path);
+#endif
+	}
+
+	/* Property table */
+	if (AG_PropLoad(ob, ds) == -1)
+		goto fail;
+
+	/* Table of child objects (ignored here) */
+	if (AG_ReadUint32(ds) != 0) {
+		AG_SetError("Archived object has children");
+		goto fail;
+	}
+
+	/* Dataset */
+	if (AG_ReadVersion(ds, ob->cls->name, &ob->cls->ver, &ver) == -1) {
+		goto fail;
+	}
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
+		for (i = 0; i < (Uint32)nHier; i++) {
+			if (hier[i]->load == NULL)
+				continue;
+			if (hier[i]->load(ob, ds, &ver) == -1)
+				goto fail;
+		}
+		Free(hier);
+	} else {
+		AG_FatalError("AG_ObjectLoad: %s: %s", ob->name, AG_GetError());
+	}
+	ob->flags |= AG_OBJECT_RESIDENT;
+
+	AG_PostEvent(ob, ob->root, "object-post-load-generic", "%s", path);
+	AG_ObjectUnlock(ob);
+	return (0);
+fail:
+	AG_ObjectFreeDataset(ob);
+	AG_ObjectFreeDeps(ob);
 	AG_ObjectUnlock(ob);
 	return (-1);
 }
@@ -1453,8 +1557,9 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 			Strlcat(path, ob->cls->name, sizeof(path));
 		}
 	}
+#ifdef OBJDEBUG
 	Debug(ob, "Saving object to %s\n", path);
-
+#endif
 	if (agObjectBackups) {
 		BackupObjectFile(ob, path);
 	} else {
@@ -1573,15 +1678,14 @@ AG_ObjectAddDep(void *p, void *depobj)
 			break;
 	}
 	if (dep != NULL) {
-		Debug(ob, "Increment dependency on %s (#%u)\n",
-		    OBJECT(depobj)->name, (Uint)dep->count);
 		if (++dep->count > AG_OBJECT_DEP_MAX) {
+#ifdef OBJDEBUG
 			Debug(ob, "Wiring dependency: %s (too many refs!)\n",
 			    OBJECT(depobj)->name);
+#endif
 			dep->count = AG_OBJECT_DEP_MAX;
 		}
 	} else {
-		Debug(ob, "Create dependency on %s\n", OBJECT(depobj)->name);
 		dep = Malloc(sizeof(AG_ObjectDep));
 		dep->obj = depobj;
 		dep->count = 1;
@@ -1676,8 +1780,6 @@ AG_ObjectDelDep(void *p, const void *depobj)
 			break;
 	}
 	if (dep == NULL) {
-		Debug(ob, "Attempt to remove invalid dep: %s\n",
-		    OBJECT(depobj)->name);
 		goto out;
 	}
 	if (dep->count == AG_OBJECT_DEP_MAX) {			/* Wired */
@@ -1685,8 +1787,6 @@ AG_ObjectDelDep(void *p, const void *depobj)
 	}
 	if ((dep->count-1) == 0) {
 		if ((ob->flags & AG_OBJECT_PRESERVE_DEPS) == 0) {
-			Debug(ob, "Remove dependency on %s\n",
-			    OBJECT(depobj)->name);
 			TAILQ_REMOVE(&ob->deps, dep, deps);
 			Free(dep);
 		} else {
@@ -1695,8 +1795,6 @@ AG_ObjectDelDep(void *p, const void *depobj)
 	} else if (dep->count == 0) {
 		AG_FatalError("AG_ObjectDelDep: Negative refcount");
 	} else {
-		Debug(ob, "Decrement dependency on %s (#%u)\n",
-		    OBJECT(depobj)->name, (Uint)dep->count);
 		dep->count--;
 	}
 out:
