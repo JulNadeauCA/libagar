@@ -8,7 +8,7 @@
 #
 #     $ cat configure.in | mkconfigure > configure
 #
-# Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2008 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -176,6 +176,7 @@ echo "    --with-libtool            Specify path to libtool [bundled]"
 echo "    --with-cygwin             Add cygwin dependencies under cygwin [no]"
 echo "    --with-manpages           Manual pages (-mdoc) [yes]"
 echo "    --with-manlinks           Manual pages links for functions [no]"
+echo "    --with-ctags              Automatically generate tag files [no]"
 echo "    --with-docs               Printable docs (-me/tbl/eqn/pic/refer) [no]"
 echo "    --enable-debug            Include debugging code [no]"
 echo "    --enable-static           Produce a static binary [default: no]"
@@ -270,6 +271,23 @@ fi
 echo "ENABLE_NLS=${ENABLE_NLS}" >> Makefile.config
 echo "HAVE_GETTEXT=${HAVE_GETTEXT}" >> Makefile.config
 
+CTAGS=""
+if [ "${with_ctags}" = "yes" ]; then
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/ectags" ]; then
+			CTAGS="${path}/ectags"
+		fi
+	done
+	if [ "${CTAGS}" = "" ]; then
+		for path in `echo $PATH | sed 's/:/ /g'`; do
+			if [ -x "${path}/ctags" ]; then
+				CTAGS="${path}/ctags"
+			fi
+		done
+	fi
+fi
+echo "CTAGS=${CTAGS}" >> Makefile.config
+
 LIBTOOL_BUNDLED="yes"
 LIBTOOL=\${TOP}/mk/libtool/libtool
 echo "LIBTOOL=${LIBTOOL}" >> Makefile.config
@@ -355,8 +373,10 @@ if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/cc" ]; then
 			CC="${i}/cc"
+			break
 		elif [ -x "${i}/gcc" ]; then
 			CC="${i}/gcc"
+			break
 		fi
 	done
 	if [ "$CC" = "" ]; then
@@ -1065,18 +1085,21 @@ SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_VERSION=`${path}/sdl-config --version`
+		break
 	fi
 done
 SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
+		break
 	fi
 done
 SDL_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
+		break
 	fi
 done
 elif [ "${SYSTEM}" = "FreeBSD" ]; then
@@ -1084,6 +1107,7 @@ SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
 		SDL_VERSION=`${path}/sdl11-config --version`
+		break
 	fi
 done
 if [ "${SDL_VERSION}" != "" ]; then
@@ -1091,12 +1115,14 @@ SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
 		SDL_CFLAGS=`${path}/sdl11-config --cflags`
+		break
 	fi
 done
 SDL_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
 		SDL_LIBS=`${path}/sdl11-config --libs`
+		break
 	fi
 done
 else
@@ -1104,18 +1130,21 @@ SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_VERSION=`${path}/sdl-config --version`
+		break
 	fi
 done
 SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
+		break
 	fi
 done
 SDL_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
+		break
 	fi
 done
 fi;
@@ -1124,18 +1153,21 @@ SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_VERSION=`${path}/sdl-config --version`
+		break
 	fi
 done
 SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
+		break
 	fi
 done
 SDL_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
+		break
 	fi
 done
 fi;
@@ -1309,16 +1341,60 @@ fi;
 if [ -d "/usr/X11R6/lib" ]; then
 GL_LIBS="-L/usr/X11R6/lib"
 fi;
+echo "yes"
+echo "yes" >> config.log
 if [ "$SYSTEM" = "Darwin" ]; then
 OPENGL_CFLAGS=""
 OPENGL_LIBS="-framework OpenGL"
-elif [ "$HAVE_MINGW" = "yes" ]; then
-OPENGL_CFLAGS=""
-OPENGL_LIBS="-lopengl32"
 else
 OPENGL_CFLAGS="${GL_CFLAGS}"
+$ECHO_N "checking whether -lopengl32 works..."
+$ECHO_N "checking whether -lopengl32 works..." >> config.log
+cat << EOT > conftest.c
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
+#include <GL/gl.h>
+#endif
+int main(int argc, char *argv[]) {
+	glFlush();
+	glLoadIdentity();
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c -lopengl32" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c -lopengl32 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_LIBOPENGL32="yes"
+echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
+echo "mdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
+echo "#ifndef HAVE_LIBOPENGL32" > config/have_libopengl32.h
+echo "#define HAVE_LIBOPENGL32 \"$HAVE_LIBOPENGL32\"" >> config/have_libopengl32.h
+echo "#endif" >> config/have_libopengl32.h
+echo "hdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_LIBOPENGL32="no"
+echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
+echo "mdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
+echo "#undef HAVE_LIBOPENGL32" >config/have_libopengl32.h
+echo "hdefs[\"HAVE_LIBOPENGL32\"] = nil" >>configure.lua
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_LIBOPENGL32}" = "yes" ]; then
+OPENGL_LIBS="${GL_LIBS} -lopengl32"
+else
 OPENGL_LIBS="${GL_LIBS} -lGL"
 fi;
+fi;
+$ECHO_N "checking whether OpenGL works..."
+$ECHO_N "checking whether OpenGL works..." >> config.log
 cat << EOT > conftest.c
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
@@ -1436,18 +1512,21 @@ FREETYPE_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_VERSION=`${path}/freetype-config --version`
+		break
 	fi
 done
 FREETYPE_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
+		break
 	fi
 done
 FREETYPE_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_LIBS=`${path}/freetype-config --libs`
+		break
 	fi
 done
 if [ -d /usr/freeware/include ]; then
@@ -1528,6 +1607,7 @@ AGAR_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/agar-config" ]; then
 		AGAR_VERSION=`${path}/agar-config --version`
+		break
 	fi
 done
 if [ "${AGAR_VERSION}" != "" ]; then
@@ -1537,12 +1617,14 @@ AGAR_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/agar-config" ]; then
 		AGAR_CFLAGS=`${path}/agar-config --cflags`
+		break
 	fi
 done
 AGAR_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/agar-config" ]; then
 		AGAR_LIBS=`${path}/agar-config --libs`
+		break
 	fi
 done
 echo "AGAR_CFLAGS=$AGAR_CFLAGS" >>Makefile.config
