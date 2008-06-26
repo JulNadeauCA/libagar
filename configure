@@ -430,8 +430,10 @@ if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/cc" ]; then
 			CC="${i}/cc"
+			break
 		elif [ -x "${i}/gcc" ]; then
 			CC="${i}/gcc"
+			break
 		fi
 	done
 	if [ "$CC" = "" ]; then
@@ -2413,18 +2415,21 @@ SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_VERSION=`${path}/sdl-config --version`
+		break
 	fi
 done
 SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
+		break
 	fi
 done
 SDL_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
+		break
 	fi
 done
 elif [ "${SYSTEM}" = "FreeBSD" ]; then
@@ -2432,6 +2437,7 @@ SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
 		SDL_VERSION=`${path}/sdl11-config --version`
+		break
 	fi
 done
 if [ "${SDL_VERSION}" != "" ]; then
@@ -2439,12 +2445,14 @@ SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
 		SDL_CFLAGS=`${path}/sdl11-config --cflags`
+		break
 	fi
 done
 SDL_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl11-config" ]; then
 		SDL_LIBS=`${path}/sdl11-config --libs`
+		break
 	fi
 done
 else
@@ -2452,18 +2460,21 @@ SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_VERSION=`${path}/sdl-config --version`
+		break
 	fi
 done
 SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
+		break
 	fi
 done
 SDL_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
+		break
 	fi
 done
 fi;
@@ -2472,18 +2483,21 @@ SDL_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_VERSION=`${path}/sdl-config --version`
+		break
 	fi
 done
 SDL_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_CFLAGS=`${path}/sdl-config --cflags`
+		break
 	fi
 done
 SDL_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/sdl-config" ]; then
 		SDL_LIBS=`${path}/sdl-config --libs`
+		break
 	fi
 done
 fi;
@@ -2640,18 +2654,21 @@ FREETYPE_VERSION=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_VERSION=`${path}/freetype-config --version`
+		break
 	fi
 done
 FREETYPE_CFLAGS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
+		break
 	fi
 done
 FREETYPE_LIBS=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
 	if [ -x "${path}/freetype-config" ]; then
 		FREETYPE_LIBS=`${path}/freetype-config --libs`
+		break
 	fi
 done
 if [ -d /usr/freeware/include ]; then
