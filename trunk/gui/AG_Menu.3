@@ -206,6 +206,12 @@ state.
 .Sh BOOLEAN AND BITMASK ITEMS
 .nr nS 1
 .Ft "AG_MenuItem *"
+.Fn AG_MenuBool "AG_MenuItem *" "const char *text" "AG_Surface *icon" "int *value" "int invert"
+.Pp
+.Ft "AG_MenuItem *"
+.Fn AG_MenuBoolMp "AG_MenuItem *" "const char *text" "AG_Surface *icon" "int *value" "int invert" "AG_Mutex *mutex"
+.Pp
+.Ft "AG_MenuItem *"
 .Fn AG_MenuIntBool "AG_MenuItem *" "const char *text" "AG_Surface *icon" "int *value" "int invert"
 .Pp
 .Ft "AG_MenuItem *"
@@ -216,6 +222,12 @@ state.
 .Pp
 .Ft "AG_MenuItem *"
 .Fn AG_MenuInt8BoolMp "AG_MenuItem *" "const char *text" "AG_Surface *icon" "Uint8 *value" "int invert" "AG_Mutex *mutex"
+.Pp
+.Ft "AG_MenuItem *"
+.Fn AG_MenuFlags "AG_MenuItem *" "const char *text" "AG_Surface *icon" "int *value" "int flags" "int invert"
+.Pp
+.Ft "AG_MenuItem *"
+.Fn AG_MenuFlagsMp "AG_MenuItem *" "const char *text" "AG_Surface *icon" "int *value" "int flags" "int invert" "AG_Mutex *mutex"
 .Pp
 .Ft "AG_MenuItem *"
 .Fn AG_MenuIntFlags "AG_MenuItem *" "const char *text" "AG_Surface *icon" "int *value" "int flags" "int invert"
@@ -355,38 +367,61 @@ Top-level items are attached directly to
 Selection is in progress if set to 1 (read-only).
 .El
 .Sh EXAMPLES
-The following code fragment creates a menu with an action item, a boolean
-item and two bitmask items.
+The following code fragment associates a menu with an
+.Xr AG_Toolbar 3 .
+Buttons and menu entries are created for the same actions.
 .Pp
 .Bd -literal -offset indent
-int someflag = 0;
+AG_Toolbar *toolbar;
+AG_Menu *menu;
+AG_MenuItem *item;
+
+toolbar = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 1, 0);
+menu = AG_MenuNew(win, 0);
+item = AG_MenuAddItem(menu, "File");
+{
+	AG_MenuToolbar(item, toolbar);
+	AG_MenuAction(item, "Load", NULL, LoadFile, NULL);
+	AG_MenuAction(item, "Save", NULL, SaveFile, NULL);
+	AG_MenuToolbar(item, NULL);
+}
+.Ed
+.Pp
+The following code fragment creates a menu with an action item, a boolean
+item and two bitmask items.
+The action item demonstrates how
+.Fn AG_MenuAction
+can push standard Agar event arguments onto the stack.
+.Pp
+.Bd -literal -offset indent
 Uint16 flags = 0;
 #define FOO_FLAG 0x01
 #define BAR_FLAG 0x02
 
 void
-hello(AG_Event *event)
+SayHello(AG_Event *event)
 {
 	char *s = AG_STRING(1);
-
 	AG_TextMsg(AG_MSG_INFO, "Hello, %s!", s);
+}
+ 
+void
+QuitApplication(AG_Event *event)
+{
+	AG_Quit();
 }
  
 .Li ...
 
-AG_Menu *menu;
-AG_MenuItem *item;
-
-menu = AG_MenuNew(win);
-item = AG_MenuAddItem(menu, "File");
+AG_Menu *menu = AG_MenuNew(win);
+AG_MenuItem *item = AG_MenuAddItem(menu, "File");
 {
-	AG_MenuAction(item, "Say hello", NULL, hello, "%s", "world");
-	AG_MenuSeparator(item);
-	AG_MenuIntBool(item, "Some flag", NULL, &someflag, 0);
 	AG_MenuInt16Flags(item, "Foo", NULL, &flags, FOO_FLAG, 0);
 	AG_MenuInt16Flags(item, "Bar", NULL, &flags, BAR_FLAG, 0);
-	AG_MenuSeparator(item);
-	AG_MenuAction(item, "Quit", myQuitIcon, quit_app, NULL);
+	AG_MenuAction(item, "Say hello", NULL,
+	    SayHello, "%s", "world");
+	AG_MenuAction(item, "Quit", NULL,
+	    QuitApplication, NULL);
 }
 .Ed
 .Sh SEE ALSO

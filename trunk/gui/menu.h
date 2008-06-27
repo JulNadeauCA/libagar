@@ -78,6 +78,7 @@ typedef struct ag_menu {
 	int tPadLbl, bPadLbl;
 	int itemh;			/* Item height (optimization) */
 	int curState;			/* For MenuState() */
+	AG_Toolbar *curToolbar;		/* For MenuToolbar() */
 } AG_Menu;
 
 typedef struct ag_popup_menu {
@@ -144,6 +145,8 @@ void	     AG_MenuState(AG_MenuItem *, int);
 #define      AG_MenuDisable(m) AG_MenuState((m),0)
 #define      AG_MenuEnable(m) AG_MenuState((m),1)
 
+void	     AG_MenuToolbar(AG_MenuItem *, AG_Toolbar *);
+
 AG_MenuItem *AG_MenuNode(AG_MenuItem *, const char *, AG_Surface *);
 AG_MenuItem *AG_MenuSeparator(AG_MenuItem *);
 AG_MenuItem *AG_MenuSection(AG_MenuItem *, const char *, ...);
@@ -177,6 +180,11 @@ AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, AG_Surface *,
 #define AG_MenuInt8Bool(mi,t,i,p,inv) \
 	AG_MenuInt8BoolMp((mi),(t),(i),(p),(inv),NULL)
 
+#define	AG_MenuBool(mi,t,i,p,inv) \
+	AG_MenuIntBoolMp((mi),(t),(i),(p),(inv),NULL)
+#define	AG_MenuBoolMp(mi,t,i,p,inv,mu) \
+	AG_MenuIntBoolMp((mi),(t),(i),(p),(inv),(mu))
+
 #define AG_MenuIntFlags(mi,t,i,fp,fl,inv) \
 	AG_MenuIntFlagsMp((mi),(t),(i),(fp),(fl),(inv),NULL)
 #define AG_MenuInt8Flags(mi,t,i,fp,fl,inv) \
@@ -189,6 +197,11 @@ AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, AG_Surface *,
 #define AG_MenuUintFlagsMp(mi,t,i,fp,fl,inv,mtx) \
 	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),(mtx))
 #define AG_MenuUintFlags(mi,t,i,fp,fl,inv) \
+	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),NULL)
+
+#define AG_MenuFlagsMp(mi,t,i,fp,fl,inv,mtx) \
+	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),(mtx))
+#define AG_MenuFlags(mi,t,i,fp,fl,inv) \
 	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),NULL)
 
 /* Legacy interfaces */
