@@ -771,7 +771,7 @@ RenderPalette(AG_HSVPal *pal)
 	da = MIN(1, pal->surface->w/255);
 	for (y = pal->rAlpha.y+8; y < pal->surface->h; y++) {
 		for (x = 0, a = 0; x < pal->surface->w; x++) {
-			AG_BLEND_RGBA2(pal->surface, x, y,
+			AG_BLEND_RGBA2_CLIPPED(pal->surface, x, y,
 			    r, g, b, a, AG_ALPHA_SRC);
 			a = x*255/pal->surface->w;
 		}
