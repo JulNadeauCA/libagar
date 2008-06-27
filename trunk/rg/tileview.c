@@ -1115,8 +1115,8 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 static void
 DrawStatusText(RG_Tileview *tv, const char *label)
 {
-	SDL_Surface *suTmp;
-	int su;
+	SDL_Surface *suTmp = NULL;		/* Make compiler happy */
+	int su = -1;
 	int wSu, hSu;
 
 	AG_PushTextState();
