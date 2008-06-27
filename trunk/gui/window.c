@@ -1083,10 +1083,6 @@ AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment align,
 		x = 0;
 		y = agView->h/2 - h/2;
 		break;
-	case AG_WINDOW_MC:
-		x = agView->w/2 - w/2;
-		y = agView->h/2 - h/2;
-		break;
 	case AG_WINDOW_MR:
 		x = agView->w - w;
 		y = agView->h/2 - h/2;
@@ -1102,6 +1098,11 @@ AG_WindowSetGeometryAligned(AG_Window *win, enum ag_window_alignment align,
 	case AG_WINDOW_BR:
 		x = agView->w - w;
 		y = agView->h - h;
+		break;
+	case AG_WINDOW_MC:
+	default:
+		x = agView->w/2 - w/2;
+		y = agView->h/2 - h/2;
 		break;
 	}
 	return AG_WindowSetGeometry(win, x, y, w, h);
