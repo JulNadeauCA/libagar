@@ -144,8 +144,8 @@ RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
 {
 	VG_Vector v1, v2, vMid;
 	int x, y, w, h;
-	int su;
-	SDL_Surface *suTmp;
+	int su = -1;			/* Make compiler happy */
+	SDL_Surface *suTmp = NULL;
 
 	AG_PushTextState();
 	if (vt->fontFace[0] != '\0' ||
@@ -297,7 +297,7 @@ Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 	VG_Text *vt = p;
 	float wText, hText;
 	VG_Vector v1, v2;
-	AG_Surface *suTmp;
+	AG_Surface *suTmp = NULL;		/* Make compiler happy */
 	int su;
 
 	if (agTextCache) {
