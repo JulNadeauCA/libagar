@@ -30,6 +30,7 @@ typedef struct ag_button {
 #define AG_BUTTON_REGEN		0x080	/* Label surface need updating */
 #define AG_BUTTON_TEXT_NODUP	0x100	/* Label text string is static */
 #define AG_BUTTON_SURFACE_NODUP	0x200	/* For ButtonSurfaceNODUP() */
+#define AG_BUTTON_INVSTATE	0x400	/* Invert value of "state" binding */
 #define AG_BUTTON_EXPAND	(AG_BUTTON_HFILL|AG_BUTTON_VFILL)
 
 	int lPad, rPad, tPad, bPad;	/* Padding in pixels */
@@ -66,6 +67,7 @@ void	   AG_ButtonSetPadding(AG_Button *, int, int, int, int);
 #define	AG_ButtonSetPaddingBottom(b,v) AG_ButtonSetPadding((b),-1,-1,-1,(v))
 void	   AG_ButtonSetFocusable(AG_Button *, int);
 void	   AG_ButtonSetSticky(AG_Button *, int);
+void	   AG_ButtonInvertState(AG_Button *, int);
 void	   AG_ButtonJustify(AG_Button *, enum ag_text_justify);
 void	   AG_ButtonSetValign(AG_Button *, enum ag_text_valign);
 void	   AG_ButtonSurface(AG_Button *, AG_Surface *);

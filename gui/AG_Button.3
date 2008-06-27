@@ -81,10 +81,13 @@ can be used to trigger events, or control a boolean value.
 .Fn AG_ButtonSetPadding "AG_Button *button" "int lPad" "int rPad" "int tPad" "int bPad"
 .Pp
 .Ft void
-.Fn AG_ButtonSetFocusable "AG_Button *button" "int focusable"
+.Fn AG_ButtonSetFocusable "AG_Button *button" "int flag"
 .Pp
 .Ft void
-.Fn AG_ButtonSetSticky "AG_Button *button" "int sticky"
+.Fn AG_ButtonSetSticky "AG_Button *button" "int flag"
+.Pp
+.Ft void
+.Fn AG_ButtonInvertState "AG_Button *button" "int flag"
 .Pp
 .Ft void
 .Fn AG_ButtonJustify "AG_Button *button" "enum ag_text_justify justify"
@@ -138,19 +141,10 @@ in the given integer.
 The
 .Fa caption
 argument, if not NULL, defines the string to display by default as
-button lable.
-Acceptable values for the
+button label.
+There are currently no
 .Fa flags
-argument include:
-.Pp
-.Bl -tag -width "AG_BUTTON_STICKY "
-.It AG_BUTTON_STICKY
-Preserve button state.
-.It AG_BUTTON_REPEAT
-Repeatedly generate
-.Sq button-pushed
-events as long as the button is pressed.
-.El
+specific to this widget.
 .Pp
 The
 .Fn AG_ButtonSetPadding
@@ -164,13 +158,16 @@ The default is to allow buttons to gain focus.
 .Pp
 The
 .Fn AG_ButtonSetSticky
-function with an argument of 1 arranges for the button to trigger its state
-only on reception of
-.Fn window-mousebuttondown
-events.
-By default,
-.Fn window-mousebuttonup
-events reset the state to 0.
+function enables or disable sticky mode.
+Under sticky mode, the button will not spring back to its previous state
+following a click event.
+This mode is mostly useful when the button's state is bound to a boolean
+variable.
+.Pp
+The
+.Fn AG_ButtonInvertState
+function defines whether to invert the meaning of the boolean variable
+bound to the button.
 .Pp
 The
 .Fn AG_ButtonJustify
