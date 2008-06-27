@@ -351,13 +351,24 @@ VG_NodeDetach(void *p)
 {
 	VG_Node *vn = p;
 	VG *vg = vn->vg;
+	VG_Node *vnChld, *vnNext;
 
 	VG_Lock(vg);
+
+	for (vnChld = TAILQ_FIRST(&vn->cNodes);
+	     vnChld != TAILQ_END(&vn->cNodes);
+	     vnChld = vnNext) {
+		vnNext = TAILQ_NEXT(vnChld, tree);
+		VG_NodeDetach(vnChld);
+	}
+	TAILQ_INIT(&vn->cNodes);
+
 	if (vn->parent != NULL) {
 		TAILQ_REMOVE(&vn->parent->cNodes, vn, tree);
 		vn->parent = NULL;
 	}
 	TAILQ_REMOVE(&vg->nodes, vn, list);
+
 	VG_Unlock(vg);
 }
 
