@@ -250,10 +250,20 @@ AG_WidgetBindMp(void *widp, const char *name, AG_Mutex *mutex,
 	AG_Widget *wid = widp;
 	AG_WidgetBinding *b;
 	va_list ap;
+	void *pArg;
+	Uint maskArg;
 	
 	AG_MutexLock(&wid->bindings_lock);
 	va_start(ap, type);
 	switch (type) {
+	case AG_WIDGET_FLAG:
+	case AG_WIDGET_FLAG8:
+	case AG_WIDGET_FLAG16:
+	case AG_WIDGET_FLAG32:
+		pArg = va_arg(ap, void *);
+		maskArg = va_arg(ap, Uint);
+		b = AG_WidgetBind(wid, name, type, pArg, maskArg);
+		break;
 	case AG_WIDGET_PROP:
 		b = AG_WidgetBind(wid, name, type,
 		    va_arg(ap, void *),
@@ -342,20 +352,11 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 		size = va_arg(ap, size_t);
 		break;
 	case AG_WIDGET_FLAG:
-		p1 = va_arg(ap, void *);
-		bitmask = va_arg(ap, Uint);
-		break;
 	case AG_WIDGET_FLAG8:
-		p1 = va_arg(ap, void *);
-		bitmask = (Uint8)va_arg(ap, Uint);
-		break;
 	case AG_WIDGET_FLAG16:
-		p1 = va_arg(ap, void *);
-		bitmask = (Uint16)va_arg(ap, Uint);
-		break;
 	case AG_WIDGET_FLAG32:
 		p1 = va_arg(ap, void *);
-		bitmask = (Uint32)va_arg(ap, Uint);
+		bitmask = va_arg(ap, Uint);
 		break;
 	default:
 		p1 = va_arg(ap, void *);
