@@ -988,7 +988,7 @@ RectBlendedFB(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 
 	for (y = 0; y < r.h; y++) {
 		for (x = 0; x < r.w; x++) {
-			AG_BLEND_RGBA2(agView->v,
+			AG_BLEND_RGBA2_CLIPPED(agView->v,
 			    wid->cx+r.x+x, wid->cy+r.y+y,
 			    c[0], c[1], c[2], c[3],
 			    func);
