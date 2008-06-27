@@ -33,7 +33,7 @@
 
 #include <stdarg.h>
 
-static int GetState(AG_WidgetBinding *, void *);
+static int GetState(AG_Button *, AG_WidgetBinding *, void *);
 static void SetState(AG_WidgetBinding *, void *, int);
 static void mousemotion(AG_Event *);
 static void mousebuttonup(AG_Event *);
@@ -216,7 +216,7 @@ Draw(void *p)
 	int pressed, wLbl, hLbl;
 	
 	binding = AG_WidgetGetBinding(bu, "state", &pState);
-	pressed = GetState(binding, pState);
+	pressed = GetState(bu, binding, pState);
 	AG_WidgetUnlockBinding(binding);
 
 	STYLE(bu)->ButtonBackground(bu, pressed);
@@ -261,28 +261,41 @@ Draw(void *p)
 }
 
 static int
-GetState(AG_WidgetBinding *binding, void *p)
+GetState(AG_Button *bu, AG_WidgetBinding *binding, void *p)
 {
+	int v = 0;
+
 	switch (binding->vtype) {
 	case AG_WIDGET_BOOL:
 	case AG_WIDGET_INT:
-		return *(int *)p;
+		v = *(int *)p;
+		break;
 	case AG_WIDGET_UINT8:
-		return (int)(*(Uint8 *)p);
+		v = (int)(*(Uint8 *)p);
+		break;
 	case AG_WIDGET_UINT16:
-		return (int)(*(Uint16 *)p);
+		v = (int)(*(Uint16 *)p);
+		break;
 	case AG_WIDGET_UINT32:
-		return (int)(*(Uint32 *)p);
+		v = (int)(*(Uint32 *)p);
+		break;
 	case AG_WIDGET_FLAG:
-		return (*(int *)p & (int)binding->data.bitmask);
+		v = (*(int *)p & (int)binding->data.bitmask);
+		break;
 	case AG_WIDGET_FLAG8:
-		return (int)(*(Uint8 *)p & (Uint8)binding->data.bitmask);
+		v = (int)(*(Uint8 *)p & (Uint8)binding->data.bitmask);
+		break;
 	case AG_WIDGET_FLAG16:
-		return (int)(*(Uint16 *)p & (Uint16)binding->data.bitmask);
+		v = (int)(*(Uint16 *)p & (Uint16)binding->data.bitmask);
+		break;
 	case AG_WIDGET_FLAG32:
-		return (int)(*(Uint32 *)p & (Uint32)binding->data.bitmask);
+		v = (int)(*(Uint32 *)p & (Uint32)binding->data.bitmask);
+		break;
 	}
-	return (-1);
+	if (bu->flags & AG_BUTTON_INVSTATE) {
+		v = !v;
+	}
+	return (v);
 }
 
 static void
@@ -360,7 +373,7 @@ mousemotion(AG_Event *event)
 	binding = AG_WidgetGetBinding(bu, "state", &pState);
 	if (!AG_WidgetRelativeArea(bu, x, y)) {
 		if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
-		    GetState(binding, pState) == 1) {
+		    GetState(bu, binding, pState) == 1) {
 			SetState(binding, pState, 0);
 			AG_WidgetBindingChanged(binding);
 		}
@@ -396,7 +409,7 @@ mousebuttondown(AG_Event *event)
 	if (!(bu->flags & AG_BUTTON_STICKY)) {
 		SetState(binding, pState, 1);
 	} else {
-		newState = !GetState(binding, pState);
+		newState = !GetState(bu, binding, pState);
 		SetState(binding, pState, newState);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", newState);
 	}
@@ -431,7 +444,7 @@ mousebuttonup(AG_Event *event)
 	}
 	
 	binding = AG_WidgetGetBinding(bu, "state", &pState);
-	if (GetState(binding, pState) && button == SDL_BUTTON_LEFT &&
+	if (GetState(bu, binding, pState) && button == SDL_BUTTON_LEFT &&
 	    !(bu->flags & AG_BUTTON_STICKY)) {
 	    	SetState(binding, pState, 0);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
@@ -516,14 +529,20 @@ AG_ButtonSetFocusable(AG_Button *bu, int focusable)
 }
 
 void
-AG_ButtonSetSticky(AG_Button *bu, int sticky)
+AG_ButtonSetSticky(AG_Button *bu, int flag)
 {
 	AG_ObjectLock(bu);
-	if (sticky) {
-		bu->flags |= (AG_BUTTON_STICKY);
-	} else {
-		bu->flags &= ~(AG_BUTTON_STICKY);
-	}
+	if (flag) { bu->flags |= (AG_BUTTON_STICKY); }
+	else { bu->flags &= ~(AG_BUTTON_STICKY); }
+	AG_ObjectUnlock(bu);
+}
+
+void
+AG_ButtonInvertState(AG_Button *bu, int flag)
+{
+	AG_ObjectLock(bu);
+	if (flag) { bu->flags |= (AG_BUTTON_INVSTATE); }
+	else { bu->flags &= ~(AG_BUTTON_INVSTATE); }
 	AG_ObjectUnlock(bu);
 }
 
