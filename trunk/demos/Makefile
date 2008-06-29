@@ -18,7 +18,8 @@ SUBDIR=	fixedres \
 	plotting \
 	scrollbar \
 	initvideosdl \
-	keyevents
+	keyevents \
+	customwidget
 
 all: all-subdir
 clean: prereq clean-subdir
