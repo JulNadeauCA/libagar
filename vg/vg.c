@@ -40,7 +40,7 @@
 
 #include <string.h>
 
-const AG_Version vgVer = { 6, 0 };
+const AG_Version vgVer = { 6, 1 };
 
 const VG_NodeOps **vgNodeClasses;
 Uint               vgNodeClassCount;
