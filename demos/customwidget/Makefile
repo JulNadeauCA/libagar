@@ -4,7 +4,7 @@ include Makefile.config
 PROJECT=	"customwidget"
 PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
-PROG_GUID=	"6799678f-1748-4f28-b21b-ac09e60c8510"
+PROG_GUID=	"5d140e81-5592-4aa7-9395-16604afae922"
 PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
 
 PROG=	customwidget
