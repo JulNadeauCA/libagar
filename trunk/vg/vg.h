@@ -378,6 +378,34 @@ VG_Rotate(void *pNode, float theta)
 	VG_MultMatrix(&vn->T, &T);
 }
 
+/* Reflection about vertical line going through the origin. */
+static __inline__ void
+VG_FlipVert(void *pNode)
+{
+	VG_Node *vn = pNode;
+	VG_Matrix T;
+
+	T.m[0][0] = 1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
+	T.m[1][0] = 0.0f;	T.m[1][1] = -1.0f;	T.m[1][2] = 0.0f;
+	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
+
+	VG_MultMatrix(&vn->T, &T);
+}
+
+/* Reflection about horizontal line going through the origin. */
+static __inline__ void
+VG_FlipHoriz(void *pNode)
+{
+	VG_Node *vn = pNode;
+	VG_Matrix T;
+
+	T.m[0][0] = -1.0f;	T.m[0][1] = 0.0f;	T.m[0][2] = 0.0f;
+	T.m[1][0] = 0.0f;	T.m[1][1] = 1.0f;	T.m[1][2] = 0.0f;
+	T.m[2][0] = 0.0f;	T.m[2][1] = 0.0f;	T.m[2][2] = 1.0f;
+
+	VG_MultMatrix(&vn->T, &T);
+}
+
 static __inline__ void
 VG_Select(void *pNode)
 {
