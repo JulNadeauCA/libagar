@@ -200,6 +200,7 @@ AG_GraphEdgeNew(AG_Graph *gf, AG_GraphVertex *v1, AG_GraphVertex *v2,
 	edge->v2 = v2;
 	edge->userPtr = userPtr;
 	edge->graph = gf;
+	edge->popupMenu = NULL;
 	TAILQ_INSERT_TAIL(&gf->edges, edge, edges);
 	gf->nedges++;
 
@@ -675,6 +676,7 @@ AG_GraphVertexNew(AG_Graph *gf, void *userPtr)
 	vtx->userPtr = userPtr;
 	vtx->edges = NULL;
 	vtx->nedges = 0;
+	vtx->popupMenu = NULL;
 
 	AG_ObjectLock(gf);
 	TAILQ_INSERT_TAIL(&gf->vertices, vtx, vertices);
