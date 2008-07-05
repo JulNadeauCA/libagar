@@ -230,8 +230,7 @@ MouseButtonUp(AG_Event *event)
 			}
 			if (item->clickFn != NULL) {
 				AG_ExecEventFn(m, item->clickFn);
-			}
-			if (item->bind_type != AG_MENU_NO_BINDING) {
+			} else if (item->bind_type != AG_MENU_NO_BINDING) {
 				if (item->bind_lock != NULL)
 					AG_MutexLock(item->bind_lock);
 

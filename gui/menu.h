@@ -17,6 +17,7 @@
 
 struct ag_menu;
 struct ag_menu_view;
+struct ag_button;
 
 typedef struct ag_menu_item {
 	char *text;			/* Label text */
@@ -58,6 +59,7 @@ typedef struct ag_menu_item {
 	struct ag_menu *pmenu;		/* Parent menu */
 	struct ag_menu_item *pitem;	/* Parent item (NULL for top items) */
 	struct ag_menu_item *sel_subitem; /* Selected subitem */
+	struct ag_button *tbButton;	/* Associated toolbar button */
 } AG_MenuItem;
 
 typedef struct ag_menu {
@@ -203,6 +205,12 @@ AG_MenuItem *AG_MenuInt32FlagsMp(AG_MenuItem *, const char *, AG_Surface *,
 	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),(mtx))
 #define AG_MenuFlags(mi,t,i,fp,fl,inv) \
 	AG_MenuIntFlagsMp((mi),(t),(i),(int *)(fp),(int)(fl),(inv),NULL)
+
+void    AG_MenuSetIntBoolMp(AG_MenuItem *, int *, int, AG_Mutex *);
+#define AG_MenuSetIntBool(mi,p,fl,inv,mtx) \
+        AG_MenuSetIntBoolMp((mi),(p),(fl),(inv),(mtx))
+
+void AG_MenuSetIntFlagsMp(AG_MenuItem *, int *, int, int, AG_Mutex *);
 
 /* Legacy interfaces */
 #define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)

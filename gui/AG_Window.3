@@ -137,12 +137,6 @@ for notebook-style display.
 .Fn AG_WindowDetach "AG_Window *win" "AG_Window *subwin"
 .Pp
 .Ft void
-.Fn AG_WindowFocus "AG_Window *win"
-.Pp
-.Ft int
-.Fn AG_WindowFocusNamed "const char *name"
-.Pp
-.Ft void
 .Fn AG_WindowUpdate "AG_Window *win"
 .Pp
 .nr nS 0
@@ -359,16 +353,6 @@ from its parent window
 .Fa pwin .
 .Pp
 The
-.Fn AG_WindowFocus
-function sets the focus on the given window.
-If the currently focused window has the
-.Dv AG_WINDOW_KEEPABOVE
-flag set, this function becomes a no-op.
-.Fn AG_WindowFocusNamed
-sets the focus on the window of the given name and returns 0 on success
-or -1 if the window was not found.
-.Pp
-The
 .Fn AG_WindowUpdate
 function calls
 .Xr AG_WidgetSizeAlloc 3
@@ -408,6 +392,38 @@ as invisible.
 .Fn AG_WindowToggleVisibility
 inverts the visibility state of
 .Fa win .
+.Sh FOCUS
+.nr nS 1
+.Ft void
+.Fn AG_WindowFocus "AG_Window *win"
+.Pp
+.Ft int
+.Fn AG_WindowFocusNamed "const char *name"
+.Pp
+.Ft int
+.Fn AG_WindowFindFocused "AG_Window *win"
+.Pp
+.Ft "AG_Window *"
+.Fn AG_WindowFocused "void"
+.Pp
+.nr nS 0
+The
+.Fn AG_WindowFocus
+function sets the focus on the given window.
+If the currently focused window has the
+.Dv AG_WINDOW_KEEPABOVE
+flag set, this function becomes a no-op.
+.Fn AG_WindowFocusNamed
+sets the focus on the window of the given name and returns 0 on success
+or -1 if the window was not found.
+.Pp
+.Fn AG_WindowFindFocused
+returns a pointer to the window currently holding focus, or NULL if there
+are currently no windows at all.
+.Fn AG_WindowFocused
+return 1 if
+.Fa win
+is holding focus, 0 otherwise.
 .Sh GENERIC EVENT HANDLERS
 .nr nS 1
 .Ft void
