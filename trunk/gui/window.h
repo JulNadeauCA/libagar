@@ -90,8 +90,6 @@ typedef struct ag_window {
 	struct ag_icon *icon;			/* Window icon */
 } AG_Window;
 
-#define AG_WINDOW_FOCUSED(w) (AG_TAILQ_LAST(&agView->windows,ag_windowq)==(w))
-
 __BEGIN_DECLS
 extern AG_WidgetClass agWindowClass;
 extern int agWindowIconWidth;
@@ -143,11 +141,12 @@ void	 AG_WindowHide(AG_Window *);
 int	 AG_WindowToggleVisibility(AG_Window *);
 int	 AG_WindowEvent(SDL_Event *);
 void	 AG_WindowResize(AG_Window *);
+int	 AG_WindowIsSurrounded(AG_Window *);
+void	 AG_WindowApplyAlignment(AG_Window *, enum ag_window_alignment);
+
 void	 AG_WindowFocus(AG_Window *);
 int	 AG_WindowFocusNamed(const char *);
 void	 AG_WindowCycleFocus(AG_Window *, int);
-int	 AG_WindowIsSurrounded(AG_Window *);
-void	 AG_WindowApplyAlignment(AG_Window *, enum ag_window_alignment);
 
 /* Generic event handlers */
 void	 AG_WindowDetachGenEv(AG_Event *);
@@ -155,9 +154,22 @@ void	 AG_WindowHideGenEv(AG_Event *);
 void	 AG_WindowShowGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
 
-#define AGWINDETACH(win)	AG_WindowDetachGenEv, "%p", (win)
-#define AGWINHIDE(win)		AG_WindowHideGenEv, "%p", (win)
-#define AGWINCLOSE(win)		AG_WindowCloseGenEv, "%p", (win)
+#define AGWINDETACH(win)     AG_WindowDetachGenEv, "%p", (win)
+#define AGWINHIDE(win)       AG_WindowHideGenEv, "%p", (win)
+#define AGWINCLOSE(win)      AG_WindowCloseGenEv, "%p", (win)
+#define AG_WINDOW_FOCUSED(w) (AG_TAILQ_LAST(&agView->windows,ag_windowq) == (w))
+
+static __inline__ AG_Window *
+AG_WindowFindFocused(void)
+{
+	return AG_TAILQ_LAST(&agView->windows,ag_windowq);
+}
+
+static __inline__ int
+AG_WindowFocused(AG_Window *win)
+{
+	return (AG_TAILQ_LAST(&agView->windows,ag_windowq) == (win));
+}
 
 static __inline__ void
 AG_WindowUpdate(AG_Window *win)
