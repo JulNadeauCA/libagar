@@ -299,9 +299,9 @@ SaveTilesetAsDlg(AG_Event *event)
 	    SaveTilesetToAGT, "%p", ts);
 	ft = AG_FileDlgAddType(fd, _("Agar icon header"), "*.h",
 	    SaveTilesetToIconsHdr, "%p", ts);
-	AG_FileOptionNewString(ft, _("Package name: "), "pkg-name", "myIcons");
-	AG_FileOptionNewBool(ft, _("Use begin_code.h"), "begin-code", 0);
-	AG_FileOptionNewBool(ft, _("Use __BEGIN_DECLS"), "cpp-decls", 0);
+	AG_FileOptionNewString(ft, _("Package name: "), "pkg-name", "fooIcon");
+	AG_FileOptionNewBool(ft, _("Use begin_code.h"), "begin-code", 1);
+	AG_FileOptionNewBool(ft, _("Use __BEGIN_DECLS"), "cpp-decls", 1);
 
 	AG_WindowShow(win);
 }
