@@ -21,5 +21,6 @@ extern AG_StaticIcon vgIconSnapIntsectAuto;
 extern AG_StaticIcon vgIconSnapIntsectManual;
 extern AG_StaticIcon vgIconPolygon;
 extern AG_StaticIcon vgIconDrawing;
+extern AG_StaticIcon vgIconProximity;
 __END_DECLS
 #include "close_code.h"

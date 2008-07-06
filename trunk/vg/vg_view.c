@@ -40,6 +40,8 @@
 
 #include "vg.h"
 #include "vg_view.h"
+#include "vg_tools.h"
+#include "tools.h"
 
 static const float scaleFactors[17] = {
 	1.0f, 2.0f, 4.0f, 6.0f, 8.0f, 10.0f, 12.0f, 16.0f, 18.0f,
@@ -252,6 +254,12 @@ OnShow(AG_Event *event)
 }
 
 static void
+UpdatePointSelRadius(VG_View *vv)
+{
+	vv->pointSelRadius = (vv->grid[0].ival/2)*vv->wPixel;
+}
+
+static void
 Init(void *obj)
 {
 	VG_View *vv = obj;
@@ -290,6 +298,7 @@ Init(void *obj)
 	vv->editAreas = NULL;
 	vv->nEditAreas = 0;
 	TAILQ_INIT(&vv->tools);
+	UpdatePointSelRadius(vv);
 
 	AG_SetEvent(vv, "window-mousemotion", MouseMotion, NULL);
 	AG_SetEvent(vv, "window-mousebuttondown", MouseButtonDown, NULL);
@@ -308,6 +317,7 @@ Destroy(void *obj)
 		AG_TextCacheDestroy(vv->tCache);
 }
 
+/* Set the snapping constraint. */
 void
 VG_ViewSetSnapMode(VG_View *vv, enum vg_snap_mode mode)
 {
@@ -316,6 +326,7 @@ VG_ViewSetSnapMode(VG_View *vv, enum vg_snap_mode mode)
 	AG_ObjectUnlock(vv);
 }
 
+/* Set the orthogonal constraint. */
 void
 VG_ViewSetOrthoMode(VG_View *vv, enum vg_ortho_mode mode)
 {
@@ -324,6 +335,7 @@ VG_ViewSetOrthoMode(VG_View *vv, enum vg_ortho_mode mode)
 	AG_ObjectUnlock(vv);
 }
 
+/* Set the parameters of the specified grid. */
 void
 VG_ViewSetGrid(VG_View *vv, int idx, enum vg_grid_type type, int ival,
     VG_Color color)
@@ -332,9 +344,13 @@ VG_ViewSetGrid(VG_View *vv, int idx, enum vg_grid_type type, int ival,
 	vv->grid[idx].type = type;
 	vv->grid[idx].ival = ival;
 	vv->grid[idx].color = color;
+	if (idx == 0) {
+		UpdatePointSelRadius(vv);
+	}
 	AG_ObjectUnlock(vv);
 }
 
+/* Register a "draw" callback. */
 void
 VG_ViewDrawFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
@@ -344,6 +360,7 @@ VG_ViewDrawFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(vv);
 }
 
+/* Register a "resize" callback. */
 void
 VG_ViewScaleFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
@@ -353,6 +370,7 @@ VG_ViewScaleFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(vv);
 }
 
+/* Register a keydown callback. */
 void
 VG_ViewKeydownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
@@ -362,6 +380,7 @@ VG_ViewKeydownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(vv);
 }
 
+/* Register a keyup callback. */
 void
 VG_ViewKeyupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
@@ -371,6 +390,7 @@ VG_ViewKeyupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(vv);
 }
 
+/* Register a mousebuttondown callback. */
 void
 VG_ViewButtondownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
@@ -380,6 +400,7 @@ VG_ViewButtondownFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(vv);
 }
 
+/* Register a mousebuttonup callback. */
 void
 VG_ViewButtonupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
@@ -389,6 +410,7 @@ VG_ViewButtonupFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectUnlock(vv);
 }
 
+/* Register a mousemotion callback. */
 void
 VG_ViewMotionFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 {
@@ -542,58 +564,58 @@ Draw(void *p)
 	}
 }
 
+/* Select a new tool to use. */
 void
 VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 {
+	int i;
+
 	AG_ObjectLock(vv);
+	for (i = 0; i < vv->nEditAreas; i++) {
+		AG_ObjectFreeChildren(vv->editAreas[i]);
+		AG_WindowUpdate(AG_ParentWindow(vv->editAreas[i]));
+	}
 	if (vv->curtool != NULL) {
-		if (vv->curtool->trigger != NULL) {
-			AG_WidgetSetBool(vv->curtool->trigger, "state", 0);
+		if (ntool != NULL && ntool->ops == vv->curtool->ops) {
+			goto out;
 		}
-		if (vv->curtool->win != NULL) {
-			AG_WindowHide(vv->curtool->win);
-		}
-		if (vv->curtool->pane != NULL) {
-			AG_ObjectFreeChildren(vv->curtool->pane);
-			AG_WindowUpdate(AG_ParentWindow(vv->curtool->pane));
+		if (vv->curtool->editWin != NULL) {
+			AG_WindowHide(vv->curtool->editWin);
 		}
 		vv->curtool->vgv = NULL;
+		vv->curtool->selected = 0;
 	}
-	vv->curtool = ntool;
 
+	vv->curtool = ntool;
 	if (ntool != NULL) {
+		ntool->selected = 1;
 		ntool->p = p;
 		ntool->vgv = vv;
 
-		if (ntool->trigger != NULL) {
-			AG_WidgetSetBool(ntool->trigger, "state", 1);
+		if (ntool->editWin != NULL) {
+			AG_WindowShow(ntool->editWin);
 		}
-		if (ntool->win != NULL) {
-			AG_WindowShow(ntool->win);
+		if (ntool->editArea != NULL && ntool->ops->edit != NULL) {
+			AG_Widget *wEdit;
+
+			wEdit = ntool->ops->edit(ntool, vv);
+			AG_ObjectAttach(ntool->editArea, wEdit);
+			AG_WindowUpdate(AG_ParentWindow(wEdit));
 		}
-#if 0
-		if (ntool->pane != NULL && ntool->ops->edit != NULL) {
-			ntool->ops->edit(ntool, ntool->pane);
-			AG_WindowUpdate(AG_ParentWindow(vv->curtool->pane));
-		}
-#endif
 		VG_Status(vv, _("Tool: %s"), ntool->ops->name);
 	} else {
 		VG_Status(vv, NULL);
 	}
-#if 0
-	if ((pWin = AG_ParentWindow(vv)) != NULL) {
-		agView->winToFocus = pWin;
-		AG_WidgetFocus(vv);
-	}
-#endif
+out:
 	AG_ObjectUnlock(vv);
 }
 
+/* Generic event handler for tool selection. */
 void
 VG_ViewSelectToolEv(AG_Event *event)
 {
 	VG_View *vv = AG_PTR(1);
+
 	AG_WidgetFocus(vv);
 	VG_ViewSelectTool(vv, AG_PTR(2), AG_PTR(3));
 }
@@ -624,6 +646,7 @@ VG_ViewFindToolByOps(VG_View *vv, const VG_ToolOps *ops)
 	return (NULL);
 }
 
+/* Register a new VG_Tool class. */
 VG_Tool *
 VG_ViewRegTool(VG_View *vv, const VG_ToolOps *ops, void *p)
 {
@@ -641,6 +664,7 @@ VG_ViewRegTool(VG_View *vv, const VG_ToolOps *ops, void *p)
 	return (t);
 }
 
+/* Set the minimum allowed display scale factor. */
 void
 VG_ViewSetScaleMin(VG_View *vv, float scaleMin)
 {
@@ -649,6 +673,7 @@ VG_ViewSetScaleMin(VG_View *vv, float scaleMin)
 	AG_ObjectUnlock(vv);
 }
 
+/* Set the maximum allowed display scale factor. */
 void
 VG_ViewSetScaleMax(VG_View *vv, float scaleMax)
 {
@@ -657,6 +682,7 @@ VG_ViewSetScaleMax(VG_View *vv, float scaleMax)
 	AG_ObjectUnlock(vv);
 }
 
+/* Set the display scale factor. */
 void
 VG_ViewSetScale(VG_View *vv, int idx)
 {
@@ -666,6 +692,7 @@ VG_ViewSetScale(VG_View *vv, int idx)
 	else if (idx >= nScaleFactors) { idx = nScaleFactors-1; }
 	
 	AG_ObjectLock(vv);
+
 	vv->scaleIdx = idx;
 	vv->scale = scaleFactors[idx];
 	if (vv->scale < vv->scaleMin) { vv->scale = vv->scaleMin; }
@@ -674,9 +701,12 @@ VG_ViewSetScale(VG_View *vv, int idx)
 	vv->wPixel = 1.0/vv->scale;
 	vv->x *= (vv->scale/scalePrev);
 	vv->y *= (vv->scale/scalePrev);
+	UpdatePointSelRadius(vv);
+
 	AG_ObjectUnlock(vv);
 }
 
+/* Set the specified tool as default. */
 void
 VG_ViewSetDefaultTool(VG_View *vv, VG_Tool *tool)
 {
@@ -685,6 +715,7 @@ VG_ViewSetDefaultTool(VG_View *vv, VG_Tool *tool)
 	AG_ObjectUnlock(vv);
 }
 
+/* Set the status line text. */
 void
 VG_Status(VG_View *vv, const char *fmt, ...)
 {
@@ -701,8 +732,9 @@ VG_Status(VG_View *vv, const char *fmt, ...)
 	AG_ObjectUnlock(vv);
 }
 
+/* Register a new container widget to associate with the tool. */
 Uint
-VG_ViewAddEditArea(VG_View *vv, void *widget)
+VG_AddEditArea(VG_View *vv, void *widget)
 {
 	Uint name;
 

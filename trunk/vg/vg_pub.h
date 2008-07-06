@@ -12,5 +12,6 @@
 #include <agar/vg/vg_view.h>
 #include <agar/vg/vg_math.h>
 #include <agar/vg/icons.h>
+#include <agar/vg/vg_tools.h>
 #include <agar/core/core_close.h>
 #endif
