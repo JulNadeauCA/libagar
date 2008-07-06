@@ -40,9 +40,9 @@
 void
 VG_ToolInit(VG_Tool *t)
 {
-	t->win = NULL;
-	t->pane = NULL;
-	t->trigger = NULL;
+	t->selected = 0;
+	t->editWin = NULL;
+	t->editArea = NULL;
 	SLIST_INIT(&t->kbindings);
 	SLIST_INIT(&t->mbindings);
 
@@ -56,12 +56,12 @@ VG_ToolDestroy(VG_Tool *tool)
 	VG_ToolKeyBinding *kbinding, *nkbinding;
 	VG_ToolMouseBinding *mbinding, *nmbinding;
 	
-	if (tool->win != NULL)
-		AG_ViewDetach(tool->win);
+	if (tool->editWin != NULL)
+		AG_ViewDetach(tool->editWin);
 	
-	if (tool->pane != NULL) {
-		AG_ObjectFreeChildren(tool->pane);
-		AG_WindowUpdate(AG_ParentWindow(tool->pane));
+	if (tool->editArea != NULL) {
+		AG_ObjectFreeChildren(tool->editArea);
+		AG_WindowUpdate(AG_ParentWindow(tool->editArea));
 	}
 	for (kbinding = SLIST_FIRST(&tool->kbindings);
 	     kbinding != SLIST_END(&tool->kbindings);
@@ -93,7 +93,7 @@ VG_ToolWindow(void *p, const char *name)
 	VG_Tool *tool = p;
 	AG_Window *win;
 
-	win = tool->win = AG_WindowNew(0);
+	win = tool->editWin = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _(tool->ops->desc));
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 	AG_SetEvent(win, "window-close", ToolWindowClosed, "%p", tool);

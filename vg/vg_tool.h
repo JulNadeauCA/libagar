@@ -21,7 +21,7 @@ typedef struct vg_tool_ops {
 
 	void (*init)(void *);
 	void (*destroy)(void *);
-	void (*edit)(void *, void *);
+	void *(*edit)(void *, struct vg_view *);
 	void (*predraw)(void *, struct vg_view *);
 	void (*postdraw)(void *, struct vg_view *);
 
@@ -34,11 +34,11 @@ typedef struct vg_tool_ops {
 
 typedef struct vg_tool {
 	const VG_ToolOps *ops;
+	int selected;				/* Tool is in use */
 	struct vg_view *vgv;			/* Associated view */
 	void *p;				/* User-supplied pointer */
-	AG_Window *win;				/* Edition window (if any) */
-	AG_Widget *pane;			/* Edition pane (if any) */
-	AG_Button *trigger;			/* Trigger button (XXX) */
+	AG_Window *editWin;			/* Edition window (if any) */
+	AG_Widget *editArea;			/* Edition area (if any) */
 	VG_Vector vCursor;			/* Last cursor position */
 	AG_SLIST_HEAD(,vg_tool_keybinding) kbindings;
 	AG_SLIST_HEAD(,vg_tool_mousebinding) mbindings;

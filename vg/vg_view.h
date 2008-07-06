@@ -4,6 +4,7 @@
 #define _AGAR_VG_VIEW_H_
 
 #ifdef _AGAR_INTERNAL
+# include <core/limits.h>
 # include <gui/widget.h>
 # include <gui/button.h>
 # include <gui/menu.h>
@@ -11,6 +12,7 @@
 # include <vg/vg.h>
 # include <vg/vg_tool.h>
 #else
+# include <agar/core/limits.h>
 # include <agar/gui/widget.h>
 # include <agar/gui/button.h>
 # include <agar/gui/menu.h>
@@ -65,17 +67,21 @@ typedef struct vg_view {
 	AG_Event *keydown_ev, *keyup_ev;	/* Keyboard events */
 	AG_Event *btndown_ev, *btnup_ev;	/* Mouse button events */
 	AG_Event *motion_ev;			/* Mouse motion event */
+
 	struct {
 		float x, y;			/* Saved coords */
 		int panning;			/* Panning mode */
 	} mouse;
+
 	VG_Tool *curtool;			/* Selected tool */
 	VG_Tool *deftool;			/* Default tool if any */
 	AG_TAILQ_HEAD(,vg_tool) tools;		/* Map edition tools */
+
 	char status[128];			/* Status text buffer */
 	AG_TextCache *tCache;			/* Text cache for VG_Text */
 	AG_Widget **editAreas;			/* User-specified container */
-	Uint       nEditAreas;
+	Uint nEditAreas;
+	int pointSelRadius;			/* Point selection threshold */
 } VG_View;
 
 #define VGVIEW(p) ((VG_View *)(p))
@@ -110,7 +116,8 @@ VG_Tool	*VG_ViewRegTool(VG_View *, const VG_ToolOps *, void *);
 void     VG_ViewSetDefaultTool(VG_View *, VG_Tool *);
 void     VG_Status(VG_View *, const char *, ...)
 	    FORMAT_ATTRIBUTE(printf, 2, 3);
-Uint     VG_ViewAddEditArea(VG_View *, void *);
+Uint     VG_AddEditArea(VG_View *, void *);
+Uint     VG_ClearEditAreas(VG_View *, void *);
 
 /*
  * Apply snapping constraints to given coordinates.
@@ -184,6 +191,105 @@ VG_GetViewCoordsFlt(VG_View *vv, VG_Vector v, float *x, float *y)
 {
 	*x = v.x*vv->scale + vv->x;
 	*y = v.y*vv->scale + vv->y;
+}
+
+/* Return the Point nearest to vPos. */
+static __inline__ void *
+VG_NearestPoint(VG_View *vv, VG_Vector vPos, void *ignore)
+{
+	float prox, proxNearest = AG_FLT_MAX;
+	VG_Node *vn, *vnNearest = NULL;
+	VG_Vector v;
+
+	AG_TAILQ_FOREACH(vn, &vv->vg->nodes, list) {
+		if (vn->ops->pointProximity == NULL ||
+		    vn == ignore ||
+		    !VG_NodeIsClass(vn, "Point")) {
+			continue;
+		}
+		v = vPos;
+		prox = vn->ops->pointProximity(vn, vv, &v);
+		if (prox < vv->grid[0].ival) {
+			if (prox < proxNearest) {
+				proxNearest = prox;
+				vnNearest = vn;
+			}
+		}
+	}
+	return (vnNearest);
+}
+
+/* Return the entity nearest to vPos. */
+static __inline__ void *
+VG_Nearest(VG_View *vv, VG_Vector vPos)
+{
+	VG *vg = vv->vg;
+	float prox, proxNearest;
+	VG_Node *vn, *vnNearest;
+	VG_Vector v;
+
+	/* Prioritize points at a fixed distance. */
+	proxNearest = AG_FLT_MAX;
+	vnNearest = NULL;
+	AG_TAILQ_FOREACH(vn, &vg->nodes, list) {
+		if (!VG_NodeIsClass(vn, "Point")) {
+			continue;
+		}
+		v = vPos;
+		prox = vn->ops->pointProximity(vn, vv, &v);
+		if (prox <= vv->pointSelRadius) {
+			if (prox < proxNearest) {
+				proxNearest = prox;
+				vnNearest = vn;
+			}
+		}
+	}
+	if (vnNearest != NULL)
+		return (vnNearest);
+
+	/* Fallback to a general query. */
+	proxNearest = AG_FLT_MAX;
+	vnNearest = NULL;
+	AG_TAILQ_FOREACH(vn, &vg->nodes, list) {
+		if (vn->ops->pointProximity == NULL) {
+			continue;
+		}
+		v = vPos;
+		prox = vn->ops->pointProximity(vn, vv, &v);
+		if (prox < proxNearest) {
+			proxNearest = prox;
+			vnNearest = vn;
+		}
+	}
+	return (vnNearest);
+}
+
+/* Highlight and return the Point nearest to vPos. */
+static __inline__ void *
+VG_HighlightNearestPoint(VG_View *vv, VG_Vector vPos, void *ignore)
+{
+	VG *vg = vv->vg;
+	float prox, proxNearest = AG_FLT_MAX;
+	VG_Node *vn, *vnNearest = NULL;
+	VG_Vector v;
+
+	AG_TAILQ_FOREACH(vn, &vg->nodes, list) {
+		vn->flags &= ~(VG_NODE_MOUSEOVER);
+		if (vn->ops->pointProximity == NULL ||
+		    vn == ignore ||
+		    !VG_NodeIsClass(vn, "Point")) {
+			continue;
+		}
+		v = vPos;
+		prox = vn->ops->pointProximity(vn, vv, &v);
+		if (prox < vv->grid[0].ival) {
+			if (prox < proxNearest) {
+				proxNearest = prox;
+				vnNearest = vn;
+			}
+		}
+	}
+	return (vnNearest);
 }
 __END_DECLS
 
