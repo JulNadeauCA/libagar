@@ -60,6 +60,7 @@ extern const AG_Unit agFrequencyUnits[];
 extern const AG_Unit agPressureUnits[];
 extern const AG_Unit agMetabolicExpenditureUnits[];
 extern const AG_Unit agPercentageUnits[];
+extern const AG_Unit agKUnits[];
 
 static __inline__ double
 AG_Unit2Base(double n, const AG_Unit *unit)
