@@ -58,6 +58,7 @@ const char *agUnitGroupNames[] = {
 	N_("Pressure"),
 	N_("Human metabolic expenditure"),
 	N_("Percentage"),
+	N_("K units (MOSFET)"),
 	NULL
 };
 const AG_Unit *agUnitGroups[] = {
@@ -85,6 +86,7 @@ const AG_Unit *agUnitGroups[] = {
 	agPressureUnits,
 	agMetabolicExpenditureUnits,
 	agPercentageUnits,
+	agKUnits,
 };
 const int agnUnitGroups = sizeof(agUnitGroups) / sizeof(agUnitGroups[0]);
 
@@ -497,3 +499,11 @@ const AG_Unit agPercentageUnits[] = {
 	{ "%", "", N_("Percent"),	1.0, NULL },
 	{ NULL, NULL, NULL,		0.0, NULL }
 };
+
+/* Units of K (MOSFET parameter) */
+const AG_Unit agKUnits[] = {
+	{ "A/V^2", "A/V\xc2\xb2", N_("Amps/Volt^2"), 	1.0, NULL },
+	{ "mA/V^2", "mA/V\xc2\xb2", N_("Milliamps/Volt^2"), 1e-3, NULL },
+	{ "uA/V^2", "\xc2\xb5A/V\xc2\xb2", N_("Microamps/Volt^2"), 1e-6, NULL }
+};
+
