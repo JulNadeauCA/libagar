@@ -130,7 +130,7 @@ All of these functions will raise a fatal condition if an error is encountered.
 .Sh THREADS
 .nr nS 1
 .Ft int
-.Fn AG_ThreadCreate "AG_Thread *th" "void (*fn)(void *arg)" "void *arg"
+.Fn AG_ThreadCreate "AG_Thread *th" "void *(*fn)(void *arg)" "void *arg"
 .Pp
 .Ft void
 .Fn AG_ThreadCancel "AG_Thread th"
