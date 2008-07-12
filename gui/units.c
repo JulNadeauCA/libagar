@@ -502,8 +502,9 @@ const AG_Unit agPercentageUnits[] = {
 
 /* Units of K (MOSFET parameter) */
 const AG_Unit agKUnits[] = {
-	{ "A/V^2", "A/V\xc2\xb2", N_("Amps/Volt^2"), 	1.0, NULL },
+	{ "A/V^2", "A/V\xc2\xb2", N_("Amps/Volt^2"), 1.0, NULL },
 	{ "mA/V^2", "mA/V\xc2\xb2", N_("Milliamps/Volt^2"), 1e-3, NULL },
-	{ "uA/V^2", "\xc2\xb5A/V\xc2\xb2", N_("Microamps/Volt^2"), 1e-6, NULL }
+	{ "uA/V^2", "\xc2\xb5\x41/V\xc2\xb2", N_("Microamps/Volt^2"), 1e-6, NULL },
+	{ NULL, NULL, NULL, 0.0, NULL }
 };
 
