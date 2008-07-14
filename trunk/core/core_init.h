@@ -3,12 +3,12 @@
 #include "begin_code.h"
 
 __BEGIN_DECLS
-struct ag_object;
 struct ag_event;
 
-extern const char *agProgName;
-extern int agVerbose;
-extern int agTerminating;
+extern const char *agProgName;	/* User program name */
+extern int agVerbose;		/* Verbose console output */
+extern int agTerminating;	/* Application is exiting */
+extern int agGUI;		/* GUI is initialized */
 
 /* Flags for AG_InitCore() */
 #define AG_CORE_VERBOSE		0x01

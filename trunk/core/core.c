@@ -50,12 +50,13 @@
 pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
 #endif
 
-const char *agProgName = "";
-AG_Config *agConfig;
-void (*agAtexitFunc)(void) = NULL;
-void (*agAtexitFuncEv)(AG_Event *) = NULL;
-int agVerbose = 0;
-int agTerminating = 0;
+AG_Config *agConfig;				/* Global Agar config data */
+void (*agAtexitFunc)(void) = NULL;		/* User exit function */
+void (*agAtexitFuncEv)(AG_Event *) = NULL;	/* User exit handler */
+const char *agProgName = "";			/* User program name */
+int agVerbose = 0;				/* Verbose console output */
+int agTerminating = 0;				/* Application is exiting */
+int agGUI = 0;					/* GUI is initialized */
 
 int
 AG_InitCore(const char *progname, Uint flags)

@@ -47,6 +47,9 @@ AG_InitStaticIcon(AG_StaticIcon *icon)
 	Uint8 *dst;
 	int x, y;
 
+	if (!agGUI)
+		return;
+
 	icon->s = AG_SurfaceRGBA(icon->w, icon->h, agSurfaceFmt->BitsPerPixel,
 	    0, icon->Rmask, icon->Gmask, icon->Bmask, icon->Amask);
 	
