@@ -35,25 +35,33 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-Each
+The
 .Xr AG_Object 3
-has a set of generic properties, which are persistent by default.
+class provides a set of general-purpose properties (key=value pairs).
 The
 .Nm
-interface allows the reading and writing of the property values.
-All of the Agar widgets which provide bindings
+interface allows properties to be assigned and read.
+.Pp
+By default,
+.Ft AG_Object
+properties are persistent (preserved by the archiving process).
+.Pp
+Agar-GUI widgets
 (see
 .Xr AG_Widget 3 )
-can bind to properties with compatible types.
+can transparently bind to object properties based on their types
+(e.g., a widget providing an
+.Ft int
+binding can also bind to an
+.Dv AG_PROP_INT
+property of an object).
 .Pp
-Specialized "read" and "write" functions can be defined on a per-property
-basis, or on a per-object basis to allow properties of arbitrary types to
-be defined dynamically by the object.
-This allows, for example, some properties of an object to be read and written
-over a network connection.
+Magic can be tied to properties by specifying "read" and "write" functions.
+It is also useful to tie magic to the entire property table of an object
+(e.g., an object's property table could be generated in some way or accessed
+over a network connection).
 .Pp
-The Agar core library implements properties for the following primitive
-types:
+Agar implements built-in properties for the following primitive types:
 .Pp
 .Bd -literal
 enum ag_prop_type {
@@ -88,6 +96,10 @@ enum ag_prop_type {
 .Pp
 .Ft void
 .Fn AG_UnlockProps "void *obj"
+.Pp
+.Fn AGOBJECT_FOREACH_PROP "AG_Prop *var" "AG_Object *obj"
+.Pp
+.Fn AGOBJECT_FOREACH_PROP_OFTYPE "AG_Prop *var" "AG_Object *obj" "enum ag_prop_type type"
 .Pp
 .Ft int
 .Fn AG_GetBool "void *obj" "const char *key"
@@ -168,6 +180,13 @@ and
 .Fn AG_UnlockProps
 functions acquire/release the recursive mutex which is associated with an
 object's properties.
+.Pp
+The
+.Fn AGOBJECT_FOREACH_PROP
+macro iterates through the properties of
+.Fa obj .
+.Fn AGOBJECT_FOREACH_PROP_OFTYPE
+excludes properties not matching the specified type.
 .Pp
 The
 .Fn AG_(Type)

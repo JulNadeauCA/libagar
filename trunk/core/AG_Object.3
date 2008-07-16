@@ -815,11 +815,13 @@ This event originates from the previous parent.
 .It Fn renamed "void"
 The object's name has changed.
 .It Fn prop-added "AG_Prop *prop"
-A new
+A new propty has been added (see
 .Xr AG_Prop 3
-property has been added.
+for details).
 .It Fn prop-modified "AG_Prop *prop"
-The value of the given property has been modified.
+The value of the given property has been modified (see
+.Xr AG_Prop 3
+for details).
 .It Fn object-post-load-generic "const char *path"
 Invoked if
 .Fn AG_ObjectLoadGeneric

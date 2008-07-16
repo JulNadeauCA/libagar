@@ -48,6 +48,7 @@ typedef struct ag_object_dep {
 
 AG_TAILQ_HEAD(ag_objectq, ag_object);
 
+/* Object instance data. */
 typedef struct ag_object {
 	char name[AG_OBJECT_NAME_MAX];	/* Object ID (unique in parent) */
 	char *archivePath;		/* Path to archive (app-specific) */
@@ -104,6 +105,7 @@ typedef struct ag_object {
 #endif
 } AG_Object;
 
+/* Checksum method for ObjectCopyChecksum(). */
 enum ag_object_checksum_alg {
 	AG_OBJECT_MD5,
 	AG_OBJECT_SHA1,
@@ -115,38 +117,58 @@ enum ag_object_checksum_alg {
 				 AG_OBJECT_NON_PERSISTENT) == 0)
 #define AGOBJECT_DEBUG(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
 
-#define AGOBJECT_FOREACH_CHILD(var, ob, t)				\
+/* Iterate through direct child objects. */
+#define AGOBJECT_FOREACH_CHILD(var, ob, t) \
 	for((var) = (struct t *)AG_TAILQ_FIRST(&AGOBJECT(ob)->children); \
 	    (var) != (struct t *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
 	    (var) = (struct t *)AG_TAILQ_NEXT(AGOBJECT(var), cobjs))
 
-#define AGOBJECT_FOREACH_CLASS(var, ob, t, subclass)			\
-	AGOBJECT_FOREACH_CHILD(var,ob,t)				\
-		if (!AG_ObjectIsClass(var,(subclass))) {		\
-			continue;					\
-		} else
-
-#define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, t)			\
+/* Iterate through direct child objects (reverse order). */
+#define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, t) \
 	for((var) = (struct t *)AG_TAILQ_LAST(&AGOBJECT(ob)->children, \
 	    ag_objectq); \
 	    (var) != (struct t *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
 	    (var) = (struct t *)AG_TAILQ_PREV(AGOBJECT(var), ag_objectq, \
 	    cobjs))
 
+/* Iterate through direct child objects of a specified class. */
+#define AGOBJECT_FOREACH_CLASS(var, ob, t, subclass) \
+	AGOBJECT_FOREACH_CHILD(var,ob,t) \
+		if (!AG_ObjectIsClass(var,(subclass))) { \
+			continue; \
+		} else
+
+/* Iterate through object properties. */
+#define AGOBJECT_FOREACH_PROP(var, ob) \
+	for((var) = (struct ag_prop *)AG_TAILQ_FIRST(&AGOBJECT(ob)->props); \
+	    (var) != (struct ag_prop *)AG_TAILQ_END(&AGOBJECT(ob)->props); \
+	    (var) = (struct ag_prop *)AG_TAILQ_NEXT(var, props))
+
+/* Iterate through object properties of a specified type. */
+#define AGOBJECT_FOREACH_PROP_OFTYPE(var, ob, t) \
+	AGOBJECT_FOREACH_PROP(var,ob) \
+		if ((var)->type != (t)) { \
+			continue; \
+		} else
+
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
-#define OBJECT(ob)		AGOBJECT(ob)
-#define OBJECT_CLASS(ob)	AGOBJECT_CLASS(ob)
-#define OBJECT_RESIDENT(ob)	AGOBJECT_RESIDENT(ob)
-#define OBJECT_PERSISTENT(ob)	AGOBJECT_PERSISTENT(ob)
-#define OBJECT_DEBUG(ob) 	AGOBJECT_DEBUG(ob)
-#define OBJECT_INITIALIZER(obj,n,pfx,cls) \
-	AGOBJECT_INITIALIZER((obj),(n),(pfx),(cls))
-#define OBJECT_FOREACH_CHILD(var,ob,t) \
-	AGOBJECT_FOREACH_CHILD((var),(ob),t)
-#define OBJECT_FOREACH_CHILD_REVERSE(var,ob,t) \
-	AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),t)
-#define OBJECT_FOREACH_CLASS(var,ob,t,subclass) \
-	AGOBJECT_FOREACH_CLASS((var),(ob),t,(subclass))
+# define OBJECT(ob)		AGOBJECT(ob)
+# define OBJECT_CLASS(ob)	AGOBJECT_CLASS(ob)
+# define OBJECT_RESIDENT(ob)	AGOBJECT_RESIDENT(ob)
+# define OBJECT_PERSISTENT(ob)	AGOBJECT_PERSISTENT(ob)
+# define OBJECT_DEBUG(ob) 	AGOBJECT_DEBUG(ob)
+# define OBJECT_INITIALIZER(obj,n,pfx,cls) \
+         AGOBJECT_INITIALIZER((obj),(n),(pfx),(cls))
+# define OBJECT_FOREACH_CHILD(var,ob,t) \
+         AGOBJECT_FOREACH_CHILD((var),(ob),t)
+# define OBJECT_FOREACH_CHILD_REVERSE(var,ob,t) \
+         AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),t)
+# define OBJECT_FOREACH_CLASS(var,ob,t,subclass) \
+         AGOBJECT_FOREACH_CLASS((var),(ob),t,(subclass))
+# define OBJECT_FOREACH_PROP(var,ob) \
+         AGOBJECT_FOREACH_PROP((var),(ob))
+# define OBJECT_FOREACH_PROP_OFTYPE(var,ob,t) \
+         AGOBJECT_FOREACH_PROP_OFTYPE((var),(ob),(t))
 #endif /* _AGAR_INTERNAL || _USE_AGAR_CORE */
 
 __BEGIN_DECLS
