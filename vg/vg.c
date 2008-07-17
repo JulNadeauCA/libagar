@@ -125,7 +125,7 @@ VG_NodeDestroy(void *p)
 		VG_NodeDestroy(vnChld);
 	}
 	TAILQ_INIT(&vn->cNodes);
-	
+
 	if (vn->ops->destroy != NULL) {
 		vn->ops->destroy(vn);
 	}
@@ -148,6 +148,7 @@ VG_ReinitNodes(VG *vg)
 		VG_NodeDestroy(vnChld);
 	}
 	TAILQ_INIT(&vg->root->cNodes);
+	TAILQ_INIT(&vg->nodes);
 }
 
 void
