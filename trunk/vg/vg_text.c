@@ -52,8 +52,8 @@ Init(void *p)
 	vt->text[0] = '\0';
 	vt->align = VG_ALIGN_MC;
 	vt->nPtrs = 0;
-	vt->fontSize = agDefaultFont->size;
-	vt->fontFlags = agDefaultFont->flags;
+	vt->fontSize = agGUI ? agDefaultFont->size : 12;
+	vt->fontFlags = agGUI ? agDefaultFont->flags : 0;
 	vt->fontFace[0] = '\0';
 }
 
@@ -149,8 +149,8 @@ RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
 
 	AG_PushTextState();
 	if (vt->fontFace[0] != '\0' ||
-	    vt->fontSize != agDefaultFont->size ||
-	    vt->fontFlags != agDefaultFont->flags) {
+	    (agGUI && vt->fontSize != agDefaultFont->size) ||
+	    (agGUI && vt->fontFlags != agDefaultFont->flags)) {
 		AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags);
 	}
 	AG_TextColorVideo32(VG_MapColorRGB(VGNODE(vt)->color));
