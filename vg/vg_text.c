@@ -193,9 +193,16 @@ RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
 			    x - w/2,
 			    y - h/2);
 		} else {
-			AG_WidgetBlitGL(vv, suTmp,
-			    x - w/2,
-			    y - h/2);
+#ifdef HAVE_OPENGL
+			if (agView->opengl) {
+				AG_WidgetBlitGL(vv, suTmp,
+				    x - w/2,
+				    y - h/2);
+			} else
+#endif
+			{
+				/* TODO */
+			}
 			AG_SurfaceFree(suTmp);
 		}
 	}
