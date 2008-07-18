@@ -43,6 +43,12 @@ specified range, as an alternative to
 .Xr AG_Numerical 3
 and
 .Xr AG_Scrollbar 3 .
+Unlike
+.Ft AG_Scrollbar ,
+.Nm
+does not provide a
+.Sq visible
+binding.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -177,17 +183,12 @@ inside of the range defined by
 .Va min
 and
 .Va max .
-In scrolling applications,
-.Va visible
-is typically used to conveniently represent the size of the display area
-(its value is simply subtracted from the range).
 .Pp
 Note that the
-.Va min ,
-.Va max
+.Va min
 and
-.Va visible
-bindings must be of the same type as
+.Va max
+bindings must share the same type as
 .Va value .
 .Pp
 The
