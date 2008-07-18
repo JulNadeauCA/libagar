@@ -94,6 +94,9 @@ MouseMotion(AG_Event *event)
 			    subitem->nsubitems == 0) {
 				goto selnone;
 			}
+			if (subitem->flags & AG_MENU_ITEM_SEPARATOR) {
+				goto selnone;
+			}
 			if (pitem->sel_subitem != subitem &&
 			    (subitem->flags & AG_MENU_ITEM_NOSELECT) == 0) {
 				SelectItem(pitem, subitem);
