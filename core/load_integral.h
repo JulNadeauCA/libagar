@@ -1,5 +1,9 @@
 /*	Public domain	*/
 
+/*
+ * Serialization of integers.
+ */
+
 #ifdef _AGAR_INTERNAL
 # include <core/byteswap.h>
 #else

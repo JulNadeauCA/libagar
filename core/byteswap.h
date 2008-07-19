@@ -5,10 +5,12 @@
 
 #ifdef _AGAR_INTERNAL
 # include <config/have_64bit.h>
+# include <config/have_long_double.h>
 # include <config/_mk_big_endian.h>
 # include <config/_mk_little_endian.h>
 #else
 # include <agar/config/have_64bit.h>
+# include <agar/config/have_long_double.h>
 # include <agar/config/_mk_big_endian.h>
 # include <agar/config/_mk_little_endian.h>
 #endif
@@ -110,7 +112,7 @@ AG_Swap32(Uint32 x)
  * Swap 64-bit
  */
 #ifdef HAVE_64BIT
-#if defined(__GNUC__) && defined(__i386__)
+# if defined(__GNUC__) && defined(__i386__)
 static __inline__ Uint64
 AG_Swap64(Uint64 x)
 {
@@ -124,7 +126,7 @@ AG_Swap64(Uint64 x)
 		"0" (v.s.a), "1" (v.s.b)); 
 	return (v.u);
 }
-#elif defined(__GNUC__) && defined(__x86_64__)
+# elif defined(__GNUC__) && defined(__x86_64__)
 static __inline__ Uint64
 AG_Swap64(Uint64 x)
 {
@@ -133,7 +135,7 @@ AG_Swap64(Uint64 x)
 		"0" (x));
 	return (x);
 }
-#else
+# else /* !MD */
 static __inline__ Uint64
 AG_Swap64(Uint64 x)
 {
@@ -147,23 +149,90 @@ AG_Swap64(Uint64 x)
 	x |= AG_Swap32(high);
 	return (x);
 }
-#endif
+# endif /* MD */
 #endif /* HAVE_64BIT */
+
+/*
+ * Swap floating-point types.
+ */
+static __inline__ float
+AG_SwapFLT(float v)
+{
+	union { Uint32 i; float v; } u;
+
+	u.v = v;
+	u.i = AG_Swap32(u.i);
+	return (u.v);
+}
+
+#ifdef HAVE_64BIT
+static __inline__ double
+AG_SwapDBL(double v)
+{
+	union { Uint64 i; double v; } u;
+	
+	u.v = v;
+	u.i = AG_Swap64(u.i);
+	return (u.v);
+}
+#else
+static __inline__ double
+AG_SwapDBL(double v)
+{
+	union { Uint8 data[8]; double v; } uIn;
+	union { Uint8 data[8]; double v; } uOut;
+	int i;
+	
+	uIn.v = v;
+	for (i = 0; i < 8; i++) {
+		uOut.data[i] = uIn.data[7-i];
+	}
+	return (uOut.v);
+}
+#endif /* HAVE_64BIT */
+
+#ifdef HAVE_LONG_DOUBLE
+static __inline__ long double
+AG_SwapLDBL(long double v)
+{
+	union { Uint8 data[10]; long double v; } uIn;
+	union { Uint8 data[10]; long double v; } uOut;
+	int i;
+
+	uIn.v = v;
+	for (i = 0; i < 10; i++) {
+		uOut.data[i] = uIn.data[9-i];
+	}
+	return (uOut.v);
+}
+#endif /* HAVE_LONG_DOUBLE */
 
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 # define AG_SwapLE16(X)	AG_Swap16(X)
 # define AG_SwapLE32(X)	AG_Swap32(X)
 # define AG_SwapLE64(X)	AG_Swap64(X)
+# define AG_SwapLEFLT(X) AG_SwapFLT(X)
+# define AG_SwapLEDBL(X) AG_SwapDBL(X)
+# define AG_SwapLELDBL(X) AG_SwapLDBL(X)
 # define AG_SwapBE16(X)	(X)
 # define AG_SwapBE32(X)	(X)
 # define AG_SwapBE64(X)	(X)
+# define AG_SwapBEFLT(X) (X)
+# define AG_SwapBEDBL(X) (X)
+# define AG_SwapBELDBL(X) (X)
 #else
 # define AG_SwapLE16(X)	(X)
 # define AG_SwapLE32(X)	(X)
 # define AG_SwapLE64(X)	(X)
+# define AG_SwapLEFLT(X) (X)
+# define AG_SwapLEDBL(X) (X)
+# define AG_SwapLELDBL(X) (X)
 # define AG_SwapBE16(X)	AG_Swap16(X)
 # define AG_SwapBE32(X)	AG_Swap32(X)
 # define AG_SwapBE64(X)	AG_Swap64(X)
+# define AG_SwapBEFLT(X) AG_SwapFLT(X)
+# define AG_SwapBEDBL(X) AG_SwapDBL(X)
+# define AG_SwapBELDBL(X) AG_SwapLDBL(X)
 #endif
 
 #ifdef __cplusplus
