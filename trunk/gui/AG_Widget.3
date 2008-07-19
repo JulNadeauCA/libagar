@@ -85,28 +85,27 @@ section of the widget's manual page.
 .Xr AG_Object 3 ->
 .Nm .
 .Sh CLASS OPERATIONS
-The
-.Ft AG_WidgetClass
-structure adds some operations to
-.Ft AG_ObjectClass :
+Object operations specific to the
+.Nm
+class are defined as follows:
 .Bd -literal
 typedef struct ag_widget_class {
 	struct ag_object_class _inherit;
-	void (*draw)(void *p);
-	void (*size_request)(void *, AG_SizeReq *);
-	int  (*size_allocate)(void *, const AG_SizeAlloc *);
+	void (*draw)(AG_Widget *w);
+	void (*size_request)(AG_Widget *w, AG_SizeReq *req);
+	int  (*size_allocate)(AG_Widget *w, const AG_SizeAlloc *alloc);
 } AG_WidgetClass;
 .Ed
 .Pp
 The
 .Va draw
-operation (if not NULL) is responsible for rendering the widget.
+operation renders the widget to the display.
 Throughout the documentation, the
 .Va draw
 operation is referred to as the
 .Sq rendering context ,
-and some functions such as
-.Fn AG_WidgetBlitSurface
+and some functions (such as
+.Fn AG_WidgetBlitSurface )
 are not safe to invoke in any other context.
 .Pp
 The
@@ -119,17 +118,26 @@ widget might return the expected size in pixels of the rendered label's text.
 .Pp
 The
 .Va size_allocate
-function notifies the widget that it has been allocated a new size or position
+callback notifies the widget that it has been allocated a new size or position
 within its parent.
-The widget is not allowed to modify the allocation, but if
+The widget is not allowed to modify the allocation at this point, but if
 .Va size_allocate
 returns -1, the special flag
 .Dv AG_WIDGET_UNDERSIZE
 is automatically set, preventing
 .Va draw
-from being invoked at all.
+from being invoked until the widget is rescaled to an acceptable size.
 .Sh WIDGET SIZING
 .nr nS 1
+.Ft "void"
+.Fn AG_Expand "AG_Widget *widget"
+.Pp
+.Ft "void"
+.Fn AG_ExpandHoriz "AG_Widget *widget"
+.Pp
+.Ft "void"
+.Fn AG_ExpandVert "AG_Widget *widget"
+.Pp
 .Ft "void"
 .Fn AG_WidgetSizeReq "AG_Widget *widget" "AG_SizeReq *req"
 .Pp
@@ -137,6 +145,26 @@ from being invoked at all.
 .Fn AG_WidgetSizeAlloc "AG_Widget *widget" "AG_SizeAlloc *alloc"
 .Pp
 .nr nS 0
+The
+.Fn AG_Expand
+function arranges for the widget to expand, filling all available area
+in its parent container widget.
+.Fn AG_ExpandHoriz
+and
+.Fn AG_ExpandVert
+cause the widget to expand to fill available space horizontally or vertically.
+.Pp
+The
+.Fn AG_WidgetSizeReq
+function invokes the
+.Va size_request
+operation of the widget and returns its size requisition into
+.Fa req .
+.Fn AG_WidgetSizeAlloc
+allocates the given position and geometry of the widget.
+These functions are generally used to implement
+.Sq container
+widgets.
 The
 .Ft AG_SizeReq
 and
@@ -152,27 +180,10 @@ typedef struct ag_size_alloc {
 	int x, y;			/* Allocated position in pixels */
 } AG_SizeAlloc;
 .Ed
-.Pp
-The
-.Fn AG_WidgetSizeReq
-function invokes the
-.Va size_request
-operation of the widget and returns its size requisition into
-.Fa req .
-.Fn AG_WidgetSizeAlloc
-allocates the given position and geometry of the widget.
-These functions are generally used in the
-.Va size_request
-and
-.Va size_allocate
-functions of container widgets.
 .Sh INPUT STATE
 The input state of a widget determines whether the user is allowed to
 modify whatever data the widget is accessing.
 The way it is implemented is widget-specific.
-In the case of read-only type widgets such as
-.Xr AG_Label 3 ,
-the input state is irrelevant.
 .Pp
 .nr nS 1
 .Ft "void"
