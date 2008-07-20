@@ -171,6 +171,8 @@ InitGlobals(void)
 	AG_RegisterClass(&agDisplayClass);
 	agVideoInfo = SDL_GetVideoInfo();
 	agGUI = 1;
+
+	AG_RegisterBuiltinLabelFormats();
 }
 
 /*

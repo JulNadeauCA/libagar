@@ -13,15 +13,20 @@
 
 #include "begin_code.h"
 
-#define AG_LABEL_MAX		1024
-#define AG_LABEL_MAX_POLLPTRS	32
+#define AG_LABEL_MAX		1024	/* Max format string length */
+#define AG_LABEL_MAX_POLLPTRS	32	/* Max polled pointers */
 
+struct ag_label;
+struct ag_text_cache;
+
+/* Type of label */
 enum ag_label_type {
 	AG_LABEL_STATIC,		/* Static text */
 	AG_LABEL_POLLED,		/* Polling (thread unsafe) */
 	AG_LABEL_POLLED_MT		/* Polling (thread safe) */
 };
 
+/* Bit flag description. */
 struct ag_label_flag {
 	Uint idx;			/* Flag arg in format string */
 	const char *text;		/* Label text */
@@ -30,7 +35,13 @@ struct ag_label_flag {
 	AG_SLIST_ENTRY(ag_label_flag) lflags;
 };
 
-struct ag_text_cache;
+/* Extended format specifier for polled labels. */
+typedef void (*AG_LabelFormatFn)(struct ag_label *, char *, size_t, int);
+typedef struct ag_label_format_spec {
+	char *fmt;
+	size_t fmtLen;
+	AG_LabelFormatFn fn;
+} AG_LabelFormatSpec;
 
 typedef struct ag_label {
 	struct ag_widget wid;
@@ -94,6 +105,10 @@ void	 AG_LabelFlagNew(AG_Label *, Uint, const char *,
 	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG16,(Uint16)(v))
 #define	 AG_LabelFlag32(lbl,i,s,v) \
 	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG32,(Uint32)(v))
+
+#define AG_LABEL_ARG(_type) (*(_type *)label->poll.ptrs[fPos])
+void	 AG_RegisterLabelFormat(const char *, AG_LabelFormatFn);
+void	 AG_RegisterBuiltinLabelFormats(void);
 
 /* Legacy */
 #define AG_LabelPrintf AG_LabelText
