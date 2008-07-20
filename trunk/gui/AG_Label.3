@@ -41,8 +41,8 @@ The
 widget displays single-line or multi-line text.
 In the case of
 .Sq polled
-labels, the text can contain directives such that specific data is
-dereferenced on rendering.
+labels, the text can contain elements which are going to be dereferenced
+on rendering.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
@@ -70,31 +70,37 @@ dereferenced on rendering.
 .Ft "void"
 .Fn AG_LabelSizeHint "AG_Label *label" "Uint nlines" "const char *text"
 .Pp
+.Ft "void"
+.Fn AG_RegisterLabelFormat "const char *fmt" "void (*fn)(AG_Label *label, char *s, size_t len, int fPos)"
+.Pp
+.Ft "void"
+.Fn AG_LABEL_ARG "TYPE type"
+.Pp
 .nr nS 0
 The
 .Fn AG_LabelNew
 function allocates, initializes and attaches a
 .Nm
-widget initially displaying the given text (which can be changed afterwards -
-see
-.Dq STATIC LABELS
-section below).
+widget initially displaying the given text.
 The
 .Fn AG_LabelNewString
 variant accepts a non-formatted string.
+See the
+.Dq STATIC LABELS
+section for more details.
 .Pp
 The
 .Fn AG_LabelNewPolled
 function creates a new
 .Nm
-widget displaying a string of text which contains references to live data
-(see
-.Dq POLLED LABELS
-section below).
+widget displaying a string of text which contains references to variables.
 The
 .Fn AG_LabelNewPolledMT
 variant accepts a pointer to a mutex that will be automatically acquired
 and release as the widget accesses the referenced data.
+See the
+.Dq POLLED LABELS
+section for more details.
 .Pp
 The
 .Fn AG_LabelSetPadding
@@ -122,84 +128,6 @@ lines of the given text string.
 If
 .Fa nlines
 is 0, the number of lines will be based on the contents of the text string.
-The
-.Fa nlines
-parameter is necessary because it is possible to poll string values that
-are possibly multi-line.
-.Sh POLLED LABELS
-Polled labels are specified to
-.Fn AG_LabelNewPolled
-and
-.Fn AG_LabelNewPolledMT
-as a format string containing regular text
-with zero or more
-.Xr printf 3
-like directives, except that the argument following the format string are
-pointers to the data instead.
-.Pp
-Note that a call to
-.Fn AG_LabelSizeHint
-is always recommended in the case of polled labels, such that the label
-is initially scaled to an optimal size, given the data that we expect the
-label will have to display.
-.Pp
-Possible format string directives include:
-.Pp
-.Bl -tag -compact -width "%llu, %llo, %llx "
-.It %d, %i
-int
-.It %lld, %lli
-Sint64
-.It %o, %u, %x, %X
-Uint
-.It %llu, %llo, %llx
-Uint64
-.It %c
-char
-.It %s
-char *
-.It %p
-void *
-.It %f
-float *
-.It %F
-double *
-.It %[u8]
-Uint8 *
-.It %[s8]
-Sint8 *
-.It %[u16]
-Uint16 *
-.It %[s16]
-Sint16 *
-.It %[u32]
-Uint32 *
-.It %[s32]
-Sint32 *
-.It %[wxh]
-AG_Rect *
-.It %[x,y]
-AG_Rect *
-.It %[rect]
-AG_Rect *
-.It %[flags]
-Uint *
-.It %[flags8]
-Uint8 *
-.It %[flags16]
-Uint16 *
-.It %[flags32]
-Uint32 *
-.El
-.Pp
-Note that the
-.Sq flags
-directive require that bit (or bitmask) descriptions be provided using the
-.Fn AG_LabelFlag*
-functions (see
-.Dq BITMASK DESCRIPTIONS
-section below).
-.Pp
 .Sh STATIC LABELS
 .nr nS 1
 .Ft void
@@ -215,7 +143,137 @@ and
 .Fn AG_LabelString
 change the text displayed by the label.
 .Pp
-.Sh BITMASK DESCRIPTIONS
+.Sh POLLED LABELS
+Polled labels are specified to
+.Fn AG_LabelNewPolled
+and
+.Fn AG_LabelNewPolledMT
+as a format string containing regular text
+with zero or more
+.Xr printf 3
+like directives.
+Arguments following the format string are expected to be pointers to the
+actual variables, which
+.Nm
+will dereference at the time of rendering using either built-in methods
+or user-specified functions.
+.Pp
+Due to memory alignment and format issues, the format string for polled labels
+is non-standard.
+Built-in format specifiers include:
+.Pp
+.Bl -tag -compact -width "%llu, %llo, %llx "
+.It %d, %i
+.Ft "int"
+.It %ld, %li
+.Ft "long int"
+.It %lld, %lli
+.Ft "long long int"
+or
+.Ft "Sint64"
+.It %o, %u, %x, %X
+.Ft "unsigned int"
+.It %lu, %lo, %lx
+.Ft "long unsigned int"
+.It %llu, %llo, %llx
+.Ft "long long unsigned int"
+or
+.Ft "Uint64"
+.It %c
+.Ft "char"
+.It %s
+.Ft "char *"
+.It %p
+.Ft "void *"
+.It %f, %g
+.Ft "float *"
+.It %lf, %lg
+.Ft "double *"
+.It %llf, %llg
+.Ft "long double *"
+.It %[u8]
+.Ft "Uint8 *"
+.It %[s8]
+.Ft "Sint8 *"
+.It %[u16]
+.Ft "Uint16 *"
+.It %[s16]
+.Ft "Sint16 *"
+.It %[u32]
+.Ft "Uint32 *"
+.It %[s32]
+.Ft "Sint32 *"
+.It %[flags]
+.Ft "Uint *"
+.It %[flags8]
+.Ft "Uint8 *"
+.It %[flags16]
+.Ft "Uint16 *"
+.It %[flags32]
+.Ft "Uint32 *"
+.El
+.Pp
+The
+.Sq %[flags*]
+directives require that bit (or bitmask) descriptions be provided using the
+.Fn AG_LabelFlag*
+functions (see
+.Dq FLAG DESCRIPTIONS
+section below).
+.Pp
+It is possible to register custom format specifiers (%[foo]) with the
+.Fn AG_RegisterLabelFormat
+function.
+The callback function provided is expected to fill the contents
+of fixed-size buffer
+.Fa s
+with a string.
+The argument is retrieved using the
+.Fn AG_LABEL_ARG
+macro.
+.Pp
+Note that a call to
+.Fn AG_LabelSizeHint
+(or
+.Xr AG_ExpandHoriz 3 )
+is usually recommended in the case of polled labels, since the exact size of
+the string cannot be known until rendering.
+.Pp
+The following specifiers are not built-in, but they should be considered
+reserved for use by a math library.
+The FreeSG math library (http://freesg.org/) does implement these extensions.
+.Pp
+.Bl -tag -compact -width "%[M44] "
+.It %[C]
+Complex number
+.It %[V]
+Vector in R^n
+.It %[V2]
+Vector in R^2
+.It %[V3]
+Vector in R^3
+.It %[V4]
+Vector in R^4
+.It %[M]
+Matrix (m*n)
+.It %[M33]
+Matrix (3*3)
+.It %[M44]
+Matrix (4*4)
+.It %[T]
+Time (seconds)
+.It %[R]
+Rectangular coordinates
+.It %[Po]
+Polar coordinates
+.It %[Pa]
+Parabolic coordinates
+.It %[Sp]
+Spherical coordinates
+.It %[Cy]
+Cylindrical coordinates
+.El
+.Sh FLAG DESCRIPTIONS
 .nr nS 1
 .Ft "void"
 .Fn AG_LabelFlag "AG_Label *label" "Uint index" "const char *descr" "Uint bitmask"
@@ -236,7 +294,7 @@ The
 .Fn AG_LabelFlag16
 and
 .Fn AG_LabelFlag32
-functions register a new bitmask description for the pointer at
+functions register a new bit "flag" description for the variable at
 .Fa index .
 If the pointed value AND'ed with
 .Fa bitmask
@@ -286,6 +344,23 @@ The following example would display
 	lbl = AG_LabelNewPolled(win, 0, "MyFlags=%[flags]", &MyFlags);
 	AG_LabelFlag(lbl, 0, "FOO_FLAG", FOO_FLAG);
 	AG_LabelFlag(lbl, 0, "BAR_FLAG", BAR_FLAG);
+}
+.Ed
+.Pp
+The following code fragment defines a custom format specifier for use
+in polled labels:
+.Bd -literal
+void
+PrintMyVector(AG_Label *label, char *s, size_t len, int fPos)
+{
+	struct my_vector *my = AG_LABEL_ARG(void *);
+	snprintf(s, len, "[%f,%f]", my->x, my->y);
+}
+
+{
+	struct my_vector v;
+	AG_RegisterLabelFormat("myVec", PrintMyVector);
+	AG_LabelNewPolled(parent, 0, "%[myVec]", &v);
 }
 .Ed
 .Sh SEE ALSO
