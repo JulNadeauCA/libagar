@@ -39,10 +39,11 @@ typedef struct ag_object_class {
 
 /* Dependency with respect to another object. */
 typedef struct ag_object_dep {
-	char		 *path;		/* Unresolved object path */
+	int persistent;			/* Include in archives */
+	char *path;			/* Unresolved object path */
 	struct ag_object *obj;		/* Resolved object */
-	Uint32		  count;	/* Reference count */
-#define AG_OBJECT_DEP_MAX (0xffffffff-2) /* If reached, stay resident */
+	Uint32 count;			/* Reference count */
+#define AG_OBJECT_DEP_MAX (0xffffffff-2)
 	AG_TAILQ_ENTRY(ag_object_dep) deps;
 } AG_ObjectDep;
 
@@ -247,7 +248,7 @@ int	 AG_ObjectLoadGenericFromFile(void *, const char *);
 int	 AG_ObjectResolveDeps(void *);
 int	 AG_ObjectLoadDataFromFile(void *, int *, const char *);
 
-AG_ObjectDep	*AG_ObjectAddDep(void *, void *);
+AG_ObjectDep	*AG_ObjectAddDep(void *, void *, int);
 int	 	 AG_ObjectFindDep(void *, Uint32, void **);
 void		 AG_ObjectDelDep(void *, const void *);
 Uint32		 AG_ObjectEncodeName(void *, const void *);

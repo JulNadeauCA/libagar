@@ -180,7 +180,7 @@ void
 MAP_NodeMaskBitmap(MAP *m, MAP_NodeMask *mask, void *pobj, Uint32 offs)
 {
 	if (m != NULL && pobj != NULL) {
-		AG_ObjectAddDep(m, pobj);
+		AG_ObjectAddDep(m, pobj, 1);
 	}
 	if (pobj != NULL) {
 		AG_ObjectPageIn(pobj, AG_OBJECT_GFX);

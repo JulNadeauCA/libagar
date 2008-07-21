@@ -545,7 +545,7 @@ AGOBJECT_FOREACH_CLASS(my_obj, parent_obj, my_class, "MyClass") {
 .Fn AG_ObjectInUse "AG_Object *obj"
 .Pp
 .Ft "AG_ObjectDep *"
-.Fn AG_ObjectAddDep "AG_Object *obj" "AG_Object *depobj"
+.Fn AG_ObjectAddDep "AG_Object *obj" "AG_Object *depobj" "int persistent"
 .Pp
 .Ft "void"
 .Fn AG_ObjectDelDep "AG_Object *obj" "AG_Object *depobj"
@@ -565,6 +565,9 @@ or 0 if it isn't.
 either creates a new dependency upon
 .Fa depobj
 or increments the reference count if one exists.
+If the
+.Fa persistent
+flag is set, the reference is preserved in object archives.
 .Fn AG_ObjectDelDep
 decrements the reference count upon
 .Fa depobj

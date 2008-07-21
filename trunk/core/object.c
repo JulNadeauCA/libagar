@@ -1345,11 +1345,15 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	AG_WriteUint32(ds, 0);
 	for (dep = TAILQ_FIRST(&ob->deps), count = 0;
 	     dep != TAILQ_END(&ob->deps);
-	     dep = TAILQ_NEXT(dep, deps), count++) {
+	     dep = TAILQ_NEXT(dep, deps)) {
 		char depName[AG_OBJECT_PATH_MAX];
 		
+		if (!dep->persistent) {
+			continue;
+		}
 		AG_ObjectCopyName(dep->obj, depName, sizeof(depName));
 		AG_WriteString(ds, depName);
+		count++;
 	}
 	AG_WriteUint32At(ds, count, countOffs);
 
@@ -1440,6 +1444,7 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 		dep->path = AG_ReadString(ds);
 		dep->obj = NULL;
 		dep->count = 0;
+		dep->persistent = 1;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
 #ifdef OBJDEBUG
 		Debug(ob, "Dependency: %s\n", dep->path);
@@ -1665,7 +1670,7 @@ AG_ObjectSetClass(void *p, void *cls)
 
 /* Add a new dependency or increment the reference count on one. */
 AG_ObjectDep *
-AG_ObjectAddDep(void *p, void *depobj)
+AG_ObjectAddDep(void *p, void *depobj, int persistent)
 {
 	AG_Object *ob = p;
 	AG_ObjectDep *dep;
@@ -1689,6 +1694,7 @@ AG_ObjectAddDep(void *p, void *depobj)
 		dep = Malloc(sizeof(AG_ObjectDep));
 		dep->obj = depobj;
 		dep->count = 1;
+		dep->persistent = persistent;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
 	}
 
