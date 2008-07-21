@@ -612,7 +612,9 @@ AG_TextFontLookup(const char *face, int size, Uint flags)
 	int rv;
 
 	AG_MutexLock(&agTextLock);
-	agTextState->font = AG_FetchFont(face, size, flags);
+	if ((agTextState->font = AG_FetchFont(face, size, flags)) == NULL) {
+		AG_FatalError("No such font: %s:%d", face, size);
+	}
 	rv = (agTextState->font != NULL) ? 0 : -1;
 	AG_MutexUnlock(&agTextLock);
 	return (rv);
