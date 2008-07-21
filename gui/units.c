@@ -156,7 +156,7 @@ AG_UnitFormat(double n, const AG_Unit ugroup[], char *buf, size_t len)
 	const AG_Unit *ubest;
 
 	ubest = AG_BestUnit(ugroup, n);
-	return (Snprintf(buf, len, "%f%s", AG_Base2Unit(n, ubest),
+	return (Snprintf(buf, len, "%.2f%s", AG_Base2Unit(n, ubest),
 	    ubest->abbr[0] != '\0' ? ubest->abbr : ubest->key));
 }
 
