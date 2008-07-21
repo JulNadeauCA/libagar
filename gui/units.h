@@ -1,16 +1,15 @@
 /*	Public domain	*/
 
+#ifndef _AGAR_WIDGET_UNITS_H_
+#define _AGAR_WIDGET_UNITS_H_
+
 #ifdef _AGAR_INTERNAL
 #include <config/historical_units.h>
 #else
 #include <agar/config/historical_units.h>
 #endif
 
-#ifndef _AGAR_WIDGET_UNITS_H_
-#define _AGAR_WIDGET_UNITS_H_
 #include "begin_code.h"
-
-#define AG_UNIT_KEY_MAX	32
 
 typedef struct ag_unit {
 	char *key;		/* Key */
