@@ -9,13 +9,16 @@ What is it?
 Agar is a type of sugar polymer obtained from seaweed and red algae. Agar
 becomes gelatinous in water and is primarly used as a culture medium for
 microbiological work. Agar is also the name of an open source toolkit for
-portable graphical applications.
+portable graphical applications. Agar consists of two libraries: Agar-Core
+and Agar-GUI.
 
-Agar consists of two libraries: Agar-Core and Agar-GUI.
-
-Agar-Core implements an object system that provides support for object
-oriented programming under any language, including ANSI C. Agar-Core also
-provides portable interfaces to some operating system services.
+The Agar-Core library provides a simple object system which allows for a
+lightweight, consistent and portable form of object-oriented programming
+under multiple languages including C, C++ and Perl (Agar-Core itself is
+implemented in C). The main functions of the object system are inheritance,
+serialization, virtual functions / events and per-object management of
+resources such as timers and threads. A number of portability interfaces
+are also provided by Agar-Core.
 
 Agar-GUI is an extensive GUI toolkit designed to work with anything that
 has a display and a pointing device (or keyboard). Currently, it provides
@@ -53,15 +56,15 @@ See: http://libagar.org/credits.html.
 
 Other libraries based on Agar
 -----------------------------
-Here are some useful libraries are based on Agar-Core and Agar-GUI. Some of
-them are bundled with this source distribution, but you need to explicitely
-link your application against them.
+There are a number of useful libraries based on Agar. Some of them are
+bundled with this source distribution (Agar-VG, etc), but you will need
+to explicitely link your application against them in order to use them.
 
-Agar-DEV	Developer/debugging tools (bundled, use `agar-dev-config`)
 Agar-VG		Vector graphics library (bundled, use `agar-vg-config`)
-Agar-SC		Scientific computing utilities (bundled, use `agar-sc-config`)
 Agar-RG		2D graphic rendering/edition (bundled, use `agar-rg-config`)
 Agar-MAP	2D game levels/edition (bundled, use `agar-map-config`)
-FreeSG		3D engine (see http://freesg.org/)
-CADTools	CAD/CAM libraries (see http://hypertriton.com/cadtools/)
+Agar-DEV	Developer/debugging tools (bundled, use `agar-dev-config`)
+FreeSG		Math, computational geometry, 3D rendering (http://freesg.org/)
+Edacious	Electronics design (http://edacious.hypertriton.com/)
+CADTools	Computer-aided design (http://cadtools.hypertriton.com/)
 
