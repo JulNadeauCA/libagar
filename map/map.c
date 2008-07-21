@@ -557,7 +557,7 @@ MAP_ItemSetTile(MAP_Item *r, MAP *map, RG_Tileset *ts, Uint32 tile_id)
 		AG_ObjectDelDep(map, r->r_tile.obj);
 		AG_ObjectPageOut(r->r_tile.obj);
 	} else {
-		AG_ObjectAddDep(map, ts);
+		AG_ObjectAddDep(map, ts, 1);
 		if (AG_ObjectPageIn(ts) == -1)
 			AG_FatalError("MAP_ItemSetTile: Paging tileset: %s",
 			    AG_GetError());
@@ -605,7 +605,7 @@ MAP_ItemSetAnim(MAP_Item *r, MAP *map, RG_Tileset *ts, Uint32 anim_id)
 		AG_ObjectPageOut(r->r_anim.obj);
 	}
 	if (ts != NULL) {
-		AG_ObjectAddDep(map, ts);
+		AG_ObjectAddDep(map, ts, 1);
 		if (AG_ObjectPageIn(ts) == -1)
 			AG_FatalError("MAP_ItemSetAnim: Paging tileset: %s",
 			    AG_GetError());
@@ -681,11 +681,11 @@ MAP_NodeMoveItem(MAP *sm, MAP_Node *sn, MAP_Item *r, MAP *dm, MAP_Node *dn,
 	switch (r->type) {
 	case MAP_ITEM_TILE:
 		AG_ObjectDelDep(sm, r->r_tile.obj);
-		AG_ObjectAddDep(dm, r->r_tile.obj);
+		AG_ObjectAddDep(dm, r->r_tile.obj, 1);
 		break;
 	case MAP_ITEM_ANIM:
 		AG_ObjectDelDep(sm, r->r_anim.obj);
-		AG_ObjectAddDep(dm, r->r_anim.obj);
+		AG_ObjectAddDep(dm, r->r_anim.obj, 1);
 		break;
 	default:
 		break;
@@ -1088,7 +1088,7 @@ MAP_AttachActor(MAP *m, MAP_Actor *a)
 		return;
 	}
 	
-	AG_ObjectAddDep(m, a);
+	AG_ObjectAddDep(m, a, 1);
 
 	a->type = AG_ACTOR_MAP;
 	a->parent = m;

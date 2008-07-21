@@ -134,7 +134,7 @@ SelectObject(AG_Event *event)
 
 	*object = it->p1;
 
-	AG_ObjectAddDep(os->pobj, *object);
+	AG_ObjectAddDep(os->pobj, *object, 1);
 
 	if (os->flags & AG_OBJSEL_PAGE_DATA) {
 		AG_ObjectPageIn(*object);
