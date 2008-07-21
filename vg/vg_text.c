@@ -148,9 +148,9 @@ RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
 	SDL_Surface *suTmp = NULL;
 
 	AG_PushTextState();
-	if (vt->fontFace[0] != '\0' ||
-	    (agGUI && vt->fontSize != agDefaultFont->size) ||
-	    (agGUI && vt->fontFlags != agDefaultFont->flags)) {
+	if (vt->fontFace[0] != '\0' &&
+	   ((agGUI && vt->fontSize != agDefaultFont->size) ||
+	    (agGUI && vt->fontFlags != agDefaultFont->flags))) {
 		AG_TextFontLookup(vt->fontFace, vt->fontSize, vt->fontFlags);
 	}
 	AG_TextColorVideo32(VG_MapColorRGB(VGNODE(vt)->color));
