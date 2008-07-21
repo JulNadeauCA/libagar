@@ -112,6 +112,7 @@ VG_Init(VG *vg, Uint flags)
 	VG_SetColorRGB(vg->root, 0, 150, 0);
 }
 
+/* Delete and free a node (including its children). */
 void
 VG_NodeDestroy(void *p)
 {
@@ -122,9 +123,11 @@ VG_NodeDestroy(void *p)
 	     vnChld != TAILQ_END(&vn->cNodes);
 	     vnChld = vnNext) {
 		vnNext = TAILQ_NEXT(vnChld, tree);
+		TAILQ_REMOVE(&vnChld->vg->nodes, vnChld, list);
 		VG_NodeDestroy(vnChld);
 	}
 	TAILQ_INIT(&vn->cNodes);
+	TAILQ_REMOVE(&vn->vg->nodes, vn, list);
 
 	if (vn->ops->destroy != NULL) {
 		vn->ops->destroy(vn);
@@ -232,7 +235,6 @@ VG_Delete(void *pVn)
 	if (vn->parent != NULL) {
 		TAILQ_REMOVE(&vn->parent->cNodes, vn, tree);
 	}
-	TAILQ_REMOVE(&vg->nodes, vn, list);
 	VG_NodeDestroy(vn);
 	VG_Unlock(vg);
 	return (0);
