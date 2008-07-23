@@ -538,12 +538,15 @@ Draw(void *p)
 
 	VG_Lock(vg);
 
-	if (vv->curtool != NULL && vv->curtool->ops->predraw != NULL)
+	if (vv->curtool != NULL && vv->curtool->ops->predraw != NULL) {
 		vv->curtool->ops->predraw(vv->curtool, vv);
-	if (vv->draw_ev != NULL)
+	}
+	if (vv->draw_ev != NULL) {
 		vv->draw_ev->handler(vv->draw_ev);
-	if (vv->curtool != NULL && vv->curtool->ops->postdraw != NULL)
+	}
+	if (vv->curtool != NULL && vv->curtool->ops->postdraw != NULL) {
 		vv->curtool->ops->postdraw(vv->curtool, vv);
+	}
 
 	DrawNode(vg, vg->root, vv);
 	VG_Unlock(vg);
@@ -571,6 +574,7 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 	int i;
 
 	AG_ObjectLock(vv);
+
 	for (i = 0; i < vv->nEditAreas; i++) {
 		AG_ObjectFreeChildren(vv->editAreas[i]);
 		AG_WindowUpdate(AG_ParentWindow(vv->editAreas[i]));
@@ -582,7 +586,6 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 		if (vv->curtool->editWin != NULL) {
 			AG_WindowHide(vv->curtool->editWin);
 		}
-		vv->curtool->vgv = NULL;
 		vv->curtool->selected = 0;
 	}
 
