@@ -96,11 +96,13 @@ VG_TextPrintfPolled(VG_Text *vt, const char *fmt, ...)
 	const char *p;
 	va_list ap;
 	
+	VG_Lock(VGNODE(vt)->vg);
+	
 	if (fmt != NULL) {
 		Strlcpy(vt->text, fmt, sizeof(vt->text));
 	} else {
 		vt->text[0] = '\0';
-		return;
+		goto out;
 	}
 
 	va_start(ap, fmt);
@@ -122,6 +124,8 @@ VG_TextPrintfPolled(VG_Text *vt, const char *fmt, ...)
 		}
 	}
 	va_end(ap);
+out:
+	VG_Unlock(VGNODE(vt)->vg);
 }
 
 /* Specify static text. */
@@ -130,6 +134,8 @@ VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 {
 	va_list ap;
 
+	VG_Lock(VGNODE(vt)->vg);
+	
 	if (fmt != NULL) {
 		va_start(ap, fmt);
 		Vsnprintf(vt->text, sizeof(vt->text), fmt, ap);
@@ -137,6 +143,8 @@ VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 	} else {
 		vt->text[0] = '\0';
 	}
+
+	VG_Unlock(VGNODE(vt)->vg);
 }
 
 static void

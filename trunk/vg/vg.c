@@ -135,9 +135,17 @@ VG_NodeDestroy(void *p)
 	Free(vn);
 }
 
+/* Reinitialize the drawing. */
+void
+VG_Clear(VG *vg)
+{
+	VG_ClearNodes(vg);
+	VG_ClearColors(vg);
+}
+
 /* Reinitialize the tree of entities. */
 void
-VG_ReinitNodes(VG *vg)
+VG_ClearNodes(VG *vg)
 {
 	VG_Node *vnChld, *vnNext;
 
@@ -154,11 +162,10 @@ VG_ReinitNodes(VG *vg)
 	TAILQ_INIT(&vg->nodes);
 }
 
+/* Reinitialize the color array. */
 void
-VG_Reinit(VG *vg)
+VG_ClearColors(VG *vg)
 {
-	VG_ReinitNodes(vg);
-	
 	if (vg->colors != NULL) {
 		Free(vg->colors);
 		vg->colors = NULL;
@@ -169,7 +176,7 @@ VG_Reinit(VG *vg)
 void
 VG_Destroy(VG *vg)
 {
-	VG_Reinit(vg);
+	VG_Clear(vg);
 	Free(vg->layers);
 	AG_MutexDestroy(&vg->lock);
 }
@@ -217,7 +224,7 @@ VG_LookupClass(const char *name)
 	return (NULL);
 }
 
-/* Detach and free the specified node. */
+/* Detach and free the specified node and its children. */
 int
 VG_Delete(void *pVn)
 {
@@ -248,17 +255,21 @@ VG_AddRef(void *p, void *pRef)
 {
 	VG_Node *vn = p;
 
+	VG_Lock(vn->vg);
 	vn->refs = Realloc(vn->refs, (vn->nRefs+1)*sizeof(VG_Node *));
 	vn->refs[vn->nRefs++] = VGNODE(pRef);
 	VGNODE(pRef)->nDeps++;
+	VG_Unlock(vn->vg);
 }
 
 Uint
 VG_DelRef(void *pVn, void *pRef)
 {
 	VG_Node *vn = pVn;
+	Uint newDeps;
 	int i;
 
+	VG_Lock(vn->vg);
 	for (i = 0; i < vn->nRefs; i++) {
 		if (vn->refs[i] == VGNODE(pRef))
 			break;
@@ -271,7 +282,9 @@ VG_DelRef(void *pVn, void *pRef)
 		    (vn->nRefs-1)*sizeof(VG_Node *));
 	}
 	vn->nRefs--;
-	return (--VGNODE(pRef)->nDeps);
+	newDeps = (--VGNODE(pRef)->nDeps);
+	VG_Unlock(vn->vg);
+	return (newDeps);
 }
 
 void VG_SetBackgroundColor(VG *vg, VG_Color c) { vg->fillColor = c; }
@@ -373,6 +386,20 @@ VG_NodeDetach(void *p)
 	TAILQ_REMOVE(&vg->nodes, vn, list);
 
 	VG_Unlock(vg);
+}
+
+/* Set the symbolic name of a node. */
+void
+VG_SetSym(void *pNode, const char *fmt, ...)
+{
+	VG_Node *vn = pNode;
+	va_list args;
+
+	VG_Lock(vn->vg);
+	va_start(args, fmt);
+	Vsnprintf(vn->sym, sizeof(vn->sym), fmt, args);
+	va_end(args);
+	VG_Unlock(vn->vg);
 }
 
 void
@@ -645,7 +672,7 @@ VG_Load(VG *vg, AG_DataSource *ds)
 	}
 
 	/* Read the entities. */
-	VG_ReinitNodes(vg);
+	VG_ClearNodes(vg);
 	nNodes = AG_ReadUint32(ds);
 	for (i = 0; i < nNodes; i++) {
 		if (LoadNodeGeneric(vg, vg->root, ds) == -1)
@@ -699,6 +726,7 @@ VG_ReadColor(AG_DataSource *ds)
 	return (c);
 }
 
+/* Serialize a node->node reference. */
 void
 VG_WriteRef(AG_DataSource *ds, void *p)
 {
@@ -708,6 +736,7 @@ VG_WriteRef(AG_DataSource *ds, void *p)
 	AG_WriteUint32(ds, vn->handle);
 }
 
+/* Deserialize a node->node reference. */
 void *
 VG_ReadRef(AG_DataSource *ds, void *pNode, const char *expType)
 {
@@ -815,10 +844,6 @@ VG_NodeTransform(void *p, VG_Matrix *T)
 	VG_Node *cNode = node;
 	TAILQ_HEAD(,vg_node) rNodes = TAILQ_HEAD_INITIALIZER(rNodes);
 
-	/*
-	 * Build a list of parent nodes and multiply their matrices in order
-	 * (ugly but faster than computing the product of their inverses).
-	 */
 	while (cNode != NULL) {
 		TAILQ_INSERT_HEAD(&rNodes, cNode, reverse);
 		if (cNode->parent == NULL) {

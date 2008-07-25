@@ -149,7 +149,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 
 VG_ToolOps vgTextTool = {
 	N_("Text"),
-	N_("Insert text in the component schematic."),
+	N_("Insert text entity."),
 	&vgIconText,
 	sizeof(VG_TextTool),
 	0,

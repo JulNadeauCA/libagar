@@ -63,7 +63,7 @@ PostDraw(void *p, VG_View *vv)
 
 VG_ToolOps vgPointTool = {
 	N_("Point"),
-	N_("Insert points in the component schematic."),
+	N_("Insert point in drawing."),
 	&vgIconPoints,
 	sizeof(VG_Tool),
 	0,

@@ -168,6 +168,26 @@ VG_IntersectLineV(float x, VG_Vector v1, VG_Vector v2)
 }
 
 /*
+ * Compute the intersection point between a given line (v1,v2) and a
+ * horizontal line at Y.
+ */
+static __inline__ VG_Vector
+VG_IntersectLineH(float y, VG_Vector v1, VG_Vector v2)
+{
+	float x1 = v1.x, x2 = v2.x;
+	float y1 = v1.y, y2 = v2.y;
+	float m, y3 = y1;
+	VG_Vector v;
+
+	if (y1 < y2) { m = y1; y1 = y2; y2 = m; }
+	if (x1 < x2) { m = x1; x1 = x2; x2 = m; y3 = y2; }
+	m = VG_Fabs(y2-y1)/VG_Fabs(x2-x1);
+	v.x = m*(y - y3);
+	v.y = y;
+	return (v);
+}
+
+/*
  * Basic matrix operations.
  */
 static __inline__ VG_Matrix

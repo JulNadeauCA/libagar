@@ -60,11 +60,13 @@ typedef struct vg_node_ops {
 	int   (*load)(void *, AG_DataSource *, const AG_Version *);
 	void  (*save)(void *, AG_DataSource *);
 	void  (*draw)(void *, struct vg_view *);
-	void  (*extent)(void *, struct vg_view *, VG_Vector *, VG_Vector *);
-	float (*pointProximity)(void *, struct vg_view *, VG_Vector *);
-	float (*lineProximity)(void *, struct vg_view *, VG_Vector *);
+	void  (*extent)(void *, struct vg_view *, VG_Vector *a,
+	                VG_Vector *b);
+	float (*pointProximity)(void *, struct vg_view *, VG_Vector *p);
+	float (*lineProximity)(void *, struct vg_view *, VG_Vector *p1,
+	                       VG_Vector *p2);
 	void  (*deleteNode)(void *);
-	void  (*moveNode)(void *, VG_Vector, VG_Vector);
+	void  (*moveNode)(void *, VG_Vector vAbs, VG_Vector vRel);
 } VG_NodeOps;
 
 typedef struct vg_layer {
@@ -166,8 +168,9 @@ void      VG_DestroySubsystem(void);
 VG       *VG_New(Uint);
 void      VG_Init(VG *, Uint);
 void      VG_Destroy(VG *);
-void      VG_Reinit(VG *);
-void      VG_ReinitNodes(VG *);
+void      VG_Clear(VG *);
+void      VG_ClearNodes(VG *);
+void      VG_ClearColors(VG *);
 void      VG_Save(VG *, AG_DataSource *);
 int       VG_Load(VG *, AG_DataSource *);
 
@@ -192,6 +195,7 @@ void      VG_SetMouseOverColor(VG *, VG_Color);
 VG_Layer *VG_PushLayer(VG *, const char *);
 void      VG_PopLayer(VG *);
 
+void	  VG_SetSym(void *, const char *, ...);
 void	  VG_SetLayer(void *, int);
 void	  VG_SetColorv(void *, const VG_Color *);
 void	  VG_SetColorRGB(void *, Uint8, Uint8, Uint8);
@@ -210,24 +214,28 @@ void     *VG_PointProximityMax(struct vg_view *, const char *,
                                const VG_Vector *, VG_Vector *, void *, float);
 VG_Matrix VG_MatrixInvert(VG_Matrix);
 
+/* Acquire the VG lock. */
 static __inline__ void
 VG_Lock(VG *vg)
 {
 	AG_MutexLock(&vg->lock);
 }
 
+/* Release the VG lock. */
 static __inline__ void
 VG_Unlock(VG *vg)
 {
 	AG_MutexUnlock(&vg->lock);
 }
 
+/* Evaluate whether a node belongs to a class. */
 static __inline__ int
 VG_NodeIsClass(void *p, const char *name)
 {
 	return (strcmp(VGNODE(p)->ops->name, name) == 0);
 }
 
+/* Return the VG_Color representing a RGB triplet. */
 static __inline__ VG_Color
 VG_GetColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
@@ -240,6 +248,7 @@ VG_GetColorRGB(Uint8 r, Uint8 g, Uint8 b)
 	return (vc);
 }
 
+/* Return the VG_Color from RGBA components. */
 static __inline__ VG_Color
 VG_GetColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
@@ -252,12 +261,14 @@ VG_GetColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	return (vc);
 }
 
+/* Return a VG_Color in display-pixel format. */
 static __inline__ Uint32
 VG_MapColorRGB(VG_Color vc)
 {
 	return AG_MapRGB(agVideoFmt, vc.r, vc.g, vc.b);
 }
 
+/* Alpha-blend colors cDst and cSrc and return in cDst. */
 static __inline__ void
 VG_BlendColors(VG_Color *cDst, VG_Color cSrc)
 {
@@ -406,18 +417,21 @@ VG_FlipHoriz(void *pNode)
 	VG_MultMatrix(&vn->T, &T);
 }
 
+/* Mark node as selected. */
 static __inline__ void
 VG_Select(void *pNode)
 {
 	VGNODE(pNode)->flags |= VG_NODE_SELECTED;
 }
 
+/* Remove the selection flag from node. */
 static __inline__ void
 VG_Unselect(void *pNode)
 {
 	VGNODE(pNode)->flags |= VG_NODE_SELECTED;
 }
 
+/* Mark all nodes selected. */
 static __inline__ void
 VG_SelectAll(VG *vg)
 {
@@ -426,6 +440,7 @@ VG_SelectAll(VG *vg)
 		vn->flags |= VG_NODE_SELECTED;
 }
 
+/* Remove the selection flag from all nodes. */
 static __inline__ void
 VG_UnselectAll(VG *vg)
 {
@@ -434,7 +449,7 @@ VG_UnselectAll(VG *vg)
 		vn->flags &= ~(VG_NODE_SELECTED);
 }
 
-/* Return the effective position of the given node relative to the origin. */
+/* Return the effective position of the given node relative to the VG origin. */
 static __inline__ VG_Vector
 VG_Pos(void *node)
 {
@@ -446,7 +461,7 @@ VG_Pos(void *node)
 	return (v);
 }
 
-/* Set the position of the given node relative to the schematic origin. */
+/* Set the position of the given node relative to the VG origin. */
 static __inline__ void
 VG_SetPosition(void *pNode, VG_Vector v)
 {

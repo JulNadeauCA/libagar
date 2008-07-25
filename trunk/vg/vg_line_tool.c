@@ -135,7 +135,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 
 VG_ToolOps vgLineTool = {
 	N_("Line"),
-	N_("Insert lines in the component schematic."),
+	N_("Insert line from two points."),
 	&vgIconLine,
 	sizeof(VG_LineTool),
 	0,
