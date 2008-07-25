@@ -1,0 +1,116 @@
+.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 25, 2008
+.Dt VG_VIEW 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm VG_View
+.Nd agar-vg visualization widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/vg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget implements the display and edition of
+.Xr VG 3
+drawings.
+.Sh INTERFACE
+.nr nS 1
+.Ft "VG_View *"
+.Fn VG_ViewNew "void *parent" "VG *vg" "Uint flags"
+.Pp
+.Ft "void"
+.Fn VG_ViewSetScale "VG_View *vv" "int c"
+.Pp
+.Ft "void"
+.Fn VG_ViewSetScaleMin "VG_View *vv" "float c"
+.Pp
+.Ft "void"
+.Fn VG_ViewSetScaleMax "VG_View *vv" "float c"
+.Pp
+.Ft "void"
+.Fn VG_ViewSetSnapMode "VG_View *vv" "enum vg_snap_mode mode"
+.Pp
+.Ft "void"
+.Fn VG_ViewSetGrid "VG_View *vv" "int gridIndex" "enum vg_grid_type type" "int interval" "VG_Color color"
+.Pp
+.Ft "void"
+.Fn VG_ViewSelectTool "VG_View *vv" "VG_Tool *tool" "void *userPtr"
+.Pp
+.Ft "void"
+.Fn VG_ViewSelectToolEv "AG_Event *event"
+.Pp
+.Ft "VG_Tool *"
+.Fn VG_ViewFindTool "VG_View *vv" "const char *name"
+.Pp
+.Ft "VG_Tool *"
+.Fn VG_ViewFindToolByOps "VG_View *vv" "const VG_ToolOps *ops"
+.Pp
+.Ft "VG_Tool *"
+.Fn VG_ViewRegTool "VG_View *vv" "const VG_ToolOps *ops" "void *userPtr"
+.Pp
+.Ft "void"
+.Fn VG_ViewSetDefaultTool "VG_View *vv" "VG_Tool *tool"
+.Pp
+.Ft "Uint"
+.Fn VG_AddEditArea "VG_View *vv" "void *widget"
+.Pp
+.Ft "void"
+.Fn VG_ApplyConstraints "VG_View *vv" "VG_Vector *pos"
+.Pp
+.Ft "void"
+.Fn VG_GetVGCoords "VG_View *vv" "int x" "int y" "VG_Vector *v"
+.Pp
+.Ft "void"
+.Fn VG_GetVGCoordsFlt "VG_View *vv" "VG_Vector pos" "VG_Vector *v"
+.Pp
+.Ft "void"
+.Fn VG_GetViewCoords "VG_View *vv" "VG_Vector v" "int *x" "int *y"
+.Pp
+.Ft "void"
+.Fn VG_GetViewCoordsFlt "VG_View *vv" "VG_Vector v" "float *x" "float *y"
+.Pp
+.Ft "void *"
+.Fn VG_NearestPoint "VG_View *vv" "VG_Vector vPos" "void *ignore"
+.Pp
+.Ft "void *"
+.Fn VG_Nearest "VG_View *vv" "VG_Vector vPos"
+.Pp
+.Ft "void *"
+.Fn VG_HighlightNearestPoint "VG_View *vv" "VG_Vector vPos" "void *ignore"
+.Pp
+.nr nS 0
+.Sh SEE ALSO
+.Xr VG 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.3.

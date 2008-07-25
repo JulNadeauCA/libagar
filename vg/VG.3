@@ -1,0 +1,849 @@
+.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 9, 2008
+.Dt VG 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm VG
+.Nd agar vector graphics interface
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/vg.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+interface allows applications to construct, display, export and import vector
+drawings, which are composed of entities (or "nodes") such as points, lines
+and arcs.
+.Pp
+There is no notion of coordinates in
+.Nm .
+Entities are organized in a tree structure, where edges represent linear
+transformations (such translations or rotations) between the entities.
+References between the entities are allowed.
+For example, a
+.Xr VG_Line 3
+is fully described by references to two independent
+.Xr VG_Point 3
+entities.
+.Pp
+The
+.Xr VG_View 3
+widget is almost always used to display
+.Nm
+drawings, and edit them through the use of a generic "tool" interface.
+.Pp
+Note that
+.Nm
+is designed to be a very simple to use, general-purpose vector drawing engine.
+There is another Agar-based vector engine,
+.Ft SK ,
+which is available in the FreeSG distribution (http://freesg.org/).
+Its basic interface is similar, but it provides more advanced math and
+computational geometry features and unlike
+.Nm
+which uses transformation matrices to position entities,
+.Ft SK
+uses systems of geometrical constraints (e.g., distances, angles, etc.).
+.Sh BUILT-IN NODE CLASSES
+While most practical applications are expected to define their own
+.Nm
+node classes, a number standard classes are built into the library:
+.Pp
+.Bl -tag -compact -width "VG_Polygon(3) "
+.It Xr VG_Point 3
+Single point
+.It Xr VG_Line 3
+Line segment
+.It Xr VG_Circle 3
+Circle
+.It Xr VG_Arc 3
+Arc (centerpoint / angle)
+.It Xr VG_Polygon 3
+Filled polygon
+.It Xr VG_Text 3
+Text label
+.El
+.Sh VG INTERFACE
+.nr nS 1
+.Ft "void"
+.Fn VG_InitSubsystem "void"
+.Pp
+.Ft "void"
+.Fn VG_DestroySubsystem "void"
+.Pp
+.Ft "VG *"
+.Fn VG_New "Uint flags"
+.Pp
+.Ft "void"
+.Fn VG_Init "VG *vg" "Uint flags"
+.Pp
+.Ft "void"
+.Fn VG_Destroy "VG *vg"
+.Pp
+.Ft "void"
+.Fn VG_Clear "VG *vg"
+.Pp
+.Ft "void"
+.Fn VG_ClearNodes "VG *vg"
+.Pp
+.Ft "void"
+.Fn VG_ClearColors "VG *vg"
+.Pp
+.Ft "void"
+.Fn VG_Lock "VG *vg"
+.Pp
+.Ft "void"
+.Fn VG_Unlock "VG *vg"
+.Pp
+.Ft "VG_Layer *"
+.Fn VG_PushLayer "VG *vg" "const char *layer"
+.Pp
+.Ft "void"
+.Fn VG_PopLayer "VG *vg"
+.Pp
+.nr nS 0
+The
+.Fn VG_InitSubsystem
+function initalizes the
+.Nm
+library and should be invoked before any other function is used.
+.Fn VG_DestroySubsystem
+releases resources allocated by the
+.Nm
+library.
+.Pp
+The
+.Fn VG_New
+function allocates and initializes a new
+.Nm
+structure.
+.Fn VG_Init
+initializes an existing one.
+Acceptable
+.Fa flags
+include:
+.Pp
+.Bl -tag -width "VG_ANTIALIAS "
+.It VG_ANTIALIAS
+Enable anti-aliasing rendering methods.
+.El
+.Pp
+.Fn VG_Destroy
+releases all resources allocated by the given
+.Nm
+object.
+The structure itself is not freed.
+.Pp
+.Fn VG_Clear
+reinitializes the
+.Nm
+structures.
+.Fn VG_ClearNodes
+reinitializes only the node trees.
+.Fn VG_ClearColors
+reinitializes the color table.
+.Pp
+.Fn VG_Lock
+acquires the lock which protects a
+.Nm
+against modifications.
+.Fn VG_Unlock
+releases the lock.
+The
+.Nm
+interface is thread-safe so it is not necessary for user applications to
+use these functions unless documented.
+For example, a
+.Fn VG_FindNode
+immediately followed by a
+.Fn VG_NodeDetach
+requires the use of
+.Fn VG_Lock ) .
+.Pp
+.Nm
+drawings are organized in layers, which are useful for determining the
+z-order of graphical entities.
+It is also possible to mask layers or blend layer-specific colors.
+.Fn VG_PushLayer
+creates a new layer of the given name and returns a pointer to the newly
+created
+.Fa VG_Layer
+structure.
+.Fn VG_PopLayer
+pops the highest layer off the stack.
+.Sh NODE CLASSES
+The
+.Ft VG_NodeOps
+structure fully describes a 
+.Nm
+node class:
+.Bd -literal
+typedef struct vg_node_ops {
+	const char            *name;
+	struct ag_static_icon *icon;
+	size_t                 size;
+	
+	void  (*init)(VG_Node *);
+	void  (*destroy)(VG_Node *);
+	int   (*load)(VG_Node *, AG_DataSource *, const AG_Version *);
+	void  (*save)(VG_Node *, AG_DataSource *);
+	void  (*draw)(VG_Node *, VG_View *);
+	void  (*extent)(VG_Node *, VG_View *, VG_Vector *a,
+	                VG_Vector *b);
+	float (*pointProximity)(VG_Node *, VG_View *, VG_Vector *p);
+	float (*lineProximity)(VG_Node *, VG_View *, VG_Vector *p1,
+	                       VG_Vector *p2);
+	void  (*deleteNode)(VG_Node *);
+	void  (*moveNode)(VG_Node *, VG_Vector, VG_Vector);
+}
+.Ed
+.Pp
+.Fa name
+is a string identifier for the class.
+.Fa icon
+is an Agar icon resource for GUI purposes.
+.Fa size
+is the full size in bytes of the structure (derived from
+.Fa VG_Node )
+which describes node instances.
+.Pp
+All function pointers are optional and can be set to NULL.
+.Pp
+The
+.Fn init
+operation initializes a node instance structure.
+.Fn destroy
+releases resources allocated by the node instance.
+.Pp
+.Fn load
+and
+.Fn save
+are used to (de)serialize the node instance from/to the given
+.Xr AG_DataSource 3 .
+.Pp
+The
+.Fn draw
+operation graphically renders the entity in a
+.Xr VG_View 3
+context, typically using the standard
+.Xr AG_Widget 3
+draw routines.
+.Pp
+.Fn extent
+computes the axis-aligned bounding box of the entity, returning the absolute
+VG coordinates of the upper-left corner in
+.Fa a
+and the lower right corner in
+.Fa b .
+.Pp
+.Fn pointProximity
+computes the shortest distance between
+.Fa p
+(given in absolute VG coordinates) and the entity.
+This operation is needed for GUI selection tools to be effective.
+.Pp
+.Fn lineProximity
+computes the shortest distance between the line (as described by endpoints
+.Fa p1
+and
+.Fa p2 )
+and the entity.
+This is an optimization which is optional to the operation of GUI selection
+tools.
+.Pp
+The
+.Fn deleteNode
+callback is invoked when the user deletes the node instance.
+It is used, for example, by
+.Xr VG_Line 3
+to call
+.Fn VG_DelRef
+on its two
+.Xr VG_Point 3
+references (also calling
+.Fn VG_Delete
+if their reference count reaches zero).
+.Pp
+The
+.Fn moveNode
+callback is invoked by
+.Xr VG_View 3
+tools (usually "select" tools) to perform a translation on the entity.
+.Fa vAbs
+is the desired new position in absolute VG coordinates,
+.Fa vRel
+describes the change in position.
+It is recommended to only rely on
+.Fa vRel .
+.Pp
+Applications and utilities are expected to register node classes using
+.Fn VG_RegisterClass .
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn VG_RegisterClass "const VG_NodeOps *class"
+.Pp
+.Ft "void"
+.Fn VG_UnregisterClass "const VG_NodeOps *class"
+.Pp
+.Ft "const VG_NodeOps *"
+.Fn VG_LookupClass "const char *className"
+.Pp
+.nr nS 0
+The
+.Fn VG_RegisterClass
+function registers the class described by the given
+.Fa VG_NodeOps
+structure.
+.Fn VG_UnregisterClass
+unregisters the given class.
+.Pp
+.Fn VG_LookupClass
+searches for a class of the specified name and return its description, or
+NULL if there is no such class.
+.Sh NODE OPERATIONS
+.nr nS 1
+.Ft "void"
+.Fn VG_NodeInit "VG_Node *node" "const VG_NodeOps *class"
+.Pp
+.Ft "int"
+.Fn VG_NodeIsClass "void *p" "const char *name"
+.Pp
+.Ft "void"
+.Fn VG_NodeAttach "VG_Node *parent" "VG_Node *node"
+.Pp
+.Ft "void"
+.Fn VG_NodeDetach "VG_Node *node"
+.Pp
+.Ft "int"
+.Fn VG_Delete "VG_Node *node"
+.Pp
+.Ft "void"
+.Fn VG_AddRef "VG_Node *node" "VG_Node *refNode"
+.Pp
+.Ft "Uint"
+.Fn VG_DelRef "VG_Node *node" "VG_Node *refNode"
+.Pp
+.Ft "void"
+.Fn VG_SetSym "VG_Node *node" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn VG_SetLayer "VG_Node *node" "int layerIndex"
+.Pp
+.Ft "void"
+.Fn VG_SetColorv "VG_Node *node" "const VG_Color *cv"
+.Pp
+.Ft "void"
+.Fn VG_SetColorRGB "VG_Node *node" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "void"
+.Fn VG_SetColorRGBA "VG_Node *node" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft "void"
+.Fn VG_Select "VG_Node *node"
+.Pp
+.Ft "void"
+.Fn VG_Unselect "VG_Node *node"
+.Pp
+.Ft "void"
+.Fn VG_SelectAll "VG *vg"
+.Pp
+.Ft "void"
+.Fn VG_UnselectAll "VG *vg"
+.Pp
+.Ft "Uint32"
+.Fn VG_GenNodeName "VG *vg" "const char *className"
+.Pp
+.Ft "VG_Node *"
+.Fn VG_FindNode "VG *vg" "Uint32 handle" "const char *type"
+.Pp
+.Ft "VG_Node *"
+.Fn VG_FindNodeSym "VG *vg" "const char *sym"
+.Pp
+.nr nS 0
+The
+.Fn VG_NodeInit
+function completely initializes a
+.Ft VG_Node
+structure as an instance of the specified node class.
+.Pp
+.Fn VG_NodeIsClass
+returns 1 if the specified node is an instance of the given class, 0
+otherwise.
+.Pp
+.Fn VG_NodeAttach
+and
+.Fn VG_NodeDetach
+are used to construct the hierarchy of entities in a drawing.
+The relationship between parent and child nodes defines the order of
+linear transformations (i.e., translations, rotations).
+.Fn VG_NodeAttach
+attaches
+.Fa node
+to an existing node
+.Fa parent
+(which is either the
+.Va root
+member of the
+.Nm
+structure, or any other entity in the drawing).
+.Fn VG_NodeDetach
+detaches the specified node from its current parent.
+.Pp
+The
+.Fn VG_Delete
+function detaches and frees the specified node instance, along with any
+child nodes.
+The function can fail (returning -1) if the entity is in use.
+.Pp
+.Fn VG_AddRef
+creates a new reference (dependency), where
+.Fa node
+depends on
+.Fa refNode .
+.Pp
+.Fn VG_DelRef
+removes the dependency with
+.Fa refNode
+and returns the new reference count of
+.Fa refNode .
+This allows the referenced node to be automatically deleted when no longer
+referenced.
+Under multithreading, the return value of
+.Fn VG_DelRef
+is only valid as long as
+.Fn VG_Lock
+is used.
+.Pp
+.Fn VG_SetSym
+sets the symbolic name of the node, an arbitrary user-specified string which
+allows the node to be looked up using
+.Fn VG_FindNodeSym .
+.Pp
+.Fn VG_SetLayer
+assigns the node to the specified layer number (see
+.Fn VG_PushLayer
+and
+.Fn VG_PopLayer ) .
+.Pp
+.Fn VG_SetColorv
+sets the node color from a pointer to a
+.Ft VG_Color
+structure.
+.Fn VG_SetColorRGB
+sets the node color from the given RGB triplet.
+.Fn VG_SetColorRGBA
+sets the node color from the given RGBA components.
+.Pp
+The
+.Fn VG_Select
+and
+.Fn VG_Unselect
+functions respectively set and unset the selection flag on the node.
+.Fn VG_SelectAll
+and
+.Fn VG_UnselectAll
+operate on all nodes in the drawing.
+.Pp
+Nodes are named by their class name followed by a numerical handle (e.g.,
+the first line created in a drawing will be named
+.Sq Line0 ) .
+.Fn VG_GenNodeName
+generates a new name, unique in the drawing, for use by a new instance of
+the specified class.
+.Pp
+The
+.Fn VG_FindNode
+function searches for a node by name, returning a pointer to the specified
+instance or NULL if not found.
+The
+.Fn VG_FindNodeSym
+variant searches node by their symbolic names (see
+.Fn VG_SetSym ) .
+Under multithreading, the return value of both
+.Fn VG_FindNode
+and
+.Fn VG_FindNodeSym
+only remains valid as long as
+.Fn VG_Lock
+is used.
+.Sh LINEAR TRANSFORMATIONS
+.nr nS 1
+.Ft "VG_Vector"
+.Fn VG_Pos "VG_Node *node"
+.Pp
+.Ft "void"
+.Fn VG_LoadIdentity "VG_Node *node"
+.Pp
+.Ft "void"
+.Fn VG_Translate "VG_Node *node" "VG_Vector v"
+.Pp
+.Ft "void"
+.Fn VG_SetPosition "VG_Node *node" "VG_Vector v"
+.Pp
+.Ft "void"
+.Fn VG_SetPositionInParent "VG_Node *node" "VG_Vector v"
+.Pp
+.Ft "void"
+.Fn VG_Scale "VG_Node *node" "float s"
+.Pp
+.Ft "void"
+.Fn VG_Rotate "VG_Node *node" "float radians"
+.Pp
+.Ft "void"
+.Fn VG_FlipVert "VG_Node *node"
+.Pp
+.Ft "void"
+.Fn VG_FlipHoriz "VG_Node *node"
+.Pp
+.Ft "void"
+.Fn VG_NodeTransform "VG_Node *node" "VG_Matrix *T"
+.Pp
+.Ft "void"
+.Fn VG_PushMatrix "VG *vg"
+.Pp
+.Ft "void"
+.Fn VG_PopMatrix "VG *vg"
+.Pp
+.Ft "VG_Matrix"
+.Fn VG_MatrixInvert "VG_Matrix M"
+.Pp
+.nr nS 0
+Every node in a
+.Nm
+is associated with an invertible 3x3 matrix T, which defines a set of
+transformations on the coordinates.
+.Pp
+The
+.Fn VG_Pos
+function computes the current absolute VG coordinates of the node.
+.Pp
+.Fn VG_LoadIdentity
+sets the transformation matrix of the node to the identity matrix.
+.Pp
+.Fn VG_Translate
+translates the node by the amount specified in
+.Fa v .
+.Pp
+.Fn VG_SetPosition
+assigns the node an absolute position
+.Fa v ,
+relative to the VG origin.
+.Fn VG_SetPositionInParent
+assigns a position relative to the parent node.
+.Pp
+.Fn VG_Scale
+uniformly scales the node by a factor of
+.Fa s .
+.Pp
+.Fn VG_Rotate
+rotates the node by the specified amount, given in radians.
+.Pp
+.Fn VG_FlipVert
+mirrors the node vertically and
+.Fn VG_FlipHoriz
+mirrors the node horizontally.
+.Pp
+.Fn VG_NodeTransform
+computes and returns into
+.Fa T
+the product of the transformation matrices of the given node and those of its
+parents.
+.Pp
+.Fn VG_PushMatrix
+and
+.Fn VG_PopMatrix
+are called from the
+.Fn draw
+operation of nodes to manipulate the global matrix stack associated with a
+drawing during rendering.
+.Fn VG_PushMatrix
+grows the stack, duplicating the top matrix.
+.Fn VG_PopMatrix
+discards the top matrix.
+.Pp
+.Fn VG_MatrixInvert
+computes the inverse of
+.Fa M .
+Since
+.Nm
+matrices are required to be non-singular, this operation cannot fail.
+.Sh SERIALIZATION
+.nr nS 1
+.Ft "void"
+.Fn VG_Save "VG *vg" "AG_DataSource *ds"
+.Pp
+.Ft "int"
+.Fn VG_Load "VG *vg" "AG_DataSource *ds"
+.Pp
+.Ft "VG_Vector"
+.Fn VG_ReadVector "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn VG_WriteVector "AG_DataSource *ds" "const VG_Vector *v"
+.Pp
+.Ft "VG_Color"
+.Fn VG_ReadColor "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn VG_WriteColor "AG_DataSource *ds" "const VG_Color *c"
+.Pp
+.Ft "void"
+.Fn VG_WriteRef "AG_DataSource *ds" "VG_Node *node"
+.Pp
+.Ft "VG_Node *"
+.Fn VG_ReadRef "AG_DataSource *ds" "VG_Node *node" "const char *className"
+.Pp
+.nr nS 0
+The
+.Fn VG_Save
+function archives the contents of
+.Fa vg
+into the specified data source.
+.Fn VG_Load
+loads the drawing from a data source;
+see
+.Xr AG_DataSource 3 .
+.Pp
+.Fn VG_ReadVector
+and
+.Fn VG_WriteVector
+are used to (de)serialize vectors (see
+.Dq MATH ROUTINES
+section).
+.Pp
+.Fn VG_ReadColor
+and
+.Fn VG_WriteColor
+are used to (de)serialize
+.Ft VG_Color
+structures.
+.Pp
+.Fn VG_WriteRef
+is useful for serializing a reference from one node to another.
+For example, the
+.Xr VG_Line 3
+.Fn save
+routine simply consists of
+.Fn VG_WriteRef
+calls on its two
+.Xr VG_Point 3
+references ) .
+.Pp
+.Fn VG_ReadRef
+deserializes a node->node reference.
+If
+.Fa className
+is provided, the function will fail and return NULL if the archived
+reference does not match the specified class name.
+.Sh COLOR OPERATIONS
+.nr nS 1
+.Ft "VG_Color"
+.Fn VG_GetColorRGB "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "VG_Color"
+.Fn VG_GetColorRGBA "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft "Uint32"
+.Fn VG_MapColorRGB "VG_Color vc"
+.Pp
+.Ft "void"
+.Fn VG_BlendColors "VG_Color *cDst" "VG_Color cSrc"
+.Pp
+.Ft "void"
+.Fn VG_SetBackgroundColor "VG *vg" "VG_Color c"
+.Pp
+.Ft "void"
+.Fn VG_SetSelectionColor "VG *vg" "VG_Color c"
+.Pp
+.Ft "void"
+.Fn VG_SetMouseOverColor "VG *vg" "VG_Color c"
+.Pp
+.nr nS 0
+.Fn VG_GetColorRGB
+returns the
+.Ft VG_Color
+structure describing the specified RGB triplet, with the alpha component
+set to 1.0 (opaque).
+The
+.Fn VG_GetColorRGBA
+variant includes the alpha component.
+.Pp
+.Fn VG_MapColorRGB
+returns the display-format pixel representation of the given color.
+.Pp
+.Fn VG_BlendColors
+blends the two specified colors, returning the results in
+.Fa cDst .
+.Pp
+.Fn VG_SetBackgroundColor
+configures the background color of the drawing.
+The
+.Fn VG_SetSelectionColor
+and
+.Fn VG_SetMouseOverColor
+functions configure the color which will be blended into the graphical
+rendering of entities which are selected or under the cursor, respectively.
+.Pp
+.Sh MATH ROUTINES
+.nr nS 1
+.Ft "VG_Vector"
+.Fn VG_GetVector "float x" "float y"
+.Pp
+.Ft "VG_Matrix"
+.Fn VG_MatrixIdentity "void"
+.Pp
+.Ft "VG_Vector"
+.Fn VG_Add "VG_Vector v1" "VG_Vector v2"
+.Pp
+.Ft "VG_Vector"
+.Fn VG_Sub "VG_Vector v1" "VG_Vector v2"
+.Pp
+.Ft "VG_Vector"
+.Fn VG_ScaleVector "float c" "VG_Vector v"
+.Pp
+.Ft "float"
+.Fn VG_DotProd "VG_Vector v1" "VG_Vector v2"
+.Pp
+.Ft "float"
+.Fn VG_Length "VG_Vector v"
+.Pp
+.Ft "float"
+.Fn VG_Distance "VG_Vector v1" "VG_Vector v2"
+.Pp
+.Ft "float"
+.Fn VG_PointLineDistance "VG_Vector A" "VG_Vector B" "VG_Vector *pt"
+.Pp
+.Ft "VG_Vector"
+.Fn VG_IntersectLineV "float x" "VG_Vector p1" "VG_Vector p2"
+.Pp
+.Ft "VG_Vector"
+.Fn VG_IntersectLineH "float x" "VG_Vector p1" "VG_Vector p2"
+.Pp
+.Ft "void"
+.Fn VG_MultMatrix "VG_Matrix *A" "const VG_Matrix *B"
+.Pp
+.Ft "void"
+.Fn VG_MultMatrixByVector "VG_Vector *Mv" "const VG_Vector *v" "const VG_Matrix *M"
+.Pp
+.nr nS 0
+The
+.Fn VG_GetVector
+function returns a
+.Ft VG_Vector
+structure given
+.Fa x ,
+.Fa y
+values.
+.Pp
+The
+.Fn VG_MatrixIdentity
+function returns the identity matrix.
+.Pp
+.Fn VG_Add
+returns the sum of vectors
+.Fa v1
+and
+.Fa v2 .
+.Pp
+.Fn VG_Sub
+returns the difference of vectors
+.Fa v1
+and
+.Fa v2 .
+.Pp
+.Fn VG_ScaleVector
+multiplies vector
+.Fa v
+by a scalar
+.Fa c .
+.Pp
+.Fn VG_DotProd
+returns the dot product of two vectors.
+.Pp
+.Fn VG_Length
+returns the length of a vector.
+.Pp
+.Fn VG_Distance
+returns the unsigned distance between two vectors.
+.Pp
+.Fn VG_PointLineDistance
+computes the minimal distance from a line (described by two points
+.Fa A
+and
+.Fa B )
+and a point
+.Fa pt .
+The function returns the distance, and the closest point on the line
+is returned back into
+.Fa pt .
+.Pp
+.Fn VG_IntersectLineV
+computes the intersection of an infinite line (described by
+.Fa p1
+and
+.Fa p2 )
+against a vertical line (described by
+.Fa x ) .
+The return value is undefined if the two lines are parallel.
+.Fn VG_IntersectLineH
+performs the same operation against a horizontal line (described
+by
+.Fa y ) .
+.Pp
+.Fn VG_MultMatrix
+computes the product of matrices
+.Fa A
+and
+.Fa B ,
+returning the result into
+.Fa B .
+.Pp
+.Fn VG_MultMatrixByVector
+computes the product of matrix
+.Fa M
+and vector
+.Fa v ,
+returning the result in
+.Fa Mv .
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr VG_View 3 ,
+.Xr VG_Point 3 ,
+.Xr VG_Line 3 ,
+.Xr VG_Circle 3 ,
+.Xr VG_Arc 3 ,
+.Xr VG_Polygon 3 ,
+.Xr VG_Text 3 .
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.3.3.

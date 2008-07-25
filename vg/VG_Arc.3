@@ -1,0 +1,91 @@
+.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 25, 2008
+.Dt VG_ARC 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm VG_Arc
+.Nd agar-vg arc entity
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/vg.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+is a
+.Xr VG 3
+node class which describes an arc in terms of a centerpoint, radius and and
+two angles.
+.Sh INTERFACE
+.nr nS 1
+.Ft "VG_Arc *"
+.Fn VG_ArcNew "VG_Node *parent" "VG_Point *centerPoint" "float r" "float a1" "float a2"
+.Pp
+.Ft "void"
+.Fn VG_ArcCenter "VG_Arc *va" "VG_Point *centerPoint"
+.Pp
+.Ft "void"
+.Fn VG_ArcRadius "VG_Arc *va" "float r"
+.Pp
+.Ft "void"
+.Fn VG_ArcAngles "VG_Arc *va" "float a1" "float a2"
+.Pp
+.nr nS 0
+The
+.Fn VG_ArcNew
+function creates a new arc entity attached to
+.Fa parent .
+.Fa centerPoint
+is a
+.Xr VG_Point 3
+defining the center of the arc and
+.Fa r
+is the radius.
+The starting and ending angles are specified by
+.Fa a1
+and
+.Fa a2 ,
+in radians.
+.Pp
+The
+.Fn VG_ArcCenter
+routine changes the centerpoint of an existing
+.Nm .
+.Fn VG_ArcRadius
+changes the radius.
+.Fn VG_ArcAngles
+changes the angles.
+.Sh SEE ALSO
+.Xr VG 3 ,
+.Xr VG_Point 3 ,
+.Xr VG_Circle 3
+.Sh HISTORY
+The
+.Nm
+class first appeared in Agar 1.3.3.
