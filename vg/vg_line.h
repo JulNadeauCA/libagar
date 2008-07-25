@@ -35,4 +35,22 @@ VG_LineNew(void *pNode, VG_Point *p1, VG_Point *p2)
 	VG_NodeAttach(pNode, vl);
 	return (vl);
 }
+
+static __inline__ void
+VG_LineThickness(VG_Line *vl, Uint8 t)
+{
+	VG_Lock(VGNODE(vl)->vg);
+	vl->thickness = t;
+	VG_Unlock(VGNODE(vl)->vg);
+}
+
+static __inline__ void
+VG_LineStipple(VG_Line *vl, Uint16 s)
+{
+	VG_Lock(VGNODE(vl)->vg);
+	vl->stipple = s;
+	VG_Unlock(VGNODE(vl)->vg);
+}
+
+void VG_LineEndpointStyle(VG_Line *, enum vg_line_endpoint, ...);
 __END_DECLS

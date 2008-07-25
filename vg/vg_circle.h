@@ -24,4 +24,14 @@ VG_CircleNew(void *pNode, VG_Point *pCenter, float r)
 	VG_NodeAttach(pNode, vc);
 	return (vc);
 }
+
+static __inline__ void
+VG_CircleCenter(VG_Circle *vc, VG_Point *pCenter)
+{
+	VG_Lock(VGNODE(vc)->vg);
+	VG_DelRef(vc, vc->p);
+	VG_AddRef(vc, pCenter);
+	vc->p = pCenter;
+	VG_Unlock(VGNODE(vc)->vg);
+}
 __END_DECLS

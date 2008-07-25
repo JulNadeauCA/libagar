@@ -37,6 +37,8 @@
 #include "vg_view.h"
 #include "icons.h"
 
+#include <stdarg.h>
+
 static void
 Init(void *p)
 {
@@ -48,6 +50,24 @@ Init(void *p)
 	vl->stipple = 0xffff;
 	vl->miterLen = 0;
 	vl->thickness = 1;
+}
+
+void
+VG_LineEndpointStyle(VG_Line *vl, enum vg_line_endpoint style, ...)
+{
+	va_list ap;
+
+	VG_Lock(VGNODE(vl)->vg);
+	
+	vl->endPt = style;
+
+	if (style == VG_LINE_MITERED) {
+		va_start(ap, style);
+		vl->miterLen = (Uint8)va_arg(ap, int);
+		va_end(ap);
+	}
+
+	VG_Unlock(VGNODE(vl)->vg);
 }
 
 static int

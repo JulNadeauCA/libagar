@@ -51,21 +51,29 @@ VG_TextNew(void *pNode, VG_Point *p1, VG_Point *p2)
 static __inline__ void
 VG_TextAlignment(VG_Text *vt, enum vg_alignment align)
 {
+	VG_Lock(VGNODE(vt)->vg);
 	vt->align = align;
+	VG_Unlock(VGNODE(vt)->vg);
 }
 static __inline__ void
 VG_TextFontFace(VG_Text *vt, const char *face)
 {
+	VG_Lock(VGNODE(vt)->vg);
 	AG_Strlcpy(vt->fontFace, face, sizeof(vt->fontFace));
+	VG_Unlock(VGNODE(vt)->vg);
 }
 static __inline__ void
 VG_TextFontSize(VG_Text *vt, int size)
 {
+	VG_Lock(VGNODE(vt)->vg);
 	vt->fontSize = size;
+	VG_Unlock(VGNODE(vt)->vg);
 }
 static __inline__ void
 VG_TextFontFlags(VG_Text *vt, Uint flags)
 {
+	VG_Lock(VGNODE(vt)->vg);
 	vt->fontFlags = flags;
+	VG_Unlock(VGNODE(vt)->vg);
 }
 __END_DECLS

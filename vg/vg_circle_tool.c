@@ -119,7 +119,7 @@ PostDraw(void *p, VG_View *vv)
 
 VG_ToolOps vgCircleTool = {
 	N_("Circle"),
-	N_("Insert circles in the component schematic."),
+	N_("Insert circle by centerpoint and radius."),
 	&vgIconCircle,
 	sizeof(VG_CircleTool),
 	0,
