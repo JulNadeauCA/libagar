@@ -1,0 +1,82 @@
+.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 25, 2008
+.Dt VG_POINT 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm VG_Point
+.Nd agar-vg point entity
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/vg.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+is a
+.Xr VG 3
+node class which describes a single point.
+.Sh INTERFACE
+.nr nS 1
+.Ft "VG_Point *"
+.Fn VG_PointNew "VG_Node *parent" "VG_Vector pos"
+.Pp
+.Ft "void"
+.Fn VG_PointSize "VG_Point *pt" "float size"
+.Pp
+.nr nS 0
+The
+.Fn VG_PointNew
+function creates a new point entity attached to
+.Fa parent ,
+with an initial translation specified by
+.Fa pos .
+.Pp
+The
+.Fn VG_PointSize
+function specifies the size in pixels of the primitive to use for rendering
+the point.
+A value of 0.0 (the default) implies that the point is considered
+construction geometry.
+The endpoints of a
+.Xr VG_Line 3
+are an example of construction geometry.
+Note that
+.Xr VG_View 3
+does provide a
+.Sq Show construction geometry
+option which causes zero-sized points to be displayed to the user.
+.Sh SEE ALSO
+.Xr VG 3 ,
+.Xr VG_Line 3 ,
+.Xr VG_Circle 3 ,
+.Xr VG_Arc 3 ,
+.Sh HISTORY
+The
+.Nm
+class first appeared in Agar 1.3.3.

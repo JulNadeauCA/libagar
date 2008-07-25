@@ -1,0 +1,109 @@
+.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 25, 2008
+.Dt VG_LINE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm VG_Line
+.Nd agar-vg line entity
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+#include <agar/vg.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+is a
+.Xr VG 3
+node class which describes a line segment in terms of two points.
+.Sh INTERFACE
+.nr nS 1
+.Ft "VG_Line *"
+.Fn VG_LineNew "VG_Node *parent" "VG_Point *p1" "VG_Point *p2"
+.Pp
+.Ft "void"
+.Fn VG_LineThickness "VG_Line *vl" "Uint8 thickness"
+.Pp
+.Ft "void"
+.Fn VG_LineStipple "VG_Line *vl" "Uint16 pattern"
+.Pp
+.Ft "void"
+.Fn VG_LineEndpointStyle "VG_Line *vl" "enum vg_endpoint_style style" "..."
+.Pp
+.nr nS 0
+The
+.Fn VG_LineNew
+function creates a new line segment entity attached to
+.Fa parent .
+The
+.Fa p1
+and
+.Fa p2
+arguments define the endpoints.
+.Pp
+.Fn VG_LineThickness
+defines the thickness of the line in pixels (default = 1 pixel).
+Note that the line thickness parameter does not influence proximity queries
+used by "select" tools. it only affects rendering, so very thick lines should
+be rendered as
+.Xr VG_Polygon 3
+instead.
+.Pp
+.Fn VG_LineStipple
+defines a 16-bit, OpenGL-style stipple pattern (default is 0xffff).
+The order in which bits are used is undefined and depends on order of
+rendering.
+.Pp
+By default, thick lines are rendered using a square endpoint style.
+.Fn VG_LineEndpointStyle
+specifies the style of endpoints to use in rendering the line.
+Acceptable values include:
+.Bd -literal
+enum vg_line_endpoint {
+	VG_LINE_SQUARE,		/* Square endpoint */
+	VG_LINE_BEVELED,	/* Beveled endpoint */
+	VG_LINE_ROUNDED,	/* Rounded endpoint (circular) */
+	VG_LINE_MITERED		/* Mitered endpoint */
+};
+.Ed
+.Pp
+If
+.Dv VG_LINE_MITERED
+is used,
+.Fn VG_LineEndpointStyle
+expects a following
+.Ft Uint8
+argument describing the miter length in pixels.
+.Pp
+.Sh SEE ALSO
+.Xr VG 3 ,
+.Xr VG_Point 3
+.Sh HISTORY
+The
+.Nm
+class first appeared in Agar 1.3.3.
