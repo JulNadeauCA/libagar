@@ -38,16 +38,31 @@
 #include "icons.h"
 
 static void
+Init(void *p)
+{
+	VG_Point *pt = p;
+
+	pt->size = 0.0f;
+}
+
+static void
 Draw(void *p, VG_View *vv)
 {
+	VG_Point *pt = p;
+	float size, i;
+
 	if (vv->flags & VG_VIEW_CONSTRUCTION) {
-		VG_Point *pt = p;
+		size = 3.0f;
+	} else {
+		size = pt->size;
+	}
+	if (size > 0.0f) {
 		Uint32 c32 = VG_MapColorRGB(VGNODE(pt)->color);
-		int x, y, i;
+		int x, y;
 
 		VG_GetViewCoords(vv, VG_Pos(pt), &x, &y);
 		AG_DrawPixel(vv, x, y, c32);
-		for (i = 0; i < 3; i++) {
+		for (i = 0; i < size; i += 1.0f) {
 			AG_DrawPixel(vv, x-i, y, c32);
 			AG_DrawPixel(vv, x+i, y, c32);
 			AG_DrawPixel(vv, x, y-i, c32);
@@ -88,7 +103,7 @@ const VG_NodeOps vgPointOps = {
 	N_("Point"),
 	&vgIconPoints,
 	sizeof(VG_Point),
-	NULL,			/* init */
+	Init,
 	NULL,			/* destroy */
 	NULL,			/* load */
 	NULL,			/* save */
