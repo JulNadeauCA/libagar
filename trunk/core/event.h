@@ -97,9 +97,9 @@ typedef struct ag_event {
 
 typedef void (*AG_EventFn)(AG_Event *);
 
+__BEGIN_DECLS
 extern const char *agEvArgTypeNames[];
 
-__BEGIN_DECLS
 AG_Event *AG_SetEvent(void *, const char *, AG_EventFn, const char *, ...);
 AG_Event *AG_AddEvent(void *, const char *, AG_EventFn, const char *, ...);
 void	  AG_UnsetEvent(void *, const char *);

@@ -89,6 +89,7 @@ enum {
 	LAST_COLOR
 };
 
+__BEGIN_DECLS
 extern Uint32 agColors[LAST_COLOR];
 extern Uint32 agColorsBorder[];
 extern int agColorsBorderSize;
@@ -103,7 +104,6 @@ extern Sint8 agLowColorShift[3];
 
 #define AG_COLOR(idx) agColors[idx]
 
-__BEGIN_DECLS
 void AG_ColorsInit(void);
 void AG_ColorsDestroy(void);
 int AG_ColorsLoad(const char *);
