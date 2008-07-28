@@ -3,9 +3,9 @@
 #include "begin_code.h"
 
 typedef struct ag_object AG_Config;
-extern AG_Config *agConfig;
 
 __BEGIN_DECLS
+extern AG_Config *agConfig;
 extern AG_ObjectClass agConfigClass;
 
 extern int agKbdDelay, agKbdRepeat;

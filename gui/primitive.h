@@ -32,8 +32,6 @@ typedef struct ag_primitive_ops {
 	void (*ArrowRight)(void *, int x, int y, int l, Uint32 c1, Uint32 c2);
 } AG_PrimitiveOps;
 
-extern AG_PrimitiveOps agPrim;
-
 #define AG_DrawPixel AG_WidgetPutPixel
 #define AG_DrawPixelBlended AG_WidgetBlendPixel32
 #define AG_DrawPixelRGB AG_WidgetPutPixelRGB
@@ -62,6 +60,7 @@ extern AG_PrimitiveOps agPrim;
 #define AG_DrawArrowRight agPrim.ArrowRight
 
 __BEGIN_DECLS
+extern AG_PrimitiveOps agPrim;
 void AG_InitPrimitives(void);
 __END_DECLS
 
