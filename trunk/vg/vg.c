@@ -160,6 +160,7 @@ VG_ClearNodes(VG *vg)
 	     vnChld != TAILQ_END(&vg->root->cNodes);
 	     vnChld = vnNext) {
 		vnNext = TAILQ_NEXT(vnChld, tree);
+		VG_NodeDetach(vnChld);
 		VG_NodeDestroy(vnChld);
 	}
 	TAILQ_INIT(&vg->root->cNodes);
