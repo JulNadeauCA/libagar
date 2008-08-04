@@ -72,6 +72,8 @@ VG_ToolOps vgPointTool = {
 	NULL,			/* edit */
 	NULL,			/* predraw */
 	PostDraw,
+	NULL,			/* selected */
+	NULL,			/* deselected */
 	NULL,			/* mousemotion */
 	MouseButtonDown,
 	NULL,			/* mousebuttonup */

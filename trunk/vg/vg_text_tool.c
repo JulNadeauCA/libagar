@@ -158,6 +158,8 @@ VG_ToolOps vgTextTool = {
 	NULL,			/* edit */
 	NULL,			/* predraw */
 	PostDraw,
+	NULL,			/* selected */
+	NULL,			/* deselected */
 	MouseMotion,
 	MouseButtonDown,
 	NULL,			/* mousebuttonup */

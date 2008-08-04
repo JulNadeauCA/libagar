@@ -575,9 +575,11 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 
 	AG_ObjectLock(vv);
 
-	for (i = 0; i < vv->nEditAreas; i++) {
-		AG_ObjectFreeChildren(vv->editAreas[i]);
-		AG_WindowUpdate(AG_ParentWindow(vv->editAreas[i]));
+	if (ntool == NULL || !(ntool->ops->flags & VG_NOEDITCLEAR)) {
+		for (i = 0; i < vv->nEditAreas; i++) {
+			AG_ObjectFreeChildren(vv->editAreas[i]);
+			AG_WindowUpdate(AG_ParentWindow(vv->editAreas[i]));
+		}
 	}
 	if (vv->curtool != NULL) {
 		if (ntool != NULL && ntool->ops == vv->curtool->ops) {
@@ -585,6 +587,9 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 		}
 		if (vv->curtool->editWin != NULL) {
 			AG_WindowHide(vv->curtool->editWin);
+		}
+		if (vv->curtool->ops->deselected != NULL) {
+			vv->curtool->ops->deselected(ntool, vv);
 		}
 		vv->curtool->selected = 0;
 	}
@@ -598,14 +603,15 @@ VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
 		if (ntool->editWin != NULL) {
 			AG_WindowShow(ntool->editWin);
 		}
-		if (ntool->editArea != NULL && ntool->ops->edit != NULL) {
-			AG_Widget *wEdit;
-
-			wEdit = ntool->ops->edit(ntool, vv);
-			AG_ObjectAttach(ntool->editArea, wEdit);
-			AG_WindowUpdate(AG_ParentWindow(wEdit));
+		if (ntool->ops->edit != NULL && vv->nEditAreas > 0) {
+			AG_ObjectAttach(vv->editAreas[0],
+			    ntool->ops->edit(ntool,vv));
+			AG_WindowUpdate(AG_ParentWindow(vv->editAreas[0]));
 		}
+
 		VG_Status(vv, _("Tool: %s"), ntool->ops->name);
+		if (ntool->ops->selected != NULL)
+			ntool->ops->selected(ntool, vv);
 	} else {
 		VG_Status(vv, NULL);
 	}
