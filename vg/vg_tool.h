@@ -18,12 +18,15 @@ typedef struct vg_tool_ops {
 #define VG_BUTTONDOWN_NOSNAP	0x04	/* Ignore snapping in buttondown */
 #define VG_BUTTON_NOSNAP	(VG_BUTTONUP_NOSNAP|VG_BUTTONDOWN_NOSNAP)
 #define VG_NOSNAP		(VG_BUTTON_NOSNAP|VG_MOUSEMOTION_NOSNAP)
+#define VG_NOEDITCLEAR		0x08	/* Don't clear edit areas on select */
 
 	void (*init)(void *);
 	void (*destroy)(void *);
 	void *(*edit)(void *, struct vg_view *);
 	void (*predraw)(void *, struct vg_view *);
 	void (*postdraw)(void *, struct vg_view *);
+	void (*selected)(void *, struct vg_view *);
+	void (*deselected)(void *, struct vg_view *);
 
 	int (*mousemotion)(void *, VG_Vector vPos, VG_Vector vRel, int buttons);
 	int (*mousebuttondown)(void *, VG_Vector vPos, int button);

@@ -119,6 +119,11 @@ VG_NodeDestroy(void *p)
 	VG_Node *vn = p;
 	VG_Node *vnChld, *vnNext;
 
+#ifdef DEBUG
+	if (vn->vg != NULL || vn->parent != NULL)
+		AG_FatalError("VG_NodeDetach() must precede VG_NodeDestroy()");
+#endif
+
 	for (vnChld = TAILQ_FIRST(&vn->cNodes);
 	     vnChld != TAILQ_END(&vn->cNodes);
 	     vnChld = vnNext) {
@@ -127,7 +132,6 @@ VG_NodeDestroy(void *p)
 		VG_NodeDestroy(vnChld);
 	}
 	TAILQ_INIT(&vn->cNodes);
-	TAILQ_REMOVE(&vn->vg->nodes, vn, list);
 
 	if (vn->ops->destroy != NULL) {
 		vn->ops->destroy(vn);
@@ -231,6 +235,10 @@ VG_Delete(void *pVn)
 	VG_Node *vn = pVn;
 	VG *vg = vn->vg;
 
+#ifdef DEBUG
+	if (vg == NULL)
+		AG_FatalError("VG_Delete() on unattached node");
+#endif
 	VG_Lock(vg);
 	if (vn->nDeps > 0) {
 		AG_SetError("%s%u is in use", vn->ops->name, vn->handle);
@@ -239,9 +247,7 @@ VG_Delete(void *pVn)
 	if (vn->ops->deleteNode != NULL) {
 		vn->ops->deleteNode(vn);
 	}
-	if (vn->parent != NULL) {
-		TAILQ_REMOVE(&vn->parent->cNodes, vn, tree);
-	}
+	VG_NodeDetach(vn);
 	VG_NodeDestroy(vn);
 	VG_Unlock(vg);
 	return (0);
@@ -369,8 +375,11 @@ VG_NodeDetach(void *p)
 	VG *vg = vn->vg;
 	VG_Node *vnChld, *vnNext;
 
+#ifdef DEBUG
+	if (vg == NULL)
+		AG_FatalError("VG_NodeDetach() on unattached node");
+#endif
 	VG_Lock(vg);
-
 	for (vnChld = TAILQ_FIRST(&vn->cNodes);
 	     vnChld != TAILQ_END(&vn->cNodes);
 	     vnChld = vnNext) {
@@ -384,7 +393,7 @@ VG_NodeDetach(void *p)
 		vn->parent = NULL;
 	}
 	TAILQ_REMOVE(&vg->nodes, vn, list);
-
+	vn->vg = NULL;
 	VG_Unlock(vg);
 }
 
