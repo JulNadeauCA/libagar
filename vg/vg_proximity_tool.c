@@ -35,8 +35,6 @@
 #include "vg_view.h"
 #include "icons.h"
 
-#ifdef DEBUG
-
 static int
 MouseButtonDown(void *t, VG_Vector v, int button)
 {
@@ -121,4 +119,3 @@ VG_ToolOps vgProximityTool = {
 	NULL,			/* keydown */
 	NULL			/* keyup */
 };
-#endif /* DEBUG */
