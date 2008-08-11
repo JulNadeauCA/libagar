@@ -46,7 +46,6 @@ void		 AG_SetError(const char *, ...)
 		     NONNULL_ATTRIBUTE(1);
 void		 AG_FatalError(const char *, ...);
 void		 AG_Debug(void *, const char *, ...)
-		     NONNULL_ATTRIBUTE(1)
 		     FORMAT_ATTRIBUTE(printf, 2, 3)
 		     NONNULL_ATTRIBUTE(2);
 void		 AG_Verbose(const char *, ...)

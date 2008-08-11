@@ -93,10 +93,18 @@ The
 .Fn AG_Debug
 function outputs a string on the debugging console of
 .Fa obj ,
-assuming it has the
+assuming the object either has the
 .Dv AG_OBJECT_DEBUG
-flag set.
+flag set, or the global
+.Va agDebugLvl
+is >= 1.
 The name of the object is prefixed to the string.
+The
+.Fa obj
+parameter can be NULL in which case the message is output on the debug
+console when
+.Va agDebugLvl
+is >= 1.
 .Sh ERROR WRAPPERS
 .nr nS 1
 .Ft "void *"
