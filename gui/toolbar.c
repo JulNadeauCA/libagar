@@ -183,7 +183,8 @@ AG_ToolbarSeparator(AG_Toolbar *bar)
 {
 	AG_LockVFS(agView);
 	AG_ObjectLock(bar);
-	AG_SeparatorNew(bar->rows[bar->curRow], bar->type == AG_TOOLBAR_HORIZ ?
+	AG_SeparatorNew(bar->rows[bar->curRow],
+	    (bar->type == AG_TOOLBAR_HORIZ) ?
 	    AG_SEPARATOR_VERT : AG_SEPARATOR_HORIZ);
 	AG_ObjectUnlock(bar);
 	AG_UnlockVFS(agView);
@@ -274,110 +275,16 @@ static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Toolbar *tbar = p;
-	AG_Box *box = p;
-	AG_Widget *chld;
-	AG_SizeReq rChld;
-	int wMax = 0, hMax = 0, nButtons;
-	int nButtonsMax = 0;
+	AG_SizeReq rBar;
 	int i;
 
-	r->w = box->padding*2;
-	r->h = box->padding*2;
+	AG_BoxSizeRequest(p, r);
 
-	for (i = 0; i < tbar->nRows; i++) {
-		nButtons = 0;
-		OBJECT_FOREACH_CHILD(chld, tbar->rows[i], ag_widget) {
-			if (chld->flags & AG_WIDGET_HIDE) {
-				continue;
-			}
-			AG_WidgetSizeReq(chld, &rChld);
-			if (rChld.w > wMax) { wMax = rChld.w; }
-			if (rChld.h > hMax) { hMax = rChld.h; }
-			nButtons++;
-		}
- 		if (nButtons > 0) {
-			switch (tbar->type) {
-			case AG_TOOLBAR_HORIZ:
-				r->w -= box->spacing;
-				break;
-			case AG_TOOLBAR_VERT:
-				r->h -= box->spacing;
-				break;
-			}
-			nButtonsMax = MAX(nButtonsMax,nButtons);
-		}
-	}
-	switch (tbar->type) {
-	case AG_TOOLBAR_HORIZ:
-		r->w = nButtonsMax*wMax;
-		r->h = hMax*tbar->nRows + box->padding*2;
-		if (nButtonsMax > 1) {
-			r->w += (nButtonsMax-1)*box->spacing;
-		}
-		break;
-	case AG_TOOLBAR_VERT:
-		r->w = wMax*tbar->nRows + box->padding*2;
-		r->h = nButtonsMax*hMax;
-		if (nButtonsMax > 1) {
-			r->h += (nButtonsMax-1)*box->spacing;
-		}
-		break;
-	}
-}
-
-static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
-{
-	AG_Toolbar *bar = p;
-	AG_Box *box = p;
-	AG_Widget *chld, *chldLast;
-	AG_SizeAlloc aChld;
-	AG_SizeReq rChld;
-	int x, y, wChld, nChld;
-
-	x = box->padding;
-	y = box->padding;
-
-	if (bar->flags & AG_TOOLBAR_HOMOGENOUS) {
-		nChld = 0;
-		OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
-			if ((chld->flags & AG_WIDGET_HIDE) == 0)
-				nChld++;
-		}
-		if (nChld == 0) {
-			return (-1);
-		}
-		wChld = a->w / nChld;
-		chldLast = NULL;
-		OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
-			if (chld->flags & AG_WIDGET_HIDE) {
-				continue;
-			}
-			aChld.x = x;
-			aChld.y = y;
-			aChld.w = wChld;
-			aChld.h = a->h;
-			AG_WidgetSizeAlloc(chld, &aChld);
-			aChld.x += aChld.w + box->spacing;
-			chldLast = chld;
-		}
-		if (aChld.x < a->w)		/* Compensate for rounding */
-			chldLast->w++;
-	} else {
-		OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
-			if (chld->flags & AG_WIDGET_HIDE) {
-				continue;
-			}
-			AG_WidgetSizeReq(chld, &rChld);
-			aChld.x = x;
-			aChld.y = y;
-			aChld.w = rChld.w;
-			aChld.h = a->h;
-			AG_WidgetSizeAlloc(chld, &aChld);
-			aChld.x += aChld.w + box->spacing;
-		}
-	}
-	return (0);
+	rBar = *r;
+	rBar.h = (tbar->type == AG_TOOLBAR_HORIZ) ? r->h/tbar->nRows :
+	                                            r->w/tbar->nRows;
+	for (i = 0; i < tbar->nRows; i++)
+		AG_BoxSizeRequest(tbar->rows[i], &rBar);
 }
 
 AG_WidgetClass agToolbarClass = {
@@ -392,7 +299,7 @@ AG_WidgetClass agToolbarClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* draw */
+	AG_BoxDraw,
 	SizeRequest,
-	SizeAllocate
+	AG_BoxSizeAllocate
 };
