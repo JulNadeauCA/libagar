@@ -300,6 +300,11 @@ WidgetParams(AG_Event *event)
 		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &box->spacing);
 		AG_SpinbuttonSetMin(sb, 0);
 		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", wp);
+		
+		AG_CheckboxNewFlag(nTab, &box->flags, AG_BOX_HOMOGENOUS,
+		    _("Homogenous"));
+		AG_CheckboxNewFlag(nTab, &box->flags, AG_BOX_FRAME,
+		    _("Visual frame"));
 	}
 
 	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Editable:*")) {
