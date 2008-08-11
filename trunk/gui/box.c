@@ -60,8 +60,8 @@ Init(void *obj)
 	box->spacing = 2;
 }
 
-static void
-Draw(void *obj)
+void
+AG_BoxDraw(void *obj)
 {
 	AG_Box *box = obj;
 
@@ -223,6 +223,11 @@ AG_BoxSizeAllocate(void *obj, const AG_SizeAlloc *a)
 				  hAvail : MIN(hAvail, rChld.h);
 			AG_WidgetSizeAlloc(chld, &aChld);
 			aChld.x += aChld.w + box->spacing;
+			if (aChld.x > a->w+box->padding*2) {
+				chld->flags |= AG_WIDGET_UNDERSIZE;
+			} else {
+				chld->flags &= ~(AG_WIDGET_UNDERSIZE);
+			}
 			break;
 		case AG_BOX_VERT:
 			aChld.w = (chld->flags & AG_WIDGET_HFILL) ?
@@ -231,6 +236,11 @@ AG_BoxSizeAllocate(void *obj, const AG_SizeAlloc *a)
 			          (hAvail - totFixed) : MIN(rChld.h, hAvail);
 			AG_WidgetSizeAlloc(chld, &aChld);
 			aChld.y += aChld.h + box->spacing;
+			if (aChld.y > a->h+box->padding*2) {
+				chld->flags |= AG_WIDGET_UNDERSIZE;
+			} else {
+				chld->flags &= ~(AG_WIDGET_UNDERSIZE);
+			}
 			break;
 		}
 	}
@@ -300,7 +310,7 @@ AG_WidgetClass agBoxClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	Draw,
+	AG_BoxDraw,
 	AG_BoxSizeRequest,
 	AG_BoxSizeAllocate
 };
