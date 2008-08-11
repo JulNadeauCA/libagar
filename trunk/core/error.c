@@ -105,7 +105,7 @@ AG_Debug(void *p, const char *fmt, ...)
 	AG_Object *obj = p;
 	va_list args;
 	
-	if (obj->debugFn != NULL) {
+	if (obj != NULL && obj->debugFn != NULL) {
 		char *buf, *p;
 
 		va_start(args, fmt);
@@ -116,12 +116,14 @@ AG_Debug(void *p, const char *fmt, ...)
 		Free(buf);
 		va_end(args);
 	} else {
-		if (agDebugLvl >= 1 || OBJECT_DEBUG(obj)) {
+		if (agDebugLvl >= 1 || (obj != NULL && OBJECT_DEBUG(obj))) {
 			va_start(args, fmt);
-			if (OBJECT(obj)->name[0] != '\0') {
-				printf("%s: ", OBJECT(obj)->name);
-			} else {
-				printf("<%p>: ", obj);
+			if (obj != NULL) {
+				if (OBJECT(obj)->name[0] != '\0') {
+					printf("%s: ", OBJECT(obj)->name);
+				} else {
+					printf("<%p>: ", obj);
+				}
 			}
 			vprintf(fmt, args);
 			va_end(args);
