@@ -340,12 +340,18 @@ void
 VG_ViewSetGrid(VG_View *vv, int idx, enum vg_grid_type type, int ival,
     VG_Color color)
 {
+	if (idx+1 > VG_GRIDS_MAX)
+		AG_FatalError("Too many grids");
+
 	AG_ObjectLock(vv);
 	vv->grid[idx].type = type;
 	vv->grid[idx].ival = ival;
 	vv->grid[idx].color = color;
 	if (idx == 0) {
 		UpdatePointSelRadius(vv);
+	}
+	if (idx >= vv->nGrids) {
+		vv->nGrids = idx+1;
 	}
 	AG_ObjectUnlock(vv);
 }
@@ -442,7 +448,7 @@ DrawGrid(VG_View *vv, const VG_Grid *grid)
 	int x, x0, y;
 	int ival;
 
-	if (grid->ival < 4) {
+	if (grid->ival <= 1) {
 		return;
 	}
 	ival = (int)(grid->ival/vv->wPixel);

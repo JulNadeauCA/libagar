@@ -262,11 +262,11 @@ VG_AddRef(void *p, void *pRef)
 {
 	VG_Node *vn = p;
 
-	VG_Lock(vn->vg);
+	if (vn->vg != NULL) { VG_Lock(vn->vg); }
 	vn->refs = Realloc(vn->refs, (vn->nRefs+1)*sizeof(VG_Node *));
 	vn->refs[vn->nRefs++] = VGNODE(pRef);
 	VGNODE(pRef)->nDeps++;
-	VG_Unlock(vn->vg);
+	if (vn->vg != NULL) { VG_Unlock(vn->vg); }
 }
 
 Uint
@@ -276,7 +276,7 @@ VG_DelRef(void *pVn, void *pRef)
 	Uint newDeps;
 	int i;
 
-	VG_Lock(vn->vg);
+	if (vn->vg != NULL) { VG_Lock(vn->vg); }
 	for (i = 0; i < vn->nRefs; i++) {
 		if (vn->refs[i] == VGNODE(pRef))
 			break;
@@ -290,7 +290,7 @@ VG_DelRef(void *pVn, void *pRef)
 	}
 	vn->nRefs--;
 	newDeps = (--VGNODE(pRef)->nDeps);
-	VG_Unlock(vn->vg);
+	if (vn->vg != NULL) { VG_Unlock(vn->vg); }
 	return (newDeps);
 }
 
@@ -405,11 +405,11 @@ VG_SetSym(void *pNode, const char *fmt, ...)
 	VG_Node *vn = pNode;
 	va_list args;
 
-	VG_Lock(vn->vg);
+	if (vn->vg != NULL) { VG_Lock(vn->vg); }
 	va_start(args, fmt);
 	Vsnprintf(vn->sym, sizeof(vn->sym), fmt, args);
 	va_end(args);
-	VG_Unlock(vn->vg);
+	if (vn->vg != NULL) { VG_Unlock(vn->vg); }
 }
 
 void
