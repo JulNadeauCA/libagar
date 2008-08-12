@@ -9,5 +9,6 @@ VG_ToolOps *vgTools[] = {
 	&vgCircleTool,
 	&vgProximityTool,
 	&vgTextTool,
+	&vgPolygonTool,
 	NULL
 };
