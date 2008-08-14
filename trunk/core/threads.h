@@ -101,7 +101,7 @@ typedef int AG_Cond;
 #define AG_CondSignal(cd)
 #define AG_CondWait(cd,m)
 #define AG_CondTimedWait(cd,m,t)
-#define AG_ThreadCancel(thread,valptr)
+#define AG_ThreadCancel(thread)
 
 #define AG_ThreadCreate(thread,func,arg) AG_FatalError("No THREADS")
 #define AG_ThreadJoin(thread,valptr) AG_FatalError("No THREADS")
