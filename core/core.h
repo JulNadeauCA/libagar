@@ -73,16 +73,6 @@ typedef unsigned long Ulong;
 #define NONNULL_ATTRIBUTE(a)
 #endif
 
-#if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
-# if defined(__cplusplus)
-#  define __BEGIN_DECLS	extern "C" {
-#  define __END_DECLS	}
-# else
-#  define __BEGIN_DECLS
-#  define __END_DECLS
-# endif
-#endif
-
 #define AG_BIG_ENDIAN 4321
 #define AG_LITTLE_ENDIAN 1234
 #include <config/_mk_big_endian.h>
