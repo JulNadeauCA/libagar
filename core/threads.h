@@ -30,9 +30,15 @@ typedef pthread_key_t AG_ThreadKey;
 #define AG_MUTEX_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 #endif
 
-__BEGIN_DECLS
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 extern pthread_mutexattr_t agRecursiveMutexAttr;
-__END_DECLS
+
+#if defined(__cplusplus)
+}
+#endif
 
 #ifdef DEBUG
 
