@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2008 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -31,10 +31,10 @@
 .Nm AG_Intro
 .Nd agar introduction
 .Sh DESCRIPTION
-Agar is a portable graphical application toolkit.
-It consists of two libraries: Agar-Core and Agar-GUI.
-The Agar source distribution also includes other useful graphics-related
-libraries.
+Agar is a graphical application toolkit.
+It provides all type sof graphical applications with consistent interfaces
+across a wide array of platforms.
+The two main Agar libraries are Agar-Core and Agar-GUI.
 .Pp
 .Sh AGAR-CORE
 Agar-Core implements the
@@ -65,8 +65,10 @@ Timing-related routines.
 Datafile versioning functions.
 .El
 .Sh AGAR-GUI
-Agar-GUI implements a set of widget and a built-in window system that are
-independent of the underlying graphics API.
+Agar-GUI implements a standard widget set and a built-in window system.
+It is implemented in a fashion independent of the underlying graphics API
+(i.e., direct-video, OpenGL), and is designed to provide the highest
+performance and efficiency achievable with any given graphics system.
 .Pp
 .Bl -tag -width "AG_Window(3) " -compact
 .It Xr AG_Colors 3
@@ -86,13 +88,14 @@ Generic widget interface.
 .It Xr AG_Window 3
 Basic window widget; interface to built-in window manager.
 .El
-.Sh STANDARD WIDGETS
-These are the standard Agar widget classes.
-The widget API is open, so libraries and applications will frequently
-implement new widgets (inheriting from existing widget classes is made
-possible by the
+.Sh AGAR-GUI: STANDARD WIDGETS
+The standard Agar widget set provides the basic GUI functionality useful to
+the widest range of applications.
+Note that the implementation of more specialized and application-specific
+widgets (made simple by the
 .Xr AG_Object 3
-system).
+interface) is encouraged, as demonstrated by the other standard Agar libraries
+which include a few of them.
 .Pp
 .Bl -tag -width "AG_ObjectSelector(3) " -compact
 .It Xr AG_Box 3
@@ -128,12 +131,8 @@ Drag-and-droppable object that can be inserted into
 widgets.
 .It Xr AG_Label 3
 Display a string of text (static or polled).
-.\" .It Xr AG_MFSpinbutton 3
-.\" Spinbutton widget for tuples (real-valued).
 .It Xr AG_MPane 3
 Standard single, dual, triple and quad paned view.
-.\" .It Xr AG_MSpinbutton 3
-.\" Spinbutton widget for tuples (integer-only).
 .It Xr AG_Matview 3
 Matrix viewer widget.
 .It Xr AG_Menu 3
@@ -169,10 +168,6 @@ Slider control (integer or floating-point bindings).
 Placeholder for drag-and-droppable
 .Xr AG_Icon 3
 objects.
-\" .It Xr AG_Spinbutton 3
-\" Spinbutton widget for integer values.
-\" Superceded by
-\" .Xr AG_Numerical 3 .
 .It Xr AG_Statusbar 3
 Specialized statusbar widget.
 .It Xr AG_Table 3
@@ -197,25 +192,41 @@ Alternate interface to
 .Sh AGAR-VG
 Agar-VG is a simple 2D vector graphics library which allows developers
 to specify hierarchical sketches consisting of elements such as lines, curves
-and text, with associated linear transformations.
-It is well suited to applications such as technical simulations; applications
-requiring dimensioned, constrained vector drawings should use the FreeSG
-.Xr SK 3
-library instead (http://freesg.org/).
+and text.
+It uses linear transformations to define the placement of geometrical
+entities, which the best approach for most applications.
 .Pp
-(Agar-VG is not yet documented)
+Following the same design philosophy as Agar-GUI, Agar-VG only provides the
+entity classes (e.g., lines, arcs) useful to the widest range of applications,
+and allows specialized and application-specific entities to be implemented
+easily in separate libraries.
+For specialized applications such as CAD systems, the placement of entities
+might be best described through geometrical constraints (e.g., distances and
+angles) as opposed to linear transformations.
+This functionality is implemented in the FreeSG library (see
+.Dq FREESG ) .
 .Pp
-.\" .Bl -tag -width "VG_View(3) " -compact
-.\" .It Xr VG 3
-.\" Vector drawing object.
-.\" .It Xr VG_View 3
-.\" Visualization widget.
-.\" .El
+.Bl -tag -width "VG_Polygon(3) " -compact
+.It Xr VG 3
+Vector drawing object.
+.It Xr VG_View 3
+Agar widget for visualization and edition of drawings.
+.It Xr VG_Arc 3
+Arc entity.
+.It Xr VG_Circle 3
+Circle entity.
+.It Xr VG_Line 3
+Line entity.
+.It Xr VG_Polygon 3
+Polygon entity.
+.It Xr VG_Text 3
+Text entity.
+.El
 .Sh AGAR-RG
 Agar-RG is a library for generating and manipulating raster graphics (either
-static or animated) by compositing a set of graphical elements. It implements
-a "smart" image format which allows directives, transformations and instancing
-of graphical elements.
+static or animated) by compositing a set of graphical elements.
+It implements a "smart" image format which allows directives, transformations
+and instancing of graphical elements.
 .Pp
 .Bl -tag -width "RG_Animview (3) " -compact
 .It Xr RG_Tileset 3
@@ -228,14 +239,10 @@ Tile reference with texturing settings.
 Animation generated from a set of instructions.
 .It Xr RG_Pixmap 3
 Graphical surface used internally.
-.\" .It Xr RG_Sketch 3
-.\" Vector drawing used internally.
 .It Xr RG_Feature 3
 Generic graphical operation framework.
 .It Xr RG_Tileview 3
 Widget for graphics edition, generic tool framework with undo.
-.\" .It Xr RG_Animview 3
-.\" Widget for displaying animations.
 .El
 .Sh AGAR-MAP
 Agar-MAP is a 2D tiling library aimed at isometric games, platform games
@@ -251,4 +258,6 @@ Dynamic map object.
 Map visualization and edition widget.
 .El
 .Sh FREESG
-See http://freesg.org/ for more details.
+FreeSG is a math library / computational geometry / 2D / 3D toolkit.
+It is not part of the Agar distribution, but it is built on top of Agar. 
+See: http://freesg.org/ for more details.
