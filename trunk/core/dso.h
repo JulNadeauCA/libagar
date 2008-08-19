@@ -31,6 +31,8 @@ extern AG_Mutex agDSOLock;
 AG_DSO *AG_LoadDSO(const char *, const char *, Uint);
 int     AG_SymDSO(AG_DSO *, const char *, void **);
 int     AG_UnloadDSO(AG_DSO *);
+#define AG_LockDSO() AG_MutexLock(&agLoadedDSOs)
+#define AG_UnlockDSO() AG_MutexUnlock(&agLoadedDSOs)
 __END_DECLS
 
 #include "close_code.h"
