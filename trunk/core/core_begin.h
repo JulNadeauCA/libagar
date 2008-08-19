@@ -79,6 +79,8 @@
 #include <stdio.h>	/* For use of FILE in headers */
 #include <SDL.h>	/* For use of SDL types in headers */
 
+#include <agar/core/limits.h>
+
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
 #define Uchar unsigned char
 #define Uint unsigned int
@@ -120,11 +122,6 @@
 #  define __END_DECLS
 # endif
 # define _AGAR_DEFINED_CC_DECLS_
-#endif
-
-#ifndef MAXPATHLEN
-#define MAXPATHLEN 1024
-#define _AGAR_DEFINED_MAXPATHLEN_
 #endif
 
 #include <agar/core/queue.h>	/* For FOO_ENTRY macros */

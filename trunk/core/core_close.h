@@ -11,10 +11,6 @@
 # undef __BEGIN_DECLS
 # undef __END_DECLS
 #endif
-#ifdef _AGAR_DEFINED_MAXPATHLEN_
-# undef _AGAR_DEFINED_MAXPATHLEN_
-# undef MAXPATHLEN
-#endif
 #ifdef _AGAR_DEBUG_
 # undef _AGAR_DEBUG_
 # undef DEBUG
