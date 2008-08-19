@@ -2,17 +2,41 @@
 
 #ifdef _AGAR_INTERNAL
 #include <config/_mk_have_limits_h.h>
+#include <config/_mk_have_float_h.h>
 #include <config/have_long_long.h>
 #include <config/have_long_double.h>
 #else
 #include <agar/config/_mk_have_limits_h.h>
+#include <agar/config/_mk_have_float_h.h>
 #include <agar/config/have_long_long.h>
 #include <agar/config/have_long_double.h>
 #endif
 
-#ifndef _AGAR_CORE_LIMITS_H
-#define _AGAR_CORE_LIMITS_H
+/*
+ * String limits
+ */
+#if defined(MAXPATHLEN)
+# define AG_PATHNAME_MAX MAXPATHLEN
+#else
+# define AG_PATHNAME_MAX 1024
+#endif
+#if defined(FILENAME_MAX)
+# define AG_FILENAME_MAX FILENAME_MAX
+#else
+# define AG_FILENAME_MAX 256
+#endif
 
+#if defined(BUFSIZ)
+# define AG_BUFFER_MIN BUFSIZ
+# define AG_BUFFER_MAX BUFSIZ
+#else
+# define AG_BUFFER_MIN 1024
+# define AG_BUFFER_MAX 8192
+#endif
+
+/*
+ * Integer limits
+ */
 #ifdef _MK_HAVE_LIMITS_H
 # include <limits.h>
 # define AG_INT_MIN	INT_MIN
@@ -41,6 +65,9 @@
 # define AG_LLONG_MAX	0x7fffffffffffffffLL	
 #endif
 
+/*
+ * Floating-point number limits
+ */
 #ifdef __FLT_MIN__
 # define AG_FLT_MIN __FLT_MIN__
 #else
@@ -74,4 +101,17 @@
 # endif
 #endif /* HAVE_LONG_DOUBLE */
 
-#endif /* _AGAR_CORE_LIMITS_H */
+#ifdef _MK_HAVE_FLOAT_H
+# include <float.h>
+# define AG_FLT_EPSILON FLT_EPSILON
+# define AG_DBL_EPSILON DBL_EPSILON
+# ifdef HAVE_LONG_DOUBLE
+#  define AG_LDBL_EPSILON LDBL_EPSILON
+# endif
+#else /* !_MK_HAVE_FLOAT_H */
+# define AG_FLT_EPSILON 1.192092896e-7f
+# define AG_DBL_EPSILON 2.2204460492503131e-16
+# ifdef HAVE_LONG_DOUBLE
+#  define AG_LDBL_EPSILON 1.08420217248550443e-19l
+# endif
+#endif /* _MK_HAVE_FLOAT_H */

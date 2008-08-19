@@ -1,0 +1,106 @@
+.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 19, 2008
+.Dt AG_LIMITS 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_Limits
+.Nd agar limit constants
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+interface provides a portable way for obtaining various types of limits
+which can be architecture or platform-specific.
+.Sh STRING LIMITS
+.Bl -tag -compact -width "AG_PATHNAME_MAX "
+.It Dv AG_PATHNAME_MAX
+Max. number of characters in a filesystem path.
+.It Dv AG_FILENAME_MAX
+Max. number of characters in a single filename.
+.It Dv AG_BUFFER_MIN
+Min. recommended bytes in an I/O buffer.
+.It Dv AG_BUFFER_MAX
+Max. recommended bytes in an I/O buffer.
+.El
+.Sh NUMERICAL LIMITS
+.Bl -tag -compact -width "AG_LONG_{MIN,MAX} "
+.It Dv AG_INT_{MIN,MAX}
+Value representible by
+.Ft int .
+.It Dv AG_UINT_MAX
+Max. value representible by
+.Ft Uint .
+.It Dv AG_LONG_{MIN,MAX}
+Value representible by
+.Ft long .
+.It Dv AG_ULONG_MAX
+Max. value representible by
+.Ft Ulong .
+.It Dv AG_FLT_{MIN,MAX}
+Value representible by
+.Ft float .
+.It Dv AG_DBL_{MIN,MAX}
+Value representible by
+.Ft double .
+.It Dv AG_LDBL_{MIN,MAX}
+Value representible by
+.Ft long double
+(defined only where
+.Dv HAVE_LONG_DOUBLE
+is set)
+.It Dv AG_FLT_EPSILON
+Smallest
+.Fa x
+of type
+.Ft float
+such that 1.0 + x != 1.0.
+.It Dv AG_DBL_EPSILON
+Smallest
+.Fa x
+of type
+.Ft double
+such that 1.0 + x != 1.0.
+.It Dv AG_LDBL_EPSILON
+Smallest
+.Fa x
+of type
+.Ft long double
+such that 1.0 + x != 1.0
+(defined only where
+.Dv HAVE_LONG_DOUBLE
+is set)
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.3.
