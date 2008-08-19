@@ -45,6 +45,8 @@
 
 #include "fgetln.h"
 
+static const int bufSize = 8192;
+
 char *
 NS_Fgetln(FILE *fp, size_t *len)
 {
@@ -53,7 +55,7 @@ NS_Fgetln(FILE *fp, size_t *len)
 	char *ptr;
 
 	if (buf == NULL) {
-		bufsiz = AG_BUFFER_MAX;
+		bufsiz = bufSize;
 		if ((buf = malloc(bufsiz)) == NULL)
 			return (NULL);
 	}
@@ -62,7 +64,7 @@ NS_Fgetln(FILE *fp, size_t *len)
 
 	*len = 0;
 	while ((ptr = strchr(&buf[*len], '\n')) == NULL) {
-		size_t nbufsiz = bufsiz + AG_BUFFER_MAX;
+		size_t nbufsiz = bufsiz + bufSize;
 		char *nbuf = realloc(buf, nbufsiz);
 
 		if (nbuf == NULL) {
@@ -77,7 +79,7 @@ NS_Fgetln(FILE *fp, size_t *len)
 		}
 
 		*len = bufsiz;
-		if (fgets(&buf[bufsiz], AG_BUFFER_MAX, fp) == NULL) {
+		if (fgets(&buf[bufsiz], bufSize, fp) == NULL) {
 			return (buf);
 		}
 		bufsiz = nbufsiz;
