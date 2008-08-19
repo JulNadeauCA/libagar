@@ -1855,7 +1855,7 @@ RG_TileviewGenericMenu(RG_Tileview *tv, AG_MenuItem *mi)
 
 AG_WidgetClass rgTileviewClass = {
 	{
-		"AG_Widget:RG_Tileview",
+		"Agar(Widget):RG(Tileview)",
 		sizeof(RG_Tileview),
 		{ 0,0 },
 		Init,
