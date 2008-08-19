@@ -27,7 +27,6 @@
  * Generate plots of proximity functions for debugging purposes.
  */
 
-#include <core/limits.h>
 #include <core/core.h>
 #include <gui/widget.h>
 #include <gui/primitive.h>

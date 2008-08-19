@@ -4,7 +4,6 @@
 #define _AGAR_VG_VIEW_H_
 
 #ifdef _AGAR_INTERNAL
-# include <core/limits.h>
 # include <gui/widget.h>
 # include <gui/button.h>
 # include <gui/menu.h>
@@ -12,7 +11,6 @@
 # include <vg/vg.h>
 # include <vg/vg_tool.h>
 #else
-# include <agar/core/limits.h>
 # include <agar/gui/widget.h>
 # include <agar/gui/button.h>
 # include <agar/gui/menu.h>

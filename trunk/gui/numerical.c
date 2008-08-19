@@ -26,7 +26,6 @@
 #include <config/_mk_have_strtoll.h>
 #include <config/_mk_have_strtold.h>
 
-#include <core/limits.h>
 #include <core/core.h>
 
 #include "numerical.h"

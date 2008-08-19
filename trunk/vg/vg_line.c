@@ -27,7 +27,6 @@
  * Line entity.
  */
 
-#include <core/limits.h>
 #include <core/core.h>
 
 #include <gui/widget.h>

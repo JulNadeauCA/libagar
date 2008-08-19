@@ -27,7 +27,6 @@
  * Text entity.
  */
 
-#include <core/limits.h>
 #include <core/core.h>
 #include <core/config.h>
 
