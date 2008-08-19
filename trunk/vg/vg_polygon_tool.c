@@ -72,6 +72,7 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 	case SDL_BUTTON_RIGHT:
 		if (t->vpCur != NULL) {
 			t->vpCur = NULL;
+			t->vtxCur = 0;
 		}
 		return (1);
 	default:
@@ -100,8 +101,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 		if ((pt = VG_NearestPoint(vv, vPos, t->vpCur->pts[1]))) {
 			VG_Status(vv, _("Use Point%u"), VGNODE(pt)->handle);
 		} else {
-			VG_Status(vv,
-			    _("Create vertex at %.2f,%.2f"),
+			VG_Status(vv, _("Create vertex at %.2f,%.2f"),
 			    vPos.x, vPos.y);
 		}
 		VG_SetPosition(t->vpCur->pts[t->vtxCur], vPos);
