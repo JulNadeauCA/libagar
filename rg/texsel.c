@@ -113,8 +113,8 @@ Init(void *obj)
 
 AG_WidgetClass rgTextureSelectorClass = {
 	{
-		"AG_Widget:AG_Tlist:AG_TextureSelector",
-		sizeof(AG_Tlist),
+		"Agar(Widget:Tlist):RG(TextureSelector)",
+		sizeof(RG_TextureSelector),
 		{ 0,0 },
 		Init,
 		NULL,		/* free */

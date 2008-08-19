@@ -62,6 +62,7 @@ extern const char *rgTileSnapModes[];
 void
 RG_InitSubsystem(void)
 {
+	AG_RegisterNamespace("RG", "RG_", "http://libagar.org/");
 	AG_RegisterClass(&rgTileviewClass);
 	AG_RegisterClass(&rgAnimviewClass);
 	AG_RegisterClass(&rgTextureSelectorClass);
@@ -1884,7 +1885,7 @@ Edit(void *p)
 }
 
 AG_ObjectClass rgTilesetClass = {
-	"RG_Tileset",
+	"RG(Tileset)",
 	sizeof(RG_Tileset),
 	{ 8, 0 },
 	Init,

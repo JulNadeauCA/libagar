@@ -284,7 +284,7 @@ RG_AnimviewSetAnimation(RG_Animview *av, RG_Anim *anim)
 
 AG_WidgetClass rgAnimviewClass = {
 	{
-		"AG_Widget:RG_Animview",
+		"Agar(Widget):RG(Animview)",
 		sizeof(RG_Animview),
 		{ 0,0 },
 		Init,
