@@ -23,9 +23,16 @@
 
 struct ag_event;
 
-/* Generic object operation vector */
+/* Agar namespace description. */
+typedef struct ag_namespace {
+	const char *name;			/* Name string */
+	const char *pfx;			/* Prefix string */
+	const char *url;			/* URL of package */
+} AG_Namespace;
+
+/* Object class description. */
 typedef struct ag_object_class {
-	const char *name;			/* Class name */
+	char name[AG_OBJECT_TYPE_MAX];		/* Expanded class name */
 	size_t size;				/* Structure size */
 	AG_Version ver;				/* Version numbers */
 
@@ -173,15 +180,16 @@ enum ag_object_checksum_alg {
 #endif /* _AGAR_INTERNAL || _USE_AGAR_CORE */
 
 __BEGIN_DECLS
-extern AG_ObjectClass agObjectClass;
-extern AG_ObjectClass **agClassTbl;
+extern AG_Namespace  *agNamespaceTbl;		/* Object class namespaces */
+extern int            agNamespaceCount;
+extern AG_ObjectClass **agClassTbl;		/* Object classes */
 extern int              agClassCount;
+extern AG_ObjectClass agObjectClass;		/* Generic Object class */
 
 void	*AG_ObjectNew(void *, const char *, AG_ObjectClass *);
 void	 AG_ObjectAttach(void *, void *);
 int	 AG_ObjectAttachToNamed(void *, const char *, void *);
 void	 AG_ObjectDetach(void *);
-void	 AG_ObjectMove(void *, void *);
 
 void	 AG_ObjectInit(void *, void *);
 void	 AG_ObjectInitStatic(void *, void *);
@@ -256,6 +264,9 @@ void		*AG_ObjectEdit(void *);
 void		 AG_ObjectGenName(AG_Object *, AG_ObjectClass *, char *,
 		                  size_t);
 
+/* LEGACY */
+void AG_ObjectMove(void *, void *);
+
 /* Locking functions */
 #ifdef THREADS
 # ifdef LOCKDEBUG
@@ -289,7 +300,7 @@ void AG_ObjectUnlockDebug(AG_Object *, const char *);
 # define AG_UnlockVFS(ob)
 #endif /* THREADS */
 
-/* Check if an object's class name matches the given pattern. */
+/* Compare an object's class name against the given pattern. */
 static __inline__ int
 AG_ObjectIsClass(const void *p, const char *cname)
 {
@@ -304,12 +315,10 @@ AG_ObjectIsClass(const void *p, const char *cname)
 		if (*c == '*')
 			nwild++;
 	}
-	/* Optimize for simplest case (no wildcards). */
+	/* Optimize for 0 or single wildcard cases. */
 	if (nwild == 0) {
 		return (strncmp(obj->cls->name, cname, c - &cname[0]) == 0);
-	}
-	/* Optimize for single-wildcard cases. */
-	if (nwild == 1) {
+	} else if (nwild == 1) {
 		for (c = &cname[0]; *c != '\0'; c++) {
 			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
 				if (c == &cname[0] ||
@@ -318,13 +327,12 @@ AG_ObjectIsClass(const void *p, const char *cname)
 					return (1);
 			}
 		}
-		/* TODO: Optimize for "*:Foo" case */
 	}
 	/* Fallback to the general matching algorithm. */
-	return (AG_ObjectIsClassGeneral(obj, cname));
+	return AG_ObjectIsClassGeneral(obj, cname);
 }
 
-/* Return the superclass of an object. */
+/* Return the description of the superclass of a given object. */
 static __inline__ AG_ObjectClass *
 AG_ObjectSuperclass(const void *p)
 {
@@ -347,7 +355,7 @@ AG_ObjectSuperclass(const void *p)
 
 /*
  * Traverse an object's ancestry looking for a matching parent object.
- * Result is only valid as long as the object's VFS is locked.
+ * THREADS: Result valid as long as Object's VFS remains locked.
  */
 static __inline__ void *
 AG_ObjectFindParent(void *p, const char *name, const char *t)
@@ -374,13 +382,13 @@ fail:
 }
 
 /*
- * Return a child object by name. Result is only valid as long as the
- * parent's VFS is locked.
+ * Return a child object by name.
+ * THREADS: Result valid as long as parent object's VFS remains locked.
  */
 static __inline__ void *
-AG_ObjectFindChild(void *p, const char *name)
+AG_ObjectFindChild(void *pParent, const char *name)
 {
-	AG_Object *pObj = AGOBJECT(p);
+	AG_Object *pObj = AGOBJECT(pParent);
 	AG_Object *cObj;
 
 	AG_LockVFS(pObj);

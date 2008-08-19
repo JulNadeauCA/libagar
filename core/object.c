@@ -48,7 +48,7 @@
 #include <config/objdebug.h>
 
 AG_ObjectClass agObjectClass = {
-	"AG_Object",
+	"Agar(Object)",
 	sizeof(AG_Object),
 	{ 7, 1 },
 	NULL,	/* init */
@@ -330,7 +330,7 @@ used:
 	return (1);
 }
 
-/* Move an object from one parent object to another. */
+/* LEGACY: Move an object from one parent object to another. */
 void
 AG_ObjectMove(void *childp, void *newparentp)
 {
@@ -411,7 +411,7 @@ AG_ObjectAttach(void *parentp, void *pChld)
 int
 AG_ObjectAttachToNamed(void *vfsRoot, const char *path, void *child)
 {
-	char ppath[MAXPATHLEN];
+	char ppath[AG_PATHNAME_MAX];
 	void *parent;
 	char *p;
 
@@ -810,7 +810,7 @@ AG_ObjectDestroy(void *p)
 int
 AG_ObjectCopyFilename(void *p, char *path, size_t path_len)
 {
-	char load_path[MAXPATHLEN], *loadpathp = &load_path[0];
+	char load_path[AG_PATHNAME_MAX], *loadpathp = &load_path[0];
 	char obj_name[AG_OBJECT_PATH_MAX];
 	AG_Object *ob = p;
 	char *dir;
@@ -856,7 +856,7 @@ out:
 int
 AG_ObjectCopyDirname(void *p, char *path, size_t path_len)
 {
-	char load_path[MAXPATHLEN], *loadpathp = &load_path[0];
+	char load_path[AG_PATHNAME_MAX], *loadpathp = &load_path[0];
 	char obj_name[AG_OBJECT_PATH_MAX];
 	AG_Object *ob = p;
 	char *dir;
@@ -868,7 +868,7 @@ AG_ObjectCopyDirname(void *p, char *path, size_t path_len)
 	for (dir = AG_Strsep(&loadpathp, ":");
 	     dir != NULL;
 	     dir = AG_Strsep(&loadpathp, ":")) {
-		char tmp_path[MAXPATHLEN];
+		char tmp_path[AG_PATHNAME_MAX];
 
 	     	Strlcpy(tmp_path, dir, sizeof(tmp_path));
 		if (ob->save_pfx != NULL) {
@@ -1043,8 +1043,8 @@ fail:
 int
 AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_Version ver;
-	char path[MAXPATHLEN];
 	AG_Object *ob = p;
 	AG_ObjectDep *dep;
 	AG_DataSource *ds;
@@ -1196,7 +1196,7 @@ fail_unlock:
 int
 AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	AG_Object *ob = p;
 	AG_DataSource *ds;
 	off_t dataOffs;
@@ -1277,7 +1277,7 @@ fail_unlock:
 static void
 BackupObjectFile(void *p, const char *orig)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 
 	if (AG_FileExists(orig)) {
 		Strlcpy(path, orig, sizeof(path));
@@ -1408,7 +1408,7 @@ fail:
 int
 AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	AG_Version ver;
 	AG_Object *ob = p;
 	AG_ObjectDep *dep;
@@ -1492,8 +1492,8 @@ fail:
 int
 AG_ObjectSaveToFile(void *p, const char *pPath)
 {
-	char pathDir[MAXPATHLEN];
-	char path[MAXPATHLEN];
+	char pathDir[AG_PATHNAME_MAX];
+	char path[AG_PATHNAME_MAX];
 	char name[AG_OBJECT_PATH_MAX];
 	AG_Object *ob = p;
 	AG_DataSource *ds;
@@ -1862,7 +1862,7 @@ AG_ObjectSetSavePfx(void *p, char *path)
 void
 AG_ObjectUnlinkDatafiles(void *p)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	AG_Object *ob = p, *cob;
 
 	AG_ObjectLock(ob);
@@ -1932,8 +1932,8 @@ AG_ObjectCopyChecksum(void *p, enum ag_object_checksum_alg alg,
     char *digest)
 {
 	AG_Object *ob = p;
-	char path[MAXPATHLEN];
-	Uchar buf[BUFSIZ];
+	char path[AG_PATHNAME_MAX];
+	Uchar buf[AG_BUFFER_MAX];
 	FILE *f;
 	size_t totlen = 0;
 	size_t rv;
@@ -2064,9 +2064,9 @@ changed:
 int
 AG_ObjectChanged(void *p)
 {
-	char bufCur[BUFSIZ], bufLast[BUFSIZ];
-	char pathCur[MAXPATHLEN];
-	char pathLast[MAXPATHLEN];
+	char bufCur[AG_BUFFER_MAX], bufLast[AG_BUFFER_MAX];
+	char pathCur[AG_PATHNAME_MAX];
+	char pathLast[AG_PATHNAME_MAX];
 	AG_Object *ob = p;
 	FILE *fLast, *fCur;
 	size_t rvLast, rvCur;
