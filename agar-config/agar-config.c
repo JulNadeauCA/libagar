@@ -69,6 +69,9 @@
 #include <config/gettext_cflags.h>
 #endif
 
+#include <config/dso_libs.h>
+#include <config/dso_cflags.h>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -123,6 +126,9 @@ main(int argc, char *argv[])
 #ifdef ENABLE_NLS
 			printf("%s ", GETTEXT_CFLAGS);
 #endif
+#ifdef DSO_CFLAGS
+			printf("%s ", DSO_CFLAGS);
+#endif
 			printf("\n");
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
@@ -150,6 +156,9 @@ main(int argc, char *argv[])
 #endif
 #ifdef ENABLE_NLS
 			printf("%s ", GETTEXT_LIBS);
+#endif
+#ifdef DSO_LIBS
+			printf("%s ", DSO_LIBS);
 #endif
 #if (defined(__APPLE__) || defined(__MACOSX__)) && defined(MAC_OS_X_VERSION_10_5)
 			printf("-dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib");
