@@ -149,10 +149,10 @@ AG_OpenDir(const char *path)
 
 #ifdef _WIN32
 	{
+		char dpath[AG_PATHNAME_MAX];
 		HANDLE h;
 		WIN32_FIND_DATA fdata;
 		DWORD rv;
-		char dpath[MAXPATHLEN];
 
 		Strlcpy(dpath, path, sizeof(dpath));
 		Strlcat(dpath, "\\*", sizeof(dpath));

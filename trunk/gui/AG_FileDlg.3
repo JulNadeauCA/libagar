@@ -374,10 +374,10 @@ contents using an external widget.
 The given directory was selected.
 .El
 .Sh STRUCTURE DATA
-.Bl -tag -width "char cfile[MAXPATHLEN] "
-.It Ft char cwd[MAXPATHLEN]
+.Bl -tag -width "char cfile[AG_PATHNAME_MAX] "
+.It Ft char cwd[AG_PATHNAME_MAX]
 Absolute path of current working directory.
-.It Ft char cfile[MAXPATHLEN]
+.It Ft char cfile[AG_PATHNAME_MAX]
 Absolute path of last selected file.
 .El
 .Sh EXAMPLES
@@ -386,6 +386,7 @@ See
 in the Agar source distribution.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Limits 3 ,
 .Xr AG_Widget 3 ,
 .Xr AG_Window 3
 .Sh HISTORY

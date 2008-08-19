@@ -569,7 +569,7 @@ out:
 
 AG_WidgetClass agSocketClass = {
 	{
-		"AG_Widget:AG_Socket",
+		"Agar(Widget:Socket)",
 		sizeof(AG_Socket),
 		{ 0,0 },
 		Init,

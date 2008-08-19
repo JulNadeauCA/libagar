@@ -2006,7 +2006,7 @@ AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 
 AG_WidgetClass agWidgetClass = {
 	{
-		"AG_Widget",
+		"Agar(Widget)",
 		sizeof(AG_Widget),
 		{ 0,0 },
 		Init,

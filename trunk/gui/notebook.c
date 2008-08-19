@@ -350,7 +350,7 @@ AG_NotebookSetTabVisibility(AG_Notebook *nb, int flag)
 
 AG_WidgetClass agNotebookClass = {
 	{
-		"AG_Widget:AG_Notebook",
+		"Agar(Widget:Notebook)",
 		sizeof(AG_Notebook),
 		{ 0,0 },
 		Init,

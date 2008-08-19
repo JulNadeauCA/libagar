@@ -663,7 +663,7 @@ Draw(void *p)
 
 AG_WidgetClass agSliderClass = {
 	{
-		"AG_Widget:AG_Slider",
+		"Agar(Widget:Slider)",
 		sizeof(AG_Slider),
 		{ 0,0 },
 		Init,

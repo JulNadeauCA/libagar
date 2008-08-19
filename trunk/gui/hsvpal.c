@@ -892,7 +892,7 @@ Draw(void *p)
 
 AG_WidgetClass agHSVPalClass = {
 	{
-		"AG_Widget:AG_HSVPal",
+		"Agar(Widget:HSVPal)",
 		sizeof(AG_HSVPal),
 		{ 0,0 },
 		Init,

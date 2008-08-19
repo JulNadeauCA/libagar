@@ -211,7 +211,7 @@ Draw(void *p)
 
 AG_WidgetClass agProgressBarClass = {
 	{
-		"AG_Widget:AG_ProgressBar",
+		"Agar(Widget:ProgressBar)",
 		sizeof(AG_ProgressBar),
 		{ 0,0 },
 		Init,

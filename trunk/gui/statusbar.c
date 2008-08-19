@@ -115,7 +115,7 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 
 AG_WidgetClass agStatusbarClass = {
 	{
-		"AG_Widget:AG_Box:AG_Statusbar",
+		"Agar(Widget:Box:Statusbar)",
 		sizeof(AG_Statusbar),
 		{ 0,0 },
 		Init,

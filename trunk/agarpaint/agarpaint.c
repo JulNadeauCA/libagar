@@ -197,7 +197,7 @@ TransformIconName(char *s)
 static void
 SaveTilesetToIconsHdr(AG_Event *event)
 {
-	char pathData[MAXPATHLEN];
+	char pathData[AG_PATHNAME_MAX];
 	char iconID[64];
 	RG_Tileset *ts = AG_PTR(1);
 	char *path = AG_STRING(2);
@@ -519,7 +519,7 @@ SplashExpire(void *obj, Uint32 ival, void *arg)
 static void
 Splash(void)
 {
-	char path[FILENAME_MAX];
+	char path[AG_FILENAME_MAX];
 	AG_Window *win;
 	AG_Pixmap *px;
 	AG_Timeout to;

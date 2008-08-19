@@ -1409,7 +1409,7 @@ AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
 
 AG_WidgetClass agTableviewClass = {
 	{
-		"AG_Widget:AG_Tableview",
+		"Agar(Widget:Tableview)",
 		sizeof(AG_Tableview),
 		{ 0,0 },
 		Init,

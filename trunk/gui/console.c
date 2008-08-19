@@ -247,7 +247,7 @@ AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
 
 AG_WidgetClass agConsoleClass = {
 	{
-		"AG_Widget:AG_Console",
+		"Agar(Widget:Console)",
 		sizeof(AG_Console),
 		{ 0,0 },
 		Init,

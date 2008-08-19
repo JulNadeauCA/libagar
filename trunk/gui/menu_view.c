@@ -412,7 +412,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 
 AG_WidgetClass agMenuViewClass = {
 	{
-		"AG_Widget:AG_MenuView",
+		"Agar(Widget:MenuView)",
 		sizeof(AG_MenuView),
 		{ 0,0 },
 		Init,

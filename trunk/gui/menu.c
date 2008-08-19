@@ -1091,7 +1091,7 @@ AG_PopupDestroy(void *pWid, AG_PopupMenu *pm)
 
 AG_WidgetClass agMenuClass = {
 	{
-		"AG_Widget:AG_Menu",
+		"Agar(Widget:Menu)",
 		sizeof(AG_Menu),
 		{ 0,0 },
 		Init,

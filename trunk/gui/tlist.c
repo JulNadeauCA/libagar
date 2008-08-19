@@ -1321,7 +1321,7 @@ PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 
 AG_WidgetClass agTlistClass = {
 	{
-		"AG_Widget:AG_Tlist",
+		"Agar(Widget:Tlist)",
 		sizeof(AG_Tlist),
 		{ 0,0 },
 		Init,

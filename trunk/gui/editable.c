@@ -1109,7 +1109,7 @@ Destroy(void *obj)
 
 AG_WidgetClass agEditableClass = {
 	{
-		"AG_Widget:AG_Editable",
+		"Agar(Widget:Editable)",
 		sizeof(AG_Editable),
 		{ 0,0 },
 		Init,

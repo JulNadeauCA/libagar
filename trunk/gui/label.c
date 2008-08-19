@@ -711,7 +711,7 @@ AG_LabelFlagNew(AG_Label *lbl, Uint idx, const char *text,
 
 AG_WidgetClass agLabelClass = {
 	{
-		"AG_Widget:AG_Label",
+		"Agar(Widget:Label)",
 		sizeof(AG_Label),
 		{ 0,0 },
 		Init,

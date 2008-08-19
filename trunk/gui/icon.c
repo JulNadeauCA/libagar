@@ -218,7 +218,7 @@ AG_IconSetText(AG_Icon *icon, const char *fmt, ...)
 
 AG_WidgetClass agIconClass = {
 	{
-		"AG_Widget:AG_Icon",
+		"Agar(Widget:Icon)",
 		sizeof(AG_Icon),
 		{ 0,0 },
 		Init,

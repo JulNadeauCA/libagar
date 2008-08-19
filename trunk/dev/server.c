@@ -176,10 +176,10 @@ static int
 cmd_surface(NS_Server *ns, NS_Command *cmd, void *pSu)
 {
 #ifdef HAVE_JPEG
-	char sendbuf[BUFSIZ];
+	char sendbuf[AG_BUFFER_MAX];
 	static struct jpeg_error_mgr jerrmgr;
 	static struct jpeg_compress_struct jcomp;
-	char tmp[sizeof("/tmp/")+FILENAME_MAX];
+	char tmp[sizeof("/tmp/")+AG_FILENAME_MAX];
 	AG_Surface *su = pSu;
 	Uint8 *jcopybuf;
 	int i, nshots = 1;

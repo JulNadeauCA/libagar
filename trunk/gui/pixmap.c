@@ -295,7 +295,7 @@ Draw(void *p)
 
 AG_WidgetClass agPixmapClass = {
 	{
-		"AG_Widget:AG_Pixmap",
+		"Agar(Widget:Pixmap)",
 		sizeof(AG_Pixmap),
 		{ 0,0 },
 		Init,

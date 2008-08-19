@@ -22,8 +22,4 @@ typedef unsigned long Ulong;
 # define N_(s) (s)
 #endif
 
-#ifndef MAXPATHLEN
-#define MAXPATHLEN 1024
-#endif
-
 #endif /* _AGARPAINT_H_ */

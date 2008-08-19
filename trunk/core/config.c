@@ -73,8 +73,8 @@ int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
 void
 AG_ConfigInit(AG_Config *cfg)
 {
-	char udatadir[MAXPATHLEN];
-	char tmpdir[MAXPATHLEN];
+	char udatadir[AG_PATHNAME_MAX];
+	char tmpdir[AG_PATHNAME_MAX];
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 	struct passwd *pwd = getpwuid(getuid());
 #endif
@@ -223,7 +223,7 @@ int
 AG_ConfigFile(const char *path_key, const char *name, const char *ext,
     char *path, size_t path_len)
 {
-	char file[MAXPATHLEN];
+	char file[AG_PATHNAME_MAX];
 	char *dir, *pathp = path;
 	int rv;
 
@@ -260,7 +260,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 }
 
 AG_ObjectClass agConfigClass = {
-	"AG_Config",
+	"Agar(Config)",
 	sizeof(AG_Config),
 	{ 9, 4 },
 	NULL,

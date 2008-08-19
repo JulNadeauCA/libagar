@@ -408,7 +408,7 @@ Init(void *obj)
 
 AG_WidgetClass agTextboxClass = {
 	{
-		"AG_Widget:AG_Textbox",
+		"Agar(Widget:Textbox)",
 		sizeof(AG_Textbox),
 		{ 0,0 },
 		Init,

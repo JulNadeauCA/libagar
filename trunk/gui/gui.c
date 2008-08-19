@@ -128,7 +128,7 @@ void *agGUIClasses[] = {
 int
 AG_InitGUI(Uint flags)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	void **ops;
 	int i, n, njoys;
 

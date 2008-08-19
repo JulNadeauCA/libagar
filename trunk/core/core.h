@@ -90,45 +90,12 @@ typedef unsigned long Ulong;
 #include <core/core_init.h>
 #include <core/error.h>
 #include <core/queue.h>
+#include <core/limits.h>
 
 #include <core/string_compat.h>
 #include <core/snprintf.h>
 #include <core/vsnprintf.h>
 #include <core/vasprintf.h>
-
-#include <core/data_source.h>
-#include <core/load_integral.h>
-#include <core/load_real.h>
-#include <core/load_string.h>
-#include <core/load_version.h>
-#include <core/load_color.h>
-
-#include <core/version.h>
-#include <core/object.h>
-#include <core/event.h>
-#include <core/cpuinfo.h>
-#include <core/typesw.h>
-
-#ifdef ENABLE_NLS
-# include <libintl.h>
-# define _(String) dgettext("agar",String)
-# ifdef dgettext_noop
-#  define N_(String) dgettext_noop("agar",String)
-# else
-#  define N_(String) (String)
-# endif
-#else
-# undef _
-# undef N_
-# undef ngettext
-# define _(String) (String)
-# define N_(String) (String)
-# define ngettext(Singular,Plural,Number) ((Number==1)?(Singular):(Plural))
-#endif /* !ENABLE_NLS */
-
-#ifndef MAXPATHLEN
-#define MAXPATHLEN 1024
-#endif
 
 #ifdef WIN32
 #define AG_PATHSEPC '\\'
@@ -156,6 +123,37 @@ typedef unsigned long Ulong;
 #pragma warning(disable: 4267)
 #pragma warning(disable: 4244)
 #endif
+
+#include <core/data_source.h>
+#include <core/load_integral.h>
+#include <core/load_real.h>
+#include <core/load_string.h>
+#include <core/load_version.h>
+#include <core/load_color.h>
+
+#include <core/version.h>
+#include <core/object.h>
+#include <core/event.h>
+#include <core/cpuinfo.h>
+#include <core/typesw.h>
+#include <core/dso.h>
+
+#ifdef ENABLE_NLS
+# include <libintl.h>
+# define _(String) dgettext("agar",String)
+# ifdef dgettext_noop
+#  define N_(String) dgettext_noop("agar",String)
+# else
+#  define N_(String) (String)
+# endif
+#else
+# undef _
+# undef N_
+# undef ngettext
+# define _(String) (String)
+# define N_(String) (String)
+# define ngettext(Singular,Plural,Number) ((Number==1)?(Singular):(Plural))
+#endif /* !ENABLE_NLS */
 
 #endif /* !_AGAR_CORE_CORE_H_ */
 #endif /* _AGAR_INTERNAL */

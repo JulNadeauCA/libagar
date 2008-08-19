@@ -237,7 +237,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 
 AG_WidgetClass agUComboClass = {
 	{
-		"AG_Widget:AG_UCombo",
+		"Agar(Widget:UCombo)",
 		sizeof(AG_UCombo),
 		{ 0,0 },
 		Init,

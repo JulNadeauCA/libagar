@@ -629,7 +629,7 @@ AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 
 AG_WidgetClass agButtonClass = {
 	{
-		"AG_Widget:AG_Button",
+		"Agar(Widget:Button)",
 		sizeof(AG_Button),
 		{ 0,0 },
 		Init,

@@ -72,8 +72,8 @@ typedef struct ag_file_dlg {
 #define AG_FILEDLG_VFILL	  0x200
 #define AG_FILEDLG_EXPAND	  (AG_FILEDLG_HFILL|AG_FILEDLG_VFILL)
 
-	char cwd[MAXPATHLEN];			/* Current working directory */
-	char cfile[MAXPATHLEN];			/* Current file path */
+	char cwd[AG_PATHNAME_MAX];		/* Current working directory */
+	char cfile[AG_PATHNAME_MAX];		/* Current file path */
 	AG_Pane *hPane;
 	AG_Tlist *tlDirs;			/* List of directories */
 	AG_Tlist *tlFiles;			/* List of files */
