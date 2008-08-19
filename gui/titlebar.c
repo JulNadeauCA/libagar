@@ -197,7 +197,7 @@ AG_TitlebarSetCaption(AG_Titlebar *tbar, const char *caption)
 
 AG_WidgetClass agTitlebarClass = {
 	{
-		"AG_Widget:AG_Box:AG_Titlebar",
+		"Agar(Widget:Box:Titlebar)",
 		sizeof(AG_Titlebar),
 		{ 0,0 },
 		Init,

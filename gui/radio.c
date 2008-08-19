@@ -328,7 +328,7 @@ Init(void *obj)
 
 AG_WidgetClass agRadioClass = {
 	{
-		"AG_Widget:AG_Radio",
+		"Agar(Widget:Radio)",
 		sizeof(AG_Radio),
 		{ 0,0, },
 		Init,

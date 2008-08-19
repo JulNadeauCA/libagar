@@ -107,7 +107,7 @@ AG_RcsDisconnect(void)
 int
 AG_RcsGetWorkingRev(AG_Object *ob, Uint *pRev)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	char buf[12];
 	size_t rv;
 	long rev;
@@ -147,7 +147,7 @@ AG_RcsGetWorkingRev(AG_Object *ob, Uint *pRev)
 int
 AG_RcsSetWorkingRev(AG_Object *ob, Uint rev)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	FILE *f;
 
 	AG_ObjectCopyFilename(ob, path, sizeof(path));
@@ -227,7 +227,7 @@ AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
 int
 AG_RcsImport(AG_Object *ob)
 {
-	char buf[BUFSIZ];
+	char buf[AG_BUFFER_MAX];
 	char objdir[AG_OBJECT_PATH_MAX];
 	char objpath[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
@@ -328,7 +328,7 @@ fail:
 int
 AG_RcsCommit(AG_Object *ob)
 {
-	char buf[BUFSIZ];
+	char buf[AG_BUFFER_MAX];
 	char objdir[AG_OBJECT_PATH_MAX];
 	char objpath[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];

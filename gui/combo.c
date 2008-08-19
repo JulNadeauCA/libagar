@@ -326,7 +326,7 @@ AG_ComboSizeAllocate(void *p, const AG_SizeAlloc *a)
 
 AG_WidgetClass agComboClass = {
 	{
-		"AG_Widget:AG_Combo",
+		"Agar(Widget:Combo)",
 		sizeof(AG_Combo),
 		{ 0,0 },
 		Init,

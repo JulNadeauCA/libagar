@@ -26,8 +26,10 @@ AG_SLIST_HEAD(ag_timeoutq, ag_timeout);
 #define AG_UnlockTiming() AG_MutexUnlock(&agTimingLock)
 
 __BEGIN_DECLS
-extern AG_Mutex agTimingLock;
 extern struct ag_objectq agTimeoutObjQ;
+#ifdef THREADS
+extern AG_Mutex agTimingLock;
+#endif
 
 void	AG_InitTimeouts(void);
 void	AG_DestroyTimeouts(void);

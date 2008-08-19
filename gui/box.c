@@ -300,7 +300,7 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 
 AG_WidgetClass agBoxClass = {
 	{
-		"AG_Widget:AG_Box",
+		"Agar(Widget:Box)",
 		sizeof(AG_Box),
 		{ 0,0 },
 		Init,

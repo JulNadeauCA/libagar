@@ -1024,7 +1024,7 @@ AG_BlendPixelRGBA(AG_Surface *s, Uint8 *pDst, Uint8 sR, Uint8 sG, Uint8 sB,
 void
 AG_ViewCapture(void)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	
 	if (AG_DumpSurface(agView->v, path) == 0) {
 		AG_TextTmsg(AG_MSG_INFO, 1000, _("Screenshot saved to %s."),
@@ -1040,7 +1040,7 @@ AG_DumpSurface(AG_Surface *pSu, char *path_save)
 {
 #ifdef HAVE_JPEG
 	AG_Surface *su;
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	struct jpeg_error_mgr jerrmgr;
 	struct jpeg_compress_struct jcomp;
 	Uint8 *jcopybuf;
@@ -1069,7 +1069,7 @@ AG_DumpSurface(AG_Surface *pSu, char *path_save)
 	}
 
 	for (;;) {
-		char file[MAXPATHLEN];
+		char file[AG_PATHNAME_MAX];
 
 		Snprintf(file, sizeof(file), "%s/%s%u.jpg", path, agProgName,
 		    seq++);
@@ -1084,7 +1084,7 @@ AG_DumpSurface(AG_Surface *pSu, char *path_save)
 		break;
 	}
 	if (path_save != NULL)
-		Strlcpy(path_save, path, MAXPATHLEN);
+		Strlcpy(path_save, path, AG_PATHNAME_MAX);
 
 	if ((fp = fdopen(fd, "wb")) == NULL) {
 		AG_SetError("fdopen: %s", strerror(errno));

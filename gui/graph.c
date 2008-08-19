@@ -904,7 +904,7 @@ AG_GraphAutoPlace(AG_Graph *gf, Uint w, Uint h)
 
 AG_WidgetClass agGraphClass = {
 	{
-		"AG_Widget:AG_Graph",
+		"Agar(Widget:Graph)",
 		sizeof(AG_Graph),
 		{ 0,0 },
 		Init,

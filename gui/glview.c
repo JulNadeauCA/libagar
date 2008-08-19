@@ -279,7 +279,7 @@ AG_GLViewDraw(void *p)
 
 AG_WidgetClass agGLViewClass = {
 	{
-		"AG_Widget:AG_GLView",
+		"Agar(Widget:GLView)",
 		sizeof(AG_GLView),
 		{ 0,0 },
 		Init,

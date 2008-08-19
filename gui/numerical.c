@@ -1130,7 +1130,7 @@ AG_NumericalGetUint64(AG_Numerical *num)
 
 AG_WidgetClass agNumericalClass = {
 	{
-		"AG_Widget:AG_Numerical",
+		"Agar(Widget:Numerical)",
 		sizeof(AG_Numerical),
 		{ 0,0 },
 		Init,

@@ -1689,7 +1689,7 @@ Destroy(void *obj)
 
 AG_WidgetClass agTableClass = {
 	{
-		"AG_Widget:AG_Table",
+		"Agar(Widget:Table)",
 		sizeof(AG_Table),
 		{ 0,0 },
 		Init,

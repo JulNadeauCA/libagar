@@ -279,7 +279,7 @@ Destroy(void *p)
 
 AG_WidgetClass agFixedPlotterClass = {
 	{
-		"AG_Widget:AG_FixedPlotter",
+		"Agar(Widget:FixedPlotter)",
 		sizeof(AG_FixedPlotter),
 		{ 0,0 },
 		Init,

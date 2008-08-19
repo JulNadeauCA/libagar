@@ -57,7 +57,7 @@ static AG_Window *DEV_ConfigWindow(AG_Config *);
 static void
 SetPath(AG_Event *event)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	AG_Textbox *tbox = AG_SELF();
 	char *varname = AG_STRING(1);
 
@@ -225,7 +225,7 @@ SaveConfig(AG_Event *event)
 static AG_Window *
 DEV_ConfigWindow(AG_Config *cfg)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	AG_Window *win;
 	AG_HBox *hb;
 	AG_Textbox *tbox;

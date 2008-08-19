@@ -28,6 +28,7 @@
 #include <agar/core/config.h>
 #include <agar/core/rcs.h>
 #include <agar/core/typesw.h>
+#include <agar/core/dso.h>
 
 #include <agar/core/core_close.h>
 #endif

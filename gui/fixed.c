@@ -207,7 +207,7 @@ AG_FixedDel(AG_Fixed *fx, void *chld)
 
 AG_WidgetClass agFixedClass = {
 	{
-		"AG_Widget:AG_Fixed",
+		"Agar(Widget:Fixed)",
 		sizeof(AG_Fixed),
 		{ 0,0 },
 		Init,

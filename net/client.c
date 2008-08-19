@@ -517,7 +517,7 @@ NC_Connect(NC_Session *client, const char *host, const char *port,
 
 	/* Look in ~/.<app-name>rc for the login information. */
 	if (host == NULL || port == NULL || user == NULL || pass == NULL) {
-		char file[MAXPATHLEN];
+		char file[AG_PATHNAME_MAX];
 		char *s, *fbufp;
 		FILE *f;
 	

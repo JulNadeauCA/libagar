@@ -391,7 +391,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 
 AG_WidgetClass agPaneClass = {
 	{
-		"AG_Widget:AG_Pane",
+		"Agar(Widget:Pane)",
 		sizeof(AG_Pane),
 		{ 0,0 },
 		Init,

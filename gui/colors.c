@@ -297,7 +297,7 @@ AG_ColorsSave(const char *file)
 int
 AG_ColorsSaveDefault(void)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 
 	if (AG_GetString(agConfig, "save-path") != NULL) {
 		Strlcpy(path, AG_GetString(agConfig,"save-path"), sizeof(path));

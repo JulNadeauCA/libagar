@@ -51,7 +51,7 @@ MyFgetln(FILE *fp, size_t *len)
 	char *ptr;
 
 	if (buf == NULL) {
-		bufsiz = BUFSIZ;
+		bufsiz = AG_BUFFER_MAX;
 		if ((buf = malloc(bufsiz)) == NULL)
 			return (NULL);
 	}
@@ -60,7 +60,7 @@ MyFgetln(FILE *fp, size_t *len)
 
 	*len = 0;
 	while ((ptr = strchr(&buf[*len], '\n')) == NULL) {
-		size_t nbufsiz = bufsiz + BUFSIZ;
+		size_t nbufsiz = bufsiz + AG_BUFFER_MAX;
 		char *nbuf = realloc(buf, nbufsiz);
 
 		if (nbuf == NULL) {
@@ -75,7 +75,7 @@ MyFgetln(FILE *fp, size_t *len)
 		}
 
 		*len = bufsiz;
-		if (fgets(&buf[bufsiz], BUFSIZ, fp) == NULL) {
+		if (fgets(&buf[bufsiz], AG_BUFFER_MAX, fp) == NULL) {
 			return (buf);
 		}
 		bufsiz = nbufsiz;

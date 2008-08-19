@@ -840,7 +840,7 @@ AG_ScrollbarVisible(AG_Scrollbar *sb)
 
 AG_WidgetClass agScrollbarClass = {
 	{
-		"AG_Widget:AG_Scrollbar",
+		"Agar(Widget:Scrollbar)",
 		sizeof(AG_Scrollbar),
 		{ 0,0 },
 		Init,

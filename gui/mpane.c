@@ -157,7 +157,7 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 
 AG_WidgetClass agMPaneClass = {
 	{
-		"AG_Widget:AG_Box:AG_MPane",
+		"Agar(Widget:Box:MPane)",
 		sizeof(AG_MPane),
 		{ 0,0 },
 		Init,

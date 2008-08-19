@@ -68,7 +68,7 @@ int
 rcsinfo_get_revision(const char *dirpath, u_int *revp, char *author,
     char *digest, char *msg, char *type, char *name)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	char *buf, *lbuf;
 	size_t len;
 	FILE *f;
@@ -147,7 +147,7 @@ rcsinfo_add_revision(const char *dirpath, struct user *u, u_int *rev,
     const char *msg, const char *digest, const char *type, const char *name)
 {
 	struct stat sb;
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	FILE *f;
 
 	Strlcpy(path, dirpath, sizeof(path));

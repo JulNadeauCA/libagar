@@ -289,7 +289,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 
 AG_WidgetClass agToolbarClass = {
 	{
-		"AG_Widget:AG_Box:AG_Toolbar",
+		"Agar(Widget:Box:Toolbar)",
 		sizeof(AG_Toolbar),
 		{ 0,0 },
 		Init,

@@ -190,7 +190,7 @@ AG_ObjectSelectorMaskType(AG_ObjectSelector *os, const char *type)
 
 AG_WidgetClass agObjectSelectorClass = {
 	{
-		"AG_Widget:AG_Combo:AG_ObjectSelector",
+		"Agar(Widget:Combo:ObjectSelector)",
 		sizeof(AG_ObjectSelector),
 		{ 0,0 },
 		Init,

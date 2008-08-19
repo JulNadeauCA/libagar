@@ -518,7 +518,7 @@ AG_SpinbuttonSetWriteable(AG_Spinbutton *sbu, int writeable)
 
 AG_WidgetClass agSpinbuttonClass = {
 	{
-		"AG_Widget:AG_Spinbutton",
+		"Agar(Widget:Spinbutton)",
 		sizeof(AG_Spinbutton),
 		{ 0,0 },
 		Init,

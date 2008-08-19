@@ -127,8 +127,8 @@ parse_revision(NS_Command *cmd, const char *key, Uint *rv)
 int
 rcs_commit(NS_Server *ns, NS_Command *cmd, void *p)
 {
-	char buf[BUFSIZ];
-	char filepath[MAXPATHLEN];
+	char buf[AG_BUFFER_MAX];
+	char filepath[AG_PATHNAME_MAX];
 	char revno[12];
 	char *dirpath, *objname, *objtype;
 	size_t nread = 0, size;
@@ -226,8 +226,8 @@ rcs_info(NS_Server *ns, NS_Command *cmd, void *p)
 int
 rcs_update(NS_Server *ns, NS_Command *cmd, void *p)
 {
-	char buf[BUFSIZ];
-	char filepath[MAXPATHLEN];
+	char buf[AG_BUFFER_MAX];
+	char filepath[AG_PATHNAME_MAX];
 	char revtext[12];
 	char *dirpath, *objname, *objtype;
 	Uint rev;
@@ -297,7 +297,7 @@ rcs_listdir(NS_Server *ns, const char *dirname, const char *path)
 	char author[RCSINFO_AUTHOR_MAX];
 	char type[RCSINFO_TYPE_MAX];
 	char name[RCSINFO_NAME_MAX];
-	char subpath[MAXPATHLEN];
+	char subpath[AG_PATHNAME_MAX];
 	Uint rev;
 	struct stat sb;
 	struct dirent *dent;
@@ -356,7 +356,7 @@ rcs_list(NS_Server *ns, NS_Command *cmd, void *p)
 int
 rcs_log(NS_Server *ns, NS_Command *cmd, void *p)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	char *buf, *lbuf, *dirpath;
 	FILE *f;
 	size_t len;

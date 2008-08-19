@@ -126,7 +126,7 @@ AG_SeparatorSetPadding(AG_Separator *sep, Uint pixels)
 
 AG_WidgetClass agSeparatorClass = {
 	{
-		"AG_Widget:AG_Separator",
+		"Agar(Widget:Separator)",
 		sizeof(AG_Separator),
 		{ 0,0 },
 		Init,

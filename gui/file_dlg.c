@@ -107,7 +107,7 @@ RefreshListing(AG_FileDlg *fd)
 	AG_ObjectLock(fd->tlFiles);
 
 	for (i = 0; i < dir->nents; i++) {
-		char path[FILENAME_MAX];
+		char path[AG_FILENAME_MAX];
 		
 		Strlcpy(path, fd->cwd, sizeof(path));
 		Strlcat(path, AG_PATHSEP, sizeof(path));
@@ -441,7 +441,7 @@ SetFilename(AG_FileDlg *fd, const char *file)
 static void
 TextboxChanged(AG_Event *event)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	AG_Textbox *tb = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
 
@@ -454,7 +454,7 @@ TextboxChanged(AG_Event *event)
 static void
 TextboxReturn(AG_Event *event)
 {
-	char file[MAXPATHLEN];
+	char file[AG_PATHNAME_MAX];
 	AG_Textbox *tb = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_FileInfo info;
@@ -599,7 +599,7 @@ int
 AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 {
 	AG_FileInfo info;
-	char ncwd[MAXPATHLEN], *c;
+	char ncwd[AG_PATHNAME_MAX], *c;
 	
 	AG_ObjectLock(fd);
 
@@ -676,7 +676,7 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 void
 AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 {
-	char file[FILENAME_MAX];
+	char file[AG_FILENAME_MAX];
 	va_list ap;
 	
 	va_start(ap, fmt);
@@ -1086,7 +1086,7 @@ AG_FileOptionString(AG_FileType *ft, const char *key)
 
 AG_WidgetClass agFileDlgClass = {
 	{
-		"AG_Widget:AG_FileDlg",
+		"Agar(Widget:FileDlg)",
 		sizeof(AG_FileDlg),
 		{ 0,0 },
 		Init,

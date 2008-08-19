@@ -321,7 +321,7 @@ ProcessCommand(NS_Server *ns, NS_Command *ncmd)
 static void
 ServerLoop(NS_Server *ns)
 {
-	char tmp[BUFSIZ];
+	char tmp[AG_BUFFER_MAX];
 	char prot[32];
 	char *buf, *lbuf = NULL, *value;
 	NS_Command ncmd;
@@ -449,7 +449,7 @@ read_failure:
 void
 NS_Logout(NS_Server *ns, int rv, const char *fmt, ...)
 {
-	char buf[BUFSIZ];
+	char buf[AG_BUFFER_MAX];
 	va_list ap;
 
 	va_start(ap, fmt);

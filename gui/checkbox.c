@@ -363,7 +363,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 
 AG_WidgetClass agCheckboxClass = {
 	{
-		"AG_Widget:AG_Checkbox",
+		"Agar(Widget:Checkbox)",
 		sizeof(AG_Checkbox),
 		{ 0,0 },
 		Init,

@@ -649,7 +649,7 @@ AG_FSpinbuttonSetRange(AG_FSpinbutton *fsu, double min, double max)
 
 AG_WidgetClass agFSpinbuttonClass = {
 	{
-		"AG_Widget:AG_FSpinbutton",
+		"Agar(Widget:FSpinbutton)",
 		sizeof(AG_FSpinbutton),
 		{ 0,0 },
 		Init,
