@@ -456,7 +456,7 @@ AG_GfxAddAnim(AG_Gfx *gfx)
 int
 AG_GfxLoadFromDEN(void *p, const char *name)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	AG_Object *ob = p;
 	AG_Den *den;
 	Uint32 i;
@@ -507,7 +507,7 @@ AG_GfxLoad(AG_Object *ob)
 {
 	extern AG_ObjectClass agObjectClass;
 	AG_Gfx *gfx = ob->gfx;
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	AG_DataSource *buf;
 	off_t gfx_offs;
 	Uint32 i, j;

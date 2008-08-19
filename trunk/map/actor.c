@@ -403,7 +403,7 @@ Edit(void *p)
 }
 
 AG_ObjectClass mapActorClass = {
-	"MAP_Actor",
+	"MAP(Actor)",
 	sizeof(MAP_Actor),
 	{ 0, 0 },
 	Init,

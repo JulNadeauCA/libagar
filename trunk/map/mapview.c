@@ -1439,7 +1439,7 @@ MAP_ViewStatus(MAP_View *mv, const char *fmt, ...)
 
 AG_WidgetClass mapViewClass = {
 	{
-		"AG_Widget:MAP_View",
+		"Agar(Widget):MAP(View)",
 		sizeof(MAP_View),
 		{ 0,0 },
 		Init,
