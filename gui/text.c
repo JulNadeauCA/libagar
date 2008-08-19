@@ -194,7 +194,7 @@ GetFontTypeFromSignature(const char *path, enum ag_font_type *pType)
 AG_Font *
 AG_FetchFont(const char *pname, int psize, int pflags)
 {
-	char path[MAXPATHLEN];
+	char path[AG_PATHNAME_MAX];
 	char name[AG_OBJECT_NAME_MAX];
 	int ptsize = (psize >= 0) ? psize : AG_GetInt(agConfig,"font.size");
 	Uint flags = (pflags >= 0) ? pflags : AG_GetUint(agConfig,"font.flags");
@@ -871,12 +871,41 @@ TextRenderSymbol(Uint ch, AG_Surface *su, int x, int y)
 		int col;
 
 		for (col = 0; col < sym->w; col++) {
-			if (AG_GET_PIXEL(sym,src) !=
-			    sym->format->colorkey) {
+			if (AG_GET_PIXEL(sym,src) != sym->format->colorkey) {
 				*dst = 1;
 			}
 			src += sym->format->BytesPerPixel;
 			dst++;
+		}
+	}
+	return (sym->w + 4);
+}
+
+static int
+TextRenderSymbol_Blended(Uint ch, AG_Surface *su, int x, int y, Uint32 pixel)
+{
+	AG_Surface *sym;
+	Uint32 alpha;
+	int row;
+
+	if ((sym = GetSymbolSurface(ch)) == NULL) {
+		return (0);
+	}
+	for (row = 0; row < sym->h; row++) {
+		Uint8 *dst = (Uint8 *)su->pixels + (y+row)*(su->pitch/4) +
+		                                   (x+2);
+		Uint8 *src = (Uint8 *)sym->pixels + row*sym->pitch;
+		int col;
+
+		for (col = 0; col < sym->w; col++) {
+			alpha = *src;
+			if (AG_GET_PIXEL(sym,src) != sym->format->colorkey) {
+				dst[0] = 0xff;
+				dst[1] = 0xff;
+				dst[2] = 0xff;
+			}
+			src += sym->format->BytesPerPixel;
+			dst+=3;
 		}
 	}
 	return (sym->w + 4);
@@ -1048,7 +1077,15 @@ TextRenderFT_Blended(const Uint32 *ucs)
 			xStart = JustifyOffset(tm.w, tm.wLines[++line]);
 			continue;
 		}
-
+#ifdef SYMBOLS
+		if (ch[0] == '$' && agTextSymbols &&
+		    ch[1] == '(' && ch[2] != '\0' && ch[3] == ')') {
+			xStart += TextRenderSymbol_Blended(ch[2], su, xStart,
+			    yStart, pixel);
+			ch += 3;
+			continue;
+		}
+#endif
 		error = AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
 		                                     TTF_CACHED_PIXMAP);
 		if (error) {
