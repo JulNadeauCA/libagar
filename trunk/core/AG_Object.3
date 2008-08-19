@@ -49,13 +49,13 @@ to be archived to different forms of persistent storage in an efficient manner.
 .nr nS 1
 .Pp
 .Ft "AG_Object *"
-.Fn AG_ObjectNew "AG_Object *parent" "const char *name" "AG_ObjectClass *cls"
+.Fn AG_ObjectNew "AG_Object *parent" "const char *name" "AG_ObjectClass *classInfo"
 .Pp
 .Ft "void"
-.Fn AG_ObjectInit "AG_Object *obj" "AG_ObjectClass *cls"
+.Fn AG_ObjectInit "AG_Object *obj" "AG_ObjectClass *classInfo"
 .Pp
 .Ft "void"
-.Fn AG_ObjectInitStatic "AG_Object *obj" "AG_ObjectClass *cls"
+.Fn AG_ObjectInitStatic "AG_Object *obj" "AG_ObjectClass *classInfo"
 .Pp
 .Ft "void"
 .Fn AG_ObjectAttach "AG_Object *new_parent" "AG_Object *obj"
@@ -65,9 +65,6 @@ to be archived to different forms of persistent storage in an efficient manner.
 .Pp
 .Ft "void"
 .Fn AG_ObjectDetach "AG_Object *obj"
-.Pp
-.Ft "void"
-.Fn AG_ObjectMove "AG_Object *obj" "AG_Object *new_parent"
 .Pp
 .Ft "AG_Object *"
 .Fn AG_ObjectRoot "AG_Object *obj"
@@ -104,9 +101,6 @@ to be archived to different forms of persistent storage in an efficient manner.
 .Pp
 .Ft "void"
 .Fn AG_ObjectSetName "AG_Object *obj" "const char *fmt" "..."
-.Pp
-.Ft "void"
-.Fn AG_ObjectSetClass "AG_Object *obj" "AG_ObjectClass *cls"
 .Pp
 .Ft "void"
 .Fn AG_ObjectSetDebugFn "AG_Object *obj" "void (*fn)(void *obj, void *userPtr, void *msg)" "void *userPtr"
@@ -152,14 +146,13 @@ bytes in length, and may not contain
 characters.
 .Pp
 The
-.Fa ops
-argument describes the object class.
-It is a pointer to a
+.Fa classInfo
+argument is a pointer to an initialized
 .Ft AG_ObjectClass
-structure:
+structure, which includes all information specific to the object's class:
 .Pp
 .Bd -literal
-typedef struct ag_object_ops {
+typedef struct ag_object_class {
 	const char *name;        /* Class name */
 	size_t size;             /* Size of structure */
 	AG_Version ver;          /* Version numbers */
@@ -173,13 +166,25 @@ typedef struct ag_object_ops {
 } AG_ObjectClass;
 .Ed
 .Pp
+It is customary to overload this structure, for example the
+.Xr AG_Widget 3
+system defines an
+.Ft AG_WidgetClass
+which is derived from
+.Ft AG_ObjectClass ,
+and includes widget-specific operation pointers.
+.Pp
 The
 .Va name
 member is the name of this class, where subclasses are separated by a
 colon, such as
-.Dq AG_Superclass:AG_Subclass .
+.Dq AG_Superclass:AG_Subclass ,
+or alternatively,
+.Dq Namespace(Superclass:Subclass)
+(see
+.Dq CLASS INFORMATION ) .
 It is implied that the root class is
-.Dq AG_Object ,
+.Ft AG_Object ,
 so there is no need to specify it in the string.
 .Pp
 The
@@ -196,37 +201,18 @@ The
 operation initializes an
 .Nm
 instance.
-It invokes the
-.Fn init
-operation of every class in the inheritance hierarchy.
-.Pp
-The
 .Fn reinit
-operation releases any element of the dataset that has been dynamically
-allocated.
-.Fn reinit
-is invoked by the object system:
-.Pp
-.Bl -bullet -compact
-.It
-Prior to a
+releases any element of the dataset that has been dynamically allocated.
+It is invoked by the object system prior to
 .Fn load
-operation where the dataset is going to be re-read from storage.
-.It
-Subsequent to a
-.Dv PAGE_OUT
-operation, to free the dataset.
-.It
-Prior to a
-.Fn destroy
-operation where the object is being completely freed.
-.El
+or
+.Fn destroy .
 .Pp
 The
 .Fn destroy
 operation is invoked from
 .Fn AG_ObjectDestroy
-to release any resources that are not handled by
+to release any resources which are not handled by
 .Fn reinit .
 Note that
 .Fn destroy
@@ -247,17 +233,26 @@ When defined, the
 operation generates user interface elements allowing the user to edit
 the object's dataset.
 It is a generic operation, not dependent on any particular GUI library.
-.Pp
-If using the Agar-GUI, the
+If using the Agar-GUI for example,
 .Fn edit
-operation will usually create an
+is expected to create a
 .Xr AG_Window 3
 or a container widget such as 
 .Xr AG_Box 3 .
-When other windows are created from
+(note that other windows created from
 .Fn edit ,
-they must be attached to the main window via
-.Xr AG_WindowAttach 3 .
+must be attached to the original window via
+.Xr AG_WindowAttach 3 ) .
+.Pp
+Note that whenever the
+.Fn init ,
+.Fn reinit ,
+.Fn load ,
+.Fn save
+and
+.Fn destroy
+operations are used, they are invoked for every class in the inheritance
+hierarchy of the given object.
 .Pp
 The following public
 .Nm
@@ -362,25 +357,6 @@ is a variant of
 which looks up the parent inside the specified VFS using the pathname
 .Fa path .
 .Pp
-.Fn AG_ObjectMove
-moves
-.Fa child
-from
-.Fa oldparent
-to
-.Fa newparent
-(both must be part of the same VFS).
-.Fn AG_ObjectMove
-raises
-.Fn detached ,
-.Fn attached
-and
-.Fn moved
-events in order.
-Note that unlike with
-.Fn AG_ObjectDetach ,
-scheduled timeout events are not cancelled automatically.
-.Pp
 .Fn AG_ObjectRoot
 returns a pointer to the root of the VFS which the given object is attached to.
 .Pp
@@ -453,12 +429,6 @@ is not enabled at compile-time.
 changes the name of the given object.
 If the object is attached to a VFS, it is assumed to be locked.
 .Pp
-.Fn AG_ObjectSetClass
-changes the generic operation vector (pointer to
-.Ft AG_ObjectClass
-structure) associated with the given object.
-This function is not thread-safe.
-.Pp
 .Fn AG_ObjectSetDebugFn
 specifies a function to process debug messages (as issued by
 .Xr AG_Debug 3 )
@@ -468,6 +438,12 @@ This function is a no-op unless Agar was compiled with the
 option.
 .Sh CLASS INFORMATION
 .nr nS 1
+.Ft "void"
+.Fn AG_RegisterNamespace "const char *name" "const char *prefix" "const char *url"
+.Pp
+.Ft "void"
+.Fn AG_UnregisterNamespace "const char *name"
+.Pp
 .Ft "void"
 .Fn AG_RegisterClass "AG_ObjectClass *ops"
 .Pp
@@ -486,9 +462,23 @@ option.
 .Fn AGOBJECT_FOREACH_CLASS "AG_Object *child_obj" "AG_Object *parent_obj" "TYPE type" "const char *class_pattern"
 .Pp
 .nr nS 0
-The
+.Fn AG_RegisterNamespace
+registers a new namespace with the specified name, prefix and URL.
+For example, Agar registers its own namespace using:
+.Bd -literal
+  AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
+.Ed
+.Pp
+Once the namespace is registered, it is possible to specify inheritance
+hierarchies using a format such as "Agar(Widget:Window)", which is equivalent
+to "AG_Widget:AG_Window", but is a nicer format when long inheritance
+hierarchies spanning different namespaces must be specified.
+.Pp
+.Fn AG_UnregisterNamespace
+unregisters an existing namespace.
+.Pp
 .Fn AG_RegisterClass
-function is used to register a new object class (described by
+registers a new object class (described by
 .Fa ops )
 in the object class table.
 This table contains, notably, all the information needed by
