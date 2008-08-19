@@ -352,22 +352,17 @@ function removes
 from its parent window
 .Fa pwin .
 .Pp
-The
-.Fn AG_WindowUpdate
-function calls
-.Xr AG_WidgetSizeAlloc 3
-and
-.Xr AG_WidgetUpdateCoords
-on the given window.
-It must be called after any direct modification of the
+Widgets are allowed to modify the
 .Va x ,
 .Va y ,
 .Va w
 and
 .Va h
-members of the
-.Nm
-structure.
+members of their structures directly.
+The
+.Fn AG_WindowUpdate
+function commits all such changes previously made to any widget attached to
+.Fa win .
 .Sh VISIBILITY
 .nr nS 1
 .Ft void
@@ -377,20 +372,25 @@ structure.
 .Fn AG_WindowHide "AG_Window *win"
 .Pp
 .Ft int
-.Fn AG_WindowToggleVisibility "AG_Window *win"
+.Fn AG_WindowIsVisible "AG_Window *win"
+.Pp
+.Ft int
+.Fn AG_WindowSetVisibility "AG_Window *win" "int flag"
 .Pp
 .nr nS 0
 The
 .Fn AG_WindowShow
-function marks
-.Fa win
-as visible.
+and
 .Fn AG_WindowHide
-marks
+functions control the visibility of a window.
+.Pp
+.Fn AG_WindowIsVisible
+returns the current visibility status of a window (0 = invisible, 1 = visible).
+With threads, the return value is only valid as long as the
 .Fa win
-as invisible.
-.Fn AG_WindowToggleVisibility
-inverts the visibility state of
+object is locked.
+.Fn AG_WindowSetVisibility
+sets the visibility state of
 .Fa win .
 .Sh FOCUS
 .nr nS 1
@@ -403,8 +403,8 @@ inverts the visibility state of
 .Ft int
 .Fn AG_WindowFindFocused "AG_Window *win"
 .Pp
-.Ft "AG_Window *"
-.Fn AG_WindowFocused "void"
+.Ft "int"
+.Fn AG_WindowIsFocused "void"
 .Pp
 .nr nS 0
 The
@@ -420,10 +420,11 @@ or -1 if the window was not found.
 .Fn AG_WindowFindFocused
 returns a pointer to the window currently holding focus, or NULL if there
 are currently no windows at all.
-.Fn AG_WindowFocused
-return 1 if
-.Fa win
-is holding focus, 0 otherwise.
+.Pp
+The
+.Fn AG_WindowIsFocused
+function returns the current focus state of the window (0 = not focused,
+1 = focused).
 .Sh GENERIC EVENT HANDLERS
 .nr nS 1
 .Ft void
@@ -542,19 +543,6 @@ The window has been displaced by the user.
 Calls to
 .Fn AG_WindowSetGeometry
 will not raise this event.
-.El
-.Sh STRUCTURE DATA
-.Bl -tag -width "AG_Titlebar *tbar "
-.It Ft int visible
-Visiblity flag (read-only, set by
-.Fn AG_WindowShow
-and
-.Fn AG_WindowHide ) .
-.It Ft AG_Titlebar *tbar
-Pointer to Titlebar object or NULL.
-See
-.Xr AG_Titlebar 3
-(read-only).
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
