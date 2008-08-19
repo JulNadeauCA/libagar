@@ -453,6 +453,9 @@ AG_RegisterLabelFormat(const char *fmt, AG_LabelFormatFn fn)
 {
 	AG_LabelFormatSpec *fs;
 
+	if (!agGUI) {
+		return;
+	}
 	AG_MutexLock(&fmtsLock);
 	fmts = Realloc(fmts, (nFmts+1)*sizeof(AG_LabelFormatSpec));
 	fs = &fmts[nFmts++];
