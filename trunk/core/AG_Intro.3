@@ -32,15 +32,23 @@
 .Nd agar introduction
 .Sh DESCRIPTION
 Agar is a graphical application toolkit.
-It provides all type sof graphical applications with consistent interfaces
+It provides all types of graphical applications with consistent interfaces
 across a wide array of platforms.
+This page describes the libraries included in the Agar source distribution.
 The two main Agar libraries are Agar-Core and Agar-GUI.
 .Pp
 .Sh AGAR-CORE
 Agar-Core implements the
 .Xr AG_Object 3
-object system and provides portable interfaces to some operating system
-services.
+object system which is used extensively by all other Agar libraries.
+It also provides cross-platform interfaces to operating system services
+(e.g., filesystems, network services, threads).
+.Pp
+To use this library, link against
+.Sq agar-config --libs
+(non-graphical applications can also link against
+.Sq agar-core-config --libs
+to avoid the GUI library).
 .Pp
 .Bl -tag -width "AG_DataSource(3) " -compact
 .It Xr AG_Config 3
@@ -49,12 +57,16 @@ Manage Agar configuration settings.
 Core Agar library initialization.
 .It Xr AG_DataSource 3
 Generic interface to different data sources.
+.It Xr AG_DSO 3
+Cross-platform interface to dynamic linkers.
 .It Xr AG_Error 3
 Error handling in Agar.
 .It Xr AG_Object 3
 The Agar object system.
 .It Xr AG_Event 3
 Event handling for objects.
+.It Xr AG_Limits 3
+Interface to platform-dependent limits.
 .It Xr AG_Prop 3
 Generic runtime properties for objects.
 .It Xr AG_Threads 3
@@ -69,6 +81,9 @@ Agar-GUI implements a standard widget set and a built-in window system.
 It is implemented in a fashion independent of the underlying graphics API
 (i.e., direct-video, OpenGL), and is designed to provide the highest
 performance and efficiency achievable with any given graphics system.
+.Pp
+To use this library, link against
+.Sq agar-config --libs .
 .Pp
 .Bl -tag -width "AG_Window(3) " -compact
 .It Xr AG_Colors 3
@@ -206,6 +221,9 @@ angles) as opposed to linear transformations.
 This functionality is implemented in the FreeSG library (see
 .Dq FREESG ) .
 .Pp
+To use this library, link against
+.Sq agar-vg-config --libs .
+.Pp
 .Bl -tag -width "VG_Polygon(3) " -compact
 .It Xr VG 3
 Vector drawing object.
@@ -228,6 +246,9 @@ static or animated) by compositing a set of graphical elements.
 It implements a "smart" image format which allows directives, transformations
 and instancing of graphical elements.
 .Pp
+To use this library, link against
+.Sq agar-rg-config --libs .
+.Pp
 .Bl -tag -width "RG_Animview (3) " -compact
 .It Xr RG_Tileset 3
 Package for graphics, animations and textures.
@@ -249,6 +270,9 @@ Agar-MAP is a 2D tiling library aimed at isometric games, platform games
 and scrollers.
 It depends on Agar-RG for graphics.
 .Pp
+To use this library, link against
+.Sq agar-map-config --libs .
+.Pp
 .Bl -tag -width "MAP_Actor(3) " -compact
 .It Xr MAP 3
 The basic 2D map object.
@@ -259,5 +283,6 @@ Map visualization and edition widget.
 .El
 .Sh FREESG
 FreeSG is a math library / computational geometry / 2D / 3D toolkit.
-It is not part of the Agar distribution, but it is built on top of Agar. 
+It is not part of the Agar distribution, but it is built on top of Agar
+and also implements some Agar widgets.
 See: http://freesg.org/ for more details.
