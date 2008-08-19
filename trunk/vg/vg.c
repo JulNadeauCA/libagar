@@ -733,6 +733,7 @@ VG_ReadColor(AG_DataSource *ds)
 	c.g = AG_ReadUint8(ds);
 	c.b = AG_ReadUint8(ds);
 	c.a = AG_ReadUint8(ds);
+	c.idx = -1;
 	return (c);
 }
 
