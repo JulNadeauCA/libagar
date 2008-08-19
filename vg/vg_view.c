@@ -43,11 +43,14 @@
 #include "vg_tools.h"
 #include "tools.h"
 
-static const float scaleFactors[17] = {
-	1.0f, 2.0f, 4.0f, 6.0f, 8.0f, 10.0f, 12.0f, 16.0f, 18.0f,
+static const float scaleFactors[28] = {
+	1.0f, 1.25f, 1.5f, 1.75f,
+	2.0f, 2.25f, 2.5f, 2.75f,
+	3.0f, 3.25f, 3.5f, 3.75f,
+	4.0f, 5.0f, 6.0f, 8.0f, 10.0f, 12.0f, 16.0f, 18.0f,
 	20.0f, 22.0f, 24.0f, 32.0f, 34.0f, 36.0f, 38.0f, 40.0f
 };
-const int nScaleFactors = 17;
+const int nScaleFactors = 28;
 
 VG_View *
 VG_ViewNew(void *parent, VG *vg, Uint flags)
@@ -764,7 +767,7 @@ VG_AddEditArea(VG_View *vv, void *widget)
 
 AG_WidgetClass vgViewClass = {
 	{
-		"AG_Widget:VG_View",
+		"Agar(Widget):VG(View)",
 		sizeof(VG_View),
 		{ 0,0 },
 		Init,
