@@ -138,7 +138,7 @@ void	 AG_WindowAttach(AG_Window *, AG_Window *);
 void	 AG_WindowDetach(AG_Window *, AG_Window *);
 void	 AG_WindowShow(AG_Window *);
 void	 AG_WindowHide(AG_Window *);
-int	 AG_WindowToggleVisibility(AG_Window *);
+void	 AG_WindowSetVisibility(AG_Window *, int);
 int	 AG_WindowEvent(SDL_Event *);
 void	 AG_WindowResize(AG_Window *);
 int	 AG_WindowIsSurrounded(AG_Window *);
@@ -159,18 +159,24 @@ void	 AG_WindowCloseGenEv(AG_Event *);
 #define AGWINCLOSE(win)      AG_WindowCloseGenEv, "%p", (win)
 #define AG_WINDOW_FOCUSED(w) (AG_TAILQ_LAST(&agView->windows,ag_windowq) == (w))
 
+/* Return the currently focused window. */
 static __inline__ AG_Window *
 AG_WindowFindFocused(void)
 {
 	return AG_TAILQ_LAST(&agView->windows,ag_windowq);
 }
 
+/* Evaluate whether the given window is holding focus. */
 static __inline__ int
-AG_WindowFocused(AG_Window *win)
+AG_WindowIsFocused(AG_Window *win)
 {
 	return (AG_TAILQ_LAST(&agView->windows,ag_windowq) == (win));
 }
 
+/*
+ * Commit direct changes made to the coordinates of Widgets attached to 
+ * the window.
+ */
 static __inline__ void
 AG_WindowUpdate(AG_Window *win)
 {
@@ -187,6 +193,13 @@ AG_WindowUpdate(AG_Window *win)
 		AG_WidgetSizeAlloc(win, &a);
 	}
 	AG_WidgetUpdateCoords(win, AGWIDGET(win)->x, AGWIDGET(win)->y);
+}
+
+/* Return visibility status of window. */
+static __inline__ int
+AG_WindowIsVisible(AG_Window *win)
+{
+	return (win->visible);
 }
 __END_DECLS
 

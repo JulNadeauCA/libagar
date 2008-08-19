@@ -337,21 +337,17 @@ AG_WindowIsSurrounded(AG_Window *win)
 	return (0);
 }
 
-/* Toggle the visibility of a window. */
-int
-AG_WindowToggleVisibility(AG_Window *win)
+/* Set the visibility state of a window. */
+void
+AG_WindowSetVisibility(AG_Window *win, int flag)
 {
-	int oldvis;
-
 	AG_ObjectLock(win);
-	oldvis = win->visible;
 	if (win->visible) {
 		AG_WindowHide(win);
 	} else {
 		AG_WindowShow(win);
 	}
 	AG_ObjectUnlock(win);
-	return (oldvis);
 }
 
 /* Set the visibility bit of a window. */
@@ -1641,7 +1637,7 @@ AG_WindowUpdateCaption(AG_Window *win)
 
 AG_WidgetClass agWindowClass = {
 	{
-		"AG_Widget:AG_Window",
+		"Agar(Widget:Window)",
 		sizeof(AG_Window),
 		{ 0,0 },
 		Init,
