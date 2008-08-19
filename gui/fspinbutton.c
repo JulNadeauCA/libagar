@@ -25,7 +25,6 @@
 
 #include <config/_mk_have_strtoll.h>
 
-#include <core/limits.h>
 #include <core/core.h>
 
 #include "fspinbutton.h"

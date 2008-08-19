@@ -23,7 +23,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/limits.h>
 #include <core/core.h>
 
 #include "spinbutton.h"

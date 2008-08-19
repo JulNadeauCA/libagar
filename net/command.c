@@ -26,11 +26,9 @@
 #include <config/network.h>
 #ifdef NETWORK
 
-#include <core/limits.h>
 #include <core/core.h>
 
 #include <stdlib.h>
-#include <limits.h>
 #include <string.h>
 #include <stdio.h>
 
