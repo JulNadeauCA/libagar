@@ -71,6 +71,7 @@ extern AG_ObjectClass mapActorClass;
 void
 MAP_InitSubsystem(void)
 {
+	AG_RegisterNamespace("MAP", "MAP_", "http://libagar.org/");
 	AG_RegisterClass(&mapClass);
 	AG_RegisterClass(&mapActorClass);
 	AG_RegisterClass(&mapEditorClass);

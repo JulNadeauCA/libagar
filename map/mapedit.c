@@ -147,7 +147,7 @@ ConfigEditor(void *p)
 }
 
 AG_ObjectClass mapEditorPseudoClass = {
-	"MAP_EditorPseudo",
+	"MAP(EditorPseudo)",
 	sizeof(AG_Object),
 	{ 0, 0 },
 	NULL,			/* init */
@@ -159,7 +159,7 @@ AG_ObjectClass mapEditorPseudoClass = {
 };
 
 AG_ObjectClass mapEditorClass = {
-	"MAP_Editor",
+	"MAP(Editor)",
 	sizeof(AG_Object),
 	{ 0, 0 },
 	NULL,		/* init */
