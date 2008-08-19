@@ -1,0 +1,130 @@
+.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 19, 2008
+.Dt AG_DSO 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_DSO
+.Nd agar portable dynamic linker interface
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+provides a cross-platform interface for loading code from a dynamic library
+file into the current process's address space, resolving symbols defined by
+the library, and unloading the library.
+.Sh INTERFACE
+.nr nS 1
+.Ft "AG_DSO *"
+.Fn AG_LoadDSO "const char *name" "const char *path" "Uint flags"
+.Pp
+.Ft "int"
+.Fn AG_SymDSO "AG_DSO *dso" "const char *symbol" "void **rv"
+.Pp
+.Ft "void"
+.Fn AG_LockDSO "void"
+.Pp
+.Ft "void"
+.Fn AG_UnlockDSO "void"
+.Pp
+.Ft "int"
+.Fn AG_UnloadDSO "AG_DSO *dso"
+.Pp
+.nr nS 0
+The
+.Fn AG_LoadDSO
+function loads the dynamic library file at
+.Fa path 
+into the current process's address space.
+.Fa name
+is a string identifier for the library for use by the
+.Xr AG_Object 3
+system independently of the file location.
+If the library was loaded successfully, a pointer to the new
+.Ft AG_DSO
+structure is returned.
+If an error occured, NULL is returned and an error message is set.
+.Pp
+The
+.Fn AG_SymDSO
+function tries to resolve the named
+.Fa symbol .
+If successful, the value is returned into
+.Fa rv
+and 0 is returned.
+Otherwise, -1 is returned and an error message is set.
+Under threads, the value returned into
+.Fa rv
+remains valid as long as
+.Fn AG_LockDSO
+is in effect.
+.Fn AG_SymDSO
+automatically prepends an underscore to the symbol if required.
+.Pp
+.Fn AG_LockDSO
+and
+.Fn AG_UnlockDSO
+acquire and release the lock protecting the list of loaded libraries
+and their resolved symbols.
+.Pp
+The
+.Fn AG_UnloadDSO
+function removes the library from the process's address space, assuming
+that its symbols are no longer being referenced.
+.Sh STRUCTURE DATA
+The
+.Fa AG_DSO
+structure includes public members:
+.Pp
+.Bl -tag -compact -width "char path[AG_PATHNAME_MAX] "
+.It char name[AG_DSO_NAME_MAX]
+Platform-independent name for this module.
+.It char path[AG_PATHNAME_MAX]
+Full path to dynamic library file.
+.It TAILQ(AG_DSOSym) syms
+List of previously resolved symbols
+.El
+.Pp
+The
+.Fa AG_DSOSym
+structure includes public members:
+.Pp
+.Bl -tag -compact -width "char *sym"
+.It char *sym
+Symbol name
+.It char *p
+Resolved address
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.3.3.
