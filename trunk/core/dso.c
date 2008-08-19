@@ -1,0 +1,579 @@
+/*
+ * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Cross-platform interface to dynamic linking loader.
+ */
+ 
+#include <config/have_dlopen.h>
+#include <config/have_dyld.h>
+#include <config/have_dyld_return_on_error.h>
+#include <config/have_shl_load.h>
+#include <config/have_dlfcn_h.h>
+#include <config/have_dl_h.h>
+#include <config/have_mach_o_dyld_h.h>
+
+#include <core/core.h>
+#include <core/config.h>
+#include <core/dir.h>
+#include <core/file.h>
+
+#if defined(BEOS)
+# include <kernel/image.h>
+# include <string.h>
+#elif defined(NETWARE)
+# include <dlfcn.h>
+#elif defined(OS390)
+# include <dll.h>
+#elif defined(_WIN32)
+# include <core/queue_close.h>			/* Conflicts */
+# include <windows.h>
+# include <core/queue_close.h>
+# include <core/queue.h>
+#else
+# include <string.h>
+# include <errno.h>
+# ifdef HAVE_DLFCN_H
+#  include <dlfcn.h>
+# endif
+# ifdef HAVE_DL_H
+#  include <dl.h>
+# endif
+# ifdef HAVE_MACH_O_DYLD_H
+#  include <mach-o/dyld.h>
+# endif
+
+# ifndef RTLD_NOW
+#  define RTLD_NOW 1
+# endif
+# ifndef RTLD_GLOBAL
+#  define RTLD_GLOBAL 0
+# endif
+#endif
+
+#if defined(BEOS)
+typedef struct ag_dso_beos {
+	struct ag_dso dso;
+	image_id handle;
+} AG_DSO_BeOS;
+#elif defined(OS2)
+typedef struct ag_dso_os2 {
+	struct ag_dso dso;
+	HMODULE handle;
+} AG_DSO_OS2;
+#else
+typedef struct ag_dso_generic {
+	struct ag_dso dso;
+	void *handle;
+} AG_DSO_Generic;
+#endif
+
+struct ag_dsoq agLoadedDSOs = TAILQ_HEAD_INITIALIZER(agLoadedDSOs);
+#ifdef THREADS
+AG_Mutex agDSOLock = AG_MUTEX_INITIALIZER;
+#endif
+
+/* Load a DSO using the load_add_on() interface on BeOS. */
+#ifdef BEOS
+static AG_DSO *
+LoadDSO_BEOS(AG_DSO_Generic *dso, const char *path)
+{
+	AG_DSO_BeOS *d;
+	image_id handle;
+
+	if ((handle = load_add_on(path)) < B_NO_ERROR) {
+		AG_SetError("%s: %s", path, strerror(handle));
+		return (NULL);
+	}
+	d = Malloc(sizeof(AG_DSO_BeOS));
+	d->handle = handle;
+	return (AG_DSO *)d;
+}
+#endif /* BEOS */
+
+/* Load a DSO using the DosLoadModule() interface on OS/2. */
+#ifdef OS2
+static AG_DSO *
+LoadDSO_OS2(AG_DSO_Generic *dso, const char *path)
+{
+	char failedMod[256];
+	AG_DSO_OS2 *d;
+	HMODULE handle;
+	int rv;
+
+	rv = DosLoadModule(failedMod, sizeof(failedMod), path, &handle);
+	if (rv != 0) {
+		AG_SetError("%s: DosLoadModule() failed: %s", path, failedMod);
+		return (NULL);
+	}
+	d = Malloc(sizeof(AG_DSO_OS2));
+	d->handle = handle;
+	return (AG_DSO *)d;
+}
+#endif /* OS2 */
+
+/* Load a DSO using the dllload() interface on OS/390. */
+#ifdef OS390
+static AG_DSO *
+LoadDSO_OS390(AG_DSO_Generic *dso, const char *path)
+{
+	AG_DSO_Generic *d;
+	
+	d = Malloc(sizeof(AG_DSO_Generic));
+	if ((d->handle = dllload(path)) == NULL) {
+		AG_SetError("%s: dllload() failed", path);
+		free(d);
+		return (NULL);
+	}
+	return (AG_DSO *)d;
+}
+#endif /* OS390 */
+
+/* Load a DSO using the LoadLibraryExW() interface on Windows. */
+#ifdef _WIN32
+static AG_DSO *
+LoadDSO_WIN32(AG_DSO_Generic *d, const char *path)
+{
+	char buf[AG_PATHNAME_MAX], *p;
+	UINT em;
+	
+	d = Malloc(sizeof(AG_DSO_Generic));
+
+	Strlcpy(buf, path, sizeof(buf));
+	for (p = buf; *p != '\0'; p++) {
+		if (*p == '/') { *p = '\\'; }
+	}
+	em = SetErrorMode(SEM_FAILCRITICALERRORS);
+	d->handle = LoadLibraryEx(path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+	if (d->handle == NULL) {
+		d->handle == LoadLibraryEx(path, NULL, 0);
+		if (d->handle == NULL) {
+			AG_SetError("%s: LoadLibraryEx() failed", path);
+			free(d);
+			return (NULL);
+		}
+	}
+	SetErrorMode(em);
+	return (AG_DSO *)d;
+}
+#endif /* _WIN32 */
+
+/* Load a DSO using the HP-UX shl_load() interface. */
+#ifdef HAVE_SHL_LOAD
+static AG_DSO *
+LoadDSO_SHL(const char *path)
+{
+	AG_DSO_Generic *d;
+
+	d = Malloc(sizeof(AG_DSO_Generic));
+	if ((d->handle = shl_load(path, BIND_IMMEDIATE, 0L)) == NULL) {
+		AG_SetError("%s: shl_load() failed", path);
+		free(d);
+		return (NULL);
+	}
+	return (AG_DSO *)d;
+}
+#endif /* HAVE_SHL_LOAD */
+
+/* Load a DSO using the dyld NSLinkModule() interface. */
+#ifdef HAVE_DYLD
+static AG_DSO *
+LoadDSO_DYLD(const char *path)
+{
+	AG_DSO_Generic *d;
+	NSObjectFileImage image;
+	NSObjectFileImageReturnCode rv;
+
+	d = Malloc(sizeof(AG_DSO_Generic));
+	d->handle = NULL;
+		
+	rv = NSCreateObjectFileImageFromFile(path, &image);
+
+	if (rv == NSObjectFileImageSuccess) {
+#  if defined(HAVE_DYLD_RETURN_ON_ERROR)
+		d->handle = (void *)NSLinkModule(image, path,
+		    NSLINKMODULE_OPTION_RETURN_ON_ERROR|
+		    NSLINKMODULE_OPTION_NONE);
+		if (d->handle == NULL) {
+			NSLinkEditErrors errors;
+			int errorNumber;
+			const char *fileName;
+			const char *s = NULL;
+
+			NSLinkEditError(&errors, &errorNumber, &fileName, &s);
+			AG_SetError("%s", s);
+			goto fail;
+		}
+#  else /* !HAVE_DYLD_RETURN_ON_ERROR */
+		d->handle = (void *)NSLinkModule(image, path, FALSE);
+		if (d->handle == NULL) {
+			AG_SetError("%s: NSLinkModule() failed", path);
+			goto fail;
+		}
+#  endif /* HAVE_DYLD_RETURN_ON_ERROR */
+
+		NSDestroyObjectFileImage(image);
+	} else if ((rv == NSObjectFileImageFormat ||
+	            rv == NSObjectFileImageInappropriateFile) &&
+		    NSAddLibrary(path) == TRUE) {
+		d->handle = (void *)( (NSModule)DYLD_LIBRARY_HANDLE );
+		if (d->handle == NULL) {
+			AG_SetError("%s: NSAddLibrary() failed", path);
+			goto fail;
+		}
+	}
+	return (AG_DSO *)d;
+fail:
+	if (rv == NSObjectFileImageSuccess) {
+		NSDestroyObjectFileImage(image);
+	}
+	free(d);
+	return (NULL);
+}
+#endif /* HAVE_DYLD */
+
+/* Load a DSO using the standard dlopen() interface. */
+#ifdef HAVE_DLOPEN
+static AG_DSO *
+LoadDSO_DLOPEN(const char *path)
+{
+	AG_DSO_Generic *d;
+	int flags = RTLD_NOW|RTLD_GLOBAL;
+	
+	d = Malloc(sizeof(AG_DSO_Generic));
+# if defined(_AIX)
+	/* Special archive.a(dso.so) syntax requires RTLD_MEMBER flag */
+	if (strchr(&path[1], '(') && path[strlen(path)-1] == ')')
+		flags |= RTLD_MEMBER;
+# endif
+      	if ((d->handle = dlopen(path, flags)) == NULL) {
+		AG_SetError("%s: %s", path, dlerror());
+		free(d);
+		return (NULL);
+	}
+	return (AG_DSO *)d;
+}
+#endif /* HAVE_DLOPEN */
+
+/* Load the specified dynamic library into the process address space. */
+AG_DSO *
+AG_LoadDSO(const char *name, const char *path, Uint flags)
+{
+	AG_DSO *dso;
+
+	AG_MutexLock(&agDSOLock);
+	
+#if defined(BEOS)
+	dso = LoadDSO_BEOS(path);
+#elif defined(OS2)
+	dso = LoadDSO_OS2(path);
+#elif defined(OS390)
+	dso = LoadDSO_OS390(path);
+#elif defined(_WIN32)
+	dso = LoadDSO_WIN32(path);
+#elif defined(HAVE_SHL_LOAD)
+	dso = LoadDSO_SHL(path);
+#elif defined(HAVE_DYLD)
+	dso = LoadDSO_DYLD(path);
+#elif defined(HAVE_DLOPEN)
+	dso = LoadDSO_DLOPEN(path);
+#endif
+	Strlcpy(dso->name, name, sizeof(dso->name));
+	Strlcpy(dso->path, path, sizeof(dso->path));
+	dso->flags = 0;
+	TAILQ_INIT(&dso->syms);
+	TAILQ_INSERT_TAIL(&agLoadedDSOs, dso, dsos);
+
+	AG_MutexUnlock(&agDSOLock);
+	return (dso);
+}
+
+/* Remove the specified dynamic library from the process's address space. */
+int
+AG_UnloadDSO(AG_DSO *dso)
+{
+	AG_DSOSym *cSym;
+
+	AG_MutexLock(&agDSOLock);
+	
+#if defined(BEOS)
+	{
+		AG_DSO_BeOS *d = (AG_DSO_BeOS *)dso;
+		if (unload_add_on(d->handle) < B_NO_ERROR) {
+			AG_SetError("%s: unload_add_on() failed", dso->name);
+			goto fail;
+		}
+	}
+#elif defined(OS2)
+	{
+		AG_DSO_OS2 *d = (AG_DSO_OS2 *)dso;
+		if (DosFreeModule(d->handle) != 0) {
+			AG_SetError("%s: DosFreeModule() failed", dso->name);
+			goto fail;
+		}
+	}
+#elif defined(OS390)
+	{
+		AG_DSO_Generic *d = (AG_DSO_Generic *)dso;
+		if (dllfree(d->handle) != 0) {
+			AG_SetError("%s: dllfree() failed", dso->name);
+			goto fail;
+		}
+	}
+#elif defined(_WIN32)
+	{
+		AG_DSO_Generic *d = (AG_DSO_Generic *)dso;
+		if (!FreeLibrary(d->handle)) {
+			AG_SetError("%s: FreeLibrary() failed", dso->name);
+			goto fail;
+		}
+	}
+#elif defined(HAVE_SHL_LOAD)
+	{
+		AG_DSO_Generic *d = (AG_DSO_Generic *)dso;
+		shl_unload((shl_t)d->handle);
+	}
+#elif defined(HAVE_DYLD)
+	{
+		AG_DSO_Generic *d = (AG_DSO_Generic *)dso;
+		if (d->handle != DYLD_LIBRARY_HANDLE)
+			NSUnLinkModule(d->handle, FALSE);
+	}
+#elif defined(HAVE_DLOPEN)
+	{
+		AG_DSO_Generic *d = (AG_DSO_Generic *)dso;
+# ifdef NETWARE
+		void *NLMHandle = getnlmhandle();
+		TAILQ_FOREACH(cSym, &dso->syms, syms)
+			UnImportPublicObject(NLMHandle, cSym->sym);
+# endif
+		if (dlclose(d->handle) != 0) {
+			AG_SetError("%s: dlclose: %s", dso->name,
+			    strerror(errno));
+			goto fail;
+		}
+	}
+#endif /* DSO_USE_FOO */
+
+	while ((cSym = TAILQ_FIRST(&dso->syms)) != NULL) {
+		free(cSym->sym);
+		free(cSym);
+	}
+	TAILQ_REMOVE(&agLoadedDSOs, dso, dsos);
+	free(dso);
+	AG_MutexUnlock(&agDSOLock);
+	return (0);
+fail:
+	AG_MutexUnlock(&agDSOLock);
+	return (-1);
+}
+
+#ifdef BEOS
+/* Look up a symbol using the BeOS get_image_symbol() interface. */
+static int
+SymDSO_BeOS(AG_DSO_BeOS *d, const char *sym, void **p)
+{
+	AG_DSO_BeOS *d = (AG_DSO_BeOS *)dso;
+	int rv;
+
+	rv = get_image_symbol(d->handle, sym, B_SYMBOL_TYPE_ANY, p);
+	if (rv != B_OK) {
+		AG_SetError("Symbol not found: \"%s\"", sym);
+		return (-1);
+	}
+	return (0);
+}
+#endif /* BEOS */
+
+#ifdef OS2
+/* Look up a symbol using the OS/2 DosQueryProcAddr() interface. */
+static int
+SymDSO_OS2(AG_DSO_OS2 *d, const char *sym, void **p)
+{
+	PFN fn;
+
+	rv = DosQueryProcAddr(d->handle, 0, sym, &fn);
+	if (rv != 0) {
+		AG_SetError("Symbol not found: \"%s\"", sym);
+		return (-1);
+	}
+	*p = (void *)fn;
+	return (0);
+}
+#endif /* OS2 */
+
+#ifdef OS390
+/* Look up a symbol using the OS/390 dllqueryvar() interface. */
+static int
+SymDSO_OS390(AG_DSO_Generic *d, const char *sym, void **p)
+{
+	if ((*p = dllqueryfn(d->handle, sym)) != NULL ||
+	    (*p = dllqueryvar(d->handle, sym)) != NULL) {
+		return (0);
+	}
+	AG_SetError("Symbol not found: \"%s\"", sym);
+	return (-1);
+}
+#endif /* OS390 */
+
+#ifdef _WIN32
+/* Look up a symbol using the Windows GetProcAddress() interface. */
+static int
+SymDSO_WIN32(AG_DSO_Generic *d, const char *sym, void **p)
+{
+	*p = (void *)GetProcAddress(d->handle, sym);
+	/* XXX no way to determine error */
+	return (0);
+}
+#endif /* _WIN32 */
+
+#ifdef HAVE_SHL_LOAD
+/* Look up a symbol using the shl_findsym() interface. */
+static int
+SymDSO_SHL(AG_DSO_Generic *d, const char *sym, void **p)
+{
+	int rv;
+
+	*p = NULL;
+	errno = 0;
+	if ((rv = shl_findsym((shl_t *)&d->handle, sym, TYPE_PROCEDURE, p))
+	    == -1) {
+		if (errno != 0) {
+			goto notfound;
+		}
+		if ((rv = shl_findsym((shl_t *)&d->handle, sym, TYPE_DATA, p))
+		    == -1) {
+			goto notfound;
+		}
+	}
+	return (0);
+notfound:
+	AG_SetError("%s: Symbol not found: \"%s\"", AGDSO(d)->name, sym);
+	return (-1);
+}
+#endif /* HAVE_SHL_LOAD */
+
+#ifdef HAVE_DYLD
+/* Look up a symbol using the dyld interface. */
+static int
+SymDSO_DYLD(AG_DSO_Generic *d, const char *sym, void **p)
+{
+	int rv;
+	NSSymbol symbol;
+	size_t symLen = strlen(sym);
+	char *symUnder = Malloc(symLen+2);
+
+	symUnder[0] = '_';
+	Strlcpy(&symUnder[1], sym, (symLen+2)-1);
+	*p = NULL;
+# ifdef NSLINKMODULE_OPTION_PRIVATE
+	if (d->handle == DYLD_LIBRARY_HANDLE) {
+		symbol = NSLookupAndBindSymbol(symUnder);
+	} else {
+		symbol = NSLookupSymbolInModule((NSModule)d->handle, symUnder);
+	}
+# else
+	symbol = NSLookupAndBindSymbol(symUnder);
+# endif
+	free(symUnder);
+
+	if (symbol == NULL) {
+		AG_SetError("%s: Undefined symbol: %s", AGDSO(d)->name, sym);
+		return (-1);
+	}
+	*p = NSAddressOfSymbol(symbol);
+	return (0);
+}
+#endif /* HAVE_DYLD */
+
+#ifdef HAVE_DLOPEN
+/* Look up a symbol using the standard dlopen() interface. */
+static int
+SymDSO_DLOPEN(AG_DSO_Generic *d, const char *sym, void **p)
+{
+	char *error;
+
+	*p = NULL;
+
+# if !defined(__ELF__) && (defined(__NetBSD__) || defined(__OpenBSD__) || \
+     defined(__FreeBSD__) || defined(__DragonFly__))
+	{
+		size_t symLen = strlen(sym);
+		char *symUnder = Malloc(symLen+2);
+
+		symUnder[0] = '_';
+		Strlcpy(&symUnder[1], sym, (symLen+2)-1);
+		*p = dlsym(d->handle, symUnder);
+		free(symUnder);
+	}
+# else /* __ELF__ */
+	*p = dlsym(d->handle, sym);
+# endif /* !__ELF__ */
+
+	if ((error = dlerror()) != NULL) {
+		AG_SetError("%s: %s", AGDSO(d)->name, error);
+		return (-1);
+	}
+	return (0);
+}
+#endif /* HAVE_DLOPEN */
+
+int
+AG_SymDSO(AG_DSO *dso, const char *sym, void **p)
+{
+	AG_DSOSym *cSym;
+	int rv;
+	
+	AG_MutexLock(&agDSOLock);
+#if defined(BEOS)
+	rv = SymDSO_BeOS((AG_DSO_BeOS *)dso, sym, p);
+#elif defined(OS2)
+	rv = SymDSO_OS2((AG_DSO_OS2 *)dso, sym, p);
+#elif defined(OS390)
+	rv = SymDSO_OS390((AG_DSO_Generic *)dso, sym, p);
+#elif defined(_WIN32)
+	rv = SymDSO_WIN32((AG_DSO_Generic *)dso, sym, p);
+#elif defined(HAVE_SHL_LOAD)
+	rv = SymDSO_SHL((AG_DSO_Generic *)dso, sym, p);
+#elif defined(HAVE_DYLD)
+	rv = SymDSO_DYLD((AG_DSO_Generic *)dso, sym, p);
+#elif defined(HAVE_DLOPEN)
+	rv = SymDSO_DLOPEN((AG_DSO_Generic *)dso, sym, p);
+#endif
+	if (rv == 0) {
+		TAILQ_FOREACH(cSym, &dso->syms, syms) {
+			if (strcmp(cSym->sym, sym) == 0)
+				break;
+		}
+		if (cSym == NULL) {
+			cSym = Malloc(sizeof(AG_DSOSym));
+			cSym->sym = Strdup(sym);
+			cSym->p = p;
+			TAILQ_INSERT_TAIL(&dso->syms, cSym, syms);
+		}
+	}
+	AG_MutexUnlock(&agDSOLock);
+	return (rv);
+}
