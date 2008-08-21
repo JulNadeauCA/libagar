@@ -8,16 +8,16 @@ UNIT_TESTS/c_size UNIT_TESTS/c_size.o agar-core-ada-conf agar-core-ada-conf.o \
 agar-core-ada.a agar-core-config.ali agar-core-config.o \
 agar-core-datasource.ali agar-core-datasource.o agar-core-error.ali \
 agar-core-error.o agar-core-event.ali agar-core-event.o agar-core-object.ali \
-agar-core-object.o agar-core-tail_queue.ali agar-core-tail_queue.o \
-agar-core-threads.ali agar-core-threads.o agar-core-timeout.ali \
-agar-core-timeout.o agar-core-types.ali agar-core-types.o agar-core-version.ali \
-agar-core-version.o agar-core.ali agar-core.o agar.ali agar.o chk-debug \
-chk-debug.o chk-lockdebug chk-lockdebug.o chk-off_t chk-off_t.o chk-threads \
-chk-threads.o ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.o ctxt/incdir.o \
-ctxt/repos.o ctxt/slibdir.o ctxt/version.o deinstaller deinstaller.o inst-check \
-inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o \
-install_core.o install_error.o installer installer.o instchk instchk.o \
-insthier.o
+agar-core-object.o agar-core-slist.ali agar-core-slist.o \
+agar-core-tail_queue.ali agar-core-tail_queue.o agar-core-threads.ali \
+agar-core-threads.o agar-core-timeout.ali agar-core-timeout.o \
+agar-core-types.ali agar-core-types.o agar-core-version.ali agar-core-version.o \
+agar-core.ali agar-core.o agar.ali agar.o chk-debug chk-debug.o chk-lockdebug \
+chk-lockdebug.o chk-off_t chk-off_t.o chk-threads chk-threads.o ctxt/bindir.o \
+ctxt/ctxt.a ctxt/dlibdir.o ctxt/incdir.o ctxt/repos.o ctxt/slibdir.o \
+ctxt/version.o deinstaller deinstaller.o inst-check inst-check.o inst-copy \
+inst-copy.o inst-dir inst-dir.o inst-link inst-link.o install_core.o \
+install_error.o installer installer.o instchk instchk.o insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
@@ -135,13 +135,13 @@ cc-compile agar-core-ada-conf.c ctxt.h _sysinfo.h
 
 agar-core-ada.a:\
 cc-slib agar-core-ada.sld agar-core-config.o agar-core-datasource.o \
-agar-core-error.o agar-core-event.o agar-core-object.o agar-core-tail_queue.o \
-agar-core-threads.o agar-core-timeout.o agar-core-types.o agar-core-version.o \
-agar-core.o agar.o
+agar-core-error.o agar-core-event.o agar-core-object.o agar-core-slist.o \
+agar-core-tail_queue.o agar-core-threads.o agar-core-timeout.o \
+agar-core-types.o agar-core-version.o agar-core.o agar.o
 	./cc-slib agar-core-ada agar-core-config.o agar-core-datasource.o \
-	agar-core-error.o agar-core-event.o agar-core-object.o agar-core-tail_queue.o \
-	agar-core-threads.o agar-core-timeout.o agar-core-types.o agar-core-version.o \
-	agar-core.o agar.o
+	agar-core-error.o agar-core-event.o agar-core-object.o agar-core-slist.o \
+	agar-core-tail_queue.o agar-core-threads.o agar-core-timeout.o \
+	agar-core-types.o agar-core-version.o agar-core.o agar.o
 
 agar-core-config.ali:\
 ada-compile agar-core-config.adb agar-core-config.ads
@@ -187,6 +187,13 @@ ada-compile agar-core-object.adb agar-core-object.ads
 
 agar-core-object.o:\
 agar-core-object.ali
+
+agar-core-slist.ali:\
+ada-compile agar-core-slist.ads agar-core-slist.ads
+	./ada-compile agar-core-slist.ads
+
+agar-core-slist.o:\
+agar-core-slist.ali
 
 agar-core-tail_queue.ali:\
 ada-compile agar-core-tail_queue.ads agar-core-tail_queue.ads
@@ -471,18 +478,19 @@ obj_clean:
 	agar-core-ada.a agar-core-config.ali agar-core-config.o \
 	agar-core-datasource.ali agar-core-datasource.o agar-core-error.ali \
 	agar-core-error.o agar-core-event.ali agar-core-event.o agar-core-object.ads \
-	agar-core-object.ali agar-core-object.o agar-core-tail_queue.ali \
-	agar-core-tail_queue.o agar-core-threads.ali agar-core-threads.o \
-	agar-core-timeout.ali agar-core-timeout.o agar-core-types.ads \
-	agar-core-types.ali agar-core-types.o agar-core-version.ali agar-core-version.o \
-	agar-core.ali agar-core.o agar.ali agar.o chk-debug chk-debug.o chk-lockdebug \
-	chk-lockdebug.o chk-off_t chk-off_t.o chk-threads chk-threads.o ctxt/bindir.c \
-	ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.c ctxt/dlibdir.o ctxt/incdir.c \
-	ctxt/incdir.o ctxt/repos.c ctxt/repos.o ctxt/slibdir.c ctxt/slibdir.o \
-	ctxt/version.c ctxt/version.o deinstaller deinstaller.o inst-check inst-check.o \
-	inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o install_core.o \
-	install_error.o
-	rm -f installer installer.o instchk instchk.o insthier.o
+	agar-core-object.ali agar-core-object.o agar-core-slist.ali agar-core-slist.o \
+	agar-core-tail_queue.ali agar-core-tail_queue.o agar-core-threads.ali \
+	agar-core-threads.o agar-core-timeout.ali agar-core-timeout.o \
+	agar-core-types.ads agar-core-types.ali agar-core-types.o agar-core-version.ali \
+	agar-core-version.o agar-core.ali agar-core.o agar.ali agar.o chk-debug \
+	chk-debug.o chk-lockdebug chk-lockdebug.o chk-off_t chk-off_t.o chk-threads \
+	chk-threads.o ctxt/bindir.c ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.c \
+	ctxt/dlibdir.o ctxt/incdir.c ctxt/incdir.o ctxt/repos.c ctxt/repos.o \
+	ctxt/slibdir.c ctxt/slibdir.o ctxt/version.c ctxt/version.o deinstaller \
+	deinstaller.o inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o \
+	inst-link
+	rm -f inst-link.o install_core.o install_error.o installer installer.o instchk \
+	instchk.o insthier.o
 ext_clean:
 	rm -f conf-adatype conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 

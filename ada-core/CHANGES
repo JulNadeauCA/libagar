@@ -5,3 +5,4 @@
 20080821 code: removed init_video from agar.core (to be placed in agar.gui)
 20080821 code: more ada-typed functions.
 20080821 code: init_core -> init
+20080821 code: added slist generic for use in gui bindings.
