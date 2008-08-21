@@ -163,6 +163,7 @@ AG_Strncasecmp(const char *s1, const char *s2, size_t n)
 	const unsigned char *cm = agStrcasecmpMapASCII;
 	const unsigned char *us1 = (const unsigned char *)s1;
 	const unsigned char *us2 = (const unsigned char *)s2;
+	size_t i;
 
 	for (i = 0; i < n; i++) {
 		if (cm[us1[i]] != cm[us2[i]])
