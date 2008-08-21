@@ -12,7 +12,7 @@
 
 /* Standard error code */
 typedef enum ag_error_code {
-	AG_UNDEFINED,		/* Undefined error */
+	AG_EUNDEFINED,		/* Undefined error */
 	AG_EPERM,		/* Operation not permitted */
 	AG_ENOENT,		/* No such file or directory */
 	AG_EINTR,		/* Interrupted system call */
