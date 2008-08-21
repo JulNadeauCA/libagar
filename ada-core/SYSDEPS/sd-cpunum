@@ -1,0 +1,33 @@
+#!/bin/sh
+
+exec 2>/dev/null
+sys="$1"
+
+case "$sys" in
+  SYSDEP_OS_LINUX)
+    ncpu="`grep -i '^processor' /proc/cpuinfo | wc -l`"
+    ;;
+  SYSDEP_OS_CRAY_UNICOS)
+    ncpu="`getconf CRAY_NCPU`"
+    ;;
+  SYSDEP_OS_IRIX)
+    ncpu="`getconf NUM_PROCESSORS`"
+    ;;
+  SYSDEP_OS_SUNOS)
+    ncpu="`psrinfo -v | grep "Status of" | wc -l`"
+    ;;
+  SYSDEP_OS_VMS)
+    ncpu="`SHOW CPU /BRIEF | grep CPU | wc -l | sed 's/ //g'`"
+    ;;
+  *)
+    ncpu="`sysctl hw.ncpu`"
+    if [ $? -eq 0 ]
+    then
+      ncpu="`echo ${ncpu} | awk '{print $2}'`"
+    else
+      ncpu=0
+    fi
+    ;;
+esac
+
+echo "${ncpu}"

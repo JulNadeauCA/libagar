@@ -1,0 +1,3 @@
+#!/bin/sh
+
+echo "${SYSDEP_MODULE}: info: $1" 1>&2

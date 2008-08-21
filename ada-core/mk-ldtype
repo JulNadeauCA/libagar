@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if [ -f conf-x-cctype ]
+then
+  CC_TYPE=`head -n 1 conf-x-cctype`
+  if [ $? -ne 0 ]
+  then
+    echo "fatal: could not read conf-x-cctype" 1>&2
+    exit 1
+  fi
+else
+  CC_TYPE=`head -n 1 conf-cctype`
+  if [ $? -ne 0 ]
+  then
+    echo "fatal: could not read conf-cctype" 1>&2
+    exit 1
+  fi
+fi
+
+LD_TYPE="${CC_TYPE}"
+exec echo "${LD_TYPE}"

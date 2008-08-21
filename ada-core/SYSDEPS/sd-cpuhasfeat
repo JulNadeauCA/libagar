@@ -1,0 +1,34 @@
+#!/bin/sh
+
+exec 2>/dev/null
+sys="$1"
+
+case "$sys" in
+  SYSDEP_OS_DARWIN)
+    alti="`sysctl hw.optional.altivec | awk '{print $2}'`"
+    if [ "${alti}" = "1" ]
+    then
+      echo '#define SYSDEP_HAVE_CPU_EXT_ALTIVEC'
+    fi
+    ;; 
+esac
+
+if [ -f ${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 ]
+then
+  f=`${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 mmx`
+  if [ $f -eq 1 ]; then echo "#define SYSDEP_HAVE_CPU_EXT_MMX"; fi
+  f=`${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 mmx2`
+  if [ $f -eq 1 ]; then echo "#define SYSDEP_HAVE_CPU_EXT_MMX2"; fi
+  f=`${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 3dnow`
+  if [ $f -eq 1 ]; then echo "#define SYSDEP_HAVE_CPU_EXT_3DNOW"; fi
+  f=`${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 3dnowext`
+  if [ $f -eq 1 ]; then echo "#define SYSDEP_HAVE_CPU_EXT_3DNOWEXT"; fi
+  f=`${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 sse`
+  if [ $f -eq 1 ]; then echo "#define SYSDEP_HAVE_CPU_EXT_SSE"; fi
+  f=`${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 sse2`
+  if [ $f -eq 1 ]; then echo "#define SYSDEP_HAVE_CPU_EXT_SSE2"; fi
+  f=`${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 sse3`
+  if [ $f -eq 1 ]; then echo "#define SYSDEP_HAVE_CPU_EXT_SSE3"; fi
+  f=`${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 sse4`
+  if [ $f -eq 1 ]; then echo "#define SYSDEP_HAVE_CPU_EXT_SSE4"; fi
+fi

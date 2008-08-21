@@ -1,0 +1,4 @@
+20080819 version: agar-core-ada 0.1
+20080820 code: added thin function layer to events, datasource, error, config
+               to use ada string/integer/boolean types.
+20080821 version: agar-core-ada 0.11

@@ -1,0 +1,2 @@
+agar-core-types.ads: chk-off_t agar-core-types.sh
+  ./agar-core-types.sh > agar-core-types.ads.tmp && mv agar-core-types.ads.tmp agar-core-types.ads

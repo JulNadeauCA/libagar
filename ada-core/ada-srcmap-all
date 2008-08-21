@@ -1,0 +1,52 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "fatal: $1" 1>&2
+  exit 1
+}
+
+make_map()
+{
+  echo
+  echo "-- $1"
+  ./ada-srcmap "$1"
+}
+
+ADA=`head -n 1 conf-adacomp` || fatal "could not read conf-adacomp"
+SYSTYPE=`head -n 1 conf-systype` || fatal "could not read conf-systype"
+ADATYPE=`head -n 1 conf-adatype` || fatal "could not read conf-adatype"
+
+case $ADATYPE in
+  GCC)
+    output_tmp="gnat.adc.tmp"
+    output="gnat.adc"
+    ;;
+  *)
+    fatal "unknown compiler type - cannot determine output file"
+    ;;
+esac
+
+if [ -f conf-mkfdirs ]
+then
+  DIRS=`cat conf-mkfdirs` || fatal "could not read conf-mkfdirs"
+fi
+DIRS=". ${DIRS}"
+
+for dir in ${DIRS}
+do
+  DIR_FILES=`ls "$dir"/*.apk 2>/dev/null` 
+  if [ $? -eq 0 ]
+  then
+    if [ ! -z "${DIR_FILES}" ]
+    then
+      for file in ${DIR_FILES}
+      do
+        make_map "${file}" >> "${output_tmp}" || fatal "error executing ada-srcmap"
+      done
+    fi
+  fi
+done
+
+touch "$output_tmp" "$output"
+mv "${output_tmp}" "${output}" || fatal "could not rename ${output_tmp} to ${output}"

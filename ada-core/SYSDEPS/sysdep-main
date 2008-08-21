@@ -1,0 +1,301 @@
+#!/bin/sh
+
+#
+# this file is only ever called by modules, so all paths must be
+# relative to the module ("../../").
+#
+
+# path from module to sysdeps dir (MUST end with trailing slash)
+SYSDEP_DIR_RELATIVE="../../"
+export SYSDEP_DIR_RELATIVE
+
+# outdir is relative to each entry in modules directory, can be
+SYSDEP_OUTDIR="${SYSDEP_DIR_RELATIVE}/../"
+
+# override with conf-outdir if it exists
+if [ -f "${SYSDEP_DIR_RELATIVE}/conf-outdir" ]
+then
+  DIR=`head -n 1 "${SYSDEP_DIR_RELATIVE}/conf-outdir"`
+  if [ $? -eq 0 ]
+  then
+    SYSDEP_OUTDIR="${SYSDEP_DIR_RELATIVE}/${DIR}"
+  fi
+fi
+export SYSDEP_OUTDIR
+
+SYSDEP_TRY_CONFIG_BIN=${SYSDEP_DIR_RELATIVE}/sd-configbin
+SYSDEP_TRY_PKG_CONFIG=${SYSDEP_DIR_RELATIVE}/sd-configpkg
+SYSDEP_TRY_MANUAL=${SYSDEP_DIR_RELATIVE}/sd-configman
+SYSDEP_FATAL=${SYSDEP_DIR_RELATIVE}/sd-fatal
+SYSDEP_ERROR=${SYSDEP_DIR_RELATIVE}/sd-error
+SYSDEP_INFO=${SYSDEP_DIR_RELATIVE}/sd-info
+SYSDEP_FILE=${SYSDEP_DIR_RELATIVE}/sd-file
+SYSDEP_LINE=${SYSDEP_DIR_RELATIVE}/sd-line
+
+PWD=`pwd`
+SYSDEP_MODULE="`basename $PWD`"
+
+export SYSDEP_MODULE
+export SYSDEP_TRY_CONFIG_BIN
+export SYSDEP_TRY_PKG_CONFIG
+export SYSDEP_TRY_MANUAL
+export SYSDEP_ERROR
+export SYSDEP_INFO
+export SYSDEP_FATAL
+export SYSDEP_FILE
+export SYSDEP_LINE
+
+files_move()
+{
+  for file in ${CREATES}
+  do
+    if [ "${file}" = "sysdeps.out" ]
+    then
+      cat "$file" >> "${SYSDEP_OUTDIR}/$file"
+      rm -f "${file}"
+    else
+      cp "$file" "${SYSDEP_OUTDIR}/$file"
+      rm -f "${file}"
+    fi
+  done
+}
+
+files_clean()
+{
+  for file in ${CREATES}
+  do
+    rm -f "${file}" "${SYSDEP_OUTDIR}/${file}"
+  done
+}
+
+flatten_defines()
+{
+  d=""
+  if [ ! -z "$1" ]
+  then
+    for tag in $1
+    do
+      d="-D${tag} ${d}"
+    done
+    echo "$d"
+  fi
+}
+
+paths_add()
+{
+  for p in $1; do SYSDEP_STDINC="$p/include $p ${SYSDEP_STDINC}"; done
+  for p in $1; do SYSDEP_STDLIB="$p/lib $p ${SYSDEP_STDLIB}"; done
+}
+
+paths_extend()
+{
+  for d in ${SYSDEP_STDINC}
+  do
+    for e in $1; do SYSDEP_STDINC="$d/$e ${SYSDEP_STDINC}"; done
+  done
+  for d in ${SYSDEP_STDLIB}
+  do
+    for e in $1; do SYSDEP_STDLIB="$d/$e ${SYSDEP_STDLIB}"; done
+  done
+}
+
+os_tolower()
+{
+  echo ${SYSDEP_OS} | sed -e 's/SYSDEP_OS_//g' | tr [A-Z] [a-z]
+}
+
+#
+# List of created files.
+#
+
+CREATES="`cat creates` sysdeps.out"
+if [ -z "${SYSDEP_CLEAN}" ];
+then
+  . ${SYSDEP_DIR_RELATIVE}/sysdep-subs;
+
+  #
+  # Ensure a clean environment.
+  #
+
+  rm -f ${CREATES}
+  touch ${CREATES}
+
+  #
+  # Execute custom script if present
+  #
+
+  if [ -x custom ]
+  then
+    ./custom ${CREATES}
+    files_move
+    exit 0
+  else
+    if [ -f custom ]
+    then
+      ${SYSDEP_FATAL} "custom exists but is not executable"
+      exit 112
+    fi
+  fi
+
+  ofile="`${SYSDEP_LINE} 1 < creates`"
+  os_lower=`os_tolower`
+  defines="`cat defines 2>/dev/null`"
+
+  if [ -f "os_ext/$os_lower/defines" ]
+  then
+    defines="`cat "os_ext/$os_lower/defines" 2>/dev/null`"
+  fi
+  if [ -f flags ]
+  then
+    xflags="`${SYSDEP_LINE} 1 < flags`";
+  fi
+  if [ -f "os_ext/$os_lower/flags" ]
+  then
+    xflags="${xflags} `${SYSDEP_LINE} 1 < os_ext/$os_lower/flags`"
+  fi
+
+  #
+  # Try config binary if requested
+  #
+
+  if [ -f "config_bin" ]
+  then
+    config_bin="`${SYSDEP_LINE} 1 < config_bin`"
+    config_bin_args="`${SYSDEP_LINE} 1 < config_bin_args`"
+    flags=`${SYSDEP_TRY_CONFIG_BIN} "${config_bin}" "${config_bin_args}" 2>&-`
+    if [ ! -z "${flags}" ]
+    then 
+      def=`flatten_defines "${defines}"`
+      str="${flags} ${def} ${xflags}"
+      echo "${str}" >> "${ofile}"
+      echo "${SYSDEP_MODULE}: ${str}" >> "sysdeps.out"
+      files_move
+      exit 0
+    else
+      ${SYSDEP_ERROR} "config binary failed"
+    fi
+  fi
+
+  #
+  # Try pkg-config if requested
+  #
+
+  if [ -f "pkg" ]
+  then
+    pkg_config_args="`${SYSDEP_LINE} 1 < pkg_config_args`"
+    pkg="`${SYSDEP_LINE} 1 < pkg`"
+    flags=`${SYSDEP_TRY_PKG_CONFIG} "${pkg}" "${pkg_config_args}" 2>&-`
+    if [ ! -z "${flags}" ]
+    then
+      def=`flatten_defines "${defines}"`
+      str="${flags} ${xflags}"
+      echo "${str}" >> "${ofile}"
+      echo "${SYSDEP_MODULE}: ${str}" >> "sysdeps.out"
+      files_move
+      exit 0
+    else
+      ${SYSDEP_ERROR} "pkg-config failed"
+    fi
+  fi
+
+  #
+  # Fall back to manual search.
+  #
+
+  if [ -f "path_add" ]
+  then
+    paths_add "`cat path_add`"
+  fi
+  if [ -f "os_ext/$os_lower/path_add" ]
+  then
+    paths_add "`cat os_ext/$os_lower/path_add`"
+  fi
+  if [ -f "path_ext" ]
+  then
+    paths_extend "`cat path_ext`"
+  fi
+  if [ -f "os_ext/$os_lower/path_ext" ]
+  then
+    paths_extend "`cat os_ext/$os_lower/path_ext`"
+  fi
+
+  if [ -f header ]
+  then
+    file="`${SYSDEP_LINE} 1 < header`"
+    if [ -f "os_ext/$os_lower/header" ]
+    then
+      file="`${SYSDEP_LINE} 1 < os_ext/$os_lower/header`"
+    fi
+    flags=`${SYSDEP_TRY_MANUAL} "${file}" "${SYSDEP_STDINC}" "-I" 2>&-`
+    if [ ! -z "${flags}" ]
+    then
+      def=`flatten_defines "${defines}"`
+      str="${flags} ${def} ${xflags}"
+      echo "${str}" >> "${ofile}"
+      echo "${SYSDEP_MODULE}: ${str}" >> "sysdeps.out"
+      files_move
+      exit 0
+    fi
+  fi
+
+  #
+  # dynamic lib search
+  #
+
+  if [ -f dynlib ]
+  then
+    lib="`${SYSDEP_LINE} 1 < dynlib`"
+    if [ -f "os_ext/$os_lower/dynlib" ]
+    then
+      lib="`${SYSDEP_LINE} 1 < os_ext/$os_lower/dynlib`"
+    fi
+    file="lib${lib}.${SYSDEP_LIBSUFFIX}"
+    flags=`${SYSDEP_TRY_MANUAL} "${file}" "${SYSDEP_STDLIB}" "-L" 2>&-`
+    if [ ! -z "${flags}" ]
+    then
+      str="${flags} -l${lib} ${xflags}"
+      echo "${str}" >> "${ofile}"
+      echo "${SYSDEP_MODULE}: ${str}" >> "sysdeps.out"
+      files_move
+      exit 0
+    fi
+  fi
+
+  #
+  # static lib search
+  #
+
+  if [ -f slib ]
+  then
+    lib="`${SYSDEP_LINE} 1 < slib`"
+    if [ -f "os_ext/$os_lower/slib" ]
+    then
+      lib="`${SYSDEP_LINE} 1 < os_ext/$os_lower/slib`"
+    fi
+    file="lib${lib}.a"
+    flags=`${SYSDEP_TRY_MANUAL} "${file}" "${SYSDEP_STDLIB}" "" 2>&-`
+    if [ ! -z "${flags}" ]
+    then
+      str=`printf "%s/%s %s" ${flags} "${file}" "${xflags}"`
+      echo "${str}" >> "${ofile}"
+      echo "${SYSDEP_MODULE}: ${str}" >> "sysdeps.out"
+      files_move
+      exit 0
+    fi
+  fi
+
+  ${SYSDEP_ERROR} "manual search failed"
+else
+  rm -f ${SYSDEP_DIR_RELATIVE}/sd-cpuidx86 \
+        ${SYSDEP_DIR_RELATIVE}/sd-cpuidx86.o
+  rm -f ${SYSDEP_DIR_RELATIVE}/sd-arch \
+        ${SYSDEP_DIR_RELATIVE}/sd-arch.o
+  rm -f ${SYSDEP_DIR_RELATIVE}/sd-cctype \
+        ${SYSDEP_DIR_RELATIVE}/sd-cctype.o
+  rm -f ${SYSDEP_DIR_RELATIVE}/sd-ccversion \
+        ${SYSDEP_DIR_RELATIVE}/sd-ccversion.o
+  rm -f ${SYSDEP_DIR_RELATIVE}/sd-os \
+        ${SYSDEP_DIR_RELATIVE}/sd-os.o
+  rm -f ${SYSDEP_OUTDIR}/sysdeps.out
+  files_clean
+fi
