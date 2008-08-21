@@ -18,6 +18,9 @@ pragma source_file_name(agar.core.event, body_file_name => "agar-core-event.adb"
 pragma source_file_name(agar.core.object, spec_file_name => "agar-core-object.ads");
 pragma source_file_name(agar.core.object, body_file_name => "agar-core-object.adb");
 
+-- ./agar-core-slist.apk
+pragma source_file_name(agar.core.slist, spec_file_name => "agar-core-slist.ads");
+
 -- ./agar-core-tail_queue.apk
 pragma source_file_name(agar.core.tail_queue, spec_file_name => "agar-core-tail_queue.ads");
 
@@ -36,6 +39,7 @@ pragma source_file_name(agar.core.version, spec_file_name => "agar-core-version.
 
 -- ./agar-core.apk
 pragma source_file_name(agar.core, spec_file_name => "agar-core.ads");
+pragma source_file_name(agar.core, body_file_name => "agar-core.adb");
 
 -- ./agar.apk
 pragma source_file_name(agar, spec_file_name => "agar.ads");
