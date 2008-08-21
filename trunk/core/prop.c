@@ -249,8 +249,8 @@ AG_FindProp(void *vfsRoot, const char *spec, int type, void *rval)
 	void *obj;
 
 	Strlcpy(sb, spec, sizeof(sb));
-	objname = AG_Strsep(&s, ":");
-	propname = AG_Strsep(&s, ":");
+	objname = Strsep(&s, ":");
+	propname = Strsep(&s, ":");
 	if (objname == NULL || propname == NULL ||
 	    objname[0] == '\0' || propname[0] == '\0') {
 		AG_SetError(_("Invalid property path: `%s'"), spec);

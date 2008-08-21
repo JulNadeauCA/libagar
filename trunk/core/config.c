@@ -229,9 +229,9 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 
 	AG_GetStringCopy(agConfig, path_key, path, path_len);
 
-	for (dir = AG_Strsep(&pathp, ":");
+	for (dir = Strsep(&pathp, ":");
 	     dir != NULL;
-	     dir = AG_Strsep(&pathp, ":")) {
+	     dir = Strsep(&pathp, ":")) {
 		Strlcpy(file, dir, sizeof(file));
 
 		if (name[0] != AG_PATHSEPC) {
