@@ -164,11 +164,11 @@ AG_Strncasecmp(const char *s1, const char *s2, size_t n)
 	const unsigned char *us1 = (const unsigned char *)s1;
 	const unsigned char *us2 = (const unsigned char *)s2;
 
-	while (--n >= 0 && cm[*us1] == cm[*us2++]) {
-		if (*us1++ == '\0')
-			return (0);
+	for (i = 0; i < n; i++) {
+		if (cm[us1[i]] != cm[us2[i]])
+			break;
 	}
-	return (n < 0 ? 0 : cm[*us1] - cm[*--us2]);
+	return i == n ? 0 : cm[us1[i]] - cm[us2[i]];
 }
 __END_DECLS
 
