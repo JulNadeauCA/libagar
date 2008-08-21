@@ -186,9 +186,9 @@ AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
 
 	buf = &rcs_client.read.buf[2];
 	*repo_rev = 0;
-	while ((s = AG_Strsep(&buf, ":")) != NULL) {
-		char *key = AG_Strsep(&s, "=");
-		char *val = AG_Strsep(&s, "=");
+	while ((s = Strsep(&buf, ":")) != NULL) {
+		char *key = Strsep(&s, "=");
+		char *val = Strsep(&s, "=");
 
 		if (key == NULL || val == NULL)
 			continue;
@@ -622,12 +622,12 @@ AG_RcsGetLog(const char *objdir, AG_RCSLog *log)
 
 	for (i = 0; i < res->argc; i++) {
 		char *s = res->argv[i];
-		char *rev = AG_Strsep(&s, ":");
-		char *author = AG_Strsep(&s, ":");
-		char *type = AG_Strsep(&s, ":");
-		char *name = AG_Strsep(&s, ":");
-		char *sum = AG_Strsep(&s, ":");
-		char *msg = AG_Strsep(&s, ":");
+		char *rev = Strsep(&s, ":");
+		char *author = Strsep(&s, ":");
+		char *type = Strsep(&s, ":");
+		char *name = Strsep(&s, ":");
+		char *sum = Strsep(&s, ":");
+		char *msg = Strsep(&s, ":");
 		AG_RCSLogEntry *lent;
 
 		if (rev == NULL || author == NULL || sum == NULL)
@@ -680,10 +680,10 @@ AG_RcsGetList(AG_RCSList *list)
 	list->nEnts = 0;
 	for (i = 0; i < res->argc; i++) {
 		char *s = res->argv[i];
-		char *name = AG_Strsep(&s, ":");
-		char *rev = AG_Strsep(&s, ":");
-		char *author = AG_Strsep(&s, ":");
-		char *type = AG_Strsep(&s, ":");
+		char *name = Strsep(&s, ":");
+		char *rev = Strsep(&s, ":");
+		char *author = Strsep(&s, ":");
+		char *type = Strsep(&s, ":");
 		AG_RCSListEntry *lent;
 
 		if (name == NULL || rev == NULL || author == NULL ||
@@ -770,7 +770,7 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 	char *buf, *s;
 	Uint rev = 0;
 	AG_Object *obj;
-	AG_ObjectClass *cl;
+	AG_ObjectClass *cls = NULL;
 
 	if (AG_RcsConnect() == -1)
 		goto fail;
@@ -788,9 +788,9 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 		goto fail;
 	}
 	buf = &rcs_client.read.buf[2];
-	while ((s = AG_Strsep(&buf, ":")) != NULL) {
-		char *key = AG_Strsep(&s, "=");
-		char *val = AG_Strsep(&s, "=");
+	while ((s = Strsep(&buf, ":")) != NULL) {
+		char *key = Strsep(&s, "=");
+		char *val = Strsep(&s, "=");
 
 		if (key == NULL || val == NULL)
 			continue;
@@ -810,7 +810,7 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 			break;
 		}
 	}
-	if ((cl = AG_FindClass(type)) == NULL)
+	if ((cls = AG_LoadClass(type)) == NULL)
 		goto fail;
 
 	/* Create the working copy if it does not exist. */
@@ -822,8 +822,8 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 		    _("Creating working copy of %s (%s)."),
 		    name, type);
 
-		obj = Malloc(cl->size);
-		AG_ObjectInit(obj, cl);
+		obj = Malloc(cls->size);
+		AG_ObjectInit(obj, cls);
 		AG_ObjectSetName(obj, "%s", name);
 		if (AG_ObjectAttachToNamed(vfsRoot, localpath, obj) == -1) {
 			AG_ObjectDestroy(obj);
@@ -855,6 +855,7 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 	return (0);
 fail:
 	AG_RcsDisconnect();
+	if (cls != NULL) { AG_UnloadClass(cls); }
 	return (-1);
 }
 
