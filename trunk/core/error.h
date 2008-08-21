@@ -1,8 +1,5 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_CORE_ERROR_H_
-#define _AGAR_CORE_ERROR_H_
-
 #ifdef _AGAR_INTERNAL
 #include <config/free_null_is_a_noop.h>
 #else
@@ -12,6 +9,26 @@
 #include <stdlib.h>
 
 #include "begin_code.h"
+
+/* Standard error code */
+typedef enum ag_error_code {
+	AG_UNDEFINED,		/* Undefined error */
+	AG_EPERM,		/* Operation not permitted */
+	AG_ENOENT,		/* No such file or directory */
+	AG_EINTR,		/* Interrupted system call */
+	AG_EIO,			/* Input/output error */
+	AG_E2BIG,		/* Argument list too long */
+	AG_EACCESS,		/* Permission denied */
+	AG_EBUSY,		/* Device or resource busy */
+	AG_EEXIST,		/* File exists */
+	AG_ENOTDIR,		/* Not a directory */
+	AG_EISDIR,		/* Is a directory */
+	AG_EMFILE,		/* Too many open files */
+	AG_EFBIG,		/* File too large */
+	AG_ENOSPC,		/* No space left on device */
+	AG_EROFS,		/* Read-only file system */
+	AG_EAGAIN		/* Resource temporarily unavailable */
+} AG_ErrorCode;
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_STD)
 # define Malloc(len) AG_Malloc(len)
@@ -40,7 +57,9 @@ extern int agDebugLvl;
 
 void		 AG_InitError(void);
 void		 AG_DestroyError(void);
+AG_ErrorCode	 AG_GetErrorCode(void);
 const char	*AG_GetError(void);
+void		 AG_SetErrorCode(AG_ErrorCode);
 void		 AG_SetError(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);
@@ -89,5 +108,3 @@ static __inline__ void AG_Free(void *p) { if (p != NULL) free(p); }
 __END_DECLS
 
 #include "close_code.h"
-
-#endif /* _AGAR_CORE_ERROR_H_ */

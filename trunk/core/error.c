@@ -34,23 +34,28 @@
 #include <string.h>
 
 #ifdef THREADS
-AG_ThreadKey agErrorKey;
+AG_ThreadKey agErrorKey;		/* Error message (thread-specific) */
+AG_ThreadKey agErrorCode;		/* Error code (thread-specific) */
 #else
-char *agErrorKey;
+char *agErrorKey;			/* Error message */
+AG_ErrorCode agErrorCode; 		/* Error code */
 #endif
+int agDebugLvl = 1;			/* Default debug level */
 
-int agDebugLvl = 1;				/* Default debug level */
-
+/* Initialize the error facility. */
 void
 AG_InitError(void)
 {
 #ifdef THREADS
 	AG_ThreadKeyCreate(&agErrorKey);
+	AG_ThreadKeyCreate(&agErrorCode);
 #else
 	agErrorKey = NULL;
+	agErrorCode = AG_EUNDEF;
 #endif
 }
 
+/* Destroy the error facility. */
 void
 AG_DestroyError(void)
 {
@@ -64,6 +69,7 @@ AG_DestroyError(void)
 #endif
 }
 
+/* Set the error message string. */
 void
 AG_SetError(const char *fmt, ...)
 {
@@ -88,6 +94,7 @@ AG_SetError(const char *fmt, ...)
 #endif
 }
 
+/* Retrieve the error message string. */
 const char *
 AG_GetError(void)
 {
@@ -98,6 +105,29 @@ AG_GetError(void)
 #endif
 }
 
+/* Set the symbolic error code. */
+void
+AG_SetErrorCode(AG_ErrorCode code)
+{
+#ifdef THREADS
+	AG_ThreadKeySet(agErrorCode, (void *)code);
+#else
+	agErrorCode = code;
+#endif
+}
+
+/* Retrieve the symbolic error code. */
+AG_ErrorCode
+AG_GetErrorCode(void)
+{
+#ifdef THREADS
+	return ((AG_ErrorCode)AG_ThreadKeyGet(agErrorCode));
+#else
+	return agErrorCode;
+#endif
+}
+
+/* Issue a debug message. */
 void
 AG_Debug(void *p, const char *fmt, ...)
 {
@@ -132,6 +162,7 @@ AG_Debug(void *p, const char *fmt, ...)
 #endif /* DEBUG */
 }
 
+/* Issue a verbose message. */
 void
 AG_Verbose(const char *fmt, ...)
 {
@@ -145,6 +176,7 @@ AG_Verbose(const char *fmt, ...)
 	va_end(args);
 }
 
+/* Raise a fatal error condition. */
 void
 AG_FatalError(const char *fmt, ...)
 {
@@ -162,11 +194,28 @@ AG_FatalError(const char *fmt, ...)
 	abort();
 }
 
-void *AG_PtrMismatch(void) { AG_FatalError("AG_PTR mismatch"); return (NULL); }
-int AG_IntMismatch(void) { AG_FatalError("AG_INT mismatch"); return (0); }
-float AG_FloatMismatch(void) { AG_FatalError("AG_FLOAT mismatch");
-                               return (0.0); }
-
+/*
+ * Raise fatal error condition due to a type access mismatch in an event
+ * handler routine.
+ */
+void *
+AG_PtrMismatch(void)
+{
+	AG_FatalError("AG_PTR mismatch");
+	return (NULL);
+}
+int
+AG_IntMismatch(void)
+{
+	AG_FatalError("AG_INT mismatch");
+	return (0);
+}
+float
+AG_FloatMismatch(void)
+{
+	AG_FatalError("AG_FLOAT mismatch");
+	return (0.0);
+}
 void *
 AG_ObjectMismatch(const char *t1, const char *t2)
 {
