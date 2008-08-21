@@ -13,13 +13,13 @@ typedef struct ag_dso_sym {
 typedef struct ag_dso {
 	char name[AG_DSONAME_MAX];		/* Module name */
 	char path[AG_PATHNAME_MAX];		/* Path to DSO */
+	Uint refCount;				/* Reference count */
 	Uint flags;
 	AG_TAILQ_HEAD(,ag_dso_sym) syms;	/* Previously used symbols */
 	AG_TAILQ_ENTRY(ag_dso) dsos;
 } AG_DSO;
 
 AG_TAILQ_HEAD(ag_dsoq, ag_dso);
-
 #define AGDSO(p) ((AG_DSO *)(p))
 
 __BEGIN_DECLS
@@ -28,11 +28,26 @@ extern struct ag_dsoq agLoadedDSOs;
 extern AG_Mutex agDSOLock;
 #endif
 
-AG_DSO *AG_LoadDSO(const char *, const char *, Uint);
+AG_DSO *AG_LoadDSO(const char *, Uint);
 int     AG_SymDSO(AG_DSO *, const char *, void **);
 int     AG_UnloadDSO(AG_DSO *);
-#define AG_LockDSO() AG_MutexLock(&agLoadedDSOs)
-#define AG_UnlockDSO() AG_MutexUnlock(&agLoadedDSOs)
+#define AG_LockDSO() AG_MutexLock(&agDSOLock)
+#define AG_UnlockDSO() AG_MutexUnlock(&agDSOLock)
+
+/* Return the named DSO or NULL if not found. */
+static __inline__ AG_DSO *
+AG_LookupDSO(const char *name)
+{
+	AG_DSO *dso;
+
+	AG_LockDSO();
+	AG_TAILQ_FOREACH(dso, &agLoadedDSOs, dsos) {
+		if (strcmp(dso->name, name) == 0)
+			break;
+	}
+	AG_UnlockDSO();
+	return (dso);
+}
 __END_DECLS
 
 #include "close_code.h"

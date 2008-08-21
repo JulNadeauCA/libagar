@@ -277,14 +277,59 @@ LoadDSO_DLOPEN(const char *path)
 }
 #endif /* HAVE_DLOPEN */
 
-/* Load the specified dynamic library into the process address space. */
+/*
+ * Load the specified module into the process address space. If it already
+ * exists, return the existing structure incrementing its reference count.
+ */
 AG_DSO *
-AG_LoadDSO(const char *name, const char *path, Uint flags)
+AG_LoadDSO(const char *name, Uint flags)
 {
+	char path[AG_PATHNAME_MAX];
 	AG_DSO *dso;
+	int i;
 
 	AG_MutexLock(&agDSOLock);
 	
+	/* See if module has already been loaded. */
+	TAILQ_FOREACH(dso, &agLoadedDSOs, dsos) {
+		if (strcmp(dso->name, name) == 0)
+			break;
+	}
+	if (dso != NULL) {
+		dso->refCount++;
+		goto out;
+	}
+
+	/* Scan the module directories for the file. */
+	path[0] = '\0';
+	for (i = 0; i < agModuleDirCount; i++) {
+		Strlcpy(path, agModuleDirs[i], sizeof(path));
+		Strlcat(path, AG_PATHSEP, sizeof(path));
+#if defined(__AMIGAOS4__)
+		Strlcat(path, name, sizeof(path));
+		Strlcat(path, ".ixlibrary", sizeof(path));
+#elif defined(HPUX)
+		Strlcat(path, name, sizeof(path));
+		Strlcat(path, ".sl", sizeof(path));
+#elif defined(_WIN32) || defined(OS2)
+		Strlcat(path, name, sizeof(path));
+		Strlcat(path, ".dll", sizeof(path));
+#else
+		Strlcat(path, "lib", sizeof(path));
+		Strlcat(path, name, sizeof(path));
+		Strlcat(path, ".so", sizeof(path));
+#endif
+		if (AG_FileExists(path))
+			break;
+	}
+	if (i == agModuleDirCount) {
+		AG_SetError("Cannot find \"%s\" module (last checked in: %s)",
+		    name, path);
+		goto fail;
+	}
+
+	/* Load the module in memory. */
+	Verbose("Loading: %s (%s)\n", name, path);
 #if defined(BEOS)
 	dso = LoadDSO_BEOS(path);
 #elif defined(OS2)
@@ -303,21 +348,31 @@ AG_LoadDSO(const char *name, const char *path, Uint flags)
 	Strlcpy(dso->name, name, sizeof(dso->name));
 	Strlcpy(dso->path, path, sizeof(dso->path));
 	dso->flags = 0;
+	dso->refCount = 1;
 	TAILQ_INIT(&dso->syms);
 	TAILQ_INSERT_TAIL(&agLoadedDSOs, dso, dsos);
-
+out:
 	AG_MutexUnlock(&agDSOLock);
 	return (dso);
+fail:
+	AG_MutexUnlock(&agDSOLock);
+	return (NULL);
 }
 
-/* Remove the specified dynamic library from the process's address space. */
+/*
+ * Decrement the reference count of the specified DSO object. If it reaches
+ * zero, unload the module from the process's address space.
+ */
 int
 AG_UnloadDSO(AG_DSO *dso)
 {
 	AG_DSOSym *cSym;
 
 	AG_MutexLock(&agDSOLock);
-	
+
+	if (--dso->refCount > 0)
+		goto out;
+
 #if defined(BEOS)
 	{
 		AG_DSO_BeOS *d = (AG_DSO_BeOS *)dso;
@@ -383,6 +438,7 @@ AG_UnloadDSO(AG_DSO *dso)
 	}
 	TAILQ_REMOVE(&agLoadedDSOs, dso, dsos);
 	free(dso);
+out:
 	AG_MutexUnlock(&agDSOLock);
 	return (0);
 fail:
