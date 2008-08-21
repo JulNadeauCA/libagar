@@ -44,6 +44,8 @@ struct install_item insthier[] = {
   {INST_COPY, "agar-core-object.adb", 0, ctxt_incdir, 0, 0, 0644},
   {INST_COPY, "agar-core-timeout.adb", 0, ctxt_repos, 0, 0, 0644},
   {INST_COPY, "agar-core-timeout.adb", 0, ctxt_incdir, 0, 0, 0644},
+  {INST_COPY, "agar-core.adb", 0, ctxt_repos, 0, 0, 0644},
+  {INST_COPY, "agar-core.adb", 0, ctxt_incdir, 0, 0, 0644},
   {INST_COPY, "agar-core-config.ali", 0, ctxt_repos, 0, 0, 0644},
   {INST_COPY, "agar-core-config.ali", 0, ctxt_incdir, 0, 0, 0444},
   {INST_COPY, "agar-core-datasource.ali", 0, ctxt_repos, 0, 0, 0644},

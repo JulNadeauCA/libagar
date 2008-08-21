@@ -232,8 +232,8 @@ agar-core-version.o:\
 agar-core-version.ali
 
 agar-core.ali:\
-ada-compile agar-core.ads agar-core.ads
-	./ada-compile agar-core.ads
+ada-compile agar-core.adb agar-core.ads
+	./ada-compile agar-core.adb
 
 agar-core.o:\
 agar-core.ali
@@ -246,10 +246,11 @@ agar.o:\
 agar.ali
 
 cc-compile:\
-conf-cc conf-cctype conf-systype conf-ccfflist flags-agar-core flags-sdl
+conf-cc conf-cctype conf-systype conf-cflags conf-ccfflist flags-agar-core \
+	flags-sdl
 
 cc-link:\
-conf-ld conf-ldtype conf-systype
+conf-ld conf-ldtype conf-systype conf-ldflags
 
 cc-slib:\
 conf-systype

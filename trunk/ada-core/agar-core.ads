@@ -34,13 +34,11 @@ package agar.core is
      flags    : init_flags_t) return c.int;
   pragma import (c, init_core, "AG_InitCore");
 
-  function init_video
-    (width  : c.int;
-     height : c.int;
-     depth  : c.int;
-     flags  : init_flags_t) return c.int;
-  pragma import (c, init_video, "AG_InitVideo");
-
+  function init_core
+    (progname : string;
+     flags    : init_flags_t) return boolean;
+  pragma inline (init_core);
+ 
   procedure at_exit_func (func : exit_callback_t);
   pragma import (c, at_exit_func, "AG_AtExitFunc");
 
