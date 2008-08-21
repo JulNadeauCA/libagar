@@ -104,6 +104,7 @@ AG_Tlist *AG_TlistNewPolled(void *, Uint, AG_EventFn, const char *, ...);
 
 void		AG_TlistSizeHint(AG_Tlist *, const char *, int);
 void		AG_TlistSizeHintPixels(AG_Tlist *, int, int);
+void		AG_TlistSizeHintLargest(AG_Tlist *, int);
 #define		AG_TlistPrescale AG_TlistSizeHint
 
 void		AG_TlistSetItemHeight(AG_Tlist *, int);
