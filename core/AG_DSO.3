@@ -62,6 +62,9 @@ The
 function loads the dynamic library file at
 .Fa path 
 into the current process's address space.
+If the library has already been loaded, the existing
+.Nm
+structure is returned and its reference count incremented.
 .Fa name
 is a string identifier for the library for use by the
 .Xr AG_Object 3
@@ -92,11 +95,15 @@ and
 .Fn AG_UnlockDSO
 acquire and release the lock protecting the list of loaded libraries
 and their resolved symbols.
+In multithreaded applications requiring the ability to unload modules, it is
+not safe to reference resolved symbols without acquiring this lock.
 .Pp
 The
 .Fn AG_UnloadDSO
-function removes the library from the process's address space, assuming
-that its symbols are no longer being referenced.
+function decrements the reference count of the specified
+.Nm
+object.
+If it reaches zero, the library is removed from the process's address space.
 .Sh STRUCTURE DATA
 The
 .Fa AG_DSO
