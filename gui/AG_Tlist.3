@@ -71,6 +71,9 @@ in situations where tree display is not needed.
 .Fn AG_TlistSizeHintPixels "AG_Tlist *tl" "int w" "int nitems"
 .Pp
 .Ft void
+.Fn AG_TlistSizeHintLargest "AG_Tlist *tl" "int nitems"
+.Pp
+.Ft void
 .Fn AG_TlistSetDblClickFn "AG_Tlist *tl" "AG_EventFn fn" "const char *fn_args" "..."
 .Pp
 .Ft void
@@ -147,7 +150,10 @@ items at once, and sufficient width to display an item containing
 .Fa text .
 The
 .Fn AG_TlistSizeHintPixels
-variant accepts a width argument in pixels instead of a string.
+variant accepts a width argument in pixels instead of a string and the
+.Fn AG_TlistSizeHintLargest
+variant uses the largest text label in the current list of items to
+determine the width.
 .Pp
 .Fn AG_TlistSetDblClickFn
 arranges for the given callback
