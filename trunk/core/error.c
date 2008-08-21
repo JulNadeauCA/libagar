@@ -51,7 +51,7 @@ AG_InitError(void)
 	AG_ThreadKeyCreate(&agErrorCode);
 #else
 	agErrorKey = NULL;
-	agErrorCode = AG_EUNDEF;
+	agErrorCode = AG_EUNDEFINED;
 #endif
 }
 
