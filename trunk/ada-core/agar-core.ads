@@ -23,21 +23,24 @@ package agar.core is
   type exit_callback_t is access procedure;
   pragma convention (c, exit_callback_t);
 
-  -- Flags for init_core()
+  -- Flags for init()
   core_verbose : constant init_flags_t := 16#01#;
 
   procedure get_version (version : version_access_t);
   pragma import (c, get_version, "AG_GetVersion");
 
-  function init_core
+  procedure get_version (version : out version_t);
+  pragma inline (get_version);
+
+  function init
     (progname : cs.chars_ptr;
      flags    : init_flags_t) return c.int;
-  pragma import (c, init_core, "AG_InitCore");
+  pragma import (c, init, "AG_InitCore");
 
-  function init_core
+  function init
     (progname : string;
      flags    : init_flags_t) return boolean;
-  pragma inline (init_core);
+  pragma inline (init);
  
   procedure at_exit_func (func : exit_callback_t);
   pragma import (c, at_exit_func, "AG_AtExitFunc");
