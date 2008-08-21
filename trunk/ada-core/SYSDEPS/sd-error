@@ -1,0 +1,3 @@
+#!/bin/sh
+
+echo "${SYSDEP_MODULE}: error: $1" 1>&2

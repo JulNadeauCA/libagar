@@ -1,0 +1,335 @@
+#!/bin/sh
+
+#
+# This file is intended to be called by 'sysdeps-main'
+#
+
+#
+# C compiler and linker
+# sysdeps conf-cc preferred over project conf-cc preferred over 'cc'
+# sysdeps conf-ld preferred over project conf-ld preferred over 'ld'
+#
+
+SYSDEP_CROSS_COMPILE=0
+${SYSDEP_FILE} exists "conf-x-cc"
+if [ $? -eq 1 ]; then SYSDEP_CROSS_COMPILE=1; fi
+export SYSDEP_CROSS_COMPILE
+
+if [ $SYSDEP_CROSS_COMPILE -eq 1 ]
+then
+  conf=`${SYSDEP_FILE} show "conf-x-cc"`
+  if [ $? -eq 0 ]
+  then
+    ${SYSDEP_ERROR} "could not read conf-x-cc"
+    exit 112;
+  fi
+  SYSDEP_CC=`${SYSDEP_LINE} 1 < ${conf}`
+
+  conf=`${SYSDEP_FILE} show "conf-x-ld"`
+  if [ $? -eq 0 ]
+  then
+    ${SYSDEP_ERROR} "could not read conf-x-ld"
+    exit 112;
+  fi
+  SYSDEP_LD=`${SYSDEP_LINE} 1 < ${conf}`
+
+  if [ -z "${SYSDEP_CC}" ]
+  then
+    ${SYSDEP_ERROR} "cross compiler is not defined"
+    exit 112
+  fi
+  if [ -z "${SYSDEP_LD}" ]
+  then
+    ${SYSDEP_ERROR} "cross linker is not defined"
+    exit 112
+  fi
+
+  conf=`${SYSDEP_FILE} show "conf-x-cflags"`
+  if [ $? -eq 1 ]; then SYSDEP_CFLAGS=`${SYSDEP_LINE} 1 < ${conf}`; fi
+  conf=`${SYSDEP_FILE} show "conf-x-ldflags"`
+  if [ $? -eq 1 ]; then SYSDEP_LDFLAGS=`${SYSDEP_LINE} 1 < ${conf}`; fi
+
+  export SYSDEP_CFLAGS
+  export SYSDEP_LDFLAGS
+else
+  SYSDEP_CC="cc"
+
+  conf=`${SYSDEP_FILE} show "conf-cc"`
+  if [ $? -eq 1 ]
+  then
+    SYSDEP_CC=`${SYSDEP_LINE} 1 < ${conf}`
+    if [ $? -ne 0 ]
+    then
+      ${SYSDEP_ERROR} "could not read conf-cc"
+      exit 112;
+    fi
+  fi
+
+  conf=`${SYSDEP_FILE} show "conf-ld"`
+  if [ $? -eq 1 ]
+  then
+    SYSDEP_LD=`${SYSDEP_LINE} 1 < ${conf}`
+    if [ $? -ne 0 ]
+    then
+      ${SYSDEP_ERROR} "could not read conf-ld"
+      exit 112;
+    fi
+  fi
+
+  if [ -z ${SYSDEP_CC} ]
+  then
+    ${SYSDEP_ERROR} "C compiler is not defined"
+    exit 112
+  fi
+  if [ -z ${SYSDEP_LD} ]
+  then
+    ${SYSDEP_ERROR} "linker is not defined"
+    exit 112
+  fi
+
+  conf=`${SYSDEP_FILE} show "conf-cflags"`
+  if [ $? -eq 1 ]; then SYSDEP_CFLAGS=`${SYSDEP_LINE} 1 < ${conf}`; fi
+  conf=`${SYSDEP_FILE} show "conf-ldflags"`
+  if [ $? -eq 1 ]; then SYSDEP_LDFLAGS=`${SYSDEP_LINE} 1 < ${conf}`; fi
+  export SYSDEP_CFLAGS
+  export SYSDEP_LDFLAGS
+fi
+
+#
+# Check C compiler and linker are usable.
+#
+
+cc_usable=0
+for dir in `echo $PATH | sed -e 's/:/ /g'`
+do
+  if [ -x "${dir}/${SYSDEP_CC}" ]
+  then
+    cc_usable=1
+  fi
+done
+if [ ${cc_usable} -eq 0 ]
+then
+  ${SYSDEP_ERROR} "could not locate usable C compiler"
+  exit 112
+fi
+export SYSDEP_CC
+
+ld_usable=0
+for dir in `echo $PATH | sed -e 's/:/ /g'`
+do
+  if [ -x "${dir}/${SYSDEP_LD}" ]
+  then
+    ld_usable=1
+  fi
+done
+if [ ${ld_usable} -eq 0 ]
+then
+  ${SYSDEP_ERROR} "could not locate usable C linker"
+  exit 112
+fi
+export SYSDEP_LD
+
+#
+# Read configuration files, compiling support programs if necessary.
+#
+
+if [ ${SYSDEP_CROSS_COMPILE} -eq 0 ]
+then
+  if [ ! -f ${SYSDEP_DIR_RELATIVE}/sd-cpuidx86 ]
+  then
+    ${SYSDEP_CC} ${SYSDEP_CFLAGS} -c -o ${SYSDEP_DIR_RELATIVE}/sd-cpuidx86.o \
+    ${SYSDEP_DIR_RELATIVE}/sd-cpuidx86.c 2>/dev/null
+    ${SYSDEP_LD} ${SYSDEP_LDFLAGS} -o ${SYSDEP_DIR_RELATIVE}/sd-cpuidx86 \
+    ${SYSDEP_DIR_RELATIVE}/sd-cpuidx86.o 2>/dev/null
+  fi
+  if [ ! -f ${SYSDEP_DIR_RELATIVE}/sd-arch ]
+  then
+    ${SYSDEP_CC} ${SYSDEP_CFLAGS} -c -o ${SYSDEP_DIR_RELATIVE}/sd-arch.o \
+    ${SYSDEP_DIR_RELATIVE}/sd-arch.c 2>/dev/null
+    ${SYSDEP_LD} ${SYSDEP_LDFLAGS} -o ${SYSDEP_DIR_RELATIVE}/sd-arch \
+    ${SYSDEP_DIR_RELATIVE}/sd-arch.o 2>/dev/null
+  fi
+  if [ ! -f ${SYSDEP_DIR_RELATIVE}/sd-cctype ]
+  then
+    ${SYSDEP_CC} ${SYSDEP_CFLAGS} -c -o ${SYSDEP_DIR_RELATIVE}/sd-cctype.o \
+    ${SYSDEP_DIR_RELATIVE}/sd-cctype.c 2>/dev/null
+    ${SYSDEP_LD} ${SYSDEP_LDFLAGS} -o ${SYSDEP_DIR_RELATIVE}/sd-cctype \
+    ${SYSDEP_DIR_RELATIVE}/sd-cctype.o 2>/dev/null
+  fi
+  if [ ! -f ${SYSDEP_DIR_RELATIVE}/sd-os ]
+  then
+    ${SYSDEP_CC} ${SYSDEP_CFLAGS} -c -o ${SYSDEP_DIR_RELATIVE}/sd-os.o \
+    ${SYSDEP_DIR_RELATIVE}/sd-os.c 2>/dev/null
+    ${SYSDEP_LD} ${SYSDEP_LDFLAGS} -o ${SYSDEP_DIR_RELATIVE}/sd-os \
+    ${SYSDEP_DIR_RELATIVE}/sd-os.o 2>/dev/null
+  fi
+  if [ ! -f ${SYSDEP_DIR_RELATIVE}/sd-ccversion ]
+  then
+    ${SYSDEP_CC} ${SYSDEP_CFLAGS} -c -o ${SYSDEP_DIR_RELATIVE}/sd-ccversion.o \
+    ${SYSDEP_DIR_RELATIVE}/sd-ccversion.c 2>/dev/null
+    ${SYSDEP_LD} ${SYSDEP_LDFLAGS} -o ${SYSDEP_DIR_RELATIVE}/sd-ccversion \
+    ${SYSDEP_DIR_RELATIVE}/sd-ccversion.o 2>/dev/null
+  fi
+
+  # find system type
+  SYSDEP_OS="`${SYSDEP_DIR_RELATIVE}/sd-os`"
+  export SYSDEP_OS
+  
+  # find system version
+  SYSDEP_OSVERSION="`${SYSDEP_DIR_RELATIVE}/sd-osversion ${SYSDEP_OS}`"
+  export SYSDEP_OSVERSION
+  
+  # find system architecture
+  SYSDEP_ARCH="`${SYSDEP_DIR_RELATIVE}/sd-arch`"
+  export SYSDEP_ARCH
+  
+  # find compiler type
+  SYSDEP_CCTYPE="`${SYSDEP_DIR_RELATIVE}/sd-cctype`"
+  export SYSDEP_CCTYPE
+  
+  # find compiler version
+  SYSDEP_CCVERSION="`${SYSDEP_DIR_RELATIVE}/sd-ccversion`"
+  export SYSDEP_CCVERSION
+  
+  # find cpu features (altivec, sse etc)
+  SYSDEP_CPU_EXT="`${SYSDEP_DIR_RELATIVE}/sd-cpufeat ${SYSDEP_OS}`"
+  export SYSDEP_CPU_EXT
+  
+  # find number of CPUs
+  SYSDEP_CPU_NUM="`${SYSDEP_DIR_RELATIVE}/sd-cpunum ${SYSDEP_OS}`"
+  export SYSDEP_CPU_NUM
+  
+  # find CPU model
+  SYSDEP_CPU_MODEL="`${SYSDEP_DIR_RELATIVE}/sd-cpumodel ${SYSDEP_OS}`"
+  export SYSDEP_CPU_MODEL
+  
+  # find CPU frequency
+  SYSDEP_CPU_FREQ="`${SYSDEP_DIR_RELATIVE}/sd-cpufreq ${SYSDEP_OS}`"
+  export SYSDEP_CPU_FREQ
+  
+  # find CPU L1 instruction cache size
+  SYSDEP_CPU_L1_INST_CACHE_SIZE="`${SYSDEP_DIR_RELATIVE}/sd-cpul1icache ${SYSDEP_OS}`"
+  export SYSDEP_CPU_L1_INST_CACHE_SIZE
+  
+  # find CPU L1 data cache size
+  SYSDEP_CPU_L1_DATA_CACHE_SIZE="`${SYSDEP_DIR_RELATIVE}/sd-cpul1dcache ${SYSDEP_OS}`"
+  export SYSDEP_CPU_L1_DATA_CACHE_SIZE
+  
+  # find CPU L2 cache size
+  SYSDEP_CPU_L2_CACHE_SIZE="`${SYSDEP_DIR_RELATIVE}/sd-cpul2cache ${SYSDEP_OS}`"
+  export SYSDEP_CPU_L2_CACHE_SIZE
+  
+  # find CPU L3 cache size
+  SYSDEP_CPU_L3_CACHE_SIZE="`${SYSDEP_DIR_RELATIVE}/sd-cpul3cache ${SYSDEP_OS}`"
+  export SYSDEP_CPU_L3_CACHE_SIZE
+  
+  # find CPU cache line size
+  SYSDEP_CPU_CACHE_LINE_SIZE="`${SYSDEP_DIR_RELATIVE}/sd-cpuclinesz ${SYSDEP_OS}`"
+  export SYSDEP_CPU_CACHE_LINE_SIZE
+else
+  # find system type
+  SYSDEP_OS="SYSDEP_OS_`${SYSDEP_FILE} get "conf-x-systype" "UNKNOWN"`"
+  export SYSDEP_OS
+  
+  # find system version
+  SYSDEP_OSVERSION=`${SYSDEP_FILE} get "conf-x-sysver" "0.0"`
+  export SYSDEP_OSVERSION
+  
+  # find system architecture
+  SYSDEP_ARCH="SYSDEP_ARCH_`${SYSDEP_FILE} get "conf-x-arch" "UNKNOWN"`"
+  export SYSDEP_ARCH
+  
+  # find compiler type
+  SYSDEP_CCTYPE="SYSDEP_CCTYPE_`${SYSDEP_FILE} get "conf-x-cctype" "UNKNOWN"`"
+  export SYSDEP_CCTYPE
+  
+  # find compiler version
+  SYSDEP_CCVERSION=`${SYSDEP_FILE} get "conf-x-ccver" "0.0.0"`
+  export SYSDEP_CCVERSION
+  
+  # find cpu features
+  SYSDEP_CPU_EXT=`${SYSDEP_FILE} get "conf-x-cpufeat" ""`
+  export SYSDEP_CPU_EXT
+  
+  # find number of CPUs
+  SYSDEP_CPU_NUM=`${SYSDEP_FILE} get "conf-x-cpunum" "0"`
+  export SYSDEP_CPU_NUM
+  
+  # find CPU model
+  SYSDEP_CPU_MODEL=`${SYSDEP_FILE} get "conf-x-cpumodel" ""`
+  export SYSDEP_CPU_MODEL
+  
+  # find CPU frequency
+  SYSDEP_CPU_FREQ=`${SYSDEP_FILE} get "conf-x-cpufreq" "0"`
+  export SYSDEP_CPU_FREQ
+  
+  # find CPU L1 instruction cache size
+  SYSDEP_CPU_L1_INST_CACHE_SIZE=`${SYSDEP_FILE} get "conf-x-cpul1ic" "0"`
+  export SYSDEP_CPU_L1_INST_CACHE_SIZE
+  
+  # find CPU L1 data cache size
+  SYSDEP_CPU_L1_DATA_CACHE_SIZE=`${SYSDEP_FILE} get "conf-x-cpul1dc" "0"`
+  export SYSDEP_CPU_L1_DATA_CACHE_SIZE
+  
+  # find CPU L2 cache size
+  SYSDEP_CPU_L2_CACHE_SIZE=`${SYSDEP_FILE} get "conf-x-cpul2c" "0"`
+  export SYSDEP_CPU_L2_CACHE_SIZE
+  
+  # find CPU L3 cache size
+  SYSDEP_CPU_L3_CACHE_SIZE=`${SYSDEP_FILE} get "conf-x-cpul3c" "0"`
+  export SYSDEP_CPU_L3_CACHE_SIZE
+  
+  # find CPU cache line size
+  SYSDEP_CPU_CACHE_LINE_SIZE=`${SYSDEP_FILE} get "conf-x-cpucline" "0"`
+  export SYSDEP_CPU_CACHE_LINE_SIZE
+fi
+
+# override path prefix
+PREFIX=`${SYSDEP_FILE} get "conf-prefix" ""`
+for dir in ${PREFIX}
+do
+  STDINC_ADD="${STDINC_ADD} ${dir}/include"
+  STDLIB_ADD="${STDLIB_ADD} ${dir}/lib"
+done
+
+# override path prefix for cross compilation
+if [ ${SYSDEP_CROSS_COMPILE} -eq 1 ]
+then
+  PREFIX=`${SYSDEP_FILE} get "conf-x-prefix" ""`
+  for dir in ${PREFIX}
+  do
+    STDINC_ADD="${STDINC_ADD} ${dir}/include"
+    STDLIB_ADD="${STDLIB_ADD} ${dir}/lib"
+  done
+fi
+
+# standard include path
+SYSDEP_STDINC="/usr/include /usr/local/include"
+case ${SYSDEP_OS} in
+  SYSDEP_OS_DARWIN) SYSDEP_STDINC="/opt/local/include /opt/include /sw/include ${SYSDEP_STDINC}";;
+  SYSDEP_OS_SUNOS) SYSDEP_STDINC="/opt/csw/include /usr/sfw/include ${SYSDEP_STDINC}";;
+  *)
+esac
+SYSDEP_STDINC="${STDINC_ADD} ${SYSDEP_STDINC}"
+export SYSDEP_STDINC
+
+# standard library path
+SYSDEP_STDLIB="/usr/lib /usr/local/lib"
+case ${SYSDEP_OS} in
+  SYSDEP_OS_DARWIN) SYSDEP_STDLIB="/opt/local/lib /opt/lib /sw/lib ${SYSDEP_STDLIB}";;
+  SYSDEP_OS_SUNOS) SYSDEP_STDLIB="/opt/csw/lib /usr/sfw/lib ${SYSDEP_STDLIB}";;
+  *)
+esac
+SYSDEP_STDLIB="${STDLIB_ADD} ${SYSDEP_STDLIB}"
+export SYSDEP_STDLIB
+
+# find system dynamic library suffix
+SYSDEP_LIBSUFFIX="so"
+case ${SYSDEP_OS} in
+  SYSDEP_OS_DARWIN) SYSDEP_LIBSUFFIX="dylib" ;;
+  SYSDEP_OS_HPUX) SYSDEP_LIBSUFFIX="sl";;
+  SYSDEP_OS_MS_WINDOWS) SYSDEP_LIBSUFFIX="dll";;
+  *) ;;
+esac
+export SYSDEP_LIBSUFFIX
+

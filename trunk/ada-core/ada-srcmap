@@ -1,0 +1,53 @@
+#!/bin/sh
+
+fatal()
+{
+  echo "fatal: $1" 1>&2
+  exit 1
+}
+
+make_map()
+{
+  cat <<EOF
+pragma source_file_name($pkg, spec_file_name => "$spec");
+EOF
+  if [ ! -z "$body" ]
+  then
+    cat <<EOF
+pragma source_file_name($pkg, body_file_name => "$body");
+EOF
+  fi
+
+  for line in $subs
+  do
+    unit=`echo $line | awk -F: '{print $1}'`
+    file=`echo $line | awk -F: '{print $2}'`
+
+    if [ -z "$unit" ]; then fatal "unit name is invalid or missing"; fi
+    if [ -z "$file" ]; then fatal "unit filename is invalid or missing"; fi
+
+    cat <<EOF
+pragma source_file_name($pkg.$unit, body_file_name => "$file");
+EOF
+  done
+}
+
+if [ $# -lt 1 ]
+then
+  echo "usage: file.apk" 1>&2
+  exit 1
+fi
+
+ADA=`head -n 1 conf-adacomp` || fatal "could not read conf-adacomp"
+SYSTYPE=`head -n 1 conf-systype` || fatal "could not read conf-systype"
+ADATYPE=`head -n 1 conf-adatype` || fatal "could not read conf-adatype"
+
+pkg=`head -n 1 "$1" | awk '{print $1}'` || fatal "could not read package name"
+spec=`head -n 1 "$1" | awk '{print $2}'` || fatal "could not read package spec"
+body=`head -n 1 "$1" | awk '{print $3}'` || fatal "could not read package body"
+subs=`sed 1d < "$1" | sed 's/ /:/g'` || fatal "could not read package subunits"
+
+if [ -z "$pkg" ]; then fatal "package name is invalid or missing"; fi
+if [ -z "$spec" ]; then fatal "spec name is invalid or missing"; fi
+
+make_map

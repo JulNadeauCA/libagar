@@ -1,0 +1,16 @@
+#!/bin/sh
+
+for mod in `ls modules`
+do
+  if [ -f modules/$mod/defines ]
+  then
+    for def in `cat modules/$mod/defines`
+    do
+      echo $def
+    done
+    if [ -d modules/$mod/os_ext ]
+    then
+      cat modules/$mod/os_ext/*/defines 2>/dev/null
+    fi
+  fi
+done

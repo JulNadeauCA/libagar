@@ -1,0 +1,64 @@
+#!/bin/sh
+# $Id$
+
+CC=`head -n 1 conf-cc`
+if [ $? -ne 0 ]
+then
+  echo "fatal: could not read conf-cc" 1>&2
+  exit 1
+fi
+
+cat > mk-ctxt.c << EOF
+#include <stdio.h>
+#include <unistd.h>
+
+char buf[1024];
+
+int main(int argc, char **argv)
+{
+  char *name;
+  unsigned long bytes = 0;
+  unsigned int line = 0;
+  long num;
+  long r;
+  long i;
+  int ch;
+  int done = 0;
+
+  if (argc != 2) return 100;
+  name = argv[1];
+
+  printf("char %s[] = {\n", name);
+  while (!done) {
+    r = read(0, buf, sizeof(buf));
+    if (r == 0) done = 1;
+    if (r == -1) return 112;
+    if (r != sizeof(buf)) {
+      for (i = r; i > 0; --i) {
+        if (buf[i] == '\n') {
+          buf[i] = 0;
+          break;
+        }
+      }
+    }
+    num = 0;
+    while (num != r) {
+      ch = buf[num];
+      ++num;
+      ++bytes;
+      printf("0x%.2x, ", ch);
+      line += 6;
+      if (line >= 72) { line = 0; printf("\n"); }
+    }
+  }
+  printf("0x00,\n};\n");
+  printf("const unsigned int %s_len = %u;\n", name, bytes);
+
+  if (fflush(stdout) == -1) return 111;
+  return 0;
+}
+EOF
+
+${CC} -c -o mk-ctxt.o mk-ctxt.c
+${CC} -o mk-ctxt mk-ctxt.o
+rm -f mk-ctxt.c mk-ctxt.o

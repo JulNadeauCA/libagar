@@ -1,0 +1,4 @@
+gnatlink
+
+The first line of this file is used as the path or location of the Ada linker.
+This program is used to combine object files and libraries into executables.

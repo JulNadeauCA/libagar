@@ -1,0 +1,3 @@
+ctxt/version.c: mk-ctxt VERSION
+	rm -f ctxt/version.c
+	./mk-ctxt ctxt_version < VERSION > ctxt/version.c

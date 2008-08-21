@@ -1,0 +1,1 @@
+chk-debug.o

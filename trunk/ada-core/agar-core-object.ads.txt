@@ -1,0 +1,748 @@
+-- agar-core-object.ads.txt
+
+with agar.core.datasource;
+with agar.core.event;
+with agar.core.tail_queue;
+with agar.core.timeout;
+with agar.core.types;
+with agar.core.version;
+
+package agar.core.object is
+  type object_t;
+  type object_access_t is access all object_t;
+  pragma convention (c, object_access_t);
+
+  type dep_t;
+  type dep_access_t is access all dep_t;
+  pragma convention (c, dep_access_t);
+
+  type prop_t;
+  type prop_access_t is access all prop_t;
+  pragma convention (c, prop_access_t);
+
+  -- queue types
+  package dep_queue is new agar.core.tail_queue
+    (entry_type => dep_access_t);
+  package event_queue is new agar.core.tail_queue
+    (entry_type => agar.core.event.event_access_t);
+  package obj_queue is new agar.core.tail_queue
+    (entry_type => object_access_t);
+  package prop_queue is new agar.core.tail_queue
+    (entry_type => prop_access_t);
+  package timeout_queue is new agar.core.tail_queue
+    (entry_type => agar.core.timeout.timeout_access_t);
+
+  use type c.unsigned;
+
+  -- prop constants
+  prop_key_max  : constant c.unsigned := 64;
+  prop_path_max : constant c.unsigned := 1024 + 1 + prop_key_max;
+
+  -- object constants
+  object_type_max   : constant c.unsigned := 128;
+  object_name_max   : constant c.unsigned := 128;
+  object_path_max   : constant c.unsigned := 1024;
+  object_digest_max : constant c.unsigned := 170;
+
+  -- object flags
+  object_reload_props   : constant c.unsigned := 16#0001#;
+  object_non_persistent : constant c.unsigned := 16#0002#;
+  object_indestructible : constant c.unsigned := 16#0004#;
+  object_resident       : constant c.unsigned := 16#0008#;
+  object_preserve_deps  : constant c.unsigned := 16#0010#;
+  object_static         : constant c.unsigned := 16#0020#;
+  object_readonly       : constant c.unsigned := 16#0040#;
+  object_was_resident   : constant c.unsigned := 16#0080#;
+  object_reopen_onload  : constant c.unsigned := 16#0200#;
+  object_remain_data    : constant c.unsigned := 16#0400#;
+  object_debug          : constant c.unsigned := 16#0800#;
+  object_name_onattach  : constant c.unsigned := 16#1000#;
+  object_saved_flags    : constant c.unsigned := 16#2000#;
+
+  -- property type
+  type prop_type_t is (
+    PROP_UINT,
+    PROP_INT,
+    PROP_UINT8,
+    PROP_SINT8,
+    PROP_UINT16,
+    PROP_SINT16,
+    PROP_UINT32,
+    PROP_SINT32,
+    PROP_UINT64,
+    PROP_SINT64,
+    PROP_FLOAT,
+    PROP_DOUBLE,
+    PROP_LONG_DOUBLE,
+    PROP_STRING,
+    PROP_POINTER,
+    PROP_BOOL,
+    -- external extensions
+    PROP_REAL,
+    PROP_RANGE,
+    PROP_COMPLEX,
+    PROP_QUAT,
+    PROP_RECTANGULAR,
+    PROP_POLAR,
+    PROP_PARABOLIC,
+    PROP_SPHERICAL,
+    PROP_CYLINDRICAL,
+    PROP_COLOR,
+    PROP_VECTOR,
+    PROP_VECTOR2,
+    PROP_VECTOR3,
+    PROP_VECTOR4,
+    PROP_MATRIX,
+    PROP_MATRIX22,
+    PROP_MATRIX33,
+    PROP_MATRIX44,
+    -- application extensions
+    PROP_PRIVATE
+  );
+  for prop_type_t use (
+    PROP_UINT        => 0,
+    PROP_INT         => 1,
+    PROP_UINT8       => 2,
+    PROP_SINT8       => 3,
+    PROP_UINT16      => 4,
+    PROP_SINT16      => 5,
+    PROP_UINT32      => 6,
+    PROP_SINT32      => 7,
+    PROP_UINT64      => 8,
+    PROP_SINT64      => 9,
+    PROP_FLOAT       => 10,
+    PROP_DOUBLE      => 11,
+    PROP_LONG_DOUBLE => 12,
+    PROP_STRING      => 13,
+    PROP_POINTER     => 14,
+    PROP_BOOL        => 15,
+
+    PROP_REAL        => 100,
+    PROP_RANGE       => 101,
+    PROP_COMPLEX     => 102,
+    PROP_QUAT        => 103,
+    PROP_RECTANGULAR => 104,
+    PROP_POLAR       => 105,
+    PROP_PARABOLIC   => 106,
+    PROP_SPHERICAL   => 107,
+    PROP_CYLINDRICAL => 108,
+    PROP_COLOR       => 109,
+    PROP_VECTOR      => 120,
+    PROP_VECTOR2     => 121,
+    PROP_VECTOR3     => 122,
+    PROP_VECTOR4     => 123,
+    PROP_MATRIX      => 130,
+    PROP_MATRIX22    => 131,
+    PROP_MATRIX33    => 132,
+    PROP_MATRIX44    => 133,
+
+    PROP_PRIVATE     => 10001
+  );
+  for prop_type_t'size use c.unsigned'size;
+  pragma convention (c, prop_type_t);
+
+  type prop_class_t is record
+    class_type : c.unsigned;
+    size       : c.size_t;
+    set        : access function
+      (obj  : object_access_t;
+       prop : prop_access_t;
+       val  : agar.core.types.void_ptr_t) return c.int;
+    get        : access function
+      (obj  : object_access_t;
+       prop : prop_access_t;
+       val  : access agar.core.types.void_ptr_t) return c.int;
+    print      : access procedure
+      (buf  : cs.chars_ptr;
+       len  : c.size_t;
+       obj  : object_access_t;
+       prop : prop_access_t);
+    compare    : access function
+      (prop1 : prop_access_t;
+       prop2 : prop_access_t) return c.int;
+    load       : access function
+      (obj         : object_access_t;
+       prop        : prop_access_t;
+       data_source : agar.core.datasource.datasource_access_t) return agar.core.types.void_ptr_t;
+    save       : access procedure
+      (obj         : object_access_t;
+       prop        : prop_access_t;
+       data_source : agar.core.datasource.datasource_access_t);
+  end record; 
+  type prop_class_access_t is access all prop_t;
+  pragma convention (c, prop_class_access_t);
+  pragma convention (c, prop_class_t);
+
+  type prop_key_t is array (1 .. prop_key_max) of aliased c.char;
+  pragma convention (c, prop_key_t);
+
+  -- data union
+  type prop_data_selector_t is
+    (u, i, u8, s8, u16, s16, u32, s32, u64, s64, f, d, ld, s, p);
+  type prop_data_union_t (selector : prop_data_selector_t := u) is record
+    case selector is
+      when u   => u   : c.unsigned;
+      when i   => i   : c.int;
+      when u8  => u8  : agar.core.types.uint8_t;
+      when s8  => s8  : agar.core.types.int8_t;
+      when u16 => u16 : agar.core.types.uint16_t;
+      when s16 => s16 : agar.core.types.int16_t;
+      when u32 => u32 : agar.core.types.uint32_t;
+      when s32 => s32 : agar.core.types.int32_t;
+      when u64 => u64 : agar.core.types.uint64_t;
+      when s64 => s64 : agar.core.types.int64_t;
+      when f   => f   : c.c_float;
+      when d   => d   : c.double;
+      when ld  => ld  : c.long_double;
+      when s   => s   : cs.chars_ptr;
+      when p   => p   : agar.core.types.void_ptr_t;
+    end case;
+  end record;
+  pragma convention (c, prop_data_union_t);
+  pragma unchecked_union (prop_data_union_t);
+
+  type prop_callback_selector_t is
+    (fn_uint,   fn_int,   fn_bool,   fn_uint8, fn_int8,  fn_uint16, fn_int16,
+     fn_uint32, fn_int32, fn_uint64, fn_int64, fn_float, fn_double, fn_long_double,
+     fn_string, fn_void);
+
+  -- read callbacks union
+  type prop_read_callbacks_union_t (selector : prop_callback_selector_t := fn_uint) is record
+    case selector is
+      when fn_uint => fn_uint : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         u    : c.unsigned) return c.unsigned;
+      when fn_int  => fn_int : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         i    : c.int) return c.int;
+      when fn_bool  => fn_bool : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         i    : c.int) return c.int;
+      when fn_uint8 => fn_uint8 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         u    : agar.core.types.uint8_t) return agar.core.types.uint8_t;
+      when fn_int8 => fn_int8 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         i    : agar.core.types.int8_t) return agar.core.types.int8_t;
+      when fn_uint16 => fn_uint16 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         u    : agar.core.types.uint16_t) return agar.core.types.uint16_t;
+      when fn_int16 => fn_int16 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         i    : agar.core.types.int16_t) return agar.core.types.int16_t;
+      when fn_uint32 => fn_uint32 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         u    : agar.core.types.uint32_t) return agar.core.types.uint32_t;
+      when fn_int32 => fn_int32 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         i    : agar.core.types.int32_t) return agar.core.types.int32_t;
+      when fn_uint64 => fn_uint64 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         u    : agar.core.types.uint64_t) return agar.core.types.uint64_t;
+      when fn_int64 => fn_int64 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         i    : agar.core.types.int64_t) return agar.core.types.int64_t;
+      when fn_float => fn_float : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         f    : c.c_float) return c.c_float;
+      when fn_double => fn_double : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         d    : c.double) return c.double;
+      when fn_long_double => fn_long_double : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         d    : c.long_double) return c.long_double;
+      when fn_string => fn_string : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         s    : cs.chars_ptr) return cs.chars_ptr;
+      when fn_void => fn_void : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t;
+         p    : agar.core.types.void_ptr_t) return agar.core.types.void_ptr_t;
+    end case;
+  end record;
+  pragma convention (c, prop_read_callbacks_union_t);
+  pragma unchecked_union (prop_read_callbacks_union_t);
+
+  -- write callbacks
+  type prop_write_callbacks_union_t (selector : prop_callback_selector_t := fn_uint) is record
+    case selector is
+      when fn_uint => fn_uint : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return c.unsigned;
+      when fn_int  => fn_int : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return c.int;
+      when fn_bool  => fn_bool : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return c.int;
+      when fn_uint8 => fn_uint8 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return agar.core.types.uint8_t;
+      when fn_int8 => fn_int8 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return agar.core.types.int8_t;
+      when fn_uint16 => fn_uint16 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return agar.core.types.uint16_t;
+      when fn_int16 => fn_int16 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return agar.core.types.int16_t;
+      when fn_uint32 => fn_uint32 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return agar.core.types.uint32_t;
+      when fn_int32 => fn_int32 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return agar.core.types.int32_t;
+      when fn_uint64 => fn_uint64 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return agar.core.types.uint64_t;
+      when fn_int64 => fn_int64 : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return agar.core.types.int64_t;
+      when fn_float => fn_float : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return c.c_float;
+      when fn_double => fn_double : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return c.double;
+      when fn_long_double => fn_long_double : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return c.long_double;
+      when fn_string => fn_string : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return cs.chars_ptr;
+      when fn_void => fn_void : access function
+        (ptr  : agar.core.types.void_ptr_t;
+         prop : prop_access_t) return agar.core.types.void_ptr_t;
+    end case;
+  end record;
+  pragma convention (c, prop_write_callbacks_union_t);
+  pragma unchecked_union (prop_write_callbacks_union_t);
+
+  type prop_t is record
+    key       : prop_key_t;
+    prop_type : c.unsigned;
+    obj       : agar.core.types.void_ptr_t;
+    data      : prop_data_union_t;
+    write_fn  : prop_write_callbacks_union_t;
+    read_fn   : prop_read_callbacks_union_t;
+    props     : prop_queue.entry_t;
+  end record;
+  pragma convention (c, prop_t);
+
+  -- Checksum method for copy_checksum
+  type checksum_alg_t is (MD5, SHA1, RMD160);
+   for checksum_alg_t use (MD5 => 0, SHA1 => 1, RMD160 => 2);
+   for checksum_alg_t'size use c.unsigned'size;
+  pragma convention (c, checksum_alg_t);
+
+  -- Generic object operation vector
+  type class_t is record
+    name    : cs.chars_ptr;
+    size    : c.size_t;
+    ver     : agar.core.version.version_t;
+    init    : access procedure (ptr : agar.core.types.void_ptr_t);
+    reinit  : access procedure (ptr : agar.core.types.void_ptr_t);
+    destroy : access procedure (ptr : agar.core.types.void_ptr_t);
+    load    : access function
+      (ptr         : agar.core.types.void_ptr_t;
+       data_source : agar.core.datasource.datasource_access_t;
+       ver         : agar.core.version.version_access_t) return c.int;
+    save    : access function
+      (ptr         : agar.core.types.void_ptr_t;
+       data_source : agar.core.datasource.datasource_access_t) return c.int;
+    edit    : access function
+      (ptr : agar.core.types.void_ptr_t) return agar.core.types.void_ptr_t;
+  end record;
+  type class_access_t is access all class_t;
+  pragma convention (c, class_access_t);
+  pragma convention (c, class_t);
+
+  -- Dependency with respect to another object.
+  type dep_t is record
+    persistent : c.int;
+    path       : cs.chars_ptr;
+    obj        : access dep_t;
+    count      : agar.core.types.uint32_t;
+    deps       : dep_queue.entry_t;
+  end record;
+  pragma convention (c, dep_t);
+
+  type object_name_t is array (1 .. object_name_max) of aliased c.char;
+  pragma convention (c, object_name_t);
+
+  --
+  -- API
+  --
+
+  function allocate
+    (parent : agar.core.types.void_ptr_t;
+     name   : cs.chars_ptr;
+     class  : class_access_t) return object_access_t;
+  pragma import (c, allocate, "AG_ObjectNew");
+
+  function allocate
+    (parent : agar.core.types.void_ptr_t;
+     name   : string;
+     class  : class_access_t) return object_access_t;
+  pragma inline (allocate);
+
+  procedure attach
+    (parent : object_access_t;
+     object : object_access_t);
+  pragma import (c, attach, "AG_ObjectAttach");
+
+  function attach_to_named
+    (vfsroot : object_access_t;
+     path    : cs.chars_ptr;
+     child   : object_access_t) return c.int;
+  pragma import (c, attach_to_named, "AG_ObjectAttachToNamed");
+
+  function attach_to_named
+    (vfsroot : object_access_t;
+     path    : string;
+     child   : object_access_t) return boolean;
+  pragma inline (attach_to_named);
+ 
+  procedure detach (object : object_access_t);
+  pragma import (c, detach, "AG_ObjectDetach");
+
+  procedure move
+    (object     : object_access_t;
+     new_parent : object_access_t);
+  pragma import (c, move, "AG_ObjectMove");
+
+  procedure init
+    (object : object_access_t;
+     class  : class_access_t);
+  pragma import (c, init, "AG_ObjectInit");
+
+  procedure init_static
+    (object : object_access_t;
+     class  : class_access_t);
+  pragma import (c, init_static, "AG_ObjectInitStatic");
+
+  procedure free_dataset (object : object_access_t);
+  pragma import (c, free_dataset, "AG_ObjectFreeDataset");
+
+  function copy_name
+    (object : object_access_t;
+     name   : cs.chars_ptr;
+     size   : c.size_t) return c.int;
+  pragma import (c, copy_name, "AG_ObjectCopyName");
+
+  function copy_dirname
+    (object : object_access_t;
+     name   : cs.chars_ptr;
+     size   : c.size_t) return c.int;
+  pragma import (c, copy_dirname, "AG_ObjectCopyDirname");
+
+  function copy_filename
+    (object : object_access_t;
+     name   : cs.chars_ptr;
+     size   : c.size_t) return c.int;
+  pragma import (c, copy_filename, "AG_ObjectCopyFilename");
+
+  function copy_checksum
+    (object : object_access_t;
+     algo   : checksum_alg_t;
+     buffer : cs.chars_ptr) return c.size_t;
+  pragma import (c, copy_checksum, "AG_ObjectCopyChecksum");
+
+  function copy_digest
+    (object : object_access_t;
+     size   : access c.size_t;
+     buffer : cs.chars_ptr) return c.int;
+  pragma import (c, copy_digest, "AG_ObjectCopyDigest");
+
+  function changed (object : object_access_t) return c.int;
+  pragma import (c, changed, "AG_ObjectChanged");
+
+  function changed_all (object : object_access_t) return c.int;
+  pragma import (c, changed_all, "AG_ObjectChangedAll");
+
+  function root (object : object_access_t) return object_access_t;
+  pragma inline (root);
+
+  function parent (object : object_access_t) return object_access_t;
+  pragma inline (parent);
+
+  function find
+    (vfsroot : object_access_t;
+     name    : cs.chars_ptr) return object_access_t;
+  pragma import (c, find, "AG_ObjectFind");
+
+  function find
+    (vfsroot : object_access_t;
+     name    : string) return object_access_t;
+  pragma inline (find);
+ 
+  function in_use (object : object_access_t) return c.int;
+  pragma import (c, in_use, "AG_ObjectInUse");
+
+  function in_use (object : object_access_t) return boolean;
+  pragma inline (in_use);
+
+  procedure set_name
+    (object : object_access_t;
+     name   : cs.chars_ptr);
+  pragma import (c, set_name, "AG_ObjectSetName");
+
+  procedure set_name
+    (object : object_access_t;
+     name   : string);
+  pragma inline (set_name);
+ 
+  procedure set_archive_path
+    (object : object_access_t;
+     path   : cs.chars_ptr);
+  pragma import (c, set_archive_path, "AG_ObjectSetArchivePath");
+
+  procedure set_archive_path
+    (object : object_access_t;
+     path   : string);
+  pragma inline (set_archive_path); 
+
+  procedure get_archive_path
+    (object : object_access_t;
+     path   : cs.chars_ptr;
+     size   : c.size_t);
+  pragma import (c, get_archive_path, "AG_ObjectGetArchivePath");
+
+  procedure set_class
+    (object : object_access_t;
+     class  : class_access_t);
+  pragma import (c, set_class, "AG_ObjectSetClass");
+
+  procedure set_debug_function
+    (object : object_access_t;
+     func   : access procedure
+      (object : object_access_t;
+       userpt : agar.core.types.void_ptr_t;
+       msg    : cs.chars_ptr);
+     udata  : agar.core.types.void_ptr_t);
+  pragma import (c, set_debug_function, "AG_ObjectSetDebugFn");
+
+  function is_class_general
+    (object  : object_access_t;
+     pattern : cs.chars_ptr) return c.int;
+  pragma import (c, is_class_general, "AG_ObjectIsClassGeneral");
+
+  function is_class_general
+    (object  : object_access_t;
+     pattern : string) return boolean;
+  pragma inline (is_class_general);
+ 
+  -- XXX: what?
+  type class_access_array_t is access class_access_t;
+  function get_inherit_hier
+    (object : object_access_t;
+     hier   : access class_access_array_t;
+     num    : access c.int) return c.int;
+  pragma import (c, get_inherit_hier, "AG_ObjectGetInheritHier");
+
+  procedure move_up (object : object_access_t);
+  pragma import (c, move_up, "AG_ObjectMoveUp");
+
+  procedure move_down (object : object_access_t);
+  pragma import (c, move_down, "AG_ObjectMoveDown");
+
+  function duplicate
+    (object : object_access_t;
+     name   : cs.chars_ptr) return object_access_t;
+  pragma import (c, duplicate, "AG_ObjectDuplicate");
+
+  procedure destroy (object : object_access_t);
+  pragma import (c, destroy, "AG_ObjectDestroy");
+
+  procedure unlink_data_files (object : object_access_t);
+  pragma import (c, unlink_data_files, "AG_ObjectUnlinkDatafiles");
+
+  procedure set_save_prefix
+    (object : object_access_t;
+     prefix : cs.chars_ptr);
+  pragma import (c, set_save_prefix, "AG_ObjectSetSavePfx");
+
+  procedure set_save_prefix
+    (object : object_access_t;
+     prefix : string);
+  pragma inline (set_save_prefix); 
+
+  -- deallocation
+
+  procedure free_children (object : object_access_t);
+  pragma import (c, free_children, "AG_ObjectFreeChildren");
+
+  procedure free_props (object : object_access_t);
+  pragma import (c, free_props, "AG_ObjectFreeProps");
+
+  procedure free_events (object : object_access_t);
+  pragma import (c, free_events, "AG_ObjectFreeEvents");
+
+  procedure free_deps (object : object_access_t);
+  pragma import (c, free_deps, "AG_ObjectFreeDeps");
+
+  procedure free_dummy_deps (object : object_access_t);
+  pragma import (c, free_dummy_deps, "AG_ObjectFreeDummyDeps");
+
+  -- XXX: what is the second parameter?
+  procedure cancel_timeouts
+    (object : object_access_t;
+     num    : c.unsigned);
+  pragma import (c, cancel_timeouts, "AG_ObjectCancelTimeouts");
+
+  -- paging
+
+  function page_in (object : object_access_t) return c.int;
+  pragma import (c, page_in, "AG_ObjectPageIn");
+
+  function page_in (object : object_access_t) return boolean;
+  pragma inline (page_in);
+
+  function page_out (object : object_access_t) return c.int;
+  pragma import (c, page_out, "AG_ObjectPageOut");
+
+  function page_out (object : object_access_t) return boolean;
+  pragma inline (page_out);
+
+  -- serial
+
+  function serialize
+    (object : object_access_t;
+     data   : agar.core.datasource.datasource_access_t) return c.int;
+  pragma import (c, serialize, "AG_ObjectSerialize");
+
+  function serialize
+    (object : object_access_t;
+     data   : agar.core.datasource.datasource_access_t) return boolean;
+  pragma inline (serialize);
+ 
+  function unserialize
+    (object : object_access_t;
+     data   : agar.core.datasource.datasource_access_t) return c.int;
+  pragma import (c, unserialize, "AG_ObjectUnserialize");
+
+  function unserialize
+    (object : object_access_t;
+     data   : agar.core.datasource.datasource_access_t) return boolean;
+  pragma inline (unserialize);
+ 
+  -- save
+
+  function save_to_file
+    (object : object_access_t;
+     name   : cs.chars_ptr) return c.int;
+  pragma import (c, save_to_file, "AG_ObjectSaveToFile");
+
+  function save_to_file
+    (object : object_access_t;
+     name   : string) return boolean;
+  pragma inline (save_to_file);
+
+  function save (object : object_access_t) return c.int;
+  pragma inline (save);
+
+  function save (object : object_access_t) return boolean;
+  pragma inline (save);
+
+  function save_all (object : object_access_t) return c.int;
+  pragma import (c, save_all, "AG_ObjectSaveAll");
+
+  function save_all (object : object_access_t) return boolean;
+  pragma inline (save_all);
+
+  -- load
+
+  function load (object : object_access_t) return c.int;
+  pragma inline (load);
+
+  -- XXX: what is the second parameter?
+  function load_data
+    (object : object_access_t;
+     num    : access c.int) return c.int;
+  pragma inline (load_data);
+
+  function load_generic (object : object_access_t) return c.int;
+  pragma inline (load_generic);
+
+  function load_from_file
+    (object : object_access_t;
+     name   : cs.chars_ptr) return c.int;
+  pragma import (c, load_from_file, "AG_ObjectLoadFromFile");
+
+  function load_from_file
+    (object : object_access_t;
+     name   : string) return boolean;
+  pragma inline (load_from_file);
+
+  function load_generic_from_file
+    (object : object_access_t;
+     name   : cs.chars_ptr) return c.int;
+  pragma import (c, load_generic_from_file, "AG_ObjectLoadGenericFromFile");
+
+  function load_generic_from_file
+    (object : object_access_t;
+     name   : string) return boolean;
+  pragma inline (load_generic_from_file); 
+
+  function load_data_from_file
+    (object : object_access_t;
+     num    : access c.int;
+     name   : cs.chars_ptr) return c.int;
+  pragma import (c, load_data_from_file, "AG_ObjectLoadDataFromFile");
+
+  -- deps
+
+  function resolve_deps (object : object_access_t) return c.int;
+  pragma import (c, resolve_deps, "AG_ObjectResolveDeps");
+
+  function add_dep
+    (object  : object_access_t;
+     add     : object_access_t;
+     persist : c.int) return dep_access_t;
+  pragma import (c, add_dep, "AG_ObjectAddDep");
+
+  function find_dep
+    (object : object_access_t;
+     index  : agar.core.types.uint32_t;
+     res    : access object_access_t) return c.int;
+  pragma import (c, find_dep, "AG_ObjectFindDep");
+
+  procedure delete_dep
+    (object : object_access_t;
+     del    : object_access_t);
+  pragma import (c, delete_dep, "AG_ObjectDelDep");
+
+  -- names
+
+  function encode_name
+    (object : object_access_t;
+     dep    : object_access_t) return agar.core.types.uint32_t;
+  pragma import (c, encode_name, "AG_ObjectEncodeName");
+
+  -- XXX: correct?
+  function edit (object : object_access_t) return object_access_t;
+  pragma import (c, edit, "AG_ObjectEdit");
+
+  procedure generate_name
+    (object : object_access_t;
+     class  : class_access_t;
+     name   : cs.chars_ptr;
+     size   : c.size_t);
+  pragma import (c, generate_name, "AG_ObjectGenName");
+
