@@ -1,0 +1,201 @@
+.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 21, 2008
+.Dt AG_FILE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3
+.Sh NAME
+.Nm AG_File
+.Nd agar file access routines
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+provides a consistent interface to filesystem operations which are
+implemented differently under different platforms.
+.Sh FILES
+.nr nS 1
+.Ft "int"
+.Fn AG_GetFileInfo "const char *path" "AG_FileInfo *fileInfo"
+.Pp
+.Ft "int"
+.Fn AG_GetSystemTempDir "char *dst" "size_t dstLen"
+.Pp
+.Ft "int"
+.Fn AG_FileExists "const char *path"
+.Pp
+.Ft "int"
+.Fn AG_FileDelete "const char *path"
+.Pp
+.nr nS 0
+The
+.Fn AG_GetFileInfo
+function returns information about the specified filesystem object, into
+the structure:
+.Bd -literal
+typedef struct ag_file_info {
+	enum ag_file_info_type type;
+	int perms;
+	int flags;
+};
+.Ed
+.Pp
+The
+.Fa type
+field can take on the values:
+.Pp
+.Bl -tag -compact -width "AG_FILE_DIRECTORY "
+.It Dv AG_FILE_REGULAR
+Regular file
+.It Dv AG_FILE_DIRECTORY
+File represents a directory
+.It Dv AG_FILE_DEVICE
+File is a special device
+.It Dv AG_FILE_FIFO
+File a POSIX fifo
+.It Dv AG_FILE_SYMLINK
+File is a symbolic link
+.It Dv AG_FILE_SOCKET
+File is a Unix-domain socket
+.El
+.Pp
+The
+.Fa perms
+field can contain the following permission flags, assumed to be true under
+the effective privileges of the current process:
+.Pp
+.Bl -tag -compact -width AG_FILE_EXECUTABLE
+.It Dv AG_FILE_READABLE
+File may be read from
+.It Dv AG_FILE_WRITEABLE
+File may be written to
+.It Dv AG_FILE_EXECUTABLE
+File is executable
+.El
+.Pp
+The
+.Fa flags
+field allows the following values:
+.Pp
+.Bl -tag -compact -width "AG_FILE_COMPRESSED "
+.It Dv AG_FILE_SUID
+File has setuid bit set
+.It Dv AG_FILE_SGID
+File has setgid bit set
+.It Dv AG_FILE_ARCHIVE
+File is marked as being an archive
+.It Dv AG_FILE_COMPRESSED
+File is marked as compressed
+.It Dv AG_FILE_ENCRYPTED
+File is marked as encrypted
+.It Dv AG_FILE_HIDDEN
+File is marked as hidden
+.It Dv AG_FILE_SPARSE
+File is marked as sparse
+.It Dv AG_FILE_TEMPORARY
+File is marked as temporary
+.It Dv AG_FILE_TEMPORARY
+File is marked as being required by the system
+.El
+.Sh DIRECTORIES
+.nr nS 1
+.Ft "int"
+.Fn AG_MkDir "const char *path"
+.Pp
+.Ft "int"
+.Fn AG_MkPath "const char *path"
+.Pp
+.Ft "int"
+.Fn AG_RmDir "const char *path"
+.Pp
+.Ft "int"
+.Fn AG_ChDir "const char *path"
+.Pp
+.Ft "void"
+.Fn AG_GetCWD "char *dst" "size_t dstLen"
+.Pp
+.Ft "AG_Dir *"
+.Fn AG_OpenDir "const char *path"
+.Pp
+.Ft "void"
+.Fn AG_CloseDir "AG_Dir *dir"
+.Pp
+.nr nS 0
+The
+.Fn AG_MkDir
+function creates a new directory under the specified path.
+The
+.Fn AG_MkPath
+variant tries to create additional directories if elements of the path are
+missing.
+Both return 0 on success, -1 on failure.
+.Pp
+.Fn AG_RmDir
+removes the specified directory, assumed to be empty, returning 0 on success
+and -1 on failure.
+.Pp
+The
+.Fn AG_ChDir
+function changes the working directory to the specified value, returning 0
+on success and -1 on failure.
+.Fn AG_GetCWD
+returns the current working directory path into
+.Fa dst ,
+assumed to be
+.Fa dstLen
+bytes in size.
+.Pp
+.Fn AG_OpenDir
+opens the specified directory.
+If successful, the function returns a newly allocated
+.Ft AG_Dir
+structure:
+.Bd -literal
+typedef struct ag_dir {
+	char **ents;		/* Filenames */
+	int nents;
+} AG_Dir;
+.Ed
+.Pp
+The
+.Va ents
+array contains the filenames for all directory entries.
+Regardless of the filesystem's character encoding,
+.Va ents
+is in UTF-8 encoding.
+.Pp
+.Fn AG_CloseDir
+closes the given directory.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3 ,
+.Xr AG_Version 3
+.Sh HISTORY
+The
+.Nm
+interface officially appeared in Agar 1.3.3.
