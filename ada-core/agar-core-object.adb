@@ -142,17 +142,6 @@ package body agar.core.object is
        prefix => cs.to_chars_ptr (ca_prefix'unchecked_access));
   end set_save_prefix;
 
-  function is_class_general
-    (object  : object_access_t;
-     pattern : string) return boolean
-  is
-    ca_pattern : aliased c.char_array := c.to_c (pattern);
-  begin
-    return is_class_general
-      (object  => object,
-       pattern => cs.to_chars_ptr (ca_pattern'unchecked_access)) = 1;
-  end is_class_general;
- 
   procedure set_archive_path
     (object : object_access_t;
      path   : string)
