@@ -1185,7 +1185,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 			 * "@lib" specification, the given library may get
 			 * dynamically loaded at this point.
 			 */
-			if ((cl = AG_LookupClass(classID)) == NULL) {
+			if ((cl = AG_LoadClass(classID)) == NULL) {
 				AG_SetError("%s: %s", ob->name, AG_GetError());
 				if (agObjectIgnoreUnknownObjs) {
 #ifdef OBJDEBUG
