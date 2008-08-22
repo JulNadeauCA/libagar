@@ -131,28 +131,6 @@ package body agar.core.object is
     return page_out (object) = 0;
   end page_out;
 
-  procedure set_save_prefix
-    (object : object_access_t;
-     prefix : string)
-  is
-    ca_prefix : aliased c.char_array := c.to_c (prefix);
-  begin
-    set_save_prefix
-      (object => object,
-       prefix => cs.to_chars_ptr (ca_prefix'unchecked_access));
-  end set_save_prefix;
-
-  procedure set_archive_path
-    (object : object_access_t;
-     path   : string)
-  is
-    ca_path : aliased c.char_array := c.to_c (path);
-  begin
-    set_archive_path
-      (object => object,
-       path   => cs.to_chars_ptr (ca_path'unchecked_access));
-  end set_archive_path;
-
   procedure set_name
     (object : object_access_t;
      name   : string)
