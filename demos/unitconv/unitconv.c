@@ -14,21 +14,18 @@ static void
 GetCategories(AG_Tlist *tl)
 {
 	int i;
-	int w, wMax = 0;
 
 	AG_TlistBegin(tl);
 	for (i = 0; i < agnUnitGroups; i++) {
 		if (strcmp(agUnitGroupNames[i], "Identity") == 0) {
 			continue;
 		}
-		AG_TextSize(agUnitGroupNames[i], &w, NULL);
-		if (w > wMax) { wMax = w; }
 		AG_TlistAddPtr(tl, NULL, agUnitGroupNames[i],
 		    (void *)agUnitGroups[i]);
 	}
 	AG_TlistSelectText(tl, "Length");
 	AG_TlistEnd(tl);
-	AG_TlistSizeHintPixels(tl, wMax, 6);
+	AG_TlistSizeHintLargest(tl, 6);
 }
 
 static void
