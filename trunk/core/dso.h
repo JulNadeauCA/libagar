@@ -33,6 +33,8 @@ int     AG_SymDSO(AG_DSO *, const char *, void **);
 int     AG_UnloadDSO(AG_DSO *);
 #define AG_LockDSO() AG_MutexLock(&agDSOLock)
 #define AG_UnlockDSO() AG_MutexUnlock(&agDSOLock)
+char  **AG_GetDSOList(Uint *);
+void    AG_FreeDSOList(char **, Uint);
 
 /* Return the named DSO or NULL if not found. */
 static __inline__ AG_DSO *
