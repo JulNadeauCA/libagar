@@ -35,9 +35,11 @@
 extern AG_ObjectClass agObjectClass;
 
 AG_ObjectClass **agClassTbl = NULL;
-int            agClassCount = 0;
-AG_Namespace *agNamespaceTbl = NULL;
-int           agNamespaceCount = 0;
+int              agClassCount = 0;
+AG_Namespace    *agNamespaceTbl = NULL;
+int              agNamespaceCount = 0;
+char           **agModuleDirs = NULL;
+int              agModuleDirCount = 0;
 
 /* Initialize the Agar class table. */
 void
@@ -47,6 +49,8 @@ AG_InitClassTbl(void)
 	agClassCount = 0;
 	agNamespaceTbl = Malloc(sizeof(AG_Namespace));
 	agNamespaceCount = 0;
+	agModuleDirs = Malloc(sizeof(char *));
+	agModuleDirCount = 0;
 
 	AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
 	AG_RegisterClass(&agObjectClass);
@@ -65,11 +69,12 @@ AG_DestroyClassTbl(void)
 }
 
 /* 
- * Convert a class specification in "Namespace1(Class1:Class2)" format
- * to the flat "PFX_Class1:PFX_Class2" format.
+ * Convert a class specification in "Namespace1(Class1:Class2)[@lib]" format
+ * to the flat "PFX_Class1:PFX_Class2" format. dstLib may be NULL.
  */
 int
-AG_ParseClassSpec(char *dst, size_t dstLen, const char *name)
+AG_ParseClassSpec(char *dst, size_t dstLen, char *dstLibs, size_t dstLibsLen,
+    const char *name)
 {
 	char buf[AG_OBJECT_TYPE_MAX], *pBuf, *pTok;
 	char nsName[AG_OBJECT_TYPE_MAX], *pNsName = nsName;
@@ -82,6 +87,7 @@ AG_ParseClassSpec(char *dst, size_t dstLen, const char *name)
 		return (-1);
 	}
 
+	if (dstLibs != NULL) { *dstLibs = '\0'; }
 	*pNsName = '\0';
 	for (s = &name[0]; *s != '\0'; s++) {
 		if (s[0] == '(' && s[1] != '\0') {
@@ -97,6 +103,8 @@ AG_ParseClassSpec(char *dst, size_t dstLen, const char *name)
 				*pNsName = *s;
 				pNsName++;
 			}
+			if (dstLibs != NULL && s[0] == '@' && s[1] != '\0')
+				Strlcpy(dstLibs, &s[1], dstLibsLen);
 		}
 		if (*s == ')') {
 			if ((s - pOpen) == 0) {
@@ -135,29 +143,32 @@ AG_ParseClassSpec(char *dst, size_t dstLen, const char *name)
 	return (0);
 }
 
-/* Register the class as described by the given AG_ObjectClass structure. */
+/*
+ * Register object class as described by the given AG_ObjectClass structure.
+ * If the "name" field is given in namespace format, convert it to expanded.
+ */
 void
-AG_RegisterClass(void *pClass)
+AG_RegisterClass(void *pClassInfo)
 {
-	AG_ObjectClass *cls = pClass;
+	AG_ObjectClass *cls = pClassInfo;
 	char s[AG_OBJECT_TYPE_MAX];
 
 	agClassTbl = Realloc(agClassTbl,
 	    (agClassCount+1)*sizeof(AG_ObjectClass *));
 	agClassTbl[agClassCount++] = cls;
 
-	/* Parse "Namespace(Class1:Class2)" specifications. */
-	if (AG_ParseClassSpec(s, sizeof(s), cls->name) == -1) {
+	if (AG_ParseClassSpec(s, sizeof(s), cls->libs, sizeof(cls->libs),
+	    cls->name) == -1) {
 		AG_FatalError("%s: %s", cls->name, AG_GetError());
 	}
 	Strlcpy(cls->name, s, sizeof(cls->name));
 }
 
-/* Unregister the specified class. */
+/* Unregister an object class. */
 void
-AG_UnregisterClass(void *p)
+AG_UnregisterClass(void *pClassInfo)
 {
-	AG_ObjectClass *cls = p;
+	AG_ObjectClass *cls = pClassInfo;
 	int i;
 
 	for (i = 0; i < agClassCount; i++) {
@@ -172,6 +183,104 @@ AG_UnregisterClass(void *p)
 		    (agClassCount-1)*sizeof(AG_ObjectClass *));
 	}
 	agClassCount--;
+}
+
+/*
+ * Return information about the currently registered class matching the
+ * given specification (in namespace / expanded format).
+ */
+AG_ObjectClass *
+AG_LookupClass(const char *classSpec)
+{
+	AG_ObjectClass *cls;
+	char className[AG_OBJECT_TYPE_MAX];
+	int i;
+
+	AG_ParseClassSpec(className, sizeof(className), NULL, 0, classSpec);
+	AG_FOREACH_CLASS(cls, i, ag_object_class, className) {
+		if (strcmp(cls->name, className) == 0)
+			return (cls);
+	}
+	AG_SetError("No such class: %s", className);
+	return (NULL);
+}
+
+/*
+ * Look for a "@libs" string in the class specification and scan module
+ * directories for the required libraries. If they are found, bring them
+ * into the current process's address space. If successful, look up the
+ * "pfxFooClass" symbol and register the class.
+ *
+ * Multiple libraries can be specified with commas. The "pfxFooClass"
+ * symbol is assumed to be defined in the first library in the list.
+ */
+AG_ObjectClass *
+AG_LoadClass(const char *classSpec)
+{
+	char className[AG_OBJECT_TYPE_MAX];
+	char libs[AG_OBJECT_TYPE_MAX], *s, *lib;
+	char sym[AG_OBJECT_TYPE_MAX];
+	AG_DSO *dso;
+	void *pClass = NULL;
+	int i;
+
+	AG_ParseClassSpec(className, sizeof(className), libs, sizeof(libs),
+	    classSpec);
+
+	/* Load all libraries specified in the string. */
+	for (i = 0, s = libs;
+	    (lib = Strsep(&s, ", ")) != NULL;
+	    i++) {
+		if ((dso = AG_LoadDSO(lib, 0)) == NULL) {
+			AG_SetError("Loading <%s>: %s", classSpec,
+			    AG_GetError());
+			return (NULL);
+		}
+		/* Look up "pfxFooClass" in the first library. */
+		if (i == 0) {
+			if ((s = strrchr(className, ':')) != NULL &&
+			    s[1] != '\0') {
+				Strlcpy(sym, &s[1], sizeof(sym));
+			} else {
+				Strlcpy(sym, s, sizeof(sym));
+			}
+			Strlcpy(sym, className, sizeof(sym));
+			Strlcat(sym, "Class", sizeof(sym));
+			printf("sym: \"%s\"\n", sym);
+
+			if (AG_SymDSO(dso, sym, &pClass) == -1) {
+				AG_SetError("<%s>: %s", lib, AG_GetError());
+				AG_UnloadDSO(dso);
+				/* XXX TODO undo other DSOs we just loaded */
+				return (NULL);
+			}
+		}
+	}
+	if (pClass == NULL) {
+		AG_SetError("Loading <%s>: No library specified", classSpec);
+		return (NULL);
+	}
+
+	AG_RegisterClass(pClass);
+	return (pClass);
+}
+
+/*
+ * Unregister the given class and decrement the reference count / unload
+ * related dynamically-linked libraries.
+ */
+void
+AG_UnloadClass(AG_ObjectClass *cls)
+{
+	char *s, *lib;
+	AG_DSO *dso;
+	
+	AG_UnregisterClass(cls);
+
+	for (s = cls->libs; (lib = Strsep(&s, ", ")) != NULL; ) {
+		if ((dso = AG_LookupDSO(lib)) != NULL)
+			AG_UnloadDSO(dso);
+	}
 }
 
 /* Register a new namespace. */
@@ -189,7 +298,7 @@ AG_RegisterNamespace(const char *name, const char *pfx, const char *url)
 	return (ns);
 }
 
-/* Unregister a previously registered namespace. */
+/* Unregister a namespace. */
 void
 AG_UnregisterNamespace(const char *name)
 {
@@ -207,4 +316,38 @@ AG_UnregisterNamespace(const char *name)
 		    (agNamespaceCount-1)*sizeof(AG_Namespace));
 	}
 	agNamespaceCount--;
+}
+
+/* Register a new module directory path. */
+void
+AG_RegisterModuleDirectory(const char *path)
+{
+	char *s, *p;
+
+	agModuleDirs = Realloc(agModuleDirs,
+	    (agModuleDirCount+1)*sizeof(char *));
+	agModuleDirs[agModuleDirCount++] = s = Strdup(path);
+	if (*(p = &s[strlen(s)-1]) == AG_PATHSEPC)
+		*p = '\0';
+}
+
+/* Unregister a module directory path. */
+void
+AG_UnregisterModuleDirectory(const char *path)
+{
+	int i;
+
+	for (i = 0; i < agModuleDirCount; i++) {
+		if (strcmp(agModuleDirs[i], path) == 0)
+			break;
+	}
+	if (i == agModuleDirCount) {
+		return;
+	}
+	free(agModuleDirs[i]);
+	if (i < agModuleDirCount-1) {
+		memmove(&agModuleDirs[i], &agModuleDirs[i+1],
+		    (agModuleDirCount-1)*sizeof(char *));
+	}
+	agModuleDirCount--;
 }
