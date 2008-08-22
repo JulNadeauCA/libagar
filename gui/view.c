@@ -32,7 +32,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/dir.h>
 
 #include "window.h"
 #include "primitive.h"

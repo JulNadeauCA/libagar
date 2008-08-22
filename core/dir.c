@@ -69,8 +69,6 @@
 #include <errno.h>
 
 #include <core/core.h>
-#include <core/dir.h>
-#include <core/file.h>
 
 int
 AG_MkDir(const char *dir)
