@@ -27,8 +27,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/dir.h>
-#include <core/file.h>
 
 #include "file_dlg.h"
 

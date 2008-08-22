@@ -136,6 +136,8 @@ typedef unsigned long Ulong;
 #include <core/event.h>
 #include <core/cpuinfo.h>
 #include <core/typesw.h>
+#include <core/file.h>
+#include <core/dir.h>
 #include <core/dso.h>
 
 #ifdef ENABLE_NLS

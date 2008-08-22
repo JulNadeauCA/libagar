@@ -37,8 +37,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/dir.h>
-#include <core/file.h>
 
 #if defined(BEOS)
 # include <kernel/image.h>

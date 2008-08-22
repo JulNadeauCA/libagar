@@ -31,8 +31,6 @@
 #include <core/md5.h>
 #include <core/sha1.h>
 #include <core/rmd160.h>
-#include <core/dir.h>
-#include <core/file.h>
 #include <core/config.h>
 
 #ifdef NETWORK
