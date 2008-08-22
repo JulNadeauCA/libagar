@@ -24,8 +24,7 @@
  */
 
 /*
- * Functions related to Agar namespacses and classes. The class table is
- * useful for debugging and enables dynamic loading of archived objects.
+ * Functions related to Agar object classes and namespaces.
  */
 
 #include <core/core.h>
@@ -350,4 +349,70 @@ AG_UnregisterModuleDirectory(const char *path)
 		    (agModuleDirCount-1)*sizeof(char *));
 	}
 	agModuleDirCount--;
+}
+
+/* General case fallback for AG_ClassIsNamed() */
+int
+AG_ClassIsNamedGeneral(const AG_ObjectClass *cls, const char *cn)
+{
+	char cname[AG_OBJECT_TYPE_MAX], *cp, *c;
+	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
+
+	Strlcpy(cname, cn, sizeof(cname));
+	Strlcpy(nname, cls->name, sizeof(nname));
+	cp = cname;
+	np = nname;
+	while ((c = Strsep(&cp, ":")) != NULL &&
+	       (s = Strsep(&np, ":")) != NULL) {
+		if (c[0] == '*' && c[1] == '\0')
+			continue;
+		if (strcmp(c, s) != 0)
+			return (0);
+	}
+	return (1);
+}
+
+/*
+ * Return an array of class structures describing the inheritance
+ * hierarchy of an object.
+ */
+int
+AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
+{
+	char cname[AG_OBJECT_TYPE_MAX], *c;
+	AG_ObjectClass *cl;
+	int i, stop = 0;
+
+	if (AGOBJECT(obj)->cls->name[0] == '\0') {
+		(*nHier) = 0;
+		return (0);
+	}
+	(*nHier) = 1;
+	Strlcpy(cname, AGOBJECT(obj)->cls->name, sizeof(cname));
+	for (c = &cname[0]; *c != '\0'; c++) {
+		if (*c == ':')
+			(*nHier)++;
+	}
+	*hier = Malloc((*nHier)*sizeof(AG_ObjectClass *));
+	i = 0;
+	for (c = &cname[0];; c++) {
+		if (*c != ':' && *c != '\0') {
+			continue;
+		}
+		if (*c == '\0') {
+			stop++;
+		} else {
+			*c = '\0';
+		}
+		if ((cl = AG_LookupClass(cname)) == NULL) {
+			Free(*hier);
+			return (-1);
+		}
+		*c = ':';
+		(*hier)[i++] = cl;
+		
+		if (stop)
+			break;
+	}
+	return (0);
 }
