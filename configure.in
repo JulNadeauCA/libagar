@@ -339,3 +339,8 @@ if [ "${enable_nls}" = "yes" ]; then
 		exit 1
 	fi
 fi
+
+# To avoid obstructing user code, we always use includes of the
+# form <agar/foo/foo.h>.
+if [ ! -e "$SRC/agar" ]; then (cd $SRC && ln -s . agar); fi
+if [ ! -e "agar" ]; then ln -s . agar; fi

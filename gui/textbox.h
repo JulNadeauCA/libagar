@@ -3,15 +3,9 @@
 #ifndef _AGAR_WIDGET_TEXTBOX_H_
 #define _AGAR_WIDGET_TEXTBOX_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#include <gui/editable.h>
-#include <gui/scrollbar.h>
-#else
 #include <agar/gui/widget.h>
 #include <agar/gui/editable.h>
 #include <agar/gui/scrollbar.h>
-#endif
 
 #include "begin_code.h"
 

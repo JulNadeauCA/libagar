@@ -3,15 +3,9 @@
 #ifndef _AGAR_WIDGET_TOOLBAR_H_
 #define _AGAR_WIDGET_TOOLBAR_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#include <gui/box.h>
-#include <gui/button.h>
-#else
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
 #include <agar/gui/button.h>
-#endif
 
 #include "begin_code.h"
 

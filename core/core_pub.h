@@ -24,7 +24,6 @@
 
 #include <agar/core/version.h>
 #include <agar/core/object.h>
-#include <agar/core/event.h>
 #include <agar/core/config.h>
 #include <agar/core/rcs.h>
 #include <agar/core/file.h>

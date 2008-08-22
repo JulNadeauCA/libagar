@@ -3,13 +3,8 @@
  * Serialization of floating-point numbers.
  */
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_long_double.h>
-#include <core/byteswap.h>
-#else
 #include <agar/config/have_long_double.h>
 #include <agar/core/byteswap.h>
-#endif
 
 #include "begin_code.h"
 

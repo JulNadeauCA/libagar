@@ -3,13 +3,8 @@
 #ifndef _AGAR_WIDGET_MPANE_H_
 #define _AGAR_WIDGET_MPANE_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#include <gui/box.h>
-#else
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
-#endif
 
 #include "begin_code.h"
 

@@ -50,7 +50,7 @@ typedef union evarg {
     AG_FloatMismatch())
  
 #define AG_OBJECT(v,t) \
- (AG_ObjectIsClass(event->argv[v].p,(t)))?event->argv[v].p:\
+ (AG_OfClass(event->argv[v].p,(t)))?event->argv[v].p:\
   AG_ObjectMismatch(OBJECT(event->argv[v].p)->cls->name,(t))
 
 #else /* !DEBUG */

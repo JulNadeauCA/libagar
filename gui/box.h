@@ -3,11 +3,7 @@
 #ifndef _AGAR_WIDGET_BOX_H_
 #define _AGAR_WIDGET_BOX_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#else
 #include <agar/gui/widget.h>
-#endif
 
 #include "begin_code.h"
 

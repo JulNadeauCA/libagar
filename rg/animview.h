@@ -3,19 +3,11 @@
 #ifndef _AGAR_RG_ANIMVIEW_H_
 #define _AGAR_RG_ANIMVIEW_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#include <gui/button.h>
-#include <gui/menu.h>
-#include <gui/window.h>
-#include <rg/tileset.h>
-#else
 #include <agar/gui/widget.h>
 #include <agar/gui/button.h>
 #include <agar/gui/menu.h>
 #include <agar/gui/window.h>
 #include <agar/rg/tileset.h>
-#endif
 
 #include "begin_code.h"
 

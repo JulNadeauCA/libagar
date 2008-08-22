@@ -11,18 +11,10 @@
  * with every copy.
  */
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_md5.h>
-#include <config/_mk_have_sys_types_h.h>
-#include <config/have_bounded_attribute.h>
-#else
 #include <agar/config/have_md5.h>
-#include <agar/config/_mk_have_sys_types_h.h>
-#include <agar/config/have_bounded_attribute.h>
-#endif
-
 #ifdef HAVE_MD5
 
+#include <agar/config/_mk_have_sys_types_h.h>
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -44,6 +36,7 @@ typedef struct MD5Context {
 	Uint8 buffer[MD5_BLOCK_LENGTH];		/* input buffer */
 } MD5_CTX;
 
+#include <agar/config/have_bounded_attribute.h>
 #ifndef BOUNDED_ATTRIBUTE
 # ifdef HAVE_BOUNDED_ATTRIBUTE
 #  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))

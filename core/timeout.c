@@ -30,8 +30,6 @@
 
 #include <core/core.h>
 
-#include "timeout.h"
-
 struct ag_objectq agTimeoutObjQ = TAILQ_HEAD_INITIALIZER(agTimeoutObjQ);
 AG_Object agTimeoutMgr;
 #ifdef THREADS

@@ -3,13 +3,8 @@
 #ifndef _AGAR_GUI_GRAPH_H_
 #define _AGAR_GUI_GRAPH_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#include <gui/scrollbar.h>
-#else
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
-#endif
 
 #include "begin_code.h"
 

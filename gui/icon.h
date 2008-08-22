@@ -3,15 +3,9 @@
 #ifndef _AGAR_WIDGET_ICON_H_
 #define _AGAR_WIDGET_ICON_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#include <gui/text.h>
-#include <gui/label.h>
-#else
 #include <agar/gui/widget.h>
 #include <agar/gui/text.h>
 #include <agar/gui/label.h>
-#endif
 
 #include "begin_code.h"
 

@@ -49,7 +49,7 @@ void
 AG_SetStyle(void *p, AG_Style *style)
 {
 	AG_ObjectLock(p);
-	if (AG_ObjectIsClass(p, "AG_Display")) {
+	if (AG_OfClass(p, "AG_Display")) {
 		AG_Display *disp = (AG_Display *)p;
 		AG_Window *win;
 

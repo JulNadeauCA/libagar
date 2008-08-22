@@ -3,13 +3,8 @@
 #ifndef _AGAR_RG_TEXSEL_H_
 #define _AGAR_RG_TEXSEL_H_
 
-#ifdef _AGAR_INTERNAL
-#include <rg/tileset.h>
-#include <gui/tlist.h>
-#else
 #include <agar/rg/tileset.h>
 #include <agar/gui/tlist.h>
-#endif
 
 #include "begin_code.h"
 

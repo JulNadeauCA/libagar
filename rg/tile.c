@@ -1420,7 +1420,7 @@ EditElement(AG_Event *event)
 	AG_Tlist *tl = AG_PTR(2);
 	AG_TlistItem *it;
 	
-	if (AG_ObjectIsClass(sndr, "AG_Widget:AG_Button:*") && !tv->edit_mode) {
+	if (AG_OfClass(sndr, "AG_Widget:AG_Button:*") && !tv->edit_mode) {
 		CloseElement(tv);
 		return;
 	}

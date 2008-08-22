@@ -3,15 +3,9 @@
 #ifndef _AGAR_WIDGET_NOTEBOOK_H_
 #define _AGAR_WIDGET_NOTEBOOK_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#include <gui/box.h>
-#include <gui/text.h>
-#else
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
 #include <agar/gui/text.h>
-#endif
 
 #define AG_NOTEBOOK_LABEL_MAX	64
 

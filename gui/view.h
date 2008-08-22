@@ -3,19 +3,11 @@
 #ifndef _AGAR_GUI_VIEW_H_
 #define _AGAR_GUI_VIEW_H_
 
-#ifdef _AGAR_INTERNAL
-# include <config/have_opengl.h>
-# include <config/view_8bpp.h>
-# include <config/view_16bpp.h>
-# include <config/view_24bpp.h>
-# include <config/view_32bpp.h>
-#else
-# include <agar/config/have_opengl.h>
-# include <agar/config/view_8bpp.h>
-# include <agar/config/view_16bpp.h>
-# include <agar/config/view_24bpp.h>
-# include <agar/config/view_32bpp.h>
-#endif
+#include <agar/config/have_opengl.h>
+#include <agar/config/view_8bpp.h>
+#include <agar/config/view_16bpp.h>
+#include <agar/config/view_24bpp.h>
+#include <agar/config/view_32bpp.h>
 
 #include "begin_code.h"
 
@@ -571,12 +563,7 @@ __END_DECLS
 
 #include "close_code.h"
 
-#ifdef _AGAR_INTERNAL
-# include <gui/iconmgr.h>
-# include <gui/load_surface.h>
-#else
-# include <agar/gui/iconmgr.h>
-# include <agar/gui/load_surface.h>
-#endif
+#include <agar/gui/iconmgr.h>
+#include <agar/gui/load_surface.h>
 
 #endif	/* _AGAR_GUI_VIEW_H_ */

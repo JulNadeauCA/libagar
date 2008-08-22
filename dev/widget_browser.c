@@ -53,7 +53,7 @@ FindWidgets(AG_Widget *wid, AG_Tlist *widtl, int depth)
 	AG_TlistItem *it;
 
 	Strlcpy(text, OBJECT(wid)->name, sizeof(text));
-	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
+	if (AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
 		AG_Window *win = (AG_Window *)wid;
 
 		Strlcat(text, " (", sizeof(text));
@@ -222,7 +222,7 @@ WidgetParams(AG_Event *event)
 		AG_CheckboxSetFromFlags(nTab, &wid->flags, flagDescr);
 	}
 
-	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
+	if (AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
 		AG_Window *ww = (AG_Window *)wid;
 		static const AG_FlagDescr flagDescr[] = {
 		    { AG_WINDOW_MODAL,		"MODAL",1 },
@@ -284,7 +284,7 @@ WidgetParams(AG_Event *event)
 		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
 	}
 
-	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Box:*")) {
+	if (AG_OfClass(wid, "AG_Widget:AG_Box:*")) {
 		AG_Box *box = (AG_Box *)wid;
 		AG_Window *wp = AG_ParentWindow(box);
 		AG_Spinbutton *sb;
@@ -307,7 +307,7 @@ WidgetParams(AG_Event *event)
 		    _("Visual frame"));
 	}
 
-	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Editable:*")) {
+	if (AG_OfClass(wid, "AG_Widget:AG_Editable:*")) {
 		AG_Editable *ed = (AG_Editable *)wid;
 		AG_Spinbutton *sb;
 		
@@ -369,7 +369,7 @@ CreateWindowMenu(AG_Event *event)
 	AG_TlistItem *ti = AG_TlistSelectedItem(tl);
 	AG_Window *win;
 
-	if (ti == NULL || !AG_ObjectIsClass(ti->p1, "AG_Widget:AG_Window:*")) {
+	if (ti == NULL || !AG_OfClass(ti->p1, "AG_Widget:AG_Window:*")) {
 		return;
 	}
 	win = ti->p1;

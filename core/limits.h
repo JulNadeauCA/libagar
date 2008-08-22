@@ -1,16 +1,9 @@
 /*	Public domain	*/
 
-#ifdef _AGAR_INTERNAL
-#include <config/_mk_have_limits_h.h>
-#include <config/_mk_have_float_h.h>
-#include <config/have_long_long.h>
-#include <config/have_long_double.h>
-#else
 #include <agar/config/_mk_have_limits_h.h>
 #include <agar/config/_mk_have_float_h.h>
 #include <agar/config/have_long_long.h>
 #include <agar/config/have_long_double.h>
-#endif
 
 /*
  * String limits

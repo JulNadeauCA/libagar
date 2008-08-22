@@ -11,18 +11,6 @@ struct rg_feature;
 struct rg_anim;
 struct rg_texture;
 
-#ifdef _AGAR_INTERNAL
-#include <gui/view.h>
-#include <rg/transform.h>
-/* #include <vg/vg.h> */
-#include <rg/tile.h>
-#include <rg/feature.h>
-#include <rg/pixmap.h>
-/* #include <rg/sketch.h> */
-#include <rg/animation.h>
-#include <rg/texture.h>
-#include <rg/prim.h>
-#else
 #include <agar/gui/view.h>
 #include <agar/rg/transform.h>
 /* #include <agar/vg/vg.h> */
@@ -33,7 +21,6 @@ struct rg_texture;
 #include <agar/rg/animation.h>
 #include <agar/rg/texture.h>
 #include <agar/rg/prim.h>
-#endif
 
 #include "begin_code.h"
 

@@ -3,11 +3,7 @@
 #ifndef _AGAR_WIDGET_HBOX_H_
 #define _AGAR_WIDGET_HBOX_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/box.h>
-#else
 #include <agar/gui/box.h>
-#endif
 
 typedef struct ag_hbox {
 	struct ag_box box;

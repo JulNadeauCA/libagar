@@ -4393,5 +4393,13 @@ fi;
 		exit 1
 	fi
 fi
+if [ ! -e "$SRC/agar" ]
+ then
+	(cd $SRC && ln -s . agar)
+fi
+if [ ! -e "agar" ]
+ then
+	ln -s . agar
+fi
 echo "Don't forget to run \"make depend\"."
 echo "Don't forget to run \"make depend\"." >> config.log

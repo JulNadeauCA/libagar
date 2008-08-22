@@ -1,13 +1,9 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_RCSMGR_H_
-#define _AGAR_RCSMGR_H_
+#ifndef _AGAR_CORE_RCS_H_
+#define _AGAR_CORE_RCS_H_
 
-#ifdef _AGAR_INTERNAL
-#include <config/network.h>
-#else
 #include <agar/config/network.h>
-#endif
 
 #include "begin_code.h"
 
@@ -82,4 +78,4 @@ int AG_RcsCheckout(void *, const char *);
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_RCSMGR_H_ */
+#endif	/* _AGAR_CORE_RCS_H_ */

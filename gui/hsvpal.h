@@ -3,15 +3,9 @@
 #ifndef _AGAR_WIDGET_HSVPAL_H_
 #define _AGAR_WIDGET_HSVPAL_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/scrollbar.h>
-#include <gui/menu.h>
-#include <gui/window.h>
-#else
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/menu.h>
 #include <agar/gui/window.h>
-#endif
 
 #include "begin_code.h"
 

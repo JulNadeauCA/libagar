@@ -1111,7 +1111,7 @@ MAP_DetachActor(MAP *m, MAP_Actor *a)
 
 	AG_ObjectCancelTimeouts(a, 0);		/* XXX hook? */
 
-	if (AG_ObjectIsClass(m, "MAP:*")) {
+	if (AG_OfClass(m, "MAP:*")) {
 		MAP_ActorUnmapTile(a);
 	}
 	AG_ObjectDelDep(m, a);
@@ -2267,7 +2267,7 @@ PollLibsFind(AG_Tlist *tl, AG_Object *pob, int depth)
 	it->p1 = pob;
 	it->depth = depth;
 
-	if (AG_ObjectIsClass(pob, "RG_Tileset:*")) {
+	if (AG_OfClass(pob, "RG_Tileset:*")) {
 		RG_Tileset *ts = (RG_Tileset *)pob;
 		AG_TlistItem *sit;
 		RG_Tile *tile;
@@ -2356,7 +2356,7 @@ SelectLib(AG_Event *event)
 				AG_WidgetFocus(mv);
 			}
 		} else if (strcmp(it->cat, "object") == 0 &&
-		    AG_ObjectIsClass(it->p1, "MAP_Actor:*")) {
+		    AG_OfClass(it->p1, "MAP_Actor:*")) {
 			if ((t = MAP_ViewFindTool(mv, "Ginsert")) != NULL) {
 				if (mv->curtool != NULL) {
 					MAP_ViewSelectTool(mv, NULL, NULL);

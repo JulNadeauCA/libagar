@@ -3,19 +3,11 @@
 #ifndef _AGAR_MAPEDIT_MAPVIEW_H_
 #define _AGAR_MAPEDIT_MAPVIEW_H_
 
-#ifdef _AGAR_INTERNAL
-#include <map/map.h>
-#include <map/mapedit.h>
-#include <map/tool.h>
-#include <map/actor.h>
-#include <gui/widget.h>
-#else
 #include <agar/map/map.h>
 #include <agar/map/mapedit.h>
 #include <agar/map/tool.h>
 #include <agar/map/actor.h>
 #include <agar/gui/widget.h>
-#endif
 
 #include "begin_code.h"
 
