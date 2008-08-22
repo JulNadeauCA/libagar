@@ -135,7 +135,7 @@ LoadDSO_OS2(AG_DSO_Generic *dso, const char *path)
 /* Load a DSO using the dllload() interface on OS/390. */
 #ifdef OS390
 static AG_DSO *
-LoadDSO_OS390(AG_DSO_Generic *dso, const char *path)
+LoadDSO_OS390(const char *path)
 {
 	AG_DSO_Generic *d;
 	
@@ -152,7 +152,7 @@ LoadDSO_OS390(AG_DSO_Generic *dso, const char *path)
 /* Load a DSO using the LoadLibraryExW() interface on Windows. */
 #ifdef _WIN32
 static AG_DSO *
-LoadDSO_WIN32(AG_DSO_Generic *d, const char *path)
+LoadDSO_WIN32(const char *path)
 {
 	char buf[AG_PATHNAME_MAX], *p;
 	UINT em;
@@ -258,7 +258,7 @@ static AG_DSO *
 LoadDSO_DLOPEN(const char *path)
 {
 	AG_DSO_Generic *d;
-	int flags = RTLD_NOW|RTLD_GLOBAL;
+	int flags = RTLD_LAZY|RTLD_GLOBAL;
 	
 	d = Malloc(sizeof(AG_DSO_Generic));
 # if defined(_AIX)
@@ -342,7 +342,13 @@ AG_LoadDSO(const char *name, Uint flags)
 	dso = LoadDSO_DYLD(path);
 #elif defined(HAVE_DLOPEN)
 	dso = LoadDSO_DLOPEN(path);
+#else
+	AG_SetError("Dynamic linking is supported on this platform");
+	dso = NULL;
 #endif
+	if (dso == NULL)
+		goto fail;
+
 	Strlcpy(dso->name, name, sizeof(dso->name));
 	Strlcpy(dso->path, path, sizeof(dso->path));
 	dso->flags = 0;
@@ -594,6 +600,7 @@ SymDSO_DLOPEN(AG_DSO_Generic *d, const char *sym, void **p)
 }
 #endif /* HAVE_DLOPEN */
 
+/* Resolve a symbol in the specified DSO. */
 int
 AG_SymDSO(AG_DSO *dso, const char *sym, void **p)
 {
@@ -630,4 +637,73 @@ AG_SymDSO(AG_DSO *dso, const char *sym, void **p)
 	}
 	AG_MutexUnlock(&agDSOLock);
 	return (rv);
+}
+
+/* Return the list of available modules in the registered directories. */
+char **
+AG_GetDSOList(Uint *count)
+{
+	char **list;
+	AG_Dir *dir;
+	int i, j;
+	
+	list = Malloc(sizeof(char *));
+	*count = 0;
+	
+	for (i = 0; i < agModuleDirCount; i++) {
+		if ((dir = AG_OpenDir(agModuleDirs[i])) != NULL) {
+			for (j = 0; j < dir->nents; j++) {
+				char *file = dir->ents[j], *s;
+				char *pStart;
+
+				if (file[0] == '.') {
+					continue;
+				}
+#if defined(__AMIGAOS4__)
+				if ((s = strstr(file, ".ixlibrary")) == NULL ||
+				    s[10] != '\0') {
+					continue;
+				}
+				pStart = s;
+#elif defined(HPUX)
+				if ((s = strstr(file, ".sl")) == NULL ||
+				    s[3] != '\0') {
+					continue;
+				}
+				pStart = s;
+#elif defined(_WIN32) || defined(OS2)
+				if ((s = strstr(file, ".dll")) == NULL ||
+				    s[4] != '\0') {
+					continue;
+				}
+				pStart = s;
+#else
+				if (strncmp(file, "lib", 3) != 0 ||
+				   (s = strstr(file, ".so")) == NULL ||
+				    s[3] != '\0') {
+					continue;
+				}
+				pStart = &file[3];
+#endif
+
+				*s = '\0';
+				list = Realloc(list, ((*count)+1)*
+				    sizeof(char *));
+				list[(*count)++] = Strdup(pStart);
+			}
+			AG_CloseDir(dir);
+		}
+	}
+	return (list);
+}
+
+void
+AG_FreeDSOList(char **list, Uint count)
+{
+	Uint i;
+
+	for (i = 0; i < count; i++) {
+		free(list[i]);
+	}
+	free(list);
 }
