@@ -30,21 +30,27 @@ typedef struct ag_namespace {
 	const char *url;			/* URL of package */
 } AG_Namespace;
 
-/* Object class description. */
+/* Agar object class description. */
 typedef struct ag_object_class {
+	/*
+	 * Public
+	 */
 	char name[AG_OBJECT_TYPE_MAX];		/* Expanded class name */
 	size_t size;				/* Structure size */
 	AG_Version ver;				/* Version numbers */
-
 	void (*init)(void *);
 	void (*reinit)(void *);
 	void (*destroy)(void *);
 	int (*load)(void *, AG_DataSource *, const AG_Version *); 
 	int (*save)(void *, AG_DataSource *);
 	void *(*edit)(void *);
+	/*
+	 * Private
+	 */
+	char libs[AG_OBJECT_TYPE_MAX];	/* Comma-separated module list */
 } AG_ObjectClass;
 
-/* Dependency with respect to another object. */
+/* Entry in object dependency table. */
 typedef struct ag_object_dep {
 	int persistent;			/* Include in archives */
 	char *path;			/* Unresolved object path */
@@ -125,6 +131,14 @@ enum ag_object_checksum_alg {
 				 AG_OBJECT_NON_PERSISTENT) == 0)
 #define AGOBJECT_DEBUG(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
 
+#define AG_FOREACH_CLASS(cls, i, type, spec) \
+	for ((i) = 0; \
+	    ((i) < agClassCount) && ((cls) = (struct type *)agClassTbl[i]); \
+	    (i)++) \
+		if ((spec) != NULL && !AG_ClassIsNamed((cls),(spec))) { \
+			continue; \
+		} else
+
 /* Iterate through direct child objects. */
 #define AGOBJECT_FOREACH_CHILD(var, ob, t) \
 	for((var) = (struct t *)AG_TAILQ_FIRST(&AGOBJECT(ob)->children); \
@@ -180,11 +194,13 @@ enum ag_object_checksum_alg {
 #endif /* _AGAR_INTERNAL || _USE_AGAR_CORE */
 
 __BEGIN_DECLS
-extern AG_Namespace  *agNamespaceTbl;		/* Object class namespaces */
-extern int            agNamespaceCount;
+extern AG_ObjectClass   agObjectClass;		/* Generic Object class */
 extern AG_ObjectClass **agClassTbl;		/* Object classes */
 extern int              agClassCount;
-extern AG_ObjectClass agObjectClass;		/* Generic Object class */
+extern AG_Namespace    *agNamespaceTbl;		/* Object class namespaces */
+extern int              agNamespaceCount;
+extern char           **agModuleDirs;		/* Module search directories */
+extern int              agModuleDirCount;
 
 void	*AG_ObjectNew(void *, const char *, AG_ObjectClass *);
 void	 AG_ObjectAttach(void *, void *);
@@ -222,6 +238,7 @@ void	 AG_ObjectSetDebugFn(void *, void (*)(void *, void *, const char *),
                              void *);
 
 int	 AG_ObjectIsClassGeneral(const AG_Object *, const char *);
+int	 AG_ClassIsNamedGeneral(const AG_ObjectClass *, const char *);
 int	 AG_ObjectGetInheritHier(void *, AG_ObjectClass ***, int *);
 
 void	 AG_ObjectMoveUp(void *);
@@ -300,7 +317,39 @@ void AG_ObjectUnlockDebug(AG_Object *, const char *);
 # define AG_UnlockVFS(ob)
 #endif /* THREADS */
 
-/* Compare an object's class name against the given pattern. */
+/* Compare the specified object class against a given pattern. */
+static __inline__ int
+AG_ClassIsNamed(void *pClass, const char *pat)
+{
+	const AG_ObjectClass *cls = pClass;
+	const char *c;
+	int nwild = 0;
+
+	if (pat[0] == '*' && pat[1] == '\0') {
+		return (1);
+	}
+	for (c = &pat[0]; *c != '\0'; c++) {
+		if (*c == '*')
+			nwild++;
+	}
+	/* Optimize for 0 or single wildcard cases. */
+	if (nwild == 0) {
+		return (strncmp(cls->name, pat, c - &pat[0]) == 0);
+	} else if (nwild == 1) {
+		for (c = &pat[0]; *c != '\0'; c++) {
+			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
+				if (c == &pat[0] ||
+				    strncmp(cls->name, pat, c - &pat[0]) == 0)
+					return (1);
+			}
+		}
+		return (0);
+	}
+	/* Fallback to the general matching algorithm. */
+	return AG_ClassIsNamedGeneral(cls, pat);
+}
+
+/* Compare an object's class specification against the given pattern. */
 static __inline__ int
 AG_ObjectIsClass(const void *p, const char *cname)
 {
@@ -327,6 +376,7 @@ AG_ObjectIsClass(const void *p, const char *cname)
 					return (1);
 			}
 		}
+		return (0);
 	}
 	/* Fallback to the general matching algorithm. */
 	return AG_ObjectIsClassGeneral(obj, cname);
