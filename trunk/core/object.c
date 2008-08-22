@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -142,6 +142,27 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cls)
 	return (obj);
 }
 
+/* Compare a class specification against a given pattern. */
+int
+AG_ClassIsNamedGeneral(const AG_ObjectClass *cls, const char *cn)
+{
+	char cname[AG_OBJECT_TYPE_MAX], *cp, *c;
+	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
+
+	Strlcpy(cname, cn, sizeof(cname));
+	Strlcpy(nname, cls->name, sizeof(nname));
+	cp = cname;
+	np = nname;
+	while ((c = Strsep(&cp, ":")) != NULL &&
+	       (s = Strsep(&np, ":")) != NULL) {
+		if (c[0] == '*' && c[1] == '\0')
+			continue;
+		if (strcmp(c, s) != 0)
+			return (0);
+	}
+	return (1);
+}
+
 /* Check if an object's class matches the given pattern (general case). */
 int
 AG_ObjectIsClassGeneral(const AG_Object *obj, const char *cn)
@@ -153,8 +174,8 @@ AG_ObjectIsClassGeneral(const AG_Object *obj, const char *cn)
 	Strlcpy(nname, obj->cls->name, sizeof(nname));
 	cp = cname;
 	np = nname;
-	while ((c = AG_Strsep(&cp, ":")) != NULL &&
-	       (s = AG_Strsep(&np, ":")) != NULL) {
+	while ((c = Strsep(&cp, ":")) != NULL &&
+	       (s = Strsep(&np, ":")) != NULL) {
 		if (c[0] == '*' && c[1] == '\0')
 			continue;
 		if (strcmp(c, s) != 0)
@@ -747,7 +768,7 @@ AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
 		} else {
 			*c = '\0';
 		}
-		if ((cl = AG_FindClass(cname)) == NULL) {
+		if ((cl = AG_LookupClass(cname)) == NULL) {
 			Free(*hier);
 			return (-1);
 		}
@@ -823,9 +844,9 @@ AG_ObjectCopyFilename(void *p, char *path, size_t path_len)
 	AG_GetStringCopy(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
-	for (dir = AG_Strsep(&loadpathp, ":");
+	for (dir = Strsep(&loadpathp, ":");
 	     dir != NULL;
-	     dir = AG_Strsep(&loadpathp, ":")) {
+	     dir = Strsep(&loadpathp, ":")) {
 	     	Strlcpy(path, dir, path_len);
 		if (ob->save_pfx != NULL) {
 			Strlcat(path, ob->save_pfx, path_len);
@@ -865,9 +886,9 @@ AG_ObjectCopyDirname(void *p, char *path, size_t path_len)
 	AG_GetStringCopy(agConfig, "load-path", load_path, sizeof(load_path));
 	AG_ObjectCopyName(ob, obj_name, sizeof(obj_name));
 
-	for (dir = AG_Strsep(&loadpathp, ":");
+	for (dir = Strsep(&loadpathp, ":");
 	     dir != NULL;
-	     dir = AG_Strsep(&loadpathp, ":")) {
+	     dir = Strsep(&loadpathp, ":")) {
 		char tmp_path[AG_PATHNAME_MAX];
 
 	     	Strlcpy(tmp_path, dir, sizeof(tmp_path));
@@ -1138,6 +1159,9 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		}
 		if (eob != NULL) {
 			/*
+			 * Reload the state of an existing object instance.
+			 */
+			/*
 			 * XXX TODO Allow these cases to be handled by a
 			 * special callback function.
 			 */
@@ -1155,7 +1179,13 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		} else {
 			AG_ObjectClass *cl;
 
-			if ((cl = AG_FindClass(classID)) == NULL) {
+			/* 
+			 * Create a new object instance. If the class of the
+			 * archived object is not registered and includes a
+			 * "@lib" specification, the given library may get
+			 * dynamically loaded at this point.
+			 */
+			if ((cl = AG_LookupClass(classID)) == NULL) {
 				AG_SetError("%s: %s", ob->name, AG_GetError());
 				if (agObjectIgnoreUnknownObjs) {
 #ifdef OBJDEBUG
