@@ -241,6 +241,7 @@ int	 AG_ObjectIsClassGeneral(const AG_Object *, const char *);
 int	 AG_ClassIsNamedGeneral(const AG_ObjectClass *, const char *);
 int	 AG_ObjectGetInheritHier(void *, AG_ObjectClass ***, int *);
 
+void     AG_ObjectMove(void *, void *);
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
 void	*AG_ObjectDuplicate(void *, const char *);
@@ -273,18 +274,28 @@ int	 AG_ObjectLoadGenericFromFile(void *, const char *);
 int	 AG_ObjectResolveDeps(void *);
 int	 AG_ObjectLoadDataFromFile(void *, int *, const char *);
 
-AG_ObjectDep	*AG_ObjectAddDep(void *, void *, int);
-int	 	 AG_ObjectFindDep(void *, Uint32, void **);
-void		 AG_ObjectDelDep(void *, const void *);
-Uint32		 AG_ObjectEncodeName(void *, const void *);
-void		*AG_ObjectEdit(void *);
-void		 AG_ObjectGenName(AG_Object *, AG_ObjectClass *, char *,
-		                  size_t);
+AG_ObjectDep *AG_ObjectAddDep(void *, void *, int);
+int           AG_ObjectFindDep(void *, Uint32, void **);
+void          AG_ObjectDelDep(void *, const void *);
+Uint32        AG_ObjectEncodeName(void *, const void *);
+void         *AG_ObjectEdit(void *);
+void          AG_ObjectGenName(AG_Object *, AG_ObjectClass *, char *, size_t);
 
-/* LEGACY */
-void AG_ObjectMove(void *, void *);
+void            AG_InitClassTbl(void);
+void            AG_DestroyClassTbl(void);
+AG_ObjectClass *AG_LookupClass(const char *);
+AG_ObjectClass *AG_LoadClass(const char *);
+void            AG_UnloadClass(AG_ObjectClass *);
+AG_Namespace   *AG_RegisterNamespace(const char *, const char *, const char *);
+void            AG_UnregisterNamespace(const char *);
+void            AG_RegisterModuleDirectory(const char *);
+void            AG_UnregisterModuleDirectory(const char *);
+void            AG_RegisterClass(void *);
+void            AG_UnregisterClass(void *);
+int             AG_ParseClassSpec(char *, size_t, char *, size_t, const char *)
+                                  BOUNDED_ATTRIBUTE(__string__, 1, 2)
+                                  BOUNDED_ATTRIBUTE(__string__, 3, 4);
 
-/* Locking functions */
 #ifdef THREADS
 # ifdef LOCKDEBUG
 void AG_ObjectLockDebug(AG_Object *, const char *);
@@ -317,6 +328,20 @@ void AG_ObjectUnlockDebug(AG_Object *, const char *);
 # define AG_UnlockVFS(ob)
 #endif /* THREADS */
 
+/* Return description for the given namespace. */
+static __inline__ AG_Namespace *
+AG_GetNamespace(const char *ns)
+{
+	int i;
+
+	for (i = 0; i < agNamespaceCount; i++) {
+		if (strcmp(agNamespaceTbl[i].name, ns) == 0)
+			return (&agNamespaceTbl[i]);
+	}
+	AG_SetError("No such namespace: %s", ns);
+	return (NULL);
+}
+
 /* Compare the specified object class against a given pattern. */
 static __inline__ int
 AG_ClassIsNamed(void *pClass, const char *pat)
@@ -325,17 +350,16 @@ AG_ClassIsNamed(void *pClass, const char *pat)
 	const char *c;
 	int nwild = 0;
 
-	if (pat[0] == '*' && pat[1] == '\0') {
-		return (1);
-	}
 	for (c = &pat[0]; *c != '\0'; c++) {
 		if (*c == '*')
 			nwild++;
 	}
-	/* Optimize for 0 or single wildcard cases. */
 	if (nwild == 0) {
 		return (strncmp(cls->name, pat, c - &pat[0]) == 0);
 	} else if (nwild == 1) {
+		if (pat[1] == '*') {
+			return (1);
+		}
 		for (c = &pat[0]; *c != '\0'; c++) {
 			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
 				if (c == &pat[0] ||
@@ -345,8 +369,7 @@ AG_ClassIsNamed(void *pClass, const char *pat)
 		}
 		return (0);
 	}
-	/* Fallback to the general matching algorithm. */
-	return AG_ClassIsNamedGeneral(cls, pat);
+	return AG_ClassIsNamedGeneral(cls, pat);	/* General case */
 }
 
 /* Compare an object's class specification against the given pattern. */
@@ -357,17 +380,16 @@ AG_ObjectIsClass(const void *p, const char *cname)
 	const char *c;
 	int nwild = 0;
 
-	if (cname[0] == '*' && cname[1] == '\0') {
-		return (1);
-	}
 	for (c = &cname[0]; *c != '\0'; c++) {
 		if (*c == '*')
 			nwild++;
 	}
-	/* Optimize for 0 or single wildcard cases. */
 	if (nwild == 0) {
 		return (strncmp(obj->cls->name, cname, c - &cname[0]) == 0);
 	} else if (nwild == 1) {
+		if (pat[1] == '*') {
+			return (1);
+		}
 		for (c = &cname[0]; *c != '\0'; c++) {
 			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
 				if (c == &cname[0] ||
@@ -378,8 +400,7 @@ AG_ObjectIsClass(const void *p, const char *cname)
 		}
 		return (0);
 	}
-	/* Fallback to the general matching algorithm. */
-	return AG_ObjectIsClassGeneral(obj, cname);
+	return AG_ObjectIsClassGeneral(obj, cname);	/* General case */
 }
 
 /* Return the description of the superclass of a given object. */
