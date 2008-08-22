@@ -140,48 +140,6 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cls)
 	return (obj);
 }
 
-/* Compare a class specification against a given pattern. */
-int
-AG_ClassIsNamedGeneral(const AG_ObjectClass *cls, const char *cn)
-{
-	char cname[AG_OBJECT_TYPE_MAX], *cp, *c;
-	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
-
-	Strlcpy(cname, cn, sizeof(cname));
-	Strlcpy(nname, cls->name, sizeof(nname));
-	cp = cname;
-	np = nname;
-	while ((c = Strsep(&cp, ":")) != NULL &&
-	       (s = Strsep(&np, ":")) != NULL) {
-		if (c[0] == '*' && c[1] == '\0')
-			continue;
-		if (strcmp(c, s) != 0)
-			return (0);
-	}
-	return (1);
-}
-
-/* Check if an object's class matches the given pattern (general case). */
-int
-AG_ObjectIsClassGeneral(const AG_Object *obj, const char *cn)
-{
-	char cname[AG_OBJECT_TYPE_MAX], *cp, *c;
-	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
-
-	Strlcpy(cname, cn, sizeof(cname));
-	Strlcpy(nname, obj->cls->name, sizeof(nname));
-	cp = cname;
-	np = nname;
-	while ((c = Strsep(&cp, ":")) != NULL &&
-	       (s = Strsep(&np, ":")) != NULL) {
-		if (c[0] == '*' && c[1] == '\0')
-			continue;
-		if (strcmp(c, s) != 0)
-			return (0);
-	}
-	return (1);
-}
-
 void
 AG_ObjectRemain(void *p, int flags)
 {
@@ -732,51 +690,6 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
 
 	AG_ObjectUnlock(ob);
 	AG_UnlockTiming();
-}
-
-/*
- * Return an array of class structures describing the inheritance
- * hierarchy of an object.
- */
-int
-AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
-{
-	char cname[AG_OBJECT_TYPE_MAX], *c;
-	AG_ObjectClass *cl;
-	int i, stop = 0;
-
-	if (AGOBJECT(obj)->cls->name[0] == '\0') {
-		(*nHier) = 0;
-		return (0);
-	}
-	(*nHier) = 1;
-	Strlcpy(cname, AGOBJECT(obj)->cls->name, sizeof(cname));
-	for (c = &cname[0]; *c != '\0'; c++) {
-		if (*c == ':')
-			(*nHier)++;
-	}
-	*hier = Malloc((*nHier)*sizeof(AG_ObjectClass *));
-	i = 0;
-	for (c = &cname[0];; c++) {
-		if (*c != ':' && *c != '\0') {
-			continue;
-		}
-		if (*c == '\0') {
-			stop++;
-		} else {
-			*c = '\0';
-		}
-		if ((cl = AG_LookupClass(cname)) == NULL) {
-			Free(*hier);
-			return (-1);
-		}
-		*c = ':';
-		(*hier)[i++] = cl;
-		
-		if (stop)
-			break;
-	}
-	return (0);
 }
 
 /*

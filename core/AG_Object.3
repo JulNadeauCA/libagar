@@ -293,12 +293,12 @@ option.
 .Fn AG_UnregisterModuleDirectory "const char *path"
 .Pp
 .Ft "int"
-.Fn AG_ObjectIsClass "AG_Object *obj" "const char *class_pattern"
+.Fn AG_OfClass "AG_Object *obj" "const char *pattern"
 .Pp
 .Ft "AG_ObjectClass *"
 .Fn AG_ObjectSuperclass "AG_Object *obj"
 .Pp
-.Fn AGOBJECT_FOREACH_CLASS "AG_Object *child_obj" "AG_Object *parent_obj" "TYPE type" "const char *class_pattern"
+.Fn AGOBJECT_FOREACH_CLASS "AG_Object *child_obj" "AG_Object *parent_obj" "TYPE type" "const char *pattern"
 .Pp
 .Fn AG_FOREACH_CLASS "AG_ObjectClass *classInfo" "int i" "TYPE type" "const char *spec"
 .Pp
@@ -482,10 +482,12 @@ function adds the specified directory to the module search path.
 removes the specified directory from the search path.
 .Pp
 The
-.Fn AG_ObjectIsClass
-function returns 1 if the given object's class name matches the given
-.Fa class_pattern ,
-which may contain wildcards such as
+.Fn AG_OfClass
+function returns 1 if the object is an instance of the class specified in
+the
+.Fa pattern ,
+string.
+The pattern may contain wildcards such as
 .Dq MyClass:*
 or
 .Dq MyClass:*:MySubclass:* .
@@ -506,7 +508,7 @@ macro iterates
 over every child object of
 .Fa parent_obj
 with a class matching
-.Fa class_pattern .
+.Fa pattern
 Example:
 .Bd -literal
 struct my_class *my_obj;

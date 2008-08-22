@@ -1,8 +1,5 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_OBJECT_H_
-#define _AGAR_OBJECT_H_
-
 #define AG_OBJECT_TYPE_MAX 128
 #define AG_OBJECT_NAME_MAX 128
 #define AG_OBJECT_PATH_MAX 1024
@@ -11,44 +8,17 @@
 #define AGOBJECT(ob) ((struct ag_object *)(ob))
 #define AGOBJECT_CLASS(obj) ((struct ag_object_class *)(AGOBJECT(obj)->cls))
 
-#ifdef _AGAR_INTERNAL
-#include <core/timeout.h>
-#include <core/prop.h>
-#else
 #include <agar/core/timeout.h>
+#include <agar/core/event.h>
 #include <agar/core/prop.h>
-#endif
+#include <agar/core/class.h>
 
 #include "begin_code.h"
 
+struct ag_object;
 struct ag_event;
 
-/* Agar namespace description. */
-typedef struct ag_namespace {
-	const char *name;			/* Name string */
-	const char *pfx;			/* Prefix string */
-	const char *url;			/* URL of package */
-} AG_Namespace;
-
-/* Agar object class description. */
-typedef struct ag_object_class {
-	/*
-	 * Public
-	 */
-	char name[AG_OBJECT_TYPE_MAX];		/* Expanded class name */
-	size_t size;				/* Structure size */
-	AG_Version ver;				/* Version numbers */
-	void (*init)(void *);
-	void (*reinit)(void *);
-	void (*destroy)(void *);
-	int (*load)(void *, AG_DataSource *, const AG_Version *); 
-	int (*save)(void *, AG_DataSource *);
-	void *(*edit)(void *);
-	/*
-	 * Private
-	 */
-	char libs[AG_OBJECT_TYPE_MAX];	/* Comma-separated module list */
-} AG_ObjectClass;
+AG_TAILQ_HEAD(ag_objectq, ag_object);
 
 /* Entry in object dependency table. */
 typedef struct ag_object_dep {
@@ -59,8 +29,6 @@ typedef struct ag_object_dep {
 #define AG_OBJECT_DEP_MAX (0xffffffff-2)
 	AG_TAILQ_ENTRY(ag_object_dep) deps;
 } AG_ObjectDep;
-
-AG_TAILQ_HEAD(ag_objectq, ag_object);
 
 /* Object instance data. */
 typedef struct ag_object {
@@ -126,11 +94,6 @@ enum ag_object_checksum_alg {
 	AG_OBJECT_RMD160
 };
 
-#define AGOBJECT_RESIDENT(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_RESIDENT)
-#define AGOBJECT_PERSISTENT(ob) ((AGOBJECT(ob)->flags & \
-				 AG_OBJECT_NON_PERSISTENT) == 0)
-#define AGOBJECT_DEBUG(ob)	(AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
-
 #define AG_FOREACH_CLASS(cls, i, type, spec) \
 	for ((i) = 0; \
 	    ((i) < agClassCount) && ((cls) = (struct type *)agClassTbl[i]); \
@@ -156,7 +119,7 @@ enum ag_object_checksum_alg {
 /* Iterate through direct child objects of a specified class. */
 #define AGOBJECT_FOREACH_CLASS(var, ob, t, subclass) \
 	AGOBJECT_FOREACH_CHILD(var,ob,t) \
-		if (!AG_ObjectIsClass(var,(subclass))) { \
+		if (!AG_OfClass(var,(subclass))) { \
 			continue; \
 		} else
 
@@ -174,11 +137,13 @@ enum ag_object_checksum_alg {
 		} else
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
-# define OBJECT(ob)		AGOBJECT(ob)
-# define OBJECT_CLASS(ob)	AGOBJECT_CLASS(ob)
-# define OBJECT_RESIDENT(ob)	AGOBJECT_RESIDENT(ob)
-# define OBJECT_PERSISTENT(ob)	AGOBJECT_PERSISTENT(ob)
-# define OBJECT_DEBUG(ob) 	AGOBJECT_DEBUG(ob)
+# define OBJECT(ob)            AGOBJECT(ob)
+# define OBJECT_CLASS(ob)      AGOBJECT_CLASS(ob)
+
+# define OBJECT_RESIDENT(ob)   (AGOBJECT(ob)->flags & AG_OBJECT_RESIDENT)
+# define OBJECT_PERSISTENT(ob) !(AGOBJECT(ob)->flags & AG_OBJECT_NON_PERSISTENT)
+# define OBJECT_DEBUG(ob)      (AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
+
 # define OBJECT_INITIALIZER(obj,n,pfx,cls) \
          AGOBJECT_INITIALIZER((obj),(n),(pfx),(cls))
 # define OBJECT_FOREACH_CHILD(var,ob,t) \
@@ -195,12 +160,6 @@ enum ag_object_checksum_alg {
 
 __BEGIN_DECLS
 extern AG_ObjectClass   agObjectClass;		/* Generic Object class */
-extern AG_ObjectClass **agClassTbl;		/* Object classes */
-extern int              agClassCount;
-extern AG_Namespace    *agNamespaceTbl;		/* Object class namespaces */
-extern int              agNamespaceCount;
-extern char           **agModuleDirs;		/* Module search directories */
-extern int              agModuleDirCount;
 
 void	*AG_ObjectNew(void *, const char *, AG_ObjectClass *);
 void	 AG_ObjectAttach(void *, void *);
@@ -237,11 +196,6 @@ void	 AG_ObjectSetClass(void *, void *);
 void	 AG_ObjectSetDebugFn(void *, void (*)(void *, void *, const char *),
                              void *);
 
-int	 AG_ObjectIsClassGeneral(const AG_Object *, const char *);
-int	 AG_ClassIsNamedGeneral(const AG_ObjectClass *, const char *);
-int	 AG_ObjectGetInheritHier(void *, AG_ObjectClass ***, int *);
-
-void     AG_ObjectMove(void *, void *);
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
 void	*AG_ObjectDuplicate(void *, const char *);
@@ -281,20 +235,7 @@ Uint32        AG_ObjectEncodeName(void *, const void *);
 void         *AG_ObjectEdit(void *);
 void          AG_ObjectGenName(AG_Object *, AG_ObjectClass *, char *, size_t);
 
-void            AG_InitClassTbl(void);
-void            AG_DestroyClassTbl(void);
-AG_ObjectClass *AG_LookupClass(const char *);
-AG_ObjectClass *AG_LoadClass(const char *);
-void            AG_UnloadClass(AG_ObjectClass *);
-AG_Namespace   *AG_RegisterNamespace(const char *, const char *, const char *);
-void            AG_UnregisterNamespace(const char *);
-void            AG_RegisterModuleDirectory(const char *);
-void            AG_UnregisterModuleDirectory(const char *);
-void            AG_RegisterClass(void *);
-void            AG_UnregisterClass(void *);
-int             AG_ParseClassSpec(char *, size_t, char *, size_t, const char *)
-                                  BOUNDED_ATTRIBUTE(__string__, 1, 2)
-                                  BOUNDED_ATTRIBUTE(__string__, 3, 4);
+#define AG_OfClass(obj,cspec) AG_ClassIsNamed(AGOBJECT(obj)->cls,(cspec))
 
 #ifdef THREADS
 # ifdef LOCKDEBUG
@@ -328,101 +269,9 @@ void AG_ObjectUnlockDebug(AG_Object *, const char *);
 # define AG_UnlockVFS(ob)
 #endif /* THREADS */
 
-/* Return description for the given namespace. */
-static __inline__ AG_Namespace *
-AG_GetNamespace(const char *ns)
-{
-	int i;
-
-	for (i = 0; i < agNamespaceCount; i++) {
-		if (strcmp(agNamespaceTbl[i].name, ns) == 0)
-			return (&agNamespaceTbl[i]);
-	}
-	AG_SetError("No such namespace: %s", ns);
-	return (NULL);
-}
-
-/* Compare the specified object class against a given pattern. */
-static __inline__ int
-AG_ClassIsNamed(void *pClass, const char *pat)
-{
-	const AG_ObjectClass *cls = pClass;
-	const char *c;
-	int nwild = 0;
-
-	for (c = &pat[0]; *c != '\0'; c++) {
-		if (*c == '*')
-			nwild++;
-	}
-	if (nwild == 0) {
-		return (strncmp(cls->name, pat, c - &pat[0]) == 0);
-	} else if (nwild == 1) {
-		if (pat[1] == '*') {
-			return (1);
-		}
-		for (c = &pat[0]; *c != '\0'; c++) {
-			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
-				if (c == &pat[0] ||
-				    strncmp(cls->name, pat, c - &pat[0]) == 0)
-					return (1);
-			}
-		}
-		return (0);
-	}
-	return AG_ClassIsNamedGeneral(cls, pat);	/* General case */
-}
-
-/* Compare an object's class specification against the given pattern. */
-static __inline__ int
-AG_ObjectIsClass(const void *p, const char *cname)
-{
-	const AG_Object *obj = AGOBJECT(p);
-	const char *c;
-	int nwild = 0;
-
-	for (c = &cname[0]; *c != '\0'; c++) {
-		if (*c == '*')
-			nwild++;
-	}
-	if (nwild == 0) {
-		return (strncmp(obj->cls->name, cname, c - &cname[0]) == 0);
-	} else if (nwild == 1) {
-		if (pat[1] == '*') {
-			return (1);
-		}
-		for (c = &cname[0]; *c != '\0'; c++) {
-			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
-				if (c == &cname[0] ||
-				    strncmp(obj->cls->name, cname,
-				            c - &cname[0]) == 0)
-					return (1);
-			}
-		}
-		return (0);
-	}
-	return AG_ObjectIsClassGeneral(obj, cname);	/* General case */
-}
-
-/* Return the description of the superclass of a given object. */
-static __inline__ AG_ObjectClass *
-AG_ObjectSuperclass(const void *p)
-{
-	AG_ObjectClass *cls = AGOBJECT(p)->cls;
-	const char *end;
-	size_t len;
-	int i;
-
-	if ((end = strrchr(cls->name, ':')) == NULL) {
-		return (AGOBJECT(p)->cls);
-	}
-	len = (size_t)(end - &cls->name[0]);
-	for (i = 0; i < agClassCount; i++) {
-		const char *s = agClassTbl[i]->name;
-		if (strncmp(s, cls->name, len) == 0 && s[len] == '\0')
-			return (agClassTbl[i]);
-	}
-	return (NULL);
-}
+/* Legacy routines */
+void    AG_ObjectMove(void *, void *);
+#define AG_ObjectIsClass(obj,cname) AG_OfClass((obj),(cname))
 
 /*
  * Traverse an object's ancestry looking for a matching parent object.
@@ -470,7 +319,27 @@ AG_ObjectFindChild(void *pParent, const char *name)
 	AG_UnlockVFS(pObj);
 	return (cObj);
 }
+
+/* Return the description of the superclass of a given object. */
+static __inline__ AG_ObjectClass *
+AG_ObjectSuperclass(const void *p)
+{
+	AG_ObjectClass *cls = AGOBJECT(p)->cls;
+	const char *end;
+	size_t len;
+	int i;
+
+	if ((end = strrchr(cls->name, ':')) == NULL) {
+		return (AGOBJECT(p)->cls);
+	}
+	len = (size_t)(end - &cls->name[0]);
+	for (i = 0; i < agClassCount; i++) {
+		const char *s = agClassTbl[i]->name;
+		if (strncmp(s, cls->name, len) == 0 && s[len] == '\0')
+			return (agClassTbl[i]);
+	}
+	return (NULL);
+}
 __END_DECLS
 
 #include "close_code.h"
-#endif	/* _AGAR_OBJECT_H */
