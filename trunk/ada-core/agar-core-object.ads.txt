@@ -422,11 +422,6 @@ package agar.core.object is
   procedure detach (object : object_access_t);
   pragma import (c, detach, "AG_ObjectDetach");
 
-  procedure move
-    (object     : object_access_t;
-     new_parent : object_access_t);
-  pragma import (c, move, "AG_ObjectMove");
-
   procedure init
     (object : object_access_t;
      class  : class_access_t);
@@ -445,36 +440,6 @@ package agar.core.object is
      name   : cs.chars_ptr;
      size   : c.size_t) return c.int;
   pragma import (c, copy_name, "AG_ObjectCopyName");
-
-  function copy_dirname
-    (object : object_access_t;
-     name   : cs.chars_ptr;
-     size   : c.size_t) return c.int;
-  pragma import (c, copy_dirname, "AG_ObjectCopyDirname");
-
-  function copy_filename
-    (object : object_access_t;
-     name   : cs.chars_ptr;
-     size   : c.size_t) return c.int;
-  pragma import (c, copy_filename, "AG_ObjectCopyFilename");
-
-  function copy_checksum
-    (object : object_access_t;
-     algo   : checksum_alg_t;
-     buffer : cs.chars_ptr) return c.size_t;
-  pragma import (c, copy_checksum, "AG_ObjectCopyChecksum");
-
-  function copy_digest
-    (object : object_access_t;
-     size   : access c.size_t;
-     buffer : cs.chars_ptr) return c.int;
-  pragma import (c, copy_digest, "AG_ObjectCopyDigest");
-
-  function changed (object : object_access_t) return c.int;
-  pragma import (c, changed, "AG_ObjectChanged");
-
-  function changed_all (object : object_access_t) return c.int;
-  pragma import (c, changed_all, "AG_ObjectChangedAll");
 
   function root (object : object_access_t) return object_access_t;
   pragma inline (root);
@@ -508,27 +473,6 @@ package agar.core.object is
      name   : string);
   pragma inline (set_name);
  
-  procedure set_archive_path
-    (object : object_access_t;
-     path   : cs.chars_ptr);
-  pragma import (c, set_archive_path, "AG_ObjectSetArchivePath");
-
-  procedure set_archive_path
-    (object : object_access_t;
-     path   : string);
-  pragma inline (set_archive_path); 
-
-  procedure get_archive_path
-    (object : object_access_t;
-     path   : cs.chars_ptr;
-     size   : c.size_t);
-  pragma import (c, get_archive_path, "AG_ObjectGetArchivePath");
-
-  procedure set_class
-    (object : object_access_t;
-     class  : class_access_t);
-  pragma import (c, set_class, "AG_ObjectSetClass");
-
   procedure set_debug_function
     (object : object_access_t;
      func   : access procedure
@@ -538,40 +482,8 @@ package agar.core.object is
      udata  : agar.core.types.void_ptr_t);
   pragma import (c, set_debug_function, "AG_ObjectSetDebugFn");
 
-  -- XXX: what?
-  type class_access_array_t is access class_access_t;
-  function get_inherit_hier
-    (object : object_access_t;
-     hier   : access class_access_array_t;
-     num    : access c.int) return c.int;
-  pragma import (c, get_inherit_hier, "AG_ObjectGetInheritHier");
-
-  procedure move_up (object : object_access_t);
-  pragma import (c, move_up, "AG_ObjectMoveUp");
-
-  procedure move_down (object : object_access_t);
-  pragma import (c, move_down, "AG_ObjectMoveDown");
-
-  function duplicate
-    (object : object_access_t;
-     name   : cs.chars_ptr) return object_access_t;
-  pragma import (c, duplicate, "AG_ObjectDuplicate");
-
   procedure destroy (object : object_access_t);
   pragma import (c, destroy, "AG_ObjectDestroy");
-
-  procedure unlink_data_files (object : object_access_t);
-  pragma import (c, unlink_data_files, "AG_ObjectUnlinkDatafiles");
-
-  procedure set_save_prefix
-    (object : object_access_t;
-     prefix : cs.chars_ptr);
-  pragma import (c, set_save_prefix, "AG_ObjectSetSavePfx");
-
-  procedure set_save_prefix
-    (object : object_access_t;
-     prefix : string);
-  pragma inline (set_save_prefix); 
 
   -- deallocation
 
@@ -589,12 +501,6 @@ package agar.core.object is
 
   procedure free_dummy_deps (object : object_access_t);
   pragma import (c, free_dummy_deps, "AG_ObjectFreeDummyDeps");
-
-  -- XXX: what is the second parameter?
-  procedure cancel_timeouts
-    (object : object_access_t;
-     num    : c.unsigned);
-  pragma import (c, cancel_timeouts, "AG_ObjectCancelTimeouts");
 
   -- paging
 
@@ -698,9 +604,6 @@ package agar.core.object is
 
   -- deps
 
-  function resolve_deps (object : object_access_t) return c.int;
-  pragma import (c, resolve_deps, "AG_ObjectResolveDeps");
-
   function add_dep
     (object  : object_access_t;
      add     : object_access_t;
@@ -724,15 +627,4 @@ package agar.core.object is
     (object : object_access_t;
      dep    : object_access_t) return agar.core.types.uint32_t;
   pragma import (c, encode_name, "AG_ObjectEncodeName");
-
-  -- XXX: correct?
-  function edit (object : object_access_t) return object_access_t;
-  pragma import (c, edit, "AG_ObjectEdit");
-
-  procedure generate_name
-    (object : object_access_t;
-     class  : class_access_t;
-     name   : cs.chars_ptr;
-     size   : c.size_t);
-  pragma import (c, generate_name, "AG_ObjectGenName");
 
