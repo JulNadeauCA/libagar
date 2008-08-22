@@ -538,16 +538,6 @@ package agar.core.object is
      udata  : agar.core.types.void_ptr_t);
   pragma import (c, set_debug_function, "AG_ObjectSetDebugFn");
 
-  function is_class_general
-    (object  : object_access_t;
-     pattern : cs.chars_ptr) return c.int;
-  pragma import (c, is_class_general, "AG_ObjectIsClassGeneral");
-
-  function is_class_general
-    (object  : object_access_t;
-     pattern : string) return boolean;
-  pragma inline (is_class_general);
- 
   -- XXX: what?
   type class_access_array_t is access class_access_t;
   function get_inherit_hier
