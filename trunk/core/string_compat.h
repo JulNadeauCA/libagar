@@ -1,16 +1,6 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_CORE_STRING_COMPAT_H_
-#define _AGAR_CORE_STRING_COMPAT_H_
-
-#ifdef _AGAR_INTERNAL
-#include <config/_mk_have_sys_types_h.h>
-#include <config/have_bounded_attribute.h>
-#else
 #include <agar/config/_mk_have_sys_types_h.h>
-#include <agar/config/have_bounded_attribute.h>
-#endif
-
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -187,4 +177,3 @@ __END_DECLS
 #endif
 
 #include "close_code.h"
-#endif /* _AGAR_CORE_STRING_COMPAT_H_ */

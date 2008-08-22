@@ -3,15 +3,9 @@
 #ifndef _AGAR_DEV_DEV_H_
 #define _AGAR_DEV_DEV_H_
 
-#ifdef _AGAR_INTERNAL
-#include <config/network.h>
-#include <config/threads.h>
-#include <config/have_jpeg.h>
-#else
 #include <agar/config/network.h>
 #include <agar/config/threads.h>
 #include <agar/config/have_jpeg.h>
-#endif
 
 #include "begin_code.h"
 

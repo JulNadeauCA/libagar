@@ -5,18 +5,10 @@
  * 100% Public Domain
  */
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_sha1.h>
-#include <config/_mk_have_sys_types_h.h>
-#include <config/have_bounded_attribute.h>
-#else
 #include <agar/config/have_sha1.h>
-#include <agar/config/_mk_have_sys_types_h.h>
-#include <agar/config/have_bounded_attribute.h>
-#endif
-
 #ifdef HAVE_SHA1
 
+#include <agar/config/_mk_have_sys_types_h.h>
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -38,6 +30,7 @@ typedef struct {
     Uint8 buffer[SHA1_BLOCK_LENGTH];
 } SHA1_CTX;
 
+#include <agar/config/have_bounded_attribute.h>
 #ifndef BOUNDED_ATTRIBUTE
 # ifdef HAVE_BOUNDED_ATTRIBUTE
 #  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))

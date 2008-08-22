@@ -1,7 +1,5 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_TIMEOUT_H_
-#define _AGAR_TIMEOUT_H_
 #include "begin_code.h"
 
 typedef struct ag_timeout {
@@ -51,4 +49,3 @@ void	AG_UnlockTimeouts(void *);
 __END_DECLS
 
 #include "close_code.h"
-#endif /* _AGAR_TIMEOUT_H_ */

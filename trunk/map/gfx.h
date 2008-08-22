@@ -1,12 +1,7 @@
 /*	Public domain	*/
 
-#ifdef _AGAR_INTERNAL
-#include <map/gfx_transform.h>
-#include <config/have_opengl.h>
-#else
 #include <agar/map/gfx_transform.h>
 #include <agar/config/have_opengl.h>
-#endif
 
 #include "begin_code.h"
 

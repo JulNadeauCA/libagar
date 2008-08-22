@@ -3,11 +3,7 @@
 #ifndef _AGAR_LOADER_TTF_H_
 #define _AGAR_LOADER_TTF_H_
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_freetype.h>
-#else
 #include <agar/config/have_freetype.h>
-#endif
 
 #ifdef HAVE_FREETYPE
 

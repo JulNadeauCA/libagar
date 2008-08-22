@@ -4,9 +4,9 @@
 #define _AGAR_MAP_MAPEDIT_H_
 
 #ifdef _AGAR_INTERNAL
-#include <map/mapview.h>
-#include <gui/window.h>
-#include <gui/button.h>
+# include <map/mapview.h>
+# include <gui/window.h>
+# include <gui/button.h>
 #endif
 
 #include "begin_code.h"

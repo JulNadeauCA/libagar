@@ -1,13 +1,6 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_PROP_H_
-#define _AGAR_PROP_H_
-
-#ifdef _AGAR_INTERNAL
-#include <config/have_long_double.h>
-#else
 #include <agar/config/have_long_double.h>
-#endif
 
 #include "begin_code.h"
 
@@ -388,4 +381,3 @@ static __inline__ void *AG_GetPointer(void *p, const char *key) {
 __END_DECLS
 
 #include "close_code.h"
-#endif /* _AGAR_PROP_H_ */

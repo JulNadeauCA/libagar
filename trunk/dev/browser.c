@@ -29,7 +29,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/timeout.h>
 
 #include <gui/window.h>
 #include <gui/box.h>

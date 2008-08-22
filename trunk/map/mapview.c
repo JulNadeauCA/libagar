@@ -94,7 +94,7 @@ void
 MAP_ViewControl(MAP_View *mv, const char *slot, void *obj)
 {
 #ifdef DEBUG
-	if (!AG_ObjectIsClass(obj, "MAP_Actor:*"))
+	if (!AG_OfClass(obj, "MAP_Actor:*"))
 		AG_FatalError("MAP_ViewControl: %s is not a MAP_Actor",
 		    OBJECT(obj)->name);
 #endif

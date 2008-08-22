@@ -3,11 +3,7 @@
 #ifndef _AGAR_WIDGET_TEXT_H_
 #define _AGAR_WIDGET_TEXT_H_
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_opengl.h>
-#else
 #include <agar/config/have_opengl.h>
-#endif
 
 #include "begin_code.h"
 

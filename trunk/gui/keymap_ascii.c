@@ -29,7 +29,6 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#include <core/prop.h>
 
 #include "widget.h"
 #include "editable.h"

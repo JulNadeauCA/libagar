@@ -5,12 +5,7 @@
 
 #ifdef THREADS
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_pthreads.h>
-#else
 #include <agar/config/have_pthreads.h>
-#endif
-
 #ifdef HAVE_PTHREADS
 #include <pthread.h>
 #include <signal.h>

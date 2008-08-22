@@ -3,15 +3,9 @@
 #ifndef _AGAR_WIDGET_CONSOLE_H_
 #define _AGAR_WIDGET_CONSOLE_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#include <gui/scrollbar.h>
-#include <gui/text.h>
-#else
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/text.h>
-#endif
 
 #include "begin_code.h"
 

@@ -23,18 +23,10 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_rmd160.h>
-#include <config/_mk_have_sys_types_h.h>
-#include <config/have_bounded_attribute.h>
-#else
 #include <agar/config/have_rmd160.h>
-#include <agar/config/_mk_have_sys_types_h.h>
-#include <agar/config/have_bounded_attribute.h>
-#endif
-
 #ifdef HAVE_RMD160
 
+#include <agar/config/_mk_have_sys_types_h.h>
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -56,6 +48,7 @@ typedef struct RMD160Context {
 	Uint8 buffer[RMD160_BLOCK_LENGTH];	/* input buffer */
 } RMD160_CTX;
 
+#include <agar/config/have_bounded_attribute.h>
 #ifndef BOUNDED_ATTRIBUTE
 # ifdef HAVE_BOUNDED_ATTRIBUTE
 #  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))

@@ -3,17 +3,10 @@
 #ifndef _AGAR_WIDGET_H_
 #define _AGAR_WIDGET_H_
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_opengl.h>
-#include <gui/colors.h>
-#include <gui/view.h>
-#include <gui/style.h>
-#else
 #include <agar/config/have_opengl.h>
 #include <agar/gui/colors.h>
 #include <agar/gui/view.h>
 #include <agar/gui/style.h>
-#endif
 
 #include "begin_code.h"
 
@@ -163,7 +156,7 @@ typedef struct ag_widget {
 #define STYLE(p)                        AGSTYLE(p)
 #define WIDTH(p)			AGWIDGET(p)->w
 #define HEIGHT(p)			AGWIDGET(p)->h
-#endif /* _AGAR_INTERNAL or _USE_AGAR_GUI */
+#endif
 
 #define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
 #define AG_WidgetDisabled(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)

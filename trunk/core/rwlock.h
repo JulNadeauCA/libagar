@@ -1,11 +1,6 @@
 /*	Public domain	*/
 
-#ifdef _AGAR_INTERNAL
-#include <config/threads.h>
-#else
 #include <agar/config/threads.h>
-#endif
-
 #ifdef THREADS
 
 typedef struct {

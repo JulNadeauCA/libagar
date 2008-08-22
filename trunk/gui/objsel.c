@@ -74,7 +74,7 @@ FindObjects(AG_ObjectSelector *os, AG_Tlist *tl, AG_Object *pob, int depth)
 	AG_TlistItem *it;
 	int nosel = 0;
 	
-	if (!AG_ObjectIsClass(pob, os->type_mask)) {
+	if (!AG_OfClass(pob, os->type_mask)) {
 		if (!TAILQ_EMPTY(&pob->children)) {
 			nosel++;
 		} else {

@@ -3,13 +3,8 @@
 #ifndef _AGAR_WIDGET_TABLEVIEW_H_
 #define _AGAR_WIDGET_TABLEVIEW_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/label.h>
-#include <gui/scrollbar.h>
-#else
 #include <agar/gui/label.h>
 #include <agar/gui/scrollbar.h>
-#endif
 
 #include "begin_code.h"
 

@@ -3,11 +3,7 @@
 #ifndef _AGAR_WIDGET_UNITS_H_
 #define _AGAR_WIDGET_UNITS_H_
 
-#ifdef _AGAR_INTERNAL
-#include <config/historical_units.h>
-#else
 #include <agar/config/historical_units.h>
-#endif
 
 #include "begin_code.h"
 

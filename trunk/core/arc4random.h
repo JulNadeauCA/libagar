@@ -1,12 +1,7 @@
 /*	Public domain	*/
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_arc4random.h>
-#include <config/_mk_have_sys_types_h.h>
-#else
 #include <agar/config/have_arc4random.h>
 #include <agar/config/_mk_have_sys_types_h.h>
-#endif
 
 #ifndef HAVE_ARC4RANDOM
 # include <SDL_types.h>

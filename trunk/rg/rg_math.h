@@ -3,11 +3,7 @@
 #ifndef _AGAR_RG_MATH_H_
 #define _AGAR_RG_MATH_H_
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_math.h>
-#else
 #include <agar/config/have_math.h>
-#endif
 #ifdef HAVE_MATH
 #include <math.h>
 #endif

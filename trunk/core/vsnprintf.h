@@ -1,12 +1,7 @@
 /*	Public domain	*/
 
-#ifdef _AGAR_INTERNAL
-#include <config/have_vsnprintf.h>
-#include <config/_mk_have_sys_types_h.h>
-#else
-#include <agar/config/have_vsnprintf.h>
 #include <agar/config/_mk_have_sys_types_h.h>
-#endif
+#include <agar/config/have_vsnprintf.h>
 
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>

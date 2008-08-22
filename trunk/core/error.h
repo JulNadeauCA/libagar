@@ -1,12 +1,11 @@
 /*	Public domain	*/
 
-#ifdef _AGAR_INTERNAL
-#include <config/free_null_is_a_noop.h>
-#else
 #include <agar/config/free_null_is_a_noop.h>
-#endif
+#include <agar/config/_mk_have_stdlib_h.h>
 
+#ifdef _MK_HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 
 #include "begin_code.h"
 

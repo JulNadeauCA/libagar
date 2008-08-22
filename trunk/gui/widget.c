@@ -107,7 +107,7 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 	if ((s = strchr(node_name, '/')) != NULL) {
 		*s = '\0';
 	}
-	if (AG_ObjectIsClass(parent, "AG_Display:*")) {
+	if (AG_OfClass(parent, "AG_Display:*")) {
 		AG_Display *disp = (AG_Display *)parent;
 		AG_Window *win;
 
@@ -125,7 +125,7 @@ WidgetFindPath(const AG_Object *parent, const char *name)
 			}
 			return (win);
 		}
-	} else if (AG_ObjectIsClass(parent, "AG_Widget:AG_Notebook:*")) {
+	} else if (AG_OfClass(parent, "AG_Widget:AG_Notebook:*")) {
 		AG_Notebook *book = (AG_Notebook *)parent;
 		AG_NotebookTab *tab;
 		/*
@@ -1226,12 +1226,12 @@ AG_ParentWindow(void *p)
 	AG_Widget *wid = p;
 	AG_Widget *pwid = wid;
 
-	if (AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*"))
+	if (AG_OfClass(wid, "AG_Widget:AG_Window:*"))
 		return ((AG_Window *)wid);
 
 	AG_LockVFS(agView);
 	while ((pwid = OBJECT(pwid)->parent) != NULL) {
-		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*"))
+		if (AG_OfClass(pwid, "AG_Widget:AG_Window:*"))
 			break;
 	}
 	AG_UnlockVFS(agView);
@@ -1267,7 +1267,7 @@ AG_WidgetFocus(void *p)
 
 	/* Set the focus flag on the widget and its parents. */
 	do {
-		if (AG_ObjectIsClass(pwid, "AG_Widget:AG_Window:*"))
+		if (AG_OfClass(pwid, "AG_Widget:AG_Window:*"))
 			break;
 #if 0
 		/* XXX */
@@ -1758,7 +1758,7 @@ AG_WidgetFindFocused(void *p)
 	AG_LockVFS(agView);
 	AG_ObjectLock(wid);
 
-	if (!AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*") &&
+	if (!AG_OfClass(wid, "AG_Widget:AG_Window:*") &&
 	    (wid->flags & AG_WIDGET_FOCUSED) == 0) {
 		goto fail;
 	}
@@ -1910,7 +1910,7 @@ FindAtPoint(AG_Widget *parent, const char *type, int x, int y)
 		if ((p = FindAtPoint(chld, type, x, y)) != NULL)
 			return (p);
 	}
-	if (AG_ObjectIsClass(parent, type) &&
+	if (AG_OfClass(parent, type) &&
 	    AG_WidgetArea(parent, x, y)) {
 		return (parent);
 	}
@@ -1948,7 +1948,7 @@ FindRectOverlap(AG_Widget *parent, const char *type, int x, int y, int w, int h)
 		if ((p = FindRectOverlap(chld, type, x,y,w,h)) != NULL)
 			return (p);
 	}
-	if (AG_ObjectIsClass(parent, type) &&
+	if (AG_OfClass(parent, type) &&
 	    AG_WidgetRectIntersect(parent, x,y,w,h)) {
 		return (parent);
 	}

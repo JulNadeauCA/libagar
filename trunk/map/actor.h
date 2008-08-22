@@ -3,11 +3,7 @@
 #ifndef _AGAR_MAP_ACTOR_H_
 #define _AGAR_MAP_ACTOR_H_
 
-#ifdef _AGAR_INTERNAL
-#include <map/map.h>
-#else
 #include <agar/map/map.h>
-#endif
 
 #include "begin_code.h"
 

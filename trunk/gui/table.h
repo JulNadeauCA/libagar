@@ -3,13 +3,8 @@
 #ifndef _AGAR_WIDGET_TABLE_H_
 #define _AGAR_WIDGET_TABLE_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/scrollbar.h>
-#include <gui/menu.h>
-#else
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/menu.h>
-#endif
 
 #include "begin_code.h"
 

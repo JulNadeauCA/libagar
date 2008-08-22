@@ -3,21 +3,12 @@
 #ifndef _AGAR_VG_VIEW_H_
 #define _AGAR_VG_VIEW_H_
 
-#ifdef _AGAR_INTERNAL
-# include <gui/widget.h>
-# include <gui/button.h>
-# include <gui/menu.h>
-# include <gui/text_cache.h>
-# include <vg/vg.h>
-# include <vg/vg_tool.h>
-#else
-# include <agar/gui/widget.h>
-# include <agar/gui/button.h>
-# include <agar/gui/menu.h>
-# include <agar/gui/text_cache.h>
-# include <agar/vg/vg.h>
-# include <agar/vg/vg_tool.h>
-#endif
+#include <agar/gui/widget.h>
+#include <agar/gui/button.h>
+#include <agar/gui/menu.h>
+#include <agar/gui/text_cache.h>
+#include <agar/vg/vg.h>
+#include <agar/vg/vg_tool.h>
 
 #define VG_GRIDS_MAX 4
 

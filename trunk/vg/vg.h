@@ -42,13 +42,8 @@ struct vg_view;
 struct vg_node;
 struct ag_static_icon;
 
-#ifdef _AGAR_INTERNAL
-# include <vg/vg_snap.h>
-# include <vg/vg_ortho.h>
-#else
-# include <agar/vg/vg_snap.h>
-# include <agar/vg/vg_ortho.h>
-#endif
+#include <agar/vg/vg_snap.h>
+#include <agar/vg/vg_ortho.h>
 
 typedef struct vg_node_ops {
 	const char            *name;
@@ -136,11 +131,7 @@ typedef struct vg {
 extern const VG_NodeOps **vgNodeClasses;
 extern Uint               vgNodeClassCount;
 
-#ifdef _AGAR_INTERNAL
-# include <vg/vg_math.h>
-#else
-# include <agar/vg/vg_math.h>
-#endif
+#include <agar/vg/vg_math.h>
 
 #define VG_FOREACH_NODE(node, vg, ntype)				\
 	for((node) = (struct ntype *)AG_TAILQ_FIRST(&(vg)->nodes);	\
@@ -478,21 +469,12 @@ VG_SetPosition(void *pNode, VG_Vector v)
 }
 __END_DECLS
 
-#ifdef _AGAR_INTERNAL
-# include <vg/vg_point.h>
-# include <vg/vg_line.h>
-# include <vg/vg_circle.h>
-# include <vg/vg_arc.h>
-# include <vg/vg_text.h>
-# include <vg/vg_polygon.h>
-#else
-# include <agar/vg/vg_point.h>
-# include <agar/vg/vg_line.h>
-# include <agar/vg/vg_circle.h>
-# include <agar/vg/vg_arc.h>
-# include <agar/vg/vg_text.h>
-# include <agar/vg/vg_polygon.h>
-#endif
+#include <agar/vg/vg_point.h>
+#include <agar/vg/vg_line.h>
+#include <agar/vg/vg_circle.h>
+#include <agar/vg/vg_arc.h>
+#include <agar/vg/vg_text.h>
+#include <agar/vg/vg_polygon.h>
 
 #include "close_code.h"
 #endif /* _AGAR_VG_H_ */

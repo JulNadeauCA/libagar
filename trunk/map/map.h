@@ -15,15 +15,9 @@
 #define MAP_NODE_ITEMS_MAX	32767
 #define MAP_ITEM_MAXMASKS	16384
 
-#ifdef _AGAR_INTERNAL
-#include <gui/view.h>
-#include <map/nodemask.h>
-#include <rg/tileset.h>
-#else
 #include <agar/gui/view.h>
 #include <agar/map/nodemask.h>
 #include <agar/rg/tileset.h>
-#endif
 
 #include "begin_code.h"
 

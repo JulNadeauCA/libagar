@@ -3,21 +3,11 @@
 #ifndef _AGAR_RG_TILEVIEW_H_
 #define _AGAR_RG_TILEVIEW_H_
 
-#ifdef _AGAR_INTERNAL
-#include <gui/widget.h>
-#include <gui/menu.h>
-#include <gui/toolbar.h>
-#include <gui/box.h>
-#include <rg/tileset.h>
-#include <core/timeout.h>
-#else
 #include <agar/gui/widget.h>
 #include <agar/gui/menu.h>
 #include <agar/gui/toolbar.h>
 #include <agar/gui/box.h>
 #include <agar/rg/tileset.h>
-#include <agar/core/timeout.h>
-#endif
 
 #include "begin_code.h"
 

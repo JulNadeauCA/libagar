@@ -3,17 +3,10 @@
 #ifndef _AGAR_CORE_BYTESWAP_H_
 #define _AGAR_CORE_BYTESWAP_H_
 
-#ifdef _AGAR_INTERNAL
-# include <config/have_64bit.h>
-# include <config/have_long_double.h>
-# include <config/_mk_big_endian.h>
-# include <config/_mk_little_endian.h>
-#else
-# include <agar/config/have_64bit.h>
-# include <agar/config/have_long_double.h>
-# include <agar/config/_mk_big_endian.h>
-# include <agar/config/_mk_little_endian.h>
-#endif
+#include <agar/config/have_64bit.h>
+#include <agar/config/have_long_double.h>
+#include <agar/config/_mk_big_endian.h>
+#include <agar/config/_mk_little_endian.h>
 
 #include "begin_code.h"
 

@@ -4,11 +4,7 @@
  * Serialization of integers.
  */
 
-#ifdef _AGAR_INTERNAL
-# include <core/byteswap.h>
-#else
-# include <agar/core/byteswap.h>
-#endif
+#include <agar/core/byteswap.h>
 
 #include "begin_code.h"
 __BEGIN_DECLS
