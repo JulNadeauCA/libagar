@@ -258,7 +258,7 @@ static AG_DSO *
 LoadDSO_DLOPEN(const char *path)
 {
 	AG_DSO_Generic *d;
-	int flags = RTLD_LAZY|RTLD_GLOBAL;
+	int flags = RTLD_NOW|RTLD_GLOBAL;
 	
 	d = Malloc(sizeof(AG_DSO_Generic));
 # if defined(_AIX)
