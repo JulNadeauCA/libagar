@@ -10,3 +10,4 @@
 20080824 code: added agar.core.dso and agar.core.limits.
 20080824 code: updated class_t.
 20080824 version: agar-core-ada 0.12
+20080824 code: updated object/class API.

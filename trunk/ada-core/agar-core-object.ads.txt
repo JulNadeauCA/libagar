@@ -634,3 +634,63 @@ package agar.core.object is
      dep    : object_access_t) return agar.core.types.uint32_t;
   pragma import (c, encode_name, "AG_ObjectEncodeName");
 
+  -- class
+
+  procedure register_class (class_info : class_access_t);
+  pragma import (c, register_class, "AG_RegisterClass");
+
+  procedure unregister_class (class_info : class_access_t);
+  pragma import (c, unregister_class, "AG_UnregisterClass");
+
+  procedure register_namespace
+    (name   : cs.chars_ptr;
+     prefix : cs.chars_ptr;
+     url    : cs.chars_ptr);
+  pragma import (c, register_namespace, "AG_RegisterNamespace");
+
+  procedure register_namespace
+    (name   : string;
+     prefix : string;
+     url    : string);
+  pragma inline (register_namespace);
+
+  procedure unregister_namespace (name : cs.chars_ptr);
+  pragma import (c, unregister_namespace, "AG_UnregisterNamespace");
+
+  procedure unregister_namespace (name : string);
+  pragma inline (unregister_namespace);
+
+  function lookup_class (spec : cs.chars_ptr) return class_access_t;
+  pragma import (c, lookup_class, "AG_LookupClass");
+
+  function lookup_class (spec : string) return class_access_t;
+  pragma inline (lookup_class);
+
+  function load_class (spec : cs.chars_ptr) return class_access_t;
+  pragma import (c, load_class, "AG_LoadClass");
+
+  function load_class (spec : string) return class_access_t;
+  pragma inline (load_class);
+
+  procedure register_module_directory (path : cs.chars_ptr);
+  pragma import (c, register_module_directory, "AG_RegisterModuleDirectory");
+
+  procedure register_module_directory (path : string);
+  pragma inline (register_module_directory);
+
+  procedure unregister_module_directory (path : cs.chars_ptr);
+  pragma import (c, unregister_module_directory, "AG_UnregisterModuleDirectory");
+
+  procedure unregister_module_directory (path : string);
+  pragma inline (unregister_module_directory);
+
+  function of_class
+    (object  : object_access_t;
+     pattern : cs.chars_ptr) return c.int;
+  pragma import (c, of_class, "agar_object_of_class");
+
+  function of_class
+    (object  : object_access_t;
+     pattern : string) return boolean;
+  pragma inline (of_class);
+
