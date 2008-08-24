@@ -158,4 +158,60 @@ package body agar.core.object is
        name    => cs.to_chars_ptr (ca_name'unchecked_access));
   end find;
 
+  procedure register_namespace
+    (name   : string;
+     prefix : string;
+     url    : string)
+  is
+    ca_name : aliased c.char_array := c.to_c (name);
+    ca_pref : aliased c.char_array := c.to_c (prefix);
+    ca_url  : aliased c.char_array := c.to_c (url);
+  begin
+    register_namespace
+      (name   => cs.to_chars_ptr (ca_name'unchecked_access),
+       prefix => cs.to_chars_ptr (ca_pref'unchecked_access),
+       url    => cs.to_chars_ptr (ca_url'unchecked_access));
+  end register_namespace;
+
+  procedure unregister_namespace (name : string) is
+    ca_name : aliased c.char_array := c.to_c (name);
+  begin
+    unregister_namespace (cs.to_chars_ptr (ca_name'unchecked_access));
+  end unregister_namespace;
+
+  function lookup_class (spec : string) return class_access_t is
+    ca_spec : aliased c.char_array := c.to_c (spec);
+  begin
+    return lookup_class (cs.to_chars_ptr (ca_spec'unchecked_access));
+  end lookup_class;
+
+  function load_class (spec : string) return class_access_t is
+    ca_spec : aliased c.char_array := c.to_c (spec);
+  begin
+    return load_class (cs.to_chars_ptr (ca_spec'unchecked_access));
+  end load_class;
+
+  procedure register_module_directory (path : string) is
+    ca_path : aliased c.char_array := c.to_c (path);
+  begin
+    register_module_directory (cs.to_chars_ptr (ca_path'unchecked_access));
+  end register_module_directory;
+
+  procedure unregister_module_directory (path : string) is
+    ca_path : aliased c.char_array := c.to_c (path);
+  begin
+    unregister_module_directory (cs.to_chars_ptr (ca_path'unchecked_access));
+  end unregister_module_directory;
+
+  function of_class
+    (object  : object_access_t;
+     pattern : string) return boolean
+  is
+    ca_pattern : aliased c.char_array := c.to_c (pattern);
+  begin
+    return of_class
+      (object  => object,
+       pattern => cs.to_chars_ptr (ca_pattern'unchecked_access)) = 0;
+  end of_class;
+
 end agar.core.object;
