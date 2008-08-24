@@ -1,9 +1,12 @@
 ada_size.ali
 ../agar-core-config.ali
 ../agar-core-datasource.ali
+../agar-core-dso.ali
 ../agar-core-error.ali
 ../agar-core-event.ali
+../agar-core-limits.ali
 ../agar-core-object.ali
+../agar-core-slist.ali
 ../agar-core-tail_queue.ali
 ../agar-core-threads.ali
 ../agar-core-timeout.ali

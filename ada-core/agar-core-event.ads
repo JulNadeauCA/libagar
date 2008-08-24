@@ -13,13 +13,13 @@ package agar.core.event is
     (entry_type => event_access_t);
 
   -- constants
-  event_args_max : constant c.int := 16;
-  event_name_max : constant c.int := 32;
+  event_args_max : constant := 16;
+  event_name_max : constant := 32;
 
   -- flags
-  event_async     : constant c.unsigned := 16#01#;
-  event_propogate : constant c.unsigned := 16#02#;
-  event_scheduled : constant c.unsigned := 16#04#;
+  event_async     : constant := 16#01#;
+  event_propogate : constant := 16#02#;
+  event_scheduled : constant := 16#04#;
 
   type arg_type_t is (
     EVARG_POINTER,

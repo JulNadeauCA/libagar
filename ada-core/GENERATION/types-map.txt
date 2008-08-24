@@ -4,6 +4,12 @@ agar.core.datasource.datasource_t:struct ag_data_source
 agar.core.datasource.io_status_t:AG_IOStatus
 agar.core.datasource.io_status_t:enum ag_io_status
 agar.core.datasource.seek_mode_t:enum ag_seek_mode
+agar.core.dso.dso_access_t:AG_DSO *
+agar.core.dso.dso_t:AG_DSO
+agar.core.dso.dso_t:struct ag_dso
+agar.core.dso.sym_access_t:AG_DSOSym *
+agar.core.dso.sym_t:AG_DSOSym
+agar.core.dso.sym_t:struct ag_dso_sym
 agar.core.event.arg_t:AG_EvArg
 agar.core.event.arg_t:union evarg
 agar.core.event.arg_type_t:enum ag_evarg_type

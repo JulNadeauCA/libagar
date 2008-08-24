@@ -2,6 +2,7 @@ with ada.text_io;
 with ada.command_line;
 
 with agar.core.datasource;
+with agar.core.dso;
 with agar.core.event;
 with agar.core.object;
 with agar.core.threads;
@@ -20,6 +21,10 @@ procedure ada_size is
   agar_core_datasource_datasource_t : aliased string := "agar.core.datasource.datasource_t";
   agar_core_datasource_io_status_t : aliased string := "agar.core.datasource.io_status_t";
   agar_core_datasource_seek_mode_t : aliased string := "agar.core.datasource.seek_mode_t";
+  agar_core_dso_dso_access_t : aliased string := "agar.core.dso.dso_access_t";
+  agar_core_dso_dso_t : aliased string := "agar.core.dso.dso_t";
+  agar_core_dso_sym_access_t : aliased string := "agar.core.dso.sym_access_t";
+  agar_core_dso_sym_t : aliased string := "agar.core.dso.sym_t";
   agar_core_event_arg_t : aliased string := "agar.core.event.arg_t";
   agar_core_event_arg_type_t : aliased string := "agar.core.event.arg_type_t";
   agar_core_event_event_t : aliased string := "agar.core.event.event_t";
@@ -57,6 +62,10 @@ procedure ada_size is
     (agar_core_datasource_datasource_t'access, agar.core.datasource.datasource_t'size),
     (agar_core_datasource_io_status_t'access, agar.core.datasource.io_status_t'size),
     (agar_core_datasource_seek_mode_t'access, agar.core.datasource.seek_mode_t'size),
+    (agar_core_dso_dso_access_t'access, agar.core.dso.dso_access_t'size),
+    (agar_core_dso_dso_t'access, agar.core.dso.dso_t'size),
+    (agar_core_dso_sym_access_t'access, agar.core.dso.sym_access_t'size),
+    (agar_core_dso_sym_t'access, agar.core.dso.sym_t'size),
     (agar_core_event_arg_t'access, agar.core.event.arg_t'size),
     (agar_core_event_arg_type_t'access, agar.core.event.arg_type_t'size),
     (agar_core_event_event_t'access, agar.core.event.event_t'size),

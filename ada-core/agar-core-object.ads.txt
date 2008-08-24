@@ -35,29 +35,29 @@ package agar.core.object is
   use type c.unsigned;
 
   -- prop constants
-  prop_key_max  : constant c.unsigned := 64;
-  prop_path_max : constant c.unsigned := 1024 + 1 + prop_key_max;
+  prop_key_max  : constant := 64;
+  prop_path_max : constant := 1024 + 1 + prop_key_max;
 
   -- object constants
-  object_type_max   : constant c.unsigned := 128;
-  object_name_max   : constant c.unsigned := 128;
-  object_path_max   : constant c.unsigned := 1024;
-  object_digest_max : constant c.unsigned := 170;
+  object_type_max   : constant := 128;
+  object_name_max   : constant := 128;
+  object_path_max   : constant := 1024;
+  object_digest_max : constant := 170;
 
   -- object flags
-  object_reload_props   : constant c.unsigned := 16#0001#;
-  object_non_persistent : constant c.unsigned := 16#0002#;
-  object_indestructible : constant c.unsigned := 16#0004#;
-  object_resident       : constant c.unsigned := 16#0008#;
-  object_preserve_deps  : constant c.unsigned := 16#0010#;
-  object_static         : constant c.unsigned := 16#0020#;
-  object_readonly       : constant c.unsigned := 16#0040#;
-  object_was_resident   : constant c.unsigned := 16#0080#;
-  object_reopen_onload  : constant c.unsigned := 16#0200#;
-  object_remain_data    : constant c.unsigned := 16#0400#;
-  object_debug          : constant c.unsigned := 16#0800#;
-  object_name_onattach  : constant c.unsigned := 16#1000#;
-  object_saved_flags    : constant c.unsigned := 16#2000#;
+  object_reload_props   : constant := 16#0001#;
+  object_non_persistent : constant := 16#0002#;
+  object_indestructible : constant := 16#0004#;
+  object_resident       : constant := 16#0008#;
+  object_preserve_deps  : constant := 16#0010#;
+  object_static         : constant := 16#0020#;
+  object_readonly       : constant := 16#0040#;
+  object_was_resident   : constant := 16#0080#;
+  object_reopen_onload  : constant := 16#0200#;
+  object_remain_data    : constant := 16#0400#;
+  object_debug          : constant := 16#0800#;
+  object_name_onattach  : constant := 16#1000#;
+  object_saved_flags    : constant := 16#2000#;
 
   -- property type
   type prop_type_t is (
@@ -351,9 +351,14 @@ package agar.core.object is
    for checksum_alg_t'size use c.unsigned'size;
   pragma convention (c, checksum_alg_t);
 
+  type class_name_t is array (1 .. object_type_max) of aliased c.char;
+  type class_libs_t is array (1 .. object_type_max) of aliased c.char;
+  pragma convention (c, class_name_t);
+  pragma convention (c, class_libs_t);
+
   -- Generic object operation vector
   type class_t is record
-    name    : cs.chars_ptr;
+    name    : class_name_t;
     size    : c.size_t;
     ver     : agar.core.version.version_t;
     init    : access procedure (ptr : agar.core.types.void_ptr_t);
@@ -368,6 +373,7 @@ package agar.core.object is
        data_source : agar.core.datasource.datasource_access_t) return c.int;
     edit    : access function
       (ptr : agar.core.types.void_ptr_t) return agar.core.types.void_ptr_t;
+    libs    : class_libs_t;
   end record;
   type class_access_t is access all class_t;
   pragma convention (c, class_access_t);
