@@ -694,3 +694,6 @@ package agar.core.object is
      pattern : string) return boolean;
   pragma inline (of_class);
 
+  function superclass (object : object_access_t) return class_access_t;
+  pragma import (c, superclass, "agar_object_superclass");
+
