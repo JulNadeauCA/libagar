@@ -4,8 +4,8 @@ with agar.core.types;
 package agar.core.version is
 
   use type c.unsigned;
-  version_name_max : constant c.unsigned := 48;
-  version_max      : constant c.unsigned := version_name_max + 8;
+  version_name_max : constant := 48;
+  version_max      : constant := version_name_max + 8;
 
   type version_t is record
     major : agar.core.types.uint32_t;

@@ -1,0 +1,2 @@
+agar-core-limits.ads: agar-core-limits.sh chk-limits
+	./agar-core-limits.sh > agar-core-limits.ads.tmp && mv agar-core-limits.ads.tmp agar-core-limits.ads

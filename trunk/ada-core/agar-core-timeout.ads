@@ -8,8 +8,8 @@ package agar.core.timeout is
   pragma convention (c, timeout_access_t);
 
   -- constants
-  cancel_ondetach : constant c.unsigned := 16#01#;
-  cancel_onload   : constant c.unsigned := 16#02#;
+  cancel_ondetach : constant := 16#01#;
+  cancel_onload   : constant := 16#02#;
 
   -- queue
   package timeout_queue is new agar.core.tail_queue

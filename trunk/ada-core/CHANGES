@@ -6,3 +6,7 @@
 20080821 code: more ada-typed functions.
 20080821 code: init_core -> init
 20080821 code: added slist generic for use in gui bindings.
+20080822 code: removed internal functions from agar.core.object.
+20080824 code: added agar.core.dso and agar.core.limits.
+20080824 code: updated class_t.
+20080824 version: agar-core-ada 0.12

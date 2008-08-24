@@ -4,20 +4,22 @@ default: all
 
 all:\
 UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o \
-UNIT_TESTS/c_size UNIT_TESTS/c_size.o agar-core-ada-conf agar-core-ada-conf.o \
-agar-core-ada.a agar-core-config.ali agar-core-config.o \
-agar-core-datasource.ali agar-core-datasource.o agar-core-error.ali \
-agar-core-error.o agar-core-event.ali agar-core-event.o agar-core-object.ali \
+UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_dso.o agar-core-ada-conf \
+agar-core-ada-conf.o agar-core-ada.a agar-core-config.ali agar-core-config.o \
+agar-core-datasource.ali agar-core-datasource.o agar-core-dso.ali \
+agar-core-dso.o agar-core-error.ali agar-core-error.o agar-core-event.ali \
+agar-core-event.o agar-core-limits.ali agar-core-limits.o agar-core-object.ali \
 agar-core-object.o agar-core-slist.ali agar-core-slist.o \
 agar-core-tail_queue.ali agar-core-tail_queue.o agar-core-threads.ali \
 agar-core-threads.o agar-core-timeout.ali agar-core-timeout.o \
 agar-core-types.ali agar-core-types.o agar-core-version.ali agar-core-version.o \
-agar-core.ali agar-core.o agar.ali agar.o chk-debug chk-debug.o chk-lockdebug \
-chk-lockdebug.o chk-off_t chk-off_t.o chk-threads chk-threads.o ctxt/bindir.o \
-ctxt/ctxt.a ctxt/dlibdir.o ctxt/incdir.o ctxt/repos.o ctxt/slibdir.o \
-ctxt/version.o deinstaller deinstaller.o inst-check inst-check.o inst-copy \
-inst-copy.o inst-dir inst-dir.o inst-link inst-link.o install_core.o \
-install_error.o installer installer.o instchk instchk.o insthier.o
+agar-core.ali agar-core.o agar.ali agar.o chk-debug chk-debug.o chk-limits \
+chk-limits.o chk-lockdebug chk-lockdebug.o chk-off_t chk-off_t.o chk-threads \
+chk-threads.o ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.o ctxt/incdir.o \
+ctxt/repos.o ctxt/slibdir.o ctxt/version.o deinstaller deinstaller.o inst-check \
+inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o \
+install_core.o install_error.o installer installer.o instchk instchk.o \
+insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
@@ -84,15 +86,16 @@ sysinfo_clean \
 
 UNIT_TESTS/ada_size:\
 ada-bind ada-link UNIT_TESTS/ada_size.ald UNIT_TESTS/ada_size.ali \
-agar-core-config.ali agar-core-datasource.ali agar-core-error.ali \
-agar-core-event.ali agar-core-object.ali agar-core-tail_queue.ali \
+agar-core-config.ali agar-core-datasource.ali agar-core-dso.ali \
+agar-core-error.ali agar-core-event.ali agar-core-limits.ali \
+agar-core-object.ali agar-core-slist.ali agar-core-tail_queue.ali \
 agar-core-threads.ali agar-core-timeout.ali agar-core-types.ali \
 agar-core-version.ali agar-core.ali agar.ali
 	./ada-bind UNIT_TESTS/ada_size.ali
 	./ada-link UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali
 
 UNIT_TESTS/ada_size.ali:\
-ada-compile UNIT_TESTS/ada_size.adb agar-core-datasource.ads \
+ada-compile UNIT_TESTS/ada_size.adb agar-core-datasource.ads agar-core-dso.ads \
 agar-core-event.ads agar-core-object.ads agar-core-threads.ads \
 agar-core-timeout.ads agar-core-types.ads agar-core-version.ads agar-core.ads \
 agar.ads
@@ -125,6 +128,10 @@ conf-adacomp conf-adatype conf-systype
 ada-srcmap-all:\
 ada-srcmap conf-adacomp conf-adatype conf-systype
 
+ag_dso.o:\
+cc-compile ag_dso.c
+	./cc-compile ag_dso.c
+
 agar-core-ada-conf:\
 cc-link agar-core-ada-conf.ld agar-core-ada-conf.o ctxt/ctxt.a
 	./cc-link agar-core-ada-conf agar-core-ada-conf.o ctxt/ctxt.a
@@ -134,14 +141,14 @@ cc-compile agar-core-ada-conf.c ctxt.h _sysinfo.h
 	./cc-compile agar-core-ada-conf.c
 
 agar-core-ada.a:\
-cc-slib agar-core-ada.sld agar-core-config.o agar-core-datasource.o \
-agar-core-error.o agar-core-event.o agar-core-object.o agar-core-slist.o \
-agar-core-tail_queue.o agar-core-threads.o agar-core-timeout.o \
-agar-core-types.o agar-core-version.o agar-core.o agar.o
-	./cc-slib agar-core-ada agar-core-config.o agar-core-datasource.o \
-	agar-core-error.o agar-core-event.o agar-core-object.o agar-core-slist.o \
-	agar-core-tail_queue.o agar-core-threads.o agar-core-timeout.o \
-	agar-core-types.o agar-core-version.o agar-core.o agar.o
+cc-slib agar-core-ada.sld ag_dso.o agar-core-config.o agar-core-datasource.o \
+agar-core-dso.o agar-core-error.o agar-core-event.o agar-core-limits.o \
+agar-core-object.o agar-core-slist.o agar-core-tail_queue.o agar-core-threads.o \
+agar-core-timeout.o agar-core-types.o agar-core-version.o agar-core.o agar.o
+	./cc-slib agar-core-ada ag_dso.o agar-core-config.o agar-core-datasource.o \
+	agar-core-dso.o agar-core-error.o agar-core-event.o agar-core-limits.o \
+	agar-core-object.o agar-core-slist.o agar-core-tail_queue.o agar-core-threads.o \
+	agar-core-timeout.o agar-core-types.o agar-core-version.o agar-core.o agar.o
 
 agar-core-config.ali:\
 ada-compile agar-core-config.adb agar-core-config.ads
@@ -160,6 +167,16 @@ ada-compile agar-core-datasource.adb agar-core-datasource.ads
 agar-core-datasource.o:\
 agar-core-datasource.ali
 
+agar-core-dso.ads:\
+agar-core-limits.ads agar-core-tail_queue.ads agar-core-types.ads agar-core.ads
+
+agar-core-dso.ali:\
+ada-compile agar-core-dso.adb agar-core-dso.ads
+	./ada-compile agar-core-dso.adb
+
+agar-core-dso.o:\
+agar-core-dso.ali
+
 agar-core-error.ali:\
 ada-compile agar-core-error.adb
 	./ada-compile agar-core-error.adb
@@ -176,6 +193,17 @@ ada-compile agar-core-event.adb agar-core-event.ads
 
 agar-core-event.o:\
 agar-core-event.ali
+
+# agar-core-limits.ads.mff
+agar-core-limits.ads: agar-core-limits.sh chk-limits
+	./agar-core-limits.sh > agar-core-limits.ads.tmp && mv agar-core-limits.ads.tmp agar-core-limits.ads
+
+agar-core-limits.ali:\
+ada-compile agar-core-limits.ads
+	./ada-compile agar-core-limits.ads
+
+agar-core-limits.o:\
+agar-core-limits.ali
 
 # agar-core-object.ads.mff
 agar-core-object.ads: agar-core-object.sh chk-debug chk-lockdebug chk-off_t chk-threads agar-core-object.ads.txt
@@ -269,6 +297,14 @@ cc-link chk-debug.ld chk-debug.o
 chk-debug.o:\
 cc-compile chk-debug.c
 	./cc-compile chk-debug.c
+
+chk-limits:\
+cc-link chk-limits.ld chk-limits.o
+	./cc-link chk-limits chk-limits.o
+
+chk-limits.o:\
+cc-compile chk-limits.c
+	./cc-compile chk-limits.c
 
 chk-lockdebug:\
 cc-link chk-lockdebug.ld chk-lockdebug.o
@@ -474,23 +510,25 @@ clean-all: sysdeps_clean tests_clean obj_clean ext_clean
 clean: obj_clean
 obj_clean:
 	rm -f UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o \
-	UNIT_TESTS/c_size UNIT_TESTS/c_size.o agar-core-ada-conf agar-core-ada-conf.o \
-	agar-core-ada.a agar-core-config.ali agar-core-config.o \
-	agar-core-datasource.ali agar-core-datasource.o agar-core-error.ali \
-	agar-core-error.o agar-core-event.ali agar-core-event.o agar-core-object.ads \
-	agar-core-object.ali agar-core-object.o agar-core-slist.ali agar-core-slist.o \
-	agar-core-tail_queue.ali agar-core-tail_queue.o agar-core-threads.ali \
-	agar-core-threads.o agar-core-timeout.ali agar-core-timeout.o \
-	agar-core-types.ads agar-core-types.ali agar-core-types.o agar-core-version.ali \
-	agar-core-version.o agar-core.ali agar-core.o agar.ali agar.o chk-debug \
-	chk-debug.o chk-lockdebug chk-lockdebug.o chk-off_t chk-off_t.o chk-threads \
+	UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_dso.o agar-core-ada-conf \
+	agar-core-ada-conf.o agar-core-ada.a agar-core-config.ali agar-core-config.o \
+	agar-core-datasource.ali agar-core-datasource.o agar-core-dso.ali \
+	agar-core-dso.o agar-core-error.ali agar-core-error.o agar-core-event.ali \
+	agar-core-event.o agar-core-limits.ads agar-core-limits.ali agar-core-limits.o \
+	agar-core-object.ads agar-core-object.ali agar-core-object.o \
+	agar-core-slist.ali agar-core-slist.o agar-core-tail_queue.ali \
+	agar-core-tail_queue.o agar-core-threads.ali agar-core-threads.o \
+	agar-core-timeout.ali agar-core-timeout.o agar-core-types.ads \
+	agar-core-types.ali agar-core-types.o agar-core-version.ali agar-core-version.o \
+	agar-core.ali agar-core.o agar.ali agar.o chk-debug chk-debug.o chk-limits \
+	chk-limits.o chk-lockdebug chk-lockdebug.o chk-off_t chk-off_t.o chk-threads \
 	chk-threads.o ctxt/bindir.c ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.c \
 	ctxt/dlibdir.o ctxt/incdir.c ctxt/incdir.o ctxt/repos.c ctxt/repos.o \
-	ctxt/slibdir.c ctxt/slibdir.o ctxt/version.c ctxt/version.o deinstaller \
-	deinstaller.o inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o \
-	inst-link
-	rm -f inst-link.o install_core.o install_error.o installer installer.o instchk \
-	instchk.o insthier.o
+	ctxt/slibdir.c ctxt/slibdir.o
+	rm -f ctxt/version.c ctxt/version.o deinstaller deinstaller.o inst-check \
+	inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o \
+	install_core.o install_error.o installer installer.o instchk instchk.o \
+	insthier.o
 ext_clean:
 	rm -f conf-adatype conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 

@@ -7,12 +7,19 @@ pragma source_file_name(agar.core.config, body_file_name => "agar-core-config.ad
 pragma source_file_name(agar.core.datasource, spec_file_name => "agar-core-datasource.ads");
 pragma source_file_name(agar.core.datasource, body_file_name => "agar-core-datasource.adb");
 
+-- ./agar-core-dso.apk
+pragma source_file_name(agar.core.dso, spec_file_name => "agar-core-dso.ads");
+pragma source_file_name(agar.core.dso, body_file_name => "agar-core-dso.adb");
+
 -- ./agar-core-error.apk
 pragma source_file_name(agar.core.error, spec_file_name => "agar-core-error.ads");
 
 -- ./agar-core-event.apk
 pragma source_file_name(agar.core.event, spec_file_name => "agar-core-event.ads");
 pragma source_file_name(agar.core.event, body_file_name => "agar-core-event.adb");
+
+-- ./agar-core-limits.apk
+pragma source_file_name(agar.core.limits, spec_file_name => "agar-core-limits.ads");
 
 -- ./agar-core-object.apk
 pragma source_file_name(agar.core.object, spec_file_name => "agar-core-object.ads");
