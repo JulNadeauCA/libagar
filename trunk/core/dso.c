@@ -96,7 +96,7 @@ AG_Mutex agDSOLock = AG_MUTEX_INITIALIZER;
 /* Load a DSO using the load_add_on() interface on BeOS. */
 #ifdef BEOS
 static AG_DSO *
-LoadDSO_BEOS(AG_DSO_Generic *dso, const char *path)
+LoadDSO_BEOS(const char *path)
 {
 	AG_DSO_BeOS *d;
 	image_id handle;
@@ -114,10 +114,10 @@ LoadDSO_BEOS(AG_DSO_Generic *dso, const char *path)
 /* Load a DSO using the DosLoadModule() interface on OS/2. */
 #ifdef OS2
 static AG_DSO *
-LoadDSO_OS2(AG_DSO_Generic *dso, const char *path)
+LoadDSO_OS2(const char *path)
 {
-	char failedMod[256];
 	AG_DSO_OS2 *d;
+	char failedMod[256];
 	HMODULE handle;
 	int rv;
 
@@ -154,6 +154,7 @@ LoadDSO_OS390(const char *path)
 static AG_DSO *
 LoadDSO_WIN32(const char *path)
 {
+	AG_DSO_Generic *d;
 	char buf[AG_PATHNAME_MAX], *p;
 	UINT em;
 	
