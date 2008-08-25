@@ -252,19 +252,17 @@ CreateWindow(void)
 			AG_Tlist *tl;
 			AG_TlistItem *ti;
 
-			/*
-			 * The Tlist widget displays either lists or trees.
-			 * For flat, polled lists, it is more efficient to use
-			 * a Table with a single column, however.
-			 */
+			/* The Tlist widget displays a tree or list of items. */
 			tl = AG_TlistNew(ntab, AG_TLIST_EXPAND|AG_TLIST_TREE);
-			ti = AG_TlistAdd(tl, agIconDoc.s, "Foo");
+			ti = AG_TlistAdd(tl, agIconDoc.s, "Category");
 			ti->depth = 0;
-			ti = AG_TlistAdd(tl, agIconDoc.s, "Bar");
+			ti = AG_TlistAdd(tl, agIconDoc.s, "Science");
 			ti->depth = 1;
-			ti = AG_TlistAdd(tl, agIconDoc.s, "Baz");
+			ti = AG_TlistAdd(tl, agIconDoc.s, "Culture");
 			ti->depth = 1;
-			ti = AG_TlistAdd(tl, agIconDoc.s, "Bezo");
+			ti = AG_TlistAdd(tl, agIconDoc.s, "Art");
+			ti->depth = 2;
+			ti = AG_TlistAdd(tl, agIconDoc.s, "Craft");
 			ti->depth = 2;
 		}
 		
