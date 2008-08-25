@@ -73,7 +73,7 @@ AG_GetNamespace(const char *ns)
 static __inline__ int
 AG_ClassIsNamed(void *pClass, const char *pat)
 {
-	const AG_ObjectClass *cls = pClass;
+	AG_ObjectClass *cls = pClass;
 	const char *c;
 	int nwild = 0;
 
@@ -84,7 +84,7 @@ AG_ClassIsNamed(void *pClass, const char *pat)
 	if (nwild == 0) {
 		return (strncmp(cls->name, pat, c - &pat[0]) == 0);
 	} else if (nwild == 1) {
-		if (pat[1] == '*') {
+		if (pat[0] == '*') {
 			return (1);
 		}
 		for (c = &pat[0]; *c != '\0'; c++) {

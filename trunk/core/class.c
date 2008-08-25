@@ -129,12 +129,14 @@ AG_ParseClassSpec(char *dst, size_t dstLen, char *dstLibs, size_t dstLibsLen,
 				i += Strlcpy(&dst[i], pTok, dstLen-i);
 				i += Strlcpy(&dst[i], ":", dstLen-i);
 			}
-			dst[i--] = '\0';		/* Strip last ':' */
 			pOpen = NULL;
 			continue;
 		}
 	}
-	if (i == 0) {					/* Flat format */
+	if (dst[i-1] == ':') {
+		dst[i-1] = '\0';		/* Strip last ':' */
+	}
+	if (i == 0) {				/* Flat format */
 		Strlcpy(dst, name, dstLen);
 	} else {
 		dst[i] = '\0';
