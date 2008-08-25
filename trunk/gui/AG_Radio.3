@@ -136,6 +136,41 @@ binding remains locked throughout the event handler's execution.
 .It Ft int oversel
 Index of last selection under the cursor.
 .El
+.Sh EXAMPLES
+The following code fragment binds
+.Nm
+to an enum:
+.Pp
+.Bd -literal -offset indent
+enum fruit {
+	APPLE,
+	ORANGE,
+	BANANA
+} fruit = APPLE;
+
+const char *fruitNames[] = {
+	"Apple",
+	"Orange",
+	"Banana",
+	NULL
+};
+
+AG_Radio *r = AG_RadioNew(NULL, 0, fruitNames);
+AG_WidgetBindInt(r, "value", &fruit);
+.Ed
+.Pp
+To specify a callback routine:
+.Bd -literal -offset indent
+void
+MyCallback(AG_Event *event)
+{
+	int newSelection = AG_INT(1);
+	printf("Selected item %d\\n", newSelection);
+}
+
+AG_Radio *r = AG_RadioNewFn(NULL, 0, fruitNames, MyCallback, NULL);
+AG_WidgetBindInt(r, "value", &fruit);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 ,
