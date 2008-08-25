@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2008 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -450,7 +450,41 @@ Number of columns (read-only).
 Number of rows (read-only).
 .El
 .Sh EXAMPLES
-See
+The following code fragment creates a table and immediately populates it:
+.Pp
+.Bd -literal -offset indent
+AG_Table *tbl;
+
+tbl = AG_TableNew(win, AG_TABLE_EXPAND);
+AG_TableAddCol(tbl, "Column 1", "<ExpectedSize>", NULL);
+AG_TableAddCol(tbl, "Column 2", NULL, NULL);
+AG_TableAddRow(tbl, "%s:%i", "Item1", 123);
+AG_TableAddRow(tbl, "%s:%i", "Item2", 456);
+AG_TableAddRow(tbl, "%s:%i", "Item3", 789);
+.Ed
+.Pp
+The following code fragment creates a table and arranges for periodical
+update of its contents from an
+.Fn UpdateMyTable
+function:
+.Pp
+.Bd -literal -offset indent
+
+void
+UpdateMyTable(AG_Event *event)
+{
+	AG_Table *tbl = AG_SELF();
+
+	AG_TableBegin(tbl);
+	AG_TableAddRow(tbl, "%s:%d", "foo", 1234);
+	AG_TableEnd(tbl);
+}
+
+AG_Table *tbl;
+tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND, UpdateMyTable, NULL);
+.Ed
+.Pp
+For more example usages, see
 .Pa demos/table
 in the Agar source distribution.
 .Sh SEE ALSO
