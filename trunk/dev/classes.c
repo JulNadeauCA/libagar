@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,65 +24,47 @@
  */
 
 /*
- * Generic dev tool initialization.
+ * Display registered AG_Object classes.
  */
-
-#include <config/network.h>
-#include <config/threads.h>
-#include <config/have_jpeg.h>
-#include <config/debug.h>
 
 #include <core/core.h>
 
 #include <gui/window.h>
-#include <gui/menu.h>
+#include <gui/table.h>
 
 #include "dev.h"
 
-static const struct dev_tool_ent {
-	char *name;
-	AG_Window *(*fn)(void);
-} devTools[] = {
-	{ N_("Registered classes"),	DEV_ClassInfo },
-	{ N_("Display Settings"),	DEV_DisplaySettings },
-	{ N_("GUI Debugger"),		DEV_GuiDebugger },
-	{ N_("Timer Inspector"),	DEV_TimerInspector },
-	{ N_("Unicode Browser"),	DEV_UnicodeBrowser },
-#if defined(DEBUG)
-	{ N_("Performance Graph"),	AG_EventShowPerfGraph },
-	{ N_("CPU Information"),	DEV_CPUInfo },
-#endif
-#if defined(NETWORK) && defined(THREADS) && defined(HAVE_JPEG)
-	{ N_("Screenshot Uploader"),	DEV_ScreenshotUploader },
-#endif
-#if defined(NETWORK) && defined(THREADS)
-	{ N_("Debug Server"),		DEV_DebugServer },
-#endif
-};
-
 static void
-SelectTool(AG_Event *event)
+PollClasses(AG_Event *event)
 {
-	const struct dev_tool_ent *ent = AG_PTR(1);
-	AG_Window *win;
-
-	if ((win = (ent->fn)()) != NULL)
-		AG_WindowShow(win);
-}
-
-void
-DEV_ToolMenu(AG_MenuItem *mi)
-{
-	const int devToolCount = sizeof(devTools) / sizeof(devTools[0]);
+	AG_Table *tbl = AG_SELF();
+	AG_ObjectClass *cls;
 	int i;
 
-	for (i = 0; i < devToolCount; i++) {
-		AG_MenuAction(mi, _(devTools[i].name), NULL,
-		    SelectTool, "%p", &devTools[i]);
+	AG_TableBegin(tbl);
+	AG_FOREACH_CLASS(cls, i, ag_object_class, NULL) {
+		AG_TableAddRow(tbl, "%s:%d:%s", cls->name, cls->size,
+		    cls->libs[0] != '\0' ? cls->libs : "(none)");
 	}
+	AG_TableEnd(tbl);
 }
 
-void
-DEV_InitSubsystem(Uint flags)
+AG_Window *
+DEV_ClassInfo(void)
 {
+	AG_Window *win;
+	AG_Table *tbl;
+
+	if ((win = AG_WindowNewNamed(0, "DEV_ClassInfo")) == NULL) {
+		return (NULL);
+	}
+	AG_WindowSetCaption(win, _("Registered classes"));
+
+	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND, PollClasses, NULL);
+	AG_TableAddCol(tbl, _("Name"), "<XXXXXXXXXXXXXXXXXXXXXXXX>", NULL);
+	AG_TableAddCol(tbl, _("Size"), "<XXXX>", NULL);
+	AG_TableAddCol(tbl, _("Modules"), NULL, NULL);
+
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
+	return (win);
 }

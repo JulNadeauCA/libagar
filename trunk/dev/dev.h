@@ -40,6 +40,8 @@ void	   DEV_BrowserGenericMenu(void *, void *);
 
 void	   DEV_ConfigShow(void);
 void	  *DEV_ObjectEdit(void *);
+
+AG_Window *DEV_ClassInfo(void);
 __END_DECLS
 
 #include "close_code.h"
