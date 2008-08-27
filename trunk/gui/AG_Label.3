@@ -74,7 +74,7 @@ on rendering.
 .Fn AG_RegisterLabelFormat "const char *fmt" "void (*fn)(AG_Label *label, char *s, size_t len, int fPos)"
 .Pp
 .Ft "void"
-.Fn AG_LABEL_ARG "TYPE type"
+.Fn AG_LABEL_ARG "AG_Label *label" "TYPE type"
 .Pp
 .nr nS 0
 The
@@ -373,7 +373,7 @@ in polled labels:
 void
 PrintMyVector(AG_Label *label, char *s, size_t len, int fPos)
 {
-	struct my_vector *my = AG_LABEL_ARG(void *);
+	struct my_vector *my = AG_LABEL_ARG(label, void *);
 	snprintf(s, len, "[%f,%f]", my->x, my->y);
 }
 
