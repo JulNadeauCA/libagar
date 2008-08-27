@@ -1,5 +1,7 @@
 package body agar.gui.window is
 
+  use type c.int;
+
   function allocate_named
     (flags : flags_t := 0;
      name  : string) return window_access_t
@@ -111,5 +113,32 @@ package body agar.gui.window is
        width  => c.int (width),
        height => c.int (height));
   end set_geometry_bounded;
+
+  function is_visible (window : window_access_t) return boolean is
+  begin
+    return is_visible (window) = 1;
+  end is_visible;
+
+  procedure set_visibility
+    (window  : window_access_t;
+     visible : boolean) is
+  begin
+    if visible then
+      set_visibility (window, 1);
+    else
+      set_visibility (window, 0);
+    end if;
+  end set_visibility;
+
+  function focus_named (name : string) return boolean is
+    ca_name : aliased c.char_array := c.to_c (name);
+  begin
+    return focus_named (cs.to_chars_ptr (ca_name'unchecked_access)) = 0;
+  end focus_named;
+
+  function is_focused (window : window_access_t) return boolean is
+  begin
+    return is_focused (window) = 1;
+  end is_focused;
 
 end agar.gui.window;
