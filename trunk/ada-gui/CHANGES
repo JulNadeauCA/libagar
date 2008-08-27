@@ -1,2 +1,3 @@
 20080822 version: agar-gui-ada 0.1
 20080827 code: added window API.
+20080827 code: moved init_video to agar.gui from agar.gui.view.
