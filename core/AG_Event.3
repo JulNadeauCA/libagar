@@ -35,24 +35,24 @@
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-Once an
-.Xr AG_Object 3
-has registered one or more event handlers for a specific type of
-event (using the
-.Fn AG_SetEvent
-or
-.Fn AG_AddEvent
-function), a call to
-.Fn AG_PostEvent
-for this type of event will trigger the execution of the event handler
-functions, in the same order as they were registered.
-It is also possible to delay the execution of the event handler by a given
-number of
-.Sq ticks
-using
-.Fn AG_SchedEvent .
+The
+.Nm
+interface implements a system of virtual functions for purposes of servicing
+.Em events ,
+on top of
+.Xr AG_Object 3 .
+Event handler functions are provided with a list of typed arguments.
+Execution of event handlers can be delayed for a set amount of time, or marked
+for execution in a separate thread where thread support is available.
 .Pp
-Event handler functions are declared as:
+Event processing is triggered by the
+.Fn AG_PostEvent
+function, which causes the execution the event handler routine(s)
+previously registered by
+.Fn AG_SetEvent
+(or
+.Fn AG_AddEvent ) .
+Event handlers are declared as:
 .Pp
 .nr nS 1
 .\" NOMANLINK
@@ -60,66 +60,75 @@ Event handler functions are declared as:
 .Fn MyEventHandler "AG_Event *event"
 .Pp
 .nr nS 0
-The event arguments can be retrieved using macros such as
-.Fn AG_INT
-and
-.Fn AG_NAMED_INT ,
-or directly from the
+.Pp
+The
 .Fa event
-structure where a variable number of arguments is needed.
-Two special arguments are
+structure contains a list of typed
+.Em arguments ,
+constructed from the arguments provided to
+.Fn AG_SetEvent
+and
+.Fn AG_PostEvent .
+The event arguments can be retrieved either by
+.Em index
+using the
+.Fn AG_<TYPE>
+macros, or by
+.Em name
+using with the
+.Fn AG_NAMED_<TYPE>
+macros.
+When retrieving arguments by index, keep in mind that the list of arguments
+passed by
+.Fn AG_PostEvent
+.Em follow
+the list of arguments provided by
+.Fn AG_SetEvent .
+For variable argument counts, the arguments can be retrieved directly from the
+.Fa event
+structure.
+.Pp
+The special argument
 .Fn AG_SELF
-(the object receiving the event) and
+(or
+.Fn AG_PTR(0) )
+is a pointer to the
+.Xr AG_Object 3
+receiving the event.
+Where applicable,
 .Fn AG_SENDER
-(the object sending the event, if applicable).
-When Agar is compiled with
+returns a pointer to the
+.Xr AG_Object 3
+responsible for raising the event.
+.Pp
+Note that when Agar is compiled with
 .Dv DEBUG ,
-those macros perform type checking.
+the
+.Fn AG_<TYPE>
+macros provide type checking at runtime.
 .Sh EVENT LOOPS
 .nr nS 1
-.Ft "void"
-.Fn AG_EventLoop_FixedFPS "void"
-.Pp
 .Ft "void"
 .Fn AG_EventLoop "void"
 .nr nS 0
 .Pp
 The event loop of an Agar application typically waits for events, invokes
 GUI rendering routines and processes timer events.
-It is possible to use a custom event loop routine, but for most
-applications, Agar's stock event loop routine,
-.Fn AG_EventLoop_FixedFPS
-(or just
-.Fn AG_EventLoop )
-is suitable.
-It performs the following:
-.Pp
-.Bl -tag -width "SDL event processing "
-.It Video updates
-It attempts to maintain a stable video refresh rate by periodically
-readjusting the delays.
-The nominal refresh rate is selected by
-.Xr AG_SetRefreshRate 3 ,
-usually at initialization time.
-If it considers that there is enough time left after the refresh cycle, it
-invokes 
-.Xr SDL_Delay 3
-to relinquish the CPU.
-.It SDL event processing
-SDL events are translated to
-.Nm
-structures, which are sent to the relevant subsystems, such as the
-.Xr AG_Window 3
-system for GUI events.
-.It Timeouts
-The
+Some applications will use a custom event loop routine, but
+.Fn AG_EventLoop
+happens to be suitable for most applications where it is necessary to strike
+a good balance between accuracy of real-time events and CPU efficiency.
+.Fn AG_EventLoop
+tries to update the display and process events in the most efficient way for
+the underlying graphics system.
+Usually, this involves computing delays which will allow a stable refresh
+rate to be maintained (see
+.Xr AG_SetRefreshRate 3 ) ,
+input events to be serviced quickly and timed events (see
 .Xr AG_Timeout 3
-system performs tasks specific to the timing schemes in use.
-Under the default timing scheme, timeouts with a timestamp exceeding the
-current time (as given by
-.Xr SDL_GetTicks 3 )
-are expired.
-.El
+and
+.Fn AG_SchedEvent )
+to be executed at accurate points in time.
 .Sh EVENT PROCESSING
 .nr nS 1
 .Ft "AG_Event *"
@@ -178,7 +187,7 @@ arguments as well as any additional arguments inserted into the argument
 vector by
 .Fn AG_PostEvent
 or
-.Fn AG_SchedEvent.
+.Fn AG_SchedEvent .
 .Pp
 The format string in
 .Fn AG_PostEvent
@@ -346,6 +355,29 @@ The type is obtained from the
 argument which is a character from an
 .Fn AG_SetEvent
 style format string.
+.Sh EXAMPLES
+The following code fragment demonstrates the typical
+.Nm
+usage in the Agar-GUI library:
+.Bd -literal -offset indent
+
+void
+SayHello(AG_Event *event)
+{
+	char *s = AG_STRING(1);    /* Given in AG_SetEvent() */
+	int new_state = AG_INT(2); /* Passed by the AG_Button(3) */
+
+	AG_TextMsg(AG_MSG_INFO, "Hello, %s! (state = %d)",
+	    s, new_state);
+}
+
+AG_Button *btn = AG_ButtonNew(NULL, 0, "Say hello");
+AG_SetEvent(btn, "button-pushed", SayHello, "%s", "World");
+.Ed
+Or alternatively:
+.Bd -literal -offset indent
+AG_ButtonNewFn(NULL, 0, "Say hello", SayHello, "%s", "World");
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,
