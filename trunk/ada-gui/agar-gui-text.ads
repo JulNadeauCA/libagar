@@ -141,11 +141,6 @@ package agar.gui.text is
 
   procedure msg
     (title : msg_title_t;
-     text  : cs.chars_ptr);
-  pragma import (c, msg, "AG_TextMsg");
-
-  procedure msg
-    (title : msg_title_t;
      text  : string);
   pragma inline (msg);
 
@@ -153,26 +148,12 @@ package agar.gui.text is
   pragma import (c, msg_from_error);
 
   procedure warning
-    (disable_key : cs.chars_ptr;
-     text        : cs.chars_ptr);
-  pragma import (c, warning, "AG_TextWarning");
-
-  procedure warning
     (disable_key : string;
      text        : string);
   pragma inline (warning);
 
-  procedure info (text : cs.chars_ptr);
-  pragma import (c, info, "AG_TextInfo");
-
   procedure info (text : string);
   pragma inline (info);
-
-  procedure timed_message
-    (title  : msg_title_t;
-     expire : agar.core.types.uint32_t;
-     text   : cs.chars_ptr);
-  pragma import (c, timed_message, "AG_TextTmsg");
 
   procedure timed_message
     (title  : msg_title_t;
@@ -181,27 +162,13 @@ package agar.gui.text is
   pragma inline (timed_message);
  
   -- missing: AG_TextEditFloat - unknown 'text_edit_float' enum type
-
-  procedure edit_string
-    (buf    : access cs.chars_ptr;
-     length : c.size_t;
-     text   : cs.chars_ptr);
-  pragma import (c, edit_string, "AG_TextEditString");
-
-  procedure prompt_string
-    (prompt  : cs.chars_ptr;
-     ok_func : access procedure (event : agar.core.event.event_access_t);
-     text    : cs.chars_ptr);
-  pragma import (c, prompt_string, "AG_TextPromptString");
+  -- missing: AG_TextEditString - unsure how to bind
 
   procedure prompt_string
     (prompt  : string;
      ok_func : access procedure (event : agar.core.event.event_access_t);
      text    : string);
   pragma inline (prompt_string);
-
-  procedure parse_font_spec (spec : cs.chars_ptr);
-  pragma import (c, parse_font_spec, "AG_TextParseFontSpec");
 
   procedure parse_font_spec (spec : string);
   pragma inline (parse_font_spec);
