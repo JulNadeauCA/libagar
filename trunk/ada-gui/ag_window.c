@@ -26,3 +26,15 @@ agar_window_set_geometry (AG_Window *win, int x, int y, int w, int h)
 {
   AG_WindowSetGeometry (win, x, y, w, h);
 }
+
+int
+agar_window_is_focused (AG_Window *win)
+{
+  return AG_WindowIsFocused (win);
+}
+
+int
+agar_window_is_visible (AG_Window *win)
+{
+  return AG_WindowIsVisible (win);
+}

@@ -287,7 +287,48 @@ package agar.gui.window is
   procedure update (window : window_access_t);
   pragma import (c, update, "agar_window_update");
 
+  -- visibility
+
+  procedure show (window : window_access_t);
+  pragma import (c, show, "AG_WindowShow");
+
+  procedure hide (window : window_access_t);
+  pragma import (c, hide, "AG_WindowHide");
+
+  function is_visible (window : window_access_t) return c.int;
+  pragma import (c, is_visible, "agar_window_is_visible");
+
+  function is_visible (window : window_access_t) return boolean;
+  pragma inline (is_visible);
+
+  procedure set_visibility
+    (window  : window_access_t;
+     visible : c.int);
+  pragma import (c, set_visibility, "AG_WindowSetVisibility");
+
+  procedure set_visibility
+    (window  : window_access_t;
+     visible : boolean);
+  pragma inline (set_visibility);
+
+  -- focus
+
+  procedure focus (window : window_access_t);
+  pragma import (c, focus, "AG_WindowFocus");
+
+  function focus_named (name : cs.chars_ptr) return c.int;
+  pragma import (c, focus_named, "AG_WindowFocusNamed");
+
+  function focus_named (name : string) return boolean;
+  pragma inline (focus_named);
+
   function find_focused (window : window_access_t) return agar.gui.widget.widget_access_t;
   pragma import (c, find_focused, "AG_WidgetFindFocused");
+
+  function is_focused (window : window_access_t) return c.int;
+  pragma import (c, is_focused, "agar_window_is_focused");
+
+  function is_focused (window : window_access_t) return boolean;
+  pragma inline (is_focused);
 
 end agar.gui.window;
