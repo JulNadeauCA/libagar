@@ -128,18 +128,8 @@ package agar.gui.window is
 
   function allocate_named
     (flags : flags_t := 0;
-     name  : cs.chars_ptr) return window_access_t;
-  pragma import (c, allocate_named, "AG_WindowNewNamed");
-
-  function allocate_named
-    (flags : flags_t := 0;
      name  : string) return window_access_t;
   pragma inline (allocate_named);
-
-  procedure set_caption
-    (window  : window_access_t;
-     caption : cs.chars_ptr);
-  pragma import (c, set_caption, "AG_WindowSetCaption");
 
   procedure set_caption
     (window  : window_access_t;
