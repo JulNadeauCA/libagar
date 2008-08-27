@@ -1,0 +1,5 @@
+gnatbind
+
+The first line of this file is used as the path or location of the Ada binder.
+This program is used to process "library info" (.ali) files before they are
+passed to the linker to produce executables.

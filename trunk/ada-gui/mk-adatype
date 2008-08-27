@@ -1,0 +1,35 @@
+#!/bin/sh
+
+cleanup()
+{
+  rm -f
+}
+
+try_v()
+{
+  data="$1"
+
+  echo "$data" | grep -i 'gcc' >/dev/null
+  if [ $? -eq 0 ]; then echo GCC; return 0; fi
+
+  return 1
+}
+
+SYS_ADA=`head -n 1 conf-adacomp`
+if [ $? -ne 0 ]
+then
+  echo "fatal: could not read conf-adacomp" 1>&2
+  exit 1
+fi
+
+# try V output
+out_v=`${SYS_ADA} -v 2>&1`
+if try_v "$out_v"
+then
+  cleanup
+  exit 0
+fi
+
+echo "fatal: could not determine ada compiler type"
+cleanup
+exit 1

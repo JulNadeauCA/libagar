@@ -1,0 +1,3 @@
+ctxt/repos.c: mk-ctxt conf-repos
+	rm -f ctxt/repos.c
+	./mk-ctxt ctxt_repos < conf-repos > ctxt/repos.c

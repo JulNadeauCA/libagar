@@ -1,0 +1,24 @@
+#!/bin/sh
+
+exec 2>/dev/null
+sys="$1"
+
+case "$sys" in
+  SYSDEP_OS_IRIX)
+    ver=`uname -R | awk '{print $NF}'`
+    ;;
+  SYSDEP_OS_SUNOS)
+    ver=`uname -r`-`uname -v`
+    ;;
+  SYSDEP_OS_VMS)
+    ver=`uname -v`
+    ;;
+  *)
+    ver=`uname -r`
+    if [ $? -ne 0 ]
+    then
+      ver=0.0
+    fi
+    ;;
+esac
+echo ${ver} | tr '/:[A-Z]' '..[a-z]'

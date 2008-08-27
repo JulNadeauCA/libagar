@@ -1,0 +1,55 @@
+agar.gui.colors.blend_func_t:AG_BlendFn
+agar.gui.colors.blend_func_t:enum ag_blend_func
+agar.gui.colors.color_t:AG_Color
+agar.gui.colors.color_t:struct ag_color
+agar.gui.pixelformat.pixel_format_access_t:AG_PixelFormat *
+agar.gui.pixelformat.pixel_format_t:AG_PixelFormat
+agar.gui.point.point_t:AG_Point
+agar.gui.point.point_t:struct ag_point
+agar.gui.rect.rect_access_t:AG_Rect *
+agar.gui.rect.rect_access_t:struct ag_rect *
+agar.gui.rect.rect_t:AG_Rect
+agar.gui.rect.rect_t:struct ag_rect
+agar.gui.style.style_access_t:AG_Style *
+agar.gui.style.style_access_t:struct ag_style *
+agar.gui.style.style_t:AG_Style
+agar.gui.style.style_t:struct ag_style
+agar.gui.surface.surface_access_t:AG_Surface *
+agar.gui.surface.surface_t:AG_Surface
+agar.gui.text.font_type_t:enum ag_font_type
+agar.gui.text.justify_t:enum ag_text_justify
+agar.gui.text.msg_title_t:enum ag_text_msg_title
+agar.gui.text.valign_t:enum ag_text_valign
+agar.gui.unit.unit_t:AG_Unit
+agar.gui.unit.unit_t:struct ag_unit
+agar.gui.view.display_t:AG_Display
+agar.gui.view.display_t:struct ag_display
+agar.gui.widget.binding_access_t:AG_WidgetBinding *
+agar.gui.widget.binding_access_t:struct ag_widget_binding *
+agar.gui.widget.binding_t:AG_WidgetBinding
+agar.gui.widget.binding_t:struct ag_widget_binding
+agar.gui.widget.binding_type_t:AG_WidgetBindingType
+agar.gui.widget.binding_type_t:enum ag_widget_binding_type
+agar.gui.widget.class_access_t:AG_WidgetClass *
+agar.gui.widget.class_access_t:struct ag_widget_class *
+agar.gui.widget.class_t:AG_WidgetClass
+agar.gui.widget.class_t:struct ag_widget_class
+agar.gui.widget.flag_descr_access_t:AG_FlagDescr *
+agar.gui.widget.flag_descr_access_t:struct ag_flag_descr *
+agar.gui.widget.flag_descr_t:AG_FlagDescr
+agar.gui.widget.flag_descr_t:struct ag_flag_descr
+agar.gui.widget.size_req_access_t:AG_SizeReq *
+agar.gui.widget.size_req_access_t:struct ag_size_req *
+agar.gui.widget.size_req_t:AG_SizeReq
+agar.gui.widget.size_req_t:struct ag_size_req
+agar.gui.widget.size_spec_t:enum ag_widget_sizespec
+agar.gui.widget.widget_access_t:AG_Widget *
+agar.gui.widget.widget_access_t:struct ag_widget *
+agar.gui.widget.widget_t:AG_Widget
+agar.gui.widget.widget_t:struct ag_widget
+agar.gui.window.alignment_t:enum ag_window_alignment
+agar.gui.window.close_action_t:enum ag_window_close_action
+agar.gui.window.window_access_t:AG_Window *
+agar.gui.window.window_access_t:struct ag_window *
+agar.gui.window.window_t:AG_Window
+agar.gui.window.window_t:struct ag_window

@@ -1,0 +1,46 @@
+
+-- ./agar-gui-colors.apk
+pragma source_file_name(agar.gui.colors, spec_file_name => "agar-gui-colors.ads");
+pragma source_file_name(agar.gui.colors, body_file_name => "agar-gui-colors.adb");
+
+-- ./agar-gui-draw.apk
+pragma source_file_name(agar.gui.draw, spec_file_name => "agar-gui-draw.ads");
+pragma source_file_name(agar.gui.draw, body_file_name => "agar-gui-draw.adb");
+
+-- ./agar-gui-pixelformat.apk
+pragma source_file_name(agar.gui.pixelformat, spec_file_name => "agar-gui-pixelformat.ads");
+
+-- ./agar-gui-point.apk
+pragma source_file_name(agar.gui.point, spec_file_name => "agar-gui-point.ads");
+
+-- ./agar-gui-rect.apk
+pragma source_file_name(agar.gui.rect, spec_file_name => "agar-gui-rect.ads");
+
+-- ./agar-gui-style.apk
+pragma source_file_name(agar.gui.style, spec_file_name => "agar-gui-style.ads");
+
+-- ./agar-gui-surface.apk
+pragma source_file_name(agar.gui.surface, spec_file_name => "agar-gui-surface.ads");
+pragma source_file_name(agar.gui.surface, body_file_name => "agar-gui-surface.adb");
+
+-- ./agar-gui-text.apk
+pragma source_file_name(agar.gui.text, spec_file_name => "agar-gui-text.ads");
+pragma source_file_name(agar.gui.text, body_file_name => "agar-gui-text.adb");
+
+-- ./agar-gui-unit.apk
+pragma source_file_name(agar.gui.unit, spec_file_name => "agar-gui-unit.ads");
+pragma source_file_name(agar.gui.unit, body_file_name => "agar-gui-unit.adb");
+
+-- ./agar-gui-view.apk
+pragma source_file_name(agar.gui.view, spec_file_name => "agar-gui-view.ads");
+pragma source_file_name(agar.gui.view, body_file_name => "agar-gui-view.adb");
+
+-- ./agar-gui-widget.apk
+pragma source_file_name(agar.gui.widget, spec_file_name => "agar-gui-widget.ads");
+pragma source_file_name(agar.gui.widget, body_file_name => "agar-gui-widget.adb");
+
+-- ./agar-gui-window.apk
+pragma source_file_name(agar.gui.window, spec_file_name => "agar-gui-window.ads");
+
+-- ./agar-gui.apk
+pragma source_file_name(agar.gui, spec_file_name => "agar-gui.ads");

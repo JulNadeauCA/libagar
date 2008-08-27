@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ $# -ne 2 ]
+then
+  echo 'usage: bin flags'
+fi
+
+config="$1"
+flags="$2"
+${config} ${flags} 2>/dev/null
+exit $?
