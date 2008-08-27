@@ -1,8 +1,11 @@
 with agar.core.tail_queue;
 with agar.core.types;
+with agar.gui.surface;
 with agar.gui.widget;
+with interfaces.c.strings;
 
 package agar.gui.window is
+  package cs renames interfaces.c.strings;
 
   use type c.unsigned;
 
@@ -114,9 +117,175 @@ package agar.gui.window is
     icon      : agar.core.types.void_ptr_t; -- XXX: icon_access_t
   end record;
 
+  subtype percent_t is positive range 1 .. 100;
+
   --
   -- API
   --
+
+  function allocate (flags : flags_t := 0) return window_access_t;
+  pragma import (c, allocate, "AG_WindowNew");
+
+  function allocate_named
+    (flags : flags_t := 0;
+     name  : cs.chars_ptr) return window_access_t;
+  pragma import (c, allocate_named, "AG_WindowNewNamed");
+
+  function allocate_named
+    (flags : flags_t := 0;
+     name  : string) return window_access_t;
+  pragma inline (allocate_named);
+
+  procedure set_caption
+    (window  : window_access_t;
+     caption : cs.chars_ptr);
+  pragma import (c, set_caption, "AG_WindowSetCaption");
+
+  procedure set_caption
+    (window  : window_access_t;
+     caption : string);
+  pragma inline (set_caption);
+
+  procedure set_icon
+    (window  : window_access_t;
+     surface : agar.gui.surface.surface_access_t);
+  pragma import (c, set_icon, "agar_window_set_icon");
+
+  procedure set_icon_no_copy
+    (window  : window_access_t;
+     surface : agar.gui.surface.surface_access_t);
+  pragma import (c, set_icon_no_copy, "agar_window_set_icon_no_copy");
+
+  procedure set_close_action
+    (window : window_access_t;
+     mode   : close_action_t);
+  pragma import (c, set_close_action, "AG_WindowSetCloseAction");
+
+  procedure set_padding
+    (window : window_access_t;
+     left   : c.int;
+     right  : c.int;
+     top    : c.int;
+     bottom : c.int);
+  pragma import (c, set_padding, "AG_WindowSetPadding");
+
+  procedure set_padding
+    (window : window_access_t;
+     left   : natural;
+     right  : natural;
+     top    : natural;
+     bottom : natural);
+  pragma inline (set_padding);
+
+  procedure set_spacing
+    (window  : window_access_t;
+     spacing : c.int);
+  pragma import (c, set_spacing, "AG_WindowSetSpacing");
+
+  procedure set_spacing
+    (window  : window_access_t;
+     spacing : natural);
+  pragma inline (set_spacing);
+ 
+  procedure set_position
+    (window    : window_access_t;
+     alignment : alignment_t;
+     cascade   : c.int);
+  pragma import (c, set_position, "AG_WindowSetPosition");
+
+  procedure set_position
+    (window    : window_access_t;
+     alignment : alignment_t;
+     cascade   : boolean);
+  pragma inline (set_position);
+
+  procedure set_geometry
+    (window : window_access_t;
+     x      : c.int;
+     y      : c.int;
+     width  : c.int;
+     height : c.int);
+  pragma import (c, set_geometry, "agar_window_set_geometry");
+
+  procedure set_geometry
+    (window : window_access_t;
+     x      : natural;
+     y      : natural;
+     width  : natural;
+     height : natural);
+  pragma inline (set_geometry);
+ 
+  procedure set_geometry_aligned
+    (window    : window_access_t;
+     alignment : alignment_t;
+     width     : c.int;
+     height    : c.int);
+  pragma import (c, set_geometry_aligned, "agar_window_set_geometry_aligned");
+
+  procedure set_geometry_aligned
+    (window    : window_access_t;
+     alignment : alignment_t;
+     width     : positive;
+     height    : positive);
+  pragma inline (set_geometry_aligned);
+ 
+  procedure set_geometry_aligned_percent
+    (window    : window_access_t;
+     alignment : alignment_t;
+     width     : c.int;
+     height    : c.int);
+  pragma import (c, set_geometry_aligned_percent, "agar_window_set_geometry_aligned_percent");
+
+  procedure set_geometry_aligned_percent
+    (window    : window_access_t;
+     alignment : alignment_t;
+     width     : percent_t;
+     height    : percent_t);
+  pragma inline (set_geometry_aligned_percent);
+
+  procedure set_geometry_bounded
+    (window : window_access_t;
+     x      : c.int;
+     y      : c.int;
+     width  : c.int;
+     height : c.int);
+  pragma import (c, set_geometry_bounded, "agar_window_set_geometry_bounded");
+
+  procedure set_geometry_bounded
+    (window : window_access_t;
+     x      : natural;
+     y      : natural;
+     width  : natural;
+     height : natural);
+  pragma inline (set_geometry_bounded);
+
+  procedure set_geometry_max (window : window_access_t);
+  pragma import (c, set_geometry_max, "AG_WindowSetGeometryMax");
+
+  procedure maximize (window : window_access_t);
+  pragma import (c, maximize, "AG_WindowMaximize");
+ 
+  procedure unmaximize (window : window_access_t);
+  pragma import (c, unmaximize, "AG_WindowUnmaximize");
+ 
+  procedure minimize (window : window_access_t);
+  pragma import (c, minimize, "AG_WindowMinimize");
+ 
+  procedure unminimize (window : window_access_t);
+  pragma import (c, unminimize, "AG_WindowUnminimize");
+ 
+  procedure attach
+    (window    : window_access_t;
+     subwindow : window_access_t);
+  pragma import (c, attach, "AG_WindowAttach");
+
+  procedure detach
+    (window    : window_access_t;
+     subwindow : window_access_t);
+  pragma import (c, detach, "AG_WindowDetach");
+
+  procedure update (window : window_access_t);
+  pragma import (c, update, "agar_window_update");
 
   function find_focused (window : window_access_t) return agar.gui.widget.widget_access_t;
   pragma import (c, find_focused, "AG_WidgetFindFocused");

@@ -80,14 +80,14 @@ package agar.gui.view is
     (width  : c.int;
      height : c.int;
      bpp    : c.int;
-     flags  : video_flags_t) return c.int;
+     flags  : video_flags_t := 0) return c.int;
   pragma import (c, init_video, "AG_InitVideo");
 
   function init_video
     (width  : positive;
      height : positive;
      bpp    : natural;
-     flags  : video_flags_t) return boolean;
+     flags  : video_flags_t := 0) return boolean;
   pragma inline (init_video);
 
   function resize_display

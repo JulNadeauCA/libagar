@@ -6,7 +6,7 @@ package body agar.gui.view is
     (width  : positive;
      height : positive;
      bpp    : natural;
-     flags  : video_flags_t) return boolean is
+     flags  : video_flags_t := 0) return boolean is
   begin
     return init_video
       (width  => c.int (width),

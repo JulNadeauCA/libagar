@@ -5,7 +5,7 @@ default: all
 all:\
 UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o \
 UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_draw.o ag_surface.o ag_unit.o \
-ag_widget.o agar-gui-ada-conf agar-gui-ada-conf.o agar-gui-ada.a \
+ag_widget.o ag_window.o agar-gui-ada-conf agar-gui-ada-conf.o agar-gui-ada.a \
 agar-gui-colors.ali agar-gui-colors.o agar-gui-draw.ali agar-gui-draw.o \
 agar-gui-pixelformat.ali agar-gui-pixelformat.o agar-gui-point.ali \
 agar-gui-point.o agar-gui-rect.ali agar-gui-rect.o agar-gui-style.ali \
@@ -177,6 +177,10 @@ ag_widget.o:\
 cc-compile ag_widget.c
 	./cc-compile ag_widget.c
 
+ag_window.o:\
+cc-compile ag_window.c
+	./cc-compile ag_window.c
+
 agar-gui-ada-conf:\
 cc-link agar-gui-ada-conf.ld agar-gui-ada-conf.o ctxt/ctxt.a
 	./cc-link agar-gui-ada-conf agar-gui-ada-conf.o ctxt/ctxt.a
@@ -187,10 +191,11 @@ cc-compile agar-gui-ada-conf.c ctxt.h _sysinfo.h
 
 agar-gui-ada.a:\
 cc-slib agar-gui-ada.sld ag_draw.o ag_surface.o ag_unit.o ag_widget.o \
-agar-gui-colors.o agar-gui-draw.o agar-gui-pixelformat.o agar-gui-point.o \
-agar-gui-rect.o agar-gui-style.o agar-gui-surface.o agar-gui-text.o \
-agar-gui-unit.o agar-gui-view.o agar-gui-widget.o agar-gui-window.o agar-gui.o
-	./cc-slib agar-gui-ada ag_draw.o ag_surface.o ag_unit.o ag_widget.o \
+ag_window.o agar-gui-colors.o agar-gui-draw.o agar-gui-pixelformat.o \
+agar-gui-point.o agar-gui-rect.o agar-gui-style.o agar-gui-surface.o \
+agar-gui-text.o agar-gui-unit.o agar-gui-view.o agar-gui-widget.o \
+agar-gui-window.o agar-gui.o
+	./cc-slib agar-gui-ada ag_draw.o ag_surface.o ag_unit.o ag_widget.o ag_window.o \
 	agar-gui-colors.o agar-gui-draw.o agar-gui-pixelformat.o agar-gui-point.o \
 	agar-gui-rect.o agar-gui-style.o agar-gui-surface.o agar-gui-text.o \
 	agar-gui-unit.o agar-gui-view.o agar-gui-widget.o agar-gui-window.o agar-gui.o
@@ -289,16 +294,19 @@ ada-compile agar-gui-widget.adb agar-gui-widget.ads
 agar-gui-widget.o:\
 agar-gui-widget.ali
 
+agar-gui-window.ads:\
+agar-gui-surface.ads agar-gui-widget.ads
+
 agar-gui-window.ali:\
-ada-compile agar-gui-window.ads agar-gui-window.ads agar-gui-widget.ads
-	./ada-compile agar-gui-window.ads
+ada-compile agar-gui-window.adb agar-gui-window.ads
+	./ada-compile agar-gui-window.adb
 
 agar-gui-window.o:\
 agar-gui-window.ali
 
 agar-gui.ali:\
-ada-compile agar-gui.ads agar-gui.ads
-	./ada-compile agar-gui.ads
+ada-compile agar-gui.adb agar-gui.ads
+	./ada-compile agar-gui.adb
 
 agar-gui.o:\
 agar-gui.ali
@@ -331,6 +339,10 @@ conf-cc mk-cctype
 conf-ldtype:\
 conf-ld mk-ldtype
 	./mk-ldtype > conf-ldtype.tmp && mv conf-ldtype.tmp conf-ldtype
+
+conf-sosuffix:\
+mk-sosuffix
+	./mk-sosuffix > conf-sosuffix.tmp && mv conf-sosuffix.tmp conf-sosuffix
 
 conf-systype:\
 mk-systype
@@ -486,6 +498,9 @@ conf-ld conf-systype conf-cctype
 mk-mk-ctxt:\
 conf-cc
 
+mk-sosuffix:\
+conf-systype
+
 mk-systype:\
 conf-cc
 
@@ -494,7 +509,7 @@ clean: obj_clean
 obj_clean:
 	rm -f UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o \
 	UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_draw.o ag_surface.o ag_unit.o \
-	ag_widget.o agar-gui-ada-conf agar-gui-ada-conf.o agar-gui-ada.a \
+	ag_widget.o ag_window.o agar-gui-ada-conf agar-gui-ada-conf.o agar-gui-ada.a \
 	agar-gui-colors.ali agar-gui-colors.o agar-gui-draw.ali agar-gui-draw.o \
 	agar-gui-pixelformat.ali agar-gui-pixelformat.o agar-gui-point.ali \
 	agar-gui-point.o agar-gui-rect.ali agar-gui-rect.o agar-gui-style.ali \
@@ -507,9 +522,10 @@ obj_clean:
 	ctxt/slibdir.c ctxt/slibdir.o ctxt/version.c ctxt/version.o deinstaller \
 	deinstaller.o inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o \
 	inst-link inst-link.o install_core.o install_error.o installer installer.o \
-	instchk instchk.o insthier.o
+	instchk
+	rm -f instchk.o insthier.o
 ext_clean:
-	rm -f conf-adatype conf-cctype conf-ldtype conf-systype mk-ctxt
+	rm -f conf-adatype conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 
 regen:\
 ada-srcmap ada-srcmap-all
