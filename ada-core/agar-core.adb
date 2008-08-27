@@ -4,7 +4,7 @@ package body agar.core is
 
   function init
     (progname : string;
-     flags    : init_flags_t) return boolean
+     flags    : init_flags_t := 0) return boolean
   is
     ca_progname : aliased c.char_array := c.to_c (progname);
   begin

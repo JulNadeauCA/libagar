@@ -11,3 +11,4 @@
 20080824 code: updated class_t.
 20080824 version: agar-core-ada 0.12
 20080824 code: updated object/class API.
+20080827 code: flags default to 0.

@@ -34,12 +34,12 @@ package agar.core is
 
   function init
     (progname : cs.chars_ptr;
-     flags    : init_flags_t) return c.int;
+     flags    : init_flags_t := 0) return c.int;
   pragma import (c, init, "AG_InitCore");
 
   function init
     (progname : string;
-     flags    : init_flags_t) return boolean;
+     flags    : init_flags_t := 0) return boolean;
   pragma inline (init);
  
   procedure at_exit_func (func : exit_callback_t);
