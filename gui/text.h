@@ -196,6 +196,24 @@ AG_TextStateCompare(const AG_TextState *s1, const AG_TextState *s2)
 	}
 	return (1);
 }
+
+/*
+ * Return the offset in pixels needed to align text based on the current
+ * justification mode.
+ */
+static __inline__ int
+AG_TextJustifyOffset(int w, int wLine)
+{
+	switch (agTextState->justify) {
+	case AG_TEXT_LEFT:
+		return (0);
+	case AG_TEXT_CENTER:
+		return (w/2 - wLine/2);
+	case AG_TEXT_RIGHT:
+		return (w - wLine);
+	}
+	return (0);
+}
 __END_DECLS
 
 #include "close_code.h"
