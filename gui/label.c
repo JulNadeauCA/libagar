@@ -625,6 +625,10 @@ static void
 Draw(void *p)
 {
 	AG_Label *lbl = p;
+	
+	if (lbl->flags & AG_LABEL_FRAME)
+		AG_DrawFrame(lbl, AG_RECT(0,0,WIDTH(lbl),HEIGHT(lbl)), -1,
+		    AG_COLOR(FRAME_COLOR));
 
 	if (lbl->flags & AG_LABEL_PARTIAL) {
 		AG_WidgetPushClipRect(lbl,
