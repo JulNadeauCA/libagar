@@ -55,7 +55,7 @@ extern AG_WidgetClass agTextboxClass;
 AG_Textbox *AG_TextboxNew(void *, Uint, const char *);
 #define     AG_TextboxSizeHint(tb,text) AG_EditableSizeHint((tb)->ed,(text))
 #define     AG_TextboxSizeHintPixels(tb,w,h) \
-            AG_EditableSizeHint((tb)->ed,(w),(h))
+            AG_EditableSizeHintPixels((tb)->ed,(w),(h))
 void        AG_TextboxSetLabel(AG_Textbox *, const char *, ...);
 #define     AG_TextboxSetPassword(tb,flag) \
             AG_EditableSetPassword((tb)->ed,(flag))
