@@ -2,6 +2,7 @@ ag_draw.o
 ag_surface.o
 ag_unit.o
 ag_widget.o
+ag_window.o
 agar-gui-colors.o
 agar-gui-draw.o
 agar-gui-pixelformat.o

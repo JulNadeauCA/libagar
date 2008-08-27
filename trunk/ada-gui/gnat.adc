@@ -41,6 +41,8 @@ pragma source_file_name(agar.gui.widget, body_file_name => "agar-gui-widget.adb"
 
 -- ./agar-gui-window.apk
 pragma source_file_name(agar.gui.window, spec_file_name => "agar-gui-window.ads");
+pragma source_file_name(agar.gui.window, body_file_name => "agar-gui-window.adb");
 
 -- ./agar-gui.apk
 pragma source_file_name(agar.gui, spec_file_name => "agar-gui.ads");
+pragma source_file_name(agar.gui, body_file_name => "agar-gui.adb");
