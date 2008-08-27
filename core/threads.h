@@ -87,6 +87,8 @@ extern pthread_mutexattr_t agRecursiveMutexAttr;
 typedef int AG_Mutex;
 typedef int AG_Thread;
 typedef int AG_Cond;
+typedef int AG_MutexAttr;
+typedef int AG_ThreadKey;
 
 #define AG_MUTEX_INITIALIZER 0
 #define AG_COND_INITIALIZER 0
