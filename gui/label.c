@@ -510,6 +510,13 @@ PrintPolled64(AG_Label *lbl, const char *f, char *s, char *s2)
 }
 #endif /* HAVE_64BIT */
 
+static int
+TextPosition(AG_Label *lbl, AG_Surface *su)
+{
+	return lbl->lPad +
+	       AG_TextJustifyOffset(WIDTH(lbl) - (lbl->lPad+lbl->rPad), su->w);
+}
+
 /* Display a polled label. */
 static void
 DrawPolled(AG_Label *lbl)
@@ -606,12 +613,11 @@ DrawPolled(AG_Label *lbl)
 
 	if (agTextCache) {
 		int su = AG_TextCacheInsLookup(lbl->tCache,s);
-		int x = lbl->lPad +
-		        AG_TextJustifyOffset(WIDTH(lbl), WSURFACE(lbl,su)->w);
+		int x = TextPosition(lbl, WSURFACE(lbl,su));
 		AG_WidgetBlitSurface(lbl, su, x, lbl->tPad);
 	} else {
 		AG_Surface *su = AG_TextRender(s);
-		int x = lbl->lPad + AG_TextJustifyOffset(WIDTH(lbl), su->w);
+		int x = TextPosition(lbl, su);
 		AG_WidgetBlit(lbl, su, x, lbl->tPad);
 		AG_SurfaceFree(su);
 	}
@@ -653,9 +659,7 @@ Draw(void *p)
 		}
 		lbl->flags &= ~(AG_LABEL_REGEN);
 		if (lbl->surface != -1) {
-			x = lbl->lPad +
-			    AG_TextJustifyOffset(WIDTH(lbl),
-			        WSURFACE(lbl,lbl->surface)->w);
+			x = TextPosition(lbl, WSURFACE(lbl,lbl->surface));
 			AG_WidgetBlitSurface(lbl, lbl->surface,
 			    x, lbl->tPad);
 		}
