@@ -102,6 +102,12 @@ See the
 .Dq POLLED LABELS
 section for more details.
 .Pp
+See
+.Dq LABEL FLAGS
+section for a the accepted
+.Fa flags
+values.
+.Pp
 The
 .Fn AG_LabelSetPadding
 function sets the label padding parameters in pixels.
@@ -248,18 +254,12 @@ The FreeSG math library (http://freesg.org/) does implement these extensions.
 Complex number
 .It %[V]
 Vector in R^n
-.It %[V2]
-Vector in R^2
-.It %[V3]
-Vector in R^3
-.It %[V4]
-Vector in R^4
+.It %[Vn]
+Vector in R^n
 .It %[M]
 Matrix (m*n)
-.It %[M33]
-Matrix (3*3)
-.It %[M44]
-Matrix (4*4)
+.It %[Mmn]
+Matrix (m*n)
 .It %[T]
 Time (seconds)
 .It %[R]
@@ -305,6 +305,26 @@ text will be displayed by the label.
 The
 .Nm
 widget neither reacts to nor generates any event.
+.Sh LABEL FLAGS
+The following
+.Nm
+.Fa flags
+are defined:
+.Bl -tag -width "AG_LABEL_NOMINSIZE "
+.It AG_LABEL_FRAME
+Draw a visible frame around the label.
+.It AG_LABEL_NOMINSIZE
+Don't enforce a minimum size on the label.
+If the label becomes partially hidden, the text will be truncated with a
+.Sq ...
+string.
+.It AG_LABEL_PARTIAL
+The label is partially hidden (read-only).
+.It AG_LABEL_REGEN
+Force re-rendering of the text at next draw (used internally by
+.Fn AG_LabelString ,
+etc.)
+.El
 .Sh EXAMPLES
 The following code snippet creates a window containing both a static label
 and a polled label:
