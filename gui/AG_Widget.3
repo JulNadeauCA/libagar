@@ -523,7 +523,16 @@ arguments are indices into the global GUI color array (see
 .Pp
 .nr nS 1
 .Ft void
-.Fn AG_DrawBox "AG_Widget *widget" "AG_Rect r" "Uint32 c"
+.Fn AG_DrawPixel "AG_Widget *widget" "int x" "int y" "Uint32 pixel"
+.Pp
+.Ft void
+.Fn AG_DrawPixelBlended "AG_Widget *widget" "int x" "int y" "Uint32 pixel" "AG_BlendFn blendFn"
+.Pp
+.Ft void
+.Fn AG_DrawPixelRGB "AG_Widget *widget" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft void
+.Fn AG_DrawBox "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c"
 .Pp
 .Ft void
 .Fn AG_DrawBoxRounded "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
@@ -532,7 +541,10 @@ arguments are indices into the global GUI color array (see
 .Fn AG_DrawBoxRoundedTop "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
 .Pp
 .Ft void
-.Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "Uint32 c"
+.Fn AG_DrawFrame "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawFrameBlended "AG_Widget *widget" "AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
 .Pp
 .Ft void
 .Fn AG_DrawCircle "AG_Widget *widget" "int x" "int y" "int radius" "Uint32 c"
@@ -556,9 +568,47 @@ arguments are indices into the global GUI color array (see
 .Fn AG_DrawRectOutline "AG_Widget *widget, AG_Rect r" "Uint32 c"
 .Pp
 .Ft void
-.Fn AG_DrawRectFIlled "AG_Widget *widget, AG_Rect r" "Uint32 c"
+.Fn AG_DrawRectFilled "AG_Widget *widget, AG_Rect r" "Uint32 c"
+.Pp
+.Ft void
+.Fn AG_DrawPlus "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Pp
+.Ft void
+.Fn AG_DrawMinus "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Pp
+.Ft void
+.Fn AG_DrawTiling "AG_Widget *widget, AG_Rect r" "int tileSz" "int offset" "Uint32 c1" "Uint32 c2"
+.Pp
+.Ft void
+.Fn AG_DrawArrowUp "AG_Widget *widget" "int x" "int y" "int h" "Uint32 c1" "Uint32 c2"
+.Pp
+.Ft void
+.Fn AG_DrawArrowDown "AG_Widget *widget" "int x" "int y" "int h" "Uint32 c1" "Uint32 c2"
+.Pp
+.Ft void
+.Fn AG_DrawArrowLeft "AG_Widget *widget" "int x" "int y" "int w" "Uint32 c1" "Uint32 c2"
+.Pp
+.Ft void
+.Fn AG_DrawArrowRight "AG_Widget *widget" "int x" "int y" "int w" "Uint32 c1" "Uint32 c2"
 .Pp
 .nr nS 0
+For all of the following functions accepting
+.Ft Uint32
+color arguments, the values are assumed to be in
+.Fa agViewFmt
+pixel format.
+.Pp
+.Fn AG_DrawPixel
+draws a single pixel at the specified coordinates.
+The
+.Fn AG_DrawPixelBlended
+variant performs alpha-blending using the specified blending function
+(see
+.Fn AG_WidgetBlendPixelRGBA ) .
+The
+.Fn AG_DrawPixelRGB
+variant accepts RGB component arguments.
+.Pp
 .Fn AG_DrawBox
 draws a 3D-style box, where 
 .Fa z
@@ -574,6 +624,8 @@ does the same but only for the two top corners of the box.
 .Pp
 .Fn AG_DrawFrame
 draws a 3D-style frame.
+.Fn AG_DrawFrameBlended
+draws a frame with alpha-blending.
 .Pp
 .Fn AG_DrawCircle
 draws a circle with the origin at
@@ -603,6 +655,36 @@ draws the outline of a rectangle.
 .Pp
 .Fn AG_DrawRectFilled
 fills a rectangle of pixels.
+.Pp
+.Fn AG_DrawPlus
+and
+.Fn AG_DrawMinus
+draw plus ("+") or minus ("-") signs spanning
+.Fa r ,
+using the specified color and blending function.
+.Pp
+.Fn AG_DrawTiling
+fills
+.Fa r
+with a two-color tiling pattern.
+.Fa tileSz
+is the size of the tiles in pixels,
+.Fa offset
+is an offset in pixels and
+.Fa c1 ,
+.Fa c2
+specify the colors of the tiles.
+.Pp
+.Fn AG_DrawArrowUp ,
+.Fn AG_DrawArrowDown ,
+.Fn AG_DrawArrowLeft
+and
+.Fn AG_DrawArrowRight
+draw an arrow at the specified coordinates.
+.Fa h
+and
+.Fa w
+specify the height/width of the arrow in pixels.
 .Sh BINDINGS
 Each widget has a list of named
 .Sq bindings ,
