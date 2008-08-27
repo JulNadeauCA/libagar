@@ -484,28 +484,41 @@ Disallow user selection of this item.
 If popup menus are in effect, disable popups for this item.
 .El
 .Sh EXAMPLES
-The following code fragment creates a dynamic list, constructed from an
-existing data structure:
-.Bd -literal
+The following code fragment displays an array of strings.
+A callback function is used such that updates in
+.Va items
+are reflected by
+.Nm .
+.Bd -literal -offset indent
+char *items[] = { "foo", "bar", NULL };
+
 void
-PollMyStructure(AG_Event *event)
+UpdateItems(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
-	MyStructure *s = AG_PTR(1);
-	int i;
+	char **item;
 
 	AG_TlistBegin(tl);
-	for (i = 0; i < s->nItems; i++) {
-		AG_TlistAdd(tl, NULL, "%s", s->itemName);
+	for (item = &items[0]; *item != NULL; item++) {
+		AG_TlistAdd(tl, NULL, "%s", *item);
 	}
 	AG_TlistEnd(tl);
 }
 
-void
-CreateGUI(MyStructure *s)
-{
-	AG_TlistNewPolled(NULL, 0, PollMyStructure, "%p", s);
-}
+AG_TlistNewPolled(NULL, 0, UpdateItems, NULL);
+.Ed
+.Pp
+The following code fragment produces a tree-like display:
+.Bd -literal -offset indent
+AG_Tlist *tl;
+AG_TlistItem *ti;
+
+tl = AG_TlistNewPolled(NULL, 0, UpdateItems, NULL);
+AG_TlistAdd(tl, NULL, "Trunk");
+ti = AG_TlistAdd(tl, NULL, "Branch 1");
+ti->depth = 1;
+ti = AG_TlistAdd(tl, NULL, "Branch 2");
+ti->depth = 1;
 .Ed
 .Pp
 See
