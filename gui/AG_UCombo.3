@@ -107,6 +107,38 @@ widget generates the following events:
 .It Fn ucombo-selected "AG_TlistItem *item"
 An item was selected.
 .El
+.Sh STRUCTURE DATA
+.Bl -tag -compact -width "AG_Button *button "
+.It Ft AG_Tlist *list
+Pointer to the
+.Xr AG_Tlist 3
+displayed by
+.Nm
+when expanded.
+.It Ft AG_Button *button
+Pointer to the underlying
+.Xr AG_Button 3
+widget.
+.El
+.Sh EXAMPLES
+The following code fragment reacts to a
+.Nm
+selection event by displaying a text dialog:
+.Bd -literal -offset indent
+void
+Selected(AG_Event *event)
+{
+	AG_TlistItem *item = AG_PTR(1);
+	AG_TextMsg(AG_MSG_INFO, "Selected item: %s", item->text);
+}
+
+AG_UCombo *com;
+
+com = AG_UComboNew(NULL, 0);
+AG_TlistAdd(com->list, NULL, "Foo");
+AG_TlistAdd(com->list, NULL, "Bar");
+AG_SetEvent(com, "ucombo-selected", Selected, NULL);
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Button 3 ,
