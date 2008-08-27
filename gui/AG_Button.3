@@ -45,7 +45,7 @@ can be used to trigger events, or control a boolean value.
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
-.Sh INITIALIZATION
+.Sh INTERFACE
 .nr nS 1
 .Ft "AG_Button *"
 .Fn AG_ButtonNew "AG_Widget *parent" "Uint flags" "const char *label"
@@ -142,9 +142,11 @@ The
 .Fa caption
 argument, if not NULL, defines the string to display by default as
 button label.
-There are currently no
+See
+.Dq BUTTON FLAGS
+for the acceptable
 .Fa flags
-specific to this widget.
+values.
 .Pp
 The
 .Fn AG_ButtonSetPadding
@@ -202,6 +204,31 @@ The
 .Fn AG_ButtonTextNODUP
 variant uses the original string without copying.
 .Pp
+.Sh BUTTON FLAGS
+The following
+.Va flags
+are provided:
+.Bl -tag -width "AG_BUTTON_MOUSEOVER "
+.It AG_BUTTON_STICKY
+Prevent the button from springing back to its previous state following
+a click.
+Set on initialization or by
+.Fn AG_ButtonSetSticky .
+.It AG_BUTTON_MOUSEOVER
+The cursor is over the button area (read-only).
+.It AG_BUTTON_REPEAT
+Repeat mode is enabled (read-only, see
+.Fn AG_ButtonSetRepeatMode ) .
+.it AG_BUTTON_REGEN
+Force update of the label text (used internally by
+.Fn AG_ButtonText ,
+etc.)
+.It AG_BUTTON_INVSTATE
+Invert the interpretation of the
+.Sq state
+binding.
+By default, a value of 1 causes the button to be pressed.
+.El
 .Sh EVENTS
 The
 .Nm
