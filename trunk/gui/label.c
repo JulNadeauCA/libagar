@@ -41,22 +41,22 @@ static AG_Mutex fmtsLock;
 AG_Label *
 AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 {
-	AG_Label *label;
+	AG_Label *lbl;
 	va_list ap;
 	const char *p;
 	
-	label = Malloc(sizeof(AG_Label));
-	AG_ObjectInit(label, &agLabelClass);
+	lbl = Malloc(sizeof(AG_Label));
+	AG_ObjectInit(lbl, &agLabelClass);
 
-	label->type = AG_LABEL_POLLED;
-	label->text = Strdup(fmt);
-	label->flags |= flags;
-	if (!(flags & AG_LABEL_NO_HFILL)) { AG_ExpandHoriz(label); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(label); }
+	lbl->type = AG_LABEL_POLLED;
+	lbl->text = Strdup(fmt);
+	lbl->flags |= flags;
+	if (!(flags & AG_LABEL_NO_HFILL)) { AG_ExpandHoriz(lbl); }
+	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
 #ifdef THREADS
-	label->poll.lock = NULL;
+	lbl->poll.lock = NULL;
 #endif
-	label->tCache = agTextCache ? AG_TextCacheNew(label, 64, 16) : NULL;
+	lbl->tCache = agTextCache ? AG_TextCacheNew(lbl, 64, 16) : NULL;
 
 	va_start(ap, fmt);
 	for (p = fmt; *p != '\0'; p++) {
@@ -70,8 +70,8 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 		case '%':
 			break;
 		default:
-			if (label->poll.nptrs+1 < AG_LABEL_MAX_POLLPTRS) {
-				label->poll.ptrs[label->poll.nptrs++] =
+			if (lbl->poll.nptrs+1 < AG_LABEL_MAX_POLLPTRS) {
+				lbl->poll.ptrs[lbl->poll.nptrs++] =
 				    va_arg(ap, void *);
 			}
 			break;
@@ -79,8 +79,8 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	}
 	va_end(ap);
 
-	AG_ObjectAttach(parent, label);
-	return (label);
+	AG_ObjectAttach(parent, lbl);
+	return (lbl);
 }
 
 /* Create a new polled label associated with a mutex. */
@@ -88,22 +88,22 @@ AG_Label *
 AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
     const char *fmt, ...)
 {
-	AG_Label *label;
+	AG_Label *lbl;
 	va_list ap;
 	const char *p;
 	
-	label = Malloc(sizeof(AG_Label));
-	AG_ObjectInit(label, &agLabelClass);
+	lbl = Malloc(sizeof(AG_Label));
+	AG_ObjectInit(lbl, &agLabelClass);
 
-	label->type = AG_LABEL_POLLED_MT;
-	label->text = Strdup(fmt);
-	label->flags |= flags;
-	if (!(flags & AG_LABEL_NO_HFILL)) { AG_ExpandHoriz(label); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(label); }
+	lbl->type = AG_LABEL_POLLED_MT;
+	lbl->text = Strdup(fmt);
+	lbl->flags |= flags;
+	if (!(flags & AG_LABEL_NO_HFILL)) { AG_ExpandHoriz(lbl); }
+	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
 #ifdef THREADS
-	label->poll.lock = mutex;
+	lbl->poll.lock = mutex;
 #endif
-	label->tCache = agTextCache ? AG_TextCacheNew(label, 64, 16) : NULL;
+	lbl->tCache = agTextCache ? AG_TextCacheNew(lbl, 64, 16) : NULL;
 
 	va_start(ap, fmt);
 	for (p = fmt; *p != '\0'; p++) {
@@ -117,8 +117,8 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 		case '%':
 			break;
 		default:
-			if (label->poll.nptrs+1 < AG_LABEL_MAX_POLLPTRS) {
-				label->poll.ptrs[label->poll.nptrs++] =
+			if (lbl->poll.nptrs+1 < AG_LABEL_MAX_POLLPTRS) {
+				lbl->poll.ptrs[lbl->poll.nptrs++] =
 				    va_arg(ap, void *);
 			}
 			break;
@@ -126,53 +126,53 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 	}
 	va_end(ap);
 
-	AG_ObjectAttach(parent, label);
-	return (label);
+	AG_ObjectAttach(parent, lbl);
+	return (lbl);
 }
 
 /* Create a new static label using the given formatted text. */
 AG_Label *
 AG_LabelNewStatic(void *parent, Uint flags, const char *fmt, ...)
 {
-	AG_Label *label;
+	AG_Label *lbl;
 	va_list ap;
 
-	label = Malloc(sizeof(AG_Label));
-	AG_ObjectInit(label, &agLabelClass);
+	lbl = Malloc(sizeof(AG_Label));
+	AG_ObjectInit(lbl, &agLabelClass);
 
-	label->type = AG_LABEL_STATIC;
-	label->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(label); }
+	lbl->type = AG_LABEL_STATIC;
+	lbl->flags |= flags;
+	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(lbl); }
+	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
 	if (fmt != NULL) {
 		va_start(ap, fmt);
-		Vasprintf(&label->text, fmt, ap);
+		Vasprintf(&lbl->text, fmt, ap);
 		va_end(ap);
 	} else {
-		label->text = NULL;
+		lbl->text = NULL;
 	}
 
-	AG_ObjectAttach(parent, label);
-	return (label);
+	AG_ObjectAttach(parent, lbl);
+	return (lbl);
 }
 
 /* LabelNewStatic() variant without format string. */
 AG_Label *
 AG_LabelNewStaticString(void *parent, Uint flags, const char *text)
 {
-	AG_Label *label;
+	AG_Label *lbl;
 	
-	label = Malloc(sizeof(AG_Label));
-	AG_ObjectInit(label, &agLabelClass);
+	lbl = Malloc(sizeof(AG_Label));
+	AG_ObjectInit(lbl, &agLabelClass);
 
-	label->type = AG_LABEL_STATIC;
-	label->flags |= flags;
-	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(label); }
-	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(label); }
-	label->text = (text != NULL) ? Strdup(text) : NULL;
+	lbl->type = AG_LABEL_STATIC;
+	lbl->flags |= flags;
+	if (flags & AG_LABEL_HFILL) { AG_ExpandHoriz(lbl); }
+	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
+	lbl->text = (text != NULL) ? Strdup(text) : NULL;
 
-	AG_ObjectAttach(parent, label);
-	return (label);
+	AG_ObjectAttach(parent, lbl);
+	return (lbl);
 }
 
 static void
@@ -338,49 +338,49 @@ AG_LabelString(AG_Label *lbl, const char *s)
 /*
  * Built-in extended format specifiers.
  */
-static void PrintU8(AG_Label *label, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%u", AG_LABEL_ARG(Uint8));
+static void PrintU8(AG_Label *lbl, char *s, size_t len, int fPos) {
+	Snprintf(s, len, "%u", AG_LABEL_ARG(lbl,Uint8));
 }
-static void PrintS8(AG_Label *label, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%d", AG_LABEL_ARG(Sint8));
+static void PrintS8(AG_Label *lbl, char *s, size_t len, int fPos) {
+	Snprintf(s, len, "%d", AG_LABEL_ARG(lbl,Sint8));
 }
-static void PrintU16(AG_Label *label, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%u", AG_LABEL_ARG(Uint16));
+static void PrintU16(AG_Label *lbl, char *s, size_t len, int fPos) {
+	Snprintf(s, len, "%u", AG_LABEL_ARG(lbl,Uint16));
 }
-static void PrintS16(AG_Label *label, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%d", AG_LABEL_ARG(Sint16));
+static void PrintS16(AG_Label *lbl, char *s, size_t len, int fPos) {
+	Snprintf(s, len, "%d", AG_LABEL_ARG(lbl,Sint16));
 }
-static void PrintU32(AG_Label *label, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%u", AG_LABEL_ARG(Uint32));
+static void PrintU32(AG_Label *lbl, char *s, size_t len, int fPos) {
+	Snprintf(s, len, "%u", AG_LABEL_ARG(lbl,Uint32));
 }
-static void PrintS32(AG_Label *label, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%d", AG_LABEL_ARG(Sint32));
+static void PrintS32(AG_Label *lbl, char *s, size_t len, int fPos) {
+	Snprintf(s, len, "%d", AG_LABEL_ARG(lbl,Sint32));
 }
 static void
-PrintOBJNAME(AG_Label *label, char *s, size_t len, int fPos)
+PrintOBJNAME(AG_Label *lbl, char *s, size_t len, int fPos)
 {
-	AG_Object *ob = AG_LABEL_ARG(AG_Object *);
+	AG_Object *ob = AG_LABEL_ARG(lbl,AG_Object *);
 	Snprintf(s, len, "%s", ob != NULL ? ob->name : "(null)");
 }
 static void
-PrintOBJTYPE(AG_Label *label, char *s, size_t len, int fPos)
+PrintOBJTYPE(AG_Label *lbl, char *s, size_t len, int fPos)
 {
-	AG_Object *ob = AG_LABEL_ARG(AG_Object *);
+	AG_Object *ob = AG_LABEL_ARG(lbl,AG_Object *);
 	Snprintf(s, len, "%s", ob->cls->name);
 }
 static void
-PrintIBOOL(AG_Label *label, char *s, size_t len, int fPos)
+PrintIBOOL(AG_Label *lbl, char *s, size_t len, int fPos)
 {
-	int *flag = &AG_LABEL_ARG(int);
+	int *flag = &AG_LABEL_ARG(lbl,int);
 	Snprintf(s, len, "%s", *flag ? _("yes") : _("no"));
 }
 static void
-PrintFLAGS(AG_Label *label, char *s, size_t len, int fPos)
+PrintFLAGS(AG_Label *lbl, char *s, size_t len, int fPos)
 {
-	Uint *flags = &AG_LABEL_ARG(Uint);
+	Uint *flags = &AG_LABEL_ARG(lbl,Uint);
 	struct ag_label_flag *lfl;
 	s[0] = '\0';
-	SLIST_FOREACH(lfl, &label->lflags, lflags) {
+	SLIST_FOREACH(lfl, &lbl->lflags, lflags) {
 		if (lfl->idx == fPos && *flags & (Uint)lfl->v) {
 			if (s[0] != '\0') { Strlcat(s, ", ", len); }
 			Strlcat(s, lfl->text, len);
@@ -388,12 +388,12 @@ PrintFLAGS(AG_Label *label, char *s, size_t len, int fPos)
 	}
 }
 static void
-PrintFLAGS8(AG_Label *label, char *s, size_t len, int fPos)
+PrintFLAGS8(AG_Label *lbl, char *s, size_t len, int fPos)
 {
-	Uint8 *flags = &AG_LABEL_ARG(Uint8);
+	Uint8 *flags = &AG_LABEL_ARG(lbl,Uint8);
 	struct ag_label_flag *lfl;
 	s[0] = '\0';
-	SLIST_FOREACH(lfl, &label->lflags, lflags) {
+	SLIST_FOREACH(lfl, &lbl->lflags, lflags) {
 		if (lfl->idx == fPos && *flags & (Uint8)lfl->v) {
 			if (s[0] != '\0') { Strlcat(s, ", ", len); }
 			Strlcat(s, lfl->text, len);
@@ -401,12 +401,12 @@ PrintFLAGS8(AG_Label *label, char *s, size_t len, int fPos)
 	}
 }
 static void
-PrintFLAGS16(AG_Label *label, char *s, size_t len, int fPos)
+PrintFLAGS16(AG_Label *lbl, char *s, size_t len, int fPos)
 {
-	Uint16 *flags = &AG_LABEL_ARG(Uint16);
+	Uint16 *flags = &AG_LABEL_ARG(lbl,Uint16);
 	struct ag_label_flag *lfl;
 	s[0] = '\0';
-	SLIST_FOREACH(lfl, &label->lflags, lflags) {
+	SLIST_FOREACH(lfl, &lbl->lflags, lflags) {
 		if (lfl->idx == fPos && *flags & (Uint16)lfl->v) {
 			if (s[0] != '\0') { Strlcat(s, ", ", len); }
 			Strlcat(s, lfl->text, len);
@@ -414,12 +414,12 @@ PrintFLAGS16(AG_Label *label, char *s, size_t len, int fPos)
 	}
 }
 static void
-PrintFLAGS32(AG_Label *label, char *s, size_t len, int fPos)
+PrintFLAGS32(AG_Label *lbl, char *s, size_t len, int fPos)
 {
-	Uint32 *flags = &AG_LABEL_ARG(Uint32);
+	Uint32 *flags = &AG_LABEL_ARG(lbl,Uint32);
 	struct ag_label_flag *lfl;
 	s[0] = '\0';
-	SLIST_FOREACH(lfl, &label->lflags, lflags) {
+	SLIST_FOREACH(lfl, &lbl->lflags, lflags) {
 		if (lfl->idx == fPos && *flags & (Uint32)lfl->v) {
 			if (s[0] != '\0') { Strlcat(s, ", ", len); }
 			Strlcat(s, lfl->text, len);
@@ -476,34 +476,34 @@ AG_RegisterLabelFormat(const char *fmt, AG_LabelFormatFn fn)
 #ifdef HAVE_64BIT
 /* Print a polled 64-bit value (%ll*). */
 static int
-PrintPolled64(AG_Label *label, const char *f, char *s, char *s2)
+PrintPolled64(AG_Label *lbl, const char *f, char *s, char *s2)
 {
 	int fPos = 0;
 
 	switch (*f) {
 # ifdef HAVE_LONG_DOUBLE
 	case 'f':
-		PF("%.2Lf", AG_LABEL_ARG(long double));
+		PF("%.2Lf", AG_LABEL_ARG(lbl,long double));
 		break;
 	case 'g':
-		PF("%Lg", AG_LABEL_ARG(long double));
+		PF("%Lg", AG_LABEL_ARG(lbl,long double));
 		break;
 # endif
 	case 'd':
 	case 'i':
-		PF("%lld", (long long)AG_LABEL_ARG(Sint64));
+		PF("%lld", (long long)AG_LABEL_ARG(lbl,Sint64));
 		break;
 	case 'o':
-		PF("%llo", (unsigned long long)AG_LABEL_ARG(Uint64));
+		PF("%llo", (unsigned long long)AG_LABEL_ARG(lbl,Uint64));
 		break;
 	case 'u':
-		PF("%llu", (unsigned long long)AG_LABEL_ARG(Uint64));
+		PF("%llu", (unsigned long long)AG_LABEL_ARG(lbl,Uint64));
 		break;
 	case 'x':
-		PF("%llx", (unsigned long long)AG_LABEL_ARG(Uint64));
+		PF("%llx", (unsigned long long)AG_LABEL_ARG(lbl,Uint64));
 		break;
 	case 'X':
-		PF("%llX", (unsigned long long)AG_LABEL_ARG(Uint64));
+		PF("%llX", (unsigned long long)AG_LABEL_ARG(lbl,Uint64));
 		break;
 	}
 	return (fPos);
@@ -512,34 +512,34 @@ PrintPolled64(AG_Label *label, const char *f, char *s, char *s2)
 
 /* Display a polled label. */
 static void
-DrawPolled(AG_Label *label)
+DrawPolled(AG_Label *lbl)
 {
 	char s[AG_LABEL_MAX];
 	char s2[AG_LABEL_MAX];
 	char *f;
 	int i, fPos = 0;
 
-	if (label->text == NULL || label->text[0] == '\0') {
+	if (lbl->text == NULL || lbl->text[0] == '\0') {
 		return;
 	}
 	s[0] = '\0';
 	s2[0] = '\0';
 
-	for (f = label->text; *f != '\0'; f++) {
+	for (f = lbl->text; *f != '\0'; f++) {
 		if (f[0] == '%' && f[1] != '\0') {
 			switch (f[1]) {
 			case 'l':
 				switch (f[2]) {
 				case 'f':
-					PF("%.2f", AG_LABEL_ARG(double));
+					PF("%.2f", AG_LABEL_ARG(lbl,double));
 					break;
 				case 'g':
-					PF("%g", AG_LABEL_ARG(double));
+					PF("%g", AG_LABEL_ARG(lbl,double));
 					break;
 #ifdef HAVE_64BIT
 				case 'l':
-					fPos += PrintPolled64(label, &f[3],
-					    s, s2);
+					fPos += PrintPolled64(lbl, &f[3], s,
+					    s2);
 					f += 2;
 					break;
 #endif /* HAVE_64BIT */
@@ -547,36 +547,36 @@ DrawPolled(AG_Label *label)
 				break;
 			case 'd':
 			case 'i':
-				PF("%d", AG_LABEL_ARG(int));
+				PF("%d", AG_LABEL_ARG(lbl,int));
 				break;
 			case 'o':
-				PF("%o", AG_LABEL_ARG(unsigned int));
+				PF("%o", AG_LABEL_ARG(lbl,unsigned int));
 				break;
 			case 'u':
-				PF("%u", AG_LABEL_ARG(unsigned int));
+				PF("%u", AG_LABEL_ARG(lbl,unsigned int));
 				break;
 			case 'x':
-				PF("%x", AG_LABEL_ARG(unsigned int));
+				PF("%x", AG_LABEL_ARG(lbl,unsigned int));
 				break;
 			case 'X':
-				PF("%X", AG_LABEL_ARG(unsigned int));
+				PF("%X", AG_LABEL_ARG(lbl,unsigned int));
 				break;
 			case 'c':
-				s2[0] = AG_LABEL_ARG(char);
+				s2[0] = AG_LABEL_ARG(lbl,char);
 				s2[1] = '\0';
 				PSTRING(s2);
 				break;
 			case 's':
-				PSTRING(&AG_LABEL_ARG(char));
+				PSTRING(&AG_LABEL_ARG(lbl,char));
 				break;
 			case 'p':
-				PF("%p", AG_LABEL_ARG(void *));
+				PF("%p", AG_LABEL_ARG(lbl,void *));
 				break;
 			case 'f':
-				PF("%.2f", AG_LABEL_ARG(float));
+				PF("%.2f", AG_LABEL_ARG(lbl,float));
 				break;
 			case 'g':
-				PF("%g", AG_LABEL_ARG(float));
+				PF("%g", AG_LABEL_ARG(lbl,float));
 				break;
 			case '[':
 				for (i = 0; i < nFmts; i++) {
@@ -584,7 +584,7 @@ DrawPolled(AG_Label *label)
 					    fmts[i].fmtLen) != 0) {
 						continue;
 					}
-					fmts[i].fn(label, s2, sizeof(s2), fPos);
+					fmts[i].fn(lbl, s2, sizeof(s2), fPos);
 					f += fmts[i].fmtLen+1;
 					PSTRING(s2);
 					break;
@@ -604,27 +604,24 @@ DrawPolled(AG_Label *label)
 		}
 	}
 
-	AG_PushTextState();
-	AG_TextJustify(label->justify);
-	AG_TextColor(TEXT_COLOR);
 	if (agTextCache) {
-		AG_WidgetBlitSurface(label,
-		    AG_TextCacheInsLookup(label->tCache,s),
-		    label->lPad,
-		    label->tPad);
+		int su = AG_TextCacheInsLookup(lbl->tCache,s);
+		int x = lbl->lPad +
+		        AG_TextJustifyOffset(WIDTH(lbl), WSURFACE(lbl,su)->w);
+		AG_WidgetBlitSurface(lbl, su, x, lbl->tPad);
 	} else {
-		AG_Surface *suTmp;
-		suTmp = AG_TextRender(s);
-		AG_WidgetBlit(label, suTmp, label->lPad, label->tPad);
-		AG_SurfaceFree(suTmp);
+		AG_Surface *su = AG_TextRender(s);
+		int x = lbl->lPad + AG_TextJustifyOffset(WIDTH(lbl), su->w);
+		AG_WidgetBlit(lbl, su, x, lbl->tPad);
+		AG_SurfaceFree(su);
 	}
-	AG_PopTextState();
 }
 
 static void
 Draw(void *p)
 {
 	AG_Label *lbl = p;
+	int x;
 	
 	if (lbl->flags & AG_LABEL_FRAME)
 		AG_DrawFrame(lbl, AG_RECT(0,0,WIDTH(lbl),HEIGHT(lbl)), -1,
@@ -633,21 +630,20 @@ Draw(void *p)
 	if (lbl->flags & AG_LABEL_PARTIAL) {
 		AG_WidgetPushClipRect(lbl,
 		    AG_RECT(0, 0,
-		            WIDGET(lbl)->w - WSURFACE(lbl,lbl->surfaceCont)->w,
-		            WIDGET(lbl)->h));
+		            WIDTH(lbl) - WSURFACE(lbl,lbl->surfaceCont)->w,
+		            HEIGHT(lbl)));
 	}
+	
+	AG_PushTextState();
+	AG_TextJustify(lbl->justify);
+	AG_TextColor(TEXT_COLOR);
 
 	switch (lbl->type) {
 	case AG_LABEL_STATIC:
-		AG_PushTextState();
 		if (lbl->surface == -1) {
-			AG_TextJustify(lbl->justify);
-			AG_TextColor(TEXT_COLOR);
 			lbl->surface = (lbl->text == NULL) ? -1 :
 			    AG_WidgetMapSurface(lbl, AG_TextRender(lbl->text));
 		} else if (lbl->flags & AG_LABEL_REGEN) {
-			AG_TextJustify(lbl->justify);
-			AG_TextColor(TEXT_COLOR);
 			if (lbl->text != NULL) {
 				AG_WidgetReplaceSurface(lbl, 0,
 				    AG_TextRender(lbl->text));
@@ -655,12 +651,13 @@ Draw(void *p)
 				lbl->surface = -1;
 			}
 		}
-		AG_PopTextState();
-
 		lbl->flags &= ~(AG_LABEL_REGEN);
 		if (lbl->surface != -1) {
+			x = lbl->lPad +
+			    AG_TextJustifyOffset(WIDTH(lbl),
+			        WSURFACE(lbl,lbl->surface)->w);
 			AG_WidgetBlitSurface(lbl, lbl->surface,
-			    lbl->lPad, lbl->tPad);
+			    x, lbl->tPad);
 		}
 		break;
 	case AG_LABEL_POLLED:
@@ -672,11 +669,13 @@ Draw(void *p)
 		AG_MutexUnlock(lbl->poll.lock);
 		break;
 	}
+	
+	AG_PopTextState();
 
 	if (lbl->flags & AG_LABEL_PARTIAL) {
 		AG_WidgetPopClipRect(lbl);
 		AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
-		    WIDGET(lbl)->w - WSURFACE(lbl,lbl->surfaceCont)->w,
+		    WIDTH(lbl) - WSURFACE(lbl,lbl->surfaceCont)->w,
 		    lbl->tPad);
 	}
 }

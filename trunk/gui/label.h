@@ -102,7 +102,7 @@ void	 AG_LabelFlagNew(AG_Label *, Uint, const char *,
 #define	 AG_LabelFlag32(lbl,i,s,v) \
 	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG32,(Uint32)(v))
 
-#define AG_LABEL_ARG(_type) (*(_type *)label->poll.ptrs[fPos])
+#define AG_LABEL_ARG(lbl,_type) (*(_type *)lbl->poll.ptrs[fPos])
 void	 AG_RegisterLabelFormat(const char *, AG_LabelFormatFn);
 void	 AG_RegisterBuiltinLabelFormats(void);
 

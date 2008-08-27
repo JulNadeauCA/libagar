@@ -759,20 +759,6 @@ GetSymbolSurface(Uint32 ch)
 }
 #endif /* SYMBOLS */
 
-static __inline__ int
-JustifyOffset(int w, int wLine)
-{
-	switch (agTextState->justify) {
-	case AG_TEXT_LEFT:
-		return (0);
-	case AG_TEXT_CENTER:
-		return (w/2 - wLine/2);
-	case AG_TEXT_RIGHT:
-		return (w - wLine);
-	}
-	return (0);
-}
-
 static __inline__ void
 InitMetrics(AG_TextMetrics *tm)
 {
@@ -955,14 +941,14 @@ TextRenderFT(const Uint32 *ucs)
 	/* Load and render each character. */
 	line = 0;
 	yStart = 0;
-	xStart = (tm.nLines > 1) ? JustifyOffset(tm.w, tm.wLines[0]) : 0;
+	xStart = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		FT_Bitmap *current = NULL;
 
 		if (*ch == '\n') {
 			yStart += font->lineskip;
-			xStart = JustifyOffset(tm.w, tm.wLines[++line]);
+			xStart = AG_TextJustifyOffset(tm.w, tm.wLines[++line]);
 			continue;
 		}
 #ifdef SYMBOLS
@@ -1064,7 +1050,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 
 	/* Load and render each character */
  	line = 0;
- 	xStart = (tm.nLines > 1) ? JustifyOffset(tm.w, tm.wLines[0]) : 0;
+ 	xStart = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
  	yStart = 0;
 
 	AG_GetRGB(agTextState->color, agSurfaceFmt, &r,&g,&b);
@@ -1074,7 +1060,7 @@ TextRenderFT_Blended(const Uint32 *ucs)
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
 		if (*ch == '\n') {
 			yStart += font->lineskip;
-			xStart = JustifyOffset(tm.w, tm.wLines[++line]);
+			xStart = AG_TextJustifyOffset(tm.w, tm.wLines[++line]);
 			continue;
 		}
 #ifdef SYMBOLS
@@ -1227,12 +1213,12 @@ TextRenderBitmap(const Uint32 *ucs)
 		AG_FatalError(NULL);
 
 	line = 0;
-	rd.x = (tm.nLines > 1) ? JustifyOffset(tm.w, tm.wLines[0]) : 0;
+	rd.x = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
 	rd.y = 0;
 	for (c = &ucs[0]; *c != '\0'; c++) {
 		if (*c == '\n') {
 			rd.y += font->lineskip;
-			rd.x = JustifyOffset(tm.w, tm.wLines[++line]);
+			rd.x = AG_TextJustifyOffset(tm.w, tm.wLines[++line]);
 			continue;
 		}
 		sGlyph = GetBitmapGlyph(*c);
