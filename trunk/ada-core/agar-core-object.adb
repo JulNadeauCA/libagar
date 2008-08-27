@@ -131,14 +131,22 @@ package body agar.core.object is
     return page_out (object) = 0;
   end page_out;
 
+  procedure c_set_name
+    (object : object_access_t;
+     fmt    : cs.chars_ptr;
+     name   : cs.chars_ptr);
+  pragma import (c, c_set_name, "AG_ObjectSetName");
+
   procedure set_name
     (object : object_access_t;
      name   : string)
   is
+    ca_fmt  : aliased c.char_array := c.to_c ("%s");
     ca_name : aliased c.char_array := c.to_c (name);
   begin
-    set_name
+    c_set_name
       (object => object,
+       fmt    => cs.to_chars_ptr (ca_fmt'unchecked_access),
        name   => cs.to_chars_ptr (ca_name'unchecked_access));
   end set_name;
  

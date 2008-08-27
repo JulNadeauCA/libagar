@@ -471,11 +471,6 @@ package agar.core.object is
 
   procedure set_name
     (object : object_access_t;
-     name   : cs.chars_ptr);
-  pragma import (c, set_name, "AG_ObjectSetName");
-
-  procedure set_name
-    (object : object_access_t;
      name   : string);
   pragma inline (set_name);
  
