@@ -1,0 +1,23 @@
+#!/bin/sh
+
+exec 2>/dev/null
+sys="$1"
+model=""
+
+case "$sys" in
+  SYSDEP_OS_DARWIN)
+    model=`machine`
+    ;;
+  SYSDEP_OS_VMS)
+    model=""
+    ;;
+  *)
+    model="`sysctl hw.model | tr [A-Z] [a-z]`"
+    ;;
+esac
+
+case "$model" in
+  ppc750) echo 'SYSDEP_CPU_PPC_MODEL_750' ;;
+  ppc7450) echo 'SYSDEP_CPU_PPC_MODEL_7450' ;;
+  *) echo 'SYSDEP_CPU_MODEL_UNKNOWN' ;;
+esac

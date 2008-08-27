@@ -1,0 +1,24 @@
+#!/bin/sh
+
+exec 2>/dev/null
+freq=0
+
+sys="$1"
+case "$sys" in
+  SYSDEP_OS_DARWIN)
+    freq="`sysctl hw.cpufrequency | awk '{print $2}'`"
+    let freq=freq/1000000
+    ;;
+  SYSDEP_OS_FREEBSD)
+    freq="`sysctl dev.cpu.0.freq | awk '{print $2}'`"
+    ;; 
+  SYSDEP_OS_LINUX)
+    freq="`grep -i 'cpu MHz' /proc/cpuinfo | awk -F. '{print $1'}`"
+    freq="`echo ${freq} | awk '{print $NF}'`"
+    ;;
+  SYSDEP_OS_VMS)
+    freq="`SHOW CPU /FULL | grep Speed | awk '{print $2}' | head -1`"
+    ;;
+esac
+
+echo "$freq"

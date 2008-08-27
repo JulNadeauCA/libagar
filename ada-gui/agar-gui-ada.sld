@@ -1,0 +1,17 @@
+ag_draw.o
+ag_surface.o
+ag_unit.o
+ag_widget.o
+agar-gui-colors.o
+agar-gui-draw.o
+agar-gui-pixelformat.o
+agar-gui-point.o
+agar-gui-rect.o
+agar-gui-style.o
+agar-gui-surface.o
+agar-gui-text.o
+agar-gui-unit.o
+agar-gui-view.o
+agar-gui-widget.o
+agar-gui-window.o
+agar-gui.o

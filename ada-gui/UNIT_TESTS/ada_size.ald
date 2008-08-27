@@ -1,0 +1,15 @@
+ada_size.ali
+../agar-gui-colors.ali
+../agar-gui-draw.ali
+../agar-gui-pixelformat.ali
+../agar-gui-point.ali
+../agar-gui-rect.ali
+../agar-gui-style.ali
+../agar-gui-surface.ali
+../agar-gui-text.ali
+../agar-gui-unit.ali
+../agar-gui-view.ali
+../agar-gui-widget.ali
+../agar-gui-window.ali
+../agar-gui.ali
+../agar-gui-ada.a

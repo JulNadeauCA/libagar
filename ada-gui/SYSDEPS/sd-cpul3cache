@@ -1,0 +1,23 @@
+#!/bin/sh
+
+exec 2>/dev/null
+sys="$1"
+cache=0
+
+case "$sys" in
+  SYSDEP_OS_DARWIN)
+    cache="`sysctl hw.l3cachesize | awk '{print $2}'`"
+    ;; 
+esac
+
+if [ -f ${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 ]
+then
+  cache="`${SYSDEP_DIR_RELATIVE}./sd-cpuidx86 l3cachesize`"
+fi
+
+if [ ! -z "${cache}" ]
+then
+  echo "${cache}"
+else
+  echo 0
+fi

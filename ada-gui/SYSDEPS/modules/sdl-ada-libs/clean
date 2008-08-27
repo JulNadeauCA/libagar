@@ -1,0 +1,4 @@
+#!/bin/sh
+SYSDEP_CLEAN=1
+export SYSDEP_CLEAN
+exec ../../sysdep-main

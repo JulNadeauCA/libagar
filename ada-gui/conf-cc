@@ -1,0 +1,4 @@
+cc
+
+The first line of this file is used as the path or location of the C compiler.
+This program is used to compile single source files into object files.

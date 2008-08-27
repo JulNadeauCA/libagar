@@ -1,0 +1,6 @@
+
+
+The first line of this file is passed to the Ada binder as extra flags.
+
+This file is optional and may be deleted (remember to regenerate the Makefile
+after removal).
