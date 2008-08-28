@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,10 +52,7 @@ const char *agEvArgTypeNames[] = {
 	"double"
 };
 
-/*
- * Execute a scheduled event invocation.
- * The object and timeouteq are assumed to be locked.
- */
+/* Execute a scheduled event invocation. */
 static Uint32
 SchedEventTimeout(void *p, Uint32 ival, void *arg)
 {
@@ -90,6 +87,7 @@ SchedEventTimeout(void *p, Uint32 ival, void *arg)
 	return (0);
 }
 
+/* Set or update the handler function for the given event. */
 AG_Event *
 AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 {
@@ -130,10 +128,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	return (ev);
 }
 
-/*
- * Register an additional event handler function for events of the
- * given type.
- */
+/* Configure an additional handler function for the specified event. */
 AG_Event *
 AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 {
@@ -190,6 +185,7 @@ out:
 	AG_ObjectUnlock(ob);
 }
 
+/* Return the Event structure for the named event. */
 AG_Event *
 AG_FindEventHandler(void *p, const char *name)
 {
