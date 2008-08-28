@@ -1,4 +1,7 @@
+with interfaces.c.strings;
+
 package body agar.gui.window is
+  package cs renames interfaces.c.strings;
 
   use type c.int;
 
@@ -39,6 +42,14 @@ package body agar.gui.window is
 
   procedure set_padding
     (window : window_access_t;
+     left   : c.int;
+     right  : c.int;
+     top    : c.int;
+     bottom : c.int);
+  pragma import (c, set_padding, "AG_WindowSetPadding");
+
+  procedure set_padding
+    (window : window_access_t;
      left   : natural;
      right  : natural;
      top    : natural;
@@ -54,10 +65,21 @@ package body agar.gui.window is
 
   procedure set_spacing
     (window  : window_access_t;
+     spacing : c.int);
+  pragma import (c, set_spacing, "AG_WindowSetSpacing");
+
+  procedure set_spacing
+    (window  : window_access_t;
      spacing : natural) is
   begin
     set_spacing (window, c.int (spacing));
   end set_spacing;
+
+  procedure set_position
+    (window    : window_access_t;
+     alignment : alignment_t;
+     cascade   : c.int);
+  pragma import (c, set_position, "AG_WindowSetPosition");
 
   procedure set_position
     (window    : window_access_t;
@@ -70,6 +92,14 @@ package body agar.gui.window is
       set_position (window, alignment, 0);
     end if;
   end set_position;
+
+  procedure set_geometry
+    (window : window_access_t;
+     x      : c.int;
+     y      : c.int;
+     width  : c.int;
+     height : c.int);
+  pragma import (c, set_geometry, "agar_window_set_geometry");
 
   procedure set_geometry
     (window : window_access_t;
@@ -89,6 +119,13 @@ package body agar.gui.window is
   procedure set_geometry_aligned
     (window    : window_access_t;
      alignment : alignment_t;
+     width     : c.int;
+     height    : c.int);
+  pragma import (c, set_geometry_aligned, "agar_window_set_geometry_aligned");
+
+  procedure set_geometry_aligned
+    (window    : window_access_t;
+     alignment : alignment_t;
      width     : positive;
      height    : positive) is
   begin
@@ -102,6 +139,13 @@ package body agar.gui.window is
   procedure set_geometry_aligned_percent
     (window    : window_access_t;
      alignment : alignment_t;
+     width     : c.int;
+     height    : c.int);
+  pragma import (c, set_geometry_aligned_percent, "agar_window_set_geometry_aligned_percent");
+
+  procedure set_geometry_aligned_percent
+    (window    : window_access_t;
+     alignment : alignment_t;
      width     : percent_t;
      height    : percent_t) is
   begin
@@ -111,6 +155,14 @@ package body agar.gui.window is
        width     => c.int (width),
        height    => c.int (height));
   end set_geometry_aligned_percent;
+
+  procedure set_geometry_bounded
+    (window : window_access_t;
+     x      : c.int;
+     y      : c.int;
+     width  : c.int;
+     height : c.int);
+  pragma import (c, set_geometry_bounded, "agar_window_set_geometry_bounded");
 
   procedure set_geometry_bounded
     (window : window_access_t;
@@ -134,6 +186,11 @@ package body agar.gui.window is
 
   procedure set_visibility
     (window  : window_access_t;
+     visible : c.int);
+  pragma import (c, set_visibility, "AG_WindowSetVisibility");
+
+  procedure set_visibility
+    (window  : window_access_t;
      visible : boolean) is
   begin
     if visible then
@@ -142,6 +199,9 @@ package body agar.gui.window is
       set_visibility (window, 0);
     end if;
   end set_visibility;
+
+  function focus_named (name : cs.chars_ptr) return c.int;
+  pragma import (c, focus_named, "AG_WindowFocusNamed");
 
   function focus_named (name : string) return boolean is
     ca_name : aliased c.char_array := c.to_c (name);

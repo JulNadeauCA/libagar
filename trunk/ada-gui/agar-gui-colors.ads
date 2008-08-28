@@ -1,8 +1,6 @@
 with agar.core.types;
-with interfaces.c.strings;
 
 package agar.gui.colors is
-  package cs renames interfaces.c.strings;
 
   type color_selection_t is (
     BG_COLOR,
@@ -209,20 +207,11 @@ package agar.gui.colors is
   procedure destroy;
   pragma import (c, destroy, "AG_ColorsDestroy");
 
-  function load (path : cs.chars_ptr) return c.int;
-  pragma import (c, load, "AG_ColorsLoad");
-
   function load (path : string) return boolean;
   pragma inline (load);
 
-  function save (path : cs.chars_ptr) return c.int;
-  pragma import (c, save, "AG_ColorsSave");
-
   function save (path : string) return boolean;
   pragma inline (save);
-
-  function save_default return c.int;
-  pragma import (c, save_default, "AG_ColorsSaveDefault");
 
   function save_default return boolean;
   pragma inline (save_default);

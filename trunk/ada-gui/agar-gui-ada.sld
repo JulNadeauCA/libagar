@@ -1,4 +1,5 @@
 ag_draw.o
+ag_event.o
 ag_surface.o
 ag_unit.o
 ag_widget.o

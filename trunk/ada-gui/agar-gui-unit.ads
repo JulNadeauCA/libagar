@@ -16,16 +16,8 @@ package agar.gui.unit is
   pragma convention (c, unit_access_t);
   pragma convention (c, unit_const_access_t);
 
-  function find (key : cs.chars_ptr) return unit_const_access_t;
-  pragma import (c, find, "AG_FindUnit");
-
   function find (key : string) return unit_const_access_t;
   pragma inline (find);
-
-  function best
-    (unit_group : unit_const_access_t;
-     n          : c.double) return unit_const_access_t;
-  pragma import (c, best, "AG_BestUnit");
 
   function best
     (unit_group : unit_const_access_t;
@@ -41,31 +33,15 @@ package agar.gui.unit is
   pragma inline (abbreviation);
 
   function unit_to_base
-    (n          : c.double;
-     unit_group : unit_const_access_t) return c.double;
-  pragma import (c, unit_to_base, "agar_unit2base");
-
-  function unit_to_base
     (n          : long_float;
      unit_group : unit_const_access_t) return long_float;
   pragma inline (unit_to_base);
  
   function base_to_unit
-    (n          : c.double;
-     unit_group : unit_const_access_t) return c.double;
-  pragma import (c, base_to_unit, "agar_base2unit");
-
-  function base_to_unit
     (n          : long_float;
      unit_group : unit_const_access_t) return long_float;
   pragma inline (base_to_unit);
  
-  function unit_to_unit
-    (n         : c.double;
-     unit_from : unit_const_access_t;
-     unit_to   : unit_const_access_t) return c.double;
-  pragma import (c, unit_to_unit, "agar_unit2unit");
-
   function unit_to_unit
     (n         : long_float;
      unit_from : unit_const_access_t;

@@ -1,10 +1,8 @@
 with agar.core.event;
 with agar.core.types;
 with agar.gui.surface;
-with interfaces.c.strings;
 
 package agar.gui.text is
-  package cs renames interfaces.c.strings;
 
   --
   -- types
@@ -39,12 +37,6 @@ package agar.gui.text is
 
   procedure pop_state;
   pragma import (c, pop_state, "AG_PopTextState");
-
-  function font
-    (face  : cs.chars_ptr;
-     size  : c.int;
-     flags : c.unsigned) return c.int;
-  pragma import (c, font, "AG_TextFont");
 
   function font
     (face  : string;
@@ -95,9 +87,6 @@ package agar.gui.text is
 
   -- render
 
-  function render (text : cs.chars_ptr) return agar.gui.surface.surface_access_t;
-  pragma import (c, render, "AG_TextRender");
-  
   function render (text : string) return agar.gui.surface.surface_access_t;
   pragma inline (render);
  
@@ -112,12 +101,6 @@ package agar.gui.text is
   function render_glyph (glyph : agar.core.types.uint32_t)
     return agar.gui.surface.surface_access_t;
   pragma import (c, render_glyph, "AG_TextRenderGlyph");
-
-  procedure size
-    (text   : cs.chars_ptr;
-     width  : access c.int;
-     height : access c.int);
-  pragma import (c, size, "AG_TextSize");
 
   procedure size
     (text   : string;

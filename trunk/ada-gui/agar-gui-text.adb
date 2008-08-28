@@ -1,6 +1,15 @@
+with interfaces.c.strings;
+
 package body agar.gui.text is
+  package cs renames interfaces.c.strings;
 
   use type c.int;
+
+  function font
+    (face  : cs.chars_ptr;
+     size  : c.int;
+     flags : c.unsigned) return c.int;
+  pragma import (c, font, "AG_TextFont");
 
   function font
     (face  : string;
@@ -15,6 +24,9 @@ package body agar.gui.text is
        flags => flags) = 0;
   end font;
 
+  function render (text : cs.chars_ptr) return agar.gui.surface.surface_access_t;
+  pragma import (c, render, "AG_TextRender");
+
   function render (text : string) return agar.gui.surface.surface_access_t is
     ca_text : aliased c.char_array := c.to_c (text);
   begin
@@ -27,6 +39,12 @@ package body agar.gui.text is
   begin
     return render_ucs4 (ca_text (ca_text'first)'unchecked_access);
   end render_ucs4;
+
+  procedure size
+    (text   : cs.chars_ptr;
+     width  : access c.int;
+     height : access c.int);
+  pragma import (c, size, "AG_TextSize");
 
   procedure size
     (text   : string;

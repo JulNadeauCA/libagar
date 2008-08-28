@@ -3,3 +3,6 @@
 20080827 code: moved init_video to agar.gui from agar.gui.view.
 20080827 code: better handling of format strings in agar.gui.text.
 20080827 code: better handling of format strings in agar.gui.window.
+20080828 code: added event_loop.
+20080828 code: removed C prototypes from agar.gui.window.
+20080828 code: removed C prototypes for all current API functions.
