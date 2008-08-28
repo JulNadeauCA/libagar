@@ -8,6 +8,8 @@ struct install_item insthier[] = {
   {INST_MKDIR, 0, 0, ctxt_slibdir, 0, 0, 0755},
   {INST_MKDIR, 0, 0, ctxt_repos, 0, 0, 0755},
   {INST_COPY, "ag_dso.c", 0, ctxt_repos, 0, 0, 0644},
+  {INST_COPY, "ag_event.c", 0, ctxt_repos, 0, 0, 0644},
+  {INST_COPY, "ag_object.c", 0, ctxt_repos, 0, 0, 0644},
   {INST_COPY, "agar-core-ada-conf.c", 0, ctxt_repos, 0, 0, 0644},
   {INST_COPY, "agar-core-config.ads", 0, ctxt_repos, 0, 0, 0644},
   {INST_COPY, "agar-core-config.ads", 0, ctxt_incdir, 0, 0, 0644},

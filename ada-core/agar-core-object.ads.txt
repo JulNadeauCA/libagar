@@ -1,7 +1,6 @@
 -- agar-core-object.ads.txt
 
 with agar.core.datasource;
-with agar.core.event;
 with agar.core.tail_queue;
 with agar.core.timeout;
 with agar.core.types;
@@ -24,7 +23,7 @@ package agar.core.object is
   package dep_queue is new agar.core.tail_queue
     (entry_type => dep_access_t);
   package event_queue is new agar.core.tail_queue
-    (entry_type => agar.core.event.event_access_t);
+    (entry_type => agar.core.types.void_ptr_t); -- circular dependency issue
   package obj_queue is new agar.core.tail_queue
     (entry_type => object_access_t);
   package prop_queue is new agar.core.tail_queue

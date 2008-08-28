@@ -1,4 +1,5 @@
 ag_dso.o
+ag_event.o
 ag_object.o
 agar-core-config.o
 agar-core-datasource.o
