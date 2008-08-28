@@ -1,6 +1,7 @@
-with agar.core.types;
-with agar.core.timeout;
+with agar.core.object;
 with agar.core.tail_queue;
+with agar.core.timeout;
+with agar.core.types;
 
 package agar.core.event is
 
@@ -98,26 +99,112 @@ package agar.core.event is
   -- API
   --
 
-  function find_event_handler
-    (object : agar.core.types.void_ptr_t;
-     name   : string) return event_access_t;
-  pragma inline (find_event_handler);
+  function set
+    (object  : agar.core.object.object_access_t;
+     name    : string;
+     handler : access procedure (event : event_access_t)) return event_access_t;
+  pragma inline (set);
 
-  function reschedule_event
-    (object     : agar.core.types.void_ptr_t;
+  function add
+    (object  : agar.core.object.object_access_t;
+     name    : string;
+     handler : access procedure (event : event_access_t)) return event_access_t;
+  pragma inline (add);
+
+  procedure unset
+    (object : agar.core.object.object_access_t;
+     name   : string);
+  pragma inline (unset);
+
+  function post
+    (sender   : agar.core.object.object_access_t;
+     receiver : agar.core.object.object_access_t;
+     name     : string) return boolean;
+  pragma inline (post);
+
+  function schedule
+    (sender   : agar.core.object.object_access_t;
+     receiver : agar.core.object.object_access_t;
+     ticks    : agar.core.types.uint32_t;
+     name     : string) return boolean;
+  pragma inline (schedule);
+
+  function find_handler
+    (object : agar.core.object.object_access_t;
+     name   : string) return event_access_t;
+  pragma inline (find_handler);
+
+  function reschedule
+    (object     : agar.core.object.object_access_t;
      event_name : string; 
      ticks      : agar.core.types.uint32_t) return boolean;
-  pragma inline (reschedule_event);
+  pragma inline (reschedule);
 
-  function cancel_event
-    (object     : agar.core.types.void_ptr_t;
+  function cancel
+    (object     : agar.core.object.object_access_t;
      event_name : string) return boolean;
-  pragma inline (cancel_event);
+  pragma inline (cancel);
 
-  procedure forward_event
-    (sender     : agar.core.types.void_ptr_t;
-     receiver   : agar.core.types.void_ptr_t;
+  procedure forward
+    (sender     : agar.core.object.object_access_t;
+     receiver   : agar.core.object.object_access_t;
      event      : event_access_t);
-  pragma import (c, forward_event, "AG_ForwardEvent");
+  pragma import (c, forward, "AG_ForwardEvent");
+
+  -- argument manipulation
+
+  procedure push_pointer
+    (event : event_access_t;
+     key   : string;
+     value : agar.core.types.void_ptr_t);
+  pragma inline (push_pointer);
+
+  procedure push_char
+    (event : event_access_t;
+     key   : string;
+     value : c.char);
+  pragma inline (push_char);
+
+  procedure push_unsigned_char
+    (event : event_access_t;
+     key   : string;
+     value : c.unsigned_char);
+  pragma inline (push_unsigned_char);
+
+  procedure push_int
+    (event : event_access_t;
+     key   : string;
+     value : c.int);
+  pragma inline (push_int);
+
+  procedure push_unsigned_int
+    (event : event_access_t;
+     key   : string;
+     value : c.unsigned);
+  pragma inline (push_unsigned_int);
+
+  procedure push_long
+    (event : event_access_t;
+     key   : string;
+     value : c.long);
+  pragma inline (push_long);
+
+  procedure push_unsigned_long
+    (event : event_access_t;
+     key   : string;
+     value : c.unsigned_long);
+  pragma inline (push_unsigned_long);
+
+  procedure push_float
+    (event : event_access_t;
+     key   : string;
+     value : float);
+  pragma inline (push_float);
+
+  procedure push_long_float
+    (event : event_access_t;
+     key   : string;
+     value : long_float);
+  pragma inline (push_long_float);
 
 end agar.core.event;

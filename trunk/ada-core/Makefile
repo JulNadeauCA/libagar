@@ -4,12 +4,12 @@ default: all
 
 all:\
 UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o \
-UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_dso.o ag_object.o agar-core-ada-conf \
-agar-core-ada-conf.o agar-core-ada.a agar-core-config.ali agar-core-config.o \
-agar-core-datasource.ali agar-core-datasource.o agar-core-dso.ali \
-agar-core-dso.o agar-core-error.ali agar-core-error.o agar-core-event.ali \
-agar-core-event.o agar-core-limits.ali agar-core-limits.o agar-core-object.ali \
-agar-core-object.o agar-core-slist.ali agar-core-slist.o \
+UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_dso.o ag_event.o ag_object.o \
+agar-core-ada-conf agar-core-ada-conf.o agar-core-ada.a agar-core-config.ali \
+agar-core-config.o agar-core-datasource.ali agar-core-datasource.o \
+agar-core-dso.ali agar-core-dso.o agar-core-error.ali agar-core-error.o \
+agar-core-event.ali agar-core-event.o agar-core-limits.ali agar-core-limits.o \
+agar-core-object.ali agar-core-object.o agar-core-slist.ali agar-core-slist.o \
 agar-core-tail_queue.ali agar-core-tail_queue.o agar-core-threads.ali \
 agar-core-threads.o agar-core-timeout.ali agar-core-timeout.o \
 agar-core-types.ali agar-core-types.o agar-core-version.ali agar-core-version.o \
@@ -132,6 +132,10 @@ ag_dso.o:\
 cc-compile ag_dso.c
 	./cc-compile ag_dso.c
 
+ag_event.o:\
+cc-compile ag_event.c
+	./cc-compile ag_event.c
+
 ag_object.o:\
 cc-compile ag_object.c
 	./cc-compile ag_object.c
@@ -145,12 +149,12 @@ cc-compile agar-core-ada-conf.c ctxt.h _sysinfo.h
 	./cc-compile agar-core-ada-conf.c
 
 agar-core-ada.a:\
-cc-slib agar-core-ada.sld ag_dso.o ag_object.o agar-core-config.o \
+cc-slib agar-core-ada.sld ag_dso.o ag_event.o ag_object.o agar-core-config.o \
 agar-core-datasource.o agar-core-dso.o agar-core-error.o agar-core-event.o \
 agar-core-limits.o agar-core-object.o agar-core-slist.o agar-core-tail_queue.o \
 agar-core-threads.o agar-core-timeout.o agar-core-types.o agar-core-version.o \
 agar-core.o agar.o
-	./cc-slib agar-core-ada ag_dso.o ag_object.o agar-core-config.o \
+	./cc-slib agar-core-ada ag_dso.o ag_event.o ag_object.o agar-core-config.o \
 	agar-core-datasource.o agar-core-dso.o agar-core-error.o agar-core-event.o \
 	agar-core-limits.o agar-core-object.o agar-core-slist.o agar-core-tail_queue.o \
 	agar-core-threads.o agar-core-timeout.o agar-core-types.o agar-core-version.o \
@@ -191,7 +195,8 @@ agar-core-error.o:\
 agar-core-error.ali
 
 agar-core-event.ads:\
-agar-core-types.ads agar-core-timeout.ads agar-core-tail_queue.ads
+agar-core-object.ads agar-core-tail_queue.ads agar-core-timeout.ads \
+	agar-core-types.ads
 
 agar-core-event.ali:\
 ada-compile agar-core-event.adb agar-core-event.ads
@@ -516,12 +521,12 @@ clean-all: sysdeps_clean tests_clean obj_clean ext_clean
 clean: obj_clean
 obj_clean:
 	rm -f UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o \
-	UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_dso.o ag_object.o agar-core-ada-conf \
-	agar-core-ada-conf.o agar-core-ada.a agar-core-config.ali agar-core-config.o \
-	agar-core-datasource.ali agar-core-datasource.o agar-core-dso.ali \
-	agar-core-dso.o agar-core-error.ali agar-core-error.o agar-core-event.ali \
-	agar-core-event.o agar-core-limits.ads agar-core-limits.ali agar-core-limits.o \
-	agar-core-object.ads agar-core-object.ali agar-core-object.o \
+	UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_dso.o ag_event.o ag_object.o \
+	agar-core-ada-conf agar-core-ada-conf.o agar-core-ada.a agar-core-config.ali \
+	agar-core-config.o agar-core-datasource.ali agar-core-datasource.o \
+	agar-core-dso.ali agar-core-dso.o agar-core-error.ali agar-core-error.o \
+	agar-core-event.ali agar-core-event.o agar-core-limits.ads agar-core-limits.ali \
+	agar-core-limits.o agar-core-object.ads agar-core-object.ali agar-core-object.o \
 	agar-core-slist.ali agar-core-slist.o agar-core-tail_queue.ali \
 	agar-core-tail_queue.o agar-core-threads.ali agar-core-threads.o \
 	agar-core-timeout.ali agar-core-timeout.o agar-core-types.ads \
