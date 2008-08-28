@@ -6,14 +6,12 @@ with agar.core;
 with agar.gui.surface;
 with agar.gui.widget;
 with agar.gui.window;
-with interfaces.c.strings;
 with interfaces.c;
 with sdl.keysym;
 with sdl.video;
 
 package agar.gui.view is
   package c renames interfaces.c;
-  package cs renames interfaces.c.strings;
 
   package window_tail_queue is new agar.core.tail_queue
     (entry_type => agar.gui.window.window_access_t);
@@ -62,17 +60,9 @@ package agar.gui.view is
   pragma convention (c, display_access_t);
 
   function resize_display
-    (width  : c.int;
-     height : c.int) return c.int;
-  pragma import (c, resize_display, "AG_ResizeDisplay");
-
-  function resize_display
     (width  : positive;
      height : positive) return boolean;
   pragma inline (resize_display);
-
-  function set_refresh_rate (rate : c.int) return c.int;
-  pragma import (c, set_refresh_rate, "AG_SetRefreshRate");
 
   function set_refresh_rate (rate : positive) return boolean;
   pragma inline (set_refresh_rate);
@@ -108,17 +98,9 @@ package agar.gui.view is
   procedure detach (window : agar.gui.window.window_access_t);
   pragma import (c, detach, "AG_ViewDetach");
 
-  function find_window (name : cs.chars_ptr) return agar.gui.window.window_access_t;
-  pragma import (c, find_window, "AG_FindWindow");
-
   function find_window (name : string) return agar.gui.window.window_access_t;
   pragma inline (find_window);
  
-  function find_widget
-    (view : display_access_t;
-     name : cs.chars_ptr) return agar.gui.widget.widget_access_t;
-  pragma import (c, find_widget, "AG_WidgetFind");
-
   function find_widget
     (view : display_access_t;
      name : string) return agar.gui.widget.widget_access_t;

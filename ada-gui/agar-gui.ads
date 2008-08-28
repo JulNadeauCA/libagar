@@ -42,4 +42,10 @@ package agar.gui is
   procedure destroy;
   pragma import (c, destroy, "AG_DestroyGUI");
 
+  procedure event_loop;
+  pragma import (c, event_loop, "agar_event_loop");
+
+  procedure event_loop_fixed_fps;
+  pragma import (c, event_loop_fixed_fps, "AG_EventLoop_FixedFPS");
+
 end agar.gui;

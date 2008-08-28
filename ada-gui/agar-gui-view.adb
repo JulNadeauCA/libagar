@@ -1,6 +1,14 @@
+with interfaces.c.strings;
+
 package body agar.gui.view is
+  package cs renames interfaces.c.strings;
 
   use type c.int;
+
+  function resize_display
+    (width  : c.int;
+     height : c.int) return c.int;
+  pragma import (c, resize_display, "AG_ResizeDisplay");
 
   function resize_display
     (width  : positive;
@@ -10,6 +18,9 @@ package body agar.gui.view is
       (width  => c.int (width),
        height => c.int (height)) = 0;
   end resize_display;
+
+  function set_refresh_rate (rate : c.int) return c.int;
+  pragma import (c, set_refresh_rate, "AG_SetRefreshRate");
 
   function set_refresh_rate (rate : positive) return boolean is
   begin
@@ -23,11 +34,19 @@ package body agar.gui.view is
     return unbind_global_key (key, modkey) = 0;
   end unbind_global_key;
 
+  function find_window (name : cs.chars_ptr) return agar.gui.window.window_access_t;
+  pragma import (c, find_window, "AG_FindWindow");
+
   function find_window (name : string) return agar.gui.window.window_access_t is
     ca_name : aliased c.char_array := c.to_c (name);
   begin
     return find_window (cs.to_chars_ptr (ca_name'unchecked_access));
   end find_window;
+
+  function find_widget
+    (view : display_access_t;
+     name : cs.chars_ptr) return agar.gui.widget.widget_access_t;
+  pragma import (c, find_widget, "AG_WidgetFind");
 
   function find_widget
     (view : display_access_t;

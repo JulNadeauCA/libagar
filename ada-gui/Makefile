@@ -4,19 +4,20 @@ default: all
 
 all:\
 UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o \
-UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_draw.o ag_surface.o ag_unit.o \
-ag_widget.o ag_window.o agar-gui-ada-conf agar-gui-ada-conf.o agar-gui-ada.a \
-agar-gui-colors.ali agar-gui-colors.o agar-gui-draw.ali agar-gui-draw.o \
-agar-gui-pixelformat.ali agar-gui-pixelformat.o agar-gui-point.ali \
-agar-gui-point.o agar-gui-rect.ali agar-gui-rect.o agar-gui-style.ali \
-agar-gui-style.o agar-gui-surface.ali agar-gui-surface.o agar-gui-text.ali \
-agar-gui-text.o agar-gui-unit.ali agar-gui-unit.o agar-gui-view.ali \
-agar-gui-view.o agar-gui-widget.ali agar-gui-widget.o agar-gui-window.ali \
-agar-gui-window.o agar-gui.ali agar-gui.o chk-opengl chk-opengl.o ctxt/bindir.o \
-ctxt/ctxt.a ctxt/dlibdir.o ctxt/incdir.o ctxt/repos.o ctxt/slibdir.o \
-ctxt/version.o deinstaller deinstaller.o inst-check inst-check.o inst-copy \
-inst-copy.o inst-dir inst-dir.o inst-link inst-link.o install_core.o \
-install_error.o installer installer.o instchk instchk.o insthier.o
+UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_draw.o ag_event.o ag_surface.o \
+ag_unit.o ag_widget.o ag_window.o agar-gui-ada-conf agar-gui-ada-conf.o \
+agar-gui-ada.a agar-gui-colors.ali agar-gui-colors.o agar-gui-draw.ali \
+agar-gui-draw.o agar-gui-pixelformat.ali agar-gui-pixelformat.o \
+agar-gui-point.ali agar-gui-point.o agar-gui-rect.ali agar-gui-rect.o \
+agar-gui-style.ali agar-gui-style.o agar-gui-surface.ali agar-gui-surface.o \
+agar-gui-text.ali agar-gui-text.o agar-gui-unit.ali agar-gui-unit.o \
+agar-gui-view.ali agar-gui-view.o agar-gui-widget.ali agar-gui-widget.o \
+agar-gui-window.ali agar-gui-window.o agar-gui.ali agar-gui.o chk-opengl \
+chk-opengl.o ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.o ctxt/incdir.o \
+ctxt/repos.o ctxt/slibdir.o ctxt/version.o deinstaller deinstaller.o inst-check \
+inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o \
+install_core.o install_error.o installer installer.o instchk instchk.o \
+insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
@@ -165,6 +166,10 @@ ag_draw.o:\
 cc-compile ag_draw.c
 	./cc-compile ag_draw.c
 
+ag_event.o:\
+cc-compile ag_event.c
+	./cc-compile ag_event.c
+
 ag_surface.o:\
 cc-compile ag_surface.c
 	./cc-compile ag_surface.c
@@ -190,15 +195,16 @@ cc-compile agar-gui-ada-conf.c ctxt.h _sysinfo.h
 	./cc-compile agar-gui-ada-conf.c
 
 agar-gui-ada.a:\
-cc-slib agar-gui-ada.sld ag_draw.o ag_surface.o ag_unit.o ag_widget.o \
-ag_window.o agar-gui-colors.o agar-gui-draw.o agar-gui-pixelformat.o \
-agar-gui-point.o agar-gui-rect.o agar-gui-style.o agar-gui-surface.o \
-agar-gui-text.o agar-gui-unit.o agar-gui-view.o agar-gui-widget.o \
-agar-gui-window.o agar-gui.o
-	./cc-slib agar-gui-ada ag_draw.o ag_surface.o ag_unit.o ag_widget.o ag_window.o \
-	agar-gui-colors.o agar-gui-draw.o agar-gui-pixelformat.o agar-gui-point.o \
-	agar-gui-rect.o agar-gui-style.o agar-gui-surface.o agar-gui-text.o \
-	agar-gui-unit.o agar-gui-view.o agar-gui-widget.o agar-gui-window.o agar-gui.o
+cc-slib agar-gui-ada.sld ag_draw.o ag_event.o ag_surface.o ag_unit.o \
+ag_widget.o ag_window.o agar-gui-colors.o agar-gui-draw.o \
+agar-gui-pixelformat.o agar-gui-point.o agar-gui-rect.o agar-gui-style.o \
+agar-gui-surface.o agar-gui-text.o agar-gui-unit.o agar-gui-view.o \
+agar-gui-widget.o agar-gui-window.o agar-gui.o
+	./cc-slib agar-gui-ada ag_draw.o ag_event.o ag_surface.o ag_unit.o ag_widget.o \
+	ag_window.o agar-gui-colors.o agar-gui-draw.o agar-gui-pixelformat.o \
+	agar-gui-point.o agar-gui-rect.o agar-gui-style.o agar-gui-surface.o \
+	agar-gui-text.o agar-gui-unit.o agar-gui-view.o agar-gui-widget.o \
+	agar-gui-window.o agar-gui.o
 
 agar-gui-colors.ali:\
 ada-compile agar-gui-colors.adb agar-gui-colors.ads
@@ -508,22 +514,21 @@ clean-all: sysdeps_clean tests_clean obj_clean ext_clean
 clean: obj_clean
 obj_clean:
 	rm -f UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o \
-	UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_draw.o ag_surface.o ag_unit.o \
-	ag_widget.o ag_window.o agar-gui-ada-conf agar-gui-ada-conf.o agar-gui-ada.a \
-	agar-gui-colors.ali agar-gui-colors.o agar-gui-draw.ali agar-gui-draw.o \
-	agar-gui-pixelformat.ali agar-gui-pixelformat.o agar-gui-point.ali \
-	agar-gui-point.o agar-gui-rect.ali agar-gui-rect.o agar-gui-style.ali \
-	agar-gui-style.o agar-gui-surface.ali agar-gui-surface.o agar-gui-text.ali \
-	agar-gui-text.o agar-gui-unit.ali agar-gui-unit.o agar-gui-view.ali \
-	agar-gui-view.o agar-gui-widget.ads agar-gui-widget.ali agar-gui-widget.o \
-	agar-gui-window.ali agar-gui-window.o agar-gui.ali agar-gui.o chk-opengl \
-	chk-opengl.o ctxt/bindir.c ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.c \
+	UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_draw.o ag_event.o ag_surface.o \
+	ag_unit.o ag_widget.o ag_window.o agar-gui-ada-conf agar-gui-ada-conf.o \
+	agar-gui-ada.a agar-gui-colors.ali agar-gui-colors.o agar-gui-draw.ali \
+	agar-gui-draw.o agar-gui-pixelformat.ali agar-gui-pixelformat.o \
+	agar-gui-point.ali agar-gui-point.o agar-gui-rect.ali agar-gui-rect.o \
+	agar-gui-style.ali agar-gui-style.o agar-gui-surface.ali agar-gui-surface.o \
+	agar-gui-text.ali agar-gui-text.o agar-gui-unit.ali agar-gui-unit.o \
+	agar-gui-view.ali agar-gui-view.o agar-gui-widget.ads agar-gui-widget.ali \
+	agar-gui-widget.o agar-gui-window.ali agar-gui-window.o agar-gui.ali agar-gui.o \
+	chk-opengl chk-opengl.o ctxt/bindir.c ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.c \
 	ctxt/dlibdir.o ctxt/incdir.c ctxt/incdir.o ctxt/repos.c ctxt/repos.o \
 	ctxt/slibdir.c ctxt/slibdir.o ctxt/version.c ctxt/version.o deinstaller \
 	deinstaller.o inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o \
-	inst-link inst-link.o install_core.o install_error.o installer installer.o \
-	instchk
-	rm -f instchk.o insthier.o
+	inst-link inst-link.o install_core.o install_error.o installer installer.o
+	rm -f instchk instchk.o insthier.o
 ext_clean:
 	rm -f conf-adatype conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 
