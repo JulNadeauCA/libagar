@@ -222,4 +222,538 @@ package body agar.core.object is
        pattern => cs.to_chars_ptr (ca_pattern'unchecked_access)) = 0;
   end of_class;
 
+  -- prop API
+  package body prop is
+
+    function c_set_boolean
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : c.int) return prop_access_t;
+    pragma import (c, c_set_boolean, "agar_object_prop_set_boolean");
+ 
+    function set_boolean
+      (object : object_access_t;
+       key    : string;
+       value  : boolean) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+      c_int : c.int := 0;
+    begin
+      if value then c_int := 1; end if;
+      return c_set_boolean
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => c_int);
+    end set_boolean;
+
+    function c_set_float
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : c.c_float) return prop_access_t;
+    pragma import (c, c_set_float, "agar_object_prop_set_float");
+ 
+    function set_float
+      (object : object_access_t;
+       key    : string;
+       value  : float) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_float
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => c.c_float (value));
+    end set_float;
+
+    function c_set_int
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : c.int) return prop_access_t;
+    pragma import (c, c_set_int, "agar_object_prop_set_int");
+ 
+    function set_integer
+      (object : object_access_t;
+       key    : string;
+       value  : integer) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_int
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => c.int (value));
+    end set_integer;
+
+    function c_set_int16
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : agar.core.types.int16_t) return prop_access_t;
+    pragma import (c, c_set_int16, "agar_object_prop_set_int16");
+ 
+    function set_int16
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.int16_t) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_int16
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => value);
+    end set_int16;
+
+    function c_set_int32
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : agar.core.types.int32_t) return prop_access_t;
+    pragma import (c, c_set_int32, "agar_object_prop_set_int32");
+ 
+    function set_int32
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.int32_t) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_int32
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => value);
+    end set_int32;
+
+    function c_set_int64
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : agar.core.types.int64_t) return prop_access_t;
+    pragma import (c, c_set_int64, "agar_object_prop_set_int64");
+ 
+    function set_int64
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.int64_t) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_int64
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => value);
+    end set_int64;
+
+    function c_set_int8
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : agar.core.types.int8_t) return prop_access_t;
+    pragma import (c, c_set_int8, "agar_object_prop_set_int8");
+ 
+    function set_int8
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.int8_t) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_int8
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => value);
+    end set_int8;
+
+    function c_set_long_float
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : c.double) return prop_access_t;
+    pragma import (c, c_set_long_float, "agar_object_prop_set_long_float");
+ 
+    function set_long_float
+      (object : object_access_t;
+       key    : string;
+       value  : long_float) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_long_float
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => c.double (value));
+    end set_long_float;
+
+    function c_set_long_long_float
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : c.long_double) return prop_access_t;
+    pragma import (c, c_set_long_long_float, "agar_object_prop_set_long_long_float");
+ 
+    function set_long_long_float
+      (object : object_access_t;
+       key    : string;
+       value  : long_long_float) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_long_long_float
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => c.long_double (value));
+    end set_long_long_float;
+
+    function c_set_pointer
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : agar.core.types.void_ptr_t) return prop_access_t;
+    pragma import (c, c_set_pointer, "agar_object_prop_set_pointer");
+ 
+    function set_pointer
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.void_ptr_t) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_pointer
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => value);
+    end set_pointer;
+
+    function c_set_uint16
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : agar.core.types.uint16_t) return prop_access_t;
+    pragma import (c, c_set_uint16, "agar_object_prop_set_uint16");
+ 
+    function set_uint16
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.uint16_t) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_uint16
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => value);
+    end set_uint16;
+
+    function c_set_uint32
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : agar.core.types.uint32_t) return prop_access_t;
+    pragma import (c, c_set_uint32, "agar_object_prop_set_uint32");
+ 
+    function set_uint32
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.uint32_t) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_uint32
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => value);
+    end set_uint32;
+
+    function c_set_uint64
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : agar.core.types.uint64_t) return prop_access_t;
+    pragma import (c, c_set_uint64, "agar_object_prop_set_uint64");
+ 
+    function set_uint64
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.uint64_t) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_uint64
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => value);
+    end set_uint64;
+
+    function c_set_uint8
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : agar.core.types.uint8_t) return prop_access_t;
+    pragma import (c, c_set_uint8, "agar_object_prop_set_uint8");
+ 
+    function set_uint8
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.uint8_t) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_uint8
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => value);
+    end set_uint8;
+
+    function c_set_unsigned_int
+      (object : object_access_t;
+       key    : cs.chars_ptr;
+       value  : c.unsigned) return prop_access_t;
+    pragma import (c, c_set_unsigned_int, "agar_object_prop_set_unsigned_int");
+ 
+    function set_natural
+      (object : object_access_t;
+       key    : string;
+       value  : natural) return prop_access_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_set_unsigned_int
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access),
+         value  => c.unsigned (value));
+    end set_natural;
+
+    -- get
+
+    function c_get_boolean
+      (object : object_access_t;
+       key    : cs.chars_ptr) return c.int;
+    pragma import (c, c_get_boolean, "agar_object_prop_get_boolean");
+ 
+    function get_boolean
+      (object : object_access_t;
+       key    : string) return boolean
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_get_boolean
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access)) = 1;
+    end get_boolean;
+
+    function c_get_float
+      (object : object_access_t;
+       key    : cs.chars_ptr) return c.c_float;
+    pragma import (c, c_get_float, "agar_object_prop_get_float");
+ 
+    function get_float
+      (object : object_access_t;
+       key    : string) return float
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return float (c_get_float
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access)));
+    end get_float;
+
+    function c_get_int
+      (object : object_access_t;
+       key    : cs.chars_ptr) return c.int;
+    pragma import (c, c_get_int, "agar_object_prop_get_int");
+ 
+    function get_integer
+      (object : object_access_t;
+       key    : string) return integer
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return integer (c_get_int
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access)));
+    end get_integer;
+
+    function c_get_int16
+      (object : object_access_t;
+       key    : cs.chars_ptr) return agar.core.types.int16_t;
+    pragma import (c, c_get_int16, "agar_object_prop_get_int16");
+ 
+    function get_int16
+      (object : object_access_t;
+       key    : string) return agar.core.types.int16_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_get_int16
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access));
+    end get_int16;
+
+    function c_get_int32
+      (object : object_access_t;
+       key    : cs.chars_ptr) return agar.core.types.int32_t;
+    pragma import (c, c_get_int32, "agar_object_prop_get_int32");
+ 
+    function get_int32
+      (object : object_access_t;
+       key    : string) return agar.core.types.int32_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_get_int32
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access));
+    end get_int32;
+
+    function c_get_int64
+      (object : object_access_t;
+       key    : cs.chars_ptr) return agar.core.types.int64_t;
+    pragma import (c, c_get_int64, "agar_object_prop_get_int64");
+ 
+    function get_int64
+      (object : object_access_t;
+       key    : string) return agar.core.types.int64_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_get_int64
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access));
+    end get_int64;
+
+    function c_get_int8
+      (object : object_access_t;
+       key    : cs.chars_ptr) return agar.core.types.int8_t;
+    pragma import (c, c_get_int8, "agar_object_prop_get_int8");
+ 
+    function get_int8
+      (object : object_access_t;
+       key    : string) return agar.core.types.int8_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_get_int8
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access));
+    end get_int8;
+
+    function c_get_long_float
+      (object : object_access_t;
+       key    : cs.chars_ptr) return c.double;
+    pragma import (c, c_get_long_float, "agar_object_prop_get_long_float");
+ 
+    function get_long_float
+      (object : object_access_t;
+       key    : string) return long_float
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return long_float (c_get_long_float
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access)));
+    end get_long_float;
+
+    function c_get_long_long_float
+      (object : object_access_t;
+       key    : cs.chars_ptr) return c.long_double;
+    pragma import (c, c_get_long_long_float, "agar_object_prop_get_long_long_float");
+ 
+    function get_long_long_float
+      (object : object_access_t;
+       key    : string) return long_long_float
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return long_long_float (c_get_long_long_float
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access)));
+    end get_long_long_float;
+
+    function c_get_pointer
+      (object : object_access_t;
+       key    : cs.chars_ptr) return agar.core.types.void_ptr_t;
+    pragma import (c, c_get_pointer, "agar_object_prop_get_pointer");
+ 
+    function get_pointer
+      (object : object_access_t;
+       key    : string) return agar.core.types.void_ptr_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_get_pointer
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access));
+    end get_pointer;
+
+    function c_get_uint16
+      (object : object_access_t;
+       key    : cs.chars_ptr) return agar.core.types.uint16_t;
+    pragma import (c, c_get_uint16, "agar_object_prop_get_uint16");
+ 
+    function get_uint16
+      (object : object_access_t;
+       key    : string) return agar.core.types.uint16_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_get_uint16
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access));
+    end get_uint16;
+
+    function c_get_uint32
+      (object : object_access_t;
+       key    : cs.chars_ptr) return agar.core.types.uint32_t;
+    pragma import (c, c_get_uint32, "agar_object_prop_get_uint32");
+ 
+    function get_uint32
+      (object : object_access_t;
+       key    : string) return agar.core.types.uint32_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_get_uint32
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access));
+    end get_uint32;
+
+    function c_get_uint64
+      (object : object_access_t;
+       key    : cs.chars_ptr) return agar.core.types.uint64_t;
+    pragma import (c, c_get_uint64, "agar_object_prop_get_uint64");
+ 
+    function get_uint64
+      (object : object_access_t;
+       key    : string) return agar.core.types.uint64_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_get_uint64
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access));
+    end get_uint64;
+
+    function c_get_uint8
+      (object : object_access_t;
+       key    : cs.chars_ptr) return agar.core.types.uint8_t;
+    pragma import (c, c_get_uint8, "agar_object_prop_get_uint8");
+ 
+    function get_uint8
+      (object : object_access_t;
+       key    : string) return agar.core.types.uint8_t
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return c_get_uint8
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access));
+    end get_uint8;
+
+    function c_get_unsigned_int
+      (object : object_access_t;
+       key    : cs.chars_ptr) return c.unsigned;
+    pragma import (c, c_get_unsigned_int, "agar_object_prop_get_unsigned_int");
+ 
+    function get_natural
+      (object : object_access_t;
+       key    : string) return natural
+    is
+      ca_key : aliased c.char_array := c.to_c (key);
+    begin
+      return natural (c_get_unsigned_int
+        (object => object,
+         key    => cs.to_chars_ptr (ca_key'unchecked_access)));
+    end get_natural;
+
+  end prop;
+
 end agar.core.object;

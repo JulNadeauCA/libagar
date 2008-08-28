@@ -691,3 +691,188 @@ package agar.core.object is
   function superclass (object : object_access_t) return class_access_t;
   pragma import (c, superclass, "agar_object_superclass");
 
+  procedure lock (object : object_access_t);
+  pragma import (c, lock, "agar_object_lock");
+
+  procedure unlock (object : object_access_t);
+  pragma import (c, unlock, "agar_object_unlock");
+
+  -- prop api
+  package prop is
+
+    function copy (prop : prop_access_t) return prop_access_t;
+    pragma import (c, copy, "AG_CopyProp");
+
+    procedure lock_props (object : object_access_t) renames lock;
+    procedure unlock_props (object : object_access_t) renames unlock;
+
+    -- get
+
+    function get_boolean
+      (object : object_access_t;
+       key    : string) return boolean;
+    pragma inline (get_boolean);
+
+    function get_float
+      (object : object_access_t;
+       key    : string) return float;
+    pragma inline (get_float);
+
+    function get_integer
+      (object : object_access_t;
+       key    : string) return integer;
+    pragma inline (get_integer);
+
+    function get_int16
+      (object : object_access_t;
+       key    : string) return agar.core.types.int16_t;
+    pragma inline (get_int16);
+
+    function get_int32
+      (object : object_access_t;
+       key    : string) return agar.core.types.int32_t;
+    pragma inline (get_int32);
+
+    function get_int64
+      (object : object_access_t;
+       key    : string) return agar.core.types.int64_t;
+    pragma inline (get_int64);
+
+    function get_int8
+      (object : object_access_t;
+       key    : string) return agar.core.types.int8_t;
+    pragma inline (get_int8);
+
+    function get_long_float
+      (object : object_access_t;
+       key    : string) return long_float;
+    pragma inline (get_long_float);
+
+    function get_long_long_float
+      (object : object_access_t;
+       key    : string) return long_long_float;
+    pragma inline (get_long_long_float);
+
+    function get_uint16
+      (object : object_access_t;
+       key    : string) return agar.core.types.uint16_t;
+    pragma inline (get_uint16);
+
+    function get_uint32
+      (object : object_access_t;
+       key    : string) return agar.core.types.uint32_t;
+    pragma inline (get_uint32);
+
+    function get_uint64
+      (object : object_access_t;
+       key    : string) return agar.core.types.uint64_t;
+    pragma inline (get_uint64);
+
+    function get_uint8
+      (object : object_access_t;
+       key    : string) return agar.core.types.uint8_t;
+    pragma inline (get_uint8);
+
+    function get_natural
+      (object : object_access_t;
+       key    : string) return natural;
+    pragma inline (get_natural);
+
+    function get_pointer
+      (object : object_access_t;
+       key    : string) return agar.core.types.void_ptr_t;
+    pragma inline (get_pointer);
+
+    -- set
+
+    function set_boolean
+      (object : object_access_t;
+       key    : string;
+       value  : boolean) return prop_access_t;
+
+    function set_float
+      (object : object_access_t;
+       key    : string;
+       value  : float) return prop_access_t;
+    pragma inline (set_float);
+
+    function set_integer
+      (object : object_access_t;
+       key    : string;
+       value  : integer) return prop_access_t;
+    pragma inline (set_integer);
+
+    function set_int16
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.int16_t) return prop_access_t;
+    pragma inline (set_int16);
+
+    function set_int32
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.int32_t) return prop_access_t;
+    pragma inline (set_int32);
+
+    function set_int64
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.int64_t) return prop_access_t;
+    pragma inline (set_int64);
+
+    function set_int8
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.int8_t) return prop_access_t;
+    pragma inline (set_int8);
+
+    function set_long_float
+      (object : object_access_t;
+       key    : string;
+       value  : long_float) return prop_access_t;
+    pragma inline (set_long_float);
+
+    function set_long_long_float
+      (object : object_access_t;
+       key    : string;
+       value  : long_long_float) return prop_access_t;
+    pragma inline (set_long_long_float);
+
+    function set_uint16
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.uint16_t) return prop_access_t;
+    pragma inline (set_uint16);
+
+    function set_uint32
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.uint32_t) return prop_access_t;
+    pragma inline (set_uint32);
+
+    function set_uint64
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.uint64_t) return prop_access_t;
+    pragma inline (set_uint64);
+
+    function set_uint8
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.uint8_t) return prop_access_t;
+    pragma inline (set_uint8);
+
+    function set_natural
+      (object : object_access_t;
+       key    : string;
+       value  : natural) return prop_access_t;
+    pragma inline (set_natural);
+
+    function set_pointer
+      (object : object_access_t;
+       key    : string;
+       value  : agar.core.types.void_ptr_t) return prop_access_t;
+    pragma inline (set_pointer);
+
+  end prop;
+
