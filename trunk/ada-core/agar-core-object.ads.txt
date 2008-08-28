@@ -706,6 +706,16 @@ package agar.core.object is
     procedure lock_props (object : object_access_t) renames lock;
     procedure unlock_props (object : object_access_t) renames unlock;
 
+    function load
+      (object      : object_access_t;
+       data_source : agar.core.datasource.datasource_access_t) return boolean;
+    pragma inline (load);
+
+    function save
+      (object      : object_access_t;
+       data_source : agar.core.datasource.datasource_access_t) return boolean;
+    pragma inline (save);
+
     -- get
 
     function get_boolean
