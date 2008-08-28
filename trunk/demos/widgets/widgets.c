@@ -63,10 +63,12 @@ CreateWindow(void)
 		 * for details).
 		 */
 		AG_LabelNewStatic(div1, 0, "This is a static label");
-		lbl = AG_LabelNewPolled(div2, 0,
+
+		lbl = AG_LabelNewPolled(div2, AG_LABEL_FRAME,
 		    "This is a polled label (x=%i)", &pane->dx);
 		AG_LabelSizeHint(lbl, 1,
 		    "This is a polled label (x=1234)");
+		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 	}
 
 	/*
@@ -83,7 +85,6 @@ CreateWindow(void)
 		for (i = 0; i < 5; i++)
 			AG_ButtonNew(hbox, 0, "x");
 	}
-
 
 	hbox = AG_HBoxNew(div1, AG_HBOX_HFILL);
 	{
@@ -194,6 +195,8 @@ CreateWindow(void)
 
 		ntab = AG_NotebookAddTab(nb, "Table", AG_BOX_VERT);
 		{
+			float f;
+
 			/*
 			 * AG_Table displays a set of cells organized in
 			 * rows and columns. It is optimized for cases where
@@ -204,29 +207,7 @@ CreateWindow(void)
 			AG_TableAddCol(table, "x", "<8888>", NULL);
 			AG_TableAddCol(table, "sin(x)", "<8888>", NULL);
 			AG_TableAddCol(table, "cos(x)", NULL, NULL);
-		}
-		
-		ntab = AG_NotebookAddTab(nb, "Graph", AG_BOX_VERT);
-		{
-			AG_Radio *rad;
-			AG_FixedPlotter *g;
-			AG_FixedPlotterItem *sinplot, *cosplot;
-			double f;
-			int i = 0;
-			
-			/*
-			 * FixedPlotter displays a plot from a set of integer
-			 * values (for floating point data, see SC_Plotter(3)).
-			 */
-			g = AG_FixedPlotterNew(ntab, AG_FIXED_PLOTTER_LINES,
-			                             AG_FIXED_PLOTTER_EXPAND);
-			sinplot = AG_FixedPlotterCurve(g, "sin", 0,150,0, 0);
-			cosplot = AG_FixedPlotterCurve(g, "cos", 150,150,0, 0);
 			for (f = 0; f < 60; f += 0.3) {
-				AG_FixedPlotterDatum(sinplot,
-				    (AG_FixedPlotterValue)(sin(f)*10.0));
-				AG_FixedPlotterDatum(cosplot,
-				    (AG_FixedPlotterValue)(cos(f)*10.0));
 				/*
 				 * Insert a Table row for sin(f) and cos(f).
 				 * The directives of the format string are
@@ -235,16 +216,6 @@ CreateWindow(void)
 				AG_TableAddRow(table, "%.02f:%.02f:%.02f",
 				    f, sin(f), cos(f));
 			}
-
-			/*
-			 * Radio displays a group of radio buttons. It can
-			 * bind to an integer value. In this case we bind it
-			 * to the "type" enum of the FixedPlotter.
-			 */
-			rad = AG_RadioNew(ntab, AG_RADIO_HFILL, NULL);
-			AG_RadioAddItemHK(rad, SDLK_p, "Points");
-			AG_RadioAddItemHK(rad, SDLK_l, "Lines");
-			AG_WidgetBindInt(rad, "value", &g->type);
 		}
 		
 		ntab = AG_NotebookAddTab(nb, "Tlist", AG_BOX_VERT);
@@ -264,16 +235,6 @@ CreateWindow(void)
 			ti->depth = 2;
 			ti = AG_TlistAdd(tl, agIconDoc.s, "Craft");
 			ti->depth = 2;
-		}
-		
-		ntab = AG_NotebookAddTab(nb, "Color", AG_BOX_VERT);
-		{
-			/*
-			 * HSVPal is an HSV color picker widget which can
-			 * bind to RGB(A) or HSV(A) vectors (integral or real)
-			 * or 32-bit pixel values (of a given format).
-			 */
-			AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
 		}
 		
 		ntab = AG_NotebookAddTab(nb, "Text", AG_BOX_VERT);
@@ -322,18 +283,9 @@ CreateWindow(void)
 		}
 	}
 
-#if 0
-	/*
-	 * AG_GLView provides an OpenGL rendering context. See the "glview",
-	 * demo in the Agar ./demos directory for a sample application.
-	 *
-	 * The higher-level SG(3) scene graph interface also provides a
-	 * visualization widget, SG_View(3). Some demos from the ./demos
-	 * directory demonstrating its use include "sgview", "linear" and
-	 * "lorenz".
-	 */
-	AG_GLViewNew(win, 0);
-#endif
+	/* Override default window sizing. */
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 80, 70);
+	
 	AG_WindowShow(win);
 }
 
