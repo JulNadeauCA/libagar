@@ -225,6 +225,30 @@ package body agar.core.object is
   -- prop API
   package body prop is
 
+    function c_load
+      (object      : object_access_t;
+       data_source : agar.core.datasource.datasource_access_t) return c.int;
+    pragma import (c, c_load, "AG_PropLoad");
+
+    function c_save
+      (object      : object_access_t;
+       data_source : agar.core.datasource.datasource_access_t) return c.int;
+    pragma import (c, c_save, "AG_PropSave");
+
+    function load
+      (object      : object_access_t;
+       data_source : agar.core.datasource.datasource_access_t) return boolean is
+    begin
+      return c_load (object, data_source) = 0;
+    end load;
+    
+    function save
+      (object      : object_access_t;
+       data_source : agar.core.datasource.datasource_access_t) return boolean is
+    begin
+      return c_save (object, data_source) = 0;
+    end save;
+
     function c_set_boolean
       (object : object_access_t;
        key    : cs.chars_ptr;
