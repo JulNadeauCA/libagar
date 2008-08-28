@@ -52,6 +52,7 @@ CreateUI(void)
 	AG_Window *win;
 	AG_Numerical *n1, *n2;
 	AG_Combo *uSel;
+	AG_Event *ev;
 
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_WindowSetCaption(win, "Unit Converter");
@@ -70,7 +71,10 @@ CreateUI(void)
 	AG_NumericalSizeHint(n1, "0000.00");
 	AG_NumericalSizeHint(n2, "0000.00");
 
-	AG_SetEvent(uSel, "combo-selected", SelectCategory, "%p,%p", n1, n2);
+	ev = AG_SetEvent(uSel, "combo-selected", SelectCategory, NULL);
+	AG_EventPushPointer(ev, NULL, n1);
+	AG_EventPushPointer(ev, NULL, n2);
+
 	AG_WindowShow(win);
 	AG_WindowMaximize(win);
 }
