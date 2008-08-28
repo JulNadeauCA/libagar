@@ -19,6 +19,7 @@ enum ag_evarg_type {
 	AG_EVARG_LAST
 };
 
+/* Argument to event handler */
 typedef union evarg {
 	void	*p;
 	char	*s;
@@ -80,6 +81,7 @@ typedef union evarg {
 #define AG_SDLKEY(v) ((SDLKey)AG_INT(v))
 #define AG_SDLMOD(v) ((SDLMod)AG_INT(v))
 
+/* Event handler structure */
 typedef struct ag_event {
 	char	name[AG_EVENT_NAME_MAX];
 	Uint	flags;
@@ -102,18 +104,18 @@ extern const char *agEvArgTypeNames[];
 
 AG_Event *AG_SetEvent(void *, const char *, AG_EventFn, const char *, ...);
 AG_Event *AG_AddEvent(void *, const char *, AG_EventFn, const char *, ...);
-void	  AG_UnsetEvent(void *, const char *);
-void	  AG_PostEvent(void *, void *, const char *, const char *, ...);
-void	  AG_ProcessEvent(SDL_Event *);
+void      AG_UnsetEvent(void *, const char *);
+void      AG_PostEvent(void *, void *, const char *, const char *, ...);
+void      AG_ProcessEvent(SDL_Event *);
 AG_Event *AG_FindEventHandler(void *, const char *);
 
-int	  	 AG_SchedEvent(void *, void *, Uint32, const char *,
-		               const char *, ...);
-int		 AG_ReschedEvent(void *, const char *, Uint32);
-int		 AG_CancelEvent(void *, const char *);
-void		 AG_ForwardEvent(void *, void *, AG_Event *);
-void		 AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
-void		 AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
+int       AG_SchedEvent(void *, void *, Uint32, const char *,
+                        const char *, ...);
+int       AG_ReschedEvent(void *, const char *, Uint32);
+int       AG_CancelEvent(void *, const char *);
+void      AG_ForwardEvent(void *, void *, AG_Event *);
+void      AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
+void      AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
 
 /* Immediately execute the given event handler. */
 static __inline__ void
@@ -137,7 +139,7 @@ __END_DECLS
 	AG_EVENT_BOUNDARY_CHECK(eev)				\
 	(eev)->argv[(eev)->argc].member = (val);		\
 	(eev)->argt[(eev)->argc] = (tname);			\
-	(eev)->argn[(eev)->argc] = (aname);			\
+	(eev)->argn[(eev)->argc] = ((aname) != NULL) ? (aname) : ""; \
 	(eev)->argc++;						\
 }
 #define AG_EVENT_INS_ARG(eev,ap,tname,member,t) { 		\
@@ -198,5 +200,63 @@ __END_DECLS
 		while (*e_fc != '\0') AG_EVENT_PUSH_ARG(ap,(e_fc),(ev)); \
 		va_end(ap);						\
 	}
+
+__BEGIN_DECLS
+static __inline__ void
+AG_EventPushPointer(AG_Event *ev, char *key, void *val)
+{
+	AG_EVENT_INS_VAL(ev, AG_EVARG_POINTER, key, p, val);
+}
+static __inline__ void
+AG_EventPushString(AG_Event *ev, char *key, char *val)
+{
+	AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, key, s, val);
+}
+static __inline__ void
+AG_EventPushChar(AG_Event *ev, char *key, char val)
+{
+	AG_EVENT_INS_VAL(ev, AG_EVARG_CHAR, key, i, (int)val);
+}
+static __inline__ void
+AG_EventPushUChar(AG_Event *ev, char *key, Uchar val)
+{
+	AG_EVENT_INS_VAL(ev, AG_EVARG_UCHAR, key, i, (int)val);
+}
+static __inline__ void
+AG_EventPushInt(AG_Event *ev, char *key, int val)
+{
+	AG_EVENT_INS_VAL(ev, AG_EVARG_INT, key, i, val);
+}
+static __inline__ void
+AG_EventPushUInt(AG_Event *ev, char *key, Uint val)
+{
+	AG_EVENT_INS_VAL(ev, AG_EVARG_UINT, key, i, (int)val);
+}
+static __inline__ void
+AG_EventPushLong(AG_Event *ev, char *key, long val)
+{
+	AG_EVENT_INS_VAL(ev, AG_EVARG_LONG, key, li, val);
+}
+static __inline__ void
+AG_EventPushULong(AG_Event *ev, char *key, Ulong val)
+{
+	AG_EVENT_INS_VAL(ev, AG_EVARG_ULONG, key, li, val);
+}
+static __inline__ void
+AG_EventPushFloat(AG_Event *ev, char *key, float val)
+{
+	AG_EVENT_INS_VAL(ev, AG_EVARG_FLOAT, key, f, (double)val);
+}
+static __inline__ void
+AG_EventPushDouble(AG_Event *ev, char *key, double val)
+{
+	AG_EVENT_INS_VAL(ev, AG_EVARG_DOUBLE, key, f, val);
+}
+static __inline__ void
+AG_EventPopArgument(AG_Event *ev)
+{
+	ev->argc--;
+}
+__END_DECLS
 
 #include "close_code.h"
