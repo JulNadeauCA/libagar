@@ -99,6 +99,8 @@ package agar.core.event is
   -- API
   --
 
+  -- event processing
+
   function set
     (object  : agar.core.object.object_access_t;
      name    : string;

@@ -17,3 +17,4 @@
 20080827 code: removed useless format string functions from agar.core.event
                in preparation for array variants.
 20080828 code: update to event API.
+20080828 code: added prop API as subpackage of agar.core.object.
