@@ -6,3 +6,4 @@
 20080828 code: added event_loop.
 20080828 code: removed C prototypes from agar.gui.window.
 20080828 code: removed C prototypes for all current API functions.
+20080829 code: added agar.gui.widget.box.

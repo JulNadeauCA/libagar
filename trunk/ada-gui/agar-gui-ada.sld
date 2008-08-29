@@ -15,5 +15,6 @@ agar-gui-text.o
 agar-gui-unit.o
 agar-gui-view.o
 agar-gui-widget.o
+agar-gui-widget-box.o
 agar-gui-window.o
 agar-gui.o

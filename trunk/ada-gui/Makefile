@@ -11,13 +11,13 @@ agar-gui-draw.o agar-gui-pixelformat.ali agar-gui-pixelformat.o \
 agar-gui-point.ali agar-gui-point.o agar-gui-rect.ali agar-gui-rect.o \
 agar-gui-style.ali agar-gui-style.o agar-gui-surface.ali agar-gui-surface.o \
 agar-gui-text.ali agar-gui-text.o agar-gui-unit.ali agar-gui-unit.o \
-agar-gui-view.ali agar-gui-view.o agar-gui-widget.ali agar-gui-widget.o \
-agar-gui-window.ali agar-gui-window.o agar-gui.ali agar-gui.o chk-opengl \
-chk-opengl.o ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.o ctxt/incdir.o \
-ctxt/repos.o ctxt/slibdir.o ctxt/version.o deinstaller deinstaller.o inst-check \
-inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o \
-install_core.o install_error.o installer installer.o instchk instchk.o \
-insthier.o
+agar-gui-view.ali agar-gui-view.o agar-gui-widget-box.ali agar-gui-widget-box.o \
+agar-gui-widget.ali agar-gui-widget.o agar-gui-window.ali agar-gui-window.o \
+agar-gui.ali agar-gui.o chk-opengl chk-opengl.o ctxt/bindir.o ctxt/ctxt.a \
+ctxt/dlibdir.o ctxt/incdir.o ctxt/repos.o ctxt/slibdir.o ctxt/version.o \
+deinstaller deinstaller.o inst-check inst-check.o inst-copy inst-copy.o \
+inst-dir inst-dir.o inst-link inst-link.o install_core.o install_error.o \
+installer installer.o instchk instchk.o insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
@@ -199,12 +199,12 @@ cc-slib agar-gui-ada.sld ag_draw.o ag_event.o ag_surface.o ag_unit.o \
 ag_widget.o ag_window.o agar-gui-colors.o agar-gui-draw.o \
 agar-gui-pixelformat.o agar-gui-point.o agar-gui-rect.o agar-gui-style.o \
 agar-gui-surface.o agar-gui-text.o agar-gui-unit.o agar-gui-view.o \
-agar-gui-widget.o agar-gui-window.o agar-gui.o
+agar-gui-widget.o agar-gui-widget-box.o agar-gui-window.o agar-gui.o
 	./cc-slib agar-gui-ada ag_draw.o ag_event.o ag_surface.o ag_unit.o ag_widget.o \
 	ag_window.o agar-gui-colors.o agar-gui-draw.o agar-gui-pixelformat.o \
 	agar-gui-point.o agar-gui-rect.o agar-gui-style.o agar-gui-surface.o \
 	agar-gui-text.o agar-gui-unit.o agar-gui-view.o agar-gui-widget.o \
-	agar-gui-window.o agar-gui.o
+	agar-gui-widget-box.o agar-gui-window.o agar-gui.o
 
 agar-gui-colors.ali:\
 ada-compile agar-gui-colors.adb agar-gui-colors.ads
@@ -288,6 +288,13 @@ ada-compile agar-gui-view.adb agar-gui-view.ads
 
 agar-gui-view.o:\
 agar-gui-view.ali
+
+agar-gui-widget-box.ali:\
+ada-compile agar-gui-widget-box.adb agar-gui-widget-box.ads
+	./ada-compile agar-gui-widget-box.adb
+
+agar-gui-widget-box.o:\
+agar-gui-widget-box.ali
 
 # agar-gui-widget.ads.mff
 agar-gui-widget.ads: agar-gui-widget.sh chk-opengl agar-gui-widget.ads.txt
@@ -521,14 +528,15 @@ obj_clean:
 	agar-gui-point.ali agar-gui-point.o agar-gui-rect.ali agar-gui-rect.o \
 	agar-gui-style.ali agar-gui-style.o agar-gui-surface.ali agar-gui-surface.o \
 	agar-gui-text.ali agar-gui-text.o agar-gui-unit.ali agar-gui-unit.o \
-	agar-gui-view.ali agar-gui-view.o agar-gui-widget.ads agar-gui-widget.ali \
-	agar-gui-widget.o agar-gui-window.ali agar-gui-window.o agar-gui.ali agar-gui.o \
-	chk-opengl chk-opengl.o ctxt/bindir.c ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.c \
-	ctxt/dlibdir.o ctxt/incdir.c ctxt/incdir.o ctxt/repos.c ctxt/repos.o \
-	ctxt/slibdir.c ctxt/slibdir.o ctxt/version.c ctxt/version.o deinstaller \
-	deinstaller.o inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o \
-	inst-link inst-link.o install_core.o install_error.o installer installer.o
-	rm -f instchk instchk.o insthier.o
+	agar-gui-view.ali agar-gui-view.o agar-gui-widget-box.ali agar-gui-widget-box.o \
+	agar-gui-widget.ads agar-gui-widget.ali agar-gui-widget.o agar-gui-window.ali \
+	agar-gui-window.o agar-gui.ali agar-gui.o chk-opengl chk-opengl.o ctxt/bindir.c \
+	ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.c ctxt/dlibdir.o ctxt/incdir.c \
+	ctxt/incdir.o ctxt/repos.c ctxt/repos.o ctxt/slibdir.c ctxt/slibdir.o \
+	ctxt/version.c ctxt/version.o deinstaller deinstaller.o inst-check inst-check.o \
+	inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o
+	rm -f install_core.o install_error.o installer installer.o instchk instchk.o \
+	insthier.o
 ext_clean:
 	rm -f conf-adatype conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 

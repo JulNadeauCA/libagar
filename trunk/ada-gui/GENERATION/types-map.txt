@@ -30,6 +30,11 @@ agar.gui.widget.binding_t:AG_WidgetBinding
 agar.gui.widget.binding_t:struct ag_widget_binding
 agar.gui.widget.binding_type_t:AG_WidgetBindingType
 agar.gui.widget.binding_type_t:enum ag_widget_binding_type
+agar.gui.widget.box.box_access_t:AG_Box *
+agar.gui.widget.box.box_access_t:struct ag_box *
+agar.gui.widget.box.box_t:AG_Box
+agar.gui.widget.box.box_t:struct ag_box
+agar.gui.widget.box.type_t:enum ag_box_type
 agar.gui.widget.class_access_t:AG_WidgetClass *
 agar.gui.widget.class_access_t:struct ag_widget_class *
 agar.gui.widget.class_t:AG_WidgetClass

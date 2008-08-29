@@ -35,6 +35,10 @@ pragma source_file_name(agar.gui.unit, body_file_name => "agar-gui-unit.adb");
 pragma source_file_name(agar.gui.view, spec_file_name => "agar-gui-view.ads");
 pragma source_file_name(agar.gui.view, body_file_name => "agar-gui-view.adb");
 
+-- ./agar-gui-widget-box.apk
+pragma source_file_name(agar.gui.widget.box, spec_file_name => "agar-gui-widget-box.ads");
+pragma source_file_name(agar.gui.widget.box, body_file_name => "agar-gui-widget-box.adb");
+
 -- ./agar-gui-widget.apk
 pragma source_file_name(agar.gui.widget, spec_file_name => "agar-gui-widget.ads");
 pragma source_file_name(agar.gui.widget, body_file_name => "agar-gui-widget.adb");
