@@ -35,6 +35,10 @@ agar.gui.widget.box.box_access_t:struct ag_box *
 agar.gui.widget.box.box_t:AG_Box
 agar.gui.widget.box.box_t:struct ag_box
 agar.gui.widget.box.type_t:enum ag_box_type
+agar.gui.widget.button.button_access_t:AG_Button *
+agar.gui.widget.button.button_access_t:struct ag_button *
+agar.gui.widget.button.button_t:AG_Button
+agar.gui.widget.button.button_t:struct ag_button
 agar.gui.widget.class_access_t:AG_WidgetClass *
 agar.gui.widget.class_access_t:struct ag_widget_class *
 agar.gui.widget.class_t:AG_WidgetClass

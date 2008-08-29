@@ -11,6 +11,7 @@ with agar.gui.text;
 with agar.gui.unit;
 with agar.gui.view;
 with agar.gui.widget.box;
+with agar.gui.widget.button;
 with agar.gui.widget;
 with agar.gui.window;
 with agar.gui;
@@ -44,6 +45,8 @@ procedure ada_size is
   agar_gui_widget_box_box_access_t : aliased string := "agar.gui.widget.box.box_access_t";
   agar_gui_widget_box_box_t : aliased string := "agar.gui.widget.box.box_t";
   agar_gui_widget_box_type_t : aliased string := "agar.gui.widget.box.type_t";
+  agar_gui_widget_button_button_access_t : aliased string := "agar.gui.widget.button.button_access_t";
+  agar_gui_widget_button_button_t : aliased string := "agar.gui.widget.button.button_t";
   agar_gui_widget_class_access_t : aliased string := "agar.gui.widget.class_access_t";
   agar_gui_widget_class_t : aliased string := "agar.gui.widget.class_t";
   agar_gui_widget_flag_descr_access_t : aliased string := "agar.gui.widget.flag_descr_access_t";
@@ -88,6 +91,8 @@ procedure ada_size is
     (agar_gui_widget_box_box_access_t'access, agar.gui.widget.box.box_access_t'size),
     (agar_gui_widget_box_box_t'access, agar.gui.widget.box.box_t'size),
     (agar_gui_widget_box_type_t'access, agar.gui.widget.box.type_t'size),
+    (agar_gui_widget_button_button_access_t'access, agar.gui.widget.button.button_access_t'size),
+    (agar_gui_widget_button_button_t'access, agar.gui.widget.button.button_t'size),
     (agar_gui_widget_class_access_t'access, agar.gui.widget.class_access_t'size),
     (agar_gui_widget_class_t'access, agar.gui.widget.class_t'size),
     (agar_gui_widget_flag_descr_access_t'access, agar.gui.widget.flag_descr_access_t'size),
