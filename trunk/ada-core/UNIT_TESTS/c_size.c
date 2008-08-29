@@ -23,6 +23,7 @@ struct {
   { "AG_EvArg", sizeof (AG_EvArg) },
   { "union evarg", sizeof (union evarg) },
   { "enum ag_evarg_type", sizeof (enum ag_evarg_type) },
+  { "AG_EventFn", sizeof (AG_EventFn) },
   { "AG_Event", sizeof (AG_Event) },
   { "struct ag_event", sizeof (struct ag_event) },
   { "enum ag_object_checksum_alg", sizeof (enum ag_object_checksum_alg) },

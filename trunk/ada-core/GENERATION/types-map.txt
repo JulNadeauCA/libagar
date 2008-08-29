@@ -13,6 +13,7 @@ agar.core.dso.sym_t:struct ag_dso_sym
 agar.core.event.arg_t:AG_EvArg
 agar.core.event.arg_t:union evarg
 agar.core.event.arg_type_t:enum ag_evarg_type
+agar.core.event.callback_t:AG_EventFn
 agar.core.event.event_t:AG_Event
 agar.core.event.event_t:struct ag_event
 agar.core.object.checksum_alg_t:enum ag_object_checksum_alg

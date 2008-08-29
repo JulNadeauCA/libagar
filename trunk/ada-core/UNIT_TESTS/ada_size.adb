@@ -27,6 +27,7 @@ procedure ada_size is
   agar_core_dso_sym_t : aliased string := "agar.core.dso.sym_t";
   agar_core_event_arg_t : aliased string := "agar.core.event.arg_t";
   agar_core_event_arg_type_t : aliased string := "agar.core.event.arg_type_t";
+  agar_core_event_callback_t : aliased string := "agar.core.event.callback_t";
   agar_core_event_event_t : aliased string := "agar.core.event.event_t";
   agar_core_object_checksum_alg_t : aliased string := "agar.core.object.checksum_alg_t";
   agar_core_object_class_t : aliased string := "agar.core.object.class_t";
@@ -68,6 +69,7 @@ procedure ada_size is
     (agar_core_dso_sym_t'access, agar.core.dso.sym_t'size),
     (agar_core_event_arg_t'access, agar.core.event.arg_t'size),
     (agar_core_event_arg_type_t'access, agar.core.event.arg_type_t'size),
+    (agar_core_event_callback_t'access, agar.core.event.callback_t'size),
     (agar_core_event_event_t'access, agar.core.event.event_t'size),
     (agar_core_object_checksum_alg_t'access, agar.core.object.checksum_alg_t'size),
     (agar_core_object_class_t'access, agar.core.object.class_t'size),
