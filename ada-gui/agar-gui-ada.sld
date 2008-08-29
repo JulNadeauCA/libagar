@@ -1,3 +1,4 @@
+ag_button.o
 ag_draw.o
 ag_event.o
 ag_surface.o
@@ -14,7 +15,8 @@ agar-gui-surface.o
 agar-gui-text.o
 agar-gui-unit.o
 agar-gui-view.o
-agar-gui-widget.o
 agar-gui-widget-box.o
+agar-gui-widget-button.o
+agar-gui-widget.o
 agar-gui-window.o
 agar-gui.o
