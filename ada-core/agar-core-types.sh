@@ -8,6 +8,7 @@ package agar.core.types is
 
   -- generic void pointer type
   subtype void_ptr_t is system.address;
+  null_ptr : constant void_ptr_t := system.null_address;
 
   -- standard integer set
   type int8_t is range -16#7f# .. 16#7f#;
