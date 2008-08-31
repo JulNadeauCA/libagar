@@ -28,6 +28,14 @@ typedef struct ag_object_class {
 	char libs[AG_OBJECT_TYPE_MAX];	/* Comma-separated module list */
 } AG_ObjectClass;
 
+#ifdef DEBUG
+# define AG_ASSERT_CLASS(obj,class) \
+	if (!AG_OfClass((obj),(class))) \
+		AG_FatalError("%s is not a %s", AGOBJECT(obj)->name, class)
+#else
+# define AG_ASSERT_CLASS(obj,class)
+#endif
+
 __BEGIN_DECLS
 extern AG_ObjectClass **agClassTbl;		/* Object classes */
 extern int              agClassCount;

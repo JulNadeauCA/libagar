@@ -7,6 +7,7 @@
 
 #define AGOBJECT(ob) ((struct ag_object *)(ob))
 #define AGOBJECT_CLASS(obj) ((struct ag_object_class *)(AGOBJECT(obj)->cls))
+#define AGCLASS(obj) ((struct ag_object_class *)(obj))
 
 #include <agar/core/timeout.h>
 #include <agar/core/event.h>
@@ -139,6 +140,7 @@ enum ag_object_checksum_alg {
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
 # define OBJECT(ob)            AGOBJECT(ob)
 # define OBJECT_CLASS(ob)      AGOBJECT_CLASS(ob)
+# define CLASS(ob)             AGCLASS(ob)
 
 # define OBJECT_RESIDENT(ob)   (AGOBJECT(ob)->flags & AG_OBJECT_RESIDENT)
 # define OBJECT_PERSISTENT(ob) !(AGOBJECT(ob)->flags & AG_OBJECT_NON_PERSISTENT)
