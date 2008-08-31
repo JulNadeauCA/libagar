@@ -39,6 +39,10 @@ agar.gui.widget.button.button_access_t:AG_Button *
 agar.gui.widget.button.button_access_t:struct ag_button *
 agar.gui.widget.button.button_t:AG_Button
 agar.gui.widget.button.button_t:struct ag_button
+agar.gui.widget.checkbox.checkbox_access_t:AG_Checkbox *
+agar.gui.widget.checkbox.checkbox_access_t:struct ag_checkbox *
+agar.gui.widget.checkbox.checkbox_t:AG_Checkbox
+agar.gui.widget.checkbox.checkbox_t:struct ag_checkbox
 agar.gui.widget.class_access_t:AG_WidgetClass *
 agar.gui.widget.class_access_t:struct ag_widget_class *
 agar.gui.widget.class_t:AG_WidgetClass

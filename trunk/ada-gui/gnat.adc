@@ -43,6 +43,10 @@ pragma source_file_name(agar.gui.widget.box, body_file_name => "agar-gui-widget-
 pragma source_file_name(agar.gui.widget.button, spec_file_name => "agar-gui-widget-button.ads");
 pragma source_file_name(agar.gui.widget.button, body_file_name => "agar-gui-widget-button.adb");
 
+-- ./agar-gui-widget-checkbox.apk
+pragma source_file_name(agar.gui.widget.checkbox, spec_file_name => "agar-gui-widget-checkbox.ads");
+pragma source_file_name(agar.gui.widget.checkbox, body_file_name => "agar-gui-widget-checkbox.adb");
+
 -- ./agar-gui-widget.apk
 pragma source_file_name(agar.gui.widget, spec_file_name => "agar-gui-widget.ads");
 pragma source_file_name(agar.gui.widget, body_file_name => "agar-gui-widget.adb");
