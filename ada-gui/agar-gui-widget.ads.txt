@@ -183,6 +183,8 @@ package agar.gui.widget is
   type surface_id_t is new c.int;
   pragma convention (c, surface_id_t);
 
+  subtype flags_t is c.unsigned;
+
   --
   -- API
   --
