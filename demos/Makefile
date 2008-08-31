@@ -19,7 +19,8 @@ SUBDIR=	fixedres \
 	scrollbar \
 	initvideosdl \
 	keyevents \
-	customwidget
+	customwidget \
+	windows
 
 all: all-subdir
 clean: prereq clean-subdir
