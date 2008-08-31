@@ -281,7 +281,7 @@ void
 AG_TlistSizeHintLargest(AG_Tlist *tl, int nitems)
 {
 	AG_TlistItem *it;
-	Uint w;
+	int w;
 
 	AG_ObjectLock(tl);
 	tl->wHint = 0;
