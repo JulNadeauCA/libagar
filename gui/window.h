@@ -21,7 +21,8 @@ enum ag_window_alignment {
 	AG_WINDOW_MR,
 	AG_WINDOW_BL,
 	AG_WINDOW_BC,
-	AG_WINDOW_BR
+	AG_WINDOW_BR,
+	AG_WINDOW_ALIGNMENT_LAST
 };
 
 #define AG_WINDOW_UPPER_LEFT	AG_WINDOW_TL
@@ -59,6 +60,7 @@ typedef struct ag_window {
 #define AG_WINDOW_NOCLOSE	0x00400	/* Disable close button */
 #define AG_WINDOW_NOMINIMIZE	0x00800	/* Disable minimize button */
 #define AG_WINDOW_NOMAXIMIZE	0x01000	/* Disable maximize button */
+#define AG_WINDOW_CASCADE	0x02000 /* For AG_WindowSetPosition() */
 #define AG_WINDOW_NOBACKGROUND	0x08000	/* Don't fill the background */
 #define AG_WINDOW_NOUPDATERECT	0x10000	/* Don't update rectangle */
 #define AG_WINDOW_FOCUSONATTACH	0x20000	/* Automatic focus on attach */
@@ -91,6 +93,8 @@ extern AG_WidgetClass agWindowClass;
 extern int agWindowIconWidth;
 extern int agWindowIconHeight;
 
+void       AG_InitWindowSystem(void);
+void       AG_DestroyWindowSystem(void);
 AG_Window *AG_WindowNew(Uint);
 AG_Window *AG_WindowNewNamed(Uint, const char *, ...)
 			     FORMAT_ATTRIBUTE(printf, 2, 3);
@@ -138,7 +142,6 @@ void	 AG_WindowSetVisibility(AG_Window *, int);
 int	 AG_WindowEvent(SDL_Event *);
 void	 AG_WindowResize(AG_Window *);
 int	 AG_WindowIsSurrounded(AG_Window *);
-void	 AG_WindowApplyAlignment(AG_Window *, enum ag_window_alignment);
 
 void	 AG_WindowFocus(AG_Window *);
 int	 AG_WindowFocusNamed(const char *);

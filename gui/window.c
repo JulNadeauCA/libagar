@@ -37,6 +37,7 @@
 #include <string.h>
 #include <stdarg.h>
 
+static void ClampToView(AG_Window *);
 static void Resize(int, AG_Window *, SDL_MouseMotionEvent *);
 static void Move(AG_Window *, SDL_MouseMotionEvent *);
 static void Shown(AG_Event *);
@@ -44,10 +45,31 @@ static void Hidden(AG_Event *);
 static void GainFocus(AG_Event *);
 static void LostFocus(AG_Event *);
 
-int	 agWindowXOutLimit = 32;
-int	 agWindowBotOutLimit = 32;
-int	 agWindowIconWidth = 32;
-int	 agWindowIconHeight = 32;
+AG_Mutex agWindowLock;
+int agWindowCurX[AG_WINDOW_ALIGNMENT_LAST];
+int agWindowCurY[AG_WINDOW_ALIGNMENT_LAST];
+int agWindowXOutLimit = 32;
+int agWindowBotOutLimit = 32;
+int agWindowIconWidth = 32;
+int agWindowIconHeight = 32;
+
+void
+AG_InitWindowSystem(void)
+{
+	int i;
+
+	AG_MutexInit(&agWindowLock);
+	for (i = 0; i < AG_WINDOW_ALIGNMENT_LAST; i++) {
+		agWindowCurX[i] = 0;
+		agWindowCurY[i] = 0;
+	}
+}
+
+void
+AG_DestroyWindowSystem(void)
+{
+	AG_MutexDestroy(&agWindowLock);
+}
 
 /* Create a generic window. */
 AG_Window *
@@ -203,6 +225,70 @@ Draw(void *p)
 		STYLE(win)->WindowBorders(win);
 }
 
+/* Apply initial alignment parameter. */
+static void
+ApplyAlignment(AG_Window *win)
+{
+	int xOffs = 0, yOffs = 0;
+
+	AG_MutexLock(&agWindowLock);
+	
+	if (win->flags & AG_WINDOW_CASCADE) {
+		xOffs = agWindowCurX[win->alignment];
+		yOffs = agWindowCurY[win->alignment];
+		agWindowCurX[win->alignment] += 16;
+		agWindowCurY[win->alignment] += 16;
+		if (agWindowCurX[win->alignment] > agView->w)
+			agWindowCurX[win->alignment] = 0;
+		if (agWindowCurY[win->alignment] > agView->h)
+			agWindowCurY[win->alignment] = 0;
+	}
+
+	switch (win->alignment) {
+	case AG_WINDOW_UPPER_LEFT:
+		WIDGET(win)->x = xOffs;
+		WIDGET(win)->y = yOffs;
+		break;
+	case AG_WINDOW_MIDDLE_LEFT:
+		WIDGET(win)->x = xOffs;
+		WIDGET(win)->y = agView->h/2 - HEIGHT(win)/2 + yOffs;
+		break;
+	case AG_WINDOW_LOWER_LEFT:
+		WIDGET(win)->x = xOffs;
+		WIDGET(win)->y = agView->h - HEIGHT(win) - yOffs;
+		break;
+	case AG_WINDOW_UPPER_RIGHT:
+		WIDGET(win)->x = agView->w - WIDTH(win) - xOffs;
+		WIDGET(win)->y = -yOffs;
+		break;
+	case AG_WINDOW_MIDDLE_RIGHT:
+		WIDGET(win)->x = agView->w - WIDTH(win) - xOffs;
+		WIDGET(win)->y = agView->h/2 - HEIGHT(win)/2 + yOffs;
+		break;
+	case AG_WINDOW_LOWER_RIGHT:
+		WIDGET(win)->x = agView->w - WIDTH(win) - xOffs;
+		WIDGET(win)->y = agView->h - HEIGHT(win) - yOffs;
+		break;
+	case AG_WINDOW_CENTER:
+		WIDGET(win)->x = agView->w/2 - WIDTH(win)/2 + xOffs;
+		WIDGET(win)->y = agView->h/2 - HEIGHT(win)/2 + yOffs;
+		break;
+	case AG_WINDOW_LOWER_CENTER:
+		WIDGET(win)->x = agView->w/2 - WIDTH(win)/2 + xOffs;
+		WIDGET(win)->y = agView->h - HEIGHT(win);
+		break;
+	case AG_WINDOW_UPPER_CENTER:
+		WIDGET(win)->x = agView->w/2 - WIDTH(win)/2 + xOffs;
+		WIDGET(win)->y = 0;
+		break;
+	default:
+		break;
+	}
+	
+	ClampToView(win);
+	AG_MutexUnlock(&agWindowLock);
+}
+
 static void
 Shown(AG_Event *event)
 {
@@ -228,7 +314,7 @@ Shown(AG_Event *event)
 		a.w = r.w;
 		a.h = r.h;
 		AG_WidgetSizeAlloc(win, &a);
-		AG_WindowApplyAlignment(win, win->alignment);
+		ApplyAlignment(win);
 	} else {
 		a.x = WIDGET(win)->x;
 		a.y = WIDGET(win)->y;
@@ -1518,7 +1604,11 @@ AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
 {
 	AG_ObjectLock(win);
 	win->alignment = alignment;
-	/* Ignore cascade for now */
+	if (cascade) {
+		win->flags |= AG_WINDOW_CASCADE;
+	} else {
+		win->flags &= ~(AG_WINDOW_CASCADE);
+	}
 	AG_ObjectUnlock(win);
 }
 
@@ -1540,58 +1630,6 @@ AG_WindowSetCloseAction(AG_Window *win, enum ag_window_close_action mode)
 		break;
 	}
 
-	AG_ObjectUnlock(win);
-}
-
-/*
- * Set the position of a window assuming its size is known.
- * The window must be locked.
- */
-void
-AG_WindowApplyAlignment(AG_Window *win, enum ag_window_alignment alignment)
-{
-	AG_ObjectLock(win);
-	
-	switch (alignment) {
-	case AG_WINDOW_UPPER_LEFT:
-		WIDGET(win)->x = 0;
-		WIDGET(win)->y = 0;
-		break;
-	case AG_WINDOW_MIDDLE_LEFT:
-		WIDGET(win)->x = 0;
-		WIDGET(win)->y = agView->h/2 - WIDGET(win)->h/2;
-		break;
-	case AG_WINDOW_LOWER_LEFT:
-		WIDGET(win)->x = 0;
-		WIDGET(win)->y = agView->h - WIDGET(win)->h;
-		break;
-	case AG_WINDOW_UPPER_RIGHT:
-		WIDGET(win)->x = agView->w - WIDGET(win)->w;
-		WIDGET(win)->y = 0;
-		break;
-	case AG_WINDOW_MIDDLE_RIGHT:
-		WIDGET(win)->x = agView->w - WIDGET(win)->w;
-		WIDGET(win)->y = agView->h/2 - WIDGET(win)->h/2;
-		break;
-	case AG_WINDOW_LOWER_RIGHT:
-		WIDGET(win)->x = agView->w - WIDGET(win)->w;
-		WIDGET(win)->y = agView->h - WIDGET(win)->h;
-		break;
-	case AG_WINDOW_CENTER:
-		WIDGET(win)->x = agView->w/2 - WIDGET(win)->w/2;
-		WIDGET(win)->y = agView->h/2 - WIDGET(win)->h/2;
-		break;
-	case AG_WINDOW_LOWER_CENTER:
-		WIDGET(win)->x = agView->w/2 - WIDGET(win)->w/2;
-		WIDGET(win)->y = agView->h - WIDGET(win)->h;
-		break;
-	case AG_WINDOW_UPPER_CENTER:
-		WIDGET(win)->x = agView->w/2 - WIDGET(win)->w/2;
-		WIDGET(win)->y = 0;
-		break;
-	}
-
-	ClampToView(win);
 	AG_ObjectUnlock(win);
 }
 
