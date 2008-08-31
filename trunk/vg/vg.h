@@ -72,7 +72,7 @@ typedef struct vg_layer {
 } VG_Layer;
 
 typedef struct vg_matrix {
-	float m[4][4];
+	float m[3][3];
 } VG_Matrix;
 
 typedef struct vg_node {
