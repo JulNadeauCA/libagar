@@ -171,6 +171,9 @@ AG_InitGUI(Uint flags)
 	/* Initialize the built-in theme. */
 	AG_SetStyle(agView, &agStyleDefault);
 
+	/* Initialize the Window system. */
+	AG_InitWindowSystem();
+
 	return (0);
 }
 
@@ -180,6 +183,7 @@ AG_DestroyGUI(void)
 	void **ops;
 
 	/* Destroy the GUI subsystems. */
+	AG_DestroyWindowSystem();
 	AG_TextDestroy();
 	AG_CursorsDestroy();
 	AG_ColorsDestroy();
