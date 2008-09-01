@@ -184,7 +184,8 @@ echo "    --enable-objdebug         Object system debugging [default: no]"
 echo "    --enable-eventdebug       Event system debugging [default: no]"
 echo "    --enable-warnings         Suggested compiler warnings [default: no]"
 echo "    --enable-threads          Thread safety [default: check]"
-echo "    --enable-gui              Build Agar-GUI [default: yes]"
+echo "    --enable-gui              Build Agar-GUI library [default: yes]"
+echo "    --enable-math             Build Agar-Math library [default: yes]"
 echo "    --enable-utf8             Unicode text/input support [default: yes]"
 echo "    --enable-8bpp             Support for 8 bpp display [default: yes]"
 echo "    --enable-16bpp            Support for 16 bpp display [default: yes]"
@@ -195,6 +196,15 @@ echo "    --enable-server           Build network server library [default: no]"
 echo "    --with-gl                 OpenGL rendering support [default: check]"
 echo "    --with-jpeg               JPEG screenshot support [default: check]"
 echo "    --with-freetype           GUI: Enable FreeType support [default: check]"
+echo "    --with-sse                M: SSE[123] optimizations [default: check]"
+echo "    --with-sse-inline         M: Inline SSE operations [default: no]"
+echo "    --with-sse2-inline        M: Inline SSE2 operations [default: no]"
+echo "    --with-sse3-inline        M: Inline SSE3 operations [default: no]"
+echo "    --with-altivec            M: AltiVec optimizations [default: check]"
+echo "    --with-altivec-inline     M: Inline AltiVec operations [default: no]"
+echo "    --with-single-fp          M: Single precision math (C99) [default: yes]"
+echo "    --with-double-fp          M: Double precision math [default: no]"
+echo "    --with-quad-fp            M: Quad precision math (C99) [default: no]"
 exit 1
 fi
 
@@ -3690,42 +3700,6 @@ $ECHO_N "checking for POSIX threads..."
 $ECHO_N "checking for POSIX threads..." >> config.log
 PTHREADS_CFLAGS=""
 PTHREADS_LIBS="-lpthread"
-if [ -f "/usr/include/pthreads/pthread.h" ]; then
-PTHREADS_CFLAGS="-I/usr/include/pthreads"
-fi;
-if [ -f "/usr/local/include/pthread.h" ]; then
-PTHREADS_CFLAGS="-I/usr/local/include"
-fi;
-if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
-PTHREADS_CFLAGS="-I/usr/local/include/pthreads"
-fi;
-if [ -f "/usr/local/lib/libpthread.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthread"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC1.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC1d.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1d"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE1.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE1d.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1d"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC2.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC2d.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2d"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE2.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2d"
-fi;
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
@@ -3743,8 +3717,8 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -3804,8 +3778,8 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -3850,55 +3824,10 @@ $ECHO_N "checking for the X/Open Threads Extension..."
 $ECHO_N "checking for the X/Open Threads Extension..." >> config.log
 if [ "${SYSTEM}" = "FreeBSD" ]; then
 PTHREADS_XOPEN_CFLAGS=""
-if [ -f "/usr/include/pthreads/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/include/pthreads"
-fi;
-if [ -f "/usr/local/include/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/local/include"
-fi;
-if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/local/include/pthreads"
-fi;
 else
 PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-if [ -f "/usr/include/pthreads/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/include/pthreads -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-fi;
-if [ -f "/usr/local/include/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/local/include -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-fi;
-if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/local/include/pthreads -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-fi;
 fi;
 PTHREADS_XOPEN_LIBS="-lpthread"
-if [ -f "/usr/local/lib/libpthread.a" ]; then
-PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthread"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC1.a" ]; then
-PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC1"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC1d.a" ]; then
-PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC1d"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE1.a" ]; then
-PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE1"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE1d.a" ]; then
-PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE1d"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC2.a" ]; then
-PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC2"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC2d.a" ]; then
-PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC2d"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE2.a" ]; then
-PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE2"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
-PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE2d"
-fi;
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
@@ -4393,13 +4322,566 @@ fi;
 		exit 1
 	fi
 fi
+if [ "${enable_math}" != "no" ]
+ then
+ENABLE_MATH="1"
+echo "#ifndef ENABLE_MATH" > config/enable_math.h
+echo "#define ENABLE_MATH \"$ENABLE_MATH\"" >> config/enable_math.h
+echo "#endif" >> config/enable_math.h
+echo "hdefs[\"ENABLE_MATH\"] = \"$ENABLE_MATH\"" >>configure.lua
+else
+echo "#undef ENABLE_MATH" >config/enable_math.h
+echo "hdefs[\"ENABLE_MATH\"] = nil" >>configure.lua
+fi
+if [ "${with_sse}" = "yes" ]
+ then
+$ECHO_N "checking for SSE extensions..."
+$ECHO_N "checking for SSE extensions..." >> config.log
+SSE_CFLAGS="-msse"
+cat << EOT > conftest.c
+#include <xmmintrin.h>
+#include <stdio.h>
+
+#define MAXERR 1e-4
+
+typedef union vec {
+	float v[4];
+	__m128 m128;
+	struct { float x, y, z, pad; };
+} Vector __attribute__ ((aligned(16)));
+
+const float testVals[4][7] = {
+	{ 0.076003,0.559770,0.163680, 1.0,	0.076003,0.559770,0.163680 },
+	{ 0.076003,0.559770,0.163680, 0.20485,	0.015569,0.114667,0.033529 },
+	{ 0.668390,0.929890,0.382710, 1.0,	0.668390,0.929890,0.382710 },
+	{ 0.668390,0.929890,0.382710, 0.95831,	0.640530,0.891120,0.366760 },
+};
+
+static Vector
+Scale(Vector a, float c)
+{
+	Vector b;
+	__m128 v;
+
+	v = _mm_set1_ps(c);
+	b.m128 = _mm_mul_ps(a.m128, v);
+	return (b);
+}
+
+int
+main(int argc, char *argv[])
+{
+	Vector a, b;
+	float dx, dy, dz;
+	int i, j;
+
+	for (i = 0; i < 10000; i++) {
+		for (j = 0; j < 4; j++) {
+			a.x = testVals[j][0];
+			a.y = testVals[j][1];
+			a.z = testVals[j][2];
+			b = Scale(a, testVals[j][3]);
+			dx = b.x - testVals[j][4];
+			dy = b.y - testVals[j][5];
+			dz = b.z - testVals[j][6];
+			if ((dx > 0.0 && dx >  MAXERR) ||
+			    (dx < 0.0 && dx < -MAXERR) ||
+			    (dy > 0.0 && dy >  MAXERR) ||
+			    (dy < 0.0 && dz < -MAXERR) ||
+			    (dz > 0.0 && dz >  MAXERR) ||
+			    (dz < 0.0 && dz < -MAXERR)) {
+				printf("results inaccurate [%f,%f,%f]\n",
+				    dx, dy, dz);
+				return (1);
+			}
+		}
+	}
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+echo "no (compile failed)"
+echo "no (compile failed)" >> config.log
+compile="failed"
+HAVE_SSE="no"
+echo "HAVE_SSE=$HAVE_SSE" >>Makefile.config
+echo "mdefs[\"HAVE_SSE\"] = \"$HAVE_SSE\"" >>configure.lua
+echo "#undef HAVE_SSE" >config/have_sse.h
+echo "hdefs[\"HAVE_SSE\"] = nil" >>configure.lua
+else
+compile="ok"
+(cd $testdir && ./conftest) >> config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SSE="yes"
+echo "HAVE_SSE=$HAVE_SSE" >>Makefile.config
+echo "mdefs[\"HAVE_SSE\"] = \"$HAVE_SSE\"" >>configure.lua
+echo "#ifndef HAVE_SSE" > config/have_sse.h
+echo "#define HAVE_SSE \"$HAVE_SSE\"" >> config/have_sse.h
+echo "#endif" >> config/have_sse.h
+echo "hdefs[\"HAVE_SSE\"] = \"$HAVE_SSE\"" >>configure.lua
+else
+echo "no (exec failed)"
+echo "no (exec failed)" >> config.log
+HAVE_SSE="no"
+echo "HAVE_SSE=$HAVE_SSE" >>Makefile.config
+echo "mdefs[\"HAVE_SSE\"] = \"$HAVE_SSE\"" >>configure.lua
+echo "#undef HAVE_SSE" >config/have_sse.h
+echo "hdefs[\"HAVE_SSE\"] = nil" >>configure.lua
+fi;
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_SSE}" = "yes" ]; then
+echo "#ifndef SSE_CFLAGS" > config/sse_cflags.h
+echo "#define SSE_CFLAGS \"$SSE_CFLAGS\"" >> config/sse_cflags.h
+echo "#endif" >> config/sse_cflags.h
+echo "hdefs[\"SSE_CFLAGS\"] = \"$SSE_CFLAGS\"" >>configure.lua
+else
+echo "#undef SSE_CFLAGS" >config/sse_cflags.h
+echo "hdefs[\"SSE_CFLAGS\"] = nil" >>configure.lua
+SSE_CFLAGS=""
+fi;
+echo "SSE_CFLAGS=$SSE_CFLAGS" >>Makefile.config
+echo "mdefs[\"SSE_CFLAGS\"] = \"$SSE_CFLAGS\"" >>configure.lua
+$ECHO_N "checking for SSE2 extensions..."
+$ECHO_N "checking for SSE2 extensions..." >> config.log
+SSE2_CFLAGS="-msse2"
+cat << EOT > conftest.c
+#include <emmintrin.h>
+
+int
+main(int argc, char *argv[])
+{
+	double a[4] __attribute__ ((aligned(16)));
+	double b[4] __attribute__ ((aligned(16)));
+	double rv;
+	__m128d vec1, vec2;
+
+	vec1 = _mm_load_pd(a);
+	vec2 = _mm_load_pd(b);
+	vec1 = _mm_xor_pd(vec1, vec2);
+	_mm_store_sd(&rv, vec1);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+echo "no (compile failed)"
+echo "no (compile failed)" >> config.log
+compile="failed"
+HAVE_SSE2="no"
+echo "HAVE_SSE2=$HAVE_SSE2" >>Makefile.config
+echo "mdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
+echo "#undef HAVE_SSE2" >config/have_sse2.h
+echo "hdefs[\"HAVE_SSE2\"] = nil" >>configure.lua
+else
+compile="ok"
+(cd $testdir && ./conftest) >> config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SSE2="yes"
+echo "HAVE_SSE2=$HAVE_SSE2" >>Makefile.config
+echo "mdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
+echo "#ifndef HAVE_SSE2" > config/have_sse2.h
+echo "#define HAVE_SSE2 \"$HAVE_SSE2\"" >> config/have_sse2.h
+echo "#endif" >> config/have_sse2.h
+echo "hdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
+else
+echo "no (exec failed)"
+echo "no (exec failed)" >> config.log
+HAVE_SSE2="no"
+echo "HAVE_SSE2=$HAVE_SSE2" >>Makefile.config
+echo "mdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
+echo "#undef HAVE_SSE2" >config/have_sse2.h
+echo "hdefs[\"HAVE_SSE2\"] = nil" >>configure.lua
+fi;
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_SSE2}" = "yes" ]; then
+echo "#ifndef SSE2_CFLAGS" > config/sse2_cflags.h
+echo "#define SSE2_CFLAGS \"$SSE2_CFLAGS\"" >> config/sse2_cflags.h
+echo "#endif" >> config/sse2_cflags.h
+echo "hdefs[\"SSE2_CFLAGS\"] = \"$SSE2_CFLAGS\"" >>configure.lua
+else
+echo "#undef SSE2_CFLAGS" >config/sse2_cflags.h
+echo "hdefs[\"SSE2_CFLAGS\"] = nil" >>configure.lua
+SSE2_CFLAGS=""
+fi;
+echo "SSE2_CFLAGS=$SSE2_CFLAGS" >>Makefile.config
+echo "mdefs[\"SSE2_CFLAGS\"] = \"$SSE2_CFLAGS\"" >>configure.lua
+$ECHO_N "checking for SSE3 extensions..."
+$ECHO_N "checking for SSE3 extensions..." >> config.log
+SSE3_CFLAGS="-msse3"
+cat << EOT > conftest.c
+#include <pmmintrin.h>
+
+int
+main(int argc, char *argv[])
+{
+	float a[4] __attribute__ ((aligned(16)));
+	float b[4] __attribute__ ((aligned(16)));
+	__m128 vec1, vec2;
+	float rv;
+
+	vec1 = _mm_load_ps(a);
+	vec2 = _mm_load_ps(b);
+	vec1 = _mm_mul_ps(vec1, vec2);
+	vec1 = _mm_hadd_ps(vec1, vec1);
+	vec1 = _mm_hadd_ps(vec1, vec1);
+	_mm_store_ss(&rv, vec1);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+if [ $? != 0 ]; then
+echo "no (compile failed)"
+echo "no (compile failed)" >> config.log
+compile="failed"
+HAVE_SSE3="no"
+echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
+echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
+echo "#undef HAVE_SSE3" >config/have_sse3.h
+echo "hdefs[\"HAVE_SSE3\"] = nil" >>configure.lua
+else
+compile="ok"
+(cd $testdir && ./conftest) >> config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SSE3="yes"
+echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
+echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
+echo "#ifndef HAVE_SSE3" > config/have_sse3.h
+echo "#define HAVE_SSE3 \"$HAVE_SSE3\"" >> config/have_sse3.h
+echo "#endif" >> config/have_sse3.h
+echo "hdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
+else
+echo "no (exec failed)"
+echo "no (exec failed)" >> config.log
+HAVE_SSE3="no"
+echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
+echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
+echo "#undef HAVE_SSE3" >config/have_sse3.h
+echo "hdefs[\"HAVE_SSE3\"] = nil" >>configure.lua
+fi;
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_SSE3}" = "yes" ]; then
+echo "#ifndef SSE3_CFLAGS" > config/sse3_cflags.h
+echo "#define SSE3_CFLAGS \"$SSE3_CFLAGS\"" >> config/sse3_cflags.h
+echo "#endif" >> config/sse3_cflags.h
+echo "hdefs[\"SSE3_CFLAGS\"] = \"$SSE3_CFLAGS\"" >>configure.lua
+else
+echo "#undef SSE3_CFLAGS" >config/sse3_cflags.h
+echo "hdefs[\"SSE3_CFLAGS\"] = nil" >>configure.lua
+SSE3_CFLAGS=""
+fi;
+echo "SSE3_CFLAGS=$SSE3_CFLAGS" >>Makefile.config
+echo "mdefs[\"SSE3_CFLAGS\"] = \"$SSE3_CFLAGS\"" >>configure.lua
+	if [ "${HAVE_SSE}" != "yes" ]
+ then
+		if [ "${with_sse}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-sse was requested, but SSE "
+			echo "* intrinsics not supported by compiler"
+			echo "*"
+			exit 1
+		else
+echo "#undef HAVE_SSE" >config/have_sse.h
+echo "hdefs[\"HAVE_SSE\"] = nil" >>configure.lua
+echo "#undef INLINE_SSE" >config/inline_sse.h
+echo "hdefs[\"INLINE_SSE\"] = nil" >>configure.lua
+echo "#undef INLINE_SSE2" >config/inline_sse2.h
+echo "hdefs[\"INLINE_SSE2\"] = nil" >>configure.lua
+echo "#undef INLINE_SSE3" >config/inline_sse3.h
+echo "hdefs[\"INLINE_SSE3\"] = nil" >>configure.lua
+		fi
+	else
+		if [ "${with_sse_inline}" = "yes" ]
+ then
+INLINE_SSE="1"
+echo "#ifndef INLINE_SSE" > config/inline_sse.h
+echo "#define INLINE_SSE \"$INLINE_SSE\"" >> config/inline_sse.h
+echo "#endif" >> config/inline_sse.h
+echo "hdefs[\"INLINE_SSE\"] = \"$INLINE_SSE\"" >>configure.lua
+		else
+echo "#undef INLINE_SSE" >config/inline_sse.h
+echo "hdefs[\"INLINE_SSE\"] = nil" >>configure.lua
+		fi
+		if [ "${HAVE_SSE2}" = "yes" ]
+ then
+			if [ "${with_sse2_inline}" = "yes" ]
+ then
+INLINE_SSE2="1"
+echo "#ifndef INLINE_SSE2" > config/inline_sse2.h
+echo "#define INLINE_SSE2 \"$INLINE_SSE2\"" >> config/inline_sse2.h
+echo "#endif" >> config/inline_sse2.h
+echo "hdefs[\"INLINE_SSE2\"] = \"$INLINE_SSE2\"" >>configure.lua
+			else
+echo "#undef INLINE_SSE2" >config/inline_sse2.h
+echo "hdefs[\"INLINE_SSE2\"] = nil" >>configure.lua
+			fi
+		else
+echo "#undef INLINE_SSE2" >config/inline_sse2.h
+echo "hdefs[\"INLINE_SSE2\"] = nil" >>configure.lua
+		fi
+		if [ "${HAVE_SSE3}" = "yes" ]
+ then
+			if [ "${with_sse3_inline}" = "yes" ]
+ then
+INLINE_SSE3="1"
+echo "#ifndef INLINE_SSE3" > config/inline_sse3.h
+echo "#define INLINE_SSE3 \"$INLINE_SSE3\"" >> config/inline_sse3.h
+echo "#endif" >> config/inline_sse3.h
+echo "hdefs[\"INLINE_SSE3\"] = \"$INLINE_SSE3\"" >>configure.lua
+			else
+echo "#undef INLINE_SSE3" >config/inline_sse3.h
+echo "hdefs[\"INLINE_SSE3\"] = nil" >>configure.lua
+			fi
+		else
+echo "#undef INLINE_SSE3" >config/inline_sse3.h
+echo "hdefs[\"INLINE_SSE3\"] = nil" >>configure.lua
+		fi
+	fi
+else
+echo "#undef HAVE_SSE" >config/have_sse.h
+echo "hdefs[\"HAVE_SSE\"] = nil" >>configure.lua
+echo "#undef HAVE_SSE2" >config/have_sse2.h
+echo "hdefs[\"HAVE_SSE2\"] = nil" >>configure.lua
+echo "#undef HAVE_SSE3" >config/have_sse3.h
+echo "hdefs[\"HAVE_SSE3\"] = nil" >>configure.lua
+echo "#undef INLINE_SSE" >config/inline_sse.h
+echo "hdefs[\"INLINE_SSE\"] = nil" >>configure.lua
+echo "#undef INLINE_SSE2" >config/inline_sse2.h
+echo "hdefs[\"INLINE_SSE2\"] = nil" >>configure.lua
+echo "#undef INLINE_SSE3" >config/inline_sse3.h
+echo "hdefs[\"INLINE_SSE3\"] = nil" >>configure.lua
+fi
+if [ "${with_altivec}" = "yes" ]
+ then
+$ECHO_N "checking for AltiVec (with <altivec.h>)..."
+$ECHO_N "checking for AltiVec (with <altivec.h>)..." >> config.log
+if [ "$SYSTEM" = "Darwin" ]; then
+ALTIVEC_CFLAGS="-faltivec -maltivec"
+ALTIVEC_CHECK_CFLAGS="-D_DARWIN_C_SOURCE"
+echo "ALTIVEC_CHECK_CFLAGS=$ALTIVEC_CHECK_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CHECK_CFLAGS\"] = \"$ALTIVEC_CHECK_CFLAGS\"" >>configure.lua
+else
+ALTIVEC_CFLAGS="-mabi=altivec -maltivec"
+ALTIVEC_CHECK_CFLAGS=""
+echo "ALTIVEC_CHECK_CFLAGS=$ALTIVEC_CHECK_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CHECK_CFLAGS\"] = \"$ALTIVEC_CHECK_CFLAGS\"" >>configure.lua
+fi;
+cat << EOT > conftest.c
+#include <altivec.h>
+float a[4] = { 1,2,3,4 };
+float b[4] = { 5,6,7,8 };
+float c[4];
+
+int
+main(int argc, char *argv[])
+{
+	vector float *va = (vector float *)a;
+	vector float *vb = (vector float *)b;
+	vector float *vc = (vector float *)c;
+
+	*vc = vec_add(*va, *vb);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_ALTIVEC="yes"
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
+echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
+echo "#ifndef HAVE_ALTIVEC" > config/have_altivec.h
+echo "#define HAVE_ALTIVEC \"$HAVE_ALTIVEC\"" >> config/have_altivec.h
+echo "#endif" >> config/have_altivec.h
+echo "hdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_ALTIVEC="no"
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
+echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
+echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
+echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_ALTIVEC}" = "yes" ]; then
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
+HAVE_ALTIVEC_H=""
+echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
+echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
+echo "#endif" >> config/altivec_cflags.h
+echo "hdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
+echo "#ifndef HAVE_ALTIVEC_H" > config/have_altivec_h.h
+echo "#define HAVE_ALTIVEC_H \"$HAVE_ALTIVEC_H\"" >> config/have_altivec_h.h
+echo "#endif" >> config/have_altivec_h.h
+echo "hdefs[\"HAVE_ALTIVEC_H\"] = \"$HAVE_ALTIVEC_H\"" >>configure.lua
+else
+$ECHO_N "checking for AltiVec (without <altivec.h>)..."
+$ECHO_N "checking for AltiVec (without <altivec.h>)..." >> config.log
+cat << EOT > conftest.c
+float a[4] = { 1,2,3,4 };
+float b[4] = { 5,6,7,8 };
+float c[4];
+
+int
+main(int argc, char *argv[])
+{
+	vector float *va = (vector float *)a;
+	vector float *vb = (vector float *)b;
+	vector float *vc = (vector float *)c;
+
+	*vc = vec_add(*va, *vb);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_ALTIVEC="yes"
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
+echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
+echo "#ifndef HAVE_ALTIVEC" > config/have_altivec.h
+echo "#define HAVE_ALTIVEC \"$HAVE_ALTIVEC\"" >> config/have_altivec.h
+echo "#endif" >> config/have_altivec.h
+echo "hdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_ALTIVEC="no"
+echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
+echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
+echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
+echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_ALTIVEC}" = "yes" ]; then
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
+echo "#ifndef ALTIVEC_CFLAGS" > config/altivec_cflags.h
+echo "#define ALTIVEC_CFLAGS \"$ALTIVEC_CFLAGS\"" >> config/altivec_cflags.h
+echo "#endif" >> config/altivec_cflags.h
+echo "hdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
+else
+echo "#undef ALTIVEC_CFLAGS" >config/altivec_cflags.h
+echo "hdefs[\"ALTIVEC_CFLAGS\"] = nil" >>configure.lua
+ALTIVEC_CFLAGS=""
+echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
+echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
+fi;
+echo "#undef HAVE_ALTIVEC_H" >config/have_altivec_h.h
+echo "hdefs[\"HAVE_ALTIVEC_H\"] = nil" >>configure.lua
+fi;
+	if [ "${HAVE_ALTIVEC}" != "yes" ]
+ then
+		if [ "${with_altivec}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-altivec was requested, but "
+			echo "* AltiVec is not supported by compiler"
+			echo "*"
+			exit 1
+		else
+echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
+echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
+echo "#undef HAVE_ALTIVEC_H" >config/have_altivec_h.h
+echo "hdefs[\"HAVE_ALTIVEC_H\"] = nil" >>configure.lua
+echo "#undef INLINE_ALTIVEC" >config/inline_altivec.h
+echo "hdefs[\"INLINE_ALTIVEC\"] = nil" >>configure.lua
+		fi
+	else
+		if [ "${with_altivec_inline}" = "yes" ]
+ then
+INLINE_ALTIVEC="1"
+echo "#ifndef INLINE_ALTIVEC" > config/inline_altivec.h
+echo "#define INLINE_ALTIVEC \"$INLINE_ALTIVEC\"" >> config/inline_altivec.h
+echo "#endif" >> config/inline_altivec.h
+echo "hdefs[\"INLINE_ALTIVEC\"] = \"$INLINE_ALTIVEC\"" >>configure.lua
+		else
+echo "#undef INLINE_ALTIVEC" >config/inline_altivec.h
+echo "hdefs[\"INLINE_ALTIVEC\"] = nil" >>configure.lua
+		fi
+	fi
+else
+echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
+echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
+echo "#undef HAVE_ALTIVEC_H" >config/have_altivec_h.h
+echo "hdefs[\"HAVE_ALTIVEC_H\"] = nil" >>configure.lua
+echo "#undef INLINE_ALTIVEC" >config/inline_altivec.h
+echo "hdefs[\"INLINE_ALTIVEC\"] = nil" >>configure.lua
+fi
+if [ "${with_quad_fp}" = "yes" ]
+ then
+	if [ "${HAVE_LONG_DOUBLE}" = "yes" ]
+ then
+QUAD_PRECISION="1"
+echo "#ifndef QUAD_PRECISION" > config/quad_precision.h
+echo "#define QUAD_PRECISION \"$QUAD_PRECISION\"" >> config/quad_precision.h
+echo "#endif" >> config/quad_precision.h
+echo "hdefs[\"QUAD_PRECISION\"] = \"$QUAD_PRECISION\"" >>configure.lua
+	else
+		echo "*"
+		echo "* --with-quad-fp was requested, but your compiler"
+		echo "* does not support the C99 long double type."
+		echo "*"
+		exit 1
+	fi
+else
+echo "#undef QUAD_PRECISION" >config/quad_precision.h
+echo "hdefs[\"QUAD_PRECISION\"] = nil" >>configure.lua
+fi
+if [ "${with_double_fp}" = "yes" ]
+ then
+DOUBLE_PRECISION="1"
+echo "#ifndef DOUBLE_PRECISION" > config/double_precision.h
+echo "#define DOUBLE_PRECISION \"$DOUBLE_PRECISION\"" >> config/double_precision.h
+echo "#endif" >> config/double_precision.h
+echo "hdefs[\"DOUBLE_PRECISION\"] = \"$DOUBLE_PRECISION\"" >>configure.lua
+else
+echo "#undef DOUBLE_PRECISION" >config/double_precision.h
+echo "hdefs[\"DOUBLE_PRECISION\"] = nil" >>configure.lua
+fi
+if [ "${with_single_fp}" != "no" ]
+ then
+SINGLE_PRECISION="1"
+echo "#ifndef SINGLE_PRECISION" > config/single_precision.h
+echo "#define SINGLE_PRECISION \"$SINGLE_PRECISION\"" >> config/single_precision.h
+echo "#endif" >> config/single_precision.h
+echo "hdefs[\"SINGLE_PRECISION\"] = \"$SINGLE_PRECISION\"" >>configure.lua
+else
+echo "#undef SINGLE_PRECISION" >config/single_precision.h
+echo "hdefs[\"SINGLE_PRECISION\"] = nil" >>configure.lua
+fi
 if [ ! -e "$SRC/agar" ]
- then
-	(cd $SRC && ln -s . agar)
-fi
+ then (cd $SRC && ln -s . agar)
+ fi
 if [ ! -e "agar" ]
- then
-	ln -s . agar
-fi
+ then ln -s . agar
+ fi
 echo "Don't forget to run \"make depend\"."
 echo "Don't forget to run \"make depend\"." >> config.log
