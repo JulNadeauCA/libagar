@@ -1352,7 +1352,7 @@ AG_EventLoop_FixedFPS(void)
 				agView->rCur = 1;
 			}
 		} else if (SDL_PollEvent(&ev) != 0) {
-			AG_ProcessEvent(&ev);
+			(void)AG_ProcessEvent(&ev);
 #ifdef DEBUG
 			agEventAvg++;
 #endif
@@ -1379,9 +1379,15 @@ UnminimizeWindow(AG_Event *event)
 	AG_WindowUnminimize(win);
 }
 
-void
+/*
+ * Process an SDL event and return 1 if the event was processed in some
+ * way.
+ */
+int
 AG_ProcessEvent(SDL_Event *ev)
 {
+	int rv = 0;
+
 	AG_LockVFS(agView);
 
 	switch (ev->type) {
@@ -1392,7 +1398,7 @@ AG_ProcessEvent(SDL_Event *ev)
 			ev->motion.yrel = -ev->motion.yrel;
 		}
 #endif
-		AG_WindowEvent(ev);
+		rv = AG_WindowEvent(ev);
 		break;
 	case SDL_MOUSEBUTTONUP:
 	case SDL_MOUSEBUTTONDOWN:
@@ -1424,6 +1430,7 @@ AG_ProcessEvent(SDL_Event *ev)
 				
 			AG_MouseGetState(&x, &y);
 			AG_MenuExpand(me, mi, x+4, y+4);
+			rv = 1;
 		}
 		break;
 	case SDL_KEYDOWN:
@@ -1446,6 +1453,7 @@ AG_ProcessEvent(SDL_Event *ev)
 					} else if (gk->fn_ev != NULL) {
 						gk->fn_ev(NULL);
 					}
+					rv = 1;
 				}
 			}
 			AG_MutexUnlock(&agGlobalKeysLock);
@@ -1458,18 +1466,20 @@ AG_ProcessEvent(SDL_Event *ev)
 		    (char)ev->key.keysym.sym,
 		    (int)ev->key.keysym.mod);
 #endif
-		AG_WindowEvent(ev);
+		rv = AG_WindowEvent(ev);
 		break;
 	case SDL_JOYAXISMOTION:
 	case SDL_JOYBUTTONDOWN:
 	case SDL_JOYBUTTONUP:
-		AG_WindowEvent(ev);
+		rv = AG_WindowEvent(ev);
 		break;
 	case SDL_VIDEORESIZE:
 		AG_ResizeDisplay(ev->resize.w, ev->resize.h);
+		rv = 1;
 		break;
 	case SDL_VIDEOEXPOSE:
 		AG_ViewVideoExpose();
+		rv = 1;
 		break;
 	case SDL_QUIT:
 #if 0
@@ -1489,6 +1499,7 @@ AG_ProcessEvent(SDL_Event *ev)
 	}
 	FreeDetachedWindows();
 	AG_UnlockVFS(agView);
+	return (rv);
 }
 
 Uint8
