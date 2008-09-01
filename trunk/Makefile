@@ -13,6 +13,7 @@ SUBDIR=	core agar-core-config \
 	vg agar-vg-config \
 	rg agar-rg-config \
 	map agar-map-config \
+	math agar-math-config \
 	dev agar-dev-config \
 	net agar-net-config \
 	po
@@ -22,6 +23,7 @@ INCDIRS=gui \
 	rg \
 	vg \
 	map \
+	math \
 	dev \
 	net
 
@@ -97,6 +99,8 @@ install-includes:
 		   ${INCLDIR}/agar/net.h; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/map/map_pub.h \
 		   ${INCLDIR}/agar/map.h; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/math/math_pub.h \
+		   ${INCLDIR}/agar/math.h; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/dev/dev_pub.h \
 		   ${INCLDIR}/agar/dev.h; \
 	else \
@@ -114,6 +118,7 @@ install-includes:
 		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h; \
 		${SUDO} ${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h; \
 		${SUDO} ${INSTALL_INCL} map/map_pub.h ${INCLDIR}/agar/map.h; \
+		${SUDO} ${INSTALL_INCL} math/math_pub.h ${INCLDIR}/agar/math.h;\
 		${SUDO} ${INSTALL_INCL} dev/dev_pub.h ${INCLDIR}/agar/dev.h; \
 	fi
 
