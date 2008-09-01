@@ -34,6 +34,7 @@
 
 #include <core/core.h>
 #include "../m.h"
+#include "spmatrix.h"
 #include "spdefs.h"
 
 void spAddToReorderedDiag(spMatrix M, spREAL g)
