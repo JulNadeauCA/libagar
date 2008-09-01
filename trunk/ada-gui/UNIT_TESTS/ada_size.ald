@@ -12,6 +12,17 @@ ada_size.ali
 ../agar-gui-widget-box.ali
 ../agar-gui-widget-button.ali
 ../agar-gui-widget-checkbox.ali
+../agar-gui-widget-combo.ali
+../agar-gui-widget-console.ali
+../agar-gui-widget-editable.ali
+../agar-gui-widget-file_dialog.ali
+../agar-gui-widget-label.ali
+../agar-gui-widget-menu.ali
+../agar-gui-widget-pane.ali
+../agar-gui-widget-scrollbar.ali
+../agar-gui-widget-textbox.ali
+../agar-gui-widget-tlist.ali
+../agar-gui-widget-toolbar.ali
 ../agar-gui-widget.ali
 ../agar-gui-window.ali
 ../agar-gui.ali

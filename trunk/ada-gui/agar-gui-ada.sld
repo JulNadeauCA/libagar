@@ -18,6 +18,17 @@ agar-gui-view.o
 agar-gui-widget-box.o
 agar-gui-widget-button.o
 agar-gui-widget-checkbox.o
+agar-gui-widget-combo.o
+agar-gui-widget-console.o
+agar-gui-widget-editable.o
+agar-gui-widget-file_dialog.o
+agar-gui-widget-label.o
+agar-gui-widget-menu.o
+agar-gui-widget-pane.o
+agar-gui-widget-scrollbar.o
+agar-gui-widget-textbox.o
+agar-gui-widget-tlist.o
+agar-gui-widget-toolbar.o
 agar-gui-widget.o
 agar-gui-window.o
 agar-gui.o
