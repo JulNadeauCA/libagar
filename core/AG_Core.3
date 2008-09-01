@@ -71,7 +71,7 @@ and subsystems.
 .nr nS 0
 The
 .Fn AG_InitCore
-function initializes Agar's internal data structures as well as SDL.
+function initializes Agar's internal data structures.
 It must be called before any other Agar function.
 The
 .Fa progname
@@ -86,14 +86,15 @@ functions are optional.
 The
 .Fn AG_InitVideo
 function sets the video mode, initializes the font engine and GUI system.
+The graphics backend is auto-selected.
 .Pp
-The
+Assuming SDL is available, the
 .Fn AG_InitVideoSDL
 function initializes the GUI system to use an existing SDL display surface.
-Note that if the specified surface has the
+If the specified surface has the
 .Dv SDL_OPENGL
 flag set, it is assumed that Agar should render itself using OpenGL
-primitives.
+primitives, otherwise plain framebuffer mode is used.
 .Pp
 The
 .Fn AG_InitGUI
