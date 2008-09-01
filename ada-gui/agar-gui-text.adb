@@ -1,7 +1,4 @@
-with interfaces.c.strings;
-
 package body agar.gui.text is
-  package cs renames interfaces.c.strings;
 
   use type c.int;
 

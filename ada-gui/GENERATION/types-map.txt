@@ -16,9 +16,29 @@ agar.gui.style.style_t:AG_Style
 agar.gui.style.style_t:struct ag_style
 agar.gui.surface.surface_access_t:AG_Surface *
 agar.gui.surface.surface_t:AG_Surface
+agar.gui.text.font_access_t:AG_Font *
+agar.gui.text.font_access_t:struct ag_font *
+agar.gui.text.font_t:AG_Font
+agar.gui.text.font_t:struct ag_font
 agar.gui.text.font_type_t:enum ag_font_type
+agar.gui.text.glyph_access_t:AG_Glyph *
+agar.gui.text.glyph_access_t:struct ag_glyph *
+agar.gui.text.glyph_t:AG_Glyph
+agar.gui.text.glyph_t:struct ag_glyph
 agar.gui.text.justify_t:enum ag_text_justify
+agar.gui.text.metrics_access_t:AG_TextMetrics *
+agar.gui.text.metrics_access_t:struct ag_text_metrics *
+agar.gui.text.metrics_t:AG_TextMetrics
+agar.gui.text.metrics_t:struct ag_text_metrics
 agar.gui.text.msg_title_t:enum ag_text_msg_title
+agar.gui.text.state_access_t:AG_TextState *
+agar.gui.text.state_access_t:struct ag_text_state *
+agar.gui.text.state_t:AG_TextState
+agar.gui.text.state_t:struct ag_text_state
+agar.gui.text.static_font_access_t:AG_StaticFont *
+agar.gui.text.static_font_access_t:struct ag_static_font *
+agar.gui.text.static_font_t:AG_StaticFont
+agar.gui.text.static_font_t:struct ag_static_font
 agar.gui.text.valign_t:enum ag_text_valign
 agar.gui.unit.unit_t:AG_Unit
 agar.gui.unit.unit_t:struct ag_unit
@@ -47,15 +67,101 @@ agar.gui.widget.class_access_t:AG_WidgetClass *
 agar.gui.widget.class_access_t:struct ag_widget_class *
 agar.gui.widget.class_t:AG_WidgetClass
 agar.gui.widget.class_t:struct ag_widget_class
+agar.gui.widget.combo.combo_access_t:AG_Combo *
+agar.gui.widget.combo.combo_access_t:struct ag_combo *
+agar.gui.widget.combo.combo_t:AG_Combo
+agar.gui.widget.combo.combo_t:struct ag_combo
+agar.gui.widget.console.console_access_t:AG_Console *
+agar.gui.widget.console.console_access_t:struct ag_console *
+agar.gui.widget.console.console_t:AG_Console
+agar.gui.widget.console.console_t:struct ag_console
+agar.gui.widget.console.line_access_t:AG_ConsoleLine *
+agar.gui.widget.console.line_access_t:struct ag_console_line *
+agar.gui.widget.console.line_t:AG_ConsoleLine
+agar.gui.widget.console.line_t:struct ag_console_line
+agar.gui.widget.editable.editable_access_t:AG_Editable *
+agar.gui.widget.editable.editable_access_t:struct ag_editable *
+agar.gui.widget.editable.editable_t:AG_Editable
+agar.gui.widget.editable.editable_t:struct ag_editable
+agar.gui.widget.editable.encoding_t:enum ag_editable_encoding
+agar.gui.widget.file_dialog.file_dialog_access_t:AG_FileDlg *
+agar.gui.widget.file_dialog.file_dialog_access_t:struct ag_file_dlg *
+agar.gui.widget.file_dialog.file_dialog_t:AG_FileDlg
+agar.gui.widget.file_dialog.file_dialog_t:struct ag_file_dlg
+agar.gui.widget.file_dialog.filetype_access_t:AG_FileType *
+agar.gui.widget.file_dialog.filetype_access_t:struct ag_file_type *
+agar.gui.widget.file_dialog.filetype_t:AG_FileType
+agar.gui.widget.file_dialog.filetype_t:struct ag_file_type
+agar.gui.widget.file_dialog.option_access_t:AG_FileOption *
+agar.gui.widget.file_dialog.option_access_t:struct ag_file_type_option *
+agar.gui.widget.file_dialog.option_t:AG_FileOption
+agar.gui.widget.file_dialog.option_t:struct ag_file_type_option
+agar.gui.widget.file_dialog.option_type_t:enum ag_file_type_option_type
 agar.gui.widget.flag_descr_access_t:AG_FlagDescr *
 agar.gui.widget.flag_descr_access_t:struct ag_flag_descr *
 agar.gui.widget.flag_descr_t:AG_FlagDescr
 agar.gui.widget.flag_descr_t:struct ag_flag_descr
+agar.gui.widget.label.format_func_t:AG_LabelFormatFn
+agar.gui.widget.label.flag_t:struct ag_label_flag
+agar.gui.widget.label.format_spec_access_t:AG_LabelFormatSpec *
+agar.gui.widget.label.format_spec_access_t:struct ag_label_format_spec *
+agar.gui.widget.label.format_spec_t:AG_LabelFormatSpec
+agar.gui.widget.label.format_spec_t:struct ag_label_format_spec
+agar.gui.widget.label.label_access_t:AG_Label *
+agar.gui.widget.label.label_access_t:struct ag_label *
+agar.gui.widget.label.label_t:AG_Label
+agar.gui.widget.label.label_t:struct ag_label
+agar.gui.widget.label.type_t:enum ag_label_type
+agar.gui.widget.menu.binding_t:enum ag_menu_binding
+agar.gui.widget.menu.item_access_t:AG_MenuItem *
+agar.gui.widget.menu.item_access_t:struct ag_menu_item *
+agar.gui.widget.menu.item_t:AG_MenuItem
+agar.gui.widget.menu.item_t:struct ag_menu_item
+agar.gui.widget.menu.menu_access_t:AG_Menu *
+agar.gui.widget.menu.menu_access_t:struct ag_menu *
+agar.gui.widget.menu.menu_t:AG_Menu
+agar.gui.widget.menu.menu_t:struct ag_menu
+agar.gui.widget.menu.view_access_t:AG_MenuView *
+agar.gui.widget.menu.view_access_t:struct ag_menu_view *
+agar.gui.widget.menu.view_t:AG_MenuView
+agar.gui.widget.menu.view_t:struct ag_menu_view
+agar.gui.widget.pane.pane_access_t:AG_Pane *
+agar.gui.widget.pane.pane_access_t:struct ag_pane *
+agar.gui.widget.pane.pane_t:AG_Pane
+agar.gui.widget.pane.pane_t:struct ag_pane
+agar.gui.widget.pane.type_t:enum ag_pane_type
+agar.gui.widget.scrollbar.button_t:enum ag_scrollbar_button
+agar.gui.widget.scrollbar.scrollbar_access_t:AG_Scrollbar *
+agar.gui.widget.scrollbar.scrollbar_access_t:struct ag_scrollbar *
+agar.gui.widget.scrollbar.scrollbar_t:AG_Scrollbar
+agar.gui.widget.scrollbar.scrollbar_t:struct ag_scrollbar
+agar.gui.widget.scrollbar.type_t:enum ag_scrollbar_type
 agar.gui.widget.size_req_access_t:AG_SizeReq *
 agar.gui.widget.size_req_access_t:struct ag_size_req *
 agar.gui.widget.size_req_t:AG_SizeReq
 agar.gui.widget.size_req_t:struct ag_size_req
 agar.gui.widget.size_spec_t:enum ag_widget_sizespec
+agar.gui.widget.textbox.textbox_access_t:AG_Textbox *
+agar.gui.widget.textbox.textbox_access_t:struct ag_textbox *
+agar.gui.widget.textbox.textbox_t:AG_Textbox
+agar.gui.widget.textbox.textbox_t:struct ag_textbox
+agar.gui.widget.tlist.item_access_t:AG_TlistItem *
+agar.gui.widget.tlist.item_access_t:struct ag_tlist_item *
+agar.gui.widget.tlist.item_t:AG_TlistItem
+agar.gui.widget.tlist.item_t:struct ag_tlist_item
+agar.gui.widget.tlist.popup_access_t:AG_TlistPopup *
+agar.gui.widget.tlist.popup_access_t:struct ag_tlist_popup *
+agar.gui.widget.tlist.popup_t:AG_TlistPopup
+agar.gui.widget.tlist.popup_t:struct ag_tlist_popup
+agar.gui.widget.tlist.tlist_access_t:AG_Tlist *
+agar.gui.widget.tlist.tlist_access_t:struct ag_tlist *
+agar.gui.widget.tlist.tlist_t:AG_Tlist
+agar.gui.widget.tlist.tlist_t:struct ag_tlist
+agar.gui.widget.toolbar.toolbar_access_t:AG_Toolbar *
+agar.gui.widget.toolbar.toolbar_access_t:struct ag_toolbar *
+agar.gui.widget.toolbar.toolbar_t:AG_Toolbar
+agar.gui.widget.toolbar.toolbar_t:struct ag_toolbar
+agar.gui.widget.toolbar.type_t:enum ag_toolbar_type
 agar.gui.widget.widget_access_t:AG_Widget *
 agar.gui.widget.widget_access_t:struct ag_widget *
 agar.gui.widget.widget_t:AG_Widget

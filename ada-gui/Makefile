@@ -13,7 +13,16 @@ agar-gui-rect.o agar-gui-style.ali agar-gui-style.o agar-gui-surface.ali \
 agar-gui-surface.o agar-gui-text.ali agar-gui-text.o agar-gui-unit.ali \
 agar-gui-unit.o agar-gui-view.ali agar-gui-view.o agar-gui-widget-box.ali \
 agar-gui-widget-box.o agar-gui-widget-button.ali agar-gui-widget-button.o \
-agar-gui-widget-checkbox.ali agar-gui-widget-checkbox.o agar-gui-widget.ali \
+agar-gui-widget-checkbox.ali agar-gui-widget-checkbox.o \
+agar-gui-widget-combo.ali agar-gui-widget-combo.o agar-gui-widget-console.ali \
+agar-gui-widget-console.o agar-gui-widget-editable.ali \
+agar-gui-widget-editable.o agar-gui-widget-file_dialog.ali \
+agar-gui-widget-file_dialog.o agar-gui-widget-label.ali agar-gui-widget-label.o \
+agar-gui-widget-menu.ali agar-gui-widget-menu.o agar-gui-widget-pane.ali \
+agar-gui-widget-pane.o agar-gui-widget-scrollbar.ali \
+agar-gui-widget-scrollbar.o agar-gui-widget-textbox.ali \
+agar-gui-widget-textbox.o agar-gui-widget-tlist.ali agar-gui-widget-tlist.o \
+agar-gui-widget-toolbar.ali agar-gui-widget-toolbar.o agar-gui-widget.ali \
 agar-gui-widget.o agar-gui-window.ali agar-gui-window.o agar-gui.ali agar-gui.o \
 chk-opengl chk-opengl.o ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.o ctxt/incdir.o \
 ctxt/repos.o ctxt/slibdir.o ctxt/version.o deinstaller deinstaller.o inst-check \
@@ -124,7 +133,12 @@ ada-bind ada-link UNIT_TESTS/ada_size.ald UNIT_TESTS/ada_size.ali \
 agar-gui-colors.ali agar-gui-draw.ali agar-gui-pixelformat.ali \
 agar-gui-point.ali agar-gui-rect.ali agar-gui-style.ali agar-gui-surface.ali \
 agar-gui-text.ali agar-gui-unit.ali agar-gui-view.ali agar-gui-widget-box.ali \
-agar-gui-widget-button.ali agar-gui-widget-checkbox.ali agar-gui-widget.ali \
+agar-gui-widget-button.ali agar-gui-widget-checkbox.ali \
+agar-gui-widget-combo.ali agar-gui-widget-console.ali \
+agar-gui-widget-editable.ali agar-gui-widget-file_dialog.ali \
+agar-gui-widget-label.ali agar-gui-widget-menu.ali agar-gui-widget-pane.ali \
+agar-gui-widget-scrollbar.ali agar-gui-widget-textbox.ali \
+agar-gui-widget-tlist.ali agar-gui-widget-toolbar.ali agar-gui-widget.ali \
 agar-gui-window.ali agar-gui.ali agar-gui-ada.a
 	./ada-bind UNIT_TESTS/ada_size.ali
 	./ada-link UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali agar-gui-ada.a
@@ -209,13 +223,21 @@ ag_unit.o ag_widget.o ag_window.o agar-gui-colors.o agar-gui-draw.o \
 agar-gui-pixelformat.o agar-gui-point.o agar-gui-rect.o agar-gui-style.o \
 agar-gui-surface.o agar-gui-text.o agar-gui-unit.o agar-gui-view.o \
 agar-gui-widget-box.o agar-gui-widget-button.o agar-gui-widget-checkbox.o \
-agar-gui-widget.o agar-gui-window.o agar-gui.o
+agar-gui-widget-combo.o agar-gui-widget-console.o agar-gui-widget-editable.o \
+agar-gui-widget-file_dialog.o agar-gui-widget-label.o agar-gui-widget-menu.o \
+agar-gui-widget-pane.o agar-gui-widget-scrollbar.o agar-gui-widget-textbox.o \
+agar-gui-widget-tlist.o agar-gui-widget-toolbar.o agar-gui-widget.o \
+agar-gui-window.o agar-gui.o
 	./cc-slib agar-gui-ada ag_button.o ag_draw.o ag_event.o ag_surface.o ag_unit.o \
 	ag_widget.o ag_window.o agar-gui-colors.o agar-gui-draw.o \
 	agar-gui-pixelformat.o agar-gui-point.o agar-gui-rect.o agar-gui-style.o \
 	agar-gui-surface.o agar-gui-text.o agar-gui-unit.o agar-gui-view.o \
 	agar-gui-widget-box.o agar-gui-widget-button.o agar-gui-widget-checkbox.o \
-	agar-gui-widget.o agar-gui-window.o agar-gui.o
+	agar-gui-widget-combo.o agar-gui-widget-console.o agar-gui-widget-editable.o \
+	agar-gui-widget-file_dialog.o agar-gui-widget-label.o agar-gui-widget-menu.o \
+	agar-gui-widget-pane.o agar-gui-widget-scrollbar.o agar-gui-widget-textbox.o \
+	agar-gui-widget-tlist.o agar-gui-widget-toolbar.o agar-gui-widget.o \
+	agar-gui-window.o agar-gui.o
 
 agar-gui-colors.ali:\
 ada-compile agar-gui-colors.adb agar-gui-colors.ads
@@ -273,8 +295,9 @@ ada-compile agar-gui-surface.adb agar-gui-surface.ads
 agar-gui-surface.o:\
 agar-gui-surface.ali
 
-agar-gui-text.ads:\
-agar-gui-surface.ads
+# agar-gui-text.ads.mff
+agar-gui-text.ads: agar-gui-text.sh chk-opengl agar-gui-text.ads.txt
+	./agar-gui-text.sh > agar-gui-text.ads.tmp && mv agar-gui-text.ads.tmp agar-gui-text.ads
 
 agar-gui-text.ali:\
 ada-compile agar-gui-text.adb agar-gui-text.ads
@@ -323,6 +346,95 @@ ada-compile agar-gui-widget-checkbox.adb agar-gui-widget-checkbox.ads
 
 agar-gui-widget-checkbox.o:\
 agar-gui-widget-checkbox.ali
+
+agar-gui-widget-combo.ali:\
+ada-compile agar-gui-widget-combo.ads agar-gui-widget-combo.ads \
+agar-gui-widget-button.ads agar-gui-widget-textbox.ads \
+agar-gui-widget-tlist.ads agar-gui-window.ads
+	./ada-compile agar-gui-widget-combo.ads
+
+agar-gui-widget-combo.o:\
+agar-gui-widget-combo.ali
+
+agar-gui-widget-console.ali:\
+ada-compile agar-gui-widget-console.ads agar-gui-widget-console.ads \
+agar-gui-text.ads agar-gui-widget-scrollbar.ads
+	./ada-compile agar-gui-widget-console.ads
+
+agar-gui-widget-console.o:\
+agar-gui-widget-console.ali
+
+agar-gui-widget-editable.ali:\
+ada-compile agar-gui-widget-editable.ads agar-gui-widget-editable.ads
+	./ada-compile agar-gui-widget-editable.ads
+
+agar-gui-widget-editable.o:\
+agar-gui-widget-editable.ali
+
+agar-gui-widget-file_dialog.ali:\
+ada-compile agar-gui-widget-file_dialog.ads agar-gui-widget-file_dialog.ads \
+agar-gui-widget-button.ads agar-gui-widget-combo.ads agar-gui-widget-label.ads \
+agar-gui-widget-pane.ads agar-gui-widget-textbox.ads agar-gui-widget-tlist.ads
+	./ada-compile agar-gui-widget-file_dialog.ads
+
+agar-gui-widget-file_dialog.o:\
+agar-gui-widget-file_dialog.ali
+
+agar-gui-widget-label.ali:\
+ada-compile agar-gui-widget-label.ads agar-gui-widget-label.ads \
+agar-gui-text.ads
+	./ada-compile agar-gui-widget-label.ads
+
+agar-gui-widget-label.o:\
+agar-gui-widget-label.ali
+
+agar-gui-widget-menu.ali:\
+ada-compile agar-gui-widget-menu.ads agar-gui-widget-menu.ads \
+agar-gui-widget-button.ads agar-gui-widget-toolbar.ads agar-gui-window.ads
+	./ada-compile agar-gui-widget-menu.ads
+
+agar-gui-widget-menu.o:\
+agar-gui-widget-menu.ali
+
+agar-gui-widget-pane.ali:\
+ada-compile agar-gui-widget-pane.ads agar-gui-widget-pane.ads \
+agar-gui-widget-box.ads
+	./ada-compile agar-gui-widget-pane.ads
+
+agar-gui-widget-pane.o:\
+agar-gui-widget-pane.ali
+
+agar-gui-widget-scrollbar.ali:\
+ada-compile agar-gui-widget-scrollbar.ads agar-gui-widget-scrollbar.ads
+	./ada-compile agar-gui-widget-scrollbar.ads
+
+agar-gui-widget-scrollbar.o:\
+agar-gui-widget-scrollbar.ali
+
+agar-gui-widget-textbox.ali:\
+ada-compile agar-gui-widget-textbox.ads agar-gui-widget-textbox.ads \
+agar-gui-widget-scrollbar.ads agar-gui-widget-editable.ads
+	./ada-compile agar-gui-widget-textbox.ads
+
+agar-gui-widget-textbox.o:\
+agar-gui-widget-textbox.ali
+
+agar-gui-widget-tlist.ali:\
+ada-compile agar-gui-widget-tlist.ads agar-gui-widget-tlist.ads \
+agar-gui-surface.ads agar-gui-widget-label.ads agar-gui-widget-menu.ads \
+agar-gui-widget-scrollbar.ads agar-gui-window.ads
+	./ada-compile agar-gui-widget-tlist.ads
+
+agar-gui-widget-tlist.o:\
+agar-gui-widget-tlist.ali
+
+agar-gui-widget-toolbar.ali:\
+ada-compile agar-gui-widget-toolbar.ads agar-gui-widget-toolbar.ads \
+agar-gui-widget-box.ads
+	./ada-compile agar-gui-widget-toolbar.ads
+
+agar-gui-widget-toolbar.o:\
+agar-gui-widget-toolbar.ali
 
 # agar-gui-widget.ads.mff
 agar-gui-widget.ads: agar-gui-widget.sh chk-opengl agar-gui-widget.ads.txt
@@ -555,15 +667,24 @@ obj_clean:
 	agar-gui-draw.ali agar-gui-draw.o agar-gui-pixelformat.ali \
 	agar-gui-pixelformat.o agar-gui-point.ali agar-gui-point.o agar-gui-rect.ali \
 	agar-gui-rect.o agar-gui-style.ali agar-gui-style.o agar-gui-surface.ali \
-	agar-gui-surface.o agar-gui-text.ali agar-gui-text.o agar-gui-unit.ali \
-	agar-gui-unit.o agar-gui-view.ali agar-gui-view.o agar-gui-widget-box.ali \
-	agar-gui-widget-box.o agar-gui-widget-button.ali agar-gui-widget-button.o \
-	agar-gui-widget-checkbox.ali agar-gui-widget-checkbox.o agar-gui-widget.ads \
-	agar-gui-widget.ali agar-gui-widget.o agar-gui-window.ali agar-gui-window.o \
-	agar-gui.ali agar-gui.o chk-opengl chk-opengl.o ctxt/bindir.c ctxt/bindir.o \
-	ctxt/ctxt.a ctxt/dlibdir.c ctxt/dlibdir.o ctxt/incdir.c ctxt/incdir.o \
-	ctxt/repos.c ctxt/repos.o ctxt/slibdir.c ctxt/slibdir.o ctxt/version.c
-	rm -f ctxt/version.o deinstaller deinstaller.o inst-check inst-check.o \
+	agar-gui-surface.o agar-gui-text.ads agar-gui-text.ali agar-gui-text.o \
+	agar-gui-unit.ali agar-gui-unit.o agar-gui-view.ali agar-gui-view.o \
+	agar-gui-widget-box.ali agar-gui-widget-box.o agar-gui-widget-button.ali \
+	agar-gui-widget-button.o agar-gui-widget-checkbox.ali \
+	agar-gui-widget-checkbox.o agar-gui-widget-combo.ali agar-gui-widget-combo.o \
+	agar-gui-widget-console.ali agar-gui-widget-console.o \
+	agar-gui-widget-editable.ali agar-gui-widget-editable.o \
+	agar-gui-widget-file_dialog.ali agar-gui-widget-file_dialog.o \
+	agar-gui-widget-label.ali agar-gui-widget-label.o agar-gui-widget-menu.ali
+	rm -f agar-gui-widget-menu.o agar-gui-widget-pane.ali agar-gui-widget-pane.o \
+	agar-gui-widget-scrollbar.ali agar-gui-widget-scrollbar.o \
+	agar-gui-widget-textbox.ali agar-gui-widget-textbox.o agar-gui-widget-tlist.ali \
+	agar-gui-widget-tlist.o agar-gui-widget-toolbar.ali agar-gui-widget-toolbar.o \
+	agar-gui-widget.ads agar-gui-widget.ali agar-gui-widget.o agar-gui-window.ali \
+	agar-gui-window.o agar-gui.ali agar-gui.o chk-opengl chk-opengl.o ctxt/bindir.c \
+	ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.c ctxt/dlibdir.o ctxt/incdir.c \
+	ctxt/incdir.o ctxt/repos.c ctxt/repos.o ctxt/slibdir.c ctxt/slibdir.o \
+	ctxt/version.c ctxt/version.o deinstaller deinstaller.o inst-check inst-check.o \
 	inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o install_core.o \
 	install_error.o installer installer.o instchk instchk.o insthier.o
 ext_clean:
