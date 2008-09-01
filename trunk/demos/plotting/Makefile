@@ -10,8 +10,8 @@ PROG_LINKS=	ag_core ag_gui ag_sc pthreads SDL SDLmain opengl freetype
 PROG=	plotting
 SRCS=	plotting.c
 
-CFLAGS+=${AGAR_SC_CFLAGS} ${AGAR_CFLAGS} -I.
-LIBS+=	${AGAR_SC_LIBS} ${AGAR_LIBS}
+CFLAGS+=${AGAR_MATH_CFLAGS} ${AGAR_CFLAGS} -I.
+LIBS+=	${AGAR_MATH_LIBS} ${AGAR_LIBS}
 
 all: all-subdir ${PROG}
 
