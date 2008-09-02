@@ -29,7 +29,7 @@
 .ds oS Agar 1.0
 .Sh NAME
 .Nm AG_Colors
-.Nd agar GUI color manager
+.Nd agar standard GUI color manager
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
@@ -38,11 +38,13 @@
 .Sh DESCRIPTION
 The
 .Nm
-interface manages a global array of RGBA colors that are shared between visible
-widgets.
-Note that themes may or may not use these values at all, see
-.Xr AG_Style 3 .
-.Sh INITIALIZATION
+interface manages a global array of standard colors which are shared between
+visible widgets.
+Note that a given theme may or may not use these values at all (see
+.Xr AG_Style 3
+for details), but it is customary for themes to use the standard colors,
+at least as general guidelines for the user's color preferences.
+.Sh INTERFACE
 .nr nS 1
 .Ft "void"
 .Fn AG_ColorsInit "void"
@@ -56,10 +58,22 @@ Note that themes may or may not use these values at all, see
 .Ft "void"
 .Fn AG_ColorsSaveDefault "void"
 .Pp
+.Ft "int"
+.Fn AG_ColorsSetRGB "int color" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "int"
+.Fn AG_ColorsSetRGBA "int color" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft "int"
+.Fn AG_ColorsGetRGB "int color" "Uint8 *r" "Uint8 *g" "Uint8 *b"
+.Pp
+.Ft "int"
+.Fn AG_ColorsGetRGBA "int color" "Uint8 *r" "Uint8 *g" "Uint8 *b" "Uint8 *a"
+.Pp
 .nr nS 0
 The
 .Fn AG_ColorsInit
-function loads the default Agar color scheme.
+function (re)loads the default Agar color scheme.
 It is automatically invoked by
 .Xr AG_InitVideo 3 .
 .Pp
@@ -73,6 +87,17 @@ saves the current color scheme to the default location, assuming
 .Va save-path
 is set in
 .Xr AG_Config 3 .
+.Pp
+The
+.Fn AG_ColorsSetRGB
+and
+.Fn AG_ColorsSetRGBA
+functions change the specified standard color based on RGB and RGBA components.
+.Fn AG_ColorsGetRGB
+and
+.Fn AG_ColorsGetRGBA
+return the RGB/RGBA components representing the specified color.
+These functions return 0 on success, -1 if the given index is invalid.
 .Sh COLOR INDICES
 The widget rendering functions read the colors from the global
 .Va agColors[]
