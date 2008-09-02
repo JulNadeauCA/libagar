@@ -32,6 +32,7 @@ $COOKIE = ".mkconcurrent_$$";
 $BUILD = '';
 @MKFILES = (
 	'Makefile.proj',
+	'Makefile.prog',
 	'\.mk$',
 	'\.inc$',
 	'^mkdep$',

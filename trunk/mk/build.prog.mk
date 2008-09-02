@@ -284,9 +284,13 @@ clean-prog:
 	    echo "rm -f ${CLEANFILES}"; \
 	    rm -f ${CLEANFILES}; \
 	fi
+	@if [ -e ".depend" ]; then \
+		echo "echo -n >.depend"; \
+		echo -n >.depend; \
+	fi
 
 cleandir-prog:
-	rm -f core *.core config.log .depend tags
+	rm -f *.core config.log tags
 	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
 	if [ -e "Makefile.config" ]; then echo -n >Makefile.config; fi
 
@@ -402,3 +406,4 @@ include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.dep.mk
 include ${TOP}/mk/build.proj.mk
 include ${TOP}/mk/build.subdir.mk
+include .depend

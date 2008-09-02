@@ -62,15 +62,6 @@ package: cleandir
 release: cleandir
 	sh mk/dist.sh commit
 
-fastclean:
-	find . -type f -and \( -name \*.o -or -name \*.lo -or \
-	          -name \*.la -or -name \*.a -or \
-	          -name libtool -or -name \*.out \
-	          -name .depend -or -name config.log -or \
-	          -name stdout.txt -or -name stderr.txt \) \
-		  -exec rm -f {} \;
-	find . -type d -and -name .libs -exec rm -fR {} \;
-
 install-includes:
 	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}
 	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}/agar
@@ -175,7 +166,7 @@ post-package:
 	fi
 
 .PHONY: clean cleandir install deinstall depend regress
-.PHONY: configure cleandir-config package snapshot release fastclean
+.PHONY: configure cleandir-config package snapshot release
 .PHONY: install-includes deinstall-includes pre-package post-package
 
 include ${TOP}/mk/build.common.mk
