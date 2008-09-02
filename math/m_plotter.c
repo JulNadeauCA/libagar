@@ -352,8 +352,6 @@ Init(void *obj)
 	ptr->xMax = 0;
 	ptr->yMin = 0.0;
 	ptr->yMax = 0.0;
-	ptr->vMin = M_NewZero(3,1);
-	ptr->vMax = M_NewZero(3,1);
 	ptr->xOffs = 0;
 	ptr->yOffs = 0;
 	ptr->wPre = 128;
@@ -362,6 +360,11 @@ Init(void *obj)
 	ptr->yScale = 1.0;
 	ptr->font = AG_FetchFont(NULL, -1, -1);
 	TAILQ_INIT(&ptr->plots);
+	
+	ptr->vMin = M_New(3,1);
+	ptr->vMax = M_New(3,1);
+	M_SetZero(ptr->vMin);
+	M_SetZero(ptr->vMax);
 
 	ptr->curColor = 0;
 	ptr->colors[0] = AG_MapRGB(agSurfaceFmt, 255, 255, 255);
@@ -397,6 +400,32 @@ Init(void *obj)
 	AG_SetEvent(ptr, "window-mousebuttondown", mousebuttondown, NULL);
 //	AG_SetEvent(ptr, "window-mousebuttonup", mousebuttonup, NULL);
 	AG_SetEvent(ptr, "window-mousemotion", mousemotion, NULL);
+}
+
+static void
+Destroy(void *obj)
+{
+	M_Plotter *ptr = obj;
+	M_Plot *plot;
+	M_PlotLabel *plbl;
+	Uint i;
+
+	while ((plot = TAILQ_FIRST(&ptr->plots)) != NULL) {
+		while ((plbl = TAILQ_FIRST(&plot->labels)) != NULL) {
+			Free(plbl);
+		}
+		if (plot->type == M_PLOT_VECTORS) {
+			for (i = 0; i < plot->n; i++) {
+				M_VecFree(plot->data.v[i]);
+			}
+			free(plot->data.v);
+		} else {
+			free(plot->data.r);
+		}
+	}
+	
+	M_Free(ptr->vMin);
+	M_Free(ptr->vMax);
 }
 
 void
@@ -630,7 +659,7 @@ void
 M_PlotVector(M_Plot *pl, const M_Vector *v)
 {
 	int i;
-	pl->data.v = Realloc(pl->data.v, (pl->n)*sizeof(M_Vector));
+	pl->data.v = Realloc(pl->data.v, (pl->n)*sizeof(M_Vector *));
 	pl->data.v[pl->n] = M_VecNew(v->m);
 	VectorMinimum(pl->plotter->vMin, pl->plotter->vMin, v);
 	VectorMaximum(pl->plotter->vMax, pl->plotter->vMax, v);
@@ -979,7 +1008,7 @@ AG_WidgetClass mPlotterClass = {
 		{ 0,0 },
 		Init,
 		NULL,			/* free */
-		NULL,			/* destroy */
+		Destroy,
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */
