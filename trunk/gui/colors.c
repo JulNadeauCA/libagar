@@ -28,6 +28,7 @@
 
 #include "view.h"
 #include "colors.h"
+#include "opengl.h"
 
 const AG_Version agColorSchemeVer = { 1, 0 };
 
@@ -312,4 +313,64 @@ AG_ColorsSaveDefault(void)
 void
 AG_ColorsDestroy(void)
 {
+}
+
+#define ASSERT_VALID_COLOR(name) \
+	do { \
+		if (name < 0 || name >= LAST_COLOR) { \
+			AG_SetError("No such color: %d", name); \
+			return (-1); \
+		}; \
+	} while (0)
+
+static void
+UpdatedColor(int color)
+{
+	if (color == BG_COLOR) {
+#ifdef HAVE_OPENGL
+		if (agView->opengl) {
+			Uint8 r, g, b;
+			AG_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r,&g,&b);
+			glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
+		} else
+#endif
+		{
+			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
+			SDL_UpdateRect(agView->v, 0, 0, agView->w, agView->h);
+		}
+	}
+}
+
+int
+AG_ColorsSetRGB(int name, Uint8 r, Uint8 g, Uint8 b)
+{
+	ASSERT_VALID_COLOR(name);
+	agColors[name] = SDL_MapRGB(agVideoFmt, r, g, b);
+	UpdatedColor(name);
+	return (0);
+}
+
+int
+AG_ColorsSetRGBA(int name, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	ASSERT_VALID_COLOR(name);
+	agColors[name] = SDL_MapRGBA(agVideoFmt, r, g, b, a);
+	UpdatedColor(name);
+	return (0);
+}
+
+int
+AG_ColorsGetRGB(int name, Uint8 *r, Uint8 *g, Uint8 *b)
+{
+	ASSERT_VALID_COLOR(name);
+	SDL_GetRGB(agColors[name], agVideoFmt, r, g, b);
+	return (0);
+}
+
+int
+AG_ColorsGetRGBA(int name, Uint8 *r, Uint8 *g, Uint8 *b, Uint8 *a)
+{
+	ASSERT_VALID_COLOR(name);
+	SDL_GetRGBA(agColors[name], agVideoFmt, r, g, b, a);
+	return (0);
 }
