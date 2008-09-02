@@ -32,10 +32,11 @@
 .Nd agar introduction
 .Sh DESCRIPTION
 Agar is a graphical application toolkit.
-It provides all types of graphical applications with consistent interfaces
-across a wide array of platforms.
+It provides all types of graphical applications, written in different languages,
+with consistent interfaces across a wide array of platforms.
 This page describes the libraries included in the Agar source distribution.
-The two main Agar libraries are Agar-Core and Agar-GUI.
+.Sq Agar
+usually refers to the Agar-Core and Agar-GUI libraries.
 .Pp
 .Sh AGAR-CORE
 Agar-Core implements the
@@ -267,6 +268,68 @@ Generic graphical operation framework.
 .It Xr RG_Tileview 3
 Widget for graphics edition, generic tool framework with undo.
 .El
+.Sh AGAR-MATH
+Agar-Math is a general-purpose math library focused on providing consistent
+structures and highly optimized routines.
+In addition to linear algebra, Agar-Math also provides useful computational
+geometry structures and methods (e.g., intersections, tesselations), portable
+complex-number/quaternion routines and some useful Agar-GUI widgets and
+extensions.
+.Pp
+To use this library, link against
+.Sq agar-math-config --libs .
+.Pp
+.Bl -tag -width "M_Quaternion(3) " -compact
+.It Xr M_Intro 3
+Math library initialization and primitive types.
+.It Xr M_Matrix 3
+Routines specific to matrices.
+This includes general m-by-n matrices (frequently encountered in scientific
+applications and usually solved with sparse-matrix optimizations),
+as well as a specialized interface for 4x4 matrices (usually countered in
+computer graphics).
+.It Xr M_Circle 3
+Circles in R^2 and R^3.
+.It Xr M_Color 3
+Mapping between different color spaces.
+.It Xr M_Complex 3
+Complex-number arithmetic not reliant on compiler extensions.
+.It Xr M_Coordinates 3
+Mapping between different coordinate systems.
+.It Xr M_Sort 3
+Sorting algorithms (qsort, heapsort, mergesort, radixsort)
+.It Xr M_IntVector 3
+Vector operations for vectors with integer elements.
+.It Xr M_Line 3
+Routines related to lines, half-lines and line segments.
+.It Xr M_Matview 3
+Agar-GUI widget for viewing the contents of
+.Xr M_Matrix 3
+objects numerically or graphically.
+.It Xr M_Plane 3
+Routines related to planes in R^3.
+.It Xr M_Plotter 3
+General-purpose plotting widget for Agar-GUI, with support for
+.Ft M_Real ,
+.Ft M_Vector
+and
+.Ft M_Complex
+types.
+.It Xr M_PointSet 3
+Set of points and related operations (e.g., convex hull).
+.It Xr M_Polygon 3
+Operations related to polygons in R^2 and R^3.
+.It Xr M_Quaternion 3
+Basic quaternion arithmetic.
+.It Xr M_Rectangle 3
+Routines specific to rectangles in R^2 and R^3.
+.It Xr M_Triangle 3
+Routines specific to triangles in R^2 and R^3.
+.It Xr M_Vector 3
+Basic linear algebra routines specific to vectors.
+In addition to vectors in R^n, specialized operations are provided for
+vectors in R^2, R^3 and R^4.
+.El
 .Sh AGAR-MAP
 Agar-MAP is a 2D tiling library aimed at isometric games, platform games
 and scrollers.
@@ -284,7 +347,16 @@ Dynamic map object.
 Map visualization and edition widget.
 .El
 .Sh FREESG
-FreeSG is a math library / computational geometry / 2D / 3D toolkit.
-It is not part of the Agar distribution, but it is built on top of Agar
-and also implements some Agar widgets.
+The FreeSG library implements scene-graphs for 2D and 3D applications.
+It is a general-purpose library used in scientific/engineering applications,
+visualization applications and games.
+.Pp
+It differs from most other scene-graph libraries in the way elements are
+related to each other in a scene.
+Instead of explicit matrix transformations, elements can be related to each
+other in terms of geometrical constraints (such as distances, coincidences,
+angles).
+FreeSG is not part of the Agar source distribution, but it is built on top
+of the Agar library, and also implements the Agar widgets needed to easily
+implement visualization and edition functionality.
 See: http://freesg.org/ for more details.
