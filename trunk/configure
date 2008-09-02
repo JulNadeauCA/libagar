@@ -2762,8 +2762,8 @@ echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
-CFLAGS="$CFLAGS -I$SRC"
-CXXFLAGS="$CXXFLAGS -I$SRC"
+CFLAGS="$CFLAGS -I\"$SRC\""
+CXXFLAGS="$CXXFLAGS -I\"$SRC\""
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
@@ -3700,6 +3700,42 @@ $ECHO_N "checking for POSIX threads..."
 $ECHO_N "checking for POSIX threads..." >> config.log
 PTHREADS_CFLAGS=""
 PTHREADS_LIBS="-lpthread"
+if [ -f "/usr/include/pthreads/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/usr/include/pthreads"
+fi;
+if [ -f "/usr/local/include/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/usr/local/include"
+fi;
+if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/usr/local/include/pthreads"
+fi;
+if [ -f "/usr/local/lib/libpthread.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthread"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC1.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC1d.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1d"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE1.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE1d.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1d"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC2.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC2d.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2d"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE2.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2d"
+fi;
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
@@ -3717,8 +3753,8 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -3778,8 +3814,8 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -3824,10 +3860,55 @@ $ECHO_N "checking for the X/Open Threads Extension..."
 $ECHO_N "checking for the X/Open Threads Extension..." >> config.log
 if [ "${SYSTEM}" = "FreeBSD" ]; then
 PTHREADS_XOPEN_CFLAGS=""
+if [ -f "/usr/include/pthreads/pthread.h" ]; then
+PTHREADS_XOPEN_CFLAGS="-I/usr/include/pthreads"
+fi;
+if [ -f "/usr/local/include/pthread.h" ]; then
+PTHREADS_XOPEN_CFLAGS="-I/usr/local/include"
+fi;
+if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
+PTHREADS_XOPEN_CFLAGS="-I/usr/local/include/pthreads"
+fi;
 else
 PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
+if [ -f "/usr/include/pthreads/pthread.h" ]; then
+PTHREADS_XOPEN_CFLAGS="-I/usr/include/pthreads -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
+fi;
+if [ -f "/usr/local/include/pthread.h" ]; then
+PTHREADS_XOPEN_CFLAGS="-I/usr/local/include -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
+fi;
+if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
+PTHREADS_XOPEN_CFLAGS="-I/usr/local/include/pthreads -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
+fi;
 fi;
 PTHREADS_XOPEN_LIBS="-lpthread"
+if [ -f "/usr/local/lib/libpthread.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthread"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC1.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC1"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC1d.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC1d"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE1.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE1"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE1d.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE1d"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC2.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC2"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC2d.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGC2d"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE2.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE2"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
+PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE2d"
+fi;
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
