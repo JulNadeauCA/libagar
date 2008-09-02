@@ -7,13 +7,10 @@ typedef struct m_matrix_ops {
 	const char *name;
 
 	M_Real *(*GetElement)(void *M, Uint i, Uint j);
-	M_Real  (*GetValue)(void *M, Uint i, Uint j);
-	int     (*AllocEnts)(void *M, Uint m, Uint n);
-	void    (*FreeEnts)(void *M);
+	M_Real  (*Get)(void *M, Uint i, Uint j);
 	int     (*Resize)(void *M, Uint m, Uint n);
 	void    (*FreeMatrix)(void *M);
 	void   *(*NewMatrix)(Uint m, Uint n);
-	void   *(*NewZeroMatrix)(Uint m, Uint n);
 	void    (*Print)(void *M);
 	
 	void    (*SetIdentity)(void *M);
@@ -25,8 +22,9 @@ typedef struct m_matrix_ops {
 	int     (*Addv)(void *A, const void *B);
 	void   *(*DirectSum)(const void *A, const void *B);
 	void   *(*Mul)(const void *A, const void *B);
-	int     (*Mulv)(const void *A, const void *B, void *C);
+	int     (*Mulv)(const void *A, const void *B, void *AB);
 	void   *(*EntMul)(const void *A, const void *B);
+	int     (*EntMulv)(const void *A, const void *B, void *AB);
 	int     (*Compare)(const void *A, const void *B, M_Real *d);
 	int     (*Trace)(M_Real *t, const void *A);
 
@@ -149,14 +147,11 @@ __END_DECLS
 #include <agar/math/m_matrix_sparse.h>
 
 /* Operations on m*n matrices. */
-#define M_GetElement            mMatOps->GetElement
-#define M_Get                   mMatOps->GetValue
-#define M_AllocEnts		mMatOps->AllocEnts
-#define M_FreeEnts		mMatOps->FreeEnts
-#define M_Resize		mMatOps->Resize
-#define M_Free			mMatOps->FreeMatrix
 #define M_New			mMatOps->NewMatrix
-#define M_NewZero		mMatOps->NewZeroMatrix
+#define M_Free			mMatOps->FreeMatrix
+#define M_Resize		mMatOps->Resize
+#define M_Get                   mMatOps->Get
+#define M_GetElement            mMatOps->GetElement
 #define M_SetIdentity		mMatOps->SetIdentity
 #define M_SetZero		mMatOps->SetZero
 #define M_Transpose		mMatOps->Transpose
@@ -168,8 +163,10 @@ __END_DECLS
 #define M_Mul			mMatOps->Mul
 #define M_Mulv			mMatOps->Mulv
 #define M_EntMul		mMatOps->EntMul
+#define M_EntMulv		mMatOps->EntMulv
 #define M_Compare		mMatOps->Compare
 #define M_Trace			mMatOps->Trace
+#define M_MatrixPrint           mMatOps->Print
 #define M_ReadMatrix		mMatOps->Read
 #define M_WriteMatrix		mMatOps->Write
 #define M_ToFloats		mMatOps->ToFloats
@@ -180,7 +177,6 @@ __END_DECLS
 #define M_InvertGaussJordan	mMatOps->InvertGaussJordan
 #define M_FactorizeLU		mMatOps->FactorizeLU
 #define M_BacksubstLU		mMatOps->BacksubstLU
-#define M_MatrixPrint           mMatOps->Print
 #define M_MNAPreorder           mMatOps->MNAPreorder
 #define M_AddToDiag		mMatOps->AddToDiag
 

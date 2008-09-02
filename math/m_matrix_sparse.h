@@ -12,10 +12,10 @@ extern const M_MatrixOps mMatOps_SP;
 
 M_Real *M_GetElement_SP(void *pM, Uint i, Uint j);
 M_Real  M_GetValue_SP(void *pM, Uint i, Uint j);
+M_Real  M_Get_SP(void *, Uint, Uint);
 int     M_MatrixResize_SP(void *pA, Uint m, Uint n);
 void    M_MatrixFree_SP(void *pA);
 void   *M_MatrixNew_SP(Uint m, Uint n);
-void   *M_MatrixNewZero_SP(Uint m, Uint n);
 void    M_MatrixPrint_SP(void *pA);
 void    M_MatrixSetZero_SP(void *pA);
 int     M_FactorizeLU_SP(void *pA);

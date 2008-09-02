@@ -16,8 +16,6 @@
 #include <agar/math/m_coordinates.h>
 #include <agar/math/m_color.h>
 #include <agar/math/m_geometry.h>
-#include <agar/math/m_gaussj.h>
-#include <agar/math/m_lu.h>
 
 #ifdef _M_INTERNAL
 # undef _

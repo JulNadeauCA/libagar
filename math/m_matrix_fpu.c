@@ -10,13 +10,10 @@ const M_MatrixOps mMatOps_FPU = {
 	"scalar",
 	/* Inline */
 	M_GetElement_FPU,
-	M_GetValue_FPU,
-	M_MatrixAllocEnts_FPU,
-	M_MatrixFreeEnts_FPU,
+	M_Get_FPU,
 	M_MatrixResize_FPU,
 	M_MatrixFree_FPU,
 	M_MatrixNew_FPU,
-	M_MatrixNewZero_FPU,
 	M_MatrixPrint_FPU,
 	M_MatrixSetIdentity_FPU,
 	M_MatrixSetZero_FPU,
@@ -29,6 +26,7 @@ const M_MatrixOps mMatOps_FPU = {
 	M_MatrixMul_FPU,
 	M_MatrixMulv_FPU,
 	M_MatrixEntMul_FPU,
+	M_MatrixEntMulv_FPU,
 	/* Not inline */
 	M_MatrixCompare_FPU,
 	M_MatrixTrace_FPU,

@@ -25,6 +25,13 @@ void M_MatrixToDoubles_FPU(double *, const void *);
 void M_MatrixFromFloats_FPU(void *, const float *);
 void M_MatrixFromDoubles_FPU(void *, const double *);
 
+int   M_InvertGaussJordanv_FPU(void *, void *);
+void *M_InvertGaussJordan_FPU(const void *, void *);
+int   M_FactorizeLU_FPU(void *);
+void  M_BacksubstLU_FPU(void *, void *);
+__END_DECLS
+
+__BEGIN_DECLS
 /* Return pointer to element at i,j */
 static __inline__ M_Real *
 M_GetElement_FPU(void *pM, Uint i, Uint j)
@@ -35,7 +42,7 @@ M_GetElement_FPU(void *pM, Uint i, Uint j)
 
 /* Return element at i,j */
 static __inline__ M_Real 
-M_GetValue_FPU(void *pM, Uint i, Uint j)
+M_Get_FPU(void *pM, Uint i, Uint j)
 {
 	M_MatrixFPU *M=pM;
 	return (M->v[i][j]);
@@ -121,25 +128,6 @@ M_MatrixNew_FPU(Uint m, Uint n)
 	}
 	A->LU = NULL;
 	A->ivec = NULL;
-	return (A);
-}
-
-/* Create a new m*n matrix initialized to 0. */
-static __inline__ void *
-M_MatrixNewZero_FPU(Uint m, Uint n)
-{
-	M_MatrixFPU *A;
-	Uint i, j;
-
-	A = AG_Malloc(sizeof(M_MatrixFPU));
-	if (M_MatrixAllocEnts_FPU(A, m,n) == -1) {
-		M_MatrixFreeEnts_FPU(A);
-		return (NULL);
-	}
-	for (i = 0; i < m; i++) {
-		for (j = 0; j < n; j++)
-			A->v[i][j] = 0.0;
-	}
 	return (A);
 }
 
@@ -324,7 +312,7 @@ M_MatrixMulv_FPU(const void *pA, const void *pB, void *pC)
 	return (0);
 }
 
-/* Return the Hadamard (entrywise) product of m*n matrices A*B into C. */
+/* Return the Hadamard (entrywise) product of m*n matrices A and B. */
 static __inline__ void *
 M_MatrixEntMul_FPU(const void *pA, const void *pB)
 {
@@ -339,6 +327,23 @@ M_MatrixEntMul_FPU(const void *pA, const void *pB)
 			AB->v[i][j] = A->v[i][j] * B->v[i][j];
 	}
 	return (AB);
+}
+
+/* Return the Hadamard (entrywise) product of m*n matrices A and B into AB. */
+static __inline__ int
+M_MatrixEntMulv_FPU(const void *pA, const void *pB, void *pAB)
+{
+	const M_MatrixFPU *A=pA, *B=pB;
+	const M_MatrixFPU *AB=pAB;
+	Uint i, j;
+
+	M_ASSERT_COMPAT_MATRICES(A,B, -1);
+	M_ASSERT_COMPAT_MATRICES(A,AB, -1);
+	for (i = 0; i < MROWS(A); i++) {
+		for (j = 0; j < MCOLS(A); j++)
+			AB->v[i][j] = A->v[i][j] * B->v[i][j];
+	}
+	return (0);
 }
 
 static __inline__ void
