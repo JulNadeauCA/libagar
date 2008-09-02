@@ -12,13 +12,10 @@
 const M_MatrixOps mMatOps_SP = {
 	"scalar",
 	M_GetElement_SP,
-	M_GetValue_SP,
-	NULL,			/* AllocEnts */
-	NULL,			/* FreeEnts */
+	M_Get_SP,
 	M_MatrixResize_SP,
 	M_MatrixFree_SP,
 	M_MatrixNew_SP,
-	M_MatrixNewZero_SP,
 	M_MatrixPrint_FPU,	/* trick to have same output on sp and fpu */
 	NULL,			/* SetIdentity */
 	M_MatrixSetZero_SP,
@@ -31,6 +28,7 @@ const M_MatrixOps mMatOps_SP = {
 	NULL,			/* Mul */
 	NULL,			/* Mulv */
 	NULL,			/* EntMul */
+	NULL,			/* EntMulv */
 	NULL,			/* Compare */
 	NULL,			/* Trace */
 	M_MatrixRead_SP,
@@ -55,7 +53,7 @@ M_GetElement_SP(void *pM, Uint i, Uint j)
 }
 
 M_Real
-M_GetValue_SP(void *pM, Uint i, Uint j)
+M_Get_SP(void *pM, Uint i, Uint j)
 {
 	M_MatrixSP *M=pM;
 	M_Real *element = spFindElement(M->d, i, j);
@@ -92,12 +90,6 @@ M_MatrixNew_SP(Uint m, Uint n)
 	MROWS(A) = m;
 	MCOLS(A) = n;
 	return (A);
-}
-
-void *
-M_MatrixNewZero_SP(Uint m, Uint n)
-{
-	return M_MatrixNew_SP(m, n);
 }
 
 void
