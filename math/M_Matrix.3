@@ -48,9 +48,16 @@ library can be compiled to provide inline expansions of these operations under
 a specific backend.
 .Sh M-BY-N MATRICES
 The following routines operate on dynamically-allocated m-by-n matrices.
-Individual entries are not directly accessible since the
+Matrix elements are not accessible as arrays, since some backends (such as
 .Em sparse
-backend does not actually store them in an array.
+does not actually store matrix elements in arrays).
+The dimensions can be obtained from the
+.Va m
+(rows) and
+.Va n
+(columns) members of the
+.Nm
+structure.
 .Pp
 .Bl -tag -width "sparse " -compact
 .It fpu
@@ -60,9 +67,328 @@ Methods optimized for large, sparse matrices.
 Based on the excellent Sparse 1.4 package by Kenneth Kundert at UC Berkeley
 (http://sparse.sourceforge.net/).
 .El
-.Pp
+.Sh M-BY-N MATRICES: INITIALIZATION
 .nr nS 1
+.Ft "M_Matrix *"
+.Fn M_New "Uint m" "Uint n"
+.Pp
+.Ft "void"
+.Fn M_Free "M_Matrix *M"
+.Pp
+.Ft "void"
+.Fn M_Resize "M_Matrix *M" "Uint m" "Uint n"
+.Pp
+.Ft "void"
+.Fn M_SetIdentity "M_Matrix *M"
+.Pp
+.Ft "void"
+.Fn M_SetZero "M_Matrix *M"
+.Pp
+.Ft "int"
+.Fn M_Copy "M_Matrix *D" "const M_Matrix *A"
+.Pp
+.Ft "M_Matrix *"
+.Fn M_Dup "const M_Matrix *M"
+.Pp
+.Ft "M_Matrix *"
+.Fn M_ReadMatrix "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn M_WriteMatrix "AG_DataSource *ds" "const M_Matrix *A"
+.Pp
 .nr nS 0
+The
+.Fn M_New
+function allocates a new
+.Fa m
+by
+.Fa n
+matrix.
+.Fn M_Free
+releases all resources allocated for the specified matrix.
+.Fn M_Resize
+resizes
+.Fa M
+to
+.Fa m
+by
+.Fa n .
+Existing entries are preserved, but new entries are left uninitialized.
+.Pp
+.Fn M_SetIdentity
+initializes
+.Fa M
+to the identity matrix.
+.Fn M_SetZero
+initializes
+.Fa M
+to all zeros.
+.Pp
+.Fn M_Copy
+copies the contents of matrix
+.Fa A
+into
+.Fa D ,
+which is assumed to have the same dimensions (otherwise, -1 is returned).
+.Fn M_Dup
+returns a duplicate of
+.Fa M .
+.Pp
+The
+.Fn M_ReadMatrix
+and
+.Fn M_WriteMatrix
+functions are used to (de)serialize the contents of matrix
+.Fa A
+from/to the specified
+.Xr AG_DataSource 3 .
+.Sh M-BY-N MATRICES: ACCESSING ELEMENTS
+.nr nS 1
+.Ft "M_Real"
+.Fn M_Get "M_Matrix *M" "Uint i" "Uint j"
+.Pp
+.Ft "void"
+.Fn M_Set "M_Matrix *M" "Uint i" "Uint j" "M_Real val"
+.Pp
+.Ft "M_Real *"
+.Fn M_GetElement "M_Matrix *M" "Uint i" "Uint j"
+.Pp
+.Ft "void"
+.Fn M_ToFloats "float *values" "const M_Matrix *A"
+.Pp
+.Ft "void"
+.Fn M_ToDoubles "double *values" "const M_Matrix *A"
+.Pp
+.Ft "void"
+.Fn M_FromFloats "M_Matrix *A" "const float *values"
+.Pp
+.Ft "void"
+.Fn M_FromDoubles "M_Matrix *A" "const double *values"
+.Pp
+.Ft "void"
+.Fn M_Print "const M_Matrix *A"
+.Pp
+.nr nS 0
+The
+.Fn M_Get
+and
+.Fn M_Set
+routines respectively retrieve and set the element
+.Fa i ,
+.Fa j .
+.Pp
+.Fn M_GetElement
+returns a pointer to the element
+.Fa i ,
+.Fa j .
+As long as the entry exists, it is safe to read and write the element.
+.Pp
+The
+.Fn M_ToFloats
+and
+.Fn M_ToDoubles
+functions return a representation of matrix
+.Fa A
+as an array of
+.Ft float
+or
+.Ft double
+values in row-major order.
+The
+.Fn M_FromFloats
+and
+.Fn M_FromDoubles
+functions initialize matrix
+.Fa A
+from an array of
+.Ft float
+or
+.Ft double
+values in row-major order.
+In both cases, it is assumed that the arrays are of the correct size for
+the given matrix dimensions.
+.Pp
+.Fn M_Print
+dumps the individual matrix entries to the standard error output.
+It is only for debugging purposes. Agar GUI applications can use the provided
+.Xr M_Matview
+widget to display matrix contents.
+.Sh M-BY-N MATRICES: BASIC OPERATIONS
+.nr nS 1
+.Ft "M_Matrix *"
+.Fn M_Transpose "M_Matrix *M"
+.Pp
+.Ft "M_Matrix *"
+.Fn M_Add "const M_Matrix *A" "const M_Matrix *B"
+.Pp
+.Ft "int"
+.Fn M_Addv "M_Matrix *A" "const M_Matrix *B"
+.Pp
+.Ft "void"
+.Fn M_AddToDiag "M_Matrix *A" "M_Real value"
+.Pp
+.Ft "M_Matrix *"
+.Fn M_DirectSum "const M_Matrix *A" "const M_Matrix *B"
+.Pp
+.Ft "M_Matrix *"
+.Fn M_Mul "const M_Matrix *A" "const M_Matrix *B"
+.Pp
+.Ft "int"
+.Fn M_Mulv "const M_Matrix *A" "const M_Matrix *B" "M_Matrix *AB"
+.Pp
+.Ft "M_Matrix *"
+.Fn M_EntMul "const M_Matrix *A" "const M_Matrix *B"
+.Pp
+.Ft "int"
+.Fn M_EntMulv "const M_Matrix *A" "const M_Matrix *B" "M_Matrix *AB"
+.Pp
+.nr nS 0
+The
+.Fn M_Transpose
+function returns the transpose of
+.Fa M
+(i.e., all
+.Fa i ,
+.Fa j
+elements are swapped against
+.Fa j ,
+.Fa i
+elements).
+.Pp
+.Fn M_Add
+returns the sum of the matrices
+.Fa A
+and
+.Fa B .
+The
+.Fn M_Addv
+variant returns the sum into an existing matrix, returning -1 if the
+dimensions are incorrect.
+.Pp
+The
+.Fn M_AddToDiag
+routine adds
+.Va value
+to each entry
+.Fa i ,
+.Fa i
+of matrix
+.Fa A .
+.Pp
+.Fn M_DirectSum
+returns the direct sum of
+.Fa A
+and
+.Fa B .
+.Pp
+.Fn M_Mul
+returns the product of matrices
+.Fa A
+and
+.Fa B .
+The
+.Fn M_Mulv
+variant returns the product into an existing matrix, returning -1 if the
+dimensions are incorrect.
+.Fn M_EntMul
+and
+.Fn M_EntMulv
+perform entrywise multiplication as opposed to matrix multiplication.
+.Sh M-BY-N MATRICES: ANALYSIS
+.nr nS 1
+.Ft "void"
+.Fn M_Compare "const M_Matrix *A" "const M_Matrix *B" "M_Real *diff"
+.Pp
+.Ft "int"
+.Fn M_Trace "M_Real *trace" "const M_Matrix *A"
+.Pp
+.Ft "void"
+.Fn M_IsSquare "M_Matrix *A"
+.Pp
+.nr nS 0
+.Fn M_Compare
+compares each entry of
+.Fa A
+and
+.Fa B ,
+returning the largest difference into
+.Fa diff .
+.Pp
+.Fn M_Trace
+returns the trace (the sum of elements on the diagonal) of
+.Fa A
+into
+.Fa trace .
+If
+.Fa A
+is not a square matrix, an error is returned.
+.Pp
+.Fn M_IsSquare
+returns 1 if
+.Fa A
+is a square (n-by-n) matrix.
+.Sh M-BY-N MATRICES: SOLVING
+.nr nS 1
+.Ft "M_Matrix *"
+.Fn M_InvertGaussJordan "const M_Matrix *A" "M_Matrix *b"
+.Pp
+.Ft "int"
+.Fn M_InvertGaussJordanv "M_Matrix *A" "M_Matrix *b"
+.Pp
+.Ft "int"
+.Fn M_FactorizeLU "M_Matrix *A"
+.Pp
+.Ft "void"
+.Fn M_BacksubstLU "M_Matrix *LU" "M_Vector *b"
+.Pp
+.Ft "void"
+.Fn M_MNAPreorder "M_Matrix *A"
+.Pp
+.nr nS 0
+The
+.Fn M_InvertGaussJordan
+routine solves a system of equations using the Gauss-Jordan elimination
+process on matrix
+.Fa A
+and right-hand side
+.Fa b .
+The vector of solutions is returned into
+.Fa b .
+The
+.Fn M_InvertGaussJordanv
+variant operates in place, destroying the original contents of
+.Fa A ,
+also returning the solution vector into
+.Fa b .
+.Pp
+The
+.Fn M_FactorizeLU
+routine computes the LU factorization of square matrix
+.Fa A .
+If successful, the original contents of
+.Fa A
+are destroyed and replaced by the LU factorization.
+On error, -1 is returned.
+Partial pivoting information is recorded in the
+.Nm
+structure for subsequent backsubstitution.
+.Pp
+The
+.Fn M_BacksubstLU
+routine solves a system of linear equations represented by a LU factorization
+.Fa LU
+(previously computed by
+.Fn M_FactorizeLU )
+and a right-hand side
+.Fa b .
+The solution vector is returned into
+.Fa b .
+.Pp
+The
+.Fn M_MNAPreorder
+routine takes advantage of the structure of modified node admittance matrices
+(typically encountered in circuit simulation) to try and remove zeros from the
+diagonal.
 .Sh 4-BY-4 MATRICES
 .Pp
 The following routines are optimized for 4x4 matrices, as frequently
@@ -82,29 +408,8 @@ Native scalar floating point methods.
 Accelerate operations using Streaming SIMD Extensions (SSE).
 .El
 .Pp
-.nr nS 1
-.Ft "M_Matrix44"
-.Fn M_MatIdentity44 "void"
-.Pp
-.Ft "void"
-.Fn M_MatIdentity44v "M_Matrix44 *A"
-.Pp
-.Ft "M_Matrix44"
-.Fn M_MatZero44 "void"
-.Pp
-.Ft "void"
-.Fn M_MatZero44v "M_Matrix44 *A"
-.Pp
-.nr nS 0
-The functions
-.Fn M_MatIdentity44
-and
-.Fn M_MatIdentity44v
-return the identity matrix.
-.Fn M_MatZero44
-and
-.Fn M_MatZero44v
-return the zero matrix.
+TODO
+
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr M_Vector 3
