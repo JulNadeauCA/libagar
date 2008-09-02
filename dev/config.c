@@ -115,24 +115,13 @@ SetUnicodeKbd(AG_Event *event)
 static void
 SetColor(AG_Event *event)
 {
-	AG_HSVPal *hsv = AG_SELF();
 	AG_Tlist *tl = AG_PTR(1);
-	AG_TlistItem *it;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
 
-	if ((it = AG_TlistSelectedItem(tl)) != NULL &&
-	    it->p1 == &agColors[BG_COLOR]) {
-#ifdef HAVE_OPENGL
-		if (agView->opengl) {
-			Uint8 r, g, b;
-			AG_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &r,&g,&b);
-			glClearColor(r/255.0, g/255.0, b/255.0, 1.0);
-		} else
-#endif
-		{
-			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
-			AG_WidgetDraw(AG_WidgetParentWindow(hsv));
-			SDL_UpdateRect(agView->v, 0, 0, agView->w, agView->h);
-		}
+	if (it != NULL && it->p1 == &agColors[BG_COLOR]) {
+		Uint8 r, g, b;
+		AG_ColorsGetRGB(BG_COLOR, &r, &g, &b);
+		AG_ColorsSetRGB(BG_COLOR, r, g, b);
 	}
 }
 
