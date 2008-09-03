@@ -228,6 +228,9 @@ AG_LoadClass(const char *classSpec)
 	AG_ParseClassSpec(className, sizeof(className), libs, sizeof(libs),
 	    classSpec);
 
+	if (libs[0] == '\0')
+		return AG_LookupClass(className);
+
 	/* Load all libraries specified in the string. */
 	for (i = 0, s = libs;
 	    (lib = Strsep(&s, ", ")) != NULL;
