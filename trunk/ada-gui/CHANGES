@@ -15,3 +15,6 @@
 20080901 code: added agar.gui.widget.file_dialog
 20080901 code: added agar.gui.widget.pane
 20080901 code: added agar.gui.widget.textbox
+20080901 code: added agar.gui.widget.fixed
+20080901 code: added agar.gui.widget.graph
+20080903 code: added all remaining API sections (types only).

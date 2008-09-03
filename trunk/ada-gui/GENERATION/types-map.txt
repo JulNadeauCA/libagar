@@ -97,12 +97,46 @@ agar.gui.widget.file_dialog.option_access_t:struct ag_file_type_option *
 agar.gui.widget.file_dialog.option_t:AG_FileOption
 agar.gui.widget.file_dialog.option_t:struct ag_file_type_option
 agar.gui.widget.file_dialog.option_type_t:enum ag_file_type_option_type
+agar.gui.widget.fixed.fixed_access_t:AG_Fixed *
+agar.gui.widget.fixed.fixed_access_t:struct ag_fixed *
+agar.gui.widget.fixed.fixed_t:AG_Fixed
+agar.gui.widget.fixed.fixed_t:struct ag_fixed
+agar.gui.widget.fixed_plotter.item_access_t:AG_FixedPlotterItem *
+agar.gui.widget.fixed_plotter.item_access_t:struct ag_fixed_plotter_item *
+agar.gui.widget.fixed_plotter.item_t:AG_FixedPlotterItem
+agar.gui.widget.fixed_plotter.item_t:struct ag_fixed_plotter_item
+agar.gui.widget.fixed_plotter.plotter_access_t:AG_FixedPlotter *
+agar.gui.widget.fixed_plotter.plotter_access_t:struct ag_fixed_plotter *
+agar.gui.widget.fixed_plotter.plotter_t:AG_FixedPlotter
+agar.gui.widget.fixed_plotter.plotter_t:struct ag_fixed_plotter
+agar.gui.widget.fixed_plotter.type_t:enum ag_fixed_plotter_type
 agar.gui.widget.flag_descr_access_t:AG_FlagDescr *
 agar.gui.widget.flag_descr_access_t:struct ag_flag_descr *
 agar.gui.widget.flag_descr_t:AG_FlagDescr
 agar.gui.widget.flag_descr_t:struct ag_flag_descr
-agar.gui.widget.label.format_func_t:AG_LabelFormatFn
+agar.gui.widget.graph.edge_access_t:AG_GraphEdge *
+agar.gui.widget.graph.edge_access_t:struct ag_graph_edge *
+agar.gui.widget.graph.edge_t:AG_GraphEdge
+agar.gui.widget.graph.edge_t:struct ag_graph_edge
+agar.gui.widget.graph.graph_access_t:AG_Graph *
+agar.gui.widget.graph.graph_access_t:struct ag_graph *
+agar.gui.widget.graph.graph_t:AG_Graph
+agar.gui.widget.graph.graph_t:struct ag_graph
+agar.gui.widget.graph.vertex_access_t:AG_GraphVertex *
+agar.gui.widget.graph.vertex_access_t:struct ag_graph_vertex *
+agar.gui.widget.graph.vertex_style_t:enum ag_graph_vertex_style
+agar.gui.widget.graph.vertex_t:AG_GraphVertex
+agar.gui.widget.graph.vertex_t:struct ag_graph_vertex
+agar.gui.widget.hsvpal.hsvpal_access_t:AG_HSVPal *
+agar.gui.widget.hsvpal.hsvpal_access_t:struct ag_hsvpal *
+agar.gui.widget.hsvpal.hsvpal_t:AG_HSVPal
+agar.gui.widget.hsvpal.hsvpal_t:struct ag_hsvpal
+agar.gui.widget.icon.icon_access_t:AG_Icon *
+agar.gui.widget.icon.icon_access_t:struct ag_icon *
+agar.gui.widget.icon.icon_t:AG_Icon
+agar.gui.widget.icon.icon_t:struct ag_icon
 agar.gui.widget.label.flag_t:struct ag_label_flag
+agar.gui.widget.label.format_func_t:AG_LabelFormatFn
 agar.gui.widget.label.format_spec_access_t:AG_LabelFormatSpec *
 agar.gui.widget.label.format_spec_access_t:struct ag_label_format_spec *
 agar.gui.widget.label.format_spec_t:AG_LabelFormatSpec
@@ -121,26 +155,99 @@ agar.gui.widget.menu.menu_access_t:AG_Menu *
 agar.gui.widget.menu.menu_access_t:struct ag_menu *
 agar.gui.widget.menu.menu_t:AG_Menu
 agar.gui.widget.menu.menu_t:struct ag_menu
+agar.gui.widget.menu.popup_menu_access_t:AG_PopupMenu *
+agar.gui.widget.menu.popup_menu_access_t:struct ag_popup_menu *
+agar.gui.widget.menu.popup_menu_t:AG_PopupMenu
+agar.gui.widget.menu.popup_menu_t:struct ag_popup_menu
 agar.gui.widget.menu.view_access_t:AG_MenuView *
 agar.gui.widget.menu.view_access_t:struct ag_menu_view *
 agar.gui.widget.menu.view_t:AG_MenuView
 agar.gui.widget.menu.view_t:struct ag_menu_view
+agar.gui.widget.mpane.layout_t:enum ag_mpane_layout
+agar.gui.widget.mpane.mpane_access_t:AG_MPane *
+agar.gui.widget.mpane.mpane_access_t:struct ag_mpane *
+agar.gui.widget.mpane.mpane_t:AG_MPane
+agar.gui.widget.mpane.mpane_t:struct ag_mpane
+agar.gui.widget.notebook.notebook_access_t:AG_Notebook *
+agar.gui.widget.notebook.notebook_access_t:struct ag_notebook *
+agar.gui.widget.notebook.notebook_t:AG_Notebook
+agar.gui.widget.notebook.notebook_t:struct ag_notebook
+agar.gui.widget.notebook.tab_access_t:AG_NotebookTab *
+agar.gui.widget.notebook.tab_access_t:struct ag_notebook_tab *
+agar.gui.widget.notebook.tab_alignment_t:enum ag_notebook_tab_alignment
+agar.gui.widget.notebook.tab_t:AG_NotebookTab
+agar.gui.widget.notebook.tab_t:struct ag_notebook_tab
+agar.gui.widget.numerical.numerical_access_t:AG_Numerical *
+agar.gui.widget.numerical.numerical_access_t:struct ag_numerical *
+agar.gui.widget.numerical.numerical_t:AG_Numerical
+agar.gui.widget.numerical.numerical_t:struct ag_numerical
 agar.gui.widget.pane.pane_access_t:AG_Pane *
 agar.gui.widget.pane.pane_access_t:struct ag_pane *
 agar.gui.widget.pane.pane_t:AG_Pane
 agar.gui.widget.pane.pane_t:struct ag_pane
 agar.gui.widget.pane.type_t:enum ag_pane_type
+agar.gui.widget.pixmap.pixmap_access_t:AG_Pixmap *
+agar.gui.widget.pixmap.pixmap_access_t:struct ag_pixmap *
+agar.gui.widget.pixmap.pixmap_t:AG_Pixmap
+agar.gui.widget.pixmap.pixmap_t:struct ag_pixmap
+agar.gui.widget.progress_bar.progress_bar_access_t:AG_ProgressBar *
+agar.gui.widget.progress_bar.progress_bar_access_t:struct ag_progress_bar *
+agar.gui.widget.progress_bar.progress_bar_t:AG_ProgressBar
+agar.gui.widget.progress_bar.progress_bar_t:struct ag_progress_bar
+agar.gui.widget.progress_bar.type_t:enum ag_progress_bar_type
+agar.gui.widget.radio.item_access_t:AG_RadioItem *
+agar.gui.widget.radio.item_access_t:struct ag_radio_item *
+agar.gui.widget.radio.item_t:AG_RadioItem
+agar.gui.widget.radio.item_t:struct ag_radio_item
+agar.gui.widget.radio.radio_access_t:AG_RadioItem *
+agar.gui.widget.radio.radio_access_t:struct ag_radio *
+agar.gui.widget.radio.radio_t:AG_RadioItem
+agar.gui.widget.radio.radio_t:struct ag_radio
 agar.gui.widget.scrollbar.button_t:enum ag_scrollbar_button
 agar.gui.widget.scrollbar.scrollbar_access_t:AG_Scrollbar *
 agar.gui.widget.scrollbar.scrollbar_access_t:struct ag_scrollbar *
 agar.gui.widget.scrollbar.scrollbar_t:AG_Scrollbar
 agar.gui.widget.scrollbar.scrollbar_t:struct ag_scrollbar
 agar.gui.widget.scrollbar.type_t:enum ag_scrollbar_type
+agar.gui.widget.separator.separator_access_t:AG_Separator *
+agar.gui.widget.separator.separator_access_t:struct ag_separator *
+agar.gui.widget.separator.separator_t:AG_Separator
+agar.gui.widget.separator.separator_t:struct ag_separator
+agar.gui.widget.separator.type_t:enum ag_separator_type
 agar.gui.widget.size_req_access_t:AG_SizeReq *
 agar.gui.widget.size_req_access_t:struct ag_size_req *
 agar.gui.widget.size_req_t:AG_SizeReq
 agar.gui.widget.size_req_t:struct ag_size_req
 agar.gui.widget.size_spec_t:enum ag_widget_sizespec
+agar.gui.widget.slider.button_t:enum ag_slider_button
+agar.gui.widget.slider.slider_access_t:AG_Slider *
+agar.gui.widget.slider.slider_access_t:struct ag_slider *
+agar.gui.widget.slider.slider_t:AG_Slider
+agar.gui.widget.slider.slider_t:struct ag_slider
+agar.gui.widget.slider.type_t:enum ag_slider_type
+agar.gui.widget.socket.bg_type_t:enum ag_socket_bg_type
+agar.gui.widget.socket.socket_access_t:AG_Socket *
+agar.gui.widget.socket.socket_access_t:struct ag_socket *
+agar.gui.widget.socket.socket_t:AG_Socket
+agar.gui.widget.socket.socket_t:struct ag_socket
+agar.gui.widget.table.cell_access_t:AG_TableCell *
+agar.gui.widget.table.cell_access_t:struct ag_table_cell *
+agar.gui.widget.table.cell_t:AG_TableCell
+agar.gui.widget.table.cell_t:struct ag_table_cell
+agar.gui.widget.table.cell_type_t:enum ag_table_cell_type
+agar.gui.widget.table.column_access_t:AG_TableCol *
+agar.gui.widget.table.column_access_t:struct ag_table_col *
+agar.gui.widget.table.column_t:AG_TableCol
+agar.gui.widget.table.column_t:struct ag_table_col
+agar.gui.widget.table.popup_access_t:AG_TablePopup *
+agar.gui.widget.table.popup_access_t:struct ag_table_popup *
+agar.gui.widget.table.popup_t:AG_TablePopup
+agar.gui.widget.table.popup_t:struct ag_table_popup
+agar.gui.widget.table.select_mode_t:enum ag_table_selmode
+agar.gui.widget.table.table_access_t:AG_Table *
+agar.gui.widget.table.table_access_t:struct ag_table *
+agar.gui.widget.table.table_t:AG_Table
+agar.gui.widget.table.table_t:struct ag_table
 agar.gui.widget.textbox.textbox_access_t:AG_Textbox *
 agar.gui.widget.textbox.textbox_access_t:struct ag_textbox *
 agar.gui.widget.textbox.textbox_t:AG_Textbox
@@ -162,6 +269,10 @@ agar.gui.widget.toolbar.toolbar_access_t:struct ag_toolbar *
 agar.gui.widget.toolbar.toolbar_t:AG_Toolbar
 agar.gui.widget.toolbar.toolbar_t:struct ag_toolbar
 agar.gui.widget.toolbar.type_t:enum ag_toolbar_type
+agar.gui.widget.ucombo.ucombo_access_t:AG_UCombo *
+agar.gui.widget.ucombo.ucombo_access_t:struct ag_ucombo *
+agar.gui.widget.ucombo.ucombo_t:AG_UCombo
+agar.gui.widget.ucombo.ucombo_t:struct ag_ucombo
 agar.gui.widget.widget_access_t:AG_Widget *
 agar.gui.widget.widget_access_t:struct ag_widget *
 agar.gui.widget.widget_t:AG_Widget

@@ -59,17 +59,65 @@ pragma source_file_name(agar.gui.widget.editable, spec_file_name => "agar-gui-wi
 -- ./agar-gui-widget-file_dialog.apk
 pragma source_file_name(agar.gui.widget.file_dialog, spec_file_name => "agar-gui-widget-file_dialog.ads");
 
+-- ./agar-gui-widget-fixed.apk
+pragma source_file_name(agar.gui.widget.fixed, spec_file_name => "agar-gui-widget-fixed.ads");
+
+-- ./agar-gui-widget-fixed_plotter.apk
+pragma source_file_name(agar.gui.widget.fixed_plotter, spec_file_name => "agar-gui-widget-fixed_plotter.ads");
+
+-- ./agar-gui-widget-graph.apk
+pragma source_file_name(agar.gui.widget.graph, spec_file_name => "agar-gui-widget-graph.ads");
+
+-- ./agar-gui-widget-hbox.apk
+pragma source_file_name(agar.gui.widget.hbox, spec_file_name => "agar-gui-widget-hbox.ads");
+
+-- ./agar-gui-widget-hsvpal.apk
+pragma source_file_name(agar.gui.widget.hsvpal, spec_file_name => "agar-gui-widget-hsvpal.ads");
+
+-- ./agar-gui-widget-icon.apk
+pragma source_file_name(agar.gui.widget.icon, spec_file_name => "agar-gui-widget-icon.ads");
+
 -- ./agar-gui-widget-label.apk
 pragma source_file_name(agar.gui.widget.label, spec_file_name => "agar-gui-widget-label.ads");
 
 -- ./agar-gui-widget-menu.apk
 pragma source_file_name(agar.gui.widget.menu, spec_file_name => "agar-gui-widget-menu.ads");
 
+-- ./agar-gui-widget-mpane.apk
+pragma source_file_name(agar.gui.widget.mpane, spec_file_name => "agar-gui-widget-mpane.ads");
+
+-- ./agar-gui-widget-notebook.apk
+pragma source_file_name(agar.gui.widget.notebook, spec_file_name => "agar-gui-widget-notebook.ads");
+
+-- ./agar-gui-widget-numerical.apk
+pragma source_file_name(agar.gui.widget.numerical, spec_file_name => "agar-gui-widget-numerical.ads");
+
 -- ./agar-gui-widget-pane.apk
 pragma source_file_name(agar.gui.widget.pane, spec_file_name => "agar-gui-widget-pane.ads");
 
+-- ./agar-gui-widget-pixmap.apk
+pragma source_file_name(agar.gui.widget.pixmap, spec_file_name => "agar-gui-widget-pixmap.ads");
+
+-- ./agar-gui-widget-progress_bar.apk
+pragma source_file_name(agar.gui.widget.progress_bar, spec_file_name => "agar-gui-widget-progress_bar.ads");
+
+-- ./agar-gui-widget-radio.apk
+pragma source_file_name(agar.gui.widget.radio, spec_file_name => "agar-gui-widget-radio.ads");
+
 -- ./agar-gui-widget-scrollbar.apk
 pragma source_file_name(agar.gui.widget.scrollbar, spec_file_name => "agar-gui-widget-scrollbar.ads");
+
+-- ./agar-gui-widget-separator.apk
+pragma source_file_name(agar.gui.widget.separator, spec_file_name => "agar-gui-widget-separator.ads");
+
+-- ./agar-gui-widget-slider.apk
+pragma source_file_name(agar.gui.widget.slider, spec_file_name => "agar-gui-widget-slider.ads");
+
+-- ./agar-gui-widget-socket.apk
+pragma source_file_name(agar.gui.widget.socket, spec_file_name => "agar-gui-widget-socket.ads");
+
+-- ./agar-gui-widget-table.apk
+pragma source_file_name(agar.gui.widget.table, spec_file_name => "agar-gui-widget-table.ads");
 
 -- ./agar-gui-widget-textbox.apk
 pragma source_file_name(agar.gui.widget.textbox, spec_file_name => "agar-gui-widget-textbox.ads");
@@ -79,6 +127,12 @@ pragma source_file_name(agar.gui.widget.tlist, spec_file_name => "agar-gui-widge
 
 -- ./agar-gui-widget-toolbar.apk
 pragma source_file_name(agar.gui.widget.toolbar, spec_file_name => "agar-gui-widget-toolbar.ads");
+
+-- ./agar-gui-widget-ucombo.apk
+pragma source_file_name(agar.gui.widget.ucombo, spec_file_name => "agar-gui-widget-ucombo.ads");
+
+-- ./agar-gui-widget-vbox.apk
+pragma source_file_name(agar.gui.widget.vbox, spec_file_name => "agar-gui-widget-vbox.ads");
 
 -- ./agar-gui-widget.apk
 pragma source_file_name(agar.gui.widget, spec_file_name => "agar-gui-widget.ads");
