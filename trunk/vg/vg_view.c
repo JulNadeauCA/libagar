@@ -92,6 +92,9 @@ MouseMotion(AG_Event *event)
 	x = vCt.x;
 	y = vCt.y;
 
+	if (vv->vg == NULL) {
+		return;
+	}
 	if (tool != NULL && tool->ops->mousemotion != NULL) {
 		if (!(tool->ops->flags & VG_MOUSEMOTION_NOSNAP)) {
 			VG_ApplyConstraints(vv, &vCt);
@@ -148,6 +151,10 @@ MouseButtonDown(AG_Event *event)
 	default:
 		break;
 	}
+	
+	if (vv->vg == NULL) {
+		return;
+	}
 	if (tool != NULL && tool->ops->mousebuttondown != NULL) {
 		if (!(tool->ops->flags & VG_BUTTONDOWN_NOSNAP)) {
 			VG_ApplyConstraints(vv, &vCt);
@@ -181,6 +188,9 @@ MouseButtonUp(AG_Event *event)
 	VG_ToolMouseBinding *mb;
 	float x, y;
 	VG_Vector vCt;
+	
+	if (vv->vg == NULL)
+		return;
 	
 	VG_GetVGCoords(vv, xCurs,yCurs, &vCt);
 	x = vCt.x;
@@ -224,6 +234,9 @@ KeyDown(AG_Event *event)
 	int keymod = AG_INT(2);
 	int unicode = AG_INT(3);
 	
+	if (vv->vg == NULL)
+		return;
+	
 	if (tool != NULL && tool->ops->keydown != NULL) {
 		if (tool->ops->keydown(tool, keysym, keymod, unicode) == 1)
 			return;
@@ -239,6 +252,9 @@ KeyUp(AG_Event *event)
 	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
 	int unicode = AG_INT(3);
+	
+	if (vv->vg == NULL)
+		return;
 	
 	if (tool != NULL && tool->ops->keyup != NULL) {
 		if (tool->ops->keyup(tool, keysym, keymod, unicode) == 1)
@@ -318,6 +334,16 @@ Destroy(void *obj)
 
 	if (vv->tCache != NULL)
 		AG_TextCacheDestroy(vv->tCache);
+}
+
+/* Change the VG being displayed. */
+void
+VG_ViewSetVG(VG_View *vv, VG *vg)
+{
+	AG_ObjectLock(vv);
+	vv->vg = vg;
+	VG_ViewSelectTool(vv, NULL, NULL);
+	AG_ObjectUnlock(vv);
 }
 
 /* Set the snapping constraint. */
@@ -535,6 +561,9 @@ Draw(void *p)
 	VG_View *vv = p;
 	VG *vg = vv->vg;
 	int su, i;
+
+	if (vg == NULL)
+		return;
 
 	if (vv->flags & VG_VIEW_BGFILL) {
 		AG_DrawRectFilled(vv, AG_RECT(0,0,WIDTH(vv),HEIGHT(vv)),

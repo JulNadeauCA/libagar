@@ -82,6 +82,7 @@ __BEGIN_DECLS
 extern AG_WidgetClass vgViewClass;
 
 VG_View	*VG_ViewNew(void *, VG *, Uint);
+void     VG_ViewSetVG(struct vg_view *, VG *);
 void     VG_ViewSetScale(struct vg_view *, int);
 void     VG_ViewSetScaleMin(struct vg_view *, float);
 void     VG_ViewSetScaleMax(struct vg_view *, float);
