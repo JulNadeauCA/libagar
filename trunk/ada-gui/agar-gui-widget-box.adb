@@ -1,24 +1,26 @@
 package body agar.gui.widget.box is
 
-  procedure c_set_homogenous
-    (box        : box_access_t;
-     homogenous : c.int);
-  pragma import (c, c_set_homogenous, "AG_BoxSetHomogenous");
-
-  procedure c_set_padding
-    (box     : box_access_t;
-     padding : c.int);
-  pragma import (c, c_set_padding, "AG_BoxSetPadding");
-
-  procedure c_set_spacing
-    (box     : box_access_t;
-     spacing : c.int);
-  pragma import (c, c_set_spacing, "AG_BoxSetSpacing");
-
-  procedure c_set_depth
-    (box   : box_access_t;
-     depth : c.int);
-  pragma import (c, c_set_depth, "AG_BoxSetDepth");
+  package cbinds is
+    procedure set_homogenous
+      (box        : box_access_t;
+       homogenous : c.int);
+    pragma import (c, set_homogenous, "AG_BoxSetHomogenous");
+  
+    procedure set_padding
+      (box     : box_access_t;
+       padding : c.int);
+    pragma import (c, set_padding, "AG_BoxSetPadding");
+  
+    procedure set_spacing
+      (box     : box_access_t;
+       spacing : c.int);
+    pragma import (c, set_spacing, "AG_BoxSetSpacing");
+  
+    procedure set_depth
+      (box   : box_access_t;
+       depth : c.int);
+    pragma import (c, set_depth, "AG_BoxSetDepth");
+  end cbinds;
 
   -- api
 
@@ -42,28 +44,28 @@ package body agar.gui.widget.box is
     hflag : c.int := 0;
   begin
     if homogenous then hflag := 1; end if;
-    c_set_homogenous (box, hflag);
+    cbinds.set_homogenous (box, hflag);
   end set_homogenous;
 
   procedure set_padding
     (box     : box_access_t;
      padding : natural) is
   begin
-    c_set_padding (box, c.int (padding));
+    cbinds.set_padding (box, c.int (padding));
   end set_padding;
 
   procedure set_spacing
     (box     : box_access_t;
      spacing : natural) is
   begin
-    c_set_spacing (box, c.int (spacing));
+    cbinds.set_spacing (box, c.int (spacing));
   end set_spacing;
 
   procedure set_depth
     (box   : box_access_t;
      depth : natural) is
   begin
-    c_set_depth (box, c.int (depth));
+    cbinds.set_depth (box, c.int (depth));
   end set_depth;
 
 end agar.gui.widget.box;

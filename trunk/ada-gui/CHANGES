@@ -19,3 +19,7 @@
 20080901 code: added agar.gui.widget.graph
 20080903 code: added all remaining API sections (types only).
 20080905 code: fixed graph structures.
+20080905 code: use subpackages instead of prefixes for C-typed functions.
+20080905 code: move private data into private record types.
+20080905 code: added agar.gui.widget.combo API functions.
+20080905 code: added agar.gui.widget.console API functions.

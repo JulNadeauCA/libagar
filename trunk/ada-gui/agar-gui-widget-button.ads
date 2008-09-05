@@ -20,24 +20,8 @@ package agar.gui.widget.button is
   BUTTON_INVSTATE      : constant flags_t := 16#400#;
   BUTTON_EXPAND        : constant flags_t := BUTTON_HFILL or BUTTON_VFILL;
 
-  type button_t is record
-    widget      : widget_t;
-    state       : c.int;
-    text        : cs.chars_ptr;
-    surface     : c.int;
-    surface_src : agar.gui.surface.surface_access_t;
-    justify     : agar.gui.text.justify_t;
-    valign      : agar.gui.text.valign_t;
-    flags       : flags_t;
-    left_pad    : c.int;
-    right_pad   : c.int;
-    top_pad     : c.int;
-    bottom_pad  : c.int;
-    delay_to    : agar.core.timeout.timeout_t;
-    repeat_to   : agar.core.timeout.timeout_t;
-  end record;
+  type button_t is private;
   type button_access_t is access all button_t;
-  pragma convention (c, button_t);
   pragma convention (c, button_access_t);
 
   function allocate
@@ -166,4 +150,24 @@ package agar.gui.widget.button is
      text    : string);
   pragma inline (text_no_copy);
 
+private
+
+  type button_t is record
+    widget      : widget_t;
+    state       : c.int;
+    text        : cs.chars_ptr;
+    surface     : c.int;
+    surface_src : agar.gui.surface.surface_access_t;
+    justify     : agar.gui.text.justify_t;
+    valign      : agar.gui.text.valign_t;
+    flags       : flags_t;
+    left_pad    : c.int;
+    right_pad   : c.int;
+    top_pad     : c.int;
+    bottom_pad  : c.int;
+    delay_to    : agar.core.timeout.timeout_t;
+    repeat_to   : agar.core.timeout.timeout_t;
+  end record;
+  pragma convention (c, button_t);
+ 
 end agar.gui.widget.button;

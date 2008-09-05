@@ -14,16 +14,8 @@ package agar.gui.widget.box is
   BOX_FRAME      : constant flags_t := 16#08#;
   BOX_EXPAND     : constant flags_t := BOX_HFILL or BOX_VFILL;
 
-  type box_t is record
-    widget   : widget_t;
-    box_type : type_t;
-    flags    : flags_t; 
-    padding  : c.int;
-    spacing  : c.int;
-    depth    : c.int;
-  end record;
+  type box_t is private;
   type box_access_t is access all box_t;
-  pragma convention (c, box_t);
   pragma convention (c, box_access_t);
 
   function allocate
@@ -61,5 +53,17 @@ package agar.gui.widget.box is
     (box   : box_access_t;
      depth : natural);
   pragma inline (set_depth);
+
+private
+
+  type box_t is record
+    widget   : widget_t;
+    box_type : type_t;
+    flags    : flags_t; 
+    padding  : c.int;
+    spacing  : c.int;
+    depth    : c.int;
+  end record;
+  pragma convention (c, box_t);
 
 end agar.gui.widget.box;
