@@ -16,6 +16,11 @@ agar.core.event.arg_type_t:enum ag_evarg_type
 agar.core.event.callback_t:AG_EventFn
 agar.core.event.event_t:AG_Event
 agar.core.event.event_t:struct ag_event
+agar.core.file.info_access_t:AG_FileInfo *
+agar.core.file.info_access_t:struct ag_file_info *
+agar.core.file.info_t:AG_FileInfo
+agar.core.file.info_t:struct ag_file_info
+agar.core.file.type_t:enum ag_file_info_type
 agar.core.object.checksum_alg_t:enum ag_object_checksum_alg
 agar.core.object.class_t:AG_ObjectClass
 agar.core.object.class_t:struct ag_object_class

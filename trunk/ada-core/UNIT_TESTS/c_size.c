@@ -1,3 +1,5 @@
+/* auto generated, do not edit */
+
 #include <agar/core.h>
 
 #include <stdio.h>
@@ -7,7 +9,6 @@ struct {
   const char *type_name;
   unsigned int type_size;
 } types[] = {
-  /* auto generated - do not edit */
   { "enum ag_byte_order", sizeof (enum ag_byte_order) },
   { "AG_DataSource", sizeof (AG_DataSource) },
   { "struct ag_data_source", sizeof (struct ag_data_source) },
@@ -26,6 +27,11 @@ struct {
   { "AG_EventFn", sizeof (AG_EventFn) },
   { "AG_Event", sizeof (AG_Event) },
   { "struct ag_event", sizeof (struct ag_event) },
+  { "AG_FileInfo *", sizeof (AG_FileInfo *) },
+  { "struct ag_file_info *", sizeof (struct ag_file_info *) },
+  { "AG_FileInfo", sizeof (AG_FileInfo) },
+  { "struct ag_file_info", sizeof (struct ag_file_info) },
+  { "enum ag_file_info_type", sizeof (enum ag_file_info_type) },
   { "enum ag_object_checksum_alg", sizeof (enum ag_object_checksum_alg) },
   { "AG_ObjectClass", sizeof (AG_ObjectClass) },
   { "struct ag_object_class", sizeof (struct ag_object_class) },

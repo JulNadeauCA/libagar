@@ -18,6 +18,10 @@ pragma source_file_name(agar.core.error, spec_file_name => "agar-core-error.ads"
 pragma source_file_name(agar.core.event, spec_file_name => "agar-core-event.ads");
 pragma source_file_name(agar.core.event, body_file_name => "agar-core-event.adb");
 
+-- ./agar-core-file.apk
+pragma source_file_name(agar.core.file, spec_file_name => "agar-core-file.ads");
+pragma source_file_name(agar.core.file, body_file_name => "agar-core-file.adb");
+
 -- ./agar-core-limits.apk
 pragma source_file_name(agar.core.limits, spec_file_name => "agar-core-limits.ads");
 

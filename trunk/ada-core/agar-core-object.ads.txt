@@ -397,12 +397,6 @@ package agar.core.object is
 
   function allocate
     (parent : agar.core.types.void_ptr_t;
-     name   : cs.chars_ptr;
-     class  : class_access_t) return object_access_t;
-  pragma import (c, allocate, "AG_ObjectNew");
-
-  function allocate
-    (parent : agar.core.types.void_ptr_t;
      name   : string;
      class  : class_access_t) return object_access_t;
   pragma inline (allocate);
@@ -411,12 +405,6 @@ package agar.core.object is
     (parent : object_access_t;
      object : object_access_t);
   pragma import (c, attach, "AG_ObjectAttach");
-
-  function attach_to_named
-    (vfsroot : object_access_t;
-     path    : cs.chars_ptr;
-     child   : object_access_t) return c.int;
-  pragma import (c, attach_to_named, "AG_ObjectAttachToNamed");
 
   function attach_to_named
     (vfsroot : object_access_t;
@@ -451,11 +439,6 @@ package agar.core.object is
 
   function parent (object : object_access_t) return object_access_t;
   pragma inline (parent);
-
-  function find
-    (vfsroot : object_access_t;
-     name    : cs.chars_ptr) return object_access_t;
-  pragma import (c, find, "AG_ObjectFind");
 
   function find
     (vfsroot : object_access_t;
@@ -542,11 +525,6 @@ package agar.core.object is
 
   function save_to_file
     (object : object_access_t;
-     name   : cs.chars_ptr) return c.int;
-  pragma import (c, save_to_file, "AG_ObjectSaveToFile");
-
-  function save_to_file
-    (object : object_access_t;
      name   : string) return boolean;
   pragma inline (save_to_file);
 
@@ -578,18 +556,8 @@ package agar.core.object is
 
   function load_from_file
     (object : object_access_t;
-     name   : cs.chars_ptr) return c.int;
-  pragma import (c, load_from_file, "AG_ObjectLoadFromFile");
-
-  function load_from_file
-    (object : object_access_t;
      name   : string) return boolean;
   pragma inline (load_from_file);
-
-  function load_generic_from_file
-    (object : object_access_t;
-     name   : cs.chars_ptr) return c.int;
-  pragma import (c, load_generic_from_file, "AG_ObjectLoadGenericFromFile");
 
   function load_generic_from_file
     (object : object_access_t;
@@ -637,51 +605,25 @@ package agar.core.object is
   pragma import (c, unregister_class, "AG_UnregisterClass");
 
   procedure register_namespace
-    (name   : cs.chars_ptr;
-     prefix : cs.chars_ptr;
-     url    : cs.chars_ptr);
-  pragma import (c, register_namespace, "AG_RegisterNamespace");
-
-  procedure register_namespace
     (name   : string;
      prefix : string;
      url    : string);
   pragma inline (register_namespace);
 
-  procedure unregister_namespace (name : cs.chars_ptr);
-  pragma import (c, unregister_namespace, "AG_UnregisterNamespace");
-
   procedure unregister_namespace (name : string);
   pragma inline (unregister_namespace);
-
-  function lookup_class (spec : cs.chars_ptr) return class_access_t;
-  pragma import (c, lookup_class, "AG_LookupClass");
 
   function lookup_class (spec : string) return class_access_t;
   pragma inline (lookup_class);
 
-  function load_class (spec : cs.chars_ptr) return class_access_t;
-  pragma import (c, load_class, "AG_LoadClass");
-
   function load_class (spec : string) return class_access_t;
   pragma inline (load_class);
-
-  procedure register_module_directory (path : cs.chars_ptr);
-  pragma import (c, register_module_directory, "AG_RegisterModuleDirectory");
 
   procedure register_module_directory (path : string);
   pragma inline (register_module_directory);
 
-  procedure unregister_module_directory (path : cs.chars_ptr);
-  pragma import (c, unregister_module_directory, "AG_UnregisterModuleDirectory");
-
   procedure unregister_module_directory (path : string);
   pragma inline (unregister_module_directory);
-
-  function of_class
-    (object  : object_access_t;
-     pattern : cs.chars_ptr) return c.int;
-  pragma import (c, of_class, "agar_object_of_class");
 
   function of_class
     (object  : object_access_t;

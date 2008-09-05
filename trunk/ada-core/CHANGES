@@ -18,3 +18,6 @@
                in preparation for array variants.
 20080828 code: update to event API.
 20080828 code: added prop API as subpackage of agar.core.object.
+20080905 code: use subpackages for C functions instead of prefixes.
+20080905 code: added agar.core.file.
+20080905 version: agar-core-ada-0.13

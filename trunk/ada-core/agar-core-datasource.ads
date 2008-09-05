@@ -111,10 +111,6 @@ package agar.core.datasource is
   pragma convention (c, datasource_access_t);
 
   -- API
-  function open
-    (path : cs.chars_ptr;
-     mode : cs.chars_ptr) return datasource_access_t;
-  pragma import (c, open, "AG_OpenFile");
 
   function open
     (path : string;

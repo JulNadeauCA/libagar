@@ -33,11 +33,6 @@ package agar.core is
   pragma inline (get_version);
 
   function init
-    (progname : cs.chars_ptr;
-     flags    : init_flags_t := 0) return c.int;
-  pragma import (c, init, "AG_InitCore");
-
-  function init
     (progname : string;
      flags    : init_flags_t := 0) return boolean;
   pragma inline (init);

@@ -1,10 +1,17 @@
 #!/bin/sh
 
+if [ $# -ne 1 ]
+then
+  echo "usage: typemap" 1>&2
+  exit 111
+fi
+
+map="$1"
+
 IFS="
 "
 
-echo "  -- auto generated - do not edit"
-for t in `cat types-map.txt | awk -F: '{print $1}' | uniq | sort`
+for t in `cat "${map}" | awk -F: '{print $1}' | uniq | sort`
 do
   tr_name=`echo $t | tr . _`
   tr_name=`echo $tr_name | tr -d ' '`
@@ -25,7 +32,7 @@ cat <<EOF
   types : aliased constant type_lookup_t := (
 EOF
 
-for t in `cat types-map.txt | awk -F: '{print $1}' | uniq | sort`
+for t in `cat "${map}" | awk -F: '{print $1}' | uniq | sort`
 do
   tr_name=`echo $t | tr . _`
   tr_name=`echo $tr_name | tr -d ' '`
