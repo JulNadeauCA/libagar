@@ -534,29 +534,23 @@ EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 static void
 SelectInsn(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
 	AG_Box *box = AG_PTR(2);
-	AG_TlistItem *it;
+	AG_TlistItem *ti = AG_PTR(3);
+	RG_AnimInsn *insn = ti->p1;
 
-	if ((it = AG_TlistSelectedItem(tl)) == NULL)
-		return;
-
-	EditInsn(ani, (RG_AnimInsn *)it->p1, box);
+	EditInsn(ani, insn, box);
 }
 
 static void
 SelectFrame(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
 	AG_Box *box = AG_PTR(2);
-	AG_TlistItem *it;
+	AG_TlistItem *ti = AG_PTR(3);
+	RG_AnimFrame *frame = ti->p1;
 
-	if ((it = AG_TlistSelectedItem(tl)) == NULL)
-		return;
-
-	EditFrame(ani, (RG_AnimFrame *)it->p1, box);
+	EditFrame(ani, frame, box);
 }
 
 static void
