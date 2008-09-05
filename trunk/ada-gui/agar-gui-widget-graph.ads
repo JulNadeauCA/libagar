@@ -58,7 +58,7 @@ package agar.gui.widget.graph is
     graph       : graph_access_t;
     vertices    : vertex_tail_queue.entry_t;
     sorted      : vertex_tail_queue.entry_t;
-    popup_menu  : agar.gui.widget.menu.popup_menu_t;
+    popup_menu  : agar.gui.widget.menu.popup_menu_access_t;
   end record;
   pragma convention (c, vertex_t);
 
@@ -75,7 +75,7 @@ package agar.gui.widget.graph is
     ptr         : agar.core.types.void_ptr_t;
     graph       : graph_access_t;
     edges       : edge_tail_queue.entry_t;
-    popup_menu  : agar.gui.widget.menu.popup_menu_t;
+    popup_menu  : agar.gui.widget.menu.popup_menu_access_t;
   end record;
   pragma convention (c, edge_t);
 
