@@ -108,7 +108,7 @@ typedef struct vg_node {
 
 typedef struct vg {
 	Uint flags;
-#define VG_ANTIALIAS	0x01		/* Anti-alias where possible */
+#define VG_NO_ANTIALIAS	0x01		/* Disable anti-aliasing */
 
 	AG_Mutex lock;
 
@@ -126,6 +126,7 @@ typedef struct vg {
 
 	VG_Node *root;			/* Tree of entities */
 	AG_TAILQ_HEAD(,vg_node) nodes;	/* List of entities */
+	AG_TAILQ_ENTRY(vg) user;	/* Entry in user list */
 } VG;
 
 extern const VG_NodeOps **vgNodeClasses;
