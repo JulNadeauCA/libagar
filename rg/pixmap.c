@@ -264,17 +264,11 @@ PollBrushes(AG_Event *event)
 static void
 SelectBrush(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	RG_Pixmap *px = AG_PTR(1);
-	AG_TlistItem *it;
+	AG_TlistItem *ti = AG_PTR(2);
+	RG_Brush *brush = ti->p1;
 
-	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
-		RG_Brush *br = it->p1;
-
-		px->curbrush = (px->curbrush == br) ? NULL : br;
-	} else {
-		px->curbrush = NULL;
-	}
+	px->curbrush = (px->curbrush == brush) ? NULL : brush;
 }
 
 static void

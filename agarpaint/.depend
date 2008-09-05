@@ -1,0 +1,498 @@
+agarpaint.o: agarpaint.c /usr/local/include/agar/agar/core.h \
+  /usr/local/include/agar/agar/core/core_begin.h \
+  /usr/local/include/agar/agar/config/debug.h \
+  /usr/local/include/agar/agar/config/lockdebug.h \
+  /usr/local/include/agar/agar/config/threads.h \
+  /usr/local/include/agar/agar/config/_mk_have_sys_types_h.h \
+  /usr/local/include/agar/agar/config/have_64bit.h \
+  /usr/local/include/agar/agar/config/have_long_double.h \
+  /usr/local/include/agar/agar/config/_mk_have_stdlib_h.h \
+  /usr/local/include/agar/agar/config/_mk_have_unistd_h.h \
+  /usr/local/include/agar/agar/config/_mk_have_unsigned_typedefs.h \
+  /usr/local/include/agar/agar/config/have_bounded_attribute.h \
+  /usr/local/include/agar/agar/config/have_format_attribute.h \
+  /usr/local/include/agar/agar/config/have_nonnull_attribute.h \
+  /usr/local/include/agar/agar/config/have_packed_attribute.h \
+  /usr/local/include/agar/agar/config/have_aligned_attribute.h \
+  /usr/local/include/agar/agar/core/threads.h \
+  /usr/local/include/agar/agar/config/have_pthreads.h \
+  /usr/include/pthread.h /usr/include/gentoo-multilib/amd64/pthread.h \
+  /usr/include/features.h /usr/include/gentoo-multilib/amd64/features.h \
+  /usr/include/sys/cdefs.h /usr/include/gentoo-multilib/amd64/sys/cdefs.h \
+  /usr/include/bits/wordsize.h \
+  /usr/include/gentoo-multilib/amd64/bits/wordsize.h \
+  /usr/include/gnu/stubs.h /usr/include/gentoo-multilib/amd64/gnu/stubs.h \
+  /usr/include/gnu/stubs-64.h \
+  /usr/include/gentoo-multilib/amd64/gnu/stubs-64.h /usr/include/sched.h \
+  /usr/include/gentoo-multilib/amd64/sched.h /usr/include/bits/types.h \
+  /usr/include/gentoo-multilib/amd64/bits/types.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/3.4.6/include/stddef.h \
+  /usr/include/bits/typesizes.h \
+  /usr/include/gentoo-multilib/amd64/bits/typesizes.h /usr/include/time.h \
+  /usr/include/gentoo-multilib/amd64/time.h /usr/include/bits/sched.h \
+  /usr/include/gentoo-multilib/amd64/bits/sched.h \
+  /usr/include/bits/time.h /usr/include/gentoo-multilib/amd64/bits/time.h \
+  /usr/include/xlocale.h /usr/include/gentoo-multilib/amd64/xlocale.h \
+  /usr/include/signal.h /usr/include/gentoo-multilib/amd64/signal.h \
+  /usr/include/bits/sigset.h \
+  /usr/include/gentoo-multilib/amd64/bits/sigset.h \
+  /usr/include/bits/pthreadtypes.h \
+  /usr/include/gentoo-multilib/amd64/bits/pthreadtypes.h \
+  /usr/include/bits/setjmp.h \
+  /usr/include/gentoo-multilib/amd64/bits/setjmp.h \
+  /usr/include/bits/signum.h \
+  /usr/include/gentoo-multilib/amd64/bits/signum.h \
+  /usr/include/bits/siginfo.h \
+  /usr/include/gentoo-multilib/amd64/bits/siginfo.h \
+  /usr/include/bits/sigaction.h \
+  /usr/include/gentoo-multilib/amd64/bits/sigaction.h \
+  /usr/include/bits/sigcontext.h \
+  /usr/include/gentoo-multilib/amd64/bits/sigcontext.h \
+  /usr/include/bits/sigstack.h \
+  /usr/include/gentoo-multilib/amd64/bits/sigstack.h \
+  /usr/include/sys/ucontext.h \
+  /usr/include/gentoo-multilib/amd64/sys/ucontext.h \
+  /usr/include/bits/sigthread.h \
+  /usr/include/gentoo-multilib/amd64/bits/sigthread.h \
+  /usr/include/sys/types.h /usr/include/gentoo-multilib/amd64/sys/types.h \
+  /usr/include/endian.h /usr/include/gentoo-multilib/amd64/endian.h \
+  /usr/include/bits/endian.h \
+  /usr/include/gentoo-multilib/amd64/bits/endian.h \
+  /usr/include/sys/select.h \
+  /usr/include/gentoo-multilib/amd64/sys/select.h \
+  /usr/include/bits/select.h \
+  /usr/include/gentoo-multilib/amd64/bits/select.h \
+  /usr/include/sys/sysmacros.h \
+  /usr/include/gentoo-multilib/amd64/sys/sysmacros.h \
+  /usr/include/stdlib.h /usr/include/gentoo-multilib/amd64/stdlib.h \
+  /usr/include/bits/waitflags.h \
+  /usr/include/gentoo-multilib/amd64/bits/waitflags.h \
+  /usr/include/bits/waitstatus.h \
+  /usr/include/gentoo-multilib/amd64/bits/waitstatus.h \
+  /usr/include/alloca.h /usr/include/gentoo-multilib/amd64/alloca.h \
+  /usr/include/unistd.h /usr/include/gentoo-multilib/amd64/unistd.h \
+  /usr/include/bits/posix_opt.h \
+  /usr/include/gentoo-multilib/amd64/bits/posix_opt.h \
+  /usr/include/bits/environments.h \
+  /usr/include/gentoo-multilib/amd64/bits/environments.h \
+  /usr/include/bits/confname.h \
+  /usr/include/gentoo-multilib/amd64/bits/confname.h \
+  /usr/include/getopt.h /usr/include/gentoo-multilib/amd64/getopt.h \
+  /usr/include/string.h /usr/include/gentoo-multilib/amd64/string.h \
+  /usr/include/stdio.h /usr/include/gentoo-multilib/amd64/stdio.h \
+  /usr/include/libio.h /usr/include/gentoo-multilib/amd64/libio.h \
+  /usr/include/_G_config.h /usr/include/gentoo-multilib/amd64/_G_config.h \
+  /usr/include/wchar.h /usr/include/gentoo-multilib/amd64/wchar.h \
+  /usr/include/bits/wchar.h \
+  /usr/include/gentoo-multilib/amd64/bits/wchar.h /usr/include/gconv.h \
+  /usr/include/gentoo-multilib/amd64/gconv.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/3.4.6/include/stdarg.h \
+  /usr/include/bits/stdio_lim.h \
+  /usr/include/gentoo-multilib/amd64/bits/stdio_lim.h \
+  /usr/include/bits/sys_errlist.h \
+  /usr/include/gentoo-multilib/amd64/bits/sys_errlist.h \
+  /usr/include/SDL/SDL.h /usr/include/SDL/SDL_main.h \
+  /usr/include/SDL/SDL_stdinc.h /usr/include/SDL/SDL_config.h \
+  /usr/include/SDL/SDL_platform.h /usr/include/strings.h \
+  /usr/include/gentoo-multilib/amd64/strings.h /usr/include/inttypes.h \
+  /usr/include/gentoo-multilib/amd64/inttypes.h /usr/include/stdint.h \
+  /usr/include/gentoo-multilib/amd64/stdint.h /usr/include/ctype.h \
+  /usr/include/gentoo-multilib/amd64/ctype.h /usr/include/iconv.h \
+  /usr/include/gentoo-multilib/amd64/iconv.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h \
+  /usr/include/SDL/SDL_audio.h /usr/include/SDL/SDL_error.h \
+  /usr/include/SDL/SDL_endian.h /usr/include/SDL/SDL_mutex.h \
+  /usr/include/SDL/SDL_thread.h /usr/include/SDL/SDL_rwops.h \
+  /usr/include/SDL/SDL_cdrom.h /usr/include/SDL/SDL_cpuinfo.h \
+  /usr/include/SDL/SDL_events.h /usr/include/SDL/SDL_active.h \
+  /usr/include/SDL/SDL_keyboard.h /usr/include/SDL/SDL_keysym.h \
+  /usr/include/SDL/SDL_mouse.h /usr/include/SDL/SDL_video.h \
+  /usr/include/SDL/SDL_joystick.h /usr/include/SDL/SDL_quit.h \
+  /usr/include/SDL/SDL_loadso.h /usr/include/SDL/SDL_timer.h \
+  /usr/include/SDL/SDL_version.h \
+  /usr/local/include/agar/agar/core/limits.h \
+  /usr/local/include/agar/agar/config/_mk_have_limits_h.h \
+  /usr/local/include/agar/agar/config/_mk_have_float_h.h \
+  /usr/local/include/agar/agar/config/have_long_long.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/3.4.6/include/limits.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/3.4.6/include/syslimits.h \
+  /usr/include/limits.h /usr/include/gentoo-multilib/amd64/limits.h \
+  /usr/include/bits/posix1_lim.h \
+  /usr/include/gentoo-multilib/amd64/bits/posix1_lim.h \
+  /usr/include/bits/local_lim.h \
+  /usr/include/gentoo-multilib/amd64/bits/local_lim.h \
+  /usr/include/linux/limits.h /usr/include/bits/posix2_lim.h \
+  /usr/include/gentoo-multilib/amd64/bits/posix2_lim.h \
+  /usr/include/bits/xopen_lim.h \
+  /usr/include/gentoo-multilib/amd64/bits/xopen_lim.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/3.4.6/include/float.h \
+  /usr/local/include/agar/agar/core/queue.h \
+  /usr/local/include/agar/agar/core/cpuinfo.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h \
+  /usr/local/include/agar/agar/config/_mk_big_endian.h \
+  /usr/local/include/agar/agar/config/_mk_little_endian.h \
+  /usr/local/include/agar/agar/core/core_init.h \
+  /usr/local/include/agar/agar/core/error.h \
+  /usr/local/include/agar/agar/config/free_null_is_a_noop.h \
+  /usr/local/include/agar/agar/core/string_compat.h \
+  /usr/local/include/agar/agar/core/snprintf.h \
+  /usr/local/include/agar/agar/config/have_snprintf.h \
+  /usr/local/include/agar/agar/core/vsnprintf.h \
+  /usr/local/include/agar/agar/config/have_vsnprintf.h \
+  /usr/local/include/agar/agar/core/vasprintf.h \
+  /usr/local/include/agar/agar/core/data_source.h \
+  /usr/local/include/agar/agar/core/load_den.h \
+  /usr/local/include/agar/agar/core/load_color.h \
+  /usr/local/include/agar/agar/core/load_integral.h \
+  /usr/local/include/agar/agar/core/byteswap.h \
+  /usr/local/include/agar/agar/core/load_real.h \
+  /usr/local/include/agar/agar/core/load_string.h \
+  /usr/local/include/agar/agar/core/load_version.h \
+  /usr/local/include/agar/agar/core/version.h \
+  /usr/local/include/agar/agar/core/object.h \
+  /usr/local/include/agar/agar/core/timeout.h \
+  /usr/local/include/agar/agar/core/event.h \
+  /usr/local/include/agar/agar/core/prop.h \
+  /usr/local/include/agar/agar/core/class.h \
+  /usr/local/include/agar/agar/core/config.h \
+  /usr/local/include/agar/agar/core/rcs.h \
+  /usr/local/include/agar/agar/config/network.h \
+  /usr/local/include/agar/agar/core/file.h \
+  /usr/local/include/agar/agar/core/dir.h \
+  /usr/local/include/agar/agar/core/dso.h \
+  /usr/local/include/agar/agar/core/core_close.h \
+  /usr/local/include/agar/agar/gui.h \
+  /usr/local/include/agar/agar/gui/view.h \
+  /usr/local/include/agar/agar/config/have_opengl.h \
+  /usr/local/include/agar/agar/config/view_8bpp.h \
+  /usr/local/include/agar/agar/config/view_16bpp.h \
+  /usr/local/include/agar/agar/config/view_24bpp.h \
+  /usr/local/include/agar/agar/config/view_32bpp.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h \
+  /usr/local/include/agar/agar/gui/iconmgr.h \
+  /usr/local/include/agar/agar/gui/load_surface.h \
+  /usr/local/include/agar/agar/gui/icons.h \
+  /usr/local/include/agar/agar/gui/primitive.h \
+  /usr/local/include/agar/agar/gui/box.h \
+  /usr/local/include/agar/agar/gui/widget.h \
+  /usr/local/include/agar/agar/gui/colors.h \
+  /usr/local/include/agar/agar/gui/style.h \
+  /usr/local/include/agar/agar/gui/button.h \
+  /usr/local/include/agar/agar/gui/text.h \
+  /usr/local/include/agar/agar/gui/checkbox.h \
+  /usr/local/include/agar/agar/gui/combo.h \
+  /usr/local/include/agar/agar/gui/textbox.h \
+  /usr/local/include/agar/agar/gui/editable.h \
+  /usr/local/include/agar/agar/gui/scrollbar.h \
+  /usr/local/include/agar/agar/gui/window.h \
+  /usr/local/include/agar/agar/gui/tlist.h \
+  /usr/local/include/agar/agar/gui/menu.h \
+  /usr/local/include/agar/agar/gui/toolbar.h \
+  /usr/local/include/agar/agar/gui/label.h \
+  /usr/local/include/agar/agar/gui/console.h \
+  /usr/local/include/agar/agar/gui/file_dlg.h \
+  /usr/local/include/agar/agar/gui/pane.h \
+  /usr/local/include/agar/agar/gui/fixed.h \
+  /usr/local/include/agar/agar/gui/fspinbutton.h \
+  /usr/local/include/agar/agar/gui/ucombo.h \
+  /usr/local/include/agar/agar/gui/units.h \
+  /usr/local/include/agar/agar/config/historical_units.h \
+  /usr/local/include/agar/agar/gui/fixed_plotter.h \
+  /usr/local/include/agar/agar/gui/glview.h \
+  /usr/local/include/agar/agar/gui/graph.h \
+  /usr/local/include/agar/agar/gui/hbox.h \
+  /usr/local/include/agar/agar/gui/hsvpal.h \
+  /usr/local/include/agar/agar/gui/icon.h \
+  /usr/local/include/agar/agar/gui/keymap.h \
+  /usr/local/include/agar/agar/gui/mfspinbutton.h \
+  /usr/local/include/agar/agar/gui/mpane.h \
+  /usr/local/include/agar/agar/gui/mspinbutton.h \
+  /usr/local/include/agar/agar/gui/notebook.h \
+  /usr/local/include/agar/agar/gui/numerical.h \
+  /usr/local/include/agar/agar/gui/objsel.h \
+  /usr/local/include/agar/agar/gui/pixmap.h \
+  /usr/local/include/agar/agar/gui/progress_bar.h \
+  /usr/local/include/agar/agar/gui/radio.h \
+  /usr/local/include/agar/agar/gui/separator.h \
+  /usr/local/include/agar/agar/gui/socket.h \
+  /usr/local/include/agar/agar/gui/spinbutton.h \
+  /usr/local/include/agar/agar/gui/slider.h \
+  /usr/local/include/agar/agar/gui/statusbar.h \
+  /usr/local/include/agar/agar/gui/table.h \
+  /usr/local/include/agar/agar/gui/tableview.h \
+  /usr/local/include/agar/agar/gui/text_cache.h \
+  /usr/local/include/agar/agar/gui/vbox.h \
+  /usr/local/include/agar/agar/gui/load_xcf.h \
+  /usr/local/include/agar/agar/map.h \
+  /usr/local/include/agar/agar/map/map.h \
+  /usr/local/include/agar/agar/map/nodemask.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h \
+  /usr/local/include/agar/agar/rg/tileset.h \
+  /usr/local/include/agar/agar/rg/transform.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h \
+  /usr/local/include/agar/agar/rg/tile.h \
+  /usr/local/include/agar/agar/rg/feature.h \
+  /usr/local/include/agar/agar/rg/pixmap.h \
+  /usr/local/include/agar/agar/rg/animation.h \
+  /usr/local/include/agar/agar/rg/texture.h \
+  /usr/local/include/agar/agar/rg/prim.h \
+  /usr/local/include/agar/agar/map/mapview.h \
+  /usr/local/include/agar/agar/map/mapedit.h \
+  /usr/local/include/agar/agar/map/tool.h \
+  /usr/local/include/agar/agar/map/actor.h \
+  /usr/local/include/agar/agar/map/icons.h config/sharedir.h \
+  config/have_agar_dev.h config/version.h config/release.h \
+  config/have_getopt.h config/enable_nls.h config/localedir.h \
+  /usr/local/include/agar/agar/dev.h \
+  /usr/local/include/agar/agar/dev/dev.h \
+  /usr/local/include/agar/agar/config/have_jpeg.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h agarpaint.h
+agarpaint.lo: agarpaint.c /usr/local/include/agar/agar/core.h \
+  /usr/local/include/agar/agar/core/core_begin.h \
+  /usr/local/include/agar/agar/config/debug.h \
+  /usr/local/include/agar/agar/config/lockdebug.h \
+  /usr/local/include/agar/agar/config/threads.h \
+  /usr/local/include/agar/agar/config/_mk_have_sys_types_h.h \
+  /usr/local/include/agar/agar/config/have_64bit.h \
+  /usr/local/include/agar/agar/config/have_long_double.h \
+  /usr/local/include/agar/agar/config/_mk_have_stdlib_h.h \
+  /usr/local/include/agar/agar/config/_mk_have_unistd_h.h \
+  /usr/local/include/agar/agar/config/_mk_have_unsigned_typedefs.h \
+  /usr/local/include/agar/agar/config/have_bounded_attribute.h \
+  /usr/local/include/agar/agar/config/have_format_attribute.h \
+  /usr/local/include/agar/agar/config/have_nonnull_attribute.h \
+  /usr/local/include/agar/agar/config/have_packed_attribute.h \
+  /usr/local/include/agar/agar/config/have_aligned_attribute.h \
+  /usr/local/include/agar/agar/core/threads.h \
+  /usr/local/include/agar/agar/config/have_pthreads.h \
+  /usr/include/pthread.h /usr/include/gentoo-multilib/amd64/pthread.h \
+  /usr/include/features.h /usr/include/gentoo-multilib/amd64/features.h \
+  /usr/include/sys/cdefs.h /usr/include/gentoo-multilib/amd64/sys/cdefs.h \
+  /usr/include/bits/wordsize.h \
+  /usr/include/gentoo-multilib/amd64/bits/wordsize.h \
+  /usr/include/gnu/stubs.h /usr/include/gentoo-multilib/amd64/gnu/stubs.h \
+  /usr/include/gnu/stubs-64.h \
+  /usr/include/gentoo-multilib/amd64/gnu/stubs-64.h /usr/include/sched.h \
+  /usr/include/gentoo-multilib/amd64/sched.h /usr/include/bits/types.h \
+  /usr/include/gentoo-multilib/amd64/bits/types.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/3.4.6/include/stddef.h \
+  /usr/include/bits/typesizes.h \
+  /usr/include/gentoo-multilib/amd64/bits/typesizes.h /usr/include/time.h \
+  /usr/include/gentoo-multilib/amd64/time.h /usr/include/bits/sched.h \
+  /usr/include/gentoo-multilib/amd64/bits/sched.h \
+  /usr/include/bits/time.h /usr/include/gentoo-multilib/amd64/bits/time.h \
+  /usr/include/xlocale.h /usr/include/gentoo-multilib/amd64/xlocale.h \
+  /usr/include/signal.h /usr/include/gentoo-multilib/amd64/signal.h \
+  /usr/include/bits/sigset.h \
+  /usr/include/gentoo-multilib/amd64/bits/sigset.h \
+  /usr/include/bits/pthreadtypes.h \
+  /usr/include/gentoo-multilib/amd64/bits/pthreadtypes.h \
+  /usr/include/bits/setjmp.h \
+  /usr/include/gentoo-multilib/amd64/bits/setjmp.h \
+  /usr/include/bits/signum.h \
+  /usr/include/gentoo-multilib/amd64/bits/signum.h \
+  /usr/include/bits/siginfo.h \
+  /usr/include/gentoo-multilib/amd64/bits/siginfo.h \
+  /usr/include/bits/sigaction.h \
+  /usr/include/gentoo-multilib/amd64/bits/sigaction.h \
+  /usr/include/bits/sigcontext.h \
+  /usr/include/gentoo-multilib/amd64/bits/sigcontext.h \
+  /usr/include/bits/sigstack.h \
+  /usr/include/gentoo-multilib/amd64/bits/sigstack.h \
+  /usr/include/sys/ucontext.h \
+  /usr/include/gentoo-multilib/amd64/sys/ucontext.h \
+  /usr/include/bits/sigthread.h \
+  /usr/include/gentoo-multilib/amd64/bits/sigthread.h \
+  /usr/include/sys/types.h /usr/include/gentoo-multilib/amd64/sys/types.h \
+  /usr/include/endian.h /usr/include/gentoo-multilib/amd64/endian.h \
+  /usr/include/bits/endian.h \
+  /usr/include/gentoo-multilib/amd64/bits/endian.h \
+  /usr/include/sys/select.h \
+  /usr/include/gentoo-multilib/amd64/sys/select.h \
+  /usr/include/bits/select.h \
+  /usr/include/gentoo-multilib/amd64/bits/select.h \
+  /usr/include/sys/sysmacros.h \
+  /usr/include/gentoo-multilib/amd64/sys/sysmacros.h \
+  /usr/include/stdlib.h /usr/include/gentoo-multilib/amd64/stdlib.h \
+  /usr/include/bits/waitflags.h \
+  /usr/include/gentoo-multilib/amd64/bits/waitflags.h \
+  /usr/include/bits/waitstatus.h \
+  /usr/include/gentoo-multilib/amd64/bits/waitstatus.h \
+  /usr/include/alloca.h /usr/include/gentoo-multilib/amd64/alloca.h \
+  /usr/include/unistd.h /usr/include/gentoo-multilib/amd64/unistd.h \
+  /usr/include/bits/posix_opt.h \
+  /usr/include/gentoo-multilib/amd64/bits/posix_opt.h \
+  /usr/include/bits/environments.h \
+  /usr/include/gentoo-multilib/amd64/bits/environments.h \
+  /usr/include/bits/confname.h \
+  /usr/include/gentoo-multilib/amd64/bits/confname.h \
+  /usr/include/getopt.h /usr/include/gentoo-multilib/amd64/getopt.h \
+  /usr/include/string.h /usr/include/gentoo-multilib/amd64/string.h \
+  /usr/include/stdio.h /usr/include/gentoo-multilib/amd64/stdio.h \
+  /usr/include/libio.h /usr/include/gentoo-multilib/amd64/libio.h \
+  /usr/include/_G_config.h /usr/include/gentoo-multilib/amd64/_G_config.h \
+  /usr/include/wchar.h /usr/include/gentoo-multilib/amd64/wchar.h \
+  /usr/include/bits/wchar.h \
+  /usr/include/gentoo-multilib/amd64/bits/wchar.h /usr/include/gconv.h \
+  /usr/include/gentoo-multilib/amd64/gconv.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/3.4.6/include/stdarg.h \
+  /usr/include/bits/stdio_lim.h \
+  /usr/include/gentoo-multilib/amd64/bits/stdio_lim.h \
+  /usr/include/bits/sys_errlist.h \
+  /usr/include/gentoo-multilib/amd64/bits/sys_errlist.h \
+  /usr/include/SDL/SDL.h /usr/include/SDL/SDL_main.h \
+  /usr/include/SDL/SDL_stdinc.h /usr/include/SDL/SDL_config.h \
+  /usr/include/SDL/SDL_platform.h /usr/include/strings.h \
+  /usr/include/gentoo-multilib/amd64/strings.h /usr/include/inttypes.h \
+  /usr/include/gentoo-multilib/amd64/inttypes.h /usr/include/stdint.h \
+  /usr/include/gentoo-multilib/amd64/stdint.h /usr/include/ctype.h \
+  /usr/include/gentoo-multilib/amd64/ctype.h /usr/include/iconv.h \
+  /usr/include/gentoo-multilib/amd64/iconv.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h \
+  /usr/include/SDL/SDL_audio.h /usr/include/SDL/SDL_error.h \
+  /usr/include/SDL/SDL_endian.h /usr/include/SDL/SDL_mutex.h \
+  /usr/include/SDL/SDL_thread.h /usr/include/SDL/SDL_rwops.h \
+  /usr/include/SDL/SDL_cdrom.h /usr/include/SDL/SDL_cpuinfo.h \
+  /usr/include/SDL/SDL_events.h /usr/include/SDL/SDL_active.h \
+  /usr/include/SDL/SDL_keyboard.h /usr/include/SDL/SDL_keysym.h \
+  /usr/include/SDL/SDL_mouse.h /usr/include/SDL/SDL_video.h \
+  /usr/include/SDL/SDL_joystick.h /usr/include/SDL/SDL_quit.h \
+  /usr/include/SDL/SDL_loadso.h /usr/include/SDL/SDL_timer.h \
+  /usr/include/SDL/SDL_version.h \
+  /usr/local/include/agar/agar/core/limits.h \
+  /usr/local/include/agar/agar/config/_mk_have_limits_h.h \
+  /usr/local/include/agar/agar/config/_mk_have_float_h.h \
+  /usr/local/include/agar/agar/config/have_long_long.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/3.4.6/include/limits.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/3.4.6/include/syslimits.h \
+  /usr/include/limits.h /usr/include/gentoo-multilib/amd64/limits.h \
+  /usr/include/bits/posix1_lim.h \
+  /usr/include/gentoo-multilib/amd64/bits/posix1_lim.h \
+  /usr/include/bits/local_lim.h \
+  /usr/include/gentoo-multilib/amd64/bits/local_lim.h \
+  /usr/include/linux/limits.h /usr/include/bits/posix2_lim.h \
+  /usr/include/gentoo-multilib/amd64/bits/posix2_lim.h \
+  /usr/include/bits/xopen_lim.h \
+  /usr/include/gentoo-multilib/amd64/bits/xopen_lim.h \
+  /usr/lib/gcc/x86_64-pc-linux-gnu/3.4.6/include/float.h \
+  /usr/local/include/agar/agar/core/queue.h \
+  /usr/local/include/agar/agar/core/cpuinfo.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h \
+  /usr/local/include/agar/agar/config/_mk_big_endian.h \
+  /usr/local/include/agar/agar/config/_mk_little_endian.h \
+  /usr/local/include/agar/agar/core/core_init.h \
+  /usr/local/include/agar/agar/core/error.h \
+  /usr/local/include/agar/agar/config/free_null_is_a_noop.h \
+  /usr/local/include/agar/agar/core/string_compat.h \
+  /usr/local/include/agar/agar/core/snprintf.h \
+  /usr/local/include/agar/agar/config/have_snprintf.h \
+  /usr/local/include/agar/agar/core/vsnprintf.h \
+  /usr/local/include/agar/agar/config/have_vsnprintf.h \
+  /usr/local/include/agar/agar/core/vasprintf.h \
+  /usr/local/include/agar/agar/core/data_source.h \
+  /usr/local/include/agar/agar/core/load_den.h \
+  /usr/local/include/agar/agar/core/load_color.h \
+  /usr/local/include/agar/agar/core/load_integral.h \
+  /usr/local/include/agar/agar/core/byteswap.h \
+  /usr/local/include/agar/agar/core/load_real.h \
+  /usr/local/include/agar/agar/core/load_string.h \
+  /usr/local/include/agar/agar/core/load_version.h \
+  /usr/local/include/agar/agar/core/version.h \
+  /usr/local/include/agar/agar/core/object.h \
+  /usr/local/include/agar/agar/core/timeout.h \
+  /usr/local/include/agar/agar/core/event.h \
+  /usr/local/include/agar/agar/core/prop.h \
+  /usr/local/include/agar/agar/core/class.h \
+  /usr/local/include/agar/agar/core/config.h \
+  /usr/local/include/agar/agar/core/rcs.h \
+  /usr/local/include/agar/agar/config/network.h \
+  /usr/local/include/agar/agar/core/file.h \
+  /usr/local/include/agar/agar/core/dir.h \
+  /usr/local/include/agar/agar/core/dso.h \
+  /usr/local/include/agar/agar/core/core_close.h \
+  /usr/local/include/agar/agar/gui.h \
+  /usr/local/include/agar/agar/gui/view.h \
+  /usr/local/include/agar/agar/config/have_opengl.h \
+  /usr/local/include/agar/agar/config/view_8bpp.h \
+  /usr/local/include/agar/agar/config/view_16bpp.h \
+  /usr/local/include/agar/agar/config/view_24bpp.h \
+  /usr/local/include/agar/agar/config/view_32bpp.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h \
+  /usr/local/include/agar/agar/gui/iconmgr.h \
+  /usr/local/include/agar/agar/gui/load_surface.h \
+  /usr/local/include/agar/agar/gui/icons.h \
+  /usr/local/include/agar/agar/gui/primitive.h \
+  /usr/local/include/agar/agar/gui/box.h \
+  /usr/local/include/agar/agar/gui/widget.h \
+  /usr/local/include/agar/agar/gui/colors.h \
+  /usr/local/include/agar/agar/gui/style.h \
+  /usr/local/include/agar/agar/gui/button.h \
+  /usr/local/include/agar/agar/gui/text.h \
+  /usr/local/include/agar/agar/gui/checkbox.h \
+  /usr/local/include/agar/agar/gui/combo.h \
+  /usr/local/include/agar/agar/gui/textbox.h \
+  /usr/local/include/agar/agar/gui/editable.h \
+  /usr/local/include/agar/agar/gui/scrollbar.h \
+  /usr/local/include/agar/agar/gui/window.h \
+  /usr/local/include/agar/agar/gui/tlist.h \
+  /usr/local/include/agar/agar/gui/menu.h \
+  /usr/local/include/agar/agar/gui/toolbar.h \
+  /usr/local/include/agar/agar/gui/label.h \
+  /usr/local/include/agar/agar/gui/console.h \
+  /usr/local/include/agar/agar/gui/file_dlg.h \
+  /usr/local/include/agar/agar/gui/pane.h \
+  /usr/local/include/agar/agar/gui/fixed.h \
+  /usr/local/include/agar/agar/gui/fspinbutton.h \
+  /usr/local/include/agar/agar/gui/ucombo.h \
+  /usr/local/include/agar/agar/gui/units.h \
+  /usr/local/include/agar/agar/config/historical_units.h \
+  /usr/local/include/agar/agar/gui/fixed_plotter.h \
+  /usr/local/include/agar/agar/gui/glview.h \
+  /usr/local/include/agar/agar/gui/graph.h \
+  /usr/local/include/agar/agar/gui/hbox.h \
+  /usr/local/include/agar/agar/gui/hsvpal.h \
+  /usr/local/include/agar/agar/gui/icon.h \
+  /usr/local/include/agar/agar/gui/keymap.h \
+  /usr/local/include/agar/agar/gui/mfspinbutton.h \
+  /usr/local/include/agar/agar/gui/mpane.h \
+  /usr/local/include/agar/agar/gui/mspinbutton.h \
+  /usr/local/include/agar/agar/gui/notebook.h \
+  /usr/local/include/agar/agar/gui/numerical.h \
+  /usr/local/include/agar/agar/gui/objsel.h \
+  /usr/local/include/agar/agar/gui/pixmap.h \
+  /usr/local/include/agar/agar/gui/progress_bar.h \
+  /usr/local/include/agar/agar/gui/radio.h \
+  /usr/local/include/agar/agar/gui/separator.h \
+  /usr/local/include/agar/agar/gui/socket.h \
+  /usr/local/include/agar/agar/gui/spinbutton.h \
+  /usr/local/include/agar/agar/gui/slider.h \
+  /usr/local/include/agar/agar/gui/statusbar.h \
+  /usr/local/include/agar/agar/gui/table.h \
+  /usr/local/include/agar/agar/gui/tableview.h \
+  /usr/local/include/agar/agar/gui/text_cache.h \
+  /usr/local/include/agar/agar/gui/vbox.h \
+  /usr/local/include/agar/agar/gui/load_xcf.h \
+  /usr/local/include/agar/agar/map.h \
+  /usr/local/include/agar/agar/map/map.h \
+  /usr/local/include/agar/agar/map/nodemask.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h \
+  /usr/local/include/agar/agar/rg/tileset.h \
+  /usr/local/include/agar/agar/rg/transform.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h \
+  /usr/local/include/agar/agar/rg/tile.h \
+  /usr/local/include/agar/agar/rg/feature.h \
+  /usr/local/include/agar/agar/rg/pixmap.h \
+  /usr/local/include/agar/agar/rg/animation.h \
+  /usr/local/include/agar/agar/rg/texture.h \
+  /usr/local/include/agar/agar/rg/prim.h \
+  /usr/local/include/agar/agar/map/mapview.h \
+  /usr/local/include/agar/agar/map/mapedit.h \
+  /usr/local/include/agar/agar/map/tool.h \
+  /usr/local/include/agar/agar/map/actor.h \
+  /usr/local/include/agar/agar/map/icons.h config/sharedir.h \
+  config/have_agar_dev.h config/version.h config/release.h \
+  config/have_getopt.h config/enable_nls.h config/localedir.h \
+  /usr/local/include/agar/agar/dev.h \
+  /usr/local/include/agar/agar/dev/dev.h \
+  /usr/local/include/agar/agar/config/have_jpeg.h \
+  /usr/include/SDL/begin_code.h /usr/include/SDL/close_code.h agarpaint.h

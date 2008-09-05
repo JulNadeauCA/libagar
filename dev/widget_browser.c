@@ -168,11 +168,10 @@ UpdateWindowCaption(AG_Event *event)
 }
 
 static void
-WidgetParams(AG_Event *event)
+EditWidgetParams(AG_Event *event)
 {
-	AG_Tlist *tl = AG_PTR(1);
-	AG_TlistItem *it;
-	AG_Widget *wid;
+	AG_TlistItem *ti = AG_PTR(2);
+	AG_Widget *wid = ti->p1;
 	AG_Window *win;
 	AG_Notebook *nb;
 	AG_NotebookTab *nTab;
@@ -180,11 +179,6 @@ WidgetParams(AG_Event *event)
 	AG_Label *lbl;
 	AG_Spinbutton *sb;
 	AG_MSpinbutton *msb;
-
-	if ((it = AG_TlistSelectedItem(tl)) == NULL) {
-		return;
-	}
-	wid = it->p1;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("GUI Debugger: <%s>"), OBJECT(wid)->name);
@@ -397,7 +391,7 @@ DEV_GuiDebugger(void)
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
 	tl = AG_TlistNewPolled(win, AG_TLIST_EXPAND, PollWindows, NULL);
-	AG_SetEvent(tl, "tlist-dblclick", WidgetParams, "%p", tl);
+	AG_SetEvent(tl, "tlist-dblclick", EditWidgetParams, "%p", tl);
 	AG_WidgetFocus(tl);
 
 	mi = AG_TlistSetPopup(tl, "window");

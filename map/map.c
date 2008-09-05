@@ -2426,13 +2426,13 @@ SetLayerVisibility(AG_Event *event)
 static void
 SelectLayer(AG_Event *event)
 {
-	AG_Tlist *tl = AG_SELF();
 	MAP *m = AG_PTR(1);
-	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	AG_TlistItem *ti = AG_PTR(2);
+	MAP_Layer *layer = ti->p1;
 	int nlayer;
 
 	for (nlayer = 0; nlayer < m->nlayers; nlayer++) {
-		if (&m->layers[nlayer] == (MAP_Layer *)it->p1) {
+		if (&m->layers[nlayer] == layer) {
 			m->cur_layer = nlayer;
 			break;
 		}

@@ -980,9 +980,9 @@ MouseButtonDown(AG_Event *event)
 			AG_CancelEvent(tl, "dblclick-expire");
 			if (tl->dblClickEv != NULL) {
 				AG_PostEvent(NULL, tl, tl->dblClickEv->name,
-				    "%p", ti->p1);
+				    "%p", ti);
 			}
-			AG_PostEvent(NULL, tl, "tlist-dblclick", "%p", ti->p1);
+			AG_PostEvent(NULL, tl, "tlist-dblclick", "%p", ti);
 			tl->dblclicked = NULL;
 		} else {
 			tl->dblclicked = ti->p1;
