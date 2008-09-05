@@ -49,9 +49,11 @@ pragma source_file_name(agar.gui.widget.checkbox, body_file_name => "agar-gui-wi
 
 -- ./agar-gui-widget-combo.apk
 pragma source_file_name(agar.gui.widget.combo, spec_file_name => "agar-gui-widget-combo.ads");
+pragma source_file_name(agar.gui.widget.combo, body_file_name => "agar-gui-widget-combo.adb");
 
 -- ./agar-gui-widget-console.apk
 pragma source_file_name(agar.gui.widget.console, spec_file_name => "agar-gui-widget-console.ads");
+pragma source_file_name(agar.gui.widget.console, body_file_name => "agar-gui-widget-console.adb");
 
 -- ./agar-gui-widget-editable.apk
 pragma source_file_name(agar.gui.widget.editable, spec_file_name => "agar-gui-widget-editable.ads");

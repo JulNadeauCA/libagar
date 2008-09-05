@@ -172,10 +172,16 @@ agar-gui-view.ads agar-gui-widget.ads agar-gui-widget-box.ads \
 agar-gui-widget-button.ads agar-gui-widget-checkbox.ads \
 agar-gui-widget-combo.ads agar-gui-widget-console.ads \
 agar-gui-widget-editable.ads agar-gui-widget-file_dialog.ads \
-agar-gui-widget-fixed.ads agar-gui-widget-graph.ads agar-gui-widget-label.ads \
-agar-gui-widget-menu.ads agar-gui-widget-pane.ads agar-gui-widget-scrollbar.ads \
+agar-gui-widget-fixed.ads agar-gui-widget-fixed_plotter.ads \
+agar-gui-widget-graph.ads agar-gui-widget-hsvpal.ads agar-gui-widget-icon.ads \
+agar-gui-widget-label.ads agar-gui-widget-menu.ads agar-gui-widget-mpane.ads \
+agar-gui-widget-notebook.ads agar-gui-widget-numerical.ads \
+agar-gui-widget-pane.ads agar-gui-widget-pixmap.ads \
+agar-gui-widget-progress_bar.ads agar-gui-widget-radio.ads \
+agar-gui-widget-scrollbar.ads agar-gui-widget-separator.ads \
+agar-gui-widget-slider.ads agar-gui-widget-socket.ads agar-gui-widget-table.ads \
 agar-gui-widget-textbox.ads agar-gui-widget-tlist.ads \
-agar-gui-widget-toolbar.ads agar-gui-window.ads
+agar-gui-widget-toolbar.ads agar-gui-widget-ucombo.ads agar-gui-window.ads
 	./ada-compile UNIT_TESTS/ada_size.adb
 
 UNIT_TESTS/ada_size.o:\
@@ -387,19 +393,23 @@ ada-compile agar-gui-widget-checkbox.adb agar-gui-widget-checkbox.ads
 agar-gui-widget-checkbox.o:\
 agar-gui-widget-checkbox.ali
 
-agar-gui-widget-combo.ali:\
-ada-compile agar-gui-widget-combo.ads agar-gui-widget-combo.ads \
+agar-gui-widget-combo.ads:\
 agar-gui-widget-button.ads agar-gui-widget-textbox.ads \
-agar-gui-widget-tlist.ads agar-gui-window.ads
-	./ada-compile agar-gui-widget-combo.ads
+	agar-gui-widget-tlist.ads agar-gui-window.ads
+
+agar-gui-widget-combo.ali:\
+ada-compile agar-gui-widget-combo.adb agar-gui-widget-combo.ads
+	./ada-compile agar-gui-widget-combo.adb
 
 agar-gui-widget-combo.o:\
 agar-gui-widget-combo.ali
 
-agar-gui-widget-console.ali:\
-ada-compile agar-gui-widget-console.ads agar-gui-widget-console.ads \
+agar-gui-widget-console.ads:\
 agar-gui-text.ads agar-gui-widget-scrollbar.ads
-	./ada-compile agar-gui-widget-console.ads
+
+agar-gui-widget-console.ali:\
+ada-compile agar-gui-widget-console.adb agar-gui-widget-console.ads
+	./ada-compile agar-gui-widget-console.adb
 
 agar-gui-widget-console.o:\
 agar-gui-widget-console.ali

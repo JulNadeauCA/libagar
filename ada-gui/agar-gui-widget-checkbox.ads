@@ -10,16 +10,8 @@ package agar.gui.widget.checkbox is
   CHECKBOX_EXPAND : constant flags_t := CHECKBOX_HFILL or CHECKBOX_VFILL;
   CHECKBOX_SET    : constant flags_t := 16#04#;
 
-  type checkbox_t is record
-    widget     : widget_t;
-    flags      : flags_t;
-    state      : c.int;
-    label_text : cs.chars_ptr;
-    label      : c.int;
-    spacing    : c.int;
-  end record;
+  type checkbox_t is private;
   type checkbox_access_t is access all checkbox_t;
-  pragma convention (c, checkbox_t);
   pragma convention (c, checkbox_access_t);
 
   function allocate
@@ -69,5 +61,17 @@ package agar.gui.widget.checkbox is
 
   procedure toggle (checkbox : checkbox_access_t);
   pragma import (c, toggle, "AG_CheckboxToggle");
+
+private
+
+  type checkbox_t is record
+    widget     : widget_t;
+    flags      : flags_t;
+    state      : c.int;
+    label_text : cs.chars_ptr;
+    label      : c.int;
+    spacing    : c.int;
+  end record;
+  pragma convention (c, checkbox_t);
 
 end agar.gui.widget.checkbox;

@@ -185,6 +185,24 @@ package agar.gui.widget is
 
   subtype flags_t is c.unsigned;
 
+  -- widget type
+  type widget_private_t is limited private;
+  type widget_t is record
+    object           : agar.core.object.object_t;
+    flags            : c.unsigned;
+    redraw           : c.int;
+    cx               : c.int;
+    cy               : c.int;
+    cx2              : c.int;
+    cy2              : c.int;
+    x                : c.int;
+    y                : c.int;
+    w                : c.int;
+    h                : c.int;
+    privdata         : widget_private_t;
+  end record;
+  pragma convention (c, widget_t);
+
   --
   -- API
   --

@@ -44,4 +44,26 @@ package agar.gui.widget.console is
   end record;
   pragma convention (c, console_t);
 
+  -- API
+
+  function allocate
+    (parent : widget_access_t;
+     flags  : flags_t) return console_access_t;
+  pragma import (c, allocate);
+
+  procedure set_padding
+    (console : console_access_t;
+     padding : natural);
+  pragma inline (set_padding);
+
+  function message
+    (console : console_access_t;
+     text    : string) return line_access_t;
+  pragma inline (message);
+
+  function append_line
+    (console : console_access_t;
+     text    : string) return line_access_t;
+  pragma inline (append_line);
+
 end agar.gui.widget.console;

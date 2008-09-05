@@ -11,6 +11,8 @@ cat agar-gui-widget.ads.txt || exit 112
 # widget_t base
 
 (cat << EOF
+private
+
   -- openGL array types
   type clip_plane_state_t is array (1 .. 4) of aliased c.int;
   pragma convention (c, clip_plane_state_t);
@@ -20,18 +22,7 @@ cat agar-gui-widget.ads.txt || exit 112
   pragma convention (c, clip_save_gl_t);
 
   -- widget type
-  type widget_t is record
-    object           : agar.core.object.object_t;
-    flags            : c.unsigned;
-    redraw           : c.int;
-    cx               : c.int;
-    cy               : c.int;
-    cx2              : c.int;
-    cy2              : c.int;
-    x                : c.int;
-    y                : c.int;
-    w                : c.int;
-    h                : c.int;
+  type widget_private_t is record
     clip_save        : agar.gui.rect.rect_t;
     style            : agar.core.types.void_ptr_t; -- XXX: style_access_t
     surfaces         : access agar.gui.surface.surface_access_t;
@@ -70,7 +61,7 @@ fi
     bindings         : binding_slist.head_t;
     menus            : menu_slist.head_t;
   end record;
-  pragma convention (c, widget_t);
+  pragma convention (c, widget_private_t);
 
 end agar.gui.widget;
 EOF
