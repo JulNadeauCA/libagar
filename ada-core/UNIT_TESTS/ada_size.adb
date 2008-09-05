@@ -1,22 +1,24 @@
+-- auto generated, do not edit
+
 with ada.text_io;
 with ada.command_line;
 
+with agar;
+with agar.core;
 with agar.core.datasource;
 with agar.core.dso;
 with agar.core.event;
+with agar.core.file;
 with agar.core.object;
 with agar.core.threads;
 with agar.core.timeout;
 with agar.core.types;
 with agar.core.version;
-with agar.core;
-with agar;
 
 procedure ada_size is
   package io renames ada.text_io;
   package cmdline renames ada.command_line;
 
-  -- auto generated - do not edit
   agar_core_datasource_byte_order_t : aliased string := "agar.core.datasource.byte_order_t";
   agar_core_datasource_datasource_t : aliased string := "agar.core.datasource.datasource_t";
   agar_core_datasource_io_status_t : aliased string := "agar.core.datasource.io_status_t";
@@ -29,6 +31,9 @@ procedure ada_size is
   agar_core_event_arg_type_t : aliased string := "agar.core.event.arg_type_t";
   agar_core_event_callback_t : aliased string := "agar.core.event.callback_t";
   agar_core_event_event_t : aliased string := "agar.core.event.event_t";
+  agar_core_file_info_access_t : aliased string := "agar.core.file.info_access_t";
+  agar_core_file_info_t : aliased string := "agar.core.file.info_t";
+  agar_core_file_type_t : aliased string := "agar.core.file.type_t";
   agar_core_object_checksum_alg_t : aliased string := "agar.core.object.checksum_alg_t";
   agar_core_object_class_t : aliased string := "agar.core.object.class_t";
   agar_core_object_dep_t : aliased string := "agar.core.object.dep_t";
@@ -71,6 +76,9 @@ procedure ada_size is
     (agar_core_event_arg_type_t'access, agar.core.event.arg_type_t'size),
     (agar_core_event_callback_t'access, agar.core.event.callback_t'size),
     (agar_core_event_event_t'access, agar.core.event.event_t'size),
+    (agar_core_file_info_access_t'access, agar.core.file.info_access_t'size),
+    (agar_core_file_info_t'access, agar.core.file.info_t'size),
+    (agar_core_file_type_t'access, agar.core.file.type_t'size),
     (agar_core_object_checksum_alg_t'access, agar.core.object.checksum_alg_t'size),
     (agar_core_object_class_t'access, agar.core.object.class_t'size),
     (agar_core_object_dep_t'access, agar.core.object.dep_t'size),

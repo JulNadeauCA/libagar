@@ -52,11 +52,6 @@ package agar.core.timeout is
   pragma import (c, delete_timeout, "AG_DelTimeout");
 
   function timeout_is_scheduled
-    (object   : agar.core.types.void_ptr_t;
-     timeout  : timeout_access_t) return c.int;
-  pragma import (c, timeout_is_scheduled, "AG_TimeoutIsScheduled");
-
-  function timeout_is_scheduled
     (object  : agar.core.types.void_ptr_t;
      timeout : timeout_access_t) return boolean;
   pragma inline (timeout_is_scheduled);

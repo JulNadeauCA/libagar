@@ -47,12 +47,6 @@ package agar.core.dso is
   --
 
   function load
-    (name  : cs.chars_ptr;
-     path  : cs.chars_ptr;
-     flags : c.unsigned) return dso_access_t;
-  pragma import (c, load, "AG_LoadDSO");
-
-  function load
     (name  : string;
      path  : string;
      flags : c.unsigned) return dso_access_t;
@@ -60,19 +54,10 @@ package agar.core.dso is
 
   function symbol
     (dso         : dso_access_t;
-     symbol_name : cs.chars_ptr;
-     value       : agar.core.types.void_ptr_t) return c.int;
-  pragma import (c, symbol, "AG_SymDSO");
-
-  function symbol
-    (dso         : dso_access_t;
      symbol_name : string;
      value       : agar.core.types.void_ptr_t) return boolean;
   pragma inline (symbol);
  
-  function unload (dso : dso_access_t) return c.int;
-  pragma import (c, unload, "AG_UnloadDSO");
-
   function unload (dso : dso_access_t) return boolean;
   pragma inline (unload);
 

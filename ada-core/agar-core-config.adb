@@ -2,6 +2,18 @@ package body agar.core.config is
 
   use type c.int;
 
+  package cbinds is
+
+    function file
+      (path_key  : cs.chars_ptr;
+       name      : cs.chars_ptr;
+       extension : cs.chars_ptr;
+       dst_path  : cs.chars_ptr;
+       dst_len   : c.size_t) return c.int;
+    pragma import (c, file, "AG_ConfigFile");
+
+  end cbinds;
+
   function file
     (path_key  : string;
      name      : string;
@@ -14,7 +26,7 @@ package body agar.core.config is
     ca_extension : aliased c.char_array := c.to_c (extension);
     ca_dst_path  : aliased c.char_array := c.to_c (dst_path);
   begin
-    return file
+    return cbinds.file
       (path_key  => cs.to_chars_ptr (ca_path_key'unchecked_access),
        name      => cs.to_chars_ptr (ca_name'unchecked_access),
        extension => cs.to_chars_ptr (ca_extension'unchecked_access),
