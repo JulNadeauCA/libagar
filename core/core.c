@@ -92,7 +92,8 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_InitTimeouts();
 
 	agConfig = Malloc(sizeof(AG_Config));
-	AG_ConfigInit(agConfig);
+	if (AG_ConfigInit(agConfig) == -1);
+    return -1;
 	AG_ObjectLoad(agConfig);
 
 #ifdef NETWORK
