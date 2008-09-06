@@ -27,4 +27,22 @@ package body agar.core is
     version := tmp_ver;
   end get_version;
 
+  -- Register an error callback so that AG_FatalError raises
+  -- an exception instead of aborting.
+
+  procedure register_error_callback is
+    procedure exception_raiser (err_str : cs.chars_ptr) is
+    begin
+      raise agar_error with cs.value (err_str);
+    end exception_raiser;
+
+    procedure set_callback
+      (callback : access procedure (str : cs.chars_ptr));
+    pragma import (c, set_callback, "AG_SetFatalCallback");
+  begin
+    set_callback (exception_raiser'access);
+  end register_error_callback;
+
+begin
+  register_error_callback;  
 end agar.core;
