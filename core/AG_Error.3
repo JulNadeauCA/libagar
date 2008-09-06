@@ -49,6 +49,9 @@ all Agar libraries, and available to applications as well.
 .Ft void
 .Fn AG_FatalError "const char *fmt" "..."
 .Pp
+.Ft void
+.Fn AG_SetFatalCallback "void (*callback)(const char *msg)"
+.Pp
 .nr nS 0
 The
 .Fn AG_GetError
@@ -71,6 +74,15 @@ The
 .Fn AG_FatalError
 function outputs the given error message to the user and causes abnormal
 termination of the program.
+.Pp
+.Fn AG_SetFatalCallback
+function sets a user provided callback to be called by
+.Fn AG_FatalError
+instead of simply terminating the process. The callback is expected
+to do program-specific cleanup and then terminate the program itself.
+An error message is passed to the callback via the
+.Fa msg
+argument.
 .Sh DEBUG ROUTINES
 .nr nS 1
 .Ft void

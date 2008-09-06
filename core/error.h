@@ -63,6 +63,7 @@ void		 AG_SetError(const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 1, 2)
 		     NONNULL_ATTRIBUTE(1);
 void		 AG_FatalError(const char *, ...);
+void		 AG_SetFatalCallback(void (*callback)(const char *));
 void		 AG_Debug(void *, const char *, ...)
 		     FORMAT_ATTRIBUTE(printf, 2, 3)
 		     NONNULL_ATTRIBUTE(2);
