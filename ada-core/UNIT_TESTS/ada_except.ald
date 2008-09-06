@@ -1,0 +1,5 @@
+ada_except.ali
+../agar-core-error.ali
+../agar-core.ali
+../agar.ali
+../agar-core-ada.a
