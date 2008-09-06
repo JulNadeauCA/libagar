@@ -415,8 +415,8 @@ agar-gui-widget-console.o:\
 agar-gui-widget-console.ali
 
 agar-gui-widget-editable.ali:\
-ada-compile agar-gui-widget-editable.ads agar-gui-widget-editable.ads
-	./ada-compile agar-gui-widget-editable.ads
+ada-compile agar-gui-widget-editable.adb
+	./ada-compile agar-gui-widget-editable.adb
 
 agar-gui-widget-editable.o:\
 agar-gui-widget-editable.ali

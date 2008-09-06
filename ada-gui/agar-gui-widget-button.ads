@@ -20,7 +20,7 @@ package agar.gui.widget.button is
   BUTTON_INVSTATE      : constant flags_t := 16#400#;
   BUTTON_EXPAND        : constant flags_t := BUTTON_HFILL or BUTTON_VFILL;
 
-  type button_t is private;
+  type button_t is limited private;
   type button_access_t is access all button_t;
   pragma convention (c, button_access_t);
 

@@ -23,3 +23,4 @@
 20080905 code: move private data into private record types.
 20080905 code: added agar.gui.widget.combo API functions.
 20080905 code: added agar.gui.widget.console API functions.
+20080906 code: added agar.gui.widget.editable API functions.
