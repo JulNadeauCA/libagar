@@ -21,3 +21,5 @@
 20080905 code: use subpackages for C functions instead of prefixes.
 20080905 code: added agar.core.file.
 20080905 version: agar-core-ada-0.13
+20080906 code: register a callback with the agar C library to raise exceptions
+               instead of fatal errors.
