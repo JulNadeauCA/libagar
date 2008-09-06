@@ -69,35 +69,14 @@ constructed from the arguments provided to
 .Fn AG_SetEvent
 and
 .Fn AG_PostEvent .
-The event arguments can be retrieved either by
+Event handler arguments can be retrieved either by
 .Em index
-using the
-.Fn AG_<TYPE>
-macros, or by
+or from a
 .Em name
-using with the
-.Fn AG_NAMED_<TYPE>
-macros.
-When retrieving arguments by index, keep in mind that the list of arguments
-passed by
-.Fn AG_PostEvent
-.Em follow
-the list of arguments provided by
-.Fn AG_SetEvent .
-For variable argument counts, the arguments can be retrieved directly from the
-.Fa event
-structure.
-.Pp
-The special argument
-.Fn AG_SELF
-(equivalent to AG_PTR(0))
-is a pointer to the
-.Xr AG_Object 3
-receiving the event.
-In situations where it is relevant to think of an Agar object "posting" an
-event (or message) to another object, a pointer to the originating object
-can be obtained from
-.Fn AG_SENDER .
+string, and Agar can provide optional runtime type-checking.
+See
+.Dq EVENT ARGUMENTS
+for more details.
 .Sh EVENT LOOPS
 .nr nS 1
 .Ft "void"
@@ -136,6 +115,7 @@ to be executed at accurate points in time.
 .Ft "AG_Event *"
 .Fn AG_SetEvent "AG_Object *obj" "const char *event_name" "void (*handler)(AG_Event *event)" "const char *fmt" "..."
 .Pp
+.Ft "AG_Event *"
 .Fn AG_AddEvent "AG_Object *obj" "const char *event_name" "void (*handler)(AG_Event *event)" "const char *fmt" "..."
 .Pp
 .Ft "AG_Event *"
@@ -180,43 +160,33 @@ The
 .Fa handler
 argument specifies the event handler function.
 .Pp
-The
 .Fa fmt
-format string and subsequent arguments specify a list of arguments to
-insert into the argument vector starting at position 1.
-When the event handler function is invoked, it will be passed those
-arguments as well as any additional arguments inserted into the argument
-vector by
-.Fn AG_PostEvent
-or
-.Fn AG_SchedEvent .
+is a special format string indicating the types of the following arguments.
+It is possible for the event handler routine to retrieve arguments by index.
+For example, the
+.Sq %s,%p,%i
+format string specifies that the following arguments are a string, a pointer
+and an
+.Ft int .
+They can be then retrieved by the event handler routine using:
+.Bd -literal -offset indent
+char *s = AG_STRING(1);
+void *p = AG_PTR(2);
+int i = AG_INT(3);
+.Ed
 .Pp
-The format string in
-.Fn AG_PostEvent
-and
-.Fn AG_SchedEvent
-accept the following sequences:
+It is also possible to use a format string of the form
+.Sq foo=%s,bar=%p,baz=%i ,
+in which case the event handler could then use:
+.Bd -literal -offset indent
+char *s = AG_NAMED_STRING("foo");
+void *p = AG_NAMED_PTR("bar");
+int i = AG_NAMED_INT("baz");
+.Ed
 .Pp
-.Bl -tag -compact -offset indent -width "diouxX "
-.It diouxX
-Converted to
-.Ft int
-.It DOU
-Converted to
-.Ft long int
-.It eEfgG
-Converted to
-.Ft double
-.It c
-Converted to
-.Ft char
-.It s
-Converted to
-.Ft char *
-.It p
-Converted to
-.Ft void *
-.El
+See
+.Dq EVENT ARGUMENTS
+for more details.
 .Pp
 The
 .Fn AG_FindEventHandler
@@ -276,6 +246,161 @@ function relays the given event to object
 passing
 .Fa sndr
 as the sender pointer.
+.Sh EVENT ARGUMENTS
+The following macros allow event handler routines to retrieve the arguments
+passed to them.
+Variable arguments are supported - in that case, arguments can be retrieved
+directly from the
+.Fa event
+structure (see
+.Dq STRUCTURE DATA ) .
+.Pp
+.nr nS 1
+.Ft "AG_Object *"
+.Fn AG_SELF "void"
+.Pp
+.Ft "AG_Object *"
+.Fn AG_SENDER "void"
+.Pp
+.Ft "void *"
+.Fn AG_PTR "int index"
+.Pp
+.Ft "AG_Object *"
+.Fn AG_OBJECT "int index" "const char *classSpec"
+.Pp
+.Ft "char *"
+.Fn AG_STRING "int index"
+.Pp
+.Ft "char"
+.Fn AG_CHAR "int index"
+.Pp
+.Ft "Uchar"
+.Fn AG_UCHAR "int index"
+.Pp
+.Ft "int"
+.Fn AG_INT "int index"
+.Pp
+.Ft "Uint"
+.Fn AG_UINT "int index"
+.Pp
+.Ft "long"
+.Fn AG_LONG "int index"
+.Pp
+.Ft "Ulong"
+.Fn AG_ULONG "int index"
+.Pp
+.Ft "float"
+.Fn AG_FLOAT "int index"
+.Pp
+.Ft "double"
+.Fn AG_DOUBLE "int index"
+.Pp
+.Ft "Uint8"
+.Fn AG_UINT8 "int index"
+.Pp
+.Ft "Sint8"
+.Fn AG_SINT8 "int index"
+.Pp
+.Ft "Uint16"
+.Fn AG_UINT16 "int index"
+.Pp
+.Ft "Sint16"
+.Fn AG_SINT16 "int index"
+.Pp
+.Ft "Uint32"
+.Fn AG_UINT32 "int index"
+.Pp
+.Ft "Sint32"
+.Fn AG_SINT32 "int index"
+.Pp
+.nr nS 0
+The
+.Fn AG_SELF
+macro (equivalent to AG_PTR(0)) returns a pointer to the
+.Xr AG_Object 3
+receiving the event (the
+.Fa rcvr
+argument to
+.Fn AG_PostEvent ) .
+.Fn AG_SENDER
+returns a pointer to the object sending the event (the
+.Fa sndr
+argument to
+.Fn AG_PostEvent ) ,
+if there is one.
+.Pp
+The following macros return a specific item in the list of arguments.
+When retrieving arguments by index, keep in mind that the list of arguments
+passed by
+.Fn AG_PostEvent
+.Em follow
+the list of arguments provided by
+.Fn AG_SetEvent .
+If debugging was enabled at compile time, these macros also ensure type
+safety.
+.Pp
+.Fn AG_PTR
+returns a pointer, previously passed as a
+.Sq %p
+argument.
+.Pp
+.Fn AG_OBJECT
+returns a pointer to an
+.Xr AG_Object 3
+previously passed as a
+.Sq %[obj]
+argument.
+If type checking is enabled, a fatal error is raised if the object's class
+specification does not match
+.Fa classSpec .
+.Pp
+.Fn AG_STRING
+returns a pointer to a string, previously passed as a
+.Sq %s
+argument.
+The event handler is not allowed to modify the string.
+.Pp
+.Fn AG_CHAR ,
+.Fn AG_UCHAR ,
+.Fn AG_INT ,
+.Fn AG_UINT ,
+.Fn AG_LONG
+and
+.Fn AG_ULONG
+return the specified native integral number, previously passed as a
+.Sq %c ,
+.Sq %C ,
+.Sq %i ,
+.Sq %u
+or
+.Sq %l
+argument respectively.
+.Pp
+.Fn AG_FLOAT
+and
+.Fn AG_DOUBLE
+return the specified native floating-point number, previously passed as
+.Sq %f
+or
+.Sq %F
+argument respectively.
+.Pp
+.Fn AG_UINT8 ,
+.Fn AG_SINT8 ,
+.Fn AG_UINT16 ,
+.Fn AG_SINT16 ,
+.Fn AG_UINT32
+and
+.Fn AG_SINT32
+return the specified fixed-size integral number, previously passed as
+.Sq %[u8] ,
+.Sq %[s8] ,
+.Sq %[u16] ,
+.Sq %[s16] ,
+.Sq %[u32]
+or
+.Sq %[s32]
+argument respectively.
 .Sh ARGUMENT MANIPULATION
 In some cases it is desirable for functions to accept a list of event handler
 arguments like
@@ -363,7 +488,6 @@ Argument types (use
 table to retrieve available types).
 .It Ft char *argn
 Identifiers for named arguments.
-.It 
 .El
 .Sh EVENT FLAGS
 Acceptable
