@@ -68,7 +68,7 @@ int agScreenshotQuality = 100;		/* JPEG quality in % */
 int agWindowAnySize = 0;		/* Allow any window size */
 int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
 
-void
+int
 AG_ConfigInit(AG_Config *cfg)
 {
 	char udatadir[AG_PATHNAME_MAX];
@@ -110,10 +110,10 @@ AG_ConfigInit(AG_Config *cfg)
 	Strlcat(tmpdir, "/tmp", sizeof(tmpdir));
 	
 	if (AG_FileExists(udatadir) == 0 && AG_MkDir(udatadir) != 0)
-		AG_FatalError("%s: %s", udatadir, AG_GetError());
+		return -1;
 	if (AG_FileExists(tmpdir) == 0 && AG_MkDir(tmpdir) != 0)
-		AG_FatalError("%s: %s", tmpdir, AG_GetError());
-	
+		return -1;
+
 	AG_SetString(cfg, "save-path", "%s", udatadir);
 	AG_SetString(cfg, "tmp-path", "%s", tmpdir);
 
@@ -151,6 +151,8 @@ AG_ConfigInit(AG_Config *cfg)
 	AG_SetString(cfg, "font.face", "?");
 	AG_SetInt(cfg, "font.size", -1);
 	AG_SetUint(cfg, "font.flags", 0);
+
+	return 0;
 }
 
 static int
