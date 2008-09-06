@@ -42,6 +42,9 @@ AG_ErrorCode agErrorCode; 		/* Error code */
 #endif
 int agDebugLvl = 1;			/* Default debug level */
 
+/* Error callback for AG_FatalError() */
+static void (*agErrorCallback)(const char *) = NULL;
+
 /* Initialize the error facility. */
 void
 AG_InitError(void)
@@ -181,17 +184,38 @@ void
 AG_FatalError(const char *fmt, ...)
 {
 	va_list args;
+  char *buf;
 
-	fprintf(stderr, "Fatal error: ");
-	if (fmt != NULL) {
-		va_start(args, fmt);
-		vfprintf(stderr, fmt, args);
-		va_end(args);
+	/* Use callback if defined. The callback must gracefully exit. */
+	if (agErrorCallback != NULL) {
+		if (fmt != NULL) {
+			va_start(args, fmt);
+			Vasprintf(&buf, fmt, args);
+			va_end(args);
+			agErrorCallback(buf);
+			abort(); /* not reached */
+		} else {
+			agErrorCallback(AG_GetError());
+			abort(); /* not reached */
+		}
 	} else {
-		fprintf(stderr, "%s", AG_GetError());
-	}
-	fprintf(stderr, "\n");
-	abort();
+		fprintf(stderr, "Fatal error: ");
+		if (fmt != NULL) {
+			va_start(args, fmt);
+			vfprintf(stderr, fmt, args);
+			va_end(args);
+		} else {
+			fprintf(stderr, "%s", AG_GetError());
+		}
+		fprintf(stderr, "\n");
+		abort();
+  }
+}
+
+void
+AG_SetFatalCallback(void (*callback)(const char *))
+{
+	agErrorCallback = callback;
 }
 
 /*
