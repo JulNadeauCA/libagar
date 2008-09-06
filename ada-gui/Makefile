@@ -421,11 +421,13 @@ ada-compile agar-gui-widget-editable.adb
 agar-gui-widget-editable.o:\
 agar-gui-widget-editable.ali
 
-agar-gui-widget-file_dialog.ali:\
-ada-compile agar-gui-widget-file_dialog.ads agar-gui-widget-file_dialog.ads \
+agar-gui-widget-file_dialog.ads:\
 agar-gui-widget-button.ads agar-gui-widget-combo.ads agar-gui-widget-label.ads \
-agar-gui-widget-pane.ads agar-gui-widget-textbox.ads agar-gui-widget-tlist.ads
-	./ada-compile agar-gui-widget-file_dialog.ads
+	agar-gui-widget-pane.ads agar-gui-widget-textbox.ads agar-gui-widget-tlist.ads
+
+agar-gui-widget-file_dialog.ali:\
+ada-compile agar-gui-widget-file_dialog.adb agar-gui-widget-file_dialog.ads
+	./ada-compile agar-gui-widget-file_dialog.adb
 
 agar-gui-widget-file_dialog.o:\
 agar-gui-widget-file_dialog.ali

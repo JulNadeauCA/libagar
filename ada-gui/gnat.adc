@@ -60,6 +60,7 @@ pragma source_file_name(agar.gui.widget.editable, spec_file_name => "agar-gui-wi
 
 -- ./agar-gui-widget-file_dialog.apk
 pragma source_file_name(agar.gui.widget.file_dialog, spec_file_name => "agar-gui-widget-file_dialog.ads");
+pragma source_file_name(agar.gui.widget.file_dialog, body_file_name => "agar-gui-widget-file_dialog.adb");
 
 -- ./agar-gui-widget-fixed.apk
 pragma source_file_name(agar.gui.widget.fixed, spec_file_name => "agar-gui-widget-fixed.ads");

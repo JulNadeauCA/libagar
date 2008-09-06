@@ -2,6 +2,7 @@
 #include "install.h"
 
 struct install_item insthier[] = {
+
   {INST_MKDIR, 0, 0, ctxt_bindir, 0, 0, 0755},
   {INST_MKDIR, 0, 0, ctxt_incdir, 0, 0, 0755},
   {INST_MKDIR, 0, 0, ctxt_dlibdir, 0, 0, 0755},
@@ -129,6 +130,8 @@ struct install_item insthier[] = {
   {INST_COPY, "agar-gui-widget-console.adb", 0, ctxt_incdir, 0, 0, 0644},
   {INST_COPY, "agar-gui-widget-editable.adb", 0, ctxt_repos, 0, 0, 0644},
   {INST_COPY, "agar-gui-widget-editable.adb", 0, ctxt_incdir, 0, 0, 0644},
+  {INST_COPY, "agar-gui-widget-file_dialog.adb", 0, ctxt_repos, 0, 0, 0644},
+  {INST_COPY, "agar-gui-widget-file_dialog.adb", 0, ctxt_incdir, 0, 0, 0644},
   {INST_COPY, "agar-gui-widget.adb", 0, ctxt_repos, 0, 0, 0644},
   {INST_COPY, "agar-gui-widget.adb", 0, ctxt_incdir, 0, 0, 0644},
   {INST_COPY, "agar-gui-window.adb", 0, ctxt_repos, 0, 0, 0644},
