@@ -24,3 +24,4 @@
 20080905 code: added agar.gui.widget.combo API functions.
 20080905 code: added agar.gui.widget.console API functions.
 20080906 code: added agar.gui.widget.editable API functions.
+20080906 code: added agar.gui.widget.file_dialog API functions.

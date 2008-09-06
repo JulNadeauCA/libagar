@@ -12,7 +12,7 @@ package agar.gui.widget.file_dialog is
 
   use type c.unsigned;
 
-  type option_t;
+  type option_t is limited private;
   type option_access_t is access all option_t;
   pragma convention (c, option_access_t);
 
@@ -20,7 +20,7 @@ package agar.gui.widget.file_dialog is
   type filetype_access_t is access all filetype_t;
   pragma convention (c, filetype_access_t);
 
-  type file_dialog_t;
+  type file_dialog_t is limited private;
   type file_dialog_access_t is access all file_dialog_t;
   pragma convention (c, file_dialog_access_t);
 
@@ -84,16 +84,6 @@ package agar.gui.widget.file_dialog is
   pragma convention (c, option_data_t);
   pragma unchecked_union (option_data_t);
 
-  type option_t is record
-    desc        : cs.chars_ptr;
-    key         : cs.chars_ptr;
-    unit        : cs.chars_ptr;
-    option_type : option_type_t;
-    data        : option_data_t;
-    opts        : option_tail_queue.entry_t;
-  end record;
-  pragma convention (c, option_t);
-
   type filetype_t is record
     fd       : file_dialog_access_t;
     descr    : cs.chars_ptr;
@@ -117,6 +107,47 @@ package agar.gui.widget.file_dialog is
 
   type path_t is array (1 .. agar.core.limits.pathname_max) of aliased c.char;
   pragma convention (c, path_t);
+
+  -- API
+
+  function allocate
+    (parent : widget_access_t;
+     flags  : flags_t) return file_dialog_access_t;
+  pragma import (c, allocate, "AG_FileDlgNew");
+
+  function allocate_mru
+    (parent : widget_access_t;
+     key    : string;
+     flags  : flags_t) return file_dialog_access_t;
+  pragma inline (allocate_mru);
+
+  function set_directory
+    (dialog : file_dialog_access_t;
+     path   : string) return boolean;
+  pragma inline (set_directory);
+
+  procedure set_directory_mru
+    (dialog : file_dialog_access_t;
+     key    : string;
+     path   : string);
+  pragma inline (set_directory_mru);
+
+  procedure set_filename
+    (dialog : file_dialog_access_t;
+     file   : string);
+  pragma inline (set_filename);
+
+private
+
+  type option_t is record
+    desc        : cs.chars_ptr;
+    key         : cs.chars_ptr;
+    unit        : cs.chars_ptr;
+    option_type : option_type_t;
+    data        : option_data_t;
+    opts        : option_tail_queue.entry_t;
+  end record;
+  pragma convention (c, option_t);
 
   type file_dialog_t is record
     widget        : widget_t;
