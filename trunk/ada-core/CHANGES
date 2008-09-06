@@ -23,3 +23,4 @@
 20080905 version: agar-core-ada-0.13
 20080906 code: register a callback with the agar C library to raise exceptions
                instead of fatal errors.
+20080906 code: add ada exception test.
