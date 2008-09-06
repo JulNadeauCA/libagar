@@ -10,7 +10,7 @@ package agar.gui.widget.checkbox is
   CHECKBOX_EXPAND : constant flags_t := CHECKBOX_HFILL or CHECKBOX_VFILL;
   CHECKBOX_SET    : constant flags_t := 16#04#;
 
-  type checkbox_t is private;
+  type checkbox_t is limited private;
   type checkbox_access_t is access all checkbox_t;
   pragma convention (c, checkbox_access_t);
 

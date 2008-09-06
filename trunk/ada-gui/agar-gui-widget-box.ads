@@ -14,7 +14,7 @@ package agar.gui.widget.box is
   BOX_FRAME      : constant flags_t := 16#08#;
   BOX_EXPAND     : constant flags_t := BOX_HFILL or BOX_VFILL;
 
-  type box_t is private;
+  type box_t is limited private;
   type box_access_t is access all box_t;
   pragma convention (c, box_access_t);
 

@@ -35,6 +35,109 @@ package agar.gui.widget.editable is
   type string_t is array (1 .. string_max) of aliased c.char;
   pragma convention (c, string_t);
 
+  type editable_t is limited private;
+  type editable_access_t is access all editable_t;
+  pragma convention (c, editable_access_t);
+
+  type cursor_pos_t is (CURSOR_BEFORE, CURSOR_IN, CURSOR_AFTER);
+   for cursor_pos_t use (CURSOR_BEFORE => -1, CURSOR_IN => 0, CURSOR_AFTER => 1);
+
+  -- API
+
+  function allocate
+    (parent : widget_access_t;
+     flags  : flags_t) return editable_access_t;
+  pragma import (c, allocate, "AG_EditableNew");
+
+  -- missing: bind_utf8 - unsure of how to bind
+  -- missing: bind_ascii
+
+  procedure set_static
+    (editable : editable_access_t;
+     enable   : boolean);
+  pragma inline (set_static);
+
+  procedure set_password
+    (editable : editable_access_t;
+     enable   : boolean);
+  pragma inline (set_password);
+
+  procedure set_integer_only
+    (editable : editable_access_t;
+     enable   : boolean);
+  pragma inline (set_integer_only);
+
+  procedure set_float_only
+    (editable : editable_access_t;
+     enable   : boolean);
+  pragma inline (set_float_only);
+
+  procedure size_hint
+    (editable : editable_access_t;
+     text     : string);
+  pragma inline (size_hint);
+
+  procedure size_hint_pixels
+    (editable : editable_access_t;
+     width    : positive;
+     height   : positive);
+  pragma inline (size_hint_pixels);
+
+  -- cursor manipulation
+
+  procedure map_position
+    (editable : editable_access_t;
+     x        : integer;
+     y        : integer;
+     index    : out natural;
+     pos      : out cursor_pos_t;
+     absolute : boolean);
+  pragma inline (map_position);
+
+  procedure move_cursor
+    (editable : editable_access_t;
+     x        : integer;
+     y        : integer;
+     absolute : boolean);
+  pragma inline (move_cursor);
+
+  function get_cursor_position (editable : editable_access_t) return natural;
+  pragma inline (get_cursor_position);
+
+  function set_cursor_position
+    (editable : editable_access_t;
+     index    : integer) return integer;
+  pragma inline (set_cursor_position);
+
+  -- text manipulation
+
+  procedure set_string
+    (editable : editable_access_t;
+     text     : string);
+  pragma inline (set_string);
+
+  procedure set_string_ucs4
+    (editable : editable_access_t;
+     text     : wide_wide_string);
+  pragma inline (set_string_ucs4);
+
+  procedure clear_string (editable : editable_access_t);
+  pragma import (c, clear_string, "AG_EditableClearString");
+
+  procedure buffer_changed (editable : editable_access_t);
+  pragma import (c, buffer_changed, "AG_EditableBufferChanged");
+
+  function get_integer (editable : editable_access_t) return integer;
+  pragma inline (get_integer);
+
+  function get_float (editable : editable_access_t) return float;
+  pragma inline (get_float);
+
+  function get_long_float (editable : editable_access_t) return long_float;
+  pragma inline (get_long_float);
+
+private
+
   type editable_t is record
     widget         : widget_t;
     flags          : flags_t;
@@ -65,8 +168,6 @@ package agar.gui.widget.editable is
     ucs_buffer     : access agar.core.types.uint32_t;
     ucs_length     : c.unsigned;
   end record;
-  type editable_access_t is access all editable_t;
   pragma convention (c, editable_t);
-  pragma convention (c, editable_access_t);
 
 end agar.gui.widget.editable;
