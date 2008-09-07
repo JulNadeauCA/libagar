@@ -24,3 +24,4 @@
 20080906 code: register a callback with the agar C library to raise exceptions
                instead of fatal errors.
 20080906 code: add ada exception test.
+20080907 code: added agar.core.object.delete.

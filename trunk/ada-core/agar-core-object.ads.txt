@@ -415,6 +415,9 @@ package agar.core.object is
   procedure detach (object : object_access_t);
   pragma import (c, detach, "AG_ObjectDetach");
 
+  procedure delete (object : object_access_t);
+  pragma import (c, delete, "AG_ObjectDelete");
+
   procedure init
     (object : object_access_t;
      class  : class_access_t);
