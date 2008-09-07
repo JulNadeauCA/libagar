@@ -91,9 +91,13 @@ AG_InitCore(const char *progname, Uint flags)
 	
 	AG_InitTimeouts();
 
-	agConfig = Malloc(sizeof(AG_Config));
-	if (AG_ConfigInit(agConfig) == -1);
-    return -1;
+	if ((agConfig = malloc(sizeof(AG_Config))) == NULL) {
+		AG_SetError("Out of memory");
+		return (-1);
+	}
+	if (AG_ConfigInit(agConfig) == -1) {
+		return (-1);
+	}
 	AG_ObjectLoad(agConfig);
 
 #ifdef NETWORK
