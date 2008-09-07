@@ -51,7 +51,7 @@ values.
 .Ft "AG_Menu *"
 .Fn AG_MenuNew "AG_Widget *parent" "Uint flags"
 .Pp
-.FT "AG_Menu *"
+.Ft "AG_Menu *"
 .Fn AG_MenuNewGlobal "Uint flags"
 .Pp
 .Ft void
@@ -107,7 +107,10 @@ If a parameter is -1, its current value is preserved.
 .Fn AG_MenuActionKb "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "AG_MenuItem *"
-.Fn AG_MenuDynamic "AG_MenuItem *parent" "AG_Surface *icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Fn AG_MenuDynamicItem "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "void (*fn)(AG_Event *)" "const char *fmt, ..."
+.Pp
+.Ft "AG_MenuItem *"
+.Fn AG_MenuDynamicItemKb "AG_MenuItem *parent" "const char *text" "AG_Surface *icon" "SDLKey key" "SDLMod kmod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "AG_MenuItem *"
 .Fn AG_MenuTool "AG_MenuItem *parent" "AG_Toolbar *toolbar" "const char *text" "AG_Surface *icon" "SDLKey keysym" "SDLMod keymod" "void (*fn)(AG_Event *)" "const char *fmt, ..."
@@ -117,6 +120,9 @@ If a parameter is -1, its current value is preserved.
 .Pp
 .Ft "void"
 .Fn AG_MenuSetLabel "AG_MenuItem *item" "const char *label"
+.Pp
+.Ft "void"
+.Fn AG_MenuSetPollFn "AG_MenuItem *item" "void (*fn)(AG_Event *)" "const char *fmt, ..."
 .Pp
 .Ft "void"
 .Fn AG_MenuItemFree "AG_MenuItem *menu" 
@@ -164,32 +170,37 @@ The
 variant automatically inserts an item into the given toolbar as well.
 .Pp
 The
-.Fn AG_MenuDynamic
+.Fn AG_MenuDynamicItem
 function creates a dynamic menu item.
-The specified event handler routine will be invoked every time the menu item
-is rendered.
+The specified callback routine
+.Fa fn
+will be invoked repeatedly to update the menu item (see
+.Xr AG_Event 3
+for details), with the
+.Nm
+itself passed as
+.Xr AG_SELF 3 .
 A pointer to the
-.Ft AGMenu
-is passed as the 0th argument, and a pointer to the
-.Ft AGMenuItem
-is passed as the last argument.
-The function is allowed to modify its
-.Va state ,
-and
-.Va onclick
-members directly.
-The label may be modified using
-.Fn AG_MenuSetLabel ,
-and the icon using
-.Fn AG_MenuSetIcon .
+.Ft AG_MenuItem
+can be retrieved using
+.Xr AG_SENDER 3 .
+The callback routine is allowed to directly modify the
+.Va state
+member of the
+.Ft AG_MenuItem .
+This variable defines the boolean state for the specified menu item
+(0 = disabled, 1 = enabled).
 If
 .Va state
-is 0 or 1, it defines the current state for boolean items (unless it is -1,
-it overrides any boolean/flag binding).
+is -1, the boolean state is determined from any boolean/flag binding
+associated with the item.
+The callback can also change the text label and icon using
+.Fn AG_MenuSetLabel
+and
+.Fn AG_MenuSetIcon .
 The
-.Va onclick
-member is a pointer to the event handler to invoke when the user selects the
-item.
+.Fn AG_MenuSetPollFn
+routine sets the callback function associated with a given item.
 .Pp
 The
 .Fn AG_MenuItemFree
