@@ -167,6 +167,7 @@ void	*AG_ObjectNew(void *, const char *, AG_ObjectClass *);
 void	 AG_ObjectAttach(void *, void *);
 int	 AG_ObjectAttachToNamed(void *, const char *, void *);
 void	 AG_ObjectDetach(void *);
+void	 AG_ObjectDelete(void *);
 
 void	 AG_ObjectInit(void *, void *);
 void	 AG_ObjectInitStatic(void *, void *);
