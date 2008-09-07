@@ -130,7 +130,10 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cls)
 		}
 	}
 	
-	obj = Malloc(cls->size);
+	if ((obj = malloc(cls->size)) == NULL) {
+		AG_SetError("Out of memory");
+		return (NULL);
+	}
 	AG_ObjectInit(obj, cls);
 	AG_ObjectSetName(obj, "%s", (name != NULL) ? name : nameGen);
 	obj->flags |= AG_OBJECT_RESIDENT;
@@ -446,6 +449,20 @@ AG_ObjectDetach(void *childp)
 	AG_ObjectUnlock(child);
 	AG_ObjectUnlock(parent);
 	AG_UnlockVFS(root);
+}
+
+void
+AG_ObjectDelete(void *p)
+{
+	AG_Object *obj = p;
+	AG_Object *root = obj->root;
+
+	if (root != NULL) { AG_ObjectLock(root); }
+	if (obj->parent != NULL) {
+		AG_ObjectDetach(obj);
+	}
+	AG_ObjectDestroy(obj);
+	if (root != NULL) { AG_ObjectUnlock(root); }
 }
 
 /* Traverse the object tree using a pathname. */

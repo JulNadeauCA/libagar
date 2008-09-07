@@ -69,6 +69,9 @@ interface.
 .Ft "void"
 .Fn AG_ObjectDetach "AG_Object *obj"
 .Pp
+.Ft "void"
+.Fn AG_ObjectDelete "AG_Object *obj"
+.Pp
 .Ft "AG_Object *"
 .Fn AG_ObjectRoot "AG_Object *obj"
 .Pp
@@ -183,6 +186,13 @@ If
 is NULL,
 .Fn AG_ObjectAttach
 is a no-op.
+.Pp
+The
+.fn AG_ObjectDelete
+routine invokes
+.Fn AG_ObjectDetach
+if the object is attached to a parent, followed by
+.Fn AG_ObjectDestroy .
 .Pp
 .Fn AG_ObjectAttachToNamed
 is a variant of
