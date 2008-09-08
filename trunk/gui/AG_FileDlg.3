@@ -138,7 +138,7 @@ is a comma-separated list of file extensions to associate with the type, or
 an empty string.
 .Pp
 .Sh OK/CANCEL ACTIONS
-The default action that is performed when a user selects a file is:
+By default, selecting a file will trigger the following checks:
 .Pp
 .Bl -enum -compact
 .It
@@ -152,8 +152,7 @@ If
 .Dv AG_FILEDLG_SAVE
 is set and a file exists, display a "Replace file?" prompt.
 .It
-Execute the matching function (based on file extension), as previously
-registered by
+Execute the format-specific callback, as previously configured with
 .Fn AG_FileDlgAddType .
 .It
 If
@@ -189,16 +188,9 @@ selected, overriding the default behavior.
 The event handler will be passed a string argument containing the
 absolute path to the selected file, followed by a pointer to the
 .Ft AG_FileType
-structure for the file type selected by the user.
-The public members of the structure are:
-.Bd -literal
-typedef struct ag_file_type {
-	const char *descr;                /* Description */
-	char **exts;                      /* Filename extensions */
-	Uint nexts;
-	AG_Event *action;                 /* Action (save/load) */
-} AG_FileType;
-.Ed
+structure for the file type selected by the user (see
+.Dq STRUCTURE DATA
+for details).
 .Pp
 .Fn AG_FileDlgCancelAction
 overrides the default behavior of the "Cancel" button.
@@ -213,12 +205,14 @@ In many cases where we are using
 .Nm
 to load or save files, we may want to provide the user with format-specific
 options that will affect the loading or saving process.
-This interface allows a table of generic options to be associated with an
+This interface controls a list of parameters associated with the
 .Ft AG_FileType
-structure (as returned by
-.Fn AG_FileDlgAddType ) ,
-such that control widgets are dynamically created in a specified container,
-allowing the user to manipulate those options.
+objects (as returned by
+.Fn AG_FileDlgAddType ) .
+Whenever a file type is selected,
+.Nm
+will automatically display control widgets allowing the user to manipulate
+those parameters.
 .Pp
 .nr nS 1
 .Ft "void"
@@ -374,11 +368,33 @@ contents using an external widget.
 The given directory was selected.
 .El
 .Sh STRUCTURE DATA
-.Bl -tag -width "char cfile[AG_PATHNAME_MAX] "
+For the
+.Ft AG_FileDlg
+object:
+.Pp
+.Bl -tag -width "char cfile[AG_PATHNAME_MAX] " -compact
 .It Ft char cwd[AG_PATHNAME_MAX]
 Absolute path of current working directory.
 .It Ft char cfile[AG_PATHNAME_MAX]
 Absolute path of last selected file.
+.El
+.Pp
+For the
+.Ft AG_FileType
+structure (as returned by
+.Fn AG_FileDlgAddType ) :
+.Pp
+.Bl -tag -width "const char *descr " -compact
+.It Ft AG_FileDlg *fd
+Back pointer to the parent
+.Ft AG_FileDlg
+(read-only).
+.It Ft const char *descr"
+Description string (read-only).
+.It Ft AG_Event *action
+Callback function (as returned by
+.Xr AG_SetEvent 3 )
+to invoke when a file of this type is selected for a load/save operation.
 .El
 .Sh EXAMPLES
 See
