@@ -175,8 +175,6 @@ struct ag_window *AG_TextPromptOptions(struct ag_button **, Uint,
 		          	NONNULL_ATTRIBUTE(3);
 void AG_TextPromptString(const char *, void (*)(AG_Event *),
 		         const char *, ...);
-void AG_TextPromptDouble(const char *, const char *, double, double,
-			 void (*)(AG_Event *), const char *, ...);
 
 AG_Glyph *AG_TextRenderGlyph(Uint32);
 void	  AG_TextUnusedGlyph(AG_Glyph *);
