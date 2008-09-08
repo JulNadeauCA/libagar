@@ -579,7 +579,7 @@ Draw(void *p)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 #endif
-	AG_WidgetPushClipRect(ed, AG_RECT(0,0,WIDTH(ed)-1,HEIGHT(ed)-1));
+	AG_WidgetPushClipRect(ed, AG_RECT(-1,-1,WIDTH(ed)-1,HEIGHT(ed)-1));
 	AG_PushTextState();
 	AG_TextColor(TEXTBOX_TXT_COLOR);
 	x = 0;
