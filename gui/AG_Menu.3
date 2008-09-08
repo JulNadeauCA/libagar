@@ -367,6 +367,10 @@ The
 .Nm
 widget does not provide any binding.
 .Sh STRUCTURE DATA
+For the
+.Ft AG_Menu
+structure:
+.Pp
 .Bl -tag -width "AG_MenuItem *itemSel "
 .It Ft AG_MenuItem *root
 The root menu item.
@@ -376,6 +380,35 @@ Top-level items are attached directly to
 .Va root .
 .It Ft int selecting
 Selection is in progress if set to 1 (read-only).
+.El
+.Pp
+For the
+.Ft AG_MenuItem
+structure:
+.Pp
+.Bl -tag -width "AG_MenuItem *subitems "
+.It Ft char *text
+Displayed text for the menu item (read-only, set by
+.Fn AG_MenuSetLabel ) .
+.It Ft AG_Surface *iconSrc
+The
+.Xr AG_Surface 3
+of the menu icon, or NULL (read-only, set by
+.Fn AG_MenuSetIcon ) .
+.It Ft int value
+The boolean state of the item, used by default.
+If the boolean state was bound to another variable (e.g., using
+.Fn AG_MenuBool
+or
+.Fn AG_MenuSetIntBool ) ,
+this value is ignored.
+.It Ft int state
+If this flag is set (the default), the item is "enabled".
+Otherwise, the user is not allowed to select the item.
+.It Ft AG_Menu *pmenu
+Back pointer to the parent
+.Ft AG_Menu
+(read-only).
 .El
 .Sh EXAMPLES
 The following code fragment associates a menu with an
@@ -400,9 +433,6 @@ item = AG_MenuAddItem(menu, "File");
 .Pp
 The following code fragment creates a menu with an action item, a boolean
 item and two bitmask items.
-The action item demonstrates how
-.Fn AG_MenuAction
-can push standard Agar event arguments onto the stack.
 .Pp
 .Bd -literal -offset indent
 Uint16 flags = 0;
