@@ -91,7 +91,7 @@ VG_SnapToolbar(void *parent, VG_View *vv, int type)
 }
 
 void
-VG_SnapMenu(AG_Menu *m, AG_MenuItem *mi, VG_View *vv)
+VG_SnapMenu(AG_MenuItem *mi, VG_View *vv)
 {
 	AG_MenuAction(mi, _("Free positioning"), vgIconSnapFree.s,
 	    SnapToMenu, "%p,%i", vv, VG_FREE_POSITIONING);
