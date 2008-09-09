@@ -265,24 +265,27 @@ and all palette entries are initialized to black.
 If 2 bpp is given, the first entry is initialized to white (255,255,255) and
 the second entry to black (0,0,0).
 .Sh STRUCTURE DATA
+For the
+.Ft AG_Surface
+structure:
+.Pp
 .Bl -tag -width "AG_PixelFormat *format "
 .It Ft Uint flags
-(Read-only) Current surface flags (see
+Current surface flags (read-only; see
 .Dq INITIALIZATION
 section).
 .It Ft AG_PixelFormat *format
-(Read-only) The surface's pixel encoding (see
+The surface's pixel encoding (read-only; see
 .Dq PIXEL FORMATS
 section).
 .It Ft int w, h
-(Read-only) Dimensions of the surface in pixels.
+Dimensions of the surface in pixels (read-only).
 .It Ft void *pixels
-Pointer to raw pixel data.
-You must invoke
+Pointer to raw pixel data (must invoke
 .Fn AG_SurfaceLock
-prior to reading or writing this data, and you must invoke
+prior to reading or writing this data, and
 .Fn AG_SurfaceUnlock
-when you are done.
+when done).
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

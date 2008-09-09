@@ -369,13 +369,13 @@ widget does not provide any binding.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Menu
-structure:
+object:
 .Pp
 .Bl -tag -width "AG_MenuItem *itemSel "
 .It Ft AG_MenuItem *root
-The root menu item.
+The root menu item (read-only).
 .It Ft AG_MenuItem *itemSel
-The currently selected top-level item.
+The currently selected top-level item (read-only).
 Top-level items are attached directly to
 .Va root .
 .It Ft int selecting

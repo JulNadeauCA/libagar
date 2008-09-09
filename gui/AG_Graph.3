@@ -228,21 +228,25 @@ The specified edge is now selected.
 .It Fn graph-edge-unselected "AG_GraphEdge *edge"
 The specified edge is no longer selected.
 .Sh STRUCTURE DATA
+For the
+.Ft AG_Graph
+object:
+.Pp
 .Bl -tag -compact -width "int xOffs, yOffs "
 .It Ft int xOffs, yOffs
 Display offset in pixels.
 .It Ft Uint nvertices
-Vertex count
+Vertex count (read-only).
 .It Ft Uint nedges
-Edge count
+Edge count (read-only)
 .It Ft TAILQ vertices
 List of
 .Ft AG_GraphVertex
-structures (see below).
+items (read-only)
 .It Ft TAILQ edges
 List of
 .Ft AG_GraphEdge
-structures (see below).
+items (read-only).
 .El
 .Pp
 For the

@@ -104,7 +104,7 @@ Acceptable values for the
 .Fa flags
 argument include:
 .Pp
-.Bl -tag -width "AG_TABLE_MULTITOGGLE "
+.Bl -tag -width "AG_TABLE_HIGHLIGHT_COLS "
 .It AG_TABLE_MULTI
 Allow the user to select multiple items while holding
 .Dv CTRL
@@ -124,8 +124,7 @@ event handler (implied by
 If the selection is not visible, scroll towards it.
 This flag is writeable, but is automatically set or cleared by keyboard events.
 .It AG_TABLE_HIGHLIGHT_COLS
-Highlight columns that are selected.
-Since column selection is not frequently used, this is not the default.
+Highlight the currently selected column(s) using transparency.
 .El
 .Pp
 The
@@ -229,13 +228,11 @@ specifies the text to display in the column header.
 is an optional size specification (see
 .Xr AG_SizeSpec 3 )
 used in initial sizing of the column.
-The
-.Fa sort_fn
-argument, if not NULL, is the sorting function to use for items of this
-column.
-The two arguments are of the
-.Fn AG_TableCell
-type.
+.Fa sort_fn ,
+if not NULL, is the compare function to use for items of this column.
+It is passed pointers to two
+.Ft AG_TableCell
+structures to compare.
 .Pp
 The
 .Fn AG_TableSelectCol
@@ -443,6 +440,10 @@ The
 .Nm
 widget does not generate any event.
 .Sh STRUCTURE DATA
+For the
+.Ft AG_Table
+object:
+.Pp
 .Bl -tag -compact -width "Uint n "
 .It Ft Uint n
 Number of columns (read-only).

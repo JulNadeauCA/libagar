@@ -108,17 +108,21 @@ widget generates the following events:
 An item was selected.
 .El
 .Sh STRUCTURE DATA
+For the
+.Ft AG_UCombo
+object:
+.Pp
 .Bl -tag -compact -width "AG_Button *button "
 .It Ft AG_Tlist *list
 Pointer to the
 .Xr AG_Tlist 3
 displayed by
 .Nm
-when expanded.
+when expanded (read-only).
 .It Ft AG_Button *button
 Pointer to the underlying
 .Xr AG_Button 3
-widget.
+widget (read-only).
 .El
 .Sh EXAMPLES
 The following code fragment reacts to a

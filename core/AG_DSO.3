@@ -105,9 +105,9 @@ function decrements the reference count of the specified
 object.
 If it reaches zero, the library is removed from the process's address space.
 .Sh STRUCTURE DATA
-The
+For the
 .Fa AG_DSO
-structure includes public members:
+structure:
 .Pp
 .Bl -tag -compact -width "char path[AG_PATHNAME_MAX] "
 .It char name[AG_DSO_NAME_MAX]
@@ -118,9 +118,9 @@ Full path to dynamic library file.
 List of previously resolved symbols
 .El
 .Pp
-The
+For the
 .Fa AG_DSOSym
-structure includes public members:
+structure:
 .Pp
 .Bl -tag -compact -width "char *sym"
 .It char *sym
