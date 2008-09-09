@@ -29,14 +29,65 @@
 .ds oS Agar 1.3
 .Sh NAME
 .Nm AG_Threads
-.Nd agar threads interface
+.Nd agar threads support
 .Sh SYNOPSIS
 .Bd -literal
 #include <agar/core.h>
 .Ed
 .Sh DESCRIPTION
-If compiled with thread support, Agar provides a generic, portable interface
-to some underlying threads API (e.g., POSIX threads).
+On all platforms with threads support, Agar can be compiled with support for
+multithreading.
+Agar API calls, unless otherwise documented, then become safe to invoke from
+arbitrary threads within an application.
+Internally this is achieved using many locking devices (e.g., mutexes),
+acquired and released in a fine-grained fashion.
+.Pp
+The Agar object system (see
+.Xr AG_Object 3 )
+provides built-in mechanisms to facilitate thread safety, such as per-object
+locks which remain held throughout the execution of event handlers.
+.Sh CONVENTIONS
+With respect to threads, the Agar documentation follows the convention that
+all functions are entirely safe to invoke from any thread, unless documented
+otherwise.
+.Pp
+When multithreading is used, the return values of functions (except for error
+codes), should only be considered safe to use for as long as the related
+Agar objects are locked.
+Internally, the Agar functions will always acquire and release the necessary
+locks, but the calling function must be necessarily careful to avoid race
+conditions when a return value is used.
+For example, to disable a widget by name, the following code could be used:
+.Bd -literal -offset indent
+/* Thread unsafe */
+AG_Widget *myWidget;
+myWidget = AG_WidgetFind(agView, "MyWindow/MyWidget");
+if (widget != NULL) { AG_WidgetDisable(myWidget); }
+.Ed
+.Pp
+But if we execute this code from an arbitrary thread, there is a chance that
+the widget returned by
+.Fn AG_WidgetFind
+might have been destroyed before we reach
+.Fn AG_WidgetDisable .
+To avoid this race condition, the following is needed:
+.Bd -literal -offset indent
+/* Thread safe */
+AG_Widget *myWidget;
+AG_ObjectLock(agView);
+myWidget = AG_WidgetFind(agView, "MyWindow/MyWidget");
+if (widget != NULL) { AG_WidgetDisable(myWidget); }
+AG_ObjectUnlock(agView);
+.Ed
+.Pp
+This convention is important to thread safety, but this is a relatively rare
+usage since in practice, most GUI calls are made from event context, where it
+is safe to assume that
+.Va agView ,
+and the relevant widgets receiving the events, are already locked.
+.Sh THREADS INTERFACE
+When compiled with threads support, Agar provides a portable, minimal interface
+to the operating system's native threads interface.
 .Sh MUTEXES
 Mutexes (MUTual EXclusion devices) are commonly used to protect shared
 data structure against concurrent modifications.
