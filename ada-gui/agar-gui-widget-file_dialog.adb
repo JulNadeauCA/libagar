@@ -24,6 +24,13 @@ package body agar.gui.widget.file_dialog is
       (dialog : file_dialog_access_t;
        file   : cs.chars_ptr);
     pragma import (c, set_filename, "AG_FileDlgSetFilename");
+
+    function add_filetype
+      (dialog      : file_dialog_access_t;
+       description : cs.chars_ptr;
+       extensions  : cs.chars_ptr;
+       fmt         : agar.core.types.void_ptr_t) return filetype_access_t;
+    pragma import (c, add_filetype, "AG_FileDlgAddType");
   end cbinds;
 
   function allocate_mru
@@ -74,5 +81,20 @@ package body agar.gui.widget.file_dialog is
       (dialog => dialog,
        file   => cs.to_chars_ptr (ca_file'unchecked_access));
   end set_filename;
+
+  function add_filetype
+    (dialog      : file_dialog_access_t;
+     description : string;
+     extensions  : string) return filetype_access_t
+  is
+    ca_desc : aliased c.char_array := c.to_c (description);
+    ca_ext  : aliased c.char_array := c.to_c (extensions);
+  begin
+    return cbinds.add_filetype
+      (dialog      => dialog,
+       description => cs.to_chars_ptr (ca_desc'unchecked_access),
+       extensions  => cs.to_chars_ptr (ca_ext'unchecked_access),
+       fmt         => agar.core.types.null_ptr);
+  end add_filetype;
 
 end agar.gui.widget.file_dialog;

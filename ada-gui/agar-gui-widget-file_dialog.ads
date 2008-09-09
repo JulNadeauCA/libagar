@@ -137,6 +137,12 @@ package agar.gui.widget.file_dialog is
      file   : string);
   pragma inline (set_filename);
 
+  function add_filetype
+    (dialog      : file_dialog_access_t;
+     description : string;
+     extensions  : string) return filetype_access_t;
+  pragma inline (add_filetype);
+
 private
 
   type option_t is record
