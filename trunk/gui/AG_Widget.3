@@ -241,7 +241,7 @@ and
 .Ft "void"
 .Fn AG_WidgetUnfocus "AG_Widget *widget"
 .Pp
-.Ft "void"
+.Ft "AG_Widget *"
 .Fn AG_WidgetFindFocused "AG_Window *win"
 .Pp
 .nr nS 0
@@ -1098,6 +1098,10 @@ The widget no longer holds focus.
 A widget binding has been added or modified.
 .El
 .Sh STRUCTURE DATA
+For the
+.Ft AG_Widget
+object:
+.Pp
 .Bl -tag -width "int cx2, cy2 "
 .It Ft Uint flags
 Option flags (see
@@ -1108,9 +1112,9 @@ Pixel coordinates of the widget relative to its parent.
 .It Ft int w, h
 Dimensions of the widget in pixels.
 .It Ft int cx, cy
-Absolute view coordinates of the upper left corner of the widget.
+Absolute view coordinates of the upper left corner of the widget (read-only).
 .It Ft int cx2, cy2
-Absolute view coordinates of the lower right corner of the widget.
+Absolute view coordinates of the lower right corner of the widget (read-only).
 .It Ft int redraw
 If
 .Dv AG_WIDGET_STATIC

@@ -435,13 +435,17 @@ or
 flags are in use.
 .El
 .Sh STRUCTURE DATA
+For the
+.Ft AG_Tlist
+object:
+.Pp
 .Bl -tag -compact -width "LIST items "
 .It Ft LIST items
 List of all
 .Ft AG_TlistItem
-objects (list itself is read-only, items are not).
+objects (read-only, items are writeable).
 .It Ft int nitems
-Count of items in the list (read-only).
+Number of items in the list (read-only).
 .El
 .Pp
 For the

@@ -425,23 +425,25 @@ functions looks for a window identified by
 .Fa name
 and return NULL if there is no such window.
 .Sh STRUCTURE DATA
+For the
+.Ft AG_View
+object:
+.Pp
 .Bl -tag -width "TAILQ windows "
 .It Ft int w, h
-Dimensions of the display in pixels.
+Dimensions of the display in pixels (read-only).
 .It Ft int depth
-Color depth of the display in bits per pixel.
+Color depth of the display in bits per pixel (read-only).
 .It Ft int rCur
-Current refresh rate.
-Meaning is dependent on the type of event loop being used.
+Current refresh rate (exact interpretation left to event loop).
 .It Ft Uint rNom
-Nominal refresh rate.
-Meaning is dependent on the type of event loop being used.
+Nominal refresh rate (exact interpretation left to event loop).
 .It Ft AG_Mutex lock
 Lock on GUI window lists.
 .It Ft TAILQ windows
 List of
 .Xr AG_Window 3
-objects associated with display.
+objects associated with display (read-only).
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

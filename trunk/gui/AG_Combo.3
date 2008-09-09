@@ -161,22 +161,27 @@ flag is not set and the user has entered a string
 which does not match any item in the list.
 .El
 .Sh STRUCTURE DATA
+For the
+.Ft AG_Combo
+object:
+.Pp
 .Bl -tag -compact -width "AG_Textbox *tbox "
 .It Ft AG_Tlist *list
 Pointer to the
 .Xr AG_Tlist 3
 displayed by
 .Nm
-when expanded.
+when expanded (read-only).
 .It Ft AG_Textbox *tbox
 Pointer to the
 .Xr AG_Textbox 3
 contained in the
-.Nm .
+.Nm
+(read-only).
 .It Ft AG_Button *button
 Pointer to the
 .Xr AG_Button 3
-next to the textbox.
+next to the textbox (read-only).
 .El
 .Sh EXAMPLES
 The following code fragment reacts to a

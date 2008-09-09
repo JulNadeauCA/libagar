@@ -142,9 +142,12 @@ The
 .Nm
 widget neither reacts to nor generates any event.
 .Sh STRUCTURE DATA
+For the
+.Ft AG_Toolbar
+object:
 .Bl -tag -width "AG_Box *rows[] "
 .It Ft AG_Box *rows[]
-Containers for the rows.
+Containers for the rows (read-only).
 Widgets can be attached manually to those containers with
 .Xr AG_ObjectAttach 3
 if
