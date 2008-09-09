@@ -34,10 +34,31 @@
 Agar is a graphical application toolkit.
 It provides all types of graphical applications, written in different languages,
 with consistent interfaces across a wide array of platforms.
-This page describes the libraries included in the Agar source distribution.
-.Sq Agar
-usually refers to the Agar-Core and Agar-GUI libraries.
 .Pp
+This document summarizes the various interfaces provided by the standard
+libraries included in the official Agar source distribution (such as Agar-Core,
+Agar-GUI, etc).
+These libraries share the same version number and release cycle, but they
+are linked and can be distributed independently.
+.Pp
+.Sh CONVENTIONS
+The Agar documentation follows the following conventions:
+.Bl -enum
+.It
+The return value for functions returning
+.Ft int ,
+unless otherwise documented, represents an error code (where 0 = success,
+-1 = failure).
+On failure, the error message can be retrieved using
+.Xr AG_GetError 3 .
+.It
+When Agar is compiled with threads support, functions are thread-safe
+unless documented otherwise (see
+.Dq CONVENTIONS
+section of
+.Xr AG_Threads 3
+for important details related to thread safety).
+.El
 .Sh AGAR-CORE
 Agar-Core implements the
 .Xr AG_Object 3
@@ -151,8 +172,6 @@ widgets.
 Display a string of text (static or polled).
 .It Xr AG_MPane 3
 Standard single, dual, triple and quad paned view.
-.It Xr AG_Matview 3
-Matrix viewer widget.
 .It Xr AG_Menu 3
 Menu widget.
 .It Xr AG_Notebook 3
@@ -160,10 +179,10 @@ Notebook widget.
 .It Xr AG_Numerical 3
 Numerical input / spinbutton widget for floating-point and integer
 values.
-.It Xr AG_ObjectSelector 3
-Selector for
-.Xr AG_Object 3
-trees.
+.\" .It Xr AG_ObjectSelector 3
+.\" Selector for
+.\" .Xr AG_Object 3
+.\" trees.
 .It Xr AG_Palette 3
 Edit a RGB color value (Uint32/AG_PixelFormat bindings). Obsoleted
 by
