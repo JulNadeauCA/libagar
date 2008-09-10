@@ -143,6 +143,9 @@ package agar.gui.widget.file_dialog is
      extensions  : string) return filetype_access_t;
   pragma inline (add_filetype);
 
+  function widget (dialog : file_dialog_access_t) return widget_access_t;
+  pragma inline (widget);
+
 private
 
   type option_t is record
@@ -156,7 +159,7 @@ private
   pragma convention (c, option_t);
 
   type file_dialog_t is record
-    widget        : widget_t;
+    widget        : aliased widget_t;
     flags         : flags_t;
     cwd           : path_t;
     cfile         : path_t;
