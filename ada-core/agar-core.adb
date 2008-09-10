@@ -10,17 +10,10 @@ package body agar.core is
     pragma import (c, init, "AG_InitCore");
   end cbinds;
 
-  -- prevent memory leak by checking if progname is set
-  ag_progname : cs.chars_ptr;
-  pragma import (c, ag_progname, "agProgName");
-
   function init
     (progname : string;
      flags    : init_flags_t := 0) return boolean is
   begin
-    if ag_progname /= cs.null_ptr then
-      cs.free (ag_progname);
-    end if;
     return cbinds.init
       (progname => cs.new_string (progname),
        flags    => flags) = 0;
