@@ -62,4 +62,9 @@ package body agar.gui.widget.fixed is
        y     => c.int (y));
   end move;
 
+  function widget (fixed : fixed_access_t) return widget_access_t is
+  begin
+    return fixed.widget'unchecked_access;
+  end widget;
+
 end agar.gui.widget.fixed;

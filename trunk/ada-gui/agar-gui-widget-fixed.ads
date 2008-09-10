@@ -17,7 +17,7 @@ package agar.gui.widget.fixed is
   FIXED_EXPAND    : constant flags_t := FIXED_HFILL or FIXED_VFILL;
 
   type fixed_t is record
-    widget     : widget_t;
+    widget     : aliased widget_t;
     flags      : flags_t;
     width_pre  : c.int;
     height_pre : c.int;
@@ -57,4 +57,7 @@ package agar.gui.widget.fixed is
      y     : natural);
   pragma inline (move);
  
+  function widget (fixed : fixed_access_t) return widget_access_t;
+  pragma inline (widget);
+
 end agar.gui.widget.fixed;
