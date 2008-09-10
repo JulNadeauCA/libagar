@@ -368,4 +368,9 @@ package body agar.gui.widget.button is
        text   => cs.to_chars_ptr (ca_text'unchecked_access));
   end text_no_copy;
 
+  function widget (button : button_access_t) return widget_access_t is
+  begin
+    return button.widget'access;
+  end widget;
+
 end agar.gui.widget.button;

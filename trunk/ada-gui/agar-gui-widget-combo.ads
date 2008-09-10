@@ -16,18 +16,8 @@ package agar.gui.widget.combo is
   COMBO_FOCUS    : constant flags_t := 16#20#;
   COMBO_EXPAND   : constant flags_t := COMBO_HFILL or COMBO_VFILL;
 
-  type combo_private_t is limited private;
-  type combo_t is record
-    widget       : widget_t;
-    flags        : flags_t;
-    textbox      : agar.gui.widget.textbox.textbox_access_t;
-    button       : agar.gui.widget.button.button_access_t;
-    list         : agar.gui.widget.tlist.tlist_access_t;
-    panel        : agar.gui.window.window_access_t;
-    privdata     : combo_private_t;
-  end record;
+  type combo_t is limited private;
   type combo_access_t is access all combo_t;
-  pragma convention (c, combo_t);
   pragma convention (c, combo_access_t);
 
   -- API
@@ -67,12 +57,18 @@ package agar.gui.widget.combo is
 
 private
 
-  type combo_private_t is record
+  type combo_t is record
+    widget       : widget_t;
+    flags        : flags_t;
+    textbox      : agar.gui.widget.textbox.textbox_access_t;
+    button       : agar.gui.widget.button.button_access_t;
+    list         : agar.gui.widget.tlist.tlist_access_t;
+    panel        : agar.gui.window.window_access_t;
     width_saved  : c.int;
     height_saved : c.int;
     width_pre    : c.int;
     height_pre   : c.int;
   end record;
-  pragma convention (c, combo_private_t);
+  pragma convention (c, combo_t);
 
 end agar.gui.widget.combo;

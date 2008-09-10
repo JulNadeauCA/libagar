@@ -136,10 +136,13 @@ package agar.gui.widget.editable is
   function get_long_float (editable : editable_access_t) return long_float;
   pragma inline (get_long_float);
 
+  function widget (editable : editable_access_t) return widget_access_t;
+  pragma inline (widget);
+
 private
 
   type editable_t is record
-    widget         : widget_t;
+    widget         : aliased widget_t;
     flags          : flags_t;
     encoding       : encoding_t;
     str            : string_t;

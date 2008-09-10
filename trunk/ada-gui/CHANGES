@@ -26,3 +26,5 @@
 20080906 code: added agar.gui.widget.editable API functions.
 20080906 code: added agar.gui.widget.file_dialog API functions.
 20080909 code: added agar.gui.widget.file_dialog.add_filetype.
+20080909 code: agar.gui.widget.fixed is now a generic package.
+20080910 code: added agar.gui.widget.fixed API functions.

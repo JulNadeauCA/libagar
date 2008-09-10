@@ -62,10 +62,13 @@ package agar.gui.widget.checkbox is
   procedure toggle (checkbox : checkbox_access_t);
   pragma import (c, toggle, "AG_CheckboxToggle");
 
+  function widget (checkbox : checkbox_access_t) return widget_access_t;
+  pragma inline (widget);
+
 private
 
   type checkbox_t is record
-    widget     : widget_t;
+    widget     : aliased widget_t;
     flags      : flags_t;
     state      : c.int;
     label_text : cs.chars_ptr;

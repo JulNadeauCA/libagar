@@ -51,6 +51,15 @@ procedure ada_size is
   package io renames ada.text_io;
   package cmdline renames ada.command_line;
 
+  -- generic types
+  type generic_t is new integer;
+  type generic_access_t is access all generic_t;
+
+  -- package instantiations
+  package gen_agar_gui_widget_fixed is new agar.gui.widget.fixed
+    (child_type => generic_t, child_access_type => generic_access_t);
+
+  -- type names
   agar_gui_colors_blend_func_t : aliased string := "agar.gui.colors.blend_func_t";
   agar_gui_colors_color_t : aliased string := "agar.gui.colors.color_t";
   agar_gui_pixelformat_pixel_format_access_t : aliased string := "agar.gui.pixelformat.pixel_format_access_t";
@@ -273,8 +282,8 @@ procedure ada_size is
     (agar_gui_widget_file_dialog_option_access_t'access, agar.gui.widget.file_dialog.option_access_t'size),
     (agar_gui_widget_file_dialog_option_t'access, agar.gui.widget.file_dialog.option_t'size),
     (agar_gui_widget_file_dialog_option_type_t'access, agar.gui.widget.file_dialog.option_type_t'size),
-    (agar_gui_widget_fixed_fixed_access_t'access, agar.gui.widget.fixed.fixed_access_t'size),
-    (agar_gui_widget_fixed_fixed_t'access, agar.gui.widget.fixed.fixed_t'size),
+    (agar_gui_widget_fixed_fixed_access_t'access, gen_agar_gui_widget_fixed.fixed_access_t'size),
+    (agar_gui_widget_fixed_fixed_t'access, gen_agar_gui_widget_fixed.fixed_t'size),
     (agar_gui_widget_fixed_plotter_item_access_t'access, agar.gui.widget.fixed_plotter.item_access_t'size),
     (agar_gui_widget_fixed_plotter_item_t'access, agar.gui.widget.fixed_plotter.item_t'size),
     (agar_gui_widget_fixed_plotter_plotter_access_t'access, agar.gui.widget.fixed_plotter.plotter_access_t'size),

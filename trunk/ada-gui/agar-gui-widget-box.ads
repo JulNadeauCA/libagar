@@ -54,10 +54,13 @@ package agar.gui.widget.box is
      depth : natural);
   pragma inline (set_depth);
 
+  function widget (box : box_access_t) return widget_access_t;
+  pragma inline (widget);
+
 private
 
   type box_t is record
-    widget   : widget_t;
+    widget   : aliased widget_t;
     box_type : type_t;
     flags    : flags_t; 
     padding  : c.int;

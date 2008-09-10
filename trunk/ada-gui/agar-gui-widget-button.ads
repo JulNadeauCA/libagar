@@ -150,10 +150,13 @@ package agar.gui.widget.button is
      text    : string);
   pragma inline (text_no_copy);
 
+  function widget (button : button_access_t) return widget_access_t;
+  pragma inline (widget);
+
 private
 
   type button_t is record
-    widget      : widget_t;
+    widget      : aliased widget_t;
     state       : c.int;
     text        : cs.chars_ptr;
     surface     : c.int;

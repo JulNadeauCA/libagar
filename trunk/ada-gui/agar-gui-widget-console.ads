@@ -32,7 +32,7 @@ package agar.gui.widget.console is
   CONSOLE_EXPAND : constant flags_t := CONSOLE_HFILL or CONSOLE_VFILL;
 
   type console_t is record
-    widget       : widget_t;
+    widget       : aliased widget_t;
     flags        : flags_t;
     padding      : c.int;
     lineskip     : c.int;
@@ -65,5 +65,8 @@ package agar.gui.widget.console is
     (console : console_access_t;
      text    : string) return line_access_t;
   pragma inline (append_line);
+
+  function widget (console : console_access_t) return widget_access_t;
+  pragma inline (widget);
 
 end agar.gui.widget.console;
