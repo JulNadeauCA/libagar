@@ -51,4 +51,9 @@ package body agar.gui.widget.console is
        text    => cs.to_chars_ptr (ca_text'unchecked_access));
   end append_line;
 
+  function widget (console : console_access_t) return widget_access_t is
+  begin
+    return console.widget'access;
+  end widget;
+
 end agar.gui.widget.console;

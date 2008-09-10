@@ -1,12 +1,13 @@
 #!/bin/sh
 
-if [ $# -ne 1 ]
+if [ $# -ne 2 ]
 then
-  echo "usage: typemap" 1>&2
+  echo "usage: typemap generics" 1>&2
   exit 111
 fi
 
 map="$1"
+gen="$2"
 
 (cat <<EOF
 -- auto generated, do not edit
@@ -33,7 +34,7 @@ procedure ada_size is
 EOF
 ) || exit 112
 
-./types-ada-size.sh "${map}" || exit 112
+./types-ada-size.lua "${map}" "${gen}" || exit 112
 
 (cat <<EOF
   procedure find (name : string) is

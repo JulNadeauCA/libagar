@@ -110,4 +110,9 @@ package body agar.gui.widget.checkbox is
        label  => cs.to_chars_ptr (ca_label'unchecked_access));
   end allocate_flags32;
 
+  function widget (checkbox : checkbox_access_t) return widget_access_t is
+  begin
+    return checkbox.widget'access;
+  end widget;
+
 end agar.gui.widget.checkbox;

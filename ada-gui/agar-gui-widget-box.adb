@@ -68,4 +68,9 @@ package body agar.gui.widget.box is
     cbinds.set_depth (box, c.int (depth));
   end set_depth;
 
+  function widget (box : box_access_t) return widget_access_t is
+  begin
+    return box.widget'access;
+  end widget;
+
 end agar.gui.widget.box;

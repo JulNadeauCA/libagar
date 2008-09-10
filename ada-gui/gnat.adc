@@ -64,6 +64,7 @@ pragma source_file_name(agar.gui.widget.file_dialog, body_file_name => "agar-gui
 
 -- ./agar-gui-widget-fixed.apk
 pragma source_file_name(agar.gui.widget.fixed, spec_file_name => "agar-gui-widget-fixed.ads");
+pragma source_file_name(agar.gui.widget.fixed, body_file_name => "agar-gui-widget-fixed.adb");
 
 -- ./agar-gui-widget-fixed_plotter.apk
 pragma source_file_name(agar.gui.widget.fixed_plotter, spec_file_name => "agar-gui-widget-fixed_plotter.ads");

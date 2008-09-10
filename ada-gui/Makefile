@@ -433,8 +433,8 @@ agar-gui-widget-file_dialog.o:\
 agar-gui-widget-file_dialog.ali
 
 agar-gui-widget-fixed.ali:\
-ada-compile agar-gui-widget-fixed.ads agar-gui-widget-fixed.ads
-	./ada-compile agar-gui-widget-fixed.ads
+ada-compile agar-gui-widget-fixed.adb agar-gui-widget-fixed.ads
+	./ada-compile agar-gui-widget-fixed.adb
 
 agar-gui-widget-fixed.o:\
 agar-gui-widget-fixed.ali

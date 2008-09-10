@@ -1,3 +1,7 @@
+generic
+  type child_type is limited private;
+  type child_access_type is access child_type;
+
 package agar.gui.widget.fixed is
 
   use type c.unsigned;
@@ -22,4 +26,35 @@ package agar.gui.widget.fixed is
   pragma convention (c, fixed_t);
   pragma convention (c, fixed_access_t);    
 
+  -- name uniformity
+  subtype child_t is child_type;
+  subtype child_access_t is child_access_type;
+
+  -- API
+  procedure put
+    (fixed : fixed_access_t;
+     child : child_access_t;
+     x     : natural;
+     y     : natural);
+  pragma inline (put);
+
+  procedure delete
+    (fixed : fixed_access_t;
+     child : child_access_t);
+  pragma import (c, delete, "AG_FixedDel");
+
+  procedure size
+    (fixed  : fixed_access_t;
+     child  : child_access_t;
+     width  : positive;
+     height : positive);
+  pragma inline (size);
+
+  procedure move
+    (fixed : fixed_access_t;
+     child : child_access_t;
+     x     : natural;
+     y     : natural);
+  pragma inline (move);
+ 
 end agar.gui.widget.fixed;

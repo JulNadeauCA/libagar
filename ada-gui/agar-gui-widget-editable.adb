@@ -228,4 +228,9 @@ package body agar.gui.widget.editable is
     return long_float (cbinds.get_long_float (editable));
   end get_long_float;
 
+  function widget (editable : editable_access_t) return widget_access_t is
+  begin
+    return editable.widget'access;
+  end widget;
+
 end agar.gui.widget.editable;
