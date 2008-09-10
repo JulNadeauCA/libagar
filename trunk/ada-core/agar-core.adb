@@ -1,6 +1,7 @@
 package body agar.core is
 
   use type c.int;
+  use type cs.chars_ptr;
 
   package cbinds is
     function init
@@ -9,14 +10,19 @@ package body agar.core is
     pragma import (c, init, "AG_InitCore");
   end cbinds;
 
+  -- prevent memory leak by checking if progname is set
+  ag_progname : cs.chars_ptr;
+  pragma import (c, ag_progname, "agProgName");
+
   function init
     (progname : string;
-     flags    : init_flags_t := 0) return boolean
-  is
-    ca_progname : aliased c.char_array := c.to_c (progname);
+     flags    : init_flags_t := 0) return boolean is
   begin
+    if ag_progname /= cs.null_ptr then
+      cs.free (ag_progname);
+    end if;
     return cbinds.init
-      (progname => cs.to_chars_ptr (ca_progname'unchecked_access),
+      (progname => cs.new_string (progname),
        flags    => flags) = 0;
   end init;
 

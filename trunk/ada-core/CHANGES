@@ -25,3 +25,5 @@
                instead of fatal errors.
 20080906 code: add ada exception test.
 20080907 code: added agar.core.object.delete.
+20080910 code: fix bug in progname setting (a pointer is stored to the string
+               inside the C library, so string cannot be stack allocated).
