@@ -46,13 +46,12 @@ insthier.o
 
 DEMOS/helloworld1:\
 ada-bind ada-link DEMOS/helloworld1.ald DEMOS/helloworld1.ali agar-gui.ali \
-agar-gui-window.ali agar-gui-view.ali agar-gui-ada.a
+agar-gui-window.ali agar-gui-ada.a
 	./ada-bind DEMOS/helloworld1.ali
 	./ada-link DEMOS/helloworld1 DEMOS/helloworld1.ali agar-gui-ada.a
 
 DEMOS/helloworld1.ali:\
-ada-compile DEMOS/helloworld1.adb agar-gui-view.ads agar-gui-window.ads \
-agar-gui.ads
+ada-compile DEMOS/helloworld1.adb agar-gui-window.ads agar-gui.ads
 	./ada-compile DEMOS/helloworld1.adb
 
 DEMOS/helloworld1.o:\
@@ -454,10 +453,12 @@ ada-compile agar-gui-widget-fixed.adb agar-gui-widget-fixed.ads
 agar-gui-widget-fixed.o:\
 agar-gui-widget-fixed.ali
 
-agar-gui-widget-fixed_plotter.ali:\
-ada-compile agar-gui-widget-fixed_plotter.ads agar-gui-widget-fixed_plotter.ads \
+agar-gui-widget-fixed_plotter.ads:\
 agar-gui-widget-label.ads
-	./ada-compile agar-gui-widget-fixed_plotter.ads
+
+agar-gui-widget-fixed_plotter.ali:\
+ada-compile agar-gui-widget-fixed_plotter.adb agar-gui-widget-fixed_plotter.ads
+	./ada-compile agar-gui-widget-fixed_plotter.adb
 
 agar-gui-widget-fixed_plotter.o:\
 agar-gui-widget-fixed_plotter.ali

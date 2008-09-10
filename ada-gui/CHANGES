@@ -29,3 +29,4 @@
 20080909 code: agar.gui.widget.fixed is now a generic package.
 20080910 code: added agar.gui.widget.fixed API functions.
 20080910 code: added helloworld1 demo.
+20080910 code: added agar.gui.widget.fixed_plotter API functions.
