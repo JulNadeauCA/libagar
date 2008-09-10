@@ -1,0 +1,44 @@
+REQUIREMENTS
+
+  SDL-1.2.x       -- http://libsdl.org
+  sdl-ada         -- http://coreland.ath.cx/git/sdl-ada.git/  (git repository)
+                     http://coreland.ath.cx/cgi-bin/gitweb.cgi?p=sdl-ada.git
+  agar-core-ada   -- http://libagar.org/
+                     http://coreland.ath.cx/git/agar-ada.git/ (git repository)
+                     http://coreland.ath.cx/cgi-bin/gitweb.cgi?p=agar-ada.git
+
+CONFIGURATION
+
+  conf-bindir     -- Installation directory for binaries
+  conf-dlibdir    -- Installation directory for dynamic libraries
+  conf-slibdir    -- Installation directory for static libraries
+  conf-incdir     -- Installation directory for headers/generic source
+  conf-repos      -- Installation directory for source code
+
+COMPILATION EXAMPLE
+
+  $ echo '/usr/local/bin'                     > conf-bindir
+  $ echo '/usr/local/lib/agar-gui-ada'        > conf-dlibdir
+  $ echo '/usr/local/lib/agar-gui-ada-static' > conf-slibdir
+  $ echo '/usr/local/include/agar-gui-ada'    > conf-incdir
+  $ echo '/usr/local/share/agar-gui-ada'      > conf-repos
+
+  $ make
+  $ make tests
+  $ make install
+  $ make install-check
+
+COMPILING WITH AGAR-GUI-ADA
+
+  Substitute the ada-* tools with your compiler of choice.
+
+  $ ada-compile test1.adb                        \
+    `agar-gui-ada-conf compile incdir cflags`    \
+    `agar-core-ada-conf compile incdir cflags`
+  $ ada-bind test1.ali
+  $ ada-link test1 test1.ali                     \
+    `agar-gui-ada-conf compile slibdir ldflaga`  \
+    `agar-core-ada-conf compile slibdir ldflags` \
+    `agar-config --libs`
+  $ ./test1
+
