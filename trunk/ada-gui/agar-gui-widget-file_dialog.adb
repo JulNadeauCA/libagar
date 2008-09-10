@@ -97,4 +97,9 @@ package body agar.gui.widget.file_dialog is
        fmt         => agar.core.types.null_ptr);
   end add_filetype;
 
+  function widget (dialog : file_dialog_access_t) return widget_access_t is
+  begin
+    return dialog.widget'access;
+  end widget;
+
 end agar.gui.widget.file_dialog;
