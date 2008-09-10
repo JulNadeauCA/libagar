@@ -37,7 +37,7 @@ COMPILING WITH AGAR-GUI-ADA
     `agar-core-ada-conf compile incdir cflags`
   $ ada-bind test1.ali
   $ ada-link test1 test1.ali                     \
-    `agar-gui-ada-conf compile slibdir ldflaga`  \
+    `agar-gui-ada-conf compile slibdir ldflags`  \
     `agar-core-ada-conf compile slibdir ldflags` \
     `agar-config --libs`
   $ ./test1
