@@ -1,0 +1,33 @@
+CONFIGURATION
+
+  conf-bindir     -- Installation directory for binaries
+  conf-dlibdir    -- Installation directory for dynamic libraries
+  conf-slibdir    -- Installation directory for static libraries
+  conf-incdir     -- Installation directory for headers/generic source
+  conf-repos      -- Installation directory for source code
+
+COMPILATION EXAMPLE
+
+  $ echo '/usr/local/bin'                 > conf-bindir
+  $ echo '/usr/local/lib/agar-ada'        > conf-dlibdir
+  $ echo '/usr/local/lib/agar-ada-static' > conf-slibdir
+  $ echo '/usr/local/include/agar-ada'    > conf-incdir
+  $ echo '/usr/local/share/agar-ada'      > conf-repos
+
+  $ make
+  $ make tests
+  $ make install
+  $ make install-check
+
+COMPILING WITH AGAR-ADA
+
+  Substitute the ada-* tools with your compiler of choice.
+
+  $ ada-compile test1.adb \
+    `agar-core-ada-conf compile incdir cflags`
+  $ ada-bind test1.ali
+  $ ada-link test1 test1.ali \
+    `agar-core-ada-conf compile slibdir ldflags` \
+    `agar-core-config --libs`
+  $ ./test1
+
