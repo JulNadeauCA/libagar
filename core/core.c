@@ -53,7 +53,7 @@ pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
 AG_Config *agConfig;				/* Global Agar config data */
 void (*agAtexitFunc)(void) = NULL;		/* User exit function */
 void (*agAtexitFuncEv)(AG_Event *) = NULL;	/* User exit handler */
-const char *agProgName = "";			/* User program name */
+char *agProgName = NULL;			/* User program name */
 int agVerbose = 0;				/* Verbose console output */
 int agTerminating = 0;				/* Application is exiting */
 int agGUI = 0;					/* GUI is initialized */
@@ -64,7 +64,7 @@ AG_InitCore(const char *progname, Uint flags)
 	if (flags & AG_CORE_VERBOSE)
 		agVerbose = 1;
 
-	agProgName = progname;
+	agProgName = Strdup(progname);
 
 #ifdef ENABLE_NLS
 	bindtextdomain("agar", LOCALEDIR);
@@ -156,6 +156,7 @@ AG_Destroy(void)
 	AG_DestroyTimeouts();
 	AG_DestroyError();
 	AG_DestroyClassTbl();
+	Free(agProgName);
 	SDL_Quit();
 	exit(0);
 }
