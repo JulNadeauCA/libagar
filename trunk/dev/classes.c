@@ -35,17 +35,25 @@
 #include "dev.h"
 
 static void
+GenClassTable(AG_Table *tbl, AG_ObjectClass *cls)
+{
+	AG_ObjectClass *subcls;
+	
+	AG_TableAddRow(tbl, "%s:%d:%s", cls->name, cls->size,
+	    cls->libs[0] != '\0' ? cls->libs : "(none)");
+
+	TAILQ_FOREACH(subcls, &cls->sub, subclasses)
+		GenClassTable(tbl, subcls);
+}
+
+static void
 PollClasses(AG_Event *event)
 {
 	AG_Table *tbl = AG_SELF();
-	AG_ObjectClass *cls;
-	int i;
 
+	/* XXX tree */
 	AG_TableBegin(tbl);
-	AG_FOREACH_CLASS(cls, i, ag_object_class, NULL) {
-		AG_TableAddRow(tbl, "%s:%d:%s", cls->name, cls->size,
-		    cls->libs[0] != '\0' ? cls->libs : "(none)");
-	}
+	GenClassTable(tbl, agClassTree);
 	AG_TableEnd(tbl);
 }
 
@@ -60,7 +68,8 @@ DEV_ClassInfo(void)
 	}
 	AG_WindowSetCaption(win, _("Registered classes"));
 
-	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND, PollClasses, NULL);
+	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND,
+	    PollClasses, NULL);
 	AG_TableAddCol(tbl, _("Name"), "<XXXXXXXXXXXXXXXXXXXXXXXX>", NULL);
 	AG_TableAddCol(tbl, _("Size"), "<XXXX>", NULL);
 	AG_TableAddCol(tbl, _("Modules"), NULL, NULL);

@@ -95,14 +95,6 @@ enum ag_object_checksum_alg {
 	AG_OBJECT_RMD160
 };
 
-#define AG_FOREACH_CLASS(cls, i, type, spec) \
-	for ((i) = 0; \
-	    ((i) < agClassCount) && ((cls) = (struct type *)agClassTbl[i]); \
-	    (i)++) \
-		if ((spec) != NULL && !AG_ClassIsNamed((cls),(spec))) { \
-			continue; \
-		} else
-
 /* Iterate through direct child objects. */
 #define AGOBJECT_FOREACH_CHILD(var, ob, t) \
 	for((var) = (struct t *)AG_TAILQ_FIRST(&AGOBJECT(ob)->children); \
@@ -327,21 +319,7 @@ AG_ObjectFindChild(void *pParent, const char *name)
 static __inline__ AG_ObjectClass *
 AG_ObjectSuperclass(const void *p)
 {
-	AG_ObjectClass *cls = AGOBJECT(p)->cls;
-	const char *end;
-	size_t len;
-	int i;
-
-	if ((end = strrchr(cls->name, ':')) == NULL) {
-		return (AGOBJECT(p)->cls);
-	}
-	len = (size_t)(end - &cls->name[0]);
-	for (i = 0; i < agClassCount; i++) {
-		const char *s = agClassTbl[i]->name;
-		if (strncmp(s, cls->name, len) == 0 && s[len] == '\0')
-			return (agClassTbl[i]);
-	}
-	return (NULL);
+	return AGOBJECT(p)->cls->super;
 }
 __END_DECLS
 
