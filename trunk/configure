@@ -4958,11 +4958,14 @@ else
 echo "#undef SINGLE_PRECISION" >config/single_precision.h
 echo "hdefs[\"SINGLE_PRECISION\"] = nil" >>configure.lua
 fi
-if [ ! -e "$SRC/agar" ]
+if [ "${with_proj_generation}" != "yes" ]
+ then
+	if [ ! -e "$SRC/agar" ]
  then (cd $SRC && ln -s . agar)
  fi
-if [ ! -e "agar" ]
+	if [ ! -e "agar" ]
  then ln -s . agar
  fi
+fi
 echo "Don't forget to run \"make depend\"."
 echo "Don't forget to run \"make depend\"." >> config.log

@@ -463,5 +463,7 @@ fi
 
 # To avoid obstructing user code, we always use includes of the
 # form <agar/foo/foo.h>.
-if [ ! -e "$SRC/agar" ]; then (cd $SRC && ln -s . agar); fi
-if [ ! -e "agar" ]; then ln -s . agar; fi
+if [ "${with_proj_generation}" != "yes" ]; then
+	if [ ! -e "$SRC/agar" ]; then (cd $SRC && ln -s . agar); fi
+	if [ ! -e "agar" ]; then ln -s . agar; fi
+fi
