@@ -392,7 +392,7 @@ echo "#ifndef SYSCONFDIR" > config/sysconfdir.h
 echo "#define SYSCONFDIR \"${SYSCONFDIR}\"" >> config/sysconfdir.h
 echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 
-VERSION="1.3.3-beta"
+VERSION="1.3.3-rc2"
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION \"$VERSION\"" >> config/version.h
 echo "#endif" >> config/version.h
@@ -2762,8 +2762,8 @@ echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
-CFLAGS="$CFLAGS -I\"$SRC\""
-CXXFLAGS="$CXXFLAGS -I\"$SRC\""
+CFLAGS="$CFLAGS -I$SRC"
+CXXFLAGS="$CXXFLAGS -I$SRC"
 echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
