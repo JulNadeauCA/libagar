@@ -84,7 +84,7 @@ proj: proj-subdir
 			rm -fR configure.tmp configure.lua; \
 			exit 1; \
 		fi; \
-		/bin/sh ./configure.tmp $$_tgtopts; \
+		/bin/sh ./configure.tmp $$_tgtopts --with-proj-generation; \
 		if [ $$? != 0 ]; then \
 			echo "configure failed"; \
 			echo -n > Makefile.config; \
