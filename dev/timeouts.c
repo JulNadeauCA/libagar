@@ -54,14 +54,16 @@ UpdateTbl(void *obj, Uint32 ival, void *arg)
 		char text[128];
 		AG_TableviewRow *row1;
 		
-		row1 = AG_TableviewRowAdd(tv, 0, NULL, NULL, id++, 0, ob->name);
+		row1 = AG_TableviewRowAdd(tv, 0, NULL, NULL, id++,
+		    0, ob->name, -1);
 		AG_TableviewRowExpand(tv, row1);
 
 		AG_ObjectLock(ob);
 		TAILQ_FOREACH(to, &ob->timeouts, timeouts) {
 			Snprintf(text, sizeof(text), "%p: %u ticks", to,
 			    (Uint)to->ticks);
-			AG_TableviewRowAdd(tv, 0, row1, NULL, id++, 0, text);
+			AG_TableviewRowAdd(tv, 0, row1, NULL, id++,
+			    0, text, -1);
 		}
 		AG_ObjectUnlock(ob);
 	}

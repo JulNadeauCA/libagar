@@ -210,7 +210,7 @@ SelectUnicodeRange(AG_Event *event)
         
 		AG_TableviewRowAdd(tv, 0, NULL, NULL, i,
 		    0, text[0],
-		    1, text[1]);
+		    1, text[1], -1);
 	}
 }
 
