@@ -5,7 +5,7 @@
 __BEGIN_DECLS
 struct ag_event;
 
-extern const char *agProgName;	/* User program name */
+extern char *agProgName;	/* User program name */
 extern int agVerbose;		/* Verbose console output */
 extern int agTerminating;	/* Application is exiting */
 extern int agGUI;		/* GUI is initialized */
