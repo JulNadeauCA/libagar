@@ -28,7 +28,7 @@ REGISTER("--with-double-fp",    "M: Double precision math [default: no]")
 REGISTER("--with-quad-fp",      "M: Quad precision math (C99) [default: no]")
 
 # Agar version
-HDEFINE(VERSION, "1.3.3-beta")
+HDEFINE(VERSION, "1.3.3-rc2")
 HDEFINE(RELEASE, "Blackened Soil Remains")
 
 # Installation directories
