@@ -887,6 +887,25 @@ RepoRenameDlg(AG_Event *event)
 
 #endif /* NETWORK */
 
+static void
+GenNewObjectMenu(AG_MenuItem *mParent, AG_ObjectClass *cls, AG_Object *vfsRoot,
+    AG_Window *win)
+{
+	AG_ObjectClass *subcls;
+	AG_MenuItem *mNode;
+
+	mNode = AG_MenuNode(mParent, cls->name, NULL);
+
+	AG_MenuAction(mNode, _("Create instance..."), NULL,
+	    CreateObjectDlg, "%p,%p,%p", vfsRoot, cls, win);
+
+	if (!TAILQ_EMPTY(&cls->sub)) {
+		AG_MenuSeparator(mNode);
+		TAILQ_FOREACH(subcls, &cls->sub, subclasses)
+			GenNewObjectMenu(mNode, subcls, vfsRoot, win);
+	}
+}
+
 /* Create the object browser window. */
 AG_Window *
 DEV_Browser(void *vfsRoot)
@@ -913,21 +932,8 @@ DEV_Browser(void *vfsRoot)
 	me = AG_MenuNew(win, AG_MENU_HFILL);
 	mi = AG_MenuAddItem(me, _("File"));
 	{
-		char label[32];
-		int i;
-
-		mi_objs = AG_MenuAction(mi, _("New object"), NULL,
-		    NULL, NULL);
-		for (i = 0; i < agClassCount; i++) {
-			if (strncmp(agClassTbl[i]->name, "AG_", 3) == 0) {
-				continue;
-			}
-			Strlcpy(label, agClassTbl[i]->name, sizeof(label));
-			label[0] = (char)toupper((int)label[0]);
-			AG_MenuAction(mi_objs, label, NULL,
-			    CreateObjectDlg, "%p,%p,%p", vfsRoot, agClassTbl[i],
-			    win);
-		}
+		mi_objs = AG_MenuNode(mi, _("New object"), NULL);
+		GenNewObjectMenu(mi_objs, agClassTree, vfsRoot, win);
 
 		AG_MenuSeparator(mi);
 

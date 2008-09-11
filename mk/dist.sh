@@ -29,7 +29,6 @@ rm -fR `find ${PROJ}-${VER} \( -name .svn \
     -or -name \*.a \
     -or -name \*.core \
     -or -name .\*.swp \
-    -or -name .depend \
     -or -name .xvpics \)`
 tar -f ${DISTFILE}.tar -c ${PROJ}-${VER}
 gzip -f ${DISTFILE}.tar
@@ -46,9 +45,18 @@ rm -fR `find ${PROJ}-${VER} \( -name .svn \
     -or -name \*.a \
     -or -name \*.core \
     -or -name .\*.swp \
-    -or -name .depend \
     -or -name .xvpics \)`
 (cd ${PROJ}-${VER} && ${MAKE} proj)
+if [ $? != 0 ]; then
+	echo "make proj failed"
+	exit 1
+fi
+(cd ${PROJ}-${VER}/demos && ${MAKE} proj)
+if [ $? != 0 ]; then
+	echo "make proj (demos) failed"
+	exit 1
+fi
+rm -f ${PROJ}-${VER}/agar
 zip -r ${DISTFILE}.zip ${PROJ}-${VER}
 
 openssl md5 ${DISTFILE}.tar.gz > ${DISTFILE}.tar.gz.md5

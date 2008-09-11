@@ -13,9 +13,9 @@ typedef struct ag_namespace {
 
 /* Agar object class description. */
 typedef struct ag_object_class {
-	char name[AG_OBJECT_TYPE_MAX];		/* Expanded class name */
-	size_t size;				/* Structure size */
-	AG_Version ver;				/* Version numbers */
+	char name[AG_OBJECT_TYPE_MAX];	/* Inheritance hierarchy string */
+	size_t size;			/* Structure size */
+	AG_Version ver;			/* Version numbers */
 	void (*init)(void *);
 	void (*reinit)(void *);
 	void (*destroy)(void *);
@@ -25,7 +25,10 @@ typedef struct ag_object_class {
 	/*
 	 * Private
 	 */
-	char libs[AG_OBJECT_TYPE_MAX];	/* Comma-separated module list */
+	char libs[AG_OBJECT_TYPE_MAX];			/* Required modules */
+	AG_TAILQ_HEAD(,ag_object_class) sub;		/* Direct subclasses */
+	AG_TAILQ_ENTRY(ag_object_class) subclasses;	/* Subclass entry */
+	struct ag_object_class *super;			/* Superclass */
 } AG_ObjectClass;
 
 #ifdef DEBUG
@@ -37,12 +40,12 @@ typedef struct ag_object_class {
 #endif
 
 __BEGIN_DECLS
-extern AG_ObjectClass **agClassTbl;		/* Object classes */
-extern int              agClassCount;
-extern AG_Namespace    *agNamespaceTbl;		/* Object class namespaces */
-extern int              agNamespaceCount;
+extern AG_ObjectClass *agClassTree;		/* Object class tree */
+extern AG_Namespace   *agNamespaceTbl;		/* Registered namespaces */
+extern int             agNamespaceCount;
 extern char           **agModuleDirs;		/* Module search directories */
 extern int              agModuleDirCount;
+extern AG_Mutex	        agClassLock;		/* Lock on class tree */
 
 void            AG_InitClassTbl(void);
 void            AG_DestroyClassTbl(void);

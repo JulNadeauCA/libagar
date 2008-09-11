@@ -310,8 +310,6 @@ option.
 .Pp
 .Fn AGOBJECT_FOREACH_CLASS "AG_Object *child_obj" "AG_Object *parent_obj" "TYPE type" "const char *pattern"
 .Pp
-.Fn AG_FOREACH_CLASS "AG_ObjectClass *classInfo" "int i" "TYPE type" "const char *spec"
-.Pp
 .nr nS 0
 The
 .Fn AG_RegisterClass
@@ -335,6 +333,10 @@ typedef struct ag_object_class {
 	void *(*edit)(void *obj);
 } AG_ObjectClass;
 .Ed
+.Pp
+The structure pointed by
+.Fa classInfo
+is used directly, it is not duplicated.
 .Pp
 Note that it is customary to overload
 .Ft AG_ObjectClass .
@@ -528,15 +530,6 @@ AGOBJECT_FOREACH_CLASS(my_obj, parent_obj, my_class, "MyClass") {
 	    AGOBJECT(my_obj)->name);
 }
 .Ed
-.Pp
-The
-.Fn AG_FOREACH_CLASS
-macro iterates over the
-.Fn AG_ObjectClass
-structure for all currently registered classes matching the given specification
-(if
-.Fa spec
-is NULL, all classes are iterated over).
 .Sh DEPENDENCIES
 .nr nS 1
 .Ft "int"
