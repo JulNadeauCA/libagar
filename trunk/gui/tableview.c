@@ -290,7 +290,7 @@ AG_TableviewSetUpdate(AG_Tableview *tv, Uint ms)
 }
 
 AG_TableviewRow *
-AG_TableviewRowAddFn(AG_Tableview *tv, int flags,
+AG_TableviewRowAdd(AG_Tableview *tv, int flags,
     AG_TableviewRow *parent, void *userp, AG_TableviewRowID rid, ...)
 {
 	AG_TableviewRow *row;

@@ -162,8 +162,8 @@ AG_TableviewCol *AG_TableviewColAdd(AG_Tableview *, int, AG_TableviewColID,
 			            const char *, const char *);
 void		 AG_TableviewColSelect(AG_Tableview *, AG_TableviewColID);
 AG_TableviewRow *AG_TableviewRowGet(AG_Tableview *, AG_TableviewRowID);
-AG_TableviewRow *AG_TableviewRowAddFn(AG_Tableview *, int, AG_TableviewRow *,
-			              void *, AG_TableviewRowID, ...);
+AG_TableviewRow *AG_TableviewRowAdd(AG_Tableview *, int, AG_TableviewRow *,
+			            void *, AG_TableviewRowID, ...);
 AG_TableviewRow *AG_TableviewRowSelected(AG_Tableview *);
 
 void AG_TableviewRowDel(AG_Tableview *, AG_TableviewRow *);
@@ -180,7 +180,6 @@ void AG_TableviewCellPrintf(AG_Tableview *, AG_TableviewRow *, int,
 		           const char *, ...);
 
 #define AG_TableviewRowGetID(ROW) (*(AG_TableviewRowID *)(ROW))
-#define AG_TableviewRowAdd(...) AG_TableviewRowAddFn(__VA_ARGS__, -1)
 #define AG_TableviewRowDeselect(TV, ROW) ((ROW)->selected = 0)
 #define	AG_TableviewRowToggle(TV, ROW)				\
 	do {							\
@@ -192,8 +191,9 @@ void AG_TableviewCellPrintf(AG_Tableview *, AG_TableviewRow *, int,
 	} while (0)
 
 #define AG_TableviewRowIDAdd(TV, ID, IDNEW, USERP) \
-	AG_TableviewRowAdd((TV), AG_TableviewRowGet((TV), (ID)), (USERP), \
-	(IDNEW))
+	AG_TableviewRowAdd((TV), 0, \
+	                   AG_TableviewRowGet((TV),(ID)), (USERP), \
+	                   (IDNEW), -1)
 
 #define AG_TableviewRowIDDel(TV, ID) \
 	AG_TableviewRowDelete((TV), AG_TableviewRowGet((TV), (ID)))
