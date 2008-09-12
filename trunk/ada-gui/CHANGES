@@ -31,3 +31,5 @@
 20080910 code: added helloworld1 demo.
 20080910 code: added agar.gui.widget.fixed_plotter API functions.
 20080913 code: added agar.gui.widget.graph API functions.
+20080913 code: added agar.gui.widget.hbox API functions.
+20080913 code: added agar.gui.widget.vbox API functions.

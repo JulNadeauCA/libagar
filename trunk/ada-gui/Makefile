@@ -473,10 +473,12 @@ ada-compile agar-gui-widget-graph.adb agar-gui-widget-graph.ads
 agar-gui-widget-graph.o:\
 agar-gui-widget-graph.ali
 
-agar-gui-widget-hbox.ali:\
-ada-compile agar-gui-widget-hbox.ads agar-gui-widget-hbox.ads \
+agar-gui-widget-hbox.ads:\
 agar-gui-widget-box.ads
-	./ada-compile agar-gui-widget-hbox.ads
+
+agar-gui-widget-hbox.ali:\
+ada-compile agar-gui-widget-hbox.adb agar-gui-widget-hbox.ads
+	./ada-compile agar-gui-widget-hbox.adb
 
 agar-gui-widget-hbox.o:\
 agar-gui-widget-hbox.ali
@@ -638,10 +640,12 @@ agar-gui-widget-button.ads agar-gui-widget-tlist.ads agar-gui-window.ads
 agar-gui-widget-ucombo.o:\
 agar-gui-widget-ucombo.ali
 
-agar-gui-widget-vbox.ali:\
-ada-compile agar-gui-widget-vbox.ads agar-gui-widget-vbox.ads \
+agar-gui-widget-vbox.ads:\
 agar-gui-widget-box.ads
-	./ada-compile agar-gui-widget-vbox.ads
+
+agar-gui-widget-vbox.ali:\
+ada-compile agar-gui-widget-vbox.adb agar-gui-widget-vbox.ads
+	./ada-compile agar-gui-widget-vbox.adb
 
 agar-gui-widget-vbox.o:\
 agar-gui-widget-vbox.ali

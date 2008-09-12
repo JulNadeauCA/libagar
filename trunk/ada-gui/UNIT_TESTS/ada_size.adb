@@ -25,6 +25,7 @@ with agar.gui.widget.file_dialog;
 with agar.gui.widget.fixed;
 with agar.gui.widget.fixed_plotter;
 with agar.gui.widget.graph;
+with agar.gui.widget.hbox;
 with agar.gui.widget.hsvpal;
 with agar.gui.widget.icon;
 with agar.gui.widget.label;
@@ -45,6 +46,7 @@ with agar.gui.widget.textbox;
 with agar.gui.widget.tlist;
 with agar.gui.widget.toolbar;
 with agar.gui.widget.ucombo;
+with agar.gui.widget.vbox;
 with agar.gui.window;
 
 procedure ada_size is
@@ -131,6 +133,8 @@ procedure ada_size is
   agar_gui_widget_graph_vertex_access_t : aliased string := "agar.gui.widget.graph.vertex_access_t";
   agar_gui_widget_graph_vertex_style_t : aliased string := "agar.gui.widget.graph.vertex_style_t";
   agar_gui_widget_graph_vertex_t : aliased string := "agar.gui.widget.graph.vertex_t";
+  agar_gui_widget_hbox_hbox_access_t : aliased string := "agar.gui.widget.hbox.hbox_access_t";
+  agar_gui_widget_hbox_hbox_t : aliased string := "agar.gui.widget.hbox.hbox_t";
   agar_gui_widget_hsvpal_hsvpal_access_t : aliased string := "agar.gui.widget.hsvpal.hsvpal_access_t";
   agar_gui_widget_hsvpal_hsvpal_t : aliased string := "agar.gui.widget.hsvpal.hsvpal_t";
   agar_gui_widget_icon_icon_access_t : aliased string := "agar.gui.widget.icon.icon_access_t";
@@ -213,6 +217,8 @@ procedure ada_size is
   agar_gui_widget_toolbar_type_t : aliased string := "agar.gui.widget.toolbar.type_t";
   agar_gui_widget_ucombo_ucombo_access_t : aliased string := "agar.gui.widget.ucombo.ucombo_access_t";
   agar_gui_widget_ucombo_ucombo_t : aliased string := "agar.gui.widget.ucombo.ucombo_t";
+  agar_gui_widget_vbox_vbox_access_t : aliased string := "agar.gui.widget.vbox.vbox_access_t";
+  agar_gui_widget_vbox_vbox_t : aliased string := "agar.gui.widget.vbox.vbox_t";
   agar_gui_widget_widget_access_t : aliased string := "agar.gui.widget.widget_access_t";
   agar_gui_widget_widget_t : aliased string := "agar.gui.widget.widget_t";
   agar_gui_window_alignment_t : aliased string := "agar.gui.window.alignment_t";
@@ -298,6 +304,8 @@ procedure ada_size is
     (agar_gui_widget_graph_vertex_access_t'access, agar.gui.widget.graph.vertex_access_t'size),
     (agar_gui_widget_graph_vertex_style_t'access, agar.gui.widget.graph.vertex_style_t'size),
     (agar_gui_widget_graph_vertex_t'access, agar.gui.widget.graph.vertex_t'size),
+    (agar_gui_widget_hbox_hbox_access_t'access, agar.gui.widget.hbox.hbox_access_t'size),
+    (agar_gui_widget_hbox_hbox_t'access, agar.gui.widget.hbox.hbox_t'size),
     (agar_gui_widget_hsvpal_hsvpal_access_t'access, agar.gui.widget.hsvpal.hsvpal_access_t'size),
     (agar_gui_widget_hsvpal_hsvpal_t'access, agar.gui.widget.hsvpal.hsvpal_t'size),
     (agar_gui_widget_icon_icon_access_t'access, agar.gui.widget.icon.icon_access_t'size),
@@ -380,6 +388,8 @@ procedure ada_size is
     (agar_gui_widget_toolbar_type_t'access, agar.gui.widget.toolbar.type_t'size),
     (agar_gui_widget_ucombo_ucombo_access_t'access, agar.gui.widget.ucombo.ucombo_access_t'size),
     (agar_gui_widget_ucombo_ucombo_t'access, agar.gui.widget.ucombo.ucombo_t'size),
+    (agar_gui_widget_vbox_vbox_access_t'access, agar.gui.widget.vbox.vbox_access_t'size),
+    (agar_gui_widget_vbox_vbox_t'access, agar.gui.widget.vbox.vbox_t'size),
     (agar_gui_widget_widget_access_t'access, agar.gui.widget.widget_access_t'size),
     (agar_gui_widget_widget_t'access, agar.gui.widget.widget_t'size),
     (agar_gui_window_alignment_t'access, agar.gui.window.alignment_t'size),

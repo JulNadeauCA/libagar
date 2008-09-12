@@ -76,6 +76,7 @@ pragma source_file_name(agar.gui.widget.graph, body_file_name => "agar-gui-widge
 
 -- ./agar-gui-widget-hbox.apk
 pragma source_file_name(agar.gui.widget.hbox, spec_file_name => "agar-gui-widget-hbox.ads");
+pragma source_file_name(agar.gui.widget.hbox, body_file_name => "agar-gui-widget-hbox.adb");
 
 -- ./agar-gui-widget-hsvpal.apk
 pragma source_file_name(agar.gui.widget.hsvpal, spec_file_name => "agar-gui-widget-hsvpal.ads");
@@ -139,6 +140,7 @@ pragma source_file_name(agar.gui.widget.ucombo, spec_file_name => "agar-gui-widg
 
 -- ./agar-gui-widget-vbox.apk
 pragma source_file_name(agar.gui.widget.vbox, spec_file_name => "agar-gui-widget-vbox.ads");
+pragma source_file_name(agar.gui.widget.vbox, body_file_name => "agar-gui-widget-vbox.adb");
 
 -- ./agar-gui-widget.apk
 pragma source_file_name(agar.gui.widget, spec_file_name => "agar-gui-widget.ads");
