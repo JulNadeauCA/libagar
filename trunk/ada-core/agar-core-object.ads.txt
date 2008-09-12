@@ -19,6 +19,10 @@ package agar.core.object is
   type prop_access_t is access all prop_t;
   pragma convention (c, prop_access_t);
 
+  type class_t;
+  type class_access_t is access all class_t;
+  pragma convention (c, class_access_t);
+
   -- queue types
   package dep_queue is new agar.core.tail_queue
     (entry_type => dep_access_t);
@@ -30,6 +34,8 @@ package agar.core.object is
     (entry_type => prop_access_t);
   package timeout_queue is new agar.core.tail_queue
     (entry_type => agar.core.timeout.timeout_access_t);
+  package class_queue is new agar.core.tail_queue
+    (entry_type => class_access_t);
 
   use type c.unsigned;
 
@@ -357,25 +363,26 @@ package agar.core.object is
 
   -- Generic object operation vector
   type class_t is record
-    name    : class_name_t;
-    size    : c.size_t;
-    ver     : agar.core.version.version_t;
-    init    : access procedure (ptr : agar.core.types.void_ptr_t);
-    reinit  : access procedure (ptr : agar.core.types.void_ptr_t);
-    destroy : access procedure (ptr : agar.core.types.void_ptr_t);
-    load    : access function
+    name       : class_name_t;
+    size       : c.size_t;
+    ver        : agar.core.version.version_t;
+    init       : access procedure (ptr : agar.core.types.void_ptr_t);
+    reinit     : access procedure (ptr : agar.core.types.void_ptr_t);
+    destroy    : access procedure (ptr : agar.core.types.void_ptr_t);
+    load       : access function
       (ptr         : agar.core.types.void_ptr_t;
        data_source : agar.core.datasource.datasource_access_t;
        ver         : agar.core.version.version_access_t) return c.int;
-    save    : access function
+    save       : access function
       (ptr         : agar.core.types.void_ptr_t;
        data_source : agar.core.datasource.datasource_access_t) return c.int;
-    edit    : access function
+    edit       : access function
       (ptr : agar.core.types.void_ptr_t) return agar.core.types.void_ptr_t;
-    libs    : class_libs_t;
+    libs       : class_libs_t;
+    sub        : class_queue.head_t;
+    subclasses : class_queue.entry_t;
+    super      : class_access_t;
   end record;
-  type class_access_t is access all class_t;
-  pragma convention (c, class_access_t);
   pragma convention (c, class_t);
 
   -- Dependency with respect to another object.
