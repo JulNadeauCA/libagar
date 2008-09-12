@@ -115,4 +115,92 @@ package agar.gui.widget.graph is
   end record;
   pragma convention (c, graph_t);
 
+  -- API
+
+  package vertex is
+    function allocate
+      (graph     : graph_access_t;
+       user_data : agar.core.types.void_ptr_t) return vertex_access_t;
+    pragma import (c, allocate, "AG_GraphVertexNew");
+
+    function find
+      (graph     : graph_access_t;
+       user_data : agar.core.types.void_ptr_t) return vertex_access_t;
+    pragma import (c, find, "AG_GraphVertexFind");
+
+    procedure label
+      (vertex : vertex_access_t;
+       label  : string);
+    pragma inline (label);
+
+    procedure color_label
+      (vertex : vertex_access_t;
+       r      : agar.core.types.uint8_t;
+       g      : agar.core.types.uint8_t;
+       b      : agar.core.types.uint8_t);
+    pragma import (c, color_label, "AG_GraphVertexColorLabel");
+
+    procedure color_background
+      (vertex : vertex_access_t;
+       r      : agar.core.types.uint8_t;
+       g      : agar.core.types.uint8_t;
+       b      : agar.core.types.uint8_t);
+    pragma import (c, color_background, "AG_GraphVertexColorBG");
+ 
+    procedure size
+      (vertex : vertex_access_t;
+       width  : positive;
+       height : positive);
+    pragma inline (size);
+    
+    procedure position
+      (vertex : vertex_access_t;
+       x      : natural;
+       y      : natural);
+    pragma inline (position);
+
+    procedure popup_menu
+      (vertex : vertex_access_t;
+       menu   : agar.gui.widget.menu.popup_menu_access_t);
+    pragma import (c, popup_menu, "AG_GraphVertexPopupMenu");
+  end vertex;
+
+  package edge is
+    function allocate
+      (graph     : graph_access_t;
+       v1        : vertex_access_t;
+       v2        : vertex_access_t;
+       user_data : agar.core.types.void_ptr_t) return edge_access_t;
+    pragma import (c, allocate, "AG_GraphEdgeNew");
+
+    function find
+      (graph     : graph_access_t;
+       user_data : agar.core.types.void_ptr_t) return edge_access_t;
+    pragma import (c, find, "AG_GraphEdgeFind");
+
+    procedure label
+      (edge  : edge_access_t;
+       label : string);
+    pragma inline (label);
+
+    procedure color_label
+      (edge : edge_access_t;
+       r    : agar.core.types.uint8_t;
+       g    : agar.core.types.uint8_t;
+       b    : agar.core.types.uint8_t);
+    pragma import (c, color_label, "AG_GraphEdgeColorLabel");
+
+    procedure color_background
+      (edge : edge_access_t;
+       r    : agar.core.types.uint8_t;
+       g    : agar.core.types.uint8_t;
+       b    : agar.core.types.uint8_t);
+    pragma import (c, color_background, "AG_GraphEdgeColor");
+ 
+    procedure popup_menu
+      (edge : edge_access_t;
+       menu : agar.gui.widget.menu.popup_menu_access_t);
+    pragma import (c, popup_menu, "AG_GraphEdgePopupMenu");
+  end edge;
+
 end agar.gui.widget.graph;

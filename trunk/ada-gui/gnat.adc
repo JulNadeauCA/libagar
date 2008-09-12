@@ -72,6 +72,7 @@ pragma source_file_name(agar.gui.widget.fixed_plotter, body_file_name => "agar-g
 
 -- ./agar-gui-widget-graph.apk
 pragma source_file_name(agar.gui.widget.graph, spec_file_name => "agar-gui-widget-graph.ads");
+pragma source_file_name(agar.gui.widget.graph, body_file_name => "agar-gui-widget-graph.adb");
 
 -- ./agar-gui-widget-hbox.apk
 pragma source_file_name(agar.gui.widget.hbox, spec_file_name => "agar-gui-widget-hbox.ads");
