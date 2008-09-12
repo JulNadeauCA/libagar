@@ -127,6 +127,10 @@ agar.gui.widget.graph.vertex_access_t:struct ag_graph_vertex *
 agar.gui.widget.graph.vertex_style_t:enum ag_graph_vertex_style
 agar.gui.widget.graph.vertex_t:AG_GraphVertex
 agar.gui.widget.graph.vertex_t:struct ag_graph_vertex
+agar.gui.widget.hbox.hbox_access_t:AG_HBox *
+agar.gui.widget.hbox.hbox_access_t:struct ag_hbox *
+agar.gui.widget.hbox.hbox_t:AG_HBox
+agar.gui.widget.hbox.hbox_t:struct ag_hbox
 agar.gui.widget.hsvpal.hsvpal_access_t:AG_HSVPal *
 agar.gui.widget.hsvpal.hsvpal_access_t:struct ag_hsvpal *
 agar.gui.widget.hsvpal.hsvpal_t:AG_HSVPal
@@ -273,6 +277,10 @@ agar.gui.widget.ucombo.ucombo_access_t:AG_UCombo *
 agar.gui.widget.ucombo.ucombo_access_t:struct ag_ucombo *
 agar.gui.widget.ucombo.ucombo_t:AG_UCombo
 agar.gui.widget.ucombo.ucombo_t:struct ag_ucombo
+agar.gui.widget.vbox.vbox_access_t:AG_VBox *
+agar.gui.widget.vbox.vbox_access_t:struct ag_vbox *
+agar.gui.widget.vbox.vbox_t:AG_VBox
+agar.gui.widget.vbox.vbox_t:struct ag_vbox
 agar.gui.widget.widget_access_t:AG_Widget *
 agar.gui.widget.widget_access_t:struct ag_widget *
 agar.gui.widget.widget_t:AG_Widget
