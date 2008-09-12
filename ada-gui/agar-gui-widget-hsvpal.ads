@@ -14,6 +14,23 @@ package agar.gui.widget.hsvpal is
   HSVPAL_VFILL  : constant flags_t := 16#08#;
   HSVPAL_EXPAND : constant flags_t := HSVPAL_HFILL or HSVPAL_VFILL;
 
+  type circle_t is limited private;
+  type triangle_t is limited private;
+  type state_t is limited private;
+  type hsvpal_t is limited private;
+
+  type hsvpal_access_t is access all hsvpal_t;
+  pragma convention (c, hsvpal_access_t);
+
+  -- API
+
+  function allocate
+    (parent : widget_access_t;
+     flags  : flags_t) return hsvpal_access_t;
+  pragma import (c, allocate, "AG_HSVPalNew");
+
+private
+
   type circle_t is record
     x       : c.int;
     y       : c.int;
@@ -62,8 +79,6 @@ package agar.gui.widget.hsvpal is
     menu_win     : agar.gui.window.window_access_t;
     c_tile       : agar.core.types.uint32_t;
   end record;
-  type hsvpal_access_t is access all hsvpal_t;
   pragma convention (c, hsvpal_t);
-  pragma convention (c, hsvpal_access_t);
 
 end agar.gui.widget.hsvpal;

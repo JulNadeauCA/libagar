@@ -22,7 +22,7 @@ package agar.gui.widget.vbox is
   function allocate
     (parent : widget_access_t;
      flags  : flags_t) return vbox_access_t;
-  pragma import (c, allocate, "AG_VBoxNew");
+  pragma import (c, allocate, "agar_gui_widget_vbox_new");
 
   procedure set_homogenous
     (box        : vbox_access_t;

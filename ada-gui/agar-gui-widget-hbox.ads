@@ -22,7 +22,7 @@ package agar.gui.widget.hbox is
   function allocate
     (parent : widget_access_t;
      flags  : flags_t) return hbox_access_t;
-  pragma import (c, allocate, "AG_HBoxNew");
+  pragma import (c, allocate, "agar_gui_widget_hbox_new");
 
   procedure set_homogenous
     (box        : hbox_access_t;
