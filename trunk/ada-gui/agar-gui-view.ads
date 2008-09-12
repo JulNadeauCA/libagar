@@ -35,7 +35,7 @@ package agar.gui.view is
 
   type display_t is record
     object       : agar.core.object.object_t;
-    v            : sdl.video.surface_ptr_t;
+    v            : sdl.video.surface_access_t;
     stmpl        : agar.gui.surface.surface_access_t;
     w            : c.int;
     h            : c.int;
@@ -43,7 +43,7 @@ package agar.gui.view is
     opengl       : c.int;
     rcur         : c.int;
     rnom         : c.unsigned;
-    dirty        : sdl.video.rect_ptr_t;
+    dirty        : sdl.video.rect_access_t;
     ndirty       : c.unsigned;
     maxdirty     : c.unsigned;
     windows      : window_tail_queue.head_t;

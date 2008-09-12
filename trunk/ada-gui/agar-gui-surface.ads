@@ -98,7 +98,7 @@ package agar.gui.surface is
   function from_bmp (file : string) return surface_access_t;
   pragma inline (from_bmp);
 
-  function from_sdl (surface : sdl.video.surface_ptr_t) return surface_access_t;
+  function from_sdl (surface : sdl.video.surface_access_t) return surface_access_t;
   pragma import (c, from_sdl, "AG_SurfaceFromSDL");
 
   procedure free (surface : surface_access_t);
