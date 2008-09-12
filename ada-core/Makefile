@@ -313,8 +313,8 @@ agar.o:\
 agar.ali
 
 cc-compile:\
-conf-cc conf-cctype conf-systype conf-cflags conf-ccfflist flags-agar-core \
-	flags-sdl
+conf-cc conf-cctype conf-systype conf-cflags conf-ccfflist flags-exceptions \
+	flags-agar-core flags-sdl
 
 cc-link:\
 conf-ld conf-ldtype conf-systype conf-ldflags
