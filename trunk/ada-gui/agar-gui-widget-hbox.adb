@@ -4,17 +4,17 @@ package body agar.gui.widget.hbox is
     procedure set_homogenous
      (box        : hbox_access_t;
       homogenous : c.int);
-    pragma import (c, set_homogenous, "AG_HBoxSetHomogenous");
+    pragma import (c, set_homogenous, "agar_gui_widget_hbox_set_homogenous");
 
     procedure set_padding
      (box     : hbox_access_t;
       padding : c.int);
-    pragma import (c, set_padding, "AG_HBoxSetPadding");
+    pragma import (c, set_padding, "agar_gui_widget_hbox_set_padding");
 
     procedure set_spacing
      (box     : hbox_access_t;
       spacing : c.int);
-    pragma import (c, set_spacing, "AG_HBoxSetSpacing");
+    pragma import (c, set_spacing, "agar_gui_widget_hbox_set_spacing");
   end cbinds;
 
   procedure set_homogenous

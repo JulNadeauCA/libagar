@@ -4,17 +4,17 @@ package body agar.gui.widget.vbox is
     procedure set_homogenous
      (box        : vbox_access_t;
       homogenous : c.int);
-    pragma import (c, set_homogenous, "AG_VBoxSetHomogenous");
+    pragma import (c, set_homogenous, "agar_gui_widget_vbox_set_homogenous");
 
     procedure set_padding
      (box     : vbox_access_t;
       padding : c.int);
-    pragma import (c, set_padding, "AG_VBoxSetPadding");
+    pragma import (c, set_padding, "agar_gui_widget_vbox_set_padding");
 
     procedure set_spacing
      (box     : vbox_access_t;
       spacing : c.int);
-    pragma import (c, set_spacing, "AG_VBoxSetSpacing");
+    pragma import (c, set_spacing, "agar_gui_widget_vbox_set_spacing");
   end cbinds;
 
   procedure set_homogenous

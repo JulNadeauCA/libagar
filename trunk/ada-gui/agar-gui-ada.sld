@@ -1,8 +1,10 @@
 ag_button.o
 ag_draw.o
 ag_event.o
+ag_hbox.o
 ag_surface.o
 ag_unit.o
+ag_vbox.o
 ag_widget.o
 ag_window.o
 agar-gui-colors.o
