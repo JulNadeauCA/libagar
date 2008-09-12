@@ -463,10 +463,12 @@ ada-compile agar-gui-widget-fixed_plotter.adb agar-gui-widget-fixed_plotter.ads
 agar-gui-widget-fixed_plotter.o:\
 agar-gui-widget-fixed_plotter.ali
 
-agar-gui-widget-graph.ali:\
-ada-compile agar-gui-widget-graph.ads agar-gui-widget-graph.ads \
+agar-gui-widget-graph.ads:\
 agar-gui-widget-menu.ads agar-gui-widget-scrollbar.ads
-	./ada-compile agar-gui-widget-graph.ads
+
+agar-gui-widget-graph.ali:\
+ada-compile agar-gui-widget-graph.adb agar-gui-widget-graph.ads
+	./ada-compile agar-gui-widget-graph.adb
 
 agar-gui-widget-graph.o:\
 agar-gui-widget-graph.ali
