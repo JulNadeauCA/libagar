@@ -165,13 +165,14 @@ AG_RegisterClass(void *p)
 	char name[AG_OBJECT_TYPE_MAX];
 	char libs[AG_OBJECT_TYPE_MAX];
 	char *s;
-	
+
 	/* Parse the inheritance hierarchy string. */
 	if (AG_ParseClassSpec(name, sizeof(name), libs, sizeof(libs),
 	    cls->name) == -1) {
 		AG_FatalError("%s: %s", cls->name, AG_GetError());
 	}
 	InitClass(cls, name, libs);
+	Debug(NULL, "Registered class: %s (%s)\n", name, libs);
 
 	/* Lookup the superclass. */
 	AG_MutexLock(&agClassLock);
@@ -194,6 +195,7 @@ AG_UnregisterClass(void *p)
 	AG_ObjectClass *clsSuper = cls->super;
 
 	AG_MutexLock(&agClassLock);
+	Debug(NULL, "Unregistering class: %s\n", cls->name);
 	TAILQ_REMOVE(&clsSuper->sub, cls, subclasses);
 	cls->super = NULL;
 	AG_MutexUnlock(&agClassLock);
