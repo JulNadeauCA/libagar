@@ -68,6 +68,7 @@ package agar.core.event is
 
   -- callback
   type callback_t is access procedure (ev : event_access_t);
+  pragma convention (c, callback_t);
 
   type event_name_t is array (1 .. event_name_max) of aliased c.char;
   pragma convention (c, event_name_t);
