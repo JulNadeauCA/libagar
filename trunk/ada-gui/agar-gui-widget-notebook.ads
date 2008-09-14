@@ -48,7 +48,7 @@ package agar.gui.widget.notebook is
   NOTEBOOK_EXPAND    : constant flags_t := NOTEBOOK_HFILL or NOTEBOOK_VFILL;
 
   type notebook_t is record
-    widget : widget_t;
+    widget              : aliased widget_t;
     tab_align           : tab_alignment_t;
     flags               : flags_t;
     bar_w               : c.int;
@@ -66,5 +66,58 @@ package agar.gui.widget.notebook is
   type notebook_access_t is access all notebook_t;
   pragma convention (c, notebook_t);
   pragma convention (c, notebook_access_t);
+
+  -- API
+
+  function allocate
+    (parent : widget_access_t;
+     flags  : flags_t) return notebook_access_t;
+  pragma import (c, allocate, "AG_NotebookNew");
+
+  procedure set_padding
+    (notebook : notebook_access_t;
+     padding  : natural);
+  pragma inline (set_padding);
+
+  procedure set_spacing
+    (notebook : notebook_access_t;
+     spacing  : natural);
+  pragma inline (set_spacing);
+
+  procedure set_tab_alignment
+    (notebook  : notebook_access_t;
+     alignment : tab_alignment_t);
+  pragma import (c, set_tab_alignment, "AG_NotebookSetTabAlignment");
+
+  procedure set_tab_font
+    (notebook  : notebook_access_t;
+     font      : agar.gui.text.font_access_t);
+  pragma import (c, set_tab_font, "AG_NotebookSetTabFont");
+
+  procedure set_tab_visibility
+    (notebook : notebook_access_t;
+     flag     : boolean := false);
+  pragma inline (set_tab_visibility);
+
+  -- tabs
+
+  procedure add_tab
+    (notebook : notebook_access_t;
+     name     : string;
+     box_type : agar.gui.widget.box.type_t);
+  pragma inline (add_tab);
+
+  procedure delete_tab
+    (notebook : notebook_access_t;
+     tab      : tab_access_t);
+  pragma import (c, delete_tab, "AG_NotebookDelTab");
+
+  procedure select_tab
+    (notebook : notebook_access_t;
+     tab      : tab_access_t);
+  pragma import (c, select_tab, "AG_NotebookSelectTab");
+
+  function widget (notebook : notebook_access_t) return widget_access_t;
+  pragma inline (widget);
 
 end agar.gui.widget.notebook;

@@ -95,9 +95,11 @@ pragma source_file_name(agar.gui.widget.menu, spec_file_name => "agar-gui-widget
 
 -- ./agar-gui-widget-mpane.apk
 pragma source_file_name(agar.gui.widget.mpane, spec_file_name => "agar-gui-widget-mpane.ads");
+pragma source_file_name(agar.gui.widget.mpane, body_file_name => "agar-gui-widget-mpane.adb");
 
 -- ./agar-gui-widget-notebook.apk
 pragma source_file_name(agar.gui.widget.notebook, spec_file_name => "agar-gui-widget-notebook.ads");
+pragma source_file_name(agar.gui.widget.notebook, body_file_name => "agar-gui-widget-notebook.adb");
 
 -- ./agar-gui-widget-numerical.apk
 pragma source_file_name(agar.gui.widget.numerical, spec_file_name => "agar-gui-widget-numerical.ads");
