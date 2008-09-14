@@ -46,4 +46,9 @@ package body agar.gui.widget.hbox is
        spacing => c.int (spacing));
   end set_spacing;
 
+  function widget (box : hbox_access_t) return widget_access_t is
+  begin
+    return agar.gui.widget.box.widget (box.box'access);
+  end widget;
+
 end agar.gui.widget.hbox;

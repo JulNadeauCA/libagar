@@ -29,6 +29,9 @@ package agar.gui.widget.hsvpal is
      flags  : flags_t) return hsvpal_access_t;
   pragma import (c, allocate, "AG_HSVPalNew");
 
+  function widget (hsvpal : hsvpal_access_t) return widget_access_t;
+  pragma inline (widget);
+
 private
 
   type circle_t is record
@@ -61,7 +64,7 @@ private
   pragma convention (c, state_t);
 
   type hsvpal_t is record
-    widget       : widget_t;
+    widget       : aliased widget_t;
     flags        : flags_t;
     h            : c.c_float;
     s            : c.c_float;

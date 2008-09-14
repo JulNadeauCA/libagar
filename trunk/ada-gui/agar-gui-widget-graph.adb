@@ -80,4 +80,9 @@ package body agar.gui.widget.graph is
     end label;
   end edge;
 
+  function widget (graph : graph_access_t) return widget_access_t is
+  begin
+    return graph.widget'access;
+  end widget;
+
 end agar.gui.widget.graph;
