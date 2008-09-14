@@ -5,7 +5,7 @@ package agar.gui.widget.hbox is
   use type c.unsigned;
 
   type hbox_t is record
-    box : agar.gui.widget.box.box_t;
+    box : aliased agar.gui.widget.box.box_t;
   end record;
   type hbox_access_t is access all hbox_t;
   pragma convention (c, hbox_t);
@@ -38,5 +38,8 @@ package agar.gui.widget.hbox is
     (box     : hbox_access_t;
      spacing : natural);
   pragma inline (set_spacing);
+
+  function widget (box : hbox_access_t) return widget_access_t;
+  pragma inline (widget);
 
 end agar.gui.widget.hbox;

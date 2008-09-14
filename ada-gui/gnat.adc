@@ -80,12 +80,15 @@ pragma source_file_name(agar.gui.widget.hbox, body_file_name => "agar-gui-widget
 
 -- ./agar-gui-widget-hsvpal.apk
 pragma source_file_name(agar.gui.widget.hsvpal, spec_file_name => "agar-gui-widget-hsvpal.ads");
+pragma source_file_name(agar.gui.widget.hsvpal, body_file_name => "agar-gui-widget-hsvpal.adb");
 
 -- ./agar-gui-widget-icon.apk
 pragma source_file_name(agar.gui.widget.icon, spec_file_name => "agar-gui-widget-icon.ads");
+pragma source_file_name(agar.gui.widget.icon, body_file_name => "agar-gui-widget-icon.adb");
 
 -- ./agar-gui-widget-label.apk
 pragma source_file_name(agar.gui.widget.label, spec_file_name => "agar-gui-widget-label.ads");
+pragma source_file_name(agar.gui.widget.label, body_file_name => "agar-gui-widget-label.adb");
 
 -- ./agar-gui-widget-menu.apk
 pragma source_file_name(agar.gui.widget.menu, spec_file_name => "agar-gui-widget-menu.ads");

@@ -92,7 +92,7 @@ package agar.gui.widget.graph is
   GRAPH_READONLY  : constant graph_flags_t := GRAPH_NO_MOVE or GRAPH_NO_SELECT or GRAPH_NO_MENUS;
 
   type graph_t is record
-    widget       : widget_t;
+    widget       : aliased widget_t;
     flags        : graph_flags_t;
     width_pre    : c.int;
     height_pre   : c.int;
@@ -202,5 +202,8 @@ package agar.gui.widget.graph is
        menu : agar.gui.widget.menu.popup_menu_access_t);
     pragma import (c, popup_menu, "AG_GraphEdgePopupMenu");
   end edge;
+
+  function widget (graph : graph_access_t) return widget_access_t;
+  pragma inline (widget);
 
 end agar.gui.widget.graph;

@@ -5,7 +5,7 @@ package agar.gui.widget.vbox is
   use type c.unsigned;
 
   type vbox_t is record
-    box : agar.gui.widget.box.box_t;
+    box : aliased agar.gui.widget.box.box_t;
   end record;
   type vbox_access_t is access all vbox_t;
   pragma convention (c, vbox_t);
@@ -38,5 +38,8 @@ package agar.gui.widget.vbox is
     (box     : vbox_access_t;
      spacing : natural);
   pragma inline (set_spacing);
+
+  function widget (box : vbox_access_t) return widget_access_t;
+  pragma inline (widget);
 
 end agar.gui.widget.vbox;
