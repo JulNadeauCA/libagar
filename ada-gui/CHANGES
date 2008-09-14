@@ -34,3 +34,6 @@
 20080913 code: added agar.gui.widget.hbox API functions.
 20080913 code: added agar.gui.widget.vbox API functions.
 20080914 code: added agar.gui.widget.label API functions.
+20080914 code: added agar.gui.widget.hsvpal API functions.
+20080914 code: added agar.gui.widget.mpane API functions.
+20080914 code: added agar.gui.widget.notebook API functions.

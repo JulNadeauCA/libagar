@@ -46,7 +46,7 @@ package agar.gui.widget.mpane is
   pragma convention (c, panes_t);
 
   type mpane_t is record
-    box    : agar.gui.widget.box.box_t;
+    box    : aliased agar.gui.widget.box.box_t;
     layout : layout_t;
     flags  : flags_t;
     panes  : panes_t;
@@ -55,5 +55,21 @@ package agar.gui.widget.mpane is
   type mpane_access_t is access all mpane_t;
   pragma convention (c, mpane_t);
   pragma convention (c, mpane_access_t);
+
+  -- API
+
+  function allocate
+    (parent : widget_access_t;
+     layout : layout_t;
+     flags  : flags_t) return mpane_access_t;
+  pragma import (c, allocate, "AG_MPaneNew");
+
+  procedure set_layout
+    (mpane  : mpane_access_t;
+     layout : layout_t);
+  pragma import (c, set_layout, "AG_MPaneSetLayout");
+
+  function widget (mpane : mpane_access_t) return widget_access_t;
+  pragma inline (widget);
 
 end agar.gui.widget.mpane;

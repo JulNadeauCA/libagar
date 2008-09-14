@@ -535,18 +535,22 @@ agar-gui-widget-button.ads agar-gui-widget-toolbar.ads agar-gui-window.ads
 agar-gui-widget-menu.o:\
 agar-gui-widget-menu.ali
 
-agar-gui-widget-mpane.ali:\
-ada-compile agar-gui-widget-mpane.ads agar-gui-widget-mpane.ads \
+agar-gui-widget-mpane.ads:\
 agar-gui-widget-box.ads
-	./ada-compile agar-gui-widget-mpane.ads
+
+agar-gui-widget-mpane.ali:\
+ada-compile agar-gui-widget-mpane.adb agar-gui-widget-mpane.ads
+	./ada-compile agar-gui-widget-mpane.adb
 
 agar-gui-widget-mpane.o:\
 agar-gui-widget-mpane.ali
 
-agar-gui-widget-notebook.ali:\
-ada-compile agar-gui-widget-notebook.ads agar-gui-widget-notebook.ads \
+agar-gui-widget-notebook.ads:\
 agar-gui-text.ads agar-gui-widget-box.ads
-	./ada-compile agar-gui-widget-notebook.ads
+
+agar-gui-widget-notebook.ali:\
+ada-compile agar-gui-widget-notebook.adb agar-gui-widget-notebook.ads
+	./ada-compile agar-gui-widget-notebook.adb
 
 agar-gui-widget-notebook.o:\
 agar-gui-widget-notebook.ali
