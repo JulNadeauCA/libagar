@@ -7,7 +7,7 @@ SUBDIR=	fixedres \
 	loader \
 	table \
 	textbox \
-	widgets \
+	themes \
 	maximized \
 	objprops \
 	unitconv \
