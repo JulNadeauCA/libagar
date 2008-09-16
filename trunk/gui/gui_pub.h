@@ -16,6 +16,7 @@
 #include <agar/gui/console.h>
 #include <agar/gui/editable.h>
 #include <agar/gui/file_dlg.h>
+#include <agar/gui/file_selector.h>
 #include <agar/gui/fixed.h>
 #include <agar/gui/fspinbutton.h>
 #include <agar/gui/fixed_plotter.h>
