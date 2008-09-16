@@ -284,7 +284,7 @@ CreateWindow(void)
 	}
 
 	/* Override default window sizing. */
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 80, 70);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 80, 80);
 	
 	AG_WindowShow(win);
 }
