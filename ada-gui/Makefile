@@ -6,9 +6,9 @@ all:\
 DEMOS/helloworld1 DEMOS/helloworld1.ali DEMOS/helloworld1.o UNIT_TESTS/ada_size \
 UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o UNIT_TESTS/c_size \
 UNIT_TESTS/c_size.o ag_button.o ag_draw.o ag_event.o ag_hbox.o ag_label.o \
-ag_surface.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o agar-gui-ada-conf \
-agar-gui-ada-conf.o agar-gui-ada.a agar-gui-colors.ali agar-gui-colors.o \
-agar-gui-draw.ali agar-gui-draw.o agar-gui-pixelformat.ali \
+ag_menu.o ag_surface.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o \
+agar-gui-ada-conf agar-gui-ada-conf.o agar-gui-ada.a agar-gui-colors.ali \
+agar-gui-colors.o agar-gui-draw.ali agar-gui-draw.o agar-gui-pixelformat.ali \
 agar-gui-pixelformat.o agar-gui-point.ali agar-gui-point.o agar-gui-rect.ali \
 agar-gui-rect.o agar-gui-style.ali agar-gui-style.o agar-gui-surface.ali \
 agar-gui-surface.o agar-gui-text.ali agar-gui-text.o agar-gui-unit.ali \
@@ -249,6 +249,10 @@ ag_label.o:\
 cc-compile ag_label.c
 	./cc-compile ag_label.c
 
+ag_menu.o:\
+cc-compile ag_menu.c
+	./cc-compile ag_menu.c
+
 ag_surface.o:\
 cc-compile ag_surface.c
 	./cc-compile ag_surface.c
@@ -279,10 +283,10 @@ cc-compile agar-gui-ada-conf.c ctxt.h _sysinfo.h
 
 agar-gui-ada.a:\
 cc-slib agar-gui-ada.sld ag_button.o ag_draw.o ag_event.o ag_hbox.o ag_label.o \
-ag_surface.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o agar-gui-colors.o \
-agar-gui-draw.o agar-gui-pixelformat.o agar-gui-point.o agar-gui-rect.o \
-agar-gui-style.o agar-gui-surface.o agar-gui-text.o agar-gui-unit.o \
-agar-gui-view.o agar-gui-widget-box.o agar-gui-widget-button.o \
+ag_menu.o ag_surface.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o \
+agar-gui-colors.o agar-gui-draw.o agar-gui-pixelformat.o agar-gui-point.o \
+agar-gui-rect.o agar-gui-style.o agar-gui-surface.o agar-gui-text.o \
+agar-gui-unit.o agar-gui-view.o agar-gui-widget-box.o agar-gui-widget-button.o \
 agar-gui-widget-checkbox.o agar-gui-widget-combo.o agar-gui-widget-console.o \
 agar-gui-widget-editable.o agar-gui-widget-file_dialog.o \
 agar-gui-widget-fixed.o agar-gui-widget-fixed_plotter.o agar-gui-widget-graph.o \
@@ -296,10 +300,10 @@ agar-gui-widget-textbox.o agar-gui-widget-tlist.o agar-gui-widget-toolbar.o \
 agar-gui-widget-ucombo.o agar-gui-widget-vbox.o agar-gui-widget.o \
 agar-gui-window.o agar-gui.o
 	./cc-slib agar-gui-ada ag_button.o ag_draw.o ag_event.o ag_hbox.o ag_label.o \
-	ag_surface.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o agar-gui-colors.o \
-	agar-gui-draw.o agar-gui-pixelformat.o agar-gui-point.o agar-gui-rect.o \
-	agar-gui-style.o agar-gui-surface.o agar-gui-text.o agar-gui-unit.o \
-	agar-gui-view.o agar-gui-widget-box.o agar-gui-widget-button.o \
+	ag_menu.o ag_surface.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o \
+	agar-gui-colors.o agar-gui-draw.o agar-gui-pixelformat.o agar-gui-point.o \
+	agar-gui-rect.o agar-gui-style.o agar-gui-surface.o agar-gui-text.o \
+	agar-gui-unit.o agar-gui-view.o agar-gui-widget-box.o agar-gui-widget-button.o \
 	agar-gui-widget-checkbox.o agar-gui-widget-combo.o agar-gui-widget-console.o \
 	agar-gui-widget-editable.o agar-gui-widget-file_dialog.o \
 	agar-gui-widget-fixed.o agar-gui-widget-fixed_plotter.o agar-gui-widget-graph.o \
@@ -527,10 +531,12 @@ ada-compile agar-gui-widget-label.adb agar-gui-widget-label.ads
 agar-gui-widget-label.o:\
 agar-gui-widget-label.ali
 
-agar-gui-widget-menu.ali:\
-ada-compile agar-gui-widget-menu.ads agar-gui-widget-menu.ads \
+agar-gui-widget-menu.ads:\
 agar-gui-widget-button.ads agar-gui-widget-toolbar.ads agar-gui-window.ads
-	./ada-compile agar-gui-widget-menu.ads
+
+agar-gui-widget-menu.ali:\
+ada-compile agar-gui-widget-menu.adb agar-gui-widget-menu.ads
+	./ada-compile agar-gui-widget-menu.adb
 
 agar-gui-widget-menu.o:\
 agar-gui-widget-menu.ali
@@ -555,11 +561,13 @@ ada-compile agar-gui-widget-notebook.adb agar-gui-widget-notebook.ads
 agar-gui-widget-notebook.o:\
 agar-gui-widget-notebook.ali
 
-agar-gui-widget-numerical.ali:\
-ada-compile agar-gui-widget-numerical.ads agar-gui-widget-numerical.ads \
+agar-gui-widget-numerical.ads:\
 agar-gui-unit.ads agar-gui-widget-button.ads agar-gui-widget-textbox.ads \
-agar-gui-widget-ucombo.ads
-	./ada-compile agar-gui-widget-numerical.ads
+	agar-gui-widget-ucombo.ads
+
+agar-gui-widget-numerical.ali:\
+ada-compile agar-gui-widget-numerical.adb agar-gui-widget-numerical.ads
+	./ada-compile agar-gui-widget-numerical.adb
 
 agar-gui-widget-numerical.o:\
 agar-gui-widget-numerical.ali
@@ -902,19 +910,19 @@ obj_clean:
 	rm -f DEMOS/helloworld1 DEMOS/helloworld1.ali DEMOS/helloworld1.o \
 	UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o \
 	UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_button.o ag_draw.o ag_event.o \
-	ag_hbox.o ag_label.o ag_surface.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o \
-	agar-gui-ada-conf agar-gui-ada-conf.o agar-gui-ada.a agar-gui-colors.ali \
-	agar-gui-colors.o agar-gui-draw.ali agar-gui-draw.o agar-gui-pixelformat.ali \
-	agar-gui-pixelformat.o agar-gui-point.ali agar-gui-point.o agar-gui-rect.ali \
-	agar-gui-rect.o agar-gui-style.ali agar-gui-style.o agar-gui-surface.ali \
-	agar-gui-surface.o agar-gui-text.ads agar-gui-text.ali agar-gui-text.o \
-	agar-gui-unit.ali agar-gui-unit.o agar-gui-view.ali agar-gui-view.o \
-	agar-gui-widget-box.ali agar-gui-widget-box.o agar-gui-widget-button.ali \
-	agar-gui-widget-button.o agar-gui-widget-checkbox.ali \
-	agar-gui-widget-checkbox.o agar-gui-widget-combo.ali agar-gui-widget-combo.o \
-	agar-gui-widget-console.ali agar-gui-widget-console.o \
-	agar-gui-widget-editable.ali agar-gui-widget-editable.o \
-	agar-gui-widget-file_dialog.ali
+	ag_hbox.o ag_label.o ag_menu.o ag_surface.o ag_unit.o ag_vbox.o ag_widget.o \
+	ag_window.o agar-gui-ada-conf agar-gui-ada-conf.o agar-gui-ada.a \
+	agar-gui-colors.ali agar-gui-colors.o agar-gui-draw.ali agar-gui-draw.o \
+	agar-gui-pixelformat.ali agar-gui-pixelformat.o agar-gui-point.ali \
+	agar-gui-point.o agar-gui-rect.ali agar-gui-rect.o agar-gui-style.ali \
+	agar-gui-style.o agar-gui-surface.ali agar-gui-surface.o agar-gui-text.ads \
+	agar-gui-text.ali agar-gui-text.o agar-gui-unit.ali agar-gui-unit.o \
+	agar-gui-view.ali agar-gui-view.o agar-gui-widget-box.ali agar-gui-widget-box.o \
+	agar-gui-widget-button.ali agar-gui-widget-button.o \
+	agar-gui-widget-checkbox.ali agar-gui-widget-checkbox.o \
+	agar-gui-widget-combo.ali agar-gui-widget-combo.o agar-gui-widget-console.ali \
+	agar-gui-widget-console.o agar-gui-widget-editable.ali \
+	agar-gui-widget-editable.o agar-gui-widget-file_dialog.ali
 	rm -f agar-gui-widget-file_dialog.o agar-gui-widget-fixed.ali \
 	agar-gui-widget-fixed.o agar-gui-widget-fixed_plotter.ali \
 	agar-gui-widget-fixed_plotter.o agar-gui-widget-graph.ali \

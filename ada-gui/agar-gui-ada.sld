@@ -3,6 +3,7 @@ ag_draw.o
 ag_event.o
 ag_hbox.o
 ag_label.o
+ag_menu.o
 ag_surface.o
 ag_unit.o
 ag_vbox.o
