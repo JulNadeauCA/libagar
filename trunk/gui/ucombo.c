@@ -65,9 +65,6 @@ AG_UComboNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt,
 static void
 Collapse(AG_UCombo *com)
 {
-	AG_WidgetBinding *stateb;
-	int *state;
-
 	if (com->panel == NULL) {
 		return;
 	}
@@ -78,11 +75,8 @@ Collapse(AG_UCombo *com)
 	AG_ObjectDetach(com->list);
 	AG_ViewDetach(com->panel);
 	com->panel = NULL;
-	
-	stateb = AG_WidgetGetBinding(com->button, "state", &state);
-	*state = 0;
-	AG_WidgetBindingChanged(stateb);
-	AG_WidgetUnlockBinding(stateb);
+
+	AG_WidgetSetBool(com->button, "state", 0);
 }
 
 static void
