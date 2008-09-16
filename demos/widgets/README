@@ -17,9 +17,6 @@ generate a screenshot. Some command-line options are provided:
 	-t [face,pts,flags]	Load an alternate font as default
 	                        (accepted flags include 'b'=bold,
 				'i'=italic and 'U'=uppercase)
-	-d			Instead of the stock event loop, enable
-	                        double buffering and use a custom event
-				loop which uses SDL_Flip().
 	-R			When using windowed graphics drivers,
 	                        don't request that the display window
 				be resizable.
