@@ -52,13 +52,12 @@
  */
 
 /*
- * Efficient rendering (and sizing) of UCS-4 or UTF-8 text using FreeType
- * (if available) or an internal bitmap font engine. The interface is a
- * state machine featuring a stack of rendering attributes.
+ * Rendering/sizing of UCS-4 or UTF-8 text using FreeType (if available) or
+ * an internal bitmap font engine.
  *
- * TextSizeFT(), TextRenderFT(), TextRenderFT_Blended() are based on code
- * from SDL_ttf (http://libsdl.org/projects/SDL_ttf/), placed under a BSD
- * license with permission from Sam Lantinga.
+ * TextSizeFT(), TextRenderFT_Mono(), TextRenderFT_Blended() are based on
+ * code from SDL_ttf (http://libsdl.org/projects/SDL_ttf/), placed under BSD
+ * license with kind permission from Sam Lantinga.
  */
 
 #include <config/have_freetype.h>
@@ -710,26 +709,7 @@ AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	AG_MutexUnlock(&agTextLock);
 }
 
-/*
- * Allocate a transparent surface and render text from a standard C string
- * (possibly with UTF-8 sequences), onto it.
- */
-AG_Surface *
-AG_TextRender(const char *text)
-{
-	Uint32 *ucs;
-	AG_Surface *su;
-	
-#ifdef UTF8
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
-#else
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text, 0);
-#endif
-	su = AG_TextRenderUCS4(ucs);
-	free(ucs);
-	return (su);
-}
-
+/* Varargs variant of TextRender(). */
 AG_Surface *
 AG_TextRenderf(const char *fmt, ...)
 {
@@ -744,7 +724,6 @@ AG_TextRenderf(const char *fmt, ...)
 	free(text);
 	return (su);
 }
-
 #ifdef SYMBOLS
 static __inline__ AG_Surface *
 GetSymbolSurface(Uint32 ch)
@@ -775,7 +754,6 @@ FreeMetrics(AG_TextMetrics *tm)
 }
 
 #ifdef HAVE_FREETYPE
-
 /*
  * Compute the rendered size of UCS-4 text with a FreeType font. If the
  * string is multiline and nLines is non-NULL, the width of individual lines
@@ -840,7 +818,8 @@ TextSizeFT(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 	tm->h = (yMax-yMin);
 }
 
-#ifdef SYMBOLS
+# ifdef SYMBOLS
+
 static int
 TextRenderSymbol(Uint ch, AG_Surface *su, int x, int y)
 {
@@ -896,11 +875,11 @@ TextRenderSymbol_Blended(Uint ch, AG_Surface *su, int x, int y, Uint32 pixel)
 	}
 	return (sym->w + 4);
 }
-#endif
+# endif /* SYMBOLS */
 
-/* Render UCS-4 text to a new surface using FreeType. */
+/* Render UCS-4 text to a monochrome surface using FreeType. */
 static AG_Surface *
-TextRenderFT(const Uint32 *ucs)
+TextRenderFT_Mono(const Uint32 *ucs)
 {
 	AG_TextMetrics tm;
 	AG_Font *font = agTextState->font;
@@ -909,18 +888,19 @@ TextRenderFT(const Uint32 *ucs)
 	AG_Surface *su;
 	AG_Palette *pal;
 	const Uint32 *ch;
-	Uint8 *src, *dst, a;
+	Uint8 *src, *dst, *dstEnd, a;
 	int row, col;
 	int line;
 	int xStart, yStart;
+	FT_Error error;
 
 	InitMetrics(&tm);
 	TextSizeFT(ucs, &tm, 1);
 	if (tm.w <= 0 || tm.h <= 0)
 		goto empty;
 
-	if ((su = AG_SurfaceIndexed(tm.w, tm.h, AG_SWSURFACE, 8)) == NULL) {
-		Verbose("TextRenderFT: %s\n", AG_GetError());
+	if ((su = AG_SurfaceIndexed(tm.w, tm.h, 8, AG_SWSURFACE)) == NULL) {
+		Verbose("TextRenderFT_Indexed: %s\n", AG_GetError());
 		goto empty;
 	}
 	pal = su->format->palette;
@@ -937,6 +917,9 @@ TextRenderFT(const Uint32 *ucs)
 	    &pal->colors[1].r,
 	    &pal->colors[1].g,
 	    &pal->colors[1].b);
+	
+	/* For bounds checking */
+	dstEnd = (Uint8 *)su->pixels + su->w*su->h;
 
 	/* Load and render each character. */
 	line = 0;
@@ -944,8 +927,6 @@ TextRenderFT(const Uint32 *ucs)
 	xStart = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
 
 	for (ch = &ucs[0]; *ch != '\0'; ch++) {
-		FT_Bitmap *current = NULL;
-
 		if (*ch == '\n') {
 			yStart += font->lineskip;
 			xStart = AG_TextJustifyOffset(tm.w, tm.wLines[++line]);
@@ -959,19 +940,19 @@ TextRenderFT(const Uint32 *ucs)
 			continue;
 		}
 #endif
-		if (AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
-		                                 TTF_CACHED_BITMAP) != 0) {
-			Verbose("TTFFindGlyph: %s\n", AG_GetError());
-		    	continue;
+		error = AG_TTFFindGlyph(ftFont, *ch, TTF_CACHED_METRICS|
+		                                     TTF_CACHED_BITMAP);
+		if (error) {
+			AG_SurfaceFree(su);
+			goto empty;
 		}
 		glyph = ftFont->current;
-		current = &glyph->bitmap;
 
 		/* Prevent texture wrapping with first glyph. */
 		if ((ch == &ucs[0]) && (glyph->minx < 0))
 			xStart -= glyph->minx;
 
-		for (row = 0; row < current->rows; row++) {
+		for (row = 0; row < glyph->bitmap.rows; row++) {
 			if (glyph->yoffset < 0) {
 				glyph->yoffset = 0;
 			}
@@ -981,9 +962,11 @@ TextRenderFT(const Uint32 *ucs)
 			dst = (Uint8 *)su->pixels +
 				(yStart+row+glyph->yoffset)*su->pitch +
 				xStart + glyph->minx;
-			src = current->buffer + row*current->pitch;
+			src = glyph->bitmap.buffer + row*glyph->bitmap.pitch;
 
-			for (col = current->width; col > 0; --col)
+			for (col = glyph->bitmap.width;
+			     col > 0 && dst < dstEnd;
+			     --col)
 				*dst++ |= *src++;
 		}
 
@@ -1145,6 +1128,7 @@ empty:
 	FreeMetrics(&tm);
 	return AG_SurfaceEmpty();
 }
+
 #endif /* HAVE_FREETYPE */
 
 static __inline__ AG_Surface *
@@ -1246,7 +1230,7 @@ AG_TextRenderUCS4(const Uint32 *text)
 		if (agTextAntialiasing) {
 			return TextRenderFT_Blended(text);
 		} else {
-			return TextRenderFT(text);
+			return TextRenderFT_Mono(text);
 		}
 #endif
 	case AG_FONT_BITMAP:

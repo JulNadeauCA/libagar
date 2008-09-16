@@ -4,6 +4,7 @@
 #define _AGAR_WIDGET_TEXT_H_
 
 #include <agar/config/have_opengl.h>
+#include <agar/config/utf8.h>
 
 #include "begin_code.h"
 
@@ -134,7 +135,6 @@ void	AG_TextBGColorRGBA(Uint8, Uint8, Uint8, Uint8);
 
 AG_Surface *AG_TextRenderf(const char *, ...);
 #define     AG_TextFormat AG_TextRenderf
-AG_Surface *AG_TextRender(const char *);
 AG_Surface *AG_TextRenderUCS4(const Uint32 *);
 
 void	 AG_TextSize(const char *, int *, int *);
@@ -182,7 +182,8 @@ void	  AG_ClearGlyphCache(void);
 
 void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
                   int, enum ag_text_justify, enum ag_text_valign);
-		    
+
+/* Compare two text states. */
 static __inline__ int
 AG_TextStateCompare(const AG_TextState *s1, const AG_TextState *s2)
 {
@@ -211,6 +212,26 @@ AG_TextJustifyOffset(int w, int wLine)
 		return (w - wLine);
 	}
 	return (0);
+}
+
+/*
+ * Allocate a transparent surface and render text from a standard C string
+ * (possibly with UTF-8 sequences), onto it.
+ */
+static __inline__ AG_Surface *
+AG_TextRender(const char *text)
+{
+	Uint32 *ucs;
+	AG_Surface *su;
+	
+#ifdef UTF8
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
+#else
+	ucs = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text, 0);
+#endif
+	su = AG_TextRenderUCS4(ucs);
+	free(ucs);
+	return (su);
 }
 __END_DECLS
 
