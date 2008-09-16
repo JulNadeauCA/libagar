@@ -193,25 +193,13 @@ AG_ToolbarSeparator(AG_Toolbar *bar)
 void
 AG_ToolbarSelect(AG_Toolbar *bar, AG_Button *bSel)
 {
-	AG_WidgetBinding *stateb;
-	int *state;
-
-	stateb = AG_WidgetGetBinding(bSel, "state", &state);
-	*state = 1;
-	AG_WidgetBindingChanged(stateb);
-	AG_WidgetUnlockBinding(stateb);
+	AG_WidgetSetBool(bSel, "state", 1);
 }
 
 void
 AG_ToolbarDeselect(AG_Toolbar *bar, AG_Button *bSel)
 {
-	AG_WidgetBinding *stateb;
-	int *state;
-
-	stateb = AG_WidgetGetBinding(bSel, "state", &state);
-	*state = 0;
-	AG_WidgetBindingChanged(stateb);
-	AG_WidgetUnlockBinding(stateb);
+	AG_WidgetSetBool(bSel, "state", 0);
 }
 
 void

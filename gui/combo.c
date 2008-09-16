@@ -54,24 +54,18 @@ AG_ComboNew(void *parent, Uint flags, const char *label)
 static void
 Collapse(AG_Combo *com)
 {
-	AG_WidgetBinding *stateb;
-	int *state;
-
 	if (com->panel == NULL) {
 		return;
 	}
-	com->wSaved = WIDGET(com->panel)->w;
-	com->hSaved = WIDGET(com->panel)->h;
+	com->wSaved = WIDTH(com->panel);
+	com->hSaved = HEIGHT(com->panel);
 
 	AG_WindowHide(com->panel);
 	AG_ObjectDetach(com->list);
 	AG_ViewDetach(com->panel);
 	com->panel = NULL;
-	
-	stateb = AG_WidgetGetBinding(com->button, "state", &state);
-	*state = 0;
-	AG_WidgetBindingChanged(stateb);
-	AG_WidgetUnlockBinding(stateb);
+
+	AG_WidgetSetBool(com->button, "state", 0);
 }
 
 static void
@@ -108,7 +102,7 @@ Expand(AG_Event *event)
 			w = rList.w + agColorsBorderSize*2;
 			h = rList.h + agColorsBorderSize*2;
  		}
-		x = WIDGET(com)->cx + WIDGET(com)->w - w;
+		x = WIDGET(com)->cx + WIDTH(com) - w;
 		y = WIDGET(com)->cy;
 
 		if (x+w > agView->w) { w = agView->w - x; }
@@ -134,7 +128,7 @@ AG_ComboSelectPointer(AG_Combo *com, void *p)
 
 	AG_ObjectLock(com->list);
 	if ((it = AG_TlistSelectPtr(com->list, p)) != NULL) {
-		AG_TextboxPrintf(com->tbox, "%s", it->text);
+		AG_TextboxSetString(com->tbox, it->text);
 	}
 	AG_ObjectUnlock(com->list);
 	return (it);
@@ -148,7 +142,7 @@ AG_ComboSelectText(AG_Combo *com, const char *text)
 
 	AG_ObjectLock(com->list);
 	if ((it = AG_TlistSelectText(com->list, text)) != NULL) {
-		AG_TextboxPrintf(com->tbox, "%s", it->text);
+		AG_TextboxSetString(com->tbox, it->text);
 	}
 	AG_ObjectUnlock(com->list);
 	return (it);
@@ -158,7 +152,7 @@ void
 AG_ComboSelect(AG_Combo *com, AG_TlistItem *it)
 {
 	AG_ObjectLock(com->list);
-	AG_TextboxPrintf(com->tbox, "%s", it->text);
+	AG_TextboxSetString(com->tbox, it->text);
 	AG_TlistSelect(com->list, it);
 	AG_ObjectUnlock(com->list);
 }
@@ -172,7 +166,7 @@ SelectedItem(AG_Event *event)
 
 	AG_ObjectLock(tl);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
-		AG_TextboxPrintf(com->tbox, "%s", ti->text);
+		AG_TextboxSetString(com->tbox, ti->text);
 		AG_PostEvent(NULL, com, "combo-selected", "%p", ti);
 	}
 	AG_ObjectUnlock(tl);
@@ -195,11 +189,11 @@ Return(AG_Event *event)
 	
 		if (text[0] != '\0' &&
 		    (it = AG_TlistSelectText(com->list, text)) != NULL) {
-			AG_TextboxPrintf(com->tbox, "%s", it->text);
+			AG_TextboxSetString(com->tbox, it->text);
 			AG_PostEvent(NULL, com, "combo-selected", "%p", it);
 		} else {
 			AG_TlistDeselectAll(com->list);
-			AG_TextboxPrintf(com->tbox, "");
+			AG_TextboxSetString(com->tbox, "");
 			AG_PostEvent(NULL, com, "combo-text-unknown", "%s",
 			    text);
 		}
