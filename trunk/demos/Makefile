@@ -13,7 +13,6 @@ SUBDIR=	fixedres \
 	unitconv \
 	sockets \
 	glview \
-	gunpowder \
 	cplusplus \
 	plotting \
 	scrollbar \
