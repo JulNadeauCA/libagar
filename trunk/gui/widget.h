@@ -4,6 +4,7 @@
 #define _AGAR_WIDGET_H_
 
 #include <agar/config/have_opengl.h>
+
 #include <agar/gui/colors.h>
 #include <agar/gui/view.h>
 #include <agar/gui/style.h>
@@ -649,7 +650,10 @@ AG_WidgetSetInt(void *wid, const char *name, int ni)
 	if ((binding = AG_WidgetGetBinding(wid, name, (int **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*i = ni;
+	if (*i != ni) {
+		*i = ni;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -662,7 +666,10 @@ AG_WidgetSetUint(void *wid, const char *name, Uint ni)
 	if ((binding = AG_WidgetGetBinding(wid, name, (Uint **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*i = ni;
+	if (*i != ni) {
+		*i = ni;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -675,7 +682,10 @@ AG_WidgetSetUint8(void *wid, const char *name, Uint8 ni)
 	if ((binding = AG_WidgetGetBinding(wid, name, (Uint8 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*i = ni;
+	if (*i != ni) {
+		*i = ni;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -688,7 +698,10 @@ AG_WidgetSetSint8(void *wid, const char *name, Sint8 ni)
 	if ((binding = AG_WidgetGetBinding(wid, name, (Sint8 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*i = ni;
+	if (*i != ni) {
+		*i = ni;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -701,7 +714,10 @@ AG_WidgetSetUint16(void *wid, const char *name, Uint16 ni)
 	if ((binding = AG_WidgetGetBinding(wid, name, (Uint16 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*i = ni;
+	if (*i != ni) {
+		*i = ni;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -714,7 +730,10 @@ AG_WidgetSetSint16(void *wid, const char *name, Sint16 ni)
 	if ((binding = AG_WidgetGetBinding(wid, name, (Sint16 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*i = ni;
+	if (*i != ni) {
+		*i = ni;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -727,7 +746,10 @@ AG_WidgetSetUint32(void *wid, const char *name, Uint32 ni)
 	if ((binding = AG_WidgetGetBinding(wid, name, (Uint32 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*i = ni;
+	if (*i != ni) {
+		*i = ni;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -740,7 +762,10 @@ AG_WidgetSetSint32(void *wid, const char *name, Sint32 ni)
 	if ((binding = AG_WidgetGetBinding(wid, name, (Sint32 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*i = ni;
+	if (*i != ni) {
+		*i = ni;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -754,7 +779,10 @@ AG_WidgetSetUint64(void *wid, const char *name, Uint64 ni)
 	if ((binding = AG_WidgetGetBinding(wid, name, (Uint64 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*i = ni;
+	if (*i != ni) {
+		*i = ni;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -767,7 +795,10 @@ AG_WidgetSetSint64(void *wid, const char *name, Sint64 ni)
 	if ((binding = AG_WidgetGetBinding(wid, name, (Sint64 **)&i)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*i = ni;
+	if (*i != ni) {
+		*i = ni;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 #endif /* HAVE_64BIT */
@@ -781,7 +812,10 @@ AG_WidgetSetFloat(void *wid, const char *name, float nf)
 	if ((binding = AG_WidgetGetBinding(wid, name, (float **)&f)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*f = nf;
+	if (*f != nf) {
+		*f = nf;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -794,7 +828,10 @@ AG_WidgetSetDouble(void *wid, const char *name, double nd)
 	if ((binding = AG_WidgetGetBinding(wid, name, (double **)&d)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*d = nd;
+	if (*d != nd) {
+		*d = nd;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
@@ -807,7 +844,10 @@ AG_WidgetSetPointer(void *wid, const char *name, void *np)
 	if ((binding = AG_WidgetGetBinding(wid, name, (void ***)&p)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	*p = np;
+	if (*p != np) {
+		*p = np;
+		AG_WidgetBindingChanged(binding);
+	}
 	AG_WidgetUnlockBinding(binding);
 }
 
