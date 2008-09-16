@@ -1067,7 +1067,7 @@ Init(void *obj)
 	ed->sel_edit = 0;
 	ed->compose = 0;
 	ed->wPre = 0;
-	ed->hPre = agTextFontLineSkip;
+	ed->hPre = agTextFontLineSkip + 2;
 	ed->xCurs = 0;
 	ed->yCurs = 0;
 	ed->xCursPref = 0;
