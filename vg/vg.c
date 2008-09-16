@@ -257,6 +257,39 @@ fail:
 	return (-1);
 }
 
+static void
+MoveNodesRecursively(VG *vgDst, VG_Node *vn)
+{
+	VG_Node *vnChld;
+
+	VG_FOREACH_CHLD(vnChld, vn, vg_node) {
+		MoveNodesRecursively(vgDst, vnChld);
+	}
+	vn->handle = VG_GenNodeName(vgDst, vn->ops->name);
+	TAILQ_REMOVE(&vn->vg->nodes, vn, list);
+	vn->vg = vgDst;
+	TAILQ_INSERT_TAIL(&vgDst->nodes, vn, list);
+}
+
+/*
+ * Move the contents of a source VG (to be discarded) to the specified
+ * destination VG, under a given node.
+ */
+void
+VG_Merge(void *pVnDst, VG *vgSrc)
+{
+	VG_Node *vnDst = pVnDst;
+	VG_Node *vn = vgSrc->root;
+
+	vn->vg = vnDst->vg;
+	vn->parent = vnDst;
+	TAILQ_INSERT_TAIL(&vnDst->vg->nodes, vn, list);
+	TAILQ_INSERT_TAIL(&vnDst->cNodes, vn, tree);
+	MoveNodesRecursively(vnDst->vg, vn);
+	vgSrc->root = NULL;
+}
+
+/* Create a node reference to another node. */
 void
 VG_AddRef(void *p, void *pRef)
 {
@@ -269,6 +302,7 @@ VG_AddRef(void *p, void *pRef)
 	if (vn->vg != NULL) { VG_Unlock(vn->vg); }
 }
 
+/* Remove a node reference to another node. */
 Uint
 VG_DelRef(void *pVn, void *pRef)
 {
@@ -322,6 +356,7 @@ VG_NodeInit(void *p, const VG_NodeOps *vnOps)
 		vn->ops->init(vn);
 }
 
+/* Generate a unique name for a node of the specified type. */
 Uint32
 VG_GenNodeName(VG *vg, const char *type)
 {
@@ -867,6 +902,7 @@ VG_NodeTransform(void *p, VG_Matrix *T)
 		VG_MultMatrix(T, &cNode->T);
 }
 
+/* Compute the inverse of a VG transformation matrix. */
 VG_Matrix
 VG_MatrixInvert(VG_Matrix A)
 {
@@ -897,3 +933,4 @@ VG_MatrixInvert(VG_Matrix A)
 	}
 	return (B);
 }
+

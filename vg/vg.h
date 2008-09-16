@@ -175,6 +175,7 @@ void      VG_NodeAttach(void *, void *);
 void      VG_NodeDetach(void *);
 void      VG_NodeDestroy(void *);
 int       VG_Delete(void *);
+void      VG_Merge(void *, VG *);
 void      VG_AddRef(void *, void *);
 Uint      VG_DelRef(void *, void *);
 void      VG_NodeTransform(void *, VG_Matrix *);
