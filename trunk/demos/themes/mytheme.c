@@ -11,7 +11,7 @@
 #include <agar/gui.h>
 #include <agar/dev.h>
 
-#include "rounded_style.h"
+#include "mytheme.h"
 
 #define WIDTH(wd)  AGWIDGET(wd)->w
 #define HEIGHT(wd) AGWIDGET(wd)->h

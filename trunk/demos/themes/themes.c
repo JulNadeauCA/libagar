@@ -1,12 +1,9 @@
 /*	Public domain	*/
 /*
- * This application displays a couple of Agar-GUI widgets. It is useful for
- * testing new themes (see AG_Style(3)), but it does not demonstrate widget
- * functionality in any useful way. If you have libjpeg installed, F8 will
- * generate a screenshot.
- *
- * See the README file for a description of the various command-line options
- * available.
+ * This application displays a couple of standard Agar-GUI widgets. It is
+ * useful for testing the GUI display and trying different themes (see
+ * AG_Style(3) for details). See README file for a description of the
+ * various command-line options provided.
  */
 
 #include <agar/core.h>
@@ -18,8 +15,7 @@
 
 #include "config/have_getopt.h"
 
-#include "rounded_style.h"
-#include "doublebuf.h"
+#include "mytheme.h"
 
 static void
 CreateWindow(void)
@@ -331,7 +327,7 @@ main(int argc, char *argv[])
 	int guiFlags = AG_VIDEO_RESIZABLE;
 
 	/* Initialize Agar-Core. */
-	if (AG_InitCore("agar-widgets-demo", 0) == -1) {
+	if (AG_InitCore("agar-themes-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
