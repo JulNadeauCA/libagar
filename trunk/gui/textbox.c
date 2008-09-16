@@ -205,10 +205,8 @@ SizeRequest(void *p, AG_SizeReq *r)
 			AG_TextSize(tbox->labelText, &wLbl, &hLbl);
 		}
 		r->w += tbox->lblPadL + wLbl + tbox->lblPadR;
-		r->h = MAX(r->h, hLbl);
-	} else {
-		r->h = MAX(r->h, agTextFontHeight);
 	}
+	r->h = MAX(r->h, agTextFontLineSkip);
 }
 
 static int
@@ -383,7 +381,7 @@ Init(void *obj)
 	WIDGET(tbox)->flags |= AG_WIDGET_FOCUSABLE;
 
 	tbox->boxPadX = 2;
-	tbox->boxPadY = 3;
+	tbox->boxPadY = 2;
 	tbox->lblPadL = 2;
 	tbox->lblPadR = 2;
 	tbox->wLbl = 0;
