@@ -343,14 +343,14 @@ main(int argc, char *argv[])
 	{
 		int c;
 
-		while ((c = getopt(argc, argv, "?vgsw:h:dfbBt:T:r:R")) != -1) {
+		while ((c = getopt(argc, argv, "?vgsw:h:fbBt:T:r:R")) != -1) {
 			extern char *optarg;
 
 			switch (c) {
 			case 'v':
 				/* Display Agar version information */
-				printf("Agar version: %d.%d.%d\n", ver.major, ver.minor,
-				    ver.patch);
+				printf("Agar version: %d.%d.%d\n", ver.major,
+				    ver.minor, ver.patch);
 				printf("Release name: \"%s\"\n", ver.release);
 				exit(0);
 			case 'g':
@@ -369,11 +369,6 @@ main(int argc, char *argv[])
 			case 'h':
 				/* Set display height in pixels */
 				h = atoi(optarg);
-				break;
-			case 'd':
-				/* Enable custom double-buffering event loop */
-				useDoubleBuf = 1;
-				guiFlags |= AG_VIDEO_DOUBLEBUF;
 				break;
 			case 'f':
 				/* Force full screen */
@@ -461,8 +456,10 @@ main(int argc, char *argv[])
 	}
 	m = AG_MenuNode(appMenu->root, "Themes", NULL);
 	{
-		AG_MenuAction(m, "Default", NULL, SetTheme, "%p", &agStyleDefault);
-		AG_MenuAction(m, "Rounded", NULL, SetTheme, "%p", &myRoundedStyle);
+		AG_MenuAction(m, "Default", NULL,
+		    SetTheme, "%p", &agStyleDefault);
+		AG_MenuAction(m, "Rounded", NULL,
+		    SetTheme, "%p", &myRoundedStyle);
 	}
 
 	/* Create our test window. */
@@ -474,18 +471,9 @@ main(int argc, char *argv[])
 		    AG_GetError());
 	}
 
-	if (useDoubleBuf) {
-		/* Use our custom event loop. */
-		printf("Using MyEventLoop_DoubleBuf()\n");
-		if (AG_GetBool(agConfig,"view.opengl")) {
-			printf("MyEventLoop_DoubleBuf() requires SDL mode!\n");
-			exit(1);
-		}
-		MyEventLoop_DoubleBuf();
-	} else {
-		/* Use the stock event loop. */
-		AG_EventLoop();
-	}
+	/* Use the stock event loop. */
+	AG_EventLoop();
+
 	AG_Destroy();
 	return (0);
 }
