@@ -35,6 +35,7 @@
 #include "console.h"
 #include "editable.h"
 #include "file_dlg.h"
+#include "file_selector.h"
 #include "fixed.h"
 #include "fspinbutton.h"
 #include "fixed_plotter.h"
@@ -86,6 +87,7 @@ void *agGUIClasses[] = {
 	&agConsoleClass,
 	&agEditableClass,
 	&agFileDlgClass,
+	&agFileSelectorClass,
 	&agFixedClass,
 	&agFSpinbuttonClass,
 	&agFixedPlotterClass,
