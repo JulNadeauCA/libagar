@@ -243,13 +243,16 @@ package agar.gui.widget.numerical is
      value     : double_t);
   pragma inline (sub_value);
 
+  function widget (numerical : numerical_access_t) return widget_access_t;
+  pragma inline (widget);
+
 private
 
   type format_t is array (1 .. 32) of aliased c.char;
   pragma convention (c, format_t);
 
   type numerical_t is record
-    widget     : widget_t;
+    widget     : aliased widget_t;
     flags      : flags_t;
     value      : c.double;
     min        : c.double;

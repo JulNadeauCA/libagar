@@ -752,4 +752,9 @@ package body agar.gui.widget.numerical is
     add_value (numerical, 0.0 - value);
   end sub_value;
 
+  function widget (numerical : numerical_access_t) return widget_access_t is
+  begin
+    return numerical.widget'access;
+  end widget;
+
 end agar.gui.widget.numerical;
