@@ -44,3 +44,5 @@
 20080917 code: added agar.gui.widget.progress_bar API functions.
 20080917 code: added agar.gui.widget.radio API functions.
 20080917 code: added agar.gui.widget.scrollbar API functions.
+20080917 code: added agar.gui.widget.separator API functions.
+20080917 code: added agar.gui.widget.slider API functions.

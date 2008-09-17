@@ -626,8 +626,8 @@ agar-gui-widget-scrollbar.o:\
 agar-gui-widget-scrollbar.ali
 
 agar-gui-widget-separator.ali:\
-ada-compile agar-gui-widget-separator.ads agar-gui-widget-separator.ads
-	./ada-compile agar-gui-widget-separator.ads
+ada-compile agar-gui-widget-separator.adb agar-gui-widget-separator.ads
+	./ada-compile agar-gui-widget-separator.adb
 
 agar-gui-widget-separator.o:\
 agar-gui-widget-separator.ali
