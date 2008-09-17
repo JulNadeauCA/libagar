@@ -11,6 +11,22 @@ package agar.core.types is
   null_ptr : constant void_ptr_t := system.null_address;
 
   -- standard integer set
+  type integer_t is new c.int;
+  type integer_access_t is access all integer_t;
+  pragma convention (c, integer_access_t);
+
+  type unsigned_t is new c.unsigned;
+  type unsigned_access_t is access all unsigned_t;
+  pragma convention (c, unsigned_access_t);
+
+  type float_t is new c.c_float;
+  type float_access_t is access all float_t;
+  pragma convention (c, float_access_t);
+
+  type double_t is new c.double;
+  type double_access_t is access all double_t;
+  pragma convention (c, double_access_t);
+
   type int8_t is range -16#7f# .. 16#7f#;
   type int16_t is range -16#7fff# .. 16#7fff#;
   type int32_t is range -16#7fffffff# .. 16#7fffffff#;

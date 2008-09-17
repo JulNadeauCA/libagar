@@ -28,3 +28,4 @@
 20080910 code: fix bug in progname setting (a pointer is stored to the string
                inside the C library, so string cannot be stack allocated).
 20080910 code: fixed null check (not portable, due to import pragma).
+20080917 code: added basic types more friendly to bindings.
