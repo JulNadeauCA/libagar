@@ -76,81 +76,94 @@ package agar.gui.widget.slider is
     (parent   : widget_access_t;
      bar_type : type_t;
      flags    : flags_t;
-     value    : agar.core.types.uint8_access_t;
-     min      : agar.core.types.uint8_access_t;
-     max      : agar.core.types.uint8_access_t;
-     visible  : agar.core.types.uint8_access_t) return slider_access_t;
+     value    : agar.core.types.uint8_ptr_t;
+     min      : agar.core.types.uint8_ptr_t;
+     max      : agar.core.types.uint8_ptr_t;
+     visible  : agar.core.types.uint8_ptr_t) return slider_access_t;
   pragma import (c, allocate_uint8, "AG_SliderNewUint8");
 
   function allocate_int8
     (parent   : widget_access_t;
      bar_type : type_t;
      flags    : flags_t;
-     value    : agar.core.types.int8_access_t;
-     min      : agar.core.types.int8_access_t;
-     max      : agar.core.types.int8_access_t;
-     visible  : agar.core.types.int8_access_t) return slider_access_t;
+     value    : agar.core.types.int8_ptr_t;
+     min      : agar.core.types.int8_ptr_t;
+     max      : agar.core.types.int8_ptr_t;
+     visible  : agar.core.types.int8_ptr_t) return slider_access_t;
   pragma import (c, allocate_int8, "AG_SliderNewSint8");
 
   function allocate_uint16
     (parent   : widget_access_t;
      bar_type : type_t;
      flags    : flags_t;
-     value    : agar.core.types.uint16_access_t;
-     min      : agar.core.types.uint16_access_t;
-     max      : agar.core.types.uint16_access_t;
-     visible  : agar.core.types.uint16_access_t) return slider_access_t;
+     value    : agar.core.types.uint16_ptr_t;
+     min      : agar.core.types.uint16_ptr_t;
+     max      : agar.core.types.uint16_ptr_t;
+     visible  : agar.core.types.uint16_ptr_t) return slider_access_t;
   pragma import (c, allocate_uint16, "AG_SliderNewUint16");
 
   function allocate_int16
     (parent   : widget_access_t;
      bar_type : type_t;
      flags    : flags_t;
-     value    : agar.core.types.int16_access_t;
-     min      : agar.core.types.int16_access_t;
-     max      : agar.core.types.int16_access_t;
-     visible  : agar.core.types.int16_access_t) return slider_access_t;
+     value    : agar.core.types.int16_ptr_t;
+     min      : agar.core.types.int16_ptr_t;
+     max      : agar.core.types.int16_ptr_t;
+     visible  : agar.core.types.int16_ptr_t) return slider_access_t;
   pragma import (c, allocate_int16, "AG_SliderNewSint16");
 
   function allocate_uint32
     (parent   : widget_access_t;
      bar_type : type_t;
      flags    : flags_t;
-     value    : agar.core.types.uint32_access_t;
-     min      : agar.core.types.uint32_access_t;
-     max      : agar.core.types.uint32_access_t;
-     visible  : agar.core.types.uint32_access_t) return slider_access_t;
+     value    : agar.core.types.uint32_ptr_t;
+     min      : agar.core.types.uint32_ptr_t;
+     max      : agar.core.types.uint32_ptr_t;
+     visible  : agar.core.types.uint32_ptr_t) return slider_access_t;
   pragma import (c, allocate_uint32, "AG_SliderNewUint32");
 
   function allocate_int32
     (parent   : widget_access_t;
      bar_type : type_t;
      flags    : flags_t;
-     value    : agar.core.types.int32_access_t;
-     min      : agar.core.types.int32_access_t;
-     max      : agar.core.types.int32_access_t;
-     visible  : agar.core.types.int32_access_t) return slider_access_t;
+     value    : agar.core.types.int32_ptr_t;
+     min      : agar.core.types.int32_ptr_t;
+     max      : agar.core.types.int32_ptr_t;
+     visible  : agar.core.types.int32_ptr_t) return slider_access_t;
   pragma import (c, allocate_int32, "AG_SliderNewSint32");
 
   function allocate_uint64
     (parent   : widget_access_t;
      bar_type : type_t;
      flags    : flags_t;
-     value    : agar.core.types.uint64_access_t;
-     min      : agar.core.types.uint64_access_t;
-     max      : agar.core.types.uint64_access_t;
-     visible  : agar.core.types.uint64_access_t) return slider_access_t;
+     value    : agar.core.types.uint64_ptr_t;
+     min      : agar.core.types.uint64_ptr_t;
+     max      : agar.core.types.uint64_ptr_t;
+     visible  : agar.core.types.uint64_ptr_t) return slider_access_t;
   pragma import (c, allocate_uint64, "AG_SliderNewUint64");
 
   function allocate_int64
     (parent   : widget_access_t;
      bar_type : type_t;
      flags    : flags_t;
-     value    : agar.core.types.int64_access_t;
-     min      : agar.core.types.int64_access_t;
-     max      : agar.core.types.int64_access_t;
-     visible  : agar.core.types.int64_access_t) return slider_access_t;
+     value    : agar.core.types.int64_ptr_t;
+     min      : agar.core.types.int64_ptr_t;
+     max      : agar.core.types.int64_ptr_t;
+     visible  : agar.core.types.int64_ptr_t) return slider_access_t;
   pragma import (c, allocate_int64, "AG_SliderNewSint64");
+
+  procedure set_increment
+    (slider    : slider_access_t;
+     increment : positive);
+  pragma inline (set_increment);
+
+  procedure set_increment
+    (slider    : slider_access_t;
+     increment : long_float);
+  pragma inline (set_increment);
+
+  function widget (slider : slider_access_t) return widget_access_t;
+  pragma inline (widget);
 
 private
 
