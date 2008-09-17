@@ -43,14 +43,13 @@
 #include "vg_tools.h"
 #include "tools.h"
 
-static const float scaleFactors[28] = {
-	1.0f, 1.25f, 1.5f, 1.75f,
-	2.0f, 2.25f, 2.5f, 2.75f,
-	3.0f, 3.25f, 3.5f, 3.75f,
-	4.0f, 5.0f, 6.0f, 8.0f, 10.0f, 12.0f, 16.0f, 18.0f,
-	20.0f, 22.0f, 24.0f, 32.0f, 34.0f, 36.0f, 38.0f, 40.0f
+static const float scaleFactors[] = {
+	1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f,
+	10.0f, 12.0f, 14.0f, 16.0f, 18.0f, 20.0f, 22.0f, 24.0f, 26.0f, 28.0f,
+	40.0f, 50.0f, 80.0f, 90.0f, 100.0f, 200.0f, 300.0f,
+	400.0f, 600.0f, 700.0f, 800.0f, 900.0f
 };
-const int nScaleFactors = 28;
+const int nScaleFactors = sizeof(scaleFactors)/sizeof(scaleFactors[0]);
 
 VG_View *
 VG_ViewNew(void *parent, VG *vg, Uint flags)
@@ -139,13 +138,13 @@ MouseButtonDown(AG_Event *event)
 	case SDL_BUTTON_WHEELDOWN:
 		if (vv->scaleIdx-1 >= 0) {
 			VG_ViewSetScale(vv, --vv->scaleIdx);
-			VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
+			VG_Status(vv, _("Scale: 1:%f"), vv->scale);
 		}
 		return;
 	case SDL_BUTTON_WHEELUP:
 		if (vv->scaleIdx+1 < nScaleFactors) {
 			VG_ViewSetScale(vv, ++vv->scaleIdx);
-			VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
+			VG_Status(vv, _("Scale: 1:%f"), vv->scale);
 		}
 		return;
 	default:
@@ -272,10 +271,29 @@ OnShow(AG_Event *event)
 	vv->y = AGWIDGET(vv)->h/2.0f;
 }
 
+/* Update the point selection radius (dependent on scale factor). */
 static void
 UpdatePointSelRadius(VG_View *vv)
 {
 	vv->pointSelRadius = (vv->grid[0].ival/2)*vv->wPixel;
+}
+
+static void
+UpdateGridIntervals(VG_View *vv)
+{
+	int i;
+
+	for (i = 0; i < vv->nGrids; i++) {
+		VG_Grid *grid = &vv->grid[i];
+
+		grid->ival = (int)VG_Rint(((float)grid->ivalNom)/vv->wPixel);
+
+		if (grid->ival < 6) {
+			grid->flags |= VG_GRID_UNDERSIZE;
+		} else {
+			grid->flags &= ~(VG_GRID_UNDERSIZE);
+		}
+	}
 }
 
 static void
@@ -374,7 +392,8 @@ VG_ViewSetGrid(VG_View *vv, int idx, enum vg_grid_type type, int ival,
 
 	AG_ObjectLock(vv);
 	vv->grid[idx].type = type;
-	vv->grid[idx].ival = ival;
+	vv->grid[idx].ivalNom = ival;
+	vv->grid[idx].ival = 0;
 	vv->grid[idx].color = color;
 	if (idx == 0) {
 		UpdatePointSelRadius(vv);
@@ -382,6 +401,7 @@ VG_ViewSetGrid(VG_View *vv, int idx, enum vg_grid_type type, int ival,
 	if (idx >= vv->nGrids) {
 		vv->nGrids = idx+1;
 	}
+	UpdateGridIntervals(vv);
 	AG_ObjectUnlock(vv);
 }
 
@@ -474,14 +494,12 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 static __inline__ void
 DrawGrid(VG_View *vv, const VG_Grid *grid)
 {
-	int x, x0, y;
-	int ival;
+	int x, x0, y, ival;
 
-	if (grid->ival <= 1) {
+	if (grid->flags & (VG_GRID_HIDE|VG_GRID_UNDERSIZE))
 		return;
-	}
-	ival = (int)(grid->ival/vv->wPixel);
-	
+
+	ival = grid->ival;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		x0 = WIDGET(vv)->cx + (int)(vv->x)%ival;
@@ -740,15 +758,18 @@ VG_ViewSetScale(VG_View *vv, int idx)
 	
 	AG_ObjectLock(vv);
 
+	/* Set the specified scaling factor. */
 	vv->scaleIdx = idx;
 	vv->scale = scaleFactors[idx];
 	if (vv->scale < vv->scaleMin) { vv->scale = vv->scaleMin; }
 	if (vv->scale > vv->scaleMax) { vv->scale = vv->scaleMax; }
-
+	
+	/* Update all values dependent on VG's representation of a pixel. */
 	vv->wPixel = 1.0/vv->scale;
 	vv->x *= (vv->scale/scalePrev);
 	vv->y *= (vv->scale/scalePrev);
 	UpdatePointSelRadius(vv);
+	UpdateGridIntervals(vv);
 
 	AG_ObjectUnlock(vv);
 }
