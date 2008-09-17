@@ -7,7 +7,7 @@ package agar.gui.widget.combo is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   COMBO_POLL     : constant flags_t := 16#01#;
   COMBO_TREE     : constant flags_t := 16#02#;
   COMBO_ANY_TEXT : constant flags_t := 16#04#;

@@ -7,7 +7,7 @@ package agar.gui.widget.hsvpal is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   HSVPAL_PIXEL  : constant flags_t := 16#01#;
   HSVPAL_DIRTY  : constant flags_t := 16#02#;
   HSVPAL_HFILL  : constant flags_t := 16#04#;

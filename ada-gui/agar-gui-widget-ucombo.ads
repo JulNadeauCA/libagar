@@ -6,7 +6,7 @@ package agar.gui.widget.ucombo is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   UCOMBO_HFILL  : constant flags_t := 16#01#;
   UCOMBO_VFILL  : constant flags_t := 16#02#;
   UCOMBO_EXPAND : constant flags_t := UCOMBO_HFILL or UCOMBO_VFILL;

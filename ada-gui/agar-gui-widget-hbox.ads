@@ -2,6 +2,7 @@ with agar.gui.widget.box;
 
 package agar.gui.widget.hbox is
 
+  use type agar.gui.widget.box.flags_t;
   use type c.unsigned;
 
   type hbox_t is record
@@ -11,11 +12,11 @@ package agar.gui.widget.hbox is
   pragma convention (c, hbox_t);
   pragma convention (c, hbox_access_t);
 
-  subtype flags_t is c.unsigned;
-  HBOX_HOMOGENOUS : constant flags_t := agar.gui.widget.box.BOX_HOMOGENOUS;
-  HBOX_HFILL      : constant flags_t := agar.gui.widget.box.BOX_HFILL;
-  HBOX_VFILL      : constant flags_t := agar.gui.widget.box.BOX_VFILL;
-  HBOX_EXPAND     : constant flags_t := agar.gui.widget.box.BOX_HFILL or agar.gui.widget.box.BOX_VFILL;
+  type flags_t is new c.unsigned;
+  HBOX_HOMOGENOUS : constant flags_t := flags_t (agar.gui.widget.box.BOX_HOMOGENOUS);
+  HBOX_HFILL      : constant flags_t := flags_t (agar.gui.widget.box.BOX_HFILL);
+  HBOX_VFILL      : constant flags_t := flags_t (agar.gui.widget.box.BOX_VFILL);
+  HBOX_EXPAND     : constant flags_t := flags_t (agar.gui.widget.box.BOX_HFILL or agar.gui.widget.box.BOX_VFILL);
 
   -- API
 

@@ -7,7 +7,7 @@ package agar.gui.widget.icon is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   ICON_REGEN_LABEL : constant flags_t := 16#01#;
   ICON_DND         : constant flags_t := 16#02#;
   ICON_DBLCLICKED  : constant flags_t := 16#04#;

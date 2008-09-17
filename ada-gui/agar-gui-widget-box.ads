@@ -7,7 +7,7 @@ package agar.gui.widget.box is
    for type_t'size use c.unsigned'size;
   pragma convention (c, type_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   BOX_HOMOGENOUS : constant flags_t := 16#01#;
   BOX_HFILL      : constant flags_t := 16#02#;
   BOX_VFILL      : constant flags_t := 16#04#;

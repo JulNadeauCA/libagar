@@ -43,7 +43,7 @@ package agar.gui.widget.label is
      num   : c.int);
   pragma convention (c, format_func_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   LABEL_HFILL     : constant flags_t := 16#01#;
   LABEL_VFILL     : constant flags_t := 16#02#;
   LABEL_NOMINSIZE : constant flags_t := 16#04#;

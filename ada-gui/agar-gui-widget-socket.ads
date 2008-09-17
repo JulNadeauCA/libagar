@@ -6,14 +6,18 @@ package agar.gui.widget.socket is
 
   use type c.unsigned;
 
-  type socket_t;
-  type socket_access_t is access all socket_t;
-  pragma convention (c, socket_access_t);
-
   type bg_type_t is (SOCKET_PIXMAP, SOCKET_RECT, SOCKET_CIRCLE);
    for bg_type_t use (SOCKET_PIXMAP => 0, SOCKET_RECT => 1, SOCKET_CIRCLE => 2);
    for bg_type_t'size use c.unsigned'size;
   pragma convention (c, bg_type_t);
+
+  type socket_t is limited private;
+  type socket_access_t is access all socket_t;
+  pragma convention (c, socket_access_t);
+
+  -- API
+
+private
 
   type pixmap_t is record
     s : c.int;
@@ -43,7 +47,7 @@ package agar.gui.widget.socket is
   pragma unchecked_union (bg_data_t);
 
   type socket_t is record
-    widget     : widget_t;
+    widget     : aliased widget_t;
     state      : c.int;
     count      : c.int;
     flags      : flags_t;

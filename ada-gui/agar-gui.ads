@@ -5,7 +5,7 @@ package agar.gui is
   package c renames interfaces.c;
 
   -- Flags for init_video
-  subtype video_flags_t is c.unsigned;
+  type video_flags_t is new c.unsigned;
   HWSURFACE     : constant video_flags_t := 16#001#;
   ASYNCBLIT     : constant video_flags_t := 16#002#;
   ANYFORMAT     : constant video_flags_t := 16#004#;

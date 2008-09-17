@@ -4,7 +4,7 @@ package agar.gui.widget.slider is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   SLIDER_HFILL     : constant flags_t := 16#01#;
   SLIDER_VFILL     : constant flags_t := 16#02#;
   SLIDER_FOCUSABLE : constant flags_t := 16#04#;

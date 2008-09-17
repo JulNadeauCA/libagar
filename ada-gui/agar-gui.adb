@@ -4,6 +4,18 @@ package body agar.gui is
 
   use type c.int;
 
+  package cbinds is
+    function init (flags : agar.core.init_flags_t := 0) return c.int;
+    pragma import (c, init, "AG_InitGUI");
+
+    function init_video
+      (width  : c.int;
+       height : c.int;
+       bpp    : c.int;
+       flags  : video_flags_t := 0) return c.int;
+    pragma import (c, init_video, "AG_InitVideo");
+  end cbinds;
+
   protected state is
     procedure init_gui;
     procedure init_video;
@@ -27,7 +39,7 @@ package body agar.gui is
      bpp    : natural;
      flags  : video_flags_t := 0) return boolean is
   begin
-    if init_video
+    if cbinds.init_video
       (width  => c.int (width),
        height => c.int (height),
        bpp    => c.int (bpp),
@@ -40,7 +52,7 @@ package body agar.gui is
   function init (flags : agar.core.init_flags_t := 0) return boolean is
   begin
     if state.inited_video then
-      if init (flags) = 0 then
+      if cbinds.init (flags) = 0 then
         state.init_gui;
       end if;
     else

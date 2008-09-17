@@ -9,7 +9,7 @@ package agar.gui.widget.progress_bar is
    for type_t'size use c.unsigned'size;
   pragma convention (c, type_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   PROGRESS_BAR_HFILL    : constant flags_t := 16#01#;
   PROGRESS_BAR_VFILL    : constant flags_t := 16#02#;
   PROGRESS_BAR_SHOW_PCT : constant flags_t := 16#04#;

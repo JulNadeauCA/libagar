@@ -2,6 +2,7 @@ with agar.gui.widget.box;
 
 package agar.gui.widget.vbox is
 
+  use type agar.gui.widget.box.flags_t;
   use type c.unsigned;
 
   type vbox_t is record
@@ -11,11 +12,11 @@ package agar.gui.widget.vbox is
   pragma convention (c, vbox_t);
   pragma convention (c, vbox_access_t);
 
-  subtype flags_t is c.unsigned;
-  VBOX_HOMOGENOUS : constant flags_t := agar.gui.widget.box.BOX_HOMOGENOUS;
-  VBOX_HFILL      : constant flags_t := agar.gui.widget.box.BOX_HFILL;
-  VBOX_VFILL      : constant flags_t := agar.gui.widget.box.BOX_VFILL;
-  VBOX_EXPAND     : constant flags_t := agar.gui.widget.box.BOX_HFILL or agar.gui.widget.box.BOX_VFILL;
+  type flags_t is new c.unsigned;
+  VBOX_HOMOGENOUS : constant flags_t := flags_t (agar.gui.widget.box.BOX_HOMOGENOUS);
+  VBOX_HFILL      : constant flags_t := flags_t (agar.gui.widget.box.BOX_HFILL);
+  VBOX_VFILL      : constant flags_t := flags_t (agar.gui.widget.box.BOX_VFILL);
+  VBOX_EXPAND     : constant flags_t := flags_t (agar.gui.widget.box.BOX_HFILL or agar.gui.widget.box.BOX_VFILL);
 
   -- API
 
