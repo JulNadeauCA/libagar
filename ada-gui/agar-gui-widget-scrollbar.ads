@@ -31,8 +31,156 @@ package agar.gui.widget.scrollbar is
   SCROLLBAR_FOCUSABLE : constant flags_t := 16#04#;
   SCROLLBAR_EXPAND    : constant flags_t := SCROLLBAR_HFILL or SCROLLBAR_VFILL;
 
+  type scrollbar_t is limited private;
+  type scrollbar_access_t is access all scrollbar_t;
+  pragma convention (c, scrollbar_access_t);
+
+  -- API
+
+  function allocate_integer
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     min      : agar.core.types.integer_access_t;
+     max      : agar.core.types.integer_access_t;
+     visible  : agar.core.types.integer_access_t) return scrollbar_access_t;
+  pragma import (c, allocate_integer, "AG_ScrollbarNewInt");
+ 
+  function allocate_unsigned
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     min      : agar.core.types.unsigned_access_t;
+     max      : agar.core.types.unsigned_access_t;
+     visible  : agar.core.types.unsigned_access_t) return scrollbar_access_t;
+  pragma import (c, allocate_unsigned, "AG_ScrollbarNewUint");
+
+  function allocate_float
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     min      : agar.core.types.float_access_t;
+     max      : agar.core.types.float_access_t;
+     visible  : agar.core.types.float_access_t) return scrollbar_access_t;
+  pragma import (c, allocate_float, "AG_ScrollbarNewFloat");
+
+  function allocate_double
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     min      : agar.core.types.double_access_t;
+     max      : agar.core.types.double_access_t;
+     visible  : agar.core.types.double_access_t) return scrollbar_access_t;
+  pragma import (c, allocate_double, "AG_ScrollbarNewDouble");
+
+  function allocate_uint8
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     value    : agar.core.types.uint8_ptr_t;
+     min      : agar.core.types.uint8_ptr_t;
+     max      : agar.core.types.uint8_ptr_t;
+     visible  : agar.core.types.uint8_ptr_t) return scrollbar_access_t;
+  pragma import (c, allocate_uint8, "AG_ScrollbarNewUint8");
+
+  function allocate_int8
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     value    : agar.core.types.int8_ptr_t;
+     min      : agar.core.types.int8_ptr_t;
+     max      : agar.core.types.int8_ptr_t;
+     visible  : agar.core.types.int8_ptr_t) return scrollbar_access_t;
+  pragma import (c, allocate_int8, "AG_ScrollbarNewSint8");
+
+  function allocate_uint16
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     value    : agar.core.types.uint16_ptr_t;
+     min      : agar.core.types.uint16_ptr_t;
+     max      : agar.core.types.uint16_ptr_t;
+     visible  : agar.core.types.uint16_ptr_t) return scrollbar_access_t;
+  pragma import (c, allocate_uint16, "AG_ScrollbarNewUint16");
+
+  function allocate_int16
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     value    : agar.core.types.int16_ptr_t;
+     min      : agar.core.types.int16_ptr_t;
+     max      : agar.core.types.int16_ptr_t;
+     visible  : agar.core.types.int16_ptr_t) return scrollbar_access_t;
+  pragma import (c, allocate_int16, "AG_ScrollbarNewSint16");
+
+  function allocate_uint32
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     value    : agar.core.types.uint32_ptr_t;
+     min      : agar.core.types.uint32_ptr_t;
+     max      : agar.core.types.uint32_ptr_t;
+     visible  : agar.core.types.uint32_ptr_t) return scrollbar_access_t;
+  pragma import (c, allocate_uint32, "AG_ScrollbarNewUint32");
+
+  function allocate_int32
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     value    : agar.core.types.int32_ptr_t;
+     min      : agar.core.types.int32_ptr_t;
+     max      : agar.core.types.int32_ptr_t;
+     visible  : agar.core.types.int32_ptr_t) return scrollbar_access_t;
+  pragma import (c, allocate_int32, "AG_ScrollbarNewSint32");
+
+  function allocate_uint64
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     value    : agar.core.types.uint64_ptr_t;
+     min      : agar.core.types.uint64_ptr_t;
+     max      : agar.core.types.uint64_ptr_t;
+     visible  : agar.core.types.uint64_ptr_t) return scrollbar_access_t;
+  pragma import (c, allocate_uint64, "AG_ScrollbarNewUint64");
+
+  function allocate_int64
+    (parent   : widget_access_t;
+     bar_type : type_t;
+     flags    : flags_t;
+     value    : agar.core.types.int64_ptr_t;
+     min      : agar.core.types.int64_ptr_t;
+     max      : agar.core.types.int64_ptr_t;
+     visible  : agar.core.types.int64_ptr_t) return scrollbar_access_t;
+  pragma import (c, allocate_int64, "AG_ScrollbarNewSint64");
+
+  procedure set_size
+    (scrollbar : scrollbar_access_t;
+     size      : natural);
+  pragma inline (set_size);
+
+  function get_size (scrollbar : scrollbar_access_t) return natural;
+  pragma inline (get_size);
+
+  function visible (scrollbar : scrollbar_access_t) return boolean;
+  pragma inline (visible);
+
+  procedure set_increment
+    (scrollbar : scrollbar_access_t;
+     increment : positive);
+  pragma inline (set_increment);
+
+  procedure set_increment
+    (scrollbar : scrollbar_access_t;
+     increment : long_float);
+  pragma inline (set_increment);
+
+  function widget (scrollbar : scrollbar_access_t) return widget_access_t;
+  pragma inline (widget);
+
+private
+
   type scrollbar_t is record
-    widget          : widget_t;
+    widget          : aliased widget_t;
     flags           : flags_t;
     value           : c.int;
     min             : c.int;
@@ -54,8 +202,6 @@ package agar.gui.widget.scrollbar is
     r_inc           : c.double;
     i_inc           : c.int;
   end record;
-  type scrollbar_access_t is access all scrollbar_t;
   pragma convention (c, scrollbar_t);
-  pragma convention (c, scrollbar_access_t);
 
 end agar.gui.widget.scrollbar;
