@@ -6,7 +6,7 @@ package agar.gui.widget.fixed is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   FIXED_HFILL     : constant flags_t := 16#01#;
   FIXED_VFILL     : constant flags_t := 16#02#;
   FIXED_NO_UPDATE : constant flags_t := 16#04#;

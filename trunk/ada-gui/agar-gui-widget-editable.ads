@@ -10,7 +10,7 @@ package agar.gui.widget.editable is
    for encoding_t'size use c.unsigned'size;
   pragma convention (c, encoding_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   EDITABLE_HFILL         : constant flags_t := 16#00001#;
   EDITABLE_VFILL         : constant flags_t := 16#00002#;
   EDITABLE_EXPAND        : constant flags_t := EDITABLE_HFILL or EDITABLE_VFILL;

@@ -8,7 +8,7 @@ package agar.gui.widget.button is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   BUTTON_STICKY        : constant flags_t := 16#002#;
   BUTTON_MOUSEOVER     : constant flags_t := 16#004#;
   BUTTON_REPEAT        : constant flags_t := 16#008#;

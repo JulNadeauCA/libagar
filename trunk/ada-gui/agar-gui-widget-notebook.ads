@@ -41,7 +41,7 @@ package agar.gui.widget.notebook is
   end record;
   pragma convention (c, tab_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   NOTEBOOK_HFILL     : constant flags_t := 16#01#;
   NOTEBOOK_VFILL     : constant flags_t := 16#02#;
   NOTEBOOK_HIDE_TABS : constant flags_t := 16#04#;

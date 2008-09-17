@@ -27,7 +27,7 @@ package agar.gui.widget.fixed_plotter is
    for type_t'size use c.unsigned'size;
   pragma convention (c, type_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   PLOTTER_SCROLL : constant flags_t := 16#01#;
   PLOTTER_XAXIS  : constant flags_t := 16#02#;
   PLOTTER_HFILL  : constant flags_t := 16#04#;

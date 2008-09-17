@@ -13,7 +13,7 @@ package agar.gui.widget.pane is
   type pane_access_t is access all pane_t;
   pragma convention (c, pane_access_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   PANE_HFILL          : constant flags_t := 16#001#;
   PANE_VFILL          : constant flags_t := 16#002#;
   PANE_DIV1FILL       : constant flags_t := 16#004#;

@@ -4,7 +4,7 @@ package agar.gui.widget.checkbox is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   CHECKBOX_HFILL  : constant flags_t := 16#01#;
   CHECKBOX_VFILL  : constant flags_t := 16#02#;
   CHECKBOX_EXPAND : constant flags_t := CHECKBOX_HFILL or CHECKBOX_VFILL;

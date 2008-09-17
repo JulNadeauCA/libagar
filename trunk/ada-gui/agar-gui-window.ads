@@ -27,7 +27,7 @@ package agar.gui.window is
   -- types
   --
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   WINDOW_MODAL         : constant flags_t := 16#00001#;
   WINDOW_MAXIMIZED     : constant flags_t := 16#00002#;
   WINDOW_MINIMIZED     : constant flags_t := 16#00004#;

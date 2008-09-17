@@ -2,7 +2,7 @@ package agar.gui.widget.pixmap is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   PIXMAP_HFILL      : constant flags_t := 16#01#;
   PIXMAP_VFILL      : constant flags_t := 16#02#;
   PIXMAP_FORCE_SIZE : constant flags_t := 16#04#;

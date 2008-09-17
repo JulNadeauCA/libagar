@@ -25,7 +25,7 @@ package agar.gui.widget.scrollbar is
   for button_t'size use c.unsigned'size;
   pragma convention (c, button_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   SCROLLBAR_HFILL     : constant flags_t := 16#01#;
   SCROLLBAR_VFILL     : constant flags_t := 16#02#;
   SCROLLBAR_FOCUSABLE : constant flags_t := 16#04#;

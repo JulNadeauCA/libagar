@@ -7,7 +7,7 @@ package agar.gui.widget.toolbar is
    for type_t'size use c.unsigned'size;
   pragma convention (c, type_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   TOOLBAR_HOMOGENOUS   : constant flags_t := 16#01#;
   TOOLBAR_STICKY       : constant flags_t := 16#02#;
   TOOLBAR_MULTI_STICKY : constant flags_t := 16#04#;

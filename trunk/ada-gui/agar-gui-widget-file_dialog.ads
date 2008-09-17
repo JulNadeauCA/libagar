@@ -95,7 +95,7 @@ package agar.gui.widget.file_dialog is
   end record;
   pragma convention (c, filetype_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   FILEDLG_MULTI    : constant flags_t := 16#001#;
   FILEDLG_CLOSEWIN : constant flags_t := 16#002#;
   FILEDLG_LOAD     : constant flags_t := 16#004#;

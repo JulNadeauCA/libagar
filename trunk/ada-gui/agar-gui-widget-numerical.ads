@@ -7,7 +7,7 @@ package agar.gui.widget.numerical is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   NUMERICAL_HFILL    : constant flags_t := 16#01#;
   NUMERICAL_VFILL    : constant flags_t := 16#02#;
   NUMERICAL_NO_HFILL : constant flags_t := 16#04#;

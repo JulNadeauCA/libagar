@@ -5,7 +5,7 @@ package agar.gui.widget.textbox is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   TEXTBOX_MULTILINE     : constant flags_t := 16#00001#;
   TEXTBOX_PASSWORD      : constant flags_t := 16#00004#;
   TEXTBOX_ABANDON_FOCUS : constant flags_t := 16#00008#;

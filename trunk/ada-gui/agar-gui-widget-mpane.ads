@@ -35,7 +35,7 @@ package agar.gui.widget.mpane is
   for layout_t'size use c.unsigned'size;
   pragma convention (c, layout_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   MPANE_HFILL     : constant flags_t := 16#01#;
   MPANE_VFILL     : constant flags_t := 16#02#;
   MPANE_FRAMES    : constant flags_t := 16#04#;

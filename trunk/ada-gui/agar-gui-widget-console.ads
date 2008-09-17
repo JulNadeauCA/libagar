@@ -26,7 +26,7 @@ package agar.gui.widget.console is
   pragma convention (c, line_t);
   pragma convention (c, line_access_t);
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   CONSOLE_HFILL  : constant flags_t := 16#01#;
   CONSOLE_VFILL  : constant flags_t := 16#02#;
   CONSOLE_EXPAND : constant flags_t := CONSOLE_HFILL or CONSOLE_VFILL;

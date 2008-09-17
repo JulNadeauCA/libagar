@@ -4,7 +4,7 @@ package agar.gui.widget.radio is
 
   use type c.unsigned;
 
-  subtype flags_t is c.unsigned;
+  type flags_t is new c.unsigned;
   RADIO_HFILL  : constant flags_t := 16#01#;
   RADIO_VFILL  : constant flags_t := 16#02#;
   RADIO_EXPAND : constant flags_t := RADIO_HFILL or RADIO_VFILL;
