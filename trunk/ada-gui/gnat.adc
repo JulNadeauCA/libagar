@@ -132,6 +132,7 @@ pragma source_file_name(agar.gui.widget.separator, body_file_name => "agar-gui-w
 
 -- ./agar-gui-widget-slider.apk
 pragma source_file_name(agar.gui.widget.slider, spec_file_name => "agar-gui-widget-slider.ads");
+pragma source_file_name(agar.gui.widget.slider, body_file_name => "agar-gui-widget-slider.adb");
 
 -- ./agar-gui-widget-socket.apk
 pragma source_file_name(agar.gui.widget.socket, spec_file_name => "agar-gui-widget-socket.ads");

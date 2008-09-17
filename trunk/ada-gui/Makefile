@@ -633,8 +633,8 @@ agar-gui-widget-separator.o:\
 agar-gui-widget-separator.ali
 
 agar-gui-widget-slider.ali:\
-ada-compile agar-gui-widget-slider.ads agar-gui-widget-slider.ads
-	./ada-compile agar-gui-widget-slider.ads
+ada-compile agar-gui-widget-slider.adb agar-gui-widget-slider.ads
+	./ada-compile agar-gui-widget-slider.adb
 
 agar-gui-widget-slider.o:\
 agar-gui-widget-slider.ali
