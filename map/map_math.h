@@ -16,6 +16,7 @@
 #define	MAP_PI 3.14159265358979323846
 #endif
 
+/* XXX test in configure */
 #if __STDC_VERSION__ >= 199901L
 # define MAP_Sin(x) sinf(x)
 # define MAP_Cos(x) cosf(x)

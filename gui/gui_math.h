@@ -16,6 +16,7 @@
 #define	AG_PI 3.14159265358979323846
 #endif
 
+/* XXX test in configure */
 #if __STDC_VERSION__ >= 199901L
 # define AG_Sin(x) sinf(x)
 # define AG_Cos(x) cosf(x)
