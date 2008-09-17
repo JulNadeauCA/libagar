@@ -111,6 +111,7 @@ pragma source_file_name(agar.gui.widget.pane, spec_file_name => "agar-gui-widget
 
 -- ./agar-gui-widget-pixmap.apk
 pragma source_file_name(agar.gui.widget.pixmap, spec_file_name => "agar-gui-widget-pixmap.ads");
+pragma source_file_name(agar.gui.widget.pixmap, body_file_name => "agar-gui-widget-pixmap.adb");
 
 -- ./agar-gui-widget-progress_bar.apk
 pragma source_file_name(agar.gui.widget.progress_bar, spec_file_name => "agar-gui-widget-progress_bar.ads");

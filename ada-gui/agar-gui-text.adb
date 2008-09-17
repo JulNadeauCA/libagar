@@ -10,7 +10,7 @@ package body agar.gui.text is
     pragma import (c, font, "AG_TextFont");
   
     function render (text : cs.chars_ptr) return agar.gui.surface.surface_access_t;
-    pragma import (c, render, "AG_TextRender");
+    pragma import (c, render, "agar_gui_text_render");
   
     function render_ucs4 (text : access c.char32_t) return agar.gui.surface.surface_access_t;
     pragma import (c, render_ucs4, "AG_TextRenderUCS4");

@@ -39,3 +39,4 @@
 20080914 code: added agar.gui.widget.notebook API functions.
 20080914 code: added agar.gui.widget.menu API functions.
 20080916 code: added agar.gui.widget.numerical API functions.
+20080917 code: added agar.gui.widget.pixmap API functions.
