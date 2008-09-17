@@ -5,6 +5,7 @@ ag_hbox.o
 ag_label.o
 ag_menu.o
 ag_pixmap.o
+ag_scrollbar.o
 ag_surface.o
 ag_text.o
 ag_unit.o
