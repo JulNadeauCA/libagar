@@ -11,6 +11,11 @@ package agar.gui.surface is
   type surface_access_t is access all surface_t;
   pragma convention (c, surface_t);
 
+  type index_t is new c.int;
+  type index_access_t is access all index_t;
+  pragma convention (c, index_t);
+  pragma convention (c, index_access_t);
+
   -- constants
   type flags_t is new c.unsigned;
   pragma convention (c, flags_t);
@@ -59,7 +64,6 @@ package agar.gui.surface is
      gmask          : agar.core.types.uint32_t;
      bmask          : agar.core.types.uint32_t) return surface_access_t;
   pragma inline (rgb);
-
 
   function rgba
     (width          : positive;
