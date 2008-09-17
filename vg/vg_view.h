@@ -21,8 +21,13 @@ enum vg_grid_type {
 
 typedef struct vg_grid {
 	enum vg_grid_type type;
-	int ival;			/* Interval (pixels, power of two) */
-	VG_Color color;			/* Display color */
+	Uint flags;
+#define VG_GRID_HIDE      0x01	/* Hide grid */
+#define VG_GRID_UNDERSIZE 0x02	/* Grid too small to display */
+
+	int ivalNom;		/* Nominal pixel interval */
+	int ival;		/* Effective interval (dependent on wPixel) */
+	VG_Color color;		/* Display color */
 } VG_Grid;
 
 typedef struct vg_view {

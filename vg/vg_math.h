@@ -14,6 +14,7 @@
 # define VG_PI 3.14159265358979323846
 #endif
 
+/* XXX test in configure */
 #if __STDC_VERSION__ >= 199901L
 # define VG_Sin(x) sinf(x)
 # define VG_Cos(x) cosf(x)
@@ -25,6 +26,7 @@
 # define VG_Ceil(x) ceilf(x)
 # define VG_Fabs(x) fabsf(x)
 # define VG_Hypot(x,y) hypotf((x),(y))
+# define VG_Rint(x) rintf(x)
 #else
 # define VG_Sin(x) ((float)sin((double)x))
 # define VG_Cos(x) ((float)cos((double)x))
@@ -36,6 +38,7 @@
 # define VG_Ceil(x) ((float)ceil((double)x))
 # define VG_Fabs(x) ((float)fabs((double)x))
 # define VG_Hypot(x,y) ((float)hypot((double)(x),(double)(y)))
+# define VG_Rint(x) ((float)rint(x))
 #endif /* C99 */
 
 #define VG_Degrees(x) ((x)/(2.0*VG_PI)*360.0)
