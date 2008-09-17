@@ -19,18 +19,8 @@ package agar.gui is
   OPENGL_OR_SDL : constant video_flags_t := 16#400#;
   NOBGCLEAR     : constant video_flags_t := 16#800#;
 
-  function init (flags : agar.core.init_flags_t := 0) return c.int;
-  pragma import (c, init, "AG_InitGUI");
-
   function init (flags : agar.core.init_flags_t := 0) return boolean;
   pragma inline (init);
-
-  function init_video
-    (width  : c.int;
-     height : c.int;
-     bpp    : c.int;
-     flags  : video_flags_t := 0) return c.int;
-  pragma import (c, init_video, "AG_InitVideo");
 
   function init_video
     (width  : positive;
