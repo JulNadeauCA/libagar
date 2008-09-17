@@ -44,10 +44,10 @@
 #include "tools.h"
 
 static const float scaleFactors[] = {
-	1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f,
-	10.0f, 12.0f, 14.0f, 16.0f, 18.0f, 20.0f, 22.0f, 24.0f, 26.0f, 28.0f,
-	40.0f, 50.0f, 80.0f, 90.0f, 100.0f, 200.0f, 300.0f,
-	400.0f, 600.0f, 700.0f, 800.0f, 900.0f
+	1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f,
+	12.0f, 14.0f, 16.0f, 18.0f, 20.0f, 22.0f, 24.0f, 26.0f, 28.0f,
+	30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f,
+	200.0f, 300.0f, 400.0f, 600.0f, 700.0f, 800.0f, 900.0f
 };
 const int nScaleFactors = sizeof(scaleFactors)/sizeof(scaleFactors[0]);
 
@@ -138,13 +138,13 @@ MouseButtonDown(AG_Event *event)
 	case SDL_BUTTON_WHEELDOWN:
 		if (vv->scaleIdx-1 >= 0) {
 			VG_ViewSetScale(vv, --vv->scaleIdx);
-			VG_Status(vv, _("Scale: 1:%f"), vv->scale);
+			VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
 		}
 		return;
 	case SDL_BUTTON_WHEELUP:
 		if (vv->scaleIdx+1 < nScaleFactors) {
 			VG_ViewSetScale(vv, ++vv->scaleIdx);
-			VG_Status(vv, _("Scale: 1:%f"), vv->scale);
+			VG_Status(vv, _("Scale: 1:%.0f"), vv->scale);
 		}
 		return;
 	default:
@@ -286,9 +286,9 @@ UpdateGridIntervals(VG_View *vv)
 	for (i = 0; i < vv->nGrids; i++) {
 		VG_Grid *grid = &vv->grid[i];
 
-		grid->ival = (int)VG_Rint(((float)grid->ivalNom)/vv->wPixel);
+		grid->ivalView = (int)VG_Rint(((float)grid->ival)/vv->wPixel);
 
-		if (grid->ival < 6) {
+		if (grid->ivalView < 6) {
 			grid->flags |= VG_GRID_UNDERSIZE;
 		} else {
 			grid->flags &= ~(VG_GRID_UNDERSIZE);
@@ -321,10 +321,6 @@ Init(void *obj)
 	vv->wPixel = 1.0f;
 	vv->snap_mode = VG_GRID;
 	vv->ortho_mode = VG_NO_ORTHO;
-	vv->grid[0].type = VG_GRID_POINTS;
-	vv->grid[0].ival = 8;
-	vv->grid[0].color = VG_GetColorRGB(100, 100, 100);
-	vv->nGrids = 1;
 	vv->mouse.x = 0.0f;
 	vv->mouse.y = 0.0f;
 	vv->mouse.panning = 0;
@@ -335,7 +331,9 @@ Init(void *obj)
 	vv->editAreas = NULL;
 	vv->nEditAreas = 0;
 	TAILQ_INIT(&vv->tools);
-	UpdatePointSelRadius(vv);
+	
+	VG_ViewSetGrid(vv, 0, VG_GRID_POINTS, 8, VG_GetColorRGB(100,100,100));
+	VG_ViewSetScale(vv, 0);
 
 	AG_SetEvent(vv, "window-mousemotion", MouseMotion, NULL);
 	AG_SetEvent(vv, "window-mousebuttondown", MouseButtonDown, NULL);
@@ -392,8 +390,8 @@ VG_ViewSetGrid(VG_View *vv, int idx, enum vg_grid_type type, int ival,
 
 	AG_ObjectLock(vv);
 	vv->grid[idx].type = type;
-	vv->grid[idx].ivalNom = ival;
-	vv->grid[idx].ival = 0;
+	vv->grid[idx].ival = ival;
+	vv->grid[idx].ivalView = 0;
 	vv->grid[idx].color = color;
 	if (idx == 0) {
 		UpdatePointSelRadius(vv);
@@ -499,7 +497,7 @@ DrawGrid(VG_View *vv, const VG_Grid *grid)
 	if (grid->flags & (VG_GRID_HIDE|VG_GRID_UNDERSIZE))
 		return;
 
-	ival = grid->ival;
+	ival = grid->ivalView;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		x0 = WIDGET(vv)->cx + (int)(vv->x)%ival;

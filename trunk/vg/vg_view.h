@@ -25,8 +25,8 @@ typedef struct vg_grid {
 #define VG_GRID_HIDE      0x01	/* Hide grid */
 #define VG_GRID_UNDERSIZE 0x02	/* Grid too small to display */
 
-	int ivalNom;		/* Nominal pixel interval */
-	int ival;		/* Effective interval (dependent on wPixel) */
+	int ival;		/* Nominal pixel interval */
+	int ivalView;		/* Effective interval (dependent on wPixel) */
 	VG_Color color;		/* Display color */
 } VG_Grid;
 
