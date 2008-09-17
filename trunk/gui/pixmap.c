@@ -127,44 +127,6 @@ AG_PixmapFromBMP(void *parent, Uint flags, const char *bmpfile)
 	return (px);
 }
 
-#if 0
-AG_Pixmap *
-AG_PixmapFromXCF(void *parent, Uint flags, const char *path)
-{
-	AG_Object tmpObj;
-	AG_Pixmap *px;
-	AG_Surface *su;
-	AG_DataSource *ds;
-	Uint i;
-	
-	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
-		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
-		return (NULL);
-	}
-
-	/* XXX hack */
-	AG_ObjectInit(&tmpObj, &agObjectClass);
-	tmpObj.gfx = AG_GfxNew(&tmpObj);
-	if (AG_XCFLoad(ds, 0, tmpObj.gfx) == -1)
-		goto fail;
-	
-	px = Malloc(sizeof(AG_Pixmap));
-	AG_ObjectInit(px, &agPixmapClass);
-	px->flags |= flags;
-	AG_ObjectAttach(parent, px);
-	for (i = 0; i < tmpObj.gfx->nsprites; i++) {
-		AG_WidgetMapSurface(px, AG_DupSurface(AG_SPRITE(&tmpObj,i).su));
-	}
-	AG_CloseFile(ds);
-	AG_ObjectDestroy(&tmpObj);
-	return (px);
-fail:
-	AG_CloseFile(ds);
-	AG_ObjectDestroy(&tmpObj);
-	return (NULL);
-}
-#endif
-
 /*
  * Map an existing surface. Returned surface ID is valid as long as pixmap
  * is locked.
@@ -235,9 +197,10 @@ AG_PixmapAddSurfaceScaled(AG_Pixmap *px, AG_Surface *su, Uint w, Uint h)
 	return (name);
 }
 
-/* Replace the current surface with a scaled version of a surface. */
+/* Replace the specified surface with a scaled version of another surface. */
 void
-AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, AG_Surface *su, Uint w, Uint h)
+AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, int surface_name, AG_Surface *su,
+    Uint w, Uint h)
 {
 	AG_Surface *scaled = NULL;
 
@@ -245,7 +208,7 @@ AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, AG_Surface *su, Uint w, Uint h)
 		AG_FatalError(NULL);
 	}
 	AG_ObjectLock(px);
-	AG_WidgetReplaceSurface(px, px->n, scaled);
+	AG_WidgetReplaceSurface(px, surface_name, scaled);
 	AG_ObjectUnlock(px);
 }
 

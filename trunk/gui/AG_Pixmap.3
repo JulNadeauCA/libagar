@@ -69,12 +69,6 @@ from a timer with
 .Ft "AG_Pixmap *"
 .Fn AG_PixmapFromSurfaceScaled "AG_Widget *parent" "Uint flags" "AG_Surface *src" "int width" "int height"
 .Pp
-.Ft "AG_Pixmap *"
-.Fn AG_PixmapFromBMP "AG_Widget *parent" "Uint flags" "const char *path"
-.Pp
-.Ft "AG_Pixmap *"
-.Fn AG_PixmapFromXCF "AG_Widget *parent" "Uint flags" "const char *path"
-.Pp
 .nr nS 0
 The
 .Fn AG_PixmapNew
@@ -106,12 +100,6 @@ creates a copy of the given
 that will be freed automatically along with the widget instance.
 .Fn AG_PixmapFromSurfaceScaled
 uses a rescaled copy of the given surface.
-.Pp
-Use
-.Fn AG_PixmapFromBMP
-to load the image from a Windows Bitmap file, or
-.Fn AG_PixmapFromXCF
-to load from a Gimp XCF file.
 .Sh CHANGING SURFACES
 .nr nS 1
 .Ft "int"
@@ -127,13 +115,22 @@ to load from a Gimp XCF file.
 .Fn AG_PixmapSetSurface "AG_Pixmap *pixmap" "int surface_name"
 .Pp
 .Ft "void"
-.Fn AG_PixmapReplaceSurface "AG_Pixmap *pixmap" "int surface_name"
+.Fn AG_PixmapReplaceSurface "AG_Pixmap *pixmap" "int surface_name" "AG_Surface *surfaceNew"
 .Pp
 .Ft "void"
-.Fn AG_PixmapReplaceSurfaceScaled "AG_Pixmap *pixmap" "int surface_name" "Uint width" "Uint height"
+.Fn AG_PixmapReplaceCurrentSurface "AG_Pixmap *pixmap" "AG_Surface *surfaceNew"
 .Pp
 .Ft "void"
-.Fn AG_PixmapUpdateSurface "AG_Pixmap *pixmap"
+.Fn AG_PixmapReplaceSurfaceScaled "AG_Pixmap *pixmap" "int surface_name" "AG_Surface *surfaceNew" "Uint width" "Uint height"
+.Pp
+.Ft "void"
+.Fn AG_PixmapReplaceCurrentSurfaceScaled "AG_Pixmap *pixmap" "AG_Surface *surfaceNew" "Uint width" "Uint height"
+.Pp
+.Ft "void"
+.Fn AG_PixmapUpdateSurface "AG_Pixmap *pixmap" "int surface_name"
+.Pp
+.Ft "void"
+.Fn AG_PixmapUpdateCurrentSurface "AG_Pixmap *pixmap"
 .Pp
 .Ft "void"
 .Fn AG_PixmapSetCoords "AG_Pixmap *pixmap" "int s" "int t"
@@ -161,9 +158,16 @@ with the name of the surface.
 If you need to modify the contents of a previously mapped surface, it is
 necessary to call
 .Fn AG_PixmapUpdateSurface
-when you're done.
+afterwards.
 It has no effect in direct video mode, but it causes the texture to be
 re-uploaded to the graphics hardware in OpenGL mode.
+.Pp
+The
+.Fn AG_PixmapReplaceCurrentSurface ,
+.Fn AG_PixmapReplaceCurrentSurfaceScaled
+and
+.Fn AG_PixmapUpdateCurrentSurface
+variants operate on the currently selected (visible) surface.
 .Pp
 The
 .Fn AG_PixmapSetCoords
