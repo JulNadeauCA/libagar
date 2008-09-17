@@ -16,6 +16,7 @@
 #define	RG_PI 3.14159265358979323846
 #endif
 
+/* XXX test in configure */
 #if __STDC_VERSION__ >= 199901L
 # define RG_Sin(x) sinf(x)
 # define RG_Cos(x) cosf(x)
