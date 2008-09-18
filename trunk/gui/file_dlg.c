@@ -645,8 +645,11 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 	}
 	if (fd->dirMRU != NULL) {
 		AG_SetString(agConfig, fd->dirMRU, fd->cwd);
-		AG_ObjectSave(agConfig);
+		if (AG_ObjectSave(agConfig) == -1)
+			Verbose("Saving MRU: %s\n", AG_GetError());
 	}
+	AG_TlistScrollToStart(fd->tlDirs);
+	AG_TlistScrollToStart(fd->tlFiles);
 
 	AG_ObjectUnlock(fd);
 	return (0);
@@ -665,6 +668,9 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 		AG_FileDlgSetDirectory(fd, s);
 	} else {
 		AG_SetString(agConfig, key, dflt);
+		if (AG_ObjectSave(agConfig) == -1) {
+			Verbose("Saving MRU: %s\n", AG_GetError());
+		}
 		AG_FileDlgSetDirectory(fd, dflt);
 	}
 	fd->dirMRU = Strdup(key);
