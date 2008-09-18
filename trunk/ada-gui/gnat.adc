@@ -142,6 +142,7 @@ pragma source_file_name(agar.gui.widget.table, spec_file_name => "agar-gui-widge
 
 -- ./agar-gui-widget-textbox.apk
 pragma source_file_name(agar.gui.widget.textbox, spec_file_name => "agar-gui-widget-textbox.ads");
+pragma source_file_name(agar.gui.widget.textbox, body_file_name => "agar-gui-widget-textbox.adb");
 
 -- ./agar-gui-widget-tlist.apk
 pragma source_file_name(agar.gui.widget.tlist, spec_file_name => "agar-gui-widget-tlist.ads");
