@@ -126,6 +126,8 @@ AG_TlistItem	*AG_TlistFindText(AG_Tlist *, const char *);
 AG_TlistItem	*AG_TlistFirstItem(AG_Tlist *);
 AG_TlistItem	*AG_TlistLastItem(AG_Tlist *);
 AG_MenuItem	*AG_TlistSetPopup(AG_Tlist *, const char *);
+void		 AG_TlistScrollToStart(AG_Tlist *);
+void		 AG_TlistScrollToEnd(AG_Tlist *);
 
 void AG_TlistSetDblClickFn(AG_Tlist *, AG_EventFn, const char *, ...);
 void AG_TlistSetPopupFn(AG_Tlist *, AG_EventFn, const char *, ...);
