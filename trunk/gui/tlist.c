@@ -1313,7 +1313,20 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 	return (tp->item);
 }
 
-/* The Tlist must be locked. */
+/* Scroll to the beginning of the list. */
+void
+AG_TlistScrollToStart(AG_Tlist *tl)
+{
+	AG_WidgetSetInt(tl->sbar, "value", 0);
+}
+
+/* Scroll to the end of the list. */
+void
+AG_TlistScrollToEnd(AG_Tlist *tl)
+{
+	AG_WidgetSetInt(tl->sbar, "value", tl->nitems - tl->nvisitems);
+}
+
 static void
 PopupMenu(AG_Tlist *tl, AG_TlistPopup *tp)
 {

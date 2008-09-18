@@ -229,6 +229,12 @@ value of 0 to indicate deselection and 1 to indicate selection.
 .Ft "AG_TlistItem *"
 .Fn AG_TlistLastItem "AG_Tlist *tlist"
 .Pp
+.Ft "void"
+.Fn AG_TlistScrollToStart "AG_Tlist *tlist"
+.Pp
+.Ft "void"
+.Fn AG_TlistScrollToEnd "AG_Tlist *tlist"
+.Pp
 .nr nS 0
 The
 .Fn AG_TlistAdd
@@ -345,17 +351,10 @@ and
 .Fn AG_TlistLastItem
 functions return the first and last items on the list.
 .Pp
-If thread safety is needed, the caller must ensure that the
-.Nm
-is locked prior to invoking
-.Fn AG_TlistFindByIndex ,
-.Fn AG_TlistSelectedItem ,
-.Fn AG_TlistSelectedItemPtr ,
-.Fn AG_TlistFindPtr ,
-.Fn AG_TlistFindText ,
-.Fn AG_TlistFirstItem
-or
-.Fn AG_TlistLastItem .
+.Fn AG_TlistScrollToStart
+scrolls the display to the start of the list, and
+.Fn AG_TlistScrollToEnd
+scrolls the display to the end of the list.
 .Sh POPUP MENUS
 .nr nS 0
 .Ft "AG_MenuItem *"
