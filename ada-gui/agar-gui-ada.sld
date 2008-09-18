@@ -8,6 +8,7 @@ ag_pixmap.o
 ag_scrollbar.o
 ag_surface.o
 ag_text.o
+ag_textbox.o
 ag_unit.o
 ag_vbox.o
 ag_widget.o

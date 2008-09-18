@@ -5,6 +5,8 @@ package agar.gui.widget.textbox is
 
   use type c.unsigned;
 
+  subtype cursor_pos_t is agar.gui.widget.editable.cursor_pos_t;
+
   type flags_t is new c.unsigned;
   TEXTBOX_MULTILINE     : constant flags_t := 16#00001#;
   TEXTBOX_PASSWORD      : constant flags_t := 16#00004#;
@@ -24,8 +26,116 @@ package agar.gui.widget.textbox is
   TEXTBOX_NOWORDSEEK    : constant flags_t := 16#10000#;
   TEXTBOX_NOLATIN1      : constant flags_t := 16#20000#;
 
+  type textbox_t is limited private;
+  type textbox_access_t is access all textbox_t;
+  pragma convention (c, textbox_access_t);
+
+  string_max : constant := agar.gui.widget.editable.string_max;
+
+  -- API
+
+  function allocate
+    (parent : widget_access_t;
+     flags  : flags_t;
+     label  : string) return textbox_access_t;
+  pragma inline (allocate);
+
+  procedure set_static
+    (textbox : textbox_access_t;
+     enable  : boolean);
+  pragma inline (set_static);
+
+  procedure set_password
+    (textbox : textbox_access_t;
+     enable  : boolean);
+  pragma inline (set_password);
+
+  procedure set_float_only
+    (textbox : textbox_access_t;
+     enable  : boolean);
+  pragma inline (set_float_only);
+
+  procedure set_integer_only
+    (textbox : textbox_access_t;
+     enable  : boolean);
+  pragma inline (set_integer_only);
+
+  procedure set_label
+    (textbox : textbox_access_t;
+     text    : string);
+  pragma inline (set_label);
+
+  procedure size_hint
+    (textbox : textbox_access_t;
+     text    : string);
+  pragma inline (size_hint);
+
+  procedure size_hint_pixels
+    (textbox : textbox_access_t;
+     width   : positive;
+     height  : positive);
+  pragma inline (size_hint_pixels);
+
+  -- cursor manipulation
+
+  procedure map_position
+    (textbox  : textbox_access_t;
+     x        : integer;
+     y        : integer;
+     index    : out natural;
+     pos      : out cursor_pos_t;
+     absolute : boolean);
+  pragma inline (map_position);
+
+  function move_cursor
+    (textbox  : textbox_access_t;
+     x        : integer;
+     y        : integer;
+     absolute : boolean) return integer;
+  pragma inline (move_cursor);
+
+  function get_cursor_position (textbox : textbox_access_t) return integer;
+  pragma inline (get_cursor_position);
+
+  function set_cursor_position
+    (textbox  : textbox_access_t;
+     position : integer) return integer;
+  pragma inline (set_cursor_position);
+
+  -- text manipulation
+
+  procedure set_string
+    (textbox : textbox_access_t;
+     text    : string);
+  pragma inline (set_string);
+
+  procedure set_string_ucs4
+    (textbox : textbox_access_t;
+     text    : wide_wide_string);
+  pragma inline (set_string_ucs4);
+
+  procedure clear_string (textbox : textbox_access_t);
+  pragma import (c, clear_string, "agar_gui_widget_textbox_clear_string");
+
+  procedure buffer_changed (textbox : textbox_access_t);
+  pragma import (c, buffer_changed, "agar_gui_widget_textbox_buffer_changed");
+
+  function get_integer (textbox : textbox_access_t) return integer;
+  pragma inline (get_integer);
+
+  function get_float (textbox : textbox_access_t) return float;
+  pragma inline (get_float);
+
+  function get_long_float (textbox : textbox_access_t) return long_float;
+  pragma inline (get_long_float);
+
+  function widget (textbox : textbox_access_t) return widget_access_t;
+  pragma inline (widget);
+
+private
+
   type textbox_t is record
-    widget          : widget_t;
+    widget          : aliased widget_t;
     editable        : agar.gui.widget.editable.editable_access_t;
     label_text      : cs.chars_ptr;
     label           : c.int;
@@ -39,10 +149,6 @@ package agar.gui.widget.textbox is
     horiz_scrollbar : agar.gui.widget.scrollbar.scrollbar_access_t;
     vert_scrollbar  : agar.gui.widget.scrollbar.scrollbar_access_t;
   end record;
-  type textbox_access_t is access all textbox_t;
   pragma convention (c, textbox_t);
-  pragma convention (c, textbox_access_t);
-
-  string_max : constant := agar.gui.widget.editable.string_max;
 
 end agar.gui.widget.textbox;
