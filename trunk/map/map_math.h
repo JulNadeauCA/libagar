@@ -4,6 +4,7 @@
 #define _AGAR_MAP_MATH_H_
 
 #include <agar/config/have_math.h>
+#include <agar/config/have_math_c99.h>
 #ifdef HAVE_MATH
 #include <math.h>
 #endif
@@ -16,8 +17,7 @@
 #define	MAP_PI 3.14159265358979323846
 #endif
 
-/* XXX test in configure */
-#if __STDC_VERSION__ >= 199901L
+#ifdef HAVE_MATH_C99
 # define MAP_Sin(x) sinf(x)
 # define MAP_Cos(x) cosf(x)
 # define MAP_Tan(x) tanf(x)
@@ -37,7 +37,7 @@
 # define MAP_Floor(x) ((float)floor((double)x))
 # define MAP_Ceil(x) ((float)ceil((double)x))
 # define MAP_Fabs(x) ((float)fabs((double)x))
-#endif /* C99 */
+#endif /* HAVE_MATH_C99 */
 
 #define MAP_Degrees(x) ((x)/(2.0*MAP_PI)*360.0)
 #define MAP_Radians(x) (((x)/360.0)*(2.0*MAP_PI))
