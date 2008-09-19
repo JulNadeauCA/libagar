@@ -202,8 +202,8 @@ echo "    --with-sse2-inline        M: Inline SSE2 operations [default: no]"
 echo "    --with-sse3-inline        M: Inline SSE3 operations [default: no]"
 echo "    --with-altivec            M: AltiVec optimizations [default: check]"
 echo "    --with-altivec-inline     M: Inline AltiVec operations [default: no]"
-echo "    --with-single-fp          M: Single precision math (C99) [default: yes]"
-echo "    --with-double-fp          M: Double precision math [default: no]"
+echo "    --with-single-fp          M: Single precision math (C99) [default: no]"
+echo "    --with-double-fp          M: Double precision math [default: yes]"
 echo "    --with-quad-fp            M: Quad precision math (C99) [default: no]"
 exit 1
 fi
@@ -1299,6 +1299,66 @@ echo "hdefs[\"MATH_LIBS\"] = \"$MATH_LIBS\"" >>configure.lua
 else
 echo "#undef MATH_LIBS" >config/math_libs.h
 echo "hdefs[\"MATH_LIBS\"] = nil" >>configure.lua
+fi;
+$ECHO_N "checking for the C math library (C99)..."
+$ECHO_N "checking for the C math library (C99)..." >> config.log
+MATH_C99_LIBS="-lm"
+MATH_C99_CFLAGS=""
+cat << EOT > conftest.c
+#include <math.h>
+
+int
+main(int argc, char *argv[])
+{
+	float f = 1.0;
+	double d = 1.0;
+
+	d = fabs(d);
+	f = fabsf(f);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_C99_CFLAGS} -o $testdir/conftest conftest.c ${MATH_C99_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_C99_CFLAGS} -o $testdir/conftest conftest.c ${MATH_C99_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_MATH_C99="yes"
+echo "HAVE_MATH_C99=$HAVE_MATH_C99" >>Makefile.config
+echo "mdefs[\"HAVE_MATH_C99\"] = \"$HAVE_MATH_C99\"" >>configure.lua
+echo "#ifndef HAVE_MATH_C99" > config/have_math_c99.h
+echo "#define HAVE_MATH_C99 \"$HAVE_MATH_C99\"" >> config/have_math_c99.h
+echo "#endif" >> config/have_math_c99.h
+echo "hdefs[\"HAVE_MATH_C99\"] = \"$HAVE_MATH_C99\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_MATH_C99="no"
+echo "HAVE_MATH_C99=$HAVE_MATH_C99" >>Makefile.config
+echo "mdefs[\"HAVE_MATH_C99\"] = \"$HAVE_MATH_C99\"" >>configure.lua
+echo "#undef HAVE_MATH_C99" >config/have_math_c99.h
+echo "hdefs[\"HAVE_MATH_C99\"] = nil" >>configure.lua
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_MATH_C99}" = "yes" ]; then
+echo "MATH_C99_CFLAGS=$MATH_C99_CFLAGS" >>Makefile.config
+echo "mdefs[\"MATH_C99_CFLAGS\"] = \"$MATH_C99_CFLAGS\"" >>configure.lua
+echo "MATH_C99_LIBS=$MATH_C99_LIBS" >>Makefile.config
+echo "mdefs[\"MATH_C99_LIBS\"] = \"$MATH_C99_LIBS\"" >>configure.lua
+echo "#ifndef MATH_C99_CFLAGS" > config/math_c99_cflags.h
+echo "#define MATH_C99_CFLAGS \"$MATH_C99_CFLAGS\"" >> config/math_c99_cflags.h
+echo "#endif" >> config/math_c99_cflags.h
+echo "hdefs[\"MATH_C99_CFLAGS\"] = \"$MATH_C99_CFLAGS\"" >>configure.lua
+echo "#ifndef MATH_C99_LIBS" > config/math_c99_libs.h
+echo "#define MATH_C99_LIBS \"$MATH_C99_LIBS\"" >> config/math_c99_libs.h
+echo "#endif" >> config/math_c99_libs.h
+echo "hdefs[\"MATH_C99_LIBS\"] = \"$MATH_C99_LIBS\"" >>configure.lua
+else
+echo "#undef MATH_C99_LIBS" >config/math_c99_libs.h
+echo "hdefs[\"MATH_C99_LIBS\"] = nil" >>configure.lua
 fi;
 $ECHO_N "checking for a gethostname() function..."
 $ECHO_N "checking for a gethostname() function..." >> config.log
@@ -4916,27 +4976,26 @@ echo "hdefs[\"HAVE_ALTIVEC_H\"] = nil" >>configure.lua
 echo "#undef INLINE_ALTIVEC" >config/inline_altivec.h
 echo "hdefs[\"INLINE_ALTIVEC\"] = nil" >>configure.lua
 fi
-if [ "${with_quad_fp}" = "yes" ]
+if [ "${with_single_fp}" = "yes" ]
  then
-	if [ "${HAVE_LONG_DOUBLE}" = "yes" ]
+	if [ "${HAVE_MATH_C99}" != "yes" ]
  then
-QUAD_PRECISION="1"
-echo "#ifndef QUAD_PRECISION" > config/quad_precision.h
-echo "#define QUAD_PRECISION \"$QUAD_PRECISION\"" >> config/quad_precision.h
-echo "#endif" >> config/quad_precision.h
-echo "hdefs[\"QUAD_PRECISION\"] = \"$QUAD_PRECISION\"" >>configure.lua
-	else
 		echo "*"
-		echo "* --with-quad-fp was requested, but your compiler"
-		echo "* does not support the C99 long double type."
+		echo "* --with-single-fp was requested, but your compiler does"
+		echo "* not support the C99 math routines (sinf(), etc)."
 		echo "*"
 		exit 1
 	fi
+SINGLE_PRECISION="1"
+echo "#ifndef SINGLE_PRECISION" > config/single_precision.h
+echo "#define SINGLE_PRECISION \"$SINGLE_PRECISION\"" >> config/single_precision.h
+echo "#endif" >> config/single_precision.h
+echo "hdefs[\"SINGLE_PRECISION\"] = \"$SINGLE_PRECISION\"" >>configure.lua
 else
-echo "#undef QUAD_PRECISION" >config/quad_precision.h
-echo "hdefs[\"QUAD_PRECISION\"] = nil" >>configure.lua
+echo "#undef SINGLE_PRECISION" >config/single_precision.h
+echo "hdefs[\"SINGLE_PRECISION\"] = nil" >>configure.lua
 fi
-if [ "${with_double_fp}" = "yes" ]
+if [ "${with_double_fp}" != "no" ]
  then
 DOUBLE_PRECISION="1"
 echo "#ifndef DOUBLE_PRECISION" > config/double_precision.h
@@ -4947,16 +5006,32 @@ else
 echo "#undef DOUBLE_PRECISION" >config/double_precision.h
 echo "hdefs[\"DOUBLE_PRECISION\"] = nil" >>configure.lua
 fi
-if [ "${with_single_fp}" != "no" ]
+if [ "${with_quad_fp}" = "yes" ]
  then
-SINGLE_PRECISION="1"
-echo "#ifndef SINGLE_PRECISION" > config/single_precision.h
-echo "#define SINGLE_PRECISION \"$SINGLE_PRECISION\"" >> config/single_precision.h
-echo "#endif" >> config/single_precision.h
-echo "hdefs[\"SINGLE_PRECISION\"] = \"$SINGLE_PRECISION\"" >>configure.lua
+	if [ "${HAVE_LONG_DOUBLE}" != "yes" ]
+ then
+		echo "*"
+		echo "* --with-quad-fp was requested, but your compiler"
+		echo "* does not support the C99 long double type."
+		echo "*"
+		exit 1
+	fi
+	if [ "${HAVE_MATH_C99}" != "yes" ]
+ then
+		echo "*"
+		echo "* --with-quad-fp was requested, but the C99 math"
+		echo "* routines (sinl(), etc.) are not available."
+		echo "*"
+		exit 1
+	fi
+QUAD_PRECISION="1"
+echo "#ifndef QUAD_PRECISION" > config/quad_precision.h
+echo "#define QUAD_PRECISION \"$QUAD_PRECISION\"" >> config/quad_precision.h
+echo "#endif" >> config/quad_precision.h
+echo "hdefs[\"QUAD_PRECISION\"] = \"$QUAD_PRECISION\"" >>configure.lua
 else
-echo "#undef SINGLE_PRECISION" >config/single_precision.h
-echo "hdefs[\"SINGLE_PRECISION\"] = nil" >>configure.lua
+echo "#undef QUAD_PRECISION" >config/quad_precision.h
+echo "hdefs[\"QUAD_PRECISION\"] = nil" >>configure.lua
 fi
 if [ "${with_proj_generation}" != "yes" ]
  then
