@@ -4,6 +4,7 @@
 #define _AGAR_VG_MATH_H_
 
 #include <agar/config/have_math.h>
+#include <agar/config/have_math_c99.h>
 #ifdef HAVE_MATH
 # include <math.h>
 #endif
@@ -14,8 +15,7 @@
 # define VG_PI 3.14159265358979323846
 #endif
 
-/* XXX test in configure */
-#if __STDC_VERSION__ >= 199901L
+#ifdef HAVE_MATH_C99
 # define VG_Sin(x) sinf(x)
 # define VG_Cos(x) cosf(x)
 # define VG_Tan(x) tanf(x)
@@ -38,8 +38,8 @@
 # define VG_Ceil(x) ((float)ceil((double)x))
 # define VG_Fabs(x) ((float)fabs((double)x))
 # define VG_Hypot(x,y) ((float)hypot((double)(x),(double)(y)))
-# define VG_Rint(x) ((float)rint(x))
-#endif /* C99 */
+# define VG_Rint(x) VG_Floor((x) + 0.5f)
+#endif /* HAVE_MATH_C99 */
 
 #define VG_Degrees(x) ((x)/(2.0*VG_PI)*360.0)
 #define VG_Radians(x) (((x)/360.0)*(2.0*VG_PI))
@@ -61,16 +61,6 @@
 __BEGIN_DECLS
 extern int vg_cos_tbl[];
 extern int vg_sin_tbl[];
-
-#if 0
-static __inline__ int
-VG_PowOf2i(int i)
-{
-	int val = 1;
-	while (val < i) { val <<= 1; }
-	return (val);
-}
-#endif
 
 /*
  * Basic vector operations
@@ -221,7 +211,6 @@ VG_MultMatrixByVector(VG_Vector *c, const VG_Vector *a, const VG_Matrix *T)
 	c->x = ax*T->m[0][0] + ay*T->m[1][0] + T->m[0][2];
 	c->y = ax*T->m[0][1] + ay*T->m[1][1] + T->m[1][2];
 }
-
 __END_DECLS
 
 #endif /* _AGAR_VG_MATH_H_ */
