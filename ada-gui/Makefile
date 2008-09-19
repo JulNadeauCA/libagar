@@ -678,27 +678,33 @@ ada-compile agar-gui-widget-textbox.adb agar-gui-widget-textbox.ads
 agar-gui-widget-textbox.o:\
 agar-gui-widget-textbox.ali
 
-agar-gui-widget-tlist.ali:\
-ada-compile agar-gui-widget-tlist.ads agar-gui-widget-tlist.ads \
+agar-gui-widget-tlist.ads:\
 agar-gui-surface.ads agar-gui-widget-label.ads agar-gui-widget-menu.ads \
-agar-gui-widget-scrollbar.ads agar-gui-window.ads
-	./ada-compile agar-gui-widget-tlist.ads
+	agar-gui-widget-scrollbar.ads agar-gui-window.ads
+
+agar-gui-widget-tlist.ali:\
+ada-compile agar-gui-widget-tlist.adb agar-gui-widget-tlist.ads
+	./ada-compile agar-gui-widget-tlist.adb
 
 agar-gui-widget-tlist.o:\
 agar-gui-widget-tlist.ali
 
+agar-gui-widget-toolbar.ads:\
+agar-gui-widget-box.ads agar-gui-widget-button.ads
+
 agar-gui-widget-toolbar.ali:\
-ada-compile agar-gui-widget-toolbar.ads agar-gui-widget-toolbar.ads \
-agar-gui-widget-box.ads
-	./ada-compile agar-gui-widget-toolbar.ads
+ada-compile agar-gui-widget-toolbar.adb agar-gui-widget-toolbar.ads
+	./ada-compile agar-gui-widget-toolbar.adb
 
 agar-gui-widget-toolbar.o:\
 agar-gui-widget-toolbar.ali
 
-agar-gui-widget-ucombo.ali:\
-ada-compile agar-gui-widget-ucombo.ads agar-gui-widget-ucombo.ads \
+agar-gui-widget-ucombo.ads:\
 agar-gui-widget-button.ads agar-gui-widget-tlist.ads agar-gui-window.ads
-	./ada-compile agar-gui-widget-ucombo.ads
+
+agar-gui-widget-ucombo.ali:\
+ada-compile agar-gui-widget-ucombo.adb agar-gui-widget-ucombo.ads
+	./ada-compile agar-gui-widget-ucombo.adb
 
 agar-gui-widget-ucombo.o:\
 agar-gui-widget-ucombo.ali
@@ -764,11 +770,11 @@ mk-adatype
 	./mk-adatype > conf-adatype.tmp && mv conf-adatype.tmp conf-adatype
 
 conf-cctype:\
-conf-cc conf-cc mk-cctype
+conf-cc mk-cctype
 	./mk-cctype > conf-cctype.tmp && mv conf-cctype.tmp conf-cctype
 
 conf-ldtype:\
-conf-ld conf-ld mk-ldtype
+conf-ld mk-ldtype
 	./mk-ldtype > conf-ldtype.tmp && mv conf-ldtype.tmp conf-ldtype
 
 conf-sosuffix:\

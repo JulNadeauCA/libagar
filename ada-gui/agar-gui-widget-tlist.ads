@@ -12,15 +12,15 @@ package agar.gui.widget.tlist is
 
   use type c.unsigned;
 
-  type popup_t;
+  type popup_t is limited private;
   type popup_access_t is access all popup_t;
   pragma convention (c, popup_access_t);
 
-  type item_t;
+  type item_t is limited private;
   type item_access_t is access all item_t;
   pragma convention (c, item_access_t);
 
-  type tlist_t;
+  type tlist_t is limited private;
   type tlist_access_t is access all tlist_t;
   pragma convention (c, tlist_access_t);
 
@@ -30,6 +30,142 @@ package agar.gui.widget.tlist is
     (entry_type => item_access_t);
   package tlist_tail_queue is new agar.core.tail_queue
     (entry_type => tlist_access_t);
+
+  type flags_t is new c.unsigned;
+  TLIST_MULTI       : constant flags_t := 16#001#;
+  TLIST_MULTITOGGLE : constant flags_t := 16#002#;
+  TLIST_POLL        : constant flags_t := 16#004#;
+  TLIST_TREE        : constant flags_t := 16#010#;
+  TLIST_HFILL       : constant flags_t := 16#020#;
+  TLIST_VFILL       : constant flags_t := 16#040#;
+  TLIST_NOSELSTATE  : constant flags_t := 16#100#;
+  TLIST_EXPAND      : constant flags_t := TLIST_HFILL or TLIST_VFILL;
+
+  -- API
+
+  function allocate
+    (parent : widget_access_t;
+     flags  : flags_t) return tlist_access_t;
+  pragma import (c, allocate, "AG_TlistNew");
+
+  function allocate_polled
+    (parent   : widget_access_t;
+     flags    : flags_t;
+     callback : agar.core.event.callback_t) return tlist_access_t;
+  pragma import (c, allocate_polled, "AG_TlistNewPolled");
+
+  procedure set_item_height
+    (tlist  : tlist_access_t;
+     height : natural);
+  pragma inline (set_item_height);
+
+  procedure set_icon
+    (tlist : tlist_access_t;
+     item  : item_access_t;
+     icon  : agar.gui.surface.surface_access_t);
+  pragma import (c, set_icon, "AG_TlistSetIcon");
+
+  procedure size_hint
+    (tlist     : tlist_access_t;
+     text      : string;
+     num_items : natural);
+  pragma inline (size_hint);
+
+  procedure size_hint_pixels
+    (tlist     : tlist_access_t;
+     width     : natural;
+     num_items : natural);
+  pragma inline (size_hint_pixels);
+
+  procedure size_hint_largest
+    (tlist     : tlist_access_t;
+     num_items : natural);
+  pragma inline (size_hint_largest);
+
+  procedure set_double_click_callback
+    (tlist     : tlist_access_t;
+     callback  : agar.core.event.callback_t);
+  pragma inline (set_double_click_callback);
+
+  procedure set_changed_callback
+    (tlist     : tlist_access_t;
+     callback  : agar.core.event.callback_t);
+  pragma inline (set_changed_callback);
+
+  -- manipulating items
+
+  procedure delete
+    (tlist : tlist_access_t;
+     item  : item_access_t);
+  pragma import (c, delete, "AG_TlistDel");
+
+  procedure list_begin (tlist : tlist_access_t);
+  pragma import (c, list_begin, "AG_TlistClear");
+
+  procedure list_end (tlist : tlist_access_t);
+  pragma import (c, list_end, "AG_TlistRestore");
+
+  procedure list_select
+    (tlist : tlist_access_t;
+     item  : item_access_t);
+  pragma import (c, list_select, "AG_TlistSelect");
+
+  procedure list_select_all (tlist : tlist_access_t);
+  pragma import (c, list_select_all, "AG_TlistSelectAll");
+
+  procedure list_deselect
+    (tlist : tlist_access_t;
+     item  : item_access_t);
+  pragma import (c, list_deselect, "AG_TlistDeselect");
+
+  procedure list_deselect_all (tlist : tlist_access_t);
+  pragma import (c, list_deselect_all, "AG_TlistDeselectAll");
+
+  function list_select_pointer
+    (tlist   : tlist_access_t;
+     pointer : agar.core.types.void_ptr_t) return item_access_t;
+  pragma import (c, list_select_pointer, "AG_TlistSelectPtr");
+
+  function list_select_text
+    (tlist : tlist_access_t;
+     text  : string) return item_access_t;
+  pragma inline (list_select_text);
+
+  function list_find_by_index
+    (tlist : tlist_access_t;
+     index : integer) return item_access_t;
+  pragma inline (list_find_by_index);
+
+  function list_selected_item (tlist : tlist_access_t) return item_access_t;
+  pragma import (c, list_selected_item, "AG_TlistSelectedItem");
+
+  function list_selected_item_pointer (tlist : tlist_access_t) return agar.core.types.void_ptr_t;
+  pragma import (c, list_selected_item_pointer, "AG_TlistSelectedItemPtr");
+
+  function list_first (tlist : tlist_access_t) return item_access_t;
+  pragma import (c, list_first, "AG_TlistFirstItem");
+
+  function list_last (tlist : tlist_access_t) return item_access_t;
+  pragma import (c, list_last, "AG_TlistLastItem");
+
+  -- popup menus
+
+  function set_popup_callback
+    (tlist    : tlist_access_t;
+     callback : agar.core.event.callback_t) return agar.gui.widget.menu.item_access_t;
+  pragma inline (set_popup_callback);
+
+  function set_popup
+    (tlist    : tlist_access_t;
+     category : string) return agar.gui.widget.menu.item_access_t;
+  pragma inline (set_popup);
+
+  --
+
+  function widget (tlist : tlist_access_t) return widget_access_t;
+  pragma inline (widget);
+
+private
 
   type popup_t is record
     class  : cs.chars_ptr;
@@ -63,19 +199,9 @@ package agar.gui.widget.tlist is
   end record;
   pragma convention (c, item_t);
 
-  subtype tlist_flags_t is c.unsigned;
-  TLIST_MULTI       : constant tlist_flags_t := 16#001#;
-  TLIST_MULTITOGGLE : constant tlist_flags_t := 16#002#;
-  TLIST_POLL        : constant tlist_flags_t := 16#004#;
-  TLIST_TREE        : constant tlist_flags_t := 16#010#;
-  TLIST_HFILL       : constant tlist_flags_t := 16#020#;
-  TLIST_VFILL       : constant tlist_flags_t := 16#040#;
-  TLIST_NOSELSTATE  : constant tlist_flags_t := 16#100#;
-  TLIST_EXPAND      : constant tlist_flags_t := TLIST_HFILL or TLIST_VFILL;
-
   type tlist_t is record
-    widget          : widget_t;
-    flags           : tlist_flags_t;
+    widget          : aliased widget_t;
+    flags           : flags_t;
     selected        : agar.core.types.void_ptr_t;
     hint_width      : c.int;
     hint_height     : c.int;
