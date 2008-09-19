@@ -10,7 +10,7 @@ package agar.gui.widget.table is
 
   use type c.unsigned;
 
-  type popup_t;
+  type popup_t is limited private;
   type popup_access_t is access all popup_t;
   pragma convention (c, popup_access_t);
 
@@ -25,16 +25,6 @@ package agar.gui.widget.table is
 
   package popup_slist is new agar.core.slist
     (entry_type => popup_access_t);
-
-  type popup_t is record
-    m      : c.int;
-    n      : c.int;
-    menu   : agar.gui.widget.menu.menu_access_t;
-    item   : agar.gui.widget.menu.item_access_t;
-    panel  : agar.gui.window.window_access_t;
-    popups : popup_slist.entry_t;
-  end record;
-  pragma convention (c, popup_t);
 
   type cell_type_t is (
     CELL_NULL,
@@ -121,30 +111,14 @@ package agar.gui.widget.table is
   type cell_format_t is array (1 .. fmt_max) of aliased c.char;
   pragma convention (c, cell_format_t);
 
-  type cell_t is record
-    cell_type : cell_type_t;
-    data      : cell_data_t;
-    fmt       : cell_format_t;
-    fn_su     : access function
-      (v : agar.core.types.void_ptr_t;
-       n : c.int;
-       m : c.int) return agar.gui.surface.surface_access_t;
-    fn_txt    : access procedure
-      (v : agar.core.types.void_ptr_t;
-       s : cs.chars_ptr;
-       n : c.size_t);
-    widget    : widget_access_t;
-    selected  : c.int;
-    surface   : c.int;
-  end record;
+  type cell_t is limited private;
   type cell_access_t is access all cell_t;
-  pragma convention (c, cell_t);
   pragma convention (c, cell_access_t);
 
   type column_name_t is array (1 .. col_name_max) of aliased c.char;
   pragma convention (c, column_name_t);
 
-  subtype column_flags_t is c.unsigned;
+  type column_flags_t is new c.unsigned;
   TABLE_COL_FILL        : constant column_flags_t := 16#01#;
   TABLE_SORT_ASCENDING  : constant column_flags_t := 16#02#;
   TABLE_SORT_DESCENDING : constant column_flags_t := 16#04#;
@@ -152,22 +126,11 @@ package agar.gui.widget.table is
   TABLE_VFILL           : constant column_flags_t := 16#10#;
   TABLE_EXPAND          : constant column_flags_t := TABLE_HFILL or TABLE_VFILL;
 
-  type column_t is record
-    name     : column_name_t;
-    sort_fn  : access function (a, b : agar.core.types.void_ptr_t) return c.int;
-    flags    : column_flags_t;
-    selected : c.int;
-    w        : c.int;
-    x        : c.int;
-    surface  : c.int;
-    pool     : cell_access_t;
-    mpool    : c.unsigned;
-  end record;
+  type column_t is limited private;
   type column_access_t is access all column_t;
-  pragma convention (c, column_t);
   pragma convention (c, column_access_t);
 
-  subtype table_flags_t is c.unsigned;
+  type table_flags_t is new c.unsigned;
   TABLE_MULTI          : constant table_flags_t := 16#01#;
   TABLE_MULTITOGGLE    : constant table_flags_t := 16#02#;
   TABLE_REDRAW_CELLS   : constant table_flags_t := 16#04#;
@@ -175,8 +138,164 @@ package agar.gui.widget.table is
   TABLE_HIGHLIGHT_COLS : constant table_flags_t := 16#40#;
   TABLE_MULTIMODE      : constant table_flags_t := TABLE_MULTI or TABLE_MULTITOGGLE;
 
+  type table_t is limited private;
+  type table_access_t is access all table_t;
+  pragma convention (c, table_access_t);
+
+  type sort_callback_t is access function
+    (elem1 : agar.core.types.void_ptr_t;
+     elem2 : agar.core.types.void_ptr_t) return c.int;
+  pragma convention (c, sort_callback_t);
+
+  -- API
+
+  function allocate
+    (parent : widget_access_t;
+     flags  : table_flags_t) return table_access_t;
+  pragma import (c, allocate, "AG_TableNew");
+
+  function allocate_polled
+    (parent   : widget_access_t;
+     flags    : table_flags_t;
+     callback : agar.core.event.callback_t) return table_access_t;
+  pragma inline (allocate_polled);
+
+  procedure size_hint
+    (table    : table_access_t;
+     width    : positive;
+     num_rows : positive);
+  pragma inline (size_hint);
+
+  procedure set_separator
+    (table     : table_access_t;
+     separator : string);
+  pragma inline (set_separator);
+
+  function set_popup
+    (table  : table_access_t;
+     row    : integer;
+     column : integer) return agar.gui.widget.menu.item_access_t;
+  pragma inline (set_popup);
+
+  procedure set_row_double_click_func
+    (table    : table_access_t;
+     callback : agar.core.event.callback_t);
+  pragma inline (set_row_double_click_func);
+
+  procedure set_column_double_click_func
+    (table    : table_access_t;
+     callback : agar.core.event.callback_t);
+  pragma inline (set_column_double_click_func);
+
+  -- table functions
+
+  procedure table_begin (table : table_access_t);
+  pragma import (c, table_begin, "AG_TableBegin");
+
+  procedure table_end (table : table_access_t);
+  pragma import (c, table_end, "AG_TableEnd");
+
+  -- column functions
+
+  function add_column
+    (table         : table_access_t;
+     name          : string;
+     size_spec     : string;
+     sort_callback : sort_callback_t) return boolean;
+  pragma inline (add_column);
+
+  procedure select_column
+    (table  : table_access_t;
+     column : integer);
+  pragma inline (select_column);
+
+  procedure deselect_column
+    (table  : table_access_t;
+     column : integer);
+  pragma inline (deselect_column);
+
+  procedure select_all_columns (table : table_access_t);
+  pragma import (c, select_all_columns, "AG_TableSelectAllCols");
+
+  procedure deselect_all_columns (table : table_access_t);
+  pragma import (c, deselect_all_columns, "AG_TableDeselectAllCols");
+
+  function column_selected
+    (table  : table_access_t;
+     column : integer) return boolean;
+  pragma inline (column_selected);
+
+  -- row functions
+
+-- TODO: how to get arguments to this function (format string)?
+--  function add_row
+--    (table         : table_access_t
+--     ...
+--  pragma inline (add_row);
+
+  procedure select_row
+    (table : table_access_t;
+     row   : natural);
+  pragma inline (select_row);
+
+  procedure deselect_row
+    (table : table_access_t;
+     row   : natural);
+  pragma inline (deselect_row);
+
+  procedure select_all_rows (table : table_access_t);
+  pragma import (c, select_all_rows, "AG_TableSelectAllCols");
+
+  procedure deselect_all_rows (table : table_access_t);
+  pragma import (c, deselect_all_rows, "AG_TableDeselectAllCols");
+
+  function row_selected
+    (table : table_access_t;
+     row   : natural) return boolean;
+  pragma inline (row_selected);
+
+  -- cell functions
+
+  procedure select_cell
+    (table  : table_access_t;
+     row    : natural;
+     column : natural);
+  pragma inline (select_cell);
+
+  procedure deselect_cell
+    (table  : table_access_t;
+     row    : natural;
+     column : natural);
+  pragma inline (deselect_cell);
+
+  function cell_selected
+    (table  : table_access_t;
+     row    : natural;
+     column : natural) return boolean;
+  pragma inline (cell_selected);
+
+  function compare_cells
+    (cell1 : cell_access_t;
+     cell2 : cell_access_t) return integer;
+  pragma inline (compare_cells);
+
+  --
+
+  function rows (table : table_access_t) return natural;
+  pragma inline (rows);
+
+  function columns (table : table_access_t) return natural;
+  pragma inline (columns);
+
+  --
+
+  function widget (table : table_access_t) return widget_access_t;
+  pragma inline (widget);
+
+private
+
   type table_t is record
-    widget           : widget_t;
+    widget           : aliased widget_t;
     flags            : table_flags_t;
     selmode          : select_mode_t;
     selected_row     : agar.core.types.void_ptr_t;
@@ -208,8 +327,47 @@ package agar.gui.widget.table is
     dec_to           : agar.core.timeout.timeout_t;
     popups           : popup_slist.head_t;
   end record;
-  type table_access_t is access all table_t;
   pragma convention (c, table_t);
-  pragma convention (c, table_access_t);
+
+  type column_t is record
+    name     : column_name_t;
+    sort_fn  : access function (a, b : agar.core.types.void_ptr_t) return c.int;
+    flags    : column_flags_t;
+    selected : c.int;
+    w        : c.int;
+    x        : c.int;
+    surface  : c.int;
+    pool     : cell_access_t;
+    mpool    : c.unsigned;
+  end record;
+  pragma convention (c, column_t);
+
+  type cell_t is record
+    cell_type : cell_type_t;
+    data      : cell_data_t;
+    fmt       : cell_format_t;
+    fn_su     : access function
+      (v : agar.core.types.void_ptr_t;
+       n : c.int;
+       m : c.int) return agar.gui.surface.surface_access_t;
+    fn_txt    : access procedure
+      (v : agar.core.types.void_ptr_t;
+       s : cs.chars_ptr;
+       n : c.size_t);
+    widget    : widget_access_t;
+    selected  : c.int;
+    surface   : c.int;
+  end record;
+  pragma convention (c, cell_t);
+
+  type popup_t is record
+    m      : c.int;
+    n      : c.int;
+    menu   : agar.gui.widget.menu.menu_access_t;
+    item   : agar.gui.widget.menu.item_access_t;
+    panel  : agar.gui.window.window_access_t;
+    popups : popup_slist.entry_t;
+  end record;
+  pragma convention (c, popup_t);
 
 end agar.gui.widget.table;

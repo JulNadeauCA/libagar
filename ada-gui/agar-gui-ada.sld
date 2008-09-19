@@ -7,6 +7,7 @@ ag_menu.o
 ag_pixmap.o
 ag_scrollbar.o
 ag_surface.o
+ag_table.o
 ag_text.o
 ag_textbox.o
 ag_unit.o
