@@ -4,6 +4,7 @@
 #define _AGAR_GUI_MATH_H_
 
 #include <agar/config/have_math.h>
+#include <agar/config/have_math_c99.h>
 #ifdef HAVE_MATH
 #include <math.h>
 #endif
@@ -16,8 +17,7 @@
 #define	AG_PI 3.14159265358979323846
 #endif
 
-/* XXX test in configure */
-#if __STDC_VERSION__ >= 199901L
+#ifdef HAVE_MATH_C99
 # define AG_Sin(x) sinf(x)
 # define AG_Cos(x) cosf(x)
 # define AG_Tan(x) tanf(x)
@@ -37,7 +37,7 @@
 # define AG_Floor(x) ((float)floor((double)x))
 # define AG_Ceil(x) ((float)ceil((double)x))
 # define AG_Fabs(x) ((float)fabs((double)x))
-#endif /* C99 */
+#endif /* HAVE_MATH_C99 */
 
 #define AG_Degrees(x) ((x)/(2.0*AG_PI)*360.0)
 #define AG_Radians(x) (((x)/360.0)*(2.0*AG_PI))
