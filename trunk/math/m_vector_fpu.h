@@ -248,7 +248,7 @@ M_VectorLERP_FPU(const void *pa, const void *pb, M_Real c)
 }
 
 static __inline__ void *
-M_VectorElemPow_FPU(const void *pa, M_Real pow)
+M_VectorElemPow_FPU(const void *pa, M_Real x)
 {
 	const M_VectorFPU *a=pa;
 	M_VectorFPU *b;
@@ -256,7 +256,7 @@ M_VectorElemPow_FPU(const void *pa, M_Real pow)
 	
 	b = M_VectorNew_FPU(MVECSIZE(a));
 	for (i = 0; i < MVECSIZE(a); i++) {
-		b->v[i] = M_Pow(a->v[i], pow);
+		b->v[i] = M_Pow(a->v[i], x);
 	}
 	return (b);
 }

@@ -392,13 +392,13 @@ M_VectorLERP3p_FPU(M_Vector3 *v1, M_Vector3 *v2, M_Real t)
 }
 
 static __inline__ M_Vector3
-M_VectorElemPow3_FPU(M_Vector3 v, M_Real pow)
+M_VectorElemPow3_FPU(M_Vector3 v, M_Real x)
 {
 	M_Vector3 r;
 
-	r.x = M_Pow(v.x, pow);
-	r.y = M_Pow(v.y, pow);
-	r.z = M_Pow(v.z, pow);
+	r.x = M_Pow(v.x, x);
+	r.y = M_Pow(v.y, x);
+	r.z = M_Pow(v.z, x);
 	return (r);
 }
 __END_DECLS
