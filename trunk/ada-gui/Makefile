@@ -6,8 +6,8 @@ all:\
 DEMOS/helloworld1 DEMOS/helloworld1.ali DEMOS/helloworld1.o UNIT_TESTS/ada_size \
 UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o UNIT_TESTS/c_size \
 UNIT_TESTS/c_size.o ag_button.o ag_draw.o ag_event.o ag_hbox.o ag_label.o \
-ag_menu.o ag_pixmap.o ag_scrollbar.o ag_surface.o ag_text.o ag_textbox.o \
-ag_unit.o ag_vbox.o ag_widget.o ag_window.o agar-gui-ada-conf \
+ag_menu.o ag_pixmap.o ag_scrollbar.o ag_surface.o ag_table.o ag_text.o \
+ag_textbox.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o agar-gui-ada-conf \
 agar-gui-ada-conf.o agar-gui-ada.a agar-gui-colors.ali agar-gui-colors.o \
 agar-gui-draw.ali agar-gui-draw.o agar-gui-pixelformat.ali \
 agar-gui-pixelformat.o agar-gui-point.ali agar-gui-point.o agar-gui-rect.ali \
@@ -266,6 +266,10 @@ ag_surface.o:\
 cc-compile ag_surface.c
 	./cc-compile ag_surface.c
 
+ag_table.o:\
+cc-compile ag_table.c
+	./cc-compile ag_table.c
+
 ag_text.o:\
 cc-compile ag_text.c
 	./cc-compile ag_text.c
@@ -300,36 +304,36 @@ cc-compile agar-gui-ada-conf.c ctxt.h _sysinfo.h
 
 agar-gui-ada.a:\
 cc-slib agar-gui-ada.sld ag_button.o ag_draw.o ag_event.o ag_hbox.o ag_label.o \
-ag_menu.o ag_pixmap.o ag_scrollbar.o ag_surface.o ag_text.o ag_textbox.o \
-ag_unit.o ag_vbox.o ag_widget.o ag_window.o agar-gui-colors.o agar-gui-draw.o \
-agar-gui-pixelformat.o agar-gui-point.o agar-gui-rect.o agar-gui-style.o \
-agar-gui-surface.o agar-gui-text.o agar-gui-unit.o agar-gui-view.o \
-agar-gui-widget-box.o agar-gui-widget-button.o agar-gui-widget-checkbox.o \
-agar-gui-widget-combo.o agar-gui-widget-console.o agar-gui-widget-editable.o \
-agar-gui-widget-file_dialog.o agar-gui-widget-fixed.o \
-agar-gui-widget-fixed_plotter.o agar-gui-widget-graph.o agar-gui-widget-hbox.o \
-agar-gui-widget-hsvpal.o agar-gui-widget-icon.o agar-gui-widget-label.o \
-agar-gui-widget-menu.o agar-gui-widget-mpane.o agar-gui-widget-notebook.o \
-agar-gui-widget-numerical.o agar-gui-widget-pane.o agar-gui-widget-pixmap.o \
-agar-gui-widget-progress_bar.o agar-gui-widget-radio.o \
+ag_menu.o ag_pixmap.o ag_scrollbar.o ag_surface.o ag_table.o ag_text.o \
+ag_textbox.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o agar-gui-colors.o \
+agar-gui-draw.o agar-gui-pixelformat.o agar-gui-point.o agar-gui-rect.o \
+agar-gui-style.o agar-gui-surface.o agar-gui-text.o agar-gui-unit.o \
+agar-gui-view.o agar-gui-widget-box.o agar-gui-widget-button.o \
+agar-gui-widget-checkbox.o agar-gui-widget-combo.o agar-gui-widget-console.o \
+agar-gui-widget-editable.o agar-gui-widget-file_dialog.o \
+agar-gui-widget-fixed.o agar-gui-widget-fixed_plotter.o agar-gui-widget-graph.o \
+agar-gui-widget-hbox.o agar-gui-widget-hsvpal.o agar-gui-widget-icon.o \
+agar-gui-widget-label.o agar-gui-widget-menu.o agar-gui-widget-mpane.o \
+agar-gui-widget-notebook.o agar-gui-widget-numerical.o agar-gui-widget-pane.o \
+agar-gui-widget-pixmap.o agar-gui-widget-progress_bar.o agar-gui-widget-radio.o \
 agar-gui-widget-scrollbar.o agar-gui-widget-separator.o \
 agar-gui-widget-slider.o agar-gui-widget-socket.o agar-gui-widget-table.o \
 agar-gui-widget-textbox.o agar-gui-widget-tlist.o agar-gui-widget-toolbar.o \
 agar-gui-widget-ucombo.o agar-gui-widget-vbox.o agar-gui-widget.o \
 agar-gui-window.o agar-gui.o
 	./cc-slib agar-gui-ada ag_button.o ag_draw.o ag_event.o ag_hbox.o ag_label.o \
-	ag_menu.o ag_pixmap.o ag_scrollbar.o ag_surface.o ag_text.o ag_textbox.o \
-	ag_unit.o ag_vbox.o ag_widget.o ag_window.o agar-gui-colors.o agar-gui-draw.o \
-	agar-gui-pixelformat.o agar-gui-point.o agar-gui-rect.o agar-gui-style.o \
-	agar-gui-surface.o agar-gui-text.o agar-gui-unit.o agar-gui-view.o \
-	agar-gui-widget-box.o agar-gui-widget-button.o agar-gui-widget-checkbox.o \
-	agar-gui-widget-combo.o agar-gui-widget-console.o agar-gui-widget-editable.o \
-	agar-gui-widget-file_dialog.o agar-gui-widget-fixed.o \
-	agar-gui-widget-fixed_plotter.o agar-gui-widget-graph.o agar-gui-widget-hbox.o \
-	agar-gui-widget-hsvpal.o agar-gui-widget-icon.o agar-gui-widget-label.o \
-	agar-gui-widget-menu.o agar-gui-widget-mpane.o agar-gui-widget-notebook.o \
-	agar-gui-widget-numerical.o agar-gui-widget-pane.o agar-gui-widget-pixmap.o \
-	agar-gui-widget-progress_bar.o agar-gui-widget-radio.o \
+	ag_menu.o ag_pixmap.o ag_scrollbar.o ag_surface.o ag_table.o ag_text.o \
+	ag_textbox.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o agar-gui-colors.o \
+	agar-gui-draw.o agar-gui-pixelformat.o agar-gui-point.o agar-gui-rect.o \
+	agar-gui-style.o agar-gui-surface.o agar-gui-text.o agar-gui-unit.o \
+	agar-gui-view.o agar-gui-widget-box.o agar-gui-widget-button.o \
+	agar-gui-widget-checkbox.o agar-gui-widget-combo.o agar-gui-widget-console.o \
+	agar-gui-widget-editable.o agar-gui-widget-file_dialog.o \
+	agar-gui-widget-fixed.o agar-gui-widget-fixed_plotter.o agar-gui-widget-graph.o \
+	agar-gui-widget-hbox.o agar-gui-widget-hsvpal.o agar-gui-widget-icon.o \
+	agar-gui-widget-label.o agar-gui-widget-menu.o agar-gui-widget-mpane.o \
+	agar-gui-widget-notebook.o agar-gui-widget-numerical.o agar-gui-widget-pane.o \
+	agar-gui-widget-pixmap.o agar-gui-widget-progress_bar.o agar-gui-widget-radio.o \
 	agar-gui-widget-scrollbar.o agar-gui-widget-separator.o \
 	agar-gui-widget-slider.o agar-gui-widget-socket.o agar-gui-widget-table.o \
 	agar-gui-widget-textbox.o agar-gui-widget-tlist.o agar-gui-widget-toolbar.o \
@@ -653,11 +657,13 @@ ada-compile agar-gui-widget-socket.adb
 agar-gui-widget-socket.o:\
 agar-gui-widget-socket.ali
 
-agar-gui-widget-table.ali:\
-ada-compile agar-gui-widget-table.ads agar-gui-widget-table.ads \
+agar-gui-widget-table.ads:\
 agar-gui-surface.ads agar-gui-widget-menu.ads agar-gui-widget-scrollbar.ads \
-agar-gui-window.ads
-	./ada-compile agar-gui-widget-table.ads
+	agar-gui-window.ads
+
+agar-gui-widget-table.ali:\
+ada-compile agar-gui-widget-table.adb agar-gui-widget-table.ads
+	./ada-compile agar-gui-widget-table.adb
 
 agar-gui-widget-table.o:\
 agar-gui-widget-table.ali
@@ -758,11 +764,11 @@ mk-adatype
 	./mk-adatype > conf-adatype.tmp && mv conf-adatype.tmp conf-adatype
 
 conf-cctype:\
-conf-cc mk-cctype
+conf-cc conf-cc mk-cctype
 	./mk-cctype > conf-cctype.tmp && mv conf-cctype.tmp conf-cctype
 
 conf-ldtype:\
-conf-ld mk-ldtype
+conf-ld conf-ld mk-ldtype
 	./mk-ldtype > conf-ldtype.tmp && mv conf-ldtype.tmp conf-ldtype
 
 conf-sosuffix:\
@@ -936,7 +942,7 @@ obj_clean:
 	UNIT_TESTS/ada_size UNIT_TESTS/ada_size.ali UNIT_TESTS/ada_size.o \
 	UNIT_TESTS/c_size UNIT_TESTS/c_size.o ag_button.o ag_draw.o ag_event.o \
 	ag_hbox.o ag_label.o ag_menu.o ag_pixmap.o ag_scrollbar.o ag_surface.o \
-	ag_text.o ag_textbox.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o \
+	ag_table.o ag_text.o ag_textbox.o ag_unit.o ag_vbox.o ag_widget.o ag_window.o \
 	agar-gui-ada-conf agar-gui-ada-conf.o agar-gui-ada.a agar-gui-colors.ali \
 	agar-gui-colors.o agar-gui-draw.ali agar-gui-draw.o agar-gui-pixelformat.ali \
 	agar-gui-pixelformat.o agar-gui-point.ali agar-gui-point.o agar-gui-rect.ali \
