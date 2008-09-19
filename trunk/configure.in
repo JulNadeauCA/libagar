@@ -23,8 +23,8 @@ REGISTER("--with-sse2-inline",	"M: Inline SSE2 operations [default: no]")
 REGISTER("--with-sse3-inline",	"M: Inline SSE3 operations [default: no]")
 REGISTER("--with-altivec",	"M: AltiVec optimizations [default: check]")
 REGISTER("--with-altivec-inline", "M: Inline AltiVec operations [default: no]")
-REGISTER("--with-single-fp",    "M: Single precision math (C99) [default: yes]")
-REGISTER("--with-double-fp",    "M: Double precision math [default: no]")
+REGISTER("--with-single-fp",    "M: Single precision math (C99) [default: no]")
+REGISTER("--with-double-fp",    "M: Double precision math [default: yes]")
 REGISTER("--with-quad-fp",      "M: Quad precision math (C99) [default: no]")
 
 # Agar version
@@ -50,6 +50,7 @@ CHECK(float_h)
 CHECK(progname)
 CHECK(free_null)
 CHECK(math)
+CHECK(math_c99)
 CHECK(gethostname)
 CHECK(getpwuid)
 CHECK(getuid)
@@ -437,28 +438,41 @@ else
 fi
 
 # Specify floating-point precision to use.
+if [ "${with_single_fp}" = "yes" ]; then
+	if [ "${HAVE_MATH_C99}" != "yes" ]; then
+		echo "*"
+		echo "* --with-single-fp was requested, but your compiler does"
+		echo "* not support the C99 math routines (sinf(), etc)."
+		echo "*"
+		exit 1
+	fi
+	HDEFINE(SINGLE_PRECISION, 1)
+else
+	HUNDEF(SINGLE_PRECISION)
+fi
+if [ "${with_double_fp}" != "no" ]; then
+	HDEFINE(DOUBLE_PRECISION, 1)
+else
+	HUNDEF(DOUBLE_PRECISION)
+fi
 if [ "${with_quad_fp}" = "yes" ]; then
-	if [ "${HAVE_LONG_DOUBLE}" = "yes" ]; then
-		HDEFINE(QUAD_PRECISION, 1)
-	else
+	if [ "${HAVE_LONG_DOUBLE}" != "yes" ]; then
 		echo "*"
 		echo "* --with-quad-fp was requested, but your compiler"
 		echo "* does not support the C99 long double type."
 		echo "*"
 		exit 1
 	fi
+	if [ "${HAVE_MATH_C99}" != "yes" ]; then
+		echo "*"
+		echo "* --with-quad-fp was requested, but the C99 math"
+		echo "* routines (sinl(), etc.) are not available."
+		echo "*"
+		exit 1
+	fi
+	HDEFINE(QUAD_PRECISION, 1)
 else
 	HUNDEF(QUAD_PRECISION)
-fi
-if [ "${with_double_fp}" = "yes" ]; then
-	HDEFINE(DOUBLE_PRECISION, 1)
-else
-	HUNDEF(DOUBLE_PRECISION)
-fi
-if [ "${with_single_fp}" != "no" ]; then
-	HDEFINE(SINGLE_PRECISION, 1)
-else
-	HUNDEF(SINGLE_PRECISION)
 fi
 
 # To avoid obstructing user code, we always use includes of the
