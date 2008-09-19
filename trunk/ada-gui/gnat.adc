@@ -147,12 +147,15 @@ pragma source_file_name(agar.gui.widget.textbox, body_file_name => "agar-gui-wid
 
 -- ./agar-gui-widget-tlist.apk
 pragma source_file_name(agar.gui.widget.tlist, spec_file_name => "agar-gui-widget-tlist.ads");
+pragma source_file_name(agar.gui.widget.tlist, body_file_name => "agar-gui-widget-tlist.adb");
 
 -- ./agar-gui-widget-toolbar.apk
 pragma source_file_name(agar.gui.widget.toolbar, spec_file_name => "agar-gui-widget-toolbar.ads");
+pragma source_file_name(agar.gui.widget.toolbar, body_file_name => "agar-gui-widget-toolbar.adb");
 
 -- ./agar-gui-widget-ucombo.apk
 pragma source_file_name(agar.gui.widget.ucombo, spec_file_name => "agar-gui-widget-ucombo.ads");
+pragma source_file_name(agar.gui.widget.ucombo, body_file_name => "agar-gui-widget-ucombo.adb");
 
 -- ./agar-gui-widget-vbox.apk
 pragma source_file_name(agar.gui.widget.vbox, spec_file_name => "agar-gui-widget-vbox.ads");
