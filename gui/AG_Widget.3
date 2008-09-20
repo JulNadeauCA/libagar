@@ -144,6 +144,15 @@ from being invoked until the widget is rescaled to an acceptable size.
 .Ft "int"
 .Fn AG_WidgetSizeAlloc "AG_Widget *widget" "AG_SizeAlloc *alloc"
 .Pp
+.Ft void
+.Fn AG_WidgetSetPosition "AG_Widget *widget" "int x" "int y"
+.Pp
+.Ft void
+.Fn AG_WidgetSetSize "AG_Widget *widget" "int w" "int h"
+.Pp
+.Ft void
+.Fn AG_WidgetSetGeometry "AG_Widget *widget" "AG_Rect rect"
+.Pp
 .nr nS 0
 The
 .Fn AG_Expand
@@ -180,6 +189,19 @@ typedef struct ag_size_alloc {
 	int x, y;			/* Allocated position in pixels */
 } AG_SizeAlloc;
 .Ed
+.Pp
+.Fn AG_WidgetSetPosition
+sets the effective position of the widget relative to its parent container.
+.Fn AG_WidgetSetSize
+sets the size of the widget in pixels.
+.Fn AG_WidgetSetGeometry
+sets both position and size of a widget from the specified
+.Ft AG_Rect .
+These functions are typically only used in the context of the
+.Fn size_request
+and
+.Fn size_allocate
+routines of container widgets.
 .Sh INPUT STATE
 The input state of a widget determines whether the user is allowed to
 modify whatever data the widget is accessing.
