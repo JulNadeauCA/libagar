@@ -188,7 +188,7 @@ package agar.gui.widget is
   -- widget type
   type widget_private_t is limited private;
   type widget_t is record
-    object           : agar.core.object.object_t;
+    object           : aliased agar.core.object.object_t;
     flags            : c.unsigned;
     redraw           : c.int;
     cx               : c.int;
@@ -400,4 +400,35 @@ package agar.gui.widget is
      w          : positive;
      h          : positive) return widget_access_t;
   pragma inline (find_rect);
+
+  -- position and size setting
+
+  procedure set_position
+    (widget : widget_access_t;
+     x      : natural;
+     y      : natural);
+  pragma inline (set_position);
+
+  procedure modify_position
+    (widget : widget_access_t;
+     x      : integer := 0;
+     y      : integer := 0);
+  pragma inline (modify_position);
+
+  procedure set_size
+    (widget : widget_access_t;
+     width  : positive;
+     height : positive);
+  pragma inline (set_size);
+
+  procedure modify_size
+    (widget : widget_access_t;
+     width  : integer := 0;
+     height : integer := 0);
+  pragma inline (modify_size);
+
+  -- 'casting'
+
+  function object (widget : widget_access_t) return agar.core.object.object_access_t;
+  pragma inline (object);
 

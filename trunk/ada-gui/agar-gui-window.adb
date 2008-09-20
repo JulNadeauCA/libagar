@@ -214,4 +214,11 @@ package body agar.gui.window is
     return is_focused (window) = 1;
   end is_focused;
 
+  --
+
+  function widget (window : window_access_t) return agar.gui.widget.widget_access_t is
+  begin
+    return window.widget'access;
+  end widget;
+
 end agar.gui.window;
