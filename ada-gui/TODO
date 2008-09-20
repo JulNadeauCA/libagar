@@ -1,5 +1,9 @@
-Code gen:
+Conditional code:
 
   HAVE_64BIT
   HAVE_LONG_DOUBLE
 
+Widget bindings.
+
+Audit all functions that used format strings (some may need array variants
+for argument passing to actually be of any use).

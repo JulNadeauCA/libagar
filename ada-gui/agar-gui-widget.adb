@@ -320,4 +320,45 @@ package body agar.gui.widget is
        h          => c.int (h));
   end find_rect;
 
+  procedure set_position
+    (widget : widget_access_t;
+     x      : natural;
+     y      : natural) is
+  begin
+    widget.x := c.int (x);
+    widget.y := c.int (y);
+  end set_position;
+
+  procedure modify_position
+    (widget : widget_access_t;
+     x      : integer := 0;
+     y      : integer := 0) is
+  begin
+    widget.x := widget.x + c.int (x);
+    widget.y := widget.y + c.int (y);
+  end modify_position;
+
+  procedure set_size
+    (widget : widget_access_t;
+     width  : positive;
+     height : positive) is
+  begin
+    widget.w := c.int (width);
+    widget.h := c.int (height);
+  end set_size;
+
+  procedure modify_size
+    (widget : widget_access_t;
+     width  : integer := 0;
+     height : integer := 0) is
+  begin
+    widget.w := widget.w + c.int (width);
+    widget.h := widget.h + c.int (height);
+  end modify_size;
+
+  function object (widget : widget_access_t) return agar.core.object.object_access_t is
+  begin
+    return widget.object'access;
+  end object;
+
 end agar.gui.widget;

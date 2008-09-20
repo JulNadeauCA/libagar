@@ -91,7 +91,7 @@ package agar.gui.window is
   pragma convention (c, window_caption_t);
 
   type window_t is record
-    widget    : agar.gui.widget.widget_t;
+    widget    : aliased agar.gui.widget.widget_t;
     flags     : flags_t;
     caption   : window_caption_t;
     visible   : c.int;
@@ -261,5 +261,10 @@ package agar.gui.window is
 
   function is_focused (window : window_access_t) return boolean;
   pragma inline (is_focused);
+
+  --
+
+  function widget (window : window_access_t) return agar.gui.widget.widget_access_t;
+  pragma inline (widget);
 
 end agar.gui.window;

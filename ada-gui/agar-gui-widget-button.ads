@@ -25,73 +25,73 @@ package agar.gui.widget.button is
   pragma convention (c, button_access_t);
 
   function allocate
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string) return button_access_t;
   pragma inline (allocate);
 
   function allocate_function
-    (widget : widget_access_t;
-     flags  : flags_t;
-     label  : string;
-     func   : agar.core.event.callback_t) return button_access_t;
+    (parent   : widget_access_t;
+     flags    : flags_t := 0;
+     label    : string;
+     callback : agar.core.event.callback_t) return button_access_t;
   pragma inline (allocate_function);
 
   function allocate_integer
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access integer) return button_access_t;
   pragma inline (allocate_integer);
 
   function allocate_uint8
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint8_t) return button_access_t;
   pragma inline (allocate_uint8);
 
   function allocate_uint16
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint16_t) return button_access_t;
   pragma inline (allocate_uint16);
 
   function allocate_uint32
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint32_t) return button_access_t;
   pragma inline (allocate_uint32);
 
   function allocate_flag
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access integer;
      mask   : integer) return button_access_t;
   pragma inline (allocate_flag);
 
   function allocate_flag8
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint8_t;
      mask   : agar.core.types.uint8_t) return button_access_t;
   pragma inline (allocate_flag8);
 
   function allocate_flag16
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint16_t;
      mask   : agar.core.types.uint16_t) return button_access_t;
   pragma inline (allocate_flag16);
 
   function allocate_flag32
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint32_t;
      mask   : agar.core.types.uint32_t) return button_access_t;

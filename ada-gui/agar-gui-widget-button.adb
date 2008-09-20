@@ -2,74 +2,74 @@ package body agar.gui.widget.button is
 
   package cbinds is
     function allocate
-      (widget : widget_access_t;
-       flags  : flags_t;
+      (parent : widget_access_t;
+       flags  : flags_t := 0;
        label  : cs.chars_ptr) return button_access_t;
     pragma import (c, allocate, "AG_ButtonNew");
 
     function allocate_function
-      (widget : widget_access_t;
-       flags  : flags_t;
-       label  : cs.chars_ptr;
-       func   : agar.core.event.callback_t;
-       fmt    : agar.core.types.void_ptr_t) return button_access_t;
+      (parent   : widget_access_t;
+       flags    : flags_t := 0;
+       label    : cs.chars_ptr;
+       callback : agar.core.event.callback_t;
+       fmt      : agar.core.types.void_ptr_t) return button_access_t;
     pragma import (c, allocate_function, "AG_ButtonNewFn");
 
     function allocate_integer
-      (widget : widget_access_t;
-       flags  : flags_t;
+      (parent : widget_access_t;
+       flags  : flags_t := 0;
        label  : cs.chars_ptr;
        ptr    : access c.int) return button_access_t;
     pragma import (c, allocate_integer, "agar_gui_widget_new_int");
 
     function allocate_uint8
-      (widget : widget_access_t;
-       flags  : flags_t;
+      (parent : widget_access_t;
+       flags  : flags_t := 0;
        label  : cs.chars_ptr;
        ptr    : access agar.core.types.uint8_t) return button_access_t;
     pragma import (c, allocate_uint8, "agar_gui_widget_new_uint8");
 
     function allocate_uint16
-      (widget : widget_access_t;
-       flags  : flags_t;
+      (parent : widget_access_t;
+       flags  : flags_t := 0;
        label  : cs.chars_ptr;
        ptr    : access agar.core.types.uint16_t) return button_access_t;
     pragma import (c, allocate_uint16, "agar_gui_widget_new_uint16");
 
     function allocate_uint32
-      (widget : widget_access_t;
-       flags  : flags_t;
+      (parent : widget_access_t;
+       flags  : flags_t := 0;
        label  : cs.chars_ptr;
        ptr    : access agar.core.types.uint32_t) return button_access_t;
     pragma import (c, allocate_uint32, "agar_gui_widget_new_uint32");
 
     function allocate_flag
-      (widget : widget_access_t;
-       flags  : flags_t;
+      (parent : widget_access_t;
+       flags  : flags_t := 0;
        label  : cs.chars_ptr;
        ptr    : access c.int;
        mask   : c.unsigned) return button_access_t;
     pragma import (c, allocate_flag, "AG_ButtonNewFlag");
 
     function allocate_flag8
-      (widget : widget_access_t;
-       flags  : flags_t;
+      (parent : widget_access_t;
+       flags  : flags_t := 0;
        label  : cs.chars_ptr;
        ptr    : access agar.core.types.uint8_t;
        mask   : agar.core.types.uint8_t) return button_access_t;
     pragma import (c, allocate_flag8, "AG_ButtonNewFlag8");
 
     function allocate_flag16
-      (widget : widget_access_t;
-       flags  : flags_t;
+      (parent : widget_access_t;
+       flags  : flags_t := 0;
        label  : cs.chars_ptr;
        ptr    : access agar.core.types.uint16_t;
        mask   : agar.core.types.uint16_t) return button_access_t;
     pragma import (c, allocate_flag16, "AG_ButtonNewFlag16");
 
     function allocate_flag32
-      (widget : widget_access_t;
-       flags  : flags_t;
+      (parent : widget_access_t;
+       flags  : flags_t := 0;
        label  : cs.chars_ptr;
        ptr    : access agar.core.types.uint32_t;
        mask   : agar.core.types.uint32_t) return button_access_t;
@@ -119,37 +119,37 @@ package body agar.gui.widget.button is
   --
 
   function allocate
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string) return button_access_t
   is
     c_label : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate
-      (widget => widget,
+      (parent => parent,
        flags  => flags,
        label  => cs.to_chars_ptr (c_label'unchecked_access));
   end allocate;
 
   function allocate_function
-    (widget : widget_access_t;
-     flags  : flags_t;
-     label  : string;
-     func   : agar.core.event.callback_t) return button_access_t
+    (parent   : widget_access_t;
+     flags    : flags_t := 0;
+     label    : string;
+     callback : agar.core.event.callback_t) return button_access_t
   is
     c_label : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate_function
-      (widget => widget,
-       func   => func,
-       flags  => flags,
-       label  => cs.to_chars_ptr (c_label'unchecked_access),
-       fmt    => agar.core.types.null_ptr);
+      (parent   => parent,
+       callback => callback,
+       flags    => flags,
+       label    => cs.to_chars_ptr (c_label'unchecked_access),
+       fmt      => agar.core.types.null_ptr);
   end allocate_function;
 
   function allocate_integer
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access integer) return button_access_t
   is
@@ -158,7 +158,7 @@ package body agar.gui.widget.button is
     c_button : button_access_t;
   begin
     c_button := cbinds.allocate_integer
-      (widget => widget,
+      (parent => parent,
        flags  => flags,
        label  => cs.to_chars_ptr (c_label'unchecked_access),
        ptr    => c_int'unchecked_access);
@@ -167,53 +167,53 @@ package body agar.gui.widget.button is
   end allocate_integer;
 
   function allocate_uint8
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint8_t) return button_access_t
   is
     c_label   : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate_uint8
-      (widget => widget,
+      (parent => parent,
        flags  => flags,
        label  => cs.to_chars_ptr (c_label'unchecked_access),
        ptr    => ptr);
   end allocate_uint8;
 
   function allocate_uint16
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint16_t) return button_access_t
   is
     c_label   : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate_uint16
-      (widget => widget,
+      (parent => parent,
        flags  => flags,
        label  => cs.to_chars_ptr (c_label'unchecked_access),
        ptr    => ptr);
   end allocate_uint16;
 
   function allocate_uint32
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint32_t) return button_access_t
   is
     c_label   : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate_uint32
-      (widget => widget,
+      (parent => parent,
        flags  => flags,
        label  => cs.to_chars_ptr (c_label'unchecked_access),
        ptr    => ptr);
   end allocate_uint32;
 
   function allocate_flag
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access integer;
      mask   : integer) return button_access_t
@@ -223,7 +223,7 @@ package body agar.gui.widget.button is
     c_button : aliased button_access_t;
   begin
     c_button := cbinds.allocate_flag
-      (widget => widget,
+      (parent => parent,
        flags  => flags,
        label  => cs.to_chars_ptr (c_label'unchecked_access),
        ptr    => c_int'unchecked_access,
@@ -233,8 +233,8 @@ package body agar.gui.widget.button is
   end allocate_flag;
 
   function allocate_flag8
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint8_t;
      mask   : agar.core.types.uint8_t) return button_access_t
@@ -242,7 +242,7 @@ package body agar.gui.widget.button is
     c_label : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate_flag8
-      (widget => widget,
+      (parent => parent,
        flags  => flags,
        label  => cs.to_chars_ptr (c_label'unchecked_access),
        ptr    => ptr,
@@ -250,8 +250,8 @@ package body agar.gui.widget.button is
   end allocate_flag8;
 
   function allocate_flag16
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint16_t;
      mask   : agar.core.types.uint16_t) return button_access_t
@@ -259,7 +259,7 @@ package body agar.gui.widget.button is
     c_label   : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate_flag16
-      (widget => widget,
+      (parent => parent,
        flags  => flags,
        label  => cs.to_chars_ptr (c_label'unchecked_access),
        ptr    => ptr,
@@ -267,8 +267,8 @@ package body agar.gui.widget.button is
   end allocate_flag16;
 
   function allocate_flag32
-    (widget : widget_access_t;
-     flags  : flags_t;
+    (parent : widget_access_t;
+     flags  : flags_t := 0;
      label  : string;
      ptr    : access agar.core.types.uint32_t;
      mask   : agar.core.types.uint32_t) return button_access_t
@@ -276,7 +276,7 @@ package body agar.gui.widget.button is
     c_label   : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate_flag32
-      (widget => widget,
+      (parent => parent,
        flags  => flags,
        label  => cs.to_chars_ptr (c_label'unchecked_access),
        ptr    => ptr,
