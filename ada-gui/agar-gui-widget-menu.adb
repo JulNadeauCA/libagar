@@ -1,5 +1,7 @@
 package body agar.gui.widget.menu is
 
+  use type c.int;
+
   package cbinds is
     procedure expand
       (menu : menu_access_t;
@@ -92,16 +94,16 @@ package body agar.gui.widget.menu is
       (item   : item_access_t;
        text   : cs.chars_ptr;
        icon   : agar.gui.surface.surface_access_t;
-       value  : access boolean;
-       invert : boolean) return item_access_t;
+       value  : access c.int;
+       invert : c.int) return item_access_t;
     pragma import (c, bind_bool, "agar_gui_widget_menu_bool");
 
     function bind_bool_with_mutex
       (item   : item_access_t;
        text   : cs.chars_ptr;
        icon   : agar.gui.surface.surface_access_t;
-       value  : access boolean;
-       invert : boolean;
+       value  : access c.int;
+       invert : c.int;
        mutex  : agar.core.threads.mutex_t) return item_access_t;
     pragma import (c, bind_bool_with_mutex, "AG_MenuIntBoolMp");
 
@@ -111,7 +113,7 @@ package body agar.gui.widget.menu is
        icon   : agar.gui.surface.surface_access_t;
        value  : access mask_t;
        flags  : mask_t;
-       invert : boolean) return item_access_t;
+       invert : c.int) return item_access_t;
     pragma import (c, bind_flags, "agar_gui_widget_menu_int_flags");
 
     function bind_flags_with_mutex
@@ -120,7 +122,7 @@ package body agar.gui.widget.menu is
        icon   : agar.gui.surface.surface_access_t;
        value  : access mask_t;
        flags  : mask_t;
-       invert : boolean;
+       invert : c.int;
        mutex  : agar.core.threads.mutex_t) return item_access_t;
     pragma import (c, bind_flags_with_mutex, "AG_MenuIntFlagsMp");
 
@@ -130,7 +132,7 @@ package body agar.gui.widget.menu is
        icon   : agar.gui.surface.surface_access_t;
        value  : access mask8_t;
        flags  : mask8_t;
-       invert : boolean) return item_access_t;
+       invert : c.int) return item_access_t;
     pragma import (c, bind_flags8, "agar_gui_widget_menu_int_flags8");
 
     function bind_flags8_with_mutex
@@ -139,7 +141,7 @@ package body agar.gui.widget.menu is
        icon   : agar.gui.surface.surface_access_t;
        value  : access mask8_t;
        flags  : mask8_t;
-       invert : boolean;
+       invert : c.int;
        mutex  : agar.core.threads.mutex_t) return item_access_t;
     pragma import (c, bind_flags8_with_mutex, "AG_MenuInt8FlagsMp");
 
@@ -149,7 +151,7 @@ package body agar.gui.widget.menu is
        icon   : agar.gui.surface.surface_access_t;
        value  : access mask16_t;
        flags  : mask16_t;
-       invert : boolean) return item_access_t;
+       invert : c.int) return item_access_t;
     pragma import (c, bind_flags16, "agar_gui_widget_menu_int_flags16");
 
     function bind_flags16_with_mutex
@@ -158,7 +160,7 @@ package body agar.gui.widget.menu is
        icon   : agar.gui.surface.surface_access_t;
        value  : access mask16_t;
        flags  : mask16_t;
-       invert : boolean;
+       invert : c.int;
        mutex  : agar.core.threads.mutex_t) return item_access_t;
     pragma import (c, bind_flags16_with_mutex, "AG_MenuInt16FlagsMp");
 
@@ -168,7 +170,7 @@ package body agar.gui.widget.menu is
        icon   : agar.gui.surface.surface_access_t;
        value  : access mask32_t;
        flags  : mask32_t;
-       invert : boolean) return item_access_t;
+       invert : c.int) return item_access_t;
     pragma import (c, bind_flags32, "agar_gui_widget_menu_int_flags32");
 
     function bind_flags32_with_mutex
@@ -177,7 +179,7 @@ package body agar.gui.widget.menu is
        icon   : agar.gui.surface.surface_access_t;
        value  : access mask32_t;
        flags  : mask32_t;
-       invert : boolean;
+       invert : c.int;
        mutex  : agar.core.threads.mutex_t) return item_access_t;
     pragma import (c, bind_flags32_with_mutex, "AG_MenuInt32FlagsMp");
 
@@ -365,14 +367,20 @@ package body agar.gui.widget.menu is
      value  : access boolean;
      invert : boolean) return item_access_t
   is
-    ca_text : aliased c.char_array := c.to_c (text);
+    ca_text  : aliased c.char_array := c.to_c (text);
+    c_invert : c.int := 0;
+    c_value  : aliased c.int;
+    item_acc : item_access_t;
   begin
-    return cbinds.bind_bool
+    if invert then c_invert := 1; end if;
+    item_acc := cbinds.bind_bool
       (item   => item,
        text   => cs.to_chars_ptr (ca_text'unchecked_access),
        icon   => icon,
-       value  => value,
-       invert => invert);
+       value  => c_value'unchecked_access,
+       invert => c_invert);
+    value.all := c_value = 1;
+    return item_acc;
   end bind_bool;
 
   function bind_bool_with_mutex
@@ -383,15 +391,21 @@ package body agar.gui.widget.menu is
      invert : boolean;
      mutex  : agar.core.threads.mutex_t) return item_access_t
   is
-    ca_text : aliased c.char_array := c.to_c (text);
+    ca_text  : aliased c.char_array := c.to_c (text);
+    c_invert : c.int := 0;
+    c_value  : aliased c.int;
+    item_acc : item_access_t;
   begin
-    return cbinds.bind_bool_with_mutex
+    if invert then c_invert := 1; end if;
+    item_acc := cbinds.bind_bool_with_mutex
       (item   => item,
        text   => cs.to_chars_ptr (ca_text'unchecked_access),
        icon   => icon,
-       value  => value,
-       invert => invert,
+       value  => c_value'unchecked_access,
+       invert => c_invert,
        mutex  => mutex);
+    value.all := c_value = 1;
+    return item_acc;
   end bind_bool_with_mutex;
 
   function bind_flags
@@ -402,15 +416,17 @@ package body agar.gui.widget.menu is
      flags  : mask_t;
      invert : boolean) return item_access_t
   is
-    ca_text : aliased c.char_array := c.to_c (text);
+    ca_text  : aliased c.char_array := c.to_c (text);
+    c_invert : c.int := 0;
   begin
+    if invert then c_invert := 1; end if;
     return cbinds.bind_flags
       (item   => item,
        text   => cs.to_chars_ptr (ca_text'unchecked_access),
        icon   => icon,
        value  => value,
        flags  => flags,
-       invert => invert);
+       invert => c_invert);
   end bind_flags;
 
   function bind_flags_with_mutex
@@ -422,15 +438,17 @@ package body agar.gui.widget.menu is
      invert : boolean;
      mutex  : agar.core.threads.mutex_t) return item_access_t
   is
-    ca_text : aliased c.char_array := c.to_c (text);
+    ca_text  : aliased c.char_array := c.to_c (text);
+    c_invert : c.int := 0;
   begin
+    if invert then c_invert := 1; end if;
     return cbinds.bind_flags_with_mutex
       (item   => item,
        text   => cs.to_chars_ptr (ca_text'unchecked_access),
        icon   => icon,
        value  => value,
        flags  => flags,
-       invert => invert,
+       invert => c_invert,
        mutex  => mutex);
   end bind_flags_with_mutex;
  
@@ -442,15 +460,17 @@ package body agar.gui.widget.menu is
      flags  : mask8_t;
      invert : boolean) return item_access_t
   is
-    ca_text : aliased c.char_array := c.to_c (text);
+    ca_text  : aliased c.char_array := c.to_c (text);
+    c_invert : c.int := 0;
   begin
+    if invert then c_invert := 1; end if;
     return cbinds.bind_flags8
       (item   => item,
        text   => cs.to_chars_ptr (ca_text'unchecked_access),
        icon   => icon,
        value  => value,
        flags  => flags,
-       invert => invert);
+       invert => c_invert);
   end bind_flags8;
 
   function bind_flags8_with_mutex
@@ -462,15 +482,17 @@ package body agar.gui.widget.menu is
      invert : boolean;
      mutex  : agar.core.threads.mutex_t) return item_access_t
   is
-    ca_text : aliased c.char_array := c.to_c (text);
+    ca_text  : aliased c.char_array := c.to_c (text);
+    c_invert : c.int := 0; 
   begin
+    if invert then c_invert := 1; end if;
     return cbinds.bind_flags8_with_mutex
       (item   => item,
        text   => cs.to_chars_ptr (ca_text'unchecked_access),
        icon   => icon,
        value  => value,
        flags  => flags,
-       invert => invert,
+       invert => c_invert,
        mutex  => mutex);
   end bind_flags8_with_mutex;
  
@@ -482,15 +504,17 @@ package body agar.gui.widget.menu is
      flags  : mask16_t;
      invert : boolean) return item_access_t
   is
-    ca_text : aliased c.char_array := c.to_c (text);
+    ca_text  : aliased c.char_array := c.to_c (text);
+    c_invert : c.int := 0;
   begin
+    if invert then c_invert := 1; end if;
     return cbinds.bind_flags16
       (item   => item,
        text   => cs.to_chars_ptr (ca_text'unchecked_access),
        icon   => icon,
        value  => value,
        flags  => flags,
-       invert => invert);
+       invert => c_invert);
   end bind_flags16;
 
   function bind_flags16_with_mutex
@@ -502,15 +526,17 @@ package body agar.gui.widget.menu is
      invert : boolean;
      mutex  : agar.core.threads.mutex_t) return item_access_t
   is
-    ca_text : aliased c.char_array := c.to_c (text);
+    ca_text  : aliased c.char_array := c.to_c (text);
+    c_invert : c.int := 0;
   begin
+    if invert then c_invert := 1; end if;
     return cbinds.bind_flags16_with_mutex
       (item   => item,
        text   => cs.to_chars_ptr (ca_text'unchecked_access),
        icon   => icon,
        value  => value,
        flags  => flags,
-       invert => invert,
+       invert => c_invert,
        mutex  => mutex);
   end bind_flags16_with_mutex;
 
@@ -522,15 +548,17 @@ package body agar.gui.widget.menu is
      flags  : mask32_t;
      invert : boolean) return item_access_t
   is
-    ca_text : aliased c.char_array := c.to_c (text);
+    ca_text  : aliased c.char_array := c.to_c (text);
+    c_invert : c.int := 0;
   begin
+    if invert then c_invert := 1; end if;
     return cbinds.bind_flags32
       (item   => item,
        text   => cs.to_chars_ptr (ca_text'unchecked_access),
        icon   => icon,
        value  => value,
        flags  => flags,
-       invert => invert);
+       invert => c_invert);
   end bind_flags32;
 
   function bind_flags32_with_mutex
@@ -542,15 +570,17 @@ package body agar.gui.widget.menu is
      invert : boolean;
      mutex  : agar.core.threads.mutex_t) return item_access_t
   is
-    ca_text : aliased c.char_array := c.to_c (text);
+    ca_text  : aliased c.char_array := c.to_c (text);
+    c_invert : c.int := 0;
   begin
+    if invert then c_invert := 1; end if;
     return cbinds.bind_flags32_with_mutex
       (item   => item,
        text   => cs.to_chars_ptr (ca_text'unchecked_access),
        icon   => icon,
        value  => value,
        flags  => flags,
-       invert => invert,
+       invert => c_invert,
        mutex  => mutex);
   end bind_flags32_with_mutex;
  
