@@ -109,7 +109,7 @@ package body agar.core.event is
   function set
     (object  : agar.core.object.object_access_t;
      name    : string;
-     handler : access procedure (event : event_access_t)) return event_access_t
+     handler : callback_t) return event_access_t
   is
     ca_name : aliased c.char_array := c.to_c (name);
   begin
@@ -123,7 +123,7 @@ package body agar.core.event is
   function add
     (object  : agar.core.object.object_access_t;
      name    : string;
-     handler : access procedure (event : event_access_t)) return event_access_t
+     handler : callback_t) return event_access_t
   is
     ca_name : aliased c.char_array := c.to_c (name);
   begin

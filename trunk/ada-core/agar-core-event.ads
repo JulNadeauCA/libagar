@@ -105,13 +105,13 @@ package agar.core.event is
   function set
     (object  : agar.core.object.object_access_t;
      name    : string;
-     handler : access procedure (event : event_access_t)) return event_access_t;
+     handler : callback_t) return event_access_t;
   pragma inline (set);
 
   function add
     (object  : agar.core.object.object_access_t;
      name    : string;
-     handler : access procedure (event : event_access_t)) return event_access_t;
+     handler : callback_t) return event_access_t;
   pragma inline (add);
 
   procedure unset
