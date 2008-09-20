@@ -200,6 +200,43 @@ AG_WindowIsVisible(AG_Window *win)
 {
 	return (win->visible);
 }
+
+/* Manually set widget geometry. */
+static __inline__ void
+AG_WidgetSetPosition(void *wid, int x, int y)
+{
+	AG_Window *pWin;
+
+	AG_ObjectLock(wid);
+	AGWIDGET(wid)->x = x;
+	AGWIDGET(wid)->y = y;
+	if ((pWin = AG_ParentWindow(wid)) != NULL) { AG_WindowUpdate(pWin); }
+	AG_ObjectUnlock(wid);
+}
+static __inline__ void
+AG_WidgetSetSize(void *wid, int w, int h)
+{
+	AG_Window *pWin;
+
+	AG_ObjectLock(wid);
+	AGWIDGET(wid)->w = w;
+	AGWIDGET(wid)->h = h;
+	if ((pWin = AG_ParentWindow(wid)) != NULL) { AG_WindowUpdate(pWin); }
+	AG_ObjectUnlock(wid);
+}
+static __inline__ void
+AG_WidgetSetGeometry(void *wid, AG_Rect r)
+{
+	AG_Window *pWin;
+
+	AG_ObjectLock(wid);
+	AGWIDGET(wid)->x = r.x;
+	AGWIDGET(wid)->y = r.y;
+	AGWIDGET(wid)->w = r.w;
+	AGWIDGET(wid)->h = r.h;
+	if ((pWin = AG_ParentWindow(wid)) != NULL) { AG_WindowUpdate(pWin); }
+	AG_ObjectUnlock(wid);
+}
 __END_DECLS
 
 #include "close_code.h"
