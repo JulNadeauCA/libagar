@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if [ $# -lt 3 ]
+then
+  echo 'usage: file path prefix'
+  exit 111
+fi
+
+file="$1"
+path="$2"
+prefix="$3"
+
+for f in ${path}
+do
+  if [ -f "${f}/${file}" ]
+  then
+    echo "${prefix}${f} "
+    exit 0
+  fi
+done
+exit 1

@@ -1,0 +1,78 @@
+#!/bin/sh
+
+if [ $# -lt 2 ]
+then
+  echo "usage: basename objects ..." 1>&2
+  exit 1
+fi
+
+ADALINK=`head -n 1 conf-adalink`
+if [ $? -ne 0 ]
+then
+  echo "fatal: could not read conf-adalink" 1>&2
+  exit 1
+fi
+SYSTYPE=`head -n 1 conf-systype`
+if [ $? -ne 0 ]
+then
+  echo "fatal: could not read conf-systype" 1>&2
+  exit 1
+fi  
+ADATYPE=`head -n 1 conf-adatype`
+if [ $? -ne 0 ]
+then
+  echo "fatal: could not read conf-adatype" 1>&2
+  exit 1
+fi
+
+ADALDFLAGS="${ADALDFLAGS} `head -n 1 conf-adaldflags 2>/dev/null`"
+
+#
+# Read global flag file list, if present.
+#
+
+if [ -f "conf-aldfflist" ]
+then
+  for f in `cat "conf-aldfflist"`
+  do
+    FLAGS=`cat $f 2>/dev/null`
+    ADALDFLAGS="${ADALDFLAGS} ${FLAGS}"
+  done
+fi
+
+out="$1"
+shift
+
+#
+# Read local flag file list, if present.
+#
+
+if [ -f "${out}.lff" ]
+then
+  for f in `cat "${out}.lff"`
+  do
+    targ="`dirname $out`/`dirname $f`/`basename $f`"
+    FLAGS="`cat $targ 2>/dev/null`"
+    ADALDFLAGS="${ADALDFLAGS} ${FLAGS}"
+  done
+fi
+
+#
+# compensate for any compiler bugs
+#
+
+case ${SYSTYPE} in
+  DARWIN)
+    case ${ADATYPE} in
+      GCC)
+        ADALDFLAGS="${ADALDFLAGS} -L/usr/local/ada-4.2/lib -lgcc_s.1" # __UNWIND bug
+        ;;
+      *)
+        ;;
+    esac
+    ;;
+  *)
+    ;;
+esac
+
+exec ${ADALINK} -o ${out} ${1+"$@"} ${ADALDFLAGS}

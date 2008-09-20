@@ -1,0 +1,3 @@
+#!/bin/sh
+
+echo "${SYSDEP_MODULE}: fatal: $1" 1>&2
