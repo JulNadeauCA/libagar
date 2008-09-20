@@ -54,7 +54,7 @@ package agar.core.event is
       when evarg_pointer => p   : agar.core.types.void_ptr_t;
       when evarg_string  => s   : cs.chars_ptr;
       when evarg_char    => ch  : c.char;
-      when evarg_uchar   => uch : c.char;
+      when evarg_uchar   => uch : c.unsigned_char;
       when evarg_int     => i   : c.int;
       when evarg_uint    => ui  : c.unsigned;
       when evarg_long    => li  : c.long;
@@ -108,10 +108,22 @@ package agar.core.event is
      handler : callback_t) return event_access_t;
   pragma inline (set);
 
+  procedure set
+    (object  : agar.core.object.object_access_t;
+     name    : string;
+     handler : callback_t);
+  pragma inline (set);
+
   function add
     (object  : agar.core.object.object_access_t;
      name    : string;
      handler : callback_t) return event_access_t;
+  pragma inline (add);
+
+  procedure add
+    (object  : agar.core.object.object_access_t;
+     name    : string;
+     handler : callback_t);
   pragma inline (add);
 
   procedure unset
@@ -209,5 +221,72 @@ package agar.core.event is
      key   : string;
      value : long_float);
   pragma inline (push_long_float);
+
+  -- argument retrieval
+
+  function get_pointer
+    (event : event_access_t;
+     index : positive) return agar.core.types.void_ptr_t;
+  pragma inline (get_pointer);
+
+  function get_char
+    (event : event_access_t;
+     index : positive) return c.char;
+  pragma inline (get_char);
+
+  function get_character
+    (event : event_access_t;
+     index : positive) return character;
+  pragma inline (get_character);
+
+  function get_unsigned_char
+    (event : event_access_t;
+     index : positive) return c.unsigned_char;
+  pragma inline (get_unsigned_char);
+
+  function get_int
+    (event : event_access_t;
+     index : positive) return c.int;
+  pragma inline (get_int);
+
+  function get_integer
+    (event : event_access_t;
+     index : positive) return integer;
+  pragma inline (get_integer);
+
+  function get_unsigned_int
+    (event : event_access_t;
+     index : positive) return c.unsigned;
+  pragma inline (get_unsigned_int);
+
+  function get_natural
+    (event : event_access_t;
+     index : positive) return natural;
+  pragma inline (get_natural);
+
+  function get_long
+    (event : event_access_t;
+     index : positive) return c.long;
+  pragma inline (get_long);
+
+  function get_long_integer
+    (event : event_access_t;
+     index : positive) return long_integer;
+  pragma inline (get_long_integer);
+
+  function get_unsigned_long
+    (event : event_access_t;
+     index : positive) return c.unsigned_long;
+  pragma inline (get_unsigned_long);
+
+  function get_float
+    (event : event_access_t;
+     index : positive) return float;
+  pragma inline (get_float);
+
+  function get_long_float
+    (event : event_access_t;
+     index : positive) return long_float;
+  pragma inline (get_long_float);
 
 end agar.core.event;

@@ -24,6 +24,11 @@ package body agar.core.event is
        name    : cs.chars_ptr;
        handler : access procedure (event : event_access_t);
        fmt     : agar.core.object.object_access_t) return event_access_t;
+    procedure set
+      (object  : agar.core.object.object_access_t;
+       name    : cs.chars_ptr;
+       handler : access procedure (event : event_access_t);
+       fmt     : agar.core.object.object_access_t);
     pragma import (c, set, "AG_SetEvent");
   
     function add
@@ -31,6 +36,11 @@ package body agar.core.event is
        name    : cs.chars_ptr;
        handler : access procedure (event : event_access_t);
        fmt     : agar.core.object.object_access_t) return event_access_t;
+    procedure add
+      (object  : agar.core.object.object_access_t;
+       name    : cs.chars_ptr;
+       handler : access procedure (event : event_access_t);
+       fmt     : agar.core.object.object_access_t);
     pragma import (c, add, "AG_AddEvent");
   
     procedure unset
@@ -120,6 +130,20 @@ package body agar.core.event is
        fmt     => null);
   end set;
 
+  procedure set
+    (object  : agar.core.object.object_access_t;
+     name    : string;
+     handler : callback_t)
+  is
+    ca_name : aliased c.char_array := c.to_c (name);
+  begin
+    cbinds.set
+      (object  => object,
+       name    => cs.to_chars_ptr (ca_name'unchecked_access),
+       handler => handler,
+       fmt     => null);
+  end set;
+
   function add
     (object  : agar.core.object.object_access_t;
      name    : string;
@@ -128,6 +152,20 @@ package body agar.core.event is
     ca_name : aliased c.char_array := c.to_c (name);
   begin
     return cbinds.add
+      (object  => object,
+       name    => cs.to_chars_ptr (ca_name'unchecked_access),
+       handler => handler,
+       fmt     => null);
+  end add;
+
+  procedure add
+    (object  : agar.core.object.object_access_t;
+     name    : string;
+     handler : callback_t)
+  is
+    ca_name : aliased c.char_array := c.to_c (name);
+  begin
+    cbinds.add
       (object  => object,
        name    => cs.to_chars_ptr (ca_name'unchecked_access),
        handler => handler,
@@ -299,5 +337,121 @@ package body agar.core.event is
   begin
     cbinds.push_double (event, cs.to_chars_ptr (ca_key'unchecked_access), c.double (value));
   end push_long_float;
+
+  --
+
+  procedure check_bounds
+    (event : event_access_t;
+     index : positive) is
+  begin
+    if index + 1 > positive (event.argc) then
+      raise constraint_error with "invalid index for event argument list";
+    end if;
+  end check_bounds;
+  pragma inline (check_bounds);
+
+  function get_pointer
+    (event : event_access_t;
+     index : positive) return agar.core.types.void_ptr_t is
+  begin
+    check_bounds (event, index);
+    return event.argv (index + 1).p;
+  end get_pointer;
+
+  function get_char
+    (event : event_access_t;
+     index : positive) return c.char is
+  begin
+    check_bounds (event, index);
+    return event.argv (index + 1).ch;
+  end get_char;
+
+  function get_character
+    (event : event_access_t;
+     index : positive) return character is
+  begin
+    check_bounds (event, index);
+    return character (event.argv (index + 1).ch);
+  end get_character;
+
+  function get_unsigned_char
+    (event : event_access_t;
+     index : positive) return c.unsigned_char is
+  begin
+    check_bounds (event, index);
+    return c.unsigned_char (event.argv (index + 1).uch);
+  end get_unsigned_char;
+
+  function get_int
+    (event : event_access_t;
+     index : positive) return c.int is
+  begin
+    check_bounds (event, index);
+    return event.argv (index + 1).i;
+  end get_int;
+
+  function get_integer
+    (event : event_access_t;
+     index : positive) return integer is
+  begin
+    check_bounds (event, index);
+    return integer (event.argv (index + 1).i);
+  end get_integer;
+
+  function get_unsigned_int
+    (event : event_access_t;
+     index : positive) return c.unsigned is
+  begin
+    check_bounds (event, index);
+    return event.argv (index + 1).ui;
+  end get_unsigned_int;
+
+  function get_natural
+    (event : event_access_t;
+     index : positive) return natural is
+  begin
+    check_bounds (event, index);
+    return natural (event.argv (index + 1).ui);
+  end get_natural;
+
+  function get_long
+    (event : event_access_t;
+     index : positive) return c.long is
+  begin
+    check_bounds (event, index);
+    return event.argv (index + 1).li;
+  end get_long;
+
+  function get_long_integer
+    (event : event_access_t;
+     index : positive) return long_integer is
+  begin
+    check_bounds (event, index);
+    return long_integer (event.argv (index + 1).li);
+  end get_long_integer;
+
+  function get_unsigned_long
+    (event : event_access_t;
+     index : positive) return c.unsigned_long is
+  begin
+    check_bounds (event, index);
+    return c.unsigned_long (event.argv (index + 1).uli);
+  end get_unsigned_long;
+
+  function get_float
+    (event : event_access_t;
+     index : positive) return float is
+  begin
+    check_bounds (event, index);
+    return float (event.argv (index + 1).f);
+  end get_float;
+
+  function get_long_float
+    (event : event_access_t;
+     index : positive) return long_float is
+  begin
+    check_bounds (event, index);
+    return long_float (event.argv (index + 1).df);
+  end get_long_float;
 
 end agar.core.event;
