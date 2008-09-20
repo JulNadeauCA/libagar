@@ -253,20 +253,6 @@ package agar.gui.widget is
 
   -- missing: find_focused moved to agar.gui.window
 
-  -- coordinates
-
-  function area
-    (widget : widget_access_t;
-     x      : natural;
-     y      : natural) return boolean;
-  pragma inline (area);
-
-  function relative_area
-    (widget : widget_access_t;
-     x      : natural;
-     y      : natural) return boolean;
-  pragma inline (relative_area);
-
   -- blitting
 
   function map_surface
@@ -400,6 +386,20 @@ package agar.gui.widget is
      w          : positive;
      h          : positive) return widget_access_t;
   pragma inline (find_rect);
+
+  -- coordinates
+
+  function absolute_coords_inside
+    (widget : widget_access_t;
+     x      : natural;
+     y      : natural) return boolean;
+  pragma inline (absolute_coords_inside);
+
+  function relative_coords_inside
+    (widget : widget_access_t;
+     x      : natural;
+     y      : natural) return boolean;
+  pragma inline (relative_coords_inside);
 
   -- position and size setting
 

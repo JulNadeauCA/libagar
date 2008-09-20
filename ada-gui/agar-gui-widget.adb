@@ -38,40 +38,6 @@ package body agar.gui.widget is
     return focused (widget) = 1;
   end focused;
 
-  function area
-    (widget : widget_access_t;
-     x      : c.int;
-     y      : c.int) return c.int;
-  pragma import (c, area, "agar_widget_area");
-
-  function area
-    (widget : widget_access_t;
-     x      : natural;
-     y      : natural) return boolean is
-  begin
-    return area
-      (widget => widget,
-       x      => c.int (x),
-       y      => c.int (y)) = 1;
-  end area;
-
-  function relative_area
-    (widget : widget_access_t;
-     x      : c.int;
-     y      : c.int) return c.int;
-  pragma import (c, relative_area, "agar_widget_relative_area");
-
-  function relative_area
-    (widget : widget_access_t;
-     x      : natural;
-     y      : natural) return boolean is
-  begin
-    return relative_area
-      (widget => widget,
-       x      => c.int (x),
-       y      => c.int (y)) = 1;
-  end relative_area;
-
   procedure blit
     (widget  : widget_access_t;
      surface : agar.gui.surface.surface_access_t;
@@ -319,6 +285,42 @@ package body agar.gui.widget is
        w          => c.int (w),
        h          => c.int (h));
   end find_rect;
+
+  function absolute_coords_inside
+    (widget : widget_access_t;
+     x      : c.int;
+     y      : c.int) return c.int;
+  pragma import (c, absolute_coords_inside, "agar_widget_area");
+
+  function absolute_coords_inside
+    (widget : widget_access_t;
+     x      : natural;
+     y      : natural) return boolean is
+  begin
+    return absolute_coords_inside
+      (widget => widget,
+       x      => c.int (x),
+       y      => c.int (y)) = 1;
+  end absolute_coords_inside;
+
+  function relative_coords_inside
+    (widget : widget_access_t;
+     x      : c.int;
+     y      : c.int) return c.int;
+  pragma import (c, relative_coords_inside, "agar_widget_relative_area");
+
+  function relative_coords_inside
+    (widget : widget_access_t;
+     x      : natural;
+     y      : natural) return boolean is
+  begin
+    return relative_coords_inside
+      (widget => widget,
+       x      => c.int (x),
+       y      => c.int (y)) = 1;
+  end relative_coords_inside;
+
+  --
 
   procedure set_position
     (widget : widget_access_t;
