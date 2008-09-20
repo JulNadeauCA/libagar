@@ -74,7 +74,7 @@ package agar.core.event is
   pragma convention (c, event_name_t);
   type event_argv_t is array (1 .. event_args_max) of aliased arg_t;
   pragma convention (c, event_argv_t);
-  type event_argt_t is array (1 .. event_args_max) of aliased c.int;
+  type event_argt_t is array (1 .. event_args_max) of aliased arg_type_t;
   pragma convention (c, event_argt_t);
   type event_argn_t is array (1 .. event_args_max) of aliased cs.chars_ptr;
   pragma convention (c, event_argn_t);
