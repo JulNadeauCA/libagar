@@ -340,21 +340,40 @@ package body agar.core.event is
 
   --
 
-  procedure check_bounds
-    (event : event_access_t;
-     index : positive) is
+  -- event argument type and index checking
+  procedure check
+    (event         : event_access_t;
+     index         : positive;
+     expected_type : arg_type_t)
+  is
+    procedure check_bounds
+      (event : event_access_t;
+       index : positive) is
+    begin
+      if index > positive (event.argc) then
+        raise constraint_error with "invalid index for event argument list";
+      end if;
+    end check_bounds;
+
+    procedure check_type
+      (event         : event_access_t;
+       index         : positive;
+       expected_type : arg_type_t) is
+    begin
+      if event.argt (index) /= expected_type then
+        raise constraint_error with "invalid type for event argument index";
+      end if;
+    end check_type;
   begin
-    if index + 1 > positive (event.argc) then
-      raise constraint_error with "invalid index for event argument list";
-    end if;
-  end check_bounds;
-  pragma inline (check_bounds);
+    check_bounds (event, index + 1);
+    check_type   (event, index + 1, expected_type);
+  end check;
 
   function get_pointer
     (event : event_access_t;
      index : positive) return agar.core.types.void_ptr_t is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_POINTER);
     return event.argv (index + 1).p;
   end get_pointer;
 
@@ -362,7 +381,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return c.char is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_CHAR);
     return event.argv (index + 1).ch;
   end get_char;
 
@@ -370,7 +389,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return character is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_CHAR);
     return character (event.argv (index + 1).ch);
   end get_character;
 
@@ -378,7 +397,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return c.unsigned_char is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_UCHAR);
     return c.unsigned_char (event.argv (index + 1).uch);
   end get_unsigned_char;
 
@@ -386,7 +405,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return c.int is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_INT);
     return event.argv (index + 1).i;
   end get_int;
 
@@ -394,7 +413,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return integer is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_INT);
     return integer (event.argv (index + 1).i);
   end get_integer;
 
@@ -402,7 +421,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return c.unsigned is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_UINT);
     return event.argv (index + 1).ui;
   end get_unsigned_int;
 
@@ -410,7 +429,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return natural is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_UINT);
     return natural (event.argv (index + 1).ui);
   end get_natural;
 
@@ -418,7 +437,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return c.long is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_LONG);
     return event.argv (index + 1).li;
   end get_long;
 
@@ -426,7 +445,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return long_integer is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_LONG);
     return long_integer (event.argv (index + 1).li);
   end get_long_integer;
 
@@ -434,7 +453,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return c.unsigned_long is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_ULONG);
     return c.unsigned_long (event.argv (index + 1).uli);
   end get_unsigned_long;
 
@@ -442,7 +461,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return float is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_FLOAT);
     return float (event.argv (index + 1).f);
   end get_float;
 
@@ -450,7 +469,7 @@ package body agar.core.event is
     (event : event_access_t;
      index : positive) return long_float is
   begin
-    check_bounds (event, index);
+    check (event, index, EVARG_DOUBLE);
     return long_float (event.argv (index + 1).df);
   end get_long_float;
 
