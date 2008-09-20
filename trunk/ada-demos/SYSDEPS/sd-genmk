@@ -1,0 +1,66 @@
+#!/bin/sh
+
+echo '# -- SYSDEPS start'
+for module in `ls modules | sort`
+do
+  if [ -f modules/$module/creates ]
+  then
+    files=`cat modules/$module/creates`
+    first_done=0
+    # flatten files to a string
+    flat_files=""
+    for file in $files; do flat_files="$file ${flat_files}"; done
+    for file in `cat modules/$module/creates`
+    do
+      if [ $first_done -eq 0 ]
+      then
+        first=$file
+        first_done=1
+        # note that hard tab characters are embedded here
+        cat <<EOF
+$file:
+	@echo SYSDEPS $module run create $flat_files
+	@(cd SYSDEPS/modules/$module && ./run)
+EOF
+      else
+cat <<EOF
+$file: $first
+EOF
+      fi
+    done
+  fi
+done
+echo
+echo
+
+for module in `ls modules | sort`
+do
+  if [ -f modules/$module/creates ]
+  then
+    files=`cat modules/$module/creates`
+    # flatten files to a string
+    flat_files=""
+    for file in $files; do flat_files="$file ${flat_files}"; done
+    # note that hard tab characters are embedded here
+    cat <<EOF
+${module}_clean:
+	@echo SYSDEPS $module clean $flat_files
+	@(cd SYSDEPS/modules/$module && ./clean)
+EOF
+  fi
+done
+echo
+echo
+
+echo "sysdeps_clean:\\"
+for module in `ls modules | sort`
+do
+  if [ -f modules/$module/creates ]
+  then
+    echo "${module}_clean \\"
+  fi
+done
+echo
+echo
+echo '# -- SYSDEPS end'
+echo

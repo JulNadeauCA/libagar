@@ -1,0 +1,56 @@
+#!/bin/sh
+
+if [ $# -lt 2 ]
+then
+  echo "usage: basename objects ..." 1>&2
+  exit 1
+fi
+
+SYS_TYPE=`head -n 1 conf-systype`
+if [ $? -ne 0 ]
+then
+  echo "fatal: could not read conf-systype" 1>&2
+  exit 1
+fi
+
+AR="ar cr"
+if [ -f conf-ar ]
+then
+  AR=`head -n 1 conf-ar`
+  if [ $? -ne 0 ]
+  then
+    echo "fatal: could not read conf-ar" 1>&2
+    exit 1
+  fi
+fi
+
+RANLIB="ranlib"
+if [ -f conf-ranlib ]
+then
+  RANLIB=`head -n 1 conf-ranlib`
+  if [ $? -ne 0 ]
+  then
+    echo "fatal: could not read conf-ranlib" 1>&2
+    exit 1
+  fi
+fi
+
+main="$1"
+shift
+
+rm -f "${main}".a
+${AR} "${main}".a ${1+"$@"}
+
+case "${SYS_TYPE}" in
+  SUNOS) ;;
+  SCO_OPENSERVER) ;;
+  UNIXWARE) ;;
+  IRIX) ;;
+  DG_UX) ;;
+  UNIXWARE) ;;
+  CRAY_UNICOS) ;;
+  VMS) ;;
+  *)
+    ${RANLIB} "$main.a"
+    ;;
+esac
