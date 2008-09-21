@@ -34,6 +34,7 @@
 #include <core/core.h>
 
 #if (defined(__APPLE__) || defined(__MACOSX__)) && defined(__ppc__)
+#include <sys/types.h>
 #include <sys/sysctl.h>
 #elif defined(__AMIGAOS4__)
 #include <exec/exec.h>
