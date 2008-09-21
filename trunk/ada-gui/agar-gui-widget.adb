@@ -363,4 +363,867 @@ package body agar.gui.widget is
     return widget.object'access;
   end object;
 
+  -- binding procedures
+  package body bindings is
+    package cbinds is
+      procedure bind_pointer
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.void_ptr_t);
+      pragma import (c, bind_pointer, "agar_gui_widget_bind_pointer");
+
+      procedure bind_property
+        (widget  : widget_access_t;
+         binding : cs.chars_ptr;
+         object  : agar.core.object.object_access_t;
+         name    : cs.chars_ptr);
+      pragma import (c, bind_property, "agar_gui_widget_bind_property");
+
+      procedure bind_boolean
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.boolean_access_t);
+      pragma import (c, bind_boolean, "agar_gui_widget_bind_boolean");
+
+      procedure bind_integer
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.integer_access_t);
+      pragma import (c, bind_integer, "agar_gui_widget_bind_integer");
+
+      procedure bind_unsigned
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.unsigned_access_t);
+      pragma import (c, bind_unsigned, "agar_gui_widget_bind_unsigned");
+
+      procedure bind_float
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.float_access_t);
+      pragma import (c, bind_float, "agar_gui_widget_bind_float");
+
+      procedure bind_double
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.double_access_t);
+      pragma import (c, bind_double, "agar_gui_widget_bind_double");
+
+      procedure bind_uint8
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint8_ptr_t);
+      pragma import (c, bind_uint8, "agar_gui_widget_bind_uint8");
+
+      procedure bind_int8
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.int8_ptr_t);
+      pragma import (c, bind_int8, "agar_gui_widget_bind_int8");
+
+      procedure bind_flag8
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint8_ptr_t;
+         mask     : agar.core.types.uint8_t);
+      pragma import (c, bind_flag8, "agar_gui_widget_bind_flag8");
+
+      procedure bind_uint16
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint16_ptr_t);
+      pragma import (c, bind_uint16, "agar_gui_widget_bind_uint16");
+
+      procedure bind_int16
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.int16_ptr_t);
+      pragma import (c, bind_int16, "agar_gui_widget_bind_int16");
+
+      procedure bind_flag16
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint16_ptr_t;
+         mask     : agar.core.types.uint16_t);
+      pragma import (c, bind_flag16, "agar_gui_widget_bind_flag16");
+
+      procedure bind_uint32
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint32_ptr_t);
+      pragma import (c, bind_uint32, "agar_gui_widget_bind_uint32");
+
+      procedure bind_int32
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.int32_ptr_t);
+      pragma import (c, bind_int32, "agar_gui_widget_bind_int32");
+
+      procedure bind_flag32
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint32_ptr_t;
+         mask     : agar.core.types.uint32_t);
+      pragma import (c, bind_flag32, "agar_gui_widget_bind_flag32");
+
+      procedure bind_uint64
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint64_ptr_t);
+      pragma import (c, bind_uint64, "agar_gui_widget_bind_uint64");
+
+      procedure bind_int64
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.int64_ptr_t);
+      pragma import (c, bind_int64, "agar_gui_widget_bind_int64");
+
+      -- get
+
+      function get_pointer
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.void_ptr_t;
+      pragma import (c, get_pointer, "agar_gui_widget_get_pointer");
+
+      function get_boolean
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.boolean_t;
+      pragma import (c, get_boolean, "agar_gui_widget_get_boolean");
+
+      function get_integer
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.integer_t;
+      pragma import (c, get_integer, "agar_gui_widget_get_integer");
+
+      function get_unsigned
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.unsigned_t;
+      pragma import (c, get_unsigned, "agar_gui_widget_get_unsigned");
+
+      function get_float
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.float_t;
+      pragma import (c, get_float, "agar_gui_widget_get_float");
+
+      function get_double
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.double_t;
+      pragma import (c, get_double, "agar_gui_widget_get_double");
+
+      function get_uint8
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.uint8_t;
+      pragma import (c, get_uint8, "agar_gui_widget_get_uint8");
+
+      function get_int8
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.int8_t;
+      pragma import (c, get_int8, "agar_gui_widget_get_int8");
+
+      function get_uint16
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.uint16_t;
+      pragma import (c, get_uint16, "agar_gui_widget_get_uint16");
+
+      function get_int16
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.int16_t;
+      pragma import (c, get_int16, "agar_gui_widget_get_int16");
+
+      function get_uint32
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.uint32_t;
+      pragma import (c, get_uint32, "agar_gui_widget_get_uint32");
+
+      function get_int32
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.int32_t;
+      pragma import (c, get_int32, "agar_gui_widget_get_int32");
+
+      function get_uint64
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.uint64_t;
+      pragma import (c, get_uint64, "agar_gui_widget_get_uint64");
+
+      function get_int64
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr) return agar.core.types.int64_t;
+      pragma import (c, get_int64, "agar_gui_widget_get_int64");
+
+      -- set
+
+      procedure set_pointer
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.void_ptr_t);
+      pragma import (c, set_pointer, "agar_gui_widget_set_pointer");
+
+
+      procedure set_boolean
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.boolean_t);
+      pragma import (c, set_boolean, "agar_gui_widget_set_boolean");
+
+
+      procedure set_integer
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.integer_t);
+      pragma import (c, set_integer, "agar_gui_widget_set_integer");
+
+
+      procedure set_unsigned
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.unsigned_t);
+      pragma import (c, set_unsigned, "agar_gui_widget_set_unsigned");
+
+
+      procedure set_float
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.float_t);
+      pragma import (c, set_float, "agar_gui_widget_set_float");
+
+
+      procedure set_double
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.double_t);
+      pragma import (c, set_double, "agar_gui_widget_set_double");
+
+      procedure set_uint8
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint8_t);
+      pragma import (c, set_uint8, "agar_gui_widget_set_uint8");
+
+      procedure set_int8
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.int8_t);
+      pragma import (c, set_int8, "agar_gui_widget_set_int8");
+
+      procedure set_uint16
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint16_t);
+      pragma import (c, set_uint16, "agar_gui_widget_set_uint16");
+
+      procedure set_int16
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.int16_t);
+      pragma import (c, set_int16, "agar_gui_widget_set_int16");
+
+      procedure set_uint32
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint32_t);
+      pragma import (c, set_uint32, "agar_gui_widget_set_uint32");
+
+      procedure set_int32
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.int32_t);
+      pragma import (c, set_int32, "agar_gui_widget_set_int32");
+
+      procedure set_uint64
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.uint64_t);
+      pragma import (c, set_uint64, "agar_gui_widget_set_uint64");
+
+      procedure set_int64
+        (widget   : widget_access_t;
+         binding  : cs.chars_ptr;
+         variable : agar.core.types.int64_t);
+      pragma import (c, set_int64, "agar_gui_widget_set_int64");
+    end cbinds;
+
+    procedure bind_pointer
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.void_ptr_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_pointer
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_pointer;
+
+    procedure bind_property
+      (widget  : widget_access_t;
+       binding : string;
+       object  : agar.core.object.object_access_t;
+       name    : string)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+      c_name    : aliased c.char_array := c.to_c (name);
+    begin
+      cbinds.bind_property
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access),
+         object  => object,
+         name    => cs.to_chars_ptr (c_name'unchecked_access));
+    end bind_property;
+
+    procedure bind_boolean
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.boolean_access_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_boolean
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_boolean;
+
+    procedure bind_integer
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.integer_access_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_integer
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_integer;
+
+    procedure bind_unsigned
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.unsigned_access_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_unsigned
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_unsigned;
+
+    procedure bind_float
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.float_access_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_float
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_float;
+
+    procedure bind_double
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.double_access_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_double
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_double;
+
+    procedure bind_uint8
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint8_ptr_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_uint8
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_uint8;
+
+    procedure bind_int8
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.int8_ptr_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_int8
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_int8;
+
+    procedure bind_flag8
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint8_ptr_t;
+       mask     : agar.core.types.uint8_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_flag8
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable,
+         mask     => mask);
+    end bind_flag8;
+
+    procedure bind_uint16
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint16_ptr_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_uint16
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_uint16;
+
+    procedure bind_int16
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.int16_ptr_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_int16
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_int16;
+
+    procedure bind_flag16
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint16_ptr_t;
+       mask     : agar.core.types.uint16_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_flag16
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable,
+         mask     => mask);
+    end bind_flag16;
+
+    procedure bind_uint32
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint32_ptr_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_uint32
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_uint32;
+
+    procedure bind_int32
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.int32_ptr_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_int32
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_int32;
+
+    procedure bind_flag32
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint32_ptr_t;
+       mask     : agar.core.types.uint32_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_flag32
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable,
+         mask     => mask);
+    end bind_flag32;
+
+    procedure bind_uint64
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint64_ptr_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_uint64
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_uint64;
+
+    procedure bind_int64
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.int64_ptr_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.bind_int64
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end bind_int64;
+
+    -- get
+
+    function get_pointer
+      (widget  : widget_access_t;
+       binding : string) return agar.core.types.void_ptr_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_pointer
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_pointer;
+
+    function get_boolean
+      (widget   : widget_access_t;
+       binding  : string) return agar.core.types.boolean_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_boolean
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_boolean;
+
+    function get_integer
+      (widget   : widget_access_t;
+       binding  : string) return agar.core.types.integer_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_integer
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_integer;
+
+    function get_unsigned
+      (widget   : widget_access_t;
+       binding  : string) return agar.core.types.unsigned_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_unsigned
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_unsigned;
+
+    function get_float
+      (widget   : widget_access_t;
+       binding  : string) return agar.core.types.float_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_float
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_float;
+
+    function get_double
+      (widget   : widget_access_t;
+       binding  : string) return agar.core.types.double_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_double
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_double;
+
+    function get_uint8
+      (widget  : widget_access_t;
+       binding : string) return agar.core.types.uint8_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_uint8
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_uint8;
+
+    function get_int8
+      (widget  : widget_access_t;
+       binding : string) return agar.core.types.int8_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_int8
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_int8;
+
+    function get_uint16
+      (widget  : widget_access_t;
+       binding : string) return agar.core.types.uint16_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_uint16
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_uint16;
+
+    function get_int16
+      (widget  : widget_access_t;
+       binding : string) return agar.core.types.int16_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_int16
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_int16;
+
+    function get_uint32
+      (widget  : widget_access_t;
+       binding : string) return agar.core.types.uint32_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_uint32
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_uint32;
+
+    function get_int32
+      (widget  : widget_access_t;
+       binding : string) return agar.core.types.int32_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_int32
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_int32;
+
+    function get_uint64
+      (widget  : widget_access_t;
+       binding : string) return agar.core.types.uint64_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_uint64
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_uint64;
+
+    function get_int64
+      (widget  : widget_access_t;
+       binding : string) return agar.core.types.int64_t
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      return cbinds.get_int64
+        (widget  => widget,
+         binding => cs.to_chars_ptr (c_binding'unchecked_access));
+    end get_int64;
+
+    -- set
+
+    procedure set_pointer
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.void_ptr_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_pointer
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_pointer;
+
+    procedure set_boolean
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.boolean_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_boolean
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_boolean;
+
+    procedure set_integer
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.integer_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_integer
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_integer;
+
+    procedure set_unsigned
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.unsigned_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_unsigned
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_unsigned;
+
+    procedure set_float
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.float_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_float
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_float;
+
+    procedure set_double
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.double_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_double
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_double;
+
+    procedure set_uint8
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint8_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_uint8
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_uint8;
+
+    procedure set_int8
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.int8_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_int8
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_int8;
+
+    procedure set_uint16
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint16_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_uint16
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_uint16;
+
+    procedure set_int16
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.int16_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_int16
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_int16;
+
+    procedure set_uint32
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint32_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_uint32
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_uint32;
+
+    procedure set_int32
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.int32_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_int32
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_int32;
+
+    procedure set_uint64
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.uint64_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_uint64
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_uint64;
+
+    procedure set_int64
+      (widget   : widget_access_t;
+       binding  : string;
+       variable : agar.core.types.int64_t)
+    is
+      c_binding : aliased c.char_array := c.to_c (binding);
+    begin
+      cbinds.set_int64
+        (widget   => widget,
+         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
+         variable => variable);
+    end set_int64;
+  end bindings;
+
 end agar.gui.widget;
