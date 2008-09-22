@@ -198,6 +198,7 @@ LoadDSO_SHL(const char *path)
 
 /* Load a DSO using the dyld NSLinkModule() interface. */
 #ifdef HAVE_DYLD
+#define DYLD_LIBRARY_HANDLE ((void *)-1)
 static AG_DSO *
 LoadDSO_DYLD(const char *path)
 {
