@@ -33,9 +33,11 @@
 
 #include <core/core.h>
 
-#if (defined(__APPLE__) || defined(__MACOSX__)) && defined(__ppc__)
-#include <sys/types.h>
-#include <sys/sysctl.h>
+#if defined(__APPLE__) || defined(__MACOSX__)
+# include <AvailabilityMacros.h>
+# if defined(__ppc__) && !defined(MAC_OS_X_VERSION_10_4)
+#  include <sys/sysctl.h>
+# endif
 #elif defined(__AMIGAOS4__)
 #include <exec/exec.h>
 #include <interfaces/exec.h>
@@ -248,7 +250,8 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 	}
 #endif /* i386 or x86_64 */
 
-#if (defined(__APPLE__) || defined(__MACOSX__)) && defined(__ppc__)
+#if (defined(__APPLE__) || defined(__MACOSX__)) && defined(__ppc__) && \
+    !defined(MAC_OS_X_VERSION_10_4)
 	{
 		int selectors[2] = { CTL_HW, HW_VECTORUNIT };
 		int flag = 0;
@@ -259,6 +262,14 @@ AG_GetCPUInfo(AG_CPUInfo *cpu)
 				cpu->ext |= AG_EXT_ALTIVEC;
 		}
 	}
+	
+#elif (defined(__APPLE__) || defined(__MACOSX__)) && defined(__ppc__) && \
+       defined(MAC_OS_X_VERSION_10_4)
+	{
+		/* XXX sysctl.h issues */
+		cpu->ext |= AG_EXT_ALTIVEC;
+	}
+    
 #elif defined(__AMIGAOS4__)
 	{
     		extern struct ExecIFace *IExec;
