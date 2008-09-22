@@ -6,3 +6,7 @@ pragma source_file_name(demo, body_file_name => "demo.adb");
 -- ./keyevent_callbacks.apk
 pragma source_file_name(keyevent_callbacks, spec_file_name => "keyevent_callbacks.ads");
 pragma source_file_name(keyevent_callbacks, body_file_name => "keyevent_callbacks.adb");
+
+-- ./winicon_callbacks.apk
+pragma source_file_name(winicon_callbacks, spec_file_name => "winicon_callbacks.ads");
+pragma source_file_name(winicon_callbacks, body_file_name => "winicon_callbacks.adb");
