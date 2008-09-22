@@ -2,6 +2,18 @@
 #include <agar/gui.h>
 
 void
+agar_window_set_icon (AG_Window *win, AG_Surface *surface)
+{
+  AG_WindowSetIcon (win, surface);
+}
+
+void
+agar_window_set_icon_no_copy (AG_Window *win, AG_Surface *surface)
+{
+  AG_WindowSetIconNODUP (win, surface);
+}
+
+void
 agar_window_set_geometry_bounded (AG_Window *win, int x, int y, int w, int h)
 {
   AG_WindowSetGeometryBounded (win, x, y, w, h);

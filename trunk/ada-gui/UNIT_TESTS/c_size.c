@@ -3,6 +3,10 @@
 #include <agar/core.h>
 #include <agar/gui.h>
 
+/* XXX: private */
+typedef unsigned int Uint;
+#include <agar/gui/titlebar.h>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -268,6 +272,10 @@ struct {
   { "struct ag_textbox *", sizeof (struct ag_textbox *) },
   { "AG_Textbox", sizeof (AG_Textbox) },
   { "struct ag_textbox", sizeof (struct ag_textbox) },
+  { "AG_Titlebar *", sizeof (AG_Titlebar *) },
+  { "struct ag_titlebar *", sizeof (struct ag_titlebar *) },
+  { "AG_Titlebar", sizeof (AG_Titlebar) },
+  { "struct ag_titlebar", sizeof (struct ag_titlebar) },
   { "AG_TlistItem *", sizeof (AG_TlistItem *) },
   { "struct ag_tlist_item *", sizeof (struct ag_tlist_item *) },
   { "AG_TlistItem", sizeof (AG_TlistItem) },

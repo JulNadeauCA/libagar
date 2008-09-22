@@ -53,3 +53,5 @@
 20080919 code: added agar.gui.widget.tlist API functions.
 20080919 code: added agar.gui.widget.toolbar API functions.
 20080919 code: added agar.gui.widget.ucombo API functions.
+20080921 code: restructure. some types moved into agar.gui.types and then
+               imported and renamed with subtypes into original packages.

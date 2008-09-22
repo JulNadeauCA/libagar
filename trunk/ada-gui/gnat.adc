@@ -27,6 +27,10 @@ pragma source_file_name(agar.gui.surface, body_file_name => "agar-gui-surface.ad
 pragma source_file_name(agar.gui.text, spec_file_name => "agar-gui-text.ads");
 pragma source_file_name(agar.gui.text, body_file_name => "agar-gui-text.adb");
 
+-- ./agar-gui-types.apk
+pragma source_file_name(agar.gui.types, spec_file_name => "agar-gui-types.ads");
+pragma source_file_name(agar.gui.types, body_file_name => "agar-gui-types.adb");
+
 -- ./agar-gui-unit.apk
 pragma source_file_name(agar.gui.unit, spec_file_name => "agar-gui-unit.ads");
 pragma source_file_name(agar.gui.unit, body_file_name => "agar-gui-unit.adb");
@@ -144,6 +148,10 @@ pragma source_file_name(agar.gui.widget.table, body_file_name => "agar-gui-widge
 -- ./agar-gui-widget-textbox.apk
 pragma source_file_name(agar.gui.widget.textbox, spec_file_name => "agar-gui-widget-textbox.ads");
 pragma source_file_name(agar.gui.widget.textbox, body_file_name => "agar-gui-widget-textbox.adb");
+
+-- ./agar-gui-widget-titlebar.apk
+pragma source_file_name(agar.gui.widget.titlebar, spec_file_name => "agar-gui-widget-titlebar.ads");
+pragma source_file_name(agar.gui.widget.titlebar, body_file_name => "agar-gui-widget-titlebar.adb");
 
 -- ./agar-gui-widget-tlist.apk
 pragma source_file_name(agar.gui.widget.tlist, spec_file_name => "agar-gui-widget-tlist.ads");

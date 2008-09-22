@@ -1,8 +1,8 @@
 with agar.core.event;
 with agar.core.object;
 with agar.core.tail_queue;
-with agar.core.types;
 with agar.core;
+with agar.gui.style;
 with agar.gui.surface;
 with agar.gui.widget;
 with agar.gui.window;
@@ -53,7 +53,7 @@ package agar.gui.view is
     win_modal    : access agar.gui.window.window_access_t;
     nmodal       : c.unsigned;
     winop        : winop_t;
-    style        : agar.core.types.void_ptr_t; -- XXX: style_access_t
+    style        : agar.gui.style.style_access_t;
   end record;
   type display_access_t is access all display_t;
   pragma convention (c, display_t);

@@ -1,33 +1,26 @@
-with agar.core.tail_queue;
-with agar.core.types;
 with agar.gui.surface;
 with agar.gui.widget;
+with agar.gui.types;
 
 package agar.gui.window is
 
   use type c.unsigned;
+  use type agar.gui.types.window_flags_t;
 
-  --
-  -- forward declarations
-  --
-  type window_t;
-  type window_access_t is access all window_t;
-  pragma convention (c, window_access_t);
-
-  package window_tail_queue is new agar.core.tail_queue
-    (entry_type => window_access_t);
+  subtype window_t is agar.gui.types.window_t;
+  subtype window_access_t is agar.gui.types.window_access_t;
 
   --
   -- constants
   --
 
-  caption_max : constant c.unsigned := 512;
+  caption_max : constant c.unsigned := agar.gui.types.window_caption_max;
 
   --
   -- types
   --
 
-  type flags_t is new c.unsigned;
+  subtype flags_t is agar.gui.types.window_flags_t;
   WINDOW_MODAL         : constant flags_t := 16#00001#;
   WINDOW_MAXIMIZED     : constant flags_t := 16#00002#;
   WINDOW_MINIMIZED     : constant flags_t := 16#00004#;
@@ -49,30 +42,7 @@ package agar.gui.window is
   WINDOW_NORESIZE      : constant flags_t := WINDOW_NOHRESIZE or WINDOW_NOVRESIZE;
   WINDOW_PLAIN         : constant flags_t := WINDOW_NOTITLE or WINDOW_NOBORDERS;
 
-  type alignment_t is (
-    WINDOW_TL,
-    WINDOW_TC,
-    WINDOW_TR,
-    WINDOW_ML,
-    WINDOW_MC,
-    WINDOW_MR,
-    WINDOW_BL,
-    WINDOW_BC,
-    WINDOW_BR
-  );
-  for alignment_t use (
-    WINDOW_TL => 0,
-    WINDOW_TC => 1,
-    WINDOW_TR => 2,
-    WINDOW_ML => 3,
-    WINDOW_MC => 4,
-    WINDOW_MR => 5,
-    WINDOW_BL => 6,
-    WINDOW_BC => 7,
-    WINDOW_BR => 8
-  );
-  for alignment_t'size use c.unsigned'size;
-  pragma convention (c, alignment_t);
+  subtype alignment_t is agar.gui.types.window_alignment_t;
 
   type close_action_t is (
     WINDOW_HIDE,
@@ -86,34 +56,6 @@ package agar.gui.window is
   );
   for close_action_t'size use c.unsigned'size;
   pragma convention (c, close_action_t);
-
-  type window_caption_t is array (1 .. caption_max) of aliased c.char;
-  pragma convention (c, window_caption_t);
-
-  type window_t is record
-    widget    : aliased agar.gui.widget.widget_t;
-    flags     : flags_t;
-    caption   : window_caption_t;
-    visible   : c.int;
-    tbar      : agar.core.types.void_ptr_t; -- XXX: titlebar_access_t
-    alignment : alignment_t;
-    spacing   : c.int;
-    tpad      : c.int;
-    bpad      : c.int;
-    lpad      : c.int;
-    rpad      : c.int;
-    minw      : c.int;
-    minh      : c.int;
-    savx      : c.int;
-    savy      : c.int;
-    savw      : c.int;
-    savh      : c.int;
-    subwins   : window_tail_queue.head_t;
-    windows   : window_tail_queue.entry_t;
-    swins     : window_tail_queue.entry_t;
-    detach    : window_tail_queue.entry_t;
-    icon      : agar.core.types.void_ptr_t; -- XXX: icon_access_t
-  end record;
 
   subtype percent_t is positive range 1 .. 100;
 
@@ -264,7 +206,7 @@ package agar.gui.window is
 
   --
 
-  function widget (window : window_access_t) return agar.gui.widget.widget_access_t;
-  pragma inline (widget);
+  function widget (window : window_access_t) return agar.gui.widget.widget_access_t
+    renames agar.gui.types.window_widget;
 
 end agar.gui.window;
