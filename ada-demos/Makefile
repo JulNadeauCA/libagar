@@ -4,7 +4,8 @@ default: all
 
 all:\
 demo.ali demo.o keyevent keyevent.ali keyevent.o keyevent_callbacks.ali \
-keyevent_callbacks.o
+keyevent_callbacks.o winicon winicon.ali winicon.o winicon_callbacks.ali \
+winicon_callbacks.o
 
 # -- SYSDEPS start
 flags-agar-core-ada:
@@ -31,6 +32,15 @@ flags-sdl-ada:
 libs-sdl-ada:
 	@echo SYSDEPS sdl-ada-libs run create libs-sdl-ada 
 	@(cd SYSDEPS/modules/sdl-ada-libs && ./run)
+libs-sdl-image:
+	@echo SYSDEPS sdl-image-libs run create libs-sdl-image 
+	@(cd SYSDEPS/modules/sdl-image-libs && ./run)
+flags-sdl-img-ada:
+	@echo SYSDEPS sdl-img-ada-flags run create flags-sdl-img-ada 
+	@(cd SYSDEPS/modules/sdl-img-ada-flags && ./run)
+libs-sdl-img-ada:
+	@echo SYSDEPS sdl-img-ada-libs run create libs-sdl-img-ada 
+	@(cd SYSDEPS/modules/sdl-img-ada-libs && ./run)
 libs-sdl:
 	@echo SYSDEPS sdl-libs run create libs-sdl 
 	@(cd SYSDEPS/modules/sdl-libs && ./run)
@@ -63,6 +73,15 @@ sdl-ada-flags_clean:
 sdl-ada-libs_clean:
 	@echo SYSDEPS sdl-ada-libs clean libs-sdl-ada 
 	@(cd SYSDEPS/modules/sdl-ada-libs && ./clean)
+sdl-image-libs_clean:
+	@echo SYSDEPS sdl-image-libs clean libs-sdl-image 
+	@(cd SYSDEPS/modules/sdl-image-libs && ./clean)
+sdl-img-ada-flags_clean:
+	@echo SYSDEPS sdl-img-ada-flags clean flags-sdl-img-ada 
+	@(cd SYSDEPS/modules/sdl-img-ada-flags && ./clean)
+sdl-img-ada-libs_clean:
+	@echo SYSDEPS sdl-img-ada-libs clean libs-sdl-img-ada 
+	@(cd SYSDEPS/modules/sdl-img-ada-libs && ./clean)
 sdl-libs_clean:
 	@echo SYSDEPS sdl-libs clean libs-sdl 
 	@(cd SYSDEPS/modules/sdl-libs && ./clean)
@@ -80,6 +99,9 @@ agar-gui-libs_clean \
 agar-libs_clean \
 sdl-ada-flags_clean \
 sdl-ada-libs_clean \
+sdl-image-libs_clean \
+sdl-img-ada-flags_clean \
+sdl-img-ada-libs_clean \
 sdl-libs_clean \
 sysinfo_clean \
 
@@ -89,15 +111,16 @@ sysinfo_clean \
 
 ada-bind:\
 conf-adabind conf-systype conf-adatype conf-adafflist flags-agar-core-ada \
-	flags-agar-gui-ada flags-sdl-ada
+	flags-agar-gui-ada flags-sdl-ada flags-sdl-img-ada
 
 ada-compile:\
-conf-adacomp conf-adatype conf-systype conf-adafflist flags-agar-core-ada \
-	flags-agar-gui-ada flags-sdl-ada
+conf-adacomp conf-adatype conf-systype conf-adacflags conf-adafflist \
+	flags-agar-core-ada flags-agar-gui-ada flags-sdl-ada flags-sdl-img-ada
 
 ada-link:\
 conf-adalink conf-adatype conf-systype conf-aldfflist libs-agar-core-ada \
-	libs-agar-gui-ada libs-agar-gui libs-sdl-ada libs-sdl
+	libs-agar-gui-ada libs-agar-gui libs-sdl-ada libs-sdl-img-ada libs-sdl \
+	libs-sdl-image
 
 ada-srcmap:\
 conf-adacomp conf-adatype conf-systype
@@ -175,11 +198,31 @@ conf-cc
 mk-systype:\
 conf-cc
 
+winicon:\
+ada-bind ada-link winicon.ald winicon.ali winicon_callbacks.ali demo.ali
+	./ada-bind winicon.ali
+	./ada-link winicon winicon.ali
+
+winicon.ali:\
+ada-compile winicon.adb demo.ads winicon_callbacks.ads
+	./ada-compile winicon.adb
+
+winicon.o:\
+winicon.ali
+
+winicon_callbacks.ali:\
+ada-compile winicon_callbacks.adb winicon_callbacks.ads
+	./ada-compile winicon_callbacks.adb
+
+winicon_callbacks.o:\
+winicon_callbacks.ali
+
 clean-all: sysdeps_clean obj_clean ext_clean
 clean: obj_clean
 obj_clean:
 	rm -f demo.ali demo.o keyevent keyevent.ali keyevent.o keyevent_callbacks.ali \
-	keyevent_callbacks.o
+	keyevent_callbacks.o winicon winicon.ali winicon.o winicon_callbacks.ali \
+	winicon_callbacks.o
 ext_clean:
 	rm -f conf-adatype conf-cctype conf-ldtype conf-systype mk-ctxt
 
