@@ -27,6 +27,14 @@ package agar.core.types is
   type double_access_t is access all double_t;
   pragma convention (c, double_access_t);
 
+  type boolean_t is (false, true);
+   for boolean_t use (false => 0, true => 1);
+   for boolean_t'size use c.unsigned'size;
+  pragma convention (c, boolean_t);
+
+  type boolean_access_t is access all boolean_t;
+  pragma convention (c, boolean_access_t);
+
   type int8_t is range -16#7f# .. 16#7f#;
   type int16_t is range -16#7fff# .. 16#7fff#;
   type int32_t is range -16#7fffffff# .. 16#7fffffff#;
