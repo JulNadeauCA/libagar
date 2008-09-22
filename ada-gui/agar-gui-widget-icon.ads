@@ -1,21 +1,19 @@
 with agar.core.types;
 with agar.gui.surface;
-with agar.gui.widget.label;
-with agar.gui.window;
+with agar.gui.types;
 
 package agar.gui.widget.icon is
 
   use type c.unsigned;
 
-  type flags_t is new c.unsigned;
+  subtype flags_t is agar.gui.types.widget_icon_flags_t;
   ICON_REGEN_LABEL : constant flags_t := 16#01#;
   ICON_DND         : constant flags_t := 16#02#;
   ICON_DBLCLICKED  : constant flags_t := 16#04#;
   ICON_BGFILL      : constant flags_t := 16#08#;
 
-  type icon_t is limited private;
-  type icon_access_t is access all icon_t;
-  pragma convention (c, icon_access_t);
+  subtype icon_t is agar.gui.types.widget_icon_t;
+  subtype icon_access_t is agar.gui.types.widget_icon_access_t;
 
   -- API
 
@@ -61,29 +59,7 @@ package agar.gui.widget.icon is
      color : agar.core.types.uint32_t);
   pragma inline (set_background_fill);
 
-  function widget (icon : icon_access_t) return widget_access_t;
-  pragma inline (widget);
-
-private
-
-  type name_t is array (1 .. agar.gui.widget.label.max) of aliased c.char;
-  pragma convention (c, name_t);
-
-  type icon_t is record
-    widget        : aliased widget_t;
-    flags         : flags_t;
-    surface       : c.int;
-    label_text    : name_t;
-    label_surface : c.int;
-    label_pad     : c.int;
-    window        : agar.gui.window.window_access_t;
-    socket        : agar.core.types.void_ptr_t;
-    x_saved       : c.int;
-    y_saved       : c.int;
-    w_saved       : c.int;
-    h_saved       : c.int;
-    c_background  : agar.core.types.uint32_t;
-  end record;
-  pragma convention (c, icon_t);
+  function widget (icon : icon_access_t) return widget_access_t renames
+    agar.gui.types.widget_icon_widget;
 
 end agar.gui.widget.icon;

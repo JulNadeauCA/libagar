@@ -76,9 +76,4 @@ package body agar.gui.widget.icon is
        color => color);
   end set_background_fill;
 
-  function widget (icon : icon_access_t) return widget_access_t is
-  begin
-    return icon.widget'access;
-  end widget;
-
 end agar.gui.widget.icon;

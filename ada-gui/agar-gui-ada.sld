@@ -22,6 +22,7 @@ agar-gui-rect.o
 agar-gui-style.o
 agar-gui-surface.o
 agar-gui-text.o
+agar-gui-types.o
 agar-gui-unit.o
 agar-gui-view.o
 agar-gui-widget-box.o

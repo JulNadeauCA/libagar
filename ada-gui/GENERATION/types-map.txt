@@ -256,6 +256,10 @@ agar.gui.widget.textbox.textbox_access_t:AG_Textbox *
 agar.gui.widget.textbox.textbox_access_t:struct ag_textbox *
 agar.gui.widget.textbox.textbox_t:AG_Textbox
 agar.gui.widget.textbox.textbox_t:struct ag_textbox
+agar.gui.widget.titlebar.titlebar_access_t:AG_Titlebar *
+agar.gui.widget.titlebar.titlebar_access_t:struct ag_titlebar *
+agar.gui.widget.titlebar.titlebar_t:AG_Titlebar
+agar.gui.widget.titlebar.titlebar_t:struct ag_titlebar
 agar.gui.widget.tlist.item_access_t:AG_TlistItem *
 agar.gui.widget.tlist.item_access_t:struct ag_tlist_item *
 agar.gui.widget.tlist.item_t:AG_TlistItem

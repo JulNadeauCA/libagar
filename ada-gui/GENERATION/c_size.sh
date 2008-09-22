@@ -14,6 +14,10 @@ map="$1"
 #include <agar/core.h>
 #include <agar/gui.h>
 
+/* XXX: private */
+typedef unsigned int Uint;
+#include <agar/gui/titlebar.h>
+
 #include <stdio.h>
 #include <string.h>
 

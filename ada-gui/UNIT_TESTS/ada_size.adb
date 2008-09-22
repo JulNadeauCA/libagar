@@ -43,6 +43,7 @@ with agar.gui.widget.slider;
 with agar.gui.widget.socket;
 with agar.gui.widget.table;
 with agar.gui.widget.textbox;
+with agar.gui.widget.titlebar;
 with agar.gui.widget.tlist;
 with agar.gui.widget.toolbar;
 with agar.gui.widget.ucombo;
@@ -206,6 +207,8 @@ procedure ada_size is
   agar_gui_widget_table_table_t : aliased string := "agar.gui.widget.table.table_t";
   agar_gui_widget_textbox_textbox_access_t : aliased string := "agar.gui.widget.textbox.textbox_access_t";
   agar_gui_widget_textbox_textbox_t : aliased string := "agar.gui.widget.textbox.textbox_t";
+  agar_gui_widget_titlebar_titlebar_access_t : aliased string := "agar.gui.widget.titlebar.titlebar_access_t";
+  agar_gui_widget_titlebar_titlebar_t : aliased string := "agar.gui.widget.titlebar.titlebar_t";
   agar_gui_widget_tlist_item_access_t : aliased string := "agar.gui.widget.tlist.item_access_t";
   agar_gui_widget_tlist_item_t : aliased string := "agar.gui.widget.tlist.item_t";
   agar_gui_widget_tlist_popup_access_t : aliased string := "agar.gui.widget.tlist.popup_access_t";
@@ -377,6 +380,8 @@ procedure ada_size is
     (agar_gui_widget_table_table_t'access, agar.gui.widget.table.table_t'size),
     (agar_gui_widget_textbox_textbox_access_t'access, agar.gui.widget.textbox.textbox_access_t'size),
     (agar_gui_widget_textbox_textbox_t'access, agar.gui.widget.textbox.textbox_t'size),
+    (agar_gui_widget_titlebar_titlebar_access_t'access, agar.gui.widget.titlebar.titlebar_access_t'size),
+    (agar_gui_widget_titlebar_titlebar_t'access, agar.gui.widget.titlebar.titlebar_t'size),
     (agar_gui_widget_tlist_item_access_t'access, agar.gui.widget.tlist.item_access_t'size),
     (agar_gui_widget_tlist_item_t'access, agar.gui.widget.tlist.item_t'size),
     (agar_gui_widget_tlist_popup_access_t'access, agar.gui.widget.tlist.popup_access_t'size),
