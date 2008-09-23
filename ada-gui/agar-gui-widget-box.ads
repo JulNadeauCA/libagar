@@ -19,18 +19,18 @@ package agar.gui.widget.box is
   pragma convention (c, box_access_t);
 
   function allocate
-    (widget   : widget_access_t;
+    (parent   : widget_access_t;
      box_type : type_t;
      flags    : flags_t) return box_access_t;
   pragma import (c, allocate, "AG_BoxNew");
 
   function allocate_horizontal
-    (widget   : widget_access_t;
+    (parent   : widget_access_t;
      flags    : flags_t) return box_access_t;
   pragma inline (allocate_horizontal);
  
   function allocate_vertical
-    (widget   : widget_access_t;
+    (parent   : widget_access_t;
      flags    : flags_t) return box_access_t;
   pragma inline (allocate_vertical);
  
