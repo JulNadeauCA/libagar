@@ -25,17 +25,17 @@ package body agar.gui.widget.box is
   -- api
 
   function allocate_horizontal
-    (widget   : widget_access_t;
+    (parent   : widget_access_t;
      flags    : flags_t) return box_access_t is
   begin
-    return allocate (widget, BOX_HORIZ, flags);
+    return allocate (parent, BOX_HORIZ, flags);
   end allocate_horizontal;
  
   function allocate_vertical
-    (widget   : widget_access_t;
+    (parent   : widget_access_t;
      flags    : flags_t) return box_access_t is
   begin
-    return allocate (widget, BOX_VERT, flags);
+    return allocate (parent, BOX_VERT, flags);
   end allocate_vertical;
  
   procedure set_homogenous

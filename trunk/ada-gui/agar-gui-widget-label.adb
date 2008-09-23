@@ -30,7 +30,9 @@ package body agar.gui.widget.label is
        text      : cs.chars_ptr);
     pragma import (c, size_hint, "AG_LabelSizeHint");
 
-    procedure text (text : cs.chars_ptr);
+    procedure text
+      (label : label_access_t;
+       text  : cs.chars_ptr);
     pragma import (c, text, "AG_LabelString");
 
     procedure flag
@@ -124,10 +126,13 @@ package body agar.gui.widget.label is
 
   -- static labels
 
-  procedure text (text : string) is
+  procedure text
+    (label : label_access_t;
+     text  : string)
+  is
     ca_text : aliased c.char_array := c.to_c (text);
   begin
-    cbinds.text (cs.to_chars_ptr (ca_text'unchecked_access));
+    cbinds.text (label, cs.to_chars_ptr (ca_text'unchecked_access));
   end text;
 
   -- flag descriptions

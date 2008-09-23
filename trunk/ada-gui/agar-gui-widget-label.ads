@@ -98,7 +98,9 @@ package agar.gui.widget.label is
 
   -- static labels
 
-  procedure text (text : string);
+  procedure text
+    (label : label_access_t;
+     text  : string);
   pragma inline (text);
 
   -- flag descriptions
