@@ -5,14 +5,19 @@ package body demo is
 
   use type agar.gui.window.window_access_t;
 
-  procedure init (name : string) is
+  procedure init
+    (name          : string;
+     video_width   : integer := 640;
+     video_height  : integer := 480;
+     window_width  : integer := 320;
+     window_height : integer := 240) is
   begin
     if not agar.core.init (name) then
       raise program_error with agar.core.error.get;
     end if;
     if not agar.gui.init_video
-      (width  => 640,
-       height => 480,
+      (width  => video_width,
+       height => video_height,
        bpp    => 32) then
       raise program_error with agar.core.error.get;
     end if;
@@ -27,13 +32,13 @@ package body demo is
       (window => window,
        x      => 10,
        y      => 10,
-       width  => 320,
-       height => 240);
-    agar.gui.window.show (window);
+       width  => window_width,
+       height => window_height);
   end init;
 
   procedure run is
   begin
+    agar.gui.window.show (window);
     agar.gui.event_loop;
   end run;
 

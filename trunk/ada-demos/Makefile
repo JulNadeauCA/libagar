@@ -4,7 +4,8 @@ default: all
 
 all:\
 demo.ali demo.o keyevent keyevent.ali keyevent.o keyevent_callbacks.ali \
-keyevent_callbacks.o winicon winicon.ali winicon.o winicon_callbacks.ali \
+keyevent_callbacks.o slider slider.ali slider.o slider_callbacks.ali \
+slider_callbacks.o winicon winicon.ali winicon.o winicon_callbacks.ali \
 winicon_callbacks.o
 
 # -- SYSDEPS start
@@ -198,6 +199,25 @@ conf-cc
 mk-systype:\
 conf-cc
 
+slider:\
+ada-bind ada-link slider.ald slider.ali slider_callbacks.ali demo.ali
+	./ada-bind slider.ali
+	./ada-link slider slider.ali
+
+slider.ali:\
+ada-compile slider.adb demo.ads slider_callbacks.ads
+	./ada-compile slider.adb
+
+slider.o:\
+slider.ali
+
+slider_callbacks.ali:\
+ada-compile slider_callbacks.adb slider_callbacks.ads
+	./ada-compile slider_callbacks.adb
+
+slider_callbacks.o:\
+slider_callbacks.ali
+
 winicon:\
 ada-bind ada-link winicon.ald winicon.ali winicon_callbacks.ali demo.ali
 	./ada-bind winicon.ali
@@ -221,7 +241,8 @@ clean-all: sysdeps_clean obj_clean ext_clean
 clean: obj_clean
 obj_clean:
 	rm -f demo.ali demo.o keyevent keyevent.ali keyevent.o keyevent_callbacks.ali \
-	keyevent_callbacks.o winicon winicon.ali winicon.o winicon_callbacks.ali \
+	keyevent_callbacks.o slider slider.ali slider.o slider_callbacks.ali \
+	slider_callbacks.o winicon winicon.ali winicon.o winicon_callbacks.ali \
 	winicon_callbacks.o
 ext_clean:
 	rm -f conf-adatype conf-cctype conf-ldtype conf-systype mk-ctxt
