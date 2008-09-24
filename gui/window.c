@@ -86,7 +86,7 @@ AG_WindowNew(Uint flags)
 	win->flags |= flags;
 
 	if ((win->flags & AG_WINDOW_NOTITLE) == 0)
-		win->minh += agTextFontHeight;
+		win->hMin += agTextFontHeight;
 	if (win->flags & AG_WINDOW_MODAL)
 		win->flags |= AG_WINDOW_NOMAXIMIZE|AG_WINDOW_NOMINIMIZE;
 	if (win->flags & AG_WINDOW_NORESIZE)
@@ -159,12 +159,13 @@ Init(void *obj)
 	win->rPad = 2;
 	win->tPad = 2;
 	win->bPad = 2;
-	win->minw = win->lPad + win->rPad;
-	win->minh = win->tPad + win->bPad;
-	win->savx = -1;
-	win->savy = -1;
-	win->savw = -1;
-	win->savh = -1;
+	
+	win->wReq = 0;
+	win->hReq = 0;
+	win->wMin= win->lPad + win->rPad + 16;
+	win->hMin = win->tPad + win->bPad + 16;
+	win->minPct = 50;
+	win->rSaved = AG_RECT(-1,-1,-1,-1);
 	win->caption[0] = '\0';
 	win->tbar = NULL;
 	win->icon = AG_IconNew(NULL, 0);
@@ -318,8 +319,8 @@ Shown(AG_Event *event)
 	} else {
 		a.x = WIDGET(win)->x;
 		a.y = WIDGET(win)->y;
-		a.w = WIDGET(win)->w;
-		a.h = WIDGET(win)->h;
+		a.w = WIDTH(win);
+		a.h = HEIGHT(win);
 		AG_WidgetSizeAlloc(win, &a);
 	}
 	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
@@ -350,8 +351,8 @@ Hidden(AG_Event *event)
 			AG_QueueVideoUpdate(
 			    WIDGET(win)->x,
 			    WIDGET(win)->y,
-			    WIDGET(win)->w,
-			    WIDGET(win)->h);
+			    WIDTH(win),
+			    HEIGHT(win));
 		}
 //	}
 	AG_PostEvent(NULL, win, "window-hidden", NULL);
@@ -413,8 +414,8 @@ AG_WindowIsSurrounded(AG_Window *win)
 		if (owin->visible &&
 		    AG_WidgetArea(owin, WIDGET(win)->x, WIDGET(win)->y) &&
 		    AG_WidgetArea(owin,
-		     WIDGET(win)->x + WIDGET(win)->w,
-		     WIDGET(win)->y + WIDGET(win)->h)) {
+		     WIDGET(win)->x + WIDTH(win),
+		     WIDGET(win)->y + HEIGHT(win))) {
 			AG_ObjectUnlock(owin);
 			return (1);
 		}
@@ -578,8 +579,8 @@ Move(AG_Window *win, SDL_MouseMotionEvent *motion)
 
 	rPrev.x = WIDGET(win)->x;
 	rPrev.y = WIDGET(win)->y;
-	rPrev.w = WIDGET(win)->w;
-	rPrev.h = WIDGET(win)->h;
+	rPrev.w = WIDTH(win);
+	rPrev.h = HEIGHT(win);
 
 	WIDGET(win)->x += motion->xrel;
 	WIDGET(win)->y += motion->yrel;
@@ -591,8 +592,8 @@ Move(AG_Window *win, SDL_MouseMotionEvent *motion)
 	/* XXX TODO Avoid drawing over KEEPABOVE windows */
 	rNew.x = WIDGET(win)->x;
 	rNew.y = WIDGET(win)->y;
-	rNew.w = WIDGET(win)->w;
-	rNew.h = WIDGET(win)->h;
+	rNew.w = WIDTH(win);
+	rNew.h = HEIGHT(win);
 	rFill1.w = 0;
 	rFill2.w = 0;
 	if (rNew.x > rPrev.x) {		/* Right */
@@ -683,10 +684,10 @@ out:
 static __inline__ int
 AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
 {
-	if ((y - WIDGET(win)->y) > (WIDGET(win)->h - agColorsBorderSize)) {
-	    	if ((x - WIDGET(win)->x) < 17) {
+	if ((y - WIDGET(win)->y) > (HEIGHT(win)-agColorsBorderSize)) {
+	    	if ((x - WIDGET(win)->x) < 17) { /* XXX */
 			return (AG_WINOP_LRESIZE);
-		} else if ((x - WIDGET(win)->x) > (WIDGET(win)->w - 17)) {
+		} else if ((x - WIDGET(win)->x) > (WIDTH(win)-17)) {
 			return (AG_WINOP_RRESIZE);
 		} else if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
 			return (AG_WINOP_HRESIZE);
@@ -1039,8 +1040,7 @@ outf:
  * background when needed.
  */
 int
-AG_WindowSetGeometryParam(AG_Window *win, int x, int y, int w, int h,
-    int bounded)
+AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 {
 	AG_SizeReq rWin;
 	AG_SizeAlloc aWin;
@@ -1048,28 +1048,37 @@ AG_WindowSetGeometryParam(AG_Window *win, int x, int y, int w, int h,
 	int new;
 	int ox, oy, ow, oh;
 	int nw, nh;
+	int wMin, hMin;
 
 	AG_ObjectLock(win);
 	ox = WIDGET(win)->x;
 	oy = WIDGET(win)->y;
-	ow = WIDGET(win)->w;
-	oh = WIDGET(win)->h;
+	ow = WIDTH(win);
+	oh = HEIGHT(win);
 	new = ((WIDGET(win)->x == -1 || WIDGET(win)->y == -1));
 
-	if (w == -1 || h == -1) {
+	if (r.w == -1 || r.h == -1) {
 		AG_WidgetSizeReq(win, &rWin);
-		nw = (w == -1) ? rWin.w : w;
-		nh = (h == -1) ? rWin.h : h;
+		nw = (r.w == -1) ? rWin.w : r.w;
+		nh = (r.h == -1) ? rWin.h : r.h;
 	} else {
-		nw = w;
-		nh = h;
+		nw = r.w;
+		nh = r.h;
 	}
-	if (nw < win->minw) { nw = win->minw; }
-	if (nh < win->minh) { nh = win->minh; }
+	
+	if (win->flags & AG_WINDOW_MINSIZEPCT) {
+		wMin = win->minPct*win->wReq/100;
+		hMin = win->minPct*win->hReq/100;
+	} else {
+		wMin = win->wMin;
+		hMin = win->hMin;
+	}
+	if (nw < wMin) { nw = wMin; }
+	if (nh < hMin) { nh = hMin; }
 
 	/* Limit the window to the view boundaries. */
-	aWin.x = (x == -1) ? WIDGET(win)->x : x;
-	aWin.y = (y == -1) ? WIDGET(win)->y : y;
+	aWin.x = (r.x == -1) ? WIDGET(win)->x : r.x;
+	aWin.y = (r.y == -1) ? WIDGET(win)->y : r.y;
 	aWin.w = nw;
 	aWin.h = nh;
 	
@@ -1111,11 +1120,11 @@ AG_WindowSetGeometryParam(AG_Window *win, int x, int y, int w, int h,
 			rFill.x = ox;
 			rFill.y = oy;
 			rFill.w = WIDGET(win)->x - ox;
-			rFill.h = WIDGET(win)->h;
-		} else if (WIDGET(win)->w < ow) {		/* R-resize */
-			rFill.x = WIDGET(win)->x + WIDGET(win)->w;
+			rFill.h = HEIGHT(win);
+		} else if (WIDTH(win) < ow) {			/* R-resize */
+			rFill.x = WIDGET(win)->x + WIDTH(win);
 			rFill.y = WIDGET(win)->y;
-			rFill.w = ow - WIDGET(win)->w;
+			rFill.w = ow - WIDTH(win);
 			rFill.h = oh;
 		} else {
 			rFill.w = 0;
@@ -1125,11 +1134,11 @@ AG_WindowSetGeometryParam(AG_Window *win, int x, int y, int w, int h,
 			SDL_FillRect(agView->v, &rFill, AG_COLOR(BG_COLOR));
 			SDL_UpdateRects(agView->v, 1, &rFill);
 		}
-		if (WIDGET(win)->h < oh) {			/* H-resize */
+		if (HEIGHT(win) < oh) {				/* H-resize */
 			rFill.x = ox;
-			rFill.y = WIDGET(win)->y + WIDGET(win)->h;
+			rFill.y = WIDGET(win)->y + HEIGHT(win);
 			rFill.w = ow;
-			rFill.h = oh - WIDGET(win)->h;
+			rFill.h = oh - HEIGHT(win);
 			SDL_FillRect(agView->v, &rFill, AG_COLOR(BG_COLOR));
 			SDL_UpdateRects(agView->v, 1, &rFill);
 		}
@@ -1139,6 +1148,34 @@ AG_WindowSetGeometryParam(AG_Window *win, int x, int y, int w, int h,
 fail:
 	AG_ObjectUnlock(win);
 	return (-1);
+}
+
+static __inline__ void
+UpdateMinSize(AG_Window *win)
+{
+}
+
+/* Configure minimum window size in percentage of computed geometry. */
+void
+AG_WindowSetMinSizePct(AG_Window *win, int pct)
+{
+	AG_ObjectLock(win);
+	win->flags |= AG_WINDOW_MINSIZEPCT;
+	win->minPct = pct;
+	UpdateMinSize(win);
+	AG_ObjectUnlock(win);
+}
+
+/* Configure minimum window size in pixels. */
+void
+AG_WindowSetMinSize(AG_Window *win, int w, int h)
+{
+	AG_ObjectLock(win);
+	win->flags &= ~(AG_WINDOW_MINSIZEPCT);
+	win->wMin = w;
+	win->hMin = h;
+	UpdateMinSize(win);
+	AG_ObjectUnlock(win);
 }
 
 /* Assign a window a specific alignment and size in pixels. */
@@ -1202,17 +1239,16 @@ AG_WindowSetGeometryAlignedPct(AG_Window *win, enum ag_window_alignment align,
 void
 AG_WindowSaveGeometry(AG_Window *win)
 {
-	win->savx = WIDGET(win)->x;
-	win->savy = WIDGET(win)->y;
-	win->savw = WIDGET(win)->w;
-	win->savh = WIDGET(win)->h;
+	win->rSaved.x = WIDGET(win)->x;
+	win->rSaved.y = WIDGET(win)->y;
+	win->rSaved.w = WIDTH(win);
+	win->rSaved.h = HEIGHT(win);
 }
 
 int
 AG_WindowRestoreGeometry(AG_Window *win)
 {
-	return AG_WindowSetGeometry(win, win->savx, win->savy,
-	                            win->savw, win->savh);
+	return AG_WindowSetGeometryRect(win, win->rSaved, 0);
 }
 
 void
@@ -1249,19 +1285,19 @@ IconMotion(AG_Event *event)
 		if (!agView->opengl) {
 			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
 			AG_QueueVideoUpdate(
-			    WIDGET(wDND)->x, WIDGET(wDND)->y,
-			    WIDGET(wDND)->w, WIDGET(wDND)->h);
+			    WIDGET(wDND)->x,
+			    WIDGET(wDND)->y,
+			    WIDTH(wDND), HEIGHT(wDND));
 		}
-		AG_WindowSetGeometryParam(wDND,
-		    WIDGET(wDND)->x + xRel,
-		    WIDGET(wDND)->y + yRel,
-		    WIDGET(wDND)->w,
-		    WIDGET(wDND)->h,
-		    1);
+		AG_WindowSetGeometryRect(wDND,
+		    AG_RECT(WIDGET(wDND)->x + xRel,
+		            WIDGET(wDND)->y + yRel,
+			    WIDTH(wDND), HEIGHT(wDND)), 1);
+		    
 		icon->xSaved = WIDGET(wDND)->x;
 		icon->ySaved = WIDGET(wDND)->y;
-		icon->wSaved = WIDGET(wDND)->w;
-		icon->hSaved = WIDGET(wDND)->h;
+		icon->wSaved = WIDTH(wDND);
+		icon->hSaved = HEIGHT(wDND);
 	}
 }
 
@@ -1336,8 +1372,8 @@ AG_WindowMinimize(AG_Window *win)
 		AG_WindowShow(wDND);
 		icon->xSaved = WIDGET(wDND)->x;
 		icon->ySaved = WIDGET(wDND)->y;
-		icon->wSaved = WIDGET(wDND)->w;
-		icon->hSaved = WIDGET(wDND)->h;
+		icon->wSaved = WIDTH(wDND);
+		icon->hSaved = HEIGHT(wDND);
 	}
 }
 
@@ -1361,8 +1397,8 @@ Resize(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 {
 	int x = WIDGET(win)->x;
 	int y = WIDGET(win)->y;
-	int w = WIDGET(win)->w;
-	int h = WIDGET(win)->h;
+	int w = WIDTH(win);
+	int h = HEIGHT(win);
 
 	switch (op) {
 	case AG_WINOP_LRESIZE:
@@ -1470,19 +1506,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 	if (nWidgets > 0 && r->h >= win->spacing)
 		r->h -= win->spacing;
 
-	if (!agWindowAnySize) {
-		win->minw = r->w;
-		win->minh = r->h;
-	} else {
-		win->minw = win->lPad + win->rPad + agColorsBorderSize*2;
-		win->minh = win->tPad + win->bPad + agColorsBorderSize;
-		if (win->tbar != NULL) {
-			win->minw = MAX(win->minw,rTbar.w);
-			win->minh += rTbar.h;
-		} else {
-			win->minh += agColorsBorderSize;
-		}
-	}
+	win->wReq = r->w;
+	win->hReq = r->h;
+	UpdateMinSize(win);
 	ClampToView(win);
 	AG_ObjectUnlock(win);
 }
@@ -1604,11 +1630,7 @@ AG_WindowSetPosition(AG_Window *win, enum ag_window_alignment alignment,
 {
 	AG_ObjectLock(win);
 	win->alignment = alignment;
-	if (cascade) {
-		win->flags |= AG_WINDOW_CASCADE;
-	} else {
-		win->flags &= ~(AG_WINDOW_CASCADE);
-	}
+	AG_SETFLAGS(win->flags, AG_WINDOW_CASCADE, cascade);
 	AG_ObjectUnlock(win);
 }
 
