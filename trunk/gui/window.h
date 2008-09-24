@@ -61,6 +61,7 @@ typedef struct ag_window {
 #define AG_WINDOW_NOMINIMIZE	0x00800	/* Disable minimize button */
 #define AG_WINDOW_NOMAXIMIZE	0x01000	/* Disable maximize button */
 #define AG_WINDOW_CASCADE	0x02000 /* For AG_WindowSetPosition() */
+#define AG_WINDOW_MINSIZEPCT	0x04000 /* Set minimum size in % */
 #define AG_WINDOW_NOBACKGROUND	0x08000	/* Don't fill the background */
 #define AG_WINDOW_NOUPDATERECT	0x10000	/* Don't update rectangle */
 #define AG_WINDOW_FOCUSONATTACH	0x20000	/* Automatic focus on attach */
@@ -76,10 +77,11 @@ typedef struct ag_window {
 	enum ag_window_alignment alignment;	/* Initial position */
 	int spacing;				/* Default spacing (px) */
 	int tPad, bPad, lPad, rPad;		/* Window padding (px) */
-	int minw, minh;				/* Minimum geometry (px) */
-	int savx, savy;				/* Saved coordinates (px) */
-	int savw, savh;				/* Saved geometry (px) */
-	
+	int wReq, hReq;				/* Requested geometry (px) */
+	int wMin, hMin;				/* Minimum geometry (px) */
+	AG_Rect rSaved;				/* Saved geometry */
+	int minPct;				/* For MINSIZEPCT */
+
 	AG_TAILQ_HEAD(,ag_window) subwins;	/* Sub-windows */
 	AG_TAILQ_ENTRY(ag_window) windows;	/* Active window list */
 	AG_TAILQ_ENTRY(ag_window) swins;	/* Sub-window list */
@@ -115,15 +117,18 @@ void	 AG_WindowSetPadding(AG_Window *, int, int, int, int);
 
 void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
 void	 AG_WindowSetCloseAction(AG_Window *, enum ag_window_close_action);
-int	 AG_WindowSetGeometryParam(AG_Window *, int, int, int, int, int);
+
+void	 AG_WindowSetMinSize(AG_Window *, int, int);
+void	 AG_WindowSetMinSizePct(AG_Window *, int);
+int	 AG_WindowSetGeometryRect(AG_Window *, AG_Rect, int);
 int	 AG_WindowSetGeometryAligned(AG_Window *, enum ag_window_alignment,
                                      int, int);
 int	 AG_WindowSetGeometryAlignedPct(AG_Window *, enum ag_window_alignment,
                                         int, int);
 #define  AG_WindowSetGeometry(win,x,y,w,h) \
-	 AG_WindowSetGeometryParam((win),(x),(y),(w),(h),0)
+	 AG_WindowSetGeometryRect((win),AG_RECT((x),(y),(w),(h)),0)
 #define  AG_WindowSetGeometryBounded(win,x,y,w,h) \
-	 AG_WindowSetGeometryParam((win),(x),(y),(w),(h),1)
+	 AG_WindowSetGeometryRect((win),AG_RECT((x),(y),(w),(h)),1)
 #define	 AG_WindowSetGeometryMax(win) \
 	 AG_WindowSetGeometry((win),0,0,agView->w,agView->h)
 

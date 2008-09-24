@@ -119,6 +119,12 @@ for notebook-style display.
 .Fn AG_WindowSetGeometryMax "AG_Window *win"
 .Pp
 .Ft "void"
+.Fn AG_WindowSetMinSize "AG_Window *win" "int w" "int h"
+.Pp
+.Ft "void"
+.Fn AG_WindowSetMinSizePct "AG_Window *win" "int pct"
+.Pp
+.Ft "void"
 .Fn AG_WindowMaximize "AG_Window *win"
 .Pp
 .Ft "void"
@@ -322,6 +328,13 @@ The
 variant sets the geometry to the size of the display (without setting the
 .Dv AG_WINDOW_MAXIMIZED
 flag).
+.Pp
+The
+.Fn AG_WindowSetMinSize
+routine sets the minimum window size in pixels.
+.Fn AG_WindowSetMinSizePct
+sets the minimum window size in percentage of the requested (computed)
+size.
 .Pp
 .Fn AG_WindowMaximize
 and
