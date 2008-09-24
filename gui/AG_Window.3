@@ -107,6 +107,9 @@ for notebook-style display.
 .Fn AG_WindowSetGeometry "AG_Window *win" "int x" "int y" "int w" "int h"
 .Pp
 .Ft "void"
+.Fn AG_WindowSetGeometryRect "AG_Window *win" "AG_Rect rect" "int bounded"
+.Pp
+.Ft "void"
 .Fn AG_WindowSetGeometryAligned "AG_Window *win" "enum ag_window_alignment alignment" "int w" "int h"
 .Pp
 .Ft "void"
@@ -307,6 +310,15 @@ The
 assigns a specific position and geometry in pixels to a window, overriding
 the default automatically-computed values.
 If a parameter is specified as -1, its current value is preserved.
+.Pp
+The
+.Fn AG_WindowSetGeometryRect
+variants accepts an
+.Ft AG_Rect
+argument.
+The
+.Fa bounded
+flag limits the window to the view area.
 .Pp
 The
 .Fn AG_WindowSetGeometryAligned
