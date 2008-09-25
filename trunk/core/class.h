@@ -3,17 +3,26 @@
 #include "begin_code.h"
 
 struct ag_object;
+struct ag_object_class_spec;
 
-/* Agar namespace description. */
+/* Agar class specification. */
+typedef struct ag_object_class_spec {
+	char hier[AG_OBJECT_HIER_MAX];		/* Inheritance hierarchy */
+	char libs[AG_OBJECT_LIBS_MAX];		/* Library list */
+	char spec[AG_OBJECT_HIER_MAX];		/* Full class specification */
+	char name[AG_OBJECT_NAME_MAX];		/* Short name */
+} AG_ObjectClassSpec;
+
+/* Agar namespace specification. */
 typedef struct ag_namespace {
 	const char *name;			/* Name string */
 	const char *pfx;			/* Prefix string */
 	const char *url;			/* URL of package */
 } AG_Namespace;
 
-/* Agar object class description. */
+/* Object class description. */
 typedef struct ag_object_class {
-	char name[AG_OBJECT_TYPE_MAX];	/* Inheritance hierarchy string */
+	char hier[AG_OBJECT_HIER_MAX];	/* Inheritance hierarchy */
 	size_t size;			/* Structure size */
 	AG_Version ver;			/* Version numbers */
 	void (*init)(void *);
@@ -25,7 +34,8 @@ typedef struct ag_object_class {
 	/*
 	 * Private
 	 */
-	char libs[AG_OBJECT_TYPE_MAX];			/* Required modules */
+	char name[AG_OBJECT_TYPE_MAX];			/* Short name */
+	char libs[AG_OBJECT_LIBS_MAX];			/* Required modules */
 	AG_TAILQ_HEAD(,ag_object_class) sub;		/* Direct subclasses */
 	AG_TAILQ_ENTRY(ag_object_class) subclasses;	/* Subclass entry */
 	struct ag_object_class *super;			/* Superclass */
@@ -59,9 +69,7 @@ void AG_RegisterModuleDirectory(const char *);
 void AG_UnregisterModuleDirectory(const char *);
 void AG_RegisterClass(void *);
 void AG_UnregisterClass(void *);
-int  AG_ParseClassSpec(char *, size_t, char *, size_t, const char *)
-                       BOUNDED_ATTRIBUTE(__string__, 1, 2)
-                       BOUNDED_ATTRIBUTE(__string__, 3, 4);
+int  AG_ParseClassSpec(struct ag_object_class_spec *, const char *);
 int  AG_OfClassGeneral(const struct ag_object *, const char *);
 int  AG_ClassIsNamedGeneral(const AG_ObjectClass *, const char *);
 int  AG_ObjectGetInheritHier(void *, AG_ObjectClass ***, int *);
@@ -80,11 +88,11 @@ AG_GetNamespace(const char *ns)
 	return (NULL);
 }
 
-/* Compare the specified object class against a given pattern. */
+/* Compare the inheritance hierarchy of a class against a given pattern. */
 static __inline__ int
 AG_ClassIsNamed(void *pClass, const char *pat)
 {
-	AG_ObjectClass *cls = pClass;
+	AG_ObjectClass *cls = (AG_ObjectClass *)pClass;
 	const char *c;
 	int nwild = 0;
 
@@ -93,7 +101,7 @@ AG_ClassIsNamed(void *pClass, const char *pat)
 			nwild++;
 	}
 	if (nwild == 0) {
-		return (strncmp(cls->name, pat, c - &pat[0]) == 0);
+		return (strncmp(cls->hier, pat, c - &pat[0]) == 0);
 	} else if (nwild == 1) {
 		if (pat[0] == '*') {
 			return (1);
@@ -101,7 +109,7 @@ AG_ClassIsNamed(void *pClass, const char *pat)
 		for (c = &pat[0]; *c != '\0'; c++) {
 			if (c[0] == ':' && c[1] == '*' && c[2] == '\0') {
 				if (c == &pat[0] ||
-				    strncmp(cls->name, pat, c - &pat[0]) == 0)
+				    strncmp(cls->hier, pat, c - &pat[0]) == 0)
 					return (1);
 			}
 		}

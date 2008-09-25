@@ -213,11 +213,12 @@ functions perform a pathname lookup on the specified VFS and return the object
 if found, NULL otherwise.
 .Pp
 .Fn AG_ObjectFindParent
-searches all parent objects of the given object for one matching the non-NULL
-.Fa name
-or
-.Fa type
-argument.
+searches all parent objects of the given object for one matching the specified
+.Fa name ,
+or the standard class specification in
+.Fa type .
+Either argument can be NULL.
+.Pp
 .Fn AG_ObjectFindChild
 performs a name lookup on the immediate children of the specified object and
 return the matching object if found, otherwise NULL.
@@ -701,6 +702,9 @@ flag set).
 .Fn AG_ObjectUnserialize "AG_Object *obj" "AG_DataSource *ds"
 .Pp
 .Ft "int"
+.Fn AG_ObjectReadHeader "AG_Object *obj" "AG_ObjectHeader *header"
+.Pp
+.Ft "int"
 .Fn AG_ObjectPageIn "AG_Object *obj"
 .Pp
 .Ft "int"
@@ -767,6 +771,23 @@ reads an archive of the given object.
 Note that the
 .Dv AG_OBJECT_CHLD_AUTOSAVE
 feature will not work with these functions.
+.Pp
+The
+.Fn AG_ObjectReadHeader
+routine decodes a standard Agar object archive header.
+On success, it returns 0 and writes the information to the
+.Fa header
+structure:
+.Bd -literal
+typedef struct ag_object_header {
+	char hier[AG_OBJECT_HIER_MAX];	    /* Inheritance hierarchy */
+	char libs[AG_OBJECT_LIBS_MAX];	    /* Library list */
+	char classSpec[AG_OBJECT_HIER_MAX]; /* Full class specification */
+	Uint32 dataOffs;                    /* Dataset offset */
+	AG_Version ver;                     /* AG_Object version */
+	Uint flags;                         /* Object flags */
+} AG_ObjectHeader;
+.Ed
 .Pp
 The
 .Fn AG_ObjectPageIn
@@ -890,13 +911,6 @@ for details).
 The value of the given property has been modified (see
 .Xr AG_Prop 3
 for details).
-.It Fn object-post-load-generic "const char *path"
-Invoked if
-.Fn AG_ObjectLoadGeneric
-succeeds.
-If the object was loaded from file,
-.Fa path
-is the pathname of the file.
 .It Fn object-post-load-data "const char *path"
 Invoked by
 .Fn AG_ObjectLoadData ,

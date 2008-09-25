@@ -199,7 +199,7 @@ AG_RcsStatus(AG_Object *ob, const char *objdir, const char *digest,
 		} else if (strcmp(key, "r") == 0) {
 			*repo_rev = (Uint)strtol(val, NULL, 10);
 		} else if (strcmp(key, "t") == 0 && type != NULL) {
-			Strlcpy(type, val, AG_OBJECT_TYPE_MAX);
+			Strlcpy(type, val, AG_OBJECT_HIER_MAX);
 		} else if (strcmp(key, "n") == 0 && name != NULL) {
 			Strlcpy(type, val, AG_OBJECT_NAME_MAX);
 		}
@@ -271,7 +271,7 @@ AG_RcsImport(AG_Object *ob)
 	    "object-type=%s\n"
 	    "object-size=%lu\n"
 	    "object-digest=%s\n\n",
-	    &objdir[1], ob->name, ob->cls->name,
+	    &objdir[1], ob->name, ob->cls->hier,
 	    (Ulong)len, digest) == -1)
 		goto fail_close;
 	
@@ -383,7 +383,7 @@ AG_RcsCommit(AG_Object *ob)
 	    "object-type=%s\n"
 	    "object-size=%lu\n"
 	    "object-digest=%s\n\n",
-	    &objdir[1], ob->name, ob->cls->name,
+	    &objdir[1], ob->name, ob->cls->hier,
 	    (Ulong)len, digest) == -1)
 		goto fail_close;
 	
@@ -440,7 +440,7 @@ fail:
 int
 AG_RcsUpdate(AG_Object *ob)
 {
-	char type[AG_OBJECT_TYPE_MAX];
+	char type[AG_OBJECT_HIER_MAX];
 	char objdir[AG_OBJECT_PATH_MAX];
 	char objpath[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
@@ -483,9 +483,9 @@ AG_RcsUpdate(AG_Object *ob)
 	case AG_RCS_DESYNCH:
 		break;
 	}
-	if (strcmp(type, ob->cls->name) != 0) {
+	if (strcmp(type, ob->cls->hier) != 0) {
 		AG_SetError(_("Repository has different object type (%s/%s)"),
-		    type, ob->cls->name);
+		    type, ob->cls->hier);
 		goto fail;
 	}
 
@@ -495,7 +495,7 @@ AG_RcsUpdate(AG_Object *ob)
 			                   "object-type=%s\n"
 					   "revision=%u\n",
 					   &objdir[1], ob->name,
-					   ob->cls->name, repo_rev);
+					   ob->cls->hier, repo_rev);
 	if (res == NULL || res->argc < 1) {
 		AG_SetError("RCS update error: %s", AG_GetError());
 		goto fail;
@@ -766,7 +766,7 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 	char localpath[AG_OBJECT_PATH_MAX];
 	char digest[AG_OBJECT_DIGEST_MAX];
 	char name[AG_OBJECT_NAME_MAX];
-	char type[AG_OBJECT_TYPE_MAX];
+	char type[AG_OBJECT_HIER_MAX];
 	char *buf, *s;
 	Uint rev = 0;
 	AG_Object *obj;
@@ -803,7 +803,7 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 			rev = (Uint)strtol(val, NULL, 10);
 			break;
 		case 't':
-			Strlcpy(type, val, AG_OBJECT_TYPE_MAX);
+			Strlcpy(type, val, AG_OBJECT_HIER_MAX);
 			break;
 		case 'n':
 			Strlcpy(name, val, AG_OBJECT_NAME_MAX);
@@ -839,10 +839,10 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 			goto fail;
 		}
 	} else {
-		if (strcmp(type, obj->cls->name) != 0) {
+		if (strcmp(type, obj->cls->hier) != 0) {
 			AG_SetError(
 			    "%s: existing object of different type (%s)",
-			    localpath, obj->cls->name);
+			    localpath, obj->cls->hier);
 			goto fail;
 		}
 	}

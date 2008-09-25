@@ -41,11 +41,20 @@ int              agModuleDirCount = 0;
 AG_Mutex	 agClassLock;
 
 static void
-InitClass(AG_ObjectClass *cls, const char *name, const char *libs)
+InitClass(AG_ObjectClass *cl, const char *hier, const char *libs)
 {
-	Strlcpy(cls->name, name, sizeof(cls->name));
-	Strlcpy(cls->libs, libs, sizeof(cls->libs));
-	TAILQ_INIT(&cls->sub);
+	const char *c;
+
+	Strlcpy(cl->hier, hier, sizeof(cl->hier));
+	Strlcpy(cl->libs, libs, sizeof(cl->libs));
+
+	if ((c = strrchr(hier, ':')) != NULL && c[1] != '\0') {
+		Strlcpy(cl->name, &c[1], sizeof(cl->name));
+	} else {
+		Strlcpy(cl->name, hier, sizeof(cl->name));
+	}
+
+	TAILQ_INIT(&cl->sub);
 }
 
 /* Initialize the object class description table. */
@@ -58,10 +67,8 @@ AG_InitClassTbl(void)
 	agModuleDirCount = 0;
 
 	AG_RegisterNamespace("Agar", "AG_", "http://libagar.org/");
-	
-	agClassTree = Malloc(sizeof(AG_ObjectClass));
-	memcpy(agClassTree, &agObjectClass, sizeof(AG_ObjectClass));
-	InitClass(agClassTree, "AG_Object", "");
+	InitClass(&agObjectClass, "AG_Object", "");
+	agClassTree = &agObjectClass;
 	
 	AG_MutexInitRecursive(&agClassLock);
 }
@@ -70,7 +77,6 @@ AG_InitClassTbl(void)
 void
 AG_DestroyClassTbl(void)
 {
-	Free(agClassTree);
 	agClassTree = NULL;
 
 	Free(agNamespaceTbl);
@@ -80,28 +86,28 @@ AG_DestroyClassTbl(void)
 	AG_MutexDestroy(&agClassLock);
 }
 
-/* 
- * Convert a class specification in "Namespace1(Class1:Class2)[@lib]" format
- * to the flat "PFX_Class1:PFX_Class2" format. dstLib may be NULL.
- */
+/* Convert a class specification in "Namespace1(Class1:Class2)[@lib]" format. */
 int
-AG_ParseClassSpec(char *dst, size_t dstLen, char *dstLibs, size_t dstLibsLen,
-    const char *name)
+AG_ParseClassSpec(AG_ObjectClassSpec *cs, const char *spec)
 {
-	char buf[AG_OBJECT_TYPE_MAX], *pBuf, *pTok;
-	char nsName[AG_OBJECT_TYPE_MAX], *pNsName = nsName;
+	char buf[AG_OBJECT_HIER_MAX], *pBuf, *pTok;
+	char nsName[AG_OBJECT_HIER_MAX], *pNsName = nsName;
 	const char *s, *p, *pOpen = NULL;
+	char *c;
 	int iTok, i = 0;
 	AG_Namespace *ns;
 
-	if (strlen(name) >= AG_OBJECT_TYPE_MAX) {
-		AG_SetError("Class string too large");
+	if (strlen(spec) >= AG_OBJECT_HIER_MAX) {
+		AG_SetError("Hierarchy string too long");
 		return (-1);
 	}
 
-	if (dstLibs != NULL) { *dstLibs = '\0'; }
+	/* Parse the inheritance hierarchy and library list. */
+	cs->hier[0] = '\0';
+	cs->libs[0] = '\0';
+	cs->name[0] = '\0';
 	*pNsName = '\0';
-	for (s = &name[0]; *s != '\0'; s++) {
+	for (s = &spec[0]; *s != '\0'; s++) {
 		if (s[0] == '(' && s[1] != '\0') {
 			if (pOpen || nsName[0] == '\0') {
 				AG_SetError("Syntax error");
@@ -115,8 +121,8 @@ AG_ParseClassSpec(char *dst, size_t dstLen, char *dstLibs, size_t dstLibsLen,
 				*pNsName = *s;
 				pNsName++;
 			}
-			if (dstLibs != NULL && s[0] == '@' && s[1] != '\0')
-				Strlcpy(dstLibs, &s[1], dstLibsLen);
+			if (s[0] == '@' && s[1] != '\0')
+				Strlcpy(cs->libs, &s[1], sizeof(cs->libs));
 		}
 		if (*s == ')') {
 			if ((s - pOpen) == 0) {
@@ -138,21 +144,37 @@ AG_ParseClassSpec(char *dst, size_t dstLen, char *dstLibs, size_t dstLibsLen,
 			buf[iTok] = '\0';
 			for (pBuf = buf;
 			     (pTok = Strsep(&pBuf, ":")) != NULL; ) {
-				i += Strlcpy(&dst[i], ns->pfx, dstLen-i);
-				i += Strlcpy(&dst[i], pTok, dstLen-i);
-				i += Strlcpy(&dst[i], ":", dstLen-i);
+				i += Strlcpy(&cs->hier[i], ns->pfx,
+				    sizeof(cs->hier)-i);
+				i += Strlcpy(&cs->hier[i], pTok,
+				    sizeof(cs->hier)-i);
+				i += Strlcpy(&cs->hier[i], ":",
+				    sizeof(cs->hier)-i);
 			}
 			pOpen = NULL;
 			continue;
 		}
 	}
-	if (i > 0 && dst[i-1] == ':') {
-		dst[i-1] = '\0';		/* Strip last ':' */
+	if (i > 0 && cs->hier[i-1] == ':') {
+		cs->hier[i-1] = '\0';		/* Strip last ':' */
 	}
 	if (i == 0) {				/* Flat format */
-		Strlcpy(dst, name, dstLen);
+		Strlcpy(cs->hier, spec, sizeof(cs->hier));
 	} else {
-		dst[i] = '\0';
+		cs->hier[i] = '\0';
+	}
+
+	/* Fill in the "name" field. */
+	if ((c = strrchr(cs->hier, ':')) != NULL && c[1] != '\0') {
+		Strlcpy(cs->name, &c[1], sizeof(cs->name));
+	} else {
+		Strlcpy(cs->name, cs->hier, sizeof(cs->name));
+	}
+	
+	/* Fill in the "spec" field. */
+	Strlcpy(cs->spec, cs->hier, sizeof(cs->spec));
+	if (cs->libs[0] != '\0') {
+		Strlcat(cs->spec, cs->libs, sizeof(cs->spec));
 	}
 	return (0);
 }
@@ -161,29 +183,31 @@ AG_ParseClassSpec(char *dst, size_t dstLen, char *dstLibs, size_t dstLibsLen,
 void
 AG_RegisterClass(void *p)
 {
-	AG_ObjectClass *cls = p;
-	char name[AG_OBJECT_TYPE_MAX];
-	char libs[AG_OBJECT_TYPE_MAX];
+	AG_ObjectClass *cl = p;
+	AG_ObjectClassSpec cs;
 	char *s;
-
-	/* Parse the inheritance hierarchy string. */
-	if (AG_ParseClassSpec(name, sizeof(name), libs, sizeof(libs),
-	    cls->name) == -1) {
-		AG_FatalError("%s: %s", cls->name, AG_GetError());
+	
+	/* Parse the class specification. */
+	if (AG_ParseClassSpec(&cs, cl->hier) == -1) {
+		AG_FatalError(NULL);
 	}
-	InitClass(cls, name, libs);
-	Debug(NULL, "Registered class: %s (%s)\n", name, libs);
+	InitClass(cl, cs.hier, cs.libs);
+	
+#ifdef CLASSDEBUG
+	Debug(NULL, "Registered class: %s: %s (%s)\n", cs.name, cs.hier,
+	    cs.libs);
+#endif
 
 	/* Lookup the superclass. */
 	AG_MutexLock(&agClassLock);
-	if ((s = strrchr(name, ':')) != NULL) {
+	if ((s = strrchr(cs.hier, ':')) != NULL) {
 		*s = '\0';
-		if ((cls->super = AG_LookupClass(name)) == NULL)
-			AG_FatalError("%s: No such superclass", name);
+		if ((cl->super = AG_LookupClass(cs.hier)) == NULL)
+			AG_FatalError("%s: No such superclass", cs.hier);
 	} else {
-		cls->super = agClassTree;			/* Root */
+		cl->super = agClassTree;			/* Root */
 	}
-	TAILQ_INSERT_TAIL(&cls->super->sub, cls, subclasses);
+	TAILQ_INSERT_TAIL(&cl->super->sub, cl, subclasses);
 	AG_MutexUnlock(&agClassLock);
 }
 
@@ -191,27 +215,29 @@ AG_RegisterClass(void *p)
 void
 AG_UnregisterClass(void *p)
 {
-	AG_ObjectClass *cls = p;
-	AG_ObjectClass *clsSuper = cls->super;
+	AG_ObjectClass *cl = p;
+	AG_ObjectClass *clSuper = cl->super;
 
 	AG_MutexLock(&agClassLock);
-	Debug(NULL, "Unregistering class: %s\n", cls->name);
-	TAILQ_REMOVE(&clsSuper->sub, cls, subclasses);
-	cls->super = NULL;
+#ifdef CLASSDEBUG
+	Debug(NULL, "Unregistering class: %s\n", cl->name);
+#endif
+	TAILQ_REMOVE(&clSuper->sub, cl, subclasses);
+	cl->super = NULL;
 	AG_MutexUnlock(&agClassLock);
 }
 
 /* XXX ridiculous */
 static AG_ObjectClass *
-FindClassByName(AG_ObjectClass *cls, const char *spec)
+FindClassByName(AG_ObjectClass *cl, const char *spec)
 {
-	AG_ObjectClass *subcls, *rv;
+	AG_ObjectClass *clSub, *rv;
 	
-	TAILQ_FOREACH(subcls, &cls->sub, subclasses) {
-		if (strcmp(subcls->name, spec) == 0) {
-			return (subcls);
+	TAILQ_FOREACH(clSub, &cl->sub, subclasses) {
+		if (strcmp(clSub->hier, spec) == 0) {
+			return (clSub);
 		}
-		if ((rv = FindClassByName(subcls, spec)) != NULL)
+		if ((rv = FindClassByName(clSub, spec)) != NULL)
 			return (rv);
 	}
 	return (NULL);
@@ -224,22 +250,22 @@ FindClassByName(AG_ObjectClass *cls, const char *spec)
 AG_ObjectClass *
 AG_LookupClass(const char *inSpec)
 {
-	char spec[AG_OBJECT_TYPE_MAX];
-	AG_ObjectClass *cls;
+	AG_ObjectClassSpec cs;
+	AG_ObjectClass *cl;
 
 	if (inSpec[0] == '\0' ||
 	    strcmp(inSpec, "Agar(Object)") == 0 ||
 	    strcmp(inSpec, "AG_Object") == 0)
 		return (agClassTree);				/* Root */
 
-	/* Prepend the implied "AG_Object:" */
-	AG_ParseClassSpec(spec, sizeof(spec), NULL, 0, inSpec);
+	if (AG_ParseClassSpec(&cs, inSpec) == -1)
+		AG_FatalError(NULL);
 
 	/* Recursively search the class structure. */
 	AG_MutexLock(&agClassLock);
-	if ((cls = FindClassByName(agClassTree, spec)) != NULL) {
+	if ((cl = FindClassByName(agClassTree, cs.hier)) != NULL) {
 		AG_MutexUnlock(&agClassLock);
-		return (cls);
+		return (cl);
 	}
 	AG_MutexUnlock(&agClassLock);
 	AG_SetError("No such class: %s", inSpec);
@@ -258,23 +284,23 @@ AG_LookupClass(const char *inSpec)
 AG_ObjectClass *
 AG_LoadClass(const char *classSpec)
 {
-	char className[AG_OBJECT_TYPE_MAX];
-	char libs[AG_OBJECT_TYPE_MAX], *s, *lib;
-	char sym[AG_OBJECT_TYPE_MAX];
+	AG_ObjectClassSpec cs;
+	char *s, *lib;
+	char sym[AG_OBJECT_HIER_MAX];
 	AG_DSO *dso;
 	void *pClass = NULL;
 	int i;
 
-	AG_ParseClassSpec(className, sizeof(className), libs, sizeof(libs),
-	    classSpec);
+	if (AG_ParseClassSpec(&cs, classSpec) == -1)
+		AG_FatalError(NULL);
 
-	if (libs[0] == '\0')
-		return AG_LookupClass(className);
+	if (cs.libs[0] == '\0')
+		return AG_LookupClass(cs.hier);
 
 	AG_MutexLock(&agClassLock);
 
 	/* Load all libraries specified in the string. */
-	for (i = 0, s = libs;
+	for (i = 0, s = cs.libs;
 	    (lib = Strsep(&s, ", ")) != NULL;
 	    i++) {
 		if ((dso = AG_LoadDSO(lib, 0)) == NULL) {
@@ -284,17 +310,12 @@ AG_LoadClass(const char *classSpec)
 		}
 		/* Look up "pfxFooClass" in the first library. */
 		if (i == 0) {
-			if ((s = strrchr(className, ':')) != NULL &&
-			    s[1] != '\0') {
-				Strlcpy(sym, &s[1], sizeof(sym));
-			} else {
-				Strlcpy(sym, s, sizeof(sym));
-			}
-			Strlcpy(sym, className, sizeof(sym));
+			Strlcpy(sym, cs.name, sizeof(sym));
 			Strlcat(sym, "Class", sizeof(sym));
 
 			if (AG_SymDSO(dso, sym, &pClass) == -1) {
-				AG_SetError("<%s>: %s", lib, AG_GetError());
+				AG_SetError("Loading <%s>: %s", lib,
+				    AG_GetError());
 				AG_UnloadDSO(dso);
 				/* XXX TODO undo other DSOs we just loaded */
 				goto fail;
@@ -319,14 +340,14 @@ fail:
  * related dynamically-linked libraries.
  */
 void
-AG_UnloadClass(AG_ObjectClass *cls)
+AG_UnloadClass(AG_ObjectClass *cl)
 {
 	char *s, *lib;
 	AG_DSO *dso;
 	
-	AG_UnregisterClass(cls);
+	AG_UnregisterClass(cl);
 
-	for (s = cls->libs; (lib = Strsep(&s, ", ")) != NULL; ) {
+	for (s = cl->libs; (lib = Strsep(&s, ", ")) != NULL; ) {
 		if ((dso = AG_LookupDSO(lib)) != NULL)
 			AG_UnloadDSO(dso);
 	}
@@ -403,13 +424,13 @@ AG_UnregisterModuleDirectory(const char *path)
 
 /* General case fallback for AG_ClassIsNamed() */
 int
-AG_ClassIsNamedGeneral(const AG_ObjectClass *cls, const char *cn)
+AG_ClassIsNamedGeneral(const AG_ObjectClass *cl, const char *cn)
 {
-	char cname[AG_OBJECT_TYPE_MAX], *cp, *c;
-	char nname[AG_OBJECT_TYPE_MAX], *np, *s;
+	char cname[AG_OBJECT_HIER_MAX], *cp, *c;
+	char nname[AG_OBJECT_HIER_MAX], *np, *s;
 
 	Strlcpy(cname, cn, sizeof(cname));
-	Strlcpy(nname, cls->name, sizeof(nname));
+	Strlcpy(nname, cl->hier, sizeof(nname));
 	cp = cname;
 	np = nname;
 	while ((c = Strsep(&cp, ":")) != NULL &&
@@ -430,16 +451,16 @@ AG_ClassIsNamedGeneral(const AG_ObjectClass *cls, const char *cn)
 int
 AG_ObjectGetInheritHier(void *obj, AG_ObjectClass ***hier, int *nHier)
 {
-	char cname[AG_OBJECT_TYPE_MAX], *c;
+	char cname[AG_OBJECT_HIER_MAX], *c;
 	AG_ObjectClass *cl;
 	int i, stop = 0;
 
-	if (AGOBJECT(obj)->cls->name[0] == '\0') {
+	if (AGOBJECT(obj)->cls->hier[0] == '\0') {
 		(*nHier) = 0;
 		return (0);
 	}
 	(*nHier) = 1;
-	Strlcpy(cname, AGOBJECT(obj)->cls->name, sizeof(cname));
+	Strlcpy(cname, AGOBJECT(obj)->cls->hier, sizeof(cname));
 	for (c = &cname[0]; *c != '\0'; c++) {
 		if (*c == ':')
 			(*nHier)++;
