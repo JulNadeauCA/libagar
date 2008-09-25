@@ -309,7 +309,7 @@ cmd_scan_vfs(NS_Server *ns, NS_Command *cmd, AG_Object *pob, int depth)
 	AG_Object *cob;
 
 	NS_ListString(ns, "%s", pob->name);
-	NS_ListString(ns, "%s", pob->cls->name);
+	NS_ListString(ns, "%s", pob->cls->hier);
 	NS_ListString(ns, "0x%08x", pob->flags);
 
 	TAILQ_FOREACH(cob, &pob->children, cobjs) {

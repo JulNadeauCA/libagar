@@ -142,7 +142,7 @@ PollEvents(AG_Event *event)
 		args[0] = '(';
 		args[1] = '\0';
 		for (i = 1; i < ev->argc; i++) {
-			char *argn = ev->argn[i];
+			const char *argn = ev->argn[i];
 
 			if (argn[0] != '\0') {
 				Strlcat(args, argn, sizeof(args));
@@ -321,7 +321,7 @@ DEV_ObjectEdit(void *p)
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 	
-		AG_LabelNewStatic(ntab, 0, _("Class: %s"), ob->cls->name);
+		AG_LabelNewStatic(ntab, 0, _("Class: %s"), ob->cls->hier);
 		AG_CheckboxSetFromFlags(ntab, &ob->flags, devObjectFlags);
 #if 0
 		AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &agLinkageLock,

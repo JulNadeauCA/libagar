@@ -426,9 +426,6 @@ DEV_ConfigWindow(AG_Config *cfg)
 	{
 		cbox = AG_CheckboxNew(tab, 0, _("Enable debugging"));
 		AG_WidgetBindInt(cbox,"state", &agDebugLvl);
-		
-		cbox = AG_CheckboxNew(tab, 0, _("Allow any window size"));
-		AG_WidgetBindInt(cbox,"state", &agWindowAnySize);
 	}
 #endif
 
