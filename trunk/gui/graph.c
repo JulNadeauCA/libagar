@@ -131,18 +131,12 @@ MouseMotion(AG_Event *event)
 		}
 	} else {
 		TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
-			if (MouseOverVertex(vtx, x, y)) {
-				vtx->flags |= AG_GRAPH_MOUSEOVER;
-			} else {
-				vtx->flags &= ~AG_GRAPH_MOUSEOVER;
-			}
+			AG_SETFLAGS(vtx->flags, AG_GRAPH_MOUSEOVER,
+			    MouseOverVertex(vtx,x,y));
 		}
 		TAILQ_FOREACH(edge, &gf->edges, edges) {
-			if (MouseOverEdge(edge, x, y)) {
-				edge->flags |= AG_GRAPH_MOUSEOVER;
-			} else {
-				edge->flags &= ~AG_GRAPH_MOUSEOVER;
-			}
+			AG_SETFLAGS(vtx->flags, AG_GRAPH_MOUSEOVER,
+			    MouseOverEdge(edge,x,y));
 		}
 	}
 }

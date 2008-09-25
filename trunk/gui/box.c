@@ -251,11 +251,7 @@ void
 AG_BoxSetHomogenous(AG_Box *box, int enable)
 {
 	AG_ObjectLock(box);
-	if (enable) {
-		box->flags |= AG_BOX_HOMOGENOUS;
-	} else {
-		box->flags &= ~(AG_BOX_HOMOGENOUS);
-	}
+	AG_SETFLAGS(box->flags, AG_BOX_HOMOGENOUS, enable);
 	AG_ObjectUnlock(box);
 }
 

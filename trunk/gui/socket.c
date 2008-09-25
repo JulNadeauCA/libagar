@@ -262,44 +262,16 @@ SetState(AG_WidgetBinding *binding, void *p, int v)
 		*(Uint32 *)p = v;
 		break;
 	case AG_WIDGET_FLAG:
-		{
-			int *state = (int *)p;
-			if (*state & (int)binding->data.bitmask) {
-				*state &= ~(int)binding->data.bitmask;
-			} else {
-				*state |= (int)binding->data.bitmask;
-			}
-		}
+		AG_SETFLAGS(*(int *)p, (int)binding->data.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG8:
-		{
-			Uint8 *state = (Uint8 *)p;
-			if (*state & (Uint8)binding->data.bitmask) {
-				*state &= ~(Uint8)binding->data.bitmask;
-			} else {
-				*state |= (Uint8)binding->data.bitmask;
-			}
-		}
+		AG_SETFLAGS(*(Uint8 *)p, (Uint8)binding->data.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG16:
-		{
-			Uint16 *state = (Uint16 *)p;
-			if (*state & (Uint16)binding->data.bitmask) {
-				*state &= ~(Uint16)binding->data.bitmask;
-			} else {
-				*state |= (Uint16)binding->data.bitmask;
-			}
-		}
+		AG_SETFLAGS(*(Uint16 *)p, (Uint16)binding->data.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG32:
-		{
-			Uint32 *state = (Uint32 *)p;
-			if (*state & (Uint32)binding->data.bitmask) {
-				*state &= ~(Uint32)binding->data.bitmask;
-			} else {
-				*state |= (Uint32)binding->data.bitmask;
-			}
-		}
+		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->data.bitmask, v);
 		break;
 	}
 }
@@ -360,12 +332,11 @@ IconMotion(AG_Event *event)
 	int yRel = AG_INT(5);
 	AG_Window *wDND = icon->wDND;
 
-	AG_WindowSetGeometryParam(wDND,
-	    WIDGET(wDND)->x + xRel,
-	    WIDGET(wDND)->y + yRel,
-	    WIDGET(wDND)->w,
-	    WIDGET(wDND)->h,
-	    1);
+	AG_WindowSetGeometryRect(wDND,
+	    AG_RECT(WIDGET(wDND)->x + xRel,
+	            WIDGET(wDND)->y + yRel,
+	            WIDTH(wDND),
+	            HEIGHT(wDND)), 1);
 }
 
 static void

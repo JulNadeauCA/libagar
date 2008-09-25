@@ -163,11 +163,7 @@ Draw(void *obj)
 void
 AG_IconSetBackgroundFill(AG_Icon *icon, int enable, Uint32 color)
 {
-	if (enable) {
-		icon->flags |= AG_ICON_BGFILL;
-	} else {
-		icon->flags &= ~(AG_ICON_BGFILL);
-	}
+	AG_SETFLAGS(icon->flags, AG_ICON_BGFILL, enable);
 	icon->cBackground = color;
 }
 

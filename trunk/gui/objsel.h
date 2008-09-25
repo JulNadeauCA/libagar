@@ -13,7 +13,7 @@ typedef struct ag_object_selector {
 	int flags;
 #define AG_OBJSEL_PAGE_DATA	0x01
 #define AG_OBJSEL_PAGE_GFX	0x02
-	char type_mask[AG_OBJECT_TYPE_MAX];
+	char type_mask[AG_OBJECT_HIER_MAX];
 	void *pobj;
 	void *root;
 	void *object;
