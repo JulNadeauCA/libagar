@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,11 +31,117 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
+
+static AG_Object errorMgr;
+
+void
+AG_DataSourceInitSubsystem(void)
+{
+	AG_ObjectInitStatic(&errorMgr, NULL);
+}
+
+void
+AG_DataSourceDestroySubsystem(void)
+{
+	AG_ObjectDestroy(&errorMgr);
+}
+
+/* Assign an error callback routine to a data source. */
+void
+AG_DataSourceSetErrorFn(AG_DataSource *ds, AG_EventFn fn, const char *fmt, ...)
+{
+	AG_ObjectLock(&errorMgr);
+	ds->errorFn = AG_SetEvent(&errorMgr, NULL, fn, NULL);
+	AG_EVENT_GET_ARGS(ds->errorFn, fmt);
+	AG_ObjectUnlock(&errorMgr);
+}
+
+/* Raise a data source exception. */
+void
+AG_DataSourceError(AG_DataSource *ds, const char *fmt, ...)
+{
+	va_list args;
+	char *msg;
+
+	if (fmt != NULL) {
+		va_start(args, fmt);
+		Vasprintf(&msg, fmt, args);
+		va_end(args);
+	} else {
+		msg = Strdup(AG_GetError());
+	}
+	
+	AG_ObjectLock(&errorMgr);
+	AG_PostEvent(NULL, &errorMgr, ds->errorFn->name, "%s", msg);
+	AG_ObjectUnlock(&errorMgr);
+}
+
+/* Enable checking of debugging information. */
+void
+AG_DataSourceSetDebug(AG_DataSource *ds, int flag)
+{
+	ds->debug = flag;
+}
+
+/* Write type identifier for type safety checks. */
+void
+AG_WriteTypeCode(AG_DataSource *ds, Uint32 type)
+{
+	Uint32 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(type) :
+	                                                 AG_SwapLE32(type);
+
+	if (AG_Write(ds, &i, sizeof(i), 1) != 0)
+		AG_DataSourceError(ds, NULL);
+}
+
+/* Write type identifier for type safety checks (offset). */
+void
+AG_WriteTypeCodeAt(AG_DataSource *ds, Uint32 type, off_t offs)
+{
+	Uint32 i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(type) :
+	                                                 AG_SwapLE32(type);
+
+	if (AG_WriteAt(ds, &i, sizeof(i), 1, offs) != 0)
+		AG_DataSourceError(ds, NULL);
+}
+
+/* Write type identifier for type safety checks (error-check). */
+int
+AG_WriteTypev(AG_DataSource *ds, Uint32 type)
+{
+	Uint32 i;
+
+	if (!ds->debug) {
+		return (0);
+	}
+	i = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(type) :
+	                                          AG_SwapLE32(type);
+
+	return AG_Write(ds, &i, sizeof(i), 1);
+}
+
+/* Check type identifier for type safety checks (error-check). */
+int
+AG_CheckTypev(AG_DataSource *ds, Uint32 type)
+{
+	Uint32 i;
+
+	if (!ds->debug) {
+		return (0);
+	}
+	if (AG_Read(ds, &i, sizeof(i), 1) != 0) {
+		AG_SetError("Reading type ID: %s", AG_GetError());
+		return (-1);
+	}
+	i = ((ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBE32(i) :
+	                                           AG_SwapLE32(i));
+	return (i == type) ? 0 : -1;
+}
 
 /*
  * File operations.
  */
-
 static AG_IOStatus
 FileRead(AG_DataSource *ds, void *buf, size_t size, size_t nmemb, size_t *rv)
 {
@@ -305,9 +411,21 @@ CoreSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
 	return (0);
 }
 
+/* Default error handler */
+static void
+ErrorDefault(AG_Event *event)
+{
+	AG_DataSource *ds = AG_SELF();
+	char *errorMsg = AG_STRING(1);
+
+	AG_FatalError("Data source (%p): %s", ds, errorMsg);
+/*	free(errorMsg); */
+}
+
 void
 AG_DataSourceInit(AG_DataSource *ds)
 {
+	ds->debug = 0;
 	ds->byte_order = AG_BYTEORDER_BE;
 	ds->rdLast = 0;
 	ds->wrLast = 0;
@@ -321,6 +439,7 @@ AG_DataSourceInit(AG_DataSource *ds)
 	ds->seek = NULL;
 	ds->close = NULL;
 	AG_MutexInitRecursive(&ds->lock);
+	AG_DataSourceSetErrorFn(ds, ErrorDefault, "%p", ds);
 }
 
 void
@@ -432,6 +551,14 @@ AG_SetByteOrder(AG_DataSource *ds, enum ag_byte_order order)
 {
 	AG_MutexLock(&ds->lock);
 	ds->byte_order = order;
+	AG_MutexUnlock(&ds->lock);
+}
+
+void
+AG_SetSourceDebug(AG_DataSource *ds, int enable)
+{
+	AG_MutexLock(&ds->lock);
+	ds->debug = enable;
 	AG_MutexUnlock(&ds->lock);
 }
 

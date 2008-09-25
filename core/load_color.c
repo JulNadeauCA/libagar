@@ -35,6 +35,7 @@ AG_WriteColor(AG_DataSource *ds, SDL_PixelFormat *pixfmt, Uint32 color)
 {
 	Uint8 r, g, b, a;
 
+	AG_WriteType(ds, AG_SOURCE_COLOR_RGBA);
 	AG_GetRGBA(color, pixfmt, &r,&g,&b,&a);
 	AG_WriteUint8(ds, r);
 	AG_WriteUint8(ds, g);
@@ -47,6 +48,7 @@ AG_ReadColor(AG_DataSource *ds, SDL_PixelFormat *pixfmt)
 {
 	Uint8 r, g, b, a;
 
+	AG_CHECK_TYPE(ds, AG_SOURCE_COLOR_RGBA, 0);
 	r = AG_ReadUint8(ds);
 	g = AG_ReadUint8(ds);
 	b = AG_ReadUint8(ds);
