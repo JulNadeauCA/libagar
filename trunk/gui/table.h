@@ -153,6 +153,8 @@ void         AG_TableSetRowDblClickFn(AG_Table *, AG_EventFn, const char *,
                                       ...);
 void         AG_TableSetColDblClickFn(AG_Table *, AG_EventFn, const char *,
                                       ...);
+void	     AG_TableSetColHeight(AG_Table *, int);
+void	     AG_TableSetRowHeight(AG_Table *, int);
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
 int	  AG_TablePoolAdd(AG_Table *, Uint, Uint);

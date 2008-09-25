@@ -68,6 +68,12 @@ provides tree support, but no multi-column functionality.
 .Fn AG_TableSizeHint "AG_Table *tbl" "int width" "int nrows"
 .Pp
 .Ft "void"
+.Fn AG_TableSetColHeight "AG_Table *tbl" "int height"
+.Pp
+.Ft "void"
+.Fn AG_TableSetRowHeight "AG_Table *tbl" "int height"
+.Pp
+.Ft "void"
 .Fn AG_TableSetSeparator "AG_Table *tbl" "const char *sep"
 .Pp
 .Ft "AG_MenuItem *"
@@ -134,6 +140,12 @@ function requests an initial sizing, where
 is the width in pixels and
 .Fa nrows
 is the number of rows to display.
+.Pp
+.Fn AG_TableSetColHeight
+sets the size of column headers in pixels.
+.Fn AG_TableSetRowHeight
+sets the size of rows in pixels.
+In both cases, the default is dependent on the height of the default font.
 .Pp
 .Fn AG_TableSetSeparator
 changes the set of accepted field-separator characters in
