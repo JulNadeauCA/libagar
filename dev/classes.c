@@ -39,8 +39,10 @@ GenClassTable(AG_Table *tbl, AG_ObjectClass *cls)
 {
 	AG_ObjectClass *subcls;
 	
-	AG_TableAddRow(tbl, "%s:%d:%s", cls->name, cls->size,
-	    cls->libs[0] != '\0' ? cls->libs : "(none)");
+	AG_TableAddRow(tbl, "%s:%d:%s:%s",
+	    cls->name, cls->size,
+	    cls->libs[0] != '\0' ? cls->libs : "(none)",
+	    cls->hier);
 
 	TAILQ_FOREACH(subcls, &cls->sub, subclasses)
 		GenClassTable(tbl, subcls);
@@ -70,9 +72,10 @@ DEV_ClassInfo(void)
 
 	tbl = AG_TableNewPolled(win, AG_TABLE_EXPAND,
 	    PollClasses, NULL);
-	AG_TableAddCol(tbl, _("Name"), "<XXXXXXXXXXXXXXXXXXXXXXXX>", NULL);
+	AG_TableAddCol(tbl, _("Name"), "<XXXXXXXXXXXXXXX>", NULL);
 	AG_TableAddCol(tbl, _("Size"), "<XXXX>", NULL);
-	AG_TableAddCol(tbl, _("Modules"), NULL, NULL);
+	AG_TableAddCol(tbl, _("Modules"), "<XXXXXXX>", NULL);
+	AG_TableAddCol(tbl, _("Hierarchy"), NULL, NULL);
 
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
 	return (win);

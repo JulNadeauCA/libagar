@@ -348,7 +348,7 @@ ImportObject(AG_Event *event)
 void
 DEV_BrowserSaveTo(void *p, const char *name)
 {
-	char ext[AG_OBJECT_TYPE_MAX+3];
+	char ext[AG_OBJECT_HIER_MAX+3];
 	AG_Object *ob = p;
 	AG_Window *win;
 	AG_FileDlg *fd;
@@ -369,7 +369,7 @@ DEV_BrowserSaveTo(void *p, const char *name)
 void
 DEV_BrowserLoadFrom(void *p, const char *name)
 {
-	char ext[AG_OBJECT_TYPE_MAX+3];
+	char ext[AG_OBJECT_HIER_MAX+3];
 	AG_Object *ob = p;
 	AG_Window *win;
 	AG_FileDlg *fd;
@@ -720,7 +720,7 @@ CreateObjectDlg(AG_Event *event)
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		AG_LabelNewStatic(bo, 0, _("Type: %s"), cl->name);
+		AG_LabelNewStatic(bo, 0, _("Class: %s"), cl->hier);
 		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL, _("Name: "));
 		AG_WidgetFocus(tb);
 	}
