@@ -52,7 +52,7 @@ typedef union evarg {
  
 #define AG_OBJECT(v,t) \
  (AG_OfClass(event->argv[v].p,(t)))?event->argv[v].p:\
-  AG_ObjectMismatch(OBJECT(event->argv[v].p)->cls->name,(t))
+  AG_ObjectMismatch(OBJECT(event->argv[v].p)->cls->hier,(t))
 
 #else /* !DEBUG */
 
@@ -81,20 +81,26 @@ typedef union evarg {
 #define AG_SDLKEY(v) ((SDLKey)AG_INT(v))
 #define AG_SDLMOD(v) ((SDLMod)AG_INT(v))
 
-/* Event handler structure */
+/* Event / event handler structure */
 typedef struct ag_event {
-	char	name[AG_EVENT_NAME_MAX];
-	Uint	flags;
-#define	AG_EVENT_ASYNC		0x01	/* Event handler runs in own thread */
-#define AG_EVENT_PROPAGATE	0x02	/* Relay event to object descendents */
-#define AG_EVENT_SCHEDULED	0x04	/* Timing-dependent (read-only flag) */
+	char name[AG_EVENT_NAME_MAX];		/* String identifier */
+	
+	Uint flags;
+#define	AG_EVENT_ASYNC     0x01			/* Service in separate thread */
+#define AG_EVENT_PROPAGATE 0x02			/* Forward to child objs */
+#define AG_EVENT_SCHEDULED 0x04			/* Timing-dependent (RO) */
+
 	void (*handler)(struct ag_event *);
-	int	 argc, argc0;
-	AG_EvArg argv[AG_EVENT_ARGS_MAX];
-	int 	 argt[AG_EVENT_ARGS_MAX];
-	char	*argn[AG_EVENT_ARGS_MAX];
-	AG_Timeout timeout;
-	AG_TAILQ_ENTRY(ag_event) events;
+
+	int argc;				/* Total argument count */
+	int argc0;				/* Argument count (omitting
+						   PostEvent() arguments) */
+	AG_EvArg argv[AG_EVENT_ARGS_MAX];	/* Argument values */
+	int 	 argt[AG_EVENT_ARGS_MAX];	/* Argument types */
+	const char *argn[AG_EVENT_ARGS_MAX];	/* Argument names */
+
+	AG_Timeout timeout;			/* Execution timeout */
+	AG_TAILQ_ENTRY(ag_event) events;	/* For Object */
 } AG_Event;
 
 typedef void (*AG_EventFn)(AG_Event *);
@@ -102,6 +108,8 @@ typedef void (*AG_EventFn)(AG_Event *);
 __BEGIN_DECLS
 extern const char *agEvArgTypeNames[];
 
+void      AG_EventInit(AG_Event *);
+void      AG_EventArgs(AG_Event *, const char *, ...);
 AG_Event *AG_SetEvent(void *, const char *, AG_EventFn, const char *, ...);
 AG_Event *AG_AddEvent(void *, const char *, AG_EventFn, const char *, ...);
 void      AG_UnsetEvent(void *, const char *);
@@ -117,7 +125,7 @@ void      AG_ForwardEvent(void *, void *, AG_Event *);
 void      AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
 void      AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
 
-/* Immediately execute the given event handler. */
+/* Execute an event handler routine without processing any arguments. */
 static __inline__ void
 AG_ExecEventFn(void *obj, AG_Event *ev)
 {
@@ -139,7 +147,7 @@ __END_DECLS
 	AG_EVENT_BOUNDARY_CHECK(eev)				\
 	(eev)->argv[(eev)->argc].member = (val);		\
 	(eev)->argt[(eev)->argc] = (tname);			\
-	(eev)->argn[(eev)->argc] = ((aname) != NULL) ? (aname) : ""; \
+	(eev)->argn[(eev)->argc] = (aname);			\
 	(eev)->argc++;						\
 }
 #define AG_EVENT_INS_ARG(eev,ap,tname,member,t) { 		\
@@ -202,53 +210,56 @@ __END_DECLS
 	}
 
 __BEGIN_DECLS
+/*
+ * Push arguments onto an Event structure.
+ */
 static __inline__ void
-AG_EventPushPointer(AG_Event *ev, char *key, void *val)
+AG_EventPushPointer(AG_Event *ev, const char *key, void *val)
 {
 	AG_EVENT_INS_VAL(ev, AG_EVARG_POINTER, key, p, val);
 }
 static __inline__ void
-AG_EventPushString(AG_Event *ev, char *key, char *val)
+AG_EventPushString(AG_Event *ev, const char *key, char *val)
 {
 	AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, key, s, val);
 }
 static __inline__ void
-AG_EventPushChar(AG_Event *ev, char *key, char val)
+AG_EventPushChar(AG_Event *ev, const char *key, char val)
 {
 	AG_EVENT_INS_VAL(ev, AG_EVARG_CHAR, key, i, (int)val);
 }
 static __inline__ void
-AG_EventPushUChar(AG_Event *ev, char *key, Uchar val)
+AG_EventPushUChar(AG_Event *ev, const char *key, Uchar val)
 {
 	AG_EVENT_INS_VAL(ev, AG_EVARG_UCHAR, key, i, (int)val);
 }
 static __inline__ void
-AG_EventPushInt(AG_Event *ev, char *key, int val)
+AG_EventPushInt(AG_Event *ev, const char *key, int val)
 {
 	AG_EVENT_INS_VAL(ev, AG_EVARG_INT, key, i, val);
 }
 static __inline__ void
-AG_EventPushUInt(AG_Event *ev, char *key, Uint val)
+AG_EventPushUInt(AG_Event *ev, const char *key, Uint val)
 {
 	AG_EVENT_INS_VAL(ev, AG_EVARG_UINT, key, i, (int)val);
 }
 static __inline__ void
-AG_EventPushLong(AG_Event *ev, char *key, long val)
+AG_EventPushLong(AG_Event *ev, const char *key, long val)
 {
 	AG_EVENT_INS_VAL(ev, AG_EVARG_LONG, key, li, val);
 }
 static __inline__ void
-AG_EventPushULong(AG_Event *ev, char *key, Ulong val)
+AG_EventPushULong(AG_Event *ev, const char *key, Ulong val)
 {
 	AG_EVENT_INS_VAL(ev, AG_EVARG_ULONG, key, li, val);
 }
 static __inline__ void
-AG_EventPushFloat(AG_Event *ev, char *key, float val)
+AG_EventPushFloat(AG_Event *ev, const char *key, float val)
 {
 	AG_EVENT_INS_VAL(ev, AG_EVARG_FLOAT, key, f, (double)val);
 }
 static __inline__ void
-AG_EventPushDouble(AG_Event *ev, char *key, double val)
+AG_EventPushDouble(AG_Event *ev, const char *key, double val)
 {
 	AG_EVENT_INS_VAL(ev, AG_EVARG_DOUBLE, key, f, val);
 }

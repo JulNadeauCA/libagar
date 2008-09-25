@@ -417,34 +417,40 @@ The following functions allow such manipulations.
 .Pp
 .nr nS 1
 .Ft void
-.Fn AG_EventPushPointer "AG_Event *ev" "char *key" "void *val"
+.Fn AG_EventInit "AG_Event *ev"
 .Pp
 .Ft void
-.Fn AG_EventPushString "AG_Event *ev" "char *key" "char *val"
+.Fn AG_EventArgs "const char *fmt" "..."
 .Pp
 .Ft void
-.Fn AG_EventPushChar "AG_Event *ev" "char *key" "char val"
+.Fn AG_EventPushPointer "AG_Event *ev" "const char *key" "void *val"
 .Pp
 .Ft void
-.Fn AG_EventPushUChar "AG_Event *ev" "char *key" "Uchar val"
+.Fn AG_EventPushString "AG_Event *ev" "const char *key" "char *val"
 .Pp
 .Ft void
-.Fn AG_EventPushInt "AG_Event *ev" "char *key" "int val"
+.Fn AG_EventPushChar "AG_Event *ev" "const char *key" "char val"
 .Pp
 .Ft void
-.Fn AG_EventPushUInt "AG_Event *ev" "char *key" "Uint val"
+.Fn AG_EventPushUChar "AG_Event *ev" "const char *key" "Uchar val"
 .Pp
 .Ft void
-.Fn AG_EventPushLong "AG_Event *ev" "char *key" "long val"
+.Fn AG_EventPushInt "AG_Event *ev" "const char *key" "int val"
 .Pp
 .Ft void
-.Fn AG_EventPushULong "AG_Event *ev" "char *key" "Ulong val"
+.Fn AG_EventPushUInt "AG_Event *ev" "const char *key" "Uint val"
 .Pp
 .Ft void
-.Fn AG_EventPushFloat "AG_Event *ev" "char *key" "float val"
+.Fn AG_EventPushLong "AG_Event *ev" "const char *key" "long val"
 .Pp
 .Ft void
-.Fn AG_EventPushDouble "AG_Event *ev" "char *key" "douvle val"
+.Fn AG_EventPushULong "AG_Event *ev" "const char *key" "Ulong val"
+.Pp
+.Ft void
+.Fn AG_EventPushFloat "AG_Event *ev" "const char *key" "float val"
+.Pp
+.Ft void
+.Fn AG_EventPushDouble "AG_Event *ev" "const char *key" "douvle val"
 .Pp
 .Ft void
 .Fn AG_EVENT_PUSH_ARG "va_list ap, char formatChar, AG_Event *ev"
@@ -453,6 +459,16 @@ The following functions allow such manipulations.
 .Fn AG_EventPopArgument "AG_Event *ev"
 .Pp
 .nr nS 0
+The
+.Fn AG_EventInit
+routine initializes an
+.Ft AG_Event
+structure with no arguments.
+.Pp
+.Fn AG_EventArgs
+specifies a list of arguments in the same format as
+.Fn AG_SetEvent .
+.Pp
 The
 .Fn AG_EventPush<TYPE>
 functions append an argument to the end of the argument list for the specified
@@ -564,6 +580,23 @@ AG_Button *btn = AG_ButtonNew(NULL, 0, "Say hello");
 AG_Event *event = AG_SetEvent(btn, "button-pushed", SayHello, NULL);
 AG_EventPushString(event, NULL, "World");
 .Ed
+.Pp
+The following code fragment invokes an event handler routine directly,
+independently of the object system:
+.Bd -literal -offset indent
+void
+SayHello(AG_Event *event)
+{
+	char *foostring = AG_STRING(1);
+	int fooint = AG_INT(2);
+}
+
+AG_Event event;
+AG_EventInit(&event);
+AG_EventArgs(&event, "%s,%d", "Foo string", 1234);
+SayHello(&event);
+.Ed
+
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,
