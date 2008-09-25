@@ -1,8 +1,10 @@
 /*	Public domain	*/
 
-#define AG_OBJECT_TYPE_MAX 128
+#define AG_OBJECT_HIER_MAX 256
+#define AG_OBJECT_TYPE_MAX 48
 #define AG_OBJECT_NAME_MAX 128
 #define AG_OBJECT_PATH_MAX 1024
+#define AG_OBJECT_LIBS_MAX 128
 #define AG_OBJECT_DIGEST_MAX 170
 
 #define AGOBJECT(ob) ((struct ag_object *)(ob))
@@ -50,7 +52,8 @@ typedef struct ag_object {
 #define AG_OBJECT_REMAIN_DATA	 0x0400	/* Keep user data resident */
 #define AG_OBJECT_DEBUG		 0x0800	/* Enable debugging */
 #define AG_OBJECT_NAME_ONATTACH	 0x1000	/* Generate name on attach */
-#define AG_OBJECT_CHLD_AUTOSAVE	 0x2000 /* Include child obj data in archive */
+#define AG_OBJECT_CHLD_AUTOSAVE	 0x2000	/* Include child obj data in archive */
+#define AG_OBJECT_DEBUG_DATA	 0x4000	/* Datafiles contain debug info */
 #define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_RELOAD_PROPS|\
  				 AG_OBJECT_INDESTRUCTIBLE|\
 				 AG_OBJECT_PRESERVE_DEPS|\
@@ -87,6 +90,14 @@ typedef struct ag_object {
 	void *debugPtr;
 #endif
 } AG_Object;
+
+/* Object archive header information. */
+typedef struct ag_object_header {
+	AG_ObjectClassSpec cs;			/* Class specification */
+	Uint32 dataOffs;			/* Dataset offset */
+	AG_Version ver;				/* AG_Object version */
+	Uint flags;				/* Object flags */
+} AG_ObjectHeader;
 
 /* Checksum method for ObjectCopyChecksum(). */
 enum ag_object_checksum_alg {
@@ -138,8 +149,6 @@ enum ag_object_checksum_alg {
 # define OBJECT_PERSISTENT(ob) !(AGOBJECT(ob)->flags & AG_OBJECT_NON_PERSISTENT)
 # define OBJECT_DEBUG(ob)      (AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
 
-# define OBJECT_INITIALIZER(obj,n,pfx,cls) \
-         AGOBJECT_INITIALIZER((obj),(n),(pfx),(cls))
 # define OBJECT_FOREACH_CHILD(var,ob,t) \
          AGOBJECT_FOREACH_CHILD((var),(ob),t)
 # define OBJECT_FOREACH_CHILD_REVERSE(var,ob,t) \
@@ -181,6 +190,7 @@ int	 AG_ObjectChangedAll(void *);
 void	*AG_ObjectFind(void *, const char *);
 void	*AG_ObjectFindF(void *, const char *, ...)
 	                FORMAT_ATTRIBUTE(printf, 2, 3);
+void	*AG_ObjectFindParent(void *, const char *, const char *);
 int	 AG_ObjectInUse(void *);
 void	 AG_ObjectSetName(void *, const char *, ...)
 	                  FORMAT_ATTRIBUTE(printf, 2, 3);
@@ -210,18 +220,20 @@ int	 AG_ObjectPageOut(void *);
 int	 AG_ObjectSerialize(void *, AG_DataSource *);
 int	 AG_ObjectUnserialize(void *, AG_DataSource *);
 int	 AG_ObjectSaveToFile(void *, const char *);
-#define	 AG_ObjectSave(p) AG_ObjectSaveToFile((p),NULL)
+#define	 AG_ObjectSave(p) \
+	 AG_ObjectSaveToFile((p),NULL)
 int	 AG_ObjectSaveAll(void *);
-
-#define	 AG_ObjectLoad(p)         AG_ObjectLoadFromFile((p),NULL)
-#define	 AG_ObjectLoadData(o,f)   AG_ObjectLoadDataFromFile((o),(f),NULL)
-#define	 AG_ObjectLoadGeneric(p)  AG_ObjectLoadGenericFromFile((p),NULL)
-
+#define	 AG_ObjectLoad(p) \
+	 AG_ObjectLoadFromFile((p),NULL)
+#define	 AG_ObjectLoadData(o,f) \
+	 AG_ObjectLoadDataFromFile((o),(f),NULL)
+#define	 AG_ObjectLoadGeneric(p) \
+	 AG_ObjectLoadGenericFromFile((p),NULL)
 int	 AG_ObjectLoadFromFile(void *, const char *);
 int	 AG_ObjectLoadGenericFromFile(void *, const char *);
-
 int	 AG_ObjectResolveDeps(void *);
 int	 AG_ObjectLoadDataFromFile(void *, int *, const char *);
+int	 AG_ObjectReadHeader(AG_DataSource *, AG_ObjectHeader *);
 
 AG_ObjectDep *AG_ObjectAddDep(void *, void *, int);
 int           AG_ObjectFindDep(void *, Uint32, void **);
@@ -267,34 +279,6 @@ void AG_ObjectUnlockDebug(AG_Object *, const char *);
 /* Legacy routines */
 void    AG_ObjectMove(void *, void *);
 #define AG_ObjectIsClass(obj,cname) AG_OfClass((obj),(cname))
-
-/*
- * Traverse an object's ancestry looking for a matching parent object.
- * THREADS: Result valid as long as Object's VFS remains locked.
- */
-static __inline__ void *
-AG_ObjectFindParent(void *p, const char *name, const char *t)
-{
-	AG_Object *ob = AGOBJECT(p);
-
-	AG_LockVFS(p);
-	while (ob != NULL) {
-		AG_Object *po = AGOBJECT(ob->parent);
-
-		if (po == NULL) {
-			goto fail;
-		}
-		if ((t == NULL || strcmp(po->cls->name, t) == 0) &&
-		    (name == NULL || strcmp(po->name, name) == 0)) {
-			AG_UnlockVFS(p);
-			return ((void *)po);
-		}
-		ob = AGOBJECT(ob->parent);
-	}
-fail:
-	AG_UnlockVFS(p);
-	return (NULL);
-}
 
 /*
  * Return a child object by name.

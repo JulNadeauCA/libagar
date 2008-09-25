@@ -48,7 +48,7 @@
 AG_ObjectClass agObjectClass = {
 	"Agar(Object)",
 	sizeof(AG_Object),
-	{ 7, 1 },
+	{ 7, 2 },
 	NULL,	/* init */
 	NULL,	/* reinit */
 	NULL,	/* destroy */
@@ -62,7 +62,7 @@ int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
 int agObjectBackups = 1;	   /* Backup object save files. */
 
 void
-AG_ObjectInit(void *p, void *cls)
+AG_ObjectInit(void *p, void *cl)
 {
 	AG_Object *ob = p;
 	AG_ObjectClass **hier;
@@ -71,7 +71,7 @@ AG_ObjectInit(void *p, void *cls)
 	ob->name[0] = '\0';
 	ob->save_pfx = "/world";
 	ob->archivePath = NULL;
-	ob->cls = (cls != NULL) ? cls : &agObjectClass;
+	ob->cls = (cl != NULL) ? cl : &agObjectClass;
 	ob->parent = NULL;
 	ob->root = ob;
 	ob->flags = 0;
@@ -106,21 +106,21 @@ AG_ObjectInit(void *p, void *cls)
 }
 
 void
-AG_ObjectInitStatic(void *p, void *cls)
+AG_ObjectInitStatic(void *p, void *cl)
 {
-	AG_ObjectInit(p, cls);
+	AG_ObjectInit(p, cl);
 	OBJECT(p)->flags |= AG_OBJECT_STATIC;
 }
 
 /* Create a new object instance and mark it resident. */
 void *
-AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cls)
+AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cl)
 {
 	char nameGen[AG_OBJECT_NAME_MAX];
 	AG_Object *obj;
 
 	if (name == NULL) {
-		AG_ObjectGenName(parent, cls, nameGen, sizeof(nameGen));
+		AG_ObjectGenName(parent, cl, nameGen, sizeof(nameGen));
 	} else {
 		if (parent != NULL &&
 		    AG_ObjectFindChild(parent, name) != NULL) {
@@ -130,11 +130,11 @@ AG_ObjectNew(void *parent, const char *name, AG_ObjectClass *cls)
 		}
 	}
 	
-	if ((obj = malloc(cls->size)) == NULL) {
+	if ((obj = malloc(cl->size)) == NULL) {
 		AG_SetError("Out of memory");
 		return (NULL);
 	}
-	AG_ObjectInit(obj, cls);
+	AG_ObjectInit(obj, cl);
 	AG_ObjectSetName(obj, "%s", (name != NULL) ? name : nameGen);
 	obj->flags |= AG_OBJECT_RESIDENT;
 	if (parent != NULL) {
@@ -548,6 +548,34 @@ AG_ObjectFindF(void *vfsRoot, const char *fmt, ...)
 		AG_SetError(_("The object `%s' does not exist."), path);
 	}
 	return (rv);
+}
+
+/*
+ * Traverse an object's ancestry looking for parent object of the given class.
+ * THREADS: Result valid as long as Object's VFS remains locked.
+ */
+void *
+AG_ObjectFindParent(void *p, const char *name, const char *t)
+{
+	AG_Object *ob = AGOBJECT(p);
+
+	AG_LockVFS(p);
+	while (ob != NULL) {
+		AG_Object *po = AGOBJECT(ob->parent);
+
+		if (po == NULL) {
+			goto fail;
+		}
+		if ((t == NULL || AG_ClassIsNamed(po->cls, t)) &&
+		    (name == NULL || strcmp(po->name, name) == 0)) {
+			AG_UnlockVFS(p);
+			return ((void *)po);
+		}
+		ob = AGOBJECT(ob->parent);
+	}
+fail:
+	AG_UnlockVFS(p);
+	return (NULL);
 }
 
 /* Clear the dependency table. */
@@ -984,21 +1012,108 @@ fail:
 	return (-1);
 }
 
+/* Read an Agar archive header. */
+int
+AG_ObjectReadHeader(AG_DataSource *ds, AG_ObjectHeader *oh)
+{
+	/* Signature and version data */
+	if (AG_ReadVersion(ds, agObjectClass.name, &agObjectClass.ver, &oh->ver)
+	    == -1)
+		return (-1);
+
+	/* Class hierarchy and module references */
+	if (oh->ver.minor >= 2) {
+		AG_ObjectClassSpec *cs = &oh->cs;
+		char *c;
+
+		AG_CopyString(cs->hier, ds, sizeof(cs->hier));
+		AG_CopyString(cs->libs, ds, sizeof(cs->libs));
+
+		Strlcpy(cs->spec, cs->hier, sizeof(cs->spec));
+		if (cs->libs[0] != '\0') {
+			Strlcat(cs->spec, "@", sizeof(cs->spec));
+			Strlcat(cs->spec, cs->libs, sizeof(cs->spec));
+		}
+		if ((c = strrchr(cs->hier, ':')) != NULL && c[1] != '\0') {
+			Strlcpy(cs->name, &c[1], sizeof(cs->name));
+		} else {
+			Strlcpy(cs->name, cs->hier, sizeof(cs->name));
+		}
+	} else {
+		oh->cs.hier[0] = '\0';
+		oh->cs.libs[0] = '\0';
+		oh->cs.spec[0] = '\0';
+		oh->cs.name[0] = '\0';
+	}
+
+	/* Dataset start offset */
+	oh->dataOffs = AG_ReadUint32(ds);
+
+	/* Object flags */
+	oh->flags = (Uint)AG_ReadUint32(ds);
+
+	return (0);
+}
+
+/* Load an object dependency table. */
+static int
+ReadDependencyTable(AG_DataSource *ds, AG_Object *ob)
+{
+	Uint32 i, count;
+	AG_ObjectDep *dep;
+
+	count = AG_ReadUint32(ds);
+	for (i = 0; i < count; i++) {
+		if ((dep = malloc(sizeof(AG_ObjectDep))) == NULL) {
+			AG_SetError("Out of memory for dependency table");
+			goto fail;
+		}
+		if ((dep->path = AG_ReadString(ds)) == NULL) {
+			free(dep);
+			goto fail;
+		}
+		dep->obj = NULL;
+		dep->count = 0;
+		dep->persistent = 1;
+		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
+#ifdef OBJDEBUG
+		Debug(ob, "Dependency: %s\n", dep->path);
+#endif
+	}
+	return (0);
+fail:
+	AG_ObjectFreeDeps(ob);
+	return (-1);
+}
+
+/* Return the default datafile path for the given object. */
+static int
+GetDatafile(char *path, AG_Object *ob)
+{
+	if (ob->archivePath != NULL) {
+		Strlcpy(path, ob->archivePath, AG_PATHNAME_MAX);
+	} else {
+		if (AG_ObjectCopyFilename(ob, path, AG_PATHNAME_MAX) == -1)
+			return (-1);
+	}
+	return (0);
+}
+
 /*
- * Load the generic part of an object from archive. If the archived
- * object has children, create instances for them and load their
- * generic part as well.
+ * Load an Agar object (or a virtual filesystem of Agar objects) from an
+ * archive file.
+ *
+ * Only the generic Object information is read, datasets are skipped and
+ * dependencies are left unresolved.
  */
 int
 AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 {
-	char path[AG_PATHNAME_MAX];
-	AG_Version ver;
 	AG_Object *ob = p;
-	AG_ObjectDep *dep;
+	AG_ObjectHeader oh;
+	char path[AG_PATHNAME_MAX];
 	AG_DataSource *ds;
 	Uint32 count, i;
-	Uint flags, flags_save;
 	
 	if (!OBJECT_PERSISTENT(ob)) {
 		AG_SetError(_("Object is non-persistent"));
@@ -1011,12 +1126,8 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	if (pPath != NULL) {
 		Strlcpy(path, pPath, sizeof(path));
 	} else {
-		if (ob->archivePath != NULL) {
-			Strlcpy(path, ob->archivePath, sizeof(path));
-		} else {
-			if (AG_ObjectCopyFilename(ob, path, sizeof(path)) == -1)
-				goto fail_unlock;
-		}
+		if (GetDatafile(path, ob) == -1)
+			goto fail_unlock;
 	}
 #ifdef OBJDEBUG
 	Debug(ob, "Loading generic data from %s\n", path);
@@ -1025,117 +1136,80 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		AG_SetError("%s: %s", path, AG_GetError());
 		goto fail_unlock;
 	}
-	if (AG_ReadVersion(ds, agObjectClass.name, &agObjectClass.ver, &ver)
-	    == -1)
-		goto fail;
 
-	/*
-	 * Must free the resident data in order to clear the dependencies.
-	 * Sets the WAS_RESIDENT flag to be used at data load stage.
-	 */
+	/* Free any resident dataset in order to clear the dependencies. */
 	if (OBJECT_RESIDENT(ob)) {
 		ob->flags |= AG_OBJECT_WAS_RESIDENT;
 		AG_ObjectFreeDataset(ob);
 	}
 	AG_ObjectFreeDeps(ob);
 
-	/* Skip dataset offset */
-	(void)AG_ReadUint32(ds);
-
-	/* Read and verify the generic object flags. */
-	flags_save = ob->flags;
-	flags = (int)AG_ReadUint32(ds);
-	if (flags & (AG_OBJECT_NON_PERSISTENT|AG_OBJECT_RESIDENT|
-	             AG_OBJECT_WAS_RESIDENT)) {
-		AG_SetError("%s: inconsistent flags (0x%08x)", ob->name,
-		    flags);
+	/* Object header */
+	if (AG_ObjectReadHeader(ds, &oh) == -1) {
 		goto fail;
 	}
-	ob->flags = flags | (flags_save & AG_OBJECT_WAS_RESIDENT);
+	ob->flags &= ~(AG_OBJECT_SAVED_FLAGS);
+	ob->flags |= oh.flags;
 
-	/* Decode the saved dependencies (to be resolved later). */
-	count = AG_ReadUint32(ds);
-	for (i = 0; i < count; i++) {
-		dep = Malloc(sizeof(AG_ObjectDep));
-		dep->path = AG_ReadString(ds);
-		dep->obj = NULL;
-		dep->count = 0;
-		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
-#ifdef OBJDEBUG
-		Debug(ob, "Dependency: %s\n", dep->path);
-#endif
-	}
-
-	/* Decode the generic properties. */
+	/* Dependencies, properties */
+	if (ReadDependencyTable(ds, ob) == -1)
+		goto fail;
 	if (AG_PropLoad(ob, ds) == -1)
 		goto fail;
-
+	
 	/* Load the generic part of the archived child objects. */
 	count = AG_ReadUint32(ds);
 	for (i = 0; i < count; i++) {
 		char cname[AG_OBJECT_NAME_MAX];
-		char classID[AG_OBJECT_TYPE_MAX];
-		AG_Object *eob, *child;
+		char hier[AG_OBJECT_HIER_MAX];
+		AG_Object *chld;
+		AG_ObjectClass *cl;
 
-	 	/* XXX ensure that there are no duplicate names. */
+	 	/* TODO check that there are no duplicate names. */
 		AG_CopyString(cname, ds, sizeof(cname));
-		AG_CopyString(classID, ds, sizeof(classID));
+		AG_CopyString(hier, ds, sizeof(hier));
 
-		OBJECT_FOREACH_CHILD(eob, ob, ag_object) {
-			if (strcmp(eob->name, cname) == 0) 
-				break;
-		}
-		if (eob != NULL) {
-			/*
-			 * Reload the state of an existing object instance.
-			 */
-			/*
-			 * XXX TODO Allow these cases to be handled by a
-			 * special callback function.
-			 */
-			if (strcmp(eob->cls->name, classID) != 0) {
-				AG_FatalError("AG_ObjectLoad: Existing object "
-				              "of different type in archive");
-			}
-			if (!OBJECT_PERSISTENT(eob)) {
-				AG_FatalError("AG_ObjectLoad: Existing "
-				              "non-persistent object");
-			}
-			if (AG_ObjectLoadGeneric(eob) == -1) {
+		/* Look for an existing object of the given name. */
+		if ((chld = AG_ObjectFindChild(ob, cname)) != NULL) {
+			if (strcmp(chld->cls->hier, hier) != 0) {
+				AG_SetError("Archived object `%s' clashes with "
+				            "existing object of different type",
+					    cname);
 				goto fail;
 			}
-		} else {
-			AG_ObjectClass *cl;
+			if (!OBJECT_PERSISTENT(chld)) {
+				AG_SetError("Archived object `%s' clashes with "
+				            "existing non-persistent object",
+					    cname);
+				goto fail;
+			}
+			if (AG_ObjectLoadGeneric(chld) == -1) {
+				goto fail;
+			}
+			continue;
+		}
 
-			/* 
-			 * Create a new object instance. If the class of the
-			 * archived object is not registered and includes a
-			 * "@lib" specification, the given library may get
-			 * dynamically loaded at this point.
-			 */
-			if ((cl = AG_LoadClass(classID)) == NULL) {
-				AG_SetError("%s: %s", ob->name, AG_GetError());
-				if (agObjectIgnoreUnknownObjs) {
+		/* Create a new child object. */
+		if ((cl = AG_LoadClass(hier)) == NULL) {
+			AG_SetError("%s: %s", ob->name, AG_GetError());
+			if (agObjectIgnoreUnknownObjs) {
 #ifdef OBJDEBUG
-					Debug(ob, "%s; ignoring\n",
-					    AG_GetError());
+				Debug(ob, "%s; ignoring\n", AG_GetError());
 #endif
-					continue;
-				} else {
-					goto fail;
-				}
+				continue;
+			} else {
 				goto fail;
 			}
-
-			child = Malloc(cl->size);
-			AG_ObjectInit(child, cl);
-			AG_ObjectSetName(child, "%s", cname);
-			AG_ObjectAttach(ob, child);
-			if (AG_ObjectLoadGeneric(child) == -1)
-				goto fail;
+			goto fail;
 		}
+		chld = Malloc(cl->size);
+		AG_ObjectInit(chld, cl);
+		AG_ObjectSetName(chld, "%s", cname);
+		AG_ObjectAttach(ob, chld);
+		if (AG_ObjectLoadGeneric(chld) == -1)
+			goto fail;
 	}
-	AG_PostEvent(ob, ob->root, "object-post-load-generic", "%s", path);
+
 	AG_CloseFile(ds);
 	AG_ObjectUnlock(ob);
 	AG_UnlockVFS(ob);
@@ -1150,39 +1224,34 @@ fail_unlock:
 	return (-1);
 }
 
-/* Load only the dataset part of an object archive. */
+/* Load an Agar object dataset from an object archive file. */
 int
 AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 {
+	AG_ObjectHeader oh;
 	char path[AG_PATHNAME_MAX];
 	AG_Object *ob = p;
 	AG_DataSource *ds;
-	off_t dataOffs;
 	AG_Version ver;
 	AG_ObjectClass **hier;
 	int i, nHier;
 	
 	AG_LockVFS(ob);
 	AG_ObjectLock(ob);
+
 	if (!OBJECT_PERSISTENT(ob)) {
-		AG_SetError(_("Object is non-persistent"));
 		goto out;
 	}
 	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
-
 	*dataFound = 1;
 
+	/* Open the file. */
 	if (pPath != NULL) {
 		Strlcpy(path, pPath, sizeof(path));
 	} else {
-		if (ob->archivePath != NULL) {
-			Strlcpy(path, ob->archivePath, sizeof(path));
-		} else {
-			if (AG_ObjectCopyFilename(ob, path, sizeof(path))
-			    == -1) {
-				*dataFound = 0;
-				goto fail_unlock;
-			}
+		if (GetDatafile(path, ob) == -1) {
+			*dataFound = 0;
+			goto fail_unlock;
 		}
 	}
 #ifdef OBJDEBUG
@@ -1193,32 +1262,37 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		*dataFound = 0;
 		goto fail_unlock;
 	}
-	if (AG_ReadVersion(ds, agObjectClass.name, &agObjectClass.ver, NULL)
-	    == -1)
+
+	/* Seek to the start of the dataset. */
+	if (AG_ObjectReadHeader(ds, &oh) == -1 ||
+	    AG_Seek(ds, oh.dataOffs, AG_SEEK_SET) == -1 ||
+	    AG_ReadVersion(ds, ob->cls->name, &ob->cls->ver, &ver) == -1)
 		goto fail;
 
-	/* Seek to dataset offset */
-	dataOffs = (off_t)AG_ReadUint32(ds);
-	AG_Seek(ds, dataOffs, AG_SEEK_SET);
-
+	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
+		AG_SetSourceDebug(ds, 1);
+	}
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == -1) {
+		goto fail;
+	}
 	if (OBJECT_RESIDENT(ob)) {
 		AG_ObjectFreeDataset(ob);
 	}
-	if (AG_ReadVersion(ds, ob->cls->name, &ob->cls->ver, &ver) == -1) {
-		goto fail;
-	}
-	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
-		for (i = 0; i < nHier; i++) {
-			if (hier[i]->load == NULL)
-				continue;
-			if (hier[i]->load(ob, ds, &ver) == -1)
-				goto fail;
+	for (i = 0; i < nHier; i++) {
+#ifdef CLASSDEBUG
+		Debug(ob, "Loading as %s\n", hier[i]->name);
+#endif
+		if (hier[i]->load == NULL)
+			continue;
+		if (hier[i]->load(ob, ds, &ver) == -1) {
+			Free(hier);
+			goto fail;
 		}
-		Free(hier);
-	} else {
-		AG_FatalError("AG_ObjectLoad: %s: %s", ob->name, AG_GetError());
 	}
+	Free(hier);
+
 	ob->flags |= AG_OBJECT_RESIDENT;
+
 	AG_CloseFile(ds);
 	AG_PostEvent(ob, ob->root, "object-post-load-data", "%s", path);
 out:
@@ -1285,20 +1359,22 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	AG_Object *ob = p;
 	off_t countOffs, dataOffs;
 	Uint32 count;
-	AG_Object *child;
+	AG_Object *chld;
 	AG_ObjectDep *dep;
 	AG_ObjectClass **hier;
 	int i, nHier;
 
 	AG_ObjectLock(ob);
-
+	
 	/* Header */
 	AG_WriteVersion(ds, agObjectClass.name, &agObjectClass.ver);
+	AG_WriteString(ds, ob->cls->hier);
+	AG_WriteString(ds, ob->cls->libs);
 	dataOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);					/* Data offs */
 	AG_WriteUint32(ds, (Uint32)(ob->flags & AG_OBJECT_SAVED_FLAGS));
 
-	/* Dependency table */
+	/* Dependency and property tables */
 	countOffs = AG_Tell(ds);
 	AG_WriteUint32(ds, 0);
 	for (dep = TAILQ_FIRST(&ob->deps), count = 0;
@@ -1314,8 +1390,6 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 		count++;
 	}
 	AG_WriteUint32At(ds, count, countOffs);
-
-	/* Property table */
 	if (AG_PropSave(ob, ds) == -1)
 		goto fail;
 	
@@ -1324,12 +1398,12 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 		countOffs = AG_Tell(ds);
 		AG_WriteUint32(ds, 0);
 		count = 0;
-		TAILQ_FOREACH(child, &ob->children, cobjs) {
-			if (!OBJECT_PERSISTENT(child)) {
+		TAILQ_FOREACH(chld, &ob->children, cobjs) {
+			if (!OBJECT_PERSISTENT(chld)) {
 				continue;
 			}
-			AG_WriteString(ds, child->name);
-			AG_WriteString(ds, child->cls->name);
+			AG_WriteString(ds, chld->name);
+			AG_WriteString(ds, chld->cls->hier);
 			count++;
 		}
 		AG_WriteUint32At(ds, count, countOffs);
@@ -1340,106 +1414,108 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 	/* Dataset */
 	AG_WriteUint32At(ds, AG_Tell(ds), dataOffs);
 	AG_WriteVersion(ds, ob->cls->name, &ob->cls->ver);
-	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
-		for (i = 0; i < nHier; i++) {
-			if (hier[i]->save == NULL)
-				continue;
-			if (hier[i]->save(ob, ds) == -1)
-				goto fail;
-		}
-		Free(hier);
-	} else {
-		AG_FatalError("AG_ObjectSave: %s: %s", ob->name, AG_GetError());
-	}
 
+	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
+		AG_SetSourceDebug(ds, 1);
+	}
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == -1) {
+		goto fail;
+	}
+	for (i = 0; i < nHier; i++) {
+#ifdef CLASSDEBUG
+		Debug(ob, "Saving as %s\n", hier[i]->name);
+#endif
+		if (hier[i]->save == NULL)
+			continue;
+		if (hier[i]->save(ob, ds) == -1) {
+			Free(hier);
+			goto fail;
+		}
+	}
+	Free(hier);
+
+	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
+		AG_SetSourceDebug(ds, 0);
+	}
 	AG_ObjectUnlock(ob);
 	return (0);
 fail:
+	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
+		AG_SetSourceDebug(ds, 0);
+	}
 	AG_ObjectUnlock(ob);
 	return (-1);
 }
 
 /*
- * Unserialize a single object from an arbitrary AG_DataSource(3). The
- * archived object must not have any child objects attached.
+ * Unserialize single object (not a VFS) from an arbitrary AG_DataSource(3).
+ * To unserialize complete virtual filesystems, see AG_ObjectLoadFromFile().
  */
 int
 AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 {
-	char path[AG_PATHNAME_MAX];
-	AG_Version ver;
 	AG_Object *ob = p;
-	AG_ObjectDep *dep;
-	Uint32 count, i;
-	Uint flags, flags_save;
-	AG_ObjectClass **hier;
-	int nHier;
+	AG_ObjectHeader oh;
+	AG_Version ver;
+	AG_ObjectClass **hier = NULL;
+	int i, nHier;
 	
 	AG_ObjectLock(ob);
 	AG_ObjectCancelTimeouts(ob, AG_CANCEL_ONLOAD);
 
-	/* Header */
-	if (AG_ReadVersion(ds, agObjectClass.name, &agObjectClass.ver, NULL)
-	    == -1) {
+	/* Object header */
+	if (AG_ObjectReadHeader(ds, &oh) == -1) {
 		goto fail;
 	}
-	(void)AG_ReadUint32(ds);			/* Dataset offset */
+	ob->flags &= ~(AG_OBJECT_SAVED_FLAGS);
+	ob->flags |= oh.flags;
 
-	flags_save = ob->flags;
-	flags = (int)AG_ReadUint32(ds);
-	if (flags & (AG_OBJECT_NON_PERSISTENT|AG_OBJECT_RESIDENT|
-	             AG_OBJECT_WAS_RESIDENT)) {
-		AG_SetError("%s: inconsistent flags (0x%08x)", ob->name,
-		    flags);
+	/* Dependencies, properties */
+	if (ReadDependencyTable(ds, ob) == -1)
 		goto fail;
-	}
-	ob->flags = flags | (flags_save & AG_OBJECT_WAS_RESIDENT);
-
-	/* Dependency table (to be resolved later) */
-	count = AG_ReadUint32(ds);
-	for (i = 0; i < count; i++) {
-		dep = Malloc(sizeof(AG_ObjectDep));
-		dep->path = AG_ReadString(ds);
-		dep->obj = NULL;
-		dep->count = 0;
-		dep->persistent = 1;
-		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
-#ifdef OBJDEBUG
-		Debug(ob, "Dependency: %s\n", dep->path);
-#endif
-	}
-
-	/* Property table */
 	if (AG_PropLoad(ob, ds) == -1)
 		goto fail;
 
-	/* Table of child objects (ignored here) */
+	/* Table of child objects, expected empty. */
 	if (AG_ReadUint32(ds) != 0) {
 		AG_SetError("Archived object has children");
 		goto fail;
 	}
 
 	/* Dataset */
-	if (AG_ReadVersion(ds, ob->cls->name, &ob->cls->ver, &ver) == -1) {
+	if (AG_ReadVersion(ds, ob->cls->name, &ob->cls->ver, &ver) == -1)
+		goto fail;
+
+	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
+		AG_SetSourceDebug(ds, 1);
+	}
+	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == -1) {
 		goto fail;
 	}
-	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
-		for (i = 0; i < (Uint32)nHier; i++) {
-			if (hier[i]->load == NULL)
-				continue;
-			if (hier[i]->load(ob, ds, &ver) == -1)
-				goto fail;
+	for (i = 0; i < nHier; i++) {
+#ifdef CLASSDEBUG
+		Debug(ob, "Loading as %s\n", hier[i]->name);
+#endif
+		if (hier[i]->load == NULL)
+			continue;
+		if (hier[i]->load(ob, ds, &ver) == -1) {
+			Free(hier);
+			goto fail;
 		}
-		Free(hier);
-	} else {
-		AG_FatalError("AG_ObjectLoad: %s: %s", ob->name, AG_GetError());
 	}
+	Free(hier);
+
 	ob->flags |= AG_OBJECT_RESIDENT;
 
-	AG_PostEvent(ob, ob->root, "object-post-load-generic", "%s", path);
+	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
+		AG_SetSourceDebug(ds, 0);
+	}
 	AG_ObjectUnlock(ob);
 	return (0);
 fail:
+	if (ob->flags & AG_OBJECT_DEBUG_DATA) {
+		AG_SetSourceDebug(ds, 0);
+	}
 	AG_ObjectFreeDataset(ob);
 	AG_ObjectFreeDeps(ob);
 	AG_ObjectUnlock(ob);
@@ -1498,6 +1574,8 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 				 */
 				ob->flags |= AG_OBJECT_RESIDENT;
 			} else {
+				AG_FatalError("LoadData failed: %s",
+				    AG_GetError());
 				AG_SetError("Failed to load non-resident "
 				            "object for save: %s",
 				    AG_GetError());
@@ -1621,9 +1699,9 @@ AG_ObjectSetArchivePath(void *p, const char *path)
 
 /* Change an object's class. This is thread unsafe and should not be used. */
 void
-AG_ObjectSetClass(void *p, void *cls)
+AG_ObjectSetClass(void *p, void *cl)
 {
-	OBJECT(p)->cls = cls;
+	OBJECT(p)->cls = cl;
 }
 
 /* Add a new dependency or increment the reference count on one. */
@@ -1641,13 +1719,8 @@ AG_ObjectAddDep(void *p, void *depobj, int persistent)
 			break;
 	}
 	if (dep != NULL) {
-		if (++dep->count > AG_OBJECT_DEP_MAX) {
-#ifdef OBJDEBUG
-			Debug(ob, "Wiring dependency: %s (too many refs!)\n",
-			    OBJECT(depobj)->name);
-#endif
+		if (++dep->count > AG_OBJECT_DEP_MAX)
 			dep->count = AG_OBJECT_DEP_MAX;
-		}
 	} else {
 		dep = Malloc(sizeof(AG_ObjectDep));
 		dep->obj = depobj;
@@ -1843,12 +1916,12 @@ AG_ObjectDuplicate(void *p, const char *newName)
 {
 	char nameSave[AG_OBJECT_NAME_MAX];
 	AG_Object *ob = p;
-	AG_ObjectClass *cls = ob->cls;
+	AG_ObjectClass *cl = ob->cls;
 	AG_Object *dob;
 
-	dob = Malloc(cls->size);
+	dob = Malloc(cl->size);
 	AG_ObjectLock(ob);
-	AG_ObjectInit(dob, cls);
+	AG_ObjectInit(dob, cl);
 	AG_ObjectSetName(dob, "%s", newName);
 	if (AG_ObjectPageIn(ob) == -1) {
 		goto fail;
@@ -2089,21 +2162,13 @@ changed:
  * object are locked.
  */
 void
-AG_ObjectGenName(AG_Object *pobj, AG_ObjectClass *cls, char *name, size_t len)
+AG_ObjectGenName(AG_Object *pobj, AG_ObjectClass *cl, char *name, size_t len)
 {
-	char tname[AG_OBJECT_TYPE_MAX];
 	Uint i = 0;
 	AG_Object *ch;
-	char *s;
-	
-	if ((s = strrchr(cls->name, ':')) != NULL && s[1] != '\0') {
-		Strlcpy(tname, &s[1], sizeof(tname));
-	} else {
-		Strlcpy(tname, cls->name, sizeof(tname));
-	}
-	tname[0] = (char)toupper(tname[0]);
+
 tryname:
-	Snprintf(name, len, "%s #%u", tname, i);
+	Snprintf(name, len, "%s #%u", cl->name, i);
 	if (pobj != NULL) {
 		AG_LockVFS(pobj);
 		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
