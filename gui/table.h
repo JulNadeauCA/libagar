@@ -106,6 +106,8 @@ typedef struct ag_table {
 #define AG_TABLE_REDRAW_CELLS	0x04	/* Redraw the cells */
 #define AG_TABLE_POLL		0x08	/* Table is polled */
 #define AG_TABLE_HIGHLIGHT_COLS	0x40	/* Highlight column selection */
+#define AG_TABLE_CELL_CLIPPING	0x80	/* Clipping is done per-cell (default
+					   is per-column) */
 #define AG_TABLE_MULTIMODE	(AG_TABLE_MULTI|AG_TABLE_MULTITOGGLE)
 	enum ag_table_selmode selmode;	/* Selection mode */
 	void *selected_row;		/* Default `selected-row' binding */
@@ -147,14 +149,12 @@ AG_Table *AG_TableNewPolled(void *, Uint, void (*fn)(AG_Event *),
 void	  AG_TableSizeHint(AG_Table *, int, int);
 #define	  AG_TablePrescale AG_TableSizeHint
 
-void         AG_TableSetSeparator(AG_Table *, const char *);
-AG_MenuItem *AG_TableSetPopup(AG_Table *, int, int);
-void         AG_TableSetRowDblClickFn(AG_Table *, AG_EventFn, const char *,
-                                      ...);
-void         AG_TableSetColDblClickFn(AG_Table *, AG_EventFn, const char *,
-                                      ...);
-void	     AG_TableSetColHeight(AG_Table *, int);
-void	     AG_TableSetRowHeight(AG_Table *, int);
+void AG_TableSetSeparator(AG_Table *, const char *);
+void AG_TableSetRowDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
+void AG_TableSetColDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
+void AG_TableSetColHeight(AG_Table *, int);
+void AG_TableSetRowHeight(AG_Table *, int);
+void AG_TableSetCellClipping(AG_Table *, int);
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
 int	  AG_TablePoolAdd(AG_Table *, Uint, Uint);
@@ -187,6 +187,7 @@ void	  AG_TableDeselectAllCols(AG_Table *);
 void	  AG_TableRedrawCells(AG_Table *);
 int	  AG_TableCompareCells(const AG_TableCell *, const AG_TableCell *);
 
+AG_MenuItem *AG_TableSetPopup(AG_Table *, int, int);
 int	     AG_TableSaveASCII(AG_Table *, FILE *, char);
 void	     AG_TableUpdateScrollbars(AG_Table *);
 __END_DECLS

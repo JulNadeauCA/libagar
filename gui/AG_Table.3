@@ -74,6 +74,9 @@ provides tree support, but no multi-column functionality.
 .Fn AG_TableSetRowHeight "AG_Table *tbl" "int height"
 .Pp
 .Ft "void"
+.Fn AG_TableSetCellClipping "AG_Table *tbl" "int enable"
+.Pp
+.Ft "void"
 .Fn AG_TableSetSeparator "AG_Table *tbl" "const char *sep"
 .Pp
 .Ft "AG_MenuItem *"
@@ -146,6 +149,11 @@ sets the size of column headers in pixels.
 .Fn AG_TableSetRowHeight
 sets the size of rows in pixels.
 In both cases, the default is dependent on the height of the default font.
+.Pp
+.Fn AG_TableSetCellClipping
+enables clipping on the contents of individual cells.
+By default, clipping is done on a per-column basis to reduce overhead
+associated with clipping rectangle setup.
 .Pp
 .Fn AG_TableSetSeparator
 changes the set of accepted field-separator characters in
