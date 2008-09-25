@@ -87,6 +87,50 @@ SchedEventTimeout(void *p, Uint32 ival, void *arg)
 	return (0);
 }
 
+static __inline__ void
+SetEventName(AG_Event *ev, AG_Object *ob, const char *name)
+{
+	if (name == NULL) {
+		if (ob != NULL) {
+			/* XXX snprintf is too slow */
+			Snprintf(ev->name, sizeof(ev->name), "__%u",
+			    ob->nevents);
+		} else {
+			Strlcpy(ev->name, "noname", sizeof(ev->name));
+		}
+	} else {
+		Strlcpy(ev->name, name, sizeof(ev->name));
+	}
+}
+
+static __inline__ void
+InitEvent(AG_Event *ev, AG_Object *ob)
+{
+	ev->flags = 0;
+	ev->argc = 1;
+	ev->argc0 = 1;
+
+	ev->argv[0].p = ob;
+	ev->argt[0] = AG_EVARG_POINTER;
+	ev->argn[0] = "_self";
+	ev->handler = NULL;
+
+	AG_SetTimeout(&ev->timeout, SchedEventTimeout, ev, 0);
+}
+
+void
+AG_EventInit(AG_Event *ev)
+{
+	InitEvent(ev, NULL);
+}
+
+/* Construct an Event structure from the given arguments only. */
+void
+AG_EventArgs(AG_Event *ev, const char *fmt, ...)
+{
+	AG_EVENT_GET_ARGS(ev, fmt);
+}
+
 /* Set or update the handler function for the given event. */
 AG_Event *
 AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
@@ -95,35 +139,28 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	AG_Event *ev;
 
 	AG_ObjectLock(ob);
+
 	if (name != NULL) {
-		TAILQ_FOREACH(ev, &ob->events, events) {
+		TAILQ_FOREACH(ev, &ob->events, events)
 			if (strcmp(ev->name, name) == 0)
 				break;
-		}
 	} else {
 		ev = NULL;
 	}
 	if (ev == NULL) {
 		ev = Malloc(sizeof(AG_Event));
-		if (name != NULL) {
-			Strlcpy(ev->name, name, sizeof(ev->name));
-		} else {
-			/* XXX use something faster */
-			Snprintf(ev->name, sizeof(ev->name), "__%u",
-			    ob->nevents);
-		}
+		InitEvent(ev, ob);
+		SetEventName(ev, ob, name);
 		TAILQ_INSERT_TAIL(&ob->events, ev, events);
 		ob->nevents++;
+	} else {
+		InitEvent(ev, ob);
 	}
-	ev->flags = 0;
 	ev->argv[0].p = ob;
-	ev->argt[0] = AG_EVARG_POINTER;
-	ev->argn[0] = "_self";
-	ev->argc = 1;
 	ev->handler = fn;
-	AG_SetTimeout(&ev->timeout, SchedEventTimeout, ev, 0);
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
+
 	AG_ObjectUnlock(ob);
 	return (ev);
 }
@@ -138,23 +175,16 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectLock(ob);
 
 	ev = Malloc(sizeof(AG_Event));
-	if (name != NULL) {
-		Strlcpy(ev->name, name, sizeof(ev->name));
-	} else {
-		Snprintf(ev->name, sizeof(ev->name), "__%u", ob->nevents);
-	}
-	ev->flags = 0;
-	ev->argv[0].p = ob;
-	ev->argt[0] = AG_EVARG_POINTER;
-	ev->argn[0] = "_self";
-	ev->argc = 1;
+	InitEvent(ev, ob);
+	SetEventName(ev, ob, name);
+
 	ev->handler = fn;
-	AG_SetTimeout(&ev->timeout, SchedEventTimeout, ev, 0);
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
 
 	TAILQ_INSERT_TAIL(&ob->events, ev, events);
 	ob->nevents++;
+
 	AG_ObjectUnlock(ob);
 	return (ev);
 }
