@@ -104,6 +104,15 @@ AG_TableSetRowHeight(AG_Table *t, int h)
 	AG_ObjectUnlock(t);
 }
 
+/* Enable clipping on a per-cell basis. */
+void
+AG_TableSetCellClipping(AG_Table *t, int enable)
+{
+	AG_ObjectLock(t);
+	AG_SETFLAGS(t->flags, AG_TABLE_CELL_CLIPPING, enable);
+	AG_ObjectUnlock(t);
+}
+
 static void
 SizeFillCols(AG_Table *t)
 {
@@ -469,7 +478,10 @@ Draw(void *p)
 		    AG_RECT(rCell.x, 0, cw, t->col_h),
 		    col->selected);
 		
-		AG_WidgetPushClipRect(t, AG_RECT(rCell.x, 0, cw, HEIGHT(t)-2));
+		if (!(t->flags & AG_TABLE_CELL_CLIPPING))
+			AG_WidgetPushClipRect(t,
+			    AG_RECT(rCell.x, 0, cw, HEIGHT(t)-2));
+		
 		if (col->surface != -1) {
 			AG_WidgetBlitSurface(t, col->surface,
 			    rCell.x + cw/2 - WSURFACE(t,col->surface)->w/2,
@@ -482,10 +494,18 @@ Draw(void *p)
 		     m++) {
 			AG_DrawLineH(t, 0, t->wTbl, rCell.y,
 			    AG_COLOR(TABLE_LINE_COLOR));
-
+	
 			STYLE(t)->TableCellBackground(t, rCell,
 			    t->cells[m][n].selected);
+
+			if (t->flags & AG_TABLE_CELL_CLIPPING)
+				AG_WidgetPushClipRect(t, rCell);
+
 			DrawCell(t, &t->cells[m][n], &rCell);
+
+			if (t->flags & AG_TABLE_CELL_CLIPPING)
+				AG_WidgetPopClipRect(t);
+
 			rCell.y += t->row_h;
 		}
 		AG_DrawLineH(t, 0, t->wTbl, rCell.y,
@@ -496,7 +516,10 @@ Draw(void *p)
 			STYLE(t)->TableSelectedColumnBackground(t, n,
 			    AG_RECT(rCell.x, 0, col->w, HEIGHT(t)));
 		}
-		AG_WidgetPopClipRect(t);
+		
+		if (!(t->flags & AG_TABLE_CELL_CLIPPING))
+			AG_WidgetPopClipRect(t);
+
 		rCell.x += col->w;
 	}
 	if (rCell.x > 0 &&
