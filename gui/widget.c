@@ -199,11 +199,7 @@ AG_WidgetSetFocusable(void *p, int flag)
 	AG_Widget *wid = p;
 
 	AG_ObjectLock(wid);
-	if (flag) {
-		wid->flags |= AG_WIDGET_FOCUSABLE;
-	} else {
-		wid->flags &= ~(AG_WIDGET_FOCUSABLE);
-	}
+	AG_SETFLAGS(wid->flags, AG_WIDGET_FOCUSABLE, flag);
 	AG_ObjectUnlock(wid);
 }
 

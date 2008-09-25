@@ -316,44 +316,16 @@ SetState(AG_WidgetBinding *binding, void *p, int v)
 		*(Uint32 *)p = v;
 		break;
 	case AG_WIDGET_FLAG:
-		{
-			int *state = (int *)p;
-			if (*state & (int)binding->data.bitmask) {
-				*state &= ~(int)binding->data.bitmask;
-			} else {
-				*state |= (int)binding->data.bitmask;
-			}
-		}
+		AG_SETFLAGS(*(int *)p, (int)binding->data.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG8:
-		{
-			Uint8 *state = (Uint8 *)p;
-			if (*state & (Uint8)binding->data.bitmask) {
-				*state &= ~(Uint8)binding->data.bitmask;
-			} else {
-				*state |= (Uint8)binding->data.bitmask;
-			}
-		}
+		AG_SETFLAGS(*(Uint8 *)p, (Uint8)binding->data.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG16:
-		{
-			Uint16 *state = (Uint16 *)p;
-			if (*state & (Uint16)binding->data.bitmask) {
-				*state &= ~(Uint16)binding->data.bitmask;
-			} else {
-				*state |= (Uint16)binding->data.bitmask;
-			}
-		}
+		AG_SETFLAGS(*(Uint16 *)p, (Uint16)binding->data.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG32:
-		{
-			Uint32 *state = (Uint32 *)p;
-			if (*state & (Uint32)binding->data.bitmask) {
-				*state &= ~(Uint32)binding->data.bitmask;
-			} else {
-				*state |= (Uint32)binding->data.bitmask;
-			}
-		}
+		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->data.bitmask, v);
 		break;
 	}
 }
@@ -532,8 +504,7 @@ void
 AG_ButtonSetSticky(AG_Button *bu, int flag)
 {
 	AG_ObjectLock(bu);
-	if (flag) { bu->flags |= (AG_BUTTON_STICKY); }
-	else { bu->flags &= ~(AG_BUTTON_STICKY); }
+	AG_SETFLAGS(bu->flags, AG_BUTTON_STICKY, flag);
 	AG_ObjectUnlock(bu);
 }
 
@@ -541,8 +512,7 @@ void
 AG_ButtonInvertState(AG_Button *bu, int flag)
 {
 	AG_ObjectLock(bu);
-	if (flag) { bu->flags |= (AG_BUTTON_INVSTATE); }
-	else { bu->flags &= ~(AG_BUTTON_INVSTATE); }
+	AG_SETFLAGS(bu->flags, AG_BUTTON_INVSTATE, flag);
 	AG_ObjectUnlock(bu);
 }
 

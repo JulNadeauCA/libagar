@@ -91,23 +91,19 @@ AG_EditableBindASCII(AG_Editable *ed, char *buf, size_t bufSize)
 
 /* Enable or disable password entry mode. */
 void
-AG_EditableSetPassword(AG_Editable *ed, int pw)
+AG_EditableSetPassword(AG_Editable *ed, int enable)
 {
 	AG_ObjectLock(ed);
-	if (pw) {
-		ed->flags |= AG_EDITABLE_PASSWORD;
-	} else {
-		ed->flags &= ~(AG_EDITABLE_PASSWORD);
-	}
+	AG_SETFLAGS(ed->flags, AG_EDITABLE_PASSWORD, enable);
 	AG_ObjectUnlock(ed);
 }
 
 /* Enable or disable static optimizations. */
 void
-AG_EditableSetStatic(AG_Editable *ed, int flag)
+AG_EditableSetStatic(AG_Editable *ed, int enable)
 {
 	AG_ObjectLock(ed);
-	if (flag) {
+	if (enable) {
 		ed->flags |= AG_EDITABLE_STATIC;
 	} else {
 		ed->flags &= ~(AG_EDITABLE_STATIC);
@@ -122,10 +118,10 @@ AG_EditableSetStatic(AG_Editable *ed, int flag)
 }
 
 void
-AG_EditableSetFltOnly(AG_Editable *ed, int flag)
+AG_EditableSetFltOnly(AG_Editable *ed, int enable)
 {
 	AG_ObjectLock(ed);
-	if (flag) {
+	if (enable) {
 		ed->flags |= AG_EDITABLE_FLT_ONLY;
 		ed->flags &= ~(AG_EDITABLE_INT_ONLY);
 	} else {
@@ -135,10 +131,10 @@ AG_EditableSetFltOnly(AG_Editable *ed, int flag)
 }
 
 void
-AG_EditableSetIntOnly(AG_Editable *ed, int flag)
+AG_EditableSetIntOnly(AG_Editable *ed, int enable)
 {
 	AG_ObjectLock(ed);
-	if (flag) {
+	if (enable) {
 		ed->flags |= AG_EDITABLE_INT_ONLY;
 		ed->flags &= ~(AG_EDITABLE_FLT_ONLY);
 	} else {
@@ -300,11 +296,7 @@ BlinkTimeout(void *obj, Uint32 ival, void *arg)
 	AG_Editable *ed = obj;
 
 	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0) {
-		if (ed->flags & AG_EDITABLE_BLINK_ON) {
-			ed->flags &= ~(AG_EDITABLE_BLINK_ON);
-		} else {
-			ed->flags |= AG_EDITABLE_BLINK_ON;
-		}
+		AG_INVFLAGS(ed->flags, AG_EDITABLE_BLINK_ON);
 	}
 	return (ival);
 }

@@ -340,11 +340,7 @@ void
 AG_NotebookSetTabVisibility(AG_Notebook *nb, int flag)
 {
 	AG_ObjectLock(nb);
-	if (flag) {
-		nb->flags &= ~(AG_NOTEBOOK_HIDE_TABS);
-	} else {
-		nb->flags |= AG_NOTEBOOK_HIDE_TABS;
-	}
+	AG_SETFLAGS(nb->flags, AG_NOTEBOOK_HIDE_TABS, flag);
 	AG_ObjectUnlock(nb);
 }
 

@@ -307,11 +307,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	case AG_WIDGET_FLAG:
 		{
 			int *state = (int *)p;
-			if (*state & (int)stateb->data.bitmask) {
-				*state &= ~(int)stateb->data.bitmask;
-			} else {
-				*state |= (int)stateb->data.bitmask;
-			}
+			AG_INVFLAGS(*state, (int)stateb->data.bitmask);
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (int)*state);
 		}
@@ -319,13 +315,25 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	case AG_WIDGET_FLAG8:
 		{
 			Uint8 *state = (Uint8 *)p;
-			if (*state & (Uint8)stateb->data.bitmask) {
-				*state &= ~(Uint8)stateb->data.bitmask;
-			} else {
-				*state |= (Uint8)stateb->data.bitmask;
-			}
+			AG_INVFLAGS(*state, (Uint8)stateb->data.bitmask);
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (Uint8)*state);
+		}
+		break;
+	case AG_WIDGET_FLAG16:
+		{
+			Uint16 *state = (Uint16 *)p;
+			AG_INVFLAGS(*state, (Uint16)stateb->data.bitmask);
+			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
+			    (Uint16)*state);
+		}
+		break;
+	case AG_WIDGET_FLAG32:
+		{
+			Uint32 *state = (Uint32 *)p;
+			AG_INVFLAGS(*state, (Uint32)stateb->data.bitmask);
+			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
+			    (Uint32)*state);
 		}
 		break;
 	case AG_WIDGET_UINT8:

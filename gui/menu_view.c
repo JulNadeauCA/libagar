@@ -149,59 +149,37 @@ SetItemBoolValue(AG_MenuItem *mi)
 	case AG_MENU_INT_BOOL:
 		{
 			int *boolp = (int *)mi->bind_p;
-
 			*boolp = !(*boolp);
 		}
 		break;
 	case AG_MENU_INT8_BOOL:
 		{
 			Uint8 *boolp = (Uint8 *) mi->bind_p;
-
 			*boolp = !(*boolp);
 		}
 		break;
 	case AG_MENU_INT_FLAGS:
 		{
 			int *flags = (int *)mi->bind_p;
-
-			if (*flags & mi->bind_flags) {
-				*flags &= ~(mi->bind_flags);
-			} else {
-				*flags |= mi->bind_flags;
-			}
+			AG_INVFLAGS(*flags, mi->bind_flags);
 		}
 		break;
 	case AG_MENU_INT8_FLAGS:
 		{
 			Uint8 *flags = (Uint8 *)mi->bind_p;
-
-			if (*flags & mi->bind_flags) {
-				*flags &= ~(mi->bind_flags);
-			} else {
-				*flags |= mi->bind_flags;
-			}
+			AG_INVFLAGS(*flags, mi->bind_flags);
 		}
 		break;
 	case AG_MENU_INT16_FLAGS:
 		{
 			Uint16 *flags = (Uint16 *)mi->bind_p;
-
-			if (*flags & mi->bind_flags) {
-				*flags &= ~(mi->bind_flags);
-			} else {
-				*flags |= mi->bind_flags;
-			}
+			AG_INVFLAGS(*flags, mi->bind_flags);
 		}
 		break;
 	case AG_MENU_INT32_FLAGS:
 		{
 			Uint32 *flags = (Uint32 *)mi->bind_p;
-
-			if (*flags & mi->bind_flags) {
-				*flags &= ~(mi->bind_flags);
-			} else {
-				*flags |= mi->bind_flags;
-			}
+			AG_INVFLAGS(*flags, mi->bind_flags);
 		}
 		break;
 	}
