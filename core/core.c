@@ -54,9 +54,11 @@ AG_Config *agConfig;				/* Global Agar config data */
 void (*agAtexitFunc)(void) = NULL;		/* User exit function */
 void (*agAtexitFuncEv)(AG_Event *) = NULL;	/* User exit handler */
 char *agProgName = NULL;			/* User program name */
-int agVerbose = 0;				/* Verbose console output */
-int agTerminating = 0;				/* Application is exiting */
-int agGUI = 0;					/* GUI is initialized */
+
+int agVerbose = 0;		/* Verbose console output */
+int agTerminating = 0;		/* Application is exiting */
+int agGUI = 0;			/* GUI is initialized */
+int agInitedSDL = 0;		/* Video system had to initialize SDL */
 
 int
 AG_InitCore(const char *progname, Uint flags)
@@ -90,6 +92,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_RegisterClass(&agConfigClass);
 	
 	AG_InitTimeouts();
+	AG_DataSourceInitSubsystem();
 
 	if ((agConfig = malloc(sizeof(AG_Config))) == NULL) {
 		AG_SetError("Out of memory");
@@ -98,7 +101,8 @@ AG_InitCore(const char *progname, Uint flags)
 	if (AG_ConfigInit(agConfig) == -1) {
 		return (-1);
 	}
-	AG_ObjectLoad(agConfig);
+	if (AG_ObjectLoad(agConfig) == -1)
+		AG_Verbose("%s; ignoring\n", AG_GetError());
 
 #ifdef NETWORK
 	AG_InitNetwork(0);
@@ -150,15 +154,16 @@ AG_Destroy(void)
 #ifdef NETWORK
 	AG_RcsDestroy();
 #endif
-#if 0
 	AG_ObjectDestroy(agConfig);
-#endif
+	AG_DataSourceDestroySubsystem();
+
 	AG_DestroyTimeouts();
 	AG_DestroyError();
 	AG_DestroyClassTbl();
 	Free(agProgName);
-	SDL_Quit();
-	exit(0);
+
+	if (agInitedSDL)
+		SDL_Quit();
 }
 
 void

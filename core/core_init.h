@@ -9,6 +9,7 @@ extern char *agProgName;	/* User program name */
 extern int agVerbose;		/* Verbose console output */
 extern int agTerminating;	/* Application is exiting */
 extern int agGUI;		/* GUI is initialized */
+extern int agInitedSDL;		/* Video system had to initialize SDL */
 
 /* Flags for AG_InitCore() */
 #define AG_CORE_VERBOSE		0x01
@@ -24,5 +25,24 @@ void	 AG_Destroy(void);
 /* Legacy */
 #define AG_InitInput(flags)
 __END_DECLS
+
+/* Utility macros */
+#define AG_SETFLAGS(var,flags,cond)		\
+	do {					\
+		if (cond) {			\
+			(var) |= (flags);	\
+		} else {			\
+			(var) &= ~(flags);	\
+		}				\
+	} while (0)
+
+#define AG_INVFLAGS(var,flags)			\
+	do {					\
+		if ((var) & (flags)) {		\
+			(var) &= ~(flags);	\
+		} else {			\
+			(var) |= (flags);	\
+		}				\
+	} while (0)
 
 #include "close_code.h"
