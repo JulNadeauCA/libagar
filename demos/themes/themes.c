@@ -255,7 +255,7 @@ CreateWindow(void)
 			 * the buffer a bit larger so the user can try
 			 * entering text.
 			 */
-			if ((f = fopen("widgets.c", "r")) != NULL) {
+			if ((f = fopen("themes.c", "r")) != NULL) {
 				fseek(f, 0, SEEK_END);
 				size = ftell(f);
 				fseek(f, 0, SEEK_SET);
@@ -266,7 +266,7 @@ CreateWindow(void)
 				someText[size] = '\0';
 			} else {
 				someText = AG_Strdup("Failed to load "
-				                     "widgets.c");
+				                     "themes.c");
 			}
 	
 			/*
