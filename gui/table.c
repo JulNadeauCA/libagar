@@ -86,6 +86,24 @@ AG_TableSetSeparator(AG_Table *t, const char *sep)
 	AG_ObjectUnlock(t);
 }
 
+/* Set column height in pixels */
+void
+AG_TableSetColHeight(AG_Table *t, int h)
+{
+	AG_ObjectLock(t);
+	t->col_h = h;
+	AG_ObjectUnlock(t);
+}
+
+/* Set row height in pixels */
+void
+AG_TableSetRowHeight(AG_Table *t, int h)
+{
+	AG_ObjectLock(t);
+	t->row_h = h;
+	AG_ObjectUnlock(t);
+}
+
 static void
 SizeFillCols(AG_Table *t)
 {
