@@ -3,6 +3,8 @@
 REGISTER("--enable-lockdebug",	"Expensive threads debugging [default: no]")
 REGISTER("--enable-objdebug",	"Object system debugging [default: no]")
 REGISTER("--enable-eventdebug",	"Event system debugging [default: no]")
+REGISTER("--enable-classdebug",	"Event object class debugging [default: no]")
+
 REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: check]")
 REGISTER("--enable-gui",	"Build Agar-GUI library [default: yes]")
@@ -105,6 +107,11 @@ if [ "${enable_eventdebug}" = "yes" ]; then
 	HDEFINE(EVENTDEBUG, 1)
 else
 	HUNDEF(EVENTDEBUG)
+fi
+if [ "${enable_classdebug}" = "yes" ]; then
+	HDEFINE(CLASSDEBUG, 1)
+else
+	HUNDEF(CLASSDEBUG)
 fi
 
 # SDL is required.

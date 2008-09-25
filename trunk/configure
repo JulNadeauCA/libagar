@@ -182,6 +182,7 @@ echo "    --enable-debug            Include debugging code [no]"
 echo "    --enable-lockdebug        Expensive threads debugging [default: no]"
 echo "    --enable-objdebug         Object system debugging [default: no]"
 echo "    --enable-eventdebug       Event system debugging [default: no]"
+echo "    --enable-classdebug       Event object class debugging [default: no]"
 echo "    --enable-warnings         Suggested compiler warnings [default: no]"
 echo "    --enable-threads          Thread safety [default: check]"
 echo "    --enable-gui              Build Agar-GUI library [default: yes]"
@@ -2888,6 +2889,17 @@ echo "hdefs[\"EVENTDEBUG\"] = \"$EVENTDEBUG\"" >>configure.lua
 else
 echo "#undef EVENTDEBUG" >config/eventdebug.h
 echo "hdefs[\"EVENTDEBUG\"] = nil" >>configure.lua
+fi
+if [ "${enable_classdebug}" = "yes" ]
+ then
+CLASSDEBUG="1"
+echo "#ifndef CLASSDEBUG" > config/classdebug.h
+echo "#define CLASSDEBUG \"$CLASSDEBUG\"" >> config/classdebug.h
+echo "#endif" >> config/classdebug.h
+echo "hdefs[\"CLASSDEBUG\"] = \"$CLASSDEBUG\"" >>configure.lua
+else
+echo "#undef CLASSDEBUG" >config/classdebug.h
+echo "hdefs[\"CLASSDEBUG\"] = nil" >>configure.lua
 fi
 $ECHO_N "checking for SDL (http://www.libsdl.org)..."
 $ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
