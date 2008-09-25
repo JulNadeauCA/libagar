@@ -331,7 +331,8 @@ Init(void *obj)
 	vv->editAreas = NULL;
 	vv->nEditAreas = 0;
 	TAILQ_INIT(&vv->tools);
-	
+
+	vv->nGrids = 0;
 	VG_ViewSetGrid(vv, 0, VG_GRID_POINTS, 8, VG_GetColorRGB(100,100,100));
 	VG_ViewSetScale(vv, 0);
 
@@ -393,6 +394,7 @@ VG_ViewSetGrid(VG_View *vv, int idx, enum vg_grid_type type, int ival,
 	vv->grid[idx].ival = ival;
 	vv->grid[idx].ivalView = 0;
 	vv->grid[idx].color = color;
+	vv->grid[idx].flags = 0;
 	if (idx == 0) {
 		UpdatePointSelRadius(vv);
 	}
