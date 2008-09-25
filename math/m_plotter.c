@@ -271,11 +271,7 @@ mousebuttondown(AG_Event *event)
 				if (!MouseOverPlotItem(ptr, pl, x, y)) {
 					continue;
 				}
-				if (pl->flags & M_PLOT_SELECTED) {
-					pl->flags &= ~M_PLOT_SELECTED;
-				} else {
-					pl->flags |= M_PLOT_SELECTED;
-				}
+				AG_INVFLAGS(pl->flags, M_PLOT_SELECTED);
 			}
 		} else {
 			TAILQ_FOREACH(pl, &ptr->plots, plots) {
