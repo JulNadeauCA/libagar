@@ -65,7 +65,6 @@ int agPageIncrement = 4;		/* Pgup/Pgdn scrolling increment */
 
 int agIdleThresh = 20;			/* Idling threshold */
 int agScreenshotQuality = 100;		/* JPEG quality in % */
-int agWindowAnySize = 0;		/* Allow any window size */
 int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
 
 int
@@ -165,7 +164,7 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 #endif
 	if (ver->minor < 2) { (void)AG_ReadUint8(ds); } /* agServerMode */
 	agIdleThresh = (int)AG_ReadUint8(ds);
-	if (ver->minor >= 3) { agWindowAnySize = (int)AG_ReadUint8(ds); }
+	if (ver->minor >= 3) { (void)AG_ReadUint8(ds); } /* agWindowAnySize */
 	if (ver->minor >= 4) { agMsgDelay = (int)AG_ReadUint32(ds); }
 	agTextComposition = AG_ReadUint8(ds);
 	agTextBidi = AG_ReadUint8(ds);
@@ -196,7 +195,7 @@ Save(void *p, AG_DataSource *ds)
 	AG_WriteUint8(ds, 0);
 #endif
 	AG_WriteUint8(ds, (Uint8)agIdleThresh);
-	AG_WriteUint8(ds, (Uint8)agWindowAnySize);
+	AG_WriteUint8(ds, 0);				/* agWindowAnySize */
 	AG_WriteUint32(ds, (Uint32)agMsgDelay);
 	AG_WriteUint8(ds, (Uint8)agTextComposition);
 	AG_WriteUint8(ds, (Uint8)agTextBidi);
