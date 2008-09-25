@@ -142,4 +142,3 @@
 # undef _MK_BIG_ENDIAN
 # undef _MK_LITTLE_ENDIAN
 #endif /* !AG_BIG_ENDIAN && !AG_LITTLE_ENDIAN */
-

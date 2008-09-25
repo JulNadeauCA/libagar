@@ -183,7 +183,8 @@ int
 AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 {
 	InitGlobals();
-	
+	agInitedSDL = 0;
+
 	if (display->w < AG_GetUint16(agConfig,"view.min-w") ||
 	    display->h < AG_GetUint16(agConfig,"view.min-h")) {
 		AG_SetError(_("The resolution is too small."));
@@ -258,11 +259,18 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 
 	InitGlobals();
 
-	if (!SDL_WasInit(SDL_INIT_VIDEO) &&
-	    SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-		AG_SetError("SDL_INIT_VIDEO: %s", SDL_GetError());
+	if (SDL_Init(0) == -1) {
+		AG_SetError("SDL_Init() failed: %s", SDL_GetError());
 		return (-1);
 	}
+	if (!SDL_WasInit(SDL_INIT_VIDEO) &&
+	    SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+		AG_SetError("SDL_INIT_VIDEO failed: %s", SDL_GetError());
+		SDL_Quit();
+		return (-1);
+	}
+	agInitedSDL = 1;
+
 	SDL_WM_SetCaption(agProgName, agProgName);
 
 	if (flags & (AG_VIDEO_OPENGL|AG_VIDEO_OPENGL_OR_SDL)) {
@@ -1352,7 +1360,8 @@ AG_EventLoop_FixedFPS(void)
 				agView->rCur = 1;
 			}
 		} else if (SDL_PollEvent(&ev) != 0) {
-			(void)AG_ProcessEvent(&ev);
+			if (AG_ProcessEvent(&ev) == -1)
+				return;
 #ifdef DEBUG
 			agEventAvg++;
 #endif
@@ -1380,8 +1389,8 @@ UnminimizeWindow(AG_Event *event)
 }
 
 /*
- * Process an SDL event and return 1 if the event was processed in some
- * way.
+ * Process an SDL event. Returns 1 if the event was processed in some
+ * way, -1 if application is exiting.
  */
 int
 AG_ProcessEvent(SDL_Event *ev)
@@ -1493,9 +1502,7 @@ AG_ProcessEvent(SDL_Event *ev)
 	case SDL_USEREVENT:
 		AG_UnlockVFS(agView);
 		agTerminating = 1;
-		AG_Destroy();
-		/* NOTREACHED */
-		break;
+		return (-1);
 	}
 	FreeDetachedWindows();
 	AG_UnlockVFS(agView);
