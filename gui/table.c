@@ -152,13 +152,13 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_Table *t = p;
 	AG_SizeAlloc aBar;
 	
-	if (a->w <= t->vbar->wButton || a->h <= t->row_h)
+	if (a->w <= t->vbar->wButton || a->h <= t->col_h)
 		return (-1);
 
 	aBar.x = a->w - t->vbar->wButton;
-	aBar.y = t->col_h - 1;
+	aBar.y = 0;
 	aBar.w = t->vbar->wButton;
-	aBar.h = a->h - t->col_h + 1;
+	aBar.h = a->h;
 	AG_WidgetSizeAlloc(t->vbar, &aBar);
 #if 0
 	aBar.x = t->vbar->wButton + 1;
@@ -416,7 +416,7 @@ SelectionVisible(AG_Table *t)
 			continue;
 		}
 		cw = ((x + col->w) < t->wTbl) ? col->w: t->wTbl - x;
-		for (m = mOffs, y = t->row_h;
+		for (m = mOffs, y = t->col_h;
 		     m < MIN(t->m, mOffs+t->mVis) && y < HEIGHT(t);
 		     m++) {
 			if (t->cells[m][n].selected &&
@@ -466,18 +466,18 @@ Draw(void *p)
 			    AG_COLOR(TABLE_LINE_COLOR));
 		}
 		STYLE(t)->TableColumnHeaderBackground(t, n,
-		    AG_RECT(rCell.x, 0, cw, t->col_h-1),
+		    AG_RECT(rCell.x, 0, cw, t->col_h),
 		    col->selected);
 		
 		AG_WidgetPushClipRect(t, AG_RECT(rCell.x, 0, cw, HEIGHT(t)-2));
 		if (col->surface != -1) {
 			AG_WidgetBlitSurface(t, col->surface,
 			    rCell.x + cw/2 - WSURFACE(t,col->surface)->w/2,
-			    0);
+			    t->col_h/2 - WSURFACE(t,col->surface)->h/2);
 		}
 
 		/* Draw the rows of this column. */
-		for (m = t->moffs, rCell.y = t->row_h;
+		for (m = t->moffs, rCell.y = t->col_h;
 		     m < MIN(t->m, t->moffs+t->mVis) && rCell.y < HEIGHT(t);
 		     m++) {
 			AG_DrawLineH(t, 0, t->wTbl, rCell.y,
@@ -519,7 +519,7 @@ AG_TableUpdateScrollbars(AG_Table *t)
 
 	AG_ObjectLock(t);
 
-	t->mVis = HEIGHT(t)/t->row_h;
+	t->mVis = (HEIGHT(t) - t->col_h)/t->row_h;
 
 	maxb = AG_WidgetGetBinding(t->vbar, "max", &max);
 	offsetb = AG_WidgetGetBinding(t->vbar, "value", &offset);
@@ -946,10 +946,10 @@ CellRightClick(AG_Table *t, int m, int px)
 static __inline__ int
 OverColumn(AG_Table *t, int y)
 {
-	if (y <= t->row_h) {
+	if (y <= t->col_h) {
 		return (-1);
 	}
-	return (AG_WidgetInt(t->vbar, "value") + y/t->row_h - 1);
+	return (AG_WidgetInt(t->vbar, "value") + (y - t->col_h)/t->row_h);
 }
 
 static void
@@ -1045,7 +1045,7 @@ MouseButtonDown(AG_Event *event)
 			AG_TableDeselectAllRows(t);
 			goto out;
 		}
-		if (m < 0 && y <= t->row_h) {
+		if (m < 0 && y <= t->col_h) {
 			ColumnLeftClick(t, x);
 		} else {
 			CellLeftClick(t, m, x);
