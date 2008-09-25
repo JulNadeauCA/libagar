@@ -48,7 +48,7 @@ for automatically-allocated memory and
 .Ft AG_ConstCoreSource
 for read-only memory.
 .Pp
-Creating a new class of data source simply can be done by overloading the
+New data sources can be implemented by overloading the
 .Nm
 structure.
 .Sh INTERFACE
@@ -108,10 +108,19 @@ structure.
 .Fn AG_SetByteOrder "AG_DataSource *ds" "enum ag_byte_order order"
 .Pp
 .Ft "void"
+.Fn AG_SetSourceDebug "AG_DataSource *ds" "int enable"
+.Pp
+.Ft "void"
 .Fn AG_DataSourceInit "AG_DataSource *ds"
 .Pp
 .Ft "void"
 .Fn AG_DataSourceDestroy "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_DataSourceSetErrorFn "AG_DataSource *ds" "void (*fn)(AG_Event *)" "const char *fmt" "..."
+.Pp
+.Ft "void"
+.Fn AG_DataSourceError "AG_DataSource *ds" "const char *fmt" "..."
 .Pp
 .nr nS 0
 The
@@ -177,16 +186,16 @@ If the underlying data source does not support this operation, a value
 of 0 is returned.
 .Pp
 .Fn AG_Seek
-seeks to the given position in the data source, where
+seeks to the given position in the data source.
+Acceptable values for
 .Fa mode
-is one of:
-.Bd -literal
-	enum ag_seek_mode {
-		AG_SEEK_SET,	/* Relative to beginning */
-		AG_SEEK_CUR,	/* Relative to current position */
-		AG_SEEK_END	/* Relative to end */
-	};
-.Ed
+include
+.Dv AG_SEEK_SET
+(relative to data start),
+.Dv AG_SEEK_CUR
+(relative to current position),
+.Dv AG_SEEK_END
+(relative to data end).
 .Pp
 The
 .Fn AG_LockDataSource
@@ -197,23 +206,24 @@ source, and are no-ops if thread support is disabled.
 .Pp
 .Fn AG_SetByteOrder
 configures the byte order to be used by integer read/write operations.
-.Fa order
-may be one of:
-.Bd -literal
-	enum ag_byte_order {
-		AG_BYTEORDER_BE,
-		AG_BYTEORDER_LE
-	};
-.Ed
-.Pp
-You can use
-.Dv AG_BYTEORDER ,
-as defined by the Agar headers, to determine the byte order of the current
-architecture.
-The define evaluates to
+Accepted parameters are
+.Dv AG_BYTEORDER_BE
+for big-endian and
+.Dv AG_BYTEORDER_LE
+for little-endian.
+To determine the byte order of the current architecture, you can use the
+standard
+.Dv AG_BYTEORDER
+define (which evaluates to
 .Dv AG_BIG_ENDIAN
 or
-.Dv AG_LITTLE_ENDIAN .
+.Dv AG_LITTLE_ENDIAN ) .
+.Pp
+Prior to writing to a data source,
+.Fn AG_SetSourceDebug
+enables encoding and verification of debugging information in the archive.
+At the cost of increasing the size of the archive, it enables, notably,
+type-safety checks at primitive data type level as the archive decoded.
 .Pp
 The
 .Fn AG_DataSourceInit
@@ -225,6 +235,33 @@ They are used internally by the
 and
 .Fn AG_Close*
 functions.
+.Pp
+.Fn AG_DataSourceSetErrorFn
+configures an alternate handler routine for data source exceptions (which
+can occur when using routines such as
+.Fn AG_ReadUint32 ,
+for example on I/O error).
+From the handler routine, a pointer to the
+.Ft AG_DataSource
+can be retrieved using
+.Dv AG_SELF ,
+and the error message is retrieved using
+.Dv AG_STRING(1) .
+The routine is expected to
+.Xr free 3
+the string.
+The default exception handler simply calls
+.Xr AG_FatalError 3 .
+.Pp
+The
+.Fn AG_DataSourceError
+function raises a data source error, with the optional error message string.
+It is intended for use in custom I/O routines which do not return an error
+status.
+If
+.Fa fmt
+is NULL, the error is obtained from
+.Xr AG_GetError 3 .
 .Sh IMPLEMENTING NEW SOURCES
 Implementing a new data source is simply a matter of inheriting from the
 .Va AG_DataSource
@@ -319,50 +356,98 @@ specified for the data source.
 .Ft Uint8
 .Fn AG_ReadUint8 "AG_DataSource *ds"
 .Pp
+.Ft int
+.Fn AG_ReadUint8v "AG_DataSource *ds" "Uint8 *v"
+.Pp
 .Ft Sint8
 .Fn AG_ReadSint8 "AG_DataSource *ds"
+.Pp
+.Ft int
+.Fn AG_ReadSint8v "AG_DataSource *ds" "Sint8 *v"
 .Pp
 .Ft Uint16
 .Fn AG_ReadUint16 "AG_DataSource *ds"
 .Pp
+.Ft int
+.Fn AG_ReadUint16v "AG_DataSource *ds" "Uint16 *v"
+.Pp
 .Ft Sint16
 .Fn AG_ReadSint16 "AG_DataSource *ds"
+.Pp
+.Ft int
+.Fn AG_ReadSint16v "AG_DataSource *ds" "Sint16 *v"
 .Pp
 .Ft Uint32
 .Fn AG_ReadUint32 "AG_DataSource *ds"
 .Pp
+.Ft int
+.Fn AG_ReadUint32v "AG_DataSource *ds" "Uint32 *v"
+.Pp
 .Ft Sint32
 .Fn AG_ReadSint32 "AG_DataSource *ds"
+.Pp
+.Ft int
+.Fn AG_ReadSint32 "AG_DataSource *ds" "Sint32 *v"
 .Pp
 .Ft Uint64
 .Fn AG_ReadUint64 "AG_DataSource *ds"
 .Pp
+.Ft int
+.Fn AG_ReadUint64v "AG_DataSource *ds" "Uint64 *v"
+.Pp
 .Ft Sint64
 .Fn AG_ReadSint64 "AG_DataSource *ds"
+.Pp
+.Ft int
+.Fn AG_ReadSint64v "AG_DataSource *ds" "Sint64 *v"
 .Pp
 .Ft void
 .Fn AG_WriteUint8 "AG_DataSource *ds" "Uint8 value"
 .Pp
+.Ft int
+.Fn AG_WriteUint8v "AG_DataSource *ds" "const Uint8 *value"
+.Pp
 .Ft void
 .Fn AG_WriteSint8 "AG_DataSource *ds" "Sint8 value"
+.Pp
+.Ft int
+.Fn AG_WriteSint8v "AG_DataSource *ds" "const Sint8 *value"
 .Pp
 .Ft void
 .Fn AG_WriteUint16 "AG_DataSource *ds" "Uint16 value"
 .Pp
+.Ft int
+.Fn AG_WriteUint16v "AG_DataSource *ds" "const Uint16 *value"
+.Pp
 .Ft void
 .Fn AG_WriteSint16 "AG_DataSource *ds" "Sint16 value"
+.Pp
+.Ft int
+.Fn AG_WriteSint16v "AG_DataSource *ds" "const Sint16 *value"
 .Pp
 .Ft void
 .Fn AG_WriteUint32 "AG_DataSource *ds" "Uint32 value"
 .Pp
+.Ft int
+.Fn AG_WriteUint32v "AG_DataSource *ds" "const Uint32 *value"
+.Pp
 .Ft void
 .Fn AG_WriteSint32 "AG_DataSource *ds" "Sint32 value"
+.Pp
+.Ft int
+.Fn AG_WriteSint32v "AG_DataSource *ds" "const Sint32 *value"
 .Pp
 .Ft void
 .Fn AG_WriteUint64 "AG_DataSource *ds" "Uint64 value"
 .Pp
+.Ft int
+.Fn AG_WriteUint64v "AG_DataSource *ds" "const Uint64 *value"
+.Pp
 .Ft void
 .Fn AG_WriteSint64 "AG_DataSource *ds" "Sint64 value"
+.Pp
+.Ft int
+.Fn AG_WriteSint64v "AG_DataSource *ds" "const Sint64 *value"
 .Pp
 .Ft void
 .Fn AG_WriteUint8At "AG_DataSource *ds" "Uint8 value" "off_t offs"
@@ -393,15 +478,28 @@ specified for the data source.
 The
 .Fn AG_Read[SU]intN
 functions read and return an integer value of N bits from the data source.
+The
+.Fn AG_Read[SU]intNv
+variants write the value to the specified pointer.
 .Pp
 The
 .Fn AG_Write[SU]intN
 functions write an integer value of N bits to the data source.
 The
-.Fn AG_Write[SU]intNAt
-variants write the integer at a specified position.
+.Fn AG_Write[SU]intNv
+variants accept a pointer argument.
 .Pp
-If any of these functions encounter an I/O error, a fatal error is raised.
+The
+.Fn AG_Write[SU]intNAt
+variants write the integer to the specified position in the data source.
+.Pp
+All
+.Fn AG_Read*v
+functions return 0 on success and -1 on failure, without raising any
+exceptions.
+The other functions will raise a data source exception if an failuer (e.g.,
+an I/O error) occured.
+.Pp
 The 64-bit types are only available if
 .Dv HAVE_64BIT
 is defined.
@@ -413,14 +511,26 @@ representation.
 .Ft "float"
 .Fn AG_ReadFloat "AG_DataSource *ds"
 .Pp
+.Ft "int"
+.Fn AG_ReadFloatv "AG_DataSource *ds" "float *f"
+.Pp
 .Ft "double"
 .Fn AG_ReadDouble "AG_DataSource *ds"
+.Pp
+.Ft "int"
+.Fn AG_ReadDoublev "AG_DataSource *ds" "double *f"
 .Pp
 .Ft "long double"
 .Fn AG_ReadLongDouble "AG_DataSource *ds"
 .Pp
+.Ft "int"
+.Fn AG_ReadLongDouble "AG_DataSource *ds" "long double *f"
+.Pp
 .Ft "void"
 .Fn AG_WriteFloat "AG_DataSource *ds" "float f"
+.Pp
+.Ft "int"
+.Fn AG_WriteFloatv "AG_DataSource *ds" "float *f"
 .Pp
 .Ft "void"
 .Fn AG_WriteFloatAt "AG_DataSource *ds" "float f" "off_t pos"
@@ -428,11 +538,17 @@ representation.
 .Ft "void"
 .Fn AG_WriteDouble "AG_DataSource *ds" "double f"
 .Pp
+.Ft "int"
+.Fn AG_WriteDoublev "AG_DataSource *ds" "double *f"
+.Pp
 .Ft "void"
 .Fn AG_WriteDoubleAt "AG_DataSource *ds" "double f" "off_t pos"
 .Pp
 .Ft "void"
 .Fn AG_WriteLongDouble "AG_DataSource *ds" "long double f"
+.Pp
+.Ft "int"
+.Fn AG_WriteLongDoublev "AG_DataSource *ds" "long double *f"
 .Pp
 .Ft "void"
 .Fn AG_WriteLongDoubleAt "AG_DataSource *ds" "long double f" "off_t pos"
@@ -453,7 +569,13 @@ The
 .Fn AG_Write*At
 variants write the value at a given position.
 .Pp
-If any of these functions encounter an I/O error, a fatal error is raised.
+All
+.Fn AG_Read*v
+functions return 0 on success and -1 on failure, without raising any
+exceptions.
+The other functions will raise a data source exception if an failuer (e.g.,
+an I/O error) occured.
+.Pp
 The
 .Fa "long double"
 functions are available only if
@@ -470,8 +592,14 @@ The encoding may or may not include a terminating NUL.
 .Ft "char *"
 .Fn AG_ReadStringLen "AG_DataSource *ds" "size_t maxsize"
 .Pp
+.Ft "int"
+.Fn AG_ReadStringLenv "AG_DataSource *ds" "size_t maxsize" "char **s"
+.Pp
 .Ft "char *"
 .Fn AG_ReadString "AG_DataSource *ds"
+.Pp
+.Ft "int"
+.Fn AG_ReadStringv "AG_DataSource *ds" "char **s"
 .Pp
 .Ft "char *"
 .Fn AG_ReadNulStringLen "AG_DataSource *ds" "size_t maxsize"
@@ -486,7 +614,13 @@ The encoding may or may not include a terminating NUL.
 .Fn AG_CopyNulString "char *buf" "AG_DataSource *ds" "size buf_size"
 .Pp
 .Ft void
+.Fn AG_SkipString "AG_DataSource *ds"
+.Pp
+.Ft void
 .Fn AG_WriteString "AG_DataSource *ds" "const char *s"
+.Pp
+.Ft int
+.Fn AG_WriteStringv "AG_DataSource *ds" "const char *s"
 .Pp
 .nr nS 0
 .Pp
@@ -499,6 +633,13 @@ bytes and returns a dynamically allocated, NUL-terminated copy of the string.
 implicitely limits the string to
 .Dv AG_LOAD_STRING_MAX
 bytes.
+On error, a data source exception is raised.
+.Pp
+The
+.Fn AG_ReadStringLenv
+and
+.Fn AG_ReadStringv
+variants accept pointer arguments and will not raise exceptions on error.
 .Pp
 .Fn AG_CopyString
 copies the string directly into a fixed-size buffer
@@ -519,9 +660,17 @@ and
 variants handle the case where the encoding of the string is NUL-terminated.
 .Pp
 The
+.Fn AG_SkipString
+routine skips over the string at the current position in the buffer.
+.Pp
+The
 .Fn AG_WriteString
 function writes a string to a data source, where the encoding is not
 NUL-terminated.
+If an error occurs, a data source exception is raised.
+The
+.Fn AG_WriteStringv
+variant returns 0 on success and -1 on failure, without raising exceptions.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Version 3 ,
@@ -533,3 +682,5 @@ first appeared in Agar 1.0.
 The current
 .Nm
 interface appeared in Agar 1.3.
+Exception handling and error-checking variants of the primitive I/O routines
+appeared in Agar 1.3.3.

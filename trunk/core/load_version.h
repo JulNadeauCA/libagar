@@ -15,7 +15,7 @@ typedef struct ag_version {
 __BEGIN_DECLS
 int	AG_ReadVersion(AG_DataSource *, const char *, const AG_Version *,
 	               AG_Version *);
-void	AG_WriteVersion(AG_DataSource *, const char *, const AG_Version *);
+int	AG_WriteVersion(AG_DataSource *, const char *, const AG_Version *);
 int	AG_ReadObjectVersion(AG_DataSource *, void *, AG_Version *);
 void	AG_WriteObjectVersion(AG_DataSource *, void *);
 __END_DECLS

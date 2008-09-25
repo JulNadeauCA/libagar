@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdio.h>
 
+/* Read Agar archive version information. */
 int
 AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
     AG_Version *rver)
@@ -45,11 +46,14 @@ AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
 
 	if (AG_Read(ds, nbuf, sizeof(nbuf), 1) != 0 ||
 	    strncmp(nbuf, name, nlen) != 0) {
-		AG_SetError(_("%s: Bad signature in data source"), name);
+		AG_SetError("%s: Bad magic (\"%s\")", name, nbuf);
 		return (-1);
 	}
-	major = AG_ReadUint32(ds);
-	minor = AG_ReadUint32(ds);
+	if (AG_ReadUint32v(ds, &major) == -1 ||
+	    AG_ReadUint32v(ds, &minor) == -1) {
+		AG_SetError("Reading version numbers: %s", AG_GetError());
+		return (-1);
+	}
 
 	if (rver != NULL) {
 		rver->major = major;
@@ -67,28 +71,42 @@ AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
 	return (0);
 }
 
-void
+/* Write Agar archive version information. */
+int
 AG_WriteVersion(AG_DataSource *ds, const char *name, const AG_Version *ver)
 {
 	char nbuf[AG_VERSION_NAME_MAX];
+	int i;
 
-	memset(nbuf, '!', sizeof(nbuf));
+	for (i = 0; i < sizeof(nbuf); i += 4) {
+		nbuf[i  ] = 'a';
+		nbuf[i+1] = 'g';
+		nbuf[i+2] = 'a';
+		nbuf[i+3] = 'r';
+	}
 	Strlcpy(nbuf, name, sizeof(nbuf));
-	if (AG_Write(ds, nbuf, sizeof(nbuf), 1) != 0) { AG_FatalError(NULL); }
-	AG_WriteUint32(ds, ver->major);
-	AG_WriteUint32(ds, ver->minor);
+	if (AG_Write(ds, nbuf, sizeof(nbuf), 1) != 0) {
+		AG_SetError("Writing magic: %s", AG_GetError());
+		return (-1);
+	}
+	if (AG_WriteUint32v(ds, &ver->major) == -1 ||
+	    AG_WriteUint32v(ds, &ver->minor) == -1) {
+		AG_SetError("Writing version numbers: %s", AG_GetError());
+		return (-1);
+	}
+	return (0);
 }
 
 int
 AG_ReadObjectVersion(AG_DataSource *ds, void *p, AG_Version *pver)
 {
-	AG_ObjectClass *cls = OBJECT(p)->cls;
-	return (AG_ReadVersion(ds, cls->name, &cls->ver, pver));
+	AG_ObjectClass *cl = OBJECT(p)->cls;
+	return AG_ReadVersion(ds, cl->name, &cl->ver, pver);
 }
 
 void
 AG_WriteObjectVersion(AG_DataSource *ds, void *p)
 {
-	AG_ObjectClass *cls = OBJECT(p)->cls;
-	AG_WriteVersion(ds, cls->name, &cls->ver);
+	AG_ObjectClass *cl = OBJECT(p)->cls;
+	AG_WriteVersion(ds, cl->name, &cl->ver);
 }
