@@ -1,0 +1,30 @@
+# Public domain
+
+REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
+
+C_DEFINE(_USE_AGAR_QUEUE)
+C_DEFINE(_USE_AGAR_STD)
+
+CHECK(cc)
+CHECK(getopt)
+
+CHECK(pthreads)
+CHECK(sdl)
+CHECK(opengl)
+CHECK(freetype)
+
+CHECK(agar, 1.3.3)
+
+if [ "${HAVE_AGAR}" != "yes" ]; then
+	echo "This application requires Agar."
+	exit 1
+fi
+
+C_INCDIR($SRC)
+C_NO_SECURE_WARNINGS()
+
+if [ "${enable_warnings}" = "yes" ]; then
+	C_OPTION(-Wall)
+	C_OPTION(-Werror)
+	C_OPTION(-Wmissing-prototypes)
+fi
