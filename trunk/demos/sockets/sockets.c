@@ -86,7 +86,7 @@ CreateGameMenu(void)
 	}
 	AG_FixedMove(fx, px, 0, 0);
 	
-	lbl = AG_LabelNewStatic(NULL, 0, "Drag & Drop Demo (%s)",
+	lbl = AG_LabelNew(NULL, 0, "Drag & Drop Demo (%s)",
 	    agView->opengl ? "OpenGL" : "SDL");
 	AG_FixedPut(fx, lbl, 20, 32);
 
