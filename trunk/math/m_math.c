@@ -141,7 +141,7 @@ M_ReadReal(AG_DataSource *ds)
 		/* XXX TODO convert */
 #endif
 	default:
-		AG_FatalError("Cannot convert real");
+		AG_FatalError("Cannot convert real (%d)", (int)prec);
 	}
 	return (0.0);
 }
@@ -168,7 +168,7 @@ M_CopyReal(AG_DataSource *ds, M_Real *rv)
 #endif
 		break;
 	default:
-		AG_FatalError("Cannot convert real");
+		AG_FatalError("Cannot convert real (%d)", (int)prec);
 	}
 }
 
