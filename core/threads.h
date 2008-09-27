@@ -72,6 +72,7 @@ extern pthread_mutexattr_t agRecursiveMutexAttr;
 #endif /* DEBUG */
 
 #define AG_ThreadCreate(t,f,arg) pthread_create((t),NULL,(f),(arg))
+#define AG_ThreadSelf() pthread_self()
 #define AG_ThreadJoin(t,vp) pthread_join((t),(vp))
 #define AG_ThreadExit(p) pthread_exit(p)
 #define AG_MutexTrylock(m) pthread_mutex_trylock(m)
@@ -106,6 +107,7 @@ typedef int AG_ThreadKey;
 #define AG_CondTimedWait(cd,m,t)
 #define AG_ThreadCancel(thread)
 
+#define AG_ThreadSelf(thread) AG_FatalError("No THREADS")
 #define AG_ThreadCreate(thread,func,arg) AG_FatalError("No THREADS")
 #define AG_ThreadJoin(thread,valptr) AG_FatalError("No THREADS")
 #define AG_ThreadExit(p)
