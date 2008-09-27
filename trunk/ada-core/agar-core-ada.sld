@@ -6,6 +6,7 @@ agar-core-datasource.o
 agar-core-dso.o
 agar-core-error.o
 agar-core-event.o
+agar-core-event_types.o
 agar-core-file.o
 agar-core-limits.o
 agar-core-object.o

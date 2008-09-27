@@ -1,3 +1,4 @@
+with agar.core.event_types;
 with agar.core.threads;
 with agar.core.types;
 
@@ -94,6 +95,8 @@ package agar.core.datasource is
 
   type datasource_t is record
     lock        : agar.core.threads.mutex_t;
+    debug       : c.int;
+    error_func  : agar.core.event_types.callback_t;
     byte_order  : byte_order_t;
     write_last  : c.size_t;
     read_last   : c.size_t;
@@ -195,5 +198,17 @@ package agar.core.datasource is
 
   procedure destroy (data_source : datasource_access_t);
   pragma import (c, destroy, "AG_DataSourceDestroy");
+
+  -- errors
+
+  procedure set_error_callback
+    (data_source : datasource_access_t;
+     callback    : agar.core.event_types.callback_t);
+  pragma inline (set_error_callback);
+
+  procedure error
+    (data_source : datasource_access_t;
+     message     : string);
+  pragma inline (error);
 
 end agar.core.datasource;

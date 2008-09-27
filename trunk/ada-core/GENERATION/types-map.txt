@@ -10,22 +10,30 @@ agar.core.dso.dso_t:struct ag_dso
 agar.core.dso.sym_access_t:AG_DSOSym *
 agar.core.dso.sym_t:AG_DSOSym
 agar.core.dso.sym_t:struct ag_dso_sym
-agar.core.event.arg_t:AG_EvArg
-agar.core.event.arg_t:union evarg
-agar.core.event.arg_type_t:enum ag_evarg_type
 agar.core.event.callback_t:AG_EventFn
 agar.core.event.event_t:AG_Event
 agar.core.event.event_t:struct ag_event
+agar.core.event_types.arg_t:AG_EvArg
+agar.core.event_types.arg_t:union evarg
+agar.core.event_types.arg_type_t:enum ag_evarg_type
 agar.core.file.info_access_t:AG_FileInfo *
 agar.core.file.info_access_t:struct ag_file_info *
 agar.core.file.info_t:AG_FileInfo
 agar.core.file.info_t:struct ag_file_info
 agar.core.file.type_t:enum ag_file_info_type
 agar.core.object.checksum_alg_t:enum ag_object_checksum_alg
+agar.core.object.class_spec_access_t:AG_ObjectClassSpec *
+agar.core.object.class_spec_access_t:struct ag_object_class_spec *
+agar.core.object.class_spec_t:AG_ObjectClassSpec
+agar.core.object.class_spec_t:struct ag_object_class_spec
 agar.core.object.class_t:AG_ObjectClass
 agar.core.object.class_t:struct ag_object_class
 agar.core.object.dep_t:AG_ObjectDep
 agar.core.object.dep_t:struct ag_object_dep
+agar.core.object.namespace_access_t:AG_Namespace *
+agar.core.object.namespace_access_t:struct ag_namespace *
+agar.core.object.namespace_t:AG_Namespace
+agar.core.object.namespace_t:struct ag_namespace
 agar.core.object.object_t:AG_Object
 agar.core.object.object_t:struct ag_object
 agar.core.object.prop_class_t:AG_PropClass

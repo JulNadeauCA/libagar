@@ -8,6 +8,7 @@ with agar.core;
 with agar.core.datasource;
 with agar.core.dso;
 with agar.core.event;
+with agar.core.event_types;
 with agar.core.file;
 with agar.core.object;
 with agar.core.threads;
@@ -27,16 +28,20 @@ procedure ada_size is
   agar_core_dso_dso_t : aliased string := "agar.core.dso.dso_t";
   agar_core_dso_sym_access_t : aliased string := "agar.core.dso.sym_access_t";
   agar_core_dso_sym_t : aliased string := "agar.core.dso.sym_t";
-  agar_core_event_arg_t : aliased string := "agar.core.event.arg_t";
-  agar_core_event_arg_type_t : aliased string := "agar.core.event.arg_type_t";
   agar_core_event_callback_t : aliased string := "agar.core.event.callback_t";
   agar_core_event_event_t : aliased string := "agar.core.event.event_t";
+  agar_core_event_types_arg_t : aliased string := "agar.core.event_types.arg_t";
+  agar_core_event_types_arg_type_t : aliased string := "agar.core.event_types.arg_type_t";
   agar_core_file_info_access_t : aliased string := "agar.core.file.info_access_t";
   agar_core_file_info_t : aliased string := "agar.core.file.info_t";
   agar_core_file_type_t : aliased string := "agar.core.file.type_t";
   agar_core_object_checksum_alg_t : aliased string := "agar.core.object.checksum_alg_t";
+  agar_core_object_class_spec_access_t : aliased string := "agar.core.object.class_spec_access_t";
+  agar_core_object_class_spec_t : aliased string := "agar.core.object.class_spec_t";
   agar_core_object_class_t : aliased string := "agar.core.object.class_t";
   agar_core_object_dep_t : aliased string := "agar.core.object.dep_t";
+  agar_core_object_namespace_access_t : aliased string := "agar.core.object.namespace_access_t";
+  agar_core_object_namespace_t : aliased string := "agar.core.object.namespace_t";
   agar_core_object_object_t : aliased string := "agar.core.object.object_t";
   agar_core_object_prop_class_t : aliased string := "agar.core.object.prop_class_t";
   agar_core_object_prop_type_t : aliased string := "agar.core.object.prop_type_t";
@@ -72,16 +77,20 @@ procedure ada_size is
     (agar_core_dso_dso_t'access, agar.core.dso.dso_t'size),
     (agar_core_dso_sym_access_t'access, agar.core.dso.sym_access_t'size),
     (agar_core_dso_sym_t'access, agar.core.dso.sym_t'size),
-    (agar_core_event_arg_t'access, agar.core.event.arg_t'size),
-    (agar_core_event_arg_type_t'access, agar.core.event.arg_type_t'size),
     (agar_core_event_callback_t'access, agar.core.event.callback_t'size),
     (agar_core_event_event_t'access, agar.core.event.event_t'size),
+    (agar_core_event_types_arg_t'access, agar.core.event_types.arg_t'size),
+    (agar_core_event_types_arg_type_t'access, agar.core.event_types.arg_type_t'size),
     (agar_core_file_info_access_t'access, agar.core.file.info_access_t'size),
     (agar_core_file_info_t'access, agar.core.file.info_t'size),
     (agar_core_file_type_t'access, agar.core.file.type_t'size),
     (agar_core_object_checksum_alg_t'access, agar.core.object.checksum_alg_t'size),
+    (agar_core_object_class_spec_access_t'access, agar.core.object.class_spec_access_t'size),
+    (agar_core_object_class_spec_t'access, agar.core.object.class_spec_t'size),
     (agar_core_object_class_t'access, agar.core.object.class_t'size),
     (agar_core_object_dep_t'access, agar.core.object.dep_t'size),
+    (agar_core_object_namespace_access_t'access, agar.core.object.namespace_access_t'size),
+    (agar_core_object_namespace_t'access, agar.core.object.namespace_t'size),
     (agar_core_object_object_t'access, agar.core.object.object_t'size),
     (agar_core_object_prop_class_t'access, agar.core.object.prop_class_t'size),
     (agar_core_object_prop_type_t'access, agar.core.object.prop_type_t'size),
