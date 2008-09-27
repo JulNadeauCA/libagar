@@ -44,9 +44,11 @@ package agar.core.object is
   prop_path_max : constant := 1024 + 1 + prop_key_max;
 
   -- object constants
-  object_type_max   : constant := 128;
+  object_hier_max   : constant := 256;
+  object_type_max   : constant := 48;
   object_name_max   : constant := 128;
   object_path_max   : constant := 1024;
+  object_libs_max   : constant := 128;
   object_digest_max : constant := 170;
 
   -- object flags
@@ -356,14 +358,46 @@ package agar.core.object is
    for checksum_alg_t'size use c.unsigned'size;
   pragma convention (c, checksum_alg_t);
 
+  type spec_hier_t is array (1 .. object_hier_max) of aliased c.char;
+  type spec_libs_t is array (1 .. object_libs_max) of aliased c.char;
+  type spec_spec_t is array (1 .. object_hier_max) of aliased c.char;
+  type spec_name_t is array (1 .. object_name_max) of aliased c.char;
+  pragma convention (c, spec_hier_t);
+  pragma convention (c, spec_libs_t);
+  pragma convention (c, spec_spec_t);
+  pragma convention (c, spec_name_t);
+
+  -- Class specification
+  type class_spec_t is record
+    hier : spec_hier_t;
+    libs : spec_libs_t;
+    spec : spec_hier_t;
+    name : spec_name_t;
+  end record;
+  type class_spec_access_t is access all class_spec_t;
+  pragma convention (c, class_spec_t);
+  pragma convention (c, class_spec_access_t);
+
+  -- Namespace specification
+  type namespace_t is record
+    name : cs.chars_ptr;
+    pfx  : cs.chars_ptr;
+    url  : cs.chars_ptr;
+  end record;
+  type namespace_access_t is access all namespace_t;
+  pragma convention (c, namespace_t);
+  pragma convention (c, namespace_access_t);
+
   type class_name_t is array (1 .. object_type_max) of aliased c.char;
-  type class_libs_t is array (1 .. object_type_max) of aliased c.char;
+  type class_hier_t is array (1 .. object_hier_max) of aliased c.char;
+  type class_libs_t is array (1 .. object_libs_max) of aliased c.char;
   pragma convention (c, class_name_t);
+  pragma convention (c, class_hier_t);
   pragma convention (c, class_libs_t);
 
   -- Generic object operation vector
   type class_t is record
-    name       : class_name_t;
+    hier       : class_hier_t;
     size       : c.size_t;
     ver        : agar.core.version.version_t;
     init       : access procedure (ptr : agar.core.types.void_ptr_t);
@@ -378,6 +412,8 @@ package agar.core.object is
        data_source : agar.core.datasource.datasource_access_t) return c.int;
     edit       : access function
       (ptr : agar.core.types.void_ptr_t) return agar.core.types.void_ptr_t;
+
+    name       : class_name_t;
     libs       : class_libs_t;
     sub        : class_queue.head_t;
     subclasses : class_queue.entry_t;

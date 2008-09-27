@@ -4,6 +4,7 @@ ada_size.ali
 ../agar-core-dso.ali
 ../agar-core-error.ali
 ../agar-core-event.ali
+../agar-core-event_types.ali
 ../agar-core-file.ali
 ../agar-core-limits.ali
 ../agar-core-object.ali

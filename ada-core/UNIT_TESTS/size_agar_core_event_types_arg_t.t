@@ -1,12 +1,12 @@
 #!/bin/sh
 # auto generated, do not edit
 
-size_ada=`./ada_size "agar.core.event.arg_t"`
+size_ada=`./ada_size "agar.core.event_types.arg_t"`
 if [ $? -ne 0 ]; then exit 2; fi
 size_c=`./c_size "union evarg"`
 if [ $? -ne 0 ]; then exit 2; fi
 
-printf "%8d %8d %s -> %s\n" "${size_ada}" "${size_c}" "agar.core.event.arg_t" "union evarg"
+printf "%8d %8d %s -> %s\n" "${size_ada}" "${size_c}" "agar.core.event_types.arg_t" "union evarg"
 
 if [ ${size_ada} -ne ${size_c} ]
 then
