@@ -20,7 +20,8 @@ SUBDIR=	fixedres \
 	keyevents \
 	customwidget \
 	windows \
-	threads
+	threads \
+	minimal
 
 all: all-subdir
 clean: prereq clean-subdir
