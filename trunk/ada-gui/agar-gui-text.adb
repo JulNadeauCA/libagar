@@ -38,11 +38,12 @@ package body agar.gui.text is
        fmt         : cs.chars_ptr;
        text        : cs.chars_ptr);
     pragma import (c, warning, "AG_TextWarning");
-  
+    
     procedure info
-      (fmt  : cs.chars_ptr;
-       text : cs.chars_ptr);
-    pragma import (c, info, "AG_TextInfo");
+      (disable_key : cs.chars_ptr;
+       fmt         : cs.chars_ptr;
+       text        : cs.chars_ptr);
+    pragma import (c, warning, "AG_TextInfo");
   
     procedure timed_message
       (title  : msg_title_t;
