@@ -11,7 +11,7 @@ EnteredString(AG_Event *event)
 {
 	char *s = AG_STRING(1);
 
-	AG_TextInfo("Got string \"%s\"", s);
+	AG_TextInfo("got-string", "Got string \"%s\"", s);
 }
 
 int
@@ -46,11 +46,14 @@ main(int argc, char *argv[])
 	AG_TextPromptString("Prompt for a string: ", EnteredString, NULL);
 
 	/* Various canned dialogs as described in AG_Text(3). */
-	AG_TextMsg(AG_MSG_INFO, "This is an informational message");
 	AG_TextWarning("my-warning-key", "This is a warning");
 	AG_TextError("This is an error message");
-	AG_TextInfo("This is an informational message");
 	AG_TextTmsg(AG_MSG_INFO, 3000, "This is a timed message");
+	AG_TextMsg(AG_MSG_INFO, "This is an informational message");
+	AG_TextInfo("infomsg",
+	    "This is an informational message. Multiline text is "
+	    "always allowed. Text will be wrapped to multiple lines "
+	    "if it cannot be displayed properly on a single line.");
 
 	/* Edit an existing floating-point variable. */
 	AG_TextEditFloat(&v, 0.0, 100.0, "cm", "Edit a float value: ");
