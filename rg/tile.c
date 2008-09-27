@@ -357,7 +357,7 @@ RG_TileDelFeature(RG_Tile *t, void *ftp, int destroy)
 		Free(tel);
 
 		if (--ft->nrefs == 0 && destroy) {
-			AG_TextTmsg(2000,
+			AG_TextTmsg(AG_MSG_INFO, 2000,
 			    _("Destroying unreferenced feature: %s"),
 			    ft->name);
 			TAILQ_REMOVE(&t->ts->features, ft, features);
@@ -430,7 +430,7 @@ RG_TileDelPixmap(RG_Tile *t, RG_Pixmap *px, int destroy)
 		TAILQ_REMOVE(&t->elements, tel, elements);
 		Free(tel);
 		if (--px->nrefs == 0 && destroy) {
-			AG_TextTmsg(2000,
+			AG_TextTmsg(AG_MSG_INFO, 2000,
 			    _("Destroying unreferenced pixmap: %s"),
 			    px->name);
 			TAILQ_REMOVE(&t->ts->pixmaps, px, pixmaps);
@@ -454,7 +454,7 @@ RG_TileDelSketch(RG_Tile *t, RG_Sketch *sk, int destroy)
 		TAILQ_REMOVE(&t->elements, tel, elements);
 		Free(tel);
 		if (--sk->nrefs == 0 && destroy) {
-			AG_TextTmsg(2000,
+			AG_TextTmsg(AG_MSG_INFO, 2000,
 			    _("Destroying unreferenced sketch: %s"),
 			    sk->name);
 			TAILQ_REMOVE(&t->ts->sketches, sk, sketches);
