@@ -19,7 +19,8 @@ SUBDIR=	fixedres \
 	initvideosdl \
 	keyevents \
 	customwidget \
-	windows
+	windows \
+	threads
 
 all: all-subdir
 clean: prereq clean-subdir

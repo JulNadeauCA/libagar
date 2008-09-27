@@ -1,0 +1,22 @@
+# Public domain
+
+REGISTER("--enable-static",	"Produce a static binary [default: no]")
+
+C_DEFINE(_USE_AGAR_STD)
+
+CHECK(cc)
+CHECK(pthreads)
+CHECK(sdl)
+CHECK(opengl)
+CHECK(freetype)
+CHECK(agar, 1.3)
+CHECK(sdl_image)
+
+if [ "${HAVE_AGAR}" != "yes" ]; then
+	echo "This demo requires Agar installed on your system."
+	exit 1
+fi
+
+if [ "${enable_static}" = "yes" ]; then
+	MDEFINE(LDFLAGS, "-static")
+fi
