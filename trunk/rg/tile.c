@@ -357,7 +357,8 @@ RG_TileDelFeature(RG_Tile *t, void *ftp, int destroy)
 		Free(tel);
 
 		if (--ft->nrefs == 0 && destroy) {
-			AG_TextInfo(_("Destroying unreferenced feature: %s"),
+			AG_TextTmsg(2000,
+			    _("Destroying unreferenced feature: %s"),
 			    ft->name);
 			TAILQ_REMOVE(&t->ts->features, ft, features);
 			AG_FeatureDestroy(ft);
@@ -429,7 +430,8 @@ RG_TileDelPixmap(RG_Tile *t, RG_Pixmap *px, int destroy)
 		TAILQ_REMOVE(&t->elements, tel, elements);
 		Free(tel);
 		if (--px->nrefs == 0 && destroy) {
-			AG_TextInfo(_("Destroying unreferenced pixmap: %s"),
+			AG_TextTmsg(2000,
+			    _("Destroying unreferenced pixmap: %s"),
 			    px->name);
 			TAILQ_REMOVE(&t->ts->pixmaps, px, pixmaps);
 			RG_PixmapDestroy(px);
@@ -452,7 +454,8 @@ RG_TileDelSketch(RG_Tile *t, RG_Sketch *sk, int destroy)
 		TAILQ_REMOVE(&t->elements, tel, elements);
 		Free(tel);
 		if (--sk->nrefs == 0 && destroy) {
-			AG_TextInfo(_("Destroying unreferenced sketch: %s"),
+			AG_TextTmsg(2000,
+			    _("Destroying unreferenced sketch: %s"),
 			    sk->name);
 			TAILQ_REMOVE(&t->ts->sketches, sk, sketches);
 			RG_SketchDestroy(sk);
@@ -1707,7 +1710,8 @@ ImportBMP(AG_Event *event)
 	RG_TileGenerate(t);
 	AG_SurfaceFree(bmp);
 
-	AG_TextInfo(_("Bitmap imported successfully (%ux%u)"),
+	AG_TextInfo("rg-bitmap-imported",
+	    _("Bitmap imported successfully (%ux%u)"),
 	    t->su->w, t->su->h);
 }
 
@@ -1740,7 +1744,9 @@ ExportBMP(AG_Event *event)
 	if (SDL_SaveBMP(sSDL, path) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, SDL_GetError());
 	} else {
-		AG_TextInfo(_("%s successfully exported to %s"), t->name, path);
+		AG_TextInfo("rg-bitmap-exported",
+		    _("%s successfully exported to %s"), t->name,
+		    path);
 	}
 	SDL_FreeSurface(sSDL);
 }

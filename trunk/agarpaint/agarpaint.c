@@ -277,7 +277,8 @@ SaveTilesetToIconsHdr(AG_Event *event)
 	fprintf(f, "}\n");
 	fclose(f);
 
-	AG_TextInfo(_("Successfully exported %s to header (%s)"),
+	AG_TextInfo("exported-tileset",
+	    _("Successfully exported %s to header (%s)"),
 	    AGOBJECT(ts)->name, pkgName);
 }
 
@@ -357,7 +358,8 @@ ImportImagesFromXCF(AG_Event *event)
 	if (AG_XCFLoad(buf, 0, LoadTileFromXCF, ts) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s: %s", path, AG_GetError());
 	} else {
-		AG_TextInfo(_("Successfully imported XCF image into %s"),
+		AG_TextInfo("imported-image",
+		    _("Successfully imported XCF image into %s"),
 		    AGOBJECT(ts)->name);
 	}
 	AG_CloseFile(buf);
@@ -394,7 +396,8 @@ SaveTileset(AG_Event *event)
 		AG_TextMsg(AG_MSG_ERROR, _("Error saving tileset: %s"),
 		    AG_GetError());
 	} else {
-		AG_TextInfo(_("Saved tileset %s successfully"),
+		AG_TextInfo("saved-tileset",
+		    _("Saved tileset %s successfully"),
 		    AGOBJECT(ts)->name);
 	}
 }
