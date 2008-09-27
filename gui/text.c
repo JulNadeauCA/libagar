@@ -1439,19 +1439,31 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 	AG_AddTimeout(NULL, &textMsgTo, expire);
 }
 
+/*
+ * Display an informational message with a "Don't tell me again" option.
+ * The user preference is preserved in a persistent table. Unlike warnings,
+ * the dialog window is not modal.
+ */
 void
-AG_TextInfo(const char *fmt, ...)
+AG_TextInfo(const char *key, const char *format, ...)
 {
+	char propKey[AG_PROP_KEY_MAX];
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_VBox *vb;
+	AG_Checkbox *cb;
 	va_list args;
-
-	if (agMsgDelay == 0)
+	int val;
+	
+	Strlcpy(propKey, "info.", sizeof(propKey));
+	Strlcat(propKey, key, sizeof(propKey));
+	
+	if (AG_GetProp(agConfig, propKey, AG_PROP_BOOL, &val) != NULL &&
+	    val == 1)
 		return;
 
-	va_start(args, fmt);
-	Vsnprintf(msg, sizeof(msg), fmt, args);
+	va_start(args, format);
+	Vsnprintf(msg, sizeof(msg), format, args);
 	va_end(args);
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOCLOSE|
@@ -1462,15 +1474,15 @@ AG_TextInfo(const char *fmt, ...)
 
 	vb = AG_VBoxNew(win, 0);
 	AG_LabelNewStaticString(vb, 0, msg);
+
+	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
+	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
+
+	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
+	AG_SetBool(agConfig, propKey, 0);
+	AG_WidgetBindProp(cb, "state", agConfig, propKey);
+
 	AG_WindowShow(win);
-	AG_LockTimeouts(NULL);
-	if (AG_TimeoutIsScheduled(NULL, &textMsgTo)) {
-		AG_ViewDetach((AG_Window *)textMsgTo.arg);
-		AG_DelTimeout(NULL, &textMsgTo);
-	}
-	AG_UnlockTimeouts(NULL);
-	AG_SetTimeout(&textMsgTo, TextTmsgExpire, win, 0);
-	AG_AddTimeout(NULL, &textMsgTo, agMsgDelay);
 }
 
 /*
@@ -1615,7 +1627,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 
 /* Create a dialog to edit a string value. */
 void
-AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
+AG_TextEditString(char *sp, size_t len, const char *msgfmt, ...)
 {
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;
@@ -1637,7 +1649,7 @@ AG_TextEditString(char **sp, size_t len, const char *msgfmt, ...)
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
 		tb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, NULL);
-		AG_TextboxBindUTF8(tb, *sp, len);
+		AG_TextboxBindUTF8(tb, sp, len);
 		AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
 		AG_WidgetFocus(tb);
 	}

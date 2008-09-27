@@ -148,9 +148,9 @@ void AG_TextMsg(enum ag_text_msg_title, const char *, ...)
 void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *, ...)
 	         FORMAT_ATTRIBUTE(printf,3,4)
 		 NONNULL_ATTRIBUTE(3);
-void AG_TextInfo(const char *, ...)
-	         FORMAT_ATTRIBUTE(printf,1,2)
-		 NONNULL_ATTRIBUTE(1);
+void AG_TextInfo(const char *, const char *, ...)
+	         FORMAT_ATTRIBUTE(printf,2,3)
+		 NONNULL_ATTRIBUTE(2);
 void AG_TextWarning(const char *, const char *, ...)
 	            FORMAT_ATTRIBUTE(printf,2,3)
 	            NONNULL_ATTRIBUTE(2);
@@ -165,7 +165,7 @@ void AG_TextEditFloat(double *, double, double, const char *,
 		      const char *, ...)
 		      FORMAT_ATTRIBUTE(printf,5,6)
 		      NONNULL_ATTRIBUTE(5);
-void AG_TextEditString(char **, size_t, const char *, ...)
+void AG_TextEditString(char *, size_t, const char *, ...)
 		       FORMAT_ATTRIBUTE(printf,3,4)
 		       NONNULL_ATTRIBUTE(3);
 

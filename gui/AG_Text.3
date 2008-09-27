@@ -206,22 +206,22 @@ and the width in pixels of each line in the array
 .Fn AG_TextError "const char *format" "..."
 .Pp
 .Ft "void"
-.Fn AG_TextInfo "const char *format" "..."
+.Fn AG_TextInfo "const char *disableKey" "const char *format" "..."
 .Pp
 .Ft "void"
 .Fn AG_TextTmsg "enum ag_text_msg_title title" "Uint32 expire" "const char *format" "..."
 .Pp
 .Ft "void"
-.Fn AG_TextEditFloat "enum text_float_type type" "double *fp" "double min" "double max" "const AG_Unit *unit" "const char *format" "..."
+.Fn AG_TextEditFloat "double *fp" "double min" "double max" "const AG_Unit *unit" "const char *format" "..."
 .Pp
 .Ft "void"
-.Fn AG_TextEditString "char **buf" "size_t len" "const char *format" "..."
+.Fn AG_TextEditString "char *buf" "size_t len" "const char *format" "..."
 .Pp
 .Ft "void"
 .Fn "AG_TextPromptString" "const char *prompt" "void (*ok_fn)(AG_Event *)" "const char *fmt" "..."
 .Pp
 .Ft "AG_Window *"
-.Fn AG_TextPromptOptions "AG_Button *buttons" "Uint nButtons" "const char *format" "..."
+.Fn AG_TextPromptOptions "AG_Button **buttons" "Uint nButtons" "const char *format" "..."
 .Pp
 .nr nS 0
 The
@@ -265,17 +265,19 @@ with a
 setting.
 .Pp
 .Fn AG_TextInfo
-displays an informational message for the amount of time specified by the
-.Xr AG_Config 3
-setting
-.Va agMsgDelay
-(in milliseconds).
-If that parameter is 0, informational messages are not shown.
+displays an informational message.
+Similar to
+.Fn AG_TextWarning ,
+a
+.Dq Don't show again
+option is provided to the user (and the setting is referenced by
+.Fa disableKey ) .
 .Pp
+The
 .Fn AG_TextTmsg
-is a variant of
+routine is a variant of
 .Fn AG_TextMsg
-that displays the message for a specific amount of time, given in milliseconds.
+which displays the message for a specific amount of time, given in milliseconds.
 .Pp
 The
 .Fn AG_TextEditFloat
