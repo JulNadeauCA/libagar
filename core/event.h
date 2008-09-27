@@ -201,7 +201,7 @@ __END_DECLS
 
 #define AG_EVENT_GET_ARGS(ev, fmtp)					\
 	if (fmtp != NULL) {						\
-		const char *e_fc = fmtp;				\
+		const char *e_fc = (const char *)fmtp;			\
 		va_list ap;						\
 									\
 		va_start(ap, fmtp);					\
