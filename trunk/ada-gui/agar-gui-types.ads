@@ -4,6 +4,7 @@
 
 with agar.core.tail_queue;
 with agar.core.types;
+with agar.gui.rect;
 with agar.gui.widget.box;
 with agar.gui.widget.button;
 with agar.gui.widget.label;
@@ -105,8 +106,10 @@ private
   type window_t is record
     widget    : aliased agar.gui.widget.widget_t;
     flags     : window_flags_t;
+
     caption   : window_caption_t;
     visible   : c.int;
+
     tbar      : widget_titlebar_access_t;
     alignment : window_alignment_t;
     spacing   : c.int;
@@ -114,16 +117,20 @@ private
     bpad      : c.int;
     lpad      : c.int;
     rpad      : c.int;
+
+    reqw      : c.int;
+    reqh      : c.int;
+
     minw      : c.int;
     minh      : c.int;
-    savx      : c.int;
-    savy      : c.int;
-    savw      : c.int;
-    savh      : c.int;
+    r_saved   : agar.gui.rect.rect_t;
+    min_pct   : c.int;
+
     subwins   : window_tail_queue.head_t;
     windows   : window_tail_queue.entry_t;
     swins     : window_tail_queue.entry_t;
     detach    : window_tail_queue.entry_t;
+
     icon      : widget_icon_access_t;
   end record;
   pragma convention (c, window_t);

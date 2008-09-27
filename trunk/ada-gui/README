@@ -1,10 +1,10 @@
 REQUIREMENTS
 
   SDL-1.2.x       -- http://libsdl.org
-  sdl-ada         -- http://coreland.ath.cx/git/sdl-ada.git/  (git repository)
+  sdl-ada         -- http://git.coreland.ath.cx/sdl-ada.git  (git repository)
                      http://coreland.ath.cx/cgi-bin/gitweb.cgi?p=sdl-ada.git
   agar-core-ada   -- http://libagar.org/
-                     http://coreland.ath.cx/git/agar-ada.git/ (git repository)
+                     http://git.coreland.ath.cx/agar-ada.git (git repository)
                      http://coreland.ath.cx/cgi-bin/gitweb.cgi?p=agar-ada.git
 
 CONFIGURATION

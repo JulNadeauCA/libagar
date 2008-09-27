@@ -1,4 +1,5 @@
 with agar.core.event;
+with agar.core.event_types;
 with agar.core.tail_queue;
 with agar.core.timeout;
 with agar.core.types;
@@ -179,7 +180,7 @@ private
   type item_label_t is array (1 .. agar.gui.widget.label.max) of aliased c.char;
   pragma convention (c, item_label_t);
 
-  type item_argv_t is array (1 .. 8) of aliased agar.core.event.arg_t;
+  type item_argv_t is array (1 .. 8) of aliased agar.core.event_types.arg_t;
   pragma convention (c, item_argv_t);
 
   type item_t is record
