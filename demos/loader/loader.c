@@ -174,6 +174,16 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
+	if (argc >= 2) {
+		if (strcmp(argv[1], "-g") == 0) {
+			printf("Forcing GL mode\n");
+			AG_SetBool(agConfig, "view.opengl", 1);
+		} else if (strcmp(argv[1], "-G") == 0) {
+			printf("Forcing SDL mode\n");
+			AG_SetBool(agConfig, "view.opengl", 0);
+		}
+	}
+	
 	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);

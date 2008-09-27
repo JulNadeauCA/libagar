@@ -58,7 +58,7 @@ CreateWindow(void)
 		 * (polled labels use special format strings; see AG_Label(3)
 		 * for details).
 		 */
-		AG_LabelNewStatic(div1, 0, "This is a static label");
+		AG_LabelNew(div1, 0, "This is a static label");
 
 		lbl = AG_LabelNewPolled(div2, AG_LABEL_FRAME,
 		    "This is a polled label (x=%i)", &pane->dx);

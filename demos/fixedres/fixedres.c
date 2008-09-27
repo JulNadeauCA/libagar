@@ -49,8 +49,8 @@ CreateGameMenu(void)
 	 * Create two labels. We don't initially attach the labels to a
 	 * parent, so we must use AG_FixedPut().
 	 */
-	lb1 = AG_LabelNewStatic(NULL, 0, "Fixed Resolution");
-	lb2 = AG_LabelNewStatic(NULL, 0, "Demo");
+	lb1 = AG_LabelNew(NULL, 0, "Fixed Resolution");
+	lb2 = AG_LabelNew(NULL, 0, "Demo");
 	AG_FixedPut(fx, lb1, 20, 32);
 	AG_FixedPut(fx, lb2, 20, 32+agTextFontHeight);
 
