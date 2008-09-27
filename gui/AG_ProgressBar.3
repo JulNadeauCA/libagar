@@ -50,6 +50,9 @@ bar representing the value.
 .Fn AG_ProgressBarNew "AG_Widget *parent" "enum ag_progress_bar_type type" "Uint flags"
 .Pp
 .Ft "AG_ProgressBar *"
+.Fn AG_ProgressBarNewInt "AG_Widget *parent" "enum ag_progress_bar_type type" "Uint flags" "int *value" "int *min" "int *max"
+.Pp
+.Ft "AG_ProgressBar *"
 .Fn AG_ProgressBarNewHoriz "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft "AG_ProgressBar *"
@@ -83,6 +86,21 @@ are accepted:
 .It AG_PROGRESS_BAR_SHOW_PCT
 Display text showing the percentage.
 .El
+.Pp
+The
+.Fn AG_ProgressBarNewInt
+variant binds the
+.Sq value ,
+.Sq min
+and
+.Sq max
+bindings on initialization.
+.Pp
+The
+.Fn AG_ProgressBarNewHoriz
+and
+.Fn AG_ProgressBarNewVert
+variants specify the layout on initialization.
 .Pp
 The
 .Fn AG_ProgressBarSetWidth
