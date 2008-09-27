@@ -21,7 +21,8 @@ SUBDIR=	fixedres \
 	customwidget \
 	windows \
 	threads \
-	minimal
+	minimal \
+	textdlg
 
 all: all-subdir
 clean: prereq clean-subdir
