@@ -3784,46 +3784,14 @@ $ECHO_N "checking for POSIX threads..."
 $ECHO_N "checking for POSIX threads..." >> config.log
 PTHREADS_CFLAGS=""
 PTHREADS_LIBS="-lpthread"
-if [ -f "/usr/include/pthreads/pthread.h" ]; then
-PTHREADS_CFLAGS="-I/usr/include/pthreads"
-fi;
-if [ -f "/usr/local/include/pthread.h" ]; then
-PTHREADS_CFLAGS="-I/usr/local/include"
-fi;
-if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
-PTHREADS_CFLAGS="-I/usr/local/include/pthreads"
-fi;
-if [ -f "/usr/local/lib/libpthread.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthread"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC1.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC1d.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1d"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE1.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE1d.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1d"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC2.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2"
-fi;
-if [ -f "/usr/local/lib/libpthreadGC2d.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2d"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE2.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2"
-fi;
-if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
-PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2d"
-fi;
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
-static void *start_routine(void *arg) { return (NULL); }
+
+static void *start_routine(void *arg)
+{
+	return (NULL);
+}
 int main(int argc, char *argv[])
 {
 	pthread_mutex_t mutex;
@@ -3884,7 +3852,111 @@ PTHREADS_LIBS="-pthread"
 cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
-static void *start_routine(void *arg) { return (NULL); }
+
+static void *start_routine(void *arg)
+{
+	return (NULL);
+}
+int main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_t thread;
+	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_lock(&mutex);
+	pthread_mutex_unlock(&mutex);
+	pthread_mutex_destroy(&mutex);
+	pthread_create(&thread, NULL, start_routine, NULL);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREADS="yes"
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
+echo "#ifndef HAVE_PTHREADS" > config/have_pthreads.h
+echo "#define HAVE_PTHREADS \"$HAVE_PTHREADS\"" >> config/have_pthreads.h
+echo "#endif" >> config/have_pthreads.h
+echo "hdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREADS="no"
+echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
+echo "#undef HAVE_PTHREADS" >config/have_pthreads.h
+echo "hdefs[\"HAVE_PTHREADS\"] = nil" >>configure.lua
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_PTHREADS}" = "yes" ]; then
+CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
+echo "CFLAGS=$CFLAGS" >>Makefile.config
+echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
+echo "PTHREADS_CFLAGS=$PTHREADS_CFLAGS" >>Makefile.config
+echo "mdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
+echo "PTHREADS_LIBS=$PTHREADS_LIBS" >>Makefile.config
+echo "mdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
+echo "#ifndef PTHREADS_CFLAGS" > config/pthreads_cflags.h
+echo "#define PTHREADS_CFLAGS \"$PTHREADS_CFLAGS\"" >> config/pthreads_cflags.h
+echo "#endif" >> config/pthreads_cflags.h
+echo "hdefs[\"PTHREADS_CFLAGS\"] = \"$PTHREADS_CFLAGS\"" >>configure.lua
+echo "#ifndef PTHREADS_LIBS" > config/pthreads_libs.h
+echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
+echo "#endif" >> config/pthreads_libs.h
+echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
+else
+PTHREADS_CFLAGS=""
+PTHREADS_LIBS=""
+if [ -f "/usr/include/pthreads/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/usr/include/pthreads"
+fi;
+if [ -f "/usr/local/include/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/usr/local/include"
+fi;
+if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/usr/local/include/pthreads"
+fi;
+if [ -f "/usr/local/lib/libpthread.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthread"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC1.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC1d.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC1d"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE1.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE1d.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE1d"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC2.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2"
+fi;
+if [ -f "/usr/local/lib/libpthreadGC2d.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGC2d"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE2.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2"
+fi;
+if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
+PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2d"
+fi;
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+
+static void *start_routine(void *arg)
+{
+	return (NULL);
+}
 int main(int argc, char *argv[])
 {
 	pthread_mutex_t mutex;
@@ -3940,32 +4012,72 @@ echo "#endif" >> config/pthreads_libs.h
 echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 fi;
 fi;
+fi;
 $ECHO_N "checking for the X/Open Threads Extension..."
 $ECHO_N "checking for the X/Open Threads Extension..." >> config.log
 if [ "${SYSTEM}" = "FreeBSD" ]; then
 PTHREADS_XOPEN_CFLAGS=""
-if [ -f "/usr/include/pthreads/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/include/pthreads"
-fi;
-if [ -f "/usr/local/include/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/local/include"
-fi;
-if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/local/include/pthreads"
-fi;
 else
 PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-if [ -f "/usr/include/pthreads/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/include/pthreads -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-fi;
-if [ -f "/usr/local/include/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/local/include -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-fi;
-if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
-PTHREADS_XOPEN_CFLAGS="-I/usr/local/include/pthreads -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
-fi;
 fi;
 PTHREADS_XOPEN_LIBS="-lpthread"
+cat << EOT > conftest.c
+#include <pthread.h>
+#include <signal.h>
+
+int main(int argc, char *argv[])
+{
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t mutexattr;
+	pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&mutex, &mutexattr);
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
+if [ "$?" = "0" ]; then
+echo "yes"
+echo "yes" >> config.log
+compile="ok"
+HAVE_PTHREADS_XOPEN="yes"
+echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
+echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
+echo "#endif" >> config/have_pthreads_xopen.h
+echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+compile="failed"
+HAVE_PTHREADS_XOPEN="no"
+echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
+echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
+echo "#undef HAVE_PTHREADS_XOPEN" >config/have_pthreads_xopen.h
+echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = nil" >>configure.lua
+fi;
+rm -f $testdir/conftest conftest.c
+if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
+echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
+echo "mdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
+echo "PTHREADS_XOPEN_LIBS=$PTHREADS_XOPEN_LIBS" >>Makefile.config
+echo "mdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
+echo "#ifndef HAVE_PTHREADS_XOPEN" > config/have_pthreads_xopen.h
+echo "#define HAVE_PTHREADS_XOPEN \"$HAVE_PTHREADS_XOPEN\"" >> config/have_pthreads_xopen.h
+echo "#endif" >> config/have_pthreads_xopen.h
+echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
+echo "#ifndef PTHREADS_XOPEN_CFLAGS" > config/pthreads_xopen_cflags.h
+echo "#define PTHREADS_XOPEN_CFLAGS \"$PTHREADS_XOPEN_CFLAGS\"" >> config/pthreads_xopen_cflags.h
+echo "#endif" >> config/pthreads_xopen_cflags.h
+echo "hdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
+echo "#ifndef PTHREADS_XOPEN_LIBS" > config/pthreads_xopen_libs.h
+echo "#define PTHREADS_XOPEN_LIBS \"$PTHREADS_XOPEN_LIBS\"" >> config/pthreads_xopen_libs.h
+echo "#endif" >> config/pthreads_xopen_libs.h
+echo "hdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
+else
+PTHREADS_XOPEN_LIBS=""
 if [ -f "/usr/local/lib/libpthread.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthread"
 fi;
@@ -3992,6 +4104,15 @@ PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE2"
 fi;
 if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthreadGCE2d"
+fi;
+if [ -f "/usr/include/pthreads/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/usr/include/pthreads"
+fi;
+if [ -f "/usr/local/include/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/usr/local/include"
+fi;
+if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
+PTHREADS_CFLAGS="-I/usr/local/include/pthreads"
 fi;
 cat << EOT > conftest.c
 #include <pthread.h>
@@ -4051,6 +4172,7 @@ echo "hdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
 else
 echo "#undef HAVE_PTHREADS_XOPEN" >config/have_pthreads_xopen.h
 echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = nil" >>configure.lua
+fi;
 fi;
 $ECHO_N "checking for PTHREAD_MUTEX_RECURSIVE..."
 $ECHO_N "checking for PTHREAD_MUTEX_RECURSIVE..." >> config.log
