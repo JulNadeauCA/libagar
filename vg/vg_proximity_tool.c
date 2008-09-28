@@ -41,7 +41,9 @@ MouseButtonDown(void *t, VG_Vector v, int button)
 	VG_Node *vn;
 
 	if (button == SDL_BUTTON_LEFT) {
-		vn = VG_Nearest(vv, v);
+		if ((vn = VG_Nearest(vv, v)) == NULL) {
+			return (0);
+		}
 		if (SDL_GetModState() & KMOD_CTRL) {
 			AG_INVFLAGS(vn->flags, VG_NODE_SELECTED);
 		} else {
