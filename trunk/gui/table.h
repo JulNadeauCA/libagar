@@ -70,6 +70,8 @@ typedef struct ag_table_cell {
 		long l;
 #ifdef HAVE_64BIT
 		Uint64 u64;
+#else
+		Uint32 u64[2];	/* Padding */
 #endif
 	} data;
 	char fmt[AG_TABLE_FMT_MAX];		/* Format string */

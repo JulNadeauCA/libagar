@@ -124,14 +124,14 @@ typedef struct ag_widget {
 #define AG_WIDGET_SURFACE_NODUP	0x01	/* Don't free on destroy */
 #define AG_WIDGET_SURFACE_REGEN	0x02	/* Texture needs to be regenerated */
 	Uint nsurfaces;
-#ifdef HAVE_OPENGL
+
+	/* For OpenGL */
 	Uint *textures;			/* Cached OpenGL textures */
 	float *texcoords;		/* Cached texture coordinates */
 	Uint *textureGC;		/* Textures queued for deletion */
 	Uint nTextureGC;
 	int clipPlaneState[4];		/* Saved state of clipping planes */
 	double rClipSaveGL[4][4];	/* Saved clipping planes */
-#endif
 
 	AG_Mutex bindings_lock;			 	/* Lock on bindings */
 	AG_SLIST_HEAD(,ag_widget_binding) bindings;	/* Binding data */

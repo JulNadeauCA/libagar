@@ -36,7 +36,7 @@ typedef struct ag_button {
 __BEGIN_DECLS
 extern AG_WidgetClass agButtonClass;
 
-AG_Button *AG_ButtonNew(void *, Uint, const char *);
+AG_Button *AG_ButtonNew(void *, Uint, const char *, ...);
 AG_Button *AG_ButtonNewFn(void *, Uint, const char *, AG_EventFn,
 			  const char *, ...);
 AG_Button *AG_ButtonNewBool(void *, Uint, const char *, AG_WidgetBindingType,

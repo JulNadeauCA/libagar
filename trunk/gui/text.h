@@ -44,10 +44,11 @@ typedef struct ag_glyph {
 	Uint32 lastRef;			/* Ticks since last reference */
 	AG_Surface *su;			/* Rendered surface */
 	int advance;			/* Pixel advance */
-#ifdef HAVE_OPENGL
+
+	/* For OpenGL */
 	Uint texture;			/* Rendered texture */
 	float texcoord[4];
-#endif
+
 	AG_SLIST_ENTRY(ag_glyph) glyphs;
 } AG_Glyph;
 
