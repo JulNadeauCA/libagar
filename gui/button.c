@@ -42,13 +42,18 @@ static void keyup(AG_Event *);
 static void keydown(AG_Event *);
 
 AG_Button *
-AG_ButtonNew(void *parent, Uint flags, const char *caption)
+AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 {
 	AG_Button *bu;
-
+	va_list args;
+	
 	bu = Malloc(sizeof(AG_Button));
 	AG_ObjectInit(bu, &agButtonClass);
-	bu->text = (caption != NULL) ? Strdup(caption) : NULL;
+
+	va_start(args, fmt);
+	Vasprintf(&bu->text, fmt, args);
+	va_end(args);
+	
 	bu->flags |= flags;
 
 	if (flags & AG_BUTTON_HFILL) { AG_ExpandHoriz(bu); }

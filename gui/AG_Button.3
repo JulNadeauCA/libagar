@@ -48,7 +48,7 @@ can be used to trigger events, or control a boolean value.
 .Sh INTERFACE
 .nr nS 1
 .Ft "AG_Button *"
-.Fn AG_ButtonNew "AG_Widget *parent" "Uint flags" "const char *label"
+.Fn AG_ButtonNew "AG_Widget *parent" "Uint flags" "const char *label" "..."
 .Pp
 .Ft "AG_Button *"
 .Fn AG_ButtonNewFn "AG_Widget *parent" "Uint flags" "const char *label" "AG_EventFn fn" "const char *fmt" "..."
@@ -113,6 +113,9 @@ The
 function allocates, initializes, and attaches a
 .Nm
 widget.
+If the
+.Fa label
+argument is given, it sets a default text caption.
 .Pp
 The
 .Fn AG_ButtonNewFn
