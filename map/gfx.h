@@ -10,10 +10,8 @@ struct ag_gfx;
 
 typedef struct ag_anim {
 	AG_Surface **frames;
-#ifdef HAVE_OPENGL
-	Uint *textures;
+	Uint *textures;			/* For OpenGL */
 	float texcoords[4];
-#endif
 	Uint32 nframes;
 	Uint32 maxframes;
 	Uint32 frame;			/* Current frame# */
@@ -21,10 +19,8 @@ typedef struct ag_anim {
 
 typedef struct ag_cached_sprite {
 	AG_Surface *su;
-#ifdef HAVE_OPENGL
-	Uint texture;
+	Uint texture;			/* For OpenGL */
 	float texcoords[4];
-#endif
 	Uint32 last_drawn;			/* Time last draw occured */
 	struct ag_transformq transforms;	/* Applied transforms */
 	AG_SLIST_ENTRY(ag_cached_sprite) sprites;
@@ -59,10 +55,8 @@ typedef struct ag_sprite {
 	enum ag_gfx_snap_mode snap_mode; 	/* Default snapping mode */
 	Uint *attrs;				/* Default node attributes */
 	int *layers;				/* Node layer offsets */
-#ifdef HAVE_OPENGL
-	Uint texture;
+	Uint texture;				/* For OpenGL */
 	float texcoords[4];
-#endif
 	AG_SLIST_HEAD(,ag_cached_sprite) csprites; /* Transform cache */
 } AG_Sprite;
 

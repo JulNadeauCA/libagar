@@ -47,6 +47,8 @@ typedef struct m_vector_ops {
 	void     *(*FromDoubles)(Uint, const double *);
 #ifdef HAVE_LONG_DOUBLE
 	void     *(*FromLongDoubles)(Uint, const long double *);
+#else /* Padding */
+	void     *(*FromLongDoubles)(Uint, const double *);
 #endif
 	void	  (*Print)(const void *v);
 } M_VectorOps;
