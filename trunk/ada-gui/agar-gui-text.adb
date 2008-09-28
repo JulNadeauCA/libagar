@@ -43,7 +43,7 @@ package body agar.gui.text is
       (disable_key : cs.chars_ptr;
        fmt         : cs.chars_ptr;
        text        : cs.chars_ptr);
-    pragma import (c, warning, "AG_TextInfo");
+    pragma import (c, info, "AG_TextInfo");
   
     procedure timed_message
       (title  : msg_title_t;
@@ -150,13 +150,18 @@ package body agar.gui.text is
        text        => cs.to_chars_ptr (ca_text'unchecked_access));
   end warning;
 
-  procedure info (text : string) is
+  procedure info
+    (disable_key : string;
+     text        : string)
+  is
     ca_fmt  : aliased c.char_array := c.to_c ("%s");
+    ca_disa : aliased c.char_array := c.to_c (disable_key);
     ca_text : aliased c.char_array := c.to_c (text);
   begin
     cbinds.info
-      (fmt  => cs.to_chars_ptr (ca_fmt'unchecked_access),
-       text => cs.to_chars_ptr (ca_text'unchecked_access));
+      (disable_key => cs.to_chars_ptr (ca_disa'unchecked_access),
+       fmt         => cs.to_chars_ptr (ca_fmt'unchecked_access),
+       text        => cs.to_chars_ptr (ca_text'unchecked_access));
   end info;
 
   procedure timed_message

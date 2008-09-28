@@ -143,6 +143,17 @@ package agar.gui.window is
   procedure set_geometry_max (window : window_access_t);
   pragma import (c, set_geometry_max, "AG_WindowSetGeometryMax");
 
+  procedure set_minimum_size
+    (window : window_access_t;
+     width  : natural;
+     height : natural);
+  pragma inline (set_minimum_size);
+
+  procedure set_minimum_size_percentage
+    (window  : window_access_t;
+     percent : percent_t);
+  pragma inline (set_minimum_size_percentage);
+
   procedure maximize (window : window_access_t);
   pragma import (c, maximize, "AG_WindowMaximize");
  
