@@ -73,27 +73,6 @@ typedef struct ag_prop {
 	Uint type;				/* Property class */
 	void *obj;				/* Back pointer to object */
 	union {
-		unsigned u;
-		int	 i;
-		Uint8	 u8;
-		Sint8	 s8;
-		Uint16	 u16;
-		Sint16	 s16;
-		Uint32	 u32;
-		Sint32	 s32;
-#ifdef HAVE_64BIT
-		Uint64   u64;
-		Sint64   s64;
-#endif
-		float	 f;
-		double	 d;
-#ifdef HAVE_LONG_DOUBLE
-		long double ld;
-#endif
-		char	*s;
-		void	*p;
-	} data;
-	union {
 		Uint	(*wUint)(void *, struct ag_prop *, Uint);
 		int	(*wInt)(void *, struct ag_prop *, int);
 		int	(*wBool)(void *, struct ag_prop *, int);
@@ -106,12 +85,17 @@ typedef struct ag_prop {
 #ifdef HAVE_64BIT
 		Uint64	(*wUint64)(void *, struct ag_prop *, Uint64);
 		Sint64	(*wSint64)(void *, struct ag_prop *, Sint64);
+#else /* Padding */
+		Uint32  (*wUint64)(void *, struct ag_prop *, void *);
+		Uint32  (*wSint64)(void *, struct ag_prop *, void *);
 #endif
 		float	(*wFloat)(void *, struct ag_prop *, float);
 		double	(*wDouble)(void *, struct ag_prop *, double);
 #ifdef HAVE_LONG_DOUBLE
 		long double (*wLongDouble)(void *, struct ag_prop *,
 		                           long double);
+#else /* Padding */
+		double (*wLongDouble)(void *, struct ag_prop *, double);
 #endif
 		char	*(*wString)(void *, struct ag_prop *, char *);
 		void	*(*wPointer)(void *, struct ag_prop *, void *);
@@ -129,16 +113,45 @@ typedef struct ag_prop {
 #ifdef HAVE_64BIT
 		Uint64	(*rUint64)(void *, struct ag_prop *);
 		Sint64	(*rSint64)(void *, struct ag_prop *);
+#else /* Padding */
+		Uint32	(*rUint64)(void *, struct ag_prop *);
+		Sint32	(*rSint64)(void *, struct ag_prop *);
 #endif
 		float	(*rFloat)(void *, struct ag_prop *);
 		double	(*rDouble)(void *, struct ag_prop *);
 #ifdef HAVE_LONG_DOUBLE
 		long double (*rLongDouble)(void *, struct ag_prop *);
+#else /* Padding */
+		double      (*rLongDouble)(void *, struct ag_prop *);
 #endif
 		char	*(*rString)(void *, struct ag_prop *);
 		void	*(*rPointer)(void *, struct ag_prop *);
 	} readFn;
 	AG_TAILQ_ENTRY(ag_prop) props;
+	
+	union {
+		unsigned u;
+		int	 i;
+		Uint8	 u8;
+		Sint8	 s8;
+		Uint16	 u16;
+		Sint16	 s16;
+		Uint32	 u32;
+		Sint32	 s32;
+#ifdef HAVE_64BIT
+		Uint64   u64;
+		Sint64   s64;
+#else
+		Uint32   u64[4];	/* Padding */
+#endif
+		float	 f;
+		double	 d;
+		char	*s;
+		void	*p;
+#ifdef HAVE_LONG_DOUBLE
+		long double ld;		/* Keep at end of struct (padding) */
+#endif
+	} data;
 } AG_Prop;
 
 #define AG_SetUintWrFn(prop,fn) (prop)->writeFn.wUint = (fn)
