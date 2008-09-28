@@ -66,10 +66,11 @@ typedef struct rg_tile {
 	Uint32 main_id;			/* Default ID mapping */
 	struct rg_tileset *ts;
 	AG_Surface *su;			/* Generated surface */
-#ifdef HAVE_OPENGL
+
+	/* For OpenGL */
 	Uint texture;			/* Cached texture */
 	float texcoords[4];
-#endif
+	
 	int xOrig, yOrig;		/* Origin point */
 	enum rg_snap_mode snap_mode;	/* Snapping mode (edition) */
 	Uint *attrs;			/* Node attribute grid (edition) */
@@ -103,10 +104,11 @@ typedef struct rg_tile {
 typedef struct rg_tile_variant {
 	RG_TransformChain transforms;	/* Applied transforms */
 	AG_Surface *su;			/* Cached resulting surface */
-#ifdef HAVE_OPENGL
+
+	/* For OpenGL */
 	Uint texture;			/* Cached texture */
 	float texcoords[4];
-#endif
+
 	Uint32 last_drawn;		/* Time last draw occured */
 	AG_SLIST_ENTRY(rg_tile_variant) vars;
 } RG_TileVariant;
