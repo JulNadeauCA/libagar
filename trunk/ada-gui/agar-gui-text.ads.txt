@@ -214,7 +214,9 @@ package agar.gui.text is
      text        : string);
   pragma inline (warning);
 
-  procedure info (text : string);
+  procedure info
+    (disable_key : string;
+     text        : string);
   pragma inline (info);
 
   procedure timed_message
