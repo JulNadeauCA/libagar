@@ -53,9 +53,7 @@ typedef struct rg_anim_frame {
 	Uint name;
 	Uint delay;
 	AG_Surface *su;
-#ifdef HAVE_OPENGL
-	Uint texture;
-#endif
+	Uint texture;				/* For OpenGL */
 } RG_AnimFrame;
 
 /* Animation structure */
