@@ -50,9 +50,13 @@ AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 	bu = Malloc(sizeof(AG_Button));
 	AG_ObjectInit(bu, &agButtonClass);
 
-	va_start(args, fmt);
-	Vasprintf(&bu->text, fmt, args);
-	va_end(args);
+	if (fmt != NULL) {
+		va_start(args, fmt);
+		Vasprintf(&bu->text, fmt, args);
+		va_end(args);
+	} else {
+		bu->text = NULL;
+	}
 	
 	bu->flags |= flags;
 
