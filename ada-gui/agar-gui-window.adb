@@ -179,6 +179,37 @@ package body agar.gui.window is
        height => c.int (height));
   end set_geometry_bounded;
 
+  procedure set_minimum_size
+    (window : window_access_t;
+     width  : c.int;
+     height : c.int);
+  pragma import (c, set_minimum_size, "AG_WindowSetMinSize");
+ 
+  procedure set_minimum_size
+    (window : window_access_t;
+     width  : natural;
+     height : natural) is
+  begin
+    set_minimum_size
+      (window => window,
+       width  => c.int (width),
+       height => c.int (height));
+  end set_minimum_size;
+ 
+  procedure set_minimum_size_percentage
+    (window  : window_access_t;
+     percent : c.int);
+  pragma import (c, set_minimum_size_percentage, "AG_WindowSetMinSizePct");
+                
+  procedure set_minimum_size_percentage
+    (window  : window_access_t;
+     percent : percent_t) is
+  begin
+    set_minimum_size_percentage
+      (window  => window,
+       percent => c.int (percent));
+  end set_minimum_size_percentage;
+
   function is_visible (window : window_access_t) return boolean is
   begin
     return is_visible (window) = 1;
