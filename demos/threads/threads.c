@@ -66,9 +66,11 @@ SpinningWorker(void *arg)
 
 	pb = AG_ProgressBarNewHoriz(win, 0);
 	AG_WidgetBindInt(pb, "value", &value);
+	AG_WidgetBindInt(pb, "min", &min);
+	AG_WidgetBindInt(pb, "max", &max);
 	AG_WindowSetPosition(win, AG_WINDOW_MR, 1);
 
-	lbl = AG_LabelNew(win, 0, "Worker thread progress: ...");
+	lbl = AG_LabelNew(win, 0, "Worker thread progress: 100%%");
 	
 	AG_WindowShow(win);
 
