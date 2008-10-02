@@ -1,0 +1,71 @@
+#!/bin/sh
+
+cleanup()
+{
+  rm -f "${WORKDIR}/ver_gnat.ali" "${WORKDIR}/ver_gnat.o" "${WORKDIR}/ver_gnat"
+}
+
+cleanup_exit()
+{
+  cleanup
+  exit 0
+}
+
+unknown()
+{
+  echo "UNKNOWN 0.0.0"
+  cleanup_exit
+}
+
+error()
+{
+  ${SYSDEP_ERROR} "$1"
+  unknown
+}
+
+try_gnat()
+{
+  ${ADA_COMP} \
+    -o "${WORKDIR}/ver_gnat.o" \
+    -c "${WORKDIR}/ver_gnat.adb" ${ADA_CFLAGS} 2>/dev/null
+  if [ $? -eq 0 ]
+  then
+    ${ADA_BIND} "${WORKDIR}/ver_gnat.ali" ${ADA_BFLAGS}
+    if [ $? -eq 0 ]
+    then
+      ${ADA_LINK} \
+        -o "${WORKDIR}/ver_gnat" \
+           "${WORKDIR}/ver_gnat.ali" ${ADA_LDFLAGS}
+      if [ $? -eq 0 ]
+      then
+        "${WORKDIR}/ver_gnat"
+        cleanup_exit
+      fi
+    fi
+  fi
+  cleanup
+}
+
+#----------------------------------------------------------------------
+# entry
+
+if [ $# -ne 6 ]
+then
+  echo "usage: ada-comp ada-cflags ada-binder ada-bflags ada-link ada-ldflags" 1>&2
+  exit 111
+fi
+
+WORKDIR="${SYSDEP_DIR_RELATIVE}"
+ADA_COMP="$1"
+ADA_CFLAGS="$2"
+ADA_BIND="$3"
+ADA_BFLAGS="$4"
+ADA_LINK="$5"
+ADA_LDFLAGS="$6"
+
+try_gnat
+
+#----------------------------------------------------------------------
+# fallback
+
+unknown
