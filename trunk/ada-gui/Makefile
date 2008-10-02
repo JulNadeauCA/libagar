@@ -40,11 +40,10 @@ agar-gui-widget-tlist.ali agar-gui-widget-tlist.o agar-gui-widget-toolbar.ali \
 agar-gui-widget-toolbar.o agar-gui-widget-ucombo.ali agar-gui-widget-ucombo.o \
 agar-gui-widget-vbox.ali agar-gui-widget-vbox.o agar-gui-widget.ali \
 agar-gui-widget.o agar-gui-window.ali agar-gui-window.o agar-gui.ali agar-gui.o \
-chk-opengl chk-opengl.o ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.o ctxt/incdir.o \
-ctxt/repos.o ctxt/slibdir.o ctxt/version.o deinstaller deinstaller.o inst-check \
-inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o \
-install_core.o install_error.o installer installer.o instchk instchk.o \
-insthier.o
+ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.o ctxt/incdir.o ctxt/repos.o \
+ctxt/slibdir.o ctxt/version.o deinstaller deinstaller.o inst-check inst-check.o \
+inst-copy inst-copy.o inst-dir inst-dir.o inst-link inst-link.o install_core.o \
+install_error.o installer installer.o instchk instchk.o insthier.o
 
 # Mkf-deinstall
 deinstall: deinstaller inst-check inst-copy inst-dir inst-link
@@ -385,9 +384,8 @@ ada-compile agar-gui-surface.adb agar-gui-surface.ads
 agar-gui-surface.o:\
 agar-gui-surface.ali
 
-# agar-gui-text.ads.mff
-agar-gui-text.ads: agar-gui-text.sh chk-opengl agar-gui-text.ads.txt
-	./agar-gui-text.sh > agar-gui-text.ads.tmp && mv agar-gui-text.ads.tmp agar-gui-text.ads
+agar-gui-text.ads:\
+agar-gui-surface.ads
 
 agar-gui-text.ali:\
 ada-compile agar-gui-text.adb agar-gui-text.ads
@@ -397,8 +395,8 @@ agar-gui-text.o:\
 agar-gui-text.ali
 
 agar-gui-types.ads:\
-agar-gui-widget-box.ads agar-gui-widget-button.ads agar-gui-widget-label.ads \
-	agar-gui-widget.ads
+agar-gui-rect.ads agar-gui-widget-box.ads agar-gui-widget-button.ads \
+	agar-gui-widget-label.ads agar-gui-widget.ads
 
 agar-gui-types.ali:\
 ada-compile agar-gui-types.adb agar-gui-types.ads
@@ -729,9 +727,8 @@ ada-compile agar-gui-widget-vbox.adb agar-gui-widget-vbox.ads
 agar-gui-widget-vbox.o:\
 agar-gui-widget-vbox.ali
 
-# agar-gui-widget.ads.mff
-agar-gui-widget.ads: agar-gui-widget.sh chk-opengl agar-gui-widget.ads.txt
-	./agar-gui-widget.sh > agar-gui-widget.ads.tmp && mv agar-gui-widget.ads.tmp agar-gui-widget.ads
+agar-gui-widget.ads:\
+agar-gui-colors.ads agar-gui-rect.ads agar-gui-surface.ads
 
 agar-gui-widget.ali:\
 ada-compile agar-gui-widget.adb agar-gui-widget.ads
@@ -766,14 +763,6 @@ conf-ld conf-ldtype conf-systype conf-ldflags
 
 cc-slib:\
 conf-systype
-
-chk-opengl:\
-cc-link chk-opengl.ld chk-opengl.o
-	./cc-link chk-opengl chk-opengl.o
-
-chk-opengl.o:\
-cc-compile chk-opengl.c
-	./cc-compile chk-opengl.c
 
 conf-adatype:\
 mk-adatype
@@ -962,9 +951,9 @@ obj_clean:
 	agar-gui-colors.o agar-gui-draw.ali agar-gui-draw.o agar-gui-pixelformat.ali \
 	agar-gui-pixelformat.o agar-gui-point.ali agar-gui-point.o agar-gui-rect.ali \
 	agar-gui-rect.o agar-gui-style.ali agar-gui-style.o agar-gui-surface.ali \
-	agar-gui-surface.o agar-gui-text.ads agar-gui-text.ali agar-gui-text.o \
-	agar-gui-types.ali agar-gui-types.o agar-gui-unit.ali agar-gui-unit.o \
-	agar-gui-view.ali agar-gui-view.o agar-gui-widget-box.ali agar-gui-widget-box.o \
+	agar-gui-surface.o agar-gui-text.ali agar-gui-text.o agar-gui-types.ali \
+	agar-gui-types.o agar-gui-unit.ali agar-gui-unit.o agar-gui-view.ali \
+	agar-gui-view.o agar-gui-widget-box.ali agar-gui-widget-box.o \
 	agar-gui-widget-button.ali agar-gui-widget-button.o \
 	agar-gui-widget-checkbox.ali agar-gui-widget-checkbox.o \
 	agar-gui-widget-combo.ali agar-gui-widget-combo.o agar-gui-widget-console.ali \
@@ -991,14 +980,14 @@ obj_clean:
 	agar-gui-widget-titlebar.ali agar-gui-widget-titlebar.o \
 	agar-gui-widget-tlist.ali agar-gui-widget-tlist.o agar-gui-widget-toolbar.ali \
 	agar-gui-widget-toolbar.o agar-gui-widget-ucombo.ali agar-gui-widget-ucombo.o \
-	agar-gui-widget-vbox.ali agar-gui-widget-vbox.o agar-gui-widget.ads \
-	agar-gui-widget.ali agar-gui-widget.o agar-gui-window.ali agar-gui-window.o \
-	agar-gui.ali agar-gui.o chk-opengl chk-opengl.o ctxt/bindir.c ctxt/bindir.o \
-	ctxt/ctxt.a ctxt/dlibdir.c ctxt/dlibdir.o ctxt/incdir.c ctxt/incdir.o \
-	ctxt/repos.c ctxt/repos.o ctxt/slibdir.c ctxt/slibdir.o ctxt/version.c \
-	ctxt/version.o deinstaller deinstaller.o inst-check inst-check.o inst-copy \
-	inst-copy.o inst-dir inst-dir.o inst-link inst-link.o install_core.o \
-	install_error.o installer installer.o instchk instchk.o insthier.o
+	agar-gui-widget-vbox.ali agar-gui-widget-vbox.o agar-gui-widget.ali \
+	agar-gui-widget.o agar-gui-window.ali agar-gui-window.o agar-gui.ali agar-gui.o \
+	ctxt/bindir.c ctxt/bindir.o ctxt/ctxt.a ctxt/dlibdir.c ctxt/dlibdir.o \
+	ctxt/incdir.c ctxt/incdir.o ctxt/repos.c ctxt/repos.o ctxt/slibdir.c \
+	ctxt/slibdir.o ctxt/version.c ctxt/version.o deinstaller deinstaller.o \
+	inst-check inst-check.o inst-copy inst-copy.o inst-dir inst-dir.o inst-link \
+	inst-link.o install_core.o install_error.o installer installer.o instchk \
+	instchk.o insthier.o
 ext_clean:
 	rm -f conf-adatype conf-cctype conf-ldtype conf-sosuffix conf-systype mk-ctxt
 

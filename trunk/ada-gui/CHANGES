@@ -56,3 +56,4 @@
 20080921 code: restructure. some types moved into agar.gui.types and then
                imported and renamed with subtypes into original packages.
 20080927 code: update code for core type changes and window minsize data.
+20081002 code: updated sysdeps.

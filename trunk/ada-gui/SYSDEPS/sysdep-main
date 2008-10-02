@@ -294,6 +294,7 @@ else
         ${SYSDEP_DIR_RELATIVE}/sd-cctype.o
   rm -f ${SYSDEP_DIR_RELATIVE}/sd-ccversion \
         ${SYSDEP_DIR_RELATIVE}/sd-ccversion.o
+  rm -f ${SYSDEP_DIR_RELATIVE}/sd-adaversion.out
   rm -f ${SYSDEP_DIR_RELATIVE}/sd-os \
         ${SYSDEP_DIR_RELATIVE}/sd-os.o
   rm -f ${SYSDEP_OUTDIR}/sysdeps.out
