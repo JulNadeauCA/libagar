@@ -4,6 +4,7 @@ package body agar.gui.widget.button is
     function allocate
       (parent : widget_access_t;
        flags  : flags_t := 0;
+       fmt    : cs.chars_ptr;
        label  : cs.chars_ptr) return button_access_t;
     pragma import (c, allocate, "AG_ButtonNew");
 
@@ -124,10 +125,12 @@ package body agar.gui.widget.button is
      label  : string) return button_access_t
   is
     c_label : aliased c.char_array := c.to_c (label);
+    c_fmt   : aliased c.char_array := c.to_c ("%s");
   begin
     return cbinds.allocate
       (parent => parent,
        flags  => flags,
+       fmt    => cs.to_chars_ptr (c_fmt'unchecked_access),
        label  => cs.to_chars_ptr (c_label'unchecked_access));
   end allocate;
 
