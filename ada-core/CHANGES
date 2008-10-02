@@ -30,3 +30,4 @@
 20080910 code: fixed null check (not portable, due to import pragma).
 20080917 code: added basic types more friendly to bindings.
 20080927 code: namespace types, datasource types and API update.
+20081002 code: updated sysdeps.
