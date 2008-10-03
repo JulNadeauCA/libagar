@@ -18,7 +18,7 @@ enum ag_rcs_status {
 	AG_RCS_UNKNOWN,	 /* Not on the repository */
 	AG_RCS_UPTODATE, /* Working copy = last rev and checksum matches */
 	AG_RCS_LOCALMOD, /* Working copy = last rev and checksum mismatch */
-	AG_RCS_DESYNCH,	 /* Working copy < last rev */
+	AG_RCS_DESYNCH	 /* Working copy < last rev */
 };
 
 typedef struct ag_rcs_log_entry {
