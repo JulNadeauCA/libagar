@@ -1,2 +1,0 @@
-agar-gui-widget.ads: agar-gui-widget.sh chk-opengl agar-gui-widget.ads.txt
-	./agar-gui-widget.sh > agar-gui-widget.ads.tmp && mv agar-gui-widget.ads.tmp agar-gui-widget.ads

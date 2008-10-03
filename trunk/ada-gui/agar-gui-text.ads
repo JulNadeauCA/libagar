@@ -139,14 +139,11 @@ package agar.gui.text is
   procedure pop_state;
   pragma import (c, pop_state, "AG_PopTextState");
 
-  function font
-    (face  : string;
-     size  : positive;
-     flags : c.unsigned) return boolean;
-  pragma inline (font);
+  procedure font (font : font_access_t);
+  pragma import (c, font, "agar_gui_text_font");
 
   procedure justify (mode : justify_t);
-  pragma import (c, justify, "AG_TextJustify");
+  pragma import (c, justify, "agar_gui_text_justify");
 
   procedure color_video32 (pixel : agar.core.types.uint32_t);
   pragma import (c, color_video32, "AG_TextColorVideo32");

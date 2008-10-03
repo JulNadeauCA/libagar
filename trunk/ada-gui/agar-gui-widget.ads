@@ -315,10 +315,10 @@ package agar.gui.widget is
   procedure push_clip_rect
     (widget : widget_access_t;
      rect   : agar.gui.rect.rect_t);
-  pragma import (c, push_clip_rect, "AG_WidgetPushClipRect");
+  pragma import (c, push_clip_rect, "AG_PushClipRect");
 
   procedure pop_clip_rect (widget : widget_access_t);
-  pragma import (c, pop_clip_rect, "AG_WidgetPopClipRect");
+  pragma import (c, pop_clip_rect, "AG_PopClipRect");
 
   -- missing: push_cursor - documented but apparently not implemented
   -- missing: pop_cursor
@@ -710,18 +710,11 @@ package agar.gui.widget is
 
 private
 
-  -- openGL array types
-  type clip_plane_state_t is array (1 .. 4) of aliased c.int;
-  pragma convention (c, clip_plane_state_t);
-  type clip_save_gl_row_t is array (1 .. 4) of aliased c.double;
-  pragma convention (c, clip_save_gl_row_t);
-  type clip_save_gl_t is array (1 .. 4) of aliased clip_save_gl_row_t;
-  pragma convention (c, clip_save_gl_t);
-
   -- widget type
   type widget_private_t is record
     clip_save        : agar.gui.rect.rect_t;
     style            : agar.core.types.void_ptr_t; -- XXX: style_access_t
+
     surfaces         : access agar.gui.surface.surface_access_t;
     surface_flags    : access c.unsigned;
     nsurfaces        : c.unsigned;
@@ -731,8 +724,6 @@ private
     texcoords        : access c.c_float;
     texture_gc       : access c.unsigned;
     ntextures_gc     : c.unsigned;
-    clip_plane_state : clip_plane_state_t;
-    clip_save_gl     : clip_save_gl_t;
 
     bindings_lock    : agar.core.threads.mutex_t;
     bindings         : binding_slist.head_t;

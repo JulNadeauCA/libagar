@@ -104,34 +104,39 @@ private
   pragma convention (c, window_caption_t);
 
   type window_t is record
-    widget    : aliased agar.gui.widget.widget_t;
-    flags     : window_flags_t;
+    widget      : aliased agar.gui.widget.widget_t;
+    flags       : window_flags_t;
 
-    caption   : window_caption_t;
-    visible   : c.int;
+    caption     : window_caption_t;
+    visible     : c.int;
 
-    tbar      : widget_titlebar_access_t;
-    alignment : window_alignment_t;
-    spacing   : c.int;
-    tpad      : c.int;
-    bpad      : c.int;
-    lpad      : c.int;
-    rpad      : c.int;
+    tbar        : widget_titlebar_access_t;
+    alignment   : window_alignment_t;
+    spacing     : c.int;
+    tpad        : c.int;
+    bpad        : c.int;
+    lpad        : c.int;
+    rpad        : c.int;
 
-    reqw      : c.int;
-    reqh      : c.int;
+    reqw        : c.int;
+    reqh        : c.int;
 
-    minw      : c.int;
-    minh      : c.int;
-    r_saved   : agar.gui.rect.rect_t;
-    min_pct   : c.int;
+    minw        : c.int;
+    minh        : c.int;
 
-    subwins   : window_tail_queue.head_t;
-    windows   : window_tail_queue.entry_t;
-    swins     : window_tail_queue.entry_t;
-    detach    : window_tail_queue.entry_t;
+    border_bot  : c.int;
+    border_side : c.int;
+    resize_ctrl : c.int;
 
-    icon      : widget_icon_access_t;
+    r_saved     : agar.gui.rect.rect_t;
+    min_pct     : c.int;
+
+    subwins     : window_tail_queue.head_t;
+    windows     : window_tail_queue.entry_t;
+    swins       : window_tail_queue.entry_t;
+    detach      : window_tail_queue.entry_t;
+
+    icon        : widget_icon_access_t;
   end record;
   pragma convention (c, window_t);
 

@@ -160,20 +160,21 @@ package agar.gui.widget.slider is
 private
 
   type slider_t is record
-    widget      : aliased widget_t;
-    flags       : flags_t;
-    value       : c.int;
-    min         : c.int;
-    max         : c.int;
-    slider_type : type_t;
-    ctl_pressed : c.int;
-    w_control   : c.int;
-    inc_to      : agar.core.timeout.timeout_t;
-    dec_to      : agar.core.timeout.timeout_t;
-    x_offset    : c.int;
-    extent      : c.int;
-    r_inc       : c.double;
-    i_inc       : c.int;
+    widget         : aliased widget_t;
+    flags          : flags_t;
+    value          : c.int;
+    min            : c.int;
+    max            : c.int;
+    slider_type    : type_t;
+    ctl_pressed    : c.int;
+    w_control_pref : c.int;
+    w_control      : c.int;
+    inc_to         : agar.core.timeout.timeout_t;
+    dec_to         : agar.core.timeout.timeout_t;
+    x_offset       : c.int;
+    extent         : c.int;
+    r_inc          : c.double;
+    i_inc          : c.int;
   end record;
   pragma convention (c, slider_t);
 
