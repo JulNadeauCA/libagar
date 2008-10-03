@@ -19,4 +19,5 @@ AG_Style(3) for details). Command-line options are:
 	-R			When using windowed graphics drivers,
 	                        don't request that the display window
 				be resizable.
+	-c [colors.acs]		Load color scheme from given file.
 

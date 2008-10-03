@@ -112,8 +112,8 @@ Expand(AG_Event *event)
 			AG_TlistSizeHintPixels(com->list,
 			    com->wPreList, com->hPreList);
 			AG_WidgetSizeReq(com->list, &rList);
-			w = rList.w + agColorsBorderSize*2;
-			h = rList.h + agColorsBorderSize*2;
+			w = rList.w + com->panel->wBorderSide*2;
+			h = rList.h + com->panel->wBorderBot;
 		}
 		x = WIDGET(com)->cx + WIDGET(com)->w - w;
 		y = WIDGET(com)->cy;
@@ -205,9 +205,17 @@ Destroy(void *p)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+Draw(void *obj)
 {
-	AG_UCombo *com = p;
+	AG_UCombo *com = obj;
+
+	AG_WidgetDraw(com->button);
+}
+
+static void
+SizeRequest(void *obj, AG_SizeReq *r)
+{
+	AG_UCombo *com = obj;
 	AG_SizeReq rButton;
 
 	AG_WidgetSizeReq(com->button, &rButton);
@@ -216,9 +224,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_UCombo *com = p;
+	AG_UCombo *com = obj;
 	AG_SizeAlloc aButton;
 
 	aButton.x = 0;
@@ -241,7 +249,7 @@ AG_WidgetClass agUComboClass = {
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	NULL,				/* draw */
+	Draw,
 	SizeRequest,
 	SizeAllocate
 };

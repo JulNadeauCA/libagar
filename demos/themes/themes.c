@@ -280,7 +280,7 @@ CreateWindow(void)
 	}
 
 	/* Override default window sizing. */
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 80, 80);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 80, 70);
 	
 	AG_WindowShow(win);
 }
@@ -311,7 +311,43 @@ static void
 SetTheme(AG_Event *event)
 {
 	AG_Style *style = AG_PTR(1);
+
 	AG_SetStyle(agView, style);
+}
+
+static void
+SetColorScheme(AG_Event *event)
+{
+	char *file = AG_STRING(1);
+
+	if (AG_ColorsLoad(file) == -1) {
+		AG_TextMsg(AG_MSG_ERROR, "Failed to load color scheme: %s",
+		    AG_GetError());
+	}
+}
+
+static void
+TweakColorScheme(AG_Event *event)
+{
+	int darker = AG_INT(1);
+	const int inc = 10;
+	int i;
+
+	for (i = 0; i < LAST_COLOR; i++) {
+		Uint8 r, g, b, a;
+
+		AG_ColorsGetRGBA(i, &r, &g, &b, &a);
+		if (darker) {
+			r = (r - inc) > 0 ? (r - inc) : 0;
+			g = (g - inc) > 0 ? (g - inc) : 0;
+			b = (b - inc) > 0 ? (b - inc) : 0;
+		} else {
+			r = (r + inc) < 255 ? (r + inc) : 255;
+			g = (g + inc) < 255 ? (g + inc) : 255;
+			b = (b + inc) < 255 ? (b + inc) : 255;
+		}
+		AG_ColorsSetRGBA(i, r, g, b, a);
+	}
 }
 
 int
@@ -325,6 +361,7 @@ main(int argc, char *argv[])
 	int w = 640, h = 480, fps = -1;
 	int useDoubleBuf = 0;
 	int guiFlags = AG_VIDEO_RESIZABLE;
+	char *colorFile = NULL;
 
 	/* Initialize Agar-Core. */
 	if (AG_InitCore("agar-themes-demo", 0) == -1) {
@@ -339,7 +376,7 @@ main(int argc, char *argv[])
 	{
 		int c;
 
-		while ((c = getopt(argc, argv, "?vgsw:h:fbBt:T:r:R")) != -1) {
+		while ((c = getopt(argc, argv, "?vgsw:h:fbBt:T:r:Rc:")) != -1) {
 			extern char *optarg;
 
 			switch (c) {
@@ -395,11 +432,15 @@ main(int argc, char *argv[])
 				/* Disable resizable window. */
 				guiFlags &= ~(AG_VIDEO_RESIZABLE);
 				break;
+			case 'c':
+				/* Load color scheme */
+				colorFile = optarg;
+				break;
 			case '?':
 			default:
 				printf("%s [-vgsDdfbBR] [-r fps] [-t fontspec] "
 				       "[-w width] [-h height] "
-				       "[-T font-path]\n",
+				       "[-T font-path] [-c colors.acs]\n",
 				       agProgName);
 				exit(0);
 			}
@@ -430,13 +471,32 @@ main(int argc, char *argv[])
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	{
 		AG_Label *lbl;
+		AG_Box *hBox;
 
-		lbl = AG_LabelNew(win, 0,
-		    "Agar version: %d.%d.%d\n(%s)\n"
-		    "Graphics driver: %s",
+		lbl = AG_LabelNew(win, AG_LABEL_HFILL,
+		    "Using Agar version: %d.%d.%d (\"%s\")\n"
+		    "Graphics mode: %s",
 		    ver.major, ver.minor, ver.patch, ver.release,
-		    AG_GetBool(agConfig,"view.opengl") ? "OpenGL" : "SDL");
+		    AG_GetBool(agConfig,"view.opengl") ?
+		    "OpenGL" : "Unaccelerated (framebuffer)");
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
+
+		hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+		{
+			AG_ButtonNewFn(hBox, 0, "Default theme",
+			    SetTheme, "%p", &agStyleDefault);
+			AG_ButtonNewFn(hBox, 0, "Custom theme",
+			    SetTheme, "%p", &myRoundedStyle);
+			
+			AG_SeparatorNewVert(hBox);
+			
+			AG_ButtonNewFn(hBox, 0, "Green",
+			    SetColorScheme, "%s", "green.acs");
+			AG_ButtonNewFn(hBox, 0, "Darker",
+			    TweakColorScheme, "%i", 1);
+			AG_ButtonNewFn(hBox, 0, "Lighter",
+			    TweakColorScheme, "%i", 0);
+		}
 
 		AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
 		AG_WindowShow(win);
@@ -446,23 +506,32 @@ main(int argc, char *argv[])
 	appMenu = AG_MenuNewGlobal(0);
 	m = AG_MenuNode(appMenu->root, "File", NULL);
 	{
-		AG_MenuAction(m, "Preferences...", NULL, Preferences, NULL);
-		AG_MenuAction(m, "GUI Debugger...", NULL, GuiDebugger, NULL);
-		AG_MenuAction(m, "Quit", NULL, Quit, NULL);
+		AG_MenuAction(m, "Preferences...", agIconGear.s,
+		    Preferences, NULL);
+		AG_MenuAction(m, "GUI Debugger...", agIconMagnifier.s,
+		    GuiDebugger, NULL);
+		AG_MenuSeparator(m);
+		AG_MenuAction(m, "Quit", agIconClose.s,
+		    Quit, NULL);
 	}
-	m = AG_MenuNode(appMenu->root, "Themes", NULL);
+	m = AG_MenuNode(appMenu->root, "Test", NULL);
 	{
-		AG_MenuAction(m, "Default", NULL,
-		    SetTheme, "%p", &agStyleDefault);
-		AG_MenuAction(m, "Rounded", NULL,
-		    SetTheme, "%p", &myRoundedStyle);
+		int i;
+
+		AG_MenuNode(m, "Submenu A", NULL);
+		AG_MenuSeparator(m);
+		m = AG_MenuNode(m, "Submenu B", NULL);
+		AG_MenuNode(m, "Submenu C", NULL);
+		AG_MenuNode(m, "Submenu D", NULL);
+		AG_MenuNode(m, "Submenu E", NULL);
 	}
 
 	/* Create our test window. */
 	CreateWindow();
 	
 	/* Load our custom color scheme. */
-	if (AG_ColorsLoad("green.acs") == -1) {
+	if (colorFile != NULL &&
+	    AG_ColorsLoad(colorFile) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "Failed to load color scheme: %s",
 		    AG_GetError());
 	}

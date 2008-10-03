@@ -60,13 +60,17 @@ Init(void *obj)
 	box->spacing = 2;
 }
 
-void
-AG_BoxDraw(void *obj)
+static void
+Draw(void *obj)
 {
 	AG_Box *box = obj;
-
+	AG_Widget *chld;
+	
 	if (box->flags & AG_BOX_FRAME)
 		STYLE(box)->BoxFrame(box, box->depth);
+	
+	WIDGET_FOREACH_CHILD(chld, box)
+		AG_WidgetDraw(chld);
 }
 
 static int
@@ -99,8 +103,8 @@ CountChildWidgets(AG_Box *box, int *totFixed)
 	return (count);
 }
 
-void
-AG_BoxSizeRequest(void *obj, AG_SizeReq *r)
+static void
+SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Box *box = obj;
 	AG_Widget *chld;
@@ -190,8 +194,8 @@ SizeAllocateHomogenous(AG_Box *box, const AG_SizeAlloc *a, int nWidgets)
 	return (0);
 }
 
-int
-AG_BoxSizeAllocate(void *obj, const AG_SizeAlloc *a)
+static int
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Box *box = obj;
 	AG_Widget *chld;
@@ -290,7 +294,7 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 	a.y = WIDGET(box)->y;
 	a.w = WIDGET(box)->w;
 	a.h = WIDGET(box)->h;
-	AG_BoxSizeAllocate(box, &a);
+	SizeAllocate(box, &a);
 	AG_ObjectUnlock(box);
 }
 
@@ -306,7 +310,7 @@ AG_WidgetClass agBoxClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	AG_BoxDraw,
-	AG_BoxSizeRequest,
-	AG_BoxSizeAllocate
+	Draw,
+	SizeRequest,
+	SizeAllocate
 };

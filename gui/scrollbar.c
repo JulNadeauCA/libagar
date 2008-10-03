@@ -28,6 +28,7 @@
 #include "scrollbar.h"
 #include "window.h"
 #include "primitive.h"
+#include "text.h"
 
 #include "gui_math.h"
 
@@ -472,13 +473,6 @@ MouseButtonUp(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
 
-	if (!AG_ScrollbarVisible(sb)) {
-		if (OBJECT(sb)->parent != NULL) {
-			AG_ForwardEvent(NULL, OBJECT(sb)->parent, event);
-		}
-		return;
-	}
-	
 	AG_DelTimeout(sb, &sb->scrollTo);
 	AG_DelTimeout(sb, &sb->incTo);
 	AG_DelTimeout(sb, &sb->decTo);
@@ -504,21 +498,13 @@ MouseButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 	int x = ((sb->type == AG_SCROLLBAR_HORIZ) ? AG_INT(2) : AG_INT(3)) -
 	        sb->wButton;
-	int pos;
+	int pos, posFound;
 
 	if (button != SDL_BUTTON_LEFT) {
 		return;
 	}
-	if (!AG_ScrollbarVisible(sb)) {
-		if (OBJECT(sb)->parent != NULL) {
-			AG_ForwardEvent(NULL, OBJECT(sb)->parent, event);
-		}
-		return;
-	}
-	if (GetPosition(sb, &pos) == -1)
-		return;
-
 	AG_WidgetFocus(sb);
+	posFound = (GetPosition(sb, &pos) == 0);
 	if (x < 0) {
 		/*
 		 * Click on DECREMENT button. Unless user provided a handler
@@ -547,14 +533,14 @@ MouseButtonDown(AG_Event *event)
 			AG_DelTimeout(sb, &sb->incTo);
 			AG_DelTimeout(sb, &sb->decTo);
 		}
-	} else if (x >= pos && x <= (pos + sb->wBar)) {
+	} else if (!posFound || (x >= pos && x <= (pos + sb->wBar))) {
 		/*
 		 * Click on the scrollbar itself. We don't do anything except
 		 * saving the cursor position which we will use in future
 		 * mousemotion events.
 		 */
 		sb->curBtn = AG_SCROLLBAR_BUTTON_SCROLL;
-		sb->xOffs = x - pos;
+		sb->xOffs = posFound ? (x - pos) : x;
 	} else if (sb->wBar != -1) {
 		/*
 		 * Click outside of scrollbar. We seek to the absolute position
@@ -574,13 +560,7 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
-#if 0	
-	if (!AG_ScrollbarVisible(sb)) {
-		if (OBJECT(sb)->parent != NULL)
-			AG_ForwardEvent(NULL, OBJECT(sb)->parent, event);
-		return;
-	}
-#endif
+
 	if (sb->curBtn != AG_SCROLLBAR_BUTTON_SCROLL) {
 		return;
 	}
@@ -740,9 +720,9 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Scrollbar *sb = p;
+	AG_Scrollbar *sb = obj;
 
 	switch (sb->type) {
 	case AG_SCROLLBAR_HORIZ:
@@ -757,9 +737,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Scrollbar *sb = p;
+	AG_Scrollbar *sb = obj;
 
 	if (a->w < 4 || a->h < 4) {
 		return (-1);
@@ -789,18 +769,46 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *p)
+DrawText(AG_Scrollbar *sb)
 {
-	AG_Scrollbar *sb = p;
+	AG_Surface *txt;
+	char label[32];
+
+	AG_PushTextState();
+	AG_TextColor(TEXT_COLOR);
+	AG_TextBGColorHex(0xccccccff);
+
+	Snprintf(label, sizeof(label), "%d < %d < %d",
+	    AG_WidgetInt(sb,"min"),
+	    AG_WidgetInt(sb,"value"),
+	    AG_WidgetInt(sb,"max"));
+
+	/* XXX inefficient */
+	txt = AG_TextRender(label);
+	AG_WidgetBlit(sb, txt,
+	    WIDTH(sb)/2 - txt->w/2,
+	    HEIGHT(sb)/2 - txt->h/2);
+	AG_SurfaceFree(txt);
+	
+	AG_PopTextState();
+}
+
+static void
+Draw(void *obj)
+{
+	AG_Scrollbar *sb = obj;
 	int x, size;
 
-	if (GetPosition(sb, &x) == -1) {
-		return;
-	}
-	size = (sb->wBar == -1) ? sb->extent : sb->wBar;
-	if (size < 0) { size = 0; }
-	
 	STYLE(sb)->ScrollbarBackground(sb);
+
+	if (GetPosition(sb, &x) == 0) {
+		size = (sb->wBar == -1) ? sb->extent : sb->wBar;
+		if (size < 0) { size = 0; }
+	} else {
+		x = 0;
+		size = sb->extent - 1;
+	}
+	
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:
 		STYLE(sb)->ScrollbarVertButtons(sb, x, size);
@@ -809,21 +817,8 @@ Draw(void *p)
 		STYLE(sb)->ScrollbarHorizButtons(sb, x, size);
 		break;
 	}
-#if 0
-	{
-		AG_Surface *txt;
-		char label[32];
-
-		Snprintf(label, sizeof(label), "%d/%d/%d", val, min, max);
-		AG_TextColor(TEXT_COLOR);
-		txt = AG_TextRender(label);
-		AG_WidgetBlit(sb, txt,
-		    WIDTH(sb)/2 - txt->w/2,
-		    HEIGHT(sb)/2 - txt->h/2);
-		AG_SurfaceFree(txt);
-		    
-	}
-#endif
+	if (sb->flags & AG_SCROLLBAR_TEXT)
+		DrawText(sb);
 }
 
 /* Return 1 if it is useful to display the scrollbar given the current range. */

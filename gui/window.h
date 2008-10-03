@@ -68,6 +68,8 @@ typedef struct ag_window {
 #define AG_WINDOW_HMAXIMIZE	0x40000	/* Keep maximized horizontally */
 #define AG_WINDOW_VMAXIMIZE	0x80000	/* Keep maximized vertically */
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
+#define AG_WINDOW_NOBUTTONS	(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|\
+				 AG_WINDOW_NOMAXIMIZE)
 #define AG_WINDOW_PLAIN		(AG_WINDOW_NOTITLE|AG_WINDOW_NOBORDERS)
 
 	char caption[AG_WINDOW_CAPTION_MAX];	/* Window caption */
@@ -79,6 +81,9 @@ typedef struct ag_window {
 	int tPad, bPad, lPad, rPad;		/* Window padding (px) */
 	int wReq, hReq;				/* Requested geometry (px) */
 	int wMin, hMin;				/* Minimum geometry (px) */
+	int wBorderBot;				/* Bottom border size (px) */
+	int wBorderSide;			/* Side border size (px) */
+	int wResizeCtrl;			/* Resize controls size (px) */
 	AG_Rect rSaved;				/* Saved geometry */
 	int minPct;				/* For MINSIZEPCT */
 
@@ -162,6 +167,25 @@ void	 AG_WindowCloseGenEv(AG_Event *);
 #define AGWINHIDE(win)       AG_WindowHideGenEv, "%p", (win)
 #define AGWINCLOSE(win)      AG_WindowCloseGenEv, "%p", (win)
 #define AG_WINDOW_FOCUSED(w) (AG_TAILQ_LAST(&agView->windows,ag_windowq) == (w))
+
+/*
+ * Render a window to the display (must be enclosed between calls to
+ * AG_BeginRendering() and AG_EndRendering()).
+ */
+static __inline__ void
+AG_WindowDraw(AG_Window *win)
+{
+	if (!win->visible)
+		return;
+
+	AG_WidgetDraw(win);
+
+	if ((win->flags & AG_WINDOW_NOUPDATERECT) == 0) {
+		AG_QueueVideoUpdate(
+		    AGWIDGET(win)->x, AGWIDGET(win)->y,
+		    AGWIDGET(win)->w, AGWIDGET(win)->h);
+	}
+}
 
 /* Return the currently focused window. */
 static __inline__ AG_Window *

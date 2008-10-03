@@ -259,9 +259,9 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_MSpinbutton *fsu = p;
+	AG_MSpinbutton *fsu = obj;
 	AG_SizeReq rChld, rYinc, rYdec;
 
 	AG_WidgetSizeReq(fsu->input, &rChld);
@@ -277,9 +277,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_MSpinbutton *fsu = p;
+	AG_MSpinbutton *fsu = obj;
 	int szBtn = a->h/2;
 	int x = 0, y = 0;
 	AG_SizeAlloc aChld;
@@ -315,11 +315,17 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_MSpinbutton *sbu = p;
+	AG_MSpinbutton *sbu = obj;
 	AG_WidgetBinding *xvalueb, *yvalueb;
 	void *xvalue, *yvalue;
+
+	AG_WidgetDraw(sbu->input);
+	AG_WidgetDraw(sbu->xdecbu);
+	AG_WidgetDraw(sbu->ydecbu);
+	AG_WidgetDraw(sbu->xincbu);
+	AG_WidgetDraw(sbu->yincbu);
 
 	if (AG_WidgetFocused(sbu->input))
 		return;

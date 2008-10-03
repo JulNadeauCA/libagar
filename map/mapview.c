@@ -268,8 +268,7 @@ Init(void *obj)
 {
 	MAP_View *mv = obj;
 
-	WIDGET(mv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|
-	                     AG_WIDGET_EXPAND;
+	WIDGET(mv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_EXPAND;
 
 	mv->flags = MAP_VIEW_CENTER;
 	mv->mode = MAP_VIEW_EDITION;
@@ -345,8 +344,7 @@ Init(void *obj)
 }
 
 void
-MAP_ViewUseScrollbars(MAP_View *mv, AG_Scrollbar *hbar,
-    AG_Scrollbar *vbar)
+MAP_ViewUseScrollbars(MAP_View *mv, AG_Scrollbar *hbar, AG_Scrollbar *vbar)
 {
 	mv->hbar = hbar;
 	mv->vbar = vbar;
@@ -440,9 +438,9 @@ CenterToOrigin(MAP_View *mv)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	MAP_View *mv = p;
+	MAP_View *mv = obj;
 	MAP_ViewDrawCb *dcb;
 	MAP *m = mv->map;
 	MAP_Node *node;
@@ -1341,26 +1339,32 @@ out:
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	MAP_View *mv = p;
+	MAP_View *mv = obj;
 
 	r->w = mv->prew*MAPTILESZ;
 	r->h = mv->preh*MAPTILESZ;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	MAP_View *mv = p;
+	MAP_View *mv = obj;
 	AG_SizeAlloc aBar;
+	AG_Rect rView;
 
+	rView.x = 0;
+	rView.y = 0;
+	rView.w = a->w;
+	rView.h = a->h;
 	if (mv->hbar != NULL) {
 		aBar.x = 0;
 		aBar.y = a->h - mv->hbar->wButton;
 		aBar.w = a->w;
 		aBar.h = mv->hbar->wButton;
 		AG_WidgetSizeAlloc(mv->hbar, &aBar);
+		rView.h -= aBar.h;
 	}
 	if (mv->vbar != NULL) {
 		aBar.x = 0;
@@ -1368,10 +1372,13 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aBar.w = mv->vbar->wButton;
 		aBar.h = a->h;
 		AG_WidgetSizeAlloc(mv->vbar, &aBar);
+		rView.w -= aBar.w;
 	}
 	AG_MutexLock(&mv->map->lock);
 	MAP_ViewSetScale(mv, AGMZOOM(mv), 0);
 	AG_MutexUnlock(&mv->map->lock);
+
+	AG_WidgetEnableClipping(mv, rView);
 	return (0);
 }
 

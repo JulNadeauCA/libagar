@@ -457,12 +457,18 @@ UpdateTextbox(AG_MFSpinbutton *num)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_MFSpinbutton *fsu = p;
+	AG_MFSpinbutton *fsu = obj;
 	AG_WidgetBinding *xvalueb, *yvalueb;
 	double *xvalue, *yvalue;
-	
+
+	AG_WidgetDraw(fsu->input);
+	AG_WidgetDraw(fsu->xincbu);
+	AG_WidgetDraw(fsu->yincbu);
+	AG_WidgetDraw(fsu->xdecbu);
+	AG_WidgetDraw(fsu->ydecbu);
+
 	if (!AG_WidgetFocused(fsu->input))
 		UpdateTextbox(fsu);
 

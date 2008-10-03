@@ -248,9 +248,9 @@ keydown(AG_Event *event)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Checkbox *cb = p;
+	AG_Checkbox *cb = obj;
 
 	r->h = agTextFontHeight;
 	r->w = agTextFontHeight;
@@ -262,9 +262,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Checkbox *cb = p;
+	AG_Checkbox *cb = obj;
 
 	if (a->w < agTextFontHeight || a->h < agTextFontHeight) {
 		return (-1);
@@ -276,9 +276,9 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 
 		if (a->w < agTextFontHeight+cb->spacing+wLbl ||
 		    a->h < agTextFontHeight) {
-			WIDGET(cb)->flags |= AG_WIDGET_CLIPPING;
+			AG_WidgetEnableClipping(cb, AG_RECT(0,0,a->w,a->h));
 		} else {
-			WIDGET(cb)->flags &= ~(AG_WIDGET_CLIPPING);
+			AG_WidgetDisableClipping(cb);
 		}
 	}
 	return (0);

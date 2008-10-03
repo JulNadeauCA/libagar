@@ -212,16 +212,16 @@ AG_GLViewReshape(AG_GLView *glv)
 }
 
 void
-AG_GLViewSizeRequest(void *p, AG_SizeReq *r)
+AG_GLViewSizeRequest(void *obj, AG_SizeReq *r)
 {
 	r->w = 32;
 	r->h = 32;
 }
 
 int
-AG_GLViewSizeAllocate(void *p, const AG_SizeAlloc *a)
+AG_GLViewSizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_GLView *glv = p;
+	AG_GLView *glv = obj;
 
 	if (a->w < 1 || a->h < 1)
 		return (-1);
@@ -231,9 +231,9 @@ AG_GLViewSizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 void
-AG_GLViewDraw(void *p)
+AG_GLViewDraw(void *obj)
 {
-	AG_GLView *glv = p;
+	AG_GLView *glv = obj;
 
 	if (glv->flags & AG_GLVIEW_INIT_MATRICES) {
 		glv->flags &= ~(AG_GLVIEW_INIT_MATRICES);

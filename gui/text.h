@@ -110,38 +110,24 @@ extern int agTextFontLineSkip;
 extern int agFreetype;
 extern int agGlyphGC;
 extern AG_TextState *agTextState;
+extern AG_Mutex agTextLock;
 
 int	 AG_TextInit(void);
 void	 AG_TextParseFontSpec(const char *);
 void	 AG_TextDestroy(void);
-
 AG_Font	*AG_FetchFont(const char *, int, int);
-
 void	 AG_PushTextState(void);
 void	 AG_PopTextState(void);
-
-void	AG_TextFont(AG_Font *);
-int	AG_TextFontLookup(const char *, int, Uint);
-void	AG_TextJustify(enum ag_text_justify);
-void	AG_TextColorVideo32(Uint32);
-void	AG_TextColor32(Uint32);
-void	AG_TextColorRGB(Uint8, Uint8, Uint8);
-void	AG_TextColorRGBA(Uint8, Uint8, Uint8, Uint8);
-void	AG_TextBGColorVideo32(Uint32);
-void	AG_TextBGColor32(Uint32);
-void	AG_TextBGColorRGB(Uint8, Uint8, Uint8);
-void	AG_TextBGColorRGBA(Uint8, Uint8, Uint8, Uint8);
-#define	AG_TextColor(name) AG_TextColorVideo32(AG_COLOR(name))
-#define	AG_TextBGColor(name) AG_TextBGColorVideo32(AG_COLOR(name))
-
-AG_Surface *AG_TextRenderf(const char *, ...);
-#define     AG_TextFormat AG_TextRenderf
-AG_Surface *AG_TextRenderUCS4(const Uint32 *);
+int	 AG_TextFontLookup(const char *, int, Uint);
 
 void	 AG_TextSize(const char *, int *, int *);
 void	 AG_TextSizeMulti(const char *, int *, int *, Uint **, Uint *);
 void	 AG_TextSizeUCS4(const Uint32 *, int *, int *);
 void	 AG_TextSizeMultiUCS4(const Uint32 *, int *, int *, Uint **, Uint *);
+
+AG_Surface *AG_TextRenderf(const char *, ...);
+AG_Surface *AG_TextRenderUCS4(const Uint32 *);
+
 
 void AG_TextMsg(enum ag_text_msg_title, const char *, ...)
                 FORMAT_ATTRIBUTE(printf,2,3)
@@ -158,9 +144,6 @@ void AG_TextWarning(const char *, const char *, ...)
 void AG_TextError(const char *, ...)
 	          FORMAT_ATTRIBUTE(printf,1,2)
 	          NONNULL_ATTRIBUTE(1);
-
-#define AG_TextMsgFromError() \
-	AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError())
 
 void AG_TextEditFloat(double *, double, double, const char *,
 		      const char *, ...)
@@ -183,6 +166,14 @@ void	  AG_ClearGlyphCache(void);
 
 void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
                   int, enum ag_text_justify, enum ag_text_valign);
+
+#define     AG_TextFormat AG_TextRenderf
+#define AG_TextMsgFromError() \
+	AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError())
+
+#define	AG_TextColor(name) AG_TextColorVideo32(AG_COLOR(name))
+#define	AG_TextBGColor(name) AG_TextBGColorVideo32(AG_COLOR(name))
+
 
 /* Compare two text states. */
 static __inline__ int
@@ -233,6 +224,122 @@ AG_TextRender(const char *text)
 	su = AG_TextRenderUCS4(ucs);
 	free(ucs);
 	return (su);
+}
+
+/* Set text color from a 32-bit pixel value (agDisplayFormat). */
+static __inline__ void
+AG_TextColorVideo32(Uint32 pixel)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->color = AG_SurfacePixel(pixel);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text color from a 32-bit pixel value (agSurfaceFormat). */
+static __inline__ void
+AG_TextColor32(Uint32 pixel)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->color = pixel;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set an opaque text color from RGB components. */
+static __inline__ void
+AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->color = AG_MapRGB(agSurfaceFmt, r,g,b);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text color from RGBA components. */
+static __inline__ void
+AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->color = AG_MapRGBA(agSurfaceFmt, r, g, b, a);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text color from 0xRRGGBBAA format. */
+static __inline__ void
+AG_TextColorHex(Uint32 c)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->color = AG_MapRGBA(agSurfaceFmt,
+	    (c&0xff000000) >> 24,
+	    (c&0x00ff0000) >> 16,
+	    (c&0x0000ff00) >> 8,
+	    (c&0x000000ff));
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set BG color from a 32-bit pixel value (agDisplayFormat). */
+static __inline__ void
+AG_TextBGColorVideo32(Uint32 pixel)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->colorBG = AG_SurfacePixel(pixel);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set BG color from a 32-bit pixel value (agSurfaceFormat). */
+static __inline__ void
+AG_TextBGColor32(Uint32 pixel)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->colorBG = pixel;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text BG color from RGB components. */
+static __inline__ void
+AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->colorBG = AG_MapRGB(agSurfaceFmt, r,g,b);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text BG color from RGBA components. */
+static __inline__ void
+AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->colorBG = AG_MapRGBA(agSurfaceFmt, r,g,b,a);
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Set text BG color from 0xRRGGBBAA format. */
+static __inline__ void
+AG_TextBGColorHex(Uint32 c)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->colorBG = AG_MapRGBA(agSurfaceFmt,
+	    (c&0xff000000) >> 24,
+	    (c&0x00ff0000) >> 16,
+	    (c&0x0000ff00) >> 8,
+	    (c&0x000000ff));
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Select the font face to use in rendering text. */
+static __inline__ void
+AG_TextFont(AG_Font *font)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->font = font;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Select the justification mode to use in rendering text. */
+static __inline__ void
+AG_TextJustify(enum ag_text_justify mode)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->justify = mode;
+	AG_MutexUnlock(&agTextLock);
 }
 __END_DECLS
 

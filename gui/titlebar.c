@@ -162,6 +162,7 @@ Draw(void *obj)
 
 	STYLE(tbar)->TitlebarBackground(tbar, tbar->pressed,
 	    AG_WINDOW_FOCUSED(tbar->win));
+	WIDGET_SUPER_OPS(tbar)->draw(tbar);
 }
 
 static void
@@ -208,6 +209,6 @@ AG_WidgetClass agTitlebarClass = {
 		NULL		/* edit */
 	},
 	Draw,
-	AG_BoxSizeRequest,
-	AG_BoxSizeAllocate
+	AG_WidgetInheritSizeRequest,
+	AG_WidgetInheritSizeAllocate
 };

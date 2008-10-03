@@ -261,9 +261,9 @@ Init(void *obj)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_MenuView *mview = p;
+	AG_MenuView *mview = obj;
 	AG_MenuItem *pitem = mview->pitem;
 	AG_Menu *m = mview->pmenu;
 	AG_Rect r;
@@ -337,9 +337,9 @@ Draw(void *p)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_MenuView *mview = p;
+	AG_MenuView *mview = obj;
 	AG_MenuItem *pitem = mview->pitem;
 	AG_Menu *m = mview->pmenu;
 	int i;
@@ -380,7 +380,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	if (a->w < 4 || a->h < 4) {
 		return (-1);

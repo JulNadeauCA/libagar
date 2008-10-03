@@ -149,22 +149,22 @@ MouseButtonDown(AG_Event *event)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
 	r->w = 256;
 	r->h = 128;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	return (a->w > 2 && a->h > 4) ? 0 : -1;
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_FixedPlotter *fpl = p;
+	AG_FixedPlotter *fpl = obj;
 	AG_FixedPlotterItem *gi;
 	int x, y, ox = 0, oy;
 	Uint32 i, yOrigin;

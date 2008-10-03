@@ -103,6 +103,9 @@ binding.
 .Ft void
 .Fn AG_SliderSetRealIncrement "AG_Slider *slider" "double increment"
 .Pp
+.Ft void
+.Fn AG_SliderSetControlSize "AG_Slider *slider" "int pixels"
+.Pp
 .nr nS 0
 The
 .Fn AG_SliderNew
@@ -143,6 +146,9 @@ define by how much the value is to be incremented/decremented as a result of
 keyboard motion.
 The former is only meaningful with integer bindings, the latter is only
 meaningful with floating-point bindings.
+.Pp
+.Fn AG_SliderSetControlSize
+specifies a preferred size for the slider control, in pixels.
 .Sh BINDINGS
 The
 .Nm

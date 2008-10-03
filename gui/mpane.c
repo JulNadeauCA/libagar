@@ -155,6 +155,16 @@ AG_MPaneSetLayout(AG_MPane *mp, enum ag_mpane_layout layout)
 	AG_ObjectUnlock(mp);
 }
 
+static void
+Draw(void *obj)
+{
+	AG_MPane *mp = obj;
+	int i;
+
+	for (i = 0; i < mp->npanes; i++)
+		AG_WidgetDraw(mp->panes[i]);
+}
+
 AG_WidgetClass agMPaneClass = {
 	{
 		"Agar(Widget:Box:MPane)",
@@ -167,7 +177,7 @@ AG_WidgetClass agMPaneClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* draw */
+	Draw,
 	NULL,			/* size_request */
 	NULL			/* size_allocate */
 };

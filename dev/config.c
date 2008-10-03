@@ -353,12 +353,6 @@ DEV_ConfigWindow(AG_Config *cfg)
 				it = AG_TlistAdd(tl, NULL, _(agColorNames[i]));
 				it->p1 = &agColors[i];
 			}
-			for (i = 0; i < agColorsBorderSize; i++) {
-				it = AG_TlistAdd(tl, NULL,
-				    _("Window border #%i"), i);
-				it->p1 = &agColorsBorder[i];
-			}
-
 			hsv = AG_HSVPalNew(hPane->div[1], AG_HSVPAL_EXPAND);
 			AG_WidgetBindPointer(hsv,"pixel-format", &agVideoFmt);
 			AG_SetEvent(hsv, "h-changed", SetColor, "%p", tl);

@@ -99,8 +99,8 @@ Expand(AG_Event *event)
 				    com->wPreList, com->hPreList);
 			}
 			AG_WidgetSizeReq(com->list, &rList);
-			w = rList.w + agColorsBorderSize*2;
-			h = rList.h + agColorsBorderSize*2;
+			w = rList.w + com->panel->wBorderSide*2;
+			h = rList.h + com->panel->wBorderBot;
  		}
 		x = WIDGET(com)->cx + WIDTH(com) - w;
 		y = WIDGET(com)->cy;
@@ -282,10 +282,19 @@ Destroy(void *p)
 	AG_ObjectDestroy(com->list);
 }
 
-void
-AG_ComboSizeRequest(void *p, AG_SizeReq *r)
+static void
+Draw(void *obj)
 {
-	AG_Combo *com = p;
+	AG_Combo *com = obj;
+
+	AG_WidgetDraw(com->tbox);
+	AG_WidgetDraw(com->button);
+}
+
+static void
+SizeRequest(void *obj, AG_SizeReq *r)
+{
+	AG_Combo *com = obj;
 	AG_SizeReq rChld;
 
 	AG_WidgetSizeReq(com->tbox, &rChld);
@@ -296,10 +305,10 @@ AG_ComboSizeRequest(void *p, AG_SizeReq *r)
 	if (r->h < rChld.h) { r->h = rChld.h; }
 }
 
-int
-AG_ComboSizeAllocate(void *p, const AG_SizeAlloc *a)
+static int
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Combo *com = p;
+	AG_Combo *com = obj;
 	AG_SizeReq rBtn;
 	AG_SizeAlloc aChld;
 
@@ -330,7 +339,7 @@ AG_WidgetClass agComboClass = {
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	NULL,				/* draw */
-	AG_ComboSizeRequest,
-	AG_ComboSizeAllocate
+	Draw,
+	SizeRequest,
+	SizeAllocate
 };

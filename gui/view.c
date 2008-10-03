@@ -62,11 +62,19 @@
  */
 /* #define OPENGL_INVERTED_Y */
 
-AG_Display *agView = NULL;		/* Main view */
-AG_PixelFormat *agVideoFmt = NULL;	/* Current format of display */
-AG_PixelFormat *agSurfaceFmt = NULL;	/* Preferred format for surfaces */
+AG_Display          *agView = NULL;	/* Main view */
+AG_PixelFormat      *agVideoFmt = NULL;	/* Current format of display */
+AG_PixelFormat      *agSurfaceFmt = NULL; /* Preferred format for surfaces */
 const SDL_VideoInfo *agVideoInfo;	/* Display information */
+
 int agBgPopupMenu = 0;			/* Background popup menu */
+int agRenderingContext = 0;		/* In rendering context (for debug) */
+
+AG_ClipRect *agClipRects = NULL;	/* Clipping rectangle stack (first
+					   entry always covers whole view) */
+int          agClipStateGL[4];		/* Saved GL clipping plane states */
+Uint        agClipRectCount = 0;
+
 static int initedGlobals = 0;
 
 const char *agBlendFuncNames[] = {
@@ -174,6 +182,44 @@ InitGlobals(void)
 	AG_RegisterBuiltinLabelFormats();
 }
 
+/* Initialize the clipping rectangle stack. */
+static void
+InitClipRects(int wView, int hView)
+{
+	AG_ClipRect *cr;
+	int i;
+
+	for (i = 0; i < 4; i++)
+		agClipStateGL[i] = 0;
+
+	/* Rectangle 0 always covers the whole view. */
+	agClipRects = Malloc(sizeof(AG_ClipRect));
+	cr = &agClipRects[0];
+	cr->r = AG_RECT(0, 0, wView, hView);
+
+	cr->eqns[0][0] = 1.0;
+	cr->eqns[0][1] = 0.0;
+	cr->eqns[0][2] = 0.0;
+	cr->eqns[0][3] = 0.0;
+	
+	cr->eqns[1][0] = 0.0;
+	cr->eqns[1][1] = 1.0;
+	cr->eqns[1][2] = 0.0;
+	cr->eqns[1][3] = 0.0;
+	
+	cr->eqns[2][0] = -1.0;
+	cr->eqns[2][1] = 0.0;
+	cr->eqns[2][2] = 0.0;
+	cr->eqns[2][3] = (double)wView;
+	
+	cr->eqns[3][0] = 0.0;
+	cr->eqns[3][1] = -1.0;
+	cr->eqns[3][2] = 0.0;
+	cr->eqns[3][3] = (double)hView;
+	
+	agClipRectCount = 1;
+}
+
 /*
  * Initialize Agar with an existing SDL/OpenGL display surface. If the
  * surface has SDL_OPENGL or SDL_OPENGLBLIT set, we assume that OpenGL
@@ -238,6 +284,8 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 	if (AG_InitGUI(0) == -1) {
 		goto fail;
 	}
+	InitClipRects(agView->w, agView->h);
+	
 	if (flags & AG_VIDEO_BGPOPUPMENU)
 		agBgPopupMenu = 1;
 	if (!(flags & AG_VIDEO_NOBGCLEAR))
@@ -386,8 +434,10 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	AG_SetUint16(agConfig, "view.w", agView->w);
 	AG_SetUint16(agConfig, "view.h", agView->h);
 
-	if (AG_InitGUI(0) == -1)
+	if (AG_InitGUI(0) == -1) {
 		goto fail;
+	}
+	InitClipRects(w, h);
 
 	if (!(flags & AG_VIDEO_NOBGCLEAR)) {
 		AG_ClearBackground();
@@ -541,11 +591,12 @@ AG_ResizeDisplay(int w, int h)
 	AG_Window *win;
 	SDL_Surface *su;
 	int ow, oh;
+	AG_ClipRect *cr0;
 
 #ifdef HAVE_OPENGL
 	/*
-	 * Until SDL implements GL context saving in a portable way, we have
-	 * to release and regenerate all resources tied to our GL context.
+	 * Save all of our GL resources since it is not portable to assume
+	 * that a display resize will not destroy them.
 	 */
 	if (agView->opengl) {
 		TAILQ_FOREACH(win, &agView->windows, windows)
@@ -554,6 +605,7 @@ AG_ResizeDisplay(int w, int h)
 	AG_ClearGlyphCache();
 #endif
 
+	/* Resize the display to the requested geometry. */
 	/* XXX set a minimum! */
 	if ((su = SDL_SetVideoMode(w, h, 0, flags)) == NULL) {
 		AG_SetError("Cannot resize display to %ux%u: %s",
@@ -562,25 +614,34 @@ AG_ResizeDisplay(int w, int h)
 	}
 	ow = agView->w;
 	oh = agView->h;
-
 	agView->v = su;
 	agView->w = w;
 	agView->h = h;
 	AG_SetUint16(agConfig, "view.w", w);
 	AG_SetUint16(agConfig, "view.h", h);
 
+	/* Update clipping rectangle 0. */
+	cr0 = &agClipRects[0];
+	cr0->r.w = w;
+	cr0->r.h = h;
+	cr0->eqns[2][3] = (double)w;
+	cr0->eqns[3][3] = (double)h;
+
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
+		/* Restore our saved GL resources. */
 		InitGL();
 		TAILQ_FOREACH(win, &agView->windows, windows)
 			RegenWidgetResourcesGL(WIDGET(win));
 	} else
 #endif
 	{
+		/* Clear the background. */
 		SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
 		SDL_UpdateRect(agView->v, 0, 0, w, h);
 	}
 
+	/* Update the Agar window geometries. */
 	TAILQ_FOREACH(win, &agView->windows, windows) {
 		AG_SizeAlloc a;
 
@@ -628,26 +689,74 @@ fail:
 	return (-1);
 }
 
-/*
- * Respond to a VIDEOEXPOSE event. Must be called from the main event/rendering
- * context and the View must be locked.
- */
+/* Enter rendering context. */
+void
+AG_BeginRendering(void)
+{
+#ifdef DEBUG
+	agRenderingContext = 1;
+#endif
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	}
+	agClipStateGL[0] = glIsEnabled(GL_CLIP_PLANE0);
+	glEnable(GL_CLIP_PLANE0);
+	agClipStateGL[1] = glIsEnabled(GL_CLIP_PLANE1);
+	glEnable(GL_CLIP_PLANE1);
+	agClipStateGL[2] = glIsEnabled(GL_CLIP_PLANE2);
+	glEnable(GL_CLIP_PLANE2);
+	agClipStateGL[3] = glIsEnabled(GL_CLIP_PLANE3);
+	glEnable(GL_CLIP_PLANE3);
+#endif
+}
+
+/* Leave rendering context. */
+void
+AG_EndRendering(void)
+{
+#ifdef DEBUG
+	if (agClipRectCount != 1)
+		AG_FatalError("Inconsistent PushClipRect() / PopClipRect()");
+#endif
+
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		SDL_GL_SwapBuffers();
+		if (agClipStateGL[0])	{ glEnable(GL_CLIP_PLANE0); }
+		else			{ glDisable(GL_CLIP_PLANE0); }
+		if (agClipStateGL[1])	{ glEnable(GL_CLIP_PLANE1); }
+		else			{ glDisable(GL_CLIP_PLANE1); }
+		if (agClipStateGL[2])	{ glEnable(GL_CLIP_PLANE2); }
+		else			{ glDisable(GL_CLIP_PLANE2); }
+		if (agClipStateGL[3])	{ glEnable(GL_CLIP_PLANE3); }
+		else			{ glDisable(GL_CLIP_PLANE3); }
+	} else
+#endif
+	if (agView->ndirty > 0) {
+		SDL_UpdateRects(agView->v, agView->ndirty, agView->dirty);
+		agView->ndirty = 0;
+	}
+#ifdef DEBUG
+	agRenderingContext = 0;
+#endif
+}
+
+/* Respond to a VIDEOEXPOSE event by redrawing the windows. */
 void
 AG_ViewVideoExpose(void)
 {
 	AG_Window *win;
 
+	AG_LockVFS(agView);
+	AG_BeginRendering();
 	TAILQ_FOREACH(win, &agView->windows, windows) {
 		AG_ObjectLock(win);
-		if (win->visible) {
-			AG_WidgetDraw(win);
-		}
+		AG_WindowDraw(win);
 		AG_ObjectUnlock(win);
 	}
-#ifdef HAVE_OPENGL
-	if (agView->opengl)
-		SDL_GL_SwapBuffers();
-#endif
+	AG_EndRendering();
+	AG_UnlockVFS(agView);
 }
 
 /* Return the named window or NULL if there is no such window. */
@@ -1315,38 +1424,13 @@ AG_EventLoop_FixedFPS(void)
 		Tr2 = SDL_GetTicks();
 		if (Tr2-Tr1 >= agView->rNom) {
 			AG_LockVFS(agView);
-#ifdef HAVE_OPENGL
-			if (agView->opengl)
-				glClear(GL_COLOR_BUFFER_BIT|
-				        GL_DEPTH_BUFFER_BIT);
-#endif
+			AG_BeginRendering();
 			TAILQ_FOREACH(win, &agView->windows, windows) {
 				AG_ObjectLock(win);
-				if (!win->visible) {
-					AG_ObjectUnlock(win);
-					continue;
-				}
-				AG_WidgetDraw(win);
-				if (!(win->flags & AG_WINDOW_NOUPDATERECT)) {
-					AG_QueueVideoUpdate(
-					    WIDGET(win)->x, WIDGET(win)->y,
-					    WIDGET(win)->w, WIDGET(win)->h);
-				}
+				AG_WindowDraw(win);
 				AG_ObjectUnlock(win);
 			}
-			if (agView->ndirty > 0) {
-#ifdef HAVE_OPENGL
-				if (agView->opengl) {
-					SDL_GL_SwapBuffers();
-				} else
-#endif
-				{
-					SDL_UpdateRects(agView->v,
-					    agView->ndirty,
-					    agView->dirty);
-				}
-				agView->ndirty = 0;
-			}
+			AG_EndRendering();
 			AG_UnlockVFS(agView);
 
 			/* Recalibrate the effective refresh rate. */

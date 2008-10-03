@@ -155,9 +155,9 @@ AG_RadioClearItems(AG_Radio *rad)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Radio *rad = p;
+	AG_Radio *rad = obj;
 	int i, val;
 	int x = rad->xPadding + rad->radius*2 + rad->xSpacing;
 	int y = rad->yPadding;
@@ -192,9 +192,9 @@ Destroy(void *p)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Radio *rad = p;
+	AG_Radio *rad = obj;
 
 	if (rad->nItems == 0) {
 		r->w = 0;
@@ -208,17 +208,19 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Radio *rad = p;
+	AG_Radio *rad = obj;
 	
 	if (a->w < rad->xPadding*2 + rad->xSpacing*2 + rad->radius*2 +
 	    rad->max_w ||
 	    a->h < rad->yPadding*2 + rad->nItems*rad->radius*2 +
 	           (rad->nItems-1)*rad->ySpacing) {
-		WIDGET(rad)->flags |= AG_WIDGET_CLIPPING;
+		AG_WidgetEnableClipping(rad, AG_RECT(0, 0,
+		    a->w - rad->xPadding,
+		    a->h - rad->yPadding));
 	} else {
-		WIDGET(rad)->flags &= ~(AG_WIDGET_CLIPPING);
+		AG_WidgetDisableClipping(rad);
 	}
 	return (0);
 }

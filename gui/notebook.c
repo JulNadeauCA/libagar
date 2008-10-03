@@ -92,8 +92,6 @@ Init(void *obj)
 {
 	AG_Notebook *nb = obj;
 
-	WIDGET(nb)->flags |= AG_WIDGET_CLIPPING;
-
 	nb->flags = 0;
 	nb->tab_align = AG_NOTEBOOK_TABS_TOP;
 	nb->sel_tab = NULL;
@@ -113,9 +111,9 @@ Init(void *obj)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Notebook *nb = p;
+	AG_Notebook *nb = obj;
 	AG_NotebookTab *tab;
 	int x = SPACING;
 	int y = SPACING;
@@ -125,8 +123,11 @@ Draw(void *p)
 	r.x = 0;
 	r.y = nb->bar_h;
 	r.w = WIDTH(nb);
-	r.h = HEIGHT(nb);
+	r.h = HEIGHT(nb) - nb->bar_h;
 	STYLE(nb)->NotebookBackground(nb, r);
+	
+	if (nb->sel_tab != NULL)
+		AG_WidgetDraw(&nb->sel_tab->box);
 
 	if (nb->flags & AG_NOTEBOOK_HIDE_TABS) {
 		return;
@@ -175,9 +176,9 @@ Draw(void *p)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Notebook *nb = p;
+	AG_Notebook *nb = obj;
 	AG_NotebookTab *tab;
 	AG_SizeReq rTab;
 
@@ -204,9 +205,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Notebook *nb = p;
+	AG_Notebook *nb = obj;
 	AG_NotebookTab *tab;
 	AG_SizeAlloc aTab;
 
@@ -220,6 +221,8 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aTab.h = a->h - nb->bar_h;
 		AG_WidgetSizeAlloc(tab, &aTab);
 	}
+
+	AG_WidgetEnableClipping(nb, AG_RECT(0, 0, a->w, a->h));
 	return (0);
 }
 
@@ -373,7 +376,7 @@ AG_WidgetClass agNotebookTabClass = {
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	NULL,				/* draw */
-	AG_BoxSizeRequest,
-	AG_BoxSizeAllocate
+	AG_WidgetInheritDraw,
+	AG_WidgetInheritSizeRequest,
+	AG_WidgetInheritSizeAllocate
 };

@@ -98,10 +98,10 @@ typedef struct ag_widget_class {
 .Ed
 .Pp
 The
-.Va draw
+.Fn draw
 operation renders the widget to the display.
 Throughout the documentation, the
-.Va draw
+.Fn draw
 operation is referred to as the
 .Sq rendering context ,
 and some functions (such as
@@ -109,7 +109,7 @@ and some functions (such as
 are not safe to invoke in any other context.
 .Pp
 The
-.Va size_request
+.Fn size_request
 option queries the widget for an initial, preferred geometry, without any
 guarantee that the request will be satisfied.
 For example, a
@@ -117,15 +117,15 @@ For example, a
 widget might return the expected size in pixels of the rendered label's text.
 .Pp
 The
-.Va size_allocate
+.Fn size_allocate
 callback notifies the widget that it has been allocated a new size or position
 within its parent.
 The widget is not allowed to modify the allocation at this point, but if
-.Va size_allocate
+.Fn size_allocate
 returns -1, the special flag
 .Dv AG_WIDGET_UNDERSIZE
 is automatically set, preventing
-.Va draw
+.Fn draw
 from being invoked until the widget is rescaled to an acceptable size.
 .Sh WIDGET SIZING
 .nr nS 1
@@ -166,7 +166,7 @@ cause the widget to expand to fill available space horizontally or vertically.
 The
 .Fn AG_WidgetSizeReq
 function invokes the
-.Va size_request
+.Fn size_request
 operation of the widget and returns its size requisition into
 .Fa req .
 .Fn AG_WidgetSizeAlloc
@@ -429,17 +429,24 @@ and
 .Fa rs
 set to NULL).
 .Sh RENDERING AND PRIMITIVES
-These functions are designed specifically for use in GUI widgets.
-They must be called from the
+These routines are provided for use in GUI widgets, exclusively in the context
+of the
+.Nm
 .Fa draw
-functions of widgets exclusively and may not be used in any other context.
+operation.
 .Pp
 .nr nS 1
 .Ft void
-.Fn AG_WidgetPushClipRect "AG_Widget *widget" "AG_Rect r"
+.Fn AG_WidgetEnableClipping "AG_Widget *widget" "AG_Rect r"
 .Pp
 .Ft void
-.Fn AG_WidgetPopClipRect "AG_Widget *widget"
+.Fn AG_WidgetDisableClipping "AG_Widget *widget"
+.Pp
+.Ft void
+.Fn AG_PushClipRect "AG_Widget *widget" "AG_Rect r"
+.Pp
+.Ft void
+.Fn AG_PopClipRect "void"
 .Pp
 .Ft void
 .Fn AG_WidgetPushCursor "AG_Widget *widget" "int cursor"
@@ -466,20 +473,43 @@ functions of widgets exclusively and may not be used in any other context.
 .Fn AG_WidgetBlendPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 pixel" "AG_BlendFn blendFn"
 .Pp
 .nr nS 0
-The
-.Fn AG_WidgetPushClipRect
-function creates a clipping rectangle over the given area (given in
-widget coordinates).
-The current clipping rectangle is saved and can be restored by calling
-.Fn AG_WidgetPopClipRect .
+.Pp
+.Fn AG_WidgetEnableClipping
+configures a global clipping rectangle, which applies to child widget as
+well as
+.Fa widget
+itself.
+.Fn AG_WidgetDisableClipping
+disables the global clipping rectangle.
+Both
+.Fn AG_WidgetEnableClipping
+and
+.Fn AG_WidgetDisableClipping
+are typically invoked from widget initialization and
+.Fn size_allocate
+context, and are not safe to invoke from GUI rendering context.
+.Pp
+.Fn AG_PushClipRect
+pushes a rectangle onto the stack of clipping rectangle.
+.Fn AG_PopClipRect
+pops the last entry from the clipping rectangle stack.
+.Pp
+The rectangle for both
+.Fn AG_WidgetEnableClipping
+and
+.Fn AG_PushClipRect
+is given in coordinates relative to the widget.
+.Pp
 The method of clipping depends on the underlying graphics API.
 For instance, in SDL mode, the temporary rectangle is set by
 .Xr SDL_SetClipRect 3
 and
 .Xr glClipPlane 3
 is used in OpenGL mode.
+In both cases, Agar will intersect the rectangles on the stack such that
+only one clipping rectangle is required of the graphics API.
 It is not safe to call these two functions anywhere outside of a widget
-.Va draw
+.Fn draw
 operation.
 .Pp
 The
@@ -1034,7 +1064,7 @@ NUL-terminating the result and returning the number of bytes that would
 have been copied if
 .Fa dst_size
 was unlimited.
-.Sh MISCELLANEOUS
+.Sh WIDGET QUERIES
 .nr nS 1
 .Ft "AG_Window *"
 .Fn AG_ParentWindow "AG_Widget *widget"
@@ -1047,9 +1077,6 @@ was unlimited.
 .Pp
 .Ft "AG_Widget *"
 .Fn AG_WidgetFindRect "const char *classMask" "int x" "int y" "int w" "int h"
-.Pp
-.Ft "void"
-.Fn AG_SetStyle "AG_Widget *widget" "AG_Style *style"
 .Pp
 .nr nS 0
 .Fn AG_ParentWindow
@@ -1080,6 +1107,35 @@ and
 is only accurate as long as the
 .Xr AG_View 3
 VFS is locked.
+.Sh GUI RENDERING
+.nr nS 1
+.Ft "void"
+.Fn AG_WidgetDraw "AG_Widget *widget"
+.Pp
+.Ft "void"
+.Fn AG_BeginRendering "void"
+.Pp
+.Ft "void"
+.Fn AG_EndRendering "void"
+.Pp
+.nr nS 0
+The
+.Fn AG_WidgetDraw
+routine renders a widget to the display.
+It is typically invoked from an event loop routine (such as
+.Xr AG_EventLoop 3 ) ,
+to recursively draw the hierarchy of visible GUI elements.
+.Pp
+.Fn AG_WidgetDraw
+invocations must be enclosed between calls to
+.Fn AG_BeginRendering
+and
+.Fn AG_EndRendering .
+.Sh THEME SELECTION
+.nr nS 1
+.Ft "void"
+.Fn AG_SetStyle "AG_Widget *widget" "AG_Style *style"
+.nr nS 0
 .Pp
 The
 .Fn AG_SetStyle
@@ -1093,6 +1149,10 @@ their parent.
 Agar-GUI is thread-safe on a fine-grained level, so it is safe to make GUI
 calls from different threads (unless documented otherwise in the widget's
 manual page).
+See
+.Xr AG_Threads 3
+for more details, including important conventions used throughout the
+documentation.
 .Sh EVENTS
 The
 .Nm
@@ -1156,23 +1216,19 @@ to fill all remaining space.
 Hint to container widgets that in a horizontal packing, this widget can expand
 to fill all remaining space.
 .It AG_WIDGET_CLIPPING
-Automatically set a temporary clipping rectangle to surround the widget
-area during rendering.
-Note that widgets can also request clipping rectangles using
-.Fn AG_WidgetPushClipRect
-and
-.Fn AG_WidgetPopClipRect .
+A global clipping rectangle is in use (read-only, must be set with
+.Fn AG_WidgetEnableClipping ) .
 .It AG_WIDGET_HIDE
 Disable rendering of this widget (does not affect widget's children).
 .It AG_WIDGET_DISABLED
-Meaning is widget-specific but it generally disables user input.
-Flag is read-only and must be set via
+Meaning is widget-specific but it generally disables user input (read-only,
+set with
 .Fn AG_WidgetDisable
 and
-.Fn AG_WidgetEnable 
-(see
+.Fn AG_WidgetEnable  ) .
+See
 .Dq INPUT STATE
-section below for more details).
+section for more details.
 .It AG_WIDGET_FOCUSABLE
 The widget can grab the focus.
 .It AG_WIDGET_UNFOCUSED_MOTION

@@ -748,8 +748,7 @@ Init(void *obj)
 	RG_Tileview *tv = obj;
 	
 	WIDGET(tv)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL|
-	                     AG_WIDGET_FOCUSABLE|
-	                     AG_WIDGET_CLIPPING;
+	                     AG_WIDGET_FOCUSABLE;
 	tv->flags = RG_TILEVIEW_NO_EXTENT|RG_TILEVIEW_NO_TILING;
 	tv->ts = NULL;
 	tv->tile = NULL;
@@ -1006,9 +1005,9 @@ RG_TileviewSetZoom(RG_Tileview *tv, int z2, int adj_offs)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	RG_Tileview *tv = p;
+	RG_Tileview *tv = obj;
 
 	if (tv->tile != NULL) {
 		r->w = tv->tile->su->w + RG_TILEVIEW_MIN_W;
@@ -1020,9 +1019,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	RG_Tileview *tv = p;
+	RG_Tileview *tv = obj;
 	int lim;
 
 	if (a->w < RG_TILEVIEW_MIN_W ||
@@ -1034,6 +1033,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	if (tv->yoffs > (lim = (a->h - RG_TILEVIEW_MIN_H)))
 		tv->yoffs = lim;
 
+	AG_WidgetEnableClipping(tv, AG_RECT(0, 0, a->w, a->h));
 	return (0);
 }
 
@@ -1541,11 +1541,11 @@ RG_AttrColor(Uint flag, int state, Uint8 *c)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	char status[64];
-	RG_Tileview *tv = p;
+	RG_Tileview *tv = obj;
 	RG_Tile *t = tv->tile;
+	char status[64];
 	RG_TileviewCtrl *ctrl;
 	AG_Rect rsrc, rdst;
 	int x, y, n;

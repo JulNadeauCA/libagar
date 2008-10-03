@@ -236,7 +236,7 @@ MouseMotion(AG_Event *event)
 	int y = AG_INT(2);
 	int i;
 
-	if (!m->selecting || y < 0 || y >= WIDGET(m)->h-1)
+	if (!m->selecting || y < 0 || y >= HEIGHT(m)-1)
 		return;
 
 	if (x < 0 && m->itemSel != NULL) {
@@ -367,8 +367,7 @@ Init(void *obj)
 
 	WIDGET(m)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
 	                    AG_WIDGET_UNFOCUSED_BUTTONUP|
-	                    AG_WIDGET_IGNORE_PADDING|
-	                    AG_WIDGET_CLIPPING;
+	                    AG_WIDGET_IGNORE_PADDING;
 
 	m->flags = 0;
 	m->lPad = 5;
@@ -888,9 +887,9 @@ AG_MenuToolbar(AG_MenuItem *mi, AG_Toolbar *tb)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Menu *m = p;
+	AG_Menu *m = obj;
 	int lbl, wLbl, hLbl;
 	int i;
 
@@ -958,9 +957,9 @@ GetItemSize(AG_MenuItem *item, int *w, int *h)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Menu *m = p;
+	AG_Menu *m = obj;
 	int i, x, y;
 	int wLbl, hLbl;
 
@@ -990,14 +989,14 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Menu *m = p;
+	AG_Menu *m = obj;
 	int wLbl, hLbl;
 	int x, y, i;
 	
-	if (WIDGET(m)->w < (m->lPad + m->rPad) ||
-	    WIDGET(m)->h < (m->tPad + m->bPad)) {
+	if (WIDTH(m) < (m->lPad + m->rPad) ||
+	    HEIGHT(m) < (m->tPad + m->bPad)) {
 		return (-1);
 	}
 	if (m->root == NULL) {
@@ -1018,6 +1017,13 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		}
 		x += wLbl;
 	}
+
+	AG_WidgetEnableClipping(m, AG_RECT(
+	    m->lPad,
+	    m->tPad,
+	    a->w - m->rPad,
+	    a->h - m->bPad));
+
 	return (0);
 }
 

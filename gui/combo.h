@@ -48,9 +48,6 @@ void AG_ComboSetButtonText(AG_Combo *, const char *);
 void AG_ComboSetButtonTextNODUP(AG_Combo *, char *);
 void AG_ComboSetButtonSurface(AG_Combo *, AG_Surface *);
 void AG_ComboSetButtonSurfaceNODUP(AG_Combo *, AG_Surface *);
-
-void AG_ComboSizeRequest(void *, AG_SizeReq *);
-int  AG_ComboSizeAllocate(void *, const AG_SizeAlloc *);
 __END_DECLS
 
 #include "close_code.h"

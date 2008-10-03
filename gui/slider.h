@@ -31,7 +31,8 @@ typedef struct ag_slider {
 	int min, max;			/* Default range bindings */
 	enum ag_slider_type type;	/* Style of scrollbar */
 	int ctlPressed;			/* Control is pressed */
-	int wControl;			/* Control size */
+	int wControlPref;		/* Control size (preferred) */
+	int wControl;			/* Control size (effective) */
 	AG_Timeout incTo, decTo;	/* Timers for keyboard motion */
 	int xOffs;			/* Cursor offset for scrolling */
 	int extent;			/* Available area for scrolling */
@@ -76,6 +77,7 @@ AG_Slider *AG_SliderNewLongDbl(void *, enum ag_slider_type, Uint,
                                long double *, long double *, long double *);
 #endif
 
+void AG_SliderSetControlSize(AG_Slider *, int);
 void AG_SliderSetIntIncrement(AG_Slider *, int);
 void AG_SliderSetRealIncrement(AG_Slider *, double);
 __END_DECLS

@@ -176,9 +176,9 @@ AG_LabelNewStaticString(void *parent, Uint flags, const char *text)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Label *lbl = p;
+	AG_Label *lbl = obj;
 	
 	if (lbl->flags & AG_LABEL_NOMINSIZE) {
 		r->w = lbl->lPad + lbl->rPad;
@@ -205,16 +205,22 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Label *lbl = p;
+	AG_Label *lbl = obj;
 	int wLbl, hLbl;
+	AG_Rect rView;
 	
 	if (a->w < 1 || a->h < 1) {
 		return (-1);
 	}
+	rView.x = lbl->lPad;
+	rView.y = lbl->tPad;
+	rView.w = a->w - lbl->rPad;
+	rView.h = a->h - lbl->bPad;
+
 	if (lbl->type == AG_LABEL_POLLED) {
-		WIDGET(lbl)->flags |= AG_WIDGET_CLIPPING;
+		AG_WidgetEnableClipping(lbl, rView);
 		return (0);
 	}
 	if (lbl->text == NULL)
@@ -227,13 +233,13 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_TextSize(lbl->text, &wLbl, &hLbl);
 
 	if (hLbl+lbl->tPad+lbl->bPad > a->h) {
-		WIDGET(lbl)->flags |= AG_WIDGET_CLIPPING;
+		AG_WidgetEnableClipping(lbl, rView);
 	} else {
-		WIDGET(lbl)->flags &= ~(AG_WIDGET_CLIPPING);
+		AG_WidgetDisableClipping(lbl);
 	}
 	if ((wLbl + lbl->lPad + lbl->rPad) > a->w) {
 		lbl->flags |= AG_LABEL_PARTIAL;
-		WIDGET(lbl)->flags &= ~(AG_WIDGET_CLIPPING);
+		AG_WidgetDisableClipping(lbl);
 		if (lbl->surfaceCont == -1) {
 			/* TODO share this between all widgets */
 			AG_PushTextState();
@@ -624,9 +630,9 @@ DrawPolled(AG_Label *lbl)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Label *lbl = p;
+	AG_Label *lbl = obj;
 	int x;
 	
 	if (lbl->flags & AG_LABEL_FRAME)
@@ -634,10 +640,10 @@ Draw(void *p)
 		    AG_COLOR(FRAME_COLOR));
 
 	if (lbl->flags & AG_LABEL_PARTIAL) {
-		AG_WidgetPushClipRect(lbl,
-		    AG_RECT(0, 0,
-		            WIDTH(lbl) - WSURFACE(lbl,lbl->surfaceCont)->w,
-		            HEIGHT(lbl)));
+		AG_PushClipRect(lbl, AG_RECT(
+		    0, 0,
+		    WIDTH(lbl) - WSURFACE(lbl,lbl->surfaceCont)->w,
+		    HEIGHT(lbl)));
 	}
 	
 	AG_PushTextState();
@@ -677,7 +683,7 @@ Draw(void *p)
 	AG_PopTextState();
 
 	if (lbl->flags & AG_LABEL_PARTIAL) {
-		AG_WidgetPopClipRect(lbl);
+		AG_PopClipRect();
 		AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
 		    WIDTH(lbl) - WSURFACE(lbl,lbl->surfaceCont)->w,
 		    lbl->tPad);
