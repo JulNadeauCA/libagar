@@ -1,1 +1,0 @@
-chk-opengl.o
