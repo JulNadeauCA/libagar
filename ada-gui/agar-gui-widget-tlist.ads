@@ -203,12 +203,14 @@ private
   type tlist_t is record
     widget          : aliased widget_t;
     flags           : flags_t;
+
     selected        : agar.core.types.void_ptr_t;
     hint_width      : c.int;
     hint_height     : c.int;
     space           : c.int;
+
     item_height     : c.int;
-    item_width      : c.int;
+    icon_width      : c.int;
     double_clicked  : agar.core.types.void_ptr_t;
     items           : item_tail_queue.head_t;
     selitems        : item_tail_queue.head_t;
@@ -223,6 +225,7 @@ private
     inc_to          : agar.core.timeout.timeout_t;
     dec_to          : agar.core.timeout.timeout_t;
     wheel_ticks     : agar.core.types.uint32_t;
+    row_width       : c.int;
   end record;
   pragma convention (c, tlist_t);
 

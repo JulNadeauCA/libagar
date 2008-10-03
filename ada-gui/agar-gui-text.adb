@@ -3,12 +3,6 @@ package body agar.gui.text is
   use type c.int;
 
   package cbinds is
-    function font
-      (face  : cs.chars_ptr;
-       size  : c.int;
-       flags : c.unsigned) return c.int;
-    pragma import (c, font, "AG_TextFont");
-  
     function render (text : cs.chars_ptr) return agar.gui.surface.surface_access_t;
     pragma import (c, render, "agar_gui_text_render");
   
@@ -62,19 +56,6 @@ package body agar.gui.text is
     procedure parse_font_spec (spec : cs.chars_ptr);
     pragma import (c, parse_font_spec, "AG_TextParseFontSpec");
   end cbinds;
-
-  function font
-    (face  : string;
-     size  : positive;
-     flags : c.unsigned) return boolean
-  is
-    ca_face : aliased c.char_array := c.to_c (face);
-  begin
-    return cbinds.font
-      (face  => cs.to_chars_ptr (ca_face'unchecked_access),
-       size  => c.int (size),
-       flags => flags) = 0;
-  end font;
 
   function render (text : string) return agar.gui.surface.surface_access_t is
     ca_text : aliased c.char_array := c.to_c (text);
