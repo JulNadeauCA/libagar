@@ -315,10 +315,10 @@ package agar.gui.widget is
   procedure push_clip_rect
     (widget : widget_access_t;
      rect   : agar.gui.rect.rect_t);
-  pragma import (c, push_clip_rect, "AG_WidgetPushClipRect");
+  pragma import (c, push_clip_rect, "AG_PushClipRect");
 
-  procedure pop_clip_rect (widget : widget_access_t);
-  pragma import (c, pop_clip_rect, "AG_WidgetPopClipRect");
+  procedure pop_clip_rect;
+  pragma import (c, pop_clip_rect, "AG_PopClipRect");
 
   -- missing: push_cursor - documented but apparently not implemented
   -- missing: pop_cursor

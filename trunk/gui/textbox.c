@@ -161,11 +161,11 @@ Draw(void *p)
 	if (tb->label != -1) {
 		AG_Surface *lblSu = WSURFACE(tb,tb->label);
 	
-		AG_WidgetPushClipRect(tb, AG_RECT(0, 0, tb->wLbl, HEIGHT(tb)));
+		AG_PushClipRect(tb, AG_RECT(0, 0, tb->wLbl, HEIGHT(tb)));
 		AG_WidgetBlitSurface(tb, tb->label,
 		    tb->lblPadL,
 		    HEIGHT(tb)/2 - lblSu->h/2);
-		AG_WidgetPopClipRect(tb);
+		AG_PopClipRect();
 	}
 	if (tb->flags & AG_TEXTBOX_MULTILINE) {
 		int d;
@@ -183,12 +183,15 @@ Draw(void *p)
 		}
 		AG_WindowUpdate(AG_ParentWindow(tb));
 	}
+	AG_WidgetDraw(tb->ed);
+	if (tb->hBar != NULL) { AG_WidgetDraw(tb->hBar); }
+	if (tb->vBar != NULL) { AG_WidgetDraw(tb->vBar); }
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Textbox *tbox = p;
+	AG_Textbox *tbox = obj;
 	AG_SizeReq rEd;
 	int wLbl, hLbl;
 
@@ -210,9 +213,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Textbox *tbox = p;
+	AG_Textbox *tbox = obj;
 	int boxPadW = tbox->boxPadX*2;
 	int boxPadH = tbox->boxPadY*2;
 	int lblPadW = tbox->lblPadL + tbox->lblPadR;

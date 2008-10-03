@@ -133,9 +133,9 @@ SizeFillCols(AG_Table *t)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Table *t = p;
+	AG_Table *t = obj;
 	int n;
 
 	if (t->prew != -1) {
@@ -156,9 +156,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Table *t = p;
+	AG_Table *t = obj;
 	AG_SizeAlloc aBar;
 	
 	if (a->w <= t->vbar->wButton || a->h <= t->col_h)
@@ -196,6 +196,8 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 #endif
 	SizeFillCols(t);
 	AG_TableUpdateScrollbars(t);
+	
+	AG_WidgetEnableClipping(t, AG_RECT(0,0,a->w,a->h));
 	return (0);
 }
 
@@ -440,17 +442,19 @@ SelectionVisible(AG_Table *t)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Table *t = p;
+	AG_Table *t = obj;
 	AG_Rect rCell, rBg;
 	int n, m;
-	
+
 	rBg.x = 0;
 	rBg.y = 0;
 	rBg.w = t->wTbl;
 	rBg.h = HEIGHT(t);
 	STYLE(t)->TableBackground(t, rBg);
+	
+	AG_WidgetDraw(t->vbar);
 	
 	t->moffs = AG_WidgetInt(t->vbar, "value");
 	if (t->poll_ev != NULL) {
@@ -471,7 +475,7 @@ Draw(void *p)
 
 		/* Draw the column header and separator. */
 		if (rCell.x > 0 && rCell.x < t->wTbl) {
-			AG_DrawLineV(t, rCell.x-1, t->col_h-1, HEIGHT(t),
+			AG_DrawLineV(t, rCell.x-1, t->col_h-1, HEIGHT(t)-2,
 			    AG_COLOR(TABLE_LINE_COLOR));
 		}
 		STYLE(t)->TableColumnHeaderBackground(t, n,
@@ -479,7 +483,7 @@ Draw(void *p)
 		    col->selected);
 		
 		if (!(t->flags & AG_TABLE_CELL_CLIPPING))
-			AG_WidgetPushClipRect(t,
+			AG_PushClipRect(t,
 			    AG_RECT(rCell.x, 0, cw, HEIGHT(t)-2));
 		
 		if (col->surface != -1) {
@@ -499,12 +503,12 @@ Draw(void *p)
 			    t->cells[m][n].selected);
 
 			if (t->flags & AG_TABLE_CELL_CLIPPING)
-				AG_WidgetPushClipRect(t, rCell);
+				AG_PushClipRect(t, rCell);
 
 			DrawCell(t, &t->cells[m][n], &rCell);
 
 			if (t->flags & AG_TABLE_CELL_CLIPPING)
-				AG_WidgetPopClipRect(t);
+				AG_PopClipRect();
 
 			rCell.y += t->row_h;
 		}
@@ -518,13 +522,13 @@ Draw(void *p)
 		}
 		
 		if (!(t->flags & AG_TABLE_CELL_CLIPPING))
-			AG_WidgetPopClipRect(t);
+			AG_PopClipRect();
 
 		rCell.x += col->w;
 	}
 	if (rCell.x > 0 &&
 	    rCell.x < t->wTbl) {
-		AG_DrawLineV(t, rCell.x-1, t->col_h-1, HEIGHT(t),
+		AG_DrawLineV(t, rCell.x-1, t->col_h-1, HEIGHT(t)-2,
 		    AG_COLOR(TABLE_LINE_COLOR));
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);

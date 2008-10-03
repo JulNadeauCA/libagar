@@ -78,18 +78,18 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Separator *sep = p;
+	AG_Separator *sep = obj;
 
 	r->w = sep->padding*2 + 2;
 	r->h = sep->padding*2 + 2;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Separator *sep = p;
+	AG_Separator *sep = obj;
 
 	if (a->w < sep->padding*2 + 2 ||
 	    a->h < sep->padding*2 + 2) {
@@ -99,9 +99,9 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Separator *sep = p;
+	AG_Separator *sep = obj;
 
 	if (!sep->visible)
 		return;

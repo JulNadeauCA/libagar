@@ -33,8 +33,6 @@
 const AG_Version agColorSchemeVer = { 1, 0 };
 
 Uint32 agColors[LAST_COLOR];
-Uint32 agColorsBorder[7];
-int    agColorsBorderSize = 7;
 
 Sint8  agFocusSunkColorShift[3] =	{ -10, -10, -20 };
 Sint8  agFocusRaisedColorShift[3] =	{  30,  30,  20 };
@@ -125,6 +123,7 @@ const char *agColorNames[] = {
 	N_("Socket label"),
 	N_("Socket highlight"),
 	N_("Progress bar"),
+	N_("Window border"),
 };
 
 void
@@ -211,14 +210,7 @@ AG_ColorsInit(void)
 	agColors[SOCKET_LABEL_COLOR] = agColors[TEXT_COLOR];
 	agColors[SOCKET_HIGHLIGHT_COLOR] = AG_MapRGB(agVideoFmt, 200, 0, 0);
 	agColors[PROGRESS_BAR_COLOR] = AG_MapRGB(agVideoFmt, 50, 50, 120);
-
-	agColorsBorder[0] = AG_MapRGB(agVideoFmt, 92, 92, 92);
-	agColorsBorder[1] = AG_MapRGB(agVideoFmt, 80, 80, 75);
-	agColorsBorder[2] = AG_MapRGB(agVideoFmt, 85, 85, 80);
-	agColorsBorder[3] = AG_MapRGB(agVideoFmt, 100, 100, 95);
-	agColorsBorder[4] = AG_MapRGB(agVideoFmt, 85, 85, 80);
-	agColorsBorder[5] = AG_MapRGB(agVideoFmt, 80, 80, 75);
-	agColorsBorder[6] = AG_MapRGB(agVideoFmt, 0, 255, 0);
+	agColors[WINDOW_BORDER_COLOR] = AG_MapRGB(agVideoFmt, 100, 100, 100);
 }
 
 #define AG_WriteRGBShift(ds,v) do {	\
@@ -249,7 +241,7 @@ AG_ColorsLoad(const char *file)
 
 	ncolors = (int)AG_ReadUint8(ds);
 	for (i = 0; i < ncolors; i++)
-		agColorsBorder[i] = AG_ReadColor(ds, agVideoFmt);
+		(void)AG_ReadColor(ds, agVideoFmt);	/* agColorsBorder */
 
 	AG_ReadUint8(ds);
 	AG_ReadRGBShift(ds, agFocusSunkColorShift);
@@ -278,10 +270,7 @@ AG_ColorsSave(const char *file)
 	for (i = 0; i < LAST_COLOR; i++) {
 		AG_WriteColor(ds, agVideoFmt, agColors[i]);
 	}
-	AG_WriteUint8(ds, (Uint8)agColorsBorderSize);
-	for (i = 0; i < agColorsBorderSize; i++) {
-		AG_WriteColor(ds, agVideoFmt, agColorsBorder[i]);
-	}
+	AG_WriteUint8(ds, 0);				/* agColorsBorder */
 
 	AG_WriteUint8(ds, 6);
 	AG_WriteRGBShift(ds, agFocusSunkColorShift);

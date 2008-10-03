@@ -200,7 +200,7 @@ AG_WidgetClass agObjectSelectorClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* draw */
-	AG_ComboSizeRequest,
-	AG_ComboSizeAllocate
+	AG_WidgetInheritDraw,
+	AG_WidgetInheritSizeRequest,
+	AG_WidgetInheritSizeAllocate
 };

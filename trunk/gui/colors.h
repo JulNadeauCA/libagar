@@ -86,13 +86,12 @@ enum {
 	SOCKET_LABEL_COLOR,
 	SOCKET_HIGHLIGHT_COLOR,
 	PROGRESS_BAR_COLOR,
+	WINDOW_BORDER_COLOR,
 	LAST_COLOR
 };
 
 __BEGIN_DECLS
 extern Uint32 agColors[LAST_COLOR];
-extern Uint32 agColorsBorder[];
-extern int agColorsBorderSize;
 extern const char *agColorNames[];
 
 extern Sint8 agFocusSunkColorShift[3];

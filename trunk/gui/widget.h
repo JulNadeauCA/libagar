@@ -62,6 +62,11 @@ enum ag_widget_sizespec {
 	AG_WIDGET_FILL				/* Fill remaining space */
 };
 
+enum ag_widget_packing {
+	AG_PACK_HORIZ,
+	AG_PACK_VERT
+};
+
 typedef struct ag_flag_descr {
 	Uint bitmask;			/* Bitmask */
 	const char *descr;		/* Bit(s) description */
@@ -94,7 +99,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_UNFOCUSED_MOTION	0x0004 /* All mousemotion events */
 #define AG_WIDGET_UNFOCUSED_BUTTONUP	0x0008 /* All mousebuttonup events */
 #define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x0010 /* All mousebuttondown events */
-#define AG_WIDGET_CLIPPING		0x0020 /* Automatic clipping */
+#define AG_WIDGET_CLIPPING		0x0020 /* Global clipping rectangle */
 #define AG_WIDGET_HFILL			0x0040 /* Expand to fill width */
 #define AG_WIDGET_VFILL			0x0080 /* Expand to fill height */
 #define AG_WIDGET_EXCEDENT		0x0100 /* Used internally for scaling */
@@ -116,7 +121,7 @@ typedef struct ag_widget {
 	int cx, cy, cx2, cy2;		/* Cached view coords (optimization) */
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
-	AG_Rect rClipSave;		/* Saved clipping rectangle */
+	AG_Rect rClip;			/* Rectangle for WIDGET_CLIPPING */
 	AG_Style *style;		/* Style (inherited from parent) */
 
 	AG_Surface **surfaces;		/* Registered surfaces */
@@ -130,16 +135,16 @@ typedef struct ag_widget {
 	float *texcoords;		/* Cached texture coordinates */
 	Uint *textureGC;		/* Textures queued for deletion */
 	Uint nTextureGC;
-	int clipPlaneState[4];		/* Saved state of clipping planes */
-	double rClipSaveGL[4][4];	/* Saved clipping planes */
 
 	AG_Mutex bindings_lock;			 	/* Lock on bindings */
 	AG_SLIST_HEAD(,ag_widget_binding) bindings;	/* Binding data */
 	AG_SLIST_HEAD(,ag_popup_menu) menus;		/* Managed menus */
 } AG_Widget;
 
-#define AGWIDGET(wi)			((AG_Widget *)(wi))
-#define AGWIDGET_OPS(wi)		((AG_WidgetClass *)OBJECT(wi)->cls)
+#define AGWIDGET(wi)		((AG_Widget *)(wi))
+#define AGWIDGET_OPS(wi)	((AG_WidgetClass *)OBJECT(wi)->cls)
+#define AGWIDGET_SUPER_OPS(wi)	((AG_WidgetClass *)OBJECT(wi)->cls->super)
+
 #define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
 #define AGWIDGET_TEXCOORD(wi, ind)	AGWIDGET(wi)->texcoords[(ind)*4]
@@ -147,9 +152,14 @@ typedef struct ag_widget {
 					 AG_WIDGET_SURFACE_NODUP)
 #define AGSTYLE(p)			 AGWIDGET(p)->style
 
+#define AGWIDGET_FOREACH_CHILD(var, ob) \
+	AGOBJECT_FOREACH_CHILD(var, ob, ag_widget)
+
+
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_GUI)
 #define WIDGET(wi)			AGWIDGET(wi)
 #define WIDGET_OPS(wi)			AGWIDGET_OPS(wi)
+#define WIDGET_SUPER_OPS(wi)		AGWIDGET_SUPER_OPS(wi)
 #define WSURFACE(wi,ind)		AGWIDGET_SURFACE((wi),(ind))
 #define WTEXTURE(wi,ind)		AGWIDGET_TEXTURE((wi),(ind))
 #define WTEXCOORD(wi,ind)		AGWIDGET_TEXCOORD((wi),(ind))
@@ -157,6 +167,7 @@ typedef struct ag_widget {
 #define STYLE(p)                        AGSTYLE(p)
 #define WIDTH(p)			AGWIDGET(p)->w
 #define HEIGHT(p)			AGWIDGET(p)->h
+#define WIDGET_FOREACH_CHILD(var,ob)	AGWIDGET_FOREACH_CHILD(var,ob)
 #endif
 
 #define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
@@ -166,7 +177,7 @@ typedef struct ag_widget {
 #ifdef DEBUG
 #define AG_WidgetRedraw(wi)						\
 	if (((wi)->flags & AG_WIDGET_STATIC) == 0)			\
-		AG_FatalError("AG_WidgetRedraw() called on non-static widget"); \
+		AG_FatalError("WidgetRedraw() called on non-static widget"); \
 	AGWIDGET(wi)->redraw++
 #else
 #define AG_WidgetRedraw(wi) AGWIDGET(wi)->redraw++
@@ -182,10 +193,12 @@ extern int agMouseDblclickDelay;
 extern int agMouseSpinDelay;
 extern int agMouseSpinIval;
 
-void	   AG_WidgetDraw(void *);
-void	   AG_WidgetSizeReq(void *, AG_SizeReq *);
-int	   AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
-void	   AG_WidgetSetFocusable(void *, int);
+void AG_WidgetDraw(void *);
+void AG_WidgetSizeReq(void *, AG_SizeReq *);
+int  AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
+void AG_WidgetSetFocusable(void *, int);
+void AG_WidgetEnableClipping(void *, AG_Rect);
+void AG_WidgetDisableClipping(void *);
 
 void		  AG_WidgetFocus(void *);
 void		  AG_WidgetUnfocus(void *);
@@ -226,9 +239,8 @@ void	 AG_WidgetFreeResourcesGL(AG_Widget *);
 void	 AG_WidgetRegenResourcesGL(AG_Widget *);
 #endif
 
-void	 AG_WidgetPushClipRect(void *, AG_Rect);
-void	 AG_WidgetPopClipRect(void *);
-int	 AG_WidgetIsOcculted(AG_Widget *);
+void	 AG_PushClipRect(void *, AG_Rect);
+void	 AG_PopClipRect(void);
 void	 AG_SetCursor(int);
 void	 AG_UnsetCursor(void);
 #define	 AG_WidgetPutPixel AG_WidgetPutPixel32
@@ -289,6 +301,14 @@ void AG_WidgetHiddenRecursive(void *);
 
 void AG_WidgetSetString(void *, const char *, const char *);
 size_t AG_WidgetCopyString(void *, const char *, char *, size_t);
+
+void AG_WidgetInheritDraw(void *);
+void AG_WidgetInheritSizeRequest(void *, AG_SizeReq *);
+int AG_WidgetInheritSizeAllocate(void *, const AG_SizeAlloc *);
+
+/*
+ * Inlines
+ */
 
 #ifdef THREADS
 static __inline__ void

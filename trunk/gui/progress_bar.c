@@ -107,9 +107,9 @@ AG_ProgressBarSetWidth(AG_ProgressBar *pb, int width)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_ProgressBar *pb= p;
+	AG_ProgressBar *pb = obj;
 
 	switch (pb->type) {
 	case AG_PROGRESS_BAR_HORIZ:
@@ -124,9 +124,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_ProgressBar *pb = p;
+	AG_ProgressBar *pb = obj;
 
 	if (a->w < pb->width || a->h < pb->width) {
 		return (-1);
@@ -152,9 +152,9 @@ AG_ProgressBarPercent(AG_ProgressBar *pb)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_ProgressBar *pb = p;
+	AG_ProgressBar *pb = obj;
 	int min, max, val;
 	int wAvail;
 	AG_Rect rd;

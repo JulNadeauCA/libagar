@@ -192,11 +192,15 @@ Init(void *obj)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Spinbutton *sbu = p;
+	AG_Spinbutton *sbu = obj;
 	AG_WidgetBinding *valueb;
 	void *value;
+
+	AG_WidgetDraw(sbu->input);
+	AG_WidgetDraw(sbu->incbu);
+	AG_WidgetDraw(sbu->decbu);
 
 	if (AG_WidgetFocused(sbu->input)) {
 		/* The value is being edited. */
@@ -234,9 +238,9 @@ Draw(void *p)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Spinbutton *num = p;
+	AG_Spinbutton *num = obj;
 	AG_SizeReq rChld, rInc, rDec;
 
 	AG_WidgetSizeReq(num->input, &rChld);
@@ -248,9 +252,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Spinbutton *num = p;
+	AG_Spinbutton *num = obj;
 	AG_SizeAlloc aChld;
 	AG_SizeReq rUnits;
 	int szBtn = a->h/2;

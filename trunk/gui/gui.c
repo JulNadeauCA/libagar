@@ -56,6 +56,7 @@
 #include "progress_bar.h"
 #include "radio.h"
 #include "scrollbar.h"
+#include "scrollview.h"
 #include "separator.h"
 #include "slider.h"
 #include "socket.h"
@@ -112,6 +113,7 @@ void *agGUIClasses[] = {
 	&agProgressBarClass,
 	&agRadioClass,
 	&agScrollbarClass,
+	&agScrollviewClass,
 	&agSeparatorClass,
 	&agSliderClass,
 	&agSocketClass,

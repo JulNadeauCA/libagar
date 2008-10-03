@@ -147,7 +147,7 @@ Init(void *obj)
 	AG_Button *bu = obj;
 
 	/* TODO replace the unfocused motion flag with a timer */
-	WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING|
+	WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE|
 	                     AG_WIDGET_UNFOCUSED_MOTION|
 			     AG_WIDGET_UNFOCUSED_BUTTONUP;
 
@@ -212,6 +212,14 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	    a->h < (bu->tPad + bu->bPad)) {
 		return (-1);
 	}
+
+#if 0
+	AG_WidgetEnableClipping(bu, AG_RECT(
+	    bu->lPad,
+	    bu->tPad,
+	    a->w - bu->rPad,
+	    a->h - bu->bPad));
+#endif
 	return (0);
 }
 

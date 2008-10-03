@@ -639,9 +639,9 @@ AG_NumericalSizeHint(AG_Numerical *num, const char *text)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Numerical *num = p;
+	AG_Numerical *num = obj;
 	AG_SizeReq rChld, rInc, rDec;
 
 	AG_WidgetSizeReq(num->input, &rChld);
@@ -654,9 +654,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Numerical *num = p;
+	AG_Numerical *num = obj;
 	AG_SizeAlloc aChld;
 	int szBtn = a->h/2;
 	int wUnitSel = num->wUnitSel + 4;
@@ -706,9 +706,13 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Numerical *num = p;
+	AG_Numerical *num = obj;
+
+	AG_WidgetDraw(num->input);
+	AG_WidgetDraw(num->incbu);
+	AG_WidgetDraw(num->decbu);
 
 	if (!AG_WidgetFocused(num->input))
 		UpdateTextbox(num);

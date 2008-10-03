@@ -301,7 +301,7 @@ Init(void *obj)
 {
 	VG_View *vv = obj;
 
-	WIDGET(vv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
+	WIDGET(vv)->flags |= AG_WIDGET_FOCUSABLE;
 
 	vv->flags = VG_VIEW_BGFILL;
 	vv->vg = NULL;
@@ -476,18 +476,19 @@ VG_ViewMotionFn(VG_View *vv, AG_EventFn fn, const char *fmt, ...)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
 	r->w = 16;
 	r->h = 16;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	if (a->w < 16 || a->h < 16) {
 		return (-1);
 	}
+	AG_WidgetEnableClipping(obj, AG_RECT(0, 0, a->w, a->h));
 	return (0);
 }
 
@@ -574,9 +575,9 @@ DrawNode(VG *vg, VG_Node *vn, VG_View *vv)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	VG_View *vv = p;
+	VG_View *vv = obj;
 	VG *vg = vv->vg;
 	int su, i;
 

@@ -780,16 +780,16 @@ RenderPalette(AG_HSVPal *pal)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
 	r->w = 128;
 	r->h = 128;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_HSVPal *pal = p;
+	AG_HSVPal *pal = obj;
 
 	if (a->w < 32 || a->h < 32)
 		return (-1);
@@ -817,9 +817,9 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_HSVPal *pal = p;
+	AG_HSVPal *pal = obj;
 	float cur_h, cur_s, cur_v;
 	Uint8 r, g, b, a;
 	int x, y;

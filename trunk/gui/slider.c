@@ -192,6 +192,23 @@ AG_SliderNewLongDbl(void *parent, enum ag_slider_type type, Uint flags,
 }
 #endif /* HAVE_LONG_DOUBLE */
 
+/* Set the size of the control in pixels. */
+void
+AG_SliderSetControlSize(AG_Slider *sl, int size)
+{
+	AG_ObjectLock(sl);
+	sl->wControlPref = size;
+	switch (sl->type) {
+	case AG_SLIDER_HORIZ:
+		sl->wControl = MIN(size, HEIGHT(sl));
+		break;
+	case AG_SLIDER_VERT:
+		sl->wControl = MIN(size, WIDTH(sl));
+		break;
+	}
+	AG_ObjectUnlock(sl);
+}
+
 /* Set the base increment for integer bindings. */
 void
 AG_SliderSetIntIncrement(AG_Slider *sl, int inc)
@@ -587,7 +604,8 @@ Init(void *obj)
 	sl->value = 0;
 	sl->min = 0;
 	sl->max = 0;
-	sl->wControl = 16;
+	sl->wControlPref = 16;
+	sl->wControl = sl->wControlPref;
 	sl->xOffs = 0;
 	sl->rInc = 1.0;	
 	sl->iInc = 1;
@@ -606,33 +624,29 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Slider *sl = p;
+	AG_Slider *sl = obj;
 	
-	r->w = sl->wControl;
-	r->h = sl->wControl;
+	r->w = sl->wControlPref*2 + 10;
+	r->h = sl->wControlPref;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Slider *sl = p;
+	AG_Slider *sl = obj;
 
 	if (a->w < 4 || a->h < 4) {
 		return (-1);
 	}
 	switch (sl->type) {
 	case AG_SLIDER_VERT:
-		if (a->h < sl->wControl) {
-			sl->wControl = a->h;
-		}
+		sl->wControl = MIN(sl->wControlPref, a->h);
 		sl->extent = a->h;
 		break;
 	case AG_SLIDER_HORIZ:
-		if (a->w < sl->wControl) {
-			sl->wControl = a->w;
-		}
+		sl->wControl = MIN(sl->wControlPref, a->w);
 		sl->extent = a->w;
 		break;
 	}
@@ -641,9 +655,9 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Slider *sl = p;
+	AG_Slider *sl = obj;
 	int x;
 
 	if (GetPosition(sl, &x) == -1) {

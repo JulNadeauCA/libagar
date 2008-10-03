@@ -266,13 +266,13 @@ SizeRequest(void *p, AG_SizeReq *r)
 	AG_SizeReq rBar;
 	int i;
 
-	AG_BoxSizeRequest(p, r);
+	WIDGET_SUPER_OPS(tbar)->size_request(tbar, r);
 
 	rBar = *r;
 	rBar.h = (tbar->type == AG_TOOLBAR_HORIZ) ? r->h/tbar->nRows :
 	                                            r->w/tbar->nRows;
 	for (i = 0; i < tbar->nRows; i++)
-		AG_BoxSizeRequest(tbar->rows[i], &rBar);
+		WIDGET_SUPER_OPS(tbar)->size_request(tbar->rows[i], &rBar);
 }
 
 AG_WidgetClass agToolbarClass = {
@@ -287,7 +287,7 @@ AG_WidgetClass agToolbarClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	AG_BoxDraw,
+	AG_WidgetInheritDraw,
 	SizeRequest,
-	AG_BoxSizeAllocate
+	AG_WidgetInheritSizeAllocate
 };

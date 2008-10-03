@@ -56,7 +56,7 @@ Init(void *obj)
 {
 	AG_Console *cons = obj;
 
-	WIDGET(cons)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
+	WIDGET(cons)->flags |= AG_WIDGET_FOCUSABLE;
 
 	cons->flags = 0;
 	cons->padding = 4;
@@ -96,6 +96,8 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
 
 	cons->vBar->visible = a->h / (agTextFontHeight + cons->lineskip);
+
+	AG_WidgetEnableClipping(cons, AG_RECT(0, 0, a->w-aBar.w, a->h));
 	return (0);
 }
 
@@ -108,6 +110,7 @@ Draw(void *p)
 	int y;
 
 	STYLE(cons)->ConsoleBackground(cons, cons->cBg);
+	AG_WidgetDraw(cons->vBar);
 
 	if (cons->rOffs >= cons->nLines) {
 		cons->rOffs = cons->nLines-1;

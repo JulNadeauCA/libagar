@@ -542,9 +542,9 @@ AG_EditableSetCursorPos(AG_Editable *ed, int pos)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Editable *ed = p;
+	AG_Editable *ed = obj;
 	AG_WidgetBinding *stringb;
 	char *s;
 	int i, dx, dy, x, y;
@@ -571,7 +571,7 @@ Draw(void *p)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 #endif
-	AG_WidgetPushClipRect(ed, AG_RECT(-1,-1,WIDTH(ed)-1,HEIGHT(ed)-1));
+	AG_PushClipRect(ed, AG_RECT(-1,-1,WIDTH(ed)-1,HEIGHT(ed)-1));
 	AG_PushTextState();
 	AG_TextColor(TEXTBOX_TXT_COLOR);
 	x = 0;
@@ -620,6 +620,14 @@ Draw(void *p)
 		dx = WIDGET(ed)->cx + x - ed->x;
 		dy = WIDGET(ed)->cy + y;
 
+		if (x < (ed->x - gl->su->w*2) ||
+		    y < -(gl->su->h) ||
+		    dx > (WIDGET(ed)->cx2 + gl->su->w) ||
+		    dy > WIDGET(ed)->cy2) {
+			x += gl->advance;
+			AG_TextUnusedGlyph(gl);
+			continue;
+		}
 		if (!agView->opengl) {
 			AG_Rect rd;
 			rd.x = dx;
@@ -694,7 +702,7 @@ Draw(void *p)
 	ed->flags &= ~(AG_EDITABLE_NOSCROLL_ONCE);
 	AG_WidgetUnlockBinding(stringb);
 	AG_PopTextState();
-	AG_WidgetPopClipRect(ed);
+	AG_PopClipRect();
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
@@ -727,18 +735,18 @@ AG_EditableSizeHintPixels(AG_Editable *ed, Uint w, Uint h)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Editable *ed = p;
+	AG_Editable *ed = obj;
 
 	r->w = ed->wPre;
 	r->h = ed->hPre;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Editable *ed = p;
+	AG_Editable *ed = obj;
 
 	if (a->w < 2 || a->h < 2)
 		return (-1);

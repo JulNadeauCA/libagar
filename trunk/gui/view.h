@@ -24,6 +24,11 @@ typedef struct ag_rect {
 	int w, h;
 } AG_Rect;
 
+typedef struct ag_clip_rect {
+	AG_Rect r;				/* Integer coordinates */
+	double eqns[4][4];			/* Plane equations (GL) */
+} AG_ClipRect;
+
 /* For transition to Agar-1.4 */
 typedef SDL_Surface AG_Surface;
 typedef SDL_PixelFormat AG_PixelFormat;
@@ -237,12 +242,21 @@ case 4:					\
 #define AG_VIDEO_NOBGCLEAR     0x800  /* Don't clear background on init */
 
 __BEGIN_DECLS
-extern AG_ObjectClass agDisplayClass;
-extern AG_Display *agView;
-extern AG_PixelFormat *agVideoFmt;
-extern AG_PixelFormat *agSurfaceFmt;
-extern const SDL_VideoInfo *agVideoInfo;
-extern const char *agBlendFuncNames[];
+extern AG_ObjectClass agDisplayClass;	/* Agar(Display) class definition */
+
+extern AG_Display     *agView;		/* Main Display */
+extern AG_PixelFormat *agVideoFmt;	/* Main Display pixel format */
+extern AG_PixelFormat *agSurfaceFmt;	/* Preferred format for surfaces */
+
+extern int         agRenderingContext;	/* Running in rendering context? */
+extern const char *agBlendFuncNames[];	/* For enum ag_blend_func */
+
+extern AG_ClipRect *agClipRects;	/* Clipping rectangle stack (first
+					   entry always covers whole view */
+extern int          agClipStateGL[4];	/* Saved GL clipping plane states */
+extern Uint         agClipRectCount;
+
+extern const SDL_VideoInfo *agVideoInfo; /* XXX */
 
 int  AG_InitVideo(int, int, int, Uint);
 int  AG_InitVideoSDL(SDL_Surface *, Uint);
@@ -257,6 +271,8 @@ void AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
 void AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
 int  AG_UnbindGlobalKey(SDLKey, SDLMod);
 void AG_ClearGlobalKeys(void);
+void AG_BeginRendering(void);
+void AG_EndRendering(void);
 
 void              AG_ViewVideoExpose(void);
 void              AG_ViewAttach(void *);
@@ -461,6 +477,17 @@ AG_RECT(int x, int y, int w, int h)
 	r.w = w;
 	r.h = h;
 	return (r);
+}
+static __inline__ AG_Rect
+AG_RectIntersect(const AG_Rect *a, const AG_Rect *b)
+{
+	AG_Rect x;
+
+	x.x = (a->x > b->x) ? a->x : b->x;
+	x.y = (a->y > b->y) ? a->y : b->y;
+	x.w = (a->w < b->w) ? a->w : b->w;
+	x.h = (a->h < b->h) ? a->h : b->h;
+	return (x);
 }
 static __inline__ SDL_Rect
 AG_RectToSDL(const AG_Rect *r)

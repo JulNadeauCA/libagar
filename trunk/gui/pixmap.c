@@ -217,8 +217,6 @@ Init(void *obj)
 {
 	AG_Pixmap *px = obj;
 
-	WIDGET(px)->flags |= AG_WIDGET_CLIPPING;
-
 	px->flags = 0;
 	px->n = 0;
 	px->s = 0;
@@ -228,9 +226,9 @@ Init(void *obj)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Pixmap *px = p;
+	AG_Pixmap *px = obj;
 
 	if ((px->flags & AG_PIXMAP_FORCE_SIZE) == 0) {
 		r->w = WSURFACE(px,px->n)->w;
@@ -242,15 +240,16 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
+	AG_WidgetEnableClipping(obj, AG_RECT(0, 0, a->w, a->h));
 	return (a->w < 1 || a->h < 1) ? -1 : 0;
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Pixmap *px = p;
+	AG_Pixmap *px = obj;
 
 	if (px->n >= 0)
 		AG_WidgetBlitSurface(px, px->n, px->s, px->t);

@@ -39,6 +39,7 @@
 #include <agar/gui/progress_bar.h>
 #include <agar/gui/radio.h>
 #include <agar/gui/scrollbar.h>
+#include <agar/gui/scrollview.h>
 #include <agar/gui/separator.h>
 #include <agar/gui/socket.h>
 #include <agar/gui/spinbutton.h>

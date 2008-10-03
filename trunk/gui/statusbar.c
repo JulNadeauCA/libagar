@@ -125,7 +125,7 @@ AG_WidgetClass agStatusbarClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* draw */
-	AG_BoxSizeRequest,
-	AG_BoxSizeAllocate
+	AG_WidgetInheritDraw,
+	AG_WidgetInheritSizeRequest,
+	AG_WidgetInheritSizeAllocate
 };

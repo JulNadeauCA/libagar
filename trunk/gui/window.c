@@ -99,6 +99,10 @@ AG_WindowNew(Uint flags)
 		titlebarFlags |= AG_TITLEBAR_NO_MAXIMIZE;
 	if ((win->flags & AG_WINDOW_NOTITLE) == 0)
 		win->tbar = AG_TitlebarNew(win, titlebarFlags);
+	if (win->flags & AG_WINDOW_NOBORDERS) {
+		win->wBorderSide = 0;
+		win->wBorderBot = 0;
+	}
 
 	AG_SetEvent(win, "window-close", AGWINDETACH(win));
 	AG_ViewAttach(win);
@@ -162,9 +166,13 @@ Init(void *obj)
 	
 	win->wReq = 0;
 	win->hReq = 0;
-	win->wMin= win->lPad + win->rPad + 16;
+	win->wMin = win->lPad + win->rPad + 16;
 	win->hMin = win->tPad + win->bPad + 16;
 	win->minPct = 50;
+	win->wBorderBot = 6;
+	win->wBorderSide = 0;
+	win->wResizeCtrl = 16;
+
 	win->rSaved = AG_RECT(-1,-1,-1,-1);
 	win->caption[0] = '\0';
 	win->tbar = NULL;
@@ -172,9 +180,6 @@ Init(void *obj)
 	TAILQ_INIT(&win->subwins);
 	AG_IconSetSurfaceNODUP(win->icon, agIconWindow.s);
 	AG_IconSetBackgroundFill(win->icon, 1, AG_COLOR(BG_COLOR));
-
-	if (!agView->opengl)
-		WIDGET(win)->flags |= AG_WIDGET_CLIPPING;
 
 	AG_SetEvent(win, "window-gainfocus", GainFocus, NULL);
 	AG_SetEvent(win, "window-lostfocus", LostFocus, NULL);
@@ -216,13 +221,18 @@ AG_WindowDetach(AG_Window *win, AG_Window *subwin)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Window *win = p;
+	AG_Window *win = obj;
+	AG_Widget *chld;
 
 	if ((win->flags & AG_WINDOW_NOBACKGROUND) == 0)
 		STYLE(win)->WindowBackground(win);
-	if ((win->flags & AG_WINDOW_NOBORDERS) == 0)
+	
+	WIDGET_FOREACH_CHILD(chld, win)
+		AG_WidgetDraw(chld);
+	
+	if (win->wBorderBot > 0 || win->wBorderSide > 0)
 		STYLE(win)->WindowBorders(win);
 }
 
@@ -684,10 +694,11 @@ out:
 static __inline__ int
 AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
 {
-	if ((y - WIDGET(win)->y) > (HEIGHT(win)-agColorsBorderSize)) {
-	    	if ((x - WIDGET(win)->x) < 17) { /* XXX */
+	if ((y - WIDGET(win)->y) > (HEIGHT(win) - win->wBorderBot)) {
+		int xRel = x - WIDGET(win)->x;
+	    	if (xRel < win->wResizeCtrl) {
 			return (AG_WINOP_LRESIZE);
-		} else if ((x - WIDGET(win)->x) > (WIDTH(win)-17)) {
+		} else if (xRel > (WIDTH(win) - win->wResizeCtrl)) {
 			return (AG_WINOP_RRESIZE);
 		} else if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
 			return (AG_WINOP_HRESIZE);
@@ -836,23 +847,24 @@ process:
 			}
 			/* Change the cursor if a RESIZE op is in progress. */
 			if (agCursorToSet == NULL &&
+			    (win->wBorderBot > 0) &&
 			    (win->flags & AG_WINDOW_NORESIZE) == 0 &&
-			    AG_WidgetArea(win, ev->motion.x, ev->motion.y)) {
-				if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
-					switch (AG_WindowMouseOverCtrl(win,
-					    ev->motion.x, ev->motion.y)) {
-					case AG_WINOP_LRESIZE:
-						AG_SetCursor(AG_LLDIAG_CURSOR);
-						break;
-					case AG_WINOP_RRESIZE:
-						AG_SetCursor(AG_LRDIAG_CURSOR);
-						break;
-					case AG_WINOP_HRESIZE:
-						AG_SetCursor(AG_VRESIZE_CURSOR);
-						break;
-					default:
-						break;
-					}
+			    AG_WidgetArea(win, ev->motion.x, ev->motion.y))
+			{
+				switch (AG_WindowMouseOverCtrl(win,
+				    ev->motion.x, ev->motion.y))
+				{
+				case AG_WINOP_LRESIZE:
+					AG_SetCursor(AG_LLDIAG_CURSOR);
+					break;
+				case AG_WINOP_RRESIZE:
+					AG_SetCursor(AG_LRDIAG_CURSOR);
+					break;
+				case AG_WINOP_HRESIZE:
+					AG_SetCursor(AG_VRESIZE_CURSOR);
+					break;
+				default:
+					break;
 				}
 			}
 			if (agCursorToSet == NULL) {
@@ -890,10 +902,11 @@ process:
 				AG_ObjectUnlock(win);
 				continue;
 			}
-			if ((win->flags & AG_WINDOW_NOBORDERS) == 0 &&
-			    (agView->winop = AG_WindowMouseOverCtrl(win,
-			    ev->button.x, ev->button.y)) != AG_WINOP_NONE) {
-				agView->winSelected = win;
+			if (win->wBorderBot > 0) {
+				agView->winop = AG_WindowMouseOverCtrl(win,
+				    ev->button.x, ev->button.y);
+				if (agView->winop != AG_WINOP_NONE)
+					agView->winSelected = win;
 			}
 			/* Forward to overlapping widgets. */
 			OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
@@ -1466,28 +1479,16 @@ AG_WindowCloseGenEv(AG_Event *event)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Window *win = p;
+	AG_Window *win = obj;
 	AG_Widget *chld;
 	AG_SizeReq rChld, rTbar;
-	int nWidgets, wPad;
+	int nWidgets;
 	
-	AG_ObjectLock(win);
+	r->w = win->lPad + win->rPad + win->wBorderSide*2;
+	r->h = win->bPad + win->tPad + win->wBorderBot;
 
-	r->w = win->lPad + win->rPad;
-	r->h = win->bPad + win->tPad;
-
-	if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
-		r->w += agColorsBorderSize*2;
-		r->h += agColorsBorderSize;
-		if (win->tbar == NULL) {
-			r->h += agColorsBorderSize;
-		}
-		wPad = win->lPad + win->rPad + agColorsBorderSize*2;
-	} else {
-		wPad = win->lPad + win->rPad;
-	}
 	if (win->tbar != NULL) {
 		AG_WidgetSizeReq(win->tbar, &rTbar);
 		r->w = MAX(r->w, rTbar.w);
@@ -1499,7 +1500,7 @@ SizeRequest(void *p, AG_SizeReq *r)
 			continue;
 		}
 		AG_WidgetSizeReq(chld, &rChld);
-		r->w = MAX(r->w, rChld.w + wPad);
+		r->w = MAX(r->w, rChld.w + (win->lPad + win->rPad));
 		r->h += rChld.h + win->spacing;
 		nWidgets++;
 	}
@@ -1510,13 +1511,12 @@ SizeRequest(void *p, AG_SizeReq *r)
 	win->hReq = r->h;
 	UpdateMinSize(win);
 	ClampToView(win);
-	AG_ObjectUnlock(win);
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Window *win = p;
+	AG_Window *win = obj;
 	AG_Widget *chld;
 	AG_SizeReq rChld;
 	AG_SizeAlloc aChld;
@@ -1524,17 +1524,9 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	int totFixed;
 	int nWidgets;
 
-	AG_ObjectLock(win);
-
 	/* Calculate total space available for widgets. */
-	wAvail = a->w - win->lPad - win->rPad;
-	hAvail = a->h - win->tPad - win->bPad;
-	if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
-		wAvail -= agColorsBorderSize*2;
-		hAvail -= agColorsBorderSize;
-		if (win->tbar == NULL)
-			hAvail -= agColorsBorderSize;
-	}
+	wAvail = a->w - win->lPad - win->rPad - win->wBorderSide*2;
+	hAvail = a->h - win->bPad - win->tPad - win->wBorderBot;
 
 	/* Calculate the space occupied by non-fill widgets. */
 	nWidgets = 0;
@@ -1560,18 +1552,11 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aChld.w = a->w;
 		aChld.h = rChld.h;
 		AG_WidgetSizeAlloc(win->tbar, &aChld);
-		aChld.x = win->lPad;
+		aChld.x = win->lPad + win->wBorderSide;
 		aChld.y = rChld.h + win->tPad;
-		if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
-			aChld.x += agColorsBorderSize;
-		}
 	} else {
-		aChld.x = win->lPad;
+		aChld.x = win->lPad + win->wBorderSide;
 		aChld.y = win->tPad;
-		if ((win->flags & AG_WINDOW_NOBORDERS) == 0) {
-			aChld.x += agColorsBorderSize;
-			aChld.y += agColorsBorderSize;
-		}
 	}
 	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
 		AG_WidgetSizeReq(chld, &rChld);
@@ -1598,7 +1583,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aChld.y += aChld.h + win->spacing;
 	}
 	ClampToView(win);
-	AG_ObjectUnlock(win);
 	return (0);
 }
 

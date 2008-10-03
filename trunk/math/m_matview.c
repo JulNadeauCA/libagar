@@ -107,8 +107,7 @@ Init(void *obj)
 {
 	M_Matview *mv = obj;
 
-	WIDGET(mv)->flags |= AG_WIDGET_EXPAND|AG_WIDGET_CLIPPING|
-	                     AG_WIDGET_FOCUSABLE;
+	WIDGET(mv)->flags |= AG_WIDGET_EXPAND|AG_WIDGET_FOCUSABLE;
 
 	mv->mode = M_MATVIEW_NUMERICAL;
 	mv->matrix = NULL;
@@ -172,31 +171,36 @@ M_MatviewSizeHint(M_Matview *mv, const char *text, Uint m, Uint n)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	M_Matview *mv = p;
+	M_Matview *mv = obj;
 
 	r->w = mv->nPre*(mv->wEnt + mv->hSpacing) + mv->hSpacing*2;
 	r->h = mv->mPre*(mv->hEnt + mv->vSpacing) + mv->vSpacing*2;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	M_Matview *mv = p;
-	AG_SizeAlloc aChld;
+	M_Matview *mv = obj;
+	AG_SizeAlloc aBar;
+	AG_Rect rView = AG_RECT(0, 0, a->w, a->h);
 
-	aChld.x = 0;
-	aChld.y = a->h - mv->hBar->wButton;
-	aChld.w = a->w;
-	aChld.h = mv->hBar->wButton+1;
-	AG_WidgetSizeAlloc(mv->hBar, &aChld);
+	aBar.x = 0;
+	aBar.y = a->h - mv->hBar->wButton;
+	aBar.w = a->w;
+	aBar.h = mv->hBar->wButton+1;
+	AG_WidgetSizeAlloc(mv->hBar, &aBar);
+	rView.h -= aBar.h;
 
-	aChld.x = a->w - mv->vBar->wButton;
-	aChld.y = mv->vBar->wButton;
-	aChld.w = mv->vBar->wButton;
-	aChld.h = a->h - mv->hBar->wButton+1;
-	AG_WidgetSizeAlloc(mv->vBar, &aChld);
+	aBar.x = a->w - mv->vBar->wButton;
+	aBar.y = mv->vBar->wButton;
+	aBar.w = mv->vBar->wButton;
+	aBar.h = a->h - mv->hBar->wButton+1;
+	AG_WidgetSizeAlloc(mv->vBar, &aBar);
+	rView.w -= aBar.w;
+
+	AG_WidgetEnableClipping(mv, rView);
 	return (0);
 }
 

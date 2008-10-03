@@ -64,48 +64,41 @@ WindowBackground(AG_Window *win)
 	    AG_COLOR(WINDOW_BG_COLOR));
 }
 
-/* Decorations for windows that don't have NOBORDERS set. */
+/* Window borders / resize controls */
 static void
 WindowBorders(AG_Window *win)
 {
-	int hBar = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
-	int hWin = HEIGHT(win);
-	int i;
+	AG_Rect r;
 
-	for (i = 1; i < agColorsBorderSize-1; i++) {
-		if (win->tbar == NULL) {
-			AG_DrawLineH(win, i, WIDTH(win)-i, i,
-			    agColorsBorder[i-1]);
+	if (win->wBorderBot > 0) {
+		r.x = 0;
+		r.y = HEIGHT(win) - win->wBorderBot;
+
+		if (!(win->flags & AG_WINDOW_NORESIZE)) {
+			r.w = win->wResizeCtrl;
+			r.h = win->wBorderBot;
+			AG_DrawBox(win, r,
+			    (agView->winop == AG_WINOP_LRESIZE) ? -1 : 1,
+			    AG_COLOR(WINDOW_BORDER_COLOR));
+
+			r.x = WIDTH(win) - win->wResizeCtrl;
+			AG_DrawBox(win, r,
+			    (agView->winop == AG_WINOP_RRESIZE) ? -1 : 1,
+			    AG_COLOR(WINDOW_BORDER_COLOR));
+			
+			r.x = win->wResizeCtrl;
+			r.w = WIDTH(win) - win->wResizeCtrl*2;
+			AG_DrawBox(win, r,
+			    (agView->winop == AG_WINOP_HRESIZE) ? -1 : 1,
+			    AG_COLOR(WINDOW_BORDER_COLOR));
+		} else {
+			r.w = WIDTH(win);
+			AG_DrawBox(win, r, 1, AG_COLOR(WINDOW_BORDER_COLOR));
 		}
-		AG_DrawLineH(win, i, WIDTH(win)-i, hWin-i,
-		    agColorsBorder[i-1]);
 	}
-	for (i = 1; i < agColorsBorderSize-1; i++) {
-		AG_DrawLineV(win, i-1,          hBar+i, hWin-i,
-		    agColorsBorder[i-1]);
-		AG_DrawLineV(win, WIDTH(win)-i, hBar+i, hWin-i,
-		    agColorsBorder[i-1]);
-	}
-	/* Indicate the resize controls */
-	if ((win->flags & AG_WINDOW_NOHRESIZE) == 0) {
-		AG_DrawLineV(win, 18, hWin-agColorsBorderSize,
-		    hWin-2, AG_COLOR(WINDOW_LO_COLOR));
-		AG_DrawLineV(win, 19, hWin-agColorsBorderSize,
-		    hWin-2, AG_COLOR(WINDOW_HI_COLOR));
-		AG_DrawLineV(win, WIDTH(win)-19, hWin-agColorsBorderSize,
-		    hWin-2, AG_COLOR(WINDOW_LO_COLOR));
-		AG_DrawLineV(win, WIDTH(win)-18, hWin-agColorsBorderSize,
-		    hWin-2, AG_COLOR(WINDOW_HI_COLOR));
-	}
-	if ((win->flags & AG_WINDOW_NOVRESIZE) == 0) {
-		AG_DrawLineH(win, 2, agColorsBorderSize, hWin-20,
-		    AG_COLOR(WINDOW_LO_COLOR));
-		AG_DrawLineH(win, 2, agColorsBorderSize, hWin-19,
-		    AG_COLOR(WINDOW_HI_COLOR));
-		AG_DrawLineH(win, WIDTH(win)-agColorsBorderSize,
-		    WIDTH(win)-2, hWin-20, AG_COLOR(WINDOW_LO_COLOR));
-		AG_DrawLineH(win, WIDTH(win)-agColorsBorderSize,
-		    WIDTH(win)-2, hWin-19, AG_COLOR(WINDOW_HI_COLOR));
+	
+	if (win->wBorderSide > 0) {
+		/* ... */
 	}
 }
 

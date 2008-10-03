@@ -66,18 +66,18 @@ AG_FixedSizeHint(AG_Fixed *fx, int w, int h)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Fixed *fx = p;
+	AG_Fixed *fx = obj;
 
 	r->w = fx->wPre;
 	r->h = fx->hPre;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Fixed *fx = p;
+	AG_Fixed *fx = obj;
 	AG_Widget *chld;
 	AG_SizeAlloc aChld;
 
@@ -99,24 +99,28 @@ static void
 Draw(void *obj)
 {
 	AG_Fixed *fx = obj;
+	AG_Widget *chld;
 
 	if (fx->flags & AG_FIXED_BOX) {
 		AG_DrawBox(fx,
-		    AG_RECT(0, 0, WIDGET(fx)->w, WIDGET(fx)->h), -1,
+		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)), -1,
 		    AG_COLOR(FRAME_COLOR));
 	} else if (fx->flags & AG_FIXED_INVBOX) {
 		AG_DrawBox(fx,
-		    AG_RECT(0, 0, WIDGET(fx)->w, WIDGET(fx)->h), -1,
+		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)), -1,
 		    AG_COLOR(FRAME_COLOR));
 	} else if (fx->flags & AG_FIXED_FRAME) {
 		AG_DrawFrame(fx,
-		    AG_RECT(0, 0, WIDGET(fx)->w, WIDGET(fx)->h), -1,
+		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)), -1,
 		    AG_COLOR(FRAME_COLOR));
 	} else if (fx->flags & AG_FIXED_FILLBG) {
 		AG_DrawRectFilled(fx,
-		    AG_RECT(0, 0, WIDGET(fx)->w, WIDGET(fx)->h),
+		    AG_RECT(0, 0, WIDTH(fx), HEIGHT(fx)),
 		    AG_COLOR(FIXED_BG_COLOR));
 	}
+
+	WIDGET_FOREACH_CHILD(chld, fx)
+		AG_WidgetDraw(chld);
 }
 
 static __inline__ void

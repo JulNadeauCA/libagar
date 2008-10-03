@@ -102,7 +102,7 @@ Init(void *obj)
 {
 	AG_Tableview *tv = obj;
 	
-	WIDGET(tv)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
+	WIDGET(tv)->flags |= AG_WIDGET_FOCUSABLE;
 
 	tv->data_callback = NULL;
 	tv->sort_callback = NULL;
@@ -560,9 +560,9 @@ Destroy(void *p)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Tableview *tv = p;
+	AG_Tableview *tv = obj;
 	int i;
 
 	r->w = tv->prew + tv->sbar_v->wButton;
@@ -573,11 +573,17 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Tableview *tv = p;
+	AG_Tableview *tv = obj;
 	Uint rows_per_view, i;
 	AG_SizeAlloc aBar;
+	AG_Rect rView;
+
+	rView.x = 0;
+	rView.y = 0;
+	rView.w = a->w;
+	rView.h = a->h;
 
 	/* Size vertical scroll bar. */
 	aBar.x = a->w - tv->sbar_v->wButton;
@@ -585,6 +591,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	aBar.w = tv->sbar_v->wButton;
 	aBar.h = a->h - (tv->sbar_h ? tv->sbar_h->wButton : 0);
 	AG_WidgetSizeAlloc(tv->sbar_v, &aBar);
+	rView.w -= aBar.w;
 
 	/* Size horizontal scroll bar, if enabled. */
 	if (tv->sbar_h != NULL) {
@@ -595,6 +602,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aBar.w = a->w - tv->sbar_h->wButton;
 		aBar.h = tv->sbar_h->wButton;
 		AG_WidgetSizeAlloc(tv->sbar_v, &aBar);
+		rView.h -= aBar.h;
 
 		for (i = 0; i < tv->columncount; i++) {
 			col_w += tv->column[i].w;
@@ -670,13 +678,15 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		tv->visible.count = rows_per_view;
 		tv->visible.dirty = 1;
 	}
+
+	AG_WidgetEnableClipping(tv, rView);
 	return (0);
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Tableview *tv = p;
+	AG_Tableview *tv = obj;
 	Uint i;
 	int y, update = 0;
 	const int view_width = (WIDTH(tv) - WIDTH(tv->sbar_v));
@@ -696,6 +706,10 @@ Draw(void *p)
 	rBg.w = WIDTH(tv);
 	rBg.h = HEIGHT(tv);
 	STYLE(tv)->TableBackground(tv, rBg);
+	
+	/* Draw the scrollbars. */
+	AG_WidgetDraw(tv->sbar_v);
+/*	AG_WidgetDraw(tv->sbar_h); */
 	
 	/* draw row selection hilites */
 	y = tv->head_height;

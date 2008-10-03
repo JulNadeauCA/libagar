@@ -174,7 +174,7 @@ Init(void *obj)
 {
 	RG_Animview *av = obj;
 
-	WIDGET(av)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_EXPAND;
+	WIDGET(av)->flags |= AG_WIDGET_EXPAND;
 
 	av->pre_w = 64;
 	av->pre_h = 64;
@@ -253,6 +253,8 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 
 	av->ranim.x = a->w/2 - av->ranim.w/2;
 	av->ranim.y = (a->h - hBtn)/2 - av->ranim.h/2;
+
+	AG_WidgetEnableClipping(av, AG_RECT(0, 0, a->w, a->h));
 	return (0);
 }
 

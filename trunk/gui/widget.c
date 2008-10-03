@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-SDL_Cursor *agCursorToSet = NULL;
+SDL_Cursor  *agCursorToSet = NULL;	/* Set cursor at end of event cycle */
 
 static void
 ChildAttached(AG_Event *event)
@@ -81,10 +81,6 @@ Init(void *obj)
 	wid->texcoords = NULL;
 	wid->textureGC = NULL;
 	wid->nTextureGC = 0;
-	wid->clipPlaneState[0] = 0;
-	wid->clipPlaneState[1] = 0;
-	wid->clipPlaneState[2] = 0;
-	wid->clipPlaneState[3] = 0;
 #endif
 
 	/*
@@ -1287,8 +1283,8 @@ out:
  * and the view must be locked.
  */
 /* TODO optimize on a per window basis */
-int
-AG_WidgetIsOcculted(AG_Widget *wid)
+static __inline__ int
+OccultedWidget(AG_Widget *wid)
 {
 	AG_Window *owin;
 	AG_Window *wwin;
@@ -1330,127 +1326,116 @@ AG_UnsetCursor(void)
 }
 
 /*
- * Push a clipping rectangle onto the clipping rectangle stack.
- * This is only safe to call from widget draw context.
+ * Configure a global clipping rectangle. Unlike clipping rectangles
+ * set by AG_PushClipRect(), the global clipping rectangle also
+ * applies to child widgets.
+ *
+ * Usually invoked from widget initialization or size allocation context.
+ * It is unsafe to invoke from GUI rendering context.
  */
 void
-AG_WidgetPushClipRect(void *p, AG_Rect r)
+AG_WidgetEnableClipping(void *p, AG_Rect rect)
 {
 	AG_Widget *wid = p;
 
+	AG_ObjectLock(wid);
+	wid->flags |= AG_WIDGET_CLIPPING;
+	memcpy(&wid->rClip, &rect, sizeof(AG_Rect));
+	AG_ObjectUnlock(wid);
+}
+
+/*
+ * Disable the global clipping rectangle.
+ *
+ * Usually invoked from widget initialization or size allocation context.
+ * It is unsafe to invoke from GUI rendering context.
+ */
+void
+AG_WidgetDisableClipping(void *p)
+{
+	AG_Widget *wid = p;
+
+	AG_ObjectLock(wid);
+	wid->flags &= ~(AG_WIDGET_CLIPPING);
+	AG_ObjectUnlock(wid);
+}
+
+/*
+ * Push a clipping rectangle onto the clipping rectangle stack.
+ * This is only safe to call from GUI rendering context.
+ */
+void
+AG_PushClipRect(void *obj, AG_Rect r)
+{
+	AG_ClipRect *cr, *crPrev;
+
+	r.x += WIDGET(obj)->cx;
+	r.y += WIDGET(obj)->cy;
+
+	agClipRects = Realloc(agClipRects, (agClipRectCount+1) *
+	                                   sizeof(AG_ClipRect));
+	crPrev = &agClipRects[agClipRectCount-1];
+	cr = &agClipRects[agClipRectCount++];
+
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		GLdouble eq0[4] = {  1,  0,  0, -(wid->cx + r.x) };
-		GLdouble eq1[4] = {  0,  1,  0, -(wid->cy + r.y) };
-		GLdouble eq2[4] = { -1,  0,  0,  (wid->cx + r.x + r.w) };
-		GLdouble eq3[4] = {  0, -1,  0,  (wid->cy + r.y + r.h) };
-
-		if (glIsEnabled(GL_CLIP_PLANE0)) {
-			wid->clipPlaneState[0] = 1;
-			glGetClipPlane(GL_CLIP_PLANE0,
-			    (GLdouble *)wid->rClipSaveGL[0]);
-		} else {
-			wid->clipPlaneState[0] = 0;
-		}
-		if (glIsEnabled(GL_CLIP_PLANE1)) {
-			wid->clipPlaneState[1] = 1;
-			glGetClipPlane(GL_CLIP_PLANE1,
-			    (GLdouble *)wid->rClipSaveGL[1]);
-		} else {
-			wid->clipPlaneState[1] = 0;
-		}
-		if (glIsEnabled(GL_CLIP_PLANE2)) {
-			wid->clipPlaneState[2] = 1;
-			glGetClipPlane(GL_CLIP_PLANE2,
-			    (GLdouble *)wid->rClipSaveGL[2]);
-		} else {
-			wid->clipPlaneState[2] = 0;
-		}
-		if (glIsEnabled(GL_CLIP_PLANE3)) {
-			wid->clipPlaneState[3] = 1;
-			glGetClipPlane(GL_CLIP_PLANE3,
-			    (GLdouble *)wid->rClipSaveGL[3]);
-		} else {
-			wid->clipPlaneState[3] = 0;
-		}
-		glClipPlane(GL_CLIP_PLANE0, eq0);
-		glClipPlane(GL_CLIP_PLANE1, eq1);
-		glClipPlane(GL_CLIP_PLANE2, eq2);
-		glClipPlane(GL_CLIP_PLANE3, eq3);
-		glEnable(GL_CLIP_PLANE0);
-		glEnable(GL_CLIP_PLANE1);
-		glEnable(GL_CLIP_PLANE2);
-		glEnable(GL_CLIP_PLANE3);
+		cr->eqns[0][0] = 1.0;
+		cr->eqns[0][1] = 0.0;
+		cr->eqns[0][2] = 0.0;
+		cr->eqns[0][3] = MIN(crPrev->eqns[0][3], -(double)(r.x));
+		glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
+		
+		cr->eqns[1][0] = 0.0;
+		cr->eqns[1][1] = 1.0;
+		cr->eqns[1][2] = 0.0;
+		cr->eqns[1][3] = MIN(crPrev->eqns[1][3], -(double)(r.y));
+		glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
+		
+		cr->eqns[2][0] = -1.0;
+		cr->eqns[2][1] = 0.0;
+		cr->eqns[2][2] = 0.0;
+		cr->eqns[2][3] = MIN(crPrev->eqns[2][3], (double)(r.x+r.w));
+		glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
+		
+		cr->eqns[3][0] = 0.0;
+		cr->eqns[3][1] = -1.0;
+		cr->eqns[3][2] = 0.0;
+		cr->eqns[3][3] = MIN(crPrev->eqns[3][3], (double)(r.y+r.h));
+		glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
 	} else
 #endif
 	{
-		AG_Rect rClip = AG_RECT(r.x + wid->cx,
-		                        r.y + wid->cy,
-					r.w, r.h);
-
-		if (rClip.x < 0) {
-			rClip.x = 0;
-		} else if (rClip.x+rClip.w > agView->w) {
-			rClip.w = agView->w - rClip.x;
-			if (rClip.w < 0) {
-				rClip.x = 0;
-				rClip.w = agView->w;
-			}
-		}
-		if (rClip.y < 0) {
-			rClip.y = 0;
-		} else if (rClip.y+rClip.h > agView->h) {
-			rClip.h = agView->h - rClip.y;
-			if (rClip.h < 0) {
-				rClip.y = 0;
-				rClip.h = agView->h;
-			}
-		}
-
-		AG_GetClipRect(agView->v, &wid->rClipSave);
-		AG_SetClipRect(agView->v, &rClip);
+		cr->r = AG_RectIntersect(&crPrev->r, &r);
+		AG_SetClipRect(agView->v, &cr->r);
 	}
 }
 
 /*
  * Pop a clipping rectangle off the clipping rectangle stack.
- * This is only safe to call from widget draw context.
+ * This is only safe to call from GUI rendering context.
  */
 void
-AG_WidgetPopClipRect(void *p)
+AG_PopClipRect(void)
 {
-	AG_Widget *wid = p;
+	AG_ClipRect *cr;
+
+#ifdef DEBUG
+	if (agClipRectCount < 1)
+		AG_FatalError("PopClipRect() without PushClipRect()");
+#endif
+	cr = &agClipRects[agClipRectCount-2];
+	agClipRectCount--;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		if (!wid->clipPlaneState[0]) {
-			glDisable(GL_CLIP_PLANE0);
-		} else {
-			glClipPlane(GL_CLIP_PLANE0,
-			    (GLdouble *)wid->rClipSaveGL[0]);
-		}
-		if (!wid->clipPlaneState[1]) {
-			glDisable(GL_CLIP_PLANE1);
-		} else {
-			glClipPlane(GL_CLIP_PLANE1,
-			    (GLdouble *)wid->rClipSaveGL[1]);
-		}
-		if (!wid->clipPlaneState[2]) {
-			glDisable(GL_CLIP_PLANE2);
-		} else {
-			glClipPlane(GL_CLIP_PLANE2,
-			    (GLdouble *)wid->rClipSaveGL[2]);
-		}
-		if (!wid->clipPlaneState[3]) {
-			glDisable(GL_CLIP_PLANE3);
-		} else {
-			glClipPlane(GL_CLIP_PLANE3,
-			    (GLdouble *)wid->rClipSaveGL[3]);
-		}
+		glClipPlane(GL_CLIP_PLANE0, (const GLdouble *)&cr->eqns[0]);
+		glClipPlane(GL_CLIP_PLANE1, (const GLdouble *)&cr->eqns[1]);
+		glClipPlane(GL_CLIP_PLANE2, (const GLdouble *)&cr->eqns[2]);
+		glClipPlane(GL_CLIP_PLANE3, (const GLdouble *)&cr->eqns[3]);
 	} else
 #endif
 	{
-		AG_SetClipRect(agView->v, &wid->rClipSave);
+		AG_SetClipRect(agView->v, &cr->r);
 	}
 }
 
@@ -1462,7 +1447,6 @@ void
 AG_WidgetDraw(void *p)
 {
 	AG_Widget *wid = p;
-	AG_Widget *chld;
 
 	AG_ObjectLock(wid);
 
@@ -1470,32 +1454,22 @@ AG_WidgetDraw(void *p)
 	if (wid->textureGC > 0)
 		DeleteQueuedTextures(wid);
 #endif
-	if (wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE)) {
+	if (wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE))
 		goto out;
-	}
-	if (((wid->flags & AG_WIDGET_STATIC)==0 || wid->redraw) &&
-	    !AG_WidgetIsOcculted(wid) &&
+
+	if (wid->flags & AG_WIDGET_CLIPPING)
+		AG_PushClipRect(wid, wid->rClip);
+
+	if (((wid->flags & AG_WIDGET_STATIC) == 0 || wid->redraw) &&
+	    !OccultedWidget(wid) &&
 	    WIDGET_OPS(wid)->draw != NULL &&
-	    WIDGET(wid)->w > 0 &&
-	    WIDGET(wid)->h > 0) {
-		int clip = 0;
-
-		if (wid->flags & AG_WIDGET_CLIPPING) {
-			AG_WidgetPushClipRect(wid,
-			    AG_RECT(0, 0, wid->w, wid->h));
-			clip = 1;
-		}
+	    WIDTH(wid) > 0 && HEIGHT(wid) > 0) {
 		WIDGET_OPS(wid)->draw(wid);
-
-		if (clip) {
-			AG_WidgetPopClipRect(wid);
-		}
 		if (wid->flags & AG_WIDGET_STATIC)
 			wid->redraw = 0;
 	}
-
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
-		AG_WidgetDraw(chld);
+	if (wid->flags & AG_WIDGET_CLIPPING)
+		AG_PopClipRect();
 out:
 	AG_ObjectUnlock(wid);
 }
@@ -1998,6 +1972,27 @@ AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 	rv = Strlcpy(dst, s, dst_size);
 	AG_WidgetUnlockBinding(b);
 	return (rv);
+}
+
+/* Generic inherited draw() routine. */
+void
+AG_WidgetInheritDraw(void *obj)
+{
+	WIDGET_SUPER_OPS(obj)->draw(obj);
+}
+
+/* Generic inherited size_request() routine. */
+void
+AG_WidgetInheritSizeRequest(void *obj, AG_SizeReq *r)
+{
+	WIDGET_SUPER_OPS(obj)->size_request(obj, r);
+}
+
+/* Generic inherited size_allocate() routine. */
+int
+AG_WidgetInheritSizeAllocate(void *obj, const AG_SizeAlloc *a)
+{
+	return WIDGET_SUPER_OPS(obj)->size_allocate(obj, a);
 }
 
 AG_WidgetClass agWidgetClass = {

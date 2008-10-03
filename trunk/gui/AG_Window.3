@@ -148,6 +148,9 @@ for notebook-style display.
 .Ft void
 .Fn AG_WindowUpdate "AG_Window *win"
 .Pp
+.Ft void
+.Fn AG_WindowDraw "AG_Window *win"
+.Pp
 .nr nS 0
 The
 .Fn AG_WindowNew
@@ -218,6 +221,12 @@ Disable window close button in titelbar.
 Disable minimize button in titlebar.
 .It AG_WINDOW_NOMAXIMIZE
 Disable maximize button in titlebar.
+.It AG_WINDOW_NOBUTTONS
+Alias for
+.Dv AG_WINDOW_NOCLOSE ,
+.Dv AG_WINDOW_NOMINIMIZE
+and
+.Dv AG_WINDOW_NOMAXIMIZE .
 .It AG_WINDOW_HMAXIMIZE
 Keep window scaled to the display width.
 .It AG_WINDOW_VMAXIMIZE
@@ -388,6 +397,17 @@ The
 .Fn AG_WindowUpdate
 function commits all such changes previously made to any widget attached to
 .Fa win .
+.Pp
+.Fn AG_WindowDraw
+renders the window to the display.
+Calls to
+.Fn AG_WindowDraw
+must be made in GUI rendering context (i.e., enclosed between calls to
+.Xr AG_BeginRendering 3
+and
+.Xr AG_EndRendering 3 ) .
+Typically, this happens in an event loop routine (such as the stock
+.Xr AG_EventLoop 3 ) .
 .Sh VISIBILITY
 .nr nS 1
 .Ft void

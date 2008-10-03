@@ -420,7 +420,7 @@ Init(void *obj)
 {
 	AG_Graph *gf = obj;
 
-	WIDGET(gf)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_FOCUSABLE;
+	WIDGET(gf)->flags |= AG_WIDGET_FOCUSABLE;
 
 	gf->flags = 0;
 	gf->wPre = 128;
@@ -509,31 +509,33 @@ AG_GraphSizeHint(AG_Graph *gf, Uint w, Uint h)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Graph *gf = p;
+	AG_Graph *gf = obj;
 
 	r->w = gf->wPre;
 	r->h = gf->hPre;
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Graph *gf = p;
+	AG_Graph *gf = obj;
 
 	if (a->w < 1 || a->h < 1)
 		return (-1);
 
 	gf->xOffs = -(a->w/2);
 	gf->yOffs = -(a->h/2);
+
+	AG_WidgetEnableClipping(gf, AG_RECT(0, 0, a->w, a->h));
 	return (0);
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Graph *gf = p;
+	AG_Graph *gf = obj;
 	AG_GraphVertex *vtx;
 	AG_GraphEdge *edge;
 	Uint8 bg[4];

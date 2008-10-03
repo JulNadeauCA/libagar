@@ -90,8 +90,8 @@ Expand(AG_Event *event)
 			h = fs->hSaved;
 		} else {
 			AG_WidgetSizeReq(fs->filedlg, &rFileDlg);
-			w = rFileDlg.w + agColorsBorderSize*2;
-			h = rFileDlg.h + agColorsBorderSize*2;
+			w = rFileDlg.w + fs->panel->wBorderSide*2;
+			h = rFileDlg.h + fs->panel->wBorderBot;
  		}
 		x = WIDGET(fs)->cx + WIDTH(fs) - w;
 		y = WIDGET(fs)->cy;
@@ -221,9 +221,18 @@ Destroy(void *p)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+Draw(void *obj)
 {
-	AG_FileSelector *fs = p;
+	AG_Widget *chld;
+
+	WIDGET_FOREACH_CHILD(chld, obj)
+		AG_WidgetDraw(chld);
+}
+
+static void
+SizeRequest(void *obj, AG_SizeReq *r)
+{
+	AG_FileSelector *fs = obj;
 	AG_SizeReq rChld;
 
 	AG_WidgetSizeReq(fs->tbox, &rChld);
@@ -235,9 +244,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_FileSelector *fs = p;
+	AG_FileSelector *fs = obj;
 	AG_SizeReq rBtn;
 	AG_SizeAlloc aChld;
 
@@ -268,7 +277,7 @@ AG_WidgetClass agFileSelectorClass = {
 		NULL,			/* save */
 		NULL			/* edit */
 	},
-	NULL,				/* draw */
+	Draw,
 	SizeRequest,
 	SizeAllocate
 };

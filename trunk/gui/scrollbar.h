@@ -25,6 +25,7 @@ typedef struct ag_scrollbar {
 #define AG_SCROLLBAR_HFILL	0x01
 #define AG_SCROLLBAR_VFILL	0x02
 #define AG_SCROLLBAR_FOCUSABLE	0x04
+#define AG_SCROLLBAR_TEXT	0x08	/* Print values */
 #define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
 
 	int value;			/* Default value binding */

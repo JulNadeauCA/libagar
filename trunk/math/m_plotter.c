@@ -341,7 +341,7 @@ Init(void *obj)
 {
 	M_Plotter *ptr = obj;
 
-	WIDGET(ptr)->flags |= AG_WIDGET_CLIPPING|AG_WIDGET_FOCUSABLE;
+	WIDGET(ptr)->flags |= AG_WIDGET_FOCUSABLE;
 
 	ptr->type = M_PLOT_2D;
 	ptr->flags = 0;
@@ -432,9 +432,9 @@ M_PlotterSizeHint(M_Plotter *ptr, Uint w, Uint h)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	M_Plotter *ptr = p;
+	M_Plotter *ptr = obj;
 
 	r->w = ptr->wPre;
 	r->h = ptr->hPre;
@@ -443,25 +443,30 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	M_Plotter *ptr = p;
-	AG_SizeAlloc aChld;
+	M_Plotter *ptr = obj;
+	AG_SizeAlloc aBar;
+	AG_Rect rView = AG_RECT(0, 0, a->w, a->h);
 
 	if (a->w < 2 || a->h < 2)
 		return (-1);
 
-	aChld.x = 0;
-	aChld.y = a->h - ptr->hbar->wButton;
-	aChld.w = a->w;
-	aChld.h = ptr->hbar->wButton;
-	AG_WidgetSizeAlloc(ptr->hbar, &aChld);
+	aBar.x = 0;
+	aBar.y = a->h - ptr->hbar->wButton;
+	aBar.w = a->w;
+	aBar.h = ptr->hbar->wButton;
+	AG_WidgetSizeAlloc(ptr->hbar, &aBar);
+	rView.h -= aBar.h;
 
-	aChld.x = a->w - ptr->vbar->wButton;
-	aChld.y = ptr->vbar->wButton;
-	aChld.w = ptr->vbar->wButton;
-	aChld.h = a->h - ptr->hbar->wButton;
-	AG_WidgetSizeAlloc(ptr->vbar, &aChld);
+	aBar.x = a->w - ptr->vbar->wButton;
+	aBar.y = ptr->vbar->wButton;
+	aBar.w = ptr->vbar->wButton;
+	aBar.h = a->h - ptr->hbar->wButton;
+	AG_WidgetSizeAlloc(ptr->vbar, &aBar);
+	rView.w -= aBar.w;
+
+	AG_WidgetEnableClipping(ptr, rView);
 	return (0);
 }
 
@@ -472,9 +477,9 @@ ScaleReal(M_Plotter *ptr, M_Plot *pl, M_Real r)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	M_Plotter *ptr = p;
+	M_Plotter *ptr = obj;
 	M_Plot *pl;
 	M_PlotLabel *plbl;
 	int y0 = HEIGHT(ptr)/2;

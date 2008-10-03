@@ -96,14 +96,13 @@ Draw background for windows (that do not have the
 .Dv AG_WINDOW_NOBACKGROUND
 flag set).
 .It Fn WindowBorders "AG_Window *window"
-Draw borders around windows (that do not have the
-.Dv AG_WINDOW_NOBORDERS
-flag set).
-The default theme uses the standard
-.Va agColorsBorder
-array (and
-.Va agColorsBorderSize )
-but it is optional.
+Draw borders around windows (the
+.Va wBorderSide
+and
+.Va wBorderBot
+members of
+.Fa window
+determine the size of the borders in pixels).
 .It Fn TitlebarBackground "AG_Widget *widget" "int isPressed" "int isFocused"
 Draw background of a titlebar widget.
 .It Fn ButtonBackground "AG_Widget *widget" "int isPressed"

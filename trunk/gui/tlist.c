@@ -219,7 +219,7 @@ Init(void *obj)
 {
 	AG_Tlist *tl = obj;
 
-	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_CLIPPING;
+	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE;
 
 	AG_WidgetBind(tl, "selected", AG_WIDGET_POINTER, &tl->selected);
 
@@ -322,9 +322,9 @@ Destroy(void *p)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Tlist *tl = p;
+	AG_Tlist *tl = obj;
 	AG_SizeReq rBar;
 
 	AG_WidgetSizeReq(tl->sbar, &rBar);
@@ -333,12 +333,12 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Tlist *tl = p;
+	AG_Tlist *tl = obj;
 	AG_SizeReq rBar;
 	AG_SizeAlloc aBar;
-	
+
 	AG_WidgetSizeReq(tl->sbar, &rBar);
 	if (rBar.w > a->w) {
 		return (-1);
@@ -348,6 +348,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	aBar.x = a->w - rBar.w;
 	aBar.y = 0;
 	AG_WidgetSizeAlloc(tl->sbar, &aBar);
+	tl->wRow = a->w - aBar.w;
 
 	if (a->w < rBar.w || a->h < tl->sbar->wButton*2) {
 		WIDGET(tl->sbar)->flags |= AG_WIDGET_HIDE;
@@ -355,19 +356,26 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		WIDGET(tl->sbar)->flags &= ~(AG_WIDGET_HIDE);
 	}
 	UpdateListScrollbar(tl);
+
+	AG_WidgetEnableClipping(tl, AG_RECT(0,0,a->w,a->h));
 	return (0);
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Tlist *tl = p;
+	AG_Tlist *tl = obj;
 	AG_TlistItem *it;
 	int y = 0, i = 0;
 	int offset;
 
 	STYLE(tl)->ListBackground(tl,
-	    AG_RECT(0, 0, WIDTH(tl), HEIGHT(tl)));
+	    AG_RECT(0,
+	            0,
+		    tl->wRow,
+		    HEIGHT(tl)));
+
+	AG_WidgetDraw(tl->sbar);
 
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
@@ -382,7 +390,10 @@ Draw(void *p)
 			break;
 
 		STYLE(tl)->ListItemBackground(tl,
-		    AG_RECT(x+tl->icon_w+2, y, WIDTH(tl)-x,tl->item_h),
+		    AG_RECT(x + tl->icon_w + 2,
+		            y + 1,
+			    tl->wRow - x - tl->icon_w - 3,
+			    tl->item_h - 1),
 		    it->selected);
 
 		if (it->iconsrc != NULL) {
@@ -399,7 +410,10 @@ Draw(void *p)
 		}
 		if (it->flags & AG_TLIST_HAS_CHILDREN) {
 			STYLE(tl)->TreeSubnodeIndicator(tl,
-			    AG_RECT(x, y, tl->icon_w, tl->item_h),
+			    AG_RECT(x,
+			            y,
+				    tl->icon_w,
+				    tl->item_h),
 			    (it->flags & AG_TLIST_VISIBLE_CHILDREN));
 		}
 		if (it->label == -1) {
@@ -412,9 +426,10 @@ Draw(void *p)
 		    y + tl->item_h/2 - WSURFACE(tl,it->label)->h/2);
 
 		y += tl->item_h;
-		if (y < HEIGHT(tl)-1)
-			AG_DrawLineH(tl, 0, WIDTH(tl), y,
+		if (y < HEIGHT(tl)-1) {
+			AG_DrawLineH(tl, 0, tl->wRow, y,
 			    AG_COLOR(TLIST_LINE_COLOR));
+		}
 	}
 }
 

@@ -800,9 +800,18 @@ Destroy(void *obj)
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+Draw(void *obj)
 {
-	AG_FileDlg *fd = p;
+	AG_Widget *chld;
+
+	WIDGET_FOREACH_CHILD(chld, obj)
+		AG_WidgetDraw(chld);
+}
+
+static void
+SizeRequest(void *obj, AG_SizeReq *r)
+{
+	AG_FileDlg *fd = obj;
 	AG_SizeReq rChld, rOk, rCancel;
 
 	AG_WidgetSizeReq(fd->hPane, &rChld);
@@ -820,9 +829,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_FileDlg *fd = p;
+	AG_FileDlg *fd = obj;
 	AG_SizeReq r;
 	AG_SizeAlloc aChld;
 	int hBtn = 0, wBtn = a->w/2;
@@ -1100,7 +1109,7 @@ AG_WidgetClass agFileDlgClass = {
 		NULL,		/* save */
 		NULL		/* edit */
 	},
-	NULL,			/* draw */
+	Draw,
 	SizeRequest,
 	SizeAllocate
 };

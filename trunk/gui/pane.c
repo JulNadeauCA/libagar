@@ -80,8 +80,8 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 	pa->dx = dx;
 	a.x = WIDGET(pa)->x;
 	a.y = WIDGET(pa)->y;
-	a.w = WIDGET(pa)->w;
-	a.h = WIDGET(pa)->h;
+	a.w = WIDTH(pa);
+	a.h = HEIGHT(pa);
 	AG_WidgetSizeAlloc(pa, &a);
 	dxNew = pa->dx;
 	AG_ObjectUnlock(pa);
@@ -104,7 +104,7 @@ MouseMotion(AG_Event *event)
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
-		if (y < 0 || y > WIDGET(pa)->h) {
+		if (y < 0 || y > HEIGHT(pa)) {
 			return;
 		}
 		if (pa->dmoving) {
@@ -121,7 +121,7 @@ MouseMotion(AG_Event *event)
 		}
 		break;
 	case AG_PANE_VERT:
-		if (x < 0 || x > WIDGET(pa)->w) {
+		if (x < 0 || x > WIDTH(pa)) {
 			return;
 		}
 		if (pa->dmoving) {
@@ -239,26 +239,29 @@ AG_PaneAttachBoxes(AG_Pane *pa, AG_Box *box1, AG_Box *box2)
 }
 
 static void
-Draw(void *p)
+Draw(void *obj)
 {
-	AG_Pane *pa = p;
+	AG_Pane *pa = obj;
+	
+	AG_WidgetDraw(pa->div[0]);
+	AG_WidgetDraw(pa->div[1]);
 
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
-		STYLE(pa)->PaneHorizDivider(pa, pa->dx, WIDGET(pa)->h/2,
+		STYLE(pa)->PaneHorizDivider(pa, pa->dx, HEIGHT(pa)/2,
 		    pa->wDiv, pa->dmoving);
 		break;
 	case AG_PANE_VERT:
-		STYLE(pa)->PaneVertDivider(pa, WIDGET(pa)->w/2, pa->dx,
+		STYLE(pa)->PaneVertDivider(pa, WIDTH(pa)/2, pa->dx,
 		    pa->wDiv, pa->dmoving);
 		break;
 	}
 }
 
 static void
-SizeRequest(void *p, AG_SizeReq *r)
+SizeRequest(void *obj, AG_SizeReq *r)
 {
-	AG_Pane *pa = p;
+	AG_Pane *pa = obj;
 	AG_SizeReq rDiv;
 	int wMax = 0, hMax = 0;
 	int i;
@@ -297,9 +300,9 @@ SizeRequest(void *p, AG_SizeReq *r)
 }
 
 static int
-SizeAllocate(void *p, const AG_SizeAlloc *a)
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_Pane *pa = p;
+	AG_Pane *pa = obj;
 	AG_SizeReq r1, r2;
 	AG_SizeAlloc a1, a2;
 
