@@ -22,7 +22,8 @@ SUBDIR=	fixedres \
 	windows \
 	threads \
 	minimal \
-	textdlg
+	textdlg \
+	scrollview
 
 all: all-subdir
 clean: prereq clean-subdir
