@@ -73,10 +73,10 @@ WindowBorders(AG_Window *win)
 	if (win->wBorderBot > 0) {
 		r.x = 0;
 		r.y = HEIGHT(win) - win->wBorderBot;
+		r.h = win->wBorderBot;
 
 		if (!(win->flags & AG_WINDOW_NORESIZE)) {
 			r.w = win->wResizeCtrl;
-			r.h = win->wBorderBot;
 			AG_DrawBox(win, r,
 			    (agView->winop == AG_WINOP_LRESIZE) ? -1 : 1,
 			    AG_COLOR(WINDOW_BORDER_COLOR));
