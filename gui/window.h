@@ -47,26 +47,28 @@ typedef struct ag_window {
 	struct ag_widget wid;
 
 	Uint flags;
-#define AG_WINDOW_MODAL		0x00001	/* Place in foreground */
-#define AG_WINDOW_MAXIMIZED	0x00002	/* Window is maximized */
-#define AG_WINDOW_MINIMIZED	0x00004	/* Window is minimized */
-#define AG_WINDOW_KEEPABOVE	0x00008	/* Keep window above */
-#define AG_WINDOW_KEEPBELOW	0x00010	/* Keep window below */
-#define AG_WINDOW_DENYFOCUS	0x00020	/* Widgets cannot gain focus */
-#define AG_WINDOW_NOTITLE	0x00040	/* Disable the titlebar */
-#define AG_WINDOW_NOBORDERS	0x00080	/* Disable the window borders */
-#define AG_WINDOW_NOHRESIZE	0x00100	/* Disable horizontal resize */
-#define AG_WINDOW_NOVRESIZE	0x00200	/* Disable vertical resize */
-#define AG_WINDOW_NOCLOSE	0x00400	/* Disable close button */
-#define AG_WINDOW_NOMINIMIZE	0x00800	/* Disable minimize button */
-#define AG_WINDOW_NOMAXIMIZE	0x01000	/* Disable maximize button */
-#define AG_WINDOW_CASCADE	0x02000 /* For AG_WindowSetPosition() */
-#define AG_WINDOW_MINSIZEPCT	0x04000 /* Set minimum size in % */
-#define AG_WINDOW_NOBACKGROUND	0x08000	/* Don't fill the background */
-#define AG_WINDOW_NOUPDATERECT	0x10000	/* Don't update rectangle */
-#define AG_WINDOW_FOCUSONATTACH	0x20000	/* Automatic focus on attach */
-#define AG_WINDOW_HMAXIMIZE	0x40000	/* Keep maximized horizontally */
-#define AG_WINDOW_VMAXIMIZE	0x80000	/* Keep maximized vertically */
+#define AG_WINDOW_MODAL		0x000001 /* Place in foreground */
+#define AG_WINDOW_MAXIMIZED	0x000002 /* Window is maximized */
+#define AG_WINDOW_MINIMIZED	0x000004 /* Window is minimized */
+#define AG_WINDOW_KEEPABOVE	0x000008 /* Keep window above */
+#define AG_WINDOW_KEEPBELOW	0x000010 /* Keep window below */
+#define AG_WINDOW_DENYFOCUS	0x000020 /* Widgets cannot gain focus */
+#define AG_WINDOW_NOTITLE	0x000040 /* Disable the titlebar */
+#define AG_WINDOW_NOBORDERS	0x000080 /* Disable the window borders */
+#define AG_WINDOW_NOHRESIZE	0x000100 /* Disable horizontal resize */
+#define AG_WINDOW_NOVRESIZE	0x000200 /* Disable vertical resize */
+#define AG_WINDOW_NOCLOSE	0x000400 /* Disable close button */
+#define AG_WINDOW_NOMINIMIZE	0x000800 /* Disable minimize button */
+#define AG_WINDOW_NOMAXIMIZE	0x001000 /* Disable maximize button */
+#define AG_WINDOW_CASCADE	0x002000 /* For AG_WindowSetPosition() */
+#define AG_WINDOW_MINSIZEPCT	0x004000 /* Set minimum size in % */
+#define AG_WINDOW_NOBACKGROUND	0x008000 /* Don't fill the background */
+#define AG_WINDOW_NOUPDATERECT	0x010000 /* Don't update rectangle */
+#define AG_WINDOW_FOCUSONATTACH	0x020000 /* Automatic focus on attach */
+#define AG_WINDOW_HMAXIMIZE	0x040000 /* Keep maximized horizontally */
+#define AG_WINDOW_VMAXIMIZE	0x080000 /* Keep maximized vertically */
+#define AG_WINDOW_NOMOVE	0x100000 /* Disallow movement of window */
+
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
 #define AG_WINDOW_NOBUTTONS	(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|\
 				 AG_WINDOW_NOMAXIMIZE)

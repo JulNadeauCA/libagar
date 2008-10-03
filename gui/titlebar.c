@@ -169,12 +169,13 @@ static void
 MouseButtonDown(AG_Event *event)
 {
 	AG_Titlebar *tbar = AG_SELF();
-
+	
 	tbar->pressed = 1;
-
-	agView->winop = AG_WINOP_MOVE;
 	agView->winToFocus = tbar->win;
 	agView->winSelected = tbar->win;
+
+	if (!(tbar->win->flags & AG_WINDOW_NOMOVE))
+		agView->winop = AG_WINOP_MOVE;
 }
 
 static void
