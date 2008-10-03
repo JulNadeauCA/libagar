@@ -848,7 +848,7 @@ process:
 			/* Change the cursor if a RESIZE op is in progress. */
 			if (agCursorToSet == NULL &&
 			    (win->wBorderBot > 0) &&
-			    (win->flags & AG_WINDOW_NORESIZE) == 0 &&
+			    !(win->flags & AG_WINDOW_NORESIZE) &&
 			    AG_WidgetArea(win, ev->motion.x, ev->motion.y))
 			{
 				switch (AG_WindowMouseOverCtrl(win,
@@ -902,7 +902,8 @@ process:
 				AG_ObjectUnlock(win);
 				continue;
 			}
-			if (win->wBorderBot > 0) {
+			if (win->wBorderBot > 0 &&
+			    !(win->flags & AG_WINDOW_NORESIZE)) {
 				agView->winop = AG_WindowMouseOverCtrl(win,
 				    ev->button.x, ev->button.y);
 				if (agView->winop != AG_WINOP_NONE)
