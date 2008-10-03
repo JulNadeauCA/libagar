@@ -10,13 +10,21 @@ int
 main(int argc, char *argv[])
 {
 	AG_Window *win;
+	int flags = AG_VIDEO_RESIZABLE;
 	int i;
 	
 	if (AG_InitCore("agar-windows-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
-	if (AG_InitVideo(640, 480, 32, AG_VIDEO_RESIZABLE) == -1) {
+	if (argc > 1) {
+		if (strcmp(argv[1], "-g") == 0) {
+			flags |= AG_VIDEO_OPENGL;
+		} else if (strcmp(argv[1], "-G") == 0) {
+			AG_SetBool(agConfig, "view.opengl", 0);
+		}
+	}
+	if (AG_InitVideo(640, 480, 32, flags) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
 	}
@@ -60,6 +68,13 @@ main(int argc, char *argv[])
 		AG_WindowSetPosition(win, AG_WINDOW_BC, 1);
 		AG_WindowShow(win);
 	}
+	
+	win = AG_WindowNew(AG_WINDOW_NOMOVE|AG_WINDOW_NORESIZE|
+	                   AG_WINDOW_NOBUTTONS);
+	AG_WindowSetCaption(win, "Unmovable");
+	AG_LabelNew(win, 0, "Unmovable window", i);
+	AG_WindowSetPosition(win, AG_WINDOW_ML, 1);
+	AG_WindowShow(win);
 
 	AG_EventLoop();
 	AG_Destroy();
