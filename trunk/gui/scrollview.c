@@ -281,21 +281,14 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_Scrollview *sv = p;
 	AG_SizeReq rBar;
 	AG_SizeAlloc aBar;
-	AG_Rect rView;
 	int wTot, hTot;
 	
-	rView.x = 0;
-	rView.y = 0;
-	rView.w = a->w;
-	rView.h = a->h;
-
 	if (sv->hbar != NULL) {
 		AG_WidgetSizeReq(sv->hbar, &rBar);
 		aBar.w = a->w;
 		aBar.h = rBar.h;
 		aBar.x = 0;
 		aBar.y = a->h - rBar.h;
-		rView.h -= rBar.h;
 		AG_WidgetSizeAlloc(sv->hbar, &aBar);
 	}
 	if (sv->vbar != NULL) {
@@ -304,7 +297,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aBar.h = a->h;
 		aBar.x = a->w - rBar.w;
 		aBar.y = 0;
-		rView.w -= rBar.w;
 		AG_WidgetSizeAlloc(sv->vbar, &aBar);
 	}
 
@@ -320,8 +312,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		sv->yOffs = hTot - a->h;
 		if (sv->yOffs < 0) { sv->yOffs = 0; }
 	}
-	
-	AG_WidgetEnableClipping(sv, rView);
 	return (0);
 }
 
@@ -329,10 +319,28 @@ static void
 Draw(void *p)
 {
 	AG_Scrollview *sv = p;
+	AG_Widget *chld;
+	AG_Rect rView;
 
 	AG_DrawBox(sv,
 	    AG_RECT(0, 0, WIDTH(sv), HEIGHT(sv)), -1,
 	    AG_COLOR(FRAME_COLOR));
+
+	rView = AG_RECT(0, 0, WIDTH(sv), HEIGHT(sv));
+	if (sv->hbar != NULL) { rView.h -= HEIGHT(sv->hbar); }
+	if (sv->vbar != NULL) { rView.w -= WIDTH(sv->vbar); }
+
+	if (sv->hbar != NULL) { AG_WidgetDraw(sv->hbar); }
+	if (sv->vbar != NULL) { AG_WidgetDraw(sv->vbar); }
+
+	AG_PushClipRect(sv, rView);
+	WIDGET_FOREACH_CHILD(chld, sv) {
+		if (chld == WIDGET(sv->hbar) || chld == WIDGET(sv->vbar)) {
+			continue;
+		}
+		AG_WidgetDraw(chld);
+	}
+	AG_PopClipRect();
 }
 
 AG_WidgetClass agScrollviewClass = {
