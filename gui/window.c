@@ -256,41 +256,41 @@ ApplyAlignment(AG_Window *win)
 	}
 
 	switch (win->alignment) {
-	case AG_WINDOW_UPPER_LEFT:
+	case AG_WINDOW_TL:
 		WIDGET(win)->x = xOffs;
 		WIDGET(win)->y = yOffs;
 		break;
-	case AG_WINDOW_MIDDLE_LEFT:
+	case AG_WINDOW_TC:
+		WIDGET(win)->x = agView->w/2 - WIDTH(win)/2 + xOffs;
+		WIDGET(win)->y = 0;
+		break;
+	case AG_WINDOW_TR:
+		WIDGET(win)->x = agView->w - WIDTH(win) - xOffs;
+		WIDGET(win)->y = yOffs;
+		break;
+	case AG_WINDOW_ML:
 		WIDGET(win)->x = xOffs;
 		WIDGET(win)->y = agView->h/2 - HEIGHT(win)/2 + yOffs;
 		break;
-	case AG_WINDOW_LOWER_LEFT:
-		WIDGET(win)->x = xOffs;
-		WIDGET(win)->y = agView->h - HEIGHT(win) - yOffs;
-		break;
-	case AG_WINDOW_UPPER_RIGHT:
-		WIDGET(win)->x = agView->w - WIDTH(win) - xOffs;
-		WIDGET(win)->y = -yOffs;
-		break;
-	case AG_WINDOW_MIDDLE_RIGHT:
-		WIDGET(win)->x = agView->w - WIDTH(win) - xOffs;
-		WIDGET(win)->y = agView->h/2 - HEIGHT(win)/2 + yOffs;
-		break;
-	case AG_WINDOW_LOWER_RIGHT:
-		WIDGET(win)->x = agView->w - WIDTH(win) - xOffs;
-		WIDGET(win)->y = agView->h - HEIGHT(win) - yOffs;
-		break;
-	case AG_WINDOW_CENTER:
+	case AG_WINDOW_MC:
 		WIDGET(win)->x = agView->w/2 - WIDTH(win)/2 + xOffs;
 		WIDGET(win)->y = agView->h/2 - HEIGHT(win)/2 + yOffs;
 		break;
-	case AG_WINDOW_LOWER_CENTER:
+	case AG_WINDOW_MR:
+		WIDGET(win)->x = agView->w - WIDTH(win) - xOffs;
+		WIDGET(win)->y = agView->h/2 - HEIGHT(win)/2 + yOffs;
+		break;
+	case AG_WINDOW_BL:
+		WIDGET(win)->x = xOffs;
+		WIDGET(win)->y = agView->h - HEIGHT(win) - yOffs;
+		break;
+	case AG_WINDOW_BC:
 		WIDGET(win)->x = agView->w/2 - WIDTH(win)/2 + xOffs;
 		WIDGET(win)->y = agView->h - HEIGHT(win);
 		break;
-	case AG_WINDOW_UPPER_CENTER:
-		WIDGET(win)->x = agView->w/2 - WIDTH(win)/2 + xOffs;
-		WIDGET(win)->y = 0;
+	case AG_WINDOW_BR:
+		WIDGET(win)->x = agView->w - WIDTH(win) - xOffs;
+		WIDGET(win)->y = agView->h - HEIGHT(win) - yOffs;
 		break;
 	default:
 		break;
