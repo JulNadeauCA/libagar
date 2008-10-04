@@ -50,6 +50,24 @@ AG_RadioNew(void *parent, Uint flags, const char **itemText)
 }
 
 AG_Radio *
+AG_RadioNewInt(void *parent, Uint flags, const char **itemText, int *v)
+{
+	AG_Radio *rad;
+	rad = AG_RadioNew(parent, flags, itemText);
+	AG_WidgetBindInt(rad, "value", v);
+	return (rad);
+}
+
+AG_Radio *
+AG_RadioNewUint(void *parent, Uint flags, const char **itemText, Uint *v)
+{
+	AG_Radio *rad;
+	rad = AG_RadioNew(parent, flags, itemText);
+	AG_WidgetBindUint(rad, "value", v);
+	return (rad);
+}
+
+AG_Radio *
 AG_RadioNewFn(void *parent, Uint flags, const char **itemText, AG_EventFn fn,
     const char *fmt, ...)
 {
