@@ -29,7 +29,7 @@
 
 #include <gui/window.h>
 #include <gui/box.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/mspinbutton.h>
 #include <gui/checkbox.h>
 #include <gui/tlist.h>
@@ -39,6 +39,7 @@
 #include <gui/pixmap.h>
 #include <gui/separator.h>
 #include <gui/pane.h>
+#include <gui/slider.h>
 
 #include "tileset.h"
 #include "tileview.h"
@@ -455,10 +456,10 @@ SelectInsnTile(AG_Event *event)
 static void
 EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 {
-	AG_Spinbutton *sb;
 	AG_MSpinbutton *msb;
 	AG_Combo *com;
 	RG_Tileview *tv;
+	AG_Slider *sl;
 
 	AG_ObjectFreeChildren(box);
 
@@ -476,14 +477,10 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 			AG_ComboSelectPointer(com, insn->t);
 		}
 
-		AG_LabelNewStaticString(box, 0, _("Preview:"));
+		AG_LabelNewString(box, 0, _("Preview:"));
 		AG_ObjectAttach(box, tv);
-		
-		sb = AG_SpinbuttonNew(box, 0, _("Alpha: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_UINT,
-		    &insn->in_tile.alpha);
-		AG_SpinbuttonSetMin(sb, 0);
-		AG_SpinbuttonSetMax(sb, 255);
+		AG_SliderNewUintR(box, AG_SLIDER_HORIZ, 0,
+		    &insn->in_tile.alpha, 0, 255);
 		break;
 	case RG_ANIM_DISPX:
 		msb = AG_MSpinbuttonNew(box, 0, ",", _("Displacement: "));
@@ -495,26 +492,26 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT, &insn->in_rotPx.x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT, &insn->in_rotPx.y);
 		
-		sb = AG_SpinbuttonNew(box, 0, _("Angle of rotation: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT,
-		    &insn->in_rotPx.theta);
+		AG_NumericalNewIntR(box, 0, "deg",
+		    _("Angle of rotation: "),
+		    &insn->in_rotPx.theta, 0, 360);
 		break;
 	default:
 		break;
 	}
 
-	sb = AG_SpinbuttonNew(box, 0, _("Delay (ms): "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &insn->delay);
-	AG_SpinbuttonSetMin(sb, 0);
-	AG_SpinbuttonSetIncrement(sb, 50);
-
+	AG_LabelNewString(box, 0, _("Delay (ms): "));
+	sl = AG_SliderNewUintR(box, AG_SLIDER_HORIZ, AG_SLIDER_HFILL,
+	    &insn->delay, 0, 10000);
+	AG_SliderSetIntIncrement(sl, 50);
+	
 	AG_WindowUpdate(AG_ParentWindow(box));
 }
 
 static void
 EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 {
-	AG_Spinbutton *sb;
+	AG_Numerical *num;
 	AG_Pixmap *pix;
 
 	AG_ObjectFreeChildren(box);
@@ -523,10 +520,9 @@ EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 
 	pix = AG_PixmapFromSurfaceCopy(box, 0, AG_DupSurface(fr->su));
 
-	sb = AG_SpinbuttonNew(box, 0, _("Delay (ms): "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_UINT, &fr->delay);
-	AG_SpinbuttonSetMin(sb, 0);
-	AG_SpinbuttonSetIncrement(sb, 50);
+	num = AG_NumericalNewUintR(box, AG_NUMERICAL_HFILL, "ms", _("Delay: "),
+	    &fr->delay, 0, 10000);
+	AG_NumericalSetIncrement(num, 50);
 
 	AG_WindowUpdate(AG_ParentWindow(box));
 }

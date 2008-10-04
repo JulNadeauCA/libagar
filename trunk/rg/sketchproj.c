@@ -30,7 +30,7 @@
 #include <gui/hsvpal.h>
 #include <gui/radio.h>
 #include <gui/box.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/notebook.h>
 #include <gui/combo.h>
 
@@ -150,7 +150,7 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
 	{
 		AG_HSVPal *hsv1;
-		AG_Spinbutton *sb;
+		AG_Numerical *num;
 		AG_Notebook *nb;
 		AG_NotebookTab *ntab;
 
@@ -164,10 +164,10 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 			    &sproj->color);
 		}
 
-		sb = AG_SpinbuttonNew(box, 0, _("Overall alpha: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &sproj->alpha);
-		AG_SpinbuttonSetRange(sb, 0, 255);
-		AG_SpinbuttonSetIncrement(sb, 5);
+		num = AG_NumericalNewUint8(box, 0, NULL, _("Alpha: "),
+		    &sproj->alpha);
+		AG_NumericalSetRange(num, 0, 255);
+		AG_NumericalSetIncrement(num, 5);
 	}
 	return (win);
 }

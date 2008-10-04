@@ -112,13 +112,31 @@ for choosing between different units
 .Fn AG_NumericalNewSint64 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint64 *value"
 .Pp
 .Ft void
-.Fn AG_NumericalSetMin "AG_Numerical *num" "double min_value"
+.Fn AG_NumericalSetMinInt "AG_Numerical *num" "int min_value"
 .Pp
 .Ft void
-.Fn AG_NumericalSetMax "AG_Numerical *num" "double max_value"
+.Fn AG_NumericalSetMinFlt "AG_Numerical *num" "float min_value"
 .Pp
 .Ft void
-.Fn AG_NumericalSetRange "AG_Numerical *num" "double min" "double max"
+.Fn AG_NumericalSetMinDbl "AG_Numerical *num" "double min_value"
+.Pp
+.Ft void
+.Fn AG_NumericalSetMaxInt "AG_Numerical *num" "int max_value"
+.Pp
+.Ft void
+.Fn AG_NumericalSetMaxFlt "AG_Numerical *num" "float max_value"
+.Pp
+.Ft void
+.Fn AG_NumericalSetMaxDbl "AG_Numerical *num" "double max_value"
+.Pp
+.Ft void
+.Fn AG_NumericalSetRangeInt "AG_Numerical *num" "int min" "int max"
+.Pp
+.Ft void
+.Fn AG_NumericalSetRangeFlt "AG_Numerical *num" "float min" "float max"
+.Pp
+.Ft void
+.Fn AG_NumericalSetRangeDbl "AG_Numerical *num" "double min" "double max"
 .Pp
 .Ft void
 .Fn AG_NumericalSetIncrement "AG_Numerical *num" "double increment"
@@ -168,14 +186,15 @@ requires
 .Dv AG_HAVE_64BIT .
 .Pp
 The
-.Fn AG_NumericalSetMin ,
-.Fn AG_NumericalSetMax
+.Fn AG_NumericalSetMin* ,
+.Fn AG_NumericalSetMax*
 and
-.Fn AG_NumericalSetRange
+.Fn AG_NumericalSetRange*
 functions define the range of acceptable values (in base units).
-Invocations of these functions must always follow any
-.Fn AG_WidgetBind
-call, since binding to
+.Pp
+Note: Calls to these routines must follow
+.Fn AG_WidgetBind ,
+because binding to
 .Va value
 automatically causes
 .Va min

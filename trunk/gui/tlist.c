@@ -366,7 +366,7 @@ Draw(void *obj)
 {
 	AG_Tlist *tl = obj;
 	AG_TlistItem *it;
-	int y = 0, i = 0;
+	int y = 0, i = 0, selSeen = 0, selPos = 1;
 	int offset;
 
 	STYLE(tl)->ListBackground(tl,
@@ -384,8 +384,12 @@ Draw(void *obj)
 	TAILQ_FOREACH(it, &tl->items, items) {
 		int x = 2 + it->depth*tl->icon_w;
 
-		if (i++ < offset)
+		if (i++ < offset) {
+			if (it->selected) {
+				selPos = -1;
+			}
 			continue;
+		}
 		if (y > HEIGHT(tl) - tl->item_h)
 			break;
 
@@ -395,6 +399,9 @@ Draw(void *obj)
 			    tl->wRow - x - tl->icon_w - 3,
 			    tl->item_h - 1),
 		    it->selected);
+
+		if (it->selected)
+			selSeen = 1;
 
 		if (it->iconsrc != NULL) {
 			if (it->icon == -1) {
@@ -427,9 +434,23 @@ Draw(void *obj)
 
 		y += tl->item_h;
 		if (y < HEIGHT(tl)-1) {
-			AG_DrawLineH(tl, 0, tl->wRow, y,
+			AG_DrawLineH(tl, 1, tl->wRow-2, y,
 			    AG_COLOR(TLIST_LINE_COLOR));
 		}
+	}
+	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {
+		AG_WidgetBinding *offsetb;
+		int *offset;
+
+		offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
+		if (selPos == -1) {
+			(*offset)--;
+		} else {
+			(*offset)++;
+		}
+		AG_WidgetUnlockBinding(offsetb);
+	} else {
+		tl->flags &= ~(AG_TLIST_SCROLLTOSEL);
 	}
 }
 

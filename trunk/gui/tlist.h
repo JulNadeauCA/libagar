@@ -55,6 +55,7 @@ typedef struct ag_tlist {
 #define AG_TLIST_HFILL		0x020
 #define AG_TLIST_VFILL		0x040
 #define AG_TLIST_NOSELSTATE	0x100	/* Don't preserve sel state in poll */
+#define AG_TLIST_SCROLLTOSEL	0x200	/* Scroll to initial selection */
 #define AG_TLIST_EXPAND		(AG_TLIST_HFILL|AG_TLIST_VFILL)
 
 	void *selected;			/* Default `selected' binding */

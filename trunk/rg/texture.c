@@ -28,7 +28,7 @@
 #include <gui/window.h>
 #include <gui/box.h>
 #include <gui/combo.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/notebook.h>
 #include <gui/tlist.h>
 #include <gui/label.h>
@@ -186,17 +186,15 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 	AG_Window *win;
 	AG_Combo *com;
 	AG_Tlist *tl;
-	AG_Spinbutton *sb;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
-	AG_Radio *rad;
 	AG_Textbox *tb;
 	
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "%s", tex->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name: "));
+	tb = AG_TextboxNew(win, 0, _("Name: "));
 	AG_TextboxBindUTF8(tb, tex->name, sizeof(tex->name));
 	AG_WidgetFocus(tb);
 
@@ -217,24 +215,23 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL);
 	ntab = AG_NotebookAddTab(nb, _("S-Wrapping"), AG_BOX_VERT);
 	{
-		AG_LabelNewStaticString(ntab, 0, _("S-coordinate wrapping: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, wrapModes);
-		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->wrap_s);
+		AG_LabelNewString(ntab, 0, _("S-coordinate wrapping: "));
+		AG_RadioNewUint(ntab, AG_RADIO_HFILL, wrapModes, &tex->wrap_s);
 	}
 	ntab = AG_NotebookAddTab(nb, _("T-Wrapping"), AG_BOX_VERT);
 	{
-		AG_LabelNewStaticString(ntab, 0, _("T-coordinate wrapping: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, wrapModes);
-		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->wrap_t);
+		AG_LabelNewString(ntab, 0, _("T-coordinate wrapping: "));
+		AG_RadioNewUint(ntab, AG_RADIO_HFILL, wrapModes, &tex->wrap_t);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_VERT);
 	{
-		AG_LabelNewStaticString(ntab, 0, _("Blending function: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, agBlendFuncNames);
-		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &tex->blend_func);
+		AG_LabelNewString(ntab, 0, _("Blending function: "));
+		AG_RadioNewUint(ntab, AG_RADIO_HFILL, agBlendFuncNames,
+		    &tex->blend_func);
+		AG_RadioNewUint(ntab, AG_RADIO_HFILL, agBlendFuncNames,
+		    &tex->blend_func);
 	}
 
-	sb = AG_SpinbuttonNew(win, 0, _("Overall alpha: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &tex->alpha);
+	AG_NumericalNewUint8(win, 0, NULL, _("Overall alpha: "), &tex->alpha);
 	return (win);
 }

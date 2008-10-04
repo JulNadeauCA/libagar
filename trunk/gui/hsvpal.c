@@ -32,7 +32,7 @@
 
 #include "hsvpal.h"
 #include "primitive.h"
-#include "fspinbutton.h"
+#include "numerical.h"
 #include "gui_math.h"
 
 #include <string.h>
@@ -420,7 +420,7 @@ EditNumValues(AG_Event *event)
 	AG_HSVPal *pal = AG_PTR(1);
 	AG_Window *pwin;
 	AG_Window *win;
-	AG_FSpinbutton *fsb;
+	AG_Numerical *num;
 	AG_WidgetBinding *b1, *b2;
 	float v;
 
@@ -438,44 +438,44 @@ EditNumValues(AG_Event *event)
 		AG_WidgetBinding *bAlpha;
 		void *pAlpha;
 
-		fsb = AG_FSpinbuttonNew(win, 0, NULL, _("Hue: "));
-		AG_FSpinbuttonSizeHint(fsb, "000");
-		AG_WidgetCopyBinding(fsb, "value", pal, "hue");
-		AG_FSpinbuttonSetRange(fsb, 0.0, 359.0);
-		AG_FSpinbuttonSetIncrement(fsb, 1);
-		FSpinbuttonSetPrecision(fsb, "f", 0);
+		num = AG_NumericalNew(win, 0, NULL, _("Hue: "));
+		AG_NumericalSizeHint(num, "000");
+		AG_WidgetCopyBinding(num, "value", pal, "hue");
+		AG_NumericalSetRange(num, 0.0, 359.0);
+		AG_NumericalSetIncrement(num, 1);
+		AG_NumericalSetPrecision(num, "f", 0);
 		
-		fsb = AG_FSpinbuttonNew(win, 0, NULL, _("Saturation: "));
-		AG_FSpinbuttonSizeHint(fsb, "00.00");
-		AG_WidgetCopyBinding(fsb, "value", pal, "saturation");
-		AG_FSpinbuttonSetRange(fsb, 0.0, 1.0);
-		AG_FSpinbuttonSetIncrement(fsb, 0.01);
-		FSpinbuttonSetPrecision(fsb, "f", 2);
+		num = AG_NumericalNew(win, 0, NULL, _("Saturation: "));
+		AG_NumericalSizeHint(num, "00.00");
+		AG_WidgetCopyBinding(num, "value", pal, "saturation");
+		AG_NumericalSetRange(num, 0.0, 1.0);
+		AG_NumericalSetIncrement(num, 0.01);
+		AG_NumericalSetPrecision(num, "f", 2);
 
-		fsb = AG_FSpinbuttonNew(win, 0, NULL, _("Value: "));
-		AG_FSpinbuttonSizeHint(fsb, "00.00");
-		AG_WidgetCopyBinding(fsb, "value", pal, "value");
-		AG_FSpinbuttonSetRange(fsb, 0.0, 1.0);
-		AG_FSpinbuttonSetIncrement(fsb, 0.01);
-		FSpinbuttonSetPrecision(fsb, "f", 2);
+		num = AG_NumericalNew(win, 0, NULL, _("Value: "));
+		AG_NumericalSizeHint(num, "00.00");
+		AG_WidgetCopyBinding(num, "value", pal, "value");
+		AG_NumericalSetRange(num, 0.0, 1.0);
+		AG_NumericalSetIncrement(num, 0.01);
+		AG_NumericalSetPrecision(num, "f", 2);
 
-		fsb = AG_FSpinbuttonNew(win, 0, NULL, _("Alpha: "));
-		AG_FSpinbuttonSizeHint(fsb, "0.000");
-		AG_WidgetCopyBinding(fsb, "value", pal, "alpha");
+		num = AG_NumericalNew(win, 0, NULL, _("Alpha: "));
+		AG_NumericalSizeHint(num, "0.000");
+		AG_WidgetCopyBinding(num, "value", pal, "alpha");
 		bAlpha = AG_WidgetGetBinding(pal, "alpha", &pAlpha);
 		switch (bAlpha->vtype) {
 		case AG_WIDGET_FLOAT:
 		case AG_WIDGET_DOUBLE:
-			AG_FSpinbuttonSetRange(fsb, 0.0, 1.0);
-			AG_FSpinbuttonSetIncrement(fsb, 0.005);
-			FSpinbuttonSetPrecision(fsb, "f", 3);
+			AG_NumericalSetRange(num, 0.0, 1.0);
+			AG_NumericalSetIncrement(num, 0.005);
+			AG_NumericalSetPrecision(num, "f", 3);
 			break;
 		case AG_WIDGET_INT:
 		case AG_WIDGET_UINT:
 		case AG_WIDGET_UINT8:
-			AG_FSpinbuttonSetRange(fsb, 0.0, 255.0);
-			AG_FSpinbuttonSetIncrement(fsb, 1.0);
-			FSpinbuttonSetPrecision(fsb, "f", 0);
+			AG_NumericalSetRange(num, 0.0, 255.0);
+			AG_NumericalSetIncrement(num, 1.0);
+			AG_NumericalSetPrecision(num, "f", 0);
 			break;
 		}
 		AG_WidgetUnlockBinding(bAlpha);

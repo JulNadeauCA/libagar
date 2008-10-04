@@ -120,7 +120,8 @@ main(int argc, char *argv[])
 
 #ifdef THREADS
 	AG_ObjectInitStatic(&workerMgr, NULL);
-	win = AG_WindowNew(AG_WINDOW_NOCLOSE);
+	win = AG_WindowNew(AG_WINDOW_NOBUTTONS);
+	AG_WindowSetCaption(win, "Threads demo");
 	AG_WindowSetPosition(win, AG_WINDOW_BR, 0);
 	AG_ButtonNewFn(win, 0, "Create sleeping worker",
 	    CreateSleepingWorker, NULL);

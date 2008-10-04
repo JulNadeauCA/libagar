@@ -34,8 +34,7 @@
 #include <gui/notebook.h>
 #include <gui/separator.h>
 #include <gui/radio.h>
-#include <gui/fspinbutton.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/primitive.h>
 
 #include "m.h"
@@ -203,24 +202,12 @@ M_PlotSettings(M_Plot *pl)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 	ntab = AG_NotebookAddTab(nb, _("Trace"), AG_BOX_VERT);
 	{
-		AG_FSpinbutton *fsb;
-		AG_Radio *rad;
-
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, type_names);
-		AG_WidgetBindInt(rad, "value", &pl->type);
-	
-		fsb = AG_FSpinbuttonNew(ntab, 0, NULL, _("X-scale: "));
-		M_WidgetBindReal(fsb, "value", &pl->xScale);
-		fsb = AG_FSpinbuttonNew(ntab, 0, NULL, _("Y-scale: "));
-		M_WidgetBindReal(fsb, "value", &pl->yScale);
-	
+		AG_RadioNewUint(ntab, 0, type_names, &pl->type);
+		M_NumericalNewReal(ntab, 0, NULL, _("X-scale: "), &pl->xScale);
+		M_NumericalNewReal(ntab, 0, NULL, _("Y-scale: "), &pl->yScale);
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
-	
-		fsb = AG_FSpinbuttonNew(ntab, 0, "px", _("X-offset: "));
-		AG_WidgetBindInt(fsb, "value", &pl->xOffs);
-		fsb = AG_FSpinbuttonNew(ntab, 0, "px", _("Y-offset: "));
-		AG_WidgetBindInt(fsb, "value", &pl->yOffs);
-		AG_FSpinbuttonSetIncrement(fsb, 5.0);
+		AG_NumericalNewInt(ntab, 0, "px", _("X-offset: "), &pl->xOffs);
+		AG_NumericalNewInt(ntab, 0, "px", _("Y-offset: "), &pl->yOffs);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 	{

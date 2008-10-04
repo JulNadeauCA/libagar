@@ -69,14 +69,9 @@ pane(void *p, void *con)
 		N_("Clear"),
 		NULL
 	};
-	AG_Radio *rad;
-	AG_Checkbox *cb;
 
-	rad = AG_RadioNew(con, AG_RADIO_HFILL, mode_items);
-	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &fi->mode);
-
-	cb = AG_CheckboxNew(con, 0, _("Randomize angle"));
-	AG_WidgetBind(cb, "state", AG_WIDGET_BOOL, &fi->randomize_angle);
+	AG_RadioNewUint(con, AG_RADIO_HFILL, mode_items, &fi->mode);
+	AG_CheckboxNewInt(con, 0, _("Randomize angle"), &fi->randomize_angle);
 }
 
 static int

@@ -464,6 +464,7 @@ Draw(void *obj)
 	double *xvalue, *yvalue;
 
 	AG_WidgetDraw(fsu->input);
+	if (fsu->units != NULL) { AG_WidgetDraw(fsu->units); }
 	AG_WidgetDraw(fsu->xincbu);
 	AG_WidgetDraw(fsu->yincbu);
 	AG_WidgetDraw(fsu->xdecbu);

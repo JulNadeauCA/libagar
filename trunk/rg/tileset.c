@@ -1168,8 +1168,6 @@ InsertTileDlg(AG_Event *event)
 	AG_Box *btnbox;
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
-	AG_Checkbox *cb;
-	AG_Radio *rad;
 /*	AG_Combo *com; */
 
 	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NOVRESIZE|
@@ -1178,7 +1176,7 @@ InsertTileDlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create new tile"));
 	
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name: "));
+	tb = AG_TextboxNew(win, 0, _("Name: "));
 	AG_TextboxBindUTF8(tb, ins_tile_name, sizeof(ins_tile_name));
 	AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXX");
 	AG_SetEvent(tb, "textbox-return", InsertTile, "%p,%p", win, ts);
@@ -1192,15 +1190,11 @@ InsertTileDlg(AG_Event *event)
 	AG_WidgetBindInt(msb, "yvalue", &ins_tile_h);
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 
-	cb = AG_CheckboxNew(win, 0, _("Alpha blending"));
-	AG_WidgetBindInt(cb, "state", &ins_alpha);
+	AG_CheckboxNewInt(win, 0, _("Alpha blending"), &ins_alpha);
+	AG_CheckboxNewInt(win, 0, _("Colorkey"), &ins_colorkey);
 	
-	cb = AG_CheckboxNew(win, 0, _("Colorkeying"));
-	AG_WidgetBindInt(cb, "state", &ins_colorkey);
-	
-	AG_LabelNewStaticString(win, 0, _("Snapping mode: "));
-	rad = AG_RadioNew(win, AG_RADIO_HFILL, rgTileSnapModes);
-	AG_WidgetBindInt(rad, "value", &ins_snap_mode);
+	AG_LabelNewString(win, 0, _("Snapping mode: "));
+	AG_RadioNewUint(win, AG_RADIO_HFILL, rgTileSnapModes, &ins_snap_mode);
 
 	btnbox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
@@ -1227,7 +1221,7 @@ InsertTextureDlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create a new texture"));
 	
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name:"));
+	tb = AG_TextboxNew(win, 0, _("Name:"));
 	AG_TextboxBindUTF8(tb, ins_texture_name, sizeof(ins_texture_name));
 	AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXX");
 	AG_SetEvent(tb, "textbox-return", InsertTexture, "%p,%p,%p", win,
@@ -1254,7 +1248,6 @@ InsertAnimDlg(AG_Event *event)
 	AG_Box *btnbox;
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
-	AG_Checkbox *cb;
 
 	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
 	    AG_WINDOW_NOMINIMIZE, "rg-insanimdlg")) == NULL) {
@@ -1262,7 +1255,7 @@ InsertAnimDlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Create new animation"));
 	
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name:"));
+	tb = AG_TextboxNew(win, 0, _("Name:"));
 	AG_TextboxBindUTF8(tb, ins_anim_name, sizeof(ins_anim_name));
 	AG_TextboxSizeHint(tb, "XXXXXXXXXXXXXXXXXXX");
 	AG_SetEvent(tb, "textbox-return", InsertAnim, "%p,%p", win, ts);
@@ -1273,11 +1266,8 @@ InsertAnimDlg(AG_Event *event)
 	AG_WidgetBindInt(msb, "yvalue", &ins_tile_h);
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 
-	cb = AG_CheckboxNew(win, 0, _("Alpha blending"));
-	AG_WidgetBindInt(cb, "state", &ins_alpha);
-	
-	cb = AG_CheckboxNew(win, 0, _("Colorkey"));
-	AG_WidgetBindInt(cb, "state", &ins_colorkey);
+	AG_CheckboxNewInt(win, 0, _("Alpha blending"), &ins_alpha);
+	AG_CheckboxNewInt(win, 0, _("Colorkey"), &ins_colorkey);
 
 	btnbox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
@@ -1876,9 +1866,9 @@ Edit(void *p)
 
 		pane = AG_PaneNew(ntab, AG_PANE_HORIZ,
 		    AG_PANE_EXPAND|AG_PANE_DIV|AG_PANE_FORCE_DIV);
-		AG_LabelNewStatic(pane->div[0], 0, _("Tiles:"));
+		AG_LabelNewString(pane->div[0], 0, _("Tiles:"));
 		AG_ObjectAttach(pane->div[0], tlTileTbl);
-		AG_LabelNewStatic(pane->div[1], 0, _("Animations:"));
+		AG_LabelNewString(pane->div[1], 0, _("Animations:"));
 		AG_ObjectAttach(pane->div[1], tlAnimTbl);
 	}
 	return (win);

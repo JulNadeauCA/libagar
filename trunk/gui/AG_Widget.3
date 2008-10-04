@@ -296,17 +296,14 @@ VFS is locked.
 .nr nS 0
 The
 .Fn AG_WidgetArea
-function returns 1 if absolute view coordinates
+routine tests whether view coordinates
 .Fa x
 and
 .Fa y
-are inside the area allocated by the widget.
+lie inside of the widget's allocated space.
+The
 .Fn AG_WidgetRelativeArea
-evaluates to 1 if widget-relative view coordinates
-.Fa x
-and
-.Fa y
-are inside the widget area.
+variant accepts widget coordinates.
 .Sh BLITTING SURFACES
 These functions manage blitting of graphical surfaces.
 They are designed specifically for use in GUI widgets.
@@ -455,16 +452,10 @@ operation.
 .Fn AG_WidgetPopCursor "AG_Widget *widget"
 .Pp
 .Ft void
-.Fn AG_WidgetPutPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 color"
-.Pp
-.Ft void
-.Fn AG_WidgetPutPixel32OrClip "AG_Widget *widget" "int x" "int y" "Uint32 color"
+.Fn AG_WidgetPutPixel32 "AG_Widget *widget" "int x" "int y" "Uint32 pixel"
 .Pp
 .Ft void
 .Fn AG_WidgetPutPixelRGB "AG_Widget *widget" "int x" "int y" "Uint8 red" "Uint8 green" "Uint8 blue"
-.Pp
-.Ft void
-.Fn AG_WidgetPutPixelRGBOrClip "AG_Widget *widget" "int x" "int y" "Uint8 red" "Uint8 green" "Uint8 blue"
 .Pp
 .Ft void
 .Fn AG_WidgetBlendPixelRGBA "AG_Widget *widget" "int x" "int y" "Uint8 color[4]" "AG_BlendFn blendFn"
@@ -523,31 +514,20 @@ The
 restores the previously saved cursor.
 .Pp
 .Fn AG_WidgetPutPixel32
-function writes a pixel of value
-.Fa color
-at the given widget coordinates.
-If the target pixel would lie outside of the video display, this function is
-a no-op.
+function writes a pixel (given in
+.Va agVideoFmt
+format) to the specified widget coordinates.
 The
-.Fn AG_WidgetPutPixel32OrClip
-variant uses the clipping rectangle of the widget instead.
-The variants
 .Fn AG_WidgetPutPixelRGB
-and
-.Fn AG_WidgetPutPixelRGBAOrClip
-accept a series of 8-bit color component values instead of a pixel value.
+variant accepts 8-bit component values.
 .Pp
-The
 .Fn AG_WidgetBlendPixelRGBA
-function blends the specified RGB components with the pixel at the specified
-coordinates
+blends the specified color against the current pixel at widget coordinates
 .Fa x ,
-.Fa y
-on the display.
-The
+.Fa y .
 .Fa color 
-array specifies the 8-bit RGB components and a 8-bit source alpha value.
-The pixels are blended according to the given function
+specifies the source 8-bit RGBA components.
+Pixels are blended according to the given function
 .Fn blendFn ,
 which may be one of:
 .Bd -literal
@@ -559,6 +539,16 @@ typedef enum ag_blend_func {
 	AG_ALPHA_ONE_MINUS_SRC	/* dA = 1-sA */
 } AG_BlendFn;
 .Ed
+.Pp
+Note that
+.Fn AG_WidgetPutPixel32 ,
+.Fn AG_WidgetPutPixelRGBA
+and
+.Fn AG_WidgetBlendPixelRGBA
+are affected by the current clipping rectangle (as set by
+.Fn AG_PushClipRect
+or
+.Fn AG_WidgetEnableClipping ) .
 .Sh GRAPHICS PRIMITIVES
 These primitives are designed specifically for use in GUI widgets.
 They must be called from the
@@ -901,10 +891,19 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Fn AG_WidgetSetSint32 "AG_Widget *widget" "const char *binding" "Sint32 u32"
 .Pp
 .Ft void
+.Fn AG_WidgetSetUint64 "AG_Widget *widget" "const char *binding" "Uint64 u64"
+.Pp
+.Ft void
+.Fn AG_WidgetSetSint64 "AG_Widget *widget" "const char *binding" "Sint64 u64"
+.Pp
+.Ft void
 .Fn AG_WidgetSetFloat "AG_Widget *widget" "const char *binding" "float f"
 .Pp
 .Ft void
 .Fn AG_WidgetSetDouble "AG_Widget *widget" "const char *binding" "double d"
+.Pp
+.Ft void
+.Fn AG_WidgetSetLongDouble "AG_Widget *widget" "const char *binding" "long double d"
 .Pp
 .Ft void
 .Fn AG_WidgetSetString "AG_Widget *widget" "const char *binding" "const char *s"
@@ -1040,19 +1039,37 @@ to
 The destination binding must already exist.
 The function returns 0 on success, -1 if an error occured.
 .Pp
+The
 .Fn AG_WidgetSet_*
-are simply variants of
-.Fa AG_WidgetBind
-without the
+routines are all simple variants of
+.Fa AG_WidgetBind ,
+with an implicit
 .Fa type
 argument.
-.Pp
 The
 .Fn AG_WidgetGet_*
-variants return the current value of the given binding.
-For thread safety, it is usually necessary to use
-.Fn AG_WidgetGetBinding ,
-which locks the binding value, requiring the caller to unlock it after use.
+routines return the current value of the specified binding.
+.Pp
+Note:
+.Fn AG_WidgetSetUint64 ,
+.Fn AG_WidgetSetSint64
+only exists if
+.Dv AG_HAVE_64BIT
+is defined.
+.Fn AG_WidgetSetLongDouble
+only exists if
+.Dv AG_HAVE_LONG_DOUBLE
+is defined.
+.Pp
+Note: Usages such as
+.Fn AG_WidgetGetFoo
+followed by
+.Fn AG_WidgetSetFoo
+are not thread-safe.
+In such cases, the race condition can be avoided by using the
+.Fn AG_WidgetGetBinding
+interface, which requires explicit unlocking after use.
+.Pp
 .Fn AG_WidgetString
 returns a copy of the string (or NULL on failure).
 .Fn AG_WidgetCopyString
@@ -1254,6 +1271,13 @@ events.
 Without this flag,
 .Dv TAB
 is used to change the focus to the next widget.
+.It AG_WIDGET_NOSPACING
+Advise parent container widgets to avoid applying spacing and padding rules
+to this widget.
+This flag is used by such widgets as
+.Xr AG_Titlebar 3
+and
+.Xr AG_Menu 3 .
 .El
 .Sh EXAMPLES
 See

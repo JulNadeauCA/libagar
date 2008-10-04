@@ -216,7 +216,7 @@ ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOTITLE);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
-	AG_LabelNewStatic(win, 0, _("File %s exists. Overwrite?"), fd->cfile);
+	AG_LabelNew(win, 0, _("File %s exists. Overwrite?"), fd->cfile);
 	hb = AG_HBoxNew(win, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);
 	{
 		AG_ButtonNewFn(hb, 0, _("Yes"),
@@ -520,8 +520,8 @@ SelectedType(AG_Event *event)
 	TAILQ_FOREACH(fo, &ft->opts, opts) {
 		switch (fo->type) {
 		case AG_FILEDLG_BOOL:
-			AG_CheckboxNewInt(fd->optsCtr, &fo->data.i.val,
-			    fo->descr);
+			AG_CheckboxNewInt(fd->optsCtr, 0, fo->descr,
+			    &fo->data.i.val);
 			break;
 		case AG_FILEDLG_INT:
 			num = AG_NumericalNew(fd->optsCtr, 0, NULL, fo->descr);
@@ -544,8 +544,7 @@ SelectedType(AG_Event *event)
 			                          fo->data.dbl.max);
 			break;
 		case AG_FILEDLG_STRING:
-			tbox = AG_TextboxNew(fd->optsCtr, AG_TEXTBOX_HFILL,
-			    fo->descr);
+			tbox = AG_TextboxNew(fd->optsCtr, 0, fo->descr);
 			AG_TextboxBindUTF8(tbox, fo->data.s,
 			    sizeof(fo->data.s));
 			break;
@@ -716,7 +715,7 @@ Init(void *obj)
 	AG_LabelSizeHint(fd->lbCwd, 1,
 	    _("Directory: XXXXXXXXXXXXX"));
 
-	fd->tbFile = AG_TextboxNew(fd, AG_TEXTBOX_HFILL, _("File: "));
+	fd->tbFile = AG_TextboxNew(fd, 0, _("File: "));
 	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
 	AG_TlistSizeHint(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
 	AG_TlistSizeHint(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);

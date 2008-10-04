@@ -29,7 +29,6 @@
 #include <gui/box.h>
 #include <gui/radio.h>
 #include <gui/hsvpal.h>
-#include <gui/fspinbutton.h>
 #include <gui/label.h>
 
 #include "tileset.h"
@@ -68,11 +67,9 @@ edit(void *p)
 		NULL
 	};
 	AG_Window *win;
-	AG_Radio *rad;
 
 	win = AG_WindowNew(0);
-	rad = AG_RadioNew(win, AG_RADIO_HFILL, mode_items);
-	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &lt->mode);
+	AG_RadioNewInt(win, AG_RADIO_HFILL, mode_items, &lt->mode);
 	return (win);
 }
 

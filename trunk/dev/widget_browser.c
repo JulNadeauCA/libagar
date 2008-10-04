@@ -36,7 +36,7 @@
 #include <gui/tlist.h>
 #include <gui/label.h>
 #include <gui/button.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/mspinbutton.h>
 #include <gui/checkbox.h>
 #include <gui/separator.h>
@@ -177,7 +177,6 @@ EditWidgetParams(AG_Event *event)
 	AG_NotebookTab *nTab;
 	AG_Textbox *tb;
 	AG_Label *lbl;
-	AG_Spinbutton *sb;
 	AG_MSpinbutton *msb;
 
 	win = AG_WindowNew(0);
@@ -203,17 +202,16 @@ EditWidgetParams(AG_Event *event)
 		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",1 },
 		    { AG_WIDGET_PRIO_MOTION,		"PRIO_MOTION",1 },
 		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",0 },
-		    { AG_WIDGET_IGNORE_PADDING,		"IGNORE_PADDING",1 },
+		    { AG_WIDGET_NOSPACING,		"NOSPACING",1 },
 		    { 0,				NULL,0 }
 		};
 
-		tb = AG_TextboxNew(nTab, AG_TEXTBOX_HFILL, _("Name: "));
+		tb = AG_TextboxNew(nTab, 0, _("Name: "));
 		AG_TextboxBindUTF8(tb, OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
-		AG_LabelNewStatic(nTab, 0, _("Class: %s"),
-		    OBJECT(wid)->cls->name);
+		AG_LabelNew(nTab, 0, _("Class: %s"), OBJECT(wid)->cls->name);
 		AG_SeparatorNewHoriz(nTab);
-		AG_CheckboxSetFromFlags(nTab, &wid->flags, flagDescr);
+		AG_CheckboxSetFromFlags(nTab, 0, &wid->flags, flagDescr);
 	}
 
 	if (AG_OfClass(wid, "AG_Widget:AG_Window:*")) {
@@ -232,10 +230,12 @@ EditWidgetParams(AG_Event *event)
 		    { AG_WINDOW_NOUPDATERECT,	"NOUPDATERECT",1 },
 		    { 0,			NULL,0 }
 		};
+		AG_Numerical *nums[4];
+		int i;
 
 		nTab = AG_NotebookAddTab(nb, _("Window"), AG_BOX_VERT);
 
-		tb = AG_TextboxNew(nTab, AG_TEXTBOX_HFILL, _("Caption: "));
+		tb = AG_TextboxNew(nTab, 0, _("Caption: "));
 		AG_TextboxBindUTF8(tb, ww->caption, sizeof(ww->caption));
 		AG_SetEvent(tb, "textbox-postchg", UpdateWindowCaption,
 		    "%p", ww);
@@ -250,79 +250,60 @@ EditWidgetParams(AG_Event *event)
 #endif
 
 		AG_SeparatorNewHoriz(nTab);
-		AG_CheckboxSetFromFlags(nTab, &ww->flags, flagDescr);
+		AG_CheckboxSetFromFlags(nTab, 0, &ww->flags, flagDescr);
 		AG_SeparatorNewHoriz(nTab);
 
-		sb = AG_SpinbuttonNew(nTab, 0, _("Widget spacing: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ww->spacing);
-		AG_SpinbuttonSetMin(sb, 0);
-		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
-		sb = AG_SpinbuttonNew(nTab, 0, _("Top padding: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ww->tPad);
-		AG_SpinbuttonSetMin(sb, 0);
-		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
+		nums[0] = AG_NumericalNewIntR(nTab, 0, "px",
+		    _("Widget spacing: "), &ww->spacing, 0, 255);
+		nums[1] = AG_NumericalNewIntR(nTab, 0, "px",
+		    _("Top padding: "), &ww->tPad, 0, 255);
+		nums[2] = AG_NumericalNewIntR(nTab, 0, "px",
+		    _("Bottom padding: "), &ww->bPad, 0, 255);
+		nums[3] = AG_NumericalNewIntR(nTab, 0, "px",
+		    _("Left padding: "), &ww->lPad, 0, 255);
+		nums[4] = AG_NumericalNewIntR(nTab, 0, "px",
+		    _("Right padding: "), &ww->rPad, 0, 255);
 	
-		sb = AG_SpinbuttonNew(nTab, 0, _("Bottom padding: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ww->bPad);
-		AG_SpinbuttonSetMin(sb, 0);
-		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
-	
-		sb = AG_SpinbuttonNew(nTab, 0, _("Left padding: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ww->lPad);
-		AG_SpinbuttonSetMin(sb, 0);
-		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
-	
-		sb = AG_SpinbuttonNew(nTab, 0, _("Right padding: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ww->rPad);
-		AG_SpinbuttonSetMin(sb, 0);
-		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", ww);
+		for (i = 0; i < 4; i++) {
+			AG_SetEvent(nums[i], "numerical-changed",
+			    UpdateWindow, "%p", ww);
+		}
 	}
 
 	if (AG_OfClass(wid, "AG_Widget:AG_Box:*")) {
 		AG_Box *box = (AG_Box *)wid;
 		AG_Window *wp = AG_ParentWindow(box);
-		AG_Spinbutton *sb;
+		AG_Numerical *num;
 		
 		nTab = AG_NotebookAddTab(nb, _("Box"), AG_BOX_VERT);
 		
-		sb = AG_SpinbuttonNew(nTab, 0, _("Padding: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &box->padding);
-		AG_SpinbuttonSetMin(sb, 0);
-		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", wp);
+		num = AG_NumericalNewIntR(nTab, 0, "px", _("Padding: "),
+		    &box->padding, 0, 255);
+		AG_SetEvent(num, "numerical-changed", UpdateWindow, "%p", wp);
 		
-		sb = AG_SpinbuttonNew(nTab, 0, _("Spacing: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &box->spacing);
-		AG_SpinbuttonSetMin(sb, 0);
-		AG_SetEvent(sb, "spinbutton-changed", UpdateWindow, "%p", wp);
+		num = AG_NumericalNewIntR(nTab, 0, "px", _("Spacing: "),
+		    &box->spacing, 0, 255);
+		AG_SetEvent(num, "numerical-changed", UpdateWindow, "%p", wp);
 		
-		AG_CheckboxNewFlag(nTab, &box->flags, AG_BOX_HOMOGENOUS,
-		    _("Homogenous"));
-		AG_CheckboxNewFlag(nTab, &box->flags, AG_BOX_FRAME,
-		    _("Visual frame"));
+		AG_CheckboxNewFlag(nTab, 0, _("Homogenous"),
+		    &box->flags, AG_BOX_HOMOGENOUS);
+		AG_CheckboxNewFlag(nTab, 0, _("Visual frame"),
+		    &box->flags, AG_BOX_FRAME);
 	}
 
 	if (AG_OfClass(wid, "AG_Widget:AG_Editable:*")) {
 		AG_Editable *ed = (AG_Editable *)wid;
-		AG_Spinbutton *sb;
 		
 		nTab = AG_NotebookAddTab(nb, _("Editable"), AG_BOX_VERT);
-		sb = AG_SpinbuttonNew(nTab, 0, "x: ");
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->x);
-		sb = AG_SpinbuttonNew(nTab, 0, "xMax: ");
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->xMax);
-		sb = AG_SpinbuttonNew(nTab, 0, "y: ");
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->y);
-		sb = AG_SpinbuttonNew(nTab, 0, "yMax: ");
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->yMax);
-		sb = AG_SpinbuttonNew(nTab, 0, "yVis: ");
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->yVis);
+		AG_NumericalNewInt(nTab, 0, "px", "x: ", &ed->x);
+		AG_NumericalNewInt(nTab, 0, "px", "xMax: ", &ed->xMax);
+		AG_NumericalNewInt(nTab, 0, "px", "y: ", &ed->y);
+		AG_NumericalNewInt(nTab, 0, "px", "yMax: ", &ed->yMax);
+		AG_NumericalNewInt(nTab, 0, "px", "yVis: ", &ed->yVis);
 		AG_SeparatorNewHoriz(nTab);
-		sb = AG_SpinbuttonNew(nTab, 0, "pos: ");
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->pos);
-		sb = AG_SpinbuttonNew(nTab, 0, "xCurs: ");
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->xCurs);
-		sb = AG_SpinbuttonNew(nTab, 0, "yCurs: ");
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ed->yCurs);
+		AG_NumericalNewInt(nTab, 0, "px", "pos: ", &ed->pos);
+		AG_NumericalNewInt(nTab, 0, "px", "xCurs: ", &ed->xCurs);
+		AG_NumericalNewInt(nTab, 0, "px", "yCurs: ", &ed->yCurs);
 	}
 
 	nTab = AG_NotebookAddTab(nb, _("Geometry"), AG_BOX_VERT);

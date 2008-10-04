@@ -31,7 +31,6 @@
 #include <gui/box.h>
 #include <gui/checkbox.h>
 #include <gui/hsvpal.h>
-#include <gui/fspinbutton.h>
 #include <gui/label.h>
 
 #include "tileset.h"
@@ -175,11 +174,9 @@ edit(void *p)
 {
 	struct polygon_tool *pt = p;
 	AG_Window *win;
-	AG_Checkbox *cb;
 
 	win = AG_WindowNew(0);
-	cb = AG_CheckboxNew(win, 0, _("Preview"));
-	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &pt->preview);
+	AG_CheckboxNewInt(win, 0, _("Preview"), &pt->preview);
 	return (win);
 }
 

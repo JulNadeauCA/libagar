@@ -38,7 +38,7 @@ SingleLineExample(void)
 	 * Create a single-line Textbox. TextboxSizeHint() requests an initial
 	 * textbox size large enough to display the given string entirely.
 	 */
-	textbox = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Static string: ");
+	textbox = AG_TextboxNew(win, 0, "Static string: ");
 	AG_TextboxSizeHint(textbox, "XXXXXXXXXXX");
 	AG_TextboxPrintf(textbox, "Hello");
 	AG_WidgetFocus(textbox);
@@ -46,16 +46,16 @@ SingleLineExample(void)
 	/* Bind checkboxes to some flags. */
 	AG_SeparatorNewHoriz(win);
 	AG_CheckboxNewFn(win, 0, "Disable input", DisableInput, "%p", textbox);
-	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_PASSWORD,
-	    "Password input");
-	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_INT_ONLY,
-	    "Force integer input");
-	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_FLT_ONLY,
-	    "Force float input");
-	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_NOEMACS,
-	    "Disable emacs keys");
-	AG_CheckboxNewFlag(win, &textbox->ed->flags, AG_EDITABLE_NOLATIN1,
-	    "Disable traditional LATIN-1");
+	AG_CheckboxNewFlag(win, 0, "Password input",
+	    &textbox->ed->flags, AG_EDITABLE_PASSWORD);
+	AG_CheckboxNewFlag(win, 0, "Force integer input",
+	    &textbox->ed->flags, AG_EDITABLE_INT_ONLY);
+	AG_CheckboxNewFlag(win, 0, "Force float input",
+	    &textbox->ed->flags, AG_EDITABLE_FLT_ONLY);
+	AG_CheckboxNewFlag(win, 0, "Disable emacs keys",
+	    &textbox->ed->flags, AG_EDITABLE_NOEMACS);
+	AG_CheckboxNewFlag(win, 0, "Disable traditional LATIN-1",
+	    &textbox->ed->flags, AG_EDITABLE_NOLATIN1);
 
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 	AG_WindowShow(win);

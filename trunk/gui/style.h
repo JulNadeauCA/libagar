@@ -17,8 +17,7 @@ typedef struct ag_style {
 	} version;
 	void (*init)(struct ag_style *);
 	void (*destroy)(struct ag_style *);
-	void (*WindowBackground)(struct ag_window *);
-	void (*WindowBorders)(struct ag_window *);
+	void (*Window)(struct ag_window *);
 	void (*TitlebarBackground)(void *, int isPressed, int isFocused);
 	void (*ButtonBackground)(void *, int isPressed);
 	void (*ButtonTextOffset)(void *, int isPressed, int *x, int *y);

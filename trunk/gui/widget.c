@@ -1919,7 +1919,8 @@ FindRectOverlap(AG_Widget *parent, const char *type, int x, int y, int w, int h)
 			return (p);
 	}
 	if (AG_OfClass(parent, type) &&
-	    AG_WidgetRectIntersect(parent, x,y,w,h)) {
+	    !(x+w < parent->cx || x > parent->cx2 ||
+	      y+w < parent->cy || y > parent->cy2)) {
 		return (parent);
 	}
 	return (NULL);

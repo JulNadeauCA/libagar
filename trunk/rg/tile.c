@@ -38,7 +38,7 @@
 #include <gui/textbox.h>
 #include <gui/menu.h>
 #include <gui/checkbox.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/mspinbutton.h>
 #include <gui/toolbar.h>
 #include <gui/label.h>
@@ -1510,7 +1510,7 @@ UpdateTileSettings(AG_Event *event)
 	AG_Window *dlg_w = AG_PTR(3);
 	AG_Checkbox *ckey_cb = AG_PTR(4);
 	AG_Checkbox *alpha_cb = AG_PTR(5);
-	AG_Spinbutton *alpha_sb = AG_PTR(6);
+	AG_Numerical *alpha_num = AG_PTR(6);
 	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
 	int w = AG_WidgetInt(msb, "xvalue");
@@ -1523,7 +1523,7 @@ UpdateTileSettings(AG_Event *event)
 		flags |= RG_TILE_SRCALPHA;
 
 	RG_TileScale(ts, t, w, h, flags);
-	t->su->format->alpha = AG_WidgetInt(alpha_sb, "value");
+	t->su->format->alpha = AG_WidgetInt(alpha_num, "value");
 	RG_TileviewSetZoom(tv, 100, 0);
 	AG_ViewDetach(dlg_w);
 
@@ -1542,8 +1542,7 @@ TileSettingsDlg(AG_Event *event)
 	AG_MSpinbutton *msb;
 	AG_Box *box;
 	AG_Checkbox *ckey_cb, *alpha_cb;
-	AG_Spinbutton *alpha_sb;
-	AG_Radio *rad;
+	AG_Numerical *alpha_num;
 	AG_Textbox *tb;
 
 	if ((win = AG_WindowNewNamed(AG_WINDOW_MODAL|AG_WINDOW_NORESIZE|
@@ -1552,11 +1551,11 @@ TileSettingsDlg(AG_Event *event)
 	}
 	AG_WindowSetCaption(win, _("Tile information: %s"), t->name);
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Name: "));
+	tb = AG_TextboxNew(win, 0, _("Name: "));
 	AG_TextboxBindUTF8(tb, t->name, sizeof(t->name));
 	AG_WidgetFocus(tb);
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, _("Class: "));
+	tb = AG_TextboxNew(win, 0, _("Class: "));
 	AG_TextboxBindUTF8(tb, t->clname, sizeof(t->clname));
 
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size: "));
@@ -1564,13 +1563,13 @@ TileSettingsDlg(AG_Event *event)
 	AG_WidgetSetInt(msb, "xvalue", t->su->w);
 	AG_WidgetSetInt(msb, "yvalue", t->su->h);
 	
-	alpha_sb = AG_SpinbuttonNew(win, 0, _("Overall alpha: "));
-	AG_SpinbuttonSetRange(alpha_sb, 0, 255);
-	AG_WidgetSetInt(alpha_sb, "value", t->su->format->alpha);
+	alpha_num = AG_NumericalNew(win, 0, NULL, _("Overall alpha: "));
+	AG_NumericalSetRange(alpha_num, 0, 255);
+	AG_WidgetSetInt(alpha_num, "value", t->su->format->alpha);
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
-	ckey_cb = AG_CheckboxNew(win, 0, _("Colorkeying"));
+	ckey_cb = AG_CheckboxNew(win, 0, _("Colorkey"));
 	AG_WidgetSetInt(ckey_cb, "state", t->flags & RG_TILE_SRCCOLORKEY);
 
 	alpha_cb = AG_CheckboxNew(win, 0, _("Source alpha"));
@@ -1578,9 +1577,8 @@ TileSettingsDlg(AG_Event *event)
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
-	AG_LabelNewStaticString(win, 0, _("Snapping mode: "));
-	rad = AG_RadioNew(win, AG_RADIO_HFILL, rgTileSnapModes);
-	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &t->snap_mode);
+	AG_LabelNewString(win, 0, _("Snapping mode: "));
+	AG_RadioNewUint(win, 0, rgTileSnapModes, &t->snap_mode);
 
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 
@@ -1588,7 +1586,7 @@ TileSettingsDlg(AG_Event *event)
 	{
 		AG_ButtonNewFn(box, 0, _("OK"),
 		    UpdateTileSettings, "%p,%p,%p,%p,%p,%p",
-		    tv, msb, win, ckey_cb, alpha_cb, alpha_sb);
+		    tv, msb, win, ckey_cb, alpha_cb, alpha_num);
 		AG_ButtonNewFn(box, 0, _("Cancel"), AGWINDETACH(win));
 	}
 

@@ -28,8 +28,6 @@
 
 #include <gui/widget.h>
 #include <gui/button.h>
-#include <gui/fspinbutton.h>
-#include <gui/spinbutton.h>
 #include <gui/primitive.h>
 #include <gui/text_cache.h>
 

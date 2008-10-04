@@ -226,14 +226,9 @@ Draw(void *obj)
 	AG_Window *win = obj;
 	AG_Widget *chld;
 
-	if ((win->flags & AG_WINDOW_NOBACKGROUND) == 0)
-		STYLE(win)->WindowBackground(win);
-	
+	STYLE(win)->Window(win);
 	WIDGET_FOREACH_CHILD(chld, win)
 		AG_WidgetDraw(chld);
-	
-	if (win->wBorderBot > 0 || win->wBorderSide > 0)
-		STYLE(win)->WindowBorders(win);
 }
 
 /* Apply initial alignment parameter. */
@@ -373,7 +368,7 @@ WidgetGainFocus(AG_Widget *wid)
 {
 	AG_Widget *chld;
 
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+	WIDGET_FOREACH_CHILD(chld, wid) {
 		AG_ObjectLock(chld);
 		WidgetGainFocus(chld);
 		AG_ObjectUnlock(chld);
@@ -387,7 +382,7 @@ WidgetLostFocus(AG_Widget *wid)
 {
 	AG_Widget *chld;
 
-	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+	WIDGET_FOREACH_CHILD(chld, wid) {
 		AG_ObjectLock(chld);
 		WidgetLostFocus(chld);
 		AG_ObjectUnlock(chld);
@@ -482,7 +477,7 @@ AG_WindowCountWidgets(AG_Widget *wid, Uint *nwidgets)
 	}
 	AG_ObjectUnlock(wid);
 
-	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+	WIDGET_FOREACH_CHILD(cwid, wid)
 		AG_WindowCountWidgets(cwid, nwidgets);
 }
 
@@ -497,7 +492,7 @@ AG_WindowMapWidgets(AG_Widget *wid, AG_Widget **widgets, Uint *i)
 	}
 	AG_ObjectUnlock(wid);
 
-	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget)
+	WIDGET_FOREACH_CHILD(cwid, wid)
 		AG_WindowMapWidgets(cwid, widgets, i);
 }
 
@@ -826,7 +821,7 @@ process:
 			 * hold focus or have the AG_WIDGET_UNFOCUSED_MOTION
 			 * flag set.
 			 */
-			OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+			WIDGET_FOREACH_CHILD(wid, win) {
 				AG_ObjectLock(wid);
 				if (wid->flags & AG_WIDGET_PRIO_MOTION) {
 					AG_WidgetMouseMotion(win, wid,
@@ -839,7 +834,7 @@ process:
 				}
 				AG_ObjectUnlock(wid);
 			}
-			OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+			WIDGET_FOREACH_CHILD(wid, win) {
 				AG_WidgetMouseMotion(win, wid,
 				    ev->motion.x, ev->motion.y,
 				    ev->motion.xrel, ev->motion.yrel,
@@ -886,7 +881,7 @@ process:
 			 * Forward to all widgets that either hold focus or have
 			 * the AG_WIDGET_UNFOCUSED_BUTTONUP flag set.
 			 */
-			OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+			WIDGET_FOREACH_CHILD(wid, win) {
 				AG_WidgetMouseButtonUp(win, wid,
 				    ev->button.button,
 				    ev->button.x, ev->button.y);
@@ -910,7 +905,7 @@ process:
 					agView->winSelected = win;
 			}
 			/* Forward to overlapping widgets. */
-			OBJECT_FOREACH_CHILD(wid, win, ag_widget) {
+			WIDGET_FOREACH_CHILD(wid, win) {
 				if (AG_WidgetMouseButtonDown(win, wid,
 				    ev->button.button, ev->button.x,
 				    ev->button.y)) {
@@ -1487,8 +1482,8 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	AG_SizeReq rChld, rTbar;
 	int nWidgets;
 	
-	r->w = win->lPad + win->rPad + win->wBorderSide*2;
-	r->h = win->bPad + win->tPad + win->wBorderBot;
+	r->w = win->lPad+win->rPad + win->wBorderSide*2;
+	r->h = win->bPad+win->tPad + win->wBorderBot;
 
 	if (win->tbar != NULL) {
 		AG_WidgetSizeReq(win->tbar, &rTbar);
@@ -1496,12 +1491,13 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		r->h += rTbar.h;
 	}
 	nWidgets = 0;
-	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
+	WIDGET_FOREACH_CHILD(chld, win) {
 		if (chld == WIDGET(win->tbar)) {
 			continue;
 		}
 		AG_WidgetSizeReq(chld, &rChld);
-		r->w = MAX(r->w, rChld.w + (win->lPad + win->rPad));
+		r->w = MAX(r->w, rChld.w + (win->lPad+win->rPad) +
+		                 win->wBorderSide*2);
 		r->h += rChld.h + win->spacing;
 		nWidgets++;
 	}
@@ -1532,7 +1528,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	/* Calculate the space occupied by non-fill widgets. */
 	nWidgets = 0;
 	totFixed = 0;
-	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
+	WIDGET_FOREACH_CHILD(chld, win) {
 		AG_WidgetSizeReq(chld, &rChld);
 		if ((chld->flags & AG_WIDGET_VFILL) == 0) {
 			totFixed += rChld.h;
@@ -1559,24 +1555,31 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		aChld.x = win->lPad + win->wBorderSide;
 		aChld.y = win->tPad;
 	}
-	OBJECT_FOREACH_CHILD(chld, win, ag_widget) {
+	WIDGET_FOREACH_CHILD(chld, win) {
 		AG_WidgetSizeReq(chld, &rChld);
 		if (chld == WIDGET(win->tbar)) {
 			continue;
 		}
-		if (chld->flags & AG_WIDGET_IGNORE_PADDING) {
+		if (chld->flags & AG_WIDGET_NOSPACING) {
 			AG_SizeAlloc aTmp;
+			AG_Widget *chldNext;
 
 			aTmp.x = 0;
 			aTmp.y = aChld.y;
 			aTmp.w = a->w;
 			aTmp.h = rChld.h;
 			AG_WidgetSizeAlloc(chld, &aTmp);
-			aChld.y += aTmp.h + win->spacing;
+			aChld.y += aTmp.h;
+
+			chldNext = WIDGET_NEXT_CHILD(chld);
+			if (chldNext == NULL ||
+			    !(chldNext->flags & AG_WIDGET_NOSPACING)) {
+				aChld.y += win->spacing;
+			}
 			continue;
 		} else {
 			aChld.w = (chld->flags & AG_WIDGET_HFILL) ?
-			          wAvail : rChld.w;
+			          wAvail : MIN(wAvail,rChld.w);
 		}
 		aChld.h = (chld->flags & AG_WIDGET_VFILL) ?
 		          hAvail-totFixed : rChld.h;

@@ -73,7 +73,7 @@ Init(void *obj)
 {
 	AG_Toolbar *bar = obj;
 	
-	WIDGET(bar)->flags |= AG_WIDGET_IGNORE_PADDING;
+	WIDGET(bar)->flags |= AG_WIDGET_NOSPACING;
 
 	bar->flags = 0;
 	bar->type = AG_TOOLBAR_HORIZ;

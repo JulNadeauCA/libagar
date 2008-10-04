@@ -30,7 +30,7 @@
 #include <gui/hsvpal.h>
 #include <gui/radio.h>
 #include <gui/box.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/notebook.h>
 
 #include <vg/vg.h>
@@ -129,27 +129,27 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 {
 	struct rg_fill_feature *f = p;
 	AG_Window *win;
-	AG_Radio *rad;
-	static const char *modes[] = {
-		N_("Solid"),
-		N_("Horizontal gradient"),
-		N_("Vertical gradient"),
-		N_("Circular gradient"),
-		N_("Pixmap pattern"),
-		NULL
-	};
 	AG_Box *box;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Fill/gradient"));
 
-	rad = AG_RadioNew(win, AG_RADIO_HFILL, modes);
-	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &f->type);
+	{
+		static const char *modes[] = {
+			N_("Solid"),
+			N_("Horizontal gradient"),
+			N_("Vertical gradient"),
+			N_("Circular gradient"),
+			N_("Pixmap pattern"),
+			NULL
+		};
+		AG_RadioNewUint(win, AG_RADIO_HFILL, modes, &f->type);
+	}
 
 	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
 	{
 		AG_HSVPal *hsv1, *hsv2;
-		AG_Spinbutton *sb;
+		AG_Numerical *num;
 		AG_Notebook *nb;
 		AG_NotebookTab *ntab;
 
@@ -172,10 +172,9 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 			    &f->f_gradient.c2);
 		}
 		
-		sb = AG_SpinbuttonNew(box, 0, _("Overall alpha: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &f->alpha);
-		AG_SpinbuttonSetRange(sb, 0, 255);
-		AG_SpinbuttonSetIncrement(sb, 5);
+		num = AG_NumericalNewUint8R(box, 0, NULL,
+		    _("Overall alpha: "), &f->alpha, 0, 255);
+		AG_NumericalSetIncrement(num, 5);
 	}
 	return (win);
 }

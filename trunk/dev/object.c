@@ -314,36 +314,31 @@ DEV_ObjectEdit(void *p)
 	{
 		AG_Textbox *tbMD5, *tbSHA1, *tbRMD160;
 
-		tbox = AG_TextboxNew(ntab, AG_TEXTBOX_HFILL, _("Name: "));
+		tbox = AG_TextboxNew(ntab, 0, _("Name: "));
 		AG_TextboxPrintf(tbox, ob->name);
 		AG_WidgetFocus(tbox);
 		AG_SetEvent(tbox, "textbox-return", RenameObject, "%p", ob);
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 	
-		AG_LabelNewStatic(ntab, 0, _("Class: %s"), ob->cls->hier);
-		AG_CheckboxSetFromFlags(ntab, &ob->flags, devObjectFlags);
+		AG_LabelNew(ntab, 0, _("Class: %s"), ob->cls->hier);
+		AG_CheckboxSetFromFlags(ntab, 0, &ob->flags, devObjectFlags);
 #if 0
 		AG_LabelNewPolledMT(ntab, AG_LABEL_HFILL, &agLinkageLock,
 		    _("Parent: %[obj]"), &ob->parent);
 #endif
-		AG_LabelNewStatic(ntab, 0, _("Save prefix: %s"),
+		AG_LabelNew(ntab, 0, _("Save prefix: %s"),
 		    ob->save_pfx != NULL ? ob->save_pfx : AG_PATHSEP);
 
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		tbMD5 = AG_TextboxNew(ntab,
-		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "MD5: ");
-		AG_TextboxSizeHint(tbMD5, "888888888888888888888888888888888");
+		tbMD5 = AG_TextboxNew(ntab, AG_TEXTBOX_READONLY, "MD5: ");
 		AG_WidgetDisable(tbMD5);
-		
-		tbSHA1 = AG_TextboxNew(ntab,
-		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "SHA1: ");
+		tbSHA1 = AG_TextboxNew(ntab, AG_TEXTBOX_READONLY, "SHA1: ");
 		AG_WidgetDisable(tbSHA1);
-		
-		tbRMD160 = AG_TextboxNew(ntab,
-		    AG_TEXTBOX_HFILL|AG_TEXTBOX_READONLY, "RMD160: ");
+		tbRMD160 = AG_TextboxNew(ntab, AG_TEXTBOX_READONLY, "RMD160: ");
 		AG_WidgetDisable(tbRMD160);
+		AG_TextboxSizeHint(tbMD5, "888888888888888888888888888888888");
 
 		box = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|
 					            AG_BOX_HFILL);
@@ -361,10 +356,10 @@ DEV_ObjectEdit(void *p)
 		AG_Label *lblStatus;
 		AG_Tlist *tl;
 
-		lblStatus = AG_LabelNewStatic(ntab, AG_LABEL_HFILL, "...");
+		lblStatus = AG_LabelNewString(ntab, AG_LABEL_HFILL, "...");
 		AG_LabelSizeHint(lblStatus, 3, _("Repository revision: #0000"));
 
-		AG_LabelNewStaticString(ntab, 0, _("Revision history:"));
+		AG_LabelNewString(ntab, 0, _("Revision history:"));
 		tl = AG_TlistNew(ntab, AG_TLIST_EXPAND);
 
 		btn = AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Refresh status"),

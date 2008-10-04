@@ -14,9 +14,6 @@ package agar.gui.widget.button is
   BUTTON_REPEAT        : constant flags_t := 16#008#;
   BUTTON_HFILL         : constant flags_t := 16#010#;
   BUTTON_VFILL         : constant flags_t := 16#020#;
-  BUTTON_REGEN         : constant flags_t := 16#080#;
-  BUTTON_TEXT_NODUP    : constant flags_t := 16#100#;
-  BUTTON_SURFACE_NODUP : constant flags_t := 16#200#;
   BUTTON_INVSTATE      : constant flags_t := 16#400#;
   BUTTON_EXPAND        : constant flags_t := BUTTON_HFILL or BUTTON_VFILL;
 

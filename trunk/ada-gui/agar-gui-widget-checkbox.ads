@@ -29,32 +29,37 @@ package agar.gui.widget.checkbox is
 
   function allocate_integer
     (parent : widget_access_t;
-     ptr    : access c.int;
-     label  : string) return checkbox_access_t;
+     flags  : flags_t;
+     label  : string;
+     ptr    : access c.int) return checkbox_access_t;
   pragma inline (allocate_integer);
 
   function allocate_flags
     (parent : widget_access_t;
+     flags  : flags_t;
+     label  : string;
      ptr    : access c.unsigned;
-     mask   : c.unsigned;
-     label  : string) return checkbox_access_t;
+     mask   : c.unsigned) return checkbox_access_t;
   pragma inline (allocate_flags);
 
   function allocate_flags32
     (parent : widget_access_t;
+     flags  : flags_t;
+     label  : string;
      ptr    : access agar.core.types.uint32_t;
-     mask   : agar.core.types.uint32_t;
-     label  : string) return checkbox_access_t;
+     mask   : agar.core.types.uint32_t) return checkbox_access_t;
   pragma inline (allocate_flags32);
 
   procedure set_from_flags
     (parent     : widget_access_t;
+     flags      : flags_t;
      ptr        : access c.unsigned;
      flags_desc : flag_descr_access_t);
   pragma import (c, set_from_flags, "AG_CheckboxSetFromFlags");
 
   procedure set_from_flags32
     (parent     : widget_access_t;
+     flags      : flags_t;
      ptr        : access agar.core.types.uint32_t;
      flags_desc : flag_descr_access_t);
   pragma import (c, set_from_flags32, "AG_CheckboxSetFromFlags");

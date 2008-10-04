@@ -54,7 +54,7 @@ DEV_DisplaySettings(void)
 
 	vb = AG_VBoxNew(win, 0);
 	{
-		AG_LabelNewStatic(vb, 0, _("OpenGL mode: %s"),
+		AG_LabelNew(vb, 0, _("OpenGL mode: %s"),
 		    agView->opengl ? _("yes") : _("no"));
 
 		/* XXX thread unsafe */
@@ -62,15 +62,15 @@ DEV_DisplaySettings(void)
 		    &agView->w, &agView->h);
 
 #if 0
-		AG_LabelNewStatic(vb, 0, _("Depth: %dbpp"),
+		AG_LabelNew(vb, 0, _("Depth: %dbpp"),
 		    (int)agVideoInfo->vfmt->BitsPerPixel);
-		AG_LabelNewStatic(vb, 0, _("Video masks: %08x,%08x,%08x"),
+		AG_LabelNew(vb, 0, _("Video masks: %08x,%08x,%08x"),
 		    (Uint)agVideoInfo->vfmt->Rmask,
 		    (Uint)agVideoInfo->vfmt->Gmask,
 		    (Uint)agVideoInfo->vfmt->Bmask);
-		AG_LabelNewStatic(vb, 0, _("Color key: 0x%x"),
+		AG_LabelNew(vb, 0, _("Color key: 0x%x"),
 		    (Uint)agVideoInfo->vfmt->colorkey);
-		AG_LabelNewStatic(vb, 0, _("Alpha: %d"),
+		AG_LabelNew(vb, 0, _("Alpha: %d"),
 		    agVideoInfo->vfmt->alpha);
 #endif
 

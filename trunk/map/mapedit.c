@@ -29,7 +29,7 @@
 #include <gui/window.h>
 #include <gui/box.h>
 #include <gui/checkbox.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/mspinbutton.h>
 
 #include "map.h"
@@ -99,8 +99,6 @@ static void *
 ConfigEditor(void *p)
 {
 	AG_Window *win;
-	AG_Checkbox *cb;
-	AG_Spinbutton *sb;
 	AG_MSpinbutton *msb;
 	AG_Box *bo;
 
@@ -109,21 +107,13 @@ ConfigEditor(void *p)
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	AG_BoxSetSpacing(bo, 5);
-	{
-		cb = AG_CheckboxNew(bo,0 , _("Moving tiles"));
-		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &mapViewAnimatedBg);
-
-		sb = AG_SpinbuttonNew(bo, 0, _("Tile size: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &mapViewBgTileSize);
-		AG_SpinbuttonSetMin(sb, 2);
-		AG_SpinbuttonSetMax(sb, 16384);
-	}
+	AG_CheckboxNewInt(bo, 0, _("Moving tiles"), &mapViewAnimatedBg);
+	AG_NumericalNewIntR(bo, 0, "px", _("Tile size: "),
+	    &mapViewBgTileSize, 2, 16384);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
-	{
-		cb = AG_CheckboxNew(bo, 0, _("Selection-bounded edition"));
-		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &mapViewEditSelOnly);
-	}
+	AG_CheckboxNewInt(bo, 0, _("Selection-bounded edition"),
+	    &mapViewEditSelOnly);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{

@@ -137,7 +137,7 @@ CreateWindow(void)
 	 * Textbox is a single or multiline text edition widget. It can bind
 	 * to a fixed-size buffer and supports UTF-8.
 	 */
-	AG_TextboxNew(div1, AG_TEXTBOX_HFILL, "Enter text: ");
+	AG_TextboxNew(div1, 0, "Enter text: ");
 
 	/*
 	 * Scrollbar provides three bindings, "value", "min" and "max",

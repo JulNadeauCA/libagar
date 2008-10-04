@@ -49,6 +49,7 @@ AG_Numerical *AG_NumericalNewInt(void *, Uint, const char *, const char *,
                                  int *);
 AG_Numerical *AG_NumericalNewIntR(void *, Uint, const char *, const char *,
                                   int *, int, int);
+
 AG_Numerical *AG_NumericalNewUint(void *, Uint, const char *, const char *,
                                   Uint *);
 AG_Numerical *AG_NumericalNewUintR(void *, Uint, const char *, const char *,
@@ -56,18 +57,31 @@ AG_Numerical *AG_NumericalNewUintR(void *, Uint, const char *, const char *,
 
 AG_Numerical *AG_NumericalNewUint8(void *, Uint, const char *, const char *,
                                    Uint8 *);
+AG_Numerical *AG_NumericalNewUint8R(void *, Uint, const char *, const char *,
+                                    Uint8 *, Uint8, Uint8);
+				   
 AG_Numerical *AG_NumericalNewSint8(void *, Uint, const char *, const char *,
                                    Sint8 *);
+AG_Numerical *AG_NumericalNewSint8R(void *, Uint, const char *, const char *,
+                                    Sint8 *, Sint8, Sint8);
+				   
 AG_Numerical *AG_NumericalNewUint16(void *, Uint, const char *, const char *,
                                     Uint16 *);
+AG_Numerical *AG_NumericalNewUint16R(void *, Uint, const char *, const char *,
+                                     Uint16 *, Uint16, Uint16);
+
 AG_Numerical *AG_NumericalNewSint16(void *, Uint, const char *, const char *,
                                     Sint16 *);
+AG_Numerical *AG_NumericalNewSint16R(void *, Uint, const char *, const char *,
+                                     Sint16 *, Sint16, Sint16);
+				    
 AG_Numerical *AG_NumericalNewUint32(void *, Uint, const char *, const char *,
                                     Uint32 *);
-AG_Numerical *AG_NumericalNewSint32(void *, Uint, const char *, const char *,
-                                    Sint32 *);
 AG_Numerical *AG_NumericalNewUint32R(void *, Uint, const char *, const char *,
                                     Uint32 *, Uint32, Uint32);
+				    
+AG_Numerical *AG_NumericalNewSint32(void *, Uint, const char *, const char *,
+                                    Sint32 *);
 AG_Numerical *AG_NumericalNewSint32R(void *, Uint, const char *, const char *,
                                     Sint32 *, Sint32, Sint32);
 
@@ -115,8 +129,12 @@ Uint32	AG_NumericalGetUint32(AG_Numerical *);
 #ifdef HAVE_64BIT
 AG_Numerical *AG_NumericalNewUint64(void *, Uint, const char *, const char *,
                                     Uint64 *);
+AG_Numerical *AG_NumericalNewUint64R(void *, Uint, const char *, const char *,
+                                     Uint64 *, Uint64, Uint64);
 AG_Numerical *AG_NumericalNewSint64(void *, Uint, const char *, const char *,
                                     Sint64 *);
+AG_Numerical *AG_NumericalNewSint64R(void *, Uint, const char *, const char *,
+                                     Sint64 *, Sint64, Sint64);
 Uint64	AG_NumericalGetUint64(AG_Numerical *);
 #define AG_NumericalGetSint64(n) ((Sint64)AG_NumericalGetUint64(n))
 #endif

@@ -81,15 +81,15 @@ DEV_CPUInfo(void)
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_CENTER, 30, 70);
 
-	AG_LabelNewStatic(win, 0, _("Architecture: %s"),
+	AG_LabelNew(win, 0, _("Architecture: %s"),
 	    agCPU.arch[0] != '\0' ? agCPU.arch : "unknown");
 
 	if (agCPU.vendorID[0] != '\0')
-		AG_LabelNewStatic(win, 0, _("Vendor ID: %s"), agCPU.vendorID);
+		AG_LabelNew(win, 0, _("Vendor ID: %s"), agCPU.vendorID);
 
 	AG_SeparatorNewHoriz(win);
 
-	AG_LabelNewStatic(win, 0, _("Architecture Extensions:"));
+	AG_LabelNew(win, 0, _("Architecture Extensions:"));
 	tl = AG_TlistNew(win, AG_TLIST_EXPAND);
 	for (fd = &archExtns[0]; fd->bitmask != 0; fd++) {
 		if (agCPU.ext & fd->bitmask)

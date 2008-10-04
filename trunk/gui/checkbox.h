@@ -23,16 +23,18 @@ typedef struct ag_checkbox {
 __BEGIN_DECLS
 extern AG_WidgetClass agCheckboxClass;
 
-AG_Checkbox	*AG_CheckboxNew(void *, Uint, const char *);
-AG_Checkbox	*AG_CheckboxNewFn(void *, Uint, const char *, AG_EventFn,
-                                  const char *, ...);
-AG_Checkbox	*AG_CheckboxNewInt(void *, int *, const char *);
-AG_Checkbox	*AG_CheckboxNewFlag(void *, Uint *, Uint, const char *);
-AG_Checkbox	*AG_CheckboxNewFlag32(void *, Uint32 *, Uint32, const char *);
-void		 AG_CheckboxSetFromFlags(void *, Uint *, const AG_FlagDescr *);
-void		 AG_CheckboxSetFromFlags32(void *, Uint32 *, 
-		                           const AG_FlagDescr *);
-void		 AG_CheckboxToggle(AG_Checkbox *);
+AG_Checkbox *AG_CheckboxNew(void *, Uint, const char *);
+AG_Checkbox *AG_CheckboxNewFn(void *, Uint, const char *, AG_EventFn,
+                              const char *, ...);
+AG_Checkbox *AG_CheckboxNewInt(void *, Uint, const char *, int *);
+AG_Checkbox *AG_CheckboxNewProp(void *, Uint, const char *, void *,
+                                const char *);
+AG_Checkbox *AG_CheckboxNewFlag(void *, Uint, const char *, Uint *, Uint);
+AG_Checkbox *AG_CheckboxNewFlag32(void *, Uint, const char *, Uint32 *, Uint32);
+
+void AG_CheckboxSetFromFlags(void *, Uint, Uint *, const AG_FlagDescr *);
+void AG_CheckboxSetFromFlags32(void *, Uint, Uint32 *, const AG_FlagDescr *);
+void AG_CheckboxToggle(AG_Checkbox *);
 __END_DECLS
 
 #include "close_code.h"

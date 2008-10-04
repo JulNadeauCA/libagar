@@ -146,8 +146,8 @@ Init(void *obj)
 	tbar->minimize_btn = NULL;
 	tbar->close_btn = NULL;
 	
-	tbar->label = AG_LabelNewStaticString(tbar,
-	    AG_LABEL_HFILL|AG_LABEL_NOMINSIZE, _("Untitled"));
+	tbar->label = AG_LabelNewString(tbar, AG_LABEL_HFILL|AG_LABEL_NOMINSIZE,
+	    _("Untitled"));
 	AG_LabelSizeHint(tbar->label, 1, "X");
 	AG_LabelSetPadding(tbar->label, 5,5,2,2);
 

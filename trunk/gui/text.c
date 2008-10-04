@@ -80,7 +80,7 @@
 #include "textbox.h"
 #include "button.h"
 #include "ucombo.h"
-#include "fspinbutton.h"
+#include "numerical.h"
 #include "keymap.h"
 #include "checkbox.h"
 
@@ -1306,7 +1306,7 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNewStaticString(vb, 0, msg);
+	AG_LabelNewString(vb, 0, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
@@ -1335,7 +1335,7 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNewStaticString(vb, 0, msg);
+	AG_LabelNewString(vb, 0, msg);
 	AG_WindowShow(win);
 
 	AG_LockTimeouts(NULL);
@@ -1383,7 +1383,7 @@ AG_TextInfo(const char *key, const char *format, ...)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNewStaticString(vb, 0, msg);
+	AG_LabelNewString(vb, 0, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
@@ -1428,7 +1428,7 @@ AG_TextWarning(const char *key, const char *format, ...)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNewStaticString(vb, 0, msg);
+	AG_LabelNewString(vb, 0, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
@@ -1459,7 +1459,7 @@ AG_TextError(const char *format, ...)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, 0);
-	AG_LabelNewStaticString(vb, 0, msg);
+	AG_LabelNewString(vb, 0, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
@@ -1486,7 +1486,7 @@ AG_TextPromptOptions(AG_Button **bOpts, Uint nbOpts, const char *fmt, ...)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
 
-	AG_LabelNewStaticString(win, 0, text);
+	AG_LabelNewString(win, 0, text);
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	for (i = 0; i < nbOpts; i++) {
@@ -1505,7 +1505,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	AG_Window *win;
 	AG_VBox *vb;
 	va_list args;
-	AG_FSpinbutton *fsb;
+	AG_Numerical *num;
 
 	va_start(args, format);
 	Vsnprintf(msg, sizeof(msg), format, args);
@@ -1516,14 +1516,13 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	AG_LabelNewStaticString(vb, 0, msg);
+	AG_LabelNewString(vb, 0, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
-		fsb = AG_FSpinbuttonNew(vb, 0, unit, _("Number: "));
-		AG_WidgetBind(fsb, "value", AG_WIDGET_DOUBLE, fp);
-		AG_FSpinbuttonSetRange(fsb, min, max);
-		AG_SetEvent(fsb, "fspinbutton-return", AGWINDETACH(win));
+		num = AG_NumericalNewDblR(vb, 0, unit, _("Number: "),
+		    fp, min, max);
+		AG_SetEvent(num, "numerical-return", AGWINDETACH(win));
 	}
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
@@ -1532,7 +1531,7 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 	/* TODO test type */
 
 	AG_WindowShow(win);
-	AG_WidgetFocus(fsb->input);
+	AG_WidgetFocus(num->input);
 }
 
 /* Create a dialog to edit a string value. */
@@ -1554,11 +1553,11 @@ AG_TextEditString(char *sp, size_t len, const char *msgfmt, ...)
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	AG_LabelNewStaticString(vb, 0, msg);
+	AG_LabelNewString(vb, 0, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
-		tb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, NULL);
+		tb = AG_TextboxNew(vb, 0, NULL);
 		AG_TextboxBindUTF8(tb, sp, len);
 		AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
 		AG_WidgetFocus(tb);
@@ -1585,11 +1584,11 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 	AG_WindowSetSpacing(win, 8);
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
-	AG_LabelNewStaticString(bo, 0, prompt);
+	AG_LabelNewString(bo, 0, prompt);
 	
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL, NULL);
+		tb = AG_TextboxNew(bo, 0, NULL);
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt)
 		AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, "string", s,
