@@ -164,7 +164,7 @@ SizeAllocateHomogenous(AG_Box *box, const AG_SizeAlloc *a, int nWidgets)
 		          wSize : (a->h - box->padding*2);
 
 		if (AG_WidgetSizeAlloc(chld, &aChld) == -1)
-			return (-1);
+			continue;
 
 		if (OBJECT(chld) ==
 		    TAILQ_LAST(&OBJECT(box)->children,ag_objectq)) {
