@@ -28,7 +28,7 @@
 
 #include <gui/radio.h>
 #include <gui/checkbox.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/label.h>
 #include <gui/tlist.h>
 #include <gui/primitive.h>
@@ -146,9 +146,6 @@ static void
 insert_pane(void *p, void *con)
 {
 	struct map_insert_tool *ins = p;
-	AG_Radio *rad;
-	AG_Checkbox *cb;
-	AG_Spinbutton *sb;
 	AG_TlistItem *it;
 	MAP_View *mvMain = TOOL(ins)->mv;
 	MAP_View *mv;
@@ -174,17 +171,16 @@ insert_pane(void *p, void *con)
 
 	ntab = AG_NotebookAddTab(nb, _("Settings"), AG_BOX_VERT);
 	{
-		AG_LabelNewStaticString(ntab, 0, _("Snap to: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, rgTileSnapModes);
-		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
+		AG_Numerical *num;
 
-		cb = AG_CheckboxNew(ntab, 0, _("Replace mode"));
-		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins->replace_mode);
-
-		sb = AG_SpinbuttonNew(ntab, 0, _("Rotation: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &ins->angle);
-		AG_SpinbuttonSetRange(sb, 0, 360);
-		AG_SpinbuttonSetIncrement(sb, 90);
+		AG_LabelNewString(ntab, 0, _("Snap to: "));
+		AG_RadioNewUint(ntab, AG_RADIO_HFILL,
+		    rgTileSnapModes, &ins->snap_mode);
+		AG_CheckboxNewInt(ntab, 0, _("Replace mode"),
+		    &ins->replace_mode);
+		num = AG_NumericalNewIntR(ntab, 0, "deg", _("Rotation: "),
+		    &ins->angle, 0, 360);
+		AG_NumericalSetIncrement(num, 90);
 	}
 }
 

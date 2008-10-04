@@ -446,7 +446,7 @@ Quit(AG_Event *event)
 		AG_WindowSetCaption(win, _("Exit application?"));
 		AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 		AG_WindowSetSpacing(win, 8);
-		AG_LabelNewStaticString(win, 0,
+		AG_LabelNewString(win, 0,
 		    _("There is at least one tileset with unsaved changes.  "
 	              "Exit application?"));
 		box = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|

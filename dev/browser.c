@@ -712,7 +712,6 @@ CreateObjectDlg(AG_Event *event)
 	AG_Tlist *tlParents;
 	AG_Box *bo;
 	AG_Textbox *tb;
-	AG_Checkbox *cb;
 
 	win = AG_WindowNew(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE);
 	AG_WindowSetCaption(win, _("New %s object"), cl->name);
@@ -720,8 +719,8 @@ CreateObjectDlg(AG_Event *event)
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		AG_LabelNewStatic(bo, 0, _("Class: %s"), cl->hier);
-		tb = AG_TextboxNew(bo, AG_TEXTBOX_HFILL, _("Name: "));
+		AG_LabelNew(bo, 0, _("Class: %s"), cl->hier);
+		tb = AG_TextboxNew(bo, 0, _("Name: "));
 		AG_WidgetFocus(tb);
 	}
 
@@ -731,7 +730,7 @@ CreateObjectDlg(AG_Event *event)
 	AG_BoxSetPadding(bo, 0);
 	AG_BoxSetSpacing(bo, 0);
 	{
-		AG_LabelNewStaticString(bo, 0, _("Parent object:"));
+		AG_LabelNewString(bo, 0, _("Parent object:"));
 
 		tlParents = AG_TlistNewPolled(bo,
 		    AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND,
@@ -743,8 +742,7 @@ CreateObjectDlg(AG_Event *event)
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
-		cb = AG_CheckboxNew(win, 0, _("Edit now"));
-		AG_WidgetBind(cb, "state", AG_WIDGET_INT, &editNowFlag);
+		AG_CheckboxNewInt(win, 0, _("Edit now"), &editNowFlag);
 	}
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
@@ -1215,8 +1213,8 @@ DEV_QuitCallback(AG_Event *event)
 	AG_WindowSetCaption(win, _("Exit application?"));
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 0);
 	AG_WindowSetSpacing(win, 8);
-	AG_LabelNewStaticString(win, 0, _("Unsaved objects have been modified. "
-	                                  "Exit application?"));
+	AG_LabelNewString(win, 0, _("Unsaved objects have been modified. "
+	                            "Exit application?"));
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_VBOX_HFILL);
 	AG_BoxSetSpacing(bo, 0);
 	AG_BoxSetPadding(bo, 0);

@@ -60,21 +60,16 @@ ginsert_pane(void *p, void *con)
 {
 	struct ginsert_tool *ins = p;
 	MAP_View *mv = TOOL(ins)->mv;
-	AG_Radio *rad;
-	AG_Checkbox *cb;
 	AG_TlistItem *it;
 	
 	if ((it = AG_TlistSelectedItem(mv->lib_tl)) != NULL) {
-		AG_LabelNewStatic(con, 0, _("Object: %s (%s)"),
+		AG_LabelNew(con, 0, _("Object: %s (%s)"),
 		    OBJECT(it->p1)->name, OBJECT(it->p1)->cls->name);
 	}
 	
-	AG_LabelNewStatic(con, 0, _("Snap to: "));
-	rad = AG_RadioNew(con, AG_RADIO_HFILL, rgTileSnapModes);
-	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &ins->snap_mode);
-
-	cb = AG_CheckboxNew(con, 0, _("Replace mode"));
-	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &ins->replace_mode);
+	AG_LabelNewString(con, 0, _("Snap to: "));
+	AG_RadioNewUint(con, AG_RADIO_HFILL, rgTileSnapModes, &ins->snap_mode);
+	AG_CheckboxNewInt(con, 0, _("Replace mode"), &ins->replace_mode);
 }
 
 static int

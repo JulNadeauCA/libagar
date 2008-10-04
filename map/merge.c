@@ -86,8 +86,7 @@ merge_init(MAP_Tool *t)
 
 	hb = AG_HBoxNew(win, AG_HBOX_HFILL);
 	{
-		tb = AG_TextboxNew(hb, AG_TEXTBOX_HFILL|AG_TEXTBOX_FOCUS,
-		    _("Name: "));
+		tb = AG_TextboxNew(hb, AG_TEXTBOX_FOCUS, _("Name: "));
 		AG_SetEvent(tb, "textbox-return", merge_create_brush, "%p", tb);
 
 		bu = AG_ButtonNew(hb, 0, _("Create"));

@@ -39,8 +39,8 @@
 #include <gui/textbox.h>
 #include <gui/tlist.h>
 #include <gui/mspinbutton.h>
-#include <gui/spinbutton.h>
 #include <gui/notebook.h>
+#include <gui/numerical.h>
 #include <gui/hsvpal.h>
 #include <gui/separator.h>
 #include <gui/file_dlg.h>
@@ -218,10 +218,9 @@ DEV_ConfigWindow(AG_Config *cfg)
 	AG_Window *win;
 	AG_HBox *hb;
 	AG_Textbox *tbox;
-	AG_Checkbox *cbox;
+	AG_Checkbox *cb;
 	AG_Notebook *nb;
 	AG_NotebookTab *tab;
-	AG_Spinbutton *sbu;
 
 	win = AG_WindowNewNamed(0, "config-engine-settings");
 	AG_WindowSetCaption(win, _("Agar settings"));
@@ -229,18 +228,18 @@ DEV_ConfigWindow(AG_Config *cfg)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	tab = AG_NotebookAddTab(nb, _("Video"), AG_BOX_VERT);
 	{
-		cbox = AG_CheckboxNew(tab, 0, _("Full screen"));
-		AG_WidgetBindProp(cbox,"state", agConfig,"view.full-screen");
-		AG_SetEvent(cbox, "checkbox-changed", SetFullscreen, NULL);
+		cb = AG_CheckboxNewProp(tab, 0, _("Full screen"),
+		    agConfig, "view.full-screen");
+		AG_SetEvent(cb, "checkbox-changed", SetFullscreen, NULL);
 
-		cbox = AG_CheckboxNew(tab, 0, _("Asynchronous blits"));
-		AG_WidgetBindProp(cbox,"state", agConfig,"view.async-blits");
-		AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
+		cb = AG_CheckboxNewProp(tab, 0, _("Asynchronous blits"),
+		    agConfig, "view.async-blits");
+		AG_SetEvent(cb, "checkbox-changed", WarnRestart, "%s",
 		    "config.view.async-blits");
 
-		cbox = AG_CheckboxNew(tab, 0, _("OpenGL mode"));
-		AG_WidgetBindProp(cbox,"state", agConfig,"view.opengl");
-		AG_SetEvent(cbox, "checkbox-changed",
+		cb = AG_CheckboxNewProp(tab, 0, _("OpenGL mode"),
+		    agConfig, "view.opengl");
+		AG_SetEvent(cb, "checkbox-changed",
 		    WarnRestart, "%s", "config.view.opengl");
 #if 0
 		msb = AG_MSpinbuttonNew(tab, 0, "x", _("Resolution: "));
@@ -250,87 +249,67 @@ DEV_ConfigWindow(AG_Config *cfg)
 #endif
 		AG_SpacerNewHoriz(tab);
 
-		sbu = AG_SpinbuttonNew(tab, 0, _("Screenshot quality (%): "));
-		AG_WidgetBindInt(sbu,"value", &agScreenshotQuality);
-		AG_SpinbuttonSetMin(sbu, 1);
-		AG_SpinbuttonSetMax(sbu, 100);
-	
-		sbu = AG_SpinbuttonNew(tab, 0, _("Idling threshold (ms): "));
-		AG_WidgetBindInt(sbu,"value", &agIdleThresh);
-		AG_SpinbuttonSetMin(sbu, 0);
-		AG_SpinbuttonSetMax(sbu, 255);
+		AG_NumericalNewIntR(tab, 0, "%", _("Screenshot quality: "),
+		    &agScreenshotQuality, 1, 100);
+		AG_NumericalNewIntR(tab, 0, "ms", _("Idling threshold: "),
+		    &agIdleThresh, 0, 255);
 	}
 
 	tab = AG_NotebookAddTab(nb, _("GUI"), AG_BOX_VERT);
 	{
-		cbox = AG_CheckboxNew(tab, 0, _("Antialiased text rendering"));
-		AG_WidgetBindInt(cbox,"state", &agTextAntialiasing);
-		AG_SetEvent(cbox, "checkbox-changed", WarnRestart, "%s",
+		cb = AG_CheckboxNewInt(tab, 0, _("Text antialiasing"),
+		    &agTextAntialiasing);
+		AG_SetEvent(cb, "checkbox-changed", WarnRestart, "%s",
 		    "config.text.antialiasing");
 		
 		AG_SpacerNewHoriz(tab);
 
-		cbox = AG_CheckboxNew(tab, 0, _("Unicode keyboard input"));
-		AG_WidgetBindProp(cbox,"state", agConfig,"input.unicode");
-		AG_SetEvent(cbox, "checkbox-changed", SetUnicodeKbd, NULL);
+		cb = AG_CheckboxNewProp(tab, 0, _("Unicode keyboard input"),
+		    agConfig, "input.unicode");
+		AG_SetEvent(cb, "checkbox-changed", SetUnicodeKbd, NULL);
 		
-		cbox = AG_CheckboxNew(tab, 0, _("Built-in key composition"));
-		AG_WidgetBindInt(cbox,"state", &agTextComposition);
-
-		cbox = AG_CheckboxNew(tab, 0, _("Edit text left to right"));
-		AG_WidgetBindInt(cbox,"state", &agTextBidi);
+		AG_CheckboxNewInt(tab, 0, _("Built-in key composition"),
+		    &agTextComposition);
+		AG_CheckboxNewInt(tab, 0, _("Bidirectional"),
+		    &agTextBidi);
 		
 		AG_SpacerNewHoriz(tab);
 		
-		sbu = AG_SpinbuttonNew(tab, 0, _("Double click delay (ms): "));
-		AG_WidgetBindInt(sbu,"value", &agMouseDblclickDelay);
-		AG_SpinbuttonSetMin(sbu, 1);
-		
-		sbu = AG_SpinbuttonNew(tab, 0, _("Mouse spin delay (ms): "));
-		AG_WidgetBindInt(sbu,"value", &agMouseSpinDelay);
-		AG_SpinbuttonSetMin(sbu, 1);
-
-		sbu = AG_SpinbuttonNew(tab, 0, _("Mouse spin interval (ms): "));
-		AG_WidgetBindInt(sbu,"value", &agMouseSpinIval);
-		AG_SpinbuttonSetMin(sbu, 1);
-
-		sbu = AG_SpinbuttonNew(tab, 0,
-		    _("Keyboard repeat delay (ms): "));
-		AG_WidgetBindInt(sbu,"value", &agKbdDelay);
-		AG_SpinbuttonSetMin(sbu, 1);
-		
-		sbu = AG_SpinbuttonNew(tab, 0,
-		    _("Keyboard repeat interval (ms): "));
-		AG_WidgetBindInt(sbu,"value", &agKbdRepeat);
-		AG_SpinbuttonSetMin(sbu, 1);
+		AG_NumericalNewIntR(tab, 0, "ms", _("Double click delay: "),
+		    &agMouseDblclickDelay, 1, 10000);
+		AG_NumericalNewIntR(tab, 0, "ms", _("Cursor spin delay: "),
+		    &agMouseSpinDelay, 1, 10000);
+		AG_NumericalNewIntR(tab, 0, "ms", _("Cursor spin interval: "),
+		    &agMouseSpinIval, 1, 10000);
+		AG_NumericalNewIntR(tab, 0, "ms", _("Key repeat delay: "),
+		    &agKbdDelay, 1, 1000);
+		AG_NumericalNewIntR(tab, 0, "ms", _("Key repeat interval: "),
+		    &agKbdRepeat, 1, 500);
 	}
 
 	tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
 	{
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
-		    _("Temporary dir: "));
+		tbox = AG_TextboxNew(tab, 0, _("Temporary dir: "));
 		AG_GetStringCopy(agConfig, "tmp-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "tmp-path");
 
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
-		    _("Data save dir: "));
+		tbox = AG_TextboxNew(tab, 0, _("Data save dir: "));
 		AG_GetStringCopy(agConfig, "save-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "save-path");
 	
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
-		    _("Data load path: "));
+		tbox = AG_TextboxNew(tab, 0, _("Data load path: "));
 		AG_GetStringCopy(agConfig, "load-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "load-path");
 	
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Font path: "));
+		tbox = AG_TextboxNew(tab, 0, _("Font path: "));
 		AG_GetStringCopy(agConfig, "font-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
 		
-		tbox = AG_TextboxNew(tab, AG_TEXTBOX_HFILL, _("Den path: "));
+		tbox = AG_TextboxNew(tab, 0, _("Den path: "));
 		AG_GetStringCopy(agConfig, "den-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "den-path");
@@ -361,7 +340,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 			    "%p", hsv);
 		}
 		
-		lbl = AG_LabelNewStatic(tab, 0,
+		lbl = AG_LabelNew(tab, 0,
 		    _("Warning: Some color changes will not "
 		      "take effect until %s is restarted."), agProgName);
 		AG_LabelSetPaddingLeft(lbl, 10);
@@ -380,34 +359,24 @@ DEV_ConfigWindow(AG_Config *cfg)
 	tab = AG_NotebookAddTab(nb, _("RCS"), AG_BOX_VERT);
 	{
 		AG_Textbox *tb;
-		AG_Spinbutton *sb;
 		AG_Box *box;
-		AG_Checkbox *cb;
 
-		cb = AG_CheckboxNew(tab, 0, _("Enable RCS"));
-		AG_WidgetBindInt(cb,"state", &agRcsMode);
+		AG_CheckboxNewInt(tab, 0, _("Enable RCS"), &agRcsMode);
 
 		AG_SpacerNewHoriz(tab);
 
-		tb = AG_TextboxNew(tab, AG_TEXTBOX_HFILL,
-		    _("Server hostname: "));
+		tb = AG_TextboxNew(tab, 0, _("Host: "));
 		AG_TextboxBindUTF8(tb, agRcsHostname, sizeof(agRcsHostname));
-	
-		sb = AG_SpinbuttonNew(tab, 0, _("Server port: "));
-		AG_WidgetBindUint(sb,"value", &agRcsPort);
-
+		AG_NumericalNewUint(tab, 0, NULL, _("Port: "), &agRcsPort);
 		AG_SeparatorNewHoriz(tab);
 
-		box = AG_BoxNew(tab, AG_BOX_HORIZ, AG_BOX_HFILL|
-				                   AG_BOX_HOMOGENOUS);
+		box = AG_BoxNewHoriz(tab, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 		{
-			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL,
-			    _("Username: "));
+			tb = AG_TextboxNew(box, 0, _("Username: "));
 			AG_TextboxBindUTF8(tb, agRcsUsername,
 			    sizeof(agRcsUsername));
 
-			tb = AG_TextboxNew(box, AG_TEXTBOX_HFILL,
-			    _("Password: "));
+			tb = AG_TextboxNew(box, 0, _("Password: "));
 			AG_TextboxSetPassword(tb, 1);
 			AG_TextboxBindUTF8(tb, agRcsPassword,
 			    sizeof(agRcsPassword));
@@ -418,8 +387,8 @@ DEV_ConfigWindow(AG_Config *cfg)
 #ifdef DEBUG
 	tab = AG_NotebookAddTab(nb, _("Debug"), AG_BOX_VERT);
 	{
-		cbox = AG_CheckboxNew(tab, 0, _("Enable debugging"));
-		AG_WidgetBindInt(cbox,"state", &agDebugLvl);
+		AG_NumericalNewIntR(tab, 0, NULL, _("Debug level: "),
+		    &agDebugLvl, 0, 255);
 	}
 #endif
 

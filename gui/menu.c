@@ -289,8 +289,9 @@ Attached(AG_Event *event)
 	AG_Window *pwin;
 
 	/* Adjust the top padding of the parent window if any. */
-	if ((pwin = AG_WidgetParentWindow(pwid)) != NULL)
+	if ((pwin = AG_WidgetParentWindow(pwid)) != NULL) {
 		AG_WindowSetPadding(pwin, -1, -1, 0, pwin->bPad);
+	}
 }
 
 /* Generic constructor for menu items. Menu must be locked. */
@@ -367,7 +368,7 @@ Init(void *obj)
 
 	WIDGET(m)->flags |= AG_WIDGET_UNFOCUSED_MOTION|
 	                    AG_WIDGET_UNFOCUSED_BUTTONUP|
-	                    AG_WIDGET_IGNORE_PADDING;
+	                    AG_WIDGET_NOSPACING;
 
 	m->flags = 0;
 	m->lPad = 5;

@@ -61,6 +61,17 @@ AG_SliderNewInt(void *parent, enum ag_slider_type type, Uint flags,
 	return (sl);
 }
 AG_Slider *
+AG_SliderNewIntR(void *parent, enum ag_slider_type type, Uint flags,
+    int *val, int min, int max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindInt(sl, "value", val); }
+	AG_WidgetSetInt(sl, "min", min);
+	AG_WidgetSetInt(sl, "max", max);
+	return (sl);
+}
+
+AG_Slider *
 AG_SliderNewUint(void *parent, enum ag_slider_type type, Uint flags,
     Uint *val, Uint *min, Uint *max)
 {
@@ -68,6 +79,16 @@ AG_SliderNewUint(void *parent, enum ag_slider_type type, Uint flags,
 	if (val != NULL) { AG_WidgetBindUint(sl, "value", val); }
 	if (min != NULL) { AG_WidgetBindUint(sl, "min", min); }
 	if (max != NULL) { AG_WidgetBindUint(sl, "max", max); }
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewUintR(void *parent, enum ag_slider_type type, Uint flags,
+    Uint *val, Uint min, Uint max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindUint(sl, "value", val); }
+	AG_WidgetSetUint(sl, "min", min);
+	AG_WidgetSetUint(sl, "max", max);
 	return (sl);
 }
 
@@ -82,6 +103,17 @@ AG_SliderNewUint8(void *parent, enum ag_slider_type type, Uint flags,
 	return (sl);
 }
 AG_Slider *
+AG_SliderNewUint8R(void *parent, enum ag_slider_type type, Uint flags,
+    Uint8 *val, Uint8 min, Uint8 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindUint8(sl, "value", val); }
+	AG_WidgetSetUint8(sl, "min", min);
+	AG_WidgetSetUint8(sl, "max", max);
+	return (sl);
+}
+
+AG_Slider *
 AG_SliderNewSint8(void *parent, enum ag_slider_type type, Uint flags,
     Sint8 *val, Sint8 *min, Sint8 *max)
 {
@@ -89,6 +121,16 @@ AG_SliderNewSint8(void *parent, enum ag_slider_type type, Uint flags,
 	if (val != NULL) { AG_WidgetBindSint8(sl, "value", val); }
 	if (min != NULL) { AG_WidgetBindSint8(sl, "min", min); }
 	if (max != NULL) { AG_WidgetBindSint8(sl, "max", max); }
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewSint8R(void *parent, enum ag_slider_type type, Uint flags,
+    Sint8 *val, Sint8 min, Sint8 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindSint8(sl, "value", val); }
+	AG_WidgetSetSint8(sl, "min", min);
+	AG_WidgetSetSint8(sl, "max", max);
 	return (sl);
 }
 
@@ -103,6 +145,17 @@ AG_SliderNewUint16(void *parent, enum ag_slider_type type, Uint flags,
 	return (sl);
 }
 AG_Slider *
+AG_SliderNewUint16R(void *parent, enum ag_slider_type type, Uint flags,
+    Uint16 *val, Uint16 min, Uint16 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindUint16(sl, "value", val); }
+	AG_WidgetSetUint16(sl, "min", min);
+	AG_WidgetSetUint16(sl, "max", max);
+	return (sl);
+}
+
+AG_Slider *
 AG_SliderNewSint16(void *parent, enum ag_slider_type type, Uint flags,
     Sint16 *val, Sint16 *min, Sint16 *max)
 {
@@ -110,6 +163,16 @@ AG_SliderNewSint16(void *parent, enum ag_slider_type type, Uint flags,
 	if (val != NULL) { AG_WidgetBindSint16(sl, "value", val); }
 	if (min != NULL) { AG_WidgetBindSint16(sl, "min", min); }
 	if (max != NULL) { AG_WidgetBindSint16(sl, "max", max); }
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewSint16R(void *parent, enum ag_slider_type type, Uint flags,
+    Sint16 *val, Sint16 min, Sint16 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindSint16(sl, "value", val); }
+	AG_WidgetSetSint16(sl, "min", min);
+	AG_WidgetSetSint16(sl, "max", max);
 	return (sl);
 }
 
@@ -124,6 +187,17 @@ AG_SliderNewUint32(void *parent, enum ag_slider_type type, Uint flags,
 	return (sl);
 }
 AG_Slider *
+AG_SliderNewUint32R(void *parent, enum ag_slider_type type, Uint flags,
+    Uint32 *val, Uint32 min, Uint32 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindUint32(sl, "value", val); }
+	AG_WidgetSetUint32(sl, "min", min);
+	AG_WidgetSetUint32(sl, "max", max);
+	return (sl);
+}
+
+AG_Slider *
 AG_SliderNewSint32(void *parent, enum ag_slider_type type, Uint flags,
     Sint32 *val, Sint32 *min, Sint32 *max)
 {
@@ -131,6 +205,16 @@ AG_SliderNewSint32(void *parent, enum ag_slider_type type, Uint flags,
 	if (val != NULL) { AG_WidgetBindSint32(sl, "value", val); }
 	if (min != NULL) { AG_WidgetBindSint32(sl, "min", min); }
 	if (max != NULL) { AG_WidgetBindSint32(sl, "max", max); }
+	return (sl);
+}
+AG_Slider *
+AG_SliderNewSint32R(void *parent, enum ag_slider_type type, Uint flags,
+    Sint32 *val, Sint32 min, Sint32 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindSint32(sl, "value", val); }
+	AG_WidgetSetSint32(sl, "min", min);
+	AG_WidgetSetSint32(sl, "max", max);
 	return (sl);
 }
 
@@ -146,6 +230,17 @@ AG_SliderNewUint64(void *parent, enum ag_slider_type type, Uint flags,
 	return (sl);
 }
 AG_Slider *
+AG_SliderNewUint64R(void *parent, enum ag_slider_type type, Uint flags,
+    Uint64 *val, Uint64 min, Uint64 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindUint64(sl, "value", val); }
+	AG_WidgetSetUint64(sl, "min", min);
+	AG_WidgetSetUint64(sl, "max", max);
+	return (sl);
+}
+
+AG_Slider *
 AG_SliderNewSint64(void *parent, enum ag_slider_type type, Uint flags,
     Sint64 *val, Sint64 *min, Sint64 *max)
 {
@@ -153,6 +248,17 @@ AG_SliderNewSint64(void *parent, enum ag_slider_type type, Uint flags,
 	if (val != NULL) { AG_WidgetBindSint64(sl, "value", val); }
 	if (min != NULL) { AG_WidgetBindSint64(sl, "min", min); }
 	if (max != NULL) { AG_WidgetBindSint64(sl, "max", max); }
+	return (sl);
+}
+
+AG_Slider *
+AG_SliderNewSint64R(void *parent, enum ag_slider_type type, Uint flags,
+    Sint64 *val, Sint64 min, Sint64 max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindSint64(sl, "value", val); }
+	AG_WidgetSetSint64(sl, "min", min);
+	AG_WidgetSetSint64(sl, "max", max);
 	return (sl);
 }
 #endif /* HAVE_64BIT */
@@ -169,6 +275,17 @@ AG_SliderNewFlt(void *parent, enum ag_slider_type type, Uint flags,
 }
 
 AG_Slider *
+AG_SliderNewFltR(void *parent, enum ag_slider_type type, Uint flags,
+    float *val, float min, float max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindFloat(sl, "value", val); }
+	AG_WidgetSetFloat(sl, "min", min);
+	AG_WidgetSetFloat(sl, "max", max);
+	return (sl);
+}
+
+AG_Slider *
 AG_SliderNewDbl(void *parent, enum ag_slider_type type, Uint flags,
     double *val, double *min, double *max)
 {
@@ -176,6 +293,17 @@ AG_SliderNewDbl(void *parent, enum ag_slider_type type, Uint flags,
 	if (val != NULL) { AG_WidgetBindDouble(sl, "value", val); }
 	if (min != NULL) { AG_WidgetBindDouble(sl, "min", min); }
 	if (max != NULL) { AG_WidgetBindDouble(sl, "max", max); }
+	return (sl);
+}
+
+AG_Slider *
+AG_SliderNewDblR(void *parent, enum ag_slider_type type, Uint flags,
+    double *val, double min, double max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindDouble(sl, "value", val); }
+	AG_WidgetSetDouble(sl, "min", min);
+	AG_WidgetSetDouble(sl, "max", max);
 	return (sl);
 }
 
@@ -188,6 +316,17 @@ AG_SliderNewLongDbl(void *parent, enum ag_slider_type type, Uint flags,
 	if (val != NULL) { AG_WidgetBindLongDouble(sl, "value", val); }
 	if (min != NULL) { AG_WidgetBindLongDouble(sl, "min", min); }
 	if (max != NULL) { AG_WidgetBindLongDouble(sl, "max", max); }
+	return (sl);
+}
+
+AG_Slider *
+AG_SliderNewLongDblR(void *parent, enum ag_slider_type type, Uint flags,
+    long double *val, long double min, long double max)
+{
+	AG_Slider *sl = AG_SliderNew(parent, type, flags);
+	if (val != NULL) { AG_WidgetBindLongDouble(sl, "value", val); }
+	AG_WidgetSetLongDouble(sl, "min", min);
+	AG_WidgetSetLongDouble(sl, "max", max);
 	return (sl);
 }
 #endif /* HAVE_LONG_DOUBLE */

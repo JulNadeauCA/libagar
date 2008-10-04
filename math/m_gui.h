@@ -7,8 +7,8 @@
 #if defined(QUAD_PRECISION)
 
 # define M_WIDGET_REAL		 AG_WIDGET_LONG_DOUBLE
-# define M_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_LONG_DOUBLE,\
-                                               (p))
+# define M_WidgetBindReal(w,n,p) AG_WidgetBindLongDouble((w),(n),(p))
+# define M_WidgetSetReal(w,n,v)	 AG_WidgetSetLongDouble((w),(n),(v))
 # define M_WidgetReal(w,n)	 AG_WidgetLongDouble((w),(n))
 # define M_NumericalNewReal	 AG_NumericalNewLongDbl
 # define M_NumericalNewRealR	 AG_NumericalNewLongDblR
@@ -25,7 +25,8 @@
 #elif defined(DOUBLE_PRECISION)
 
 # define M_WIDGET_REAL		 AG_WIDGET_DOUBLE
-# define M_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_DOUBLE,(p))
+# define M_WidgetBindReal(w,n,p) AG_WidgetBindDouble((w),(n),(p))
+# define M_WidgetSetReal(w,n,v)	 AG_WidgetSetDouble((w),(n),(v))
 # define M_WidgetReal(w,n)	 AG_WidgetDouble((w),(n))
 # define M_NumericalNewReal	 AG_NumericalNewDbl
 # define M_NumericalNewRealR	 AG_NumericalNewDblR
@@ -42,7 +43,8 @@
 #elif defined(SINGLE_PRECISION)
 
 # define M_WIDGET_REAL		 AG_WIDGET_FLOAT
-# define M_WidgetBindReal(w,n,p) AG_WidgetBind((w),(n),AG_WIDGET_FLOAT,(p))
+# define M_WidgetBindReal(w,n,p) AG_WidgetBindFloat((w),(n),(p))
+# define M_WidgetSetReal(w,n,v)	 AG_WidgetSetFloat((w),(n),(v))
 # define M_WidgetReal(w,n)	 AG_WidgetFloat((w),(n))
 # define M_NumericalNewReal	 AG_NumericalNewFlt
 # define M_NumericalNewRealR	 AG_NumericalNewFltR
@@ -72,12 +74,6 @@
 #define M_NumericalGetTime	 AG_NumericalGetSint32
 
 __BEGIN_DECLS
-AG_FSpinbutton	*M_SpinReal(void *, const char *, M_Real *);
-AG_FSpinbutton	*M_SpinRealInc(void *, const char *, M_Real *, M_Real);
-AG_FSpinbutton	*M_SpinFloat(void *, const char *, float *);
-AG_FSpinbutton	*M_SpinDouble(void *, const char *, double *);
-AG_Spinbutton	*M_SpinInt(void *, const char *, int *);
-
 void	*M_EditVector3(void *, const char *, M_Vector3 *);
 void	*M_EditVector4(void *, const char *, M_Vector4 *);
 void	*M_EditMatrix44(void *, const char *, M_Matrix44 *);

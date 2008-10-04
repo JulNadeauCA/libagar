@@ -71,13 +71,8 @@ Init(void *p)
 static void
 EditPane(void *p, void *con)
 {
-	AG_Checkbox *cb;
-
-	cb = AG_CheckboxNew(con, 0, _("Erase all elements"));
-	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &erase_all);
-	
-	cb = AG_CheckboxNew(con, 0, _("Apply to all layers"));
-	AG_WidgetBind(cb, "state", AG_WIDGET_INT, &all_layers);
+	AG_CheckboxNewInt(con, 0, _("Erase all elements"), &erase_all);
+	AG_CheckboxNewInt(con, 0, _("Apply to all layers"), &all_layers);
 }
 
 static int

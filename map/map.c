@@ -47,7 +47,7 @@
 #include <gui/statusbar.h>
 #include <gui/textbox.h>
 #include <gui/menu.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/mspinbutton.h>
 #include <gui/notebook.h>
 #include <gui/scrollbar.h>
@@ -2152,8 +2152,6 @@ EditMapParameters(AG_Event *event)
 	AG_Window *pwin = AG_PTR(2);
 	AG_Window *win;
 	AG_MSpinbutton *msb;
-	AG_Spinbutton *sb;
-	AG_Checkbox *cbox;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 
@@ -2179,8 +2177,8 @@ EditMapParameters(AG_Event *event)
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &m->origin.y);
 		AG_MSpinbuttonSetRange(msb, 0, MAP_WIDTH_MAX);
 
-		sb = AG_SpinbuttonNew(ntab, 0, _("Origin layer: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &m->origin.layer);
+		AG_NumericalNewIntR(ntab, 0, NULL,
+		    _("Origin layer: "), &m->origin.layer, 0, 255);
 	}
 
 	ntab = AG_NotebookAddTab(nb, _("View"), AG_BOX_VERT);
@@ -2196,11 +2194,11 @@ EditMapParameters(AG_Event *event)
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &AGMCAM(mv).x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &AGMCAM(mv).y);
 		
-		sb = AG_SpinbuttonNew(ntab, 0, _("Zoom factor: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &AGMCAM(mv).zoom);
+		AG_NumericalNewIntR(ntab, 0, NULL,
+		    _("Zoom factor: "), &AGMCAM(mv).zoom, 1, 100);
 		
-		sb = AG_SpinbuttonNew(ntab, 0, _("Tile size: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT, &AGMTILESZ(mv));
+		AG_NumericalNewInt(ntab, 0, "px",
+		    _("Tile size: "), &AGMTILESZ(mv));
 	
 		msb = AG_MSpinbuttonNew(ntab, 0, ",",
 		    _("Display offset (view): "));
@@ -2215,8 +2213,8 @@ EditMapParameters(AG_Event *event)
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 
-		cbox = AG_CheckboxNew(ntab, 0, _("Smooth scaling"));
-		AG_WidgetBind(cbox, "state", AG_WIDGET_INT, &mapSmoothScaling);
+		AG_CheckboxNewInt(ntab, 0, _("Smooth scaling"),
+		    &mapSmoothScaling);
 		
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 		
@@ -2596,7 +2594,6 @@ EditItemProps(AG_Event *event)
 	int yoffs = AG_INT(5);
 	MAP_Item *r;
 	AG_Window *pwin, *win;
-	AG_Spinbutton *sb;
 	AG_MSpinbutton *msb;
 
 	if ((r = MAP_ItemLocate(mv->map, mv->mouse.xmap, mv->mouse.ymap,
@@ -2608,40 +2605,29 @@ EditItemProps(AG_Event *event)
 	AG_WindowSetCaption(win, _("Map item"));
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 1);
 
-	AG_LabelNewStatic(win, 0, _("Type: %s"),
+	AG_LabelNew(win, 0, _("Type: %s"),
 	    (r->type == MAP_ITEM_TILE) ? _("Tile") :
 	    (r->type == MAP_ITEM_ANIM) ? _("Animation") :
 	    (r->type == MAP_ITEM_WARP) ? _("Warp point") : "?");
-
 	msb = AG_MSpinbuttonNew(win, 0, ",", _("Centering: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.xcenter);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.ycenter);
-	
 	msb = AG_MSpinbuttonNew(win, 0, ",", _("Motion: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.xmotion);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.ymotion);
-	
 	msb = AG_MSpinbuttonNew(win, 0, ",", _("Origin: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.xorigin);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.yorigin);
-	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
-	
 	msb = AG_MSpinbuttonNew(win, 0, ",", _("Source coords: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_SINT16, &r->r_gfx.rs.x);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_SINT16, &r->r_gfx.rs.y);
-	
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Source dims: "));
 	AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT16, &r->r_gfx.rs.w);
 	AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT16, &r->r_gfx.rs.h);
-
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
-	
-	sb = AG_SpinbuttonNew(win, 0, _("Layer: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_UINT8, &r->layer);
-
-	sb = AG_SpinbuttonNew(win, 0, _("Friction: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_SINT8, &r->friction);
+	AG_NumericalNewUint8(win, 0, NULL, _("Layer: "), &r->layer);
+	AG_NumericalNewUint8(win, 0, NULL, _("Friction: "), &r->friction);
 
 	if ((pwin = AG_WidgetParentWindow(mv)) != NULL) {
 		AG_WindowAttach(pwin, win);
@@ -2969,7 +2955,7 @@ Edit(void *p)
 			    m, mv->layers_tl);
 
 			hBox = AG_BoxNew(ntab, AG_BOX_HORIZ, AG_BOX_HFILL);
-			tb = AG_TextboxNew(hBox, AG_TEXTBOX_HFILL, _("Name: "));
+			tb = AG_TextboxNew(hBox, 0, _("Name: "));
 			AG_SetEvent(tb, "textbox-return",
 			    PushLayer, "%p, %p", m, tb);
 			AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Push"),

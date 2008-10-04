@@ -109,12 +109,6 @@ package body agar.gui.widget.button is
        fmt    : cs.chars_ptr;
        text   : cs.chars_ptr);
     pragma import (c, text, "AG_ButtonText");
-
-    procedure text_no_copy
-      (button : button_access_t;
-       fmt    : cs.chars_ptr;
-       text   : cs.chars_ptr);
-    pragma import (c, text_no_copy, "AG_ButtonTextNODUP");
   end cbinds;
 
   --

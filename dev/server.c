@@ -47,7 +47,6 @@
 #include <gui/box.h>
 #include <gui/tlist.h>
 #include <gui/textbox.h>
-#include <gui/fspinbutton.h>
 #include <gui/mfspinbutton.h>
 #include <gui/statusbar.h>
 #include <gui/menu.h>
@@ -410,7 +409,7 @@ DEV_DebugServer(void)
 	AG_ButtonNewFn(win, AG_BUTTON_HFILL, _("Stop server"),
 	    StopServer, "%p", tl);
 
-	AG_LabelNewStatic(win, 0, _("Connected clients:"));
+	AG_LabelNewString(win, 0, _("Connected clients:"));
 	AG_ObjectAttach(win, tl);
 	return (win);
 }

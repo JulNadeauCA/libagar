@@ -314,37 +314,34 @@ Edit(void *p)
 	User *u = p;
 	AG_Window *win;
 	AG_Textbox *tb;
-	AG_Checkbox *cb;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "User: %s", AGOBJECT(u)->name);
 	AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 1);
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Name: ");
+	tb = AG_TextboxNew(win, 0, "Name: ");
 	AG_TextboxBindUTF8(tb, u->name, sizeof(u->name));
 	AG_WidgetFocus(tb);
 
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Password: ");
+	tb = AG_TextboxNew(win, 0, "Password: ");
 	AG_TextboxSetPassword(tb, 1);
 	AG_TextboxBindUTF8(tb, u->pass, sizeof(u->pass));
 	
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Real name: ");
+	tb = AG_TextboxNew(win, 0, "Real name: ");
 	AG_TextboxBindUTF8(tb, u->real_name, sizeof(u->real_name));
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "E-mail address: ");
+	tb = AG_TextboxNew(win, 0, "E-mail address: ");
 	AG_TextboxBindUTF8(tb, u->email, sizeof(u->email));
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Language (ISO639): ");
+	tb = AG_TextboxNew(win, 0, "Language (ISO639): ");
 	AG_TextboxBindUTF8(tb, u->lang, sizeof(u->lang));
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Country (ISO3166): ");
+	tb = AG_TextboxNew(win, 0, "Country (ISO3166): ");
 	AG_TextboxBindUTF8(tb, u->country, sizeof(u->country));
-	tb = AG_TextboxNew(win, AG_TEXTBOX_HFILL, "Comments: ");
+	tb = AG_TextboxNew(win, 0, "Comments: ");
 	AG_TextboxBindUTF8(tb, u->comments, sizeof(u->comments));
 
-	cb = AG_CheckboxNew(win, 0, "Write access");
-	AG_WidgetBindFlag(cb, "state", &u->flags, USER_WRITE);
-	cb = AG_CheckboxNew(win, 0, "Administrative access");
-	AG_WidgetBindFlag(cb, "state", &u->flags, USER_ADMIN);
-	cb = AG_CheckboxNew(win, 0, "Send e-mail notices");
-	AG_WidgetBindFlag(cb, "state", &u->flags, USER_EMAIL_NOTICES);
+	AG_CheckboxNewFlag(win, 0, "Write access", &u->flags, USER_WRITE);
+	AG_CheckboxNewFlag(win, 0, "Admin access", &u->flags, USER_ADMIN);
+	AG_CheckboxNewFlag(win, 0, "Send e-mail notices",
+	    &u->flags, USER_EMAIL_NOTICES);
 	return (win);
 }
 

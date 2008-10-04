@@ -30,8 +30,7 @@
 #include <gui/window.h>
 #include <gui/box.h>
 #include <gui/hsvpal.h>
-#include <gui/fspinbutton.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 #include <gui/mspinbutton.h>
 #include <gui/checkbox.h>
 #include <gui/combo.h>
@@ -212,28 +211,24 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 
 	ntab = AG_NotebookAddTab(nb, _("Settings"), AG_BOX_VERT);
 	{
-		AG_FSpinbutton *fsb;
-		AG_Spinbutton *sb;
 		AG_MSpinbutton *msb;
+		AG_Numerical *num;
 
-		fsb = AG_FSpinbuttonNew(ntab, 0, NULL, _("Scale: "));
-		AG_WidgetBind(fsb, "value", AG_WIDGET_FLOAT,
-		    &tel->tel_sketch.scale);
-		AG_FSpinbuttonSetMin(fsb, 0.0001);
-		AG_FSpinbuttonSetIncrement(fsb, 0.1);
-		AG_SetEvent(fsb, "fspinbutton-changed", UpdateScale, "%p,%p",
-		    tv, tel);
+		num = AG_NumericalNewFltR(ntab, 0, NULL, _("Scale: "),
+		    &tel->tel_sketch.scale, 1e-4, 1e4);
+		AG_NumericalSetIncrement(num, 0.1);
+		AG_SetEvent(num, "numerical-changed",
+		    UpdateScale, "%p,%p", tv, tel);
 		
 		msb = AG_MSpinbuttonNew(ntab, 0, ",", _("Coordinates: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &tel->tel_sketch.x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &tel->tel_sketch.y);
-		AG_SetEvent(fsb, "fspinbutton-changed", UpdateScale, "%p,%p",
-		    tv, tel);
+
+		AG_SetEvent(num, "numerical-changed",
+		    UpdateScale, "%p,%p", tv, tel);
 		
-		sb = AG_SpinbuttonNew(ntab, 0, _("Overall alpha: "));
-		AG_SpinbuttonSetRange(sb, 0, 255);
-		AG_WidgetBind(sb, "value", AG_WIDGET_INT,
-		    &tel->tel_sketch.alpha);
+		AG_NumericalNewIntR(ntab, 0, NULL, _("Overall alpha: "),
+		    &tel->tel_sketch.alpha, 0, 255);
 	}
 
 	return (win);
@@ -265,8 +260,6 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
 	const VG_ElementOps *ops;
-	AG_Radio *rad;
-	AG_Spinbutton *sb;
 	AG_Combo *com;
 	AG_Label *lbl;
 	
@@ -278,14 +271,12 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_RIGHT, 0);
 
 	ops = vgElementTypes[vge->type];
-	AG_LabelNewStatic(win, 0, _("Element type: %s"), ops->name);
+	AG_LabelNew(win, 0, _("Element type: %s"), ops->name);
 	lbl = AG_LabelNewPolled(win, AG_LABEL_HFILL, _("Vertices: %u"),
 	    &vge->nvtx);
 	AG_LabelSizeHint(lbl, 1, _("Vertices: 00000000"));
 	
-	sb = AG_SpinbuttonNew(win, 0, _("Layer: "));
-	AG_WidgetBind(sb, "value", AG_WIDGET_INT, &vge->layer);
-	AG_SpinbuttonSetMin(sb, 0);
+	AG_NumericalNewIntR(win, 0, NULL, _("Layer: "), &vge->layer, 0, 255);
 
 	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL, _("Style: "));
 	AG_SetEvent(com->list, "tlist-poll", PollStyles, "%p", vg);
@@ -315,27 +306,20 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 			NULL
 		};
 	
-		AG_LabelNewStaticString(ntab, 0, _("Line style: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, line_styles);
-		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->line_st.style);
+		AG_LabelNewString(ntab, 0, _("Line style: "));
+		AG_RadioNewUint(ntab, AG_RADIO_HFILL, line_styles,
+		    &vge->line_st.style);
 		
-		AG_LabelNewStaticString(ntab, 0, _("Endpoint style: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, endpoint_styles);
-		AG_WidgetBind(rad, "value", AG_WIDGET_INT,
+		AG_LabelNewString(ntab, 0, _("Endpoint style: "));
+		AG_RadioNewUint(ntab, AG_RADIO_HFILL, endpoint_styles,
 		    &vge->line_st.endpoint_style);
 
-		sb = AG_SpinbuttonNew(ntab, 0, _("Stipple pattern: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_UINT16,
+		AG_NumericalNewUint16(ntab, 0, NULL, _("Stipple pattern: "),
 		    &vge->line_st.stipple);
-		
-		sb = AG_SpinbuttonNew(ntab, 0, _("Thickness: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8,
-		    &vge->line_st.thickness);
-		AG_SpinbuttonSetMin(sb, 1);
-		
-		sb = AG_SpinbuttonNew(ntab, 0, _("Miter length: "));
-		AG_WidgetBind(sb, "value", AG_WIDGET_UINT8,
-		    &vge->line_st.miter_len);
+		AG_NumericalNewUint8R(ntab, 0, "px", _("Thickness: "),
+		    &vge->line_st.thickness, 1, 20);
+		AG_NumericalNewUint8R(ntab, 0, "px", _("Miter length: "),
+		    &vge->line_st.miter_len, 1, 20);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Filling style"), AG_BOX_VERT);
 	{
@@ -347,11 +331,11 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		};
 		RG_TextureSelector *texsel;
 
-		AG_LabelNewStaticString(ntab, 0, _("Filling style: "));
-		rad = AG_RadioNew(ntab, AG_RADIO_HFILL, fill_styles);
-		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &vge->fill_st.style);
+		AG_LabelNewString(ntab, 0, _("Filling style: "));
+		AG_RadioNewUint(ntab, AG_RADIO_HFILL, fill_styles,
+		    &vge->fill_st.style);
 			
-		AG_LabelNewStaticString(ntab, 0, _("Texture: "));
+		AG_LabelNewString(ntab, 0, _("Texture: "));
 		texsel = RG_TextureSelectorNew(ntab, tv->ts, 0);
 		WIDGET(texsel)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
 		AG_WidgetBindString(texsel, "texture-name",

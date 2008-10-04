@@ -53,23 +53,18 @@
 
 AG_Style agStyleDefault;
 
-/* Background for windows that don't have NOBACKGROUND set. */
+/* Background and borders for windows. */
 static void
-WindowBackground(AG_Window *win)
-{
-	int hBar = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
-
-	AG_DrawRectFilled(win,
-	    AG_RECT(0, hBar-1, WIDTH(win), HEIGHT(win)-hBar),
-	    AG_COLOR(WINDOW_BG_COLOR));
-}
-
-/* Window borders / resize controls */
-static void
-WindowBorders(AG_Window *win)
+Window(AG_Window *win)
 {
 	AG_Rect r;
+	int hBar = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
 
+	if (!(win->flags & AG_WINDOW_NOBACKGROUND)) {
+		AG_DrawRectFilled(win,
+		    AG_RECT(0, hBar, WIDTH(win), HEIGHT(win)-hBar),
+		    AG_COLOR(WINDOW_BG_COLOR));
+	}
 	if (win->wBorderBot > 0) {
 		r.x = 0;
 		r.y = HEIGHT(win) - win->wBorderBot;
@@ -96,9 +91,14 @@ WindowBorders(AG_Window *win)
 			AG_DrawBox(win, r, 1, AG_COLOR(WINDOW_BORDER_COLOR));
 		}
 	}
-	
 	if (win->wBorderSide > 0) {
-		/* ... */
+		r.x = 0;
+		r.y = hBar;
+		r.w = win->wBorderSide;
+		r.h = HEIGHT(win) - win->wBorderBot - hBar;
+		AG_DrawBox(win, r, 1, AG_COLOR(WINDOW_BORDER_COLOR));
+		r.x = WIDTH(win) - win->wBorderSide;
+		AG_DrawBox(win, r, 1, AG_COLOR(WINDOW_BORDER_COLOR));
 	}
 }
 
@@ -659,8 +659,7 @@ AG_Style agStyleDefault = {
 	{ 0, 0 },
 	NULL,			/* init */
 	NULL,			/* destroy */
-	WindowBackground,
-	WindowBorders,
+	Window,
 	TitlebarBackground,
 	ButtonBackground,
 	ButtonTextOffset,

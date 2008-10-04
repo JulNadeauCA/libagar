@@ -29,7 +29,6 @@
 #include <gui/box.h>
 #include <gui/radio.h>
 #include <gui/hsvpal.h>
-#include <gui/fspinbutton.h>
 #include <gui/label.h>
 
 #include "tileset.h"

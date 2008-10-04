@@ -31,8 +31,7 @@
 
 #include <gui/cursors.h>
 #include <gui/window.h>
-#include <gui/spinbutton.h>
-#include <gui/fspinbutton.h>
+#include <gui/numerical.h>
 #include <gui/mspinbutton.h>
 #include <gui/checkbox.h>
 #include <gui/hsvpal.h>
@@ -355,7 +354,7 @@ CreateBrushDlg(AG_Event *event)
 	AG_WindowSetCaption(win, _("New %s brush"), px->name);
 	AG_WindowSetPosition(win, AG_WINDOW_CENTER, 1);
 
-	tb_name = AG_TextboxNew(NULL, AG_TEXTBOX_HFILL, _("Name: "));
+	tb_name = AG_TextboxNew(NULL, 0, _("Name: "));
 	cb_oneshot = AG_CheckboxNew(NULL, 0, _("One-shot"));
 	AG_WidgetFocus(tb_name);
 
@@ -363,7 +362,7 @@ CreateBrushDlg(AG_Event *event)
 	AG_BoxSetPadding(bo, 0);
 	AG_BoxSetSpacing(bo, 0);
 	{
-		AG_LabelNewStaticString(bo, 0, _("Source pixmap:"));
+		AG_LabelNewString(bo, 0, _("Source pixmap:"));
 
 		tl = AG_TlistNew(bo, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistSetItemHeight(tl, RG_TILESZ);
@@ -441,20 +440,18 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 {
 	RG_Pixmap *px = tel->tel_pixmap.px;
 	AG_Window *win;
-	AG_Checkbox *cb;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
+	AG_HSVPal *pal;
+	AG_Tlist *tl;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Pixmap %s"), px->name);
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
-
 	ntab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
-		AG_HSVPal *pal;
-
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
 		AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER,
 		    &tv->ts->fmt);
@@ -464,14 +461,12 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_WidgetBind(pal, "alpha", AG_WIDGET_FLOAT, &px->a);
 	
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
-		cb = AG_CheckboxNew(ntab, 0, _("Source pixmap only"));
-		AG_WidgetBind(cb, "state", AG_WIDGET_BOOL, &pixmap_source);
-	}
 
+		AG_CheckboxNewInt(ntab, 0, _("Source pixmap only"),
+		    &pixmap_source);
+	}
 	ntab = AG_NotebookAddTab(nb, _("Brushes"), AG_BOX_VERT);
 	{
-		AG_Tlist *tl;
-
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
 		AG_TlistSetItemHeight(tl, RG_TILESZ);
 		AG_SetEvent(tl, "tlist-poll", PollBrushes, "%p", px);
@@ -481,7 +476,6 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_ButtonNewFn(ntab, AG_BUTTON_HFILL, _("Create new brush"),
 		    CreateBrushDlg, "%p,%p,%p", tv, px, win);
 	}
-	
 	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_VERT);
 	{
 		static const char *blend_modes[] = {
@@ -491,18 +485,13 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 			N_("Disable blending"),
 			NULL
 		};
-		AG_Radio *rad;
-		AG_Checkbox *cb;
 
-		AG_LabelNewStaticString(ntab, 0, _("Blending method:"));
-		rad = AG_RadioNew(ntab, AG_RADIO_EXPAND, blend_modes);
-		AG_WidgetBind(rad, "value", AG_WIDGET_INT, &px->blend_mode);
-
+		AG_LabelNewString(ntab, 0, _("Blending method:"));
+		AG_RadioNewUint(ntab, 0, blend_modes, &px->blend_mode);
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
-		cb = AG_CheckboxNew(ntab, 0, _("Source pixmap only"));
-		AG_WidgetBind(cb, "state", AG_WIDGET_BOOL, &pixmap_source);
+		AG_CheckboxNewInt(ntab, 0, _("Source pixmap only"),
+		    &pixmap_source);
 	}
-
 	return (win);
 }
 

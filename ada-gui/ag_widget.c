@@ -86,21 +86,9 @@ agar_widget_put_pixel32 (AG_Widget *widget, int x, int y, Uint32 color)
 }
 
 void
-agar_widget_put_pixel32_or_clip (AG_Widget *widget, int x, int y, Uint32 color)
-{
-  AG_WidgetPutPixel32OrClip (widget, x, y, color);
-}
-
-void
 agar_widget_put_pixel_rgb (AG_Widget *widget, int x, int y, Uint8 red, Uint8 green, Uint8 blue)
 {
   AG_WidgetPutPixelRGB (widget, x, y, red, green, blue);
-}
-
-void
-agar_widget_put_pixel_rgb_or_clip (AG_Widget *widget, int x, int y, Uint8 red, Uint8 green, Uint8 blue)
-{
-  AG_WidgetPutPixelRGBOrClip (widget, x, y, red, green, blue);
 }
 
 void

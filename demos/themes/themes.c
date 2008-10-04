@@ -21,8 +21,7 @@ static void
 CreateWindow(void)
 {
 	AG_Window *win;
-	AG_HBox *hbox;
-	AG_VBox *vbox;
+	AG_Box *hBox, *vBox;
 	AG_Pane *pane;
 	AG_Combo *com;
 	AG_UCombo *ucom;
@@ -68,10 +67,11 @@ CreateWindow(void)
 	}
 
 	/*
-	 * HBox is a container which aligns its children horizontally. Both
-	 * HBox and VBox are derived from the Box object.
+	 * Box is a general-purpose widget container. We use AG_BoxNewHoriz()
+	 * for horizontal widget packing.
 	 */
-	hbox = AG_HBoxNew(div1, AG_HBOX_HFILL|AG_HBOX_HOMOGENOUS);
+	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL|AG_BOX_HOMOGENOUS|
+	                            AG_BOX_FRAME);
 	{
 		/*
 		 * The Button widget is a simple push-button. It is typically
@@ -79,10 +79,10 @@ CreateWindow(void)
 		 * an boolean (integer) value or a bitmask.
 		 */
 		for (i = 0; i < 5; i++)
-			AG_ButtonNew(hbox, 0, "x");
+			AG_ButtonNew(hBox, 0, "%c", 0x41+i);
 	}
 
-	hbox = AG_HBoxNew(div1, AG_HBOX_HFILL);
+	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL);
 	{
 		/* The Radio checkbox is a group of radio buttons. */
 		{
@@ -91,17 +91,17 @@ CreateWindow(void)
 				"Radio2",
 				NULL
 			};
-			AG_RadioNew(hbox, AG_RADIO_EXPAND, radioItems);
+			AG_RadioNew(hBox, AG_RADIO_EXPAND, radioItems);
 		}
 	
-		vbox = AG_VBoxNew(hbox, 0);
+		vBox = AG_BoxNewVert(hBox, 0);
 		{
 			/*
 			 * The Checkbox widget can bind to boolean values
 			 * and bitmasks.
 			 */
-			AG_CheckboxNew(vbox, 0, "Checkbox 1");
-			AG_CheckboxNew(vbox, 0, "Checkbox 2");
+			AG_CheckboxNew(vBox, 0, "Checkbox 1");
+			AG_CheckboxNew(vBox, 0, "Checkbox 2");
 		}
 	}
 
@@ -144,7 +144,7 @@ CreateWindow(void)
 	 * Textbox is a single or multiline text edition widget. It can bind
 	 * to a fixed-size buffer and supports UTF-8.
 	 */
-	AG_TextboxNew(div1, AG_TEXTBOX_HFILL, "Enter text: ");
+	AG_TextboxNew(div1, 0, "Enter text: ");
 
 	/*
 	 * Scrollbar provides three bindings, "value", "min" and "max",

@@ -396,6 +396,7 @@ Draw(void *obj)
 	AG_WidgetDraw(fsu->input);
 	AG_WidgetDraw(fsu->incbu);
 	AG_WidgetDraw(fsu->decbu);
+	if (fsu->units != NULL) { AG_WidgetDraw(fsu->units); }
 
 	if (AG_WidgetFocused(fsu->input))
 		return;

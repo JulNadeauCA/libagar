@@ -234,9 +234,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	    rad->max_w ||
 	    a->h < rad->yPadding*2 + rad->nItems*rad->radius*2 +
 	           (rad->nItems-1)*rad->ySpacing) {
-		AG_WidgetEnableClipping(rad, AG_RECT(0, 0,
-		    a->w - rad->xPadding,
-		    a->h - rad->yPadding));
+		AG_WidgetEnableClipping(rad, AG_RECT(0,0,a->w,a->h));
 	} else {
 		AG_WidgetDisableClipping(rad);
 	}

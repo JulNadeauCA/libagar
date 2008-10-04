@@ -4,6 +4,7 @@
 #define _AGAR_WIDGET_H_
 
 #include <agar/config/have_opengl.h>
+#include <agar/config/have_long_double.h>
 
 #include <agar/gui/colors.h>
 #include <agar/gui/view.h>
@@ -111,8 +112,8 @@ typedef struct ag_widget {
 						  any other widget, regardless
 						  of focus */
 #define AG_WIDGET_UNDERSIZE		0x4000 /* Size allocation failed */
-#define AG_WIDGET_IGNORE_PADDING	0x8000 /* Ignore container padding
-					          (container-specific) */
+#define AG_WIDGET_NOSPACING		0x8000 /* Disable spacing/padding around
+						  widget (container-specific) */
 #define AG_WIDGET_UNFOCUSED_KEYDOWN	0x10000 /* All mousebuttondown events */
 #define AG_WIDGET_UNFOCUSED_KEYUP	0x20000 /* All mousebuttondown events */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
@@ -154,7 +155,8 @@ typedef struct ag_widget {
 
 #define AGWIDGET_FOREACH_CHILD(var, ob) \
 	AGOBJECT_FOREACH_CHILD(var, ob, ag_widget)
-
+#define AGWIDGET_NEXT_CHILD(var) \
+	AGOBJECT_NEXT_CHILD((var),ag_widget)
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_GUI)
 #define WIDGET(wi)			AGWIDGET(wi)
@@ -168,6 +170,7 @@ typedef struct ag_widget {
 #define WIDTH(p)			AGWIDGET(p)->w
 #define HEIGHT(p)			AGWIDGET(p)->h
 #define WIDGET_FOREACH_CHILD(var,ob)	AGWIDGET_FOREACH_CHILD(var,ob)
+#define WIDGET_NEXT_CHILD(var)		AGWIDGET_NEXT_CHILD(var)
 #endif
 
 #define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
@@ -311,6 +314,7 @@ int AG_WidgetInheritSizeAllocate(void *, const AG_SizeAlloc *);
  */
 
 #ifdef THREADS
+/* Acquire/release lock on a widget binding. */
 static __inline__ void
 AG_WidgetLockBinding(AG_WidgetBinding *bind)
 {
@@ -328,6 +332,7 @@ AG_WidgetUnlockBinding(AG_WidgetBinding *bind)
 #define AG_WidgetUnlockBinding(b)
 #endif /* THREADS */
 
+/* Set the widget state. */
 static __inline__ void
 AG_WidgetEnable(void *p)
 {
@@ -338,7 +343,6 @@ AG_WidgetEnable(void *p)
 	}
 	AG_ObjectUnlock(p);
 }
-
 static __inline__ void
 AG_WidgetDisable(void *p)
 {
@@ -350,6 +354,7 @@ AG_WidgetDisable(void *p)
 	AG_ObjectUnlock(p);
 }
 
+/* Test whether view coordinates x,y lie in widget's allocated space. */
 static __inline__ int
 AG_WidgetArea(void *p, int x, int y)
 {
@@ -359,6 +364,7 @@ AG_WidgetArea(void *p, int x, int y)
 	        x < wid->cx+wid->w && y < wid->cy+wid->h);
 }
 
+/* Test whether widget coordinates x,y lie in widget's allocated space. */
 static __inline__ int
 AG_WidgetRelativeArea(void *p, int x, int y)
 {
@@ -370,18 +376,7 @@ AG_WidgetRelativeArea(void *p, int x, int y)
 		y < wid->h);
 }
 
-static __inline__ int
-AG_WidgetRectIntersect(void *p, int x, int y, int w, int h)
-{
-	AG_Widget *wid = AGWIDGET(p);
-
-	if (x+w < wid->cx || x > wid->cx2 ||
-	    y+w < wid->cy || y > wid->cy2) {
-		return (0);
-	}
-	return (1);
-}
-
+/* Put a single pixel at specified coordinates. */
 static __inline__ void
 AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 {
@@ -394,26 +389,7 @@ AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 		AG_WidgetPutPixel32_GL(p, vx,vy, color);
 	} else
 #endif
-	{
-		if (!AG_CLIPPED_PIXEL(agView->v, vx,vy))
-			AG_PUT_PIXEL2(agView->v, vx,vy, color);
-	}
-}
-
-static __inline__ void
-AG_WidgetPutPixel32OrClip(void *p, int wx, int wy, Uint32 color)
-{
-	AG_Widget *wid = AGWIDGET(p);
-	int vx = wid->cx+wx;
-	int vy = wid->cy+wy;
-	
-	if (!AG_WidgetArea(wid, vx,vy))
-		return;
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		AG_WidgetPutPixel32_GL(p, vx,vy, color);
-	} else
-#endif
+	if (!AG_CLIPPED_PIXEL(agView->v, vx,vy))
 		AG_PUT_PIXEL2(agView->v, vx,vy, color);
 }
 
@@ -429,25 +405,8 @@ AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 		AG_WidgetPutPixelRGB_GL(p, vx,vy, r,g,b);
 	} else
 #endif
-	if (!AG_CLIPPED_PIXEL(agView->v, vx, vy)) {
+	if (!AG_CLIPPED_PIXEL(agView->v, vx, vy))
 		AG_PUT_PIXEL2(agView->v, vx,vy, AG_MapRGB(agVideoFmt,r,g,b));
-	}
-}
-
-static __inline__ void
-AG_WidgetPutPixelRGBOrClip(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
-{
-	AG_Widget *wid = AGWIDGET(p);
-	int vx = wid->cx+wx, vy = wid->cy+wy;
-	
-	if (!AG_WidgetArea(wid, vx,vy))
-		return;
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		AG_WidgetPutPixelRGB_GL(p, wx,wy, r,g,b);
-	} else
-#endif
-		AG_PUT_PIXEL2(agView->v, vx,vy, AG_MapRGB(agVideoFmt, r,g,b));
 }
 
 static __inline__ void
@@ -854,6 +813,25 @@ AG_WidgetSetDouble(void *wid, const char *name, double nd)
 	}
 	AG_WidgetUnlockBinding(binding);
 }
+
+#ifdef HAVE_LONG_DOUBLE
+static __inline__ void
+AG_WidgetSetLongDouble(void *wid, const char *name, long double nd)
+{
+	AG_WidgetBinding *binding;
+	long double *d;
+
+	if ((binding = AG_WidgetGetBinding(wid, name,
+	    (long double **)&d)) == NULL) {
+		AG_FatalError("%s", AG_GetError());
+	}
+	if (*d != nd) {
+		*d = nd;
+		AG_WidgetBindingChanged(binding);
+	}
+	AG_WidgetUnlockBinding(binding);
+}
+#endif
 
 static __inline__ void
 AG_WidgetSetPointer(void *wid, const char *name, void *np)

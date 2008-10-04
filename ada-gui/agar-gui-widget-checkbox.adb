@@ -17,22 +17,25 @@ package body agar.gui.widget.checkbox is
   
     function allocate_integer
       (parent : widget_access_t;
-       ptr    : access c.int;
-       label  : cs.chars_ptr) return checkbox_access_t;
+       flags  : flags_t;
+       label  : cs.chars_ptr;
+       ptr    : access c.int) return checkbox_access_t;
     pragma import (c, allocate_integer, "AG_CheckboxNewInt");
   
     function allocate_flags
       (parent : widget_access_t;
+       flags  : flags_t;
+       label  : cs.chars_ptr;
        ptr    : access c.unsigned;
-       mask   : c.unsigned;
-       label  : cs.chars_ptr) return checkbox_access_t;
+       mask   : c.unsigned) return checkbox_access_t;
     pragma import (c, allocate_flags, "AG_CheckboxNewFlag");
   
     function allocate_flags32
       (parent : widget_access_t;
+       flags  : flags_t;
+       label  : cs.chars_ptr;
        ptr    : access agar.core.types.uint32_t;
-       mask   : agar.core.types.uint32_t;
-       label  : cs.chars_ptr) return checkbox_access_t;
+       mask   : agar.core.types.uint32_t) return checkbox_access_t;
     pragma import (c, allocate_flags32, "AG_CheckboxNewFlag32");
   end cbinds;
 
@@ -69,45 +72,51 @@ package body agar.gui.widget.checkbox is
 
   function allocate_integer
     (parent : widget_access_t;
-     ptr    : access c.int;
-     label  : string) return checkbox_access_t
+     flags  : flags_t;
+     label  : string;
+     ptr    : access c.int) return checkbox_access_t
   is
     ca_label : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate_integer
       (parent => parent,
-       ptr    => ptr,
-       label  => cs.to_chars_ptr (ca_label'unchecked_access));
+       flags  => flags,
+       label  => cs.to_chars_ptr (ca_label'unchecked_access),
+       ptr    => ptr);
   end allocate_integer;
 
   function allocate_flags
     (parent : widget_access_t;
+     flags  : flags_t;
+     label  : string;
      ptr    : access c.unsigned;
-     mask   : c.unsigned;
-     label  : string) return checkbox_access_t
+     mask   : c.unsigned) return checkbox_access_t
   is
     ca_label : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate_flags
       (parent => parent,
+       flags  => flags,
+       label  => cs.to_chars_ptr (ca_label'unchecked_access),
        ptr    => ptr,
-       mask   => mask,
-       label  => cs.to_chars_ptr (ca_label'unchecked_access));
+       mask   => mask);
   end allocate_flags;
 
   function allocate_flags32
     (parent : widget_access_t;
+     flags  : flags_t;
+     label  : string;
      ptr    : access agar.core.types.uint32_t;
-     mask   : agar.core.types.uint32_t;
-     label  : string) return checkbox_access_t
+     mask   : agar.core.types.uint32_t) return checkbox_access_t
   is
     ca_label : aliased c.char_array := c.to_c (label);
   begin
     return cbinds.allocate_flags32
       (parent => parent,
+       flags  => flags,
+       label  => cs.to_chars_ptr (ca_label'unchecked_access),
        ptr    => ptr,
-       mask   => mask,
-       label  => cs.to_chars_ptr (ca_label'unchecked_access));
+       mask   => mask);
   end allocate_flags32;
 
   function widget (checkbox : checkbox_access_t) return widget_access_t is

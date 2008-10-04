@@ -54,19 +54,22 @@ binding.
 .Fn AG_CheckboxNewFn "AG_Widget *parent" "Uint flags" "const char *label" "AG_EventFn fn" "const char *fmt" "..."
 .Pp
 .Ft "AG_Checkbox *"
-.Fn AG_CheckboxNewInt "AG_Widget *parent" "int *pBool" "const char *label"
+.Fn AG_CheckboxNewInt "AG_Widget *parent" "Uint flags" "const char *label" "int *pBool"
 .Pp
 .Ft "AG_Checkbox *"
-.Fn AG_CheckboxNewFlag "AG_Widget *parent" "Uint *pFlags" "Uint bitmask" "const char *label"
+.Fn AG_CheckboxNewProp "AG_Widget *parent" "Uint flags" "const char *label" "AG_Object *obj" "const char *prop"
 .Pp
 .Ft "AG_Checkbox *"
-.Fn AG_CheckboxNewFlag32 "AG_Widget *parent" "Uint32 *pFlags" "Uint32 bitmask" "const char *label"
+.Fn AG_CheckboxNewFlag "AG_Widget *parent" "Uint flags" "const char *label" "Uint *pFlags" "Uint bitmask"
+.Pp
+.Ft "AG_Checkbox *"
+.Fn AG_CheckboxNewFlag32 "AG_Widget *parent" "Uint flags" "const char *label" "Uint32 *pFlags" "Uint32 bitmask"
 .Pp
 .Fn "AG_Checkbox *"
-.Fn AG_CheckboxSetFromFlags "AG_Widget *parent" "Uint *pFlags" "const AG_FlagDescr *flagsDescr"
+.Fn AG_CheckboxSetFromFlags "AG_Widget *parent" "Uint flags" "Uint *pFlags" "const AG_FlagDescr *flagsDescr"
 .Pp
 .Fn "AG_Checkbox *"
-.Fn AG_CheckboxSetFromFlags32 "AG_Widget *parent" "Uint32 *pFlags" "const AG_FlagDescr *flagsDescr"
+.Fn AG_CheckboxSetFromFlags32 "AG_Widget *parent" "Uint flags" "Uint32 *pFlags" "const AG_FlagDescr *flagsDescr"
 .Pp
 .Ft "void"
 .Fn AG_CheckboxToggle "AG_Checkbox *checkbox"
@@ -89,14 +92,20 @@ argument include:
 .Pp
 .Bl -tag -width "AG_CHECKBOX_SET "
 .It AG_CHECKBOX_SET
-Set the default state binding to 1 on initialization.
+Set the state to 1 on initialization.
 .El
 .Pp
 The
 .Fn AG_CheckboxNewInt
-function binds the default state to a boolean integer.
+variant binds the state to a boolean integer.
+.Pp
+.Fn AG_CheckboxNewProp
+binds the state to an
+.Xr AG_Prop 3
+of boolean or integer type.
+.Pp
 .Fn AG_CheckboxNewFlag
-binds the default state to a specified set of bits
+binds the state to a specified set of bits
 .Fa bitmask
 in
 .Fa pFlags .

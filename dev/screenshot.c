@@ -53,7 +53,7 @@
 #include <gui/textbox.h>
 #include <gui/label.h>
 #include <gui/button.h>
-#include <gui/spinbutton.h>
+#include <gui/numerical.h>
 
 #include "dev.h"
 
@@ -278,7 +278,7 @@ DEV_ScreenshotUploader(void)
 	AG_VBox *vb;
 	AG_HBox *hb;
 	AG_Label *lbl;
-	AG_Spinbutton *sbu;
+	AG_Numerical *num;
 	
 	if ((win = AG_WindowNewNamed(AG_WINDOW_NOVRESIZE,
 	    "DEV_ScreenshotUploader")) == NULL) {
@@ -300,15 +300,14 @@ DEV_ScreenshotUploader(void)
 		AG_LabelSizeHint(lbl, 1,
 		    _("Status: Transmitting frame XXXXXXXXXX"));
 
-		hosttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, _("Host: "));
-		porttb = AG_TextboxNew(vb, AG_TEXTBOX_HFILL, _("Port: "));
+		hosttb = AG_TextboxNew(vb, 0, _("Host: "));
+		porttb = AG_TextboxNew(vb, 0, _("Port: "));
 		AG_WidgetFocus(hosttb);
 
-		sbu = AG_SpinbuttonNew(vb, 0, _("Refresh rate (ms): "));
-		AG_SpinbuttonSetMin(sbu, 1);
-		AG_WidgetBindMp(sbu, "value", &xmit_lock, AG_WIDGET_INT,
-		    &xmit_delay);
-		AG_SpinbuttonSetMax(sbu, 10000);
+		num = AG_NumericalNew(vb, 0, "ms", _("Refresh rate: "));
+		AG_WidgetBindMp(num, "value", &xmit_lock,
+		    AG_WIDGET_INT, &xmit_delay);
+		AG_NumericalSetRange(num, 1, 10000);
 
 		AG_TextboxPrintf(porttb, "%i", default_port);
 	}
