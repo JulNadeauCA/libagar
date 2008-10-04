@@ -104,9 +104,6 @@ can be used to trigger events, or control a boolean value.
 .Ft void
 .Fn AG_ButtonText "AG_Button *button" "const char *fmt" "..."
 .Pp
-.Ft void
-.Fn AG_ButtonTextNODUP "AG_Button *button" "char *text"
-.Pp
 .nr nS 0
 The
 .Fn AG_ButtonNew
@@ -193,7 +190,7 @@ Repeat mode causes multiple
 .Sq button-pushed
 events to be posted periodically for as long as the button is triggered.
 Repeat mode is used notably by
-.Xr AG_Spinbutton 3 .
+.Xr AG_Numerical 3 .
 .Pp
 .Fn AG_ButtonSurface
 sets the button label to a copy of the given surface.
@@ -203,9 +200,6 @@ variant uses the given surface as source without copying.
 .Pp
 .Fn AG_ButtonText
 uses the given text string as the button label.
-The
-.Fn AG_ButtonTextNODUP
-variant uses the original string without copying.
 .Pp
 .Sh BUTTON FLAGS
 The following
@@ -222,10 +216,6 @@ The cursor is over the button area (read-only).
 .It AG_BUTTON_REPEAT
 Repeat mode is enabled (read-only, see
 .Fn AG_ButtonSetRepeatMode ) .
-.it AG_BUTTON_REGEN
-Force update of the label text (used internally by
-.Fn AG_ButtonText ,
-etc.)
 .It AG_BUTTON_INVSTATE
 Invert the interpretation of the
 .Sq state

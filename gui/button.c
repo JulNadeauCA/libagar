@@ -51,13 +51,15 @@ AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 	AG_ObjectInit(bu, &agButtonClass);
 
 	if (fmt != NULL) {
+		char text[AG_LABEL_MAX];
+
 		va_start(args, fmt);
-		Vasprintf(&bu->text, fmt, args);
+		Vsnprintf(text, sizeof(text), fmt, args);
 		va_end(args);
-	} else {
-		bu->text = NULL;
+
+		bu->lbl = AG_LabelNewString(bu, 0, text);
+		AG_LabelJustify(bu->lbl, bu->justify);
 	}
-	
 	bu->flags |= flags;
 
 	if (flags & AG_BUTTON_HFILL) { AG_ExpandHoriz(bu); }
@@ -154,7 +156,7 @@ Init(void *obj)
 	AG_WidgetBindBool(bu, "state", &bu->state);
 
 	bu->flags = 0;
-	bu->text = NULL;
+	bu->lbl = NULL;
 	bu->surface = -1;
 	bu->state = 0;
 	bu->justify = AG_TEXT_CENTER;
@@ -175,51 +177,44 @@ Init(void *obj)
 }
 
 static void
-Destroy(void *p)
-{
-	AG_Button *bu = p;
-
-	if ((bu->flags & AG_BUTTON_TEXT_NODUP) == 0)
-		Free(bu->text);
-}
-
-static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_Button *bu = p;
+	AG_SizeReq rLbl;
+	
+	r->w = bu->lPad + bu->rPad;
+	r->h = bu->tPad + bu->bPad;
 
 	if (bu->surface != -1) {
-		r->w = WSURFACE(bu,bu->surface)->w;
-		r->h = WSURFACE(bu,bu->surface)->h;
+		r->w += WSURFACE(bu,bu->surface)->w;
+		r->h += WSURFACE(bu,bu->surface)->h;
 	} else {
-		if (bu->text != NULL && bu->text[0] != '\0') {
-			AG_TextSize(bu->text, &r->w, &r->h);
+		if (bu->lbl != NULL) {
+			AG_WidgetSizeReq(bu->lbl, &rLbl);
+			r->w += rLbl.w;
+			r->h += rLbl.h;
 		} else {
-			r->w = 0;
-			r->h = agTextFontHeight;
+			r->h += agTextFontHeight;
 		}
 	}
-	r->w += bu->lPad + bu->rPad;
-	r->h += bu->tPad + bu->bPad;
 }
 
 static int
 SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	AG_Button *bu = p;
+	AG_SizeAlloc aLbl;
 
-	if (a->w < (bu->lPad + bu->rPad) ||
-	    a->h < (bu->tPad + bu->bPad)) {
+	if (a->w < 2 || a->h < 2) {
 		return (-1);
 	}
-
-#if 0
-	AG_WidgetEnableClipping(bu, AG_RECT(
-	    bu->lPad,
-	    bu->tPad,
-	    a->w - bu->rPad,
-	    a->h - bu->bPad));
-#endif
+	if (bu->lbl != NULL) {
+		aLbl.x = bu->lPad;
+		aLbl.y = bu->tPad;
+		aLbl.w = a->w - (bu->lPad+bu->rPad);
+		aLbl.h = a->h - (bu->tPad+bu->bPad);
+		AG_WidgetSizeAlloc(bu->lbl, &aLbl);
+	}
 	return (0);
 }
 
@@ -229,8 +224,7 @@ Draw(void *p)
 	AG_Button *bu = p;
 	AG_WidgetBinding *binding;
 	void *pState;
-	int x = 0, y = 0;
-	int pressed, wLbl, hLbl;
+	int pressed;
 	
 	binding = AG_WidgetGetBinding(bu, "state", &pState);
 	pressed = GetState(bu, binding, pState);
@@ -238,43 +232,32 @@ Draw(void *p)
 
 	STYLE(bu)->ButtonBackground(bu, pressed);
 
-	if (bu->text != NULL && bu->text[0] != '\0') {
-		if (bu->surface == -1) {
-			AG_PushTextState();
-			AG_TextJustify(bu->justify);
-			AG_TextColor(BUTTON_TXT_COLOR);
-			bu->surface = AG_WidgetMapSurface(bu,
-			    AG_TextRender(bu->text));
-			AG_PopTextState();
-		} else if (bu->flags & AG_BUTTON_REGEN) {
-			AG_PushTextState();
-			AG_TextJustify(bu->justify);
-			AG_TextColor(BUTTON_TXT_COLOR);
-			AG_WidgetReplaceSurface(bu, bu->surface,
-			    AG_TextRender(bu->text));
-			AG_PopTextState();
-		}
-	}
-	if (bu->surface == -1)
+	if (bu->lbl != NULL) {
+		AG_WidgetDraw(bu->lbl);
 		return;
-
-	wLbl = WSURFACE(bu,bu->surface)->w;
-	hLbl = WSURFACE(bu,bu->surface)->h;
-
-	switch (bu->justify) {
-	case AG_TEXT_LEFT:
-		x = bu->lPad;
-		break;
-	case AG_TEXT_CENTER:
-		x = WIDGET(bu)->w/2 - wLbl/2;
-		break;
-	case AG_TEXT_RIGHT:
-		x = WIDGET(bu)->w - wLbl - bu->rPad;
-		break;
 	}
-	y = WIDGET(bu)->h/2 - hLbl/2;
-	STYLE(bu)->ButtonTextOffset(bu, pressed, &x, &y);
-	AG_WidgetBlitSurface(bu, bu->surface, x, y);
+
+	if (bu->surface != -1) {
+		int x = 0, y = 0, w, h;
+		
+		w = WSURFACE(bu,bu->surface)->w;
+		h = WSURFACE(bu,bu->surface)->h;
+
+		switch (bu->justify) {
+		case AG_TEXT_LEFT:
+			x = bu->lPad;
+			break;
+		case AG_TEXT_CENTER:
+			x = WIDTH(bu)/2 - w/2;
+			break;
+		case AG_TEXT_RIGHT:
+			x = WIDTH(bu) - w - bu->rPad;
+			break;
+		}
+		y = HEIGHT(bu)/2 - h/2;
+		STYLE(bu)->ButtonTextOffset(bu, pressed, &x, &y);
+		AG_WidgetBlitSurface(bu, bu->surface, x, y);
+	}
 }
 
 static int
@@ -538,6 +521,9 @@ AG_ButtonSetJustification(AG_Button *bu, enum ag_text_justify jus)
 {
 	AG_ObjectLock(bu);
 	bu->justify = jus;
+	if (bu->lbl != NULL) {
+		AG_LabelJustify(bu->lbl, jus);
+	}
 	AG_ObjectUnlock(bu);
 }
 
@@ -590,27 +576,22 @@ AG_ButtonSetRepeatMode(AG_Button *bu, int repeat)
 }
 
 void
-AG_ButtonTextNODUP(AG_Button *bu, char *text)
-{
-	AG_ObjectLock(bu);
-	Free(bu->text);
-	bu->text = text;
-	bu->flags |= (AG_BUTTON_REGEN|AG_BUTTON_TEXT_NODUP);
-	AG_ObjectUnlock(bu);
-}
-
-void
 AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 {
 	va_list args;
+	char text[AG_LABEL_MAX];
+
+	va_start(args, fmt);
+	Vsnprintf(text, sizeof(text), fmt, args);
+	va_end(args);
 
 	AG_ObjectLock(bu);
-	Free(bu->text);
-	va_start(args, fmt);
-	Vasprintf(&bu->text, fmt, args);
-	va_end(args);
-	bu->flags |=  AG_BUTTON_REGEN;
-	bu->flags &= ~AG_BUTTON_TEXT_NODUP;
+	if (bu->lbl != NULL) {
+		AG_LabelString(bu->lbl, text);
+	} else {
+		bu->lbl = AG_LabelNewString(bu, 0, text);
+		AG_LabelJustify(bu->lbl, bu->justify);
+	}
 	AG_ObjectUnlock(bu);
 }
 
@@ -621,7 +602,7 @@ AG_WidgetClass agButtonClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* free */
-		Destroy,
+		NULL,		/* destroy */
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */
