@@ -74,9 +74,13 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-There are currently no
+Accepted
 .Fa flags
-specific to this widget.
+include:
+.Bl -tag -width "AG_UCOMBO_SCROLLTOSEL "
+.It AG_UCOMBO_SCROLLTOSEL
+Scroll to initial selection if it is not visible.
+.El
 .Pp
 The
 .Fn AG_UComboNewPolled

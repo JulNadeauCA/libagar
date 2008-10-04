@@ -41,6 +41,9 @@ AG_UComboNew(void *parent, Uint flags)
 	if (flags & AG_UCOMBO_HFILL) { AG_ExpandHoriz(com); }
 	if (flags & AG_UCOMBO_VFILL) { AG_ExpandVert(com); }
 
+	if (flags & AG_UCOMBO_SCROLLTOSEL)
+		com->list->flags |= AG_TLIST_SCROLLTOSEL;
+
 	AG_ObjectAttach(parent, com);
 	return (com);
 }
@@ -168,7 +171,7 @@ Init(void *obj)
 	
 	com->list = Malloc(sizeof(AG_Tlist));
 	AG_ObjectInit(com->list, &agTlistClass);
-	WIDGET(com->list)->flags |= AG_WIDGET_EXPAND;
+	AG_Expand(com->list);
 
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 }

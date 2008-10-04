@@ -13,8 +13,9 @@
 typedef struct ag_ucombo {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_UCOMBO_HFILL	  0x01
-#define AG_UCOMBO_VFILL	  0x02
+#define AG_UCOMBO_HFILL	  	0x01
+#define AG_UCOMBO_VFILL	  	0x02
+#define AG_UCOMBO_SCROLLTOSEL	0x40	/* Scroll to initial selection */
 #define AG_UCOMBO_EXPAND  (AG_UCOMBO_HFILL|AG_UCOMBO_VFILL)
 	AG_Button *button;		/* Selection button */
 	AG_Tlist *list;			/* Item list */
