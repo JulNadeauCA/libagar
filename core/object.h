@@ -112,6 +112,10 @@ enum ag_object_checksum_alg {
 	    (var) != (struct t *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
 	    (var) = (struct t *)AG_TAILQ_NEXT(AGOBJECT(var), cobjs))
 
+/* Return next entry in list of direct child objects. */
+#define AGOBJECT_NEXT_CHILD(var,t) \
+	((struct t *)AG_TAILQ_NEXT(AGOBJECT(var),cobjs))
+	
 /* Iterate through direct child objects (reverse order). */
 #define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, t) \
 	for((var) = (struct t *)AG_TAILQ_LAST(&AGOBJECT(ob)->children, \
@@ -158,7 +162,10 @@ enum ag_object_checksum_alg {
 # define OBJECT_FOREACH_PROP(var,ob) \
          AGOBJECT_FOREACH_PROP((var),(ob))
 # define OBJECT_FOREACH_PROP_OFTYPE(var,ob,t) \
-         AGOBJECT_FOREACH_PROP_OFTYPE((var),(ob),(t))
+         AGOBJECT_FOREACH_PROP_OFTYPE((var),(ob),t)
+# define OBJECT_NEXT_CHILD(var,t) \
+	 AGOBJECT_NEXT_CHILD((var),t)
+
 #endif /* _AGAR_INTERNAL || _USE_AGAR_CORE */
 
 __BEGIN_DECLS
