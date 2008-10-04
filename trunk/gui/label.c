@@ -633,17 +633,25 @@ static void
 Draw(void *obj)
 {
 	AG_Label *lbl = obj;
-	int x;
+	int x, cw;
 	
 	if (lbl->flags & AG_LABEL_FRAME)
-		AG_DrawFrame(lbl, AG_RECT(0,0,WIDTH(lbl),HEIGHT(lbl)), -1,
+		AG_DrawFrame(lbl,
+		    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)), -1,
 		    AG_COLOR(FRAME_COLOR));
 
 	if (lbl->flags & AG_LABEL_PARTIAL) {
-		AG_PushClipRect(lbl, AG_RECT(
-		    0, 0,
-		    WIDTH(lbl) - WSURFACE(lbl,lbl->surfaceCont)->w,
-		    HEIGHT(lbl)));
+		cw = WSURFACE(lbl,lbl->surfaceCont)->w;
+		if (WIDTH(lbl) <= cw) {
+			AG_PushClipRect(lbl,
+			    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)));
+			AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
+			    0, lbl->tPad);
+			AG_PopClipRect();
+			return;
+		}
+		AG_PushClipRect(lbl,
+		    AG_RECT(0, 0, WIDTH(lbl)-cw, HEIGHT(lbl)));
 	}
 	
 	AG_PushTextState();
@@ -685,7 +693,7 @@ Draw(void *obj)
 	if (lbl->flags & AG_LABEL_PARTIAL) {
 		AG_PopClipRect();
 		AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
-		    WIDTH(lbl) - WSURFACE(lbl,lbl->surfaceCont)->w,
+		    WIDTH(lbl) - cw,
 		    lbl->tPad);
 	}
 }
