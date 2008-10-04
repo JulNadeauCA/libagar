@@ -14,12 +14,13 @@
 typedef struct ag_combo {
 	struct ag_widget wid;
 	Uint flags;
-#define AG_COMBO_POLL	  0x01		/* Polled list */
-#define AG_COMBO_TREE	  0x02		/* Tree display */
-#define AG_COMBO_ANY_TEXT 0x04		/* Accept text not matching an item */
-#define AG_COMBO_HFILL	  0x08
-#define AG_COMBO_VFILL	  0x10
-#define AG_COMBO_FOCUS	  0x20
+#define AG_COMBO_POLL	  	0x01	/* Polled list */
+#define AG_COMBO_TREE	  	0x02	/* Tree display */
+#define AG_COMBO_ANY_TEXT 	0x04	/* Accept text not matching an item */
+#define AG_COMBO_HFILL	  	0x08
+#define AG_COMBO_VFILL	  	0x10
+#define AG_COMBO_FOCUS	  	0x20
+#define AG_COMBO_SCROLLTOSEL	0x40	/* Scroll to initial selection */
 #define AG_COMBO_EXPAND	  (AG_COMBO_HFILL|AG_COMBO_VFILL)
 
 	AG_Textbox *tbox;		/* Text input */
@@ -45,7 +46,6 @@ void AG_ComboSelect(AG_Combo *, AG_TlistItem *);
 AG_TlistItem *AG_ComboSelectPointer(AG_Combo *, void *);
 AG_TlistItem *AG_ComboSelectText(AG_Combo *, const char *);
 void AG_ComboSetButtonText(AG_Combo *, const char *);
-void AG_ComboSetButtonTextNODUP(AG_Combo *, char *);
 void AG_ComboSetButtonSurface(AG_Combo *, AG_Surface *);
 void AG_ComboSetButtonSurfaceNODUP(AG_Combo *, AG_Surface *);
 __END_DECLS

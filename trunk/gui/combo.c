@@ -44,6 +44,9 @@ AG_ComboNew(void *parent, Uint flags, const char *label)
 	if (flags & AG_COMBO_ANY_TEXT) { AG_WidgetDisable(com->tbox); }
 	if (flags & AG_COMBO_TREE) { com->list->flags |= AG_TLIST_TREE; }
 	if (flags & AG_COMBO_POLL) { com->list->flags |= AG_TLIST_POLL; }
+	if (flags & AG_COMBO_SCROLLTOSEL) {
+		com->list->flags |= AG_TLIST_SCROLLTOSEL;
+	}
 	if (flags & AG_COMBO_HFILL) { AG_ExpandHoriz(com); }
 	if (flags & AG_COMBO_VFILL) { AG_ExpandVert(com); }
 	
@@ -249,12 +252,6 @@ void
 AG_ComboSetButtonText(AG_Combo *com, const char *text)
 {
 	AG_ButtonText(com->button, "%s", text);
-}
-
-void
-AG_ComboSetButtonTextNODUP(AG_Combo *com, char *text)
-{
-	AG_ButtonTextNODUP(com->button, text);
 }
 
 void

@@ -80,7 +80,7 @@ Acceptable
 .Fa flags
 include:
 .Pp
-.Bl -tag -width "AG_COMBO_ANY_TEXT "
+.Bl -tag -width "AG_COMBO_SCROLLTOSEL "
 .It AG_COMBO_POLL
 List contents are dynamic (pass the
 .Dv AG_TLIST_POLL
@@ -93,6 +93,8 @@ flag to the
 .Va tlist ) .
 .It AG_COMBO_ANY_TEXT
 Allow user to enter text that does not match any item in the list.
+.It AG_COMBO_SCROLLTOSEL
+Scroll to initial selection if it is not visible.
 .El
 .Pp
 The
