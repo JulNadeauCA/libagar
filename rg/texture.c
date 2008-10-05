@@ -226,9 +226,7 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 	ntab = AG_NotebookAddTab(nb, _("Blending"), AG_BOX_VERT);
 	{
 		AG_LabelNewString(ntab, 0, _("Blending function: "));
-		AG_RadioNewUint(ntab, AG_RADIO_HFILL, agBlendFuncNames,
-		    &tex->blend_func);
-		AG_RadioNewUint(ntab, AG_RADIO_HFILL, agBlendFuncNames,
+		AG_RadioNewInt(ntab, AG_RADIO_HFILL, agBlendFuncNames,
 		    &tex->blend_func);
 	}
 
