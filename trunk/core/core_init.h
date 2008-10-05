@@ -45,4 +45,17 @@ __END_DECLS
 		}				\
 	} while (0)
 
+#ifndef AG_MIN
+#define	AG_MIN(a,b) (((a)<(b))?(a):(b))
+#endif
+#ifndef AG_MAX
+#define	AG_MAX(a,b) (((a)>(b))?(a):(b))
+#endif
+#ifndef AG_MIN3
+#define	AG_MIN3(a,b,c) AG_MIN((a),AG_MIN((b),(c)))
+#endif
+#ifndef AG_MAX3
+#define	AG_MAX3(a,b,c) AG_MAX((a),AG_MAX((b),(c)))
+#endif
+
 #include "close_code.h"
