@@ -39,13 +39,13 @@ install:
 	@exit 1
 
 configure:
-	if [ ! -e "cache" ]; then \
-		echo "mkdir cache"; \
-		mkdir cache; \
+	if [ ! -e ".cache" ]; then \
+		echo "mkdir .cache"; \
+		mkdir .cache; \
 	fi
 	for D in ${SUBDIR}; do \
 		echo "==> $$D"; \
-		(cd $$D && ./configure --cache=../cache); \
+		(cd $$D && ./configure --cache=../.cache); \
 	done
 
 configure-scripts:
