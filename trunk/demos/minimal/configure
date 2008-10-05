@@ -818,6 +818,14 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
+int
+main(int argc, char *argv[])
+{
+	long double ld = 0.1;
+
+	ld = 0;
+	return (0);
+}
 
 EOT
 	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
@@ -859,6 +867,15 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
+int
+main(int argc, char *argv[])
+{
+	long long ll = 0.0;
+	unsigned long long ull = 0.0;
+	ll = 1.0;
+	ull = 1.0;
+	return (0);
+}
 
 EOT
 	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
