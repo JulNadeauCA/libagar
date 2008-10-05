@@ -558,9 +558,11 @@ DrawPolled(AG_Label *lbl)
 				switch (f[2]) {
 				case 'f':
 					PF("%.2f", AG_LABEL_ARG(lbl,double));
+					f += 2;
 					break;
 				case 'g':
 					PF("%g", AG_LABEL_ARG(lbl,double));
+					f += 2;
 					break;
 #ifdef HAVE_64BIT
 				case 'l':
