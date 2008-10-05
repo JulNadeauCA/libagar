@@ -276,13 +276,13 @@ main(int argc, char *argv[])
 		}
 
 		AG_SeparatorNewHoriz(box);
-		AG_LabelNewPolled(box, 0, "Aref: %F", &Aref);
-		AG_LabelNewPolled(box, 0, "v1: %F", &v1);
-		AG_LabelNewPolled(box, 0, "v2: %F", &v2);
-		AG_LabelNewPolled(box, 0, "v3: %F", &v3);
-		AG_LabelNewPolled(box, 0, "Ts: %F", &Ts);
-		AG_LabelNewPolled(box, 0, "Ta: %F", &Ta);
-		AG_LabelNewPolled(box, 0, "To: %F", &To);
+		AG_LabelNewPolled(box, 0, "Aref: %lf", &Aref);
+		AG_LabelNewPolled(box, 0, "v1: %lf", &v1);
+		AG_LabelNewPolled(box, 0, "v2: %lf", &v2);
+		AG_LabelNewPolled(box, 0, "v3: %lf", &v3);
+		AG_LabelNewPolled(box, 0, "Ts: %lf", &Ts);
+		AG_LabelNewPolled(box, 0, "Ta: %lf", &Ta);
+		AG_LabelNewPolled(box, 0, "To: %lf", &To);
 		AG_ButtonAct(box, AG_BUTTON_HFILL, "Generate",
 		    GeneratePlot, "%p", plt);
 	}
