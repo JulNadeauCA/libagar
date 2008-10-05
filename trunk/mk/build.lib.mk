@@ -334,14 +334,14 @@ clean-lib:
 	    rm -f ${CLEANFILES}; \
 	fi
 	@if [ -e ".depend" ]; then \
-		echo "echo -n >.depend"; \
-		echo -n >.depend; \
+		echo "echo >.depend"; \
+		echo >.depend; \
 	fi
 
 cleandir-lib:
 	rm -f ${LIBTOOL} ${LIBTOOL_COOKIE} ${LTCONFIG_LOG} config.log tags
 	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
-	if [ -e "Makefile.config" ]; then echo -n >Makefile.config; fi
+	if [ -e "Makefile.config" ]; then echo >Makefile.config; fi
 
 install-lib: ${LIBTOOL_COOKIE}
 	@if [ "${INCL}" != "none" -a "${INCL}" != "none" ]; then \

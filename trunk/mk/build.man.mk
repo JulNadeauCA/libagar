@@ -560,7 +560,7 @@ man:
 	fi
 
 manlinks: Makefile
-	echo -n > .manlinks.mk
+	echo > .manlinks.mk
 	@if [ "${MAN2}" != "" ]; then \
 		for F in ${MAN2}; do \
 			echo "cat $$F |perl ${TOP}/mk/manlinks.pl $$F >>.manlinks.mk"; \

@@ -285,14 +285,14 @@ clean-prog:
 	    rm -f ${CLEANFILES}; \
 	fi
 	@if [ -e ".depend" ]; then \
-		echo "echo -n >.depend"; \
-		echo -n >.depend; \
+		echo "echo >.depend"; \
+		echo >.depend; \
 	fi
 
 cleandir-prog:
 	rm -f *.core config.log tags
 	if [ -e "./config/prefix.h" ]; then rm -fr ./config; fi
-	if [ -e "Makefile.config" ]; then echo -n >Makefile.config; fi
+	if [ -e "Makefile.config" ]; then echo >Makefile.config; fi
 
 install-prog:
 	@if [ ! -e "${BINDIR}" ]; then \

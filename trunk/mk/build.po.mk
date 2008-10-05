@@ -139,7 +139,7 @@ deinstall-po:
 
 count:
 	@for F in ${POS}; do \
-		echo -n "$$F: "; \
+		echo "$$F"; \
 		cat $$F |grep "^msgid " |cut -c 7- |\
 		    perl -pe '!s/^\"(.*)\"/$$1/' | \
 		    perl -pe '!s/<.+>//g' | \
