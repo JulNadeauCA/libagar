@@ -87,11 +87,11 @@ proj: proj-subdir
 		/bin/sh ./configure.tmp $$_tgtopts --with-proj-generation; \
 		if [ $$? != 0 ]; then \
 			echo "configure failed"; \
-			echo -n > Makefile.config; \
+			echo > Makefile.config; \
 			exit 1; \
 		fi; \
 		rm -f configure.tmp config.log; \
-		echo -n >Makefile.config; \
+		echo >Makefile.config; \
 	        perl ${TOP}/mk/cmpfiles.pl; \
 	        echo "cat Makefile | ${MKPROJFILES} "$$_tgtflav" \
 		    ${PROJINCLUDES} > ${PREMAKEOUT}";\
