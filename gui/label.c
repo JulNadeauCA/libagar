@@ -633,7 +633,7 @@ static void
 Draw(void *obj)
 {
 	AG_Label *lbl = obj;
-	int x, cw;
+	int x, cw = 0;				/* make compiler happy */
 	
 	if (lbl->flags & AG_LABEL_FRAME)
 		AG_DrawFrame(lbl,
