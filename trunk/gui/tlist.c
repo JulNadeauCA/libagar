@@ -231,7 +231,6 @@ Init(void *obj)
 	tl->dblclicked = NULL;
 	tl->nitems = 0;
 	tl->nvisitems = 0;
-	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, 0);
 	tl->compare_fn = AG_TlistComparePtrs;
 	tl->wHint = 0;
 	tl->hHint = tl->item_h + 2;
@@ -242,6 +241,9 @@ Init(void *obj)
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
+	
+	tl->sbar = AG_ScrollbarNew(tl, AG_SCROLLBAR_VERT, 0);
+	AG_WidgetSetFocusable(tl->sbar, 0);
 
 	AG_SetEvent(tl->sbar, "scrollbar-changed", ScrollbarChanged, "%p", tl);
 	AG_SetEvent(tl, "window-mousebuttondown", MouseButtonDown, NULL);
@@ -340,8 +342,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_SizeAlloc aBar;
 
 	AG_WidgetSizeReq(tl->sbar, &rBar);
-	if (rBar.w > a->w) {
-		return (-1);
+	if (a->w < rBar.w*2) {
+		rBar.w = MAX(0, a->w/2);
 	}
 	aBar.w = rBar.w;
 	aBar.h = a->h;
@@ -350,14 +352,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_WidgetSizeAlloc(tl->sbar, &aBar);
 	tl->wRow = a->w - aBar.w;
 
-	if (a->w < rBar.w || a->h < tl->sbar->wButton*2) {
-		WIDGET(tl->sbar)->flags |= AG_WIDGET_HIDE;
-	} else {
-		WIDGET(tl->sbar)->flags &= ~(AG_WIDGET_HIDE);
-	}
 	UpdateListScrollbar(tl);
-
-	AG_WidgetEnableClipping(tl, AG_RECT(0,0,a->w,a->h));
 	return (0);
 }
 
@@ -369,13 +364,10 @@ Draw(void *obj)
 	int y = 0, i = 0, selSeen = 0, selPos = 1;
 	int offset;
 
-	STYLE(tl)->ListBackground(tl,
-	    AG_RECT(0,
-	            0,
-		    tl->wRow,
-		    HEIGHT(tl)));
-
+	STYLE(tl)->ListBackground(tl, AG_RECT(0, 0, tl->wRow, HEIGHT(tl)));
 	AG_WidgetDraw(tl->sbar);
+
+	AG_PushClipRect(tl, AG_RECT(0, 0, tl->wRow, HEIGHT(tl)));
 
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
@@ -452,6 +444,7 @@ Draw(void *obj)
 	} else {
 		tl->flags &= ~(AG_TLIST_SCROLLTOSEL);
 	}
+	AG_PopClipRect();
 }
 
 /*
