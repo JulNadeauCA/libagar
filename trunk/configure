@@ -112,6 +112,9 @@ do
 	--testdir=*)
 	    testdir=$optarg
 	    ;;
+	--cache=*)
+	    cache=$optarg
+	    ;;
 	*)
 	    echo "invalid argument: $arg"
 	    echo "try ./configure --help"
@@ -169,15 +172,15 @@ echo "    --mandir                  Manpage directory [$PREFIX/share/man]"
 echo "    --infodir                 Info directory [$PREFIX/share/info]"
 echo "    --srcdir                  Source tree for concurrent build [.]"
 echo "    --testdir                 Directory in which to execute tests [.]"
-echo "    --help                    Display this message"
-echo "    --enable-nls              Native Language Support [no]"
-echo "    --with-gettext            Use gettext tools (msgmerge, ...) [check]"
-echo "    --with-libtool            Specify path to libtool [bundled]"
-echo "    --with-cygwin             Add cygwin dependencies under cygwin [no]"
+echo "    --cache                   Cache directory for test results [none]"
 echo "    --with-manpages           Manual pages (-mdoc) [yes]"
 echo "    --with-manlinks           Manual pages links for functions [no]"
 echo "    --with-ctags              Automatically generate tag files [no]"
 echo "    --with-docs               Printable docs (-me/tbl/eqn/pic/refer) [no]"
+echo "    --with-libtool            Specify path to libtool [use bundled]"
+echo "    --with-cygwin             Add cygwin dependencies under cygwin [no]"
+echo "    --enable-nls              Native Language Support [no]"
+echo "    --with-gettext            Use gettext tools [check]"
 echo "    --enable-debug            Include debugging code [no]"
 echo "    --enable-lockdebug        Expensive threads debugging [default: no]"
 echo "    --enable-objdebug         Object system debugging [default: no]"
@@ -486,16 +489,30 @@ rm -f cc-test cc-test.c
 TEST_CFLAGS=""
 $ECHO_N "checking for compiler warnings..."
 $ECHO_N "checking for compiler warnings..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_CC_WARNINGS" ]; then
+		HAVE_CC_WARNINGS=`cat ${cache}/ctest-HAVE_CC_WARNINGS`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_CC_WARNINGS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 int main(int argc, char *argv[]) { return (0); }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_CC_WARNINGS="yes"
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
@@ -506,20 +523,33 @@ echo "hdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_CC_WARNINGS="no"
 echo "HAVE_CC_WARNINGS=$HAVE_CC_WARNINGS" >>Makefile.config
 echo "mdefs[\"HAVE_CC_WARNINGS\"] = \"$HAVE_CC_WARNINGS\"" >>configure.lua
 echo "#undef HAVE_CC_WARNINGS" >config/have_cc_warnings.h
 echo "hdefs[\"HAVE_CC_WARNINGS\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_CC_WARNINGS" > ${cache}/ctest-HAVE_CC_WARNINGS
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CC_WARNINGS
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
 $ECHO_N "checking for IEEE754 floating point..."
 $ECHO_N "checking for IEEE754 floating point..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_IEEE754" ]; then
+		HAVE_IEEE754=`cat ${cache}/ctest-HAVE_IEEE754`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_IEEE754`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
 {
@@ -531,12 +561,16 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_IEEE754="yes"
 echo "HAVE_IEEE754=$HAVE_IEEE754" >>Makefile.config
 echo "mdefs[\"HAVE_IEEE754\"] = \"$HAVE_IEEE754\"" >>configure.lua
@@ -547,17 +581,30 @@ echo "hdefs[\"HAVE_IEEE754\"] = \"$HAVE_IEEE754\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_IEEE754="no"
 echo "HAVE_IEEE754=$HAVE_IEEE754" >>Makefile.config
 echo "mdefs[\"HAVE_IEEE754\"] = \"$HAVE_IEEE754\"" >>configure.lua
 echo "#undef HAVE_IEEE754" >config/have_ieee754.h
 echo "hdefs[\"HAVE_IEEE754\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_IEEE754" > ${cache}/ctest-HAVE_IEEE754
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_IEEE754
+fi
 rm -f $testdir/conftest conftest.c
 $ECHO_N "checking __bounded__ attribute..."
 $ECHO_N "checking __bounded__ attribute..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_BOUNDED_ATTRIBUTE" ]; then
+		HAVE_BOUNDED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_BOUNDED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_BOUNDED_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 void foo(char *, int) __attribute__ ((__bounded__(__string__,1,2)));
 void foo(char *a, int c) { }
 int main(int argc, char *argv[])
@@ -568,12 +615,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_BOUNDED_ATTRIBUTE="yes"
 echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
@@ -584,17 +635,30 @@ echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configu
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_BOUNDED_ATTRIBUTE="no"
 echo "HAVE_BOUNDED_ATTRIBUTE=$HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = \"$HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
 echo "#undef HAVE_BOUNDED_ATTRIBUTE" >config/have_bounded_attribute.h
 echo "hdefs[\"HAVE_BOUNDED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_BOUNDED_ATTRIBUTE" > ${cache}/ctest-HAVE_BOUNDED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_BOUNDED_ATTRIBUTE
+fi
 rm -f $testdir/conftest conftest.c
 $ECHO_N "checking __format__ attribute..."
 $ECHO_N "checking __format__ attribute..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_FORMAT_ATTRIBUTE" ]; then
+		HAVE_FORMAT_ATTRIBUTE=`cat ${cache}/ctest-HAVE_FORMAT_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_FORMAT_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <stdarg.h>
 void foo1(char *, ...)
      __attribute__((__format__ (printf, 1, 2)));
@@ -611,12 +675,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_FORMAT_ATTRIBUTE="yes"
 echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
@@ -627,17 +695,30 @@ echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_FORMAT_ATTRIBUTE="no"
 echo "HAVE_FORMAT_ATTRIBUTE=$HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = \"$HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
 echo "#undef HAVE_FORMAT_ATTRIBUTE" >config/have_format_attribute.h
 echo "hdefs[\"HAVE_FORMAT_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_FORMAT_ATTRIBUTE" > ${cache}/ctest-HAVE_FORMAT_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_FORMAT_ATTRIBUTE
+fi
 rm -f $testdir/conftest conftest.c
 $ECHO_N "checking __nonnull__ attribute..."
 $ECHO_N "checking __nonnull__ attribute..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_NONNULL_ATTRIBUTE" ]; then
+		HAVE_NONNULL_ATTRIBUTE=`cat ${cache}/ctest-HAVE_NONNULL_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_NONNULL_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 void foo(char *) __attribute__((__nonnull__ (1)));
 void foo(char *a) { }
 int main(int argc, char *argv[])
@@ -647,15 +728,14 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_NONNULL_ATTRIBUTE="yes"
@@ -674,9 +754,24 @@ echo "mdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = \"$HAVE_NONNULL_ATTRIBUTE\"" >>configu
 echo "#undef HAVE_NONNULL_ATTRIBUTE" >config/have_nonnull_attribute.h
 echo "hdefs[\"HAVE_NONNULL_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_NONNULL_ATTRIBUTE" > ${cache}/ctest-HAVE_NONNULL_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_NONNULL_ATTRIBUTE
+fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking __aligned__ attribute..."
 $ECHO_N "checking __aligned__ attribute..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_ALIGNED_ATTRIBUTE" ]; then
+		HAVE_ALIGNED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_ALIGNED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ALIGNED_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 int main(int argc, char *argv[])
 {
 	struct s1 { int x,y,z; } __attribute__ ((aligned(16)));
@@ -684,15 +779,14 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_ALIGNED_ATTRIBUTE="yes"
@@ -711,9 +805,24 @@ echo "mdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = \"$HAVE_ALIGNED_ATTRIBUTE\"" >>configu
 echo "#undef HAVE_ALIGNED_ATTRIBUTE" >config/have_aligned_attribute.h
 echo "hdefs[\"HAVE_ALIGNED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_ALIGNED_ATTRIBUTE" > ${cache}/ctest-HAVE_ALIGNED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALIGNED_ATTRIBUTE
+fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking __packed__ attribute..."
 $ECHO_N "checking __packed__ attribute..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PACKED_ATTRIBUTE" ]; then
+		HAVE_PACKED_ATTRIBUTE=`cat ${cache}/ctest-HAVE_PACKED_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PACKED_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 int main(int argc, char *argv[])
 {
 	struct s1 { char c; int x,y,z; } __attribute__ ((packed));
@@ -721,15 +830,14 @@ int main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -Wall -Werror -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_PACKED_ATTRIBUTE="yes"
@@ -748,28 +856,34 @@ echo "mdefs[\"HAVE_PACKED_ATTRIBUTE\"] = \"$HAVE_PACKED_ATTRIBUTE\"" >>configure
 echo "#undef HAVE_PACKED_ATTRIBUTE" >config/have_packed_attribute.h
 echo "hdefs[\"HAVE_PACKED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
-$ECHO_N "checking for long double..."
-$ECHO_N "checking for long double..." >> config.log
-cat << EOT > conftest.c
-int
-main(int argc, char *argv[])
-{
-	long double ld = 0.1;
-
-	ld = 0;
-	return (0);
-}
-
-EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PACKED_ATTRIBUTE" > ${cache}/ctest-HAVE_PACKED_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PACKED_ATTRIBUTE
 fi
 rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+$ECHO_N "checking for long double..."
+$ECHO_N "checking for long double..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_LONG_DOUBLE" ]; then
+		HAVE_LONG_DOUBLE=`cat ${cache}/ctest-HAVE_LONG_DOUBLE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_LONG_DOUBLE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_LONG_DOUBLE="yes"
@@ -784,29 +898,33 @@ HAVE_LONG_DOUBLE="no"
 echo "#undef HAVE_LONG_DOUBLE" >config/have_long_double.h
 echo "hdefs[\"HAVE_LONG_DOUBLE\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_LONG_DOUBLE" > ${cache}/ctest-HAVE_LONG_DOUBLE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LONG_DOUBLE
+fi
 $ECHO_N "checking for long long..."
 $ECHO_N "checking for long long..." >> config.log
-cat << EOT > conftest.c
-int
-main(int argc, char *argv[])
-{
-	long long ll = 0.0;
-	unsigned long long ull = 0.0;
-	ll = 1.0;
-	ull = 1.0;
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_LONG_LONG" ]; then
+		HAVE_LONG_LONG=`cat ${cache}/ctest-HAVE_LONG_LONG`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_LONG_LONG`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_LONG_LONG="yes"
@@ -821,9 +939,23 @@ HAVE_LONG_LONG="no"
 echo "#undef HAVE_LONG_LONG" >config/have_long_long.h
 echo "hdefs[\"HAVE_LONG_LONG\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_LONG_LONG" > ${cache}/ctest-HAVE_LONG_LONG
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LONG_LONG
+fi
 $ECHO_N "checking for cygwin environment..."
 $ECHO_N "checking for cygwin environment..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_CYGWIN" ]; then
+		HAVE_CYGWIN=`cat ${cache}/ctest-HAVE_CYGWIN`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_CYGWIN`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <windows.h>
@@ -838,15 +970,14 @@ main(int argc, char *argv[]) {
 }
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -mcygwin -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_CYGWIN="yes"
@@ -865,6 +996,11 @@ echo "mdefs[\"HAVE_CYGWIN\"] = \"$HAVE_CYGWIN\"" >>configure.lua
 echo "#undef HAVE_CYGWIN" >config/have_cygwin.h
 echo "hdefs[\"HAVE_CYGWIN\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_CYGWIN" > ${cache}/ctest-HAVE_CYGWIN
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CYGWIN
+fi
+rm -f $testdir/conftest conftest.c
 if [ "${compile}" = "ok" ]; then
 	if [ "${with_cygwin}" != "yes" ]; then
 		CFLAGS="$CFLAGS -mno-cygwin"
@@ -873,7 +1009,17 @@ if [ "${compile}" = "ok" ]; then
 fi
 $ECHO_N "checking for <sys/types.h>..."
 $ECHO_N "checking for <sys/types.h>..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_SYS_TYPES_H" ]; then
+		_MK_HAVE_SYS_TYPES_H=`cat ${cache}/ctest-_MK_HAVE_SYS_TYPES_H`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_SYS_TYPES_H`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
 	size_t len = 1;
@@ -882,12 +1028,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 _MK_HAVE_SYS_TYPES_H="yes"
 echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.lua
@@ -898,18 +1048,31 @@ echo "hdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.l
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 _MK_HAVE_SYS_TYPES_H="no"
 echo "_MK_HAVE_SYS_TYPES_H=$_MK_HAVE_SYS_TYPES_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_SYS_TYPES_H\"] = \"$_MK_HAVE_SYS_TYPES_H\"" >>configure.lua
 echo "#undef _MK_HAVE_SYS_TYPES_H" >config/_mk_have_sys_types_h.h
 echo "hdefs[\"_MK_HAVE_SYS_TYPES_H\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_SYS_TYPES_H" > ${cache}/ctest-_MK_HAVE_SYS_TYPES_H
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_SYS_TYPES_H
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${_MK_HAVE_SYS_TYPES_H}" = "yes" ]; then
 $ECHO_N "checking for 64-bit types..."
 $ECHO_N "checking for 64-bit types..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_64BIT" ]; then
+		HAVE_64BIT=`cat ${cache}/ctest-HAVE_64BIT`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_64BIT`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
 	int64_t i64 = 0;
@@ -920,12 +1083,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_64BIT="yes"
 echo "HAVE_64BIT=$HAVE_64BIT" >>Makefile.config
 echo "mdefs[\"HAVE_64BIT\"] = \"$HAVE_64BIT\"" >>configure.lua
@@ -936,17 +1103,30 @@ echo "hdefs[\"HAVE_64BIT\"] = \"$HAVE_64BIT\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_64BIT="no"
 echo "HAVE_64BIT=$HAVE_64BIT" >>Makefile.config
 echo "mdefs[\"HAVE_64BIT\"] = \"$HAVE_64BIT\"" >>configure.lua
 echo "#undef HAVE_64BIT" >config/have_64bit.h
 echo "hdefs[\"HAVE_64BIT\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_64BIT" > ${cache}/ctest-HAVE_64BIT
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_64BIT
+fi
 rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for conflicting typedefs..."
 $ECHO_N "checking for conflicting typedefs..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS" ]; then
+		_MK_HAVE_UNSIGNED_TYPEDEFS=`cat ${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_UNSIGNED_TYPEDEFS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
 	Uchar foo = 0;
@@ -957,12 +1137,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 _MK_HAVE_UNSIGNED_TYPEDEFS="yes"
 echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
@@ -973,20 +1157,33 @@ echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 _MK_HAVE_UNSIGNED_TYPEDEFS="no"
 echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
 echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" >config/_mk_have_unsigned_typedefs.h
 echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_UNSIGNED_TYPEDEFS" > ${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_UNSIGNED_TYPEDEFS
+fi
 rm -f $testdir/conftest conftest.c
 else
 echo "#undef HAVE_64BIT" >config/have_64bit.h
 echo "hdefs[\"HAVE_64BIT\"] = nil" >>configure.lua
 $ECHO_N "checking for conflicting typedefs..."
 $ECHO_N "checking for conflicting typedefs..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS" ]; then
+		_MK_HAVE_UNSIGNED_TYPEDEFS=`cat ${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_UNSIGNED_TYPEDEFS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 int main(int argc, char *argv[]) {
 	Uchar foo = 0;
 	Uint bar = 0;
@@ -996,12 +1193,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 _MK_HAVE_UNSIGNED_TYPEDEFS="yes"
 echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
@@ -1012,18 +1213,31 @@ echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 _MK_HAVE_UNSIGNED_TYPEDEFS="no"
 echo "_MK_HAVE_UNSIGNED_TYPEDEFS=$_MK_HAVE_UNSIGNED_TYPEDEFS" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = \"$_MK_HAVE_UNSIGNED_TYPEDEFS\"" >>configure.lua
 echo "#undef _MK_HAVE_UNSIGNED_TYPEDEFS" >config/_mk_have_unsigned_typedefs.h
 echo "hdefs[\"_MK_HAVE_UNSIGNED_TYPEDEFS\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_UNSIGNED_TYPEDEFS" > ${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_UNSIGNED_TYPEDEFS
+fi
 rm -f $testdir/conftest conftest.c
 fi;
 $ECHO_N "checking for <stdlib.h>..."
 $ECHO_N "checking for <stdlib.h>..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_STDLIB_H" ]; then
+		_MK_HAVE_STDLIB_H=`cat ${cache}/ctest-_MK_HAVE_STDLIB_H`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_STDLIB_H`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <stdlib.h>
 int main(int argc, char *argv[]) {
 	void *foo = malloc(1);
@@ -1032,12 +1246,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 _MK_HAVE_STDLIB_H="yes"
 echo "_MK_HAVE_STDLIB_H=$_MK_HAVE_STDLIB_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_STDLIB_H\"] = \"$_MK_HAVE_STDLIB_H\"" >>configure.lua
@@ -1048,17 +1266,30 @@ echo "hdefs[\"_MK_HAVE_STDLIB_H\"] = \"$_MK_HAVE_STDLIB_H\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 _MK_HAVE_STDLIB_H="no"
 echo "_MK_HAVE_STDLIB_H=$_MK_HAVE_STDLIB_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_STDLIB_H\"] = \"$_MK_HAVE_STDLIB_H\"" >>configure.lua
 echo "#undef _MK_HAVE_STDLIB_H" >config/_mk_have_stdlib_h.h
 echo "hdefs[\"_MK_HAVE_STDLIB_H\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_STDLIB_H" > ${cache}/ctest-_MK_HAVE_STDLIB_H
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_STDLIB_H
+fi
 rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for <unistd.h>..."
 $ECHO_N "checking for <unistd.h>..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_UNISTD_H" ]; then
+		_MK_HAVE_UNISTD_H=`cat ${cache}/ctest-_MK_HAVE_UNISTD_H`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_UNISTD_H`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <unistd.h>
 #include <sys/types.h>
 int main(int argc, char *argv[]) {
@@ -1071,12 +1302,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 _MK_HAVE_UNISTD_H="yes"
 echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_UNISTD_H\"] = \"$_MK_HAVE_UNISTD_H\"" >>configure.lua
@@ -1087,17 +1322,30 @@ echo "hdefs[\"_MK_HAVE_UNISTD_H\"] = \"$_MK_HAVE_UNISTD_H\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 _MK_HAVE_UNISTD_H="no"
 echo "_MK_HAVE_UNISTD_H=$_MK_HAVE_UNISTD_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_UNISTD_H\"] = \"$_MK_HAVE_UNISTD_H\"" >>configure.lua
 echo "#undef _MK_HAVE_UNISTD_H" >config/_mk_have_unistd_h.h
 echo "hdefs[\"_MK_HAVE_UNISTD_H\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_UNISTD_H" > ${cache}/ctest-_MK_HAVE_UNISTD_H
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_UNISTD_H
+fi
 rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for compatible <limits.h>..."
 $ECHO_N "checking for compatible <limits.h>..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_LIMITS_H" ]; then
+		_MK_HAVE_LIMITS_H=`cat ${cache}/ctest-_MK_HAVE_LIMITS_H`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_LIMITS_H`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <limits.h>
 
 int main(int argc, char *argv[]) {
@@ -1112,12 +1360,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 _MK_HAVE_LIMITS_H="yes"
 echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_LIMITS_H\"] = \"$_MK_HAVE_LIMITS_H\"" >>configure.lua
@@ -1128,17 +1380,30 @@ echo "hdefs[\"_MK_HAVE_LIMITS_H\"] = \"$_MK_HAVE_LIMITS_H\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 _MK_HAVE_LIMITS_H="no"
 echo "_MK_HAVE_LIMITS_H=$_MK_HAVE_LIMITS_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_LIMITS_H\"] = \"$_MK_HAVE_LIMITS_H\"" >>configure.lua
 echo "#undef _MK_HAVE_LIMITS_H" >config/_mk_have_limits_h.h
 echo "hdefs[\"_MK_HAVE_LIMITS_H\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_LIMITS_H" > ${cache}/ctest-_MK_HAVE_LIMITS_H
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_LIMITS_H
+fi
 rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for compatible <float.h>..."
 $ECHO_N "checking for compatible <float.h>..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_FLOAT_H" ]; then
+		_MK_HAVE_FLOAT_H=`cat ${cache}/ctest-_MK_HAVE_FLOAT_H`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_FLOAT_H`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <float.h>
 
 int main(int argc, char *argv[]) {
@@ -1151,12 +1416,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 _MK_HAVE_FLOAT_H="yes"
 echo "_MK_HAVE_FLOAT_H=$_MK_HAVE_FLOAT_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_FLOAT_H\"] = \"$_MK_HAVE_FLOAT_H\"" >>configure.lua
@@ -1167,36 +1436,40 @@ echo "hdefs[\"_MK_HAVE_FLOAT_H\"] = \"$_MK_HAVE_FLOAT_H\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 _MK_HAVE_FLOAT_H="no"
 echo "_MK_HAVE_FLOAT_H=$_MK_HAVE_FLOAT_H" >>Makefile.config
 echo "mdefs[\"_MK_HAVE_FLOAT_H\"] = \"$_MK_HAVE_FLOAT_H\"" >>configure.lua
 echo "#undef _MK_HAVE_FLOAT_H" >config/_mk_have_float_h.h
 echo "hdefs[\"_MK_HAVE_FLOAT_H\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_FLOAT_H" > ${cache}/ctest-_MK_HAVE_FLOAT_H
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_FLOAT_H
+fi
 rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for the __progname variable..."
 $ECHO_N "checking for the __progname variable..." >> config.log
-cat << EOT > conftest.c
-#include <stdio.h>
-int
-main(int argc, char *argv[])
-{
-	extern char *__progname;
-	printf("%s\n", __progname);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PROGNAME" ]; then
+		HAVE_PROGNAME=`cat ${cache}/ctest-HAVE_PROGNAME`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PROGNAME`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_PROGNAME="yes"
@@ -1211,6 +1484,10 @@ HAVE_PROGNAME="no"
 echo "#undef HAVE_PROGNAME" >config/have_progname.h
 echo "hdefs[\"HAVE_PROGNAME\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PROGNAME" > ${cache}/ctest-HAVE_PROGNAME
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PROGNAME
+fi
 $ECHO_N "checking for free(NULL) is a no-op..."
 $ECHO_N "checking for free(NULL) is a no-op..." >> config.log
 cat << EOT > conftest.c
@@ -1260,7 +1537,17 @@ $ECHO_N "checking for the C math library..."
 $ECHO_N "checking for the C math library..." >> config.log
 MATH_LIBS="-lm"
 MATH_CFLAGS=""
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_MATH" ]; then
+		HAVE_MATH=`cat ${cache}/ctest-HAVE_MATH`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_MATH`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <math.h>
 
 int
@@ -1272,12 +1559,16 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o $testdir/conftest conftest.c ${MATH_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o $testdir/conftest conftest.c ${MATH_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o $testdir/conftest conftest.c ${MATH_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_CFLAGS} -o $testdir/conftest conftest.c ${MATH_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_MATH="yes"
 echo "HAVE_MATH=$HAVE_MATH" >>Makefile.config
 echo "mdefs[\"HAVE_MATH\"] = \"$HAVE_MATH\"" >>configure.lua
@@ -1288,13 +1579,16 @@ echo "hdefs[\"HAVE_MATH\"] = \"$HAVE_MATH\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_MATH="no"
 echo "HAVE_MATH=$HAVE_MATH" >>Makefile.config
 echo "mdefs[\"HAVE_MATH\"] = \"$HAVE_MATH\"" >>configure.lua
 echo "#undef HAVE_MATH" >config/have_math.h
 echo "hdefs[\"HAVE_MATH\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_MATH" > ${cache}/ctest-HAVE_MATH
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_MATH
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_MATH}" = "yes" ]; then
 echo "MATH_CFLAGS=$MATH_CFLAGS" >>Makefile.config
@@ -1317,7 +1611,17 @@ $ECHO_N "checking for the C math library (C99)..."
 $ECHO_N "checking for the C math library (C99)..." >> config.log
 MATH_C99_LIBS="-lm"
 MATH_C99_CFLAGS=""
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_MATH_C99" ]; then
+		HAVE_MATH_C99=`cat ${cache}/ctest-HAVE_MATH_C99`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_MATH_C99`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <math.h>
 
 int
@@ -1332,12 +1636,16 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_C99_CFLAGS} -o $testdir/conftest conftest.c ${MATH_C99_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_C99_CFLAGS} -o $testdir/conftest conftest.c ${MATH_C99_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_C99_CFLAGS} -o $testdir/conftest conftest.c ${MATH_C99_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${MATH_C99_CFLAGS} -o $testdir/conftest conftest.c ${MATH_C99_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_MATH_C99="yes"
 echo "HAVE_MATH_C99=$HAVE_MATH_C99" >>Makefile.config
 echo "mdefs[\"HAVE_MATH_C99\"] = \"$HAVE_MATH_C99\"" >>configure.lua
@@ -1348,13 +1656,16 @@ echo "hdefs[\"HAVE_MATH_C99\"] = \"$HAVE_MATH_C99\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_MATH_C99="no"
 echo "HAVE_MATH_C99=$HAVE_MATH_C99" >>Makefile.config
 echo "mdefs[\"HAVE_MATH_C99\"] = \"$HAVE_MATH_C99\"" >>configure.lua
 echo "#undef HAVE_MATH_C99" >config/have_math_c99.h
 echo "hdefs[\"HAVE_MATH_C99\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_MATH_C99" > ${cache}/ctest-HAVE_MATH_C99
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_MATH_C99
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_MATH_C99}" = "yes" ]; then
 echo "MATH_C99_CFLAGS=$MATH_C99_CFLAGS" >>Makefile.config
@@ -1375,30 +1686,27 @@ echo "hdefs[\"MATH_C99_LIBS\"] = nil" >>configure.lua
 fi;
 $ECHO_N "checking for a gethostname() function..."
 $ECHO_N "checking for a gethostname() function..." >> config.log
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <unistd.h>
-
-int
-main(int argc, char *argv[])
-{
-	char hostname[64];
-	int rv;
-
-	rv = gethostname(hostname, sizeof(hostname));
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETHOSTNAME" ]; then
+		HAVE_GETHOSTNAME=`cat ${cache}/ctest-HAVE_GETHOSTNAME`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETHOSTNAME`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_GETHOSTNAME="yes"
@@ -1413,32 +1721,33 @@ HAVE_GETHOSTNAME="no"
 echo "#undef HAVE_GETHOSTNAME" >config/have_gethostname.h
 echo "hdefs[\"HAVE_GETHOSTNAME\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETHOSTNAME" > ${cache}/ctest-HAVE_GETHOSTNAME
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETHOSTNAME
+fi
 $ECHO_N "checking for a getpwuid() function..."
 $ECHO_N "checking for a getpwuid() function..." >> config.log
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <pwd.h>
-
-int
-main(int argc, char *argv[])
-{
-	struct passwd *pwd;
-	uid_t uid = 0;
-
-	pwd = getpwuid(uid);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETPWUID" ]; then
+		HAVE_GETPWUID=`cat ${cache}/ctest-HAVE_GETPWUID`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETPWUID`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_GETPWUID="yes"
@@ -1453,31 +1762,33 @@ HAVE_GETPWUID="no"
 echo "#undef HAVE_GETPWUID" >config/have_getpwuid.h
 echo "hdefs[\"HAVE_GETPWUID\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETPWUID" > ${cache}/ctest-HAVE_GETPWUID
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETPWUID
+fi
 $ECHO_N "checking for a getuid() function..."
 $ECHO_N "checking for a getuid() function..." >> config.log
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <unistd.h>
-
-int
-main(int argc, char *argv[])
-{
-	uid_t uid;
-
-	uid = getuid();
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETUID" ]; then
+		HAVE_GETUID=`cat ${cache}/ctest-HAVE_GETUID`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETUID`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_GETUID="yes"
@@ -1492,27 +1803,33 @@ HAVE_GETUID="no"
 echo "#undef HAVE_GETUID" >config/have_getuid.h
 echo "hdefs[\"HAVE_GETUID\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETUID" > ${cache}/ctest-HAVE_GETUID
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETUID
+fi
 $ECHO_N "checking for a getenv() function..."
 $ECHO_N "checking for a getenv() function..." >> config.log
-cat << EOT > conftest.c
-#include <stdlib.h>
-int
-main(int argc, char *argv[])
-{
-	(void)getenv("PATH");
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETENV" ]; then
+		HAVE_GETENV=`cat ${cache}/ctest-HAVE_GETENV`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETENV`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_GETENV="yes"
@@ -1527,29 +1844,33 @@ HAVE_GETENV="no"
 echo "#undef HAVE_GETENV" >config/have_getenv.h
 echo "hdefs[\"HAVE_GETENV\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETENV" > ${cache}/ctest-HAVE_GETENV
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETENV
+fi
 $ECHO_N "checking for setenv() and unsetenv()..."
 $ECHO_N "checking for setenv() and unsetenv()..." >> config.log
-cat << EOT > conftest.c
-#include <stdlib.h>
-int
-main(int argc, char *argv[])
-{
-	(void)setenv("BSDBUILD_SETENV_TEST", "foo", 1);
-	unsetenv("BSDBUILD_SETENV_TEST");
-
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SETENV" ]; then
+		HAVE_SETENV=`cat ${cache}/ctest-HAVE_SETENV`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SETENV`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_SETENV="yes"
@@ -1564,27 +1885,33 @@ HAVE_SETENV="no"
 echo "#undef HAVE_SETENV" >config/have_setenv.h
 echo "hdefs[\"HAVE_SETENV\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SETENV" > ${cache}/ctest-HAVE_SETENV
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SETENV
+fi
 $ECHO_N "checking for a strsep() function..."
 $ECHO_N "checking for a strsep() function..." >> config.log
-cat << EOT > conftest.c
-#include <string.h>
-int
-main(int argc, char *argv[])
-{
-	(void)strsep(NULL, NULL);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_STRSEP" ]; then
+		HAVE_STRSEP=`cat ${cache}/ctest-HAVE_STRSEP`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_STRSEP`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_STRSEP="yes"
@@ -1599,29 +1926,33 @@ HAVE_STRSEP="no"
 echo "#undef HAVE_STRSEP" >config/have_strsep.h
 echo "hdefs[\"HAVE_STRSEP\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_STRSEP" > ${cache}/ctest-HAVE_STRSEP
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_STRSEP
+fi
 $ECHO_N "checking for the snprintf() function..."
 $ECHO_N "checking for the snprintf() function..." >> config.log
-cat << EOT > conftest.c
-#include <stdio.h>
-
-int
-main(int argc, char *argv[])
-{
-	char buf[16];
-	(void)snprintf(buf, sizeof(buf), "foo");
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SNPRINTF" ]; then
+		HAVE_SNPRINTF=`cat ${cache}/ctest-HAVE_SNPRINTF`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SNPRINTF`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_SNPRINTF="yes"
@@ -1636,38 +1967,33 @@ HAVE_SNPRINTF="no"
 echo "#undef HAVE_SNPRINTF" >config/have_snprintf.h
 echo "hdefs[\"HAVE_SNPRINTF\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SNPRINTF" > ${cache}/ctest-HAVE_SNPRINTF
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SNPRINTF
+fi
 $ECHO_N "checking for the vsnprintf() function..."
 $ECHO_N "checking for the vsnprintf() function..." >> config.log
-cat << EOT > conftest.c
-#include <stdio.h>
-#include <stdarg.h>
-
-static void
-testfmt(const char *fmt, ...)
-{
-	char buf[16];
-	va_list ap;
-	va_start(ap, fmt);
-	(void)vsnprintf(buf, sizeof(buf), fmt, ap);
-	va_end(ap);
-}
-int
-main(int argc, char *argv[])
-{
-	testfmt("foo", 1, 2, 3);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_VSNPRINTF" ]; then
+		HAVE_VSNPRINTF=`cat ${cache}/ctest-HAVE_VSNPRINTF`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_VSNPRINTF`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_VSNPRINTF="yes"
@@ -1682,44 +2008,33 @@ HAVE_VSNPRINTF="no"
 echo "#undef HAVE_VSNPRINTF" >config/have_vsnprintf.h
 echo "hdefs[\"HAVE_VSNPRINTF\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_VSNPRINTF" > ${cache}/ctest-HAVE_VSNPRINTF
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VSNPRINTF
+fi
 $ECHO_N "checking for a vasprintf() function..."
 $ECHO_N "checking for a vasprintf() function..." >> config.log
-cat << EOT > conftest.c
-#ifdef __linux__
-#define _GNU_SOURCE
-#endif
-#include <stdio.h>
-#include <stdarg.h>
-
-int
-testprintf(const char *fmt, ...)
-{
-	va_list args;
-	char *buf;
-
-	va_start(args, fmt);
-	if (vasprintf(&buf, "%s", args) == -1) {
-		return (-1);
-	}
-	va_end(args);
-	return (0);
-}
-int
-main(int argc, char *argv[])
-{
-	return (testprintf("foo %s", "bar"));
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_VASPRINTF" ]; then
+		HAVE_VASPRINTF=`cat ${cache}/ctest-HAVE_VASPRINTF`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_VASPRINTF`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_VASPRINTF="yes"
@@ -1734,30 +2049,33 @@ HAVE_VASPRINTF="no"
 echo "#undef HAVE_VASPRINTF" >config/have_vasprintf.h
 echo "hdefs[\"HAVE_VASPRINTF\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_VASPRINTF" > ${cache}/ctest-HAVE_VASPRINTF
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VASPRINTF
+fi
 $ECHO_N "checking for the arc4random() random number generator..."
 $ECHO_N "checking for the arc4random() random number generator..." >> config.log
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <stdlib.h>
-int
-main(int argc, char *argv[])
-{
-	u_int32_t i;
-
-	i = arc4random();
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_ARC4RANDOM" ]; then
+		HAVE_ARC4RANDOM=`cat ${cache}/ctest-HAVE_ARC4RANDOM`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ARC4RANDOM`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_ARC4RANDOM="yes"
@@ -1772,31 +2090,33 @@ HAVE_ARC4RANDOM="no"
 echo "#undef HAVE_ARC4RANDOM" >config/have_arc4random.h
 echo "hdefs[\"HAVE_ARC4RANDOM\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_ARC4RANDOM" > ${cache}/ctest-HAVE_ARC4RANDOM
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ARC4RANDOM
+fi
 $ECHO_N "checking for MD5 functions..."
 $ECHO_N "checking for MD5 functions..." >> config.log
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <md5.h>
-
-int
-main(int argc, char *argv[])
-{
-	MD5_CTX md5;
-
-	MD5Init(&md5);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_MD5" ]; then
+		HAVE_MD5=`cat ${cache}/ctest-HAVE_MD5`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_MD5`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_MD5="yes"
@@ -1811,31 +2131,33 @@ HAVE_MD5="no"
 echo "#undef HAVE_MD5" >config/have_md5.h
 echo "hdefs[\"HAVE_MD5\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_MD5" > ${cache}/ctest-HAVE_MD5
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_MD5
+fi
 $ECHO_N "checking for SHA1 functions..."
 $ECHO_N "checking for SHA1 functions..." >> config.log
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <sha1.h>
-
-int
-main(int argc, char *argv[])
-{
-	SHA1_CTX sha1;
-
-	SHA1Init(&sha1);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SHA1" ]; then
+		HAVE_SHA1=`cat ${cache}/ctest-HAVE_SHA1`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SHA1`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_SHA1="yes"
@@ -1850,31 +2172,33 @@ HAVE_SHA1="no"
 echo "#undef HAVE_SHA1" >config/have_sha1.h
 echo "hdefs[\"HAVE_SHA1\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SHA1" > ${cache}/ctest-HAVE_SHA1
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SHA1
+fi
 $ECHO_N "checking for RMD160 functions..."
 $ECHO_N "checking for RMD160 functions..." >> config.log
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <rmd160.h>
-
-int
-main(int argc, char *argv[])
-{
-	RMD160_CTX rmd160;
-
-	RMD160Init(&rmd160);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_RMD160" ]; then
+		HAVE_RMD160=`cat ${cache}/ctest-HAVE_RMD160`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_RMD160`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_RMD160="yes"
@@ -1889,6 +2213,10 @@ HAVE_RMD160="no"
 echo "#undef HAVE_RMD160" >config/have_rmd160.h
 echo "hdefs[\"HAVE_RMD160\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_RMD160" > ${cache}/ctest-HAVE_RMD160
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_RMD160
+fi
 $ECHO_N "checking for the X window system..."
 $ECHO_N "checking for the X window system..." >> config.log
 X11_CFLAGS=""
@@ -1929,7 +2257,17 @@ fi;
 if [ -d /usr/X11R6/lib ]; then
 X11_LIBS="-L/usr/X11R6/lib"
 fi;
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_X11" ]; then
+		HAVE_X11=`cat ${cache}/ctest-HAVE_X11`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_X11`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <X11/Xlib.h>
 int main(int argc, char *argv[])
 {
@@ -1940,12 +2278,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${X11_CFLAGS} -o $testdir/conftest conftest.c ${X11_LIBS} -lX11 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_X11="yes"
 echo "HAVE_X11=$HAVE_X11" >>Makefile.config
 echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
@@ -1956,13 +2298,16 @@ echo "hdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_X11="no"
 echo "HAVE_X11=$HAVE_X11" >>Makefile.config
 echo "mdefs[\"HAVE_X11\"] = \"$HAVE_X11\"" >>configure.lua
 echo "#undef HAVE_X11" >config/have_x11.h
 echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_X11" > ${cache}/ctest-HAVE_X11
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_X11
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_X11}" != "" ]; then
 echo "#ifndef X11_CFLAGS" > config/x11_cflags.h
@@ -1985,32 +2330,27 @@ echo "hdefs[\"X11_LIBS\"] = nil" >>configure.lua
 fi;
 $ECHO_N "checking for the signal() function..."
 $ECHO_N "checking for the signal() function..." >> config.log
-cat << EOT > conftest.c
-#include <signal.h>
-
-void
-sighandler(int sig)
-{
-}
-
-int
-main(int argc, char *argv[])
-{
-	signal(SIGTERM, sighandler);
-	signal(SIGILL, sighandler);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_SIGNAL" ]; then
+		_MK_HAVE_SIGNAL=`cat ${cache}/ctest-_MK_HAVE_SIGNAL`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_SIGNAL`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 _MK_HAVE_SIGNAL="yes"
@@ -2025,31 +2365,33 @@ _MK_HAVE_SIGNAL="no"
 echo "#undef _MK_HAVE_SIGNAL" >config/_mk_have_signal.h
 echo "hdefs[\"_MK_HAVE_SIGNAL\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_SIGNAL" > ${cache}/ctest-_MK_HAVE_SIGNAL
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_SIGNAL
+fi
 $ECHO_N "checking for setjmp() and longjmp()..."
 $ECHO_N "checking for setjmp() and longjmp()..." >> config.log
-cat << EOT > conftest.c
-#include <setjmp.h>
-
-jmp_buf jmpbuf;
-
-int
-main(int argc, char *argv[])
-{
-	longjmp(jmpbuf, 1);
-	setjmp(jmpbuf);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_SETJMP" ]; then
+		_MK_HAVE_SETJMP=`cat ${cache}/ctest-_MK_HAVE_SETJMP`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_SETJMP`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 _MK_HAVE_SETJMP="yes"
@@ -2064,32 +2406,33 @@ _MK_HAVE_SETJMP="no"
 echo "#undef _MK_HAVE_SETJMP" >config/_mk_have_setjmp.h
 echo "hdefs[\"_MK_HAVE_SETJMP\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_SETJMP" > ${cache}/ctest-_MK_HAVE_SETJMP
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_SETJMP
+fi
 $ECHO_N "checking for a strtoll() function..."
 $ECHO_N "checking for a strtoll() function..." >> config.log
-cat << EOT > conftest.c
-#include <stdlib.h>
-
-int
-main(int argc, char *argv[])
-{
-	long long int lli;
-	char *ep = NULL;
-	char *foo = "1234";
-
-	lli = strtoll(foo, &ep, 10);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_STRTOLL" ]; then
+		_MK_HAVE_STRTOLL=`cat ${cache}/ctest-_MK_HAVE_STRTOLL`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_STRTOLL`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 _MK_HAVE_STRTOLL="yes"
@@ -2104,33 +2447,33 @@ _MK_HAVE_STRTOLL="no"
 echo "#undef _MK_HAVE_STRTOLL" >config/_mk_have_strtoll.h
 echo "hdefs[\"_MK_HAVE_STRTOLL\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_STRTOLL" > ${cache}/ctest-_MK_HAVE_STRTOLL
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_STRTOLL
+fi
 $ECHO_N "checking for a strtold() function..."
 $ECHO_N "checking for a strtold() function..." >> config.log
-cat << EOT > conftest.c
-#define _XOPEN_SOURCE 600
-#include <stdlib.h>
-
-int
-main(int argc, char *argv[])
-{
-	long double ld;
-	char *ep = NULL;
-	char *foo = "1234";
-
-	ld = strtold(foo, &ep);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_HAVE_STRTOLD" ]; then
+		_MK_HAVE_STRTOLD=`cat ${cache}/ctest-_MK_HAVE_STRTOLD`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_HAVE_STRTOLD`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 _MK_HAVE_STRTOLD="yes"
@@ -2145,6 +2488,10 @@ _MK_HAVE_STRTOLD="no"
 echo "#undef _MK_HAVE_STRTOLD" >config/_mk_have_strtold.h
 echo "hdefs[\"_MK_HAVE_STRTOLD\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_HAVE_STRTOLD" > ${cache}/ctest-_MK_HAVE_STRTOLD
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_STRTOLD
+fi
 $ECHO_N "checking for AltiVec (with <altivec.h>)..."
 $ECHO_N "checking for AltiVec (with <altivec.h>)..." >> config.log
 if [ "$SYSTEM" = "Darwin" ]; then
@@ -2158,7 +2505,17 @@ ALTIVEC_CHECK_CFLAGS=""
 echo "ALTIVEC_CHECK_CFLAGS=$ALTIVEC_CHECK_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CHECK_CFLAGS\"] = \"$ALTIVEC_CHECK_CFLAGS\"" >>configure.lua
 fi;
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_ALTIVEC" ]; then
+		HAVE_ALTIVEC=`cat ${cache}/ctest-HAVE_ALTIVEC`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ALTIVEC`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <altivec.h>
 float a[4] = { 1,2,3,4 };
 float b[4] = { 5,6,7,8 };
@@ -2176,12 +2533,16 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_ALTIVEC="yes"
 echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
 echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
@@ -2192,13 +2553,16 @@ echo "hdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_ALTIVEC="no"
 echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
 echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
 echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_ALTIVEC" > ${cache}/ctest-HAVE_ALTIVEC
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALTIVEC
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
@@ -2215,7 +2579,17 @@ echo "hdefs[\"HAVE_ALTIVEC_H\"] = \"$HAVE_ALTIVEC_H\"" >>configure.lua
 else
 $ECHO_N "checking for AltiVec (without <altivec.h>)..."
 $ECHO_N "checking for AltiVec (without <altivec.h>)..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_ALTIVEC" ]; then
+		HAVE_ALTIVEC=`cat ${cache}/ctest-HAVE_ALTIVEC`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ALTIVEC`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 float a[4] = { 1,2,3,4 };
 float b[4] = { 5,6,7,8 };
 float c[4];
@@ -2232,12 +2606,16 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_ALTIVEC="yes"
 echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
 echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
@@ -2248,13 +2626,16 @@ echo "hdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_ALTIVEC="no"
 echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
 echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
 echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_ALTIVEC" > ${cache}/ctest-HAVE_ALTIVEC
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALTIVEC
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
@@ -2483,32 +2864,27 @@ HAVE_DLFCN_H="no"
 echo "#undef HAVE_DLFCN_H" >config/have_dlfcn_h.h
 echo "hdefs[\"HAVE_DLFCN_H\"] = nil" >>configure.lua
 fi;
-cat << EOT > conftest.c
-#ifdef HAVE_DLFCN_H
-#include <dlfcn.h>
-#endif
-
-int
-main(int argc, char *argv[])
-{
-	void *handle;
-	char *error;
-	handle = dlopen("foo.so", 0);
-	error = dlerror();
-	(void)dlsym(handle, "foo");
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_DLOPEN" ]; then
+		HAVE_DLOPEN=`cat ${cache}/ctest-HAVE_DLOPEN`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_DLOPEN`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_DLOPEN="yes"
@@ -2523,10 +2899,24 @@ HAVE_DLOPEN="no"
 echo "#undef HAVE_DLOPEN" >config/have_dlopen.h
 echo "hdefs[\"HAVE_DLOPEN\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_DLOPEN" > ${cache}/ctest-HAVE_DLOPEN
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DLOPEN
+fi
 if [ "${HAVE_DLOPEN}" != "yes" ]; then
 $ECHO_N "checking for dlopen() in -ldl..."
 $ECHO_N "checking for dlopen() in -ldl..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_DLOPEN" ]; then
+		HAVE_DLOPEN=`cat ${cache}/ctest-HAVE_DLOPEN`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_DLOPEN`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #ifdef HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif
@@ -2543,15 +2933,14 @@ main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -ldl -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -ldl -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -ldl -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -ldl -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_DLOPEN="yes"
@@ -2570,6 +2959,11 @@ echo "mdefs[\"HAVE_DLOPEN\"] = \"$HAVE_DLOPEN\"" >>configure.lua
 echo "#undef HAVE_DLOPEN" >config/have_dlopen.h
 echo "hdefs[\"HAVE_DLOPEN\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_DLOPEN" > ${cache}/ctest-HAVE_DLOPEN
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DLOPEN
+fi
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_DLOPEN}" = "yes" ]; then
 DSO_CFLAGS=""
 DSO_LIBS="-ldl"
@@ -2620,30 +3014,27 @@ HAVE_MACH_O_DYLD_H="no"
 echo "#undef HAVE_MACH_O_DYLD_H" >config/have_mach_o_dyld_h.h
 echo "hdefs[\"HAVE_MACH_O_DYLD_H\"] = nil" >>configure.lua
 fi;
-cat << EOT > conftest.c
-#ifdef HAVE_MACH_O_DYLD_H
-#include <mach-o/dyld.h>
-#endif
-int
-main(int argc, char *argv[])
-{
-	NSObjectFileImage img;
-	NSObjectFileImageReturnCode rv;
-
-	rv = NSCreateObjectFileImageFromFile("foo", &img);
-	return (rv == NSObjectFileImageSuccess);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_DYLD" ]; then
+		HAVE_DYLD=`cat ${cache}/ctest-HAVE_DYLD`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_DYLD`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_DYLD="yes"
@@ -2658,43 +3049,34 @@ HAVE_DYLD="no"
 echo "#undef HAVE_DYLD" >config/have_dyld.h
 echo "hdefs[\"HAVE_DYLD\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_DYLD" > ${cache}/ctest-HAVE_DYLD
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DYLD
+fi
 if [ "${HAVE_DYLD}" = "Yes" ]; then
 echo "checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR"
 echo "checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR" >> config.log
-cat << EOT > conftest.c
-#ifdef HAVE_MACH_O_DYLD_H
-#include <mach-o/dyld.h>
-#endif
-int
-main(int argc, char *argv[])
-{
-	NSObjectFileImage img;
-	NSObjectFileImageReturnCode rv;
-	void *handle;
-
-	rv = NSCreateObjectFileImageFromFile("foo", &img);
-	handle = (void *)NSLinkModule(img, "foo",
-	    NSLINKMODULE_OPTION_RETURN_ON_ERROR|
-		NSLINKMODULE_OPTION_NONE);
-	if (handle == NULL) {
-		NSLinkEditErrors errs;
-		int n;
-		const char *f, *s = NULL;
-		NSLinkEditError(&errs, &n, &f, &s);
-	}
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_DYLD_RETURN_ON_ERROR" ]; then
+		HAVE_DYLD_RETURN_ON_ERROR=`cat ${cache}/ctest-HAVE_DYLD_RETURN_ON_ERROR`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_DYLD_RETURN_ON_ERROR`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_DYLD_RETURN_ON_ERROR="yes"
@@ -2709,6 +3091,10 @@ HAVE_DYLD_RETURN_ON_ERROR="no"
 echo "#undef HAVE_DYLD_RETURN_ON_ERROR" >config/have_dyld_return_on_error.h
 echo "hdefs[\"HAVE_DYLD_RETURN_ON_ERROR\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_DYLD_RETURN_ON_ERROR" > ${cache}/ctest-HAVE_DYLD_RETURN_ON_ERROR
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DYLD_RETURN_ON_ERROR
+fi
 else
 HAVE_DYLD_RETURN_ON_ERROR="no"
 echo "#undef HAVE_DYLD_RETURN_ON_ERROR" >config/have_dyld_return_on_error.h
@@ -2759,7 +3145,17 @@ HAVE_DL_H="no"
 echo "#undef HAVE_DL_H" >config/have_dl_h.h
 echo "hdefs[\"HAVE_DL_H\"] = nil" >>configure.lua
 fi;
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SHL_LOAD" ]; then
+		HAVE_SHL_LOAD=`cat ${cache}/ctest-HAVE_SHL_LOAD`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SHL_LOAD`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #ifdef HAVE_DL_H
 #include <dl.h>
 #endif
@@ -2778,15 +3174,14 @@ main(int argc, char *argv[])
 }
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -ldld -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -ldld -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -ldld -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -ldld -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_SHL_LOAD="yes"
@@ -2805,6 +3200,11 @@ echo "mdefs[\"HAVE_SHL_LOAD\"] = \"$HAVE_SHL_LOAD\"" >>configure.lua
 echo "#undef HAVE_SHL_LOAD" >config/have_shl_load.h
 echo "hdefs[\"HAVE_SHL_LOAD\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SHL_LOAD" > ${cache}/ctest-HAVE_SHL_LOAD
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SHL_LOAD
+fi
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SHL_LOAD}" = "yes" ]; then
 DSO_CFLAGS=""
 DSO_LIBS="-ldld"
@@ -2916,102 +3316,304 @@ fi
 $ECHO_N "checking for SDL (http://www.libsdl.org)..."
 $ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
 if [ "${SYSTEM}" = "Darwin" ]; then
-SDL_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl-config" ]; then
-		SDL_VERSION=`${path}/sdl-config --version`
-		break
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_VERSION" ]; then
+		SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
+		MK_CACHED="Yes"
 	fi
-done
-SDL_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl-config" ]; then
-		SDL_CFLAGS=`${path}/sdl-config --cflags`
-		break
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl-config" ]; then
+			SDL_VERSION=`${path}/sdl-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
 	fi
-done
-SDL_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl-config" ]; then
-		SDL_LIBS=`${path}/sdl-config --libs`
-		break
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
+		SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
+		MK_CACHED="Yes"
 	fi
-done
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl-config" ]; then
+			SDL_CFLAGS=`${path}/sdl-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_LIBS" ]; then
+		SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl-config" ]; then
+			SDL_LIBS=`${path}/sdl-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
+	fi
+fi
 elif [ "${SYSTEM}" = "FreeBSD" ]; then
-SDL_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl11-config" ]; then
-		SDL_VERSION=`${path}/sdl11-config --version`
-		break
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_VERSION" ]; then
+		SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
+		MK_CACHED="Yes"
 	fi
-done
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl11-config" ]; then
+			SDL_VERSION=`${path}/sdl11-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
+	fi
+fi
 if [ "${SDL_VERSION}" != "" ]; then
-SDL_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl11-config" ]; then
-		SDL_CFLAGS=`${path}/sdl11-config --cflags`
-		break
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
+		SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
+		MK_CACHED="Yes"
 	fi
-done
-SDL_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl11-config" ]; then
-		SDL_LIBS=`${path}/sdl11-config --libs`
-		break
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl11-config" ]; then
+			SDL_CFLAGS=`${path}/sdl11-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
 	fi
-done
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_LIBS" ]; then
+		SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl11-config" ]; then
+			SDL_LIBS=`${path}/sdl11-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
+	fi
+fi
 else
-SDL_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl-config" ]; then
-		SDL_VERSION=`${path}/sdl-config --version`
-		break
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_VERSION" ]; then
+		SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
+		MK_CACHED="Yes"
 	fi
-done
-SDL_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl-config" ]; then
-		SDL_CFLAGS=`${path}/sdl-config --cflags`
-		break
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl-config" ]; then
+			SDL_VERSION=`${path}/sdl-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
 	fi
-done
-SDL_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl-config" ]; then
-		SDL_LIBS=`${path}/sdl-config --libs`
-		break
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
+		SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
+		MK_CACHED="Yes"
 	fi
-done
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl-config" ]; then
+			SDL_CFLAGS=`${path}/sdl-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_LIBS" ]; then
+		SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl-config" ]; then
+			SDL_LIBS=`${path}/sdl-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
+	fi
+fi
 fi;
 else
-SDL_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl-config" ]; then
-		SDL_VERSION=`${path}/sdl-config --version`
-		break
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_VERSION" ]; then
+		SDL_VERSION=`cat ${cache}/exec-SDL_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_VERSION`
+		MK_CACHED="Yes"
 	fi
-done
-SDL_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl-config" ]; then
-		SDL_CFLAGS=`${path}/sdl-config --cflags`
-		break
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl-config" ]; then
+			SDL_VERSION=`${path}/sdl-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_VERSION" > ${cache}/exec-SDL_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_VERSION
 	fi
-done
-SDL_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/sdl-config" ]; then
-		SDL_LIBS=`${path}/sdl-config --libs`
-		break
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_CFLAGS" ]; then
+		SDL_CFLAGS=`cat ${cache}/exec-SDL_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_CFLAGS`
+		MK_CACHED="Yes"
 	fi
-done
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl-config" ]; then
+			SDL_CFLAGS=`${path}/sdl-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_CFLAGS" > ${cache}/exec-SDL_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-SDL_LIBS" ]; then
+		SDL_LIBS=`cat ${cache}/exec-SDL_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-SDL_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	SDL_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/sdl-config" ]; then
+			SDL_LIBS=`${path}/sdl-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$SDL_LIBS" > ${cache}/exec-SDL_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL_LIBS
+	fi
+fi
 fi;
 if [ "${SDL_VERSION}" != "" ]; then
 echo "yes"
 echo "yes" >> config.log
 $ECHO_N "checking whether SDL works..."
 $ECHO_N "checking whether SDL works..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SDL" ]; then
+		HAVE_SDL=`cat ${cache}/ctest-HAVE_SDL`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SDL`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <stdio.h>
 #include <SDL.h>
 int main(int argc, char *argv[]) {
@@ -3026,12 +3628,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_SDL="yes"
 echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
 echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
@@ -3042,13 +3648,16 @@ echo "hdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_SDL="no"
 echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
 echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 echo "#undef HAVE_SDL" >config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SDL" > ${cache}/ctest-HAVE_SDL
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SDL
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SDL}" != "no" ]; then
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
@@ -3067,7 +3676,17 @@ else
 $ECHO_N "checking whether SDL works (with X11 libs)..."
 $ECHO_N "checking whether SDL works (with X11 libs)..." >> config.log
 SDL_LIBS="${SDL_LIBS} -L/usr/X11R6/lib -lX11 -lXext -lXrandr -lXrender"
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SDL" ]; then
+		HAVE_SDL=`cat ${cache}/ctest-HAVE_SDL`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SDL`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <stdio.h>
 #include <SDL.h>
 int main(int argc, char *argv[]) {
@@ -3082,12 +3701,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_SDL="yes"
 echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
 echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
@@ -3098,13 +3721,16 @@ echo "hdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_SDL="no"
 echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
 echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
 echo "#undef HAVE_SDL" >config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SDL" > ${cache}/ctest-HAVE_SDL
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SDL
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SDL}" != "no" ]; then
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
@@ -3155,27 +3781,75 @@ echo "hdefs[\"ENABLE_GUI\"] = \"$ENABLE_GUI\"" >>configure.lua
  then
 $ECHO_N "checking for FreeType (http://www.freetype.org)..."
 $ECHO_N "checking for FreeType (http://www.freetype.org)..." >> config.log
-FREETYPE_VERSION=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/freetype-config" ]; then
-		FREETYPE_VERSION=`${path}/freetype-config --version`
-		break
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-FREETYPE_VERSION" ]; then
+		FREETYPE_VERSION=`cat ${cache}/exec-FREETYPE_VERSION`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_VERSION`
+		MK_CACHED="Yes"
 	fi
-done
-FREETYPE_CFLAGS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/freetype-config" ]; then
-		FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
-		break
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	FREETYPE_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/freetype-config" ]; then
+			FREETYPE_VERSION=`${path}/freetype-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$FREETYPE_VERSION" > ${cache}/exec-FREETYPE_VERSION
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_VERSION
 	fi
-done
-FREETYPE_LIBS=""
-for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/freetype-config" ]; then
-		FREETYPE_LIBS=`${path}/freetype-config --libs`
-		break
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-FREETYPE_CFLAGS" ]; then
+		FREETYPE_CFLAGS=`cat ${cache}/exec-FREETYPE_CFLAGS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_CFLAGS`
+		MK_CACHED="Yes"
 	fi
-done
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	FREETYPE_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/freetype-config" ]; then
+			FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$FREETYPE_CFLAGS" > ${cache}/exec-FREETYPE_CFLAGS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_CFLAGS
+	fi
+fi
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-FREETYPE_LIBS" ]; then
+		FREETYPE_LIBS=`cat ${cache}/exec-FREETYPE_LIBS`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-FREETYPE_LIBS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	FREETYPE_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/freetype-config" ]; then
+			FREETYPE_LIBS=`${path}/freetype-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$FREETYPE_LIBS" > ${cache}/exec-FREETYPE_LIBS
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-FREETYPE_LIBS
+	fi
+fi
 if [ -d /usr/freeware/include ]; then
 FREETYPE_CFLAGS="${FREETYPE_CFLAGS} -I/usr/freeware/include"
 fi;
@@ -3184,7 +3858,17 @@ echo "yes"
 echo "yes" >> config.log
 $ECHO_N "checking whether FreeType works..."
 $ECHO_N "checking whether FreeType works..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_FREETYPE" ]; then
+		HAVE_FREETYPE=`cat ${cache}/ctest-HAVE_FREETYPE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_FREETYPE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
@@ -3199,12 +3883,16 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_FREETYPE="yes"
 echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
 echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
@@ -3215,13 +3903,16 @@ echo "hdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_FREETYPE="no"
 echo "HAVE_FREETYPE=$HAVE_FREETYPE" >>Makefile.config
 echo "mdefs[\"HAVE_FREETYPE\"] = \"$HAVE_FREETYPE\"" >>configure.lua
 echo "#undef HAVE_FREETYPE" >config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_FREETYPE" > ${cache}/ctest-HAVE_FREETYPE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_FREETYPE
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 echo "#ifndef FREETYPE_CFLAGS" > config/freetype_cflags.h
@@ -3325,7 +4016,17 @@ else
 OPENGL_CFLAGS="${GL_CFLAGS}"
 $ECHO_N "checking whether -lopengl32 works..."
 $ECHO_N "checking whether -lopengl32 works..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_LIBOPENGL32" ]; then
+		HAVE_LIBOPENGL32=`cat ${cache}/ctest-HAVE_LIBOPENGL32`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_LIBOPENGL32`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #else
@@ -3338,12 +4039,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c -lopengl32" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c -lopengl32 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c -lopengl32" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c -lopengl32 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_LIBOPENGL32="yes"
 echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
 echo "mdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
@@ -3354,13 +4059,16 @@ echo "hdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_LIBOPENGL32="no"
 echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
 echo "mdefs[\"HAVE_LIBOPENGL32\"] = \"$HAVE_LIBOPENGL32\"" >>configure.lua
 echo "#undef HAVE_LIBOPENGL32" >config/have_libopengl32.h
 echo "hdefs[\"HAVE_LIBOPENGL32\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_LIBOPENGL32" > ${cache}/ctest-HAVE_LIBOPENGL32
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LIBOPENGL32
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_LIBOPENGL32}" = "yes" ]; then
 OPENGL_LIBS="${GL_LIBS} -lopengl32"
@@ -3370,7 +4078,17 @@ fi;
 fi;
 $ECHO_N "checking whether OpenGL works..."
 $ECHO_N "checking whether OpenGL works..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_OPENGL" ]; then
+		HAVE_OPENGL=`cat ${cache}/ctest-HAVE_OPENGL`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_OPENGL`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #else
@@ -3383,12 +4101,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_OPENGL="yes"
 echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
 echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
@@ -3399,13 +4121,16 @@ echo "hdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_OPENGL="no"
 echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
 echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
 echo "#undef HAVE_OPENGL" >config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_OPENGL" > ${cache}/ctest-HAVE_OPENGL
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_OPENGL
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
@@ -3424,7 +4149,17 @@ else
 $ECHO_N "checking whether -lGL requires -lm..."
 $ECHO_N "checking whether -lGL requires -lm..." >> config.log
 OPENGL_LIBS="${OPENGL_LIBS} -lm"
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_OPENGL" ]; then
+		HAVE_OPENGL=`cat ${cache}/ctest-HAVE_OPENGL`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_OPENGL`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #else
@@ -3437,12 +4172,16 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_OPENGL="yes"
 echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
 echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
@@ -3453,13 +4192,16 @@ echo "hdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_OPENGL="no"
 echo "HAVE_OPENGL=$HAVE_OPENGL" >>Makefile.config
 echo "mdefs[\"HAVE_OPENGL\"] = \"$HAVE_OPENGL\"" >>configure.lua
 echo "#undef HAVE_OPENGL" >config/have_opengl.h
 echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_OPENGL" > ${cache}/ctest-HAVE_OPENGL
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_OPENGL
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
@@ -3541,7 +4283,17 @@ echo "ok"
 echo "ok" >> config.log
 $ECHO_N "checking whether libjpeg works..."
 $ECHO_N "checking whether libjpeg works..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_JPEG" ]; then
+		HAVE_JPEG=`cat ${cache}/ctest-HAVE_JPEG`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_JPEG`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #ifdef _WIN32
 #error "libjpeg conflicts with windows.h"
 #endif
@@ -3571,12 +4323,16 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o $testdir/conftest conftest.c ${JPEG_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o $testdir/conftest conftest.c ${JPEG_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o $testdir/conftest conftest.c ${JPEG_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${JPEG_CFLAGS} -o $testdir/conftest conftest.c ${JPEG_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_JPEG="yes"
 echo "HAVE_JPEG=$HAVE_JPEG" >>Makefile.config
 echo "mdefs[\"HAVE_JPEG\"] = \"$HAVE_JPEG\"" >>configure.lua
@@ -3587,13 +4343,16 @@ echo "hdefs[\"HAVE_JPEG\"] = \"$HAVE_JPEG\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_JPEG="no"
 echo "HAVE_JPEG=$HAVE_JPEG" >>Makefile.config
 echo "mdefs[\"HAVE_JPEG\"] = \"$HAVE_JPEG\"" >>configure.lua
 echo "#undef HAVE_JPEG" >config/have_jpeg.h
 echo "hdefs[\"HAVE_JPEG\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_JPEG" > ${cache}/ctest-HAVE_JPEG
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_JPEG
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_JPEG}" != "" ]; then
 echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
@@ -3677,37 +4436,27 @@ if [ "${enable_network}" = "yes" ]
  then
 $ECHO_N "checking for the getaddrinfo() function..."
 $ECHO_N "checking for the getaddrinfo() function..." >> config.log
-cat << EOT > conftest.c
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-
-int
-main(int argc, char *argv[])
-{
-	struct addrinfo hints, *res0;
-	const char *s;
-	int rv;
-
-	hints.ai_family = PF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
-	rv = getaddrinfo("hostname", "port", &hints, &res0);
-	s = gai_strerror(rv);
-	freeaddrinfo(res0);
-	return (0);
-}
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETADDRINFO" ]; then
+		HAVE_GETADDRINFO=`cat ${cache}/ctest-HAVE_GETADDRINFO`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETADDRINFO`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 
 EOT
-compile="ok"
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-if [ $? != 0 ]; then
-	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
 fi
-rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_GETADDRINFO="yes"
@@ -3722,6 +4471,10 @@ HAVE_GETADDRINFO="no"
 echo "#undef HAVE_GETADDRINFO" >config/have_getaddrinfo.h
 echo "hdefs[\"HAVE_GETADDRINFO\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETADDRINFO" > ${cache}/ctest-HAVE_GETADDRINFO
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETADDRINFO
+fi
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]
  then
 NETWORK="1"
@@ -3784,7 +4537,17 @@ $ECHO_N "checking for POSIX threads..."
 $ECHO_N "checking for POSIX threads..." >> config.log
 PTHREADS_CFLAGS=""
 PTHREADS_LIBS="-lpthread"
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PTHREADS" ]; then
+		HAVE_PTHREADS=`cat ${cache}/ctest-HAVE_PTHREADS`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PTHREADS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
 
@@ -3805,12 +4568,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_PTHREADS="yes"
 echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
@@ -3821,13 +4588,16 @@ echo "hdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_PTHREADS="no"
 echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 echo "#undef HAVE_PTHREADS" >config/have_pthreads.h
 echo "hdefs[\"HAVE_PTHREADS\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PTHREADS" > ${cache}/ctest-HAVE_PTHREADS
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREADS
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
@@ -3849,7 +4619,17 @@ else
 $ECHO_N "checking for -pthread..."
 $ECHO_N "checking for -pthread..." >> config.log
 PTHREADS_LIBS="-pthread"
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PTHREADS" ]; then
+		HAVE_PTHREADS=`cat ${cache}/ctest-HAVE_PTHREADS`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PTHREADS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
 
@@ -3870,12 +4650,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_PTHREADS="yes"
 echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
@@ -3886,13 +4670,16 @@ echo "hdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_PTHREADS="no"
 echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 echo "#undef HAVE_PTHREADS" >config/have_pthreads.h
 echo "hdefs[\"HAVE_PTHREADS\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PTHREADS" > ${cache}/ctest-HAVE_PTHREADS
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREADS
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
@@ -3949,7 +4736,17 @@ fi;
 if [ -f "/usr/local/lib/libpthreadGCE2d.a" ]; then
 PTHREADS_LIBS="-L/usr/local/lib -lpthreadGCE2d"
 fi;
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PTHREADS" ]; then
+		HAVE_PTHREADS=`cat ${cache}/ctest-HAVE_PTHREADS`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PTHREADS`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
 
@@ -3970,12 +4767,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_PTHREADS="yes"
 echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
@@ -3986,13 +4787,16 @@ echo "hdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_PTHREADS="no"
 echo "HAVE_PTHREADS=$HAVE_PTHREADS" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS\"] = \"$HAVE_PTHREADS\"" >>configure.lua
 echo "#undef HAVE_PTHREADS" >config/have_pthreads.h
 echo "hdefs[\"HAVE_PTHREADS\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PTHREADS" > ${cache}/ctest-HAVE_PTHREADS
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREADS
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
@@ -4021,7 +4825,17 @@ else
 PTHREADS_XOPEN_CFLAGS="-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600"
 fi;
 PTHREADS_XOPEN_LIBS="-lpthread"
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PTHREADS_XOPEN" ]; then
+		HAVE_PTHREADS_XOPEN=`cat ${cache}/ctest-HAVE_PTHREADS_XOPEN`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PTHREADS_XOPEN`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
 
@@ -4035,12 +4849,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_PTHREADS_XOPEN="yes"
 echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
@@ -4051,13 +4869,16 @@ echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_PTHREADS_XOPEN="no"
 echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
 echo "#undef HAVE_PTHREADS_XOPEN" >config/have_pthreads_xopen.h
 echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PTHREADS_XOPEN" > ${cache}/ctest-HAVE_PTHREADS_XOPEN
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREADS_XOPEN
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
 echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
@@ -4114,7 +4935,17 @@ fi;
 if [ -f "/usr/local/include/pthreads/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/local/include/pthreads"
 fi;
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PTHREADS_XOPEN" ]; then
+		HAVE_PTHREADS_XOPEN=`cat ${cache}/ctest-HAVE_PTHREADS_XOPEN`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PTHREADS_XOPEN`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
 
@@ -4128,12 +4959,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_XOPEN_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_XOPEN_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_PTHREADS_XOPEN="yes"
 echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
@@ -4144,13 +4979,16 @@ echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_PTHREADS_XOPEN="no"
 echo "HAVE_PTHREADS_XOPEN=$HAVE_PTHREADS_XOPEN" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREADS_XOPEN\"] = \"$HAVE_PTHREADS_XOPEN\"" >>configure.lua
 echo "#undef HAVE_PTHREADS_XOPEN" >config/have_pthreads_xopen.h
 echo "hdefs[\"HAVE_PTHREADS_XOPEN\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PTHREADS_XOPEN" > ${cache}/ctest-HAVE_PTHREADS_XOPEN
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREADS_XOPEN
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
 echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
@@ -4176,7 +5014,17 @@ fi;
 fi;
 $ECHO_N "checking for PTHREAD_MUTEX_RECURSIVE..."
 $ECHO_N "checking for PTHREAD_MUTEX_RECURSIVE..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PTHREAD_MUTEX_RECURSIVE" ]; then
+		HAVE_PTHREAD_MUTEX_RECURSIVE=`cat ${cache}/ctest-HAVE_PTHREAD_MUTEX_RECURSIVE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PTHREAD_MUTEX_RECURSIVE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
 int main(int argc, char *argv[])
@@ -4189,12 +5037,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_PTHREAD_MUTEX_RECURSIVE="yes"
 echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
@@ -4205,13 +5057,16 @@ echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_PTHREAD_MUTEX_RECURSIVE="no"
 echo "HAVE_PTHREAD_MUTEX_RECURSIVE=$HAVE_PTHREAD_MUTEX_RECURSIVE" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >>configure.lua
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE" >config/have_pthread_mutex_recursive.h
 echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PTHREAD_MUTEX_RECURSIVE" > ${cache}/ctest-HAVE_PTHREAD_MUTEX_RECURSIVE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREAD_MUTEX_RECURSIVE
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
@@ -4224,7 +5079,17 @@ echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE\"] = nil" >>configure.lua
 fi;
 $ECHO_N "checking for PTHREAD_MUTEX_RECURSIVE_NP..."
 $ECHO_N "checking for PTHREAD_MUTEX_RECURSIVE_NP..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_PTHREAD_MUTEX_RECURSIVE_NP" ]; then
+		HAVE_PTHREAD_MUTEX_RECURSIVE_NP=`cat ${cache}/ctest-HAVE_PTHREAD_MUTEX_RECURSIVE_NP`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_PTHREAD_MUTEX_RECURSIVE_NP`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <pthread.h>
 #include <signal.h>
 int main(int argc, char *argv[])
@@ -4237,12 +5102,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${PTHREADS_CFLAGS} -o $testdir/conftest conftest.c ${PTHREADS_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_PTHREAD_MUTEX_RECURSIVE_NP="yes"
 echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
@@ -4253,13 +5122,16 @@ echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSI
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_PTHREAD_MUTEX_RECURSIVE_NP="no"
 echo "HAVE_PTHREAD_MUTEX_RECURSIVE_NP=$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >>Makefile.config
 echo "mdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >>configure.lua
 echo "#undef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" >config/have_pthread_mutex_recursive_np.h
 echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > ${cache}/ctest-HAVE_PTHREAD_MUTEX_RECURSIVE_NP
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREAD_MUTEX_RECURSIVE_NP
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
@@ -4409,7 +5281,17 @@ $ECHO_N "checking for a gettext library..."
 $ECHO_N "checking for a gettext library..." >> config.log
 GETTEXT_CFLAGS=""
 GETTEXT_LIBS=""
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETTEXT" ]; then
+		HAVE_GETTEXT=`cat ${cache}/ctest-HAVE_GETTEXT`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETTEXT`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <libintl.h>
 int main(int argc, char *argv[])
 {
@@ -4422,12 +5304,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_GETTEXT="yes"
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
@@ -4438,13 +5324,16 @@ echo "hdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_GETTEXT="no"
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
 echo "#undef HAVE_GETTEXT" >config/have_gettext.h
 echo "hdefs[\"HAVE_GETTEXT\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETTEXT" > ${cache}/ctest-HAVE_GETTEXT
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTEXT
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_GETTEXT}" = "no" ]; then
 $ECHO_N "checking whether gettext requires -lintl..."
@@ -4465,7 +5354,17 @@ if [ -e /opt/local/include/libintl.h ]; then
 GETTEXT_CFLAGS="-I/opt/local/include"
 GETTEXT_LIBS="-L/opt/local/lib -lintl"
 fi;
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETTEXT" ]; then
+		HAVE_GETTEXT=`cat ${cache}/ctest-HAVE_GETTEXT`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETTEXT`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <libintl.h>
 int main(int argc, char *argv[])
 {
@@ -4478,12 +5377,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_GETTEXT="yes"
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
@@ -4494,13 +5397,16 @@ echo "hdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_GETTEXT="no"
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
 echo "#undef HAVE_GETTEXT" >config/have_gettext.h
 echo "hdefs[\"HAVE_GETTEXT\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETTEXT" > ${cache}/ctest-HAVE_GETTEXT
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTEXT
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_GETTEXT}" = "yes" ]; then
 echo "#ifndef GETTEXT_CFLAGS" > config/gettext_cflags.h
@@ -4534,7 +5440,17 @@ if [ -e /opt/local/include/iconv.h ]; then
 GETTEXT_CFLAGS="${GETTEXT_CFLAGS} -I/opt/local/include"
 GETTEXT_LIBS="${GETTEXT_LIBS} -L/opt/local/lib -liconv"
 fi;
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETTEXT" ]; then
+		HAVE_GETTEXT=`cat ${cache}/ctest-HAVE_GETTEXT`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETTEXT`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <libintl.h>
 int main(int argc, char *argv[])
 {
@@ -4547,12 +5463,16 @@ int main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS} 2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${GETTEXT_CFLAGS} -o $testdir/conftest conftest.c ${GETTEXT_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_GETTEXT="yes"
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
@@ -4563,13 +5483,16 @@ echo "hdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_GETTEXT="no"
 echo "HAVE_GETTEXT=$HAVE_GETTEXT" >>Makefile.config
 echo "mdefs[\"HAVE_GETTEXT\"] = \"$HAVE_GETTEXT\"" >>configure.lua
 echo "#undef HAVE_GETTEXT" >config/have_gettext.h
 echo "hdefs[\"HAVE_GETTEXT\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETTEXT" > ${cache}/ctest-HAVE_GETTEXT
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTEXT
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_GETTEXT}" != "" ]; then
 echo "#ifndef GETTEXT_CFLAGS" > config/gettext_cflags.h
@@ -4969,7 +5892,17 @@ ALTIVEC_CHECK_CFLAGS=""
 echo "ALTIVEC_CHECK_CFLAGS=$ALTIVEC_CHECK_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CHECK_CFLAGS\"] = \"$ALTIVEC_CHECK_CFLAGS\"" >>configure.lua
 fi;
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_ALTIVEC" ]; then
+		HAVE_ALTIVEC=`cat ${cache}/ctest-HAVE_ALTIVEC`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ALTIVEC`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <altivec.h>
 float a[4] = { 1,2,3,4 };
 float b[4] = { 5,6,7,8 };
@@ -4987,12 +5920,16 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_ALTIVEC="yes"
 echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
 echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
@@ -5003,13 +5940,16 @@ echo "hdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_ALTIVEC="no"
 echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
 echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
 echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_ALTIVEC" > ${cache}/ctest-HAVE_ALTIVEC
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALTIVEC
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
@@ -5026,7 +5966,17 @@ echo "hdefs[\"HAVE_ALTIVEC_H\"] = \"$HAVE_ALTIVEC_H\"" >>configure.lua
 else
 $ECHO_N "checking for AltiVec (without <altivec.h>)..."
 $ECHO_N "checking for AltiVec (without <altivec.h>)..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_ALTIVEC" ]; then
+		HAVE_ALTIVEC=`cat ${cache}/ctest-HAVE_ALTIVEC`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ALTIVEC`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 float a[4] = { 1,2,3,4 };
 float b[4] = { 5,6,7,8 };
 float c[4];
@@ -5043,12 +5993,16 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
-if [ "$?" = "0" ]; then
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${ALTIVEC_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 HAVE_ALTIVEC="yes"
 echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
 echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
@@ -5059,13 +6013,16 @@ echo "hdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 HAVE_ALTIVEC="no"
 echo "HAVE_ALTIVEC=$HAVE_ALTIVEC" >>Makefile.config
 echo "mdefs[\"HAVE_ALTIVEC\"] = \"$HAVE_ALTIVEC\"" >>configure.lua
 echo "#undef HAVE_ALTIVEC" >config/have_altivec.h
 echo "hdefs[\"HAVE_ALTIVEC\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_ALTIVEC" > ${cache}/ctest-HAVE_ALTIVEC
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALTIVEC
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
