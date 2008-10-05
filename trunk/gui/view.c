@@ -699,15 +699,15 @@ AG_BeginRendering(void)
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		agClipStateGL[0] = glIsEnabled(GL_CLIP_PLANE0);
+		glEnable(GL_CLIP_PLANE0);
+		agClipStateGL[1] = glIsEnabled(GL_CLIP_PLANE1);
+		glEnable(GL_CLIP_PLANE1);
+		agClipStateGL[2] = glIsEnabled(GL_CLIP_PLANE2);
+		glEnable(GL_CLIP_PLANE2);
+		agClipStateGL[3] = glIsEnabled(GL_CLIP_PLANE3);
+		glEnable(GL_CLIP_PLANE3);
 	}
-	agClipStateGL[0] = glIsEnabled(GL_CLIP_PLANE0);
-	glEnable(GL_CLIP_PLANE0);
-	agClipStateGL[1] = glIsEnabled(GL_CLIP_PLANE1);
-	glEnable(GL_CLIP_PLANE1);
-	agClipStateGL[2] = glIsEnabled(GL_CLIP_PLANE2);
-	glEnable(GL_CLIP_PLANE2);
-	agClipStateGL[3] = glIsEnabled(GL_CLIP_PLANE3);
-	glEnable(GL_CLIP_PLANE3);
 #endif
 }
 
