@@ -950,7 +950,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CYGWIN
 fi
 rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 	if [ "${with_cygwin}" != "yes" ]; then
 		CFLAGS="$CFLAGS -mno-cygwin"
 		echo "CFLAGS=$CFLAGS" >> Makefile.config
