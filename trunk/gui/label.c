@@ -271,6 +271,7 @@ Init(void *obj)
 	lbl->wPre = -1;
 	lbl->hPre = agTextFontHeight;
 	lbl->justify = AG_TEXT_LEFT;
+	lbl->valign = AG_TEXT_TOP;
 	lbl->tCache = NULL;
 	SLIST_INIT(&lbl->lflags);
 	
@@ -312,6 +313,15 @@ AG_LabelJustify(AG_Label *lbl, enum ag_text_justify justify)
 {
 	AG_ObjectLock(lbl);
 	lbl->justify = justify;
+	AG_ObjectUnlock(lbl);
+}
+
+/* Vertically align the text in the specified way. */
+void
+AG_LabelValign(AG_Label *lbl, enum ag_text_valign valign)
+{
+	AG_ObjectLock(lbl);
+	lbl->valign = valign;
 	AG_ObjectUnlock(lbl);
 }
 
@@ -516,11 +526,13 @@ PrintPolled64(AG_Label *lbl, const char *f, char *s, char *s2)
 }
 #endif /* HAVE_64BIT */
 
-static int
-TextPosition(AG_Label *lbl, AG_Surface *su)
+static __inline__ void
+GetPosition(AG_Label *lbl, AG_Surface *su, int *x, int *y)
 {
-	return lbl->lPad +
-	       AG_TextJustifyOffset(WIDTH(lbl) - (lbl->lPad+lbl->rPad), su->w);
+	*x = lbl->lPad +
+	     AG_TextJustifyOffset(WIDTH(lbl) - (lbl->lPad+lbl->rPad), su->w);
+	*y = lbl->tPad +
+	     AG_TextValignOffset(HEIGHT(lbl) - (lbl->tPad+lbl->bPad), su->h);
 }
 
 /* Display a polled label. */
@@ -531,6 +543,7 @@ DrawPolled(AG_Label *lbl)
 	char s2[AG_LABEL_MAX];
 	char *f;
 	int i, fPos = 0;
+	int x, y;
 
 	if (lbl->text == NULL || lbl->text[0] == '\0') {
 		return;
@@ -619,12 +632,14 @@ DrawPolled(AG_Label *lbl)
 
 	if (agTextCache) {
 		int su = AG_TextCacheInsLookup(lbl->tCache,s);
-		int x = TextPosition(lbl, WSURFACE(lbl,su));
-		AG_WidgetBlitSurface(lbl, su, x, lbl->tPad);
+		
+		GetPosition(lbl, WSURFACE(lbl,su), &x, &y);
+		AG_WidgetBlitSurface(lbl, su, x, y);
 	} else {
 		AG_Surface *su = AG_TextRender(s);
-		int x = TextPosition(lbl, su);
-		AG_WidgetBlit(lbl, su, x, lbl->tPad);
+
+		GetPosition(lbl, su, &x, &y);
+		AG_WidgetBlit(lbl, su, x, y);
 		AG_SurfaceFree(su);
 	}
 }
@@ -633,7 +648,7 @@ static void
 Draw(void *obj)
 {
 	AG_Label *lbl = obj;
-	int x, cw = 0;				/* make compiler happy */
+	int x, y, cw = 0;			/* make compiler happy */
 	
 	if (lbl->flags & AG_LABEL_FRAME)
 		AG_DrawFrame(lbl,
@@ -656,6 +671,7 @@ Draw(void *obj)
 	
 	AG_PushTextState();
 	AG_TextJustify(lbl->justify);
+	AG_TextValign(lbl->valign);
 	AG_TextColor(TEXT_COLOR);
 
 	switch (lbl->type) {
@@ -673,9 +689,8 @@ Draw(void *obj)
 		}
 		lbl->flags &= ~(AG_LABEL_REGEN);
 		if (lbl->surface != -1) {
-			x = TextPosition(lbl, WSURFACE(lbl,lbl->surface));
-			AG_WidgetBlitSurface(lbl, lbl->surface,
-			    x, lbl->tPad);
+			GetPosition(lbl, WSURFACE(lbl,lbl->surface), &x, &y);
+			AG_WidgetBlitSurface(lbl, lbl->surface, x, y);
 		}
 		break;
 	case AG_LABEL_POLLED:
@@ -688,14 +703,14 @@ Draw(void *obj)
 		break;
 	}
 	
-	AG_PopTextState();
-
 	if (lbl->flags & AG_LABEL_PARTIAL) {
 		AG_PopClipRect();
+		GetPosition(lbl, WSURFACE(lbl,lbl->surfaceCont), &x, &y);
 		AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
 		    WIDTH(lbl) - cw,
-		    lbl->tPad);
+		    y);
 	}
+	AG_PopTextState();
 }
 
 static void

@@ -93,6 +93,9 @@ can be used to trigger events, or control a boolean value.
 .Fn AG_ButtonJustify "AG_Button *button" "enum ag_text_justify justify"
 .Pp
 .Ft void
+.Fn AG_ButtonValign "AG_Button *button" "enum ag_text_valign valign"
+.Pp
+.Ft void
 .Fn AG_ButtonSetRepeatMode "AG_Button *button" "int repeat_flag"
 .Pp
 .Ft void
@@ -171,15 +174,25 @@ The
 function defines whether to invert the meaning of the boolean variable
 bound to the button.
 .Pp
-The
 .Fn AG_ButtonJustify
-function sets the text justification for the button text:
+sets the justification for the button text label (or icon):
 .Pp
 .Bd -literal
 enum ag_text_justify {
 	AG_TEXT_LEFT,
 	AG_TEXT_CENTER,
 	AG_TEXT_RIGHT
+};
+.Ed
+.Pp
+.Fn AG_ButtonValign
+sets the vertical alignment for the button text label (or icon):
+.Pp
+.Bd -literal
+enum ag_text_valign {
+	AG_TEXT_TOP,
+	AG_TEXT_MIDDLE,
+	AG_TEXT_BOTTOM
 };
 .Ed
 .Pp
@@ -197,9 +210,11 @@ sets the button label to a copy of the given surface.
 The
 .Fn AG_ButtonSurfaceNODUP
 variant uses the given surface as source without copying.
+If a text label currently exists, it is removed.
 .Pp
 .Fn AG_ButtonText
 uses the given text string as the button label.
+If a surface is currently set, it is removed.
 .Pp
 .Sh BUTTON FLAGS
 The following
