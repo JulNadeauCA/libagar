@@ -225,10 +225,20 @@ Draw(void *obj)
 {
 	AG_Window *win = obj;
 	AG_Widget *chld;
-
+	int hTitle = 0;
+	
 	STYLE(win)->Window(win);
+
+	hTitle = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
+	AG_PushClipRect(win,
+	    AG_RECT(0, 0,
+	            WIDTH(win) - win->wBorderSide*2,
+		    HEIGHT(win) - win->wBorderBot));
+
 	WIDGET_FOREACH_CHILD(chld, win)
 		AG_WidgetDraw(chld);
+	
+	AG_PopClipRect();
 }
 
 /* Apply initial alignment parameter. */
@@ -1159,11 +1169,6 @@ fail:
 	return (-1);
 }
 
-static __inline__ void
-UpdateMinSize(AG_Window *win)
-{
-}
-
 /* Configure minimum window size in percentage of computed geometry. */
 void
 AG_WindowSetMinSizePct(AG_Window *win, int pct)
@@ -1171,7 +1176,6 @@ AG_WindowSetMinSizePct(AG_Window *win, int pct)
 	AG_ObjectLock(win);
 	win->flags |= AG_WINDOW_MINSIZEPCT;
 	win->minPct = pct;
-	UpdateMinSize(win);
 	AG_ObjectUnlock(win);
 }
 
@@ -1183,7 +1187,6 @@ AG_WindowSetMinSize(AG_Window *win, int w, int h)
 	win->flags &= ~(AG_WINDOW_MINSIZEPCT);
 	win->wMin = w;
 	win->hMin = h;
-	UpdateMinSize(win);
 	AG_ObjectUnlock(win);
 }
 
@@ -1506,7 +1509,6 @@ SizeRequest(void *obj, AG_SizeReq *r)
 
 	win->wReq = r->w;
 	win->hReq = r->h;
-	UpdateMinSize(win);
 	ClampToView(win);
 }
 
