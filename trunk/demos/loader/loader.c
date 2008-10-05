@@ -28,6 +28,7 @@ LoadBMP(AG_Event *event)
 	AG_FileType *ft = AG_PTR(2);
 	AG_Surface *bmp;
 	AG_Window *win;
+	AG_Scrollview *sv;
 	Uint8 *pSrc;
 	char *title;
 	int i;
@@ -63,15 +64,18 @@ LoadBMP(AG_Event *event)
 	}
 
 	/*
-	 * Add a pixmap widget displaying the bitmap, scaled down to the
-	 * maximum view size if needed.
+	 * Place an AG_Pixmap(3) widget inside of an AG_Scrollview(3) to
+	 * display the image.
 	 */
-	AG_PixmapFromSurfaceScaled(win, 0, bmp,
-	    (bmp->w < (agView->w - 16)) ? bmp->w : agView->w - 16,
-	    (bmp->h < (agView->h - 40)) ? bmp->h : agView->h - 40);
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
+	AG_PixmapFromSurfaceScaled(sv, 0, bmp, bmp->w, bmp->h);
 
-	AG_SurfaceFree(bmp);
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC,
+	    AG_MIN(agView->w,bmp->w),
+	    AG_MIN(agView->h,bmp->h));
 	AG_WindowShow(win);
+	
+	AG_SurfaceFree(bmp);
 }
 
 #ifdef HAVE_SDL_IMAGE
@@ -84,8 +88,8 @@ LoadIMG(AG_Event *event)
 	char *file = AG_STRING(1);
 	AG_FileType *ft = AG_PTR(2);
 	SDL_Surface *img;
-	AG_Surface *aImg;
 	AG_Window *win;
+	AG_Scrollview *sv;
 	char *title;
 	int i;
 
@@ -102,16 +106,20 @@ LoadIMG(AG_Event *event)
 	}
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Image <%s>", title);
+
 	/*
-	 * Add a pixmap widget displaying the bitmap, scaled down to the
-	 * maximum view size if needed.
+	 * Place an AG_Pixmap(3) widget inside of an AG_Scrollview(3) to
+	 * display the image.
 	 */
-	aImg = AG_SurfaceFromSDL(img);
-	AG_PixmapFromSurfaceScaled(win, 0, aImg,
-	    (img->w < (agView->w - 16)) ? img->w : agView->w - 16,
-	    (img->h < (agView->h - 40)) ? img->h : agView->h - 40);
-	SDL_FreeSurface(img);
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
+	AG_PixmapFromSurface(sv, 0, AG_SurfaceFromSDL(img));
+
+	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC,
+	    AG_MIN(agView->w,img->w),
+	    AG_MIN(agView->h,img->h));
 	AG_WindowShow(win);
+	
+	SDL_FreeSurface(img);
 }
 #endif /* HAVE_SDL_IMAGE */
 
