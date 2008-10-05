@@ -950,7 +950,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CYGWIN
 fi
 rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 	if [ "${with_cygwin}" != "yes" ]; then
 		CFLAGS="$CFLAGS -mno-cygwin"
 		echo "CFLAGS=$CFLAGS" >> Makefile.config
@@ -1017,7 +1017,6 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 CXX_HAVE_WARNINGS="yes"
 echo "CXX_HAVE_WARNINGS=$CXX_HAVE_WARNINGS" >>Makefile.config
 echo "mdefs[\"CXX_HAVE_WARNINGS\"] = \"$CXX_HAVE_WARNINGS\"" >>configure.lua
@@ -1028,7 +1027,6 @@ echo "hdefs[\"CXX_HAVE_WARNINGS\"] = \"$CXX_HAVE_WARNINGS\"" >>configure.lua
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 CXX_HAVE_WARNINGS="no"
 echo "CXX_HAVE_WARNINGS=$CXX_HAVE_WARNINGS" >>Makefile.config
 echo "mdefs[\"CXX_HAVE_WARNINGS\"] = \"$CXX_HAVE_WARNINGS\"" >>configure.lua
@@ -1076,7 +1074,6 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 CXX_HAVE_BOUNDED_ATTRIBUTE="yes"
 echo "CXX_HAVE_BOUNDED_ATTRIBUTE=$CXX_HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"CXX_HAVE_BOUNDED_ATTRIBUTE\"] = \"$CXX_HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
@@ -1087,7 +1084,6 @@ echo "hdefs[\"CXX_HAVE_BOUNDED_ATTRIBUTE\"] = \"$CXX_HAVE_BOUNDED_ATTRIBUTE\"" >
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 CXX_HAVE_BOUNDED_ATTRIBUTE="no"
 echo "CXX_HAVE_BOUNDED_ATTRIBUTE=$CXX_HAVE_BOUNDED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"CXX_HAVE_BOUNDED_ATTRIBUTE\"] = \"$CXX_HAVE_BOUNDED_ATTRIBUTE\"" >>configure.lua
@@ -1138,7 +1134,6 @@ fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
-compile="ok"
 CXX_HAVE_FORMAT_ATTRIBUTE="yes"
 echo "CXX_HAVE_FORMAT_ATTRIBUTE=$CXX_HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"CXX_HAVE_FORMAT_ATTRIBUTE\"] = \"$CXX_HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
@@ -1149,7 +1144,6 @@ echo "hdefs[\"CXX_HAVE_FORMAT_ATTRIBUTE\"] = \"$CXX_HAVE_FORMAT_ATTRIBUTE\"" >>c
 else
 echo "no"
 echo "no" >> config.log
-compile="failed"
 CXX_HAVE_FORMAT_ATTRIBUTE="no"
 echo "CXX_HAVE_FORMAT_ATTRIBUTE=$CXX_HAVE_FORMAT_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"CXX_HAVE_FORMAT_ATTRIBUTE\"] = \"$CXX_HAVE_FORMAT_ATTRIBUTE\"" >>configure.lua
@@ -1374,7 +1368,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/cxxtest-status-CXX_HAVE_CYGWIN
 fi
 rm -f $testdir/conftest conftest.cpp
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 	if [ "${with_cygwin}" != "yes" ]; then
 		CXXFLAGS="$CXXFLAGS -mno-cygwin"
 		echo "CXXFLAGS=$CXXFLAGS" >> Makefile.config
