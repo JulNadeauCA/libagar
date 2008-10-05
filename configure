@@ -1018,7 +1018,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CYGWIN
 fi
 rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 	if [ "${with_cygwin}" != "yes" ]; then
 		CFLAGS="$CFLAGS -mno-cygwin"
 		echo "CFLAGS=$CFLAGS" >> Makefile.config
@@ -1515,7 +1515,19 @@ if [ "${cache}" != "" ]; then
 fi
 $ECHO_N "checking for free(NULL) is a no-op..."
 $ECHO_N "checking for free(NULL) is a no-op..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+MK_RUN_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-FREE_NULL_IS_A_NOOP" ]; then
+		FREE_NULL_IS_A_NOOP=`cat ${cache}/ctest-FREE_NULL_IS_A_NOOP`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-FREE_NULL_IS_A_NOOP`
+		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-FREE_NULL_IS_A_NOOP`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <stdlib.h>
 int main(int argc, char *argv[]) {
 	free(NULL);
@@ -1523,19 +1535,14 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-echo "no (compile failed)"
-echo "no (compile failed)" >> config.log
-compile="failed"
-FREE_NULL_IS_A_NOOP="no"
-echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >>Makefile.config
-echo "mdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
-echo "#undef FREE_NULL_IS_A_NOOP" >config/free_null_is_a_noop.h
-echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = nil" >>configure.lua
-else
-compile="ok"
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 (cd $testdir && ./conftest) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
@@ -1548,15 +1555,30 @@ echo "#define FREE_NULL_IS_A_NOOP \"$FREE_NULL_IS_A_NOOP\"" >> config/free_null_
 echo "#endif" >> config/free_null_is_a_noop.h
 echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
 else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
+echo "no (test program failed)"
+echo "no (test program failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
 FREE_NULL_IS_A_NOOP="no"
 echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >>Makefile.config
 echo "mdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
 echo "#undef FREE_NULL_IS_A_NOOP" >config/free_null_is_a_noop.h
 echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = nil" >>configure.lua
 fi;
+else
+echo "no (compilation failed)"
+echo "no (compilation failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
+FREE_NULL_IS_A_NOOP="no"
+echo "FREE_NULL_IS_A_NOOP=$FREE_NULL_IS_A_NOOP" >>Makefile.config
+echo "mdefs[\"FREE_NULL_IS_A_NOOP\"] = \"$FREE_NULL_IS_A_NOOP\"" >>configure.lua
+echo "#undef FREE_NULL_IS_A_NOOP" >config/free_null_is_a_noop.h
+echo "hdefs[\"FREE_NULL_IS_A_NOOP\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$FREE_NULL_IS_A_NOOP" > ${cache}/ctest-FREE_NULL_IS_A_NOOP
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-FREE_NULL_IS_A_NOOP
+	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-FREE_NULL_IS_A_NOOP
+fi
 rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for the C math library..."
 $ECHO_N "checking for the C math library..." >> config.log
@@ -2887,7 +2909,19 @@ echo ""
 echo "" >> config.log
 $ECHO_N "checking for BIG_ENDIAN..."
 $ECHO_N "checking for BIG_ENDIAN..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+MK_RUN_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_BIG_ENDIAN" ]; then
+		_MK_BIG_ENDIAN=`cat ${cache}/ctest-_MK_BIG_ENDIAN`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_BIG_ENDIAN`
+		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-_MK_BIG_ENDIAN`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sys/param.h>
 int
@@ -2901,19 +2935,14 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-echo "no (compile failed)"
-echo "no (compile failed)" >> config.log
-compile="failed"
-_MK_BIG_ENDIAN="no"
-echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
-echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
-echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
-else
-compile="ok"
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 (cd $testdir && ./conftest) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
@@ -2926,15 +2955,30 @@ echo "#define _MK_BIG_ENDIAN \"$_MK_BIG_ENDIAN\"" >> config/_mk_big_endian.h
 echo "#endif" >> config/_mk_big_endian.h
 echo "hdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
 else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
+echo "no (test program failed)"
+echo "no (test program failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
 _MK_BIG_ENDIAN="no"
 echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >>Makefile.config
 echo "mdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
 echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
 echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
 fi;
+else
+echo "no (compilation failed)"
+echo "no (compilation failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
+_MK_BIG_ENDIAN="no"
+echo "_MK_BIG_ENDIAN=$_MK_BIG_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_BIG_ENDIAN\"] = \"$_MK_BIG_ENDIAN\"" >>configure.lua
+echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
+echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_BIG_ENDIAN" > ${cache}/ctest-_MK_BIG_ENDIAN
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_BIG_ENDIAN
+	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-_MK_BIG_ENDIAN
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${_MK_BIG_ENDIAN}" = "yes" ]; then
 _MK_LITTLE_ENDIAN="no"
@@ -2943,7 +2987,19 @@ echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 else
 $ECHO_N "checking for LITTLE_ENDIAN..."
 $ECHO_N "checking for LITTLE_ENDIAN..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+MK_RUN_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_LITTLE_ENDIAN" ]; then
+		_MK_LITTLE_ENDIAN=`cat ${cache}/ctest-_MK_LITTLE_ENDIAN`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_LITTLE_ENDIAN`
+		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-_MK_LITTLE_ENDIAN`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <sys/types.h>
 #include <sys/param.h>
 int
@@ -2957,19 +3013,14 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-echo "no (compile failed)"
-echo "no (compile failed)" >> config.log
-compile="failed"
-_MK_LITTLE_ENDIAN="no"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
-echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
-echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
-else
-compile="ok"
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 (cd $testdir && ./conftest) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
@@ -2982,15 +3033,30 @@ echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >> config/_mk_little_end
 echo "#endif" >> config/_mk_little_endian.h
 echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
 else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
+echo "no (test program failed)"
+echo "no (test program failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
 _MK_LITTLE_ENDIAN="no"
 echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
 echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
 echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
 echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 fi;
+else
+echo "no (compilation failed)"
+echo "no (compilation failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
+_MK_LITTLE_ENDIAN="no"
+echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_LITTLE_ENDIAN" > ${cache}/ctest-_MK_LITTLE_ENDIAN
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_LITTLE_ENDIAN
+	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-_MK_LITTLE_ENDIAN
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${_MK_LITTLE_ENDIAN}" = "yes" ]; then
 _MK_BIG_ENDIAN="no"
@@ -2999,7 +3065,19 @@ echo "hdefs[\"_MK_BIG_ENDIAN\"] = nil" >>configure.lua
 else
 $ECHO_N "checking for little endian byte order..."
 $ECHO_N "checking for little endian byte order..." >> config.log
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+MK_RUN_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-_MK_LITTLE_ENDIAN" ]; then
+		_MK_LITTLE_ENDIAN=`cat ${cache}/ctest-_MK_LITTLE_ENDIAN`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-_MK_LITTLE_ENDIAN`
+		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-_MK_LITTLE_ENDIAN`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 int
 main(int argc, char *argv[])
 {
@@ -3012,19 +3090,14 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-echo "no (compile failed)"
-echo "no (compile failed)" >> config.log
-compile="failed"
-_MK_LITTLE_ENDIAN="no"
-echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
-echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
-echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
-echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
-else
-compile="ok"
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 (cd $testdir && ./conftest) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
@@ -3037,17 +3110,32 @@ echo "#define _MK_LITTLE_ENDIAN \"$_MK_LITTLE_ENDIAN\"" >> config/_mk_little_end
 echo "#endif" >> config/_mk_little_endian.h
 echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
 else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
+echo "no (test program failed)"
+echo "no (test program failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
 _MK_LITTLE_ENDIAN="no"
 echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
 echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
 echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
 echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 fi;
+else
+echo "no (compilation failed)"
+echo "no (compilation failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
+_MK_LITTLE_ENDIAN="no"
+echo "_MK_LITTLE_ENDIAN=$_MK_LITTLE_ENDIAN" >>Makefile.config
+echo "mdefs[\"_MK_LITTLE_ENDIAN\"] = \"$_MK_LITTLE_ENDIAN\"" >>configure.lua
+echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
+echo "hdefs[\"_MK_LITTLE_ENDIAN\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$_MK_LITTLE_ENDIAN" > ${cache}/ctest-_MK_LITTLE_ENDIAN
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_LITTLE_ENDIAN
+	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-_MK_LITTLE_ENDIAN
+fi
 rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "failed" ]; then
+if [ "${MK_COMPILE_STATUS}" != "OK" ]; then
 echo "Unable to determine byte order"
 exit 1
 fi;
@@ -3069,15 +3157,15 @@ TEST_HEADERS="Yes"
 echo > conftest.c
 echo "#include <dlfcn.h>" >> conftest.c
 echo "int main (int argc, char *argv[]) { return (0); }" >> conftest.c
-compile="ok"
+MK_COMPILE_STATUS="OK"
 echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
 $CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	MK_COMPILE_STATUS="FAIL($?)"
 fi
 rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 HAVE_DLFCN_H="yes"
 echo "#ifndef HAVE_DLFCN_H" > config/have_dlfcn_h.h
 echo "#define HAVE_DLFCN_H \"$HAVE_DLFCN_H\"" >> config/have_dlfcn_h.h
@@ -3233,15 +3321,15 @@ TEST_HEADERS="Yes"
 echo > conftest.c
 echo "#include <mach-o/dyld.h>" >> conftest.c
 echo "int main (int argc, char *argv[]) { return (0); }" >> conftest.c
-compile="ok"
+MK_COMPILE_STATUS="OK"
 echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
 $CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	MK_COMPILE_STATUS="FAIL($?)"
 fi
 rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 HAVE_MACH_O_DYLD_H="yes"
 echo "#ifndef HAVE_MACH_O_DYLD_H" > config/have_mach_o_dyld_h.h
 echo "#define HAVE_MACH_O_DYLD_H \"$HAVE_MACH_O_DYLD_H\"" >> config/have_mach_o_dyld_h.h
@@ -3398,15 +3486,15 @@ TEST_HEADERS="Yes"
 echo > conftest.c
 echo "#include <dl.h>" >> conftest.c
 echo "int main (int argc, char *argv[]) { return (0); }" >> conftest.c
-compile="ok"
+MK_COMPILE_STATUS="OK"
 echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
 $CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
-	compile="failed"
+	MK_COMPILE_STATUS="FAIL($?)"
 fi
 rm -f $testdir/conftest conftest.c
-if [ "${compile}" = "ok" ]; then
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 HAVE_DL_H="yes"
 echo "#ifndef HAVE_DL_H" > config/have_dl_h.h
 echo "#define HAVE_DL_H \"$HAVE_DL_H\"" >> config/have_dl_h.h
@@ -5842,7 +5930,19 @@ if [ "${with_sse}" = "yes" ]
 $ECHO_N "checking for SSE extensions..."
 $ECHO_N "checking for SSE extensions..." >> config.log
 SSE_CFLAGS="-msse"
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+MK_RUN_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SSE" ]; then
+		HAVE_SSE=`cat ${cache}/ctest-HAVE_SSE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SSE`
+		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-HAVE_SSE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <xmmintrin.h>
 #include <stdio.h>
 
@@ -5904,19 +6004,14 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-echo "no (compile failed)"
-echo "no (compile failed)" >> config.log
-compile="failed"
-HAVE_SSE="no"
-echo "HAVE_SSE=$HAVE_SSE" >>Makefile.config
-echo "mdefs[\"HAVE_SSE\"] = \"$HAVE_SSE\"" >>configure.lua
-echo "#undef HAVE_SSE" >config/have_sse.h
-echo "hdefs[\"HAVE_SSE\"] = nil" >>configure.lua
-else
-compile="ok"
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 (cd $testdir && ./conftest) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
@@ -5929,15 +6024,30 @@ echo "#define HAVE_SSE \"$HAVE_SSE\"" >> config/have_sse.h
 echo "#endif" >> config/have_sse.h
 echo "hdefs[\"HAVE_SSE\"] = \"$HAVE_SSE\"" >>configure.lua
 else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
+echo "no (test program failed)"
+echo "no (test program failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
 HAVE_SSE="no"
 echo "HAVE_SSE=$HAVE_SSE" >>Makefile.config
 echo "mdefs[\"HAVE_SSE\"] = \"$HAVE_SSE\"" >>configure.lua
 echo "#undef HAVE_SSE" >config/have_sse.h
 echo "hdefs[\"HAVE_SSE\"] = nil" >>configure.lua
 fi;
+else
+echo "no (compilation failed)"
+echo "no (compilation failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
+HAVE_SSE="no"
+echo "HAVE_SSE=$HAVE_SSE" >>Makefile.config
+echo "mdefs[\"HAVE_SSE\"] = \"$HAVE_SSE\"" >>configure.lua
+echo "#undef HAVE_SSE" >config/have_sse.h
+echo "hdefs[\"HAVE_SSE\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SSE" > ${cache}/ctest-HAVE_SSE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SSE
+	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-HAVE_SSE
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SSE}" = "yes" ]; then
 echo "#ifndef SSE_CFLAGS" > config/sse_cflags.h
@@ -5954,7 +6064,19 @@ echo "mdefs[\"SSE_CFLAGS\"] = \"$SSE_CFLAGS\"" >>configure.lua
 $ECHO_N "checking for SSE2 extensions..."
 $ECHO_N "checking for SSE2 extensions..." >> config.log
 SSE2_CFLAGS="-msse2"
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+MK_RUN_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SSE2" ]; then
+		HAVE_SSE2=`cat ${cache}/ctest-HAVE_SSE2`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SSE2`
+		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-HAVE_SSE2`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <emmintrin.h>
 
 int
@@ -5973,19 +6095,14 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-echo "no (compile failed)"
-echo "no (compile failed)" >> config.log
-compile="failed"
-HAVE_SSE2="no"
-echo "HAVE_SSE2=$HAVE_SSE2" >>Makefile.config
-echo "mdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
-echo "#undef HAVE_SSE2" >config/have_sse2.h
-echo "hdefs[\"HAVE_SSE2\"] = nil" >>configure.lua
-else
-compile="ok"
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE2_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 (cd $testdir && ./conftest) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
@@ -5998,15 +6115,30 @@ echo "#define HAVE_SSE2 \"$HAVE_SSE2\"" >> config/have_sse2.h
 echo "#endif" >> config/have_sse2.h
 echo "hdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
 else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
+echo "no (test program failed)"
+echo "no (test program failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
 HAVE_SSE2="no"
 echo "HAVE_SSE2=$HAVE_SSE2" >>Makefile.config
 echo "mdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
 echo "#undef HAVE_SSE2" >config/have_sse2.h
 echo "hdefs[\"HAVE_SSE2\"] = nil" >>configure.lua
 fi;
+else
+echo "no (compilation failed)"
+echo "no (compilation failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
+HAVE_SSE2="no"
+echo "HAVE_SSE2=$HAVE_SSE2" >>Makefile.config
+echo "mdefs[\"HAVE_SSE2\"] = \"$HAVE_SSE2\"" >>configure.lua
+echo "#undef HAVE_SSE2" >config/have_sse2.h
+echo "hdefs[\"HAVE_SSE2\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SSE2" > ${cache}/ctest-HAVE_SSE2
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SSE2
+	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-HAVE_SSE2
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SSE2}" = "yes" ]; then
 echo "#ifndef SSE2_CFLAGS" > config/sse2_cflags.h
@@ -6023,7 +6155,19 @@ echo "mdefs[\"SSE2_CFLAGS\"] = \"$SSE2_CFLAGS\"" >>configure.lua
 $ECHO_N "checking for SSE3 extensions..."
 $ECHO_N "checking for SSE3 extensions..." >> config.log
 SSE3_CFLAGS="-msse3"
-cat << EOT > conftest.c
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+MK_RUN_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SSE3" ]; then
+		HAVE_SSE3=`cat ${cache}/ctest-HAVE_SSE3`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SSE3`
+		MK_RUN_STATUS=`cat ${cache}/ctest-runstatus-HAVE_SSE3`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
 #include <pmmintrin.h>
 
 int
@@ -6044,19 +6188,14 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
-if [ $? != 0 ]; then
-echo "no (compile failed)"
-echo "no (compile failed)" >> config.log
-compile="failed"
-HAVE_SSE3="no"
-echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
-echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
-echo "#undef HAVE_SSE3" >config/have_sse3.h
-echo "hdefs[\"HAVE_SSE3\"] = nil" >>configure.lua
-else
-compile="ok"
+	echo "$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest conftest.c " >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${CFLAGS} ${SSE3_CFLAGS} -o $testdir/conftest conftest.c  2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 (cd $testdir && ./conftest) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
@@ -6069,15 +6208,30 @@ echo "#define HAVE_SSE3 \"$HAVE_SSE3\"" >> config/have_sse3.h
 echo "#endif" >> config/have_sse3.h
 echo "hdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
 else
-echo "no (exec failed)"
-echo "no (exec failed)" >> config.log
+echo "no (test program failed)"
+echo "no (test program failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
 HAVE_SSE3="no"
 echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
 echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
 echo "#undef HAVE_SSE3" >config/have_sse3.h
 echo "hdefs[\"HAVE_SSE3\"] = nil" >>configure.lua
 fi;
+else
+echo "no (compilation failed)"
+echo "no (compilation failed)" >> config.log
+MK_RUN_STATUS="FAIL(\$?)"
+HAVE_SSE3="no"
+echo "HAVE_SSE3=$HAVE_SSE3" >>Makefile.config
+echo "mdefs[\"HAVE_SSE3\"] = \"$HAVE_SSE3\"" >>configure.lua
+echo "#undef HAVE_SSE3" >config/have_sse3.h
+echo "hdefs[\"HAVE_SSE3\"] = nil" >>configure.lua
 fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SSE3" > ${cache}/ctest-HAVE_SSE3
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SSE3
+	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-HAVE_SSE3
+fi
 rm -f $testdir/conftest conftest.c
 if [ "${HAVE_SSE3}" = "yes" ]; then
 echo "#ifndef SSE3_CFLAGS" > config/sse3_cflags.h
