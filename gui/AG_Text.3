@@ -64,6 +64,9 @@ rendering attributes.
 .Fn AG_TextJustify "enum ag_text_justify mode"
 .Pp
 .Ft void
+.Fn AG_TextValign "enum ag_text_valign mode"
+.Pp
+.Ft void
 .Fn AG_TextColorVideo32 "Uint32 pixel"
 .Pp
 .Ft void
@@ -114,6 +117,17 @@ enum ag_text_justify {
 	AG_TEXT_LEFT,
 	AG_TEXT_CENTER,
 	AG_TEXT_RIGHT
+};
+.Ed
+.Pp
+.Fn AG_TextValign
+selects the vertical alignment mode to use where text is rendered to an
+area of arbitrary height:
+.Bd -literal
+enum ag_text_valign {
+	AG_TEXT_TOP,
+	AG_TEXT_MIDDLE,
+	AG_TEXT_BOTTOM
 };
 .Ed
 .Pp

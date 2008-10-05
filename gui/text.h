@@ -82,6 +82,7 @@ typedef struct ag_text_state {
 	Uint32 color;			/* FG color (surfaceFmt) */
 	Uint32 colorBG;			/* BG color (surfaceFmt) */
 	enum ag_text_justify justify;	/* Justification mode */
+	enum ag_text_valign valign;	/* Vertical alignment mode */
 } AG_TextState;
 
 /* Description of font stored in data segment. */
@@ -196,12 +197,24 @@ static __inline__ int
 AG_TextJustifyOffset(int w, int wLine)
 {
 	switch (agTextState->justify) {
-	case AG_TEXT_LEFT:
-		return (0);
-	case AG_TEXT_CENTER:
-		return (w/2 - wLine/2);
-	case AG_TEXT_RIGHT:
-		return (w - wLine);
+	case AG_TEXT_LEFT:	return (0);
+	case AG_TEXT_CENTER:	return (w/2 - wLine/2);
+	case AG_TEXT_RIGHT:	return (w - wLine);
+	}
+	return (0);
+}
+
+/*
+ * Return the offset in pixels needed to align text based on the current
+ * vertical alignment mode.
+ */
+static __inline__ int
+AG_TextValignOffset(int h, int hLine)
+{
+	switch (agTextState->valign) {
+	case AG_TEXT_TOP:	return (0);
+	case AG_TEXT_MIDDLE:	return (h/2 - hLine/2);
+	case AG_TEXT_BOTTOM:	return (h - hLine);
 	}
 	return (0);
 }
@@ -339,6 +352,15 @@ AG_TextJustify(enum ag_text_justify mode)
 {
 	AG_MutexLock(&agTextLock);
 	agTextState->justify = mode;
+	AG_MutexUnlock(&agTextLock);
+}
+
+/* Select the vertical alignment mode to use in rendering text. */
+static __inline__ void
+AG_TextValign(enum ag_text_valign mode)
+{
+	AG_MutexLock(&agTextLock);
+	agTextState->valign = mode;
 	AG_MutexUnlock(&agTextLock);
 }
 __END_DECLS

@@ -355,6 +355,7 @@ InitTextState(void)
 	agTextState->color = AG_MapRGB(agSurfaceFmt, 255,255,255);
 	agTextState->colorBG = AG_MapRGBA(agSurfaceFmt, 0,0,0,0);
 	agTextState->justify = AG_TEXT_LEFT;
+	agTextState->valign = AG_TEXT_TOP;
 }
 
 /* Must be invoked in rendering context. */

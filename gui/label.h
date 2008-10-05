@@ -56,6 +56,7 @@ typedef struct ag_label {
 	int wPre, hPre;			/* SizeHint dimensions */
 	int lPad, rPad, tPad, bPad;	/* Label padding */
 	enum ag_text_justify justify;	/* Justification mode */
+	enum ag_text_valign valign;	/* Vertical alignment */
 	struct {
 		AG_Mutex *lock;			   /* Lock for polled data */
 		void *ptrs[AG_LABEL_MAX_POLLPTRS]; /* Pointers to polled data */
@@ -84,6 +85,7 @@ void	AG_LabelText(AG_Label *, const char *, ...)
 
 void	 AG_LabelSetPadding(AG_Label *, int, int, int, int);
 void	 AG_LabelJustify(AG_Label *, enum ag_text_justify);
+void	 AG_LabelValign(AG_Label *, enum ag_text_valign);
 #define	 AG_LabelSetPaddingLeft(lbl,v)   AG_LabelSetPadding((lbl),(v),-1,-1,-1)
 #define	 AG_LabelSetPaddingRight(lbl,v)  AG_LabelSetPadding((lbl),-1,(v),-1,-1)
 #define	 AG_LabelSetPaddingTop(lbl,v)    AG_LabelSetPadding((lbl),-1,-1,(v),-1)

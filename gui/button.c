@@ -59,6 +59,7 @@ AG_ButtonNew(void *parent, Uint flags, const char *fmt, ...)
 
 		bu->lbl = AG_LabelNewString(bu, 0, text);
 		AG_LabelJustify(bu->lbl, bu->justify);
+		AG_LabelValign(bu->lbl, bu->valign);
 	}
 	bu->flags |= flags;
 
@@ -213,6 +214,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		aLbl.y = bu->tPad;
 		aLbl.w = a->w - (bu->lPad+bu->rPad);
 		aLbl.h = a->h - (bu->tPad+bu->bPad);
+
 		AG_WidgetSizeAlloc(bu->lbl, &aLbl);
 	}
 	return (0);
@@ -244,17 +246,15 @@ Draw(void *p)
 		h = WSURFACE(bu,bu->surface)->h;
 
 		switch (bu->justify) {
-		case AG_TEXT_LEFT:
-			x = bu->lPad;
-			break;
-		case AG_TEXT_CENTER:
-			x = WIDTH(bu)/2 - w/2;
-			break;
-		case AG_TEXT_RIGHT:
-			x = WIDTH(bu) - w - bu->rPad;
-			break;
+		case AG_TEXT_LEFT:	x = bu->lPad;			break;
+		case AG_TEXT_CENTER:	x = WIDTH(bu)/2 - w/2;		break;
+		case AG_TEXT_RIGHT:	x = WIDTH(bu) - w - bu->rPad;	break;
 		}
-		y = HEIGHT(bu)/2 - h/2;
+		switch (bu->valign) {
+		case AG_TEXT_TOP:	x = bu->tPad;			break;
+		case AG_TEXT_MIDDLE:	x = HEIGHT(bu)/2 - h/2;		break;
+		case AG_TEXT_BOTTOM:	x = HEIGHT(bu) - h - bu->bPad;	break;
+		}
 		STYLE(bu)->ButtonTextOffset(bu, pressed, &x, &y);
 		AG_WidgetBlitSurface(bu, bu->surface, x, y);
 	}
@@ -528,10 +528,13 @@ AG_ButtonSetJustification(AG_Button *bu, enum ag_text_justify jus)
 }
 
 void
-AG_ButtonSetValign(AG_Button *bu, enum ag_text_valign va)
+AG_ButtonValign(AG_Button *bu, enum ag_text_valign va)
 {
 	AG_ObjectLock(bu);
 	bu->valign = va;
+	if (bu->lbl != NULL) {
+		AG_LabelValign(bu->lbl, va);
+	}
 	AG_ObjectUnlock(bu);
 }
 
@@ -541,6 +544,11 @@ AG_ButtonSurface(AG_Button *bu, AG_Surface *su)
 	AG_Surface *suDup = (su != NULL) ? AG_DupSurface(su) : NULL;
 
 	AG_ObjectLock(bu);
+	if (bu->lbl != NULL) {
+		AG_ObjectDetach(bu->lbl);
+		AG_ObjectDestroy(bu->lbl);
+		bu->lbl = NULL;
+	}
 	if (bu->surface != -1) {
 		AG_WidgetReplaceSurface(bu, bu->surface, suDup);
 	} else {
@@ -553,6 +561,11 @@ void
 AG_ButtonSurfaceNODUP(AG_Button *bu, AG_Surface *su)
 {
 	AG_ObjectLock(bu);
+	if (bu->lbl != NULL) {
+		AG_ObjectDetach(bu->lbl);
+		AG_ObjectDestroy(bu->lbl);
+		bu->lbl = NULL;
+	}
 	if (bu->surface != -1) {
 		AG_WidgetReplaceSurfaceNODUP(bu, bu->surface, su);
 	} else {
@@ -586,11 +599,15 @@ AG_ButtonText(AG_Button *bu, const char *fmt, ...)
 	va_end(args);
 
 	AG_ObjectLock(bu);
+	if (bu->surface != -1) {
+		AG_ButtonSurface(bu, NULL);
+	}
 	if (bu->lbl != NULL) {
 		AG_LabelString(bu->lbl, text);
 	} else {
 		bu->lbl = AG_LabelNewString(bu, 0, text);
 		AG_LabelJustify(bu->lbl, bu->justify);
+		AG_LabelValign(bu->lbl, bu->valign);
 	}
 	AG_ObjectUnlock(bu);
 }
