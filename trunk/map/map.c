@@ -2194,7 +2194,7 @@ EditMapParameters(AG_Event *event)
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &AGMCAM(mv).x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &AGMCAM(mv).y);
 		
-		AG_NumericalNewIntR(ntab, 0, NULL,
+		AG_NumericalNewUintR(ntab, 0, NULL,
 		    _("Zoom factor: "), &AGMCAM(mv).zoom, 1, 100);
 		
 		AG_NumericalNewInt(ntab, 0, "px",
