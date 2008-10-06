@@ -24,7 +24,6 @@ typedef struct ag_scrollbar {
 	Uint flags;
 #define AG_SCROLLBAR_HFILL	0x01
 #define AG_SCROLLBAR_VFILL	0x02
-#define AG_SCROLLBAR_FOCUSABLE	0x04
 #define AG_SCROLLBAR_TEXT	0x08	/* Print values */
 #define AG_SCROLLBAR_EXPAND	(AG_SCROLLBAR_HFILL|AG_SCROLLBAR_VFILL)
 
@@ -33,8 +32,7 @@ typedef struct ag_scrollbar {
 	int visible;			/* Subtracts from range */
 	enum ag_scrollbar_type type;	/* Style of scrollbar */
 	enum ag_scrollbar_button curBtn; /* Active button */
-	int wButton;			/* Effective button size */
-	int wButtonDef;			/* Default button size */
+	int wButton;			/* Button size */
 	int wBar;			/* Scroll bar size */
 	int hArrow;			/* Arrow height */
 	AG_Event *buttonIncFn;		/* Alt. handler for increment btns */
@@ -125,7 +123,6 @@ static __inline__ void
 AG_ScrollbarSetButtonSize(AG_Scrollbar *sb, int wButton)
 {
 	AG_ObjectLock(sb);
-	sb->wButtonDef = wButton;
 	sb->wButton = wButton;
 	AG_ObjectUnlock(sb);
 }

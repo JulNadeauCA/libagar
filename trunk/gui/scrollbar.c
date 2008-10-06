@@ -46,7 +46,6 @@ AG_ScrollbarNew(void *parent, enum ag_scrollbar_type type, Uint flags)
 
 	if (flags & AG_SCROLLBAR_HFILL) { AG_ExpandHoriz(sb); }
 	if (flags & AG_SCROLLBAR_VFILL) { AG_ExpandVert(sb); }
-	if (flags & AG_SCROLLBAR_FOCUSABLE) { AG_WidgetSetFocusable(sb, 1); }
 
 	AG_ObjectAttach(parent, sb);
 	return (sb);
@@ -317,6 +316,12 @@ fail:
 		    (*(type *)pMax - *(type *)pVis - *(type *)pMin) /	\
 		    sb->extent;						\
 		*(type *)pVal += *(type *)pMin;				\
+		if (*(type *)pVal < *(type *)pMin) {			\
+			*(type *)pVal = *(type *)pMin;			\
+		}							\
+		if (*(type *)pVal > *(type *)pMax) {			\
+			*(type *)pVal = *(type *)pMax;			\
+		}							\
 	}
 
 static __inline__ void
@@ -682,7 +687,8 @@ Init(void *obj)
 	AG_Scrollbar *sb = obj;
 
 	WIDGET(sb)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
-	                     AG_WIDGET_UNFOCUSED_MOTION;
+	                     AG_WIDGET_UNFOCUSED_MOTION|
+			     AG_WIDGET_FOCUSABLE;
 
 	AG_WidgetBindInt(sb, "value", &sb->value);
 	AG_WidgetBindInt(sb, "min", &sb->min);
@@ -696,14 +702,15 @@ Init(void *obj)
 	sb->min = 0;
 	sb->max = 0;
 	sb->visible = 0;
-	sb->wButtonDef = 16;			/* XXX */
-	sb->wButton = 16;
-	sb->wBar = 8;
 	sb->buttonIncFn = NULL;
 	sb->buttonDecFn = NULL;
 	sb->xOffs = 0;
 	sb->rInc = 1.0;	
 	sb->iInc = 1;
+
+	sb->wBar = 8;
+	sb->wButton = 16;
+	sb->hArrow = sb->wButton*5/9;
 
 	AG_SetEvent(sb, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(sb, "window-mousebuttonup", MouseButtonUp, NULL);
@@ -726,12 +733,12 @@ SizeRequest(void *obj, AG_SizeReq *r)
 
 	switch (sb->type) {
 	case AG_SCROLLBAR_HORIZ:
-		r->w = sb->wButtonDef*2;
-		r->h = sb->wButtonDef;
+		r->w = sb->wButton*2;
+		r->h = sb->wButton;
 		break;
 	case AG_SCROLLBAR_VERT:
-		r->w = sb->wButtonDef;
-		r->h = sb->wButtonDef*2;
+		r->w = sb->wButton;
+		r->h = sb->wButton*2;
 		break;
 	}
 }
@@ -744,27 +751,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	if (a->w < 4 || a->h < 4) {
 		return (-1);
 	}
-	switch (sb->type) {
-	case AG_SCROLLBAR_VERT:
-		if (a->h < sb->wButtonDef*2) {
-			sb->wButton = a->h/2;
-		} else {
-			sb->wButton = sb->wButtonDef;
-		}
-		sb->extent = a->h;
-		break;
-	case AG_SCROLLBAR_HORIZ:
-		if (a->w < sb->wButtonDef*2) {
-			sb->wButton = a->w/2;
-		} else {
-			sb->wButton = sb->wButtonDef;
-		}
-		sb->extent = a->w;
-		break;
-	}
-	sb->extent -= sb->wButton*2;
-	sb->extent -= sb->wBar;
-	sb->hArrow = sb->wButton*5/9;
+	sb->extent = ((sb->type==AG_SCROLLBAR_VERT) ? a->h : a->w) -
+	             sb->wButton*2 - sb->wBar;
+	if (sb->extent < 0) { sb->extent = 0; }
 	return (0);
 }
 
@@ -778,10 +767,11 @@ DrawText(AG_Scrollbar *sb)
 	AG_TextColor(TEXT_COLOR);
 	AG_TextBGColorHex(0xccccccff);
 
-	Snprintf(label, sizeof(label), "%d < %d < %d",
+	Snprintf(label, sizeof(label), "%d < %d < %d(%d)",
 	    AG_WidgetInt(sb,"min"),
 	    AG_WidgetInt(sb,"value"),
-	    AG_WidgetInt(sb,"max"));
+	    AG_WidgetInt(sb,"max"),
+	    AG_WidgetInt(sb,"visible"));
 
 	/* XXX inefficient */
 	txt = AG_TextRender(label);
@@ -799,22 +789,20 @@ Draw(void *obj)
 	AG_Scrollbar *sb = obj;
 	int x, size;
 
-	STYLE(sb)->ScrollbarBackground(sb);
-
 	if (GetPosition(sb, &x) == 0) {
 		size = (sb->wBar == -1) ? sb->extent : sb->wBar;
 		if (size < 0) { size = 0; }
 	} else {
 		x = 0;
-		size = sb->extent - 1;
+		size = sb->extent + sb->wBar;
 	}
 	
 	switch (sb->type) {
 	case AG_SCROLLBAR_VERT:
-		STYLE(sb)->ScrollbarVertButtons(sb, x, size);
+		STYLE(sb)->ScrollbarVert(sb, x, size);
 		break;
 	case AG_SCROLLBAR_HORIZ:
-		STYLE(sb)->ScrollbarHorizButtons(sb, x, size);
+		STYLE(sb)->ScrollbarHoriz(sb, x, size);
 		break;
 	}
 	if (sb->flags & AG_SCROLLBAR_TEXT)
