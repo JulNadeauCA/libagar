@@ -53,11 +53,11 @@ cleandir-config:
 	find . -name premake.lua -exec rm -f {} \;
 	find . -name configure.lua -exec rm -f {} \;
 
-snapshot: cleandir
-	sh mk/dist.sh snapshot
+beta: cleandir
+	sh mk/dist.sh beta
 
 package: cleandir
-	sh mk/dist.sh
+	sh mk/dist.sh stable
 
 release: cleandir
 	sh mk/dist.sh commit
@@ -166,7 +166,7 @@ post-package:
 	fi
 
 .PHONY: clean cleandir install deinstall depend regress
-.PHONY: configure cleandir-config package snapshot release
+.PHONY: configure cleandir-config package beta release
 .PHONY: install-includes deinstall-includes pre-package post-package
 
 include ${TOP}/mk/build.common.mk
