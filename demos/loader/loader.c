@@ -70,9 +70,7 @@ LoadBMP(AG_Event *event)
 	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
 	AG_PixmapFromSurfaceScaled(sv, 0, bmp, bmp->w, bmp->h);
 
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC,
-	    AG_MIN(agView->w,bmp->w),
-	    AG_MIN(agView->h,bmp->h));
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
 	AG_WindowShow(win);
 	
 	AG_SurfaceFree(bmp);
@@ -114,9 +112,7 @@ LoadIMG(AG_Event *event)
 	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
 	AG_PixmapFromSurface(sv, 0, AG_SurfaceFromSDL(img));
 
-	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC,
-	    AG_MIN(agView->w,img->w),
-	    AG_MIN(agView->h,img->h));
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
 	AG_WindowShow(win);
 	
 	SDL_FreeSurface(img);

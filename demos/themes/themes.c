@@ -159,12 +159,12 @@ CreateWindow(void)
 		AG_ProgressBar *pb;
 
 		sb = AG_ScrollbarNewInt(div1, AG_SCROLLBAR_HORIZ,
-		    AG_SCROLLBAR_HFILL|AG_SCROLLBAR_FOCUSABLE,
+		    AG_SCROLLBAR_HFILL,
 		    &myVal, &myMin, &myMax, &myVisible);
 		AG_ScrollbarSetIntIncrement(sb, 10);
 
 		sl = AG_SliderNewInt(div1, AG_SLIDER_HORIZ,
-		    AG_SLIDER_HFILL|AG_SCROLLBAR_FOCUSABLE,
+		    AG_SLIDER_HFILL,
 		    &myVal, &myMin, &myMax);
 		AG_SliderSetIntIncrement(sl, 10);
 
