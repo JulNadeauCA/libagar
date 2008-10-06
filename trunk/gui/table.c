@@ -1669,12 +1669,11 @@ Init(void *obj)
 	t->prew = -1;				/* Use column size specs */
 	t->preh = 64;
 	t->wTbl = -1;
+
 	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);
-#if 0
-	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0);
-#else
-	t->hbar = NULL;
-#endif
+	AG_WidgetSetFocusable(t->vbar, 0);
+/*	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0); */
+
 	t->poll_ev = NULL;
 	t->nResizing = -1;
 	t->cols = NULL;
