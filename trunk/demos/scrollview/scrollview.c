@@ -41,7 +41,7 @@ main(int argc, char *argv[])
 	win = AG_WindowNew(0);
 
 	/* Create a Scrollview container. Allow panning of X and Y. */
-	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND|AG_SCROLLVIEW_PAN_XY);
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
 
 	/* Create a bunch of buttons under the Scrollview. */
 	for (y = 0; y < 20; y++) {
