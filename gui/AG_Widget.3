@@ -236,7 +236,7 @@ and
 macros evaluate whether the given widget is enabled for input.
 .Sh FOCUS STATE
 The focus state of a widget controls both its appearance and enables the
-reception of specific types of events.
+reception of specific types of events which are filtered by default.
 A focused widget (in a currently focused window) will receive mouse events
 .Sq window-mousemotion ,
 .Sq window-mousebuttonup ,
@@ -245,15 +245,17 @@ as well as keyboard events
 and
 .Sq window-keydown .
 .Pp
-Note that any widget can still receive those events regardless of focus
-state, using
-.Dv AG_WIDGET_UNFOCUSED_*
-flags, such as
-.Dv AG_WIDGET_UNFOCUSED_MOTION
+Widget can explicitely disable focus-dependent filtering for those events
+by setting the flags
+.Dv AG_WIDGET_UNFOCUSED_MOTION ,
+.Dv AG_WIDGET_UNFOCUSED_BUTTONUP
 and
-.Dv AG_WIDGET_UNFOCUSED_BUTTONUP .
+.Dv AG_WIDGET_UNFOCUSED_BUTTONDOWN .
 .Pp
 .nr nS 1
+.Ft "void"
+.Fn AG_WidgetSetFocusable "AG_Widget *widget" "int enable"
+.Pp
 .Ft "int"
 .Fn AG_WidgetFocused "AG_Widget *widget"
 .Pp
@@ -267,6 +269,10 @@ and
 .Fn AG_WidgetFindFocused "AG_Window *win"
 .Pp
 .nr nS 0
+The
+.Fn AG_WidgetSetFocusable
+routine sets whether the widget is allowed to gain focus (off by default).
+.Pp
 The
 .Fn AG_WidgetFocused
 macro evaluates to 1 if a widget holds focus inside of its parent.
@@ -1247,7 +1253,8 @@ See
 .Dq INPUT STATE
 section for more details.
 .It AG_WIDGET_FOCUSABLE
-The widget can grab the focus.
+Widget allowed to grab the focus (set by
+.Fn AG_WidgetSetFocusable ) .
 .It AG_WIDGET_UNFOCUSED_MOTION
 Receive
 .Sq window-mousemotion
