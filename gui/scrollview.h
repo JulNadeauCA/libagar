@@ -19,6 +19,7 @@ typedef struct ag_scrollview {
 #define AG_SCROLLVIEW_PANNING	0x10 /* Panning in progress */
 #define AG_SCROLLVIEW_BY_CURSOR	0x20 /* Panning with cursor allowed */
 #define AG_SCROLLVIEW_BY_KBD	0x40 /* Panning with keyboard allowed */
+#define AG_SCROLLVIEW_FRAME	0x80 /* Draw background and frame */
 #define AG_SCROLLVIEW_EXPAND	(AG_SCROLLVIEW_HFILL|AG_SCROLLVIEW_VFILL)
 #define AG_SCROLLVIEW_NOPAN_XY	(AG_SCROLLVIEW_NOPAN_X|AG_SCROLLVIEW_NOPAN_Y)
 
@@ -28,13 +29,15 @@ typedef struct ag_scrollview {
 	int xMin, xMax, yMin, yMax;	/* Display boundaries */
 	AG_Rect rView;			/* Available space for widgets */
 	AG_Scrollbar *hbar, *vbar;	/* Scrollbars for panning */
+	int incr;			/* Scrolling increment */
 } AG_Scrollview;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agScrollviewClass;
 
-AG_Scrollview	*AG_ScrollviewNew(void *, Uint);
-void		 AG_ScrollviewSizeHint(AG_Scrollview *, Uint, Uint);
+AG_Scrollview *AG_ScrollviewNew(void *, Uint);
+void           AG_ScrollviewSizeHint(AG_Scrollview *, Uint, Uint);
+void           AG_ScrollviewSetIncrement(AG_Scrollview *, int);
 __END_DECLS
 
 #include "close_code.h"

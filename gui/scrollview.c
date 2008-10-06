@@ -33,20 +33,20 @@
 #include <stdarg.h>
 #include <string.h>
 
-/* Disable drawing of widgets completely outside of the view. */
+/* Clip widgets completely outside of the view in a more efficient way. */
 static void
-ClipWidgets(AG_Scrollview *sv, AG_Widget *wid, int xRel, int yRel)
+ClipWidgets(AG_Scrollview *sv, AG_Widget *wid)
 {
 	AG_Widget *chld;
 
-	if (wid->x+wid->w < 0 ||
-	    wid->y+wid->h < 0) {
+	if (wid->cx + wid->w < WIDGET(sv)->cx ||
+	    wid->cy + wid->h < WIDGET(sv)->cy) {
 		wid->flags |= AG_WIDGET_HIDE;
 	} else {
 		wid->flags &= ~(AG_WIDGET_HIDE);
 	}
 	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
-		ClipWidgets(sv, chld, wid->x, wid->y);
+		ClipWidgets(sv, chld);
 }
 
 /* Place child widgets at the current offset in the Scrollview. */
@@ -76,7 +76,7 @@ PlaceWidgets(AG_Scrollview *sv, int *wTot, int *hTot)
 			aChld.y += aChld.h;
 			break;
 		}
-		ClipWidgets(sv, chld, 0,0);
+		ClipWidgets(sv, chld);
 	}
 	switch (sv->pack) {
 	case AG_PACK_HORIZ:
@@ -168,6 +168,9 @@ Scrolled(AG_Event *event)
 	AG_Scrollview *sv = AG_PTR(1);
 	AG_Window *pWin = AG_ParentWindow(sv);
 
+	if (pWin != NULL)
+		AG_WindowUpdate(pWin);
+
 	PlaceWidgets(sv, NULL, NULL);
 
 	if (pWin != NULL)
@@ -212,9 +215,19 @@ AG_ScrollviewNew(void *parent, Uint flags)
 	if (flags & AG_SCROLLVIEW_BY_KBD) {
 		AG_SetEvent(sv, "window-keydown", KeyDown, NULL);
 	}
-
+	AG_ScrollviewSetIncrement(sv, 10);
 	AG_ObjectAttach(parent, sv);
 	return (sv);
+}
+
+void
+AG_ScrollviewSetIncrement(AG_Scrollview *sv, int incr)
+{
+	AG_ObjectLock(sv);
+	sv->incr = incr;
+	if (sv->hbar != NULL) { AG_ScrollbarSetIntIncrement(sv->hbar, incr); }
+	if (sv->vbar != NULL) { AG_ScrollbarSetIntIncrement(sv->vbar, incr); }
+	AG_ObjectUnlock(sv);
 }
 
 static void
@@ -235,6 +248,7 @@ Init(void *obj)
 	sv->vbar = NULL;
 	sv->pack = AG_PACK_VERT;
 	sv->rView = AG_RECT(0,0,0,0);
+	sv->incr = 10;
 }
 
 void
@@ -349,13 +363,15 @@ Draw(void *p)
 	AG_Scrollview *sv = p;
 	AG_Widget *chld;
 
-	AG_DrawBox(sv,
-	    AG_RECT(0, 0, WIDTH(sv), HEIGHT(sv)), -1,
-	    AG_COLOR(FRAME_COLOR));
+	if (sv->flags & AG_SCROLLVIEW_FRAME) {
+		AG_DrawBox(sv,
+		    AG_RECT(0, 0, WIDTH(sv), HEIGHT(sv)), -1,
+		    AG_COLOR(FRAME_COLOR));
+	}
 
 	if (sv->hbar != NULL) { AG_WidgetDraw(sv->hbar); }
 	if (sv->vbar != NULL) { AG_WidgetDraw(sv->vbar); }
-
+	
 	AG_PushClipRect(sv, sv->rView);
 	WIDGET_FOREACH_CHILD(chld, sv) {
 		if (chld == WIDGET(sv->hbar) || chld == WIDGET(sv->vbar)) {
