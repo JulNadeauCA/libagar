@@ -21,26 +21,33 @@ package agar.gui.window is
   --
 
   subtype flags_t is agar.gui.types.window_flags_t;
-  WINDOW_MODAL         : constant flags_t := 16#00001#;
-  WINDOW_MAXIMIZED     : constant flags_t := 16#00002#;
-  WINDOW_MINIMIZED     : constant flags_t := 16#00004#;
-  WINDOW_KEEPABOVE     : constant flags_t := 16#00008#;
-  WINDOW_KEEPBELOW     : constant flags_t := 16#00010#;
-  WINDOW_DENYFOCUS     : constant flags_t := 16#00020#;
-  WINDOW_NOTITLE       : constant flags_t := 16#00040#;
-  WINDOW_NOBORDERS     : constant flags_t := 16#00080#;
-  WINDOW_NOHRESIZE     : constant flags_t := 16#00100#;
-  WINDOW_NOVRESIZE     : constant flags_t := 16#00200#;
-  WINDOW_NOCLOSE       : constant flags_t := 16#00400#;
-  WINDOW_NOMINIMIZE    : constant flags_t := 16#00800#;
-  WINDOW_NOMAXIMIZE    : constant flags_t := 16#01000#;
-  WINDOW_NOBACKGROUND  : constant flags_t := 16#08000#;
-  WINDOW_NOUPDATERECT  : constant flags_t := 16#10000#;
-  WINDOW_FOCUSONATTACH : constant flags_t := 16#20000#;
-  WINDOW_HMAXIMIZE     : constant flags_t := 16#40000#;
-  WINDOW_VMAXIMIZE     : constant flags_t := 16#80000#;
-  WINDOW_NORESIZE      : constant flags_t := WINDOW_NOHRESIZE or WINDOW_NOVRESIZE;
-  WINDOW_PLAIN         : constant flags_t := WINDOW_NOTITLE or WINDOW_NOBORDERS;
+  WINDOW_MODAL         : constant flags_t := 16#000001#;
+  WINDOW_MAXIMIZED     : constant flags_t := 16#000002#;
+  WINDOW_MINIMIZED     : constant flags_t := 16#000004#;
+  WINDOW_KEEPABOVE     : constant flags_t := 16#000008#;
+  WINDOW_KEEPBELOW     : constant flags_t := 16#000010#;
+  WINDOW_DENYFOCUS     : constant flags_t := 16#000020#;
+  WINDOW_NOTITLE       : constant flags_t := 16#000040#;
+  WINDOW_NOBORDERS     : constant flags_t := 16#000080#;
+  WINDOW_NOHRESIZE     : constant flags_t := 16#000100#;
+  WINDOW_NOVRESIZE     : constant flags_t := 16#000200#;
+  WINDOW_NOCLOSE       : constant flags_t := 16#000400#;
+  WINDOW_NOMINIMIZE    : constant flags_t := 16#000800#;
+  WINDOW_NOMAXIMIZE    : constant flags_t := 16#001000#;
+  WINDOW_NOBACKGROUND  : constant flags_t := 16#008000#;
+  WINDOW_NOUPDATERECT  : constant flags_t := 16#010000#;
+  WINDOW_FOCUSONATTACH : constant flags_t := 16#020000#;
+  WINDOW_HMAXIMIZE     : constant flags_t := 16#040000#;
+  WINDOW_VMAXIMIZE     : constant flags_t := 16#080000#;
+  WINDOW_NOMOVE        : constant flags_t := 16#100000#;
+  WINDOW_NOCLIPPING    : constant flags_t := 16#200000#;
+  WINDOW_NORESIZE      : constant flags_t := WINDOW_NOHRESIZE or
+                                             WINDOW_NOVRESIZE;
+  WINDOW_NOBUTTONS     : constant flags_t := WINDOW_NOCLOSE or
+                                             WINDOW_NOMINIMIZE or
+                                             WINDOW_NOMAXIMIZE;
+  WINDOW_PLAIN         : constant flags_t := WINDOW_NOTITLE or
+                                             WINDOW_NOBORDERS;
 
   subtype alignment_t is agar.gui.types.window_alignment_t;
 

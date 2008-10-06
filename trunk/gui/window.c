@@ -230,15 +230,17 @@ Draw(void *obj)
 	STYLE(win)->Window(win);
 
 	hTitle = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
-	AG_PushClipRect(win,
-	    AG_RECT(0, 0,
-	            WIDTH(win) - win->wBorderSide*2,
-		    HEIGHT(win) - win->wBorderBot));
-
-	WIDGET_FOREACH_CHILD(chld, win)
+	if (!(win->flags & AG_WINDOW_NOCLIPPING)) {
+		AG_PushClipRect(win,
+		    AG_RECT(0, 0,
+		            WIDTH(win) - win->wBorderSide*2,
+			    HEIGHT(win) - win->wBorderBot));
+	}
+	WIDGET_FOREACH_CHILD(chld, win) {
 		AG_WidgetDraw(chld);
-	
-	AG_PopClipRect();
+	}
+	if (!(win->flags & AG_WINDOW_NOCLIPPING))
+		AG_PopClipRect();
 }
 
 /* Apply initial alignment parameter. */
