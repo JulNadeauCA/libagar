@@ -39,10 +39,8 @@ ClipWidgets(AG_Scrollview *sv, AG_Widget *wid, int xRel, int yRel)
 {
 	AG_Widget *chld;
 
-	if (xRel+wid->x+wid->w < 0 ||
-	    yRel+wid->y+wid->h < 0 ||
-	    xRel+wid->x > WIDTH(sv) ||
-	    yRel+wid->y > HEIGHT(sv)) {
+	if (wid->x+wid->w < 0 ||
+	    wid->y+wid->h < 0) {
 		wid->flags |= AG_WIDGET_HIDE;
 	} else {
 		wid->flags &= ~(AG_WIDGET_HIDE);
@@ -80,8 +78,20 @@ PlaceWidgets(AG_Scrollview *sv, int *wTot, int *hTot)
 		}
 		ClipWidgets(sv, chld, 0,0);
 	}
-	if (wTot != NULL) { *wTot = aChld.x+aChld.w; }
-	if (hTot != NULL) { *hTot = aChld.y+aChld.h; }
+	switch (sv->pack) {
+	case AG_PACK_HORIZ:
+		if (wTot != NULL)
+			*wTot = aChld.x + sv->xOffs;
+		if (hTot != NULL)
+			*hTot = aChld.y+aChld.h + sv->yOffs;
+		break;
+	case AG_PACK_VERT:
+		if (wTot != NULL)
+			*wTot = aChld.x+aChld.w + sv->xOffs;
+		if (hTot != NULL)
+			*hTot = aChld.y + sv->yOffs;
+		break;
+	}
 }
 
 static void
@@ -176,20 +186,20 @@ AG_ScrollviewNew(void *parent, Uint flags)
 	if (flags & AG_SCROLLVIEW_HFILL) { AG_ExpandHoriz(sv); }
 	if (flags & AG_SCROLLVIEW_VFILL) { AG_ExpandVert(sv); }
 
-	if (flags & AG_SCROLLVIEW_PAN_X) {
+	if (!(flags & AG_SCROLLVIEW_NOPAN_X)) {
 		sv->hbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_HORIZ, 0);
 		AG_WidgetBindInt(sv->hbar, "value", &sv->xOffs);
 		AG_WidgetBindInt(sv->hbar, "min", &sv->xMin);
 		AG_WidgetBindInt(sv->hbar, "max", &sv->xMax);
-		AG_WidgetBindInt(sv->hbar, "visible", &WIDGET(sv)->w);
+		AG_WidgetBindInt(sv->hbar, "visible", &sv->rView.w);
 		AG_SetEvent(sv->hbar, "scrollbar-changed", Scrolled, "%p", sv);
 	}
-	if (flags & AG_SCROLLVIEW_PAN_Y) {
+	if (!(flags & AG_SCROLLVIEW_NOPAN_Y)) {
 		sv->vbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_VERT, 0);
 		AG_WidgetBindInt(sv->vbar, "value", &sv->yOffs);
 		AG_WidgetBindInt(sv->vbar, "min", &sv->yMin);
 		AG_WidgetBindInt(sv->vbar, "max", &sv->yMax);
-		AG_WidgetBindInt(sv->vbar, "visible", &WIDGET(sv)->h);
+		AG_WidgetBindInt(sv->vbar, "visible", &sv->rView.h);
 		AG_SetEvent(sv->vbar, "scrollbar-changed", Scrolled, "%p", sv);
 	}
 
@@ -224,6 +234,7 @@ Init(void *obj)
 	sv->hbar = NULL;
 	sv->vbar = NULL;
 	sv->pack = AG_PACK_VERT;
+	sv->rView = AG_RECT(0,0,0,0);
 }
 
 void
@@ -282,28 +293,44 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_SizeReq rBar;
 	AG_SizeAlloc aBar;
 	int wTot, hTot;
-	
+
+	sv->rView.w = a->w;
+	sv->rView.h = a->h;
+
 	if (sv->hbar != NULL) {
 		AG_WidgetSizeReq(sv->hbar, &rBar);
-		aBar.w = a->w;
+		aBar.w = a->w - rBar.h;
 		aBar.h = rBar.h;
 		aBar.x = 0;
 		aBar.y = a->h - rBar.h;
 		AG_WidgetSizeAlloc(sv->hbar, &aBar);
+		sv->rView.h -= aBar.h;
+		if (sv->rView.h < 0) { sv->rView.h = 0; }
 	}
 	if (sv->vbar != NULL) {
 		AG_WidgetSizeReq(sv->vbar, &rBar);
 		aBar.w = rBar.w;
-		aBar.h = a->h;
+		aBar.h = a->h - rBar.w;
 		aBar.x = a->w - rBar.w;
 		aBar.y = 0;
 		AG_WidgetSizeAlloc(sv->vbar, &aBar);
+		sv->rView.w -= aBar.w;
+		if (sv->rView.w < 0) { sv->rView.w = 0; }
 	}
 
 	PlaceWidgets(sv, &wTot, &hTot);
-	if (sv->hbar != NULL) { sv->xMax = wTot; }
-	if (sv->vbar != NULL) { sv->yMax = hTot; }
+	sv->xMax = wTot;
+	sv->yMax = hTot;
 
+	if (sv->hbar != NULL) {
+		if ((sv->xMax - sv->rView.w - sv->xOffs) < 0)
+			sv->xOffs = MAX(0, sv->xMax - sv->rView.w);
+	}
+	if (sv->vbar != NULL) {
+		if ((sv->yMax - sv->rView.h - sv->yOffs) < 0)
+			sv->yOffs = MAX(0, sv->yMax - sv->rView.h);
+	}
+#if 0
 	if (a->w >= (wTot - sv->xOffs)) {
 		sv->xOffs = wTot - a->w;
 		if (sv->xOffs < 0) { sv->xOffs = 0; }
@@ -312,6 +339,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 		sv->yOffs = hTot - a->h;
 		if (sv->yOffs < 0) { sv->yOffs = 0; }
 	}
+#endif
 	return (0);
 }
 
@@ -320,20 +348,15 @@ Draw(void *p)
 {
 	AG_Scrollview *sv = p;
 	AG_Widget *chld;
-	AG_Rect rView;
 
 	AG_DrawBox(sv,
 	    AG_RECT(0, 0, WIDTH(sv), HEIGHT(sv)), -1,
 	    AG_COLOR(FRAME_COLOR));
 
-	rView = AG_RECT(0, 0, WIDTH(sv), HEIGHT(sv));
-	if (sv->hbar != NULL) { rView.h -= HEIGHT(sv->hbar); }
-	if (sv->vbar != NULL) { rView.w -= WIDTH(sv->vbar); }
-
 	if (sv->hbar != NULL) { AG_WidgetDraw(sv->hbar); }
 	if (sv->vbar != NULL) { AG_WidgetDraw(sv->vbar); }
 
-	AG_PushClipRect(sv, rView);
+	AG_PushClipRect(sv, sv->rView);
 	WIDGET_FOREACH_CHILD(chld, sv) {
 		if (chld == WIDGET(sv->hbar) || chld == WIDGET(sv->vbar)) {
 			continue;

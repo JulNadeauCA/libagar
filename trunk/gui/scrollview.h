@@ -14,18 +14,19 @@ typedef struct ag_scrollview {
 	Uint flags;
 #define AG_SCROLLVIEW_HFILL	0x01
 #define AG_SCROLLVIEW_VFILL	0x02
-#define AG_SCROLLVIEW_PAN_X	0x04 /* X is pannable */ 
-#define AG_SCROLLVIEW_PAN_Y	0x08 /* Y is pannable */
+#define AG_SCROLLVIEW_NOPAN_X	0x04 /* X is not pannable */ 
+#define AG_SCROLLVIEW_NOPAN_Y	0x08 /* Y is not pannable */
 #define AG_SCROLLVIEW_PANNING	0x10 /* Panning in progress */
 #define AG_SCROLLVIEW_BY_CURSOR	0x20 /* Panning with cursor allowed */
 #define AG_SCROLLVIEW_BY_KBD	0x40 /* Panning with keyboard allowed */
 #define AG_SCROLLVIEW_EXPAND	(AG_SCROLLVIEW_HFILL|AG_SCROLLVIEW_VFILL)
-#define AG_SCROLLVIEW_PAN_XY	(AG_SCROLLVIEW_PAN_X|AG_SCROLLVIEW_PAN_Y)
+#define AG_SCROLLVIEW_NOPAN_XY	(AG_SCROLLVIEW_NOPAN_X|AG_SCROLLVIEW_NOPAN_Y)
 
 	enum ag_widget_packing pack;	/* Packing mode */
 	int wPre, hPre;			/* Requested geometry */
 	int xOffs, yOffs;		/* Display offset */
 	int xMin, xMax, yMin, yMax;	/* Display boundaries */
+	AG_Rect rView;			/* Available space for widgets */
 	AG_Scrollbar *hbar, *vbar;	/* Scrollbars for panning */
 } AG_Scrollview;
 
