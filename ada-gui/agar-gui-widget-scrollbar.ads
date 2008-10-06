@@ -28,7 +28,6 @@ package agar.gui.widget.scrollbar is
   type flags_t is new c.unsigned;
   SCROLLBAR_HFILL     : constant flags_t := 16#01#;
   SCROLLBAR_VFILL     : constant flags_t := 16#02#;
-  SCROLLBAR_FOCUSABLE : constant flags_t := 16#04#;
   SCROLLBAR_EXPAND    : constant flags_t := SCROLLBAR_HFILL or SCROLLBAR_VFILL;
 
   type scrollbar_t is limited private;
