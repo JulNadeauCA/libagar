@@ -353,16 +353,6 @@ ProgressBarBackground(void *pb)
 	    AG_COLOR(FRAME_COLOR));
 }
 
-
-/* Background for Scrollbar */
-static void
-ScrollbarBackground(void *sb)
-{
-	AG_DrawBox(sb,
-	    AG_RECT(0, 0, WIDTH(sb), HEIGHT(sb)), -1,
-	    AG_COLOR(SCROLLBAR_COLOR));
-}
-
 /* Background for horizontal Slider */
 static void
 SliderBackgroundHoriz(void *sl)
@@ -407,74 +397,170 @@ SliderControlVert(void *p, int y, int h)
 	    AG_COLOR(SCROLLBAR_BTN_COLOR));
 }
 
+/* Vertical scrollbar (undersize case). */
+static void
+ScrollbarVertUndersize(AG_Scrollbar *sb)
+{
+	int w = WIDTH(sb)/2;
+	int size = MIN(HEIGHT(sb)/4, WIDTH(sb));
+
+	AG_DrawBox(sb, AG_RECT(0,0,WIDTH(sb),HEIGHT(sb)), 1,
+	    AG_COLOR(SCROLLBAR_BTN_COLOR));
+	AG_DrawArrowUp(sb,
+	    w,
+	    size,
+	    size,
+	    AG_COLOR(SCROLLBAR_ARR1_COLOR),
+	    AG_COLOR(SCROLLBAR_ARR2_COLOR));
+	AG_DrawArrowDown(sb,
+	    w,
+	    HEIGHT(sb)/2 + size,
+	    size,
+	    AG_COLOR(SCROLLBAR_ARR1_COLOR),
+	    AG_COLOR(SCROLLBAR_ARR2_COLOR));
+}
+
 /* Buttons of vertical Scrollbar */
 static void
-ScrollbarVertButtons(AG_Scrollbar *sb, int y, int h)
+ScrollbarVert(AG_Scrollbar *sb, int y, int h)
 {
+	int mid = WIDTH(sb)/2;
+	int b2 = sb->wButton*2;
+	int hArrow = MIN(WIDTH(sb), sb->hArrow);
 	int y2;
 
+	if (HEIGHT(sb) < b2) {
+		ScrollbarVertUndersize(sb);
+		return;
+	}
+
+	/* Background */
+	AG_DrawBox(sb,
+	    AG_RECT(0, 0, WIDTH(sb), HEIGHT(sb)), -1,
+	    AG_COLOR(SCROLLBAR_COLOR));
+
+	/* Upper button. */
 	AG_DrawBox(sb,
 	    AG_RECT(0, 0, WIDTH(sb), sb->wButton),
 	    (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC) ? -1 : 1,
 	    AG_COLOR(SCROLLBAR_BTN_COLOR));
-	AG_DrawArrowUp(sb, WIDTH(sb)/2, sb->wButton/2, sb->hArrow,
+	AG_DrawArrowUp(sb,
+	    mid,
+	    sb->wButton/2,
+	    hArrow,
 	    AG_COLOR(SCROLLBAR_ARR1_COLOR),
 	    AG_COLOR(SCROLLBAR_ARR2_COLOR));
 	
+	/* Lower button. */
 	y2 = HEIGHT(sb) - sb->wButton;
 	AG_DrawBox(sb,
 	    AG_RECT(0, y2, WIDTH(sb), sb->wButton),
 	    (sb->curBtn == AG_SCROLLBAR_BUTTON_INC) ? -1 : 1,
 	    AG_COLOR(SCROLLBAR_BTN_COLOR));
-	AG_DrawArrowDown(sb, WIDTH(sb)/2, (y2 + sb->wButton/2), sb->hArrow,
+	AG_DrawArrowDown(sb,
+	    mid,
+	    y2 + sb->wButton/2,
+	    hArrow,
 	    AG_COLOR(SCROLLBAR_ARR1_COLOR),
 	    AG_COLOR(SCROLLBAR_ARR2_COLOR));
 
+	/* Scrollbar. */
 	if (h > 0) {
 		AG_DrawBox(sb,
-		    AG_RECT(0, sb->wButton+y, WIDTH(sb), h),
+		    AG_RECT(0,
+		            sb->wButton + y,
+			    WIDTH(sb),
+			    MIN(h, HEIGHT(sb)-b2)),
 		    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
 		    AG_COLOR(SCROLLBAR_BTN_COLOR));
 	} else {
 		AG_DrawBox(sb,
-		    AG_RECT(0, sb->wButton, WIDTH(sb),
-		            HEIGHT(sb) - sb->wButton*2),
+		    AG_RECT(0,
+		            sb->wButton,
+			    WIDTH(sb),
+		            HEIGHT(sb)-b2),
 		    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
 		    AG_COLOR(SCROLLBAR_BTN_COLOR));
 	}
 }
 
+/* Horizontal scrollbar (undersize case). */
+static void
+ScrollbarHorizUndersize(AG_Scrollbar *sb)
+{
+	int h = HEIGHT(sb)/2;
+	int size = MIN(WIDTH(sb)/4, HEIGHT(sb));
+
+	AG_DrawBox(sb, AG_RECT(0,0,WIDTH(sb),HEIGHT(sb)), 1,
+	    AG_COLOR(SCROLLBAR_BTN_COLOR));
+	AG_DrawArrowLeft(sb,
+	    size,
+	    h,
+	    size,
+	    AG_COLOR(SCROLLBAR_ARR1_COLOR),
+	    AG_COLOR(SCROLLBAR_ARR2_COLOR));
+	AG_DrawArrowRight(sb,
+	    WIDTH(sb)/2 + size,
+	    h,
+	    size,
+	    AG_COLOR(SCROLLBAR_ARR1_COLOR),
+	    AG_COLOR(SCROLLBAR_ARR2_COLOR));
+}
+
 /* Buttons of horizontal Scrollbar */
 static void
-ScrollbarHorizButtons(AG_Scrollbar *sb, int x, int w)
+ScrollbarHoriz(AG_Scrollbar *sb, int x, int w)
 {
+	int mid = HEIGHT(sb)/2;
+	int b2 = sb->wButton*2;
+	int hArrow = MIN(HEIGHT(sb), sb->hArrow);
 	int x2;
 	
+	if (WIDTH(sb) < b2) {
+		ScrollbarHorizUndersize(sb);
+		return;
+	}
+	
+	/* Background */
+	AG_DrawBox(sb,
+	    AG_RECT(0, 0, WIDTH(sb), HEIGHT(sb)), -1,
+	    AG_COLOR(SCROLLBAR_COLOR));
+
+	/* Left button */
 	AG_DrawBox(sb,
 	    AG_RECT(0, 0, sb->wButton, HEIGHT(sb)),
 	    (sb->curBtn == AG_SCROLLBAR_BUTTON_DEC) ? -1 : 1,
 	    AG_COLOR(SCROLLBAR_BTN_COLOR));
-	AG_DrawArrowLeft(sb, sb->wButton/2, HEIGHT(sb)/2, sb->hArrow,
+	AG_DrawArrowLeft(sb,
+	    sb->wButton/2, mid,
+	    hArrow,
 	    AG_COLOR(SCROLLBAR_ARR1_COLOR),
 	    AG_COLOR(SCROLLBAR_ARR2_COLOR));
 	
+	/* Right button */
 	x2 = WIDTH(sb)-sb->wButton;
 	AG_DrawBox(sb,
 	    AG_RECT(x2, 0, sb->wButton, HEIGHT(sb)),
 	    (sb->curBtn == AG_SCROLLBAR_BUTTON_INC) ? -1 : 1,
 	    AG_COLOR(SCROLLBAR_BTN_COLOR));
-	AG_DrawArrowRight(sb, (x2 + sb->wButton/2), HEIGHT(sb)/2, sb->hArrow,
+	AG_DrawArrowRight(sb, (x2 + sb->wButton/2), mid, hArrow,
 	    AG_COLOR(SCROLLBAR_ARR1_COLOR),
 	    AG_COLOR(SCROLLBAR_ARR2_COLOR));
 
+	/* Scrollbar */
 	if (w > 0) {
 		AG_DrawBox(sb,
-		    AG_RECT(sb->wButton+x, 0, w, HEIGHT(sb)),
+		    AG_RECT(sb->wButton + x,
+		            0,
+			    MIN(w, WIDTH(sb)-b2),
+			    HEIGHT(sb)),
 		    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
 		    AG_COLOR(SCROLLBAR_BTN_COLOR));
 	} else {
 		AG_DrawBox(sb,
-		    AG_RECT(sb->wButton, 0, WIDTH(sb) - sb->wButton*2,
+		    AG_RECT(sb->wButton,
+		            0,
+			    WIDTH(sb)-b2,
 		            HEIGHT(sb)),
 		    (sb->curBtn == AG_SCROLLBAR_BUTTON_SCROLL) ? -1 : 1,
 		    AG_COLOR(SCROLLBAR_BTN_COLOR));
@@ -679,9 +765,8 @@ AG_Style agStyleDefault = {
 	RadioGroupBackground,
 	RadioButton,
 	ProgressBarBackground,
-	ScrollbarBackground,
-	ScrollbarVertButtons,
-	ScrollbarHorizButtons,
+	ScrollbarVert,
+	ScrollbarHoriz,
 	SliderBackgroundHoriz,
 	SliderBackgroundVert,
 	SliderControlHoriz,

@@ -40,9 +40,8 @@ typedef struct ag_style {
 	void (*RadioButton)(struct ag_radio *, int x, int y, int selected,
 	                    int over);
 	void (*ProgressBarBackground)(void *);
-	void (*ScrollbarBackground)(void *);
-	void (*ScrollbarVertButtons)(struct ag_scrollbar *, int y, int h);
-	void (*ScrollbarHorizButtons)(struct ag_scrollbar *, int x, int w);
+	void (*ScrollbarVert)(struct ag_scrollbar *, int y, int h);
+	void (*ScrollbarHoriz)(struct ag_scrollbar *, int x, int w);
 	void (*SliderBackgroundHoriz)(void *);
 	void (*SliderBackgroundVert)(void *);
 	void (*SliderControlHoriz)(void *, int, int);
