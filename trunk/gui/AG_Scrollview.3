@@ -55,6 +55,9 @@ controls to pan the view.
 .Ft "void"
 .Fn AG_ScrollviewSizeHint "AG_Scrollview *sv" "Uint width" "Uint height"
 .Pp
+.Ft "void"
+.Fn AG_ScrollviewSetIncrement "AG_Scrollview *sv" "int increment"
+.Pp
 .nr nS 0
 The
 .Fn AG_ScrollviewNew
@@ -81,6 +84,8 @@ of child widgets).
 .It Dv AG_SCROLLVIEW_BY_KBD
 Panning with keyboard is permitted (may interfere with the operation
 of child widgets).
+.It Dv AG_SCROLLVIEW_FRAME
+Draw background and frame.
 .El
 .Pp
 The
@@ -88,6 +93,9 @@ The
 function requests an initial widget size for the
 .Nm
 in pixels.
+.Pp
+.Fn AG_ScrollviewSetIncrement
+sets the increment for scrolling the view, in pixels.
 .Pp
 .Sh EVENTS
 The
