@@ -483,10 +483,10 @@ AG_RectIntersect(const AG_Rect *a, const AG_Rect *b)
 {
 	AG_Rect x;
 
-	x.x = (a->x > b->x) ? a->x : b->x;
-	x.y = (a->y > b->y) ? a->y : b->y;
-	x.w = (a->w < b->w) ? a->w : b->w;
-	x.h = (a->h < b->h) ? a->h : b->h;
+	x.x = AG_MAX(a->x, b->x);
+	x.y = AG_MAX(a->y, b->y);
+	x.w = AG_MIN((a->x+a->w), (b->x+b->w)) - x.x;
+	x.h = AG_MIN((a->y+a->h), (b->y+b->h)) - x.y;
 	return (x);
 }
 static __inline__ SDL_Rect
