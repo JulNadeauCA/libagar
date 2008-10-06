@@ -68,6 +68,8 @@ typedef struct ag_window {
 #define AG_WINDOW_HMAXIMIZE	0x040000 /* Keep maximized horizontally */
 #define AG_WINDOW_VMAXIMIZE	0x080000 /* Keep maximized vertically */
 #define AG_WINDOW_NOMOVE	0x100000 /* Disallow movement of window */
+#define AG_WINDOW_NOCLIPPING	0x200000 /* Don't set a clipping rectangle
+					    over the window area */
 
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
 #define AG_WINDOW_NOBUTTONS	(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|\
