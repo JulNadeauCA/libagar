@@ -52,27 +52,25 @@ rm -fR `find ${DISTNAME} \( -name .svn \
     -or -name \*.core \
     -or -name .\*.swp \
     -or -name .xvpics \)`
+rm -f ${DISTNAME}/agar
 
 # ZIP: Generate project files for various IDEs.
 (cd ${DISTNAME} && ${MAKE} proj)
-if [ $? != 0 ]; then
+if [ "$?" != "0" ]; then
 	echo "${MAKE} proj failed"
 	exit 1
 fi
 (cd ${DISTNAME}/demos && ${MAKE} proj)
-if [ $? != 0 ]; then
+if [ "$?" != "0" ]; then
 	echo "${MAKE} proj (demos) failed"
 	exit 1
 fi
 
-# ZIP: Remove include symlink.
-rm -f ${DISTNAME}/agar
-
 # ZIP: Litter header files with "DECLSPEC" as required by some compilers.
-find ${DISTNAME} -name \*.h -exec perl mk/gen-declspecs.pl {} \;
+(cd ${DISTNAME} && find . -name \*.h -exec perl mk/gen-declspecs.pl {} \;
 
 # ZIP: Compress archive
-zip -r ${DISTNAME}.zip ${DISTNAME}
+zip -q -r ${DISTNAME}.zip ${DISTNAME}
 
 echo "Updating checksums"
 openssl md5 ${DISTNAME}.tar.gz > ${DISTNAME}.tar.gz.md5
