@@ -64,6 +64,7 @@ typedef struct ag_label {
 	} poll;
 	AG_SLIST_HEAD(,ag_label_flag) lflags;	/* Label flag descriptions */
 	struct ag_text_cache *tCache;		/* Cache for polled labels */
+	AG_Rect rClip;				/* Clipping rectangle */
 } AG_Label;
 
 __BEGIN_DECLS
