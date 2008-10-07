@@ -122,6 +122,8 @@ typedef struct ag_tableview {
 			Uint depth;
 		} *items;
 	} visible;
+
+	AG_Rect r;				/* View area */
 } AG_Tableview;
 
 /* Flags for AG_TableviewColAdd() */

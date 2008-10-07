@@ -238,6 +238,7 @@ Init(void *obj)
 	tl->changedEv = NULL;
 	tl->dblClickEv = NULL;
 	tl->wheelTicks = 0;
+	tl->r = AG_RECT(0,0,0,0);
 	TAILQ_INIT(&tl->items);
 	TAILQ_INIT(&tl->selitems);
 	TAILQ_INIT(&tl->popups);
@@ -352,6 +353,11 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_WidgetSizeAlloc(tl->sbar, &aBar);
 	tl->wRow = a->w - aBar.w;
 
+	tl->r.x = 0;
+	tl->r.y = 0;
+	tl->r.w = tl->wRow;
+	tl->r.h = a->h;
+
 	UpdateListScrollbar(tl);
 	return (0);
 }
@@ -364,10 +370,11 @@ Draw(void *obj)
 	int y = 0, i = 0, selSeen = 0, selPos = 1;
 	int offset;
 
-	STYLE(tl)->ListBackground(tl, AG_RECT(0, 0, tl->wRow, HEIGHT(tl)));
+	STYLE(tl)->ListBackground(tl, tl->r);
+
 	AG_WidgetDraw(tl->sbar);
 
-	AG_PushClipRect(tl, AG_RECT(0, 0, tl->wRow, HEIGHT(tl)));
+	AG_PushClipRect(tl, tl->r);
 
 	if (tl->flags & AG_TLIST_POLL) {
 		AG_PostEvent(NULL, tl, "tlist-poll", NULL);

@@ -41,6 +41,7 @@ typedef struct ag_notebook {
 	int lblPartialWidth;		/* Width of "..." */
 	struct ag_notebook_tab *sel_tab;
 	AG_TAILQ_HEAD(,ag_notebook_tab) tabs;
+	AG_Rect r;			/* View area */
 } AG_Notebook;
 
 __BEGIN_DECLS

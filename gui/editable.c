@@ -571,7 +571,8 @@ Draw(void *obj)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 #endif
-	AG_PushClipRect(ed, AG_RECT(-1,-1,WIDTH(ed)-1,HEIGHT(ed)-1));
+	AG_PushClipRect(ed, ed->r);
+
 	AG_PushTextState();
 	AG_TextColor(TEXTBOX_TXT_COLOR);
 	x = 0;
@@ -702,6 +703,7 @@ Draw(void *obj)
 	ed->flags &= ~(AG_EDITABLE_NOSCROLL_ONCE);
 	AG_WidgetUnlockBinding(stringb);
 	AG_PopTextState();
+
 	AG_PopClipRect();
 
 #ifdef HAVE_OPENGL
@@ -752,6 +754,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		return (-1);
 
 	ed->yVis = a->h/agTextFontLineSkip;
+	ed->r = AG_RECT(-1, -1, a->w-1, a->h-1);
 	return (0);
 }
 
@@ -1083,6 +1086,7 @@ Init(void *obj)
 	ed->repeatUnicode = 0;
 	ed->ucsBuf = NULL;
 	ed->ucsLen = 0;
+	ed->r = AG_RECT(0,0,0,0);
 
 	AG_SetEvent(ed, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(ed, "window-keyup", KeyUp, NULL);

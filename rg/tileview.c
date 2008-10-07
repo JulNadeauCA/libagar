@@ -1033,7 +1033,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	if (tv->yoffs > (lim = (a->h - RG_TILEVIEW_MIN_H)))
 		tv->yoffs = lim;
 
-	AG_WidgetEnableClipping(tv, AG_RECT(0, 0, a->w, a->h));
 	return (0);
 }
 
@@ -1553,6 +1552,7 @@ Draw(void *obj)
 	if (t == NULL)
 		return;
 
+	AG_PushClipRect(tv, AG_RECT(0, 0, WIDTH(tv), HEIGHT(tv)));
 #if 0
 	if (tv->state == RG_TILEVIEW_SKETCH_EDIT) {
 		VG_Rasterize(rv->tv_sketch.sk->vg);
@@ -1757,6 +1757,7 @@ Draw(void *obj)
 	if (agView->opengl)
 		glDisable(GL_BLEND);
 #endif
+	AG_PopClipRect();
 }
 
 static void

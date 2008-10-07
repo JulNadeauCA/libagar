@@ -330,6 +330,7 @@ Init(void *obj)
 	vv->tCache = agTextCache ? AG_TextCacheNew(vv, 128, 16) : NULL;
 	vv->editAreas = NULL;
 	vv->nEditAreas = 0;
+	vv->r = AG_RECT(0,0,0,0);
 	TAILQ_INIT(&vv->tools);
 
 	vv->nGrids = 0;
@@ -485,10 +486,13 @@ SizeRequest(void *obj, AG_SizeReq *r)
 static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
+	VG_View *vv = obj;
+
 	if (a->w < 16 || a->h < 16) {
 		return (-1);
 	}
-	AG_WidgetEnableClipping(obj, AG_RECT(0, 0, a->w, a->h));
+	vv->r.w = a->w;
+	vv->r.h = a->h;
 	return (0);
 }
 
@@ -584,14 +588,14 @@ Draw(void *obj)
 	if (vg == NULL)
 		return;
 
-	if (vv->flags & VG_VIEW_BGFILL) {
-		AG_DrawRectFilled(vv, AG_RECT(0,0,WIDTH(vv),HEIGHT(vv)),
-		    VG_MapColorRGB(vg->fillColor));
-	} 
-	if (vv->flags & VG_VIEW_GRID) {
+	if (vv->flags & VG_VIEW_BGFILL)
+		AG_DrawRectFilled(vv, vv->r, VG_MapColorRGB(vg->fillColor));
+	
+	AG_PushClipRect(vv, vv->r);
+
+	if (vv->flags & VG_VIEW_GRID)
 		for (i = 0; i < vv->nGrids; i++)
 			DrawGrid(vv, &vv->grid[i]);
-	}
 
 	VG_Lock(vg);
 
@@ -622,6 +626,8 @@ Draw(void *obj)
 		    HEIGHT(vv) - suTmp->h);
 		AG_SurfaceFree(suTmp);
 	}
+
+	AG_PopClipRect();
 }
 
 /* Select a new tool to use. */

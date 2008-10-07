@@ -1188,6 +1188,7 @@ RectGL(void *p, AG_Rect r, Uint32 color)
 	int x2 = x1+r.w-1;
 	int y2 = y1+r.h-1;
 
+#if 0
 	if (wid->flags & AG_WIDGET_CLIPPING) {
 		if (x1 > wid->cx+wid->w ||
 		    y1 > wid->cy+wid->h) {
@@ -1202,6 +1203,7 @@ RectGL(void *p, AG_Rect r, Uint32 color)
 		if (y2 > wid->cy+wid->h)
 			y2 = wid->cy+wid->h;
 	}
+#endif
 	AG_GetRGB(color, agVideoFmt, &red,&green,&blue);
 	glBegin(GL_POLYGON);
 	glColor3ub(red, green, blue);
@@ -1223,6 +1225,7 @@ RectBlendedGL(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 	GLboolean blend_save;
 	GLint sfac_save, dfac_save;
 
+#if 0
 	if (wid->flags & AG_WIDGET_CLIPPING) {
 		if (x1 > wid->cx+wid->w ||
 		    y1 > wid->cy+wid->h) {
@@ -1237,7 +1240,7 @@ RectBlendedGL(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 		if (y2 > wid->cy+wid->h)
 			y2 = wid->cy+wid->h;
 	}
-
+#endif
 	if (c[3] < 255) {
 		glGetBooleanv(GL_BLEND, &blend_save);
 		glGetIntegerv(GL_BLEND_SRC, &sfac_save);

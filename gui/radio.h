@@ -27,7 +27,8 @@ typedef struct ag_radio {
 	int oversel;		/* Overlapping selection */
 	int xPadding, yPadding;
 	int xSpacing, ySpacing;
-	int radius;
+	int radius;		/* Control radius in pixels */
+	AG_Rect r;		/* View area */
 } AG_Radio;
 
 __BEGIN_DECLS

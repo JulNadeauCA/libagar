@@ -179,11 +179,13 @@ Draw(void *obj)
 	int i, val;
 	int x = rad->xPadding + rad->radius*2 + rad->xSpacing;
 	int y = rad->yPadding;
-
+	
 	STYLE(rad)->RadioGroupBackground(rad,
 	    AG_RECT(0, 0, WIDTH(rad), HEIGHT(rad)));
+	
 	val = AG_WidgetInt(rad, "value");
 	AG_PushTextState();
+	AG_PushClipRect(rad, rad->r);
 	for (i = 0; i < rad->nItems;
 	     i++, y += (rad->radius*2 + rad->ySpacing)) {
 		AG_RadioItem *ri = &rad->items[i];
@@ -198,6 +200,7 @@ Draw(void *obj)
 		}
 		AG_WidgetBlitSurface(rad, ri->surface, x, y);
 	}
+	AG_PopClipRect();
 	AG_PopTextState();
 }
 
@@ -230,14 +233,14 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Radio *rad = obj;
 	
-	if (a->w < rad->xPadding*2 + rad->xSpacing*2 + rad->radius*2 +
-	    rad->max_w ||
-	    a->h < rad->yPadding*2 + rad->nItems*rad->radius*2 +
-	           (rad->nItems-1)*rad->ySpacing) {
-		AG_WidgetEnableClipping(rad, AG_RECT(0,0,a->w,a->h));
-	} else {
-		AG_WidgetDisableClipping(rad);
+	if (a->w < rad->xPadding*2 ||
+	    a->h < rad->yPadding*2) {
+		return (-1);
 	}
+	rad->r.x = rad->xPadding;
+	rad->r.y = rad->yPadding;
+	rad->r.w = a->w - rad->xPadding;
+	rad->r.h = a->h - rad->yPadding;
 	return (0);
 }
 
@@ -323,7 +326,7 @@ Init(void *obj)
 {
 	AG_Radio *rad = obj;
 
-	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
 
 	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &rad->value);
 
@@ -338,6 +341,7 @@ Init(void *obj)
 	rad->radius = 6;
 	rad->items = NULL;
 	rad->nItems = 0;
+	rad->r = AG_RECT(0,0,0,0);
 
 	AG_SetEvent(rad, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(rad, "window-keydown", KeyDown, NULL);

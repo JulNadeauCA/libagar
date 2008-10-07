@@ -440,12 +440,6 @@ operation.
 .Pp
 .nr nS 1
 .Ft void
-.Fn AG_WidgetEnableClipping "AG_Widget *widget" "AG_Rect r"
-.Pp
-.Ft void
-.Fn AG_WidgetDisableClipping "AG_Widget *widget"
-.Pp
-.Ft void
 .Fn AG_PushClipRect "AG_Widget *widget" "AG_Rect r"
 .Pp
 .Ft void
@@ -471,43 +465,22 @@ operation.
 .Pp
 .nr nS 0
 .Pp
-.Fn AG_WidgetEnableClipping
-configures a global clipping rectangle, which applies to child widget as
-well as
-.Fa widget
-itself.
-.Fn AG_WidgetDisableClipping
-disables the global clipping rectangle.
-Both
-.Fn AG_WidgetEnableClipping
-and
-.Fn AG_WidgetDisableClipping
-are typically invoked from widget initialization and
-.Fn size_allocate
-context, and are not safe to invoke from GUI rendering context.
-.Pp
+The
 .Fn AG_PushClipRect
-pushes a rectangle onto the stack of clipping rectangle.
+function pushes a rectangle onto the stack of clipping rectangles.
 .Fn AG_PopClipRect
 pops the last entry from the clipping rectangle stack.
+The clipping rectangle is given in coordinates relative to the widget.
 .Pp
-The rectangle for both
-.Fn AG_WidgetEnableClipping
-and
-.Fn AG_PushClipRect
-is given in coordinates relative to the widget.
-.Pp
+These routines must be invoked from GUI rendering context.
 The method of clipping depends on the underlying graphics API.
 For instance, in SDL mode, the temporary rectangle is set by
 .Xr SDL_SetClipRect 3
 and
 .Xr glClipPlane 3
 is used in OpenGL mode.
-In both cases, Agar will intersect the rectangles on the stack such that
-only one clipping rectangle is required of the graphics API.
-It is not safe to call these two functions anywhere outside of a widget
-.Fn draw
-operation.
+In either case, the actual clipping rectangle passed to the graphics API
+is the intersection of all clipping rectangles on the stack.
 .Pp
 The
 .Fn AG_WidgetPushCursor
@@ -552,9 +525,7 @@ Note that
 and
 .Fn AG_WidgetBlendPixelRGBA
 are affected by the current clipping rectangle (as set by
-.Fn AG_PushClipRect
-or
-.Fn AG_WidgetEnableClipping ) .
+.Fn AG_PushClipRect ) .
 .Sh GRAPHICS PRIMITIVES
 These primitives are designed specifically for use in GUI widgets.
 They must be called from the
@@ -1238,9 +1209,6 @@ to fill all remaining space.
 .It AG_WIDGET_VFILL
 Hint to container widgets that in a horizontal packing, this widget can expand
 to fill all remaining space.
-.It AG_WIDGET_CLIPPING
-A global clipping rectangle is in use (read-only, must be set with
-.Fn AG_WidgetEnableClipping ) .
 .It AG_WIDGET_HIDE
 Disable rendering of this widget (does not affect widget's children).
 .It AG_WIDGET_DISABLED

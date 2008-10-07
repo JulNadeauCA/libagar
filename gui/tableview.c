@@ -114,6 +114,7 @@ Init(void *obj)
 	tv->locked = 0;
 	tv->sort = 0;
 	tv->polled = 0;
+	tv->r = AG_RECT(0,0,0,0);
 
 	tv->head_height = tv->header ? agTextFontHeight : 0;
 	tv->row_height = agTextFontHeight+2;
@@ -563,13 +564,20 @@ static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Tableview *tv = obj;
+	AG_SizeReq rBar;
 	int i;
 
-	r->w = tv->prew + tv->sbar_v->wButton;
-	r->h = tv->preh + (tv->sbar_h == NULL ? 0 : tv->sbar_h->wButton);
-	for (i = 0; i < tv->columncount; i++) {
-		r->w += tv->column[i].w;
+	AG_WidgetSizeReq(tv->sbar_v, &rBar);
+	r->w = tv->prew + rBar.w;
+	r->h = tv->preh;
+
+	if (tv->sbar_h != NULL) {
+		AG_WidgetSizeReq(tv->sbar_h, &rBar);
+		r->h += rBar.h;
 	}
+	
+	for (i = 0; i < tv->columncount; i++)
+		r->w += tv->column[i].w;
 }
 
 static int
@@ -578,31 +586,37 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_Tableview *tv = obj;
 	Uint rows_per_view, i;
 	AG_SizeAlloc aBar;
-	AG_Rect rView;
+	AG_SizeReq rBar;
 
-	rView.x = 0;
-	rView.y = 0;
-	rView.w = a->w;
-	rView.h = a->h;
+	if (a->h < tv->head_height || a->w < 8)
+		return (-1);
+
+	tv->r = AG_RECT(
+	    0,
+	    tv->head_height,
+	    WIDTH(tv),
+	    HEIGHT(tv) - tv->head_height);
 
 	/* Size vertical scroll bar. */
-	aBar.x = a->w - tv->sbar_v->wButton;
+	AG_WidgetSizeReq(tv->sbar_v, &rBar);
+	aBar.x = a->w - rBar.w;
 	aBar.y = 0;
-	aBar.w = tv->sbar_v->wButton;
-	aBar.h = a->h - (tv->sbar_h ? tv->sbar_h->wButton : 0);
+	aBar.w = rBar.w;
+	aBar.h = a->h - aBar.w;
 	AG_WidgetSizeAlloc(tv->sbar_v, &aBar);
-	rView.w -= aBar.w;
+	tv->r.w -= WIDTH(tv->sbar_v);
 
 	/* Size horizontal scroll bar, if enabled. */
 	if (tv->sbar_h != NULL) {
 		int col_w = 0;
 
+		AG_WidgetSizeReq(tv->sbar_h, &rBar);
 		aBar.x = 0;
-		aBar.y = a->h - tv->sbar_h->wButton;
-		aBar.w = a->w - tv->sbar_h->wButton;
-		aBar.h = tv->sbar_h->wButton;
-		AG_WidgetSizeAlloc(tv->sbar_v, &aBar);
-		rView.h -= aBar.h;
+		aBar.y = a->h - rBar.h;
+		aBar.w = a->w - WIDTH(tv->sbar_v);
+		aBar.h = rBar.h;
+		AG_WidgetSizeAlloc(tv->sbar_h, &aBar);
+		tv->r.h -= HEIGHT(tv->sbar_h);
 
 		for (i = 0; i < tv->columncount; i++) {
 			col_w += tv->column[i].w;
@@ -648,16 +662,11 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 
 	/* Calculate how many rows the view holds. */
 	{
-		int view_height = a->h - (NULL == tv->sbar_h ? 0 :
-				  HEIGHT(tv->sbar_h));
-
-		if (view_height < tv->head_height) {
-			view_height = tv->head_height;
+		if (tv->r.h < tv->head_height) {
+			tv->r.h = tv->head_height;
 		}
-		rows_per_view = (view_height - tv->head_height) /
-		    tv->row_height;
-
-		if ((view_height - tv->head_height) % tv->row_height)
+		rows_per_view = tv->r.h/ tv->row_height;
+		if (tv->r.h % tv->row_height)
 			rows_per_view++;
 	}
 
@@ -678,8 +687,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		tv->visible.count = rows_per_view;
 		tv->visible.dirty = 1;
 	}
-
-	AG_WidgetEnableClipping(tv, rView);
 	return (0);
 }
 
@@ -689,27 +696,20 @@ Draw(void *obj)
 	AG_Tableview *tv = obj;
 	Uint i;
 	int y, update = 0;
-	const int view_width = (WIDTH(tv) - WIDTH(tv->sbar_v));
-	AG_Rect rBg;
 
 	/* before we draw, update if needed */
-	if (tv->visible.dirty)
+	if (tv->visible.dirty) {
 		view_changed(tv);
-
+	}
 	if (tv->visible.redraw_rate &&
 	    SDL_GetTicks() > tv->visible.redraw_last + tv->visible.redraw_rate)
 		update = 1;
 	
-	/* Draw the background box */
-	rBg.x = 0;
-	rBg.y = 0;
-	rBg.w = WIDTH(tv);
-	rBg.h = HEIGHT(tv);
-	STYLE(tv)->TableBackground(tv, rBg);
+	STYLE(tv)->TableBackground(tv, tv->r);
 	
-	/* Draw the scrollbars. */
 	AG_WidgetDraw(tv->sbar_v);
-/*	AG_WidgetDraw(tv->sbar_h); */
+	if (tv->sbar_h != NULL)
+		AG_WidgetDraw(tv->sbar_h);
 	
 	/* draw row selection hilites */
 	y = tv->head_height;
@@ -718,7 +718,7 @@ Draw(void *obj)
 			break;
 		}
 		STYLE(tv)->TableRowBackground(tv,
-		    AG_RECT(1, y, view_width-2, tv->row_height),
+		    AG_RECT(1, y, tv->r.w-2, tv->row_height),
 		    VISROW(tv,i)->selected);
 		y += tv->row_height;
 	}
@@ -746,7 +746,6 @@ foreach_visible_column(AG_Tableview *tv, visible_do dothis, void *arg1,
 {
 	int x, first_col, col_width;
 	Uint i;
-	int view_width = (WIDTH(tv) - WIDTH(tv->sbar_v));
 	int view_edge = (tv->sbar_h ? AG_WidgetInt(tv->sbar_h, "value") : 0);
 
 	x = 0;
@@ -766,12 +765,12 @@ foreach_visible_column(AG_Tableview *tv, visible_do dothis, void *arg1,
 						 * offset on the screen */
 		}
 		/* stop after the last onscreen column */
-		if (x >= view_width)
+		if (x >= tv->r.w)
 			break;
 
 		/* determine how wide this column will be */
-		col_width = (x + tv->column[i].w > view_width) ?
-			view_width - x : tv->column[i].w;
+		col_width = (x + tv->column[i].w > tv->r.w) ?
+			    (tv->r.w - x) : tv->column[i].w;
 
 		/* do what we should */
 		if (dothis(tv, x, x + col_width, i, arg1, arg2) == 0)
@@ -789,8 +788,6 @@ static void
 view_changed(AG_Tableview *tv)
 {
 	int rows_per_view, max, filled, value;
-	int view_height = HEIGHT(tv) - (tv->sbar_h != NULL ?
-	                                HEIGHT(tv->sbar_h) : 0);
 	int scrolling_area = HEIGHT(tv->sbar_v) - tv->sbar_v->wButton*2;
 	Uint i;
 
@@ -798,15 +795,15 @@ view_changed(AG_Tableview *tv)
 	tv->dblclicked = 0;
 	AG_CancelEvent(tv, "dblclick-expire");
 
-	rows_per_view = (view_height - tv->head_height) / tv->row_height;
-	if ((view_height - tv->head_height) % tv->row_height)
+	rows_per_view = tv->r.h/tv->row_height;
+	if (tv->r.h % tv->row_height)
 		rows_per_view++;
 
 	max = tv->expandedrows - rows_per_view;
 	if (max < 0) {
 		max = 0;
 	}
-	if (max && ((view_height - tv->head_height) % tv->row_height) < 16) {
+	if (max && (tv->r.h % tv->row_height) < 16) {
 		max++;
 	}
 	AG_WidgetSetInt(tv->sbar_v, "max", max);
@@ -1174,7 +1171,6 @@ static int
 draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
     void *arg2)
 {
-	const int view_width = (WIDTH(tv) - WIDTH(tv->sbar_v));
 	const int *update = (int *)arg1;
 	Uint j, cidx = tv->column[idx].idx;
 	int y;
@@ -1200,6 +1196,7 @@ draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 		render_dyncolumn(tv, idx);
 
 	/* draw cells in this column */
+	AG_PushClipRect(tv, tv->r);
 	y = tv->head_height;
 	for (j = 0; j < tv->visible.count; j++) {
 		int x = x1+4;
@@ -1226,14 +1223,12 @@ draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 		}
 		y += tv->row_height;
 	}
+	AG_PopClipRect();
 
 	/* Fill the Remaining Space in column heading */
-	if (tv->header && idx == tv->columncount-1 && x2 < view_width) {
+	if (tv->header && idx == tv->columncount-1 && x2 < tv->r.w) {
 		STYLE(tv)->TableColumnHeaderBackground(tv, -1,
-		    AG_RECT(x2, 0,
-		            view_width-x2,
-			    tv->head_height),
-		    0);
+		    AG_RECT(x2, 0, tv->r.w-x2, tv->head_height), 0);
 	}
 	return (1);
 }

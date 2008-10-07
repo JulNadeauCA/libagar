@@ -121,6 +121,7 @@ Init(void *obj)
 	mv->nPre = 0;
 	mv->numFmt = "%g";
 	mv->tCache = agTextCache ? AG_TextCacheNew(mv, 64, 16) : NULL;
+	mv->r = AG_RECT(0,0,0,0);
 	
 	AG_WidgetBind(mv->hBar, "value", AG_WIDGET_UINT, &mv->xOffs);
 	AG_WidgetBind(mv->vBar, "value", AG_WIDGET_UINT, &mv->yOffs);
@@ -182,23 +183,24 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	M_Matview *mv = obj;
 	AG_SizeAlloc aBar;
-	AG_Rect rView = AG_RECT(0, 0, a->w, a->h);
+
+	mv->r.w = a->w;
+	mv->r.h = a->h;
 
 	aBar.x = 0;
 	aBar.y = a->h - mv->hBar->wButton;
 	aBar.w = a->w;
 	aBar.h = mv->hBar->wButton+1;
 	AG_WidgetSizeAlloc(mv->hBar, &aBar);
-	rView.h -= aBar.h;
+	mv->r.h -= HEIGHT(mv->hBar);
 
 	aBar.x = a->w - mv->vBar->wButton;
 	aBar.y = mv->vBar->wButton;
 	aBar.w = mv->vBar->wButton;
 	aBar.h = a->h - mv->hBar->wButton+1;
 	AG_WidgetSizeAlloc(mv->vBar, &aBar);
-	rView.w -= aBar.w;
+	mv->r.w -= WIDTH(mv->vBar);
 
-	AG_WidgetEnableClipping(mv, rView);
 	return (0);
 }
 
@@ -214,20 +216,19 @@ DrawNumerical(void *p)
 	int xOffs = -mv->xOffs*mv->wEnt + 8;
 	int yOffs = -mv->yOffs*mv->hEnt + 8;
 
-	AG_DrawBox(mv,
-	    AG_RECT(0, 0, WIDTH(mv), HEIGHT(mv)), -1,
-	    AG_COLOR(BG_COLOR));
-
+	AG_DrawBox(mv, mv->r, -1, AG_COLOR(BG_COLOR));
+	AG_PushClipRect(mv, mv->r);
+	
 	AG_PushTextState();
 	AG_TextColor(TEXT_COLOR);
 
 	for (m = 0, y = yOffs;
-	     m < MROWS(M) && y < HEIGHT(mv);
+	     m < MROWS(M) && y < mv->r.h;
 	     m++, y += (mv->hEnt + mv->vSpacing)) {
 		for (n = 0, x = xOffs;
-		     n < MCOLS(M) && x < WIDTH(mv);
+		     n < MCOLS(M) && x < mv->r.w;
 		     n++, x += (mv->wEnt + mv->hSpacing)) {
-			Snprintf(text, sizeof(text), mv->numFmt, M_Get(M, m, n));
+			Snprintf(text, sizeof(text), mv->numFmt, M_Get(M,m,n));
 			if (agTextCache) {
 				int su = AG_TextCacheInsLookup(mv->tCache,text);
 				AG_WidgetBlitSurface(mv, su, x, y);
@@ -245,7 +246,9 @@ DrawNumerical(void *p)
 	
 	AG_DrawLineV(mv, xMin-2, 2, y, AG_COLOR(TEXT_COLOR));
 	AG_DrawLineV(mv, xMax+4, 2, y, AG_COLOR(TEXT_COLOR));
+
 	AG_PopTextState();
+	AG_PopClipRect();
 }
 
 static void
@@ -259,9 +262,8 @@ DrawGreyscale(void *p)
 	int xOffs = -mv->xOffs*mv->scale;
 	int yOffs = -mv->yOffs*mv->scale;
 
-	AG_DrawBox(mv,
-	    AG_RECT(0, 0, WIDTH(mv), HEIGHT(mv)), -1,
-	    AG_COLOR(BG_COLOR));
+	AG_DrawBox(mv, mv->r, -1, AG_COLOR(BG_COLOR));
+	AG_PushClipRect(mv, mv->r);
 
 	for (m = 0; m < MROWS(A); m++) {
 		for (n = 0; n < MCOLS(A); n++) {
@@ -273,10 +275,10 @@ DrawGreyscale(void *p)
 	big -= small;
 
 	for (m = 0, y = yOffs;
-	     m < MROWS(A) && y < HEIGHT(mv);
+	     m < MROWS(A) && y < mv->r.h;
 	     m++, y += mv->scale) {
 		for (n = 0, x = xOffs;
-		     n < MCOLS(A) && x < WIDTH(mv);
+		     n < MCOLS(A) && x < mv->r.w;
 		     n++, x += mv->scale) {
 		     	M_Real dv = M_Get(A,m,n);
 			Uint32 c;
@@ -301,6 +303,7 @@ DrawGreyscale(void *p)
 			    c);
 		}
 	}
+	AG_PopClipRect();
 }
 
 static void

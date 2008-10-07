@@ -100,7 +100,6 @@ typedef struct ag_widget {
 #define AG_WIDGET_UNFOCUSED_MOTION	0x0004 /* All mousemotion events */
 #define AG_WIDGET_UNFOCUSED_BUTTONUP	0x0008 /* All mousebuttonup events */
 #define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x0010 /* All mousebuttondown events */
-#define AG_WIDGET_CLIPPING		0x0020 /* Global clipping rectangle */
 #define AG_WIDGET_HFILL			0x0040 /* Expand to fill width */
 #define AG_WIDGET_VFILL			0x0080 /* Expand to fill height */
 #define AG_WIDGET_EXCEDENT		0x0100 /* Used internally for scaling */
@@ -122,7 +121,6 @@ typedef struct ag_widget {
 	int cx, cy, cx2, cy2;		/* Cached view coords (optimization) */
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
-	AG_Rect rClip;			/* Rectangle for WIDGET_CLIPPING */
 	AG_Style *style;		/* Style (inherited from parent) */
 
 	AG_Surface **surfaces;		/* Registered surfaces */
@@ -200,8 +198,6 @@ void AG_WidgetDraw(void *);
 void AG_WidgetSizeReq(void *, AG_SizeReq *);
 int  AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
 void AG_WidgetSetFocusable(void *, int);
-void AG_WidgetEnableClipping(void *, AG_Rect);
-void AG_WidgetDisableClipping(void *);
 
 void		  AG_WidgetFocus(void *);
 void		  AG_WidgetUnfocus(void *);

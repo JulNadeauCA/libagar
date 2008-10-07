@@ -163,7 +163,6 @@ Init(void *obj)
 	win->rPad = 2;
 	win->tPad = 2;
 	win->bPad = 2;
-	
 	win->wReq = 0;
 	win->hReq = 0;
 	win->wMin = win->lPad + win->rPad + 16;
@@ -172,8 +171,8 @@ Init(void *obj)
 	win->wBorderBot = 6;
 	win->wBorderSide = 0;
 	win->wResizeCtrl = 16;
-
 	win->rSaved = AG_RECT(-1,-1,-1,-1);
+	win->r = AG_RECT(0,0,0,0);
 	win->caption[0] = '\0';
 	win->tbar = NULL;
 	win->icon = AG_IconNew(NULL, 0);
@@ -225,16 +224,11 @@ Draw(void *obj)
 {
 	AG_Window *win = obj;
 	AG_Widget *chld;
-	int hTitle = 0;
 	
 	STYLE(win)->Window(win);
 
-	hTitle = (win->tbar != NULL) ? HEIGHT(win->tbar) : 0;
 	if (!(win->flags & AG_WINDOW_NOCLIPPING)) {
-		AG_PushClipRect(win,
-		    AG_RECT(0, 0,
-		            WIDTH(win) - win->wBorderSide*2,
-			    HEIGHT(win) - win->wBorderBot));
+		AG_PushClipRect(win, win->r);
 	}
 	WIDGET_FOREACH_CHILD(chld, win) {
 		AG_WidgetDraw(chld);
@@ -1591,6 +1585,12 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		aChld.y += aChld.h + win->spacing;
 	}
 	ClampToView(win);
+
+	win->r.x = 0;
+	win->r.y = 0;
+	win->r.w = a->w - win->wBorderSide*2;
+	win->r.h = a->h - win->wBorderBot;
+
 	return (0);
 }
 

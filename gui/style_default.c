@@ -154,14 +154,16 @@ BoxFrame(void *box, int depth)
 static void
 CheckboxButton(void *cbox, int state)
 {
+	int btnSize = MIN(WIDTH(cbox),HEIGHT(cbox));
+	
 	if (AG_WidgetEnabled(cbox)) {
 		AG_DrawBox(cbox,
-		    AG_RECT(0, 0, HEIGHT(cbox), HEIGHT(cbox)),
+		    AG_RECT(0, 0, btnSize, btnSize),
 		    state ? -1 : 1,
 		    AG_COLOR(CHECKBOX_COLOR));
 	} else {
 		AG_DrawBoxDithered(cbox,
-		    AG_RECT(0, 0, HEIGHT(cbox), HEIGHT(cbox)),
+		    AG_RECT(0, 0, btnSize, btnSize),
 		    state ? -1 : 1,
 		    AG_COLOR(CHECKBOX_COLOR),
 		    AG_COLOR(DISABLED_COLOR));
@@ -254,6 +256,7 @@ MenuItemSeparator(void *mv, int x1, int x2, int y, int h)
 static void
 NotebookBackground(void *nb, AG_Rect r)
 {
+	/* XXX use something less expensive */
 	AG_DrawRectFilled(nb, r, AG_COLOR(NOTEBOOK_SEL_COLOR));
 }
 

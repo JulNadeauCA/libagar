@@ -75,6 +75,7 @@ typedef struct ag_menu {
 	int itemh;			/* Item height (optimization) */
 	int curState;			/* For MenuState() */
 	AG_Toolbar *curToolbar;		/* For MenuToolbar() */
+	AG_Rect r;			/* View area */
 } AG_Menu;
 
 typedef struct ag_popup_menu {
