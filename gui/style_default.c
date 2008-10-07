@@ -62,7 +62,7 @@ Window(AG_Window *win)
 
 	if (!(win->flags & AG_WINDOW_NOBACKGROUND)) {
 		AG_DrawRectFilled(win,
-		    AG_RECT(0, hBar, WIDTH(win), HEIGHT(win)-hBar),
+		    AG_RECT(0, hBar-1, WIDTH(win), HEIGHT(win)-hBar),
 		    AG_COLOR(WINDOW_BG_COLOR));
 	}
 	if (win->wBorderBot > 0) {
