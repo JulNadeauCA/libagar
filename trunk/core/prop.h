@@ -215,44 +215,67 @@ AG_Prop  *AG_SetString(void *, const char *, const char *, ...);
  ********************/
 
 static __inline__ AG_Prop *
-AG_SetUint(void *ob, const char *key, Uint i) {
+AG_SetUint(void *ob, const char *key, Uint i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_UINT, i));
 }
-static __inline__ AG_Prop *AG_SetInt(void *ob, const char *key, int i) {
+static __inline__ AG_Prop *
+AG_SetInt(void *ob, const char *key, int i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_INT, i));
 }
-static __inline__ AG_Prop *AG_SetUint8(void *ob, const char *key, Uint8 i) {
+static __inline__ AG_Prop *
+AG_SetUint8(void *ob, const char *key, Uint8 i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_UINT8, i));
 }
-static __inline__ AG_Prop *AG_SetSint8(void *ob, const char *key, Sint8 i) {
+static __inline__ AG_Prop *
+AG_SetSint8(void *ob, const char *key, Sint8 i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_SINT8, i));
 }
-static __inline__ AG_Prop *AG_SetUint16(void *ob, const char *key, Uint16 i) {
+static __inline__ AG_Prop *
+AG_SetUint16(void *ob, const char *key, Uint16 i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_UINT16, i));
 }
-static __inline__ AG_Prop *AG_SetSint16(void *ob, const char *key, Sint16 i) {
+static __inline__ AG_Prop *
+AG_SetSint16(void *ob, const char *key, Sint16 i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_SINT16, i));
 }
-static __inline__ AG_Prop *AG_SetUint32(void *ob, const char *key, Uint32 i) {
+static __inline__ AG_Prop *
+AG_SetUint32(void *ob, const char *key, Uint32 i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_UINT32, i));
 }
-static __inline__ AG_Prop *AG_SetSint32(void *ob, const char *key, Sint32 i) {
+static __inline__ AG_Prop *
+AG_SetSint32(void *ob, const char *key, Sint32 i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_SINT32, i));
 }
 
 #ifdef HAVE_64BIT
-static __inline__ AG_Prop *AG_SetUint64(void *ob, const char *key, Uint64 i) {
+static __inline__ AG_Prop *
+AG_SetUint64(void *ob, const char *key, Uint64 i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_UINT64, i));
 }
-static __inline__ AG_Prop *AG_SetSint64(void *ob, const char *key, Sint64 i) {
+static __inline__ AG_Prop *
+AG_SetSint64(void *ob, const char *key, Sint64 i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_SINT64, i));
 }
 #endif /* HAVE_64BIT */
 
-static __inline__ AG_Prop *AG_SetFloat(void *ob, const char *key, float f) {
+static __inline__ AG_Prop *
+AG_SetFloat(void *ob, const char *key, float f)
+{
 	return (AG_SetProp(ob, key, AG_PROP_FLOAT, f));
 }
-static __inline__ AG_Prop *AG_SetDouble(void *ob, const char *key, double d) {
+static __inline__ AG_Prop *
+AG_SetDouble(void *ob, const char *key, double d)
+{
 	return (AG_SetProp(ob, key, AG_PROP_DOUBLE, d));
 }
 
@@ -264,69 +287,91 @@ AG_SetLongDouble(void *ob, const char *key, long double d)
 }
 #endif /* HAVE_LONG_DOUBLE */
 
-static __inline__ AG_Prop *AG_SetPointer(void *ob, const char *key, void *p) {
+static __inline__ AG_Prop *
+AG_SetPointer(void *ob, const char *key, void *p)
+{
 	return (AG_SetProp(ob, key, AG_PROP_POINTER, p));
 }
-static __inline__ AG_Prop *AG_SetBool(void *ob, const char *key, int i) {
+static __inline__ AG_Prop *
+AG_SetBool(void *ob, const char *key, int i)
+{
 	return (AG_SetProp(ob, key, AG_PROP_BOOL, i));
 }
-static __inline__ Uint AG_GetUint(void *p, const char *key) {
+static __inline__ Uint
+AG_GetUint(void *p, const char *key)
+{
 	Uint i;
 	if (AG_GetProp(p, key, AG_PROP_UINT, (Uint *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ int AG_GetInt(void *p, const char *key) {
+static __inline__ int
+AG_GetInt(void *p, const char *key)
+{
 	int i;
 	if (AG_GetProp(p, key, AG_PROP_INT, (int *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ int AG_GetBool(void *p, const char *key) {
+static __inline__ int
+AG_GetBool(void *p, const char *key)
+{
 	int i;
 	if (AG_GetProp(p, key, AG_PROP_BOOL, (int *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Uint8 AG_GetUint8(void *p, const char *key) {
+static __inline__ Uint8
+AG_GetUint8(void *p, const char *key)
+{
 	Uint8 i;
 	if (AG_GetProp(p, key, AG_PROP_UINT8, (Uint8 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Sint8 AG_GetSint8(void *p, const char *key) {
+static __inline__ Sint8
+AG_GetSint8(void *p, const char *key)
+{
 	Sint8 i;
 	if (AG_GetProp(p, key, AG_PROP_SINT8, (Sint8 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Uint16 AG_GetUint16(void *p, const char *key) {
+static __inline__ Uint16
+AG_GetUint16(void *p, const char *key)
+{
 	Uint16 i;
 	if (AG_GetProp(p, key, AG_PROP_UINT16, (Uint16 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Sint16 AG_GetSint16(void *p, const char *key) {
+static __inline__ Sint16
+AG_GetSint16(void *p, const char *key)
+{
 	Sint16 i;
 	if (AG_GetProp(p, key, AG_PROP_SINT16, (Sint16 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Uint32 AG_GetUint32(void *p, const char *key) {
+static __inline__ Uint32
+AG_GetUint32(void *p, const char *key)
+{
 	Uint32 i;
 	if (AG_GetProp(p, key, AG_PROP_UINT32, (Uint32 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Sint32 AG_GetSint32(void *p, const char *key) {
+static __inline__ Sint32
+AG_GetSint32(void *p, const char *key)
+{
 	Sint32 i;
 	if (AG_GetProp(p, key, AG_PROP_SINT32, (Sint32 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
@@ -335,14 +380,18 @@ static __inline__ Sint32 AG_GetSint32(void *p, const char *key) {
 }
 
 #ifdef HAVE_64BIT
-static __inline__ Uint64 AG_GetUint64(void *p, const char *key) {
+static __inline__ Uint64
+AG_GetUint64(void *p, const char *key)
+{
 	Uint64 i;
 	if (AG_GetProp(p, key, AG_PROP_UINT64, (Uint64 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (i);
 }
-static __inline__ Sint64 AG_GetSint64(void *p, const char *key) {
+static __inline__ Sint64
+AG_GetSint64(void *p, const char *key)
+{
 	Sint64 i;
 	if (AG_GetProp(p, key, AG_PROP_SINT64, (Sint64 *)&i) == NULL) {
 		AG_FatalError("%s", AG_GetError());
@@ -351,14 +400,18 @@ static __inline__ Sint64 AG_GetSint64(void *p, const char *key) {
 }
 #endif /* HAVE_64BIT */
 
-static __inline__ float AG_GetFloat(void *p, const char *key) {
+static __inline__ float
+AG_GetFloat(void *p, const char *key)
+{
 	float f;
 	if (AG_GetProp(p, key, AG_PROP_FLOAT, (float *)&f) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (f);
 }
-static __inline__ double AG_GetDouble(void *p, const char *key) {
+static __inline__ double
+AG_GetDouble(void *p, const char *key)
+{
 	double d;
 	if (AG_GetProp(p, key, AG_PROP_DOUBLE, (double *)&d) == NULL) {
 		AG_FatalError("%s", AG_GetError());
@@ -367,7 +420,9 @@ static __inline__ double AG_GetDouble(void *p, const char *key) {
 }
 
 #ifdef HAVE_LONG_DOUBLE
-static __inline__ long double AG_GetLongDouble(void *p, const char *key) {
+static __inline__ long double
+AG_GetLongDouble(void *p, const char *key)
+{
 	long double d;
 	if (AG_GetProp(p, key, AG_PROP_LONG_DOUBLE, (long double *)&d)
 	    == NULL) {
@@ -377,14 +432,18 @@ static __inline__ long double AG_GetLongDouble(void *p, const char *key) {
 }
 #endif /* HAVE_LONG_DOUBLE */
 
-static __inline__ char *AG_GetString(void *p, const char *key) {
+static __inline__ char *
+AG_GetString(void *p, const char *key)
+{
 	char *s;
 	if (AG_GetProp(p, key, AG_PROP_STRING, (char *)&s) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	return (s);
 }
-static __inline__ void *AG_GetPointer(void *p, const char *key) {
+static __inline__ void *
+AG_GetPointer(void *p, const char *key)
+{
 	void *np;
 	if (AG_GetProp(p, key, AG_PROP_POINTER, (void *)&np) == NULL) {
 		AG_FatalError("%s", AG_GetError());

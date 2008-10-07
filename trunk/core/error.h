@@ -103,7 +103,11 @@ AG_Realloc(void *pOld, size_t len)
 # define AG_Free(p) free(p)
 # undef FREE_NULL_IS_A_NOOP
 #else
-static __inline__ void AG_Free(void *p) { if (p != NULL) free(p); }
+static __inline__ void
+AG_Free(void *p) {
+	if (p != NULL)
+		free(p);
+}
 #endif
 __END_DECLS
 
