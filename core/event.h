@@ -105,35 +105,6 @@ typedef struct ag_event {
 
 typedef void (*AG_EventFn)(AG_Event *);
 
-__BEGIN_DECLS
-extern const char *agEvArgTypeNames[];
-
-void      AG_EventInit(AG_Event *);
-void      AG_EventArgs(AG_Event *, const char *, ...);
-AG_Event *AG_SetEvent(void *, const char *, AG_EventFn, const char *, ...);
-AG_Event *AG_AddEvent(void *, const char *, AG_EventFn, const char *, ...);
-void      AG_UnsetEvent(void *, const char *);
-void      AG_PostEvent(void *, void *, const char *, const char *, ...);
-int       AG_ProcessEvent(SDL_Event *);
-AG_Event *AG_FindEventHandler(void *, const char *);
-
-int       AG_SchedEvent(void *, void *, Uint32, const char *,
-                        const char *, ...);
-int       AG_ReschedEvent(void *, const char *, Uint32);
-int       AG_CancelEvent(void *, const char *);
-void      AG_ForwardEvent(void *, void *, AG_Event *);
-void      AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
-void      AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
-
-/* Execute an event handler routine without processing any arguments. */
-static __inline__ void
-AG_ExecEventFn(void *obj, AG_Event *ev)
-{
-	if (ev->handler != NULL)
-		AG_PostEvent(NULL, obj, ev->name, NULL);
-}
-__END_DECLS
-
 #ifdef DEBUG
 #define AG_EVENT_DEFAULT_CASE() default: AG_FatalError("Bad event arg spec");
 #define AG_EVENT_BOUNDARY_CHECK(ev) \
@@ -210,9 +181,34 @@ __END_DECLS
 	}
 
 __BEGIN_DECLS
-/*
- * Push arguments onto an Event structure.
- */
+extern const char *agEvArgTypeNames[];
+
+void      AG_EventInit(AG_Event *);
+void      AG_EventArgs(AG_Event *, const char *, ...);
+AG_Event *AG_SetEvent(void *, const char *, AG_EventFn, const char *, ...);
+AG_Event *AG_AddEvent(void *, const char *, AG_EventFn, const char *, ...);
+void      AG_UnsetEvent(void *, const char *);
+void      AG_PostEvent(void *, void *, const char *, const char *, ...);
+int       AG_ProcessEvent(SDL_Event *);
+AG_Event *AG_FindEventHandler(void *, const char *);
+
+int       AG_SchedEvent(void *, void *, Uint32, const char *,
+                        const char *, ...);
+int       AG_ReschedEvent(void *, const char *, Uint32);
+int       AG_CancelEvent(void *, const char *);
+void      AG_ForwardEvent(void *, void *, AG_Event *);
+void      AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
+void      AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
+
+/* Execute an event handler routine without processing any arguments. */
+static __inline__ void
+AG_ExecEventFn(void *obj, AG_Event *ev)
+{
+	if (ev->handler != NULL)
+		AG_PostEvent(NULL, obj, ev->name, NULL);
+}
+
+/* Push arguments onto an Event structure. */
 static __inline__ void
 AG_EventPushPointer(AG_Event *ev, const char *key, void *val)
 {

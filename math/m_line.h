@@ -38,8 +38,16 @@ M_LineToPts3(M_Line3 L, M_Vector3 *p1, M_Vector3 *p2)
 }
 
 /* Test whether the given Line is actually a ray. */
-static __inline__ int M_LineIsRay2(M_Line2 L) { return (L.t == M_INFINITY); }
-static __inline__ int M_LineIsRay3(M_Line3 L) { return (L.t == M_INFINITY); }
+static __inline__ int
+M_LineIsRay2(M_Line2 L)
+{
+	return (L.t == M_INFINITY);
+}
+static __inline__ int
+M_LineIsRay3(M_Line3 L)
+{
+	return (L.t == M_INFINITY);
+}
 
 /* Return the first and second Points of the given Line. */
 static __inline__ M_Vector2

@@ -77,10 +77,26 @@ AG_PowOf2i(int i)
 	while (val < i) { val <<= 1; }
 	return (val);
 }
-static __inline__ float AG_Hypot(float x, float y) { return AG_Sqrt(x*x+y*y); }
-static __inline__ int AG_Truncf(double d) { return ((int)floor(d)); }
-static __inline__ double AG_Fracf(double d) { return (d - floor(d)); }
-static __inline__ double AG_FracInvf(double d) { return (1 - (d - floor(d))); }
+static __inline__ float
+AG_Hypot(float x, float y)
+{
+	return AG_Sqrt(x*x+y*y);
+}
+static __inline__ int
+AG_Truncf(double d)
+{
+	return ((int)floor(d));
+}
+static __inline__ double
+AG_Fracf(double d)
+{
+	return (d - floor(d));
+}
+static __inline__ double
+AG_FracInvf(double d)
+{
+	return (1 - (d - floor(d)));
+}
 __END_DECLS
 
 #include "close_code.h"
