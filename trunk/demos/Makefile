@@ -63,7 +63,7 @@ prereq:
 proj:
 	for D in ${SUBDIR}; do \
 		echo "==> $$D"; \
-		(cd $$D && ${MAKE} proj); \
+		(cd $$D && touch Makefile.config && ${MAKE} proj); \
 	done
 
 proj-vs2005:
