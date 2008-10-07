@@ -196,8 +196,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 #endif
 	SizeFillCols(t);
 	AG_TableUpdateScrollbars(t);
-	
-	AG_WidgetEnableClipping(t, AG_RECT(0,0,a->w,a->h));
 	return (0);
 }
 
@@ -324,17 +322,18 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		goto blit;
 	case AG_CELL_WIDGET:
 		if (WIDGET_OPS(c->data.p)->draw != NULL) {
+			AG_SizeAlloc wa;
 			AG_Widget *W = c->data.p;
 
-			W->x = rd->x;
-			W->y = rd->y;
-			W->w = rd->w;
-			W->h = rd->h;
-			W->cx = WIDGET(t)->cx + rd->x;
-			W->cy = WIDGET(t)->cy + rd->y;
-			W->cx2 = W->cx + W->w;
-			W->cy2 = W->cy + W->h;
-			AGWIDGET_OPS(W)->draw(W);
+			wa.x = rd->x;
+			wa.y = rd->y;
+			wa.w = rd->w;
+			wa.h = rd->h;
+			AG_WidgetSizeAlloc(W, &wa);
+			AG_WidgetUpdateCoords(W,
+			    WIDGET(t)->cx + rd->x,
+			    WIDGET(t)->cy + rd->y);
+			AG_WidgetDraw(W);
 		}
 		c->surface = -1;
 		return;
