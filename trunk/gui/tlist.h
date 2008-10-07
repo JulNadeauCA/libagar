@@ -78,6 +78,7 @@ typedef struct ag_tlist {
 	AG_Timeout incTo, decTo;	/* Keyboard motion timers */
 	Uint32 wheelTicks;		/* For wheel acceleration */
 	int wRow;			/* Row width */
+	AG_Rect r;			/* View area */
 } AG_Tlist;
 
 #define AG_TLIST_FOREACH(it, tl) \

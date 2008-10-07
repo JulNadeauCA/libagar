@@ -253,8 +253,6 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 
 	av->ranim.x = a->w/2 - av->ranim.w/2;
 	av->ranim.y = (a->h - hBtn)/2 - av->ranim.h/2;
-
-	AG_WidgetEnableClipping(av, AG_RECT(0, 0, a->w, a->h));
 	return (0);
 }
 
@@ -268,8 +266,11 @@ Draw(void *p)
 		return;
 	}
 	fr = &av->anim->frames[av->frame];
-	if (fr->su != NULL)
+	if (fr->su != NULL) {
+		AG_PushClipRect(av, AG_RECT(0, 0, WIDTH(av), HEIGHT(av)));
 		AG_WidgetBlit(av, fr->su, av->ranim.x, av->ranim.y);
+		AG_PopClipRect();
+	}
 }
 
 void

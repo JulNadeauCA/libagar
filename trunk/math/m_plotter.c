@@ -342,6 +342,7 @@ Init(void *obj)
 	ptr->xScale = 1.0;
 	ptr->yScale = 1.0;
 	ptr->font = AG_FetchFont(NULL, -1, -1);
+	ptr->r = AG_RECT(0,0,0,0);
 	TAILQ_INIT(&ptr->plots);
 	
 	ptr->vMin = M_New(3,1);
@@ -370,7 +371,7 @@ Init(void *obj)
 	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, 0);
 	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, 0);
 	AG_WidgetBind(ptr->hbar, "value", AG_WIDGET_INT, &ptr->xOffs);
-	AG_WidgetBind(ptr->hbar, "visible", AG_WIDGET_INT, &WIDTH(ptr));
+	AG_WidgetBind(ptr->hbar, "visible", AG_WIDGET_INT, &ptr->r.w);
 	AG_WidgetBind(ptr->hbar, "max", AG_WIDGET_INT, &ptr->xMax);
 	AG_SetEvent(ptr->hbar, "scrollbar-changed", UpdateXBar, "%p", ptr);
 
@@ -434,26 +435,27 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	M_Plotter *ptr = obj;
 	AG_SizeAlloc aBar;
-	AG_Rect rView = AG_RECT(0, 0, a->w, a->h);
 
 	if (a->w < 2 || a->h < 2)
 		return (-1);
+
+	ptr->r.w = a->w;
+	ptr->r.h = a->h;
 
 	aBar.x = 0;
 	aBar.y = a->h - ptr->hbar->wButton;
 	aBar.w = a->w;
 	aBar.h = ptr->hbar->wButton;
 	AG_WidgetSizeAlloc(ptr->hbar, &aBar);
-	rView.h -= aBar.h;
+	ptr->r.h -= HEIGHT(ptr->hbar);
 
 	aBar.x = a->w - ptr->vbar->wButton;
 	aBar.y = ptr->vbar->wButton;
 	aBar.w = ptr->vbar->wButton;
 	aBar.h = a->h - ptr->hbar->wButton;
 	AG_WidgetSizeAlloc(ptr->vbar, &aBar);
-	rView.w -= aBar.w;
-
-	AG_WidgetEnableClipping(ptr, rView);
+	ptr->r.w -= WIDTH(ptr->vbar);
+	
 	return (0);
 }
 
@@ -469,14 +471,15 @@ Draw(void *obj)
 	M_Plotter *ptr = obj;
 	M_Plot *pl;
 	M_PlotLabel *plbl;
-	int y0 = HEIGHT(ptr)/2;
 	Uint i;
+	int y0 = ptr->r.h/2;
 
-	AG_DrawBox(ptr,
-	    AG_RECT(0, 0, WIDTH(ptr), HEIGHT(ptr)), -1,
-	    AG_COLOR(GRAPH_BG_COLOR));
-	AG_DrawLineH(ptr, 1, WIDTH(ptr)-2, y0, ptr->colors[0]);
-	AG_DrawLineV(ptr, ptr->xMax-1, 30, HEIGHT(ptr)-30, ptr->colors[0]);
+	AG_DrawBox(ptr, ptr->r, -1, AG_COLOR(GRAPH_BG_COLOR));
+
+	AG_PushClipRect(ptr, ptr->r);
+	
+	AG_DrawLineH(ptr, 1, ptr->r.w-2, y0, ptr->colors[0]);
+	AG_DrawLineV(ptr, ptr->xMax-1, 30, ptr->r.h-30, ptr->colors[0]);
 
 	/* First pass */
 	TAILQ_FOREACH(pl, &ptr->plots, plots) {
@@ -515,7 +518,7 @@ Draw(void *obj)
 					    y0 - y + pl->yOffs + ptr->yOffs,
 					    AG_VideoPixel(pl->color));
 				}
-				if (x > WIDTH(ptr)) { break; }
+				if (x > ptr->r.w) { break; }
 			}
 			break;
 		case M_PLOT_LINEAR:
@@ -526,7 +529,7 @@ Draw(void *obj)
 				    y0 - y + pl->yOffs + ptr->yOffs,
 				    AG_VideoPixel(pl->color));
 				py = y0 - y + pl->yOffs + ptr->yOffs;
-				if (x > WIDTH(ptr)) { break; }
+				if (x > ptr->r.w) { break; }
 			}
 			break;
 		default:
@@ -554,17 +557,15 @@ Draw(void *obj)
 			switch (plbl->type) {
 			case M_LABEL_X:
 				xLbl = plbl->x - ptr->xOffs - pl->xOffs;
-				yLbl = HEIGHT(ptr) - HEIGHT(ptr->hbar) -
-				       su->h - 4 - plbl->y;
+				yLbl = ptr->r.h - su->h - 4 - plbl->y;
 				AG_DrawLineBlended(ptr,
 				    xLbl, 1,
-				    xLbl, HEIGHT(ptr)-2,
+				    xLbl, ptr->r.h-2,
 				    colLine, AG_ALPHA_SRC);
 				break;
 			case M_LABEL_Y:
 				xLbl = plbl->x - ptr->xOffs - pl->xOffs;
-				yLbl = HEIGHT(ptr) - HEIGHT(ptr->hbar) -
-				       su->h - 4 - plbl->y;
+				yLbl = ptr->r.h - su->h - 4 - plbl->y;
 				break;
 			case M_LABEL_FREE:
 				xLbl = 4 + plbl->x - ptr->xOffs - pl->xOffs;
@@ -582,6 +583,8 @@ Draw(void *obj)
 			    xLbl+2, yLbl);
 		}
 	}
+
+	AG_PopClipRect();
 }
 
 void

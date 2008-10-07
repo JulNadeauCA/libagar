@@ -439,6 +439,7 @@ Init(void *obj)
 	gf->pxMax = 0;
 	gf->pyMin = 0;
 	gf->pyMax = 0;
+	gf->r = AG_RECT(0,0,0,0);
 
 #if 0
 	gf->hbar = AG_ScrollbarNew(gf, AG_SCROLLBAR_HORIZ, 0);
@@ -527,8 +528,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 
 	gf->xOffs = -(a->w/2);
 	gf->yOffs = -(a->h/2);
+	gf->r = AG_RECT(0, 0, a->w, a->h);
 
-	AG_WidgetEnableClipping(gf, AG_RECT(0, 0, a->w, a->h));
 	return (0);
 }
 
@@ -539,6 +540,8 @@ Draw(void *obj)
 	AG_GraphVertex *vtx;
 	AG_GraphEdge *edge;
 	Uint8 bg[4];
+
+	AG_PushClipRect(gf, gf->r);
 
 	/* Draw the bounding box */
 	AG_DrawRectOutline(gf,
@@ -637,6 +640,8 @@ Draw(void *obj)
 			    vtx->y - lbl->h/2 - gf->yOffs);
 		}
 	}
+
+	AG_PopClipRect();
 }
 
 /* Graph must be locked. */

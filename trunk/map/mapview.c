@@ -280,7 +280,8 @@ Init(void *obj)
 	mv->mh = 0;
 	mv->prew = 4;
 	mv->preh = 4;
-	
+	mv->r = AG_RECT(0,0,0,0);
+
 	mv->mouse.scrolling = 0;
 	mv->mouse.x = 0;
 	mv->mouse.y = 0;
@@ -457,13 +458,16 @@ Draw(void *obj)
 	GLfloat texenvmode;
 #endif
 
-	if (WIDGET(mv)->w < MAPTILESZ || WIDGET(mv)->h < MAPTILESZ)
+	if (WIDTH(mv) < MAPTILESZ || HEIGHT(mv) < MAPTILESZ)
 		return;
 
+	if (mv->hbar != NULL) { AG_WidgetDraw(mv->hbar); }
+	if (mv->vbar != NULL) { AG_WidgetDraw(mv->vbar); }
+
+	AG_PushClipRect(mv, mv->r);
+
 	if (WIDGET(mv)->flags & AG_WIDGET_FOCUSED)
-		AG_DrawRectOutline(mv,
-		    AG_RECT(0, 0, WIDGET(mv)->w, WIDGET(mv)->h),
-		    AG_COLOR(FOCUS_COLOR));
+		AG_DrawRectOutline(mv, mv->r, AG_COLOR(FOCUS_COLOR));
 
 	SLIST_FOREACH(dcb, &mv->draw_cbs, draw_cbs)
 		dcb->func(mv, dcb->p);
@@ -639,6 +643,7 @@ out:
 	}
 #endif
 	AG_MutexUnlock(&m->lock);
+	AG_PopClipRect();
 }
 
 /*
@@ -670,34 +675,34 @@ MAP_ViewUpdateCamera(MAP_View *mv)
 
 	switch (cam->alignment) {
 	case AG_MAP_CENTER:
-		xcam -= WIDGET(mv)->w/2;
-		ycam -= WIDGET(mv)->h/2;
+		xcam -= WIDTH(mv)/2;
+		ycam -= HEIGHT(mv)/2;
 		break;
 	case AG_MAP_LOWER_CENTER:
-		xcam -= WIDGET(mv)->w/2;
-		ycam -= WIDGET(mv)->h;
+		xcam -= WIDTH(mv)/2;
+		ycam -= HEIGHT(mv);
 		break;
 	case AG_MAP_UPPER_CENTER:
-		xcam -= WIDGET(mv)->w/2;
+		xcam -= WIDTH(mv)/2;
 		break;
 	case AG_MAP_UPPER_LEFT:
 		break;
 	case AG_MAP_MIDDLE_LEFT:
-		ycam -= WIDGET(mv)->h/2;
+		ycam -= HEIGHT(mv)/2;
 		break;
 	case AG_MAP_LOWER_LEFT:
-		ycam -= WIDGET(mv)->h;
+		ycam -= HEIGHT(mv);
 		break;
 	case AG_MAP_UPPER_RIGHT:
-		xcam -= WIDGET(mv)->w;
+		xcam -= WIDTH(mv);
 		break;
 	case AG_MAP_MIDDLE_RIGHT:
-		xcam -= WIDGET(mv)->w;
-		ycam -= WIDGET(mv)->h/2;
+		xcam -= WIDTH(mv);
+		ycam -= HEIGHT(mv)/2;
 		break;
 	case AG_MAP_LOWER_RIGHT:
-		xcam -= WIDGET(mv)->w;
-		ycam -= WIDGET(mv)->h;
+		xcam -= WIDTH(mv);
+		ycam -= HEIGHT(mv);
 		break;
 	}
 	
@@ -748,8 +753,8 @@ MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 	if (AGMTILESZ(mv) > MAP_TILESZ_MAX)
 		AGMTILESZ(mv) = MAP_TILESZ_MAX;
 
-	mv->mw = WIDGET(mv)->w/AGMTILESZ(mv) + 2;
-	mv->mh = WIDGET(mv)->h/AGMTILESZ(mv) + 2;
+	mv->mw = WIDTH(mv)/AGMTILESZ(mv) + 2;
+	mv->mh = HEIGHT(mv)/AGMTILESZ(mv) + 2;
 
 	SDL_GetMouseState(&x, &y);
 	x -= WIDGET(mv)->cx;
@@ -1352,19 +1357,17 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	MAP_View *mv = obj;
 	AG_SizeAlloc aBar;
-	AG_Rect rView;
 
-	rView.x = 0;
-	rView.y = 0;
-	rView.w = a->w;
-	rView.h = a->h;
+	mv->r.w = a->w;
+	mv->r.h = a->h;
+
 	if (mv->hbar != NULL) {
 		aBar.x = 0;
 		aBar.y = a->h - mv->hbar->wButton;
 		aBar.w = a->w;
 		aBar.h = mv->hbar->wButton;
 		AG_WidgetSizeAlloc(mv->hbar, &aBar);
-		rView.h -= aBar.h;
+		mv->r.h -= HEIGHT(mv->hbar);
 	}
 	if (mv->vbar != NULL) {
 		aBar.x = 0;
@@ -1372,13 +1375,11 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		aBar.w = mv->vbar->wButton;
 		aBar.h = a->h;
 		AG_WidgetSizeAlloc(mv->vbar, &aBar);
-		rView.w -= aBar.w;
+		mv->r.w -= WIDTH(mv->vbar);
 	}
 	AG_MutexLock(&mv->map->lock);
 	MAP_ViewSetScale(mv, AGMZOOM(mv), 0);
 	AG_MutexUnlock(&mv->map->lock);
-
-	AG_WidgetEnableClipping(mv, rView);
 	return (0);
 }
 

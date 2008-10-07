@@ -66,6 +66,8 @@ Init(void *obj)
 	cons->rOffs = 0;
 	cons->cBg = AG_MapRGB(agVideoFmt, 0,0,0);
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, 0);
+	cons->r = AG_RECT(0,0,0,0);
+	
 	AG_WidgetBindInt(cons->vBar, "value", &cons->rOffs);
 	AG_WidgetBindInt(cons->vBar, "max", &cons->nLines);
 
@@ -84,20 +86,23 @@ static int
 SizeAllocate(void *p, const AG_SizeAlloc *a)
 {
 	AG_Console *cons = p;
+	AG_SizeReq rBar;
 	AG_SizeAlloc aBar;
 	
 	if (a->w < 8 || a->h < 8)
 		return (-1);
 
-	aBar.w = 20;					/* XXX */
-	aBar.x = a->w - aBar.w;
+	cons->r = AG_RECT(0, 0, a->w, a->h);
+
+	AG_WidgetSizeReq(cons->vBar, &rBar);
+	aBar.x = a->w - rBar.w;
 	aBar.y = 0;
+	aBar.w = rBar.w;
 	aBar.h = a->h;
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
+	cons->r.w -= aBar.w;
 
 	cons->vBar->visible = a->h / (agTextFontHeight + cons->lineskip);
-
-	AG_WidgetEnableClipping(cons, AG_RECT(0, 0, a->w-aBar.w, a->h));
 	return (0);
 }
 
@@ -110,14 +115,16 @@ Draw(void *p)
 	int y;
 
 	STYLE(cons)->ConsoleBackground(cons, cons->cBg);
+
 	AG_WidgetDraw(cons->vBar);
 
 	if (cons->rOffs >= cons->nLines) {
 		cons->rOffs = cons->nLines-1;
 	}
-	if (cons->nLines == 0) {
+	if (cons->nLines == 0)
 		return;
-	}
+
+	AG_PushClipRect(cons, cons->r);
 	for (r = cons->rOffs, y = cons->padding;
 	     r < cons->nLines && y < WIDGET(cons)->h;
 	     r++) {
@@ -134,6 +141,7 @@ Draw(void *p)
 		AG_WidgetBlitSurface(cons, ln->surface, cons->padding, y);
 		y += WSURFACE(cons,ln->surface)->h + cons->lineskip;
 	}
+	AG_PopClipRect();
 }
 
 static void

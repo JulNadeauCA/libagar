@@ -481,9 +481,7 @@ Draw(void *obj)
 		    AG_RECT(rCell.x, 0, cw, t->col_h),
 		    col->selected);
 		
-		if (!(t->flags & AG_TABLE_CELL_CLIPPING))
-			AG_PushClipRect(t,
-			    AG_RECT(rCell.x, 0, cw, HEIGHT(t)-2));
+		AG_PushClipRect(t, AG_RECT(rCell.x, 0, cw, HEIGHT(t)-2));
 		
 		if (col->surface != -1) {
 			AG_WidgetBlitSurface(t, col->surface,
@@ -493,7 +491,7 @@ Draw(void *obj)
 
 		/* Draw the rows of this column. */
 		for (m = t->moffs, rCell.y = t->col_h;
-		     m < MIN(t->m, t->moffs+t->mVis) && rCell.y < HEIGHT(t);
+		     m < MIN(t->m, t->moffs+(t->mVis+1));
 		     m++) {
 			AG_DrawLineH(t, 0, t->wTbl, rCell.y,
 			    AG_COLOR(TABLE_LINE_COLOR));
@@ -520,9 +518,7 @@ Draw(void *obj)
 			    AG_RECT(rCell.x, 0, col->w, HEIGHT(t)));
 		}
 		
-		if (!(t->flags & AG_TABLE_CELL_CLIPPING))
-			AG_PopClipRect();
-
+		AG_PopClipRect();
 		rCell.x += col->w;
 	}
 	if (rCell.x > 0 &&

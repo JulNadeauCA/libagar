@@ -242,7 +242,6 @@ SizeRequest(void *obj, AG_SizeReq *r)
 static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	AG_WidgetEnableClipping(obj, AG_RECT(0, 0, a->w, a->h));
 	return (a->w < 1 || a->h < 1) ? -1 : 0;
 }
 
@@ -251,8 +250,11 @@ Draw(void *obj)
 {
 	AG_Pixmap *px = obj;
 
-	if (px->n >= 0)
+	if (px->n >= 0) {
+		AG_PushClipRect(px, AG_RECT(0,0,WIDTH(px),HEIGHT(px)));
 		AG_WidgetBlitSurface(px, px->n, px->s, px->t);
+		AG_PopClipRect();
+	}
 }
 
 AG_WidgetClass agPixmapClass = {

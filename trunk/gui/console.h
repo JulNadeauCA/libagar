@@ -39,6 +39,7 @@ typedef struct ag_console {
 	Uint rOffs;			/* Row display offset */
 	Uint32 cBg;			/* Background color */
 	AG_Scrollbar *vBar;		/* Scrollbar */
+	AG_Rect r;			/* View area */
 } AG_Console;
 
 __BEGIN_DECLS

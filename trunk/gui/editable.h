@@ -64,6 +64,7 @@ typedef struct ag_editable {
 	Uint32 repeatUnicode;		/* Last unicode translated key */
 	Uint32 *ucsBuf;			/* UCS4 buffer (for STATIC) */
 	Uint    ucsLen;			/* Buffer length (for STATIC) */
+	AG_Rect r;			/* View area */
 } AG_Editable;
 
 #define AGEDITABLE(p) ((AG_Editable *)(p))

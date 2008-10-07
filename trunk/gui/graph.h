@@ -82,6 +82,7 @@ typedef struct ag_graph {
 	Uint nvertices, nedges;	
 	int pxMin, pxMax, pyMin, pyMax;		/* Bounds of last cluster
 						   (for autoplacer) */
+	AG_Rect r;			/* View area */
 } AG_Graph;
 
 __BEGIN_DECLS

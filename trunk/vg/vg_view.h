@@ -76,6 +76,7 @@ typedef struct vg_view {
 	AG_Widget **editAreas;			/* User-specified container */
 	Uint nEditAreas;
 	int pointSelRadius;			/* Point selection threshold */
+	AG_Rect r;				/* View area */
 } VG_View;
 
 #define VGVIEW(p) ((VG_View *)(p))

@@ -97,6 +97,7 @@ typedef struct ag_window {
 	AG_TAILQ_ENTRY(ag_window) detach;	/* Zombie window list */
 
 	struct ag_icon *icon;			/* Window icon */
+	AG_Rect r;				/* View area */
 } AG_Window;
 
 __BEGIN_DECLS

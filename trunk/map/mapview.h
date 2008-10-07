@@ -76,12 +76,13 @@ typedef struct map_view {
 		int moving;		/* Noderefs are being displaced */
 	} rsel;
 
-	MAP *map;		/* Map to display */
+	MAP *map;			/* Map to display */
 	MAP_Actor *actor;		/* Actor being controlled */
 	int cam;			/* Name of map camera to use */
 	int mx, my;			/* Display offset (nodes) */
 	int xoffs, yoffs;		/* Display offset (pixels) */
 	Uint mw, mh;			/* Display size (nodes) */
+	AG_Rect r;			/* View area */
 
 	int cx, cy;			/* Cursor position (nodes) */
 	int cxoffs, cyoffs;		/* Cursor offset (pixels) */

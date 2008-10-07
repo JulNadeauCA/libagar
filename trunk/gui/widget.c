@@ -1326,41 +1326,6 @@ AG_UnsetCursor(void)
 }
 
 /*
- * Configure a global clipping rectangle. Unlike clipping rectangles
- * set by AG_PushClipRect(), the global clipping rectangle also
- * applies to child widgets.
- *
- * Usually invoked from widget initialization or size allocation context.
- * It is unsafe to invoke from GUI rendering context.
- */
-void
-AG_WidgetEnableClipping(void *p, AG_Rect rect)
-{
-	AG_Widget *wid = p;
-
-	AG_ObjectLock(wid);
-	wid->flags |= AG_WIDGET_CLIPPING;
-	memcpy(&wid->rClip, &rect, sizeof(AG_Rect));
-	AG_ObjectUnlock(wid);
-}
-
-/*
- * Disable the global clipping rectangle.
- *
- * Usually invoked from widget initialization or size allocation context.
- * It is unsafe to invoke from GUI rendering context.
- */
-void
-AG_WidgetDisableClipping(void *p)
-{
-	AG_Widget *wid = p;
-
-	AG_ObjectLock(wid);
-	wid->flags &= ~(AG_WIDGET_CLIPPING);
-	AG_ObjectUnlock(wid);
-}
-
-/*
  * Push a clipping rectangle onto the clipping rectangle stack.
  * This is only safe to call from GUI rendering context.
  */
@@ -1449,16 +1414,12 @@ AG_WidgetDraw(void *p)
 	AG_Widget *wid = p;
 
 	AG_ObjectLock(wid);
-
 #ifdef HAVE_OPENGL
 	if (wid->textureGC > 0)
 		DeleteQueuedTextures(wid);
 #endif
 	if (wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE))
 		goto out;
-
-	if (wid->flags & AG_WIDGET_CLIPPING)
-		AG_PushClipRect(wid, wid->rClip);
 
 	if (((wid->flags & AG_WIDGET_STATIC) == 0 || wid->redraw) &&
 	    !OccultedWidget(wid) &&
@@ -1468,8 +1429,6 @@ AG_WidgetDraw(void *p)
 		if (wid->flags & AG_WIDGET_STATIC)
 			wid->redraw = 0;
 	}
-	if (wid->flags & AG_WIDGET_CLIPPING)
-		AG_PopClipRect();
 out:
 	AG_ObjectUnlock(wid);
 }

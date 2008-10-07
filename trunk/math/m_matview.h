@@ -29,6 +29,7 @@ typedef struct m_matview {
 	int scale;			/* Scale (for graphic rendering) */
 	AG_Scrollbar *hBar, *vBar;	/* Display scrollbars */
 	struct ag_text_cache *tCache;	/* For numerical display */
+	AG_Rect r;			/* View area */
 } M_Matview;
 
 __BEGIN_DECLS

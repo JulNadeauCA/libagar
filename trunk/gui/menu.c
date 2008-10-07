@@ -379,6 +379,7 @@ Init(void *obj)
 	m->rPadLbl = 7;
 	m->tPadLbl = 3;
 	m->bPadLbl = 3;
+	m->r = AG_RECT(0,0,0,0);
 
 	m->curToolbar = NULL;
 	m->curState = 1;
@@ -896,9 +897,11 @@ Draw(void *obj)
 
 	STYLE(m)->MenuRootBackground(m);
 
-	if (m->root == NULL) {
+	if (m->root == NULL)
 		return;
-	}
+
+	AG_PushClipRect(m, m->r);
+
 	for (i = 0; i < m->root->nsubitems; i++) {
 		AG_MenuItem *item = &m->root->subitems[i];
 
@@ -932,6 +935,8 @@ Draw(void *obj)
 		    item->x + m->lPadLbl,
 		    item->y + m->tPadLbl);
 	}
+
+	AG_PopClipRect();
 }
 
 static void
@@ -996,10 +1001,15 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	int wLbl, hLbl;
 	int x, y, i;
 	
-	if (WIDTH(m) < (m->lPad + m->rPad) ||
-	    HEIGHT(m) < (m->tPad + m->bPad)) {
+	if (a->w < (m->lPad + m->rPad) ||
+	    a->h < (m->tPad + m->bPad)) {
 		return (-1);
 	}
+	m->r.x = m->lPad;
+	m->r.y = m->tPad;
+	m->r.w = a->w - m->rPad;
+	m->r.h = a->h - m->bPad;
+
 	if (m->root == NULL) {
 		return (-1);
 	}
@@ -1018,13 +1028,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		}
 		x += wLbl;
 	}
-
-	AG_WidgetEnableClipping(m, AG_RECT(
-	    m->lPad,
-	    m->tPad,
-	    a->w - m->rPad,
-	    a->h - m->bPad));
-
 	return (0);
 }
 

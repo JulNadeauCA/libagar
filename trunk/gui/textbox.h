@@ -42,6 +42,8 @@ typedef struct ag_textbox {
 	int lblPadL, lblPadR;		/* Padding around label */
 	int wLbl, hLbl;			/* Label dimensions */
 	AG_Scrollbar *hBar, *vBar;	/* Scrollbars for MULTILINE */
+	AG_Rect r;			/* View area */
+	AG_Rect rLbl;			/* Label area */
 } AG_Textbox;
 
 #define AGTEXTBOX(p) ((AG_Textbox *)(p))

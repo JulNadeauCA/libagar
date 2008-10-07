@@ -103,6 +103,7 @@ Init(void *obj)
 	nb->padding = -1;
 	nb->lblPartial = -1;
 	nb->tabFont = NULL;
+	nb->r = AG_RECT(0,0,0,0);
 	TAILQ_INIT(&nb->tabs);
 	
 	AG_NotebookSetTabFont(nb, AG_FetchFont(NULL, agDefaultFont->size-1, 0));
@@ -117,17 +118,16 @@ Draw(void *obj)
 	AG_NotebookTab *tab;
 	int x = SPACING;
 	int y = SPACING;
-	AG_Rect r;
 	int idx = 0;
+	AG_Rect r;
 
-	r.x = 0;
-	r.y = nb->bar_h;
-	r.w = WIDTH(nb);
-	r.h = HEIGHT(nb) - nb->bar_h;
-	STYLE(nb)->NotebookBackground(nb, r);
+	STYLE(nb)->NotebookBackground(nb, nb->r);
 	
-	if (nb->sel_tab != NULL)
+	if (nb->sel_tab != NULL) {
+		AG_PushClipRect(nb, nb->r);
 		AG_WidgetDraw(&nb->sel_tab->box);
+		AG_PopClipRect();
+	}
 
 	if (nb->flags & AG_NOTEBOOK_HIDE_TABS) {
 		return;
@@ -221,8 +221,10 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		aTab.h = a->h - nb->bar_h;
 		AG_WidgetSizeAlloc(tab, &aTab);
 	}
-
-	AG_WidgetEnableClipping(nb, AG_RECT(0, 0, a->w, a->h));
+	nb->r.x = 0;
+	nb->r.y = nb->bar_h;
+	nb->r.w = a->w;
+	nb->r.h = a->h - nb->bar_h;
 	return (0);
 }
 

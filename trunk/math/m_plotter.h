@@ -110,6 +110,7 @@ typedef struct m_plotter {
 	Uint32 colors[M_PLOTTER_NDEFCOLORS];	/* Default plot color */
 	int curColor;				/* Current default color */
 	AG_Scrollbar *hbar, *vbar;	/* Display scrollbars */
+	AG_Rect r;			/* View area */
 	AG_TAILQ_HEAD(,m_plot) plots;	/* Plots in this view */
 } M_Plotter;
 
