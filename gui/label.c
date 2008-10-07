@@ -209,20 +209,15 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Label *lbl = obj;
 	int wLbl, hLbl;
-	AG_Rect rView;
 	
 	if (a->w < 1 || a->h < 1) {
 		return (-1);
 	}
-	rView.x = lbl->lPad;
-	rView.y = lbl->tPad;
-	rView.w = a->w - lbl->rPad;
-	rView.h = a->h - lbl->bPad;
+	lbl->rClip.x = lbl->lPad;
+	lbl->rClip.y = lbl->tPad;
+	lbl->rClip.w = a->w - lbl->rPad;
+	lbl->rClip.h = a->h - lbl->bPad;
 
-	if (lbl->type == AG_LABEL_POLLED) {
-		AG_WidgetEnableClipping(lbl, rView);
-		return (0);
-	}
 	if (lbl->text == NULL)
 		return (0);
 
@@ -232,14 +227,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	 */
 	AG_TextSize(lbl->text, &wLbl, &hLbl);
 
-	if (hLbl+lbl->tPad+lbl->bPad > a->h) {
-		AG_WidgetEnableClipping(lbl, rView);
-	} else {
-		AG_WidgetDisableClipping(lbl);
-	}
 	if ((wLbl + lbl->lPad + lbl->rPad) > a->w) {
 		lbl->flags |= AG_LABEL_PARTIAL;
-		AG_WidgetDisableClipping(lbl);
 		if (lbl->surfaceCont == -1) {
 			/* TODO share this between all widgets */
 			AG_PushTextState();
@@ -651,12 +640,12 @@ Draw(void *obj)
 {
 	AG_Label *lbl = obj;
 	int x, y, cw = 0;			/* make compiler happy */
-	
+
 	if (lbl->flags & AG_LABEL_FRAME)
 		AG_DrawFrame(lbl,
 		    AG_RECT(0, 0, WIDTH(lbl), HEIGHT(lbl)), -1,
 		    AG_COLOR(FRAME_COLOR));
-
+	
 	if (lbl->flags & AG_LABEL_PARTIAL) {
 		cw = WSURFACE(lbl,lbl->surfaceCont)->w;
 		if (WIDTH(lbl) <= cw) {
@@ -669,6 +658,8 @@ Draw(void *obj)
 		}
 		AG_PushClipRect(lbl,
 		    AG_RECT(0, 0, WIDTH(lbl)-cw, HEIGHT(lbl)));
+	} else {
+		AG_PushClipRect(lbl, lbl->rClip);
 	}
 	
 	AG_PushTextState();
@@ -705,8 +696,9 @@ Draw(void *obj)
 		break;
 	}
 	
+	AG_PopClipRect();
+	
 	if (lbl->flags & AG_LABEL_PARTIAL) {
-		AG_PopClipRect();
 		GetPosition(lbl, WSURFACE(lbl,lbl->surfaceCont), &x, &y);
 		AG_WidgetBlitSurface(lbl, lbl->surfaceCont,
 		    WIDTH(lbl) - cw,
