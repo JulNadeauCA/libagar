@@ -60,7 +60,7 @@ M_VectorSetZero_FPU(void *pv)
 		v->v[i] = 0.0;
 }
 
-static __inline void
+static __inline__ void
 M_VectorFree_FPU(void *pv)
 {
 	M_VectorFPU *v=pv;
