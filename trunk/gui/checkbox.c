@@ -34,20 +34,25 @@
 #include <stdarg.h>
 #include <string.h>
 
-static void mousebuttondown(AG_Event *);
-static void keydown(AG_Event *);
-
 AG_Checkbox *
-AG_CheckboxNew(void *parent, Uint flags, const char *label)
+AG_CheckboxNew(void *parent, Uint flags, const char *fmt, ...)
 {
 	AG_Checkbox *cb;
+	va_list args;
 
 	cb = Malloc(sizeof(AG_Checkbox));
 	AG_ObjectInit(cb, &agCheckboxClass);
 	cb->flags |= flags;
-	if (label != NULL) {
-		cb->labelTxt = Strdup(label);
+
+	if (fmt != NULL) {
+		char text[AG_LABEL_MAX];
+
+		va_start(args, fmt);
+		Vsnprintf(text, sizeof(text), fmt, args);
+		va_end(args);
+		cb->lbl = AG_LabelNewString(cb, 0, text);
 	}
+	
 	if (flags & AG_CHECKBOX_SET) {
 		cb->state = 1;
 	}
@@ -144,30 +149,55 @@ AG_CheckboxSetFromFlags32(void *parent, Uint flags, Uint32 *pFlags,
 }
 
 static void
+MouseButtonDown(AG_Event *event)
+{
+	AG_Checkbox *cb = AG_SELF();
+	int button = AG_INT(1);
+
+	if (!AG_WidgetEnabled(cb))
+		return;
+
+	if (button == SDL_BUTTON(1)) {
+		AG_CheckboxToggle(cb);
+	}
+	AG_WidgetFocus(cb);
+}
+
+static void
+KeyDown(AG_Event *event)
+{
+	AG_Checkbox *cb = AG_SELF();
+	
+	if (!AG_WidgetEnabled(cb))
+		return;
+
+	switch (AG_SDLKEY(1)) {
+	case SDLK_RETURN:
+	case SDLK_SPACE:
+		AG_CheckboxToggle(cb);
+		break;
+	default:
+		break;
+	}
+}
+
+static void
 Init(void *obj)
 {
 	AG_Checkbox *cb = obj;
 
 	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetBind(cb, "state", AG_WIDGET_BOOL, &cb->state);
+	AG_WidgetBindBool(cb, "state", &cb->state);
 
 	cb->flags = 0;
 	cb->state = 0;
-	cb->labelTxt = NULL;
-	cb->label = -1;
+	cb->lbl = NULL;
 	cb->spacing = 6;
+	cb->btnSize = agTextFontHeight;
 	
-	AG_SetEvent(cb, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(cb, "window-keydown", keydown, NULL);
-}
-
-static void
-Destroy(void *p)
-{
-	AG_Checkbox *cb = p;
-
-	Free(cb->labelTxt);
+	AG_SetEvent(cb, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(cb, "window-keydown", KeyDown, NULL);
 }
 
 static void
@@ -213,64 +243,27 @@ Draw(void *obj)
 		state = 0;
 		break;
 	}
+
 	STYLE(cb)->CheckboxButton(cb, state);
+	if (cb->lbl != NULL) {
+		AG_WidgetDraw(cb->lbl);
+	}
 	AG_WidgetUnlockBinding(stateb);
-
-	if (cb->labelTxt == NULL || cb->labelTxt[0] == '\0') {
-		return;
-	}
-	if (cb->label == -1) {
-		AG_TextColor(CHECKBOX_TXT_COLOR);
-		cb->label = AG_WidgetMapSurface(cb,
-		    AG_TextRender(cb->labelTxt));
-	}
-	AG_WidgetBlitSurface(cb, cb->label, HEIGHT(cb)+cb->spacing, 0);
-}
-
-static void
-mousebuttondown(AG_Event *event)
-{
-	AG_Checkbox *cb = AG_SELF();
-	int button = AG_INT(1);
-
-	if (!AG_WidgetEnabled(cb))
-		return;
-
-	if (button == SDL_BUTTON(1)) {
-		AG_CheckboxToggle(cb);
-	}
-	AG_WidgetFocus(cb);
-}
-
-static void
-keydown(AG_Event *event)
-{
-	AG_Checkbox *cb = AG_SELF();
-	
-	if (!AG_WidgetEnabled(cb))
-		return;
-
-	switch (AG_SDLKEY(1)) {
-	case SDLK_RETURN:
-	case SDLK_SPACE:
-		AG_CheckboxToggle(cb);
-		break;
-	default:
-		break;
-	}
 }
 
 static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {
 	AG_Checkbox *cb = obj;
+	AG_SizeReq rLbl;
 
-	r->h = agTextFontHeight;
-	r->w = agTextFontHeight;
+	r->h = cb->btnSize;
+	r->w = cb->btnSize;
 	
-	if (cb->labelTxt != NULL) {
-		AG_TextSize(cb->labelTxt, &r->w, NULL);
-		r->w += agTextFontHeight + cb->spacing;
+	if (cb->lbl != NULL) {
+		AG_WidgetSizeReq(cb->lbl, &rLbl);
+		r->w += cb->spacing + rLbl.w;
+		r->h = MAX(r->h, rLbl.h);
 	}
 }
 
@@ -278,21 +271,17 @@ static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_Checkbox *cb = obj;
+	AG_SizeAlloc aLbl;
 
-	if (a->w < agTextFontHeight || a->h < agTextFontHeight) {
+	if (a->w < cb->btnSize || a->h < cb->btnSize) {
 		return (-1);
 	}
-	if (cb->labelTxt != NULL) {
-		int wLbl, hLbl;
-
-		AG_TextSize(cb->labelTxt, &wLbl, &hLbl);
-
-		if (a->w < agTextFontHeight+cb->spacing+wLbl ||
-		    a->h < agTextFontHeight) {
-			AG_WidgetEnableClipping(cb, AG_RECT(0,0,a->w,a->h));
-		} else {
-			AG_WidgetDisableClipping(cb);
-		}
+	if (cb->lbl != NULL) {
+		aLbl.x = cb->btnSize + cb->spacing;
+		aLbl.y = HEIGHT(cb)/2 - HEIGHT(cb->lbl)/2;
+		aLbl.w = a->w - aLbl.x;
+		aLbl.h = a->h;
+		AG_WidgetSizeAlloc(cb->lbl, &aLbl);
 	}
 	return (0);
 }
@@ -389,7 +378,7 @@ AG_WidgetClass agCheckboxClass = {
 		{ 0,0 },
 		Init,
 		NULL,			/* free */
-		Destroy,
+		NULL,			/* destroy */
 		NULL,			/* load */
 		NULL,			/* save */
 		NULL			/* edit */

@@ -4,6 +4,7 @@
 #define _AGAR_WIDGET_CHECKBOX_H_
 
 #include <agar/gui/widget.h>
+#include <agar/gui/label.h>
 
 #include "begin_code.h"
 
@@ -14,16 +15,16 @@ typedef struct ag_checkbox {
 #define AG_CHECKBOX_VFILL	0x02
 #define AG_CHECKBOX_EXPAND	(AG_CHECKBOX_HFILL|AG_CHECKBOX_VFILL)
 #define AG_CHECKBOX_SET		0x04
-	int state;
-	char *labelTxt;
-	int label;
-	int spacing;
+	int state;		/* Default "state" binding */
+	int spacing;		/* Spacing in pixels */
+	AG_Label *lbl;		/* Text label */
+	int btnSize;		/* Button size in pixels */
 } AG_Checkbox;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agCheckboxClass;
 
-AG_Checkbox *AG_CheckboxNew(void *, Uint, const char *);
+AG_Checkbox *AG_CheckboxNew(void *, Uint, const char *, ...);
 AG_Checkbox *AG_CheckboxNewFn(void *, Uint, const char *, AG_EventFn,
                               const char *, ...);
 AG_Checkbox *AG_CheckboxNewInt(void *, Uint, const char *, int *);
