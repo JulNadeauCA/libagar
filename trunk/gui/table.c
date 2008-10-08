@@ -496,9 +496,6 @@ Draw(void *obj)
 			AG_DrawLineH(t, 0, t->wTbl, rCell.y,
 			    AG_COLOR(TABLE_LINE_COLOR));
 	
-			STYLE(t)->TableCellBackground(t, rCell,
-			    t->cells[m][n].selected);
-
 			if (t->flags & AG_TABLE_CELL_CLIPPING)
 				AG_PushClipRect(t, rCell);
 
@@ -506,6 +503,11 @@ Draw(void *obj)
 
 			if (t->flags & AG_TABLE_CELL_CLIPPING)
 				AG_PopClipRect();
+	
+			if (t->cells[m][n].selected) {
+				Uint8 c[4] = { 0, 0, 250, 32 };
+				AG_DrawRectBlended(t, rCell, c, AG_ALPHA_SRC);
+			}
 
 			rCell.y += t->row_h;
 		}
