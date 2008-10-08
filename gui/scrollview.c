@@ -206,7 +206,7 @@ AG_ScrollviewNew(void *parent, Uint flags)
 		AG_SetEvent(sv->vbar, "scrollbar-changed", Scrolled, "%p", sv);
 	}
 
-	if (flags & AG_SCROLLVIEW_BY_CURSOR) {
+	if (flags & AG_SCROLLVIEW_BY_MOUSE) {
 		AG_SetEvent(sv, "window-mousebuttondown", MouseButtonDown,
 		    NULL);
 		AG_SetEvent(sv, "window-mousebuttonup", MouseButtonUp, NULL);
