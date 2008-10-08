@@ -675,16 +675,6 @@ TableRowBackground(void *wid, AG_Rect r, int isSelected)
 	}
 }
 
-/* Background for table cells (over TableRowBackground) */
-static void
-TableCellBackground(void *wid, AG_Rect r, int isSelected)
-{
-	if (isSelected) {
-		Uint8 c[4] = { 0, 0, 250, 64 };
-		AG_DrawRectBlended(wid, r, c, AG_ALPHA_SRC);
-	}
-}
-
 /* Background for textbox widgets */
 static void
 TextboxBackground(void *tbox, AG_Rect r, int isCombo)
@@ -782,7 +772,6 @@ AG_Style agStyleDefault = {
 	TableColumnHeaderBackground,
 	TableSelectedColumnBackground,
 	TableRowBackground,
-	TableCellBackground,
 	TextboxBackground,
 	ListBackground,
 	ListItemBackground,
