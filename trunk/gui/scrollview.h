@@ -17,7 +17,7 @@ typedef struct ag_scrollview {
 #define AG_SCROLLVIEW_NOPAN_X	0x04 /* X is not pannable */ 
 #define AG_SCROLLVIEW_NOPAN_Y	0x08 /* Y is not pannable */
 #define AG_SCROLLVIEW_PANNING	0x10 /* Panning in progress */
-#define AG_SCROLLVIEW_BY_CURSOR	0x20 /* Panning with cursor allowed */
+#define AG_SCROLLVIEW_BY_MOUSE	0x20 /* Panning with mouse allowed */
 #define AG_SCROLLVIEW_BY_KBD	0x40 /* Panning with keyboard allowed */
 #define AG_SCROLLVIEW_FRAME	0x80 /* Draw background and frame */
 #define AG_SCROLLVIEW_EXPAND	(AG_SCROLLVIEW_HFILL|AG_SCROLLVIEW_VFILL)
