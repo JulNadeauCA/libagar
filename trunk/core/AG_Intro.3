@@ -38,11 +38,11 @@ with consistent interfaces across a wide array of platforms.
 This document summarizes the various interfaces provided by the standard
 libraries included in the official Agar source distribution (such as Agar-Core,
 Agar-GUI, etc).
-These libraries share the same version number and release cycle, but they
-are linked and can be distributed independently.
+These libraries share the same version number and release cycle, but they are
+separate and can be packaged and distributed independently.
 .Pp
-.Sh CONVENTIONS
-The Agar documentation follows the following conventions:
+.Sh USING THE AGAR DOCUMENTATION
+The Agar documentation follows the following important conventions:
 .Bl -enum
 .It
 The return value for functions returning
@@ -58,6 +58,36 @@ unless documented otherwise (see
 section of
 .Xr AG_Threads 3
 for important details related to thread safety).
+.El
+.Pp
+There is generally one manual page per Agar object class in the Agar API
+documentation.
+A number of manual page sections are standard throughout the documentation,
+this includes:
+.Bl -tag -width "INHERITANCE HIERARCHY "
+.It INHERITANCE HIERARCHY
+List of parent (inherited) classes.
+See
+.Xr AG_Object 3
+for details on inheritance with the Agar object system.
+.It EVENTS
+List of events defined by this object (and optionally, a list
+of events potentially raised by this object).
+See
+.Xr AG_Event 3
+for details on Agar events.
+.It STRUCTURE DATA
+List of public structure members which are safe to access directly (in the
+specified way).
+Function interfaces are always available so developers who prefer to use them
+exclusively can ignore these sections.
+.Pp
+Note: Multithreaded applications must use
+.Xr AG_ObjectLock 3
+prior to accessing this data (although the object can be assumed locked
+in some contexts, see
+.Xr AG_Event 3
+for details).
 .El
 .Sh AGAR-CORE
 Agar-Core implements the
