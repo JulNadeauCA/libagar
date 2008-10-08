@@ -128,6 +128,7 @@ AG_EventInit(AG_Event *ev)
 void
 AG_EventArgs(AG_Event *ev, const char *fmt, ...)
 {
+	InitEvent(ev, NULL);
 	AG_EVENT_GET_ARGS(ev, fmt);
 }
 
