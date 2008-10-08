@@ -466,8 +466,10 @@ routine initializes an
 structure with no arguments.
 .Pp
 .Fn AG_EventArgs
-specifies a list of arguments in the same format as
-.Fn AG_SetEvent .
+initializes an
+.Ft AG_Event
+structure and also specifies a list of arguments (in the same format as
+.Fn AG_SetEvent ) .
 .Pp
 The
 .Fn AG_EventPush<TYPE>
@@ -592,7 +594,6 @@ SayHello(AG_Event *event)
 }
 
 AG_Event event;
-AG_EventInit(&event);
 AG_EventArgs(&event, "%s,%d", "Foo string", 1234);
 SayHello(&event);
 .Ed
