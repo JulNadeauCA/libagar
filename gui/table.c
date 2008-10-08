@@ -481,7 +481,7 @@ Draw(void *obj)
 		    AG_RECT(rCell.x, 0, cw, t->col_h),
 		    col->selected);
 		
-		AG_PushClipRect(t, AG_RECT(rCell.x, 0, cw, HEIGHT(t)-2));
+		AG_PushClipRect(t, AG_RECT(rCell.x, 0, cw, HEIGHT(t)));
 		
 		if (col->surface != -1) {
 			AG_WidgetBlitSurface(t, col->surface,
@@ -491,7 +491,7 @@ Draw(void *obj)
 
 		/* Draw the rows of this column. */
 		for (m = t->moffs, rCell.y = t->col_h;
-		     m < MIN(t->m, t->moffs+(t->mVis+1));
+		     m < MIN(t->m, t->moffs+t->mVis);
 		     m++) {
 			AG_DrawLineH(t, 0, t->wTbl, rCell.y,
 			    AG_COLOR(TABLE_LINE_COLOR));
@@ -538,10 +538,14 @@ AG_TableUpdateScrollbars(AG_Table *t)
 {
 	AG_WidgetBinding *maxb, *offsetb;
 	int *max, *offset;
+	int hAvail;
 
 	AG_ObjectLock(t);
 
-	t->mVis = (HEIGHT(t) - t->col_h)/t->row_h;
+	hAvail = HEIGHT(t) - t->col_h;
+	t->mVis = hAvail/t->row_h;
+	if (hAvail % t->row_h)
+		t->mVis++;
 
 	maxb = AG_WidgetGetBinding(t->vbar, "max", &max);
 	offsetb = AG_WidgetGetBinding(t->vbar, "value", &offset);
