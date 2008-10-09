@@ -439,6 +439,9 @@ AG_UnloadDSO(AG_DSO *dso)
 			goto out;
 		}
 	}
+#else
+	AG_SetError("Dynamic linking is supported on this platform");
+	goto out;
 #endif /* DSO_USE_FOO */
 
 	while ((cSym = TAILQ_FIRST(&dso->syms)) != NULL) {
@@ -608,7 +611,7 @@ int
 AG_SymDSO(AG_DSO *dso, const char *sym, void **p)
 {
 	AG_DSOSym *cSym;
-	int rv;
+	int rv = 0;
 	
 	AG_MutexLock(&agDSOLock);
 #if defined(BEOS)
@@ -625,6 +628,9 @@ AG_SymDSO(AG_DSO *dso, const char *sym, void **p)
 	rv = SymDSO_DYLD((AG_DSO_Generic *)dso, sym, p);
 #elif defined(HAVE_DLOPEN)
 	rv = SymDSO_DLOPEN((AG_DSO_Generic *)dso, sym, p);
+#else
+	AG_SetError("Dynamic linking is supported on this platform");
+	rv = -1;
 #endif
 	if (rv == 0) {
 		TAILQ_FOREACH(cSym, &dso->syms, syms) {
