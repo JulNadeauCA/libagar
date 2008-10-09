@@ -216,6 +216,28 @@ function releases all resources allocated by the given surface.
 .Pp
 .Ft void
 .Fn AG_SurfaceUnlock "AG_Surface *surface"
+.Pp
+.Ft "AG_Surface *"
+.Fn AG_DupSurface "AG_Surface *src"
+.Pp
+.Ft "int"
+.Fn AG_ScaleSurface "AG_Surface *src" "Uint16 width" "Uint16 height" "AG_Surface **dst"
+.Pp
+.Ft "Uint32"
+.Fn AG_VideoPixel "Uint32 c"
+.Pp
+.Ft "Uint32"
+.Fn AG_SurfacePixel "Uint32 c"
+.Pp
+.Ft "int"
+.Fn AG_SamePixelFmt "AG_Surface *s1" "AG_Surface *s2"
+.Pp
+.Ft "void"
+.Fn AG_SetAlphaPixels "AG_Surface *surface" "Uint8 alpha"
+.Pp
+.Ft "int"
+.Fn AG_DumpSurface "AG_Surface *su" "char *path_save"
+.Pp
 .nr nS 0
 .Pp
 The
@@ -230,6 +252,60 @@ The raw pixel data is copied, so alpha and colorkey parameters are ignored.
 and
 .Fn AG_SurfaceUnlock
 protect the raw pixel data against both reading and writing.
+.Pp
+.Fn AG_DupSurface
+returns a newly allocated surface containing a copy of
+.Fa src .
+.Pp
+.Fn AG_ScaleSurface
+returns a copy of surface
+.Fa src
+scaled to the given size in pixels into
+.Fa dst ,
+which must be either NULL or a pointer to an existing surface.
+If
+.Fa dst
+is NULL, a new surface is allocated.
+The function returns 0 on success and -1 if a failure has occured.
+.Pp
+The
+.Fn AG_VideoPixel
+routine converts the given pixel value
+.Fa c
+from reference surface format (agSurfaceFmt) to video display
+format (agVideoFmt).
+.Fn AG_SurfacePixel
+does the opposite.
+.Pp
+.Fn AG_SamePixelFmt
+compares the two surfaces
+.Fa s1
+and
+.Fa s2
+and return 1 if they both share the same color depth, RGBA masks and colorkey
+settings.
+.Pp
+The
+.Fn AG_SetAlphaPixels
+function changes the alpha component of all pixels with a non-zero alpha
+component.
+.Pp
+The
+.Fn AG_DumpSurface
+function encodes a JPEG image file from the contents of a specified surface
+.Fa su
+(or if
+.Fa su
+is NULL, it uses the contents of the current display).
+The image is saved to the application's data directory, and the resulting
+path is copied to the
+.Fa path_save
+argument (if not NULL),
+which must be at least
+.Dv AG_PATHNAME_MAX
+bytes in size.
+.Fn AG_DumpSurface
+returns 0 on success and -1 on failure.
 .Sh PIXEL FORMATS
 .nr nS 1
 .Ft "AG_PixelFormat *"
