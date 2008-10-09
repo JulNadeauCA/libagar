@@ -13,11 +13,15 @@ typedef struct ag_pixmap {
 #define AG_PIXMAP_HFILL		0x01
 #define AG_PIXMAP_VFILL		0x02
 #define AG_PIXMAP_FORCE_SIZE	0x04	/* Always override image size */
+#define AG_PIXMAP_RESCALE	0x08	/* Scale image to fit widget */
+#define AG_PIXMAP_UPDATE	0x10	/* Scaled copy needs updating */
 #define AG_PIXMAP_EXPAND (AG_PIXMAP_HFILL|AG_PIXMAP_VFILL)
 
 	int n;			/* Current surface (or -1) */
 	int s, t;		/* Source coordinates */
 	int pre_w, pre_h;	/* Geometry to use if there is no surface */
+	int sScaled;		/* Scaled surface (for RESCALE) */
+	AG_Rect rClip;		/* Clipping rectangle (for !RESCALE) */
 } AG_Pixmap;
 
 __BEGIN_DECLS
@@ -50,18 +54,24 @@ void	   AG_PixmapReplaceSurfaceScaled(AG_Pixmap *, int, AG_Surface *, Uint,
 static __inline__ int
 AG_PixmapSetSurface(AG_Pixmap *px, int name)
 {
+	AG_ObjectLock(px);
 	if (name < 0 || name >= (int)AGWIDGET(px)->nsurfaces) {
+		AG_ObjectUnlock(px);
 		return (-1);
 	}
 	px->n = name;
+	px->flags |= AG_PIXMAP_UPDATE;
+	AG_ObjectUnlock(px);
 	return (0);
 }
 
 static __inline__ void
 AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
 {
+	AG_ObjectLock(px);
 	px->s = s;
 	px->t = t;
+	AG_ObjectUnlock(px);
 }
 __END_DECLS
 
