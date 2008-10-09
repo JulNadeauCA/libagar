@@ -80,9 +80,14 @@ The initial geometry of the widget is defined by the
 and
 .Fa height
 parameters.
-There are currently no
+The following
 .Fa flags
-specific to this widget.
+are accepted:
+.Pp
+.Bl -tag -width "AG_PIXMAP_RESCALE "
+.Dv AG_PIXMAP_RESCALE
+Rescale image to fit widget size.
+.Ed
 .Pp
 The following functions create a new
 .Nm
@@ -188,9 +193,43 @@ Source surface coordinates.
 Can be set using
 .Fn AG_PixmapSetCoords .
 .El
+.Sh EXAMPLES
+The following code fragment displays an existing
+.Xr AG_Surface 3 .
+It packs
+.Nm
+in a
+.Xr AG_Scrollview 3
+widget, allowing the user to pan the view:
+.Bd -literal
+AG_Scrollview *sv;
+AG_Pixmap *px;
+
+sv = AG_ScrollviewNew(window, AG_SCROLLVIEW_BY_MOUSE);
+AG_Expand(sv);
+px = AG_PixmapFromSurface(sv, 0, mySurface);
+.Ed
+.Pp
+Assuming Agar was compiled with support for the SDL library, the following
+code fragment displays an
+.Xr SDL_Surface 3 .
+It uses
+.Dv AG_PIXMAP_RESCALE
+to scale the image to fit the widget geometry:
+.Bd -literal
+AG_Pixmap *px;
+SDL_Surface *sSDL;
+AG_Surface *s;
+
+sSDL = SDL_LoadBMP("foo.bmp");
+s = AG_SurfaceFromSDL(sSDL);
+px = AG_PixmapFromSurface(sv, AG_PIXMAP_RESCALE,
+    AG_SurfaceFromSDL(sSDL));
+.Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Fixed 3 ,
+.Xr AG_Scrollview 3 ,
 .Xr AG_Surface 3 ,
 .Xr AG_View 3 ,
 .Xr AG_Widget 3 ,

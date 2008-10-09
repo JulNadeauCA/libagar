@@ -138,6 +138,7 @@ AG_PixmapAddSurface(AG_Pixmap *px, AG_Surface *su)
 
 	AG_ObjectLock(px);
 	name = AG_WidgetMapSurfaceNODUP(px, su);
+	px->flags |= AG_PIXMAP_UPDATE;
 	AG_ObjectUnlock(px);
 	return (name);
 }
@@ -157,6 +158,7 @@ AG_PixmapAddSurfaceFromBMP(AG_Pixmap *px, const char *path)
 	}
 	AG_ObjectLock(px);
 	name = AG_WidgetMapSurface(px, bmp);
+	px->flags |= AG_PIXMAP_UPDATE;
 	AG_ObjectUnlock(px);
 	return (name);
 }
@@ -174,6 +176,7 @@ AG_PixmapAddSurfaceCopy(AG_Pixmap *px, AG_Surface *su)
 	dup = AG_DupSurface(su);
 	AG_ObjectLock(px);
 	name = AG_WidgetMapSurface(px, dup);
+	px->flags |= AG_PIXMAP_UPDATE;
 	AG_ObjectUnlock(px);
 	return (name);
 }
@@ -193,6 +196,7 @@ AG_PixmapAddSurfaceScaled(AG_Pixmap *px, AG_Surface *su, Uint w, Uint h)
 	}
 	AG_ObjectLock(px);
 	name = AG_WidgetMapSurface(px, scaled);
+	px->flags |= AG_PIXMAP_UPDATE;
 	AG_ObjectUnlock(px);
 	return (name);
 }
@@ -209,6 +213,7 @@ AG_PixmapReplaceSurfaceScaled(AG_Pixmap *px, int surface_name, AG_Surface *su,
 	}
 	AG_ObjectLock(px);
 	AG_WidgetReplaceSurface(px, surface_name, scaled);
+	if (surface_name == px->n) { px->flags |= AG_PIXMAP_UPDATE; }
 	AG_ObjectUnlock(px);
 }
 
@@ -217,12 +222,14 @@ Init(void *obj)
 {
 	AG_Pixmap *px = obj;
 
-	px->flags = 0;
+	px->flags = AG_PIXMAP_UPDATE;
 	px->n = 0;
 	px->s = 0;
 	px->t = 0;
 	px->pre_w = 64;
 	px->pre_h = 64;
+	px->rClip = AG_RECT(0,0,0,0);
+	px->sScaled = -1;
 }
 
 static void
@@ -242,7 +249,40 @@ SizeRequest(void *obj, AG_SizeReq *r)
 static int
 SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
-	return (a->w < 1 || a->h < 1) ? -1 : 0;
+	AG_Pixmap *px = obj;
+	
+	if (a->w < 1 || a->h < 1) {
+		return (-1);
+	}
+	px->rClip.w = a->w;
+	px->rClip.h = a->h;
+	px->flags |= AG_PIXMAP_UPDATE;
+	return (0);
+}
+
+static void
+UpdateScaled(AG_Pixmap *px)
+{
+	AG_Surface *scaled = NULL;
+
+	if (px->n < 0 || WIDTH(px) == 0 || HEIGHT(px) == 0) {
+		goto fail;
+	}
+	if (AG_ScaleSurface(WSURFACE(px,px->n), WIDTH(px), HEIGHT(px), &scaled)
+	    == -1) {
+		goto fail;
+	}
+	if (px->sScaled == -1) {
+		px->sScaled = AG_WidgetMapSurface(px, scaled);
+	} else {
+		AG_WidgetReplaceSurface(px, px->sScaled, scaled);
+	}
+	return;
+fail:
+	if (px->sScaled != -1) {
+		AG_WidgetUnmapSurface(px, px->sScaled);
+		px->sScaled = -1;
+	}
 }
 
 static void
@@ -250,8 +290,17 @@ Draw(void *obj)
 {
 	AG_Pixmap *px = obj;
 
-	if (px->n >= 0) {
-		AG_PushClipRect(px, AG_RECT(0,0,WIDTH(px),HEIGHT(px)));
+	if (px->n < 0)
+		return;
+
+	if (px->flags & AG_PIXMAP_RESCALE) {
+		if (px->flags & AG_PIXMAP_UPDATE) {
+			UpdateScaled(px);
+			px->flags &= ~(AG_PIXMAP_UPDATE);
+		}
+		AG_WidgetBlitSurface(px, px->sScaled, px->s, px->t);
+	} else {
+		AG_PushClipRect(px, px->rClip);
 		AG_WidgetBlitSurface(px, px->n, px->s, px->t);
 		AG_PopClipRect();
 	}
