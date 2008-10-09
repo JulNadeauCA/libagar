@@ -49,7 +49,7 @@ The
 .Nm
 interface also implements a series of macros for basic pixel operations, and
 a number of utility routines for surface and texture manipulation.
-.Sh INITIALIZATION
+.Sh INTERFACE
 .nr nS 1
 .Ft "int"
 .Fn AG_InitVideo "int w" "int h" "int bpp" "Uint flags"
@@ -74,6 +74,9 @@ a number of utility routines for surface and texture manipulation.
 .Pp
 .Ft void
 .Fn AG_ClearGlobalKeys "void"
+.Pp
+.Ft "void"
+.Fn AG_QueueVideoUpdate "int x" "int y" "int w" "int h"
 .Pp
 .nr nS 0
 The
@@ -149,100 +152,12 @@ mapping exists.
 .Pp
 .Fn AG_ClearGlobalKeys
 removes all existing key mappings.
-.Sh GRAPHIC SURFACES
-.Pp
-TODO: Move this to
-.Xr AG_Surface 3 .
-.nr nS 1
-.Ft "AG_Surface *"
-.Fn AG_DupSurface "AG_Surface *src"
-.Pp
-.Ft "int"
-.Fn AG_ScaleSurface "AG_Surface *src" "Uint16 width" "Uint16 height" "AG_Surface **dst"
-.Pp
-.Ft "Uint32"
-.Fn AG_VideoPixel "Uint32 c"
-.Pp
-.Ft "Uint32"
-.Fn AG_SurfacePixel "Uint32 c"
-.Pp
-.Ft "int"
-.Fn AG_SamePixelFmt "AG_Surface *s1" "AG_Surface *s2"
-.Pp
-.Ft "void"
-.Fn AG_SetAlphaPixels "AG_Surface *surface" "Uint8 alpha"
-.Pp
-.Ft "void"
-.Fn AG_QueueVideoUpdate "int x" "int y" "int w" "int h"
-.Pp
-.Ft "int"
-.Fn AG_DumpSurface "AG_Surface *su" "char *path_save"
-.Pp
-.nr nS 0
-The
-.Fn AG_DupSurface
-returns a newly allocated surface containing a copy of
-.Fa src .
-.Fn AG_ScaleSurface
-returns a copy of
-.Fa src
-scaled to the given size in pixels into
-.Fa dst ,
-which must be either NULL or a pointer to a valid surface.
-If
-.Fa dst
-is NULL, a new surface is allocated.
-The function returns 0 on success and -1 if a failure has occured.
-.Pp
-The
-.Fn AG_VideoPixel
-function converts the given pixel value
-.Fa c
-from reference surface format (agSurfaceFmt) to video display
-format (agVideoFmt).
-.Fn AG_SurfacePixel
-does the opposite.
-.Pp
-.Fn AG_SamePixelFmt
-compares the two surfaces
-.Fa s1
-and
-.Fa s2
-and return 1 if they both share the same color depth, RGBA masks and colorkey
-settings.
-.Pp
-The
-.Fn AG_SetAlphaPixels
-function changes the alpha component of all pixels with a non-zero alpha
-component.
 .Pp
 The
 .Fn AG_QueueVideoUpdate
-function queues the update of a video region.
-In SDL mode, this creates an entry
-on an
-.Ft SDL_Rect
-array that will be passed to
-.Xr SDL_UpdateRects 3 .
-This function is a no-op in OpenGL mode.
-.Pp
-The
-.Fn AG_DumpSurface
-function encodes a JPEG image file from the contents of a specified surface
-.Fa su
-(or if
-.Fa su
-is NULL, it uses the contents of the current display).
-The image is saved to the application's data directory, and the resulting
-path is copied to the
-.Fa path_save
-argument (if not NULL),
-which must be at least
-.Dv AG_PATHNAME_MAX
-bytes in size.
-.Fn AG_DumpSurface
-returns 0 on success and -1 on failure.
-The function always fails if Agar was not compiled with libjpeg support.
+routine queues the update of a video region for the next event processing
+cycle.
+It is only used by framebuffer-based display modes.
 .Sh PIXEL OPERATIONS
 .nr nS 1
 .Ft "void"
