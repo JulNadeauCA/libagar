@@ -373,18 +373,21 @@ int
 AG_UnloadDSO(AG_DSO *dso)
 {
 	AG_DSOSym *cSym;
+	int rv = -1;
 
 	AG_MutexLock(&agDSOLock);
 
-	if (--dso->refCount > 0)
+	if (--dso->refCount > 0) {
+		rv = 0;
 		goto out;
+	}
 
 #if defined(BEOS)
 	{
 		AG_DSO_BeOS *d = (AG_DSO_BeOS *)dso;
 		if (unload_add_on(d->handle) < B_NO_ERROR) {
 			AG_SetError("%s: unload_add_on() failed", dso->name);
-			goto fail;
+			goto out;
 		}
 	}
 #elif defined(OS2)
@@ -392,7 +395,7 @@ AG_UnloadDSO(AG_DSO *dso)
 		AG_DSO_OS2 *d = (AG_DSO_OS2 *)dso;
 		if (DosFreeModule(d->handle) != 0) {
 			AG_SetError("%s: DosFreeModule() failed", dso->name);
-			goto fail;
+			goto out;
 		}
 	}
 #elif defined(OS390)
@@ -400,7 +403,7 @@ AG_UnloadDSO(AG_DSO *dso)
 		AG_DSO_Generic *d = (AG_DSO_Generic *)dso;
 		if (dllfree(d->handle) != 0) {
 			AG_SetError("%s: dllfree() failed", dso->name);
-			goto fail;
+			goto out;
 		}
 	}
 #elif defined(_WIN32)
@@ -408,7 +411,7 @@ AG_UnloadDSO(AG_DSO *dso)
 		AG_DSO_Generic *d = (AG_DSO_Generic *)dso;
 		if (!FreeLibrary(d->handle)) {
 			AG_SetError("%s: FreeLibrary() failed", dso->name);
-			goto fail;
+			goto out;
 		}
 	}
 #elif defined(HAVE_SHL_LOAD)
@@ -433,7 +436,7 @@ AG_UnloadDSO(AG_DSO *dso)
 		if (dlclose(d->handle) != 0) {
 			AG_SetError("%s: dlclose: %s", dso->name,
 			    strerror(errno));
-			goto fail;
+			goto out;
 		}
 	}
 #endif /* DSO_USE_FOO */
@@ -444,12 +447,10 @@ AG_UnloadDSO(AG_DSO *dso)
 	}
 	TAILQ_REMOVE(&agLoadedDSOs, dso, dsos);
 	free(dso);
+	rv = 0;
 out:
 	AG_MutexUnlock(&agDSOLock);
-	return (0);
-fail:
-	AG_MutexUnlock(&agDSOLock);
-	return (-1);
+	return (rv);
 }
 
 #ifdef BEOS
