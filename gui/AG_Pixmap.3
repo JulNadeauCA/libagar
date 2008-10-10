@@ -97,14 +97,14 @@ that of the source image.
 .Pp
 .Fn AG_PixmapFromSurface
 maps an existing
-.Xr AG_Surface 3 ,
-which must remain valid until the widget is destroyed.
+.Xr AG_Surface 3
+to surface 0.
+The surface must remain valid until the widget is destroyed.
+The
 .Fn AG_PixmapFromSurfaceCopy
-creates a copy of the given
-.Ft AG_Surface
-that will be freed automatically along with the widget instance.
+variant instead creates and manages a copy of the surface.
 .Fn AG_PixmapFromSurfaceScaled
-uses a rescaled copy of the given surface.
+uses rescaled copy of the surface.
 .Sh CHANGING SURFACES
 .nr nS 1
 .Ft "int"
