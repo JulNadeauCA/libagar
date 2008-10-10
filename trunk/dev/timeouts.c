@@ -91,8 +91,7 @@ DEV_TimerInspector(void)
 	}
 	AG_WindowSetCaption(win, _("Timer Inspector"));
 
-	tv = AG_TableviewNew(win, AG_TABLEVIEW_NOHEADER|AG_TABLEVIEW_EXPAND,
-	   NULL, NULL);
+	tv = AG_TableviewNew(win, AG_TABLEVIEW_EXPAND, NULL, NULL);
 	AG_TableviewSizeHint(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
 	AG_TableviewColAdd(tv, 0, 0, NULL, NULL);
 	
