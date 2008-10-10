@@ -244,7 +244,7 @@ Draw(void *obj)
 		break;
 	}
 
-	STYLE(cb)->CheckboxButton(cb, state);
+	STYLE(cb)->CheckboxButton(cb, state, cb->btnSize);
 	if (cb->lbl != NULL) {
 		AG_WidgetDraw(cb->lbl);
 	}
@@ -263,7 +263,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	if (cb->lbl != NULL) {
 		AG_WidgetSizeReq(cb->lbl, &rLbl);
 		r->w += cb->spacing + rLbl.w;
-		r->h = MAX(r->h, rLbl.h);
+		r->h = agTextFontHeight;
 	}
 }
 
