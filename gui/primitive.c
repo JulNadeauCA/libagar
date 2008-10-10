@@ -37,6 +37,10 @@
 
 AG_PrimitiveOps agPrim;
 
+#ifdef HAVE_OPENGL
+static Uint8 DisabledStipple[128];  /* Stiple pattern for "disabled" items */
+#endif
+
 /* Add to individual RGB components of a pixel. */
 /* TODO use SIMD to compute the components in parallel */
 static __inline__ Uint32
@@ -187,7 +191,7 @@ Box(void *p, AG_Rect r, int z, Uint32 c)
 
 /* Render a 3D-style box with dithering. */
 static void
-BoxDitheredFB(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
+BoxDisabledFB(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
 	int x, y;
@@ -1269,9 +1273,28 @@ RectBlendedGL(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 }
 
 static void
-BoxDitheredGL(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
+BoxDisabledGL(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
 {
-	/* TODO */
+	AG_Widget *wid = p;
+	int stippleEnabled = glIsEnabled(GL_POLYGON_STIPPLE);
+	Uint32 cBg;
+
+	glEnable(GL_POLYGON_STIPPLE);
+	glPushAttrib(GL_POLYGON_STIPPLE_BIT);
+	glPolygonStipple(DisabledStipple);
+
+	if (AG_WidgetFocused(wid)) {
+		cBg = ColorShift(c2, (z<0) ? agFocusSunkColorShift :
+		                             agFocusRaisedColorShift);
+	} else {
+		cBg = ColorShift(c2, (z<0) ? agNofocusSunkColorShift :
+		                             agNofocusRaisedColorShift);
+	}
+	AG_DrawRectFilled(wid, r, c1);
+	AG_DrawFrame(wid, r, z, c1);
+
+	glPopAttrib();
+	if (!stippleEnabled) { glDisable(GL_POLYGON_STIPPLE); }
 }
 
 /* Render a 3D-style box with rounded edges. */
@@ -1429,6 +1452,9 @@ ArrowRightGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 void
 AG_InitPrimitives(void)
 {
+#ifdef HAVE_OPENGL
+	memset(DisabledStipple, 0xaa, sizeof(DisabledStipple));
+#endif
 	agPrim.Box = Box;
 	agPrim.Frame = Frame;
 	agPrim.FrameBlended = FrameBlended;
@@ -1450,7 +1476,7 @@ AG_InitPrimitives(void)
 		agPrim.Circle2 = Circle2GL;
 		agPrim.BoxRounded = BoxRoundedGL;
 		agPrim.BoxRoundedTop = BoxRoundedTopGL;
-		agPrim.BoxDithered = BoxDitheredGL;
+		agPrim.BoxDisabled = BoxDisabledGL;
 		agPrim.ArrowUp = ArrowUpGL;
 		agPrim.ArrowDown = ArrowDownGL;
 		agPrim.ArrowLeft = ArrowLeftGL;
@@ -1466,7 +1492,7 @@ AG_InitPrimitives(void)
 		agPrim.Circle2 = Circle2FB;
 		agPrim.BoxRounded = BoxRoundedFB;
 		agPrim.BoxRoundedTop = BoxRoundedTopFB;
-		agPrim.BoxDithered = BoxDitheredFB;
+		agPrim.BoxDisabled = BoxDisabledFB;
 		agPrim.ArrowUp = ArrowUpFB;
 		agPrim.ArrowDown = ArrowDownFB;
 		agPrim.ArrowLeft = ArrowLeftFB;
