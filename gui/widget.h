@@ -12,6 +12,7 @@
 
 #include "begin_code.h"
 
+#define AG_SIZE_SPEC_MAX		256
 #define AG_WIDGET_BINDING_NAME_MAX	16
 
 typedef struct ag_size_req {
@@ -56,11 +57,11 @@ typedef enum ag_widget_binding_type {
 } AG_WidgetBindingType;
 
 enum ag_widget_sizespec {
-	AG_WIDGET_BAD_SPEC,
-	AG_WIDGET_PIXELS,			/* Pixel count */
-	AG_WIDGET_PERCENT,			/* % of available space */
-	AG_WIDGET_STRINGLEN,			/* Width of given string */
-	AG_WIDGET_FILL				/* Fill remaining space */
+	AG_WIDGET_BAD_SPEC,	/* Parser error */
+	AG_WIDGET_PIXELS,	/* Pixel count */
+	AG_WIDGET_PERCENT,	/* % of available space */
+	AG_WIDGET_STRINGLEN,	/* Width of given string */
+	AG_WIDGET_FILL		/* Fill remaining space */
 };
 
 enum ag_widget_packing {

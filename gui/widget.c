@@ -37,6 +37,9 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
+
+/* #define DEBUG_CLIPPING */
 
 SDL_Cursor  *agCursorToSet = NULL;	/* Set cursor at end of event cycle */
 
@@ -799,8 +802,8 @@ AG_WidgetBlit(void *p, AG_Surface *srcsu, int x, int y)
 
 	rd.x = wid->cx + x;
 	rd.y = wid->cy + y;
-	rd.w = srcsu->w <= wid->w ? srcsu->w : wid->w;		/* Clip */
-	rd.h = srcsu->h <= wid->h ? srcsu->h : wid->h;		/* Clip */
+	rd.w = wid->w;
+	rd.h = wid->h;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
@@ -891,8 +894,8 @@ AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, AG_Rect *rs, int x, int y)
 
 	rd.x = wDst->cx + x;
 	rd.y = wDst->cy + y;
-	rd.w = su->w <= wDst->w ? su->w : wDst->w;		/* Clip */
-	rd.h = su->h <= wDst->h ? su->h : wDst->h;		/* Clip */
+	rd.w = su->w;
+	rd.h = su->h;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
@@ -955,6 +958,18 @@ AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, AG_Rect *rs, int x, int y)
 #endif /* HAVE_OPENGL */
 	{
 		AG_SurfaceBlit(su, rs, agView->v, &rd);
+#ifdef DEBUG_CLIPPING
+		{
+			AG_Rect rClip;
+
+			rClip.x = agView->v->clip_rect.x - wDst->cx;
+			rClip.y = agView->v->clip_rect.y - wDst->cy;
+			rClip.w = agView->v->clip_rect.w;
+			rClip.h = agView->v->clip_rect.h;
+			AG_DrawRectOutline(wDst, rClip,
+			    AG_MapRGB(agVideoFmt,0,0,0));
+		}
+#endif
 	}
 }
 
@@ -1733,42 +1748,37 @@ AG_WidgetUpdateCoords(void *parent, int x, int y)
 
 /* Parse a generic size specification. */
 enum ag_widget_sizespec
-AG_WidgetParseSizeSpec(const char *spec_text, int *w)
+AG_WidgetParseSizeSpec(const char *input, int *w)
 {
-	char spec[256];
-	char *p;
+	char spec[AG_SIZE_SPEC_MAX], *p;
+	size_t len;
 
-	Strlcpy(spec, spec_text, sizeof(spec));
-	for (p = &spec[0]; (p[0] != '\0' && p[1] != '\0'); p++) {
-		break;
-	}
+	Strlcpy(spec, input, sizeof(spec));
+	len = strlen(spec);
+	if (len == 0) { goto syntax; }
+	p = &spec[len-1];
+
 	switch (*p) {
 	case '%':
 		*p = '\0';
 		*w = (int)strtol(spec, NULL, 10);
 		return (AG_WIDGET_PERCENT);
 	case '>':
-		if (spec[0] != '<') {
-			return (AG_WIDGET_BAD_SPEC);
-		}
+		if (spec[0] != '<') { goto syntax; }
 		*p = '\0';
 		AG_TextSize(&spec[1], w, NULL);
 		return (AG_WIDGET_STRINGLEN);
 	case 'x':
-		{
-			const char *ep;
-
-			if ((ep = strchr(spec, 'p')) == NULL) {
-				return (AG_WIDGET_BAD_SPEC);
-			}
-			ep = '\0';
-			*w = (int)strtol(ep, NULL, 10);
-			return (AG_WIDGET_PIXELS);
-		}
+		if (p > &spec[0] && p[-1] != 'p') { goto syntax; }
+		p[-1] = '\0';
+		*w = (int)strtol(spec, NULL, 10);
+		return (AG_WIDGET_PIXELS);
 	default:
-		AG_TextSize(spec, w, NULL);
 		break;
 	}
+syntax:
+	Verbose("Warning: Bad SizeSpec: \"%s\"\n", input);
+	*w = 0;
 	return (AG_WIDGET_BAD_SPEC);
 }
 
