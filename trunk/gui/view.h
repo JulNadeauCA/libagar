@@ -93,11 +93,6 @@ typedef enum ag_blend_func {
 	 (ax) >= (s)->clip_rect.x+(s)->clip_rect.w ||	\
 	 (ay) < (s)->clip_rect.y ||			\
 	 (ay) >= (s)->clip_rect.y+(s)->clip_rect.h)
-#define AG_NONCLIPPED_PIXEL(s, ax, ay)			\
-	((ax) >= (s)->clip_rect.x &&			\
-	 (ax) < (s)->clip_rect.x+(s)->clip_rect.w &&	\
-	 (ay) >= (s)->clip_rect.y &&			\
-	 (ay) < (s)->clip_rect.y+(s)->clip_rect.h)
 
 /*
  * Putpixel macros optimized for the display surface format.
@@ -169,7 +164,7 @@ case 4:					\
 	}								\
 } while (0)
 #define AG_VIEW_PUT_PIXEL2_CLIPPED(vx, vy, c) do {			\
-	if (AG_NONCLIPPED_PIXEL(agView->v, (vx), (vy))) {		\
+	if (!AG_CLIPPED_PIXEL(agView->v, (vx), (vy))) {			\
 		Uint8 *_view_dst = (Uint8 *)agView->v->pixels +		\
 		    (vy)*agView->v->pitch + (vx)*agVideoFmt->BytesPerPixel; \
 		switch (agVideoFmt->BytesPerPixel) {			 \
@@ -198,7 +193,7 @@ case 4:					\
 	    (c));							\
 } while (0)
 #define AG_PUT_PIXEL2_CLIPPED(s, x, y, c) do {				\
-	if (AG_NONCLIPPED_PIXEL((s), (x), (y))) {			\
+	if (!AG_CLIPPED_PIXEL((s), (x), (y))) {				\
 		AG_PutPixel((s),					\
 		    (Uint8 *)(s)->pixels + (y)*(s)->pitch +		\
 		    (x)*(s)->format->BytesPerPixel,			\
@@ -219,7 +214,7 @@ case 4:					\
 	    (r),(g),(b),(a),(m));					\
 } while (0)
 #define AG_BLEND_RGBA2_CLIPPED(s, x, y, r, g, b, a, m) do {		\
-	if (AG_NONCLIPPED_PIXEL((s), (x), (y))) {			\
+	if (!AG_CLIPPED_PIXEL((s), (x), (y))) {				\
 		AG_BlendPixelRGBA((s),					\
 		    (Uint8 *)(s)->pixels + (y)*(s)->pitch +		\
 		    (x)*(s)->format->BytesPerPixel,			\
