@@ -554,6 +554,9 @@ arguments are indices into the global GUI color array (see
 .Fn AG_DrawBox "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c"
 .Pp
 .Ft void
+.Fn AG_DrawBoxDisabled "AG_Widget *widget" "AG_Rect r" "int z" "Uint32 c1" "Uint32 c2"
+.Pp
+.Ft void
 .Fn AG_DrawBoxRounded "AG_Widget *widget" "AG_Rect r" "int z" "int radius" "Uint32 c"
 .Pp
 .Ft void
@@ -635,11 +638,19 @@ indicates the
 .Sq depth
 in pixels.
 The
+.Fn AG_DrawBoxDisabled
+variant uses a stipple pattern of 
+.Fa c1
+against
+.Fa c2 ,
+traditionally used to indicate a "disabled" control.
+.Pp
 .Fn AG_DrawBoxRounded
-variant renders a box with the edges rounded to the given
+renders a box with the edges rounded to the given
 .Fa radius .
+The
 .Fn AG_DrawBoxRoundedTop
-does the same but only for the two top corners of the box.
+variant only rounds the top two corners.
 .Pp
 .Fn AG_DrawFrame
 draws a 3D-style frame.

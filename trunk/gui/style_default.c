@@ -123,7 +123,7 @@ ButtonBackground(void *btn, int isPressed)
 		    isPressed ? -1 : 1,
 		    AG_COLOR(BUTTON_COLOR));
 	} else {
-		AG_DrawBoxDithered(btn,
+		AG_DrawBoxDisabled(btn,
 		    AG_RECT(0, 0, WIDTH(btn), HEIGHT(btn)),
 		    isPressed ? -1 : 1,
 		    AG_COLOR(BUTTON_COLOR),
@@ -160,7 +160,7 @@ CheckboxButton(void *cbox, int state, int size)
 		    state ? -1 : 1,
 		    AG_COLOR(CHECKBOX_COLOR));
 	} else {
-		AG_DrawBoxDithered(cbox,
+		AG_DrawBoxDisabled(cbox,
 		    AG_RECT(0, 0, size, size),
 		    state ? -1 : 1,
 		    AG_COLOR(CHECKBOX_COLOR),
@@ -602,7 +602,7 @@ SocketBackground(AG_Socket *sock)
 			    AG_RECT(0, 0, WIDTH(sock), HEIGHT(sock)), -1,
 			    AG_COLOR(SOCKET_COLOR));
 		} else {
-			AG_DrawBoxDithered(sock,
+			AG_DrawBoxDisabled(sock,
 			    AG_RECT(0, 0, WIDTH(sock), HEIGHT(sock)), -1,
 			    AG_COLOR(SOCKET_COLOR),
 			    AG_COLOR(DISABLED_COLOR));
@@ -678,7 +678,7 @@ static void
 TextboxBackground(void *tbox, AG_Rect r, int isCombo)
 {
 	if (AG_WidgetDisabled(tbox)) {
-		AG_DrawBoxDithered(tbox, r, -1,
+		AG_DrawBoxDisabled(tbox, r, -1,
 		    AG_COLOR(TEXTBOX_COLOR),
 		    AG_COLOR(DISABLED_COLOR));
 	} else {
