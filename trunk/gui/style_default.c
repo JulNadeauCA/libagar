@@ -152,18 +152,16 @@ BoxFrame(void *box, int depth)
 
 /* Button for Checkbox widgets */
 static void
-CheckboxButton(void *cbox, int state)
+CheckboxButton(void *cbox, int state, int size)
 {
-	int btnSize = MIN(WIDTH(cbox),HEIGHT(cbox));
-	
 	if (AG_WidgetEnabled(cbox)) {
 		AG_DrawBox(cbox,
-		    AG_RECT(0, 0, btnSize, btnSize),
+		    AG_RECT(0, 0, size, size),
 		    state ? -1 : 1,
 		    AG_COLOR(CHECKBOX_COLOR));
 	} else {
 		AG_DrawBoxDithered(cbox,
-		    AG_RECT(0, 0, btnSize, btnSize),
+		    AG_RECT(0, 0, size, size),
 		    state ? -1 : 1,
 		    AG_COLOR(CHECKBOX_COLOR),
 		    AG_COLOR(DISABLED_COLOR));
