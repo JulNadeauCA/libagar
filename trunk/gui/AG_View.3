@@ -158,149 +158,66 @@ The
 routine queues the update of a video region for the next event processing
 cycle.
 It is only used by framebuffer-based display modes.
-.Sh PIXEL OPERATIONS
+.Sh FRAMEBUFFER-SPECIFIC OPERATIONS
+The following operations are only available when the current display surface
+provides an accessible framebuffer.
 .nr nS 1
-.Ft "void"
-.Fn AG_CLIPPED_PIXEL "AG_Surface *s" "int x" "int y"
-.Pp
-.Ft "void"
-.Fn AG_UNCLIPPED_PIXEL "AG_Surface *s" "int x" "int y"
-.Pp
-.Ft "Uint32"
-.Fn AG_GET_PIXEL "AG_Surface *s" "Uint8 *p"
-.Pp
-.Ft "Uint32"
-.Fn AG_GET_PIXEL2 "AG_Surface *s" "int x" "int y"
-.Pp
-.Ft "void"
-.Fn AG_PUT_PIXEL "AG_Surface *s" "Uint8 *p" "Uint32 c"
-.Pp
-.Ft "void"
-.Fn AG_PUT_PIXEL2 "AG_Surface *s" "int x" "int y" "Uint32 c"
-.Pp
-.Ft "void"
-.Fn AG_PUT_PIXEL2_CLIPPED "AG_Surface *s" "int x" "int y" "Uint32 c"
-.Pp
-.Ft "void"
-.Fn AG_BLEND_RGBA "AG_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum ag_blend_func func"
-.Pp
-.Ft "void"
-.Fn AG_BLEND_RGBA2 "AG_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum ag_blend_func func"
-.Pp
-.Ft "void"
-.Fn AG_BLEND_RGBA2_CLIPPED "AG_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 alpha" "enum ag_blend_func func"
-.Pp
 .Ft "void"
 .Fn AG_VIEW_PUT_PIXEL "Uint8 *p" "Uint32 c"
 .Pp
 .Ft "void"
 .Fn AG_VIEW_PUT_PIXEL2 "int x" "int y" "Uint32 c"
 .Pp
-.Ft "void"
-.Fn AG_VIEW_PUT_PIXEL2_CLIPPED "int x" "int y" "Uint32 c"
-.Pp
 .nr nS 0
-The macros
-.Fn AG_CLIPPED_PIXEL
+The
+.Fn AG_VIEW_PUT_PIXEL
 and
-.Fn AG_UNCLIPPED_PIXEL
-evaluate whether the pixel at the given coordinates resides inside or outside
-of the clipping rectangle of the given surface.
-.Pp
-.Fn AG_GET_PIXEL
-returns a 32-bit interpretation of the pixel at the given location
-.Fa p
-in the pixel data of the surface
-.Fa s .
-The
-.Fn AG_GET_PIXEL2
-variant finds the location of the pixel in the surface from the coordinates
-.Fa x ,
-.Fa y .
-.Pp
-.Fn AG_PUT_PIXEL
-and
-.Fn AG_PUT_PIXEL2
-write the color
-.Fa c
-to the pixel at the given location, without doing any clipping.
-The
-.Fn AG_PUT_PIXEL2_CLIPPED
-variant ensures that the pixel is inside the clipping rectangle of the surface
-before writing to it.
-.Pp
-The
-.Fn AG_BLEND_RGBA ,
-.Fn AG_BLEND_RGBA2
-and
-.Fn AG_BLEND_RGBA2_CLIPPED
-macros operate in a manner similar to
-.Fn AG_PUT_PIXEL* ,
-except that the destination pixel is alpha-blended with the color described
-by the given RGB triplet, whose weight is defined by the
-.Fa alpha
-parameter.
-The
-.Fa func
-argument may be one of:
-.Pp
-.Bd -literal
-enum ag_blend_func {
-	AG_ALPHA_OVERLAY,		/* dA = sA+dA */
-	AG_ALPHA_SRC,			/* dA = sA */
-	AG_ALPHA_DST,			/* dA = dA */
-	AG_ALPHA_ONE_MINUS_DST,		/* dA = 1-dA */
-	AG_ALPHA_ONE_MINUS_SRC		/* dA = 1-sA */
-};
-.Ed
-.Pp
-The macros
-.Fn AG_VIEW_PUT_PIXEL ,
 .Fn AG_VIEW_PUT_PIXEL2
+macros sets the value of a display pixel using a similar interface to
+.Xr AG_PUT_PIXEL 3
 and
-.Fn AG_VIEW_PUT_PIXEL2_CLIPPED
-behave in a manner similar to
-.Fn AG_PUT_PIXEL* ,
-except that they are optimized for the display surface.
-For instance, support for specific display depths may have been disabled
-at compile-time.
-.Sh OPENGL OPERATIONS
-The following functions are available only if Agar was compiled with OpenGL
-support, and the current application is in OpenGL mode (as indicated by the
-.Va opengl
-flag of the current display).
-.Pp
-They must be invoked from the main event/rendering context.
+.Xr AG_PUT_PIXEL2 3 .
+The operation is optimized for the pixel format of the display surface.
+It is unsafe to invoke these macros unless the current display surface is
+framebuffer-based.
+.Sh OPENGL-SPECIFIC OPERATIONS
+The following operations are only available when the current display surface
+has an associated OpenGL context.
 .Pp
 .nr nS 1
-.Pp
 .Ft "GLuint"
 .Fn AG_SurfaceTexture "AG_Surface *src" "GLfloat *texcoord"
 .Pp
 .Ft "void"
-.Fn AG_UpdateTexture "AG_Surface *src" "GLuint texture"
+.Fn AG_UpdateTexture "AG_Surface *src" "GLuint name"
 .Pp
 .Ft "AG_Surface *"
 .Fn AG_CaptureGLView "void"
 .Pp
 .nr nS 0
-The
 .Fn AG_SurfaceTexture
-function creates an OpenGL texture from
-.Fa src
-and returns the OpenGL surface handle.
-If
-.Fa texcoord
-is not NULL, the function returns the texture coordinates (4 float values)
-into it.
+creates an OpenGL texture from
+.Fa src ,
+returning the GL surface handel.
+Texture coordinates (described as 4
+.Ft float
+values) is returned into
+.Fa texcoord ,
+is non-NULL.
+.Pp
+The
 .Fn AG_UpdateTexture
-updates the contents of an existing OpenGL texture by name, from
-the contents of a given Agar surface.
+routine updates the contents of an existing OpenGL texture from the contents
+of a specified
+.Ft AG_Surface .
+.Fa name
+specifies the GL texture handle.
 .Pp
 The
 .Fn AG_CaptureGLView
-function captures the contents of the current OpenGL display into a
-newly-allocated Agar surface and returns it.
+function captures the contents of the current OpenGL display into an
+.Ft AG_Surface .
+The surface must be freed after use.
 .Sh WINDOW SYSTEM
 .nr nS 1
 .Ft "void"
