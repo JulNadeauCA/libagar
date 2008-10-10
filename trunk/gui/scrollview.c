@@ -95,30 +95,14 @@ PlaceWidgets(AG_Scrollview *sv, int *wTot, int *hTot)
 }
 
 static void
-KeyDown(AG_Event *event)
+PanView(AG_Event *event)
 {
-	AG_Scrollview *sv = AG_SELF();
-	int keysym = AG_INT(1);
-	const int scrollIncr = 10; /* XXX */
+	AG_Scrollview *sv = AG_PTR(1);
+	AG_Window *pWin = AG_ParentWindow(sv);
 
-	switch (keysym) {
-	case SDLK_LEFT:
-		sv->xOffs -= scrollIncr;
-		break;
-	case SDLK_RIGHT:
-		sv->xOffs += scrollIncr;
-		break;
-	case SDLK_UP:
-		sv->yOffs -= scrollIncr;
-		break;
-	case SDLK_DOWN:
-		sv->yOffs += scrollIncr;
-		break;
-	case SDLK_0:
-		sv->xOffs = 0;
-		sv->yOffs = 0;
-		break;
-	}
+	if (pWin != NULL) { AG_WindowUpdate(pWin); }
+	PlaceWidgets(sv, NULL, NULL);
+	if (pWin != NULL) { AG_WindowUpdate(pWin); }
 }
 
 static void
@@ -127,11 +111,24 @@ MouseMotion(AG_Event *event)
 	AG_Scrollview *sv = AG_SELF();
 	int dx = AG_INT(3);
 	int dy = AG_INT(4);
+	AG_Event ev;
 
 	if (sv->flags & AG_SCROLLVIEW_PANNING) {
 		sv->xOffs -= dx;
 		sv->yOffs -= dy;
+
+		if (sv->xOffs+sv->rView.w > sv->xMax)
+			sv->xOffs = sv->xMax-sv->rView.w;
+		if (sv->yOffs+sv->rView.h > sv->yMax)
+			sv->yOffs = sv->yMax-sv->rView.h;
+		if (sv->xOffs < 0)
+			sv->xOffs = 0;
+		if (sv->yOffs < 0)
+			sv->yOffs = 0;
 	}
+	AG_EventInit(&ev);
+	AG_EventPushPointer(&ev, NULL, sv);
+	PanView(&ev);
 }
 
 static void
@@ -156,25 +153,11 @@ MouseButtonDown(AG_Event *event)
 	switch (button) {
 	case SDL_BUTTON_MIDDLE:
 		sv->flags |= AG_SCROLLVIEW_PANNING;
+		AG_WidgetFocus(sv);
 		break;
 	default:
 		break;
 	}
-}
-
-static void
-Scrolled(AG_Event *event)
-{
-	AG_Scrollview *sv = AG_PTR(1);
-	AG_Window *pWin = AG_ParentWindow(sv);
-
-	if (pWin != NULL)
-		AG_WindowUpdate(pWin);
-
-	PlaceWidgets(sv, NULL, NULL);
-
-	if (pWin != NULL)
-		AG_WindowUpdate(pWin);
 }
 
 AG_Scrollview *
@@ -195,7 +178,7 @@ AG_ScrollviewNew(void *parent, Uint flags)
 		AG_WidgetBindInt(sv->hbar, "min", &sv->xMin);
 		AG_WidgetBindInt(sv->hbar, "max", &sv->xMax);
 		AG_WidgetBindInt(sv->hbar, "visible", &sv->rView.w);
-		AG_SetEvent(sv->hbar, "scrollbar-changed", Scrolled, "%p", sv);
+		AG_SetEvent(sv->hbar, "scrollbar-changed", PanView, "%p", sv);
 	}
 	if (!(flags & AG_SCROLLVIEW_NOPAN_Y)) {
 		sv->vbar = AG_ScrollbarNew(sv, AG_SCROLLBAR_VERT, 0);
@@ -203,17 +186,15 @@ AG_ScrollviewNew(void *parent, Uint flags)
 		AG_WidgetBindInt(sv->vbar, "min", &sv->yMin);
 		AG_WidgetBindInt(sv->vbar, "max", &sv->yMax);
 		AG_WidgetBindInt(sv->vbar, "visible", &sv->rView.h);
-		AG_SetEvent(sv->vbar, "scrollbar-changed", Scrolled, "%p", sv);
+		AG_SetEvent(sv->vbar, "scrollbar-changed", PanView, "%p", sv);
 	}
 
 	if (flags & AG_SCROLLVIEW_BY_MOUSE) {
+		WIDGET(sv)->flags |= AG_WIDGET_FOCUSABLE;
 		AG_SetEvent(sv, "window-mousebuttondown", MouseButtonDown,
 		    NULL);
 		AG_SetEvent(sv, "window-mousebuttonup", MouseButtonUp, NULL);
 		AG_SetEvent(sv, "window-mousemotion", MouseMotion, NULL);
-	}
-	if (flags & AG_SCROLLVIEW_BY_KBD) {
-		AG_SetEvent(sv, "window-keydown", KeyDown, NULL);
 	}
 	AG_ScrollviewSetIncrement(sv, 10);
 	AG_ObjectAttach(parent, sv);
