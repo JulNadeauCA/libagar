@@ -340,6 +340,62 @@ The size of this palette is determined by
 and all palette entries are initialized to black.
 If 2 bpp is given, the first entry is initialized to white (255,255,255) and
 the second entry to black (0,0,0).
+.Sh PIXEL OPERATIONS
+.nr nS 1
+.Ft "Uint32"
+.Fn AG_GET_PIXEL "AG_Surface *s" "Uint8 *p"
+.Pp
+.Ft "Uint32"
+.Fn AG_GET_PIXEL2 "AG_Surface *s" "int x" "int y"
+.Pp
+.Ft "void"
+.Fn AG_PUT_PIXEL "AG_Surface *s" "Uint8 *p" "Uint32 c"
+.Pp
+.Ft "void"
+.Fn AG_PUT_PIXEL2 "AG_Surface *s" "int x" "int y" "Uint32 c"
+.Pp
+.Ft "void"
+.Fn AG_BLEND_RGBA "AG_Surface *s" "Uint8 *p" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum ag_blend_func func"
+.Pp
+.Ft "void"
+.Fn AG_BLEND_RGBA2 "AG_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum ag_blend_func func"
+.Pp
+.nr nS 0
+The
+.Fn AG_GET_PIXEL
+macro returns a 32-bit interpretation of the pixel at the given location
+.Fa p
+in the pixel data of the surface
+.Fa s .
+.Fn AG_GET_PIXEL2
+variant locates the pixel in the surface using the specified coordinates.
+.Pp
+The
+.Fn AG_PUT_PIXEL
+and
+.Fn AG_PUT_PIXEL2
+write the color
+.Fa c
+to the pixel at the given location, without doing any clipping.
+.Pp
+The
+.Fn AG_BLEND_RGBA
+and
+.Fn AG_BLEND_RGBA2
+variants perform alpha-blending of the destination pixel against the
+specified color, where
+.Fa func
+specifies the blending formula:
+.Pp
+.Bd -literal
+enum ag_blend_func {
+	AG_ALPHA_OVERLAY,		/* dA = sA+dA */
+	AG_ALPHA_SRC,			/* dA = sA */
+	AG_ALPHA_DST,			/* dA = dA */
+	AG_ALPHA_ONE_MINUS_DST,		/* dA = 1-dA */
+	AG_ALPHA_ONE_MINUS_SRC		/* dA = 1-sA */
+};
+.Ed
 .Sh STRUCTURE DATA
 For the
 .Ft AG_Surface
