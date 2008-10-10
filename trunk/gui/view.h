@@ -487,6 +487,8 @@ AG_RectIntersect(const AG_Rect *a, const AG_Rect *b)
 	x.y = AG_MAX(a->y, b->y);
 	x.w = AG_MIN((a->x+a->w), (b->x+b->w)) - x.x;
 	x.h = AG_MIN((a->y+a->h), (b->y+b->h)) - x.y;
+	if (x.w < 0) { x.w = 0; }
+	if (x.h < 0) { x.h = 0; }
 	return (x);
 }
 static __inline__ SDL_Rect
