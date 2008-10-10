@@ -34,10 +34,6 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define ID_INVALID ((Uint)-1)
-#define VISROW(tv,i) ((tv)->visible.items[i].row)
-#define VISDEPTH(tv,i) ((tv)->visible.items[i].depth)
-
 /*
  * Worker function for foreach_visible_column()
  * Should return 0 if foreach_ should stop.
@@ -69,6 +65,9 @@ static void lost_focus(AG_Event *);
 static void columnresize(AG_Event *);
 static void columnmove(AG_Event *);
 
+#define ID_INVALID ((Uint)-1)
+#define VISROW(tv,i) ((tv)->visible.items[i].row)
+#define VISDEPTH(tv,i) ((tv)->visible.items[i].depth)
 
 AG_Tableview *
 AG_TableviewNew(void *parent, Uint flags, AG_TableviewDataFn data_callback,
@@ -80,15 +79,10 @@ AG_TableviewNew(void *parent, Uint flags, AG_TableviewDataFn data_callback,
 	AG_ObjectInit(tv, &agTableviewClass);
 	tv->data_callback = data_callback;
 	tv->sort_callback = sort_callback;
+	tv->flags |= flags;
 
-	if (  flags & AG_TABLEVIEW_HFILL)	{ AG_ExpandHoriz(tv); }
-	if (  flags & AG_TABLEVIEW_VFILL)	{ AG_ExpandVert(tv); }
-	if (  flags & AG_TABLEVIEW_REORDERCOLS)	{ tv->reordercols = 1; }
-	if (!(flags & AG_TABLEVIEW_NOHEADER))	{ tv->header = 1; }
-	if (!(flags & AG_TABLEVIEW_NOSORT))	{ tv->sort = 1; }
-	if (  flags & AG_TABLEVIEW_REORDERCOLS)	{ tv->reordercols = 1; }
-	if (  flags & AG_TABLEVIEW_SELMULTI)	{ tv->selmulti = 1; }
-	if (  flags & AG_TABLEVIEW_POLLED)	{ tv->polled = 1; }
+	if (flags & AG_TABLEVIEW_HFILL)	{ AG_ExpandHoriz(tv); }
+	if (flags & AG_TABLEVIEW_VFILL)	{ AG_ExpandVert(tv); }
 
 	if (flags & AG_TABLEVIEW_HORIZ) {
 		tv->sbar_h = AG_ScrollbarNew(tv, AG_SCROLLBAR_HORIZ, 0);
@@ -106,17 +100,10 @@ Init(void *obj)
 
 	tv->data_callback = NULL;
 	tv->sort_callback = NULL;
-	tv->selmulti = 0;
-	tv->selsingle = 0;
-	tv->selnoclear = 0;
-	tv->reordercols = 0;
-	tv->header = 0;
-	tv->locked = 0;
-	tv->sort = 0;
-	tv->polled = 0;
+	tv->flags = 0;
 	tv->r = AG_RECT(0,0,0,0);
 
-	tv->head_height = tv->header ? agTextFontHeight : 0;
+	tv->head_height = agTextFontHeight;
 	tv->row_height = agTextFontHeight+2;
 	tv->dblclicked = 0;
 	tv->sbar_v = AG_ScrollbarNew(tv, AG_SCROLLBAR_VERT, 0);
@@ -174,10 +161,20 @@ Init(void *obj)
 void
 AG_TableviewSizeHint(AG_Tableview *tv, const char *text, int nitems)
 {
+	AG_ObjectLock(tv);
 	AG_TextSize(text, &tv->prew, NULL);
 	tv->preh = tv->head_height + (tv->row_height * nitems);
+	AG_ObjectUnlock(tv);
 }
 
+void
+AG_TableviewSetColHeight(AG_Tableview *tv, int h)
+{
+	AG_ObjectLock(tv);
+	tv->head_height = h;
+	AG_WindowUpdate(AG_ParentWindow(tv));
+	AG_ObjectUnlock(tv);
+}
 
 AG_TableviewCol *
 AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
@@ -191,9 +188,6 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 
 	AG_ObjectLock(tv);
 
-	if (tv->locked)
-		return (NULL);
-
 	/* column identifier must be unique */
 	for (i = 0; i < tv->columncount; i++) {
 		if (tv->column[i].cid == cid)
@@ -203,32 +197,17 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 	tv->column = Realloc(tv->column, (tv->columncount+1) *
 					 sizeof(AG_TableviewCol));
 	col = &tv->column[tv->columncount];
+	col->flags = flags;
+	col->mousedown = 0;
 	col->cid = cid;
 	col->idx = tv->columncount;
-	col->mousedown = 0;
 	tv->columncount++;
 
 	if (tv->columncount == 1)
 		tv->expanderColumn = cid;
 
-	/* initialize flags */
-	col->mousedown = 0;
-	col->moving = 0;
-	col->editable = 0;
-	col->resizable = 1;
-	col->update = 0;
-	col->fill = 0;
-	col->dynamic = 0;
-
-	/* set requested flags */
-	if (flags & AG_TABLEVIEW_COL_EDITABLE)	col->editable = 1;
-	if (flags & AG_TABLEVIEW_COL_KEYEDIT)	tv->enterEdit = cid;
-	if (flags & AG_TABLEVIEW_COL_NORESIZE)	col->resizable = 0;
-	if (flags & AG_TABLEVIEW_COL_DYNAMIC)	col->dynamic = 1;
-	if (flags & AG_TABLEVIEW_COL_EXPANDER)	tv->expanderColumn = cid;
-	if (flags & AG_TABLEVIEW_COL_FILL)		col->fill = 1;
-	if ((flags & AG_TABLEVIEW_COL_UPDATE) &&
-	    (flags & AG_TABLEVIEW_COL_DYNAMIC))	col->update = 1;
+	if (flags & AG_TABLEVIEW_COL_KEYEDIT) { tv->enterEdit = cid; }
+	if (flags & AG_TABLEVIEW_COL_EXPANDER) { tv->expanderColumn = cid; }
 
 	/* column label */
 	if (label == NULL) {
@@ -251,7 +230,7 @@ AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
 		}
 	} else {
 		col->w = 6;
-		col->fill = 1;
+		col->flags |= AG_TABLEVIEW_COL_FILL;
 	}
 
 	tv->visible.dirty = 1;
@@ -291,8 +270,8 @@ AG_TableviewSetUpdate(AG_Tableview *tv, Uint ms)
 }
 
 AG_TableviewRow *
-AG_TableviewRowAdd(AG_Tableview *tv, int flags,
-    AG_TableviewRow *parent, void *userp, AG_TableviewRowID rid, ...)
+AG_TableviewRowAdd(AG_Tableview *tv, Uint flags, AG_TableviewRow *parent,
+    void *userp, AG_TableviewRowID rid, ...)
 {
 	AG_TableviewRow *row;
 	Uint i;
@@ -300,19 +279,20 @@ AG_TableviewRowAdd(AG_Tableview *tv, int flags,
 	AG_TableviewColID cid;
 
 	AG_ObjectLock(tv);
-	tv->locked = 1;
 
-	/* verify the row identifier is not in use */
-	if (row_get(&tv->children, rid)) {
+	if (row_get(&tv->children, rid)) {		/* Row ID in use */
 		AG_ObjectUnlock(tv);
 		return (NULL);
 	}
+	
 	row = Malloc(sizeof(AG_TableviewRow));
 	row->cell = Malloc(sizeof(struct ag_tableview_cell)*tv->columncount);
 	row->userp = userp;
-	row->dynamic = !(flags & AG_TABLEVIEW_STATIC_ROW);
+	row->selected = 0;
+	row->flags = flags;
+	row->parent = parent;
+	TAILQ_INIT(&row->children);
 
-	/* initialize cells */
 	for (i = 0; i < tv->columncount; i++) {
 		row->cell[i].text = NULL;
 		row->cell[i].image = NULL;
@@ -348,15 +328,7 @@ AG_TableviewRowAdd(AG_Tableview *tv, int flags,
 	}
 	va_end(ap);
 
-	TAILQ_INIT(&row->children);
-
-	/* initialize flags */
-	row->selected = 0;
-	row->expanded = 0;
-
-	/* set requested flags */
 	row->rid = rid;
-	row->parent = parent;
 
 	if (parent) {
 		TAILQ_INSERT_TAIL(&parent->children, row, siblings);
@@ -413,7 +385,7 @@ AG_TableviewRowDel(AG_Tableview *tv, AG_TableviewRow *row)
 	} else {
 		TAILQ_REMOVE(&tv->children, row, siblings);
 	}
-	if (tv->polled) {
+	if (tv->flags & AG_TABLEVIEW_POLLED) {
 		TAILQ_INSERT_TAIL(&tv->backstore, row, backstore);
 		goto out;
 	}
@@ -474,7 +446,7 @@ void
 AG_TableviewRowSelect(AG_Tableview *tv, AG_TableviewRow *row)
 {
 	AG_ObjectLock(tv);
-	if (!tv->selmulti) {
+	if (!(tv->flags & AG_TABLEVIEW_SELMULTI)) {
 		AG_TableviewRowDeselectAll(tv, NULL);
 	}
 	row->selected = 1;
@@ -496,7 +468,7 @@ AG_TableviewRowGet(AG_Tableview *tv, AG_TableviewRowID rid)
 void
 AG_TableviewRowSelectAll(AG_Tableview *tv, AG_TableviewRow *root)
 {
-	if (!tv->selmulti)
+	if (!(tv->flags & AG_TABLEVIEW_SELMULTI))
 		return;
 
 	AG_ObjectLock(tv);
@@ -524,8 +496,8 @@ void
 AG_TableviewRowExpand(AG_Tableview *tv, AG_TableviewRow *in)
 {
 	AG_ObjectLock(tv);
-	if (!in->expanded) {
-		in->expanded = 1;
+	if (!(in->flags & AG_TABLEVIEW_ROW_EXPANDED)) {
+		in->flags |= AG_TABLEVIEW_ROW_EXPANDED;
 		if (visible(in)) {
 			tv->expandedrows +=
 			    count_visible_descendants(&in->children, 0);
@@ -539,8 +511,8 @@ void
 AG_TableviewRowCollapse(AG_Tableview *tv, AG_TableviewRow *in)
 {
 	AG_ObjectLock(tv);
-	if (in->expanded) {
-		in->expanded = 0;
+	if (in->flags & AG_TABLEVIEW_ROW_EXPANDED) {
+		in->flags &= ~(AG_TABLEVIEW_ROW_EXPANDED);
 		if (visible(in)) {
 			tv->expandedrows -=
 			    count_visible_descendants(&in->children, 0);
@@ -644,7 +616,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		fill_cols = 0;
 		nonfill_width = 0;
 		for (i = 0; i < tv->columncount; i++) {
-			if (tv->column[i].fill) {
+			if (tv->column[i].flags & AG_TABLEVIEW_COL_FILL) {
 				fill_cols++;
 			} else {
 				nonfill_width += tv->column[i].w;
@@ -655,7 +627,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		             fill_cols;
 
 		for (i = 0; i < tv->columncount; i++) {
-			if (tv->column[i].fill)
+			if (tv->column[i].flags & AG_TABLEVIEW_COL_FILL)
 				tv->column[i].w = fill_width;
 		}
 	}
@@ -828,7 +800,7 @@ view_changed(AG_Tableview *tv)
 
 	/* render dynamic columns */
 	for (i = 0; i < tv->columncount; i++)
-		if (tv->column[i].dynamic)
+		if (tv->column[i].flags & AG_TABLEVIEW_COL_DYNAMIC)
 			render_dyncolumn(tv, i);
 
 	tv->visible.redraw_last = SDL_GetTicks();
@@ -857,7 +829,8 @@ view_changed_check(AG_Tableview *tv, struct ag_tableview_rowq* in, int depth,
 			}
 		}
 
-		if (row->expanded && filled+x < tv->visible.count)
+		if (row->flags & AG_TABLEVIEW_ROW_EXPANDED &&
+		    filled+x < tv->visible.count)
 			x += view_changed_check(tv, &row->children, depth + 1,
 			    filled + x, seen);
 
@@ -897,7 +870,8 @@ select_all(struct ag_tableview_rowq * children)
 
 	TAILQ_FOREACH(row, children, siblings) {
 		row->selected = 1;
-		if (row->expanded && !TAILQ_EMPTY(&row->children))
+		if (row->flags & AG_TABLEVIEW_ROW_EXPANDED &&
+		    !TAILQ_EMPTY(&row->children))
 			select_all(&row->children);
 	}
 }
@@ -926,7 +900,8 @@ deselect_all(struct ag_tableview_rowq *children)
 
 	TAILQ_FOREACH(row, children, siblings) {
 		row->selected = 0;
-		if (row->expanded && !TAILQ_EMPTY(&row->children))
+		if (row->flags & AG_TABLEVIEW_ROW_EXPANDED &&
+		    !TAILQ_EMPTY(&row->children))
 			deselect_all(&row->children);
 	}
 }
@@ -943,7 +918,8 @@ count_visible_descendants(struct ag_tableview_rowq *in, int i)
 
 	TAILQ_FOREACH(row, in, siblings) {
 		j++;
-		if (row->expanded && !TAILQ_EMPTY(&row->children))
+		if (row->flags & AG_TABLEVIEW_ROW_EXPANDED &&
+		    !TAILQ_EMPTY(&row->children))
 			j = count_visible_descendants(&row->children, j);
 	}
 	return (j);
@@ -977,7 +953,7 @@ visible(AG_TableviewRow *in)
 	AG_TableviewRow *row = in->parent;
 
 	while (row != NULL) {
-		if (!row->expanded) {
+		if (!(row->flags & AG_TABLEVIEW_ROW_EXPANDED)) {
 			return (0);
 		}
 		row = row->parent;
@@ -996,7 +972,7 @@ render_dyncolumn(AG_Tableview *tv, Uint idx)
 
 		if (row == NULL)
 			break;
-		if (!row->dynamic)
+		if (!(row->flags & AG_TABLEVIEW_ROW_DYNAMIC))
 			continue;
 
 		if (row->cell[cidx].image != NULL)
@@ -1020,26 +996,26 @@ clicked_header(AG_Tableview *tv, int x1, int x2, Uint32 idx,
 
 	/* click on the CENTER */
 	if (x >= x1+3 && x <= x2-3) {
-		if (tv->reordercols) {
+		if (tv->flags & AG_TABLEVIEW_REORDERCOLS) {
 			AG_SchedEvent(NULL, tv, 400, "column-move",
 				       "%i,%i", idx, x1);
 		}
-		if (tv->reordercols || tv->sort)
+		if (tv->flags & AG_TABLEVIEW_REORDERCOLS ||
+		    tv->flags & AG_TABLEVIEW_SORT)
 			tv->column[idx].mousedown = 1;
 	}
 	/* click on the LEFT resize line */
 	else if (idx-1 >= 0 && idx-1 < tv->columncount &&
-	         tv->column[idx-1].resizable &&
+	         tv->column[idx-1].flags & AG_TABLEVIEW_COL_RESIZABLE &&
 		 idx > 0 &&
 		 x < x1+3) {
 		AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
 		    "%i,%i", idx-1, x1-tv->column[idx-1].w);
 	}
 	/* click on the RIGHT resize line */
-	else if (idx >= 0 && idx < tv->columncount &&
-	         tv->column[idx].resizable &&
-		 (x > x2-3 ||
-		  (idx == tv->columncount-1 && x < x2+3))) {
+	else if ((idx >= 0 && idx < tv->columncount) &&
+	         (tv->column[idx].flags & AG_TABLEVIEW_COL_RESIZABLE) &&
+		 (x > x2-3 || (idx == tv->columncount-1 && x < x2+3))) {
 		AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
 		    "%i,%i", idx, x1);
 	}
@@ -1091,8 +1067,8 @@ clicked_row(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 	    !TAILQ_EMPTY(&row->children) &&
 	    x > (x1+4+(depth*(ts+4))) &&
 	    x < (x1+4+(depth*(ts+4))+ts)) {
-		if (row->expanded) {
-			row->expanded = 0;
+		if (row->flags & AG_TABLEVIEW_ROW_EXPANDED) {
+			row->flags &= ~(AG_TABLEVIEW_ROW_EXPANDED);
 			/*
 			 * XXX deselect_all could return count to save
 			 * redundant call to count_visible_descendants
@@ -1101,7 +1077,7 @@ clicked_row(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 			tv->expandedrows -= count_visible_descendants(
 			    &row->children, 0);
 		} else {
-			row->expanded = 1;
+			row->flags |= AG_TABLEVIEW_ROW_EXPANDED;
 			tv->expandedrows += count_visible_descendants(
 			    &row->children, 0);
 		}
@@ -1115,7 +1091,7 @@ clicked_row(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 			row->selected = 0;
 			AG_PostEvent(NULL, tv, "tableview-deselect", "%p", row);
 		} else {
-			if (!tv->selmulti) {
+			if (!(tv->flags & AG_TABLEVIEW_SELMULTI)) {
 				deselect_all(&tv->children);
 			}
 			row->selected = 1;
@@ -1176,7 +1152,7 @@ draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 	int y;
 
 	/* draw label for this column */
-	if (tv->header) {
+	if (tv->head_height > 0) {
 		int xLbl;
 
 		STYLE(tv)->TableColumnHeaderBackground(tv, idx,
@@ -1192,7 +1168,8 @@ draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 		    0);
 	}
 	/* check for the need to update */
-	if (*update && tv->column[idx].update)
+	if (*update &&
+	    tv->column[idx].flags & AG_TABLEVIEW_COL_DYNAMIC)
 		render_dyncolumn(tv, idx);
 
 	/* draw cells in this column */
@@ -1211,7 +1188,8 @@ draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 			if (!TAILQ_EMPTY(&VISROW(tv,j)->children)) {
 				STYLE(tv)->TreeSubnodeIndicator(tv,
 				    AG_RECT(x, y+tw/2, tw, tw),
-				    VISROW(tv,j)->expanded);
+				    (VISROW(tv,j)->flags &
+				     AG_TABLEVIEW_ROW_EXPANDED));
 			}
 			x += tw+4;
 		}
@@ -1226,7 +1204,9 @@ draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 	AG_PopClipRect();
 
 	/* Fill the Remaining Space in column heading */
-	if (tv->header && idx == tv->columncount-1 && x2 < tv->r.w) {
+	if (tv->head_height > 0 &&
+	    idx == tv->columncount-1 &&
+	    x2 < tv->r.w) {
 		STYLE(tv)->TableColumnHeaderBackground(tv, -1,
 		    AG_RECT(x2, 0, tv->r.w-x2, tv->head_height), 0);
 	}
@@ -1266,8 +1246,8 @@ mousebuttonup(AG_Event *event)
 		 * if the column wasn't moved and the mouse is still within
 		 * the column's header, do sort work
 		 */
-		if (tv->sort &&
-		    tv->column[i].moving == 0 &&
+		if (tv->flags & AG_TABLEVIEW_SORT &&
+		    !(tv->column[i].flags & AG_TABLEVIEW_COL_MOVING) &&
 		    coord_y < tv->head_height &&
 		    coord_x >= left &&
 		    coord_x < (left+tv->column[i].w)) {
@@ -1284,7 +1264,7 @@ mousebuttonup(AG_Event *event)
 			//XXX - run sort here
 		}
 		tv->column[i].mousedown = 0;
-		tv->column[i].moving = 0;
+		tv->column[i].flags &= ~(AG_TABLEVIEW_COL_MOVING);
 	}
 }
 
@@ -1297,7 +1277,7 @@ mousebuttondown(AG_Event *event)
 
 	AG_WidgetFocus(tv);
 
-	if (tv->header && coord_y < tv->head_height) {
+	if (tv->head_height > 0 && coord_y < tv->head_height) {
 		/* a mouse down on the column header */
 		foreach_visible_column(tv, clicked_header, &coord_x, NULL);
 	} else {
@@ -1362,7 +1342,7 @@ columnmove(AG_Event *event)
 	 * if we haven't mouseupped by the time this event is called, set
 	 * moving to indicate we won't sort.
 	 */
-	tv->column[col].moving = 1;
+	tv->column[col].flags |= AG_TABLEVIEW_COL_MOVING;
 
 	AG_MouseGetState(&x, NULL);
 	x -= WIDGET(tv)->cx;
