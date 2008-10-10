@@ -31,16 +31,15 @@ enum {
 
 typedef struct ag_tableview_col {
 	AG_TableviewColID cid;
-	Uint idx;			/* Index into row->cell[] */
-
-	/* Flags */
-	int mousedown :1;
-	int moving :1;
-	int editable :1;
-	int resizable :1;
-	int update :1;
-	int fill :1;
-	int dynamic :1;
+	Uint idx;				/* Index into row->cell[] */
+	Uint flags;
+#define AG_TABLEVIEW_COL_DYNAMIC	0x01	/* Updates periodically */
+#define AG_TABLEVIEW_COL_EXPANDER	0x02	/* Should hold +/- boxes */
+#define AG_TABLEVIEW_COL_RESIZABLE	0x04	/* User-resizable */
+#define AG_TABLEVIEW_COL_MOVING		0x08	/* Being displaced */
+#define AG_TABLEVIEW_COL_KEYEDIT	0x10
+#define AG_TABLEVIEW_COL_FILL		0x20	/* Expand to remaining space */
+	int mousedown;				/* Mouse click */
 
 	char label[AG_TABLEVIEW_LABEL_MAX];	/* Header text */
 	AG_Surface *label_img;			/* Rendered header text */
@@ -56,9 +55,12 @@ typedef struct ag_tableview_row {
 		char *text;
 		AG_Surface *image;
 	} *cell;
-	int selected : 1;
-	int expanded : 1;
-	int dynamic : 1;
+
+	int selected;				/* Row is selected */
+	Uint flags;
+#define AG_TABLEVIEW_ROW_EXPANDED	0x01	/* Tree expanded */
+#define AG_TABLEVIEW_ROW_DYNAMIC	0x02	/* Update dynamically */
+
 	struct ag_tableview_row *parent;
 	struct ag_tableview_rowq children;
 	void *userp;
@@ -78,14 +80,17 @@ typedef struct ag_tableview {
 	AG_TableviewSortFn sort_callback;	/* Callback to compare */
 	
 	/* Flags */
-	int selmulti :1;		/* Allow more than 1 select */
-	int selsingle :1;
-	int selnoclear :1;		/* Keep at least 1 selection */
-	int reordercols :1;		/* Allow column reordering */
-	int header :1;			/* Draw column headings */
-	int sort :1;			/* Do sort procedures */
-	int locked :1;			/* Table format is set */
-	int polled :1;
+	Uint flags;
+#define AG_TABLEVIEW_SELMULTI	 0x001	/* Allow multiple selections */
+#define AG_TABLEVIEW_REORDERCOLS 0x002	/* Allow column reordering */
+#define AG_TABLEVIEW_HEADER	 0x004	/* Draw column headings */
+#define AG_TABLEVIEW_SORT	 0x008	/* Enable sorting */
+#define AG_TABLEVIEW_POLLED	 0x010	/* Polling mode */
+#define AG_TABLEVIEW_HORIZ	 0x020	/* Allow horizontal scrolling */
+#define AG_TABLEVIEW_HFILL	 0x040
+#define AG_TABLEVIEW_VFILL	 0x080
+#define AG_TABLEVIEW_EXPAND	 (AG_TABLEVIEW_HFILL|AG_TABLEVIEW_VFILL)
+
 
 	int head_height;		/* Header height */
 	int row_height;			/* Per-row height */
@@ -126,28 +131,6 @@ typedef struct ag_tableview {
 	AG_Rect r;				/* View area */
 } AG_Tableview;
 
-/* Flags for AG_TableviewColAdd() */
-#define AG_TABLEVIEW_COL_EDITABLE	0x01	/* Cells are editable */
-#define AG_TABLEVIEW_COL_KEYEDIT	0x02	/* Begin edits on enter */
-#define AG_TABLEVIEW_COL_NORESIZE	0x04	/* Disallow resizing */
-#define AG_TABLEVIEW_COL_UPDATE		0x08	/* Updates periodically */
-#define AG_TABLEVIEW_COL_DYNAMIC	0x20	/* Uses the callback */
-#define AG_TABLEVIEW_COL_EXPANDER	0x40	/* Should hold +/- boxes */
-#define AG_TABLEVIEW_COL_FILL		0x80	/* Fill remaining space */
-
-/* Flags for AG_TableviewNew() */
-#define AG_TABLEVIEW_SELMULTI	 0x001 /* Multiple selections (ctrl/shift) */
-#define AG_TABLEVIEW_SELSINGLE	 0x002
-#define AG_TABLEVIEW_SELNOCLEAR	 0x004
-#define AG_TABLEVIEW_HORIZ	 0x008 /* Can scroll horizontally if needed */
-#define AG_TABLEVIEW_REORDERCOLS 0x010 /* Users may reorder the columns */
-#define AG_TABLEVIEW_NOHEADER	 0x020 /* do not display the header */
-#define AG_TABLEVIEW_NOSORT	 0x040 /* do not sort. header not clickable */
-#define AG_TABLEVIEW_POLLED	 0x080 /* remember selections */
-#define AG_TABLEVIEW_HFILL	 0x100
-#define AG_TABLEVIEW_VFILL	 0x200
-#define AG_TABLEVIEW_EXPAND	 (AG_TABLEVIEW_HFILL|AG_TABLEVIEW_VFILL)
-
 /* Flags for tableview_add_row() */
 #define AG_TABLEVIEW_STATIC_ROW	0x01	/* Don't update row dynamically */
 
@@ -159,12 +142,13 @@ AG_Tableview	*AG_TableviewNew(void *, Uint, AG_TableviewDataFn,
 void		 AG_TableviewSizeHint(AG_Tableview *, const char *, int);
 #define		 AG_TableviewPrescale AG_TableviewSizeHint
 void		 AG_TableviewSetUpdate(AG_Tableview *, Uint);
+void		 AG_TableviewSetColHeight(AG_Tableview *, int);
 
 AG_TableviewCol *AG_TableviewColAdd(AG_Tableview *, int, AG_TableviewColID,
 			            const char *, const char *);
 void		 AG_TableviewColSelect(AG_Tableview *, AG_TableviewColID);
 AG_TableviewRow *AG_TableviewRowGet(AG_Tableview *, AG_TableviewRowID);
-AG_TableviewRow *AG_TableviewRowAdd(AG_Tableview *, int, AG_TableviewRow *,
+AG_TableviewRow *AG_TableviewRowAdd(AG_Tableview *, Uint, AG_TableviewRow *,
 			            void *, AG_TableviewRowID, ...);
 AG_TableviewRow *AG_TableviewRowSelected(AG_Tableview *);
 
@@ -186,7 +170,7 @@ void AG_TableviewCellPrintf(AG_Tableview *, AG_TableviewRow *, int,
 #define	AG_TableviewRowToggle(TV, ROW)				\
 	do {							\
 		if (NULL == (ROW)) break			\
-		if ((ROW)->flags & TABLEVIEW_ROW_EXPANDED)	\
+		if ((ROW)->flags & AG_TABLEVIEW_ROW_EXPANDED)	\
 			AG_TableviewRowCollapse(TV, (ROW));	\
 		else						\
 			AG_TableviewRowExpand(TV, (ROW));	\
@@ -225,7 +209,7 @@ void AG_TableviewCellPrintf(AG_Tableview *, AG_TableviewRow *, int,
 	do {								\
 		AG_TableviewRow *_row = AG_TableviewRowGet((TV), (ID)); \
 		if (NULL == _row) break;				\
-		if (_row->flags & TABLEVIEW_ROW_EXPANDED) {		\
+		if (_row->flags & AG_TABLEVIEW_ROW_EXPANDED) {		\
 			AG_TableviewRowCollapse((TV), _row);		\
 		} else {						\
 			AG_TableviewRowExpand((TV), _row);		\
