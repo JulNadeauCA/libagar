@@ -64,11 +64,12 @@ LoadBMP(AG_Event *event)
 	}
 
 	/*
-	 * Place an AG_Pixmap(3) widget inside of an AG_Scrollview(3) to
-	 * display the image.
+	 * Place an AG_Pixmap(3) widget inside of an AG_Scrollview(3) so
+	 * the user can pan the view.
 	 */
-	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_BY_MOUSE);
 	AG_PixmapFromSurfaceScaled(sv, 0, bmp, bmp->w, bmp->h);
+	AG_Expand(sv);
 
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
 	AG_WindowShow(win);
@@ -109,8 +110,9 @@ LoadIMG(AG_Event *event)
 	 * Place an AG_Pixmap(3) widget inside of an AG_Scrollview(3) to
 	 * display the image.
 	 */
-	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
+	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_BY_MOUSE);
 	AG_PixmapFromSurface(sv, 0, AG_SurfaceFromSDL(img));
+	AG_Expand(sv);
 
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 60, 60);
 	AG_WindowShow(win);
