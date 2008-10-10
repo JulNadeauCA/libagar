@@ -38,8 +38,9 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget displays a set of items in list or tree format.
-Typically, the contents are dynamically updated.
+widget is designed to display the contents of an existing tree or list
+structure.
+Typically, the contents are generated from a polling routine.
 .Pp
 Note that
 .Xr AG_Table 3
@@ -438,8 +439,8 @@ For the
 .Ft AG_Tlist
 object:
 .Pp
-.Bl -tag -compact -width "LIST items "
-.It Ft LIST items
+.Bl -tag -compact -width "TAILQ items "
+.It Ft TAILQ items
 List of all
 .Ft AG_TlistItem
 objects (read-only, items are writeable).
@@ -457,17 +458,14 @@ Selection flag.
 .It Ft void *p1
 User pointer.
 .It Ft const char *cat
-User "category" string.
-Usage is application-specific, typically used for popup menus.
+User "category" string (application-specific usage).
 .It Ft char text[]
-Text string to display.
-Limited to
+Text to display (limit of
 .Dv AG_TLIST_LABEL_MAX
-bytes.
+bytes).
 .It Ft int depth
-Depth in tree (only applicable if
-.Dv AG_TLIST_TREE
-is set).
+Depth in tree (for
+.Dv AG_TLIST_TREE ) .
 .It Ft Uint8 flags
 Item flags (see
 .Dq ITEM FLAGS
@@ -487,41 +485,38 @@ Disallow user selection of this item.
 If popup menus are in effect, disable popups for this item.
 .El
 .Sh EXAMPLES
-The following code fragment displays an array of strings.
-A callback function is used such that updates in
-.Va items
-are reflected by
-.Nm .
+The following code fragment displays an existing tree structure.
+A callback function is used such that updates in the tree are
+reflected instantly by the widget.
 .Bd -literal -offset indent
-char *items[] = { "foo", "bar", NULL };
+MyTreeItem *myTreeRoot;
 
 void
 UpdateItems(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
-	char **item;
+	MyTreeItem *item = AG_PTR(1);
+	MyTreeItem *child;
+	AG_TlistItem *ti;
 
-	AG_TlistBegin(tl);
-	for (item = &items[0]; *item != NULL; item++) {
-		AG_TlistAdd(tl, NULL, "%s", *item);
+	if (item == myTreeRoot)
+		AG_TlistBegin(tl);
+
+	ti = AG_TlistAddPtr(tl, NULL, item->text, item);
+	ti->flags |= AG_TLIST_HAS_CHILDREN;
+	if (ti->flags & AG_TLIST_EXPANDED) {
+		LIST_FOREACH(child, &item->children, children) {
+			AG_Event ev;
+			AG_EventArgs(&ev, "%p,%p", tl, child);
+			UpdateItems(&ev);
+		}
 	}
-	AG_TlistEnd(tl);
+
+	if (item == myTreeRoot)
+		AG_TlistEnd(tl);
 }
 
-AG_TlistNewPolled(NULL, 0, UpdateItems, NULL);
-.Ed
-.Pp
-The following code fragment produces a tree-like display:
-.Bd -literal -offset indent
-AG_Tlist *tl;
-AG_TlistItem *ti;
-
-tl = AG_TlistNewPolled(NULL, 0, UpdateItems, NULL);
-AG_TlistAdd(tl, NULL, "Trunk");
-ti = AG_TlistAdd(tl, NULL, "Branch 1");
-ti->depth = 1;
-ti = AG_TlistAdd(tl, NULL, "Branch 2");
-ti->depth = 1;
+AG_TlistNewPolled(NULL, 0, UpdateItems, "%p", myTreeRoot);
 .Ed
 .Pp
 See
