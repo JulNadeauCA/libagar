@@ -51,6 +51,7 @@ AG_CheckboxNew(void *parent, Uint flags, const char *fmt, ...)
 		Vsnprintf(text, sizeof(text), fmt, args);
 		va_end(args);
 		cb->lbl = AG_LabelNewString(cb, 0, text);
+		AG_LabelValign(cb->lbl, AG_TEXT_MIDDLE);
 	}
 	
 	if (flags & AG_CHECKBOX_SET) {
@@ -278,7 +279,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	}
 	if (cb->lbl != NULL) {
 		aLbl.x = cb->btnSize + cb->spacing;
-		aLbl.y = HEIGHT(cb)/2 - HEIGHT(cb->lbl)/2;
+		aLbl.y = 0;
 		aLbl.w = a->w - aLbl.x;
 		aLbl.h = a->h;
 		AG_WidgetSizeAlloc(cb->lbl, &aLbl);
