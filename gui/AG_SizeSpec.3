@@ -37,28 +37,32 @@
 .Ed
 .Sh DESCRIPTION
 Some functions related to Agar widgets accept specially parsed string
-arguments which are used to specify relative sizes of visual elements.
-For instance, the
+arguments which are used to specify relative sizes of visual elements
+which cannot be automatically determined by Agar.
+.Pp
+For example, the
+.Xr AG_Table 3
+widget provides an
 .Xr AG_TableAddCol 3
-function takes an optional
+function which accepts an optional
 .Fa size_spec
 argument for defining the initial width of a column.
 .Pp
-Sizes can be given in pixels ("Npx"), percentiles ("N%"), or width of text
-as rendered using the default font ("<Text>").
-.Sh EXAMPLES
+The following formats are allowed:
 .Bl -tag -width "<Some text> "
-.It "100px"
-Size to 100 pixels.
-.It "50%"
-Size to 50 percent.
-The meaning is dependent on the widget.
-For example, for
+.It Npx
+Number of pixels.
+For example, "100px" will size to 100 pixels.
+.It <Some text>
+Size to the minimum amount of space required to completely display the
+given text, as rendered using the default font.
+.It N%
+Percentage of space (widget-specific).
+For example, "50%" in
 .Xr AG_TableAddCol 3
-this is relative to the full width of the table.
-.It "<Some text>"
-Size to the width in pixels of "Some text", as rendered using the current
-default font.
+will size a new column to half of the available space.
+.It -
+Expand to fill any available space remaining (widget-specific).
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
