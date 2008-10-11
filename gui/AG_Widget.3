@@ -120,13 +120,26 @@ The
 .Fn size_allocate
 callback notifies the widget that it has been allocated a new size or position
 within its parent.
-The widget is not allowed to modify the allocation at this point, but if
-.Fn size_allocate
-returns -1, the special flag
+The
+.Ft AG_SizeAlloc
+parameter specifies the new allocation.
+It is also safe to assume that when
+.Fa size_allocate
+is invoked, the
+.Va w ,
+.Va h ,
+.Va x ,
+.Va y
+members of the
+.Nm
+structure are already set to the new allocated position and size.
+.Pp
+Widgets are not allowed to modify their geometry from
+.Fn size_allocate ,
+but operation can return -1 to reject the allocated geometry.
+This sets the
 .Dv AG_WIDGET_UNDERSIZE
-is automatically set, preventing
-.Fn draw
-from being invoked until the widget is rescaled to an acceptable size.
+flag, disabling rendering of the widget with its current geometry.
 .Sh WIDGET SIZING
 .nr nS 1
 .Ft "void"
