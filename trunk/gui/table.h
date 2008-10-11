@@ -93,7 +93,8 @@ typedef struct ag_table_col {
 #define AG_TABLE_VFILL		 0x10
 #define AG_TABLE_EXPAND		 (AG_TABLE_HFILL|AG_TABLE_VFILL)
 	int selected;			/* Entire column is selected */
-	int w;				/* Width in pixel */
+	int w;				/* Width (px) */
+	int wPct;			/* Width (percent or -1) */
 	int x;				/* Current position */
 	int surface;			/* Text surface mapping */
 	AG_TableCell *pool;		/* Pool of inactive cells */
@@ -108,21 +109,19 @@ typedef struct ag_table {
 #define AG_TABLE_REDRAW_CELLS	0x04	/* Redraw the cells */
 #define AG_TABLE_POLL		0x08	/* Table is polled */
 #define AG_TABLE_HIGHLIGHT_COLS	0x40	/* Highlight column selection */
-#define AG_TABLE_CELL_CLIPPING	0x80	/* Clipping is done per-cell (default
-					   is per-column) */
 #define AG_TABLE_MULTIMODE	(AG_TABLE_MULTI|AG_TABLE_MULTITOGGLE)
-	enum ag_table_selmode selmode;	/* Selection mode */
-	void *selected_row;		/* Default `selected-row' binding */
-	void *selected_col;		/* Default `selected-col' binding */
-	void *selected_cell;		/* Default `selected-cell' binding */
-	int prew, preh;			/* Size hint */
+	enum ag_table_selmode selMode;	/* Selection mode */
+	int wHint, hHint;		/* Size hint */
 
 	const char *sep;		/* Field separators */
-	int wTbl;			/* Width of table display area */
-	int row_h;			/* Row height in pixels */
-	int col_h;			/* Column header height in pixels */
-	int xoffs;			/* Column display offset */
-	int moffs;			/* Row offset (for poll function) */
+	int hRow;			/* Row height (px) */
+	int hCol;			/* Column header height (px) */
+	int wColMin;			/* Minimum column width (px) */
+	int wColDefault;		/* "Default" pixel width to use in
+					   size requisition for "%" and FILL
+					   columns */
+	int xOffs;			/* Column display offset */
+	int mOffs;			/* Row offset (for poll function) */
 	AG_TableCol *cols;		/* Column data */
 	AG_TableCell **cells;		/* Row data */
 	Uint n;				/* Number of columns */
@@ -134,10 +133,13 @@ typedef struct ag_table {
 	AG_Event *poll_ev;		/* Poll event */
 	AG_Event *dblClickRowEv;	/* Row double click callback */
 	AG_Event *dblClickColEv;	/* Column double click callback */
-	int dblClickedRow;		/* For row double click */
-	int dblClickedCol;		/* For column double click */
+	AG_Event *dblClickCellEv;	/* Cell double click callback */
+	int dblClickedRow;		/* For SEL_ROWS */
+	int dblClickedCol;		/* For SEL_COLS */
+	int dblClickedCell;		/* For SEL_CELLS */
 	Uint32 wheelTicks;		/* For wheel acceleration */
 	AG_Timeout incTo, decTo;	/* Timers for keyboard motion */
+	AG_Rect r;			/* View area */
 
 	AG_SLIST_HEAD(,ag_table_popup) popups; /* Registered popup menus */
 } AG_Table;
@@ -154,9 +156,12 @@ void	  AG_TableSizeHint(AG_Table *, int, int);
 void AG_TableSetSeparator(AG_Table *, const char *);
 void AG_TableSetRowDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
 void AG_TableSetColDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
+void AG_TableSetCellDblClickFn(AG_Table *, AG_EventFn, const char *, ...);
 void AG_TableSetColHeight(AG_Table *, int);
 void AG_TableSetRowHeight(AG_Table *, int);
-void AG_TableSetCellClipping(AG_Table *, int);
+void AG_TableSetColMin(AG_Table *, int);
+void AG_TableSetDefaultColWidth(AG_Table *, int);
+void AG_TableSetSelectionMode(AG_Table *, enum ag_table_selmode);
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
 int	  AG_TablePoolAdd(AG_Table *, Uint, Uint);
@@ -191,7 +196,6 @@ int	  AG_TableCompareCells(const AG_TableCell *, const AG_TableCell *);
 
 AG_MenuItem *AG_TableSetPopup(AG_Table *, int, int);
 int	     AG_TableSaveASCII(AG_Table *, FILE *, char);
-void	     AG_TableUpdateScrollbars(AG_Table *);
 __END_DECLS
 
 #include "close_code.h"
