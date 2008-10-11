@@ -1759,6 +1759,9 @@ AG_WidgetParseSizeSpec(const char *input, int *w)
 	p = &spec[len-1];
 
 	switch (*p) {
+	case '-':
+		*w = 0;
+		return (AG_WIDGET_FILL);
 	case '%':
 		*p = '\0';
 		*w = (int)strtol(spec, NULL, 10);
