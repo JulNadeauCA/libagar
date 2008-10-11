@@ -152,16 +152,20 @@ SizeColumns(AG_Table *t)
 	AG_TableCol *tc, *tcFill = NULL;
 	Uint n;
 
+	t->wTot = 0;
 	for (n = 0; n < t->n; n++) {
 		tc = &t->cols[n];
 		if (tc->wPct != -1) {
 			tc->w = tc->wPct*t->r.w/100;
+			t->wTot += tc->w;
 			tc->wPct = -1;
 			continue;
 		}
 		if (tc->flags & AG_TABLE_COL_FILL) {
 			tcFill = tc;
-			tc->flags &= ~(AG_TABLE_COL_FILL);
+			tcFill->flags &= ~(AG_TABLE_COL_FILL);
+		} else {
+			t->wTot += tc->w;
 		}
 	}
 	if (tcFill != NULL) {
@@ -171,6 +175,7 @@ SizeColumns(AG_Table *t)
 			if (tc != tcFill)
 				tcFill->w -= tc->w;
 		}
+		t->wTot += tcFill->w;
 	}
 }
 
@@ -181,50 +186,47 @@ SizeColumns(AG_Table *t)
 static void
 UpdateScrollbars(AG_Table *t)
 {
-	AG_WidgetBinding *maxb, *offsetb;
-	int *max, *offset;
-	int n;
+	AG_WidgetBinding *bValue, *bMax;
+	int *value, *max;
 
 	t->mVis = t->r.h/t->hRow;
 	if (t->r.h % t->hRow) { t->mVis++; }
 
 	if (t->vbar != NULL) {
-		maxb = AG_WidgetGetBinding(t->vbar, "max", &max);
-		offsetb = AG_WidgetGetBinding(t->vbar, "value", &offset);
+		bMax = AG_WidgetGetBinding(t->vbar, "max", &max);
+		bValue = AG_WidgetGetBinding(t->vbar, "value", &value);
 		if ((*max = LAST_VISIBLE(t)) < 0) {
 			*max = 0;
 		}
-		if (*offset > *max) {
-			*offset = *max;
-			AG_WidgetBindingChanged(offsetb);
-		} else if (*offset < 0) {
-			*offset = 0;
-			AG_WidgetBindingChanged(offsetb);
+		if (*value > *max) {
+			*value = *max;
+		} else if (*value < 0) {
+			*value = 0;
 		}
 		if (t->m > 0 && t->mVis > 0 && (t->mVis-1) < t->m) {
 			AG_ScrollbarSetBarSize(t->vbar,
 			    (t->mVis-1)*(HEIGHT(t->vbar) - t->vbar->wButton*2) /
 			    t->m);
 		} else {
-			AG_ScrollbarSetBarSize(t->vbar, -1);	/* Full range */
+			AG_ScrollbarSetBarSize(t->vbar, -1);
 		}
-		AG_WidgetUnlockBinding(offsetb);
-		AG_WidgetUnlockBinding(maxb);
+		AG_WidgetUnlockBinding(bValue);
+		AG_WidgetUnlockBinding(bMax);
 	}
 	if (t->hbar != NULL) {
-		int wTot = 0;
-		for (n = 0; n < t->n; n++) {
-			AG_TableCol *tc = &t->cols[n];
-			wTot += tc->w;
-		}
-		AG_WidgetSetInt(t->hbar, "max", wTot);
-		if (wTot == 0 || wTot <= WIDTH(t) || t->r.w == 0) {
+		SizeColumns(t);
+		if (t->wTot == 0 || t->wTot <= t->r.w || t->r.w == 0) {
 			AG_ScrollbarSetBarSize(t->hbar, -1);
 		} else {
 			AG_ScrollbarSetBarSize(t->hbar,
-			    wTot*(WIDTH(t->hbar) - t->hbar->wButton*2) /
-			    t->r.w);
+			    t->r.w*(WIDTH(t->hbar) - t->hbar->wButton*2) /
+			    t->wTot);
 		}
+		bValue = AG_WidgetGetBinding(t->hbar, "value", &value);
+		if ((t->wTot - t->r.w - *value) < 0) {
+			*value = MAX(0, t->wTot - t->r.w);
+		}
+		AG_WidgetUnlockBinding(bValue);
 	}
 }
 
@@ -518,7 +520,7 @@ SelectionVisible(AG_Table *t)
 	if (t->poll_ev != NULL) {
 		t->poll_ev->handler(t->poll_ev);
 	}
-	for (n = 0, x = t->xOffs;
+	for (n = 0, x = -t->xOffs;
 	     n < t->n && x < t->r.w;
 	     n++) {
 		AG_TableCol *col = &t->cols[n];
@@ -563,7 +565,7 @@ Draw(void *obj)
 	rCol.h = t->hCol + t->r.h - 2;
 	rCell.h = t->hRow;
 
-	for (n = 0, rCell.x = t->xOffs;
+	for (n = 0, rCell.x = -t->xOffs;
 	     n < t->n && rCell.x < t->r.w;
 	     n++) {
 		AG_TableCol *col = &t->cols[n];
@@ -571,10 +573,9 @@ Draw(void *obj)
 		if (col->w <= 0) {
 			continue;
 		}
+		rCell.w = col->w;
 		rCol.w = ((rCell.x + col->w) < t->r.w) ?
 		         col->w : (t->r.w - rCell.x);
-
-		rCell.w = col->w;
 		rCol.x = rCell.x;
 
 		/* Column header and separator */
@@ -585,16 +586,17 @@ Draw(void *obj)
 			    rCol.h,
 			    AG_COLOR(TABLE_LINE_COLOR));
 		}
+		
+		AG_PushClipRect(t, rCol);
+
 		STYLE(t)->TableColumnHeaderBackground(t, n,
 		    AG_RECT(rCol.x, 0, rCol.w, t->hCol),
 		    col->selected);
-		
-		AG_PushClipRect(t, rCol);
 
 		/* Column header label */
 		if (col->surface != -1) {
 			AG_WidgetBlitSurface(t, col->surface,
-			    rCell.x + rCol.w/2 - WSURFACE(t,col->surface)->w/2,
+			    rCell.x + col->w/2 - WSURFACE(t,col->surface)->w/2,
 			    t->hCol/2 - WSURFACE(t,col->surface)->h/2);
 		}
 
@@ -854,7 +856,9 @@ AG_TableEnd(AG_Table *t)
 		tc->pool = NULL;
 		tc->mpool = 0;
 	}
-	UpdateScrollbars(t);
+	if (t->r.h > 0 && t->r.w > 0) {
+		UpdateScrollbars(t);
+	}
 	AG_ObjectUnlock(t);
 }
 
@@ -897,7 +901,9 @@ ColumnRightClick(AG_Table *t, int px)
 	int cx;
 	int x = px - (COLUMN_RESIZE_RANGE/2);
 
-	for (n = 0, cx = t->xOffs; n < t->n; n++) {
+	for (n = 0, cx = -t->xOffs;
+	     n < t->n;
+	     n++) {
 		AG_TableCol *tc = &t->cols[n];
 		int x2 = cx+tc->w;
 		AG_TablePopup *tp;
@@ -922,7 +928,7 @@ ColumnLeftClick(AG_Table *t, int px)
 	int multi = SelectingMultiple(t);
 	Uint n;
 
-	for (n = 0, x1 = t->xOffs;
+	for (n = 0, x1 = -t->xOffs;
 	     n < t->n;
 	     n++) {
 		AG_TableCol *tc = &t->cols[n];
@@ -975,19 +981,18 @@ CellLeftClick(AG_Table *t, int mc, int x)
 	AG_TableCol *tc;
 	Uint m, n, i, j, nc;
 	
-	for (nc = 0; nc < t->n; nc++) {
+	for (nc=0; nc < t->n; nc++) {
 		tc = &t->cols[nc];
-		if ((x - t->xOffs) > tc->x &&
-		    (x - t->xOffs) < tc->x+tc->w)
+		if ((x + t->xOffs) > tc->x &&
+		    (x + t->xOffs) < tc->x+tc->w)
 			break;
 	}
-
-	printf("click at %d,%d\n", mc, nc);
+	if (nc == t->n) { nc = t->n-1; }
 
 	switch (t->selMode) {
 	case AG_TABLE_SEL_ROWS:
 		if (SelectingRange(t)) {
-			for (m = 0; m < t->m; m++) {
+			for (m=0; m < t->m; m++) {
 				if (AG_TableRowSelected(t,m))
 					break;
 			}
@@ -995,22 +1000,22 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				break;
 			}
 			if (m < mc) {
-				for (i = m; i <= mc; i++)
+				for (i=m; i <= mc; i++)
 					AG_TableSelectRow(t, i);
 			} else if (m > mc) {
-				for (i = mc; i <= m; i++)
+				for (i=mc; i <= m; i++)
 					AG_TableSelectRow(t, i);
 			} else {
 				AG_TableSelectRow(t, mc);
 			}
 		} else if (SelectingMultiple(t)) {
-			for (n = 0; n < t->n; n++) {
+			for (n=0; n < t->n; n++) {
 				c = &t->cells[mc][n];
 				c->selected = !c->selected;
 			}
 		} else {
-			for (m = 0; m < t->m; m++) {
-				for (n = 0; n < t->n; n++) {
+			for (m=0; m < t->m; m++) {
+				for (n=0; n < t->n; n++) {
 					c = &t->cells[m][n];
 					c->selected = ((int)m == mc);
 				}
@@ -1035,8 +1040,8 @@ CellLeftClick(AG_Table *t, int mc, int x)
 		break;
 	case AG_TABLE_SEL_CELLS:
 		if (SelectingRange(t)) {
-			for (m = 0; m < t->m; m++) {
-				for (n = 0; n < t->n; n++) {
+			for (m=0, n=0; m < t->m; m++) {
+				for (n=0; n < t->n; n++) {
 					if (AG_TableCellSelected(t,m,n))
 						break;
 				}
@@ -1047,11 +1052,11 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				break;
 			}
 			if (m < mc && n < nc) {
-				for (i = n; i <= nc; i++)
+				for (i=n; i <= nc; i++)
 					for (j = m; j <= mc; j++)
 						AG_TableSelectCell(t, j,i);
 			} else if (m > mc && n > nc) {
-				for (i = nc; i <= n; i++)
+				for (i=nc; i <= n; i++)
 					for (j = mc; j <= m; j++)
 						AG_TableSelectCell(t, j,i);
 			} else {
@@ -1061,8 +1066,8 @@ CellLeftClick(AG_Table *t, int mc, int x)
 			c = &t->cells[mc][nc];
 			c->selected = !c->selected;
 		} else {
-			for (m = 0; m < t->m; m++) {
-				for (n = 0; n < t->n; n++) {
+			for (m=0; m < t->m; m++) {
+				for (n=0; n < t->n; n++) {
 					c = &t->cells[m][n];
 					c->selected = ((int)m == mc) &&
 					              ((int)n == nc);
@@ -1088,7 +1093,7 @@ CellLeftClick(AG_Table *t, int mc, int x)
 		break;
 	case AG_TABLE_SEL_COLS:
 		if (SelectingRange(t)) {
-			for (n = 0; n < t->n; n++) {
+			for (n=0; n < t->n; n++) {
 				if (AG_TableColSelected(t,n))
 					break;
 			}
@@ -1096,21 +1101,21 @@ CellLeftClick(AG_Table *t, int mc, int x)
 				break;
 			}
 			if (n < nc) {
-				for (i = n; i <= nc; i++)
+				for (i=n; i <= nc; i++)
 					AG_TableSelectCol(t, i);
 			} else if (n > nc) {
-				for (i = nc; i <= n; i++)
+				for (i=nc; i <= n; i++)
 					AG_TableSelectCol(t, i);
 			} else {
 				AG_TableSelectCol(t, nc);
 			}
 		} else if (SelectingMultiple(t)) {
-			for (n = 0; n < t->n; n++) {
+			for (n=0; n < t->n; n++) {
 				tc = &t->cols[n];
 				tc->selected = !tc->selected;
 			}
 		} else {
-			for (n = 0; n < t->n; n++) {
+			for (n=0; n < t->n; n++) {
 				tc = &t->cols[n];
 				tc->selected = ((int)n == nc);
 			}
@@ -1142,7 +1147,7 @@ CellRightClick(AG_Table *t, int m, int px)
 	int x = px - (COLUMN_RESIZE_RANGE/2), cx;
 	Uint n;
 
-	for (n = 0, cx = t->xOffs;
+	for (n = 0, cx = -t->xOffs;
 	     n < t->n;
 	     n++) {
 		AG_TableCol *tc = &t->cols[n];
@@ -1181,7 +1186,7 @@ OverColumnResizeControl(AG_Table *t, int px)
 	if (px < 0 || px > t->r.w) {
 		return (0);
 	}
-	for (n = 0, cx = t->xOffs;
+	for (n = 0, cx = -t->xOffs;
 	     n < t->n;
 	     n++) {
 		int x2 = cx + t->cols[n].w;
@@ -1279,7 +1284,6 @@ MouseButtonDown(AG_Event *event)
 			if (*offs < 0) {
 				*offs = 0;
 			}
-			AG_WidgetBindingChanged(offsb);
 			AG_WidgetUnlockBinding(offsb);
 		}
 		break;
@@ -1293,7 +1297,6 @@ MouseButtonDown(AG_Event *event)
 			if (*offs > LAST_VISIBLE(t)) {
 				*offs = LAST_VISIBLE(t);
 			}
-			AG_WidgetBindingChanged(offsb);
 			AG_WidgetUnlockBinding(offsb);
 		}
 		break;
@@ -1589,18 +1592,15 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 			tc->wPct = tc->w;
 			tc->w = 0;
 			break;
+		case AG_WIDGET_FILL:
+			tc->flags |= AG_TABLE_COL_FILL;
+			break;
 		default:
 			break;
 		}
 	} else {
-		if (name != NULL) {
+		if (name != NULL)
 			tc->flags |= AG_TABLE_COL_FILL;
-#ifdef DEBUG
-			for (n = 0; n < t->n; n++)
-				if (t->cols[n].flags & AG_TABLE_COL_FILL)
-					AG_FatalError("Multiple FILL columns");
-#endif
-		}
 	}
 
 	/* Resize the row arrays. */
@@ -1883,14 +1883,17 @@ Init(void *obj)
 	t->hHint = t->hCol + t->hRow*2;
 	t->r = AG_RECT(0,0,0,0);
 	t->selMode = AG_TABLE_SEL_ROWS;
+	t->wTot = 0;
 
 	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);
 	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0);
 	AG_WidgetSetInt(t->hbar, "min", 0);
 	AG_WidgetBindInt(t->hbar, "value", &t->xOffs);
 	AG_WidgetBindInt(t->hbar, "visible", &t->r.w);
+	AG_WidgetBindInt(t->hbar, "max", &t->wTot);
 
 	AG_WidgetSetFocusable(t->vbar, 0);
+	AG_WidgetSetFocusable(t->hbar, 0);
 
 	t->poll_ev = NULL;
 	t->nResizing = -1;
