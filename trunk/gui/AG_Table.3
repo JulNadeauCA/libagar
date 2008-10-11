@@ -74,7 +74,13 @@ provides tree support, but no multi-column functionality.
 .Fn AG_TableSetRowHeight "AG_Table *tbl" "int height"
 .Pp
 .Ft "void"
-.Fn AG_TableSetCellClipping "AG_Table *tbl" "int enable"
+.Fn AG_TableSetColMin "AG_Table *tbl" "int width"
+.Pp
+.Ft "void"
+.Fn AG_TableSetDefaultColWidth "AG_Table *tbl" "int width"
+.Pp
+.Ft "void"
+.Fn AG_TableSetSelectionMode "AG_Table *tbl" "enum ag_table_selmode mode"
 .Pp
 .Ft "void"
 .Fn AG_TableSetSeparator "AG_Table *tbl" "const char *sep"
@@ -150,10 +156,30 @@ sets the size of column headers in pixels.
 sets the size of rows in pixels.
 In both cases, the default is dependent on the height of the default font.
 .Pp
-.Fn AG_TableSetCellClipping
-enables clipping on the contents of individual cells.
-By default, clipping is done on a per-column basis to reduce overhead
-associated with clipping rectangle setup.
+.Fn AG_TableSetColMin
+sets the minimum allowed column width, in pixels.
+The default is a small value intended to prevent the user from resizing
+columns to zero size.
+If existing columns are smaller than the specified value,
+.Fn AG_TableSetColMin
+will resize them.
+.Pp
+.Fn AG_TableSetDefaultColWidth
+specifies a "default" width in pixels, to use during initial size requisition
+for columns using FILL or a size specification in "%".
+.Pp
+.Fn AG_TableSetSelectionMode
+defines the effect of cursor selections on the table.
+Possible values for
+.Fa mode
+are:
+.Bd -literal
+enum ag_table_selmode {
+	AG_TABLE_SEL_ROWS,	/* Select entire rows */
+	AG_TABLE_SEL_CELLS,	/* Select individual cells */
+	AG_TABLE_SEL_COLS	/* Select entire columns */
+};
+.Ed
 .Pp
 .Fn AG_TableSetSeparator
 changes the set of accepted field-separator characters in
@@ -181,15 +207,21 @@ are both valid indices, the menu is shown when clicking on the given cell.
 If both indices are -1, the menu is shown when clicking on any cell.
 .Pp
 The
-.Fn AG_TableSetRowDblClickFn
-and
+.Fn AG_TableSetRowDblClickFn ,
 .Fn AG_TableSetColDblClickFn
-functions register a callback routine to invoke whenever the user double
-clicks on a row or a column.
-The row or column index (an
-.Ft int )
-is passed to the callback function.
-.Pp
+and
+.Fn AG_TableSetCellDblClickFn
+functions register a callback routine to invoke upon double-click on a
+row, column or cell, respectively, depending on the current selection mode.
+The callback routine for
+.Fn AG_TableSetRowDblClickFn
+is passed the row index as an
+.Ft int
+argument.
+.Fn AG_TableSetColDblClickFn
+is passed the column index and
+.Fn AG_TableSetCellDblClickFn
+is passed the row and column indices in order.
 .Sh TABLE FUNCTIONS
 .nr nS 1
 .Ft "void"

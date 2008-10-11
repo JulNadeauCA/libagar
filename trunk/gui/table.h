@@ -140,6 +140,7 @@ typedef struct ag_table {
 	Uint32 wheelTicks;		/* For wheel acceleration */
 	AG_Timeout incTo, decTo;	/* Timers for keyboard motion */
 	AG_Rect r;			/* View area */
+	int wTot;			/* Total width for all columns */
 
 	AG_SLIST_HEAD(,ag_table_popup) popups; /* Registered popup menus */
 } AG_Table;
