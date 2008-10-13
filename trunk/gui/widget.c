@@ -1431,28 +1431,23 @@ AG_WidgetDraw(void *p)
 	    !OccultedWidget(wid) &&
 	    WIDGET_OPS(wid)->draw != NULL) {
 		WIDGET_OPS(wid)->draw(wid);
-	}
 #if 0
-	if (!AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
-		static Uint8 c1[4] = { 200, 0, 0, 25 };
-		AG_Rect r;
+		if (!AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
+			static Uint8 c1[4] = { 200, 0, 0, 25 };
+			AG_Rect r = AG_Rect2ToRect(wid->rSens);
 
-		r.x = wid->rSens.x1;
-		r.y = wid->rSens.y1;
-		r.w = wid->rSens.w;
-		r.h = wid->rSens.h;
-
-		if (r.x != wid->rView.x1 || r.y != wid->rView.y1 ||
-		    r.w != wid->rView.w || r.h != wid->rView.h) {
-			r.x -= wid->rView.x1;
-			r.y -= wid->rView.y1;
-			AG_DrawRectBlended(wid, r,
-			    c1, AG_ALPHA_SRC);
-			AG_DrawRectOutline(wid, r,
-			    AG_MapRGB(agVideoFmt,100,0,0));
+			if (r.x != wid->rView.x1 || r.y != wid->rView.y1 ||
+			    r.w != wid->rView.w || r.h != wid->rView.h) {
+				r.x -= wid->rView.x1;
+				r.y -= wid->rView.y1;
+				AG_DrawRectBlended(wid, r,
+				    c1, AG_ALPHA_SRC);
+				AG_DrawRectOutline(wid, r,
+				    AG_MapRGB(agVideoFmt,100,0,0));
+			}
 		}
-	}
 #endif
+	}
 	AG_ObjectUnlock(wid);
 }
 
@@ -1575,6 +1570,26 @@ AG_WidgetBlendPixelRGBA(void *p, int x, int y, Uint8 c[4], AG_BlendFn fn)
 		    wid->rView.y1 + y,
 		    c[0], c[1], c[2], c[3], fn);
 	}
+}
+
+/*
+ * Test whether view coordinates x,y lie in widget's sensitivity rectangle
+ * (intersected against those of all parent widgets).
+ */
+int
+AG_WidgetSensitive(void *obj, int x, int y)
+{
+	AG_Widget *wt = AGWIDGET(obj);
+	AG_Widget *wtParent = wt;
+	AG_Rect2 rx = wt->rSens;
+
+	while ((wtParent = OBJECT(wtParent)->parent) != NULL) {
+		if (AG_ObjectIsClass(wtParent, "AG_Widget:AG_Window:*")) {
+			break;
+		}
+		rx = AG_RectIntersect2(&rx, &wtParent->rSens);
+	}
+	return AG_RectInside2(&rx, x,y);
 }
 
 /*

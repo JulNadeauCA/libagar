@@ -40,7 +40,8 @@ main(int argc, char *argv[])
 
 	win = AG_WindowNew(0);
 
-	/* Create a Scrollview container. Allow panning of X and Y. */
+
+	AG_ButtonNew(win, 0, "Foo");
 	sv = AG_ScrollviewNew(win, AG_SCROLLVIEW_EXPAND);
 
 	/* Create a bunch of buttons under the Scrollview. */
@@ -49,8 +50,9 @@ main(int argc, char *argv[])
 		AG_BoxSetSpacing(hBox, 1);
 		AG_BoxSetPadding(hBox, 0);
 		for (x = 0; x < 20; x++)
-			AG_ButtonNew(hBox, 0, "%c%d", (char)(0x41+x), y);
+			AG_ButtonNew(hBox, 0, "Foo\n%c\n%d", (char)(0x41+x), y);
 	}
+	AG_ButtonNew(win, 0, "Bar");
 
 	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MC, 50, 50);
 	AG_WindowShow(win);

@@ -494,6 +494,24 @@ AG_Rect2ToRect(AG_Rect2 r2)
 	return (r);
 }
 
+/* Resize a Rect. */
+static __inline__ void
+AG_RectSize(AG_Rect *r, int w, int h)
+{
+	r->w = w;
+	r->h = h;
+}
+
+/* Resize a Rect2. */
+static __inline__ void
+AG_RectSize2(AG_Rect2 *r, int w, int h)
+{
+	r->w = w;
+	r->x2 = r->x1+w;
+	r->h = h;
+	r->y2 = r->y1+h;
+}
+
 /* Convert a Rect to a Rect2. */
 static __inline__ AG_Rect2
 AG_RectToRect2(AG_Rect r)
@@ -558,6 +576,26 @@ AG_RectCompare2(const AG_Rect2 *a, const AG_Rect2 *b)
 	        a->y1 == b->y1 &&
 		a->w == b->w &&
 		a->h == b->h) ? 0:1;
+}
+
+/* Test whether a point intersects a Rect. */
+static __inline__ int
+AG_RectInside(const AG_Rect *r, int x, int y)
+{
+	return (x >= r->x &&
+	        y >= r->y &&
+		x < r->x+r->w &&
+		y < r->y+r->h); 
+}
+
+/* Test whether a point intersects a Rect2. */
+static __inline__ int
+AG_RectInside2(const AG_Rect2 *r, int x, int y)
+{
+	return (x >= r->x1 &&
+	        y >= r->y1 &&
+		x < r->x2 &&
+		y < r->y2); 
 }
 
 /* Convert an AG_Rect to an equivalent SDL_Rect. */
