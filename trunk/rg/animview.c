@@ -165,8 +165,8 @@ MouseButtonDown(AG_Event *event)
 
 	if (button == SDL_BUTTON_RIGHT &&
 	    y < WIDGET(av)->h - WIDGET(av->btns.play)->h)
-		OpenMenu(av, WIDGET(av)->cx + x,
-		             WIDGET(av)->cy + y);
+		OpenMenu(av, WIDGET(av)->rView.x1 + x,
+		             WIDGET(av)->rView.y1 + y);
 }
 
 static void

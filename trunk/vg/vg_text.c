@@ -180,8 +180,8 @@ RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		glPushMatrix();
-		glTranslatef((float)(WIDGET(vv)->cx + x),
-		             (float)(WIDGET(vv)->cy + y),
+		glTranslatef((float)(WIDGET(vv)->rView.x1 + x),
+		             (float)(WIDGET(vv)->rView.y1 + y),
 			     0.0f);
 		glRotatef(VG_Degrees(VG_Atan2(v1.y-v2.y, v1.x-v2.x)),
 		    0.0f, 0.0f, 1.0f);

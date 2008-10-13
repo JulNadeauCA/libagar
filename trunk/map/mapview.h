@@ -137,8 +137,8 @@ void MAP_ViewSelectTool(MAP_View *, MAP_Tool *, void *);
 static __inline__ void
 MAP_ViewPixel2i(MAP_View *mv, int x, int y)
 {
-	int dx = AGWIDGET(mv)->cx + x;
-	int dy = AGWIDGET(mv)->cy + y;
+	int dx = AGWIDGET(mv)->rView.x1 + x;
+	int dy = AGWIDGET(mv)->rView.y1 + y;
 
 	if (mv->col.a < 255) {
 		AG_BLEND_RGBA2_CLIPPED(agView->v, dx, dy,

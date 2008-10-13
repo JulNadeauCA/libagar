@@ -354,8 +354,8 @@ merge_cursor(MAP_Tool *t, AG_Rect *rd)
 
 				TAILQ_FOREACH(r, &sn->nrefs, nrefs) {
 					MAP_ItemDraw(mv->map, r,
-					    WIDGET(mv)->cx + dx,
-					    WIDGET(mv)->cy + dy,
+					    WIDGET(mv)->rView.x1 + dx,
+					    WIDGET(mv)->rView.y1 + dy,
 					    mv->cam);
 					rv = 0;
 				}

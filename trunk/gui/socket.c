@@ -344,8 +344,8 @@ IconButtonUp(AG_Event *event)
 {
 	AG_Icon *icon = AG_PTR(1);
 	AG_Window *wDND = icon->wDND;
-	int x = WIDGET(wDND)->cx;
-	int y = WIDGET(wDND)->cy;
+	int x = WIDGET(wDND)->rView.x1;
+	int y = WIDGET(wDND)->rView.y1;
 	AG_Socket *sock;
 	int detach = 1;
 
@@ -414,8 +414,10 @@ MouseButtonDown(AG_Event *event)
 		AG_ObjectUnlock(px);
 
 		AG_WindowSetGeometry(icon->wDND,
-		    WIDGET(icon)->cx, WIDGET(icon)->cy,
-		    WIDGET(icon)->w,  WIDGET(icon)->h);
+		    WIDGET(icon)->rView.x1,
+		    WIDGET(icon)->rView.y1,
+		    WIDTH(icon),
+		    HEIGHT(icon));
 		AG_WindowShow(icon->wDND);
 	}
 }
@@ -509,8 +511,8 @@ AG_SocketInsertIcon(AG_Socket *sock, AG_Icon *icon)
 
 	a.w = WIDGET(sock)->w;
 	a.h = WIDGET(sock)->h;
-	a.x = WIDGET(sock)->cx;
-	a.y = WIDGET(sock)->cy;
+	a.x = WIDGET(sock)->rView.x1;
+	a.y = WIDGET(sock)->rView.y1;
 	AG_WidgetSizeAlloc(icon, &a);
 	AG_WidgetUpdateCoords(icon, a.x, a.y);
 	

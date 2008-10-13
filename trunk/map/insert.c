@@ -295,15 +295,15 @@ insert_cursor(void *p, AG_Rect *rd)
 		sy0 = ins->mvTmp->esel.y;
 		sx1 = sx0 + ins->mvTmp->esel.w - 1;
 		sy1 = sy0 + ins->mvTmp->esel.h - 1;
-		dx0 = WIDGET(mv)->cx + rd->x;
-		dy0 = WIDGET(mv)->cy + rd->y;
+		dx0 = WIDGET(mv)->rView.x1 + rd->x;
+		dy0 = WIDGET(mv)->rView.y1 + rd->y;
 	} else {
 		sx0 = 0;
 		sy0 = 0;
 		sx1 = mSrc->mapw-1;
 		sy1 = mSrc->maph-1;
-		dx0 = WIDGET(mv)->cx + rd->x - mSrc->origin.x*AGMTILESZ(mv);
-		dy0 = WIDGET(mv)->cy + rd->y - mSrc->origin.y*AGMTILESZ(mv);
+		dx0 = WIDGET(mv)->rView.x1+rd->x - mSrc->origin.x*AGMTILESZ(mv);
+		dy0 = WIDGET(mv)->rView.y1+rd->y - mSrc->origin.y*AGMTILESZ(mv);
 	}
 	if (ins->snap_mode == RG_SNAP_NONE) {
 		dx0 += mv->cxoffs*MAPTILESZ/AGMTILESZ(mv);

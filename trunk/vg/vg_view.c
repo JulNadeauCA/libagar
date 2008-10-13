@@ -507,12 +507,12 @@ DrawGrid(VG_View *vv, const VG_Grid *grid)
 	ival = grid->ivalView;
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		x0 = WIDGET(vv)->cx + (int)(vv->x)%ival;
-		y = WIDGET(vv)->cy + (int)(vv->y)%ival;
+		x0 = WIDGET(vv)->rView.x1 + (int)(vv->x)%ival;
+		y = WIDGET(vv)->rView.y1 + (int)(vv->y)%ival;
 		glBegin(GL_POINTS);
 		glColor3ub(grid->color.r, grid->color.g, grid->color.b);
-		for (; y < WIDGET(vv)->cy2; y += ival) {
-			for (x = x0; x < WIDGET(vv)->cx2; x += ival)
+		for (; y < WIDGET(vv)->rView.y2; y += ival) {
+			for (x = x0; x < WIDGET(vv)->rView.x2; x += ival)
 				glVertex2s(x, y);
 		}
 		glEnd();
@@ -524,8 +524,8 @@ DrawGrid(VG_View *vv, const VG_Grid *grid)
 		x0 = (int)(vv->x)%ival;
 		y = (int)(vv->y)%ival;
 		c32 = VG_MapColorRGB(grid->color);
-		for (; y < WIDGET(vv)->cy2; y += ival) {
-			for (x = x0; x < WIDGET(vv)->cx2; x += ival)
+		for (; y < WIDGET(vv)->rView.y2; y += ival) {
+			for (x = x0; x < WIDGET(vv)->rView.x2; x += ival)
 				AG_DrawPixel(vv, x, y, c32);
 		}
 	}

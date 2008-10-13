@@ -1323,7 +1323,7 @@ columnresize(AG_Event *event)
 	int x;
 
 	AG_MouseGetState(&x, NULL);
-	x -= WIDGET(tv)->cx;
+	x -= WIDGET(tv)->rView.x1;
 	tv->column[col].w = (x-left > tv->column[col].label_img->w) ?
 	    (x-left) : tv->column[col].label_img->w;
 
@@ -1345,7 +1345,7 @@ columnmove(AG_Event *event)
 	tv->column[col].flags |= AG_TABLEVIEW_COL_MOVING;
 
 	AG_MouseGetState(&x, NULL);
-	x -= WIDGET(tv)->cx;
+	x -= WIDGET(tv)->rView.x1;
 
 	/* dragging to the left */
 	if ((tv->column[col].w < tv->column[col-1].w &&

@@ -371,8 +371,8 @@ MouseButtonDown(AG_Event *event)
 		if (button == SDL_BUTTON_MIDDLE) {
 			if (tv->tv_feature.ft->ops->menu != NULL) {
 				RG_FeatureOpenMenu(tv,
-				    WIDGET(tv)->cx + x,
-				    WIDGET(tv)->cy + y);
+				    WIDGET(tv)->rView.x1 + x,
+				    WIDGET(tv)->rView.y1 + y);
 			}
 		} else if (button == SDL_BUTTON_RIGHT) {
 			tv->scrolling++;
@@ -406,8 +406,8 @@ MouseButtonDown(AG_Event *event)
 	if (button == SDL_BUTTON_MIDDLE &&
 	    tv->state == RG_TILEVIEW_TILE_EDIT) {
 		RG_TileOpenMenu(tv,
-		    WIDGET(tv)->cx+x,
-		    WIDGET(tv)->cy+y);
+		    WIDGET(tv)->rView.x1 + x,
+		    WIDGET(tv)->rView.y1 + y);
 	}
 }
 
@@ -1050,22 +1050,22 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 	if (!agView->opengl) {
 		for (dy = 0; dy < tv->pxsz; dy++) {
 			for (dx = 0; dx < tv->pxsz; dx++) {
-				int cx = x1+dx;
-				int cy = y1+dy;
+				int xView = x1+dx;
+				int yView = y1+dy;
 
-				if (cx < WIDGET(tv)->cx ||
-				    cy < WIDGET(tv)->cy ||
-				    cx > WIDGET(tv)->cx2 ||
-				    cy > WIDGET(tv)->cy2)
+				if (xView < WIDGET(tv)->rView.x1 ||
+				    yView < WIDGET(tv)->rView.y1 ||
+				    xView > WIDGET(tv)->rView.x2 ||
+				    yView > WIDGET(tv)->rView.y2)
 					continue;
 
 				if (tv->c.a < 255) {
 					AG_BLEND_RGBA2_CLIPPED(agView->v,
-					    cx, cy,
+					    xView, yView,
 					    tv->c.r, tv->c.g, tv->c.b, tv->c.a,
 					    AG_ALPHA_OVERLAY);
 				} else {
-					AG_VIEW_PUT_PIXEL2_CLIPPED(cx, cy,
+					AG_VIEW_PUT_PIXEL2_CLIPPED(xView, yView,
 					    tv->c.pc);
 				}
 			}
@@ -1077,13 +1077,13 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 		GLboolean svBlendBit;
 		GLint svBlendSrc, svBlendDst;
 
-		if (x1 > WIDGET(tv)->cx2)	return;
-		if (y1 > WIDGET(tv)->cy2)	return;
-		if (x1 < WIDGET(tv)->cx)	x1 = WIDGET(tv)->cx;
-		if (y1 < WIDGET(tv)->cy)	y1 = WIDGET(tv)->cy;
+		if (x1 > WIDGET(tv)->rView.x2)	return;
+		if (y1 > WIDGET(tv)->rView.y2)	return;
+		if (x1 < WIDGET(tv)->rView.x1)	x1 = WIDGET(tv)->rView.x1;
+		if (y1 < WIDGET(tv)->rView.y1)	y1 = WIDGET(tv)->rView.y1;
 		if (x1 >= x2 || y1 >= y2)	return;
-		if (x2 > WIDGET(tv)->cx2)	x2 = WIDGET(tv)->cx2;
-		if (y2 > WIDGET(tv)->cy2)	y2 = WIDGET(tv)->cy2;
+		if (x2 > WIDGET(tv)->rView.x2)	x2 = WIDGET(tv)->rView.x2;
+		if (y2 > WIDGET(tv)->rView.y2)	y2 = WIDGET(tv)->rView.y2;
 		
 		if (tv->c.a < 255) {
 			glGetBooleanv(GL_BLEND, &svBlendBit);
@@ -1201,13 +1201,13 @@ RG_TileviewRect2(RG_Tileview *tv, int x, int y, int w, int h)
 		GLboolean svBlendBit;
 		GLint svBlendSrc, svBlendDst;
 
-		if (x1 > WIDGET(tv)->cx2)	return;
-		if (y1 > WIDGET(tv)->cy2)	return;
-		if (x1 < WIDGET(tv)->cx)	x1 = WIDGET(tv)->cx;
-		if (y1 < WIDGET(tv)->cy)	y1 = WIDGET(tv)->cy;
+		if (x1 > WIDGET(tv)->rView.x2)	return;
+		if (y1 > WIDGET(tv)->rView.y2)	return;
+		if (x1 < WIDGET(tv)->rView.x1)	x1 = WIDGET(tv)->rView.x1;
+		if (y1 < WIDGET(tv)->rView.y1)	y1 = WIDGET(tv)->rView.y1;
 		if (x1 >= x2 || y1 >= y2)	return;
-		if (x2 > WIDGET(tv)->cx2)	x2 = WIDGET(tv)->cx2;
-		if (y2 > WIDGET(tv)->cy2)	y2 = WIDGET(tv)->cy2;
+		if (x2 > WIDGET(tv)->rView.x2)	x2 = WIDGET(tv)->rView.x2;
+		if (y2 > WIDGET(tv)->rView.y2)	y2 = WIDGET(tv)->rView.y2;
 
 		if (tv->c.a < 255) {
 			glGetBooleanv(GL_BLEND, &svBlendBit);
@@ -1325,25 +1325,27 @@ RG_TileviewRect2o(RG_Tileview *tv, int x, int y, int w, int h)
 			glColor3ub(tv->c.r, tv->c.g, tv->c.b);
 		}
 
-		if (y1 > WIDGET(tv)->cy && y1 < WIDGET(tv)->cy2 &&
-		    x1 < WIDGET(tv)->cx2 && x2 > WIDGET(tv)->cx) {
-			glVertex2i(MAX(x1, WIDGET(tv)->cx), y1);
-			glVertex2i(MIN(x2, WIDGET(tv)->cx2), y1);
+		if (y1 > WIDGET(tv)->rView.y1 &&
+		    y1 < WIDGET(tv)->rView.y2 &&
+		    x1 < WIDGET(tv)->rView.x2 &&
+		    x2 > WIDGET(tv)->rView.x1) {
+			glVertex2i(MAX(x1, WIDGET(tv)->rView.x1), y1);
+			glVertex2i(MIN(x2, WIDGET(tv)->rView.x2), y1);
 		}
-		if (x2 < WIDGET(tv)->cx2 && x2 > WIDGET(tv)->cx &&
-		    y1 < WIDGET(tv)->cy2 && y2 > WIDGET(tv)->cy) {
-			glVertex2i(x2, MAX(y1, WIDGET(tv)->cy));
-			glVertex2i(x2, MIN(y2, WIDGET(tv)->cy2));
+		if (x2 < WIDGET(tv)->rView.x2 && x2 > WIDGET(tv)->rView.x1 &&
+		    y1 < WIDGET(tv)->rView.y2 && y2 > WIDGET(tv)->rView.y1) {
+			glVertex2i(x2, MAX(y1, WIDGET(tv)->rView.y1));
+			glVertex2i(x2, MIN(y2, WIDGET(tv)->rView.y2));
 		}
-		if (y2 > WIDGET(tv)->cy && y2 < WIDGET(tv)->cy2 &&
-		    x1 < WIDGET(tv)->cx2 && x2 > WIDGET(tv)->cx) {
-			glVertex2i(MIN(x2, WIDGET(tv)->cx2), y2);
-			glVertex2i(MAX(x1, WIDGET(tv)->cx), y2);
+		if (y2 > WIDGET(tv)->rView.y1 && y2 < WIDGET(tv)->rView.y2 &&
+		    x1 < WIDGET(tv)->rView.x2 && x2 > WIDGET(tv)->rView.x1) {
+			glVertex2i(MIN(x2, WIDGET(tv)->rView.x2), y2);
+			glVertex2i(MAX(x1, WIDGET(tv)->rView.x1), y2);
 		}
-		if (x1 > WIDGET(tv)->cx && x1 < WIDGET(tv)->cx2 &&
-		    y1 < WIDGET(tv)->cy2 && y2 > WIDGET(tv)->cy) {
-			glVertex2i(x1, MIN(y2, WIDGET(tv)->cy2));
-			glVertex2i(x1, MAX(y1, WIDGET(tv)->cy));
+		if (x1 > WIDGET(tv)->rView.x1 && x1 < WIDGET(tv)->rView.x2 &&
+		    y1 < WIDGET(tv)->rView.y2 && y2 > WIDGET(tv)->rView.y1) {
+			glVertex2i(x1, MIN(y2, WIDGET(tv)->rView.y2));
+			glVertex2i(x1, MAX(y1, WIDGET(tv)->rView.y1));
 		}
 
 		glEnd();

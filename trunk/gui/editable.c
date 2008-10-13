@@ -618,22 +618,19 @@ Draw(void *obj)
 
 		c = (ed->flags & AG_EDITABLE_PASSWORD) ? '*' : c;
 		gl = AG_TextRenderGlyph(c);
-		dx = WIDGET(ed)->cx + x - ed->x;
-		dy = WIDGET(ed)->cy + y;
+		dx = WIDGET(ed)->rView.x1 + x - ed->x;
+		dy = WIDGET(ed)->rView.y1 + y;
 
 		if (x < (ed->x - gl->su->w*2) ||
 		    y < -(gl->su->h) ||
-		    dx > (WIDGET(ed)->cx2 + gl->su->w) ||
-		    dy > WIDGET(ed)->cy2) {
+		    dx > (WIDGET(ed)->rView.x2 + gl->su->w) ||
+		    dy >  WIDGET(ed)->rView.y2) {
 			x += gl->advance;
 			AG_TextUnusedGlyph(gl);
 			continue;
 		}
 		if (!agView->opengl) {
-			AG_Rect rd;
-			rd.x = dx;
-			rd.y = dy;
-			AG_SurfaceBlit(gl->su, NULL, agView->v, &rd);
+			AG_SurfaceBlit(gl->su, NULL, agView->v, dx,dy);
 		}
 #ifdef HAVE_OPENGL
 		else {

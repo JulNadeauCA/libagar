@@ -93,8 +93,8 @@ Expand(AG_Event *event)
 			w = rFileDlg.w + fs->panel->wBorderSide*2;
 			h = rFileDlg.h + fs->panel->wBorderBot;
  		}
-		x = WIDGET(fs)->cx + WIDTH(fs) - w;
-		y = WIDGET(fs)->cy;
+		x = WIDGET(fs)->rView.x2 - w;
+		y = WIDGET(fs)->rView.y1;
 
 		if (x+w > agView->w) { w = agView->w - x; }
 		if (y+h > agView->h) { h = agView->h - y; }

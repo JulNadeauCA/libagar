@@ -106,7 +106,6 @@ typedef struct ag_widget {
 #define AG_WIDGET_EXCEDENT		0x0100 /* Used internally for scaling */
 #define AG_WIDGET_HIDE			0x0200 /* Don't draw this widget */
 #define AG_WIDGET_DISABLED		0x0400 /* Don't respond to input */
-#define AG_WIDGET_STATIC		0x0800 /* Use the redraw flag method */
 #define AG_WIDGET_CATCH_TAB		0x1000 /* Catch tab key events */
 #define AG_WIDGET_PRIO_MOTION		0x2000 /* Block mousemotion events to
 						  any other widget, regardless
@@ -118,10 +117,11 @@ typedef struct ag_widget {
 #define AG_WIDGET_UNFOCUSED_KEYUP	0x20000 /* All mousebuttondown events */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
-	int redraw;			/* Redraw flag (for WIDGET_STATIC) */
-	int cx, cy, cx2, cy2;		/* Cached view coords (optimization) */
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
+	AG_Rect2 rView;			/* Computed view coordinates */
+	AG_Rect2 rSens;			/* Area sensitive to mouse events */
+
 	AG_Style *style;		/* Style (inherited from parent) */
 
 	AG_Surface **surfaces;		/* Registered surfaces */
@@ -175,15 +175,6 @@ typedef struct ag_widget {
 #define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
 #define AG_WidgetDisabled(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)
 #define AG_WidgetEnabled(wi)	((AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)==0)
-
-#ifdef DEBUG
-#define AG_WidgetRedraw(wi)						\
-	if (((wi)->flags & AG_WIDGET_STATIC) == 0)			\
-		AG_FatalError("WidgetRedraw() called on non-static widget"); \
-	AGWIDGET(wi)->redraw++
-#else
-#define AG_WidgetRedraw(wi) AGWIDGET(wi)->redraw++
-#endif
 
 struct ag_window;
 
@@ -357,8 +348,18 @@ AG_WidgetArea(void *p, int x, int y)
 {
 	AG_Widget *wid = AGWIDGET(p);
 
-	return (x > wid->cx && y > wid->cy &&
-	        x < wid->cx+wid->w && y < wid->cy+wid->h);
+	return (x > wid->rView.x1 && y > wid->rView.y1 &&
+	        x < wid->rView.x2 && y < wid->rView.y2);
+}
+
+/* Test whether view coordinates x,y lie in widget's rSens. */
+static __inline__ int
+AG_WidgetSensitive(void *p, int x, int y)
+{
+	AG_Widget *wid = AGWIDGET(p);
+
+	return (x > wid->rSens.x1 && y > wid->rSens.y1 &&
+	        x < wid->rSens.x2 && y < wid->rSens.y2);
 }
 
 /* Test whether widget coordinates x,y lie in widget's allocated space. */
@@ -378,8 +379,8 @@ static __inline__ void
 AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 {
 	AG_Widget *wid = AGWIDGET(p);
-	int vx = wid->cx+wx;
-	int vy = wid->cy+wy;
+	int vx = wid->rView.x1 + wx;
+	int vy = wid->rView.y1 + wy;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
@@ -394,8 +395,8 @@ static __inline__ void
 AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 {
 	AG_Widget *wid = AGWIDGET(p);
-	int vx = wid->cx+wx;
-	int vy = wid->cy+wy;
+	int vx = wid->rView.x1 + wx;
+	int vy = wid->rView.y1 + wy;
 	
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {

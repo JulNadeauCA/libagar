@@ -197,7 +197,6 @@ EditWidgetParams(AG_Event *event)
 		    { AG_WIDGET_EXCEDENT,		"EXCEDENT",0 },
 		    { AG_WIDGET_HIDE,			"HIDE",1 },
 		    { AG_WIDGET_DISABLED,		"DISABLED",1 },
-		    { AG_WIDGET_STATIC,			"STATIC",0 },
 		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",1 },
 		    { AG_WIDGET_PRIO_MOTION,		"PRIO_MOTION",1 },
 		    { AG_WIDGET_UNDERSIZE,		"UNDERSIZE",0 },
@@ -316,12 +315,12 @@ EditWidgetParams(AG_Event *event)
 		AG_WidgetBindInt(msb, "yvalue", &wid->h);
 		
 		msb = AG_MSpinbuttonNew(nTab, 0, ",", "View coords (UL): ");
-		AG_WidgetBindInt(msb, "xvalue", &wid->cx);
-		AG_WidgetBindInt(msb, "yvalue", &wid->cy);
+		AG_WidgetBindInt(msb, "xvalue", &wid->rView.x1);
+		AG_WidgetBindInt(msb, "yvalue", &wid->rView.y1);
 		
 		msb = AG_MSpinbuttonNew(nTab, 0, ",", "View coords (LR): ");
-		AG_WidgetBindInt(msb, "xvalue", &wid->cx2);
-		AG_WidgetBindInt(msb, "yvalue", &wid->cy2);
+		AG_WidgetBindInt(msb, "xvalue", &wid->rView.x2);
+		AG_WidgetBindInt(msb, "yvalue", &wid->rView.y2);
 	}
 	nTab = AG_NotebookAddTab(nb, _("Surfaces"), AG_BOX_VERT);
 	{
