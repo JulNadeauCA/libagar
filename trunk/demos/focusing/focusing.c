@@ -13,10 +13,10 @@ static void
 mousemotion(AG_Event *event)
 {
 	AG_Widget *w = AG_SELF();
-	int x = w->cx + AG_INT(1);
-	int y = w->cy + AG_INT(2);
+	int x = AG_INT(1);
+	int y = AG_INT(2);
 
-	if (AG_WidgetArea(w, x, y)) {
+	if (AG_WidgetSensitive(w, w->rView.x1+x, w->rView.y1+y)) {
 		if ((w->flags & AG_WIDGET_FOCUSED) == 0) {
 			/*
 			 * Place the focus over the widget's parent window
