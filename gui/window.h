@@ -63,7 +63,7 @@ typedef struct ag_window {
 #define AG_WINDOW_CASCADE	0x002000 /* For AG_WindowSetPosition() */
 #define AG_WINDOW_MINSIZEPCT	0x004000 /* Set minimum size in % */
 #define AG_WINDOW_NOBACKGROUND	0x008000 /* Don't fill the background */
-#define AG_WINDOW_NOUPDATERECT	0x010000 /* Don't update rectangle */
+#define AG_WINDOW_NOUPDATERECT	0x010000 /* Unused */
 #define AG_WINDOW_FOCUSONATTACH	0x020000 /* Automatic focus on attach */
 #define AG_WINDOW_HMAXIMIZE	0x040000 /* Keep maximized horizontally */
 #define AG_WINDOW_VMAXIMIZE	0x080000 /* Keep maximized vertically */
@@ -184,12 +184,8 @@ AG_WindowDraw(AG_Window *win)
 		return;
 
 	AG_WidgetDraw(win);
-
-	if ((win->flags & AG_WINDOW_NOUPDATERECT) == 0) {
-		AG_QueueVideoUpdate(
-		    AGWIDGET(win)->x, AGWIDGET(win)->y,
-		    AGWIDGET(win)->w, AGWIDGET(win)->h);
-	}
+	if (!agView->opengl)
+		AG_ViewUpdateFB(&AGWIDGET(win)->rView);
 }
 
 /* Return the currently focused window. */
