@@ -37,9 +37,9 @@
 #include <string.h>
 #include <stdarg.h>
 
+static void ProcessWM_Resize(int, AG_Window *, int, int);
+static void ProcessWM_Move(AG_Window *, int, int);
 static void ClampToView(AG_Window *);
-static void Resize(int, AG_Window *, SDL_MouseMotionEvent *);
-static void Move(AG_Window *, SDL_MouseMotionEvent *);
 static void Shown(AG_Event *);
 static void Hidden(AG_Event *);
 static void GainFocus(AG_Event *);
@@ -52,6 +52,8 @@ int agWindowXOutLimit = 32;
 int agWindowBotOutLimit = 32;
 int agWindowIconWidth = 32;
 int agWindowIconHeight = 32;
+
+extern SDL_Cursor *agCursorToSet;				/* widget.c */
 
 void
 AG_InitWindowSystem(void)
@@ -359,11 +361,7 @@ Hidden(AG_Event *event)
 			AG_DrawRectFilled(win,
 			    AG_RECT(0,0, WIDTH(win), HEIGHT(win)),
 			    AG_COLOR(BG_COLOR));
-			AG_QueueVideoUpdate(
-			    WIDGET(win)->x,
-			    WIDGET(win)->y,
-			    WIDTH(win),
-			    HEIGHT(win));
+			AG_ViewUpdateFB(&WIDGET(win)->rView);
 		}
 //	}
 	AG_PostEvent(NULL, win, "window-hidden", NULL);
@@ -578,12 +576,9 @@ ClampToView(AG_Window *win)
 #endif
 }
 
-/*
- * Move a window using the mouse.
- * The view and window must be locked.
- */
+/* Process a window move initiated by the WM. */
 static void
-Move(AG_Window *win, SDL_MouseMotionEvent *motion)
+ProcessWM_Move(AG_Window *win, int xRel, int yRel)
 {
 	AG_Rect rPrev, rNew;
 	SDL_Rect rFill1, rFill2;
@@ -593,8 +588,8 @@ Move(AG_Window *win, SDL_MouseMotionEvent *motion)
 	rPrev.w = WIDTH(win);
 	rPrev.h = HEIGHT(win);
 
-	WIDGET(win)->x += motion->xrel;
-	WIDGET(win)->y += motion->yrel;
+	WIDGET(win)->x += xRel;
+	WIDGET(win)->y += yRel;
 	ClampToView(win);
 
 	AG_WidgetUpdateCoords(win, WIDGET(win)->x, WIDGET(win)->y);
@@ -629,8 +624,7 @@ Move(AG_Window *win, SDL_MouseMotionEvent *motion)
 		rFill2.w = rPrev.w;
 		rFill2.h = rPrev.y - rNew.y;
 	}
-	if (!agView->opengl &&
-	    !(win->flags & AG_WINDOW_NOUPDATERECT)) {
+	if (!agView->opengl) {
 		if (rFill1.w > 0) {
 			SDL_FillRect(agView->v, &rFill1, AG_COLOR(BG_COLOR));
 			SDL_UpdateRects(agView->v, 1, &rFill1);
@@ -709,6 +703,110 @@ AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
 }
 
 /*
+ * If there is a modal window, request its shutdown if a click is
+ * detected outside of its area.
+ */
+static int
+ModalClose(AG_Window *win, int x, int y)
+{
+	AG_ObjectLock(win);
+	if (!AG_WidgetArea(win, x, y)) {
+		AG_PostEvent(NULL, win, "window-modal-close", NULL);
+		AG_ObjectUnlock(win);
+		return (1);
+	}
+	AG_ObjectUnlock(win);
+	return (0);
+}
+
+/*
+ * Place focus on a Window following a click at the given coordinates.
+ * Returns 1 if the focus state has changed as a result.
+ */
+static int
+FocusWindowAt(int x, int y)
+{
+	AG_Window *win;
+
+	agView->winToFocus = NULL;
+	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
+		AG_ObjectLock(win);
+		if (!win->visible ||
+		    !AG_WidgetArea(win, x,y) ||
+		    (win->flags & AG_WINDOW_DENYFOCUS)) {
+			AG_ObjectUnlock(win);
+			continue;
+		}
+		agView->winToFocus = win;
+		AG_ObjectUnlock(win);
+		return (1);
+	}
+	return (0);
+}
+
+/* WM-specific processing of mousemotion events. */
+static int
+ProcessWM_MouseMotion(AG_Window *win, int xRel, int yRel)
+{
+	switch (agView->winop) {
+	case AG_WINOP_MOVE:
+		ProcessWM_Move(win, xRel, yRel);
+		return (1);
+	case AG_WINOP_LRESIZE:
+		ProcessWM_Resize(AG_WINOP_LRESIZE, win, xRel, yRel);
+		return (1);
+	case AG_WINOP_RRESIZE:
+		ProcessWM_Resize(AG_WINOP_RRESIZE, win, xRel, yRel);
+		return (1);
+	case AG_WINOP_HRESIZE:
+		ProcessWM_Resize(AG_WINOP_HRESIZE, win, xRel, yRel);
+		return (1);
+	default:
+		break;
+	}
+	return (0);
+}
+
+/*
+ * Reorder the window list and post the appropriate Window events following
+ * a change in focus.
+ */
+static void
+ChangeWindowFocus(void)
+{
+	AG_Window *winLast;
+
+	winLast = TAILQ_LAST(&agView->windows, ag_windowq);
+	if (agView->winToFocus != NULL &&
+	    agView->winToFocus == winLast) {
+		AG_ObjectLock(agView->winToFocus);
+		AG_PostEvent(NULL, agView->winToFocus, "window-gainfocus",
+		    NULL);
+		AG_ObjectUnlock(agView->winToFocus);
+		agView->winToFocus = NULL;
+		return;
+	}
+	if (winLast != NULL) {
+		AG_ObjectLock(winLast);
+		if (winLast->flags & AG_WINDOW_KEEPABOVE) {
+			AG_ObjectUnlock(winLast);
+			return;
+		}
+		AG_PostEvent(NULL, winLast, "window-lostfocus", NULL);
+		AG_ObjectUnlock(winLast);
+	}
+	if (agView->winToFocus != NULL &&
+	    agView->winToFocus != TAILQ_LAST(&agView->windows,ag_windowq)) {
+		TAILQ_REMOVE(&agView->windows, agView->winToFocus, windows);
+		TAILQ_INSERT_TAIL(&agView->windows, agView->winToFocus,
+		    windows);
+		AG_PostEvent(NULL, agView->winToFocus, "window-gainfocus",
+		    NULL);
+	}
+	agView->winToFocus = NULL;
+}
+
+/*
  * Dispatch events to widgets.
  * The view must be locked, and the window list must be nonempty.
  * Returns 1 if the event was processed, otherwise 0.
@@ -716,123 +814,71 @@ AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
 int
 AG_WindowEvent(SDL_Event *ev)
 {
-	extern SDL_Cursor *agCursorToSet;
-	static AG_Window *keydown_win = NULL;	/* XXX hack */
+	static AG_Window *winLastKeydown = NULL;
 	AG_Window *win;
 	AG_Widget *wid, *wFoc;
-	int focus_changed = 0, tabCycle;
-	AG_Window *focus_saved = agView->winToFocus;
+	int focusChg = 0, tabCycle;
 	int rv = 0;
 
 	agCursorToSet = NULL;
 	
 	if (agView->nModal > 0) {
-		/* Skip window manager operations if there is a modal window. */
-		goto process;
+		win = agView->winModal[agView->nModal-1];
+		if (ev->type == SDL_MOUSEBUTTONDOWN &&
+		    ModalClose(win, ev->button.x, ev->button.y)) {
+			rv = 1;
+			goto out;
+		}
+		goto scan;		/* Skip WM events */
 	}
+
+	/* Process WM events */
 	switch (ev->type) {
-	case SDL_MOUSEBUTTONDOWN:
-		/*
-		 * Focus on the highest overlapping window, and continue
-		 * with normal processing of the MOUSEBUTTONDOWN event.
-		 */
-		agView->winToFocus = NULL;
-		TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq,
-		    windows) {
-			AG_ObjectLock(win);
-			if (!win->visible ||
-			    !AG_WidgetArea(win, ev->button.x, ev->button.y)) {
-				AG_ObjectUnlock(win);
-				continue;
-			}
-			if (win->flags & AG_WINDOW_DENYFOCUS) {
-				agView->winToFocus = focus_saved;
-			} else {
-				agView->winToFocus = win;
-				focus_changed++;
-			}
-			AG_ObjectUnlock(win);
-			break;
+	case SDL_MOUSEBUTTONDOWN:			/* Focus on window */
+		if (FocusWindowAt(ev->button.x, ev->button.y)) {
+			focusChg++;
 		}
 		break;
-	case SDL_MOUSEBUTTONUP:
-		/* Terminate any window operation in progress. */
+	case SDL_MOUSEBUTTONUP:				/* Terminate WM op */
 		agView->winop = AG_WINOP_NONE;
 		break;
 	}
-process:
+
+scan:
 	/*
 	 * Iterate over the visible windows and deliver the appropriate Agar
 	 * events.
 	 */
 	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
 		AG_ObjectLock(win);
-		/*
-		 * If a modal window exists and a click is made outside of
-		 * its area, send it a "window-modal-close" event.
-		 */
-		if (agView->nModal > 0) {
-			if (win == agView->winModal[agView->nModal-1]) {
-				if ((ev->type == SDL_MOUSEBUTTONDOWN) &&
-				    !AG_WidgetArea(win, ev->button.x,
-				    ev->button.y)) {
-					AG_PostEvent(NULL, win,
-					    "window-modal-close", NULL);
-					rv = 1;
-					AG_ObjectUnlock(win);
-					goto out;
-				}
-			} else {
-				AG_ObjectUnlock(win);
-				continue;
-			}
-		}
+
+		/* XXX TODO move invisible windows to different tailq! */
 		if (!win->visible) {
 			AG_ObjectUnlock(win);
 			continue;
 		}
 		switch (ev->type) {
 		case SDL_MOUSEMOTION:
-			/* Process active MOVE or RESIZE operations. */
 			if (agView->winop != AG_WINOP_NONE &&
 			    agView->winSelected != win) {
 				AG_ObjectUnlock(win);
 				continue;
 			}
-			switch (agView->winop) {
-			case AG_WINOP_NONE:
-				break;
-			case AG_WINOP_MOVE:
-				Move(win, &ev->motion);
+			if (ProcessWM_MouseMotion(win,
+			    ev->motion.xrel, ev->motion.yrel)) {
 				AG_ObjectUnlock(win);
 				rv = 1;
 				goto out;
-			case AG_WINOP_LRESIZE:
-				Resize(AG_WINOP_LRESIZE, win, &ev->motion);
-				AG_ObjectUnlock(win);
-				goto out;
-			case AG_WINOP_RRESIZE:
-				Resize(AG_WINOP_RRESIZE, win, &ev->motion);
-				AG_ObjectUnlock(win);
-				goto out;
-			case AG_WINOP_HRESIZE:
-				Resize(AG_WINOP_HRESIZE, win, &ev->motion);
-				AG_ObjectUnlock(win);
-				goto out;
-			default:
-				break;
 			}
-			/*
-			 * Forward this MOUSEMOTION to all widgets that either
-			 * hold focus or have the AG_WIDGET_UNFOCUSED_MOTION
-			 * flag set.
-			 */
 			WIDGET_FOREACH_CHILD(wid, win) {
 				AG_ObjectLock(wid);
+				/* XXX hack */
 				if (wid->flags & AG_WIDGET_PRIO_MOTION) {
 					AG_WidgetMouseMotion(win, wid,
-					    ev->motion.x, ev->motion.y,
-					    ev->motion.xrel, ev->motion.yrel,
+					    ev->motion.x,
+					    ev->motion.y,
+					    ev->motion.xrel,
+					    ev->motion.yrel,
 					    ev->motion.state);
 					AG_ObjectUnlock(wid);
 					AG_ObjectUnlock(win);
@@ -892,7 +938,7 @@ process:
 				    ev->button.button,
 				    ev->button.x, ev->button.y);
 			}
-			if (focus_changed) {
+			if (focusChg) {
 				AG_ObjectUnlock(win);
 				rv = 1;
 				goto out;
@@ -907,8 +953,11 @@ process:
 			    !(win->flags & AG_WINDOW_NORESIZE)) {
 				agView->winop = AG_WindowMouseOverCtrl(win,
 				    ev->button.x, ev->button.y);
-				if (agView->winop != AG_WINOP_NONE)
+				if (agView->winop != AG_WINOP_NONE) {
 					agView->winSelected = win;
+					AG_ObjectUnlock(win);
+					goto out;
+				}
 			}
 			/* Forward to overlapping widgets. */
 			WIDGET_FOREACH_CHILD(wid, win) {
@@ -920,19 +969,19 @@ process:
 					goto out;
 				}
 			}
-			if (focus_changed) {
+			if (focusChg) {
 				AG_ObjectUnlock(win);
 				rv = 1;
 				goto out;
 			}
 			break;
 		case SDL_KEYUP:
-			if (keydown_win != NULL && keydown_win != win) {
+			if (winLastKeydown != NULL && winLastKeydown != win) {
 				/*
 				 * Key was initially pressed while another
 				 * window was holding focus, ignore.
 				 */
-				keydown_win = NULL;
+				winLastKeydown = NULL;
 				break;
 			}
 			/* FALLTHROUGH */
@@ -986,7 +1035,7 @@ process:
 					 * in case a keydown event handler
 					 * changes the window focus.
 					 */
-					keydown_win = win;
+					winLastKeydown = win;
 					rv = 1;
 				}
 				AG_ObjectUnlock(wFoc);
@@ -1008,44 +1057,16 @@ process:
 	}
 out:
 	/*
-	 * If requested, reorder the window list such that a new window
-	 * holds focus.
-	 * 
-	 * The focus_changed flag is set if there was a focus change
-	 * in reaction to a window operation (winToFocus can be NULL
-	 * in that case).
+	 * Reorder the window list, if needed, to reflect any change
+	 * in the window focus state.
+	 *
+	 * focusChg is set if focus change was requested by the WM (in which
+	 * case winToFocus could be NULL). Use of AG_WindowFocus() from event
+	 * handler routines can also affect winToFocus.
 	 */
-	if (focus_changed || agView->winToFocus != NULL) {
-		AG_Window *lastwin;
-
-		lastwin = TAILQ_LAST(&agView->windows, ag_windowq);
-		if (agView->winToFocus != NULL &&
-		    agView->winToFocus == lastwin) {
-			AG_PostEvent(NULL, agView->winToFocus,
-			    "window-gainfocus", NULL);
-			agView->winToFocus = NULL;
-			goto outf;
-		}
-
-		if (lastwin != NULL) {
-			if (lastwin->flags & AG_WINDOW_KEEPABOVE) {
-				goto outf;
-			}
-			AG_PostEvent(NULL, lastwin, "window-lostfocus", NULL);
-		}
-		if (agView->winToFocus != NULL &&
-		    agView->winToFocus != TAILQ_LAST(&agView->windows,
-		    ag_windowq)) {
-			TAILQ_REMOVE(&agView->windows, agView->winToFocus,
-			    windows);
-			TAILQ_INSERT_TAIL(&agView->windows, agView->winToFocus,
-			    windows);
-			AG_PostEvent(NULL, agView->winToFocus,
-			    "window-gainfocus", NULL);
-		}
-		agView->winToFocus = NULL;
+	if (focusChg || agView->winToFocus != NULL) {
+		ChangeWindowFocus();
 	}
-outf:
 	return (rv);
 }
 
@@ -1129,8 +1150,7 @@ AG_WindowSetGeometryRect(AG_Window *win, AG_Rect r, int bounded)
 
 	/* Update the background. */
 	/* XXX TODO Avoid drawing over KEEPABOVE windows */
-	if (win->visible && !new && !agView->opengl &&
-	    !(win->flags & AG_WINDOW_NOUPDATERECT)) {
+	if (win->visible && !new && !agView->opengl) {
 		if (WIDGET(win)->x > ox) {			/* L-resize */
 			rFill.x = ox;
 			rFill.y = oy;
@@ -1272,8 +1292,7 @@ AG_WindowUnmaximize(AG_Window *win)
 {
 	if (AG_WindowRestoreGeometry(win) == 0) {
 		win->flags &= ~(AG_WINDOW_MAXIMIZED);
-		if (!agView->opengl &&
-		    !(win->flags & AG_WINDOW_NOUPDATERECT)) {
+		if (!agView->opengl) {
 			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
 			SDL_UpdateRect(agView->v, 0, 0, agView->v->w,
 			    agView->v->h);
@@ -1292,16 +1311,14 @@ IconMotion(AG_Event *event)
 	if (icon->flags & AG_ICON_DND) {
 		if (!agView->opengl) {
 			SDL_FillRect(agView->v, NULL, AG_COLOR(BG_COLOR));
-			AG_QueueVideoUpdate(
-			    WIDGET(wDND)->x,
-			    WIDGET(wDND)->y,
-			    WIDTH(wDND), HEIGHT(wDND));
+			AG_ViewUpdateFB(&WIDGET(wDND)->rView);
 		}
 		AG_WindowSetGeometryRect(wDND,
 		    AG_RECT(WIDGET(wDND)->x + xRel,
 		            WIDGET(wDND)->y + yRel,
-			    WIDTH(wDND), HEIGHT(wDND)), 1);
-		    
+			    WIDTH(wDND),
+			    HEIGHT(wDND)), 1);
+		 
 		icon->xSaved = WIDGET(wDND)->x;
 		icon->ySaved = WIDGET(wDND)->y;
 		icon->wSaved = WIDTH(wDND);
@@ -1396,12 +1413,9 @@ AG_WindowUnminimize(AG_Window *win)
 	}
 }
 
-/*
- * Resize a window with the mouse.
- * The window must be locked.
- */
+/* Process a window resize operation initiated by the WM. */
 static void
-Resize(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
+ProcessWM_Resize(int op, AG_Window *win, int xRel, int yRel)
 {
 	int x = WIDGET(win)->x;
 	int y = WIDGET(win)->y;
@@ -1411,33 +1425,33 @@ Resize(int op, AG_Window *win, SDL_MouseMotionEvent *motion)
 	switch (op) {
 	case AG_WINOP_LRESIZE:
 		if (!(win->flags & AG_WINDOW_NOHRESIZE)) {
-			if (motion->xrel < 0) {
-				w -= motion->xrel;
-				x += motion->xrel;
-			} else if (motion->xrel > 0) {
-				w -= motion->xrel;
-				x += motion->xrel;
+			if (xRel < 0) {
+				w -= xRel;
+				x += xRel;
+			} else if (xRel > 0) {
+				w -= xRel;
+				x += xRel;
 			}
 		}
 		if (!(win->flags & AG_WINDOW_NOVRESIZE)) {
-			if (motion->yrel < 0 || motion->yrel > 0)
-				h += motion->yrel;
+			if (yRel < 0 || yRel > 0)
+				h += yRel;
 		}
 		break;
 	case AG_WINOP_RRESIZE:
 		if (!(win->flags & AG_WINDOW_NOHRESIZE)) {
-			if (motion->xrel < 0 || motion->xrel > 0)
-				w += motion->xrel;
+			if (xRel < 0 || xRel > 0)
+				w += xRel;
 		}
 		if (!(win->flags & AG_WINDOW_NOVRESIZE)) {
-			if (motion->yrel < 0 || motion->yrel > 0)
-				h += motion->yrel;
+			if (yRel < 0 || yRel > 0)
+				h += yRel;
 		}
 		break;
 	case AG_WINOP_HRESIZE:
 		if (!(win->flags & AG_WINDOW_NOHRESIZE)) {
-			if (motion->yrel < 0 || motion->yrel > 0)
-				h += motion->yrel;
+			if (yRel < 0 || yRel > 0)
+				h += yRel;
 		}
 		break;
 	default:
