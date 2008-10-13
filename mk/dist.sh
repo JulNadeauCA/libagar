@@ -8,13 +8,13 @@ DISTNAME=${PROJ}-${VER}
 RHOST=resin.csoft.net
 RUSER=vedge
 MAKE=make
-REMOTEDIR=www/${PHASE}.csoft.org/${PROJ}
 
 if [ "$1" != "" ]; then
 	PHASE="$1"
 else
 	PHASE=stable
 fi
+REMOTEDIR=www/${PHASE}.hypertriton.com/${PROJ}
 
 cd ..
 
@@ -56,18 +56,10 @@ rm -f ${DISTNAME}/agar
 
 # ZIP: Generate project files for various IDEs.
 (cd ${DISTNAME} && ${MAKE} proj)
-if [ "$?" != "0" ]; then
-	echo "${MAKE} proj failed"
-	exit 1
-fi
 (cd ${DISTNAME}/demos && ${MAKE} proj)
-if [ "$?" != "0" ]; then
-	echo "${MAKE} proj (demos) failed"
-	exit 1
-fi
 
 # ZIP: Litter header files with "DECLSPEC" as required by some compilers.
-(cd ${DISTNAME} && find . -name \*.h -exec perl mk/gen-declspecs.pl {} \;
+(cd ${DISTNAME} && find . -name \*.h -exec perl mk/gen-declspecs.pl {} \;)
 
 # ZIP: Compress archive
 zip -q -r ${DISTNAME}.zip ${DISTNAME}
@@ -84,9 +76,10 @@ echo "Updating signatures"
 gpg -ab ${DISTNAME}.tar.gz
 gpg -ab ${DISTNAME}.zip
 
-if [ "$1" = "commit" -o "$1" = "snapshot" ]; then
-	echo "Uploading to ${RHOST}"
-	scp -C ${DISTNAME}.{tar.gz,tar.gz.md5,tar.gz.asc,zip,zip.md5,zip.asc} ${RUSER}@${RHOST}:${REMOTEDIR}
+echo "Uploading to ${RHOST}"
+scp -C ${DISTNAME}.{tar.gz,tar.gz.md5,tar.gz.asc,zip,zip.md5,zip.asc} ${RUSER}@${RHOST}:${REMOTEDIR}
+
+if [ "$PHASE" = "stable" ]; then
 	echo "*********************************************************"
 	echo "TODO:"
 	echo "- Update http://en.wikipedia.org/wiki/Agar (software)"

@@ -53,14 +53,11 @@ cleandir-config:
 	find . -name premake.lua -exec rm -f {} \;
 	find . -name configure.lua -exec rm -f {} \;
 
-beta: cleandir
+beta:
 	sh mk/dist.sh beta
 
-package: cleandir
+release:
 	sh mk/dist.sh stable
-
-release: cleandir
-	sh mk/dist.sh commit
 
 install-includes:
 	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}
