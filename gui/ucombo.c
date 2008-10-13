@@ -118,8 +118,8 @@ Expand(AG_Event *event)
 			w = rList.w + com->panel->wBorderSide*2;
 			h = rList.h + com->panel->wBorderBot;
 		}
-		x = WIDGET(com)->cx + WIDGET(com)->w - w;
-		y = WIDGET(com)->cy;
+		x = WIDGET(com)->rView.x2 - w;
+		y = WIDGET(com)->rView.y1;
 
 		AG_SetEvent(com->panel, "window-modal-close",
 		    ModalClose, "%p", com);

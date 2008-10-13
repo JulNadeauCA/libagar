@@ -277,10 +277,10 @@ PaneHorizDivider(void *pa, int x, int y, int w, int isMoving)
 	    isMoving?-1:1,
 	    AG_COLOR(PANE_COLOR));
 	if (!agView->opengl) {
-		int cx = x + w/2;
-		AG_WidgetPutPixel(pa, cx, y, AG_COLOR(PANE_CIRCLE_COLOR));
-		AG_WidgetPutPixel(pa, cx, y-5, AG_COLOR(PANE_CIRCLE_COLOR));
-		AG_WidgetPutPixel(pa, cx, y+5, AG_COLOR(PANE_CIRCLE_COLOR));
+		int xMid = x + w/2;
+		AG_WidgetPutPixel(pa, xMid, y, AG_COLOR(PANE_CIRCLE_COLOR));
+		AG_WidgetPutPixel(pa, xMid, y-5, AG_COLOR(PANE_CIRCLE_COLOR));
+		AG_WidgetPutPixel(pa, xMid, y+5, AG_COLOR(PANE_CIRCLE_COLOR));
 	}
 }
 
@@ -293,10 +293,10 @@ PaneVertDivider(void *pa, int x, int y, int w, int isMoving)
 	    isMoving?-1:1,
 	    AG_COLOR(PANE_COLOR));
 	if (!agView->opengl) {
-		int cy = y + w/2;
-		AG_WidgetPutPixel(pa, x, cy, AG_COLOR(PANE_CIRCLE_COLOR));
-		AG_WidgetPutPixel(pa, x-5, cy, AG_COLOR(PANE_CIRCLE_COLOR));
-		AG_WidgetPutPixel(pa, x+5, cy, AG_COLOR(PANE_CIRCLE_COLOR));
+		int yMid = y + w/2;
+		AG_WidgetPutPixel(pa, x, yMid, AG_COLOR(PANE_CIRCLE_COLOR));
+		AG_WidgetPutPixel(pa, x-5, yMid, AG_COLOR(PANE_CIRCLE_COLOR));
+		AG_WidgetPutPixel(pa, x+5, yMid, AG_COLOR(PANE_CIRCLE_COLOR));
 	}
 }
 

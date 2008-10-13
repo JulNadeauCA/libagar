@@ -246,8 +246,10 @@ AG_GLViewDraw(void *obj)
 		AG_GLViewReshape(glv);
 	}
 
-	glViewport(WIDGET(glv)->cx, agView->h - WIDGET(glv)->cy2,
-	           WIDGET(glv)->w, WIDGET(glv)->h);
+	glViewport(WIDGET(glv)->rView.x1,
+	           agView->h - WIDGET(glv)->rView.y2,
+	           WIDGET(glv)->w,
+		   WIDGET(glv)->h);
 
 	glMatrixMode(GL_TEXTURE);
 	glPushMatrix();

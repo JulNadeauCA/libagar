@@ -402,10 +402,9 @@ DrawMapCursor(MAP_View *mv)
 #if 0
 		/* XXX */
 		AG_MouseGetState(&msx, &msy);
-		rd.x = msx;
-		rd.y = msy;
 		if (!agView->opengl)
-			AG_SurfaceBlit(mapIconCursor.s, NULL, agView->v, &rd);
+			AG_SurfaceBlit(mapIconCursor.s, NULL, agView->v,
+			    msx, msy);
 #endif
 		return;
 	}
@@ -520,8 +519,8 @@ draw_layer:
 					continue;
 
 				MAP_ItemDraw(m, nref,
-				    WIDGET(mv)->cx + rx,
-				    WIDGET(mv)->cy + ry,
+				    WIDGET(mv)->rView.x1 + rx,
+				    WIDGET(mv)->rView.y1 + ry,
 				    mv->cam);
 
 #ifdef DEBUG
@@ -757,8 +756,8 @@ MAP_ViewSetScale(MAP_View *mv, Uint zoom, int adj_offs)
 	mv->mh = HEIGHT(mv)/AGMTILESZ(mv) + 2;
 
 	SDL_GetMouseState(&x, &y);
-	x -= WIDGET(mv)->cx;
-	y -= WIDGET(mv)->cy;
+	x -= WIDGET(mv)->rView.x1;
+	y -= WIDGET(mv)->rView.y1;
 
 	pixw = mv->map->mapw*AGMTILESZ(mv);
 	pixh = mv->map->maph*AGMTILESZ(mv);

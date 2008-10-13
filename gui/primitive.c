@@ -87,9 +87,9 @@ static void
 ArrowUpFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
-	int y1 = wid->cy+y0 - (h>>1);
-	int y2 = y1+h-1;
-	int xs = wid->cx+x0, xe = xs;
+	int y1 = wid->rView.y1 + y0 - (h>>1);
+	int y2 = y1 + h - 1;
+	int xs = wid->rView.x1 + x0, xe = xs;
 	int x, y;
 
 	SDL_LockSurface(agView->v);
@@ -109,9 +109,9 @@ static void
 ArrowDownFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
-	int y1 = wid->cy+y0 - (h>>1);
+	int y1 = wid->rView.y1 + y0 - (h>>1);
 	int y2 = y1+h-1;
-	int xs = wid->cx+x0, xe = xs;
+	int xs = wid->rView.x1 + x0, xe = xs;
 	int x, y;
 
 	SDL_LockSurface(agView->v);
@@ -131,9 +131,9 @@ static void
 ArrowLeftFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
-	int x1 = wid->cx+x0 - (h>>1);
+	int x1 = wid->rView.x1 + x0 - (h>>1);
 	int x2 = x1+h-1;
-	int ys = wid->cy+y0, ye = ys;
+	int ys = wid->rView.y1 + y0, ye = ys;
 	int x, y;
 
 	SDL_LockSurface(agView->v);
@@ -153,9 +153,9 @@ static void
 ArrowRightFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
-	int x1 = wid->cx+x0 - (h>>1);
+	int x1 = wid->rView.x1 + x0 - (h>>1);
 	int x2 = x1+h-1;
-	int ys = wid->cy+y0, ye = ys;
+	int ys = wid->rView.y1 + y0, ye = ys;
 	int x, y;
 
 	SDL_LockSurface(agView->v);
@@ -633,8 +633,8 @@ ClipHorizLine(AG_Widget *wid, int *x1, int *x2, int *y, int *dx)
 {
 	SDL_Rect *rd = &agView->v->clip_rect;
 
-	if ((wid->cy + *y) <  rd->y ||
-	    (wid->cy + *y) >= rd->y+rd->h) {
+	if ((wid->rView.y1 + *y) <  rd->y ||
+	    (wid->rView.y1 + *y) >= rd->y+rd->h) {
 		return (1);
 	}
 	if (*x1 > *x2) {
@@ -642,10 +642,10 @@ ClipHorizLine(AG_Widget *wid, int *x1, int *x2, int *y, int *dx)
 		*x2 = *x1;
 		*x1 = *dx;
 	}
-	if (wid->cx + *x1 < rd->x)
-		*x1 = rd->x - wid->cx;
-	if (wid->cx + *x2 >= rd->x+rd->w)
-		*x2 = rd->x + rd->w - wid->cx - 1;
+	if (wid->rView.x1 + *x1 < rd->x)
+		*x1 = rd->x - wid->rView.x1;
+	if (wid->rView.x1 + *x2 >= rd->x+rd->w)
+		*x2 = rd->x + rd->w - wid->rView.x1 - 1;
 
 	*dx = *x2 - *x1;
 	return (*dx <= 0);
@@ -662,8 +662,9 @@ LineH32(void *widget, int x1, int x2, int y, Uint32 c)
 		return;
 	}
 	SDL_LockSurface(agView->v);
-	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
-	    ((wid->cx+x1)<<2);
+	pDst = (Uint8 *)agView->v->pixels +
+	       (wid->rView.y1 + y)*agView->v->pitch +
+	       ((wid->rView.x1 + x1) << 2);
 	pEnd = pDst + (dx<<2);
 	while (pDst < pEnd) {
 		*(Uint32 *)pDst = c;
@@ -683,8 +684,9 @@ LineH24(void *widget, int x1, int x2, int y, Uint32 c)
 		return;
 	}
 	SDL_LockSurface(agView->v);
-	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
-	    (wid->cx+x1)*3;
+	pDst = (Uint8 *)agView->v->pixels +
+	    (wid->rView.y1 + y)*agView->v->pitch +
+	    (wid->rView.x1 + x1)*3;
 	pEnd = pDst + dx*3;
 	while (pDst < pEnd) {
 #if AG_BYTEORDER == AG_BIG_ENDIAN
@@ -712,8 +714,9 @@ LineH16(void *widget, int x1, int x2, int y, Uint32 c)
 		return;
 	}
 	SDL_LockSurface(agView->v);
-	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
-	    ((wid->cx+x1)<<1);
+	pDst = (Uint8 *)agView->v->pixels +
+	       (wid->rView.y1 + y)*agView->v->pitch +
+	       ((wid->rView.x1 + x1)<<1);
 	pEnd = pDst + (dx<<1);
 	while (pDst < pEnd) {
 		*(Uint16 *)pDst = c;
@@ -733,8 +736,9 @@ LineH8(void *widget, int x1, int x2, int y, Uint32 c)
 		return;
 	}
 	SDL_LockSurface(agView->v);
-	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y)*agView->v->pitch +
-	    (wid->cx+x1);
+	pDst = (Uint8 *)agView->v->pixels +
+	       (wid->rView.y1 + y)*agView->v->pitch +
+	       (wid->rView.x1 + x1);
 	pEnd = pDst + dx;
 	memset(pDst, c, pEnd-pDst);
 	SDL_UnlockSurface(agView->v);
@@ -745,8 +749,8 @@ ClipVertLine(AG_Widget *wid, int *x, int *y1, int *y2, int *dy)
 {
 	SDL_Rect *rd = &agView->v->clip_rect;
 
-	if ((wid->cx + *x) <  rd->x ||
-	    (wid->cx + *x) >= rd->x+rd->w) {
+	if ((wid->rView.x1 + *x) <  rd->x ||
+	    (wid->rView.x1 + *x) >= rd->x+rd->w) {
 		return (1);
 	}
 	if (*y1 > *y2) {
@@ -754,10 +758,10 @@ ClipVertLine(AG_Widget *wid, int *x, int *y1, int *y2, int *dy)
 		*y2 = *y1;
 		*y1 = *dy;
 	}
-	if (wid->cy + *y1 < rd->y)
-		*y1 = rd->y - wid->cy;
-	if (wid->cy + *y2 >= rd->y+rd->h)
-		*y2 = rd->y + rd->h - wid->cy - 1;
+	if (wid->rView.y1 + *y1 < rd->y)
+		*y1 = rd->y - wid->rView.y1;
+	if (wid->rView.y1 + *y2 >= rd->y+rd->h)
+		*y2 = rd->y + rd->h - wid->rView.y1 - 1;
 
 	*dy = *y2 - *y1;
 	return (*dy <= 0);
@@ -774,8 +778,9 @@ LineV32(void *widget, int x, int y1, int y2, Uint32 c)
 		return;
 	}
 	SDL_LockSurface(agView->v);
-	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
-	    ((wid->cx+x)<<2);
+	pDst = (Uint8 *)agView->v->pixels +
+	       (wid->rView.y1 + y1)*agView->v->pitch +
+	       ((wid->rView.x1 + x)<<2);
 	pEnd = pDst + dy*agView->v->pitch;
 	while (pDst < pEnd) {
 		*(Uint32 *)pDst = c;
@@ -795,8 +800,9 @@ LineV24(void *widget, int x, int y1, int y2, Uint32 c)
 		return;
 	}
 	SDL_LockSurface(agView->v);
-	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
-	    (wid->cx+x)*3;
+	pDst = (Uint8 *)agView->v->pixels +
+	       (wid->rView.y1 + y1)*agView->v->pitch +
+	       (wid->rView.x1 + x)*3;
 	pEnd = pDst + dy*agView->v->pitch;
 	while (pDst < pEnd) {
 #if AG_BYTEORDER == AG_BIG_ENDIAN
@@ -824,8 +830,9 @@ LineV16(void *widget, int x, int y1, int y2, Uint32 c)
 		return;
 	}
 	SDL_LockSurface(agView->v);
-	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
-	    ((wid->cx+x)<<1);
+	pDst = (Uint8 *)agView->v->pixels +
+	       (wid->rView.y1 + y1)*agView->v->pitch +
+	       ((wid->rView.x1 + x)<<1);
 	pEnd = pDst + dy*agView->v->pitch;
 	while (pDst < pEnd) {
 		*(Uint16 *)pDst = c;
@@ -845,8 +852,9 @@ LineV8(void *widget, int x, int y1, int y2, Uint32 c)
 		return;
 	}
 	SDL_LockSurface(agView->v);
-	pDst = (Uint8 *)agView->v->pixels + (wid->cy+y1)*agView->v->pitch +
-	    (wid->cx+x);
+	pDst = (Uint8 *)agView->v->pixels +
+	       (wid->rView.y1 + y1)*agView->v->pitch +
+	       (wid->rView.x1 + x);
 	pEnd = pDst + dy*agView->v->pitch;
 	while (pDst < pEnd) {
 		*(Uint8 *)pDst = c;
@@ -976,8 +984,8 @@ RectFilledFB(void *p, AG_Rect r, Uint32 color)
 	AG_Widget *wid = p;
 	AG_Rect rd;
 
-	rd.x = wid->cx+r.x;
-	rd.y = wid->cy+r.y;
+	rd.x = wid->rView.x1 + r.x;
+	rd.y = wid->rView.y1 + r.y;
 	rd.w = r.w;
 	rd.h = r.h;
 	AG_FillRect(agView->v, &rd, color);
@@ -993,7 +1001,8 @@ RectBlendedFB(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 	for (y = 0; y < r.h; y++) {
 		for (x = 0; x < r.w; x++) {
 			AG_BLEND_RGBA2_CLIPPED(agView->v,
-			    wid->cx+r.x+x, wid->cy+r.y+y,
+			    wid->rView.x1 + r.x + x,
+			    wid->rView.y1 + r.y + y,
 			    c[0], c[1], c[2], c[3],
 			    func);
 		}
@@ -1061,10 +1070,10 @@ static void
 LineGL(void *p, int px1, int py1, int px2, int py2, Uint32 color)
 {
 	AG_Widget *wid = p;
-	int x1 = wid->cx + px1;
-	int y1 = wid->cy + py1;
-	int x2 = wid->cx + px2;
-	int y2 = wid->cy + py2;
+	int x1 = wid->rView.x1 + px1;
+	int y1 = wid->rView.y1 + py1;
+	int x2 = wid->rView.x1 + px2;
+	int y2 = wid->rView.y1 + py2;
 	Uint8 r, g, b;
 
 	AG_GetRGB(color, agVideoFmt, &r,&g,&b);
@@ -1079,14 +1088,14 @@ static void
 LineHGL(void *p, int x1, int x2, int py, Uint32 color)
 {
 	AG_Widget *wid = p;
-	int y = wid->cy + py;
+	int y = wid->rView.y1 + py;
 	Uint8 r, g, b;
 
 	AG_GetRGB(color, agVideoFmt, &r,&g,&b);
 	glBegin(GL_LINES);
 	glColor3ub(r, g, b);
-	glVertex2s(wid->cx + x1, y);
-	glVertex2s(wid->cx + x2, y);
+	glVertex2s(wid->rView.x1 + x1, y);
+	glVertex2s(wid->rView.x1 + x2, y);
 	glEnd();
 }
 
@@ -1094,14 +1103,14 @@ static void
 LineVGL(void *p, int px, int y1, int y2, Uint32 color)
 {
 	AG_Widget *wid = p;
-	int x = wid->cx + px;
+	int x = wid->rView.x1 + px;
 	Uint8 r, g, b;
 
 	AG_GetRGB(color, agVideoFmt, &r,&g,&b);
 	glBegin(GL_LINES);
 	glColor3ub(r, g, b);
-	glVertex2s(x, wid->cy + y1);
-	glVertex2s(x, wid->cy + y2);
+	glVertex2s(x, wid->rView.y1 + y1);
+	glVertex2s(x, wid->rView.y1 + y2);
 	glEnd();
 }
 
@@ -1110,10 +1119,10 @@ LineBlendedGL(void *p, int px1, int py1, int px2, int py2, Uint8 c[4],
     AG_BlendFn func)
 {
 	AG_Widget *wid = p;
-	int x1 = wid->cx + px1;
-	int y1 = wid->cy + py1;
-	int x2 = wid->cx + px2;
-	int y2 = wid->cy + py2;
+	int x1 = wid->rView.x1 + px1;
+	int y1 = wid->rView.y1 + py1;
+	int x2 = wid->rView.x1 + px2;
+	int y2 = wid->rView.y1 + py2;
 	GLboolean blend_save;
 	GLint sfac_save, dfac_save;
 	
@@ -1155,8 +1164,8 @@ CircleGL(void *p, int x, int y, int radius, Uint32 color)
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(r, g, b);
 	for (i = 0; i < nedges; i++) {
-		glVertex2f(wid->cx + x + radius*Cos((2*AG_PI*i)/nedges),
-		           wid->cy + y + radius*Sin((2*AG_PI*i)/nedges));
+		glVertex2f(wid->rView.x1 + x + radius*Cos((2*AG_PI*i)/nedges),
+		           wid->rView.y1 + y + radius*Sin((2*AG_PI*i)/nedges));
 	}
 	glEnd();
 }
@@ -1166,18 +1175,20 @@ Circle2GL(void *p, int x, int y, int radius, Uint32 color)
 {
 	AG_Widget *wid = p;
 	int nedges = radius*2;
-	int i;
 	Uint8 r, g, b;
+	int x1 = wid->rView.x1 + x;
+	int y1 = wid->rView.y1 + y;
+	int i;
 	
 	AG_GetRGB(color, agVideoFmt, &r,&g,&b);
 
 	glBegin(GL_LINE_LOOP);
 	glColor3ub(r, g, b);
 	for (i = 0; i < nedges; i++) {
-		glVertex2f(wid->cx + x + radius*Cos((2*AG_PI*i)/nedges),
-		           wid->cy + y + radius*Sin((2*AG_PI*i)/nedges));
-		glVertex2f(wid->cx + x + (radius+1)*Cos((2*AG_PI*i)/nedges),
-		           wid->cy + y + (radius+1)*Sin((2*AG_PI*i)/nedges));
+		glVertex2f(x1 + radius*Cos((2*AG_PI*i)/nedges),
+		           y1 + radius*Sin((2*AG_PI*i)/nedges));
+		glVertex2f(x1 + (radius+1)*Cos((2*AG_PI*i)/nedges),
+		           y1 + (radius+1)*Sin((2*AG_PI*i)/nedges));
 	}
 	glEnd();
 }
@@ -1187,25 +1198,21 @@ RectGL(void *p, AG_Rect r, Uint32 color)
 {
 	AG_Widget *wid = p;
 	Uint8 red, green, blue;
-	int x1 = wid->cx+r.x;
-	int y1 = wid->cy+r.y;
-	int x2 = x1+r.w-1;
-	int y2 = y1+r.h-1;
+	int x1 = wid->rView.x1 + r.x;
+	int y1 = wid->rView.y1 + r.y;
+	int x2 = x1 + r.w - 1;
+	int y2 = y1 + r.h - 1;
 
 #if 0
 	if (wid->flags & AG_WIDGET_CLIPPING) {
-		if (x1 > wid->cx+wid->w ||
-		    y1 > wid->cy+wid->h) {
+		if (x1 > wid->rView.x2 ||
+		    y1 > wid->rView.y2) {
 			return;
 		}
-		if (x1 < wid->cx)
-			x1 = wid->cx;
-		if (y1 < wid->cy)
-			y1 = wid->cy;
-		if (x2 > wid->cx+wid->w)
-			x2 = wid->cx+wid->w;
-		if (y2 > wid->cy+wid->h)
-			y2 = wid->cy+wid->h;
+		if (x1 < wid->rView.x1) { x1 = wid->rView.x1; }
+		if (y1 < wid->rView.y1) { y1 = wid->rView.y1; }
+		if (x2 > wid->rView.x2) { x2 = wid->rView.x2; }
+		if (y2 > wid->rView.y2) { y2 = wid->rView.y2; }
 	}
 #endif
 	AG_GetRGB(color, agVideoFmt, &red,&green,&blue);
@@ -1222,8 +1229,8 @@ static void
 RectBlendedGL(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 {
 	AG_Widget *wid = p;
-	int x1 = wid->cx+r.x;
-	int y1 = wid->cy+r.y;
+	int x1 = wid->rView.x1 + r.x;
+	int y1 = wid->rView.y1 + r.y;
 	int x2 = x1+r.w;
 	int y2 = y1+r.h;
 	GLboolean blend_save;
@@ -1231,18 +1238,13 @@ RectBlendedGL(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 
 #if 0
 	if (wid->flags & AG_WIDGET_CLIPPING) {
-		if (x1 > wid->cx+wid->w ||
-		    y1 > wid->cy+wid->h) {
+		if (x1 > rView.x2 || y1 > rView.y2) {
 			return;
 		}
-		if (x1 < wid->cx)
-			x1 = wid->cx;
-		if (y1 < wid->cy)
-			y1 = wid->cy;
-		if (x2 > wid->cx+wid->w)
-			x2 = wid->cx+wid->w;
-		if (y2 > wid->cy+wid->h)
-			y2 = wid->cy+wid->h;
+		if (x1 < wid->rView.x1) { x1 = wid->rView.x1; }
+		if (y1 < wid->rView.y1) { y1 = wid->rView.y1; }
+		if (x2 > wid->rView.x2) { x2 = wid->rView.x2; }
+		if (y2 > wid->rView.y2) { y2 = wid->rView.y2; }
 	}
 #endif
 	if (c[3] < 255) {
@@ -1308,7 +1310,8 @@ BoxRoundedGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef(wid->cx+r.x, wid->cy+r.y, 0);
+	glTranslatef(wid->rView.x1 + r.x,
+	             wid->rView.y1 + r.y, 0);
 	glBegin(GL_POLYGON);
 	{
 		AG_GetRGB(cBg, agVideoFmt, &red,&green,&blue);
@@ -1356,7 +1359,8 @@ BoxRoundedTopGL(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef(wid->cx+r.x, wid->cy+r.y, 0);
+	glTranslatef(wid->rView.x1 + r.x,
+	             wid->rView.y1 + r.y, 0);
 	glBegin(GL_POLYGON);
 	{
 		AG_GetRGB(cBg, agVideoFmt, &red,&green,&blue);
@@ -1402,7 +1406,7 @@ ArrowUpGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 	AG_GetRGB(c1, agVideoFmt, &r,&g,&b);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef(wid->cx, wid->cy, 0);
+	glTranslatef(wid->rView.x1, wid->rView.y1, 0);
 	glBegin(GL_POLYGON);
 	{
 		glColor3ub(r, g, b);
@@ -1423,7 +1427,7 @@ ArrowDownGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 	AG_GetRGB(c1, agVideoFmt, &r,&g,&b);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef(wid->cx, wid->cy, 0);
+	glTranslatef(wid->rView.x1, wid->rView.y1, 0);
 	glBegin(GL_POLYGON);
 	{
 		glColor3ub(r, g, b);

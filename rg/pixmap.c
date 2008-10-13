@@ -219,8 +219,6 @@ RG_PixmapScale(RG_Pixmap *px, int w, int h, int xoffs, int yoffs)
 
 	/* Copy the old surface over. */
 	if (px->su != NULL) {
-		AG_Rect rd;
-
 		AG_SetAlpha(nsu, px->su->flags&(AG_SRCALPHA|AG_RLEACCEL),
 		    px->su->format->alpha);
 		AG_SetColorKey(nsu, px->su->flags&(AG_SRCCOLORKEY|AG_RLEACCEL),
@@ -228,9 +226,7 @@ RG_PixmapScale(RG_Pixmap *px, int w, int h, int xoffs, int yoffs)
 
 		AG_SetAlpha(px->su, 0, 0);
 		AG_SetColorKey(px->su, 0, 0);
-		rd.x = xoffs;
-		rd.y = yoffs;
-		AG_SurfaceBlit(px->su, NULL, nsu, &rd);
+		AG_SurfaceBlit(px->su, NULL, nsu, xoffs, yoffs);
 		AG_SurfaceFree(px->su);
 	}
 	px->su = nsu;

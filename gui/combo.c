@@ -105,8 +105,8 @@ Expand(AG_Event *event)
 			w = rList.w + com->panel->wBorderSide*2;
 			h = rList.h + com->panel->wBorderBot;
  		}
-		x = WIDGET(com)->cx + WIDTH(com) - w;
-		y = WIDGET(com)->cy;
+		x = WIDGET(com)->rView.x2 - w;
+		y = WIDGET(com)->rView.y1;
 
 		if (x+w > agView->w) { w = agView->w - x; }
 		if (y+h > agView->h) { h = agView->h - y; }

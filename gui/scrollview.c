@@ -39,8 +39,8 @@ ClipWidgets(AG_Scrollview *sv, AG_Widget *wid)
 {
 	AG_Widget *chld;
 
-	if (wid->cx + wid->w < WIDGET(sv)->cx ||
-	    wid->cy + wid->h < WIDGET(sv)->cy) {
+	if (wid->rView.x2 < WIDGET(sv)->rView.x1 ||
+	    wid->rView.y2 < WIDGET(sv)->rView.y1) {
 		wid->flags |= AG_WIDGET_HIDE;
 	} else {
 		wid->flags &= ~(AG_WIDGET_HIDE);

@@ -119,7 +119,7 @@ BlendOverlayAlpha(RG_Tile *t, AG_Surface *su, AG_Rect *rd)
 static void
 BlendSDL(RG_Tile *t, AG_Surface *su, AG_Rect *rd)
 {
-	AG_SurfaceBlit(su, NULL, t->su, rd);
+	AG_SurfaceBlit(su, NULL, t->su, rd->x, rd->y);
 }
 #endif
 

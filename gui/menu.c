@@ -200,8 +200,8 @@ MouseButtonDown(AG_Event *event)
 				}
 				m->itemSel = item;
 				AG_MenuExpand(m, item,
-				    WIDGET(m)->cx + item->x,
-				    WIDGET(m)->cy + item->y + hLbl+m->bPad-1);
+				    WIDGET(m)->rView.x1+item->x,
+				    WIDGET(m)->rView.y1+item->y+hLbl+m->bPad-1);
 				m->selecting = 1;
 			}
 			break;
@@ -268,8 +268,8 @@ MouseMotion(AG_Event *event)
 				}
 				m->itemSel = item;
 				AG_MenuExpand(m, item,
-				    WIDGET(m)->cx + item->x,
-				    WIDGET(m)->cy + item->y + hLbl+m->bPad-1);
+				    WIDGET(m)->rView.x1+item->x,
+				    WIDGET(m)->rView.y1+item->y+hLbl+m->bPad-1);
 			}
 			break;
 		}

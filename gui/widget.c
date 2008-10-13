@@ -64,9 +64,8 @@ Init(void *obj)
 	OBJECT(wid)->flags |= AG_OBJECT_NAME_ONATTACH;
 
 	wid->flags = 0;
-	wid->redraw = 1;
-	wid->cx = -1;
-	wid->cy = -1;
+	wid->rView = AG_RECT2(-1,-1,-1,-1);
+	wid->rSens = AG_RECT2(0,0,0,0);
 	wid->x = -1;
 	wid->y = -1;
 	wid->w = -1;
@@ -795,15 +794,11 @@ Destroy(void *obj)
  * XXX glDrawPixels() is probably faster.
  */
 void
-AG_WidgetBlit(void *p, AG_Surface *srcsu, int x, int y)
+AG_WidgetBlit(void *p, AG_Surface *srcsu, int wx, int wy)
 {
 	AG_Widget *wid = p;
-	AG_Rect rd;
-
-	rd.x = wid->cx + x;
-	rd.y = wid->cy + y;
-	rd.w = wid->w;
-	rd.h = wid->h;
+	int x = wid->rView.x1 + wx;
+	int y = wid->rView.y1 + wy;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
@@ -832,13 +827,13 @@ AG_WidgetBlit(void *p, AG_Surface *srcsu, int x, int y)
 		glBegin(GL_TRIANGLE_STRIP);
 		{
 			glTexCoord2f(texcoord[0], texcoord[1]);
-			glVertex2i(rd.x, rd.y);
+			glVertex2i(x, y);
 			glTexCoord2f(texcoord[2], texcoord[1]);
-			glVertex2i(rd.x+srcsu->w, rd.y);
+			glVertex2i(x+srcsu->w, y);
 			glTexCoord2f(texcoord[0], texcoord[3]);
-			glVertex2i(rd.x, rd.y+srcsu->h);
+			glVertex2i(x, y+srcsu->h);
 			glTexCoord2f(texcoord[2], texcoord[3]);
-			glVertex2i(rd.x+srcsu->w, rd.y+srcsu->h);
+			glVertex2i(x+srcsu->w, y+srcsu->h);
 		}
 		glEnd();
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -857,7 +852,7 @@ AG_WidgetBlit(void *p, AG_Surface *srcsu, int x, int y)
 	} else
 #endif /* HAVE_OPENGL */
 	{
-		AG_SurfaceBlit(srcsu, NULL, agView->v, &rd);
+		AG_SurfaceBlit(srcsu, NULL, agView->v, x,y);
 	}
 }
 
@@ -882,20 +877,19 @@ UpdateTexture(AG_Widget *wid, int name)
  * Only safe to call from rendering context.
  */
 void
-AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, AG_Rect *rs, int x, int y)
+AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, AG_Rect *rSrc,
+    int wx, int wy)
 {
 	AG_Widget *wDst = pDst;
 	AG_Widget *wSrc = pSrc;
 	AG_Surface *su = wSrc->surfaces[name];
-	AG_Rect rd;
+	int x, y;
 
 	if (name == -1 || su == NULL)
 		return;
 
-	rd.x = wDst->cx + x;
-	rd.y = wDst->cy + y;
-	rd.w = su->w;
-	rd.h = su->h;
+	x = wDst->rView.x1 + wx;
+	y = wDst->rView.y1 + wy;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
@@ -908,14 +902,14 @@ AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, AG_Rect *rs, int x, int y)
 
 		UpdateTexture(wSrc, name);
 
-		if (rs == NULL) {
+		if (rSrc == NULL) {
 			texcoord = &wSrc->texcoords[name*4];
 		} else {
 			texcoord = &tmptexcoord[0];
-			texcoord[0] = (GLfloat)rs->x/PowOf2i(rs->x);
-			texcoord[1] = (GLfloat)rs->y/PowOf2i(rs->y);
-			texcoord[2] = (GLfloat)rs->w/PowOf2i(rs->w);
-			texcoord[3] = (GLfloat)rs->h/PowOf2i(rs->h);
+			texcoord[0] = (GLfloat)rSrc->x/PowOf2i(rSrc->x);
+			texcoord[1] = (GLfloat)rSrc->y/PowOf2i(rSrc->y);
+			texcoord[2] = (GLfloat)rSrc->w/PowOf2i(rSrc->w);
+			texcoord[3] = (GLfloat)rSrc->h/PowOf2i(rSrc->h);
 		}
 
 		glGetTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, &texenvmode);
@@ -934,13 +928,13 @@ AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, AG_Rect *rs, int x, int y)
 		glBegin(GL_TRIANGLE_STRIP);
 		{
 			glTexCoord2f(texcoord[0], texcoord[1]);
-			glVertex2i(rd.x, rd.y);
+			glVertex2i(x, y);
 			glTexCoord2f(texcoord[2], texcoord[1]);
-			glVertex2i(rd.x+su->w, rd.y);
+			glVertex2i(x+su->w, y);
 			glTexCoord2f(texcoord[0], texcoord[3]);
-			glVertex2i(rd.x, rd.y+su->h);
+			glVertex2i(x, y+su->h);
 			glTexCoord2f(texcoord[2], texcoord[3]);
-			glVertex2i(rd.x+su->w, rd.y+su->h);
+			glVertex2i(x+su->w, y+su->h);
 		}
 		glEnd();
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -957,13 +951,13 @@ AG_WidgetBlitFrom(void *pDst, void *pSrc, int name, AG_Rect *rs, int x, int y)
 	} else
 #endif /* HAVE_OPENGL */
 	{
-		AG_SurfaceBlit(su, rs, agView->v, &rd);
+		AG_SurfaceBlit(su, rSrc, agView->v, x,y);
 #ifdef DEBUG_CLIPPING
 		{
 			AG_Rect rClip;
 
-			rClip.x = agView->v->clip_rect.x - wDst->cx;
-			rClip.y = agView->v->clip_rect.y - wDst->cy;
+			rClip.x = agView->v->clip_rect.x - wDst->rView.x1;
+			rClip.y = agView->v->clip_rect.y - wDst->rView.y1;
 			rClip.w = agView->v->clip_rect.w;
 			rClip.h = agView->v->clip_rect.h;
 			AG_DrawRectOutline(wDst, rClip,
@@ -1312,10 +1306,10 @@ OccultedWidget(AG_Widget *wid)
 	for (; owin != TAILQ_END(&agView->windows);
 	     owin = TAILQ_NEXT(owin, windows)) {
 		if (owin->visible &&
-		    wid->cx > WIDGET(owin)->x &&
-		    wid->cy > WIDGET(owin)->y &&
-		    wid->cx+wid->w < WIDGET(owin)->x+WIDGET(owin)->w &&
-		    wid->cy+wid->h < WIDGET(owin)->y+WIDGET(owin)->h) {
+		    wid->rView.x1 > WIDGET(owin)->x &&
+		    wid->rView.y1 > WIDGET(owin)->y &&
+		    wid->rView.x2 < WIDGET(owin)->x+WIDGET(owin)->w &&
+		    wid->rView.y2 < WIDGET(owin)->y+WIDGET(owin)->h) {
 			return (1);
 		}
 	}
@@ -1342,15 +1336,15 @@ AG_UnsetCursor(void)
 
 /*
  * Push a clipping rectangle onto the clipping rectangle stack.
- * This is only safe to call from GUI rendering context.
+ * Must be invoked from GUI rendering context.
  */
 void
 AG_PushClipRect(void *obj, AG_Rect r)
 {
 	AG_ClipRect *cr, *crPrev;
 
-	r.x += WIDGET(obj)->cx;
-	r.y += WIDGET(obj)->cy;
+	r.x += WIDGET(obj)->rView.x1;
+	r.y += WIDGET(obj)->rView.y1;
 
 	agClipRects = Realloc(agClipRects, (agClipRectCount+1) *
 	                                   sizeof(AG_ClipRect));
@@ -1392,7 +1386,7 @@ AG_PushClipRect(void *obj, AG_Rect r)
 
 /*
  * Pop a clipping rectangle off the clipping rectangle stack.
- * This is only safe to call from GUI rendering context.
+ * Must be invoked from GUI rendering context.
  */
 void
 AG_PopClipRect(void)
@@ -1420,8 +1414,8 @@ AG_PopClipRect(void)
 }
 
 /*
- * Render a widget and its descendents, recursively.
- * The view must be locked. In OpenGL mode, GL must be locked as well.
+ * Render a widget to the display.
+ * Must be invoked from GUI rendering context.
  */
 void
 AG_WidgetDraw(void *p)
@@ -1433,18 +1427,32 @@ AG_WidgetDraw(void *p)
 	if (wid->textureGC > 0)
 		DeleteQueuedTextures(wid);
 #endif
-	if (wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE))
-		goto out;
-
-	if (((wid->flags & AG_WIDGET_STATIC) == 0 || wid->redraw) &&
+	if (!(wid->flags & (AG_WIDGET_HIDE|AG_WIDGET_UNDERSIZE)) &&
 	    !OccultedWidget(wid) &&
-	    WIDGET_OPS(wid)->draw != NULL &&
-	    WIDTH(wid) > 0 && HEIGHT(wid) > 0) {
+	    WIDGET_OPS(wid)->draw != NULL) {
 		WIDGET_OPS(wid)->draw(wid);
-		if (wid->flags & AG_WIDGET_STATIC)
-			wid->redraw = 0;
 	}
-out:
+#if 0
+	if (!AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
+		static Uint8 c1[4] = { 200, 0, 0, 25 };
+		AG_Rect r;
+
+		r.x = wid->rSens.x1;
+		r.y = wid->rSens.y1;
+		r.w = wid->rSens.w;
+		r.h = wid->rSens.h;
+
+		if (r.x != wid->rView.x1 || r.y != wid->rView.y1 ||
+		    r.w != wid->rView.w || r.h != wid->rView.h) {
+			r.x -= wid->rView.x1;
+			r.y -= wid->rView.y1;
+			AG_DrawRectBlended(wid, r,
+			    c1, AG_ALPHA_SRC);
+			AG_DrawRectOutline(wid, r,
+			    AG_MapRGB(agVideoFmt,100,0,0));
+		}
+	}
+#endif
 	AG_ObjectUnlock(wid);
 }
 
@@ -1475,13 +1483,13 @@ AG_WidgetSizeReq(void *w, AG_SizeReq *r)
 }
 
 int
-AG_WidgetSizeAlloc(void *p, AG_SizeAlloc *a)
+AG_WidgetSizeAlloc(void *obj, AG_SizeAlloc *a)
 {
-	AG_Widget *w = p;
+	AG_Widget *w = obj;
 
 	AG_ObjectLock(w);
 
-	if (a->w < 0 || a->h < 0) {
+	if (a->w <= 0 || a->h <= 0) {
 		a->w = 0;
 		a->h = 0;
 		w->flags |= AG_WIDGET_UNDERSIZE;
@@ -1490,6 +1498,7 @@ AG_WidgetSizeAlloc(void *p, AG_SizeAlloc *a)
 	w->y = a->y;
 	w->w = a->w;
 	w->h = a->h;
+
 	if (WIDGET_OPS(w)->size_allocate != NULL) {
 		if (WIDGET_OPS(w)->size_allocate(w, a) == -1) {
 			w->flags |= AG_WIDGET_UNDERSIZE;
@@ -1510,15 +1519,13 @@ fail:
  * Blend with the pixel at widget-relative x,y coordinates, with clipping
  * to display area.
  *
- * Must be invoked from rendering context. In SDL mode, the display surface
- * must be locked.
+ * Must be invoked from GUI rendering context. In SDL mode, the display
+ * surface must be locked.
  */
 void
-AG_WidgetBlendPixelRGBA(void *p, int wx, int wy, Uint8 c[4], AG_BlendFn fn)
+AG_WidgetBlendPixelRGBA(void *p, int x, int y, Uint8 c[4], AG_BlendFn fn)
 {
 	AG_Widget *wid = p;
-	int vx = wid->cx+wx;
-	int vy = wid->cy+wy;
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
@@ -1551,7 +1558,8 @@ AG_WidgetBlendPixelRGBA(void *p, int wx, int wy, Uint8 c[4], AG_BlendFn fn)
 		}
 		glBegin(GL_POINTS);
 		glColor4ubv((GLubyte *)c);
-		glVertex2s(vx, vy);
+		glVertex2s(wid->rView.x1 + x,
+		           wid->rView.y1 + y);
 		glEnd();
 
 		if (!svBlendBit) {
@@ -1562,7 +1570,9 @@ AG_WidgetBlendPixelRGBA(void *p, int wx, int wy, Uint8 c[4], AG_BlendFn fn)
 	} else
 #endif /* HAVE_OPENGL */
 	{
-		AG_BLEND_RGBA2_CLIPPED(agView->v, vx, vy,
+		AG_BLEND_RGBA2_CLIPPED(agView->v,
+		    wid->rView.x1 + x,
+		    wid->rView.y1 + y,
 		    c[0], c[1], c[2], c[3], fn);
 	}
 }
@@ -1581,8 +1591,12 @@ AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
 	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetFocused(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
 		AG_PostEvent(NULL, wid, "window-mousemotion",
-		    "%i, %i, %i, %i, %i", x-wid->cx, y-wid->cy,
-		    xrel, yrel, state);
+		    "%i,%i,%i,%i,%i",
+		    x - wid->rView.x1,
+		    y - wid->rView.y1,
+		    xrel,
+		    yrel,
+		    state);
 		if (wid->flags & AG_WIDGET_PRIO_MOTION)
 			goto out;
 	}
@@ -1605,8 +1619,10 @@ AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
 	AG_ObjectLock(wid);
 	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetFocused(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
-		AG_PostEvent(NULL, wid,  "window-mousebuttonup", "%i, %i, %i",
-		    button, x-wid->cx, y-wid->cy);
+		AG_PostEvent(NULL, wid, "window-mousebuttonup", "%i,%i,%i",
+		    button,
+		    x - wid->rView.x1,
+		    y - wid->rView.y1);
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		AG_WidgetMouseButtonUp(win, cwid, button, x, y);
@@ -1629,7 +1645,7 @@ AG_WidgetMouseButtonDown(AG_Window *win, AG_Widget *wid, int button,
 		if (AG_WidgetMouseButtonDown(win, cwid, button, x, y))
 			goto match;
 	}
-	if (!AG_WidgetArea(wid, x, y)) {
+	if (!AG_WidgetSensitive(wid, x, y)) {
 		goto out;
 	}
 	TAILQ_FOREACH(ev, &OBJECT(wid)->events, events) {
@@ -1637,8 +1653,10 @@ AG_WidgetMouseButtonDown(AG_Window *win, AG_Widget *wid, int button,
 			break;
 	}
 	if (ev != NULL) {
-		AG_PostEvent(NULL, wid, "window-mousebuttondown", "%i, %i, %i",
-		    button, x-wid->cx, y-wid->cy);
+		AG_PostEvent(NULL, wid, "window-mousebuttondown", "%i,%i,%i",
+		    button,
+		    x - wid->rView.x1,
+		    y - wid->rView.y1);
 		goto match;
 	}
 out:
@@ -1726,24 +1744,40 @@ fail:
 
 /* Compute the absolute view coordinates of a widget and its descendents. */
 void
-AG_WidgetUpdateCoords(void *parent, int x, int y)
+AG_WidgetUpdateCoords(void *obj, int x, int y)
 {
-	AG_Widget *pwid = parent, *cwid;
+	AG_Widget *wid = obj, *chld;
+	AG_Rect2 rPrev;
 
-	AG_LockVFS(pwid);
-	AG_ObjectLock(pwid);
-	pwid->cx = x;
-	pwid->cy = y;
-	pwid->cx2 = x + pwid->w;
-	pwid->cy2 = y + pwid->h;
+	AG_LockVFS(wid);
+	AG_ObjectLock(wid);
 
-	AG_PostEvent(NULL, pwid, "widget-moved", NULL);
+	rPrev = wid->rView;
+	wid->rView.x1 = x;
+	wid->rView.y1 = y;
+	wid->rView.w = wid->w;
+	wid->rView.h = wid->h;
+	wid->rView.x2 = x + wid->w;
+	wid->rView.y2 = y + wid->h;
+	
+	wid->rSens.x1 = x;
+	wid->rSens.y1 = y;
+	wid->rSens.w = wid->w;
+	wid->rSens.h = wid->h;
+	wid->rSens.x2 = x + wid->w;
+	wid->rSens.y2 = y + wid->h;
 
-	OBJECT_FOREACH_CHILD(cwid, pwid, ag_widget) {
-		AG_WidgetUpdateCoords(cwid, pwid->cx+cwid->x, pwid->cy+cwid->y);
+	if (AG_RectCompare2(&wid->rView, &rPrev) != 0) {
+		AG_PostEvent(NULL, wid, "widget-moved", NULL);
 	}
-	AG_ObjectUnlock(pwid);
-	AG_UnlockVFS(pwid);
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget) {
+		AG_WidgetUpdateCoords(chld,
+		    wid->rView.x1 + chld->x,
+		    wid->rView.y1 + chld->y);
+	}
+
+	AG_ObjectUnlock(wid);
+	AG_UnlockVFS(wid);
 }
 
 /* Parse a generic size specification. */
@@ -1891,8 +1925,8 @@ FindRectOverlap(AG_Widget *parent, const char *type, int x, int y, int w, int h)
 			return (p);
 	}
 	if (AG_OfClass(parent, type) &&
-	    !(x+w < parent->cx || x > parent->cx2 ||
-	      y+w < parent->cy || y > parent->cy2)) {
+	    !(x+w < parent->rView.x1 || x > parent->rView.x2 ||
+	      y+w < parent->rView.y1 || y > parent->rView.y2)) {
 		return (parent);
 	}
 	return (NULL);

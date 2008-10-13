@@ -1750,6 +1750,7 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 	int tilesz = m->cameras[cam].tilesz;
 	RG_Tile *tile;
 	RG_Anim *anim;
+	int x, y;
 
 	switch (r->type) {
 	case MAP_ITEM_TILE:
@@ -1789,28 +1790,23 @@ MAP_ItemDraw(MAP *m, MAP_Item *r, int rx, int ry, int cam)
 draw:
 	if (!agView->opengl) {
 		if (tilesz != MAPTILESZ) {
-			int dx = rx + r->r_gfx.xcenter*tilesz/MAPTILESZ +
+			x = rx + r->r_gfx.xcenter*tilesz/MAPTILESZ +
 			         r->r_gfx.xmotion*tilesz/MAPTILESZ -
 				 r->r_gfx.xorigin*tilesz/MAPTILESZ;
-			int dy = ry + r->r_gfx.ycenter*tilesz/MAPTILESZ +
+			y = ry + r->r_gfx.ycenter*tilesz/MAPTILESZ +
 			         r->r_gfx.ymotion*tilesz/MAPTILESZ -
 				 r->r_gfx.yorigin*tilesz/MAPTILESZ;
 
-			BlitSurfaceScaled(m, su, &r->r_gfx.rs, dx, dy, cam);
+			BlitSurfaceScaled(m, su, &r->r_gfx.rs, x,y, cam);
 		} else {
-			AG_Rect rd;
-
-			rd.x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion -
+			x = rx + r->r_gfx.xcenter + r->r_gfx.xmotion -
 			    r->r_gfx.xorigin;
-			rd.y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion -
+			y = ry + r->r_gfx.ycenter + r->r_gfx.ymotion -
 			    r->r_gfx.yorigin;
 
-			if (debug_su) {
-				AG_SurfaceBlit(su, NULL, agView->v, &rd);
-			} else {
-				AG_SurfaceBlit(su, &r->r_gfx.rs, agView->v,
-				    &rd);
-			}
+			AG_SurfaceBlit(su,
+			    debug_su ? NULL : &r->r_gfx.rs,
+			    agView->v, x,y);
 		}
 	} else {
 #ifdef HAVE_OPENGL
@@ -1988,13 +1984,11 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, AG_Surface *sprite)
 	char mapname[AG_OBJECT_NAME_MAX];
 	int x, y, mx, my;
 	Uint mw, mh;
-	AG_Rect sd, rd;
+	AG_Rect sd;
 	MAP *fragmap;
 
 	sd.w = MAPTILESZ;
 	sd.h = MAPTILESZ;
-	rd.x = 0;
-	rd.y = 0;
 	mw = sprite->w/MAPTILESZ + 1;
 	mh = sprite->h/MAPTILESZ + 1;
 
@@ -2039,7 +2033,7 @@ AG_GenerateMapFromSurface(AG_Gfx *gfx, AG_Surface *sprite)
 			AG_SetColorKey(sprite, 0, 0);
 			sd.x = x;
 			sd.y = y;
-			AG_SurfaceBlit(sprite, &sd, su, &rd);
+			AG_SurfaceBlit(sprite, &sd, su, 0,0);
 			nsprite = AG_GfxAddTile(gfx, su);
 			AG_SetAlpha(sprite, saflags, salpha);
 			AG_SetColorKey(sprite, sckflags, scolorkey);

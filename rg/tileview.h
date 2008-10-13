@@ -227,10 +227,10 @@ typedef struct rg_tileview {
 } RG_Tileview;
 
 #define RG_TILEVIEW_TOOL(p) ((RG_TileviewTool *)p)
-#define RG_TILEVIEW_SCALED_X(tv, x) (AGWIDGET(tv)->cx + (tv)->xoffs + \
-    (x)*(tv)->pxsz)
-#define RG_TILEVIEW_SCALED_Y(tv, x) (AGWIDGET(tv)->cy + (tv)->yoffs + \
-    (y)*(tv)->pxsz)
+#define RG_TILEVIEW_SCALED_X(tv, x) \
+    (AGWIDGET(tv)->rView.x1 + (tv)->xoffs + (x)*(tv)->pxsz)
+#define RG_TILEVIEW_SCALED_Y(tv, x) \
+    (AGWIDGET(tv)->rView.y1 + (tv)->yoffs + (y)*(tv)->pxsz)
 
 __BEGIN_DECLS
 extern AG_WidgetClass rgTileviewClass;
