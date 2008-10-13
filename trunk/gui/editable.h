@@ -81,6 +81,7 @@ void         AG_EditableBindASCII(AG_Editable *, char *, size_t);
 
 void         AG_EditableSizeHint(AG_Editable *, const char *);
 void         AG_EditableSizeHintPixels(AG_Editable *, Uint, Uint);
+void         AG_EditableSizeHintLines(AG_Editable *, Uint);
 #define      AG_EditablePrescale AG_EditableSizeHint
 void         AG_EditableSetPassword(AG_Editable *, int);
 void         AG_EditableSetStatic(AG_Editable *, int);

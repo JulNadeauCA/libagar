@@ -58,6 +58,8 @@ AG_Textbox *AG_TextboxNew(void *, Uint, const char *);
 #define     AG_TextboxSizeHint(tb,text) AG_EditableSizeHint((tb)->ed,(text))
 #define     AG_TextboxSizeHintPixels(tb,w,h) \
             AG_EditableSizeHintPixels((tb)->ed,(w),(h))
+#define     AG_TextboxSizeHintLines(tb,l) \
+            AG_EditableSizeHintLines((tb)->ed,(l))
 void        AG_TextboxSetLabel(AG_Textbox *, const char *, ...);
 #define     AG_TextboxSetPassword(tb,flag) \
             AG_EditableSetPassword((tb)->ed,(flag))

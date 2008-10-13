@@ -76,6 +76,9 @@ It allows the user to edit UTF-8 encoded text in single-line or multi-line mode.
 .Ft void
 .Fn AG_EditableSizeHintPixels "AG_Editable *ed" "Uint w" "Uint h"
 .Pp
+.Ft void
+.Fn AG_EditableSizeHintLines "AG_Editable *ed" "Uint nLines"
+.Pp
 .nr nS 0
 The
 .Fn AG_EditableNew
@@ -172,6 +175,8 @@ in its entirety.
 The
 .Fn AG_EditableSizeHintPixels
 variant accepts arguments in pixels.
+.Fn AG_EditableSizeHintLines
+accepts a line count.
 .Sh CURSOR MANIPULATION
 .nr nS 1
 .Ft int
