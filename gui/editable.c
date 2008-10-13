@@ -733,6 +733,14 @@ AG_EditableSizeHintPixels(AG_Editable *ed, Uint w, Uint h)
 	AG_ObjectUnlock(ed);
 }
 
+void
+AG_EditableSizeHintLines(AG_Editable *ed, Uint nLines)
+{
+	AG_ObjectLock(ed);
+	ed->hPre = nLines*agTextFontHeight;
+	AG_ObjectUnlock(ed);
+}
+
 static void
 SizeRequest(void *obj, AG_SizeReq *r)
 {

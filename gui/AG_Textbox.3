@@ -79,6 +79,9 @@ multiline mode.
 .Ft void
 .Fn AG_TextboxSizeHintPixels "AG_Textbox *textbox" "Uint w" "Uint h"
 .Pp
+.Ft void
+.Fn AG_TextboxSizeHintLines "AG_Textbox *textbox" "Uint nLines"
+.Pp
 .nr nS 0
 The
 .Fn AG_TextboxNew
@@ -173,6 +176,8 @@ in its entirety.
 The
 .Fn AG_TextboxSizeHintPixels
 variant accepts arguments in pixels.
+.Fn AG_TextboxSizeHintLines
+accepts a number of lines.
 .Sh CURSOR MANIPULATION
 .nr nS 1
 .Ft int
