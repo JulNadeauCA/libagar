@@ -759,6 +759,37 @@ AG_ViewVideoExpose(void)
 	AG_UnlockVFS(agView);
 }
 
+/* Queue a video region for update (for FB graphics modes). */
+void
+AG_ViewUpdateFB(const AG_Rect2 *rp)
+{
+	AG_Rect2 r;
+	int n;
+
+	if (agView->opengl)
+		return;
+
+	/* XXX TODO use IntersectRect() against agView */
+	r = *rp;
+	if (r.x1 < 0) { r.x1 = 0; }
+	if (r.y1 < 0) { r.y1 = 0; }
+	if (r.x2 > agView->w) { r.x2 = agView->w; r.w = r.x2-r.x1; }
+	if (r.y2 > agView->h) { r.y2 = agView->h; r.h = r.y2-r.y1; }
+	if (r.w < 0) { r.x1 = 0; r.x2 = r.w = agView->w; }
+	if (r.h < 0) { r.y1 = 0; r.y2 = r.h = agView->h; }
+
+	n = agView->ndirty++;
+	if (n+1 > agView->maxdirty) {
+		agView->maxdirty *= 2;
+		agView->dirty = AG_Realloc(agView->dirty, agView->maxdirty *
+		                                          sizeof(SDL_Rect));
+	}
+	agView->dirty[n].x = r.x1;
+	agView->dirty[n].y = r.y1;
+	agView->dirty[n].w = r.w;
+	agView->dirty[n].h = r.h;
+}
+
 /* Return the named window or NULL if there is no such window. */
 AG_Window *
 AG_FindWindow(const char *name)

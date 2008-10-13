@@ -15,18 +15,28 @@ struct ag_window;
 struct ag_style;
 AG_TAILQ_HEAD(ag_windowq, ag_window);
 
+/* Integer point */
 typedef struct ag_point {
 	int x, y;
 } AG_Point;
 
+/* Integer rectangle from coordinate and dimensions */
 typedef struct ag_rect {
 	int x, y;
 	int w, h;
 } AG_Rect;
 
+/* Integer rectangle with computed extrema. */
+typedef struct ag_rect2 {
+	int x1, y1;
+	int w, h;
+	int x2, y2;
+} AG_Rect2;
+
+/* Clipping rectangle */
 typedef struct ag_clip_rect {
-	AG_Rect r;				/* Integer coordinates */
-	double eqns[4][4];			/* Plane equations (GL) */
+	AG_Rect r;		/* Integer coordinates */
+	double eqns[4][4];	/* Computed plane equations (GL) */
 } AG_ClipRect;
 
 /* For transition to Agar-1.4 */
@@ -258,18 +268,19 @@ int  AG_InitVideoSDL(SDL_Surface *, Uint);
 int  AG_InitGUI(Uint);
 void AG_DestroyGUI(void);
 void AG_ClearBackground(void);
-
-void AG_DestroyVideo(void);
-int  AG_ResizeDisplay(int, int);
 int  AG_SetRefreshRate(int);
+void AG_ViewUpdateFB(const AG_Rect2 *);
+void AG_ViewVideoExpose(void);
+int  AG_ResizeDisplay(int, int);
+void AG_DestroyVideo(void);
+void AG_BeginRendering(void);
+void AG_EndRendering(void);
+
 void AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
 void AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
 int  AG_UnbindGlobalKey(SDLKey, SDLMod);
 void AG_ClearGlobalKeys(void);
-void AG_BeginRendering(void);
-void AG_EndRendering(void);
 
-void              AG_ViewVideoExpose(void);
 void              AG_ViewAttach(void *);
 void              AG_ViewDetach(struct ag_window *);
 struct ag_window *AG_FindWindow(const char *);
@@ -354,6 +365,7 @@ void            AG_SurfaceFree(AG_Surface *);
 #define AG_GetRGBA(pixel,fmt,r,g,b,a) \
 	SDL_GetRGBA((pixel),(SDL_PixelFormat *)(fmt),(r),(g),(b),(a))
 
+/* Convert a pixel from SurfaceFmt to VideoFmt. */
 static __inline__ Uint32
 AG_VideoPixel(Uint32 c)
 {
@@ -361,6 +373,8 @@ AG_VideoPixel(Uint32 c)
 	AG_GetRGB(c, agSurfaceFmt, &r,&g,&b);
 	return AG_MapRGB(agVideoFmt, r,g,b);
 }
+
+/* Convert a pixel from VideoFmt to SurfaceFmt. */
 static __inline__ Uint32
 AG_SurfacePixel(Uint32 c)
 {
@@ -368,6 +382,8 @@ AG_SurfacePixel(Uint32 c)
 	AG_GetRGB(c, agVideoFmt, &r,&g,&b);
 	return AG_MapRGB(agSurfaceFmt, r,g,b);
 }
+
+/* Return pixel value at specified position in surface s. */
 static __inline__ Uint32
 AG_GetPixel(AG_Surface *s, Uint8 *pSrc)
 {
@@ -389,6 +405,8 @@ AG_GetPixel(AG_Surface *s, Uint8 *pSrc)
 	}
 	return (*pSrc);
 }
+
+/* Write pixel value at specified position in surface s. */
 static __inline__ void
 AG_PutPixel(AG_Surface *s, Uint8 *pDst, Uint32 cDst)
 {
@@ -415,6 +433,8 @@ AG_PutPixel(AG_Surface *s, Uint8 *pDst, Uint32 cDst)
 		break;
 	}
 }
+
+/* Test whether two surfaces use identical pixel formats. */
 static __inline__ int
 AG_SamePixelFmt(AG_Surface *s1, AG_Surface *s2)
 {
@@ -426,35 +446,7 @@ AG_SamePixelFmt(AG_Surface *s1, AG_Surface *s2)
 		s1->format->colorkey == s2->format->colorkey);
 }
 
-static __inline__ void
-AG_QueueVideoUpdate(int x, int y, int w, int h)
-{
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		agView->ndirty = 1;
-	} else
-#endif
-	{
-		if (x < 0) { x = 0; }
-		if (y < 0) { y = 0; }
-		if (x+w > agView->w) { w = agView->w - x; }
-		if (y+h > agView->h) { h = agView->h - y; }
-		if (w < 0) { x = 0; w = agView->w; }
-		if (h < 0) { y = 0; h = agView->h; }
-
-		if (agView->ndirty+1 > agView->maxdirty) {
-			agView->maxdirty *= 2;
-			agView->dirty = (SDL_Rect *)AG_Realloc(agView->dirty,
-			    agView->maxdirty * sizeof(SDL_Rect));
-		}
-		agView->dirty[agView->ndirty].x = x;
-		agView->dirty[agView->ndirty].y = y;
-		agView->dirty[agView->ndirty].w = w;
-		agView->dirty[agView->ndirty].h = h;
-		agView->ndirty++;
-	}
-}
-
+/* Return a Point at x,y. */
 static __inline__ AG_Point
 AG_POINT(int x, int y)
 {
@@ -463,6 +455,8 @@ AG_POINT(int x, int y)
 	pt.y = y;
 	return (pt);
 }
+
+/* Return a Rect of dimensions w,h at position x,y. */
 static __inline__ AG_Rect
 AG_RECT(int x, int y, int w, int h)
 {
@@ -473,6 +467,48 @@ AG_RECT(int x, int y, int w, int h)
 	r.h = h;
 	return (r);
 }
+
+/* Return a Rect2 of dimensions w,h at position x,y. */
+static __inline__ AG_Rect2
+AG_RECT2(int x, int y, int w, int h)
+{
+	AG_Rect2 r;
+	r.x1 = x;
+	r.y1 = y;
+	r.w = w;
+	r.h = h;
+	r.x2 = x+w;
+	r.y2 = y+h;
+	return (r);
+}
+
+/* Convert a Rect2 to a Rect. */
+static __inline__ AG_Rect
+AG_Rect2ToRect(AG_Rect2 r2)
+{
+	AG_Rect r;
+	r.x = r2.x1;
+	r.y = r2.y1;
+	r.w = r2.w;
+	r.h = r2.h;
+	return (r);
+}
+
+/* Convert a Rect to a Rect2. */
+static __inline__ AG_Rect2
+AG_RectToRect2(AG_Rect r)
+{
+	AG_Rect2 r2;
+	r2.x1 = r.x;
+	r2.y1 = r.y;
+	r2.w = r.w;
+	r2.h = r.h;
+	r2.x2 = r.x+r.w;
+	r2.y2 = r.y+r.h;
+	return (r2);
+}
+
+/* Return the intersection of two Rect's. */
 static __inline__ AG_Rect
 AG_RectIntersect(const AG_Rect *a, const AG_Rect *b)
 {
@@ -486,6 +522,45 @@ AG_RectIntersect(const AG_Rect *a, const AG_Rect *b)
 	if (x.h < 0) { x.h = 0; }
 	return (x);
 }
+
+/* Return the intersection of two Rect2's. */
+static __inline__ AG_Rect2
+AG_RectIntersect2(const AG_Rect2 *a, const AG_Rect2 *b)
+{
+	AG_Rect2 rx;
+
+	rx.x1 = AG_MAX(a->x1, b->x1);
+	rx.y1 = AG_MAX(a->y1, b->y1);
+	rx.w = AG_MIN(a->x2, b->x2) - rx.x1;
+	if (rx.w < 0) { rx.w = 0; }
+	rx.h = AG_MIN(a->y2, b->y2) - rx.y1;
+	if (rx.h < 0) { rx.h = 0; }
+	rx.x2 = rx.x1 + rx.w;
+	rx.y2 = rx.y1 + rx.h;
+	return (rx);
+}
+
+/* Test whether two Rect's are the same. */
+static __inline__ int
+AG_RectCompare(const AG_Rect *a, const AG_Rect *b)
+{
+	return (a->x == b->x &&
+	        a->y == b->y &&
+		a->w == b->w &&
+		a->h == b->h) ? 0:1;
+}
+
+/* Test whether two Rect2's are the same. */
+static __inline__ int
+AG_RectCompare2(const AG_Rect2 *a, const AG_Rect2 *b)
+{
+	return (a->x1 == b->x1 &&
+	        a->y1 == b->y1 &&
+		a->w == b->w &&
+		a->h == b->h) ? 0:1;
+}
+
+/* Convert an AG_Rect to an equivalent SDL_Rect. */
 static __inline__ SDL_Rect
 AG_RectToSDL(const AG_Rect *r)
 {
@@ -496,6 +571,8 @@ AG_RectToSDL(const AG_Rect *r)
 	rs.h = (Uint16)r->h;
 	return (rs);
 }
+
+/* Convert a SDL_Rect to an equivalent AG_Rect. */
 static __inline__ AG_Rect
 AG_RectFromSDL(const SDL_Rect *r)
 {
@@ -507,6 +584,7 @@ AG_RectFromSDL(const SDL_Rect *r)
 	return (rs);
 }
 
+/* Return a Color structure for given RGB components. */
 static __inline__ AG_Color
 AG_COLOR_RGB(Uint8 r, Uint8 g, Uint8 b)
 {
@@ -516,6 +594,8 @@ AG_COLOR_RGB(Uint8 r, Uint8 g, Uint8 b)
 	c.b = b;
 	return (c);
 }
+
+/* Return a Color structure for given RGBA components. */
 static __inline__ AG_Color
 AG_COLOR_RGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
@@ -527,29 +607,31 @@ AG_COLOR_RGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	return (c);
 }
 
+/*
+ * Copy the contents a surface (or a region within a surface) to a given
+ * position in another surface.
+ */
 static __inline__ void
-AG_SurfaceBlit(AG_Surface *src, const AG_Rect *sr, AG_Surface *dst,
-    const AG_Rect *dr)
+AG_SurfaceBlit(AG_Surface *src, const AG_Rect *rSrc, AG_Surface *dst,
+    int xDst, int yDst)
 {
-	SDL_Rect srSDL, drSDL;
+	SDL_Rect rs, rd;
 
-	if (sr != NULL && dr != NULL) {
-		srSDL = AG_RectToSDL(sr);
-		drSDL.x = (Sint16)dr->x;
-		drSDL.y = (Sint16)dr->y;
-		SDL_BlitSurface(src, &srSDL, dst, &drSDL);
-	} else if (sr != NULL) {
-		srSDL = AG_RectToSDL(sr);
-		SDL_BlitSurface(src, &srSDL, dst, NULL);
-	} else if (dr != NULL) {
-		drSDL.x = (Sint16)dr->x;
-		drSDL.y = (Sint16)dr->y;
-		SDL_BlitSurface(src, NULL, dst, &drSDL);
+	rd.x = (Sint16)xDst;
+	rd.y = (Sint16)yDst;
+
+	if (rSrc != NULL) {
+		rs.x = (Sint16)rSrc->x;
+		rs.y = (Sint16)rSrc->y;
+		rs.w = (Uint16)rSrc->w;
+		rs.h = (Uint16)rSrc->h;
+		SDL_BlitSurface(src, &rs, dst, &rd);
 	} else {
-		SDL_BlitSurface(src, NULL, dst, NULL);
+		SDL_BlitSurface(src, NULL, dst, &rd);
 	}
 }
 
+/* Fill rectangle with pixels */
 static __inline__ void
 AG_FillRect(AG_Surface *s, const AG_Rect *r, Uint32 c)
 {
@@ -563,6 +645,10 @@ AG_FillRect(AG_Surface *s, const AG_Rect *r, Uint32 c)
 	}
 }
 
+/*
+ * Get/set the clipping rectangle of a Surface. The clipping rectangle applies
+ * to AG_SurfaceBlit()s where surface s is the destination of the blit.
+ */
 static __inline__ void
 AG_GetClipRect(AG_Surface *s, AG_Rect *r)
 {

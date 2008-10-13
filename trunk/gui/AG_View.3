@@ -76,7 +76,7 @@ a number of utility routines for surface and texture manipulation.
 .Fn AG_ClearGlobalKeys "void"
 .Pp
 .Ft "void"
-.Fn AG_QueueVideoUpdate "int x" "int y" "int w" "int h"
+.Fn AG_ViewUpdateFB "const AG_Rect2 *r"
 .Pp
 .nr nS 0
 The
@@ -90,9 +90,9 @@ include:
 .It AG_VIDEO_HWSURFACE
 Request hardware framebuffer, whenever possible.
 .It AG_VIDEO_ASYNCBLIT
-In SDL mode, pass the
+If SDL is selected as a back-end, pass the
 .Dv SDL_ASYNCBLIT
-to
+flag to
 .Xr SDL_SetVideoMode 3 .
 .It AG_VIDEO_ANYFORMAT
 In SDL mode, avoid emulating surface of requested depth if not available.
@@ -154,10 +154,12 @@ mapping exists.
 removes all existing key mappings.
 .Pp
 The
-.Fn AG_QueueVideoUpdate
+.Fn AG_ViewUpdateFB
 routine queues the update of a video region for the next event processing
 cycle.
-It is only used by framebuffer-based display modes.
+If the current display mode is not framebuffer-based,
+.Fn AG_ViewUpdateFB
+is a no-op.
 .Sh FRAMEBUFFER-SPECIFIC OPERATIONS
 The following operations are only available when the current display surface
 provides an accessible framebuffer.
@@ -167,6 +169,12 @@ provides an accessible framebuffer.
 .Pp
 .Ft "void"
 .Fn AG_VIEW_PUT_PIXEL2 "int x" "int y" "Uint32 c"
+.Pp
+.Ft "void"
+.Fn AG_VIEW_PUT_PIXEL2_CLIPPED "int x" "int y" "Uint32 c"
+.Pp
+.Ft "void"
+.Fn AG_ViewUpdateFB "const AG_Rect *r"
 .Pp
 .nr nS 0
 The
@@ -180,6 +188,16 @@ and
 The operation is optimized for the pixel format of the display surface.
 It is unsafe to invoke these macros unless the current display surface is
 framebuffer-based.
+.Pp
+.Fn AG_VIEW_PUT_PIXEL2_CLIPPED
+tests the given coordinates against the current clipping rectangle (see
+.Xr AG_WidgetPushClipRect 3 ,
+.Xr AG_WidgetPopClipRect 3 ,
+.Xr AG_SetClipRect 3 ) .
+.Pp
+The
+.Fn AG_ViewUpdateFB
+routine marks the specified video region for subsequent video updates.
 .Sh OPENGL-SPECIFIC OPERATIONS
 The following operations are only available when the current display surface
 has an associated OpenGL context.
@@ -279,10 +297,9 @@ objects associated with display (read-only).
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
+.Xr AG_Rect 3 ,
 .Xr AG_Surface 3 ,
 .Xr AG_Window 3 ,
-.Xr glViewport 3 ,
-.Xr glOrtho 3 ,
 .Xr SDL_SetVideoMode 3
 .Sh HISTORY
 The
