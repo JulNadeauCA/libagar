@@ -175,6 +175,9 @@ SizeColumns(AG_Table *t)
 			if (tc != tcFill)
 				tcFill->w -= tc->w;
 		}
+		if (tcFill->w < t->wColMin) {
+			tcFill->w = t->wColMin;
+		}
 		t->wTot += tcFill->w;
 	}
 }
@@ -427,17 +430,34 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 	case AG_CELL_WIDGET:
 		if (WIDGET_OPS(c->data.p)->draw != NULL) {
 			AG_SizeAlloc wa;
-			AG_Widget *W = c->data.p;
+			AG_Widget *wt = c->data.p;
 
-			wa.x = rd->x;
-			wa.y = rd->y;
-			wa.w = rd->w;
-			wa.h = rd->h;
-			AG_WidgetSizeAlloc(W, &wa);
-			AG_WidgetUpdateCoords(W,
-			    WIDGET(t)->cx + rd->x,
-			    WIDGET(t)->cy + rd->y);
-			AG_WidgetDraw(W);
+			/* Update the effective widget coordinates. */
+			if (wt->x != rd->x || wt->y != rd->y ||
+			    wt->w != rd->w || wt->h != rd->h) {
+				wa.x = rd->x;
+				wa.y = rd->y;
+				wa.w = rd->w;
+				wa.h = rd->h;
+				AG_WidgetSizeAlloc(wt, &wa);
+				AG_WidgetUpdateCoords(wt,
+				    WIDGET(t)->rView.x1 + rd->x,
+				    WIDGET(t)->rView.y1 + rd->y);
+			} else {
+				wt->rSens.w = rd->w;
+				wt->rSens.h = rd->h;
+			}
+
+			/* Mask mouse events in clipped out area. */
+			wt->rSens.w = (rd->x+rd->w > t->r.w) ?
+			    (t->r.w - rd->x - 2) : rd->w;
+			wt->rSens.x2 = wt->rSens.x1 + wt->rSens.w;
+
+			wt->rSens.h = (rd->y+rd->h > t->r.h+t->hCol) ?
+			    (t->r.h + t->hCol - rd->y - 2) : rd->h;
+			wt->rSens.y2 = wt->rSens.y1 + wt->rSens.h;
+			
+			AG_WidgetDraw(wt);
 		}
 		c->surface = -1;
 		return;
@@ -1599,8 +1619,7 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 			break;
 		}
 	} else {
-		if (name != NULL)
-			tc->flags |= AG_TABLE_COL_FILL;
+		tc->flags |= AG_TABLE_COL_FILL;
 	}
 
 	/* Resize the row arrays. */
