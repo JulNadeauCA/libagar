@@ -84,16 +84,29 @@ over
 .Fn AG_RectIntersect2 "const AG_Rect2 *a" "const AG_Rect2 *b"
 .Pp
 .Ft int
-.Fn AG_RectCompare "const AG_Rect *a" "const AG_Rect *b"
+.Fn AG_RectInside "const AG_Rect *r" "int x" "int y"
 .Pp
 .Ft int
-.Fn AG_RectCompare2 "const AG_Rect2 *a" "const AG_Rect2 *b"
+.Fn AG_RectInside2 "const AG_Rect2 *r" "int x" "int y"
 .Pp
 .Ft SDL_Rect
 .Fn AG_RectToSDL "const AG_Rect *r"
 .Pp
 .Ft AG_Rect
 .Fn AG_RectFromSDL "const SDL_Rect *r"
+.Pp
+.Ft int
+.Fn AG_RectCompare "const AG_Rect *a" "const AG_Rect *b"
+.Pp
+.Ft int
+.Fn AG_RectCompare2 "const AG_Rect2 *a" "const AG_Rect2 *b"
+.Pp
+.Ft void
+.Fn AG_RectSize "AG_Rect *r" "int w" "int h"
+.Pp
+.Ft void
+.Fn AG_RectSize2 "AG_Rect2 *r" "int w" "int h"
+.Pp
 .nr nS 0
 .Pp
 The
@@ -138,10 +151,27 @@ return intersection of rectangles
 and
 .Fa b .
 .Pp
+.Fn AG_RectInside
+and
+.Fn AG_RectInside
+return 1 if the point
+.Fa x ,
+.Fa y
+lies inside of rectangle
+.Fa r .
+.Pp
+The
 .Fn AG_RectCompare
 and
 .Fn AG_RectCompare2
-returns 0 if both rectangles possess the same coordinates and dimensions.
+routines return 0 if both rectangles possess the same coordinates and
+dimensions.
+.Pp
+The
+.Fn AG_RectSize
+and
+.Fn AG_RectSize2
+routines resize a rectangle to the specified dimensions.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Widget 3 .

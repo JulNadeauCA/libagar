@@ -120,7 +120,8 @@ typedef struct ag_widget {
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
 	AG_Rect2 rView;			/* Computed view coordinates */
-	AG_Rect2 rSens;			/* Area sensitive to mouse events */
+	AG_Rect2 rSens;			/* Rectangle of sensitivity (i.e., to
+					   cursor events), in view coords */
 
 	AG_Style *style;		/* Style (inherited from parent) */
 
@@ -239,6 +240,7 @@ void	 AG_UnsetCursor(void);
 void	 AG_WidgetBlendPixelRGBA(void *, int, int, Uint8 [4],
 	                         enum ag_blend_func);
 
+int   AG_WidgetSensitive(void *, int, int);
 void  AG_WidgetMouseMotion(struct ag_window *, AG_Widget *, int, int, int,
 	                   int, int);
 void  AG_WidgetMouseButtonUp(struct ag_window *, AG_Widget *, int, int, int);
@@ -350,16 +352,6 @@ AG_WidgetArea(void *p, int x, int y)
 
 	return (x > wid->rView.x1 && y > wid->rView.y1 &&
 	        x < wid->rView.x2 && y < wid->rView.y2);
-}
-
-/* Test whether view coordinates x,y lie in widget's rSens. */
-static __inline__ int
-AG_WidgetSensitive(void *p, int x, int y)
-{
-	AG_Widget *wid = AGWIDGET(p);
-
-	return (x > wid->rSens.x1 && y > wid->rSens.y1 &&
-	        x < wid->rSens.x2 && y < wid->rSens.y2);
 }
 
 /* Test whether widget coordinates x,y lie in widget's allocated space. */

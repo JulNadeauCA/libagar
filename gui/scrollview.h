@@ -26,8 +26,9 @@ typedef struct ag_scrollview {
 	int wPre, hPre;			/* Requested geometry */
 	int xOffs, yOffs;		/* Display offset */
 	int xMin, xMax, yMin, yMax;	/* Display boundaries */
-	AG_Rect rView;			/* Available space for widgets */
+	AG_Rect r;			/* Available space for widgets */
 	AG_Scrollbar *hbar, *vbar;	/* Scrollbars for panning */
+	int wBar, hBar;			/* Effective scrollbar sizes */
 	int incr;			/* Scrolling increment */
 } AG_Scrollview;
 
