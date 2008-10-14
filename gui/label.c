@@ -547,17 +547,17 @@ DrawPolled(AG_Label *lbl)
 				switch (f[2]) {
 				case 'f':
 					PF("%.2f", AG_LABEL_ARG(lbl,double));
-					f += 2;
+					f++;
 					break;
 				case 'g':
 					PF("%g", AG_LABEL_ARG(lbl,double));
-					f += 2;
+					f++;
 					break;
 #ifdef HAVE_64BIT
 				case 'l':
 					fPos += PrintPolled64(lbl, &f[3], s,
 					    s2);
-					f += 2;
+					f++;
 					break;
 #endif /* HAVE_64BIT */
 				}
