@@ -142,11 +142,6 @@ package agar.gui.widget.button is
      text    : string);
   pragma inline (text);
 
-  procedure text_no_copy
-    (button  : button_access_t;
-     text    : string);
-  pragma inline (text_no_copy);
-
   function widget (button : button_access_t) return widget_access_t;
   pragma inline (widget);
 

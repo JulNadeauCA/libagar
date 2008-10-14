@@ -178,6 +178,7 @@ private
     pad_top      : c.int;
     pad_bottom   : c.int;
     justify      : agar.gui.text.justify_t;
+    valign       : agar.gui.text.valign_t;
     poll         : poll_t;
     lflags       : flag_slist.head_t;
     cache        : agar.core.types.void_ptr_t; -- XXX: ag_text_cache *
