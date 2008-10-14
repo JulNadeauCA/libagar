@@ -76,8 +76,10 @@ echo "Updating signatures"
 gpg -ab ${DISTNAME}.tar.gz
 gpg -ab ${DISTNAME}.zip
 
-echo "Uploading to ${RHOST}"
-scp -C ${DISTNAME}.{tar.gz,tar.gz.md5,tar.gz.asc,zip,zip.md5,zip.asc} ${RUSER}@${RHOST}:${REMOTEDIR}
+if [ "$NOUPLOAD" != "Yes" ]; then
+	echo "Uploading to ${RHOST}"
+	scp -C ${DISTNAME}.{tar.gz,tar.gz.md5,tar.gz.asc,zip,zip.md5,zip.asc} ${RUSER}@${RHOST}:${REMOTEDIR}
+fi
 
 if [ "$PHASE" = "stable" ]; then
 	echo "*********************************************************"

@@ -5,6 +5,8 @@
 
 #include <agar/gui/box.h>
 
+#include <agar/begin.h>
+
 typedef struct ag_vbox {
 	struct ag_box box;
 } AG_VBox;
@@ -19,5 +21,7 @@ typedef struct ag_vbox {
 #define AG_VBoxSetHomogenous(b, fl) AG_BoxSetHomogenous((AG_Box *)(b), (fl))
 #define AG_VBoxSetPadding(b, pad) AG_BoxSetPadding((AG_Box *)(b), (pad))
 #define AG_VBoxSetSpacing(b, sp) AG_BoxSetSpacing((AG_Box *)(b), (sp))
+
+#include <agar/close.h>
 
 #endif /* _AGAR_WIDGET_VBOX_H_ */
