@@ -352,19 +352,6 @@ package body agar.gui.widget.button is
        text   => cs.to_chars_ptr (ca_text'unchecked_access));
   end text;
 
-  procedure text_no_copy
-    (button  : button_access_t;
-     text    : string)
-  is
-    ca_fmt  : aliased c.char_array := c.to_c ("%s");
-    ca_text : aliased c.char_array := c.to_c (text);
-  begin
-    cbinds.text_no_copy
-      (button => button,
-       fmt    => cs.to_chars_ptr (ca_fmt'unchecked_access),
-       text   => cs.to_chars_ptr (ca_text'unchecked_access));
-  end text_no_copy;
-
   function widget (button : button_access_t) return widget_access_t is
   begin
     return button.widget'access;

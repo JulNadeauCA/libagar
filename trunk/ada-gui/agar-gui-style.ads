@@ -23,8 +23,7 @@ package agar.gui.style is
     version                            : version_t;
     init                               : access procedure (style : style_access_t);
     destroy                            : access procedure (style : style_access_t);
-    window_background                  : access procedure (window : agar.gui.window.window_access_t);
-    window_borders                     : access procedure (window : agar.gui.window.window_access_t);
+    window                             : access procedure (window : agar.gui.window.window_access_t);
     titlebar_background                : access procedure
       (widget     : agar.gui.widget.widget_access_t;
        is_pressed : c.int;

@@ -330,13 +330,6 @@ package agar.gui.widget is
      color  : agar.core.types.uint32_t);
   pragma inline (put_pixel32);
  
-  procedure put_pixel32_or_clip
-    (widget : widget_access_t;
-     x      : natural;
-     y      : natural;
-     color  : agar.core.types.uint32_t);
-  pragma inline (put_pixel32_or_clip);
- 
   procedure put_pixel_rgb
     (widget : widget_access_t;
      x      : natural;
@@ -345,15 +338,6 @@ package agar.gui.widget is
      g      : agar.core.types.uint8_t;
      b      : agar.core.types.uint8_t); 
   pragma inline (put_pixel_rgb);
-
-  procedure put_pixel_rgb_or_clip
-    (widget : widget_access_t;
-     x      : natural;
-     y      : natural;
-     r      : agar.core.types.uint8_t;
-     g      : agar.core.types.uint8_t;
-     b      : agar.core.types.uint8_t); 
-  pragma inline (put_pixel_rgb_or_clip);
 
   procedure blend_pixel_rgba
     (widget : widget_access_t;

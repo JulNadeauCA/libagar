@@ -81,6 +81,7 @@ package agar.gui.text is
     color     : agar.core.types.uint32_t;
     color_bg  : agar.core.types.uint32_t;
     justify   : justify_t;
+    valign    : valign_t;
   end record;
   type state_access_t is access all state_t;
   pragma convention (c, state_t);

@@ -124,26 +124,6 @@ package body agar.gui.widget is
        color  => color);
   end put_pixel32;
 
-  procedure put_pixel32_or_clip
-    (widget : widget_access_t;
-     x      : c.int;
-     y      : c.int;
-     color  : agar.core.types.uint32_t);
-  pragma import (c, put_pixel32_or_clip, "agar_widget_put_pixel32_or_clip");
-
-  procedure put_pixel32_or_clip
-    (widget : widget_access_t;
-     x      : natural;
-     y      : natural;
-     color  : agar.core.types.uint32_t) is
-  begin
-    put_pixel32_or_clip
-      (widget => widget,
-       x      => c.int (x),
-       y      => c.int (y),
-       color  => color);
-  end put_pixel32_or_clip;
-
   procedure put_pixel_rgb
     (widget : widget_access_t;
      x      : c.int;
@@ -169,32 +149,6 @@ package body agar.gui.widget is
        g      => g,
        b      => b);
   end put_pixel_rgb;
-
-  procedure put_pixel_rgb_or_clip
-    (widget : widget_access_t;
-     x      : c.int;
-     y      : c.int;
-     r      : agar.core.types.uint8_t;
-     g      : agar.core.types.uint8_t;
-     b      : agar.core.types.uint8_t); 
-  pragma import (c, put_pixel_rgb_or_clip, "agar_widget_put_pixel_rgb_or_clip");
-
-  procedure put_pixel_rgb_or_clip
-    (widget : widget_access_t;
-     x      : natural;
-     y      : natural;
-     r      : agar.core.types.uint8_t;
-     g      : agar.core.types.uint8_t;
-     b      : agar.core.types.uint8_t) is
-  begin
-    put_pixel_rgb_or_clip
-      (widget => widget,
-       x      => c.int (x),
-       y      => c.int (y),
-       r      => r, 
-       g      => g,
-       b      => b);
-  end put_pixel_rgb_or_clip;
 
   procedure blend_pixel_rgba
     (widget : widget_access_t;
