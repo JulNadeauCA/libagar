@@ -6,7 +6,7 @@
 #include <agar/config/have_opengl.h>
 #include <agar/config/utf8.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_TEXT_STATES_MAX 32
 
@@ -365,5 +365,5 @@ AG_TextValign(enum ag_text_valign mode)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_WIDGET_TEXT_H_ */

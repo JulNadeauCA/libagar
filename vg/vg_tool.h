@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_VG_TOOL_H_
 #define _AGAR_VG_TOOL_H_
-#include "begin_code.h"
+#include <agar/begin.h>
 
 struct vg_tool_keybinding;
 struct vg_tool_mousebinding;
@@ -83,5 +83,5 @@ void VG_ToolBindMouseButton(void *, int,
 void VG_ToolUnbindKey(void *, SDLMod, SDLKey);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_VG_TOOL_H_ */

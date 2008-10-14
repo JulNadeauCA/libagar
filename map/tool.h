@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_MAPEDIT_TOOL_H_
 #define _AGAR_MAPEDIT_TOOL_H_
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_MAPTOOL_STATUS_MAX	8
 
@@ -88,5 +88,5 @@ void MAP_ToolPopStatus(void *);
 void MAP_ToolUpdateStatus(void *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_MAPEDIT_TOOL_H_ */

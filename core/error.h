@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #endif
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 /* Standard error code */
 typedef enum ag_error_code {
@@ -111,4 +111,4 @@ AG_Free(void *p) {
 #endif
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>

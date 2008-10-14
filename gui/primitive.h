@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_WIDGET_PRIMITIVE_H_
 #define _AGAR_WIDGET_PRIMITIVE_H_
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct ag_primitive_ops {
 	void (*Box)(void *, AG_Rect r, int z, Uint32 c);
@@ -64,5 +64,5 @@ extern AG_PrimitiveOps agPrim;
 void AG_InitPrimitives(void);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_WIDGET_PRIMITIVE_H_ */

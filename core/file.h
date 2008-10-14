@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_COMPAT_FILE_H_
 #define _AGAR_COMPAT_FILE_H_
-#include "begin_code.h"
+#include <agar/begin.h>
 
 enum ag_file_info_type {
 	AG_FILE_REGULAR,
@@ -40,5 +40,5 @@ int AG_FileExists(const char *);
 int AG_FileDelete(const char *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_COMPAT_FILE_H_ */

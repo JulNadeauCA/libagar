@@ -6,7 +6,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 enum ag_mpane_layout {
 	AG_MPANE1,		/* Single view */
@@ -43,5 +43,5 @@ AG_MPane *AG_MPaneNew(void *, enum ag_mpane_layout, Uint);
 void      AG_MPaneSetLayout(AG_MPane *, enum ag_mpane_layout);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_MPANE_H_ */

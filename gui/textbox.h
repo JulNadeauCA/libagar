@@ -7,7 +7,7 @@
 #include <agar/gui/editable.h>
 #include <agar/gui/scrollbar.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_TEXTBOX_STRING_MAX AG_EDITABLE_STRING_MAX
 
@@ -103,5 +103,5 @@ void    AG_TextboxPrintf(AG_Textbox *, const char *, ...);
 } while (0)
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_TEXTBOX_H_ */

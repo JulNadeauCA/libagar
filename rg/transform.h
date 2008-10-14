@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_RG_TRANSFORM_H_
 #define _AGAR_RG_TRANSFORM_H_
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define RG_TRANSFORM_MAX_ARGS	64	/* Max transform args */
 #define RG_TRANSFORM_CHAIN_MAX	1000	/* Max transform chain entries */
@@ -48,5 +48,5 @@ void	 RG_TransformChainDup(const RG_TransformChain *, RG_TransformChain *);
 int	 RG_TransformCompare(const RG_Transform *, const RG_Transform *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_RG_TRANSFORM_H_ */

@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_EVENT_ARGS_MAX 16
 #define AG_EVENT_NAME_MAX 32
@@ -266,4 +266,4 @@ AG_EventPopArgument(AG_Event *ev)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>

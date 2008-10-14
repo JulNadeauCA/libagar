@@ -7,7 +7,7 @@
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_MSPINBUTTON_NOHFILL	0x01
 #define AG_MSPINBUTTON_VFILL	0x02
@@ -38,5 +38,5 @@ void	AG_MSpinbuttonSetIncrement(AG_MSpinbutton *, int);
 void	AG_MSpinbuttonSetWriteable(AG_MSpinbutton *, int);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_MSPINBUTTON_H_ */

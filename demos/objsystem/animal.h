@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct animal {
 	struct ag_object obj;		/* Parent class */
@@ -12,4 +12,4 @@ typedef struct animal {
 extern AG_ObjectClass AnimalClass;
 Animal *AnimalNew(void *);
 
-#include "close_code.h"
+#include <agar/close.h>

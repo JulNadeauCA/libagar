@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 struct map_view;
 struct map_tool;
@@ -14,4 +14,4 @@ struct map_insert_tool {
 	struct map_view *mvTmp;
 };
 
-#include "close_code.h"
+#include <agar/close.h>

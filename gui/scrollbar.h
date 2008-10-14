@@ -5,7 +5,7 @@
 
 #include <agar/gui/widget.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 enum ag_scrollbar_type {
 	AG_SCROLLBAR_HORIZ,
@@ -137,5 +137,5 @@ AG_ScrollbarGetButtonSize(AG_Scrollbar *sb)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_WIDGET_SCROLLBAR_H_ */

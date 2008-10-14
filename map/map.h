@@ -19,7 +19,7 @@
 #include <agar/map/nodemask.h>
 #include <agar/rg/tileset.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 enum map_item_type {
 	MAP_ITEM_TILE,		/* Reference to a tile */
@@ -234,5 +234,5 @@ void	 	 MAP_AttachActor(MAP *, struct map_actor *);
 void	 	 MAP_DetachActor(MAP *, struct map_actor *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_MAP_H_ */

@@ -5,7 +5,7 @@
 
 #include <agar/gui/widget.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_EDITABLE_STRING_MAX 1024
 
@@ -128,5 +128,5 @@ AG_EditableBufferChanged(AG_Editable *ed)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_EDITABLE_H_ */

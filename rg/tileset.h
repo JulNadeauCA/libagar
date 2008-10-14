@@ -22,7 +22,7 @@ struct rg_texture;
 #include <agar/rg/texture.h>
 #include <agar/rg/prim.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #ifndef RG_TILESZ
 #define RG_TILESZ 16
@@ -131,5 +131,5 @@ RG_GetAnim(RG_Tileset *ts, Uint32 id)
 
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_RG_TILESET_H_ */

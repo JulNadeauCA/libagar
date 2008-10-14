@@ -5,7 +5,7 @@
 
 #include <agar/map/map.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct map_actor_class {
 	struct ag_object_class _inherit;
@@ -67,5 +67,5 @@ void	   MAP_ActorUnmapTile(void *);
 void	   MAP_ActorMoveTile(void *, int, int);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_MAP_ACTOR_H_ */

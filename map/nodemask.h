@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_NODEMASK_H_
 #define _AGAR_NODEMASK_H_
-#include "begin_code.h"
+#include <agar/begin.h>
 
 struct map;
 
@@ -51,5 +51,5 @@ void	 MAP_NodeMaskVertex(MAP_NodeMask *, Uint32, Uint32);
 int	 MAP_NodeMaskIntersect(const MAP_NodeMask *, const MAP_NodeMask *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_NODEMASK_H_ */

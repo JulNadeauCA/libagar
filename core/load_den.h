@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_DEN_NAME_MAX		64
 #define AG_DEN_HINT_MAX		16
@@ -48,4 +48,4 @@ int	AG_DenImportFile(AG_Den *, int, const char *, const char *,
 	                const char *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>

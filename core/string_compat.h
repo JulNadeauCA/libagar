@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #endif
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 enum ag_unicode_conv {
 	AG_UNICODE_FROM_USASCII,	/* US-ASCII -> UCS-4 */
@@ -176,4 +176,4 @@ __END_DECLS
 #define StrdupUCS4 AG_StrdupUCS4
 #endif
 
-#include "close_code.h"
+#include <agar/close.h>

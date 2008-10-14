@@ -29,7 +29,7 @@
 
 #include <agar/core/byteswap.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 __BEGIN_DECLS
 #define	AG_ReadSint8(ds)	 ((Sint8)AG_ReadUint8(ds))
 #define	AG_ReadSint8v(ds,v)	 AG_ReadUint8v(ds, (Sint8 *)(v))
@@ -293,4 +293,4 @@ AG_WriteUint64At(AG_DataSource *ds, Uint64 u64, off_t pos)
 #endif /* HAVE_64BIT */
 
 __END_DECLS
-#include "close_code.h"
+#include <agar/close.h>

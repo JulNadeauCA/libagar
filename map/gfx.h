@@ -3,7 +3,7 @@
 #include <agar/map/gfx_transform.h>
 #include <agar/config/have_opengl.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 struct ag_object;
 struct ag_gfx;
@@ -126,4 +126,4 @@ void	 AG_SpriteGetNodeAttrs(AG_Sprite *, Uint *, Uint *);
 Uint	 AG_SpriteGetWtiles(AG_Sprite *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>

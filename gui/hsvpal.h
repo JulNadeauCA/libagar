@@ -7,7 +7,7 @@
 #include <agar/gui/menu.h>
 #include <agar/gui/window.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct ag_hsvpal {
 	struct ag_widget wid;
@@ -52,5 +52,5 @@ extern AG_WidgetClass agHSVPalClass;
 AG_HSVPal *AG_HSVPalNew(void *, Uint);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_HSVPAL_H_ */

@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_COMPAT_DIR_H_
 #define _AGAR_COMPAT_DIR_H_
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct ag_dir {
 	char **ents;
@@ -19,5 +19,5 @@ int	   AG_MkPath(const char *);
 int	   AG_GetCWD(char *, size_t);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_COMPAT_DIR_H_ */

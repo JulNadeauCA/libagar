@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_MAPEDIT_MAPVIEW_H_
-#define _AGAR_MAPEDIT_MAPVIEW_H_
+#ifndef _AGAR_MAP_MAPVIEW_H_
+#define _AGAR_MAP_MAPVIEW_H_
 
 #include <agar/map/map.h>
 #include <agar/map/mapedit.h>
@@ -9,7 +9,7 @@
 #include <agar/map/actor.h>
 #include <agar/gui/widget.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 struct map_view;
 struct ag_toolbar;
@@ -170,5 +170,5 @@ MAP_ViewVLine(MAP_View *mv, int x, int y1, int y2)
 }
 __END_DECLS
 
-#include "close_code.h"
-#endif /* _AGAR_MAPEDIT_MAPVIEW_H_ */
+#include <agar/close.h>
+#endif /* _AGAR_MAP_MAPVIEW_H_ */

@@ -5,7 +5,7 @@
 
 #include <agar/config/have_opengl.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define RG_ANIMATION_NAME_MAX	32
 #define RG_ANIMATION_FRAMES_MAX	(0xffffffff-1)
@@ -117,5 +117,5 @@ RG_AnimGetFrame(RG_Anim *anim, Uint frame)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_RG_ANIMATION_H_ */

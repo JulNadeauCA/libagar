@@ -5,7 +5,7 @@
 
 #include <agar/config/network.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 extern char agRcsHostname[64];
 extern char agRcsUsername[32];
@@ -77,5 +77,5 @@ int AG_RcsCheckout(void *, const char *);
 #endif /* NETWORK */
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_CORE_RCS_H_ */

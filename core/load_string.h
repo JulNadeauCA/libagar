@@ -2,7 +2,8 @@
 
 #define AG_LOAD_STRING_MAX 32767
 
-#include "begin_code.h"
+#include <agar/begin.h>
+
 __BEGIN_DECLS
 char	*AG_ReadStringLen(AG_DataSource *, size_t);
 int	 AG_ReadStringLenv(AG_DataSource *, size_t, char **);
@@ -20,4 +21,5 @@ size_t	 AG_CopyString(char *, AG_DataSource *, size_t);
 size_t	 AG_CopyNulString(char *, AG_DataSource *, size_t);
 void	 AG_SkipString(AG_DataSource *);
 __END_DECLS
-#include "close_code.h"
+
+#include <agar/close.h>

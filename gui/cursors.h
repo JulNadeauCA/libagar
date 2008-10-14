@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_WIDGET_CURSORS_H_
 #define _AGAR_WIDGET_CURSORS_H_
-#include "begin_code.h"
+#include <agar/begin.h>
 
 enum {
 	AG_FILL_CURSOR,
@@ -24,5 +24,5 @@ void AG_CursorsInit(void);
 void AG_CursorsDestroy(void);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_WIDGET_CURSORS_H_ */

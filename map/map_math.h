@@ -9,7 +9,7 @@
 #include <math.h>
 #endif
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #ifdef M_PI
 #define MAP_PI M_PI
@@ -75,5 +75,5 @@ MAP_PowOf2i(int i)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_MAP_MATH_H_ */

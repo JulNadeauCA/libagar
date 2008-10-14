@@ -6,7 +6,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/text.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 struct ag_icon;
 
@@ -75,5 +75,5 @@ void AG_SocketInsertIcon(AG_Socket *, struct ag_icon *);
 void AG_SocketRemoveIcon(AG_Socket *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_SOCKET_H_ */

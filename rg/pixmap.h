@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_RG_PIXMAP_H_
 #define _AGAR_RG_PIXMAP_H_
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define RG_PIXMAP_NAME_MAX	32
 
@@ -115,5 +115,5 @@ RG_PixmapSetBrush(RG_Pixmap *pixmap, RG_Brush *brush)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_RG_PIXMAP_H_ */
