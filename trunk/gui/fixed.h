@@ -5,7 +5,7 @@
 
 #include <agar/gui/widget.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct ag_fixed {
 	struct ag_widget wid;
@@ -39,5 +39,5 @@ void	  AG_FixedSize(AG_Fixed *, void *, int, int);
 void	  AG_FixedMove(AG_Fixed *, void *, int, int);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_FIXED_H_ */

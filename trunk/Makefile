@@ -12,7 +12,6 @@ SUBDIR=	core agar-core-config \
 	gui agar-config \
 	vg agar-vg-config \
 	rg agar-rg-config \
-	map agar-map-config \
 	math agar-math-config \
 	dev agar-dev-config \
 	net agar-net-config \
@@ -22,7 +21,6 @@ INCDIRS=gui \
 	core \
 	rg \
 	vg \
-	map \
 	math \
 	dev \
 	net
@@ -75,6 +73,7 @@ install-includes:
 		    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 		    INSTALL_INCL="${INSTALL_INCL}" \
 		    ${SH} mk/install-includes.sh config ${INCLDIR}/agar; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/begin.h ${INCLDIR}/agar; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/core/core_pub.h \
 		    ${INCLDIR}/agar/core.h; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/gui/gui_pub.h \
@@ -85,8 +84,6 @@ install-includes:
 		   ${INCLDIR}/agar/rg.h; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/net/net_pub.h \
 		   ${INCLDIR}/agar/net.h; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/map/map_pub.h \
-		   ${INCLDIR}/agar/map.h; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/math/math_pub.h \
 		   ${INCLDIR}/agar/math.h; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/dev/dev_pub.h \
@@ -99,13 +96,13 @@ install-includes:
 		    INSTALL_INCL="${INSTALL_INCL}" \
 		    ${SH} mk/install-includes.sh $$DIR ${INCLDIR}/agar; \
 		done; \
+		${SUDO} ${INSTALL_INCL} begin.h ${INCLDIR}/agar; \
 		${SUDO} ${INSTALL_INCL} core/core_pub.h \
 		    ${INCLDIR}/agar/core.h; \
 		${SUDO} ${INSTALL_INCL} gui/gui_pub.h ${INCLDIR}/agar/gui.h; \
 		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h; \
 		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h; \
 		${SUDO} ${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h; \
-		${SUDO} ${INSTALL_INCL} map/map_pub.h ${INCLDIR}/agar/map.h; \
 		${SUDO} ${INSTALL_INCL} math/math_pub.h ${INCLDIR}/agar/math.h;\
 		${SUDO} ${INSTALL_INCL} dev/dev_pub.h ${INCLDIR}/agar/dev.h; \
 	fi

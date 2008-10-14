@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct ag_object AG_Config;
 
@@ -23,4 +23,4 @@ int  AG_ConfigFile(const char *, const char *, const char *, char *, size_t)
 		   BOUNDED_ATTRIBUTE(__string__, 4, 5);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>

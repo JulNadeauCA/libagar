@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_VERSION_H_
 #define _AGAR_VERSION_H_
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct ag_version {
 	Uint32	 major;
@@ -20,5 +20,5 @@ int	AG_ReadObjectVersion(AG_DataSource *, void *, AG_Version *);
 void	AG_WriteObjectVersion(AG_DataSource *, void *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_VERSION_H_ */

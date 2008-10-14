@@ -7,7 +7,7 @@
 #include <agar/gui/menu.h>
 #include <agar/gui/label.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_TLIST_LABEL_MAX AG_LABEL_MAX
 #define AG_TLIST_ARGS_MAX 8
@@ -160,5 +160,5 @@ AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_TLIST_H_ */

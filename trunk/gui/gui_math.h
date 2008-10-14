@@ -9,7 +9,7 @@
 #include <math.h>
 #endif
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #ifdef M_PI
 #define AG_PI M_PI
@@ -99,5 +99,5 @@ AG_FracInvf(double d)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_GUI_MATH_H_ */

@@ -9,7 +9,7 @@
 #include <agar/gui/box.h>
 #include <agar/rg/tileset.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define RG_TILEVIEW_MIN_W	32
 #define RG_TILEVIEW_MIN_H	32
@@ -421,5 +421,5 @@ RG_TileviewSetDouble(RG_TileviewCtrl *ctrl, int nval, double v)
 #define RG_TileviewSetUint(tv,nval,v) RG_TileviewSetInt((tv),(nval),(Uint)(v))
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_RG_TILEVIEW_H */

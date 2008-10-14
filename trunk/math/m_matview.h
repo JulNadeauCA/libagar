@@ -7,7 +7,7 @@
 #include <agar/gui/label.h>
 #include <agar/gui/scrollbar.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 enum m_matview_mode {
 	M_MATVIEW_GREYSCALE,
@@ -42,5 +42,5 @@ void       M_MatviewSetDisplayMode(M_Matview *, enum m_matview_mode);
 void       M_MatviewSetNumericalFmt(M_Matview *, const char *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_MATH_M_MATVIEW_H_ */

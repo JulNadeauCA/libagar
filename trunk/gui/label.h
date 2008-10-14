@@ -6,7 +6,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/text.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_LABEL_MAX		1024	/* Max format string length */
 #define AG_LABEL_MAX_POLLPTRS	32	/* Max polled pointers */
@@ -113,5 +113,5 @@ void	 AG_RegisterBuiltinLabelFormats(void);
 #define AG_LabelPrintf AG_LabelText
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_LABEL_H_ */

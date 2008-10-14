@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 __BEGIN_DECLS
 struct ag_event;
@@ -58,4 +58,4 @@ __END_DECLS
 #define	AG_MAX3(a,b,c) AG_MAX((a),AG_MAX((b),(c)))
 #endif
 
-#include "close_code.h"
+#include <agar/close.h>

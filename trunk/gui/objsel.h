@@ -6,7 +6,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/combo.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct ag_object_selector {
 	struct ag_combo com;
@@ -30,5 +30,5 @@ AG_TlistItem *AG_ObjectSelectorSelect(AG_ObjectSelector *, void *);
 void	      AG_ObjectSelectorMaskType(AG_ObjectSelector *, const char *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_OBJSEL_H_ */

@@ -9,7 +9,7 @@
 #include <agar/gui/ucombo.h>
 #include <agar/gui/units.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct ag_numerical {
 	struct ag_widget wid;
@@ -147,5 +147,5 @@ long double   AG_NumericalGetLongDbl(AG_Numerical *);
 
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_NUMERICAL_H_ */

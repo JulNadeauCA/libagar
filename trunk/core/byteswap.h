@@ -8,7 +8,7 @@
 #include <agar/config/_mk_big_endian.h>
 #include <agar/config/_mk_little_endian.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -231,6 +231,6 @@ AG_SwapLDBL(long double v)
 #ifdef __cplusplus
 }
 #endif
-#include "close_code.h"
+#include <agar/close.h>
 
 #endif /* _AGAR_CORE_BYTESWAP_H_ */

@@ -5,7 +5,7 @@
 
 #include <agar/gui/widget.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 enum ag_slider_type {
 	AG_SLIDER_HORIZ,
@@ -110,5 +110,5 @@ void AG_SliderSetIntIncrement(AG_Slider *, int);
 void AG_SliderSetRealIncrement(AG_Slider *, double);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_WIDGET_SLIDER_H_ */

@@ -5,7 +5,7 @@
 
 #include <agar/gui/widget.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_WINDOW_CAPTION_MAX 512
 
@@ -269,5 +269,5 @@ AG_WidgetSetGeometry(void *wid, AG_Rect r)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_WINDOW_H_ */

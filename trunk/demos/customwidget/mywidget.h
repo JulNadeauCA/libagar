@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 /* Structure describing an instance of the MyWidget class. */
 typedef struct my_widget {
@@ -14,4 +14,4 @@ extern AG_WidgetClass myWidgetClass;
 MyWidget *MyWidgetNew(void *, const char *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>

@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_DSONAME_MAX 128
 
@@ -52,4 +52,4 @@ AG_LookupDSO(const char *name)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>

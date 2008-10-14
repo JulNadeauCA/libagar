@@ -7,7 +7,7 @@
 #include <agar/gui/box.h>
 #include <agar/gui/label.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_STATUSBAR_MAX_LABELS 8
 
@@ -25,5 +25,5 @@ AG_Label     *AG_StatusbarAddLabel(AG_Statusbar *, enum ag_label_type,
 	                           const char *, ...);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_STATUSBAR_H_ */

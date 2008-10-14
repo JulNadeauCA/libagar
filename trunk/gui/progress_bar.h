@@ -5,7 +5,7 @@
 
 #include <agar/gui/widget.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 enum ag_progress_bar_type {
 	AG_PROGRESS_BAR_HORIZ,
@@ -45,5 +45,5 @@ void	AG_ProgressBarSetWidth(AG_ProgressBar *, int);
 int	AG_ProgressBarPercent(AG_ProgressBar *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_WIDGET_PROGRESS_BAR_H_ */

@@ -6,7 +6,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/label.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef Sint16 AG_FixedPlotterValue;
 
@@ -64,5 +64,5 @@ AG_FixedPlotterScroll(AG_FixedPlotter *fpl, int i)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_GUI_FIXED_PLOTTER_H_ */

@@ -12,7 +12,7 @@
 
 #define VG_GRIDS_MAX 4
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 enum vg_grid_type {
 	VG_GRID_POINTS,
@@ -289,5 +289,5 @@ VG_HighlightNearestPoint(VG_View *vv, VG_Vector vPos, void *ignore)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_VG_VIEW_H_ */

@@ -3,7 +3,7 @@
 #ifndef _AGAR_CORE_VERSION_H_
 #define _AGAR_CORE_VERSION_H_
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AGAR_MAJOR_VERSION	1
 #define AGAR_MINOR_VERSION	3
@@ -26,5 +26,5 @@ __BEGIN_DECLS
 void  AG_GetVersion(AG_AgarVersion *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_CORE_VERSION_H_ */

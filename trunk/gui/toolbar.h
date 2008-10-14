@@ -7,7 +7,7 @@
 #include <agar/gui/box.h>
 #include <agar/gui/button.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_TOOLBAR_MAX_ROWS	8
 
@@ -48,5 +48,5 @@ void		 AG_ToolbarSelectAll(AG_Toolbar *);
 void		 AG_ToolbarDeselectAll(AG_Toolbar *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_TOOLBAR_H_ */

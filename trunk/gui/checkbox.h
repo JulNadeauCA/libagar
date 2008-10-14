@@ -6,7 +6,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/label.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 typedef struct ag_checkbox {
 	struct ag_widget wid;
@@ -38,5 +38,5 @@ void AG_CheckboxSetFromFlags32(void *, Uint, Uint32 *, const AG_FlagDescr *);
 void AG_CheckboxToggle(AG_Checkbox *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_CHECKBOX_H_ */

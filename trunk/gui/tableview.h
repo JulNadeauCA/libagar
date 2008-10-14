@@ -6,7 +6,7 @@
 #include <agar/gui/label.h>
 #include <agar/gui/scrollbar.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_TABLEVIEW_LABEL_MAX AG_LABEL_MAX
 
@@ -217,5 +217,5 @@ void AG_TableviewCellPrintf(AG_Tableview *, AG_TableviewRow *, int,
 	} while(0)
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_TABLEVIEW_H_ */

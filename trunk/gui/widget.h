@@ -10,7 +10,7 @@
 #include <agar/gui/view.h>
 #include <agar/gui/style.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_SIZE_SPEC_MAX		256
 #define AG_WIDGET_BINDING_NAME_MAX	16
@@ -862,5 +862,5 @@ AG_ExpandVert(void *wid)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_H_ */

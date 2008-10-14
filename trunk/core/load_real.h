@@ -6,7 +6,7 @@
 #include <agar/config/have_long_double.h>
 #include <agar/core/byteswap.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 __BEGIN_DECLS
 
@@ -196,4 +196,4 @@ AG_WriteLongDoubleAt(AG_DataSource *ds, long double fv, off_t pos)
 #endif /* HAVE_LONG_DOUBLE */
 
 __END_DECLS
-#include "close_code.h"
+#include <agar/close.h>

@@ -7,7 +7,7 @@
 #include <agar/gui/label.h>
 #include <agar/gui/button.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 struct ag_window;
 
@@ -32,5 +32,5 @@ AG_Titlebar *AG_TitlebarNew(void *, Uint);
 void	     AG_TitlebarSetCaption(AG_Titlebar *, const char *);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_TITLEBAR_H_ */

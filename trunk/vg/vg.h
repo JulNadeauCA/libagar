@@ -3,7 +3,7 @@
 #ifndef _AGAR_VG_H_
 #define _AGAR_VG_H_
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define VG_NAME_MAX		128
 #define VG_LAYER_NAME_MAX	128
@@ -478,5 +478,5 @@ __END_DECLS
 #include <agar/vg/vg_text.h>
 #include <agar/vg/vg_polygon.h>
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_VG_H_ */

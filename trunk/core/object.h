@@ -16,7 +16,7 @@
 #include <agar/core/prop.h>
 #include <agar/core/class.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 struct ag_object;
 struct ag_event;
@@ -314,4 +314,4 @@ AG_ObjectSuperclass(const void *p)
 }
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>

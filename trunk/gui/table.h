@@ -6,7 +6,7 @@
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/menu.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 #define AG_TABLE_TXT_MAX 128
 #define AG_TABLE_FMT_MAX 16
@@ -199,5 +199,5 @@ AG_MenuItem *AG_TableSetPopup(AG_Table *, int, int);
 int	     AG_TableSaveASCII(AG_Table *, FILE *, char);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif /* _AGAR_WIDGET_TABLE_H_ */

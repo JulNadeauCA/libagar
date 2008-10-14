@@ -7,7 +7,7 @@
 #include <agar/config/threads.h>
 #include <agar/config/have_jpeg.h>
 
-#include "begin_code.h"
+#include <agar/begin.h>
 
 struct ag_menu_item;
 
@@ -44,5 +44,5 @@ void	  *DEV_ObjectEdit(void *);
 AG_Window *DEV_ClassInfo(void);
 __END_DECLS
 
-#include "close_code.h"
+#include <agar/close.h>
 #endif	/* _AGAR_DEV_DEV_H_ */
