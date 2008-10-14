@@ -962,6 +962,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_LONG_DOUBLE" > ${cache}/ctest-HAVE_LONG_DOUBLE
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LONG_DOUBLE
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for long long..."
 $ECHO_N "checking for long long..." >> config.log
 MK_CACHED="No"
@@ -1012,6 +1013,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_LONG_LONG" > ${cache}/ctest-HAVE_LONG_LONG
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LONG_LONG
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for cygwin environment..."
 $ECHO_N "checking for cygwin environment..." >> config.log
 MK_CACHED="No"
@@ -1565,6 +1567,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_PROGNAME" > ${cache}/ctest-HAVE_PROGNAME
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PROGNAME
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for free(NULL) is a no-op..."
 $ECHO_N "checking for free(NULL) is a no-op..." >> config.log
 MK_CACHED="No"
@@ -1836,6 +1839,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETHOSTNAME" > ${cache}/ctest-HAVE_GETHOSTNAME
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETHOSTNAME
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for a getpwuid() function..."
 $ECHO_N "checking for a getpwuid() function..." >> config.log
 MK_CACHED="No"
@@ -1889,6 +1893,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETPWUID" > ${cache}/ctest-HAVE_GETPWUID
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETPWUID
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for a getuid() function..."
 $ECHO_N "checking for a getuid() function..." >> config.log
 MK_CACHED="No"
@@ -1941,6 +1946,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETUID" > ${cache}/ctest-HAVE_GETUID
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETUID
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for a getenv() function..."
 $ECHO_N "checking for a getenv() function..." >> config.log
 MK_CACHED="No"
@@ -1989,6 +1995,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETENV" > ${cache}/ctest-HAVE_GETENV
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETENV
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for setenv() and unsetenv()..."
 $ECHO_N "checking for setenv() and unsetenv()..." >> config.log
 MK_CACHED="No"
@@ -2039,6 +2046,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_SETENV" > ${cache}/ctest-HAVE_SETENV
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SETENV
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for a strsep() function..."
 $ECHO_N "checking for a strsep() function..." >> config.log
 MK_CACHED="No"
@@ -2087,6 +2095,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_STRSEP" > ${cache}/ctest-HAVE_STRSEP
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_STRSEP
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for the snprintf() function..."
 $ECHO_N "checking for the snprintf() function..." >> config.log
 MK_CACHED="No"
@@ -2137,6 +2146,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_SNPRINTF" > ${cache}/ctest-HAVE_SNPRINTF
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SNPRINTF
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for the vsnprintf() function..."
 $ECHO_N "checking for the vsnprintf() function..." >> config.log
 MK_CACHED="No"
@@ -2196,6 +2206,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_VSNPRINTF" > ${cache}/ctest-HAVE_VSNPRINTF
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VSNPRINTF
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for a vasprintf() function..."
 $ECHO_N "checking for a vasprintf() function..." >> config.log
 MK_CACHED="No"
@@ -2261,6 +2272,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_VASPRINTF" > ${cache}/ctest-HAVE_VASPRINTF
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VASPRINTF
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for the arc4random() random number generator..."
 $ECHO_N "checking for the arc4random() random number generator..." >> config.log
 MK_CACHED="No"
@@ -2312,6 +2324,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_ARC4RANDOM" > ${cache}/ctest-HAVE_ARC4RANDOM
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ARC4RANDOM
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for MD5 functions..."
 $ECHO_N "checking for MD5 functions..." >> config.log
 MK_CACHED="No"
@@ -2364,6 +2377,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_MD5" > ${cache}/ctest-HAVE_MD5
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_MD5
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for SHA1 functions..."
 $ECHO_N "checking for SHA1 functions..." >> config.log
 MK_CACHED="No"
@@ -2416,6 +2430,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_SHA1" > ${cache}/ctest-HAVE_SHA1
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SHA1
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for RMD160 functions..."
 $ECHO_N "checking for RMD160 functions..." >> config.log
 MK_CACHED="No"
@@ -2468,6 +2483,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_RMD160" > ${cache}/ctest-HAVE_RMD160
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_RMD160
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for the X window system..."
 $ECHO_N "checking for the X window system..." >> config.log
 X11_CFLAGS=""
@@ -2634,6 +2650,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_SIGNAL" > ${cache}/ctest-_MK_HAVE_SIGNAL
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_SIGNAL
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for setjmp() and longjmp()..."
 $ECHO_N "checking for setjmp() and longjmp()..." >> config.log
 MK_CACHED="No"
@@ -2686,6 +2703,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_SETJMP" > ${cache}/ctest-_MK_HAVE_SETJMP
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_SETJMP
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for a strtoll() function..."
 $ECHO_N "checking for a strtoll() function..." >> config.log
 MK_CACHED="No"
@@ -2739,6 +2757,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_STRTOLL" > ${cache}/ctest-_MK_HAVE_STRTOLL
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_STRTOLL
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for a strtold() function..."
 $ECHO_N "checking for a strtold() function..." >> config.log
 MK_CACHED="No"
@@ -2793,6 +2812,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_STRTOLD" > ${cache}/ctest-_MK_HAVE_STRTOLD
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_STRTOLD
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for AltiVec (with <altivec.h>)..."
 $ECHO_N "checking for AltiVec (with <altivec.h>)..." >> config.log
 if [ "$SYSTEM" = "Darwin" ]; then
@@ -3284,6 +3304,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_DLOPEN" > ${cache}/ctest-HAVE_DLOPEN
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DLOPEN
 fi
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_DLOPEN}" != "yes" ]; then
 $ECHO_N "checking for dlopen() in -ldl..."
 $ECHO_N "checking for dlopen() in -ldl..." >> config.log
@@ -3446,6 +3467,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_DYLD" > ${cache}/ctest-HAVE_DYLD
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DYLD
 fi
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_DYLD}" = "Yes" ]; then
 echo "checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR"
 echo "checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR" >> config.log
@@ -3510,6 +3532,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_DYLD_RETURN_ON_ERROR" > ${cache}/ctest-HAVE_DYLD_RETURN_ON_ERROR
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DYLD_RETURN_ON_ERROR
 fi
+rm -f $testdir/conftest conftest.c
 else
 HAVE_DYLD_RETURN_ON_ERROR="no"
 echo "#undef HAVE_DYLD_RETURN_ON_ERROR" >config/have_dyld_return_on_error.h
@@ -4909,6 +4932,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETADDRINFO" > ${cache}/ctest-HAVE_GETADDRINFO
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETADDRINFO
 fi
+rm -f $testdir/conftest conftest.c
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]
  then
 NETWORK="1"

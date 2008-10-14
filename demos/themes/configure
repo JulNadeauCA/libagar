@@ -894,6 +894,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_LONG_DOUBLE" > ${cache}/ctest-HAVE_LONG_DOUBLE
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LONG_DOUBLE
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for long long..."
 $ECHO_N "checking for long long..." >> config.log
 MK_CACHED="No"
@@ -944,6 +945,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_LONG_LONG" > ${cache}/ctest-HAVE_LONG_LONG
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LONG_LONG
 fi
+rm -f $testdir/conftest conftest.c
 $ECHO_N "checking for cygwin environment..."
 $ECHO_N "checking for cygwin environment..." >> config.log
 MK_CACHED="No"
@@ -2948,6 +2950,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETOPT" > ${cache}/ctest-HAVE_GETOPT
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETOPT
 fi
+rm -f $testdir/conftest conftest.c
 if [ "${HAVE_AGAR}" != "yes" ]
  then
 	echo "This demo requires Agar installed on your system."
