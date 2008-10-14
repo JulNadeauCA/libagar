@@ -54,6 +54,9 @@ cleandir-config:
 beta:
 	sh mk/dist.sh beta
 
+package:
+	env NOUPLOAD=Yes sh mk/dist.sh beta
+
 release:
 	sh mk/dist.sh stable
 
@@ -74,6 +77,7 @@ install-includes:
 		    INSTALL_INCL="${INSTALL_INCL}" \
 		    ${SH} mk/install-includes.sh config ${INCLDIR}/agar; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/begin.h ${INCLDIR}/agar; \
+		${SUDO} ${INSTALL_INCL} ${SRC}/close.h ${INCLDIR}/agar; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/core/core_pub.h \
 		    ${INCLDIR}/agar/core.h; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/gui/gui_pub.h \
@@ -97,6 +101,7 @@ install-includes:
 		    ${SH} mk/install-includes.sh $$DIR ${INCLDIR}/agar; \
 		done; \
 		${SUDO} ${INSTALL_INCL} begin.h ${INCLDIR}/agar; \
+		${SUDO} ${INSTALL_INCL} close.h ${INCLDIR}/agar; \
 		${SUDO} ${INSTALL_INCL} core/core_pub.h \
 		    ${INCLDIR}/agar/core.h; \
 		${SUDO} ${INSTALL_INCL} gui/gui_pub.h ${INCLDIR}/agar/gui.h; \
