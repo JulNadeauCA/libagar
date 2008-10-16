@@ -9,36 +9,16 @@
 #include <string.h>
 
 double value = 0.0;
-
-static void
-GetCategories(AG_Tlist *tl)
-{
-	int i;
-
-	AG_TlistBegin(tl);
-	for (i = 0; i < agnUnitGroups; i++) {
-		if (strcmp(agUnitGroupNames[i], "Identity") == 0) {
-			continue;
-		}
-		AG_TlistAddPtr(tl, NULL, agUnitGroupNames[i],
-		    (void *)agUnitGroups[i]);
-	}
-	AG_TlistSelectText(tl, "Length");
-	AG_TlistEnd(tl);
-	AG_TlistSizeHintLargest(tl, 6);
-}
+const AG_Unit *unitGroup = agLengthUnits;
+AG_Numerical *n1, *n2;
 
 static void
 SelectCategory(AG_Event *event)
 {
-	AG_Numerical *n1 = AG_PTR(1);
-	AG_Numerical *n2 = AG_PTR(2);
-	AG_TlistItem *it = AG_PTR(3);
-	AG_Unit *group = it->p1, *unit;
+	AG_Unit *group = AG_PTR(1), *unit;
 		
 	for (unit = &group[0]; unit->key != NULL; unit++) {
 		if (unit->divider == 1) {
-			printf("Selecting unit: %s\n", unit->key);
 			AG_NumericalSetUnitSystem(n1, unit->key);
 			AG_NumericalSetUnitSystem(n2, unit->key);
 			return;
@@ -49,18 +29,40 @@ SelectCategory(AG_Event *event)
 static void
 CreateUI(void)
 {
+	const struct {
+		const char *name;
+		const AG_Unit *p;
+	} units[] = {
+		{ "Len", agLengthUnits },
+		{ "Ang", agAngleUnits },
+		{ "Mass", agMassUnits },
+		{ "Area", agAreaUnits },
+		{ "Vol", agVolumeUnits },
+		{ "Spd", agSpeedUnits },
+		{ "Time", agTimeUnits },
+		{ "Temp", agTemperatureUnits },
+		{ "Pwr", agPowerUnits },
+		{ "Met", agMetabolicExpenditureUnits },
+	};
+	int i;
 	AG_Window *win;
-	AG_Numerical *n1, *n2;
-	AG_Combo *uSel;
 	AG_Event *ev;
+	AG_Toolbar *tb;
 
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_WindowSetCaption(win, "Unit Converter");
 	AG_WindowSetPadding(win, 10, 10, 10, 10);
 	agColors[WINDOW_BG_COLOR] = agColors[BG_COLOR];
 
-	uSel = AG_ComboNew(win, AG_COMBO_HFILL, "Category: ");
-	GetCategories(uSel->list);
+	tb = AG_ToolbarNew(win, AG_TOOLBAR_HORIZ, 2, AG_TOOLBAR_HOMOGENOUS|
+	                                             AG_TOOLBAR_STICKY);
+	for (i = 0; i < sizeof(units)/sizeof(units[0]); i++) {
+		if (i == 5) {
+			AG_ToolbarRow(tb, 1);
+		}
+		AG_ToolbarButton(tb, units[i].name, (i == 0),
+		    SelectCategory, "%p", units[i].p);
+	}
 
 	AG_SeparatorNewHoriz(win);
 
@@ -70,10 +72,6 @@ CreateUI(void)
 	AG_WidgetBindDouble(n2, "value", &value);
 	AG_NumericalSizeHint(n1, "0000.00");
 	AG_NumericalSizeHint(n2, "0000.00");
-
-	ev = AG_SetEvent(uSel, "combo-selected", SelectCategory, NULL);
-	AG_EventPushPointer(ev, NULL, n1);
-	AG_EventPushPointer(ev, NULL, n2);
 
 	AG_WindowShow(win);
 	AG_WindowMaximize(win);
@@ -86,6 +84,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
+	AG_TextParseFontSpec("_agFontVera:14");
 	if (AG_InitVideo(400, 180, 32, AG_VIDEO_RESIZABLE) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (-1);
