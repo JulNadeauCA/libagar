@@ -86,75 +86,78 @@ enum ag_prop_type {
 .Sh READING PROPERTIES
 .nr nS 1
 .Ft "AG_Prop *"
-.Fn AG_Prop "void *obj" "const char *key" "enum ag_prop_type type" "void *dst"
+.Fn AG_GetProp "AG_Object *obj" "const char *key" "enum ag_prop_type type" "void *dst"
+.Pp
+.Ft "int"
+.Fn AG_PropDefined "AG_Object *obj" "const char *key"
 .Pp
 .Ft "AG_Prop *"
 .Fn AG_CopyProp "const AG_Prop *prop"
 .Pp
 .Ft void
-.Fn AG_LockProps "void *obj"
+.Fn AG_LockProps "AG_Object *obj"
 .Pp
 .Ft void
-.Fn AG_UnlockProps "void *obj"
+.Fn AG_UnlockProps "AG_Object *obj"
 .Pp
 .Fn AGOBJECT_FOREACH_PROP "AG_Prop *var" "AG_Object *obj"
 .Pp
 .Fn AGOBJECT_FOREACH_PROP_OFTYPE "AG_Prop *var" "AG_Object *obj" "enum ag_prop_type type"
 .Pp
 .Ft int
-.Fn AG_GetBool "void *obj" "const char *key"
+.Fn AG_GetBool "AG_Object *obj" "const char *key"
 .Pp
 .Ft "Uint"
-.Fn AG_GetUint "void *obj" "const char *key"
+.Fn AG_GetUint "AG_Object *obj" "const char *key"
 .Pp
 .Ft int
-.Fn AG_GetInt "void *obj" "const char *key"
+.Fn AG_GetInt "AG_Object *obj" "const char *key"
 .Pp
 .Ft Uint8
-.Fn AG_GetUint8 "void *obj" "const char *key"
+.Fn AG_GetUint8 "AG_Object *obj" "const char *key"
 .Pp
 .Ft Sint8
-.Fn AG_GetSint8 "void *obj" "const char *key"
+.Fn AG_GetSint8 "AG_Object *obj" "const char *key"
 .Pp
 .Ft Uint16
-.Fn AG_GetUint16 "void *obj" "const char *key"
+.Fn AG_GetUint16 "AG_Object *obj" "const char *key"
 .Pp
 .Ft Sint16
-.Fn AG_GetSint16 "void *obj" "const char *key"
+.Fn AG_GetSint16 "AG_Object *obj" "const char *key"
 .Pp
 .Ft Uint32
-.Fn AG_GetUint32 "void *obj" "const char *key"
+.Fn AG_GetUint32 "AG_Object *obj" "const char *key"
 .Pp
 .Ft Sint32
-.Fn AG_GetSint32 "void *obj" "const char *key"
+.Fn AG_GetSint32 "AG_Object *obj" "const char *key"
 .Pp
 .Ft Uint64
-.Fn AG_GetUint64 "void *obj" "const char *key"
+.Fn AG_GetUint64 "AG_Object *obj" "const char *key"
 .Pp
 .Ft Sint64
-.Fn AG_GetSint64 "void *obj" "const char *key"
+.Fn AG_GetSint64 "AG_Object *obj" "const char *key"
 .Pp
 .Ft float
-.Fn AG_GetFloat "void *obj" "const char *key"
+.Fn AG_GetFloat "AG_Object *obj" "const char *key"
 .Pp
 .Ft double
-.Fn AG_GetDouble "void *obj" "const char *key"
+.Fn AG_GetDouble "AG_Object *obj" "const char *key"
 .Pp
 .Ft "long double"
-.Fn AG_GetLongDouble "void *obj" "const char *key"
+.Fn AG_GetLongDouble "AG_Object *obj" "const char *key"
 .Pp
 .Ft "char *"
-.Fn AG_GetString "void *obj" "const char *key"
+.Fn AG_GetString "AG_Object *obj" "const char *key"
 .Pp
 .Ft size_t
-.Fn AG_GetStringCopy "void *obj" "const char *key" "char *dst" "size_t dst_size"
+.Fn AG_GetStringCopy "AG_Object *obj" "const char *key" "char *dst" "size_t dst_size"
 .Pp
 .Ft "void *"
-.Fn AG_GetPointer "void *obj" "const char *key"
+.Fn AG_GetPointer "AG_Object *obj" "const char *key"
 .Pp
 .nr nS 0
 The
-.Fn AG_Prop
+.Fn AG_GetProp
 function searches for a property of type
 .Fa type
 named
@@ -168,6 +171,12 @@ returns a pointer to the related
 .Nm
 structure, or NULL if no property matches
 .Fa key .
+.Pp
+The
+.Fn AG_PropDefined
+routine returns 1 if a property
+.Fa key
+exists.
 .Pp
 The
 .Fn AG_CopyProp
@@ -212,55 +221,55 @@ NUL-terminating the result.
 .Sh WRITING PROPERTIES
 .nr nS 1
 .Ft "AG_Prop *"
-.Fn AG_SetProp "void *obj" "const char *name" "enum ag_prop_type type" "..."
+.Fn AG_SetProp "AG_Object *obj" "const char *name" "enum ag_prop_type type" "..."
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetBool "void *obj" "const char *key" "int value"
+.Fn AG_SetBool "AG_Object *obj" "const char *key" "int value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetUint "void *obj" "const char *key" "Uint value"
+.Fn AG_SetUint "AG_Object *obj" "const char *key" "Uint value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetInt "void *obj" "const char *key" "int value"
+.Fn AG_SetInt "AG_Object *obj" "const char *key" "int value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetUint8 "void *obj" "const char *key" "Uint8 value"
+.Fn AG_SetUint8 "AG_Object *obj" "const char *key" "Uint8 value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetSint8 "void *obj" "const char *key" "Sint8 value"
+.Fn AG_SetSint8 "AG_Object *obj" "const char *key" "Sint8 value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetUint16 "void *obj" "const char *key" "Uint16 value"
+.Fn AG_SetUint16 "AG_Object *obj" "const char *key" "Uint16 value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetSint16 "void *obj" "const char *key" "Sint16 value"
+.Fn AG_SetSint16 "AG_Object *obj" "const char *key" "Sint16 value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetUint32 "void *obj" "const char *key" "Uint32 value"
+.Fn AG_SetUint32 "AG_Object *obj" "const char *key" "Uint32 value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetSint32 "void *obj" "const char *key" "Sint32 value"
+.Fn AG_SetSint32 "AG_Object *obj" "const char *key" "Sint32 value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetUint64 "void *obj" "const char *key" "Uint64 value"
+.Fn AG_SetUint64 "AG_Object *obj" "const char *key" "Uint64 value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetSint64 "void *obj" "const char *key" "Sint64 value"
+.Fn AG_SetSint64 "AG_Object *obj" "const char *key" "Sint64 value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetFloat "void *obj" "const char *key" "float value"
+.Fn AG_SetFloat "AG_Object *obj" "const char *key" "float value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetDouble "void *obj" "const char *key" "double value"
+.Fn AG_SetDouble "AG_Object *obj" "const char *key" "double value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetLongDouble "void *obj" "const char *key" "long double value"
+.Fn AG_SetLongDouble "AG_Object *obj" "const char *key" "long double value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetString "void *obj" "const char *key" "const char *fmt" "..."
+.Fn AG_SetString "AG_Object *obj" "const char *key" "const char *fmt" "..."
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetPointer "void *obj" "const char *key" "void *ptr"
+.Fn AG_SetPointer "AG_Object *obj" "const char *key" "void *ptr"
 .Pp
 .nr nS 0
 The
@@ -294,10 +303,10 @@ are not available on all platforms.
 .Sh SAVING/LOADING
 .nr nS 1
 .Ft int
-.Fn AG_PropLoad "void *obj" "AG_DataSource *ds"
+.Fn AG_PropLoad "AG_Object *obj" "AG_DataSource *ds"
 .Pp
 .Ft int
-.Fn AG_PropSave "void *obj" "AG_DataSource *ds"
+.Fn AG_PropSave "AG_Object *obj" "AG_DataSource *ds"
 .Pp
 .nr nS 0
 The

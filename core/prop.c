@@ -91,6 +91,24 @@ AG_CopyProp(const AG_Prop *prop)
 	return (0);
 }
 
+/* Test for the existence of a given property. */
+int
+AG_PropDefined(void *p, const char *key)
+{
+	AG_Object *obj = p;
+	AG_Prop *prop;
+
+	AG_ObjectLock(obj);
+	TAILQ_FOREACH(prop, &obj->props, props) {
+		if (strcmp(key, prop->key) == 0) {
+			AG_ObjectUnlock(obj);
+			return (1);
+		}
+	}
+	AG_ObjectUnlock(obj);
+	return (0);
+}
+
 #undef PROP_SET
 #define PROP_SET(fn,v,type,argtype) do { \
 	if (prop->writeFn.fn != NULL) { \

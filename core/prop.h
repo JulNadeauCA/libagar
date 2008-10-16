@@ -209,6 +209,7 @@ int	  AG_PropCopyPath(char *, size_t, void *, const char *)
 		          BOUNDED_ATTRIBUTE(__string__, 1, 2);
 size_t	  AG_GetStringCopy(void *, const char *, char *, size_t);
 AG_Prop  *AG_SetString(void *, const char *, const char *, ...);
+int       AG_PropDefined(void *, const char *);
 
 /********************
  * Get/Set Routines *
