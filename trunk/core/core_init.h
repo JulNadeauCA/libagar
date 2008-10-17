@@ -2,6 +2,12 @@
 
 #include <agar/begin.h>
 
+/* Flags for AG_InitCore() */
+#define AG_VERBOSE         0x01 /* Allow errors/warning output on console */
+#define AG_CREATE_DATADIR  0x02 /* Auto-create data directory on init */
+#define AG_NO_CFG_AUTOLOAD 0x04 /* Don't autoload configuration */
+#define AG_CORE_VERBOSE AG_VERBOSE
+
 __BEGIN_DECLS
 struct ag_event;
 
@@ -10,9 +16,6 @@ extern int agVerbose;		/* Verbose console output */
 extern int agTerminating;	/* Application is exiting */
 extern int agGUI;		/* GUI is initialized */
 extern int agInitedSDL;		/* Video system had to initialize SDL */
-
-/* Flags for AG_InitCore() */
-#define AG_CORE_VERBOSE		0x01
 
 int	 AG_InitCore(const char *, Uint);
 int	 AG_InitVideo(int, int, int, Uint);

@@ -61,6 +61,7 @@
  */
 
 #include <config/have_freetype.h>
+#include <config/ttfdir.h>
 #include <config/utf8.h>
 
 #include <core/core.h>
@@ -94,11 +95,16 @@
 #include "fonts.h"
 #include "fonts_data.h"
 
+/* Default fonts */
+const char *agDefaultFaceFT = "_agFontVera";
+const char *agDefaultFaceBitmap = "_agFontMinimal";
+
+/* Statically compiled fonts */
 AG_StaticFont *agBuiltinFonts[] = {
 	&agFontVera,
 	&agFontMinimal
 };
-const int agBuiltinFontCount = 2;
+const int agBuiltinFontCount = sizeof(agBuiltinFonts)/sizeof(agBuiltinFonts[0]);
 
 int agTextFontHeight = 0;		/* Default font height (px) */
 int agTextFontAscent = 0;		/* Default font ascent (px) */
@@ -195,8 +201,8 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 {
 	char path[AG_PATHNAME_MAX];
 	char name[AG_OBJECT_NAME_MAX];
-	int ptsize = (psize >= 0) ? psize : AG_GetInt(agConfig,"font.size");
-	Uint flags = (pflags >= 0) ? pflags : AG_GetUint(agConfig,"font.flags");
+	int ptsize = (psize >= 0) ? psize : AG_CfgInt("font.size");
+	Uint flags = (pflags >= 0) ? pflags : AG_CfgUint("font.flags");
 	enum ag_font_type type;
 	AG_StaticFont *builtin;
 	AG_Font *font;
@@ -205,7 +211,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	if (pname != NULL) {
 		Strlcpy(name, pname, sizeof(name));
 	} else {
-		AG_GetStringCopy(agConfig, "font.face", name, sizeof(name));
+		AG_CfgStringCopy("font.face", name, sizeof(name));
 	}
 	AG_MutexLock(&agTextLock);
 	SLIST_FOREACH(font, &fonts, fonts) {
@@ -404,15 +410,53 @@ int
 AG_TextInit(void)
 {
 	int i;
-
+	
 	AG_MutexInitRecursive(&agTextLock);
+	
+	/*
+	 * Initialize default font specifications. Search for platform-specific
+	 * font paths and include them.
+	 */
+	if (AG_CfgBool("initial-run")) {
+#if defined(__APPLE__)
+# if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
+		char *home = AG_CfgString("home");
+
+		AG_SetCfgString("font-path",
+		    "%s/fonts:%s:%s/Library/Fonts:"
+		    "/Library/Fonts:/System/Library/Fonts",
+		    AG_CfgString("save-path"), TTFDIR, home);
+# else
+		AG_SetCfgString("font-path",
+		    "%s/fonts:%s:/Library/Fonts:/System/Library/Fonts",
+		    AG_CfgString("save-path"), TTFDIR);
+# endif
+#elif defined(_WIN32)
+		AG_SetCfgString("font-path", "fonts:.");
+#else
+		AG_SetCfgString("font-path", "%s/fonts:%s",
+		    AG_CfgString("save-path"), TTFDIR);
+#endif
+		AG_Verbose("Default font path: %s", AG_CfgString("font-path"));
 
 #ifdef HAVE_FREETYPE
-	if (AG_GetBool(agConfig,"font.freetype")) {
-		if (strcmp(AG_GetString(agConfig, "font.face"),"?") == 0) {
-			AG_SetString(agConfig, "font.face", "_agFontVera");
-			AG_SetInt(agConfig, "font.size", 10);
-			AG_SetUint(agConfig, "font.flags", 0);
+		AG_SetCfgBool("font.freetype", 1);
+		AG_Verbose("Default font engine: FreeType");
+#else
+		AG_SetCfgBool("font.freetype", 0);
+		AG_Verbose("Default font engine: Bitmap");
+#endif
+		AG_SetCfgString("font.face", "?");
+		AG_SetCfgInt("font.size", -1);
+		AG_SetCfgUint("font.flags", 0);
+	}
+
+#ifdef HAVE_FREETYPE
+	if (AG_CfgBool("font.freetype")) {
+		if (strcmp(AG_CfgString("font.face"),"?") == 0) {
+			AG_SetCfgString("font.face", agDefaultFaceFT);
+			AG_SetCfgInt("font.size", 10);
+			AG_SetCfgUint("font.flags", 0);
 		}
 		if (AG_TTFInit() == -1) {
 			return (-1);
@@ -421,10 +465,10 @@ AG_TextInit(void)
 	} else
 #endif
 	{
-		if (strcmp(AG_GetString(agConfig, "font.face"),"?") == 0) {
-			AG_SetString(agConfig, "font.face", "_agFontMinimal");
-			AG_SetInt(agConfig, "font.size", 12);
-			AG_SetUint(agConfig, "font.flags", 0);
+		if (strcmp(AG_CfgString("font.face"),"?") == 0) {
+			AG_SetCfgString("font.face", agDefaultFaceBitmap);
+			AG_SetCfgInt("font.size", 12);
+			AG_SetCfgUint("font.flags", 0);
 		}
 		agFreetype = 0;
 	}
@@ -1261,11 +1305,11 @@ AG_TextParseFontSpec(const char *fontspec)
 
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
-		AG_SetString(agConfig, "font.face", s);
+		AG_SetCfgString("font.face", s);
 	}
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
-		AG_SetInt(agConfig, "font.size", atoi(s));
+		AG_SetCfgInt("font.size", atoi(s));
 	}
 	if ((s = AG_Strsep(&fs, ":,/")) != NULL &&
 	    s[0] != '\0') {
@@ -1278,7 +1322,7 @@ AG_TextParseFontSpec(const char *fontspec)
 			case 'U': flags |= AG_FONT_UPPERCASE;	break;
 			}
 		}
-		AG_SetUint(agConfig, "font.flags", flags);
+		AG_SetCfgUint("font.flags", flags);
 	}
 }
 
@@ -1388,7 +1432,7 @@ AG_TextInfo(const char *key, const char *format, ...)
 	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
 
 	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-	AG_SetBool(agConfig, propKey, 0);
+	AG_SetCfgBool(propKey, 0);
 	AG_WidgetBindProp(cb, "state", agConfig, propKey);
 
 	AG_WindowShow(win);
@@ -1433,7 +1477,7 @@ AG_TextWarning(const char *key, const char *format, ...)
 	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
 
 	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-	AG_SetBool(agConfig, propKey, 0);
+	AG_SetCfgBool(propKey, 0);
 	AG_WidgetBindProp(cb, "state", agConfig, propKey);
 
 	AG_WindowShow(win);

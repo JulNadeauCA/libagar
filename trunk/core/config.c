@@ -30,7 +30,6 @@
  */
 
 #include <config/sharedir.h>
-#include <config/ttfdir.h>
 #include <config/have_getpwuid.h>
 #include <config/have_getuid.h>
 #include <config/have_freetype.h>
@@ -39,15 +38,12 @@
 #include <core/config.h>
 #include <core/rcs.h>
 
-#include <gui/view.h>
-#include <gui/text.h>
-#include <gui/window.h>
-
 #include <string.h>
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 #include <pwd.h>
 #endif
 
+/* XXX XXX move to agar-gui */
 int agKbdDelay = 250;			/* Key repeat delay */
 int agKbdRepeat = 35;			/* Key repeat interval */
 int agMouseDblclickDelay = 250;		/* Mouse double-click delay */
@@ -68,7 +64,37 @@ int agScreenshotQuality = 100;		/* JPEG quality in % */
 int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
 
 int
-AG_ConfigInit(AG_Config *cfg)
+AG_CreateDataDir(void)
+{
+	char *datadir = AG_CfgString("save-path");
+	char *tmpdir = AG_CfgString("tmp-path");
+
+	if (AG_FileExists(datadir) == 0 && AG_MkDir(datadir) != 0)
+		return (-1);
+	if (AG_FileExists(tmpdir) == 0 && AG_MkDir(tmpdir) != 0)
+		return (-1);
+	
+	return (0);
+}
+
+int
+AG_ConfigSave(void)
+{
+	if (AG_CreateDataDir() == -1 ||
+	    AG_ObjectSave(agConfig) == -1) {
+		return (-1);
+	}
+	return (0);
+}
+
+int
+AG_ConfigLoad(void)
+{
+	return AG_ObjectLoad(agConfig);
+}
+
+int
+AG_ConfigInit(AG_Config *cfg, Uint flags)
 {
 	char udatadir[AG_PATHNAME_MAX];
 	char tmpdir[AG_PATHNAME_MAX];
@@ -82,6 +108,8 @@ AG_ConfigInit(AG_Config *cfg)
 	OBJECT(cfg)->save_pfx = NULL;
 
 	AG_SetBool(cfg, "initial-run", 1);
+
+	/* XXX XXX move to agar-gui */
 	AG_SetBool(cfg, "view.full-screen", 0);
 	AG_SetBool(cfg, "view.async-blits", 0);
 	AG_SetBool(cfg, "view.opengl", 0);
@@ -101,18 +129,15 @@ AG_ConfigInit(AG_Config *cfg)
 	Strlcat(udatadir, AG_PATHSEP, sizeof(udatadir));
 	Strlcat(udatadir, ".", sizeof(udatadir));
 	Strlcat(udatadir, agProgName, sizeof(udatadir));
+	AG_SetString(cfg, "home", "%s", pwd->pw_dir);
 #else
 	udatadir[0] = '.';
 	Strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
+	AG_SetString(cfg, "home", ".");
 #endif
 	Strlcpy(tmpdir, udatadir, sizeof(tmpdir));
 	Strlcat(tmpdir, "/tmp", sizeof(tmpdir));
 	
-	if (AG_FileExists(udatadir) == 0 && AG_MkDir(udatadir) != 0)
-		return -1;
-	if (AG_FileExists(tmpdir) == 0 && AG_MkDir(tmpdir) != 0)
-		return -1;
-
 	AG_SetString(cfg, "save-path", "%s", udatadir);
 	AG_SetString(cfg, "tmp-path", "%s", tmpdir);
 
@@ -124,34 +149,11 @@ AG_ConfigInit(AG_Config *cfg)
 	AG_SetString(cfg, "load-path", "%s:%s", udatadir, SHAREDIR);
 #endif
 	
-#if defined(__APPLE__)
-# if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-	AG_SetString(cfg, "font-path", "%s/fonts:%s:%s/Library/Fonts:"
-	                                "/Library/Fonts:"
-					"/System/Library/Fonts",
-					udatadir, TTFDIR, pwd->pw_dir);
-# else
-	AG_SetString(cfg, "font-path", "%s/fonts:%s:"
-	                                "/Library/Fonts:"
-					"/System/Library/Fonts",
-					udatadir, TTFDIR);
-# endif
-#elif defined(_WIN32)
-	AG_SetString(cfg, "font-path", "fonts:.");
-#else
-	AG_SetString(cfg, "font-path", "%s/fonts:%s", udatadir, TTFDIR);
-#endif
-
-#ifdef HAVE_FREETYPE
-	AG_SetBool(cfg, "font.freetype", 1);
-#else
-	AG_SetBool(cfg, "font.freetype", 0);
-#endif
-	AG_SetString(cfg, "font.face", "?");
-	AG_SetInt(cfg, "font.size", -1);
-	AG_SetUint(cfg, "font.flags", 0);
-
-	return 0;
+	if (flags & AG_CREATE_DATADIR) {
+		if (AG_CreateDataDir() == -1)
+			return (-1);
+	}
+	return (0);
 }
 
 static int
@@ -187,8 +189,12 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 }
 
 static int
-Save(void *p, AG_DataSource *ds)
+Save(void *obj, AG_DataSource *ds)
 {
+	AG_Config *cfg = obj;
+
+	AG_SetBool(cfg, "initial-run", 0);
+
 #ifdef DEBUG
 	AG_WriteUint8(ds, (Uint8)agDebugLvl);
 #else
@@ -256,6 +262,18 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	AG_SetError(_("Cannot find %s.%s (in <%s>:%s)."), name,
 	    (ext != NULL) ? ext : "", path_key, path);
 	return (-1);
+}
+
+void
+AG_SetCfgString(const char *key, const char *fmt, ...)
+{
+	va_list ap;
+	char *s;
+
+	va_start(ap, fmt);
+	Vasprintf(&s, fmt, ap);
+	va_end(ap);
+	(void)AG_SetProp(agConfig, key, AG_PROP_STRING, s);
 }
 
 AG_ObjectClass agConfigClass = {

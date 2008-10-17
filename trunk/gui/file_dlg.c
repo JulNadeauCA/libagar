@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,8 +62,7 @@ AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 	AG_FileDlg *fd;
 
 	fd = AG_FileDlgNew(parent, flags);
-	AG_FileDlgSetDirectoryMRU(fd, mruKey,
-	    AG_GetString(agConfig,"save-path"));
+	AG_FileDlgSetDirectoryMRU(fd, mruKey, AG_CfgString("save-path"));
 	return (fd);
 }
 
@@ -643,9 +642,8 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 		goto fail;
 	}
 	if (fd->dirMRU != NULL) {
-		AG_SetString(agConfig, fd->dirMRU, fd->cwd);
-		if (AG_ObjectSave(agConfig) == -1)
-			Verbose("Saving MRU: %s\n", AG_GetError());
+		AG_SetCfgString(fd->dirMRU, "%s", fd->cwd);
+		AG_ConfigSave();
 	}
 	AG_TlistScrollToStart(fd->tlDirs);
 	AG_TlistScrollToStart(fd->tlFiles);
@@ -666,8 +664,8 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 	if (AG_GetProp(agConfig, key, AG_PROP_STRING, &s) != NULL) {
 		AG_FileDlgSetDirectory(fd, s);
 	} else {
-		AG_SetString(agConfig, key, dflt);
-		if (AG_ObjectSave(agConfig) == -1) {
+		AG_SetCfgString(key, "%s", dflt);
+		if (AG_ConfigSave() == -1) {
 			Verbose("Saving MRU: %s\n", AG_GetError());
 		}
 		AG_FileDlgSetDirectory(fd, dflt);

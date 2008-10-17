@@ -1431,20 +1431,20 @@ AG_WidgetDraw(void *p)
 	    !OccultedWidget(wid) &&
 	    WIDGET_OPS(wid)->draw != NULL) {
 		WIDGET_OPS(wid)->draw(wid);
-#if 0
-		if (!AG_ObjectIsClass(wid, "AG_Widget:AG_Window:*")) {
+#ifdef DEBUG
+		if (wid->flags & AG_WIDGET_DEBUG_RSENS) {
 			static Uint8 c1[4] = { 200, 0, 0, 25 };
 			AG_Rect r = AG_Rect2ToRect(wid->rSens);
 
-			if (r.x != wid->rView.x1 || r.y != wid->rView.y1 ||
-			    r.w != wid->rView.w || r.h != wid->rView.h) {
+/*			if (r.x != wid->rView.x1 || r.y != wid->rView.y1 || */
+/*			    r.w != wid->rView.w || r.h != wid->rView.h) { */
 				r.x -= wid->rView.x1;
 				r.y -= wid->rView.y1;
 				AG_DrawRectBlended(wid, r,
 				    c1, AG_ALPHA_SRC);
 				AG_DrawRectOutline(wid, r,
 				    AG_MapRGB(agVideoFmt,100,0,0));
-			}
+/*			} */
 		}
 #endif
 	}
