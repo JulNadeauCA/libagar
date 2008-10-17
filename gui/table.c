@@ -84,6 +84,17 @@ AG_TableSetSelectionMode(AG_Table *t, enum ag_table_selmode mode)
 	AG_ObjectUnlock(t);
 }
 
+void
+AG_TableSetSelectionColor(AG_Table *t, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	AG_ObjectLock(t);
+	t->selColor[0] = r;
+	t->selColor[1] = g;
+	t->selColor[2] = b;
+	t->selColor[3] = a;
+	AG_ObjectUnlock(t);
+}
+
 /* Change the set of recognized field separators (defaults to ":") */
 void
 AG_TableSetSeparator(AG_Table *t, const char *sep)
@@ -230,6 +241,70 @@ UpdateScrollbars(AG_Table *t)
 			*value = MAX(0, t->wTot - t->r.w);
 		}
 		AG_WidgetUnlockBinding(bValue);
+	}
+}
+
+/* Set the effective position of all embedded widgets in the table. */
+static void
+UpdateEmbeddedWidgets(AG_Table *t)
+{
+	AG_SizeAlloc wa;
+	AG_Widget *wt;
+	AG_Rect rd;
+	AG_TableCol *col;
+	AG_TableCell *c;
+	Uint m, n;
+	int update = 0;
+
+	rd.h = t->hRow;
+
+	for (n = 0, rd.x = -t->xOffs;
+	     n < t->n;
+	     n++) {
+		col = &t->cols[n];
+		rd.w = col->w;
+		rd.y = t->hCol - t->mOffs*t->hRow;
+		for (m = 0;
+		     m < t->m;
+		     m++) {
+			c = &t->cells[m][n];
+			if (c->type != AG_CELL_WIDGET) {
+				continue;
+			}
+			wt = c->data.p;
+
+			if (wt->x != rd.x || wt->y != rd.y ||
+			    wt->w != rd.w || wt->h != rd.h) {
+				wa.x = rd.x;
+				wa.y = rd.y;
+				wa.w = rd.w;
+				wa.h = rd.h;
+				AG_WidgetSizeAlloc(wt, &wa);
+				update++;
+			}
+
+			/*
+			 * Adjust sensitivity rectangle if widget is
+			 * partially visible.
+			 */
+			wt->rSens.w = (rd.x+rd.w > t->r.w) ?
+			    (t->r.w - rd.x - 4) : rd.w;
+			wt->rSens.x2 = wt->rSens.x1 + wt->rSens.w;
+	
+			wt->rSens.h = (rd.y+rd.h > t->r.h+t->hCol) ?
+			    (t->r.h + t->hCol - rd.y - 4) : rd.h;
+			wt->rSens.y2 = wt->rSens.y1 + wt->rSens.h;
+
+			rd.y += t->hRow;
+		}
+		rd.x += col->w;
+	}
+
+	/* Apply any changes to widget size allocations. */
+	if (update) {
+		AG_WidgetUpdateCoords(t,
+		    WIDGET(t)->rView.x1,
+		    WIDGET(t)->rView.y1);
 	}
 }
 
@@ -429,35 +504,7 @@ DrawCell(AG_Table *t, AG_TableCell *c, AG_Rect *rd)
 		goto blit;
 	case AG_CELL_WIDGET:
 		if (WIDGET_OPS(c->data.p)->draw != NULL) {
-			AG_SizeAlloc wa;
-			AG_Widget *wt = c->data.p;
-
-			/* Update the effective widget coordinates. */
-			if (wt->x != rd->x || wt->y != rd->y ||
-			    wt->w != rd->w || wt->h != rd->h) {
-				wa.x = rd->x;
-				wa.y = rd->y;
-				wa.w = rd->w;
-				wa.h = rd->h;
-				AG_WidgetSizeAlloc(wt, &wa);
-				AG_WidgetUpdateCoords(wt,
-				    WIDGET(t)->rView.x1 + rd->x,
-				    WIDGET(t)->rView.y1 + rd->y);
-			} else {
-				wt->rSens.w = rd->w;
-				wt->rSens.h = rd->h;
-			}
-
-			/* Mask mouse events in clipped out area. */
-			wt->rSens.w = (rd->x+rd->w > t->r.w) ?
-			    (t->r.w - rd->x - 2) : rd->w;
-			wt->rSens.x2 = wt->rSens.x1 + wt->rSens.w;
-
-			wt->rSens.h = (rd->y+rd->h > t->r.h+t->hCol) ?
-			    (t->r.h + t->hCol - rd->y - 2) : rd->h;
-			wt->rSens.y2 = wt->rSens.y1 + wt->rSens.h;
-			
-			AG_WidgetDraw(wt);
+			AG_WidgetDraw(c->data.p);
 		}
 		c->surface = -1;
 		return;
@@ -569,7 +616,7 @@ Draw(void *obj)
 {
 	AG_Table *t = obj;
 	AG_Rect rCol, rCell;
-	int n, m;
+	Uint n, m;
 
 	STYLE(t)->TableBackground(t, t->r);
 	
@@ -580,6 +627,8 @@ Draw(void *obj)
 	if (t->poll_ev != NULL) {
 		t->poll_ev->handler(t->poll_ev);
 	}
+	if (t->flags & AG_TABLE_WIDGETS)
+		UpdateEmbeddedWidgets(t);
 
 	rCol.y = 0;
 	rCol.h = t->hCol + t->r.h - 2;
@@ -624,14 +673,15 @@ Draw(void *obj)
 		for (m = t->mOffs, rCell.y = t->hCol;
 		     m < t->m && (rCell.y < rCol.h);
 		     m++) {
+			AG_TableCell *c = &t->cells[m][n];
+
 			AG_DrawLineH(t, 0, t->r.w, rCell.y,
 			    AG_COLOR(TABLE_LINE_COLOR));
 
-			DrawCell(t, &t->cells[m][n], &rCell);
-
-			if (t->cells[m][n].selected) {
-				Uint8 c[4] = { 0, 0, 250, 32 }; /* XXX custom */
-				AG_DrawRectBlended(t, rCell, c, AG_ALPHA_SRC);
+			DrawCell(t, c, &rCell);
+			if (c->selected) {
+				AG_DrawRectBlended(t, rCell, t->selColor,
+				    AG_ALPHA_SRC);
 			}
 			rCell.y += t->hRow;
 		}
@@ -774,6 +824,7 @@ AG_TableBegin(AG_Table *t)
 	Free(t->cells);
 	t->cells = NULL;
 	t->m = 0;
+	t->flags &= ~(AG_TABLE_WIDGETS);
 	AG_WidgetSetInt(t->vbar, "max", 0);
 }
 
@@ -1412,6 +1463,9 @@ MouseMotion(AG_Event *event)
 			tc->w = t->wColMin;
 		}
 		SizeColumns(t);
+		if (t->r.h > 0 && t->r.w > 0) {
+			UpdateScrollbars(t);
+		}
 		AG_SetCursor(AG_HRESIZE_CURSOR);
 	} else {
 		if (OverColumnHeader(t, y) &&
@@ -1730,7 +1784,7 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				c->widget = c->data.p;
 				AG_ObjectAttach(t, c->widget);
 				AG_WidgetSizeAlloc(c->widget, &a);
-				AG_WindowUpdate(AG_ParentWindow(t));
+				t->flags |= AG_TABLE_WIDGETS;
 			}
 		}
 		switch (sc[0]) {
@@ -1902,6 +1956,10 @@ Init(void *obj)
 	t->hHint = t->hCol + t->hRow*2;
 	t->r = AG_RECT(0,0,0,0);
 	t->selMode = AG_TABLE_SEL_ROWS;
+	t->selColor[0] = 0;
+	t->selColor[1] = 0;
+	t->selColor[2] = 250;
+	t->selColor[3] = 32;
 	t->wTot = 0;
 
 	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);

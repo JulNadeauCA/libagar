@@ -109,6 +109,7 @@ typedef struct ag_table {
 #define AG_TABLE_REDRAW_CELLS	0x04	/* Redraw the cells */
 #define AG_TABLE_POLL		0x08	/* Table is polled */
 #define AG_TABLE_HIGHLIGHT_COLS	0x40	/* Highlight column selection */
+#define AG_TABLE_WIDGETS	0x80	/* Embedded widgets are in use */
 #define AG_TABLE_MULTIMODE	(AG_TABLE_MULTI|AG_TABLE_MULTITOGGLE)
 	enum ag_table_selmode selMode;	/* Selection mode */
 	int wHint, hHint;		/* Size hint */
@@ -141,6 +142,7 @@ typedef struct ag_table {
 	AG_Timeout incTo, decTo;	/* Timers for keyboard motion */
 	AG_Rect r;			/* View area */
 	int wTot;			/* Total width for all columns */
+	Uint8 selColor[4];		/* Selection color (RGBA) */
 
 	AG_SLIST_HEAD(,ag_table_popup) popups; /* Registered popup menus */
 } AG_Table;
@@ -163,6 +165,7 @@ void AG_TableSetRowHeight(AG_Table *, int);
 void AG_TableSetColMin(AG_Table *, int);
 void AG_TableSetDefaultColWidth(AG_Table *, int);
 void AG_TableSetSelectionMode(AG_Table *, enum ag_table_selmode);
+void AG_TableSetSelectionColor(AG_Table *, Uint8, Uint8, Uint8, Uint8);
 
 void	  AG_TableFreeCell(AG_Table *, AG_TableCell *);
 int	  AG_TablePoolAdd(AG_Table *, Uint, Uint);

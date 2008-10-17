@@ -83,6 +83,9 @@ provides tree support, but no multi-column functionality.
 .Fn AG_TableSetSelectionMode "AG_Table *tbl" "enum ag_table_selmode mode"
 .Pp
 .Ft "void"
+.Fn AG_TableSetSelectionColor "AG_Table *tbl" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a"
+.Pp
+.Ft "void"
 .Fn AG_TableSetSeparator "AG_Table *tbl" "const char *sep"
 .Pp
 .Ft "AG_MenuItem *"
@@ -180,6 +183,10 @@ enum ag_table_selmode {
 	AG_TABLE_SEL_COLS	/* Select entire columns */
 };
 .Ed
+.Pp
+.Fn AG_TableSetSelectionColor
+sets the color of the rectangle that will be blended onto selected cells, rows
+or columns in order to indicate selection.
 .Pp
 .Fn AG_TableSetSeparator
 changes the set of accepted field-separator characters in
