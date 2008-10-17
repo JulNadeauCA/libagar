@@ -194,7 +194,6 @@ EditWidgetParams(AG_Event *event)
 		    { AG_WIDGET_UNFOCUSED_BUTTONDOWN, "UNFOCUSED_BUTTONDOWN",1},
 		    { AG_WIDGET_HFILL,			"HFILL",1 },
 		    { AG_WIDGET_VFILL,			"VFILL",1 },
-		    { AG_WIDGET_EXCEDENT,		"EXCEDENT",0 },
 		    { AG_WIDGET_HIDE,			"HIDE",1 },
 		    { AG_WIDGET_DISABLED,		"DISABLED",1 },
 		    { AG_WIDGET_CATCH_TAB,		"CATCH_TAB",1 },

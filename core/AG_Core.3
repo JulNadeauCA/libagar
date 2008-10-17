@@ -71,17 +71,28 @@ and subsystems.
 .nr nS 0
 The
 .Fn AG_InitCore
-function initializes Agar's internal data structures.
-It must be called before any other Agar function.
+function initializes the internal data structures of the Agar-Core library.
+It must be invoked before any other
+.Sq AG_
+routine.
 The
 .Fa progname
-argument specifies the name of the program.
-The application's data files will be stored in the
+argument is an arbitrary name for the application.
+Available
+.Fa flags
+options include:
+.Bl -tag -width "AG_NO_CFG_AUTOLOAD "
+.It AG_VERBOSE
+Allow errors and warning output on console.
+.It AG_CREATE_DATADIR
+If it does not exist, automatically create a
 .Pa ~/.<progname>
-directory.
-This is the only initialization function which is required, the other
-.Fn AG_Init*
-functions are optional.
+data directory on startup.
+.It AG_NO_CFG_AUTOLOAD
+Skip loading of
+.Xr AG_Config 3
+configuration data on startup.
+.El
 .Pp
 The
 .Fn AG_InitVideo

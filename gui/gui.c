@@ -129,6 +129,7 @@ void *agGUIClasses[] = {
 	NULL
 };
 
+/* Initialize Agar-GUI */
 int
 AG_InitGUI(Uint flags)
 {
@@ -151,7 +152,7 @@ AG_InitGUI(Uint flags)
 	Strlcat(path, AG_PATHSEP, sizeof(path));
 	Strlcat(path, "gui-colors.acs", sizeof(path));
 	(void)AG_ColorsLoad(path);
-	
+
 	/* Initialize the font engine. */
 	if (AG_TextInit() == -1)
 		return (-1);
@@ -181,6 +182,7 @@ AG_InitGUI(Uint flags)
 	return (0);
 }
 
+/* Release resources allocated by Agar-GUI */
 void
 AG_DestroyGUI(void)
 {

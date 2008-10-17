@@ -86,7 +86,7 @@ InitCore(progName, ...)
 	const char *progName
 PREINIT:
 	const AP_FlagNames flagNames[] = {
-		{ "verbose", AG_CORE_VERBOSE },
+		{ "verbose", AG_VERBOSE },
 		{ NULL,      0 }
 	};
 	Uint flags = 0;

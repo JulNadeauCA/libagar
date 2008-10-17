@@ -63,7 +63,7 @@ int agInitedSDL = 0;		/* Video system had to initialize SDL */
 int
 AG_InitCore(const char *progname, Uint flags)
 {
-	if (flags & AG_CORE_VERBOSE)
+	if (flags & AG_VERBOSE)
 		agVerbose = 1;
 
 	agProgName = Strdup(progname);
@@ -98,12 +98,10 @@ AG_InitCore(const char *progname, Uint flags)
 		AG_SetError("Out of memory");
 		return (-1);
 	}
-	if (AG_ConfigInit(agConfig) == -1) {
+	if (AG_ConfigInit(agConfig, flags) == -1) {
 		return (-1);
 	}
-	if (AG_ObjectLoad(agConfig) == -1)
-		AG_Verbose("%s; ignoring\n", AG_GetError());
-
+	(void)AG_ObjectLoad(agConfig);
 #ifdef NETWORK
 	AG_InitNetwork(0);
 #endif

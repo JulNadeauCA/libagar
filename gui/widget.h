@@ -96,25 +96,25 @@ typedef struct ag_widget {
 	struct ag_object obj;
 
 	Uint flags;
-#define AG_WIDGET_FOCUSABLE		0x0001 /* Can grab focus */
-#define AG_WIDGET_FOCUSED		0x0002 /* Holds focus (optimization) */
-#define AG_WIDGET_UNFOCUSED_MOTION	0x0004 /* All mousemotion events */
-#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x0008 /* All mousebuttonup events */
-#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x0010 /* All mousebuttondown events */
-#define AG_WIDGET_HFILL			0x0040 /* Expand to fill width */
-#define AG_WIDGET_VFILL			0x0080 /* Expand to fill height */
-#define AG_WIDGET_EXCEDENT		0x0100 /* Used internally for scaling */
-#define AG_WIDGET_HIDE			0x0200 /* Don't draw this widget */
-#define AG_WIDGET_DISABLED		0x0400 /* Don't respond to input */
-#define AG_WIDGET_CATCH_TAB		0x1000 /* Catch tab key events */
-#define AG_WIDGET_PRIO_MOTION		0x2000 /* Block mousemotion events to
+#define AG_WIDGET_FOCUSABLE		0x00001 /* Can grab focus */
+#define AG_WIDGET_FOCUSED		0x00002 /* Holds focus (optimization) */
+#define AG_WIDGET_UNFOCUSED_MOTION	0x00004 /* All mousemotion events */
+#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x00008 /* All mousebuttonup events */
+#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x00010 /* All mousebuttondown events */
+#define AG_WIDGET_HFILL			0x00040 /* Expand to fill width */
+#define AG_WIDGET_VFILL			0x00080 /* Expand to fill height */
+#define AG_WIDGET_HIDE			0x00200 /* Don't draw this widget */
+#define AG_WIDGET_DISABLED		0x00400 /* Don't respond to input */
+#define AG_WIDGET_CATCH_TAB		0x01000 /* Catch tab key events */
+#define AG_WIDGET_PRIO_MOTION		0x02000 /* Block mousemotion events to
 						  any other widget, regardless
 						  of focus */
-#define AG_WIDGET_UNDERSIZE		0x4000 /* Size allocation failed */
-#define AG_WIDGET_NOSPACING		0x8000 /* Disable spacing/padding around
-						  widget (container-specific) */
+#define AG_WIDGET_UNDERSIZE		0x04000 /* Size allocation failed */
+#define AG_WIDGET_NOSPACING		0x08000 /* Disable spacings around
+						   widget; container-specific */
 #define AG_WIDGET_UNFOCUSED_KEYDOWN	0x10000 /* All mousebuttondown events */
 #define AG_WIDGET_UNFOCUSED_KEYUP	0x20000 /* All mousebuttondown events */
+#define AG_WIDGET_DEBUG_RSENS		0x40000 /* Debug sensitivity rect */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int x, y;			/* Coordinates in container */
