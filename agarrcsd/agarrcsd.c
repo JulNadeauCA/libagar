@@ -125,7 +125,7 @@ main(int argc, char *argv[])
 	int adminflag = 0;
 	int i;
 	
-	if (AG_InitCore("agarrcsd", 0) == -1) {
+	if (AG_InitCore("agarrcsd", AG_CREATE_DATADIR) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}

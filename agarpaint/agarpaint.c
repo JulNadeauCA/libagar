@@ -556,7 +556,7 @@ main(int argc, char *argv[])
 	textdomain("agarpaint");
 #endif
 
-	if (AG_InitCore("agarpaint", 0) == -1) {
+	if (AG_InitCore("agarpaint", AG_CREATE_DATADIR) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
 	}
