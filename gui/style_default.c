@@ -73,18 +73,18 @@ Window(AG_Window *win)
 		if (!(win->flags & AG_WINDOW_NORESIZE)) {
 			r.w = win->wResizeCtrl;
 			AG_DrawBox(win, r,
-			    (agView->winop == AG_WINOP_LRESIZE) ? -1 : 1,
+			    AG_WindowSelectedWM(win,AG_WINOP_LRESIZE) ? -1 : 1,
 			    AG_COLOR(WINDOW_BORDER_COLOR));
 
 			r.x = WIDTH(win) - win->wResizeCtrl;
 			AG_DrawBox(win, r,
-			    (agView->winop == AG_WINOP_RRESIZE) ? -1 : 1,
+			    AG_WindowSelectedWM(win,AG_WINOP_RRESIZE) ? -1 : 1,
 			    AG_COLOR(WINDOW_BORDER_COLOR));
 			
 			r.x = win->wResizeCtrl;
 			r.w = WIDTH(win) - win->wResizeCtrl*2;
 			AG_DrawBox(win, r,
-			    (agView->winop == AG_WINOP_HRESIZE) ? -1 : 1,
+			    AG_WindowSelectedWM(win,AG_WINOP_HRESIZE) ? -1 : 1,
 			    AG_COLOR(WINDOW_BORDER_COLOR));
 		} else {
 			r.w = WIDTH(win);

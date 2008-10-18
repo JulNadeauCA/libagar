@@ -231,6 +231,13 @@ AG_WindowIsVisible(AG_Window *win)
 	return (win->visible);
 }
 
+/* Test whether a window is currently selected for a given WM operation. */
+static __inline__ int
+AG_WindowSelectedWM(AG_Window *win, enum ag_wm_operation op)
+{
+	return (agView->winSelected == win && agView->winop == op);
+}
+
 /* Manually set widget geometry. */
 static __inline__ void
 AG_WidgetSetPosition(void *wid, int x, int y)
