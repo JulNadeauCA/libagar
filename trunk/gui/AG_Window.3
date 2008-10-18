@@ -41,22 +41,23 @@ The
 object implements a mobile, resizable container for widgets; it is
 itself derived from the
 .Xr AG_Widget 3
-structure and attached to a
+structure and attached to an
 .Xr AG_View 3 .
-Currently there is only one view; multiple views will be supported in
-the Agar-1.4 release.
-By default, the container behavior of
+Similarly to
+.Xr AG_Box 3 ,
 .Nm
-is similar to
-.Xr AG_VBox 3
-and an
+is a general-purpose widget container.
+By default, an
 .Xr AG_Titlebar 3
-is attached to the window at creation time.
+widget is attached to the window when it is created.
 .Pp
-When a window first becomes visible, its child widgets are queried for a
-default, minimum size and the window is sized to accomodate them as much as
-possible within the current view.
-After this initial sizing, containers can resize their children further.
+It not usually necessary to provide explicit dimensions in pixels when
+creating new Agar windows.
+Widgets are queried for preferred dimensions when the window is first
+displayed.
+In cases where the "best" widget dimensions cannot be guessed properly at
+initialization time, it is customary for Agar widgets to provide one or more
+"size hint" routine.
 .Pp
 Commonly used containers include
 .Xr AG_Box 3 ,
@@ -92,7 +93,7 @@ for notebook-style display.
 .Fn AG_WindowSetIconNODUP "AG_Window *win" "AG_Surface *surface"
 .Pp
 .Ft "void"
-.Fn AG_WindowSetCloseAction "AG_Window *win" "int mode"
+.Fn AG_WindowSetCloseAction "AG_Window *win" "eum ag_window_close_action action"
 .Pp
 .Ft "void"
 .Fn AG_WindowSetPadding "AG_Window *win" "int paddingLeft" "int paddingRight" "int paddingTop" "int paddingBottom"
@@ -154,88 +155,20 @@ for notebook-style display.
 .nr nS 0
 The
 .Fn AG_WindowNew
-allocates, initializes and attach a new unnamed window.
-The default close action assigned it "detach" (destroy the window).
+allocates, initializes and attach a new window.
 .Pp
 The
 .Fn AG_WindowNewNamed
-variant tries to create a named window.
-If a window of that name exists, the function places the focus on that window
-and returns NULL.
-The default close action assigned to named windows is "hide".
+variant creates a new named window.
+If a window of the same name exists,
+.Fn AG_WindowNewNamed
+only moves the focus to that window, and returns NULL.
 .Pp
-Acceptable flags include:
-.Pp
-.Bl -tag -width "AG_WINDOW_NOUPDATERECT "
-.It AG_WINDOW_MAXIMIZED
-Window is currently maximized (read-only).
-.It AG_WINDOW_MINIMIZED
-Window is currently minimized (read-only).
-.It AG_WINDOW_KEEPABOVE
-Stay on top of other windows.
-.It AG_WINDOW_KEEPBELOW
-Stay below other windows.
-.It AG_WINDOW_DENYFOCUS
-Don't automatically grab focus in response to a
-.Sq window-mousebuttondown
-event in the window area.
-.It AG_WINDOW_MODAL
-Place window in foreground and prevent all other windows from catching events.
-Multiple modal windows are organized in a stack and the effective modal window
-is the one that was shown
-(with
-.Fn AG_WindowShow )
-the last.
-Implies
-.Dv AG_WINDOW_NOMAXIMIZE
-and
-.Dv AG_WINDOW_NOMINIMIZE .
-.It AG_WINDOW_NOBACKGROUND
-Don't fill the window background prior to rendering its contents.
-.It AG_WINDOW_NOUPDATERECT
-Disable automatic updating of the video region corresponding to the
-window area (applicable to framebuffer-based graphics drivers only)
-.It AG_WINDOW_NOTITLE
-Don't automatically create an
-.Xr AG_Titlebar 3
-widget.
-.It AG_WINDOW_NOBORDERS
-Don't draw decorative window borders.
-.It AG_WINDOW_PLAIN
-Alias for
-.Dv AG_WINDOW_NOTITLE
-and
-.Dv AG_WINDOW_NOBORDERS .
-.It AG_WINDOW_NOHRESIZE
-Disable horizontal window resize control.
-.It AG_WINDOW_NOVRESIZE
-Disable vertical window resize control.
-.It AG_WINDOW_NORESIZE
-Alias for
-.Dv AG_WINDOW_NOHRESIZE
-and
-.Dv AG_WINDOW_NOVRESIZE .
-.It AG_WINDOW_NOCLOSE
-Disable window close button in titelbar.
-.It AG_WINDOW_NOMINIMIZE
-Disable minimize button in titlebar.
-.It AG_WINDOW_NOMAXIMIZE
-Disable maximize button in titlebar.
-.It AG_WINDOW_NOBUTTONS
-Alias for
-.Dv AG_WINDOW_NOCLOSE ,
-.Dv AG_WINDOW_NOMINIMIZE
-and
-.Dv AG_WINDOW_NOMAXIMIZE .
-.It AG_WINDOW_HMAXIMIZE
-Keep window scaled to the display width.
-.It AG_WINDOW_VMAXIMIZE
-Keep window scaled to the display height.
-.It AG_WINDOW_NOMOVE
-User is not allowed to move the window.
-.It AG_WINDOW_NOCLIPPING
-Disable the clipping rectangle over the window area (enabled by default).
-.El
+See
+.Dq FLAGS
+for available
+.Fa flags
+options.
 .Pp
 The
 .Fn AG_WindowSetCaption
@@ -261,16 +194,28 @@ the window is destroyed.
 .Pp
 The
 .Fn AG_WindowSetCloseAction
-function changes the current
-.Sq window-close
-event handler to one of the predefined handlers:
+function specifies the action that should be performed when the user clicks on
+the
+.Em close
+control of
+.Xr AG_Titlebar 3 .
 .Pp
-.Bd -literal
-enum ag_window_close_action {
-	AG_WINDOW_HIDE,
-	AG_WINDOW_DETACH
-};
-.Ed
+.Bl -tag -width "AG_WINDOW_DETACH "
+.It AG_WINDOW_HIDE
+Window is only hidden.
+This is the default action for windows created with
+.Fn AG_WindowNewNamed .
+.It AG_WINDOW_DETACH
+Window is detached from the view and all resources allocated by it (and
+its attached widgets) are released.
+This is the default action for windows created with
+.Fn AG_WindowNew .
+.El
+.Pp
+To set an arbitrary callback routine, simply configure an
+.Sq window-close
+event handler (see
+.Dq EVENTS ) .
 .Pp
 The
 .Fn AG_WindowSetPadding
@@ -298,19 +243,10 @@ The
 .Fn AG_WindowSetPosition
 specifies the method used to compute the initial window position.
 Acceptable values include:
-.Pp
 .Bd -literal
-enum ag_window_alignment {
-	AG_WINDOW_TL,		/* Top-left */
-	AG_WINDOW_TC,		/* Top-center */
-	AG_WINDOW_TR,		/* Top-right */
-	AG_WINDOW_ML,		/* Middle-left */
-	AG_WINDOW_MC,		/* Middle-center */
-	AG_WINDOW_MR,		/* Middle-right */
-	AG_WINDOW_BL,		/* Bottom-left */
-	AG_WINDOW_BC,		/* Bottom-center */
-	AG_WINDOW_BR		/* Bottom-right */
-};
+ AG_WINDOW_TL  AG_WINDOW_TC  AG_WINDOW_TR
+ AG_WINDOW_ML  AG_WINDOW_MC  AG_WINDOW_MR
+ AG_WINDOW_BL  AG_WINDOW_BC  AG_WINDOW_BR
 .Ed
 .Pp
 If the
@@ -424,6 +360,9 @@ Typically, this happens in an event loop routine (such as the stock
 .Fn AG_WindowIsVisible "AG_Window *win"
 .Pp
 .Ft int
+.Fn AG_WindowSelectedWM "AG_Window *win" "enum ag_wm_operation op"
+.Pp
+.Ft int
 .Fn AG_WindowSetVisibility "AG_Window *win" "int flag"
 .Pp
 .nr nS 0
@@ -438,6 +377,25 @@ returns the current visibility status of a window (0 = invisible, 1 = visible).
 With threads, the return value is only valid as long as the
 .Fa win
 object is locked.
+.Pp
+.Fn AG_WindowSelectedWM
+returns 1 if Agar's internal window manager is currently performing the
+specified operation on the window.
+Accepted values for
+.Fa op
+include:
+.Pp
+.Bl -tag -compact -width "AG_WINOP_LRESIZE "
+.It AG_WINOP_NONE
+No operation
+.It AG_WINOP_LRESIZE
+Being resized via left-side resize control.
+.It AG_WINOP_RRESIZE
+Being resized via right-side resize control.
+.It AG_WINOP_HRESIZE
+Being resized via horizontal resize control.
+.El
+.Pp
 .Fn AG_WindowSetVisibility
 sets the visibility state of
 .Fa win .
@@ -507,6 +465,81 @@ A pointer to the window is passed as argument 1 to those event handlers.
 The
 .Fn AG_WindowSetCloseAction
 function is an alternative to assigning these event handlers manually.
+.Sh FLAGS
+For the
+.Ft AG_Window
+object:
+.Pp
+.Bl -tag -width "AG_WINDOW_NOUPDATERECT "
+.It AG_WINDOW_MAXIMIZED
+Window is currently maximized (read-only).
+.It AG_WINDOW_MINIMIZED
+Window is currently minimized (read-only).
+.It AG_WINDOW_KEEPABOVE
+Stay on top of other windows.
+.It AG_WINDOW_KEEPBELOW
+Stay below other windows.
+.It AG_WINDOW_DENYFOCUS
+Don't automatically grab focus in response to a
+.Sq window-mousebuttondown
+event in the window area.
+.It AG_WINDOW_MODAL
+Place window in foreground and prevent all other windows from catching events.
+Multiple modal windows are organized in a stack and the effective modal window
+is the one that was shown
+(with
+.Fn AG_WindowShow )
+the last.
+Implies
+.Dv AG_WINDOW_NOMAXIMIZE
+and
+.Dv AG_WINDOW_NOMINIMIZE .
+.It AG_WINDOW_NOBACKGROUND
+Don't fill the window background prior to rendering its contents.
+.It AG_WINDOW_NOUPDATERECT
+Disable automatic updating of the video region corresponding to the
+window area (applicable to framebuffer-based graphics drivers only)
+.It AG_WINDOW_NOTITLE
+Don't automatically create an
+.Xr AG_Titlebar 3
+widget.
+.It AG_WINDOW_NOBORDERS
+Don't draw decorative window borders.
+.It AG_WINDOW_PLAIN
+Alias for
+.Dv AG_WINDOW_NOTITLE
+and
+.Dv AG_WINDOW_NOBORDERS .
+.It AG_WINDOW_NOHRESIZE
+Disable horizontal window resize control.
+.It AG_WINDOW_NOVRESIZE
+Disable vertical window resize control.
+.It AG_WINDOW_NORESIZE
+Alias for
+.Dv AG_WINDOW_NOHRESIZE
+and
+.Dv AG_WINDOW_NOVRESIZE .
+.It AG_WINDOW_NOCLOSE
+Disable window close button in titelbar.
+.It AG_WINDOW_NOMINIMIZE
+Disable minimize button in titlebar.
+.It AG_WINDOW_NOMAXIMIZE
+Disable maximize button in titlebar.
+.It AG_WINDOW_NOBUTTONS
+Alias for
+.Dv AG_WINDOW_NOCLOSE ,
+.Dv AG_WINDOW_NOMINIMIZE
+and
+.Dv AG_WINDOW_NOMAXIMIZE .
+.It AG_WINDOW_HMAXIMIZE
+Keep window scaled to the display width.
+.It AG_WINDOW_VMAXIMIZE
+Keep window scaled to the display height.
+.It AG_WINDOW_NOMOVE
+User is not allowed to move the window.
+.It AG_WINDOW_NOCLIPPING
+Disable the clipping rectangle over the window area (enabled by default).
+.El
 .Sh EVENTS
 The
 .Nm
