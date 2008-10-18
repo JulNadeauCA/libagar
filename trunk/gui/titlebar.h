@@ -27,9 +27,7 @@ typedef struct ag_titlebar {
 
 __BEGIN_DECLS
 extern AG_WidgetClass agTitlebarClass;
-
 AG_Titlebar *AG_TitlebarNew(void *, Uint);
-void	     AG_TitlebarSetCaption(AG_Titlebar *, const char *);
 __END_DECLS
 
 #include <agar/close.h>

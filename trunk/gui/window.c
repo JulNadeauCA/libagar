@@ -1686,7 +1686,10 @@ AG_WindowUpdateCaption(AG_Window *win)
 
 	AG_ObjectLock(win);
 	if (win->tbar != NULL) {
-		AG_TitlebarSetCaption(win->tbar, win->caption);
+		AG_ObjectLock(win->tbar);
+		AG_LabelString(win->tbar->label, (win->caption != NULL) ?
+		                                 win->caption : "");
+		/* XXX */
 		if (Strlcpy(iconCap, win->caption, sizeof(iconCap)) >=
 		    sizeof(iconCap)) {
 			for (c = &iconCap[0]; *c != '\0'; c++) {
@@ -1697,6 +1700,7 @@ AG_WindowUpdateCaption(AG_Window *win)
 		} else {
 			AG_IconSetText(win->icon, "%s", iconCap);
 		}
+		AG_ObjectUnlock(win->tbar);
 	}
 	AG_ObjectUnlock(win);
 }

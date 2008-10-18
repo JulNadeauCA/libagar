@@ -55,6 +55,14 @@ typedef struct ag_color { Uint8 r, g, b, a; } AG_Color;
 #define AG_LOGPAL		SDL_LOGPAL
 #define AG_PHYSPAL		SDL_PHYSPAL
 
+enum ag_wm_operation {
+	AG_WINOP_NONE,		/* No operation */
+	AG_WINOP_MOVE,		/* Move window */
+	AG_WINOP_LRESIZE,	/* Resize (via left control) */
+	AG_WINOP_RRESIZE,	/* Resize (via right control) */
+	AG_WINOP_HRESIZE	/* Resize (via horizontal control) */
+};
+
 typedef struct ag_display {
 	struct ag_object obj;
 
@@ -78,13 +86,7 @@ typedef struct ag_display {
 	struct ag_window *winSelected;	/* Window being moved/resized/etc */
 	struct ag_window **winModal;	/* Modal window stack */
 	Uint nModal;
-	enum {
-		AG_WINOP_NONE,
-		AG_WINOP_MOVE,			/* Window movement */
-		AG_WINOP_LRESIZE,		/* Window resize */
-		AG_WINOP_RRESIZE,
-		AG_WINOP_HRESIZE
-	} winop;
+	enum ag_wm_operation winop;	/* WM operation in progress */
 	struct ag_style *style;		/* Default style for new windows */
 } AG_Display;
 

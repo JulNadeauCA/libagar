@@ -189,14 +189,6 @@ MouseButtonUp(AG_Event *event)
 	agView->winSelected = NULL;
 }
 
-void
-AG_TitlebarSetCaption(AG_Titlebar *tbar, const char *caption)
-{
-	AG_ObjectLock(tbar);
-	AG_LabelText(tbar->label, (caption == NULL) ? "" : caption);
-	AG_ObjectUnlock(tbar);
-}
-
 AG_WidgetClass agTitlebarClass = {
 	{
 		"Agar(Widget:Box:Titlebar)",
