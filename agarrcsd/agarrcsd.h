@@ -3,13 +3,8 @@
 #include <sys/types.h>
 
 #include <agar/core.h>
-#include <agar/net.h>
-
-#include <agar/core/strlcpy.h>
-#include <agar/core/strlcat.h>
+#include <agar/core/net.h>
 #include <agar/core/snprintf.h>
-#include <agar/core/vsnprintf.h>
-#include <agar/core/vasprintf.h>
 
 #include <agar/config/_mk_have_unsigned_typedefs.h>
 #ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
