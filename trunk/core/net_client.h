@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_NET_CLIENT_H_
-#define _AGAR_NET_CLIENT_H_
+#ifndef _AGAR_CORE_NET_CLIENT_H_
+#define _AGAR_CORE_NET_CLIENT_H_
 
 #define NC_HOSTNAME_MAX	256
 #define NC_PORTNUM_MAX	16
@@ -46,4 +46,4 @@ NC_Result	*NC_QueryBinary(NC_Session *, const char *, ...);
 void		 NC_FreeResult(NC_Result *);
 __END_DECLS
 
-#endif /* _AGAR_NET_CLIENT_H_ */
+#endif /* _AGAR_CORE_NET_CLIENT_H_ */
