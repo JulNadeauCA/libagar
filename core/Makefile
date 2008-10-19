@@ -11,6 +11,7 @@ SRCS=	config.c core.c error.c event.c object.c prop.c rcs.c \
 	timeout.c class.c cpuinfo.c load_color.c load_den.c \
 	data_source.c load_string.c load_version.c \
 	setenv.c snprintf.c vsnprintf.c vasprintf.c \
+	net_client.c net_command.c net_fgetln.c net_server.c \
 	gethostname.c arc4random.c dir.c md5.c sha1.c rmd160.c \
 	file.c string_compat.c dso.c
 

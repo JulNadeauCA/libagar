@@ -26,7 +26,7 @@
 #include <config/network.h>
 #ifdef NETWORK
 
-#include <core/core.h>
+#include "core.h"
 
 #include <sys/types.h>
 #include <sys/param.h>
@@ -46,10 +46,15 @@
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
-#include <pwd.h>
 
-#include "net.h"
-#include "client.h"
+#include "net_command.h"
+#include "net_client.h"
+
+#include <config/have_getpwuid.h>
+#include <config/have_getuid.h>
+#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
+#include <pwd.h>
+#endif
 
 enum {
 	RDBUF_INIT =	4096,
@@ -65,7 +70,6 @@ int ncReconnectIval = 2;		/* Interval between retries (secs) */
 void
 NC_InitSubsystem(Uint flags)
 {
-	AG_RegisterClass(&nsClientClass);
 }
 
 int
@@ -511,7 +515,6 @@ NC_Connect(NC_Session *client, const char *host, const char *port,
 	char fbuf[1024];
 	const char *cause = NULL;
 	struct addrinfo hints, *res, *res0;
-	struct passwd *pwd;
 	int s, rv;
 
 	/* Look in ~/.<app-name>rc for the login information. */
@@ -519,13 +522,21 @@ NC_Connect(NC_Session *client, const char *host, const char *port,
 		char file[AG_PATHNAME_MAX];
 		char *s, *fbufp;
 		FILE *f;
-	
-		if ((pwd = getpwuid(getuid())) == NULL) {
-			AG_SetError("Who are you?");
-			return (-1);
+
+#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
+		{
+			struct passwd *pwd;
+
+			if ((pwd = getpwuid(getuid())) == NULL) {
+				AG_SetError("Who are you?");
+				return (-1);
+			}
+			Strlcpy(file, pwd->pw_dir, sizeof(file));
+			Strlcat(file, "/.", sizeof(file));
 		}
-		Strlcpy(file, pwd->pw_dir, sizeof(file));
-		Strlcat(file, "/.", sizeof(file));
+#else
+		Strlcpy(file, "./", sizeof(file));
+#endif
 		Strlcat(file, client->name, sizeof(file));
 		Strlcat(file, "rc", sizeof(file));
 
@@ -639,5 +650,4 @@ NC_Destroy(NC_Session *client)
 	NC_Disconnect(client);
 	Free(client->read.buf);
 }
-
 #endif /* NETWORK */

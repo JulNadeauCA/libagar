@@ -26,15 +26,13 @@
 #include <config/network.h>
 #ifdef NETWORK
 
-#include <core/core.h>
+#include "core.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-#include <errno.h>
-
-#include "net.h"
+#include "net_command.h"
 
 char *nsCommandErrorString = "";
 
@@ -82,15 +80,9 @@ NS_CommandLong(NS_Command *cmd, const char *key, long *lp)
 		if (strcmp(arg->key, key) == 0) {
 			char *ep;
 			
-			errno = 0;
 			lv = strtol((char *)arg->value, &ep, 10);
 			if (((char *)arg->value)[0] == '\0' || *ep != '\0') {
 				nsCommandErrorString = "long arg invalid";
-				return (-1);
-			}
-			if (errno == ERANGE &&
-			    (lv == AG_LONG_MAX || lv == AG_LONG_MIN)) {
-				nsCommandErrorString = "long arg out of range";
 				return (-1);
 			}
 			*lp = lv;

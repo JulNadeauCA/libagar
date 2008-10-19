@@ -26,7 +26,7 @@
 #include <config/server.h>
 #ifdef SERVER
 
-#include <core/core.h>
+#include "core.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -50,9 +50,11 @@
 #include <fcntl.h>
 #include <signal.h>
 
-#include "net.h"
-#include "sockunion.h"
-#include "fgetln.h"
+#include "net_command.h"
+#include "net_client.h"
+#include "net_server.h"
+#include "net_sockunion.h"
+#include "net_fgetln.h"
 
 #define MAX_SERVER_SOCKS 64
 
@@ -72,6 +74,7 @@ void
 NS_InitSubsystem(Uint flags)
 {
 	AG_RegisterClass(&nsServerClass);
+	AG_RegisterClass(&nsClientClass);
 }
 
 NS_Server *
@@ -111,14 +114,6 @@ InitServer(void *obj)
 	ns->logoutFn = NULL;
 
 	TAILQ_INIT(&ns->clients);
-}
-
-static void
-InitClient(void *obj)
-{
-	NS_Client *nc = obj;
-
-	nc->host[0] = '\0';
 }
 
 static void
@@ -723,6 +718,14 @@ NS_Listen(NS_Server *ns)
 	return (0);
 }
 
+static void
+InitClient(void *obj)
+{
+	NS_Client *cl = obj;
+
+	cl->host[0] = '\0';
+}
+
 AG_ObjectClass nsServerClass = {
 	"NS_Server",
 	sizeof(NS_Server),
@@ -746,5 +749,4 @@ AG_ObjectClass nsClientClass = {
 	NULL,			/* save */
 	NULL			/* edit */
 };
-
 #endif /* SERVER */

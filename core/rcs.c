@@ -56,7 +56,7 @@ int agRcsMode = 0;
 #include <errno.h>
 #include <unistd.h>
 
-#include <net/net.h>
+#include "net.h"
 
 static NC_Session rcs_client;
 static int connected = 0;

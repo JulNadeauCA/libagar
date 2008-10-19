@@ -40,10 +40,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
 #include <string.h>
 
-#include "fgetln.h"
+#include "net_fgetln.h"
 
 static const int bufSize = 8192;
 
@@ -68,10 +67,7 @@ NS_Fgetln(FILE *fp, size_t *len)
 		char *nbuf = realloc(buf, nbufsiz);
 
 		if (nbuf == NULL) {
-			int oerrno = errno;
-			
 			free(buf);
-			errno = oerrno;
 			buf = NULL;
 			return (NULL);
 		} else {
