@@ -1,37 +1,15 @@
-/*
-    SDL - Simple DirectMedia Layer
-    Copyright (C) 1997-2004 Sam Lantinga
-
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Library General Public
-    License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
-
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Library General Public License for more details.
-
-    You should have received a copy of the GNU Library General Public
-    License along with this library; if not, write to the Free
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-    Sam Lantinga
-    slouken@libsdl.org
-*/
-
-/*
- * This file sets things up for C dynamic library function definitions,
- * static inlined functions, and structures aligned at 4-byte alignment.
- * If you don't like ugly C preprocessor code, don't look at this file. :)
- */
+/*	Public domain	*/
 
 #ifdef _AGAR_BEGIN_H_
 #error Nested inclusion of <agar/begin.h>
 #endif
 #define _AGAR_BEGIN_H_
 
-/* Some compilers use a special export keyword for dynamic libraries */
+/*
+ * Expand "DECLSPEC" to any compiler-specific keywords, as required for proper
+ * visibility of symbols in shared libraries.
+ * See: http://gcc.gnu.org/wiki/Visibility
+ */
 #ifndef DECLSPEC
 # if defined(__BEOS__)
 #  if defined(__GNUC__)
@@ -68,24 +46,6 @@
 # endif
 # define _AGAR_DEFINED_DECLSPEC
 #endif
-
-/*
- * By default Agar uses the C calling convention, but on OS/2, we use the
- * _System calling convention to be compatible with every compiler.
- */
-#ifndef AGARCALL
-# if defined(__WIN32__) && !defined(__GNUC__)
-#  define AGARCALL __cdecl
-# else
-#  ifdef __OS2__
-#   define AGARCALL _System
-#  else
-#   define AGARCALL
-#  endif
-# endif
-# define _AGAR_DEFINED_AGARCALL
-#endif
-
 #ifdef __SYMBIAN32__ 
 # ifndef EKA2 
 #  undef DECLSPEC
@@ -117,8 +77,8 @@
 #endif
 
 /*
- * Set up compiler-specific options for inlining functions. If inline not
- * supported, turn static __inline__ functions into regular static functions.
+ * Expand "__inline__" to any compiler-specific keyword needed for defining
+ * an inline function, if supported.
  */
 #ifndef AG_INLINE_OKAY
 # ifdef __GNUC__
@@ -142,21 +102,18 @@
 #  endif
 # endif
 #endif
-
 #ifndef AG_INLINE_OKAY
 # define __inline__
 #endif
 #undef AG_INLINE_OKAY
 
-/* Apparently this is needed by several Windows compilers */
-#if !defined(__MACH__)
-# ifndef NULL
-#  ifdef __cplusplus
-#   define NULL 0
-#   define _AGAR_DEFINED_NULL
-#  else
-#   define NULL ((void *)0)
-#   define _AGAR_DEFINED_NULL
-#  endif
-# endif /* NULL */
-#endif /* ! Mac OS X - breaks precompiled headers */
+/* Define NULL if needed. */
+#if !defined(NULL) && !defined(__MACH__)
+# ifdef __cplusplus
+#  define NULL 0
+#  define _AGAR_DEFINED_NULL
+# else
+#  define NULL ((void *)0)
+#  define _AGAR_DEFINED_NULL
+# endif
+#endif
