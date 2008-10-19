@@ -15,7 +15,6 @@ REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
 REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
 REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
 REGISTER("--enable-network",	"Build network client library [default: check]")
-REGISTER("--enable-server",	"Build network server library [default: no]")
 REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
 REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
 REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
@@ -219,6 +218,7 @@ if [ "${enable_network}" = "yes" ]; then
 	CHECK(getaddrinfo)
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
 		HDEFINE(NETWORK, 1)
+		HDEFINE(SERVER, 1)
 	else
 		if [ "${enable_network}" = "yes" ]; then
 			echo "*"
@@ -229,31 +229,11 @@ if [ "${enable_network}" = "yes" ]; then
 			exit 1
 		else
 			HUNDEF(NETWORK)
-		fi
-	fi
-else
-	HUNDEF(NETWORK)
-	HUNDEF(HAVE_GETADDRINFO)
-fi
-
-# Enable network server code only if requested explicitely.
-# TODO: other checks
-if [ "${enable_server}" = "yes" ]; then
-	if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
-		HDEFINE(SERVER, 1)
-	else
-		if [ "${enable_server}" = "yes" ]; then
-			echo "*"
-			echo "* --enable-server was requested, but this system"
-			echo "* does not support getaddrinfo(). Try running the"
-			echo "* configure script again without this option."
-			echo "*"
-			exit 1
-		else
 			HUNDEF(SERVER)
 		fi
 	fi
 else
+	HUNDEF(NETWORK)
 	HUNDEF(SERVER)
 	HUNDEF(HAVE_GETADDRINFO)
 fi
