@@ -33,7 +33,6 @@
 #include <config/sharedir.h>
 #include <config/ttfdir.h>
 #include <config/localedir.h>
-#include <config/network.h>
 
 #include <config/have_freetype.h>
 #include <config/have_opengl.h>
@@ -133,9 +132,6 @@ main(int argc, char *argv[])
 		} else if (strcmp(argv[i], "--libs") == 0) {
 			printf("-L%s ", LIBDIR);
 			printf("-lag_gui -lag_core ");
-#ifdef NETWORK
-			printf("-lag_net ");
-#endif
 #ifdef SDL_LIBS
 			printf("%s ", SDL_LIBS);
 #endif

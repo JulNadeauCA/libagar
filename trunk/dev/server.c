@@ -40,17 +40,12 @@
 
 #include <core/core.h>
 #include <core/config.h>
-
-#include <net/net.h>
+#include <core/net.h>
 
 #include <gui/window.h>
-#include <gui/box.h>
 #include <gui/tlist.h>
-#include <gui/textbox.h>
-#include <gui/mfspinbutton.h>
-#include <gui/statusbar.h>
-#include <gui/menu.h>
 #include <gui/text.h>
+#include <gui/label.h>
 
 #include "dev.h"
 

@@ -2,6 +2,7 @@
 
 #ifndef _AGAR_CORE_NET_CLIENT_H_
 #define _AGAR_CORE_NET_CLIENT_H_
+#include <agar/begin.h>
 
 #define NC_HOSTNAME_MAX	256
 #define NC_PORTNUM_MAX	16
@@ -46,4 +47,5 @@ NC_Result	*NC_QueryBinary(NC_Session *, const char *, ...);
 void		 NC_FreeResult(NC_Result *);
 __END_DECLS
 
+#include <agar/close.h>
 #endif /* _AGAR_CORE_NET_CLIENT_H_ */

@@ -2,6 +2,8 @@
 
 #include <netinet/in.h>
 
+#include <agar/begin.h>
+
 union sockunion {
 	struct sockinet {
 		unsigned char	si_len;
@@ -11,7 +13,11 @@ union sockunion {
 	struct sockaddr_in	su_sin;
 	struct sockaddr_in6	su_sin6;
 };
-#define su_len		su_si.si_len
-#define su_family	su_si.si_family
-#define su_port		su_si.si_port
 
+#ifdef _AGAR_INTERNAL
+# define su_len		su_si.si_len
+# define su_family	su_si.si_family
+# define su_port	su_si.si_port
+#endif
+
+#include <agar/close.h>
