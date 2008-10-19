@@ -14,7 +14,6 @@ SUBDIR=	core agar-core-config \
 	rg agar-rg-config \
 	math agar-math-config \
 	dev agar-dev-config \
-	net agar-net-config \
 	po
 	
 INCDIRS=gui \
@@ -22,8 +21,7 @@ INCDIRS=gui \
 	rg \
 	vg \
 	math \
-	dev \
-	net
+	dev
 
 all: all-subdir
 clean: clean-config clean-subdir
@@ -87,8 +85,6 @@ install-includes:
 		    ${INCLDIR}/agar/vg.h; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/rg/rg_pub.h \
 		   ${INCLDIR}/agar/rg.h; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/net/net_pub.h \
-		   ${INCLDIR}/agar/net.h; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/math/math_pub.h \
 		   ${INCLDIR}/agar/math.h; \
 		${SUDO} ${INSTALL_INCL} ${SRC}/dev/dev_pub.h \
@@ -108,7 +104,6 @@ install-includes:
 		${SUDO} ${INSTALL_INCL} gui/gui_pub.h ${INCLDIR}/agar/gui.h; \
 		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h; \
 		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h; \
-		${SUDO} ${INSTALL_INCL} net/net_pub.h ${INCLDIR}/agar/net.h; \
 		${SUDO} ${INSTALL_INCL} math/math_pub.h ${INCLDIR}/agar/math.h;\
 		${SUDO} ${INSTALL_INCL} dev/dev_pub.h ${INCLDIR}/agar/dev.h; \
 	fi
