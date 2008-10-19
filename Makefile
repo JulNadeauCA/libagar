@@ -48,6 +48,7 @@ cleandir-config:
 	(cd agarpaint && touch Makefile.config)
 	(cd demos && ${MAKE} cleandir)
 	(cd demos && rm -f */Makefile.config)
+	rm -fR demos/.cache
 	find . -name premake.lua -exec rm -f {} \;
 	find . -name configure.lua -exec rm -f {} \;
 
