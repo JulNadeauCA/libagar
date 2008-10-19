@@ -5,6 +5,50 @@
 #endif
 #define _AGAR_BEGIN_H_
 
+/* Define Uint, Uchar and Ulong if needed. */
+#include <agar/config/_mk_have_unsigned_typedefs.h>
+#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
+# define _MK_HAVE_UNSIGNED_TYPEDEFS
+# define Uint unsigned int
+# define Uchar unsigned char
+# define Ulong unsigned long
+# define _AGAR_DEFINED_UNSIGNED_TYPEDEFS
+#endif
+#undef _MK_HAVE_UNSIGNED_TYPEDEFS
+
+/* Define internationalization macros if NLS is enabled. */
+#include <agar/config/enable_nls.h>
+#ifdef ENABLE_NLS
+# include <libintl.h>
+# define _(String) dgettext("agar",String)
+# ifdef dgettext_noop
+#  define N_(String) dgettext_noop("agar",String)
+# else
+#  define N_(String) (String)
+# endif
+# define _AGAR_DEFINED_NLS
+#else
+# undef _
+# undef N_
+# undef ngettext
+# define _(String) (String)
+# define N_(String) (String)
+# define ngettext(Singular,Plural,Number) ((Number==1)?(Singular):(Plural))
+# define _AGAR_DEFINED_NLS
+#endif
+
+/* Define __BEGIN_DECLS and __END_DECLS if needed. */
+#if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
+# define _AGAR_DEFINED_CDECLS
+# if defined(__cplusplus)
+#  define __BEGIN_DECLS extern "C" {
+#  define __END_DECLS   }
+# else
+#  define __BEGIN_DECLS
+#  define __END_DECLS
+# endif
+#endif
+
 /*
  * Expand "DECLSPEC" to any compiler-specific keywords, as required for proper
  * visibility of symbols in shared libraries.
@@ -80,32 +124,29 @@
  * Expand "__inline__" to any compiler-specific keyword needed for defining
  * an inline function, if supported.
  */
-#ifndef AG_INLINE_OKAY
-# ifdef __GNUC__
-#  define AG_INLINE_OKAY
+#ifdef __GNUC__
+# define _AGAR_USE_INLINE
+#else
+# if defined(_MSC_VER) || defined(__BORLANDC__) || \
+     defined(__DMC__) || defined(__SC__) || \
+     defined(__WATCOMC__) || defined(__LCC__) || \
+     defined(__DECC) || defined(__EABI__)
+#  ifndef __inline__
+#   define __inline__	__inline
+#  endif
+#  define _AGAR_USE_INLINE
 # else
-#  if defined(_MSC_VER) || defined(__BORLANDC__) || \
-      defined(__DMC__) || defined(__SC__) || \
-      defined(__WATCOMC__) || defined(__LCC__) || \
-      defined(__DECC) || defined(__EABI__)
+#  if !defined(__MRC__) && !defined(_SGI_SOURCE)
 #   ifndef __inline__
-#    define __inline__	__inline
+#    define __inline__ inline
 #   endif
-#   define AG_INLINE_OKAY
-#  else
-#   if !defined(__MRC__) && !defined(_SGI_SOURCE)
-#    ifndef __inline__
-#     define __inline__ inline
-#    endif
-#    define AG_INLINE_OKAY
-#   endif
+#   define _AGAR_USE_INLINE
 #  endif
 # endif
-#endif
-#ifndef AG_INLINE_OKAY
+#endif /* !__GNUC__ */
+#ifndef _AGAR_USE_INLINE
 # define __inline__
 #endif
-#undef AG_INLINE_OKAY
 
 /* Define NULL if needed. */
 #if !defined(NULL) && !defined(__MACH__)
@@ -116,4 +157,36 @@
 #  define NULL ((void *)0)
 #  define _AGAR_DEFINED_NULL
 # endif
+#endif
+
+/* Expand FOO_ATTRIBUTE() to supported compiler attributes. */
+#include <agar/config/have_bounded_attribute.h>
+#include <agar/config/have_format_attribute.h>
+#include <agar/config/have_nonnull_attribute.h>
+#include <agar/config/have_packed_attribute.h>
+#include <agar/config/have_aligned_attribute.h>
+#ifdef HAVE_BOUNDED_ATTRIBUTE
+# define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
+#else
+# define BOUNDED_ATTRIBUTE(t, a, b)
+#endif
+#ifdef HAVE_FORMAT_ATTRIBUTE
+# define FORMAT_ATTRIBUTE(t, a, b) __attribute__((__format__ (t,a,b)))
+#else
+# define FORMAT_ATTRIBUTE(t, a, b)
+#endif
+#ifdef HAVE_NONNULL_ATTRIBUTE
+# define NONNULL_ATTRIBUTE(a) __attribute__((__nonnull__ (a)))
+#else
+# define NONNULL_ATTRIBUTE(a)
+#endif
+#ifdef HAVE_PACKED_ATTRIBUTE
+# define PACKED_ATTRIBUTE __attribute__((__packed__))
+#else
+# define PACKED_ATTRIBUTE
+#endif
+#ifdef HAVE_ALIGNED_ATTRIBUTE
+# define ALIGNED_ATTRIBUTE(a) __attribute__((__aligned__ (a)))
+#else
+# define ALIGNED_ATTRIBUTE(a)
 #endif
