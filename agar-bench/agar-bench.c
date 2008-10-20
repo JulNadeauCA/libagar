@@ -220,10 +220,10 @@ MainWindow(void)
 		t = AG_TableNewPolled(ntab, AG_TABLE_MULTI|AG_TABLE_EXPAND,
 		    poll_test, "%i", i);
 
-		AG_TableAddCol(t, "Test", NULL, NULL);
-		AG_TableAddCol(t, "Min", "<88.8888M>", NULL);
-		AG_TableAddCol(t, "Avg", "<88.8888M>", NULL);
-		AG_TableAddCol(t, "Max", "<88.8888M>", NULL);
+		AG_TableAddCol(t, "Test", "70%", NULL);
+		AG_TableAddCol(t, "Min", "10%", NULL);
+		AG_TableAddCol(t, "Avg", "10%", NULL);
+		AG_TableAddCol(t, "Max", "10%", NULL);
 		AG_TableAddCol(t, NULL, NULL, NULL);
 	
 		hbox = AG_HBoxNew(ntab, AG_HBOX_HOMOGENOUS|AG_HBOX_HFILL);

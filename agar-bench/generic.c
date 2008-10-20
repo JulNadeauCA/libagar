@@ -14,7 +14,7 @@ InitSurface(void)
 {
 	surface = AG_SurfaceVideoRGB(32,32);
 	surface64 = AG_SurfaceVideoRGB(64,64);
-	surface128 = AG_SurfaceVideo(128,128);
+	surface128 = AG_SurfaceVideoRGB(128,128);
 }
 
 void
