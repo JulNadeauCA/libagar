@@ -26,7 +26,7 @@
 #include <agar/core.h>
 #include <agar/gui.h>
 #include <agar/gui/load_xcf.h>
-#include <agar/map.h>
+#include <agar/rg.h>
 
 #include "config/sharedir.h"
 #include "config/have_agar_dev.h"
@@ -614,7 +614,6 @@ main(int argc, char *argv[])
 
 	/* Initialize the subsystems. */
 	RG_InitSubsystem();
-	MAP_InitSubsystem();
 
 	/* Initialize an "editor" object we will use as VFS root. */
 	AG_ObjectInitStatic(&editor, NULL);
