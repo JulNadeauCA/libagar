@@ -10,14 +10,11 @@ static void
 InitWidget(void)
 {
 	AG_ObjectInitStatic(&wid, &agWidgetClass);
-	wid.cx = 1;
-	wid.cy = 1;
 	wid.x = 0;
 	wid.y = 0;
 	wid.w = agView->w-1;
 	wid.h = agView->h-1;
-	wid.cx2 = wid.cx + wid.w;
-	wid.cy2 = wid.cy + wid.h;
+	wid.rView = AG_RECT2(1, 1, wid.w, wid.h);
 }
 
 static void
