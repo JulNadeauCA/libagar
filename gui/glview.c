@@ -262,9 +262,17 @@ AG_GLViewDraw(void *obj)
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadMatrixf(glv->mModelview);
-	
+
+	glPushAttrib(GL_TRANSFORM_BIT);
+	glDisable(GL_CLIP_PLANE0);
+	glDisable(GL_CLIP_PLANE1);
+	glDisable(GL_CLIP_PLANE2);
+	glDisable(GL_CLIP_PLANE3);
+
 	if (glv->draw_ev != NULL)
 		glv->draw_ev->handler(glv->draw_ev);
+	
+	glPopAttrib();
 		
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
