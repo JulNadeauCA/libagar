@@ -60,11 +60,11 @@ There are a number of useful libraries based on Agar. Some of them are
 bundled with this source distribution (Agar-VG, etc), but you will need
 to explicitely link your application against them in order to use them.
 
+Agar-MATH	General-purpose math library (bundled, use `agar-math-config`)
 Agar-VG		Vector graphics library (bundled, use `agar-vg-config`)
-Agar-RG		2D graphic rendering/edition (bundled, use `agar-rg-config`)
-Agar-MAP	2D game levels/edition (bundled, use `agar-map-config`)
+Agar-RG		Raster graphics library (bundled, use `agar-rg-config`)
 Agar-DEV	Developer/debugging tools (bundled, use `agar-dev-config`)
-FreeSG		Math, computational geometry, 3D rendering (http://freesg.org/)
+FreeSG		2D/3D graphics engine (http://freesg.org/)
 Edacious	Electronics design (http://edacious.hypertriton.com/)
 CADTools	Computer-aided design (http://cadtools.hypertriton.com/)
 
