@@ -499,32 +499,52 @@ if [ "$CC" = "" ]; then
 		fi
 	done
 	if [ "$CC" = "" ]; then
-		echo "Could not find a C compiler, try setting CC."
-		echo "CC is unset and cc/gcc is not in PATH." >> config.log
+		echo "Unable to find a C compiler in PATH. Please set your compiler"
+		echo "explicitely with the CC environment variable."
+		echo "Unable to find a C compiler in PATH." >> config.log
 		exit 1
 	fi
 fi
 
-cat << 'EOT' > cc-test.c
-int
-main(int argc, char *argv[])
-{
-	return (0);
-}
+cat << 'EOT' > conftest.c
+int main(int argc, char *argv[]) { return (0); }
 EOT
 
-$CC -o cc-test cc-test.c 2>>config.log
+$CC -o conftest conftest.c 2>>config.log
 if [ $? != 0 ]; then
     echo "no"
-	echo "The test C program failed to compile."
-	rm -f cc-test cc-test.c
+	echo "Test C program (conftest.c) failed to compile."
+	echo "Test C program (conftest.c) failed to compile." >> config.log
     exit 1
 fi
+
+EXECSUFFIX=""
+for OUTFILE in conftest.exe conftest conftest.*; do
+	if [ -f $OUTFILE ]; then
+		case $OUTFILE in
+		*.c | *.o | *.obj | *.bb | *.bbg | *.d | *.pdb | *.tds | *.xcoff | *.dSYM | *.xSYM )
+			;;
+		*.* )
+			EXECSUFFIX=`expr "$OUTFILE" : '[^.]*\(\..*\)'`
+			break ;;
+		* )
+			break ;;
+		esac;
+    fi
+done
+if [ "$EXECSUFFIX" != "" ]; then
+	echo "Detected executable suffix: $EXECSUFFIX" >> config.log
+fi
+echo "EXECSUFFIX=$EXECSUFFIX" >> Makefile.config
+echo "#ifndef EXECSUFFIX" > config/execsuffix.h
+echo "#define EXECSUFFIX \"${EXECSUFFIX}\"" >> config/execsuffix.h
+echo "#endif /* EXECSUFFIX */" >> config/execsuffix.h
+
 echo "yes"
-rm -f cc-test cc-test.c
+rm -f conftest.c conftest$EXECSUFFIX
 TEST_CFLAGS=""
-$ECHO_N "checking for compiler warnings..."
-$ECHO_N "checking for compiler warnings..." >> config.log
+$ECHO_N "checking for compiler warning options..."
+$ECHO_N "checking for compiler warning options..." >> config.log
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -569,7 +589,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_CC_WARNINGS" > ${cache}/ctest-HAVE_CC_WARNINGS
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CC_WARNINGS
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
 TEST_CFLAGS="-Wall -Werror"
 fi;
@@ -624,7 +644,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GCC" > ${cache}/ctest-HAVE_GCC
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GCC
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for IEEE754 floating point..."
 $ECHO_N "checking for IEEE754 floating point..." >> config.log
 MK_CACHED="No"
@@ -679,7 +699,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_IEEE754" > ${cache}/ctest-HAVE_IEEE754
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_IEEE754
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking __bounded__ attribute..."
 $ECHO_N "checking __bounded__ attribute..." >> config.log
 MK_CACHED="No"
@@ -733,7 +753,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_BOUNDED_ATTRIBUTE" > ${cache}/ctest-HAVE_BOUNDED_ATTRIBUTE
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_BOUNDED_ATTRIBUTE
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking __format__ attribute..."
 $ECHO_N "checking __format__ attribute..." >> config.log
 MK_CACHED="No"
@@ -793,7 +813,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_FORMAT_ATTRIBUTE" > ${cache}/ctest-HAVE_FORMAT_ATTRIBUTE
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_FORMAT_ATTRIBUTE
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking __nonnull__ attribute..."
 $ECHO_N "checking __nonnull__ attribute..." >> config.log
 MK_CACHED="No"
@@ -846,7 +866,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_NONNULL_ATTRIBUTE" > ${cache}/ctest-HAVE_NONNULL_ATTRIBUTE
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_NONNULL_ATTRIBUTE
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 $ECHO_N "checking __aligned__ attribute..."
 $ECHO_N "checking __aligned__ attribute..." >> config.log
 MK_CACHED="No"
@@ -897,7 +917,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_ALIGNED_ATTRIBUTE" > ${cache}/ctest-HAVE_ALIGNED_ATTRIBUTE
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALIGNED_ATTRIBUTE
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 $ECHO_N "checking __packed__ attribute..."
 $ECHO_N "checking __packed__ attribute..." >> config.log
 MK_CACHED="No"
@@ -948,7 +968,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_PACKED_ATTRIBUTE" > ${cache}/ctest-HAVE_PACKED_ATTRIBUTE
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PACKED_ATTRIBUTE
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 $ECHO_N "checking for long double..."
 $ECHO_N "checking for long double..." >> config.log
 MK_CACHED="No"
@@ -998,7 +1018,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_LONG_DOUBLE" > ${cache}/ctest-HAVE_LONG_DOUBLE
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LONG_DOUBLE
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for long long..."
 $ECHO_N "checking for long long..." >> config.log
 MK_CACHED="No"
@@ -1049,7 +1069,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_LONG_LONG" > ${cache}/ctest-HAVE_LONG_LONG
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LONG_LONG
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for cygwin environment..."
 $ECHO_N "checking for cygwin environment..." >> config.log
 MK_CACHED="No"
@@ -1107,11 +1127,14 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_CYGWIN" > ${cache}/ctest-HAVE_CYGWIN
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CYGWIN
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 	if [ "${with_cygwin}" != "yes" ]; then
+		echo "* Disabling cygwin compatibility layer"
 		CFLAGS="$CFLAGS -mno-cygwin"
 		echo "CFLAGS=$CFLAGS" >> Makefile.config
+	else
+		echo "* Using cygwin compatibility layer"
 	fi
 fi
 $ECHO_N "checking for <sys/types.h>..."
@@ -1165,7 +1188,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_SYS_TYPES_H" > ${cache}/ctest-_MK_HAVE_SYS_TYPES_H
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_SYS_TYPES_H
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${_MK_HAVE_SYS_TYPES_H}" = "yes" ]; then
 $ECHO_N "checking for 64-bit types..."
 $ECHO_N "checking for 64-bit types..." >> config.log
@@ -1220,7 +1243,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_64BIT" > ${cache}/ctest-HAVE_64BIT
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_64BIT
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for conflicting typedefs..."
 $ECHO_N "checking for conflicting typedefs..." >> config.log
 MK_CACHED="No"
@@ -1274,7 +1297,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_UNSIGNED_TYPEDEFS" > ${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_UNSIGNED_TYPEDEFS
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 else
 echo "#undef HAVE_64BIT" >config/have_64bit.h
 echo "hdefs[\"HAVE_64BIT\"] = nil" >>configure.lua
@@ -1330,7 +1353,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_UNSIGNED_TYPEDEFS" > ${cache}/ctest-_MK_HAVE_UNSIGNED_TYPEDEFS
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_UNSIGNED_TYPEDEFS
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 fi;
 $ECHO_N "checking for <stdlib.h>..."
 $ECHO_N "checking for <stdlib.h>..." >> config.log
@@ -1383,7 +1406,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_STDLIB_H" > ${cache}/ctest-_MK_HAVE_STDLIB_H
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_STDLIB_H
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for <unistd.h>..."
 $ECHO_N "checking for <unistd.h>..." >> config.log
 MK_CACHED="No"
@@ -1439,7 +1462,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_UNISTD_H" > ${cache}/ctest-_MK_HAVE_UNISTD_H
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_UNISTD_H
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for compatible <limits.h>..."
 $ECHO_N "checking for compatible <limits.h>..." >> config.log
 MK_CACHED="No"
@@ -1497,7 +1520,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_LIMITS_H" > ${cache}/ctest-_MK_HAVE_LIMITS_H
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_LIMITS_H
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for compatible <float.h>..."
 $ECHO_N "checking for compatible <float.h>..." >> config.log
 MK_CACHED="No"
@@ -1553,7 +1576,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_FLOAT_H" > ${cache}/ctest-_MK_HAVE_FLOAT_H
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_FLOAT_H
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for the __progname variable..."
 $ECHO_N "checking for the __progname variable..." >> config.log
 MK_CACHED="No"
@@ -1603,7 +1626,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_PROGNAME" > ${cache}/ctest-HAVE_PROGNAME
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PROGNAME
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for free(NULL) is a no-op..."
 $ECHO_N "checking for free(NULL) is a no-op..." >> config.log
 MK_CACHED="No"
@@ -1634,7 +1657,7 @@ EOT
 	fi
 fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest) >> config.log
+(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -1670,7 +1693,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-FREE_NULL_IS_A_NOOP
 	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-FREE_NULL_IS_A_NOOP
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 $ECHO_N "checking for the C math library..."
 $ECHO_N "checking for the C math library..." >> config.log
 MATH_LIBS="-lm"
@@ -1727,7 +1750,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_MATH" > ${cache}/ctest-HAVE_MATH
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_MATH
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_MATH}" = "yes" ]; then
 echo "MATH_CFLAGS=$MATH_CFLAGS" >>Makefile.config
 echo "mdefs[\"MATH_CFLAGS\"] = \"$MATH_CFLAGS\"" >>configure.lua
@@ -1804,7 +1827,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_MATH_C99" > ${cache}/ctest-HAVE_MATH_C99
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_MATH_C99
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_MATH_C99}" = "yes" ]; then
 echo "MATH_C99_CFLAGS=$MATH_C99_CFLAGS" >>Makefile.config
 echo "mdefs[\"MATH_C99_CFLAGS\"] = \"$MATH_C99_CFLAGS\"" >>configure.lua
@@ -1875,7 +1898,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETHOSTNAME" > ${cache}/ctest-HAVE_GETHOSTNAME
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETHOSTNAME
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a getpwuid() function..."
 $ECHO_N "checking for a getpwuid() function..." >> config.log
 MK_CACHED="No"
@@ -1929,7 +1952,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETPWUID" > ${cache}/ctest-HAVE_GETPWUID
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETPWUID
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a getuid() function..."
 $ECHO_N "checking for a getuid() function..." >> config.log
 MK_CACHED="No"
@@ -1982,7 +2005,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETUID" > ${cache}/ctest-HAVE_GETUID
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETUID
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a getenv() function..."
 $ECHO_N "checking for a getenv() function..." >> config.log
 MK_CACHED="No"
@@ -2031,7 +2054,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETENV" > ${cache}/ctest-HAVE_GETENV
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETENV
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for setenv() and unsetenv()..."
 $ECHO_N "checking for setenv() and unsetenv()..." >> config.log
 MK_CACHED="No"
@@ -2082,7 +2105,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_SETENV" > ${cache}/ctest-HAVE_SETENV
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SETENV
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a strsep() function..."
 $ECHO_N "checking for a strsep() function..." >> config.log
 MK_CACHED="No"
@@ -2131,7 +2154,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_STRSEP" > ${cache}/ctest-HAVE_STRSEP
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_STRSEP
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for the snprintf() function..."
 $ECHO_N "checking for the snprintf() function..." >> config.log
 MK_CACHED="No"
@@ -2182,7 +2205,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_SNPRINTF" > ${cache}/ctest-HAVE_SNPRINTF
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SNPRINTF
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for the vsnprintf() function..."
 $ECHO_N "checking for the vsnprintf() function..." >> config.log
 MK_CACHED="No"
@@ -2242,7 +2265,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_VSNPRINTF" > ${cache}/ctest-HAVE_VSNPRINTF
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VSNPRINTF
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a vasprintf() function..."
 $ECHO_N "checking for a vasprintf() function..." >> config.log
 MK_CACHED="No"
@@ -2308,7 +2331,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_VASPRINTF" > ${cache}/ctest-HAVE_VASPRINTF
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VASPRINTF
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for the arc4random() random number generator..."
 $ECHO_N "checking for the arc4random() random number generator..." >> config.log
 MK_CACHED="No"
@@ -2360,7 +2383,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_ARC4RANDOM" > ${cache}/ctest-HAVE_ARC4RANDOM
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ARC4RANDOM
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for MD5 functions..."
 $ECHO_N "checking for MD5 functions..." >> config.log
 MK_CACHED="No"
@@ -2413,7 +2436,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_MD5" > ${cache}/ctest-HAVE_MD5
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_MD5
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for SHA1 functions..."
 $ECHO_N "checking for SHA1 functions..." >> config.log
 MK_CACHED="No"
@@ -2466,7 +2489,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_SHA1" > ${cache}/ctest-HAVE_SHA1
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SHA1
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for RMD160 functions..."
 $ECHO_N "checking for RMD160 functions..." >> config.log
 MK_CACHED="No"
@@ -2519,7 +2542,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_RMD160" > ${cache}/ctest-HAVE_RMD160
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_RMD160
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for the X window system..."
 $ECHO_N "checking for the X window system..." >> config.log
 X11_CFLAGS=""
@@ -2611,7 +2634,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_X11" > ${cache}/ctest-HAVE_X11
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_X11
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_X11}" != "" ]; then
 echo "#ifndef X11_CFLAGS" > config/x11_cflags.h
 echo "#define X11_CFLAGS \"$X11_CFLAGS\"" >> config/x11_cflags.h
@@ -2686,7 +2709,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_SIGNAL" > ${cache}/ctest-_MK_HAVE_SIGNAL
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_SIGNAL
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for setjmp() and longjmp()..."
 $ECHO_N "checking for setjmp() and longjmp()..." >> config.log
 MK_CACHED="No"
@@ -2739,7 +2762,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_SETJMP" > ${cache}/ctest-_MK_HAVE_SETJMP
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_SETJMP
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a strtoll() function..."
 $ECHO_N "checking for a strtoll() function..." >> config.log
 MK_CACHED="No"
@@ -2793,7 +2816,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_STRTOLL" > ${cache}/ctest-_MK_HAVE_STRTOLL
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_STRTOLL
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a strtold() function..."
 $ECHO_N "checking for a strtold() function..." >> config.log
 MK_CACHED="No"
@@ -2848,7 +2871,7 @@ if [ "${cache}" != "" ]; then
 	echo "$_MK_HAVE_STRTOLD" > ${cache}/ctest-_MK_HAVE_STRTOLD
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_STRTOLD
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for AltiVec (with <altivec.h>)..."
 $ECHO_N "checking for AltiVec (with <altivec.h>)..." >> config.log
 if [ "$SYSTEM" = "Darwin" ]; then
@@ -2920,7 +2943,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_ALTIVEC" > ${cache}/ctest-HAVE_ALTIVEC
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALTIVEC
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
@@ -2993,7 +3016,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_ALTIVEC" > ${cache}/ctest-HAVE_ALTIVEC
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALTIVEC
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
@@ -3051,7 +3074,7 @@ EOT
 	fi
 fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest) >> config.log
+(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -3087,7 +3110,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_BIG_ENDIAN
 	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-_MK_BIG_ENDIAN
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 if [ "${_MK_BIG_ENDIAN}" = "yes" ]; then
 _MK_LITTLE_ENDIAN="no"
 echo "#undef _MK_LITTLE_ENDIAN" >config/_mk_little_endian.h
@@ -3129,7 +3152,7 @@ EOT
 	fi
 fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest) >> config.log
+(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -3165,7 +3188,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_LITTLE_ENDIAN
 	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-_MK_LITTLE_ENDIAN
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 if [ "${_MK_LITTLE_ENDIAN}" = "yes" ]; then
 _MK_BIG_ENDIAN="no"
 echo "#undef _MK_BIG_ENDIAN" >config/_mk_big_endian.h
@@ -3206,7 +3229,7 @@ EOT
 	fi
 fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest) >> config.log
+(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -3242,7 +3265,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_LITTLE_ENDIAN
 	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-_MK_LITTLE_ENDIAN
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 if [ "${MK_COMPILE_STATUS}" != "OK" ]; then
 echo "Unable to determine byte order"
 exit 1
@@ -3272,7 +3295,7 @@ if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	MK_COMPILE_STATUS="FAIL($?)"
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 HAVE_DLFCN_H="yes"
 echo "#ifndef HAVE_DLFCN_H" > config/have_dlfcn_h.h
@@ -3340,7 +3363,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_DLOPEN" > ${cache}/ctest-HAVE_DLOPEN
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DLOPEN
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_DLOPEN}" != "yes" ]; then
 $ECHO_N "checking for dlopen() in -ldl..."
 $ECHO_N "checking for dlopen() in -ldl..." >> config.log
@@ -3401,7 +3424,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_DLOPEN" > ${cache}/ctest-HAVE_DLOPEN
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DLOPEN
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 if [ "${HAVE_DLOPEN}" = "yes" ]; then
 DSO_CFLAGS=""
 DSO_LIBS="-ldl"
@@ -3437,7 +3460,7 @@ if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	MK_COMPILE_STATUS="FAIL($?)"
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 HAVE_MACH_O_DYLD_H="yes"
 echo "#ifndef HAVE_MACH_O_DYLD_H" > config/have_mach_o_dyld_h.h
@@ -3503,7 +3526,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_DYLD" > ${cache}/ctest-HAVE_DYLD
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DYLD
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_DYLD}" = "Yes" ]; then
 echo "checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR"
 echo "checking for NSLINKMODULE_OPTION_RETURN_ON_ERROR" >> config.log
@@ -3568,7 +3591,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_DYLD_RETURN_ON_ERROR" > ${cache}/ctest-HAVE_DYLD_RETURN_ON_ERROR
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DYLD_RETURN_ON_ERROR
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 else
 HAVE_DYLD_RETURN_ON_ERROR="no"
 echo "#undef HAVE_DYLD_RETURN_ON_ERROR" >config/have_dyld_return_on_error.h
@@ -3604,7 +3627,7 @@ if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	MK_COMPILE_STATUS="FAIL($?)"
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 HAVE_DL_H="yes"
 echo "#ifndef HAVE_DL_H" > config/have_dl_h.h
@@ -3678,7 +3701,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_SHL_LOAD" > ${cache}/ctest-HAVE_SHL_LOAD
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SHL_LOAD
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 if [ "${HAVE_SHL_LOAD}" = "yes" ]; then
 DSO_CFLAGS=""
 DSO_LIBS="-ldld"
@@ -4126,7 +4149,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_SDL" > ${cache}/ctest-HAVE_SDL
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SDL
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_SDL}" != "no" ]; then
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
@@ -4199,7 +4222,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_SDL" > ${cache}/ctest-HAVE_SDL
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SDL
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_SDL}" != "no" ]; then
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
@@ -4381,7 +4404,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_FREETYPE" > ${cache}/ctest-HAVE_FREETYPE
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_FREETYPE
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_FREETYPE}" = "yes" ]; then
 echo "#ifndef FREETYPE_CFLAGS" > config/freetype_cflags.h
 echo "#define FREETYPE_CFLAGS \"$FREETYPE_CFLAGS\"" >> config/freetype_cflags.h
@@ -4537,7 +4560,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_LIBOPENGL32" > ${cache}/ctest-HAVE_LIBOPENGL32
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_LIBOPENGL32
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_LIBOPENGL32}" = "yes" ]; then
 OPENGL_LIBS="${GL_LIBS} -lopengl32"
 else
@@ -4599,7 +4622,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_OPENGL" > ${cache}/ctest-HAVE_OPENGL
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_OPENGL
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
@@ -4670,7 +4693,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_OPENGL" > ${cache}/ctest-HAVE_OPENGL
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_OPENGL
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 echo "OPENGL_CFLAGS=$OPENGL_CFLAGS" >>Makefile.config
 echo "mdefs[\"OPENGL_CFLAGS\"] = \"$OPENGL_CFLAGS\"" >>configure.lua
@@ -4821,7 +4844,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_JPEG" > ${cache}/ctest-HAVE_JPEG
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_JPEG
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_JPEG}" != "" ]; then
 echo "JPEG_CFLAGS=$JPEG_CFLAGS" >>Makefile.config
 echo "mdefs[\"JPEG_CFLAGS\"] = \"$JPEG_CFLAGS\"" >>configure.lua
@@ -4962,7 +4985,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETADDRINFO" > ${cache}/ctest-HAVE_GETADDRINFO
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETADDRINFO
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]
  then
 NETWORK="1"
@@ -5066,7 +5089,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_PTHREADS" > ${cache}/ctest-HAVE_PTHREADS
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREADS
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
 echo "CFLAGS=$CFLAGS" >>Makefile.config
@@ -5148,7 +5171,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_PTHREADS" > ${cache}/ctest-HAVE_PTHREADS
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREADS
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
 echo "CFLAGS=$CFLAGS" >>Makefile.config
@@ -5265,7 +5288,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_PTHREADS" > ${cache}/ctest-HAVE_PTHREADS
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREADS
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_PTHREADS}" = "yes" ]; then
 CFLAGS="${CFLAGS} ${PTHREADS_CFLAGS}"
 echo "CFLAGS=$CFLAGS" >>Makefile.config
@@ -5347,7 +5370,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_PTHREADS_XOPEN" > ${cache}/ctest-HAVE_PTHREADS_XOPEN
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREADS_XOPEN
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
 echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
 echo "mdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
@@ -5457,7 +5480,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_PTHREADS_XOPEN" > ${cache}/ctest-HAVE_PTHREADS_XOPEN
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREADS_XOPEN
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_PTHREADS_XOPEN}" = "yes" ]; then
 echo "PTHREADS_XOPEN_CFLAGS=$PTHREADS_XOPEN_CFLAGS" >>Makefile.config
 echo "mdefs[\"PTHREADS_XOPEN_CFLAGS\"] = \"$PTHREADS_XOPEN_CFLAGS\"" >>configure.lua
@@ -5535,7 +5558,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_PTHREAD_MUTEX_RECURSIVE" > ${cache}/ctest-HAVE_PTHREAD_MUTEX_RECURSIVE
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREAD_MUTEX_RECURSIVE
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE" > config/have_pthread_mutex_recursive.h
 echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE \"$HAVE_PTHREAD_MUTEX_RECURSIVE\"" >> config/have_pthread_mutex_recursive.h
@@ -5600,7 +5623,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > ${cache}/ctest-HAVE_PTHREAD_MUTEX_RECURSIVE_NP
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_PTHREAD_MUTEX_RECURSIVE_NP
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "yes" ]; then
 echo "#ifndef HAVE_PTHREAD_MUTEX_RECURSIVE_NP" > config/have_pthread_mutex_recursive_np.h
 echo "#define HAVE_PTHREAD_MUTEX_RECURSIVE_NP \"$HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"" >> config/have_pthread_mutex_recursive_np.h
@@ -5802,7 +5825,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETTEXT" > ${cache}/ctest-HAVE_GETTEXT
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTEXT
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_GETTEXT}" = "no" ]; then
 $ECHO_N "checking whether gettext requires -lintl..."
 $ECHO_N "checking whether gettext requires -lintl..." >> config.log
@@ -5875,7 +5898,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETTEXT" > ${cache}/ctest-HAVE_GETTEXT
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTEXT
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_GETTEXT}" = "yes" ]; then
 echo "#ifndef GETTEXT_CFLAGS" > config/gettext_cflags.h
 echo "#define GETTEXT_CFLAGS \"$GETTEXT_CFLAGS\"" >> config/gettext_cflags.h
@@ -5961,7 +5984,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_GETTEXT" > ${cache}/ctest-HAVE_GETTEXT
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTEXT
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_GETTEXT}" != "" ]; then
 echo "#ifndef GETTEXT_CFLAGS" > config/gettext_cflags.h
 echo "#define GETTEXT_CFLAGS \"$GETTEXT_CFLAGS\"" >> config/gettext_cflags.h
@@ -6098,7 +6121,7 @@ EOT
 	fi
 fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest) >> config.log
+(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -6134,7 +6157,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SSE
 	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-HAVE_SSE
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 if [ "${HAVE_SSE}" = "yes" ]; then
 echo "#ifndef SSE_CFLAGS" > config/sse_cflags.h
 echo "#define SSE_CFLAGS \"$SSE_CFLAGS\"" >> config/sse_cflags.h
@@ -6189,7 +6212,7 @@ EOT
 	fi
 fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest) >> config.log
+(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -6225,7 +6248,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SSE2
 	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-HAVE_SSE2
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 if [ "${HAVE_SSE2}" = "yes" ]; then
 echo "#ifndef SSE2_CFLAGS" > config/sse2_cflags.h
 echo "#define SSE2_CFLAGS \"$SSE2_CFLAGS\"" >> config/sse2_cflags.h
@@ -6282,7 +6305,7 @@ EOT
 	fi
 fi
 if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-(cd $testdir && ./conftest) >> config.log
+(cd $testdir && ./conftest$EXECSUFFIX) >> config.log
 if [ "$?" = "0" ]; then
 echo "yes"
 echo "yes" >> config.log
@@ -6318,7 +6341,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SSE3
 	echo $MK_RUN_STATUS > ${cache}/ctest-runstatus-HAVE_SSE3
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest
 if [ "${HAVE_SSE3}" = "yes" ]; then
 echo "#ifndef SSE3_CFLAGS" > config/sse3_cflags.h
 echo "#define SSE3_CFLAGS \"$SSE3_CFLAGS\"" >> config/sse3_cflags.h
@@ -6484,7 +6507,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_ALTIVEC" > ${cache}/ctest-HAVE_ALTIVEC
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALTIVEC
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
@@ -6557,7 +6580,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_ALTIVEC" > ${cache}/ctest-HAVE_ALTIVEC
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ALTIVEC
 fi
-rm -f $testdir/conftest conftest.c
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_ALTIVEC}" = "yes" ]; then
 echo "ALTIVEC_CFLAGS=$ALTIVEC_CFLAGS" >>Makefile.config
 echo "mdefs[\"ALTIVEC_CFLAGS\"] = \"$ALTIVEC_CFLAGS\"" >>configure.lua
