@@ -28,3 +28,8 @@ if [ "${enable_warnings}" = "yes" ]; then
 	C_OPTION(-Werror)
 	C_OPTION(-Wmissing-prototypes)
 fi
+
+echo "*"
+echo "* Configuration successful."
+echo "* Use make && make install to build and install agar-disasm."
+echo "*"

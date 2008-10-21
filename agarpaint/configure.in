@@ -62,3 +62,8 @@ if [ "${enable_nls}" = "yes" ]; then
 		exit 1
 	fi
 fi
+
+echo "*"
+echo "* Configuration successful."
+echo "* Use make && make install to build and install agarpaint."
+echo "*"

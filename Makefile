@@ -13,15 +13,16 @@ SUBDIR=	core agar-core-config \
 	vg agar-vg-config \
 	rg agar-rg-config \
 	math agar-math-config \
-	dev agar-dev-config \
-	po
+	dev agar-dev-config
 	
-INCDIRS=gui \
-	core \
-	rg \
+INCDIRS=core \
+	gui \
 	vg \
+	rg \
 	math \
 	dev
+
+INCPUB=	core gui vg rg math dev
 
 all: all-subdir
 clean: clean-config clean-subdir
@@ -31,21 +32,23 @@ deinstall: deinstall-subdir deinstall-includes
 depend: depend-subdir
 regress: regress-subdir
 
+includes:
+	perl mk/gen-includes.pl agar
+
 configure:
 	cat configure.in | mkconfigure > configure
 	chmod 755 configure
 
 clean-config:
 	rm -f configure.lua
+	rm -fR include
 
 cleandir-config:
 	rm -fr config config.log Makefile.config .projfiles.out .projfiles2.out
 	touch Makefile.config
-	(cd agarpaint && ${MAKE} cleandir)
-	(cd agarpaint && rm -f Makefile.config)
-	(cd agarpaint && touch Makefile.config)
-	(cd demos && ${MAKE} cleandir)
-	(cd demos && rm -f */Makefile.config)
+	-(cd agarpaint && ${MAKE} cleandir)
+	-(cd agarrcsd && ${MAKE} cleandir)
+	-(cd demos && ${MAKE} cleandir)
 	rm -fR demos/.cache
 	find . -name premake.lua -exec rm -f {} \;
 	find . -name configure.lua -exec rm -f {} \;
@@ -62,64 +65,33 @@ release:
 install-includes:
 	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}
 	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}/agar
-	@if [ "${SRC}" != "" ]; then \
-		(cd ${SRC} && for DIR in ${INCDIRS}; do \
-		    echo "mk/install-includes.sh $$DIR"; \
-		    ${SUDO} env \
-		        INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
-		        INSTALL_INCL="${INSTALL_INCL}" \
-		        ${SH} mk/install-includes.sh $$DIR ${INCLDIR}/agar; \
-		done); \
-		echo "mk/install-includes.sh config"; \
-		${SUDO} env \
-		    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
-		    INSTALL_INCL="${INSTALL_INCL}" \
-		    ${SH} mk/install-includes.sh config ${INCLDIR}/agar; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/begin.h ${INCLDIR}/agar; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/close.h ${INCLDIR}/agar; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/core/core_pub.h \
-		    ${INCLDIR}/agar/core.h; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/gui/gui_pub.h \
-		    ${INCLDIR}/agar/gui.h; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/vg/vg_pub.h \
-		    ${INCLDIR}/agar/vg.h; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/rg/rg_pub.h \
-		   ${INCLDIR}/agar/rg.h; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/math/math_pub.h \
-		   ${INCLDIR}/agar/math.h; \
-		${SUDO} ${INSTALL_INCL} ${SRC}/dev/dev_pub.h \
-		   ${INCLDIR}/agar/dev.h; \
-	else \
-		for DIR in ${INCDIRS} config; do \
-		    echo "mk/install-includes.sh $$DIR"; \
-		    ${SUDO} env \
-		    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
-		    INSTALL_INCL="${INSTALL_INCL}" \
-		    ${SH} mk/install-includes.sh $$DIR ${INCLDIR}/agar; \
-		done; \
-		${SUDO} ${INSTALL_INCL} begin.h ${INCLDIR}/agar; \
-		${SUDO} ${INSTALL_INCL} close.h ${INCLDIR}/agar; \
-		${SUDO} ${INSTALL_INCL} core/core_pub.h \
-		    ${INCLDIR}/agar/core.h; \
-		${SUDO} ${INSTALL_INCL} gui/gui_pub.h ${INCLDIR}/agar/gui.h; \
-		${SUDO} ${INSTALL_INCL} vg/vg_pub.h ${INCLDIR}/agar/vg.h; \
-		${SUDO} ${INSTALL_INCL} rg/rg_pub.h ${INCLDIR}/agar/rg.h; \
-		${SUDO} ${INSTALL_INCL} math/math_pub.h ${INCLDIR}/agar/math.h;\
-		${SUDO} ${INSTALL_INCL} dev/dev_pub.h ${INCLDIR}/agar/dev.h; \
-	fi
+	@(cd include/agar && for DIR in ${INCDIRS}; do \
+	    echo "mk/install-includes.sh $$DIR ${INCLDIR}/agar"; \
+	    ${SUDO} env \
+	      INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
+	      INSTALL_INCL="${INSTALL_INCL}" \
+	      ${SH} ${SRCDIR}/mk/install-includes.sh \
+	        $$DIR ${INCLDIR}/agar; \
+	done)
+	@echo "mk/install-includes.sh config ${INCLDIR}/agar"
+	@${SUDO} env \
+	    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
+	    INSTALL_INCL="${INSTALL_INCL}" \
+	    ${SH} ${SRCDIR}/mk/install-includes.sh config ${INCLDIR}/agar
+	@for INC in ${INCPUB}; do \
+		echo "${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
+		    ${INCLDIR}/agar/$${INC}.h"; \
+		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
+		    ${INCLDIR}/agar/$${INC}.h; \
+	done
+	@echo "${INSTALL_INCL} include/agar/begin.h ${INCLDIR}/agar"
+	@${SUDO} ${INSTALL_INCL} include/agar/begin.h ${INCLDIR}/agar
+	@echo "${INSTALL_INCL} include/agar/close.h ${INCLDIR}/agar"
+	@${SUDO} ${INSTALL_INCL} include/agar/close.h ${INCLDIR}/agar
 
 deinstall-includes:
-	${FIND} . -type f -name '*.h' -print \
-	    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
-	    | ${SUDO} ${SH}
-	@if [ "${SRC}" != "" ]; then \
-		echo "${FIND} ${SRC} -type f -name '*.h' -print \
-		    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
-		    | ${SUDO} ${SH}"; \
-		(cd ${SRC} && ${FIND} . -type f -name '*.h' -print \
-		    | ${AWK} '{print "${DEINSTALL_INCL} ${INCLDIR}/"$$1}' \
-		    | ${SUDO} ${SH}); \
-	fi
+	@echo "rm -fR ${INCLDIR}/agar"
+	@${SUDO} rm -fR ${INCLDIR}/agar
 
 pre-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
@@ -160,7 +132,7 @@ post-package:
 		rm -f Release-* ChangeLog-* LICENSE LICENSE-Vera Logo.png; \
 	fi
 
-.PHONY: clean cleandir install deinstall depend regress
+.PHONY: clean cleandir install deinstall depend regress includes
 .PHONY: configure cleandir-config package beta release
 .PHONY: install-includes deinstall-includes pre-package post-package
 
