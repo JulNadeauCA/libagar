@@ -57,9 +57,11 @@ beta:
 	sh mk/dist.sh beta
 
 package:
+	-${MAKE} all-manlinks
 	env NOUPLOAD=Yes sh mk/dist.sh beta
 
 release:
+	-${MAKE} all-manlinks
 	sh mk/dist.sh stable
 
 install-includes:

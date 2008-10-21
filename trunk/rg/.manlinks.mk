@@ -1,3 +1,4 @@
+
 MANLINKS+=RG_Anim.3:RG_AnimInit.3
 CATLINKS+=RG_Anim.cat3:RG_AnimInit.cat3
 MANLINKS+=RG_Anim.3:RG_AnimDestroy.3
