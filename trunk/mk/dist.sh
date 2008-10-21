@@ -58,9 +58,6 @@ rm -f ${DISTNAME}/agar
 (cd ${DISTNAME} && ${MAKE} proj)
 (cd ${DISTNAME}/demos && ${MAKE} proj)
 
-# ZIP: Litter header files with "DECLSPEC" as required by some compilers.
-(cd ${DISTNAME} && find . -name \*.h -exec perl mk/gen-declspecs.pl {} \;)
-
 # ZIP: Compress archive
 zip -q -r ${DISTNAME}.zip ${DISTNAME}
 
