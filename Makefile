@@ -86,10 +86,10 @@ install-includes:
 		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
 		    ${INCLDIR}/agar/$${INC}.h; \
 	done
-	@echo "${INSTALL_INCL} include/agar/begin.h ${INCLDIR}/agar"
-	@${SUDO} ${INSTALL_INCL} include/agar/begin.h ${INCLDIR}/agar
-	@echo "${INSTALL_INCL} include/agar/close.h ${INCLDIR}/agar"
-	@${SUDO} ${INSTALL_INCL} include/agar/close.h ${INCLDIR}/agar
+	@(cd include/agar && for FILE in begin.h close.h; do \
+	    echo "${INSTALL_INCL} $$FILE ${INCLDIR}/agar"; \
+	    ${SUDO} ${INSTALL_INCL} $$FILE ${INCLDIR}/agar; \
+	done)
 
 deinstall-includes:
 	@echo "rm -fR ${INCLDIR}/agar"
