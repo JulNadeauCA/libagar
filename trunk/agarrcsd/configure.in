@@ -33,3 +33,7 @@ if [ "${enable_warnings}" = "yes" ]; then
 	MDEFINE(CFLAGS, "$CFLAGS -Wno-unused")
 fi
 
+echo "*"
+echo "* Configuration successful."
+echo "* Use make && make install to build and install agarrcsd."
+echo "*"
