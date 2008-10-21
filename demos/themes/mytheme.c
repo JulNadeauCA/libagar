@@ -38,10 +38,10 @@ ButtonBackground(void *btn, int isPressed)
 }
 
 static void
-CheckboxButton(void *cbox, int state)
+CheckboxButton(void *cbox, int state, int size)
 {
 	AG_DrawBoxRounded(cbox,
-	    AG_RECT(0, 0, HEIGHT(cbox), HEIGHT(cbox)),
+	    AG_RECT(0, 0, size, size),
 	    state ? -1 : 1,
 	    6,
 	    AG_COLOR(CHECKBOX_COLOR));
