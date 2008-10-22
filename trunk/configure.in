@@ -143,13 +143,9 @@ if [ "${enable_gui}" != "no" ]; then
 			echo "* Agar needs FreeType to display vector fonts"
 			echo "* (http://www.freetype.org/)."
 			echo "*"
-			echo "* If you really want to use Agar's built-in low"
-			echo "* quality bitmap font engine, run the configure"
-			echo "* script again using the --without-freetype flag."
-			echo "*"
-			echo "* Note that the bundled bitmap font only includes"
-			echo "* the basic US-ASCII characters and is not meant"
-			echo "* to be used except for porting to new platforms."
+			echo "* If you really want to use Agar's built-in"
+			echo "* monospace bitmap font engine (not recommended),"
+			echo "* please use: ./configure --without-freetype"
 			echo "*"
 			exit 1
 		fi
