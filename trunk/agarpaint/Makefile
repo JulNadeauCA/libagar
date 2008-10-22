@@ -3,7 +3,7 @@ include Makefile.config
 
 PROJECT=	"agarpaint"
 PROJINCLUDES=	configure.lua
-SUBDIR=		po
+#SUBDIR=	po
 
 PROG=		agarpaint
 PROG_TYPE=	"GUI"
