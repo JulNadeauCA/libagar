@@ -33,7 +33,8 @@ depend: depend-subdir
 regress: regress-subdir
 
 includes:
-	perl mk/gen-includes.pl agar
+	if [ ! -e "include" ]; then mkdir include; fi
+	perl mk/gen-includes.pl include/agar
 
 configure:
 	cat configure.in | mkconfigure > configure
