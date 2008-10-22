@@ -5103,8 +5103,8 @@ echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
 echo "#endif" >> config/pthreads_libs.h
 echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 else
-$ECHO_N "checking for -pthread..."
-$ECHO_N "checking for -pthread..." >> config.log
+$ECHO_N "checking for -pthread (default path)..."
+$ECHO_N "checking for -pthread (default path)..." >> config.log
 PTHREADS_LIBS="-pthread"
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
@@ -5187,6 +5187,8 @@ echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 else
 PTHREADS_CFLAGS=""
 PTHREADS_LIBS=""
+$ECHO_N "checking for -pthread (common paths)..."
+$ECHO_N "checking for -pthread (common paths)..." >> config.log
 if [ -f "/usr/include/pthreads/pthread.h" ]; then
 PTHREADS_CFLAGS="-I/usr/include/pthreads"
 fi;
@@ -5386,6 +5388,8 @@ echo "#endif" >> config/pthreads_xopen_libs.h
 echo "hdefs[\"PTHREADS_XOPEN_LIBS\"] = \"$PTHREADS_XOPEN_LIBS\"" >>configure.lua
 else
 PTHREADS_XOPEN_LIBS=""
+$ECHO_N "checking for the X/Open Threads Extension (common paths)..."
+$ECHO_N "checking for the X/Open Threads Extension (common paths)..." >> config.log
 if [ -f "/usr/local/lib/libpthread.a" ]; then
 PTHREADS_XOPEN_LIBS="-L/usr/local/lib -lpthread"
 fi;
@@ -6689,17 +6693,11 @@ else
 echo "#undef QUAD_PRECISION" >config/quad_precision.h
 echo "hdefs[\"QUAD_PRECISION\"] = nil" >>configure.lua
 fi
-#
-# Preprocess headers for visibility and calling convention stuff. Developers
-# can use the unpreprocessed headers directly with --includes=link.
-# 
-if [ ! -e "include" ]; then
-	mkdir "include"
-fi
+if [ ! -e "include" ]; then mkdir "include"; fi
 if [ "${includes}" = "link" ]; then
 	echo "* Not preprocessing includes"
 	if [ ! -e "include/agar" ]; then
-		if [ "${srcdir}" != "" ]; then
+		if [ "${SRCDIR}" != "${BLDDIR}" ]; then
 			ln -s "$SRC" "include/agar"
 		else
 			ln -s "$BLD" "include/agar"
@@ -6708,11 +6706,11 @@ if [ "${includes}" = "link" ]; then
 else
 	if [ ! -e "include/agar" ]; then
 		$ECHO_N "* Preprocessing includes..."
-		if [ "${srcdir}" != "" ]; then
+		if [ "${SRCDIR}" != "${BLDDIR}" ]; then
 			(cd $SRC && perl mk/gen-includes.pl "$BLD/include/agar" 1>>$BLD/config.log 2>&1)
 			cp -fR config include/agar
 		else
-			perl mk/gen-includes.pl "include/agar" 1>config.log 2>&1
+			perl mk/gen-includes.pl "include/agar" 1>>config.log 2>&1
 		fi
 		if [ $? != 0 ]; then
 			echo "perl mk/gen-includes.pl failed";
