@@ -34,32 +34,6 @@
 #include "m.h"
 #include "m_gui.h"
 
-AG_Numerical *
-M_NumericalNewReal(void *parent, Uint flags, const char *unit,
-    const char *label, M_Real *pv)
-{
-	AG_Numerical *num;
-
-	num = AG_NumericalNew(parent, flags, unit, label);
-	M_WidgetBindReal(num, "value", pv);
-	AG_NumericalSetIncrement(num, 0.05);
-	return (num);
-}
-
-AG_Numerical *
-M_NumericalNewRealR(void *parent, Uint flags, const char *unit,
-    const char *label, M_Real *pv, M_Real min, M_Real max)
-{
-	AG_Numerical *num;
-
-	num = AG_NumericalNew(parent, flags, unit, label);
-	M_WidgetBindReal(num, "value", pv);
-	M_WidgetSetReal(num, "min", min);
-	M_WidgetSetReal(num, "max", max);
-	AG_NumericalSetIncrement(num, 0.05);
-	return (num);
-}
-
 void *
 M_EditVector3(void *parent, const char *label, M_Vector3 *pv)
 {
