@@ -104,11 +104,11 @@ pre-package:
 		echo "VisualC.html" >> ${PROJFILELIST}; \
 		if [ -e "`which unix2dos 2>/dev/null`" ]; then \
 			V=`perl mk/get-version.pl`; \
-			unix2dos -n README README.txt; \
-			unix2dos -n INSTALL INSTALL.txt; \
-			unix2dos -n ChangeLogs/Release-$$V RELEASE-$$V.txt; \
-			unix2dos -n mk/LICENSE.txt LICENSE.txt; \
-			unix2dos -n gui/fonts/Vera-Copyright.txt \
+			cat README |unix2dos >README.txt; \
+			cat INSTALL |unix2dos >INSTALL.txt; \
+			cat ChangeLogs/Release-$$V |unix2dos >RELEASE-$$V.txt; \
+			cat mk/LICENSE.txt |unix2dos >LICENSE.txt; \
+			cat gui/fonts/Vera-Copyright.txt |unix2dos > \
 			    LICENSE-Vera.txt; \
 			cp -f mk/agar-logo.png Logo.png; \
 			echo "README.txt" >> ${PROJFILELIST}; \
