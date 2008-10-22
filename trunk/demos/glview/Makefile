@@ -11,8 +11,8 @@ PROG_LINKS=	ag_core ag_gui \
 PROG=		glview
 SRCS=		glview.c
 
-CFLAGS+=${AGAR_CFLAGS} ${OPENGL_CFLAGS} ${GLU_CFLAGS} -I.
-LIBS+=	${AGAR_LIBS} ${OPENGL_LIBS} ${GLU_LIBS}
+CFLAGS+=${AGAR_CFLAGS} ${OPENGL_CFLAGS} ${MATH_CFLAGS} -I.
+LIBS+=	${AGAR_LIBS} ${OPENGL_LIBS} ${MATH_LIBS}
 
 all: all-subdir ${PROG}
 

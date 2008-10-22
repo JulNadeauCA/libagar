@@ -14,63 +14,152 @@
 #include <agar/gui/opengl.h>
 
 #include <string.h>
+#include <math.h>
 
-#include <GL/glu.h>
+const char *primitiveNames[] = { "Cube", "Sphere", NULL };
+enum { CUBE, SPHERE } primitive = SPHERE;
 
-static GLfloat spin = 0.0f, vz = -5.0f, spin2 = 0.0f;
-static GLfloat material[4] = { 0.0f, 0.5f, 0.0f, 1.0f };
+GLfloat spin = 0.0f, vz = -5.0f;
+GLfloat ambient[4] = { 0.0f, 0.5f, 0.0f, 1.0f };
+GLfloat diffuse[4] = { 0.0f, 0.5f, 0.0f, 1.0f };
+GLfloat specular[4] = { 0.0f, 0.5f, 0.0f, 1.0f };
+int wireframe = 1;
+
+static GLfloat isoVtx[12][3] = {    
+#define X .525731112119133606 
+#define Z .850650808352039932
+    {-X, 0.0, Z}, {X, 0.0, Z}, {-X, 0.0, -Z}, {X, 0.0, -Z},    
+    {0.0, Z, X}, {0.0, Z, -X}, {0.0, -Z, X}, {0.0, -Z, -X},    
+    {Z, X, 0.0}, {-Z, X, 0.0}, {Z, -X, 0.0}, {-Z, -X, 0.0} 
+};
+static GLuint isoInd[20][3] = { 
+    {0,4,1}, {0,9,4}, {9,5,4}, {4,5,8}, {4,8,1},    
+    {8,10,1}, {8,3,10}, {5,3,8}, {5,2,3}, {2,7,3},    
+    {7,10,3}, {7,6,10}, {7,11,6}, {11,0,6}, {0,1,6}, 
+    {6,1,10}, {9,0,11}, {9,11,2}, {9,2,5}, {7,2,11} };
+
 
 /* Widget resize callback function. */
 static void
 MyScaleFunction(AG_Event *event)
 {
+	GLdouble xMin, xMax, yMin, yMax;
+	
 	glLoadIdentity();
 
 	/* Set a 60 degrees field of view with 1.0 aspect ratio. */
-	gluPerspective(60.0, 1.0, 0.01, 100.0);
+	yMax = 0.01*tan(0.523598f);
+	yMin = -yMax;
+	xMin = yMin;
+	xMax = yMax;
+	glFrustum(xMin, xMax, yMin, yMax, 0.01, 100.0);
 }
 
-/*
- * Rendering function. This routine renders our scene. Any GL command,
- * with the exception of glViewport(), can be issued here.
- */
+static void
+Norm(GLfloat *a)
+{
+    GLfloat d = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+    a[0] /= d;
+    a[1] /= d;
+    a[2] /= d;
+}
+
+static void
+DrawTriangle(GLfloat *a, GLfloat *b, GLfloat *c, int div, float r)
+{
+	if (div <= 0) {
+		glNormal3fv(a); glVertex3f(a[0]*r, a[1]*r, a[2]*r);
+		glNormal3fv(b); glVertex3f(b[0]*r, b[1]*r, b[2]*r);
+		glNormal3fv(c); glVertex3f(c[0]*r, c[1]*r, c[2]*r);
+	} else {
+		GLfloat ab[3], ac[3], bc[3];
+		int i;
+
+		for (i = 0; i < 3; i++) {
+			ab[i] = (a[i]+b[i])/2;
+			ac[i] = (a[i]+c[i])/2;
+			bc[i] = (b[i]+c[i])/2;
+		}
+		Norm(ab);
+		Norm(ac);
+		Norm(bc);
+		DrawTriangle(a, ab, ac, div-1, r);
+		DrawTriangle(b, bc, ab, div-1, r);
+		DrawTriangle(c, ac, bc, div-1, r);
+		DrawTriangle(ab, bc, ac, div-1, r);
+	}
+}
+
+/* Render a cube. */
 static void
 MyDrawFunction(AG_Event *event)
 {
-	GLUquadric *q;
+	int i;
 	
 	glLoadIdentity();
-	gluLookAt(0.5, vz, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);
 	glEnable(GL_DEPTH_TEST);
+	glPushAttrib(GL_POLYGON_BIT);
+	glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_POLYGON);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
 
 	glPushMatrix();
-	{
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material);
-		glRotatef(spin, 1.0f, 0.0f, 1.0f);
-		glRotatef(-spin2, 0.0f, 0.0f, 1.0f);
-		q = gluNewQuadric();
-		gluCylinder(q, 1.0, 0.0, 1.0, 20, 2);
-		gluDeleteQuadric(q);
-		
-		glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-		q = gluNewQuadric();
-		gluCylinder(q, 1.0, 0.0, 1.0, 20, 2);
-		gluDeleteQuadric(q);
+	glTranslatef(0.0f, 0.0f, vz);
+	glRotatef(spin,0.0f,1.0f,0.0f);
+	glRotatef(spin,1.0f,1.0f,1.0f);
+
+	switch (primitive) {
+	case CUBE:
+		glBegin(GL_QUADS);
+		glColor3f(1.0f, 0.0f, 0.0f);
+		glVertex3f( 1.0f, 1.0f,-1.0f);
+		glVertex3f(-1.0f, 1.0f,-1.0f);
+		glVertex3f(-1.0f, 1.0f, 1.0f);
+		glVertex3f( 1.0f, 1.0f, 1.0f);
+		glVertex3f( 1.0f,-1.0f, 1.0f);
+		glVertex3f(-1.0f,-1.0f, 1.0f);
+		glVertex3f(-1.0f,-1.0f,-1.0f);
+		glVertex3f( 1.0f,-1.0f,-1.0f);
+		glVertex3f( 1.0f, 1.0f, 1.0f);
+		glVertex3f(-1.0f, 1.0f, 1.0f);
+		glVertex3f(-1.0f,-1.0f, 1.0f);
+		glVertex3f( 1.0f,-1.0f, 1.0f);
+		glVertex3f( 1.0f,-1.0f,-1.0f);
+		glVertex3f(-1.0f,-1.0f,-1.0f);
+		glVertex3f(-1.0f, 1.0f,-1.0f);
+		glVertex3f( 1.0f, 1.0f,-1.0f);
+		glVertex3f(-1.0f, 1.0f, 1.0f);
+		glVertex3f(-1.0f, 1.0f,-1.0f);
+		glVertex3f(-1.0f,-1.0f,-1.0f);
+		glVertex3f(-1.0f,-1.0f, 1.0f);
+		glVertex3f( 1.0f, 1.0f,-1.0f);
+		glVertex3f( 1.0f, 1.0f, 1.0f);
+		glVertex3f( 1.0f,-1.0f, 1.0f);
+		glVertex3f( 1.0f,-1.0f,-1.0f);
+		glEnd();
+		break;
+	case SPHERE:
+		glBegin(GL_TRIANGLES);
+		for (i = 0; i < 20; i++) {
+       	 	DrawTriangle(isoVtx[isoInd[i][0]],
+			             isoVtx[isoInd[i][1]],
+				     isoVtx[isoInd[i][2]],
+				     2, 1.0);
+		}
+    		glEnd();
 	}
+
 	glPopMatrix();
-	
+	glPopAttrib();
 	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_LIGHT0);
+	glDisable(GL_LIGHT1);
 	glDisable(GL_LIGHTING);
-	
-	spin = (spin + 2.0f);
-	if (spin > 360.0f) { spin -= 360.0f; }
-	
-	spin2 = (spin2 + 4.0f);
-	if (spin2 > 360.0f) { spin2 -= 360.0f; }
+
+	if (++spin > 360.0f) { spin -= 360.0f; }
 }
 
 /*
@@ -107,18 +196,13 @@ static void
 Mousebutton(AG_Event *event)
 {
 	int button = AG_INT(1);
-	int x = AG_INT(2);
-	int y = AG_INT(3);
 
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
-		vz += 1.0;
-		if (vz > 0.0) {
-			vz = 0.0;
-		}
+		vz -= 0.1;
 		break;
 	case SDL_BUTTON_WHEELDOWN:
-		vz -= 1.0;
+		vz += 0.1;
 		break;
 	}
 }
@@ -128,12 +212,15 @@ CreateMainWindow(void)
 {
 	AG_Window *win;
 	AG_GLView *glv;
-	AG_HBox *hb;
+	AG_Box *hb;
 	AG_HSVPal *pal;
 
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
-	hb = AG_HBoxNew(win, AG_HBOX_EXPAND);
+	hb = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
 	{
+		AG_Notebook *nb;
+		AG_NotebookTab *ntab;
+
 		/* Create the AG_GLView widget. */
 		glv = AG_GLViewNew(hb, AG_GLVIEW_EXPAND);
 		AG_WidgetFocus(glv);
@@ -144,12 +231,21 @@ CreateMainWindow(void)
 		AG_GLViewOverlayFn(glv, MyOverlayFunction, NULL);
 		AG_GLViewButtondownFn(glv, Mousebutton, NULL);
 
-		/*
-		 * Create an HSV palette widget and bind it directly
-		 * to the material color ("RGBAv" binds to 4 floats).
-		 */
-		pal = AG_HSVPalNew(hb, AG_HSVPAL_VFILL);
-		AG_WidgetBindFloat(pal, "RGBAv", material);
+		nb = AG_NotebookNew(hb, AG_NOTEBOOK_VFILL);
+		ntab = AG_NotebookAddTab(nb, "Ambient", AG_BOX_VERT);
+		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
+		AG_WidgetBindFloat(pal, "RGBAv", ambient);
+		ntab = AG_NotebookAddTab(nb, "Diffuse", AG_BOX_VERT);
+		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
+		AG_WidgetBindFloat(pal, "RGBAv", diffuse);
+		ntab = AG_NotebookAddTab(nb, "Specular", AG_BOX_VERT);
+		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
+		AG_WidgetBindFloat(pal, "RGBAv", specular);
+	}
+	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_FRAME);
+	{
+		AG_RadioNewInt(hb, 0, primitiveNames, (int *)&primitive);
+		AG_ButtonNewInt(hb, AG_BUTTON_STICKY, "Wireframe", &wireframe);
 	}
 
 	AG_WindowShow(win);
