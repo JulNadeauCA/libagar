@@ -167,7 +167,7 @@ LoadDSO_WIN32(const char *path)
 	em = SetErrorMode(SEM_FAILCRITICALERRORS);
 	d->handle = LoadLibraryEx(path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 	if (d->handle == NULL) {
-		d->handle == LoadLibraryEx(path, NULL, 0);
+		d->handle = LoadLibraryEx(path, NULL, 0);
 		if (d->handle == NULL) {
 			AG_SetError("%s: LoadLibraryEx() failed", path);
 			free(d);
