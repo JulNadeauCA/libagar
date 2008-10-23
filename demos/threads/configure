@@ -1159,8 +1159,8 @@ echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
 echo "#endif" >> config/pthreads_libs.h
 echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 else
-$ECHO_N "checking for -pthread (default path)..."
-$ECHO_N "checking for -pthread (default path)..." >> config.log
+$ECHO_N "checking for -pthread..."
+$ECHO_N "checking for -pthread..." >> config.log
 PTHREADS_LIBS="-pthread"
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
