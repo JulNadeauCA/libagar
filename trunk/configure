@@ -444,7 +444,7 @@ echo "#ifndef SYSCONFDIR" > config/sysconfdir.h
 echo "#define SYSCONFDIR \"${SYSCONFDIR}\"" >> config/sysconfdir.h
 echo "#endif /* SYSCONFDIR */" >> config/sysconfdir.h
 
-VERSION="1.3.3-rc3"
+VERSION="1.3.3"
 echo "#ifndef VERSION" > config/version.h
 echo "#define VERSION \"$VERSION\"" >> config/version.h
 echo "#endif" >> config/version.h
@@ -5103,8 +5103,8 @@ echo "#define PTHREADS_LIBS \"$PTHREADS_LIBS\"" >> config/pthreads_libs.h
 echo "#endif" >> config/pthreads_libs.h
 echo "hdefs[\"PTHREADS_LIBS\"] = \"$PTHREADS_LIBS\"" >>configure.lua
 else
-$ECHO_N "checking for -pthread (default path)..."
-$ECHO_N "checking for -pthread (default path)..." >> config.log
+$ECHO_N "checking for -pthread..."
+$ECHO_N "checking for -pthread..." >> config.log
 PTHREADS_LIBS="-pthread"
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
