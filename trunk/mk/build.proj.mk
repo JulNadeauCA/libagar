@@ -57,7 +57,8 @@ proj: proj-subdir
 	        if [ ! -e "$$INCL" ]; then \
 	            echo "Missing $$INCL; generating"; \
 	            (cd ${TOP} && cat configure.in | mkconfigure \
-	             --emul-os=windows --emul-arch=i386 >/dev/null); \
+	             --emul-env=vs2005 --emul-os=windows \
+		     --emul-arch=i386 >/dev/null); \
 	        fi; \
 	    done; \
 	    cat Makefile | ${MKPROJFILES} "" ${PROJINCLUDES} > ${PREMAKEOUT};\
@@ -77,8 +78,8 @@ proj: proj-subdir
 		echo "Target options: $$_tgtopts"; \
 		rm -fR config; \
 		cat configure.in | \
-		    mkconfigure --emul-os=$$_tgtos --emul-arch=$$_tgtarch > \
-		    configure.tmp; \
+		    mkconfigure --emul-env=$$_tgtproj --emul-os=$$_tgtos \
+		    --emul-arch=$$_tgtarch > configure.tmp; \
 		if [ $$? != 0 ]; then \
 			echo "mkconfigure failed"; \
 			rm -fR configure.tmp configure.lua; \
