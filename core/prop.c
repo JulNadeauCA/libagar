@@ -43,7 +43,7 @@ Uint                 agPropClassCount = 0;
 void
 AG_RegisterPropClass(const AG_PropClass *pc)
 {
-	agPropClasses = Realloc(agPropClasses,
+	agPropClasses = Realloc((AG_PropClass **)agPropClasses,
 	    (agPropClassCount+1)*sizeof(AG_PropClass *));
 	agPropClasses[agPropClassCount++] = pc;
 }
@@ -61,7 +61,7 @@ AG_UnregisterPropClass(const AG_PropClass *pc)
 		return;
 	}
 	if (i < agPropClassCount-1) {
-		memmove(&agPropClasses[i], &agPropClasses[i+1],
+		memmove((AG_PropClass **)&agPropClasses[i], &agPropClasses[i+1],
 		    (agPropClassCount-1)*sizeof(AG_PropClass *));
 	}
 	agPropClassCount--;
