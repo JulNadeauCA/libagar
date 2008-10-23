@@ -4,6 +4,7 @@
  */
 
 #include <agar/config/threads.h>
+#include <agar/config/have_sdl.h>
 
 #include <agar/core.h>
 #include <agar/gui.h>
@@ -45,7 +46,11 @@ SleepingWorker(void *arg)
 		}
 		AG_LabelPrintf(lbl, "Worker thread progress: %d%%",
 		    AG_ProgressBarPercent(pb));
+#ifdef HAVE_SDL
+		SDL_Delay(1000);
+#else
 		sleep(1);
+#endif
 	}
 }
 
