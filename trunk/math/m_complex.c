@@ -23,8 +23,8 @@ M_ComplexAbs(M_Complex z)
 	    z.r == -M_INFINITY || z.i == -M_INFINITY) {
 		return (M_INFINITY);
 	}
-	if ((rPart = Fabs(z.r)) == 0.0) { return (iPart); }
-	if ((iPart = Fabs(z.i)) == 0.0) { return (rPart); }
+	if ((rPart = Fabs(z.r)) == 0.0) { return Fabs(z.i); }
+	if ((iPart = Fabs(z.i)) == 0.0) { return Fabs(z.r); }
 	x = Frexp(rPart, &ex);
 	y = Frexp(iPart, &ey);
 	e = ex - ey;
