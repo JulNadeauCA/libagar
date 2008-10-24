@@ -1,13 +1,36 @@
 /*
- * Public domain.
- * Operations on m*n matrices (SP version).
+ * Operations on m*n matrices (Sparse1.4 version).
+ *
+ * Sparse1.4 is distributed as open-source software under the Berkeley
+ * license model. Redistribution and use in source and binary forms, with
+ * or without modification, are permitted provided that the following
+ * conditions are met:
+ * 
+ * Redistributions of source code must retain the original copyright notice,
+ * this list of conditions and the following disclaimer.  Redistributions
+ * in binary form must reproduce the above copyright notice, this list
+ * of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.  Neither the name of
+ * the copyright holder nor the names of the authors may be used to endorse
+ * or promote products derived from this software without specific prior
+ * written permission.
+ * 
+ * This software is provided by the copyright holders and contributors
+ * ``as is'' and any express or implied warranties, including, but not
+ * limited to, the implied warranties of merchantability and fitness for
+ * a particular purpose are disclaimed. In no event shall the copyright
+ * owner or contributors be liable for any direct, indirect, incidental,
+ * special, exemplary, or consequential damages (including, but not
+ * limited to, procurement of substitute goods or services; loss of use,
+ * data, or profits; or business interruption) however caused and on any
+ * theory of liability, whether in contract, strict liability, or tort
+ * (including negligence or otherwise) arising in any way out of the use
+ * of this software, even if advised of the possibility of such damage.
  */
 
 #include <core/core.h>
 #include "m.h"
-#include "SPARSE/spmatrix.h"
-
-#define ERRIMPL AG_FatalError("Unimplemented function")
+#include "m_sparse.h"
 
 const M_MatrixOps mMatOps_SP = {
 	"scalar",
@@ -145,12 +168,12 @@ M_AddToDiag_SP(void *pA, M_Real g)
 void *
 M_MatrixRead_SP(AG_DataSource *buf)
 {
-	ERRIMPL;
-	return NULL;
+	AG_FatalError("Unimplemented function")
+	return (NULL);
 }
 
 void
 M_MatrixWrite_SP(AG_DataSource *buf, const void *pA)
 {
-	ERRIMPL;
+	AG_FatalError("Unimplemented function")
 }

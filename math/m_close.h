@@ -2,19 +2,7 @@
 /*
  * Clean up internal header definitions.
  */
-#ifndef _M_INTERNAL
-# ifdef _MK_HAVE_UNSIGNED_TYPEDEFS
-#  undef _MK_HAVE_UNSIGNED_TYPEDEFS
-#  undef Uint
-#  undef Uchar
-#  undef Ulong
-# endif
-# ifdef _M_DEFINED_CDECLS
-#  undef _M_DEFINED_CDECLS
-#  undef __BEGIN_DECLS
-#  undef __END_DECLS
-# endif
-
+#ifndef _AGAR_INTERNAL
 # undef SINGLE_PRECISION
 # undef DOUBLE_PRECISION
 # undef QUAD_PRECISION
@@ -27,4 +15,6 @@
 # ifdef _M_UNDEFINED_QUAD_PRECISION
 #  define QUAD_PRECISION
 # endif
-#endif /* !_M_INTERNAL */
+#endif /* !_AGAR_INTERNAL */
+
+#include <agar/close.h>

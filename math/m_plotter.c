@@ -202,7 +202,7 @@ M_PlotSettings(M_Plot *pl)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_EXPAND);
 	ntab = AG_NotebookAddTab(nb, _("Trace"), AG_BOX_VERT);
 	{
-		AG_RadioNewUint(ntab, 0, type_names, &pl->type);
+		AG_RadioNewUint(ntab, 0, type_names, (Uint *)&pl->type);
 		M_NumericalNewReal(ntab, 0, NULL, _("X-scale: "), &pl->xScale);
 		M_NumericalNewReal(ntab, 0, NULL, _("Y-scale: "), &pl->yScale);
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
