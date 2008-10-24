@@ -37,6 +37,8 @@ const M_VectorOps mVecOps_FPU = {
 	M_VectorFromDoubles_FPU,
 #ifdef HAVE_LONG_DOUBLE
 	M_VectorFromLongDoubles_FPU,
+#else
+	M_VectorFromDoubles_FPU,	/* Padding */
 #endif
 	M_VectorPrint_FPU
 };
