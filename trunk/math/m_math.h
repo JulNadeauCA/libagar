@@ -333,7 +333,7 @@ typedef struct m_matrix {
 #define M_Max(h,i) ((h) > (i) ? (h) : (i))
 #define M_Min(l,o) ((l) < (o) ? (l) : (o))
 
-#if defined(_M_INTERNAL) || defined(_USE_AGAR_MATH)
+#if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_MATH)
 # define Log(r) M_Log(r)
 # define Exp(r) M_Exp(r)
 # define Sqrt(r) M_Sqrt(r)

@@ -5,7 +5,7 @@
 
 #include <agar/math/m_begin.h>
 
-#define spREAL M_Real
+#define spREAL M_Real /* XXX */
 
 #include <agar/math/m_math.h>
 #include <agar/math/m_int_vector.h>
@@ -16,13 +16,6 @@
 #include <agar/math/m_coordinates.h>
 #include <agar/math/m_color.h>
 #include <agar/math/m_geometry.h>
-
-#ifdef _M_INTERNAL
-# undef _
-# undef N_
-# define _(s) (s)
-# define N_(s) (s)
-#endif
 
 #include <agar/math/m_close.h>
 #endif /* _AGAR_MATH_M_H_ */

@@ -1,9 +1,6 @@
 TOP=	..
 include ${TOP}/Makefile.config
 
-SUBDIR=		SPARSE
-LIBS=		SPARSE/*.lo
-
 LIB=		ag_math
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
@@ -21,15 +18,19 @@ SRCS=	m_math.c m_complex.c m_quaternion.c \
 	m_line.c m_circle.c m_triangle.c m_rectangle.c m_polygon.c m_plane.c \
 	m_coordinates.c m_heapsort.c m_mergesort.c m_qsort.c m_radixsort.c \
 	m_point_set.c m_color.c \
-	m_matrix_sparse.c
-
-LIB_XOBJS=SPARSE
+	m_matrix_sparse.c \
+	m_sparse_allocate.c \
+	m_sparse_build.c \
+	m_sparse_eda.c \
+	m_sparse_factor.c \
+	m_sparse_output.c \
+	m_sparse_solve.c \
+	m_sparse_utils.c
 
 MAN3=	M_Matrix.3
 
 CFLAGS+=${SDL_CFLAGS} ${PTHREADS_XOPEN_CFLAGS} ${ALTIVEC_CFLAGS} ${SSE_CFLAGS} \
-	${SSE2_CFLAGS} ${SSE3_CFLAGS} ${GLU_CFLAGS} ${MATH_CFLAGS} \
-	-D_M_INTERNAL
+	${SSE2_CFLAGS} ${SSE3_CFLAGS} ${GLU_CFLAGS} ${MATH_CFLAGS}
 
 # For gcc warnings in m_matrix44_sse.c.
 CFLAGS+=${WNO_UNINITIALIZED}

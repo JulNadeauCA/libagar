@@ -150,7 +150,7 @@ typedef struct m_geom3 {
 	} g;
 } M_Geom3;
 
-#ifdef _M_INTERNAL
+#ifdef _AGAR_INTERNAL
 #define g_point     g.point
 #define g_line      g.line
 #define g_circle    g.circle

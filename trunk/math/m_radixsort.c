@@ -107,7 +107,7 @@ M_RadixSortStable(const Uint8 **a, int n, const Uint8 *tab, Uint endch)
 			return (-1);
 		}
 		RadixSortB(a, ta, n, 0, tr, endch);
-		free(ta);
+		free((Uint8 *)ta);
 	}
 	return (0);
 }
