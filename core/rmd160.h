@@ -24,49 +24,52 @@
  */
 
 #include <agar/config/have_rmd160.h>
+
 #ifdef HAVE_RMD160
 
-#include <agar/config/_mk_have_sys_types_h.h>
-#ifdef _MK_HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#include <rmd160.h>
+# include <agar/config/_mk_have_sys_types_h.h>
+# ifdef _MK_HAVE_SYS_TYPES_H
+#  include <sys/types.h>
+# endif
+# include <rmd160.h>
+
+# define AG_RMD160_BLOCK_LENGTH		RMD160_BLOCK_LENGTH
+# define AG_RMD160_DIGEST_LENGTH	RMD160_DIGEST_LENGTH
+# define AG_RMD160_DIGEST_STRING_LENGTH	RMD160_DIGEST_STRING_LENGTH
+
+# define AG_RMD160Init		RMD160Init
+# define AG_RMD160Transform	RMD160Transform
+# define AG_RMD160Update	RMD160Update
+# define AG_RMD160Pad		RMD160Pad
+# define AG_RMD160Final		RMD160Final
+# define AG_RMD160End		RMD160End
+# define AG_RMD160Data		RMD160Data
 
 #else /* !HAVE_RMD160 */
 
-#undef RMD160_BLOCK_LENGTH
-#undef RMD160_DIGEST_LENGTH
-#undef RMD160_DIGEST_STRING_LENGTH
+#include <agar/begin.h>
 
-#define	RMD160_BLOCK_LENGTH		64
-#define	RMD160_DIGEST_LENGTH		20
-#define	RMD160_DIGEST_STRING_LENGTH	(RMD160_DIGEST_LENGTH * 2 + 1)
+#define	AG_RMD160_BLOCK_LENGTH		64
+#define	AG_RMD160_DIGEST_LENGTH		20
+#define	AG_RMD160_DIGEST_STRING_LENGTH	(AG_RMD160_DIGEST_LENGTH * 2 + 1)
 
-typedef struct RMD160Context {
+typedef struct ag_rmd160_ctx {
 	Uint32 state[5];			/* state */
 	Uint64 count;				/* number of bits, mod 2^64 */
-	Uint8 buffer[RMD160_BLOCK_LENGTH];	/* input buffer */
-} RMD160_CTX;
-
-#include <agar/config/have_bounded_attribute.h>
-#ifndef BOUNDED_ATTRIBUTE
-# ifdef HAVE_BOUNDED_ATTRIBUTE
-#  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
-# else
-#  define BOUNDED_ATTRIBUTE(t, a, b)
-# endif
-#endif
+	Uint8 buffer[AG_RMD160_BLOCK_LENGTH];	/* input buffer */
+} AG_RMD160_CTX;
 
 __BEGIN_DECLS
-void	 RMD160Init(RMD160_CTX *);
-void	 RMD160Transform(Uint32 [5], const Uint8 [RMD160_BLOCK_LENGTH]);
-void	 RMD160Update(RMD160_CTX *, const Uint8 *, size_t)
-		BOUNDED_ATTRIBUTE(__string__,2,3);
-void	 RMD160Pad(RMD160_CTX *);
-void	 RMD160Final(Uint8 [RMD160_DIGEST_LENGTH], RMD160_CTX *);
-char	*RMD160End(RMD160_CTX *, char *);
-char	*RMD160Data(const Uint8 *, size_t, char *)
-		BOUNDED_ATTRIBUTE(__string__,1,2);
+void  AG_RMD160Init(AG_RMD160_CTX *);
+void  AG_RMD160Transform(Uint32 [5], const Uint8 [AG_RMD160_BLOCK_LENGTH]);
+void  AG_RMD160Update(AG_RMD160_CTX *, const Uint8 *, size_t)
+                      BOUNDED_ATTRIBUTE(__string__,2,3);
+void  AG_RMD160Pad(AG_RMD160_CTX *);
+void  AG_RMD160Final(Uint8 [AG_RMD160_DIGEST_LENGTH], AG_RMD160_CTX *);
+char *AG_RMD160End(AG_RMD160_CTX *, char *);
+char *AG_RMD160Data(const Uint8 *, size_t, char *)
+                    BOUNDED_ATTRIBUTE(__string__,1,2);
 __END_DECLS
 
+#include <agar/close.h>
 #endif /* !HAVE_RMD160 */

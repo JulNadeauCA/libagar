@@ -1,5 +1,7 @@
 /*	Public domain	*/
 
+#ifndef	_AGAR_CORE_CORE_INIT_H_
+#define	_AGAR_CORE_CORE_INIT_H_
 #include <agar/begin.h>
 
 /* Flags for AG_InitCore() */
@@ -62,3 +64,4 @@ __END_DECLS
 #endif
 
 #include <agar/close.h>
+#endif /* _AGAR_CORE_CORE_INIT_H_ */

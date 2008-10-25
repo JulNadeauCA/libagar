@@ -24,6 +24,7 @@
  */
 
 #include <config/version.h>
+#include <config/have_gethostname.h>
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -68,7 +69,10 @@ version(NS_Server *serv, NS_Command *cmd, void *p)
 {
 	char hostname[128];
 
+	hostname[0] = '\0';
+#ifdef HAVE_GETHOSTNAME
 	gethostname(hostname, sizeof(hostname));
+#endif
 	NS_Message(serv, 0, "agarrcsd:%s:%s", VERSION, hostname);
 	return (0);
 }

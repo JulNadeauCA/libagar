@@ -23,7 +23,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/arc4random.h>
 #include <core/core.h>
 
 #include <gui/view.h>
@@ -868,7 +867,11 @@ randfill_ortho(RG_Tileview *tv, RG_TileElement *tel, int x, int y,
 		return;
 
 	if (*bit == 0) {
-		*r = arc4random();
+#if 0
+		*r = arc4random(); /* XXX portability issues */
+#else
+		*r = 0x11223344;
+#endif
 	}
 	flag = ((*r) & (2<<(*bit))) >> ((*bit)+1);
 	if (++(*bit) > 30) { (*bit) = 0; }

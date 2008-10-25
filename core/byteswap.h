@@ -10,10 +10,7 @@
 
 #include <agar/begin.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+__BEGIN_DECLS
 /*
  * Swap 16-bit
  */
@@ -200,6 +197,8 @@ AG_SwapLDBL(long double v)
 }
 #endif /* HAVE_LONG_DOUBLE */
 
+__END_DECLS
+
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 # define AG_SwapLE16(X)	AG_Swap16(X)
 # define AG_SwapLE32(X)	AG_Swap32(X)
@@ -228,9 +227,5 @@ AG_SwapLDBL(long double v)
 # define AG_SwapBELDBL(X) AG_SwapLDBL(X)
 #endif
 
-#ifdef __cplusplus
-}
-#endif
 #include <agar/close.h>
-
 #endif /* _AGAR_CORE_BYTESWAP_H_ */

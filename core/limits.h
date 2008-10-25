@@ -1,5 +1,8 @@
 /*	Public domain	*/
 
+#ifndef	_AGAR_CORE_LIMITS_H_
+#define	_AGAR_CORE_LIMITS_H_
+
 #include <agar/config/_mk_have_limits_h.h>
 #include <agar/config/_mk_have_float_h.h>
 #include <agar/config/have_long_long.h>
@@ -108,3 +111,5 @@
 #  define AG_LDBL_EPSILON 1.08420217248550443e-19l
 # endif
 #endif /* _MK_HAVE_FLOAT_H */
+
+#endif /* _AGAR_CORE_LIMITS_H_ */

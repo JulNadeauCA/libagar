@@ -1848,60 +1848,6 @@ else
 echo "#undef MATH_C99_LIBS" >config/math_c99_libs.h
 echo "hdefs[\"MATH_C99_LIBS\"] = nil" >>configure.lua
 fi;
-$ECHO_N "checking for a gethostname() function..."
-$ECHO_N "checking for a gethostname() function..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_GETHOSTNAME" ]; then
-		HAVE_GETHOSTNAME=`cat ${cache}/ctest-HAVE_GETHOSTNAME`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETHOSTNAME`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <sys/types.h>
-#include <unistd.h>
-
-int
-main(int argc, char *argv[])
-{
-	char hostname[64];
-	int rv;
-
-	rv = gethostname(hostname, sizeof(hostname));
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_GETHOSTNAME="yes"
-echo "#ifndef HAVE_GETHOSTNAME" > config/have_gethostname.h
-echo "#define HAVE_GETHOSTNAME \"$HAVE_GETHOSTNAME\"" >> config/have_gethostname.h
-echo "#endif" >> config/have_gethostname.h
-echo "hdefs[\"HAVE_GETHOSTNAME\"] = \"$HAVE_GETHOSTNAME\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_GETHOSTNAME="no"
-echo "#undef HAVE_GETHOSTNAME" >config/have_gethostname.h
-echo "hdefs[\"HAVE_GETHOSTNAME\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_GETHOSTNAME" > ${cache}/ctest-HAVE_GETHOSTNAME
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETHOSTNAME
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a getpwuid() function..."
 $ECHO_N "checking for a getpwuid() function..." >> config.log
 MK_CACHED="No"
@@ -2333,58 +2279,6 @@ fi;
 if [ "${cache}" != "" ]; then
 	echo "$HAVE_VASPRINTF" > ${cache}/ctest-HAVE_VASPRINTF
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VASPRINTF
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for the arc4random() random number generator..."
-$ECHO_N "checking for the arc4random() random number generator..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_ARC4RANDOM" ]; then
-		HAVE_ARC4RANDOM=`cat ${cache}/ctest-HAVE_ARC4RANDOM`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_ARC4RANDOM`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <sys/types.h>
-#include <stdlib.h>
-int
-main(int argc, char *argv[])
-{
-	u_int32_t i;
-
-	i = arc4random();
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_ARC4RANDOM="yes"
-echo "#ifndef HAVE_ARC4RANDOM" > config/have_arc4random.h
-echo "#define HAVE_ARC4RANDOM \"$HAVE_ARC4RANDOM\"" >> config/have_arc4random.h
-echo "#endif" >> config/have_arc4random.h
-echo "hdefs[\"HAVE_ARC4RANDOM\"] = \"$HAVE_ARC4RANDOM\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_ARC4RANDOM="no"
-echo "#undef HAVE_ARC4RANDOM" >config/have_arc4random.h
-echo "hdefs[\"HAVE_ARC4RANDOM\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_ARC4RANDOM" > ${cache}/ctest-HAVE_ARC4RANDOM
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_ARC4RANDOM
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for MD5 functions..."

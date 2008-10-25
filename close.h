@@ -1,5 +1,8 @@
 /*	Public domain	*/
 
+#ifndef _AGAR_BEGIN_H_
+#error Inclusion of <agar/close.h> without <agar/begin.h>
+#endif
 #undef _AGAR_BEGIN_H_
 
 /*

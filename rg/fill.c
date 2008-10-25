@@ -32,6 +32,7 @@
 #include <gui/box.h>
 #include <gui/numerical.h>
 #include <gui/notebook.h>
+#include <gui/load_color.h>
 
 #include <vg/vg.h>
 

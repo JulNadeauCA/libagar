@@ -1,5 +1,7 @@
 /*	Public domain	*/
 
+#ifndef	_AGAR_CORE_LOAD_DEN_H_
+#define	_AGAR_CORE_LOAD_DEN_H_
 #include <agar/begin.h>
 
 #define AG_DEN_NAME_MAX		64
@@ -49,3 +51,4 @@ int	AG_DenImportFile(AG_Den *, int, const char *, const char *,
 __END_DECLS
 
 #include <agar/close.h>
+#endif /* _AGAR_CORE_LOAD_DEN_H_ */

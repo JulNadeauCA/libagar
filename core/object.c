@@ -1982,38 +1982,38 @@ AG_ObjectCopyChecksum(void *p, enum ag_object_checksum_alg alg,
 	switch (alg) {
 	case AG_OBJECT_MD5:
 		{
-			MD5_CTX ctx;
+			AG_MD5_CTX ctx;
 
-			MD5Init(&ctx);
+			AG_MD5Init(&ctx);
 			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
-				MD5Update(&ctx, buf, (Uint)rv);
+				AG_MD5Update(&ctx, buf, (Uint)rv);
 				totlen += rv;
 			}
-			MD5End(&ctx, digest);
+			AG_MD5End(&ctx, digest);
 		}
 		break;
 	case AG_OBJECT_SHA1:
 		{
-			SHA1_CTX ctx;
+			AG_SHA1_CTX ctx;
 
-			SHA1Init(&ctx);
+			AG_SHA1Init(&ctx);
 			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
-				SHA1Update(&ctx, buf, (Uint)rv);
+				AG_SHA1Update(&ctx, buf, (Uint)rv);
 				totlen += rv;
 			}
-			SHA1End(&ctx, digest);
+			AG_SHA1End(&ctx, digest);
 		}
 		break;
 	case AG_OBJECT_RMD160:
 		{
-			RMD160_CTX ctx;
+			AG_RMD160_CTX ctx;
 
-			RMD160Init(&ctx);
+			AG_RMD160Init(&ctx);
 			while ((rv = fread(buf, 1, sizeof(buf), f)) > 0) {
-				RMD160Update(&ctx, buf, (Uint)rv);
+				AG_RMD160Update(&ctx, buf, (Uint)rv);
 				totlen += rv;
 			}
-			RMD160End(&ctx, digest);
+			AG_RMD160End(&ctx, digest);
 		}
 		break;
 	}
@@ -2033,9 +2033,9 @@ fail:
 int
 AG_ObjectCopyDigest(void *ob, size_t *len, char *digest)
 {
-	char md5[MD5_DIGEST_STRING_LENGTH];
-	char sha1[SHA1_DIGEST_STRING_LENGTH];
-	char rmd160[RMD160_DIGEST_STRING_LENGTH];
+	char md5[AG_MD5_DIGEST_STRING_LENGTH];
+	char sha1[AG_SHA1_DIGEST_STRING_LENGTH];
+	char rmd160[AG_RMD160_DIGEST_STRING_LENGTH];
 
 	AG_ObjectLock(ob);
 	if ((*len = AG_ObjectCopyChecksum(ob, AG_OBJECT_MD5, md5)) == 0 ||

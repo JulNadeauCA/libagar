@@ -1,5 +1,8 @@
 /*	Public domain	*/
 
+#ifndef _AGAR_CORE_OBJECT_H_
+#define _AGAR_CORE_OBJECT_H_
+
 #define AG_OBJECT_HIER_MAX 256
 #define AG_OBJECT_TYPE_MAX 48
 #define AG_OBJECT_NAME_MAX 128
@@ -315,3 +318,4 @@ AG_ObjectSuperclass(const void *p)
 __END_DECLS
 
 #include <agar/close.h>
+#endif /* _AGAR_CORE_OBJECT_H_ */

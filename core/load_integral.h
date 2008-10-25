@@ -27,6 +27,9 @@
  * Serialization of integers.
  */
 
+#ifndef	_AGAR_CORE_LOAD_INTEGRAL_H_
+#define	_AGAR_CORE_LOAD_INTEGRAL_H_
+
 #include <agar/core/byteswap.h>
 
 #include <agar/begin.h>
@@ -294,3 +297,5 @@ AG_WriteUint64At(AG_DataSource *ds, Uint64 u64, off_t pos)
 
 __END_DECLS
 #include <agar/close.h>
+
+#endif /* _AGAR_CORE_LOAD_INTEGRAL_H_ */

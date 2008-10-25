@@ -1,5 +1,7 @@
 /*	Public domain	*/
 
+#ifndef _AGAR_CORE_CONFIG_H_
+#define _AGAR_CORE_CONFIG_H_
 #include <agar/begin.h>
 
 typedef struct ag_object AG_Config;
@@ -38,3 +40,4 @@ __END_DECLS
 #define AG_SetCfgBool(k,v) AG_SetBool(agConfig,(k),(v))
 
 #include <agar/close.h>
+#endif /* _AGAR_CORE_CONFIG_H_ */

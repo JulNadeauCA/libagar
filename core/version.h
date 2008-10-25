@@ -2,7 +2,6 @@
 
 #ifndef _AGAR_CORE_VERSION_H_
 #define _AGAR_CORE_VERSION_H_
-
 #include <agar/begin.h>
 
 #define AGAR_MAJOR_VERSION	1

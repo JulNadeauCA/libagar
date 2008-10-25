@@ -140,12 +140,10 @@ cmd_version(NS_Server *ns, NS_Command *cmd, void *p)
 	char hostname[128];
 
 	hostname[0] = '\0';
-	gethostname(hostname, sizeof(hostname));
-
 	NS_BeginList(ns);
 	NS_ListString(ns, "%s", VERSION);
 	NS_ListString(ns, "%s", RELEASE);
-	NS_ListString(ns, "%s", hostname);
+	NS_ListString(ns, "%s", "localhost");
 	NS_EndList(ns);
 	return (0);
 }

@@ -10,6 +10,7 @@ CHECK(cc)
 REQUIRE(agar, 1.3)
 REQUIRE(agar-network, 1.3)
 REQUIRE(agar-dev, 1.3)
+CHECK(gethostname)
 
 if [ "${HAVE_AGAR}" != "yes" ]; then
 	echo "This program requires Agar (http://agar.csoft.org/)"

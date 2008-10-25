@@ -1,5 +1,8 @@
 /*	Public domain	*/
 
+#ifndef	_AGAR_CORE_LOAD_STRING_H_
+#define	_AGAR_CORE_LOAD_STRING_H_
+
 #define AG_LOAD_STRING_MAX 32767
 
 #include <agar/begin.h>
@@ -23,3 +26,4 @@ void	 AG_SkipString(AG_DataSource *);
 __END_DECLS
 
 #include <agar/close.h>
+#endif /* _AGAR_CORE_LOAD_STRING_H_ */
