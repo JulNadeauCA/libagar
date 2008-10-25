@@ -168,12 +168,12 @@ M_AddToDiag_SP(void *pA, M_Real g)
 void *
 M_MatrixRead_SP(AG_DataSource *buf)
 {
-	AG_FatalError("Unimplemented function")
+	AG_FatalError("Unimplemented function");
 	return (NULL);
 }
 
 void
 M_MatrixWrite_SP(AG_DataSource *buf, const void *pA)
 {
-	AG_FatalError("Unimplemented function")
+	AG_FatalError("Unimplemented function");
 }

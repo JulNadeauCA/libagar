@@ -120,12 +120,6 @@ ElementPtr  pPivot;
     Intermediate = Matrix->Intermediate;
     Size = Matrix->Size;
 
-/* Correct array pointers for ARRAY_OFFSET. */
-#if NOT ARRAY_OFFSET
-    --RHS;
-    --Solution;
-#endif
-
 /* Initialize Intermediate vector. */
     pExtOrder = &Matrix->IntToExtRowMap[Size];
     for (I = Size; I > 0; I--)
@@ -226,11 +220,6 @@ ComplexNumber  Temp;
 
     Size = Matrix->Size;
     Intermediate = (ComplexVector)Matrix->Intermediate;
-
-/* Correct array pointers for ARRAY_OFFSET. */
-#if NOT ARRAY_OFFSET
-    RHS -= 2; Solution -= 2;
-#endif
 
 /* Initialize Intermediate vector. */
     pExtOrder = &Matrix->IntToExtRowMap[Size];
@@ -354,12 +343,6 @@ RealNumber  Temp;
     Size = Matrix->Size;
     Intermediate = Matrix->Intermediate;
 
-/* Correct array pointers for ARRAY_OFFSET. */
-#if NOT ARRAY_OFFSET
-    --RHS;
-    --Solution;
-#endif
-
 /* Initialize Intermediate vector. */
     pExtOrder = &Matrix->IntToExtColMap[Size];
     for (I = Size; I > 0; I--)
@@ -459,11 +442,6 @@ ComplexNumber  Temp;
 
     Size = Matrix->Size;
     Intermediate = (ComplexVector)Matrix->Intermediate;
-
-/* Correct array pointers for ARRAY_OFFSET. */
-#if NOT ARRAY_OFFSET
-    RHS -= 2;   Solution -= 2;
-#endif
 
 /* Initialize Intermediate vector. */
     pExtOrder = &Matrix->IntToExtColMap[Size];

@@ -45,6 +45,7 @@
 #include <core/core.h>
 #include "m.h"
 #include "m_gui.h"
+#include "m_sparse.h"
 
 static int CountTwins( MatrixPtr, int, ElementPtr*, ElementPtr* );
 static void SwapCols( MatrixPtr, ElementPtr, ElementPtr );
@@ -345,12 +346,6 @@ RealNumber  ScaleFactor;
 
     lSize = Matrix->Size;
 
-/* Correct pointers to arrays for ARRAY_OFFSET */
-#if NOT ARRAY_OFFSET
-    --RHS_ScaleFactors;
-    --SolutionScaleFactors;
-#endif
-
 /* Scale Rows */
     pExtOrder = &Matrix->IntToExtRowMap[1];
     for (I = 1; I <= lSize; I++)
@@ -449,12 +444,6 @@ RealNumber  ScaleFactor;
 /* Begin `ScaleComplexMatrix'. */
     lSize = Matrix->Size;
 
-/* Correct pointers to arrays for ARRAY_OFFSET */
-#if NOT ARRAY_OFFSET
-    --RHS_ScaleFactors;
-    --SolutionScaleFactors;
-#endif
-
 /* Scale Rows */
     pExtOrder = &Matrix->IntToExtRowMap[1];
     for (I = 1; I <= lSize; I++)
@@ -525,12 +514,6 @@ MatrixPtr  Matrix = (MatrixPtr)eMatrix;
         return;
     }
 
-#if NOT ARRAY_OFFSET
-/* Correct array pointers for ARRAY_OFFSET. */
-    --RHS;
-    --Solution;
-#endif
-
 /* Initialize Intermediate vector with reordered Solution vector. */
     Vector = Matrix->Intermediate;
     pExtOrder = &Matrix->IntToExtColMap[Matrix->Size];
@@ -580,11 +563,6 @@ ComplexNumber  Sum;
 register  int  I, *pExtOrder;
 
 /* Begin `ComplexMatrixMultiply'. */
-
-/* Correct array pointers for ARRAY_OFFSET. */
-#if NOT ARRAY_OFFSET
-    RHS -= 2;           Solution -= 2;
-#endif
 
 /* Initialize Intermediate vector with reordered Solution vector. */
     Vector = (ComplexVector)Matrix->Intermediate;
@@ -646,12 +624,6 @@ MatrixPtr  Matrix = (MatrixPtr)eMatrix;
         return;
     }
 
-#if NOT ARRAY_OFFSET
-/* Correct array pointers for ARRAY_OFFSET. */
-    --RHS;
-    --Solution;
-#endif
-
 /* Initialize Intermediate vector with reordered Solution vector. */
     Vector = Matrix->Intermediate;
     pExtOrder = &Matrix->IntToExtRowMap[Matrix->Size];
@@ -701,11 +673,6 @@ ComplexNumber  Sum;
 register  int  I, *pExtOrder;
 
 /* Begin `ComplexTransposedMatrixMultiply'. */
-
-/* Correct array pointers for ARRAY_OFFSET. */
-#if NOT ARRAY_OFFSET
-    RHS -= 2;           Solution -= 2;
-#endif
 
 /* Initialize Intermediate vector with reordered Solution vector. */
     Vector = (ComplexVector)Matrix->Intermediate;

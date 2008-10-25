@@ -737,14 +737,6 @@ int  ExtRow;
 
 /* Begin `CountMarkowitz'. */
 
-/* Correct array pointer for ARRAY_OFFSET. */
-#if NOT ARRAY_OFFSET
-        if (RHS != NULL)
-        {   if (Matrix->Complex) RHS -= 2;
-            else --RHS;
-        }
-#endif
-
 /* Generate MarkowitzRow Count for each row. */
     for (I = Step; I <= Size; I++)
     {

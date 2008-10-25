@@ -40,10 +40,10 @@
 #include "m.h"
 #include "m_sparse.h"
 
-char spcMatrixIsNotValid[] = "Matrix passed to Sparse is not valid";
-char spcErrorsMustBeCleared[] = "Error not cleared";
-char spcMatrixMustBeFactored[] = "Matrix must be factored";
-char spcMatrixMustNotBeFactored[] = "Matrix must not be factored";
+const char *spcMatrixIsNotValid = "Matrix passed to Sparse is not valid";
+const char *spcErrorsMustBeCleared = "Error not cleared";
+const char *spcMatrixMustBeFactored = "Matrix must be factored";
+const char *spcMatrixMustNotBeFactored = "Matrix must not be factored";
 
 static void InitializeElementBlocks( MatrixPtr, int, int );
 static void RecordAllocation( MatrixPtr, void* );
