@@ -10,6 +10,10 @@ agar.gui.rect.rect_access_t:AG_Rect *
 agar.gui.rect.rect_access_t:struct ag_rect *
 agar.gui.rect.rect_t:AG_Rect
 agar.gui.rect.rect_t:struct ag_rect
+agar.gui.rect.rect2_access_t:AG_Rect2 *
+agar.gui.rect.rect2_access_t:struct ag_rect2 *
+agar.gui.rect.rect2_t:AG_Rect2
+agar.gui.rect.rect2_t:struct ag_rect2
 agar.gui.style.style_access_t:AG_Style *
 agar.gui.style.style_access_t:struct ag_style *
 agar.gui.style.style_t:AG_Style

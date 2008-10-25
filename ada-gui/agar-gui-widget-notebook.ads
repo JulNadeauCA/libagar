@@ -62,6 +62,7 @@ package agar.gui.widget.notebook is
     label_partial_width : c.int;
     sel_tab             : tab_access_t;
     tabs                : tab_tail_queue.head_t;
+    r                   : agar.gui.rect.rect_t;
   end record;
   type notebook_access_t is access all notebook_t;
   pragma convention (c, notebook_t);

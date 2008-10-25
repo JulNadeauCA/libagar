@@ -137,6 +137,7 @@ private
     detach      : window_tail_queue.entry_t;
 
     icon        : widget_icon_access_t;
+    r           : agar.gui.rect.rect_t;
   end record;
   pragma convention (c, window_t);
 

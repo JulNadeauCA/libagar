@@ -182,6 +182,7 @@ private
     poll         : poll_t;
     lflags       : flag_slist.head_t;
     cache        : agar.core.types.void_ptr_t; -- XXX: ag_text_cache *
+    r_clip       : agar.gui.rect.rect_t;
   end record;
   pragma convention (c, label_t);
 

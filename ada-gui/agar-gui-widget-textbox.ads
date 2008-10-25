@@ -137,8 +137,10 @@ private
   type textbox_t is record
     widget          : aliased widget_t;
     editable        : agar.gui.widget.editable.editable_access_t;
+
     label_text      : cs.chars_ptr;
     label           : c.int;
+
     flags           : flags_t;
     box_pad_x       : c.int;
     box_pad_y       : c.int;
@@ -148,6 +150,9 @@ private
     height_label    : c.int;
     horiz_scrollbar : agar.gui.widget.scrollbar.scrollbar_access_t;
     vert_scrollbar  : agar.gui.widget.scrollbar.scrollbar_access_t;
+
+    r               : agar.gui.rect.rect_t;
+    r_label         : agar.gui.rect.rect_t;
   end record;
   pragma convention (c, textbox_t);
 

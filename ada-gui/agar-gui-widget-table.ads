@@ -295,37 +295,44 @@ package agar.gui.widget.table is
 private
 
   type table_t is record
-    widget           : aliased widget_t;
-    flags            : table_flags_t;
-    selmode          : select_mode_t;
-    selected_row     : agar.core.types.void_ptr_t;
-    selected_col     : agar.core.types.void_ptr_t;
-    selected_cell    : agar.core.types.void_ptr_t;
-    pre_w            : c.int;
-    pre_h            : c.int;
-    sep              : cs.chars_ptr;
-    w_table          : c.int;
-    row_w            : c.int;
-    col_h            : c.int;
-    x_offset         : c.int;
-    m_offset         : c.int;
-    cols             : column_access_t;
-    cells            : access cell_access_t;
-    n                : c.unsigned;
-    m                : c.unsigned;
-    m_vis            : c.unsigned;
-    n_resizing       : c.int;
-    v_bar            : agar.gui.widget.scrollbar.scrollbar_access_t;
-    h_bar            : agar.gui.widget.scrollbar.scrollbar_access_t;
-    poll_ev          : agar.core.event.event_access_t;
-    dbl_click_row_ev : agar.core.event.event_access_t;
-    dbl_click_col_ev : agar.core.event.event_access_t;
-    dbl_clicked_row  : c.int;
-    dbl_clicked_col  : c.int;
-    wheel_ticks      : agar.core.types.uint32_t;
-    inc_to           : agar.core.timeout.timeout_t;
-    dec_to           : agar.core.timeout.timeout_t;
-    popups           : popup_slist.head_t;
+    widget            : aliased widget_t;
+    flags             : table_flags_t;
+    selmode           : select_mode_t;
+    w_hint            : c.int;
+    h_hint            : c.int;
+
+    sep               : cs.chars_ptr;
+    h_row             : c.int;
+    h_col             : c.int;
+    w_col_min         : c.int;
+    w_col_default     : c.int;
+
+    x_offset          : c.int;
+    m_offset          : c.int;
+
+    cols              : column_access_t;
+    cells             : access cell_access_t;
+
+    n                 : c.unsigned;
+    m                 : c.unsigned;
+    m_vis             : c.unsigned;
+    n_resizing        : c.int;
+    v_bar             : agar.gui.widget.scrollbar.scrollbar_access_t;
+    h_bar             : agar.gui.widget.scrollbar.scrollbar_access_t;
+    poll_ev           : agar.core.event.event_access_t;
+    dbl_click_row_ev  : agar.core.event.event_access_t;
+    dbl_click_col_ev  : agar.core.event.event_access_t;
+    dbl_click_cell_ev : agar.core.event.event_access_t;
+    dbl_clicked_row   : c.int;
+    dbl_clicked_col   : c.int;
+    dbl_clicked_cell  : c.int;
+    wheel_ticks       : agar.core.types.uint32_t;
+    inc_to            : agar.core.timeout.timeout_t;
+    dec_to            : agar.core.timeout.timeout_t;
+    r                 : agar.gui.rect.rect_t;
+    w_total           : c.int;
+
+    popups            : popup_slist.head_t;
   end record;
   pragma convention (c, table_t);
 
@@ -335,6 +342,7 @@ private
     flags    : column_flags_t;
     selected : c.int;
     w        : c.int;
+    w_pct    : c.int;
     x        : c.int;
     surface  : c.int;
     pool     : cell_access_t;

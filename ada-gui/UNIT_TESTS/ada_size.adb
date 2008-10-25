@@ -70,6 +70,8 @@ procedure ada_size is
   agar_gui_point_point_t : aliased string := "agar.gui.point.point_t";
   agar_gui_rect_rect_access_t : aliased string := "agar.gui.rect.rect_access_t";
   agar_gui_rect_rect_t : aliased string := "agar.gui.rect.rect_t";
+  agar_gui_rect_rect2_access_t : aliased string := "agar.gui.rect.rect2_access_t";
+  agar_gui_rect_rect2_t : aliased string := "agar.gui.rect.rect2_t";
   agar_gui_style_style_access_t : aliased string := "agar.gui.style.style_access_t";
   agar_gui_style_style_t : aliased string := "agar.gui.style.style_t";
   agar_gui_surface_surface_access_t : aliased string := "agar.gui.surface.surface_access_t";
@@ -243,6 +245,8 @@ procedure ada_size is
     (agar_gui_point_point_t'access, agar.gui.point.point_t'size),
     (agar_gui_rect_rect_access_t'access, agar.gui.rect.rect_access_t'size),
     (agar_gui_rect_rect_t'access, agar.gui.rect.rect_t'size),
+    (agar_gui_rect_rect2_access_t'access, agar.gui.rect.rect2_access_t'size),
+    (agar_gui_rect_rect2_t'access, agar.gui.rect.rect2_t'size),
     (agar_gui_style_style_access_t'access, agar.gui.style.style_access_t'size),
     (agar_gui_style_style_t'access, agar.gui.style.style_t'size),
     (agar_gui_surface_surface_access_t'access, agar.gui.surface.surface_access_t'size),

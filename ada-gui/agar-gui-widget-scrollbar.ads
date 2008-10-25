@@ -181,6 +181,7 @@ private
   type scrollbar_t is record
     widget          : aliased widget_t;
     flags           : flags_t;
+
     value           : c.int;
     min             : c.int;
     max             : c.int;
@@ -188,7 +189,6 @@ private
     bar_type        : type_t;
     bar_button      : button_t;
     button_width    : c.int;
-    button_def      : c.int;
     bar_width       : c.int;
     arrow_height    : c.int;
     button_inc_func : access agar.core.event.event_t;

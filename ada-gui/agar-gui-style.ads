@@ -104,13 +104,11 @@ package agar.gui.style is
        over     : c.int);
     progress_bar_background            : access procedure
       (widget : agar.gui.widget.widget_access_t);
-    scrollbar_background               : access procedure
-      (widget : agar.gui.widget.widget_access_t);
-    scrollbar_vertical_buttons         : access procedure
+    scrollbar_vertical                 : access procedure
       (widget : agar.gui.widget.widget_access_t;  -- XXX: AG_Scrollbar *
        y      : c.int;
        h      : c.int);
-    scrollbar_horizontal_buttons       : access procedure
+    scrollbar_horizontal               : access procedure
       (widget : agar.gui.widget.widget_access_t;  -- XXX: AG_Scrollbar *
        x      : c.int;
        w      : c.int);
@@ -148,10 +146,6 @@ package agar.gui.style is
        index  : c.int;
        rect   : agar.gui.rect.rect_t);
     table_row_background               : access procedure
-      (widget      : agar.gui.widget.widget_access_t;
-       rect        : agar.gui.rect.rect_t;
-       is_selected : c.int);
-    table_cell_background              : access procedure
       (widget      : agar.gui.widget.widget_access_t;
        rect        : agar.gui.rect.rect_t;
        is_selected : c.int);

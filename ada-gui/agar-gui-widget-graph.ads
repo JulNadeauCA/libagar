@@ -112,6 +112,7 @@ package agar.gui.widget.graph is
     px_max       : c.int;
     py_min       : c.int;
     py_max       : c.int;
+    r            : agar.gui.rect.rect_t;
   end record;
   pragma convention (c, graph_t);
 
