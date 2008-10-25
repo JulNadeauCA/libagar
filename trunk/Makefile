@@ -34,7 +34,12 @@ regress: regress-subdir
 
 includes:
 	if [ ! -e "include" ]; then mkdir include; fi
-	perl mk/gen-includes.pl include/agar
+	if [ "${SRCDIR}" != "${BLDDIR}" ]; then \
+		(cd "${SRCDIR}" && \
+		 perl mk/gen-includes.pl "${BLDDIR}/include/agar"); \
+	else \
+		perl mk/gen-includes.pl include/agar; \
+	fi
 
 configure:
 	cat configure.in | mkconfigure > configure
@@ -44,7 +49,7 @@ clean-config:
 	rm -f configure.lua
 	rm -fR include
 
-cleandir-config:
+cleandir-config: clean-config
 	rm -fr config config.log Makefile.config .projfiles.out .projfiles2.out
 	touch Makefile.config
 	-(cd agarpaint && ${MAKE} cleandir)
