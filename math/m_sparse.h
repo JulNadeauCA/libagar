@@ -55,9 +55,6 @@
  */
 #define  DIAGONAL_PIVOTING              YES
 
-/* Specify whether arrays start at an index of zero or one. */
-#define  ARRAY_OFFSET                   NOT FORTRAN
-
 /* Use modified Markowitz method of pivot selection. */
 #define  MODIFIED_MARKOWITZ             NO
 
@@ -1115,6 +1112,11 @@ struct  MatrixFrame
 typedef struct MatrixFrame *MatrixPtr;
 
 __BEGIN_DECLS
+extern const char *spcMatrixIsNotValid;
+extern const char *spcErrorsMustBeCleared;
+extern const char *spcMatrixMustBeFactored;
+extern const char *spcMatrixMustNotBeFactored;
+
 ElementPtr spcGetElement( MatrixPtr );
 ElementPtr spcGetFillin( MatrixPtr );
 ElementPtr spcFindDiag( MatrixPtr, int );
@@ -1124,11 +1126,6 @@ void spcCreateInternalVectors( MatrixPtr );
 void spcLinkRows( MatrixPtr );
 void spcColExchange( MatrixPtr, int, int );
 void spcRowExchange( MatrixPtr, int, int );
-
-char spcMatrixIsNotValid[];
-char spcErrorsMustBeCleared[];
-char spcMatrixMustBeFactored[];
-char spcMatrixMustNotBeFactored[];
 __END_DECLS
 
 #include <agar/math/m_close.h>

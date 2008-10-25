@@ -538,17 +538,6 @@ FILE  *pMatrixFile;
     if ((pMatrixFile = fopen(File,"a")) == NULL)
         return 0;
 
-/* Correct array pointers for ARRAY_OFFSET. */
-#if NOT ARRAY_OFFSET
-    if (Matrix->Complex)
-    {
-        RHS -= 2;
-    }
-    else
-        --RHS;
-#endif /* NOT ARRAY_OFFSET */
-
-
 /* Output vector. */
     Size = Matrix->Size;
     if (Size == 0) return 1;
