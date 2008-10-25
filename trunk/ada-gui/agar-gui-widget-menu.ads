@@ -128,6 +128,7 @@ package agar.gui.widget.menu is
     height             : c.int;
     current_state      : c.int;
     current_toolbar    : agar.gui.widget.toolbar.toolbar_access_t;
+    r                  : agar.gui.rect.rect_t;
   end record;
   pragma convention (c, menu_t);
 

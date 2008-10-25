@@ -143,7 +143,9 @@ private
 
   type editable_t is record
     widget         : aliased widget_t;
+
     flags          : flags_t;
+
     encoding       : encoding_t;
     str            : string_t;
     width_pre      : c.int;
@@ -153,12 +155,15 @@ private
     x_cursor       : c.int;
     y_cursor       : c.int;
     x_cursor_pref  : c.int;
+
     x_sel1         : c.int;
     x_sel2         : c.int;
     sel_edit       : c.int;
+
     to_delay       : agar.core.timeout.timeout_t;
     to_repeat      : agar.core.timeout.timeout_t;
     to_blink       : agar.core.timeout.timeout_t;
+
     x              : c.int;
     x_max          : c.int;
     y              : c.int;
@@ -170,6 +175,7 @@ private
     repeat_unicode : agar.core.types.uint32_t;
     ucs_buffer     : access agar.core.types.uint32_t;
     ucs_length     : c.unsigned;
+    r              : agar.gui.rect.rect_t;
   end record;
   pragma convention (c, editable_t);
 

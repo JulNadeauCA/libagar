@@ -107,11 +107,14 @@ private
   type pixmap_t is record
     widget : aliased widget_t;
     flags  : flags_t;
+
     n      : c.int;
     s      : c.int;
     t      : c.int;
     pre_w  : c.int;
     pre_h  : c.int;
+    scaled : c.int;
+    r      : agar.gui.rect.rect_t;
   end record;
   pragma convention (c, pixmap_t);
 

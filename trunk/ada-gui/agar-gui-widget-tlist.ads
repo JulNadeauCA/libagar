@@ -226,6 +226,7 @@ private
     dec_to          : agar.core.timeout.timeout_t;
     wheel_ticks     : agar.core.types.uint32_t;
     row_width       : c.int;
+    r               : agar.gui.rect.rect_t;
   end record;
   pragma convention (c, tlist_t);
 

@@ -190,15 +190,12 @@ package agar.gui.widget is
   type widget_t is record
     object           : aliased agar.core.object.object_t;
     flags            : c.unsigned;
-    redraw           : c.int;
-    cx               : c.int;
-    cy               : c.int;
-    cx2              : c.int;
-    cy2              : c.int;
+
     x                : c.int;
     y                : c.int;
     w                : c.int;
     h                : c.int;
+
     privdata         : widget_private_t;
   end record;
   pragma convention (c, widget_t);
@@ -696,7 +693,9 @@ private
 
   -- widget type
   type widget_private_t is record
-    clip_save        : agar.gui.rect.rect_t;
+    r_view           : agar.gui.rect.rect2_t;
+    r_sens           : agar.gui.rect.rect2_t;
+
     style            : agar.core.types.void_ptr_t; -- XXX: style_access_t
 
     surfaces         : access agar.gui.surface.surface_access_t;

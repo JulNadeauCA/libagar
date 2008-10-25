@@ -71,6 +71,7 @@ private
     x_spacing : c.int;
     y_spacing : c.int;
     radius    : c.int;
+    r         : agar.gui.rect.rect_t;
   end record;
   pragma convention (c, radio_t);
 

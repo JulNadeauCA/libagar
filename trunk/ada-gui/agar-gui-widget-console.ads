@@ -41,6 +41,7 @@ package agar.gui.widget.console is
     row_offset   : c.unsigned;
     color_bg     : agar.core.types.uint32_t;
     scrollbar    : agar.gui.widget.scrollbar.scrollbar_access_t;
+    r            : agar.gui.rect.rect_t;
   end record;
   pragma convention (c, console_t);
 
