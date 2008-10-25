@@ -12,49 +12,52 @@
  */
 
 #include <agar/config/have_md5.h>
+
 #ifdef HAVE_MD5
 
-#include <agar/config/_mk_have_sys_types_h.h>
-#ifdef _MK_HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#include <md5.h>
+# include <agar/config/_mk_have_sys_types_h.h>
+# ifdef _MK_HAVE_SYS_TYPES_H
+#  include <sys/types.h>
+# endif
+# include <md5.h>
+
+# define AG_MD5_BLOCK_LENGTH		MD5_BLOCK_LENGTH
+# define AG_MD5_DIGEST_LENGTH		MD5_DIGEST_LENGTH
+# define AG_MD5_DIGEST_STRING_LENGTH	MD5_DIGEST_STRING_LENGTH
+
+# define AG_MD5Init		MD5Init
+# define AG_MD5Update		MD5Update
+# define AG_MD5Pad 		MD5Pad
+# define AG_MD5Final		MD5Final
+# define AG_MD5Transform	MD5Transform
+# define AG_MD5End		MD5End
+# define AG_MD5Data		MD5Data
 
 #else /* !HAVE_MD5 */
 
-#undef MD5_BLOCK_LENGTH
-#undef MD5_DIGEST_LENGTH
-#undef MD5_DIGEST_STRING_LENGTH
+#include <agar/begin.h>
 
-#define	MD5_BLOCK_LENGTH		64
-#define	MD5_DIGEST_LENGTH		16
-#define	MD5_DIGEST_STRING_LENGTH	(MD5_DIGEST_LENGTH * 2 + 1)
+#define	AG_MD5_BLOCK_LENGTH		64
+#define	AG_MD5_DIGEST_LENGTH		16
+#define	AG_MD5_DIGEST_STRING_LENGTH	(AG_MD5_DIGEST_LENGTH * 2 + 1)
 
-typedef struct MD5Context {
+typedef struct ag_md5_ctx {
 	Uint32 state[4];			/* state */
 	Uint64 count;				/* number of bits, mod 2^64 */
-	Uint8 buffer[MD5_BLOCK_LENGTH];		/* input buffer */
-} MD5_CTX;
-
-#include <agar/config/have_bounded_attribute.h>
-#ifndef BOUNDED_ATTRIBUTE
-# ifdef HAVE_BOUNDED_ATTRIBUTE
-#  define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
-# else
-#  define BOUNDED_ATTRIBUTE(t, a, b)
-# endif
-#endif
+	Uint8 buffer[AG_MD5_BLOCK_LENGTH];	/* input buffer */
+} AG_MD5_CTX;
 
 __BEGIN_DECLS
-void	 MD5Init(MD5_CTX *);
-void	 MD5Update(MD5_CTX *, const Uint8 *, size_t)
-	 	BOUNDED_ATTRIBUTE(__string__,2,3);
-void	 MD5Pad(MD5_CTX *);
-void	 MD5Final(Uint8 [MD5_DIGEST_LENGTH], MD5_CTX *);
-void	 MD5Transform(Uint32 [4], const Uint8 [MD5_BLOCK_LENGTH]);
-char	*MD5End(MD5_CTX *, char *);
-char	*MD5Data(const Uint8 *, size_t, char *)
-		BOUNDED_ATTRIBUTE(__string__,1,2);
+void  AG_MD5Init(AG_MD5_CTX *);
+void  AG_MD5Update(AG_MD5_CTX *, const Uint8 *, size_t)
+                   BOUNDED_ATTRIBUTE(__string__,2,3);
+void  AG_MD5Pad(AG_MD5_CTX *);
+void  AG_MD5Final(Uint8 [AG_MD5_DIGEST_LENGTH], AG_MD5_CTX *);
+void  AG_MD5Transform(Uint32 [4], const Uint8 [AG_MD5_BLOCK_LENGTH]);
+char *AG_MD5End(AG_MD5_CTX *, char *);
+char *AG_MD5Data(const Uint8 *, size_t, char *)
+                 BOUNDED_ATTRIBUTE(__string__,1,2);
 __END_DECLS
 
+#include <agar/close.h>
 #endif /* !HAVE_MD5 */

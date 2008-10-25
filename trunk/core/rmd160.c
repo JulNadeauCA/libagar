@@ -28,20 +28,21 @@
  */
 
 #include <config/have_rmd160.h>
-
 #ifndef HAVE_RMD160
-#include <core/core.h>
+
+#include "core.h"
+#include "rmd160.h"
+
 #include <string.h>
-#include <core/rmd160.h>
 
 #define PUT_64BIT_LE(cp, value) do {                                    \
-	(cp)[7] = (Uint8)((value) >> 56);                                        \
-	(cp)[6] = (Uint8)((value) >> 48);                                        \
-	(cp)[5] = (Uint8)((value) >> 40);                                        \
-	(cp)[4] = (Uint8)((value) >> 32);                                        \
-	(cp)[3] = (Uint8)((value) >> 24);                                        \
-	(cp)[2] = (Uint8)((value) >> 16);                                        \
-	(cp)[1] = (Uint8)((value) >> 8);                                         \
+	(cp)[7] = (Uint8)((value) >> 56);                               \
+	(cp)[6] = (Uint8)((value) >> 48);                               \
+	(cp)[5] = (Uint8)((value) >> 40);                               \
+	(cp)[4] = (Uint8)((value) >> 32);                               \
+	(cp)[3] = (Uint8)((value) >> 24);                               \
+	(cp)[2] = (Uint8)((value) >> 16);                               \
+	(cp)[1] = (Uint8)((value) >> 8);                                \
 	(cp)[0] = (Uint8)(value); } while (0)
 
 #define PUT_32BIT_LE(cp, value) do {                                    \
@@ -85,14 +86,14 @@
 
 #define X(i)	x[i]
 
-static Uint8 PADDING[RMD160_BLOCK_LENGTH] = {
+static Uint8 PADDING[AG_RMD160_BLOCK_LENGTH] = {
 	0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 void
-RMD160Init(RMD160_CTX *ctx)
+AG_RMD160Init(AG_RMD160_CTX *ctx)
 {
 	ctx->count = 0;
 	ctx->state[0] = H0;
@@ -103,26 +104,26 @@ RMD160Init(RMD160_CTX *ctx)
 }
 
 void
-RMD160Update(RMD160_CTX *ctx, const Uint8 *input, size_t len)
+AG_RMD160Update(AG_RMD160_CTX *ctx, const Uint8 *input, size_t len)
 {
 	size_t have, off, need;
 
-	have = (size_t)(ctx->count / 8) % RMD160_BLOCK_LENGTH;
-	need = RMD160_BLOCK_LENGTH - have;
+	have = (size_t)(ctx->count / 8) % AG_RMD160_BLOCK_LENGTH;
+	need = AG_RMD160_BLOCK_LENGTH - have;
 	ctx->count += 8 * len;
 	off = 0;
 
 	if (len >= need) {
 		if (have) {
 			memcpy(ctx->buffer + have, input, need);
-			RMD160Transform(ctx->state, ctx->buffer);
+			AG_RMD160Transform(ctx->state, ctx->buffer);
 			off = need;
 			have = 0;
 		}
 		/* now the buffer is empty */
-		while (off + RMD160_BLOCK_LENGTH <= len) {
-			RMD160Transform(ctx->state, input+off);
-			off += RMD160_BLOCK_LENGTH;
+		while (off + AG_RMD160_BLOCK_LENGTH <= len) {
+			AG_RMD160Transform(ctx->state, input+off);
+			off += AG_RMD160_BLOCK_LENGTH;
 		}
 	}
 	if (off < len)
@@ -130,7 +131,7 @@ RMD160Update(RMD160_CTX *ctx, const Uint8 *input, size_t len)
 }
 
 void
-RMD160Pad(RMD160_CTX *ctx)
+AG_RMD160Pad(AG_RMD160_CTX *ctx)
 {
 	Uint8 size[8];
 	size_t padlen;
@@ -138,22 +139,24 @@ RMD160Pad(RMD160_CTX *ctx)
 	PUT_64BIT_LE(size, ctx->count);
 
 	/*
-	 * pad to RMD160_BLOCK_LENGTH byte blocks, at least one byte from
+	 * pad to AG_RMD160_BLOCK_LENGTH byte blocks, at least one byte from
 	 * PADDING plus 8 bytes for the size
 	 */
-	padlen = (size_t)(RMD160_BLOCK_LENGTH - ((ctx->count / 8) % RMD160_BLOCK_LENGTH));
-	if (padlen < 1 + 8)
-		padlen += RMD160_BLOCK_LENGTH;
-	RMD160Update(ctx, PADDING, padlen - 8);		/* padlen - 8 <= 64 */
-	RMD160Update(ctx, size, 8);
+	padlen = (size_t)(AG_RMD160_BLOCK_LENGTH -
+	                  ((ctx->count / 8) % AG_RMD160_BLOCK_LENGTH));
+	if (padlen < 1 + 8) {
+		padlen += AG_RMD160_BLOCK_LENGTH;
+	}
+	AG_RMD160Update(ctx, PADDING, padlen - 8);	/* padlen - 8 <= 64 */
+	AG_RMD160Update(ctx, size, 8);
 }
 
 void
-RMD160Final(Uint8 digest[RMD160_DIGEST_LENGTH], RMD160_CTX *ctx)
+AG_RMD160Final(Uint8 digest[AG_RMD160_DIGEST_LENGTH], AG_RMD160_CTX *ctx)
 {
 	int i;
 
-	RMD160Pad(ctx);
+	AG_RMD160Pad(ctx);
 	if (digest != NULL) {
 		for (i = 0; i < 5; i++)
 			PUT_32BIT_LE(digest + i*4, ctx->state[i]);
@@ -162,11 +165,11 @@ RMD160Final(Uint8 digest[RMD160_DIGEST_LENGTH], RMD160_CTX *ctx)
 }
 
 void
-RMD160Transform(Uint32 state[5], const Uint8 block[RMD160_BLOCK_LENGTH])
+AG_RMD160Transform(Uint32 state[5], const Uint8 block[AG_RMD160_BLOCK_LENGTH])
 {
 	Uint32 a, b, c, d, e, aa, bb, cc, dd, ee, t, x[16];
 
-#ifdef AG_BIG_ENDIAN
+#if AG_BYTEORDER == AG_BIG_ENDIAN
 	int i;
 
 	for (i = 0; i < 16; i++)
@@ -176,7 +179,7 @@ RMD160Transform(Uint32 state[5], const Uint8 block[RMD160_BLOCK_LENGTH])
 		    (Uint32)(block[i*4 + 2]) << 16 |
 		    (Uint32)(block[i*4 + 3]) << 24);
 #else
-	memcpy(x, block, RMD160_BLOCK_LENGTH);
+	memcpy(x, block, AG_RMD160_BLOCK_LENGTH);
 #endif
 
 	a = state[0];
@@ -374,17 +377,18 @@ RMD160Transform(Uint32 state[5], const Uint8 block[RMD160_BLOCK_LENGTH])
 }
 
 char *
-RMD160End(RMD160_CTX *ctx, char *buf)
+AG_RMD160End(AG_RMD160_CTX *ctx, char *buf)
 {
 	int i;
-	Uint8 digest[RMD160_DIGEST_LENGTH];
+	Uint8 digest[AG_RMD160_DIGEST_LENGTH];
 	static const char hex[] = "0123456789abcdef";
 
-	if (buf == NULL && (buf = malloc(RMD160_DIGEST_STRING_LENGTH)) == NULL)
+	if (buf == NULL &&
+	    (buf = malloc(AG_RMD160_DIGEST_STRING_LENGTH)) == NULL)
 		return (NULL);
 
-	RMD160Final(digest, ctx);
-	for (i = 0; i < RMD160_DIGEST_LENGTH; i++) {
+	AG_RMD160Final(digest, ctx);
+	for (i = 0; i < AG_RMD160_DIGEST_LENGTH; i++) {
 		buf[i + i] = hex[digest[i] >> 4];
 		buf[i + i + 1] = hex[digest[i] & 0x0f];
 	}
@@ -394,12 +398,13 @@ RMD160End(RMD160_CTX *ctx, char *buf)
 }
 
 char *
-RMD160Data(const Uint8 *data, size_t len, char *buf)
+AG_RMD160Data(const Uint8 *data, size_t len, char *buf)
 {
-	RMD160_CTX ctx;
+	AG_RMD160_CTX ctx;
 
-	RMD160Init(&ctx);
-	RMD160Update(&ctx, data, len);
-	return (RMD160End(&ctx, buf));
+	AG_RMD160Init(&ctx);
+	AG_RMD160Update(&ctx, data, len);
+	return AG_RMD160End(&ctx, buf);
 }
+
 #endif /* !HAVE_RMD160 */

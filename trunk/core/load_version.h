@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_VERSION_H_
-#define _AGAR_VERSION_H_
+#ifndef	_AGAR_CORE_LOAD_VERSION_H_
+#define	_AGAR_CORE_LOAD_VERSION_H_
 #include <agar/begin.h>
 
 typedef struct ag_version {
@@ -21,4 +21,4 @@ void	AG_WriteObjectVersion(AG_DataSource *, void *);
 __END_DECLS
 
 #include <agar/close.h>
-#endif	/* _AGAR_VERSION_H_ */
+#endif	/* _AGAR_CORE_LOAD_VERSION_H_ */

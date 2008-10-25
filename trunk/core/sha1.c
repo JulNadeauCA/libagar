@@ -22,11 +22,12 @@
  */
 
 #include <config/have_sha1.h>
-
 #ifndef HAVE_SHA1
-#include <core/core.h>
+
+#include "core.h"
+#include "sha1.h"
+
 #include <string.h>
-#include <core/sha1.h>
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 
@@ -56,17 +57,17 @@
  * Hash a single 512-bit block. This is the core of the algorithm.
  */
 void
-SHA1Transform(Uint32 state[5], const Uint8 buffer[SHA1_BLOCK_LENGTH])
+AG_SHA1Transform(Uint32 state[5], const Uint8 buffer[AG_SHA1_BLOCK_LENGTH])
 {
 	Uint32 a, b, c, d, e;
-	Uint8 workspace[SHA1_BLOCK_LENGTH];
+	Uint8 workspace[AG_SHA1_BLOCK_LENGTH];
 	typedef union {
 		Uint8 c[64];
 		Uint32 l[16];
 	} CHAR64LONG16;
 	CHAR64LONG16 *block = (CHAR64LONG16 *)workspace;
 
-	(void)memcpy(block, buffer, SHA1_BLOCK_LENGTH);
+	(void)memcpy(block, buffer, AG_SHA1_BLOCK_LENGTH);
 
 	/* Copy context->state[] to working vars */
 	a = state[0];
@@ -113,7 +114,7 @@ SHA1Transform(Uint32 state[5], const Uint8 buffer[SHA1_BLOCK_LENGTH])
  * SHA1Init - Initialize new context
  */
 void
-SHA1Init(SHA1_CTX *context)
+AG_SHA1Init(AG_SHA1_CTX *context)
 {
 
 	/* SHA1 initialization constants */
@@ -130,7 +131,7 @@ SHA1Init(SHA1_CTX *context)
  * Run your data through this.
  */
 void
-SHA1Update(SHA1_CTX *context, const Uint8 *data, size_t len)
+AG_SHA1Update(AG_SHA1_CTX *context, const Uint8 *data, size_t len)
 {
 	size_t i, j;
 
@@ -138,9 +139,9 @@ SHA1Update(SHA1_CTX *context, const Uint8 *data, size_t len)
 	context->count += (len << 3);
 	if ((j + len) > 63) {
 		(void)memcpy(&context->buffer[j], data, (i = 64-j));
-		SHA1Transform(context->state, context->buffer);
+		AG_SHA1Transform(context->state, context->buffer);
 		for ( ; i + 63 < len; i += 64)
-			SHA1Transform(context->state, (Uint8 *)&data[i]);
+			AG_SHA1Transform(context->state, (Uint8 *)&data[i]);
 		j = 0;
 	} else {
 		i = 0;
@@ -153,7 +154,7 @@ SHA1Update(SHA1_CTX *context, const Uint8 *data, size_t len)
  * Add padding and return the message digest.
  */
 void
-SHA1Pad(SHA1_CTX *context)
+AG_SHA1Pad(AG_SHA1_CTX *context)
 {
 	Uint8 finalcount[8];
 	Uint i;
@@ -162,20 +163,22 @@ SHA1Pad(SHA1_CTX *context)
 		finalcount[i] = (Uint8)((context->count >>
 		    ((7 - (i & 7)) * 8)) & 255);	/* Endian independent */
 	}
-	SHA1Update(context, (Uint8 *)"\200", 1);
-	while ((context->count & 504) != 448)
-		SHA1Update(context, (Uint8 *)"\0", 1);
-	SHA1Update(context, finalcount, 8); /* Should cause a SHA1Transform() */
+	AG_SHA1Update(context, (Uint8 *)"\200", 1);
+	while ((context->count & 504) != 448) {
+		AG_SHA1Update(context, (Uint8 *)"\0", 1);
+	}
+	/* Should cause a SHA1Transform() */
+	AG_SHA1Update(context, finalcount, 8);
 }
 
 void
-SHA1Final(Uint8 digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context)
+AG_SHA1Final(Uint8 digest[AG_SHA1_DIGEST_LENGTH], AG_SHA1_CTX *context)
 {
 	Uint i;
 
-	SHA1Pad(context);
+	AG_SHA1Pad(context);
 	if (digest) {
-		for (i = 0; i < SHA1_DIGEST_LENGTH; i++) {
+		for (i = 0; i < AG_SHA1_DIGEST_LENGTH; i++) {
 			digest[i] = (Uint8)
 			   ((context->state[i>>2] >> ((3-(i & 3)) * 8) ) & 255);
 		}
@@ -184,17 +187,17 @@ SHA1Final(Uint8 digest[SHA1_DIGEST_LENGTH], SHA1_CTX *context)
 }
 
 char *
-SHA1End(SHA1_CTX *ctx, char *buf)
+AG_SHA1End(AG_SHA1_CTX *ctx, char *buf)
 {
 	int i;
-	Uint8 digest[SHA1_DIGEST_LENGTH];
+	Uint8 digest[AG_SHA1_DIGEST_LENGTH];
 	static const char hex[] = "0123456789abcdef";
 
-	if (buf == NULL && (buf = malloc(SHA1_DIGEST_STRING_LENGTH)) == NULL)
+	if (buf == NULL && (buf = malloc(AG_SHA1_DIGEST_STRING_LENGTH)) == NULL)
 		return (NULL);
 
-	SHA1Final(digest, ctx);
-	for (i = 0; i < SHA1_DIGEST_LENGTH; i++) {
+	AG_SHA1Final(digest, ctx);
+	for (i = 0; i < AG_SHA1_DIGEST_LENGTH; i++) {
 		buf[i + i] = hex[digest[i] >> 4];
 		buf[i + i + 1] = hex[digest[i] & 0x0f];
 	}
@@ -204,13 +207,13 @@ SHA1End(SHA1_CTX *ctx, char *buf)
 }
 
 char *
-SHA1Data(const Uint8 *data, size_t len, char *buf)
+AG_SHA1Data(const Uint8 *data, size_t len, char *buf)
 {
-	SHA1_CTX ctx;
+	AG_SHA1_CTX ctx;
 
-	SHA1Init(&ctx);
-	SHA1Update(&ctx, data, len);
-	return (SHA1End(&ctx, buf));
+	AG_SHA1Init(&ctx);
+	AG_SHA1Update(&ctx, data, len);
+	return AG_SHA1End(&ctx, buf);
 }
 
 #endif /* !HAVE_SHA1 */

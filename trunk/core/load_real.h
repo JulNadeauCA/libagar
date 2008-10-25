@@ -3,6 +3,9 @@
  * Serialization of floating-point numbers.
  */
 
+#ifndef	_AGAR_CORE_LOAD_REAL_H_
+#define	_AGAR_CORE_LOAD_REAL_H_
+
 #include <agar/config/have_long_double.h>
 #include <agar/core/byteswap.h>
 
@@ -197,3 +200,5 @@ AG_WriteLongDoubleAt(AG_DataSource *ds, long double fv, off_t pos)
 
 __END_DECLS
 #include <agar/close.h>
+
+#endif /* _AGAR_CORE_LOAD_REAL_H_ */

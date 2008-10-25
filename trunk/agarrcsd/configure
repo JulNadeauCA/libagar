@@ -144,7 +144,7 @@ else
 fi
 
 if [ "${srcdir}" != "" ]; then
-	echo "concurrent build (source in ${srcdir})"
+	echo "* Separate build (source in ${srcdir})"
 	SRC=${srcdir}
 	perl ${SRC}/mk/mkconcurrent.pl ${SRC}
 	if [ $? != 0 ]; then
@@ -154,6 +154,9 @@ else
 	SRC=`pwd`
 fi
 BLD=`pwd`
+
+SRCDIR="${SRC}"
+BLDDIR="${BLD}"
 
 if [ "${testdir}" != "" ]; then
 	echo "Configure tests will be executed in ${testdir}"
@@ -1634,6 +1637,60 @@ echo "hdefs[\"AGAR_DEV_CFLAGS\"] = nil" >>configure.lua
 echo "#undef AGAR_DEV_LIBS" >config/agar_dev_libs.h
 echo "hdefs[\"AGAR_DEV_LIBS\"] = nil" >>configure.lua
 fi;
+$ECHO_N "checking for a gethostname() function..."
+$ECHO_N "checking for a gethostname() function..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETHOSTNAME" ]; then
+		HAVE_GETHOSTNAME=`cat ${cache}/ctest-HAVE_GETHOSTNAME`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETHOSTNAME`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+	char hostname[64];
+	int rv;
+
+	rv = gethostname(hostname, sizeof(hostname));
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_GETHOSTNAME="yes"
+echo "#ifndef HAVE_GETHOSTNAME" > config/have_gethostname.h
+echo "#define HAVE_GETHOSTNAME \"$HAVE_GETHOSTNAME\"" >> config/have_gethostname.h
+echo "#endif" >> config/have_gethostname.h
+echo "hdefs[\"HAVE_GETHOSTNAME\"] = \"$HAVE_GETHOSTNAME\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_GETHOSTNAME="no"
+echo "#undef HAVE_GETHOSTNAME" >config/have_gethostname.h
+echo "hdefs[\"HAVE_GETHOSTNAME\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETHOSTNAME" > ${cache}/ctest-HAVE_GETHOSTNAME
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETHOSTNAME
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 if [ "${HAVE_AGAR}" != "yes" ]
  then
 	echo "This program requires Agar (http://agar.csoft.org/)"

@@ -12,36 +12,17 @@
 #include <config/lockdebug.h>
 #include <config/threads.h>
 #include <config/network.h>
-#include <config/have_bounded_attribute.h>
-#include <config/have_format_attribute.h>
-#include <config/have_nonnull_attribute.h>
 #include <config/have_64bit.h>
 #include <config/have_long_double.h>
-#include <config/enable_nls.h>
 
-#include <config/_mk_have_unsigned_typedefs.h>
-#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
-#define _MK_HAVE_UNSIGNED_TYPEDEFS
-typedef unsigned int Uint;
-typedef unsigned char Uchar;
-typedef unsigned long Ulong;
-#endif
-
-#if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
-# if defined(__cplusplus)
-#  define __BEGIN_DECLS	extern "C" {
-#  define __END_DECLS	}
-# else
-#  define __BEGIN_DECLS
-#  define __END_DECLS
-# endif
-#endif
-
+/* For threads types and use in inlines. */
 #include <core/threads.h>
 
+/* XXX for SDL_Delay() */
 #include <SDL.h>
 #include <SDL_endian.h>
 
+/* For inline routines */
 #include <config/_mk_have_sys_types_h.h>
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -57,22 +38,7 @@ typedef unsigned long Ulong;
 #include <string.h>
 #include <stdio.h>
 
-#ifdef HAVE_BOUNDED_ATTRIBUTE
-#define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
-#else
-#define BOUNDED_ATTRIBUTE(t, a, b)
-#endif
-#ifdef HAVE_FORMAT_ATTRIBUTE
-#define FORMAT_ATTRIBUTE(t, a, b) __attribute__((__format__ (t,a,b)))
-#else
-#define FORMAT_ATTRIBUTE(t, a, b)
-#endif
-#ifdef HAVE_NONNULL_ATTRIBUTE
-#define NONNULL_ATTRIBUTE(a) __attribute__((__nonnull__ (a)))
-#else
-#define NONNULL_ATTRIBUTE(a)
-#endif
-
+/* Define AG_BYTEORDER */
 #define AG_BIG_ENDIAN 4321
 #define AG_LITTLE_ENDIAN 1234
 #include <config/_mk_big_endian.h>
@@ -129,7 +95,6 @@ typedef unsigned long Ulong;
 #include <core/load_real.h>
 #include <core/load_string.h>
 #include <core/load_version.h>
-#include <core/load_color.h>
 
 #include <core/version.h>
 #include <core/object.h>
@@ -137,23 +102,6 @@ typedef unsigned long Ulong;
 #include <core/file.h>
 #include <core/dir.h>
 #include <core/dso.h>
-
-#ifdef ENABLE_NLS
-# include <libintl.h>
-# define _(String) dgettext("agar",String)
-# ifdef dgettext_noop
-#  define N_(String) dgettext_noop("agar",String)
-# else
-#  define N_(String) (String)
-# endif
-#else
-# undef _
-# undef N_
-# undef ngettext
-# define _(String) (String)
-# define N_(String) (String)
-# define ngettext(Singular,Plural,Number) ((Number==1)?(Singular):(Plural))
-#endif /* !ENABLE_NLS */
 
 #endif /* !_AGAR_CORE_CORE_H_ */
 #endif /* _AGAR_INTERNAL */

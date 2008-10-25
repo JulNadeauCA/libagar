@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_COMPAT_DIR_H_
-#define _AGAR_COMPAT_DIR_H_
+#ifndef _AGAR_CORE_DIR_H_
+#define _AGAR_CORE_DIR_H_
 #include <agar/begin.h>
 
 typedef struct ag_dir {
@@ -20,4 +20,4 @@ int	   AG_GetCWD(char *, size_t);
 __END_DECLS
 
 #include <agar/close.h>
-#endif /* _AGAR_COMPAT_DIR_H_ */
+#endif /* _AGAR_CORE_DIR_H_ */

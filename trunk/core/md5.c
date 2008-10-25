@@ -29,20 +29,21 @@
  */
 
 #include <config/have_md5.h>
-
 #ifndef HAVE_MD5
-#include <core/core.h>
+
+#include "core.h"
+#include "md5.h"
+
 #include <string.h>
-#include <core/md5.h>
 
 #define PUT_64BIT_LE(cp, value) do {					\
-	(cp)[7] = (Uint8)((value) >> 56);					\
-	(cp)[6] = (Uint8)((value) >> 48);					\
-	(cp)[5] = (Uint8)((value) >> 40);					\
-	(cp)[4] = (Uint8)((value) >> 32);					\
-	(cp)[3] = (Uint8)((value) >> 24);					\
-	(cp)[2] = (Uint8)((value) >> 16);					\
-	(cp)[1] = (Uint8)((value) >> 8);						\
+	(cp)[7] = (Uint8)((value) >> 56);				\
+	(cp)[6] = (Uint8)((value) >> 48);				\
+	(cp)[5] = (Uint8)((value) >> 40);				\
+	(cp)[4] = (Uint8)((value) >> 32);				\
+	(cp)[3] = (Uint8)((value) >> 24);				\
+	(cp)[2] = (Uint8)((value) >> 16);				\
+	(cp)[1] = (Uint8)((value) >> 8);				\
 	(cp)[0] = (Uint8)(value); } while (0)
 
 #define PUT_32BIT_LE(cp, value) do {					\
@@ -51,7 +52,7 @@
 	(cp)[1] = (value) >> 8;						\
 	(cp)[0] = (value); } while (0)
 
-static Uint8 PADDING[MD5_BLOCK_LENGTH] = {
+static Uint8 PADDING[AG_MD5_BLOCK_LENGTH] = {
 	0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -62,7 +63,7 @@ static Uint8 PADDING[MD5_BLOCK_LENGTH] = {
  * initialization constants.
  */
 void
-MD5Init(MD5_CTX *ctx)
+AG_MD5Init(AG_MD5_CTX *ctx)
 {
 	ctx->count = 0;
 	ctx->state[0] = 0x67452301;
@@ -76,13 +77,13 @@ MD5Init(MD5_CTX *ctx)
  * of bytes.
  */
 void
-MD5Update(MD5_CTX *ctx, const unsigned char *input, size_t len)
+AG_MD5Update(AG_MD5_CTX *ctx, const unsigned char *input, size_t len)
 {
 	size_t have, need;
 
 	/* Check how many bytes we already have and how many more we need. */
-	have = (size_t)((ctx->count >> 3) & (MD5_BLOCK_LENGTH - 1));
-	need = MD5_BLOCK_LENGTH - have;
+	have = (size_t)((ctx->count >> 3) & (AG_MD5_BLOCK_LENGTH - 1));
+	need = AG_MD5_BLOCK_LENGTH - have;
 
 	/* Update bitcount */
 	ctx->count += (Uint64)len << 3;
@@ -90,17 +91,17 @@ MD5Update(MD5_CTX *ctx, const unsigned char *input, size_t len)
 	if (len >= need) {
 		if (have != 0) {
 			memcpy(ctx->buffer + have, input, need);
-			MD5Transform(ctx->state, ctx->buffer);
+			AG_MD5Transform(ctx->state, ctx->buffer);
 			input += need;
 			len -= need;
 			have = 0;
 		}
 
-		/* Process data in MD5_BLOCK_LENGTH-byte chunks. */
-		while (len >= MD5_BLOCK_LENGTH) {
-			MD5Transform(ctx->state, input);
-			input += MD5_BLOCK_LENGTH;
-			len -= MD5_BLOCK_LENGTH;
+		/* Process data in AG_MD5_BLOCK_LENGTH-byte chunks. */
+		while (len >= AG_MD5_BLOCK_LENGTH) {
+			AG_MD5Transform(ctx->state, input);
+			input += AG_MD5_BLOCK_LENGTH;
+			len -= AG_MD5_BLOCK_LENGTH;
 		}
 	}
 
@@ -114,7 +115,7 @@ MD5Update(MD5_CTX *ctx, const unsigned char *input, size_t len)
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
 void
-MD5Pad(MD5_CTX *ctx)
+AG_MD5Pad(AG_MD5_CTX *ctx)
 {
 	Uint8 count[8];
 	size_t padlen;
@@ -123,23 +124,23 @@ MD5Pad(MD5_CTX *ctx)
 	PUT_64BIT_LE(count, ctx->count);
 
 	/* Pad out to 56 mod 64. */
-	padlen = (size_t)(MD5_BLOCK_LENGTH -
-	    ((ctx->count >> 3) & (MD5_BLOCK_LENGTH - 1)));
+	padlen = (size_t)(AG_MD5_BLOCK_LENGTH -
+	    ((ctx->count >> 3) & (AG_MD5_BLOCK_LENGTH - 1)));
 	if (padlen < 1 + 8)
-		padlen += MD5_BLOCK_LENGTH;
-	MD5Update(ctx, PADDING, padlen - 8);		/* padlen - 8 <= 64 */
-	MD5Update(ctx, count, 8);
+		padlen += AG_MD5_BLOCK_LENGTH;
+	AG_MD5Update(ctx, PADDING, padlen - 8);		/* padlen - 8 <= 64 */
+	AG_MD5Update(ctx, count, 8);
 }
 
 /*
- * Final wrapup--call MD5Pad, fill in digest and zero out ctx.
+ * Final wrapup--call AG_MD5Pad, fill in digest and zero out ctx.
  */
 void
-MD5Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx)
+AG_MD5Final(unsigned char digest[AG_MD5_DIGEST_LENGTH], AG_MD5_CTX *ctx)
 {
 	int i;
 
-	MD5Pad(ctx);
+	AG_MD5Pad(ctx);
 	if (digest != NULL) {
 		for (i = 0; i < 4; i++)
 			PUT_32BIT_LE(digest + i * 4, ctx->state[i]);
@@ -166,12 +167,12 @@ MD5Final(unsigned char digest[MD5_DIGEST_LENGTH], MD5_CTX *ctx)
  * the data and converts bytes into longwords for this routine.
  */
 void
-MD5Transform(Uint32 state[4], const Uint8 block[MD5_BLOCK_LENGTH])
+AG_MD5Transform(Uint32 state[4], const Uint8 block[AG_MD5_BLOCK_LENGTH])
 {
-	Uint32 a, b, c, d, in[MD5_BLOCK_LENGTH / 4];
+	Uint32 a, b, c, d, in[AG_MD5_BLOCK_LENGTH / 4];
 
 #if AG_BYTEORDER == AG_BIG_ENDIAN
-	for (a = 0; a < MD5_BLOCK_LENGTH / 4; a++) {
+	for (a = 0; a < AG_MD5_BLOCK_LENGTH / 4; a++) {
 		in[a] = (Uint32)(
 		    (Uint32)(block[a * 4 + 0]) |
 		    (Uint32)(block[a * 4 + 1]) <<  8 |
@@ -262,17 +263,17 @@ MD5Transform(Uint32 state[4], const Uint8 block[MD5_BLOCK_LENGTH])
 }
 
 char *
-MD5End(MD5_CTX *ctx, char *buf)
+AG_MD5End(AG_MD5_CTX *ctx, char *buf)
 {
 	int i;
-	Uint8 digest[MD5_DIGEST_LENGTH];
+	Uint8 digest[AG_MD5_DIGEST_LENGTH];
 	static const char hex[] = "0123456789abcdef";
 
-	if (buf == NULL && (buf = malloc(MD5_DIGEST_STRING_LENGTH)) == NULL)
+	if (buf == NULL && (buf = malloc(AG_MD5_DIGEST_STRING_LENGTH)) == NULL)
 		return (NULL);
 
-	MD5Final(digest, ctx);
-	for (i = 0; i < MD5_DIGEST_LENGTH; i++) {
+	AG_MD5Final(digest, ctx);
+	for (i = 0; i < AG_MD5_DIGEST_LENGTH; i++) {
 		buf[i + i] = hex[digest[i] >> 4];
 		buf[i + i + 1] = hex[digest[i] & 0x0f];
 	}
@@ -282,13 +283,13 @@ MD5End(MD5_CTX *ctx, char *buf)
 }
 
 char *
-MD5Data(const Uint8 *data, size_t len, char *buf)
+AG_MD5Data(const Uint8 *data, size_t len, char *buf)
 {
-	MD5_CTX ctx;
+	AG_MD5_CTX ctx;
 
-	MD5Init(&ctx);
-	MD5Update(&ctx, data, len);
-	return (MD5End(&ctx, buf));
+	AG_MD5Init(&ctx);
+	AG_MD5Update(&ctx, data, len);
+	return AG_MD5End(&ctx, buf);
 }
 
 #endif /* !HAVE_MD5 */

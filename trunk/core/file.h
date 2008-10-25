@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_COMPAT_FILE_H_
-#define _AGAR_COMPAT_FILE_H_
+#ifndef _AGAR_CORE_FILE_H_
+#define _AGAR_CORE_FILE_H_
 #include <agar/begin.h>
 
 enum ag_file_info_type {
@@ -41,4 +41,4 @@ int AG_FileDelete(const char *);
 __END_DECLS
 
 #include <agar/close.h>
-#endif /* _AGAR_COMPAT_FILE_H_ */
+#endif /* _AGAR_CORE_FILE_H_ */

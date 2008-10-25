@@ -29,6 +29,7 @@
 #include "view.h"
 #include "colors.h"
 #include "opengl.h"
+#include "load_color.h"
 
 const AG_Version agColorSchemeVer = { 1, 0 };
 

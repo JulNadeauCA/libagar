@@ -16,7 +16,6 @@
 
 #include <agar/core/data_source.h>
 #include <agar/core/load_den.h>
-#include <agar/core/load_color.h>
 #include <agar/core/load_integral.h>
 #include <agar/core/load_real.h>
 #include <agar/core/load_string.h>

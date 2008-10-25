@@ -28,7 +28,8 @@
  */
 
 #include <core/core.h>
-#include <gui/view.h>
+#include "view.h"
+#include "load_color.h"
 
 void
 AG_WriteColor(AG_DataSource *ds, SDL_PixelFormat *pixfmt, Uint32 color)

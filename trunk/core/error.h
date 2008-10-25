@@ -1,8 +1,10 @@
 /*	Public domain	*/
 
+#ifndef	_AGAR_CORE_ERROR_H_
+#define	_AGAR_CORE_ERROR_H_
+
 #include <agar/config/free_null_is_a_noop.h>
 #include <agar/config/_mk_have_stdlib_h.h>
-
 #ifdef _MK_HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -112,3 +114,4 @@ AG_Free(void *p) {
 __END_DECLS
 
 #include <agar/close.h>
+#endif /* _AGAR_CORE_ERROR_H_ */
