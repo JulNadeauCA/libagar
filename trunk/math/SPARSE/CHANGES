@@ -1,7 +1,0 @@
-This documents the changes we made to SPARSE library : http://sparse.sourceforge.net/
-We currently use SPARSE 1.4b.
-Changes to vanilla SPARSE :
-* changed the includes (basically, include "../m.h" in every .c, and include nothing in .h)
-* #define spREAL M_Real to use M's real type
-* uncapitalized file names
-* removed some unused prototypes, and silenced some warnings
