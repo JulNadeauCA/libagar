@@ -128,7 +128,6 @@ proj: proj-subdir
 			env PKG_OS=$$_tgtos PKG_ARCH=$$_tgtarch \
 			    PKG_IDE=$$_tgtproj ${MAKE} ${PROJPOSTPKG}; \
 		fi; \
-		rm `cat .projfiles.out`; \
 		rm -fR config .projfiles.out ${PROJFILELIST}; \
 	    done; \
 	fi
