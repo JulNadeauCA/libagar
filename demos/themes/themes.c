@@ -200,9 +200,9 @@ CreateWindow(void)
 			 * periodically.
 			 */
 			table = AG_TableNew(ntab, AG_TABLE_EXPAND);
-			AG_TableAddCol(table, "x", "<8888>", NULL);
-			AG_TableAddCol(table, "sin(x)", "<8888>", NULL);
-			AG_TableAddCol(table, "cos(x)", NULL, NULL);
+			AG_TableAddCol(table, "x", "33%", NULL);
+			AG_TableAddCol(table, "sin(x)", "33%", NULL);
+			AG_TableAddCol(table, "cos(x)", "33%", NULL);
 			for (f = 0; f < 60; f += 0.3) {
 				/*
 				 * Insert a Table row for sin(f) and cos(f).
