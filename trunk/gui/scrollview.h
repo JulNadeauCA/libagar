@@ -6,7 +6,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 typedef struct ag_scrollview {
 	struct ag_widget wid;
@@ -40,5 +40,5 @@ void           AG_ScrollviewSizeHint(AG_Scrollview *, Uint, Uint);
 void           AG_ScrollviewSetIncrement(AG_Scrollview *, int);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_GUI_SCROLLVIEW_H_ */

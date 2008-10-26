@@ -6,7 +6,7 @@
 #include <agar/rg/tileset.h>
 #include <agar/gui/tlist.h>
 
-#include <agar/begin.h>
+#include <agar/rg/begin.h>
 
 typedef struct rg_texture_selector {
 	struct ag_tlist tl;
@@ -20,5 +20,5 @@ extern AG_WidgetClass rgTextureSelectorClass;
 RG_TextureSelector *RG_TextureSelectorNew(void *, RG_Tileset *, Uint);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/rg/close.h>
 #endif /* _AGAR_RG_TEXSEL_H_ */

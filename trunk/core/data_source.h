@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_CORE_DATA_SOURCE_H_
 #define _AGAR_CORE_DATA_SOURCE_H_
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 struct ag_event;
 
@@ -155,5 +155,5 @@ int            AG_CheckTypev(AG_DataSource *, Uint32);
 
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_DATA_SOURCE_H_ */

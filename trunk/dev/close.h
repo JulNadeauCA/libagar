@@ -1,33 +1,33 @@
 /*	Public domain	*/
 
-#ifndef _AGAR_BEGIN_H_
-#error Inclusion of <agar/close.h> without <agar/begin.h>
+#ifndef _AGAR_DEV_BEGIN_H_
+#error Inclusion of <agar/dev/close.h> without <agar/dev/begin.h>
 #endif
-#undef _AGAR_BEGIN_H_
+#undef _AGAR_DEV_BEGIN_H_
 
 /*
  * Undo standard definitions from begin.h, unless we are compiling the
  * library itself.
  */
-#ifndef _AGAR_INTERNAL
-# ifdef _AGAR_DEFINED_UNSIGNED_TYPEDEFS
-#  undef _AGAR_DEFINED_UNSIGNED_TYPEDEFS
+#ifndef _AGAR_DEV_INTERNAL
+# ifdef _AGAR_DEV_DEFINED_UNSIGNED_TYPEDEFS
+#  undef _AGAR_DEV_DEFINED_UNSIGNED_TYPEDEFS
 #  undef Uint
 #  undef Uchar
 #  undef Ulong
 # endif
-# ifdef _AGAR_DEFINED_CDECLS
-#  undef _AGAR_DEFINED_CDECLS
+# ifdef _AGAR_DEV_DEFINED_CDECLS
+#  undef _AGAR_DEV_DEFINED_CDECLS
 #  undef __BEGIN_DECLS
 #  undef __END_DECLS
 # endif
-# ifdef _AGAR_DEFINED_NLS
+# ifdef _AGAR_DEV_DEFINED_NLS
 #  undef _
 #  undef N_
 #  undef ngettext
 # endif
 #endif
-#undef _AGAR_USE_INLINE
+#undef _AGAR_DEV_USE_INLINE
 
 /* Reset structure packing at previous byte alignment. */
 #if defined(_MSC_VER) || defined(__MWERKS__) || defined(__WATCOMC__) || \
@@ -44,12 +44,12 @@
 #endif
 
 /* Always undo DECLSPEC and NULL. */
-#ifdef _AGAR_DEFINED_DECLSPEC
-# undef _AGAR_DEFINED_DECLSPEC
+#ifdef _AGAR_DEV_DEFINED_DECLSPEC
+# undef _AGAR_DEV_DEFINED_DECLSPEC
 # undef DECLSPEC
 #endif
-#ifdef _AGAR_DEFINED_NULL
-# undef _AGAR_DEFINED_NULL
+#ifdef _AGAR_DEV_DEFINED_NULL
+# undef _AGAR_DEV_DEFINED_NULL
 # undef NULL
 #endif
 

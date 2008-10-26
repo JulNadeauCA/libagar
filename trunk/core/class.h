@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 struct ag_object;
 struct ag_object_class_spec;
@@ -119,4 +119,4 @@ AG_ClassIsNamed(void *pClass, const char *pat)
 }
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>

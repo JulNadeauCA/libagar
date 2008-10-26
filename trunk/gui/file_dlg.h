@@ -12,7 +12,7 @@
 #include <agar/gui/pane.h>
 #include <agar/gui/label.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 struct ag_file_dlg;
 
@@ -117,5 +117,5 @@ double         AG_FileOptionDbl(AG_FileType *, const char *);
 char          *AG_FileOptionString(AG_FileType *, const char *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_FILE_DLG_H_ */

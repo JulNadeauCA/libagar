@@ -32,8 +32,8 @@ MAN3=	AG_View.3 AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Editable.3 AG_Slider.3 AG_Surface.3 AG_Scrollview.3 AG_Rect.3 \
 	AG_Titlebar.3
 
-CFLAGS+=-I.. ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} ${X11_CFLAGS} \
-	${JPEG_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}
+CFLAGS+=-D_AGAR_GUI_INTERNAL ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} \
+	${X11_CFLAGS} ${JPEG_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk

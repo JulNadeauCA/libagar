@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 typedef struct ag_timeout {
 	Uint32 (*fn)(void *p, Uint32 ival, void *arg);
@@ -48,4 +48,4 @@ void	AG_UnlockTimeouts(void *);
 #define	AG_ProcessTimeout(x) AG_ProcessTimeouts(x)
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>

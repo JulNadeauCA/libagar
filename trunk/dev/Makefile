@@ -11,6 +11,7 @@ SRCS=	dev.c browser.c screenshot.c server.c timeouts.c uniconv.c \
 	view_params.c widget_browser.c cpuinfo.c config.c object.c \
 	classes.c
 
-CFLAGS+=-I.. ${SDL_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS} ${GETTEXT_CFLAGS}
+CFLAGS+=-D_AGAR_DEV_INTERNAL ${SDL_CFLAGS} ${X11_CFLAGS} ${JPEG_CFLAGS} \
+	${GETTEXT_CFLAGS}
 
 include ${TOP}/mk/build.lib.mk

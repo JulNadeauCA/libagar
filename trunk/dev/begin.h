@@ -1,9 +1,9 @@
 /*	Public domain	*/
 
-#ifdef _AGAR_BEGIN_H_
-#error Nested inclusion of <agar/begin.h>
+#ifdef _AGAR_DEV_BEGIN_H_
+#error Nested inclusion of <agar/dev/begin.h>
 #endif
-#define _AGAR_BEGIN_H_
+#define _AGAR_DEV_BEGIN_H_
 
 /* Define Uint, Uchar and Ulong if needed. */
 #include <agar/config/_mk_have_unsigned_typedefs.h>
@@ -12,7 +12,7 @@
 # define Uint unsigned int
 # define Uchar unsigned char
 # define Ulong unsigned long
-# define _AGAR_DEFINED_UNSIGNED_TYPEDEFS
+# define _AGAR_DEV_DEFINED_UNSIGNED_TYPEDEFS
 #endif
 #undef _MK_HAVE_UNSIGNED_TYPEDEFS
 
@@ -26,7 +26,7 @@
 # else
 #  define N_(String) (String)
 # endif
-# define _AGAR_DEFINED_NLS
+# define _AGAR_DEV_DEFINED_NLS
 #else
 # undef _
 # undef N_
@@ -34,12 +34,12 @@
 # define _(String) (String)
 # define N_(String) (String)
 # define ngettext(Singular,Plural,Number) ((Number==1)?(Singular):(Plural))
-# define _AGAR_DEFINED_NLS
+# define _AGAR_DEV_DEFINED_NLS
 #endif
 
 /* Define __BEGIN_DECLS and __END_DECLS if needed. */
 #if !defined(__BEGIN_DECLS) || !defined(__END_DECLS)
-# define _AGAR_DEFINED_CDECLS
+# define _AGAR_DEV_DEFINED_CDECLS
 # if defined(__cplusplus)
 #  define __BEGIN_DECLS extern "C" {
 #  define __END_DECLS   }
@@ -63,7 +63,7 @@
 #  endif
 # elif defined(__WIN32__)
 #  ifdef __BORLANDC__
-#   ifdef _AGAR_INTERNAL
+#   ifdef _AGAR_DEV_INTERNAL
 #    define DECLSPEC 
 #   else
 #    define DECLSPEC	__declspec(dllimport)
@@ -73,7 +73,7 @@
 #  endif
 # elif defined(__OS2__)
 #  ifdef __WATCOMC__
-#   ifdef _AGAR_INTERNAL
+#   ifdef _AGAR_DEV_INTERNAL
 #    define DECLSPEC	__declspec(dllexport)
 #   else
 #    define DECLSPEC
@@ -88,17 +88,17 @@
 #   define DECLSPEC
 #  endif
 # endif
-# define _AGAR_DEFINED_DECLSPEC
+# define _AGAR_DEV_DEFINED_DECLSPEC
 #endif
 #ifdef __SYMBIAN32__ 
 # ifndef EKA2 
 #  undef DECLSPEC
 #  define DECLSPEC
-#  define _AGAR_DEFINED_DECLSPEC
+#  define _AGAR_DEV_DEFINED_DECLSPEC
 # elif !defined(__WINS__)
 #  undef DECLSPEC
 #  define DECLSPEC __declspec(dllexport)
-#  define _AGAR_DEFINED_DECLSPEC
+#  define _AGAR_DEV_DEFINED_DECLSPEC
 # endif
 #endif
 
@@ -125,7 +125,7 @@
  * an inline function, if supported.
  */
 #ifdef __GNUC__
-# define _AGAR_USE_INLINE
+# define _AGAR_DEV_USE_INLINE
 #else
 # if defined(_MSC_VER) || defined(__BORLANDC__) || \
      defined(__DMC__) || defined(__SC__) || \
@@ -134,17 +134,17 @@
 #  ifndef __inline__
 #   define __inline__	__inline
 #  endif
-#  define _AGAR_USE_INLINE
+#  define _AGAR_DEV_USE_INLINE
 # else
 #  if !defined(__MRC__) && !defined(_SGI_SOURCE)
 #   ifndef __inline__
 #    define __inline__ inline
 #   endif
-#   define _AGAR_USE_INLINE
+#   define _AGAR_DEV_USE_INLINE
 #  endif
 # endif
 #endif /* !__GNUC__ */
-#ifndef _AGAR_USE_INLINE
+#ifndef _AGAR_DEV_USE_INLINE
 # define __inline__
 #endif
 
@@ -152,10 +152,10 @@
 #if !defined(NULL) && !defined(__MACH__)
 # ifdef __cplusplus
 #  define NULL 0
-#  define _AGAR_DEFINED_NULL
+#  define _AGAR_DEV_DEFINED_NULL
 # else
 #  define NULL ((void *)0)
-#  define _AGAR_DEFINED_NULL
+#  define _AGAR_DEV_DEFINED_NULL
 # endif
 #endif
 

@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_WIDGET_KEYMAP_H_
 #define _AGAR_WIDGET_KEYMAP_H_
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 struct ag_keycode_ascii {
 	SDLKey key;
@@ -41,5 +41,5 @@ Uint32 AG_ApplyModifiersASCII(Uint32, int);
 int    AG_KeyInputCompose(AG_Editable *, Uint32, Uint32 *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif	/* _AGAR_WIDGET_KEYMAP_H_ */

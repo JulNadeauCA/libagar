@@ -5,7 +5,7 @@
 
 #define AG_LOAD_STRING_MAX 32767
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 __BEGIN_DECLS
 char	*AG_ReadStringLen(AG_DataSource *, size_t);
@@ -25,5 +25,5 @@ size_t	 AG_CopyNulString(char *, AG_DataSource *, size_t);
 void	 AG_SkipString(AG_DataSource *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_LOAD_STRING_H_ */

@@ -2,7 +2,7 @@
 
 #include <agar/config/have_long_double.h>
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 #define AG_PROP_PATH_MAX	(AG_OBJECT_PATH_MAX+1+AG_PROP_KEY_MAX)
 #define AG_PROP_KEY_MAX		64
@@ -453,4 +453,4 @@ AG_GetPointer(void *p, const char *key)
 }
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>

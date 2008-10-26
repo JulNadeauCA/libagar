@@ -1,9 +1,9 @@
 /*	Public domain	*/
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 __BEGIN_DECLS
 int AG_XCFLoad(AG_DataSource *, off_t,
                void (*)(AG_Surface *, const char *, void *),
 	       void *);
 __END_DECLS
-#include <agar/close.h>
+#include <agar/gui/close.h>

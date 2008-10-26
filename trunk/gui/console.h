@@ -7,7 +7,7 @@
 #include <agar/gui/scrollbar.h>
 #include <agar/gui/text.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 #define AG_CONSOLE_LINE_MAX	1024
 
@@ -55,5 +55,5 @@ void		AG_ConsoleMsgPtr(AG_ConsoleLine *, void *);
 void		AG_ConsoleMsgIcon(AG_ConsoleLine *, int);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_CONSOLE_H_ */

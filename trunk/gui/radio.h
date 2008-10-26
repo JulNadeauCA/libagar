@@ -5,7 +5,7 @@
 
 #include <agar/gui/widget.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 typedef struct ag_radio_item {
 	char text[128];
@@ -45,5 +45,5 @@ int       AG_RadioAddItemHK(AG_Radio *, SDLKey, const char *, ...);
 void      AG_RadioClearItems(AG_Radio *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_RADIO_H_ */

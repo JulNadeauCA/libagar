@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_GUI_STYLE_H_
 #define _AGAR_GUI_STYLE_H_
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 struct ag_window;
 struct ag_radio;
@@ -66,5 +66,5 @@ extern AG_Style agStyleDefault;
 void AG_SetStyle(void *, AG_Style *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_GUI_STYLE_H_ */

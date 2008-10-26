@@ -16,7 +16,7 @@ SRCS=	vg.c vg_circle.c vg_arc.c vg_line.c vg_ortho.c vg_point.c vg_snap.c \
 MAN3=	VG.3 VG_Arc.3 VG_Circle.3 VG_Line.3 VG_Point.3 VG_Polygon.3 VG_Text.3 \
 	VG_View.3
 
-CFLAGS+=-I.. ${SDL_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}
+CFLAGS+=-D_AGAR_VG_INTERNAL ${SDL_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}
 
 include ${TOP}/mk/build.lib.mk
 include ${TOP}/mk/build.man.mk

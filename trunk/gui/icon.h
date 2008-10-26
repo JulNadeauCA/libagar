@@ -7,7 +7,7 @@
 #include <agar/gui/text.h>
 #include <agar/gui/label.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 struct ag_window;
 struct ag_socket;
@@ -44,5 +44,5 @@ void	 AG_IconSetText(AG_Icon *, const char *, ...)
 void	 AG_IconSetBackgroundFill(AG_Icon *, int, Uint32);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_ICON_H_ */

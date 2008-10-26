@@ -2,7 +2,7 @@
 
 #ifndef	_AGAR_CORE_LOAD_DEN_H_
 #define	_AGAR_CORE_LOAD_DEN_H_
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 #define AG_DEN_NAME_MAX		64
 #define AG_DEN_HINT_MAX		16
@@ -50,5 +50,5 @@ int	AG_DenImportFile(AG_Den *, int, const char *, const char *,
 	                const char *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_LOAD_DEN_H_ */

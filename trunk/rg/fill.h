@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_RG_FILL_H_
 #define _AGAR_RG_FILL_H_
-#include <agar/begin.h>
+#include <agar/rg/begin.h>
 
 struct ag_window;
 struct ag_toolbar;
@@ -50,5 +50,5 @@ struct ag_window *RG_FillEdit(void *, RG_Tileview *);
 struct ag_toolbar *RG_FillToolbar(void *, RG_Tileview *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/rg/close.h>
 #endif /* _AGAR_RG_FILL_H_ */

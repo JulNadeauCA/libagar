@@ -9,7 +9,7 @@
 #include <agar/gui/window.h>
 #include <agar/gui/tlist.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 typedef struct ag_combo {
 	struct ag_widget wid;
@@ -50,5 +50,5 @@ void AG_ComboSetButtonSurface(AG_Combo *, AG_Surface *);
 void AG_ComboSetButtonSurfaceNODUP(AG_Combo *, AG_Surface *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_COMBO_H_ */

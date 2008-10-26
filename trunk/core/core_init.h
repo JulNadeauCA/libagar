@@ -2,7 +2,7 @@
 
 #ifndef	_AGAR_CORE_CORE_INIT_H_
 #define	_AGAR_CORE_CORE_INIT_H_
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 /* Flags for AG_InitCore() */
 #define AG_VERBOSE         0x01 /* Allow errors/warning output on console */
@@ -63,5 +63,5 @@ __END_DECLS
 #define	AG_MAX3(a,b,c) AG_MAX((a),AG_MAX((b),(c)))
 #endif
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_CORE_INIT_H_ */

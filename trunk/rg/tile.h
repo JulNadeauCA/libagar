@@ -5,7 +5,7 @@
 
 #include <agar/config/have_opengl.h>
 
-#include <agar/begin.h>
+#include <agar/rg/begin.h>
 
 #define RG_TILE_NAME_MAX	 128
 #define RG_TILE_CLASS_MAX	 32
@@ -155,5 +155,5 @@ void		RG_TileDelPixmap(RG_Tile *, struct rg_pixmap *, int);
 void		RG_TileDelSketch(RG_Tile *, struct rg_sketch *, int);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/rg/close.h>
 #endif	/* _AGAR_RG_TILE_H_ */

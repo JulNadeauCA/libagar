@@ -8,7 +8,7 @@
 #include <agar/config/_mk_big_endian.h>
 #include <agar/config/_mk_little_endian.h>
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 __BEGIN_DECLS
 /*
@@ -227,5 +227,5 @@ __END_DECLS
 # define AG_SwapBELDBL(X) AG_SwapLDBL(X)
 #endif
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_BYTESWAP_H_ */

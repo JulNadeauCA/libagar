@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_RG_FEATURE_H_
 #define _AGAR_RG_FEATURE_H_
-#include <agar/begin.h>
+#include <agar/rg/begin.h>
 
 #define RG_FEATURE_NAME_MAX 32
 #define RG_FEATURE_TYPE_MAX 32
@@ -76,5 +76,5 @@ void	RG_FeatureOpenMenu(struct rg_tileview *, int, int);
 void	RG_FeatureCloseMenu(struct rg_tileview *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/rg/close.h>
 #endif	/* _AGAR_RG_FEATURE_H_ */

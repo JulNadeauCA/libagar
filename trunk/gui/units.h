@@ -5,7 +5,7 @@
 
 #include <agar/config/historical_units.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 typedef struct ag_unit {
 	char *key;		/* Key */
@@ -83,5 +83,5 @@ AG_UnitAbbr(const AG_Unit *unit)
 #define	AG_Unit2Unitf(n, u1, u2) ((float)AG_Unit2Unit((float)(n), (u1), (u2)))
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_UNITS_H_ */

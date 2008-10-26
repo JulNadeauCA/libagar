@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_MATH_M_GUI_H_
 #define _AGAR_MATH_M_GUI_H_
-#include <agar/math/m_begin.h>
+#include <agar/math/begin.h>
 
 #if defined(QUAD_PRECISION)
 
@@ -83,7 +83,7 @@ void	*M_EditScale3(void *, const char *, M_Matrix44 *);
 void	*M_EditScale4(void *, const char *, M_Matrix44 *);
 __END_DECLS
 
-#include <agar/math/m_close.h>
+#include <agar/math/close.h>
 
 #include <agar/math/m_plotter.h>
 #include <agar/math/m_matview.h>

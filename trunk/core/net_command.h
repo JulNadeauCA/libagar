@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 typedef struct ns_command_arg {
 	char	 key[32];
@@ -30,4 +30,4 @@ void	 NS_CommandCopyString(char *, NS_Command *, const char *, size_t);
 #define NC_CommandCopyString	NS_CommandCopyString
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>

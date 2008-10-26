@@ -9,7 +9,7 @@
 #include <agar/gui/window.h>
 #include <agar/gui/file_dlg.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 typedef struct ag_file_selector {
 	struct ag_widget wid;
@@ -36,5 +36,5 @@ void AG_FileSelectorSetFile(AG_FileSelector *, const char *);
 void AG_FileSelectorSetDirectory(AG_FileSelector *, const char *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_FILE_SELECTOR_H_ */

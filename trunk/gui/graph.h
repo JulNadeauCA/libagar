@@ -6,7 +6,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/scrollbar.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 #define AG_GRAPH_NDEFCOLORS	16
 #define AG_GRAPH_LABEL_MAX	64
@@ -117,5 +117,5 @@ void		 AG_GraphEdgePopupMenu(AG_GraphEdge *, struct ag_popup_menu *);
 void		 AG_GraphAutoPlace(AG_Graph *, Uint, Uint);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_GUI_GRAPH_H_ */

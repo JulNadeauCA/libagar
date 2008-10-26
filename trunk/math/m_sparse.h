@@ -37,7 +37,7 @@
 #error "m_sparse.h is only for internal backend usage"
 #endif
 
-#include <agar/math/m_begin.h>
+#include <agar/math/begin.h>
 
 /*
  * Configuration Settings
@@ -1128,4 +1128,4 @@ void spcColExchange( MatrixPtr, int, int );
 void spcRowExchange( MatrixPtr, int, int );
 __END_DECLS
 
-#include <agar/math/m_close.h>
+#include <agar/math/close.h>

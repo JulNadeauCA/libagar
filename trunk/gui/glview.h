@@ -7,7 +7,7 @@
 #include <agar/config/have_opengl.h>
 
 #ifdef HAVE_OPENGL
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 typedef struct ag_glview {
 	struct ag_widget wid;
@@ -58,6 +58,6 @@ void	   AG_GLViewButtonupFn(AG_GLView *, AG_EventFn, const char *, ...);
 void	   AG_GLViewMotionFn(AG_GLView *, AG_EventFn, const char *, ...);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* HAVE_OPENGL */
 #endif /* _AGAR_WIDGET_GLVIEW_H_ */

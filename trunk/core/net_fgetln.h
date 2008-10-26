@@ -1,8 +1,8 @@
 /*	Public domain	*/
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 __BEGIN_DECLS
 char *NS_Fgetln(FILE *, size_t *);
 __END_DECLS
-#include <agar/close.h>
+#include <agar/core/close.h>
 

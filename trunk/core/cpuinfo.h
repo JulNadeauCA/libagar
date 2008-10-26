@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_CORE_CPUINFO_H_
 #define _AGAR_CORE_CPUINFO_H_
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 typedef struct ag_cpuinfo {
 	const char *arch;		/* Architecture name */
@@ -56,5 +56,5 @@ __END_DECLS
 #define HasSSSE3()	(agCPU.ext & AG_EXT_SSSE3)
 #endif
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif	/* _AGAR_CORE_CPUINFO_H_ */
