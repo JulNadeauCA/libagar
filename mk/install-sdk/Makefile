@@ -1,7 +1,7 @@
 TOP=	../..
 include ${TOP}/Makefile.config
 
-PROJECT=	"install-sdk"
+PROJECT=	install-sdk
 PROJDIR=	ProjectFiles
 PROJINCLUDES=	configure.lua
 
