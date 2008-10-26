@@ -516,8 +516,6 @@ main(int argc, char *argv[])
 	}
 	m = AG_MenuNode(appMenu->root, "Test", NULL);
 	{
-		int i;
-
 		AG_MenuNode(m, "Submenu A", NULL);
 		AG_MenuSeparator(m);
 		m = AG_MenuNode(m, "Submenu B", NULL);

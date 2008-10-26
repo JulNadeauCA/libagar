@@ -46,7 +46,6 @@ CreateUI(void)
 	};
 	int i;
 	AG_Window *win;
-	AG_Event *ev;
 	AG_Toolbar *tb;
 
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
