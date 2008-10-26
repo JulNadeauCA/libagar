@@ -106,7 +106,7 @@ AG_ReadDoublev(AG_DataSource *ds, double *fv)
 static __inline__ void
 AG_WriteDouble(AG_DataSource *ds, double fv)
 {
-	float f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(fv) :
+	double f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(fv) :
 	                                                AG_SwapLEDBL(fv);
 
 	AG_WriteType(ds, AG_SOURCE_DOUBLE);
@@ -116,8 +116,8 @@ AG_WriteDouble(AG_DataSource *ds, double fv)
 static __inline__ int
 AG_WriteDoublev(AG_DataSource *ds, double *fv)
 {
-	float f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(*fv) :
-	                                                AG_SwapLEDBL(*fv);
+	double f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(*fv) :
+	                                                 AG_SwapLEDBL(*fv);
 
 	if (AG_WriteTypev(ds, AG_SOURCE_DOUBLE) == -1) {
 		return (-1);
