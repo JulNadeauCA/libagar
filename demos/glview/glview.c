@@ -22,13 +22,14 @@ enum { CUBE, SPHERE } primitive = SPHERE;
 const char *shadingNames[] = { "Flat Shading", "Smooth Shading", NULL };
 enum { FLATSHADING, SMOOTHSHADING } shading = FLATSHADING;
 
-GLfloat spin = 0.0f, vz = -5.0f;
+GLfloat spin = 0.0f;
+GLdouble vz = -5.0;
 GLfloat ambient[4] = { 0.5f, 1.0f, 1.0f, 1.0f };
 GLfloat diffuse[4] = { 0.5f, 1.0f, 1.0f, 1.0f };
 GLfloat specular[4] = { 0.5f, 1.0f, 1.0f, 1.0f };
 int wireframe = 0;
 
-static GLfloat isoVtx[12][3] = {    
+static GLdouble isoVtx[12][3] = {    
 #define X .525731112119133606 
 #define Z .850650808352039932
     {-X, 0.0, Z}, {X, 0.0, Z}, {-X, 0.0, -Z}, {X, 0.0, -Z},    
@@ -59,29 +60,29 @@ MyScaleFunction(AG_Event *event)
 }
 
 static void
-Norm(GLfloat *a)
+Norm(GLdouble *a)
 {
-    GLfloat d = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+    GLdouble d = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
     a[0] /= d;
     a[1] /= d;
     a[2] /= d;
 }
 
 static void
-DrawTriangle(GLfloat *a, GLfloat *b, GLfloat *c, int div, float r)
+DrawTriangle(GLdouble *a, GLdouble *b, GLdouble *c, int div, float r)
 {
 	if (div <= 0) {
-		glNormal3fv(a); glVertex3f(a[0]*r, a[1]*r, a[2]*r);
-		glNormal3fv(b); glVertex3f(b[0]*r, b[1]*r, b[2]*r);
-		glNormal3fv(c); glVertex3f(c[0]*r, c[1]*r, c[2]*r);
+		glNormal3dv(a); glVertex3d(a[0]*r, a[1]*r, a[2]*r);
+		glNormal3dv(b); glVertex3d(b[0]*r, b[1]*r, b[2]*r);
+		glNormal3dv(c); glVertex3d(c[0]*r, c[1]*r, c[2]*r);
 	} else {
-		GLfloat ab[3], ac[3], bc[3];
+		GLdouble ab[3], ac[3], bc[3];
 		int i;
 
 		for (i = 0; i < 3; i++) {
-			ab[i] = (a[i]+b[i])/2;
-			ac[i] = (a[i]+c[i])/2;
-			bc[i] = (b[i]+c[i])/2;
+			ab[i] = (a[i]+b[i])/2.0;
+			ac[i] = (a[i]+c[i])/2.0;
+			bc[i] = (b[i]+c[i])/2.0;
 		}
 		Norm(ab);
 		Norm(ac);
@@ -132,7 +133,7 @@ MyDrawFunction(AG_Event *event)
 	glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
 
 	glPushMatrix();
-	glTranslatef(0.0f, 0.0f, vz);
+	glTranslated(0.0, 0.0, vz);
 	glRotatef(spin,0.0f,1.0f,0.0f);
 	glRotatef(spin,1.0f,1.0f,1.0f);
 
@@ -169,10 +170,10 @@ MyDrawFunction(AG_Event *event)
 	case SPHERE:
 		glBegin(GL_TRIANGLES);
 		for (i = 0; i < 20; i++) {
-       	 	DrawTriangle(isoVtx[isoInd[i][0]],
+			DrawTriangle(isoVtx[isoInd[i][0]],
 			             isoVtx[isoInd[i][1]],
 				     isoVtx[isoInd[i][2]],
-				     2, 1.0);
+				     2, 1.0f);
 		}
     		glEnd();
 	}
