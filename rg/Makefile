@@ -14,7 +14,7 @@ MAN3=	RG_Anim.3 RG_Feature.3 RG_Pixmap.3 RG_Tile.3 RG_Tileset.3 RG_Tileview.3
 
 #SRCS+= sketch.c sketch_line.c sketch_circle.c sketch_polygon.c sketchproj.c
 
-CFLAGS+=-I.. ${SDL_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}
+CFLAGS+=-D_AGAR_RG_INTERNAL ${SDL_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk

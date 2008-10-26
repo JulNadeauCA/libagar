@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_CORE_NET_SERVER_H_
 #define _AGAR_CORE_NET_SERVER_H_
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 #define NS_HOSTNAME_MAX	256
 
@@ -105,5 +105,5 @@ void	NS_ListItem(NS_Server *, void *, size_t);
 void	NS_ListString(NS_Server *, const char *, ...);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_NET_SERVER_H_ */

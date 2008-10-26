@@ -9,7 +9,7 @@
 #include <agar/gui/ucombo.h>
 #include <agar/gui/units.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 #define AG_MFSPINBUTTON_NOHFILL	0x01
 #define AG_MFSPINBUTTON_VFILL	0x02
@@ -46,5 +46,5 @@ void	AG_MFSpinbuttonSetPrecision(AG_MFSpinbutton *, const char *, int);
 void	AG_MFSpinbuttonSetWriteable(AG_MFSpinbutton *, int);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_MFSPINBUTTON_H_ */

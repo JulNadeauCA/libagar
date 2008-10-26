@@ -7,7 +7,7 @@
 #include <agar/gui/textbox.h>
 #include <agar/gui/button.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 #define AG_SPINBUTTON_NOHFILL	0x01
 #define AG_SPINBUTTON_VFILL	0x02
@@ -36,5 +36,5 @@ void		 AG_SpinbuttonSetIncrement(AG_Spinbutton *, int);
 void		 AG_SpinbuttonSetWriteable(AG_Spinbutton *, int);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_SPINBUTTON_H_ */

@@ -26,13 +26,15 @@
 #include <core/core.h>
 #include <core/config.h>
 
-#include "tileview.h"
-#include "icons.h"
-
+#include <gui/widget.h>
 #include <gui/view.h>
+#include <gui/text.h>
 #include <gui/primitive.h>
 #include <gui/text_cache.h>
 #include <gui/opengl.h>
+
+#include "tileview.h"
+#include "icons.h"
 
 #include <stdarg.h>
 #include <string.h>

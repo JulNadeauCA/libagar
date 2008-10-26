@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #endif
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 /* Standard error code */
 typedef enum ag_error_code {
@@ -113,5 +113,5 @@ AG_Free(void *p) {
 #endif
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_ERROR_H_ */

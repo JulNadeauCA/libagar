@@ -5,13 +5,7 @@
 
 #include <agar/config/network.h>
 
-#include <agar/begin.h>
-
-extern char agRcsHostname[64];
-extern char agRcsUsername[32];
-extern char agRcsPassword[32];
-extern Uint agRcsPort;
-extern int agRcsMode;
+#include <agar/core/begin.h>
 
 enum ag_rcs_status {
 	AG_RCS_ERROR,	 /* Status unavailable */
@@ -48,6 +42,12 @@ typedef struct ag_rcs_list {
 } AG_RCSList;
 
 __BEGIN_DECLS
+extern char agRcsHostname[64];
+extern char agRcsUsername[32];
+extern char agRcsPassword[32];
+extern Uint agRcsPort;
+extern int agRcsMode;
+
 #ifdef NETWORK
 void AG_RcsInit(void);
 void AG_RcsDestroy(void);
@@ -77,5 +77,5 @@ int AG_RcsCheckout(void *, const char *);
 #endif /* NETWORK */
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif	/* _AGAR_CORE_RCS_H_ */

@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_ICONMGR_H_
 #define _AGAR_ICONMGR_H_
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 /* Description of icon stored in data segment. */
 typedef struct ag_static_icon {
@@ -20,5 +20,5 @@ void        AG_InitStaticIcon(AG_StaticIcon *);
 AG_Surface *AG_ObjectIcon(void *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif	/* _AGAR_ICONMGR_H_ */

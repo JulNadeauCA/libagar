@@ -2,7 +2,7 @@
 
 #include <netinet/in.h>
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 union sockunion {
 	struct sockinet {
@@ -20,4 +20,4 @@ union sockunion {
 # define su_port	su_si.si_port
 #endif
 
-#include <agar/close.h>
+#include <agar/core/close.h>

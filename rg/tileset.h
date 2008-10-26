@@ -11,7 +11,6 @@ struct rg_feature;
 struct rg_anim;
 struct rg_texture;
 
-#include <agar/gui/view.h>
 #include <agar/rg/transform.h>
 /* #include <agar/vg/vg.h> */
 #include <agar/rg/tile.h>
@@ -22,7 +21,7 @@ struct rg_texture;
 #include <agar/rg/texture.h>
 #include <agar/rg/prim.h>
 
-#include <agar/begin.h>
+#include <agar/rg/begin.h>
 
 #ifndef RG_TILESZ
 #define RG_TILESZ 16
@@ -131,5 +130,5 @@ RG_GetAnim(RG_Tileset *ts, Uint32 id)
 
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/rg/close.h>
 #endif	/* _AGAR_RG_TILESET_H_ */

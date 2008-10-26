@@ -5,7 +5,7 @@
 
 #include <agar/gui/widget.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 enum ag_separator_type {
 	AG_SEPARATOR_HORIZ,
@@ -32,5 +32,5 @@ void          AG_SeparatorSetPadding(AG_Separator *, Uint);
 #define AG_SpacerNewVert(p) AG_SpacerNew((p),AG_SEPARATOR_VERT)
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_SEPARATOR_H_ */

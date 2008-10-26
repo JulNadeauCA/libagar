@@ -5,7 +5,7 @@
 
 #include <agar/gui/widget.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 typedef struct ag_pixmap {
 	struct ag_widget wid;
@@ -75,5 +75,5 @@ AG_PixmapSetCoords(AG_Pixmap *px, int s, int t)
 }
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_PIXMAP_H */

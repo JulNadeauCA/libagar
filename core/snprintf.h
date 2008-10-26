@@ -17,11 +17,11 @@
 #  define AG_Snprintf snprintf
 # endif
 #else
-# include <agar/begin.h>
+# include <agar/core/begin.h>
 __BEGIN_DECLS
 int AG_Snprintf(char *, size_t, const char *, ...);
 __END_DECLS
-# include <agar/close.h>
+# include <agar/core/close.h>
 #endif /* !HAVE_SNPRINTF */
 
 #endif /* _AGAR_CORE_SNPRINTF_H_ */

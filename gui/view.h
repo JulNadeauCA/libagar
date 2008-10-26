@@ -9,7 +9,7 @@
 #include <agar/config/view_24bpp.h>
 #include <agar/config/view_32bpp.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 struct ag_window;
 struct ag_style;
@@ -712,7 +712,7 @@ AG_SetClipRect(AG_Surface *s, const AG_Rect *r)
 }
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 
 #include <agar/gui/iconmgr.h>
 #include <agar/gui/load_surface.h>

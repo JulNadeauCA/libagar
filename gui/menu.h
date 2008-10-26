@@ -7,7 +7,7 @@
 #include <agar/gui/window.h>
 #include <agar/gui/toolbar.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 struct ag_menu;
 struct ag_menu_view;
@@ -211,5 +211,5 @@ void AG_MenuSetIntFlagsMp(AG_MenuItem *, int *, int, int, AG_Mutex *);
 #define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_MENU_H_ */

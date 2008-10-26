@@ -29,6 +29,9 @@
 
 #include <core/core.h>
 #include <core/config.h>
+#ifdef NETWORK
+#include <core/rcs.h>
+#endif
 
 #include <gui/window.h>
 #include <gui/box.h>
@@ -43,12 +46,6 @@
 #include <gui/file_dlg.h>
 #include <gui/notebook.h>
 #include <gui/icons.h>
-
-#include "dev.h"
-
-#ifdef NETWORK
-#include <core/rcs.h>
-#endif
 
 #include <string.h>
 #include <ctype.h>

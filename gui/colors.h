@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_WIDGET_COLORS_H_
 #define _AGAR_WIDGET_COLORS_H_
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 enum {
 	BG_COLOR,
@@ -114,5 +114,5 @@ int AG_ColorsGetRGB(int, Uint8 *, Uint8 *, Uint8 *);
 int AG_ColorsGetRGBA(int, Uint8 *, Uint8 *, Uint8 *, Uint8 *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif	/* _AGAR_WIDGET_COLORS_H_ */

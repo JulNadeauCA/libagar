@@ -15,11 +15,11 @@
 # include <stdio.h>
 # define AG_Vsnprintf vsnprintf
 #else
-# include <agar/begin.h>
+# include <agar/core/begin.h>
 __BEGIN_DECLS
 int AG_Vsnprintf(char *, size_t, const char *, va_list);
 __END_DECLS
-# include <agar/close.h>
+# include <agar/core/close.h>
 #endif /* HAVE_VASPRINTF */
 
 #endif /* _AGAR_CORE_VSNPRINTF_H_ */

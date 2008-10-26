@@ -8,7 +8,7 @@
 #include <agar/gui/window.h>
 #include <agar/gui/tlist.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 typedef struct ag_ucombo {
 	struct ag_widget wid;
@@ -33,5 +33,5 @@ void	   AG_UComboSizeHint(AG_UCombo *, const char *, int);
 void	   AG_UComboSizeHintPixels(AG_UCombo *, int, int);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_UCOMBO_H_ */

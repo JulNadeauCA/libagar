@@ -1,6 +1,6 @@
 #ifndef _AGAR_GUI_TEXT_CACHE_H_
 #define _AGAR_GUI_TEXT_CACHE_H_
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 typedef struct ag_cached_text {
 	char *text;				/* Text string */
@@ -42,5 +42,5 @@ AG_TextCacheHash(AG_TextCache *tc, const char *s)
 }
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_GUI_TEXT_CACHE_H_ */

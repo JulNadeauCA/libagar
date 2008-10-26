@@ -9,7 +9,7 @@
 
 #define AG_NOTEBOOK_LABEL_MAX	64
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 enum ag_notebook_tab_alignment {
 	AG_NOTEBOOK_TABS_TOP,
@@ -67,5 +67,5 @@ void AG_NotebookDelTab(AG_Notebook *, AG_NotebookTab *);
 void AG_NotebookSelectTab(AG_Notebook *, AG_NotebookTab *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_NOTEBOOK_H_ */

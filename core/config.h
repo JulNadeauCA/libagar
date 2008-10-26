@@ -2,7 +2,7 @@
 
 #ifndef _AGAR_CORE_CONFIG_H_
 #define _AGAR_CORE_CONFIG_H_
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 typedef struct ag_object AG_Config;
 
@@ -39,5 +39,5 @@ __END_DECLS
 #define AG_SetCfgInt(k,v) AG_SetInt(agConfig,(k),(v))
 #define AG_SetCfgBool(k,v) AG_SetBool(agConfig,(k),(v))
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_CONFIG_H_ */

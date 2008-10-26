@@ -5,7 +5,7 @@
 
 #include <agar/gui/widget.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 enum ag_box_type {
 	AG_BOX_HORIZ,
@@ -42,5 +42,5 @@ void	 AG_BoxSetDepth(AG_Box *, int);
 void	 AG_BoxSetType(AG_Box *, enum ag_box_type);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_BOX_H_ */

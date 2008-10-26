@@ -7,7 +7,7 @@
 #include <agar/gui/label.h>
 #include <agar/gui/scrollbar.h>
 
-#include <agar/begin.h>
+#include <agar/math/begin.h>
 
 #define M_PLOTTER_NDEFCOLORS	16
 #define M_PLOTTER_LABEL_MAX	64
@@ -153,5 +153,5 @@ void	M_PlotVector(M_Plot *, const M_Vector *);
 void	M_PlotVectorv(M_Plot *, Uint, const M_Vector **);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/math/close.h>
 #endif /* _AGAR_MATH_M_PLOTTER_H_ */

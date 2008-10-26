@@ -6,7 +6,7 @@
 #include <agar/gui/widget.h>
 #include <agar/gui/box.h>
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 enum ag_pane_type {
 	AG_PANE_HORIZ,
@@ -50,5 +50,5 @@ void	 AG_PaneSetDivisionPacking(AG_Pane *, int, enum ag_box_type);
 int	 AG_PaneMoveDivider(AG_Pane *, int);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_PANE_H_ */

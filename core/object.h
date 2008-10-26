@@ -19,7 +19,7 @@
 #include <agar/core/prop.h>
 #include <agar/core/class.h>
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 struct ag_object;
 struct ag_event;
@@ -317,5 +317,5 @@ AG_ObjectSuperclass(const void *p)
 }
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_OBJECT_H_ */

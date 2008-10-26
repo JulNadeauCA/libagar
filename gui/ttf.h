@@ -11,7 +11,7 @@
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 
-#include <agar/begin.h>
+#include <agar/gui/begin.h>
 
 typedef struct ag_ttf_glyph {
 	int stored;
@@ -65,6 +65,6 @@ int		 AG_TTFGlyphMetrics(AG_TTFFont *, Uint32 , int *, int *,
 		                    int *, int *, int *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/gui/close.h>
 #endif /* HAVE_FREETYPE */
 #endif /* _AGAR_LOADER_TTF_H_ */

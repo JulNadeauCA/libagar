@@ -9,7 +9,7 @@
 #include <agar/gui/window.h>
 #include <agar/rg/tileset.h>
 
-#include <agar/begin.h>
+#include <agar/rg/begin.h>
 
 typedef struct rg_anim_view {
 	struct ag_widget wid;
@@ -37,5 +37,5 @@ void		 RG_AnimviewSizeHint(RG_Animview *, int, int);
 void		 RG_AnimviewSetAnimation(RG_Animview *, RG_Anim *);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/rg/close.h>
 #endif /* _AGAR_RG_ANIMVIEW_H */

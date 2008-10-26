@@ -29,7 +29,7 @@
 
 #else /* !HAVE_SHA1 */
 
-#include <agar/begin.h>
+#include <agar/core/begin.h>
 
 #define AG_SHA1_BLOCK_LENGTH		64
 #define AG_SHA1_DIGEST_LENGTH		20
@@ -53,5 +53,5 @@ char *AG_SHA1Data(const Uint8 *, size_t, char *)
                   BOUNDED_ATTRIBUTE(__string__,1,2);
 __END_DECLS
 
-#include <agar/close.h>
+#include <agar/core/close.h>
 #endif /* !HAVE_SHA1 */

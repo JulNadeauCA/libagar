@@ -3,9 +3,7 @@
 #ifndef _AGAR_MATH_M_H_
 #define _AGAR_MATH_M_H_
 
-#include <agar/math/m_begin.h>
-
-#define spREAL M_Real /* XXX */
+#include <agar/math/begin.h>
 
 #include <agar/math/m_math.h>
 #include <agar/math/m_int_vector.h>
@@ -17,5 +15,6 @@
 #include <agar/math/m_color.h>
 #include <agar/math/m_geometry.h>
 
-#include <agar/math/m_close.h>
+#include <agar/math/close.h>
+
 #endif /* _AGAR_MATH_M_H_ */
