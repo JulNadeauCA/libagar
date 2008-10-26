@@ -23,11 +23,15 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Install a newly compiled Agar library on the Windows platform.
+ */
+
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
 
-#define INSTALL_DIR "C:\\Program Files\\Agar"
+#define DEFAULT_DIR "C:\\Program Files\\Agar"
 
 int
 InstallLibs(const char *dir)
@@ -182,21 +186,67 @@ RemoveEmptyDirs(const char *dir)
 	return (0);
 }
 
+static char *
+Prompt(const char *msg, const char *dflt)
+{
+	char buf[1024];
+
+	printf("%s [%s]: ", msg, dflt);
+	fflush(stdout);
+	fgets(buf, sizeof(buf), stdin);
+	if (buf[0] == '\n') {
+		return _strdup(dflt);
+	} else {
+		if (buf[strlen(buf)-1] == '\n') {
+			buf[strlen(buf)-1] = '\0';
+		}
+		return _strdup(buf);
+	}
+}
+
+static void
+AnyKey(void)
+{
+	char buf[2];
+
+	printf("Press any key to continue...");
+	fflush(stdout);
+	fgets(buf, sizeof(buf), stdin);
+}
+
 int
 main(int argc, char *argv[])
 {
-	char *dir = INSTALL_DIR;
+	char *dir = DEFAULT_DIR, *over;
 	char libdir[1024], incldir[1024];
+	DWORD attrs;
 
 	if (argc > 1) {
 		dir = argv[1];
 	}
-	printf("Installing Agar SDK into %s\n", dir);
+	printf("Agar SDK Installation\n");
+	printf("=====================\n");
+	dir = Prompt("Installation directory", DEFAULT_DIR);
+	printf("Will install into %s\n", dir);
 
+	if ((attrs = GetFileAttributes(dir)) != INVALID_FILE_ATTRIBUTES) {
+		if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
+			over = Prompt("Directory exists. Overwrite?", "no");
+			if (over[0] != 'y' && over[0] != 'Y') {
+				printf("Aborting installation.\n");
+				AnyKey();
+				exit(1);
+			}
+		} else {
+			printf("Existing file: %s; remove first\n", dir);
+			AnyKey();
+			exit(1);
+		}
+	}
+
+	printf("Installing Agar SDK into %s\n", dir);
 	CreateDirectory(dir, NULL);
 	sprintf_s(incldir, sizeof(incldir), "%s\\include", dir);
-	CreateDirectory(incldir, NULL);
-	sprintf_s(incldir, sizeof(incldir), "%s\\include\\agar", dir);
 	CreateDirectory(incldir, NULL);
 
 	sprintf_s(libdir, sizeof(libdir), "%s\\lib", dir);
@@ -206,11 +256,15 @@ main(int argc, char *argv[])
 		printf("Failed to install libraries\n");
 		exit(1);
 	}
-	if (InstallIncludes(".", incldir) == -1) {
+	if (InstallIncludes("include", incldir) == -1) {
 		printf("Failed to install includes\n");
 		exit(1);
 	}
 	RemoveEmptyDirs(incldir);
+
+	printf("The Agar SDK was successfully installed into %s\n", dir);
+	AnyKey();
+
 	exit(0);
 }
 
