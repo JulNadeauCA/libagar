@@ -144,7 +144,7 @@ else
 fi
 
 if [ "${srcdir}" != "" ]; then
-	echo "concurrent build (source in ${srcdir})"
+	echo "* Separate build (source in ${srcdir})"
 	SRC=${srcdir}
 	perl ${SRC}/mk/mkconcurrent.pl ${SRC}
 	if [ $? != 0 ]; then
@@ -154,6 +154,9 @@ else
 	SRC=`pwd`
 fi
 BLD=`pwd`
+
+SRCDIR="${SRC}"
+BLDDIR="${BLD}"
 
 if [ "${testdir}" != "" ]; then
 	echo "Configure tests will be executed in ${testdir}"
@@ -3209,6 +3212,7 @@ fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 #include <agar/core.h>
+#include <agar/gui.h>
 #include <agar/rg.h>
 
 int main(int argc, char *argv[]) {
