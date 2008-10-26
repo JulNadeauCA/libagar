@@ -95,7 +95,7 @@ CreateTable3(void)
                 AG_Pixmap *pixmap1, *pixmap2;
                 char b[16384];
              
-                snprintf(b, sizeof(b),
+                AG_Snprintf(b, sizeof(b),
 		    "%d: %s\n%d Agree\n #%d\n %s", x,
 		    "hello", 12094, 12490, "world"); 
 
