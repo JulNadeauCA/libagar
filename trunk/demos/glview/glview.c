@@ -19,11 +19,14 @@
 const char *primitiveNames[] = { "Cube", "Sphere", NULL };
 enum { CUBE, SPHERE } primitive = SPHERE;
 
+const char *shadingNames[] = { "Flat Shading", "Smooth Shading", NULL };
+enum { FLATSHADING, SMOOTHSHADING } shading = FLATSHADING;
+
 GLfloat spin = 0.0f, vz = -5.0f;
-GLfloat ambient[4] = { 0.0f, 0.5f, 0.0f, 1.0f };
-GLfloat diffuse[4] = { 0.0f, 0.5f, 0.0f, 1.0f };
-GLfloat specular[4] = { 0.0f, 0.5f, 0.0f, 1.0f };
-int wireframe = 1;
+GLfloat ambient[4] = { 0.5f, 1.0f, 1.0f, 1.0f };
+GLfloat diffuse[4] = { 0.5f, 1.0f, 1.0f, 1.0f };
+GLfloat specular[4] = { 0.5f, 1.0f, 1.0f, 1.0f };
+int wireframe = 0;
 
 static GLfloat isoVtx[12][3] = {    
 #define X .525731112119133606 
@@ -90,22 +93,43 @@ DrawTriangle(GLfloat *a, GLfloat *b, GLfloat *c, int div, float r)
 	}
 }
 
-/* Render a cube. */
+/* Render the test object. */
 static void
 MyDrawFunction(AG_Event *event)
 {
 	int i;
+	GLfloat pos[4];
 	
 	glLoadIdentity();
+	
+	glPushAttrib(GL_POLYGON_BIT|GL_LIGHTING_BIT|GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
 	glEnable(GL_DEPTH_TEST);
-	glPushAttrib(GL_POLYGON_BIT);
+
 	glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_POLYGON);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse);
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
+	glShadeModel(shading == FLATSHADING ? GL_FLAT : GL_SMOOTH);
+
+	pos[0] = 10.0f;
+	pos[1] = 10.0f;
+	pos[2] = 0.0f;
+	pos[3] = 1.0f;
+	glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 10.0f);
+	glLightfv(GL_LIGHT1, GL_POSITION, pos);
+	
+	pos[1] = -10.0f;
+	pos[2] = 10.0f;
+	glLightfv(GL_LIGHT0, GL_POSITION, pos);
+	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 10.0f);
+
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
 
 	glPushMatrix();
 	glTranslatef(0.0f, 0.0f, vz);
@@ -155,9 +179,6 @@ MyDrawFunction(AG_Event *event)
 
 	glPopMatrix();
 	glPopAttrib();
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_LIGHT1);
-	glDisable(GL_LIGHTING);
 
 	if (++spin > 360.0f) { spin -= 360.0f; }
 }
@@ -232,20 +253,24 @@ CreateMainWindow(void)
 		AG_GLViewButtondownFn(glv, Mousebutton, NULL);
 
 		nb = AG_NotebookNew(hb, AG_NOTEBOOK_VFILL);
-		ntab = AG_NotebookAddTab(nb, "Ambient", AG_BOX_VERT);
+		ntab = AG_NotebookAddTab(nb, "Amb", AG_BOX_VERT);
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
 		AG_WidgetBindFloat(pal, "RGBAv", ambient);
-		ntab = AG_NotebookAddTab(nb, "Diffuse", AG_BOX_VERT);
+		ntab = AG_NotebookAddTab(nb, "Dif", AG_BOX_VERT);
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
 		AG_WidgetBindFloat(pal, "RGBAv", diffuse);
-		ntab = AG_NotebookAddTab(nb, "Specular", AG_BOX_VERT);
+		ntab = AG_NotebookAddTab(nb, "Spe", AG_BOX_VERT);
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
 		AG_WidgetBindFloat(pal, "RGBAv", specular);
 	}
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_FRAME);
 	{
 		AG_RadioNewInt(hb, 0, primitiveNames, (int *)&primitive);
-		AG_ButtonNewInt(hb, AG_BUTTON_STICKY, "Wireframe", &wireframe);
+		AG_SeparatorNewVert(hb);
+		AG_RadioNewInt(hb, 0, shadingNames, (int *)&shading);
+		AG_SeparatorNewVert(hb);
+		AG_ButtonNewInt(hb, AG_BUTTON_STICKY, "Wireframe Mode",
+		    &wireframe);
 	}
 
 	AG_WindowShow(win);
