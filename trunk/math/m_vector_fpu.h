@@ -54,7 +54,7 @@ static __inline__ void
 M_VectorSetZero_FPU(void *pv)
 {
 	M_VectorFPU *v=pv;
-	int i;
+	Uint i;
 
 	for (i = 0; i < MVECSIZE(v); i++)
 		v->v[i] = 0.0;
