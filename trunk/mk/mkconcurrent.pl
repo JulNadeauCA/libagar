@@ -44,6 +44,8 @@ $BUILD = '';
 	'^ltmain\.sh$',
 	'^manlinks\.pl$',
 	'^hstrip\.pl$',
+	'^cmpfiles\.pl$',
+	'^cleanfiles\.pl$',
 	'^gen-includes\.pl$',
 	'^gen-declspecs\.pl$',
 );
