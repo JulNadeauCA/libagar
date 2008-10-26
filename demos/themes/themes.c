@@ -203,7 +203,7 @@ CreateWindow(void)
 			AG_TableAddCol(table, "x", "33%", NULL);
 			AG_TableAddCol(table, "sin(x)", "33%", NULL);
 			AG_TableAddCol(table, "cos(x)", "33%", NULL);
-			for (f = 0; f < 60; f += 0.3) {
+			for (f = 0.0f; f < 60.0f; f += 0.3f) {
 				/*
 				 * Insert a Table row for sin(f) and cos(f).
 				 * The directives of the format string are
