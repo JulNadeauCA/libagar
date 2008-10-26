@@ -21,7 +21,6 @@ SleepingWorker(void *arg)
 	AG_ProgressBar *pb;
 	AG_Label *lbl;
 	int min = 0, max = 20, value = 0;
-	int i;
 
 	win = AG_WindowNew(0);
 	
