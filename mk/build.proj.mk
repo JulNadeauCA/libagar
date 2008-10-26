@@ -107,6 +107,9 @@ proj: proj-subdir
 			exit 1; \
 		fi; \
 	        perl ${TOP}/mk/cmpfiles.pl added > .projfiles.out; \
+		echo "* Begin generated files:"; \
+		cat .projfiles.out; \
+		echo "* End generated files"; \
 		cp -f .projfiles.out ${PROJFILELIST}; \
 	        rm .cmpfiles.out; \
 		if [ "${PROJFILESEXTRA}" != "" ]; then \
@@ -128,6 +131,7 @@ proj: proj-subdir
 			env PKG_OS=$$_tgtos PKG_ARCH=$$_tgtarch \
 			    PKG_IDE=$$_tgtproj ${MAKE} ${PROJPOSTPKG}; \
 		fi; \
+		cat .projfiles.out | perl ${TOP}/mk/cleanfiles.pl; \
 		rm -fR config .projfiles.out ${PROJFILELIST}; \
 	    done; \
 	fi
