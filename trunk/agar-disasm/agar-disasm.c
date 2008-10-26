@@ -28,7 +28,6 @@
 #include <agar/config/have_long_double.h>
 
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
 
 const struct {
