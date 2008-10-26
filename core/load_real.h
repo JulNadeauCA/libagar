@@ -127,8 +127,8 @@ AG_WriteDoublev(AG_DataSource *ds, double *fv)
 static __inline__ void
 AG_WriteDoubleAt(AG_DataSource *ds, double fv, off_t pos)
 {
-	float f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(fv) :
-	                                                AG_SwapLEDBL(fv);
+	double f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBEDBL(fv) :
+	                                                 AG_SwapLEDBL(fv);
 
 	AG_WriteTypeAt(ds, AG_SOURCE_DOUBLE, pos);
 	if (AG_WriteAt(ds, &f, sizeof(f), 1, AG_TYPE_OFFSET(ds,pos)) != 0)
@@ -168,8 +168,8 @@ AG_ReadLongDoublev(AG_DataSource *ds, long double *fv)
 static __inline__ void
 AG_WriteLongDouble(AG_DataSource *ds, long double fv)
 {
-	float f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBELDBL(fv) :
-	                                                AG_SwapLELDBL(fv);
+	long double f = (ds->byte_order==AG_BYTEORDER_BE) ? AG_SwapBELDBL(fv) :
+	                                                    AG_SwapLELDBL(fv);
 
 	AG_WriteType(ds, AG_SOURCE_LONG_DOUBLE);
 	if (AG_Write(ds, &f, sizeof(f), 1) != 0)
@@ -178,8 +178,8 @@ AG_WriteLongDouble(AG_DataSource *ds, long double fv)
 static __inline__ int
 AG_WriteLongDoublev(AG_DataSource *ds, long double *fv)
 {
-	float f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBELDBL(*fv) :
-	                                                AG_SwapLELDBL(*fv);
+	long double f = (ds->byte_order==AG_BYTEORDER_BE) ? AG_SwapBELDBL(*fv) :
+	                                                    AG_SwapLELDBL(*fv);
 
 	if (AG_WriteTypev(ds, AG_SOURCE_LONG_DOUBLE) == -1) {
 		return (-1);
@@ -189,8 +189,8 @@ AG_WriteLongDoublev(AG_DataSource *ds, long double *fv)
 static __inline__ void
 AG_WriteLongDoubleAt(AG_DataSource *ds, long double fv, off_t pos)
 {
-	float f = (ds->byte_order == AG_BYTEORDER_BE) ? AG_SwapBELDBL(fv) :
-	                                                AG_SwapLELDBL(fv);
+	long double f = (ds->byte_order==AG_BYTEORDER_BE) ? AG_SwapBELDBL(fv) :
+	                                                    AG_SwapLELDBL(fv);
 
 	AG_WriteTypeAt(ds, AG_SOURCE_LONG_DOUBLE, pos);
 	if (AG_WriteAt(ds, &f, sizeof(f), 1, AG_TYPE_OFFSET(ds,pos)) != 0)
