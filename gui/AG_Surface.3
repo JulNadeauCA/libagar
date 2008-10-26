@@ -407,6 +407,18 @@ the second entry to black (0,0,0).
 .Ft "void"
 .Fn AG_BLEND_RGBA2_CLIPPED "AG_Surface *s" "int x" "int y" "Uint8 r" "Uint8 g" "Uint8 b" "Uint8 a" "enum ag_blend_func func"
 .Pp
+.Ft void
+.Fn AG_GetRGB "Uint32 pixel" "AG_PixelFormat *pf" "Uint8 *r" "Uint8 *g" "Uint8 *b"
+.Pp
+.Ft void
+.Fn AG_GetRGBA "Uint32 pixel" "AG_PixelFormat *pf" "Uint8 *r" "Uint8 *g" "Uint8 *b" "Uint8 *a"
+.Pp
+.Ft Uint32
+.Fn AG_MapRGB "AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uing8 b"
+.Pp
+.Ft Uint32
+.Fn AG_MapRGBA "AG_PixelFormat *pf" "Uint8 r" "Uint8 g" "Uing8 b" "Uint8 a"
+.Pp
 .nr nS 0
 The
 .Fn AG_GET_PIXEL
