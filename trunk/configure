@@ -3659,7 +3659,7 @@ echo "mdefs[\"WNO_UNINITIALIZED\"] = \"$WNO_UNINITIALIZED\"" >>configure.lua
 fi
 if [ "${enable_lockdebug}" = "yes" ]
  then
-LOCKDEBUG="1"
+LOCKDEBUG="yes"
 echo "#ifndef LOCKDEBUG" > config/lockdebug.h
 echo "#define LOCKDEBUG \"$LOCKDEBUG\"" >> config/lockdebug.h
 echo "#endif" >> config/lockdebug.h
@@ -3670,7 +3670,7 @@ echo "hdefs[\"LOCKDEBUG\"] = nil" >>configure.lua
 fi
 if [ "${enable_objdebug}" = "yes" ]
  then
-OBJDEBUG="1"
+OBJDEBUG="yes"
 echo "#ifndef OBJDEBUG" > config/objdebug.h
 echo "#define OBJDEBUG \"$OBJDEBUG\"" >> config/objdebug.h
 echo "#endif" >> config/objdebug.h
@@ -3681,7 +3681,7 @@ echo "hdefs[\"OBJDEBUG\"] = nil" >>configure.lua
 fi
 if [ "${enable_eventdebug}" = "yes" ]
  then
-EVENTDEBUG="1"
+EVENTDEBUG="yes"
 echo "#ifndef EVENTDEBUG" > config/eventdebug.h
 echo "#define EVENTDEBUG \"$EVENTDEBUG\"" >> config/eventdebug.h
 echo "#endif" >> config/eventdebug.h
@@ -3692,7 +3692,7 @@ echo "hdefs[\"EVENTDEBUG\"] = nil" >>configure.lua
 fi
 if [ "${enable_classdebug}" = "yes" ]
  then
-CLASSDEBUG="1"
+CLASSDEBUG="yes"
 echo "#ifndef CLASSDEBUG" > config/classdebug.h
 echo "#define CLASSDEBUG \"$CLASSDEBUG\"" >> config/classdebug.h
 echo "#endif" >> config/classdebug.h
@@ -4160,7 +4160,7 @@ if [ "${HAVE_SDL}" != "yes" ]
 fi
 if [ "${enable_gui}" != "no" ]
  then
-ENABLE_GUI="1"
+ENABLE_GUI="yes"
 echo "#ifndef ENABLE_GUI" > config/enable_gui.h
 echo "#define ENABLE_GUI \"$ENABLE_GUI\"" >> config/enable_gui.h
 echo "#endif" >> config/enable_gui.h
@@ -4881,12 +4881,12 @@ fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]
  then
-NETWORK="1"
+NETWORK="yes"
 echo "#ifndef NETWORK" > config/network.h
 echo "#define NETWORK \"$NETWORK\"" >> config/network.h
 echo "#endif" >> config/network.h
 echo "hdefs[\"NETWORK\"] = \"$NETWORK\"" >>configure.lua
-SERVER="1"
+SERVER="yes"
 echo "#ifndef SERVER" > config/server.h
 echo "#define SERVER \"$SERVER\"" >> config/server.h
 echo "#endif" >> config/server.h
@@ -5532,7 +5532,7 @@ echo "hdefs[\"HAVE_PTHREAD_MUTEX_RECURSIVE_NP\"] = nil" >>configure.lua
 fi;
 	if [ "${HAVE_PTHREADS}" = "yes" ]
 	then
-THREADS="1"
+THREADS="yes"
 echo "#ifndef THREADS" > config/threads.h
 echo "#define THREADS \"$THREADS\"" >> config/threads.h
 echo "#endif" >> config/threads.h
@@ -5603,7 +5603,7 @@ echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 fi
 if [ "${enable_utf8}" != "no" ]
  then
-UTF8="1"
+UTF8="yes"
 echo "#ifndef UTF8" > config/utf8.h
 echo "#define UTF8 \"$UTF8\"" >> config/utf8.h
 echo "#endif" >> config/utf8.h
@@ -5614,14 +5614,14 @@ echo "hdefs[\"UTF8\"] = nil" >>configure.lua
 fi
 echo "#undef ASTRONOMICAL_UNITS" >config/astronomical_units.h
 echo "hdefs[\"ASTRONOMICAL_UNITS\"] = nil" >>configure.lua
-HISTORICAL_UNITS="1"
+HISTORICAL_UNITS="yes"
 echo "#ifndef HISTORICAL_UNITS" > config/historical_units.h
 echo "#define HISTORICAL_UNITS \"$HISTORICAL_UNITS\"" >> config/historical_units.h
 echo "#endif" >> config/historical_units.h
 echo "hdefs[\"HISTORICAL_UNITS\"] = \"$HISTORICAL_UNITS\"" >>configure.lua
 if [ "${enable_8bpp}" != "no" ]
  then
-VIEW_8BPP="1"
+VIEW_8BPP="yes"
 echo "#ifndef VIEW_8BPP" > config/view_8bpp.h
 echo "#define VIEW_8BPP \"$VIEW_8BPP\"" >> config/view_8bpp.h
 echo "#endif" >> config/view_8bpp.h
@@ -5632,7 +5632,7 @@ echo "hdefs[\"VIEW_8BPP\"] = nil" >>configure.lua
 fi
 if [ "${enable_16bpp}" != "no" ]
  then
-VIEW_16BPP="1"
+VIEW_16BPP="yes"
 echo "#ifndef VIEW_16BPP" > config/view_16bpp.h
 echo "#define VIEW_16BPP \"$VIEW_16BPP\"" >> config/view_16bpp.h
 echo "#endif" >> config/view_16bpp.h
@@ -5643,7 +5643,7 @@ echo "hdefs[\"VIEW_16BPP\"] = nil" >>configure.lua
 fi
 if [ "${enable_24bpp}" != "no" ]
  then
-VIEW_24BPP="1"
+VIEW_24BPP="yes"
 echo "#ifndef VIEW_24BPP" > config/view_24bpp.h
 echo "#define VIEW_24BPP \"$VIEW_24BPP\"" >> config/view_24bpp.h
 echo "#endif" >> config/view_24bpp.h
@@ -5654,7 +5654,7 @@ echo "hdefs[\"VIEW_24BPP\"] = nil" >>configure.lua
 fi
 if [ "${enable_32bpp}" != "no" ]
  then
-VIEW_32BPP="1"
+VIEW_32BPP="yes"
 echo "#ifndef VIEW_32BPP" > config/view_32bpp.h
 echo "#define VIEW_32BPP \"$VIEW_32BPP\"" >> config/view_32bpp.h
 echo "#endif" >> config/view_32bpp.h
@@ -5922,7 +5922,7 @@ fi;
 fi
 if [ "${enable_math}" != "no" ]
  then
-ENABLE_MATH="1"
+ENABLE_MATH="yes"
 echo "#ifndef ENABLE_MATH" > config/enable_math.h
 echo "#define ENABLE_MATH \"$ENABLE_MATH\"" >> config/enable_math.h
 echo "#endif" >> config/enable_math.h
@@ -6273,7 +6273,7 @@ echo "hdefs[\"INLINE_SSE3\"] = nil" >>configure.lua
 	else
 		if [ "${with_sse_inline}" = "yes" ]
  then
-INLINE_SSE="1"
+INLINE_SSE="yes"
 echo "#ifndef INLINE_SSE" > config/inline_sse.h
 echo "#define INLINE_SSE \"$INLINE_SSE\"" >> config/inline_sse.h
 echo "#endif" >> config/inline_sse.h
@@ -6286,7 +6286,7 @@ echo "hdefs[\"INLINE_SSE\"] = nil" >>configure.lua
  then
 			if [ "${with_sse2_inline}" = "yes" ]
  then
-INLINE_SSE2="1"
+INLINE_SSE2="yes"
 echo "#ifndef INLINE_SSE2" > config/inline_sse2.h
 echo "#define INLINE_SSE2 \"$INLINE_SSE2\"" >> config/inline_sse2.h
 echo "#endif" >> config/inline_sse2.h
@@ -6303,7 +6303,7 @@ echo "hdefs[\"INLINE_SSE2\"] = nil" >>configure.lua
  then
 			if [ "${with_sse3_inline}" = "yes" ]
  then
-INLINE_SSE3="1"
+INLINE_SSE3="yes"
 echo "#ifndef INLINE_SSE3" > config/inline_sse3.h
 echo "#define INLINE_SSE3 \"$INLINE_SSE3\"" >> config/inline_sse3.h
 echo "#endif" >> config/inline_sse3.h
@@ -6515,7 +6515,7 @@ echo "hdefs[\"INLINE_ALTIVEC\"] = nil" >>configure.lua
 	else
 		if [ "${with_altivec_inline}" = "yes" ]
  then
-INLINE_ALTIVEC="1"
+INLINE_ALTIVEC="yes"
 echo "#ifndef INLINE_ALTIVEC" > config/inline_altivec.h
 echo "#define INLINE_ALTIVEC \"$INLINE_ALTIVEC\"" >> config/inline_altivec.h
 echo "#endif" >> config/inline_altivec.h
@@ -6543,7 +6543,7 @@ if [ "${with_single_fp}" = "yes" ]
 		echo "*"
 		exit 1
 	fi
-SINGLE_PRECISION="1"
+SINGLE_PRECISION="yes"
 echo "#ifndef SINGLE_PRECISION" > config/single_precision.h
 echo "#define SINGLE_PRECISION \"$SINGLE_PRECISION\"" >> config/single_precision.h
 echo "#endif" >> config/single_precision.h
@@ -6554,7 +6554,7 @@ echo "hdefs[\"SINGLE_PRECISION\"] = nil" >>configure.lua
 fi
 if [ "${with_double_fp}" != "no" ]
  then
-DOUBLE_PRECISION="1"
+DOUBLE_PRECISION="yes"
 echo "#ifndef DOUBLE_PRECISION" > config/double_precision.h
 echo "#define DOUBLE_PRECISION \"$DOUBLE_PRECISION\"" >> config/double_precision.h
 echo "#endif" >> config/double_precision.h
@@ -6581,7 +6581,7 @@ if [ "${with_quad_fp}" = "yes" ]
 		echo "*"
 		exit 1
 	fi
-QUAD_PRECISION="1"
+QUAD_PRECISION="yes"
 echo "#ifndef QUAD_PRECISION" > config/quad_precision.h
 echo "#define QUAD_PRECISION \"$QUAD_PRECISION\"" >> config/quad_precision.h
 echo "#endif" >> config/quad_precision.h
@@ -6633,5 +6633,6 @@ echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 echo "*"
 echo "* Configuration successful."
-echo "* Use make && make install to build and install Agar."
+echo "* Use \"make depend\" if you plan on editing the source code."
+echo "* Use \"make\" and \"make install\" to build and install Agar."
 echo "*"

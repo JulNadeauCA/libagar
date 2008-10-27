@@ -96,22 +96,22 @@ else
 fi
 
 if [ "${enable_lockdebug}" = "yes" ]; then
-	HDEFINE(LOCKDEBUG, 1)
+	HDEFINE(LOCKDEBUG, "yes")
 else
 	HUNDEF(LOCKDEBUG)
 fi
 if [ "${enable_objdebug}" = "yes" ]; then
-	HDEFINE(OBJDEBUG, 1)
+	HDEFINE(OBJDEBUG, "yes")
 else
 	HUNDEF(OBJDEBUG)
 fi
 if [ "${enable_eventdebug}" = "yes" ]; then
-	HDEFINE(EVENTDEBUG, 1)
+	HDEFINE(EVENTDEBUG, "yes")
 else
 	HUNDEF(EVENTDEBUG)
 fi
 if [ "${enable_classdebug}" = "yes" ]; then
-	HDEFINE(CLASSDEBUG, 1)
+	HDEFINE(CLASSDEBUG, "yes")
 else
 	HUNDEF(CLASSDEBUG)
 fi
@@ -130,7 +130,7 @@ fi
 # Options specific to the Agar-GUI library.
 #
 if [ "${enable_gui}" != "no" ]; then
-	HDEFINE(ENABLE_GUI, 1)
+	HDEFINE(ENABLE_GUI, "yes")
 
 	# Enable Freetype support if the Freetype library is found. Otherwise
 	# fall back to the bitmap font engine.
@@ -216,8 +216,8 @@ fi
 if [ "${enable_network}" = "yes" ]; then
 	CHECK(getaddrinfo)
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
-		HDEFINE(NETWORK, 1)
-		HDEFINE(SERVER, 1)
+		HDEFINE(NETWORK, "yes")
+		HDEFINE(SERVER, "yes")
 	else
 		if [ "${enable_network}" = "yes" ]; then
 			echo "*"
@@ -242,7 +242,7 @@ if [ "${enable_threads}" != "no" ]; then
 	CHECK(pthreads)
 	if [ "${HAVE_PTHREADS}" = "yes" ];
 	then
-		HDEFINE(THREADS, 1)
+		HDEFINE(THREADS, "yes")
 		if [ "${HAVE_PTHREADS_XOPEN}" = "no" ]; then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "no" ]; then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "no" ]; then
@@ -290,7 +290,7 @@ fi
 
 # Enable UTF8 support by default.
 if [ "${enable_utf8}" != "no" ]; then
-	HDEFINE(UTF8, 1)
+	HDEFINE(UTF8, "yes")
 else
 	HUNDEF(UTF8)
 fi
@@ -300,27 +300,27 @@ fi
 HUNDEF(ASTRONOMICAL_UNITS)
 
 # Enable conversion of historical units.
-HDEFINE(HISTORICAL_UNITS, 1)
+HDEFINE(HISTORICAL_UNITS, "yes")
 
 # Support 8/16/24/32bpp video displays by default.
 # Disable unused modes to reduce code size and gain some cycles.
 if [ "${enable_8bpp}" != "no" ]; then
-	HDEFINE(VIEW_8BPP, 1)
+	HDEFINE(VIEW_8BPP, "yes")
 else
 	HUNDEF(VIEW_8BPP)
 fi
 if [ "${enable_16bpp}" != "no" ]; then
-	HDEFINE(VIEW_16BPP, 1)
+	HDEFINE(VIEW_16BPP, "yes")
 else
 	HUNDEF(VIEW_16BPP)
 fi
 if [ "${enable_24bpp}" != "no" ]; then
-	HDEFINE(VIEW_24BPP, 1)
+	HDEFINE(VIEW_24BPP, "yes")
 else
 	HUNDEF(VIEW_24BPP)
 fi
 if [ "${enable_32bpp}" != "no" ]; then
-	HDEFINE(VIEW_32BPP, 1)
+	HDEFINE(VIEW_32BPP, "yes")
 else
 	HUNDEF(VIEW_32BPP)
 fi
@@ -341,7 +341,7 @@ fi
 # Options specific to the Agar-Math library
 #
 if [ "${enable_math}" != "no" ]; then
-	HDEFINE(ENABLE_MATH, 1)
+	HDEFINE(ENABLE_MATH, "yes")
 else
 	HUNDEF(ENABLE_MATH)
 fi
@@ -363,13 +363,13 @@ if [ "${with_sse}" = "yes" ]; then
 		fi
 	else
 		if [ "${with_sse_inline}" = "yes" ]; then
-			HDEFINE(INLINE_SSE, 1)
+			HDEFINE(INLINE_SSE, "yes")
 		else
 			HUNDEF(INLINE_SSE)
 		fi
 		if [ "${HAVE_SSE2}" = "yes" ]; then
 			if [ "${with_sse2_inline}" = "yes" ]; then
-				HDEFINE(INLINE_SSE2, 1)
+				HDEFINE(INLINE_SSE2, "yes")
 			else
 				HUNDEF(INLINE_SSE2)
 			fi
@@ -378,7 +378,7 @@ if [ "${with_sse}" = "yes" ]; then
 		fi
 		if [ "${HAVE_SSE3}" = "yes" ]; then
 			if [ "${with_sse3_inline}" = "yes" ]; then
-				HDEFINE(INLINE_SSE3, 1)
+				HDEFINE(INLINE_SSE3, "yes")
 			else
 				HUNDEF(INLINE_SSE3)
 			fi
@@ -412,7 +412,7 @@ if [ "${with_altivec}" = "yes" ]; then
 		fi
 	else
 		if [ "${with_altivec_inline}" = "yes" ]; then
-			HDEFINE(INLINE_ALTIVEC, 1)
+			HDEFINE(INLINE_ALTIVEC, "yes")
 		else
 			HUNDEF(INLINE_ALTIVEC)
 		fi
@@ -432,12 +432,12 @@ if [ "${with_single_fp}" = "yes" ]; then
 		echo "*"
 		exit 1
 	fi
-	HDEFINE(SINGLE_PRECISION, 1)
+	HDEFINE(SINGLE_PRECISION, "yes")
 else
 	HUNDEF(SINGLE_PRECISION)
 fi
 if [ "${with_double_fp}" != "no" ]; then
-	HDEFINE(DOUBLE_PRECISION, 1)
+	HDEFINE(DOUBLE_PRECISION, "yes")
 else
 	HUNDEF(DOUBLE_PRECISION)
 fi
@@ -456,7 +456,7 @@ if [ "${with_quad_fp}" = "yes" ]; then
 		echo "*"
 		exit 1
 	fi
-	HDEFINE(QUAD_PRECISION, 1)
+	HDEFINE(QUAD_PRECISION, "yes")
 else
 	HUNDEF(QUAD_PRECISION)
 fi
@@ -470,5 +470,6 @@ C_INCDIR($BLD/include/agar)
 
 echo "*"
 echo "* Configuration successful."
-echo "* Use make && make install to build and install Agar."
+echo "* Use \"make depend\" if you plan on editing the source code."
+echo "* Use \"make\" and \"make install\" to build and install Agar."
 echo "*"

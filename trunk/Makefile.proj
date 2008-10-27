@@ -15,17 +15,22 @@
 #
 
 PROJFILES=	windows:i386:vs2005:: \
+		windows:i386:vs2005:-debug:--enable-debug \
 		windows:i386:vs2005:-nofreetype:--without-freetype \
 		windows:i386:vs2005:-nothreads:--disable-threads \
+		windows:i386:vs2005:-nogl:--without-gl\
 		windows:i386:vs2005:-nofreetype,nothreads:--without-freetype,--disable-threads \
+		windows:i386:vs2005:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
+		windows:i386:cb-gcc:: \
+		windows:i386:cb-gcc:-nofreetype:--without-freetype \
+		windows:i386:cb-gcc:-nothreads:--disable-threads \
+		windows:i386:cb-gcc:-nogl:--without-gl \
+		windows:i386:cb-gcc:-nofreetype,nothreads:--without-freetype,--disable-threads \
+		windows:i386:cb-gcc:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
 		windows:i386:vs2003:: \
-		windows:i386:vs2003:-nofreetype:--without-freetype \
-		windows:i386:vs2003:-nothreads:--disable-threads \
 		windows:i386:vs2003:-nofreetype,nothreads:--without-freetype,--disable-threads \
 		windows:i386:vs2002:: \
 		windows:i386:vs2002:-nofreetype,nothreads:--without-freetype,--disable-threads \
 		windows:i386:vs6:: \
 		windows:i386:vs6:-nofreetype,nothreads:--without-freetype,--disable-threads \
-		windows:i386:cb-gcc:: \
-		windows:i386:cb-gcc:-nofreetype,nothreads:--without-freetype,--disable-threads
 
