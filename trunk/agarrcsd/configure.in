@@ -7,9 +7,9 @@ HDEFINE(VERSION, "1.1-beta")
 HDEFINE(RELEASE, "Source of Agony")
 
 CHECK(cc)
-REQUIRE(agar, 1.3)
-REQUIRE(agar-network, 1.3)
-REQUIRE(agar-dev, 1.3)
+REQUIRE(agar, 1.3.3)
+REQUIRE(agar-dev)
+REQUIRE(agar-network)
 CHECK(gethostname)
 
 if [ "${HAVE_AGAR}" != "yes" ]; then
@@ -17,9 +17,9 @@ if [ "${HAVE_AGAR}" != "yes" ]; then
 	exit 1
 fi
 # XXX check for server mode
-if [ "${HAVE_AGAR_NETWORK}" != "yes" ]; then
-	echo "This application requires network support in Agar-Core."
-	echo "Please recompile Agar with the --enable-network option."
+if [ "${AGAR_HAVE_NETWORK}" != "yes" ]; then
+	echo "This application requires network support in Agar."
+	echo "Please recompile Agar with the --enable-network."
 	exit 1
 fi
 if [ "${HAVE_AGAR_DEV}" != "yes" ]; then

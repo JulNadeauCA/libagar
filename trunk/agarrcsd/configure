@@ -1245,151 +1245,6 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_AGAR
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
-$ECHO_N "checking for ag_core..."
-$ECHO_N "checking for ag_core..." >> config.log
-MK_EXEC_FOUND="No"
-MK_CACHED="No"
-MK_EXEC_UNIQUE="No"
-MK_EXEC_FOUND_PATH=""
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-AGAR_VERSION" ]; then
-		AGAR_VERSION=`cat ${cache}/exec-AGAR_VERSION`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_VERSION`
-		MK_EXEC_FOUND_PATH=`cat ${cache}/exec-found-path-AGAR_VERSION`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	AGAR_VERSION=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-config" ]; then
-			if [ "$MK_EXEC_FOUND" = "Yes" ]; then
-				echo "yes."
-				echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
-				echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
-				break;
-			fi
-			AGAR_VERSION=`${path}/agar-config --version`
-			MK_EXEC_FOUND="Yes"
-			MK_EXEC_FOUND_PATH="${path}/agar-config"
-		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$AGAR_VERSION" > ${cache}/exec-AGAR_VERSION
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_VERSION
-		echo $MK_EXEC_FOUND_PATH > ${cache}/exec-found-path-AGAR_VERSION
-	fi
-fi
-if [ "${AGAR_VERSION}" != "" ]; then
-echo "yes"
-echo "yes" >> config.log
-MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-AGAR_CFLAGS" ]; then
-		AGAR_CFLAGS=`cat ${cache}/exec-AGAR_CFLAGS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_CFLAGS`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	AGAR_CFLAGS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-config" ]; then
-			AGAR_CFLAGS=`${path}/agar-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
-		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$AGAR_CFLAGS" > ${cache}/exec-AGAR_CFLAGS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_CFLAGS
-	fi
-fi
-MK_EXEC_FOUND="No"
-MK_CACHED="No"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/exec-AGAR_LIBS" ]; then
-		AGAR_LIBS=`cat ${cache}/exec-AGAR_LIBS`
-		MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_LIBS`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	AGAR_LIBS=""
-	for path in `echo $PATH | sed 's/:/ /g'`; do
-		if [ -x "${path}/agar-config" ]; then
-			AGAR_LIBS=`${path}/agar-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
-		fi
-	done
-	if [ "${cache}" != "" ]; then
-		echo "$AGAR_LIBS" > ${cache}/exec-AGAR_LIBS
-		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_LIBS
-	fi
-fi
-$ECHO_N "checking for network support in ag_core..."
-$ECHO_N "checking for network support in ag_core..." >> config.log
-MK_CACHED="No"
-MK_COMPILE_STATUS="OK"
-if [ "${cache}" != "" ]; then
-	if [ -e "${cache}/ctest-HAVE_AGAR_NETWORK" ]; then
-		HAVE_AGAR_NETWORK=`cat ${cache}/ctest-HAVE_AGAR_NETWORK`
-		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_AGAR_NETWORK`
-		MK_CACHED="Yes"
-	fi
-fi
-if [ "${MK_CACHED}" = "No" ]; then
-	cat << EOT > conftest.c
-#include <agar/core.h>
-#include <agar/core/net.h>
-
-int main(int argc, char *argv[]) {
-	NC_Session sess;
-	NC_Init(&sess, "foo", "bar");
-	NC_Destroy(&sess);
-	return (0);
-}
-
-EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_LIBS}" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS ${AGAR_CFLAGS} -o $testdir/conftest conftest.c ${AGAR_LIBS} 2>>config.log
-	if [ $? != 0 ]; then
-		echo "-> failed ($?)" >> config.log
-		MK_COMPILE_STATUS="FAIL($?)"
-	fi
-fi
-if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
-echo "yes"
-echo "yes" >> config.log
-HAVE_AGAR_NETWORK="yes"
-echo "HAVE_AGAR_NETWORK=$HAVE_AGAR_NETWORK" >>Makefile.config
-echo "mdefs[\"HAVE_AGAR_NETWORK\"] = \"$HAVE_AGAR_NETWORK\"" >>configure.lua
-echo "#ifndef HAVE_AGAR_NETWORK" > config/have_agar_network.h
-echo "#define HAVE_AGAR_NETWORK \"$HAVE_AGAR_NETWORK\"" >> config/have_agar_network.h
-echo "#endif" >> config/have_agar_network.h
-echo "hdefs[\"HAVE_AGAR_NETWORK\"] = \"$HAVE_AGAR_NETWORK\"" >>configure.lua
-else
-echo "no"
-echo "no" >> config.log
-HAVE_AGAR_NETWORK="no"
-echo "HAVE_AGAR_NETWORK=$HAVE_AGAR_NETWORK" >>Makefile.config
-echo "mdefs[\"HAVE_AGAR_NETWORK\"] = \"$HAVE_AGAR_NETWORK\"" >>configure.lua
-echo "#undef HAVE_AGAR_NETWORK" >config/have_agar_network.h
-echo "hdefs[\"HAVE_AGAR_NETWORK\"] = nil" >>configure.lua
-fi;
-if [ "${cache}" != "" ]; then
-	echo "$HAVE_AGAR_NETWORK" > ${cache}/ctest-HAVE_AGAR_NETWORK
-	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_AGAR_NETWORK
-fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
-else
-echo "no"
-echo "no" >> config.log
-echo "#undef HAVE_AGAR_NETWORK" >config/have_agar_network.h
-echo "hdefs[\"HAVE_AGAR_NETWORK\"] = nil" >>configure.lua
-fi;
 $ECHO_N "checking for agar-dev (http://hypertriton.com/agar-dev/)..."
 $ECHO_N "checking for agar-dev (http://hypertriton.com/agar-dev/)..." >> config.log
 MK_EXEC_FOUND="No"
@@ -1637,6 +1492,58 @@ echo "hdefs[\"AGAR_DEV_CFLAGS\"] = nil" >>configure.lua
 echo "#undef AGAR_DEV_LIBS" >config/agar_dev_libs.h
 echo "hdefs[\"AGAR_DEV_LIBS\"] = nil" >>configure.lua
 fi;
+$ECHO_N "checking for network support in Agar..."
+$ECHO_N "checking for network support in Agar..." >> config.log
+MK_EXEC_FOUND="No"
+MK_CACHED="No"
+MK_EXEC_UNIQUE="No"
+MK_EXEC_FOUND_PATH=""
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/exec-AGAR_HAVE_NETWORK" ]; then
+		AGAR_HAVE_NETWORK=`cat ${cache}/exec-AGAR_HAVE_NETWORK`
+		MK_EXEC_FOUND=`cat ${cache}/exec-found-AGAR_HAVE_NETWORK`
+		MK_EXEC_FOUND_PATH=`cat ${cache}/exec-found-path-AGAR_HAVE_NETWORK`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	AGAR_HAVE_NETWORK=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -x "${path}/agar-config" ]; then
+			if [ "$MK_EXEC_FOUND" = "Yes" ]; then
+				echo "yes."
+				echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
+				echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
+				break;
+			fi
+			AGAR_HAVE_NETWORK=`${path}/agar-config --network`
+			MK_EXEC_FOUND="Yes"
+			MK_EXEC_FOUND_PATH="${path}/agar-config"
+		fi
+	done
+	if [ "${cache}" != "" ]; then
+		echo "$AGAR_HAVE_NETWORK" > ${cache}/exec-AGAR_HAVE_NETWORK
+		echo $MK_EXEC_FOUND > ${cache}/exec-found-AGAR_HAVE_NETWORK
+		echo $MK_EXEC_FOUND_PATH > ${cache}/exec-found-path-AGAR_HAVE_NETWORK
+	fi
+fi
+if [ "${AGAR_HAVE_NETWORK}" = "yes" ]; then
+echo "yes"
+echo "yes" >> config.log
+echo "AGAR_HAVE_NETWORK=$AGAR_HAVE_NETWORK" >>Makefile.config
+echo "mdefs[\"AGAR_HAVE_NETWORK\"] = \"$AGAR_HAVE_NETWORK\"" >>configure.lua
+echo "#ifndef AGAR_HAVE_NETWORK" > config/agar_have_network.h
+echo "#define AGAR_HAVE_NETWORK \"$AGAR_HAVE_NETWORK\"" >> config/agar_have_network.h
+echo "#endif" >> config/agar_have_network.h
+echo "hdefs[\"AGAR_HAVE_NETWORK\"] = \"$AGAR_HAVE_NETWORK\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+echo "AGAR_HAVE_NETWORK=$AGAR_HAVE_NETWORK" >>Makefile.config
+echo "mdefs[\"AGAR_HAVE_NETWORK\"] = \"$AGAR_HAVE_NETWORK\"" >>configure.lua
+echo "#undef AGAR_HAVE_NETWORK" >config/agar_have_network.h
+echo "hdefs[\"AGAR_HAVE_NETWORK\"] = nil" >>configure.lua
+fi;
 $ECHO_N "checking for a gethostname() function..."
 $ECHO_N "checking for a gethostname() function..." >> config.log
 MK_CACHED="No"
@@ -1696,10 +1603,10 @@ if [ "${HAVE_AGAR}" != "yes" ]
 	echo "This program requires Agar (http://agar.csoft.org/)"
 	exit 1
 fi
-if [ "${HAVE_AGAR_NETWORK}" != "yes" ]
+if [ "${AGAR_HAVE_NETWORK}" != "yes" ]
  then
-	echo "This application requires network support in Agar-Core."
-	echo "Please recompile Agar with the --enable-network option."
+	echo "This application requires network support in Agar."
+	echo "Please recompile Agar with the --enable-network."
 	exit 1
 fi
 if [ "${HAVE_AGAR_DEV}" != "yes" ]
