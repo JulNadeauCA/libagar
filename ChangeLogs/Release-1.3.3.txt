@@ -1,0 +1,122 @@
+
+Release Notes for Agar 1.3.3 (Blackened Soil Remains)
+-----------------------------------------------------
+
+Here are some of the most notable changes since Agar 1.3.2, in no
+particular order. 
+
+- Implemented Ada bindings (thanks rothwell!).
+- Documentation fixes. Many new manual pages and examples were also added.
+- Merged Math library (originally from FreeSG) into Agar distribution.
+- Include files are now preprocessed for addition of visibility-related
+  specifiers (see http://gcc.gnu.org/wiki/Visibility)
+- Merged ag_net library into ag_core (though API is still not official).
+- Generated IDE "project files" are now distributed in the source .zip only.
+- The MAP library has been removed from the Agar distribution and moved to
+  the FreeSG distribution (http://freesg.org/).
+- Describe important documentation conventions in AG_Intro(3) and AG_Threads(3).
+
+- CORE: Implemented AG_DSO(3) as general interface to dynamic library
+  loading, and AG_LoadClass() more specifically for AG_Object classes.
+- CORE: Added namespaces to Agar class specifications. Object classes can now
+  be specified in "Namespace(Foo:Bar)" format.
+- CORE: It is now possible to specify DSOs ("@libname") in class specification
+  strings.
+- GUI: Bindings to long double and [SU]int64 are now fully supported when
+  compiled against support for the types.
+- CORE: Application data directories are no longer created on startup unless
+  AG_CREATE_DATADIR is given to AG_InitCore().
+- CORE: Added AG_SetCfgTYPE() and AG_CfgTYPE() macros.
+- CORE: More consistent definitions in <core/limits.h>
+- CORE: Implemented AG_SetErrorCode(), AG_GetErrorCode().
+- CORE: Implemented AG_SetFatalCallback() for catching fatal errors.
+- CORE: Work around AltiVec check issue on MacOS X 10.4.
+- CORE: Implemented AG_PropDefined() to check existence of an Object property.
+- CORE: Implemented AG_EventInit(), AG_EventArgs() and AG_EventPush<Type>()
+  to facilitate manipulation of AG_Event structures.
+- CORE: Implemented datafile debugging and error-check routines in
+  AG_DataSource. Markers can be optionally inserted into datafiles to provide
+  a simple form of type checking (useful for debugging). Added agar-disasm(1)
+  tool to examine datafiles containing this information.
+- CORE: Implemented AG_ObjectReadHeader(), useful to quickly check the
+  signature of a datafile.
+- DEV: Various GUI-related fixes.
+- VG: Library has been reimplemented for the most part and is now officially
+  supported. Since it was previously undocumented, these changes will not be
+  listed here.
+
+- GUI: Implemented AG_InitVideoSDL(). This allows Agar to use an already
+  initialized SDL display surface.
+- GUI: Many fixes, optimizations and clean-up related to clipping and culling
+  of widgets. The AG_WIDGET_CLIPPING option has been replaced by
+  AG_{Push,Pop}ClipRect(). Agar now uses a stack of clipping rectangles, with
+  their intersection used as the actual clipping rectangle during rendering.
+- GUI: The AG_WidgetDraw() routine no longer recurses over the child widgets
+  of container widgets. This provides container widgets with control over
+  their order of rendering, and ability to apply their own clipping rectangles.
+- GUI: Remove various dependencies on SDL-specific APIs. Added AG_Surface(3)
+  and AG_Rect(3) interfaces.
+- GUI: Improved behavior of many of the standard widgets when resized to very
+  small sizes.
+- GUI: Implemented AG_Slider(3) widget for editing numerical values within a
+  given range.
+- GUI: Implemented AG_Scrollview(3) widget as a general-purpose scrollable
+  container.
+- GUI: AG_Combo(3), AG_UCombo(3): New AG_TLIST_SCROLLTOSEL option.
+- GUI: Much clean up and beautification of geometry and sizing-related
+  code in the standard widget library.
+- GUI: Various cosmetic fixes to widget primitives, such as the GL
+  implementation of BoxDisabled().
+- GUI: Add support for bindings to floating-point and [SU]int{8,16,32,64}.
+  Implemented AG_ScrollbarSet<Type>Increment().
+- GUI: Implemented AG_LabelValign(), AG_TextValign(), AG_TextError().
+- GUI: Pack AG_Label(3) in AG_Button(3), AG_Checkbox(3) instead of directly
+  rendering text.
+- GUI: Add FLAG16, FLAG32 bindings to AG_Checkbox(3).
+- GUI: Fix annoying directory change behavior in AG_FileDlg(3).
+- GUI: Add AG_PIXMAP_RESCALE option, AG_PixmapReplaceCurrentSurface() and
+  AG_PixmapUpdateCurrentSurface() in AG_Pixmap(3).
+- GUI: Implement graph-{vertex,edge}-selected events and
+  AG_Graph{Vertex,Edge}{Find,PopupMenu}() functions in AG_Graph(3).
+- GUI: Add AG_GRAPH_NO_{MOVE,SELECT,MENUS} options to AG_Graph(3).
+- GUI: Added AG_ColorsSet{RGB,RGBA}(), AG_ColorsGet{RGB,RGBA}().
+- GUI: Added AG_Expand(), AG_ExpandHoriz(), AG_ExpandVert() as an alternative
+  to providing FOO_HFILL, FOO_VFILL or FOO_EXPAND initialization flags to
+  widgets.
+- GUI: Added AG_WidgetSet{Position,Size,Geometry}() routines to provide a
+  function interface to widget geometry modifications.
+- GUI: GUI-specific code can now be isolated from the standard event loop
+  using AG_{Begin,End}Rendering() to enclose AG_WidgetDraw() usages and
+  AG_ViewUpdateFB().
+- GUI: Added generic AG_WIDGET_NOSPACING flag (advisory to container widgets).
+- GUI: Reimplemented default WindowBorder() style operation; added wBorderSide,
+  wBorderBot parameters.
+- GUI: Added AG_{Textbox,Editable}SizeHintLines() routines.
+- GUI: Added alternate AG_RadioNew{Int,Uint}() constructors to AG_Radio(3).
+- GUI: Implement AG_TlistSizeHintLargest(), AG_TlistScrollTo{Start,End}() in
+  AG_Tlist(3).
+- GUI: Many improvements to AG_Table(3). Added AG_TableSetColHeight(),
+  AG_TableSetColMin(), AG_TableSetDefaultColWidth(), AG_TableSetRowHeight(),
+  AG_TableSetSelectionMode(), AG_TableSetSelectionColor(). Also implemented
+  AG_TABLE_SCROLL_TO_SEL, AG_TABLE_HIGHLIGHT_COLS options and horizontal
+  scrolling.
+- GUI: Fixed many issues related to sizing, rendering and event delivery of
+  widgets embedded into AG_Table(3) cells (thanks sacrebleu!)
+- GUI: The delivery of events such as mousebuttondown is now determined by
+  sensitivity rectangles (rSens) associated with widgets, defaulting to the
+  effective widget geometries. These rectangles can be modified in
+  size_allocate() or draw() context.
+- GUI: Fixed bug that would prevent AG_SizeSpec "%" specifiers from working
+  correctly.
+- GUI: Added alternate "range" constructors AG_NumericalNew<Type>R() to
+  AG_Numerical(3).
+- GUI: In AG_Window(3), implemented AG_WindowSetGeometryRect(),
+  AG_WindowSetGeometryAligned(), AG_WindowSetGeometryAlignedPct(),
+  AG_WindowSetMinSize(), AG_WindowSetMinSizePct(), AG_WindowSelectedWM(),
+  AG_WindowIsVisible().
+- GUI: Allow extension of the "polled" label format specifiers using
+  AG_RegisterLabelFormat() and AG_LABEL_ARG() macro.
+- GUI: Polled labels now recognize %lf, %lg, %llf and %llf specifiers for
+  double and long double. Added much needed examples to AG_Label(3).
+- GUI: Added AG_ProgressBarNewInt() constructor to AG_ProgressBar(3).
+
