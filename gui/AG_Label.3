@@ -259,9 +259,12 @@ Note that a call to
 is usually recommended in the case of polled labels, since the exact size of
 the string cannot be known until rendering.
 .Pp
-The following specifiers are not built-in, but they should be considered
-reserved for use by a math library.
-The FreeSG math library (http://freesg.org/) does implement these extensions.
+The following specifiers should be considered reserved for use by the
+developer's preferred math library.
+The Agar-Math library, which is included in the Agar sources, does implement
+them (they are registered as soon as the library is initialized
+with
+.Fn M_InitSubsystem ) .
 .Pp
 .Bl -tag -compact -width "%[M44] "
 .It %[C]
