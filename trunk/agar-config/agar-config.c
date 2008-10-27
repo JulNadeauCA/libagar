@@ -87,40 +87,40 @@ const struct {
 	const char *opt;
 	const char *data;
 } stringOpts[] = {
-	{ "--version",		VERSION },
-	{ "--release",		RELEASE },
-	{ "--prefix",		PREFIX },
-	{ "--sysconfdir",	SYSCONFDIR },
-	{ "--incldir",		INCLDIR },
-	{ "--libdir",		LIBDIR },
-	{ "--sharedir",		SHAREDIR },
-	{ "--ttfdir",		TTFDIR },
-	{ "--localedir",	LOCALEDIR },
+	{ "--version",	 VERSION },
+	{ "--release",	 RELEASE },
+	{ "--prefix",	 PREFIX },
+	{ "--sysconfdir",SYSCONFDIR },
+	{ "--incldir",	 INCLDIR },
+	{ "--libdir",	 LIBDIR },
+	{ "--sharedir",	 SHAREDIR },
+	{ "--ttfdir",	 TTFDIR },
+	{ "--localedir", LOCALEDIR },
 #ifdef THREADS
-	{ "--threads",		"yes" },
+	{ "--threads",	"yes" },
 #else
-	{ "--threads",		"no" },
+	{ "--threads",	"no" },
 #endif
 #ifdef NETWORK
-	{ "--network",		"yes" },
+	{ "--network",	"yes" },
 #else
-	{ "--network",		"no" },
+	{ "--network",	"no" },
 #endif
 
 #ifdef HAVE_SDL
-	{ "--have-sdl",		"yes" },
+	{ "--sdl",	"yes" },
 #else
-	{ "--have-sdl",		"no" },
+	{ "--sdl",	"no" },
 #endif
 #ifdef HAVE_OPENGL
-	{ "--have-opengl",	"yes" },
+	{ "--opengl",	"yes" },
 #else
-	{ "--have-opengl",	"no" },
+	{ "--opengl",	"no" },
 #endif
 #ifdef HAVE_FREETYPE
-	{ "--have-freetype",	"yes" },
+	{ "--freetype",	"yes" },
 #else
-	{ "--have-freetype",	"no" },
+	{ "--freetype",	"no" },
 #endif
 };
 const int nStringOpts = sizeof(stringOpts) / sizeof(stringOpts[0]);
@@ -133,7 +133,7 @@ PrintUsage(char *name)
 	    "[--sysconfdir] [--incldir] [--libdir] [--sharedir] "
 	    "[--ttfdir] [--localedir] "
 	    "[--threads] [--network] "
-	    "[--have-sdl] [--have-opengl] [--have-freetype "
+	    "[--sdl] [--opengl] [--freetype] "
 	    "[--cflags] [--libs]\n", name);
 }
 
