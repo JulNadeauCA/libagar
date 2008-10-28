@@ -2881,6 +2881,11 @@ else
 echo "#undef MATH_LIBS" >config/math_libs.h
 echo "hdefs[\"MATH_LIBS\"] = nil" >>configure.lua
 fi;
+if [ "${HAVE_AGAR}" != "yes" ]
+ then
+	echo "This demo requires Agar installed on your system."
+	exit 1
+fi
 if [ "${AGAR_HAVE_OPENGL}" != "yes" ]
  then
 	echo "*"

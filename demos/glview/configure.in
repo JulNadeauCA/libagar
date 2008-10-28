@@ -11,6 +11,10 @@ CHECK(agar, 1.3.3)
 CHECK(agar-opengl)
 CHECK(math)
 
+if [ "${HAVE_AGAR}" != "yes" ]; then
+	echo "This demo requires Agar installed on your system."
+	exit 1
+fi
 if [ "${AGAR_HAVE_OPENGL}" != "yes" ]; then
 	echo "*"
 	echo "* Agar must have been compiled with OpenGL support for"
