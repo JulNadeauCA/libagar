@@ -20,5 +20,5 @@ if [ "$1" = "--cflags" ]; then
 	echo "-D_REENTRANT -D_GNU_SOURCE=1 -I${PREFIX}/include/agar -I${PREFIX}/include/SDL -I${PREFIX}/include/freetype2 -I${PREFIX}/include -I/usr/local/include/SDL -I/usr/local/include/freetype2 -I/usr/local/include -I/usr/X11R6/include/SDL -I/usr/X11R6/include/freetype2 -I/usr/X11R6/include"
 fi
 if [ "$1" = "--libs" ]; then
-	echo "-L${PREFIX}/lib -L/usr/local/lib -lag_gui -lag_core -lag_net -Wl,-rpath,/usr/local/lib -lSDL -pthread -Wl,--rpath -Wl,/usr/local/lib -lfreetype -lz -L/usr/X11R6/lib -lGL -lm -lpthread"
+	echo "-L${PREFIX}/lib -L/usr/local/lib -lag_gui -lag_core -Wl,-rpath,/usr/local/lib -lSDL -pthread -Wl,--rpath -Wl,/usr/local/lib -lfreetype -lz -L/usr/X11R6/lib -lGL -lm -lpthread"
 fi
