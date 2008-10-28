@@ -5,7 +5,7 @@
 
 PROJNAME=	agar
 PKGNAME=	${PROJNAME}-${VERSION}-${OS}-${ARCH}${FLAVOR}
-SRCDIR=		/home/vedge/src/agar
+#SRCDIR=	/path/to/source
 
 VERSION=	`(cd ${SRCDIR} && perl mk/get-version.pl)`
 RELEASE=	`(cd ${SRCDIR} && perl mk/get-release.pl)`
@@ -17,6 +17,12 @@ PLATFORM?=	unix
 all: pre-build do-build package
 
 pre-build:
+	@if [ "${SRCDIR}" = "" ]; then \
+		echo "*"; \
+		echo "* Please set SRCDIR to the source directory path."; \
+		echo "*"; \
+		exit 1; \
+	fi
 	mkdir ${BUILDDIR}
 	mkdir ${FAKEDIR}
 	mkdir ${FAKEDIR}/${PKGNAME}
