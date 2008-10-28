@@ -494,11 +494,15 @@ $ECHO_N "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/cc" ]; then
-			CC="${i}/cc"
-			break
+			if [ -f "${i}/cc" ]; then
+				CC="${i}/cc"
+				break
+			fi
 		elif [ -x "${i}/gcc" ]; then
-			CC="${i}/gcc"
-			break
+			if [ -f "${i}/gcc" ]; then
+				CC="${i}/gcc"
+				break
+			fi
 		fi
 	done
 	if [ "$CC" = "" ]; then
@@ -3717,9 +3721,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_VERSION=`${path}/sdl-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_VERSION=`${path}/sdl-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3740,9 +3746,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_CFLAGS=`${path}/sdl-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_CFLAGS=`${path}/sdl-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3763,9 +3771,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_LIBS=`${path}/sdl-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_LIBS=`${path}/sdl-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3787,9 +3797,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl11-config" ]; then
-			SDL_VERSION=`${path}/sdl11-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl11-config" ]; then
+				SDL_VERSION=`${path}/sdl11-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3811,9 +3823,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl11-config" ]; then
-			SDL_CFLAGS=`${path}/sdl11-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl11-config" ]; then
+				SDL_CFLAGS=`${path}/sdl11-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3834,9 +3848,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl11-config" ]; then
-			SDL_LIBS=`${path}/sdl11-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl11-config" ]; then
+				SDL_LIBS=`${path}/sdl11-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3858,9 +3874,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_VERSION=`${path}/sdl-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_VERSION=`${path}/sdl-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3881,9 +3899,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_CFLAGS=`${path}/sdl-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_CFLAGS=`${path}/sdl-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3904,9 +3924,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_LIBS=`${path}/sdl-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_LIBS=`${path}/sdl-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3929,9 +3951,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_VERSION=`${path}/sdl-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_VERSION=`${path}/sdl-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3952,9 +3976,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_CFLAGS=`${path}/sdl-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_CFLAGS=`${path}/sdl-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -3975,9 +4001,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_LIBS=`${path}/sdl-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_LIBS=`${path}/sdl-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4182,9 +4210,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	FREETYPE_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/freetype-config" ]; then
-			FREETYPE_VERSION=`${path}/freetype-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/freetype-config" ]; then
+				FREETYPE_VERSION=`${path}/freetype-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4205,9 +4235,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	FREETYPE_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/freetype-config" ]; then
-			FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/freetype-config" ]; then
+				FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -4228,9 +4260,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	FREETYPE_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/freetype-config" ]; then
-			FREETYPE_LIBS=`${path}/freetype-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/freetype-config" ]; then
+				FREETYPE_LIBS=`${path}/freetype-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then

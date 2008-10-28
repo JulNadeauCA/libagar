@@ -144,7 +144,7 @@ else
 fi
 
 if [ "${srcdir}" != "" ]; then
-	echo "concurrent build (source in ${srcdir})"
+	echo "* Separate build (source in ${srcdir})"
 	SRC=${srcdir}
 	perl ${SRC}/mk/mkconcurrent.pl ${SRC}
 	if [ $? != 0 ]; then
@@ -154,6 +154,9 @@ else
 	SRC=`pwd`
 fi
 BLD=`pwd`
+
+SRCDIR="${SRC}"
+BLDDIR="${BLD}"
 
 if [ "${testdir}" != "" ]; then
 	echo "Configure tests will be executed in ${testdir}"
@@ -424,11 +427,15 @@ $ECHO_N "checking for a usable C compiler..." >> config.log
 if [ "$CC" = "" ]; then
 	for i in `echo $PATH |sed 's/:/ /g'`; do
 		if [ -x "${i}/cc" ]; then
-			CC="${i}/cc"
-			break
+			if [ -f "${i}/cc" ]; then
+				CC="${i}/cc"
+				break
+			fi
 		elif [ -x "${i}/gcc" ]; then
-			CC="${i}/gcc"
-			break
+			if [ -f "${i}/gcc" ]; then
+				CC="${i}/gcc"
+				break
+			fi
 		fi
 	done
 	if [ "$CC" = "" ]; then
@@ -1699,9 +1706,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_VERSION=`${path}/sdl-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_VERSION=`${path}/sdl-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1722,9 +1731,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_CFLAGS=`${path}/sdl-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_CFLAGS=`${path}/sdl-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1745,9 +1756,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_LIBS=`${path}/sdl-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_LIBS=`${path}/sdl-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1769,9 +1782,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl11-config" ]; then
-			SDL_VERSION=`${path}/sdl11-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl11-config" ]; then
+				SDL_VERSION=`${path}/sdl11-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1793,9 +1808,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl11-config" ]; then
-			SDL_CFLAGS=`${path}/sdl11-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl11-config" ]; then
+				SDL_CFLAGS=`${path}/sdl11-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1816,9 +1833,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl11-config" ]; then
-			SDL_LIBS=`${path}/sdl11-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl11-config" ]; then
+				SDL_LIBS=`${path}/sdl11-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1840,9 +1859,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_VERSION=`${path}/sdl-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_VERSION=`${path}/sdl-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1863,9 +1884,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_CFLAGS=`${path}/sdl-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_CFLAGS=`${path}/sdl-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1886,9 +1909,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_LIBS=`${path}/sdl-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_LIBS=`${path}/sdl-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1911,9 +1936,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_VERSION=`${path}/sdl-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_VERSION=`${path}/sdl-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1934,9 +1961,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_CFLAGS=`${path}/sdl-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_CFLAGS=`${path}/sdl-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -1957,9 +1986,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_LIBS=`${path}/sdl-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_LIBS=`${path}/sdl-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -2403,9 +2434,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	FREETYPE_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/freetype-config" ]; then
-			FREETYPE_VERSION=`${path}/freetype-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/freetype-config" ]; then
+				FREETYPE_VERSION=`${path}/freetype-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -2426,9 +2459,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	FREETYPE_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/freetype-config" ]; then
-			FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/freetype-config" ]; then
+				FREETYPE_CFLAGS=`${path}/freetype-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -2449,9 +2484,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	FREETYPE_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/freetype-config" ]; then
-			FREETYPE_LIBS=`${path}/freetype-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/freetype-config" ]; then
+				FREETYPE_LIBS=`${path}/freetype-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -2566,15 +2603,17 @@ if [ "${MK_CACHED}" = "No" ]; then
 	AGAR_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/agar-config" ]; then
-			if [ "$MK_EXEC_FOUND" = "Yes" ]; then
-				echo "yes."
-				echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
-				echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
-				break;
+			if [ -f "${path}/agar-config" ]; then
+				if [ "$MK_EXEC_FOUND" = "Yes" ]; then
+					echo "yes."
+					echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)"
+					echo "* Warning: Multiple 'agar-config' exist in PATH (using $MK_EXEC_FOUND_PATH)" >> config.log
+					break;
+				fi
+				AGAR_VERSION=`${path}/agar-config --version`
+				MK_EXEC_FOUND="Yes"
+				MK_EXEC_FOUND_PATH="${path}/agar-config"
 			fi
-			AGAR_VERSION=`${path}/agar-config --version`
-			MK_EXEC_FOUND="Yes"
-			MK_EXEC_FOUND_PATH="${path}/agar-config"
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -2599,9 +2638,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	AGAR_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/agar-config" ]; then
-			AGAR_CFLAGS=`${path}/agar-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/agar-config" ]; then
+				AGAR_CFLAGS=`${path}/agar-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -2622,9 +2663,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	AGAR_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/agar-config" ]; then
-			AGAR_LIBS=`${path}/agar-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/agar-config" ]; then
+				AGAR_LIBS=`${path}/agar-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -2725,9 +2768,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_VERSION=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_VERSION=`${path}/sdl-config --version`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_VERSION=`${path}/sdl-config --version`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -2748,9 +2793,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_CFLAGS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_CFLAGS=`${path}/sdl-config --cflags`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_CFLAGS=`${path}/sdl-config --cflags`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -2771,9 +2818,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_LIBS=`${path}/sdl-config --static-libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_LIBS=`${path}/sdl-config --static-libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
@@ -2794,9 +2843,11 @@ if [ "${MK_CACHED}" = "No" ]; then
 	SDL_LIBS_SHORT=""
 	for path in `echo $PATH | sed 's/:/ /g'`; do
 		if [ -x "${path}/sdl-config" ]; then
-			SDL_LIBS_SHORT=`${path}/sdl-config --libs`
-			MK_EXEC_FOUND="Yes"
-			break
+			if [ -f "${path}/sdl-config" ]; then
+				SDL_LIBS_SHORT=`${path}/sdl-config --libs`
+				MK_EXEC_FOUND="Yes"
+				break
+			fi
 		fi
 	done
 	if [ "${cache}" != "" ]; then
