@@ -13,6 +13,12 @@ BUILDDIR=	/tmp/w-${PKGNAME}
 FAKEDIR=	/tmp/pkg-${PKGNAME}
 RELENGDIR=	${SRCDIR}/Packages/${OS}-${ARCH}${FLAVOR}
 PLATFORM?=	unix
+CONFIGURE_ARGS?=
+CONFIGURE_STD=	--enable-threads \
+		--enable-network \
+		--with-gl \
+		--with-freetype \
+		--without-jpeg
 
 all: pre-build do-build package
 
@@ -26,6 +32,12 @@ pre-build:
 	mkdir ${BUILDDIR}
 	mkdir ${FAKEDIR}
 	mkdir ${FAKEDIR}/${PKGNAME}
+
+do-build:
+	(cd ${BUILDDIR} && ${SRCDIR}/configure \
+	    --srcdir=${SRCDIR} --prefix=${FAKEDIR}/${PKGNAME} \
+	    ${CONFIGURE_ARGS} && \
+	    make depend all install)
 
 package:
 	(cd ${FAKEDIR} && \
