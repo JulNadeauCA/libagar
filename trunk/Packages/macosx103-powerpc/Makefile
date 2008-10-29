@@ -1,6 +1,6 @@
 
 PLATFORM=	unix
-OS=		macosx
+OS=		macosx103
 ARCH=		powerpc
 FLAVOR=
 CONFIGURE_ARGS=	${CONFIGURE_STD}
