@@ -225,7 +225,7 @@ echo "    --enable-network          Build network client library [default: check
 echo "    --with-gl                 OpenGL rendering support [default: check]"
 echo "    --with-jpeg               JPEG screenshot support [default: check]"
 echo "    --with-freetype           GUI: Enable FreeType support [default: check]"
-echo "    --with-sse                M: SSE[123] optimizations [default: check]"
+echo "    --with-sse                M: SSE[123] optimizations [default: no]"
 echo "    --with-sse-inline         M: Inline SSE operations [default: no]"
 echo "    --with-sse2-inline        M: Inline SSE2 operations [default: no]"
 echo "    --with-sse3-inline        M: Inline SSE3 operations [default: no]"
