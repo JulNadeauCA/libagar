@@ -78,7 +78,7 @@ AG_MkDir(const char *dir)
 		return (0);
 	} else {
 		AG_SetError(_("%s: Failed to create directory (%d)"), dir,
-		    GetLastError());
+		    (int)GetLastError());
 		return (-1);
 	}
 #else
@@ -100,7 +100,7 @@ AG_RmDir(const char *dir)
 		return (0);
 	} else {
 		AG_SetError(_("%s: Failed to remove directory (%d)"), dir,
-		    GetLastError());
+		    (int)GetLastError());
 		return (-1);
 	}
 #else
@@ -122,7 +122,7 @@ AG_ChDir(const char *dir)
 		return (0);
 	} else {
 		AG_SetError(_("%s: Failed to change directory (%d)"), dir,
-		    GetLastError());
+		    (int)GetLastError());
 		return (-1);
 	}
 #else
@@ -156,7 +156,7 @@ AG_OpenDir(const char *path)
 		Strlcat(dpath, "\\*", sizeof(dpath));
 		if ((h = FindFirstFile(dpath, &fdata))==INVALID_HANDLE_VALUE) {
 			AG_SetError(_("Invalid file handle (%d)"),
-			    GetLastError());
+			    (int)GetLastError());
 			goto fail;
 		}
 		while (FindNextFile(h, &fdata) != 0) {
@@ -254,7 +254,7 @@ AG_GetCWD(char *buf, size_t len)
 
 	if ((rv = GetCurrentDirectory(len, buf)) == 0) {
 		AG_SetError(_("Failed to get current directory (%d)"),
-		    GetLastError());
+		    (int)GetLastError());
 		return (-1);
 	} else if (rv > len) {
 		AG_SetError(_("Failed to get current directory (%s)"),
