@@ -13,7 +13,7 @@ ports or packages (look for devel/sdl and print/freetype).
 
 To install this package, run the installation script:
 
-	$ ./install
+	$ ./install.sh
 
 For more information about Agar, visit http://libagar.org/.
 

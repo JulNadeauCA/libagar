@@ -48,9 +48,10 @@ package:
 	 cp -f ${RELENGDIR}/README.* ${PKGNAME} && \
 	 cat ${RELENGDIR}/../install-${PLATFORM}.sh | \
 	     perl ${RELENGDIR}/../install-subst.pl "${SRCDIR}" "${PROJNAME}" \
-	     "${OS}" "${ARCH}" "${FLAVOR}" > ${PKGNAME}/install && \
-	 chmod 755 ${PKGNAME}/install && \
+	     "${OS}" "${ARCH}" "${FLAVOR}" > ${PKGNAME}/install.sh && \
+	 chmod 755 ${PKGNAME}/install.sh && \
 	 cp -f ${RELENGDIR}/agar-config.sh ${PKGNAME} && \
+	 cp -f ${RELENGDIR}/../config.guess ${PKGNAME} && \
 	 tar -f ${PKGNAME}.tar -c ${PKGNAME} && \
 	 gzip -f ${PKGNAME}.tar && \
 	 cp -f ${PKGNAME}.tar.gz ${RELENGDIR})
