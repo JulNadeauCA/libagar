@@ -14,7 +14,7 @@ print/freetype2 and devel/sdl12).
 
 To install this package, run the installation script:
 
-	$ ./install
+	$ ./install.sh
 
 For more information about Agar, visit http://libagar.org/.
 

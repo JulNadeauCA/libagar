@@ -12,35 +12,79 @@ AR_ARCH="%ARCH%"
 AR_FLAVOR="%FLAVOR%"
 SUBDIRS="bin:exec lib:exec include: share:"
 INSTALL_MODE="bsd"
+INSTSCRIPTNAME="install.sh"
+SH="/bin/sh"
 
 #
 # Generic Installation
 #
 
+if [ "${INSTDIR}" = "" ]; then
+	INSTDIR="."
+fi
+if [ -e "/bin/echo" ]; then
+    /bin/echo -n ""
+    if [ $? = 0 ]; then 
+        ECHO_N="/bin/echo -n"
+    else        
+        ECHO_N="echo -n"
+    fi          
+else            
+    ECHO_N="echo -n"
+fi              
+
 AR="${PROJNAME}-${VERSION}-${AR_OS}-${AR_ARCH}${AR_FLAVOR}.tar.gz"
 ARPATH="`pwd`/${AR}"
-HOST_OS=`uname -s`
-HOST_ARCH=`uname -m`
+PLATFORM=`sh ${INSTDIR}/config.guess`
 
 if [ "${PREFIX}" = "" ]; then
 	PREFIX="/usr/local"
 fi
 
-if [ "${HOST_OS}" = "FreeBSD" ]; then	HOST_OS="freebsd";	fi
-if [ "${HOST_OS}" = "NetBSD" ]; then	HOST_OS="netbsd";	fi
-if [ "${HOST_OS}" = "OpenBSD" ]; then	HOST_OS="openbsd";	fi
-if [ "${HOST_OS}" = "Linux" ]; then	HOST_OS="linux";	fi
-if [ "${HOST_OS}" = "IRIX" ]; then	HOST_OS="irix";		fi
-if [ "${HOST_OS}" = "IRIX64" ]; then	HOST_OS="irix";		fi
-if [ "${HOST_OS}" = "CYGWIN_NT-5.1" ]; then HOST_OS="cygwin";	fi
-if [ "${HOST_OS}" = "Darwin" ]; then	HOST_OS="macosx";	fi
+case ${PLATFORM} in
+*-*-freebsd*)
+	HOST_OS="freebsd"
+	;;
+*-*-netbsd*)
+	HOST_OS="netbsd"
+	;;
+*-*-openbsd*)
+	HOST_OS="openbsd"
+	;;
+*-*-linux*)
+	HOST_OS="linux"
+	;;
+*-*-irix*)
+	HOST_OS="irix"
+	;;
+*-*-cygwin | *-*-mingw32)
+	HOST_OS="mingw32"
+	;;
+*-*-darwin*)
+	HOST_OS="macosx"
+	;;
+*)
+	HOST_OS="unknown"
+	;;
+esac
 
-if [ "${HOST_ARCH}" = "x86_64" ]; then	HOST_ARCH="amd64";	fi
-if [ "${HOST_ARCH}" = "i486" ]; then	HOST_ARCH="i386";	fi
-if [ "${HOST_ARCH}" = "i586" ]; then	HOST_ARCH="i386";	fi
-if [ "${HOST_ARCH}" = "i686" ]; then	HOST_ARCH="i386";	fi
-if [ "${HOST_ARCH}" = "mips" ]; then	HOST_ARCH="mipsel";	fi
-if [ "${HOST_ARCH}" = "Power Macintosh" ]; then	HOST_ARCH="powerpc"; fi
+case ${PLATFORM} in
+x86_64-*-* | amd64-*-*)
+	HOST_ARCH="amd64"
+	;;
+i*86-*-*)
+	HOST_ARCH="i386"
+	;;
+mips-*-*)
+	HOST_ARCH="mipsel"
+	;;
+macppc-*-* | powerpc-*-*)
+	HOST_ARCH="powerpc"
+	;;
+*)
+	HOST_ARCH="unknown"
+	;;
+esac
 
 if [ "$1" = "--dir" ]; then
 	if [ "$2" = "" ]; then
@@ -52,29 +96,31 @@ if [ "$1" = "--dir" ]; then
 		echo "$DIR: $!"
 		exit 1
 	fi
-	cd $DIR
+	cd "$DIR"
 	for FILE in `ls -1`; do
-		if [ -d $FILE ]; then
-			if [ ! -e "$DEST/$FILE" ]; then
+		if [ -d "$FILE" ]; then
+			if [ ! -e "${DEST}/${FILE}" ]; then
 				echo "mkdir $DEST/$FILE"
-				mkdir $DEST/$FILE
+				mkdir "${DEST}/${FILE}"
 				if [ $? != 0 ]; then
 					exit 1
 				fi
 			fi
-			env PREFIX=${PREFIX} MODE=$MODE INST=$INST \
-			    DEST=$DEST/$FILE REL=$REL/$FILE \
-			    $INST --dir $FILE
+			env PREFIX="${PREFIX}" MODE=${MODE} \
+			    INSTDIR="${INSTDIR}" \
+			    INSTSCRIPTPATH="${INSTSCRIPTPATH}" \
+			    DEST="${DEST}/${FILE}" REL="${REL}/${FILE}" \
+			    ${INSTSCRIPTPATH} --dir ${FILE}
 			if [ $? != 0 ]; then
 				exit 1
 			fi
 		else
 			if [ "$MODE" = "exec" ]; then
 				echo "install -c -m 755 $FILE ${PREFIX}/$REL"
-				install -c -m 755 $FILE ${PREFIX}/$REL
+				install -c -m 755 "$FILE" "${PREFIX}/$REL"
 			else
 				echo "install -c -m 644 $FILE ${PREFIX}/$REL"
-				install -c -m 644 $FILE ${PREFIX}/$REL
+				install -c -m 644 "$FILE" "${PREFIX}/$REL"
 			fi
 			if [ $? != 0 ]; then
 				exit 1
@@ -88,64 +134,102 @@ if [ "$1" != "--force" ]; then
 	if [ "${AR_OS}" != "${HOST_OS}" -o "${AR_ARCH}" != "${HOST_ARCH}" ];
 	then
 		echo "*"
-		echo "* ERROR: Operating system mismatch"
-		echo -n "* Your system is ${HOST_OS}-${HOST_ARCH}. "
-		echo "This package was compiled for ${AR_OS}-${AR_ARCH}."
-		echo -n "* If you want to install it anyway, run this script "
-		echo "with the --force option."
+		echo "* ERROR: Operating system mismatch."
+		echo "* Your system is: ${HOST_OS}-${HOST_ARCH}."
+		echo "* This package was compiled for ${AR_OS}-${AR_ARCH}."
+		echo "*"
+		echo "* If you want to proceed and install it anyway, use:"
+		echo "* ./install.sh --force"
 		echo "*"
 		exit 1;
 	fi
 fi
 
-echo "This script will install ${PROJNAME} for ${AR_OS}-${AR_ARCH}."
-echo -n "Do you want to continue? [Y/n] "
+echo "*"
+echo "* This script will install ${PROJNAME} for ${AR_OS}-${AR_ARCH}."
+echo "*"
+$ECHO_N "Do you want to continue? [Y/n] "
 read CONF
-
-if [ "${CONF}" != "y" -a "${CONF}" != "Y" -a "${CONF}" != "" \
-     -a "${CONF}" != " " ]; then
-	echo "* Installation aborted."
-	exit 1;
-fi
+case x${CONF} in
+xy* | xY* | x)
+	echo "*"
+	echo "* Starting installation..."
+	echo "*"
+	;;
+*)
+	echo "*"
+	echo "* Aborted installation."
+	echo "*"
+	exit 1
+	;;
+esac
 
 TAR=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/tar" ]; then TAR="${path}/tar"; fi
+	if [ -x "${path}/tar" ]; then
+	if [ -f "${path}/tar" ]; then
+		TAR="${path}/tar"
+	fi
+	fi
 done
 if [ "${TAR}" = "" ]; then
-	echo "ERROR: This installation program requires the tar(1) utility."
+	echo "*"
+	echo "* ERROR: This script requires the tar(1) utility."
+	echo "* Aborted installation."
+	echo "*"
 	exit 1;
 fi
 GUNZIP=""
 for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/gunzip" ]; then GUNZIP="${path}/gunzip"; fi
+	if [ -x "${path}/gunzip" ]; then
+	if [ -f "${path}/gunzip" ]; then
+		GUNZIP="${path}/gunzip"
+	fi
+	fi
 done
 if [ "${GUNZIP}" = "" ]; then
-	echo "ERROR: This installation program requires the gunzip(1) utility."
+	echo "*"
+	echo "* ERROR: This script requires the gunzip(1) utility."
+	echo "* Aborted installation."
+	echo "*"
 	exit 1
 fi
 
-echo -n "Installation prefix? [$PREFIX] "
+$ECHO_N "Installation prefix? [$PREFIX] "
 read UPREFIX
-if [ "${UPREFIX}" != "" -a "${UPREFIX}" != " " ]; then
+if [ "${UPREFIX}" != "" ]; then
+if [ "${UPREFIX}" != " " ]; then
 	PREFIX=${UPREFIX}
 	if [ ! -e "${PREFIX}" ]; then
 		echo "The directory ${PREFIX} does not exist."
-		echo -n "Do you want to create it? [Y/n] "
+		$ECHO_N "Do you want to create it? [Y/n] "
 		read CONF
-		if [ "${CONF}" = "y" -o "${CONF}" = "Y" -o "${CONF}" = "" \
-		     -o "${CONF}" = " " ]; then
-			mkdir ${PREFIX}
+		case x${CONF} in
+		xy* | xY* | x)
+			;;
+		*)
+			echo "*"
+			echo "* Aborted installation"
+			echo "*"
+			exit 1
+			;;
+		esac
+		echo "mkdir ${PREFIX}"
+		mkdir "${PREFIX}"
+		if [ $? != 0 ]; then
+			echo "mkdir -p ${PREFIX}"
+			mkdir -p "${PREFIX}"
 			if [ $? != 0 ]; then
-				mkdir -p ${PREFIX}
-				if [ $? != 0 ]; then
-					echo "ERROR: Cannot create ${PREFIX}";
-					exit 1
-				fi
+				echo "*"
+				echo "* ERROR: Could not create ${PREFIX}."
+				echo "* Installation aborted."
+				echo "*"
+				exit 1
 			fi
 		fi
 		echo "Created directory ${PREFIX}."
 	fi
+fi
 fi
 
 if [ "${INSTALL_MODE}" = "bsd" ]; then
@@ -153,19 +237,27 @@ if [ "${INSTALL_MODE}" = "bsd" ]; then
 		dir=`echo $DIR |awk -F: '{print $1}'`;
 		mode=`echo $DIR |awk -F: '{print $2}'`;
 		if [ ! -e "${PREFIX}/$dir" ]; then
-			mkdir ${PREFIX}/$dir
+			mkdir "${PREFIX}/$dir"
 			if [ $? != 0 ]; then
-				echo "Failed to create ${PREFIX}/$dir"
+				echo "*"
+				echo "* Failed to create ${PREFIX}/$dir"
+				echo "* Installation aborted."
+				echo "*"
 				exit 1
 			fi
 			echo "Created directory ${PREFIX}/$dir."
 		fi
 		echo "> $dir"
-		env PREFIX=${PREFIX} MODE=$mode INST=`pwd`/install \
-		    DEST=${PREFIX}/$dir REL=$dir \
-		    ./install --dir $dir
+		env PREFIX="${PREFIX}" MODE=$mode \
+		    INSTDIR="`pwd`" \
+		    INSTSCRIPTPATH="`pwd`/${INSTSCRIPTNAME}" \
+		    DEST="${PREFIX}/${dir}" REL="${dir}" \
+		    ${SH} ${INSTSCRIPTNAME} --dir ${dir}
 		if [ $? != 0 ]; then
-			echo "File installation failed"
+			echo "* "
+			echo "* File installation failed"
+			echo "* Installation aborted"
+			echo "*"
 			exit 1
 		fi
 	done
@@ -191,31 +283,47 @@ cat agar-config.sh | \
     sed "s,%INSTALLED_RELEASE%,${RELEASE}," | \
     sed "s,%PREFIX%,${PREFIX}," > ${PREFIX}/bin/agar-config
 if [ $? != 0 ]; then
-	echo "ERROR: Failed to process agar-config. Installation is incomplete."
+	echo "*"
+	echo "* ERROR: Failed to process agar-config. Is sed(1) working?"
+	echo "* Installation is incomplete."
+	echo "*"
 	exit 1
 fi
 
 chmod 755 ${PREFIX}/bin/agar-config
 if [ $? != 0 ]; then
-	echo "ERROR: Failed to set permissions on agar-config"
+	echo "*"
+	echo "* ERROR: Failed to set permissions on agar-config"
+	echo "*"
 	exit 1
 fi
 
 AGARCONFIG="no"
 for path in `echo $PATH | sed 's/:/ /g'`; do
-	if [ -x "${path}/agar-config" ]; then AGARCONFIG="yes"; fi
+	if [ -x "${path}/agar-config" ]; then
+	if [ -f "${path}/agar-config" ]; then
+		AGARCONFIG="yes"
+	fi
+	fi
 done
 if [ "${AGARCONFIG}" = "no" ]; then
-	echo "WARNING: The agar-config program cannot be found in your PATH."
-	echo "If you want agar applications to compile, you will need to"
-	echo "add the ${PREFIX}/bin directory to your PATH."
+	echo "*"
+	echo "* WARNING: The agar-config program cannot be found in your PATH!"
+	echo "*"
+	echo "* If you want Agar applications to compile, you must add the"
+	echo "* ${PREFIX}/bin directory to your PATH environment variable."
+	echo "*"
 fi
 
 if [ "${AR_OS}" = "macosx" ]; then
+	$ECHO_N "Running ranlib(1) on library files..."
 	for FILE in `ls -1 lib/*.a`; do
 		echo "ranlib ${PREFIX}/$FILE"
 		ranlib ${PREFIX}/$FILE
 	done
+	echo "Done."
 fi
 
-echo "${PROJNAME} was installed successfully into ${PREFIX}."
+echo "*"
+echo "* ${PROJNAME}-${VERSION} was successfully installed in ${PREFIX}."
+echo "*"
