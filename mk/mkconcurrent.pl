@@ -48,6 +48,7 @@ $BUILD = '';
 	'^cleanfiles\.pl$',
 	'^gen-includes\.pl$',
 	'^gen-declspecs\.pl$',
+	'^install-manpages\.sh$',
 );
 
 sub Debug
