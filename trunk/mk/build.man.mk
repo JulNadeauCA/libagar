@@ -348,183 +348,102 @@ install-man-dirs:
 
 install-man:
 	@if [ "${MAN1}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    if [ "${CATMAN1}" = "" ]; then \
-	        for F in ${MAN1}; do \
-	            CAT=`echo $$F | sed 's/.1$$/.cat1/'`; \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man1"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man1; \
-	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat1"; \
-	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat1; \
-	        done; \
-	    else \
-	        for F in ${MAN1}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man1"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man1; \
-		done; \
-	        for F in ${CATMAN1}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat1"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat1; \
-		done; \
+	    env MAN="${MAN1}" CATMAN="${CATMAN1}" \
+	        INSTALL_DATA="${INSTALL_DATA}" \
+		MANDIR="${MANDIR}/man1" \
+	        CATMANDIR="${MANDIR}/cat1" \
+	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	    if [ $$? != 0 ]; then \
+	    	echo "install-manpages.sh failed"; \
+		exit 1; \
 	    fi; \
 	fi
 	@if [ "${MAN2}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    if [ "${CATMAN2}" = "" ]; then \
-	        for F in ${MAN2}; do \
-	            CAT=`echo $$F | sed 's/.2$$/.cat2/'`; \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man2"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man2; \
-	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat2"; \
-	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat2; \
-	        done; \
-	    else \
-	        for F in ${MAN2}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man2"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man2; \
-		done; \
-	        for F in ${CATMAN2}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat2"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat2; \
-		done; \
+	    env MAN="${MAN2}" CATMAN="${CATMAN2}" \
+	        INSTALL_DATA="${INSTALL_DATA}" \
+		MANDIR="${MANDIR}/man2" \
+	        CATMANDIR="${MANDIR}/cat2" \
+	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	    if [ $$? != 0 ]; then \
+	    	echo "install-manpages.sh failed"; \
+		exit 1; \
 	    fi; \
 	fi
 	@if [ "${MAN3}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    if [ "${CATMAN3}" = "" ]; then \
-	        for F in ${MAN3}; do \
-	            CAT=`echo $$F | sed 's/.3$$/.cat3/'`; \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man3"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man3; \
-	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat3"; \
-	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat3; \
-	        done; \
-	    else \
-	        for F in ${MAN3}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man3"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man3; \
-		done; \
-	        for F in ${CATMAN3}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat3"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat3; \
-		done; \
+	    env MAN="${MAN3}" CATMAN="${CATMAN3}" \
+	        INSTALL_DATA="${INSTALL_DATA}" \
+		MANDIR="${MANDIR}/man3" \
+	        CATMANDIR="${MANDIR}/cat3" \
+	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	    if [ $$? != 0 ]; then \
+	    	echo "install-manpages.sh failed"; \
+		exit 1; \
 	    fi; \
 	fi
 	@if [ "${MAN4}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    if [ "${CATMAN4}" = "" ]; then \
-	        for F in ${MAN4}; do \
-	            CAT=`echo $$F | sed 's/.4$$/.cat4/'`; \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man4"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man4; \
-	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat4"; \
-	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat4; \
-	        done; \
-	    else \
-	        for F in ${MAN4}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man4"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man4; \
-		done; \
-	        for F in ${CATMAN4}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat4"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat4; \
-		done; \
+	    env MAN="${MAN4}" CATMAN="${CATMAN4}" \
+	        INSTALL_DATA="${INSTALL_DATA}" \
+		MANDIR="${MANDIR}/man4" \
+	        CATMANDIR="${MANDIR}/cat4" \
+	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	    if [ $$? != 0 ]; then \
+	    	echo "install-manpages.sh failed"; \
+		exit 1; \
 	    fi; \
 	fi
 	@if [ "${MAN5}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    if [ "${CATMAN5}" = "" ]; then \
-	        for F in ${MAN5}; do \
-	            CAT=`echo $$F | sed 's/.5$$/.cat5/'`; \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man5"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man5; \
-	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat5"; \
-	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat5; \
-	        done; \
-	    else \
-	        for F in ${MAN5}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man5"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man5; \
-		done; \
-	        for F in ${CATMAN5}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat5"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat5; \
-		done; \
+	    env MAN="${MAN5}" CATMAN="${CATMAN5}" \
+	        INSTALL_DATA="${INSTALL_DATA}" \
+		MANDIR="${MANDIR}/man5" \
+	        CATMANDIR="${MANDIR}/cat5" \
+	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	    if [ $$? != 0 ]; then \
+	    	echo "install-manpages.sh failed"; \
+		exit 1; \
 	    fi; \
 	fi
 	@if [ "${MAN6}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    if [ "${CATMAN6}" = "" ]; then \
-	        for F in ${MAN6}; do \
-	            CAT=`echo $$F | sed 's/.6$$/.cat6/'`; \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man6"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man6; \
-	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat6"; \
-	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat6; \
-	        done; \
-	    else \
-	        for F in ${MAN6}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man6"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man6; \
-		done; \
-	        for F in ${CATMAN6}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat6"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat6; \
-		done; \
+	    env MAN="${MAN6}" CATMAN="${CATMAN6}" \
+	        INSTALL_DATA="${INSTALL_DATA}" \
+		MANDIR="${MANDIR}/man6" \
+	        CATMANDIR="${MANDIR}/cat6" \
+	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	    if [ $$? != 0 ]; then \
+	    	echo "install-manpages.sh failed"; \
+		exit 1; \
 	    fi; \
 	fi
 	@if [ "${MAN7}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    if [ "${CATMAN7}" = "" ]; then \
-	        for F in ${MAN7}; do \
-	            CAT=`echo $$F | sed 's/.7$$/.cat7/'`; \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man7"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man7; \
-	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat7"; \
-	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat7; \
-	        done; \
-	    else \
-	        for F in ${MAN7}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man7"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man7; \
-		done; \
-	        for F in ${CATMAN7}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat7"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat7; \
-		done; \
+	    env MAN="${MAN7}" CATMAN="${CATMAN7}" \
+	        INSTALL_DATA="${INSTALL_DATA}" \
+		MANDIR="${MANDIR}/man7" \
+	        CATMANDIR="${MANDIR}/cat7" \
+	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	    if [ $$? != 0 ]; then \
+	    	echo "install-manpages.sh failed"; \
+		exit 1; \
 	    fi; \
 	fi
 	@if [ "${MAN8}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    if [ "${CATMAN8}" = "" ]; then \
-	        for F in ${MAN8}; do \
-	            CAT=`echo $$F | sed 's/.8$$/.cat8/'`; \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man8"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man8; \
-	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat8"; \
-	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat8; \
-	        done; \
-	    else \
-	        for F in ${MAN8}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man8"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man8; \
-		done; \
-	        for F in ${CATMAN8}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat8"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat8; \
-		done; \
+	    env MAN="${MAN8}" CATMAN="${CATMAN8}" \
+	        INSTALL_DATA="${INSTALL_DATA}" \
+		MANDIR="${MANDIR}/man8" \
+	        CATMANDIR="${MANDIR}/cat8" \
+	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	    if [ $$? != 0 ]; then \
+	    	echo "install-manpages.sh failed"; \
+		exit 1; \
 	    fi; \
 	fi
 	@if [ "${MAN9}" != "" -a "${NOMAN}" != "yes" ]; then \
-	    if [ "${CATMAN9}" = "" ]; then \
-	        for F in ${MAN9}; do \
-	            CAT=`echo $$F | sed 's/.9$$/.cat9/'`; \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man9"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man9; \
-	            echo "${INSTALL_DATA} $$CAT ${MANDIR}/cat9"; \
-	            ${SUDO} ${INSTALL_DATA} $$CAT ${MANDIR}/cat9; \
-	        done; \
-	    else \
-	        for F in ${MAN9}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/man9"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/man9; \
-		done; \
-	        for F in ${CATMAN9}; do \
-	            echo "${INSTALL_DATA} $$F ${MANDIR}/cat9"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${MANDIR}/cat9; \
-		done; \
+	    env MAN="${MAN9}" CATMAN="${CATMAN9}" \
+	        INSTALL_DATA="${INSTALL_DATA}" \
+		MANDIR="${MANDIR}/man9" \
+	        CATMANDIR="${MANDIR}/cat9" \
+	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	    if [ $$? != 0 ]; then \
+	    	echo "install-manpages.sh failed"; \
+		exit 1; \
 	    fi; \
 	fi
 	@if [ "${NOMANLINKS}" != "yes" -a "${MANLINKS}" != "" ]; then \
