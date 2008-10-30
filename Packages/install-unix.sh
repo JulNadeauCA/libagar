@@ -15,6 +15,7 @@ INSTALL_MODE="bsd"
 INSTSCRIPTNAME="install.sh"
 SH="/bin/sh"
 EXECSUFFIX=""
+CONFIG_PROGS="agar-config agar-core-config agar-dev-config agar-math-config agar-rg-config agar-vg-config"
 
 #
 # Generic Installation
@@ -269,7 +270,7 @@ elif [ "${INSTALL_MODE}" = "tarball" ]; then
 		exit 1
 	fi
 	echo "Unpacking archive into ${PREFIX}..."
-	(cd ${PREFIX} && ${GUNZIP} < ${ARPATH} | tar -xf -)
+	(cd "${PREFIX}" && ${GUNZIP} < "${ARPATH}" | tar -xf -)
 else
 	echo "Bad INSTALL_MODE: ${INSTALL_MODE}"
 	exit 1
@@ -279,27 +280,32 @@ fi
 # Agar-specific installation
 #
 
-rm -f ${PREFIX}/bin/agar-config
-rm -f ${PREFIX}/bin/agar-config${EXECSUFFIX}
-cat agar-config.sh | \
-    sed "s,%INSTALLED_VERSION%,${VERSION}," | \
-    sed "s,%INSTALLED_RELEASE%,${RELEASE}," | \
-    sed "s,%PREFIX%,${PREFIX}," > ${PREFIX}/bin/agar-config
-if [ $? != 0 ]; then
-	echo "*"
-	echo "* ERROR: Failed to process agar-config. Is sed(1) working?"
-	echo "* Installation is incomplete."
-	echo "*"
-	exit 1
-fi
+for F in ${CONFIG_PROGS}; do
+	if [ -e "${PREFIX}/bin/${F}${EXECSUFFIX}" ]; then
+		echo "* Removing conflicting ${F}${EXECSUFFIX}"
+		rm -f "${PREFIX}/bin/${F}${EXECSUFFIX}"
+	fi
+	cat agar-config.sh | \
+	    sed "s,%INSTALLED_VERSION%,${VERSION}," | \
+	    sed "s,%INSTALLED_RELEASE%,${RELEASE}," | \
+	    sed "s,%PREFIX%,${PREFIX}," > "${PREFIX}/bin/${F}"
+	if [ $? != 0 ]; then
+		echo "*"
+		echo "* ERROR: Failed to process ${F}."
+		echo "* Is sed(1) working?"
+		echo "* Installation is incomplete."
+		echo "*"
+		exit 1
+	fi
+	chmod 755 "${PREFIX}/bin/${F}"
+	if [ $? != 0 ]; then
+		echo "*"
+		echo "* ERROR: Could not set permissions on ${F}!"
+		echo "*"
+		exit 1
+	fi
+done
 
-chmod 755 ${PREFIX}/bin/agar-config
-if [ $? != 0 ]; then
-	echo "*"
-	echo "* ERROR: Failed to set permissions on agar-config"
-	echo "*"
-	exit 1
-fi
 
 AGARCONFIG="no"
 for path in `echo $PATH | sed 's/:/ /g'`; do
@@ -322,7 +328,7 @@ if [ "${AR_OS}" = "macosx" ]; then
 	$ECHO_N "Running ranlib(1) on library files..."
 	for FILE in `ls -1 lib/*.a`; do
 		echo "ranlib ${PREFIX}/$FILE"
-		ranlib ${PREFIX}/$FILE
+		ranlib "${PREFIX}/$FILE"
 	done
 	echo "Done."
 fi
