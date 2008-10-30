@@ -4,14 +4,15 @@
 #
 
 PROJNAME=	agar
-PKGNAME=	${PROJNAME}-${VERSION}-${OS}-${ARCH}${FLAVOR}
+PORTNAME?=	${OS}-${ARCH}${FLAVOR}
+PKGNAME?=	${PROJNAME}-${VERSION}-${PORTNAME}
 #SRCDIR=	/path/to/source
 
 VERSION=	`(cd ${SRCDIR} && perl mk/get-version.pl)`
 RELEASE=	`(cd ${SRCDIR} && perl mk/get-release.pl)`
 BUILDDIR=	/tmp/w-${PKGNAME}
 FAKEDIR=	/tmp/pkg-${PKGNAME}
-RELENGDIR=	${SRCDIR}/Packages/${OS}-${ARCH}${FLAVOR}
+RELENGDIR=	${SRCDIR}/Packages/${PORTNAME}
 PLATFORM?=	unix
 
 CONFIGURE_ARGS?=
