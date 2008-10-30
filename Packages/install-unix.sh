@@ -14,6 +14,7 @@ SUBDIRS="bin:exec lib:exec include: share:"
 INSTALL_MODE="bsd"
 INSTSCRIPTNAME="install.sh"
 SH="/bin/sh"
+EXECSUFFIX=""
 
 #
 # Generic Installation
@@ -59,6 +60,7 @@ case ${PLATFORM} in
 	;;
 *-*-cygwin | *-*-mingw32)
 	HOST_OS="mingw32"
+	EXECSUFFIX=".exe"
 	;;
 *-*-darwin*)
 	HOST_OS="macosx"
@@ -278,6 +280,7 @@ fi
 #
 
 rm -f ${PREFIX}/bin/agar-config
+rm -f ${PREFIX}/bin/agar-config${EXECSUFFIX}
 cat agar-config.sh | \
     sed "s,%INSTALLED_VERSION%,${VERSION}," | \
     sed "s,%INSTALLED_RELEASE%,${RELEASE}," | \
