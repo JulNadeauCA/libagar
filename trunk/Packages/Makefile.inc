@@ -13,12 +13,21 @@ BUILDDIR=	/tmp/w-${PKGNAME}
 FAKEDIR=	/tmp/pkg-${PKGNAME}
 RELENGDIR=	${SRCDIR}/Packages/${OS}-${ARCH}${FLAVOR}
 PLATFORM?=	unix
+
 CONFIGURE_ARGS?=
 CONFIGURE_STD=	--enable-threads \
 		--enable-network \
 		--with-gl \
 		--with-freetype \
 		--without-jpeg
+
+# NOTE: Sync with ${CONFIG_PROGS} in install-unix.sh.
+CONFIG_PROGS=	agar-config \
+		agar-core-config \
+		agar-dev-config \
+		agar-math-config \
+		agar-rg-config \
+		agar-vg-config
 
 all: pre-build do-build package
 
@@ -50,7 +59,9 @@ package:
 	     perl ${RELENGDIR}/../install-subst.pl "${SRCDIR}" "${PROJNAME}" \
 	     "${OS}" "${ARCH}" "${FLAVOR}" > ${PKGNAME}/install.sh && \
 	 chmod 755 ${PKGNAME}/install.sh && \
-	 cp -f ${RELENGDIR}/agar-config.sh ${PKGNAME} && \
+	 for F in ${CONFIG_PROGS}; do \
+	 	cp -f ${RELENGDIR}/$$F.sh ${PKGNAME}; \
+	 done; \
 	 cp -f ${RELENGDIR}/../config.guess ${PKGNAME} && \
 	 tar -f ${PKGNAME}.tar -c ${PKGNAME} && \
 	 gzip -f ${PKGNAME}.tar && \
