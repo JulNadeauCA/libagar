@@ -9,6 +9,7 @@ static void OutputLIBS(void);
 
 #include "../agar-config/agar-config-generic.h"
 
+/* XXX */
 #include <config/have_sdl.h>
 #ifdef HAVE_SDL
 #include <config/sdl_libs.h>
@@ -85,8 +86,7 @@ OutputCFLAGS(void)
 static void
 OutputLIBS(void)
 {
-	printf("-L%s ", LIBDIR);
-	printf("-lag_gui -lag_core ");
+	printf("-L%s -lag_core ", LIBDIR);
 #ifdef SDL_LIBS
 	printf("%s ", SDL_LIBS);
 #endif
