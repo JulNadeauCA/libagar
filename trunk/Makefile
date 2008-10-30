@@ -55,7 +55,7 @@ cleandir-config: clean-config
 	-(cd agarpaint && ${MAKE} cleandir)
 	-(cd agarrcsd && ${MAKE} cleandir)
 	-(cd demos && ${MAKE} cleandir)
-	rm -fR demos/.cache
+	-rm -fR demos/.cache
 	find . -name premake.lua -exec rm -f {} \;
 	find . -name configure.lua -exec rm -f {} \;
 

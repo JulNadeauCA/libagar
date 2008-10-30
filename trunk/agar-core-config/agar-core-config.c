@@ -1,121 +1,112 @@
+/*	Public domain	*/
 /*
- * Copyright (c) 2007 Hypertriton, Inc. <http://hypertriton.com/>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Output compile information for ag_core library.
  */
 
-#include <config/version.h>
-#include <config/debug.h>
-#include <config/release.h>
-#include <config/prefix.h>
-#include <config/sysconfdir.h>
-#include <config/incldir.h>
-#include <config/libdir.h>
-#include <config/sharedir.h>
-#include <config/localedir.h>
+static void PrintUsage(char *);
+static void OutputCFLAGS(void);
+static void OutputLIBS(void);
+
+#include "../agar-config/agar-config-generic.h"
+
+#include <config/have_sdl.h>
+#ifdef HAVE_SDL
+#include <config/sdl_libs.h>
+#include <config/sdl_cflags.h>
+#endif
+
+#include <config/have_math.h>
+#ifdef HAVE_MATH
+#include <config/math_libs.h>
+#include <config/math_cflags.h>
+#endif
 
 #include <config/have_pthreads.h>
-#include <config/enable_nls.h>
-
 #ifdef HAVE_PTHREADS
 #include <config/pthreads_libs.h>
 #include <config/pthreads_cflags.h>
 #endif
+
+#include <config/enable_nls.h>
 #ifdef ENABLE_NLS
 #include <config/gettext_libs.h>
 #include <config/gettext_cflags.h>
 #endif
 
-#include <config/sdl_libs.h>
-#include <config/sdl_cflags.h>
-
+#include <config/threads.h>
+#include <config/network.h>
 #include <config/dso_libs.h>
 #include <config/dso_cflags.h>
 
-#include <stdio.h>
-#include <string.h>
+const struct config_string_opt stringOpts[] = {
+	GENERIC_STRING_OPTS,
+#ifdef THREADS
+	{ "--threads",	"yes" },
+#else
+	{ "--threads",	"no" },
+#endif
+#ifdef NETWORK
+	{ "--network",	"yes" },
+#else
+	{ "--network",	"no" },
+#endif
+};
+const int nStringOpts = sizeof(stringOpts) / sizeof(stringOpts[0]);
+
+static void
+PrintUsage(char *name)
+{
+	fprintf(stderr, GENERIC_USAGE_STRING, name);
+	fprintf(stderr, "[--threads] [--network]\n");
+}
+
+static void
+OutputCFLAGS(void)
+{
+	printf("-I%s ", INCLDIR);
+#ifdef SDL_CFLAGS
+	printf("%s ", SDL_CFLAGS);
+#endif
+#ifdef MATH_CFLAGS
+	printf("%s ", MATH_CFLAGS);
+#endif
+#ifdef HAVE_PTHREADS
+	printf("%s ", PTHREADS_CFLAGS);
+#endif
+#ifdef ENABLE_NLS
+	printf("%s ", GETTEXT_CFLAGS);
+#endif
+#ifdef DSO_CFLAGS
+	printf("%s ", DSO_CFLAGS);
+#endif
+	printf("\n");
+}
+
+static void
+OutputLIBS(void)
+{
+	printf("-L%s ", LIBDIR);
+	printf("-lag_gui -lag_core ");
+#ifdef SDL_LIBS
+	printf("%s ", SDL_LIBS);
+#endif
+#ifdef MATH_LIBS
+	printf("%s ", MATH_LIBS);
+#endif
+#ifdef HAVE_PTHREADS
+	printf("%s ", PTHREADS_LIBS);
+#endif
+#ifdef ENABLE_NLS
+	printf("%s ", GETTEXT_LIBS);
+#endif
+#ifdef DSO_LIBS
+	printf("%s ", DSO_LIBS);
+#endif
+	printf("\n");
+}
 
 int
 main(int argc, char *argv[])
 {
-	int i;
-
-	for (i = 0; i < argc; i++) {
-		if (strcmp(argv[i], "--version") == 0) {
-			printf("%s\n", VERSION);
-		} else if (strcmp(argv[i], "--release") == 0) {
-			printf("%s\n", RELEASE);
-		} else if (strcmp(argv[i], "--prefix") == 0) {
-			printf("%s\n", PREFIX);
-		} else if (strcmp(argv[i], "--sysconfdir") == 0) {
-			printf("%s\n", SYSCONFDIR);
-		} else if (strcmp(argv[i], "--incldir") == 0) {
-			printf("%s\n", INCLDIR);
-		} else if (strcmp(argv[i], "--libdir") == 0) {
-			printf("%s\n", LIBDIR);
-		} else if (strcmp(argv[i], "--sharedir") == 0) {
-			printf("%s\n", SHAREDIR);
-		} else if (strcmp(argv[i], "--localedir") == 0) {
-			printf("%s\n", LOCALEDIR);
-		} else if (strcmp(argv[i], "--cflags") == 0) {
-			printf("-I%s ", INCLDIR);
-#ifdef SDL_CFLAGS
-			printf("%s ", SDL_CFLAGS);
-#endif
-#ifdef HAVE_PTHREADS
-			printf("%s ", PTHREADS_CFLAGS);
-#endif
-#ifdef ENABLE_NLS
-			printf("%s ", GETTEXT_CFLAGS);
-#endif
-#ifdef DSO_CFLAGS
-			printf("%s ", DSO_CFLAGS);
-#endif
-			printf("\n");
-		} else if (strcmp(argv[i], "--libs") == 0) {
-			printf("-L%s ", LIBDIR);
-			printf("-lag_core ");
-#ifdef SDL_LIBS
-			printf("%s ", SDL_LIBS);
-#endif
-#ifdef HAVE_PTHREADS
-			printf("%s ", PTHREADS_LIBS);
-#endif
-#ifdef ENABLE_NLS
-			printf("%s ", GETTEXT_LIBS);
-#endif
-#ifdef DSO_LIBS
-			printf("%s ", DSO_LIBS);
-#endif
-			printf("\n");
-		}
-	}
-	if (i <= 1) {
-		fprintf(stderr,
-		    "Usage: %s [--version] [--release] [--prefix] "
-		    "[--sysconfdir] [--incldir] [--libdir] [--sharedir] "
-		    "[--localedir] [--cflags] [--libs]\n", argv[0]);
-		return (1);
-	}
-	return (0);
+	return GenericFooConfig(stringOpts, nStringOpts, argc, argv);
 }
-

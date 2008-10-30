@@ -1,101 +1,68 @@
+/*	Public domain	*/
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Output compile information for ag_core and ag_gui libraries.
  */
 
-#include <config/version.h>
-#include <config/debug.h>
-#include <config/release.h>
-#include <config/prefix.h>
-#include <config/sysconfdir.h>
-#include <config/incldir.h>
-#include <config/libdir.h>
-#include <config/sharedir.h>
-#include <config/ttfdir.h>
-#include <config/localedir.h>
+static void PrintUsage(char *);
+static void OutputCFLAGS(void);
+static void OutputLIBS(void);
 
-#include <config/have_sdl.h>
-#include <config/have_opengl.h>
-#include <config/have_freetype.h>
-#include <config/have_jpeg.h>
-#include <config/have_math.h>
-#include <config/have_pthreads.h>
+#include "agar-config-generic.h"
+
 #include <config/threads.h>
 #include <config/network.h>
-#include <config/enable_nls.h>
 
+#include <config/have_sdl.h>
 #ifdef HAVE_SDL
-# include <config/sdl_libs.h>
-# include <config/sdl_cflags.h>
+#include <config/sdl_libs.h>
+#include <config/sdl_cflags.h>
 #endif
+
+#include <config/have_opengl.h>
 #ifdef HAVE_OPENGL
-# include <config/opengl_libs.h>
-# include <config/opengl_cflags.h>
+#include <config/opengl_libs.h>
+#include <config/opengl_cflags.h>
 #endif
+
+#include <config/have_freetype.h>
 #ifdef HAVE_FREETYPE
-# include <config/freetype_libs.h>
-# include <config/freetype_cflags.h>
+#include <config/freetype_libs.h>
+#include <config/freetype_cflags.h>
 #endif
+
+#include <config/have_jpeg.h>
 #ifdef HAVE_JPEG
-# include <config/jpeg_libs.h>
-# include <config/jpeg_cflags.h>
+#include <config/jpeg_libs.h>
+#include <config/jpeg_cflags.h>
 #endif
+
+#include <config/have_math.h>
 #ifdef HAVE_MATH
-# include <config/math_libs.h>
-# include <config/math_cflags.h>
+#include <config/math_libs.h>
+#include <config/math_cflags.h>
 #endif
+
+#include <config/have_pthreads.h>
 #ifdef HAVE_PTHREADS
-# include <config/pthreads_libs.h>
-# include <config/pthreads_cflags.h>
+#include <config/pthreads_libs.h>
+#include <config/pthreads_cflags.h>
 #endif
+
+#include <config/enable_nls.h>
 #ifdef ENABLE_NLS
-# include <config/gettext_libs.h>
-# include <config/gettext_cflags.h>
+#include <config/gettext_libs.h>
+#include <config/gettext_cflags.h>
 #endif
 
 #include <config/dso_libs.h>
 #include <config/dso_cflags.h>
 
-#include <stdio.h>
-#include <string.h>
-
 #if defined(__APPLE__) || defined(__MACOSX__)
 # include <AvailabilityMacros.h>
 #endif
 
-const struct {
-	const char *opt;
-	const char *data;
-} stringOpts[] = {
-	{ "--version",	 VERSION },
-	{ "--release",	 RELEASE },
-	{ "--prefix",	 PREFIX },
-	{ "--sysconfdir",SYSCONFDIR },
-	{ "--incldir",	 INCLDIR },
-	{ "--libdir",	 LIBDIR },
-	{ "--sharedir",	 SHAREDIR },
-	{ "--ttfdir",	 TTFDIR },
-	{ "--localedir", LOCALEDIR },
+const struct config_string_opt stringOpts[] = {
+	GENERIC_STRING_OPTS,
 #ifdef THREADS
 	{ "--threads",	"yes" },
 #else
@@ -106,7 +73,6 @@ const struct {
 #else
 	{ "--network",	"no" },
 #endif
-
 #ifdef HAVE_SDL
 	{ "--sdl",	"yes" },
 #else
@@ -128,13 +94,9 @@ const int nStringOpts = sizeof(stringOpts) / sizeof(stringOpts[0]);
 static void
 PrintUsage(char *name)
 {
+	fprintf(stderr, GENERIC_USAGE_STRING, name);
 	fprintf(stderr,
-	    "Usage: %s [--version] [--release] [--prefix] "
-	    "[--sysconfdir] [--incldir] [--libdir] [--sharedir] "
-	    "[--ttfdir] [--localedir] "
-	    "[--threads] [--network] "
-	    "[--sdl] [--opengl] [--freetype] "
-	    "[--cflags] [--libs]\n", name);
+	    "[--threads] [--network] [--sdl] [--opengl] [--freetype]\n");
 }
 
 static void
@@ -206,31 +168,5 @@ OutputLIBS(void)
 int
 main(int argc, char *argv[])
 {
-	int i, j;
-
-	for (i = 1; i < argc; i++) {
-		if (strcmp(argv[i], "--cflags") == 0) {
-			OutputCFLAGS();
-		} else if (strcmp(argv[i], "--libs") == 0) {
-			OutputLIBS();
-		} else {
-			for (j = 0; j < nStringOpts; j++) {
-				if (strcmp(argv[i], stringOpts[j].opt) == 0)
-					break;
-			}
-			if (j < nStringOpts) {
-				printf("%s\n", stringOpts[j].data);
-				continue;
-			}
-			printf("No such option: %s\n", argv[i]);
-			PrintUsage(argv[0]);
-			return (1);
-		}
-	}
-	if (i <= 1) {
-		PrintUsage(argv[0]);
-		return (1);
-	}
-	return (0);
+	return GenericFooConfig(stringOpts, nStringOpts, argc, argv);
 }
-
