@@ -285,7 +285,7 @@ for F in ${CONFIG_PROGS}; do
 		echo "* Removing conflicting ${F}${EXECSUFFIX}"
 		rm -f "${PREFIX}/bin/${F}${EXECSUFFIX}"
 	fi
-	cat agar-config.sh | \
+	cat "${F}.sh" | \
 	    sed "s,%INSTALLED_VERSION%,${VERSION}," | \
 	    sed "s,%INSTALLED_RELEASE%,${RELEASE}," | \
 	    sed "s,%PREFIX%,${PREFIX}," > "${PREFIX}/bin/${F}"
