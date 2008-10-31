@@ -376,22 +376,22 @@ UpdateTextbox(AG_MFSpinbutton *num)
 		Snprintf(sx, sizeof(sx), "%u", *(Uint *)value);
 		break;
 	case AG_WIDGET_UINT8:
-		Snprintf(sx, sizeof(sx), "%u", *(Uint8 *)value);
+		Snprintf(sx, sizeof(sx), "%u", (unsigned)(*(Uint8 *)value));
 		break;
 	case AG_WIDGET_SINT8:
-		Snprintf(sx, sizeof(sx), "%d", *(Sint8 *)value);
+		Snprintf(sx, sizeof(sx), "%d", (int)(*(Sint8 *)value));
 		break;
 	case AG_WIDGET_UINT16:
-		Snprintf(sx, sizeof(sx), "%u", *(Uint16 *)value);
+		Snprintf(sx, sizeof(sx), "%u", (unsigned)(*(Uint16 *)value));
 		break;
 	case AG_WIDGET_SINT16:
-		Snprintf(sx, sizeof(sx), "%d", *(Sint16 *)value);
+		Snprintf(sx, sizeof(sx), "%d", (int)(*(Sint16 *)value));
 		break;
 	case AG_WIDGET_UINT32:
-		Snprintf(sx, sizeof(sx), "%u", *(Uint32 *)value);
+		Snprintf(sx, sizeof(sx), "%u", (unsigned)(*(Uint32 *)value));
 		break;
 	case AG_WIDGET_SINT32:
-		Snprintf(sx, sizeof(sx), "%d", *(Sint32 *)value);
+		Snprintf(sx, sizeof(sx), "%d", (int)(*(Sint32 *)value));
 		break;
 #ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:
@@ -424,22 +424,22 @@ UpdateTextbox(AG_MFSpinbutton *num)
 		Snprintf(sy, sizeof(sy), "%u", *(Uint *)value);
 		break;
 	case AG_WIDGET_UINT8:
-		Snprintf(sy, sizeof(sy), "%u", *(Uint8 *)value);
+		Snprintf(sy, sizeof(sy), "%u", (unsigned)(*(Uint8 *)value));
 		break;
 	case AG_WIDGET_SINT8:
-		Snprintf(sy, sizeof(sy), "%d", *(Sint8 *)value);
+		Snprintf(sy, sizeof(sy), "%d", (int)(*(Sint8 *)value));
 		break;
 	case AG_WIDGET_UINT16:
-		Snprintf(sy, sizeof(sy), "%u", *(Uint16 *)value);
+		Snprintf(sy, sizeof(sy), "%u", (unsigned)(*(Uint16 *)value));
 		break;
 	case AG_WIDGET_SINT16:
-		Snprintf(sy, sizeof(sy), "%d", *(Sint16 *)value);
+		Snprintf(sy, sizeof(sy), "%d", (int)(*(Sint16 *)value));
 		break;
 	case AG_WIDGET_UINT32:
-		Snprintf(sy, sizeof(sy), "%u", *(Uint32 *)value);
+		Snprintf(sy, sizeof(sy), "%u", (unsigned)(*(Uint32 *)value));
 		break;
 	case AG_WIDGET_SINT32:
-		Snprintf(sy, sizeof(sy), "%d", *(Sint32 *)value);
+		Snprintf(sy, sizeof(sy), "%d", (int)(*(Sint32 *)value));
 		break;
 #ifdef HAVE_64BIT
 	case AG_WIDGET_UINT64:

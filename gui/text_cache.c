@@ -147,7 +147,7 @@ AG_TextCacheInsLookup(AG_TextCache *tc, const char *text)
 		}
 	} else {
 		ct->stamp = SDL_GetTicks();
-		fprintf(stderr, "HIT (%u)\n", ct->stamp);
+		fprintf(stderr, "HIT (%u)\n", (unsigned)ct->stamp);
 	}
 	return (ct->surface);
 }

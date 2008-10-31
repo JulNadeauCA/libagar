@@ -23,12 +23,13 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "opengl.h"
+
 #include <core/core.h>
 #include <core/config.h>
 
 #include "view.h"
 #include "colors.h"
-#include "opengl.h"
 #include "load_color.h"
 
 const AG_Version agColorSchemeVer = { 1, 0 };

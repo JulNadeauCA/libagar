@@ -486,7 +486,8 @@ ConvertLayer(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_header *head,
 	hier->h = AG_ReadUint32(buf);
 	hier->bpp = AG_ReadUint32(buf);
 	if (hier->bpp != 4 && hier->bpp != 3) {
-		AG_SetError(_("Cannot handle %dBpp XCF data"), hier->bpp);
+		AG_SetError(_("Cannot handle %dBpp XCF data"),
+		    (int)hier->bpp);
 		Free(hier);
 		return (NULL);
 	}
@@ -588,7 +589,9 @@ AG_XCFLoad(AG_DataSource *buf, off_t xcf_offs,
 	head->h = AG_ReadUint32(buf);
 	if (head->w > XCF_WIDTH_MAX ||
 	    head->h > XCF_HEIGHT_MAX) {
-		AG_SetError(_("Bad XCF geometry: %ux%u"), head->w, head->h);
+		AG_SetError(_("Bad XCF geometry: %ux%u"),
+		    (unsigned int)head->w,
+		    (unsigned int)head->h);
 		Free(head);
 		return (-1);
 	}

@@ -2720,6 +2720,8 @@ fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
 $ECHO_N "checking for a strtold() function..."
 $ECHO_N "checking for a strtold() function..." >> config.log
+if [ "${HAVE_LONG_DOUBLE}" = "yes" ]; then
+if [ "${HAVE_CYGWIN}" = "no" ]; then
 MK_CACHED="No"
 MK_COMPILE_STATUS="OK"
 if [ "${cache}" != "" ]; then
@@ -2733,7 +2735,6 @@ if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
 #define _XOPEN_SOURCE 600
 #include <stdlib.h>
-
 int
 main(int argc, char *argv[])
 {
@@ -2773,6 +2774,20 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-_MK_HAVE_STRTOLD
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+else
+_MK_HAVE_STRTOLD="no"
+echo "#undef _MK_HAVE_STRTOLD" >config/_mk_have_strtold.h
+echo "hdefs[\"_MK_HAVE_STRTOLD\"] = nil" >>configure.lua
+echo "not checking (cygwin issues)"
+echo "not checking (cygwin issues)" >> config.log
+fi;
+else
+_MK_HAVE_STRTOLD="no"
+echo "#undef _MK_HAVE_STRTOLD" >config/_mk_have_strtold.h
+echo "hdefs[\"_MK_HAVE_STRTOLD\"] = nil" >>configure.lua
+echo "skipping (no long double)"
+echo "skipping (no long double)" >> config.log
+fi;
 $ECHO_N "checking for AltiVec (with <altivec.h>)..."
 $ECHO_N "checking for AltiVec (with <altivec.h>)..." >> config.log
 if [ "$SYSTEM" = "Darwin" ]; then

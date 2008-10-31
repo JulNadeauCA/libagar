@@ -60,6 +60,8 @@
  * license with kind permission from Sam Lantinga.
  */
 
+#include "opengl.h"
+
 #include <config/have_freetype.h>
 #include <config/ttfdir.h>
 #include <config/utf8.h>
@@ -88,8 +90,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
-
-#include "opengl.h"
 
 #include "icons.h"
 #include "fonts.h"

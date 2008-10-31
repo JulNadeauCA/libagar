@@ -23,8 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/have_long_double.h>
 #include <config/_mk_have_strtoll.h>
 #include <config/_mk_have_strtold.h>
+
+#if defined(HAVE_LONG_DOUBLE) && defined(_MK_HAVE_STRTOLD)
+#define _XOPEN_SOURCE 600
+#include <stdlib.h>
+#endif
 
 #include <core/core.h>
 
@@ -32,11 +38,6 @@
 #include "primitive.h"
 
 #include <string.h>
-
-#ifdef _MK_HAVE_STRTOLD
-#define _XOPEN_SOURCE 600
-#include <stdlib.h>
-#endif
 
 static void UnitSelected(AG_Event *);
 

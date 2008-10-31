@@ -28,6 +28,8 @@
  * used by AG_Textbox(3), editable cells in AG_Table(3), etc.
  */
 
+#include "opengl.h"
+
 #include <core/core.h>
 #include <core/config.h>
 
@@ -41,7 +43,6 @@
 
 #include "keymap.h"
 #include "primitive.h"
-#include "opengl.h"
 #include "cursors.h"
 
 #include <string.h>

@@ -44,6 +44,7 @@
 
 #include <config/lockdebug.h>
 #include <config/objdebug.h>
+#include <config/threads.h>
 
 AG_ObjectClass agObjectClass = {
 	"Agar(Object)",
@@ -427,10 +428,14 @@ void
 AG_ObjectDetach(void *childp)
 {
 	AG_Object *child = childp;
+#ifdef THREADS
 	AG_Object *root = child->root;
+#endif
 	AG_Object *parent = child->parent;
 
+#ifdef THREADS
 	AG_LockVFS(root);
+#endif
 	AG_ObjectLock(parent);
 	AG_ObjectLock(child);
 
@@ -448,7 +453,9 @@ AG_ObjectDetach(void *childp)
 #endif
 	AG_ObjectUnlock(child);
 	AG_ObjectUnlock(parent);
+#ifdef THREADS
 	AG_UnlockVFS(root);
+#endif
 }
 
 void

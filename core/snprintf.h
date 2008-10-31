@@ -11,7 +11,7 @@
 #include <agar/config/have_snprintf.h>
 #ifdef HAVE_SNPRINTF
 # include <stdio.h>
-# if defined(_WIN32)
+# if defined(_WIN32) && defined(_MSC_VER)
 #  define AG_Snprintf _snprintf
 # else
 #  define AG_Snprintf snprintf
