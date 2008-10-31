@@ -1,8 +1,5 @@
 #!/bin/sh
-#
-# Static agar-config for Linux/i386 binary packages.
 # Public domain
-#
 
 PREFIX="%PREFIX%"
 

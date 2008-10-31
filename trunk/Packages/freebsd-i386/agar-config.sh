@@ -1,8 +1,5 @@
 #!/bin/sh
-#
-# Static agar-config for FreeBSD/i386 binary packages.
 # Public domain
-#
 
 PREFIX="%PREFIX%"
 

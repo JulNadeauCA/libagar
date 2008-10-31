@@ -1,8 +1,5 @@
 #!/bin/sh
-#
-# Static agar-config for Darwin/ppc binary packages.
 # Public domain
-#
 
 PREFIX="%PREFIX%"
 
