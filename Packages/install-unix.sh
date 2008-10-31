@@ -155,9 +155,6 @@ $ECHO_N "Do you want to continue? [Y/n] "
 read CONF
 case x${CONF} in
 xy* | xY* | x)
-	echo "*"
-	echo "* Starting installation..."
-	echo "*"
 	;;
 *)
 	echo "*"
@@ -282,7 +279,6 @@ fi
 
 for F in ${CONFIG_PROGS}; do
 	if [ -e "${PREFIX}/bin/${F}${EXECSUFFIX}" ]; then
-		echo "* Removing conflicting ${F}${EXECSUFFIX}"
 		rm -f "${PREFIX}/bin/${F}${EXECSUFFIX}"
 	fi
 	cat "${F}.sh" | \
