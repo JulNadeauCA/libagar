@@ -1,8 +1,5 @@
 #!/bin/sh
-#
-# Static agar-config for OpenBSD/sparc binary packages.
 # Public domain
-#
 
 PREFIX="%PREFIX%"
 

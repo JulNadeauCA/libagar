@@ -3001,13 +3001,18 @@ echo "hdefs[\"HAVE_SDL_IMAGE\"] = nil" >>configure.lua
 fi;
 if [ "${HAVE_AGAR}" != "yes" ]
  then
-	echo "This demo requires Agar installed on your system."
+	echo "*"
+	echo "* The Agar library was not detected."
+	echo "* This demo requires Agar installed on your system."
+	echo "*"
 	exit 1
 fi
 if [ "${AGAR_HAVE_THREADS}" != "yes" ]
  then
-	echo "This demo requires threads support in agar. Please recompile"
-	echo "agar with the --enable-threads option."
+	echo "*"
+	echo "* This demo requires threads support in agar. Please recompile"
+	echo "* agar with the --enable-threads option."
+	echo "*"
 	exit 1
 fi
 if [ "${enable_static}" = "yes" ]
