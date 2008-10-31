@@ -8,7 +8,7 @@ if [ "$1" = "--release" ]; then echo "%INSTALLED_RELEASE%"; fi
 if [ "$1" = "--prefix" ]; then echo "${PREFIX}"; fi
 
 if [ "$1" = "--threads" ]; then echo "yes"; fi
-if [ "$1" = "--network" ]; then echo "yes"; fi
+if [ "$1" = "--network" ]; then echo "no"; fi
 if [ "$1" = "--sdl" ]; then echo "yes"; fi
 if [ "$1" = "--opengl" ]; then echo "yes"; fi
 if [ "$1" = "--freetype" ]; then echo "yes"; fi
