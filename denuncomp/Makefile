@@ -4,7 +4,8 @@ include Makefile.config
 PROG=		denuncomp
 PROG_TYPE=	"CLI"
 PROG_GUID=	"3B69DB91-66D5-4d11-B77E-D83A26372A7D"
-PROG_LINKS=	ag_core
+PROG_LINKS=	ag_core \
+		pthreads SDL SDLmain
 
 SRCS=	denuncomp.c
 MAN1=	denuncomp.1
