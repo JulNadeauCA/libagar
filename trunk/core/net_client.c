@@ -323,7 +323,7 @@ readbin:
 		AG_SetError("Incomplete binary response.");
 		goto fail;
 	}
-	printf("downloaded %lu bytes\n", (u_long)binread);
+	printf("downloaded %lu bytes\n", (unsigned long)binread);
 	return (res);
 fail:
 	Free(res->argv[0]);
