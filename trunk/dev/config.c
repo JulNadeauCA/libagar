@@ -27,6 +27,8 @@
  * Generic configuration settings dialog.
  */
 
+#include <gui/opengl.h>
+
 #include <core/core.h>
 #include <core/config.h>
 #include <core/rcs.h>
@@ -47,8 +49,6 @@
 #include <gui/pane.h>
 
 #include "dev.h"
-
-#include <gui/opengl.h>
 
 AG_Window *devConfigWindow = NULL;
 

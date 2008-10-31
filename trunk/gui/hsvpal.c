@@ -38,7 +38,11 @@
 #include <string.h>
 
 static float cH = 0.0, cS = 0.0, cV = 0.0, cA = 0.0;	/* Copy buffer */
+
+#include <config/threads.h>
+#ifdef THREADS
 static AG_Mutex CopyLock = AG_MUTEX_INITIALIZER;
+#endif
 
 static void RenderPalette(AG_HSVPal *);
 

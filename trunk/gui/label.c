@@ -33,9 +33,15 @@
 #include <string.h>
 #include <stdarg.h>
 
+#include <config/threads.h>
+
+#include <core/snprintf.h>
+
 static AG_LabelFormatSpec *fmts = NULL;	/* Format specifiers */
 static int nFmts = 0;
+#ifdef THREADS
 static AG_Mutex fmtsLock;
+#endif
 
 /* Create a new polled label. */
 AG_Label *
@@ -344,22 +350,22 @@ AG_LabelString(AG_Label *lbl, const char *s)
  * Built-in extended format specifiers.
  */
 static void PrintU8(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%u", AG_LABEL_ARG(lbl,Uint8));
+	Snprintf(s, len, "%u", (unsigned int)AG_LABEL_ARG(lbl,Uint8));
 }
 static void PrintS8(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%d", AG_LABEL_ARG(lbl,Sint8));
+	Snprintf(s, len, "%d", (int)AG_LABEL_ARG(lbl,Sint8));
 }
 static void PrintU16(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%u", AG_LABEL_ARG(lbl,Uint16));
+	Snprintf(s, len, "%u", (unsigned int)AG_LABEL_ARG(lbl,Uint16));
 }
 static void PrintS16(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%d", AG_LABEL_ARG(lbl,Sint16));
+	Snprintf(s, len, "%d", (int)AG_LABEL_ARG(lbl,Sint16));
 }
 static void PrintU32(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%u", AG_LABEL_ARG(lbl,Uint32));
+	Snprintf(s, len, "%u", (unsigned int)AG_LABEL_ARG(lbl,Uint32));
 }
 static void PrintS32(AG_Label *lbl, char *s, size_t len, int fPos) {
-	Snprintf(s, len, "%d", AG_LABEL_ARG(lbl,Sint32));
+	Snprintf(s, len, "%d", (int)AG_LABEL_ARG(lbl,Sint32));
 }
 static void
 PrintOBJNAME(AG_Label *lbl, char *s, size_t len, int fPos)

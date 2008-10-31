@@ -28,6 +28,8 @@
  * class with a built-in label, pixel padding and scrollbars.
  */
 
+#include "opengl.h"
+
 #include <core/core.h>
 #include <core/config.h>
 
@@ -37,7 +39,6 @@
 #include "text.h"
 #include "keymap.h"
 #include "primitive.h"
-#include "opengl.h"
 #include "window.h"
 
 #include <string.h>

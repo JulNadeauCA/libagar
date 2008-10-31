@@ -49,6 +49,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include <config/threads.h>
+
 extern const RG_FeatureOps rgFillOps;
 /* extern const RG_FeatureOps rgSketchProjOps; */
 
@@ -1420,7 +1422,9 @@ EditSelTiles(AG_Event *event)
 static void
 EditSelAnims(AG_Event *event)
 {
+#ifdef THREADS
 	RG_Tileset *ts = AG_PTR(1);
+#endif
 	AG_Tlist *tl = AG_PTR(2);
 	AG_Window *pwin = AG_PTR(3);
 	AG_Window *win;

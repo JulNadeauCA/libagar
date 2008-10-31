@@ -137,7 +137,8 @@ AG_ReadSurface(AG_DataSource *ds, AG_PixelFormat *pixfmt)
 
 	encoding = AG_ReadUint32(ds);
 	if (encoding != RAW_ENCODING) {
-		AG_SetError(_("Unsupported surface encoding: %d"), encoding);
+		AG_SetError(_("Unsupported surface encoding: %u"),
+		    (unsigned int)encoding);
 		return (NULL);
 	}
 	flags = AG_ReadUint32(ds);

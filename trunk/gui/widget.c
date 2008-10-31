@@ -23,6 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "opengl.h"
+
 #include <core/core.h>
 
 #include "widget.h"
@@ -32,8 +34,6 @@
 #include "primitive.h"
 #include "notebook.h"
 #include "gui_math.h"
-
-#include "opengl.h"
 
 #include <stdarg.h>
 #include <string.h>

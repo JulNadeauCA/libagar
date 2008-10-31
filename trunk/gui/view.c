@@ -27,8 +27,7 @@
  * Low-level interface between the GUI and video display.
  */
 
-#include <config/have_jpeg.h>
-#include <config/have_x11.h>
+#include "opengl.h"
 
 #include <core/core.h>
 #include <core/config.h>
@@ -49,13 +48,14 @@
 #include <string.h>
 #include <fcntl.h>
 
+#include <config/have_jpeg.h>
 #ifdef HAVE_JPEG
 #undef HAVE_STDLIB_H		/* Work around SDL.h retardation */
 #include <jpeglib.h>
 #include <errno.h>
 #endif
 
-#include "opengl.h"
+#include <config/threads.h>
 
 /*
  * Invert the Y-coordinate in OpenGL mode.
@@ -95,7 +95,9 @@ struct ag_global_key {
 };
 static SLIST_HEAD(,ag_global_key) agGlobalKeys =
     SLIST_HEAD_INITIALIZER(&agGlobalKeys);
+#ifdef THREADS
 static AG_Mutex agGlobalKeysLock;
+#endif
 
 #ifdef DEBUG
 int agEventAvg = 0;		/* Number of events in last frame */

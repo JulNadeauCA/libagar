@@ -331,7 +331,9 @@ static void
 EditClose(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
+#ifdef THREADS
 	RG_Tileset *ts = AG_PTR(1);
+#endif
 	RG_Anim *ani = AG_PTR(2);
 	
 	AG_MutexLock(&ts->lock);
@@ -346,7 +348,9 @@ PollInsns(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
+#ifdef THREADS
 	RG_Tileset *ts = ani->tileset;
+#endif
 	AG_TlistItem *it;
 	Uint i;
 
@@ -397,7 +401,9 @@ PollFrames(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
+#ifdef THREADS
 	RG_Tileset *ts = ani->tileset;
+#endif
 	Uint i;
 
 	AG_TlistClear(tl);

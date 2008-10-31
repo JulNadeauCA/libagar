@@ -27,13 +27,14 @@
  * Low-level primitive graphics routines for use by GUI widgets.
  */
 
+#include "opengl.h"
+
 #include <core/core.h>
 
 #include "widget.h"
 #include "window.h"
 #include "primitive.h"
 #include "gui_math.h"
-#include "opengl.h"
 
 AG_PrimitiveOps agPrim;
 

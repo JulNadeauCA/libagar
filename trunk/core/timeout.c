@@ -29,6 +29,7 @@
  */
 
 #include <core/core.h>
+#include <config/threads.h>
 
 struct ag_objectq agTimeoutObjQ = TAILQ_HEAD_INITIALIZER(agTimeoutObjQ);
 AG_Object agTimeoutMgr;
@@ -210,17 +211,21 @@ pop:
 void
 AG_LockTimeouts(void *p)
 {
+#ifdef THREADS
 	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
-
 	AG_ObjectLock(ob);
+#endif
 	AG_LockTiming();
 }
 
 void
 AG_UnlockTimeouts(void *p)
 {
+#ifdef THREADS
 	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
-
+#endif
 	AG_UnlockTiming();
+#ifdef THREADS
 	AG_ObjectUnlock(ob);
+#endif
 }
