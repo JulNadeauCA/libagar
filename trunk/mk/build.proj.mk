@@ -40,13 +40,15 @@ PROJFILESEXTRA?=
 PROJFILELIST=	.projfiles2.out
 PROJPREPKG?=
 PROJPOSTPKG?=
+PROJCONFIGDIR?=
 
-PROJFILES?=	linux:i386:cb-gcc:: \
+PROJFILES?=	bsd:i386:cb-gcc:: \
+		linux:i386:cb-gcc:: \
 		macosx:i386:cb-gcc:: \
 		windows:i386:cb-gcc:: \
 		windows:i386:vs2005::
 
-CLEANFILES+=	${PREMAKEOUT} configure.lua
+CLEANFILES+=	${PREMAKEOUT} ${PROJINCLUDES}
 
 proj-package:
 	@if [ "${PROJECT}" = "" ]; then \
@@ -54,7 +56,7 @@ proj-package:
 	    cat Makefile | \
 	        env PROJTARGET="${PROJTARGET}" PROJOS="${PROJOS}" \
 		PROJARCH="${PROJARCH}" PROJFLAVOR="" \
-		PROJINCLUDES="${TOP}/configure.lua" \
+		PROJINCLUDES="${PROJINCLUDES}" \
 	        ${MKPROJFILES} > ${PREMAKEOUT}; \
 	fi
 
@@ -90,7 +92,7 @@ proj:
 		    --emul-arch=$$_tgtarch > configure.tmp; \
 		if [ $$? != 0 ]; then \
 			echo "mkconfigure failed"; \
-			rm -fR configure.tmp configure.lua; \
+			rm -fR configure.tmp ${PROJINCLUDES}; \
 			exit 1; \
 		fi; \
 		echo "./configure.tmp $$_tgtopts --with-proj-generation"; \
@@ -105,10 +107,12 @@ proj:
 		    PROJARCH="$$_tgtarch" \
 		    ${MAKE} proj-package-subdir; \
 		\
-		echo "rm -fR include/agar/config"; \
-		rm -fR include/agar/config; \
-		echo "cp -fR config include/agar/config"; \
-		cp -fR config include/agar/config; \
+		if [ "${PROJCONFIGDIR}" != "" ]; then \
+			echo "rm -fR ${PROJCONFIGDIR}"; \
+			rm -fR ${PROJCONFIGDIR}; \
+			echo "cp -fR config ${PROJCONFIGDIR}"; \
+			cp -fR config ${PROJCONFIGDIR}; \
+		fi; \
 		echo "rm -f configure.tmp config.log"; \
 		rm -f configure.tmp config.log; \
 		echo >Makefile.config; \
@@ -117,7 +121,8 @@ proj:
 	        echo "cat Makefile | ${MKPROJFILES} > ${PREMAKEOUT}"; \
 	        cat Makefile | \
 		    env PROJFLAVOR="$$_tgtflav" \
-		    PROJINCLUDES="${TOP}/configure.lua" \
+		    PROJOS="$$_tgtos" \
+		    PROJINCLUDES="${PROJINCLUDES}" \
 		    ${MKPROJFILES} > ${PREMAKEOUT}; \
 	        echo "${PREMAKE} ${PREMAKEFLAGS} --file ${PREMAKEOUT} \
 		    --os $$_tgtos --target $$_tgtproj"; \
@@ -160,7 +165,7 @@ proj:
 		echo "* Cleaning up"; \
 		cat .projfiles.out | perl ${TOP}/mk/cleanfiles.pl; \
 		rm -fR include config ${PROJFILELIST}; \
-		rm -f configure.lua .projfiles.out; \
+		rm -f .projfiles.out ${PROJINCLUDES}; \
 	done
 	${MAKE} proj-clean
 	@echo "* Done"
