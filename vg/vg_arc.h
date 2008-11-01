@@ -11,7 +11,7 @@ typedef struct vg_arc {
 #define VGARC(p) ((VG_Arc *)(p))
 
 __BEGIN_DECLS
-extern const VG_NodeOps vgArcOps;
+extern VG_NodeOps vgArcOps;
 
 static __inline__ VG_Arc *
 VG_ArcNew(void *pNode, VG_Point *pCenter, float r, float a1, float a2)

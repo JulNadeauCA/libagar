@@ -9,7 +9,7 @@ typedef struct vg_circle {
 #define VGCIRCLE(p) ((VG_Circle *)(p))
 
 __BEGIN_DECLS
-extern const VG_NodeOps vgCircleOps;
+extern VG_NodeOps vgCircleOps;
 
 static __inline__ VG_Circle *
 VG_CircleNew(void *pNode, VG_Point *pCenter, float r)

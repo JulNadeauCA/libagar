@@ -41,8 +41,8 @@
 
 const AG_Version vgVer = { 6, 1 };
 
-const VG_NodeOps **vgNodeClasses;
-Uint               vgNodeClassCount;
+VG_NodeOps **vgNodeClasses;
+Uint         vgNodeClassCount;
 
 void
 VG_InitSubsystem(void)
@@ -187,7 +187,7 @@ VG_Destroy(VG *vg)
 }
 
 void
-VG_RegisterClass(const VG_NodeOps *vnOps)
+VG_RegisterClass(VG_NodeOps *vnOps)
 {
 	vgNodeClasses = Realloc(vgNodeClasses,
 	    (vgNodeClassCount+1)*sizeof(VG_NodeOps *));
@@ -195,7 +195,7 @@ VG_RegisterClass(const VG_NodeOps *vnOps)
 }
 
 void
-VG_UnregisterClass(const VG_NodeOps *vnOps)
+VG_UnregisterClass(VG_NodeOps *vnOps)
 {
 	int i;
 
@@ -215,13 +215,13 @@ VG_UnregisterClass(const VG_NodeOps *vnOps)
 
 
 /* Lookup a node class by name. */
-const VG_NodeOps *
+VG_NodeOps *
 VG_LookupClass(const char *name)
 {
 	Uint i;
 
 	for (i = 0; i < vgNodeClassCount; i++) {
-		const VG_NodeOps *vnOps = vgNodeClasses[i];
+		VG_NodeOps *vnOps = vgNodeClasses[i];
 		if (strcmp(vnOps->name, name) == 0)
 			return (vnOps);
 	}
@@ -333,7 +333,7 @@ void VG_SetSelectionColor(VG *vg, VG_Color c) { vg->selectionColor = c; }
 void VG_SetMouseOverColor(VG *vg, VG_Color c) { vg->mouseoverColor = c; }
 
 void
-VG_NodeInit(void *p, const VG_NodeOps *vnOps)
+VG_NodeInit(void *p, VG_NodeOps *vnOps)
 {
 	VG_Node *vn = p;
 
@@ -631,7 +631,7 @@ LoadNodeGeneric(VG *vg, VG_Node *vnParent, AG_DataSource *ds)
 {
 	char type[VG_TYPE_NAME_MAX];
 	VG_Node *vn;
-	const VG_NodeOps *vnOps;
+	VG_NodeOps *vnOps;
 	Uint32 i, nNodes;
 	
 	AG_CopyString(type, ds, sizeof(type));

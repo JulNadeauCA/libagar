@@ -76,7 +76,7 @@ typedef struct vg_matrix {
 } VG_Matrix;
 
 typedef struct vg_node {
-	const VG_NodeOps *ops;		/* Node class information */
+	VG_NodeOps *ops;		/* Node class information */
 	Uint32 handle;			/* Instance handle */
 	char sym[VG_SYM_NAME_MAX];	/* Symbolic name */
 
@@ -129,8 +129,8 @@ typedef struct vg {
 	AG_TAILQ_ENTRY(vg) user;	/* Entry in user list */
 } VG;
 
-extern const VG_NodeOps **vgNodeClasses;
-extern Uint               vgNodeClassCount;
+extern VG_NodeOps **vgNodeClasses;
+extern Uint         vgNodeClassCount;
 
 #include <agar/vg/vg_math.h>
 
@@ -166,11 +166,11 @@ void      VG_ClearColors(VG *);
 void      VG_Save(VG *, AG_DataSource *);
 int       VG_Load(VG *, AG_DataSource *);
 
-const VG_NodeOps *VG_LookupClass(const char *);
-void              VG_RegisterClass(const VG_NodeOps *);
-void              VG_UnregisterClass(const VG_NodeOps *);
+VG_NodeOps *VG_LookupClass(const char *);
+void        VG_RegisterClass(VG_NodeOps *);
+void        VG_UnregisterClass(VG_NodeOps *);
 
-void      VG_NodeInit(void *, const VG_NodeOps *);
+void      VG_NodeInit(void *, VG_NodeOps *);
 void      VG_NodeAttach(void *, void *);
 void      VG_NodeDetach(void *);
 void      VG_NodeDestroy(void *);

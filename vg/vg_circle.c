@@ -124,7 +124,7 @@ Move(void *p, VG_Vector vCurs, VG_Vector vRel)
 	vc->r = VG_Distance(VG_Pos(vc->p), vCurs);
 }
 
-const VG_NodeOps vgCircleOps = {
+VG_NodeOps vgCircleOps = {
 	N_("Circle"),
 	&vgIconCircle,
 	sizeof(VG_Circle),

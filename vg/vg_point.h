@@ -8,7 +8,7 @@ typedef struct vg_point {
 #define VGPOINT(p) ((VG_Point *)(p))
 
 __BEGIN_DECLS
-extern const VG_NodeOps vgPointOps;
+extern VG_NodeOps vgPointOps;
 
 static __inline__ VG_Point *
 VG_PointNew(void *pNode, VG_Vector pos)

@@ -12,7 +12,7 @@ typedef struct vg_polygon {
 #define VGPOLYGON(p) ((VG_Polygon *)(p))
 
 __BEGIN_DECLS
-extern const VG_NodeOps vgPolygonOps;
+extern VG_NodeOps vgPolygonOps;
 
 static __inline__ VG_Polygon *
 VG_PolygonNew(void *pNode)

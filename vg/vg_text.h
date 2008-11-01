@@ -28,7 +28,7 @@ typedef struct vg_text {
 #define VGTEXT(p) ((VG_Text *)(p))
 
 __BEGIN_DECLS
-extern const VG_NodeOps vgTextOps;
+extern VG_NodeOps vgTextOps;
 
 void VG_TextPrintf(VG_Text *, const char *, ...);
 void VG_TextPrintfPolled(VG_Text *, const char *, ...);

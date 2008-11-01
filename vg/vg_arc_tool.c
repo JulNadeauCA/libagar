@@ -68,7 +68,7 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 				pCenter = VG_PointNew(vg->root, vPos);
 			}
 			t->vaCur = VG_ArcNew(vg->root, pCenter, 1.0f,
-			    0.0f, VG_PI);
+			    0.0f, (float)VG_PI);
 			AdjustRadius(t->vaCur, vPos);
 		} else {
 			AdjustRadius(t->vaCur, vPos);
