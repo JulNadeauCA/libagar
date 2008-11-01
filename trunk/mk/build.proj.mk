@@ -150,8 +150,8 @@ proj:
 	        echo "config" >> ${PROJFILELIST}; \
 		echo "+ include"; \
 	        echo "include" >> ${PROJFILELIST}; \
-		echo "rm -f ${PROJDIR}/$$_tgtproj-$$_tgtos.zip"; \
-		rm -f "${PROJDIR}/$$_tgtproj-$$_tgtos.zip"; \
+		echo "rm -f ${PROJDIR}/$$_tgtproj-$$_tgtos$$_tgtflav.zip"; \
+		rm -f "${PROJDIR}/$$_tgtproj-$$_tgtos$$_tgtflav.zip"; \
 		if [ "${PROJPREPKG}" != "" ]; then \
 			echo "${MAKE} ${PROJPREPKG}"; \
 			env PKG_OS=$$_tgtos PKG_IDE=$$_tgtproj \
