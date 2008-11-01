@@ -110,8 +110,8 @@ int agTextFontHeight = 0;		/* Default font height (px) */
 int agTextFontAscent = 0;		/* Default font ascent (px) */
 int agTextFontDescent = 0;		/* Default font descent (px) */
 int agTextFontLineSkip = 0;		/* Default font line skip (px) */
-int agFreetype = 0;			/* Use Freetype font engine */
 int agGlyphGC = 0;			/* Enable glyph garbage collector */
+int agFreetypeInited = 0;		/* Initialized Freetype library */
 
 static AG_TextState states[AG_TEXT_STATES_MAX];
 static Uint curState = 0;
@@ -161,11 +161,15 @@ DestroyFont(void *obj)
 	AG_Font *font = obj;
 	int i;
 
-	if (!agFreetype) {
+	switch (font->type) {
+	case AG_FONT_BITMAP:
 		for (i = 0; i < font->nglyphs; i++) {
 			AG_SurfaceFree(font->bglyphs[i]);
 		}
 		Free(font->bglyphs);
+		break;
+	default:
+		break;
 	}
 }
 
@@ -302,7 +306,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 		}
 
 		font->type = AG_FONT_BITMAP;
-		font->bglyphs = Malloc(32*sizeof(AG_Surface *));
+		font->bglyphs = Malloc(sizeof(AG_Surface *));
 		font->nglyphs = 0;
 
 		if (AG_XCFLoad(ds, 0, LoadBitmapGlyph, font) == -1) {
@@ -412,20 +416,17 @@ AG_TextInit(void)
 	int i;
 	
 	AG_MutexInitRecursive(&agTextLock);
-	
-	/*
-	 * Initialize default font specifications. Search for platform-specific
-	 * font paths and include them.
-	 */
-	if (AG_CfgBool("initial-run")) {
+
+	/* Set the default font search path. */
+	if (!AG_CfgDefined("font-path")) {
 #if defined(__APPLE__)
 # if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
-		char *home = AG_CfgString("home");
-
 		AG_SetCfgString("font-path",
 		    "%s/fonts:%s:%s/Library/Fonts:"
 		    "/Library/Fonts:/System/Library/Fonts",
-		    AG_CfgString("save-path"), TTFDIR, home);
+		    AG_CfgString("save-path"),
+		    TTFDIR,
+		    AG_CfgString("home"));
 # else
 		AG_SetCfgString("font-path",
 		    "%s/fonts:%s:/Library/Fonts:/System/Library/Fonts",
@@ -437,62 +438,61 @@ AG_TextInit(void)
 		AG_SetCfgString("font-path", "%s/fonts:%s",
 		    AG_CfgString("save-path"), TTFDIR);
 #endif
-		AG_Verbose("Default font path: %s", AG_CfgString("font-path"));
-
+		AG_Verbose("Using default font path: %s",
+		    AG_CfgString("font-path"));
+	}
+	
+	/* Initialize FreeType if available. */
 #ifdef HAVE_FREETYPE
-		AG_SetCfgBool("font.freetype", 1);
-		AG_Verbose("Default font engine: FreeType");
-#else
-		AG_SetCfgBool("font.freetype", 0);
-		AG_Verbose("Default font engine: Bitmap");
+	if (AG_TTFInit() == 0) {
+		agFreetypeInited = 1;
+	} else {
+		AG_Verbose("Failed to initialize FreeType (%s); falling back "
+		           "to monospace font engine", AG_GetError());
+	}
 #endif
-		AG_SetCfgString("font.face", "?");
-		AG_SetCfgInt("font.size", -1);
+
+	/* Load the default font. */
+	if (!AG_CfgDefined("font.face")) {
+		AG_SetCfgString("font.face", agFreetypeInited ?
+		                             agDefaultFaceFT :
+					     agDefaultFaceBitmap);
+	}
+	if (!AG_CfgDefined("font.size")) {
+		AG_SetCfgInt("font.size", 10);
+	}
+	if (!AG_CfgDefined("font.flags")) {
 		AG_SetCfgUint("font.flags", 0);
 	}
-
-#ifdef HAVE_FREETYPE
-	if (AG_CfgBool("font.freetype")) {
-		if (strcmp(AG_CfgString("font.face"),"?") == 0) {
-			AG_SetCfgString("font.face", agDefaultFaceFT);
-			AG_SetCfgInt("font.size", 10);
-			AG_SetCfgUint("font.flags", 0);
-		}
-		if (AG_TTFInit() == -1) {
-			return (-1);
-		}
-		agFreetype = 1;
-	} else
-#endif
-	{
-		if (strcmp(AG_CfgString("font.face"),"?") == 0) {
-			AG_SetCfgString("font.face", agDefaultFaceBitmap);
-			AG_SetCfgInt("font.size", 12);
-			AG_SetCfgUint("font.flags", 0);
-		}
-		agFreetype = 0;
-	}
 	if ((agDefaultFont = AG_FetchFont(NULL, -1, -1)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
+		AG_SetError("Failed to load default font: %s", AG_GetError());
+		goto fail;
 	}
 	agTextFontHeight = agDefaultFont->height;
 	agTextFontAscent = agDefaultFont->ascent;
 	agTextFontDescent = agDefaultFont->descent;
 	agTextFontLineSkip = agDefaultFont->lineskip;
 
+	/* Initialize the state engine and cache. */
 	curState = 0;
 	agTextState = &states[0];
 	InitTextState();
-
 	for (i = 0; i < GLYPH_NBUCKETS; i++) {
 		SLIST_INIT(&agGlyphCache[i].glyphs);
 	}
 #ifdef GLYPH_GC
-	/* Perform glyph garbage collection periodically. */
 	AG_SetTimeout(&glyphGcTo, GlyphGC, NULL, 0);
 	agGlyphGC = 0;
 #endif
 	return (0);
+fail:
+#ifdef HAVE_FREETYPE
+	if (agFreetypeInited) {
+		AG_TTFDestroy();
+		agFreetypeInited = 0;
+	}
+#endif
+	return (-1);
 }
 
 /* Clear the glyph cache. Must be invoked in rendering context. */
@@ -537,9 +537,12 @@ AG_TextDestroy(void)
 #endif
 		AG_ObjectDestroy(font);
 	}
+
 #ifdef HAVE_FREETYPE
-	if (agFreetype)
+	if (agFreetypeInited) {
 		AG_TTFDestroy();
+		agFreetypeInited = 0;
+	}
 #endif
 	AG_MutexDestroy(&agTextLock);
 }
@@ -581,21 +584,28 @@ AG_TextRenderGlyph(Uint32 ch)
 		ucs[1] = '\0';
 		gl->su = AG_TextRenderUCS4(ucs);
 
+		switch (agTextState->font->type) {
 #ifdef HAVE_FREETYPE
-		if (agFreetype) {
-			AG_TTFGlyph *gt;
+		case AG_FONT_VECTOR:
+			{
+				AG_TTFGlyph *gt;
 
-			if (AG_TTFFindGlyph(agTextState->font->ttf, ch,
-			    TTF_CACHED_METRICS|TTF_CACHED_BITMAP) == 0) {
-				gt = ((AG_TTFFont *)agTextState->font->ttf)->current;
-				gl->advance = gt->advance;
-			} else {
-				gl->advance = gl->su->w;
+				if (AG_TTFFindGlyph(agTextState->font->ttf, ch,
+				    TTF_CACHED_METRICS|
+				    TTF_CACHED_BITMAP) == 0) {
+					gt = ((AG_TTFFont *)agTextState->font->ttf)->current;
+					gl->advance = gt->advance;
+				} else {
+					gl->advance = gl->su->w;
+				}
 			}
-		} else
+			break;
 #endif
-		{
+		case AG_FONT_BITMAP:
 			gl->advance = gl->su->w;
+			break;
+		default:
+			break;
 		}
 #ifdef HAVE_OPENGL
 		if (agView->opengl)
@@ -1087,28 +1097,29 @@ empty:
 #endif /* HAVE_FREETYPE */
 
 static __inline__ AG_Surface *
-GetBitmapGlyph(Uint32 c)
+GetBitmapGlyph(AG_Font *font, Uint32 c)
 {
-	if ((agTextState->font->flags & AG_FONT_UPPERCASE) &&
+	if ((font->flags & AG_FONT_UPPERCASE) &&
 	    (isalpha(c) && islower(c))) {
 		c = toupper(c);
 	}
-	if (c < agTextState->font->c0 || c > agTextState->font->c1) {
+	if (c < font->c0 || c > font->c1) {
 		return (agTextState->font->bglyphs[0]);
 	}
-	return (agTextState->font->bglyphs[c - agTextState->font->c0 + 1]);
+	return (font->bglyphs[c - font->c0 + 1]);
 }
 
 /* Compute the rendered size of UCS-4 text with a bitmap font. */
 static __inline__ void
 TextSizeBitmap(const Uint32 *ucs, AG_TextMetrics *tm, int extended)
 {
+	AG_Font *font = agTextState->font;
 	const Uint32 *c;
 	AG_Surface *sGlyph;
 	int wLine = 0;
 
 	for (c = &ucs[0]; *c != '\0'; c++) {
-		sGlyph = GetBitmapGlyph(*c);
+		sGlyph = GetBitmapGlyph(font, *c);
 		if (*c == '\n') {
 			if (extended) {
 				tm->wLines = Realloc(tm->wLines,
@@ -1148,20 +1159,21 @@ TextRenderBitmap(const Uint32 *ucs)
 	InitMetrics(&tm);
 	TextSizeBitmap(ucs, &tm, 1);
 
-	if ((su = AG_SurfaceStdRGB(tm.w, tm.h)) == NULL)
+	if ((su = AG_SurfaceStdRGBA(tm.w, tm.h)) == NULL)
 		AG_FatalError(NULL);
 
 	line = 0;
 	rd.x = (tm.nLines > 1) ? AG_TextJustifyOffset(tm.w, tm.wLines[0]) : 0;
 	rd.y = 0;
+	
 	for (c = &ucs[0]; *c != '\0'; c++) {
 		if (*c == '\n') {
 			rd.y += font->lineskip;
 			rd.x = AG_TextJustifyOffset(tm.w, tm.wLines[++line]);
 			continue;
 		}
-		sGlyph = GetBitmapGlyph(*c);
-		AG_SurfaceBlit(sGlyph, NULL, su, sGlyph->w, sGlyph->h);
+		sGlyph = GetBitmapGlyph(font, *c);
+		AG_SurfaceBlit(sGlyph, NULL, su, rd.x, rd.y);
 		rd.x += sGlyph->w;
 	}
 	AG_SetColorKey(su, AG_SRCCOLORKEY|AG_RLEACCEL, 0);

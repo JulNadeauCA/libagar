@@ -259,22 +259,24 @@ ReadTileFlat(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 }
 
 static Uint8 *
-ReadTileRLE(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
+ReadTileRLE(AG_DataSource *buf, Uint32 len, int Bpp, int x, int y)
 {
 	int i, size, count, j;
 	Uint8 *tilep, *tile, *data;
 
 	tilep = tile = Malloc(len);
-	AG_Read(buf, tile, sizeof(Uint8), len);
-
-	if ((data = malloc(x * y * bpp)) == NULL) {
-		AG_SetError(_("Out of memory for XCF tile"));
+	if (AG_Read(buf, tile, len, 1) != AG_IO_SUCCESS) {
+		AG_SetError("XCF Tile: Read error");
 		return (NULL);
 	}
-	for (i = 0; i < bpp; i++) {
+	if ((data = malloc(x*y*Bpp)) == NULL) {
+		AG_SetError("XCF Tile: Out of memory");
+		return (NULL);
+	}
+	for (i = 0; i < Bpp; i++) {
 		Uint8 *d = &data[i];
 	
-		size = x * y;
+		size = x*y;
 		count = 0;
 
 		while (size > 0) {
@@ -292,7 +294,7 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 
 				while (length-- > 0) {
 					*d = *tile++;
-					d += bpp;
+					d += Bpp;
 				}
 			} else {
 				length += 1;
@@ -307,7 +309,7 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 
 				for (j = 0; j < length; j++) {
 					*d = val;
-					d += bpp;
+					d += Bpp;
 				}
 			}
 		}
@@ -317,14 +319,14 @@ ReadTileRLE(AG_DataSource *buf, Uint32 len, int bpp, int x, int y)
 }
 
 static Uint8 *
-ReadTile(struct xcf_header *head, AG_DataSource *buf, Uint32 len, int bpp,
+ReadTile(struct xcf_header *head, AG_DataSource *buf, Uint32 len, int Bpp,
     int x, int y)
 {
 	switch (head->compression) {
 	case XCF_COMPRESSION_NONE:
-		return ReadTileFlat(buf, len, bpp, x, y);
+		return ReadTileFlat(buf, len, Bpp, x, y);
 	case XCF_COMPRESSION_RLE:
-		return ReadTileRLE(buf, len, bpp, x, y);
+		return ReadTileRLE(buf, len, Bpp, x, y);
 	}
 	AG_SetError(_("Unknown XCF compression mode: %d"), head->compression);
 	return (NULL);
@@ -358,8 +360,10 @@ ConvertLevel(AG_DataSource *buf, Uint32 xcfoffs, struct xcf_hierarchy *hier,
 		} else {
 			tile = ReadTile(head, buf, ox*oy*6, hier->bpp, ox, oy);
 		}
-		if (tile == NULL)
-			return (-1);
+		if (tile == NULL) {
+			/* return (-1); */
+			continue;
+		}
 	
 		p = tile;
 		for (y = ty; y < ty+oy; y++) {
