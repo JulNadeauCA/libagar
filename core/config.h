@@ -29,6 +29,7 @@ int  AG_ConfigLoad(void);
 void AG_SetCfgString(const char *, const char *, ...);
 __END_DECLS
 
+#define AG_CfgDefined(k) AG_PropDefined(agConfig,(k))
 #define AG_CfgUint(k) AG_GetUint(agConfig,(k))
 #define AG_CfgInt(k) AG_GetInt(agConfig,(k))
 #define AG_CfgBool(k) AG_GetBool(agConfig,(k))

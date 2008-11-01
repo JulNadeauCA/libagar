@@ -108,7 +108,7 @@ extern int agTextFontHeight;
 extern int agTextFontAscent;
 extern int agTextFontDescent;
 extern int agTextFontLineSkip;
-extern int agFreetype;
+extern int agFreetypeInited;
 extern int agGlyphGC;
 extern AG_TextState *agTextState;
 extern AG_Mutex agTextLock;
