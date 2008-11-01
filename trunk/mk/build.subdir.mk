@@ -267,7 +267,7 @@ regress-subdir-ifexists:
 		done; \
 	fi)
 
-proj-subdir:
+proj-package-subdir:
 	@(if [ "${SUBDIR}" = "" ]; then \
 	    SUBDIR="NONE"; \
 	else \
@@ -276,7 +276,7 @@ proj-subdir:
 	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
-		    (cd $$F && ${MAKE} REL=${REL}$$F/ proj); \
+		    (cd $$F && ${MAKE} REL=${REL}$$F/ proj-package); \
 		    if [ $$? != 0 ]; then \
 		    	exit 1; \
 		    fi; \
@@ -304,4 +304,4 @@ proj-clean-subdir:
 .PHONY:	all-subdir-ifexists clean-subdir-ifexists cleandir-subdir-ifexists
 .PHONY: install-subdir-ifexists deinstall-subdir-ifexists
 .PHONY: depend-subdir-ifexists regress-subdir-ifexists
-.PHONY: proj-subdir proj-clean-subdir
+.PHONY: proj-package-subdir proj-clean-subdir
