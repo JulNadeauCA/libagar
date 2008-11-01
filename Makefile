@@ -5,6 +5,8 @@ PROJECT=	"Agar"
 PROJECT_GUID=	"93733df2-c743-489e-bc9f-f22aee00d787"
 PROJPREPKG=	pre-package
 PROJPOSTPKG=	post-package
+PROJCONFIGDIR=	include/agar/config
+PROJINCLUDES=	${SRCDIR}/configure.lua
 
 include ${TOP}/Makefile.proj
 
