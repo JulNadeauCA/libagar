@@ -153,7 +153,7 @@ Move(void *p, VG_Vector vCurs, VG_Vector vRel)
 	/* TODO */
 }
 
-const VG_NodeOps vgLineOps = {
+VG_NodeOps vgLineOps = {
 	N_("Line"),
 	&vgIconLine,
 	sizeof(VG_Line),

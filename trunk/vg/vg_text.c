@@ -359,7 +359,7 @@ Delete(void *p)
 		VG_Delete(vt->p2);
 }
 
-const VG_NodeOps vgTextOps = {
+VG_NodeOps vgTextOps = {
 	N_("Text"),
 	&vgIconText,
 	sizeof(VG_Text),

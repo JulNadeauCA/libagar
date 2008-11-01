@@ -152,7 +152,7 @@ Move(void *p, VG_Vector vCurs, VG_Vector vRel)
 	va->r = VG_Distance(VG_Pos(va->p), vCurs);
 }
 
-const VG_NodeOps vgArcOps = {
+VG_NodeOps vgArcOps = {
 	N_("Arc"),
 	&vgIconBezier,
 	sizeof(VG_Arc),

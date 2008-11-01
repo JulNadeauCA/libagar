@@ -19,7 +19,7 @@ typedef struct vg_line {
 #define VGLINE(p) ((VG_Line *)(p))
 
 __BEGIN_DECLS
-extern const VG_NodeOps vgLineOps;
+extern VG_NodeOps vgLineOps;
 
 static __inline__ VG_Line *
 VG_LineNew(void *pNode, VG_Point *p1, VG_Point *p2)

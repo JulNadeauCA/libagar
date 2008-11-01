@@ -298,7 +298,7 @@ Delete(void *p)
 	}
 }
 
-const VG_NodeOps vgPolygonOps = {
+VG_NodeOps vgPolygonOps = {
 	N_("Polygon"),
 	&vgIconPolygon,
 	sizeof(VG_Polygon),

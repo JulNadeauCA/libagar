@@ -98,7 +98,7 @@ Move(void *p, VG_Vector vPos, VG_Vector vRel)
 	VG_SetPosition(p, vPos);
 }
 
-const VG_NodeOps vgPointOps = {
+VG_NodeOps vgPointOps = {
 	N_("Point"),
 	&vgIconPoints,
 	sizeof(VG_Point),
