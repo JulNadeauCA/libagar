@@ -1159,7 +1159,7 @@ TextRenderBitmap(const Uint32 *ucs)
 	InitMetrics(&tm);
 	TextSizeBitmap(ucs, &tm, 1);
 
-	if ((su = AG_SurfaceStdRGBA(tm.w, tm.h)) == NULL)
+	if ((su = AG_SurfaceStdRGB(tm.w, tm.h)) == NULL)
 		AG_FatalError(NULL);
 
 	line = 0;
@@ -1176,10 +1176,9 @@ TextRenderBitmap(const Uint32 *ucs)
 		AG_SurfaceBlit(sGlyph, NULL, su, rd.x, rd.y);
 		rd.x += sGlyph->w;
 	}
-	AG_SetColorKey(su, AG_SRCCOLORKEY|AG_RLEACCEL, 0);
-	AG_SetAlpha(su,
-	    font->bglyphs[0]->flags & (AG_SRCALPHA|AG_RLEACCEL),
-	    font->bglyphs[0]->format->alpha);
+	AG_SetColorKey(su, AG_SRCCOLORKEY, 0);
+	AG_SetAlpha(su, font->bglyphs[0]->flags & AG_SRCALPHA,
+	                font->bglyphs[0]->format->alpha);
 
 	FreeMetrics(&tm);
 	return (su);

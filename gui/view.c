@@ -1060,6 +1060,33 @@ AG_UpdateTexture(AG_Surface *sourcesu, int texture)
 	AG_SurfaceFree(texsu);
 }
 
+static void
+CopyColorKeySurface(AG_Surface *suTex, AG_Surface *suSrc)
+{
+	Uint8 *pSrc;
+	int x, y;
+
+	pSrc = suSrc->pixels;
+	for (y = 0; y < suSrc->h; y++) {
+		for (x = 0; x < suSrc->w; x++) {
+			Uint32 c = AG_GET_PIXEL(suSrc,pSrc);
+			Uint8 r,g,b;
+
+			if (c != suSrc->format->colorkey) {
+				AG_GetRGB(c, suSrc->format, &r,&g,&b);
+				AG_PUT_PIXEL2(suTex, x,y, 
+				    AG_MapRGBA(suTex->format,
+				    r,g,b,AG_ALPHA_OPAQUE));
+			} else {
+				AG_PUT_PIXEL2(suTex, x,y, 
+				    AG_MapRGBA(suTex->format,
+				    0,0,0,AG_ALPHA_TRANSPARENT));
+			}
+			pSrc += suSrc->format->BytesPerPixel;
+		}
+	}
+}
+
 /*
  * Generate an OpenGL texture from an Agar surface.
  * Returns the texture handle and 4 coordinates into texcoord.
@@ -1067,21 +1094,21 @@ AG_UpdateTexture(AG_Surface *sourcesu, int texture)
  * Must be called from widget rendering context only.
  */
 Uint
-AG_SurfaceTexture(AG_Surface *sourcesu, float *texcoord)
+AG_SurfaceTexture(AG_Surface *suSrc, float *texcoord)
 {
-	AG_Surface *texsu;
-	int w = PowOf2i(sourcesu->w);
-	int h = PowOf2i(sourcesu->h);
+	AG_Surface *suTex;
+	int w = PowOf2i(suSrc->w);
+	int h = PowOf2i(suSrc->h);
 	GLuint texture;
 
 	/* Convert to the GL_RGBA/GL_UNSIGNED_BYTE format. */
 	if (texcoord != NULL) {
 		texcoord[0] = 0.0f;
 		texcoord[1] = 0.0f;
-		texcoord[2] = (GLfloat)sourcesu->w / w;
-		texcoord[3] = (GLfloat)sourcesu->h / h;
+		texcoord[2] = (GLfloat)suSrc->w / w;
+		texcoord[3] = (GLfloat)suSrc->h / h;
 	}
-	texsu = AG_SurfaceRGBA(w,h, 32, 0,
+	suTex = AG_SurfaceRGBA(w,h, 32, 0,
 #if AG_BYTEORDER == AG_BIG_ENDIAN
 		0xff000000,
 		0x00ff0000,
@@ -1094,10 +1121,14 @@ AG_SurfaceTexture(AG_Surface *sourcesu, float *texcoord)
 		0xff000000
 #endif
 	    );
-	if (texsu == NULL) {
+	if (suTex == NULL) {
 		AG_FatalError(NULL);
 	}
-	AG_SurfaceCopy(texsu, sourcesu);
+	if (suSrc->flags & AG_SRCCOLORKEY) {
+		CopyColorKeySurface(suTex, suSrc);
+	} else {
+		AG_SurfaceCopy(suTex, suSrc);
+	}
 	
 	/* Upload as an OpenGL texture. */
 	glGenTextures(1, &texture);
@@ -1110,10 +1141,10 @@ AG_SurfaceTexture(AG_Surface *sourcesu, float *texcoord)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 #endif
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-	    GL_UNSIGNED_BYTE, texsu->pixels);
+	    GL_UNSIGNED_BYTE, suTex->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	AG_SurfaceFree(texsu);
+	AG_SurfaceFree(suTex);
 	return (texture);
 }
 
