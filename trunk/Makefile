@@ -107,7 +107,8 @@ pre-package:
 			V=`perl mk/get-version.pl`; \
 			cat README |unix2dos >README.txt; \
 			cat INSTALL |unix2dos >INSTALL.txt; \
-			cat ChangeLogs/Release-$$V |unix2dos >RELEASE-$$V.txt; \
+			cat ChangeLogs/Release-$$V.txt | \
+			    unix2dos >RELEASE-$$V.txt; \
 			cat mk/LICENSE.txt |unix2dos >LICENSE.txt; \
 			cat gui/fonts/Vera-Copyright.txt |unix2dos > \
 			    LICENSE-Vera.txt; \
