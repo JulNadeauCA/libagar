@@ -14,24 +14,24 @@
 # Premake is available from http://premake.sourceforge.net/.
 #
 
-PROJFILES=	windows:i386:vs2005:: \
-		windows:i386:vs2005:-debug:--enable-debug \
-		windows:i386:vs2005:-nofreetype:--without-freetype \
-		windows:i386:vs2005:-nothreads:--disable-threads \
-		windows:i386:vs2005:-nogl:--without-gl\
-		windows:i386:vs2005:-nofreetype,nothreads:--without-freetype,--disable-threads \
-		windows:i386:vs2005:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
-		windows:i386:cb-gcc:: \
-		windows:i386:cb-gcc:-debug:--enable-debug \
-		windows:i386:cb-gcc:-nofreetype:--without-freetype \
-		windows:i386:cb-gcc:-nothreads:--disable-threads \
-		windows:i386:cb-gcc:-nogl:--without-gl \
-		windows:i386:cb-gcc:-nofreetype,nothreads:--without-freetype,--disable-threads \
-		windows:i386:cb-gcc:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
-		windows:i386:vs2003:: \
-		windows:i386:vs2003:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
-		windows:i386:vs2002:: \
-		windows:i386:vs2002:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
-		windows:i386:vs6:: \
-		windows:i386:vs6:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
+PROJFILES=	bsd:cb-gcc:: \
+		linux:cb-gcc:: \
+		macosx:cb-gcc:: \
+		windows:vs2005:: \
+		windows:vs2005:-nofreetype:--without-freetype \
+		windows:vs2005:-nothreads:--disable-threads \
+		windows:vs2005:-nogl:--without-gl\
+		windows:vs2005:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
+		windows:cb-gcc:: \
+		windows:cb-gcc:-nofreetype:--without-freetype \
+		windows:cb-gcc:-nothreads:--disable-threads \
+		windows:cb-gcc:-nogl:--without-gl \
+		windows:cb-gcc:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
+		windows:cb-ow:: \
+		windows:vs2003:: \
+		windows:vs2003:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
+		windows:vs2002:: \
+		windows:vs2002:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
+		windows:vs6:: \
+		windows:vs6:-nofreetype,nothreads,nogl:--without-freetype,--disable-threads,--without-gl \
 

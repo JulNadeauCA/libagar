@@ -46,7 +46,12 @@ PROJFILES?=	bsd:i386:cb-gcc:: \
 		linux:i386:cb-gcc:: \
 		macosx:i386:cb-gcc:: \
 		windows:i386:cb-gcc:: \
-		windows:i386:vs2005::
+		windows:i386:cb-ow:: \
+		windows:i386:vs6:: \
+		windows:i386:vs2002:: \
+		windows:i386:vs2003:: \
+		windows:i386:vs2005:: \
+		windows:i386:vs2008::
 
 CLEANFILES+=	${PREMAKEOUT} ${PROJINCLUDES}
 
@@ -55,8 +60,7 @@ proj-package:
 	    echo "cat Makefile | ${MKPROJFILES} > ${PREMAKEOUT}"; \
 	    cat Makefile | \
 	        env PROJTARGET="${PROJTARGET}" PROJOS="${PROJOS}" \
-		PROJARCH="${PROJARCH}" PROJFLAVOR="" \
-		PROJINCLUDES="${PROJINCLUDES}" \
+		PROJFLAVOR="" PROJINCLUDES="${PROJINCLUDES}" \
 	        ${MKPROJFILES} > ${PREMAKEOUT}; \
 	fi
 
@@ -67,10 +71,9 @@ proj:
 	fi
 	@for TGT in ${PROJFILES}; do \
 		_tgtos=`echo $$TGT |awk -F: '{print $$1}' `; \
-		_tgtarch=`echo $$TGT |awk -F: '{print $$2}' `; \
-		_tgtproj=`echo $$TGT |awk -F: '{print $$3}' `; \
-		_tgtflav=`echo $$TGT |awk -F: '{print $$4}' `; \
-		_tgtopts=`echo $$TGT |awk -F: '{print $$5}'|sed 's/,/ /g'`; \
+		_tgtproj=`echo $$TGT |awk -F: '{print $$2}' `; \
+		_tgtflav=`echo $$TGT |awk -F: '{print $$3}' `; \
+		_tgtopts=`echo $$TGT |awk -F: '{print $$4}'|sed 's/,/ /g'`; \
 		echo "*"; \
 		echo "* Target: $$_tgtos ($$_tgtproj)"; \
 		echo "* Target flavor: $$_tgtflav"; \
@@ -86,10 +89,10 @@ proj:
 			rm -fR include; \
 		fi; \
 		echo "mkconfigure --emul-env=$$_tgtproj --emul-os=$$_tgtos \
-		    --emul-arch=$$_tgtarch > configure.tmp"; \
+		    > configure.tmp"; \
 		cat configure.in | \
 		    mkconfigure --emul-env=$$_tgtproj --emul-os=$$_tgtos \
-		    --emul-arch=$$_tgtarch > configure.tmp; \
+		    > configure.tmp; \
 		if [ $$? != 0 ]; then \
 			echo "mkconfigure failed"; \
 			rm -fR configure.tmp ${PROJINCLUDES}; \
@@ -104,7 +107,7 @@ proj:
 		fi; \
 		echo "${MAKE} proj-package-subdir"; \
 		env PROJTARGET="$$_tgtproj" PROJOS="$$_tgtos" \
-		    PROJARCH="$$_tgtarch" \
+		    PROJINCLUDES="${PROJINCLUDES}" \
 		    ${MAKE} proj-package-subdir; \
 		\
 		if [ "${PROJCONFIGDIR}" != "" ]; then \
@@ -151,16 +154,18 @@ proj:
 		rm -f "${PROJDIR}/$$_tgtproj-$$_tgtos.zip"; \
 		if [ "${PROJPREPKG}" != "" ]; then \
 			echo "${MAKE} ${PROJPREPKG}"; \
-			env PKG_OS=$$_tgtos PKG_ARCH=$$_tgtarch \
-			    PKG_IDE=$$_tgtproj ${MAKE} ${PROJPREPKG}; \
+			env PKG_OS=$$_tgtos PKG_IDE=$$_tgtproj \
+			    PROJINCLUDES="${PROJINCLUDES}" \
+			    ${MAKE} ${PROJPREPKG}; \
 		fi; \
-		echo "* Creating $$_tgtproj-$$_tgtos-$$_tgtarch$$_tgtflav.zip";\
+		echo "* Creating $$_tgtproj-$$_tgtos$$_tgtflav.zip";\
 		cat ${PROJFILELIST} | ${ZIP} ${ZIPFLAGS} \
-		    ${PROJDIR}/$$_tgtproj-$$_tgtos-$$_tgtarch$$_tgtflav.zip -@;\
+		    ${PROJDIR}/$$_tgtproj-$$_tgtos$$_tgtflav.zip -@;\
 		if [ "${PROJPOSTPKG}" != "" ]; then \
 			echo "${MAKE} ${PROJPOSTPKG}"; \
-			env PKG_OS=$$_tgtos PKG_ARCH=$$_tgtarch \
-			    PKG_IDE=$$_tgtproj ${MAKE} ${PROJPOSTPKG}; \
+			env PKG_OS=$$_tgtos PKG_IDE=$$_tgtproj \
+			    PROJINCLUDES="${PROJINCLUDES}" \
+			    ${MAKE} ${PROJPOSTPKG}; \
 		fi; \
 		echo "* Cleaning up"; \
 		cat .projfiles.out | perl ${TOP}/mk/cleanfiles.pl; \
