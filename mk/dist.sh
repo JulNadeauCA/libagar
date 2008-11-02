@@ -25,41 +25,38 @@ echo "* Version: ${VER}"
 echo "* Release: ${REL}"
 echo "*"
 
-# TAR: Prepare archive
+#
+# Prepare Source TAR.GZ.
+#
 echo "Building tar.gz"
 rm -fr ${DISTNAME}
 cp -fRp ${PROJ} ${DISTNAME}
-rm -fR `find ${DISTNAME} \( -name .svn \
-    -or -name \*~ \
-    -or -name \*.o \
-    -or -name \*.a \
-    -or -name \*.core \
-    -or -name .\*.swp \
-    -or -name .xvpics \)`
+rm -fR `find ${DISTNAME} \( -name .svn -or -name \*~ -or -name .\*.swp \)`
+
+# TAR: Prepare standard README.txt and friends.
+(cd ${DISTNAME} && env PKG_OS="" ${MAKE} pre-package)
 
 # TAR: Compress archive
 tar -f ${DISTNAME}.tar -c ${DISTNAME}
 gzip -f ${DISTNAME}.tar
 
-# ZIP: Prepare archive
+#
+# Prepare Source ZIP.
+#
 echo "Building zip"
 rm -fr ${DISTNAME}
 cp -fRp ${PROJ} ${DISTNAME}
-rm -fR `find ${DISTNAME} \( -name .svn \
-    -or -name \*~ \
-    -or -name \*.o \
-    -or -name \*.a \
-    -or -name \*.core \
-    -or -name .\*.swp \
-    -or -name .xvpics \)`
-rm -f ${DISTNAME}/agar
+rm -fR `find ${DISTNAME} \( -name .svn -or -name \*~ -or -name .\*.swp \)`
 
-# ZIP: Generate project files for various IDEs.
+# ZIP: Prepare IDE "project files", README.txt and friends.
 (cd ${DISTNAME} && ${MAKE} proj)
 (cd ${DISTNAME}/demos && ${MAKE} proj)
+(cd ${DISTNAME}/agarpaint && ${MAKE} proj)
+(cd ${DISTNAME} && env PKG_OS="windows" ${MAKE} pre-package)
+(cd ${DISTNAME} && rm -f INSTALL README RELEASE-${VER} install-sdk.exe)
 
 # ZIP: Compress archive
-zip -q -r ${DISTNAME}.zip ${DISTNAME}
+zip -8 -q -r ${DISTNAME}.zip ${DISTNAME}
 
 echo "Updating checksums"
 openssl md5 ${DISTNAME}.tar.gz > ${DISTNAME}.tar.gz.md5

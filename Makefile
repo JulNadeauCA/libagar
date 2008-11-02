@@ -124,8 +124,7 @@ pre-package:
 		fi; \
 	else \
 		V=`perl mk/get-version.pl`; \
-		cp ChangeLogs/Release-$$V RELEASE-$$V; \
-		cp ChangeLogs/ChangeLog-$$V ChangeLog-$$V; \
+		cp ChangeLogs/Release-$$V.txt RELEASE-$$V; \
 		cp mk/LICENSE.txt LICENSE; \
 		cp gui/fonts/Vera-Copyright.txt LICENSE-Vera; \
 		cp mk/agar-logo.png Logo.png; \
@@ -134,7 +133,7 @@ pre-package:
 post-package:
 	@if [ "${PKG_OS}" = "windows" ]; then \
 		rm -f install-sdk.exe README.txt INSTALL.txt VisualC.html; \
-		rm -f RELEASE-*.txt LICENSE.txt License-Vera.txt Logo.png; \
+		rm -f RELEASE-*.txt LICENSE.txt LICENSE-Vera.txt Logo.png; \
 	else \
 		rm -f Release-* ChangeLog-* LICENSE LICENSE-Vera Logo.png; \
 	fi
