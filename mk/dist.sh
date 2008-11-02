@@ -29,7 +29,10 @@ echo "*"
 # Prepare Source TAR.GZ.
 #
 echo "Building tar.gz"
-rm -fr ${DISTNAME}
+if [ -e "${DISTNAME}" ]; then
+	echo "* Existing directory: ${DISTNAME}; remove first"
+	exit 1
+fi
 cp -fRp ${PROJ} ${DISTNAME}
 rm -fR `find ${DISTNAME} \( -name .svn -or -name \*~ -or -name .\*.swp \)`
 
@@ -51,7 +54,7 @@ rm -fR `find ${DISTNAME} \( -name .svn -or -name \*~ -or -name .\*.swp \)`
 # ZIP: Prepare IDE "project files", README.txt and friends.
 (cd ${DISTNAME} && ${MAKE} proj)
 (cd ${DISTNAME}/demos && ${MAKE} proj)
-(cd ${DISTNAME}/agarpaint && ${MAKE} proj)
+(cd ${DISTNAME}/agarpaint && touch Makefile.config && ${MAKE} proj)
 (cd ${DISTNAME} && env PKG_OS="windows" ${MAKE} pre-package)
 (cd ${DISTNAME} && rm -f INSTALL README RELEASE-${VER} install-sdk.exe)
 
