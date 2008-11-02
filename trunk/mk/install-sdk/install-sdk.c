@@ -33,6 +33,15 @@
 
 #define DEFAULT_DIR "C:\\Program Files\\Agar"
 
+const char *miscFiles[] = {
+	"README.txt",
+	"LICENSE.txt",
+	"LICENSE-Vera.txt",
+	"Logo.png",
+	"VisualC.html"
+};
+const int nMiscFiles = sizeof(miscFiles)/sizeof(miscFiles[0]);
+
 int
 InstallLibs(const char *dir)
 {
@@ -133,7 +142,7 @@ InstallIncludes(const char *srcDir, const char *dstDir)
 			    filename);
 		}
 
-		printf("%s -> %s\n", path, dest);
+		printf("%s\n", dest);
 		if (CopyFile(path, dest, 0) == 0) {
 			printf("%s: CopyFile() failed\n", dest);
 			return (-1);
@@ -218,7 +227,8 @@ int
 main(int argc, char *argv[])
 {
 	char *dir = DEFAULT_DIR, *over;
-	char libdir[1024], incldir[1024];
+	char libdir[2048], incldir[2048], path[2048];
+	int i;
 	DWORD attrs;
 
 	if (argc > 1) {
@@ -261,6 +271,15 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	RemoveEmptyDirs(incldir);
+
+	for (i = 0; i < nMiscFiles; i++) {
+		sprintf_s(path, sizeof(path), "%s\\%s", dir, miscFiles[i]);
+		printf("%s\n", path);
+		if (CopyFile(miscFiles[i], path, 0) == 0) {
+			printf("%s: CopyFile() failed; ignoring\n", dir);
+			continue;
+		}
+	}
 
 	printf("The Agar SDK was successfully installed into %s\n", dir);
 	AnyKey();

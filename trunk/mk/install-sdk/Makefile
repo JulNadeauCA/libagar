@@ -4,6 +4,7 @@ include ${TOP}/Makefile.config
 PROJECT=	install-sdk
 PROJDIR=	ProjectFiles
 PROJINCLUDES=	configure.lua
+PROJFILES=	windows:vs2005::
 
 PROG=		install-sdk
 PROG_TYPE=	"CLI"
