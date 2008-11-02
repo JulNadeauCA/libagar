@@ -42,16 +42,16 @@ PROJPREPKG?=
 PROJPOSTPKG?=
 PROJCONFIGDIR?=
 
-PROJFILES?=	bsd:i386:cb-gcc:: \
-		linux:i386:cb-gcc:: \
-		macosx:i386:cb-gcc:: \
-		windows:i386:cb-gcc:: \
-		windows:i386:cb-ow:: \
-		windows:i386:vs6:: \
-		windows:i386:vs2002:: \
-		windows:i386:vs2003:: \
-		windows:i386:vs2005:: \
-		windows:i386:vs2008::
+PROJFILES?=	bsd:cb-gcc:: \
+		linux:cb-gcc:: \
+		macosx:cb-gcc:: \
+		windows:cb-gcc:: \
+		windows:cb-ow:: \
+		windows:vs6:: \
+		windows:vs2002:: \
+		windows:vs2003:: \
+		windows:vs2005:: \
+		windows:vs2008::
 
 CLEANFILES+=	${PREMAKEOUT} ${PROJINCLUDES}
 
