@@ -51,12 +51,15 @@ rm -fr ${DISTNAME}
 cp -fRp ${PROJ} ${DISTNAME}
 rm -fR `find ${DISTNAME} \( -name .svn -or -name \*~ -or -name .\*.swp \)`
 
+# ZIP: Preprocess header files.
+(cd ${DISTNAME} && ${MAKE} includes)
+
 # ZIP: Prepare IDE "project files", README.txt and friends.
 (cd ${DISTNAME} && ${MAKE} proj)
 (cd ${DISTNAME}/demos && ${MAKE} proj)
 (cd ${DISTNAME}/agarpaint && touch Makefile.config && ${MAKE} proj)
 (cd ${DISTNAME} && env PKG_OS="windows" ${MAKE} pre-package)
-(cd ${DISTNAME} && rm -f INSTALL README RELEASE-${VER} install-sdk.exe)
+(cd ${DISTNAME} && rm -f INSTALL README RELEASE-${VER})
 
 # ZIP: Compress archive
 zip -8 -q -r ${DISTNAME}.zip ${DISTNAME}
@@ -85,7 +88,6 @@ if [ "$PHASE" = "stable" ]; then
 	echo "- Update http://fr.wikipedia.org/wiki/Agar (moteur)"
 	echo "- Update http://sourceforge.net/projects/agar/"
 	echo "- Update http://freshmeat.net/projects/agar/"
-	echo "- Announcements to agar@ and agar-fr@"
-	echo "- Announcements to agar-announce@ and agar-announce-fr@"
+	echo "- Notify agar@, agar-announce@, agar-announce-fr@"
 	echo "*********************************************************"
 fi
