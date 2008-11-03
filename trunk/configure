@@ -6680,6 +6680,10 @@ echo "CFLAGS=$CFLAGS" >>Makefile.config
 echo "mdefs[\"CFLAGS\"] = \"$CFLAGS\"" >>configure.lua
 echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
+if [ -e "$BLD/include" ]
+ then
+	cp -fR config "$BLD/include/agar"
+fi
 echo "*"
 echo "* Configuration successful."
 echo "* Use \"make depend\" if you plan on editing the source code."
