@@ -468,6 +468,10 @@ C_INCPREP(include,agar)
 C_INCDIR($BLD/include)
 C_INCDIR($BLD/include/agar)
 
+if [ -e "$BLD/include" ]; then
+	cp -fR config "$BLD/include/agar"
+fi
+
 echo "*"
 echo "* Configuration successful."
 echo "* Use \"make depend\" if you plan on editing the source code."
