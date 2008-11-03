@@ -3,20 +3,25 @@ include ${TOP}/Makefile.config
 
 PROJECT=	"Agar"
 PROJECT_GUID=	"93733df2-c743-489e-bc9f-f22aee00d787"
-PROJPREPKG=	pre-package
-PROJPOSTPKG=	post-package
 PROJCONFIGDIR=	include/agar/config
 PROJINCLUDES=	${SRCDIR}/configure.lua
 
 include ${TOP}/Makefile.proj
 
-SUBDIR=	core agar-core-config \
-	gui agar-config \
-	vg agar-vg-config \
-	rg agar-rg-config \
-	math agar-math-config \
-	dev agar-dev-config
-	
+SUBDIR=		core agar-core-config \
+		gui agar-config \
+		vg agar-vg-config \
+		rg agar-rg-config \
+		math agar-math-config \
+		dev agar-dev-config
+
+SUBDIR_CONFIG=	agar-core-config \
+		agar-config \
+		agar-vg-config \
+		agar-rg-config \
+		agar-math-config \
+		agar-dev-config
+
 INCDIRS=core \
 	gui \
 	vg \
