@@ -29,6 +29,14 @@ procedure ver_gnat is
     fsf_prefix  : constant string := "GNAT Version: ";
     gpl_prefix  : constant string := "GPL ";
 
+    -- does the version string have a non-numeric prefix?
+    function have_prefix (str : string) return boolean
+    is
+      char : constant character := str (str'first);
+    begin
+      return (char < '0') or (char > '9');
+    end have_prefix;
+
     -- find first non numeric character in string
     procedure first_non_numeric
       (str      : string;
@@ -116,17 +124,24 @@ procedure ver_gnat is
     version_minor := 0;
     version_patch := 0;
 
-    remove_prefix (version_tmp, fsf_prefix, removed);
-    if removed then
+    -- FSF GNAT appears to have no prefix on some platforms
+    if have_prefix (version_tmp) then
+      remove_prefix (version_tmp, fsf_prefix, removed);
+      if removed then
+        version_name := version_strings.to_bounded_string ("GNAT_FSF");
+        parse_fsf;
+        return;
+      end if;
+
+      remove_prefix (version_tmp, gpl_prefix, removed);
+      if removed then
+        version_name := version_strings.to_bounded_string ("GNAT_GPL");
+        parse_gpl;
+        return;
+      end if;
+    else
       version_name := version_strings.to_bounded_string ("GNAT_FSF");
       parse_fsf;
-      return;
-    end if;
-
-    remove_prefix (version_tmp, gpl_prefix, removed);
-    if removed then
-      version_name := version_strings.to_bounded_string ("GNAT_GPL");
-      parse_gpl;
       return;
     end if;
   end version_parse;

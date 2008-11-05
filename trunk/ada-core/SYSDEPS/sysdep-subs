@@ -448,6 +448,8 @@ fi
 PREFIX=`${SYSDEP_FILE} get "conf-prefix" ""`
 for dir in ${PREFIX}
 do
+  ${SYSDEP_INFO} "using custom prefix ${dir}/include"
+  ${SYSDEP_INFO} "using custom prefix ${dir}/lib"
   STDINC_ADD="${STDINC_ADD} ${dir}/include"
   STDLIB_ADD="${STDLIB_ADD} ${dir}/lib"
 done
@@ -458,6 +460,8 @@ then
   PREFIX=`${SYSDEP_FILE} get "conf-x-prefix" ""`
   for dir in ${PREFIX}
   do
+    ${SYSDEP_INFO} "using custom x-prefix ${dir}/include"
+    ${SYSDEP_INFO} "using custom x-prefix ${dir}/lib"
     STDINC_ADD="${STDINC_ADD} ${dir}/include"
     STDLIB_ADD="${STDLIB_ADD} ${dir}/lib"
   done
