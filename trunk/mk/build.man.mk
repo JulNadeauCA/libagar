@@ -352,7 +352,7 @@ install-man:
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${MANDIR}/man1" \
 	        CATMANDIR="${MANDIR}/cat1" \
-	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
 		exit 1; \
@@ -363,7 +363,7 @@ install-man:
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${MANDIR}/man2" \
 	        CATMANDIR="${MANDIR}/cat2" \
-	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
 		exit 1; \
@@ -374,7 +374,7 @@ install-man:
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${MANDIR}/man3" \
 	        CATMANDIR="${MANDIR}/cat3" \
-	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
 		exit 1; \
@@ -385,7 +385,7 @@ install-man:
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${MANDIR}/man4" \
 	        CATMANDIR="${MANDIR}/cat4" \
-	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
 		exit 1; \
@@ -396,7 +396,7 @@ install-man:
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${MANDIR}/man5" \
 	        CATMANDIR="${MANDIR}/cat5" \
-	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
 		exit 1; \
@@ -407,7 +407,7 @@ install-man:
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${MANDIR}/man6" \
 	        CATMANDIR="${MANDIR}/cat6" \
-	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
 		exit 1; \
@@ -418,7 +418,7 @@ install-man:
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${MANDIR}/man7" \
 	        CATMANDIR="${MANDIR}/cat7" \
-	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
 		exit 1; \
@@ -429,7 +429,7 @@ install-man:
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${MANDIR}/man8" \
 	        CATMANDIR="${MANDIR}/cat8" \
-	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
 		exit 1; \
@@ -440,7 +440,7 @@ install-man:
 	        INSTALL_DATA="${INSTALL_DATA}" \
 		MANDIR="${MANDIR}/man9" \
 	        CATMANDIR="${MANDIR}/cat9" \
-	        ${SH} ${TOP}/mk/install-manpages.sh; \
+	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
 		exit 1; \
