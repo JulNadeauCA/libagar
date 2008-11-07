@@ -114,9 +114,13 @@ extern AG_TextState *agTextState;
 extern AG_Mutex agTextLock;
 
 int	 AG_TextInit(void);
-void	 AG_TextParseFontSpec(const char *);
 void	 AG_TextDestroy(void);
+
+void	 AG_TextParseFontSpec(const char *);
 AG_Font	*AG_FetchFont(const char *, int, int);
+void     AG_DestroyFont(AG_Font *);
+void	 AG_SetDefaultFont(AG_Font *);
+
 void	 AG_PushTextState(void);
 void	 AG_PopTextState(void);
 int	 AG_TextFontLookup(const char *, int, Uint);
