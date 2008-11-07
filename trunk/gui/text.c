@@ -156,12 +156,17 @@ LoadBitmapGlyph(AG_Surface *su, const char *lbl, void *p)
 }
 
 static void
-DestroyFont(void *obj)
+FontDestroy(void *obj)
 {
 	AG_Font *font = obj;
 	int i;
 
 	switch (font->type) {
+#ifdef HAVE_FREETYPE
+	case AG_FONT_VECTOR:
+		AG_TTFCloseFont(font->ttf);
+		break;
+#endif
 	case AG_FONT_BITMAP:
 		for (i = 0; i < font->nglyphs; i++) {
 			AG_SurfaceFree(font->bglyphs[i]);
@@ -349,6 +354,21 @@ fail:
 	return (NULL);
 }
 
+void
+AG_DestroyFont(AG_Font *font)
+{
+	if (font != agDefaultFont)
+		AG_ObjectDestroy(font);
+}
+
+void
+AG_SetDefaultFont(AG_Font *font)
+{
+	AG_MutexLock(&agTextLock);
+	agDefaultFont = font;
+	AG_MutexUnlock(&agTextLock);
+}
+
 static Uint32
 TextTmsgExpire(void *obj, Uint32 ival, void *arg)
 {
@@ -531,11 +551,9 @@ AG_TextDestroy(void)
 	     font != SLIST_END(&fonts);
 	     font = nextfont) {
 		nextfont = SLIST_NEXT(font, fonts);
-#ifdef HAVE_FREETYPE
-		if (font->type == AG_FONT_VECTOR)
-			AG_TTFCloseFont(font->ttf);
-#endif
 		AG_ObjectDestroy(font);
+		if (font == agDefaultFont)
+			agDefaultFont = NULL;
 	}
 
 #ifdef HAVE_FREETYPE
@@ -1702,7 +1720,7 @@ AG_ObjectClass agFontClass = {
 	{ 0, 0 },
 	NULL,		/* init */
 	NULL,		/* free */
-	DestroyFont,
+	FontDestroy,
 	NULL,		/* load */
 	NULL,		/* save */
 	NULL,		/* edit */

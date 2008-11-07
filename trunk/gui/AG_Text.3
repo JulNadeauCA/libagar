@@ -159,8 +159,11 @@ rendering functions.
 .Ft "AG_Surface *"
 .Fn AG_TextRenderf "const char *fmt" "..."
 .Pp
-.Ft "AG_Surface *"
+.Ft "AG_Glyph *"
 .Fn AG_TextRenderGlyph "Uint32 uch"
+.Pp
+.Ft void
+.Fn AG_TextUnusedGlyph "AG_Glyph *glyph"
 .Pp
 .Ft "void"
 .Fn AG_TextSize "const char *text" "int *w" "int *h"
@@ -188,7 +191,28 @@ style arguments.
 .Fn AG_TextRenderUCS4
 renders text in UCS-4 format onto a new surface.
 .Fn AG_TextRenderGlyph
-renders a single UCS-4 encoded Unicode character onto a new surface.
+renders the specified UCS-4 encoded Unicode character.
+The function returns an
+.Ft AG_Glyph
+structure, which has the following public (read-only) members:
+.Pp
+.Bl -tag -compact -width "float texcoord[4] "
+.It Uint32 ch
+Unicode character (UCS-4 encoded)
+.It AG_Surface *su
+Pixel surface
+.It Uint texture
+OpenGL texture handle (if OpenGL is in use)
+.It float texcoord[4]
+OpenGL texture coordinates (if OpenGL is in use
+.It int advance
+Amount of translation (in pixels) recommended to follow when rendering text
+.El
+.Pp
+.Fn AG_TextUnusedGlyph
+must be invoked when an
+.Ft AG_Glyph
+object is no longer needed.
 .Pp
 The
 .Fn AG_TextSize
@@ -332,8 +356,17 @@ creates a dialog displaying a text string and an array of buttons.
 is a set of existing
 .Xr AG_Button 3
 widgets to display.
-.Sh MISCELLANEOUS
+.Sh FONT SELECTION
 .nr nS 1
+.Ft "AG_Font *"
+.Fn AG_FetchFont "const char *face" "int points" "int flags"
+.Pp
+.Ft void
+.Fn AG_DestroyFont "AG_Font *font"
+.Pp
+.Ft void
+.Fn AG_SetDefaultFont "AG_Font *font"
+.Pp
 .Ft void
 .Fn AG_TextParseFontSpec "const char *fontspec"
 .Pp
