@@ -39,11 +39,13 @@
 # include <config/have_pthread_mutex_recursive_np.h>
 #endif
 
-#include <core/core.h>
-#include <core/config.h>
+#include "core.h"
+#include "config.h"
+#include "dso.h"
 #ifdef NETWORK
-# include <core/rcs.h>
+#include "rcs.h"
 #endif
+
 #include <stdio.h>
 
 #ifdef THREADS
@@ -86,6 +88,7 @@ AG_InitCore(const char *progname, Uint flags)
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
 	    PTHREAD_MUTEX_RECURSIVE);
 # endif
+	AG_MutexInitRecursive(&agDSOLock);
 #endif /* THREADS */
 
 	AG_InitClassTbl();
