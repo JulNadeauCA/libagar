@@ -56,6 +56,9 @@ the library, and unloading the library.
 .Ft "int"
 .Fn AG_UnloadDSO "AG_DSO *dso"
 .Pp
+.Ft "AG_DSO *"
+.Fn AG_LookupDSO "const char *name"
+.Pp
 .nr nS 0
 The
 .Fn AG_LoadDSO
@@ -104,6 +107,10 @@ function decrements the reference count of the specified
 .Nm
 object.
 If it reaches zero, the library is removed from the process's address space.
+.Pp
+.Fn AG_LookupDSO
+searches the list of currently loaded DSOs by the specified name.
+If no match is found, NULL is returned.
 .Sh STRUCTURE DATA
 For the
 .Fa AG_DSO
