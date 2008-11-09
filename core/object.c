@@ -825,7 +825,7 @@ AG_ObjectCopyFilename(void *p, char *path, size_t path_len)
 	}
 	AG_SetError(_("The %s%s%c%s.%s file is not in load-path."),
 	    ob->save_pfx != NULL ? ob->save_pfx : "",
-	    obj_name, AG_PATHSEPC, ob->name, ob->cls->name);
+	    obj_name, AG_PATHSEPCHAR, ob->name, ob->cls->name);
 	AG_ObjectUnlock(ob);
 	return (-1);
 out:

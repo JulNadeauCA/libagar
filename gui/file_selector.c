@@ -117,7 +117,7 @@ SetDirectoryAndFile(AG_FileSelector *fs, const char *pPath)
 	char path[AG_FILENAME_MAX], *file;
 	
 	Strlcpy(path, pPath, sizeof(path));
-	if ((file = strrchr(path, AG_PATHSEPC)) != NULL) {
+	if ((file = strrchr(path, AG_PATHSEPCHAR)) != NULL) {
 		AG_FileDlgSetFilename(fs->filedlg, file);
 		*file = '\0';
 		AG_FileDlgSetDirectory(fs->filedlg, path);
@@ -148,8 +148,8 @@ AG_FileSelectorSetDirectory(AG_FileSelector *fs, const char *path)
 	char dir[AG_PATHNAME_MAX];
 
 	Strlcpy(dir, path, sizeof(dir));
-	if (dir[0] != '\0' && dir[strlen(dir)-1] != AG_PATHSEPC) {
-		dir[strlen(dir)-1] = AG_PATHSEPC;
+	if (dir[0] != '\0' && dir[strlen(dir)-1] != AG_PATHSEPCHAR) {
+		dir[strlen(dir)-1] = AG_PATHSEPCHAR;
 	}
 	AG_ObjectLock(fs->filedlg);
 	SetDirectory(fs, dir);

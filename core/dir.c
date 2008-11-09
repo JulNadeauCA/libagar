@@ -237,7 +237,7 @@ AG_MkPath(const char *path)
 			goto fail;
 		}
 
-		*slash = AG_PATHSEPC;
+		*slash = AG_PATHSEPCHAR;
 	}
 	Free(pathp);
 	return (0);

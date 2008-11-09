@@ -397,7 +397,7 @@ AG_RegisterModuleDirectory(const char *path)
 	agModuleDirs = Realloc(agModuleDirs,
 	    (agModuleDirCount+1)*sizeof(char *));
 	agModuleDirs[agModuleDirCount++] = s = Strdup(path);
-	if (*(p = &s[strlen(s)-1]) == AG_PATHSEPC)
+	if (*(p = &s[strlen(s)-1]) == AG_PATHSEPCHAR)
 		*p = '\0';
 }
 
