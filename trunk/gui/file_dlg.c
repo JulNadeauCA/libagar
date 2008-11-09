@@ -414,7 +414,7 @@ ProcessFilename(char *file, size_t len)
 		return (0);
 
 	/* Remove trailing path separators. */
-	if (*end == AG_PATHSEPC) {
+	if (*end == AG_PATHSEPCHAR) {
 		*end = '\0';
 		end--;
 	}
@@ -585,7 +585,7 @@ AG_FileDlgAtRoot(AG_FileDlg *fd)
 	int rv;
 	
 	AG_ObjectLock(fd);
-	rv = (fd->cwd[0] == AG_PATHSEPC && fd->cwd[1] == '\0');
+	rv = (fd->cwd[0] == AG_PATHSEPCHAR && fd->cwd[1] == '\0');
 	AG_ObjectUnlock(fd);
 	return (rv);
 }
@@ -607,17 +607,17 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 	} else if (dir[0] == '.' && dir[1] == '.' && dir[2] == '\0') {
 		if (!AG_FileDlgAtRoot(fd)) {
 			Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
-			if ((c = strrchr(ncwd, AG_PATHSEPC)) != NULL) {
+			if ((c = strrchr(ncwd, AG_PATHSEPCHAR)) != NULL) {
 				*c = '\0';
 			}
 			if (c == &ncwd[0]) {
-				ncwd[0] = AG_PATHSEPC;
+				ncwd[0] = AG_PATHSEPCHAR;
 				ncwd[1] = '\0';
 			}
 		}
-	} else if (dir[0] != AG_PATHSEPC) {
+	} else if (dir[0] != AG_PATHSEPCHAR) {
 		Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
-		if (!(ncwd[0] == AG_PATHSEPC &&
+		if (!(ncwd[0] == AG_PATHSEPCHAR &&
 		      ncwd[1] == '\0')) {
 			Strlcat(ncwd, AG_PATHSEP, sizeof(ncwd));
 		}

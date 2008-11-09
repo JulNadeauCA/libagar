@@ -63,14 +63,6 @@
 #include <core/vsnprintf.h>
 #include <core/vasprintf.h>
 
-#ifdef WIN32
-#define AG_PATHSEPC '\\'
-#define AG_PATHSEP "\\"
-#else
-#define AG_PATHSEPC '/'
-#define AG_PATHSEP "/"
-#endif
-
 #ifndef MIN
 #define	MIN(a,b) (((a)<(b))?(a):(b))
 #endif

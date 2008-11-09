@@ -239,7 +239,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	     dir = Strsep(&pathp, ":")) {
 		Strlcpy(file, dir, sizeof(file));
 
-		if (name[0] != AG_PATHSEPC) {
+		if (name[0] != AG_PATHSEPCHAR) {
 			Strlcat(file, AG_PATHSEP, sizeof(file));
 		}
 		Strlcat(file, name, sizeof(file));
