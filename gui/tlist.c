@@ -392,9 +392,9 @@ Draw(void *obj)
 
 		STYLE(tl)->ListItemBackground(tl,
 		    AG_RECT(x + tl->icon_w + 2,
-		            y + 1,
+		            y,
 			    tl->wRow - x - tl->icon_w - 3,
-			    tl->item_h - 1),
+			    tl->item_h),
 		    it->selected);
 
 		if (it->selected)
