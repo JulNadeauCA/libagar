@@ -420,7 +420,7 @@ The following functions allow such manipulations.
 .Fn AG_EventInit "AG_Event *ev"
 .Pp
 .Ft void
-.Fn AG_EventArgs "const char *fmt" "..."
+.Fn AG_EventArgs "AG_Event *ev" "const char *fmt" "..."
 .Pp
 .Ft void
 .Fn AG_EventPushPointer "AG_Event *ev" "const char *key" "void *val"
@@ -466,9 +466,9 @@ routine initializes an
 structure with no arguments.
 .Pp
 .Fn AG_EventArgs
-initializes an
-.Ft AG_Event
-structure and also specifies a list of arguments (in the same format as
+initializes
+.Fa ev
+and also specifies a list of arguments (in the same format as
 .Fn AG_SetEvent ) .
 .Pp
 The
