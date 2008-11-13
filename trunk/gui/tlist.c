@@ -412,7 +412,7 @@ Draw(void *obj)
 			}
 			AG_WidgetBlitSurface(tl, it->icon, x, y);
 		}
-		if (it->flags & AG_TLIST_EXPANDED) {
+		if (it->flags & AG_TLIST_HAS_CHILDREN) {
 			STYLE(tl)->TreeSubnodeIndicator(tl,
 			    AG_RECT(x,
 			            y,
@@ -546,7 +546,7 @@ AG_TlistClear(AG_Tlist *tl)
 	     it = nit) {
 		nit = TAILQ_NEXT(it, items);
 		if ((!(tl->flags & AG_TLIST_NOSELSTATE) && it->selected) ||
-		      (it->flags & AG_TLIST_EXPANDED)) {
+		      (it->flags & AG_TLIST_HAS_CHILDREN)) {
 			TAILQ_INSERT_HEAD(&tl->selitems, it, selitems);
 		} else {
 			FreeItem(tl, it);
@@ -934,7 +934,7 @@ MouseButtonDown(AG_Event *event)
 		break;
 	case SDL_BUTTON_LEFT:
 		/* Expand the children if the user clicked on the [+] sign. */
-		if (ti->flags & AG_TLIST_EXPANDED) {
+		if (ti->flags & AG_TLIST_HAS_CHILDREN) {
 			if (x >= ti->depth*tl->icon_w &&
 			    x <= (ti->depth+1)*tl->icon_w) {
 				if (ti->flags & AG_TLIST_VISIBLE_CHILDREN) {
