@@ -323,7 +323,7 @@ Draw(void *obj)
 			}
 			AG_WidgetBlitFrom(mview, m, lbl, NULL,
 			    x,
-			    r.y + m->itemh/2 - WSURFACE(m,lbl)->h/2 + 1);
+			    r.y + m->itemh/2 - agTextFontHeight/2 + 1);
 			x += WSURFACE(m,lbl)->w;
 		}
 		if (item->nsubitems > 0) {
