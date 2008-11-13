@@ -612,21 +612,22 @@ Draw(void *obj)
 	DrawNode(vg, vg->root, vv);
 	VG_Unlock(vg);
 
-	AG_TextColor(TEXT_COLOR);
-	if (agTextCache) {
-		su = AG_TextCacheInsLookup(vv->tCache, vv->status);
-		AG_WidgetBlitSurface(vv, su,
-		    0,
-		    HEIGHT(vv) - WSURFACE(vv,su)->h);
-	} else {
-		AG_Surface *suTmp;
-		suTmp = AG_TextRender(vv->status);
-		AG_WidgetBlit(vv, suTmp,
-		    0,
-		    HEIGHT(vv) - suTmp->h);
-		AG_SurfaceFree(suTmp);
+	if (vv->status[0] != '\0') {
+		AG_TextColor(TEXT_COLOR);
+		if (agTextCache) {
+			su = AG_TextCacheInsLookup(vv->tCache, vv->status);
+			AG_WidgetBlitSurface(vv, su,
+			    0,
+			    HEIGHT(vv) - WSURFACE(vv,su)->h);
+		} else {
+			AG_Surface *suTmp;
+			suTmp = AG_TextRender(vv->status);
+			AG_WidgetBlit(vv, suTmp,
+			    0,
+			    HEIGHT(vv) - suTmp->h);
+			AG_SurfaceFree(suTmp);
+		}
 	}
-
 	AG_PopClipRect();
 }
 
