@@ -42,13 +42,13 @@
 #include <gui/separator.h>
 #include <gui/checkbox.h>
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 #include <core/rcs.h>
 #endif
 
 #include "dev.h"
 
-#include <config/lockdebug.h>
+#include <config/ag_lockdebug.h>
 
 const AG_FlagDescr devObjectFlags[] = {
 	{ AG_OBJECT_DEBUG,		N_("Debugging"),		  1 },
@@ -111,7 +111,7 @@ PollProps(AG_Event *event)
 	AG_TlistRestore(tl);
 }
 
-#if defined(THREADS) && defined(LOCKDEBUG)
+#if defined(AG_THREADS) && defined(AG_LOCKDEBUG)
 static void
 PollLocks(AG_Event *event)
 {
@@ -125,7 +125,7 @@ PollLocks(AG_Event *event)
 	}
 	AG_TlistRestore(tl);
 }
-#endif /* THREADS and LOCKDEBUG */
+#endif /* AG_THREADS and AG_LOCKDEBUG */
 
 static void
 PollEvents(AG_Event *event)
@@ -241,7 +241,7 @@ RefreshSums(AG_Event *event)
 	}
 }
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 
 static void
 RefreshRepoStatus(AG_Event *event)
@@ -291,7 +291,7 @@ out:
 	AG_RcsDisconnect();
 }
 
-#endif /* NETWORK */
+#endif /* AG_NETWORK */
 
 void *
 DEV_ObjectEdit(void *p)
@@ -350,7 +350,7 @@ DEV_ObjectEdit(void *p)
 		}
 	}
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 	ntab = AG_NotebookAddTab(nb, _("RCS"), AG_BOX_VERT);
 	{
 		AG_Label *lblStatus;
@@ -368,7 +368,7 @@ DEV_ObjectEdit(void *p)
 		if (agRcsMode)
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);
 	}
-#endif /* NETWORK */
+#endif /* AG_NETWORK */
 
 	ntab = AG_NotebookAddTab(nb, _("Deps"), AG_BOX_VERT);
 	{
@@ -389,7 +389,7 @@ DEV_ObjectEdit(void *p)
 		AG_SetEvent(tl, "tlist-poll", PollProps, "%p", ob);
 	}
 	
-#if defined(THREADS) && defined(LOCKDEBUG)
+#if defined(AG_THREADS) && defined(AG_LOCKDEBUG)
 	ntab = AG_NotebookAddTab(nb, _("Locks"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);

@@ -101,6 +101,7 @@ extern AG_WidgetClass agMenuClass;
 extern AG_WidgetClass agMenuViewClass;
 extern AG_Menu *agAppMenu;
 extern AG_Window *agAppMenuWin;
+extern AG_Mutex agAppMenuLock;
 
 AG_Menu	  *AG_MenuNew(void *, Uint);
 AG_Menu	  *AG_MenuNewGlobal(Uint);

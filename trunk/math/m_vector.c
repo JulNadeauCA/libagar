@@ -45,19 +45,19 @@ M_VectorInitEngine(void)
 	if (HasSSE()) {
 #ifdef HAVE_SSE
 		mVecOps3 = &mVecOps3_SSE;
-#elif defined(DEBUG)
+#elif defined(AG_DEBUG)
 		AG_Verbose("SSE available, but disabled at compile time\n");
 #endif
 	}
 	if (HasSSE3()) {
 #ifdef HAVE_SSE3
 		mVecOps3 = &mVecOps3_SSE3;
-#elif defined(DEBUG)
+#elif defined(AG_DEBUG)
 		AG_Verbose("SSE3 available, but disabled at compile time\n");
 #endif
 	}
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	AG_Verbose("Vector operations: ");
 #if defined(INLINE_ALTIVEC)
 	AG_Verbose("altivec (inline)\n");
@@ -70,7 +70,7 @@ M_VectorInitEngine(void)
 #else
 	AG_Verbose("%s\n", mVecOps3->name);
 #endif
-#endif /* DEBUG */
+#endif /* AG_DEBUG */
 }
 
 M_Vector2

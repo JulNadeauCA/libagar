@@ -3,14 +3,14 @@
 #ifndef _AGAR_CORE_THREADS_H_
 #define _AGAR_CORE_THREADS_H_
 
-#ifdef THREADS
+#ifdef AG_THREADS
 
 #include <agar/config/have_pthreads.h>
 #ifdef HAVE_PTHREADS
 #include <pthread.h>
 #include <signal.h>
 #else
-# error "THREADS option currently requires POSIX threads"
+# error "AG_THREADS option requires POSIX threads"
 #endif
 
 typedef pthread_mutex_t AG_Mutex;
@@ -31,7 +31,7 @@ extern pthread_mutexattr_t agRecursiveMutexAttr;
 __END_DECLS
 #include <agar/core/close.h>
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 
 # define AG_MutexInit(m) if (pthread_mutex_init((m),NULL)!=0) abort()
 # define AG_MutexInitRecursive(m) if (pthread_mutex_init((m),&agRecursiveMutexAttr)!=0) abort()
@@ -48,7 +48,7 @@ __END_DECLS
 
 # define AG_ThreadCancel(t) if (pthread_cancel(t)!=0) abort();
 
-#else /* !DEBUG */
+#else /* !AG_DEBUG */
 
 # define AG_MutexInit(m) pthread_mutex_init((m),NULL)
 # define AG_MutexInitRecursive(m) pthread_mutex_init((m),&agRecursiveMutexAttr)
@@ -65,7 +65,7 @@ __END_DECLS
 
 # define AG_ThreadCancel(t) pthread_cancel(t)
 
-#endif /* DEBUG */
+#endif /* AG_DEBUG */
 
 #define AG_ThreadCreate(t,f,arg) pthread_create((t),NULL,(f),(arg))
 #define AG_ThreadSelf() pthread_self()
@@ -79,7 +79,7 @@ __END_DECLS
 #define AG_ThreadSigMask(how,n,o) pthread_sigmask((how),(n),(o))
 #define AG_ThreadKill(thread,signo) pthread_kill((thread),(signo))
 
-#else /* !THREADS */
+#else /* !AG_THREADS */
 
 typedef int AG_Mutex;
 typedef int AG_Thread;
@@ -103,9 +103,9 @@ typedef int AG_ThreadKey;
 #define AG_CondTimedWait(cd,m,t)
 #define AG_ThreadCancel(thread)
 
-#define AG_ThreadSelf(thread) AG_FatalError("No THREADS")
-#define AG_ThreadCreate(thread,func,arg) AG_FatalError("No THREADS")
-#define AG_ThreadJoin(thread,valptr) AG_FatalError("No THREADS")
+#define AG_ThreadSelf(thread) AG_FatalError("No AG_THREADS")
+#define AG_ThreadCreate(thread,func,arg) AG_FatalError("No AG_THREADS")
+#define AG_ThreadJoin(thread,valptr) AG_FatalError("No AG_THREADS")
 #define AG_ThreadExit(p)
 #define AG_MutexTrylock(m)
 #define AG_ThreadKeyCreate(k)
@@ -116,6 +116,6 @@ typedef int AG_ThreadKey;
 #define AG_ThreadKill(thread,signo)
 
 #undef HAVE_PTHREADS
-#endif /* THREADS */
+#endif /* AG_THREADS */
 
 #endif /* _AGAR_CORE_THREADS_H_ */

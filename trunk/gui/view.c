@@ -38,7 +38,7 @@
 #include "colors.h"
 #include "menu.h"
 #include "text.h"
-#ifdef DEBUG
+#ifdef AG_DEBUG
 #include "label.h"
 #include "fixed_plotter.h"
 #endif
@@ -54,8 +54,6 @@
 #include <jpeglib.h>
 #include <errno.h>
 #endif
-
-#include <config/threads.h>
 
 /*
  * Invert the Y-coordinate in OpenGL mode.
@@ -95,11 +93,11 @@ struct ag_global_key {
 };
 static SLIST_HEAD(,ag_global_key) agGlobalKeys =
     SLIST_HEAD_INITIALIZER(&agGlobalKeys);
-#ifdef THREADS
+#ifdef AG_THREADS
 static AG_Mutex agGlobalKeysLock;
 #endif
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 int agEventAvg = 0;		/* Number of events in last frame */
 int agIdleAvg = 0;		/* Measured SDL_Delay() granularity */
 AG_Window *agPerfWindow;
@@ -695,7 +693,7 @@ fail:
 void
 AG_BeginRendering(void)
 {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	agRenderingContext = 1;
 #endif
 #ifdef HAVE_OPENGL
@@ -717,7 +715,7 @@ AG_BeginRendering(void)
 void
 AG_EndRendering(void)
 {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (agClipRectCount != 1)
 		AG_FatalError("Inconsistent PushClipRect() / PopClipRect()");
 #endif
@@ -739,7 +737,7 @@ AG_EndRendering(void)
 		SDL_UpdateRects(agView->v, agView->ndirty, agView->dirty);
 		agView->ndirty = 0;
 	}
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	agRenderingContext = 0;
 #endif
 }
@@ -1420,7 +1418,7 @@ AG_HSV2RGB(float h, float s, float v, Uint8 *r, Uint8 *g, Uint8 *b)
 	*b = vB*255;
 }
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 /*
  * Update the performance counters.
  * XXX remove this once the graph widget implements polling.
@@ -1467,7 +1465,7 @@ PerfMonitorInit(void)
 	agPerfEvnts = AG_FixedPlotterCurve(agPerfGraph, "event", 0,0,180, 99);
 	agPerfIdle = AG_FixedPlotterCurve(agPerfGraph, "idle", 180,180,180, 99);
 }
-#endif /* DEBUG */
+#endif /* AG_DEBUG */
 
 /*
  * Try to ensure a fixed frame rate, and idle as much as possible.
@@ -1480,7 +1478,7 @@ AG_EventLoop_FixedFPS(void)
 	AG_Window *win;
 	Uint32 Tr1, Tr2 = 0;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	PerfMonitorInit();
 #endif
 	Tr1 = SDL_GetTicks();
@@ -1500,7 +1498,7 @@ AG_EventLoop_FixedFPS(void)
 			/* Recalibrate the effective refresh rate. */
 			Tr1 = SDL_GetTicks();
 			agView->rCur = agView->rNom - (Tr1-Tr2);
-#ifdef DEBUG
+#ifdef AG_DEBUG
 			if (agPerfWindow->visible)
 				PerfMonitorUpdate();
 #endif
@@ -1510,14 +1508,14 @@ AG_EventLoop_FixedFPS(void)
 		} else if (SDL_PollEvent(&ev) != 0) {
 			if (AG_ProcessEvent(&ev) == -1)
 				return;
-#ifdef DEBUG
+#ifdef AG_DEBUG
 			agEventAvg++;
 #endif
 		} else if (AG_TIMEOUTS_QUEUED()) {		/* Safe */
 			AG_ProcessTimeouts(Tr2);
 		} else if (agView->rCur > agIdleThresh) {
 			SDL_Delay(agView->rCur - agIdleThresh);
-#ifdef DEBUG
+#ifdef AG_DEBUG
 			agIdleAvg = SDL_GetTicks() - Tr2;
 		} else {
 			agIdleAvg = 0;

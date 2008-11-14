@@ -38,14 +38,14 @@ EOF
 threads=`./chk-threads`
 if [ $? -ne 0 ]
 then
-  echo 'fatal: could not determine if THREADS is defined' 1>&2
+  echo 'fatal: could not determine if AG_THREADS is defined' 1>&2
   exit 112
 fi
 
 if [ "${threads}" = "threads" ]
 then
   (cat <<EOF
-  -- THREADS defined
+  -- AG_THREADS defined
   lock           : agar.core.threads.mutex_t;
 EOF
 ) || exit 112
@@ -57,14 +57,14 @@ fi
 lockdebug=`./chk-lockdebug`
 if [ $? -ne 0 ]
 then
-  echo 'fatal: could not determine if LOCKDEBUG is defined' 1>&2
+  echo 'fatal: could not determine if AG_LOCKDEBUG is defined' 1>&2
   exit 112
 fi
 
 if [ "${lockdebug}" = "lockdebug" ]
 then
   (cat <<EOF
-  -- LOCKDEBUG defined
+  -- AG_LOCKDEBUG defined
   lockinfo       : access cs.chars_ptr;
   nlockinfo      : c.unsigned;
 EOF
@@ -77,14 +77,14 @@ fi
 debug=`./chk-debug`
 if [ $? -ne 0 ]
 then
-  echo 'fatal: could not determine if DEBUG is defined' 1>&2
+  echo 'fatal: could not determine if AG_DEBUG is defined' 1>&2
   exit 112
 fi
 
 if [ "${debug}" = "debug" ]
 then
   (cat <<EOF
-  -- DEBUG defined
+  -- AG_DEBUG defined
   debug_fn       : access procedure
     (ptr1 : agar.core.types.void_ptr_t;
      ptr2 : agar.core.types.void_ptr_t;

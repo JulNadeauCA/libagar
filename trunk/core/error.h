@@ -42,7 +42,7 @@ typedef enum ag_error_code {
 		AG_FatalError("Out of memory (vasprintf)");	\
 } while (0)
 # define Verbose AG_Verbose
-# ifdef DEBUG
+# ifdef AG_DEBUG
 #  define Debug AG_Debug
 # else
 #  ifdef __GNUC__
@@ -50,7 +50,7 @@ typedef enum ag_error_code {
 #  else
 #   define Debug AG_Debug
 #  endif
-# endif /* DEBUG */
+# endif /* AG_DEBUG */
 #endif /* _AGAR_INTERNAL or _USE_AGAR_STD */
 
 __BEGIN_DECLS

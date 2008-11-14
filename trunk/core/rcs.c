@@ -32,7 +32,7 @@
 #include <core/sha1.h>
 #include <core/rmd160.h>
 
-#include <config/network.h>
+#include <config/ag_network.h>
 #include <config/version.h>
 
 #include <gui/view.h>
@@ -48,7 +48,7 @@ char agRcsPassword[32] = "";
 Uint agRcsPort = 6785;
 int agRcsMode = 0;
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 
 #include <sys/types.h>
 
@@ -859,4 +859,4 @@ fail:
 	return (-1);
 }
 
-#endif /* NETWORK */
+#endif /* AG_NETWORK */

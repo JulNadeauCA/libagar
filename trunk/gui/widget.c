@@ -178,7 +178,7 @@ AG_WidgetFind(AG_Display *view, const char *name)
 {
 	void *rv;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (name[0] != '/')
 		AG_FatalError("WidgetFind: Not an absolute path: %s", name);
 #endif
@@ -1393,7 +1393,7 @@ AG_PopClipRect(void)
 {
 	AG_ClipRect *cr;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (agClipRectCount < 1)
 		AG_FatalError("PopClipRect() without PushClipRect()");
 #endif
@@ -1431,7 +1431,7 @@ AG_WidgetDraw(void *p)
 	    !OccultedWidget(wid) &&
 	    WIDGET_OPS(wid)->draw != NULL) {
 		WIDGET_OPS(wid)->draw(wid);
-#ifdef DEBUG
+#ifdef AG_DEBUG
 		if (wid->flags & AG_WIDGET_DEBUG_RSENS) {
 			static Uint8 c1[4] = { 200, 0, 0, 25 };
 			AG_Rect r = AG_Rect2ToRect(wid->rSens);
@@ -1446,7 +1446,7 @@ AG_WidgetDraw(void *p)
 				    AG_MapRGB(agVideoFmt,100,0,0));
 /*			} */
 		}
-#endif
+#endif /* AG_DEBUG */
 	}
 	AG_ObjectUnlock(wid);
 }

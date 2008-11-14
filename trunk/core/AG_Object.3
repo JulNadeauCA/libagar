@@ -264,9 +264,8 @@ and
 functions acquire or release the lock protecting the layout of the entire
 virtual system which the given object is part of.
 .Pp
-Note that all lock/unlock functions are turned to no-ops if
-.Dv THREADS
-is not enabled at compile-time.
+Note that all lock/unlock functions are turned to no-ops if Agar is compiled
+without threads support.
 .Pp
 .Fn AG_ObjectSetName
 changes the name of the given object.
@@ -276,9 +275,7 @@ If the object is attached to a VFS, it is assumed to be locked.
 specifies a function to process debug messages (as issued by
 .Xr AG_Debug 3 )
 for the object.
-This function is a no-op unless Agar was compiled with the
-.Dv DEBUG
-option.
+This function is a no-op unless Agar was compiled with --enable-debug.
 .Pp
 The
 .Fn AGOBJECT_FOREACH_CHILD

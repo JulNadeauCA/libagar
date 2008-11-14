@@ -33,7 +33,7 @@
 #include <core/rmd160.h>
 #include <core/config.h>
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 #include <core/rcs.h>
 #endif
 
@@ -42,9 +42,9 @@
 #include <fcntl.h>
 #include <string.h>
 
-#include <config/lockdebug.h>
-#include <config/objdebug.h>
-#include <config/threads.h>
+#include <config/ag_lockdebug.h>
+#include <config/ag_objdebug.h>
+#include <config/ag_classdebug.h>
 
 AG_ObjectClass agObjectClass = {
 	"Agar(Object)",
@@ -78,11 +78,11 @@ AG_ObjectInit(void *p, void *cl)
 	ob->flags = 0;
 	ob->nevents = 0;
 
-#ifdef LOCKDEBUG
+#ifdef AG_LOCKDEBUG
 	ob->lockinfo = Malloc(sizeof(char *));
 	ob->nlockinfo = 0;
 #endif
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	ob->debugFn = NULL;
 	ob->debugPtr = NULL;
 #endif
@@ -319,7 +319,7 @@ AG_ObjectMove(void *childp, void *newparentp)
 	AG_Object *oparent = child->parent;
 	AG_Object *nparent = newparentp;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (oparent->root != nparent->root)
 		AG_FatalError("Cannot move objects across VFSes");
 #endif
@@ -337,7 +337,7 @@ AG_ObjectMove(void *childp, void *newparentp)
 	AG_PostEvent(nparent, child, "attached", NULL);
 	AG_PostEvent(oparent, child, "moved", "%p", nparent);
 
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 	Debug(child, "Moving from %s to new parent %s\n",
 	    oparent->name, nparent->name);
 	Debug(oparent, "Detached object: %s (moving to %s)\n",
@@ -376,7 +376,7 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	AG_PostEvent(parent, chld, "attached", NULL);
 	AG_PostEvent(chld, parent, "child-attached", NULL);
 
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 	Debug(parent, "Attached child object: %s\n", chld->name);
 	Debug(chld, "Attached to new parent: %s\n", parent->name);
 #endif
@@ -428,12 +428,12 @@ void
 AG_ObjectDetach(void *childp)
 {
 	AG_Object *child = childp;
-#ifdef THREADS
+#ifdef AG_THREADS
 	AG_Object *root = child->root;
 #endif
 	AG_Object *parent = child->parent;
 
-#ifdef THREADS
+#ifdef AG_THREADS
 	AG_LockVFS(root);
 #endif
 	AG_ObjectLock(parent);
@@ -447,13 +447,13 @@ AG_ObjectDetach(void *childp)
 	AG_PostEvent(parent, child, "detached", NULL);
 	AG_PostEvent(child, parent, "child-detached", NULL);
 
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 	Debug(parent, "Detached child object %s\n", child->name);
 	Debug(child, "Detached from parent %s\n", parent->name);
 #endif
 	AG_ObjectUnlock(child);
 	AG_ObjectUnlock(parent);
-#ifdef THREADS
+#ifdef AG_THREADS
 	AG_UnlockVFS(root);
 #endif
 }
@@ -512,7 +512,7 @@ AG_ObjectFind(void *vfsRoot, const char *name)
 {
 	void *rv;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (name[0] != '/')
 		AG_FatalError("AG_ObjectFind: Not an absolute path: %s", name);
 #endif
@@ -543,7 +543,7 @@ AG_ObjectFindF(void *vfsRoot, const char *fmt, ...)
 	va_start(ap, fmt);
 	Vsnprintf(path, sizeof(path), fmt, ap);
 	va_end(ap);
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (path[0] != '/')
 		AG_FatalError("AG_ObjectFindF: Not an absolute path: %s", path);
 #endif
@@ -633,7 +633,7 @@ FreeChildObject(AG_Object *obj)
 {
 	AG_Object *cob, *ncob;
 
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 	Debug(obj, "Freeing children\n");
 #endif
 	AG_ObjectLock(obj);
@@ -726,7 +726,7 @@ AG_ObjectCancelTimeouts(void *p, Uint flags)
 	TAILQ_FOREACH(ev, &ob->events, events) {
 		if ((ev->flags & AG_EVENT_SCHEDULED) &&
 		    (ev->timeout.flags & flags)) {
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 			Debug(ob, "Cancelling scheduled event <%s>\n",
 			    ev->name);
 #endif
@@ -755,7 +755,7 @@ AG_ObjectDestroy(void *p)
 	AG_ObjectClass **hier;
 	int i, nHier;
 
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 	if (ob->parent != NULL) {
 		AG_FatalError("AG_ObjectDestroy: %s still attached to %p",
 		    ob->name, ob->parent);
@@ -981,7 +981,7 @@ AG_ObjectResolveDeps(void *p)
 	AG_ObjectLock(ob);
 
 	TAILQ_FOREACH(dep, &ob->deps, deps) {
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 		Debug(ob, "Resolving dependency: %s\n", dep->path);
 #endif
 		if (dep->obj != NULL) {
@@ -992,7 +992,7 @@ AG_ObjectResolveDeps(void *p)
 			    ob->name, dep->path);
 			goto fail;
 		}
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 		Debug(ob, "Dependency resolves to %p (%s)\n", dep->obj,
 		    dep->obj->name);
 #endif
@@ -1083,7 +1083,7 @@ ReadDependencyTable(AG_DataSource *ds, AG_Object *ob)
 		dep->count = 0;
 		dep->persistent = 1;
 		TAILQ_INSERT_TAIL(&ob->deps, dep, deps);
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 		Debug(ob, "Dependency: %s\n", dep->path);
 #endif
 	}
@@ -1136,7 +1136,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		if (GetDatafile(path, ob) == -1)
 			goto fail_unlock;
 	}
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 	Debug(ob, "Loading generic data from %s\n", path);
 #endif
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
@@ -1200,7 +1200,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 		if ((cl = AG_LoadClass(hier)) == NULL) {
 			AG_SetError("%s: %s", ob->name, AG_GetError());
 			if (agObjectIgnoreUnknownObjs) {
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 				Debug(ob, "%s; ignoring\n", AG_GetError());
 #endif
 				continue;
@@ -1261,7 +1261,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 			goto fail_unlock;
 		}
 	}
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 	Debug(ob, "Loading dataset from %s\n", path);
 #endif
 	if ((ds = AG_OpenFile(path, "rb")) == NULL) {
@@ -1286,7 +1286,7 @@ AG_ObjectLoadDataFromFile(void *p, int *dataFound, const char *pPath)
 		AG_ObjectFreeDataset(ob);
 	}
 	for (i = 0; i < nHier; i++) {
-#ifdef CLASSDEBUG
+#ifdef AG_CLASSDEBUG
 		Debug(ob, "Loading as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->load == NULL)
@@ -1429,7 +1429,7 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 		goto fail;
 	}
 	for (i = 0; i < nHier; i++) {
-#ifdef CLASSDEBUG
+#ifdef AG_CLASSDEBUG
 		Debug(ob, "Saving as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->save == NULL)
@@ -1500,7 +1500,7 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 		goto fail;
 	}
 	for (i = 0; i < nHier; i++) {
-#ifdef CLASSDEBUG
+#ifdef AG_CLASSDEBUG
 		Debug(ob, "Loading as %s\n", hier[i]->name);
 #endif
 		if (hier[i]->load == NULL)
@@ -1605,7 +1605,7 @@ AG_ObjectSaveToFile(void *p, const char *pPath)
 			Strlcat(path, ob->cls->name, sizeof(path));
 		}
 	}
-#ifdef OBJDEBUG
+#ifdef AG_OBJDEBUG
 	Debug(ob, "Saving object to %s\n", path);
 #endif
 	if (agObjectBackups) {
@@ -2190,7 +2190,7 @@ tryname:
 	}
 }
 
-#ifdef LOCKDEBUG
+#ifdef AG_LOCKDEBUG
 void
 AG_ObjectLockDebug(AG_Object *ob, const char *info)
 {
@@ -2210,4 +2210,4 @@ AG_ObjectUnlockDebug(AG_Object *ob, const char *info)
 	AG_MutexUnlock(&ob->lock);
 	if (agDebugLvl >= 10) { AG_Debug(ob, "Unlocked (%s)\n", info); }
 }
-#endif /* LOCKDEBUG */
+#endif /* AG_LOCKDEBUG */

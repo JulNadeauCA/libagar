@@ -41,7 +41,7 @@ typedef struct ag_object_class {
 	struct ag_object_class *super;			/* Superclass */
 } AG_ObjectClass;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 # define AG_ASSERT_CLASS(obj,class) \
 	if (!AG_OfClass((obj),(class))) \
 		AG_FatalError("%s is not a %s", AGOBJECT(obj)->name, class)

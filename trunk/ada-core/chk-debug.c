@@ -4,7 +4,7 @@
 int
 main (void)
 {
-#if defined (DEBUG)
+#if defined (AG_DEBUG)
   printf ("debug\n");
 #else
   printf ("no debug\n");

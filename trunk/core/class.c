@@ -31,6 +31,8 @@
 
 #include <string.h>
 
+#include <config/ag_classdebug.h>
+
 extern AG_ObjectClass agObjectClass;
 
 AG_ObjectClass *agClassTree = NULL;		/* Root */
@@ -193,7 +195,7 @@ AG_RegisterClass(void *p)
 	}
 	InitClass(cl, cs.hier, cs.libs);
 	
-#ifdef CLASSDEBUG
+#ifdef AG_CLASSDEBUG
 	Debug(NULL, "Registered class: %s: %s (%s)\n", cs.name, cs.hier,
 	    cs.libs);
 #endif
@@ -219,7 +221,7 @@ AG_UnregisterClass(void *p)
 	AG_ObjectClass *clSuper = cl->super;
 
 	AG_MutexLock(&agClassLock);
-#ifdef CLASSDEBUG
+#ifdef AG_CLASSDEBUG
 	Debug(NULL, "Unregistering class: %s\n", cl->name);
 #endif
 	TAILQ_REMOVE(&clSuper->sub, cl, subclasses);

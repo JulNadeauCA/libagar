@@ -1,6 +1,6 @@
 /*	Public domain	*/
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 # define M_VEC_ENTRY_EXISTS(v,i) ((i) >= 0 && (i) < MVECTOR(v)->m)
 # define M_ASSERT_MATCHING_VECTORS(a, b, ret) \
 	do { \

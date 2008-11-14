@@ -81,14 +81,14 @@ typedef struct ag_object {
 	
 	void *parent;			/* Parent object (NULL for VFS root) */
 	void *root;			/* Pointer to VFS root */
-#ifdef THREADS
+#ifdef AG_THREADS
 	AG_Mutex lock;			/* General object lock */
 #endif
-#ifdef LOCKDEBUG
+#ifdef AG_LOCKDEBUG
 	const char **lockinfo;		/* For lock debugging */
 	Uint nlockinfo;
 #endif
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	void (*debugFn)(void *, void *, const char *);
 	void *debugPtr;
 #endif
@@ -254,8 +254,8 @@ void          AG_ObjectGenName(AG_Object *, AG_ObjectClass *, char *, size_t);
 
 #define AG_OfClass(obj,cspec) AG_ClassIsNamed(AGOBJECT(obj)->cls,(cspec))
 
-#ifdef THREADS
-# ifdef LOCKDEBUG
+#ifdef AG_THREADS
+# ifdef AG_LOCKDEBUG
 void AG_ObjectLockDebug(AG_Object *, const char *);
 void AG_ObjectUnlockDebug(AG_Object *, const char *);
 #  ifdef __GNUC__
@@ -269,22 +269,22 @@ void AG_ObjectUnlockDebug(AG_Object *, const char *);
 #   define AG_ObjectLock(ob) AG_ObjectLockDebug(AGOBJECT(ob),"?")
 #   define AG_ObjectUnlock(ob) AG_ObjectUnlockDebug(ob)
 #  endif
-# else /* !LOCKDEBUG */
+# else /* !AG_LOCKDEBUG */
 #  define AG_ObjectLock(ob) AG_MutexLock(&AGOBJECT(ob)->lock)
 #  define AG_ObjectUnlock(ob) AG_MutexUnlock(&AGOBJECT(ob)->lock)
-# endif /* LOCKDEBUG */
+# endif /* AG_LOCKDEBUG */
 # define AG_LockProps(ob) AG_ObjectLock(ob)
 # define AG_UnlockProps(ob) AG_ObjectUnlock(ob)
 # define AG_LockVFS(ob) AG_ObjectLock(AGOBJECT(ob)->root)
 # define AG_UnlockVFS(ob) AG_ObjectUnlock(AGOBJECT(ob)->root)
-#else /* !THREADS */
+#else /* !AG_THREADS */
 # define AG_ObjectLock(ob)
 # define AG_ObjectUnlock(ob)
 # define AG_LockProps(ob)
 # define AG_UnlockProps(ob)
 # define AG_LockVFS(ob)
 # define AG_UnlockVFS(ob)
-#endif /* THREADS */
+#endif /* AG_THREADS */
 
 /* Legacy routines */
 void    AG_ObjectMove(void *, void *);

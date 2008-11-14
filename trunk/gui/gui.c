@@ -178,6 +178,7 @@ AG_InitGUI(Uint flags)
 
 	/* Initialize the Window system. */
 	AG_InitWindowSystem();
+	AG_MutexInitRecursive(&agAppMenuLock);
 
 	return (0);
 }
@@ -187,6 +188,8 @@ void
 AG_DestroyGUI(void)
 {
 	void **ops;
+	
+	AG_MutexDestroy(&agAppMenuLock);
 
 	/* Destroy the GUI subsystems. */
 	AG_DestroyWindowSystem();

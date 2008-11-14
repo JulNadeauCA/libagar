@@ -86,7 +86,7 @@ typedef struct rg_anim_variant {
 	AG_SLIST_ENTRY(rg_anim_variant) vars;
 } RG_AnimVariant;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 #define RG_ANIM_FRAME(anim,frame) RG_AnimGetFrame((anim),(frame))
 #else
 #define RG_ANIM_FRAME(anim,frame) &(anim)->frames[frame]

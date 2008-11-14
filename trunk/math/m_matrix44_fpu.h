@@ -70,7 +70,7 @@ M_MatrixMult44pv_FPU(M_Matrix44 *C, const M_Matrix44 *A, const M_Matrix44 *B)
 {
 	int m, n;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (C == A) { AG_FatalError("use M_MatrixMultv() if C==A"); }
 #endif
 	for (m = 0; m < 4; m++) {

@@ -23,8 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/network.h>
-#ifdef NETWORK
+#include <config/ag_network.h>
+#ifdef AG_NETWORK
 
 #include "core.h"
 
@@ -650,4 +650,4 @@ NC_Destroy(NC_Session *client)
 	NC_Disconnect(client);
 	Free(client->read.buf);
 }
-#endif /* NETWORK */
+#endif /* AG_NETWORK */

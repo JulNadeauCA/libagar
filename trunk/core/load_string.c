@@ -207,7 +207,7 @@ AG_CopyString(char *dst, AG_DataSource *ds, size_t dst_size)
 		goto fail;
 	}
 	if (len > (Uint32)(dst_size-1)) {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 		Verbose("0x%x: %luB string truncated to fit %luB buffer\n",
 		    (Uint)AG_Tell(ds), (Ulong)len, (Ulong)dst_size);
 #endif
@@ -276,7 +276,7 @@ AG_CopyNulString(char *dst, AG_DataSource *ds, size_t dst_size)
 		goto fail;
 	}
 	if (len > (Uint32)dst_size) {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 		Verbose("0x%x: %luB string truncated to fit %luB buffer\n",
 		    (Uint)AG_Tell(ds), (Ulong)len, (Ulong)dst_size);
 #endif

@@ -3,13 +3,12 @@
  * This program demonstrates multithread support in Agar.
  */
 
-#include <agar/config/threads.h>
 #include <agar/config/have_sdl.h>
 
 #include <agar/core.h>
 #include <agar/gui.h>
 
-#ifdef THREADS
+#ifdef AG_THREADS
 
 AG_Object workerMgr;
 int nWorkers = 0;
@@ -20,7 +19,7 @@ SleepingWorker(void *arg)
 	AG_Window *win;
 	AG_ProgressBar *pb;
 	AG_Label *lbl;
-	int min = 0, max = 20, value = 0;
+	int min = 0, max = 10, value = 0;
 
 	win = AG_WindowNew(0);
 	
@@ -104,7 +103,7 @@ CreateSpinningWorker(AG_Event *event)
 	AG_ThreadCreate(&th, SpinningWorker, NULL);
 }
 
-#endif /* THREADS */
+#endif /* AG_THREADS */
 
 int
 main(int argc, char *argv[])
@@ -122,7 +121,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
-#ifdef THREADS
+#ifdef AG_THREADS
 	AG_ObjectInitStatic(&workerMgr, NULL);
 	win = AG_WindowNew(AG_WINDOW_NOBUTTONS);
 	AG_WindowSetCaption(win, "Threads demo");
