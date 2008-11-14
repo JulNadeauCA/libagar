@@ -109,7 +109,7 @@ enum ag_object_checksum_alg {
 	AG_OBJECT_RMD160
 };
 
-/* Iterate through direct child objects. */
+/* Iterate over the direct child objects. */
 #define AGOBJECT_FOREACH_CHILD(var, ob, t) \
 	for((var) = (struct t *)AG_TAILQ_FIRST(&AGOBJECT(ob)->children); \
 	    (var) != (struct t *)AG_TAILQ_END(&AGOBJECT(ob)->children); \
@@ -119,7 +119,7 @@ enum ag_object_checksum_alg {
 #define AGOBJECT_NEXT_CHILD(var,t) \
 	((struct t *)AG_TAILQ_NEXT(AGOBJECT(var),cobjs))
 	
-/* Iterate through direct child objects (reverse order). */
+/* Iterate over the direct child objects (reverse order). */
 #define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, t) \
 	for((var) = (struct t *)AG_TAILQ_LAST(&AGOBJECT(ob)->children, \
 	    ag_objectq); \
@@ -127,20 +127,20 @@ enum ag_object_checksum_alg {
 	    (var) = (struct t *)AG_TAILQ_PREV(AGOBJECT(var), ag_objectq, \
 	    cobjs))
 
-/* Iterate through direct child objects of a specified class. */
+/* Iterate over the direct child objects (matching a specified class). */
 #define AGOBJECT_FOREACH_CLASS(var, ob, t, subclass) \
 	AGOBJECT_FOREACH_CHILD(var,ob,t) \
 		if (!AG_OfClass(var,(subclass))) { \
 			continue; \
 		} else
 
-/* Iterate through object properties. */
+/* Iterate over object properties. */
 #define AGOBJECT_FOREACH_PROP(var, ob) \
 	for((var) = (struct ag_prop *)AG_TAILQ_FIRST(&AGOBJECT(ob)->props); \
 	    (var) != (struct ag_prop *)AG_TAILQ_END(&AGOBJECT(ob)->props); \
 	    (var) = (struct ag_prop *)AG_TAILQ_NEXT(var, props))
 
-/* Iterate through object properties of a specified type. */
+/* Iterate over object properties (matching a specified type). */
 #define AGOBJECT_FOREACH_PROP_OFTYPE(var, ob, t) \
 	AGOBJECT_FOREACH_PROP(var,ob) \
 		if ((var)->type != (t)) { \
