@@ -56,7 +56,7 @@ typedef struct rg_tileset {
 	AG_TAILQ_HEAD(, rg_texture) textures;
 } RG_Tileset;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 #define RGTILE(ts,id) RG_GetTile((ts),(id))
 #define RGANIM(ts,id) RG_GetAnim((ts),(id))
 #else

@@ -29,7 +29,7 @@
 
 #include <core/core.h>
 #include <core/config.h>
-#ifdef NETWORK
+#ifdef AG_NETWORK
 #include <core/rcs.h>
 #endif
 
@@ -499,7 +499,7 @@ ObjectOp(AG_Event *event)
 			AG_ObjectUnlinkDatafiles(ob);
 			AG_ObjectDestroy(ob);
 			break;
-#ifdef NETWORK
+#ifdef AG_NETWORK
 		case OBJEDIT_RCS_IMPORT:
 			if (AG_ObjectSave(ob) == -1 ||
 			    AG_RcsImport(ob) == -1) {
@@ -539,7 +539,7 @@ ObjectOp(AG_Event *event)
 		case OBJEDIT_RCS_UPDATE_ALL:
 			AG_RcsUpdateAll(ob);
 			break;
-#endif /* NETWORK */
+#endif /* AG_NETWORK */
 		}
 	}
 }
@@ -757,7 +757,7 @@ CreateObjectDlg(AG_Event *event)
 	AG_WindowShow(win);
 }
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 
 static void
 PollRevisions(AG_Event *event)
@@ -880,7 +880,7 @@ RepoRenameDlg(AG_Event *event)
 	AG_TextPromptString(prompt, RepoRenameObject, "%p,%s", tl, it->text);
 }
 
-#endif /* NETWORK */
+#endif /* AG_NETWORK */
 
 static void
 GenNewObjectMenu(AG_MenuItem *mParent, AG_ObjectClass *cls, AG_Object *vfsRoot,
@@ -968,7 +968,7 @@ DEV_Browser(void *vfsRoot)
 		    ShowPreferences, NULL);
 	}
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 	mi = AG_MenuAddItem(me, _("Repository"));
 	{
 		AG_MenuAction(mi, _("Commit"), agIconLoad.s,
@@ -988,18 +988,18 @@ DEV_Browser(void *vfsRoot)
 		    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 		    OBJEDIT_RCS_IMPORT_ALL);
 	}
-#endif /* NETWORK */
+#endif /* AG_NETWORK */
 	
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	mi = AG_MenuAddItem(me, _("Debug"));
 	DEV_ToolMenu(mi);
-#endif /* DEBUG */
+#endif /* AG_DEBUG */
 
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	ntab = AG_NotebookAddTab(nb, _("Working copy"), AG_BOX_VERT);
 	{
 		AG_MenuItem *mi;
-#ifdef NETWORK
+#ifdef AG_NETWORK
 		AG_MenuItem *mi2;
 #endif
 
@@ -1029,7 +1029,7 @@ DEV_Browser(void *vfsRoot)
 			    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 			    OBJEDIT_EXPORT);
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 			if (agRcsMode) {
 				AG_MenuSeparator(mi);
 			
@@ -1060,7 +1060,7 @@ DEV_Browser(void *vfsRoot)
 				    ObjectOp, "%p,%p,%i", vfsRoot, tlObjs,
 				    OBJEDIT_RCS_IMPORT_ALL);
 			}
-#endif /* NETWORK */
+#endif /* AG_NETWORK */
 			AG_MenuSeparator(mi);
 			
 			AG_MenuAction(mi, _("Duplicate"), NULL,
@@ -1085,7 +1085,7 @@ DEV_Browser(void *vfsRoot)
 		}
 	}
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 	ntab = AG_NotebookAddTab(nb, _("Repository"), AG_BOX_VERT);
 	{
 		AG_Tlist *tl;
@@ -1112,7 +1112,7 @@ DEV_Browser(void *vfsRoot)
 		if (agRcsMode)
 			AG_PostEvent(NULL, btn, "button-pushed", NULL);
 	}
-#endif /* NETWORK */
+#endif /* AG_NETWORK */
 	
 	AG_WindowShow(win);
 	return (win);

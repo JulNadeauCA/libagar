@@ -303,7 +303,7 @@ AG_Surface *AG_CaptureGLView(void);
 void              AG_EventLoop_FixedFPS(void);
 #define           AG_EventLoop() AG_EventLoop_FixedFPS()
 Uint8             AG_MouseGetState(int *, int *);
-#ifdef DEBUG
+#ifdef AG_DEBUG
 struct ag_window *AG_EventShowPerfGraph(void);
 #endif
 

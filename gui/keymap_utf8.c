@@ -41,7 +41,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#ifdef THREADS
+#ifdef AG_THREADS
 static AG_Mutex killRingLock = AG_MUTEX_INITIALIZER;
 #endif
 static Uint32  *killRing = NULL;

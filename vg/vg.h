@@ -311,7 +311,7 @@ VG_PushMatrix(VG *vg)
 static __inline__ void
 VG_PopMatrix(VG *vg)
 {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (vg->nT == 1) { AG_FatalError("VG_PopMatrix"); }
 #endif
 	vg->nT--;

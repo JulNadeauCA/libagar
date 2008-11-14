@@ -29,12 +29,12 @@
  * the display in JPEG format.
  */
 
-#include <config/network.h>
-#include <config/threads.h>
+#include <config/ag_network.h>
+#include <config/ag_threads.h>
 #include <config/have_jpeg.h>
 #include <config/have_opengl.h>
 
-#if defined(NETWORK) && defined(THREADS) && defined(HAVE_JPEG)
+#if defined(AG_NETWORK) && defined(AG_THREADS) && defined(HAVE_JPEG)
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -290,7 +290,7 @@ DEV_ScreenshotUploader(void)
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
 	{
 		Strlcpy(status, _("Idle"), sizeof(status));
-#ifdef THREADS
+#ifdef AG_THREADS
 		lbl = AG_LabelNewPolledMT(vb, AG_LABEL_HFILL, &xmit_lock,
 		    _("Status: %s."), &status);
 #else
@@ -327,4 +327,4 @@ DEV_ScreenshotUploader(void)
 	return (win);
 }
 
-#endif /* NETWORK and THREADS and HAVE_JPEG */
+#endif /* AG_NETWORK and AG_THREADS and HAVE_JPEG */

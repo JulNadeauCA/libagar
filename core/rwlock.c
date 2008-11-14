@@ -23,10 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/threads.h>
-#ifdef THREADS
-
-#include <config/debug.h>
+#include <config/ag_threads.h>
+#ifdef AG_THREADS
 
 #define _XOPEN_SOURCE 500	/* Require recursive mutexes */
 #include <pthread.h>
@@ -34,6 +32,8 @@
 #undef _XOPEN_SOURCE
 
 #include "rwlock.h"
+
+#include <config/ag_debug.h>
 
 static rwlockattr_t default_rwlockattr = {
 	0, RWLOCKATTR_MAGIC
@@ -50,7 +50,7 @@ rwlockattr_init(rwlockattr_t *attr)
 int
 rwlockattr_destroy(rwlockattr_t *attr)
 {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (attr->magic != RWLOCKATTR_MAGIC)
 		return (EINVAL);
 #endif
@@ -62,7 +62,7 @@ rwlockattr_destroy(rwlockattr_t *attr)
 int
 rwlockattr_settype(rwlockattr_t *attr, int type)
 {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (attr->magic != RWLOCKATTR_MAGIC)
 		return (EINVAL);
 #endif
@@ -73,7 +73,7 @@ rwlockattr_settype(rwlockattr_t *attr, int type)
 int
 rwlockattr_gettype(rwlockattr_t *attr, int *type)
 {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (attr->magic != RWLOCKATTR_MAGIC)
 		return (EINVAL);
 #endif
@@ -134,7 +134,7 @@ rwlock_init(rwlock_t *rw, rwlockattr_t *attr)
 int
 rwlock_destroy(rwlock_t *rw)
 {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
 #endif
@@ -174,7 +174,7 @@ rwlock_rdlock(rwlock_t *rw)
 {
 	int res;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
 #endif
@@ -207,7 +207,7 @@ rwlock_tryrdlock(rwlock_t *rw)
 {
 	int res;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
 #endif
@@ -232,7 +232,7 @@ rwlock_wrlock(rwlock_t *rw)
 {
 	int res;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
 #endif
@@ -261,7 +261,7 @@ rwlock_trywrlock(rwlock_t *rw)
 {
 	int res;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
 #endif
@@ -284,7 +284,7 @@ rwlock_unlock(rwlock_t *rw)
 {
 	int res;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (rw->magic != RWLOCK_MAGIC)
 		return (EINVAL);
 #endif
@@ -315,4 +315,4 @@ rwlock_unlock(rwlock_t *rw)
 	return (res);
 }
 
-#endif	/* THREADS */
+#endif /* AG_THREADS */

@@ -44,12 +44,12 @@ M_MatrixInitEngine(void)
 	if (HasSSE()) {
 #ifdef HAVE_SSE
 		mMatOps44 = &mMatOps44_SSE;
-#elif defined(DEBUG)
+#elif defined(AG_DEBUG)
 		AG_Verbose("SSE available, but disabled at compile time\n");
 #endif
 	}
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	AG_Verbose("Matrix operations: ");
 #if defined(INLINE_ALTIVEC)
 	AG_Verbose("altivec (inline)\n");
@@ -62,7 +62,7 @@ M_MatrixInitEngine(void)
 #else
 	AG_Verbose("%s\n", mMatOps44->name);
 #endif
-#endif /* DEBUG */
+#endif /* AG_DEBUG */
 }
 
 

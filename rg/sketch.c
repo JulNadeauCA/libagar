@@ -145,7 +145,7 @@ RG_SketchRender(RG_Tile *t, RG_TileElement *tel)
 	
 	if (vg->flags & VG_VISGRID)
 		VG_DrawGrid(vg);
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (vg->flags & VG_VISBBOXES)
 		VG_DrawExtents(vg);
 #endif

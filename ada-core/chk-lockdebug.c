@@ -4,7 +4,7 @@
 int
 main (void)
 {
-#if defined (LOCKDEBUG)
+#if defined (AG_LOCKDEBUG)
   printf ("lockdebug\n");
 #else
   printf ("no lockdebug\n");

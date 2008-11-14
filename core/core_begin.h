@@ -1,17 +1,9 @@
 /*	Public domain	*/
 
-#ifndef DEBUG
-# include <agar/config/debug.h>
-# define _AGAR_DEBUG_
-#endif
-#ifndef LOCKDEBUG
-# include <agar/config/lockdebug.h>
-# define _AGAR_LOCKDEBUG_
-#endif
-#ifndef THREADS
-# include <agar/config/threads.h>
-# define _AGAR_THREADS_
-#endif
+#include <agar/config/ag_debug.h>
+#include <agar/config/ag_lockdebug.h>
+#include <agar/config/ag_threads.h>
+
 #ifndef _AGAR_HAVE_SYS_TYPES_H
 # include <agar/config/_mk_have_sys_types_h.h>
 # define _AGAR_HAVE_SYS_TYPES_H_

@@ -34,19 +34,19 @@ static void OutputLIBS(void);
 #include <config/gettext_cflags.h>
 #endif
 
-#include <config/threads.h>
-#include <config/network.h>
+#include <config/ag_threads.h>
+#include <config/ag_network.h>
 #include <config/dso_libs.h>
 #include <config/dso_cflags.h>
 
 const struct config_string_opt stringOpts[] = {
 	GENERIC_STRING_OPTS,
-#ifdef THREADS
+#ifdef AG_THREADS
 	{ "--threads",	"yes" },
 #else
 	{ "--threads",	"no" },
 #endif
-#ifdef NETWORK
+#ifdef AG_NETWORK
 	{ "--network",	"yes" },
 #else
 	{ "--network",	"no" },

@@ -62,7 +62,7 @@ AG_StatusbarAddLabel(AG_Statusbar *sbar, enum ag_label_type type,
 	const char *p;
 
 	AG_ObjectLock(sbar);
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (sbar->nlabels+1 >= AG_STATUSBAR_MAX_LABELS)
 		AG_FatalError("AG_StatusbarAddLabel: Too many labels");
 #endif

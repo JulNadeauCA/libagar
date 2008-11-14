@@ -1804,7 +1804,7 @@ RG_TileviewSelectTool(RG_Tileview *tv, RG_TileviewTool *tvt)
 {
 	AG_Window *pwin = AG_WidgetParentWindow(tv);
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (pwin == NULL)
 		AG_FatalError("RG_TileviewSelectTool: %s has no parent window",
 		    OBJECT(tv)->name);

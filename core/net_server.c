@@ -169,7 +169,7 @@ NS_Log(enum ns_log_lvl loglvl, const char *fmt, ...)
 void
 NS_BeginList(NS_Server *ns)
 {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (ns->listItems != NULL)
 		AG_FatalError("Nested NS_BeginList() calls");
 #endif

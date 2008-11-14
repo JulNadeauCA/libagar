@@ -28,27 +28,28 @@
  */
 
 #include <config/version.h>
-#include <config/network.h>
 #include <config/release.h>
 #include <config/enable_nls.h>
 #include <config/localedir.h>
+#include <config/ag_network.h>
+#include <config/ag_threads.h>
 
-#ifdef THREADS
-# include <config/have_pthreads_xopen.h>
-# include <config/have_pthread_mutex_recursive.h>
-# include <config/have_pthread_mutex_recursive_np.h>
+#ifdef AG_THREADS
+#include <config/have_pthreads_xopen.h>
+#include <config/have_pthread_mutex_recursive.h>
+#include <config/have_pthread_mutex_recursive_np.h>
 #endif
 
 #include "core.h"
 #include "config.h"
 #include "dso.h"
-#ifdef NETWORK
+#ifdef AG_NETWORK
 #include "rcs.h"
 #endif
 
 #include <stdio.h>
 
-#ifdef THREADS
+#ifdef AG_THREADS
 pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
 #endif
 
@@ -79,7 +80,7 @@ AG_InitCore(const char *progname, Uint flags)
 	AG_InitError();
 	AG_GetCPUInfo(&agCPU);
 
-#ifdef THREADS
+#ifdef AG_THREADS
 	pthread_mutexattr_init(&agRecursiveMutexAttr);
 # if defined(HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
 	pthread_mutexattr_settype(&agRecursiveMutexAttr,
@@ -89,7 +90,7 @@ AG_InitCore(const char *progname, Uint flags)
 	    PTHREAD_MUTEX_RECURSIVE);
 # endif
 	AG_MutexInitRecursive(&agDSOLock);
-#endif /* THREADS */
+#endif /* AG_THREADS */
 
 	AG_InitClassTbl();
 	AG_RegisterClass(&agConfigClass);
@@ -105,20 +106,20 @@ AG_InitCore(const char *progname, Uint flags)
 		return (-1);
 	}
 	(void)AG_ObjectLoad(agConfig);
-#ifdef NETWORK
+#ifdef AG_NETWORK
 	AG_InitNetwork(0);
 #endif
 	return (0);
 }
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 int
 AG_InitNetwork(Uint flags)
 {
 	AG_RcsInit();
 	return (0);
 }
-#endif /* NETWORK */
+#endif /* AG_NETWORK */
 
 /* Register a function to invoke in AG_Quit(). */
 void
@@ -152,7 +153,7 @@ AG_Destroy(void)
 	if (agAtexitFuncEv != NULL)
 		agAtexitFuncEv(NULL);
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 	AG_RcsDestroy();
 #endif
 	AG_ObjectDestroy(agConfig);

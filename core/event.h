@@ -28,7 +28,7 @@ typedef union evarg {
 	double	 f;
 } AG_EvArg;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 #define AG_PTR(v) (event->argt[v]==AG_EVARG_POINTER?event->argv[v].p:\
     AG_PtrMismatch())
 #define AG_STRING(v) (event->argt[v]==AG_EVARG_STRING?event->argv[v].s:\
@@ -54,7 +54,7 @@ typedef union evarg {
  (AG_OfClass(event->argv[v].p,(t)))?event->argv[v].p:\
   AG_ObjectMismatch(OBJECT(event->argv[v].p)->cls->hier,(t))
 
-#else /* !DEBUG */
+#else /* !AG_DEBUG */
 
 #define AG_PTR(v) (event->argv[v].p)
 #define AG_STRING(v) (event->argv[v].s)
@@ -68,7 +68,7 @@ typedef union evarg {
 #define AG_DOUBLE(v) (event->argv[v].f)
 #define AG_OBJECT(v,t) (event->argv[v].p)
 
-#endif /* DEBUG */
+#endif /* AG_DEBUG */
 
 #define AG_SELF() AG_PTR(0)
 #define AG_SENDER() AG_PTR(event->argc)
@@ -105,7 +105,7 @@ typedef struct ag_event {
 
 typedef void (*AG_EventFn)(AG_Event *);
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 #define AG_EVENT_DEFAULT_CASE() default: AG_FatalError("Bad event arg spec");
 #define AG_EVENT_BOUNDARY_CHECK(ev) \
   if ((ev)->argc >= AG_EVENT_ARGS_MAX-1) AG_FatalError("Excess event args");

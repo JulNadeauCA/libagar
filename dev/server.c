@@ -29,9 +29,9 @@
  * as query of display variables and surface contents.
  */
 
-#include <config/network.h>
-#include <config/threads.h>
-#if defined(NETWORK) && defined(THREADS)
+#include <config/ag_network.h>
+#include <config/ag_threads.h>
+#if defined(AG_NETWORK) && defined(AG_THREADS)
 
 #include <config/version.h>
 #include <config/release.h>
@@ -406,4 +406,4 @@ DEV_DebugServer(void)
 	AG_ObjectAttach(win, tl);
 	return (win);
 }
-#endif	/* NETWORK and THREADS */
+#endif /* AG_NETWORK and AG_THREADS */

@@ -89,7 +89,7 @@ typedef struct ag_dso_generic {
 #endif
 
 struct ag_dsoq agLoadedDSOs = TAILQ_HEAD_INITIALIZER(agLoadedDSOs);
-#ifdef THREADS
+#ifdef AG_THREADS
 AG_Mutex agDSOLock;
 #endif
 

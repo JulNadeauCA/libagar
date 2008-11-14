@@ -159,7 +159,7 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 static int
 Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	agDebugLvl = AG_ReadUint8(ds);
 #else
 	(void)AG_ReadUint8(ds);
@@ -195,7 +195,7 @@ Save(void *obj, AG_DataSource *ds)
 
 	AG_SetBool(cfg, "initial-run", 0);
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	AG_WriteUint8(ds, (Uint8)agDebugLvl);
 #else
 	AG_WriteUint8(ds, 0);

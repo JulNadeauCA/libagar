@@ -23,8 +23,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/threads.h>
-
 #include <core/core.h>
 #include <core/config.h>
 
@@ -748,7 +746,7 @@ AG_FileDlgOkAction(AG_FileDlg *fd, AG_EventFn fn, const char *fmt, ...)
 	}
 	fd->okAction = AG_SetEvent(fd, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(fd->okAction, fmt);
-#ifdef THREADS
+#ifdef AG_THREADS
 	if (fd->flags & AG_FILEDLG_ASYNC)
 		fd->okAction->flags |= AG_EVENT_ASYNC;
 #endif
@@ -910,7 +908,7 @@ AG_FileDlgAddType(AG_FileDlg *fd, const char *descr, const char *exts,
 	if (fn != NULL) {
 		ft->action = AG_SetEvent(fd, NULL, fn, NULL);
 		AG_EVENT_GET_ARGS(ft->action, fmt);
-#ifdef THREADS
+#ifdef AG_THREADS
 		if (fd->flags & AG_FILEDLG_ASYNC)
 			ft->action->flags |= AG_EVENT_ASYNC;
 #endif

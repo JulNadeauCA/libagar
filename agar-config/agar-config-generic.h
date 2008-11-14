@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include <config/version.h>
-#include <config/debug.h>
+#include <config/ag_debug.h>
 #include <config/release.h>
 #include <config/prefix.h>
 #include <config/sysconfdir.h>

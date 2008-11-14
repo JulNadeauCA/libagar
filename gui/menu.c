@@ -36,7 +36,7 @@
 
 AG_Menu *agAppMenu = NULL;
 AG_Window *agAppMenuWin = NULL;
-AG_Mutex agAppMenuLock = AG_MUTEX_INITIALIZER;
+AG_Mutex agAppMenuLock;
 
 AG_Menu *
 AG_MenuNew(void *parent, Uint flags)
@@ -62,25 +62,20 @@ AG_MenuNewGlobal(Uint flags)
 
 	m = Malloc(sizeof(AG_Menu));
 	AG_ObjectInit(m, &agMenuClass);
-
-	m->flags |= flags;
+	m->flags |= (flags|AG_MENU_GLOBAL);
 
 	AG_MutexLock(&agAppMenuLock);
-
 	if (agAppMenu != NULL) {
 		AG_ViewDetach(agAppMenuWin);
 		AG_ObjectDestroy(agAppMenu);
 	}
-	
-	m->flags |= AG_MENU_GLOBAL;
+	agAppMenu = m;
+
 	AG_MenuSetPadding(m, 4, 4, -1, -1);
-	
 	if (flags & AG_MENU_VFILL) {
 		AG_ExpandVert(m);
 	}
 	AG_ExpandHoriz(m);
-
-	agAppMenu = m;
 	agAppMenuWin = AG_WindowNewNamed(AG_WINDOW_PLAIN|AG_WINDOW_KEEPBELOW|
 					 AG_WINDOW_DENYFOCUS|
 					 AG_WINDOW_HMAXIMIZE,
@@ -88,7 +83,7 @@ AG_MenuNewGlobal(Uint flags)
 	AG_ObjectAttach(agAppMenuWin, m);
 	AG_WindowSetPadding(agAppMenuWin, 0, 0, 0, 0);
 	AG_WindowShow(agAppMenuWin);
-	
+
 	AG_MutexUnlock(&agAppMenuLock);
 	return (m);
 }
@@ -483,11 +478,11 @@ AG_MenuDynamicItem(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 	AG_Menu *m = pitem->pmenu;
 	AG_MenuItem *mi;
 
-	AG_ObjectLock(pitem->pmenu);
+	AG_ObjectLock(m);
 	mi = CreateItem(pitem, text, icon);
 	mi->poll = AG_SetEvent(m, NULL, fn, NULL);
 	AG_EVENT_GET_ARGS(mi->poll, fmt);
-	AG_ObjectUnlock(pitem->pmenu);
+	AG_ObjectUnlock(m);
 	return (mi);
 }
 

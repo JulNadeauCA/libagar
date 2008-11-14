@@ -237,7 +237,7 @@ EditWidgetParams(AG_Event *event)
 		AG_SetEvent(tb, "textbox-postchg", UpdateWindowCaption,
 		    "%p", ww);
 
-#ifdef THREADS
+#ifdef AG_THREADS
 		lbl = AG_LabelNewPolledMT(nTab, AG_LABEL_HFILL,
 		    &OBJECT(ww)->lock,
 		    "Flags: <%[flags]>", &ww->flags);

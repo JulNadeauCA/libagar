@@ -5,10 +5,11 @@
 # http://bsdbuild.hypertriton.com/.
 #
 
+REGISTER("--enable-debug",	"General debugging [default: no]")
 REGISTER("--enable-lockdebug",	"Expensive threads debugging [default: no]")
 REGISTER("--enable-objdebug",	"Object system debugging [default: no]")
+REGISTER("--enable-classdebug",	"Object class debugging [default: no]")
 REGISTER("--enable-eventdebug",	"Event system debugging [default: no]")
-REGISTER("--enable-classdebug",	"Event object class debugging [default: no]")
 
 REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: check]")
@@ -93,25 +94,31 @@ else
 	MDEFINE(WNO_UNINITIALIZED, "")
 fi
 
-if [ "${enable_lockdebug}" = "yes" ]; then
-	HDEFINE(LOCKDEBUG, "yes")
+if [ "${enable_debug}" = "yes" ]; then
+	HDEFINE(AG_DEBUG, "yes")
+	echo "LDFLAGS+=-g" >> Makefile.config
 else
-	HUNDEF(LOCKDEBUG)
+	HUNDEF(AG_DEBUG)
+fi
+if [ "${enable_lockdebug}" = "yes" ]; then
+	HDEFINE(AG_LOCKDEBUG, "yes")
+else
+	HUNDEF(AG_LOCKDEBUG)
 fi
 if [ "${enable_objdebug}" = "yes" ]; then
-	HDEFINE(OBJDEBUG, "yes")
+	HDEFINE(AG_OBJDEBUG, "yes")
 else
-	HUNDEF(OBJDEBUG)
+	HUNDEF(AG_OBJDEBUG)
 fi
 if [ "${enable_eventdebug}" = "yes" ]; then
-	HDEFINE(EVENTDEBUG, "yes")
+	HDEFINE(AG_EVENTDEBUG, "yes")
 else
-	HUNDEF(EVENTDEBUG)
+	HUNDEF(AG_EVENTDEBUG)
 fi
 if [ "${enable_classdebug}" = "yes" ]; then
-	HDEFINE(CLASSDEBUG, "yes")
+	HDEFINE(AG_CLASSDEBUG, "yes")
 else
-	HUNDEF(CLASSDEBUG)
+	HUNDEF(AG_CLASSDEBUG)
 fi
 
 # SDL is required.
@@ -214,8 +221,7 @@ fi
 if [ "${enable_network}" = "yes" ]; then
 	CHECK(getaddrinfo)
 	if [ "${HAVE_GETADDRINFO}" = "yes" ]; then
-		HDEFINE(NETWORK, "yes")
-		HDEFINE(SERVER, "yes")
+		HDEFINE(AG_NETWORK, "yes")
 	else
 		if [ "${enable_network}" = "yes" ]; then
 			echo "*"
@@ -225,13 +231,11 @@ if [ "${enable_network}" = "yes" ]; then
 			echo "*"
 			exit 1
 		else
-			HUNDEF(NETWORK)
-			HUNDEF(SERVER)
+			HUNDEF(AG_NETWORK)
 		fi
 	fi
 else
-	HUNDEF(NETWORK)
-	HUNDEF(SERVER)
+	HUNDEF(AG_NETWORK)
 	HUNDEF(HAVE_GETADDRINFO)
 fi
 
@@ -240,11 +244,11 @@ if [ "${enable_threads}" != "no" ]; then
 	CHECK(pthreads)
 	if [ "${HAVE_PTHREADS}" = "yes" ];
 	then
-		HDEFINE(THREADS, "yes")
+		HDEFINE(AG_THREADS, "yes")
 		if [ "${HAVE_PTHREADS_XOPEN}" = "no" ]; then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE}" = "no" ]; then
 		if [ "${HAVE_PTHREAD_MUTEX_RECURSIVE_NP}" = "no" ]; then
-			HUNDEF(THREADS)
+			HUNDEF(AG_THREADS)
 			if [ "${enable_threads}" = "yes" ]; then
 				echo "*"
 				echo "* --enable-threads was given, but your"
@@ -259,7 +263,7 @@ if [ "${enable_threads}" != "no" ]; then
 		fi
 		fi
 	else
-		HUNDEF(THREADS)
+		HUNDEF(AG_THREADS)
 		if [ "${enable_threads}" = "yes" ]; then
 			echo "*"
 			echo "* --enable-threads was given, but no pthreads"
@@ -270,7 +274,7 @@ if [ "${enable_threads}" != "no" ]; then
 		fi
 	fi
 else
-	HUNDEF(THREADS)
+	HUNDEF(AG_THREADS)
 	HUNDEF(HAVE_PTHREADS)
 	HUNDEF(HAVE_PTHREADS_XOPEN)
 	MDEFINE(PTHREADS_CFLAGS, "")
@@ -278,7 +282,7 @@ else
 	MDEFINE(PTHREADS_XOPEN_CFLAGS, "")
 	MDEFINE(PTHREADS_XOPEN_LIBS, "")
 	#
-	# Lock macros expand to no-ops when compiled !THREADS, which may
+	# Lock macros expand to no-ops when compiled !AG_THREADS, which may
 	# result in unused variables in some places.
 	#
 	if [ "${enable_warnings}" = "yes" ]; then

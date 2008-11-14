@@ -24,6 +24,7 @@
  */
 
 #include <core/core.h>
+
 #include <gui/view.h>
 #include <gui/load_surface.h>
 
@@ -141,7 +142,7 @@ RG_AnimInsertFrame(RG_Anim *ani, AG_Surface *sNew)
 	Uint32 sFlags = 0;
 	RG_AnimFrame *fr;
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if ((ani->nframes+1) >= RG_ANIMATION_FRAMES_MAX)
 		AG_FatalError("%s: Too many frames", ani->name);
 #endif
@@ -331,7 +332,7 @@ static void
 EditClose(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
-#ifdef THREADS
+#ifdef AG_THREADS
 	RG_Tileset *ts = AG_PTR(1);
 #endif
 	RG_Anim *ani = AG_PTR(2);
@@ -348,7 +349,7 @@ PollInsns(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
-#ifdef THREADS
+#ifdef AG_THREADS
 	RG_Tileset *ts = ani->tileset;
 #endif
 	AG_TlistItem *it;
@@ -401,7 +402,7 @@ PollFrames(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Anim *ani = AG_PTR(1);
-#ifdef THREADS
+#ifdef AG_THREADS
 	RG_Tileset *ts = ani->tileset;
 #endif
 	Uint i;

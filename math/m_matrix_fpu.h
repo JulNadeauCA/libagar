@@ -292,7 +292,7 @@ M_MatrixMulv_FPU(const void *pA, const void *pB, void *pC)
 	Uint i, j, k;
 
 	M_ASSERT_MULTIPLIABLE_MATRICES(A,B, -1);
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (MROWS(C) != MCOLS(A) || MCOLS(C) != MCOLS(B)) {
 		AG_SetError("C=%dx%d != %dx%d", MROWS(C), MCOLS(C),
 		    MCOLS(A), MCOLS(B));

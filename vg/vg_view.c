@@ -531,7 +531,7 @@ DrawGrid(VG_View *vv, const VG_Grid *grid)
 	}
 }
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 static void
 DrawNodeExtent(VG_Node *vn, VG_View *vv)
 {
@@ -548,7 +548,7 @@ DrawNodeExtent(VG_Node *vn, VG_View *vv)
 	rExt.h = (int)((b.y - a.y)*vv->scale);
 	AG_DrawRectOutline(vv, rExt, AG_MapRGB(agVideoFmt, 250,0,0));
 }
-#endif /* DEBUG */
+#endif /* AG_DEBUG */
 
 static void
 DrawNode(VG *vg, VG_Node *vn, VG_View *vv)
@@ -561,7 +561,7 @@ DrawNode(VG *vg, VG_Node *vn, VG_View *vv)
 
 	VG_FOREACH_CHLD(vnChld, vn, vg_node)
 		DrawNode(vg, vnChld, vv);
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	if (vv->flags & VG_VIEW_EXTENTS)
 		DrawNodeExtent(vn, vv);
 #endif

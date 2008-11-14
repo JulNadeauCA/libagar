@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
-#include <agar/config/threads.h>
-#ifdef THREADS
+#include <agar/config/ag_threads.h>
+#ifdef AG_THREADS
 
 typedef struct {
 	int	type;
@@ -47,4 +47,4 @@ int	rwlockattr_destroy(rwlockattr_t *);
 int	rwlockattr_settype(rwlockattr_t *, int);
 int	rwlockattr_gettype(rwlockattr_t *, int *);
 
-#endif /* THREADS */
+#endif /* AG_THREADS */

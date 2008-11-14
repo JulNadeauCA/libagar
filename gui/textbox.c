@@ -351,7 +351,7 @@ Enabled(AG_Event *event)
 	AG_WidgetEnable(tb->ed);
 }
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 static void
 Bound(AG_Event *event)
 {
@@ -409,7 +409,7 @@ Init(void *obj)
 	AG_SetEvent(tb, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);
 	AG_SetEvent(tb, "widget-enabled", Enabled, NULL);
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	AG_SetEvent(tb, "widget-bound", Bound, NULL);
 #endif
 	AG_SetEvent(tb, "widget-gainfocus", GainFocus, NULL);

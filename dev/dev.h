@@ -3,8 +3,8 @@
 #ifndef _AGAR_DEV_DEV_H_
 #define _AGAR_DEV_DEV_H_
 
-#include <agar/config/network.h>
-#include <agar/config/threads.h>
+#include <agar/config/ag_network.h>
+#include <agar/config/ag_threads.h>
 #include <agar/config/have_jpeg.h>
 
 #include <agar/dev/begin.h>
@@ -15,10 +15,10 @@ __BEGIN_DECLS
 void	   DEV_InitSubsystem(Uint);
 void	   DEV_ToolMenu(struct ag_menu_item *);
 
-#if defined(NETWORK) && defined(THREADS) && defined(HAVE_JPEG)
+#if defined(AG_NETWORK) && defined(AG_THREADS) && defined(HAVE_JPEG)
 AG_Window *DEV_ScreenshotUploader(void);
 #endif
-#if defined(NETWORK) && defined(THREADS)
+#if defined(AG_NETWORK) && defined(AG_THREADS)
 AG_Window *DEV_DebugServer(void);
 int	   DEV_DebugServerStart(void);
 #endif

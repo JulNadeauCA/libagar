@@ -4,7 +4,7 @@
 int
 main (void)
 {
-#if defined (THREADS)
+#if defined (AG_THREADS)
   printf ("threads\n");
 #else
   printf ("no threads\n");

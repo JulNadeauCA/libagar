@@ -303,7 +303,7 @@ int AG_WidgetInheritSizeAllocate(void *, const AG_SizeAlloc *);
  * Inlines
  */
 
-#ifdef THREADS
+#ifdef AG_THREADS
 /* Acquire/release lock on a widget binding. */
 static __inline__ void
 AG_WidgetLockBinding(AG_WidgetBinding *bind)
@@ -320,7 +320,7 @@ AG_WidgetUnlockBinding(AG_WidgetBinding *bind)
 #else
 #define AG_WidgetLockBinding(b)
 #define AG_WidgetUnlockBinding(b)
-#endif /* THREADS */
+#endif /* AG_THREADS */
 
 /* Set the widget state. */
 static __inline__ void

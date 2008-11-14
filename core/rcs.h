@@ -3,7 +3,7 @@
 #ifndef _AGAR_CORE_RCS_H_
 #define _AGAR_CORE_RCS_H_
 
-#include <agar/config/network.h>
+#include <agar/config/ag_network.h>
 
 #include <agar/core/begin.h>
 
@@ -48,7 +48,7 @@ extern char agRcsPassword[32];
 extern Uint agRcsPort;
 extern int agRcsMode;
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 void AG_RcsInit(void);
 void AG_RcsDestroy(void);
 int AG_RcsConnect(void);
@@ -74,7 +74,7 @@ void AG_RcsFreeList(AG_RCSList *);
 int AG_RcsDelete(const char *);
 int AG_RcsRename(const char *, const char *);
 int AG_RcsCheckout(void *, const char *);
-#endif /* NETWORK */
+#endif /* AG_NETWORK */
 __END_DECLS
 
 #include <agar/core/close.h>

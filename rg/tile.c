@@ -1269,7 +1269,7 @@ static void
 PollFeatures(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
-#ifdef THREADS
+#ifdef AG_THREADS
 	RG_Tileset *ts = AG_PTR(1);
 #endif
 	RG_Tile *t = AG_PTR(2);

@@ -27,15 +27,13 @@
  * Implementation of the generic event system for AG_Object.
  */
 
-#include <config/threads.h>
-
 #include <core/core.h>
 #include <core/config.h>
 
 #include <string.h>
 #include <stdarg.h>
 
-#include <config/eventdebug.h>
+#include <config/ag_eventdebug.h>
 
 static void PropagateEvent(AG_Object *, AG_Object *, AG_Event *);
 
@@ -59,7 +57,7 @@ SchedEventTimeout(void *p, Uint32 ival, void *arg)
 	AG_Object *ob = p;
 	AG_Event *ev = arg;
 
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
 		Debug(ob, "Event <%s> timeout (%u ticks)\n", ev->name,
 		    (Uint)ival);
@@ -69,7 +67,7 @@ SchedEventTimeout(void *p, Uint32 ival, void *arg)
 	/* Propagate event to children. */
 	if (ev->flags & AG_EVENT_PROPAGATE) {
 		AG_Object *child;
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 		if (agDebugLvl >= 5)
 			Debug(ob, "Propagate <%s> (timeout)\n", ev->name);
 #endif
@@ -244,7 +242,7 @@ PropagateEvent(AG_Object *sndr, AG_Object *rcvr, AG_Event *ev)
 	AG_ForwardEvent(sndr, rcvr, ev);
 }
 
-#ifdef THREADS
+#ifdef AG_THREADS
 /* Invoke an event handler routine asynchronously. */
 static void *
 EventThread(void *p)
@@ -254,7 +252,7 @@ EventThread(void *p)
 	AG_Object *chld;
 
 	if (eev->flags & AG_EVENT_PROPAGATE) {
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 		if (agDebugLvl >= 5)
 			Debug(rcvr, "Propagate <%s> (async)\n", eev->name);
 #endif
@@ -264,21 +262,21 @@ EventThread(void *p)
 		}
 		AG_UnlockVFS(rcvr);
 	}
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
 		Debug(rcvr, "BEGIN event thread for <%s>\n", eev->name);
 #endif
 	if (eev->handler != NULL) {
 		eev->handler(eev);
 	}
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
 		Debug(rcvr, "CLOSE event thread for <%s>\n", eev->name);
 #endif
 	Free(eev);
 	return (NULL);
 }
-#endif /* THREADS */
+#endif /* AG_THREADS */
 
 /*
  * Execute the event handler routine for the given event. The given arguments
@@ -295,7 +293,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	AG_Event *ev;
 	AG_Object *chld;
 
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
 		Debug(rcvr, "Event <%s> posted from %s\n", evname,
 		    sndr?sndr->name:"NULL");
@@ -304,7 +302,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	TAILQ_FOREACH(ev, &rcvr->events, events) {
 		if (strcmp(evname, ev->name) != 0)
 			continue;
-#ifdef THREADS
+#ifdef AG_THREADS
 		if (ev->flags & AG_EVENT_ASYNC) {
 			AG_Thread th;
 			AG_Event *evNew;
@@ -318,7 +316,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			evNew->argn[evNew->argc] = "_sender";
 			AG_ThreadCreate(&th, EventThread, evNew);
 		} else
-#endif /* THREADS */
+#endif /* AG_THREADS */
 		{
 			AG_Event tmpev;
 
@@ -329,7 +327,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			tmpev.argn[tmpev.argc] = "_sender";
 
 			if (tmpev.flags & AG_EVENT_PROPAGATE) {
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 				if (agDebugLvl >= 5)
 					Debug(rcvr, "Propagate <%s> (post)\n",
 					    evname);
@@ -359,7 +357,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
 
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
 		Debug(rcvr, "Schedule <%s> in %u ticks\n", evname, (Uint)ticks);
 #endif
@@ -373,7 +371,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 		goto fail;
 	}
 	if (ev->flags & AG_EVENT_SCHEDULED) {
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 		if (agDebugLvl >= 5)
 			Debug(rcvr, "Reschedule <%s>\n", evname);
 #endif
@@ -401,7 +399,7 @@ AG_ReschedEvent(void *p, const char *evname, Uint32 ticks)
 	AG_Object *ob = p;
 	AG_Event *ev;
 
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
 		Debug(ob, "Reschedule <%s> in %u ticks\n", evname, (Uint)ticks);
 #endif
@@ -447,7 +445,7 @@ AG_CancelEvent(void *p, const char *evname)
 		goto fail;
 	}
 	if (ev->flags & AG_EVENT_SCHEDULED) {
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 		if (agDebugLvl >= 5)
 			Debug(ob, "Cancelled timeout <%s> (cancel)\n", evname);
 #endif
@@ -477,7 +475,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 	AG_Object *chld;
 	AG_Event *ev;
 
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
 		Debug(rcvr, "Event <%s> forwarded from %s\n", event->name,
 		    sndr?sndr->name:"NULL");
@@ -489,7 +487,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 	}
 	if (ev == NULL)
 		goto out;
-#ifdef THREADS
+#ifdef AG_THREADS
 	if (ev->flags & AG_EVENT_ASYNC) {
 		AG_Thread th;
 		AG_Event *evNew;
@@ -503,7 +501,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 		evNew->argn[evNew->argc] = "_sender";
 		AG_ThreadCreate(&th, EventThread, evNew);
 	} else
-#endif /* THREADS */
+#endif /* AG_THREADS */
 	{
 		AG_Event tmpev;
 
@@ -514,7 +512,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 		tmpev.argn[tmpev.argc] = "_sender";
 
 		if (ev->flags & AG_EVENT_PROPAGATE) {
-#ifdef EVENTDEBUG
+#ifdef AG_EVENTDEBUG
 			if (agDebugLvl >= 5)
 				Debug(rcvr, "Propagate <%s> (forward)\n",
 				    event->name);

@@ -33,13 +33,11 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include <config/threads.h>
-
 #include <core/snprintf.h>
 
 static AG_LabelFormatSpec *fmts = NULL;	/* Format specifiers */
 static int nFmts = 0;
-#ifdef THREADS
+#ifdef AG_THREADS
 static AG_Mutex fmtsLock;
 #endif
 
@@ -59,7 +57,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 	lbl->flags |= flags;
 	if (!(flags & AG_LABEL_NO_HFILL)) { AG_ExpandHoriz(lbl); }
 	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
-#ifdef THREADS
+#ifdef AG_THREADS
 	lbl->poll.lock = NULL;
 #endif
 	lbl->tCache = agTextCache ? AG_TextCacheNew(lbl, 64, 16) : NULL;
@@ -106,7 +104,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 	lbl->flags |= flags;
 	if (!(flags & AG_LABEL_NO_HFILL)) { AG_ExpandHoriz(lbl); }
 	if (flags & AG_LABEL_VFILL) { AG_ExpandVert(lbl); }
-#ifdef THREADS
+#ifdef AG_THREADS
 	lbl->poll.lock = mutex;
 #endif
 	lbl->tCache = agTextCache ? AG_TextCacheNew(lbl, 64, 16) : NULL;

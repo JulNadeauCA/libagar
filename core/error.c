@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef THREADS
+#ifdef AG_THREADS
 AG_ThreadKey agErrorKey;		/* Error message (thread-specific) */
 AG_ThreadKey agErrorCode;		/* Error code (thread-specific) */
 #else
@@ -49,7 +49,7 @@ static void (*agErrorCallback)(const char *) = NULL;
 void
 AG_InitError(void)
 {
-#ifdef THREADS
+#ifdef AG_THREADS
 	AG_ThreadKeyCreate(&agErrorKey);
 	AG_ThreadKeyCreate(&agErrorCode);
 #else
@@ -62,7 +62,7 @@ AG_InitError(void)
 void
 AG_DestroyError(void)
 {
-#ifdef THREADS
+#ifdef AG_THREADS
 #if 0
 	/* XXX uninitialized warnings */
 	AG_ThreadKeyDelete(agErrorKey);
@@ -82,7 +82,7 @@ AG_SetError(const char *fmt, ...)
 	va_start(args, fmt);
 	Vasprintf(&buf, fmt, args);
 	va_end(args);
-#ifdef THREADS
+#ifdef AG_THREADS
 	{
 		char *ekey;
 
@@ -101,7 +101,7 @@ AG_SetError(const char *fmt, ...)
 const char *
 AG_GetError(void)
 {
-#ifdef THREADS
+#ifdef AG_THREADS
 	return ((const char *)AG_ThreadKeyGet(agErrorKey));
 #else
 	return ((const char *)agErrorKey);
@@ -112,7 +112,7 @@ AG_GetError(void)
 void
 AG_SetErrorCode(AG_ErrorCode code)
 {
-#ifdef THREADS
+#ifdef AG_THREADS
 	AG_ThreadKeySet(agErrorCode, (void *)code);
 #else
 	agErrorCode = code;
@@ -123,7 +123,7 @@ AG_SetErrorCode(AG_ErrorCode code)
 AG_ErrorCode
 AG_GetErrorCode(void)
 {
-#ifdef THREADS
+#ifdef AG_THREADS
 	return ((AG_ErrorCode)AG_ThreadKeyGet(agErrorCode));
 #else
 	return agErrorCode;
@@ -134,7 +134,7 @@ AG_GetErrorCode(void)
 void
 AG_Debug(void *p, const char *fmt, ...)
 {
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	AG_Object *obj = p;
 	va_list args;
 	
@@ -162,7 +162,7 @@ AG_Debug(void *p, const char *fmt, ...)
 			va_end(args);
 		}
 	}
-#endif /* DEBUG */
+#endif /* AG_DEBUG */
 }
 
 /* Issue a verbose message. */

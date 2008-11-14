@@ -8,10 +8,10 @@
 #ifndef _AGAR_CORE_CORE_H_
 #define _AGAR_CORE_CORE_H_
 
-#include <config/debug.h>
-#include <config/lockdebug.h>
-#include <config/threads.h>
-#include <config/network.h>
+#include <config/ag_debug.h>
+#include <config/ag_lockdebug.h>
+#include <config/ag_threads.h>
+#include <config/ag_network.h>
 #include <config/have_64bit.h>
 #include <config/have_long_double.h>
 

@@ -355,7 +355,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 		}
 	}
 
-#ifdef NETWORK
+#ifdef AG_NETWORK
 	tab = AG_NotebookAddTab(nb, _("RCS"), AG_BOX_VERT);
 	{
 		AG_Textbox *tb;
@@ -382,9 +382,9 @@ DEV_ConfigWindow(AG_Config *cfg)
 			    sizeof(agRcsPassword));
 		}
 	}
-#endif /* NETWORK */
+#endif /* AG_NETWORK */
 
-#ifdef DEBUG
+#ifdef AG_DEBUG
 	tab = AG_NotebookAddTab(nb, _("Debug"), AG_BOX_VERT);
 	{
 		AG_NumericalNewIntR(tab, 0, NULL, _("Debug level: "),

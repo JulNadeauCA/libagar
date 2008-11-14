@@ -102,7 +102,7 @@ typedef struct m_matrix_ops44 {
 } M_MatrixOps44;
 
 /* Debug macros */
-#ifdef DEBUG
+#ifdef AG_DEBUG
 # define M_ENTRY_EXISTS(A,i,j) \
 	((i) >= 0 && (i) < (A)->m && (j) >= 0 && (j) < (A)->n)
 # define M_ASSERT_COMPAT_MATRICES(A, B, ret) \
