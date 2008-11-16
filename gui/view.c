@@ -96,6 +96,7 @@ static SLIST_HEAD(,ag_global_key) agGlobalKeys =
 #ifdef AG_THREADS
 static AG_Mutex agGlobalKeysLock;
 #endif
+static void (*agVideoResizeCallback)(Uint w, Uint h) = NULL;
 
 #ifdef AG_DEBUG
 int agEventAvg = 0;		/* Number of events in last frame */
@@ -684,9 +685,18 @@ AG_ResizeDisplay(int w, int h)
 		}
 		AG_ObjectUnlock(win);
 	}
+	if (agVideoResizeCallback != NULL) {
+		agVideoResizeCallback(w, h);
+	}
 	return (0);
 fail:
 	return (-1);
+}
+
+void
+AG_SetVideoResizeCallback(void (*fn)(Uint w, Uint h))
+{
+	agVideoResizeCallback = fn;
 }
 
 /* Enter rendering context. */

@@ -278,6 +278,7 @@ void AG_DestroyVideo(void);
 void AG_BeginRendering(void);
 void AG_EndRendering(void);
 int  AG_ProcessEvent(SDL_Event *);
+void AG_SetVideoResizeCallback(void (*)(Uint, Uint));
 
 void AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
 void AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));

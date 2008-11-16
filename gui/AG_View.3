@@ -63,6 +63,9 @@ a number of utility routines for surface and texture manipulation.
 .Ft "int"
 .Fn AG_SetRefreshRate "int fps"
 .Pp
+.Ft "void"
+.Fn AG_SetVideoResizeCallback "void (*fn)(Uint w, Uint h)"
+.Pp
 .Ft void
 .Fn AG_BindGlobalKey "SDLKey key" "SDLMod mod" "void (*fn)(void)"
 .Pp
@@ -137,6 +140,14 @@ will attempt to draw exactly this number of frames per second and then idle
 as much as possible.
 This value is only advisory, alternate or user-defined event loop functions
 may ignore it entirely.
+.Pp
+.Fn AG_SetVideoResizeCallback
+configures a routine that will be invoked, whenever the display is resized
+(assuming the display is resizable).
+The
+.Fa w ,
+.Fa h
+arguments are the new geometry in pixels.
 .Pp
 .Fn AG_BindGlobalKey
 arranges for the given function to be invoked whenever the user presses the
