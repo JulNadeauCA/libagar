@@ -66,13 +66,11 @@ typedef struct ag_font {
 	int ascent;			/* Ascent (relative to baseline) */
 	int descent;			/* Descent (relative to baseline) */
 	int lineskip;			/* Multiline y-increment */
-
 	void *ttf;			/* TTF object */
 	char bspec[32];			/* Bitmap font specification */
 	AG_Surface **bglyphs;		/* Bitmap glyphs */
 	Uint nglyphs;			/* Bitmap glyph count */
 	Uint32 c0, c1;			/* Bitmap glyph range */
-
 	AG_SLIST_ENTRY(ag_font) fonts;
 } AG_Font;
 
@@ -112,6 +110,8 @@ extern int agFreetypeInited;
 extern int agGlyphGC;
 extern AG_TextState *agTextState;
 extern AG_Mutex agTextLock;
+extern AG_StaticFont *agBuiltinFonts[];
+extern const int agBuiltinFontCount;
 
 int	 AG_TextInit(void);
 void	 AG_TextDestroy(void);
