@@ -39,6 +39,7 @@
 #include "fixed.h"
 #include "fspinbutton.h"
 #include "fixed_plotter.h"
+#include "font_selector.h"
 #include "glview.h"
 #include "graph.h"
 #include "hsvpal.h"
@@ -87,6 +88,7 @@ void *agGUIClasses[] = {
 	&agComboClass,
 	&agConsoleClass,
 	&agEditableClass,
+	&agFontSelectorClass,
 	&agFileDlgClass,
 	&agFileSelectorClass,
 	&agFixedClass,

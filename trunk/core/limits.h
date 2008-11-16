@@ -21,6 +21,7 @@
 #else
 # define AG_FILENAME_MAX 256
 #endif
+#define AG_SEARCHPATH_MAX (AG_PATHNAME_MAX*4)
 
 #if defined(BUFSIZ)
 # define AG_BUFFER_MIN BUFSIZ
