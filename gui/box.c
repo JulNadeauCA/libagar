@@ -29,6 +29,7 @@
 
 #include "window.h"
 #include "primitive.h"
+#include "text.h"
 
 AG_Box *
 AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
@@ -48,6 +49,26 @@ AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
 	return (box);
 }
 
+/* Set the label text. */
+void
+AG_BoxSetLabel(AG_Box *box, const char *fmt, ...)
+{
+	va_list ap;
+
+	AG_ObjectLock(box);
+
+	va_start(ap, fmt);
+	Free(box->caption);
+	Vasprintf(&box->caption, fmt, ap);
+	va_end(ap);
+
+	if (box->sCaption != -1) {
+		AG_WidgetUnmapSurface(box, box->sCaption);
+		box->sCaption = -1;
+	}
+	AG_ObjectUnlock(box);
+}
+
 static void
 Init(void *obj)
 {
@@ -58,6 +79,36 @@ Init(void *obj)
 	box->depth = -1;
 	box->padding = 4;
 	box->spacing = 2;
+	box->caption = NULL;
+	box->sCaption = -1;
+	box->rCaption = AG_RECT(5, agTextFontHeight/2, 0, 0);
+}
+
+static void
+Destroy(void *obj)
+{
+	AG_Box *box = obj;
+
+	Free(box->caption);
+}
+
+static void
+DrawCaption(AG_Box *box)
+{
+	int y = agTextFontHeight/2;
+
+	if (box->sCaption == -1)  {
+		AG_Surface *sText;
+
+		sText = AG_TextRender(box->caption);
+		box->sCaption = AG_WidgetMapSurface(box, sText);
+	}
+	STYLE(box)->BoxFrame(box,
+	    AG_RECT(0, y, WIDTH(box), HEIGHT(box)-y),
+	    box->depth);
+	AG_WidgetBlitSurface(box, box->sCaption,
+	    box->rCaption.x,
+	    box->rCaption.y);
 }
 
 static void
@@ -65,9 +116,16 @@ Draw(void *obj)
 {
 	AG_Box *box = obj;
 	AG_Widget *chld;
-	
-	if (box->flags & AG_BOX_FRAME)
-		STYLE(box)->BoxFrame(box, box->depth);
+
+	if (box->caption != NULL) {
+		DrawCaption(box);
+	} else {
+		if (box->flags & AG_BOX_FRAME) {
+			STYLE(box)->BoxFrame(box,
+			    AG_RECT(0, 0, WIDTH(box), HEIGHT(box)),
+			    box->depth);
+		}
+	}
 	
 	WIDGET_FOREACH_CHILD(chld, box)
 		AG_WidgetDraw(chld);
@@ -203,6 +261,10 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	AG_SizeAlloc aChld;
 	int nWidgets, totFixed;
 	int wAvail, hAvail;
+	int hLabel = (box->caption != NULL) ? agTextFontHeight/2 : 0;
+
+	box->rCaption.w = a->w;
+	box->rCaption.h = a->h - box->rCaption.y;
 
 	if ((nWidgets = CountChildWidgets(box, &totFixed)) == 0) {
 		return (0);
@@ -214,9 +276,9 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		return (0);
 	}
 	wAvail = a->w - box->padding*2;
-	hAvail = a->h - box->padding*2;
+	hAvail = a->h - box->padding*2 - hLabel;
 	aChld.x = box->padding;
-	aChld.y = box->padding;
+	aChld.y = box->padding + hLabel;
 	OBJECT_FOREACH_CHILD(chld, box, ag_widget) {
 		AG_WidgetSizeReq(chld, &rChld);
 		switch (box->type) {
@@ -305,7 +367,7 @@ AG_WidgetClass agBoxClass = {
 		{ 0,0 },
 		Init,
 		NULL,		/* free */
-		NULL,		/* destroy */
+		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
 		NULL		/* edit */

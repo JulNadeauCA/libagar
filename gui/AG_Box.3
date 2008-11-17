@@ -55,6 +55,9 @@ widget packs its children horizontally or vertically.
 .Fn AG_BoxNewVert "AG_Widget *parent" "Uint flags"
 .Pp
 .Ft void
+.Fn AG_BoxSetLabel "AG_Box *box" "const char *format" "..."
+.Pp
+.Ft void
 .Fn AG_BoxSetHomogenous "AG_Box *box" "int homogenous"
 .Pp
 .Ft void
@@ -86,8 +89,13 @@ include:
 .It AG_BOX_HOMOGENOUS
 Divide space into equal parts.
 .It AG_BOX_FRAME
-Draw a decorative frame.
+Draw a decorative frame by default.
+This flag is implied if a caption text is set.
 .El
+.Pp
+The
+.Fn AG_BoxSetLabel
+function configures a text label to display over the container.
 .Pp
 The
 .Fn AG_BoxSetHomogenous

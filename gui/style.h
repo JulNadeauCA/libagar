@@ -21,7 +21,7 @@ typedef struct ag_style {
 	void (*TitlebarBackground)(void *, int isPressed, int isFocused);
 	void (*ButtonBackground)(void *, int isPressed);
 	void (*ButtonTextOffset)(void *, int isPressed, int *x, int *y);
-	void (*BoxFrame)(void *, int depth);
+	void (*BoxFrame)(void *, AG_Rect r, int depth);
 	void (*CheckboxButton)(void *, int state, int size);
 	void (*ConsoleBackground)(void *, Uint32 bg);
 	void (*FixedPlotterBackground)(void *, int showAxis, Uint32 yOffs);
