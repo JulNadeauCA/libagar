@@ -143,11 +143,9 @@ ButtonTextOffset(void *btn, int state, int *x, int *y)
 
 /* Background for Box-style containers */
 static void
-BoxFrame(void *box, int depth)
+BoxFrame(void *box, AG_Rect r, int depth)
 {
-	AG_DrawBox(box,
-	    AG_RECT(0, 0, WIDTH(box), HEIGHT(box)), depth,
-	    AG_COLOR(FRAME_COLOR));
+	AG_DrawBox(box, r, depth, AG_COLOR(FRAME_COLOR));
 }
 
 /* Button for Checkbox widgets */
