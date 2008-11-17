@@ -246,9 +246,6 @@ Init(void *obj)
 	fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);
 	fs->tlStyles = AG_TlistNew(fs->hPane2->div[0], AG_TLIST_EXPAND);
 	fs->sizeBox = AG_BoxNewVert(fs->hPane2->div[1], AG_BOX_EXPAND);
-	fs->numSize = AG_NumericalNewInt(fs->sizeBox,
-	    AG_TLIST_HFILL|AG_TLIST_SCROLLTOSEL,
-	    NULL, _("Size: "), &fs->curSize);
 	fs->tlSizes = AG_TlistNew(fs->sizeBox,
 	    AG_TLIST_EXPAND|AG_TLIST_SCROLLTOSEL);
 

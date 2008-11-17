@@ -22,7 +22,6 @@ typedef struct ag_font_selector {
 	AG_Box *sizeBox;			/* Container for sizes */
 	AG_Tlist *tlFaces;			/* List of font faces */
 	AG_Tlist *tlStyles;			/* List of font styles */
-	AG_Numerical *numSize;			/* Numerical size selector */
 	AG_Tlist *tlSizes;			/* List of available sizes */
 
 	char curFace[AG_OBJECT_NAME_MAX];	/* Current font face */
