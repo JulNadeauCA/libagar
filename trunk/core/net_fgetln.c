@@ -34,8 +34,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/server.h>
-#ifdef SERVER
+#include <config/ag_network.h>
+#ifdef AG_NETWORK
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,4 +84,4 @@ NS_Fgetln(FILE *fp, size_t *len)
 	return (buf);
 }
 
-#endif /* SERVER */
+#endif /* AG_NETWORK */
