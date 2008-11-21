@@ -23,8 +23,8 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/server.h>
-#ifdef SERVER
+#include <config/ag_network.h>
+#ifdef AG_NETWORK
 
 #include "core.h"
 
@@ -749,4 +749,4 @@ AG_ObjectClass nsClientClass = {
 	NULL,			/* save */
 	NULL			/* edit */
 };
-#endif /* SERVER */
+#endif /* AG_NETWORK */
