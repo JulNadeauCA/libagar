@@ -56,6 +56,7 @@ const char *agUnitGroupNames[] = {
 	N_("Inductance"),
 	N_("Frequency"),
 	N_("Pressure"),
+	N_("Vacuum"),
 	N_("Human metabolic expenditure"),
 	N_("Percentage"),
 	N_("K units (MOSFET)"),
@@ -84,6 +85,7 @@ const AG_Unit *agUnitGroups[] = {
 	agInductanceUnits,
 	agFrequencyUnits,
 	agPressureUnits,
+	agVacuumUnits,
 	agMetabolicExpenditureUnits,
 	agPercentageUnits,
 	agKUnits,
@@ -452,24 +454,43 @@ const AG_Unit agFrequencyUnits[] = {
 
 /* Units of pressure and stress */
 const AG_Unit agPressureUnits[] = {
-	{ "Pa", "", "Pascals",					1.0, NULL },
-	{ "Mba", "", "Millibars",				1e2, NULL },
-	{ "kPa", "", "Kilopascals",				1e3, NULL },
-	{ "Bar", "", "Bars",					1e5, NULL },
-	{ "Kg-f/m^2", "Kg-f/m\xc2\xb2",	N_("Kg-force per m^2"), 9.80665, NULL },
-	{ "Cm H2O", "Cm H\xc2\xb2O", N_("Centimeters of water"),98.0665, NULL },
-	{ "In H2O", "In H\xc2\xb2O", N_("Inches of water"),  249.08891, NULL },
-	{ "Cm Hg", "", N_("Centimeters of mercury"),		1333.22, NULL },
-	{ "Ft H2O", "Ft H\xc2\xb2O", N_("Feet of water"),    2989.06692, NULL },
-	{ "In Hg", "", N_("Inches of mercury"),		       3386.388, NULL },
-	{ "m H2O", "m H\xc2\xb2O", N_("Meters of water"),	9806.65, NULL },
-	{ "Kips/in^2", "Kips/In\xc2\xb2", N_("Kips per in^2"),	6894760, NULL },
-#ifdef ASTRONOMICAL_UNITS
-	{ "Atm(P)", "", N_("Pluto Atmospheres"),	0.5, NULL },
-	{ "Atm(E)", "", N_("Earth Atmospheres"),	101325, NULL },
-	{ "Atm(M)", "", N_("Mars Atmospheres"),		1e3, NULL },
-#endif
-	{ NULL,	NULL, NULL,				0, NULL }
+	{ "Pa",        "",                "Pascals",			1.0, NULL },
+	{ "mbar",      "",                "Millibars",			1e2, NULL },
+	{ "kPa",       "",                "Kilopascals",		1e3, NULL },
+	{ "bar",       "",                "Bars",			1e5, NULL },
+	{ "Kg-f/m^2",  "Kg-f/m\xc2\xb2",  N_("Kg-force per m\xc2\xb2"),	9.80665, NULL },
+	{ "cm H2O",    "cm H\xc2\xb2O",   N_("Centimeters of water"),	98.0665, NULL },
+	{ "in H2O",    "in H\xc2\xb2O",   N_("Inches of water"),	249.08891, NULL },
+	{ "cm Hg",     "",                N_("Centimeters of mercury"),	1333.22, NULL },
+	{ "Ft H2O",    "Ft H\xc2\xb2O",   N_("Feet of water"),   	2989.06692, NULL },
+	{ "in Hg",     "",                N_("Inches of mercury"),      3386.388, NULL },
+	{ "m H2O",     "m H\xc2\xb2O",    N_("Meters of water"),	9806.65, NULL },
+	{ "Kips/in^2", "Kips/in\xc2\xb2", N_("Kips per in\xc2\xb2"),	6894760, NULL },
+	{ "Atm",       "",                N_("Atmospheres"),		101325, NULL },
+	{ NULL,	NULL, NULL, 0, NULL }
+};
+
+/* Units of vacuum pressure */
+const AG_Unit agVacuumUnits[] = {
+	{ "ubar(V)",       "\xc2\xb5\x62\x61\x72", N_("Microbar"),            0.000750062, NULL },
+	{ "Pa(V)",         "Pa",               N_("Pascals"),                 0.007500617, NULL },
+	{ "N/m^2(V)",      "N/m\xc2\xb2",      N_("Newtons per m\xc2\xb2"),   0.007500617, NULL },
+	{ "mtorr(V)",      "mtorr",            N_("Millitorr"),               0.001, NULL },
+	{ "micron Hg(V)",  "micron Hg",        N_("Microns of Mercury"),      0.001, NULL },
+	{ "mbar(V)",       "mbar",             N_("Millibar"),                0.75030012004802, NULL },
+	{ "torr(V)",       "torr",             N_("Torr"),                    1.0, NULL },
+	{ "mm Hg(V)",      "mm Hg",            N_("Millimeters of Mercury"),  1.0, NULL },
+	{ "in H2O(V-4C)",  "in H\xc2\xb2O (4\xc2\xb0\x43)",  N_("Inches of Water (4\xc2\xb0\x43)"), 1.868268641, NULL },
+	{ "in H2O(V-60F)", "in H\xc2\xb2O (60\xc2\xb0\x46)", N_("Inches of Water (60\xc2\xb0\x46)"), 1.866475993, NULL },
+	{ "in Hg(V-32F)",  "in Hg (32\xc2\xb0\x46)", N_("Inches of Mercury (32\xc2\xb0\x46)"), 25.399938811, NULL },
+	{ "in Hg(V-60F)",  "in Hg (60\xc2\xb0\x46)", N_("Inches of Mercury (60\xc2\xb0\x46)"), 25.328457932, NULL },
+	{ "psi(V)",        "psi",              N_("Pounds per in\xc2\xb2"),   51.714932572, NULL },
+	{ "at(V)",         "at",               N_("Atmospheres technical"),   735.559240069, NULL },
+	{ "kg/cm^2(V)",    "kg/cm\xc2\xb2",    N_("Kilograms per cm\xc2\xb2"),735.56454579, NULL },
+	{ "bar(V)",        "bar",              N_("Bar"),                     750.30012004, NULL },
+	{ "dynes/cm^2(V)", "dynes/cm\xc2\xb2", N_("Dynes per cm\xc2\xb2"),    750.33012004, NULL },
+	{ "Atm(V)",        "Atm",              N_("Standard atmospheres"),    760.0, NULL },
+	{ NULL, NULL, NULL, 0.0, NULL }
 };
 
 /* Units of metabolic cost (ie. physical activity) */
@@ -502,9 +523,9 @@ const AG_Unit agPercentageUnits[] = {
 
 /* Units of K (MOSFET parameter) */
 const AG_Unit agKUnits[] = {
-	{ "A/V^2", "A/V\xc2\xb2", N_("Amps/Volt^2"), 1.0, NULL },
-	{ "mA/V^2", "mA/V\xc2\xb2", N_("Milliamps/Volt^2"), 1e-3, NULL },
-	{ "uA/V^2", "\xc2\xb5\x41/V\xc2\xb2", N_("Microamps/Volt^2"), 1e-6, NULL },
+	{ "A/V^2", "A/V\xc2\xb2", N_("Amps/Volt\xc2\xb2"), 1.0, NULL },
+	{ "mA/V^2", "mA/V\xc2\xb2", N_("Milliamps/Volt\xc2\xb2"), 1e-3, NULL },
+	{ "uA/V^2", "\xc2\xb5\x41/V\xc2\xb2", N_("Microamps/Volt\xc2\xb2"), 1e-6, NULL },
 	{ NULL, NULL, NULL, 0.0, NULL }
 };
 
