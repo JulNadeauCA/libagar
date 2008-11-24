@@ -42,6 +42,8 @@ CreateUI(void)
 		{ "Time", agTimeUnits },
 		{ "Temp", agTemperatureUnits },
 		{ "Pwr", agPowerUnits },
+		{ "Press", agPressureUnits },
+		{ "Vac", agVacuumUnits },
 		{ "Met", agMetabolicExpenditureUnits },
 	};
 	int i;
@@ -71,6 +73,8 @@ CreateUI(void)
 	AG_WidgetBindDouble(n2, "value", &value);
 	AG_NumericalSizeHint(n1, "0000.00");
 	AG_NumericalSizeHint(n2, "0000.00");
+	AG_NumericalSetPrecision(n1, "g", 6);
+	AG_NumericalSetPrecision(n2, "g", 6);
 
 	AG_WindowShow(win);
 	AG_WindowMaximize(win);
