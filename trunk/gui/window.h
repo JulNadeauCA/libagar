@@ -124,6 +124,8 @@ void	 AG_WindowSetPadding(AG_Window *, int, int, int, int);
 #define	 AG_WindowSetPaddingRight(w,p)  AG_WindowSetPadding((w),-1,(p),-1,-1)
 #define	 AG_WindowSetPaddingTop(w,p)    AG_WindowSetPadding((w),-1,-1,(p),-1)
 #define	 AG_WindowSetPaddingBottom(w,p) AG_WindowSetPadding((w),-1,-1,-1,(p))
+void     AG_WindowSetSideBorders(AG_Window *, int);
+void     AG_WindowSetBottomBorder(AG_Window *, int);
 
 void	 AG_WindowSetPosition(AG_Window *, enum ag_window_alignment, int);
 void	 AG_WindowSetCloseAction(AG_Window *, enum ag_window_close_action);
