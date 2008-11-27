@@ -52,6 +52,8 @@ int agWindowXOutLimit = 32;
 int agWindowBotOutLimit = 32;
 int agWindowIconWidth = 32;
 int agWindowIconHeight = 32;
+int agWindowSideBorderDefault = 0;
+int agWindowBotBorderDefault = 6;
 
 extern SDL_Cursor *agCursorToSet;				/* widget.c */
 
@@ -170,8 +172,8 @@ Init(void *obj)
 	win->wMin = win->lPad + win->rPad + 16;
 	win->hMin = win->tPad + win->bPad + 16;
 	win->minPct = 50;
-	win->wBorderBot = 6;
-	win->wBorderSide = 0;
+	win->wBorderBot = agWindowBotBorderDefault;
+	win->wBorderSide = agWindowSideBorderDefault;
 	win->wResizeCtrl = 16;
 	win->rSaved = AG_RECT(-1,-1,-1,-1);
 	win->r = AG_RECT(0,0,0,0);
@@ -1606,6 +1608,32 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	win->r.h = a->h - win->wBorderBot;
 
 	return (0);
+}
+
+/* Set the width of the window side borders. */
+void
+AG_WindowSetSideBorders(AG_Window *win, int pixels)
+{
+	if (win != NULL) {
+		AG_ObjectLock(win);
+		win->wBorderSide = pixels;
+		AG_ObjectUnlock(win);
+	} else {
+		agWindowSideBorderDefault = pixels;
+	}
+}
+
+/* Set the width of the window bottom border. */
+void
+AG_WindowSetBottomBorder(AG_Window *win, int pixels)
+{
+	if (win != NULL) {
+		AG_ObjectLock(win);
+		win->wBorderBot = pixels;
+		AG_ObjectUnlock(win);
+	} else {
+		agWindowBotBorderDefault = pixels;
+	}
 }
 
 /* Change the spacing between child widgets. */
