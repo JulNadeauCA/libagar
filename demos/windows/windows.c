@@ -30,7 +30,7 @@ main(int argc, char *argv[])
 	}
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
-
+	
 	for (i = 0; i < 5; i++) {
 		win = AG_WindowNew(0);
 		AG_WindowSetCaption(win, "TL%d", i);
@@ -75,6 +75,15 @@ main(int argc, char *argv[])
 	AG_LabelNew(win, 0, "Unmovable window", i);
 	AG_WindowSetPosition(win, AG_WINDOW_ML, 1);
 	AG_WindowShow(win);
+	
+	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, "Tweaked borders");
+	AG_LabelNew(win, 0, "Window with tweaked borders", i);
+	AG_WindowSetPosition(win, AG_WINDOW_ML, 1);
+	AG_WindowSetSideBorders(win, 10);
+	AG_WindowSetBottomBorder(win, 10);
+	AG_WindowShow(win);
+
 
 	AG_EventLoop();
 	AG_Destroy();
