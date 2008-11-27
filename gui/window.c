@@ -1496,8 +1496,10 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	AG_Widget *chld;
 	AG_SizeReq rChld, rTbar;
 	int nWidgets;
+	int wTot;
 	
-	r->w = win->lPad+win->rPad + win->wBorderSide*2;
+	wTot = win->lPad + win->rPad + win->wBorderSide*2;
+	r->w = wTot;
 	r->h = win->bPad+win->tPad + win->wBorderBot;
 
 	if (win->tbar != NULL) {
@@ -1511,8 +1513,7 @@ SizeRequest(void *obj, AG_SizeReq *r)
 			continue;
 		}
 		AG_WidgetSizeReq(chld, &rChld);
-		r->w = MAX(r->w, rChld.w + (win->lPad+win->rPad) +
-		                 win->wBorderSide*2);
+		r->w = MAX(r->w, rChld.w + wTot);
 		r->h += rChld.h + win->spacing;
 		nWidgets++;
 	}
@@ -1604,8 +1605,8 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 
 	win->r.x = 0;
 	win->r.y = 0;
-	win->r.w = a->w - win->wBorderSide*2;
-	win->r.h = a->h - win->wBorderBot;
+	win->r.w = a->w;
+	win->r.h = a->h;
 
 	return (0);
 }
