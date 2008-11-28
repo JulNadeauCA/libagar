@@ -47,7 +47,7 @@
 #include <agar/gui/slider.h>
 #include <agar/gui/statusbar.h>
 #include <agar/gui/table.h>
-#include <agar/gui/tableview.h>
+#include <agar/gui/treetbl.h>
 #include <agar/gui/text.h>
 #include <agar/gui/textbox.h>
 #include <agar/gui/text_cache.h>

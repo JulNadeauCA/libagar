@@ -64,7 +64,7 @@
 #include "spinbutton.h"
 #include "statusbar.h"
 #include "table.h"
-#include "tableview.h"
+#include "treetbl.h"
 #include "textbox.h"
 #include "titlebar.h"
 #include "tlist.h"
