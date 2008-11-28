@@ -12,7 +12,7 @@ SRCS=	config.c core.c error.c event.c object.c prop.c rcs.c \
 	data_source.c load_string.c load_version.c \
 	snprintf.c vsnprintf.c vasprintf.c \
 	net_client.c net_command.c net_fgetln.c net_server.c \
-	dir.c md5.c sha1.c rmd160.c file.c string_compat.c dso.c
+	dir.c md5.c sha1.c rmd160.c file.c string_compat.c dso.c tree.c
 
 MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 AG_Timeout.3 \
 	AG_Config.3 AG_Version.3 AG_DataSource.3 AG_Error.3 AG_Threads.3 \

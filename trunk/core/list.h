@@ -1,28 +1,29 @@
 /*	Public domain	*/
 /*
- * Implementation of array-based lists (as opposed to linked lists as
- * in the queue(3) macros).
+ * Implementation of generic array-based lists (as opposed to linked lists
+ * as implemented by the AG_Queue(3) macros). Private data can be associated
+ * with list elements.
  */
 
 #ifndef _AGAR_CORE_LIST_H_
 #define _AGAR_CORE_LIST_H_
 
-typedef struct list {
+typedef struct ag_list {
 	int n;			/* Element count */
 	void  **v;		/* Element pointers */
 	void  **vPvt;		/* Element private data */
 	size_t *vPvtSize;	/* Element private data sizes */
-} LIST;
+} AG_List;
 
 __BEGIN_DECLS
 
 /* Create a new list */
-static __inline__ LIST *
-LIST_New(void)
+static __inline__ AG_List *
+AG_ListNew(void)
 {
-	LIST *L;
+	AG_List *L;
 
-	L = Malloc(sizeof(LIST));
+	L = AG_Malloc(sizeof(AG_List));
 	L->n = 0;
 	L->v = NULL;
 	L->vPvt = NULL;
@@ -31,19 +32,19 @@ LIST_New(void)
 }
 
 /* Duplicate an existing list */
-static __inline__ LIST *
-LIST_Dup(const LIST *L)
+static __inline__ AG_List *
+AG_ListDup(const AG_List *L)
 {
 	size_t vLen = L->n*sizeof(void *);
 	size_t vsLen = L->n*sizeof(size_t);
-	LIST *Ldup;
+	AG_List *Ldup;
 	int i;
 
-	Ldup = Malloc(sizeof(LIST));
+	Ldup = AG_Malloc(sizeof(AG_List));
 	Ldup->n = L->n;
-	Ldup->v = Malloc(vLen);
-	Ldup->vPvt = Malloc(vLen);
-	Ldup->vPvtSize = Malloc(vsLen);
+	Ldup->v = AG_Malloc(vLen);
+	Ldup->vPvt = AG_Malloc(vLen);
+	Ldup->vPvtSize = AG_Malloc(vsLen);
 
 	for (i = 0; i < Ldup->n; i++) {
 		if (L->vPvt[i] != NULL) {
@@ -59,27 +60,27 @@ LIST_Dup(const LIST *L)
 
 /* Insert a new item at the tail of a list. */
 static __inline__ int
-LIST_Append(LIST *L, void *p)
+AG_ListAppend(AG_List *L, void *p)
 {
-	L->v = Realloc(L->v, (L->n+1)*sizeof(void *));
+	L->v = AG_Realloc(L->v, (L->n+1)*sizeof(void *));
 	L->v[L->n] = p;
-	L->vPvt = Realloc(L->vPvt, (L->n+1)*sizeof(void *));
+	L->vPvt = AG_Realloc(L->vPvt, (L->n+1)*sizeof(void *));
 	L->vPvt[L->n] = NULL;
-	L->vPvtSize = Realloc(L->vPvtSize, (L->n+1)*sizeof(size_t));
+	L->vPvtSize = AG_Realloc(L->vPvtSize, (L->n+1)*sizeof(size_t));
 	L->vPvtSize[L->n] = 0;
 	return (L->n++);
 }
 
 /* Insert a new item with private data at the tail of a list. */
 static __inline__ int
-LIST_AppendPvt(LIST *L, const void *pPvt, size_t pvtSize)
+AG_ListAppendP(AG_List *L, const void *pPvt, size_t pvtSize)
 {
 	void *p;
 
-	L->v = Realloc(L->v, (L->n+1)*sizeof(void *));
-	L->vPvt = Realloc(L->vPvt, (L->n+1)*sizeof(void *));
-	L->vPvtSize = Realloc(L->vPvtSize, (L->n+1)*sizeof(size_t));
-	p = Malloc(pvtSize);
+	L->v = AG_Realloc(L->v, (L->n+1)*sizeof(void *));
+	L->vPvt = AG_Realloc(L->vPvt, (L->n+1)*sizeof(void *));
+	L->vPvtSize = AG_Realloc(L->vPvtSize, (L->n+1)*sizeof(size_t));
+	p = AG_Malloc(pvtSize);
 	L->v[L->n] = p;
 	L->vPvt[L->n] = p;
 	L->vPvtSize[L->n] = pvtSize;
@@ -92,7 +93,7 @@ LIST_AppendPvt(LIST *L, const void *pPvt, size_t pvtSize)
  * Return 1 on success, 0 if position was invalid.
  */
 static __inline__ int
-LIST_Insert(LIST *L, int pos, void *p)
+AG_ListInsert(AG_List *L, int pos, void *p)
 {
 	size_t vLen, vsLen;
 	
@@ -101,9 +102,9 @@ LIST_Insert(LIST *L, int pos, void *p)
 
 	vLen = (L->n+1)*sizeof(void *);
 	vsLen = (L->n+1)*sizeof(size_t);
-	L->v = Realloc(L->v, vLen);
-	L->vPvt = Realloc(L->vPvt, vLen);
-	L->vPvtSize = Realloc(L->vPvtSize, vsLen);
+	L->v = AG_Realloc(L->v, vLen);
+	L->vPvt = AG_Realloc(L->vPvt, vLen);
+	L->vPvtSize = AG_Realloc(L->vPvtSize, vsLen);
 	if (pos < L->n) {
 		vLen -= sizeof(void *);
 		vsLen -= sizeof(size_t);
@@ -122,7 +123,7 @@ LIST_Insert(LIST *L, int pos, void *p)
  * Return 1 on success, 0 if position was invalid.
  */
 static __inline__ int
-LIST_InsertPvt(LIST *L, int pos, void *pPvt, size_t pvtSize)
+AG_ListInsertP(AG_List *L, int pos, void *pPvt, size_t pvtSize)
 {
 	size_t vLen, vsLen;
 	void *p;
@@ -132,9 +133,9 @@ LIST_InsertPvt(LIST *L, int pos, void *pPvt, size_t pvtSize)
 
 	vLen = (L->n+1)*sizeof(void *);
 	vsLen = (L->n+1)*sizeof(size_t);
-	L->v = Realloc(L->v, vLen);
-	L->vPvt = Realloc(L->vPvt, vLen);
-	L->vPvtSize = Realloc(L->vPvtSize, vsLen);
+	L->v = AG_Realloc(L->v, vLen);
+	L->vPvt = AG_Realloc(L->vPvt, vLen);
+	L->vPvtSize = AG_Realloc(L->vPvtSize, vsLen);
 	if (pos < L->n) {
 		vLen -= sizeof(void *);
 		vsLen -= sizeof(size_t);
@@ -146,7 +147,7 @@ LIST_InsertPvt(LIST *L, int pos, void *pPvt, size_t pvtSize)
 	L->vPvt[pos] = pPvt;
 	L->vPvtSize[pos] = pvtSize;
 
-	p = Malloc(pvtSize);
+	p = AG_Malloc(pvtSize);
 	L->v[pos] = p;
 	L->vPvt[pos] = p;
 	L->vPvtSize[pos] = pvtSize;
@@ -156,25 +157,25 @@ LIST_InsertPvt(LIST *L, int pos, void *pPvt, size_t pvtSize)
 
 /* Insert at head of list. */
 static __inline__ int
-LIST_Prepend(LIST *L, void *p)
+AG_ListPrepend(AG_List *L, void *p)
 {
-	return LIST_Insert(L,0,p);
+	return AG_ListInsert(L,0,p);
 }
 
 static __inline__ int
-LIST_PrependPvt(LIST *L, void *pPvt, size_t pvtSize)
+AG_ListPrependP(AG_List *L, void *pPvt, size_t pvtSize)
 {
-	return LIST_InsertPvt(L,0,pPvt,pvtSize);
+	return AG_ListInsertP(L,0,pPvt,pvtSize);
 }
 
 /* Remove an item from the list by index. Return 1 if successful. */
 static __inline__ int
-LIST_Remove(LIST *L, int idx)
+AG_ListRemove(AG_List *L, int idx)
 {
 	if (idx < 0 || idx >= L->n) {
 		return (0);
 	}
-	Free(L->vPvt[idx]);
+	AG_Free(L->vPvt[idx]);
 	if (idx < L->n-1) {
 		size_t vLen = (L->n - 1)*sizeof(void *);
 		size_t vsLen = (L->n - 1)*sizeof(size_t);
@@ -188,16 +189,16 @@ LIST_Remove(LIST *L, int idx)
 
 /* Remove all items from a list. */
 static __inline__ void
-LIST_Clear(LIST *L)
+AG_ListClear(AG_List *L)
 {
 	int i;
 
 	for (i = 0; i < L->n; i++) {
-		Free(L->vPvt[i]);
+		AG_Free(L->vPvt[i]);
 	}
-	Free(L->vPvt);
-	Free(L->v);
-	Free(L->vPvtSize);
+	AG_Free(L->vPvt);
+	AG_Free(L->v);
+	AG_Free(L->vPvtSize);
 	L->vPvt = NULL;
 	L->v = NULL;
 	L->vPvtSize = NULL;
@@ -205,25 +206,43 @@ LIST_Clear(LIST *L)
 
 /* Release resources allocated by a list. */
 static __inline__ void
-LIST_Destroy(LIST *L)
+AG_ListDestroy(AG_List *L)
 {
-	LIST_Clear(L);
-	Free(L);
+	AG_ListClear(L);
+	AG_Free(L);
 }
 
 /* Create a new list from an array of strings. */
-static __inline__ LIST *
-LIST_NewFromStrings(int n, const char **s)
+static __inline__ AG_List *
+AG_ListNewFromStrings(int n, const char **s)
 {
-	LIST *L;
+	AG_List *L;
 	int i;
 
-	L = LIST_New();
+	L = AG_ListNew();
 	for (i = 0; i < n; i++) {
-		LIST_AppendPvt(L, s[i], strlen(s[i])+1);
+		AG_ListAppendP(L, s[i], strlen(s[i])+1);
 	}
 	return (L);
 }
 __END_DECLS
+
+#if 0
+#if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_LISTS)
+# define LIST			AG_List
+# define LIST_New		AG_ListNew
+# define LIST_NewFromStrings	AG_ListNewFromStrings
+# define LIST_Dup		AG_ListDup
+# define LIST_Insert		AG_ListInsert
+# define LIST_InsertP		AG_ListInsertP
+# define LIST_Append		AG_ListAppend
+# define LIST_AppendP		AG_ListAppendP
+# define LIST_Prepend		AG_ListPrepend
+# define LIST_PrependP		AG_ListPrependP
+# define LIST_Remove		AG_ListRemove
+# define LIST_Clear		AG_ListClear
+# define LIST_Destroy		AG_ListDestroy
+#endif
+#endif
 
 #endif /* _AGAR_CORE_LIST_H_ */
