@@ -148,10 +148,8 @@ AG_Quit(void)
 void
 AG_Destroy(void)
 {
-	if (agAtexitFunc != NULL)
-		agAtexitFunc();
-	if (agAtexitFuncEv != NULL)
-		agAtexitFuncEv(NULL);
+	if (agAtexitFunc != NULL) { agAtexitFunc(); }
+	if (agAtexitFuncEv != NULL) { agAtexitFuncEv(NULL); }
 
 #ifdef AG_NETWORK
 	AG_RcsDestroy();
