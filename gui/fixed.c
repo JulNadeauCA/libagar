@@ -86,10 +86,10 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		aChld.y = chld->y;
 		aChld.w = chld->w;
 		aChld.h = chld->h;
-
+#if 0
 		if (chld->flags & AG_WIDGET_HFILL) { aChld.w = a->w; }
 		if (chld->flags & AG_WIDGET_VFILL) { aChld.h = a->h; }
-		
+#endif		
 		AG_WidgetSizeAlloc(chld, &aChld);
 	}
 	return (0);
