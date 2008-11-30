@@ -825,21 +825,21 @@ The following public
 .Nm
 flags are defined:
 .Bl -tag -width "AG_OBJECT_NON_PERSISTENT "
-.It Dv AG_OBJECT_RELOAD_PROPS
+.It AG_OBJECT_RELOAD_PROPS
 Prevents clearing of the
 .Xr AG_Prop 3
 table prior to
 .Fn AG_ObjectLoad .
-.It Dv AG_OBJECT_NON_PERSISTENT
+.It AG_OBJECT_NON_PERSISTENT
 Disables archiving of the object and its children.
 If set,
 .Fn AG_ObjectSave
 becomes a no-op and
 .Fn AG_ObjectLoad
 calls will fail.
-.It Dv AG_OBJECT_INDESTRUCTIBLE
+.It AG_OBJECT_INDESTRUCTIBLE
 Advisory and application-specific.
-.It Dv AG_OBJECT_RESIDENT
+.It AG_OBJECT_RESIDENT
 Read-only flag set by the object system to indicate that the object's dataset
 is currently resident in memory.
 This flag is set by
@@ -851,10 +851,10 @@ and is cleared by
 .Fn AG_ObjectFreeDataset
 and
 .Fn AG_ObjectPageOut .
-.It Dv AG_OBJECT_PRESERVE_DEPS
+.It AG_OBJECT_PRESERVE_DEPS
 Disable automatic removal of object dependencies when reference counts
 reach 0.
-.It Dv AG_OBJECT_STATIC
+.It AG_OBJECT_STATIC
 Indicates that this object is either statically-allocated (or allocated
 through another facility than
 .Xr malloc 3 ) .
@@ -863,9 +863,9 @@ The
 operation will not call
 .Xr free 3
 on the structure.
-.It Dv AG_OBJECT_READONLY
+.It AG_OBJECT_READONLY
 Advisory and application-specific.
-.It Dv AG_OBJECT_REOPEN_ONLOAD
+.It AG_OBJECT_REOPEN_ONLOAD
 If the object has a
 .Sq edit
 operation, arrange for all graphical interface elements (as returned by
@@ -875,20 +875,20 @@ to be automatically destroyed and recreated after any
 call.
 This flag is useful for complex objects where the graphical interface
 references elements of the dataset.
-.It Dv AG_OBJECT_REMAIN_DATA
+.It AG_OBJECT_REMAIN_DATA
 Prevent the object's dataset from being automatically freed (with
 .Fn AG_ObjectFreeDataset )
 as a result of an
 .Fn AG_ObjectPageOut
 call, when the reference count reaches zero.
-.It Dv AG_OBJECT_DEBUG
+.It AG_OBJECT_DEBUG
 Enable per-object debugging; application-specific.
-.It Dv AG_OBJECT_NAME_ONATTACH
+.It AG_OBJECT_NAME_ONATTACH
 Request that
 .Fn AG_ObjectAttach
 calls automatically generates a name for the child object being attached.
 The name will be unique in the parent.
-.It Dv AG_OBJECT_CHLD_AUTOSAVE
+.It AG_OBJECT_CHLD_AUTOSAVE
 Arrange for child objects to be automatically saved along with the object
 when
 .Fn AG_ObjectSave*

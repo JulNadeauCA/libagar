@@ -70,17 +70,17 @@ The
 field can take on the values:
 .Pp
 .Bl -tag -compact -width "AG_FILE_DIRECTORY "
-.It Dv AG_FILE_REGULAR
+.It AG_FILE_REGULAR
 Regular file
-.It Dv AG_FILE_DIRECTORY
+.It AG_FILE_DIRECTORY
 File represents a directory
-.It Dv AG_FILE_DEVICE
+.It AG_FILE_DEVICE
 File is a special device
-.It Dv AG_FILE_FIFO
+.It AG_FILE_FIFO
 File a POSIX fifo
-.It Dv AG_FILE_SYMLINK
+.It AG_FILE_SYMLINK
 File is a symbolic link
-.It Dv AG_FILE_SOCKET
+.It AG_FILE_SOCKET
 File is a Unix-domain socket
 .El
 .Pp
@@ -90,11 +90,11 @@ field can contain the following permission flags, assumed to be true under
 the effective privileges of the current process:
 .Pp
 .Bl -tag -compact -width AG_FILE_EXECUTABLE
-.It Dv AG_FILE_READABLE
+.It AG_FILE_READABLE
 File may be read from
-.It Dv AG_FILE_WRITEABLE
+.It AG_FILE_WRITEABLE
 File may be written to
-.It Dv AG_FILE_EXECUTABLE
+.It AG_FILE_EXECUTABLE
 File is executable
 .El
 .Pp
@@ -103,24 +103,22 @@ The
 field allows the following values:
 .Pp
 .Bl -tag -compact -width "AG_FILE_COMPRESSED "
-.It Dv AG_FILE_SUID
+.It AG_FILE_SUID
 File has setuid bit set
-.It Dv AG_FILE_SGID
+.It AG_FILE_SGID
 File has setgid bit set
-.It Dv AG_FILE_ARCHIVE
+.It AG_FILE_ARCHIVE
 File is marked as being an archive
-.It Dv AG_FILE_COMPRESSED
+.It AG_FILE_COMPRESSED
 File is marked as compressed
-.It Dv AG_FILE_ENCRYPTED
+.It AG_FILE_ENCRYPTED
 File is marked as encrypted
-.It Dv AG_FILE_HIDDEN
+.It AG_FILE_HIDDEN
 File is marked as hidden
-.It Dv AG_FILE_SPARSE
+.It AG_FILE_SPARSE
 File is marked as sparse
-.It Dv AG_FILE_TEMPORARY
+.It AG_FILE_TEMPORARY
 File is marked as temporary
-.It Dv AG_FILE_TEMPORARY
-File is marked as being required by the system
 .El
 .Sh DIRECTORIES
 .nr nS 1
