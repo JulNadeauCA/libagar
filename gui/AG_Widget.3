@@ -949,7 +949,7 @@ enum ag_widget_binding_type {
 .Pp
 The meaning of the following arguments depend on the type:
 .Bl -tag -width "AG_WIDGET_STRING "
-.It Dv AG_WIDGET_PROP
+.It AG_WIDGET_PROP
 Translate an
 .Xr AG_Prop 3
 value transparently.
@@ -959,7 +959,7 @@ Object holding the property.
 .It Ft const char *key
 Property key.
 .El
-.It Dv AG_WIDGET_STRING
+.It AG_WIDGET_STRING
 Fixed-size, NUL-terminated string.
 .Bl -tag -width "AG_Mutex *lock " -compact
 .It Ft AG_Mutex *lock
@@ -969,7 +969,7 @@ Fixed-size, NUL-terminated string.
 .It Ft size_t bufsize
 Total buffer size in bytes.
 .El
-.It Dv AG_WIDGET_FLAG
+.It AG_WIDGET_FLAG
 One or more bits in a natural integer.
 .Bl -tag -width "Uint bitmask " -compact
 .It Ft Uint value
@@ -977,7 +977,7 @@ Flags value.
 .It Ft Uint bitmask
 Bitmask value.
 .El
-.It Dv AG_WIDGET_FLAG8
+.It AG_WIDGET_FLAG8
 One or more bits in a 8-bit integer.
 .Bl -tag -width "Uint8 bitmask " -compact
 .It Ft Uint8 value
@@ -985,7 +985,7 @@ Flags value.
 .It Ft Uint8 bitmask
 Bitmask value.
 .El
-.It Dv AG_WIDGET_FLAG16
+.It AG_WIDGET_FLAG16
 One or more bits in a 16-bit integer.
 .Bl -tag -width "Uint16 bitmask " -compact
 .It Ft Uint16 value
@@ -993,7 +993,7 @@ Flags value.
 .It Ft Uint16 bitmask
 Bitmask value.
 .El
-.It Dv AG_WIDGET_FLAG32
+.It AG_WIDGET_FLAG32
 One or more bits in a 32-bit integer.
 .Bl -tag -width "Uint32 bitmask " -compact
 .It Ft Uint32 value
@@ -1001,7 +1001,7 @@ Flags value.
 .It Ft Uint32 bitmask
 Bitmask value.
 .El
-.It Dv AG_WIDGET_*
+.It AG_WIDGET_*
 Other types of data.
 .Bl -tag -width "AG_Mutex *lock " -compact
 .It Ft AG_Mutex *lock
