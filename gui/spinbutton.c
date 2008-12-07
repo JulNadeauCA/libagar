@@ -57,7 +57,7 @@ Bound(AG_Event *event)
 	AG_WidgetBinding *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "value") == 0) {
-		switch (binding->vtype) {
+		switch (binding->type) {
 		case AG_WIDGET_INT:
 			sbu->min = AG_INT_MIN+1;
 			sbu->max = AG_INT_MAX-1;
@@ -297,7 +297,7 @@ AG_SpinbuttonAddValue(AG_Spinbutton *sbu, int inc)
 	minb = AG_WidgetGetBinding(sbu, "min", &min);
 	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_INT:
 		*(int *)value = *(int *)value+inc < *min ? *min :
 		                *(int *)value+inc > *max ? *max :
@@ -363,7 +363,7 @@ AG_SpinbuttonSetValue(AG_Spinbutton *sbu, ...)
 	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 
 	va_start(ap, sbu);
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_INT:
 		{
 			int i = va_arg(ap, int);

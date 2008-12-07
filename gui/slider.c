@@ -716,7 +716,7 @@ BoundValue(AG_Event *event)
 	 */
 	if (!strcmp(bNew->name, "min") || !strcmp(bNew->name, "max")) {
 		bValue = AG_WidgetGetBinding(sl, "value", &pValue);
-		if (bValue->vtype != bNew->vtype) {
+		if (bValue->type != bNew->type) {
 			AG_FatalError("Slider \"%s\" binding type disagree "
 			              "with \"value\" binding", bNew->name);
 		}

@@ -10,13 +10,6 @@ agar_gui_widget_bind_pointer (AG_Widget *w, const char *binding, void **p)
 }
 
 void
-agar_gui_widget_bind_property (AG_Widget *w, const char *binding,
-  AG_Object *obj, const char *prop_name)
-{
-  AG_WidgetBindProp (w, binding, obj, prop_name);
-}
-
-void
 agar_gui_widget_bind_boolean (AG_Widget *w, const char *binding, int *var)
 {
   AG_WidgetBindBool (w, binding, var);

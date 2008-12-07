@@ -38,7 +38,6 @@
 #include <gui/view.h>
 #include <gui/text.h>
 #include <gui/tlist.h>
-#include <gui/tableview.h>
 
 #include "rcs.h"
 

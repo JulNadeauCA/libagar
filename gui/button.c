@@ -85,7 +85,7 @@ AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
 
 AG_Button *
 AG_ButtonNewBool(void *parent, Uint flags, const char *caption,
-    AG_WidgetBindingType type, void *p)
+    AG_DatumType type, void *p)
 {
 	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
 	AG_WidgetBind(bu, "state", type, p);
@@ -265,8 +265,7 @@ GetState(AG_Button *bu, AG_WidgetBinding *binding, void *p)
 {
 	int v = 0;
 
-	switch (binding->vtype) {
-	case AG_WIDGET_BOOL:
+	switch (binding->type) {
 	case AG_WIDGET_INT:
 		v = *(int *)p;
 		break;
@@ -301,8 +300,7 @@ GetState(AG_Button *bu, AG_WidgetBinding *binding, void *p)
 static void
 SetState(AG_WidgetBinding *binding, void *p, int v)
 {
-	switch (binding->vtype) {
-	case AG_WIDGET_BOOL:
+	switch (binding->type) {
 	case AG_WIDGET_INT:
 		*(int *)p = v;
 		break;

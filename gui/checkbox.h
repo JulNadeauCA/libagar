@@ -28,8 +28,6 @@ AG_Checkbox *AG_CheckboxNew(void *, Uint, const char *, ...);
 AG_Checkbox *AG_CheckboxNewFn(void *, Uint, const char *, AG_EventFn,
                               const char *, ...);
 AG_Checkbox *AG_CheckboxNewInt(void *, Uint, const char *, int *);
-AG_Checkbox *AG_CheckboxNewProp(void *, Uint, const char *, void *,
-                                const char *);
 AG_Checkbox *AG_CheckboxNewFlag(void *, Uint, const char *, Uint *, Uint);
 AG_Checkbox *AG_CheckboxNewFlag32(void *, Uint, const char *, Uint32 *, Uint32);
 

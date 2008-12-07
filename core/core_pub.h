@@ -14,6 +14,7 @@
 # include <agar/core/vasprintf.h>
 #endif
 
+#include <agar/core/datum.h>
 #include <agar/core/list.h>
 #include <agar/core/tree.h>
 #include <agar/core/data_source.h>

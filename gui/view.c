@@ -106,6 +106,9 @@ static AG_FixedPlotter *agPerfGraph;
 static AG_FixedPlotterItem *agPerfFPS, *agPerfEvnts, *agPerfIdle;
 #endif
 
+int agFullscreenMode = 0;
+int agAsyncBlits = 0;
+
 #ifdef HAVE_OPENGL
 static void
 InitGL(void)

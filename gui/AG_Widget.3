@@ -736,7 +736,7 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Pp
 .nr nS 1
 .Ft "AG_WidgetBinding *"
-.Fn AG_WidgetBind "AG_Widget *widget, const char *binding" "enum ag_widget_binding_type type, ..."
+.Fn AG_WidgetBind "AG_Widget *widget, const char *binding" "enum ag_datum_type type, ..."
 .Pp
 .Ft "AG_WidgetBinding *"
 .Fn AG_WidgetGetBinding "AG_Widget *widget" "const char *binding" "void *res"
@@ -793,13 +793,7 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Fn AG_WidgetBindPointer "AG_Widget *widget" "const char *binding" "void **p"
 .Pp
 .Ft "void"
-.Fn AG_WidgetBindProp "AG_Widget *widget" "const char *binding" "AG_Object *obj" "const char *prop_name"
-.Pp
-.Ft "void"
 .Fn AG_WidgetBindString "AG_Widget *widget" "const char *binding" "char *p" "size_t len"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindProp "AG_Widget *widget" "const char *binding" "AG_Object *obj" "const char *propKey"
 .Pp
 .Ft "void"
 .Fn AG_WidgetBindFlag "AG_Widget *widget" "const char *binding" "int *p" "int bitmask"
@@ -908,45 +902,32 @@ Correct values for the
 .Fa type
 argument include:
 .Pp
-.Bd -literal
-enum ag_widget_binding_type {
-	AG_WIDGET_NONE,
-	AG_WIDGET_BOOL,
-	AG_WIDGET_UINT,
-	AG_WIDGET_INT,
-	AG_WIDGET_UINT8,
-	AG_WIDGET_SINT8,
-	AG_WIDGET_UINT16,
-	AG_WIDGET_SINT16,
-	AG_WIDGET_UINT32,
-	AG_WIDGET_SINT32,
-	AG_WIDGET_UINT64,
-	AG_WIDGET_SINT64,
-	AG_WIDGET_FLOAT,
-	AG_WIDGET_DOUBLE,
-	AG_WIDGET_LONG_DOUBLE,
-	AG_WIDGET_STRING,
-	AG_WIDGET_POINTER,
-	AG_WIDGET_PROP,
-	AG_WIDGET_FLAG,
-	AG_WIDGET_FLAG8,
-	AG_WIDGET_FLAG16,
-	AG_WIDGET_FLAG32
-}
-.Ed
+.Bl -tag -compact
+.It AG_WIDGET_NONE
+.It AG_WIDGET_BOOL
+.It AG_WIDGET_UINT
+.It AG_WIDGET_INT
+.It AG_WIDGET_UINT8
+.It AG_WIDGET_SINT8
+.It AG_WIDGET_UINT16
+.It AG_WIDGET_SINT16
+.It AG_WIDGET_UINT32
+.It AG_WIDGET_SINT32
+.It AG_WIDGET_UINT64
+.It AG_WIDGET_SINT64
+.It AG_WIDGET_FLOAT
+.It AG_WIDGET_DOUBLE
+.It AG_WIDGET_LONG_DOUBLE
+.It AG_WIDGET_STRING
+.It AG_WIDGET_POINTER
+.It AG_WIDGET_FLAG
+.It AG_WIDGET_FLAG8
+.It AG_WIDGET_FLAG16
+.It AG_WIDGET_FLAG32
+.El
 .Pp
 The meaning of the following arguments depend on the type:
 .Bl -tag -width "AG_WIDGET_STRING "
-.It AG_WIDGET_PROP
-Translate an
-.Xr AG_Prop 3
-value transparently.
-.Bl -tag -width "const char *key " -compact
-.It Ft AG_Object *obj
-Object holding the property.
-.It Ft const char *key
-Property key.
-.El
 .It AG_WIDGET_STRING
 Fixed-size, NUL-terminated string.
 .Bl -tag -width "AG_Mutex *lock " -compact

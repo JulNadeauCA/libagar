@@ -57,9 +57,6 @@ binding.
 .Fn AG_CheckboxNewInt "AG_Widget *parent" "Uint flags" "const char *label" "int *pBool"
 .Pp
 .Ft "AG_Checkbox *"
-.Fn AG_CheckboxNewProp "AG_Widget *parent" "Uint flags" "const char *label" "AG_Object *obj" "const char *prop"
-.Pp
-.Ft "AG_Checkbox *"
 .Fn AG_CheckboxNewFlag "AG_Widget *parent" "Uint flags" "const char *label" "Uint *pFlags" "Uint bitmask"
 .Pp
 .Ft "AG_Checkbox *"
@@ -101,11 +98,6 @@ Set the state to 1 on initialization.
 The
 .Fn AG_CheckboxNewInt
 variant binds the state to a boolean integer.
-.Pp
-.Fn AG_CheckboxNewProp
-binds the state to an
-.Xr AG_Prop 3
-of boolean or integer type.
 .Pp
 .Fn AG_CheckboxNewFlag
 binds the state to a specified set of bits

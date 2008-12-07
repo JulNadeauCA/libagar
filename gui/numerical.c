@@ -339,7 +339,7 @@ Bound(AG_Event *event)
 	AG_WidgetBinding *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "value") == 0) {
-		switch (binding->vtype) {
+		switch (binding->type) {
 		case AG_WIDGET_DOUBLE:
 			num->min = -AG_DBL_MAX+1;
 			num->max =  AG_DBL_MAX-1;
@@ -423,8 +423,7 @@ UpdateTextbox(AG_Numerical *num)
 	void *value;
 
 	valueb = AG_WidgetGetBinding(num, "value", &value);
-	AG_TextboxPrintf(num->input, "vtype=%d", (int)valueb->vtype);
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_DOUBLE:
 		AG_TextboxPrintf(num->input, num->format,
 		    AG_Base2Unit(*(double *)value, num->unit));
@@ -515,7 +514,7 @@ UpdateFromText(AG_Event *event)
 	valueb = AG_WidgetGetBinding(num, "value", &value);
 	stringb = AG_WidgetGetBinding(num->input->ed, "string", &s);
 
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_DOUBLE:
 	case AG_WIDGET_FLOAT:
 		AG_NumericalSetValue(num,
@@ -819,7 +818,7 @@ AG_NumericalAddValue(AG_Numerical *num, double inc)
 	minb = AG_WidgetGetBinding(num, "min", &min);
 	maxb = AG_WidgetGetBinding(num, "max", &max);
 
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_DOUBLE:	ADD_REAL(double);	break;
 	case AG_WIDGET_FLOAT:	ADD_REAL(float);	break;
 	case AG_WIDGET_INT:	ADD_CONVERTED(int);	break;
@@ -870,7 +869,7 @@ AG_NumericalSetValue(AG_Numerical *num, double nvalue)
 	minb = AG_WidgetGetBinding(num, "min", &min);
 	maxb = AG_WidgetGetBinding(num, "max", &max);
 
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_DOUBLE:	ASSIGN_VALUE(double);	break;
 	case AG_WIDGET_FLOAT:	ASSIGN_VALUE(float);	break;
 	case AG_WIDGET_INT:	CONV_VALUE(int);	break;
@@ -910,7 +909,7 @@ AG_NumericalSetMin(AG_Numerical *num, double nmin)
 	/* TODO allow integer min/max bindings */
 	AG_ObjectLock(num);
 	minb = AG_WidgetGetBinding(num, "min", &min);
-	switch (minb->vtype) {
+	switch (minb->type) {
 	case AG_WIDGET_DOUBLE:
 		*(double *)min = nmin;
 		break;
@@ -938,7 +937,7 @@ AG_NumericalSetMax(AG_Numerical *num, double nmax)
 	/* TODO allow integer min/max bindings */
 	AG_ObjectLock(num);
 	maxb = AG_WidgetGetBinding(num, "max", &max);
-	switch (maxb->vtype) {
+	switch (maxb->type) {
 	case AG_WIDGET_DOUBLE:
 		*(double *)max = nmax;
 		break;
@@ -1033,7 +1032,7 @@ AG_NumericalGetFlt(AG_Numerical *num)
 	void *value;
 
 	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->vtype) {
+	switch (bValue->type) {
 	case AG_WIDGET_FLOAT:	return *(float *)value;
 	case AG_WIDGET_DOUBLE:	return  (float)(*(double *)value);
 	case AG_WIDGET_INT:	return  (float)(*(int *)value);
@@ -1063,7 +1062,7 @@ AG_NumericalGetDbl(AG_Numerical *num)
 	void *value;
 
 	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->vtype) {
+	switch (bValue->type) {
 	case AG_WIDGET_DOUBLE:	return *(double *)value;
 	case AG_WIDGET_FLOAT:	return  (double)(*(float *)value);
 	case AG_WIDGET_INT:	return  (double)(*(int *)value);
@@ -1094,7 +1093,7 @@ AG_NumericalGetLongDbl(AG_Numerical *num)
 	void *value;
 
 	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->vtype) {
+	switch (bValue->type) {
 	case AG_WIDGET_DOUBLE:		return  (long double)(*(double *)value);
 	case AG_WIDGET_FLOAT:		return  (long double)(*(float *)value);
 	case AG_WIDGET_INT:		return  (long double)(*(int *)value);
@@ -1123,7 +1122,7 @@ AG_NumericalGetInt(AG_Numerical *num)
 	void *value;
 
 	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->vtype) {
+	switch (bValue->type) {
 	case AG_WIDGET_INT:	return *(int *)value;
 	case AG_WIDGET_UINT:	return (int)(*(Uint *)value);
 	case AG_WIDGET_UINT8:	return (int)(*(Uint8 *)value);
@@ -1153,7 +1152,7 @@ AG_NumericalGetUint32(AG_Numerical *num)
 	void *value;
 
 	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->vtype) {
+	switch (bValue->type) {
 	case AG_WIDGET_INT:	return (Uint32)(*(int *)value);
 	case AG_WIDGET_UINT:	return (Uint32)(*(Uint *)value);
 	case AG_WIDGET_UINT8:	return (Uint32)(*(Uint8 *)value);
@@ -1184,7 +1183,7 @@ AG_NumericalGetUint64(AG_Numerical *num)
 	void *value;
 
 	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->vtype) {
+	switch (bValue->type) {
 	case AG_WIDGET_INT:	return (Uint64)(*(int *)value);
 	case AG_WIDGET_UINT:	return (Uint64)(*(Uint *)value);
 	case AG_WIDGET_UINT8:	return (Uint64)(*(Uint8 *)value);

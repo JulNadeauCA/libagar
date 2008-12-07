@@ -169,7 +169,6 @@ package agar.gui.widget is
   type binding_t is record
     name         : binding_name_t;
     binding_type : c.int;
-    vtype        : c.int;
     mutex        : agar.core.threads.mutex_t;
     p1           : agar.core.types.void_ptr_t;
     data         : binding_data_union_t;

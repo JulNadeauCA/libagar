@@ -58,7 +58,7 @@ Bound(AG_Event *event)
 
 	if (strcmp(binding->name, "xvalue") == 0 ||
 	    strcmp(binding->name, "yvalue") == 0) {
-		switch (binding->vtype) {
+		switch (binding->type) {
 		case AG_WIDGET_INT:
 			sbu->min = AG_INT_MIN+1;
 			sbu->max = AG_INT_MAX-1;
@@ -332,7 +332,7 @@ Draw(void *obj)
 
 	xvalueb = AG_WidgetGetBinding(sbu, "xvalue", &xvalue);
 	yvalueb = AG_WidgetGetBinding(sbu, "yvalue", &yvalue);
-	switch (xvalueb->vtype) {
+	switch (xvalueb->type) {
 	case AG_WIDGET_INT:
 		AG_TextboxPrintf(sbu->input, "%d%s%d",
 		    *(int *)xvalue, sbu->sep, *(int *)yvalue);
@@ -382,7 +382,7 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 	minb = AG_WidgetGetBinding(sbu, "min", &min);
 	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_INT:
 		if (*(int *)value+inc >= *min &&
 		    *(int *)value+inc <= *max)
@@ -450,7 +450,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 
 	va_start(ap, which);
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_INT:
 		{
 			int i = va_arg(ap, int);

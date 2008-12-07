@@ -31,11 +31,11 @@
 #include <core/core.h>
 
 #include <gui/window.h>
-#include <gui/tableview.h>
+#include <gui/treetbl.h>
 
 #include "dev.h"
 
-static AG_Tableview *tv = NULL;
+static AG_Treetbl *tt = NULL;
 static AG_Timeout refresher;
 
 static Uint32 
@@ -46,24 +46,22 @@ UpdateTbl(void *obj, Uint32 ival, void *arg)
 	AG_Timeout *to;
 	int id;
 	
-	AG_TableviewRowDelAll(tv);
+	AG_TreetblClearRows(tt);
 	AG_LockTiming();
 
 	id = 0;
 	TAILQ_FOREACH(ob, &agTimeoutObjQ, tobjs) {
 		char text[128];
-		AG_TableviewRow *row1;
+		AG_TreetblRow *objRow;
 		
-		row1 = AG_TableviewRowAdd(tv, 0, NULL, NULL, id++,
-		    0, ob->name, -1);
-		AG_TableviewRowExpand(tv, row1);
+		objRow = AG_TreetblAddRow(tt, NULL, id++, "%s", ob->name);
+		AG_TreetblExpandRow(tt, objRow);
 
 		AG_ObjectLock(ob);
 		TAILQ_FOREACH(to, &ob->timeouts, timeouts) {
-			Snprintf(text, sizeof(text), "%p: %u ticks", to,
-			    (Uint)to->ticks);
-			AG_TableviewRowAdd(tv, 0, row1, NULL, id++,
-			    0, text, -1);
+			Snprintf(text, sizeof(text),
+			    "%p: %u ticks", to, (Uint)to->ticks);
+			AG_TreetblAddRow(tt, objRow, id++, "%s", text);
 		}
 		AG_ObjectUnlock(ob);
 	}
@@ -75,9 +73,9 @@ static void
 CloseWindow(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
-	AG_Tableview *tv = AG_PTR(1);
+	AG_Treetbl *tt = AG_PTR(1);
 
-	AG_DelTimeout(tv, &refresher);
+	AG_DelTimeout(tt, &refresher);
 	AG_ViewDetach(win);
 }
 
@@ -91,13 +89,13 @@ DEV_TimerInspector(void)
 	}
 	AG_WindowSetCaption(win, _("Timer Inspector"));
 
-	tv = AG_TableviewNew(win, AG_TABLEVIEW_EXPAND, NULL, NULL);
-	AG_TableviewSizeHint(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
-	AG_TableviewColAdd(tv, 0, 0, NULL, NULL);
+	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
+	AG_TreetblSizeHint(tt, 200, 6);
+	AG_TreetblAddCol(tt, 0, NULL, NULL);
 	
-	AG_SetTimeout(&refresher, UpdateTbl, tv, 0);
-	AG_AddTimeout(tv, &refresher, 50);
+	AG_SetTimeout(&refresher, UpdateTbl, tt, 0);
+	AG_AddTimeout(tt, &refresher, 50);
 	
-	AG_SetEvent(win, "window-close", CloseWindow, "%p", tv);
+	AG_SetEvent(win, "window-close", CloseWindow, "%p", tt);
 	return (win);
 }

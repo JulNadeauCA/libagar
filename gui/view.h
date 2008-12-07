@@ -265,6 +265,9 @@ extern Uint         agClipRectCount;
 
 extern const SDL_VideoInfo *agVideoInfo; /* XXX */
 
+extern int agFullscreenMode;
+extern int agAsyncBlits;
+
 int  AG_InitVideo(int, int, int, Uint);
 int  AG_InitVideoSDL(SDL_Surface *, Uint);
 int  AG_InitGUI(Uint);

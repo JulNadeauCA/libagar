@@ -5,81 +5,43 @@
 #define AG_EVENT_ARGS_MAX 16
 #define AG_EVENT_NAME_MAX 32
 
-enum ag_evarg_type {
-	AG_EVARG_POINTER,
-	AG_EVARG_STRING,
-	AG_EVARG_CHAR,
-	AG_EVARG_UCHAR,
-	AG_EVARG_INT,
-	AG_EVARG_UINT,
-	AG_EVARG_LONG,
-	AG_EVARG_ULONG,
-	AG_EVARG_FLOAT,
-	AG_EVARG_DOUBLE,
-	AG_EVARG_LAST
-};
-
-/* Argument to event handler */
-typedef union evarg {
-	void	*p;
-	char	*s;
-	int	 i;
-	long int li;
-	double	 f;
-} AG_EvArg;
-
 #ifdef AG_DEBUG
-#define AG_PTR(v) (event->argt[v]==AG_EVARG_POINTER?event->argv[v].p:\
-    AG_PtrMismatch())
-#define AG_STRING(v) (event->argt[v]==AG_EVARG_STRING?event->argv[v].s:\
-    (char *)AG_PtrMismatch())
-#define AG_CHAR(v) (event->argt[v]==AG_EVARG_CHAR?(char)event->argv[v].i:\
-    (char)AG_IntMismatch())
-#define AG_UCHAR(v) (event->argt[v]==AG_EVARG_UCHAR?(char)event->argv[v].i:\
-    (unsigned char)AG_IntMismatch())
-#define AG_INT(v) (event->argt[v]==AG_EVARG_INT?event->argv[v].i:\
-    AG_IntMismatch())
-#define AG_UINT(v) (event->argt[v]==AG_EVARG_UINT?(unsigned)event->argv[v].i:\
-    (unsigned)AG_IntMismatch())
-#define AG_LONG(v) (event->argt[v]==AG_EVARG_LONG?event->argv[v].li:\
-    (long)AG_IntMismatch())
-#define AG_ULONG(v) (event->argt[v]==AG_EVARG_ULONG?\
-    (unsigned long)event->argv[v].li:(unsigned long)AG_IntMismatch())
-#define AG_FLOAT(v) (event->argt[v]==AG_EVARG_FLOAT?(float)event->argv[v].f:\
-    (unsigned long)AG_FloatMismatch())
-#define AG_DOUBLE(v) (event->argt[v]==AG_EVARG_DOUBLE?event->argv[v].f:\
-    AG_FloatMismatch())
- 
-#define AG_OBJECT(v,t) \
- (AG_OfClass(event->argv[v].p,(t)))?event->argv[v].p:\
-  AG_ObjectMismatch(OBJECT(event->argv[v].p)->cls->hier,(t))
+#define AG_PTR(v) (event->argv[v].type==AG_DATUM_POINTER ? event->argv[v].data.p : AG_PtrMismatch())
+#define AG_STRING(v) (event->argv[v].type==AG_DATUM_STRING ? event->argv[v].data.s : (char *)AG_PtrMismatch())
+#define AG_CHAR(v) (event->argv[v].type==AG_DATUM_CHAR ? (char)event->argv[v].data.i : (char)AG_IntMismatch())
+#define AG_UCHAR(v) (event->argv[v].type==AG_DATUM_UCHAR ? (char)event->argv[v].data.i : (unsigned char)AG_IntMismatch())
+#define AG_INT(v) (event->argv[v].type==AG_DATUM_INT ? event->argv[v].data.i : AG_IntMismatch())
+#define AG_UINT(v) (event->argv[v].type==AG_DATUM_UINT ? (unsigned)event->argv[v].data.i : (unsigned)AG_IntMismatch())
+#define AG_LONG(v) (event->argv[v].type==AG_DATUM_LONG ? event->argv[v].data.s32 : (long)AG_IntMismatch())
+#define AG_ULONG(v) (event->argv[v].type==AG_DATUM_ULONG ? (unsigned long)event->argv[v].data.u32 : (unsigned long)AG_IntMismatch())
+#define AG_FLOAT(v) (event->argv[v].type==AG_DATUM_FLOAT ? (float)event->argv[v].data.flt : (unsigned long)AG_FloatMismatch())
+#define AG_DOUBLE(v) (event->argv[v].type==AG_DATUM_DOUBLE ? event->argv[v].data.dbl : AG_FloatMismatch())
+#define AG_OBJECT(v,t) (AG_OfClass(event->argv[v].data.p,(t))) ? event->argv[v].data.p : AG_ObjectMismatch(OBJECT(event->argv[v].data.p)->cls->hier,(t))
 
 #else /* !AG_DEBUG */
 
-#define AG_PTR(v) (event->argv[v].p)
-#define AG_STRING(v) (event->argv[v].s)
-#define AG_CHAR(v) ((char)event->argv[v].i)
-#define AG_UCHAR(v) ((unsigned char)event->argv[v].i)
-#define AG_INT(v) (event->argv[v].i)
-#define AG_UINT(v) ((unsigned)event->argv[v].i)
-#define AG_LONG(v) (event->argv[v].li)
-#define AG_ULONG(v) ((unsigned long)event->argv[v].li)
-#define AG_FLOAT(v) ((float)event->argv[v].f)
-#define AG_DOUBLE(v) (event->argv[v].f)
-#define AG_OBJECT(v,t) (event->argv[v].p)
+#define AG_PTR(v)	(event->argv[v].data.p)
+#define AG_STRING(v)	(event->argv[v].data.s)
+#define AG_CHAR(v)	((char)event->argv[v].data.i)
+#define AG_UCHAR(v)	((unsigned char)event->argv[v].data.i)
+#define AG_INT(v)	(event->argv[v].data.i)
+#define AG_UINT(v)	((unsigned)event->argv[v].data.i)
+#define AG_LONG(v)	(event->argv[v].data.s32)
+#define AG_ULONG(v)	((unsigned long)event->argv[v].data.u32)
+#define AG_FLOAT(v)	((float)event->argv[v].data.flt)
+#define AG_DOUBLE(v)	(event->argv[v].data.dbl)
+#define AG_OBJECT(v,t)	(event->argv[v].data.p)
 
 #endif /* AG_DEBUG */
 
-#define AG_SELF() AG_PTR(0)
-#define AG_SENDER() AG_PTR(event->argc)
-#define AG_SINT8(v) ((Sint8)AG_INT(v))
-#define AG_UINT8(v) ((Uint8)AG_UINT(v))
-#define AG_SINT16(v) ((Sint16)AG_INT(v))
-#define AG_UINT16(v) ((Uint16)AG_UINT(v))
-#define AG_SINT32(v) ((Sint32)AG_LONG(v))
-#define AG_UINT32(v) ((Uint32)AG_ULONG(v))
-#define AG_SDLKEY(v) ((SDLKey)AG_INT(v))
-#define AG_SDLMOD(v) ((SDLMod)AG_INT(v))
+#define AG_SELF()	AG_PTR(0)
+#define AG_SENDER()	AG_PTR(event->argc)
+#define AG_SINT8(v)	((Sint8)AG_INT(v))
+#define AG_UINT8(v)	((Uint8)AG_UINT(v))
+#define AG_SINT16(v)	((Sint16)AG_INT(v))
+#define AG_UINT16(v)	((Uint16)AG_UINT(v))
+#define AG_SINT32(v)	((Sint32)AG_LONG(v))
+#define AG_UINT32(v)	((Uint32)AG_ULONG(v))
 
 /* Event / event handler structure */
 typedef struct ag_event {
@@ -95,20 +57,20 @@ typedef struct ag_event {
 	int argc;				/* Total argument count */
 	int argc0;				/* Argument count (omitting
 						   PostEvent() arguments) */
-	AG_EvArg argv[AG_EVENT_ARGS_MAX];	/* Argument values */
-	int 	 argt[AG_EVENT_ARGS_MAX];	/* Argument types */
-	const char *argn[AG_EVENT_ARGS_MAX];	/* Argument names */
+	AG_Datum argv[AG_EVENT_ARGS_MAX];	/* Argument values */
 
 	AG_Timeout timeout;			/* Execution timeout */
 	AG_TAILQ_ENTRY(ag_event) events;	/* For Object */
-} AG_Event;
+} AG_Event, AG_Args;
 
 typedef void (*AG_EventFn)(AG_Event *);
 
 #ifdef AG_DEBUG
-#define AG_EVENT_DEFAULT_CASE() default: AG_FatalError("Bad event arg spec");
+#define AG_EVENT_DEFAULT_CASE() \
+	default: AG_FatalError("Bad AG_Event(3) argument string");
 #define AG_EVENT_BOUNDARY_CHECK(ev) \
-  if ((ev)->argc >= AG_EVENT_ARGS_MAX-1) AG_FatalError("Excess event args");
+	if ((ev)->argc >= AG_EVENT_ARGS_MAX-1) \
+		AG_FatalError("Too many AG_Event(3) arguments");
 #else
 #define AG_EVENT_DEFAULT_CASE() default: break;
 #define AG_EVENT_BOUNDARY_CHECK(ev)
@@ -116,50 +78,56 @@ typedef void (*AG_EventFn)(AG_Event *);
 
 #define AG_EVENT_INS_VAL(eev,tname,aname,member,val) {		\
 	AG_EVENT_BOUNDARY_CHECK(eev)				\
-	(eev)->argv[(eev)->argc].member = (val);		\
-	(eev)->argt[(eev)->argc] = (tname);			\
-	(eev)->argn[(eev)->argc] = (aname);			\
+	(eev)->argv[(eev)->argc].type = (tname);		\
+	(eev)->argv[(eev)->argc].name = (aname);		\
+	(eev)->argv[(eev)->argc].mutex = NULL;			\
+	(eev)->argv[(eev)->argc].data.member = (val);		\
 	(eev)->argc++;						\
 }
 #define AG_EVENT_INS_ARG(eev,ap,tname,member,t) { 		\
 	AG_EVENT_BOUNDARY_CHECK(eev)				\
-	(eev)->argv[(eev)->argc].member = va_arg(ap, t);	\
-	(eev)->argt[(eev)->argc] = (tname);			\
-	(eev)->argn[(eev)->argc] = "";				\
+	(eev)->argv[(eev)->argc].type = (tname);		\
+	(eev)->argv[(eev)->argc].name = "";			\
+	(eev)->argv[(eev)->argc].mutex = NULL;			\
+	(eev)->argv[(eev)->argc].data.member = va_arg(ap,t);	\
 	(eev)->argc++;						\
 }
 
 #define AG_EVENT_PUSH_ARG(ap,fp,ev) {					\
 	switch (*(fp)) {						\
 	case 'p':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_EVARG_POINTER,p,void *);	\
+		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_POINTER,p,void *);	\
 		break;							\
 	case 'i':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_EVARG_INT,i,int);		\
+		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_INT,i,int);		\
 		break;							\
 	case 'u':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_EVARG_UINT,i,int);		\
+		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_UINT,i,int);		\
 		break;							\
 	case 'f':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_EVARG_FLOAT,f,double);	\
+		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_FLOAT,flt,double);	\
 		break;							\
 	case 'd':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_EVARG_DOUBLE,f,double);	\
+		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_DOUBLE,dbl,double);	\
 		break;							\
 	case 's':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_EVARG_STRING,s,char *);	\
+		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_STRING,s,char *);	\
 		break;							\
 	case 'c':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_EVARG_UCHAR,i,int);	\
+		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_UINT8,u8,int);	\
 		break;							\
 	case 'C':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_EVARG_CHAR,i,int);	\
-		break;							\
-	case 'U':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_EVARG_ULONG,li,long int);	\
-		break;							\
-	case 'D':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_EVARG_LONG,li,long int);	\
+		switch (*(fp+1)) {					\
+		case 's':						\
+			AG_EVENT_INS_ARG((ev),ap,AG_DATUM_CONST_STRING,	\
+			    Cs,const char *);				\
+			break;						\
+		case 'p':						\
+			AG_EVENT_INS_ARG((ev),ap,AG_DATUM_CONST_POINTER,\
+			    Cp,const void *);				\
+			break;						\
+		}							\
+		(fp)++;							\
 		break;							\
 	case ' ':							\
 	case ',':							\
@@ -176,13 +144,13 @@ typedef void (*AG_EventFn)(AG_Event *);
 		va_list ap;						\
 									\
 		va_start(ap, fmtp);					\
-		while (*e_fc != '\0') AG_EVENT_PUSH_ARG(ap,(e_fc),(ev)); \
+		while (*e_fc != '\0') {					\
+			AG_EVENT_PUSH_ARG(ap,(e_fc),(ev));		\
+		}							\
 		va_end(ap);						\
 	}
 
 __BEGIN_DECLS
-extern const char *agEvArgTypeNames[];
-
 void      AG_EventInit(AG_Event *);
 void      AG_EventArgs(AG_Event *, const char *, ...);
 AG_Event *AG_SetEvent(void *, const char *, AG_EventFn, const char *, ...);
@@ -211,52 +179,32 @@ AG_ExecEventFn(void *obj, AG_Event *ev)
 static __inline__ void
 AG_EventPushPointer(AG_Event *ev, const char *key, void *val)
 {
-	AG_EVENT_INS_VAL(ev, AG_EVARG_POINTER, key, p, val);
+	AG_EVENT_INS_VAL(ev, AG_DATUM_POINTER, key, p, val);
 }
 static __inline__ void
 AG_EventPushString(AG_Event *ev, const char *key, char *val)
 {
-	AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, key, s, val);
-}
-static __inline__ void
-AG_EventPushChar(AG_Event *ev, const char *key, char val)
-{
-	AG_EVENT_INS_VAL(ev, AG_EVARG_CHAR, key, i, (int)val);
-}
-static __inline__ void
-AG_EventPushUChar(AG_Event *ev, const char *key, Uchar val)
-{
-	AG_EVENT_INS_VAL(ev, AG_EVARG_UCHAR, key, i, (int)val);
+	AG_EVENT_INS_VAL(ev, AG_DATUM_STRING, key, s, val);
 }
 static __inline__ void
 AG_EventPushInt(AG_Event *ev, const char *key, int val)
 {
-	AG_EVENT_INS_VAL(ev, AG_EVARG_INT, key, i, val);
+	AG_EVENT_INS_VAL(ev, AG_DATUM_INT, key, i, val);
 }
 static __inline__ void
 AG_EventPushUInt(AG_Event *ev, const char *key, Uint val)
 {
-	AG_EVENT_INS_VAL(ev, AG_EVARG_UINT, key, i, (int)val);
-}
-static __inline__ void
-AG_EventPushLong(AG_Event *ev, const char *key, long val)
-{
-	AG_EVENT_INS_VAL(ev, AG_EVARG_LONG, key, li, val);
-}
-static __inline__ void
-AG_EventPushULong(AG_Event *ev, const char *key, Ulong val)
-{
-	AG_EVENT_INS_VAL(ev, AG_EVARG_ULONG, key, li, val);
+	AG_EVENT_INS_VAL(ev, AG_DATUM_UINT, key, i, (int)val);
 }
 static __inline__ void
 AG_EventPushFloat(AG_Event *ev, const char *key, float val)
 {
-	AG_EVENT_INS_VAL(ev, AG_EVARG_FLOAT, key, f, (double)val);
+	AG_EVENT_INS_VAL(ev, AG_DATUM_FLOAT, key, flt, (double)val);
 }
 static __inline__ void
 AG_EventPushDouble(AG_Event *ev, const char *key, double val)
 {
-	AG_EVENT_INS_VAL(ev, AG_EVARG_DOUBLE, key, f, val);
+	AG_EVENT_INS_VAL(ev, AG_DATUM_DOUBLE, key, dbl, val);
 }
 static __inline__ void
 AG_EventPopArgument(AG_Event *ev)
@@ -264,5 +212,13 @@ AG_EventPopArgument(AG_Event *ev)
 	ev->argc--;
 }
 __END_DECLS
+
+/* Legacy */
+#define AG_SDLKEY(v) ((SDLKey)AG_INT(v))
+#define AG_SDLMOD(v) ((SDLMod)AG_INT(v))
+#define AG_EventPushChar AG_EventPushSint8
+#define AG_EventPushUChar AG_EventPushUint8
+#define AG_EventPushLong AG_EventPushSint32
+#define AG_EventPushULong AG_EventPushUint32
 
 #include <agar/core/close.h>

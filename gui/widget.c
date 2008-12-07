@@ -210,15 +210,10 @@ AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_WidgetBinding *bSrc)
 		return (-1);
 	}
 	bDst->type = bSrc->type;
-	bDst->vtype = bSrc->vtype;
 	bDst->mutex = bSrc->mutex;
 	bDst->p1 = bSrc->p1;
 
 	switch (bDst->type) {
-	case AG_WIDGET_PROP:
-		Strlcpy(bDst->data.prop, bSrc->data.prop,
-		    sizeof(bDst->data.prop));
-		break;
 	case AG_WIDGET_STRING:
 		bDst->data.size = bSrc->data.size;
 		break;
@@ -239,7 +234,7 @@ AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_WidgetBinding *bSrc)
 /* Bind a mutex-protected variable to a widget. */
 AG_WidgetBinding *
 AG_WidgetBindMp(void *widp, const char *name, AG_Mutex *mutex,
-    enum ag_widget_binding_type type, ...)
+    enum ag_datum_type type, ...)
 {
 	AG_Widget *wid = widp;
 	AG_WidgetBinding *b;
@@ -258,11 +253,6 @@ AG_WidgetBindMp(void *widp, const char *name, AG_Mutex *mutex,
 		maskArg = va_arg(ap, Uint);
 		b = AG_WidgetBind(wid, name, type, pArg, maskArg);
 		break;
-	case AG_WIDGET_PROP:
-		b = AG_WidgetBind(wid, name, type,
-		    va_arg(ap, void *),
-		    va_arg(ap, char *));
-		break;
 	case AG_WIDGET_STRING:
 		b = AG_WidgetBind(wid, name, type,
 		    va_arg(ap, char *),
@@ -279,68 +269,19 @@ AG_WidgetBindMp(void *widp, const char *name, AG_Mutex *mutex,
 	return (b);
 }
 
-/*
- * Obtain the virtual type of the given binding. This translates WIDGET_PROP
- * bindings to the equivalent widget binding type.
- */
-static int
-GetVirtualBindingType(AG_WidgetBinding *binding)
-{
-	AG_Prop *prop;
-
-	switch (binding->type) {
-	case AG_WIDGET_PROP:
-		if ((prop = AG_GetProp(binding->p1, binding->data.prop, -1,
-		    NULL)) == NULL) {
-			AG_FatalError("%s", AG_GetError());
-		}
-		switch (prop->type) {
-		case AG_PROP_FLOAT:	return (AG_WIDGET_FLOAT);
-		case AG_PROP_DOUBLE:	return (AG_WIDGET_DOUBLE);
-#ifdef HAVE_LONG_DOUBLE
-		case AG_PROP_LONG_DOUBLE: return (AG_WIDGET_LONG_DOUBLE);
-#endif
-		case AG_PROP_BOOL:	return (AG_WIDGET_BOOL);
-		case AG_PROP_INT:	return (AG_WIDGET_INT);
-		case AG_PROP_UINT8:	return (AG_WIDGET_UINT8);
-		case AG_PROP_SINT8:	return (AG_WIDGET_SINT8);
-		case AG_PROP_UINT16:	return (AG_WIDGET_UINT16);
-		case AG_PROP_SINT16:	return (AG_WIDGET_SINT16);
-		case AG_PROP_UINT32:	return (AG_WIDGET_UINT32);
-		case AG_PROP_SINT32:	return (AG_WIDGET_SINT32);
-#ifdef HAVE_64BIT
-		case AG_PROP_UINT64:	return (AG_WIDGET_UINT64);
-		case AG_PROP_SINT64:	return (AG_WIDGET_SINT64);
-#endif
-		case AG_PROP_STRING:	return (AG_WIDGET_STRING);
-		case AG_PROP_POINTER:	return (AG_WIDGET_POINTER);
-		default:		return (-1);
-		}
-	default:
-		return (binding->type);
-	}
-	return (-1);
-}
-
 /* Bind a variable to a widget. */
 AG_WidgetBinding *
-AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
-    ...)
+AG_WidgetBind(void *widp, const char *name, enum ag_datum_type type, ...)
 {
 	AG_Widget *wid = widp;
 	AG_WidgetBinding *binding;
 	void *p1;
 	size_t size = 0;		/* -Wuninitialized */
 	Uint32 bitmask = 0;		/* -Wuninitialized */
-	char *prop = NULL;		/* -Wuninitialized */
 	va_list ap;
 
 	va_start(ap, type);
 	switch (type) {
-	case AG_WIDGET_PROP:
-		p1 = va_arg(ap, void *);
-		prop = va_arg(ap, char *);
-		break;
 	case AG_WIDGET_STRING:
 		p1 = va_arg(ap, char *);
 		size = va_arg(ap, size_t);
@@ -367,10 +308,6 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 		binding->type = type;
 		binding->p1 = p1;
 		switch (type) {
-		case AG_WIDGET_PROP:
-			Strlcpy(binding->data.prop, prop,
-			    sizeof(binding->data.prop));
-			break;
 		case AG_WIDGET_STRING:
 			binding->data.size = size;
 			break;
@@ -383,7 +320,6 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 		default:
 			break;
 		}
-		binding->vtype = GetVirtualBindingType(binding);
 		AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
 		AG_MutexUnlock(&wid->bindings_lock);
 		AG_ObjectUnlock(wid);
@@ -396,9 +332,6 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 	binding->p1 = p1;
 	binding->mutex = NULL;
 	switch (type) {
-	case AG_WIDGET_PROP:
-		Strlcpy(binding->data.prop, prop, sizeof(binding->data.prop));
-		break;
 	case AG_WIDGET_STRING:
 		binding->data.size = size;
 		break;
@@ -411,7 +344,6 @@ AG_WidgetBind(void *widp, const char *name, enum ag_widget_binding_type type,
 	default:
 		break;
 	}
-	binding->vtype = GetVirtualBindingType(binding);
 	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
 	AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
 	AG_MutexUnlock(&wid->bindings_lock);
@@ -430,7 +362,6 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 {
 	AG_Widget *wid = widp;
 	AG_WidgetBinding *binding;
-	AG_Prop *prop;
 	void **res;
 	va_list ap;
 
@@ -447,7 +378,6 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 			AG_MutexLock(binding->mutex);
 		}
 		switch (binding->type) {
-		case AG_WIDGET_BOOL:
 		case AG_WIDGET_INT:
 			*(int **)res = (int *)binding->p1;
 			break;
@@ -509,66 +439,6 @@ AG_WidgetGetBinding(void *widp, const char *name, ...)
 		case AG_WIDGET_FLAG32:
 			*(Uint32 **)res = (Uint32 *)binding->p1;
 			break;
-		case AG_WIDGET_PROP:			/* Convert */
-			if ((prop = AG_GetProp(binding->p1, binding->data.prop,
-			    -1, NULL)) == NULL) {
-				AG_FatalError("%s", AG_GetError());
-			}
-			switch (prop->type) {
-			case AG_PROP_BOOL:
-			case AG_PROP_INT:
-				*(int **)res = (int *)&prop->data.i;
-				break;
-			case AG_PROP_UINT8:
-				*(Uint8 **)res = (Uint8 *)&prop->data.u8;
-				break;
-			case AG_PROP_SINT8:
-				*(Sint8 **)res = (Sint8 *)&prop->data.s8;
-				break;
-			case AG_PROP_UINT16:
-				*(Uint16 **)res = (Uint16 *)&prop->data.u16;
-				break;
-			case AG_PROP_SINT16:
-				*(Sint16 **)res = (Sint16 *)&prop->data.s16;
-				break;
-			case AG_PROP_UINT32:
-				*(Uint32 **)res = (Uint32 *)&prop->data.u32;
-				break;
-			case AG_PROP_SINT32:
-				*(Sint32 **)res = (Sint32 *)&prop->data.s32;
-				break;
-#ifdef HAVE_64BIT
-			case AG_PROP_UINT64:
-				*(Uint64 **)res = (Uint64 *)&prop->data.u64;
-				break;
-			case AG_PROP_SINT64:
-				*(Sint64 **)res = (Sint64 *)&prop->data.s64;
-				break;
-#endif
-			case AG_PROP_FLOAT:
-				*(float **)res = (float *)&prop->data.f;
-				break;
-			case AG_PROP_DOUBLE:
-				*(double **)res = (double *)&prop->data.d;
-				break;
-#ifdef HAVE_LONG_DOUBLE
-			case AG_PROP_LONG_DOUBLE:
-				*(long double **)res =
-				    (long double *)&prop->data.ld;
-				break;
-#endif
-			case AG_PROP_STRING:
-				*(char ***)res = (char **)&prop->data.s;
-				break;
-			case AG_PROP_POINTER:
-				*(void ***)res = (void **)&prop->data.p;
-				break;
-			default:
-				AG_SetError("Failed to translate property");
-				binding = NULL;
-				goto out;
-			}
-			break;
 		default:
 			AG_SetError("Bad widget binding type");
 			binding = NULL;
@@ -591,17 +461,7 @@ out:
 void
 AG_WidgetBindingChanged(AG_WidgetBinding *bind)
 {
-	if (bind->type == AG_WIDGET_PROP) {
-		AG_Object *pobj = bind->p1;
-		AG_Prop *prop;
-
-		AG_ObjectLock(pobj);
-		if ((prop = AG_GetProp(pobj, bind->data.prop, -1, NULL))
-		    != NULL) {
-			AG_PostEvent(NULL, pobj, "prop-modified", "%p", prop);
-		}
-		AG_ObjectUnlock(pobj);
-	}
+	/* nothing yet */
 }
 
 /*

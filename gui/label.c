@@ -732,7 +732,7 @@ Destroy(void *p)
 /* Register a flag description text. */
 void
 AG_LabelFlagNew(AG_Label *lbl, Uint idx, const char *text,
-    enum ag_widget_binding_type type, Uint32 v)
+    enum ag_datum_type type, Uint32 v)
 {
 	struct ag_label_flag *lfl;
 
