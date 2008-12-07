@@ -572,11 +572,6 @@ AG_TlistCompareStrings(const AG_TlistItem *it1,
 int
 AG_TlistComparePtrs(const AG_TlistItem *it1, const AG_TlistItem *it2)
 {
-	if (it1->argc != it2->argc ||
-	   (it1->argc > 0 &&
-	    memcmp(it1->argv, it2->argv, it1->argc*sizeof(union evarg)) != 0)) {
-		return (0);
-	}
 	return (it1->p1 == it2->p1);
 }
 
@@ -647,7 +642,6 @@ AllocItem(AG_Tlist *tl, AG_Surface *iconsrc)
 	it->flags = 0;
 	it->icon = -1;
 	it->label = -1;
-	it->argc = 0;
 	UpdateItemIcon(tl, it, iconsrc);
 	return (it);
 }
@@ -695,44 +689,6 @@ AG_TlistAdd(AG_Tlist *tl, AG_Surface *iconsrc, const char *fmt, ...)
 	InsertItem(tl, it, 0);
 	AG_ObjectUnlock(tl);
 	return (it);
-}
-
-void
-AG_TlistSetArgs(AG_TlistItem *it, const char *fmt, ...)
-{
-	va_list ap;
-	const char *s = fmt;
-
-	va_start(ap, fmt);
-	while (*s != '\0') {
-		switch (*s) {
-		case 'p':
-			it->argv[it->argc++].p = va_arg(ap, void *);
-			break;
-		case 's':
-			it->argv[it->argc++].s = va_arg(ap, char *);
-			break;
-		case 'i':
-		case 'u':
-			it->argv[it->argc++].i = va_arg(ap, int);
-			break;
-		case 'D':
-		case 'U':
-			it->argv[it->argc++].li = va_arg(ap, long int);
-			break;
-		case 'f':
-		case 'd':
-			it->argv[it->argc++].f = va_arg(ap, double);
-			break;
-		case 'c':
-			it->argv[it->argc++].i = va_arg(ap, int);
-			break;
-		default:
-			break;
-		}
-		s++;
-	}
-	va_end(ap);
 }
 
 AG_TlistItem *
