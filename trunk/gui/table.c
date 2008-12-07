@@ -774,6 +774,14 @@ AG_TableRedrawCells(AG_Table *t)
 void
 AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 {
+	if (c->widget != NULL) {
+#if 0
+		printf("Detaching embedded widget %p: %s\n", c->widget,
+		    OBJECT(c->widget)->name);
+#endif
+		AG_ObjectDetach(c->widget);
+		AG_ObjectDestroy(c->widget);
+	}
 	if (c->surface >= 0)
 		AG_WidgetUnmapSurface(t, c->surface);
 }
