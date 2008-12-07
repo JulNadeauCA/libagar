@@ -56,6 +56,7 @@
 #include <core/core_init.h>
 #include <core/error.h>
 #include <core/queue.h>
+#include <core/datum.h>
 #include <core/list.h>
 #include <core/tree.h>
 #include <core/limits.h>

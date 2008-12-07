@@ -1461,8 +1461,11 @@ AG_TextInfo(const char *key, const char *format, ...)
 	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
 
 	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
+#if 0
+	/* XXX props */
 	AG_SetCfgBool(propKey, 0);
 	AG_WidgetBindProp(cb, "state", agConfig, propKey);
+#endif
 
 	AG_WindowShow(win);
 }
@@ -1506,8 +1509,11 @@ AG_TextWarning(const char *key, const char *format, ...)
 	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
 
 	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
+#if 0
+	XXX props
 	AG_SetCfgBool(propKey, 0);
 	AG_WidgetBindProp(cb, "state", agConfig, propKey);
+#endif
 
 	AG_WindowShow(win);
 }
@@ -1663,7 +1669,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 		tb = AG_TextboxNew(bo, 0, NULL);
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt)
-		AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, "string", s,
+		AG_EVENT_INS_VAL(ev, AG_DATUM_STRING, "string", s,
 		    &tb->ed->string[0]);
 		AG_AddEvent(tb, "textbox-return", AGWINDETACH(win));
 		AG_WidgetFocus(tb);
@@ -1674,7 +1680,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 		btn = AG_ButtonNew(bo, 0, _("Ok"));
 		ev = AG_SetEvent(btn, "button-pushed", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt);
-		AG_EVENT_INS_VAL(ev, AG_EVARG_STRING, "string", s,
+		AG_EVENT_INS_VAL(ev, AG_DATUM_STRING, "string", s,
 		    &tb->ed->string[0]);
 		AG_AddEvent(btn, "button-pushed", AGWINDETACH(win));
 

@@ -77,6 +77,7 @@ AG_ObjectInit(void *p, void *cl)
 	ob->root = ob;
 	ob->flags = 0;
 	ob->nevents = 0;
+	ob->vars = NULL;
 
 #ifdef AG_LOCKDEBUG
 	ob->lockinfo = Malloc(sizeof(char *));

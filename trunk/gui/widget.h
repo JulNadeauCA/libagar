@@ -31,30 +31,29 @@ typedef struct ag_widget_class {
 	int  (*size_allocate)(void *, const AG_SizeAlloc *);
 } AG_WidgetClass;
 
-typedef enum ag_widget_binding_type {
-	AG_WIDGET_NONE,
-	AG_WIDGET_BOOL,
-	AG_WIDGET_UINT,
-	AG_WIDGET_INT,
-	AG_WIDGET_UINT8,
-	AG_WIDGET_SINT8,
-	AG_WIDGET_UINT16,
-	AG_WIDGET_SINT16,
-	AG_WIDGET_UINT32,
-	AG_WIDGET_SINT32,
-	AG_WIDGET_UINT64,
-	AG_WIDGET_SINT64,
-	AG_WIDGET_FLOAT,
-	AG_WIDGET_DOUBLE,
-	AG_WIDGET_LONG_DOUBLE,
-	AG_WIDGET_STRING,
-	AG_WIDGET_POINTER,
-	AG_WIDGET_PROP,
-	AG_WIDGET_FLAG,
-	AG_WIDGET_FLAG8,
-	AG_WIDGET_FLAG16,
-	AG_WIDGET_FLAG32,
-} AG_WidgetBindingType;
+/* LEGACY */
+#define AG_WidgetBindingType	AG_DatumType
+#define AG_WIDGET_NONE		AG_DATUM_P_NULL
+#define AG_WIDGET_BOOL		AG_DATUM_P_INT
+#define AG_WIDGET_UINT		AG_DATUM_P_UINT
+#define AG_WIDGET_INT		AG_DATUM_P_INT
+#define AG_WIDGET_UINT8		AG_DATUM_P_UINT8
+#define AG_WIDGET_SINT8		AG_DATUM_P_SINT8
+#define AG_WIDGET_UINT16	AG_DATUM_P_UINT16
+#define AG_WIDGET_SINT16	AG_DATUM_P_SINT16
+#define AG_WIDGET_UINT32	AG_DATUM_P_UINT32
+#define AG_WIDGET_SINT32	AG_DATUM_P_SINT32
+#define AG_WIDGET_UINT64	AG_DATUM_P_UINT64
+#define AG_WIDGET_SINT64	AG_DATUM_P_SINT64
+#define AG_WIDGET_FLOAT		AG_DATUM_P_FLOAT
+#define AG_WIDGET_DOUBLE	AG_DATUM_P_DOUBLE
+#define AG_WIDGET_LONG_DOUBLE	AG_DATUM_P_LONG_DOUBLE
+#define AG_WIDGET_STRING	AG_DATUM_P_STRING
+#define AG_WIDGET_POINTER	AG_DATUM_P_POINTER
+#define AG_WIDGET_FLAG		AG_DATUM_P_FLAG
+#define AG_WIDGET_FLAG8		AG_DATUM_P_FLAG8
+#define AG_WIDGET_FLAG16	AG_DATUM_P_FLAG16
+#define AG_WIDGET_FLAG32	AG_DATUM_P_FLAG32
 
 enum ag_widget_sizespec {
 	AG_WIDGET_BAD_SPEC,	/* Parser error */
@@ -78,8 +77,6 @@ typedef struct ag_flag_descr {
 typedef struct ag_widget_binding {
 	char name[AG_WIDGET_BINDING_NAME_MAX];	/* Binding identifier */
 	int type;				/* Real binding type */
-	int vtype;				/* Virtual binding type
-						   (translated PROP types) */
 	AG_Mutex *mutex;			/* Mutex to acquire or NULL */
 	void *p1;				/* Pointer to variable */
 	union {
@@ -237,25 +234,20 @@ void	 AG_SetCursor(int);
 void	 AG_UnsetCursor(void);
 #define	 AG_WidgetPutPixel AG_WidgetPutPixel32
 #define	 AG_WidgetBlendPixel AG_WidgetBlendPixelRGBA
-void	 AG_WidgetBlendPixelRGBA(void *, int, int, Uint8 [4],
-	                         enum ag_blend_func);
+void	 AG_WidgetBlendPixelRGBA(void *, int, int, Uint8 [4], enum ag_blend_func);
 
 int   AG_WidgetSensitive(void *, int, int);
-void  AG_WidgetMouseMotion(struct ag_window *, AG_Widget *, int, int, int,
-	                   int, int);
+void  AG_WidgetMouseMotion(struct ag_window *, AG_Widget *, int, int, int, int, int);
 void  AG_WidgetMouseButtonUp(struct ag_window *, AG_Widget *, int, int, int);
 int   AG_WidgetMouseButtonDown(struct ag_window *, AG_Widget *, int, int, int);
 void  AG_WidgetUnfocusedKeyUp(AG_Widget *, int, int, int);
 void  AG_WidgetUnfocusedKeyDown(AG_Widget *, int, int, int);
 
-AG_WidgetBinding *AG_WidgetBind(void *, const char *,
-	                        AG_WidgetBindingType, ...);
-AG_WidgetBinding *AG_WidgetBindMp(void *, const char *, AG_Mutex *,
-			          AG_WidgetBindingType, ...);
+AG_WidgetBinding *AG_WidgetBind(void *, const char *, AG_DatumType, ...);
+AG_WidgetBinding *AG_WidgetBindMp(void *, const char *, AG_Mutex *, AG_DatumType, ...);
 AG_WidgetBinding *AG_WidgetGetBinding(void *, const char *, ...);
 void	  	  AG_WidgetBindingChanged(AG_WidgetBinding *);
-int	  	  AG_WidgetCopyBinding(void *, const char *,
-                                       AG_WidgetBinding *);
+int	  	  AG_WidgetCopyBinding(void *, const char *, AG_WidgetBinding *);
 
 #define AG_WidgetBindBool(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_BOOL,(p))
 #define AG_WidgetBindInt(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_INT,(p))
@@ -273,7 +265,6 @@ int	  	  AG_WidgetCopyBinding(void *, const char *,
 #define AG_WidgetBindLongDouble(w,b,p) AG_WidgetBind((w),(b),\
                                        AG_WIDGET_LONG_DOUBLE,(p))
 #define AG_WidgetBindPointer(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_POINTER,(p))
-#define AG_WidgetBindProp(w,b,o,k) AG_WidgetBind((w),(b),AG_WIDGET_PROP,(o),(k))
 #define AG_WidgetBindString(w,b,p,len) AG_WidgetBind((w),(b),AG_WIDGET_STRING,\
 				       (p),(len))
 #define AG_WidgetBindFlag(w,b,p,mask) AG_WidgetBind((w),(b),AG_WIDGET_FLAG,\

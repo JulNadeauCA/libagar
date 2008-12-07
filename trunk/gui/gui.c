@@ -160,9 +160,7 @@ AG_InitGUI(Uint flags)
 		return (-1);
 
 	/* Initialize the input devices. */
-	if (AG_GetBool(agConfig,"input.unicode")) {
-		SDL_EnableUNICODE(1);
-	}
+	SDL_EnableUNICODE(1);
 	if (AG_GetBool(agConfig,"input.joysticks")) {
 		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
 			n = SDL_NumJoysticks();

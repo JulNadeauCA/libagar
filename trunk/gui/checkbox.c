@@ -84,16 +84,6 @@ AG_CheckboxNewInt(void *parent, Uint flags, const char *label, int *pVal)
 }
 
 AG_Checkbox *
-AG_CheckboxNewProp(void *parent, Uint flags, const char *label, void *obj,
-    const char *prop)
-{
-	AG_Checkbox *cb;
-	cb = AG_CheckboxNew(parent, flags, label);
-	AG_WidgetBindProp(cb, "state", obj, prop);
-	return (cb);
-}
-
-AG_Checkbox *
 AG_CheckboxNewFlag(void *parent, Uint flags, const char *label, Uint *pFlags,
     Uint bitmask)
 {
@@ -210,8 +200,7 @@ Draw(void *obj)
 	int state;
 	
 	stateb = AG_WidgetGetBinding(cb, "state", &p);
-	switch (stateb->vtype) {
-	case AG_WIDGET_BOOL:
+	switch (stateb->type) {
 	case AG_WIDGET_INT:
 	case AG_WIDGET_UINT:
 		state = *(int *)p;
@@ -296,8 +285,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 
 	AG_ObjectLock(cb);
 	stateb = AG_WidgetGetBinding(cb, "state", &p);
-	switch (stateb->vtype) {
-	case AG_WIDGET_BOOL:
+	switch (stateb->type) {
 	case AG_WIDGET_INT:
 	case AG_WIDGET_UINT:
 		{

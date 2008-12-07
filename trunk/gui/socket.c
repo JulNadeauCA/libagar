@@ -179,8 +179,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 static __inline__ int
 GetState(AG_WidgetBinding *binding, void *p)
 {
-	switch (binding->vtype) {
-	case AG_WIDGET_BOOL:
+	switch (binding->type) {
 	case AG_WIDGET_INT:
 		return *(int *)p;
 	case AG_WIDGET_UINT8:
@@ -204,7 +203,7 @@ GetState(AG_WidgetBinding *binding, void *p)
 static __inline__ int
 GetCount(AG_WidgetBinding *binding, void *p)
 {
-	switch (binding->vtype) {
+	switch (binding->type) {
 	case AG_WIDGET_UINT:	return (Uint)(*(int *)p);
 	case AG_WIDGET_INT:	return *(int *)p;
 	case AG_WIDGET_UINT8:	return (int)(*(Uint8 *)p);
@@ -247,8 +246,7 @@ Draw(void *obj)
 static void
 SetState(AG_WidgetBinding *binding, void *p, int v)
 {
-	switch (binding->vtype) {
-	case AG_WIDGET_BOOL:
+	switch (binding->type) {
 	case AG_WIDGET_INT:
 		*(int *)p = v;
 		break;
@@ -280,7 +278,7 @@ SetState(AG_WidgetBinding *binding, void *p, int v)
 static void
 SetCount(AG_WidgetBinding *binding, void *p, int v)
 {
-	switch (binding->vtype) {
+	switch (binding->type) {
 	case AG_WIDGET_UINT:	*(Uint *)p = v;		break;
 	case AG_WIDGET_INT:	*(int *)p = v;		break;
 	case AG_WIDGET_UINT8:	*(Uint8 *)p = v;	break;

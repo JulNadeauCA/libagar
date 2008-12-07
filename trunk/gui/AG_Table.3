@@ -43,15 +43,14 @@ Cells can be associated with text, numerical values, pointers to numerical
 values, or custom functions.
 .Nm
 is optimized for tables that must be rebuilt frequently.
-.Pp
 Individual cells, entire rows or entire columns can be selected indepedently.
 .Pp
-The
-.Xr AG_TableView 3
-widget provides an alternative table API and implementation with tree support,
-where dynamic tables are not needed.
-.Xr AG_Tlist 3
-provides tree support, but no multi-column functionality.
+Note that another table display widget,
+.Xr AG_Treetbl 3 ,
+is also available.
+It stores row information in a tree structure and provides a very different
+interface from
+.Nm .
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->

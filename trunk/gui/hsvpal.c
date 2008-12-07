@@ -70,7 +70,7 @@ GetAlpha8(AG_HSVPal *pal)
 	Uint8 a = 255;
 
 	bAlpha = AG_WidgetGetBinding(pal, "alpha", &pAlpha);
-	switch (bAlpha->vtype) {
+	switch (bAlpha->type) {
 	case AG_WIDGET_FLOAT:
 		a = (Uint8)((*(float *)pAlpha)*255.0);
 		break;
@@ -95,7 +95,7 @@ SetAlpha8(AG_HSVPal *pal, Uint8 a)
 	void *pAlpha;
 
 	bAlpha = AG_WidgetGetBinding(pal, "alpha", &pAlpha);
-	switch (bAlpha->vtype) {
+	switch (bAlpha->type) {
 	case AG_WIDGET_FLOAT:
 		*(float *)pAlpha = (float)(((float)a)/255.0);
 		break;
@@ -126,7 +126,7 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 	a = GetAlpha8(pal);
 	
 	if ((bv = AG_WidgetGetBinding(pal, "RGBv", &v)) != NULL) {
-		switch (bv->vtype) {
+		switch (bv->type) {
 		case AG_WIDGET_FLOAT:
 			((float *)v)[0] = (float)r/255.0;
 			((float *)v)[1] = (float)g/255.0;
@@ -151,7 +151,7 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 		AG_WidgetUnlockBinding(bv);
 	}
 	if ((bv = AG_WidgetGetBinding(pal, "RGBAv", &v)) != NULL) {
-		switch (bv->vtype) {
+		switch (bv->type) {
 		case AG_WIDGET_FLOAT:
 			((float *)v)[0] = (float)r/255.0;
 			((float *)v)[1] = (float)g/255.0;
@@ -214,7 +214,7 @@ UpdateHSVFromRGBAv(AG_HSVPal *hsv)
 	if ((bRGBAv = AG_WidgetGetBinding(hsv, "RGBAv", &RGBAv)) == NULL) {
 		return;
 	}
-	switch (bRGBAv->vtype) {
+	switch (bRGBAv->type) {
 	case AG_WIDGET_FLOAT:
 		r = (Uint8)(((float *)RGBAv)[0] * 255.0);
 		g = (Uint8)(((float *)RGBAv)[1] * 255.0);
@@ -267,7 +267,7 @@ UpdateHSVFromRGBv(AG_HSVPal *hsv)
 	if ((bRGBv = AG_WidgetGetBinding(hsv, "RGBv", &RGBv)) == NULL) {
 		return;
 	}
-	switch (bRGBv->vtype) {
+	switch (bRGBv->type) {
 	case AG_WIDGET_FLOAT:
 		r = (Uint8)(((float *)RGBv)[0] * 255.0);
 		g = (Uint8)(((float *)RGBv)[1] * 255.0);
@@ -353,7 +353,7 @@ UpdateAlpha(AG_HSVPal *pal, int x)
 	void *pAlpha;
 
 	bAlpha = AG_WidgetGetBinding(pal, "alpha", &pAlpha);
-	switch (bAlpha->vtype) {
+	switch (bAlpha->type) {
 	case AG_WIDGET_FLOAT:
 		*(float *)pAlpha = ((float)x)/((float)pal->rAlpha.w);
 		if (*(float *)pAlpha > 1.0) {
@@ -466,7 +466,7 @@ EditNumValues(AG_Event *event)
 		AG_NumericalSizeHint(num, "0.000");
 		AG_WidgetCopyBinding(num, "value", pal, "alpha");
 		bAlpha = AG_WidgetGetBinding(pal, "alpha", &pAlpha);
-		switch (bAlpha->vtype) {
+		switch (bAlpha->type) {
 		case AG_WIDGET_FLOAT:
 		case AG_WIDGET_DOUBLE:
 			AG_NumericalSetRange(num, 0.0, 1.0);

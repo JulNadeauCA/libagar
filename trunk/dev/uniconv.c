@@ -32,7 +32,7 @@
 
 #include <gui/window.h>
 #include <gui/combo.h>
-#include <gui/tableview.h>
+#include <gui/treetbl.h>
 
 #include "dev.h"
 
@@ -170,7 +170,7 @@ static void
 SelectUnicodeRange(AG_Event *event)
 {
 	char text[4][128];
-	AG_Tableview *tv = AG_PTR(1);
+	AG_Treetbl *tt = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
 	struct unicode_range *range = it->p1;
 	const struct unicode_range *next_range = NULL;
@@ -186,7 +186,7 @@ SelectUnicodeRange(AG_Event *event)
 	}
 	end = (next_range != NULL) ? next_range->start-1 : 0xffff;
 
-	AG_TableviewRowDelAll(tv);
+	AG_TreetblClearRows(tt);
 	
 	for (i = range->start; i < end; i++) {
 		if (i == 10)
@@ -208,9 +208,7 @@ SelectUnicodeRange(AG_Event *event)
 		}
 		Snprintf(text[1], sizeof(text[1]), "%s", utf8seq);
         
-		AG_TableviewRowAdd(tv, 0, NULL, NULL, i,
-		    0, text[0],
-		    1, text[1], -1);
+		AG_TreetblAddRow(tt, NULL, i, "%s,%s", text[0], text[1]);
 	}
 }
 
@@ -219,7 +217,7 @@ DEV_UnicodeBrowser(void)
 {
 	AG_Window *win;
 	AG_Combo *com;
-	AG_Tableview *tv;
+	AG_Treetbl *tt;
 	int i, w, wMax = 0;
 
 	if ((win = AG_WindowNewNamed(0, "DEV_UnicodeBrowser")) == NULL) {
@@ -237,11 +235,11 @@ DEV_UnicodeBrowser(void)
 	}
 	AG_ComboSizeHintPixels(com, wMax, 10);
 	
-	tv = AG_TableviewNew(win, AG_TABLEVIEW_EXPAND, NULL, NULL);
-	AG_TableviewSizeHint(tv, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 6);
-	AG_TableviewColAdd(tv, 0, 0, "Char", NULL);
-	AG_TableviewColAdd(tv, 0, 1, "Hex", "<0000>");
+	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
+	AG_TreetblSizeHint(tt, 200, 6);
+	AG_TreetblAddCol(tt, 0, "<XXXXXXX>", "Char");
+	AG_TreetblAddCol(tt, 1, "<XXXXXXX>", "Hex");
 	
-	AG_SetEvent(com, "combo-selected", SelectUnicodeRange, "%p", tv);
+	AG_SetEvent(com, "combo-selected", SelectUnicodeRange, "%p", tt);
 	return (win);
 }

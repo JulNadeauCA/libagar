@@ -142,47 +142,33 @@ PollEvents(AG_Event *event)
 		args[0] = '(';
 		args[1] = '\0';
 		for (i = 1; i < ev->argc; i++) {
-			const char *argn = ev->argn[i];
+			AG_Datum *d = &ev->argv[i];
 
-			if (argn[0] != '\0') {
-				Strlcat(args, argn, sizeof(args));
+			if (d->name != NULL && d->name[0] != '\0') {
+				Strlcat(args, d->name, sizeof(args));
 				Strlcat(args, "=", sizeof(args));
 			}
-			switch (ev->argt[i]) {
-			case AG_EVARG_POINTER:
-				Snprintf(arg, sizeof(arg), "%p", ev->argv[i].p);
+			switch (d->type) {
+			case AG_DATUM_POINTER:
+				Snprintf(arg, sizeof(arg), "%p", ev->argv[i].data.p);
 				break;
-			case AG_EVARG_STRING:
-				Snprintf(arg, sizeof(arg), "\"%s\"",
-				    ev->argv[i].s);
+			case AG_DATUM_STRING:
+				Snprintf(arg, sizeof(arg), "\"%s\"", ev->argv[i].data.s);
 				break;
-			case AG_EVARG_UCHAR:
-			case AG_EVARG_CHAR:
-				Snprintf(arg, sizeof(arg), "'%c'",
-				    (Uchar)ev->argv[i].i);
+			case AG_DATUM_INT:
+				Snprintf(arg, sizeof(arg), "%d", ev->argv[i].data.i);
 				break;
-			case AG_EVARG_INT:
-				Snprintf(arg, sizeof(arg), "%d", ev->argv[i].i);
+			case AG_DATUM_UINT:
+				Snprintf(arg, sizeof(arg), "%u", (Uint)ev->argv[i].data.i);
 				break;
-			case AG_EVARG_UINT:
-				Snprintf(arg, sizeof(arg), "%u",
-				    (Uint)ev->argv[i].i);
+			case AG_DATUM_FLOAT:
+				Snprintf(arg, sizeof(arg), "<%.04f>", ev->argv[i].data.flt);
 				break;
-			case AG_EVARG_LONG:
-				Snprintf(arg, sizeof(arg), "%li",
-				    ev->argv[i].li);
+			case AG_DATUM_DOUBLE:
+				Snprintf(arg, sizeof(arg), "<%.04f>", ev->argv[i].data.dbl);
 				break;
-			case AG_EVARG_ULONG:
-				Snprintf(arg, sizeof(arg), "%li",
-				    (Ulong)ev->argv[i].li);
-				break;
-			case AG_EVARG_FLOAT:
-				Snprintf(arg, sizeof(arg), "<%.04f>",
-				    ev->argv[i].f);
-				break;
-			case AG_EVARG_DOUBLE:
-				Snprintf(arg, sizeof(arg), "<%.04f>",
-				    ev->argv[i].f);
+			default:
+				Snprintf(arg, sizeof(arg), "???");
 				break;
 			}
 			Strlcat(args, arg, sizeof(args));

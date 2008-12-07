@@ -673,7 +673,7 @@ BoundValue(AG_Event *event)
 	if (!strcmp(bNew->name, "min") || !strcmp(bNew->name, "max") ||
 	    !strcmp(bNew->name, "visible")) {
 		bValue = AG_WidgetGetBinding(sb, "value", &pValue);
-		if (bValue->vtype != bNew->vtype) {
+		if (bValue->type != bNew->type) {
 			AG_FatalError("Scrollbar \"%s\" binding type disagree "
 			              "with \"value\" binding", bNew->name);
 		}

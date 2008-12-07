@@ -103,14 +103,6 @@ BindSelectedColor(AG_Event *event)
 	AG_WidgetBindUint32(hsv, "pixel", c);
 }
 
-static void
-SetUnicodeKbd(AG_Event *event)
-{
-	int enable = AG_INT(1);
-
-	SDL_EnableUNICODE(enable);
-}
-
 /* Must be invoked from main event/rendering context. */
 static void
 SetColor(AG_Event *event)
@@ -228,19 +220,15 @@ DEV_ConfigWindow(AG_Config *cfg)
 	nb = AG_NotebookNew(win, AG_NOTEBOOK_HFILL|AG_NOTEBOOK_VFILL);
 	tab = AG_NotebookAddTab(nb, _("Video"), AG_BOX_VERT);
 	{
-		cb = AG_CheckboxNewProp(tab, 0, _("Full screen"),
-		    agConfig, "view.full-screen");
+		cb = AG_CheckboxNewInt(tab, 0, _("Full screen"),
+		    &agFullscreenMode);
 		AG_SetEvent(cb, "checkbox-changed", SetFullscreen, NULL);
 
-		cb = AG_CheckboxNewProp(tab, 0, _("Asynchronous blits"),
-		    agConfig, "view.async-blits");
+		cb = AG_CheckboxNewInt(tab, 0, _("Asynchronous blits"),
+		    &agAsyncBlits);
 		AG_SetEvent(cb, "checkbox-changed", WarnRestart, "%s",
 		    "config.view.async-blits");
 
-		cb = AG_CheckboxNewProp(tab, 0, _("OpenGL mode"),
-		    agConfig, "view.opengl");
-		AG_SetEvent(cb, "checkbox-changed",
-		    WarnRestart, "%s", "config.view.opengl");
 #if 0
 		msb = AG_MSpinbuttonNew(tab, 0, "x", _("Resolution: "));
 		AG_WidgetBindUint16(msb,"xvalue", &agView->w);
@@ -264,10 +252,6 @@ DEV_ConfigWindow(AG_Config *cfg)
 		
 		AG_SpacerNewHoriz(tab);
 
-		cb = AG_CheckboxNewProp(tab, 0, _("Unicode keyboard input"),
-		    agConfig, "input.unicode");
-		AG_SetEvent(cb, "checkbox-changed", SetUnicodeKbd, NULL);
-		
 		AG_CheckboxNewInt(tab, 0, _("Built-in key composition"),
 		    &agTextComposition);
 		AG_CheckboxNewInt(tab, 0, _("Bidirectional"),

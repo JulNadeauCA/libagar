@@ -68,7 +68,7 @@ Bound(AG_Event *event)
 	AG_WidgetBinding *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "value") == 0) {
-		switch (binding->vtype) {
+		switch (binding->type) {
 		case AG_WIDGET_DOUBLE:
 			fsu->min = -AG_DBL_MAX+1;
 			fsu->max =  AG_DBL_MAX-1;
@@ -165,7 +165,7 @@ TextChanged(AG_Event *event)
 	valueb = AG_WidgetGetBinding(fsu, "value", &value);
 	stringb = AG_WidgetGetBinding(fsu->input->ed, "string", &s);
 
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_DOUBLE:
 	case AG_WIDGET_FLOAT:
 		AG_FSpinbuttonSetValue(fsu,
@@ -402,7 +402,7 @@ Draw(void *obj)
 		return;
 
 	valueb = AG_WidgetGetBinding(fsu, "value", &value);
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_DOUBLE:
 		AG_TextboxPrintf(fsu->input, fsu->format,
 		    AG_Base2Unit(*(double *)value, fsu->unit));
@@ -473,7 +473,7 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 	minb = AG_WidgetGetBinding(fsu, "min", &min);
 	maxb = AG_WidgetGetBinding(fsu, "max", &max);
 
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_DOUBLE:	ADD_REAL(double);	break;
 	case AG_WIDGET_FLOAT:	ADD_REAL(float);	break;
 	case AG_WIDGET_INT:	ADD_CONVERTED(int);	break;
@@ -518,7 +518,7 @@ AG_FSpinbuttonSetValue(AG_FSpinbutton *fsu, double nvalue)
 	minb = AG_WidgetGetBinding(fsu, "min", &min);
 	maxb = AG_WidgetGetBinding(fsu, "max", &max);
 
-	switch (valueb->vtype) {
+	switch (valueb->type) {
 	case AG_WIDGET_DOUBLE:	ASSIGN_VALUE(double);	break;
 	case AG_WIDGET_FLOAT:	ASSIGN_VALUE(float);	break;
 	case AG_WIDGET_INT:	CONV_VALUE(int);	break;
@@ -553,7 +553,7 @@ AG_FSpinbuttonSetMin(AG_FSpinbutton *fsu, double nmin)
 
 	/* TODO allow integer min/max bindings */
 	minb = AG_WidgetGetBinding(fsu, "min", &min);
-	switch (minb->vtype) {
+	switch (minb->type) {
 	case AG_WIDGET_DOUBLE:
 		*(double *)min = nmin;
 		break;
@@ -572,7 +572,7 @@ AG_FSpinbuttonSetMax(AG_FSpinbutton *fsu, double nmax)
 	
 	/* TODO allow integer min/max bindings */
 	maxb = AG_WidgetGetBinding(fsu, "max", &max);
-	switch (maxb->vtype) {
+	switch (maxb->type) {
 	case AG_WIDGET_DOUBLE:
 		*(double *)max = nmax;
 		break;

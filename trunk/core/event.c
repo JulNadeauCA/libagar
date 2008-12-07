@@ -37,19 +37,6 @@
 
 static void PropagateEvent(AG_Object *, AG_Object *, AG_Event *);
 
-const char *agEvArgTypeNames[] = {
-	"pointer",
-	"string",
-	"char",
-	"Uchar",
-	"int",
-	"Uint",
-	"long",
-	"Ulong",
-	"float",
-	"double"
-};
-
 /* Execute a scheduled event invocation. */
 static Uint32
 SchedEventTimeout(void *p, Uint32 ival, void *arg)
@@ -104,14 +91,18 @@ SetEventName(AG_Event *ev, AG_Object *ob, const char *name)
 static __inline__ void
 InitEvent(AG_Event *ev, AG_Object *ob)
 {
+	AG_Datum *d;
+
 	ev->flags = 0;
 	ev->argc = 1;
 	ev->argc0 = 1;
-
-	ev->argv[0].p = ob;
-	ev->argt[0] = AG_EVARG_POINTER;
-	ev->argn[0] = "_self";
 	ev->handler = NULL;
+
+	d = &ev->argv[0];
+	d->type = AG_DATUM_POINTER;
+	d->name = "_self";
+	d->mutex = NULL;
+	d->data.p = ob;
 
 	AG_SetTimeout(&ev->timeout, SchedEventTimeout, ev, 0);
 }
@@ -155,7 +146,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	} else {
 		InitEvent(ev, ob);
 	}
-	ev->argv[0].p = ob;
+	ev->argv[0].data.p = ob;
 	ev->handler = fn;
 	AG_EVENT_GET_ARGS(ev, fmt);
 	ev->argc0 = ev->argc;
@@ -248,7 +239,7 @@ static void *
 EventThread(void *p)
 {
 	AG_Event *eev = p;
-	AG_Object *rcvr = eev->argv[0].p;
+	AG_Object *rcvr = eev->argv[0].data.p;
 	AG_Object *chld;
 
 	if (eev->flags & AG_EVENT_PROPAGATE) {
@@ -292,6 +283,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
 	AG_Object *chld;
+	AG_Datum *d;
 
 #ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
@@ -311,9 +303,12 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			evNew = Malloc(sizeof(AG_Event));
 			memcpy(evNew, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(evNew, fmt);
-			evNew->argv[evNew->argc].p = sndr;
-			evNew->argt[evNew->argc] = AG_EVARG_POINTER;
-			evNew->argn[evNew->argc] = "_sender";
+
+			d = &evNew->argv[evNew->argc];
+			d->type = AG_DATUM_POINTER;
+			d->name = "_sender";
+			d->mutex = NULL;
+			d->data.p = sndr;
 			AG_ThreadCreate(&th, EventThread, evNew);
 		} else
 #endif /* AG_THREADS */
@@ -322,9 +317,12 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 
 			memcpy(&tmpev, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(&tmpev, fmt);
-			tmpev.argv[tmpev.argc].p = sndr;
-			tmpev.argt[tmpev.argc] = AG_EVARG_POINTER;
-			tmpev.argn[tmpev.argc] = "_sender";
+
+			d = &tmpev.argv[tmpev.argc];
+			d->type = AG_DATUM_POINTER;
+			d->name = "_sender";
+			d->mutex = NULL;
+			d->data.p = sndr;
 
 			if (tmpev.flags & AG_EVENT_PROPAGATE) {
 #ifdef AG_EVENTDEBUG
@@ -356,6 +354,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	AG_Object *sndr = sp;
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
+	AG_Datum *d;
 
 #ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
@@ -379,9 +378,13 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	}
 	ev->argc = ev->argc0;
 	AG_EVENT_GET_ARGS(ev, fmt);
-	ev->argv[ev->argc].p = sndr;
-	ev->argt[ev->argc] = AG_EVARG_POINTER;
-	ev->argn[ev->argc] = "_sender";
+
+	d = &ev->argv[ev->argc];
+	d->type = AG_DATUM_POINTER;
+	d->name = "_sender";
+	d->mutex = NULL;
+	d->data.p = sndr;
+
 	ev->flags |= AG_EVENT_SCHEDULED;
 	AG_AddTimeout(rcvr, &ev->timeout, ticks);
 	AG_UnlockTiming();
@@ -474,6 +477,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 	AG_Object *rcvr = pRcvr;
 	AG_Object *chld;
 	AG_Event *ev;
+	AG_Datum *d;
 
 #ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
@@ -495,10 +499,12 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 		/* TODO allocate from an per-object pool */
 		evNew = Malloc(sizeof(AG_Event));
 		memcpy(evNew, ev, sizeof(AG_Event));
-		evNew->argv[0].p = rcvr;
-		evNew->argv[evNew->argc].p = sndr;
-		evNew->argt[evNew->argc] = AG_EVARG_POINTER;
-		evNew->argn[evNew->argc] = "_sender";
+		evNew->argv[0].data.p = rcvr;
+		d = &evNew->argv[evNew->argc];
+		d->type = AG_DATUM_POINTER;
+		d->name = "_sender";
+		d->mutex = NULL;
+		d->data.p = sndr;
 		AG_ThreadCreate(&th, EventThread, evNew);
 	} else
 #endif /* AG_THREADS */
@@ -506,10 +512,12 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 		AG_Event tmpev;
 
 		memcpy(&tmpev, event, sizeof(AG_Event));
-		tmpev.argv[0].p = rcvr;
-		tmpev.argv[tmpev.argc].p = sndr;
-		tmpev.argt[tmpev.argc] = AG_EVARG_POINTER;
-		tmpev.argn[tmpev.argc] = "_sender";
+		tmpev.argv[0].data.p = rcvr;
+		d = &tmpev.argv[tmpev.argc];
+		d->type = AG_DATUM_POINTER;
+		d->name = "_sender";
+		d->mutex = NULL;
+		d->data.p = sndr;
 
 		if (ev->flags & AG_EVENT_PROPAGATE) {
 #ifdef AG_EVENTDEBUG

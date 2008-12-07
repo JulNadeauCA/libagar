@@ -120,7 +120,6 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 	AG_SetUint8(cfg, "view.depth", 32);
 	AG_SetUint(cfg, "view.nominal-fps", 40);
 	AG_SetBool(cfg, "input.joysticks", 1);
-	AG_SetBool(cfg, "input.unicode", 1);
 	AG_SetBool(cfg, "input.composition", 1);
 
 	/* Set the save directory path and create it as needed. */
