@@ -26,7 +26,7 @@
 #include <core/core.h>
 #include <core/config.h>
 
-#include "tableview.h"
+#include "treetbl.h"
 
 #include "window.h"
 #include "primitive.h"
@@ -35,1002 +35,295 @@
 #include <stdarg.h>
 
 /*
- * Worker function for foreach_visible_column()
- * Should return 0 if foreach_ should stop.
+ * Worker function for FOREACH_VISIBLE_COLUMN().
+ * Return 0 to break the loop.
  */
-typedef int (*visible_do)(AG_Tableview *tv, int x1, int x2, Uint32 visidx,
+typedef int (*VisibleForeachFn)(AG_Treetbl *tt, int x1, int x2, Uint32 visidx,
     void *, void *);
 
-static void foreach_visible_column(AG_Tableview *, visible_do, void *,
-                                   void *);
-static void view_changed(AG_Tableview *);
-static int view_changed_check(AG_Tableview *, struct ag_tableview_rowq *,
-			      int, int, int *);
-static AG_TableviewRow *row_get(struct ag_tableview_rowq *, AG_TableviewRowID);
-static void select_all(struct ag_tableview_rowq *);
-static void deselect_all(struct ag_tableview_rowq *);
-static int count_visible_descendants(struct ag_tableview_rowq *, int);
-static void switch_columns(AG_Tableview *, Uint, Uint);
-static int visible(AG_TableviewRow *);
-static void render_dyncolumn(AG_Tableview *, Uint);
-static int clicked_header(AG_Tableview *, int, int, Uint32, void *, void *);
-static int clicked_row(AG_Tableview *, int, int, Uint32, void *, void *);
-static int draw_column(AG_Tableview *, int, int, Uint32, void *, void *);
+#define VISROW(tt,i) ((tt)->visible.items[i].row)
+#define VISDEPTH(tt,i) ((tt)->visible.items[i].depth)
 
-static void mousebuttonup(AG_Event *);
-static void mousebuttondown(AG_Event *);
-static void scrolled(AG_Event *);
-static void dblclick_expire(AG_Event *);
-static void lost_focus(AG_Event *);
-static void columnresize(AG_Event *);
-static void columnmove(AG_Event *);
-
-#define ID_INVALID ((Uint)-1)
-#define VISROW(tv,i) ((tv)->visible.items[i].row)
-#define VISDEPTH(tv,i) ((tv)->visible.items[i].depth)
-
-AG_Tableview *
-AG_TableviewNew(void *parent, Uint flags, AG_TableviewDataFn data_callback,
-    AG_TableviewSortFn sort_callback)
+AG_Treetbl *
+AG_TreetblNew(void *parent, Uint flags, AG_TreetblDataFn cellDataFn,
+    AG_TreetblSortFn sortFn)
 {
-	AG_Tableview *tv;
+	AG_Treetbl *tt;
 
-	tv = Malloc(sizeof(AG_Tableview));
-	AG_ObjectInit(tv, &agTableviewClass);
-	tv->data_callback = data_callback;
-	tv->sort_callback = sort_callback;
-	tv->flags |= flags;
+	tt = Malloc(sizeof(AG_Treetbl));
+	AG_ObjectInit(tt, &agTreetblClass);
+	tt->cellDataFn = cellDataFn;
+	tt->sortFn = sortFn;
+	tt->flags |= flags;
 
-	if (flags & AG_TABLEVIEW_HFILL)	{ AG_ExpandHoriz(tv); }
-	if (flags & AG_TABLEVIEW_VFILL)	{ AG_ExpandVert(tv); }
+	if (flags & AG_TREETBL_HFILL)	{ AG_ExpandHoriz(tt); }
+	if (flags & AG_TREETBL_VFILL)	{ AG_ExpandVert(tt); }
 
-	if (flags & AG_TABLEVIEW_HORIZ) {
-		tv->sbar_h = AG_ScrollbarNew(tv, AG_SCROLLBAR_HORIZ, 0);
-	}
-	AG_ObjectAttach(parent, tv);
-	return (tv);
+	tt->hBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_HORIZ, 0);
+
+	AG_ObjectAttach(parent, tt);
+	return (tt);
 }
 
 static void
-Init(void *obj)
+ExpireDoubleClick(AG_Event *event)
 {
-	AG_Tableview *tv = obj;
-	
-	WIDGET(tv)->flags |= AG_WIDGET_FOCUSABLE;
+	AG_Treetbl *tt = AG_SELF();
 
-	tv->data_callback = NULL;
-	tv->sort_callback = NULL;
-	tv->flags = 0;
-	tv->r = AG_RECT(0,0,0,0);
-
-	tv->head_height = agTextFontHeight;
-	tv->row_height = agTextFontHeight+2;
-	tv->dblclicked = 0;
-	tv->sbar_v = AG_ScrollbarNew(tv, AG_SCROLLBAR_VERT, 0);
-	tv->sbar_h = NULL;
-	//tv->editbox = NULL;
-
-	AG_WidgetSetInt(tv->sbar_v, "min", 0);
-	AG_WidgetSetInt(tv->sbar_v, "max", 0);
-	AG_WidgetSetInt(tv->sbar_v, "value", 0);
-
-	if (tv->sbar_h != NULL) {
-		AG_WidgetSetInt(tv->sbar_h, "min", 0);
-		AG_WidgetSetInt(tv->sbar_h, "max", 0);
-		AG_WidgetSetInt(tv->sbar_h, "value", 0);
-	}
-	tv->column = NULL;
-	tv->columncount = 0;
-	tv->sortMode = AG_TABLEVIEW_SORT_NOT;
-
-	tv->sortColumn = ID_INVALID;
-	tv->enterEdit = ID_INVALID;
-	tv->expanderColumn = ID_INVALID;
-
-	TAILQ_INIT(&tv->children);
-	TAILQ_INIT(&tv->backstore);
-	tv->expandedrows = 0;
-
-	tv->visible.redraw_rate = 0;
-	tv->visible.redraw_last = SDL_GetTicks();
-	tv->visible.count = 0;
-	tv->visible.items = NULL;
-
-	tv->prew = 10;
-	tv->preh = tv->head_height + (tv->row_height * 4);
-
-	/*
-	 * XXX - implement key selection / scroll changing AG_SetEvent(tv,
-	 * "window-keydown", lvist_keydown, NULL); AG_SetEvent(tv,
-	 * "window-keyup", lvist_keyup, NULL); AG_SetEvent(tv, "key-tick",
-	 * key_tick, NULL);
-	 */
-
-	/* private, internal events */
-	AG_SetEvent(tv, "window-mousebuttonup", mousebuttonup, NULL);
-	AG_SetEvent(tv, "window-mousebuttondown", mousebuttondown, NULL);
-	AG_SetEvent(tv->sbar_v, "scrollbar-changed", scrolled, "%p", tv);
-	AG_SetEvent(tv, "dblclick-expire", dblclick_expire, NULL);
-	AG_SetEvent(tv, "widget-lostfocus", lost_focus, NULL);
-	AG_SetEvent(tv, "widget-hidden", lost_focus, NULL);
-
-	AG_SetEvent(tv, "column-resize", columnresize, NULL);
-	AG_SetEvent(tv, "column-move", columnmove, NULL);
-}
-
-void
-AG_TableviewSizeHint(AG_Tableview *tv, const char *text, int nitems)
-{
-	AG_ObjectLock(tv);
-	AG_TextSize(text, &tv->prew, NULL);
-	tv->preh = tv->head_height + (tv->row_height * nitems);
-	AG_ObjectUnlock(tv);
-}
-
-void
-AG_TableviewSetColHeight(AG_Tableview *tv, int h)
-{
-	AG_ObjectLock(tv);
-	tv->head_height = h;
-	AG_WindowUpdate(AG_ParentWindow(tv));
-	AG_ObjectUnlock(tv);
-}
-
-AG_TableviewCol *
-AG_TableviewColAdd(AG_Tableview *tv, int flags, AG_TableviewColID cid,
-    const char *label, const char *size)
-{
-	AG_TableviewCol *col = NULL;
-	Uint i;
-
-	if (cid == ID_INVALID)
-		return (NULL);
-
-	AG_ObjectLock(tv);
-
-	/* column identifier must be unique */
-	for (i = 0; i < tv->columncount; i++) {
-		if (tv->column[i].cid == cid)
-			goto out;
-	}
-
-	tv->column = Realloc(tv->column, (tv->columncount+1) *
-					 sizeof(AG_TableviewCol));
-	col = &tv->column[tv->columncount];
-	col->flags = flags;
-	col->mousedown = 0;
-	col->cid = cid;
-	col->idx = tv->columncount;
-	tv->columncount++;
-
-	if (tv->columncount == 1)
-		tv->expanderColumn = cid;
-
-	if (flags & AG_TABLEVIEW_COL_KEYEDIT) { tv->enterEdit = cid; }
-	if (flags & AG_TABLEVIEW_COL_EXPANDER) { tv->expanderColumn = cid; }
-
-	/* column label */
-	if (label == NULL) {
-		col->label[0] = '\0';
-	} else {
-		Strlcpy(col->label, label, sizeof(col->label));
-	}
-	AG_TextColor(TABLEVIEW_HTXT_COLOR);
-	col->label_img = AG_TextRender(col->label);
-	col->label_id = AG_WidgetMapSurface(tv, col->label_img);
-
-	/* column width */
-	if (size != NULL) {
-		switch (AG_WidgetParseSizeSpec(size, &col->w)) {
-		case AG_WIDGET_PERCENT:
-			col->w = col->w*WIDTH(tv)/100;
-			break;
-		default:
-			break;
-		}
-	} else {
-		col->w = 6;
-		col->flags |= AG_TABLEVIEW_COL_FILL;
-	}
-
-	tv->visible.dirty = 1;
-out:
-	AG_ObjectUnlock(tv);
-	return (col);
-}
-
-void
-AG_TableviewColSelect(AG_Tableview *tv, AG_TableviewColID cid)
-{
-	Uint i, ind = -1, valid = 0;
-
-	AG_ObjectLock(tv);
-
-        /* check if cid is valid */
-        for (i = 0; i < tv->columncount; i++) {
-                if (tv->column[i].cid == cid) {
-                        valid = 1;
-			ind = i;
-			break;
-		}
-        }
-
-	if (valid) {
-		tv->column[ind].mousedown = 1;
-	}
-	AG_ObjectUnlock(tv);
-}
-
-void
-AG_TableviewSetUpdate(AG_Tableview *tv, Uint ms)
-{
-	AG_ObjectLock(tv);
-	tv->visible.redraw_rate = ms;
-	AG_ObjectUnlock(tv);
-}
-
-AG_TableviewRow *
-AG_TableviewRowAdd(AG_Tableview *tv, Uint flags, AG_TableviewRow *parent,
-    void *userp, AG_TableviewRowID rid, ...)
-{
-	AG_TableviewRow *row;
-	Uint i;
-	va_list ap;
-	AG_TableviewColID cid;
-
-	AG_ObjectLock(tv);
-
-	if (row_get(&tv->children, rid)) {		/* Row ID in use */
-		AG_ObjectUnlock(tv);
-		return (NULL);
-	}
-	
-	row = Malloc(sizeof(AG_TableviewRow));
-	row->cell = Malloc(sizeof(struct ag_tableview_cell)*tv->columncount);
-	row->userp = userp;
-	row->selected = 0;
-	row->flags = flags;
-	row->parent = parent;
-	TAILQ_INIT(&row->children);
-
-	for (i = 0; i < tv->columncount; i++) {
-		row->cell[i].text = NULL;
-		row->cell[i].image = NULL;
-	}
-
-	/* import static data */
-	va_start(ap, rid);
-	while ((cid = va_arg(ap, AG_TableviewColID)) != -1) {
-		void *data = va_arg(ap, void *);
-
-		for (i = 0; i < tv->columncount; i++) {
-			if (cid == tv->column[i].cid) {
-				/*
-				 * If the user already passed for this col,
-				 * don't leak.
-				 */
-				if (row->cell[i].text != NULL) {
-					free(row->cell[i].text);
-				}
-				if (row->cell[i].image != NULL) {
-					AG_SurfaceFree(row->cell[i].image);
-				}
-				row->cell[i].text = (data != NULL) ?
-				                    Strdup((char *)data) :
-						    Strdup("(null)");
-
-				AG_TextColor(TABLEVIEW_CTXT_COLOR);
-				row->cell[i].image = AG_TextRender(
-				    row->cell[i].text);
-				break;
-			}
-		}
-	}
-	va_end(ap);
-
-	row->rid = rid;
-
-	if (parent) {
-		TAILQ_INSERT_TAIL(&parent->children, row, siblings);
-	} else {
-		TAILQ_INSERT_TAIL(&tv->children, row, siblings);
-	}
-
-	/* increment scroll only if visible: */
-	if (visible(row))
-		tv->expandedrows++;
-
-	tv->visible.dirty = 1;
-	AG_ObjectUnlock(tv);
-	return (row);
+	/* the user hasn't clicked again, so cancel the double click */
+	tt->dblclicked = 0;
+	/* XXX - if the cursor remains in the cell, activate a click-to-edit */
 }
 
 static void
-DestroyRow(AG_Tableview *tv, AG_TableviewRow *row)
+FocusLost(AG_Event *event)
 {
-	int i;
+	AG_Treetbl *tt = AG_SELF();
 
-	for (i = 0; i < tv->columncount; i++) {
-		AG_SurfaceFree(row->cell[i].image);
-		free(row->cell[i].text);
-	}
-	Free(row->cell);
-	Free(row);
+	AG_CancelEvent(tt, "dblclick-expire");
+	tt->dblclicked = 0;
 }
 
-void
-AG_TableviewRowDel(AG_Tableview *tv, AG_TableviewRow *row)
-{
-	AG_TableviewRow *row1, *row2;
-
-	if (row == NULL)
-		return;
-
-	AG_ObjectLock(tv);
-
-	/* first remove children */
-	row1 = TAILQ_FIRST(&row->children);
-	while (row1 != NULL) {
-		row2 = TAILQ_NEXT(row1, siblings);
-		AG_TableviewRowDel(tv, row1);
-		row1 = row2;
-	}
-
-	/* now that children are gone, remove this row */
-	if (visible(row))
-		tv->expandedrows--;
-
-	if (row->parent) {
-		TAILQ_REMOVE(&row->parent->children, row, siblings);
-	} else {
-		TAILQ_REMOVE(&tv->children, row, siblings);
-	}
-	if (tv->flags & AG_TABLEVIEW_POLLED) {
-		TAILQ_INSERT_TAIL(&tv->backstore, row, backstore);
-		goto out;
-	}
-	DestroyRow(tv, row);
-out:
-	tv->visible.dirty = 1;
-	AG_ObjectUnlock(tv);
-}
-
-void
-AG_TableviewRowDelAll(AG_Tableview *tv)
-{
-	AG_TableviewRow *row1, *row2;
-
-	AG_ObjectLock(tv);
-	row1 = TAILQ_FIRST(&tv->children);
-	while (row1 != NULL) {
-		row2 = TAILQ_NEXT(row1, siblings);
-		AG_TableviewRowDel(tv, row1);
-		row1 = row2;
-	}
-	TAILQ_INIT(&tv->children);
-	
-	tv->expandedrows = 0;
-	tv->visible.dirty = 1;
-	AG_ObjectUnlock(tv);
-}
-
-void
-AG_TableviewRowRestoreAll(AG_Tableview *tv)
-{
-	AG_TableviewRow *row, *nrow, *srow;
-	int i;
-
-	AG_ObjectLock(tv);
-		
-	for (row = TAILQ_FIRST(&tv->backstore);
-	     row != TAILQ_END(&tv->backstore);
-	     row = nrow) {
-		nrow = TAILQ_NEXT(row, backstore);
-		TAILQ_FOREACH(srow, &tv->children, siblings) {
-			for (i = 0; i < tv->columncount; i++) {
-				if (strcmp(row->cell[i].text,
-				    srow->cell[i].text) != 0)
-					break;
-			}
-			if (i == tv->columncount)
-				srow->selected = row->selected;
-		}
-		DestroyRow(tv, row);
-	}
-	TAILQ_INIT(&tv->backstore);
-
-	AG_ObjectUnlock(tv);
-}
-
-void
-AG_TableviewRowSelect(AG_Tableview *tv, AG_TableviewRow *row)
-{
-	AG_ObjectLock(tv);
-	if (!(tv->flags & AG_TABLEVIEW_SELMULTI)) {
-		AG_TableviewRowDeselectAll(tv, NULL);
-	}
-	row->selected = 1;
-	AG_ObjectUnlock(tv);
-}
-
-/* Return value is only valid as long as Tableview is locked. */
-AG_TableviewRow *
-AG_TableviewRowGet(AG_Tableview *tv, AG_TableviewRowID rid)
-{
-	AG_TableviewRow *row;
-
-	AG_ObjectLock(tv);
-	row = row_get(&tv->children, rid);
-	AG_ObjectUnlock(tv);
-	return (row);
-}
-
-void
-AG_TableviewRowSelectAll(AG_Tableview *tv, AG_TableviewRow *root)
-{
-	if (!(tv->flags & AG_TABLEVIEW_SELMULTI))
-		return;
-
-	AG_ObjectLock(tv);
-	if (root == NULL) {
-		select_all(&tv->children);
-	} else {
-		select_all(&root->children);
-	}
-	AG_ObjectUnlock(tv);
-}
-
-void
-AG_TableviewRowDeselectAll(AG_Tableview *tv, AG_TableviewRow *root)
-{
-	AG_ObjectLock(tv);
-	if (root == NULL) {
-		deselect_all(&tv->children);
-	} else {
-		deselect_all(&root->children);
-	}
-	AG_ObjectUnlock(tv);
-}
-
-void
-AG_TableviewRowExpand(AG_Tableview *tv, AG_TableviewRow *in)
-{
-	AG_ObjectLock(tv);
-	if (!(in->flags & AG_TABLEVIEW_ROW_EXPANDED)) {
-		in->flags |= AG_TABLEVIEW_ROW_EXPANDED;
-		if (visible(in)) {
-			tv->expandedrows +=
-			    count_visible_descendants(&in->children, 0);
-			tv->visible.dirty = 1;
-		}
-	}
-	AG_ObjectUnlock(tv);
-}
-
-void
-AG_TableviewRowCollapse(AG_Tableview *tv, AG_TableviewRow *in)
-{
-	AG_ObjectLock(tv);
-	if (in->flags & AG_TABLEVIEW_ROW_EXPANDED) {
-		in->flags &= ~(AG_TABLEVIEW_ROW_EXPANDED);
-		if (visible(in)) {
-			tv->expandedrows -=
-			    count_visible_descendants(&in->children, 0);
-			tv->visible.dirty = 1;
-		}
-	}
-	AG_ObjectUnlock(tv);
-}
 
 static void
-Destroy(void *p)
+ScrollbarChanged(AG_Event *event)
 {
-	AG_Tableview *tv = p;
+	AG_Treetbl *tt = AG_PTR(1);
 
-	AG_TableviewRowDelAll(tv);
-	Free(tv->column);
-	Free(tv->visible.items);
+	tt->visible.dirty = 1;
 }
 
+/* Process mouse column resize */
 static void
-SizeRequest(void *obj, AG_SizeReq *r)
+ResizeColumn(AG_Treetbl *tt, int cid, int left)
 {
-	AG_Tableview *tv = obj;
-	AG_SizeReq rBar;
-	int i;
+	AG_TreetblCol *col = &tt->column[cid];
+	int x;
 
-	AG_WidgetSizeReq(tv->sbar_v, &rBar);
-	r->w = tv->prew + rBar.w;
-	r->h = tv->preh;
-
-	if (tv->sbar_h != NULL) {
-		AG_WidgetSizeReq(tv->sbar_h, &rBar);
-		r->h += rBar.h;
-	}
-	
-	for (i = 0; i < tv->columncount; i++)
-		r->w += tv->column[i].w;
-}
-
-static int
-SizeAllocate(void *obj, const AG_SizeAlloc *a)
-{
-	AG_Tableview *tv = obj;
-	Uint rows_per_view, i;
-	AG_SizeAlloc aBar;
-	AG_SizeReq rBar;
-
-	if (a->h < tv->head_height || a->w < 8)
-		return (-1);
-
-	tv->r = AG_RECT(
-	    0,
-	    tv->head_height,
-	    WIDTH(tv),
-	    HEIGHT(tv) - tv->head_height);
-
-	/* Size vertical scroll bar. */
-	AG_WidgetSizeReq(tv->sbar_v, &rBar);
-	aBar.x = a->w - rBar.w;
-	aBar.y = 0;
-	aBar.w = rBar.w;
-	aBar.h = a->h - aBar.w;
-	AG_WidgetSizeAlloc(tv->sbar_v, &aBar);
-	tv->r.w -= WIDTH(tv->sbar_v);
-
-	/* Size horizontal scroll bar, if enabled. */
-	if (tv->sbar_h != NULL) {
-		int col_w = 0;
-
-		AG_WidgetSizeReq(tv->sbar_h, &rBar);
-		aBar.x = 0;
-		aBar.y = a->h - rBar.h;
-		aBar.w = a->w - WIDTH(tv->sbar_v);
-		aBar.h = rBar.h;
-		AG_WidgetSizeAlloc(tv->sbar_h, &aBar);
-		tv->r.h -= HEIGHT(tv->sbar_h);
-
-		for (i = 0; i < tv->columncount; i++) {
-			col_w += tv->column[i].w;
-		}
-		if (col_w > WIDTH(tv->sbar_h)) {
-			int scroll = col_w - WIDTH(tv->sbar_h);
-
-			AG_WidgetSetInt(tv->sbar_h, "max", scroll);
-			if (AG_WidgetInt(tv->sbar_h, "value") > scroll) {
-				AG_WidgetSetInt(tv->sbar_h, "value", scroll);
-			}
-			AG_ScrollbarSetBarSize(tv->sbar_h,
-			    WIDTH(tv->sbar_h)*(a->w - tv->sbar_h->wButton*3) / 
-			    col_w);
-		} else {
-			AG_WidgetSetInt(tv->sbar_h, "value", 0);
-			AG_ScrollbarSetBarSize(tv->sbar_h, -1);
-		}
-	}
-
-	/* Calculate widths for TABLEVIEW_COL_FILL columns. */
-	{
-		Uint fill_cols, nonfill_width, fill_width;
-
-		fill_cols = 0;
-		nonfill_width = 0;
-		for (i = 0; i < tv->columncount; i++) {
-			if (tv->column[i].flags & AG_TABLEVIEW_COL_FILL) {
-				fill_cols++;
-			} else {
-				nonfill_width += tv->column[i].w;
-			}
-		}
-
-		fill_width = (a->w - WIDTH(tv->sbar_v) - nonfill_width) /
-		             fill_cols;
-
-		for (i = 0; i < tv->columncount; i++) {
-			if (tv->column[i].flags & AG_TABLEVIEW_COL_FILL)
-				tv->column[i].w = fill_width;
-		}
-	}
-
-	/* Calculate how many rows the view holds. */
-	{
-		if (tv->r.h < tv->head_height) {
-			tv->r.h = tv->head_height;
-		}
-		rows_per_view = tv->r.h/ tv->row_height;
-		if (tv->r.h % tv->row_height)
-			rows_per_view++;
-	}
-
-	if (tv->visible.count < rows_per_view) {
-		/* visible area increased */
-		tv->visible.items = Realloc(tv->visible.items,
-		    sizeof(struct ag_tableview_rowdocket_item) * rows_per_view);
-
-		for (i = tv->visible.count; i < rows_per_view; i++)
-			VISROW(tv,i) = NULL;
-
-		tv->visible.count = rows_per_view;
-		tv->visible.dirty = 1;
-	} else if (tv->visible.count > rows_per_view) {
-		/* visible area decreased */
-		tv->visible.items = Realloc(tv->visible.items,
-		    sizeof(struct ag_tableview_rowdocket_item) * rows_per_view);
-		tv->visible.count = rows_per_view;
-		tv->visible.dirty = 1;
-	}
-	return (0);
-}
-
-static void
-Draw(void *obj)
-{
-	AG_Tableview *tv = obj;
-	Uint i;
-	int y, update = 0;
-
-	/* before we draw, update if needed */
-	if (tv->visible.dirty) {
-		view_changed(tv);
-	}
-	if (tv->visible.redraw_rate &&
-	    SDL_GetTicks() > tv->visible.redraw_last + tv->visible.redraw_rate)
-		update = 1;
-	
-	STYLE(tv)->TableBackground(tv, tv->r);
-	
-	AG_WidgetDraw(tv->sbar_v);
-	if (tv->sbar_h != NULL)
-		AG_WidgetDraw(tv->sbar_h);
-	
-	/* draw row selection hilites */
-	y = tv->head_height;
-	for (i = 0; i < tv->visible.count; i++) {
-		if (VISROW(tv,i) == NULL) {
-			break;
-		}
-		STYLE(tv)->TableRowBackground(tv,
-		    AG_RECT(1, y, tv->r.w-2, tv->row_height),
-		    VISROW(tv,i)->selected);
-		y += tv->row_height;
-	}
-
-	/* draw columns */
-	foreach_visible_column(tv, draw_column, &update, NULL);
-
-	if (update)
-		tv->visible.redraw_last = SDL_GetTicks();
+	AG_MouseGetState(&x, NULL);
+	x -= WIDGET(tt)->rView.x1;
+	col->w = (x-left) > 16 ? (x-left) : 16;
 }
 
 /*
- * Internal functions. We assume that the Tableview has been locked by
- * the caller.
- */
-
-/*
- * loops through each column currently onscreen. calls visible_fn for each
- * one, passing along args returns the index of the first dothis() call to
- * return zero, or tv->columncount, whichever comes first.
- */
-static void
-foreach_visible_column(AG_Tableview *tv, visible_do dothis, void *arg1,
-    void *arg2)
-{
-	int x, first_col, col_width;
-	Uint i;
-	int view_edge = (tv->sbar_h ? AG_WidgetInt(tv->sbar_h, "value") : 0);
-
-	x = 0;
-	first_col = -1;
-	for (i = 0; i < tv->columncount; i++) {
-		/* skip until we find an onscreen column */
-		if (first_col == -1 &&
-		    x + tv->column[i].w < view_edge) {
-			x += tv->column[i].w;	/* x represents the offset in
-						 * the table */
-			continue;
-		}
-		/* OK, we found the first onscreen column */
-		else if (first_col == -1) {
-			first_col = i;
-			x = x - view_edge;	/* x now represents the
-						 * offset on the screen */
-		}
-		/* stop after the last onscreen column */
-		if (x >= tv->r.w)
-			break;
-
-		/* determine how wide this column will be */
-		col_width = (x + tv->column[i].w > tv->r.w) ?
-			    (tv->r.w - x) : tv->column[i].w;
-
-		/* do what we should */
-		if (dothis(tv, x, x + col_width, i, arg1, arg2) == 0)
-			return;
-
-		x += tv->column[i].w;
-	}
-}
-
-/*
- * called after any addition or removal of visible rows. Rebuilds the array
- * of rows to be drawn (tv->visible)
- */
-static void
-view_changed(AG_Tableview *tv)
-{
-	int rows_per_view, max, filled, value;
-	int scrolling_area = HEIGHT(tv->sbar_v) - tv->sbar_v->wButton*2;
-	Uint i;
-
-	/* cancel double clicks if what's under it changes it */
-	tv->dblclicked = 0;
-	AG_CancelEvent(tv, "dblclick-expire");
-
-	rows_per_view = tv->r.h/tv->row_height;
-	if (tv->r.h % tv->row_height)
-		rows_per_view++;
-
-	max = tv->expandedrows - rows_per_view;
-	if (max < 0) {
-		max = 0;
-	}
-	if (max && (tv->r.h % tv->row_height) < 16) {
-		max++;
-	}
-	AG_WidgetSetInt(tv->sbar_v, "max", max);
-	if (AG_WidgetInt(tv->sbar_v, "value") > max)
-		AG_WidgetSetInt(tv->sbar_v, "value", max);
-
-	/* Calculate Scrollbar Size */
-	if (rows_per_view && tv->expandedrows > rows_per_view) {
-		AG_ScrollbarSetBarSize(tv->sbar_v,
-		    rows_per_view * scrolling_area / tv->expandedrows);
-	} else {
-		AG_ScrollbarSetBarSize(tv->sbar_v, -1);
-	}
-
-	/* locate visible rows */
-	value = AG_WidgetInt(tv->sbar_v, "value");
-	filled = view_changed_check(tv, &tv->children, 0, 0, &value);
-
-	/* blank empty rows */
-	for (i = filled; i < tv->visible.count; i++)
-		VISROW(tv,i) = NULL;
-
-	/* render dynamic columns */
-	for (i = 0; i < tv->columncount; i++)
-		if (tv->column[i].flags & AG_TABLEVIEW_COL_DYNAMIC)
-			render_dyncolumn(tv, i);
-
-	tv->visible.redraw_last = SDL_GetTicks();
-	tv->visible.dirty = 0;
-}
-
-/*
- * recursive companion to view_changed. finds the visible rows and populates
- * tv->visible.items array with them
+ * Return the number of visible descendants a given row has. must pass 0 for
+ * i to get a meaningful result.
  */
 static int
-view_changed_check(AG_Tableview *tv, struct ag_tableview_rowq* in, int depth,
-    int filled, int *seen)
+CountVisibleChld(AG_TreetblRowQ *in, int i)
 {
-	AG_TableviewRow *row;
-	Uint x = 0;
-
-	TAILQ_FOREACH(row, in, siblings) {
-		if (*seen) {
-			(*seen)--;
-		} else {
-			if ((filled+x) < tv->visible.count) {
-				VISROW(tv,filled+x) = row;
-				VISDEPTH(tv,filled+x) = depth;
-				x++;
-			}
-		}
-
-		if (row->flags & AG_TABLEVIEW_ROW_EXPANDED &&
-		    filled+x < tv->visible.count)
-			x += view_changed_check(tv, &row->children, depth + 1,
-			    filled + x, seen);
-
-		if (filled+x >= tv->visible.count)
-			return (x);
-	}
-	return (x);
-}
-
-/*
- * return a pointer if the row with the given identifer exists in or in a
- * descendant of the rowq. If it does not exist, return NULL
- */
-static AG_TableviewRow *
-row_get(struct ag_tableview_rowq *searchIn, AG_TableviewRowID rid)
-{
-	AG_TableviewRow *row, *row2;
-
-	TAILQ_FOREACH(row, searchIn, siblings) {
-		if (row->rid == rid)
-			return (row);
-
-		if (!TAILQ_EMPTY(&row->children)) {
-			row2 = row_get(&row->children, rid);
-			if (row2 != NULL)
-				return (row2);
-		}
-	}
-	return (NULL);
-}
-
-/* set the selection bit for all rows in and descended from the rowq */
-static void
-select_all(struct ag_tableview_rowq * children)
-{
-	AG_TableviewRow *row;
-
-	TAILQ_FOREACH(row, children, siblings) {
-		row->selected = 1;
-		if (row->flags & AG_TABLEVIEW_ROW_EXPANDED &&
-		    !TAILQ_EMPTY(&row->children))
-			select_all(&row->children);
-	}
-}
-
-AG_TableviewRow *
-AG_TableviewRowSelected(AG_Tableview *tv)
-{
-	AG_TableviewRow *row;
-
-	AG_ObjectLock(tv);
-	TAILQ_FOREACH(row, &tv->children, siblings) {
-		if (row->selected) {
-			AG_ObjectUnlock(tv);
-			return (row);
-		}
-	}
-	AG_ObjectUnlock(tv);
-	return (NULL);
-}
-
-/* clear the selection bit for all rows in and descended from the rowq */
-static void
-deselect_all(struct ag_tableview_rowq *children)
-{
-	AG_TableviewRow *row;
-
-	TAILQ_FOREACH(row, children, siblings) {
-		row->selected = 0;
-		if (row->flags & AG_TABLEVIEW_ROW_EXPANDED &&
-		    !TAILQ_EMPTY(&row->children))
-			deselect_all(&row->children);
-	}
-}
-
-/*
- * return the number of visible descendants a given row has. must pass 0 for
- * i to get a meaningful result
- */
-static int
-count_visible_descendants(struct ag_tableview_rowq *in, int i)
-{
-	AG_TableviewRow *row;
+	AG_TreetblRow *row;
 	int j = i;
 
 	TAILQ_FOREACH(row, in, siblings) {
 		j++;
-		if (row->flags & AG_TABLEVIEW_ROW_EXPANDED &&
+		if (row->flags & AG_TREETBL_ROW_EXPANDED &&
 		    !TAILQ_EMPTY(&row->children))
-			j = count_visible_descendants(&row->children, j);
+			j = CountVisibleChld(&row->children, j);
 	}
 	return (j);
 }
 
-/* switch column a with column b */
+/* Swap two columns. */
 static void
-switch_columns(AG_Tableview * tv, Uint a, Uint b)
+SwapColumns(AG_Treetbl *tt, Uint a, Uint b)
 {
-	AG_TableviewCol col_tmp;
+	AG_TreetblCol col_tmp;
 
 	/* a little sanity checking never hurt */
-	if (a >= tv->columncount || b >= tv->columncount)
+	if (a >= tt->n || b >= tt->n)
 		return;
 	if (a == b)
 		return;
 
-	col_tmp = tv->column[a];
-	tv->column[a] = tv->column[b];
-	tv->column[b] = col_tmp;
-	tv->visible.dirty = 1;
+	col_tmp = tt->column[a];
+	tt->column[a] = tt->column[b];
+	tt->column[b] = col_tmp;
+	tt->visible.dirty = 1;
+}
+
+/* Process mouse column move. */
+static void
+MoveColumn(AG_Treetbl *tt, Uint cid, int left)
+{
+	AG_TreetblCol *col = &tt->column[cid];
+	AG_TreetblCol *colLeft = &tt->column[cid-1];
+	AG_TreetblCol *colRight = &tt->column[cid+1];
+	int x;
+
+	col->flags |= AG_TREETBL_COL_MOVING;
+
+	AG_MouseGetState(&x, NULL);
+	x -= WIDGET(tt)->rView.x1;
+
+	if ((col->w < colLeft->w  && x < left - colLeft->w + col->w) ||
+	    (col->w >= colLeft->w && x < left)) {
+		/*
+		 * Drag left
+		 */
+		if (cid > 0) {
+			left -= colLeft->w;
+			SwapColumns(tt, cid, cid-1);
+			cid--;
+		}
+	} else if ((col->w <= colRight->w && x > left + colRight->w) ||
+		   (col->w > colRight->w  && x > left + col->w)) {
+		/*
+		 * Drag right
+		 */
+		if (cid < tt->n-1) {
+			left += colRight->w;
+			SwapColumns(tt, cid, cid+1);
+			cid++;
+		}
+	}
 }
 
 /*
- * return 1 if the row is visible return 0 if an ancestor row is collapsed,
- * hiding it.
+ * Loops through each column currently onscreen. calls foreachFn for each
+ * one, passing along args returns the index of the first foreachFn() call to
+ * return zero, or tt->n, whichever comes first.
  */
-static int
-visible(AG_TableviewRow *in)
+static void
+FOREACH_VISIBLE_COLUMN(AG_Treetbl *tt, VisibleForeachFn foreachFn, void *arg1,
+    void *arg2)
 {
-	AG_TableviewRow *row = in->parent;
+	int x, first_col, wCol;
+	Uint i;
+	int view_edge = (tt->hBar ? AG_WidgetInt(tt->hBar, "value") : 0);
 
-	while (row != NULL) {
-		if (!(row->flags & AG_TABLEVIEW_ROW_EXPANDED)) {
-			return (0);
+	x = 0;
+	first_col = -1;
+	for (i = 0; i < tt->n; i++) {
+		AG_TreetblCol *col = &tt->column[i];
+
+		if (first_col == -1 && x + col->w < view_edge) {
+			x += col->w;		/* x = offset in table */
+			continue;
+		} else if (first_col == -1) {
+			first_col = i;
+			x = x - view_edge;	/* x = offset on screen */
 		}
-		row = row->parent;
+		if (x >= tt->r.w)
+			break;
+
+		wCol = (x + col->w > tt->r.w) ? (tt->r.w - x) : col->w;
+		if (foreachFn(tt, x, x+wCol, i, arg1, arg2) == 0)
+			return;
+
+		x += col->w;
 	}
-	return (1);
 }
+
 
 static void
-render_dyncolumn(AG_Tableview *tv, Uint idx)
+MouseButtonUp(AG_Event *event)
 {
-	char *celltext;
-	Uint i, cidx = tv->column[idx].idx;
+	AG_Treetbl *tt = AG_SELF();
+	AG_TreetblCol *col = NULL;
+	int coord_x = AG_INT(2), coord_y = AG_INT(3);
+	int left;
+	Uint i;
 
-	for (i = 0; i < tv->visible.count; i++) {
-		AG_TableviewRow *row = VISROW(tv,i);
-
-		if (row == NULL)
+	/*
+	 * Our goal here is to set/toggle a column's sorting mode if the
+	 * click fell on the header and the user did not drag it
+	 */
+	/* XXX - fix horiz sbar */
+	left = 0;
+	for (i = 0; i < tt->n; i++) {
+		col = &tt->column[i];
+		if (col->flags & AG_TREETBL_COL_SELECTED) {
 			break;
-		if (!(row->flags & AG_TABLEVIEW_ROW_DYNAMIC))
-			continue;
+		}
+		left += col->w;
+	}
+	if (col == NULL)
+		return;
 
-		if (row->cell[cidx].image != NULL)
-			AG_SurfaceFree(row->cell[cidx].image);
-
-		celltext = tv->data_callback(tv, tv->column[idx].cid, row->rid);
-		AG_TextColor(TABLEVIEW_CTXT_COLOR);
-		row->cell[cidx].image =
-		    AG_TextRender((celltext != NULL) ? celltext : "");
+	if (i < tt->n) {
+		/*
+		 * if the column wasn't moved and the mouse is still within
+		 * the column's header, do sort work
+		 */
+		if (tt->flags & AG_TREETBL_SORT &&
+		    !(col->flags & AG_TREETBL_COL_MOVING) &&
+		    coord_y < tt->hCol &&
+		    coord_x >= left &&
+		    coord_x < (left+col->w)) {
+			if (col->flags & AG_TREETBL_COL_SORTING) {
+				if (tt->sortMode == AG_TREETBL_SORT_DSC) {
+					tt->sortMode = AG_TREETBL_SORT_ASC;
+				} else {
+					tt->sortMode = AG_TREETBL_SORT_DSC;
+				}
+			}
+			AG_TreetblSetSortCol(tt, col);
+		}
+		col->flags &= ~(AG_TREETBL_COL_MOVING|AG_TREETBL_COL_SELECTED);
 	}
 }
 
+/* Process click on a column header. */
 static int
-clicked_header(AG_Tableview *tv, int x1, int x2, Uint32 idx,
+ClickedColumnHeader(AG_Treetbl *tt, int x1, int x2, Uint32 idx,
     void *arg1, void *arg2)
 {
 	int x = *(int *)arg1;
+	AG_TreetblCol *col = &tt->column[idx];
+	AG_TreetblCol *colLeft = &tt->column[idx-1];
 
-	if ((x < x1 || x >= x2) && idx != tv->columncount-1)
+	if ((x < x1 || x >= x2) && idx != tt->n-1)
 		return (1);
 
 	/* click on the CENTER */
 	if (x >= x1+3 && x <= x2-3) {
-		if (tv->flags & AG_TABLEVIEW_REORDERCOLS) {
-			AG_SchedEvent(NULL, tv, 400, "column-move",
-				       "%i,%i", idx, x1);
+		if (tt->flags & AG_TREETBL_REORDERCOLS) {
+			MoveColumn(tt, idx, x1);
 		}
-		if (tv->flags & AG_TABLEVIEW_REORDERCOLS ||
-		    tv->flags & AG_TABLEVIEW_SORT)
-			tv->column[idx].mousedown = 1;
+		if (tt->flags & AG_TREETBL_REORDERCOLS ||
+		    tt->flags & AG_TREETBL_SORT)
+			col->flags |= AG_TREETBL_COL_SELECTED;
 	}
 	/* click on the LEFT resize line */
-	else if (idx-1 >= 0 && idx-1 < tv->columncount &&
-	         tv->column[idx-1].flags & AG_TABLEVIEW_COL_RESIZABLE &&
+	else if (idx-1 >= 0 && idx-1 < tt->n &&
+	         colLeft->flags & AG_TREETBL_COL_RESIZABLE &&
 		 idx > 0 &&
 		 x < x1+3) {
-		AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
-		    "%i,%i", idx-1, x1-tv->column[idx-1].w);
+		ResizeColumn(tt, idx-1, (x1 - colLeft->w));
 	}
 	/* click on the RIGHT resize line */
-	else if ((idx >= 0 && idx < tv->columncount) &&
-	         (tv->column[idx].flags & AG_TABLEVIEW_COL_RESIZABLE) &&
-		 (x > x2-3 || (idx == tv->columncount-1 && x < x2+3))) {
-		AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-resize",
-		    "%i,%i", idx, x1);
+	else if ((idx >= 0 && idx < tt->n) &&
+	         (col->flags & AG_TREETBL_COL_RESIZABLE) &&
+		 (x > x2-3 || (idx == tt->n-1 && x < x2+3))) {
+		ResizeColumn(tt, idx, x1);
 	}
 	return (0);
 }
 
+/* Clear the selection bit for all rows in and descended from the rowq */
+static void
+DeselectAll(AG_TreetblRowQ *children)
+{
+	AG_TreetblRow *row;
+
+	TAILQ_FOREACH(row, children, siblings) {
+		row->flags &= ~(AG_TREETBL_ROW_SELECTED);
+		if (row->flags & AG_TREETBL_ROW_EXPANDED &&
+		    !TAILQ_EMPTY(&row->children))
+			DeselectAll(&row->children);
+	}
+}
+
+/* Process click over a row. */
 static int
-clicked_row(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
-    void *arg2)
+ClickedRow(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
 {
 	const int x = *(int *)arg1;
 	const int y = *(int *)arg2;
-	AG_TableviewRow *row = NULL;
+	AG_TreetblRow *row = NULL;
 	int depth = 0;
-	int ts = tv->row_height/2 + 1;
+	int ts = tt->hRow/2 + 1;
 	SDLMod modifiers = SDL_GetModState();
 	Uint i, j, row_idx;
 	int px;
@@ -1039,367 +332,1107 @@ clicked_row(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
 		return (1);
 
 	/* Find the visible row under the cursor. */
-	for (i = 0, px = tv->head_height;
-	     i < tv->visible.count;
-	     i++, px += tv->row_height) {
-		if (y >= px && y < px+tv->row_height) {
-			if (VISROW(tv,i) == NULL) {
-				i = tv->visible.count;
+	for (i = 0, px = tt->hCol;
+	     i < tt->visible.count;
+	     i++, px += tt->hRow) {
+		if (y >= px && y < px+tt->hRow) {
+			if (VISROW(tt,i) == NULL) {
+				i = tt->visible.count;
 			}
 			break;
 		}
 	}
-	if (i != tv->visible.count) {
-		row = VISROW(tv,i);
-		depth = VISDEPTH(tv,i);
+	if (i != tt->visible.count) {
+		row = VISROW(tt,i);
+		depth = VISDEPTH(tt,i);
 	}
 	row_idx = i;
 
 	/* Clicking on blank space clears the selection. */
 	if (row == NULL) {
-		deselect_all(&tv->children);
-		//AG_PostEvent(NULL, tv, "tableview-selectclear", "");
+		DeselectAll(&tt->children);
+		//AG_PostEvent(NULL, tt, "treetbl-selectclear", "");
 		return (0);
 	}
 
 	/* Check for a click on the +/- button, if applicable. */
-	if (tv->column[idx].cid == tv->expanderColumn &&
+	if ((tt->column[idx].flags & AG_TREETBL_COL_EXPANDER) &&
 	    !TAILQ_EMPTY(&row->children) &&
 	    x > (x1+4+(depth*(ts+4))) &&
 	    x < (x1+4+(depth*(ts+4))+ts)) {
-		if (row->flags & AG_TABLEVIEW_ROW_EXPANDED) {
-			row->flags &= ~(AG_TABLEVIEW_ROW_EXPANDED);
+		if (row->flags & AG_TREETBL_ROW_EXPANDED) {
+			row->flags &= ~(AG_TREETBL_ROW_EXPANDED);
 			/*
-			 * XXX deselect_all could return count to save
-			 * redundant call to count_visible_descendants
+			 * XXX DeselectAll could return count to save
+			 * redundant call to CountVisibleChld
 			 */
-			deselect_all(&row->children);
-			tv->expandedrows -= count_visible_descendants(
+			DeselectAll(&row->children);
+			tt->nExpandedRows -= CountVisibleChld(
 			    &row->children, 0);
 		} else {
-			row->flags |= AG_TABLEVIEW_ROW_EXPANDED;
-			tv->expandedrows += count_visible_descendants(
-			    &row->children, 0);
+			row->flags |= AG_TREETBL_ROW_EXPANDED;
+			tt->nExpandedRows += CountVisibleChld(&row->children, 0);
 		}
-		tv->visible.dirty = 1;
+		tt->visible.dirty = 1;
 		return (0);
 	}
 	
 	/* Handle command/control clicks and range selections. */
 	if ((modifiers & KMOD_META || modifiers & KMOD_CTRL)) {
-		if (row->selected) {
-			row->selected = 0;
-			AG_PostEvent(NULL, tv, "tableview-deselect", "%p", row);
+		if (row->flags & AG_TREETBL_ROW_SELECTED) {
+			row->flags &= ~(AG_TREETBL_ROW_SELECTED);
+			AG_PostEvent(NULL, tt, "treetbl-deselect", "%p", row);
 		} else {
-			if (!(tv->flags & AG_TABLEVIEW_SELMULTI)) {
-				deselect_all(&tv->children);
+			if (!(tt->flags & AG_TREETBL_MULTI)) {
+				DeselectAll(&tt->children);
 			}
-			row->selected = 1;
-			AG_PostEvent(NULL, tv, "tableview-select", "%p", row);
+			row->flags |= AG_TREETBL_ROW_SELECTED;
+			AG_PostEvent(NULL, tt, "treetbl-select", "%p", row);
 		}
 	} else if (modifiers & KMOD_SHIFT) {
-		for (j = 0; j < tv->visible.count; j++) {
-			if (VISROW(tv,j) != NULL &&
-			    VISROW(tv,j)->selected)
+		for (j = 0; j < tt->visible.count; j++) {
+			if (VISROW(tt,j) != NULL &&
+			    (VISROW(tt,j)->flags & AG_TREETBL_ROW_SELECTED))
 				break;
 		}
-		if (j < tv->visible.count) {
+		if (j < tt->visible.count) {
 			/* XXX the selection may start on an invisible row */
 			if (j < row_idx) {
 				for (i = j; i <= row_idx; i++) {
-					if (VISROW(tv,i) != NULL)
-						VISROW(tv,i)->selected = 1;
+					if (VISROW(tt,i) != NULL)
+						VISROW(tt,i)->flags |=
+						    AG_TREETBL_ROW_SELECTED;
 				}
 			} else if (j > row_idx) {
 				for (i = row_idx; i <= j; i++) {
-					if (VISROW(tv,i) != NULL)
-						VISROW(tv,i)->selected = 1;
+					if (VISROW(tt,i) != NULL)
+						VISROW(tt,i)->flags |=
+						    AG_TREETBL_ROW_SELECTED;
 				}
 			} else {
-				if (VISROW(tv,row_idx) != NULL)
-					VISROW(tv,row_idx)->selected = 1;
+				if (VISROW(tt,row_idx) != NULL)
+					VISROW(tt,row_idx)->flags |=
+					    AG_TREETBL_ROW_SELECTED;
 			}
 		}
 	} else {
-		deselect_all(&tv->children);
-		if (!row->selected) {
-			row->selected = 1;
-			AG_PostEvent(NULL, tv, "tableview-select", "%p", row);
+		DeselectAll(&tt->children);
+		if (!(row->flags & AG_TREETBL_ROW_SELECTED)) {
+			row->flags |= AG_TREETBL_ROW_SELECTED;
+			AG_PostEvent(NULL, tt, "treetbl-select", "%p", row);
 		}
 	}
 
 	/* Handle double-clicks. */
-	if (tv->dblclicked) {
-		AG_CancelEvent(tv, "dblclick-expire");
-		deselect_all(&tv->children);
-		row->selected = 1;
-		tv->dblclicked = 0;
-		AG_PostEvent(NULL, tv, "tableview-dblclick", "%p", row);
+	if (tt->dblclicked) {
+		AG_CancelEvent(tt, "dblclick-expire");
+		DeselectAll(&tt->children);
+		row->flags |= AG_TREETBL_ROW_SELECTED;
+		tt->dblclicked = 0;
+		AG_PostEvent(NULL, tt, "treetbl-dblclick", "%p", row);
 	} else {
-		tv->dblclicked++;
-		AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "dblclick-expire",
+		tt->dblclicked++;
+		AG_SchedEvent(NULL, tt, agMouseDblclickDelay, "dblclick-expire",
 		    NULL);
 	}
 	return (0);
 }
 
-static int
-draw_column(AG_Tableview *tv, int x1, int x2, Uint32 idx, void *arg1,
-    void *arg2)
+static void
+MouseButtonDown(AG_Event *event)
 {
-	const int *update = (int *)arg1;
-	Uint j, cidx = tv->column[idx].idx;
-	int y;
+	AG_Treetbl *tt = AG_SELF();
+	int coord_x = AG_INT(2);
+	int coord_y = AG_INT(3);
 
-	/* draw label for this column */
-	if (tv->head_height > 0) {
-		int xLbl;
+	AG_WidgetFocus(tt);
 
-		STYLE(tv)->TableColumnHeaderBackground(tv, idx,
-		    AG_RECT(x1, 0,
-		            tv->column[idx].w,
-			    tv->head_height),
-		    (tv->column[idx].mousedown ||
-		     tv->column[idx].cid == tv->sortColumn));
-
-		xLbl = tv->column[idx].w/2 - tv->column[idx].label_img->w/2;
-		AG_WidgetBlitSurface(tv, tv->column[idx].label_id,
-		    x1 + xLbl,
-		    0);
+	if (tt->hCol > 0 && coord_y < tt->hCol) {
+		/* a mouse down on the column header */
+		FOREACH_VISIBLE_COLUMN(tt, ClickedColumnHeader, &coord_x, NULL);
+	} else {
+		/* a mouse down in the body */
+		FOREACH_VISIBLE_COLUMN(tt, ClickedRow, &coord_x, &coord_y);
 	}
-	/* check for the need to update */
-	if (*update &&
-	    tv->column[idx].flags & AG_TABLEVIEW_COL_DYNAMIC)
-		render_dyncolumn(tv, idx);
+}
 
-	/* draw cells in this column */
-	AG_PushClipRect(tv, tv->r);
-	y = tv->head_height;
-	for (j = 0; j < tv->visible.count; j++) {
-		int x = x1+4;
+static void
+Init(void *obj)
+{
+	AG_Treetbl *tt = obj;
+	
+	WIDGET(tt)->flags |= AG_WIDGET_FOCUSABLE;
 
-		if (VISROW(tv,j) == NULL) {
+	tt->cellDataFn = NULL;
+	tt->sortFn = NULL;
+	tt->flags = 0;
+	tt->r = AG_RECT(0,0,0,0);
+
+	tt->hCol = agTextFontHeight;
+	tt->hRow = agTextFontHeight+2;
+	tt->dblclicked = 0;
+	tt->vBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_VERT, 0);
+	tt->hBar = NULL;
+
+	AG_WidgetSetInt(tt->vBar, "min", 0);
+	AG_WidgetSetInt(tt->vBar, "max", 0);
+	AG_WidgetSetInt(tt->vBar, "value", 0);
+
+	if (tt->hBar != NULL) {
+		AG_WidgetSetInt(tt->hBar, "min", 0);
+		AG_WidgetSetInt(tt->hBar, "max", 0);
+		AG_WidgetSetInt(tt->hBar, "value", 0);
+	}
+	tt->column = NULL;
+	tt->n = 0;
+	tt->sortMode = AG_TREETBL_SORT_NOT;
+
+	TAILQ_INIT(&tt->children);
+	TAILQ_INIT(&tt->backstore);
+	tt->nExpandedRows = 0;
+
+	tt->visible.redraw_rate = 0;
+	tt->visible.redraw_last = SDL_GetTicks();
+	tt->visible.count = 0;
+	tt->visible.items = NULL;
+
+	tt->wHint = 10;
+	tt->hHint = tt->hCol + (tt->hRow * 4);
+
+	/* private, internal events */
+	AG_SetEvent(tt, "window-mousebuttonup", MouseButtonUp, NULL);
+	AG_SetEvent(tt, "window-mousebuttondown", MouseButtonDown, NULL);
+	AG_SetEvent(tt->vBar, "scrollbar-changed", ScrollbarChanged, "%p", tt);
+	AG_SetEvent(tt, "dblclick-expire", ExpireDoubleClick, NULL);
+	AG_SetEvent(tt, "widget-lostfocus", FocusLost, NULL);
+	AG_SetEvent(tt, "widget-hidden", FocusLost, NULL);
+}
+
+void
+AG_TreetblSizeHint(AG_Treetbl *tt, int w, int nrows)
+{
+	AG_ObjectLock(tt);
+	tt->wHint = w;
+	tt->hHint = tt->hCol + tt->hRow*nrows;
+	AG_ObjectUnlock(tt);
+}
+
+void
+AG_TreetblSetColHeight(AG_Treetbl *tt, int h)
+{
+	AG_ObjectLock(tt);
+	tt->hCol = h;
+	AG_WindowUpdate(AG_ParentWindow(tt));
+	AG_ObjectUnlock(tt);
+}
+
+/* Insert a column in the table. */
+AG_TreetblCol *
+AG_TreetblAddCol(AG_Treetbl *tt, int colID, const char *width, const char *text,
+    ...)
+{
+	AG_TreetblCol *col, *colsNew;
+	va_list args;
+	Uint i;
+
+	if (colID == -1)
+		return (NULL);
+
+	AG_ObjectLock(tt);
+
+	/* Check for existing column ID */
+	if ((tt->flags & AG_TREETBL_NODUPCHECKS) == 0) {
+		for (i = 0; i < tt->n; i++) {
+			if (tt->column[i].cid == colID)
+				break;
+		}
+		if (i < tt->n) {
+			AG_SetError("Existing column ID: %d", colID);
+			goto fail;
+		}
+	}
+
+	/* Allocate new column */
+	if ((colsNew = realloc(tt->column, (tt->n+1)*sizeof(AG_TreetblCol)))
+	    == NULL) {
+		AG_SetError("Out of memory");
+		goto fail;
+	}
+	tt->column = colsNew;
+	col = &tt->column[tt->n];
+	col->tbl = tt;
+	col->flags = 0;
+	col->cid = colID;
+	col->idx = tt->n;
+	col->labelSu = -1;
+	tt->n++;
+
+	/* Use first column for expander controls by default. */
+	if (tt->n == 1)
+		col->flags |= AG_TREETBL_COL_EXPANDER;
+
+	/* Format the column header text. */
+	if (text == NULL) {
+		col->label[0] = '\0';
+	} else {
+		va_start(args, text);
+		Vsnprintf(col->label, sizeof(col->label), text, args);
+		va_end(args);
+	}
+
+	/* Set the default column width. */
+	if (width != NULL) {
+		switch (AG_WidgetParseSizeSpec(width, &col->w)) {
+		case AG_WIDGET_PERCENT:
+			col->w = col->w*WIDTH(tt)/100;
+			break;
+		default:
 			break;
 		}
-		if (tv->column[idx].cid == tv->expanderColumn) {
-			int tw = tv->row_height/2 + 1;
+	} else {
+		col->w = 6;
+		col->flags |= AG_TREETBL_COL_FILL;
+	}
 
-			x += VISDEPTH(tv,j)*(tw+4);
-			if (!TAILQ_EMPTY(&VISROW(tv,j)->children)) {
-				STYLE(tv)->TreeSubnodeIndicator(tv,
+	tt->visible.dirty = 1;
+	AG_ObjectUnlock(tt);
+	return (col);
+fail:
+	AG_ObjectUnlock(tt);
+	return (NULL);
+}
+
+/* Select the column controlling the sorting. */
+void
+AG_TreetblSetSortCol(AG_Treetbl *tt, AG_TreetblCol *col)
+{
+	int i;
+
+	AG_ObjectLock(tt);
+	for (i = 0; i < tt->n; i++) {
+		tt->column[i].flags &= ~(AG_TREETBL_COL_SORTING);
+	}
+	col->flags |= AG_TREETBL_COL_SORTING;
+	AG_ObjectUnlock(tt);
+}
+
+/* Set the sorting order */
+void
+AG_TreetblSetSortMode(AG_Treetbl *tt, enum ag_treetbl_sort_mode mode)
+{
+	AG_ObjectLock(tt);
+	tt->sortMode = mode;
+	AG_ObjectUnlock(tt);
+}
+
+/* Select an alternate column for the expand/collapse controls. */
+void
+AG_TreetblSetExpanderCol(AG_Treetbl *tt, AG_TreetblCol *col)
+{
+	int i;
+
+	AG_ObjectLock(tt);
+	for (i = 0; i < tt->n; i++) {
+		tt->column[i].flags &= ~(AG_TREETBL_COL_EXPANDER);
+	}
+	col->flags |= AG_TREETBL_COL_EXPANDER;
+	AG_ObjectUnlock(tt);
+}
+
+/* Select a column. */
+void
+AG_TreetblSelectCol(AG_Treetbl *tt, AG_TreetblCol *col)
+{
+	AG_ObjectLock(tt);
+	col->flags |= AG_TREETBL_COL_SELECTED;
+	AG_ObjectUnlock(tt);
+}
+
+/* Deselect a column. */
+void
+AG_TreetblDeselectCol(AG_Treetbl *tt, AG_TreetblCol *col)
+{
+	AG_ObjectLock(tt);
+	col->flags &= ~(AG_TREETBL_COL_SELECTED);
+	AG_ObjectUnlock(tt);
+}
+
+/* Select a column by ID */
+int
+AG_TreetblSelectColID(AG_Treetbl *tt, int colID)
+{
+	int i;
+
+	AG_ObjectLock(tt);
+        for (i = 0; i < tt->n; i++) {
+                if (tt->column[i].cid == colID)
+			break;
+        }
+	if (i == tt->n) {
+		AG_ObjectUnlock(tt);
+		return (-1);
+	}
+	tt->column[i].flags |= AG_TREETBL_COL_SELECTED;
+	AG_ObjectUnlock(tt);
+	return (0);
+}
+
+/* Deselect a column by ID */
+int
+AG_TreetblDeselectColID(AG_Treetbl *tt, int colID)
+{
+	int i;
+
+	AG_ObjectLock(tt);
+        for (i = 0; i < tt->n; i++) {
+                if (tt->column[i].cid == colID)
+			break;
+        }
+	if (i == tt->n) {
+		AG_ObjectUnlock(tt);
+		return (-1);
+	}
+	tt->column[i].flags &= ~(AG_TREETBL_COL_SELECTED);
+	AG_ObjectUnlock(tt);
+	return (0);
+}
+
+void
+AG_TreetblSetRefreshRate(AG_Treetbl *tt, Uint ms)
+{
+	AG_ObjectLock(tt);
+	tt->visible.redraw_rate = ms;
+	AG_ObjectUnlock(tt);
+}
+
+/*
+ * Return 1 if the row is visible return 0 if an ancestor row is collapsed,
+ * hiding it.
+ */
+static int
+RowIsVisible(AG_TreetblRow *in)
+{
+	AG_TreetblRow *row = in->parent;
+
+	while (row != NULL) {
+		if (!(row->flags & AG_TREETBL_ROW_EXPANDED)) {
+			return (0);
+		}
+		row = row->parent;
+	}
+	return (1);
+}
+
+/* Insert a row in the table. */
+AG_TreetblRow *
+AG_TreetblAddRow(AG_Treetbl *tt, AG_TreetblRow *pRow, int rowID,
+    const char *argSpec, ...)
+{
+	AG_TreetblRow *row;
+	Uint i;
+#if 0
+	va_list ap;
+	int colID;
+#endif
+
+	AG_ObjectLock(tt);
+
+	/* Check if row ID is already use */
+	if (!(tt->flags & AG_TREETBL_NODUPCHECKS) &&
+	    AG_TreetblLookupRowRecurse(&tt->children, rowID)) {
+		AG_SetError("Existing row ID: %d", rowID);
+		goto fail;
+	}
+	
+	if ((row = malloc(sizeof(AG_TreetblRow))) == NULL) {
+		goto outofmem;
+	}
+	row->tbl = tt;
+	if ((row->cell = malloc(sizeof(AG_TreetblCell)*tt->n)) == NULL) {
+		free(row);
+		goto outofmem;
+	}
+	row->flags = 0;
+	row->parent = pRow;
+	TAILQ_INIT(&row->children);
+
+	for (i = 0; i < tt->n; i++) {
+		row->cell[i].text = NULL;
+		row->cell[i].image = NULL;
+	}
+#if 0
+	/* import static data */
+	va_start(ap, rowID);
+	while ((colID = va_arg(ap, int)) != -1) {
+		void *data = va_arg(ap, void *);
+
+		for (i = 0; i < tt->n; i++) {
+			if (colID == tt->column[i].cid) {
+				AG_TreetblCell *cell = &row->cell[i];
+
+				/*
+				 * If the user already passed for this col,
+				 * don't leak.
+				 */
+				if (cell->text != NULL) {
+					free(cell->text);
+				}
+				if (cell->image != NULL) {
+					AG_SurfaceFree(cell->image);
+				}
+				cell->text = (data != NULL) ?
+				             Strdup((char *)data) :
+				             Strdup("(null)");
+
+				AG_TextColor(TABLEVIEW_CTXT_COLOR);
+				cell->image = AG_TextRender(cell->text);
+				break;
+			}
+		}
+	}
+	va_end(ap);
+#endif
+
+	row->rid = rowID;
+
+	if (pRow != NULL) {
+		TAILQ_INSERT_TAIL(&pRow->children, row, siblings);
+	} else {
+		TAILQ_INSERT_TAIL(&tt->children, row, siblings);
+	}
+
+	/* increment scroll only if visible: */
+	if (RowIsVisible(row))
+		tt->nExpandedRows++;
+
+	tt->visible.dirty = 1;
+
+	AG_ObjectUnlock(tt);
+	return (row);
+outofmem:
+	AG_SetError("Out of memory");
+fail:
+	AG_ObjectUnlock(tt);
+	return (NULL);
+}
+
+static void
+DestroyRow(AG_Treetbl *tt, AG_TreetblRow *row)
+{
+	int i;
+
+	for (i = 0; i < tt->n; i++) {
+		AG_TreetblCell *cell = &row->cell[i];
+
+		AG_SurfaceFree(cell->image);
+		free(cell->text);
+	}
+	Free(row->cell);
+	Free(row);
+}
+
+void
+AG_TreetblDelRow(AG_Treetbl *tt, AG_TreetblRow *row)
+{
+	AG_TreetblRow *row1, *row2;
+
+	if (row == NULL)
+		return;
+
+	AG_ObjectLock(tt);
+
+	/* first remove children */
+	row1 = TAILQ_FIRST(&row->children);
+	while (row1 != NULL) {
+		row2 = TAILQ_NEXT(row1, siblings);
+		AG_TreetblDelRow(tt, row1);
+		row1 = row2;
+	}
+
+	/* now that children are gone, remove this row */
+	if (RowIsVisible(row))
+		tt->nExpandedRows--;
+
+	if (row->parent) {
+		TAILQ_REMOVE(&row->parent->children, row, siblings);
+	} else {
+		TAILQ_REMOVE(&tt->children, row, siblings);
+	}
+	if (tt->flags & AG_TREETBL_POLLED) {
+		TAILQ_INSERT_TAIL(&tt->backstore, row, backstore);
+		goto out;
+	}
+	DestroyRow(tt, row);
+out:
+	tt->visible.dirty = 1;
+	AG_ObjectUnlock(tt);
+}
+
+/*
+ * Clear the rows. If AG_TREETBL_POLLED is in effect, the selection state
+ * is remembered.
+ */
+void
+AG_TreetblClearRows(AG_Treetbl *tt)
+{
+	AG_TreetblRow *row1, *row2;
+
+	AG_ObjectLock(tt);
+	row1 = TAILQ_FIRST(&tt->children);
+	while (row1 != NULL) {
+		row2 = TAILQ_NEXT(row1, siblings);
+		AG_TreetblDelRow(tt, row1);
+		row1 = row2;
+	}
+	TAILQ_INIT(&tt->children);
+	
+	tt->nExpandedRows = 0;
+	tt->visible.dirty = 1;
+	AG_ObjectUnlock(tt);
+}
+
+void
+AG_TreetblRestoreRows(AG_Treetbl *tt)
+{
+	AG_TreetblRow *row, *nrow, *srow;
+	int i;
+
+	AG_ObjectLock(tt);
+		
+	for (row = TAILQ_FIRST(&tt->backstore);
+	     row != TAILQ_END(&tt->backstore);
+	     row = nrow) {
+		nrow = TAILQ_NEXT(row, backstore);
+		TAILQ_FOREACH(srow, &tt->children, siblings) {
+			for (i = 0; i < tt->n; i++) {
+				if (strcmp(row->cell[i].text,
+				    srow->cell[i].text) != 0)
+					break;
+			}
+			if (i != tt->n) {
+				continue;
+			}
+			if (row->flags & AG_TREETBL_ROW_SELECTED) {
+				srow->flags |= AG_TREETBL_ROW_SELECTED;
+			} else {
+				srow->flags &= ~(AG_TREETBL_ROW_SELECTED);
+			}
+		}
+		DestroyRow(tt, row);
+	}
+	TAILQ_INIT(&tt->backstore);
+
+	AG_ObjectUnlock(tt);
+}
+
+/* Select the given row. */
+void
+AG_TreetblSelectRow(AG_Treetbl *tt, AG_TreetblRow *row)
+{
+	AG_ObjectLock(tt);
+	if (!(tt->flags & AG_TREETBL_MULTI)) {
+		AG_TreetblDeselectRow(tt, NULL);
+	}
+	row->flags |= AG_TREETBL_ROW_SELECTED;
+	AG_ObjectUnlock(tt);
+}
+
+static void
+SelectAll(AG_TreetblRowQ *children)
+{
+	AG_TreetblRow *row;
+
+	TAILQ_FOREACH(row, children, siblings) {
+		row->flags |= AG_TREETBL_ROW_SELECTED;
+
+		if (!TAILQ_EMPTY(&row->children))
+			SelectAll(&row->children);
+	}
+}
+
+/* Set the selection bit for all rows recursively. */
+void
+AG_TreetblSelectAll(AG_Treetbl *tt, AG_TreetblRow *root)
+{
+	if (!(tt->flags & AG_TREETBL_MULTI))
+		return;
+
+	AG_ObjectLock(tt);
+	if (root == NULL) {
+		SelectAll(&tt->children);
+	} else {
+		SelectAll(&root->children);
+	}
+	AG_ObjectUnlock(tt);
+}
+
+/* Deselect the given row. */
+void
+AG_TreetblDeselectRow(AG_Treetbl *tt, AG_TreetblRow *row)
+{
+	AG_ObjectLock(tt);
+	if (row == NULL) {
+		DeselectAll(&tt->children);
+	} else {
+		DeselectAll(&row->children);
+	}
+	AG_ObjectUnlock(tt);
+}
+
+/* Expand a specified row for display. */
+void
+AG_TreetblExpandRow(AG_Treetbl *tt, AG_TreetblRow *in)
+{
+	AG_ObjectLock(tt);
+	if (!(in->flags & AG_TREETBL_ROW_EXPANDED)) {
+		in->flags |= AG_TREETBL_ROW_EXPANDED;
+		if (RowIsVisible(in)) {
+			tt->nExpandedRows += CountVisibleChld(&in->children, 0);
+			tt->visible.dirty = 1;
+		}
+	}
+	AG_ObjectUnlock(tt);
+}
+
+/* Collapse a specified row from display. */
+void
+AG_TreetblCollapseRow(AG_Treetbl *tt, AG_TreetblRow *in)
+{
+	AG_ObjectLock(tt);
+	if (in->flags & AG_TREETBL_ROW_EXPANDED) {
+		in->flags &= ~(AG_TREETBL_ROW_EXPANDED);
+		if (RowIsVisible(in)) {
+			tt->nExpandedRows -= CountVisibleChld(&in->children, 0);
+			tt->visible.dirty = 1;
+		}
+	}
+	AG_ObjectUnlock(tt);
+}
+
+static void
+Destroy(void *p)
+{
+	AG_Treetbl *tt = p;
+
+	AG_TreetblClearRows(tt);
+	Free(tt->column);
+	Free(tt->visible.items);
+}
+
+static void
+SizeRequest(void *obj, AG_SizeReq *r)
+{
+	AG_Treetbl *tt = obj;
+	AG_SizeReq rBar;
+	int i;
+
+	AG_WidgetSizeReq(tt->vBar, &rBar);
+	r->w = tt->wHint + rBar.w;
+	r->h = tt->hHint;
+
+	if (tt->hBar != NULL) {
+		AG_WidgetSizeReq(tt->hBar, &rBar);
+		r->h += rBar.h;
+	}
+	
+	for (i = 0; i < tt->n; i++)
+		r->w += tt->column[i].w;
+}
+
+static int
+SizeAllocate(void *obj, const AG_SizeAlloc *a)
+{
+	AG_Treetbl *tt = obj;
+	Uint rows_per_view, i;
+	AG_SizeAlloc aBar;
+	AG_SizeReq rBar;
+
+	if (a->h < tt->hCol || a->w < 8)
+		return (-1);
+
+	tt->r = AG_RECT(
+	    0,
+	    tt->hCol,
+	    WIDTH(tt),
+	    HEIGHT(tt) - tt->hCol);
+
+	/* Size vertical scroll bar. */
+	AG_WidgetSizeReq(tt->vBar, &rBar);
+	aBar.x = a->w - rBar.w;
+	aBar.y = 0;
+	aBar.w = rBar.w;
+	aBar.h = a->h - aBar.w;
+	AG_WidgetSizeAlloc(tt->vBar, &aBar);
+	tt->r.w -= WIDTH(tt->vBar);
+
+	/* Size horizontal scroll bar, if enabled. */
+	if (tt->hBar != NULL) {
+		int col_w = 0;
+
+		AG_WidgetSizeReq(tt->hBar, &rBar);
+		aBar.x = 0;
+		aBar.y = a->h - rBar.h;
+		aBar.w = a->w - WIDTH(tt->vBar);
+		aBar.h = rBar.h;
+		AG_WidgetSizeAlloc(tt->hBar, &aBar);
+		tt->r.h -= HEIGHT(tt->hBar);
+
+		for (i = 0; i < tt->n; i++) {
+			col_w += tt->column[i].w;
+		}
+		if (col_w > WIDTH(tt->hBar)) {
+			int scroll = col_w - WIDTH(tt->hBar);
+
+			AG_WidgetSetInt(tt->hBar, "max", scroll);
+			if (AG_WidgetInt(tt->hBar, "value") > scroll) {
+				AG_WidgetSetInt(tt->hBar, "value", scroll);
+			}
+			AG_ScrollbarSetBarSize(tt->hBar,
+			    WIDTH(tt->hBar)*(a->w - tt->hBar->wButton*3) / 
+			    col_w);
+		} else {
+			AG_WidgetSetInt(tt->hBar, "value", 0);
+			AG_ScrollbarSetBarSize(tt->hBar, -1);
+		}
+	}
+
+	/* Calculate widths for TREETBL_COL_FILL columns. */
+	{
+		Uint fill_cols, nonfill_width, fill_width;
+
+		fill_cols = 0;
+		nonfill_width = 0;
+		for (i = 0; i < tt->n; i++) {
+			AG_TreetblCol *col = &tt->column[i];
+			if (col->flags & AG_TREETBL_COL_FILL) {
+				fill_cols++;
+			} else {
+				nonfill_width += col->w;
+			}
+		}
+
+		fill_width = (a->w - WIDTH(tt->vBar) - nonfill_width) /
+		             fill_cols;
+
+		for (i = 0; i < tt->n; i++) {
+			AG_TreetblCol *col = &tt->column[i];
+			if (col->flags & AG_TREETBL_COL_FILL)
+				col->w = fill_width;
+		}
+	}
+
+	/* Calculate how many rows the view holds. */
+	{
+		if (tt->r.h < tt->hCol) {
+			tt->r.h = tt->hCol;
+		}
+		rows_per_view = tt->r.h/ tt->hRow;
+		if (tt->r.h % tt->hRow)
+			rows_per_view++;
+	}
+
+	if (tt->visible.count < rows_per_view) {
+		/* visible area increased */
+		tt->visible.items = Realloc(tt->visible.items,
+		    sizeof(struct ag_treetbl_rowdocket_item) * rows_per_view);
+
+		for (i = tt->visible.count; i < rows_per_view; i++)
+			VISROW(tt,i) = NULL;
+
+		tt->visible.count = rows_per_view;
+		tt->visible.dirty = 1;
+	} else if (tt->visible.count > rows_per_view) {
+		/* visible area decreased */
+		tt->visible.items = Realloc(tt->visible.items,
+		    sizeof(struct ag_treetbl_rowdocket_item) * rows_per_view);
+		tt->visible.count = rows_per_view;
+		tt->visible.dirty = 1;
+	}
+	return (0);
+}
+
+/* Render a dynamic column. */
+static void
+DrawDynamicColumn(AG_Treetbl *tt, Uint idx)
+{
+	AG_TreetblCol *col = &tt->column[idx];
+	char *s;
+	Uint i;
+
+	for (i = 0; i < tt->visible.count; i++) {
+		AG_TreetblRow *row = VISROW(tt,i);
+		AG_TreetblCell *cell;
+
+		if (row == NULL)
+			break;
+		if (!(row->flags & AG_TREETBL_ROW_DYNAMIC))
+			continue;
+
+		cell = &row->cell[col->idx];
+
+		if (cell->image != NULL)
+			AG_SurfaceFree(cell->image);
+
+		AG_PushTextState();
+		AG_TextColor(TABLEVIEW_CTXT_COLOR);
+		s = tt->cellDataFn(tt, col->cid, row->rid);
+		cell->image = AG_TextRender((s != NULL) ? s : "");
+		AG_PopTextState();
+	}
+}
+
+/* Render a column header and cells. */
+static int
+DrawColumn(AG_Treetbl *tt, int x1, int x2, Uint32 idx, void *arg1, void *arg2)
+{
+	const int *update = (int *)arg1;
+	AG_TreetblCol *col = &tt->column[idx];
+	Uint j;
+	int y;
+
+	/* Render the column header. */
+	if (tt->hCol > 0) {
+		STYLE(tt)->TableColumnHeaderBackground(tt, idx,
+		    AG_RECT(x1, 0, col->w, tt->hCol),
+		    (col->flags & (AG_TREETBL_COL_SELECTED|
+		                   AG_TREETBL_COL_SORTING)));
+
+		if (col->label[0] != '\0') {
+			int xLbl;
+
+			if (col->labelSu == -1) {
+				AG_PushTextState();
+				AG_TextColor(TABLEVIEW_HTXT_COLOR);
+				col->labelSu = AG_WidgetMapSurface(tt,
+				    AG_TextRender(col->label));
+			}
+			xLbl = col->w/2 - WSURFACE(tt,col->labelSu)->w/2;
+			AG_WidgetBlitSurface(tt, col->labelSu, x1+xLbl, 0);
+		}
+	}
+
+	/* Check for the need to update */
+	if (*update && (col->flags & AG_TREETBL_COL_DYNAMIC))
+		DrawDynamicColumn(tt, idx);
+
+	/* Draw the cells under this column */
+	AG_PushClipRect(tt, tt->r);
+	y = tt->hCol;
+	for (j = 0; j < tt->visible.count; j++) {
+		int x = x1+4;
+		AG_TreetblCell *cell;
+
+		if (VISROW(tt,j) == NULL) {
+			break;
+		}
+		if (col->flags & AG_TREETBL_COL_EXPANDER) {
+			int tw = tt->hRow/2 + 1;
+
+			x += VISDEPTH(tt,j)*(tw+4);
+			if (!TAILQ_EMPTY(&VISROW(tt,j)->children)) {
+				STYLE(tt)->TreeSubnodeIndicator(tt,
 				    AG_RECT(x, y+tw/2, tw, tw),
-				    (VISROW(tv,j)->flags &
-				     AG_TABLEVIEW_ROW_EXPANDED));
+				    (VISROW(tt,j)->flags &
+				     AG_TREETBL_ROW_EXPANDED));
 			}
 			x += tw+4;
 		}
-		if (VISROW(tv,j)->cell[cidx].image) {
-			/* XXX inefficient in opengl mode */
-			AG_WidgetBlit(tv,
-			    VISROW(tv,j)->cell[cidx].image,
-			    x, y+1);
+		cell = &VISROW(tt,j)->cell[col->idx];
+		if (cell->image != NULL) {
+			/* XXX XXX GL inefficient in opengl mode */
+			AG_WidgetBlit(tt, cell->image, x, y+1);
 		}
-		y += tv->row_height;
+		y += tt->hRow;
 	}
 	AG_PopClipRect();
 
-	/* Fill the Remaining Space in column heading */
-	if (tv->head_height > 0 &&
-	    idx == tv->columncount-1 &&
-	    x2 < tv->r.w) {
-		STYLE(tv)->TableColumnHeaderBackground(tv, -1,
-		    AG_RECT(x2, 0, tv->r.w-x2, tv->head_height), 0);
+	/* Fill the Remaining space in column heading */
+	if (tt->hCol > 0 &&
+	    idx == tt->n-1 &&
+	    x2 < tt->r.w) {
+		STYLE(tt)->TableColumnHeaderBackground(tt, -1,
+		    AG_RECT(x2, 0, tt->r.w-x2, tt->hCol), 0);
 	}
 	return (1);
 }
 
 /*
- * *********************** EVENT HANDLERS **********************
+ * Recursive companion to ViewChanged. Finds the visible rows and populates
+ * tt->visible.items array with them.
  */
-
-static void
-mousebuttonup(AG_Event *event)
+static int
+ViewChangedRecurse(AG_Treetbl *tt, AG_TreetblRowQ *in, int depth, int filled,
+    int *seen)
 {
-	AG_Tableview *tv = AG_SELF();
-	int coord_x = AG_INT(2), coord_y = AG_INT(3);
-	int left;
+	AG_TreetblRow *row;
+	Uint x = 0;
+
+	TAILQ_FOREACH(row, in, siblings) {
+		if (*seen) {
+			(*seen)--;
+		} else {
+			if ((filled+x) < tt->visible.count) {
+				VISROW(tt,filled+x) = row;
+				VISDEPTH(tt,filled+x) = depth;
+				x++;
+			}
+		}
+
+		if (row->flags & AG_TREETBL_ROW_EXPANDED &&
+		    filled+x < tt->visible.count)
+			x += ViewChangedRecurse(tt, &row->children, depth + 1,
+			    filled + x, seen);
+
+		if (filled+x >= tt->visible.count)
+			return (x);
+	}
+	return (x);
+}
+
+/*
+ * Called after any addition or removal of visible rows. Rebuilds the array
+ * of rows to be drawn (tt->visible).
+ */
+static void
+ViewChanged(AG_Treetbl *tt)
+{
+	int rows_per_view, max, filled, value;
+	int scrolling_area = HEIGHT(tt->vBar) - tt->vBar->wButton*2;
 	Uint i;
 
-	AG_CancelEvent(tv, "column-resize");
-	AG_CancelEvent(tv, "column-move");
+	/* cancel double clicks if what's under it changes it */
+	tt->dblclicked = 0;
+	AG_CancelEvent(tt, "dblclick-expire");
 
-	/*
-	 * Our goal here is to set/toggle a column's sorting mode if the
-	 * click fell on the header and the user did not drag it
-	 */
-	/* XXX - fix horiz sbar */
-	left = 0;
-	for (i = 0; i < tv->columncount; i++) {
-		if (tv->column[i].mousedown) {
+	rows_per_view = tt->r.h/tt->hRow;
+	if (tt->r.h % tt->hRow)
+		rows_per_view++;
+
+	max = tt->nExpandedRows - rows_per_view;
+	if (max < 0) {
+		max = 0;
+	}
+	if (max && (tt->r.h % tt->hRow) < 16) {
+		max++;
+	}
+	AG_WidgetSetInt(tt->vBar, "max", max);
+	if (AG_WidgetInt(tt->vBar, "value") > max)
+		AG_WidgetSetInt(tt->vBar, "value", max);
+
+	/* Calculate Scrollbar Size */
+	if (rows_per_view && tt->nExpandedRows > rows_per_view) {
+		AG_ScrollbarSetBarSize(tt->vBar,
+		    rows_per_view * scrolling_area / tt->nExpandedRows);
+	} else {
+		AG_ScrollbarSetBarSize(tt->vBar, -1);
+	}
+
+	/* locate visible rows */
+	value = AG_WidgetInt(tt->vBar, "value");
+	filled = ViewChangedRecurse(tt, &tt->children, 0, 0, &value);
+
+	/* blank empty rows */
+	for (i = filled; i < tt->visible.count; i++)
+		VISROW(tt,i) = NULL;
+
+	/* render dynamic columns */
+	for (i = 0; i < tt->n; i++)
+		if (tt->column[i].flags & AG_TREETBL_COL_DYNAMIC)
+			DrawDynamicColumn(tt, i);
+
+	tt->visible.redraw_last = SDL_GetTicks();
+	tt->visible.dirty = 0;
+}
+
+static void
+Draw(void *obj)
+{
+	AG_Treetbl *tt = obj;
+	Uint i;
+	int y, update = 0;
+
+	/* Before we draw, update if needed */
+	if (tt->visible.dirty) {
+		ViewChanged(tt);
+	}
+	if (tt->visible.redraw_rate &&
+	    SDL_GetTicks() > tt->visible.redraw_last + tt->visible.redraw_rate)
+		update = 1;
+	
+	STYLE(tt)->TableBackground(tt, tt->r);
+	
+	AG_WidgetDraw(tt->vBar);
+	if (tt->hBar != NULL)
+		AG_WidgetDraw(tt->hBar);
+	
+	/* draw row selection hilites */
+	y = tt->hCol;
+	for (i = 0; i < tt->visible.count; i++) {
+		if (VISROW(tt,i) == NULL) {
 			break;
 		}
-		left += tv->column[i].w;
+		STYLE(tt)->TableRowBackground(tt,
+		    AG_RECT(1, y, tt->r.w-2, tt->hRow),
+		    (VISROW(tt,i)->flags & AG_TREETBL_ROW_SELECTED));
+		y += tt->hRow;
 	}
 
-	if (i < tv->columncount) {
-		/*
-		 * if the column wasn't moved and the mouse is still within
-		 * the column's header, do sort work
-		 */
-		if (tv->flags & AG_TABLEVIEW_SORT &&
-		    !(tv->column[i].flags & AG_TABLEVIEW_COL_MOVING) &&
-		    coord_y < tv->head_height &&
-		    coord_x >= left &&
-		    coord_x < (left+tv->column[i].w)) {
-			/* toggle the sort mode */
-			if (tv->sortColumn == ID_INVALID ||
-			    tv->sortMode == AG_TABLEVIEW_SORT_DSC) {
-				tv->sortMode = AG_TABLEVIEW_SORT_ASC;
-			} else {
-				tv->sortMode = AG_TABLEVIEW_SORT_DSC;
-			}
+	/* draw columns */
+	FOREACH_VISIBLE_COLUMN(tt, DrawColumn, &update, NULL);
 
-			tv->sortColumn = tv->column[i].cid;
-
-			//XXX - run sort here
-		}
-		tv->column[i].mousedown = 0;
-		tv->column[i].flags &= ~(AG_TABLEVIEW_COL_MOVING);
-	}
+	if (update)
+		tt->visible.redraw_last = SDL_GetTicks();
 }
 
-static void
-mousebuttondown(AG_Event *event)
+/* Return a pointer to the currently selected row or NULL. */
+AG_TreetblRow *
+AG_TreetblSelectedRow(AG_Treetbl *tt)
 {
-	AG_Tableview *tv = AG_SELF();
-	int coord_x = AG_INT(2);
-	int coord_y = AG_INT(3);
+	AG_TreetblRow *row;
 
-	AG_WidgetFocus(tv);
-
-	if (tv->head_height > 0 && coord_y < tv->head_height) {
-		/* a mouse down on the column header */
-		foreach_visible_column(tv, clicked_header, &coord_x, NULL);
-	} else {
-		/* a mouse down in the body */
-		foreach_visible_column(tv, clicked_row, &coord_x, &coord_y);
-	}
-}
-
-static void
-scrolled(AG_Event *event)
-{
-	AG_Tableview *tv = AG_PTR(1);
-
-	tv->visible.dirty = 1;
-}
-
-static void
-dblclick_expire(AG_Event *event)
-{
-	AG_Tableview *tv = AG_SELF();
-
-	/* the user hasn't clicked again, so cancel the double click */
-	tv->dblclicked = 0;
-
-	/* XXX - if the cursor remains in the cell, activate a click-to-edit */
-}
-
-/* XXX - this seems to be called after every click.. */
-static void
-lost_focus(AG_Event *event)
-{
-	//AG_CancelEvent(tv, "key-tick");
-	//AG_CancelEvent(tv, "dblclick-expire");
-	//tv->dblclicked = 0;
-	//tv->keymoved = 0;
-}
-
-static void
-columnresize(AG_Event *event)
-{
-	AG_Tableview *tv = AG_SELF();
-	int col = AG_INT(1), left = AG_INT(2);
-	int x;
-
-	AG_MouseGetState(&x, NULL);
-	x -= WIDGET(tv)->rView.x1;
-	tv->column[col].w = (x-left > tv->column[col].label_img->w) ?
-	    (x-left) : tv->column[col].label_img->w;
-
-	AG_ReschedEvent(tv, "column-resize", agMouseDblclickDelay);
-}
-
-static void
-columnmove(AG_Event *event)
-{
-	AG_Tableview *tv = AG_SELF();
-	Uint col = AG_UINT(1);
-	int left = AG_INT(2);
-	int x;
-
-	/*
-	 * if we haven't mouseupped by the time this event is called, set
-	 * moving to indicate we won't sort.
-	 */
-	tv->column[col].flags |= AG_TABLEVIEW_COL_MOVING;
-
-	AG_MouseGetState(&x, NULL);
-	x -= WIDGET(tv)->rView.x1;
-
-	/* dragging to the left */
-	if ((tv->column[col].w < tv->column[col-1].w &&
-	     x < left - tv->column[col-1].w + tv->column[col].w) ||
-	    (tv->column[col].w >= tv->column[col-1].w &&
-	     x < left)) {
-		if (col > 0) {
-			left -= tv->column[col-1].w;
-			switch_columns(tv, col, col-1);
-			col--;
+	AG_ObjectLock(tt);
+	TAILQ_FOREACH(row, &tt->children, siblings) {
+		if (row->flags |= AG_TREETBL_ROW_SELECTED) {
+			AG_ObjectUnlock(tt);
+			return (row);
 		}
 	}
-	/* dragging to the right */
-	else if ((tv->column[col].w <= tv->column[col+1].w &&
-		  x > left + tv->column[col+1].w) ||
-		 (tv->column[col].w > tv->column[col+1].w &&
-		  x > left + tv->column[col].w)) {
-		if (col < tv->columncount-1) {
-			left += tv->column[col+1].w;
-			switch_columns(tv, col, col+1);
-			col++;
-		}
-	}
-	AG_SchedEvent(NULL, tv, agMouseDblclickDelay, "column-move", "%u,%i",
-	    col, left);
+	AG_ObjectUnlock(tt);
+	return (NULL);
 }
 
+#if 0
+
+/* Set the text associated with a given cell. */
 void
-AG_TableviewCellPrintf(AG_Tableview *tv, AG_TableviewRow *row, int cell,
+AG_TreetblCellPrintf(AG_Treetbl *tt, AG_TreetblRow *row, int cid,
     const char *fmt, ...)
 {
 	va_list args;
+	AG_TreetblCell *cell = &row->cell[cid];
 
-	AG_ObjectLock(tv);
+	AG_ObjectLock(tt);
 
-	if (row->cell[cell].image != NULL) {
-		AG_SurfaceFree(row->cell[cell].image);
-	}
-	Free(row->cell[cell].text);
-
+	Free(cell->text);
 	va_start(args, fmt);
-	Vasprintf(&row->cell[cell].text, fmt, args);
+	Vasprintf(&cell->text, fmt, args);
 	va_end(args);
 
+	AG_PushTextState();
 	AG_TextColor(TABLEVIEW_CTXT_COLOR);
-	row->cell[cell].image = AG_TextRender(row->cell[cell].text);
+	if (cell->image != NULL) { AG_SurfaceFree(cell->image); }
+	cell->image = AG_TextRender(cell->text);
+	AG_PopTextState();
 	
-	AG_ObjectUnlock(tv);
+	AG_ObjectUnlock(tt);
 }
 
-AG_WidgetClass agTableviewClass = {
+#endif
+
+AG_WidgetClass agTreetblClass = {
 	{
-		"Agar(Widget:Tableview)",
-		sizeof(AG_Tableview),
+		"Agar(Widget:Treetbl)",
+		sizeof(AG_Treetbl),
 		{ 0,0 },
 		Init,
 		NULL,			/* free */

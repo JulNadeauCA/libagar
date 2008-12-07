@@ -1,221 +1,253 @@
 /*	Public domain */
 
-#ifndef _AGAR_WIDGET_TABLEVIEW_H_
-#define _AGAR_WIDGET_TABLEVIEW_H_
+#ifndef _AGAR_WIDGET_TREETBL_H_
+#define _AGAR_WIDGET_TREETBL_H_
 
 #include <agar/gui/label.h>
 #include <agar/gui/scrollbar.h>
 
 #include <agar/gui/begin.h>
 
-#define AG_TABLEVIEW_LABEL_MAX AG_LABEL_MAX
+#define AG_TREETBL_LABEL_MAX AG_LABEL_MAX
 
-typedef Uint32 AG_TableviewRowID;
-typedef Uint32 AG_TableviewColID;
+struct ag_treetbl;
 
-struct ag_tableview;
+typedef char *(*AG_TreetblDataFn)(struct ag_treetbl *, int, int);
+typedef int (*AG_TreetblSortFn)(int, int, int, char);
 
-typedef char *(*AG_TableviewDataFn)(struct ag_tableview *, AG_TableviewColID,
-		AG_TableviewRowID);
-typedef int (*AG_TableviewSortFn)(AG_TableviewColID, AG_TableviewRowID,
-	      AG_TableviewRowID, char);
-
-enum {
-	AG_TABLEVIEW_SORT_NOT = 0,
-	AG_TABLEVIEW_SORT_ASC = 1,
-	AG_TABLEVIEW_SORT_DSC = 2,
-	 
-	AG_TABLEVIEW_SORTED_AFIRST = 1,
-	AG_TABLEVIEW_SORTED_BFIRST = 2
+enum ag_treetbl_sort_mode {
+	AG_TREETBL_SORT_NOT = 0,
+	AG_TREETBL_SORT_ASC = 1,
+	AG_TREETBL_SORT_DSC = 2
 };
 
-typedef struct ag_tableview_col {
-	AG_TableviewColID cid;
+typedef struct ag_treetbl_col {
+	int cid;				/* Column identifier */
+	struct ag_treetbl *tbl;			/* Back pointer to Treetbl */
+
 	Uint idx;				/* Index into row->cell[] */
 	Uint flags;
-#define AG_TABLEVIEW_COL_DYNAMIC	0x01	/* Updates periodically */
-#define AG_TABLEVIEW_COL_EXPANDER	0x02	/* Should hold +/- boxes */
-#define AG_TABLEVIEW_COL_RESIZABLE	0x04	/* User-resizable */
-#define AG_TABLEVIEW_COL_MOVING		0x08	/* Being displaced */
-#define AG_TABLEVIEW_COL_KEYEDIT	0x10
-#define AG_TABLEVIEW_COL_FILL		0x20	/* Expand to remaining space */
-	int mousedown;				/* Mouse click */
+#define AG_TREETBL_COL_DYNAMIC		0x01	/* Updates periodically */
+#define AG_TREETBL_COL_EXPANDER		0x02	/* Should hold +/- boxes */
+#define AG_TREETBL_COL_RESIZABLE	0x04	/* User-resizable */
+#define AG_TREETBL_COL_MOVING		0x08	/* Being displaced */
+#define AG_TREETBL_COL_FILL		0x20	/* Expand to remaining space */
+#define AG_TREETBL_COL_SELECTED		0x40	/* Column is selected */
+#define AG_TREETBL_COL_SORTING		0x80	/* Controls sorting */
 
-	char label[AG_TABLEVIEW_LABEL_MAX];	/* Header text */
-	AG_Surface *label_img;			/* Rendered header text */
-	int label_id;
+	char label[AG_TREETBL_LABEL_MAX];	/* Header text */
+	int labelSu;				/* Cached text surface or -1 */
 	int w;					/* Column width */
-} AG_TableviewCol;
+} AG_TreetblCol;
 
-AG_TAILQ_HEAD(ag_tableview_rowq, ag_tableview_row);
+typedef AG_TAILQ_HEAD(ag_treetbl_rowq, ag_treetbl_row) AG_TreetblRowQ;
 
-typedef struct ag_tableview_row {
-	AG_TableviewRowID rid;
-	struct ag_tableview_cell {
-		char *text;
-		AG_Surface *image;
-	} *cell;
+typedef struct ag_treetbl_cell {
+	char *text;
+	AG_Surface *image;
+} AG_TreetblCell;
 
-	int selected;				/* Row is selected */
+typedef struct ag_treetbl_row {
+	int rid;			/* Row identifier */
+	struct ag_treetbl *tbl;		/* Back pointer to Treetbl */
+	AG_TreetblCell *cell;		/* Array of cells */
+
 	Uint flags;
-#define AG_TABLEVIEW_ROW_EXPANDED	0x01	/* Tree expanded */
-#define AG_TABLEVIEW_ROW_DYNAMIC	0x02	/* Update dynamically */
+#define AG_TREETBL_ROW_EXPANDED	0x01	/* Tree expanded */
+#define AG_TREETBL_ROW_DYNAMIC	0x02	/* Update dynamically */
+#define AG_TREETBL_ROW_SELECTED	0x04	/* Row is selected */
 
-	struct ag_tableview_row *parent;
-	struct ag_tableview_rowq children;
-	void *userp;
-	AG_TAILQ_ENTRY(ag_tableview_row) siblings;
-	AG_TAILQ_ENTRY(ag_tableview_row) backstore;
-} AG_TableviewRow;
+	struct ag_treetbl_row *parent;
+	AG_TreetblRowQ children;
+	AG_TAILQ_ENTRY(ag_treetbl_row) siblings;
+	AG_TAILQ_ENTRY(ag_treetbl_row) backstore;
+} AG_TreetblRow;
 
-typedef struct ag_tableview {
+typedef struct ag_treetbl {
 	struct ag_widget wid;
 	
-	/* child widgets */
-	AG_Scrollbar *sbar_v;		/* Vertical scrollbar */
-	AG_Scrollbar *sbar_h;		/* Horizontal scrollbar */
-	//AG_Textbox *editbox;		/* Cell edition widget */
-	
-	AG_TableviewDataFn data_callback;	/* Callback to get cell data */
-	AG_TableviewSortFn sort_callback;	/* Callback to compare */
-	
-	/* Flags */
 	Uint flags;
-#define AG_TABLEVIEW_SELMULTI	 0x001	/* Allow multiple selections */
-#define AG_TABLEVIEW_REORDERCOLS 0x002	/* Allow column reordering */
-#define AG_TABLEVIEW_HEADER	 0x004	/* Draw column headings */
-#define AG_TABLEVIEW_SORT	 0x008	/* Enable sorting */
-#define AG_TABLEVIEW_POLLED	 0x010	/* Polling mode */
-#define AG_TABLEVIEW_HORIZ	 0x020	/* Allow horizontal scrolling */
-#define AG_TABLEVIEW_HFILL	 0x040
-#define AG_TABLEVIEW_VFILL	 0x080
-#define AG_TABLEVIEW_EXPAND	 (AG_TABLEVIEW_HFILL|AG_TABLEVIEW_VFILL)
+#define AG_TREETBL_MULTI	0x001	/* Allow multiple selections */
+#define AG_TREETBL_REORDERCOLS	0x002	/* Allow column reordering */
+#define AG_TREETBL_NODUPCHECKS	0x004	/* Skip checks for duplicate IDs */
+#define AG_TREETBL_SORT		0x008	/* Enable sorting */
+#define AG_TREETBL_POLLED	0x010	/* Polling mode */
+#define AG_TREETBL_HFILL	0x040
+#define AG_TREETBL_VFILL	0x080
+#define AG_TREETBL_EXPAND	(AG_TREETBL_HFILL|AG_TREETBL_VFILL)
 
-
-	int head_height;		/* Header height */
-	int row_height;			/* Per-row height */
+	AG_Rect r;			/* View area */
+	int hCol;			/* Header height */
+	int hRow;			/* Per-row height */
 	int dblclicked;			/* Used by double click */
-	/*int keymoved;			Used by key repeat */
-	int prew, preh;			/* Size hint */
+	int wHint, hHint;		/* Size hint */
 	
-	/* columns */
-	Uint columncount;
-	struct ag_tableview_col *column;
-	char sortMode;			/* Sort mode (a or b) */
+	Uint n;				/* Column count */
+	AG_TreetblCol *column;		/* Column array */
+
+	enum ag_treetbl_sort_mode sortMode;	/* Sorting mode */
 	
-	/*
-	 * Special columns - columns with a unique purpose. ID_INVALID if
-	 * unused.
-	 */
-	AG_TableviewColID sortColumn;		/* Column we sort by */
-	AG_TableviewColID enterEdit;		/* Column we edit on enter */
-	AG_TableviewColID expanderColumn;	/* Column for +/- boxes */
+	AG_TreetblRowQ children;	/* Tree of rows */
+	AG_TreetblRowQ backstore;	/* For polling */
+	int nExpandedRows;		/* Number of rows visible */
 	
-	/* rows */
-	struct ag_tableview_rowq children;	/* List of rows */
-	struct ag_tableview_rowq backstore;	/* List of saved rows */
-	int expandedrows;			/* Number of rows visible */
+	AG_Scrollbar *vBar;		/* Vertical scrollbar */
+	AG_Scrollbar *hBar;		/* Horizontal scrollbar */
 	
-	/* drawing hints */
+	AG_TreetblDataFn cellDataFn;	/* Callback to get cell data */
+	AG_TreetblSortFn sortFn;	/* Compare function */
+	
 	struct {
-		Uint redraw_last;
-		Uint redraw_rate;
-		int dirty;
-		Uint count;
-		struct ag_tableview_rowdocket_item {
-			struct ag_tableview_row *row;
+		Uint redraw_last;			/* Last drawn */
+		Uint redraw_rate;			/* Refresh rate */
+		int dirty;				/* Needs update */
+		Uint count;				/* Visible rows per view */
+
+		struct ag_treetbl_rowdocket_item {	/* Visible row cache */
+			AG_TreetblRow *row;
 			Uint depth;
 		} *items;
 	} visible;
-
-	AG_Rect r;				/* View area */
-} AG_Tableview;
-
-/* Flags for tableview_add_row() */
-#define AG_TABLEVIEW_STATIC_ROW	0x01	/* Don't update row dynamically */
+} AG_Treetbl;
 
 __BEGIN_DECLS
-extern AG_WidgetClass agTableviewClass;
+extern AG_WidgetClass agTreetblClass;
 
-AG_Tableview	*AG_TableviewNew(void *, Uint, AG_TableviewDataFn,
-		                 AG_TableviewSortFn);
-void		 AG_TableviewSizeHint(AG_Tableview *, const char *, int);
-#define		 AG_TableviewPrescale AG_TableviewSizeHint
-void		 AG_TableviewSetUpdate(AG_Tableview *, Uint);
-void		 AG_TableviewSetColHeight(AG_Tableview *, int);
+AG_Treetbl *AG_TreetblNew(void *, Uint, AG_TreetblDataFn, AG_TreetblSortFn);
+void        AG_TreetblSizeHint(AG_Treetbl *, int, int);
+void        AG_TreetblSetRefreshRate(AG_Treetbl *, Uint);
+void        AG_TreetblSetColHeight(AG_Treetbl *, int);
+void        AG_TreetblSetSortCol(AG_Treetbl *, AG_TreetblCol *);
+void        AG_TreetblSetSortMode(AG_Treetbl *, enum ag_treetbl_sort_mode mode);
+void        AG_TreetblSetExpanderCol(AG_Treetbl *, AG_TreetblCol *);
 
-AG_TableviewCol *AG_TableviewColAdd(AG_Tableview *, int, AG_TableviewColID,
-			            const char *, const char *);
-void		 AG_TableviewColSelect(AG_Tableview *, AG_TableviewColID);
-AG_TableviewRow *AG_TableviewRowGet(AG_Tableview *, AG_TableviewRowID);
-AG_TableviewRow *AG_TableviewRowAdd(AG_Tableview *, Uint, AG_TableviewRow *,
-			            void *, AG_TableviewRowID, ...);
-AG_TableviewRow *AG_TableviewRowSelected(AG_Tableview *);
+AG_TreetblCol *AG_TreetblAddCol(AG_Treetbl *, int, const char *,
+                                const char *, ...);
+void           AG_TreetblSelectCol(AG_Treetbl *, AG_TreetblCol *);
+int            AG_TreetblSelectColID(AG_Treetbl *, int);
+void           AG_TreetblDeselectCol(AG_Treetbl *, AG_TreetblCol *);
+int            AG_TreetblDeselectColID(AG_Treetbl *, int);
 
-void AG_TableviewRowDel(AG_Tableview *, AG_TableviewRow *);
-void AG_TableviewRowDelAll(AG_Tableview *);
-void AG_TableviewRowRestoreAll(AG_Tableview *);
-void AG_TableviewRowSelect(AG_Tableview *, AG_TableviewRow *);
-void AG_TableviewRowSelectAll(AG_Tableview *, AG_TableviewRow *);
-void AG_TableviewRowDeselectAll(AG_Tableview *, AG_TableviewRow *);
-void AG_TableviewRowExpand(AG_Tableview *, AG_TableviewRow *);
-void AG_TableviewRowCollapse(AG_Tableview *, AG_TableviewRow *);
-void AG_TableviewRowExpandAll(AG_Tableview *, AG_TableviewRow *);
-void AG_TableviewRowCollapseAll(AG_Tableview *, AG_TableviewRow *);
-void AG_TableviewCellPrintf(AG_Tableview *, AG_TableviewRow *, int,
-		           const char *, ...);
+AG_TreetblRow *AG_TreetblAddRow(AG_Treetbl *, AG_TreetblRow *, int,
+                                const char *, ...);
 
-#define AG_TableviewRowGetID(ROW) (*(AG_TableviewRowID *)(ROW))
-#define AG_TableviewRowDeselect(TV, ROW) ((ROW)->selected = 0)
-#define	AG_TableviewRowToggle(TV, ROW)				\
+void           AG_TreetblDelRow(AG_Treetbl *, AG_TreetblRow *);
+void           AG_TreetblClearRows(AG_Treetbl *);
+void           AG_TreetblRestoreRows(AG_Treetbl *);
+
+void           AG_TreetblSelectRow(AG_Treetbl *, AG_TreetblRow *);
+void           AG_TreetblDeselectRow(AG_Treetbl *, AG_TreetblRow *);
+void           AG_TreetblSelectAll(AG_Treetbl *, AG_TreetblRow *);
+void           AG_TreetblDeselectAll(AG_Treetbl *, AG_TreetblRow *);
+AG_TreetblRow *AG_TreetblSelectedRow(AG_Treetbl *);
+
+void           AG_TreetblExpandRow(AG_Treetbl *, AG_TreetblRow *);
+void           AG_TreetblCollapseRow(AG_Treetbl *, AG_TreetblRow *);
+
+#if 0
+void           AG_TreetblCellPrintf(AG_Treetbl *, AG_TreetblRow *, int,
+                                    const char *, ...);
+#endif
+
+#define	AG_TreetblRowToggle(TV, ROW)				\
 	do {							\
 		if (NULL == (ROW)) break			\
-		if ((ROW)->flags & AG_TABLEVIEW_ROW_EXPANDED)	\
-			AG_TableviewRowCollapse(TV, (ROW));	\
+		if ((ROW)->flags & AG_TREETBL_ROW_EXPANDED)	\
+			AG_TreetblCollapseRow(TV, (ROW));	\
 		else						\
-			AG_TableviewRowExpand(TV, (ROW));	\
+			AG_TreetblExpandRow(TV, (ROW));		\
 	} while (0)
 
-#define AG_TableviewRowIDAdd(TV, ID, IDNEW, USERP) \
-	AG_TableviewRowAdd((TV), 0, \
-	                   AG_TableviewRowGet((TV),(ID)), (USERP), \
-	                   (IDNEW), -1)
+#define AG_TreetblBegin	AG_TreetblClearRows
+#define AG_TreetblEnd	AG_TreetblRestoreRows
 
-#define AG_TableviewRowIDDel(TV, ID) \
-	AG_TableviewRowDelete((TV), AG_TableviewRowGet((TV), (ID)))
+/*
+ * Return a pointer if the row with the given identifer exists in or in a
+ * descendant of the rowq. If it does not exist, return NULL.
+ */
+static __inline__ AG_TreetblRow *
+AG_TreetblLookupRowRecurse(AG_TreetblRowQ *searchIn, int rid)
+{
+	AG_TreetblRow *row, *row2;
 
-#define AG_TableviewRowIDSelect(TV, ID) \
-	AG_TableviewRowSelect((TV), AG_TableviewRowGet((TV), (ID)))
+	AG_TAILQ_FOREACH(row, searchIn, siblings) {
+		if (row->rid == rid)
+			return (row);
 
-#define AG_TableviewRowIDDeselect(TV, ID)				\
-	do {								\
-		AG_TableviewRow *_row = AG_TableviewRowGet((TV), (ID)); \
-		if (_row != NULL) _row->selected = 0; \
-	} while(0)
+		if (!AG_TAILQ_EMPTY(&row->children)) {
+			row2 = AG_TreetblLookupRowRecurse(&row->children, rid);
+			if (row2 != NULL)
+				return (row2);
+		}
+	}
+	return (NULL);
+}
 
-#define AG_TableviewRowIDSelectAll(TV, ID) \
-	AG_TableviewRowSelectAll((TV), AG_TableviewRowGet((TV), (ID)))
+/*
+ * Lookup a row by ID. Return value is only valid as long as the Treetbl
+ * remains locked.
+ */
+static __inline__ AG_TreetblRow *
+AG_TreetblLookupRow(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
 
-#define AG_TableviewRowIDDeselect_all(TV, ID) \
-	AG_TableviewRowDeselectAll((TV), AG_TableviewRowGet((TV), (ID)))
+	AG_ObjectLock(tt);
+	row = AG_TreetblLookupRowRecurse(&tt->children, rowID);
+	AG_ObjectUnlock(tt);
+	return (row);
+}
 
-#define AG_TableviewRowIDExpand(TV, ID) \
-	AG_TableviewRowExpand((TV), AG_TableviewRowGet((TV), (ID)))
+/* Delete a row by ID */
+static __inline__ int
+AG_TreetblDelRowID(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_TreetblDelRow(tt, row);
+	return (0);
+}
 
-#define AG_TableviewRowIDCollapse(TV, ID) \
-	AG_TableviewRowCollapse((TV), AG_TableviewRowGet((TV), (ID)))
+/* Select a row by ID */
+static __inline__ int
+AG_TreetblSelectRowID(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_TreetblSelectRow(tt, row);
+	return (0);
+}
 
-#define AG_TableviewRowIDToggle(TV, ID)					\
-	do {								\
-		AG_TableviewRow *_row = AG_TableviewRowGet((TV), (ID)); \
-		if (NULL == _row) break;				\
-		if (_row->flags & AG_TABLEVIEW_ROW_EXPANDED) {		\
-			AG_TableviewRowCollapse((TV), _row);		\
-		} else {						\
-			AG_TableviewRowExpand((TV), _row);		\
-		}							\
-	} while(0)
+/* Deselect a row by ID */
+static __inline__ int
+AG_TreetblDeselectRowID(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_TreetblDeselectRow(tt, row);
+	return (0);
+}
+
+/* Expand a row by ID */
+static __inline__ int
+AG_TreetblExpandRowID(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_TreetblExpandRow(tt, row);
+	return (0);
+}
+
+/* Collapse a row by ID */
+static __inline__ int
+AG_TreetblCollapseRowID(AG_Treetbl *tt, int rowID)
+{
+	AG_TreetblRow *row;
+	if ((row = AG_TreetblLookupRow(tt,rowID)) == NULL) { return (-1); }
+	AG_TreetblCollapseRow(tt, row);
+	return (0);
+}
 __END_DECLS
 
 #include <agar/gui/close.h>
-#endif /* _AGAR_WIDGET_TABLEVIEW_H_ */
+#endif /* _AGAR_WIDGET_TREETBL_H_ */
