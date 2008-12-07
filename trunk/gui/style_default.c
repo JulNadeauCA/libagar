@@ -39,7 +39,7 @@
 #include "console.h"
 #include "tlist.h"
 #include "table.h"
-#include "tableview.h"
+#include "treetbl.h"
 #include "textbox.h"
 #include "socket.h"
 #include "separator.h"

@@ -16,7 +16,7 @@ SRCS=	gui.c view.c widget.c window.c style.c style_default.c iconmgr.c \
 	fixed_plotter.c tlist.c scrollbar.c spinbutton.c titlebar.c toolbar.c \
 	fspinbutton.c combo.c ucombo.c units.c nlunits.c hsvpal.c \
 	mspinbutton.c mfspinbutton.c statusbar.c menu.c menu_view.c \
-	treetable.c separator.c notebook.c pixmap.c file_dlg.c objsel.c \
+	treetbl.c separator.c notebook.c pixmap.c file_dlg.c objsel.c \
 	fixed.c numerical.c table.c glview.c mpane.c pane.c console.c graph.c \
 	socket.c icon.c progress_bar.c slider.c text_cache.c load_surface.c \
 	load_color.c load_xcf.c file_selector.c scrollview.c font_selector.c
