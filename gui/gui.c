@@ -123,7 +123,7 @@ void *agGUIClasses[] = {
 	&agStatusbarClass,
 	&agTitlebarClass,
 	&agTableClass,
-	&agTableviewClass,
+	&agTreetblClass,
 	&agTextboxClass,
 	&agTlistClass,
 	&agToolbarClass,
