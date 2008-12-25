@@ -775,10 +775,6 @@ void
 AG_TableFreeCell(AG_Table *t, AG_TableCell *c)
 {
 	if (c->widget != NULL) {
-#if 0
-		printf("Detaching embedded widget %p: %s\n", c->widget,
-		    OBJECT(c->widget)->name);
-#endif
 		AG_ObjectDetach(c->widget);
 		AG_ObjectDestroy(c->widget);
 	}
@@ -1704,6 +1700,7 @@ AG_TableInitCell(AG_Table *t, AG_TableCell *c)
 	c->fnTxt = NULL;
 	c->selected = 0;
 	c->surface = -1;
+	c->widget = NULL;
 }
 
 int
