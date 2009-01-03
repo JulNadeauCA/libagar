@@ -669,26 +669,26 @@ AG_GetDSOList(Uint *count)
 					continue;
 				}
 #if defined(__AMIGAOS4__)
-				if ((s = strstr(file, ".ixlibrary")) == NULL ||
+				if ((s = Strcasestr(file, ".ixlibrary")) == NULL ||
 				    s[10] != '\0') {
 					continue;
 				}
 				pStart = s;
 #elif defined(HPUX)
-				if ((s = strstr(file, ".sl")) == NULL ||
+				if ((s = Strcasestr(file, ".sl")) == NULL ||
 				    s[3] != '\0') {
 					continue;
 				}
 				pStart = s;
 #elif defined(_WIN32) || defined(OS2)
-				if ((s = strstr(file, ".dll")) == NULL ||
+				if ((s = Strcasestr(file, ".dll")) == NULL ||
 				    s[4] != '\0') {
 					continue;
 				}
 				pStart = s;
 #else
 				if (strncmp(file, "lib", 3) != 0 ||
-				   (s = strstr(file, ".so")) == NULL ||
+				   (s = Strcasestr(file, ".so")) == NULL ||
 				    s[3] != '\0') {
 					continue;
 				}
