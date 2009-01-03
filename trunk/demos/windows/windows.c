@@ -72,13 +72,23 @@ main(int argc, char *argv[])
 	win = AG_WindowNew(AG_WINDOW_NOMOVE|AG_WINDOW_NORESIZE|
 	                   AG_WINDOW_NOBUTTONS);
 	AG_WindowSetCaption(win, "Unmovable");
-	AG_LabelNew(win, 0, "Unmovable window", i);
+	AG_LabelNew(win, 0, "Unmovable window");
 	AG_WindowSetPosition(win, AG_WINDOW_ML, 1);
+	AG_WindowShow(win);
+	
+	win = AG_WindowNew(AG_WINDOW_KEEPABOVE);
+	AG_WindowSetCaption(win, "KEEPABOVE");
+	AG_LabelNew(win, 0, "KEEPABOVE");
+	AG_WindowShow(win);
+	
+	win = AG_WindowNew(AG_WINDOW_KEEPBELOW);
+	AG_WindowSetCaption(win, "KEEPBELOW");
+	AG_LabelNew(win, 0, "KEEPBELOW");
 	AG_WindowShow(win);
 	
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Tweaked borders");
-	AG_LabelNew(win, 0, "Window with tweaked borders", i);
+	AG_LabelNew(win, 0, "Window with tweaked borders");
 	AG_WindowSetPosition(win, AG_WINDOW_ML, 1);
 	AG_WindowSetSideBorders(win, 10);
 	AG_WindowSetBottomBorder(win, 10);
