@@ -81,6 +81,9 @@ widgets are more efficient alternatives to
 .Ft void
 .Fn AG_TlistSetChangedFn "AG_Tlist *tl" "AG_EventFn fn" "const char *fn_args" "..."
 .Pp
+.Ft void
+.Fn AG_TlistSetCompareFn "AG_Tlist *tl" "int (*fn)(const AG_TlistItem *a)(const AG_TlistItem *b)"
+.Pp
 .nr nS 0
 The
 .Fn AG_TlistNew
@@ -169,6 +172,22 @@ arranges for the callback
 to be invoked when the user selects or deselects an item.
 The arguments are respectively, a pointer to the item and an integer with a
 value of 0 to indicate deselection and 1 to indicate selection.
+.Pp
+In order for
+.Nm
+to maintain per-item states (selection flag, etc) through polling updates, items
+must be uniquely identifiable.
+By default, the
+.Va p1
+pointer is used.
+.Fn AG_TlistSetCompareFn
+specifies an alternate comparison routine to use.
+The standard built-in routines
+.Fn AG_TlistCompareStrings ,
+.Fn AG_TlistComparePtrs
+and
+.Fn AG_TlistComparePtrsAndClasses
+are provided.
 .Sh MANIPULATING ITEMS
 .nr nS 1
 .Ft "AG_TlistItem *"
