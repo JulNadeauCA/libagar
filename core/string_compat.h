@@ -1,4 +1,58 @@
-/*	Public domain	*/
+/*
+ * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/*-
+ * Copyright (c) 1990, 1993
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Chris Torek.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 #ifndef	_AGAR_CORE_STRING_COMPAT_H_
 #define	_AGAR_CORE_STRING_COMPAT_H_
@@ -136,6 +190,9 @@ AG_LengthUTF8(const char *s)
 	return (rv);
 }
 
+/*
+ * Compare two strings ignoring case.
+ */
 static __inline__ int
 AG_Strcasecmp(const char *s1, const char *s2)
 {
@@ -150,6 +207,9 @@ AG_Strcasecmp(const char *s1, const char *s2)
 	return (cm[*us1] - cm[*--us2]);
 }
 
+/*
+ * Compare the first n-characters of two strings ignoring case.
+ */
 static __inline__ int
 AG_Strncasecmp(const char *s1, const char *s2, size_t n)
 {
@@ -164,6 +224,29 @@ AG_Strncasecmp(const char *s1, const char *s2, size_t n)
 	}
 	return i == n ? 0 : cm[us1[i]] - cm[us2[i]];
 }
+
+/*
+ * Locate a substring ignoring case.
+ */
+static __inline__ char *
+AG_Strcasestr(const char *s, const char *find)
+{
+	char c, sc;
+	size_t len;
+
+	if ((c = *find++) != 0) {
+		c = (char)tolower((unsigned char)c);
+		len = strlen(find);
+		do {
+			do {
+				if ((sc = *s++) == 0)
+					return (NULL);
+			} while ((char)tolower((unsigned char)sc) != c);
+		} while (AG_Strncasecmp(s, find, len) != 0);
+		s--;
+	}
+	return ((char *)s);
+}
 __END_DECLS
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_STD)
@@ -173,6 +256,7 @@ __END_DECLS
 #define Strdup AG_Strdup
 #define Strcasecmp AG_Strcasecmp
 #define Strncasecmp AG_Strncasecmp
+#define Strcasestr AG_Strcasestr
 #define StrlcatUCS4 AG_StrlcatUCS4
 #define StrlcpyUCS4 AG_StrlcpyUCS4
 #define StrsepUCS4 AG_StrsepUCS4
