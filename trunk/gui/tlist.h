@@ -54,6 +54,7 @@ typedef struct ag_tlist {
 #define AG_TLIST_VFILL		0x040
 #define AG_TLIST_NOSELSTATE	0x100	/* Don't preserve sel state in poll */
 #define AG_TLIST_SCROLLTOSEL	0x200	/* Scroll to initial selection */
+#define AG_TLIST_REFRESH	0x400	/* Repopulate display (for polling) */
 #define AG_TLIST_EXPAND		(AG_TLIST_HFILL|AG_TLIST_VFILL)
 
 	void *selected;			/* Default `selected' binding */
@@ -77,6 +78,7 @@ typedef struct ag_tlist {
 	Uint32 wheelTicks;		/* For wheel acceleration */
 	int wRow;			/* Row width */
 	AG_Rect r;			/* View area */
+	AG_Timeout refreshTo;		/* Autorefresh timer */
 } AG_Tlist;
 
 #define AG_TLIST_FOREACH(it, tl) \
@@ -97,13 +99,14 @@ extern AG_WidgetClass agTlistClass;
 AG_Tlist *AG_TlistNew(void *, Uint);
 AG_Tlist *AG_TlistNewPolled(void *, Uint, AG_EventFn, const char *, ...);
 
-void		AG_TlistSizeHint(AG_Tlist *, const char *, int);
-void		AG_TlistSizeHintPixels(AG_Tlist *, int, int);
-void		AG_TlistSizeHintLargest(AG_Tlist *, int);
-#define		AG_TlistPrescale AG_TlistSizeHint
+void      AG_TlistSizeHint(AG_Tlist *, const char *, int);
+void      AG_TlistSizeHintPixels(AG_Tlist *, int, int);
+void      AG_TlistSizeHintLargest(AG_Tlist *, int);
+#define   AG_TlistPrescale AG_TlistSizeHint
 
-void		AG_TlistSetItemHeight(AG_Tlist *, int);
-void		AG_TlistSetIcon(AG_Tlist *, AG_TlistItem *, AG_Surface *);
+void      AG_TlistSetItemHeight(AG_Tlist *, int);
+void      AG_TlistSetIcon(AG_Tlist *, AG_TlistItem *, AG_Surface *);
+void      AG_TlistSetRefresh(AG_Tlist *, int);
 
 void	       AG_TlistSetArgs(AG_TlistItem *, const char *, ...);
 void	       AG_TlistDel(AG_Tlist *, AG_TlistItem *);
@@ -155,6 +158,14 @@ AG_TlistVisibleChildren(AG_Tlist *tl, AG_TlistItem *cit)
 		return (0);			/* TODO default setting */
 	}
 	return (sit->flags & AG_TLIST_VISIBLE_CHILDREN);
+}
+
+static __inline__ void
+AG_TlistRefresh(AG_Tlist *tl)
+{
+	AG_ObjectLock(tl);
+	tl->flags |= AG_TLIST_REFRESH;
+	AG_ObjectUnlock(tl);
 }
 __END_DECLS
 
