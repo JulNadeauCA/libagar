@@ -29,7 +29,10 @@
 #include "primitive.h"
 #include "icons.h"
 
-/* Widget must be locked. */
+/*
+ * Selection has moved over the specified item. If the item is a submenu,
+ * the submenu timer is initiated.
+ */
 static void
 SelectItem(AG_MenuItem *pitem, AG_MenuItem *subitem)
 {
@@ -42,11 +45,14 @@ SelectItem(AG_MenuItem *pitem, AG_MenuItem *subitem)
 	}
 	pitem->sel_subitem = subitem;
 
+	if (subitem == NULL)
+		return;
+
 	AG_LockTimeouts(m);
 	AG_DelTimeout(mview, &mview->submenu_to);
 	if (subitem != NULL &&
 	    subitem->nsubitems > 0) {
-		AG_AddTimeout(mview, &mview->submenu_to, 200);
+		AG_ScheduleTimeout(mview, &mview->submenu_to, 200);
 		mview->submenu_to.arg = subitem;
 	}
 	AG_UnlockTimeouts(m);
