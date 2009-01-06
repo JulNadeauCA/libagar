@@ -84,7 +84,7 @@ AG_WindowNew(Uint flags)
 
 	win = Malloc(sizeof(AG_Window));
 	AG_ObjectInit(win, &agWindowClass);
-	AG_ObjectSetName(win, "win-generic");
+	AG_ObjectSetName(win, "generic");
 	OBJECT(win)->flags &= ~(AG_OBJECT_NAME_ONATTACH);
 
 	win->flags |= flags;
@@ -671,8 +671,7 @@ AG_WindowFocusNamed(const char *name)
 
 	AG_LockVFS(agView);
 	TAILQ_FOREACH(owin, &agView->windows, windows) {
-		if (strlen(OBJECT(owin)->name) >= 4 &&
-		    strcmp(OBJECT(owin)->name+4, name) == 0) {
+		if (strcmp(OBJECT(owin)->name, name) == 0) {
 			AG_WindowShow(owin);
 			AG_WindowFocus(owin);
 		    	rv = 1;
@@ -681,7 +680,7 @@ AG_WindowFocusNamed(const char *name)
 	}
 out:
 	AG_UnlockVFS(agView);
-	return (0);
+	return (rv);
 }
 
 /*
@@ -776,35 +775,35 @@ ProcessWM_MouseMotion(AG_Window *win, int xRel, int yRel)
 static void
 ChangeWindowFocus(void)
 {
-	AG_Window *winLast;
+	AG_Window *winLast = TAILQ_LAST(&agView->windows, ag_windowq);
+	AG_Window *winToFocus = agView->winToFocus;
 
-	winLast = TAILQ_LAST(&agView->windows, ag_windowq);
-	if (agView->winToFocus != NULL &&
-	    agView->winToFocus == winLast) {
-		AG_ObjectLock(agView->winToFocus);
-		AG_PostEvent(NULL, agView->winToFocus, "window-gainfocus",
-		    NULL);
-		AG_ObjectUnlock(agView->winToFocus);
-		agView->winToFocus = NULL;
-		return;
-	}
 	if (winLast != NULL) {
+		if (winToFocus != NULL &&
+		    winToFocus == winLast) {
+			/* Nothing to do */
+			goto out;
+		}
 		AG_ObjectLock(winLast);
 		if (winLast->flags & AG_WINDOW_KEEPABOVE) {
 			AG_ObjectUnlock(winLast);
-			return;
+			goto out;
 		}
 		AG_PostEvent(NULL, winLast, "window-lostfocus", NULL);
 		AG_ObjectUnlock(winLast);
 	}
-	if (agView->winToFocus != NULL &&
-	    agView->winToFocus != TAILQ_LAST(&agView->windows,ag_windowq)) {
-		TAILQ_REMOVE(&agView->windows, agView->winToFocus, windows);
-		TAILQ_INSERT_TAIL(&agView->windows, agView->winToFocus,
-		    windows);
-		AG_PostEvent(NULL, agView->winToFocus, "window-gainfocus",
-		    NULL);
+	if (winToFocus != NULL) {
+		AG_ObjectLock(winToFocus);
+		if (winToFocus->flags & AG_WINDOW_KEEPBELOW) {
+			AG_ObjectUnlock(winToFocus);
+			goto out;
+		}
+		TAILQ_REMOVE(&agView->windows, winToFocus, windows);
+		TAILQ_INSERT_TAIL(&agView->windows, winToFocus, windows);
+		AG_PostEvent(NULL, winToFocus, "window-gainfocus", NULL);
+		AG_ObjectUnlock(winToFocus);
 	}
+out:
 	agView->winToFocus = NULL;
 }
 
