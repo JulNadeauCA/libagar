@@ -382,22 +382,23 @@ User-specified function of the form:
 .Ft "AG_Surface *"
 .Fn MySurfFn "void *tbl" "int x" "int y"
 .Pp
-The returned surface will be displayed in the cell.
+The returned
+.Xr AG_Surface 3
+will be displayed in the cell.
 The
 .Fa x
 and
 .Fa y
 parameters can be ignored.
-.Xr AG_Surface 3 
 .It %[W]
 An arbitrary widget to insert into the table.
 Note that for efficiency reasons,
 .Nm
 is not treated like a standard widget container, so widgets that are
 inserted into the table in this way should not be attached to any parent
-(i.e., when using widget constructor functions, just leave the
+(e.g., the
 .Fa parent
-argument set to NULL).
+argument of standard constructor routines should be NULL).
 .El
 .Pp
 The functions
