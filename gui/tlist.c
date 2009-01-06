@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,6 +75,16 @@ AG_TlistNewPolled(void *parent, Uint flags, AG_EventFn fn, const char *fmt, ...)
 	return (tl);
 }
 
+static __inline__ void
+UpdatePolled(AG_Tlist *tl)
+{
+	if ((tl->flags & AG_TLIST_POLL) &&
+	    (tl->flags & AG_TLIST_REFRESH)) {
+		tl->flags &= ~(AG_TLIST_REFRESH);
+		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
+	}
+}
+
 static int
 SelectionVisible(AG_Tlist *tl)
 {
@@ -82,9 +92,7 @@ SelectionVisible(AG_Tlist *tl)
 	int y = 0, i = 0;
 	int offset;
 
-	if (tl->flags & AG_TLIST_POLL) {
-		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
-	}
+	UpdatePolled(tl);
 	offset = AG_WidgetInt(tl->sbar, "value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
@@ -178,6 +186,7 @@ static void
 DoubleClickTimeout(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
+
 	tl->dblclicked = NULL;
 }
 
@@ -185,9 +194,21 @@ static void
 LostFocus(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
+
 	AG_DelTimeout(tl, &tl->incTo);
 	AG_DelTimeout(tl, &tl->decTo);
 	AG_CancelEvent(tl, "dblclick-expire");
+}
+
+static void
+Shown(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+
+	if (tl->flags & AG_TLIST_POLL) {
+		tl->flags |= AG_TLIST_REFRESH;
+		AG_ScheduleTimeout(tl, &tl->refreshTo, 125);
+	}
 }
 
 static Uint32
@@ -212,6 +233,15 @@ IncrementTimeout(void *obj, Uint32 ival, void *arg)
 	ks = SDL_GetKeyState(&numkeys);
 	IncrementSelection(tl, ks[SDLK_PAGEDOWN] ? agPageIncrement : 1);
 	return (agKbdRepeat);
+}
+
+static Uint32
+RefreshTimeout(void *obj, Uint32 ival, void *arg)
+{
+	AG_Tlist *tl = obj;
+
+	tl->flags |= AG_TLIST_REFRESH;
+	return (ival);
 }
 
 static void
@@ -253,9 +283,11 @@ Init(void *obj)
 	AG_SetEvent(tl, "dblclick-expire", DoubleClickTimeout, NULL);
 	AG_SetEvent(tl, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(tl, "widget-hidden", LostFocus, NULL);
+	AG_SetEvent(tl, "widget-shown", Shown, NULL);
 	
 	AG_SetTimeout(&tl->decTo, DecrementTimeout, NULL, 0);
 	AG_SetTimeout(&tl->incTo, IncrementTimeout, NULL, 0);
+	AG_SetTimeout(&tl->refreshTo, RefreshTimeout, NULL, 0);
 }
 
 void
@@ -369,14 +401,11 @@ Draw(void *obj)
 	int offset;
 
 	STYLE(tl)->ListBackground(tl, tl->r);
-
 	AG_WidgetDraw(tl->sbar);
-
 	AG_PushClipRect(tl, tl->r);
 
-	if (tl->flags & AG_TLIST_POLL) {
-		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
-	}
+	UpdatePolled(tl);
+
 	offset = AG_WidgetInt(tl->sbar, "value");
 	TAILQ_FOREACH(it, &tl->items, items) {
 		int x = 2 + it->depth*tl->icon_w;
@@ -561,6 +590,7 @@ AG_TlistClear(AG_Tlist *tl)
 	AG_ObjectUnlock(tl);
 }
 
+/* Generic string compare routine. */
 int
 AG_TlistCompareStrings(const AG_TlistItem *it1,
     const AG_TlistItem *it2)
@@ -569,12 +599,14 @@ AG_TlistCompareStrings(const AG_TlistItem *it1,
 	        strcmp(it1->text, it2->text) == 0);
 }
 
+/* Generic pointer compare routine. */
 int
 AG_TlistComparePtrs(const AG_TlistItem *it1, const AG_TlistItem *it2)
 {
 	return (it1->p1 == it2->p1);
 }
 
+/* Generic pointer+class compare routine. */
 int
 AG_TlistComparePtrsAndClasses(const AG_TlistItem *it1,
     const AG_TlistItem *it2)
@@ -584,12 +616,26 @@ AG_TlistComparePtrsAndClasses(const AG_TlistItem *it1,
 		 (strcmp(it1->cat, it2->cat) == 0)));
 }
 
+/* Set an alternate compare function for items. */
 void
 AG_TlistSetCompareFn(AG_Tlist *tl,
     int (*fn)(const AG_TlistItem *, const AG_TlistItem *))
 {
 	AG_ObjectLock(tl);
 	tl->compare_fn = fn;
+	AG_ObjectUnlock(tl);
+}
+
+/* Set the update rate for polled displays in ms (-1 = update explicitely). */
+void
+AG_TlistSetRefresh(AG_Tlist *tl, int ms)
+{
+	AG_ObjectLock(tl);
+	if (ms == -1) {
+		AG_DelTimeout(tl, &tl->refreshTo);
+	} else {
+		AG_ScheduleTimeout(tl, &tl->refreshTo, ms);
+	}
 	AG_ObjectUnlock(tl);
 }
 
@@ -713,9 +759,7 @@ AG_TlistSelectPtr(AG_Tlist *tl, void *p)
 	AG_TlistItem *it;
 
 	AG_ObjectLock(tl);
-	if (tl->flags & AG_TLIST_POLL) {
-		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
-	}
+	UpdatePolled(tl);
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
 	}
@@ -736,9 +780,7 @@ AG_TlistSelectText(AG_Tlist *tl, const char *text)
 	AG_TlistItem *it;
 
 	AG_ObjectLock(tl);
-	if (tl->flags & AG_TLIST_POLL) {
-		AG_PostEvent(NULL, tl, "tlist-poll", NULL);
-	}
+	UpdatePolled(tl);
 	if ((tl->flags & AG_TLIST_MULTI) == 0) {
 		AG_TlistDeselectAll(tl);
 	}
@@ -898,6 +940,7 @@ MouseButtonDown(AG_Event *event)
 				} else {
 					ti->flags |=  AG_TLIST_VISIBLE_CHILDREN;
 				}
+				tl->flags |= AG_TLIST_REFRESH;
 				return;
 			}
 		}
@@ -1020,22 +1063,22 @@ KeyDown(AG_Event *event)
 	case SDLK_UP:
 		DecrementSelection(tl, 1);
 		AG_DelTimeout(tl, &tl->incTo);
-		AG_ReplaceTimeout(tl, &tl->decTo, agKbdDelay);
+		AG_ScheduleTimeout(tl, &tl->decTo, agKbdDelay);
 		break;
 	case SDLK_DOWN:
 		IncrementSelection(tl, 1);
 		AG_DelTimeout(tl, &tl->decTo);
-		AG_ReplaceTimeout(tl, &tl->incTo, agKbdDelay);
+		AG_ScheduleTimeout(tl, &tl->incTo, agKbdDelay);
 		break;
 	case SDLK_PAGEUP:
 		DecrementSelection(tl, agPageIncrement);
 		AG_DelTimeout(tl, &tl->incTo);
-		AG_ReplaceTimeout(tl, &tl->decTo, agKbdDelay);
+		AG_ScheduleTimeout(tl, &tl->decTo, agKbdDelay);
 		break;
 	case SDLK_PAGEDOWN:
 		IncrementSelection(tl, agPageIncrement);
 		AG_DelTimeout(tl, &tl->decTo);
-		AG_ReplaceTimeout(tl, &tl->incTo, agKbdDelay);
+		AG_ScheduleTimeout(tl, &tl->incTo, agKbdDelay);
 		break;
 	}
 }

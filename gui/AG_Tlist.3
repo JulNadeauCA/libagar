@@ -61,6 +61,12 @@ widgets are more efficient alternatives to
 .Fn AG_TlistNewPolled "AG_Widget *parent" "Uint flags" "void (*eventFn)(AG_Event *)" "const char *eventArgs" "..."
 .Pp
 .Ft void
+.Fn AG_TlistSetRefresh "AG_Tlist *tl" "int ms"
+.Pp
+.Ft void
+.Fn AG_TlistRefresh "AG_Tlist *tl"
+.Pp
+.Ft void
 .Fn AG_TlistSetItemHeight "AG_Tlist *tl" "int item_height"
 .Pp
 .Ft void
@@ -132,9 +138,18 @@ When using
 don't try to preserve selection information across list updates.
 .El
 .Pp
-The
+.Fn AG_TlistSetRefresh
+configures the rate at which the polling routine will be invoked, in
+milliseconds.
+It is only useful with
+.Fn AG_TlistNewPolled .
+The default is 125 milliseconds.
+A value of -1 disables automatic updates, assuming
+.Fn AG_TlistRefresh
+will be used to explicitely force updates.
+.Pp
 .Fn AG_TlistSetItemHeight
-function sets the height of all items to
+sets the height of all items to
 .Fa item_height
 pixels .
 .Pp
