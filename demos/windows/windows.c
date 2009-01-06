@@ -94,6 +94,16 @@ main(int argc, char *argv[])
 	AG_WindowSetBottomBorder(win, 10);
 	AG_WindowShow(win);
 
+	{
+		int i;
+		for (i = 0; i < 5; i++) {
+			if ((win = AG_WindowNewNamed(0, "foo"))) {
+				AG_WindowSetCaption(win, "Named");
+				AG_LabelNew(win, 0, "Named window");
+				AG_WindowShow(win);
+			}
+		}
+	}
 
 	AG_EventLoop();
 	AG_Destroy();
