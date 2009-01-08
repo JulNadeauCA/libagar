@@ -109,6 +109,12 @@ interface.
 .Fn AG_ObjectSetName "AG_Object *obj" "const char *fmt" "..."
 .Pp
 .Ft "void"
+.Fn AG_ObjectGenName "AG_Object *obj" "AG_ObjectClass *classInfo" "char *name" "size_t len"
+.Pp
+.Ft "void"
+.Fn AG_ObjectGenNamePfx "AG_Object *obj" "const char *prefix" "char *name" "size_t len"
+.Pp
+.Ft "void"
 .Fn AG_ObjectSetDebugFn "AG_Object *obj" "void (*fn)(void *obj, void *userPtr, void *msg)" "void *userPtr"
 .Pp
 .Fn AGOBJECT_FOREACH_CHILD "AG_Object *child" "AG_Object *parent" "TYPE type"
@@ -270,6 +276,20 @@ without threads support.
 .Fn AG_ObjectSetName
 changes the name of the given object.
 If the object is attached to a VFS, it is assumed to be locked.
+.Pp
+.Fn AG_ObjectGenName
+generates an object name string unique to the specified parent object
+.Fa obj .
+The class name is used as prefix, followed by a number.
+The name is written to the fixed-size buffer
+.Fa name
+of the given size
+.Fa len .
+In a multithreaded context, the name is only guaranteed to remain unique as
+long as the parent object's VFS is locked.
+Similarly,
+.Fn AG_ObjectGenNamePfx
+generates a name using the specified prefix instead of the class name.
 .Pp
 .Fn AG_ObjectSetDebugFn
 specifies a function to process debug messages (as issued by
