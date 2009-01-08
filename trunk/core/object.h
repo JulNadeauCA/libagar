@@ -253,7 +253,8 @@ int           AG_ObjectFindDep(void *, Uint32, void **);
 void          AG_ObjectDelDep(void *, const void *);
 Uint32        AG_ObjectEncodeName(void *, const void *);
 void         *AG_ObjectEdit(void *);
-void          AG_ObjectGenName(AG_Object *, AG_ObjectClass *, char *, size_t);
+void          AG_ObjectGenName(void *, AG_ObjectClass *, char *, size_t);
+void          AG_ObjectGenNamePfx(void *, const char *, char *, size_t);
 
 #define AG_OfClass(obj,cspec) AG_ClassIsNamed(AGOBJECT(obj)->cls,(cspec))
 
@@ -317,6 +318,30 @@ static __inline__ AG_ObjectClass *
 AG_ObjectSuperclass(const void *p)
 {
 	return AGOBJECT(p)->cls->super;
+}
+
+/* Lock the timeouts associated with an object. */
+static __inline__ void
+AG_LockTimeouts(void *p)
+{
+#ifdef AG_THREADS
+	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
+	AG_ObjectLock(ob);
+#endif
+	AG_LockTiming();
+}
+
+/* Unlock the timeouts associated with an object. */
+static __inline__ void
+AG_UnlockTimeouts(void *p)
+{
+#ifdef AG_THREADS
+	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
+#endif
+	AG_UnlockTiming();
+#ifdef AG_THREADS
+	AG_ObjectUnlock(ob);
+#endif
 }
 __END_DECLS
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -2167,16 +2167,41 @@ changed:
 /*
  * Generate an object name that is unique in the given parent object. The
  * name is only guaranteed to remain unique as long as the VFS and parent
- * object are locked.
+ * object are locked. The class name is used as prefix.
  */
 void
-AG_ObjectGenName(AG_Object *pobj, AG_ObjectClass *cl, char *name, size_t len)
+AG_ObjectGenName(void *p, AG_ObjectClass *cl, char *name, size_t len)
 {
+	AG_Object *pobj = p;
 	Uint i = 0;
 	AG_Object *ch;
 
 tryname:
 	Snprintf(name, len, "%s #%u", cl->name, i);
+	if (pobj != NULL) {
+		AG_LockVFS(pobj);
+		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
+			if (strcmp(ch->name, name) == 0)
+				break;
+		}
+		AG_UnlockVFS(pobj);
+		if (ch != NULL) {
+			i++;
+			goto tryname;
+		}
+	}
+}
+
+/* Generate a unique object name using the specified prefix. */
+void
+AG_ObjectGenNamePfx(void *p, const char *pfx, char *name, size_t len)
+{
+	AG_Object *pobj = p;
+	Uint i = 1;
+	AG_Object *ch;
+
+tryname:
+	Snprintf(name, len, "%s%u", pfx, i);
 	if (pobj != NULL) {
 		AG_LockVFS(pobj);
 		TAILQ_FOREACH(ch, &pobj->children, cobjs) {
