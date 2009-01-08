@@ -647,7 +647,7 @@ AG_TextUnusedGlyph(AG_Glyph *gl)
 #ifdef GLYPH_GC
 	if (agGlyphGC == 0) {
 		agGlyphGC = 1;
-		AG_AddTimeout(NULL, &glyphGcTo, GLYPH_GC_INTERVAL);
+		AG_ScheduleTimeout(NULL, &glyphGcTo, GLYPH_GC_INTERVAL);
 	}
 #endif
 }
@@ -1418,7 +1418,7 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 	AG_UnlockTimeouts(NULL);
 
 	AG_SetTimeout(&textMsgTo, TextTmsgExpire, win, 0);
-	AG_AddTimeout(NULL, &textMsgTo, expire);
+	AG_ScheduleTimeout(NULL, &textMsgTo, expire);
 }
 
 /*

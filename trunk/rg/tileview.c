@@ -154,14 +154,12 @@ KeyDown(AG_Event *event)
 		break;
 	case SDLK_EQUALS:
 		AG_SetTimeout(&tv->zoom_to, ZoomInTimeout, NULL, 0);
-		AG_DelTimeout(tv, &tv->zoom_to);
-		AG_AddTimeout(tv, &tv->zoom_to, 10);
+		AG_ScheduleTimeout(tv, &tv->zoom_to, 10);
 		ZoomInTimeout(tv, 0, NULL);
 		break;
 	case SDLK_MINUS:
 		AG_SetTimeout(&tv->zoom_to, ZoomOutTimeout, NULL, 0);
-		AG_DelTimeout(tv, &tv->zoom_to);
-		AG_AddTimeout(tv, &tv->zoom_to, 10);
+		AG_ScheduleTimeout(tv, &tv->zoom_to, 10);
 		ZoomOutTimeout(tv, 0, NULL);
 		break;
 	case SDLK_0:
@@ -962,7 +960,7 @@ void
 RG_TileviewSetAutoRefresh(RG_Tileview *tv, int ena, int rate)
 {
 	if (ena) {
-		AG_AddTimeout(tv, &tv->redraw_to, rate);
+		AG_ScheduleTimeout(tv, &tv->redraw_to, rate);
 	} else {
 		AG_DelTimeout(tv, &tv->redraw_to);
 	}

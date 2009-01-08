@@ -386,7 +386,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	d->data.p = sndr;
 
 	ev->flags |= AG_EVENT_SCHEDULED;
-	AG_AddTimeout(rcvr, &ev->timeout, ticks);
+	AG_ScheduleTimeout(rcvr, &ev->timeout, ticks);
 	AG_UnlockTiming();
 	AG_ObjectUnlock(rcvr);
 	return (0);
@@ -419,7 +419,7 @@ AG_ReschedEvent(void *p, const char *evname, Uint32 ticks)
 		AG_DelTimeout(ob, &ev->timeout);
 	}
 	ev->flags |= AG_EVENT_SCHEDULED;
-	AG_AddTimeout(ob, &ev->timeout, ticks);
+	AG_ScheduleTimeout(ob, &ev->timeout, ticks);
 
 	AG_ObjectUnlock(ob);
 	AG_UnlockTiming();

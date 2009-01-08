@@ -285,7 +285,7 @@ DelayTimeout(void *obj, Uint32 ival, void *arg)
 {
 	AG_Editable *ed = obj;
 
-	AG_ReplaceTimeout(ed, &ed->toRepeat, agKbdRepeat);
+	AG_ScheduleTimeout(ed, &ed->toRepeat, agKbdRepeat);
 	AG_DelTimeout(ed, &ed->toCursorBlink);
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	return (0);
@@ -311,7 +311,7 @@ GainedFocus(AG_Event *event)
 	
 	AG_DelTimeout(ed, &ed->toDelay);
 	AG_DelTimeout(ed, &ed->toRepeat);
-	AG_ReplaceTimeout(ed, &ed->toCursorBlink, agTextBlinkRate);
+	AG_ScheduleTimeout(ed, &ed->toCursorBlink, agTextBlinkRate);
 	ed->flags |= AG_EDITABLE_BLINK_ON;
 	AG_UnlockTimeouts(ed);
 }
@@ -783,7 +783,7 @@ KeyDown(AG_Event *event)
 	AG_LockTimeouts(ed);
 	AG_DelTimeout(ed, &ed->toRepeat);
 	if (ProcessKey(ed, keysym, keymod, unicode) == 1) {
-		AG_ReplaceTimeout(ed, &ed->toDelay, agKbdDelay);
+		AG_ScheduleTimeout(ed, &ed->toDelay, agKbdDelay);
 	} else {
 		AG_DelTimeout(ed, &ed->toDelay);
 	}
@@ -800,7 +800,7 @@ KeyUp(AG_Event *event)
 		AG_LockTimeouts(ed);
 		AG_DelTimeout(ed, &ed->toRepeat);
 		AG_DelTimeout(ed, &ed->toDelay);
-		AG_ReplaceTimeout(ed, &ed->toCursorBlink, agTextBlinkRate);
+		AG_ScheduleTimeout(ed, &ed->toCursorBlink, agTextBlinkRate);
 		AG_UnlockTimeouts(ed);
 	}
 	if (keysym == SDLK_RETURN &&
