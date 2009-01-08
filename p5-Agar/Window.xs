@@ -64,7 +64,7 @@ PREINIT:
 	Uint flags = 0;
 CODE:
 	if ((items == 2 && SvTYPE(SvRV(ST(1))) != SVt_PVHV) || items > 2) {
-		Perl_croak("Usage: Agar::Window->new([{opts}])");
+		Perl_croak(aTHX_ "Usage: Agar::Window->new([{opts}])");
 	}
 	if (items == 2) {
 		AP_MapHashToFlags(SvRV(ST(1)), flagNames, &flags);
@@ -81,7 +81,7 @@ PREINIT:
 	Uint flags = 0;
 CODE:
 	if ((items == 3 && SvTYPE(SvRV(ST(2))) != SVt_PVHV) || items > 3) {
-		Perl_croak("Usage: Agar::Window->newNamed(name,[{opts}])");
+		Perl_croak(aTHX_ "Usage: Agar::Window->newNamed(name,[{opts}])");
 	}
 	if (items == 3) {
 		AP_MapHashToFlags(SvRV(ST(2)), flagNames, &flags);

@@ -52,7 +52,7 @@ PREINIT:
 	Uint flags = 0;
 CODE:
 	if ((items == 5 && SvTYPE(SvRV(ST(4))) != SVt_PVHV) || items > 5) {
-		Perl_croak("Usage: Agar::Surface->new(w,h,pxFormat,[{opts}])");
+		Perl_croak(aTHX_ "Usage: Agar::Surface->new(w,h,pxFormat,[{opts}])");
 	}
 	if (items == 5) {
 		AP_MapHashToFlags(SvRV(ST(4)), flagNames, &flags);
@@ -71,7 +71,7 @@ PREINIT:
 	Uint flags = 0;
 CODE:
 	if ((items == 5 && SvTYPE(SvRV(ST(4))) != SVt_PVHV) || items > 5) {
-		Perl_croak("Usage: Agar::Surface->newIndexed(w,h,depth,"
+		Perl_croak(aTHX_ "Usage: Agar::Surface->newIndexed(w,h,depth,"
 		           "[{opts}])");
 	}
 	if (items == 5) {

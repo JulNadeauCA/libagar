@@ -7,6 +7,7 @@ typedef unsigned long Ulong;
 typedef AG_PixelFormat * Agar__PixelFormat;
 typedef AG_Surface * Agar__Surface;
 typedef AG_Window * Agar__Window;
+typedef SDL_Surface * SDL__Surface;
 
 typedef struct ap_flag_names {
 	const char *name;
