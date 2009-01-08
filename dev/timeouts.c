@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -94,7 +94,7 @@ DEV_TimerInspector(void)
 	AG_TreetblAddCol(tt, 0, NULL, NULL);
 	
 	AG_SetTimeout(&refresher, UpdateTbl, tt, 0);
-	AG_AddTimeout(tt, &refresher, 50);
+	AG_ScheduleTimeout(tt, &refresher, 50);
 	
 	AG_SetEvent(win, "window-close", CloseWindow, "%p", tt);
 	return (win);

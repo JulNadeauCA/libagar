@@ -1,4 +1,4 @@
-.\" Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ is a pointer to the object managing the timeout (or NULL),
 is the delay in ticks before the next invocation, and
 .Fa arg
 is the user-supplied pointer passed to
-.Fn AG_AddTimeout .
+.Fn AG_ScheduleTimeout .
 If the callback function returns a non-zero value, the timeout is automatically
 rescheduled to occur in t+n ticks.
 .Pp
@@ -74,10 +74,7 @@ which is an alternative interface to the one described here.
 .Fn AG_SetTimeout "AG_Timeout *to" "Uint32 (*fn)(void *obj, Uint32 ival, void *arg)" "void *arg, int flags"
 .Pp
 .Ft "void"
-.Fn AG_AddTimeout "void *obj" "AG_Timeout *to" "Uint32 ival"
-.Pp
-.Ft "void"
-.Fn AG_ReplaceTimeout "void *obj" "AG_Timeout *to" "Uint32 ival"
+.Fn AG_ScheduleTimeout "void *obj" "AG_Timeout *to" "Uint32 ival"
 .Pp
 .Ft "void"
 .Fn AG_DelTimeout "void *obj" "AG_Timeout *to"
@@ -114,9 +111,9 @@ cancel any scheduled execution of the callback function.
 .El
 .Pp
 The
-.Fn AG_AddTimeout
-function schedules the previously specified callback function for execution in
-t+ival ticks.
+.Fn AG_ScheduleTimeout
+function schedules (or reschedules) the previously configured callback
+function for execution in t+ival ticks.
 The
 .Fa obj
 argument specifies the
@@ -131,36 +128,31 @@ If the
 argument is NULL, the callback is associated with a global "timer manager"
 object which uses the default timing algorithm.
 .Pp
-With the default timing algorithm, a
+With the default (real-time) timing algorithm, a
 .Dq tick
-is considered to be equivalent to 1 millisecond (as obtained from
-.Xr SDL_GetTicks 3 ) .
-Different timing schemes may assign different meanings to one tick, for
-example a digital simulation could define one tick to be equivalent to
-one nanosecond, and provisions could be made to allow single-stepping.
+is considered equivalent to roughly 1 millisecond.
+Different timing schemes can assign different meanings to a "tick".
 The
 .Nm
 interface remains consistent across different timing schemes.
 .Pp
 The
-.Fn AG_ReplaceTimeout
-function is a variant of
-.Fn AG_AddTimeout
-which invokes
-.Fn AG_DelTimeout
-implicitly, prior to scheduling the event.
-.Pp
-The
 .Fn AG_DelTimeout
 function removes the given timeout from the queue if it is currently scheduled
 for execution.
+It is not necessary to invoke
+.Fn AG_DelTimeout
+before
+.Fn AG_SchedTimeout
+when re-scheduling an event.
+.Pp
 .Fn AG_TimeoutIsScheduled
 returns 1 if the given timeout is currently scheduled for execution.
 The timeouts must have been locked by the caller of the function (see
 below).
 .Pp
 Both
-.Fn AG_AddTimeout
+.Fn AG_ScheduleTimeout
 and
 .Fn AG_DelTimeout
 may be invoked safely from callback functions, but it is more efficient to use

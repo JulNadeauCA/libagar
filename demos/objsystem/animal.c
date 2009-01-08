@@ -56,7 +56,7 @@ Attached(AG_Event *event)
 {
 	Animal *animal = AG_SELF();
 
-	AG_AddTimeout(animal, &animal->time, 1000);
+	AG_ScheduleTimeout(animal, &animal->time, 1000);
 }
 
 /*

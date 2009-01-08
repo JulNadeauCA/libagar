@@ -140,7 +140,7 @@ ExpireDelay(void *obj, Uint32 ival, void *arg)
 {
 	AG_Button *bu = obj;
 
-	AG_ReplaceTimeout(bu, &bu->repeat_to, agMouseSpinIval);
+	AG_ScheduleTimeout(bu, &bu->repeat_to, agMouseSpinIval);
 	return (0);
 }
 
@@ -388,7 +388,7 @@ mousebuttondown(AG_Event *event)
 
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimeout(bu, &bu->repeat_to);
-		AG_ReplaceTimeout(bu, &bu->delay_to, agMouseSpinDelay);
+		AG_ScheduleTimeout(bu, &bu->delay_to, agMouseSpinDelay);
 	}
 }
 
@@ -443,7 +443,7 @@ keydown(AG_Event *event)
 
 	if (bu->flags & AG_BUTTON_REPEAT) {
 		AG_DelTimeout(bu, &bu->repeat_to);
-		AG_ReplaceTimeout(bu, &bu->delay_to, 800);
+		AG_ScheduleTimeout(bu, &bu->delay_to, 800);
 	}
 	AG_WidgetUnlockBinding(binding);
 }

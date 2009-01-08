@@ -42,9 +42,8 @@ package agar.core.timeout is
   procedure schedule_timeout
     (object  : agar.core.types.void_ptr_t;
      timeout : timeout_access_t;
-     ival    : agar.core.types.uint32_t;
-     replace : c.int);
-  pragma import (c, schedule_timeout, "AG_AddTimeout");
+     ival    : agar.core.types.uint32_t);
+  pragma import (c, schedule_timeout, "AG_ScheduleTimeout");
 
   procedure delete_timeout
     (object   : agar.core.types.void_ptr_t;

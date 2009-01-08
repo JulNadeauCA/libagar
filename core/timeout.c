@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
 
 /*
  * Implementation of simple timers. Timers are usually associated with an
- * AG_Object for easier management (e.g., automatic cancellation).
+ * AG_Object for management purposes.
  */
 
 #include <core/core.h>
@@ -58,42 +58,39 @@ AG_SetTimeout(AG_Timeout *to, Uint32 (*fn)(void *, Uint32, void *), void *arg,
 	to->fn = fn;
 	to->arg = arg;
 	to->ticks = 0;
-	to->running = 0;
 	to->flags = flags;
 }
 
-/* Schedule the timeout to occur in dt ticks. */
+/* Schedule (or re-schedule) the timeout to occur in dt ticks. */
 void
-AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt, int replace)
+AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt)
 {
 	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
-	AG_Timeout *to2;
+	AG_Timeout *toAfter;
 	Uint32 t = SDL_GetTicks()+dt;
-	int was_empty;
+	int listEmpty;
 
 	AG_ObjectLock(ob);
-	was_empty = TAILQ_EMPTY(&ob->timeouts);
-	if (replace) {
-		TAILQ_FOREACH(to2, &ob->timeouts, timeouts) {
-			if (to == to2) {
-				TAILQ_REMOVE(&ob->timeouts, to, timeouts);
-				break;
-			}
-		}
+	listEmpty = TAILQ_EMPTY(&ob->timeouts);
+
+	if (!listEmpty && (to->flags & AG_TIMEOUT_QUEUED)) {
+		TAILQ_REMOVE(&ob->timeouts, to, timeouts);
 	}
-	TAILQ_FOREACH(to2, &ob->timeouts, timeouts) {
-		if (dt < to2->ticks) {
-			TAILQ_INSERT_BEFORE(to2, to, timeouts);
+	TAILQ_FOREACH(toAfter, &ob->timeouts, timeouts) {
+		if (dt < toAfter->ticks) {
+			TAILQ_INSERT_BEFORE(toAfter, to, timeouts);
 			break;
 		}
 	}
-	if (to2 == TAILQ_END(&ob->timeouts)) {
+	if (toAfter == TAILQ_END(&ob->timeouts)) {
 		TAILQ_INSERT_HEAD(&ob->timeouts, to, timeouts);
 	}
+
 	to->ticks = t;
 	to->ival = dt;
-	to->flags = 0;
-	if (was_empty) {
+	to->flags |= AG_TIMEOUT_QUEUED;
+
+	if (listEmpty) {
 		AG_LockTiming();
 		TAILQ_INSERT_TAIL(&agTimeoutObjQ, ob, tobjs);
 		AG_UnlockTiming();
@@ -101,54 +98,31 @@ AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt, int replace)
 	AG_ObjectUnlock(ob);
 }
 
-/*
- * Return 1 if the given timeout is scheduled.
- * The object and timeout queue must be locked.
- */
-int
-AG_TimeoutIsScheduled(void *p, AG_Timeout *to)
-{
-	AG_Object *tob;
-	AG_Timeout *oto;
-
-	TAILQ_FOREACH(tob, &agTimeoutObjQ, tobjs) {
-		TAILQ_FOREACH(oto, &tob->timeouts, timeouts) {
-			if (oto == to)
-				return (1);
-		}
-	}
-	return (0);
-}
-
 /* Cancel the given timeout if it is scheduled for execution. */
 void
 AG_DelTimeout(void *p, AG_Timeout *to)
 {
 	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
-	AG_Timeout *oto;
 	
 	AG_LockTimeouts(ob);
-	TAILQ_FOREACH(oto, &ob->timeouts, timeouts) {
-		if (oto == to) {
-			TAILQ_REMOVE(&ob->timeouts, to, timeouts);
-			if (TAILQ_EMPTY(&ob->timeouts)) {
-				TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
-			}
-			break;
-		}
+	if (to->flags & AG_TIMEOUT_QUEUED) {
+		to->flags &= ~(AG_TIMEOUT_QUEUED);
+		TAILQ_REMOVE(&ob->timeouts, to, timeouts);
+		if (TAILQ_EMPTY(&ob->timeouts))
+			TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
 	}
 	AG_UnlockTimeouts(ob);
 }
 
 /*
- * Block the calling thread until the given timeout executes, or the
- * given timeout (given in SDL_Delay() ticks) is exceeded.
+ * Block the calling thread until the given timeout executes (and is not
+ * immediately rescheduled), or the given delay (given in SDL_Delay()
+ * ticks) is exceeded.
  */
 int
 AG_TimeoutWait(void *p, AG_Timeout *to, Uint32 timeout)
 {
 	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
-	AG_Timeout *oto;
 	Uint32 elapsed = 0;
 	
 wait:
@@ -158,11 +132,9 @@ wait:
 	}
 	SDL_Delay(1);
 	AG_LockTimeouts(ob);
-	TAILQ_FOREACH(oto, &ob->timeouts, timeouts) {
-		if (oto == to) {
-			AG_UnlockTimeouts(ob);
-			goto wait;
-		}
+	if (to->flags & AG_TIMEOUT_QUEUED) {
+		AG_UnlockTimeouts(ob);
+		goto wait;
 	}
 	AG_UnlockTimeouts(ob);
 	return (0);
@@ -191,12 +163,11 @@ pop:
 				if (TAILQ_EMPTY(&ob->timeouts)) {
 					TAILQ_REMOVE(&agTimeoutObjQ, ob, tobjs);
 				}
-				to->running++;
+				to->flags &= ~(AG_TIMEOUT_QUEUED);
 				rv = to->fn(ob, to->ival, to->arg);
-				to->running = 0;
 				if (rv > 0) {
 					to->ival = rv;
-					AG_AddTimeout(ob, to, rv);
+					AG_ScheduleTimeout(ob, to, rv);
 				}
 				goto pop;
 			}
@@ -205,26 +176,4 @@ pop:
 	}
 	AG_UnlockTiming();
 	SDL_Delay(1);
-}
-
-void
-AG_LockTimeouts(void *p)
-{
-#ifdef AG_THREADS
-	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
-	AG_ObjectLock(ob);
-#endif
-	AG_LockTiming();
-}
-
-void
-AG_UnlockTimeouts(void *p)
-{
-#ifdef AG_THREADS
-	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
-#endif
-	AG_UnlockTiming();
-#ifdef AG_THREADS
-	AG_ObjectUnlock(ob);
-#endif
 }

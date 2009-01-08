@@ -532,7 +532,7 @@ Splash(void)
 	    sizeof(path)) == 0) {
 		px = AG_PixmapFromBMP(win, 0, path);
 		AG_SetTimeout(&to, SplashExpire, NULL, 0);
-		AG_AddTimeout(win, &to, 2000);
+		AG_ScheduleTimeout(win, &to, 2000);
 	} else {
 		fprintf(stderr, "%s\n", AG_GetError());
 	}

@@ -648,13 +648,13 @@ KeyDown(AG_Event *event)
 	case SDLK_LEFT:
 		Decrement(sl, 1);
 		AG_DelTimeout(sl, &sl->incTo);
-		AG_ReplaceTimeout(sl, &sl->decTo, agKbdDelay);
+		AG_ScheduleTimeout(sl, &sl->decTo, agKbdDelay);
 		break;
 	case SDLK_DOWN:
 	case SDLK_RIGHT:
 		Increment(sl, 1);
 		AG_DelTimeout(sl, &sl->decTo);
-		AG_ReplaceTimeout(sl, &sl->incTo, agKbdDelay);
+		AG_ScheduleTimeout(sl, &sl->incTo, agKbdDelay);
 		break;
 	}
 }

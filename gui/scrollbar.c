@@ -520,7 +520,7 @@ MouseButtonDown(AG_Event *event)
 			AG_PostEvent(NULL, sb, sb->buttonDecFn->name, "%i", 1);
 		} else {
 			Decrement(sb, 1);
-			AG_ReplaceTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
+			AG_ScheduleTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
 			AG_DelTimeout(sb, &sb->incTo);
 			AG_DelTimeout(sb, &sb->decTo);
 		}
@@ -534,7 +534,7 @@ MouseButtonDown(AG_Event *event)
 			AG_PostEvent(NULL, sb, sb->buttonIncFn->name, "%i", 1);
 		} else {
 			Increment(sb, 1);
-			AG_ReplaceTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
+			AG_ScheduleTimeout(sb, &sb->scrollTo, agMouseSpinDelay);
 			AG_DelTimeout(sb, &sb->incTo);
 			AG_DelTimeout(sb, &sb->decTo);
 		}
@@ -602,13 +602,13 @@ KeyDown(AG_Event *event)
 	case SDLK_LEFT:
 		Decrement(sb, 1);
 		AG_DelTimeout(sb, &sb->incTo);
-		AG_ReplaceTimeout(sb, &sb->decTo, agKbdDelay);
+		AG_ScheduleTimeout(sb, &sb->decTo, agKbdDelay);
 		break;
 	case SDLK_DOWN:
 	case SDLK_RIGHT:
 		Increment(sb, 1);
 		AG_DelTimeout(sb, &sb->decTo);
-		AG_ReplaceTimeout(sb, &sb->incTo, agKbdDelay);
+		AG_ScheduleTimeout(sb, &sb->incTo, agKbdDelay);
 		break;
 	}
 }

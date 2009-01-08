@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1429,22 +1429,22 @@ KeyDown(AG_Event *event)
 	case SDLK_UP:
 		DecrementSelection(t, 1);
 		AG_DelTimeout(t, &t->incTo);
-		AG_ReplaceTimeout(t, &t->decTo, agKbdDelay);
+		AG_ScheduleTimeout(t, &t->decTo, agKbdDelay);
 		break;
 	case SDLK_DOWN:
 		IncrementSelection(t, 1);
 		AG_DelTimeout(t, &t->decTo);
-		AG_ReplaceTimeout(t, &t->incTo, agKbdDelay);
+		AG_ScheduleTimeout(t, &t->incTo, agKbdDelay);
 		break;
 	case SDLK_PAGEUP:
 		DecrementSelection(t, agPageIncrement);
 		AG_DelTimeout(t, &t->incTo);
-		AG_ReplaceTimeout(t, &t->decTo, agKbdDelay);
+		AG_ScheduleTimeout(t, &t->decTo, agKbdDelay);
 		break;
 	case SDLK_PAGEDOWN:
 		IncrementSelection(t, agPageIncrement);
 		AG_DelTimeout(t, &t->decTo);
-		AG_ReplaceTimeout(t, &t->incTo, agKbdDelay);
+		AG_ScheduleTimeout(t, &t->incTo, agKbdDelay);
 		break;
 	}
 }

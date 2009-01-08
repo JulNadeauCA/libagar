@@ -44,7 +44,7 @@ Play(AG_Event *event)
 {
 	RG_Animview *av = AG_PTR(1);
 
-	AG_ReplaceTimeout(av, &av->timer, 1);
+	AG_ScheduleTimeout(av, &av->timer, 1);
 	AG_ButtonDisable(av->btns.play);
 	AG_ButtonEnable(av->btns.pause);
 	AG_ButtonEnable(av->btns.stop);
