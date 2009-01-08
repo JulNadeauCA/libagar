@@ -54,6 +54,12 @@ widget packs its children horizontally or vertically.
 .Ft "AG_Box *"
 .Fn AG_BoxNewVert "AG_Widget *parent" "Uint flags"
 .Pp
+.Ft "AG_Box *"
+.Fn AG_BoxNewHorizNS "AG_Widget *parent" "Uint flags"
+.Pp
+.Ft "AG_Box *"
+.Fn AG_BoxNewVertNS "AG_Widget *parent" "Uint flags"
+.Pp
 .Ft void
 .Fn AG_BoxSetLabel "AG_Box *box" "const char *format" "..."
 .Pp
@@ -92,6 +98,21 @@ Divide space into equal parts.
 Draw a decorative frame by default.
 This flag is implied if a caption text is set.
 .El
+.Pp
+The
+.Fn AG_BoxNewHoriz
+and
+.Fn AG_BoxNewVert
+variants are equivalent to setting
+.Dv AG_BOX_HORIZ
+and
+.Dv AG_BOX_VERT .
+The
+.Fn AG_BoxNewHorizNS
+and
+.Fn AG_BoxNewVertNS
+(no spacing) variants implicitely set default padding and spacing parameters
+to 0 pixels.
 .Pp
 The
 .Fn AG_BoxSetLabel

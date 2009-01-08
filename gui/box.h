@@ -35,8 +35,6 @@ __BEGIN_DECLS
 extern AG_WidgetClass agBoxClass;
 
 AG_Box	*AG_BoxNew(void *, enum ag_box_type, Uint);
-#define  AG_BoxNewHoriz(p,f) AG_BoxNew((p),AG_BOX_HORIZ,(f))
-#define  AG_BoxNewVert(p,f) AG_BoxNew((p),AG_BOX_VERT,(f))
 
 void     AG_BoxSetLabel(AG_Box *, const char *, ...);
 void	 AG_BoxSetHomogenous(AG_Box *, int);
@@ -44,6 +42,26 @@ void	 AG_BoxSetPadding(AG_Box *, int);
 void	 AG_BoxSetSpacing(AG_Box *, int);
 void	 AG_BoxSetDepth(AG_Box *, int);
 void	 AG_BoxSetType(AG_Box *, enum ag_box_type);
+
+#define  AG_BoxNewHoriz(p,f) AG_BoxNew((p),AG_BOX_HORIZ,(f))
+#define  AG_BoxNewVert(p,f) AG_BoxNew((p),AG_BOX_VERT,(f))
+
+static __inline__ AG_Box *
+AG_BoxNewHorizNS(void *p, Uint flags)
+{
+	AG_Box *hBox = AG_BoxNewHoriz(p, flags);
+	AG_BoxSetSpacing(hBox, 0);
+	AG_BoxSetPadding(hBox, 0);
+	return (hBox);
+}
+static __inline__ AG_Box *
+AG_BoxNewVertNS(void *p, Uint flags)
+{
+	AG_Box *vBox = AG_BoxNewVert(p, flags);
+	AG_BoxSetSpacing(vBox, 0);
+	AG_BoxSetPadding(vBox, 0);
+	return (vBox);
+}
 __END_DECLS
 
 #include <agar/gui/close.h>
