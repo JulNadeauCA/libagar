@@ -93,11 +93,11 @@ PREINIT:
 CODE:
 	if (items == 2) {
 		if (SvTYPE(SvRV(ST(1))) != SVt_PVHV) {
-			Perl_croak("Usage: Agar::InitCore(progName,[{opts}])");
+			Perl_croak(aTHX_ "Usage: Agar::InitCore(progName,[{opts}])");
 		}
 		AP_MapHashToFlags(SvRV(ST(1)), flagNames, &flags);
 	} else if (items != 1) {
-		Perl_croak("Usage: Agar::InitCore(progName,[{opts}])");
+		Perl_croak(aTHX_ "Usage: Agar::InitCore(progName,[{opts}])");
 	}
 	RETVAL = (AG_InitCore(progName, flags) == 0);
 OUTPUT:
@@ -127,12 +127,43 @@ PREINIT:
 	Uint flags = 0;
 CODE:
 	if ((items == 4 && SvTYPE(SvRV(ST(3))) != SVt_PVHV) || items > 4) {
-		Perl_croak("Usage: Agar::InitVideo(w,h,bitsPerPixel,[{opts}])");
+		Perl_croak(aTHX_ "Usage: Agar::InitVideo(w,h,bitsPerPixel,[{opts}])");
 	}
 	if (items == 4) {
 		AP_MapHashToFlags(SvRV(ST(3)), flagNames, &flags);
 	}
 	RETVAL = (AG_InitVideo(w, h, bitsPerPixel, flags) == 0);
+OUTPUT:
+	RETVAL
+
+int
+InitVideoSDL(sdl_surface, ...)
+	SDL::Surface sdl_surface
+PREINIT:
+	const AP_FlagNames flagNames[] = {
+		{ "hwSurface",   AG_VIDEO_HWSURFACE },
+		{ "asyncBlit",   AG_VIDEO_ASYNCBLIT },
+		{ "anyFormat",   AG_VIDEO_ANYFORMAT },
+		{ "hwPalette",   AG_VIDEO_HWPALETTE },
+		{ "doubleBuf",   AG_VIDEO_DOUBLEBUF },
+		{ "fullScreen",  AG_VIDEO_FULLSCREEN },
+		{ "resizable",   AG_VIDEO_RESIZABLE },
+		{ "noFrame",     AG_VIDEO_NOFRAME },
+		{ "bgPopupMenu", AG_VIDEO_BGPOPUPMENU },
+		{ "openGL",      AG_VIDEO_OPENGL },
+		{ "openGLOrSDL", AG_VIDEO_OPENGL_OR_SDL },
+		{ "noBgClear",   AG_VIDEO_NOBGCLEAR },
+		{ NULL,          0 }
+	};
+	Uint flags = 0;
+CODE:
+	if ((items == 2 && SvTYPE(SvRV(ST(1))) != SVt_PVHV) || items > 4) {
+		Perl_croak(aTHX_ "Usage: Agar::InitVideoSDL(sdl_surface,[{opts}])");
+	}
+	if (items == 2) {
+		AP_MapHashToFlags(SvRV(ST(1)), flagNames, &flags);
+	}
+	RETVAL = (AG_InitVideoSDL(sdl_surface, flags) == 0);
 OUTPUT:
 	RETVAL
 

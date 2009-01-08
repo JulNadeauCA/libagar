@@ -2,6 +2,7 @@ TYPEMAP
 Agar::Window		T_PTROBJ
 Agar::Surface		T_PTROBJ
 Agar::PixelFormat	T_PTROBJ
+SDL::Surface		T_PTROBJ
 Uint8			T_U_CHAR
 Sint8			T_CHAR
 Uint16			T_UV
