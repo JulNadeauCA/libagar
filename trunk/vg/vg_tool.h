@@ -6,8 +6,10 @@
 
 struct vg_tool_keybinding;
 struct vg_tool_mousebinding;
+struct vg_tool_command;
 struct vg_view;
 
+/* VG tool class description */
 typedef struct vg_tool_ops {
 	const char *name, *desc;
 	AG_StaticIcon *icon;
@@ -35,6 +37,7 @@ typedef struct vg_tool_ops {
 	int (*keyup)(void *, int ksym, int kmod, int unicode);
 } VG_ToolOps;
 
+/* VG tool instance */
 typedef struct vg_tool {
 	const VG_ToolOps *ops;
 	int selected;				/* Tool is in use */
@@ -44,26 +47,20 @@ typedef struct vg_tool {
 	AG_Widget *editArea;			/* Edition area (if any) */
 	VG_Vector vCursor;			/* Last cursor position */
 	AG_SLIST_HEAD(,vg_tool_keybinding) kbindings;
-	AG_SLIST_HEAD(,vg_tool_mousebinding) mbindings;
+	AG_TAILQ_HEAD(,vg_tool_command) cmds;
 	AG_TAILQ_ENTRY(vg_tool) tools;
 } VG_Tool;
 
-typedef struct vg_tool_keybinding {
-	SDLMod mod;
-	SDLKey key;
-	int edit;
-	int (*func)(VG_Tool *, SDLKey k, int s, void *);
-	void *arg;
-	AG_SLIST_ENTRY(vg_tool_keybinding) kbindings;
-} VG_ToolKeyBinding;
-
-typedef struct vg_tool_mousebinding {
-	int button;
-	int edit;
-	int (*func)(VG_Tool *, int b, int s, float x, float y, void *);
-	void *arg;
-	AG_SLIST_ENTRY(vg_tool_mousebinding) mbindings;
-} VG_ToolMouseBinding;
+/* General command handler */
+typedef struct vg_tool_command {
+	char *name;				/* Command string */
+	char *descr;				/* Description string */
+	AG_Event *fn;				/* Callback routine (bound to VG_View) */
+	SDLMod kMod;				/* Bound key modifier */
+	SDLKey kSym;				/* Bound keysym */
+	VG_Tool *tool;				/* Back pointer to tool */
+	AG_TAILQ_ENTRY(vg_tool_command) cmds;
+} VG_ToolCommand;
 
 #define VGTOOL(t) ((VG_Tool *)(t))
 #define VG_CURTOOL(vv) \
@@ -71,16 +68,14 @@ typedef struct vg_tool_mousebinding {
     (vv)->deftool != NULL ? (vv)->deftool : NULL
 
 __BEGIN_DECLS
-void		 VG_ToolInit(VG_Tool *);
-void		 VG_ToolDestroy(VG_Tool *);
-AG_Window	*VG_ToolWindow(void *, const char *);
+void       VG_ToolInit(VG_Tool *);
+void       VG_ToolDestroy(VG_Tool *);
+AG_Window *VG_ToolWindow(void *, const char *);
 
-void VG_ToolBindKey(void *, SDLMod, SDLKey,
-		    int (*)(VG_Tool *, SDLKey, int, void *), void *);
-void VG_ToolBindMouseButton(void *, int,
-			    int (*)(VG_Tool *, int, int, float, float, void *),
-			    void *);
-void VG_ToolUnbindKey(void *, SDLMod, SDLKey);
+VG_ToolCommand *VG_ToolCommandNew(void *, const char *, AG_EventFn);
+void            VG_ToolCommandKey(VG_ToolCommand *, SDLMod, SDLKey);
+void            VG_ToolCommandDescr(VG_ToolCommand *, const char *, ...);
+int             VG_ToolCommandExec(void *, const char *, const char *, ...);
 __END_DECLS
 
 #include <agar/vg/close.h>
