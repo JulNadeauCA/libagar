@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,8 +43,7 @@ VG_ToolInit(VG_Tool *t)
 	t->selected = 0;
 	t->editWin = NULL;
 	t->editArea = NULL;
-	SLIST_INIT(&t->kbindings);
-	SLIST_INIT(&t->mbindings);
+	TAILQ_INIT(&t->cmds);
 
 	if (t->ops->init != NULL)
 		t->ops->init(t);
@@ -53,8 +52,7 @@ VG_ToolInit(VG_Tool *t)
 void
 VG_ToolDestroy(VG_Tool *tool)
 {
-	VG_ToolKeyBinding *kbinding, *nkbinding;
-	VG_ToolMouseBinding *mbinding, *nmbinding;
+	VG_ToolCommand *cmd, *cmdNext;
 	
 	if (tool->editWin != NULL)
 		AG_ViewDetach(tool->editWin);
@@ -63,17 +61,12 @@ VG_ToolDestroy(VG_Tool *tool)
 		AG_ObjectFreeChildren(tool->editArea);
 		AG_WindowUpdate(AG_ParentWindow(tool->editArea));
 	}
-	for (kbinding = SLIST_FIRST(&tool->kbindings);
-	     kbinding != SLIST_END(&tool->kbindings);
-	     kbinding = nkbinding) {
-		nkbinding = SLIST_NEXT(kbinding, kbindings);
-		Free(kbinding);
-	}
-	for (mbinding = SLIST_FIRST(&tool->mbindings);
-	     mbinding != SLIST_END(&tool->mbindings);
-	     mbinding = nmbinding) {
-		nmbinding = SLIST_NEXT(mbinding, mbindings);
-		Free(mbinding);
+	for (cmd = TAILQ_FIRST(&tool->cmds);
+	     cmd != TAILQ_END(&tool->cmds);
+	     cmd = cmdNext) {
+		cmdNext = TAILQ_NEXT(cmd, cmds);
+		Free(cmd->name);
+		Free(cmd);
 	}
 	if (tool->ops->destroy != NULL)
 		tool->ops->destroy(tool);
@@ -100,52 +93,77 @@ VG_ToolWindow(void *p, const char *name)
 	return (win);
 }
 
-void
-VG_ToolBindMouseButton(void *p, int button,
-    int (*func)(VG_Tool *, int, int, float, float, void *), void *arg)
+/* Register a tool command. */
+VG_ToolCommand *
+VG_ToolCommandNew(void *obj, const char *name, AG_EventFn fn)
 {
-	VG_Tool *tool = p;
-	VG_ToolMouseBinding *mb;
-	
-	mb = Malloc(sizeof(VG_ToolMouseBinding));
-	mb->button = button;
-	mb->func = func;
-	mb->edit = 0;
-	mb->arg = arg;
-	SLIST_INSERT_HEAD(&tool->mbindings, mb, mbindings);
+	VG_Tool *tool = obj;
+	VG_ToolCommand *tc;
+
+	tc = Malloc(sizeof(VG_ToolCommand));
+	tc->name = Strdup(name);
+	tc->descr = NULL;
+	tc->kMod = KMOD_NONE;
+	tc->kSym = SDLK_UNKNOWN;
+	tc->tool = tool;
+	tc->fn = AG_SetEvent(tool->vgv, NULL, fn, NULL);
+
+	AG_ObjectLock(tool->vgv);
+	TAILQ_INSERT_HEAD(&tool->cmds, tc, cmds);
+	AG_ObjectUnlock(tool->vgv);
+	return (tc);
 }
 
+/* Configure a keyboard shortcut for a command. */
 void
-VG_ToolBindKey(void *p, SDLMod keymod, SDLKey keysym,
-    int (*func)(VG_Tool *, SDLKey, int, void *), void *arg)
+VG_ToolCommandKey(VG_ToolCommand *tc, SDLMod kMod, SDLKey kSym)
 {
-	VG_Tool *tool = p;
-	VG_ToolKeyBinding *kb;
-
-	kb = Malloc(sizeof(VG_ToolKeyBinding));
-	kb->key = keysym;
-	kb->mod = keymod;
-	kb->func = func;
-	kb->edit = 0;
-	kb->arg = arg;
-	SLIST_INSERT_HEAD(&tool->kbindings, kb, kbindings);
+	AG_ObjectLock(tc->tool->vgv);
+	tc->kMod = kMod;
+	tc->kSym = kSym;
+	AG_ObjectUnlock(tc->tool->vgv);
 }
 
+/* Set the long description for a command. */
 void
-VG_ToolUnbindKey(void *p, SDLMod keymod, SDLKey keysym)
+VG_ToolCommandDescr(VG_ToolCommand *tc, const char *fmt, ...)
 {
-	VG_Tool *tool = p;
-	VG_ToolKeyBinding *kb;
+	va_list ap;
 
-	SLIST_FOREACH(kb, &tool->kbindings, kbindings) {
-		if (kb->mod == keymod &&
-		    kb->key == keysym)
+	AG_ObjectLock(tc->tool->vgv);
+	va_start(ap, fmt);
+	Free(tc->descr);
+	Vasprintf(&tc->descr, fmt, ap);
+	va_end(ap);
+	AG_ObjectUnlock(tc->tool->vgv);
+}
+
+/* Execute a tool command. */
+int
+VG_ToolCommandExec(void *obj, const char *name, const char *fmt, ...)
+{
+	VG_Tool *tool = obj;
+	VG_ToolCommand *cmd;
+	AG_Event evPost;
+
+	AG_ObjectLock(tool->vgv);
+
+	TAILQ_FOREACH(cmd, &tool->cmds, cmds) {
+		if (strcmp(cmd->name, name) == 0)
 			break;
 	}
-	if (kb == NULL) {
-		return;
+	if (cmd == NULL) {
+		AG_SetError("No such command: %s", name);
+		goto fail;
 	}
-	SLIST_REMOVE(&tool->kbindings, kb, vg_tool_keybinding, kbindings);
-	Free(kb);
-}
+	Debug(tool->vgv, "%s: CMD: <%s>\n", tool->ops->name, name);
+	AG_EventInit(&evPost);
+	AG_EVENT_GET_ARGS(&evPost, fmt);
+	cmd->fn->handler(&evPost);
 
+	AG_ObjectUnlock(tool->vgv);
+	return (0);
+fail:
+	AG_ObjectUnlock(tool->vgv);
+	return (-1);
+}

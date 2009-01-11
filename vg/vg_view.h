@@ -105,7 +105,7 @@ void     VG_ViewButtondownFn(VG_View *, AG_EventFn, const char *, ...);
 void     VG_ViewButtonupFn(VG_View *, AG_EventFn, const char *, ...);
 void     VG_ViewMotionFn(VG_View *, AG_EventFn, const char *, ...);
 
-void     VG_ViewSelectTool(VG_View *, VG_Tool *, void *);
+void     VG_ViewSelectTool(VG_View *, void *, void *);
 void     VG_ViewSelectToolEv(AG_Event *);
 VG_Tool *VG_ViewFindTool(VG_View *, const char *);
 VG_Tool *VG_ViewFindToolByOps(VG_View *, const VG_ToolOps *);

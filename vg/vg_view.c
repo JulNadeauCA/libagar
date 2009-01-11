@@ -120,7 +120,6 @@ MouseButtonDown(AG_Event *event)
 	int button = AG_INT(1);
 	int xCurs = AG_INT(2);
 	int yCurs = AG_INT(3);
-	VG_ToolMouseBinding *mb;
 	float x, y;
 	VG_Vector vCt;
 
@@ -161,16 +160,6 @@ MouseButtonDown(AG_Event *event)
 		if (tool->ops->mousebuttondown(tool, vCt, button) == 1)
 			return;
 	}
-	TAILQ_FOREACH(tool, &vv->tools, tools) {
-		SLIST_FOREACH(mb, &tool->mbindings, mbindings) {
-			if (mb->button != button) {
-				continue;
-			}
-			tool->vgv = vv;
-			if (mb->func(tool, button, 1, x, y, mb->arg) == 1)
-				return;
-		}
-	}
 	if (vv->btndown_ev != NULL)
 		AG_PostEvent(NULL, vv, vv->btndown_ev->name,
 		    "%i,%f,%f", button, x, y);
@@ -184,7 +173,6 @@ MouseButtonUp(AG_Event *event)
 	int button = AG_INT(1);
 	int xCurs = AG_INT(2);
 	int yCurs = AG_INT(3);
-	VG_ToolMouseBinding *mb;
 	float x, y;
 	VG_Vector vCt;
 	
@@ -201,16 +189,6 @@ MouseButtonUp(AG_Event *event)
 		}
 		if (tool->ops->mousebuttonup(tool, vCt, button) == 1)
 			return;
-	}
-	TAILQ_FOREACH(tool, &vv->tools, tools) {
-		SLIST_FOREACH(mb, &tool->mbindings, mbindings) {
-			if (mb->button != button) {
-				continue;
-			}
-			tool->vgv = vv;
-			if (mb->func(tool, button, 0, x, y, mb->arg) == 1)
-				return;
-		}
 	}
 	switch (button) {
 	case SDL_BUTTON_MIDDLE:
@@ -232,13 +210,21 @@ KeyDown(AG_Event *event)
 	int keysym = AG_INT(1);
 	int keymod = AG_INT(2);
 	int unicode = AG_INT(3);
+	VG_ToolCommand *cmd;
 	
-	if (vv->vg == NULL)
+	if (vv->vg == NULL || tool == NULL)
 		return;
 	
-	if (tool != NULL && tool->ops->keydown != NULL) {
-		if (tool->ops->keydown(tool, keysym, keymod, unicode) == 1)
-			return;
+	if (tool->ops->keydown != NULL &&
+	    tool->ops->keydown(tool, keysym, keymod, unicode) == 1) {
+		return;
+	}
+	TAILQ_FOREACH(cmd, &tool->cmds, cmds) {
+		if (cmd->kSym == keysym &&
+		    (cmd->kMod == KMOD_NONE || keymod & cmd->kMod)) {
+			Debug(tool->vgv, "%s: KBD: <%s>\n", tool->ops->name, cmd->name);
+			AG_PostEvent(NULL, tool->vgv, cmd->fn->name, "%p", tool);
+		}
 	}
 	/* TODO panning, etc... */
 }
@@ -633,8 +619,9 @@ Draw(void *obj)
 
 /* Select a new tool to use. */
 void
-VG_ViewSelectTool(VG_View *vv, VG_Tool *ntool, void *p)
+VG_ViewSelectTool(VG_View *vv, void *pTool, void *p)
 {
+	VG_Tool *ntool = pTool;
 	int i;
 
 	AG_ObjectLock(vv);
@@ -703,6 +690,7 @@ VG_ViewFindTool(VG_View *vv, const char *name)
 		if (strcmp(tool->ops->name, name) == 0)
 			return (tool);
 	}
+	AG_SetError("No such tool: %s", name);
 	return (NULL);
 }
 
@@ -716,6 +704,7 @@ VG_ViewFindToolByOps(VG_View *vv, const VG_ToolOps *ops)
 		if (tool->ops == ops)
 			return (tool);
 	}
+	AG_SetError("No such tool: %p", ops);
 	return (NULL);
 }
 
