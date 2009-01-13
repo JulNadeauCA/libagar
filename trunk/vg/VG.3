@@ -40,13 +40,14 @@
 The
 .Nm
 interface allows applications to construct, display, export and import vector
-drawings, which are composed of entities (or "nodes") such as points, lines
-and arcs.
+drawings, which are composed of entities (i.e.,
+.Ft VG_Node
+objects) from simple primitives to more complex or application-specific items.
 .Pp
 There is no notion of coordinates in
 .Nm .
-Entities are organized in a tree structure, where edges represent linear
-transformations (such translations or rotations) between the entities.
+Entities are organized in a tree structure where elements are connected by
+linear transformations (such as translations or rotations).
 References between the entities are allowed.
 For example, a
 .Xr VG_Line 3
@@ -58,24 +59,29 @@ The
 .Xr VG_View 3
 widget is almost always used to display
 .Nm
-drawings, and edit them through the use of a generic "tool" interface.
+drawings.
+.Ft VG_View
+also provides a handy "tool" registration interface which simplifies the
+development
+of editors.
 .Pp
-Note that
+Note: While
 .Nm
-is designed to be a very simple to use, general-purpose vector drawing engine.
-There is another Agar-based vector engine,
+is general-purpose and designed for simplicity, a more CAD oriented
+alternative,
 .Ft SK ,
-which is available in the FreeSG distribution (http://freesg.org/).
-Its basic interface is similar, but it provides more advanced math and
-computational geometry features and unlike
+is available in the FreeSG distribution (http://freesg.org/).
+.Ft SK
+is similar to
+.Nm ,
+but it provides more advanced math and computational geometry features.
+Unlike
 .Nm
-which uses transformation matrices to position entities,
+which uses linear transformations to represent relative entity positions,
 .Ft SK
 uses systems of geometrical constraints (e.g., distances, angles, etc.).
 .Sh BUILT-IN NODE CLASSES
-While most practical applications are expected to define their own
-.Nm
-node classes, a number standard classes are built into the library:
+A number of simple primitives entities are built into the library:
 .Pp
 .Bl -tag -compact -width "VG_Polygon(3) "
 .It Xr VG_Point 3
@@ -199,12 +205,35 @@ created
 structure.
 .Fn VG_PopLayer
 pops the highest layer off the stack.
-.Sh NODE CLASSES
+.Sh NODE CLASS REGISTRATION
+.nr nS 1
+.Ft "void"
+.Fn VG_RegisterClass "VG_NodeOps *class"
+.Pp
+.Ft "void"
+.Fn VG_UnregisterClass "VG_NodeOps *class"
+.Pp
+.Ft "VG_NodeOps *"
+.Fn VG_LookupClass "const char *className"
+.Pp
+.nr nS 0
+Applications and utilities are expected to register node classes using
+.Fn VG_RegisterClass ,
+which registers the class described by the given
+.Fa VG_NodeOps
+structure.
+.Fn VG_UnregisterClass
+unregisters the given class.
+.Pp
+.Fn VG_LookupClass
+searches for a class of the specified name and return its description, or
+NULL if there is no such class.
 The
 .Ft VG_NodeOps
 structure fully describes a 
 .Nm
-node class:
+node class.
+All function pointers are optional and can be set to NULL.
 .Bd -literal
 typedef struct vg_node_ops {
 	const char            *name;
@@ -226,16 +255,15 @@ typedef struct vg_node_ops {
 }
 .Ed
 .Pp
+The
 .Fa name
-is a string identifier for the class.
+field is a string identifier for this class.
 .Fa icon
-is an Agar icon resource for GUI purposes.
+is an optional Agar icon resource for GUI purposes.
 .Fa size
 is the full size in bytes of the structure (derived from
 .Fa VG_Node )
 which describes node instances.
-.Pp
-All function pointers are optional and can be set to NULL.
 .Pp
 The
 .Fn init
@@ -303,32 +331,6 @@ is the desired new position in absolute VG coordinates,
 describes the change in position.
 It is recommended to only rely on
 .Fa vRel .
-.Pp
-Applications and utilities are expected to register node classes using
-.Fn VG_RegisterClass .
-.Pp
-.nr nS 1
-.Ft "void"
-.Fn VG_RegisterClass "VG_NodeOps *class"
-.Pp
-.Ft "void"
-.Fn VG_UnregisterClass "VG_NodeOps *class"
-.Pp
-.Ft "VG_NodeOps *"
-.Fn VG_LookupClass "const char *className"
-.Pp
-.nr nS 0
-The
-.Fn VG_RegisterClass
-function registers the class described by the given
-.Fa VG_NodeOps
-structure.
-.Fn VG_UnregisterClass
-unregisters the given class.
-.Pp
-.Fn VG_LookupClass
-searches for a class of the specified name and return its description, or
-NULL if there is no such class.
 .Sh NODE OPERATIONS
 .nr nS 1
 .Ft "void"
