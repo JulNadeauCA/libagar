@@ -289,7 +289,7 @@ Init(void *obj)
 
 	WIDGET(vv)->flags |= AG_WIDGET_FOCUSABLE;
 
-	vv->flags = VG_VIEW_BGFILL;
+	vv->flags = 0;
 	vv->vg = NULL;
 	vv->draw_ev = NULL;
 	vv->scale_ev = NULL;
@@ -345,8 +345,10 @@ void
 VG_ViewSetVG(VG_View *vv, VG *vg)
 {
 	AG_ObjectLock(vv);
-	vv->vg = vg;
-	VG_ViewSelectTool(vv, NULL, NULL);
+	if (vv->vg != vg) {
+		vv->vg = vg;
+		VG_ViewSelectTool(vv, NULL, NULL);
+	}
 	AG_ObjectUnlock(vv);
 }
 
@@ -574,7 +576,7 @@ Draw(void *obj)
 	if (vg == NULL)
 		return;
 
-	if (vv->flags & VG_VIEW_BGFILL)
+	if (!(vv->flags & VG_VIEW_DISABLE_BG))
 		AG_DrawRectFilled(vv, vv->r, VG_MapColorRGB(vg->fillColor));
 	
 	AG_PushClipRect(vv, vv->r);
@@ -744,20 +746,18 @@ VG_ViewSetScaleMax(VG_View *vv, float scaleMax)
 	AG_ObjectUnlock(vv);
 }
 
-/* Set the display scale factor. */
+/* Set the display scale factor explicitely. */
 void
-VG_ViewSetScale(VG_View *vv, int idx)
+VG_ViewSetScale(VG_View *vv, float c)
 {
-	float scalePrev = vv->scale;
-	
-	if (idx < 0) { idx = 0; }
-	else if (idx >= nScaleFactors) { idx = nScaleFactors-1; }
-	
+	float scalePrev;
+
 	AG_ObjectLock(vv);
+	scalePrev = vv->scale;
 
 	/* Set the specified scaling factor. */
-	vv->scaleIdx = idx;
-	vv->scale = scaleFactors[idx];
+	/* vv->scaleIdx = idx; XXX */
+	vv->scale = c;
 	if (vv->scale < vv->scaleMin) { vv->scale = vv->scaleMin; }
 	if (vv->scale > vv->scaleMax) { vv->scale = vv->scaleMax; }
 	
@@ -769,6 +769,15 @@ VG_ViewSetScale(VG_View *vv, int idx)
 	UpdateGridIntervals(vv);
 
 	AG_ObjectUnlock(vv);
+}
+
+/* Set the display scale factor by preset index. */
+void
+VG_ViewSetScalePreset(VG_View *vv, int idx)
+{
+	if (idx < 0) { idx = 0; }
+	else if (idx >= nScaleFactors) { idx = nScaleFactors-1; }
+	VG_ViewSetScale(vv, scaleFactors[idx]);
 }
 
 /* Set the specified tool as default. */

@@ -11,9 +11,10 @@ struct vg_view;
 
 /* VG tool class description */
 typedef struct vg_tool_ops {
-	const char *name, *desc;
-	AG_StaticIcon *icon;
-	size_t len;
+	const char *name;		/* Tool name */
+	const char *desc;		/* Optional description */
+	AG_StaticIcon *icon;		/* Optional GUI icon */
+	size_t len;			/* Size of instance structure */
 	Uint flags;
 #define VG_MOUSEMOTION_NOSNAP	0x01	/* Ignore snapping in mousemotion */
 #define VG_BUTTONUP_NOSNAP	0x02	/* Ignore snapping in buttonup */
