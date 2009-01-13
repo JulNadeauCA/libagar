@@ -38,7 +38,7 @@ typedef struct vg_view {
 #define VG_VIEW_VFILL		0x02
 #define VG_VIEW_GRID		0x04		/* Display grid */
 #define VG_VIEW_EXTENTS		0x08		/* Display extents (DEBUG) */
-#define VG_VIEW_BGFILL		0x10		/* Fill background */
+#define VG_VIEW_DISABLE_BG	0x10		/* Enable VG background */
 #define VG_VIEW_CONSTRUCTION	0x20		/* Construction geometry */
 #define VG_VIEW_EXPAND	(VG_VIEW_HFILL|VG_VIEW_VFILL)
 
@@ -89,7 +89,8 @@ extern AG_WidgetClass vgViewClass;
 
 VG_View	*VG_ViewNew(void *, VG *, Uint);
 void     VG_ViewSetVG(struct vg_view *, VG *);
-void     VG_ViewSetScale(struct vg_view *, int);
+void     VG_ViewSetScale(struct vg_view *, float);
+void     VG_ViewSetScalePreset(struct vg_view *, int);
 void     VG_ViewSetScaleMin(struct vg_view *, float);
 void     VG_ViewSetScaleMax(struct vg_view *, float);
 void     VG_ViewSetSnapMode(struct vg_view *, enum vg_snap_mode);
