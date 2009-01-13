@@ -1,4 +1,4 @@
-.\" Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2008-2009 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -39,9 +39,12 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget implements the display and edition of
+widget displays a
 .Xr VG 3
-drawings.
+vector graphics object.
+.Nm
+also provides a simple "tool" registration interface which allows modular
+editors to be implemented quickly.
 .Sh INTERFACE
 .nr nS 1
 .Ft "VG_View *"
@@ -51,7 +54,10 @@ drawings.
 .Fn VG_ViewSetVG "VG_View *vv" "VG *vg"
 .Pp
 .Ft "void"
-.Fn VG_ViewSetScale "VG_View *vv" "int c"
+.Fn VG_ViewSetScale "VG_View *vv" "float c"
+.Pp
+.Ft "void"
+.Fn VG_ViewSetScalePreset "VG_View *vv" "int index"
 .Pp
 .Ft "void"
 .Fn VG_ViewSetScaleMin "VG_View *vv" "float c"
@@ -63,25 +69,7 @@ drawings.
 .Fn VG_ViewSetSnapMode "VG_View *vv" "enum vg_snap_mode mode"
 .Pp
 .Ft "void"
-.Fn VG_ViewSetGrid "VG_View *vv" "int gridIndex" "enum vg_grid_type type" "int interval" "VG_Color color"
-.Pp
-.Ft "void"
-.Fn VG_ViewSelectTool "VG_View *vv" "VG_Tool *tool" "void *userPtr"
-.Pp
-.Ft "void"
-.Fn VG_ViewSelectToolEv "AG_Event *event"
-.Pp
-.Ft "VG_Tool *"
-.Fn VG_ViewFindTool "VG_View *vv" "const char *name"
-.Pp
-.Ft "VG_Tool *"
-.Fn VG_ViewFindToolByOps "VG_View *vv" "const VG_ToolOps *ops"
-.Pp
-.Ft "VG_Tool *"
-.Fn VG_ViewRegTool "VG_View *vv" "const VG_ToolOps *ops" "void *userPtr"
-.Pp
-.Ft "void"
-.Fn VG_ViewSetDefaultTool "VG_View *vv" "VG_Tool *tool"
+.Fn VG_ViewSetGrid "VG_View *vv" "int gridID" "enum vg_grid_type type" "int interval" "VG_Color color"
 .Pp
 .Ft "Uint"
 .Fn VG_AddEditArea "VG_View *vv" "void *widget"
@@ -102,18 +90,300 @@ drawings.
 .Fn VG_GetViewCoordsFlt "VG_View *vv" "VG_Vector v" "float *x" "float *y"
 .Pp
 .Ft "void *"
-.Fn VG_NearestPoint "VG_View *vv" "VG_Vector vPos" "void *ignore"
-.Pp
-.Ft "void *"
 .Fn VG_Nearest "VG_View *vv" "VG_Vector vPos"
 .Pp
 .Ft "void *"
-.Fn VG_HighlightNearestPoint "VG_View *vv" "VG_Vector vPos" "void *ignore"
+.Fn VG_NearestPoint "VG_View *vv" "VG_Vector vPos" "void *ignore"
 .Pp
 .nr nS 0
+The
+.Fn VG_ViewNew
+function allocates, initializes, and attaches a
+.Nm
+widget displaying the specified
+.Fa vg
+object.
+Acceptable initialization
+.Fa flags
+include:
+.Bl -tag -width "VG_VIEW_CONSTRUCTION "
+.It VG_VIEW_GRID
+Display the grid; see
+.Fn VG_ViewSetGrid .
+.It VG_VIEW_EXTENTS
+Display the bounding boxes of the VG elements.
+This option is only implemented in debug mode.
+.It VG_VIEW_DISABLE_BG
+Disable the VG-specific background.
+.It VG_VIEW_CONSTRUCTION
+Display VG elements marked as "for construction", such as the points used to
+construct a polygon.
+The exact interpretation of this setting is element-specific.
+.El
+.Pp
+The VG object displayed can be changed at runtime with
+.Fn VG_ViewSetVG .
+If a VG tool (see
+.Dq TOOL INTERFACE )
+is currently in use, changing the VG has the side effect of
+deselecting the tool.
+.Pp
+.Fn VG_ViewSetScale
+sets the scaling factor at which the vector scene will be displayed.
+The
+.Fn VG_ViewSetScalePreset
+variant accepts an index into the table of preset scaling factors as an
+argument (0..nScaleFactors).
+.Fn VG_ViewSetScaleMin
+and
+.Fn VG_ViewSetScaleMax
+specify the range of scaling factors the user is allowed to select.
+.Pp
+.Fn VG_ViewSetSnapMode
+selects the snapping constraint mode for the cursor.
+Acceptable values of
+.Fa mode
+include:
+.Pp
+.Bl -tag -compact -width "VG_FREE_POSITIONING "
+.It VG_FREE_POSITIONING
+No snapping constraint.
+.It VG_GRID
+Snap cursor to active grid.
+.It VG_ENDPOINT
+Snap to line endpoints.
+.It VG_CLOSEST_POINT
+Snap to closest point on nearest entity.
+.El
+.Pp
+.Fn VG_ViewSetGrid
+either creates a new grid, or changes the parameters of an existing grid
+.Fa gridID .
+The
+.Fa interval
+argument specifies the interval of the grid (in pixels).
+.Fa color
+sets the color which will be used to display the grid.
+.Fa type
+specifies the style of rendering:
+.Pp
+.Bl -tag -compact -width "VG_GRID_POINTS "
+.It VG_GRID_POINTS
+Draw the grid as an array of points.
+.It VG_GRID_LINES
+Draw the grid using lines only.
+.El
+.Pp
+The
+.Fn VG_AddEditArea
+routine indicates a container widget which the
+.Nm
+should use to display tool-specific GUI elements.
+Whenever a tool is selected, its optional
+.Fn edit
+operation may create one or more GUI elements specific to the tool (e.g.,
+checkboxes controlling various tool-specific options), under this specified
+container widget.
+Multiple edition areas are allowed.
+.Fn VG_AddEditArea
+returns an index into the
+.Va editAreas
+array of
+.Nm .
+.Pp
+The
+.Fn VG_ApplyConstraints
+routine applies effective position constraints (e.g., the snapping mode given
+by
+.Fn VG_ViewSetSnapMode )
+on the given position, overwriting the contents of
+.Fa pos
+with the result.
+.Pp
+The
+.Fn VG_GetVGCoords
+routine converts the given integer coordinates (relative to the
+.Nm
+widget), into real coordinates in the VG scene.
+The
+.Fn VG_GetVGCoordsFlt
+variant accepts view coordinates in floating-point format.
+.Pp
+Conversely,
+.Fn VG_GetViewCoords
+and
+.Fn VG_GetViewCoordsFlt
+convert the specified real VG coordinates
+.Fa v
+to integer (or floating-point) view coordinates into
+.Fa x ,
+.Fa y .
+.Pp
+The
+.Fn VG_Nearest
+routine returns a pointer to the entity nearest to the given coordinates.
+The
+.Fn VG_NearestPoint
+variant searches the scene for a point which intersects a VG element and
+is closest to the specified VG coordinates
+.Fa vPos .
+.Fa ignore
+is an optional pointer to an element which should be ignored in the computation.
+.Sh TOOL INTERFACE
+.nr nS 1
+.Ft "VG_Tool *"
+.Fn VG_ViewRegTool "VG_View *vv" "const VG_ToolOps *classInfo" "void *userPtr"
+.Pp
+.Ft "void"
+.Fn VG_ViewSelectTool "VG_View *vv" "VG_Tool *tool" "void *userPtr"
+.Pp
+.Ft "void"
+.Fn VG_ViewSelectToolEv "AG_Event *event"
+.Pp
+.Ft "VG_Tool *"
+.Fn VG_ViewFindTool "VG_View *vv" "const char *name"
+.Pp
+.Ft "VG_Tool *"
+.Fn VG_ViewFindToolByOps "VG_View *vv" "const VG_ToolOps *classInfo"
+.Pp
+.Ft "void"
+.Fn VG_ViewSetDefaultTool "VG_View *vv" "VG_Tool *tool"
+.Pp
+.nr nS 0
+Implementing an editor using
+.Nm
+is typically done by registering a set of tools which are invoked using a
+callback-style interface.
+.Pp
+.Fn VG_ViewRegTool
+registers a new tool class (described by the provided
+.Fa classInfo
+structure)
+with the
+.Nm .
+.Fa userPtr
+is an optional user pointer which will be passed to the tool.
+The
+.Ft VG_ToolOps
+structure is as follows.
+Any of the callback functions may be set to NULL.
+.Bd -literal
+typedef struct vg_tool_ops {
+	const char *name;          /* Tool name */
+	const char *desc;          /* Optional description */
+	AG_StaticIcon *icon;       /* Optional GUI icon */
+	size_t len;                /* Size of instance structure */
+	Uint flags;                /* Options (see below) */
+
+	void (*init)(void *);
+	void (*destroy)(void *);
+	void *(*edit)(void *, struct vg_view *);
+	void (*predraw)(void *, struct vg_view *);
+	void (*postdraw)(void *, struct vg_view *);
+	void (*selected)(void *, struct vg_view *);
+	void (*deselected)(void *, struct vg_view *);
+
+	int (*mousemotion)(void *, VG_Vector vPos, VG_Vector vRel,
+	                   int buttons);
+	int (*mousebuttondown)(void *, VG_Vector vPos, int button);
+	int (*mousebuttonup)(void *, VG_Vector vPos, int button);
+	int (*keydown)(void *, int ksym, int kmod, int unicode);
+	int (*keyup)(void *, int ksym, int kmod, int unicode);
+} VG_ToolOps;
+.Ed
+.Pp
+The
+.Fa name
+field specifies a short name for the tool.
+.Fa desc
+is a short description of the purpose of the tool.
+.Fa icon
+is an optional
+.Xr AG_StaticIcon 3
+for the GUI.
+.Pp
+The
+.Fa len
+value specifies the size, in bytes, of the structure which will be used to
+describe an instance of the tool (either
+.Ft VG_Tool
+or a derivative of it).
+.Pp
+Acceptable
+.Fa flags
+options include:
+.Bl -tag -width "VG_MOUSEMOTION_NOSNAP "
+.It VG_NOSNAP
+Disable position constraints in any context.
+.It VG_MOUSEMOTION_NOSNAP
+Disable position constraints when communicating mouse motion events to the
+tool.
+.It VG_BUTTONUP_NOSNAP
+Disable position constraints when communicating mouse button release events
+to the tool.
+.It VG_BUTTONDOWN_NOSNAP
+Disable position constraints when communicating mouse button press events
+to the tool.
+.It VG_BUTTON_NOSNAP
+Implies
+.Dv VG_BUTTONUP_NOSNAP
+and
+.Dv VG_BUTTONDOWN_NOSNAP
+.It VG_NOEDITCLEAR
+When the tool is selected, do not perform automatic removal of GUI elements
+in the containers specified by
+.Fn VG_AddEditArea .
+.El
+.Pp
+The
+.Fn init
+callback initializes an instance of the tool.
+.Fn destroy
+releases resources allocated by an instance of the tool.
+.Pp
+The
+.Fn edit
+operation creates one or more GUI elements, typically used to set various
+tool-specific options.
+The object returned by
+.Fn edit
+should be a derivative of
+.Xr AG_Widget 3 .
+.Pp
+The
+.Fn predraw
+and
+.Fn postdraw
+callbacks are invoked prior to, and after rendering of the scene by the
+.Nm .
+Typically,
+.Fn postdraw
+is used to render specialized cursors or provide visual feedback to the user
+in a manner specific to the tool.
+.Pp
+.Fn selected
+and
+.Fn deselected
+are invoked whenever the tool is, respectively, selected or deselected by the
+user.
+.Pp
+Low-level mouse and keyboard events can be handled directly by the tool
+using
+.Fn mousemotion
+.Fn mousebuttondown ,
+.Fn mousebuttonup ,
+.Fn keydown
+and
+.Fn keyup .
+The coordinates passed to mouse-related callbacks are subject to the current
+position constraints, unless disabled by one of the
+.Dv VG_*_NOSNAP
+flags in the
+.Fa flags
+field.
 .Sh SEE ALSO
 .Xr VG 3
 .Sh HISTORY
 The
 .Nm
-interface first appeared in Agar 1.3.
+interface first appeared in Agar 1.3, and was first documented in Agar 1.3.3.
