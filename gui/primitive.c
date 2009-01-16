@@ -1403,6 +1403,7 @@ ArrowUpGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
 	Uint8 r, g, b;
+	int h2 = h>>1;
 
 	AG_GetRGB(c1, agVideoFmt, &r,&g,&b);
 	glMatrixMode(GL_MODELVIEW);
@@ -1411,9 +1412,9 @@ ArrowUpGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 	glBegin(GL_POLYGON);
 	{
 		glColor3ub(r, g, b);
-		glVertex2i(x,		y - (h>>1));
-		glVertex2i(x - (h>>1),	y + (h>>1));
-		glVertex2i(x + (h>>1),	y + (h>>1));
+		glVertex2i(x,		y - h2);
+		glVertex2i(x - h2,	y + h2);
+		glVertex2i(x + h2,	y + h2);
 	}
 	glEnd();
 	glPopMatrix();
@@ -1424,6 +1425,7 @@ ArrowDownGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 {
 	AG_Widget *wid = p;
 	Uint8 r, g, b;
+	int h2 = h>>1;
 
 	AG_GetRGB(c1, agVideoFmt, &r,&g,&b);
 	glMatrixMode(GL_MODELVIEW);
@@ -1432,9 +1434,9 @@ ArrowDownGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 	glBegin(GL_POLYGON);
 	{
 		glColor3ub(r, g, b);
-		glVertex2i(x - (h>>1),	y - (h>>1));
-		glVertex2i(x + (h>>1),	y - (h>>1));
-		glVertex2i(x,		y + (h>>1));
+		glVertex2i(x - h2,	y - h2);
+		glVertex2i(x + h2,	y - h2);
+		glVertex2i(x,		y + h2);
 	}
 	glEnd();
 	glPopMatrix();
@@ -1443,13 +1445,45 @@ ArrowDownGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 static void
 ArrowLeftGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 {
-	/* TODO */
+	AG_Widget *wid = p;
+	Uint8 r, g, b;
+	int h2 = h>>1;
+
+	AG_GetRGB(c1, agVideoFmt, &r,&g,&b);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glTranslatef(wid->rView.x1, wid->rView.y1, 0);
+	glBegin(GL_POLYGON);
+	{
+		glColor3ub(r, g, b);
+		glVertex2i(x - h2,	y);
+		glVertex2i(x + h2,	y + h2);
+		glVertex2i(x + h2,	y - h2);
+	}
+	glEnd();
+	glPopMatrix();
 }
 
 static void
 ArrowRightGL(void *p, int x, int y, int h, Uint32 c1, Uint32 c2)
 {
-	/* TODO */
+	AG_Widget *wid = p;
+	Uint8 r, g, b;
+	int h2 = h>>1;
+
+	AG_GetRGB(c1, agVideoFmt, &r,&g,&b);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glTranslatef(wid->rView.x1, wid->rView.y1, 0);
+	glBegin(GL_POLYGON);
+	{
+		glColor3ub(r, g, b);
+		glVertex2i(x + h2,	y);
+		glVertex2i(x - h2,	y + h2);
+		glVertex2i(x - h2,	y - h2);
+	}
+	glEnd();
+	glPopMatrix();
 }
 
 #endif /* HAVE_OPENGL */
