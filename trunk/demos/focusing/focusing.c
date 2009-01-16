@@ -1,13 +1,12 @@
 /*	Public domain	*/
 /*
- * This sample application demonstrates how widgets can control the focus
- * state. A dummy widget receives all mousemotion events and places the
- * focus on itself when the cursor is inside its area. Once the widget has
- * focus, it can receive keyboard events.
+ * This program tests different aspects of widget focusing behavior.
  */
 
 #include <agar/core.h>
 #include <agar/gui.h>
+
+static AG_Widget *widget1, *widget2;
 
 static void
 mousemotion(AG_Event *event)
@@ -64,13 +63,15 @@ buttondown(AG_Event *event)
 }
 
 static void
-CreateWindow(void)
+TestUnfocusedMouseMotion(void)
 {
 	AG_Window *win;
 	AG_Button *btn;
 	AG_Fixed *fx1, *fx2;
 
-	win = AG_WindowNew(0);
+	win = AG_WindowNew(AG_WINDOW_NOCLOSE);
+	AG_WindowSetCaption(win, "Unfocused mousemotion");
+	AG_LabelNew(win, 0, "Mouse hover to gain focus");
 	fx1 = AG_FixedNew(win, AG_FIXED_EXPAND);
 
 	btn = AG_ButtonNew(fx1, 0, "Foo");
@@ -80,6 +81,11 @@ CreateWindow(void)
 	AG_FixedMove(fx1, btn, 0, 32);
 	AG_FixedSize(fx1, btn, 32, 32);
 	AG_ButtonDisable(btn);
+	btn = AG_ButtonNew(fx1, 0, "Baz");
+	AG_FixedMove(fx1, btn, 0, 64);
+	AG_FixedSize(fx1, btn, 32, 32);
+
+	widget1 = AGWIDGET(btn);
 
 	fx2 = AG_FixedNew(fx1, AG_FIXED_BOX);
 	AGWIDGET(fx2)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
@@ -94,9 +100,56 @@ CreateWindow(void)
 	AG_WindowShow(win);
 }
 
+static void
+TestTabCycle(void)
+{
+	AG_Window *win;
+	AG_Box *b, *b1, *b2;
+	AG_Button *btn;
+	int i;
+
+	win = AG_WindowNew(AG_WINDOW_NOCLOSE);
+	AG_WindowSetCaption(win, "Tab cycle");
+
+	AG_LabelNew(win, 0, "<TAB> = Cycle focus forward\n"
+	                    "<SHIFT+TAB> = Cycle focus backward");
+	b = AG_BoxNewHoriz(win, AG_BOX_EXPAND|AG_BOX_HOMOGENOUS);
+
+	btn = AG_ButtonNew(b, AG_BUTTON_HFILL, "Foo");
+	widget2 = AGWIDGET(btn);
+
+	b1 = AG_BoxNewVert(b, AG_BOX_VFILL);
+	for (i = 0; i < 5; i++) {
+		AG_ButtonNew(b1, AG_BUTTON_HFILL, "#%d", i);
+	}
+	b2 = AG_BoxNewVert(b, AG_BOX_VFILL);;
+	for (i = 5; i < 10; i++) {
+		AG_ButtonNew(b2, AG_BUTTON_HFILL, "#%d", i);
+	}
+
+	AG_WindowShow(win);
+	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MR, 40, 50);
+	AG_WindowShow(win);
+}
+
+static void
+FocusWidget1(AG_Event *event)
+{
+	AG_WidgetFocus(widget1);
+}
+
+static void
+FocusWidget2(AG_Event *event)
+{
+	AG_WidgetFocus(widget2);
+}
+
 int
 main(int argc, char *argv[])
 {
+	AG_Window *win;
+	AG_Button *btn;
+
 	if (AG_InitCore("agar-focusing-demo", 0) == -1) {
 		fprintf(stderr, "%s\n", AG_GetError());
 		return (1);
@@ -107,7 +160,18 @@ main(int argc, char *argv[])
 	}
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
-	CreateWindow();
+
+	TestUnfocusedMouseMotion();
+	TestTabCycle();
+
+	win = AG_WindowNew(AG_WINDOW_PLAIN|AG_WINDOW_NOCLOSE);
+	AG_WindowSetPosition(win, AG_WINDOW_BC, 0);
+	btn = AG_ButtonNewFn(win, 0, "Focus widget 1", FocusWidget1, NULL);
+	AG_WidgetSetFocusable(btn, 0);
+	btn = AG_ButtonNewFn(win, 0, "Focus widget 2", FocusWidget2, NULL);
+	AG_WidgetSetFocusable(btn, 0);
+	AG_WindowShow(win);
+
 	AG_EventLoop();
 	AG_Destroy();
 	return (0);
