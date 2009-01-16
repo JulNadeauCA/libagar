@@ -127,8 +127,7 @@ TestTabCycle(void)
 		AG_ButtonNew(b2, AG_BUTTON_HFILL, "#%d", i);
 	}
 
-	AG_WindowShow(win);
-	AG_WindowSetGeometryAlignedPct(win, AG_WINDOW_MR, 40, 50);
+	AG_WindowSetPosition(win, AG_WINDOW_MR, 0);
 	AG_WindowShow(win);
 }
 
