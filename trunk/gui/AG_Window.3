@@ -423,11 +423,14 @@ sets the visibility state of
 .Ft int
 .Fn AG_WindowFocusNamed "const char *name"
 .Pp
-.Ft int
-.Fn AG_WindowFindFocused "AG_Window *win"
+.Ft "AG_Window *"
+.Fn AG_WindowFindFocused "void"
 .Pp
 .Ft "int"
 .Fn AG_WindowIsFocused "void"
+.Pp
+.Ft "void"
+.Fn AG_WindowCycleFocus "AG_Window *win" "int reverse"
 .Pp
 .nr nS 0
 The
@@ -444,10 +447,15 @@ or -1 if the window was not found.
 returns a pointer to the window currently holding focus, or NULL if there
 are currently no windows at all.
 .Pp
-The
 .Fn AG_WindowIsFocused
-function returns the current focus state of the window (0 = not focused,
-1 = focused).
+returns 1 if the window is currently holding focus, otherwise 0.
+.Pp
+.Fn AG_WindowCycleFocus
+places the focus over the widget following (or preceeding if
+.Fa reverse
+is 1) the widget currently holding focus inside of
+.Fa win .
+By default, Agar maps the "TAB" key to this function.
 .Sh GENERIC EVENT HANDLERS
 .nr nS 1
 .Ft void

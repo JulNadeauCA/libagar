@@ -180,6 +180,7 @@ Init(void *obj)
 	win->caption[0] = '\0';
 	win->tbar = NULL;
 	win->icon = AG_IconNew(NULL, 0);
+	win->nFocused = 0;
 	TAILQ_INIT(&win->subwins);
 	AG_IconSetSurfaceNODUP(win->icon, agIconWindow.s);
 	AG_IconSetBackgroundFill(win->icon, 1, AG_COLOR(BG_COLOR));
@@ -472,34 +473,20 @@ AG_WindowHide(AG_Window *win)
 	AG_ObjectUnlock(win);
 }
 
+/* Build an ordered list of the focusable widgets in a window. */
 static void
-AG_WindowCountWidgets(AG_Widget *wid, Uint *nwidgets)
+ListFocusableWidgets(AG_List *L, AG_Widget *wid)
 {
-	AG_Widget *cwid;
+	AG_Widget *chld;
 
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_FOCUSABLE) {
-		(*nwidgets)++;
+		AG_ListAppendPointer(L, wid->focusFwd ? wid->focusFwd : wid);
 	}
 	AG_ObjectUnlock(wid);
 
-	WIDGET_FOREACH_CHILD(cwid, wid)
-		AG_WindowCountWidgets(cwid, nwidgets);
-}
-
-static void
-AG_WindowMapWidgets(AG_Widget *wid, AG_Widget **widgets, Uint *i)
-{
-	AG_Widget *cwid;
-
-	AG_ObjectLock(wid);
-	if (wid->flags & AG_WIDGET_FOCUSABLE) {
-		widgets[(*i)++] = wid;
-	}
-	AG_ObjectUnlock(wid);
-
-	WIDGET_FOREACH_CHILD(cwid, wid)
-		AG_WindowMapWidgets(cwid, widgets, i);
+	WIDGET_FOREACH_CHILD(chld, wid)
+		ListFocusableWidgets(L, chld);
 }
 
 /*
@@ -509,37 +496,55 @@ AG_WindowMapWidgets(AG_Widget *wid, AG_Widget **widgets, Uint *i)
 void
 AG_WindowCycleFocus(AG_Window *win, int reverse)
 {
-	AG_Widget **widgets;
-	AG_Widget *olfocus;
-	Uint nwidgets = 0;
-	Uint i = 0;
+	AG_List *Lfoc, *Luniq;
+	int i, j;
 
-	if ((olfocus = AG_WidgetFindFocused(win)) == NULL) {
-		return;
+	/* Generate a list of focusable widgets; eliminate duplicates. */
+	Lfoc = AG_ListNew();
+	Luniq = AG_ListNew();
+	ListFocusableWidgets(Lfoc, WIDGET(win));
+	for (i = 0; i < Lfoc->n; i++) {
+		for (j = 0; j < Luniq->n; j++) {
+			if (Lfoc->v[i].data.p == Luniq->v[j].data.p)
+				break;
+		}
+		if (j == Luniq->n)
+			AG_ListAppendPointer(Luniq, Lfoc->v[i].data.p);
 	}
-	AG_WindowCountWidgets(WIDGET(win), &nwidgets);
-	widgets = Malloc(nwidgets*sizeof(AG_Widget *));
-	AG_WindowMapWidgets(WIDGET(win), widgets, &i);
 
-	for (i = 0; i < nwidgets; i++) {
-		if (widgets[i] == olfocus) {
-			if (reverse) {
-				if (i-1 >= 0) {
-					AG_WidgetFocus(widgets[i-1]);
-				} else if (i-1 < 0) {
-					AG_WidgetFocus(widgets[nwidgets-1]);
-				}
+	/* Move focus after/before the currently focused widget. */
+	if (reverse) {
+		for (i = 0; i < Luniq->n; i++) {
+			if (WIDGET(Luniq->v[i].data.p)->flags & AG_WIDGET_FOCUSED)
+				break;
+		}
+		if (i == -1) {
+			AG_WidgetFocus(Luniq->v[0].data.p);
+		} else {
+			if (i-1 < 0) {
+				AG_WidgetFocus(Luniq->v[Luniq->n - 1].data.p);
 			} else {
-				if (i+1 < nwidgets) {
-					AG_WidgetFocus(widgets[i+1]);
-				} else if (i+1 >= nwidgets) {
-					AG_WidgetFocus(widgets[0]);
-				}
+				AG_WidgetFocus(Luniq->v[i - 1].data.p);
 			}
-			break;
+		}
+	} else {
+		for (i = Luniq->n-1; i >= 0; i--) {
+			if (WIDGET(Luniq->v[i].data.p)->flags & AG_WIDGET_FOCUSED)
+				break;
+		}
+		if (i == Luniq->n) {
+			AG_WidgetFocus(Luniq->v[0].data.p);
+		} else {
+			if (i+1 < Luniq->n) {
+				AG_WidgetFocus(Luniq->v[i + 1].data.p);
+			} else {
+				AG_WidgetFocus(Luniq->v[0].data.p);
+			}
 		}
 	}
-	Free(widgets);
+
+	AG_ListDestroy(Lfoc);
+	AG_ListDestroy(Luniq);
 }
 
 /*
@@ -1015,7 +1020,7 @@ scan:
 				break;
 			}
 			tabCycle = 1;
-			if (AG_WINDOW_FOCUSED(win) &&
+			if (AG_WindowIsFocused(win) &&
 			   (wFoc = AG_WidgetFindFocused(win)) != NULL) {
 				AG_ObjectLock(wFoc);
 				if (ev->key.keysym.sym != SDLK_TAB ||
