@@ -68,8 +68,7 @@ typedef struct ag_window {
 #define AG_WINDOW_HMAXIMIZE	0x040000 /* Keep maximized horizontally */
 #define AG_WINDOW_VMAXIMIZE	0x080000 /* Keep maximized vertically */
 #define AG_WINDOW_NOMOVE	0x100000 /* Disallow movement of window */
-#define AG_WINDOW_NOCLIPPING	0x200000 /* Don't set a clipping rectangle
-					    over the window area */
+#define AG_WINDOW_NOCLIPPING	0x200000 /* Don't set a clipping rectangle over the window area */
 
 #define AG_WINDOW_NORESIZE	(AG_WINDOW_NOHRESIZE|AG_WINDOW_NOVRESIZE)
 #define AG_WINDOW_NOBUTTONS	(AG_WINDOW_NOCLOSE|AG_WINDOW_NOMINIMIZE|\
@@ -98,6 +97,7 @@ typedef struct ag_window {
 
 	struct ag_icon *icon;			/* Window icon */
 	AG_Rect r;				/* View area */
+	int nFocused;				/* Widgets in focus chain */
 } AG_Window;
 
 __BEGIN_DECLS
@@ -170,10 +170,10 @@ void	 AG_WindowHideGenEv(AG_Event *);
 void	 AG_WindowShowGenEv(AG_Event *);
 void	 AG_WindowCloseGenEv(AG_Event *);
 
+#define AGWINDOW(win)        ((AG_Window *)(win))
 #define AGWINDETACH(win)     AG_WindowDetachGenEv, "%p", (win)
 #define AGWINHIDE(win)       AG_WindowHideGenEv, "%p", (win)
 #define AGWINCLOSE(win)      AG_WindowCloseGenEv, "%p", (win)
-#define AG_WINDOW_FOCUSED(w) (AG_TAILQ_LAST(&agView->windows,ag_windowq) == (w))
 
 /*
  * Render a window to the display (must be enclosed between calls to
