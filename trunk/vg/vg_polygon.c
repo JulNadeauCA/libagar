@@ -31,6 +31,8 @@
 
 #include <gui/widget.h>
 #include <gui/primitive.h>
+#include <gui/checkbox.h>
+#include <gui/separator.h>
 #ifdef HAVE_OPENGL
 #include <gui/opengl.h>
 #endif
@@ -200,7 +202,6 @@ static void
 Draw(void *p, VG_View *vv)
 {
 	VG_Polygon *vp = p;
-	VG_Vector v;
 	int i;
 
 	if (vp->nPts < 3 || vp->outline) {
@@ -210,15 +211,19 @@ Draw(void *p, VG_View *vv)
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		VG_Color *c = &VGNODE(vp)->color;
+		int x, y;
+
 		glBegin(GL_POLYGON);
 		glColor3ub(c->r, c->g, c->b);
 		for (i = 0; i < vp->nPts; i++) {
-			v = VG_Pos(vp->pts[i]);
-			glVertex2f(v.x, v.y);
+			VG_GetViewCoords(vv, VG_Pos(vp->pts[i]), &x, &y);
+			x += WIDGET(vv)->rView.x1;
+			y += WIDGET(vv)->rView.y1;
+			glVertex2i(x, y);
 		}
 		glEnd();
 	} else
-#endif
+#endif /* HAVE_OPENGL */
 	{
 		DrawFB(vp, vv);
 	}
@@ -298,6 +303,18 @@ Delete(void *p)
 	}
 }
 
+static void *
+Edit(void *p, VG_View *vv)
+{
+	VG_Polygon *vp = p;
+	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+
+	AG_LabelNewPolled(box, AG_LABEL_HFILL, _("Points: %d"), &vp->nPts);
+	AG_SeparatorNewHoriz(box);
+	AG_CheckboxNewInt(box, 0, _("Render outline"), &vp->outline);
+	return (box);
+}
+
 VG_NodeOps vgPolygonOps = {
 	N_("Polygon"),
 	&vgIconPolygon,
@@ -311,5 +328,6 @@ VG_NodeOps vgPolygonOps = {
 	PointProximity,
 	NULL,			/* lineProximity */
 	Delete,
-	NULL			/* moveNode */
+	NULL,			/* moveNode */
+	Edit
 };

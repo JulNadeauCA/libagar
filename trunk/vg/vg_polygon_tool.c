@@ -59,18 +59,31 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 
 	switch (button) {
 	case SDL_BUTTON_LEFT:
-		if ((pt = VG_NearestPoint(vv, vPos, NULL)) == NULL) {
-			pt = VG_PointNew(vg->root, vPos);
-		}
 		if (t->vpCur == NULL) {
+			if ((pt = VG_NearestPoint(vv, vPos, NULL)) == NULL) {
+				pt = VG_PointNew(vg->root, vPos);
+			}
 			t->vpCur = VG_PolygonNew(vg->root);
-			t->vtxCur = 0;
+			VG_PolygonVertex(t->vpCur, pt);
+			pt = VG_PointNew(vg->root, vPos);
+			VG_PolygonVertex(t->vpCur, pt);
+			t->vtxCur = 1;
+		} else {
+			if ((pt = VG_NearestPoint(vv, vPos,
+			    t->vpCur->pts[t->vtxCur])) == NULL) {
+				pt = VG_PointNew(vg->root, vPos);
+			}
+			VG_PolygonVertex(t->vpCur, pt);
+			t->vtxCur++;
 		}
-		VG_PolygonVertex(t->vpCur, pt);
-		t->vtxCur++;
 		return (1);
 	case SDL_BUTTON_RIGHT:
 		if (t->vpCur != NULL) {
+			VG_Point *ptLast = t->vpCur->pts[t->vtxCur];
+
+			VG_PolygonDelVertex(t->vpCur, t->vtxCur);
+			(void)VG_Delete(ptLast);	/* No-op if in use */
+
 			t->vpCur = NULL;
 			t->vtxCur = 0;
 		}
@@ -98,7 +111,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 	VG_Point *pt;
 	
 	if (t->vpCur != NULL) {
-		if ((pt = VG_NearestPoint(vv, vPos, t->vpCur->pts[1]))) {
+		if ((pt = VG_NearestPoint(vv, vPos, t->vpCur->pts[t->vtxCur]))) {
 			VG_Status(vv, _("Use Point%u"), VGNODE(pt)->handle);
 		} else {
 			VG_Status(vv, _("Create vertex at %.2f,%.2f"),
