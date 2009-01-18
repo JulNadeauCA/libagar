@@ -274,7 +274,11 @@ The
 .Fn AG_WindowSetGeometry
 assigns a specific position and geometry in pixels to a window, overriding
 the default automatically-computed values.
-If a parameter is specified as -1, its current value is preserved.
+If either
+.Fa w
+or
+.Fa h
+is specified as -1, the current width / height is preserved.
 .Pp
 The
 .Fn AG_WindowSetGeometryRect
