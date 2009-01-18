@@ -85,7 +85,7 @@ AG_ButtonNewFn(void *parent, Uint flags, const char *caption, AG_EventFn fn,
 
 AG_Button *
 AG_ButtonNewBool(void *parent, Uint flags, const char *caption,
-    AG_DatumType type, void *p)
+    AG_VariableType type, void *p)
 {
 	AG_Button *bu = AG_ButtonNew(parent, flags, caption);
 	AG_WidgetBind(bu, "state", type, p);
@@ -193,10 +193,8 @@ SizeRequest(void *p, AG_SizeReq *r)
 		if (bu->lbl != NULL) {
 			AG_WidgetSizeReq(bu->lbl, &rLbl);
 			r->w += rLbl.w;
-			r->h += rLbl.h;
-		} else {
-			r->h += agTextFontHeight;
 		}
+		r->h += agTextFontHeight;
 	}
 }
 
@@ -279,16 +277,18 @@ GetState(AG_Button *bu, AG_WidgetBinding *binding, void *p)
 		v = (int)(*(Uint32 *)p);
 		break;
 	case AG_WIDGET_FLAG:
-		v = (*(int *)p & (int)binding->data.bitmask);
+		v = (*(int *)p & (int)binding->info.bitmask);
 		break;
 	case AG_WIDGET_FLAG8:
-		v = (int)(*(Uint8 *)p & (Uint8)binding->data.bitmask);
+		v = (int)(*(Uint8 *)p & (Uint8)binding->info.bitmask);
 		break;
 	case AG_WIDGET_FLAG16:
-		v = (int)(*(Uint16 *)p & (Uint16)binding->data.bitmask);
+		v = (int)(*(Uint16 *)p & (Uint16)binding->info.bitmask);
 		break;
 	case AG_WIDGET_FLAG32:
-		v = (int)(*(Uint32 *)p & (Uint32)binding->data.bitmask);
+		v = (int)(*(Uint32 *)p & (Uint32)binding->info.bitmask);
+		break;
+	default:
 		break;
 	}
 	if (bu->flags & AG_BUTTON_INVSTATE) {
@@ -314,16 +314,18 @@ SetState(AG_WidgetBinding *binding, void *p, int v)
 		*(Uint32 *)p = v;
 		break;
 	case AG_WIDGET_FLAG:
-		AG_SETFLAGS(*(int *)p, (int)binding->data.bitmask, v);
+		AG_SETFLAGS(*(int *)p, (int)binding->info.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG8:
-		AG_SETFLAGS(*(Uint8 *)p, (Uint8)binding->data.bitmask, v);
+		AG_SETFLAGS(*(Uint8 *)p, (Uint8)binding->info.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG16:
-		AG_SETFLAGS(*(Uint16 *)p, (Uint16)binding->data.bitmask, v);
+		AG_SETFLAGS(*(Uint16 *)p, (Uint16)binding->info.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG32:
-		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->data.bitmask, v);
+		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->info.bitmask, v);
+		break;
+	default:
 		break;
 	}
 }
