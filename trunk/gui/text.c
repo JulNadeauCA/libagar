@@ -1366,6 +1366,7 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_VBox *vb;
+	AG_Button *btnOK;
 	va_list args;
 
 	va_start(args, format);
@@ -1381,8 +1382,9 @@ AG_TextMsg(enum ag_text_msg_title title, const char *format, ...)
 	AG_LabelNewString(vb, 0, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
-	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
+	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
+	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
 }
 
@@ -1429,20 +1431,22 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 void
 AG_TextInfo(const char *key, const char *format, ...)
 {
-	char propKey[AG_PROP_KEY_MAX];
+	char disableSw[AG_PROP_KEY_MAX];
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Checkbox *cb;
+	AG_Button *btnOK;
 	va_list args;
 	int val;
 	
-	Strlcpy(propKey, "info.", sizeof(propKey));
-	Strlcat(propKey, key, sizeof(propKey));
-	
-	if (AG_GetProp(agConfig, propKey, AG_PROP_BOOL, &val) != NULL &&
-	    val == 1)
+	Strlcpy(disableSw, "info.", sizeof(disableSw));
+	Strlcat(disableSw, key, sizeof(disableSw));
+	if (AG_GetProp(agConfig, disableSw, AG_PROP_BOOL, &val) != NULL &&
+	    val == 1) {
 		return;
+	}
+	AG_SetCfgBool(disableSw, 0);
 
 	va_start(args, format);
 	Vsnprintf(msg, sizeof(msg), format, args);
@@ -1458,15 +1462,12 @@ AG_TextInfo(const char *key, const char *format, ...)
 	AG_LabelNewString(vb, 0, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
-	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
+	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-#if 0
-	/* XXX props */
-	AG_SetCfgBool(propKey, 0);
-	AG_WidgetBindProp(cb, "state", agConfig, propKey);
-#endif
+//	AG_WidgetBindProp(cb, "state", agConfig, disableSw);
 
+	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
 }
 
@@ -1477,20 +1478,22 @@ AG_TextInfo(const char *key, const char *format, ...)
 void
 AG_TextWarning(const char *key, const char *format, ...)
 {
-	char propKey[AG_PROP_KEY_MAX];
+	char disableSw[AG_PROP_KEY_MAX];
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_VBox *vb;
 	AG_Checkbox *cb;
+	AG_Button *btnOK;
 	va_list args;
 	int val;
 	
-	Strlcpy(propKey, "warn.", sizeof(propKey));
-	Strlcat(propKey, key, sizeof(propKey));
-	
-	if (AG_GetProp(agConfig, propKey, AG_PROP_BOOL, &val) != NULL &&
-	    val == 1)
+	Strlcpy(disableSw, "warn.", sizeof(disableSw));
+	Strlcat(disableSw, key, sizeof(disableSw));
+	if (AG_GetProp(agConfig, disableSw, AG_PROP_BOOL, &val) != NULL &&
+	    val == 1) {
 		return;
+	}
+	AG_SetCfgBool(disableSw, 0);
 
 	va_start(args, format);
 	Vsnprintf(msg, sizeof(msg), format, args);
@@ -1506,15 +1509,12 @@ AG_TextWarning(const char *key, const char *format, ...)
 	AG_LabelNewString(vb, 0, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
-	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
+	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-#if 0
-	XXX props
-	AG_SetCfgBool(propKey, 0);
-	AG_WidgetBindProp(cb, "state", agConfig, propKey);
-#endif
+//	AG_WidgetBindProp(cb, "state", agConfig, disableSw);
 
+	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
 }
 
@@ -1525,6 +1525,7 @@ AG_TextError(const char *format, ...)
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_VBox *vb;
+	AG_Button *btnOK;
 	va_list args;
 
 	va_start(args, format);
@@ -1540,8 +1541,9 @@ AG_TextError(const char *format, ...)
 	AG_LabelNewString(vb, 0, msg);
 
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
-	AG_WidgetFocus(AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win)));
+	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
+	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
 }
 
@@ -1608,8 +1610,8 @@ AG_TextEditFloat(double *fp, double min, double max, const char *unit,
 
 	/* TODO test type */
 
+	AG_WidgetFocus(num);
 	AG_WindowShow(win);
-	AG_WidgetFocus(num->input);
 }
 
 /* Create a dialog to edit a string value. */
@@ -1634,14 +1636,14 @@ AG_TextEditString(char *sp, size_t len, const char *msgfmt, ...)
 	AG_LabelNewString(vb, 0, msg);
 	
 	vb = AG_VBoxNew(win, AG_VBOX_HFILL);
-	{
-		tb = AG_TextboxNew(vb, 0, NULL);
-		AG_TextboxBindUTF8(tb, sp, len);
-		AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
-		AG_WidgetFocus(tb);
-	}
+	tb = AG_TextboxNew(vb, 0, NULL);
+	AG_TextboxBindUTF8(tb, sp, len);
+	AG_SetEvent(tb, "textbox-return", AGWINDETACH(win));
+
 	vb = AG_VBoxNew(win, AG_VBOX_HOMOGENOUS|AG_VBOX_HFILL|AG_VBOX_VFILL);
 	AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
+
+	AG_WidgetFocus(tb);
 	AG_WindowShow(win);
 }
 
@@ -1652,7 +1654,7 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 {
 	AG_Window *win;
 	AG_Box *bo;
-	AG_Button *btn;
+	AG_Button *btnOK;
 	AG_Textbox *tb;
 	AG_Event *ev;
 
@@ -1669,24 +1671,24 @@ AG_TextPromptString(const char *prompt, void (*ok_fn)(AG_Event *),
 		tb = AG_TextboxNew(bo, 0, NULL);
 		ev = AG_SetEvent(tb, "textbox-return", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt)
-		AG_EVENT_INS_VAL(ev, AG_DATUM_STRING, "string", s,
+		AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, "string", s,
 		    &tb->ed->string[0]);
 		AG_AddEvent(tb, "textbox-return", AGWINDETACH(win));
-		AG_WidgetFocus(tb);
 	}
 
 	bo = AG_BoxNew(win, AG_BOX_HORIZ, AG_BOX_HOMOGENOUS|AG_BOX_HFILL);
 	{
-		btn = AG_ButtonNew(bo, 0, _("Ok"));
-		ev = AG_SetEvent(btn, "button-pushed", ok_fn, NULL);
+		btnOK = AG_ButtonNew(bo, 0, _("Ok"));
+		ev = AG_SetEvent(btnOK, "button-pushed", ok_fn, NULL);
 		AG_EVENT_GET_ARGS(ev, fmt);
-		AG_EVENT_INS_VAL(ev, AG_DATUM_STRING, "string", s,
+		AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, "string", s,
 		    &tb->ed->string[0]);
-		AG_AddEvent(btn, "button-pushed", AGWINDETACH(win));
+		AG_AddEvent(btnOK, "button-pushed", AGWINDETACH(win));
 
 		AG_ButtonNewFn(bo, 0, _("Cancel"), AGWINDETACH(win));
 	}
 
+	AG_WidgetFocus(tb);
 	AG_WindowShow(win);
 }
 
