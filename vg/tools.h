@@ -4,6 +4,7 @@
  */
 
 VG_ToolOps *vgTools[] = {
+/*	&vgSelectTool, */
 	&vgPointTool,
 	&vgLineTool,
 	&vgCircleTool,
