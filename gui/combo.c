@@ -40,7 +40,6 @@ AG_ComboNew(void *parent, Uint flags, const char *label)
 	if (label != NULL) {
 		AG_TextboxSetLabel(com->tbox, "%s", label);
 	}
-	if (flags & AG_COMBO_FOCUS) { AG_WidgetFocus(com); }
 	if (flags & AG_COMBO_ANY_TEXT) { AG_WidgetDisable(com->tbox); }
 	if (flags & AG_COMBO_TREE) { com->list->flags |= AG_TLIST_TREE; }
 	if (flags & AG_COMBO_POLL) { com->list->flags |= AG_TLIST_POLL; }
@@ -232,6 +231,7 @@ Init(void *obj)
 	AG_SetEvent(com->button, "button-pushed", Expand, "%p", com);
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 	AG_SetEvent(com->tbox, "textbox-return", Return, "%p", com);
+	AG_WidgetForwardFocus(com, com->tbox);
 }
 
 void

@@ -174,6 +174,7 @@ Init(void *obj)
 	AG_Expand(com->list);
 
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
+	AG_WidgetForwardFocus(com, com->button);
 }
 
 void
