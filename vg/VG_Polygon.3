@@ -48,8 +48,11 @@ entities as its vertices.
 .Ft "VG_Polygon *"
 .Fn VG_PolygonNew "VG_Node *parent"
 .Pp
-.Ft "void"
+.Ft "Uint"
 .Fn VG_PolygonVertex "VG_Polygon *P" "VG_Point *pt"
+.Pp
+.Ft "void"
+.Fn VG_PolygonDelVertex "VG_Polygon *P" "Uint vtx"
 .Pp
 .nr nS 0
 The
@@ -59,7 +62,18 @@ function creates a new polygon entity attached to
 without any vertices.
 .Pp
 .Fn VG_PolygonVertex
-inserts a new vertex.
+creates a new vertex using the existing
+.Xr VG_Point 3
+.Fa pt .
+The index of the new vertex is returned.
+.Pp
+.Fn VG_PolygonDelVertex
+removes the specified vertex
+.Fa vtx
+from the polygon.
+The function is a no-op if
+.Fa vtx
+is an invalid index.
 .Pp
 .Fn VG_PolygonSetOutline
 disables filling of the polygon such that only its outline is displayed.
