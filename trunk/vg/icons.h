@@ -22,5 +22,6 @@ extern AG_StaticIcon vgIconSnapIntsectManual;
 extern AG_StaticIcon vgIconPolygon;
 extern AG_StaticIcon vgIconDrawing;
 extern AG_StaticIcon vgIconProximity;
+extern AG_StaticIcon vgIconSelectArrow;
 __END_DECLS
 #include <agar/vg/close.h>
