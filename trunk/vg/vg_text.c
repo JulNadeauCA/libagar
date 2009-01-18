@@ -33,6 +33,9 @@
 #include <gui/widget.h>
 #include <gui/primitive.h>
 #include <gui/opengl.h>
+#include <gui/textbox.h>
+#include <gui/font_selector.h>
+#include <gui/checkbox.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -46,9 +49,9 @@ Init(void *p)
 {
 	VG_Text *vt = p;
 
+	vt->text[0] = '\0';
 	vt->p1 = NULL;
 	vt->p2 = NULL;
-	vt->text[0] = '\0';
 	vt->align = VG_ALIGN_MC;
 	vt->nPtrs = 0;
 	vt->fontSize = agGUI ? agDefaultFont->size : 12;
@@ -359,6 +362,96 @@ Delete(void *p)
 		VG_Delete(vt->p2);
 }
 
+static void
+SetAlign(AG_Event *event)
+{
+	VG_Text *vt = AG_PTR(1);
+	enum vg_alignment align = (enum vg_alignment)AG_INT(2);
+
+	vt->align = align;
+}
+
+static void
+SelectFont(AG_Event *event)
+{
+	VG_Text *vt = AG_PTR(1);
+	AG_Window *win = AG_PTR(2);
+	AG_FontSelector *fs = AG_PTR(3);
+
+	Strlcpy(vt->fontFace, fs->curFace, sizeof(vt->fontFace));
+	vt->fontSize = fs->curSize;
+	vt->fontFlags = 0;
+	if (fs->curStyle & AG_FONT_BOLD) { vt->fontFlags |= VG_TEXT_BOLD; }
+	if (fs->curStyle & AG_FONT_ITALIC) { vt->fontFlags |= VG_TEXT_ITALIC; }
+
+	AG_ViewDetach(win);
+}
+
+static void
+SelectFontDlg(AG_Event *event)
+{
+	VG_Text *vt = AG_PTR(1);
+	VG_View *vv = AG_PTR(2);
+	AG_Window *win, *winParent;
+	AG_FontSelector *fs;
+	AG_Box *hBox;
+
+	win = AG_WindowNew(0);
+	AG_WindowSetCaption(win, _("Font selection"));
+
+	fs = AG_FontSelectorNew(win, AG_FONTSELECTOR_EXPAND);
+
+	hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	AG_ButtonNewFn(hBox, 0, _("OK"), SelectFont, "%p,%p,%p", vt, win, fs);
+	AG_ButtonNewFn(hBox, 0, _("Close"), AG_WindowCloseGenEv, "%p", win);
+
+	AG_WindowShow(win);
+	if ((winParent = AG_ParentWindow(vv)) != NULL)
+		AG_WindowAttach(winParent, win);
+}
+
+static void *
+Edit(void *p, VG_View *vv)
+{
+	VG_Text *vt = p;
+	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+	AG_Pane *vPane;
+	AG_Textbox *tb;
+	AG_Box *bAl, *bAlv;
+
+	vPane = AG_PaneNewVert(box, AG_PANE_EXPAND);
+
+	AG_LabelNew(vPane->div[0], 0, _("Text: "));
+	tb = AG_TextboxNew(vPane->div[0],
+	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND,
+	    NULL);
+	AG_TextboxBindUTF8(tb, vt->text, sizeof(vt->text));
+
+	bAlv = AG_BoxNewVertNS(vPane->div[1], AG_BOX_HFILL|AG_BOX_FRAME);
+	AG_LabelNew(bAlv, 0, _("Alignment: "));
+	bAl = AG_BoxNewHorizNS(bAlv, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	AG_ButtonNewFn(bAl, 0, _("TL"), SetAlign, "%p,%i", vt, VG_ALIGN_TL);
+	AG_ButtonNewFn(bAl, 0, _("TC"), SetAlign, "%p,%i", vt, VG_ALIGN_TC);
+	AG_ButtonNewFn(bAl, 0, _("TR"), SetAlign, "%p,%i", vt, VG_ALIGN_TR);
+	bAl = AG_BoxNewHorizNS(bAlv, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	AG_ButtonNewFn(bAl, 0, _("ML"), SetAlign, "%p,%i", vt, VG_ALIGN_ML);
+	AG_ButtonNewFn(bAl, 0, _("MC"), SetAlign, "%p,%i", vt, VG_ALIGN_MC);
+	AG_ButtonNewFn(bAl, 0, _("MR"), SetAlign, "%p,%i", vt, VG_ALIGN_MR);
+	bAl = AG_BoxNewHorizNS(bAlv, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	AG_ButtonNewFn(bAl, 0, _("BL"), SetAlign, "%p,%i", vt, VG_ALIGN_BL);
+	AG_ButtonNewFn(bAl, 0, _("BC"), SetAlign, "%p,%i", vt, VG_ALIGN_BC);
+	AG_ButtonNewFn(bAl, 0, _("BR"), SetAlign, "%p,%i", vt, VG_ALIGN_BR);
+
+	AG_ButtonNewFn(vPane->div[1], AG_BUTTON_HFILL, _("Select font"),
+	    SelectFontDlg, "%p,%p", vt, vv);
+	AG_CheckboxNewFlag(vPane->div[1], 0, _("Underline"),
+	    &vt->fontFlags, VG_TEXT_UNDERLINE);
+	AG_CheckboxNewFlag(vPane->div[1], 0, _("Scale to view"),
+	    &vt->fontFlags, VG_TEXT_SCALED);
+
+	return (box);
+}
+
 VG_NodeOps vgTextOps = {
 	N_("Text"),
 	&vgIconText,
@@ -372,5 +465,6 @@ VG_NodeOps vgTextOps = {
 	PointProximity,
 	NULL,			/* lineProximity */
 	Delete,
-	NULL			/* moveNode */
+	NULL,			/* moveNode */
+	Edit
 };

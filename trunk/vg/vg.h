@@ -62,6 +62,7 @@ typedef struct vg_node_ops {
 	                       VG_Vector *p2);
 	void  (*deleteNode)(void *);
 	void  (*moveNode)(void *, VG_Vector vAbs, VG_Vector vRel);
+	void  *(*edit)(void *, struct vg_view *);
 } VG_NodeOps;
 
 typedef struct vg_layer {

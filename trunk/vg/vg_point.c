@@ -31,6 +31,7 @@
 
 #include <gui/widget.h>
 #include <gui/primitive.h>
+#include <gui/numerical.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -98,6 +99,16 @@ Move(void *p, VG_Vector vPos, VG_Vector vRel)
 	VG_SetPosition(p, vPos);
 }
 
+static void *
+Edit(void *p, VG_View *vv)
+{
+	VG_Point *vp = p;
+	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+
+	AG_NumericalNewFlt(box, 0, NULL, _("Render size: "), &vp->size);
+	return (box);
+}
+
 VG_NodeOps vgPointOps = {
 	N_("Point"),
 	&vgIconPoints,
@@ -111,5 +122,6 @@ VG_NodeOps vgPointOps = {
 	PointProximity,
 	NULL,			/* lineProximity */
 	NULL,			/* deleteNode */
-	Move
+	Move,
+	Edit
 };

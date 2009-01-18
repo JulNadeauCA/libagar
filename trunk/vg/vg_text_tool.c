@@ -30,13 +30,16 @@
 #include <core/core.h>
 #include <gui/widget.h>
 #include <gui/primitive.h>
+#include <gui/textbox.h>
+
 #include "vg.h"
 #include "vg_view.h"
 #include "icons.h"
 
 typedef struct vg_text_tool {
 	VG_Tool _inherit;
-	VG_Text *vtCur;
+	VG_Text *vtIns;			/* Text being inserted */
+	char text[VG_TEXT_MAX];
 } VG_TextTool;
 
 static void
@@ -44,16 +47,8 @@ Init(void *p)
 {
 	VG_TextTool *t = p;
 
-	t->vtCur = NULL;
-}
-
-static void
-SetTextString(AG_Event *event)
-{
-	VG_Text *vt = AG_PTR(1);
-	char *s = AG_STRING(2);
-
-	VG_TextPrintf(vt, "%s", s);
+	t->vtIns = NULL;
+	Strlcpy(t->text, "<text>", sizeof(t->text));
 }
 
 static int
@@ -66,32 +61,30 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 
 	switch (button) {
 	case SDL_BUTTON_LEFT:
-		if (t->vtCur == NULL) {
+		if (t->vtIns == NULL) {
 			if (!(p1 = VG_NearestPoint(vv, vPos, NULL))) {
 				p1 = VG_PointNew(vg->root, vPos);
 			}
 			p2 = VG_PointNew(vg->root, vPos);
-			t->vtCur = VG_TextNew(vg->root, p1, p2);
-			VG_TextPrintf(t->vtCur, "(text)");
-			AG_TextPromptString(_("Enter text string: "),
-			    SetTextString, "%p", t->vtCur);
+			t->vtIns = VG_TextNew(vg->root, p1, p2);
+			VG_TextPrintf(t->vtIns, "%s", t->text);
 		} else {
 			if ((p2 = VG_NearestPoint(vv, vPos,
-			    t->vtCur->p2))) {
-				VG_DelRef(t->vtCur, t->vtCur->p2);
-				VG_Delete(t->vtCur->p2);
-				t->vtCur->p2 = p2;
-				VG_AddRef(t->vtCur, p2);
+			    t->vtIns->p2))) {
+				VG_DelRef(t->vtIns, t->vtIns->p2);
+				VG_Delete(t->vtIns->p2);
+				t->vtIns->p2 = p2;
+				VG_AddRef(t->vtIns, p2);
 			} else {
-				VG_SetPosition(t->vtCur->p2, vPos);
+				VG_SetPosition(t->vtIns->p2, vPos);
 			}
-			t->vtCur = NULL;
+			t->vtIns = NULL;
 		}
 		return (1);
 	case SDL_BUTTON_RIGHT:
-		if (t->vtCur != NULL) {
-			VG_Delete(t->vtCur);
-			t->vtCur = NULL;
+		if (t->vtIns != NULL) {
+			VG_Delete(t->vtIns);
+			t->vtIns = NULL;
 		}
 		return (1);
 	default:
@@ -118,14 +111,14 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 	VG_Vector pos;
 	float theta, rad;
 	
-	if (t->vtCur != NULL) {
-		pEx = t->vtCur->p1;
+	if (t->vtIns != NULL) {
+		pEx = t->vtIns->p1;
 		pos = VG_Pos(pEx);
 		theta = VG_Atan2(vPos.y - pos.y,
 		                 vPos.x - pos.x);
 		rad = VG_Hypot(vPos.x - pos.x,
 		               vPos.y - pos.y);
-		if ((pEx = VG_NearestPoint(vv, vPos, t->vtCur->p2))) {
+		if ((pEx = VG_NearestPoint(vv, vPos, t->vtIns->p2))) {
 			VG_Status(vv, _("End baseline at Point%u"),
 			    VGNODE(pEx)->handle);
 		} else {
@@ -134,7 +127,7 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 			      "(%.2f|%.2f\xc2\xb0)"),
 			    vPos.x, vPos.y, rad, VG_Degrees(theta));
 		}
-		VG_SetPosition(t->vtCur->p2, vPos);
+		VG_SetPosition(t->vtIns->p2, vPos);
 	} else {
 		if ((pEx = VG_NearestPoint(vv, vPos, NULL))) {
 			VG_Status(vv, _("Start baseline at Point%u"),
@@ -147,6 +140,19 @@ MouseMotion(void *p, VG_Vector vPos, VG_Vector vRel, int b)
 	return (0);
 }
 
+static void *
+Edit(void *p, VG_View *vv)
+{
+	VG_TextTool *t = p;
+	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+	AG_Textbox *tb;
+
+	AG_LabelNew(box, 0, _("Text: "));
+	tb = AG_TextboxNew(box, AG_TEXTBOX_MULTILINE|AG_TEXTBOX_HFILL, NULL);
+	AG_TextboxBindUTF8(tb, t->text, sizeof(t->text));
+	return (box);
+}
+
 VG_ToolOps vgTextTool = {
 	N_("Text"),
 	N_("Insert text entity."),
@@ -155,7 +161,7 @@ VG_ToolOps vgTextTool = {
 	0,
 	Init,
 	NULL,			/* destroy */
-	NULL,			/* edit */
+	Edit,
 	NULL,			/* predraw */
 	PostDraw,
 	NULL,			/* selected */
