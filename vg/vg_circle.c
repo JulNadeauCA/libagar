@@ -31,6 +31,7 @@
 
 #include <gui/widget.h>
 #include <gui/primitive.h>
+#include <gui/numerical.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -124,6 +125,16 @@ Move(void *p, VG_Vector vCurs, VG_Vector vRel)
 	vc->r = VG_Distance(VG_Pos(vc->p), vCurs);
 }
 
+static void *
+Edit(void *p, VG_View *vv)
+{
+	VG_Circle *vc = p;
+	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+
+	AG_NumericalNewFlt(box, 0, NULL, _("Radius: "), &vc->r);
+	return (box);
+}
+
 VG_NodeOps vgCircleOps = {
 	N_("Circle"),
 	&vgIconCircle,
@@ -137,5 +148,6 @@ VG_NodeOps vgCircleOps = {
 	PointProximity,
 	NULL,			/* lineProximity */
 	Delete,
-	Move
+	Move,
+	Edit
 };

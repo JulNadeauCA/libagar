@@ -31,6 +31,7 @@
 
 #include <gui/widget.h>
 #include <gui/primitive.h>
+#include <gui/numerical.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -152,6 +153,19 @@ Move(void *p, VG_Vector vCurs, VG_Vector vRel)
 	va->r = VG_Distance(VG_Pos(va->p), vCurs);
 }
 
+static void *
+Edit(void *p, VG_View *vv)
+{
+	VG_Arc *va = p;
+	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+
+	AG_NumericalNewFlt(box, 0, NULL, _("Radius: "), &va->r);
+	AG_NumericalNewFlt(box, 0, NULL, _("Start angle: "), &va->a1);
+	AG_NumericalNewFlt(box, 0, NULL, _("End angle: "), &va->a2);
+
+	return (box);
+}
+
 VG_NodeOps vgArcOps = {
 	N_("Arc"),
 	&vgIconBezier,
@@ -165,5 +179,6 @@ VG_NodeOps vgArcOps = {
 	PointProximity,
 	NULL,			/* lineProximity */
 	Delete,
-	Move
+	Move,
+	Edit
 };

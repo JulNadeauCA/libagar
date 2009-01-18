@@ -252,6 +252,7 @@ typedef struct vg_node_ops {
 	                       VG_Vector *p2);
 	void  (*deleteNode)(VG_Node *);
 	void  (*moveNode)(VG_Node *, VG_Vector, VG_Vector);
+	void *(*edit)(VG_Node *, VG_View *);
 }
 .Ed
 .Pp
@@ -331,6 +332,17 @@ is the desired new position in absolute VG coordinates,
 describes the change in position.
 It is recommended to only rely on
 .Fa vRel .
+.Pp
+The
+.Fn edit
+callback is invoked by the
+.Fn VG_EditNode
+operation of
+.Xr VG_View 3 .
+It is expected to return a container widget to which is attached a number
+of widgets bound to various
+.Ft VG_Node
+instance parameters.
 .Sh NODE OPERATIONS
 .nr nS 1
 .Ft "void"

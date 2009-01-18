@@ -31,6 +31,8 @@
 
 #include <gui/widget.h>
 #include <gui/primitive.h>
+#include <gui/numerical.h>
+#include <gui/radio.h>
 
 #include "vg.h"
 #include "vg_view.h"
@@ -153,6 +155,29 @@ Move(void *p, VG_Vector vCurs, VG_Vector vRel)
 	/* TODO */
 }
 
+static void *
+Edit(void *p, VG_View *vv)
+{
+	VG_Line *vl = p;
+	AG_Box *box = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+	AG_Radio *rad;
+	const char *endPtStyles[] = {
+		N_("Square"),
+		N_("Beveled"),
+		N_("Rounded"),
+		N_("Mitered"),
+		NULL
+	};
+
+	AG_NumericalNewUint8(box, 0, NULL, _("Thickness: "), &vl->thickness);
+	AG_NumericalNewUint16(box, 0, NULL, _("Stipple pattern: "), &vl->stipple);
+
+	AG_LabelNew(box, 0, _("Endpoint style: "));
+	rad = AG_RadioNewUint(box, AG_RADIO_EXPAND, endPtStyles, &vl->endPt);
+
+	return (box);
+}
+
 VG_NodeOps vgLineOps = {
 	N_("Line"),
 	&vgIconLine,
@@ -166,5 +191,6 @@ VG_NodeOps vgLineOps = {
 	PointProximity,
 	NULL,			/* lineProximity */
 	Delete,
-	Move
+	Move,
+	Edit
 };
