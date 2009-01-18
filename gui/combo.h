@@ -19,7 +19,6 @@ typedef struct ag_combo {
 #define AG_COMBO_ANY_TEXT 	0x04	/* Accept text not matching an item */
 #define AG_COMBO_HFILL	  	0x08
 #define AG_COMBO_VFILL	  	0x10
-#define AG_COMBO_FOCUS	  	0x20
 #define AG_COMBO_SCROLLTOSEL	0x40	/* Scroll to initial selection */
 #define AG_COMBO_EXPAND	  (AG_COMBO_HFILL|AG_COMBO_VFILL)
 
