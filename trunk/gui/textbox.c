@@ -24,8 +24,8 @@
  */
 
 /*
- * Single or multi-line text input widget. This augments the AG_Editable
- * class with a built-in label, pixel padding and scrollbars.
+ * Single or multi-line text input widget. This is a simple subclass of
+ * AG_Editable(3) adding a built-in label, pixel padding and scrollbars.
  */
 
 #include "opengl.h"
@@ -46,7 +46,7 @@
 #include <ctype.h>
 
 static void
-BeginDrag(AG_Event *event)
+BeginScrollbarDrag(AG_Event *event)
 {
 	AG_Textbox *tb = AG_PTR(1);
 	
@@ -55,7 +55,7 @@ BeginDrag(AG_Event *event)
 }
 
 static void
-EndDrag(AG_Event *event)
+EndScrollbarDrag(AG_Event *event)
 {
 	AG_Textbox *tb = AG_PTR(1);
 
@@ -98,7 +98,7 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 		tb->ed->flags |= AG_EDITABLE_NOWORDSEEK;
 	if (flags & AG_TEXTBOX_NOLATIN1)
 		tb->ed->flags |= AG_EDITABLE_NOLATIN1;
-		
+	
 	if (flags & AG_TEXTBOX_MULTILINE) {
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;
 		tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ, 0);
@@ -110,11 +110,14 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 		AG_WidgetBindInt(tb->hBar, "visible", &WIDTH(tb->ed));
 		AG_WidgetBindInt(tb->vBar, "visible", &tb->ed->yVis);
 		AG_SetEvent(tb->hBar, "scrollbar-drag-begin",
-		    BeginDrag, "%p", tb);
+		    BeginScrollbarDrag, "%p", tb);
 		AG_SetEvent(tb->vBar, "scrollbar-drag-begin",
-		    BeginDrag, "%p", tb);
-		AG_SetEvent(tb->hBar, "scrollbar-drag-end", EndDrag, "%p", tb);
-		AG_SetEvent(tb->vBar, "scrollbar-drag-end", EndDrag, "%p", tb);
+		    BeginScrollbarDrag, "%p", tb);
+		AG_SetEvent(tb->hBar, "scrollbar-drag-end",
+		    EndScrollbarDrag, "%p", tb);
+		AG_SetEvent(tb->vBar, "scrollbar-drag-end",
+		    EndScrollbarDrag, "%p", tb);
+		AG_TextboxSizeHintLines(tb, 4);
 	}
 
 	tb->flags |= flags;
@@ -299,7 +302,7 @@ AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 	stringb = AG_WidgetGetBinding(tb->ed, "string", &text);
 	if (fmt != NULL && fmt[0] != '\0') {
 		va_start(args, fmt);
-		Vsnprintf(text, stringb->data.size, fmt, args);
+		Vsnprintf(text, stringb->info.size, fmt, args);
 		va_end(args);
 		tb->ed->pos = AG_LengthUTF8(text);
 	} else {
@@ -378,20 +381,11 @@ EditableReturn(AG_Event *event)
 }
 
 static void
-GainFocus(AG_Event *event)
-{
-	AG_Textbox *tb = AG_SELF();
-	AG_WidgetFocus(tb->ed);
-}
-
-static void
 Init(void *obj)
 {
 	AG_Textbox *tb = obj;
 
 	tb->ed = AG_EditableNew(tb, 0);
-
-	WIDGET(tb)->flags |= AG_WIDGET_FOCUSABLE;
 
 	tb->boxPadX = 2;
 	tb->boxPadY = 2;
@@ -412,11 +406,11 @@ Init(void *obj)
 #ifdef AG_DEBUG
 	AG_SetEvent(tb, "widget-bound", Bound, NULL);
 #endif
-	AG_SetEvent(tb, "widget-gainfocus", GainFocus, NULL);
-	
 	AG_SetEvent(tb->ed, "editable-prechg", EditablePreChg, "%p", tb);
 	AG_SetEvent(tb->ed, "editable-postchg", EditablePostChg, "%p", tb);
 	AG_SetEvent(tb->ed, "editable-return", EditableReturn, "%p", tb);
+	
+	AG_WidgetForwardFocus(tb, tb->ed);
 }
 
 AG_WidgetClass agTextboxClass = {
