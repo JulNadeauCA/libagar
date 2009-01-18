@@ -383,22 +383,6 @@ Basic linear algebra routines specific to vectors.
 In addition to vectors in R^n, specialized operations are provided for
 vectors in R^2, R^3 and R^4.
 .El
-.Sh AGAR-MAP
-Agar-MAP is a 2D tiling library aimed at isometric games, platform games
-and scrollers.
-It depends on Agar-RG for graphics.
-.Pp
-To use this library, link against
-.Sq agar-map-config --libs .
-.Pp
-.Bl -tag -width "MAP_Actor(3) " -compact
-.It Xr MAP 3
-The basic 2D map object.
-.It Xr MAP_Actor 3
-Dynamic map object.
-.It Xr MAP_View 3
-Map visualization and edition widget.
-.El
 .Sh FREESG
 The FreeSG library implements scene-graphs for 2D and 3D applications.
 It is a general-purpose library used in scientific/engineering applications,
@@ -409,7 +393,10 @@ related to each other in a scene.
 Instead of explicit matrix transformations, elements can be related to each
 other in terms of geometrical constraints (such as distances, coincidences,
 angles).
+In addition to vector-based scenes, FreeSG also includes a 2D tiling library
+aimed at isometric games, platform games and scrollers.
+.Pp
 FreeSG is not part of the Agar source distribution, but it is built on top
-of the Agar library, and also implements the Agar widgets needed to easily
-implement visualization and edition functionality.
+of the Agar library, and adds a few Agar widgets for visualization and
+edition purposes.
 See: http://freesg.org/ for more details.
