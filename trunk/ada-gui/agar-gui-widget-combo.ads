@@ -13,7 +13,6 @@ package agar.gui.widget.combo is
   COMBO_ANY_TEXT : constant flags_t := 16#04#;
   COMBO_HFILL    : constant flags_t := 16#08#;
   COMBO_VFILL    : constant flags_t := 16#10#;
-  COMBO_FOCUS    : constant flags_t := 16#20#;
   COMBO_EXPAND   : constant flags_t := COMBO_HFILL or COMBO_VFILL;
 
   type combo_t is limited private;

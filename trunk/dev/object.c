@@ -142,29 +142,29 @@ PollEvents(AG_Event *event)
 		args[0] = '(';
 		args[1] = '\0';
 		for (i = 1; i < ev->argc; i++) {
-			AG_Datum *d = &ev->argv[i];
+			AG_Variable *V = &ev->argv[i];
 
-			if (d->name != NULL && d->name[0] != '\0') {
-				Strlcat(args, d->name, sizeof(args));
+			if (V->name != NULL && V->name[0] != '\0') {
+				Strlcat(args, V->name, sizeof(args));
 				Strlcat(args, "=", sizeof(args));
 			}
-			switch (d->type) {
-			case AG_DATUM_POINTER:
+			switch (V->type) {
+			case AG_VARIABLE_POINTER:
 				Snprintf(arg, sizeof(arg), "%p", ev->argv[i].data.p);
 				break;
-			case AG_DATUM_STRING:
+			case AG_VARIABLE_STRING:
 				Snprintf(arg, sizeof(arg), "\"%s\"", ev->argv[i].data.s);
 				break;
-			case AG_DATUM_INT:
+			case AG_VARIABLE_INT:
 				Snprintf(arg, sizeof(arg), "%d", ev->argv[i].data.i);
 				break;
-			case AG_DATUM_UINT:
+			case AG_VARIABLE_UINT:
 				Snprintf(arg, sizeof(arg), "%u", (Uint)ev->argv[i].data.i);
 				break;
-			case AG_DATUM_FLOAT:
+			case AG_VARIABLE_FLOAT:
 				Snprintf(arg, sizeof(arg), "<%.04f>", ev->argv[i].data.flt);
 				break;
-			case AG_DATUM_DOUBLE:
+			case AG_VARIABLE_DOUBLE:
 				Snprintf(arg, sizeof(arg), "<%.04f>", ev->argv[i].data.dbl);
 				break;
 			default:

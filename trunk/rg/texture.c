@@ -184,7 +184,7 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 		NULL
 	};
 	AG_Window *win;
-	AG_Combo *com;
+	AG_Combo *comTS;
 	AG_Tlist *tl;
 	AG_Notebook *nb;
 	AG_NotebookTab *ntab;
@@ -198,14 +198,13 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 	AG_TextboxBindUTF8(tb, tex->name, sizeof(tex->name));
 	AG_WidgetFocus(tb);
 
-	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL|AG_COMBO_FOCUS,
-	    _("Tileset: "));
+	comTS = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL, _("Tileset: "));
 #if 0
-	AG_SetEvent(com->list, "tlist-poll", PollTilesets, NULL);
+	AG_SetEvent(comTS->list, "tlist-poll", PollTilesets, NULL);
 #endif
-	AG_SetEvent(com, "combo-selected", SelectTileset, "%p", tex);
-	AG_ComboSelectText(com, tex->tileset);
-	AG_TextboxPrintf(com->tbox, "%s", tex->tileset);
+	AG_SetEvent(comTS, "combo-selected", SelectTileset, "%p", tex);
+	AG_ComboSelectText(comTS, tex->tileset);
+	AG_TextboxPrintf(comTS->tbox, "%s", tex->tileset);
 
 	tl = AG_TlistNew(win, AG_TLIST_POLL|AG_TLIST_EXPAND);
 	AG_SetEvent(tl, "tlist-poll", PollSourceTiles, "%p,%p", vfsRoot, tex);
@@ -231,5 +230,7 @@ RG_TextureEdit(void *vfsRoot, RG_Texture *tex)
 	}
 
 	AG_NumericalNewUint8(win, 0, NULL, _("Overall alpha: "), &tex->alpha);
+
+	AG_WidgetFocus(comTS);
 	return (win);
 }

@@ -97,7 +97,7 @@ RG_SketchProjSave(void *p, AG_DataSource *buf)
 }
 
 static void
-poll_sketches(AG_Event *event)
+PollSketches(AG_Event *event)
 {
 	AG_Tlist *tl = AG_SELF();
 	RG_Tile *t = AG_PTR(1);
@@ -121,7 +121,7 @@ poll_sketches(AG_Event *event)
 }
 
 static void
-select_sketch(AG_Event *event)
+SelectSketch(AG_Event *event)
 {
 	struct rg_sketchproj *sproj = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(3);
@@ -135,17 +135,17 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 	struct rg_sketchproj *sproj = p;
 	AG_Window *win;
 	AG_Box *box;
-	AG_Combo *com;
+	AG_Combo *comSK;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, _("Polygon"));
 
-	com = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL|AG_COMBO_FOCUS,
-	    _("Sketch: "));
-	AG_SetEvent(com->list, "tlist-poll", poll_sketches, "%p", tv->tile);
-	AG_SetEvent(com, "combo-selected", select_sketch, "%p,%p", sproj,
-	    tv->tile);
-	AG_ComboSelectText(com, sproj->sketch);
+	comSK = AG_ComboNew(win, AG_COMBO_POLL|AG_COMBO_HFILL, _("Sketch: "));
+	AG_SetEvent(comSK->list, "tlist-poll",
+	    PollSketches, "%p", tv->tile);
+	AG_SetEvent(comSK, "combo-selected",
+	    SelectSketch, "%p,%p", sproj, tv->tile);
+	AG_ComboSelectText(comSK, sproj->sketch);
 
 	box = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL|AG_BOX_VFILL);
 	{
@@ -169,6 +169,8 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 		AG_NumericalSetRange(num, 0, 255);
 		AG_NumericalSetIncrement(num, 5);
 	}
+
+	AG_WidgetFocus(comSK);
 	return (win);
 }
 
