@@ -821,6 +821,39 @@ VG_AddEditArea(VG_View *vv, void *widget)
 	return (name);
 }
 
+/* Destroy widgets attached to all edit areas. */
+void
+VG_ClearEditAreas(VG_View *vv)
+{
+	Uint i;
+
+	AG_ObjectLock(vv);
+	for (i = 0; i < vv->nEditAreas; i++) {
+		AG_Widget *editArea = vv->editAreas[i];
+
+		AG_ObjectFreeChildren(editArea);
+		AG_WindowUpdate(AG_ParentWindow(editArea));
+		AG_WidgetHiddenRecursive(editArea);
+	}
+	AG_ObjectUnlock(vv);
+}
+
+/* Create GUI elements for editing the parameters of vn. */
+void
+VG_EditNode(VG_View *vv, Uint editArea, VG_Node *vn)
+{
+	void *wEdit;
+
+	if (vv->nEditAreas > editArea &&
+	    vn->ops->edit != NULL &&
+	    (wEdit = vn->ops->edit(vn, vv)) != NULL) {
+		AG_ObjectFreeChildren(vv->editAreas[editArea]);
+		AG_ObjectAttach(vv->editAreas[editArea], wEdit);
+		AG_WindowUpdate(AG_ParentWindow(vv->editAreas[editArea]));
+		AG_WidgetShownRecursive(vv->editAreas[editArea]);
+	}
+}
+
 AG_WidgetClass vgViewClass = {
 	{
 		"Agar(Widget):VG(View)",
