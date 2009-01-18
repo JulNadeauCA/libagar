@@ -7,7 +7,7 @@ LIB_SHARED=	Yes
 LIB_GUID=	"9d6bb497-1d2a-4ac0-9f7b-7be68b9077e8"
 LIB_LINKS=	pthreads SDL
 
-SRCS=	datum.c config.c core.c error.c event.c object.c prop.c rcs.c \
+SRCS=	variable.c config.c core.c error.c event.c object.c prop.c rcs.c \
 	timeout.c class.c cpuinfo.c load_den.c \
 	data_source.c load_string.c load_version.c \
 	snprintf.c vsnprintf.c vasprintf.c \
