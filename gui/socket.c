@@ -189,13 +189,15 @@ GetState(AG_WidgetBinding *binding, void *p)
 	case AG_WIDGET_UINT32:
 		return (int)(*(Uint32 *)p);
 	case AG_WIDGET_FLAG:
-		return (*(int *)p & (int)binding->data.bitmask);
+		return (*(int *)p & (int)binding->info.bitmask);
 	case AG_WIDGET_FLAG8:
-		return (int)(*(Uint8 *)p & (Uint8)binding->data.bitmask);
+		return (int)(*(Uint8 *)p & (Uint8)binding->info.bitmask);
 	case AG_WIDGET_FLAG16:
-		return (int)(*(Uint16 *)p & (Uint16)binding->data.bitmask);
+		return (int)(*(Uint16 *)p & (Uint16)binding->info.bitmask);
 	case AG_WIDGET_FLAG32:
-		return (int)(*(Uint32 *)p & (Uint32)binding->data.bitmask);
+		return (int)(*(Uint32 *)p & (Uint32)binding->info.bitmask);
+	default:
+		return (-1);
 	}
 	return (-1);
 }
@@ -212,6 +214,7 @@ GetCount(AG_WidgetBinding *binding, void *p)
 	case AG_WIDGET_SINT16:	return (int)(*(Sint16 *)p);
 	case AG_WIDGET_UINT32:	return (int)(*(Uint32 *)p);
 	case AG_WIDGET_SINT32:	return (int)(*(Sint32 *)p);
+	default:		return (-1);
 	}
 	return (-1);
 }
@@ -260,16 +263,18 @@ SetState(AG_WidgetBinding *binding, void *p, int v)
 		*(Uint32 *)p = v;
 		break;
 	case AG_WIDGET_FLAG:
-		AG_SETFLAGS(*(int *)p, (int)binding->data.bitmask, v);
+		AG_SETFLAGS(*(int *)p, (int)binding->info.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG8:
-		AG_SETFLAGS(*(Uint8 *)p, (Uint8)binding->data.bitmask, v);
+		AG_SETFLAGS(*(Uint8 *)p, (Uint8)binding->info.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG16:
-		AG_SETFLAGS(*(Uint16 *)p, (Uint16)binding->data.bitmask, v);
+		AG_SETFLAGS(*(Uint16 *)p, (Uint16)binding->info.bitmask, v);
 		break;
 	case AG_WIDGET_FLAG32:
-		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->data.bitmask, v);
+		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->info.bitmask, v);
+		break;
+	default:
 		break;
 	}
 }

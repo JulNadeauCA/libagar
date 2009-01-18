@@ -91,6 +91,8 @@ Bound(AG_Event *event)
 			sbu->min = -0x7fffffff+1;
 			sbu->max =  0x7fffffff-1;
 			break;
+		default:
+			break;
 		}
 	}
 }
@@ -364,6 +366,8 @@ Draw(void *obj)
 	case AG_WIDGET_SINT32:
 		AG_TextboxPrintf(sbu->input, "%d%s%d",
 		    *(Sint32 *)xvalue, sbu->sep, *(Sint32 *)yvalue);
+		break;
+	default:
 		break;
 	}
 	AG_WidgetUnlockBinding(xvalueb);

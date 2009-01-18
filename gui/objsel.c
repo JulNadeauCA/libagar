@@ -149,7 +149,7 @@ Bound(AG_Event *event)
 	AG_WidgetBinding *b = AG_PTR(1);
 
 	if (strcmp(b->name, "object") == 0) {
-		void **object = b->p1;
+		void **object = b->data.p;
 	
 		if (*object != NULL)
 			AG_ComboSelectPointer(&os->com, *object);

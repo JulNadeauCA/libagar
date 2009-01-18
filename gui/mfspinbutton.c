@@ -78,6 +78,8 @@ Bound(AG_Event *event)
 			fsu->min = -AG_FLT_MAX+1;
 			fsu->max =  AG_FLT_MAX-1;
 			break;
+		default:
+			break;
 		}
 	}
 }
@@ -393,7 +395,7 @@ UpdateTextbox(AG_MFSpinbutton *num)
 	case AG_WIDGET_SINT32:
 		Snprintf(sx, sizeof(sx), "%d", (int)(*(Sint32 *)value));
 		break;
-#ifdef HAVE_64BIT
+#if 0
 	case AG_WIDGET_UINT64:
 		Snprintf(sx, sizeof(sx), "%llu",
 		    (unsigned long long)(*(Uint64 *)value));
@@ -403,6 +405,8 @@ UpdateTextbox(AG_MFSpinbutton *num)
 		    (long long)(*(Sint64 *)value));
 		break;
 #endif
+	default:
+		break;
 	}
 	AG_WidgetUnlockBinding(valueb);
 	
@@ -441,7 +445,7 @@ UpdateTextbox(AG_MFSpinbutton *num)
 	case AG_WIDGET_SINT32:
 		Snprintf(sy, sizeof(sy), "%d", (int)(*(Sint32 *)value));
 		break;
-#ifdef HAVE_64BIT
+#if 0
 	case AG_WIDGET_UINT64:
 		Snprintf(sy, sizeof(sy), "%llu",
 		    (unsigned long long)(*(Uint64 *)value));
@@ -451,6 +455,8 @@ UpdateTextbox(AG_MFSpinbutton *num)
 		    (long long)(*(Uint64 *)value));
 		break;
 #endif
+	default:
+		break;
 	}
 	AG_TextboxPrintf(num->input, "%s%s%s", sx, num->sep, sy);
 	AG_WidgetUnlockBinding(valueb);
@@ -547,6 +553,8 @@ AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
 		                  nvalue > *max ? *max :
 				  (float)nvalue;
 		break;
+	default:
+		break;
 	}
 	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
 	AG_WidgetBindingChanged(valueb);
@@ -573,6 +581,8 @@ AG_MFSpinbuttonSetMin(AG_MFSpinbutton *fsu, double nmin)
 	case AG_WIDGET_FLOAT:
 		*(float *)min = (float)nmin;
 		break;
+	default:
+		break;
 	}
 	AG_WidgetUnlockBinding(minb);
 	AG_ObjectUnlock(fsu);
@@ -592,6 +602,8 @@ AG_MFSpinbuttonSetMax(AG_MFSpinbutton *fsu, double nmax)
 		break;
 	case AG_WIDGET_FLOAT:
 		*(float *)max = (float)nmax;
+		break;
+	default:
 		break;
 	}
 	AG_WidgetUnlockBinding(maxb);

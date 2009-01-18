@@ -313,13 +313,12 @@ MouseButtonDown(AG_Event *event)
 	AG_GraphEdge *edge, *edge2;
 	AG_PopupMenu *pm;
 
-	AG_WidgetFocus(gf);
-
 	switch (button) {
 	case SDL_BUTTON_MIDDLE:
 		gf->flags |= AG_GRAPH_PANNING;
 		break;
 	case SDL_BUTTON_LEFT:
+		AG_WidgetFocus(gf);
 		if (gf->flags & AG_GRAPH_NO_SELECT) {
 			break;
 		}
@@ -374,6 +373,7 @@ MouseButtonDown(AG_Event *event)
 		if (gf->flags & AG_GRAPH_NO_MENUS) {
 			break;
 		}
+		AG_WidgetFocus(gf);
 		TAILQ_FOREACH(vtx, &gf->vertices, vertices) {
 			if (!MouseOverVertex(vtx, x, y)) {
 				continue;

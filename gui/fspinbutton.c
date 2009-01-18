@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * LEGACY: Use AG_Numerical(3) instead of this widget.
+ */
+
 #include <config/_mk_have_strtoll.h>
 
 #include <core/core.h>
@@ -119,7 +123,7 @@ Bound(AG_Event *event)
 			fsu->max =  0x7fffffff-1;
 			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
-#ifdef HAVE_64BIT
+#if 0
 		case AG_WIDGET_UINT64:
 			fsu->min = 0;
 			fsu->max = 0xffffffffffffffffULL;
@@ -131,6 +135,8 @@ Bound(AG_Event *event)
 			AG_TextboxSetIntOnly(fsu->input, 1);
 			break;
 #endif
+		default:
+			break;
 		}
 	}
 }
@@ -181,12 +187,14 @@ TextChanged(AG_Event *event)
 	case AG_WIDGET_SINT32:
 		AG_FSpinbuttonSetValue(fsu, (double)strtol(s, NULL, 10));
 		break;
-#if defined(HAVE_64BIT) && defined(_MK_HAVE_STRTOLL)
+#if 0 && defined(HAVE_64BIT) && defined(_MK_HAVE_STRTOLL)
 	case AG_WIDGET_UINT64:
 	case AG_WIDGET_SINT64:
 		AG_FSpinbuttonSetValue(fsu, (double)strtoll(s, NULL, 10));
 		break;
 #endif
+	default:
+		break;
 	}
 
 	AG_WidgetUnlockBinding(stringb);
@@ -435,7 +443,7 @@ Draw(void *obj)
 	case AG_WIDGET_SINT32:
 		AG_TextboxPrintf(fsu->input, "%d", *(Sint32 *)value);
 		break;
-#ifdef HAVE_64BIT
+#if 0
 	case AG_WIDGET_UINT64:
 		AG_TextboxPrintf(fsu->input, "%lld", *(Uint64 *)value);
 		break;
@@ -443,6 +451,8 @@ Draw(void *obj)
 		AG_TextboxPrintf(fsu->input, "%lld", *(Sint64 *)value);
 		break;
 #endif
+	default:
+		break;
 	}
 	AG_WidgetUnlockBinding(valueb);
 }
@@ -484,10 +494,11 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 	case AG_WIDGET_SINT16:	ADD_CONVERTED(Sint16);	break;
 	case AG_WIDGET_UINT32:	ADD_CONVERTED(Uint32);	break;
 	case AG_WIDGET_SINT32:	ADD_CONVERTED(Sint32);	break;
-#ifdef HAVE_64BIT
+#if 0
 	case AG_WIDGET_UINT64:	ADD_CONVERTED(Uint64);	break;
 	case AG_WIDGET_SINT64:	ADD_CONVERTED(Sint64);	break;
 #endif
+	default:					break;
 	}
 	AG_PostEvent(NULL, fsu, "fspinbutton-changed", NULL);
 	AG_WidgetBindingChanged(valueb);
@@ -529,10 +540,11 @@ AG_FSpinbuttonSetValue(AG_FSpinbutton *fsu, double nvalue)
 	case AG_WIDGET_SINT16:	CONV_VALUE(Sint16);	break;
 	case AG_WIDGET_UINT32:	CONV_VALUE(Uint32);	break;
 	case AG_WIDGET_SINT32:	CONV_VALUE(Sint32);	break;
-#ifdef HAVE_64BIT
+#if 0
 	case AG_WIDGET_UINT64:	CONV_VALUE(Uint64);	break;
 	case AG_WIDGET_SINT64:	CONV_VALUE(Sint64);	break;
 #endif
+	default:					break;
 	}
 
 	AG_PostEvent(NULL, fsu, "fspinbutton-changed", NULL);
@@ -560,6 +572,8 @@ AG_FSpinbuttonSetMin(AG_FSpinbutton *fsu, double nmin)
 	case AG_WIDGET_FLOAT:
 		*(float *)min = (float)nmin;
 		break;
+	default:
+		break;
 	}
 	AG_WidgetUnlockBinding(minb);
 }
@@ -578,6 +592,8 @@ AG_FSpinbuttonSetMax(AG_FSpinbutton *fsu, double nmax)
 		break;
 	case AG_WIDGET_FLOAT:
 		*(float *)max = (float)nmax;
+		break;
+	default:
 		break;
 	}
 	AG_WidgetUnlockBinding(maxb);

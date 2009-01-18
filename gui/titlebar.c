@@ -161,7 +161,7 @@ Draw(void *obj)
 	AG_Titlebar *tbar = obj;
 
 	STYLE(tbar)->TitlebarBackground(tbar, tbar->pressed,
-	    AG_WINDOW_FOCUSED(tbar->win));
+	    AG_WindowIsFocused(tbar->win));
 	WIDGET_SUPER_OPS(tbar)->draw(tbar);
 }
 

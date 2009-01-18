@@ -83,6 +83,8 @@ GetAlpha8(AG_HSVPal *pal)
 	case AG_WIDGET_UINT8:
 		a = (int)((*(Uint8 *)pAlpha));
 		break;
+	default:
+		break;
 	}
 	AG_WidgetUnlockBinding(bAlpha);
 	return (a);
@@ -107,6 +109,8 @@ SetAlpha8(AG_HSVPal *pal, Uint8 a)
 		break;
 	case AG_WIDGET_UINT8:
 		*(Uint8 *)pAlpha = (Uint8)a;
+		break;
+	default:
 		break;
 	}
 	AG_WidgetUnlockBinding(bAlpha);
@@ -147,6 +151,8 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 			((Uint8 *)v)[1] = g;
 			((Uint8 *)v)[2] = b;
 			break;
+		default:
+			break;
 		}
 		AG_WidgetUnlockBinding(bv);
 	}
@@ -175,6 +181,8 @@ UpdatePixelFromHSVA(AG_HSVPal *pal)
 			((Uint8 *)v)[1] = g;
 			((Uint8 *)v)[2] = b;
 			((Uint8 *)v)[3] = a;
+			break;
+		default:
 			break;
 		}
 		AG_WidgetUnlockBinding(bv);
@@ -380,6 +388,8 @@ UpdateAlpha(AG_HSVPal *pal, int x)
 		break;
 	case AG_WIDGET_UINT8:
 		*(Uint8 *)pAlpha = (Uint8)(x/pal->rAlpha.w);
+		break;
+	default:
 		break;
 	}
 	AG_WidgetUnlockBinding(bAlpha);
@@ -652,7 +662,7 @@ bound(AG_Event *event)
 #if 0
 		hsv->flags |= AG_HSVPAL_PIXEL;
 #endif
-		UpdateHSVFromPixel(hsv, *(Uint32 *)bind->p1);
+		UpdateHSVFromPixel(hsv, *(Uint32 *)bind->data.p);
 	} else if (strcmp(bind->name, "RGBAv") == 0) {
 		UpdateHSVFromRGBAv(hsv);
 	} else if (strcmp(bind->name, "RGBv") == 0) {

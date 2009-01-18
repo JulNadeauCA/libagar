@@ -67,7 +67,7 @@ AG_Scrollbar *AG_ScrollbarNewUint32(void *, enum ag_scrollbar_type, Uint,
                                     Uint32 *, Uint32 *, Uint32 *, Uint32 *);
 AG_Scrollbar *AG_ScrollbarNewSint32(void *, enum ag_scrollbar_type, Uint,
                                     Sint32 *, Sint32 *, Sint32 *, Sint32 *);
-#ifdef HAVE_64BIT
+#if 0
 AG_Scrollbar *AG_ScrollbarNewUint64(void *, enum ag_scrollbar_type, Uint,
                                     Uint64 *, Uint64 *, Uint64 *, Uint64 *);
 AG_Scrollbar *AG_ScrollbarNewSint64(void *, enum ag_scrollbar_type, Uint,
@@ -77,7 +77,7 @@ AG_Scrollbar *AG_ScrollbarNewFloat(void *, enum ag_scrollbar_type, Uint,
                                    float *, float *, float *, float *);
 AG_Scrollbar *AG_ScrollbarNewDouble(void *, enum ag_scrollbar_type, Uint,
                                     double *, double *, double *, double *);
-#ifdef HAVE_LONG_DOUBLE
+#if 0
 AG_Scrollbar *AG_ScrollbarNewLongDouble(void *, enum ag_scrollbar_type, Uint,
                                         long double *, long double *,
 					long double *, long double *);

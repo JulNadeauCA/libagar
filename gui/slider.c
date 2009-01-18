@@ -218,51 +218,6 @@ AG_SliderNewSint32R(void *parent, enum ag_slider_type type, Uint flags,
 	return (sl);
 }
 
-#ifdef HAVE_64BIT
-AG_Slider *
-AG_SliderNewUint64(void *parent, enum ag_slider_type type, Uint flags,
-    Uint64 *val, Uint64 *min, Uint64 *max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindUint64(sl, "value", val); }
-	if (min != NULL) { AG_WidgetBindUint64(sl, "min", min); }
-	if (max != NULL) { AG_WidgetBindUint64(sl, "max", max); }
-	return (sl);
-}
-AG_Slider *
-AG_SliderNewUint64R(void *parent, enum ag_slider_type type, Uint flags,
-    Uint64 *val, Uint64 min, Uint64 max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindUint64(sl, "value", val); }
-	AG_WidgetSetUint64(sl, "min", min);
-	AG_WidgetSetUint64(sl, "max", max);
-	return (sl);
-}
-
-AG_Slider *
-AG_SliderNewSint64(void *parent, enum ag_slider_type type, Uint flags,
-    Sint64 *val, Sint64 *min, Sint64 *max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindSint64(sl, "value", val); }
-	if (min != NULL) { AG_WidgetBindSint64(sl, "min", min); }
-	if (max != NULL) { AG_WidgetBindSint64(sl, "max", max); }
-	return (sl);
-}
-
-AG_Slider *
-AG_SliderNewSint64R(void *parent, enum ag_slider_type type, Uint flags,
-    Sint64 *val, Sint64 min, Sint64 max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindSint64(sl, "value", val); }
-	AG_WidgetSetSint64(sl, "min", min);
-	AG_WidgetSetSint64(sl, "max", max);
-	return (sl);
-}
-#endif /* HAVE_64BIT */
-
 AG_Slider *
 AG_SliderNewFlt(void *parent, enum ag_slider_type type, Uint flags,
     float *val, float *min, float *max)
@@ -306,30 +261,6 @@ AG_SliderNewDblR(void *parent, enum ag_slider_type type, Uint flags,
 	AG_WidgetSetDouble(sl, "max", max);
 	return (sl);
 }
-
-#ifdef HAVE_LONG_DOUBLE
-AG_Slider *
-AG_SliderNewLongDbl(void *parent, enum ag_slider_type type, Uint flags,
-    long double *val, long double *min, long double *max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindLongDouble(sl, "value", val); }
-	if (min != NULL) { AG_WidgetBindLongDouble(sl, "min", min); }
-	if (max != NULL) { AG_WidgetBindLongDouble(sl, "max", max); }
-	return (sl);
-}
-
-AG_Slider *
-AG_SliderNewLongDblR(void *parent, enum ag_slider_type type, Uint flags,
-    long double *val, long double min, long double max)
-{
-	AG_Slider *sl = AG_SliderNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindLongDouble(sl, "value", val); }
-	AG_WidgetSetLongDouble(sl, "min", min);
-	AG_WidgetSetLongDouble(sl, "max", max);
-	return (sl);
-}
-#endif /* HAVE_LONG_DOUBLE */
 
 /* Set the size of the control in pixels. */
 void
@@ -399,14 +330,7 @@ GetPosition(AG_Slider *sl, int *x)
 	case AG_WIDGET_SINT16:	GET_POSITION(Sint16);	break;
 	case AG_WIDGET_UINT32:	GET_POSITION(Uint32);	break;
 	case AG_WIDGET_SINT32:	GET_POSITION(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	GET_POSITION(Uint64);	break;
-	case AG_WIDGET_SINT64:	GET_POSITION(Sint64);	break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: GET_POSITION(long double);	break;
-#endif
-	default: *x = 0; break;
+	default: *x = 0;				break;
 	} 
 	AG_WidgetUnlockBinding(bMax);
 	AG_WidgetUnlockBinding(bMin);
@@ -455,13 +379,7 @@ SeekToPosition(AG_Slider *sl, int x)
 	case AG_WIDGET_SINT16:	SEEK_TO_POSITION(Sint16);	break;
 	case AG_WIDGET_UINT32:	SEEK_TO_POSITION(Uint32);	break;
 	case AG_WIDGET_SINT32:	SEEK_TO_POSITION(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	SEEK_TO_POSITION(Uint64);	break;
-	case AG_WIDGET_SINT64:	SEEK_TO_POSITION(Sint64);	break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: SEEK_TO_POSITION(long double); break;
-#endif
+	default:						break;
 	} 
 	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
@@ -507,13 +425,7 @@ Decrement(AG_Slider *sl, int v)
 	case AG_WIDGET_SINT16:	DECREMENT_INT(Sint16);	break;
 	case AG_WIDGET_UINT32:	DECREMENT_INT(Uint32);	break;
 	case AG_WIDGET_SINT32:	DECREMENT_INT(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	DECREMENT_INT(Uint64);	break;
-	case AG_WIDGET_SINT64:	DECREMENT_INT(Sint64);	break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: DECREMENT_REAL(long double); break;
-#endif
+	default:					break;
 	} 
 	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
@@ -560,13 +472,7 @@ Increment(AG_Slider *sl, int v)
 	case AG_WIDGET_SINT16:	INCREMENT_INT(Sint16);	break;
 	case AG_WIDGET_UINT32:	INCREMENT_INT(Uint32);	break;
 	case AG_WIDGET_SINT32:	INCREMENT_INT(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	INCREMENT_INT(Uint64);	break;
-	case AG_WIDGET_SINT64:	INCREMENT_INT(Sint64);	break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: INCREMENT_REAL(long double); break;
-#endif
+	default:					break;
 	} 
 	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
