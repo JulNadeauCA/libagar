@@ -38,9 +38,9 @@
 The
 .Xr AG_Object 3
 class provides a set of general-purpose properties (key=value pairs).
-Values are specified with
-.Xr AG_Datum 3
-structures.
+Values are specified using the
+.Xr AG_Variable 3
+interface.
 The
 .Nm
 interface allows properties to be assigned and read.
@@ -56,7 +56,7 @@ can transparently bind to object properties based on their data types
 (e.g., a widget providing an
 .Ft int
 binding can also bind to an
-.Dv AG_DATUM_INT
+.Dv AG_VARIABLE_INT
 property of an object).
 .Pp
 Magic can be tied to properties by specifying "read" and "write" functions.
@@ -299,7 +299,7 @@ saves an object's property table in machine-independent format to
 .Fa ds .
 Properties which are marked non-persistent
 (such as all properties of type
-.Dv AG_DATUM_POINTER )
+.Dv AG_VARIABLE_POINTER )
 are ignored by these functions.
 .Sh READ/WRITE OPERATIONS
 .nr nS 1
