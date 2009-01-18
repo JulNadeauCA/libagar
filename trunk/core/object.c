@@ -78,6 +78,7 @@ AG_ObjectInit(void *p, void *cl)
 	ob->flags = 0;
 	ob->nevents = 0;
 	ob->vars = NULL;
+	ob->nVars = 0;
 
 #ifdef AG_LOCKDEBUG
 	ob->lockinfo = Malloc(sizeof(char *));
@@ -688,6 +689,15 @@ AG_ObjectFreeProps(AG_Object *ob)
 	TAILQ_INIT(&ob->props);
 	AG_ObjectUnlock(ob);
 }
+	
+/* Clear an object's variable list. */
+void
+AG_ObjectFreeVariables(AG_Object *ob)
+{
+	Free(ob->vars);
+	ob->vars = NULL;
+	ob->nVars = 0;
+}
 
 /*
  * Destroy the event handlers registered by an object, cancelling
@@ -777,7 +787,8 @@ AG_ObjectDestroy(void *p)
 	} else {
 		AG_FatalError("%s: %s", ob->name, AG_GetError());
 	}
-
+	
+	AG_ObjectFreeVariables(ob);
 	AG_ObjectFreeProps(ob);
 	AG_ObjectFreeEvents(ob);
 	AG_MutexDestroy(&ob->lock);

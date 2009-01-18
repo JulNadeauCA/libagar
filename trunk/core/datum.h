@@ -1,119 +1,113 @@
 /*	Public domain	*/
 
-#include <agar/config/have_64bit.h>
-#include <agar/config/have_long_double.h>
-
 #include <agar/core/begin.h>
 
-#define AG_ARGS_MAX	16
-
-typedef enum ag_datum_type {
+typedef enum ag_variable_type {
 	/*
 	 * Standard types
 	 */
-	AG_DATUM_NULL		,	/* No data */
-	AG_DATUM_UINT		,	/* Unsigned int */
-	AG_DATUM_INT		,	/* int */
-	AG_DATUM_UINT8		,	/* Unsigned 8-bit */
-	AG_DATUM_SINT8		,	/* Signed 8-bit */
-	AG_DATUM_UINT16		,	/* Unsigned 16-bit */
-	AG_DATUM_SINT16		,	/* Signed 16-bit */
-	AG_DATUM_UINT32		,	/* Unsigned 32-bit */
-	AG_DATUM_SINT32		,	/* Signed 32-bit */
-	AG_DATUM_UINT64		,	/* Unsigned 64-bit (optional) */
-	AG_DATUM_SINT64		,	/* Signed 64-bit (optional) */
-	AG_DATUM_FLOAT		,	/* Single-precision float */
-	AG_DATUM_DOUBLE		,	/* Double-precision float */
-	AG_DATUM_LONG_DOUBLE	,	/* Quad-precision float (optional) */
-	AG_DATUM_STRING		,	/* C string */
-	AG_DATUM_CONST_STRING	,	/* C string (const) */
-	AG_DATUM_POINTER	,	/* C pointer */
-	AG_DATUM_CONST_POINTER	,	/* C pointer (const) */
+	AG_VARIABLE_NULL,		/* No data */
+	AG_VARIABLE_UINT,		/* Unsigned int */
+	AG_VARIABLE_INT,		/* Natural int */
+	AG_VARIABLE_UINT8,		/* Unsigned 8-bit */
+	AG_VARIABLE_SINT8,		/* Signed 8-bit */
+	AG_VARIABLE_UINT16,		/* Unsigned 16-bit */
+	AG_VARIABLE_SINT16,		/* Signed 16-bit */
+	AG_VARIABLE_UINT32,		/* Unsigned 32-bit */
+	AG_VARIABLE_SINT32,		/* Signed 32-bit */
+	AG_VARIABLE_UINT64,		/* Unsigned 64-bit (optional) */
+	AG_VARIABLE_SINT64,		/* Signed 64-bit (optional) */
+	AG_VARIABLE_FLOAT,		/* Single-precision float */
+	AG_VARIABLE_DOUBLE,		/* Double-precision float */
+	AG_VARIABLE_LONG_DOUBLE,	/* Quad-precision float (optional) */
+	AG_VARIABLE_STRING,		/* C string */
+	AG_VARIABLE_CONST_STRING,	/* C string (const) */
+	AG_VARIABLE_POINTER,		/* C pointer */
+	AG_VARIABLE_CONST_POINTER,	/* C pointer (const) */
 
-	AG_DATUM_P_UINT		,	/* Pointer to Uint */
-	AG_DATUM_P_INT		,	/* Pointer to int */
-	AG_DATUM_P_UINT8	,	/* Pointer to Uint8 */
-	AG_DATUM_P_SINT8	,	/* Pointer to Sint8 */
-	AG_DATUM_P_UINT16	,	/* Pointer to Uint16 */
-	AG_DATUM_P_SINT16	,	/* Pointer to Sint16 */
-	AG_DATUM_P_UINT32	,	/* Pointer to Uint32 */
-	AG_DATUM_P_SINT32	,	/* Pointer to Sint32 */
-	AG_DATUM_P_UINT64	,	/* Pointer to Uint64 (optional) */
-	AG_DATUM_P_SINT64	,	/* Pointer to Sint64 (optional) */
-	AG_DATUM_P_FLOAT	,	/* Pointer to float */
-	AG_DATUM_P_DOUBLE	,	/* Pointer to double */
-	AG_DATUM_P_LONG_DOUBLE	,	/* Pointer to long double (optional) */
-	AG_DATUM_P_STRING	,	/* Pointer to C string */
-	AG_DATUM_P_CONST_STRING ,	/* Pointer to C string (const) */
-	AG_DATUM_P_POINTER	,	/* Pointer to C pointer */
-	AG_DATUM_P_CONST_POINTER ,	/* Pointer to C pointer (const) */
-	AG_DATUM_P_OBJECT	,	/* Pointer to AG_Object */
-	AG_DATUM_P_FLAG		,	/* Bit in int (uses info.mask) */
-	AG_DATUM_P_FLAG8	,	/* Bit in int8 (uses info.mask) */
-	AG_DATUM_P_FLAG16	,	/* Bit in int16 (uses info.mask) */
-	AG_DATUM_P_FLAG32	,	/* Bit in int32 (uses info.mask) */
-
+	AG_VARIABLE_P_UINT,		/* Pointer to Uint */
+	AG_VARIABLE_P_INT,		/* Pointer to int */
+	AG_VARIABLE_P_UINT8,		/* Pointer to Uint8 */
+	AG_VARIABLE_P_SINT8,		/* Pointer to Sint8 */
+	AG_VARIABLE_P_UINT16,		/* Pointer to Uint16 */
+	AG_VARIABLE_P_SINT16,		/* Pointer to Sint16 */
+	AG_VARIABLE_P_UINT32,		/* Pointer to Uint32 */
+	AG_VARIABLE_P_SINT32,		/* Pointer to Sint32 */
+	AG_VARIABLE_P_UINT64,		/* Pointer to Uint64 (optional) */
+	AG_VARIABLE_P_SINT64,		/* Pointer to Sint64 (optional) */
+	AG_VARIABLE_P_FLOAT,		/* Pointer to float */
+	AG_VARIABLE_P_DOUBLE,		/* Pointer to double */
+	AG_VARIABLE_P_LONG_DOUBLE,	/* Pointer to long double (optional) */
+	AG_VARIABLE_P_STRING,		/* Pointer to C string */
+	AG_VARIABLE_P_CONST_STRING,	/* Pointer to C string (const) */
+	AG_VARIABLE_P_POINTER,		/* Pointer to C pointer */
+	AG_VARIABLE_P_CONST_POINTER,	/* Pointer to C pointer (const) */
+	AG_VARIABLE_P_OBJECT,		/* Pointer to AG_Object */
+	AG_VARIABLE_P_FLAG,		/* Bit in int (uses info.mask) */
+	AG_VARIABLE_P_FLAG8,		/* Bit in int8 (uses info.mask) */
+	AG_VARIABLE_P_FLAG16,		/* Bit in int16 (uses info.mask) */
+	AG_VARIABLE_P_FLAG32,		/* Bit in int32 (uses info.mask) */
 	/*
-	 * Standard types implemented outside of Agar
+	 * Standard types implemented by external libraries.
 	 */
-	AG_DATUM_REAL		,	/* M: Real number */
-	AG_DATUM_P_REAL		,
-	AG_DATUM_RANGE		,	/* M: Interval */
-	AG_DATUM_P_RANGE	,
-	AG_DATUM_COMPLEX	,	/* M: Complex number */
-	AG_DATUM_P_COMPLEX	,
-	AG_DATUM_QUAT		,	/* M: Quaternion */
-	AG_DATUM_P_QUAT		,
-	AG_DATUM_RECTANGULAR	,	/* M: Rectangular coordinates */
-	AG_DATUM_P_RECTANGULAR	,
-	AG_DATUM_POLAR		,	/* M: Polar coordinates */
-	AG_DATUM_P_POLAR	,
-	AG_DATUM_PARABOLIC	,	/* M: Parabolic coordinates */
-	AG_DATUM_P_PARABOLIC	,
-	AG_DATUM_SPHERICAL	,	/* M: Spherical coordinates */
-	AG_DATUM_P_SPHERICAL	,
-	AG_DATUM_CYLINDRICAL	,	/* M: Cylindrical coordinates */
-	AG_DATUM_P_CYLINDRICAL	,
-	AG_DATUM_COLOR		,	/* M: Vector in RGBA color space */
-	AG_DATUM_P_COLOR	,
-	AG_DATUM_VECTOR		,	/* M: Vector in Rn */
-	AG_DATUM_P_VECTOR	,
-	AG_DATUM_VECTOR2	,	/* M: Vector in R2 */
-	AG_DATUM_P_VECTOR2	,
-	AG_DATUM_VECTOR3	,	/* M: Vector in R3 */
-	AG_DATUM_P_VECTOR3	,
-	AG_DATUM_VECTOR4	,	/* M: Vector in R4 */
-	AG_DATUM_P_VECTOR4	,
-	AG_DATUM_MATRIX		,	/* M: mxn matrix */
-	AG_DATUM_P_MATRIX	,
-	AG_DATUM_MATRIX22	,	/* M: 2x2 matrix */
-	AG_DATUM_P_MATRIX22	,
-	AG_DATUM_MATRIX33	,	/* M: 3x3 matrix */
-	AG_DATUM_P_MATRIX33	,
-	AG_DATUM_MATRIX44	,	/* M: 4x4 matrix */
-	AG_DATUM_P_MATRIX44	,
+	AG_VARIABLE_REAL,		/* M: Real number */
+	AG_VARIABLE_P_REAL,
+	AG_VARIABLE_RANGE,		/* M: Interval */
+	AG_VARIABLE_P_RANGE,
+	AG_VARIABLE_COMPLEX,		/* M: Complex number */
+	AG_VARIABLE_P_COMPLEX,
+	AG_VARIABLE_QUAT,		/* M: Quaternion */
+	AG_VARIABLE_P_QUAT,
+	AG_VARIABLE_RECTANGULAR,	/* M: Rectangular coordinates */
+	AG_VARIABLE_P_RECTANGULAR,
+	AG_VARIABLE_POLAR,		/* M: Polar coordinates */
+	AG_VARIABLE_P_POLAR,
+	AG_VARIABLE_PARABOLIC,		/* M: Parabolic coordinates */
+	AG_VARIABLE_P_PARABOLIC,
+	AG_VARIABLE_SPHERICAL,		/* M: Spherical coordinates */
+	AG_VARIABLE_P_SPHERICAL,
+	AG_VARIABLE_CYLINDRICAL,	/* M: Cylindrical coordinates */
+	AG_VARIABLE_P_CYLINDRICAL,
+	AG_VARIABLE_COLOR,		/* M: Vector in RGBA color space */
+	AG_VARIABLE_P_COLOR,
+	AG_VARIABLE_VECTOR,		/* M: Vector in Rn */
+	AG_VARIABLE_P_VECTOR,
+	AG_VARIABLE_VECTOR2,		/* M: Vector in R2 */
+	AG_VARIABLE_P_VECTOR2,
+	AG_VARIABLE_VECTOR3,		/* M: Vector in R3 */
+	AG_VARIABLE_P_VECTOR3,
+	AG_VARIABLE_VECTOR4,		/* M: Vector in R4 */
+	AG_VARIABLE_P_VECTOR4,
+	AG_VARIABLE_MATRIX,		/* M: mxn matrix */
+	AG_VARIABLE_P_MATRIX,
+	AG_VARIABLE_MATRIX22,		/* M: 2x2 matrix */
+	AG_VARIABLE_P_MATRIX22,
+	AG_VARIABLE_MATRIX33,		/* M: 3x3 matrix */
+	AG_VARIABLE_P_MATRIX33,
+	AG_VARIABLE_MATRIX44,		/* M: 4x4 matrix */
+	AG_VARIABLE_P_MATRIX44,
 	/*
 	 * For future standard types
 	 */
-	AG_DATUM_EXT4		,
-	AG_DATUM_EXT5		,
-	AG_DATUM_EXT6		,
-	AG_DATUM_EXT7		,
-	AG_DATUM_EXT8		,
-	AG_DATUM_EXT9		,
-	AG_DATUM_EXT10		,
-	AG_DATUM_EXT11		,
-	AG_DATUM_EXT12		,
-	AG_DATUM_EXT13		,
-	AG_DATUM_EXT14		,
-	AG_DATUM_EXT15		,
-	AG_DATUM_EXT16		,
-	AG_DATUM_EXT17		,
+	AG_VARIABLE_EXT4,
+	AG_VARIABLE_EXT5,
+	AG_VARIABLE_EXT6,
+	AG_VARIABLE_EXT7,
+	AG_VARIABLE_EXT8,
+	AG_VARIABLE_EXT9,
+	AG_VARIABLE_EXT10,
+	AG_VARIABLE_EXT11,
+	AG_VARIABLE_EXT12,
+	AG_VARIABLE_EXT13,
+	AG_VARIABLE_EXT14,
+	AG_VARIABLE_EXT15,
+	AG_VARIABLE_EXT16,
+	AG_VARIABLE_EXT17,
 	/*
 	 * Application-specific extensions
 	 */
-	AG_DATUM_PRIVATE	= 10001,
-} AG_DatumType;
+	AG_VARIABLE_PRIVATE = 10001,
+} AG_VariableType;
 
 struct ag_event;
 
@@ -126,27 +120,20 @@ typedef Uint16      (*AG_Uint16Fn)(struct ag_event *);
 typedef Sint16      (*AG_Sint16Fn)(struct ag_event *);
 typedef Uint32      (*AG_Uint32Fn)(struct ag_event *);
 typedef Sint32      (*AG_Sint32Fn)(struct ag_event *);
-#ifdef HAVE_64BIT
-typedef Uint64      (*AG_Uint64Fn)(struct ag_event *);
-typedef Sint64      (*AG_Sint64Fn)(struct ag_event *);
-#endif
 typedef float       (*AG_FloatFn)(struct ag_event *);
 typedef double      (*AG_DoubleFn)(struct ag_event *);
-#ifdef HAVE_LONG_DOUBLE
-typedef long double (*AG_LongDoubleFn)(struct ag_event *);
-#endif
 typedef char       *(*AG_StringFn)(struct ag_event *, size_t *);
 typedef const char *(*AG_ConstStringFn)(struct ag_event *, size_t *);
 typedef void       *(*AG_PointerFn)(struct ag_event *);
 typedef const void *(*AG_ConstPointerFn)(struct ag_event *);
 
-typedef struct ag_datum {
-	enum ag_datum_type type;	/* Datum type */
+typedef struct ag_variable {
+	AG_VariableType type;		/* Variable type */
 	const char *name;		/* Key */
 	AG_Mutex *mutex;		/* Lock protecting data (or NULL) */
 	union {
-		Uint32 bitmask;		/* Bitmask (for DATUM_P_FLAG_*) */
-		size_t size;		/* Size (for DATUM_STRING_*) */
+		Uint32 bitmask;		/* Bitmask (for AG_VARIABLE_P_FLAG_*) */
+		size_t size;		/* Size (for AG_VARIABLE_STRING_*) */
 	} info;
 	union {
 		void (*fnVoid)(struct ag_event *);
@@ -158,15 +145,8 @@ typedef struct ag_datum {
 		Sint16 (*fnSint16)(struct ag_event *);
 		Uint32 (*fnUint32)(struct ag_event *);
 		Sint32 (*fnSint32)(struct ag_event *);
-#ifdef HAVE_64BIT
-		Uint64 (*fnUint64)(struct ag_event *);
-		Sint64 (*fnSint64)(struct ag_event *);
-#endif
 		float (*fnFloat)(struct ag_event *);
 		double (*fnDouble)(struct ag_event *);
-#ifdef HAVE_LONG_DOUBLE
-		long double (*fnLongDouble)(struct ag_event *);
-#endif
 		char *(*fnString)(struct ag_event *, size_t *);
 		const char *(*fnConstString)(struct ag_event *, size_t *);
 		void *(*fnPointer)(struct ag_event *);
@@ -187,24 +167,240 @@ typedef struct ag_datum {
 		Sint16 s16;
 		Uint32 u32;
 		Sint32 s32;
-#ifdef HAVE_64BIT
-		Uint64 u64;
-		Sint64 s64;
-#else
-		Uint32 u64[2];		/* Padding */
-		Sint32 s64[2];		/* Padding */
-#endif
-#ifdef HAVE_LONG_DOUBLE
-		long double ldbl;	/* Keep at end (padding) */
-#endif
 	} data;
-} AG_Datum;
+} AG_Variable;
+
+#undef AG_VARIABLE_SETARG
+#define AG_VARIABLE_SETARG(t,pt,dmemb,dtype,vtype,ival,fnmemb,fntype)	\
+	if (pFlag) {							\
+		(V)->type = (pt);					\
+	} else {							\
+		(V)->type = (t);					\
+		if (fnFlag) {						\
+			(V)->data.dmemb = (ival);			\
+			(V)->fn.fnmemb = va_arg(ap, fntype);		\
+		} else {						\
+			(V)->data.dmemb = (dtype)va_arg(ap, vtype);	\
+		}							\
+	} while (0)
+
+#undef AG_VARIABLE_SETARG_STRING
+#define AG_VARIABLE_SETARG_STRING(t,pt,dmemb,dtype,ival,fnmemb,fntype)	\
+	if (pFlag) {							\
+		(V)->type = (pt);					\
+	} else {							\
+		(V)->type = (t);					\
+		if (fnFlag) {						\
+			(V)->data.dmemb = (ival);			\
+			(V)->fn.fnmemb = va_arg(ap, fntype);		\
+			(V)->info.size = 0;				\
+		} else {						\
+			(V)->data.dmemb = va_arg(ap, dtype);		\
+			(V)->info.size = strlen((V)->data.dmemb)+1;	\
+		}							\
+	} while (0)
+
+#undef AG_VARIABLE_SETARG_STRING_BUFFER
+#define AG_VARIABLE_SETARG_STRING_BUFFER(t,pt,dmemb,dtype,ival,fnmemb,fntype) \
+	if (pFlag) {							\
+		(V)->type = (pt);					\
+	} else {							\
+		(V)->type = (t);					\
+		if (fnFlag) {						\
+			(V)->data.dmemb = (ival);			\
+			(V)->fn.fnmemb = va_arg(ap, fntype);		\
+			(V)->info.size = 0;				\
+		} else {						\
+			(V)->data.dmemb = va_arg(ap, dtype);		\
+			(V)->info.size = va_arg(ap, size_t);		\
+		}							\
+	} while (0)
+
+/* Parse a variable specifier and get the value from varargs. */
+#undef AG_VARIABLE_GET
+#define AG_VARIABLE_GET(ap, fmtSpec, V)					\
+	do {								\
+		const char *sc;						\
+		int pFlag = 0, fnFlag = 0, lFlag = 0, isExtended = 0;	\
+		int inFmt = 0;						\
+									\
+		(V)->type = AG_VARIABLE_NULL;				\
+		(V)->name = NULL;					\
+		(V)->mutex = NULL;					\
+		(V)->fn.fnVoid = NULL;					\
+		(V)->info.bitmask = 0;					\
+									\
+		for (sc = &(fmtSpec)[0]; *sc != '\0'; sc++) {		\
+			if (*sc == '%') {				\
+				inFmt = 1;				\
+				continue;				\
+			}						\
+			if (*sc == '*' && sc[1] != '\0') {		\
+				pFlag++;				\
+			} else if (*sc == 'l' && sc[1] != '\0') {	\
+				lFlag++;				\
+			} else if (*sc == 'F' && sc[1] != '\0') {	\
+				fnFlag++;				\
+			} else if (*sc == '[' && sc[1] != '\0') {	\
+				isExtended++;				\
+				break;					\
+			} else if (inFmt && strchr("*Csdiufgp]", *sc)) { \
+				break;					\
+			} else if (strchr(".0123456789", *sc)) {	\
+				continue;				\
+			} else {					\
+				inFmt = 0;				\
+			}						\
+		}							\
+		if (*sc == '\0' || !inFmt) {				\
+			break; 						\
+		}							\
+		if (pFlag) {						\
+			(V)->data.p = va_arg(ap, void *);		\
+		}							\
+		if (isExtended) {					\
+			sc++;						\
+			if (sc[0] == 's') {				\
+				if (sc[1] == '3' && sc[2] == '2') {	\
+					AG_VARIABLE_SETARG(		\
+					    AG_VARIABLE_SINT32,		\
+					    AG_VARIABLE_P_SINT32,	\
+					    s32, Sint32, int, 0,	\
+					    fnSint32, AG_Sint32Fn);	\
+				} else if (sc[1] == '1' && sc[2] == '6') { \
+					AG_VARIABLE_SETARG(		\
+					    AG_VARIABLE_SINT16,		\
+					    AG_VARIABLE_P_SINT16,	\
+					    s16, Sint16, int, 0,	\
+					    fnSint16, AG_Sint16Fn);	\
+				} else if (sc[1] == '8') {		\
+					AG_VARIABLE_SETARG(		\
+					    AG_VARIABLE_SINT8,		\
+					    AG_VARIABLE_P_SINT8,	\
+					    s8, Sint8, int, 0,		\
+					    fnSint8, AG_Sint8Fn);	\
+				}					\
+			} else if (sc[0] == 'u') {			\
+				if (sc[1] == '3' && sc[2] == '2') {	\
+					AG_VARIABLE_SETARG(		\
+					    AG_VARIABLE_UINT32,		\
+					    AG_VARIABLE_P_UINT32,	\
+					    u32, Uint32, Uint, 0,	\
+					    fnUint32, AG_Uint32Fn);	\
+				} else if (sc[1] == '1' && sc[2] == '6') { \
+					AG_VARIABLE_SETARG(		\
+					    AG_VARIABLE_UINT16,		\
+					    AG_VARIABLE_P_UINT16,	\
+					    u16, Uint16, Uint, 0,	\
+					    fnUint16, AG_Uint16Fn);	\
+				} else if (sc[1] == '8') {		\
+					AG_VARIABLE_SETARG(		\
+					    AG_VARIABLE_UINT8, 		\
+					    AG_VARIABLE_P_UINT8,	\
+					    u8, Uint8, int, 0,		\
+					    fnUint8, AG_Uint8Fn);	\
+				}					\
+			} else if (sc[0] == 'C') {			\
+				switch (sc[1]) {			\
+				case 'p':				\
+					AG_VARIABLE_SETARG(		\
+					    AG_VARIABLE_CONST_POINTER,	\
+					    AG_VARIABLE_P_CONST_POINTER, \
+					    Cp, const void *, const void *, \
+					    NULL,			\
+					    fnConstPointer,		\
+					    AG_ConstPointerFn);		\
+					break;				\
+				case 's':				\
+					AG_VARIABLE_SETARG_STRING(	\
+					    AG_VARIABLE_CONST_STRING,	\
+					    AG_VARIABLE_P_CONST_STRING,	\
+					    Cs, const char *, NULL,	\
+					    fnConstString,		\
+					    AG_ConstStringFn);		\
+					break;				\
+				}					\
+			} else if (sc[0] == 'B') {			\
+				AG_VARIABLE_SETARG_STRING_BUFFER(	\
+				    AG_VARIABLE_STRING,			\
+				    AG_VARIABLE_P_STRING,		\
+				    s, char *, NULL,			\
+				    fnString, AG_StringFn);		\
+			}						\
+			break;						\
+		}							\
+									\
+		switch (sc[0]) {					\
+		case 'p':						\
+			AG_VARIABLE_SETARG(AG_VARIABLE_POINTER,		\
+			    AG_VARIABLE_P_POINTER,			\
+			    p, void *, void *, NULL,			\
+			    fnPointer, AG_PointerFn);			\
+			break;						\
+		case 's':						\
+			AG_VARIABLE_SETARG_STRING(AG_VARIABLE_STRING,	\
+			    AG_VARIABLE_P_STRING,			\
+			    s, char *, NULL,				\
+			    fnString, AG_StringFn);			\
+			break;						\
+		case 'd':						\
+		case 'i':						\
+			if (lFlag == 0) {				\
+				AG_VARIABLE_SETARG(AG_VARIABLE_INT,	\
+				    AG_VARIABLE_P_INT,			\
+				    i, int, int, 0,			\
+				    fnInt, AG_IntFn);			\
+			} else {					\
+				AG_VARIABLE_SETARG(AG_VARIABLE_SINT32,	\
+				    AG_VARIABLE_P_SINT32,		\
+				    s32, Sint32, Sint32, 0,		\
+				    fnSint32, AG_Sint32Fn);		\
+			}						\
+			break;						\
+		case 'u':						\
+			if (lFlag == 0) {				\
+				AG_VARIABLE_SETARG(AG_VARIABLE_UINT,	\
+				    AG_VARIABLE_P_UINT,			\
+				    u, Uint, Uint, 0,			\
+				    fnUint, AG_UintFn);			\
+			} else {					\
+				AG_VARIABLE_SETARG(AG_VARIABLE_UINT32,	\
+				    AG_VARIABLE_P_UINT32,		\
+				    u32, Uint32, Uint32, 0,		\
+				    fnUint32, AG_Uint32Fn);		\
+			}						\
+			break;						\
+		case 'f':						\
+		case 'g':						\
+			if (lFlag == 0) {				\
+				AG_VARIABLE_SETARG(AG_VARIABLE_FLOAT,	\
+				    AG_VARIABLE_P_FLOAT,		\
+				    flt, float, double, 0.0f,		\
+				    fnFloat, AG_FloatFn);		\
+			} else {					\
+				AG_VARIABLE_SETARG(AG_VARIABLE_DOUBLE,	\
+				    AG_VARIABLE_P_DOUBLE,		\
+				    dbl, double, double, 0.0,		\
+				    fnDouble, AG_DoubleFn);		\
+			}						\
+			break;						\
+		default:						\
+			break;						\
+		}							\
+	} while (0)
 
 __BEGIN_DECLS
 struct ag_list;
+extern const char *agVariableTypeNames[];
 
-extern const char *agDatumTypeNames[];
-struct ag_list *AG_ParseDatumList(const char *, ...);
+struct ag_list *AG_ParseVariableList(const char *, ...);
+AG_Variable    *AG_Set(void *, const char *, const char *, ...);
+
+static __inline__ void
+AG_VariableChanged(AG_Variable *V)
+{
+	/* TODO */
+}
 __END_DECLS
 
 #include <agar/core/close.h>

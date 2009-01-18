@@ -6,16 +6,16 @@
 #define AG_EVENT_NAME_MAX 32
 
 #ifdef AG_DEBUG
-#define AG_PTR(v) (event->argv[v].type==AG_DATUM_POINTER ? event->argv[v].data.p : AG_PtrMismatch())
-#define AG_STRING(v) (event->argv[v].type==AG_DATUM_STRING ? event->argv[v].data.s : (char *)AG_PtrMismatch())
-#define AG_CHAR(v) (event->argv[v].type==AG_DATUM_CHAR ? (char)event->argv[v].data.i : (char)AG_IntMismatch())
-#define AG_UCHAR(v) (event->argv[v].type==AG_DATUM_UCHAR ? (char)event->argv[v].data.i : (unsigned char)AG_IntMismatch())
-#define AG_INT(v) (event->argv[v].type==AG_DATUM_INT ? event->argv[v].data.i : AG_IntMismatch())
-#define AG_UINT(v) (event->argv[v].type==AG_DATUM_UINT ? (unsigned)event->argv[v].data.i : (unsigned)AG_IntMismatch())
-#define AG_LONG(v) (event->argv[v].type==AG_DATUM_LONG ? event->argv[v].data.s32 : (long)AG_IntMismatch())
-#define AG_ULONG(v) (event->argv[v].type==AG_DATUM_ULONG ? (unsigned long)event->argv[v].data.u32 : (unsigned long)AG_IntMismatch())
-#define AG_FLOAT(v) (event->argv[v].type==AG_DATUM_FLOAT ? (float)event->argv[v].data.flt : (unsigned long)AG_FloatMismatch())
-#define AG_DOUBLE(v) (event->argv[v].type==AG_DATUM_DOUBLE ? event->argv[v].data.dbl : AG_FloatMismatch())
+#define AG_PTR(v) (event->argv[v].type==AG_VARIABLE_POINTER ? event->argv[v].data.p : AG_PtrMismatch())
+#define AG_STRING(v) (event->argv[v].type==AG_VARIABLE_STRING ? event->argv[v].data.s : (char *)AG_PtrMismatch())
+#define AG_CHAR(v) (event->argv[v].type==AG_VARIABLE_CHAR ? (char)event->argv[v].data.i : (char)AG_IntMismatch())
+#define AG_UCHAR(v) (event->argv[v].type==AG_VARIABLE_UCHAR ? (char)event->argv[v].data.i : (unsigned char)AG_IntMismatch())
+#define AG_INT(v) (event->argv[v].type==AG_VARIABLE_INT ? event->argv[v].data.i : AG_IntMismatch())
+#define AG_UINT(v) (event->argv[v].type==AG_VARIABLE_UINT ? (unsigned)event->argv[v].data.i : (unsigned)AG_IntMismatch())
+#define AG_LONG(v) (event->argv[v].type==AG_VARIABLE_LONG ? event->argv[v].data.s32 : (long)AG_IntMismatch())
+#define AG_ULONG(v) (event->argv[v].type==AG_VARIABLE_ULONG ? (unsigned long)event->argv[v].data.u32 : (unsigned long)AG_IntMismatch())
+#define AG_FLOAT(v) (event->argv[v].type==AG_VARIABLE_FLOAT ? (float)event->argv[v].data.flt : (unsigned long)AG_FloatMismatch())
+#define AG_DOUBLE(v) (event->argv[v].type==AG_VARIABLE_DOUBLE ? event->argv[v].data.dbl : AG_FloatMismatch())
 #define AG_OBJECT(v,t) (AG_OfClass(event->argv[v].data.p,(t))) ? event->argv[v].data.p : AG_ObjectMismatch(OBJECT(event->argv[v].data.p)->cls->hier,(t))
 
 #else /* !AG_DEBUG */
@@ -57,7 +57,7 @@ typedef struct ag_event {
 	int argc;				/* Total argument count */
 	int argc0;				/* Argument count (omitting
 						   PostEvent() arguments) */
-	AG_Datum argv[AG_EVENT_ARGS_MAX];	/* Argument values */
+	AG_Variable argv[AG_EVENT_ARGS_MAX];	/* Argument values */
 
 	AG_Timeout timeout;			/* Execution timeout */
 	AG_TAILQ_ENTRY(ag_event) events;	/* For Object */
@@ -96,34 +96,34 @@ typedef void (*AG_EventFn)(AG_Event *);
 #define AG_EVENT_PUSH_ARG(ap,fp,ev) {					\
 	switch (*(fp)) {						\
 	case 'p':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_POINTER,p,void *);	\
+		AG_EVENT_INS_ARG((ev),ap,AG_VARIABLE_POINTER,p,void *);	\
 		break;							\
 	case 'i':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_INT,i,int);		\
+		AG_EVENT_INS_ARG((ev),ap,AG_VARIABLE_INT,i,int);		\
 		break;							\
 	case 'u':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_UINT,i,int);		\
+		AG_EVENT_INS_ARG((ev),ap,AG_VARIABLE_UINT,i,int);		\
 		break;							\
 	case 'f':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_FLOAT,flt,double);	\
+		AG_EVENT_INS_ARG((ev),ap,AG_VARIABLE_FLOAT,flt,double);	\
 		break;							\
 	case 'd':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_DOUBLE,dbl,double);	\
+		AG_EVENT_INS_ARG((ev),ap,AG_VARIABLE_DOUBLE,dbl,double);	\
 		break;							\
 	case 's':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_STRING,s,char *);	\
+		AG_EVENT_INS_ARG((ev),ap,AG_VARIABLE_STRING,s,char *);	\
 		break;							\
 	case 'c':							\
-		AG_EVENT_INS_ARG((ev),ap,AG_DATUM_UINT8,u8,int);	\
+		AG_EVENT_INS_ARG((ev),ap,AG_VARIABLE_UINT8,u8,int);	\
 		break;							\
 	case 'C':							\
 		switch (*(fp+1)) {					\
 		case 's':						\
-			AG_EVENT_INS_ARG((ev),ap,AG_DATUM_CONST_STRING,	\
+			AG_EVENT_INS_ARG((ev),ap,AG_VARIABLE_CONST_STRING,	\
 			    Cs,const char *);				\
 			break;						\
 		case 'p':						\
-			AG_EVENT_INS_ARG((ev),ap,AG_DATUM_CONST_POINTER,\
+			AG_EVENT_INS_ARG((ev),ap,AG_VARIABLE_CONST_POINTER,\
 			    Cp,const void *);				\
 			break;						\
 		}							\
@@ -179,32 +179,32 @@ AG_ExecEventFn(void *obj, AG_Event *ev)
 static __inline__ void
 AG_EventPushPointer(AG_Event *ev, const char *key, void *val)
 {
-	AG_EVENT_INS_VAL(ev, AG_DATUM_POINTER, key, p, val);
+	AG_EVENT_INS_VAL(ev, AG_VARIABLE_POINTER, key, p, val);
 }
 static __inline__ void
 AG_EventPushString(AG_Event *ev, const char *key, char *val)
 {
-	AG_EVENT_INS_VAL(ev, AG_DATUM_STRING, key, s, val);
+	AG_EVENT_INS_VAL(ev, AG_VARIABLE_STRING, key, s, val);
 }
 static __inline__ void
 AG_EventPushInt(AG_Event *ev, const char *key, int val)
 {
-	AG_EVENT_INS_VAL(ev, AG_DATUM_INT, key, i, val);
+	AG_EVENT_INS_VAL(ev, AG_VARIABLE_INT, key, i, val);
 }
 static __inline__ void
 AG_EventPushUInt(AG_Event *ev, const char *key, Uint val)
 {
-	AG_EVENT_INS_VAL(ev, AG_DATUM_UINT, key, i, (int)val);
+	AG_EVENT_INS_VAL(ev, AG_VARIABLE_UINT, key, i, (int)val);
 }
 static __inline__ void
 AG_EventPushFloat(AG_Event *ev, const char *key, float val)
 {
-	AG_EVENT_INS_VAL(ev, AG_DATUM_FLOAT, key, flt, (double)val);
+	AG_EVENT_INS_VAL(ev, AG_VARIABLE_FLOAT, key, flt, (double)val);
 }
 static __inline__ void
 AG_EventPushDouble(AG_Event *ev, const char *key, double val)
 {
-	AG_EVENT_INS_VAL(ev, AG_DATUM_DOUBLE, key, dbl, val);
+	AG_EVENT_INS_VAL(ev, AG_VARIABLE_DOUBLE, key, dbl, val);
 }
 static __inline__ void
 AG_EventPopArgument(AG_Event *ev)

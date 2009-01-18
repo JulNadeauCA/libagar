@@ -23,10 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <core/core.h>
+#include "core.h"
 
-/* Names for standard datum types */
-const char *agDatumTypeNames[] = {
+/* Names for standard variable types */
+const char *agVariableTypeNames[] = {
 	"NULL",
 	"Uint",
 	"int",
@@ -109,58 +109,13 @@ const char *agDatumTypeNames[] = {
 	NULL
 };
 
-#undef SETARG
-#define SETARG(t,pt,dmemb,dtype,vtype,ival,fnmemb,fntype)	\
-	if (pFlag) {						\
-		d.type = (pt);					\
-	} else {						\
-		d.type = (t);					\
-		if (fnFlag) {					\
-			d.data.dmemb = (ival);			\
-			d.fn.fnmemb = va_arg(ap, fntype);	\
-		} else {					\
-			d.data.dmemb = (dtype)va_arg(ap, vtype); \
-		}						\
-	} while (0)
-
-#undef SETARG_STRING
-#define SETARG_STRING(t,pt,dmemb,dtype,ival,fnmemb,fntype)	\
-	if (pFlag) {						\
-		d.type = (pt);					\
-	} else {						\
-		d.type = (t);					\
-		if (fnFlag) {					\
-			d.data.dmemb = (ival);			\
-			d.fn.fnmemb = va_arg(ap, fntype);	\
-			d.info.size = 0;			\
-		} else {					\
-			d.data.dmemb = va_arg(ap, dtype);	\
-			d.info.size = strlen(d.data.dmemb) + 1;	\
-		}						\
-	} while (0)
-
-#undef SETARG_STRING_BUFFER
-#define SETARG_STRING_BUFFER(t,pt,dmemb,dtype,ival,fnmemb,fntype) \
-	if (pFlag) {						\
-		d.type = (pt);					\
-	} else {						\
-		d.type = (t);					\
-		if (fnFlag) {					\
-			d.data.dmemb = (ival);			\
-			d.fn.fnmemb = va_arg(ap, fntype);	\
-			d.info.size = 0;			\
-		} else {					\
-			d.data.dmemb = va_arg(ap, dtype);	\
-			d.info.size = va_arg(ap, size_t);	\
-		}						\
-	} while (0)
-
-/* Parse arguments into a list of AG_Datum structures. */
+#if 0
+/* Parse the given arguments and return a List of Variables. */
 AG_List *
-AG_ParseDatumList(const char *argSpec, ...)
+AG_ParseVariableList(const char *argSpec, ...)
 {
 	char *asDup, *as, *s;
-	AG_Datum d;
+	AG_Variable V;
 	AG_List *L;
 	va_list ap;
 
@@ -172,177 +127,47 @@ AG_ParseDatumList(const char *argSpec, ...)
 
 	va_start(ap, argSpec);
 	while ((s = AG_Strsep(&as, ":, ")) != NULL) {
-		char *sc;
-		int pFlag = 0, fnFlag = 0, lFlag = 0, isExtended = 0;
-		int infmt = 0;
-
-		d.type = AG_DATUM_NULL;
-		d.name = NULL;
-		d.mutex = NULL;
-		d.fn.fnVoid = NULL;
-
-		for (sc = &s[0]; *sc != '\0'; sc++) {
-			if (*sc == '%') {
-				infmt = 1;
-				continue;
-			}
-			if (*sc == '*' && sc[1] != '\0') {
-				pFlag++;
-			} else if (*sc == 'l' && sc[1] != '\0') {
-				lFlag++;
-			} else if (*sc == 'F' && sc[1] != '\0') {
-				fnFlag++;
-			} else if (*sc == '[' && sc[1] != '\0') {
-				isExtended++;
-				break;
-			} else if (infmt && strchr("*Csdiufgp]", *sc) != NULL) {
-				break;
-			} else if (strchr(".0123456789", *sc)) {
-				continue;
-			} else {
-				infmt = 0;
-			}
-		}
-		if (*sc == '\0' || !infmt) {
-			AG_ListAppend(L, &d);
-			continue;
-		}
-		if (pFlag) {
-			d.data.p = va_arg(ap, void *);
-		}
-		if (isExtended) {
-			sc++;
-			if (sc[0] == 's') {
-				/*
-				 * Signed types: %[s*]
-				 */
-				if (sc[1] == '3' && sc[2] == '2') {
-					SETARG(AG_DATUM_SINT32, AG_DATUM_P_SINT32,
-					       s32, Sint32, int, 0,
-					       fnSint32, AG_Sint32Fn);
-				} else if (s[1] == '1' && sc[2] == '6') {
-					SETARG(AG_DATUM_SINT16, AG_DATUM_P_SINT16,
-					       s16, Sint16, int, 0,
-					       fnSint16, AG_Sint16Fn);
-				} else if (s[1] == '8') {
-					SETARG(AG_DATUM_SINT8, AG_DATUM_P_SINT8,
-					       s8, Sint8, int, 0,
-					       fnSint8, AG_Sint8Fn);
-				}
-			} else if (sc[0] == 'u') {
-				/*
-				 * Unsigned types: %[u*]
-				 */
-				if (sc[1] == '3' && sc[2] == '2') {
-					SETARG(AG_DATUM_UINT32, AG_DATUM_P_UINT32,
-					       u32, Uint32, Uint, 0,
-					       fnUint32, AG_Uint32Fn);
-				} else if (s[1] == '1' && sc[2] == '6') {
-					SETARG(AG_DATUM_UINT16, AG_DATUM_P_UINT16,
-					       u16, Uint16, Uint, 0,
-					       fnUint16, AG_Uint16Fn);
-				} else if (s[1] == '8') {
-					SETARG(AG_DATUM_UINT8, AG_DATUM_P_UINT8,
-					       u8, Uint8, int, 0,
-					       fnUint8, AG_Uint8Fn);
-				}
-			} else if (sc[0] == 'C') {
-				/*
-				 * Const types: %[C*]
-				 */
-				switch (sc[1]) {
-				case 'p':
-					SETARG(AG_DATUM_CONST_POINTER, AG_DATUM_P_CONST_POINTER,
-					       Cp, const void *, const void *, NULL,
-					       fnConstPointer, AG_ConstPointerFn);
-					break;
-				case 's':
-					SETARG_STRING(AG_DATUM_CONST_STRING, AG_DATUM_P_CONST_STRING,
-					              Cs, const char *, NULL,
-					              fnConstString, AG_ConstStringFn);
-					break;
-				}
-			} else if (sc[0] == 'B') {
-				/*
-				 * Explicitely sized string buffer: %[B]
-				 */
-				SETARG_STRING_BUFFER(AG_DATUM_STRING, AG_DATUM_P_STRING,
-				                     s, char *, NULL,
-				                     fnString, AG_StringFn);
-			}
-			break;
-		}
-
-		switch (sc[0]) {
-		case 'p':
-			SETARG(AG_DATUM_POINTER, AG_DATUM_P_POINTER,
-			       p, void *, void *, NULL,
-			       fnPointer, AG_PointerFn);
-			break;
-		case 's':
-			SETARG_STRING(AG_DATUM_STRING, AG_DATUM_P_STRING,
-			              s, char *, NULL,
-				      fnString, AG_StringFn);
-			break;
-		case 'd':
-		case 'i':
-			if (lFlag == 0) {
-				SETARG(AG_DATUM_INT, AG_DATUM_P_INT,
-				       i, int, int, 0,
-				       fnInt, AG_IntFn);
-#ifdef HAVE_64BIT
-			} else if (lFlag == 2) {	/* Alias for %[s64] */
-				SETARG(AG_DATUM_SINT64, AG_DATUM_P_SINT64,
-				       s64, Sint64, Sint64, 0,
-				       fnSint64, AG_Sint64Fn);
-#endif
-			} else {			/* Alias for %[s32] */
-				SETARG(AG_DATUM_SINT32, AG_DATUM_P_SINT32,
-				       s32, Sint32, Sint32, 0,
-				       fnSint32, AG_Sint32Fn);
-			}
-			break;
-		case 'u':
-			if (lFlag == 0) {
-				SETARG(AG_DATUM_UINT, AG_DATUM_P_UINT,
-				       u, Uint, Uint, 0,
-				       fnUint, AG_UintFn);
-#ifdef HAVE_64BIT
-			} else if (lFlag == 2) {	/* Alias for %[u64] */
-				SETARG(AG_DATUM_UINT64, AG_DATUM_P_UINT64,
-				       u64, Uint64, Uint64, 0,
-				       fnUint64, AG_Uint64Fn);
-#endif
-			} else {			/* Alias for %[u32] */
-				SETARG(AG_DATUM_UINT32, AG_DATUM_P_UINT32,
-				       u32, Uint32, Uint32, 0,
-				       fnUint32, AG_Uint32Fn);
-			}
-			break;
-		case 'f':
-		case 'g':
-			if (lFlag == 0) {
-				SETARG(AG_DATUM_FLOAT, AG_DATUM_P_FLOAT,
-				       flt, float, double, 0.0f,
-				       fnFloat, AG_FloatFn);
-#ifdef HAVE_LONG_DOUBLE
-			} else if (lFlag == 2) {
-				SETARG(AG_DATUM_LONG_DOUBLE, AG_DATUM_P_LONG_DOUBLE,
-				       ldbl, long double, long double, 0.0l,
-				       fnLongDouble, AG_LongDoubleFn);
-#endif
-			} else {
-				SETARG(AG_DATUM_DOUBLE, AG_DATUM_P_DOUBLE,
-				       dbl, double, double, 0.0,
-				       fnDouble, AG_DoubleFn);
-			}
-			break;
-		default:
-			break;
-		}
-		AG_ListAppend(L, &d);
+		AG_VARIABLE_GET(ap, s, &V);
+		AG_ListAppend(L, &V);
 	}
 	va_end(ap);
+
 	Free(asDup);
 	return (L);
+}
+#endif
+
+/*
+ * Set the value of the specified Object variable. If there is no variable
+ * of the given name, it is created. The format string specifies the type
+ * in standard argument format, followed by the relevant parameters.
+ */
+AG_Variable *
+AG_Set(void *pObj, const char *name, const char *fmt, ...)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+	va_list ap;
+	Uint i;
+
+	AG_ObjectLock(obj);
+
+	for (i = 0; i < obj->nVars; i++) {
+		if (strcmp(obj->vars[i].name, name) == 0)
+			break;
+	}
+	if (i == obj->nVars) {			/* Create new variable */
+		obj->vars = Realloc(obj->vars,
+		    (obj->nVars+1)*sizeof(AG_Variable));
+		V = &obj->vars[obj->nVars++];
+	}
+	va_start(ap, fmt);
+	AG_VARIABLE_GET(ap, fmt, V);
+	va_end(ap);
+	V->name = name;
+
+	AG_PostEvent(NULL, obj, "variable-set", "%p", V);
+
+	AG_ObjectUnlock(obj);
+	return (V);
 }

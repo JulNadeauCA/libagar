@@ -1,6 +1,6 @@
 /*	Public domain	*/
 /*
- * Implementation of a generic array-based list of AG_Datum(3) items.
+ * Implementation of a generic array-based list of AG_Variable(3) items.
  */
 
 #ifndef _AGAR_CORE_LIST_H_
@@ -8,7 +8,7 @@
 
 typedef struct ag_list {
 	int n;			/* Element count */
-	AG_Datum *v;		/* Items */
+	AG_Variable *v;		/* Items */
 } AG_List;
 
 __BEGIN_DECLS
@@ -32,7 +32,7 @@ AG_ListNew(void)
 static __inline__ AG_List *
 AG_ListDup(const AG_List *L)
 {
-	size_t vLen = L->n*sizeof(AG_Datum);
+	size_t vLen = L->n*sizeof(AG_Variable);
 	AG_List *Ldup;
 
 	Ldup = AG_Malloc(sizeof(AG_List));
@@ -44,10 +44,10 @@ AG_ListDup(const AG_List *L)
 
 /* Insert a new datum at the tail of a list. */
 static __inline__ int
-AG_ListAppend(AG_List *L, const AG_Datum *d)
+AG_ListAppend(AG_List *L, const AG_Variable *d)
 {
-	L->v = AG_Realloc(L->v, (L->n+1)*sizeof(AG_Datum));
-	memcpy(&L->v[L->n], d, sizeof(AG_Datum));
+	L->v = AG_Realloc(L->v, (L->n+1)*sizeof(AG_Variable));
+	memcpy(&L->v[L->n], d, sizeof(AG_Variable));
 	return (L->n++);
 }
 
@@ -56,26 +56,26 @@ AG_ListAppend(AG_List *L, const AG_Datum *d)
  * Return 1 on success, 0 if index was invalid.
  */
 static __inline__ int
-AG_ListInsert(AG_List *L, int pos, const AG_Datum *d)
+AG_ListInsert(AG_List *L, int pos, const AG_Variable *d)
 {
 	size_t vLen;
 	
 	if (pos < 0 || pos > L->n)
 		return (0);
 
-	vLen = (L->n+1)*sizeof(AG_Datum);
+	vLen = (L->n+1)*sizeof(AG_Variable);
 	L->v = AG_Realloc(L->v, vLen);
 	if (pos < L->n) {
-		vLen -= sizeof(AG_Datum);
+		vLen -= sizeof(AG_Variable);
 		memmove(&L->v[pos+1], &L->v[pos], vLen);
 	}
-	memcpy(&L->v[pos], d, sizeof(AG_Datum));
+	memcpy(&L->v[pos], d, sizeof(AG_Variable));
 	return (1);
 }
 
 /* Insert a new datum at head of list. */
 static __inline__ int
-AG_ListPrepend(AG_List *L, const AG_Datum *d)
+AG_ListPrepend(AG_List *L, const AG_Variable *d)
 {
 	return AG_ListInsert(L,0,d);
 }
@@ -91,7 +91,7 @@ AG_ListRemove(AG_List *L, int idx)
 		return (0);
 	}
 	if (idx < L->n-1) {
-		memmove(&L->v[idx], &L->v[idx+1], (L->n-1)*sizeof(AG_Datum));
+		memmove(&L->v[idx], &L->v[idx+1], (L->n-1)*sizeof(AG_Variable));
 	}
 	L->n--;
 	return (1);
@@ -111,6 +111,19 @@ AG_ListDestroy(AG_List *L)
 {
 	AG_ListClear(L);
 	AG_Free(L);
+}
+
+/* Insert items of specific types. */
+static __inline__ int
+AG_ListAppendPointer(AG_List *L, void *p)
+{
+	AG_Variable V;
+	
+	V.type = AG_VARIABLE_POINTER;
+	V.name = "";
+	V.mutex = NULL;
+	V.data.p = p;
+	return AG_ListAppend(L, &V);
 }
 __END_DECLS
 

@@ -74,8 +74,8 @@ typedef struct ag_object {
 	AG_TAILQ_HEAD(,ag_prop) props;		/* Generic property table */
 	AG_TAILQ_HEAD(,ag_timeout) timeouts;	/* Timers tied to object */
 	
-	AG_Datum *vars;				/* Variables / bindings */
-	Uint     nVars;
+	AG_Variable *vars;			/* Variables / bindings */
+	Uint        nVars;
 
 	AG_TAILQ_HEAD(,ag_object_dep) deps; /* Object dependencies */
 	struct ag_objectq children;	 /* Child objects */
@@ -221,6 +221,7 @@ void	 AG_ObjectDestroy(void *);
 void	 AG_ObjectUnlinkDatafiles(void *);
 void	 AG_ObjectSetSavePfx(void *, char *);
 
+void	 AG_ObjectFreeVariables(AG_Object *);
 void	 AG_ObjectFreeChildren(void *);
 void	 AG_ObjectFreeProps(AG_Object *);
 void 	 AG_ObjectFreeEvents(AG_Object *);

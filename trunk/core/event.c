@@ -91,18 +91,18 @@ SetEventName(AG_Event *ev, AG_Object *ob, const char *name)
 static __inline__ void
 InitEvent(AG_Event *ev, AG_Object *ob)
 {
-	AG_Datum *d;
+	AG_Variable *V;
 
 	ev->flags = 0;
 	ev->argc = 1;
 	ev->argc0 = 1;
 	ev->handler = NULL;
 
-	d = &ev->argv[0];
-	d->type = AG_DATUM_POINTER;
-	d->name = "_self";
-	d->mutex = NULL;
-	d->data.p = ob;
+	V = &ev->argv[0];
+	V->type = AG_VARIABLE_POINTER;
+	V->name = "_self";
+	V->mutex = NULL;
+	V->data.p = ob;
 
 	AG_SetTimeout(&ev->timeout, SchedEventTimeout, ev, 0);
 }
@@ -283,7 +283,7 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
 	AG_Object *chld;
-	AG_Datum *d;
+	AG_Variable *V;
 
 #ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
@@ -304,11 +304,11 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			memcpy(evNew, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(evNew, fmt);
 
-			d = &evNew->argv[evNew->argc];
-			d->type = AG_DATUM_POINTER;
-			d->name = "_sender";
-			d->mutex = NULL;
-			d->data.p = sndr;
+			V = &evNew->argv[evNew->argc];
+			V->type = AG_VARIABLE_POINTER;
+			V->name = "_sender";
+			V->mutex = NULL;
+			V->data.p = sndr;
 			AG_ThreadCreate(&th, EventThread, evNew);
 		} else
 #endif /* AG_THREADS */
@@ -318,11 +318,11 @@ AG_PostEvent(void *sp, void *rp, const char *evname, const char *fmt, ...)
 			memcpy(&tmpev, ev, sizeof(AG_Event));
 			AG_EVENT_GET_ARGS(&tmpev, fmt);
 
-			d = &tmpev.argv[tmpev.argc];
-			d->type = AG_DATUM_POINTER;
-			d->name = "_sender";
-			d->mutex = NULL;
-			d->data.p = sndr;
+			V = &tmpev.argv[tmpev.argc];
+			V->type = AG_VARIABLE_POINTER;
+			V->name = "_sender";
+			V->mutex = NULL;
+			V->data.p = sndr;
 
 			if (tmpev.flags & AG_EVENT_PROPAGATE) {
 #ifdef AG_EVENTDEBUG
@@ -354,7 +354,7 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	AG_Object *sndr = sp;
 	AG_Object *rcvr = rp;
 	AG_Event *ev;
-	AG_Datum *d;
+	AG_Variable *V;
 
 #ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
@@ -379,11 +379,11 @@ AG_SchedEvent(void *sp, void *rp, Uint32 ticks, const char *evname,
 	ev->argc = ev->argc0;
 	AG_EVENT_GET_ARGS(ev, fmt);
 
-	d = &ev->argv[ev->argc];
-	d->type = AG_DATUM_POINTER;
-	d->name = "_sender";
-	d->mutex = NULL;
-	d->data.p = sndr;
+	V = &ev->argv[ev->argc];
+	V->type = AG_VARIABLE_POINTER;
+	V->name = "_sender";
+	V->mutex = NULL;
+	V->data.p = sndr;
 
 	ev->flags |= AG_EVENT_SCHEDULED;
 	AG_ScheduleTimeout(rcvr, &ev->timeout, ticks);
@@ -477,7 +477,7 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 	AG_Object *rcvr = pRcvr;
 	AG_Object *chld;
 	AG_Event *ev;
-	AG_Datum *d;
+	AG_Variable *V;
 
 #ifdef AG_EVENTDEBUG
 	if (agDebugLvl >= 5)
@@ -500,11 +500,11 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 		evNew = Malloc(sizeof(AG_Event));
 		memcpy(evNew, ev, sizeof(AG_Event));
 		evNew->argv[0].data.p = rcvr;
-		d = &evNew->argv[evNew->argc];
-		d->type = AG_DATUM_POINTER;
-		d->name = "_sender";
-		d->mutex = NULL;
-		d->data.p = sndr;
+		V = &evNew->argv[evNew->argc];
+		V->type = AG_VARIABLE_POINTER;
+		V->name = "_sender";
+		V->mutex = NULL;
+		V->data.p = sndr;
 		AG_ThreadCreate(&th, EventThread, evNew);
 	} else
 #endif /* AG_THREADS */
@@ -513,11 +513,11 @@ AG_ForwardEvent(void *pSndr, void *pRcvr, AG_Event *event)
 
 		memcpy(&tmpev, event, sizeof(AG_Event));
 		tmpev.argv[0].data.p = rcvr;
-		d = &tmpev.argv[tmpev.argc];
-		d->type = AG_DATUM_POINTER;
-		d->name = "_sender";
-		d->mutex = NULL;
-		d->data.p = sndr;
+		V = &tmpev.argv[tmpev.argc];
+		V->type = AG_VARIABLE_POINTER;
+		V->name = "_sender";
+		V->mutex = NULL;
+		V->data.p = sndr;
 
 		if (ev->flags & AG_EVENT_PROPAGATE) {
 #ifdef AG_EVENTDEBUG
