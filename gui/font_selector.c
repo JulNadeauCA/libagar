@@ -61,11 +61,16 @@ BoundFont(AG_Event *event)
 		return;
 
 	AG_ObjectLock(fs);
-	pFont = b->p1;
+
+	pFont = b->data.p;
 	AG_WidgetSetPointer(fs, "font", *pFont);
 	Strlcpy(fs->curFace, OBJECT(*pFont)->name, sizeof(fs->curFace));
 	fs->curSize = (*pFont)->size;
 	fs->curStyle = (*pFont)->flags;
+
+	fs->tlFaces->flags |= AG_TLIST_SCROLLTOSEL;
+	fs->tlSizes->flags |= AG_TLIST_SCROLLTOSEL;
+
 	AG_ObjectUnlock(fs);
 }
 
@@ -95,7 +100,9 @@ UpdatePreview(AG_FontSelector *fs)
 	bFont = AG_WidgetGetBinding(fs, "font", &pFont);
 	AG_PushTextState();
 
-	AG_TextFont(*pFont);
+	if (*pFont != NULL) {
+		AG_TextFont(*pFont);
+	}
 	s = AG_TextRender(_("The Quick Brown Fox Jumps Over The Lazy Dog"));
 	if (fs->sPreview == -1) {
 		fs->sPreview = AG_WidgetMapSurfaceNODUP(fs, s);
@@ -131,7 +138,8 @@ UpdateFaces(AG_Event *event)
 
 		ti = AG_TlistAdd(fs->tlFaces, NULL, "_%s", font->name);
 		ti->p1 = font;
-		if (strcmp(ti->text, OBJECT(*pFont)->name) == 0)
+		if (*pFont != NULL &&
+		    strcmp(ti->text, OBJECT(*pFont)->name) == 0)
 			ti->selected++;
 	}
 
@@ -166,7 +174,8 @@ UpdateFaces(AG_Event *event)
 				continue;
 			}
 			ti = AG_TlistAdd(fs->tlFaces, NULL, "%s", file);
-			if (strcmp(file, OBJECT(*pFont)->name) == 0)
+			if (*pFont != NULL &&
+			    strcmp(file, OBJECT(*pFont)->name) == 0)
 				ti->selected++;
 		}
 		AG_CloseDir(dir);
@@ -175,17 +184,18 @@ UpdateFaces(AG_Event *event)
 	/* XXX */
 	for (i = 0; i < nStdSizes; i++) {
 		ti = AG_TlistAdd(fs->tlSizes, NULL, "%d", stdSizes[i]);
-		if (stdSizes[i] == (*pFont)->size)
+		if (*pFont != NULL &&
+		    stdSizes[i] == (*pFont)->size)
 			ti->selected++;
 	}
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Regular"));
-	if ((*pFont)->flags == 0) { ti->selected++; }
+	if (*pFont != NULL && (*pFont)->flags == 0) { ti->selected++; }
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Italic"));
-	if ((*pFont)->flags == AG_FONT_ITALIC) { ti->selected++; }
+	if (*pFont != NULL && (*pFont)->flags == AG_FONT_ITALIC) { ti->selected++; }
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold"));
-	if ((*pFont)->flags == AG_FONT_BOLD) { ti->selected++; }
+	if (*pFont != NULL && (*pFont)->flags == AG_FONT_BOLD) { ti->selected++; }
 	ti = AG_TlistAdd(fs->tlStyles, NULL, _("Bold Italic"));
-	if ((*pFont)->flags == (AG_FONT_BOLD|AG_FONT_ITALIC)) { ti->selected++; }
+	if (*pFont != NULL && (*pFont)->flags == (AG_FONT_BOLD|AG_FONT_ITALIC)) { ti->selected++; }
 
 	UpdatePreview(fs);
 
@@ -241,14 +251,13 @@ Init(void *obj)
 	fs->flags = AG_FONTSELECTOR_UPDATE;
 
 	fs->hPane = AG_PaneNewHoriz(fs, AG_PANE_EXPAND);
-	fs->tlFaces = AG_TlistNew(fs->hPane->div[0],
-	    AG_TLIST_SCROLLTOSEL|AG_TLIST_EXPAND);
+	fs->tlFaces = AG_TlistNew(fs->hPane->div[0], AG_TLIST_EXPAND);
 	fs->hPane2 = AG_PaneNewHoriz(fs->hPane->div[1], AG_PANE_EXPAND);
 	fs->tlStyles = AG_TlistNew(fs->hPane2->div[0], AG_TLIST_EXPAND);
 	fs->sizeBox = AG_BoxNewVert(fs->hPane2->div[1], AG_BOX_EXPAND);
-	fs->tlSizes = AG_TlistNew(fs->sizeBox,
-	    AG_TLIST_EXPAND|AG_TLIST_SCROLLTOSEL);
+	fs->tlSizes = AG_TlistNew(fs->sizeBox, AG_TLIST_EXPAND);
 
+	fs->font = NULL;
 	fs->curFace[0] = '\0';
 	fs->curStyle = 0;
 	fs->curSize = 0;
@@ -258,7 +267,6 @@ Init(void *obj)
 	AG_TlistSizeHint(fs->tlFaces, "XXXXXXXXXXXXXXX", 8);
 	AG_TlistSizeHint(fs->tlStyles, "XXXXXXXXX", 8);
 	AG_TlistSizeHint(fs->tlSizes, "100", 8);
-	AG_WidgetFocus(fs->tlFaces);
 	
 	AG_WidgetBindPointer(fs, "font", &fs->font);
 
