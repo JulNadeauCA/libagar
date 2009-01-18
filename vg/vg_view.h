@@ -115,6 +115,8 @@ void     VG_ViewSetDefaultTool(VG_View *, VG_Tool *);
 void     VG_Status(VG_View *, const char *, ...)
 	    FORMAT_ATTRIBUTE(printf, 2, 3);
 Uint     VG_AddEditArea(VG_View *, void *);
+void     VG_ClearEditAreas(VG_View *);
+void     VG_EditNode(VG_View *, Uint, VG_Node *);
 
 /*
  * Apply snapping constraints to given coordinates.

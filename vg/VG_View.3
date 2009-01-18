@@ -75,6 +75,12 @@ editors to be implemented quickly.
 .Fn VG_AddEditArea "VG_View *vv" "void *widget"
 .Pp
 .Ft "void"
+.Fn VG_ClearEditAreas "VG_View *vv"
+.Pp
+.Ft "void"
+.Fn VG_EditNode "VG_View *vv" "Uint editArea" "VG_Node *vn"
+.Pp
+.Ft "void"
 .Fn VG_ApplyConstraints "VG_View *vv" "VG_Vector *pos"
 .Pp
 .Ft "void"
@@ -179,17 +185,33 @@ The
 routine indicates a container widget which the
 .Nm
 should use to display tool-specific GUI elements.
-Whenever a tool is selected, its optional
+Whenever a tool (or a
+.Ft VG_Node )
+is selected, its optional
 .Fn edit
-operation may create one or more GUI elements specific to the tool (e.g.,
-checkboxes controlling various tool-specific options), under this specified
-container widget.
+operation may create one or more GUI elements bound to various parameters.
 Multiple edition areas are allowed.
 .Fn VG_AddEditArea
 returns an index into the
 .Va editAreas
 array of
 .Nm .
+.Pp
+.Fn VG_ClearEditAreas
+destroys all widgets currently attached to the container(s) registered by
+.Fn VG_AddEditArea .
+.Pp
+.Fn VG_EditNode
+populates the specified edit area (index as returned by
+.Fn VG_AddEditArea )
+with the controls returned by the
+.Fn edit
+operation of the specified
+.Ft VG_Node .
+.Fn VG_EditNode
+is automatically invoked by the stock selection tool
+.Va vgSelectTool
+when an entity is selected.
 .Pp
 The
 .Fn VG_ApplyConstraints
