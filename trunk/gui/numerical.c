@@ -23,15 +23,6 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <config/have_long_double.h>
-#include <config/_mk_have_strtoll.h>
-#include <config/_mk_have_strtold.h>
-
-#if defined(HAVE_LONG_DOUBLE) && defined(_MK_HAVE_STRTOLD)
-#define _XOPEN_SOURCE 600
-#include <stdlib.h>
-#endif
-
 #include <core/core.h>
 
 #include "numerical.h"
@@ -108,18 +99,6 @@ AG_NumericalNewFltR(void *parent, Uint flags, const char *unit,
 	AG_NumericalSetMaxFlt(num, max);
 	return (num);
 }
-
-#ifdef HAVE_LONG_DOUBLE
-AG_Numerical *
-AG_NumericalNewLongDbl(void *parent, Uint flags, const char *unit,
-    const char *label, long double *v)
-{
-	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindLongDouble(num, "value", v);
-	return (num);
-}
-#endif
 
 AG_Numerical *
 AG_NumericalNewInt(void *parent, Uint flags, const char *unit,
@@ -288,50 +267,6 @@ AG_NumericalNewSint32R(void *parent, Uint flags, const char *unit,
 	return (num);
 }
 
-#ifdef HAVE_64BIT
-AG_Numerical *
-AG_NumericalNewUint64(void *parent, Uint flags, const char *unit,
-    const char *label, Uint64 *v)
-{
-	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindUint64(num, "value", v);
-	return (num);
-}
-AG_Numerical *
-AG_NumericalNewUint64R(void *parent, Uint flags, const char *unit,
-    const char *label, Uint64 *v, Uint64 min, Uint64 max)
-{
-	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindUint64(num, "value", v);
-	AG_NumericalSetMinDbl(num, (double)min); /* XXX */
-	AG_NumericalSetMaxDbl(num, (double)max);
-	return (num);
-}
-
-AG_Numerical *
-AG_NumericalNewSint64(void *parent, Uint flags, const char *unit,
-    const char *label, Sint64 *v)
-{
-	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindSint64(num, "value", v);
-	return (num);
-}
-AG_Numerical *
-AG_NumericalNewSint64R(void *parent, Uint flags, const char *unit,
-    const char *label, Sint64 *v, Sint64 min, Sint64 max)
-{
-	AG_Numerical *num;
-	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindSint64(num, "value", v);
-	AG_NumericalSetMinDbl(num, (double)min); /* XXX */
-	AG_NumericalSetMaxDbl(num, (double)max);
-	return (num);
-}
-#endif /* HAVE_64BIT */
-
 static void
 Bound(AG_Event *event)
 {
@@ -390,25 +325,6 @@ Bound(AG_Event *event)
 			num->max =  0x7fffffff-1;
 			AG_TextboxSetIntOnly(num->input, 1);
 			break;
-#ifdef HAVE_64BIT
-		case AG_WIDGET_UINT64:
-			num->min = 0;
-			num->max = 0xffffffffffffffffULL;
-			AG_TextboxSetIntOnly(num->input, 1);
-			break;
-		case AG_WIDGET_SINT64:
-			num->min = -0x7fffffffffffffffULL+1;
-			num->max =  0x7fffffffffffffffULL-1;
-			AG_TextboxSetIntOnly(num->input, 1);
-			break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-		case AG_WIDGET_LONG_DOUBLE:
-			num->min = -AG_LDBL_MAX+1;
-			num->max =  AG_LDBL_MAX-1;
-			AG_TextboxSetFltOnly(num->input, 1);
-			break;
-#endif
 		default:
 			break;
 		}
@@ -456,20 +372,6 @@ UpdateTextbox(AG_Numerical *num)
 	case AG_WIDGET_SINT32:
 		AG_TextboxPrintf(num->input, "%d", *(Sint32 *)value);
 		break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:
-		AG_TextboxPrintf(num->input, "%lld", *(Uint64 *)value);
-		break;
-	case AG_WIDGET_SINT64:
-		AG_TextboxPrintf(num->input, "%lld", *(Sint64 *)value);
-		break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE:
-		AG_TextboxPrintf(num->input, num->format,
-		    AG_Base2Unit(*(long double *)value, num->unit));
-		break;
-#endif
 	default:
 		break;
 	}
@@ -498,7 +400,6 @@ GainedFocus(AG_Event *event)
 	AG_Numerical *num = AG_SELF();
 
 	UpdateTextbox(num);
-	AG_WidgetFocus(num->input->ed);
 }
 
 /* Update the numerical value from the textbox. */
@@ -530,19 +431,6 @@ UpdateFromText(AG_Event *event)
 	case AG_WIDGET_SINT32:
 		AG_NumericalSetValue(num, (double)strtol(s, NULL, 10));
 		break;
-#if defined(HAVE_64BIT) && defined(_MK_HAVE_STRTOLL)
-	case AG_WIDGET_UINT64:
-	case AG_WIDGET_SINT64:
-		AG_NumericalSetValue(num, (double)strtoll(s, NULL, 11));
-		break;
-#endif
-#if defined(HAVE_LONG_DOUBLE) && defined(_MK_HAVE_STRTOLD)
-	case AG_WIDGET_LONG_DOUBLE:
-		/* XXX Unit2Base */
-		AG_NumericalSetValue(num,
-		    AG_Unit2Base((double)strtold(s, NULL), num->unit));
-		break;
-#endif
 	default:
 		break;
 	}
@@ -700,6 +588,7 @@ Init(void *obj)
 	    UpdateFromText, "%p,%i", num, 1);
 	AG_SetEvent(num->input, "textbox-changed",
 	    UpdateFromText, "%p,%i", num, 0);
+	AG_WidgetForwardFocus(num, num->input);
 }
 
 void
@@ -829,13 +718,7 @@ AG_NumericalAddValue(AG_Numerical *num, double inc)
 	case AG_WIDGET_SINT16:	ADD_CONVERTED(Sint16);	break;
 	case AG_WIDGET_UINT32:	ADD_CONVERTED(Uint32);	break;
 	case AG_WIDGET_SINT32:	ADD_CONVERTED(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	ADD_CONVERTED(Uint64);	break;
-	case AG_WIDGET_SINT64:	ADD_CONVERTED(Sint64);	break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: ADD_REAL(long double); break;
-#endif
+	default:					break;
 	}
 	AG_PostEvent(NULL, num, "numerical-changed", NULL);
 	AG_WidgetBindingChanged(valueb);
@@ -880,13 +763,7 @@ AG_NumericalSetValue(AG_Numerical *num, double nvalue)
 	case AG_WIDGET_SINT16:	CONV_VALUE(Sint16);	break;
 	case AG_WIDGET_UINT32:	CONV_VALUE(Uint32);	break;
 	case AG_WIDGET_SINT32:	CONV_VALUE(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	CONV_VALUE(Uint64);	break;
-	case AG_WIDGET_SINT64:	CONV_VALUE(Sint64);	break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: ASSIGN_VALUE(long double); break;
-#endif
+	default:					break;
 	}
 
 	AG_PostEvent(NULL, num, "numerical-changed", NULL);
@@ -916,11 +793,6 @@ AG_NumericalSetMin(AG_Numerical *num, double nmin)
 	case AG_WIDGET_FLOAT:
 		*(float *)min = (float)nmin;
 		break;
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE:
-		*(long double *)min = nmin;
-		break;
-#endif
 	default:
 		break;
 	}
@@ -944,11 +816,6 @@ AG_NumericalSetMax(AG_Numerical *num, double nmax)
 	case AG_WIDGET_FLOAT:
 		*(float *)max = (float)nmax;
 		break;
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE:
-		*(long double *)max = nmax;
-		break;
-#endif
 	default:
 		break;
 	}
@@ -1043,13 +910,6 @@ AG_NumericalGetFlt(AG_Numerical *num)
 	case AG_WIDGET_SINT8:	return  (float)(*(Sint8 *)value);
 	case AG_WIDGET_SINT16:	return  (float)(*(Sint16 *)value);
 	case AG_WIDGET_SINT32:	return  (float)(*(Sint32 *)value);
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	return  (float)(*(Uint64 *)value);
-	case AG_WIDGET_SINT64:	return  (float)(*(Sint64 *)value);
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: return (float)(*(long double *)value);
-#endif
 	default:		return (0.0);
 	}
 }
@@ -1073,46 +933,9 @@ AG_NumericalGetDbl(AG_Numerical *num)
 	case AG_WIDGET_SINT8:	return  (double)(*(Sint8 *)value);
 	case AG_WIDGET_SINT16:	return  (double)(*(Sint16 *)value);
 	case AG_WIDGET_SINT32:	return  (double)(*(Sint32 *)value);
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	return  (double)(*(Uint64 *)value);
-	case AG_WIDGET_SINT64:	return  (double)(*(Sint64 *)value);
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: return  (double)(*(long double *)value);
-#endif
 	default:		return (0.0);
 	}
 }
-
-#ifdef HAVE_LONG_DOUBLE
-/* Convert the bound value to a long double and return it. */
-long double
-AG_NumericalGetLongDbl(AG_Numerical *num)
-{
-	AG_WidgetBinding *bValue;
-	void *value;
-
-	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->type) {
-	case AG_WIDGET_DOUBLE:		return  (long double)(*(double *)value);
-	case AG_WIDGET_FLOAT:		return  (long double)(*(float *)value);
-	case AG_WIDGET_INT:		return  (long double)(*(int *)value);
-	case AG_WIDGET_UINT:		return  (long double)(*(Uint *)value);
-	case AG_WIDGET_UINT8:		return  (long double)(*(Uint8 *)value);
-	case AG_WIDGET_UINT16:		return  (long double)(*(Uint16 *)value);
-	case AG_WIDGET_UINT32:		return  (long double)(*(Uint32 *)value);
-	case AG_WIDGET_SINT8:		return  (long double)(*(Sint8 *)value);
-	case AG_WIDGET_SINT16:		return  (long double)(*(Sint16 *)value);
-	case AG_WIDGET_SINT32:		return  (long double)(*(Sint32 *)value);
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:		return  (long double)(*(Uint64 *)value);
-	case AG_WIDGET_SINT64:		return  (long double)(*(Sint64 *)value);
-#endif
-	case AG_WIDGET_LONG_DOUBLE:	return *(long double *)value;
-	default:			return (0.0l);
-	}
-}
-#endif /* HAVE_LONG_DOUBLE */
 
 /* Convert the bound value to a natural integer and return it. */
 int
@@ -1131,15 +954,8 @@ AG_NumericalGetInt(AG_Numerical *num)
 	case AG_WIDGET_SINT8:	return (int)(*(Sint8 *)value);
 	case AG_WIDGET_SINT16:	return (int)(*(Sint16 *)value);
 	case AG_WIDGET_SINT32:	return (int)(*(Sint32 *)value);
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	return (int)(*(Uint64 *)value);
-	case AG_WIDGET_SINT64:	return (int)(*(Sint64 *)value);
-#endif
 	case AG_WIDGET_DOUBLE:	return (int)(*(double *)value);
 	case AG_WIDGET_FLOAT:	return (int)(*(float *)value);
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: return (int)(*(long double *)value);
-#endif
 	default:		return (0);
 	}
 }
@@ -1161,48 +977,11 @@ AG_NumericalGetUint32(AG_Numerical *num)
 	case AG_WIDGET_SINT8:	return (Uint32)(*(Sint8 *)value);
 	case AG_WIDGET_SINT16:	return (Uint32)(*(Sint16 *)value);
 	case AG_WIDGET_SINT32:	return (Uint32)(*(Sint32 *)value);
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	return (Uint32)(*(Uint64 *)value);
-	case AG_WIDGET_SINT64:	return (Uint32)(*(Sint64 *)value);
-#endif
 	case AG_WIDGET_DOUBLE:	return (Uint32)(*(double *)value);
 	case AG_WIDGET_FLOAT:	return (Uint32)(*(float *)value);
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: return (Uint32)(*(long double *)value);
-#endif
 	default:		return (0);
 	}
 }
-
-#ifdef HAVE_64BIT
-/* Convert the bound value to a 64-bit integer and return it. */
-Uint64
-AG_NumericalGetUint64(AG_Numerical *num)
-{
-	AG_WidgetBinding *bValue;
-	void *value;
-
-	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->type) {
-	case AG_WIDGET_INT:	return (Uint64)(*(int *)value);
-	case AG_WIDGET_UINT:	return (Uint64)(*(Uint *)value);
-	case AG_WIDGET_UINT8:	return (Uint64)(*(Uint8 *)value);
-	case AG_WIDGET_UINT16:	return (Uint64)(*(Uint16 *)value);
-	case AG_WIDGET_UINT32:	return (Uint64)(*(Uint32 *)value);
-	case AG_WIDGET_SINT8:	return (Uint64)(*(Sint8 *)value);
-	case AG_WIDGET_SINT16:	return (Uint64)(*(Sint16 *)value);
-	case AG_WIDGET_SINT32:	return (Uint64)(*(Sint32 *)value);
-	case AG_WIDGET_UINT64:	return *(Uint64 *)value;
-	case AG_WIDGET_SINT64:	return (Uint64)(*(Sint64 *)value);
-	case AG_WIDGET_DOUBLE:	return (Uint64)(*(double *)value);
-	case AG_WIDGET_FLOAT:	return (Uint64)(*(float *)value);
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: return (Uint64)(*(long double *)value);
-#endif
-	default:		return (0);
-	}
-}
-#endif /* HAVE_64BIT */
 
 AG_WidgetClass agNumericalClass = {
 	{

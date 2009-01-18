@@ -73,9 +73,6 @@ for choosing between different units
 .Fn AG_NumericalNewDblR "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "double *value" "double min" "double max"
 .Pp
 .Ft "AG_Numerical *"
-.Fn AG_NumericalNewLongDbl "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "long double *value"
-.Pp
-.Ft "AG_Numerical *"
 .Fn AG_NumericalNewInt "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "int *value"
 .Pp
 .Ft "AG_Numerical *"
@@ -104,12 +101,6 @@ for choosing between different units
 .Pp
 .Ft "AG_Numerical *"
 .Fn AG_NumericalNewSint32 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint32 *value"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewUint64 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Uint64 *value"
-.Pp
-.Ft "AG_Numerical *"
-.Fn AG_NumericalNewSint64 "AG_Widget *parent, Uint flags, const char *unit" "const char *label" "Sint64 *value"
 .Pp
 .Ft void
 .Fn AG_NumericalSetMinInt "AG_Numerical *num" "int min_value"
@@ -177,13 +168,6 @@ The
 constructors also assign a default
 .Sq value
 binding of the given type.
-.Fn AG_NumericalNewLongDbl
-is only available if
-.Dv AG_HAVE_LONG_DOUBLE
-is defined and
-.Fn AG_NumericalNew[SU]int64
-requires
-.Dv AG_HAVE_64BIT .
 .Pp
 The
 .Fn AG_NumericalSetMin* ,
@@ -301,9 +285,7 @@ The
 .Nm
 widget provides the following bindings:
 .Pp
-.Bl -tag -compact -width "long double *value, *min, *max "
-.It Va long double *value, *min, *max
-Real number (quad-precision).
+.Bl -tag -compact -width "double *value, *min, *max "
 .It Va double *value, *min, *max
 Real number (double-precision).
 .It Va float *value, *min, *max
@@ -318,20 +300,12 @@ Unsigned 8-bit value.
 Unsigned 16-bit value.
 .It Va Uint32 *value, *min, *max
 Unsigned 32-bit value.
-.It Va Uint64 *value, *min, *max
-Unsigned 64-bit value (only if
-.Dv HAVE_64BIT
-is defined).
 .It Va Sint8 *value, *min, *max
 Signed 8-bit value.
 .It Va Sint16 *value, *min, *max
 Signed 16-bit value.
 .It Va Sint32 *value, *min, *max
 Signed 32-bit value.
-.It Va Sint64 *value, *min, *max
-Signed 64-bit value (only if
-.Dv HAVE_64BIT
-is defined).
 .El
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
