@@ -63,7 +63,7 @@ SetPath(AG_Event *event)
 
 	AG_TextboxCopyString(tbox, path, sizeof(path));
 	AG_SetString(agConfig, varname, "%s", path);
-	WIDGET(tbox)->flags &= ~(AG_WIDGET_FOCUSED);
+	AG_WidgetUnfocus(tbox);
 }
 
 static void

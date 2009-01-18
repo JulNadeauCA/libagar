@@ -464,7 +464,7 @@ static void
 EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 {
 	AG_MSpinbutton *msb;
-	AG_Combo *com;
+	AG_Combo *comTile;
 	RG_Tileview *tv;
 	AG_Slider *sl;
 
@@ -473,35 +473,37 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 	switch (insn->type) {
 	case RG_ANIM_TILE:
 		tv = RG_TileviewNew(NULL, ani->tileset, 0);
-		com = AG_ComboNew(box, AG_COMBO_POLL|AG_COMBO_HFILL|
-		                       AG_COMBO_FOCUS, _("Tile: "));
-		AG_SetEvent(com, "combo-selected",
+		comTile = AG_ComboNew(box, AG_COMBO_POLL|AG_COMBO_HFILL,
+		    _("Tile: "));
+		AG_SetEvent(comTile, "combo-selected",
 		    SelectInsnTile, "%p,%p,%p", ani, insn, tv);
-		AG_SetEvent(com->list, "tlist-poll",
+		AG_SetEvent(comTile->list, "tlist-poll",
 		    PollTiles, "%p", ani->tileset);
 		if (insn->t != NULL) {
 			RG_TileviewSetTile(tv, insn->t);
-			AG_ComboSelectPointer(com, insn->t);
+			AG_ComboSelectPointer(comTile, insn->t);
 		}
 
 		AG_LabelNewString(box, 0, _("Preview:"));
 		AG_ObjectAttach(box, tv);
 		AG_SliderNewUintR(box, AG_SLIDER_HORIZ, 0,
 		    &insn->in_tile.alpha, 0, 255);
+
+		AG_WidgetFocus(comTile);
 		break;
 	case RG_ANIM_DISPX:
 		msb = AG_MSpinbuttonNew(box, 0, ",", _("Displacement: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &insn->in_disPx.dx);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &insn->in_disPx.dy);
+		AG_WidgetFocus(msb);
 		break;
 	case RG_ANIM_ROTPX:
 		msb = AG_MSpinbuttonNew(box, 0, ",", _("Center of rotation: "));
 		AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT, &insn->in_rotPx.x);
 		AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT, &insn->in_rotPx.y);
-		
-		AG_NumericalNewIntR(box, 0, "deg",
-		    _("Angle of rotation: "),
+		AG_NumericalNewIntR(box, 0, "deg", _("Angle of rotation: "),
 		    &insn->in_rotPx.theta, 0, 360);
+		AG_WidgetFocus(msb);
 		break;
 	default:
 		break;

@@ -216,7 +216,7 @@ AG_Window *
 DEV_UnicodeBrowser(void)
 {
 	AG_Window *win;
-	AG_Combo *com;
+	AG_Combo *comRange;
 	AG_Treetbl *tt;
 	int i, w, wMax = 0;
 
@@ -226,20 +226,22 @@ DEV_UnicodeBrowser(void)
 	AG_WindowSetCaption(win, _("Unicode Browser"));
 	AG_WindowSetCloseAction(win, AG_WINDOW_DETACH);
 
-	com = AG_ComboNew(win, AG_COMBO_HFILL|AG_COMBO_FOCUS, _("Range: "));
+	comRange = AG_ComboNew(win, AG_COMBO_HFILL, _("Range: "));
 	for (i = 0; i < unicodeRangeCount; i++) {
 		AG_TextSize(unicodeRanges[i].name, &w, NULL);
 		if (w > wMax) { wMax = w; }
-		AG_TlistAddPtr(com->list, NULL, unicodeRanges[i].name,
+		AG_TlistAddPtr(comRange->list, NULL, unicodeRanges[i].name,
 		    (void *)&unicodeRanges[i]);
 	}
-	AG_ComboSizeHintPixels(com, wMax, 10);
+	AG_ComboSizeHintPixels(comRange, wMax, 10);
 	
 	tt = AG_TreetblNew(win, AG_TREETBL_EXPAND, NULL, NULL);
 	AG_TreetblSizeHint(tt, 200, 6);
 	AG_TreetblAddCol(tt, 0, "<XXXXXXX>", "Char");
 	AG_TreetblAddCol(tt, 1, "<XXXXXXX>", "Hex");
-	
-	AG_SetEvent(com, "combo-selected", SelectUnicodeRange, "%p", tt);
+
+	AG_SetEvent(comRange, "combo-selected", SelectUnicodeRange, "%p", tt);
+
+	AG_WidgetFocus(comRange);
 	return (win);
 }
