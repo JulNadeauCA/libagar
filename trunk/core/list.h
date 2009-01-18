@@ -42,7 +42,7 @@ AG_ListDup(const AG_List *L)
 	return (Ldup);
 }
 
-/* Insert a new datum at the tail of a list. */
+/* Insert a new variable at the tail of a list. */
 static __inline__ int
 AG_ListAppend(AG_List *L, const AG_Variable *d)
 {
@@ -52,7 +52,7 @@ AG_ListAppend(AG_List *L, const AG_Variable *d)
 }
 
 /*
- * Insert a new datum at the specified index in list.
+ * Insert a new variable at the specified index in list.
  * Return 1 on success, 0 if index was invalid.
  */
 static __inline__ int
@@ -73,7 +73,7 @@ AG_ListInsert(AG_List *L, int pos, const AG_Variable *d)
 	return (1);
 }
 
-/* Insert a new datum at head of list. */
+/* Insert a new variable at head of list. */
 static __inline__ int
 AG_ListPrepend(AG_List *L, const AG_Variable *d)
 {
@@ -81,7 +81,7 @@ AG_ListPrepend(AG_List *L, const AG_Variable *d)
 }
 
 /*
- * Remove a datum from a list by index.
+ * Remove a variable from a list by index.
  * Return 1 on success, 0 if index was invalid.
  */
 static __inline__ int
