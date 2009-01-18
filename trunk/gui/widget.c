@@ -71,9 +71,8 @@ Init(void *obj)
 	wid->w = -1;
 	wid->h = -1;
 	wid->style = &agStyleDefault;
-	SLIST_INIT(&wid->bindings);
 	SLIST_INIT(&wid->menus);
-	AG_MutexInitRecursive(&wid->bindings_lock);
+	wid->focusFwd = NULL;
 
 	wid->nsurfaces = 0;
 	wid->surfaces = NULL;
@@ -191,277 +190,279 @@ AG_WidgetFind(AG_Display *view, const char *name)
 	return (rv);
 }
 
+/* Set the FOCUSABLE flag on a widget. */
 void
-AG_WidgetSetFocusable(void *p, int flag)
+AG_WidgetSetFocusable(void *obj, int flag)
 {
-	AG_Widget *wid = p;
+	AG_Widget *wid = obj;
 
 	AG_ObjectLock(wid);
 	AG_SETFLAGS(wid->flags, AG_WIDGET_FOCUSABLE, flag);
 	AG_ObjectUnlock(wid);
 }
 
-int
-AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_WidgetBinding *bSrc)
+/* Arrange for a widget to automatically forward focus to another widget. */
+void
+AG_WidgetForwardFocus(void *obj, void *objFwd)
 {
-	AG_WidgetBinding *bDst;
+	AG_Widget *wid = obj;
 
-	if ((bDst = AG_WidgetGetBinding(wDst, nDst)) == NULL) {
+	AG_ObjectLock(wid);
+	if (objFwd != NULL) {
+		wid->flags |= AG_WIDGET_FOCUSABLE;
+		wid->focusFwd = WIDGET(objFwd);
+	} else {
+		wid->flags &= ~(AG_WIDGET_FOCUSABLE);
+		wid->focusFwd = NULL;
+	}
+	AG_ObjectUnlock(wid);
+}
+
+/*
+ * Duplicate a widget binding.
+ * (Legacy Widget interface to AG_Variable(3) API).
+ */
+int
+AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
+{
+	AG_Variable *Vdst;
+
+	if ((Vdst = AG_WidgetGetBinding(wDst, nDst, NULL)) == NULL) {
 		return (-1);
 	}
-	bDst->type = bSrc->type;
-	bDst->mutex = bSrc->mutex;
-	bDst->p1 = bSrc->p1;
+	Vdst->type = Vsrc->type;
+	Vdst->mutex = Vsrc->mutex;
+	Vdst->data.p = Vsrc->data.p;
 
-	switch (bDst->type) {
-	case AG_WIDGET_STRING:
-		bDst->data.size = bSrc->data.size;
-		break;
+	switch (Vdst->type) {
 	case AG_WIDGET_FLAG:
 	case AG_WIDGET_FLAG8:
 	case AG_WIDGET_FLAG16:
 	case AG_WIDGET_FLAG32:
-		bDst->data.bitmask = bSrc->data.bitmask;
+		Vdst->info.bitmask = Vsrc->info.bitmask;
+		break;
+	case AG_WIDGET_STRING:
+		Vdst->info.size = Vsrc->info.size;
 		break;
 	default:
 		break;
 	}
-	AG_PostEvent(NULL, wDst, "widget-bound", "%p", bDst);
-	AG_WidgetUnlockBinding(bDst);
+	AG_PostEvent(NULL, wDst, "widget-bound", "%p", Vdst);
+	AG_WidgetUnlockBinding(Vdst);
 	return (0);
 }
 
-/* Bind a mutex-protected variable to a widget. */
-AG_WidgetBinding *
-AG_WidgetBindMp(void *widp, const char *name, AG_Mutex *mutex,
-    enum ag_datum_type type, ...)
+/*
+ * Bind a mutex-protected variable to a widget.
+ * (Legacy Widget interface to AG_Variable(3) API).
+ */
+AG_Variable *
+AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
+    enum ag_variable_type type, ...)
 {
-	AG_Widget *wid = widp;
-	AG_WidgetBinding *b;
+	AG_Widget *wid = obj;
+	AG_Variable *V;
 	va_list ap;
-	void *pArg;
-	Uint maskArg;
+	void *p = NULL;
+	Uint bitmask = 0;
+	size_t size = 0;
 	
-	AG_MutexLock(&wid->bindings_lock);
-	va_start(ap, type);
-	switch (type) {
-	case AG_WIDGET_FLAG:
-	case AG_WIDGET_FLAG8:
-	case AG_WIDGET_FLAG16:
-	case AG_WIDGET_FLAG32:
-		pArg = va_arg(ap, void *);
-		maskArg = va_arg(ap, Uint);
-		b = AG_WidgetBind(wid, name, type, pArg, maskArg);
-		break;
-	case AG_WIDGET_STRING:
-		b = AG_WidgetBind(wid, name, type,
-		    va_arg(ap, char *),
-		    va_arg(ap, size_t));
-		break;
-	default:
-		b = AG_WidgetBind(wid, name, type,
-		    va_arg(ap, void *));
-		break;
-	}
-	va_end(ap);
-	b->mutex = mutex;
-	AG_MutexUnlock(&wid->bindings_lock);
-	return (b);
-}
-
-/* Bind a variable to a widget. */
-AG_WidgetBinding *
-AG_WidgetBind(void *widp, const char *name, enum ag_datum_type type, ...)
-{
-	AG_Widget *wid = widp;
-	AG_WidgetBinding *binding;
-	void *p1;
-	size_t size = 0;		/* -Wuninitialized */
-	Uint32 bitmask = 0;		/* -Wuninitialized */
-	va_list ap;
+	AG_ObjectLock(wid);
 
 	va_start(ap, type);
 	switch (type) {
-	case AG_WIDGET_STRING:
-		p1 = va_arg(ap, char *);
-		size = va_arg(ap, size_t);
-		break;
-	case AG_WIDGET_FLAG:
+	case AG_WIDGET_FLAG:			/* AG_VARIABLE_P_FLAG* */
 	case AG_WIDGET_FLAG8:
 	case AG_WIDGET_FLAG16:
 	case AG_WIDGET_FLAG32:
-		p1 = va_arg(ap, void *);
+		p = va_arg(ap, void *);
 		bitmask = va_arg(ap, Uint);
 		break;
+	case AG_WIDGET_STRING:			/* AG_VARIABLE_P_STRING */
+		p = (void *)va_arg(ap, char *);
+		size = va_arg(ap, size_t);
+		break;
 	default:
-		p1 = va_arg(ap, void *);
+		p = va_arg(ap, void *);
+		break;
+	}
+	va_end(ap);
+	
+	switch (type) {
+	case AG_WIDGET_FLAG:			/* AG_VARIABLE_P_FLAG* */
+	case AG_WIDGET_FLAG8:
+	case AG_WIDGET_FLAG16:
+	case AG_WIDGET_FLAG32:
+		V = AG_WidgetBind(wid, name, type, p, bitmask);
+		break;
+	case AG_WIDGET_STRING:			/* AG_VARIABLE_P_STRING */
+		V = AG_WidgetBind(wid, name, type, p, size);
+		break;
+	default:
+		V = AG_WidgetBind(wid, name, type, p);
+		break;
+	}
+
+	V->mutex = mutex;
+
+	AG_ObjectUnlock(wid);
+	return (V);
+}
+
+/*
+ * Bind a non mutex-protected variable to a widget.
+ * (Legacy Widget interface to AG_Variable(3) API).
+ */
+AG_Variable *
+AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+	va_list ap;
+	Uint i;
+
+	AG_ObjectLock(obj);
+
+	for (i = 0; i < obj->nVars; i++) {
+		if (strcmp(obj->vars[i].name, name) == 0)
+			break;
+	}
+	if (i == obj->nVars) {			/* Create new binding */
+		obj->vars = Realloc(obj->vars,
+		    (obj->nVars+1)*sizeof(AG_Variable));
+		V = &obj->vars[obj->nVars++];
+		V->name = name;
+	} else {
+		V = &obj->vars[i];
+	}
+	V->type = type;
+	V->fn.fnVoid = NULL;
+	V->mutex = NULL;
+	
+	va_start(ap, type);
+	switch (type) {
+	case AG_WIDGET_FLAG:			/* AG_VARIABLE_P_FLAG* */
+	case AG_WIDGET_FLAG8:
+	case AG_WIDGET_FLAG16:
+	case AG_WIDGET_FLAG32:
+		V->data.p = va_arg(ap, void *);
+		V->info.bitmask = va_arg(ap, Uint);
+		break;
+	case AG_WIDGET_STRING:			/* AG_VARIABLE_P_STRING */
+		V->data.p = va_arg(ap, char *);
+		V->info.size = va_arg(ap, size_t);
+		break;
+	default:
+		V->data.p = va_arg(ap, void *);
+		V->info.bitmask = 0;
 		break;
 	}
 	va_end(ap);
 
-	AG_ObjectLock(wid);
-	AG_MutexLock(&wid->bindings_lock);
-	SLIST_FOREACH(binding, &wid->bindings, bindings) {
-		if (strcmp(binding->name, name) != 0) {
-			continue;
-		}
-		binding->type = type;
-		binding->p1 = p1;
-		switch (type) {
-		case AG_WIDGET_STRING:
-			binding->data.size = size;
-			break;
-		case AG_WIDGET_FLAG:
-		case AG_WIDGET_FLAG8:
-		case AG_WIDGET_FLAG16:
-		case AG_WIDGET_FLAG32:
-			binding->data.bitmask = bitmask;
-			break;
-		default:
-			break;
-		}
-		AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
-		AG_MutexUnlock(&wid->bindings_lock);
-		AG_ObjectUnlock(wid);
-		return (binding);
-	}
-
-	binding = Malloc(sizeof(AG_WidgetBinding));
-	Strlcpy(binding->name, name, sizeof(binding->name));
-	binding->type = type;
-	binding->p1 = p1;
-	binding->mutex = NULL;
-	switch (type) {
-	case AG_WIDGET_STRING:
-		binding->data.size = size;
-		break;
-	case AG_WIDGET_FLAG:
-	case AG_WIDGET_FLAG8:
-	case AG_WIDGET_FLAG16:
-	case AG_WIDGET_FLAG32:
-		binding->data.bitmask = bitmask;
-		break;
-	default:
-		break;
-	}
-	SLIST_INSERT_HEAD(&wid->bindings, binding, bindings);
-	AG_PostEvent(NULL, wid, "widget-bound", "%p", binding);
-	AG_MutexUnlock(&wid->bindings_lock);
-	AG_ObjectUnlock(wid);
-	return (binding);
+	AG_PostEvent(NULL, obj, "widget-bound", "%p", V);
+	AG_ObjectUnlock(obj);
+	return (V);
 }
 
 /*
  * Lookup a binding and copy its data to pointers passed as arguments.
+ * (Legacy Widget interface to AG_Variable(3) API).
  *
- * This function locks any locking device associated with the binding, so the
- * caller must invoke AG_WidgetUnlockBinding() when done accessing the the data.
+ * Any locking device associated with the binding is acquired, so the
+ * caller must invoke AG_WidgetUnlockBinding() when done accessing the
+ * data.
  */
-AG_WidgetBinding *
-AG_WidgetGetBinding(void *widp, const char *name, ...)
+AG_Variable *
+AG_WidgetGetBinding(void *pObj, const char *name, ...)
 {
-	AG_Widget *wid = widp;
-	AG_WidgetBinding *binding;
+	AG_Object *obj = pObj;
+	AG_Variable *V;
 	void **res;
 	va_list ap;
+	Uint i;
 
 	va_start(ap, name);
 	res = va_arg(ap, void **);
 	va_end(ap);
 
-	AG_MutexLock(&wid->bindings_lock);
-	SLIST_FOREACH(binding, &wid->bindings, bindings) {
-		if (strcmp(binding->name, name) != 0)
-			continue;
-
-		if (binding->mutex != NULL) {
-			AG_MutexLock(binding->mutex);
-		}
-		switch (binding->type) {
-		case AG_WIDGET_INT:
-			*(int **)res = (int *)binding->p1;
+	AG_ObjectLock(obj);
+	for (i = 0; i < obj->nVars; i++) {
+		V = &obj->vars[i];
+		if (strcmp(V->name, name) == 0)
 			break;
-		case AG_WIDGET_UINT:
-			*(Uint **)res = (Uint *)binding->p1;
-			break;
-		case AG_WIDGET_UINT8:
-			*(Uint8 **)res = (Uint8 *)binding->p1;
-			break;
-		case AG_WIDGET_SINT8:
-			*(Sint8 **)res = (Sint8 *)binding->p1;
-			break;
-		case AG_WIDGET_UINT16:
-			*(Uint16 **)res = (Uint16 *)binding->p1;
-			break;
-		case AG_WIDGET_SINT16:
-			*(Sint16 **)res = (Sint16 *)binding->p1;
-			break;
-		case AG_WIDGET_UINT32:
-			*(Uint32 **)res = (Uint32 *)binding->p1;
-			break;
-		case AG_WIDGET_SINT32:
-			*(Sint32 **)res = (Sint32 *)binding->p1;
-			break;
-#ifdef HAVE_64BIT
-		case AG_WIDGET_UINT64:
-			*(Uint64 **)res = (Uint64 *)binding->p1;
-			break;
-		case AG_WIDGET_SINT64:
-			*(Sint64 **)res = (Sint64 *)binding->p1;
-			break;
-#endif
-		case AG_WIDGET_FLOAT:
-			*(float **)res = (float *)binding->p1;
-			break;
-		case AG_WIDGET_DOUBLE:
-			*(double **)res = (double *)binding->p1;
-			break;
-#ifdef HAVE_LONG_DOUBLE
-		case AG_WIDGET_LONG_DOUBLE:
-			*(long double **)res = (long double *)binding->p1;
-			break;
-#endif
-		case AG_WIDGET_STRING:
-			*(char ***)res = (char **)binding->p1;
-			break;
-		case AG_WIDGET_POINTER:
-			*(void ***)res = (void **)binding->p1;
-			break;
-		case AG_WIDGET_FLAG:
-			*(Uint **)res = (Uint *)binding->p1;
-			break;
-		case AG_WIDGET_FLAG8:
-			*(Uint8 **)res = (Uint8 *)binding->p1;
-			break;
-		case AG_WIDGET_FLAG16:
-			*(Uint16 **)res = (Uint16 *)binding->p1;
-			break;
-		case AG_WIDGET_FLAG32:
-			*(Uint32 **)res = (Uint32 *)binding->p1;
-			break;
-		default:
-			AG_SetError("Bad widget binding type");
-			binding = NULL;
-			goto out;
-		}
-out:
-		AG_MutexUnlock(&wid->bindings_lock);
-		return (binding);			/* Return locked */
 	}
-	AG_MutexUnlock(&wid->bindings_lock);
-
-	AG_SetError(_("No such widget binding: %s"), name);
+	if (i == obj->nVars) {
+		AG_SetError("%s: No such binding: %s", obj->name, name);
+		goto fail;
+	}
+	if (V->mutex != NULL) {
+		AG_MutexLock(V->mutex);
+	}
+	if (res == NULL) {
+		goto out;
+	}
+	switch (V->type) {
+	case AG_WIDGET_INT:
+		*(int **)res = (int *)V->data.p;
+		break;
+	case AG_WIDGET_UINT:
+		*(Uint **)res = (Uint *)V->data.p;
+		break;
+	case AG_WIDGET_UINT8:
+		*(Uint8 **)res = (Uint8 *)V->data.p;
+		break;
+	case AG_WIDGET_SINT8:
+		*(Sint8 **)res = (Sint8 *)V->data.p;
+		break;
+	case AG_WIDGET_UINT16:
+		*(Uint16 **)res = (Uint16 *)V->data.p;
+		break;
+	case AG_WIDGET_SINT16:
+		*(Sint16 **)res = (Sint16 *)V->data.p;
+		break;
+	case AG_WIDGET_UINT32:
+		*(Uint32 **)res = (Uint32 *)V->data.p;
+		break;
+	case AG_WIDGET_SINT32:
+		*(Sint32 **)res = (Sint32 *)V->data.p;
+		break;
+	case AG_WIDGET_FLOAT:
+		*(float **)res = (float *)V->data.p;
+		break;
+	case AG_WIDGET_DOUBLE:
+		*(double **)res = (double *)V->data.p;
+		break;
+	case AG_WIDGET_STRING:
+		*(char ***)res = (char **)V->data.p;
+		break;
+	case AG_WIDGET_POINTER:
+		*(void ***)res = (void **)V->data.p;
+		break;
+	case AG_WIDGET_FLAG:
+		*(Uint **)res = (Uint *)V->data.p;
+		break;
+	case AG_WIDGET_FLAG8:
+		*(Uint8 **)res = (Uint8 *)V->data.p;
+		break;
+	case AG_WIDGET_FLAG16:
+		*(Uint16 **)res = (Uint16 *)V->data.p;
+		break;
+	case AG_WIDGET_FLAG32:
+		*(Uint32 **)res = (Uint32 *)V->data.p;
+		break;
+	default:
+		AG_SetError("Bad binding type");
+		if (V->mutex != NULL) {
+			AG_MutexUnlock(V->mutex);
+		}
+		goto fail;
+	}
+out:
+	AG_ObjectUnlock(obj);
+	return (V);					/* Return locked */
+fail:
+	AG_ObjectUnlock(obj);
 	return (NULL);
-}
-
-/*
- * Generate a prop-modified event after manipulating the property values
- * manually. The property must be locked.
- */
-void
-AG_WidgetBindingChanged(AG_WidgetBinding *bind)
-{
-	/* nothing yet */
 }
 
 /*
@@ -599,7 +600,6 @@ Destroy(void *obj)
 {
 	AG_Widget *wid = obj;
 	AG_PopupMenu *pm, *pm2;
-	AG_WidgetBinding *bind, *nbind;
 	Uint i;
 	
 	for (pm = SLIST_FIRST(&wid->menus);
@@ -636,14 +636,6 @@ Destroy(void *obj)
 		Free(wid->textureGC);
 	}
 #endif
-
-	for (bind = SLIST_FIRST(&wid->bindings);
-	     bind != SLIST_END(&wid->bindings);
-	     bind = nbind) {
-		nbind = SLIST_NEXT(bind, bindings);
-		Free(bind);
-	}
-	AG_MutexDestroy(&wid->bindings_lock);
 }
 
 /*
@@ -1060,16 +1052,48 @@ AG_WidgetRegenResourcesGL(AG_Widget *wid)
 }
 #endif /* HAVE_OPENGL */
 
-/* Clear the AG_WIDGET_FOCUSED bit from a widget and its descendents. */
+/* Acquire widget focus */
+static __inline__ void
+FocusWidget(AG_Widget *w)
+{
+	AG_Window *winParent;
+
+	w->flags |= AG_WIDGET_FOCUSED;
+	if ((winParent = AG_ParentWindow(w)) != NULL) {
+		AG_PostEvent(winParent, w, "widget-gainfocus", NULL);
+		winParent->nFocused++;
+	}
+}
+
+/* Give up widget focus */
+static __inline__ void
+UnfocusWidget(AG_Widget *w)
+{
+	AG_Window *winParent;
+
+	w->flags &= ~(AG_WIDGET_FOCUSED);
+	if ((winParent = AG_ParentWindow(w)) != NULL) {
+		AG_PostEvent(winParent, w, "widget-lostfocus", NULL);
+		winParent->nFocused--;
+	}
+}
+
+/* Remove focus from a widget and its children. */
 void
 AG_WidgetUnfocus(void *p)
 {
 	AG_Widget *wid = p, *cwid;
 
 	AG_ObjectLock(wid);
+	if (wid->focusFwd != NULL) {
+		AG_ObjectLock(wid->focusFwd);
+		if (wid->focusFwd->flags & AG_WIDGET_FOCUSED) {
+			UnfocusWidget(wid->focusFwd);
+		}
+		AG_ObjectUnlock(wid->focusFwd);
+	}
 	if (wid->flags & AG_WIDGET_FOCUSED) {
-		wid->flags &= ~(AG_WIDGET_FOCUSED);
-		AG_PostEvent(NULL, wid, "widget-lostfocus", NULL);
+		UnfocusWidget(wid);
 	}
 	OBJECT_FOREACH_CHILD(cwid, wid, ag_widget) {
 		AG_WidgetUnfocus(cwid);
@@ -1103,75 +1127,61 @@ AG_ParentWindow(void *p)
 void
 AG_WidgetFocus(void *p)
 {
-	AG_Widget *wid = p, *pwid = wid, *fwid;
-	AG_Window *pwin;
+	AG_Widget *wid = p, *wParent = wid;
+	AG_Window *win;
 
 	AG_LockVFS(agView);
 	AG_ObjectLock(wid);
 
-	if ((wid->flags & AG_WIDGET_FOCUSABLE) == 0)
-		goto out;
-
-	/* See if this widget is already focused. */
-	if ((fwid = AG_WidgetFindFocused(wid)) != NULL &&
-	    (fwid == wid))
-		goto out;
-
-	/* Remove focus from other widgets inside this window. */
-	pwin = AG_WidgetParentWindow(wid);
-	if (pwin != NULL) {
-		if (pwin->flags & AG_WINDOW_DENYFOCUS) {
-			goto out;
-		}
-		AG_WidgetUnfocus(pwin);
+	/* Remove any existing focus. */
+	TAILQ_FOREACH(win, &agView->windows, windows) {
+		if (win->nFocused > 0)
+			AG_WidgetUnfocus(win);
 	}
 
 	/* Set the focus flag on the widget and its parents. */
 	do {
-		if (AG_OfClass(pwid, "AG_Widget:AG_Window:*"))
-			break;
-#if 0
-		/* XXX */
-		if ((pwid->flags & AG_WIDGET_FOCUSABLE) == 0) {
-			Debug(wid, "Parent (%s) is not focusable\n",
-			    OBJECT(pwid)->name);
+		if (AG_OfClass(wParent, "AG_Widget:AG_Window:*")) {
+			AG_WindowFocus(AGWINDOW(wParent));
 			break;
 		}
-#endif
-		pwid->flags |= AG_WIDGET_FOCUSED;
-		AG_PostEvent(OBJECT(pwid)->parent, pwid, "widget-gainfocus",
-		    NULL);
-	} while ((pwid = OBJECT(pwid)->parent) != NULL);
-out:
+		AG_ObjectLock(wParent);
+		if ((wParent->flags & AG_WIDGET_FOCUSED) == 0) {
+			if (wParent->focusFwd != NULL &&
+			    !(wParent->focusFwd->flags & AG_WIDGET_FOCUSED)) {
+				FocusWidget(wParent->focusFwd);
+			}
+			FocusWidget(wParent);
+		}
+		AG_ObjectUnlock(wParent);
+	} while ((wParent = OBJECT(wParent)->parent) != NULL);
+
 	AG_ObjectUnlock(wid);
 	AG_UnlockVFS(agView);
 }
 
 /*
- * Evaluate whether a given widget is at least partially visible. The Widget
- * and the view must be locked.
+ * Evaluate whether a given widget is at least partially visible.
+ * The Widget and View must be locked.
  */
 /* TODO optimize on a per window basis */
 static __inline__ int
 OccultedWidget(AG_Widget *wid)
 {
-	AG_Window *owin;
-	AG_Window *wwin;
+	AG_Window *wParent;
+	AG_Window *w;
 
-	if ((wwin = AG_ObjectFindParent(wid, NULL, "AG_Widget:AG_Window"))
-	    == NULL ||
-	    (owin = TAILQ_NEXT(wwin, windows)) == NULL) {
+	if ((wParent = AG_ObjectFindParent(wid, NULL, "AG_Widget:AG_Window")) == NULL ||
+	    (w = TAILQ_NEXT(wParent, windows)) == NULL) {
 		return (0);
 	}
-	for (; owin != TAILQ_END(&agView->windows);
-	     owin = TAILQ_NEXT(owin, windows)) {
-		if (owin->visible &&
-		    wid->rView.x1 > WIDGET(owin)->x &&
-		    wid->rView.y1 > WIDGET(owin)->y &&
-		    wid->rView.x2 < WIDGET(owin)->x+WIDGET(owin)->w &&
-		    wid->rView.y2 < WIDGET(owin)->y+WIDGET(owin)->h) {
+	for (; w != TAILQ_END(&agView->windows); w = TAILQ_NEXT(w, windows)) {
+		if (w->visible &&
+		    wid->rView.x1 > WIDGET(w)->x &&
+		    wid->rView.y1 > WIDGET(w)->y &&
+		    wid->rView.x2 < WIDGET(w)->x+WIDGET(w)->w &&
+		    wid->rView.y2 < WIDGET(w)->y+WIDGET(w)->h)
 			return (1);
-		}
 	}
 	return (0);
 }
@@ -1439,7 +1449,7 @@ AG_WidgetBlendPixelRGBA(void *p, int x, int y, Uint8 c[4], AG_BlendFn fn)
 int
 AG_WidgetSensitive(void *obj, int x, int y)
 {
-	AG_Widget *wt = AGWIDGET(obj);
+	AG_Widget *wt = WIDGET(obj);
 	AG_Widget *wtParent = wt;
 	AG_Rect2 rx = wt->rSens;
 
@@ -1463,7 +1473,7 @@ AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
 	AG_Widget *cwid;
 
 	AG_ObjectLock(wid);
-	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetFocused(wid)) ||
+	if ((AG_WindowIsFocused(win) && AG_WidgetFocused(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
 		AG_PostEvent(NULL, wid, "window-mousemotion",
 		    "%i,%i,%i,%i,%i",
@@ -1492,7 +1502,7 @@ AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
 	AG_Widget *cwid;
 
 	AG_ObjectLock(wid);
-	if ((AG_WINDOW_FOCUSED(win) && AG_WidgetFocused(wid)) ||
+	if ((AG_WindowIsFocused(win) && AG_WidgetFocused(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
 		AG_PostEvent(NULL, wid, "window-mousebuttonup", "%i,%i,%i",
 		    button,
@@ -1831,14 +1841,14 @@ AG_WidgetFindRect(const char *type, int x, int y, int w, int h)
 void
 AG_WidgetSetString(void *wid, const char *name, const char *ns)
 {
-	AG_WidgetBinding *binding;
+	AG_Variable *V;
 	char *s;
 
-	if ((binding = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
+	if ((V = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
-	Strlcpy(s, ns, binding->data.size);
-	AG_WidgetUnlockBinding(binding);
+	Strlcpy(s, ns, V->info.size);
+	AG_WidgetUnlockBinding(V);
 }
 
 size_t

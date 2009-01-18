@@ -242,14 +242,14 @@ clears it.
 .Ft "void"
 .Fn AG_WidgetSetFocusable "AG_Widget *widget" "int enable"
 .Pp
-.Ft "int"
-.Fn AG_WidgetFocused "AG_Widget *widget"
-.Pp
 .Ft "void"
 .Fn AG_WidgetFocus "AG_Widget *widget"
 .Pp
 .Ft "void"
 .Fn AG_WidgetUnfocus "AG_Widget *widget"
+.Pp
+.Ft "int"
+.Fn AG_WidgetFocused "AG_Widget *widget"
 .Pp
 .Ft "AG_Widget *"
 .Fn AG_WidgetFindFocused "AG_Window *win"
@@ -276,9 +276,6 @@ and
 specifies whether the widget should be allowed to receive focus
 (default = FALSE).
 .Pp
-.Fn AG_WidgetFocused
-returns 1 if the widget is currently holding focus with respect to its parent.
-.Pp
 The
 .Fn AG_WidgetFocus
 function moves the keyboard/mousemotion focus over the given widget
@@ -286,9 +283,19 @@ and its parents.
 .Fn AG_WidgetUnfocus
 removes the focus state from the given widget and its children.
 .Pp
+.Fn AG_WidgetFocused
+returns 1 if
+.Fa widget
+is currently holding focus.
+.Pp
 .Fn AG_WidgetFindFocused
-searches the given window for a focused widget and returns a pointer to it
-if it was found or NULL otherwise.
+recursively searches
+.Fa win
+for a widget holding focus.
+Where multiple widgets may be holding focus, widgets found deepest in the
+tree have priority over their parents.
+.Fn AG_WidgetFindFocused
+returns NULL if no widget is focused.
 Note: Under multithreading, the return value is only valid as long as the
 .Xr AG_View 3
 VFS object is locked.
@@ -736,7 +743,7 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Pp
 .nr nS 1
 .Ft "AG_WidgetBinding *"
-.Fn AG_WidgetBind "AG_Widget *widget, const char *binding" "enum ag_datum_type type, ..."
+.Fn AG_WidgetBind "AG_Widget *widget, const char *binding" "enum ag_variable_type type, ..."
 .Pp
 .Ft "AG_WidgetBinding *"
 .Fn AG_WidgetGetBinding "AG_Widget *widget" "const char *binding" "void *res"
@@ -776,12 +783,6 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Pp
 .Ft "void"
 .Fn AG_WidgetBindSint32 "AG_Widget *widget" "const char *binding" "Sint32 *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindUint64 "AG_Widget *widget" "const char *binding" "Uint64 *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindSint64 "AG_Widget *widget" "const char *binding" "Sint64 *p"
 .Pp
 .Ft "void"
 .Fn AG_WidgetBindFloat "AG_Widget *widget" "const char *binding" "float *p"
@@ -874,19 +875,10 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 .Fn AG_WidgetSetSint32 "AG_Widget *widget" "const char *binding" "Sint32 u32"
 .Pp
 .Ft void
-.Fn AG_WidgetSetUint64 "AG_Widget *widget" "const char *binding" "Uint64 u64"
-.Pp
-.Ft void
-.Fn AG_WidgetSetSint64 "AG_Widget *widget" "const char *binding" "Sint64 u64"
-.Pp
-.Ft void
 .Fn AG_WidgetSetFloat "AG_Widget *widget" "const char *binding" "float f"
 .Pp
 .Ft void
 .Fn AG_WidgetSetDouble "AG_Widget *widget" "const char *binding" "double d"
-.Pp
-.Ft void
-.Fn AG_WidgetSetLongDouble "AG_Widget *widget" "const char *binding" "long double d"
 .Pp
 .Ft void
 .Fn AG_WidgetSetString "AG_Widget *widget" "const char *binding" "const char *s"
@@ -913,11 +905,8 @@ argument include:
 .It AG_WIDGET_SINT16
 .It AG_WIDGET_UINT32
 .It AG_WIDGET_SINT32
-.It AG_WIDGET_UINT64
-.It AG_WIDGET_SINT64
 .It AG_WIDGET_FLOAT
 .It AG_WIDGET_DOUBLE
-.It AG_WIDGET_LONG_DOUBLE
 .It AG_WIDGET_STRING
 .It AG_WIDGET_POINTER
 .It AG_WIDGET_FLAG
@@ -980,17 +969,6 @@ Pointer to the data.
 .El
 .El
 .Pp
-Note that the
-.Dv AG_WIDGET_UINT64
-and
-.Dv AG_WIDGET_SINT64
-types are only implemented if
-.Dv AG_HAVE_64BIT
-is defined, and
-.Dv AG_WIDGET_LONG_DOUBLE
-requires
-.Dv AG_HAVE_LONG_DOUBLE .
-.Pp
 The
 .Fn AG_WidgetGetBinding
 function returns a matching binding (locked), or NULL if none was found.
@@ -1019,17 +997,6 @@ argument.
 The
 .Fn AG_WidgetGet_*
 routines return the current value of the specified binding.
-.Pp
-Note:
-.Fn AG_WidgetSetUint64 ,
-.Fn AG_WidgetSetSint64
-only exists if
-.Dv AG_HAVE_64BIT
-is defined.
-.Fn AG_WidgetSetLongDouble
-only exists if
-.Dv AG_HAVE_LONG_DOUBLE
-is defined.
 .Pp
 Note: Usages such as
 .Fn AG_WidgetGetFoo
@@ -1160,7 +1127,6 @@ Input state has been disabled with
 The widget (or one of its parents) has been moved.
 .It Fn widget-gainfocus "void"
 The widget now holds focus inside its parent container.
-This event originates from the parent container object.
 .It Fn widget-lostfocus "void"
 The widget no longer holds focus.
 .It Fn widget-bound "AG_WidgetBinding *binding"
@@ -1210,8 +1176,10 @@ See
 .Dq INPUT STATE
 section for more details.
 .It AG_WIDGET_FOCUSABLE
-Widget allowed to grab the focus (set by
-.Fn AG_WidgetSetFocusable ) .
+The widget is allowed to grab the focus; normally set by
+.Fn AG_WidgetSetFocusable .
+Note that the widget may still become "focused" if child widgets are attached
+to it and one of them happens to grab focus.
 .It AG_WIDGET_UNFOCUSED_MOTION
 Receive
 .Sq window-mousemotion

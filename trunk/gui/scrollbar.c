@@ -143,7 +143,7 @@ AG_ScrollbarNewSint32(void *parent, enum ag_scrollbar_type type, Uint flags,
 	return (sb);
 }
 
-#ifdef HAVE_64BIT
+#if 0
 AG_Scrollbar *
 AG_ScrollbarNewUint64(void *parent, enum ag_scrollbar_type type, Uint flags,
     Uint64 *val, Uint64 *min, Uint64 *max, Uint64 *vis)
@@ -192,7 +192,7 @@ AG_ScrollbarNewDouble(void *parent, enum ag_scrollbar_type type, Uint flags,
 	return (sb);
 }
 
-#ifdef HAVE_LONG_DOUBLE
+#if 0
 AG_Scrollbar *
 AG_ScrollbarNewLongDouble(void *parent, enum ag_scrollbar_type type, Uint flags,
     long double *val, long double *min, long double *max, long double *vis)
@@ -278,13 +278,7 @@ GetPosition(AG_Scrollbar *sb, int *x)
 	case AG_WIDGET_SINT16:	GET_POSITION(Sint16);	break;
 	case AG_WIDGET_UINT32:	GET_POSITION(Uint32);	break;
 	case AG_WIDGET_SINT32:	GET_POSITION(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	GET_POSITION(Uint64);	break;
-	case AG_WIDGET_SINT64:	GET_POSITION(Sint64);	break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: GET_POSITION(long double);	break;
-#endif
+	default:					break;
 	} 
 	if (sb->wBar == -1) {
 		*x = 0;
@@ -346,13 +340,7 @@ SeekToPosition(AG_Scrollbar *sb, int x)
 	case AG_WIDGET_SINT16:	SEEK_TO_POSITION(Sint16);	break;
 	case AG_WIDGET_UINT32:	SEEK_TO_POSITION(Uint32);	break;
 	case AG_WIDGET_SINT32:	SEEK_TO_POSITION(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	SEEK_TO_POSITION(Uint64);	break;
-	case AG_WIDGET_SINT64:	SEEK_TO_POSITION(Sint64);	break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: SEEK_TO_POSITION(long double); break;
-#endif
+	default:						break;
 	} 
 	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
@@ -400,13 +388,7 @@ Decrement(AG_Scrollbar *sb, int v)
 	case AG_WIDGET_SINT16:	DECREMENT_INT(Sint16);	break;
 	case AG_WIDGET_UINT32:	DECREMENT_INT(Uint32);	break;
 	case AG_WIDGET_SINT32:	DECREMENT_INT(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	DECREMENT_INT(Uint64);	break;
-	case AG_WIDGET_SINT64:	DECREMENT_INT(Sint64);	break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: DECREMENT_REAL(long double); break;
-#endif
+	default:					break;
 	} 
 	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
@@ -455,13 +437,7 @@ Increment(AG_Scrollbar *sb, int v)
 	case AG_WIDGET_SINT16:	INCREMENT_INT(Sint16);	break;
 	case AG_WIDGET_UINT32:	INCREMENT_INT(Uint32);	break;
 	case AG_WIDGET_SINT32:	INCREMENT_INT(Sint32);	break;
-#ifdef HAVE_64BIT
-	case AG_WIDGET_UINT64:	INCREMENT_INT(Uint64);	break;
-	case AG_WIDGET_SINT64:	INCREMENT_INT(Sint64);	break;
-#endif
-#ifdef HAVE_LONG_DOUBLE
-	case AG_WIDGET_LONG_DOUBLE: INCREMENT_REAL(long double); break;
-#endif
+	default:					break;
 	} 
 	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);

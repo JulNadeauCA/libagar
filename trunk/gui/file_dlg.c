@@ -209,6 +209,7 @@ static void
 ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 {
 	AG_Window *win;
+	AG_Button *btn;
 	AG_HBox *hb;
 
 	win = AG_WindowNew(AG_WINDOW_NORESIZE|AG_WINDOW_NOTITLE);
@@ -218,8 +219,8 @@ ReplaceFileDlg(AG_FileDlg *fd, AG_Window *pwin)
 	{
 		AG_ButtonNewFn(hb, 0, _("Yes"),
 		    ReplaceFileConfirm, "%p,%p,%p", fd, win, pwin);
-		AG_WidgetFocus(AG_ButtonNewFn(hb, 0, _("Cancel"),
-		    AGWINDETACH(win)));
+		btn = AG_ButtonNewFn(hb, 0, _("Cancel"), AGWINDETACH(win));
+		AG_WidgetFocus(btn);
 	}
 //	AG_WindowAttach(pwin, win);
 	AG_WindowShow(win);
@@ -715,7 +716,6 @@ Init(void *obj)
 	fd->comTypes = AG_ComboNew(fd, AG_COMBO_HFILL, _("Type: "));
 	AG_TlistSizeHint(fd->tlDirs, "XXXXXXXXXXXXXX", 8);
 	AG_TlistSizeHint(fd->tlFiles, "XXXXXXXXXXXXXXXXXX", 8);
-	AG_WidgetFocus(fd->tbFile);
 
 	fd->btnOk = AG_ButtonNew(fd, 0, _("OK"));
 	fd->btnCancel = AG_ButtonNew(fd, 0, _("Cancel"));

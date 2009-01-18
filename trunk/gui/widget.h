@@ -31,30 +31,6 @@ typedef struct ag_widget_class {
 	int  (*size_allocate)(void *, const AG_SizeAlloc *);
 } AG_WidgetClass;
 
-/* LEGACY */
-#define AG_WidgetBindingType	AG_DatumType
-#define AG_WIDGET_NONE		AG_DATUM_P_NULL
-#define AG_WIDGET_BOOL		AG_DATUM_P_INT
-#define AG_WIDGET_UINT		AG_DATUM_P_UINT
-#define AG_WIDGET_INT		AG_DATUM_P_INT
-#define AG_WIDGET_UINT8		AG_DATUM_P_UINT8
-#define AG_WIDGET_SINT8		AG_DATUM_P_SINT8
-#define AG_WIDGET_UINT16	AG_DATUM_P_UINT16
-#define AG_WIDGET_SINT16	AG_DATUM_P_SINT16
-#define AG_WIDGET_UINT32	AG_DATUM_P_UINT32
-#define AG_WIDGET_SINT32	AG_DATUM_P_SINT32
-#define AG_WIDGET_UINT64	AG_DATUM_P_UINT64
-#define AG_WIDGET_SINT64	AG_DATUM_P_SINT64
-#define AG_WIDGET_FLOAT		AG_DATUM_P_FLOAT
-#define AG_WIDGET_DOUBLE	AG_DATUM_P_DOUBLE
-#define AG_WIDGET_LONG_DOUBLE	AG_DATUM_P_LONG_DOUBLE
-#define AG_WIDGET_STRING	AG_DATUM_P_STRING
-#define AG_WIDGET_POINTER	AG_DATUM_P_POINTER
-#define AG_WIDGET_FLAG		AG_DATUM_P_FLAG
-#define AG_WIDGET_FLAG8		AG_DATUM_P_FLAG8
-#define AG_WIDGET_FLAG16	AG_DATUM_P_FLAG16
-#define AG_WIDGET_FLAG32	AG_DATUM_P_FLAG32
-
 enum ag_widget_sizespec {
 	AG_WIDGET_BAD_SPEC,	/* Parser error */
 	AG_WIDGET_PIXELS,	/* Pixel count */
@@ -73,19 +49,6 @@ typedef struct ag_flag_descr {
 	const char *descr;		/* Bit(s) description */
 	int writeable;			/* User-editable */
 } AG_FlagDescr;
-
-typedef struct ag_widget_binding {
-	char name[AG_WIDGET_BINDING_NAME_MAX];	/* Binding identifier */
-	int type;				/* Real binding type */
-	AG_Mutex *mutex;			/* Mutex to acquire or NULL */
-	void *p1;				/* Pointer to variable */
-	union {
-		char prop[AG_PROP_KEY_MAX];	/* Property name (for PROP) */
-		size_t size;			/* Size (for STRING) */
-		Uint32 bitmask;			/* Bitmask (for FLAG) */
-	} data;
-	AG_SLIST_ENTRY(ag_widget_binding) bindings;
-} AG_WidgetBinding;
 
 struct ag_popup_menu;
 
@@ -134,9 +97,9 @@ typedef struct ag_widget {
 	Uint *textureGC;		/* Textures queued for deletion */
 	Uint nTextureGC;
 
-	AG_Mutex bindings_lock;			 	/* Lock on bindings */
-	AG_SLIST_HEAD(,ag_widget_binding) bindings;	/* Binding data */
-	AG_SLIST_HEAD(,ag_popup_menu) menus;		/* Managed menus */
+	AG_Mutex bindings_lock;		 	/* Lock on bindings */
+	AG_SLIST_HEAD(,ag_popup_menu) menus;	/* Managed menus */
+	struct ag_widget *focusFwd;		/* For ForwardFocus() */
 } AG_Widget;
 
 #define AGWIDGET(wi)		((AG_Widget *)(wi))
@@ -188,6 +151,7 @@ void AG_WidgetDraw(void *);
 void AG_WidgetSizeReq(void *, AG_SizeReq *);
 int  AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
 void AG_WidgetSetFocusable(void *, int);
+void AG_WidgetForwardFocus(void *, void *);
 
 void		  AG_WidgetFocus(void *);
 void		  AG_WidgetUnfocus(void *);
@@ -243,48 +207,12 @@ int   AG_WidgetMouseButtonDown(struct ag_window *, AG_Widget *, int, int, int);
 void  AG_WidgetUnfocusedKeyUp(AG_Widget *, int, int, int);
 void  AG_WidgetUnfocusedKeyDown(AG_Widget *, int, int, int);
 
-AG_WidgetBinding *AG_WidgetBind(void *, const char *, AG_DatumType, ...);
-AG_WidgetBinding *AG_WidgetBindMp(void *, const char *, AG_Mutex *, AG_DatumType, ...);
-AG_WidgetBinding *AG_WidgetGetBinding(void *, const char *, ...);
-void	  	  AG_WidgetBindingChanged(AG_WidgetBinding *);
-int	  	  AG_WidgetCopyBinding(void *, const char *, AG_WidgetBinding *);
-
-#define AG_WidgetBindBool(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_BOOL,(p))
-#define AG_WidgetBindInt(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_INT,(p))
-#define AG_WidgetBindUint(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT,(p))
-#define AG_WidgetBindUint8(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT8,(p))
-#define AG_WidgetBindSint8(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_SINT8,(p))
-#define AG_WidgetBindUint16(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT16,(p))
-#define AG_WidgetBindSint16(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_SINT16,(p))
-#define AG_WidgetBindUint32(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT32,(p))
-#define AG_WidgetBindSint32(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_SINT32,(p))
-#define AG_WidgetBindUint64(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT64,(p))
-#define AG_WidgetBindSint64(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_SINT64,(p))
-#define AG_WidgetBindFloat(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_FLOAT,(p))
-#define AG_WidgetBindDouble(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_DOUBLE,(p))
-#define AG_WidgetBindLongDouble(w,b,p) AG_WidgetBind((w),(b),\
-                                       AG_WIDGET_LONG_DOUBLE,(p))
-#define AG_WidgetBindPointer(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_POINTER,(p))
-#define AG_WidgetBindString(w,b,p,len) AG_WidgetBind((w),(b),AG_WIDGET_STRING,\
-				       (p),(len))
-#define AG_WidgetBindFlag(w,b,p,mask) AG_WidgetBind((w),(b),AG_WIDGET_FLAG,\
-                                      (p),(mask))
-#define AG_WidgetBindFlag8(w,b,p,mask) AG_WidgetBind((w),(b),AG_WIDGET_FLAG8,\
-                                       (p),(mask))
-#define AG_WidgetBindFlag16(w,b,p,mask) AG_WidgetBind((w),(b),AG_WIDGET_FLAG16,\
-                                        (p),(mask))
-#define AG_WidgetBindFlag32(w,b,p,mask) AG_WidgetBind((w),(b),AG_WIDGET_FLAG32,\
-                                        (p),(mask))
-
 enum ag_widget_sizespec AG_WidgetParseSizeSpec(const char *, int *);
 int			AG_WidgetScrollDelta(Uint32 *);
 void			*AG_WidgetFind(AG_Display *, const char *);
 
 void AG_WidgetShownRecursive(void *);
 void AG_WidgetHiddenRecursive(void *);
-
-void AG_WidgetSetString(void *, const char *, const char *);
-size_t AG_WidgetCopyString(void *, const char *, char *, size_t);
 
 void AG_WidgetInheritDraw(void *);
 void AG_WidgetInheritSizeRequest(void *, AG_SizeReq *);
@@ -293,25 +221,6 @@ int AG_WidgetInheritSizeAllocate(void *, const AG_SizeAlloc *);
 /*
  * Inlines
  */
-
-#ifdef AG_THREADS
-/* Acquire/release lock on a widget binding. */
-static __inline__ void
-AG_WidgetLockBinding(AG_WidgetBinding *bind)
-{
-	if (bind->mutex != NULL)
-		AG_MutexLock(bind->mutex);
-}
-static __inline__ void
-AG_WidgetUnlockBinding(AG_WidgetBinding *bind)
-{
-	if (bind->mutex != NULL)
-		AG_MutexUnlock(bind->mutex);
-}
-#else
-#define AG_WidgetLockBinding(b)
-#define AG_WidgetUnlockBinding(b)
-#endif /* AG_THREADS */
 
 /* Set the widget state. */
 static __inline__ void
@@ -399,437 +308,6 @@ AG_WidgetBlendPixel32(void *p, int wx, int wy, Uint32 pixel, AG_BlendFn fn)
 	AG_WidgetBlendPixelRGBA(p, wx,wy, c, fn);
 }
 
-#define AG_WidgetBool AG_WidgetInt
-
-static __inline__ int
-AG_WidgetInt(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	int *i, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (int **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *i;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-static __inline__ Uint
-AG_WidgetUint(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	Uint *i, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (Uint **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *i;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-static __inline__ Uint8
-AG_WidgetUint8(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	Uint8 *i, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (Uint8 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *i;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-static __inline__ Sint8
-AG_WidgetSint8(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	Sint8 *i, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (Sint8 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *i;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-static __inline__ Uint16
-AG_WidgetUint16(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	Uint16 *i, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (Uint16 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *i;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-static __inline__ Sint16
-AG_WidgetSint16(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	Sint16 *i, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (Sint16 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *i;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-static __inline__ Uint32
-AG_WidgetUint32(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	Uint32 *i, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (Uint32 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *i;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-static __inline__ Sint32
-AG_WidgetSint32(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	Sint32 *i, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (Sint32 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *i;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-#ifdef HAVE_64BIT
-static __inline__ Uint64
-AG_WidgetUint64(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	Uint64 *i, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (Uint64 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *i;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-static __inline__ Sint64
-AG_WidgetSint64(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	Sint64 *i, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (Sint64 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *i;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-#endif /* HAVE_64BIT */
-
-static __inline__ float
-AG_WidgetFloat(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	float *f, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (float **)&f)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *f;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-static __inline__ double
-AG_WidgetDouble(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	double *d, rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (double **)&d)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *d;
-	AG_WidgetUnlockBinding(b);
-	return (rv);
-}
-
-static __inline__ char *
-AG_WidgetString(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	char *s, *sd;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (char **)&s)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	sd = AG_Strdup(s);
-	AG_WidgetUnlockBinding(b);
-	return (sd);
-}
-
-static __inline__ void *
-AG_WidgetPointer(void *wid, const char *name)
-{
-	AG_WidgetBinding *b;
-	void **p, *rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, (void ***)&p)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = *p;
-	AG_WidgetUnlockBinding(b);
-	return (p);
-}
-
-#define AG_WidgetSetBool AG_WidgetSetInt
-
-static __inline__ void
-AG_WidgetSetInt(void *wid, const char *name, int ni)
-{
-	AG_WidgetBinding *binding;
-	int *i;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (int **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*i != ni) {
-		*i = ni;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-static __inline__ void
-AG_WidgetSetUint(void *wid, const char *name, Uint ni)
-{
-	AG_WidgetBinding *binding;
-	Uint *i;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (Uint **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*i != ni) {
-		*i = ni;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-static __inline__ void
-AG_WidgetSetUint8(void *wid, const char *name, Uint8 ni)
-{
-	AG_WidgetBinding *binding;
-	Uint8 *i;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (Uint8 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*i != ni) {
-		*i = ni;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-static __inline__ void
-AG_WidgetSetSint8(void *wid, const char *name, Sint8 ni)
-{
-	AG_WidgetBinding *binding;
-	Sint8 *i;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (Sint8 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*i != ni) {
-		*i = ni;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-static __inline__ void
-AG_WidgetSetUint16(void *wid, const char *name, Uint16 ni)
-{
-	AG_WidgetBinding *binding;
-	Uint16 *i;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (Uint16 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*i != ni) {
-		*i = ni;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-static __inline__ void
-AG_WidgetSetSint16(void *wid, const char *name, Sint16 ni)
-{
-	AG_WidgetBinding *binding;
-	Sint16 *i;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (Sint16 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*i != ni) {
-		*i = ni;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-static __inline__ void
-AG_WidgetSetUint32(void *wid, const char *name, Uint32 ni)
-{
-	AG_WidgetBinding *binding;
-	Uint32 *i;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (Uint32 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*i != ni) {
-		*i = ni;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-static __inline__ void
-AG_WidgetSetSint32(void *wid, const char *name, Sint32 ni)
-{
-	AG_WidgetBinding *binding;
-	Sint32 *i;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (Sint32 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*i != ni) {
-		*i = ni;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-#ifdef HAVE_64BIT
-static __inline__ void
-AG_WidgetSetUint64(void *wid, const char *name, Uint64 ni)
-{
-	AG_WidgetBinding *binding;
-	Uint64 *i;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (Uint64 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*i != ni) {
-		*i = ni;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-static __inline__ void
-AG_WidgetSetSint64(void *wid, const char *name, Sint64 ni)
-{
-	AG_WidgetBinding *binding;
-	Sint64 *i;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (Sint64 **)&i)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*i != ni) {
-		*i = ni;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-#endif /* HAVE_64BIT */
-
-static __inline__ void
-AG_WidgetSetFloat(void *wid, const char *name, float nf)
-{
-	AG_WidgetBinding *binding;
-	float *f;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (float **)&f)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*f != nf) {
-		*f = nf;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-static __inline__ void
-AG_WidgetSetDouble(void *wid, const char *name, double nd)
-{
-	AG_WidgetBinding *binding;
-	double *d;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (double **)&d)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*d != nd) {
-		*d = nd;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
-#ifdef HAVE_LONG_DOUBLE
-static __inline__ void
-AG_WidgetSetLongDouble(void *wid, const char *name, long double nd)
-{
-	AG_WidgetBinding *binding;
-	long double *d;
-
-	if ((binding = AG_WidgetGetBinding(wid, name,
-	    (long double **)&d)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*d != nd) {
-		*d = nd;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-#endif
-
-static __inline__ void
-AG_WidgetSetPointer(void *wid, const char *name, void *np)
-{
-	AG_WidgetBinding *binding;
-	void **p;
-
-	if ((binding = AG_WidgetGetBinding(wid, name, (void ***)&p)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	if (*p != np) {
-		*p = np;
-		AG_WidgetBindingChanged(binding);
-	}
-	AG_WidgetUnlockBinding(binding);
-}
-
 static __inline__ void
 AG_Expand(void *wid)
 {
@@ -852,6 +330,9 @@ AG_ExpandVert(void *wid)
 	AG_ObjectUnlock(wid);
 }
 __END_DECLS
+
+/* LEGACY */
+#include <agar/gui/widget_legacy.h>
 
 #include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_H_ */

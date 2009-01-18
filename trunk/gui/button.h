@@ -36,7 +36,7 @@ extern AG_WidgetClass agButtonClass;
 AG_Button *AG_ButtonNew(void *, Uint, const char *, ...);
 AG_Button *AG_ButtonNewFn(void *, Uint, const char *, AG_EventFn,
 			  const char *, ...);
-AG_Button *AG_ButtonNewBool(void *, Uint, const char *, AG_DatumType, void *);
+AG_Button *AG_ButtonNewBool(void *, Uint, const char *, AG_VariableType, void *);
 #define    AG_ButtonNewInt(b,f,c,p) \
 	   AG_ButtonNewBool((b),(f),(c),AG_WIDGET_INT,(p))
 #define    AG_ButtonNewUint8(b,f,c,p) \

@@ -195,14 +195,14 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 	if (ed->flags & AG_EDITABLE_STATIC) {
 		if (ed->ucsBuf == NULL) {
 			ed->ucsBuf = AG_ImportUnicode(AG_UNICODE_FROM_UTF8,
-			    s, stringb->data.size);
+			    s, stringb->info.size);
 			ed->ucsLen = AG_LengthUCS4(ed->ucsBuf);
 		}
 		ucs = ed->ucsBuf;
 		len = ed->ucsLen;
 	} else {
 		ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s,
-		    stringb->data.size);
+		    stringb->info.size);
 		len = AG_LengthUCS4(ucs);
 	}
 	if (ed->pos < 0) { ed->pos = 0; }
@@ -218,7 +218,7 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 		    kc->modmask == 0 || (keymod & kc->modmask)) {
 			AG_PostEvent(NULL, ed, "editable-prechg", NULL);
 			rv = kc->func(ed, keysym, keymod, unicode, ucs,
-			    len, stringb->data.size);
+			    len, stringb->info.size);
 			break;
 		}
 	}
@@ -226,8 +226,8 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 		if (ed->flags & AG_EDITABLE_STATIC) {
 			ed->ucsLen = AG_LengthUCS4(ucs);
 		}
-		AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->p1, ucs,
-		    stringb->data.size);
+		AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->data.s, ucs,
+		    stringb->info.size);
 		ed->flags |= AG_EDITABLE_MARKPREF;
 		AG_WidgetBindingChanged(stringb);
 		AG_PostEvent(NULL, ed, "editable-postchg", NULL);
@@ -250,7 +250,7 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 		    kc->modmask == 0 || (keymod & kc->modmask)) {
 			AG_PostEvent(NULL, ed, "editable-prechg", NULL);
 			rv = kc->func(ed, keysym, keymod, unicode, s,
-			    len, stringb->data.size);
+			    len, stringb->info.size);
 			if (rv == 1) {
 				AG_WidgetBindingChanged(stringb);
 			}
@@ -819,7 +819,7 @@ MouseButtonDown(AG_Event *event)
 	int btn = AG_INT(1);
 	int mx = AG_INT(2);
 	int my = AG_INT(3);
-
+	
 	AG_WidgetFocus(ed);
 
 	switch (btn) {
@@ -893,7 +893,7 @@ AG_EditableSetString(AG_Editable *ed, const char *text)
 	AG_ObjectLock(ed);
 	stringb = AG_WidgetGetBinding(ed, "string", &buf);
 	if (text != NULL) {
-		Strlcpy(buf, text, stringb->data.size);
+		Strlcpy(buf, text, stringb->info.size);
 		ed->pos = AG_LengthUTF8(text);
 	} else {
 		buf[0] = '\0';
@@ -915,7 +915,7 @@ AG_EditableSetStringUCS4(AG_Editable *ed, const Uint32 *ucs)
 	stringb = AG_WidgetGetBinding(ed, "string", &buf);
 	if (ucs != NULL) {
 		AG_ExportUnicode(AG_UNICODE_TO_UTF8, buf, ucs,
-		    stringb->data.size);
+		    stringb->info.size);
 		ed->pos = (int)AG_LengthUCS4(ucs);
 	} else {
 		buf[0] = '\0';
@@ -937,7 +937,7 @@ AG_EditablePrintf(AG_Editable *ed, const char *fmt, ...)
 	stringb = AG_WidgetGetBinding(ed, "string", &s);
 	if (fmt != NULL && fmt[0] != '\0') {
 		va_start(args, fmt);
-		Vsnprintf(s, stringb->data.size, fmt, args);
+		Vsnprintf(s, stringb->info.size, fmt, args);
 		va_end(args);
 		ed->pos = AG_LengthUTF8(s);
 	} else {

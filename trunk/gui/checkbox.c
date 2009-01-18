@@ -206,16 +206,16 @@ Draw(void *obj)
 		state = *(int *)p;
 		break;
 	case AG_WIDGET_FLAG:
-		state = *(int *)p & (int)stateb->data.bitmask;
+		state = *(int *)p & (int)stateb->info.bitmask;
 		break;
 	case AG_WIDGET_FLAG8:
-		state = *(Uint8 *)p & (Uint8)stateb->data.bitmask;
+		state = *(Uint8 *)p & (Uint8)stateb->info.bitmask;
 		break;
 	case AG_WIDGET_FLAG16:
-		state = *(Uint16 *)p & (Uint16)stateb->data.bitmask;
+		state = *(Uint16 *)p & (Uint16)stateb->info.bitmask;
 		break;
 	case AG_WIDGET_FLAG32:
-		state = *(Uint32 *)p & (Uint32)stateb->data.bitmask;
+		state = *(Uint32 *)p & (Uint32)stateb->info.bitmask;
 		break;
 	case AG_WIDGET_UINT8:
 	case AG_WIDGET_SINT8:
@@ -298,7 +298,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	case AG_WIDGET_FLAG:
 		{
 			int *state = (int *)p;
-			AG_INVFLAGS(*state, (int)stateb->data.bitmask);
+			AG_INVFLAGS(*state, (int)stateb->info.bitmask);
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (int)*state);
 		}
@@ -306,7 +306,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	case AG_WIDGET_FLAG8:
 		{
 			Uint8 *state = (Uint8 *)p;
-			AG_INVFLAGS(*state, (Uint8)stateb->data.bitmask);
+			AG_INVFLAGS(*state, (Uint8)stateb->info.bitmask);
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (Uint8)*state);
 		}
@@ -314,7 +314,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	case AG_WIDGET_FLAG16:
 		{
 			Uint16 *state = (Uint16 *)p;
-			AG_INVFLAGS(*state, (Uint16)stateb->data.bitmask);
+			AG_INVFLAGS(*state, (Uint16)stateb->info.bitmask);
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (Uint16)*state);
 		}
@@ -322,7 +322,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	case AG_WIDGET_FLAG32:
 		{
 			Uint32 *state = (Uint32 *)p;
-			AG_INVFLAGS(*state, (Uint32)stateb->data.bitmask);
+			AG_INVFLAGS(*state, (Uint32)stateb->info.bitmask);
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (Uint32)*state);
 		}
@@ -353,6 +353,8 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			AG_PostEvent(NULL, cb, "checkbox-changed", "%i",
 			    (int)*state);
 		}
+		break;
+	default:
 		break;
 	}
 	AG_WidgetBindingChanged(stateb);

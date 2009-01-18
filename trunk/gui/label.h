@@ -26,7 +26,7 @@ struct ag_label_flag {
 	Uint idx;			/* Flag arg in format string */
 	const char *text;		/* Label text */
 	Uint32 v;			/* Bitmask */
-	enum ag_datum_type type;
+	AG_VariableType type;
 	AG_SLIST_ENTRY(ag_label_flag) lflags;
 };
 
@@ -94,7 +94,7 @@ void	 AG_LabelValign(AG_Label *, enum ag_text_valign);
 void	 AG_LabelSizeHint(AG_Label *, Uint, const char *);
 #define	 AG_LabelPrescale AG_LabelSizeHint
 
-void	 AG_LabelFlagNew(AG_Label *, Uint, const char *, enum ag_datum_type, Uint32);
+void	 AG_LabelFlagNew(AG_Label *, Uint, const char *, AG_VariableType, Uint32);
 #define	 AG_LabelFlag(lbl,i,s,v) \
 	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG,(Uint)(v))
 #define	 AG_LabelFlag8(lbl,i,s,v) \

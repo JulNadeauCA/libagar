@@ -79,17 +79,6 @@ AG_Slider *AG_SliderNewSint32(void *, enum ag_slider_type, Uint, Sint32 *,
                               Sint32 *, Sint32 *);
 AG_Slider *AG_SliderNewSint32R(void *, enum ag_slider_type, Uint, Sint32 *,
                                Sint32, Sint32);
-#ifdef HAVE_64BIT
-AG_Slider *AG_SliderNewUint64(void *, enum ag_slider_type, Uint, Uint64 *,
-                              Uint64 *, Uint64 *);
-AG_Slider *AG_SliderNewUint64R(void *, enum ag_slider_type, Uint, Uint64 *,
-                               Uint64, Uint64);
-AG_Slider *AG_SliderNewSint64(void *, enum ag_slider_type, Uint, Sint64 *,
-                              Sint64 *, Sint64 *);
-AG_Slider *AG_SliderNewSint64R(void *, enum ag_slider_type, Uint, Sint64 *,
-                               Sint64, Sint64);
-#endif
-
 AG_Slider *AG_SliderNewFlt(void *, enum ag_slider_type, Uint, float *,
                            float *, float *);
 AG_Slider *AG_SliderNewFltR(void *, enum ag_slider_type, Uint, float *,
@@ -98,12 +87,6 @@ AG_Slider *AG_SliderNewDbl(void *, enum ag_slider_type, Uint, double *,
                            double *, double *);
 AG_Slider *AG_SliderNewDblR(void *, enum ag_slider_type, Uint, double *,
                             double, double);
-#ifdef HAVE_LONG_DOUBLE
-AG_Slider *AG_SliderNewLongDbl(void *, enum ag_slider_type, Uint,
-                               long double *, long double *, long double *);
-AG_Slider *AG_SliderNewLongDblR(void *, enum ag_slider_type, Uint,
-                                long double *, long double, long double);
-#endif
 
 void AG_SliderSetControlSize(AG_Slider *, int);
 void AG_SliderSetIntIncrement(AG_Slider *, int);

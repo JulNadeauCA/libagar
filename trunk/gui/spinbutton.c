@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * LEGACY: Use AG_Numerical(3) instead of this widget.
+ */
+
 #include <core/core.h>
 
 #include "spinbutton.h"
@@ -89,6 +93,8 @@ Bound(AG_Event *event)
 		case AG_WIDGET_SINT32:
 			sbu->min = -0x7fffffff+1;
 			sbu->max =  0x7fffffff-1;
+			break;
+		default:
 			break;
 		}
 	}
@@ -233,6 +239,8 @@ Draw(void *obj)
 	case AG_WIDGET_SINT32:
 		AG_TextboxPrintf(sbu->input, "%d", *(Sint32 *)value);
 		break;
+	default:
+		break;
 	}
 	AG_WidgetUnlockBinding(valueb);
 }
@@ -338,6 +346,8 @@ AG_SpinbuttonAddValue(AG_Spinbutton *sbu, int inc)
 		                   *(Sint32 *)value+inc > *max ? *max :
 			  	   *(Sint32 *)value+inc;
 		break;
+	default:
+		break;
 	}
 
 	AG_PostEvent(NULL, sbu, "spinbutton-changed", NULL);
@@ -435,6 +445,8 @@ AG_SpinbuttonSetValue(AG_Spinbutton *sbu, ...)
 			                   i > (Sint32)*max ? (Sint32)*max :
 					   i;
 		}
+		break;
+	default:
 		break;
 	}
 	va_end(ap);
