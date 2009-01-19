@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2002-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,8 @@
  */
 
 /*
- * Implementation of generic properties for AG_Object.
+ * LEGACY Interface to AG_Variable(3).
  */
-
-#include <config/have_ieee754.h>
 
 #include <core/core.h>
 
@@ -37,70 +35,40 @@
 
 const AG_Version agPropTblVer = { 2, 0 };
 
-const AG_PropClass **agPropClasses = NULL;
-Uint                 agPropClassCount = 0;
+/* LEGACY Encoding of prop types */
+enum ag_prop_legacy_type {
+	AG_LEGACY_PROP_UINT		= 0,
+	AG_LEGACY_PROP_INT		= 1,
+	AG_LEGACY_PROP_UINT8		= 2,
+	AG_LEGACY_PROP_SINT8		= 3,
+	AG_LEGACY_PROP_UINT16		= 4,
+	AG_LEGACY_PROP_SINT16		= 5,
+	AG_LEGACY_PROP_UINT32		= 6,
+	AG_LEGACY_PROP_SINT32		= 7,
+	AG_LEGACY_PROP_UINT64		= 8,	/* MD */
+	AG_LEGACY_PROP_SINT64		= 9,	/* MD */
+	AG_LEGACY_PROP_FLOAT		= 10,
+	AG_LEGACY_PROP_DOUBLE		= 11,
+	AG_LEGACY_PROP_LONG_DOUBLE	= 12,	/* MD */
+	AG_LEGACY_PROP_STRING		= 13,
+	AG_LEGACY_PROP_POINTER		= 14,
+	AG_LEGACY_PROP_BOOL		= 15,
+	AG_LEGACY_PROP_PRIVATE		= 10001
+};
 
-void
-AG_RegisterPropClass(const AG_PropClass *pc)
-{
-	agPropClasses = Realloc((AG_PropClass **)agPropClasses,
-	    (agPropClassCount+1)*sizeof(AG_PropClass *));
-	agPropClasses[agPropClassCount++] = pc;
-}
-
-void
-AG_UnregisterPropClass(const AG_PropClass *pc)
-{
-	int i;
-
-	for (i = 0; i < agPropClassCount; i++) {
-		if (agPropClasses[i] == pc)
-			break;
-	}
-	if (i == agPropClassCount) {
-		return;
-	}
-	if (i < agPropClassCount-1) {
-		memmove((AG_PropClass **)&agPropClasses[i], &agPropClasses[i+1],
-		    (agPropClassCount-1)*sizeof(AG_PropClass *));
-	}
-	agPropClassCount--;
-}
-
-/* Return the copy of a property. */
-AG_Prop *
-AG_CopyProp(const AG_Prop *prop)
-{
-	AG_Prop *nprop;
-
-	nprop = Malloc(sizeof(AG_Prop));
-	memcpy(nprop, prop, sizeof(AG_Prop));
-
-	switch (prop->type) {
-	case AG_PROP_STRING:
-		nprop->data.s = Strdup(prop->data.s);
-		if (nprop->data.s == NULL) {
-			Free(nprop);
-			AG_SetError(_("Out of memory for string"));
-			return (NULL);
-		}
-		break;
-	default:
-		break;
-	}
-	return (0);
-}
-
-/* Test for the existence of a given property. */
+/*
+ * Test for the existence of a given property.
+ * LEGACY Interface to AG_Variable(3).
+ */
 int
 AG_PropDefined(void *p, const char *key)
 {
 	AG_Object *obj = p;
-	AG_Prop *prop;
+	Uint i;
 
 	AG_ObjectLock(obj);
-	TAILQ_FOREACH(prop, &obj->props, props) {
-		if (strcmp(key, prop->key) == 0) {
+	for (i = 0; i < obj->nVars; i++) {
+		if (strcmp(key, obj->vars[i].name) == 0) {
 			AG_ObjectUnlock(obj);
 			return (1);
 		}
@@ -109,160 +77,97 @@ AG_PropDefined(void *p, const char *key)
 	return (0);
 }
 
-#undef PROP_SET
-#define PROP_SET(fn,v,type,argtype) do { \
-	if (prop->writeFn.fn != NULL) { \
-		prop->data.v = (type)prop->writeFn.fn(ob, prop, \
-		    (type)va_arg(ap, argtype)); \
-	} else { \
-		prop->data.v = (type)va_arg(ap, argtype); \
-	} \
-} while (0)
-
-/* Create a new property, or modify an existing one. */
+/*
+ * Create a new property, or modify an existing one.
+ * LEGACY Interface to AG_Variable(3).
+ */
 AG_Prop *
-AG_SetProp(void *p, const char *key, enum ag_prop_type type, ...)
+AG_SetProp(void *pObj, const char *key, enum ag_prop_type type, ...)
 {
-	AG_Object *ob = p;
-	AG_Prop *prop;
-	int modify = 0;
+	AG_Object *obj = pObj;
+	AG_Variable *V;
 	va_list ap;
 
-	TAILQ_FOREACH(prop, &ob->props, props) {
-		if (prop->type == type &&
-		    strcmp(prop->key, key) == 0)
-			break;
-	}
-	if (prop == NULL) {
-		prop = Malloc(sizeof(AG_Prop));
-		Strlcpy(prop->key, key, sizeof(prop->key));
-		prop->type = type;
-		prop->writeFn.wUint = NULL;
-		prop->readFn.rUint = NULL;
-	} else {
-		modify++;
-	}
-
+	AG_ObjectLock(obj);
 	va_start(ap, type);
 	switch (type) {
-	case AG_PROP_UINT:	PROP_SET(wUint, u, Uint, Uint);		break;
-	case AG_PROP_INT:	PROP_SET(wUint, i, int, int);		break;
-	case AG_PROP_BOOL:	PROP_SET(wBool, i, int, int);		break;
-	case AG_PROP_FLOAT:	PROP_SET(wFloat, f, float, double);	break;
-	case AG_PROP_DOUBLE:	PROP_SET(wDouble, d, double, double);	break;
-#ifdef HAVE_LONG_DOUBLE
-	case AG_PROP_LONG_DOUBLE:
-		PROP_SET(wLongDouble, ld, long double, long double);
-		break;
-#endif
-	case AG_PROP_STRING:
-		if (modify) {
-			char *old_s = prop->data.s;
-			PROP_SET(wString, s, char *, char *);
-			if (prop->data.s != old_s) { Free(old_s); }
-		} else {
-			PROP_SET(wString, s, char *, char *);
-		}
-		break;
-	case AG_PROP_POINTER:	PROP_SET(wPointer, p, void *, void *);	break;
-	case AG_PROP_UINT8:	PROP_SET(wUint8, u8, Uint8, int);	break;
-	case AG_PROP_SINT8:	PROP_SET(wSint8, s8, Sint8, int);	break;
-	case AG_PROP_UINT16:	PROP_SET(wUint16, u16, Uint16, int);	break;
-	case AG_PROP_SINT16:	PROP_SET(wSint16, s16, Sint16, int);	break;
-	case AG_PROP_UINT32:	PROP_SET(wUint32, u32, Uint32, int);	break;
-	case AG_PROP_SINT32:	PROP_SET(wSint32, s32, Sint32, int);	break;
-#ifdef HAVE_64BIT
-	case AG_PROP_UINT64:	PROP_SET(wUint64, u64, Uint64, int);	break;
-	case AG_PROP_SINT64:	PROP_SET(wSint64, s64, Sint64, int);	break;
-#endif
-	default:
-		AG_FatalError("AG_SetProp: No such type: %d", type);
+	case AG_PROP_INT:	AG_SetInt(obj, key, va_arg(ap,int));		break;
+	case AG_PROP_UINT:	AG_SetUint(obj, key, va_arg(ap,Uint));		break;
+	case AG_PROP_FLOAT:	AG_SetFloat(obj, key, (float)va_arg(ap,double)); break;
+	case AG_PROP_DOUBLE:	AG_SetDouble(obj, key, va_arg(ap,double));	break;
+	case AG_PROP_STRING:	AG_SetString(obj, key, "%s", va_arg(ap,char *)); break;
+	case AG_PROP_POINTER:	AG_SetPointer(obj, key, va_arg(ap,void *));	break;
+	case AG_PROP_UINT8:	AG_SetUint8(obj, key, (Uint8)va_arg(ap,int));	break;
+	case AG_PROP_SINT8:	AG_SetSint8(obj, key, (Sint8)va_arg(ap,int));	break;
+	case AG_PROP_UINT16:	AG_SetUint16(obj, key, (Uint16)va_arg(ap,int));	break;
+	case AG_PROP_SINT16:	AG_SetSint16(obj, key, (Sint16)va_arg(ap,int));	break;
+	case AG_PROP_UINT32:	AG_SetUint32(obj, key, va_arg(ap,Uint32));	break;
+	case AG_PROP_SINT32:	AG_SetSint32(obj, key, va_arg(ap,Sint32));	break;
+	default:								break;
 	}
 	va_end(ap);
-
-	AG_ObjectLock(ob);
-	if (!modify) {
-		TAILQ_INSERT_TAIL(&ob->props, prop, props);
-		AG_PostEvent(NULL, ob, "prop-added", "%p", prop);
-	} else {
-		AG_PostEvent(NULL, ob, "prop-modified", "%p", prop);
-	}
-	AG_ObjectUnlock(ob);
-	return (prop);
+	AG_ObjectUnlock(obj);
+	return (V);
 }
-#undef PROP_SET
 
 #undef PROP_GET
-#define PROP_GET(fn,v,type) do { \
-	if (prop->readFn.fn != NULL) { \
-		if (p != NULL) { \
-			*(type *)p = prop->readFn.fn(ob, prop); \
-		} else { \
-			prop->data.v = prop->readFn.fn(ob, prop); \
-		} \
-	} else { \
-		if (p != NULL) \
-			*(type *)p = (type)prop->data.v; \
-	} \
+#define PROP_GET(v,type) do { \
+	if (p != NULL) *(type *)p = (type)V->data.v; \
 } while (0)
 
-/* Return a pointer to the data of a property. */
-AG_Prop *
-AG_GetProp(void *obp, const char *key, int t, void *p)
+/*
+ * Lookup a property by name.
+ * LEGACY interface to AG_Variable(3).
+ */
+AG_Variable *
+AG_GetProp(void *pObj, const char *key, int t, void *p)
 {
-	AG_Object *ob = obp;
-	AG_Prop *prop;
+	AG_Object *obj = pObj;
+	Uint i;
 
-	AG_ObjectLock(ob);
-	TAILQ_FOREACH(prop, &ob->props, props) {
-		if ((t >= 0 && t != prop->type) ||
-		    strcmp(key, prop->key) != 0) {
+	AG_ObjectLock(obj);
+	for (i = 0; i < obj->nVars; i++) {
+		AG_Variable *V = &obj->vars[i];
+
+		if ((t >= 0 && t != V->type) || strcmp(key, V->name) != 0) {
 			continue;
 		}
-		switch (prop->type) {
-		case AG_PROP_INT: 	PROP_GET(rInt, i, int);		break;
-		case AG_PROP_BOOL:	PROP_GET(rBool, i, int);	break;
-		case AG_PROP_UINT:	PROP_GET(rUint, u, unsigned);	break;
-		case AG_PROP_UINT8:	PROP_GET(rUint8, u8, Uint8);	break;
-		case AG_PROP_SINT8:	PROP_GET(rSint8, s8, Sint8);	break;
-		case AG_PROP_UINT16:	PROP_GET(rUint16, u16, Uint16);	break;
-		case AG_PROP_SINT16:	PROP_GET(rSint16, s16, Sint16);	break;
-		case AG_PROP_UINT32:	PROP_GET(rUint32, u32, Uint32);	break;
-		case AG_PROP_SINT32:	PROP_GET(rSint32, s32, Sint32);	break;
-#ifdef HAVE_64BIT
-		case AG_PROP_UINT64:	PROP_GET(rUint64, u64, Uint64);	break;
-		case AG_PROP_SINT64:	PROP_GET(rSint64, s64, Sint64);	break;
-#endif
-		case AG_PROP_FLOAT:	PROP_GET(rFloat, f, float);	break;
-		case AG_PROP_DOUBLE:	PROP_GET(rDouble, d, double);	break;
-#ifdef HAVE_LONG_DOUBLE
-		case AG_PROP_LONG_DOUBLE:
-			PROP_GET(rLongDouble, ld, long double);
-			break;
-#endif
-		case AG_PROP_STRING:	PROP_GET(rString, s, char *);	break;
-		case AG_PROP_POINTER:	PROP_GET(rPointer, p, void *);	break;
+		switch (V->type) {
+		case AG_PROP_INT: 	PROP_GET(i, int);	break;
+		case AG_PROP_UINT:	PROP_GET(u, unsigned);	break;
+		case AG_PROP_UINT8:	PROP_GET(u8, Uint8);	break;
+		case AG_PROP_SINT8:	PROP_GET(s8, Sint8);	break;
+		case AG_PROP_UINT16:	PROP_GET(u16, Uint16);	break;
+		case AG_PROP_SINT16:	PROP_GET(s16, Sint16);	break;
+		case AG_PROP_UINT32:	PROP_GET(u32, Uint32);	break;
+		case AG_PROP_SINT32:	PROP_GET(s32, Sint32);	break;
+		case AG_PROP_FLOAT:	PROP_GET(flt, float);	break;
+		case AG_PROP_DOUBLE:	PROP_GET(dbl, double);	break;
+		case AG_PROP_STRING:	PROP_GET(s, char *);	break;
+		case AG_PROP_POINTER:	PROP_GET(p, void *);	break;
 		default:
-			AG_SetError("bad prop %d", prop->type);
+			AG_SetError("Bad prop %d", V->type);
 			goto fail;
 		}
-		AG_ObjectUnlock(ob);
-		return (prop);
+		AG_ObjectUnlock(obj);
+		return (V);
 	}
-	AG_SetError(_("%s: no such property: `%s' (%d)."), ob->name, key, t);
+	AG_SetError("%s: No such property: \"%s\" (%d)", obj->name, key, t);
 fail:
-	AG_ObjectUnlock(ob);
+	AG_ObjectUnlock(obj);
 	return (NULL);
 }
 
 /*
  * Search for a property referenced by a "object-name:prop-name" string,
  * relative to the specified VFS.
+ *
+ * LEGACY Interface to AG_Variable(3).
  */
 AG_Prop *
 AG_FindProp(void *vfsRoot, const char *spec, int type, void *rval)
 {
-	char sb[AG_OBJECT_PATH_MAX+1+AG_PROP_KEY_MAX];
+	char sb[AG_OBJECT_PATH_MAX+65];
 	char *s = &sb[0], *objname, *propname;
 	void *obj;
 
@@ -280,6 +185,7 @@ AG_FindProp(void *vfsRoot, const char *spec, int type, void *rval)
 	return (AG_GetProp(obj, propname, -1, rval));
 }
 
+/* LEGACY Interface to AG_Variable(3). */
 int
 AG_PropCopyPath(char *dst, size_t size, void *obj, const char *prop_name)
 {
@@ -308,7 +214,7 @@ AG_PropLoad(void *p, AG_DataSource *ds)
 
 	nprops = AG_ReadUint32(ds);
 	for (i = 0; i < nprops; i++) {
-		char key[AG_PROP_KEY_MAX];
+		char key[64];
 		Uint32 t;
 
 		if (AG_CopyString(key, ds, sizeof(key)) >= sizeof(key)) {
@@ -319,74 +225,48 @@ AG_PropLoad(void *p, AG_DataSource *ds)
 		t = AG_ReadUint32(ds);
 		
 		switch (t) {
-		case AG_PROP_BOOL:
+		case AG_LEGACY_PROP_BOOL:
 			AG_SetBool(ob, key, (int)AG_ReadUint8(ds));
 			break;
-		case AG_PROP_UINT8:
+		case AG_LEGACY_PROP_UINT8:
 			AG_SetBool(ob, key, AG_ReadUint8(ds));
 			break;
-		case AG_PROP_SINT8:
+		case AG_LEGACY_PROP_SINT8:
 			AG_SetBool(ob, key, AG_ReadSint8(ds));
 			break;
-		case AG_PROP_UINT16:
+		case AG_LEGACY_PROP_UINT16:
 			AG_SetUint16(ob, key, AG_ReadUint16(ds));
 			break;
-		case AG_PROP_SINT16:
+		case AG_LEGACY_PROP_SINT16:
 			AG_SetSint16(ob, key, AG_ReadSint16(ds));
 			break;
-		case AG_PROP_UINT32:
+		case AG_LEGACY_PROP_UINT32:
 			AG_SetUint32(ob, key, AG_ReadUint32(ds));
 			break;
-		case AG_PROP_SINT32:
+		case AG_LEGACY_PROP_SINT32:
 			AG_SetSint32(ob, key, AG_ReadSint32(ds));
 			break;
-#ifdef HAVE_64BIT
-		case AG_PROP_UINT64:
-			AG_SetUint64(ob, key, AG_ReadUint64(ds));
-			break;
-		case AG_PROP_SINT64:
-			AG_SetSint64(ob, key, AG_ReadSint64(ds));
-			break;
-#endif
-		case AG_PROP_UINT:
+		case AG_LEGACY_PROP_UINT:
 			AG_SetUint(ob, key, (Uint)AG_ReadUint32(ds));
 			break;
-		case AG_PROP_INT:
+		case AG_LEGACY_PROP_INT:
 			AG_SetInt(ob, key, (int)AG_ReadSint32(ds));
 			break;
-#ifdef HAVE_IEEE754
-		case AG_PROP_FLOAT:
+		case AG_LEGACY_PROP_FLOAT:
 			AG_SetFloat(ob, key, AG_ReadFloat(ds));
 			break;
-		case AG_PROP_DOUBLE:
+		case AG_LEGACY_PROP_DOUBLE:
 			AG_SetDouble(ob, key, AG_ReadDouble(ds));
 			break;
-# ifdef HAVE_LONG_DOUBLE
-		case AG_PROP_LONG_DOUBLE:
-			AG_SetDouble(ob, key, AG_ReadLongDouble(ds));
-			break;
-# endif
-#endif
-		case AG_PROP_STRING:
+		case AG_LEGACY_PROP_STRING:
 			{
-				char *s;
-
-				s = AG_ReadString(ds);
-#ifdef AG_PROP_STRING_LIMIT
-				if (strlen(s) >= AG_PROP_STRING_LIMIT) {
-					AG_SetError("prop string %lu >= %lu",
-					    strlen(s), AG_PROP_STRING_LIMIT);
-					Free(s);
-					goto fail;
-				}
-#endif
+				char *s = AG_ReadString(ds);
 				AG_SetString(ob, key, "%s", s);
 				Free(s);
 			}
 			break;
 		default:
-			AG_SetError(_("Cannot load property of type %d."), 
-			    (int)t);
+			AG_SetError("Cannot load property of type %d", (int)t);
 			goto fail;
 		}
 	}
@@ -402,8 +282,8 @@ AG_PropSave(void *p, AG_DataSource *ds)
 {
 	AG_Object *ob = p;
 	off_t count_offs;
-	Uint32 nprops = 0;
-	AG_Prop *prop;
+	Uint32 nVars = 0;
+	Uint i;
 	Uint8 c;
 	
 	AG_WriteVersion(ds, "AG_PropTbl", &agPropTblVer);
@@ -413,158 +293,77 @@ AG_PropSave(void *p, AG_DataSource *ds)
 	count_offs = AG_Tell(ds);			/* Skip count */
 	AG_WriteUint32(ds, 0);
 
-	TAILQ_FOREACH(prop, &ob->props, props) {
-		AG_WriteString(ds, (char *)prop->key);
-		AG_WriteUint32(ds, prop->type);
-		switch (prop->type) {
-		case AG_PROP_BOOL:
-			c = (prop->data.i == 1) ? 1 : 0;
+	for (i = 0; i < ob->nVars; i++) {
+		AG_Variable *V = &ob->vars[i];
+
+		AG_WriteString(ds, (char *)V->name);
+		AG_WriteUint32(ds, V->type);
+		switch (V->type) {
+		case AG_LEGACY_PROP_BOOL:
+			c = (V->data.i == 1) ? 1 : 0;
 			AG_WriteUint8(ds, c);
 			break;
-		case AG_PROP_UINT8:
-			AG_WriteUint8(ds, prop->data.u8);
+		case AG_LEGACY_PROP_UINT8:
+			AG_WriteUint8(ds, V->data.u8);
 			break;
-		case AG_PROP_SINT8:
-			AG_WriteSint8(ds, prop->data.s8);
+		case AG_LEGACY_PROP_SINT8:
+			AG_WriteSint8(ds, V->data.s8);
 			break;
-		case AG_PROP_UINT16:
-			AG_WriteUint16(ds, prop->data.u16);
+		case AG_LEGACY_PROP_UINT16:
+			AG_WriteUint16(ds, V->data.u16);
 			break;
-		case AG_PROP_SINT16:
-			AG_WriteSint16(ds, prop->data.s16);
+		case AG_LEGACY_PROP_SINT16:
+			AG_WriteSint16(ds, V->data.s16);
 			break;
-		case AG_PROP_UINT32:
-			AG_WriteUint32(ds, prop->data.u32);
+		case AG_LEGACY_PROP_UINT32:
+			AG_WriteUint32(ds, V->data.u32);
 			break;
-		case AG_PROP_SINT32:
-			AG_WriteSint32(ds, prop->data.s32);
+		case AG_LEGACY_PROP_SINT32:
+			AG_WriteSint32(ds, V->data.s32);
 			break;
-#ifdef HAVE_64BIT
-		case AG_PROP_UINT64:
-			AG_WriteUint64(ds, prop->data.u64);
+		case AG_LEGACY_PROP_UINT:
+			AG_WriteUint32(ds, (Uint32)V->data.u);
 			break;
-		case AG_PROP_SINT64:
-			AG_WriteSint64(ds, prop->data.s64);
+		case AG_LEGACY_PROP_INT:
+			AG_WriteSint32(ds, (Sint32)V->data.i);
 			break;
-#endif
-		case AG_PROP_UINT:
-			AG_WriteUint32(ds, (Uint32)prop->data.u);
+		case AG_LEGACY_PROP_FLOAT:
+			AG_WriteFloat(ds, V->data.flt);
 			break;
-		case AG_PROP_INT:
-			AG_WriteSint32(ds, (Sint32)prop->data.i);
+		case AG_LEGACY_PROP_DOUBLE:
+			AG_WriteDouble(ds, V->data.dbl);
 			break;
-#ifdef HAVE_IEEE754
-		case AG_PROP_FLOAT:
-			AG_WriteFloat(ds, prop->data.f);
+		case AG_LEGACY_PROP_STRING:
+			AG_WriteString(ds, V->data.s);
 			break;
-		case AG_PROP_DOUBLE:
-			AG_WriteDouble(ds, prop->data.d);
-			break;
-# ifdef HAVE_LONG_DOUBLE
-		case AG_PROP_LONG_DOUBLE:
-			AG_WriteLongDouble(ds, prop->data.ld);
-			break;
-# endif
-#endif
-		case AG_PROP_STRING:
-			AG_WriteString(ds, prop->data.s);
-			break;
-		case AG_PROP_POINTER:
+		case AG_LEGACY_PROP_POINTER:
 			break;
 		default:
-			AG_SetError(_("Property of type %d cannot be saved."),
-			    prop->type);
+			AG_SetError("Property of type %d cannot be saved.",
+			    V->type);
 			goto fail;
 		}
-		nprops++;
+		nVars++;
 	}
 	AG_ObjectUnlock(ob);
-	AG_WriteUint32At(ds, nprops, count_offs);	/* Write count */
+	AG_WriteUint32At(ds, nVars, count_offs);	/* Write count */
 	return (0);
 fail:
 	AG_ObjectUnlock(ob);
 	return (-1);
 }
 
-void
-AG_PropDestroy(AG_Prop *prop)
-{
-	switch (prop->type) {
-	case AG_PROP_STRING:
-		Free(prop->data.s);
-		break;
-	}
-}
-
-void
-AG_PropPrint(char *s, size_t len, void *obj, const char *pname)
-{
-	AG_Prop *pr;
-
-	pr = AG_GetProp(obj, pname, -1, NULL);
-	if (pr == NULL) {
-		Strlcpy(s, "(?prop)", len);
-		return;
-	}
-	switch (pr->type) {
-	case AG_PROP_UINT:	Snprintf(s, len, "%u", pr->data.u);	break;
-	case AG_PROP_INT:	Snprintf(s, len, "%d", pr->data.i);	break;
-	case AG_PROP_UINT8:	Snprintf(s, len, "%u", pr->data.u8);	break;
-	case AG_PROP_SINT8:	Snprintf(s, len, "%d", pr->data.s8);	break;
-	case AG_PROP_UINT16:	Snprintf(s, len, "%u", pr->data.u16);	break;
-	case AG_PROP_SINT16:	Snprintf(s, len, "%d", pr->data.s16);	break;
-	case AG_PROP_UINT32:
-		Snprintf(s, len, "%lu", (unsigned long)pr->data.u32);
-		break;
-	case AG_PROP_SINT32:
-		Snprintf(s, len, "%ld", (long)pr->data.s32);
-		break;
-#ifdef HAVE_64BIT
-	case AG_PROP_UINT64:	Snprintf(s, len, "%llu",
-				(unsigned long long)pr->data.u64);
-				break;
-	case AG_PROP_SINT64:	Snprintf(s, len, "%lld",
-				(long long)pr->data.s64);
-				break;
-#endif	
-	case AG_PROP_FLOAT:	Snprintf(s, len, "%f", pr->data.f);	break;
-	case AG_PROP_DOUBLE:	Snprintf(s, len, "%f", pr->data.d);	break;
-#ifdef HAVE_LONG_DOUBLE
-	case AG_PROP_LONG_DOUBLE: Snprintf(s, len, "%Lf", pr->data.ld); break;
-#endif
-	case AG_PROP_STRING:	Snprintf(s, len, "\"%s\"", pr->data.s);	break;
-	case AG_PROP_POINTER:	Snprintf(s, len, "->%p", pr->data.p);	break;
-	case AG_PROP_BOOL:
-		Strlcpy(s, pr->data.i ? "true" : "false", len);
-		break;
-	default:
-		Strlcat(s, "(?prop-type)", len);
-		break;
-	}
-}
-
 size_t
-AG_GetStringCopy(void *p, const char *key, char *buf, size_t bufsize)
+AG_GetStringCopy(void *obj, const char *key, char *buf, size_t bufsize)
 {
 	size_t sl;
 	char *s;
-	AG_LockProps(p);
-	if (AG_GetProp(p, key, AG_PROP_STRING, &s) == NULL) {
+
+	AG_ObjectLock(obj);
+	if (AG_GetProp(obj, key, AG_PROP_STRING, &s) == NULL) {
 		AG_FatalError("%s", AG_GetError());
 	}
 	sl = Strlcpy(buf, s, bufsize);
-	AG_UnlockProps(p);
+	AG_ObjectUnlock(obj);
 	return (sl);
-}
-
-AG_Prop *
-AG_SetString(void *ob, const char *key, const char *fmt, ...)
-{
-	va_list ap;
-	char *s;
-
-	va_start(ap, fmt);
-	Vasprintf(&s, fmt, ap);
-	va_end(ap);
-	return (AG_SetProp(ob, key, AG_PROP_STRING, s));
 }

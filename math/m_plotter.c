@@ -699,10 +699,11 @@ M_PlotPropVal(M_Plotter *ptr, M_Plot *pl)
 		return (0.0);
 	}
 	switch (prop->type) {
-	case AG_PROP_FLOAT:	return ((M_Real)prop->data.f);
-	case AG_PROP_DOUBLE:	return ((M_Real)prop->data.d);
+	case AG_PROP_FLOAT:	return ((M_Real)prop->data.flt);
+	case AG_PROP_DOUBLE:	return ((M_Real)prop->data.dbl);
 	case AG_PROP_INT:	return ((M_Real)prop->data.i);
 	case AG_PROP_UINT:	return ((M_Real)prop->data.u);
+	default:		break;
 	}
 	return (0.0);
 }

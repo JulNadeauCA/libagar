@@ -80,10 +80,6 @@ over a network connection).
 .Ft void
 .Fn AG_UnlockProps "AG_Object *obj"
 .Pp
-.Fn AGOBJECT_FOREACH_PROP "AG_Prop *var" "AG_Object *obj"
-.Pp
-.Fn AGOBJECT_FOREACH_PROP_OFTYPE "AG_Prop *var" "AG_Object *obj" "enum ag_prop_type type"
-.Pp
 .Ft int
 .Fn AG_GetBool "AG_Object *obj" "const char *key"
 .Pp
@@ -111,20 +107,11 @@ over a network connection).
 .Ft Sint32
 .Fn AG_GetSint32 "AG_Object *obj" "const char *key"
 .Pp
-.Ft Uint64
-.Fn AG_GetUint64 "AG_Object *obj" "const char *key"
-.Pp
-.Ft Sint64
-.Fn AG_GetSint64 "AG_Object *obj" "const char *key"
-.Pp
 .Ft float
 .Fn AG_GetFloat "AG_Object *obj" "const char *key"
 .Pp
 .Ft double
 .Fn AG_GetDouble "AG_Object *obj" "const char *key"
-.Pp
-.Ft "long double"
-.Fn AG_GetLongDouble "AG_Object *obj" "const char *key"
 .Pp
 .Ft "char *"
 .Fn AG_GetString "AG_Object *obj" "const char *key"
@@ -171,24 +158,11 @@ functions acquire/release the recursive mutex which is associated with an
 object's properties.
 .Pp
 The
-.Fn AGOBJECT_FOREACH_PROP
-macro iterates through the properties of
-.Fa obj .
-.Fn AGOBJECT_FOREACH_PROP_OFTYPE
-excludes properties not matching the specified type.
-.Pp
-The
 .Fn AG_(Type)
 functions all look for a property named
 .Fa key
 and return the associated value, raising a fatal condition if there is
 no match.
-Note that
-.Fn AG_GetUint64 ,
-.Fn AG_GetSint64
-and
-.Fn AG_GetLongDouble
-are not available on all platforms.
 .Pp
 .Fn AG_GetString
 returns a copy of the string.
@@ -231,19 +205,10 @@ NUL-terminating the result.
 .Fn AG_SetSint32 "AG_Object *obj" "const char *key" "Sint32 value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetUint64 "AG_Object *obj" "const char *key" "Uint64 value"
-.Pp
-.Ft "AG_Prop *"
-.Fn AG_SetSint64 "AG_Object *obj" "const char *key" "Sint64 value"
-.Pp
-.Ft "AG_Prop *"
 .Fn AG_SetFloat "AG_Object *obj" "const char *key" "float value"
 .Pp
 .Ft "AG_Prop *"
 .Fn AG_SetDouble "AG_Object *obj" "const char *key" "double value"
-.Pp
-.Ft "AG_Prop *"
-.Fn AG_SetLongDouble "AG_Object *obj" "const char *key" "long double value"
 .Pp
 .Ft "AG_Prop *"
 .Fn AG_SetString "AG_Object *obj" "const char *key" "const char *fmt" "..."
@@ -274,12 +239,6 @@ returning a pointer to the modified property.
 If the
 .Fa key
 does not match any existing property, a new one is created.
-Again, please note that
-.Fn AG_SetUint64 ,
-.Fn AG_SetSint64
-and
-.Fn AG_SetLongDouble
-are not available on all platforms.
 .Sh SAVING/LOADING
 .nr nS 1
 .Ft int
@@ -331,19 +290,10 @@ are ignored by these functions.
 .Fn AG_SetSint32WrFn "AG_Prop *prop, Sint32 (*fn)(void *, AG_Prop *, Sint32)"
 .Pp
 .Ft void
-.Fn AG_SetUint64WrFn "AG_Prop *prop, Uint64 (*fn)(void *, AG_Prop *, Uint64)"
-.Pp
-.Ft void
-.Fn AG_SetSint64WrFn "AG_Prop *prop, Sint64 (*fn)(void *, AG_Prop *, Sint64)"
-.Pp
-.Ft void
 .Fn AG_SetFloatWrFn "AG_Prop *prop, float (*fn)(void *, AG_Prop *, float)"
 .Pp
 .Ft void
 .Fn AG_SetDoubleWrFn "AG_Prop *prop, double (*fn)(void *, AG_Prop *, double)"
-.Pp
-.Ft void
-.Fn AG_SetLongDoubleWrFn "AG_Prop *prop, long double (*fn)(void *, AG_Prop *, long double)"
 .Pp
 .Ft void
 .Fn AG_SetStringWrFn "AG_Prop *prop, char *(*fn)(void *, AG_Prop *, char *)"
@@ -379,19 +329,10 @@ are ignored by these functions.
 .Fn AG_SetSint32RdFn "AG_Prop *prop, Sint32 (*fn)(void *, AG_Prop *)"
 .Pp
 .Ft void
-.Fn AG_SetUint64RdFn "AG_Prop *prop, Uint64 (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetSint64RdFn "AG_Prop *prop, Sint64 (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
 .Fn AG_SetFloatRdFn "AG_Prop *prop, float (*fn)(void *, AG_Prop *)"
 .Pp
 .Ft void
 .Fn AG_SetDoubleRdFn "AG_Prop *prop, double (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetLongDoubleRdFn "AG_Prop *prop, long double (*fn)(void *, AG_Prop *)"
 .Pp
 .Ft void
 .Fn AG_SetStringRdFn "AG_Prop *prop, char *(*fn)(void *, AG_Prop *)"
@@ -431,4 +372,3 @@ The
 interface first appeared in Agar 1.0.
 Support for property-specific and object-specific read/write operations first
 appeared in Agar 1.1.
-Support for 64-bit types and long double was also added in Agar 1.1.

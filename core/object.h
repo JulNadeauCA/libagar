@@ -71,7 +71,6 @@ typedef struct ag_object {
 
 	Uint nevents;				/* Number of event handlers */
 	AG_TAILQ_HEAD(,ag_event) events;	/* Event handlers */
-	AG_TAILQ_HEAD(,ag_prop) props;		/* Generic property table */
 	AG_TAILQ_HEAD(,ag_timeout) timeouts;	/* Timers tied to object */
 	
 	AG_Variable *vars;			/* Variables / bindings */
@@ -137,19 +136,6 @@ enum ag_object_checksum_alg {
 			continue; \
 		} else
 
-/* Iterate over object properties. */
-#define AGOBJECT_FOREACH_PROP(var, ob) \
-	for((var) = (struct ag_prop *)AG_TAILQ_FIRST(&AGOBJECT(ob)->props); \
-	    (var) != (struct ag_prop *)AG_TAILQ_END(&AGOBJECT(ob)->props); \
-	    (var) = (struct ag_prop *)AG_TAILQ_NEXT(var, props))
-
-/* Iterate over object properties (matching a specified type). */
-#define AGOBJECT_FOREACH_PROP_OFTYPE(var, ob, t) \
-	AGOBJECT_FOREACH_PROP(var,ob) \
-		if ((var)->type != (t)) { \
-			continue; \
-		} else
-
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
 # define OBJECT(ob)            AGOBJECT(ob)
 # define OBJECT_CLASS(ob)      AGOBJECT_CLASS(ob)
@@ -165,10 +151,6 @@ enum ag_object_checksum_alg {
          AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),t)
 # define OBJECT_FOREACH_CLASS(var,ob,t,subclass) \
          AGOBJECT_FOREACH_CLASS((var),(ob),t,(subclass))
-# define OBJECT_FOREACH_PROP(var,ob) \
-         AGOBJECT_FOREACH_PROP((var),(ob))
-# define OBJECT_FOREACH_PROP_OFTYPE(var,ob,t) \
-         AGOBJECT_FOREACH_PROP_OFTYPE((var),(ob),t)
 # define OBJECT_NEXT_CHILD(var,t) \
 	 AGOBJECT_NEXT_CHILD((var),t)
 
@@ -223,7 +205,6 @@ void	 AG_ObjectSetSavePfx(void *, char *);
 
 void	 AG_ObjectFreeVariables(AG_Object *);
 void	 AG_ObjectFreeChildren(void *);
-void	 AG_ObjectFreeProps(AG_Object *);
 void 	 AG_ObjectFreeEvents(AG_Object *);
 void	 AG_ObjectFreeDeps(AG_Object *);
 void	 AG_ObjectFreeDummyDeps(AG_Object *);
@@ -291,9 +272,10 @@ void AG_ObjectUnlockDebug(AG_Object *, const char *);
 # define AG_UnlockVFS(ob)
 #endif /* AG_THREADS */
 
-/* Legacy routines */
+/* LEGACY routines */
 void    AG_ObjectMove(void *, void *);
 #define AG_ObjectIsClass(obj,cname) AG_OfClass((obj),(cname))
+#define AG_ObjectFreeProps(obj) AG_ObjectFreeVariables(obj)
 
 /*
  * Return a child object by name.

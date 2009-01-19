@@ -629,7 +629,7 @@ and -1 on failure.
 .Fn AG_ObjectFreeEvents "AG_Object *obj"
 .Pp
 .Ft "void"
-.Fn AG_ObjectFreeProps "AG_Object *obj"
+.Fn AG_ObjectFreeVariables "AG_Object *obj"
 .Pp
 .Ft "void"
 .Fn AG_ObjectFreeDeps "AG_Object *obj"
@@ -684,12 +684,14 @@ Internally,
 .Fn AG_ObjectDestroy
 invokes
 .Fn AG_ObjectFreeEvents ,
-.Fn AG_ObjectFreeProps ,
+.Fn AG_ObjectFreeVariables ,
 .Fn AG_ObjectFreeDeps
 and
 .Fn AG_ObjectFreeChildren ,
 but these functions may be called directly in order to destroy and reinitialize
-the event handler list, the property table and destroy the child objects,
+the event handler list, the
+.Xr AG_Variable 3
+table and destroy the child objects,
 respectively.
 .Pp
 In addition to reinitializing the event handler table,
@@ -848,7 +850,7 @@ flags are defined:
 .Bl -tag -width "AG_OBJECT_NON_PERSISTENT "
 .It AG_OBJECT_RELOAD_PROPS
 Prevents clearing of the
-.Xr AG_Prop 3
+.Xr AG_Variable 3
 table prior to
 .Fn AG_ObjectLoad .
 .It AG_OBJECT_NON_PERSISTENT
@@ -944,14 +946,6 @@ The linkage lock is held during the execution of the event handler.
 This event originates from the previous parent.
 .It Fn renamed "void"
 The object's name has changed.
-.It Fn prop-added "AG_Prop *prop"
-A new propty has been added (see
-.Xr AG_Prop 3
-for details).
-.It Fn prop-modified "AG_Prop *prop"
-The value of the given property has been modified (see
-.Xr AG_Prop 3
-for details).
 .It Fn object-post-load-data "const char *path"
 Invoked by
 .Fn AG_ObjectLoadData ,
@@ -967,7 +961,7 @@ in the Agar source distribution.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,
-.Xr AG_Prop 3 ,
+.Xr AG_Variable 3 ,
 .Xr AG_Timeout 3
 .Sh HISTORY
 The
