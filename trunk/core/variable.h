@@ -171,7 +171,7 @@ typedef struct ag_variable {
 } AG_Variable;
 
 #undef AG_VARIABLE_SETARG
-#define AG_VARIABLE_SETARG(t,pt,dmemb,dtype,vtype,ival,fnmemb,fntype)	\
+#define AG_VARIABLE_SETARG(V,t,pt,dmemb,dtype,vtype,ival,fnmemb,fntype)	\
 	if (pFlag) {							\
 		(V)->type = (pt);					\
 	} else {							\
@@ -185,7 +185,7 @@ typedef struct ag_variable {
 	} while (0)
 
 #undef AG_VARIABLE_SETARG_STRING
-#define AG_VARIABLE_SETARG_STRING(t,pt,dmemb,dtype,ival,fnmemb,fntype)	\
+#define AG_VARIABLE_SETARG_STRING(V,t,pt,dmemb,dtype,ival,fnmemb,fntype) \
 	if (pFlag) {							\
 		(V)->type = (pt);					\
 	} else {							\
@@ -201,7 +201,7 @@ typedef struct ag_variable {
 	} while (0)
 
 #undef AG_VARIABLE_SETARG_STRING_BUFFER
-#define AG_VARIABLE_SETARG_STRING_BUFFER(t,pt,dmemb,dtype,ival,fnmemb,fntype) \
+#define AG_VARIABLE_SETARG_STRING_BUFFER(V,t,pt,dmemb,dtype,ival,fnmemb,fntype) \
 	if (pFlag) {							\
 		(V)->type = (pt);					\
 	} else {							\
@@ -262,19 +262,19 @@ typedef struct ag_variable {
 			sc++;						\
 			if (sc[0] == 's') {				\
 				if (sc[1] == '3' && sc[2] == '2') {	\
-					AG_VARIABLE_SETARG(		\
+					AG_VARIABLE_SETARG((V),		\
 					    AG_VARIABLE_SINT32,		\
 					    AG_VARIABLE_P_SINT32,	\
 					    s32, Sint32, int, 0,	\
 					    fnSint32, AG_Sint32Fn);	\
 				} else if (sc[1] == '1' && sc[2] == '6') { \
-					AG_VARIABLE_SETARG(		\
+					AG_VARIABLE_SETARG((V),		\
 					    AG_VARIABLE_SINT16,		\
 					    AG_VARIABLE_P_SINT16,	\
 					    s16, Sint16, int, 0,	\
 					    fnSint16, AG_Sint16Fn);	\
 				} else if (sc[1] == '8') {		\
-					AG_VARIABLE_SETARG(		\
+					AG_VARIABLE_SETARG((V),		\
 					    AG_VARIABLE_SINT8,		\
 					    AG_VARIABLE_P_SINT8,	\
 					    s8, Sint8, int, 0,		\
@@ -282,19 +282,19 @@ typedef struct ag_variable {
 				}					\
 			} else if (sc[0] == 'u') {			\
 				if (sc[1] == '3' && sc[2] == '2') {	\
-					AG_VARIABLE_SETARG(		\
+					AG_VARIABLE_SETARG((V),		\
 					    AG_VARIABLE_UINT32,		\
 					    AG_VARIABLE_P_UINT32,	\
 					    u32, Uint32, Uint, 0,	\
 					    fnUint32, AG_Uint32Fn);	\
 				} else if (sc[1] == '1' && sc[2] == '6') { \
-					AG_VARIABLE_SETARG(		\
+					AG_VARIABLE_SETARG((V),		\
 					    AG_VARIABLE_UINT16,		\
 					    AG_VARIABLE_P_UINT16,	\
 					    u16, Uint16, Uint, 0,	\
 					    fnUint16, AG_Uint16Fn);	\
 				} else if (sc[1] == '8') {		\
-					AG_VARIABLE_SETARG(		\
+					AG_VARIABLE_SETARG((V),		\
 					    AG_VARIABLE_UINT8, 		\
 					    AG_VARIABLE_P_UINT8,	\
 					    u8, Uint8, int, 0,		\
@@ -303,7 +303,7 @@ typedef struct ag_variable {
 			} else if (sc[0] == 'C') {			\
 				switch (sc[1]) {			\
 				case 'p':				\
-					AG_VARIABLE_SETARG(		\
+					AG_VARIABLE_SETARG((V),		\
 					    AG_VARIABLE_CONST_POINTER,	\
 					    AG_VARIABLE_P_CONST_POINTER, \
 					    Cp, const void *, const void *, \
@@ -312,7 +312,7 @@ typedef struct ag_variable {
 					    AG_ConstPointerFn);		\
 					break;				\
 				case 's':				\
-					AG_VARIABLE_SETARG_STRING(	\
+					AG_VARIABLE_SETARG_STRING((V),	\
 					    AG_VARIABLE_CONST_STRING,	\
 					    AG_VARIABLE_P_CONST_STRING,	\
 					    Cs, const char *, NULL,	\
@@ -321,7 +321,7 @@ typedef struct ag_variable {
 					break;				\
 				}					\
 			} else if (sc[0] == 'B') {			\
-				AG_VARIABLE_SETARG_STRING_BUFFER(	\
+				AG_VARIABLE_SETARG_STRING_BUFFER((V),	\
 				    AG_VARIABLE_STRING,			\
 				    AG_VARIABLE_P_STRING,		\
 				    s, char *, NULL,			\
@@ -332,13 +332,13 @@ typedef struct ag_variable {
 									\
 		switch (sc[0]) {					\
 		case 'p':						\
-			AG_VARIABLE_SETARG(AG_VARIABLE_POINTER,		\
+			AG_VARIABLE_SETARG((V),AG_VARIABLE_POINTER,	\
 			    AG_VARIABLE_P_POINTER,			\
 			    p, void *, void *, NULL,			\
 			    fnPointer, AG_PointerFn);			\
 			break;						\
 		case 's':						\
-			AG_VARIABLE_SETARG_STRING(AG_VARIABLE_STRING,	\
+			AG_VARIABLE_SETARG_STRING((V),AG_VARIABLE_STRING, \
 			    AG_VARIABLE_P_STRING,			\
 			    s, char *, NULL,				\
 			    fnString, AG_StringFn);			\
@@ -346,12 +346,12 @@ typedef struct ag_variable {
 		case 'd':						\
 		case 'i':						\
 			if (lFlag == 0) {				\
-				AG_VARIABLE_SETARG(AG_VARIABLE_INT,	\
+				AG_VARIABLE_SETARG((V),AG_VARIABLE_INT,	\
 				    AG_VARIABLE_P_INT,			\
 				    i, int, int, 0,			\
 				    fnInt, AG_IntFn);			\
 			} else {					\
-				AG_VARIABLE_SETARG(AG_VARIABLE_SINT32,	\
+				AG_VARIABLE_SETARG((V),AG_VARIABLE_SINT32, \
 				    AG_VARIABLE_P_SINT32,		\
 				    s32, Sint32, Sint32, 0,		\
 				    fnSint32, AG_Sint32Fn);		\
@@ -359,12 +359,12 @@ typedef struct ag_variable {
 			break;						\
 		case 'u':						\
 			if (lFlag == 0) {				\
-				AG_VARIABLE_SETARG(AG_VARIABLE_UINT,	\
+				AG_VARIABLE_SETARG((V),AG_VARIABLE_UINT, \
 				    AG_VARIABLE_P_UINT,			\
 				    u, Uint, Uint, 0,			\
 				    fnUint, AG_UintFn);			\
 			} else {					\
-				AG_VARIABLE_SETARG(AG_VARIABLE_UINT32,	\
+				AG_VARIABLE_SETARG((V),AG_VARIABLE_UINT32, \
 				    AG_VARIABLE_P_UINT32,		\
 				    u32, Uint32, Uint32, 0,		\
 				    fnUint32, AG_Uint32Fn);		\
@@ -373,12 +373,12 @@ typedef struct ag_variable {
 		case 'f':						\
 		case 'g':						\
 			if (lFlag == 0) {				\
-				AG_VARIABLE_SETARG(AG_VARIABLE_FLOAT,	\
+				AG_VARIABLE_SETARG((V),AG_VARIABLE_FLOAT, \
 				    AG_VARIABLE_P_FLOAT,		\
 				    flt, float, double, 0.0f,		\
 				    fnFloat, AG_FloatFn);		\
 			} else {					\
-				AG_VARIABLE_SETARG(AG_VARIABLE_DOUBLE,	\
+				AG_VARIABLE_SETARG((V),AG_VARIABLE_DOUBLE, \
 				    AG_VARIABLE_P_DOUBLE,		\
 				    dbl, double, double, 0.0,		\
 				    fnDouble, AG_DoubleFn);		\
@@ -393,8 +393,59 @@ __BEGIN_DECLS
 struct ag_list;
 extern const char *agVariableTypeNames[];
 
-struct ag_list *AG_ParseVariableList(const char *, ...);
-AG_Variable    *AG_Set(void *, const char *, const char *, ...);
+struct ag_list *AG_VariableList(const char *, ...);
+void            AG_VariablePrint(char *, size_t, void *, const char *);
+
+AG_Variable *AG_Set(void *, const char *, const char *, ...);
+
+AG_Variable *AG_SetUint(void *, const char *, Uint);
+AG_Variable *AG_BindUint(void *, const char *, Uint *);
+AG_Variable *AG_BindUint_MP(void *, const char *, Uint *, AG_Mutex *);
+AG_Variable *AG_SetInt(void *, const char *, int);
+AG_Variable *AG_BindInt(void *, const char *, int *);
+AG_Variable *AG_BindInt_MP(void *, const char *, int *, AG_Mutex *);
+
+AG_Variable *AG_SetUint8(void *, const char *, Uint8);
+AG_Variable *AG_BindUint8(void *, const char *, Uint8 *);
+AG_Variable *AG_BindUint8_MP(void *, const char *, Uint8 *, AG_Mutex *);
+AG_Variable *AG_SetSint8(void *, const char *, Sint8);
+AG_Variable *AG_BindSint8(void *, const char *, Sint8 *);
+AG_Variable *AG_BindSint8_MP(void *, const char *, Sint8 *, AG_Mutex *);
+
+AG_Variable *AG_SetUint16(void *, const char *, Uint16);
+AG_Variable *AG_BindUint16(void *, const char *, Uint16 *);
+AG_Variable *AG_BindUint16_MP(void *, const char *, Uint16 *, AG_Mutex *);
+AG_Variable *AG_SetSint16(void *, const char *, Sint16);
+AG_Variable *AG_BindSint16(void *, const char *, Sint16 *);
+AG_Variable *AG_BindSint16_MP(void *, const char *, Sint16 *, AG_Mutex *);
+
+AG_Variable *AG_SetUint32(void *, const char *, Uint32);
+AG_Variable *AG_BindUint32(void *, const char *, Uint32 *);
+AG_Variable *AG_BindUint32_MP(void *, const char *, Uint32 *, AG_Mutex *);
+AG_Variable *AG_SetSint32(void *, const char *, Sint32);
+AG_Variable *AG_BindSint32(void *, const char *, Sint32 *);
+AG_Variable *AG_BindSint32_MP(void *, const char *, Sint32 *, AG_Mutex *);
+
+AG_Variable *AG_SetFloat(void *, const char *, float);
+AG_Variable *AG_BindFloat(void *, const char *, float *);
+AG_Variable *AG_BindFloat_MP(void *, const char *, float *, AG_Mutex *);
+AG_Variable *AG_SetDouble(void *, const char *, double);
+AG_Variable *AG_BindDouble(void *, const char *, double *);
+AG_Variable *AG_BindDouble_MP(void *, const char *, double *, AG_Mutex *);
+
+AG_Variable *AG_SetString(void *, const char *, const char *, ...);
+AG_Variable *AG_BindString(void *, const char *, char **, size_t);
+AG_Variable *AG_BindString_MP(void *, const char *, char **, size_t, AG_Mutex *);
+AG_Variable *AG_SetConstString(void *, const char *, const char *);
+AG_Variable *AG_BindConstString(void *, const char *, const char **);
+AG_Variable *AG_BindConstString_MP(void *, const char *, const char **, AG_Mutex *);
+
+AG_Variable *AG_SetPointer(void *, const char *, void *);
+AG_Variable *AG_BindPointer(void *, const char *, void **);
+AG_Variable *AG_BindPointer_MP(void *, const char *, void **, AG_Mutex *);
+AG_Variable *AG_SetConstPointer(void *, const char *, const void *);
+AG_Variable *AG_BindConstPointer(void *, const char *, const void **);
+AG_Variable *AG_BindConstPointer_MP(void *, const char *, const void **, AG_Mutex *);
 
 static __inline__ void
 AG_VariableChanged(AG_Variable *V)

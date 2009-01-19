@@ -93,7 +93,6 @@ AG_ObjectInit(void *p, void *cl)
 	TAILQ_INIT(&ob->deps);
 	TAILQ_INIT(&ob->children);
 	TAILQ_INIT(&ob->events);
-	TAILQ_INIT(&ob->props);
 	TAILQ_INIT(&ob->timeouts);
 	
 	if (AG_ObjectGetInheritHier(ob, &hier, &nHier) == 0) {
@@ -672,24 +671,6 @@ AG_ObjectFreeChildren(void *p)
 	AG_ObjectUnlock(pob);
 }
 
-/* Clear an object's property table. */
-void
-AG_ObjectFreeProps(AG_Object *ob)
-{
-	AG_Prop *prop, *nextprop;
-
-	AG_ObjectLock(ob);
-	for (prop = TAILQ_FIRST(&ob->props);
-	     prop != TAILQ_END(&ob->props);
-	     prop = nextprop) {
-		nextprop = TAILQ_NEXT(prop, props);
-		AG_PropDestroy(prop);
-		Free(prop);
-	}
-	TAILQ_INIT(&ob->props);
-	AG_ObjectUnlock(ob);
-}
-	
 /* Clear an object's variable list. */
 void
 AG_ObjectFreeVariables(AG_Object *ob)

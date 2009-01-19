@@ -1431,7 +1431,7 @@ AG_TextTmsg(enum ag_text_msg_title title, Uint32 expire, const char *format,
 void
 AG_TextInfo(const char *key, const char *format, ...)
 {
-	char disableSw[AG_PROP_KEY_MAX];
+	char disableSw[64];
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_VBox *vb;
@@ -1478,7 +1478,7 @@ AG_TextInfo(const char *key, const char *format, ...)
 void
 AG_TextWarning(const char *key, const char *format, ...)
 {
-	char disableSw[AG_PROP_KEY_MAX];
+	char disableSw[64];
 	char msg[AG_LABEL_MAX];
 	AG_Window *win;
 	AG_VBox *vb;

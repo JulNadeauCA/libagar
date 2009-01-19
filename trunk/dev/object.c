@@ -101,12 +101,13 @@ PollProps(AG_Event *event)
 	char val[AG_TLIST_LABEL_MAX];
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *ob = AG_PTR(1);
-	AG_Prop *prop;
+	Uint i;
 	
 	AG_TlistClear(tl);
-	TAILQ_FOREACH(prop, &ob->props, props) {
-		AG_PropPrint(val, sizeof(val), ob, prop->key);
-		AG_TlistAdd(tl, NULL, "%s = %s", prop->key, val);
+	for (i = 0; i < ob->nVars; i++) {
+		AG_Variable *V = &ob->vars[i];
+		AG_PropPrint(val, sizeof(val), ob, V->name);
+		AG_TlistAdd(tl, NULL, "%s = %s", V->name, val);
 	}
 	AG_TlistRestore(tl);
 }
