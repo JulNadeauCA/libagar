@@ -78,7 +78,7 @@ CreateTable3(void)
         AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
             
         table = AG_TableNew(win, AG_TABLE_EXPAND);
-        AG_LabelNewStatic(win, 0, "%d total", 100);
+        AG_LabelNew(win, 0, "%d total", 100);
     
         /* Create our columns. */
 	AG_TableAddCol(table, "Morphology Results", "140px", NULL);
