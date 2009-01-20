@@ -381,13 +381,11 @@ MouseButtonDown(AG_Event *event)
 	int newState;
 	AG_Icon *icon;
 	
-	if (AG_WidgetDisabled(sock))
+	if (AG_WidgetDisabled(sock) ||
+	    button != SDL_BUTTON_LEFT) {
 		return;
-
+	}
 	AG_WidgetFocus(sock);
-
-	if (button != SDL_BUTTON_LEFT)
-		return;
 	
 	binding = AG_WidgetGetBinding(sock, "state", &pState);
 	if (!(sock->flags & AG_SOCKET_STICKY_STATE)) {
