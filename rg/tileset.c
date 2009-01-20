@@ -1186,8 +1186,8 @@ InsertTileDlg(AG_Event *event)
 	AG_TextboxBindUTF8(com->tbox, ins_tile_class, sizeof(ins_tile_class));
 #endif
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size: "));
-	AG_WidgetBindInt(msb, "xvalue", &ins_tile_w);
-	AG_WidgetBindInt(msb, "yvalue", &ins_tile_h);
+	AG_BindInt(msb, "xvalue", &ins_tile_w);
+	AG_BindInt(msb, "yvalue", &ins_tile_h);
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 
 	AG_CheckboxNewInt(win, 0, _("Alpha blending"), &ins_alpha);
@@ -1262,8 +1262,8 @@ InsertAnimDlg(AG_Event *event)
 	AG_WidgetFocus(tb);
 
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size:"));
-	AG_WidgetBindInt(msb, "xvalue", &ins_tile_w);
-	AG_WidgetBindInt(msb, "yvalue", &ins_tile_h);
+	AG_BindInt(msb, "xvalue", &ins_tile_w);
+	AG_BindInt(msb, "yvalue", &ins_tile_h);
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
 
 	AG_CheckboxNewInt(win, 0, _("Alpha blending"), &ins_alpha);

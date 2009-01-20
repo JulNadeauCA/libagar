@@ -290,9 +290,9 @@ Init(void *obj)
 {
 	AG_FSpinbutton *fsu = obj;
 
-	AG_WidgetBind(fsu, "value", AG_WIDGET_DOUBLE, &fsu->value);
-	AG_WidgetBind(fsu, "min", AG_WIDGET_DOUBLE, &fsu->min);
-	AG_WidgetBind(fsu, "max", AG_WIDGET_DOUBLE, &fsu->max);
+	AG_BindDouble(fsu, "value", &fsu->value);
+	AG_BindDouble(fsu, "min", &fsu->min);
+	AG_BindDouble(fsu, "max", &fsu->max);
 	
 	fsu->inc = 1.0;
 	fsu->value = 0.0;

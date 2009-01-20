@@ -89,8 +89,8 @@ Init(void *obj)
 	                       AG_WIDGET_UNFOCUSED_MOTION|
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
 
-	AG_WidgetBindBool(sock, "state", &sock->state);
-	AG_WidgetBindInt(sock, "count", &sock->count);
+	AG_BindInt(sock, "state", &sock->state);
+	AG_BindInt(sock, "count", &sock->count);
 
 	sock->flags = 0;
 	sock->state = 0;

@@ -493,14 +493,14 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 		break;
 	case RG_ANIM_DISPX:
 		msb = AG_MSpinbuttonNew(box, 0, ",", _("Displacement: "));
-		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &insn->in_disPx.dx);
-		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &insn->in_disPx.dy);
+		AG_BindInt(msb, "xvalue", &insn->in_disPx.dx);
+		AG_BindInt(msb, "yvalue", &insn->in_disPx.dy);
 		AG_WidgetFocus(msb);
 		break;
 	case RG_ANIM_ROTPX:
 		msb = AG_MSpinbuttonNew(box, 0, ",", _("Center of rotation: "));
-		AG_WidgetBind(msb, "xvalue", AG_WIDGET_UINT, &insn->in_rotPx.x);
-		AG_WidgetBind(msb, "yvalue", AG_WIDGET_UINT, &insn->in_rotPx.y);
+		AG_BindUint(msb, "xvalue", &insn->in_rotPx.x);
+		AG_BindUint(msb, "yvalue", &insn->in_rotPx.y);
 		AG_NumericalNewIntR(box, 0, "deg", _("Angle of rotation: "),
 		    &insn->in_rotPx.theta, 0, 360);
 		AG_WidgetFocus(msb);

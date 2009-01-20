@@ -61,9 +61,9 @@ AG_ProgressBarNewInt(void *parent, enum ag_progress_bar_type type, Uint flags,
     int *val, int *min, int *max)
 {
 	AG_ProgressBar *pb = AG_ProgressBarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindInt(pb, "value", val); }
-	if (min != NULL) { AG_WidgetBindInt(pb, "min", min); }
-	if (max != NULL) { AG_WidgetBindInt(pb, "max", max); }
+	if (val != NULL) { AG_BindInt(pb, "value", val); }
+	if (min != NULL) { AG_BindInt(pb, "min", min); }
+	if (max != NULL) { AG_BindInt(pb, "max", max); }
 	return (pb);
 }
 
@@ -75,9 +75,9 @@ Init(void *obj)
 	WIDGET(pb)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
 	                     AG_WIDGET_UNFOCUSED_MOTION;
 
-	AG_WidgetBindInt(pb, "value", &pb->value);
-	AG_WidgetBindInt(pb, "min", &pb->min);
-	AG_WidgetBindInt(pb, "max", &pb->max);
+	AG_BindInt(pb, "value", &pb->value);
+	AG_BindInt(pb, "min", &pb->min);
+	AG_BindInt(pb, "max", &pb->max);
 
 	pb->type = AG_PROGRESS_BAR_HORIZ;
 	pb->flags = 0;

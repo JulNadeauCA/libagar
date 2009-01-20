@@ -444,15 +444,15 @@ Init(void *obj)
 #if 0
 	gf->hbar = AG_ScrollbarNew(gf, AG_SCROLLBAR_HORIZ, 0);
 	gf->vbar = AG_ScrollbarNew(gf, AG_SCROLLBAR_VERT, 0);
-	AG_WidgetBind(gf->hbar, "value", AG_WIDGET_INT, &gf->xOffs);
-	AG_WidgetBind(gf->hbar, "min", AG_WIDGET_INT, &gf->xMin);
-	AG_WidgetBind(gf->hbar, "max", AG_WIDGET_INT, &gf->xMax);
-	AG_WidgetBind(gf->hbar, "visible", AG_WIDGET_INT, &WIDGET(gf)->w);
+	AG_BindInt(gf->hbar, "value", &gf->xOffs);
+	AG_BindInt(gf->hbar, "min", &gf->xMin);
+	AG_BindInt(gf->hbar, "max", &gf->xMax);
+	AG_BindInt(gf->hbar, "visible", &WIDGET(gf)->w);
 
-	AG_WidgetBind(gf->vbar, "value", AG_WIDGET_INT, &gf->yOffs);
-	AG_WidgetBind(gf->vbar, "min", AG_WIDGET_INT, &gf->yMin);
-	AG_WidgetBind(gf->vbar, "max", AG_WIDGET_INT, &gf->yMax);
-	AG_WidgetBind(gf->vbar, "visible", AG_WIDGET_INT, &WIDGET(gf)->h);
+	AG_BindInt(gf->vbar, "value", &gf->yOffs);
+	AG_BindInt(gf->vbar, "min", &gf->yMin);
+	AG_BindInt(gf->vbar, "max", &gf->yMax);
+	AG_BindInt(gf->vbar, "visible", &WIDGET(gf)->h);
 #endif
 
 	AG_SetEvent(gf, "window-keydown", KeyDown, NULL);

@@ -79,7 +79,7 @@ AG_CheckboxNewInt(void *parent, Uint flags, const char *label, int *pVal)
 {
 	AG_Checkbox *cb;
 	cb = AG_CheckboxNew(parent, flags, label);
-	AG_WidgetBindBool(cb, "state", pVal);
+	AG_BindInt(cb, "state", pVal);
 	return (cb);
 }
 
@@ -89,7 +89,7 @@ AG_CheckboxNewFlag(void *parent, Uint flags, const char *label, Uint *pFlags,
 {
 	AG_Checkbox *cb;
 	cb = AG_CheckboxNew(parent, flags, label);
-	AG_WidgetBindFlag(cb, "state", pFlags, bitmask);
+	AG_BindFlag(cb, "state", pFlags, bitmask);
 	return (cb);
 }
 
@@ -99,7 +99,7 @@ AG_CheckboxNewFlag32(void *parent, Uint flags, const char *label,
 {
 	AG_Checkbox *cb;
 	cb = AG_CheckboxNew(parent, flags, label);
-	AG_WidgetBindFlag32(cb, "state", pFlags, bitmask);
+	AG_BindFlag32(cb, "state", pFlags, bitmask);
 	return (cb);
 }
 
@@ -179,7 +179,7 @@ Init(void *obj)
 
 	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetBindBool(cb, "state", &cb->state);
+	AG_BindInt(cb, "state", &cb->state);
 
 	cb->flags = 0;
 	cb->state = 0;

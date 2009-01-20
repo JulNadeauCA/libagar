@@ -677,16 +677,16 @@ Init(void *obj)
 
 	WIDGET(pal)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &pal->h);
-	AG_WidgetBind(pal, "saturation", AG_WIDGET_FLOAT, &pal->s);
-	AG_WidgetBind(pal, "value", AG_WIDGET_FLOAT, &pal->v);
-	AG_WidgetBind(pal, "alpha", AG_WIDGET_FLOAT, &pal->a);
-	AG_WidgetBind(pal, "pixel", AG_WIDGET_UINT32, &pal->pixel);
-	AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER, &agVideoFmt);
-/*	AG_WidgetBind(pal, "red", AG_WIDGET_FLOAT, &pal->r); */
-/*	AG_WidgetBind(pal, "green", AG_WIDGET_FLOAT, &pal->g); */
-/*	AG_WidgetBind(pal, "blue", AG_WIDGET_FLOAT, &pal->b); */
-/*	AG_WidgetBind(pal, "RGBAv", AG_WIDGET_FLOAT, &pal->rgbav); */
+	AG_BindFloat(pal, "hue", &pal->h);
+	AG_BindFloat(pal, "saturation", &pal->s);
+	AG_BindFloat(pal, "value", &pal->v);
+	AG_BindFloat(pal, "alpha", &pal->a);
+	AG_BindUint32(pal, "pixel", &pal->pixel);
+	AG_BindPointer(pal, "pixel-format", (void **)&agVideoFmt);
+/*	AG_BindFloat(pal, "red", &pal->r); */
+/*	AG_BindFloat(pal, "green", &pal->g); */
+/*	AG_BindFloat(pal, "blue", &pal->b); */
+/*	AG_BindFloat(pal, "RGBAv", &pal->rgbav); */
 
 	pal->flags = 0;
 	pal->h = 0.0;

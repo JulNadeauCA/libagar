@@ -158,10 +158,8 @@ RG_SketchProjEdit(void *p, RG_Tileview *tv)
 		ntab = AG_NotebookAddTab(nb, _("Color"), AG_BOX_VERT);
 		{
 			hsv1 = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-			AG_WidgetBind(hsv1, "pixel-format", AG_WIDGET_POINTER,
-			    &tv->ts->fmt);
-			AG_WidgetBind(hsv1, "pixel", AG_WIDGET_UINT32,
-			    &sproj->color);
+			AG_BindPointer(hsv1, "pixel-format", &tv->ts->fmt);
+			AG_BindUint32(hsv1, "pixel", &sproj->color);
 		}
 
 		num = AG_NumericalNewUint8(box, 0, NULL, _("Alpha: "),

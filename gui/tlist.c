@@ -251,7 +251,7 @@ Init(void *obj)
 
 	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetBind(tl, "selected", AG_WIDGET_POINTER, &tl->selected);
+	AG_BindPointer(tl, "selected", &tl->selected);
 
 	tl->flags = 0;
 	tl->selected = NULL;

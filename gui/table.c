@@ -1970,9 +1970,9 @@ Init(void *obj)
 	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);
 	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0);
 	AG_WidgetSetInt(t->hbar, "min", 0);
-	AG_WidgetBindInt(t->hbar, "value", &t->xOffs);
-	AG_WidgetBindInt(t->hbar, "visible", &t->r.w);
-	AG_WidgetBindInt(t->hbar, "max", &t->wTot);
+	AG_BindInt(t->hbar, "value", &t->xOffs);
+	AG_BindInt(t->hbar, "visible", &t->r.w);
+	AG_BindInt(t->hbar, "max", &t->wTot);
 
 	AG_WidgetSetFocusable(t->vbar, 0);
 	AG_WidgetSetFocusable(t->hbar, 0);

@@ -523,21 +523,21 @@ SelectedType(AG_Event *event)
 			break;
 		case AG_FILEDLG_INT:
 			num = AG_NumericalNew(fd->optsCtr, 0, NULL, fo->descr);
-			AG_WidgetBindInt(num, "value", &fo->data.i.val);
+			AG_BindInt(num, "value", &fo->data.i.val);
 			AG_NumericalSetRangeInt(num, fo->data.i.min,
 			    fo->data.i.max);
 			break;
 		case AG_FILEDLG_FLOAT:
 			num = AG_NumericalNew(fd->optsCtr, 0, fo->unit,
 			    fo->descr);
-			AG_WidgetBindFloat(num, "value", &fo->data.flt.val);
+			AG_BindFloat(num, "value", &fo->data.flt.val);
 			AG_NumericalSetRangeDbl(num, fo->data.flt.min,
 			                             fo->data.flt.max);
 			break;
 		case AG_FILEDLG_DOUBLE:
 			num = AG_NumericalNew(fd->optsCtr, 0, fo->unit,
 			    fo->descr);
-			AG_WidgetBindDouble(num, "value", &fo->data.dbl.val);
+			AG_BindDouble(num, "value", &fo->data.dbl.val);
 			AG_NumericalSetRange(num, fo->data.dbl.min,
 			                          fo->data.dbl.max);
 			break;

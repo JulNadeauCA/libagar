@@ -54,7 +54,7 @@ AG_RadioNewInt(void *parent, Uint flags, const char **itemText, int *v)
 {
 	AG_Radio *rad;
 	rad = AG_RadioNew(parent, flags, itemText);
-	AG_WidgetBindInt(rad, "value", v);
+	AG_BindInt(rad, "value", v);
 	return (rad);
 }
 
@@ -63,7 +63,7 @@ AG_RadioNewUint(void *parent, Uint flags, const char **itemText, Uint *v)
 {
 	AG_Radio *rad;
 	rad = AG_RadioNew(parent, flags, itemText);
-	AG_WidgetBindUint(rad, "value", v);
+	AG_BindUint(rad, "value", v);
 	return (rad);
 }
 
@@ -328,7 +328,7 @@ Init(void *obj)
 
 	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
 
-	AG_WidgetBind(rad, "value", AG_WIDGET_INT, &rad->value);
+	AG_BindInt(rad, "value", &rad->value);
 
 	rad->flags = 0;
 	rad->value = -1;

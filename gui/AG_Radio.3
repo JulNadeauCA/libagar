@@ -171,7 +171,7 @@ const char *fruitNames[] = {
 };
 
 AG_Radio *r = AG_RadioNew(NULL, 0, fruitNames);
-AG_WidgetBindInt(r, "value", &fruit);
+AG_BindInt(r, "value", &fruit);
 .Ed
 .Pp
 To specify a callback routine:
@@ -184,7 +184,7 @@ MyCallback(AG_Event *event)
 }
 
 AG_Radio *r = AG_RadioNewFn(NULL, 0, fruitNames, MyCallback, NULL);
-AG_WidgetBindInt(r, "value", &fruit);
+AG_BindInt(r, "value", &fruit);
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,

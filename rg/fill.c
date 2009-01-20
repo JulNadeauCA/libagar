@@ -158,19 +158,17 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 		ntab = AG_NotebookAddTab(nb, _("Color A"), AG_BOX_VERT);
 		{
 			hsv1 = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-			AG_WidgetBind(hsv1, "pixel-format", AG_WIDGET_POINTER,
-			    &tv->ts->fmt);
-			AG_WidgetBind(hsv1, "pixel", AG_WIDGET_UINT32,
-			    &f->f_gradient.c1);
+			AG_BindPointer(hsv1, "pixel-format",
+			    (void **)&tv->ts->fmt);
+			AG_BindUint32(hsv1, "pixel", &f->f_gradient.c1);
 		}
 
 		ntab = AG_NotebookAddTab(nb, _("Color B"), AG_BOX_VERT);
 		{
 			hsv2 = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-			AG_WidgetBind(hsv1, "pixel-format", AG_WIDGET_POINTER,
-			    &tv->ts->fmt);
-			AG_WidgetBind(hsv2, "pixel", AG_WIDGET_UINT32,
-			    &f->f_gradient.c2);
+			AG_BindPointer(hsv1, "pixel-format",
+			    (void **)&tv->ts->fmt);
+			AG_BindUint32(hsv2, "pixel", &f->f_gradient.c2);
 		}
 		
 		num = AG_NumericalNewUint8R(box, 0, NULL,

@@ -200,12 +200,11 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 		AG_HSVPal *pal;
 
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-		AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER,
-		    &tv->ts->fmt);
-		AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &sk->h);
-		AG_WidgetBind(pal, "saturation", AG_WIDGET_FLOAT, &sk->s);
-		AG_WidgetBind(pal, "value", AG_WIDGET_FLOAT, &sk->v);
-		AG_WidgetBind(pal, "alpha", AG_WIDGET_FLOAT, &sk->a);
+		AG_BindPointer(pal, "pixel-format", &tv->ts->fmt);
+		AG_BindFloat(pal, "hue", &sk->h);
+		AG_BindFloat(pal, "saturation", &sk->s);
+		AG_BindFloat(pal, "value", &sk->v);
+		AG_BindFloat(pal, "alpha", &sk->a);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Texture"), AG_BOX_VERT);
 
@@ -221,8 +220,8 @@ RG_SketchEdit(RG_Tileview *tv, RG_TileElement *tel)
 		    UpdateScale, "%p,%p", tv, tel);
 		
 		msb = AG_MSpinbuttonNew(ntab, 0, ",", _("Coordinates: "));
-		AG_WidgetBind(msb, "xvalue", AG_WIDGET_INT, &tel->tel_sketch.x);
-		AG_WidgetBind(msb, "yvalue", AG_WIDGET_INT, &tel->tel_sketch.y);
+		AG_BindInt(msb, "xvalue", &tel->tel_sketch.x);
+		AG_BindInt(msb, "yvalue", &tel->tel_sketch.y);
 
 		AG_SetEvent(num, "numerical-changed",
 		    UpdateScale, "%p,%p", tv, tel);
@@ -287,9 +286,8 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		AG_HSVPal *pal;
 
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-		AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER,
-		    &sk->vg->fmt);
-		AG_WidgetBind(pal, "pixel", AG_WIDGET_UINT32, &vge->color);
+		AG_BindPointer(pal, "pixel-format", &sk->vg->fmt);
+		AG_BindUint32(pal, "pixel", &vge->color);
 	}
 	ntab = AG_NotebookAddTab(nb, _("Line style"), AG_BOX_VERT);
 	{
@@ -338,8 +336,8 @@ RG_SketchEditElement(RG_Tileview *tv, RG_TileElement *tel,
 		AG_LabelNewString(ntab, 0, _("Texture: "));
 		texsel = RG_TextureSelectorNew(ntab, tv->ts, 0);
 		WIDGET(texsel)->flags |= AG_WIDGET_HFILL|AG_WIDGET_VFILL;
-		AG_WidgetBindString(texsel, "texture-name",
-		    vge->fill_st.texture, sizeof(vge->fill_st.texture));
+		AG_BindString(texsel, "texture-name", vge->fill_st.texture,
+		    sizeof(vge->fill_st.texture));
 	}
 
 	return (win);

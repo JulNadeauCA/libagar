@@ -256,13 +256,13 @@ CreateMainWindow(void)
 		nb = AG_NotebookNew(hb, AG_NOTEBOOK_VFILL);
 		ntab = AG_NotebookAddTab(nb, "Amb", AG_BOX_VERT);
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
-		AG_WidgetBindFloat(pal, "RGBAv", ambient);
+		AG_BindFloat(pal, "RGBAv", ambient);
 		ntab = AG_NotebookAddTab(nb, "Dif", AG_BOX_VERT);
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
-		AG_WidgetBindFloat(pal, "RGBAv", diffuse);
+		AG_BindFloat(pal, "RGBAv", diffuse);
 		ntab = AG_NotebookAddTab(nb, "Spe", AG_BOX_VERT);
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
-		AG_WidgetBindFloat(pal, "RGBAv", specular);
+		AG_BindFloat(pal, "RGBAv", specular);
 	}
 	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_FRAME);
 	{

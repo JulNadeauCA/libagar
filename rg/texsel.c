@@ -107,8 +107,7 @@ Init(void *obj)
 	ts->flags = 0;
 	ts->texname[0] = '\0';
 
-	AG_WidgetBindString(ts, "texture-name", ts->texname,
-	    sizeof(ts->texname));
+	AG_BindString(ts, "texture-name", ts->texname, sizeof(ts->texname));
 }
 
 AG_WidgetClass rgTextureSelectorClass = {

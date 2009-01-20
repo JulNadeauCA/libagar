@@ -651,8 +651,7 @@ AG_MenuIntBoolMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_WidgetBindMp(mi->tbButton, "state", lock, AG_WIDGET_INT,
-		    pBool);
+		AG_BindInt_MP(mi->tbButton, "state", pBool, lock);
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -673,8 +672,7 @@ AG_MenuInt8BoolMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_WidgetBindMp(mi->tbButton, "state", lock, AG_WIDGET_UINT8,
-		    pBool);
+		AG_BindUint8_MP(mi->tbButton, "state", pBool, lock);
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -696,8 +694,8 @@ AG_MenuIntFlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_WidgetBindMp(mi->tbButton, "state", lock, AG_WIDGET_FLAG,
-		    pFlags, flags);
+		AG_BindFlag_MP(mi->tbButton, "state", (Uint *)pFlags,
+		    (Uint)flags, lock);
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -719,8 +717,7 @@ AG_MenuInt8FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_WidgetBindMp(mi->tbButton, "state", lock, AG_WIDGET_FLAG8,
-		    pFlags, flags);
+		AG_BindFlag8_MP(mi->tbButton, "state", pFlags, flags, lock);
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -742,8 +739,7 @@ AG_MenuInt16FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_WidgetBindMp(mi->tbButton, "state", lock, AG_WIDGET_FLAG16,
-		    pFlags, flags);
+		AG_BindFlag16_MP(mi->tbButton, "state", pFlags, flags, lock);
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -765,8 +761,7 @@ AG_MenuInt32FlagsMp(AG_MenuItem *pitem, const char *text, AG_Surface *icon,
 	mi->bind_lock = lock;
 	if (pitem->pmenu->curToolbar != NULL) {
 		mi->tbButton = CreateToolbarButtonBool(pitem, icon, text, inv);
-		AG_WidgetBindMp(mi->tbButton, "state", lock, AG_WIDGET_FLAG32,
-		    pFlags, flags);
+		AG_BindFlag32_MP(mi->tbButton, "state", pFlags, flags, lock);
 		AG_ButtonInvertState(mi->tbButton, inv);
 	}
 	AG_ObjectUnlock(pitem->pmenu);
@@ -782,8 +777,7 @@ AG_MenuSetIntBoolMp(AG_MenuItem *mi, int *pBool, int inv, AG_Mutex *lock)
 	mi->bind_invert = inv;
 	mi->bind_lock = lock;
 	if (mi->tbButton != NULL) {
-		AG_WidgetBindMp(mi->tbButton, "state", lock, AG_WIDGET_INT,
-		    pBool);
+		AG_BindInt_MP(mi->tbButton, "state", pBool, lock);
 		AG_ButtonInvertState(mi->tbButton, inv);
 		AG_ButtonSetSticky(mi->tbButton, 1);
 	}
@@ -801,8 +795,7 @@ AG_MenuSetIntFlagsMp(AG_MenuItem *mi, int *pFlags, int flags, int inv,
 	mi->bind_invert = inv;
 	mi->bind_lock = lock;
 	if (mi->tbButton != NULL) {
-		AG_WidgetBind(mi->tbButton, "state", AG_WIDGET_FLAG,
-		    pFlags, flags);
+		AG_BindFlag(mi->tbButton, "state", (Uint *)pFlags, (Uint)flags);
 		AG_ButtonInvertState(mi->tbButton, inv);
 		AG_ButtonSetSticky(mi->tbButton, 1);
 	}

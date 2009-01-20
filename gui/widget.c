@@ -220,7 +220,7 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 
 /*
  * Duplicate a widget binding.
- * (Legacy Widget interface to AG_Variable(3) API).
+ * LEGACY Widget interface to AG_Variable(3).
  */
 int
 AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
@@ -254,7 +254,7 @@ AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
 
 /*
  * Bind a mutex-protected variable to a widget.
- * (Legacy Widget interface to AG_Variable(3) API).
+ * LEGACY Widget interface to AG_Variable(3).
  */
 AG_Variable *
 AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
@@ -311,7 +311,7 @@ AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
 
 /*
  * Bind a non mutex-protected variable to a widget.
- * (Legacy Widget interface to AG_Variable(3) API).
+ * LEGACY Widget interface to AG_Variable(3).
  */
 AG_Variable *
 AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
@@ -366,7 +366,7 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 
 /*
  * Lookup a binding and copy its data to pointers passed as arguments.
- * (Legacy Widget interface to AG_Variable(3) API).
+ * LEGACY Widget interface to AG_Variable(3).
  *
  * Any locking device associated with the binding is acquired, so the
  * caller must invoke AG_WidgetUnlockBinding() when done accessing the

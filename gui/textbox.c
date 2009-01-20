@@ -103,20 +103,16 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;
 		tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ, 0);
 		tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT, 0);
-		AG_WidgetBindInt(tb->hBar, "value", &tb->ed->x);
-		AG_WidgetBindInt(tb->vBar, "value", &tb->ed->y);
-		AG_WidgetBindInt(tb->hBar, "max", &tb->ed->xMax);
-		AG_WidgetBindInt(tb->vBar, "max", &tb->ed->yMax);
-		AG_WidgetBindInt(tb->hBar, "visible", &WIDTH(tb->ed));
-		AG_WidgetBindInt(tb->vBar, "visible", &tb->ed->yVis);
-		AG_SetEvent(tb->hBar, "scrollbar-drag-begin",
-		    BeginScrollbarDrag, "%p", tb);
-		AG_SetEvent(tb->vBar, "scrollbar-drag-begin",
-		    BeginScrollbarDrag, "%p", tb);
-		AG_SetEvent(tb->hBar, "scrollbar-drag-end",
-		    EndScrollbarDrag, "%p", tb);
-		AG_SetEvent(tb->vBar, "scrollbar-drag-end",
-		    EndScrollbarDrag, "%p", tb);
+		AG_BindInt(tb->hBar, "value", &tb->ed->x);
+		AG_BindInt(tb->vBar, "value", &tb->ed->y);
+		AG_BindInt(tb->hBar, "max", &tb->ed->xMax);
+		AG_BindInt(tb->vBar, "max", &tb->ed->yMax);
+		AG_BindInt(tb->hBar, "visible", &WIDTH(tb->ed));
+		AG_BindInt(tb->vBar, "visible", &tb->ed->yVis);
+		AG_SetEvent(tb->hBar, "scrollbar-drag-begin", BeginScrollbarDrag, "%p", tb);
+		AG_SetEvent(tb->vBar, "scrollbar-drag-begin", BeginScrollbarDrag, "%p", tb);
+		AG_SetEvent(tb->hBar, "scrollbar-drag-end", EndScrollbarDrag, "%p", tb);
+		AG_SetEvent(tb->vBar, "scrollbar-drag-end", EndScrollbarDrag, "%p", tb);
 		AG_TextboxSizeHintLines(tb, 4);
 	}
 

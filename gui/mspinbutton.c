@@ -216,10 +216,10 @@ Init(void *obj)
 {
 	AG_MSpinbutton *sbu = obj;
 
-	AG_WidgetBind(sbu, "xvalue", AG_WIDGET_INT, &sbu->xvalue);
-	AG_WidgetBind(sbu, "yvalue", AG_WIDGET_INT, &sbu->yvalue);
-	AG_WidgetBind(sbu, "min", AG_WIDGET_INT, &sbu->min);
-	AG_WidgetBind(sbu, "max", AG_WIDGET_INT, &sbu->max);
+	AG_BindInt(sbu, "xvalue", &sbu->xvalue);
+	AG_BindInt(sbu, "yvalue", &sbu->yvalue);
+	AG_BindInt(sbu, "min", &sbu->min);
+	AG_BindInt(sbu, "max", &sbu->max);
 
 	sbu->xvalue = 0;
 	sbu->yvalue = 0;
