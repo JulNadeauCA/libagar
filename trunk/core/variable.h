@@ -434,8 +434,8 @@ AG_Variable *AG_BindDouble(void *, const char *, double *);
 AG_Variable *AG_BindDouble_MP(void *, const char *, double *, AG_Mutex *);
 
 AG_Variable *AG_SetString(void *, const char *, const char *, ...);
-AG_Variable *AG_BindString(void *, const char *, char **, size_t);
-AG_Variable *AG_BindString_MP(void *, const char *, char **, size_t, AG_Mutex *);
+AG_Variable *AG_BindString(void *, const char *, char *, size_t);
+AG_Variable *AG_BindString_MP(void *, const char *, char *, size_t, AG_Mutex *);
 AG_Variable *AG_SetConstString(void *, const char *, const char *);
 AG_Variable *AG_BindConstString(void *, const char *, const char **);
 AG_Variable *AG_BindConstString_MP(void *, const char *, const char **, AG_Mutex *);
@@ -446,6 +446,15 @@ AG_Variable *AG_BindPointer_MP(void *, const char *, void **, AG_Mutex *);
 AG_Variable *AG_SetConstPointer(void *, const char *, const void *);
 AG_Variable *AG_BindConstPointer(void *, const char *, const void **);
 AG_Variable *AG_BindConstPointer_MP(void *, const char *, const void **, AG_Mutex *);
+
+AG_Variable *AG_BindFlag(void *, const char *, Uint *, Uint);
+AG_Variable *AG_BindFlag_MP(void *, const char *, Uint *, Uint, AG_Mutex *);
+AG_Variable *AG_BindFlag8(void *, const char *, Uint8 *, Uint8);
+AG_Variable *AG_BindFlag8_MP(void *, const char *, Uint8 *, Uint8, AG_Mutex *);
+AG_Variable *AG_BindFlag16(void *, const char *, Uint16 *, Uint16);
+AG_Variable *AG_BindFlag16_MP(void *, const char *, Uint16 *, Uint16, AG_Mutex *);
+AG_Variable *AG_BindFlag32(void *, const char *, Uint32 *, Uint32);
+AG_Variable *AG_BindFlag32_MP(void *, const char *, Uint32 *, Uint32, AG_Mutex *);
 
 static __inline__ void
 AG_VariableChanged(AG_Variable *V)
