@@ -6,62 +6,62 @@ io.write ([[
 void
 agar_gui_widget_bind_pointer (AG_Widget *w, const char *binding, void **p)
 {
-  AG_WidgetBindPointer (w, binding, p);
+  AG_BindPointer (w, binding, p);
 }
 
 void
 agar_gui_widget_bind_boolean (AG_Widget *w, const char *binding, int *var)
 {
-  AG_WidgetBindBool (w, binding, var);
+  AG_BindBool (w, binding, var);
 }
 
 void
 agar_gui_widget_bind_integer (AG_Widget *w, const char *binding, int *var)
 {
-  AG_WidgetBindInt (w, binding, var);
+  AG_BindInt (w, binding, var);
 }
 
 void
 agar_gui_widget_bind_unsigned (AG_Widget *w, const char *binding, unsigned *var)
 {
-  AG_WidgetBindUint (w, binding, var);
+  AG_BindUint (w, binding, var);
 }
 
 void
 agar_gui_widget_bind_float (AG_Widget *w, const char *binding, float *var)
 {
-  AG_WidgetBindFloat (w, binding, var);
+  AG_BindFloat (w, binding, var);
 }
 
 void
 agar_gui_widget_bind_double (AG_Widget *w, const char *binding, double *var)
 {
-  AG_WidgetBindDouble (w, binding, var);
+  AG_BindDouble (w, binding, var);
 }
 
 ]])
 
-for _, value in pairs ({8, 16, 32, 64}) do
+for _, value in pairs ({8, 16, 32}) do
   io.write ([[
 void
 agar_gui_widget_bind_uint]]..ts(value)..[[ (AG_Widget *w, const char *binding,
   Uint]]..ts(value)..[[ *val)
 {
-  AG_WidgetBindUint]]..ts(value)..[[ (w, binding, val);
+  AG_BindUint]]..ts(value)..[[ (w, binding, val);
 }
 
 void
 agar_gui_widget_bind_int]]..ts(value)..[[ (AG_Widget *w, const char *binding,
   Sint]]..ts(value)..[[ *val)
 {
-  AG_WidgetBindSint]]..ts(value)..[[ (w, binding, val);
+  AG_BindSint]]..ts(value)..[[ (w, binding, val);
 }
 
 void
 agar_gui_widget_bind_flag]]..ts(value)..[[ (AG_Widget *w, const char *binding,
   Uint]]..ts(value)..[[ *val, Uint]]..ts(value)..[[ bitmask)
 {
-  AG_WidgetBindFlag]]..ts(value)..[[ (w, binding, val, bitmask);
+  AG_BindFlag]]..ts(value)..[[ (w, binding, val, bitmask);
 }
 
 ]])
@@ -106,7 +106,7 @@ agar_gui_widget_get_double (AG_Widget *w, const char *binding)
 
 ]])
 
-for _, value in pairs ({8, 16, 32, 64}) do
+for _, value in pairs ({8, 16, 32}) do
   io.write ([[
 Uint]]..ts(value)..[[
 
@@ -164,7 +164,7 @@ agar_gui_widget_set_double (AG_Widget *w, const char *binding, double val)
 
 ]])
 
-for _, value in pairs ({8, 16, 32, 64}) do
+for _, value in pairs ({8, 16, 32}) do
   io.write ([[
 void
 agar_gui_widget_set_uint]]..ts(value)..[[ (AG_Widget *w, const char *binding,

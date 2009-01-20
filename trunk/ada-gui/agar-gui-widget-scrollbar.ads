@@ -132,26 +132,6 @@ package agar.gui.widget.scrollbar is
      visible  : agar.core.types.int32_ptr_t) return scrollbar_access_t;
   pragma import (c, allocate_int32, "AG_ScrollbarNewSint32");
 
-  function allocate_uint64
-    (parent   : widget_access_t;
-     bar_type : type_t;
-     flags    : flags_t;
-     value    : agar.core.types.uint64_ptr_t;
-     min      : agar.core.types.uint64_ptr_t;
-     max      : agar.core.types.uint64_ptr_t;
-     visible  : agar.core.types.uint64_ptr_t) return scrollbar_access_t;
-  pragma import (c, allocate_uint64, "AG_ScrollbarNewUint64");
-
-  function allocate_int64
-    (parent   : widget_access_t;
-     bar_type : type_t;
-     flags    : flags_t;
-     value    : agar.core.types.int64_ptr_t;
-     min      : agar.core.types.int64_ptr_t;
-     max      : agar.core.types.int64_ptr_t;
-     visible  : agar.core.types.int64_ptr_t) return scrollbar_access_t;
-  pragma import (c, allocate_int64, "AG_ScrollbarNewSint64");
-
   procedure set_size
     (scrollbar : scrollbar_access_t;
      size      : natural);

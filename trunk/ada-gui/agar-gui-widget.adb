@@ -420,18 +420,6 @@ package body agar.gui.widget is
          mask     : agar.core.types.uint32_t);
       pragma import (c, bind_flag32, "agar_gui_widget_bind_flag32");
 
-      procedure bind_uint64
-        (widget   : widget_access_t;
-         binding  : cs.chars_ptr;
-         variable : agar.core.types.uint64_ptr_t);
-      pragma import (c, bind_uint64, "agar_gui_widget_bind_uint64");
-
-      procedure bind_int64
-        (widget   : widget_access_t;
-         binding  : cs.chars_ptr;
-         variable : agar.core.types.int64_ptr_t);
-      pragma import (c, bind_int64, "agar_gui_widget_bind_int64");
-
       -- get
 
       function get_pointer
@@ -493,16 +481,6 @@ package body agar.gui.widget is
         (widget   : widget_access_t;
          binding  : cs.chars_ptr) return agar.core.types.int32_t;
       pragma import (c, get_int32, "agar_gui_widget_get_int32");
-
-      function get_uint64
-        (widget   : widget_access_t;
-         binding  : cs.chars_ptr) return agar.core.types.uint64_t;
-      pragma import (c, get_uint64, "agar_gui_widget_get_uint64");
-
-      function get_int64
-        (widget   : widget_access_t;
-         binding  : cs.chars_ptr) return agar.core.types.int64_t;
-      pragma import (c, get_int64, "agar_gui_widget_get_int64");
 
       -- set
 
@@ -583,17 +561,6 @@ package body agar.gui.widget is
          variable : agar.core.types.int32_t);
       pragma import (c, set_int32, "agar_gui_widget_set_int32");
 
-      procedure set_uint64
-        (widget   : widget_access_t;
-         binding  : cs.chars_ptr;
-         variable : agar.core.types.uint64_t);
-      pragma import (c, set_uint64, "agar_gui_widget_set_uint64");
-
-      procedure set_int64
-        (widget   : widget_access_t;
-         binding  : cs.chars_ptr;
-         variable : agar.core.types.int64_t);
-      pragma import (c, set_int64, "agar_gui_widget_set_int64");
     end cbinds;
 
     procedure bind_pointer
@@ -813,32 +780,6 @@ package body agar.gui.widget is
          mask     => mask);
     end bind_flag32;
 
-    procedure bind_uint64
-      (widget   : widget_access_t;
-       binding  : string;
-       variable : agar.core.types.uint64_ptr_t)
-    is
-      c_binding : aliased c.char_array := c.to_c (binding);
-    begin
-      cbinds.bind_uint64
-        (widget   => widget,
-         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
-         variable => variable);
-    end bind_uint64;
-
-    procedure bind_int64
-      (widget   : widget_access_t;
-       binding  : string;
-       variable : agar.core.types.int64_ptr_t)
-    is
-      c_binding : aliased c.char_array := c.to_c (binding);
-    begin
-      cbinds.bind_int64
-        (widget   => widget,
-         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
-         variable => variable);
-    end bind_int64;
-
     -- get
 
     function get_pointer
@@ -972,28 +913,6 @@ package body agar.gui.widget is
         (widget  => widget,
          binding => cs.to_chars_ptr (c_binding'unchecked_access));
     end get_int32;
-
-    function get_uint64
-      (widget  : widget_access_t;
-       binding : string) return agar.core.types.uint64_t
-    is
-      c_binding : aliased c.char_array := c.to_c (binding);
-    begin
-      return cbinds.get_uint64
-        (widget  => widget,
-         binding => cs.to_chars_ptr (c_binding'unchecked_access));
-    end get_uint64;
-
-    function get_int64
-      (widget  : widget_access_t;
-       binding : string) return agar.core.types.int64_t
-    is
-      c_binding : aliased c.char_array := c.to_c (binding);
-    begin
-      return cbinds.get_int64
-        (widget  => widget,
-         binding => cs.to_chars_ptr (c_binding'unchecked_access));
-    end get_int64;
 
     -- set
 
@@ -1153,31 +1072,6 @@ package body agar.gui.widget is
          variable => variable);
     end set_int32;
 
-    procedure set_uint64
-      (widget   : widget_access_t;
-       binding  : string;
-       variable : agar.core.types.uint64_t)
-    is
-      c_binding : aliased c.char_array := c.to_c (binding);
-    begin
-      cbinds.set_uint64
-        (widget   => widget,
-         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
-         variable => variable);
-    end set_uint64;
-
-    procedure set_int64
-      (widget   : widget_access_t;
-       binding  : string;
-       variable : agar.core.types.int64_t)
-    is
-      c_binding : aliased c.char_array := c.to_c (binding);
-    begin
-      cbinds.set_int64
-        (widget   => widget,
-         binding  => cs.to_chars_ptr (c_binding'unchecked_access),
-         variable => variable);
-    end set_int64;
   end bindings;
 
 end agar.gui.widget;
