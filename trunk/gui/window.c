@@ -830,10 +830,24 @@ AG_WindowEvent(SDL_Event *ev)
 	
 	if (agView->nModal > 0) {
 		win = agView->winModal[agView->nModal-1];
-		if (ev->type == SDL_MOUSEBUTTONDOWN &&
-		    ModalClose(win, ev->button.x, ev->button.y)) {
-			rv = 1;
-			goto out;
+		switch (ev->type) {
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			if (ModalClose(win, ev->button.x, ev->button.y)) {
+				rv = 1;
+				agView->winToFocus = win;
+				goto out;
+			}
+			break;
+		case SDL_MOUSEMOTION:
+			if (ModalClose(win, ev->motion.x, ev->motion.y)) {
+				rv = 1;
+				agView->winToFocus = win;
+				goto out;
+			}
+			break;
+		default:
+			break;
 		}
 		goto scan;		/* Skip WM events */
 	}
@@ -859,7 +873,8 @@ scan:
 		AG_ObjectLock(win);
 
 		/* XXX TODO move invisible windows to different tailq! */
-		if (!win->visible) {
+		if (!win->visible || (agView->nModal > 0 &&
+		    win != agView->winModal[agView->nModal-1])) {
 			AG_ObjectUnlock(win);
 			continue;
 		}
