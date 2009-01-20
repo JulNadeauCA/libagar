@@ -678,7 +678,7 @@ AG_SetString(void *pObj, const char *name, const char *fmt, ...)
 }
 
 AG_Variable *
-AG_BindString(void *pObj, const char *name, char **v, size_t size)
+AG_BindString(void *pObj, const char *name, char *v, size_t size)
 {
 	AG_Object *obj = pObj;
 	AG_Variable *V;
@@ -692,7 +692,7 @@ AG_BindString(void *pObj, const char *name, char **v, size_t size)
 }
 
 AG_Variable *
-AG_BindString_MP(void *pObj, const char *name, char **v, size_t size,
+AG_BindString_MP(void *pObj, const char *name, char *v, size_t size,
     AG_Mutex *mutex)
 {
 	AG_Object *obj = pObj;
@@ -827,6 +827,126 @@ AG_BindConstPointer_MP(void *pObj, const char *name, const void **v,
 	AG_ObjectLock(obj);
 	V = AllocVariable(obj, name, AG_VARIABLE_P_CONST_POINTER);
 	V->data.Cp = v;
+	V->mutex = mutex;
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+AG_Variable *
+AG_BindFlag(void *pObj, const char *name, Uint *v, Uint bitmask)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+
+	AG_ObjectLock(obj);
+	V = AllocVariable(obj, name, AG_VARIABLE_P_FLAG);
+	V->data.p = v;
+	V->info.bitmask = bitmask;
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+AG_Variable *
+AG_BindFlag_MP(void *pObj, const char *name, Uint *v, Uint bitmask,
+    AG_Mutex *mutex)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+
+	AG_ObjectLock(obj);
+	V = AllocVariable(obj, name, AG_VARIABLE_P_FLAG);
+	V->data.p = v;
+	V->info.bitmask = bitmask;
+	V->mutex = mutex;
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+AG_Variable *
+AG_BindFlag8(void *pObj, const char *name, Uint8 *v, Uint8 bitmask)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+
+	AG_ObjectLock(obj);
+	V = AllocVariable(obj, name, AG_VARIABLE_P_FLAG8);
+	V->data.p = v;
+	V->info.bitmask = bitmask;
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+AG_Variable *
+AG_BindFlag8_MP(void *pObj, const char *name, Uint8 *v, Uint8 bitmask,
+    AG_Mutex *mutex)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+
+	AG_ObjectLock(obj);
+	V = AllocVariable(obj, name, AG_VARIABLE_P_FLAG8);
+	V->data.p = v;
+	V->info.bitmask = bitmask;
+	V->mutex = mutex;
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+AG_Variable *
+AG_BindFlag16(void *pObj, const char *name, Uint16 *v, Uint16 bitmask)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+
+	AG_ObjectLock(obj);
+	V = AllocVariable(obj, name, AG_VARIABLE_P_FLAG16);
+	V->data.p = v;
+	V->info.bitmask = bitmask;
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+AG_Variable *
+AG_BindFlag16_MP(void *pObj, const char *name, Uint16 *v, Uint16 bitmask,
+    AG_Mutex *mutex)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+
+	AG_ObjectLock(obj);
+	V = AllocVariable(obj, name, AG_VARIABLE_P_FLAG16);
+	V->data.p = v;
+	V->info.bitmask = bitmask;
+	V->mutex = mutex;
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+AG_Variable *
+AG_BindFlag32(void *pObj, const char *name, Uint32 *v, Uint32 bitmask)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+
+	AG_ObjectLock(obj);
+	V = AllocVariable(obj, name, AG_VARIABLE_P_FLAG32);
+	V->data.p = v;
+	V->info.bitmask = bitmask;
+	AG_ObjectUnlock(obj);
+	return (V);
+}
+
+AG_Variable *
+AG_BindFlag32_MP(void *pObj, const char *name, Uint32 *v, Uint32 bitmask,
+    AG_Mutex *mutex)
+{
+	AG_Object *obj = pObj;
+	AG_Variable *V;
+
+	AG_ObjectLock(obj);
+	V = AllocVariable(obj, name, AG_VARIABLE_P_FLAG32);
+	V->data.p = v;
+	V->info.bitmask = bitmask;
 	V->mutex = mutex;
 	AG_ObjectUnlock(obj);
 	return (V);
