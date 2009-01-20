@@ -149,9 +149,9 @@ MouseButtonDown(AG_Event *event)
 		return;
 
 	if (button == SDL_BUTTON(1)) {
+		AG_WidgetFocus(cb);
 		AG_CheckboxToggle(cb);
 	}
-	AG_WidgetFocus(cb);
 }
 
 static void
