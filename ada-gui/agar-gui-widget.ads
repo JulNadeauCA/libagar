@@ -516,18 +516,6 @@ package agar.gui.widget is
        mask     : agar.core.types.uint32_t);
     pragma inline (bind_flag32);
 
-    procedure bind_uint64
-      (widget   : widget_access_t;
-       binding  : string;
-       variable : agar.core.types.uint64_ptr_t);
-    pragma inline (bind_uint64);
-
-    procedure bind_int64
-      (widget   : widget_access_t;
-       binding  : string;
-       variable : agar.core.types.int64_ptr_t);
-    pragma inline (bind_int64);
-
     -- get
 
     function get_pointer
@@ -589,16 +577,6 @@ package agar.gui.widget is
       (widget   : widget_access_t;
        binding  : string) return agar.core.types.int32_t;
     pragma inline (get_int32);
-
-    function get_uint64
-      (widget   : widget_access_t;
-       binding  : string) return agar.core.types.uint64_t;
-    pragma inline (get_uint64);
-
-    function get_int64
-      (widget   : widget_access_t;
-       binding  : string) return agar.core.types.int64_t;
-    pragma inline (get_int64);
 
     -- set
 
@@ -673,18 +651,6 @@ package agar.gui.widget is
        binding  : string;
        variable : agar.core.types.int32_t);
     pragma inline (set_int32);
-
-    procedure set_uint64
-      (widget   : widget_access_t;
-       binding  : string;
-       variable : agar.core.types.uint64_t);
-    pragma inline (set_uint64);
-
-    procedure set_int64
-      (widget   : widget_access_t;
-       binding  : string;
-       variable : agar.core.types.int64_t);
-    pragma inline (set_int64);
 
   end bindings;
 

@@ -126,24 +126,6 @@ package agar.gui.widget.slider is
      max      : agar.core.types.int32_ptr_t) return slider_access_t;
   pragma import (c, allocate_int32, "AG_SliderNewSint32");
 
-  function allocate_uint64
-    (parent   : widget_access_t;
-     bar_type : type_t;
-     flags    : flags_t;
-     value    : agar.core.types.uint64_ptr_t;
-     min      : agar.core.types.uint64_ptr_t;
-     max      : agar.core.types.uint64_ptr_t) return slider_access_t;
-  pragma import (c, allocate_uint64, "AG_SliderNewUint64");
-
-  function allocate_int64
-    (parent   : widget_access_t;
-     bar_type : type_t;
-     flags    : flags_t;
-     value    : agar.core.types.int64_ptr_t;
-     min      : agar.core.types.int64_ptr_t;
-     max      : agar.core.types.int64_ptr_t) return slider_access_t;
-  pragma import (c, allocate_int64, "AG_SliderNewSint64");
-
   procedure set_increment
     (slider    : slider_access_t;
      increment : positive);

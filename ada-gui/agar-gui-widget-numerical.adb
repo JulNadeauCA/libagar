@@ -106,14 +106,6 @@ package body agar.gui.widget.numerical is
        value  : agar.core.types.uint32_ptr_t) return numerical_access_t;
     pragma import (c, allocate_uint32, "AG_NumericalNewUint32");
 
-    function allocate_uint64
-      (parent : widget_access_t;
-       flags  : flags_t;
-       unit   : cs.chars_ptr;
-       label  : cs.chars_ptr;
-       value  : agar.core.types.uint64_ptr_t) return numerical_access_t;
-    pragma import (c, allocate_uint64, "AG_NumericalNewUint64");
-
     function allocate_int8
       (parent : widget_access_t;
        flags  : flags_t;
@@ -137,14 +129,6 @@ package body agar.gui.widget.numerical is
        label  : cs.chars_ptr;
        value  : agar.core.types.int32_ptr_t) return numerical_access_t;
     pragma import (c, allocate_int32, "AG_NumericalNewSint32");
-
-    function allocate_int64
-      (parent : widget_access_t;
-       flags  : flags_t;
-       unit   : cs.chars_ptr;
-       label  : cs.chars_ptr;
-       value  : agar.core.types.int64_ptr_t) return numerical_access_t;
-    pragma import (c, allocate_int64, "AG_NumericalNewSint64");
 
     function set_unit_system
       (numerical : numerical_access_t;
@@ -549,36 +533,6 @@ package body agar.gui.widget.numerical is
     end if;
   end allocate_uint32;
 
-  function allocate_uint64
-    (parent : widget_access_t;
-     flags  : flags_t;
-     unit   : string;
-     label  : string;
-     value  : agar.core.types.uint64_ptr_t) return numerical_access_t
-  is
-    c_label : aliased c.char_array := c.to_c (label);
-  begin
-    if unit /= no_unit then
-      return cbinds.allocate_uint64
-        (parent => parent,
-         flags  => flags,
-         unit   => cs.null_ptr,
-         label  => cs.to_chars_ptr (c_label'unchecked_access),
-         value  => value);
-    else
-      declare
-        c_unit : aliased c.char_array := c.to_c (unit);
-      begin
-        return cbinds.allocate_uint64
-          (parent => parent,
-           flags  => flags,
-           unit   => cs.to_chars_ptr (c_unit'unchecked_access),
-           label  => cs.to_chars_ptr (c_label'unchecked_access),
-           value  => value);
-      end;
-    end if;
-  end allocate_uint64;
-
   function allocate_int8
     (parent : widget_access_t;
      flags  : flags_t;
@@ -668,36 +622,6 @@ package body agar.gui.widget.numerical is
       end;
     end if;
   end allocate_int32;
-
-  function allocate_int64
-    (parent : widget_access_t;
-     flags  : flags_t;
-     unit   : string;
-     label  : string;
-     value  : agar.core.types.int64_ptr_t) return numerical_access_t
-  is
-    c_label : aliased c.char_array := c.to_c (label);
-  begin
-    if unit /= no_unit then
-      return cbinds.allocate_int64
-        (parent => parent,
-         flags  => flags,
-         unit   => cs.null_ptr,
-         label  => cs.to_chars_ptr (c_label'unchecked_access),
-         value  => value);
-    else
-      declare
-        c_unit : aliased c.char_array := c.to_c (unit);
-      begin
-        return cbinds.allocate_int64
-          (parent => parent,
-           flags  => flags,
-           unit   => cs.to_chars_ptr (c_unit'unchecked_access),
-           label  => cs.to_chars_ptr (c_label'unchecked_access),
-           value  => value);
-      end;
-    end if;
-  end allocate_int64;
 
   function set_unit_system
     (numerical : numerical_access_t;

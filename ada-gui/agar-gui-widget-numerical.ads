@@ -144,14 +144,6 @@ package agar.gui.widget.numerical is
      value  : agar.core.types.uint32_ptr_t) return numerical_access_t;
   pragma inline (allocate_uint32);
 
-  function allocate_uint64
-    (parent : widget_access_t;
-     flags  : flags_t;
-     unit   : string;
-     label  : string;
-     value  : agar.core.types.uint64_ptr_t) return numerical_access_t;
-  pragma inline (allocate_uint64);
-
   function allocate_int8
     (parent : widget_access_t;
      flags  : flags_t;
@@ -175,14 +167,6 @@ package agar.gui.widget.numerical is
      label  : string;
      value  : agar.core.types.int32_ptr_t) return numerical_access_t;
   pragma inline (allocate_int32);
-
-  function allocate_int64
-    (parent : widget_access_t;
-     flags  : flags_t;
-     unit   : string;
-     label  : string;
-     value  : agar.core.types.int64_ptr_t) return numerical_access_t;
-  pragma inline (allocate_int64);
 
   procedure set_min
     (numerical : numerical_access_t;

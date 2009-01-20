@@ -102,114 +102,100 @@ agar_widget_blend_pixel_32 (AG_Widget *widget, int x, int y, Uint32 pixel, AG_Bl
 void
 agar_gui_widget_bind_pointer (AG_Widget *w, const char *binding, void **p)
 {
-  AG_WidgetBindPointer (w, binding, p);
+  AG_BindPointer (w, binding, p);
 }
 
 void
 agar_gui_widget_bind_boolean (AG_Widget *w, const char *binding, int *var)
 {
-  AG_WidgetBindBool (w, binding, var);
+  AG_BindBool (w, binding, var);
 }
 
 void
 agar_gui_widget_bind_integer (AG_Widget *w, const char *binding, int *var)
 {
-  AG_WidgetBindInt (w, binding, var);
+  AG_BindInt (w, binding, var);
 }
 
 void
 agar_gui_widget_bind_unsigned (AG_Widget *w, const char *binding, unsigned *var)
 {
-  AG_WidgetBindUint (w, binding, var);
+  AG_BindUint (w, binding, var);
 }
 
 void
 agar_gui_widget_bind_float (AG_Widget *w, const char *binding, float *var)
 {
-  AG_WidgetBindFloat (w, binding, var);
+  AG_BindFloat (w, binding, var);
 }
 
 void
 agar_gui_widget_bind_double (AG_Widget *w, const char *binding, double *var)
 {
-  AG_WidgetBindDouble (w, binding, var);
+  AG_BindDouble (w, binding, var);
 }
 
 void
 agar_gui_widget_bind_uint8 (AG_Widget *w, const char *binding,
   Uint8 *val)
 {
-  AG_WidgetBindUint8 (w, binding, val);
+  AG_BindUint8 (w, binding, val);
 }
 
 void
 agar_gui_widget_bind_int8 (AG_Widget *w, const char *binding,
   Sint8 *val)
 {
-  AG_WidgetBindSint8 (w, binding, val);
+  AG_BindSint8 (w, binding, val);
 }
 
 void
 agar_gui_widget_bind_flag8 (AG_Widget *w, const char *binding,
   Uint8 *val, Uint8 bitmask)
 {
-  AG_WidgetBindFlag8 (w, binding, val, bitmask);
+  AG_BindFlag8 (w, binding, val, bitmask);
 }
 
 void
 agar_gui_widget_bind_uint16 (AG_Widget *w, const char *binding,
   Uint16 *val)
 {
-  AG_WidgetBindUint16 (w, binding, val);
+  AG_BindUint16 (w, binding, val);
 }
 
 void
 agar_gui_widget_bind_int16 (AG_Widget *w, const char *binding,
   Sint16 *val)
 {
-  AG_WidgetBindSint16 (w, binding, val);
+  AG_BindSint16 (w, binding, val);
 }
 
 void
 agar_gui_widget_bind_flag16 (AG_Widget *w, const char *binding,
   Uint16 *val, Uint16 bitmask)
 {
-  AG_WidgetBindFlag16 (w, binding, val, bitmask);
+  AG_BindFlag16 (w, binding, val, bitmask);
 }
 
 void
 agar_gui_widget_bind_uint32 (AG_Widget *w, const char *binding,
   Uint32 *val)
 {
-  AG_WidgetBindUint32 (w, binding, val);
+  AG_BindUint32 (w, binding, val);
 }
 
 void
 agar_gui_widget_bind_int32 (AG_Widget *w, const char *binding,
   Sint32 *val)
 {
-  AG_WidgetBindSint32 (w, binding, val);
+  AG_BindSint32 (w, binding, val);
 }
 
 void
 agar_gui_widget_bind_flag32 (AG_Widget *w, const char *binding,
   Uint32 *val, Uint32 bitmask)
 {
-  AG_WidgetBindFlag32 (w, binding, val, bitmask);
-}
-
-void
-agar_gui_widget_bind_uint64 (AG_Widget *w, const char *binding,
-  Uint64 *val)
-{
-  AG_WidgetBindUint64 (w, binding, val);
-}
-
-void
-agar_gui_widget_bind_int64 (AG_Widget *w, const char *binding,
-  Sint64 *val)
-{
-  AG_WidgetBindSint64 (w, binding, val);
+  AG_BindFlag32 (w, binding, val, bitmask);
 }
 
 void *
@@ -282,18 +268,6 @@ Sint32
 agar_gui_widget_get_int32 (AG_Widget *w, const char *binding)
 {
   return AG_WidgetSint32 (w, binding);
-}
-
-Uint64
-agar_gui_widget_get_uint64 (AG_Widget *w, const char *binding)
-{
-  return AG_WidgetUint64 (w, binding);
-}
-
-Sint64
-agar_gui_widget_get_int64 (AG_Widget *w, const char *binding)
-{
-  return AG_WidgetSint64 (w, binding);
 }
 
 void
@@ -372,19 +346,5 @@ agar_gui_widget_set_int32 (AG_Widget *w, const char *binding,
   Sint32 val)
 {
   AG_WidgetSetSint32 (w, binding, val);
-}
-
-void
-agar_gui_widget_set_uint64 (AG_Widget *w, const char *binding,
-  Uint64 val)
-{
-  AG_WidgetSetUint64 (w, binding, val);
-}
-
-void
-agar_gui_widget_set_int64 (AG_Widget *w, const char *binding,
-  Sint64 val)
-{
-  AG_WidgetSetSint64 (w, binding, val);
 }
 
