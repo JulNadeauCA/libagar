@@ -135,9 +135,9 @@ CreateWindow(void)
 		static int myMin = 0, myMax = 10, myInt = 1;
 
 		num = AG_NumericalNew(div1, AG_NUMERICAL_HFILL, "cm", "Real: ");
-		AG_WidgetBindFloat(num, "value", &myFloat);
+		AG_BindFloat(num, "value", &myFloat);
 		num = AG_NumericalNew(div1, AG_NUMERICAL_HFILL, NULL, "Int: ");
-		AG_WidgetBindInt(num, "value", &myInt);
+		AG_BindInt(num, "value", &myInt);
 	}
 
 	/*

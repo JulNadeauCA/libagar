@@ -64,7 +64,7 @@ AG_NumericalNewDbl(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindDouble(num, "value", v);
+	AG_BindDouble(num, "value", v);
 	return (num);
 }
 AG_Numerical *
@@ -73,7 +73,7 @@ AG_NumericalNewDblR(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindDouble(num, "value", v);
+	AG_BindDouble(num, "value", v);
 	AG_NumericalSetMinDbl(num, min);
 	AG_NumericalSetMaxDbl(num, max);
 	return (num);
@@ -85,7 +85,7 @@ AG_NumericalNewFlt(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindFloat(num, "value", v);
+	AG_BindFloat(num, "value", v);
 	return (num);
 }
 AG_Numerical *
@@ -94,7 +94,7 @@ AG_NumericalNewFltR(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindFloat(num, "value", v);
+	AG_BindFloat(num, "value", v);
 	AG_NumericalSetMinFlt(num, min);
 	AG_NumericalSetMaxFlt(num, max);
 	return (num);
@@ -106,7 +106,7 @@ AG_NumericalNewInt(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindInt(num, "value", v);
+	AG_BindInt(num, "value", v);
 	return (num);
 }
 AG_Numerical *
@@ -115,7 +115,7 @@ AG_NumericalNewIntR(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindInt(num, "value", v);
+	AG_BindInt(num, "value", v);
 	AG_NumericalSetMin(num, (double)min);	/* XXX */
 	AG_NumericalSetMax(num, (double)max);
 	return (num);
@@ -126,7 +126,7 @@ AG_NumericalNewUint(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindUint(num, "value", v);
+	AG_BindUint(num, "value", v);
 	return (num);
 }
 AG_Numerical *
@@ -135,7 +135,7 @@ AG_NumericalNewUintR(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindUint(num, "value", v);
+	AG_BindUint(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
 	return (num);
@@ -147,7 +147,7 @@ AG_NumericalNewUint8(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindUint8(num, "value", v);
+	AG_BindUint8(num, "value", v);
 	return (num);
 }
 AG_Numerical *
@@ -156,7 +156,7 @@ AG_NumericalNewUint8R(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindUint8(num, "value", v);
+	AG_BindUint8(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
 	return (num);
@@ -168,7 +168,7 @@ AG_NumericalNewSint8(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindSint8(num, "value", v);
+	AG_BindSint8(num, "value", v);
 	return (num);
 }
 AG_Numerical *
@@ -177,7 +177,7 @@ AG_NumericalNewSint8R(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindSint8(num, "value", v);
+	AG_BindSint8(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
 	return (num);
@@ -189,7 +189,7 @@ AG_NumericalNewUint16(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindUint16(num, "value", v);
+	AG_BindUint16(num, "value", v);
 	return (num);
 }
 AG_Numerical *
@@ -198,7 +198,7 @@ AG_NumericalNewUint16R(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindUint16(num, "value", v);
+	AG_BindUint16(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
 	return (num);
@@ -210,7 +210,7 @@ AG_NumericalNewSint16(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindSint16(num, "value", v);
+	AG_BindSint16(num, "value", v);
 	return (num);
 }
 AG_Numerical *
@@ -219,7 +219,7 @@ AG_NumericalNewSint16R(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindSint16(num, "value", v);
+	AG_BindSint16(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
 	return (num);
@@ -231,7 +231,7 @@ AG_NumericalNewUint32(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindUint32(num, "value", v);
+	AG_BindUint32(num, "value", v);
 	return (num);
 }
 AG_Numerical *
@@ -240,7 +240,7 @@ AG_NumericalNewUint32R(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindUint32(num, "value", v);
+	AG_BindUint32(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
 	return (num);
@@ -252,7 +252,7 @@ AG_NumericalNewSint32(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindSint32(num, "value", v);
+	AG_BindSint32(num, "value", v);
 	return (num);
 }
 AG_Numerical *
@@ -261,7 +261,7 @@ AG_NumericalNewSint32R(void *parent, Uint flags, const char *unit,
 {
 	AG_Numerical *num;
 	num = AG_NumericalNew(parent, flags, unit, label);
-	AG_WidgetBindSint32(num, "value", v);
+	AG_BindSint32(num, "value", v);
 	AG_NumericalSetMinInt(num, (int)min);
 	AG_NumericalSetMaxInt(num, (int)max);
 	return (num);
@@ -556,9 +556,9 @@ Init(void *obj)
 
 	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetBindDouble(num, "value", &num->value);
-	AG_WidgetBindDouble(num, "min", &num->min);
-	AG_WidgetBindDouble(num, "max", &num->max);
+	AG_BindDouble(num, "value", &num->value);
+	AG_BindDouble(num, "min", &num->min);
+	AG_BindDouble(num, "max", &num->max);
 	
 	num->inc = 1.0;
 	num->value = 0.0;

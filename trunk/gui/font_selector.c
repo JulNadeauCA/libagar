@@ -268,7 +268,7 @@ Init(void *obj)
 	AG_TlistSizeHint(fs->tlStyles, "XXXXXXXXX", 8);
 	AG_TlistSizeHint(fs->tlSizes, "100", 8);
 	
-	AG_WidgetBindPointer(fs, "font", &fs->font);
+	AG_BindPointer(fs, "font", (void **)&fs->font);
 
 	AG_SetEvent(fs, "widget-shown", UpdateFaces, NULL);
 	AG_SetEvent(fs, "widget-bound", BoundFont, NULL);

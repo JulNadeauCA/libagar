@@ -68,8 +68,8 @@ Init(void *obj)
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, 0);
 	cons->r = AG_RECT(0,0,0,0);
 	
-	AG_WidgetBindInt(cons->vBar, "value", &cons->rOffs);
-	AG_WidgetBindInt(cons->vBar, "max", &cons->nLines);
+	AG_BindUint(cons->vBar, "value", &cons->rOffs);
+	AG_BindUint(cons->vBar, "max", &cons->nLines);
 
 	AG_SetEvent(cons, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(cons, "window-keyup", KeyUp, NULL);

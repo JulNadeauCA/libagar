@@ -448,12 +448,11 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 	ntab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-		AG_WidgetBind(pal, "pixel-format", AG_WIDGET_POINTER,
-		    &tv->ts->fmt);
-		AG_WidgetBind(pal, "hue", AG_WIDGET_FLOAT, &px->h);
-		AG_WidgetBind(pal, "saturation", AG_WIDGET_FLOAT, &px->s);
-		AG_WidgetBind(pal, "value", AG_WIDGET_FLOAT, &px->v);
-		AG_WidgetBind(pal, "alpha", AG_WIDGET_FLOAT, &px->a);
+		AG_BindPointer(pal, "pixel-format", (void **)&tv->ts->fmt);
+		AG_BindFloat(pal, "hue", &px->h);
+		AG_BindFloat(pal, "saturation", &px->s);
+		AG_BindFloat(pal, "value", &px->v);
+		AG_BindFloat(pal, "alpha", &px->a);
 	
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 

@@ -36,15 +36,10 @@ extern AG_WidgetClass agButtonClass;
 AG_Button *AG_ButtonNew(void *, Uint, const char *, ...);
 AG_Button *AG_ButtonNewFn(void *, Uint, const char *, AG_EventFn,
 			  const char *, ...);
-AG_Button *AG_ButtonNewBool(void *, Uint, const char *, AG_VariableType, void *);
-#define    AG_ButtonNewInt(b,f,c,p) \
-	   AG_ButtonNewBool((b),(f),(c),AG_WIDGET_INT,(p))
-#define    AG_ButtonNewUint8(b,f,c,p) \
-	   AG_ButtonNewBool((b),(f),(c),AG_WIDGET_UINT8,(p))
-#define    AG_ButtonNewUint16(b,f,c,p) \
-	   AG_ButtonNewBool((b),(f),(c),AG_WIDGET_UINT16,(p))
-#define    AG_ButtonNewUint32(b,f,c,p) \
-	   AG_ButtonNewBool((b),(f),(c),AG_WIDGET_UINT32,(p))
+AG_Button *AG_ButtonNewInt(void *, Uint, const char *, int *);
+AG_Button *AG_ButtonNewUint8(void *, Uint, const char *, Uint8 *);
+AG_Button *AG_ButtonNewUint16(void *, Uint, const char *, Uint16 *);
+AG_Button *AG_ButtonNewUint32(void *, Uint, const char *, Uint32 *);
 
 AG_Button *AG_ButtonNewFlag(void *, Uint, const char *, Uint *, Uint);
 AG_Button *AG_ButtonNewFlag8(void *, Uint, const char *, Uint8 *, Uint8);

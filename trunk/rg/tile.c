@@ -1993,7 +1993,7 @@ RG_TileEdit(RG_Tileset *ts, RG_Tile *t)
 		    AG_BUTTON_STICKY|AG_BUTTON_HFILL,
 		    _("Edit"));
 		WIDGET(btn)->flags |= AG_WIDGET_HFILL;
-		AG_WidgetBind(btn, "state", AG_WIDGET_INT, &tv->edit_mode);
+		AG_BindInt(btn, "state", &tv->edit_mode);
 		AG_SetEvent(btn, "button-pushed",
 		    EditElement, "%p,%p", tv, tlFeatures);
 		AG_SetEvent(tlFeatures, "tlist-dblclick",

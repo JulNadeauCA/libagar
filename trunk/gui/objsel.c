@@ -173,7 +173,7 @@ Init(void *obj)
 	os->type_mask[0] = '*';
 	os->type_mask[1] = '\0';
 
-	AG_WidgetBind(os, "object", AG_WIDGET_POINTER, &os->object);
+	AG_BindPointer(os, "object", &os->object);
 
 	AG_SetEvent(os->com.list, "tlist-poll", PollObjects, "%p", os);
 	AG_SetEvent(&os->com, "combo-selected", SelectObject, "%p", os);

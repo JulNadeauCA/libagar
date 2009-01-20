@@ -242,10 +242,10 @@ Init(void *obj)
 
 	WIDGET(fsu)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetBind(fsu, "xvalue", AG_WIDGET_DOUBLE, &fsu->xvalue);
-	AG_WidgetBind(fsu, "yvalue", AG_WIDGET_DOUBLE, &fsu->yvalue);
-	AG_WidgetBind(fsu, "min", AG_WIDGET_DOUBLE, &fsu->min);
-	AG_WidgetBind(fsu, "max", AG_WIDGET_DOUBLE, &fsu->max);
+	AG_BindDouble(fsu, "xvalue", &fsu->xvalue);
+	AG_BindDouble(fsu, "yvalue", &fsu->yvalue);
+	AG_BindDouble(fsu, "min", &fsu->min);
+	AG_BindDouble(fsu, "max", &fsu->max);
 
 	fsu->xvalue = 0.0;
 	fsu->yvalue = 0.0;

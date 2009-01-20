@@ -56,10 +56,10 @@ AG_ScrollbarNewInt(void *parent, enum ag_scrollbar_type type, Uint flags,
     int *val, int *min, int *max, int *vis)
 {
 	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindInt(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindInt(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindInt(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindInt(sb, "visible", vis); }
+	if (val != NULL) { AG_BindInt(sb, "value", val); }
+	if (min != NULL) { AG_BindInt(sb, "min", min); }
+	if (max != NULL) { AG_BindInt(sb, "max", max); }
+	if (vis != NULL) { AG_BindInt(sb, "visible", vis); }
 	return (sb);
 }
 AG_Scrollbar *
@@ -67,10 +67,10 @@ AG_ScrollbarNewUint(void *parent, enum ag_scrollbar_type type, Uint flags,
     Uint *val, Uint *min, Uint *max, Uint *vis)
 {
 	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindUint(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindUint(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindUint(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindUint(sb, "visible", vis); }
+	if (val != NULL) { AG_BindUint(sb, "value", val); }
+	if (min != NULL) { AG_BindUint(sb, "min", min); }
+	if (max != NULL) { AG_BindUint(sb, "max", max); }
+	if (vis != NULL) { AG_BindUint(sb, "visible", vis); }
 	return (sb);
 }
 
@@ -79,10 +79,10 @@ AG_ScrollbarNewUint8(void *parent, enum ag_scrollbar_type type, Uint flags,
     Uint8 *val, Uint8 *min, Uint8 *max, Uint8 *vis)
 {
 	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindUint8(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindUint8(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindUint8(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindUint8(sb, "visible", vis); }
+	if (val != NULL) { AG_BindUint8(sb, "value", val); }
+	if (min != NULL) { AG_BindUint8(sb, "min", min); }
+	if (max != NULL) { AG_BindUint8(sb, "max", max); }
+	if (vis != NULL) { AG_BindUint8(sb, "visible", vis); }
 	return (sb);
 }
 AG_Scrollbar *
@@ -90,10 +90,10 @@ AG_ScrollbarNewSint8(void *parent, enum ag_scrollbar_type type, Uint flags,
     Sint8 *val, Sint8 *min, Sint8 *max, Sint8 *vis)
 {
 	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindSint8(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindSint8(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindSint8(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindSint8(sb, "visible", vis); }
+	if (val != NULL) { AG_BindSint8(sb, "value", val); }
+	if (min != NULL) { AG_BindSint8(sb, "min", min); }
+	if (max != NULL) { AG_BindSint8(sb, "max", max); }
+	if (vis != NULL) { AG_BindSint8(sb, "visible", vis); }
 	return (sb);
 }
 
@@ -102,10 +102,10 @@ AG_ScrollbarNewUint16(void *parent, enum ag_scrollbar_type type, Uint flags,
     Uint16 *val, Uint16 *min, Uint16 *max, Uint16 *vis)
 {
 	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindUint16(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindUint16(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindUint16(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindUint16(sb, "visible", vis); }
+	if (val != NULL) { AG_BindUint16(sb, "value", val); }
+	if (min != NULL) { AG_BindUint16(sb, "min", min); }
+	if (max != NULL) { AG_BindUint16(sb, "max", max); }
+	if (vis != NULL) { AG_BindUint16(sb, "visible", vis); }
 	return (sb);
 }
 AG_Scrollbar *
@@ -113,10 +113,10 @@ AG_ScrollbarNewSint16(void *parent, enum ag_scrollbar_type type, Uint flags,
     Sint16 *val, Sint16 *min, Sint16 *max, Sint16 *vis)
 {
 	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindSint16(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindSint16(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindSint16(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindSint16(sb, "visible", vis); }
+	if (val != NULL) { AG_BindSint16(sb, "value", val); }
+	if (min != NULL) { AG_BindSint16(sb, "min", min); }
+	if (max != NULL) { AG_BindSint16(sb, "max", max); }
+	if (vis != NULL) { AG_BindSint16(sb, "visible", vis); }
 	return (sb);
 }
 
@@ -125,10 +125,10 @@ AG_ScrollbarNewUint32(void *parent, enum ag_scrollbar_type type, Uint flags,
     Uint32 *val, Uint32 *min, Uint32 *max, Uint32 *vis)
 {
 	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindUint32(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindUint32(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindUint32(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindUint32(sb, "visible", vis); }
+	if (val != NULL) { AG_BindUint32(sb, "value", val); }
+	if (min != NULL) { AG_BindUint32(sb, "min", min); }
+	if (max != NULL) { AG_BindUint32(sb, "max", max); }
+	if (vis != NULL) { AG_BindUint32(sb, "visible", vis); }
 	return (sb);
 }
 AG_Scrollbar *
@@ -136,47 +136,22 @@ AG_ScrollbarNewSint32(void *parent, enum ag_scrollbar_type type, Uint flags,
     Sint32 *val, Sint32 *min, Sint32 *max, Sint32 *vis)
 {
 	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindSint32(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindSint32(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindSint32(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindSint32(sb, "visible", vis); }
+	if (val != NULL) { AG_BindSint32(sb, "value", val); }
+	if (min != NULL) { AG_BindSint32(sb, "min", min); }
+	if (max != NULL) { AG_BindSint32(sb, "max", max); }
+	if (vis != NULL) { AG_BindSint32(sb, "visible", vis); }
 	return (sb);
 }
-
-#if 0
-AG_Scrollbar *
-AG_ScrollbarNewUint64(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Uint64 *val, Uint64 *min, Uint64 *max, Uint64 *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindUint64(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindUint64(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindUint64(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindUint64(sb, "visible", vis); }
-	return (sb);
-}
-AG_Scrollbar *
-AG_ScrollbarNewSint64(void *parent, enum ag_scrollbar_type type, Uint flags,
-    Sint64 *val, Sint64 *min, Sint64 *max, Sint64 *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindSint64(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindSint64(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindSint64(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindSint64(sb, "visible", vis); }
-	return (sb);
-}
-#endif /* HAVE_64BIT */
 
 AG_Scrollbar *
 AG_ScrollbarNewFloat(void *parent, enum ag_scrollbar_type type, Uint flags,
     float *val, float *min, float *max, float *vis)
 {
 	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindFloat(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindFloat(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindFloat(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindFloat(sb, "visible", vis); }
+	if (val != NULL) { AG_BindFloat(sb, "value", val); }
+	if (min != NULL) { AG_BindFloat(sb, "min", min); }
+	if (max != NULL) { AG_BindFloat(sb, "max", max); }
+	if (vis != NULL) { AG_BindFloat(sb, "visible", vis); }
 	return (sb);
 }
 
@@ -185,26 +160,12 @@ AG_ScrollbarNewDouble(void *parent, enum ag_scrollbar_type type, Uint flags,
     double *val, double *min, double *max, double *vis)
 {
 	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindDouble(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindDouble(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindDouble(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindDouble(sb, "visible", vis); }
+	if (val != NULL) { AG_BindDouble(sb, "value", val); }
+	if (min != NULL) { AG_BindDouble(sb, "min", min); }
+	if (max != NULL) { AG_BindDouble(sb, "max", max); }
+	if (vis != NULL) { AG_BindDouble(sb, "visible", vis); }
 	return (sb);
 }
-
-#if 0
-AG_Scrollbar *
-AG_ScrollbarNewLongDouble(void *parent, enum ag_scrollbar_type type, Uint flags,
-    long double *val, long double *min, long double *max, long double *vis)
-{
-	AG_Scrollbar *sb = AG_ScrollbarNew(parent, type, flags);
-	if (val != NULL) { AG_WidgetBindLongDouble(sb, "value", val); }
-	if (min != NULL) { AG_WidgetBindLongDouble(sb, "min", min); }
-	if (max != NULL) { AG_WidgetBindLongDouble(sb, "max", max); }
-	if (vis != NULL) { AG_WidgetBindLongDouble(sb, "visible", vis); }
-	return (sb);
-}
-#endif /* HAVE_LONG_DOUBLE */
 
 /* Set an alternate handler for UP/LEFT button click. */
 void
@@ -666,10 +627,10 @@ Init(void *obj)
 	                     AG_WIDGET_UNFOCUSED_MOTION|
 			     AG_WIDGET_FOCUSABLE;
 
-	AG_WidgetBindInt(sb, "value", &sb->value);
-	AG_WidgetBindInt(sb, "min", &sb->min);
-	AG_WidgetBindInt(sb, "max", &sb->max);
-	AG_WidgetBindInt(sb, "visible", &sb->visible);
+	AG_BindInt(sb, "value", &sb->value);
+	AG_BindInt(sb, "min", &sb->min);
+	AG_BindInt(sb, "max", &sb->max);
+	AG_BindInt(sb, "visible", &sb->visible);
 
 	sb->type = AG_SCROLLBAR_HORIZ;
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;

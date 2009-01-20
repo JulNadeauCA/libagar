@@ -128,9 +128,9 @@ CreateWindow(void)
 		static int myMin = 0, myMax = 10, myInt = 1;
 
 		num = AG_NumericalNew(div1, AG_NUMERICAL_HFILL, "cm", "Real: ");
-		AG_WidgetBindFloat(num, "value", &myFloat);
+		AG_BindFloat(num, "value", &myFloat);
 		num = AG_NumericalNew(div1, AG_NUMERICAL_HFILL, NULL, "Int: ");
-		AG_WidgetBindInt(num, "value", &myInt);
+		AG_BindInt(num, "value", &myInt);
 	}
 
 	/*
@@ -234,7 +234,7 @@ CreateWindow(void)
 			rad = AG_RadioNew(ntab, AG_RADIO_HFILL, NULL);
 			AG_RadioAddItemHK(rad, SDLK_p, "Points");
 			AG_RadioAddItemHK(rad, SDLK_l, "Lines");
-			AG_WidgetBindInt(rad, "value", &g->type);
+			AG_BindInt(rad, "value", &g->type);
 		}
 		
 		ntab = AG_NotebookAddTab(nb, "Tlist", AG_BOX_VERT);

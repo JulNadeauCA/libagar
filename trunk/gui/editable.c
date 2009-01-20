@@ -75,7 +75,7 @@ void
 AG_EditableBindUTF8(AG_Editable *ed, char *buf, size_t bufSize)
 {
 	AG_ObjectLock(ed);
-	AG_WidgetBindString(ed, "string", buf, bufSize);
+	AG_BindString(ed, "string", buf, bufSize);
 	ed->encoding = AG_ENCODING_UTF8;
 	AG_ObjectUnlock(ed);
 }
@@ -85,7 +85,7 @@ void
 AG_EditableBindASCII(AG_Editable *ed, char *buf, size_t bufSize)
 {
 	AG_ObjectLock(ed);
-	AG_WidgetBindString(ed, "string", buf, bufSize);
+	AG_BindString(ed, "string", buf, bufSize);
 	ed->encoding = AG_ENCODING_ASCII;
 	AG_ObjectUnlock(ed);
 }

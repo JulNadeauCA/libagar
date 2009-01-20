@@ -69,8 +69,8 @@ CreateUI(void)
 
 	n1 = AG_NumericalNew(win, AG_NUMERICAL_HFILL, "in", "Value: ");
 	n2 = AG_NumericalNew(win, AG_NUMERICAL_HFILL, "mm", "Value: ");
-	AG_WidgetBindDouble(n1, "value", &value);
-	AG_WidgetBindDouble(n2, "value", &value);
+	AG_BindDouble(n1, "value", &value);
+	AG_BindDouble(n2, "value", &value);
 	AG_NumericalSizeHint(n1, "0000.00");
 	AG_NumericalSizeHint(n2, "0000.00");
 	AG_NumericalSetPrecision(n1, "g", 6);
