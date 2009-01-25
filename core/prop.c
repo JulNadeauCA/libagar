@@ -57,27 +57,6 @@ enum ag_prop_legacy_type {
 };
 
 /*
- * Test for the existence of a given property.
- * LEGACY Interface to AG_Variable(3).
- */
-int
-AG_PropDefined(void *p, const char *key)
-{
-	AG_Object *obj = p;
-	Uint i;
-
-	AG_ObjectLock(obj);
-	for (i = 0; i < obj->nVars; i++) {
-		if (strcmp(key, obj->vars[i].name) == 0) {
-			AG_ObjectUnlock(obj);
-			return (1);
-		}
-	}
-	AG_ObjectUnlock(obj);
-	return (0);
-}
-
-/*
  * Create a new property, or modify an existing one.
  * LEGACY Interface to AG_Variable(3).
  */
@@ -156,46 +135,6 @@ AG_GetProp(void *pObj, const char *key, int t, void *p)
 fail:
 	AG_ObjectUnlock(obj);
 	return (NULL);
-}
-
-/*
- * Search for a property referenced by a "object-name:prop-name" string,
- * relative to the specified VFS.
- *
- * LEGACY Interface to AG_Variable(3).
- */
-AG_Prop *
-AG_FindProp(void *vfsRoot, const char *spec, int type, void *rval)
-{
-	char sb[AG_OBJECT_PATH_MAX+65];
-	char *s = &sb[0], *objname, *propname;
-	void *obj;
-
-	Strlcpy(sb, spec, sizeof(sb));
-	objname = Strsep(&s, ":");
-	propname = Strsep(&s, ":");
-	if (objname == NULL || propname == NULL ||
-	    objname[0] == '\0' || propname[0] == '\0') {
-		AG_SetError(_("Invalid property path: `%s'"), spec);
-		return (NULL);
-	}
-	if ((obj = AG_ObjectFind(vfsRoot, objname)) == NULL) {
-		return (NULL);
-	}
-	return (AG_GetProp(obj, propname, -1, rval));
-}
-
-/* LEGACY Interface to AG_Variable(3). */
-int
-AG_PropCopyPath(char *dst, size_t size, void *obj, const char *prop_name)
-{
-	if (AG_ObjectCopyName(obj, dst, size) == -1 ||
-	    Strlcat(dst, ":", size) >= size ||
-	    Strlcat(dst, prop_name, size) >= size) {
-		AG_SetError("String overflow");
-		return (-1);
-	}
-	return (0);
 }
 
 int
@@ -351,19 +290,4 @@ AG_PropSave(void *p, AG_DataSource *ds)
 fail:
 	AG_ObjectUnlock(ob);
 	return (-1);
-}
-
-size_t
-AG_GetStringCopy(void *obj, const char *key, char *buf, size_t bufsize)
-{
-	size_t sl;
-	char *s;
-
-	AG_ObjectLock(obj);
-	if (AG_GetProp(obj, key, AG_PROP_STRING, &s) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	sl = Strlcpy(buf, s, bufsize);
-	AG_ObjectUnlock(obj);
-	return (sl);
 }
