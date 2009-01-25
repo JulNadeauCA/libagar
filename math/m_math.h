@@ -47,8 +47,7 @@ typedef long double M_Real;
 # define M_PROP_REAL	AG_PROP_LONG_DOUBLE
 # define M_SetReal	AG_SetLongDouble
 # define M_GetReal	AG_GetLongDouble
-# define M_SetRealWrFn	AG_SetLongDoubleWrFn
-# define M_SetRealRdFn	AG_SetLongDoubleRdFn
+# define M_SetRealFn	AG_BindLongDoubleFn
 #elif defined(DOUBLE_PRECISION)
 typedef double M_Real;
 # define M_REAL(n)	AG_DOUBLE(n)
@@ -56,8 +55,7 @@ typedef double M_Real;
 # define M_PROP_REAL	AG_PROP_DOUBLE
 # define M_SetReal	AG_SetDouble
 # define M_GetReal	AG_GetDouble
-# define M_SetRealWrFn	AG_SetDoubleWrFn
-# define M_SetRealRdFn	AG_SetDoubleRdFn
+# define M_BindRealFn	AG_BindDoubleFn
 #elif defined(SINGLE_PRECISION)
 typedef float M_Real;
 # define M_REAL(n)	AG_FLOAT(n)
@@ -65,8 +63,7 @@ typedef float M_Real;
 # define M_PROP_REAL	AG_PROP_FLOAT
 # define M_SetReal	AG_SetFloat
 # define M_GetReal	AG_GetFloat
-# define M_SetRealWrFn	AG_SetFloatWrFn
-# define M_SetRealRdFn	AG_SetFloatRdFn
+# define M_BindRealFn	AG_BindFloatFn
 #else
 # error "Math precision not specified"
 #endif
