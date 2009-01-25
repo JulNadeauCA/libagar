@@ -63,8 +63,8 @@ M_MatviewSetMatrix(M_Matview *mv, M_Matrix *M)
 	mv->matrix = MMATRIX(MFPU);
 	mv->mPre = MROWS(MFPU);
 	mv->nPre = MCOLS(MFPU);
-	AG_WidgetBind(mv->hBar, "max", AG_WIDGET_UINT, &MMATRIX(mv->matrix)->m);
-	AG_WidgetBind(mv->vBar, "max", AG_WIDGET_UINT, &MMATRIX(mv->matrix)->n);
+	AG_BindUint(mv->hBar, "max", &MMATRIX(mv->matrix)->m);
+	AG_BindUint(mv->vBar, "max", &MMATRIX(mv->matrix)->n);
 	AG_ObjectUnlock(mv);
 }
 
@@ -123,8 +123,8 @@ Init(void *obj)
 	mv->tCache = agTextCache ? AG_TextCacheNew(mv, 64, 16) : NULL;
 	mv->r = AG_RECT(0,0,0,0);
 	
-	AG_WidgetBind(mv->hBar, "value", AG_WIDGET_UINT, &mv->xOffs);
-	AG_WidgetBind(mv->vBar, "value", AG_WIDGET_UINT, &mv->yOffs);
+	AG_BindInt(mv->hBar, "value", &mv->xOffs);
+	AG_BindInt(mv->vBar, "value", &mv->yOffs);
 	AG_WidgetSetInt(mv->hBar, "min", 0);
 	AG_WidgetSetInt(mv->vBar, "min", 0);
 

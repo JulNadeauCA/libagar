@@ -7,8 +7,7 @@
 #if defined(QUAD_PRECISION)
 
 # define M_WIDGET_REAL		 AG_WIDGET_LONG_DOUBLE
-# define M_WidgetBindReal(w,n,p) AG_WidgetBindLongDouble((w),(n),(p))
-# define M_WidgetSetReal(w,n,v)	 AG_WidgetSetLongDouble((w),(n),(v))
+# define M_BindReal(w,n,p)       AG_BindLongDouble((w),(n),(p))
 # define M_WidgetReal(w,n)	 AG_WidgetLongDouble((w),(n))
 # define M_NumericalNewReal	 AG_NumericalNewLongDbl
 # define M_NumericalNewRealR	 AG_NumericalNewLongDblR
@@ -25,8 +24,7 @@
 #elif defined(DOUBLE_PRECISION)
 
 # define M_WIDGET_REAL		 AG_WIDGET_DOUBLE
-# define M_WidgetBindReal(w,n,p) AG_WidgetBindDouble((w),(n),(p))
-# define M_WidgetSetReal(w,n,v)	 AG_WidgetSetDouble((w),(n),(v))
+# define M_BindReal(w,n,p)       AG_BindDouble((w),(n),(p))
 # define M_WidgetReal(w,n)	 AG_WidgetDouble((w),(n))
 # define M_NumericalNewReal	 AG_NumericalNewDbl
 # define M_NumericalNewRealR	 AG_NumericalNewDblR
@@ -43,8 +41,7 @@
 #elif defined(SINGLE_PRECISION)
 
 # define M_WIDGET_REAL		 AG_WIDGET_FLOAT
-# define M_WidgetBindReal(w,n,p) AG_WidgetBindFloat((w),(n),(p))
-# define M_WidgetSetReal(w,n,v)	 AG_WidgetSetFloat((w),(n),(v))
+# define M_BindReal(w,n,p)       AG_BindFloat((w),(n),(p))
 # define M_WidgetReal(w,n)	 AG_WidgetFloat((w),(n))
 # define M_NumericalNewReal	 AG_NumericalNewFlt
 # define M_NumericalNewRealR	 AG_NumericalNewFltR
@@ -63,7 +60,7 @@
 #endif
 
 #define M_WIDGET_TIME		 AG_WIDGET_SINT32
-#define M_WidgetBindTime(w,n,p)	 AG_WidgetBind((w),(n),M_WIDGET_TIME,(p))
+#define M_BindTime(w,n,p)	 AG_BindSint32((w),(n),(p))
 #define M_WidgetTime(w,n)	 AG_WidgetSint32((w),(n))
 #define M_NumericalNewTime	 AG_NumericalNewSint32
 #define M_NumericalNewTimeR	 AG_NumericalNewSint32R
