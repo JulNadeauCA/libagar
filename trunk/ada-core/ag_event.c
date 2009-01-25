@@ -33,7 +33,7 @@ agar_event_push_int (AG_Event *ev, char *key, int val)
 void
 agar_event_push_unsigned_int (AG_Event *ev, char *key, unsigned int val)
 {
-  AG_EventPushUInt (ev, key, val);
+  AG_EventPushUint (ev, key, val);
 }
 
 void
