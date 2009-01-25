@@ -113,11 +113,11 @@ over a network connection).
 .Ft double
 .Fn AG_GetDouble "AG_Object *obj" "const char *key"
 .Pp
-.Ft "char *"
-.Fn AG_GetString "AG_Object *obj" "const char *key"
-.Pp
 .Ft size_t
-.Fn AG_GetStringCopy "AG_Object *obj" "const char *key" "char *dst" "size_t dst_size"
+.Fn AG_GetString "AG_Object *obj" "const char *key" "char *dst" "size_t dst_size"
+.Pp
+.Ft "char *"
+.Fn AG_GetStringDup "AG_Object *obj" "const char *key"
 .Pp
 .Ft "void *"
 .Fn AG_GetPointer "AG_Object *obj" "const char *key"
@@ -164,14 +164,16 @@ functions all look for a property named
 and return the associated value, raising a fatal condition if there is
 no match.
 .Pp
+The
 .Fn AG_GetString
-returns a copy of the string.
-.Fn AG_GetStringCopy
-copies up to
+routine copies up to
 .Fa dst_size
 - 1 characters from the value of a string property to
 .Fa dst ,
 NUL-terminating the result.
+.Pp
+.Fn AG_GetStringDup
+returns a copy of the string.
 .Sh WRITING PROPERTIES
 .nr nS 1
 .Ft "AG_Prop *"
