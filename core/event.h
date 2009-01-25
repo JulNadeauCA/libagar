@@ -61,7 +61,7 @@ typedef struct ag_event {
 
 	AG_Timeout timeout;			/* Execution timeout */
 	AG_TAILQ_ENTRY(ag_event) events;	/* For Object */
-} AG_Event, AG_Args;
+} AG_Event;
 
 typedef void (*AG_EventFn)(AG_Event *);
 
@@ -192,7 +192,7 @@ AG_EventPushInt(AG_Event *ev, const char *key, int val)
 	AG_EVENT_INS_VAL(ev, AG_VARIABLE_INT, key, i, val);
 }
 static __inline__ void
-AG_EventPushUInt(AG_Event *ev, const char *key, Uint val)
+AG_EventPushUint(AG_Event *ev, const char *key, Uint val)
 {
 	AG_EVENT_INS_VAL(ev, AG_VARIABLE_UINT, key, i, (int)val);
 }

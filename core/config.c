@@ -66,12 +66,15 @@ int agMsgDelay = 500;			/* Display duration of infoboxes (ms) */
 int
 AG_CreateDataDir(void)
 {
-	char *datadir = AG_CfgString("save-path");
-	char *tmpdir = AG_CfgString("tmp-path");
+	char dataDir[AG_PATHNAME_MAX];
+	char tmpDir[AG_PATHNAME_MAX];
 
-	if (AG_FileExists(datadir) == 0 && AG_MkDir(datadir) != 0)
+	AG_CopyCfgString("save-path", dataDir, sizeof(dataDir));
+	AG_CopyCfgString("tmp-path", tmpDir, sizeof(tmpDir));
+
+	if (AG_FileExists(dataDir) == 0 && AG_MkDir(dataDir) != 0)
 		return (-1);
-	if (AG_FileExists(tmpdir) == 0 && AG_MkDir(tmpdir) != 0)
+	if (AG_FileExists(tmpDir) == 0 && AG_MkDir(tmpDir) != 0)
 		return (-1);
 	
 	return (0);
@@ -231,7 +234,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 	char *dir, *pathp = path;
 	int rv;
 
-	AG_GetStringCopy(agConfig, path_key, path, path_len);
+	AG_GetString(agConfig, path_key, path, path_len);
 
 	for (dir = Strsep(&pathp, ":");
 	     dir != NULL;
@@ -257,7 +260,7 @@ AG_ConfigFile(const char *path_key, const char *name, const char *ext,
 			return (-1);
 		}
 	}
-	AG_GetStringCopy(agConfig, path_key, path, path_len);
+	AG_GetString(agConfig, path_key, path, path_len);
 	AG_SetError(_("Cannot find %s.%s (in <%s>:%s)."), name,
 	    (ext != NULL) ? ext : "", path_key, path);
 	return (-1);

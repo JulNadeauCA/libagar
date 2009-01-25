@@ -29,12 +29,12 @@ int  AG_ConfigLoad(void);
 void AG_SetCfgString(const char *, const char *, ...);
 __END_DECLS
 
-#define AG_CfgDefined(k) AG_PropDefined(agConfig,(k))
-#define AG_CfgUint(k) AG_GetUint(agConfig,(k))
-#define AG_CfgInt(k) AG_GetInt(agConfig,(k))
-#define AG_CfgBool(k) AG_GetBool(agConfig,(k))
-#define AG_CfgString(k) AG_GetString(agConfig,(k))
-#define AG_CfgStringCopy(k,b,s) AG_GetStringCopy(agConfig,(k),(b),(s))
+#define AG_CfgDefined(k)            AG_Defined(agConfig,(k))
+#define AG_CfgUint(k)               AG_GetUint(agConfig,(k))
+#define AG_CfgInt(k)                AG_GetInt(agConfig,(k))
+#define AG_CfgBool(k)               AG_GetBool(agConfig,(k))
+#define AG_CopyCfgString(k,dst,len) AG_GetString(agConfig,(k),(dst),(len))
+#define AG_CfgString(k)             AG_GetStringDup(agConfig,(k))
 
 #define AG_SetCfgUint(k,v) AG_SetUint(agConfig,(k),(v))
 #define AG_SetCfgInt(k,v) AG_SetInt(agConfig,(k),(v))
