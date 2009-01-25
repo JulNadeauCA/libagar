@@ -14,9 +14,6 @@
 # include <agar/core/vasprintf.h>
 #endif
 
-#include <agar/core/variable.h>
-#include <agar/core/list.h>
-#include <agar/core/tree.h>
 #include <agar/core/data_source.h>
 #include <agar/core/load_den.h>
 #include <agar/core/load_integral.h>
@@ -26,6 +23,8 @@
 
 #include <agar/core/version.h>
 #include <agar/core/object.h>
+#include <agar/core/list.h>
+#include <agar/core/tree.h>
 #include <agar/core/config.h>
 #include <agar/core/rcs.h>
 #include <agar/core/file.h>
