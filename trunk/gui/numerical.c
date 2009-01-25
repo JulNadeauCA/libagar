@@ -721,7 +721,6 @@ AG_NumericalAddValue(AG_Numerical *num, double inc)
 	default:					break;
 	}
 	AG_PostEvent(NULL, num, "numerical-changed", NULL);
-	AG_WidgetBindingChanged(valueb);
 
 	AG_WidgetUnlockBinding(valueb);
 	AG_WidgetUnlockBinding(minb);
@@ -767,7 +766,6 @@ AG_NumericalSetValue(AG_Numerical *num, double nvalue)
 	}
 
 	AG_PostEvent(NULL, num, "numerical-changed", NULL);
-	AG_WidgetBindingChanged(valueb);
 
 	AG_WidgetUnlockBinding(valueb);
 	AG_WidgetUnlockBinding(minb);

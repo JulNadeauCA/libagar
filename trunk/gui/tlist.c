@@ -505,10 +505,8 @@ UpdateListScrollbar(AG_Tlist *tl)
 	if (noffset < 0)
 		noffset = 0;
 
-	if (*offset != noffset) {
+	if (*offset != noffset)
 		*offset = noffset;
-		AG_WidgetBindingChanged(offsetb);
-	}
 
 	if (tl->nitems > 0 && tl->nvisitems > 0 &&
 	    tl->nvisitems < tl->nitems) {
@@ -860,7 +858,6 @@ SelectItem(AG_Tlist *tl, AG_TlistItem *it)
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 1);
 	}
 	AG_PostEvent(NULL, tl, "tlist-selected", "%p", it);
-	AG_WidgetBindingChanged(selectedb);
 	AG_WidgetUnlockBinding(selectedb);
 }
 
@@ -881,7 +878,6 @@ DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 		}
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 0);
 	}
-	AG_WidgetBindingChanged(selectedb);
 	AG_WidgetUnlockBinding(selectedb);
 }
 
@@ -912,7 +908,6 @@ MouseButtonDown(AG_Event *event)
 			if (*offs < 0) {
 				*offs = 0;
 			}
-			AG_WidgetBindingChanged(offsb);
 			AG_WidgetUnlockBinding(offsb);
 		}
 		break;
@@ -926,7 +921,6 @@ MouseButtonDown(AG_Event *event)
 			if (*offs > (tl->nitems - tl->nvisitems)) {
 				*offs = tl->nitems - tl->nvisitems;
 			}
-			AG_WidgetBindingChanged(offsb);
 			AG_WidgetUnlockBinding(offsb);
 		}
 		break;

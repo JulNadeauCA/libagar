@@ -519,7 +519,6 @@ AG_MFSpinbuttonAddValue(AG_MFSpinbutton *fsu, const char *which, double inc)
 		break;
 	}
 	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
-	AG_WidgetBindingChanged(valueb);
 
 	AG_WidgetUnlockBinding(valueb);
 	AG_WidgetUnlockBinding(minb);
@@ -557,7 +556,6 @@ AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
 		break;
 	}
 	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
-	AG_WidgetBindingChanged(valueb);
 
 	AG_WidgetUnlockBinding(valueb);
 	AG_WidgetUnlockBinding(minb);

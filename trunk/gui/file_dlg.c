@@ -57,10 +57,12 @@ AG_FileDlgNew(void *parent, Uint flags)
 AG_FileDlg *
 AG_FileDlgNewMRU(void *parent, const char *mruKey, Uint flags)
 {
+	char savePath[AG_PATHNAME_MAX];
 	AG_FileDlg *fd;
 
 	fd = AG_FileDlgNew(parent, flags);
-	AG_FileDlgSetDirectoryMRU(fd, mruKey, AG_CfgString("save-path"));
+	AG_CopyCfgString("save-path", savePath, sizeof(savePath));
+	AG_FileDlgSetDirectoryMRU(fd, mruKey, savePath);
 	return (fd);
 }
 

@@ -1241,7 +1241,7 @@ AG_DumpSurface(AG_Surface *pSu, char *path_save)
 	JSAMPROW row[1];
 	int x;
 
-	AG_GetStringCopy(agConfig, "save-path", path, sizeof(path));
+	AG_GetString(agConfig, "save-path", path, sizeof(path));
 	Strlcat(path, AG_PATHSEP, sizeof(path));
 	Strlcat(path, "screenshot", sizeof(path));
 	if (AG_MkDir(path) == -1 && errno != EEXIST) {

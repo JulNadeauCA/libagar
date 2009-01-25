@@ -313,7 +313,6 @@ MouseMotion(AG_Event *event)
 		if ((sock->flags & AG_SOCKET_STICKY_STATE) == 0 &&
 		    GetState(binding, pState) == 1) {
 			SetState(binding, pState, 0);
-			AG_WidgetBindingChanged(binding);
 		}
 		if (sock->flags & AG_SOCKET_MOUSEOVER) {
 			sock->flags &= ~(AG_SOCKET_MOUSEOVER);
@@ -395,7 +394,6 @@ MouseButtonDown(AG_Event *event)
 		SetState(binding, pState, newState);
 		AG_PostEvent(NULL, sock, "socket-click", "%i", newState);
 	}
-	AG_WidgetBindingChanged(binding);
 	AG_WidgetUnlockBinding(binding);
 
 	if ((icon = sock->icon) != NULL) {
@@ -444,7 +442,6 @@ MouseButtonUp(AG_Event *event)
 	    !(sock->flags & AG_SOCKET_STICKY_STATE)) {
 	    	SetState(binding, pState, 0);
 		AG_PostEvent(NULL, sock, "socket-click", "%i", 0);
-		AG_WidgetBindingChanged(binding);
 	}
 	AG_WidgetUnlockBinding(binding);
 }

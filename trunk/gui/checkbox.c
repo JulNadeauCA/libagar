@@ -357,7 +357,6 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	default:
 		break;
 	}
-	AG_WidgetBindingChanged(stateb);
 	AG_WidgetUnlockBinding(stateb);
 	AG_ObjectUnlock(cb);
 }
