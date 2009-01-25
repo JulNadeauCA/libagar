@@ -14,7 +14,8 @@ chomp($cflags);
 chomp($libs);
 
 my %Makefile = (
-	'AUTHOR'	=> 'Julien Nadeau <vedge@hypertriton.com>',
+	'AUTHOR'	=> 'Julien Nadeau <vedge@hypertriton.com>, ' .
+	                   'Mat Sutcliffe <oktal@gmx.co.uk>',
 	'ABSTRACT'	=> 'Perl interface to the Agar GUI toolkit',
 	'NAME'		=> 'Agar',
 	'VERSION_FROM'	=> 'Agar.pm',
