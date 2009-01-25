@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2009 Mat Sutcliffe (oktal@gmx.co.uk)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,13 +39,13 @@ void
 lock(self)
 	Agar::Config self
 CODE:
-	AG_LockProps(self);
+	AG_ObjectLock(self);
 
 void
 unlock(self)
 	Agar::Config self
 CODE:
-	AG_UnlockProps(self);
+	AG_ObjectUnlock(self);
 
 int
 load(self, path)
