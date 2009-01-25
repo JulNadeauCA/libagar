@@ -96,24 +96,15 @@ M_InitSubsystem(void)
 	M_VectorInitEngine();
 	M_MatrixInitEngine();
 
-	AG_RegisterClass(&mPlotterClass);
-	AG_RegisterClass(&mMatviewClass);
+	if (agGUI) {
+		AG_RegisterClass(&mPlotterClass);
+		AG_RegisterClass(&mMatviewClass);
 
-	AG_RegisterLabelFormat("C", PrintComplex);
-	AG_RegisterLabelFormat("T", PrintTime);
-	AG_RegisterLabelFormat("V", PrintVector);
-	AG_RegisterLabelFormat("M", PrintMatrix);
-#if 0
-	AG_RegisterLabelFormat("V2", PrintVector2);
-	AG_RegisterLabelFormat("V3", PrintVector3);
-	AG_RegisterLabelFormat("V4", PrintVector4);
-	AG_RegisterLabelFormat("M44", PrintMatrix44);
-	AG_RegisterLabelFormat("R", PrintRectangular);
-	AG_RegisterLabelFormat("Po", PrintPolar);
-	AG_RegisterLabelFormat("Pa", PrintParabolic);
-	AG_RegisterLabelFormat("Sp", PrintSpherical);
-	AG_RegisterLabelFormat("Cy", PrintCylindrical);
-#endif
+		AG_RegisterLabelFormat("C", PrintComplex);
+		AG_RegisterLabelFormat("T", PrintTime);
+		AG_RegisterLabelFormat("V", PrintVector);
+		AG_RegisterLabelFormat("M", PrintMatrix);
+	}
 }
 
 /* Release resources allocated by the math library. */
