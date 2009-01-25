@@ -31,88 +31,79 @@
 #include <agar/gui.h>
 #include "perl_agar.h"
 
-static const AP_FlagNames flagNames[] = {
-	{ "hwSurface",   AG_HWSURFACE },
-	{ "srcColorKey", AG_SRCCOLORKEY },
-	{ "srcAlpha",    AG_SRCALPHA },
-	{ NULL,          0 }
-};
+int nameToColor(const char *name)
+{
+	int i;
+	for (i = 0; i < LAST_COLOR; i++) {
+		if (strEQ(name, agColorNames[i])) {
+			return i;
+		}
+	}
+	return -1;
+}
 
-MODULE = Agar::Surface		PACKAGE = Agar::Surface		PREFIX = AG_
+MODULE = Agar::Colors	PACKAGE = Agar::Colors	PREFIX = AG_
 PROTOTYPES: ENABLE
 VERSIONCHECK: DISABLE
 
-Agar::Surface
-new(package, w, h, pf, ...)
-	const char *package
-	int w
-	int h
-	Agar::PixelFormat pf
-PREINIT:
-	Uint flags = 0;
+void
+Reset()
 CODE:
-	if ((items == 5 && SvTYPE(SvRV(ST(4))) != SVt_PVHV) || items > 5) {
-		Perl_croak(aTHX_ "Usage: Agar::Surface->new(w,h,pxFormat,[{opts}])");
-	}
-	if (items == 5) {
-		AP_MapHashToFlags(SvRV(ST(4)), flagNames, &flags);
-	}
-	RETVAL = AG_SurfaceNew(w, h, pf, flags);
+	AG_ColorsInit();
+
+int
+Load(path)
+	const char * path
+CODE:
+	RETVAL = AG_ColorsLoad(path);
 OUTPUT:
 	RETVAL
 
-Agar::Surface
-newIndexed(package, w, h, bitsPerPixel, ...)
-	const char *package
-	int w
-	int h
-	int bitsPerPixel
-PREINIT:
-	Uint flags = 0;
+int
+Save(path)
+	const char * path
 CODE:
-	if ((items == 5 && SvTYPE(SvRV(ST(4))) != SVt_PVHV) || items > 5) {
-		Perl_croak(aTHX_ "Usage: Agar::Surface->newIndexed(w,h,depth,"
-		           "[{opts}])");
-	}
-	if (items == 5) {
-		AP_MapHashToFlags(SvRV(ST(4)), flagNames, &flags);
-	}
-	RETVAL = AG_SurfaceIndexed(w, h, bitsPerPixel, flags);
-OUTPUT:
-	RETVAL
-
-
-Agar::Surface
-newEmpty(package)
-	const char *package
-CODE:
-	RETVAL = AG_SurfaceEmpty();
-OUTPUT:
-	RETVAL
-
-Agar::Surface
-newFromBMP(package, path)
-	const char *package
-	const char *path
-CODE:
-	if ((RETVAL = AG_SurfaceFromBMP(path)) == NULL) {
-		XSRETURN_UNDEF;
-	}
-OUTPUT:
-	RETVAL
-
-Agar::Surface
-newFromSDL(package, surface)
-	const char *package
-	SDL::Surface surface
-CODE:
-	RETVAL = AG_SurfaceFromSDL(surface);
+	RETVAL = AG_ColorsSave(path);
 OUTPUT:
 	RETVAL
 
 void
-DESTROY(s)
-	Agar::Surface s
+SaveDefault()
 CODE:
-	AG_SurfaceFree(s);
+	AG_ColorsSaveDefault();
+
+int
+SetRGB(name, r, g, b)
+	const char * name
+	Uint8 r
+	Uint8 g
+	Uint8 b
+PREINIT:
+	int color;
+CODE:
+	if ((color = nameToColor(name)) < 0) {
+		RETVAL = -1;
+	} else {
+		RETVAL = AG_ColorsSetRGB(color, r, g, b);
+	}
+OUTPUT:
+	RETVAL
+
+int
+SetRGBA(name, r, g, b, a)
+	const char * name
+	Uint8 r
+	Uint8 g
+	Uint8 b
+	Uint8 a
+PREINIT:
+	int color;
+CODE:
+	if ((color = nameToColor(name)) < 0) {
+		RETVAL = -1;
+	} else {
+		RETVAL = AG_ColorsSetRGBA(color, r, g, b, a);
+	}
+OUTPUT:
+	RETVAL
 
