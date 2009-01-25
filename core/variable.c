@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2008-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -123,14 +123,12 @@ AG_VariableList(const char *argSpec, ...)
 	}
 	asDup = Strdup(argSpec);
 	as = &asDup[0];
-
 	va_start(ap, argSpec);
 	while ((s = AG_Strsep(&as, ":, ")) != NULL) {
 		AG_VARIABLE_GET(ap, s, &V);
 		AG_ListAppend(L, &V);
 	}
 	va_end(ap);
-
 	Free(asDup);
 	return (L);
 }
@@ -140,8 +138,9 @@ AG_VariableList(const char *argSpec, ...)
  * Object must be locked.
  */
 static __inline__ AG_Variable *
-AllocVariable(AG_Object *obj, const char *name, enum ag_variable_type type)
+AllocVariable(void *pObj, const char *name, enum ag_variable_type type)
 {
+	AG_Object *obj = pObj;
 	Uint i;
 	AG_Variable *V;
 	
@@ -163,46 +162,13 @@ AllocVariable(AG_Object *obj, const char *name, enum ag_variable_type type)
 	return (V);
 }
 
-/*
- * Lookup a variable by name and return it locked.
- * Object must be locked.
- */
-static __inline__ AG_Variable *
-GetVariable(AG_Object *obj, const char *name)
-{
-	Uint i;
-	AG_Variable *V;
-	
-	for (i = 0; i < obj->nVars; i++) {
-		if (strcmp(obj->vars[i].name, name) == 0)
-			break;
-	}
-	if (i == obj->nVars) {
-		AG_SetError("%s: No such variable: \"%s\"", obj->name, name);
-		return (NULL);
-	}
-	V = &obj->vars[i];
-	if (V->mutex != NULL) {
-		AG_MutexLock(V->mutex);
-	}
-	return (V);
-}
-
-/* Release any mutex associated with a variable. */
-static __inline__ void
-UnlockVariable(AG_Variable *V)
-{
-	if (V->mutex != NULL)
-		AG_MutexUnlock(V->mutex);
-}
-
 /* Print the specified variable to fixed-size buffer. */
 void
 AG_VariablePrint(char *s, size_t len, void *obj, const char *pname)
 {
 	AG_Variable *V;
 
-	if ((V = GetVariable(obj, pname)) == NULL) {
+	if ((V = AG_GetVariable(obj, pname)) == NULL) {
 		Snprintf(s, len, "<%s>", AG_GetError());
 		return;
 	}
@@ -229,8 +195,33 @@ AG_VariablePrint(char *s, size_t len, void *obj, const char *pname)
 		Strlcat(s, "<?>", len);
 		break;
 	}
+	AG_UnlockVariable(V);
 }
 
+/*
+ * Search for a variable from an a "object-name:prop-name" string,
+ * relative to the specified VFS.
+ */
+AG_Variable *
+AG_GetVariableVFS(void *vfsRoot, const char *varPath)
+{
+	char sb[AG_OBJECT_PATH_MAX+65];
+	char *s = &sb[0], *objName, *varName;
+	void *obj;
+
+	Strlcpy(sb, varPath, sizeof(sb));
+	objName = Strsep(&s, ":");
+	varName = Strsep(&s, ":");
+	if (objName == NULL || varName == NULL ||
+	    objName[0] == '\0' || varName[0] == '\0') {
+		AG_SetError(_("Invalid variable path: %s"), varPath);
+		return (NULL);
+	}
+	if ((obj = AG_ObjectFind(vfsRoot, objName)) == NULL) {
+		return (NULL);
+	}
+	return AG_GetVariable(obj, varName);
+}
 
 /*
  * Set the value of the specified Object variable. If there is no variable
@@ -245,425 +236,561 @@ AG_Set(void *pObj, const char *name, const char *fmt, ...)
 	va_list ap;
 
 	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_NULL);
-
+	V = AG_GetVariable(obj, name);
 	va_start(ap, fmt);
 	AG_VARIABLE_GET(ap, fmt, V);
 	va_end(ap);
-
 	V->name = name;
 	AG_ObjectUnlock(obj);
 	return (V);
 }
 
 /*
- * Integer get/set routines.
+ * Atomic get/set and bind routines.
  */
 
-AG_Variable *
-AG_SetUint(void *pObj, const char *name, Uint v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
+#undef  VARIABLE_GET_FN
+#define VARIABLE_GET_FN(obj,V,_field,_fname) do {		\
+	char evName[AG_EVENT_NAME_MAX];				\
+	AG_Event *ev;						\
+								\
+	Strlcpy(evName, "get-", sizeof(evName));		\
+	Strlcat(evName, (V)->name, sizeof(evName));		\
+	AG_ObjectLock(obj);					\
+	TAILQ_FOREACH(ev, &OBJECT(obj)->events, events) {	\
+		if (strcmp(evName, ev->name) == 0)		\
+			break;					\
+	}							\
+	if (ev != NULL) {					\
+		(V)->data._field = (V)->fn._fname(ev);		\
+	}							\
+	AG_ObjectUnlock(obj);					\
+} while (0)
 
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_UINT);
-	V->data.u = v;
-	AG_ObjectUnlock(obj);
+#undef  VARIABLE_GET
+#define VARIABLE_GET(obj,name,_memb,_fn,_type,_getfn)		\
+	_type rv;						\
+	AG_Variable *V;						\
+								\
+	if ((V = AG_GetVariable((obj),(name))) == NULL) {	\
+		return (0);					\
+	}							\
+	if (V->fn._fn != NULL) { _getfn((obj),V); }		\
+	rv = V->data._memb;					\
+	AG_UnlockVariable(V);					\
+	return (rv)						\
+
+#undef  VARIABLE_SET
+#define VARIABLE_SET(obj,name,_memb,type)			\
+	AG_Variable *V;						\
+								\
+	AG_ObjectLock(obj);					\
+	V = AllocVariable(obj, name, type);			\
+	V->data._memb = v;					\
+	AG_ObjectUnlock(obj);					\
+	return (V)
+
+#undef  VARIABLE_SET_FN
+#define VARIABLE_SET_FN(obj,name,_memb,type)			\
+	char evName[AG_EVENT_NAME_MAX];				\
+	AG_Event *ev;						\
+	AG_Variable *V;						\
+								\
+	Strlcpy(evName, "get-", sizeof(evName));		\
+	Strlcat(evName, name, sizeof(evName));			\
+	AG_ObjectLock(obj);					\
+	V = AllocVariable(obj, name, type);			\
+	V->fn._memb = fn;					\
+	ev = AG_SetEvent(obj, evName, NULL, NULL);		\
+	AG_EVENT_GET_ARGS(ev, fmt);				\
+	AG_ObjectUnlock(obj);					\
+	return (V)
+
+#undef  VARIABLE_SET_MP
+#define VARIABLE_SET_MP(obj,name,_memb,type)			\
+	AG_Variable *V;						\
+								\
+	AG_ObjectLock(obj);					\
+	V = AllocVariable(obj, name, type);			\
+	V->data._memb = v;					\
+	V->mutex = mutex;					\
+	AG_ObjectUnlock(obj);					\
+	return (V)
+
+/*
+ * Unsigned integer
+ */
+static void
+GetUintFn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, u, fnUint);
+}
+Uint
+AG_GetUint(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, u, fnUint, Uint, GetUintFn);
+}
+AG_Variable *
+AG_SetUint(void *obj, const char *name, Uint v)
+{
+	VARIABLE_SET(obj, name, u, AG_VARIABLE_UINT);
+}
+AG_Variable *
+AG_BindUintFn(void *obj, const char *name, AG_UintFn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnUint, AG_VARIABLE_UINT);
+}
+AG_Variable *
+AG_BindUint(void *obj, const char *name, Uint *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_UINT);
+}
+AG_Variable *
+AG_BindUint_MP(void *obj, const char *name, Uint *v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_UINT);
+}
+
+/*
+ * Signed integer
+ */
+static void
+GetIntFn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, i, fnInt);
+}
+int
+AG_GetInt(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, u, fnInt, int, GetIntFn);
+}
+AG_Variable *
+AG_SetInt(void *obj, const char *name, int v)
+{
+	VARIABLE_SET(obj, name, i, AG_VARIABLE_INT);
+}
+AG_Variable *
+AG_BindInt(void *obj, const char *name, int *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_INT);
+}
+AG_Variable *
+AG_BindIntFn(void *obj, const char *name, AG_IntFn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnInt, AG_VARIABLE_INT);
+}
+AG_Variable *
+AG_BindInt_MP(void *obj, const char *name, int *v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_INT);
+}
+
+/*
+ * Unsigned 8-bit integer
+ */
+static void
+GetUint8Fn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, u8, fnUint8);
+}
+Uint8
+AG_GetUint8(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, u8, fnUint8, Uint8, GetUint8Fn);
+}
+AG_Variable *
+AG_SetUint8(void *obj, const char *name, Uint8 v)
+{
+	VARIABLE_SET(obj, name, s8, AG_VARIABLE_SINT8);
+}
+AG_Variable *
+AG_BindUint8(void *obj, const char *name, Uint8 *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_SINT8);
+}
+AG_Variable *
+AG_BindUint8Fn(void *obj, const char *name, AG_Uint8Fn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnUint8, AG_VARIABLE_UINT8);
+}
+AG_Variable *
+AG_BindUint8_MP(void *obj, const char *name, Uint8 *v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_SINT8);
+}
+
+/*
+ * Signed 8-bit integer
+ */
+static void
+GetSint8Fn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, s8, fnSint8);
+}
+Sint8
+AG_GetSint8(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, s8, fnSint8, Sint8, GetSint8Fn);
+}
+AG_Variable *
+AG_SetSint8(void *obj, const char *name, Sint8 v)
+{
+	VARIABLE_SET(obj, name, s8, AG_VARIABLE_SINT8);
+}
+AG_Variable *
+AG_BindSint8(void *obj, const char *name, Sint8 *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_SINT8);
+}
+AG_Variable *
+AG_BindSint8Fn(void *obj, const char *name, AG_Sint8Fn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnSint8, AG_VARIABLE_SINT8);
+}
+AG_Variable *
+AG_BindSint8_MP(void *obj, const char *name, Sint8 *v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_SINT8);
+}
+
+/*
+ * Unsigned 16-bit integer
+ */
+static void
+GetUint16Fn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, u16, fnUint16);
+}
+Uint16
+AG_GetUint16(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, u16, fnUint16, Uint16, GetUint16Fn);
+}
+AG_Variable *
+AG_SetUint16(void *obj, const char *name, Uint16 v)
+{
+	VARIABLE_SET(obj, name, u16, AG_VARIABLE_UINT16);
+}
+AG_Variable *
+AG_BindUint16(void *obj, const char *name, Uint16 *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_UINT16);
+}
+AG_Variable *
+AG_BindUint16Fn(void *obj, const char *name, AG_Uint16Fn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnUint16, AG_VARIABLE_UINT16);
+}
+AG_Variable *
+AG_BindUint16_MP(void *obj, const char *name, Uint16 *v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_UINT16);
+}
+
+/*
+ * Signed 16-bit integer
+ */
+static void
+GetSint16Fn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, s16, fnSint16);
+}
+Sint16
+AG_GetSint16(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, s16, fnSint16, Sint16, GetSint16Fn);
+}
+AG_Variable *
+AG_SetSint16(void *obj, const char *name, Sint16 v)
+{
+	VARIABLE_SET(obj, name, s16, AG_VARIABLE_SINT16);
+}
+AG_Variable *
+AG_BindSint16(void *obj, const char *name, Sint16 *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_SINT16);
+}
+AG_Variable *
+AG_BindSint16Fn(void *obj, const char *name, AG_Sint16Fn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnSint16, AG_VARIABLE_SINT16);
+}
+AG_Variable *
+AG_BindSint16_MP(void *obj, const char *name, Sint16 *v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_SINT16);
+}
+
+/*
+ * Unsigned 32-bit integer
+ */
+static void
+GetUint32Fn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, u32, fnUint32);
+}
+Uint32
+AG_GetUint32(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, u32, fnUint32, Uint32, GetUint32Fn);
+}
+AG_Variable *
+AG_SetUint32(void *obj, const char *name, Uint32 v)
+{
+	VARIABLE_SET(obj, name, u32, AG_VARIABLE_UINT32);
+}
+AG_Variable *
+AG_BindUint32(void *obj, const char *name, Uint32 *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_UINT32);
+}
+AG_Variable *
+AG_BindUint32Fn(void *obj, const char *name, AG_Uint32Fn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnUint32, AG_VARIABLE_UINT32);
+}
+AG_Variable *
+AG_BindUint32_MP(void *obj, const char *name, Uint32 *v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_UINT32);
+}
+
+/*
+ * Signed 32-bit integer
+ */
+static void
+GetSint32Fn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, s32, fnSint32);
+}
+Sint32
+AG_GetSint32(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, s32, fnSint32, Sint32, GetSint32Fn);
+}
+AG_Variable *
+AG_SetSint32(void *obj, const char *name, Sint32 v)
+{
+	VARIABLE_SET(obj, name, s32, AG_VARIABLE_SINT32);
+}
+AG_Variable *
+AG_BindSint32(void *obj, const char *name, Sint32 *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_SINT32);
+}
+AG_Variable *
+AG_BindSint32Fn(void *obj, const char *name, AG_Sint32Fn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnSint32, AG_VARIABLE_SINT32);
+}
+AG_Variable *
+AG_BindSint32_MP(void *obj, const char *name, Sint32 *v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_SINT32);
+}
+
+/*
+ * Single-precision floating-point number.
+ */
+static void
+GetFloatFn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, flt, fnFloat);
+}
+float
+AG_GetFloat(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, flt, fnFloat, float, GetFloatFn);
+}
+AG_Variable *
+AG_SetFloat(void *obj, const char *name, float v)
+{
+	VARIABLE_SET(obj, name, flt, AG_VARIABLE_FLOAT);
+}
+AG_Variable *
+AG_BindFloat(void *obj, const char *name, float *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_FLOAT);
+}
+AG_Variable *
+AG_BindFloatFn(void *obj, const char *name, AG_FloatFn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnFloat, AG_VARIABLE_FLOAT);
+}
+AG_Variable *
+AG_BindFloat_MP(void *obj, const char *name, float *v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_FLOAT);
+}
+
+/*
+ * Double-precision floating-point number.
+ */
+static void
+GetDoubleFn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, dbl, fnDouble);
+}
+double
+AG_GetDouble(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, dbl, fnDouble, double, GetDoubleFn);
+}
+AG_Variable *
+AG_SetDouble(void *obj, const char *name, double v)
+{
+	VARIABLE_SET(obj, name, dbl, AG_VARIABLE_DOUBLE);
+}
+AG_Variable *
+AG_BindDouble(void *obj, const char *name, double *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_DOUBLE);
+}
+AG_Variable *
+AG_BindDoubleFn(void *obj, const char *name, AG_DoubleFn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnDouble, AG_VARIABLE_DOUBLE);
+}
+AG_Variable *
+AG_BindDouble_MP(void *obj, const char *name, double *v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_DOUBLE);
+}
+
+/*
+ * Pointer routines.
+ */
+static void
+GetPointerFn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, p, fnPointer);
+}
+void *
+AG_GetPointer(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, p, fnPointer, void *, GetPointerFn);
+}
+AG_Variable *
+AG_SetPointer(void *obj, const char *name, void *v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_POINTER);
+}
+AG_Variable *
+AG_BindPointer(void *obj, const char *name, void **v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_POINTER);
+}
+AG_Variable *
+AG_BindPointerFn(void *obj, const char *name, AG_PointerFn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnPointer, AG_VARIABLE_POINTER);
+}
+AG_Variable *
+AG_BindPointer_MP(void *obj, const char *name, void **v, AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_POINTER);
 	return (V);
 }
 
+/*
+ * Const pointer routines.
+ */
+static void
+GetConstPointerFn(void *obj, AG_Variable *V)
+{
+	VARIABLE_GET_FN(obj, V, Cp, fnConstPointer);
+}
+const void *
+AG_GetConstPointer(void *obj, const char *name)
+{
+	VARIABLE_GET(obj, name, Cp, fnConstPointer, const void *, GetConstPointerFn);
+}
 AG_Variable *
-AG_BindUint(void *pObj, const char *name, Uint *v)
+AG_SetConstPointer(void *obj, const char *name, const void *v)
+{
+	VARIABLE_SET(obj, name, Cp, AG_VARIABLE_CONST_POINTER);
+}
+AG_Variable *
+AG_BindConstPointer(void *obj, const char *name, const void **v)
+{
+	VARIABLE_SET(obj, name, p, AG_VARIABLE_P_CONST_POINTER);
+}
+AG_Variable *
+AG_BindConstPointerFn(void *obj, const char *name, AG_ConstPointerFn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnConstPointer, AG_VARIABLE_CONST_POINTER);
+}
+AG_Variable *
+AG_BindConstPointer_MP(void *obj, const char *name, const void **v,
+    AG_Mutex *mutex)
+{
+	VARIABLE_SET_MP(obj, name, p, AG_VARIABLE_P_CONST_POINTER);
+}
+
+/*
+ * String get/set routines.
+ */
+static size_t
+GetStringFn(void *obj, AG_Variable *V, char *dst, size_t dstSize)
+{
+	char evName[AG_EVENT_NAME_MAX];
+	AG_Event *ev;
+	size_t rv;
+
+	Strlcpy(evName, "get-", sizeof(evName));
+	Strlcat(evName, V->name, sizeof(evName));
+
+	AG_ObjectLock(obj);
+	TAILQ_FOREACH(ev, &OBJECT(obj)->events, events) {
+		if (strcmp(evName, ev->name) == 0)
+			break;
+	}
+	rv = (V->fn.fnString != NULL) ?
+	      V->fn.fnString(ev, dst, dstSize) : 0;
+	AG_ObjectUnlock(obj);
+	return (rv);
+}
+size_t
+AG_GetString(void *pObj, const char *name, char *dst, size_t dstSize)
 {
 	AG_Object *obj = pObj;
 	AG_Variable *V;
+	size_t rv;
 
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_UINT);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
+	if ((V = AG_GetVariable(obj, name)) == NULL) {
+		return (0);
+	}
+	if (V->fn.fnString != NULL) {
+		rv = GetStringFn(obj, V, dst, dstSize);
+	} else {
+		Strlcpy(dst, V->data.s, dstSize);
+		rv = strlen(V->data.s);
+	}
+	AG_UnlockVariable(V);
+	return (rv);
 }
-
-AG_Variable *
-AG_BindUint_MP(void *pObj, const char *name, Uint *v, AG_Mutex *mutex)
+char *
+AG_GetStringDup(void *pObj, const char *name)
 {
 	AG_Object *obj = pObj;
 	AG_Variable *V;
+	char *s;
 
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_UINT);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
+	if ((V = AG_GetVariable(obj, name)) == NULL) {
+		return (0);
+	}
+	if (V->fn.fnString != NULL) {
+		s = Malloc(V->info.size);
+		(void)GetStringFn(obj, V, s, V->info.size);
+	} else {
+		s = Strdup(V->data.s);
+	}
+	AG_UnlockVariable(V);
+	return (s);
 }
-
 AG_Variable *
-AG_SetInt(void *pObj, const char *name, int v)
+AG_SetString(void *obj, const char *name, const char *fmt, ...)
 {
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_INT);
-	V->data.i = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindInt(void *pObj, const char *name, int *v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_INT);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindInt_MP(void *pObj, const char *name, int *v, AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_INT);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_SetUint8(void *pObj, const char *name, Uint8 v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_UINT8);
-	V->data.u8 = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindUint8(void *pObj, const char *name, Uint8 *v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_UINT8);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindUint8_MP(void *pObj, const char *name, Uint8 *v, AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_UINT8);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_SetSint8(void *pObj, const char *name, Sint8 v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_SINT8);
-	V->data.s8 = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindSint8(void *pObj, const char *name, Sint8 *v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_SINT8);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindSint8_MP(void *pObj, const char *name, Sint8 *v, AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_SINT8);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_SetUint16(void *pObj, const char *name, Uint16 v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_UINT16);
-	V->data.u16 = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindUint16(void *pObj, const char *name, Uint16 *v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_UINT16);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindUint16_MP(void *pObj, const char *name, Uint16 *v, AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_UINT16);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_SetSint16(void *pObj, const char *name, Sint16 v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_SINT16);
-	V->data.s16 = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindSint16(void *pObj, const char *name, Sint16 *v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_SINT16);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindSint16_MP(void *pObj, const char *name, Sint16 *v, AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_SINT16);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_SetUint32(void *pObj, const char *name, Uint32 v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_UINT32);
-	V->data.u32 = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindUint32(void *pObj, const char *name, Uint32 *v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_UINT32);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindUint32_MP(void *pObj, const char *name, Uint32 *v, AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_UINT32);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_SetSint32(void *pObj, const char *name, Sint32 v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_SINT32);
-	V->data.s32 = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindSint32(void *pObj, const char *name, Sint32 *v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_SINT32);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindSint32_MP(void *pObj, const char *name, Sint32 *v, AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_SINT32);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_SetFloat(void *pObj, const char *name, float v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_FLOAT);
-	V->data.flt = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindFloat(void *pObj, const char *name, float *v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_FLOAT);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindFloat_MP(void *pObj, const char *name, float *v, AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_FLOAT);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_SetDouble(void *pObj, const char *name, double v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_DOUBLE);
-	V->data.dbl = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindDouble(void *pObj, const char *name, double *v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_DOUBLE);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindDouble_MP(void *pObj, const char *name, double *v, AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_DOUBLE);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_SetString(void *pObj, const char *name, const char *fmt, ...)
-{
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 	va_list ap;
 
@@ -676,11 +803,9 @@ AG_SetString(void *pObj, const char *name, const char *fmt, ...)
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindString(void *pObj, const char *name, char *v, size_t size)
+AG_BindString(void *obj, const char *name, char *v, size_t size)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -690,12 +815,15 @@ AG_BindString(void *pObj, const char *name, char *v, size_t size)
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindString_MP(void *pObj, const char *name, char *v, size_t size,
+AG_BindStringFn(void *obj, const char *name, AG_StringFn fn, const char *fmt, ...)
+{
+	VARIABLE_SET_FN(obj, name, fnString, AG_VARIABLE_STRING);
+}
+AG_Variable *
+AG_BindString_MP(void *obj, const char *name, char *v, size_t size,
     AG_Mutex *mutex)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -706,11 +834,9 @@ AG_BindString_MP(void *pObj, const char *name, char *v, size_t size,
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_SetConstString(void *pObj, const char *name, const char *v)
+AG_SetConstString(void *obj, const char *name, const char *v)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -720,11 +846,9 @@ AG_SetConstString(void *pObj, const char *name, const char *v)
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindConstString(void *pObj, const char *name, const char **v)
+AG_BindConstString(void *obj, const char *name, const char **v)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -734,12 +858,10 @@ AG_BindConstString(void *pObj, const char *name, const char **v)
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindConstString_MP(void *pObj, const char *name, const char **v,
+AG_BindConstString_MP(void *obj, const char *name, const char **v,
     AG_Mutex *mutex)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -751,91 +873,12 @@ AG_BindConstString_MP(void *pObj, const char *name, const char **v,
 	return (V);
 }
 
+/*
+ * Bitwise flag routines.
+ */
 AG_Variable *
-AG_SetPointer(void *pObj, const char *name, void *v)
+AG_BindFlag(void *obj, const char *name, Uint *v, Uint bitmask)
 {
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_POINTER);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindPointer(void *pObj, const char *name, void **v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_POINTER);
-	V->data.p = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindPointer_MP(void *pObj, const char *name, void **v, AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_POINTER);
-	V->data.p = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_SetConstPointer(void *pObj, const char *name, const void *v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_CONST_POINTER);
-	V->data.Cp = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindConstPointer(void *pObj, const char *name, const void **v)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_CONST_POINTER);
-	V->data.Cp = v;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindConstPointer_MP(void *pObj, const char *name, const void **v,
-    AG_Mutex *mutex)
-{
-	AG_Object *obj = pObj;
-	AG_Variable *V;
-
-	AG_ObjectLock(obj);
-	V = AllocVariable(obj, name, AG_VARIABLE_P_CONST_POINTER);
-	V->data.Cp = v;
-	V->mutex = mutex;
-	AG_ObjectUnlock(obj);
-	return (V);
-}
-
-AG_Variable *
-AG_BindFlag(void *pObj, const char *name, Uint *v, Uint bitmask)
-{
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -845,12 +888,10 @@ AG_BindFlag(void *pObj, const char *name, Uint *v, Uint bitmask)
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindFlag_MP(void *pObj, const char *name, Uint *v, Uint bitmask,
+AG_BindFlag_MP(void *obj, const char *name, Uint *v, Uint bitmask,
     AG_Mutex *mutex)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -861,11 +902,9 @@ AG_BindFlag_MP(void *pObj, const char *name, Uint *v, Uint bitmask,
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindFlag8(void *pObj, const char *name, Uint8 *v, Uint8 bitmask)
+AG_BindFlag8(void *obj, const char *name, Uint8 *v, Uint8 bitmask)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -875,12 +914,10 @@ AG_BindFlag8(void *pObj, const char *name, Uint8 *v, Uint8 bitmask)
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindFlag8_MP(void *pObj, const char *name, Uint8 *v, Uint8 bitmask,
+AG_BindFlag8_MP(void *obj, const char *name, Uint8 *v, Uint8 bitmask,
     AG_Mutex *mutex)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -891,11 +928,9 @@ AG_BindFlag8_MP(void *pObj, const char *name, Uint8 *v, Uint8 bitmask,
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindFlag16(void *pObj, const char *name, Uint16 *v, Uint16 bitmask)
+AG_BindFlag16(void *obj, const char *name, Uint16 *v, Uint16 bitmask)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -905,12 +940,10 @@ AG_BindFlag16(void *pObj, const char *name, Uint16 *v, Uint16 bitmask)
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindFlag16_MP(void *pObj, const char *name, Uint16 *v, Uint16 bitmask,
+AG_BindFlag16_MP(void *obj, const char *name, Uint16 *v, Uint16 bitmask,
     AG_Mutex *mutex)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -921,11 +954,9 @@ AG_BindFlag16_MP(void *pObj, const char *name, Uint16 *v, Uint16 bitmask,
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindFlag32(void *pObj, const char *name, Uint32 *v, Uint32 bitmask)
+AG_BindFlag32(void *obj, const char *name, Uint32 *v, Uint32 bitmask)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -935,12 +966,10 @@ AG_BindFlag32(void *pObj, const char *name, Uint32 *v, Uint32 bitmask)
 	AG_ObjectUnlock(obj);
 	return (V);
 }
-
 AG_Variable *
-AG_BindFlag32_MP(void *pObj, const char *name, Uint32 *v, Uint32 bitmask,
+AG_BindFlag32_MP(void *obj, const char *name, Uint32 *v, Uint32 bitmask,
     AG_Mutex *mutex)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
 
 	AG_ObjectLock(obj);
@@ -951,3 +980,4 @@ AG_BindFlag32_MP(void *pObj, const char *name, Uint32 *v, Uint32 bitmask,
 	AG_ObjectUnlock(obj);
 	return (V);
 }
+

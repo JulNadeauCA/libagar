@@ -2,6 +2,8 @@
 
 #include <agar/core/begin.h>
 
+#define AG_VARIABLE_NAME_MAX 64
+
 typedef enum ag_variable_type {
 	/*
 	 * Standard types
@@ -122,8 +124,7 @@ typedef Uint32      (*AG_Uint32Fn)(struct ag_event *);
 typedef Sint32      (*AG_Sint32Fn)(struct ag_event *);
 typedef float       (*AG_FloatFn)(struct ag_event *);
 typedef double      (*AG_DoubleFn)(struct ag_event *);
-typedef char       *(*AG_StringFn)(struct ag_event *, size_t *);
-typedef const char *(*AG_ConstStringFn)(struct ag_event *, size_t *);
+typedef size_t      (*AG_StringFn)(struct ag_event *, char *, size_t);
 typedef void       *(*AG_PointerFn)(struct ag_event *);
 typedef const void *(*AG_ConstPointerFn)(struct ag_event *);
 
@@ -147,8 +148,7 @@ typedef struct ag_variable {
 		Sint32 (*fnSint32)(struct ag_event *);
 		float (*fnFloat)(struct ag_event *);
 		double (*fnDouble)(struct ag_event *);
-		char *(*fnString)(struct ag_event *, size_t *);
-		const char *(*fnConstString)(struct ag_event *, size_t *);
+		size_t (*fnString)(struct ag_event *, char *, size_t);
 		void *(*fnPointer)(struct ag_event *);
 		const void *(*fnConstPointer)(struct ag_event *);
 	} fn;
@@ -316,8 +316,8 @@ typedef struct ag_variable {
 					    AG_VARIABLE_CONST_STRING,	\
 					    AG_VARIABLE_P_CONST_STRING,	\
 					    Cs, const char *, NULL,	\
-					    fnConstString,		\
-					    AG_ConstStringFn);		\
+					    fnString,			\
+					    AG_StringFn);		\
 					break;				\
 				}					\
 			} else if (sc[0] == 'B') {			\
@@ -395,56 +395,91 @@ extern const char *agVariableTypeNames[];
 
 struct ag_list *AG_VariableList(const char *, ...);
 void            AG_VariablePrint(char *, size_t, void *, const char *);
+AG_Variable    *AG_GetVariableVFS(void *, const char *);
 
 AG_Variable *AG_Set(void *, const char *, const char *, ...);
 
+Uint         AG_GetUint(void *, const char *);
 AG_Variable *AG_SetUint(void *, const char *, Uint);
 AG_Variable *AG_BindUint(void *, const char *, Uint *);
+AG_Variable *AG_BindUintFn(void *, const char *, AG_UintFn, const char *, ...);
 AG_Variable *AG_BindUint_MP(void *, const char *, Uint *, AG_Mutex *);
+
+int          AG_GetInt(void *, const char *);
 AG_Variable *AG_SetInt(void *, const char *, int);
 AG_Variable *AG_BindInt(void *, const char *, int *);
+AG_Variable *AG_BindIntFn(void *, const char *, AG_IntFn, const char *, ...);
 AG_Variable *AG_BindInt_MP(void *, const char *, int *, AG_Mutex *);
 
+Uint8        AG_GetUint8(void *, const char *);
 AG_Variable *AG_SetUint8(void *, const char *, Uint8);
 AG_Variable *AG_BindUint8(void *, const char *, Uint8 *);
+AG_Variable *AG_BindUint8Fn(void *, const char *, AG_Uint8Fn, const char *, ...);
 AG_Variable *AG_BindUint8_MP(void *, const char *, Uint8 *, AG_Mutex *);
+
+Sint8        AG_GetSint8(void *, const char *);
 AG_Variable *AG_SetSint8(void *, const char *, Sint8);
 AG_Variable *AG_BindSint8(void *, const char *, Sint8 *);
+AG_Variable *AG_BindSint8Fn(void *, const char *, AG_Sint8Fn, const char *, ...);
 AG_Variable *AG_BindSint8_MP(void *, const char *, Sint8 *, AG_Mutex *);
 
+Uint16       AG_GetUint16(void *, const char *);
 AG_Variable *AG_SetUint16(void *, const char *, Uint16);
 AG_Variable *AG_BindUint16(void *, const char *, Uint16 *);
+AG_Variable *AG_BindUint16Fn(void *, const char *, AG_Uint16Fn, const char *, ...);
 AG_Variable *AG_BindUint16_MP(void *, const char *, Uint16 *, AG_Mutex *);
+
+Sint16       AG_GetSint16(void *, const char *);
 AG_Variable *AG_SetSint16(void *, const char *, Sint16);
+AG_Variable *AG_BindSint16Fn(void *, const char *, AG_Sint16Fn, const char *, ...);
 AG_Variable *AG_BindSint16(void *, const char *, Sint16 *);
 AG_Variable *AG_BindSint16_MP(void *, const char *, Sint16 *, AG_Mutex *);
 
+Uint32       AG_GetUint32(void *, const char *);
 AG_Variable *AG_SetUint32(void *, const char *, Uint32);
+AG_Variable *AG_BindUint32Fn(void *, const char *, AG_Uint32Fn, const char *, ...);
 AG_Variable *AG_BindUint32(void *, const char *, Uint32 *);
 AG_Variable *AG_BindUint32_MP(void *, const char *, Uint32 *, AG_Mutex *);
+
+Sint32       AG_GetSint32(void *, const char *);
 AG_Variable *AG_SetSint32(void *, const char *, Sint32);
+AG_Variable *AG_BindSint32Fn(void *, const char *, AG_Sint32Fn, const char *, ...);
 AG_Variable *AG_BindSint32(void *, const char *, Sint32 *);
 AG_Variable *AG_BindSint32_MP(void *, const char *, Sint32 *, AG_Mutex *);
 
+float        AG_GetFloat(void *, const char *);
 AG_Variable *AG_SetFloat(void *, const char *, float);
+AG_Variable *AG_BindFloatFn(void *, const char *, AG_FloatFn, const char *, ...);
 AG_Variable *AG_BindFloat(void *, const char *, float *);
 AG_Variable *AG_BindFloat_MP(void *, const char *, float *, AG_Mutex *);
+
+double       AG_GetDouble(void *, const char *);
 AG_Variable *AG_SetDouble(void *, const char *, double);
+AG_Variable *AG_BindDoubleFn(void *, const char *, AG_DoubleFn, const char *, ...);
 AG_Variable *AG_BindDouble(void *, const char *, double *);
 AG_Variable *AG_BindDouble_MP(void *, const char *, double *, AG_Mutex *);
 
+size_t       AG_GetString(void *, const char *, char *, size_t)
+	                  BOUNDED_ATTRIBUTE(__string__, 3, 4);
+char        *AG_GetStringDup(void *, const char *);
 AG_Variable *AG_SetString(void *, const char *, const char *, ...);
 AG_Variable *AG_BindString(void *, const char *, char *, size_t);
+AG_Variable *AG_BindStringFn(void *, const char *, AG_StringFn, const char *, ...);
 AG_Variable *AG_BindString_MP(void *, const char *, char *, size_t, AG_Mutex *);
 AG_Variable *AG_SetConstString(void *, const char *, const char *);
 AG_Variable *AG_BindConstString(void *, const char *, const char **);
 AG_Variable *AG_BindConstString_MP(void *, const char *, const char **, AG_Mutex *);
 
+void        *AG_GetPointer(void *, const char *);
 AG_Variable *AG_SetPointer(void *, const char *, void *);
 AG_Variable *AG_BindPointer(void *, const char *, void **);
+AG_Variable *AG_BindPointerFn(void *, const char *, AG_PointerFn, const char *, ...);
 AG_Variable *AG_BindPointer_MP(void *, const char *, void **, AG_Mutex *);
+
+const void  *AG_GetConstPointer(void *, const char *);
 AG_Variable *AG_SetConstPointer(void *, const char *, const void *);
 AG_Variable *AG_BindConstPointer(void *, const char *, const void **);
+AG_Variable *AG_BindConstPointerFn(void *, const char *, AG_ConstPointerFn, const char *, ...);
 AG_Variable *AG_BindConstPointer_MP(void *, const char *, const void **, AG_Mutex *);
 
 AG_Variable *AG_BindFlag(void *, const char *, Uint *, Uint);
@@ -456,10 +491,54 @@ AG_Variable *AG_BindFlag16_MP(void *, const char *, Uint16 *, Uint16, AG_Mutex *
 AG_Variable *AG_BindFlag32(void *, const char *, Uint32 *, Uint32);
 AG_Variable *AG_BindFlag32_MP(void *, const char *, Uint32 *, Uint32, AG_Mutex *);
 
-static __inline__ void
-AG_VariableChanged(AG_Variable *V)
+/* Return 1 if the named variable exists. */
+static __inline__ int
+AG_Defined(void *pObj, const char *name)
 {
-	/* TODO */
+	AG_Object *obj = pObj;
+	Uint i;
+
+	AG_ObjectLock(obj);
+	for (i = 0; i < obj->nVars; i++) {
+		if (strcmp(name, obj->vars[i].name) == 0) {
+			AG_ObjectUnlock(obj);
+			return (1);
+		}
+	}
+	AG_ObjectUnlock(obj);
+	return (0);
+}
+
+/*
+ * Lookup a variable by name and return it locked.
+ * Object must be locked.
+ */
+static __inline__ AG_Variable *
+AG_GetVariable(AG_Object *obj, const char *name)
+{
+	Uint i;
+	AG_Variable *V;
+	
+	for (i = 0; i < obj->nVars; i++) {
+		if (strcmp(obj->vars[i].name, name) == 0)
+			break;
+	}
+	if (i == obj->nVars) {
+		return (NULL);
+	}
+	V = &obj->vars[i];
+	if (V->mutex != NULL) {
+		AG_MutexLock(V->mutex);
+	}
+	return (V);
+}
+
+/* Release any locking device associated with a variable. */
+static __inline__ void
+AG_UnlockVariable(AG_Variable *V)
+{
+	if (V->mutex != NULL)
+		AG_MutexUnlock(V->mutex);
 }
 __END_DECLS
 
