@@ -432,7 +432,6 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 	}
 
 	AG_PostEvent(NULL, sbu, "mspinbutton-changed", "%s", which);
-	AG_WidgetBindingChanged(valueb);
 
 	AG_WidgetUnlockBinding(maxb);
 	AG_WidgetUnlockBinding(minb);
@@ -565,7 +564,6 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 	va_end(ap);
 
 	AG_PostEvent(NULL, sbu, "mspinbutton-changed", "%s", which);
-	AG_WidgetBindingChanged(valueb);
 
 	AG_WidgetUnlockBinding(valueb);
 	AG_WidgetUnlockBinding(minb);
@@ -582,7 +580,6 @@ AG_MSpinbuttonSetMin(AG_MSpinbutton *sbu, int nmin)
 	AG_ObjectLock(sbu);
 	minb = AG_WidgetGetBinding(sbu, "min", &min);
 	*min = nmin;
-	AG_WidgetBindingChanged(minb);
 	AG_WidgetUnlockBinding(minb);
 	AG_ObjectUnlock(sbu);
 }
@@ -596,7 +593,6 @@ AG_MSpinbuttonSetMax(AG_MSpinbutton *sbu, int nmax)
 	AG_ObjectLock(sbu);
 	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 	*max = nmax;
-	AG_WidgetBindingChanged(maxb);
 	AG_WidgetUnlockBinding(maxb);
 	AG_ObjectUnlock(sbu);
 }
@@ -612,8 +608,6 @@ AG_MSpinbuttonSetRange(AG_MSpinbutton *sbu, int nmin, int nmax)
 	maxb = AG_WidgetGetBinding(sbu, "max", &max);
 	*min = nmin;
 	*max = nmax;
-	AG_WidgetBindingChanged(minb);
-	AG_WidgetBindingChanged(maxb);
 	AG_WidgetUnlockBinding(minb);
 	AG_WidgetUnlockBinding(maxb);
 	AG_ObjectUnlock(sbu);

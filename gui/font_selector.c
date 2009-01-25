@@ -143,7 +143,7 @@ UpdateFaces(AG_Event *event)
 			ti->selected++;
 	}
 
-	AG_CfgStringCopy("font-path", fontPath, sizeof(fontPath));
+	AG_CopyCfgString("font-path", fontPath, sizeof(fontPath));
 	while ((s = AG_Strsep(&pFontPath, ":")) != NULL) {
 		AG_Dir *dir;
 		int i;

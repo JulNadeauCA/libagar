@@ -381,7 +381,6 @@ SeekToPosition(AG_Slider *sl, int x)
 	case AG_WIDGET_SINT32:	SEEK_TO_POSITION(Sint32);	break;
 	default:						break;
 	} 
-	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
 	AG_WidgetUnlockBinding(bMax);
 	AG_WidgetUnlockBinding(bMin);
@@ -427,7 +426,6 @@ Decrement(AG_Slider *sl, int v)
 	case AG_WIDGET_SINT32:	DECREMENT_INT(Sint32);	break;
 	default:					break;
 	} 
-	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
 	AG_WidgetUnlockBinding(bMax);
 	AG_WidgetUnlockBinding(bMin);
@@ -474,7 +472,6 @@ Increment(AG_Slider *sl, int v)
 	case AG_WIDGET_SINT32:	INCREMENT_INT(Sint32);	break;
 	default:					break;
 	} 
-	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
 	AG_WidgetUnlockBinding(bMax);
 	AG_WidgetUnlockBinding(bMin);

@@ -501,7 +501,6 @@ AG_FSpinbuttonAddValue(AG_FSpinbutton *fsu, double inc)
 	default:					break;
 	}
 	AG_PostEvent(NULL, fsu, "fspinbutton-changed", NULL);
-	AG_WidgetBindingChanged(valueb);
 
 	AG_WidgetUnlockBinding(valueb);
 	AG_WidgetUnlockBinding(minb);
@@ -548,7 +547,6 @@ AG_FSpinbuttonSetValue(AG_FSpinbutton *fsu, double nvalue)
 	}
 
 	AG_PostEvent(NULL, fsu, "fspinbutton-changed", NULL);
-	AG_WidgetBindingChanged(valueb);
 
 	AG_WidgetUnlockBinding(valueb);
 	AG_WidgetUnlockBinding(minb);

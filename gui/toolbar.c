@@ -102,7 +102,6 @@ StickyUpdate(AG_Event *event)
 			} else {
 				*state = (oBtn == selBtn);
 			}
-			AG_WidgetBindingChanged(stateb);
 			AG_WidgetUnlockBinding(stateb);
 		}
 	}
@@ -214,7 +213,6 @@ AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
 			stateb = AG_WidgetGetBinding(b, "state", &state);
 			*state = (b == bSel);
-			AG_WidgetBindingChanged(stateb);
 			AG_WidgetUnlockBinding(stateb);
 		}
 	}
@@ -233,7 +231,6 @@ AG_ToolbarSelectAll(AG_Toolbar *bar)
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
 			stateb = AG_WidgetGetBinding(b, "state", &state);
 			*state = 1;
-			AG_WidgetBindingChanged(stateb);
 			AG_WidgetUnlockBinding(stateb);
 		}
 	}
@@ -252,7 +249,6 @@ AG_ToolbarDeselectAll(AG_Toolbar *bar)
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
 			stateb = AG_WidgetGetBinding(b, "state", &state);
 			*state = 0;
-			AG_WidgetBindingChanged(stateb);
 			AG_WidgetUnlockBinding(stateb);
 		}
 	}

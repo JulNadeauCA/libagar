@@ -370,7 +370,6 @@ mousemotion(AG_Event *event)
 		if ((bu->flags & AG_BUTTON_STICKY) == 0 &&
 		    GetState(bu, binding, pState) == 1) {
 			SetState(binding, pState, 0);
-			AG_WidgetBindingChanged(binding);
 		}
 		if (bu->flags & AG_BUTTON_MOUSEOVER) {
 			bu->flags &= ~(AG_BUTTON_MOUSEOVER);
@@ -408,7 +407,6 @@ mousebuttondown(AG_Event *event)
 		SetState(binding, pState, newState);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", newState);
 	}
-	AG_WidgetBindingChanged(binding);
 	AG_WidgetUnlockBinding(binding);
 
 	if (bu->flags & AG_BUTTON_REPEAT) {
@@ -443,7 +441,6 @@ mousebuttonup(AG_Event *event)
 	    !(bu->flags & AG_BUTTON_STICKY)) {
 	    	SetState(binding, pState, 0);
 		AG_PostEvent(NULL, bu, "button-pushed", "%i", 0);
-		AG_WidgetBindingChanged(binding);
 	}
 	AG_WidgetUnlockBinding(binding);
 }

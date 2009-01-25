@@ -303,7 +303,6 @@ SeekToPosition(AG_Scrollbar *sb, int x)
 	case AG_WIDGET_SINT32:	SEEK_TO_POSITION(Sint32);	break;
 	default:						break;
 	} 
-	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
 	AG_WidgetUnlockBinding(bVis);
 	AG_WidgetUnlockBinding(bMax);
@@ -351,7 +350,6 @@ Decrement(AG_Scrollbar *sb, int v)
 	case AG_WIDGET_SINT32:	DECREMENT_INT(Sint32);	break;
 	default:					break;
 	} 
-	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
 	AG_WidgetUnlockBinding(bVis);
 	AG_WidgetUnlockBinding(bMax);
@@ -400,7 +398,6 @@ Increment(AG_Scrollbar *sb, int v)
 	case AG_WIDGET_SINT32:	INCREMENT_INT(Sint32);	break;
 	default:					break;
 	} 
-	AG_WidgetBindingChanged(bVal);
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
 	AG_WidgetUnlockBinding(bVis);
 	AG_WidgetUnlockBinding(bMax);

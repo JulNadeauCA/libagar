@@ -229,7 +229,6 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 		AG_ExportUnicode(AG_UNICODE_TO_UTF8, stringb->data.s, ucs,
 		    stringb->info.size);
 		ed->flags |= AG_EDITABLE_MARKPREF;
-		AG_WidgetBindingChanged(stringb);
 		AG_PostEvent(NULL, ed, "editable-postchg", NULL);
 	}
 	if (!(ed->flags & AG_EDITABLE_STATIC)) { Free(ucs); }
@@ -251,15 +250,11 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 			AG_PostEvent(NULL, ed, "editable-prechg", NULL);
 			rv = kc->func(ed, keysym, keymod, unicode, s,
 			    len, stringb->info.size);
-			if (rv == 1) {
-				AG_WidgetBindingChanged(stringb);
-			}
 			break;
 		}
 	}
 	if (rv == 1) {
 		ed->flags |= AG_EDITABLE_MARKPREF;
-		AG_WidgetBindingChanged(stringb);
 		AG_PostEvent(NULL, ed, "editable-postchg", NULL);
 	}
 #endif /* UTF8 */

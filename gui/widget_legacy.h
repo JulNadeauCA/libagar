@@ -32,7 +32,6 @@
 #define ag_widget_binding	ag_variable
 #define ag_widget_binding_type	ag_variable_type
 
-#define AG_WidgetBindingChanged	AG_VariableChanged
 #define AG_WidgetBindBool(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_BOOL,(p))
 #define AG_WidgetBindInt(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_INT,(p))
 #define AG_WidgetBindUint(w,b,p) AG_WidgetBind((w),(b),AG_WIDGET_UINT,(p))
@@ -52,6 +51,7 @@
 #define AG_WidgetBindFlag32(w,b,p,mask) AG_WidgetBind((w),(b),AG_WIDGET_FLAG32,(p),(mask))
 #define AG_WidgetBool AG_WidgetInt
 #define AG_WidgetSetBool AG_WidgetSetInt
+#define AG_WidgetBindingChanged(b)
 
 __BEGIN_DECLS
 AG_Variable *AG_WidgetBind(void *, const char *, AG_VariableType, ...);
@@ -243,7 +243,6 @@ AG_WidgetSetInt(void *wid, const char *name, int ni)
 	if ((V = AG_WidgetGetBinding(wid, name, (int **)&i)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*i != ni) {
 		*i = ni;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }
@@ -257,7 +256,6 @@ AG_WidgetSetUint(void *wid, const char *name, Uint ni)
 	if ((V = AG_WidgetGetBinding(wid, name, (Uint **)&i)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*i != ni) {
 		*i = ni;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }
@@ -271,7 +269,6 @@ AG_WidgetSetUint8(void *wid, const char *name, Uint8 ni)
 	if ((V = AG_WidgetGetBinding(wid, name, (Uint8 **)&i)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*i != ni) {
 		*i = ni;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }
@@ -285,7 +282,6 @@ AG_WidgetSetSint8(void *wid, const char *name, Sint8 ni)
 	if ((V = AG_WidgetGetBinding(wid, name, (Sint8 **)&i)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*i != ni) {
 		*i = ni;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }
@@ -299,7 +295,6 @@ AG_WidgetSetUint16(void *wid, const char *name, Uint16 ni)
 	if ((V = AG_WidgetGetBinding(wid, name, (Uint16 **)&i)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*i != ni) {
 		*i = ni;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }
@@ -313,7 +308,6 @@ AG_WidgetSetSint16(void *wid, const char *name, Sint16 ni)
 	if ((V = AG_WidgetGetBinding(wid, name, (Sint16 **)&i)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*i != ni) {
 		*i = ni;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }
@@ -327,7 +321,6 @@ AG_WidgetSetUint32(void *wid, const char *name, Uint32 ni)
 	if ((V = AG_WidgetGetBinding(wid, name, (Uint32 **)&i)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*i != ni) {
 		*i = ni;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }
@@ -341,7 +334,6 @@ AG_WidgetSetSint32(void *wid, const char *name, Sint32 ni)
 	if ((V = AG_WidgetGetBinding(wid, name, (Sint32 **)&i)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*i != ni) {
 		*i = ni;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }
@@ -355,7 +347,6 @@ AG_WidgetSetFloat(void *wid, const char *name, float nf)
 	if ((V = AG_WidgetGetBinding(wid, name, (float **)&f)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*f != nf) {
 		*f = nf;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }
@@ -369,7 +360,6 @@ AG_WidgetSetDouble(void *wid, const char *name, double nd)
 	if ((V = AG_WidgetGetBinding(wid, name, (double **)&d)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*d != nd) {
 		*d = nd;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }
@@ -383,7 +373,6 @@ AG_WidgetSetPointer(void *wid, const char *name, void *np)
 	if ((V = AG_WidgetGetBinding(wid, name, (void ***)&p)) == NULL) { AG_FatalError("%s", AG_GetError()); }
 	if (*p != np) {
 		*p = np;
-		AG_VariableChanged(V);
 	}
 	AG_WidgetUnlockBinding(V);
 }

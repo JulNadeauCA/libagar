@@ -220,7 +220,7 @@ AG_FetchFont(const char *pname, int psize, int pflags)
 	if (pname != NULL) {
 		Strlcpy(name, pname, sizeof(name));
 	} else {
-		AG_CfgStringCopy("font.face", name, sizeof(name));
+		AG_CopyCfgString("font.face", name, sizeof(name));
 	}
 	AG_MutexLock(&agTextLock);
 	SLIST_FOREACH(font, &fonts, fonts) {
@@ -441,25 +441,27 @@ AG_TextInit(void)
 	if (!AG_CfgDefined("font-path")) {
 #if defined(__APPLE__)
 # if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
+		char savePath[AG_PATHNAME_MAX];
+		char home[AG_PATHNAME_MAX];
+		AG_CopyCfgString("save-path", savePath, sizeof(savePath));
+		AG_CopyCfgString("home", home, sizeof(home));
 		AG_SetCfgString("font-path",
-		    "%s/fonts:%s:%s/Library/Fonts:"
-		    "/Library/Fonts:/System/Library/Fonts",
-		    AG_CfgString("save-path"),
-		    TTFDIR,
-		    AG_CfgString("home"));
+		    "%s/fonts:%s:%s/Library/Fonts:/Library/Fonts:/System/Library/Fonts",
+		    savePath, TTFDIR, home);
 # else
+		char savePath[AG_PATHNAME_MAX];
+		AG_CopyCfgString("save-path", savePath, sizeof(savePath));
 		AG_SetCfgString("font-path",
 		    "%s/fonts:%s:/Library/Fonts:/System/Library/Fonts",
-		    AG_CfgString("save-path"), TTFDIR);
+		    savePath, TTFDIR);
 # endif
 #elif defined(_WIN32)
 		AG_SetCfgString("font-path", "fonts:.");
 #else
-		AG_SetCfgString("font-path", "%s/fonts:%s",
-		    AG_CfgString("save-path"), TTFDIR);
+		char savePath[AG_PATHNAME_MAX];
+		AG_CopyCfgString("save-path", savePath, sizeof(savePath));
+		AG_SetCfgString("font-path", "%s/fonts:%s", savePath, TTFDIR);
 #endif
-		AG_Verbose("Using default font path: %s",
-		    AG_CfgString("font-path"));
 	}
 	
 	/* Initialize FreeType if available. */

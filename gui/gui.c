@@ -150,7 +150,7 @@ AG_InitGUI(Uint flags)
 	agIcon_Init();
 
 	/* Try to load a color scheme from the default path. */
-	Strlcpy(path, AG_GetString(agConfig,"save-path"), sizeof(path));
+	AG_GetString(agConfig, "save-path", path, sizeof(path));
 	Strlcat(path, AG_PATHSEP, sizeof(path));
 	Strlcat(path, "gui-colors.acs", sizeof(path));
 	(void)AG_ColorsLoad(path);
