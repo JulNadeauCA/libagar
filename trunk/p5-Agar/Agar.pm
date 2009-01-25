@@ -7,7 +7,42 @@ require DynaLoader;
 our @ISA = qw(DynaLoader);
 our $VERSION = '1.3.3';
 
+@Agar::Widget::ISA = qw(Agar::Object);
+@Agar::Window::ISA = qw(Agar::Widget);
+@Agar::Box::ISA = qw(Agar::Widget);
+@Agar::Button::ISA = qw(Agar::Widget);
+@Agar::Checkbox::ISA = qw(Agar::Widget);
+@Agar::Combo::ISA = qw(Agar::Widget);
+@Agar::Console::ISA = qw(Agar::Widget);
+@Agar::Editable::ISA = qw(Agar::Widget);
+@Agar::FileDlg::ISA = qw(Agar::Widget);
+@Agar::Fixed::ISA = qw(Agar::Widget);
+@Agar::Label::ISA = qw(Agar::Widget);
+@Agar::Menu::ISA = qw(Agar::Widget);
+@Agar::MPane::ISA = qw(Agar::Widget);
+@Agar::Notebook::ISA = qw(Agar::Widget);
+@Agar::Numerical::ISA = qw(Agar::Widget);
+@Agar::Pane::ISA = qw(Agar::Widget);
+@Agar::PopupMenu::ISA = qw(Agar::Widget);
+@Agar::ProgressBar::ISA = qw(Agar::Widget);
+@Agar::Radio::ISA = qw(Agar::Widget);
+@Agar::Scrollbar::ISA = qw(Agar::Widget);
+@Agar::Scrollview::ISA = qw(Agar::Widget);
+@Agar::Separator::ISA = qw(Agar::Widget);
+@Agar::Slider::ISA = qw(Agar::Widget);
+@Agar::Textbox::ISA = qw(Agar::Widget);
+@Agar::Tlist::ISA = qw(Agar::Widget);
+@Agar::Toolbar::ISA = qw(Agar::Widget);
+@Agar::UCombo::ISA = qw(Agar::Widget);
+
 bootstrap Agar $VERSION;
+
+sub Agar::Object::downcast {
+	my $class = $_[0]->getClassName();
+	if ($class =~ s/^AG_/Agar::/ && $class->isa('Agar::Object')) {
+		return bless $_[0], $class;
+	}
+}
 
 1;
 
@@ -57,6 +92,22 @@ Initialize the Agar-GUI library and create a new video display of the
 specified dimensions in pixels, and depth in bits per pixel (see
 L</VIDEO OPTIONS>).
 
+=item B<Agar::InitVideoSDL($sdl_surface,[%options])>
+
+In cooperation with the SDL_perl bindings, this call is similar to InitVideo
+but allows you to provide your own SDL::Surface for drawing to.
+
+WARNING: When using the Agar Perl bindings with SDL_perl, you must C<use Agar>
+I<before> you C<use> any SDL modules.
+
+=item B<Agar::ResizeDisplay($x,$h)>
+
+Change the display size.
+
+=item B<Agar::SetRefreshRate($fps)>
+
+Attempt to limit the number of updates per second.
+
 =item B<Agar::Version>
 
 Return a scalar value containing the version number of the installed
@@ -75,6 +126,107 @@ this is actually a thread-specific value.
 
 Return the Agar error string. This is a scalar value which can contain
 UTF-8 characters.
+
+=item B<Agar::EventLoop>
+
+Agar's default event loop.
+
+=item B<Agar::BeginRendering>
+
+Any calls to any Widgets' Draw methods must be preceded by a call to this
+method. Only needed for writing a custom event loop.
+
+=item B<Agar::EndRendering>
+
+Call this after each frame's batch of drawing is complete. Only needed for a
+custom event loop.
+
+=item B<Agar::ProcessEvent($event)>
+
+Pass a single SDL::Event into Agar. Only needed for a custom event loop.
+
+=item B<Agar::ProcessTimeouts($ticks)>
+
+Updates Agar's timing clock. Expects to be passed the output of
+SDL::App::ticks. Only needed for writing a custom event loop.
+
+=item B<Agar::GetConfig>
+
+Returns the main Agar::Config object.
+
+=item B<Agar::GetViewObject>
+
+Returns the root view surface as an Agar::Object. Only needed for writing a
+custom event loop.
+
+=item B<Agar::DrawAll>
+
+Causes all windows to be drawn. Only needed for writing a custom event loop.
+
+=item B<Agar::FindWidget($name)>
+
+Returns the first widget it finds with the specified name, or undef if none
+was found.
+
+=item B<Agar::FindObject($name)>
+
+Returns the first object it finds with the specified name, or undef if none
+was found.
+
+=item B<Agar::FindWidgetAtPoint($x, $y)>
+
+Returns the deepest widget in the object tree at the specified absolute screen
+coordinates, or undef if none was found.
+
+=item B<Agar::FindWidgetOfClassAtPoint($class, $x, $y)>
+
+Returns the deepest widget of the specified Perl-style class in the object
+tree at the specified absolute screen coordinates, or undef if none was found.
+
+=item B<Agar::InfoMsg($text)>
+
+Creates a modal dialog box displaying some informational text.
+
+=item B<Agar::WarningMsg($text)>
+
+Creates a modal dialog box displaying some warning text.
+
+=item B<Agar::ErrorMsg($text)>
+
+Creates a modal dialog box displaying some error text.
+
+=item B<Agar::InfoMsgTimed($ms, $text)>
+
+Creates a modal dialog box displaying some informational text that disappears
+after the specified number of milliseconds.
+
+=item B<Agar::WarningMsgTimed($ms, $text)>
+
+Creates a modal dialog box displaying some warning text that disappears
+after the specified number of milliseconds.
+
+=item B<Agar::ErrorMsgTimed($ms, $text)>
+
+Creates a modal dialog box displaying some error text that disappears
+after the specified number of milliseconds.
+
+=item B<Agar::InfoMsgIgnorable($key, $text)>
+
+Creates a modal dialog box displaying some informational text, with a checkbox
+that allows the user to ignore subsequent messages with the same key string.
+
+=item B<Agar::WarningMsgIgnorable($key, $text)>
+
+Creates a modal dialog box displaying some warning text, with a checkbox.
+that allows the user to ignore subsequent messages with the same key string.
+
+=item B<Agar::PromptMsg($text, $codeRef)>
+
+Creates a dialog box with a text entry widget, and calls the specified code
+reference when a value has been entered.
+
+This increments the internal reference count of the code reference, then
+decrements it again after it's been called.
 
 =back
 

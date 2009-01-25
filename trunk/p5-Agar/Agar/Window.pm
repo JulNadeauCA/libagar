@@ -6,6 +6,7 @@ use Agar;
 ;1
 
 __END__
+
 =head1 NAME
 
 Agar::Window - Agar GUI window
@@ -24,7 +25,8 @@ Agar::Window - Agar GUI window
 
 =head1 DESCRIPTION
 
-The B<Agar::Window> object is the basic container of the Agar GUI.
+The B<Agar::Window> object is the basic container of the Agar GUI. It extends
+B<Agar::Widget>.
 
 =head1 METHODS
 
@@ -132,6 +134,41 @@ current icon associated with the window. If the $icon argument is given, set
 the icon as well. Both the $icon parameter and the return value are
 L<Agar::Surface> objects.
 
+=item B<$win-E<gt>setGeometry($x,$y,$w,$h)>
+
+Sets the position and size of the window to the specified (x,y) coordinates
+and width and height.
+
+=item B<$win-E<gt>setMinSize($w,$h)>
+
+Enforce a minimum width and height on the window.
+
+=item B<$win-E<gt>show()>
+
+Enable drawing of this window.
+
+=item B<$win-E<gt>hide()>
+
+Disable drawing of this window.
+
+=item B<$win-E<gt>draw()>
+
+Cause the window to draw itself. Only really useful when writing a custom
+event loop.
+
+=item B<$win-E<gt>attach()>
+
+Attach this window to the view. Windows returned by constructors are already
+attached; this method is only useful in combination with detach.
+
+=item B<$win-E<gt>detach()>
+
+Detach this window from the view.
+
+=item B<$widget = $win-E<gt>findFocused()>
+
+Returns the child widget that currently has focus, or undef if there is none.
+
 =back
 
 =head1 AUTHOR
@@ -146,6 +183,6 @@ under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-L<Agar>, L<Agar::Surface>
+L<Agar>, L<Agar::Surface>, L<Agar::Widget>
 
 =cut

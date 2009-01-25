@@ -35,17 +35,81 @@
 #include <agar/gui.h>
 #include "perl_agar.h"
 
+extern XS(boot_Agar__Object);
+extern XS(boot_Agar__Widget);
+extern XS(boot_Agar__Event);
 extern XS(boot_Agar__PixelFormat);
 extern XS(boot_Agar__Surface);
 extern XS(boot_Agar__Window);
+extern XS(boot_Agar__Config);
+extern XS(boot_Agar__Font);
+extern XS(boot_Agar__Colors);
+extern XS(boot_Agar__Text);
+extern XS(boot_Agar__Box);
+extern XS(boot_Agar__Button);
+extern XS(boot_Agar__Checkbox);
+extern XS(boot_Agar__Combo);
+extern XS(boot_Agar__Console);
+extern XS(boot_Agar__Editable);
+extern XS(boot_Agar__FileDlg);
+extern XS(boot_Agar__Fixed);
+extern XS(boot_Agar__Label);
+extern XS(boot_Agar__Menu);
+extern XS(boot_Agar__MPane);
+extern XS(boot_Agar__Notebook);
+extern XS(boot_Agar__Numerical);
+extern XS(boot_Agar__Pane);
+extern XS(boot_Agar__Pixmap);
+extern XS(boot_Agar__ProgressBar);
+extern XS(boot_Agar__Radio);
+extern XS(boot_Agar__Scrollbar);
+extern XS(boot_Agar__Scrollview);
+extern XS(boot_Agar__Separator);
+extern XS(boot_Agar__Slider);
+extern XS(boot_Agar__Textbox);
+extern XS(boot_Agar__Tlist);
+extern XS(boot_Agar__Toolbar);
+extern XS(boot_Agar__UCombo);
 
 MODULE = Agar		PACKAGE = Agar		PREFIX = AG_
 PROTOTYPES: DISABLE
 
 BOOT:
+boot_Agar__Object(aTHX_ cv);
+boot_Agar__Widget(aTHX_ cv);
+boot_Agar__Event(aTHX_ cv);
 boot_Agar__PixelFormat(aTHX_ cv);
 boot_Agar__Surface(aTHX_ cv);
 boot_Agar__Window(aTHX_ cv);
+boot_Agar__Config(aTHX_ cv);
+boot_Agar__Font(aTHX_ cv);
+boot_Agar__Colors(aTHX_ cv);
+boot_Agar__Text(aTHX_ cv);
+boot_Agar__Box(aTHX_ cv);
+boot_Agar__Button(aTHX_ cv);
+boot_Agar__Checkbox(aTHX_ cv);
+boot_Agar__Combo(aTHX_ cv);
+boot_Agar__Console(aTHX_ cv);
+boot_Agar__Editable(aTHX_ cv);
+boot_Agar__FileDlg(aTHX_ cv);
+boot_Agar__Fixed(aTHX_ cv);
+boot_Agar__Label(aTHX_ cv);
+boot_Agar__Menu(aTHX_ cv);
+boot_Agar__MPane(aTHX_ cv);
+boot_Agar__Notebook(aTHX_ cv);
+boot_Agar__Numerical(aTHX_ cv);
+boot_Agar__Pane(aTHX_ cv);
+boot_Agar__Pixmap(aTHX_ cv);
+boot_Agar__ProgressBar(aTHX_ cv);
+boot_Agar__Radio(aTHX_ cv);
+boot_Agar__Scrollbar(aTHX_ cv);
+boot_Agar__Scrollview(aTHX_ cv);
+boot_Agar__Separator(aTHX_ cv);
+boot_Agar__Slider(aTHX_ cv);
+boot_Agar__Textbox(aTHX_ cv);
+boot_Agar__Tlist(aTHX_ cv);
+boot_Agar__Toolbar(aTHX_ cv);
+boot_Agar__UCombo(aTHX_ cv);
 
 SV *
 Version()
@@ -141,14 +205,6 @@ InitVideoSDL(sdl_surface, ...)
 	SDL::Surface sdl_surface
 PREINIT:
 	const AP_FlagNames flagNames[] = {
-		{ "hwSurface",   AG_VIDEO_HWSURFACE },
-		{ "asyncBlit",   AG_VIDEO_ASYNCBLIT },
-		{ "anyFormat",   AG_VIDEO_ANYFORMAT },
-		{ "hwPalette",   AG_VIDEO_HWPALETTE },
-		{ "doubleBuf",   AG_VIDEO_DOUBLEBUF },
-		{ "fullScreen",  AG_VIDEO_FULLSCREEN },
-		{ "resizable",   AG_VIDEO_RESIZABLE },
-		{ "noFrame",     AG_VIDEO_NOFRAME },
 		{ "bgPopupMenu", AG_VIDEO_BGPOPUPMENU },
 		{ "openGL",      AG_VIDEO_OPENGL },
 		{ "openGLOrSDL", AG_VIDEO_OPENGL_OR_SDL },
@@ -167,10 +223,199 @@ CODE:
 OUTPUT:
 	RETVAL
 
+int
+Resize(w, h)
+	int w
+	int h
+CODE:
+	RETVAL = AG_ResizeDisplay(w, h);
+OUTPUT:
+	RETVAL
+
+int
+SetRefreshRate(fps)
+	int fps
+CODE:
+	RETVAL = AG_SetRefreshRate(fps);
+OUTPUT:
+	RETVAL
+
 void
 EventLoop()
 CODE:
 	AG_EventLoop();
+
+void
+BeginRendering()
+CODE:
+	AG_BeginRendering();
+
+void
+EndRendering()
+CODE:
+	AG_EndRendering();
+
+int
+ProcessEvent(event)
+	SDL::Event event
+CODE:
+	RETVAL = AG_ProcessEvent(event);
+OUTPUT:
+	RETVAL
+
+void
+ProcessTimeouts(ticks)
+	Uint32 ticks
+CODE:
+	if (AG_TIMEOUTS_QUEUED()) {
+		AG_ProcessTimeouts(ticks);
+	}
+
+Agar::Config
+GetConfig()
+CODE:
+	RETVAL = agConfig;
+OUTPUT:
+	RETVAL
+
+Agar::Object
+GetViewObject()
+CODE:
+	RETVAL = AGOBJECT(agView);
+OUTPUT:
+	RETVAL
+
+void
+DrawAll()
+PREINIT:
+	int i;
+	AG_Window * win;
+CODE:
+	TAILQ_FOREACH(win, &(agView->windows), windows) {
+		AG_WindowDraw(win);
+	}
+	for (i = 0; i < agView->nModal; i++) {
+		AG_WindowDraw(agView->winModal[i]);
+	}
+
+Agar::Widget
+FindWidget(name)
+	const char * name
+CODE:
+	if ((RETVAL = AG_WidgetFind(agView, name)) == NULL) {
+		XSRETURN_UNDEF;
+	}
+OUTPUT:
+	RETVAL
+
+Agar::Object
+FindObject(name)
+	const char * name
+CODE:
+	if ((RETVAL = AG_ObjectFind(AGOBJECT(agView), name)) == NULL) {
+		XSRETURN_UNDEF;
+	}
+OUTPUT:
+	RETVAL
+
+Agar::Widget
+FindWidgetAtPoint(x, y)
+	int x
+	int y
+CODE:
+	if ((RETVAL = AG_WidgetFindPoint("*", x, y)) == NULL) {
+		XSRETURN_UNDEF;
+	}
+OUTPUT:
+	RETVAL
+
+Agar::Widget
+FindWidgetOfClassAtPoint(class, x, y)
+	const char * class
+	int x
+	int y
+PREINIT:
+	char *cClass;
+	int perlStyle;
+CODE:
+	if ((perlStyle = strnEQ(class, "Agar::", 6))) {
+		cClass = savepv(class + 3);
+		cClass[0] = 'A'; cClass[1] = 'G'; cClass[2] = '_';
+	} else {
+		cClass = (char *) class;
+	}
+	if ((RETVAL = AG_WidgetFindPoint(cClass, x, y)) == NULL) {
+		if (perlStyle) { Safefree(cClass); }
+		XSRETURN_UNDEF;
+	}
+	if (perlStyle) { Safefree(cClass); }
+OUTPUT:
+	RETVAL
+
+void
+InfoMsg(text)
+	const char * text
+CODE:
+	AG_TextMsg(AG_MSG_INFO, "%s", text);
+
+void
+WarningMsg(text)
+	const char * text
+CODE:
+	AG_TextMsg(AG_MSG_WARNING, "%s", text);
+
+void
+ErrorMsg(text)
+	const char * text
+CODE:
+	AG_TextMsg(AG_MSG_ERROR, "%s", text);
+
+void
+InfoMsgTimed(ms, text)
+	Uint32 ms
+	const char * text
+CODE:
+	AG_TextTmsg(AG_MSG_INFO, ms, "%s", text);
+
+void
+WarningMsgTimed(ms, text)
+	Uint32 ms
+	const char * text
+CODE:
+	AG_TextTmsg(AG_MSG_WARNING, ms, "%s", text);
+
+void
+ErrorMsgTimed(ms, text)
+	Uint32 ms
+	const char * text
+CODE:
+	AG_TextTmsg(AG_MSG_ERROR, ms, "%s", text);
+
+void
+InfoMsgIgnorable(key, text)
+	const char * key
+	const char * text
+CODE:
+	AG_TextInfo(key, "%s", text);
+
+void
+WarningMsgIgnorable(key, text)
+	const char * key
+	const char * text
+CODE:
+	AG_TextWarning(key, "%s", text);
+
+void
+PromptMsg(text, coderef)
+	const char * text
+	SV * coderef
+CODE:
+	if (SvTYPE(SvRV(coderef)) == SVt_PVCV) {
+		SvREFCNT_inc(coderef);
+		AG_TextPromptString(text, AP_EventHandlerDecRef, "%p", coderef);
+	} else {
+		Perl_croak(aTHX_ "Usage: Agar::PromptText(text,coderef)");
+	}
 
 void
 DESTROY()

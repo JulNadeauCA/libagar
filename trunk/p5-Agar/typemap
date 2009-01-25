@@ -1,8 +1,7 @@
 TYPEMAP
-Agar::Window		T_PTROBJ
-Agar::Surface		T_PTROBJ
-Agar::PixelFormat	T_PTROBJ
-SDL::Surface		T_PTROBJ
+Uint			T_UV
+Ulong			T_UV
+Uchar			T_U_CHAR
 Uint8			T_U_CHAR
 Sint8			T_CHAR
 Uint16			T_UV
@@ -15,3 +14,50 @@ Uint16 *		T_PTR
 Sint16 *		T_PTR
 Uint32 *		T_PTR
 Sint32 *		T_PTR
+SDL::Surface		T_PTROBJ
+SDL::Event		T_PTROBJ
+Agar::Object		T_PTROBJ
+Agar::Widget		T_PTROBJ
+Agar::Event		T_PTROBJ
+Agar::Surface		T_PTROBJ
+Agar::PixelFormat	T_PTROBJ
+Agar::Window		T_PTROBJ
+Agar::Config		T_PTROBJ
+Agar::Font		T_PTROBJ
+Agar::Box		T_PTROBJ
+Agar::Button		T_PTROBJ
+Agar::Checkbox		T_PTROBJ
+Agar::Combo		T_PTROBJ
+Agar::Console		T_PTROBJ
+Agar::Editable		T_PTROBJ
+Agar::FileDlg		T_PTROBJ
+Agar::Fixed		T_PTROBJ
+Agar::GLView		T_PTROBJ
+Agar::Graph		T_PTROBJ
+Agar::FixedPlotter	T_PTROBJ
+Agar::HSVPal		T_PTROBJ
+Agar::Icon		T_PTROBJ
+Agar::Label		T_PTROBJ
+Agar::MPane		T_PTROBJ
+Agar::Menu		T_PTROBJ
+Agar::MenuItem		T_PTROBJ
+Agar::Notebook		T_PTROBJ
+Agar::NotebookTab	T_PTROBJ
+Agar::Numerical		T_PTROBJ
+Agar::Pane		T_PTROBJ
+Agar::Pixmap		T_PTROBJ
+Agar::PopupMenu		T_PTROBJ
+Agar::ProgressBar	T_PTROBJ
+Agar::Radio		T_PTROBJ
+Agar::Scrollbar		T_PTROBJ
+Agar::Scrollview	T_PTROBJ
+Agar::Separator		T_PTROBJ
+Agar::Slider		T_PTROBJ
+Agar::Socket		T_PTROBJ
+Agar::Statusbar		T_PTROBJ
+Agar::Table		T_PTROBJ
+Agar::Textbox		T_PTROBJ
+Agar::Tlist		T_PTROBJ
+Agar::TlistItem		T_PTROBJ
+Agar::Toolbar		T_PTROBJ
+Agar::UCombo		T_PTROBJ

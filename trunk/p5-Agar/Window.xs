@@ -122,6 +122,24 @@ OUTPUT:
 	RETVAL
 
 void
+setGeometry(win, x, y, w, h)
+	Agar::Window win
+	int x
+	int y
+	int w
+	int h
+CODE:
+	AG_WindowSetGeometry(win, x, y, w, h);
+
+void
+setMinSize(win, w, h)
+	Agar::Window win
+	int w
+	int h
+CODE:
+	AG_WindowSetMinSize(win, w, h);
+
+void
 show(win)
 	Agar::Window win
 CODE:
@@ -132,6 +150,34 @@ hide(win)
 	Agar::Window win
 CODE:
 	AG_WindowHide(win);
+
+void
+draw(win)
+	Agar::Window win
+CODE:
+	AG_WindowDraw(win);
+
+void
+attach(win)
+	Agar::Window win
+CODE:
+	AG_ViewAttach(win);
+
+void
+detach(win)
+	Agar::Window win
+CODE:
+	AG_ViewDetach(win);
+
+Agar::Widget
+findFocused(win)
+	Agar::Window win
+CODE:
+	if ((RETVAL = AG_WidgetFindFocused(win)) == NULL) {
+		XSRETURN_UNDEF;
+	}
+OUTPUT:
+	RETVAL
 
 void
 DESTROY(win)

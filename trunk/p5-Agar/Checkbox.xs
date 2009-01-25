@@ -32,87 +32,67 @@
 #include "perl_agar.h"
 
 static const AP_FlagNames flagNames[] = {
-	{ "hwSurface",   AG_HWSURFACE },
-	{ "srcColorKey", AG_SRCCOLORKEY },
-	{ "srcAlpha",    AG_SRCALPHA },
-	{ NULL,          0 }
+	{ "set",		AG_CHECKBOX_SET },
+	{ NULL,			0 }
 };
 
-MODULE = Agar::Surface		PACKAGE = Agar::Surface		PREFIX = AG_
+MODULE = Agar::Checkbox		PACKAGE = Agar::Checkbox	PREFIX = AG_
 PROTOTYPES: ENABLE
 VERSIONCHECK: DISABLE
 
-Agar::Surface
-new(package, w, h, pf, ...)
-	const char *package
-	int w
-	int h
-	Agar::PixelFormat pf
+Agar::Checkbox
+new(package, parent, label, ...)
+	const char * package
+	Agar::Widget parent
+	const char * label
 PREINIT:
-	Uint flags = 0;
+	Uint flags = 0, wflags = 0;
 CODE:
-	if ((items == 5 && SvTYPE(SvRV(ST(4))) != SVt_PVHV) || items > 5) {
-		Perl_croak(aTHX_ "Usage: Agar::Surface->new(w,h,pxFormat,[{opts}])");
+	if ((items == 4 && SvTYPE(SvRV(ST(3))) != SVt_PVHV) || items > 4) {
+		Perl_croak(aTHX_ "Usage: Agar::Checkbox->new(parent,label,[{opts}])");
 	}
-	if (items == 5) {
-		AP_MapHashToFlags(SvRV(ST(4)), flagNames, &flags);
+	if (items == 4) {
+		AP_MapHashToFlags(SvRV(ST(3)), flagNames, &flags);
+		AP_MapHashToFlags(SvRV(ST(3)), AP_WidgetFlagNames, &wflags);
 	}
-	RETVAL = AG_SurfaceNew(w, h, pf, flags);
-OUTPUT:
-	RETVAL
-
-Agar::Surface
-newIndexed(package, w, h, bitsPerPixel, ...)
-	const char *package
-	int w
-	int h
-	int bitsPerPixel
-PREINIT:
-	Uint flags = 0;
-CODE:
-	if ((items == 5 && SvTYPE(SvRV(ST(4))) != SVt_PVHV) || items > 5) {
-		Perl_croak(aTHX_ "Usage: Agar::Surface->newIndexed(w,h,depth,"
-		           "[{opts}])");
-	}
-	if (items == 5) {
-		AP_MapHashToFlags(SvRV(ST(4)), flagNames, &flags);
-	}
-	RETVAL = AG_SurfaceIndexed(w, h, bitsPerPixel, flags);
-OUTPUT:
-	RETVAL
-
-
-Agar::Surface
-newEmpty(package)
-	const char *package
-CODE:
-	RETVAL = AG_SurfaceEmpty();
-OUTPUT:
-	RETVAL
-
-Agar::Surface
-newFromBMP(package, path)
-	const char *package
-	const char *path
-CODE:
-	if ((RETVAL = AG_SurfaceFromBMP(path)) == NULL) {
-		XSRETURN_UNDEF;
-	}
-OUTPUT:
-	RETVAL
-
-Agar::Surface
-newFromSDL(package, surface)
-	const char *package
-	SDL::Surface surface
-CODE:
-	RETVAL = AG_SurfaceFromSDL(surface);
+	RETVAL = AG_CheckboxNew(parent, flags, label);
+	AGWIDGET(RETVAL)->flags |= wflags;
 OUTPUT:
 	RETVAL
 
 void
-DESTROY(s)
-	Agar::Surface s
+toggle(self)
+	Agar::Checkbox self
 CODE:
-	AG_SurfaceFree(s);
+	AG_CheckboxToggle(self);
+
+void
+setFlag(self, name)
+	Agar::Checkbox self
+	const char * name
+CODE:
+	if (AP_SetNamedFlag(name, flagNames, &(self->flags))) {
+		AP_SetNamedFlag(name, AP_WidgetFlagNames, &(AGWIDGET(self)->flags));
+	}
+
+void
+unsetFlag(self, name)
+	Agar::Checkbox self
+	const char * name
+CODE:
+	if (AP_UnsetNamedFlag(name, flagNames, &(self->flags))) {
+		AP_UnsetNamedFlag(name, AP_WidgetFlagNames, &(AGWIDGET(self)->flags));
+	}
+
+Uint
+getFlag(self, name)
+	Agar::Checkbox self
+	const char * name
+CODE:
+	if (AP_GetNamedFlag(name, flagNames, self->flags, &RETVAL)) {
+		if (AP_GetNamedFlag(name, AP_WidgetFlagNames, AGWIDGET(self)->flags,
+			&RETVAL)) { XSRETURN_UNDEF; }
+	}
+OUTPUT:
+	RETVAL
 
