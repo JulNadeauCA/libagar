@@ -56,9 +56,6 @@
 #include <core/core_init.h>
 #include <core/error.h>
 #include <core/queue.h>
-#include <core/variable.h>
-#include <core/list.h>
-#include <core/tree.h>
 #include <core/limits.h>
 
 #include <core/string_compat.h>
@@ -93,6 +90,8 @@
 
 #include <core/version.h>
 #include <core/object.h>
+#include <core/list.h>
+#include <core/tree.h>
 #include <core/cpuinfo.h>
 #include <core/file.h>
 #include <core/dir.h>

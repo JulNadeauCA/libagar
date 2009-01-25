@@ -15,8 +15,6 @@
 #define AGCLASS(obj) ((struct ag_object_class *)(obj))
 
 #include <agar/core/timeout.h>
-#include <agar/core/event.h>
-#include <agar/core/prop.h>
 #include <agar/core/class.h>
 
 #include <agar/core/begin.h>
@@ -73,8 +71,8 @@ typedef struct ag_object {
 	AG_TAILQ_HEAD(,ag_event) events;	/* Event handlers */
 	AG_TAILQ_HEAD(,ag_timeout) timeouts;	/* Timers tied to object */
 	
-	AG_Variable *vars;			/* Variables / bindings */
-	Uint        nVars;
+	struct ag_variable *vars;		/* Variables / bindings */
+	Uint               nVars;
 
 	AG_TAILQ_HEAD(,ag_object_dep) deps; /* Object dependencies */
 	struct ag_objectq children;	 /* Child objects */
@@ -135,6 +133,12 @@ enum ag_object_checksum_alg {
 		if (!AG_OfClass(var,(subclass))) { \
 			continue; \
 		} else
+
+/* Iterate over the variables. */
+#define AGOBJECT_FOREACH_VARIABLE(var, i, obj) \
+	for ((i) = 0; \
+	    ((i) < AGOBJECT(obj)->nVars) && ((var) = &AGOBJECT(obj)->vars[i]); \
+	    (i)++)
 
 #if defined(_AGAR_INTERNAL) || defined(_USE_AGAR_CORE)
 # define OBJECT(ob)            AGOBJECT(ob)
@@ -203,7 +207,7 @@ void	 AG_ObjectDestroy(void *);
 void	 AG_ObjectUnlinkDatafiles(void *);
 void	 AG_ObjectSetSavePfx(void *, char *);
 
-void	 AG_ObjectFreeVariables(AG_Object *);
+void	 AG_ObjectFreeVariables(void *);
 void	 AG_ObjectFreeChildren(void *);
 void 	 AG_ObjectFreeEvents(AG_Object *);
 void	 AG_ObjectFreeDeps(AG_Object *);
@@ -259,15 +263,11 @@ void AG_ObjectUnlockDebug(AG_Object *, const char *);
 #  define AG_ObjectLock(ob) AG_MutexLock(&AGOBJECT(ob)->lock)
 #  define AG_ObjectUnlock(ob) AG_MutexUnlock(&AGOBJECT(ob)->lock)
 # endif /* AG_LOCKDEBUG */
-# define AG_LockProps(ob) AG_ObjectLock(ob)
-# define AG_UnlockProps(ob) AG_ObjectUnlock(ob)
 # define AG_LockVFS(ob) AG_ObjectLock(AGOBJECT(ob)->root)
 # define AG_UnlockVFS(ob) AG_ObjectUnlock(AGOBJECT(ob)->root)
 #else /* !AG_THREADS */
 # define AG_ObjectLock(ob)
 # define AG_ObjectUnlock(ob)
-# define AG_LockProps(ob)
-# define AG_UnlockProps(ob)
 # define AG_LockVFS(ob)
 # define AG_UnlockVFS(ob)
 #endif /* AG_THREADS */
@@ -329,4 +329,9 @@ AG_UnlockTimeouts(void *p)
 __END_DECLS
 
 #include <agar/core/close.h>
+
+#include <agar/core/variable.h>
+#include <agar/core/event.h>
+#include <agar/core/prop.h>
+
 #endif /* _AGAR_CORE_OBJECT_H_ */
