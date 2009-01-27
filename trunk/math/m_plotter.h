@@ -38,12 +38,12 @@ enum m_plot_type {
 };
 
 enum m_plot_source {
-	M_PLOT_MANUALLY,	/* Don't update automatically */
-	M_PLOT_FROM_PROP,	/* Numerical object property */
-	M_PLOT_FROM_REAL,	/* M_Real variable */
-	M_PLOT_FROM_INT,	/* Integer variable */
-	M_PLOT_FROM_COMPONENT,	/* Single vector/matrix component */
-	M_PLOT_DERIVATIVE	/* Derivative of other plot */
+	M_PLOT_MANUALLY,		/* Don't update automatically */
+	M_PLOT_FROM_VARIABLE_VFS,	/* Object variable (VFS path) */
+	M_PLOT_FROM_REAL,		/* M_Real variable */
+	M_PLOT_FROM_INT,		/* Integer variable */
+	M_PLOT_FROM_COMPONENT,		/* Single vector/matrix component */
+	M_PLOT_DERIVATIVE		/* Derivative of other plot */
 };
 
 typedef struct m_plot {
@@ -53,7 +53,7 @@ typedef struct m_plot {
 		struct {
 			void *vfs;	 /* VFS root object */
 			const char *key; /* Property path */
-		} prop;
+		} varVFS;
 		M_Real *real;		/* Pointer to real value */
 		int *integer;		/* Pointer to integer value */
 		struct {
@@ -135,8 +135,8 @@ void	 M_PlotClear(M_Plot *);
 M_Plot	*M_PlotFromReal(M_Plotter *, enum m_plot_type, const char *, M_Real *);
 M_Plot	*M_PlotFromInt(M_Plotter *, enum m_plot_type, const char *, int *);
 M_Plot	*M_PlotFromDerivative(M_Plotter *, enum m_plot_type, M_Plot *);
-M_Plot	*M_PlotFromProp(M_Plotter *, enum m_plot_type, const char *, void *,
-	                const char *);
+M_Plot	*M_PlotFromVariableVFS(M_Plotter *, enum m_plot_type, const char *,
+                               void *, const char *);
 
 struct ag_window *M_PlotSettings(M_Plot *);
 
