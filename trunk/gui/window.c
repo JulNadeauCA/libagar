@@ -834,16 +834,12 @@ AG_WindowEvent(SDL_Event *ev)
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			if (ModalClose(win, ev->button.x, ev->button.y)) {
-				rv = 1;
-				agView->winToFocus = win;
-				goto out;
+				return (1);
 			}
 			break;
 		case SDL_MOUSEMOTION:
 			if (ModalClose(win, ev->motion.x, ev->motion.y)) {
-				rv = 1;
-				agView->winToFocus = win;
-				goto out;
+				return (1);
 			}
 			break;
 		default:
