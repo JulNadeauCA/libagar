@@ -79,17 +79,24 @@ typedef void (*AG_EventFn)(AG_Event *);
 #define AG_EVENT_INS_VAL(eev,tname,aname,member,val) {		\
 	AG_EVENT_BOUNDARY_CHECK(eev)				\
 	(eev)->argv[(eev)->argc].type = (tname);		\
-	(eev)->argv[(eev)->argc].name = (aname);		\
+	if ((aname) != NULL) {					\
+		AG_Strlcpy((eev)->argv[(eev)->argc].name, (aname), \
+		        AG_VARIABLE_NAME_MAX);			\
+	} else {						\
+		(eev)->argv[(eev)->argc].name[0] = '\0';	\
+	}							\
 	(eev)->argv[(eev)->argc].mutex = NULL;			\
 	(eev)->argv[(eev)->argc].data.member = (val);		\
+	(eev)->argv[(eev)->argc].fn.fnVoid = NULL;		\
 	(eev)->argc++;						\
 }
 #define AG_EVENT_INS_ARG(eev,ap,tname,member,t) { 		\
 	AG_EVENT_BOUNDARY_CHECK(eev)				\
 	(eev)->argv[(eev)->argc].type = (tname);		\
-	(eev)->argv[(eev)->argc].name = "";			\
+	(eev)->argv[(eev)->argc].name[0] = '\0';		\
 	(eev)->argv[(eev)->argc].mutex = NULL;			\
 	(eev)->argv[(eev)->argc].data.member = va_arg(ap,t);	\
+	(eev)->argv[(eev)->argc].fn.fnVoid = NULL;		\
 	(eev)->argc++;						\
 }
 
