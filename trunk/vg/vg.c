@@ -51,8 +51,9 @@ VG_InitSubsystem(void)
 	vgNodeClassCount = 0;
 
 	AG_RegisterNamespace("VG", "VG_", "http://libagar.org/");
-	AG_RegisterClass(&vgViewClass);
-
+	if (agGUI) {
+		AG_RegisterClass(&vgViewClass);
+	}
 	VG_RegisterClass(&vgPointOps);
 	VG_RegisterClass(&vgLineOps);
 	VG_RegisterClass(&vgPolygonOps);
