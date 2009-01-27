@@ -65,7 +65,7 @@ AG_TreeItemNew(void *p, size_t privDataSize)
 {
 	AG_TreeItem *ti;
 
-	ti = AG_Malloc(sizeof(AG_TreeItem));
+	ti = (AG_TreeItem *)AG_Malloc(sizeof(AG_TreeItem));
 	ti->p = p;
 	ti->privData = (privDataSize > 0) ? AG_Malloc(privDataSize) : NULL;
 	ti->privDataSize = privDataSize;
