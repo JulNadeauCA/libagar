@@ -158,7 +158,7 @@ AllocVariable(void *pObj, const char *name, enum ag_variable_type type)
 	V->type = type;
 	V->mutex = NULL;
 	V->fn.fnVoid = NULL;
-	V->name = name;
+	Strlcpy(V->name, name, sizeof(V->name));
 	return (V);
 }
 
@@ -240,7 +240,7 @@ AG_Set(void *pObj, const char *name, const char *fmt, ...)
 	va_start(ap, fmt);
 	AG_VARIABLE_GET(ap, fmt, V);
 	va_end(ap);
-	V->name = name;
+	Strlcpy(V->name, name, sizeof(V->name));
 	AG_ObjectUnlock(obj);
 	return (V);
 }

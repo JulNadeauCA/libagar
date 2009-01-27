@@ -2,7 +2,7 @@
 
 #include <agar/core/begin.h>
 
-#define AG_VARIABLE_NAME_MAX 64
+#define AG_VARIABLE_NAME_MAX 24
 
 typedef enum ag_variable_type {
 	/*
@@ -129,12 +129,12 @@ typedef void       *(*AG_PointerFn)(struct ag_event *);
 typedef const void *(*AG_ConstPointerFn)(struct ag_event *);
 
 typedef struct ag_variable {
-	AG_VariableType type;		/* Variable type */
-	const char *name;		/* Key */
-	AG_Mutex *mutex;		/* Lock protecting data (or NULL) */
+	char name[AG_VARIABLE_NAME_MAX]; /* Variable name */
+	AG_VariableType type;	 	 /* Variable type */
+	AG_Mutex *mutex;		 /* Lock protecting data (or NULL) */
 	union {
-		Uint32 bitmask;		/* Bitmask (for AG_VARIABLE_P_FLAG_*) */
-		size_t size;		/* Size (for AG_VARIABLE_STRING_*) */
+		Uint32 bitmask;		 /* Bitmask (for AG_VARIABLE_P_FLAG_*) */
+		size_t size;		 /* Size (for AG_VARIABLE_STRING_*) */
 	} info;
 	union {
 		void (*fnVoid)(struct ag_event *);
@@ -225,7 +225,7 @@ typedef struct ag_variable {
 		int inFmt = 0;						\
 									\
 		(V)->type = AG_VARIABLE_NULL;				\
-		(V)->name = NULL;					\
+		(V)->name[0] = '\0';					\
 		(V)->mutex = NULL;					\
 		(V)->fn.fnVoid = NULL;					\
 		(V)->info.bitmask = 0;					\
@@ -495,7 +495,7 @@ AG_Variable *AG_BindFlag32_MP(void *, const char *, Uint32 *, Uint32, AG_Mutex *
 static __inline__ int
 AG_Defined(void *pObj, const char *name)
 {
-	AG_Object *obj = pObj;
+	AG_Object *obj = AGOBJECT(pObj);
 	Uint i;
 
 	AG_ObjectLock(obj);

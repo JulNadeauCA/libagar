@@ -308,7 +308,7 @@ static __inline__ void
 AG_LockTimeouts(void *p)
 {
 #ifdef AG_THREADS
-	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
+	AG_Object *ob = (p != NULL) ? AGOBJECT(p) : &agTimeoutMgr;
 	AG_ObjectLock(ob);
 #endif
 	AG_LockTiming();
@@ -319,7 +319,7 @@ static __inline__ void
 AG_UnlockTimeouts(void *p)
 {
 #ifdef AG_THREADS
-	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
+	AG_Object *ob = (p != NULL) ? AGOBJECT(p) : &agTimeoutMgr;
 #endif
 	AG_UnlockTiming();
 #ifdef AG_THREADS
