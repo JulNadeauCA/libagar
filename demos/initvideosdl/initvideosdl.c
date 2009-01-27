@@ -234,7 +234,7 @@ CreateWindow(void)
 			rad = AG_RadioNew(ntab, AG_RADIO_HFILL, NULL);
 			AG_RadioAddItemHK(rad, SDLK_p, "Points");
 			AG_RadioAddItemHK(rad, SDLK_l, "Lines");
-			AG_BindInt(rad, "value", &g->type);
+			AG_BindUint(rad, "value", &g->type);
 		}
 		
 		ntab = AG_NotebookAddTab(nb, "Tlist", AG_BOX_VERT);
