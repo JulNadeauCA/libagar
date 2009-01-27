@@ -733,8 +733,8 @@ CreateObjectDlg(AG_Event *event)
 		    AG_TLIST_POLL|AG_TLIST_TREE|AG_TLIST_EXPAND,
 		    PollObjects, "%p,%p", vfsRoot, lastSelectedParent);
 		AG_TlistSizeHint(tlParents, "XXXXXXXXXXXXXXXXXXX", 5);
-		AG_WidgetBind(tlParents, "selected", AG_WIDGET_POINTER,
-		    &lastSelectedParent);
+		AG_BindPointer(tlParents, "selected",
+		    (void **)&lastSelectedParent);
 	}
 
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);

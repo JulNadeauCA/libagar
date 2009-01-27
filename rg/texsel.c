@@ -77,17 +77,10 @@ SelectTexture(AG_Event *event)
 {
 	RG_TextureSelector *ts = AG_SELF();
 	AG_Tlist *tl = (AG_Tlist *)ts;
-	AG_TlistItem *it;
-	RG_Texture *tex;
-	AG_WidgetBinding *bTexname;
-	char *texname;
+	AG_TlistItem *it = AG_TlistSelectedItem(tl);
+	RG_Texture *tex = it->p1;
 
-	bTexname = AG_WidgetGetBinding(ts, "texture-name", &texname);
-	if ((it = AG_TlistSelectedItem(tl)) != NULL) {
-		tex = it->p1;
-		Strlcpy(texname, tex->name, bTexname->info.size);
-	}
-	AG_WidgetUnlockBinding(bTexname);
+	AG_SetString(ts, "texture-name", tex->name);
 }
 
 static void
