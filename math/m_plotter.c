@@ -214,8 +214,8 @@ M_PlotSettings(M_Plot *pl)
 		AG_HSVPal *pal;
 
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-		AG_WidgetBindPointer(pal, "pixel-format", &agSurfaceFmt);
-		AG_WidgetBindUint32(pal, "pixel", &pl->color);
+		AG_BindPointer(pal, "pixel-format", (void **)&agSurfaceFmt);
+		AG_BindUint32(pal, "pixel", &pl->color);
 		AG_SetEvent(pal, "h-changed", UpdateLabel, "%p", pl);
 		AG_SetEvent(pal, "sv-changed", UpdateLabel, "%p", pl);
 	}
@@ -370,19 +370,19 @@ Init(void *obj)
 	
 	ptr->hbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_HORIZ, 0);
 	ptr->vbar = AG_ScrollbarNew(ptr, AG_SCROLLBAR_VERT, 0);
-	AG_WidgetBind(ptr->hbar, "value", AG_WIDGET_INT, &ptr->xOffs);
-	AG_WidgetBind(ptr->hbar, "visible", AG_WIDGET_INT, &ptr->r.w);
-	AG_WidgetBind(ptr->hbar, "max", AG_WIDGET_INT, &ptr->xMax);
+	AG_BindInt(ptr->hbar, "value", &ptr->xOffs);
+	AG_BindInt(ptr->hbar, "visible", &ptr->r.w);
+	AG_BindInt(ptr->hbar, "max", &ptr->xMax);
 	AG_SetEvent(ptr->hbar, "scrollbar-changed", UpdateXBar, "%p", ptr);
 
-	AG_WidgetBind(ptr->vbar, "value", AG_WIDGET_INT, &ptr->yOffs);
-//	AG_WidgetBind(ptr->vbar, "max", AG_WIDGET_INT, &ptr->yMax);
+	AG_BindInt(ptr->vbar, "value", &ptr->yOffs);
+/*	AG_BindInt(ptr->vbar, "max", &ptr->yMax); */
 	AG_WidgetSetInt(ptr->hbar, "min", 0);
 	AG_WidgetSetInt(ptr->vbar, "min", 0);
 
 	AG_SetEvent(ptr, "window-keydown", keydown, NULL);
 	AG_SetEvent(ptr, "window-mousebuttondown", mousebuttondown, NULL);
-//	AG_SetEvent(ptr, "window-mousebuttonup", mousebuttonup, NULL);
+/*	AG_SetEvent(ptr, "window-mousebuttonup", mousebuttonup, NULL); */
 	AG_SetEvent(ptr, "window-mousemotion", mousemotion, NULL);
 }
 
@@ -689,23 +689,29 @@ M_PlotDerivative(M_Plotter *ptr, M_Plot *dp)
 }
 
 static __inline__ M_Real
-M_PlotPropVal(M_Plotter *ptr, M_Plot *pl)
+PlotVariableVFS(M_Plotter *ptr, M_Plot *pl)
 {
-	AG_Prop *prop;
+	AG_Variable *V;
+	M_Real rv;
 
-	if ((prop = AG_FindProp(pl->src.prop.vfs, pl->src.prop.key, -1, NULL))
+	if ((V = AG_GetVariableVFS(pl->src.varVFS.vfs, pl->src.varVFS.key))
 	    == NULL) {
-		printf("%s\n", AG_GetError());
+		AG_Verbose("Plot \"%s\": %s\n", pl->src.varVFS.key,
+		    AG_GetError());
 		return (0.0);
 	}
-	switch (prop->type) {
-	case AG_PROP_FLOAT:	return ((M_Real)prop->data.flt);
-	case AG_PROP_DOUBLE:	return ((M_Real)prop->data.dbl);
-	case AG_PROP_INT:	return ((M_Real)prop->data.i);
-	case AG_PROP_UINT:	return ((M_Real)prop->data.u);
-	default:		break;
+	switch (V->type) {
+	case AG_VARIABLE_FLOAT:		rv = (M_Real)V->data.flt;	break;
+	case AG_VARIABLE_DOUBLE:	rv = (M_Real)V->data.dbl;	break;
+	case AG_VARIABLE_INT:		rv = (M_Real)V->data.i;		break;
+	case AG_VARIABLE_UINT:		rv = (M_Real)V->data.u;		break;
+	default:
+		AG_Verbose("Plot \"%s\": Invalid type\n", pl->src.varVFS.key);
+		rv = 0.0;
+		break;
 	}
-	return (0.0);
+	AG_UnlockVariable(V);
+	return (rv);
 }
 
 void
@@ -718,8 +724,8 @@ M_PlotterUpdate(M_Plotter *ptr)
 		switch (pl->src_type) {
 		case M_PLOT_MANUALLY:
 			break;
-		case M_PLOT_FROM_PROP:
-			M_PlotReal(pl, M_PlotPropVal(ptr, pl));
+		case M_PLOT_FROM_VARIABLE_VFS:
+			M_PlotReal(pl, PlotVariableVFS(ptr, pl));
 			break;
 		case M_PLOT_FROM_REAL:
 			M_PlotReal(pl, *pl->src.real);
@@ -850,6 +856,7 @@ reposition:
 	return (plbl);
 }
 
+/* Create a new plot. */
 M_Plot *
 M_PlotNew(M_Plotter *ptr, enum m_plot_type type)
 {
@@ -884,6 +891,7 @@ M_PlotNew(M_Plotter *ptr, enum m_plot_type type)
 	return (pl);
 }
 
+/* Plot the derivative of existing Plot data. */
 M_Plot *
 M_PlotFromDerivative(M_Plotter *ptr, enum m_plot_type type, M_Plot *plot)
 {
@@ -896,16 +904,20 @@ M_PlotFromDerivative(M_Plotter *ptr, enum m_plot_type type, M_Plot *plot)
 	return (pl);
 }
 
+/*
+ * Plot a Variable from a VFS "object:variable-name" path. This allows the
+ * object or variable to safely disappear as long as the VFS root remains.
+ */
 M_Plot *
-M_PlotFromProp(M_Plotter *ptr, enum m_plot_type type, const char *label,
-    void *vfsRoot, const char *prop)
+M_PlotFromVariableVFS(M_Plotter *ptr, enum m_plot_type type, const char *label,
+    void *vfsRoot, const char *varName)
 {
 	M_Plot *pl;
 
 	pl = M_PlotNew(ptr, type);
-	pl->src_type = M_PLOT_FROM_PROP;
-	pl->src.prop.vfs = vfsRoot;
-	pl->src.prop.key = Strdup(prop);
+	pl->src_type = M_PLOT_FROM_VARIABLE_VFS;
+	pl->src.varVFS.vfs = vfsRoot;
+	pl->src.varVFS.key = Strdup(varName);
 	M_PlotSetLabel(pl, "%s", label);
 	return (pl);
 }
