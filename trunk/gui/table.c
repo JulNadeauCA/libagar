@@ -1985,7 +1985,6 @@ Init(void *obj)
 	t->m = 0;
 	t->mVis = 0;
 	t->xOffs = 0;
-	t->poll_ev = NULL;
 	t->dblClickRowEv = NULL;
 	t->dblClickColEv = NULL;
 	t->dblClickCellEv = NULL;
