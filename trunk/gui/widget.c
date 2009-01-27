@@ -331,7 +331,7 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 		obj->vars = Realloc(obj->vars,
 		    (obj->nVars+1)*sizeof(AG_Variable));
 		V = &obj->vars[obj->nVars++];
-		V->name = name;
+		Strlcpy(V->name, name, sizeof(V->name));
 	} else {
 		V = &obj->vars[i];
 	}
