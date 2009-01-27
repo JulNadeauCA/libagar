@@ -100,7 +100,7 @@ BindSelectedColor(AG_Event *event)
 	AG_TlistItem *it = AG_PTR(2);
 	Uint32 *c = it->p1;
 
-	AG_WidgetBindUint32(hsv, "pixel", c);
+	AG_BindUint32(hsv, "pixel", c);
 }
 
 /* Must be invoked from main event/rendering context. */
@@ -231,8 +231,8 @@ DEV_ConfigWindow(AG_Config *cfg)
 
 #if 0
 		msb = AG_MSpinbuttonNew(tab, 0, "x", _("Resolution: "));
-		AG_WidgetBindUint16(msb,"xvalue", &agView->w);
-		AG_WidgetBindUint16(msb,"yvalue", &agView->h);
+		AG_BindUint16(msb,"xvalue", &agView->w);
+		AG_BindUint16(msb,"yvalue", &agView->h);
 		AG_MSpinbuttonSetRange(msb, 320, 4096);
 #endif
 		AG_SpacerNewHoriz(tab);
@@ -274,27 +274,27 @@ DEV_ConfigWindow(AG_Config *cfg)
 	tab = AG_NotebookAddTab(nb, _("Directories"), AG_BOX_VERT);
 	{
 		tbox = AG_TextboxNew(tab, 0, _("Temporary dir: "));
-		AG_GetStringCopy(agConfig, "tmp-path", path, sizeof(path));
+		AG_GetString(agConfig, "tmp-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "tmp-path");
 
 		tbox = AG_TextboxNew(tab, 0, _("Data save dir: "));
-		AG_GetStringCopy(agConfig, "save-path", path, sizeof(path));
+		AG_GetString(agConfig, "save-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "save-path");
 	
 		tbox = AG_TextboxNew(tab, 0, _("Data load path: "));
-		AG_GetStringCopy(agConfig, "load-path", path, sizeof(path));
+		AG_GetString(agConfig, "load-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "load-path");
 	
 		tbox = AG_TextboxNew(tab, 0, _("Font path: "));
-		AG_GetStringCopy(agConfig, "font-path", path, sizeof(path));
+		AG_GetString(agConfig, "font-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "font-path");
 		
 		tbox = AG_TextboxNew(tab, 0, _("Den path: "));
-		AG_GetStringCopy(agConfig, "den-path", path, sizeof(path));
+		AG_GetString(agConfig, "den-path", path, sizeof(path));
 		AG_TextboxPrintf(tbox, "%s", path);
 		AG_SetEvent(tbox, "textbox-return", SetPath, "%s", "den-path");
 	}
@@ -317,7 +317,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 				it->p1 = &agColors[i];
 			}
 			hsv = AG_HSVPalNew(hPane->div[1], AG_HSVPAL_EXPAND);
-			AG_WidgetBindPointer(hsv,"pixel-format", &agVideoFmt);
+			AG_BindPointer(hsv, "pixel-format", (void **)&agVideoFmt);
 			AG_SetEvent(hsv, "h-changed", SetColor, "%p", tl);
 			AG_SetEvent(hsv, "sv-changed", SetColor, "%p", tl);
 			AG_SetEvent(tl, "tlist-selected", BindSelectedColor,

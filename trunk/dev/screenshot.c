@@ -305,8 +305,7 @@ DEV_ScreenshotUploader(void)
 		AG_WidgetFocus(hosttb);
 
 		num = AG_NumericalNew(vb, 0, "ms", _("Refresh rate: "));
-		AG_WidgetBindMp(num, "value", &xmit_lock,
-		    AG_WIDGET_INT, &xmit_delay);
+		AG_BindInt_MP(num, "value", &xmit_delay, &xmit_lock);
 		AG_NumericalSetRange(num, 1, 10000);
 
 		AG_TextboxPrintf(porttb, "%i", default_port);

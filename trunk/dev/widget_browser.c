@@ -306,20 +306,20 @@ EditWidgetParams(AG_Event *event)
 	nTab = AG_NotebookAddTab(nb, _("Geometry"), AG_BOX_VERT);
 	{
 		msb = AG_MSpinbuttonNew(nTab, 0, ",", "Container coords: ");
-		AG_WidgetBindInt(msb, "xvalue", &wid->x);
-		AG_WidgetBindInt(msb, "yvalue", &wid->y);
+		AG_BindInt(msb, "xvalue", &wid->x);
+		AG_BindInt(msb, "yvalue", &wid->y);
 
 		msb = AG_MSpinbuttonNew(nTab, 0, "x", "Geometry: ");
-		AG_WidgetBindInt(msb, "xvalue", &wid->w);
-		AG_WidgetBindInt(msb, "yvalue", &wid->h);
+		AG_BindInt(msb, "xvalue", &wid->w);
+		AG_BindInt(msb, "yvalue", &wid->h);
 		
 		msb = AG_MSpinbuttonNew(nTab, 0, ",", "View coords (UL): ");
-		AG_WidgetBindInt(msb, "xvalue", &wid->rView.x1);
-		AG_WidgetBindInt(msb, "yvalue", &wid->rView.y1);
+		AG_BindInt(msb, "xvalue", &wid->rView.x1);
+		AG_BindInt(msb, "yvalue", &wid->rView.y1);
 		
 		msb = AG_MSpinbuttonNew(nTab, 0, ",", "View coords (LR): ");
-		AG_WidgetBindInt(msb, "xvalue", &wid->rView.x2);
-		AG_WidgetBindInt(msb, "yvalue", &wid->rView.y2);
+		AG_BindInt(msb, "xvalue", &wid->rView.x2);
+		AG_BindInt(msb, "yvalue", &wid->rView.y2);
 	}
 	nTab = AG_NotebookAddTab(nb, _("Surfaces"), AG_BOX_VERT);
 	{
