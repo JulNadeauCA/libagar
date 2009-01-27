@@ -3,10 +3,11 @@
  * This program demonstrates multithread support in Agar.
  */
 
-#include <agar/config/have_sdl.h>
-
 #include <agar/core.h>
 #include <agar/gui.h>
+
+#include <agar/config/have_sdl.h>
+#include <agar/config/ag_threads.h>
 
 #ifdef AG_THREADS
 
