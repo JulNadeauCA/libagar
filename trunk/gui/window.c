@@ -511,6 +511,8 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 		if (j == Luniq->n)
 			AG_ListAppendPointer(Luniq, Lfoc->v[i].data.p);
 	}
+	if (Luniq->n == 0)
+		goto out;
 
 	/* Move focus after/before the currently focused widget. */
 	if (reverse) {
@@ -542,7 +544,7 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 			}
 		}
 	}
-
+out:
 	AG_ListDestroy(Lfoc);
 	AG_ListDestroy(Luniq);
 }
