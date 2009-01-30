@@ -57,6 +57,7 @@ AG_ObjectClass agObjectClass = {
 	NULL,	/* save */
 	NULL	/* edit */
 };
+const AG_Version agPropTblVer = { 2, 1 };
 	
 int agObjectIgnoreDataErrors = 0;  /* Don't fail on a data load failure. */
 int agObjectIgnoreUnknownObjs = 0; /* Don't fail on unknown object types. */
@@ -312,7 +313,8 @@ used:
 	return (1);
 }
 
-/* LEGACY: Move an object from one parent object to another. */
+#ifdef AG_LEGACY
+/* Move an object from one parent object to another. */
 void
 AG_ObjectMove(void *childp, void *newparentp)
 {
@@ -351,6 +353,7 @@ AG_ObjectMove(void *childp, void *newparentp)
 	AG_ObjectLock(oparent);
 	AG_UnlockVFS(oparent);
 }
+#endif /* AG_LEGACY */
 
 /* Attach an object to another object. */
 void
@@ -676,7 +679,11 @@ void
 AG_ObjectFreeVariables(void *pObj)
 {
 	AG_Object *ob = pObj;
+	Uint i;
 
+	for (i = 0; i < ob->nVars; i++) {
+		AG_FreeVariable(&ob->vars[i]);
+	}
 	Free(ob->vars);
 	ob->vars = NULL;
 	ob->nVars = 0;
@@ -772,7 +779,6 @@ AG_ObjectDestroy(void *p)
 	}
 	
 	AG_ObjectFreeVariables(ob);
-	AG_ObjectFreeProps(ob);
 	AG_ObjectFreeEvents(ob);
 	AG_MutexDestroy(&ob->lock);
 	Free(ob->archivePath);
@@ -1101,6 +1107,141 @@ GetDatafile(char *path, AG_Object *ob)
 	return (0);
 }
 
+/* Load Object variables. */
+int
+AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
+{
+	AG_Object *ob = p;
+	Uint32 i, count;
+	Uint j;
+
+	if (AG_ReadVersion(ds, "AG_PropTbl", &agPropTblVer, NULL) == -1)
+		return (-1);
+
+	AG_ObjectLock(ob);
+
+	if ((ob->flags & AG_OBJECT_RELOAD_PROPS) == 0)
+		AG_ObjectFreeVariables(ob);
+
+	count = AG_ReadUint32(ds);
+	for (i = 0; i < count; i++) {
+		char key[64];
+		Uint32 code;
+
+		if (AG_CopyString(key, ds, sizeof(key)) >= sizeof(key)) {
+			AG_SetError("Variable name too long: %s", key);
+			goto fail;
+		}
+		code = AG_ReadUint32(ds);
+		for (j = 0; j < AG_VARIABLE_TYPE_LAST; j++) {
+			if (agVariableTypes[j].code == code)
+				break;
+		}
+		if (j == AG_VARIABLE_TYPE_LAST) {
+			AG_SetError("Unknown variable code: %u", (Uint)code);
+			goto fail;
+		}
+		switch (agVariableTypes[j].typeTgt) {
+		case AG_VARIABLE_UINT:
+			AG_SetUint(ob, key, (Uint)AG_ReadUint32(ds));
+			break;
+		case AG_VARIABLE_INT:
+			AG_SetInt(ob, key, (int)AG_ReadSint32(ds));
+			break;
+		case AG_VARIABLE_UINT8:
+			AG_SetBool(ob, key, AG_ReadUint8(ds));
+			break;
+		case AG_VARIABLE_SINT8:
+			AG_SetBool(ob, key, AG_ReadSint8(ds));
+			break;
+		case AG_VARIABLE_UINT16:
+			AG_SetUint16(ob, key, AG_ReadUint16(ds));
+			break;
+		case AG_VARIABLE_SINT16:
+			AG_SetSint16(ob, key, AG_ReadSint16(ds));
+			break;
+		case AG_VARIABLE_UINT32:
+			AG_SetUint32(ob, key, AG_ReadUint32(ds));
+			break;
+		case AG_VARIABLE_SINT32:
+			AG_SetSint32(ob, key, AG_ReadSint32(ds));
+			break;
+		case AG_VARIABLE_FLOAT:
+			AG_SetFloat(ob, key, AG_ReadFloat(ds));
+			break;
+		case AG_VARIABLE_DOUBLE:
+			AG_SetDouble(ob, key, AG_ReadDouble(ds));
+			break;
+		case AG_VARIABLE_STRING:
+			AG_SetStringNODUP(ob, key, AG_ReadString(ds));
+			break;
+		default:
+			AG_SetError("Attempt to load variable of type %s",
+			    agVariableTypes[j].name);
+			goto fail;
+		}
+	}
+	AG_ObjectUnlock(ob);
+	return (0);
+fail:
+	AG_ObjectUnlock(ob);
+	return (-1);
+}
+
+/* Save Object variables. */
+void
+AG_ObjectSaveVariables(void *p, AG_DataSource *ds)
+{
+	AG_Object *ob = p;
+	off_t countOffs;
+	Uint32 count = 0;
+	Uint i;
+	
+	AG_WriteVersion(ds, "AG_PropTbl", &agPropTblVer);
+	countOffs = AG_Tell(ds);
+	AG_WriteUint32(ds, 0);
+	
+	AG_ObjectLock(ob);
+	for (i = 0; i < ob->nVars; i++) {
+		AG_Variable *V = &ob->vars[i];
+
+		if (agVariableTypes[V->type].code == -1)
+			continue;			/* Nonpersistent */
+
+		AG_LockVariable(V);
+		if (V->fn.fnVoid != NULL &&
+		    AG_EvalVariable(ob, V) == -1) {
+			Debug(ob, "Failed to eval %s (%s); excluding from archive",
+			    V->name, AG_GetError());
+			AG_UnlockVariable(V);
+			continue;
+		}
+
+		AG_WriteString(ds, (char *)V->name);
+		AG_WriteUint32(ds, agVariableTypes[V->type].code);
+
+		switch (AG_VARIABLE_TYPE(V)) {
+		case AG_VARIABLE_UINT:	 AG_WriteUint32(ds, (Uint32)V->data.u);	break;
+		case AG_VARIABLE_INT:	 AG_WriteSint32(ds, (Sint32)V->data.i);	break;
+		case AG_VARIABLE_UINT8:	 AG_WriteUint8(ds, V->data.u8);		break;
+		case AG_VARIABLE_SINT8:	 AG_WriteSint8(ds, V->data.s8);		break;
+		case AG_VARIABLE_UINT16: AG_WriteUint16(ds, V->data.u16);	break;
+		case AG_VARIABLE_SINT16: AG_WriteSint16(ds, V->data.s16);	break;
+		case AG_VARIABLE_UINT32: AG_WriteUint32(ds, V->data.u32);	break;
+		case AG_VARIABLE_SINT32: AG_WriteSint32(ds, V->data.s32);	break;
+		case AG_VARIABLE_FLOAT:  AG_WriteFloat(ds, V->data.flt);	break;
+		case AG_VARIABLE_DOUBLE: AG_WriteDouble(ds, V->data.dbl);	break;
+		case AG_VARIABLE_STRING: AG_WriteString(ds, V->data.s);		break;
+		default:							break;
+		}
+		AG_UnlockVariable(V);
+
+		count++;
+	}
+	AG_ObjectUnlock(ob);
+	AG_WriteUint32At(ds, count, countOffs);
+}
+
 /*
  * Load an Agar object (or a virtual filesystem of Agar objects) from an
  * archive file.
@@ -1156,7 +1297,7 @@ AG_ObjectLoadGenericFromFile(void *p, const char *pPath)
 	/* Dependencies, properties */
 	if (ReadDependencyTable(ds, ob) == -1)
 		goto fail;
-	if (AG_PropLoad(ob, ds) == -1)
+	if (AG_ObjectLoadVariables(ob, ds) == -1)
 		goto fail;
 	
 	/* Load the generic part of the archived child objects. */
@@ -1392,8 +1533,7 @@ AG_ObjectSerialize(void *p, AG_DataSource *ds)
 		count++;
 	}
 	AG_WriteUint32At(ds, count, countOffs);
-	if (AG_PropSave(ob, ds) == -1)
-		goto fail;
+	AG_ObjectSaveVariables(ob, ds);
 	
 	/* Table of child objects */
 	if (ob->flags & AG_OBJECT_CHLD_AUTOSAVE) {
@@ -1475,7 +1615,7 @@ AG_ObjectUnserialize(void *p, AG_DataSource *ds)
 	/* Dependencies, properties */
 	if (ReadDependencyTable(ds, ob) == -1)
 		goto fail;
-	if (AG_PropLoad(ob, ds) == -1)
+	if (AG_ObjectLoadVariables(ob, ds) == -1)
 		goto fail;
 
 	/* Table of child objects, expected empty. */
@@ -2213,9 +2353,9 @@ tryname:
 void
 AG_ObjectLockDebug(AG_Object *ob, const char *info)
 {
-	if (agDebugLvl >= 10) { AG_Debug(ob, "Locking (%s)...", info); }
+	if (agDebugLvl >= 10) { Debug(ob, "Locking (%s)...", info); }
 	AG_MutexLock(&ob->lock);
-	if (agDebugLvl >= 10) { AG_Debug(ob, "OK\n"); }
+	if (agDebugLvl >= 10) { Debug(ob, "OK\n"); }
 
 	ob->lockinfo = (const char **)AG_Realloc(ob->lockinfo,
 	    (ob->nlockinfo+1)*sizeof(char *));
@@ -2227,6 +2367,6 @@ AG_ObjectUnlockDebug(AG_Object *ob, const char *info)
 {
 	ob->nlockinfo--;
 	AG_MutexUnlock(&ob->lock);
-	if (agDebugLvl >= 10) { AG_Debug(ob, "Unlocked (%s)\n", info); }
+	if (agDebugLvl >= 10) { Debug(ob, "Unlocked (%s)\n", info); }
 }
 #endif /* AG_LOCKDEBUG */

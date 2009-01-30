@@ -2,56 +2,52 @@
 
 #include <agar/core/begin.h>
 
-#define AG_VARIABLE_NAME_MAX 24
-
 typedef enum ag_variable_type {
-	/*
-	 * Standard types
-	 */
 	AG_VARIABLE_NULL,		/* No data */
+	/* Primitive */
 	AG_VARIABLE_UINT,		/* Unsigned int */
-	AG_VARIABLE_INT,		/* Natural int */
-	AG_VARIABLE_UINT8,		/* Unsigned 8-bit */
-	AG_VARIABLE_SINT8,		/* Signed 8-bit */
-	AG_VARIABLE_UINT16,		/* Unsigned 16-bit */
-	AG_VARIABLE_SINT16,		/* Signed 16-bit */
-	AG_VARIABLE_UINT32,		/* Unsigned 32-bit */
-	AG_VARIABLE_SINT32,		/* Signed 32-bit */
-	AG_VARIABLE_UINT64,		/* Unsigned 64-bit (optional) */
-	AG_VARIABLE_SINT64,		/* Signed 64-bit (optional) */
-	AG_VARIABLE_FLOAT,		/* Single-precision float */
-	AG_VARIABLE_DOUBLE,		/* Double-precision float */
-	AG_VARIABLE_LONG_DOUBLE,	/* Quad-precision float (optional) */
-	AG_VARIABLE_STRING,		/* C string */
-	AG_VARIABLE_CONST_STRING,	/* C string (const) */
-	AG_VARIABLE_POINTER,		/* C pointer */
-	AG_VARIABLE_CONST_POINTER,	/* C pointer (const) */
-
 	AG_VARIABLE_P_UINT,		/* Pointer to Uint */
+	AG_VARIABLE_INT,		/* Natural int */
 	AG_VARIABLE_P_INT,		/* Pointer to int */
+	AG_VARIABLE_UINT8,		/* Unsigned 8-bit */
 	AG_VARIABLE_P_UINT8,		/* Pointer to Uint8 */
+	AG_VARIABLE_SINT8,		/* Signed 8-bit */
 	AG_VARIABLE_P_SINT8,		/* Pointer to Sint8 */
+	AG_VARIABLE_UINT16,		/* Unsigned 16-bit */
 	AG_VARIABLE_P_UINT16,		/* Pointer to Uint16 */
+	AG_VARIABLE_SINT16,		/* Signed 16-bit */
 	AG_VARIABLE_P_SINT16,		/* Pointer to Sint16 */
+	AG_VARIABLE_UINT32,		/* Unsigned 32-bit */
 	AG_VARIABLE_P_UINT32,		/* Pointer to Uint32 */
+	AG_VARIABLE_SINT32,		/* Signed 32-bit */
 	AG_VARIABLE_P_SINT32,		/* Pointer to Sint32 */
+	AG_VARIABLE_UINT64,		/* Unsigned 64-bit (optional) */
 	AG_VARIABLE_P_UINT64,		/* Pointer to Uint64 (optional) */
+	AG_VARIABLE_SINT64,		/* Signed 64-bit (optional) */
 	AG_VARIABLE_P_SINT64,		/* Pointer to Sint64 (optional) */
+	AG_VARIABLE_FLOAT,		/* Single-precision float */
 	AG_VARIABLE_P_FLOAT,		/* Pointer to float */
+	AG_VARIABLE_DOUBLE,		/* Double-precision float */
 	AG_VARIABLE_P_DOUBLE,		/* Pointer to double */
+	AG_VARIABLE_LONG_DOUBLE,	/* Quad-precision float (optional) */
 	AG_VARIABLE_P_LONG_DOUBLE,	/* Pointer to long double (optional) */
+	AG_VARIABLE_STRING,		/* C string */
 	AG_VARIABLE_P_STRING,		/* Pointer to C string */
+	AG_VARIABLE_CONST_STRING,	/* C string (const) */
 	AG_VARIABLE_P_CONST_STRING,	/* Pointer to C string (const) */
+	AG_VARIABLE_POINTER,		/* C pointer */
 	AG_VARIABLE_P_POINTER,		/* Pointer to C pointer */
-	AG_VARIABLE_P_CONST_POINTER,	/* Pointer to C pointer (const) */
-	AG_VARIABLE_P_OBJECT,		/* Pointer to AG_Object */
+	AG_VARIABLE_CONST_POINTER,	/* C pointer (const) */
+	AG_VARIABLE_P_CONST_POINTER, 	/* Pointer to C pointer (const) */
+	/* Bitmask */
 	AG_VARIABLE_P_FLAG,		/* Bit in int (uses info.mask) */
 	AG_VARIABLE_P_FLAG8,		/* Bit in int8 (uses info.mask) */
 	AG_VARIABLE_P_FLAG16,		/* Bit in int16 (uses info.mask) */
 	AG_VARIABLE_P_FLAG32,		/* Bit in int32 (uses info.mask) */
-	/*
-	 * Standard types implemented by external libraries.
-	 */
+	/* Agar-Core */
+	AG_VARIABLE_P_OBJECT,		/* Pointer to AG_Object */
+#if 0
+	/* Agar-Math */
 	AG_VARIABLE_REAL,		/* M: Real number */
 	AG_VARIABLE_P_REAL,
 	AG_VARIABLE_RANGE,		/* M: Interval */
@@ -88,28 +84,20 @@ typedef enum ag_variable_type {
 	AG_VARIABLE_P_MATRIX33,
 	AG_VARIABLE_MATRIX44,		/* M: 4x4 matrix */
 	AG_VARIABLE_P_MATRIX44,
-	/*
-	 * For future standard types
-	 */
-	AG_VARIABLE_EXT4,
-	AG_VARIABLE_EXT5,
-	AG_VARIABLE_EXT6,
-	AG_VARIABLE_EXT7,
-	AG_VARIABLE_EXT8,
-	AG_VARIABLE_EXT9,
-	AG_VARIABLE_EXT10,
-	AG_VARIABLE_EXT11,
-	AG_VARIABLE_EXT12,
-	AG_VARIABLE_EXT13,
-	AG_VARIABLE_EXT14,
-	AG_VARIABLE_EXT15,
-	AG_VARIABLE_EXT16,
-	AG_VARIABLE_EXT17,
-	/*
-	 * Application-specific extensions
-	 */
-	AG_VARIABLE_PRIVATE = 10001,
+#endif
+	AG_VARIABLE_TYPE_LAST
 } AG_VariableType;
+
+typedef struct ag_variable_type_info {
+	enum ag_variable_type type;		/* Variable type */
+	int indirLvl;				/* Indirection level */
+	const char *name;			/* Name string */
+	enum ag_variable_type typeTgt;		/* Pointer target type (or AG_VARIABLE_NULL) */
+	int code;				/* Numerical code (-1 = non persistent) */
+} AG_VariableTypeInfo;
+
+#define AG_VARIABLE_NAME_MAX	24
+#define AG_VARIABLE_BOOL	AG_VARIABLE_INT
 
 struct ag_event;
 
@@ -128,6 +116,40 @@ typedef size_t      (*AG_StringFn)(struct ag_event *, char *, size_t);
 typedef void       *(*AG_PointerFn)(struct ag_event *);
 typedef const void *(*AG_ConstPointerFn)(struct ag_event *);
 
+union ag_variable_fn {
+	void (*fnVoid)(struct ag_event *);
+	Uint (*fnUint)(struct ag_event *);
+	int (*fnInt)(struct ag_event *);
+	Uint8 (*fnUint8)(struct ag_event *);
+	Sint8 (*fnSint8)(struct ag_event *);
+	Uint16 (*fnUint16)(struct ag_event *);
+	Sint16 (*fnSint16)(struct ag_event *);
+	Uint32 (*fnUint32)(struct ag_event *);
+	Sint32 (*fnSint32)(struct ag_event *);
+	float (*fnFloat)(struct ag_event *);
+	double (*fnDouble)(struct ag_event *);
+	size_t (*fnString)(struct ag_event *, char *, size_t);
+	void *(*fnPointer)(struct ag_event *);
+	const void *(*fnConstPointer)(struct ag_event *);
+};
+	
+union ag_variable_data {
+	void *p;
+	const void *Cp;
+	char *s;
+	const char *Cs;
+	int i;
+	Uint u;
+	float flt;
+	double dbl;
+	Uint8 u8;
+	Sint8 s8;
+	Uint16 u16;
+	Sint16 s16;
+	Uint32 u32;
+	Sint32 s32;
+};
+
 typedef struct ag_variable {
 	char name[AG_VARIABLE_NAME_MAX]; /* Variable name */
 	AG_VariableType type;	 	 /* Variable type */
@@ -136,38 +158,8 @@ typedef struct ag_variable {
 		Uint32 bitmask;		 /* Bitmask (for AG_VARIABLE_P_FLAG_*) */
 		size_t size;		 /* Size (for AG_VARIABLE_STRING_*) */
 	} info;
-	union {
-		void (*fnVoid)(struct ag_event *);
-		Uint (*fnUint)(struct ag_event *);
-		int (*fnInt)(struct ag_event *);
-		Uint8 (*fnUint8)(struct ag_event *);
-		Sint8 (*fnSint8)(struct ag_event *);
-		Uint16 (*fnUint16)(struct ag_event *);
-		Sint16 (*fnSint16)(struct ag_event *);
-		Uint32 (*fnUint32)(struct ag_event *);
-		Sint32 (*fnSint32)(struct ag_event *);
-		float (*fnFloat)(struct ag_event *);
-		double (*fnDouble)(struct ag_event *);
-		size_t (*fnString)(struct ag_event *, char *, size_t);
-		void *(*fnPointer)(struct ag_event *);
-		const void *(*fnConstPointer)(struct ag_event *);
-	} fn;
-	union {
-		void *p;
-		const void *Cp;
-		char *s;
-		const char *Cs;
-		int i;
-		Uint u;
-		float flt;
-		double dbl;
-		Uint8 u8;
-		Sint8 s8;
-		Uint16 u16;
-		Sint16 s16;
-		Uint32 u32;
-		Sint32 s32;
-	} data;
+	union ag_variable_fn fn;
+	union ag_variable_data data;
 } AG_Variable;
 
 #undef AG_VARIABLE_SETARG
@@ -389,13 +381,33 @@ typedef struct ag_variable {
 		}							\
 	} while (0)
 
+/* Evaluate the value of a variable tied to a function. */
+#define AG_VARIABLE_GET_FN(obj,V,_field,_fname) do {		\
+	char evName[AG_EVENT_NAME_MAX];				\
+	AG_Event *ev;						\
+								\
+	Strlcpy(evName, "get-", sizeof(evName));		\
+	Strlcat(evName, (V)->name, sizeof(evName));		\
+	AG_ObjectLock(obj);					\
+	TAILQ_FOREACH(ev, &OBJECT(obj)->events, events) {	\
+		if (strcmp(evName, ev->name) == 0)		\
+			break;					\
+	}							\
+	if (ev != NULL) {					\
+		(V)->data._field = (V)->fn._fname(ev);		\
+	}							\
+	AG_ObjectUnlock(obj);					\
+} while (0)
+
 __BEGIN_DECLS
 struct ag_list;
-extern const char *agVariableTypeNames[];
+extern const AG_VariableTypeInfo agVariableTypes[];
 
+int		AG_EvalVariable(AG_Object *, AG_Variable *);
 struct ag_list *AG_VariableList(const char *, ...);
-void            AG_VariablePrint(char *, size_t, void *, const char *);
+void            AG_PrintVariable(char *, size_t, AG_Variable *);
 AG_Variable    *AG_GetVariableVFS(void *, const char *);
+AG_Variable    *AG_GetVariable(void *, const char *, ...);
 
 AG_Variable *AG_Set(void *, const char *, const char *, ...);
 
@@ -410,6 +422,12 @@ AG_Variable *AG_SetInt(void *, const char *, int);
 AG_Variable *AG_BindInt(void *, const char *, int *);
 AG_Variable *AG_BindIntFn(void *, const char *, AG_IntFn, const char *, ...);
 AG_Variable *AG_BindInt_MP(void *, const char *, int *, AG_Mutex *);
+
+#define      AG_GetBool		AG_GetInt
+#define      AG_SetBool		AG_SetInt
+#define      AG_BindBool	AG_BindInt
+#define      AG_BindBoolFn	AG_BindIntFn
+#define      AG_BindBool_MP	AG_BindInt_MP
 
 Uint8        AG_GetUint8(void *, const char *);
 AG_Variable *AG_SetUint8(void *, const char *, Uint8);
@@ -462,7 +480,11 @@ AG_Variable *AG_BindDouble_MP(void *, const char *, double *, AG_Mutex *);
 size_t       AG_GetString(void *, const char *, char *, size_t)
 	                  BOUNDED_ATTRIBUTE(__string__, 3, 4);
 char        *AG_GetStringDup(void *, const char *);
-AG_Variable *AG_SetString(void *, const char *, const char *, ...);
+AG_Variable *AG_SetString(void *, const char *, const char *);
+AG_Variable *AG_SetStringNODUP(void *, const char *, char *);
+AG_Variable *AG_SetStringFixed(void *, const char *, char *, size_t)
+                               BOUNDED_ATTRIBUTE(__string__, 3, 4);
+AG_Variable *AG_PrtString(void *, const char *, const char *, ...);
 AG_Variable *AG_BindString(void *, const char *, char *, size_t);
 AG_Variable *AG_BindStringFn(void *, const char *, AG_StringFn, const char *, ...);
 AG_Variable *AG_BindString_MP(void *, const char *, char *, size_t, AG_Mutex *);
@@ -509,12 +531,34 @@ AG_Defined(void *pObj, const char *name)
 	return (0);
 }
 
+/* Acquire any locking device associated with a variable. */
+static __inline__ void
+AG_LockVariable(AG_Variable *V)
+{
+	if (V->mutex != NULL) { AG_MutexLock(V->mutex); }
+}
+
+/* Release any locking device associated with a variable. */
+static __inline__ void
+AG_UnlockVariable(AG_Variable *V)
+{
+	if (V->mutex != NULL) { AG_MutexUnlock(V->mutex); }
+}
+
+/* Release all resources associated with a variable. */
+static __inline__ void
+AG_FreeVariable(AG_Variable *V)
+{
+	if (V->type == AG_VARIABLE_STRING && V->info.size == 0)
+		AG_Free(V->data.s);
+}
+
 /*
  * Lookup a variable by name and return it locked.
  * Object must be locked.
  */
 static __inline__ AG_Variable *
-AG_GetVariable(AG_Object *obj, const char *name)
+AG_GetVariableLocked(AG_Object *obj, const char *name)
 {
 	Uint i;
 	AG_Variable *V;
@@ -527,19 +571,13 @@ AG_GetVariable(AG_Object *obj, const char *name)
 		return (NULL);
 	}
 	V = &obj->vars[i];
-	if (V->mutex != NULL) {
-		AG_MutexLock(V->mutex);
-	}
+	AG_LockVariable(V);
 	return (V);
 }
 
-/* Release any locking device associated with a variable. */
-static __inline__ void
-AG_UnlockVariable(AG_Variable *V)
-{
-	if (V->mutex != NULL)
-		AG_MutexUnlock(V->mutex);
-}
+#define AG_VARIABLE_TYPE(V) (agVariableTypes[(V)->type].typeTgt)
+#define AG_VARIABLE_TYPE_NAME(V) (agVariableTypes[(V)->type].name)
+
 __END_DECLS
 
 #include <agar/core/close.h>

@@ -100,7 +100,6 @@ int
 AG_ConfigInit(AG_Config *cfg, Uint flags)
 {
 	char udatadir[AG_PATHNAME_MAX];
-	char tmpdir[AG_PATHNAME_MAX];
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
 	struct passwd *pwd = getpwuid(getuid());
 #endif
@@ -110,20 +109,20 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 	OBJECT(cfg)->flags |= AG_OBJECT_RELOAD_PROPS|AG_OBJECT_RESIDENT;
 	OBJECT(cfg)->save_pfx = NULL;
 
-	AG_SetBool(cfg, "initial-run", 1);
+	AG_SetInt(cfg, "initial-run", 1);
 
 	/* XXX XXX move to agar-gui */
-	AG_SetBool(cfg, "view.full-screen", 0);
-	AG_SetBool(cfg, "view.async-blits", 0);
-	AG_SetBool(cfg, "view.opengl", 0);
+	AG_SetInt(cfg, "view.full-screen", 0);
+	AG_SetInt(cfg, "view.async-blits", 0);
+	AG_SetInt(cfg, "view.opengl", 0);
 	AG_SetUint16(cfg, "view.w", 800);
 	AG_SetUint16(cfg, "view.h", 600);
 	AG_SetUint16(cfg, "view.min-w", 16);
 	AG_SetUint16(cfg, "view.min-h", 16);
 	AG_SetUint8(cfg, "view.depth", 32);
 	AG_SetUint(cfg, "view.nominal-fps", 40);
-	AG_SetBool(cfg, "input.joysticks", 1);
-	AG_SetBool(cfg, "input.composition", 1);
+	AG_SetInt(cfg, "input.joysticks", 1);
+	AG_SetInt(cfg, "input.composition", 1);
 
 	/* Set the save directory path and create it as needed. */
 #if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
@@ -131,24 +130,21 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 	Strlcat(udatadir, AG_PATHSEP, sizeof(udatadir));
 	Strlcat(udatadir, ".", sizeof(udatadir));
 	Strlcat(udatadir, agProgName, sizeof(udatadir));
-	AG_SetString(cfg, "home", "%s", pwd->pw_dir);
+	AG_SetString(cfg, "home", pwd->pw_dir);
 #else
 	udatadir[0] = '.';
 	Strlcpy(&udatadir[1], agProgName, sizeof(udatadir)-1);
 	AG_SetString(cfg, "home", ".");
 #endif
-	Strlcpy(tmpdir, udatadir, sizeof(tmpdir));
-	Strlcat(tmpdir, "/tmp", sizeof(tmpdir));
-	
-	AG_SetString(cfg, "save-path", "%s", udatadir);
-	AG_SetString(cfg, "tmp-path", "%s", tmpdir);
+	AG_SetString(cfg, "save-path", udatadir);
+	AG_PrtString(cfg, "tmp-path", "%s/tmp", udatadir);
 
 #if defined(_WIN32)
 	AG_SetString(cfg, "den-path", ".");
-	AG_SetString(cfg, "load-path", "%s:.", udatadir);
+	AG_PrtString(cfg, "load-path", "%s:.", udatadir);
 #else
-	AG_SetString(cfg, "den-path", "%s", SHAREDIR);
-	AG_SetString(cfg, "load-path", "%s:%s", udatadir, SHAREDIR);
+	AG_SetString(cfg, "den-path", SHAREDIR);
+	AG_PrtString(cfg, "load-path", "%s:%s", udatadir, SHAREDIR);
 #endif
 	
 	if (flags & AG_CREATE_DATADIR) {
@@ -195,7 +191,7 @@ Save(void *obj, AG_DataSource *ds)
 {
 	AG_Config *cfg = obj;
 
-	AG_SetBool(cfg, "initial-run", 0);
+	AG_SetInt(cfg, "initial-run", 0);
 
 #ifdef AG_DEBUG
 	AG_WriteUint8(ds, (Uint8)agDebugLvl);
