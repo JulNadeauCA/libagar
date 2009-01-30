@@ -171,13 +171,13 @@ Default font flags (style, weight).
 The following example sets platform-specific font paths.
 .Bd -literal
 #ifdef __APPLE__
-AG_SetString(agConfig, "font-path", "%s/Library/Fonts:/Library/Fonts:"
+AG_PrtString(agConfig, "font-path", "%s/Library/Fonts:/Library/Fonts:"
                                     "/System/Library/Fonts",
 			            getenv("HOME"));
 #elif _WIN32
 AG_SetString(agConfig, "font-path", "c:\\windows\\fonts");
 #else
-AG_SetString(agConfig, "font-path", "%s/.fonts:"
+AG_PrtString(agConfig, "font-path", "%s/.fonts:"
                                     "/usr/X11R6/lib/X11/fonts/TTF",
                                     getenv("HOME"));
 #endif

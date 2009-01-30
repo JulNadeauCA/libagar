@@ -219,20 +219,19 @@ int	 AG_ObjectPageOut(void *);
 int	 AG_ObjectSerialize(void *, AG_DataSource *);
 int	 AG_ObjectUnserialize(void *, AG_DataSource *);
 int	 AG_ObjectSaveToFile(void *, const char *);
-#define	 AG_ObjectSave(p) \
-	 AG_ObjectSaveToFile((p),NULL)
+#define	 AG_ObjectSave(p) AG_ObjectSaveToFile((p),NULL)
 int	 AG_ObjectSaveAll(void *);
-#define	 AG_ObjectLoad(p) \
-	 AG_ObjectLoadFromFile((p),NULL)
-#define	 AG_ObjectLoadData(o,f) \
-	 AG_ObjectLoadDataFromFile((o),(f),NULL)
-#define	 AG_ObjectLoadGeneric(p) \
-	 AG_ObjectLoadGenericFromFile((p),NULL)
+void	 AG_ObjectSaveVariables(void *, AG_DataSource *);
+
+#define	 AG_ObjectLoad(p) AG_ObjectLoadFromFile((p),NULL)
+#define	 AG_ObjectLoadData(o,f) AG_ObjectLoadDataFromFile((o),(f),NULL)
+#define	 AG_ObjectLoadGeneric(p) AG_ObjectLoadGenericFromFile((p),NULL)
 int	 AG_ObjectLoadFromFile(void *, const char *);
 int	 AG_ObjectLoadGenericFromFile(void *, const char *);
 int	 AG_ObjectResolveDeps(void *);
 int	 AG_ObjectLoadDataFromFile(void *, int *, const char *);
 int	 AG_ObjectReadHeader(AG_DataSource *, AG_ObjectHeader *);
+int	 AG_ObjectLoadVariables(void *, AG_DataSource *);
 
 AG_ObjectDep *AG_ObjectAddDep(void *, void *, int);
 int           AG_ObjectFindDep(void *, Uint32, void **);
@@ -272,10 +271,11 @@ void AG_ObjectUnlockDebug(AG_Object *, const char *);
 # define AG_UnlockVFS(ob)
 #endif /* AG_THREADS */
 
-/* LEGACY routines */
+#ifdef AG_LEGACY
 void    AG_ObjectMove(void *, void *);
 #define AG_ObjectIsClass(obj,cname) AG_OfClass((obj),(cname))
 #define AG_ObjectFreeProps(obj) AG_ObjectFreeVariables(obj)
+#endif /* AG_LEGACY */
 
 /*
  * Return a child object by name.

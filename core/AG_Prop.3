@@ -49,20 +49,11 @@ By default, properties are made persistent by the
 .Ft AG_Object
 archiving process.
 .Pp
-Agar-GUI widgets
-(see
-.Xr AG_Widget 3 )
-can transparently bind to object properties based on their data types
-(e.g., a widget providing an
-.Ft int
-binding can also bind to an
-.Dv AG_VARIABLE_INT
-property of an object).
-.Pp
-Magic can be tied to properties by specifying "read" and "write" functions.
-It is also useful to tie magic to the entire property table of an object
-(e.g., an object's property table could be generated in some way or accessed
-over a network connection).
+NOTE: As of Agar 1.3.4, this interface is now
+.Em deprecated .
+Developers should use the new
+.Xr AG_Variable 3 ,
+interface instead.
 .Sh READING PROPERTIES
 .nr nS 1
 .Ft "AG_Prop *"
@@ -213,7 +204,16 @@ returns a copy of the string.
 .Fn AG_SetDouble "AG_Object *obj" "const char *key" "double value"
 .Pp
 .Ft "AG_Prop *"
-.Fn AG_SetString "AG_Object *obj" "const char *key" "const char *fmt" "..."
+.Fn AG_SetString "AG_Object *obj" "const char *key" "const char *s"
+.Pp
+.Ft "AG_Prop *"
+.Fn AG_SetStringNODUP "AG_Object *obj" "const char *key" "const char *s"
+.Pp
+.Ft "AG_Prop *"
+.Fn AG_SetStringFixed "AG_Object *obj" "const char *key" "char *buf" "size_t bufSize"
+.Pp
+.Ft "AG_Prop *"
+.Fn AG_PrtString "AG_Object *obj" "const char *key" "const char *fmt" "..."
 .Pp
 .Ft "AG_Prop *"
 .Fn AG_SetPointer "AG_Object *obj" "const char *key" "void *ptr"
@@ -262,108 +262,6 @@ Properties which are marked non-persistent
 (such as all properties of type
 .Dv AG_VARIABLE_POINTER )
 are ignored by these functions.
-.Sh READ/WRITE OPERATIONS
-.nr nS 1
-.Ft void
-.Fn AG_SetUintWrFn "AG_Prop *prop, Uint (*fn)(void *, AG_Prop *, Uint)"
-.Pp
-.Ft void
-.Fn AG_SetIntWrFn "AG_Prop *prop, int (*fn)(void *, AG_Prop *, int)"
-.Pp
-.Ft void
-.Fn AG_SetBoolWrFn "AG_Prop *prop, int (*fn)(void *, AG_Prop *, int)"
-.Pp
-.Ft void
-.Fn AG_SetUint8WrFn "AG_Prop *prop, Uint8 (*fn)(void *, AG_Prop *, Uint8)"
-.Pp
-.Ft void
-.Fn AG_SetSint8WrFn "AG_Prop *prop, Sint8 (*fn)(void *, AG_Prop *, Sint8)"
-.Pp
-.Ft void
-.Fn AG_SetUint16WrFn "AG_Prop *prop, Uint16 (*fn)(void *, AG_Prop *, Uint16)"
-.Pp
-.Ft void
-.Fn AG_SetSint16WrFn "AG_Prop *prop, Sint16 (*fn)(void *, AG_Prop *, Sint16)"
-.Pp
-.Ft void
-.Fn AG_SetUint32WrFn "AG_Prop *prop, Uint32 (*fn)(void *, AG_Prop *, Uint32)"
-.Pp
-.Ft void
-.Fn AG_SetSint32WrFn "AG_Prop *prop, Sint32 (*fn)(void *, AG_Prop *, Sint32)"
-.Pp
-.Ft void
-.Fn AG_SetFloatWrFn "AG_Prop *prop, float (*fn)(void *, AG_Prop *, float)"
-.Pp
-.Ft void
-.Fn AG_SetDoubleWrFn "AG_Prop *prop, double (*fn)(void *, AG_Prop *, double)"
-.Pp
-.Ft void
-.Fn AG_SetStringWrFn "AG_Prop *prop, char *(*fn)(void *, AG_Prop *, char *)"
-.Pp
-.Ft void
-.Fn AG_SetPointerWrFn "AG_Prop *prop, void *(*fn)(void *, AG_Prop *, void *)"
-.Pp
-.Ft void
-.Fn AG_SetUintRdFn "AG_Prop *prop, Uint (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetIntRdFn "AG_Prop *prop, int (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetBoolRdFn "AG_Prop *prop, int (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetUint8RdFn "AG_Prop *prop, Uint8 (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetSint8RdFn "AG_Prop *prop, Sint8 (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetUint16RdFn "AG_Prop *prop, Uint16 (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetSint16RdFn "AG_Prop *prop, Sint16 (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetUint32RdFn "AG_Prop *prop, Uint32 (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetSint32RdFn "AG_Prop *prop, Sint32 (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetFloatRdFn "AG_Prop *prop, float (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetDoubleRdFn "AG_Prop *prop, double (*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetStringRdFn "AG_Prop *prop, char *(*fn)(void *, AG_Prop *)"
-.Pp
-.Ft void
-.Fn AG_SetPointerRdFn "AG_Prop *prop, void *(*fn)(void *, AG_Prop *)"
-.Pp
-.nr nS 0
-All
-.Fn AG_Set(Type)WrFn
-functions assign a specific write-function to the given property.
-The write operation is invoked whenever the
-.Fn AG_SetProp
-function attempts to modify the given property.
-The new value is passed as the third argument to the write-function, and the
-value returned by the function is assigned to the property.
-To preserve the current value, the write-function can read the current value
-directly from the
-.Nm
-argument and return it.
-.Pp
-Similarly, the set of
-.Fn AG_Set(Type)RdFn
-functions define a specific read-function to return the value of a given
-property whenever it is requested by
-.Fn AG_GetProp .
-.Pp
-The first argument to the read and write functions is always a pointer to
-the object which contains the given property.
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Object 3 ,
@@ -374,3 +272,8 @@ The
 interface first appeared in Agar 1.0.
 Support for property-specific and object-specific read/write operations first
 appeared in Agar 1.1.
+The introduction of
+.Xr AG_Variable 3
+in Agar 1.3.4 rendered the
+.Nm
+interface obsolete.

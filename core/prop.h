@@ -1,10 +1,9 @@
 /*	Public domain	*/
 
-#include <agar/core/begin.h>
-
 /*
  * LEGACY Interface to AG_Variable(3).
  */
+#include <agar/core/begin.h>
 
 #define AG_Prop		AG_Variable
 #define ag_prop		ag_variable
@@ -25,15 +24,12 @@
 #define AG_PROP_BOOL	AG_VARIABLE_INT
 
 __BEGIN_DECLS
-int	 AG_PropLoad(void *, AG_DataSource *);
-int	 AG_PropSave(void *, AG_DataSource *);
+#define  AG_PropLoad AG_ObjectLoadVariables
+#define  AG_PropSave AG_ObjectSaveVariables
 AG_Prop	*AG_SetProp(void *, const char *, enum ag_prop_type, ...);
 AG_Prop	*AG_GetProp(void *, const char *, int, void *);
 
-#define AG_PropPrint	 AG_VariablePrint
 #define AG_PropDefined	 AG_Defined
-#define AG_GetBool	 AG_GetInt
-#define AG_SetBool	 AG_SetInt
 #define AG_GetStringCopy AG_GetString
 __END_DECLS
 
