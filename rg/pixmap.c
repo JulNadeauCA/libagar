@@ -303,13 +303,13 @@ CreateBrush(AG_Event *event)
 	}
 	spx = it->p1;
 
-	btype = (enum rg_brush_type)AG_WidgetInt(rad_types, "value");
+	btype = (enum rg_brush_type)AG_GetInt(rad_types, "value");
 	pbr = RG_PixmapAddBrush(px, btype, spx);
 	AG_TextboxCopyString(tb, pbr->name, sizeof(pbr->name));
 	if (pbr->name[0] == '\0') {
 		Strlcpy(pbr->name, spx->name, sizeof(pbr->name));
 	}
-	if (AG_WidgetInt(cb_oneshot, "state")) {
+	if (AG_GetInt(cb_oneshot, "state")) {
 		pbr->flags |= RG_PIXMAP_BRUSH_ONESHOT;
 	}
 	AG_ViewDetach(dlg_win);
@@ -370,7 +370,7 @@ CreateBrushDlg(AG_Event *event)
 	bo = AG_BoxNew(win, AG_BOX_VERT, AG_BOX_HFILL);
 	{
 		rad_types = AG_RadioNew(bo, AG_RADIO_EXPAND, types);
-		AG_WidgetSetInt(rad_types, "value", 0);
+		AG_SetInt(rad_types, "value", 0);
 		AG_ObjectAttach(bo, tb_name);
 		AG_ObjectAttach(bo, cb_oneshot);
 	}

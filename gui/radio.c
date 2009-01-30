@@ -183,7 +183,7 @@ Draw(void *obj)
 	STYLE(rad)->RadioGroupBackground(rad,
 	    AG_RECT(0, 0, WIDTH(rad), HEIGHT(rad)));
 	
-	val = AG_WidgetInt(rad, "value");
+	val = AG_GetInt(rad, "value");
 	AG_PushTextState();
 	AG_PushClipRect(rad, rad->r);
 	for (i = 0; i < rad->nItems;
@@ -257,12 +257,12 @@ static void
 MouseButtonDown(AG_Event *event)
 {
 	AG_Radio *rad = AG_SELF();
-	AG_WidgetBinding *valueb;
+	AG_Variable *value;
 	int button = AG_INT(1);
 	int y = AG_INT(3);
 	int *sel, selNew = -1;
 
-	valueb = AG_WidgetGetBinding(rad, "value", &sel);
+	value = AG_GetVariable(rad, "value", &sel);
 	switch (button) {
 	case SDL_BUTTON_LEFT:
 		selNew = ((y - rad->yPadding)/(rad->radius*2 + rad->ySpacing));
@@ -280,19 +280,19 @@ MouseButtonDown(AG_Event *event)
 		*sel = selNew;
 		AG_PostEvent(NULL, rad, "radio-changed", "%i", *sel);
 	}
-	AG_WidgetUnlockBinding(valueb);
+	AG_UnlockVariable(value);
 }
 
 static void
 KeyDown(AG_Event *event)
 {
 	AG_Radio *rad = AG_SELF();
-	AG_WidgetBinding *valueb;
+	AG_Variable *value;
 	int keysym = AG_INT(1);
 	int *sel, selNew = -1;
 	int i;
 
-	valueb = AG_WidgetGetBinding(rad, "value", &sel);
+	value = AG_GetVariable(rad, "value", &sel);
 	switch ((SDLKey)keysym) {
 	case SDLK_DOWN:
 		selNew = *sel;
@@ -318,7 +318,7 @@ KeyDown(AG_Event *event)
 		*sel = selNew;
 		AG_PostEvent(NULL, rad, "radio-changed", "%i", *sel);
 	}
-	AG_WidgetUnlockBinding(valueb);
+	AG_UnlockVariable(value);
 }
 
 static void

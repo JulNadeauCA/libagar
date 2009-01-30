@@ -87,7 +87,7 @@ StickyUpdate(AG_Event *event)
 {
 	AG_Button *selBtn = AG_SELF();
 	AG_Toolbar *bar = AG_PTR(1);
-	AG_WidgetBinding *stateb;
+	AG_Variable *stateb;
 	AG_Button *oBtn;
 	int i;
 
@@ -96,13 +96,13 @@ StickyUpdate(AG_Event *event)
 		OBJECT_FOREACH_CHILD(oBtn, bar->rows[i], ag_button) {
 			int *state;
 
-			stateb = AG_WidgetGetBinding(oBtn, "state", &state);
+			stateb = AG_GetVariable(oBtn, "state", &state);
 			if (bar->flags & AG_TOOLBAR_MULTI_STICKY) {
 				*state = !(*state);
 			} else {
 				*state = (oBtn == selBtn);
 			}
-			AG_WidgetUnlockBinding(stateb);
+			AG_UnlockVariable(stateb);
 		}
 	}
 	AG_ObjectUnlock(bar);
@@ -134,7 +134,7 @@ AG_ToolbarButtonIcon(AG_Toolbar *bar, AG_Surface *icon, int def,
 	AG_ButtonSurface(bu, icon);
 	AG_ButtonSetFocusable(bu, 0);
 	AG_ButtonSetSticky(bu, bar->flags & AG_TOOLBAR_STICKY);
-	AG_WidgetSetBool(bu, "state", def);
+	AG_SetInt(bu, "state", def);
 	bar->nButtons++;
 	
 	ev = AG_SetEvent(bu, "button-pushed", handler, NULL);
@@ -162,7 +162,7 @@ AG_ToolbarButton(AG_Toolbar *bar, const char *text, int def,
 	bu = AG_ButtonNew(bar->rows[bar->curRow], 0, text);
 	AG_ButtonSetFocusable(bu, 0);
 	AG_ButtonSetSticky(bu, bar->flags & AG_TOOLBAR_STICKY);
-	AG_WidgetSetBool(bu, "state", def);
+	AG_SetInt(bu, "state", def);
 	bar->nButtons++;
 	
 	ev = AG_SetEvent(bu, "button-pushed", handler, NULL);
@@ -192,28 +192,28 @@ AG_ToolbarSeparator(AG_Toolbar *bar)
 void
 AG_ToolbarSelect(AG_Toolbar *bar, AG_Button *bSel)
 {
-	AG_WidgetSetBool(bSel, "state", 1);
+	AG_SetInt(bSel, "state", 1);
 }
 
 void
 AG_ToolbarDeselect(AG_Toolbar *bar, AG_Button *bSel)
 {
-	AG_WidgetSetBool(bSel, "state", 0);
+	AG_SetInt(bSel, "state", 0);
 }
 
 void
 AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 {
-	AG_WidgetBinding *stateb;
+	AG_Variable *stateb;
 	AG_Button *b;
 	int i, *state;
 
 	AG_ObjectLock(bar);
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
-			stateb = AG_WidgetGetBinding(b, "state", &state);
+			stateb = AG_GetVariable(b, "state", &state);
 			*state = (b == bSel);
-			AG_WidgetUnlockBinding(stateb);
+			AG_UnlockVariable(stateb);
 		}
 	}
 	AG_ObjectUnlock(bar);
@@ -222,16 +222,16 @@ AG_ToolbarSelectOnly(AG_Toolbar *bar, AG_Button *bSel)
 void
 AG_ToolbarSelectAll(AG_Toolbar *bar)
 {
-	AG_WidgetBinding *stateb;
+	AG_Variable *stateb;
 	AG_Button *b;
 	int i, *state;
 
 	AG_ObjectLock(bar);
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
-			stateb = AG_WidgetGetBinding(b, "state", &state);
+			stateb = AG_GetVariable(b, "state", &state);
 			*state = 1;
-			AG_WidgetUnlockBinding(stateb);
+			AG_UnlockVariable(stateb);
 		}
 	}
 	AG_ObjectUnlock(bar);
@@ -240,16 +240,16 @@ AG_ToolbarSelectAll(AG_Toolbar *bar)
 void
 AG_ToolbarDeselectAll(AG_Toolbar *bar)
 {
-	AG_WidgetBinding *stateb;
+	AG_Variable *stateb;
 	AG_Button *b;
 	int i, *state;
 
 	AG_ObjectLock(bar);
 	for (i = 0; i < bar->nRows; i++) {
 		OBJECT_FOREACH_CHILD(b, bar->rows[i], ag_button) {
-			stateb = AG_WidgetGetBinding(b, "state", &state);
+			stateb = AG_GetVariable(b, "state", &state);
 			*state = 0;
-			AG_WidgetUnlockBinding(stateb);
+			AG_UnlockVariable(stateb);
 		}
 	}
 	AG_ObjectUnlock(bar);

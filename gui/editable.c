@@ -152,7 +152,7 @@ AG_EditableSetIntOnly(AG_Editable *ed, int enable)
 static int
 ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *s;
 	int i, rv = 0, len;
 #ifdef UTF8
@@ -190,7 +190,7 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 		}
 	}
 	
-	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	stringb = AG_GetVariable(ed, "string", &s);
 #ifdef UTF8
 	if (ed->flags & AG_EDITABLE_STATIC) {
 		if (ed->ucsBuf == NULL) {
@@ -259,7 +259,7 @@ ProcessKey(AG_Editable *ed, SDLKey keysym, SDLMod keymod, Uint32 unicode)
 	}
 #endif /* UTF8 */
 
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	return (1);
 }
 
@@ -367,7 +367,7 @@ FreeStringUCS4(AG_Editable *ed, Uint32 *ucs)
 int
 AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	AG_Font *font;
 	size_t len;
 	char *s;
@@ -386,7 +386,7 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 	x = 0;
 	y = 0;
 
-	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	stringb = AG_GetVariable(ed, "string", &s);
 	GetStringUCS4(ed, s, &ucs, &len);
 	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL)
 		AG_FatalError("AG_Editable: %s", AG_GetError());
@@ -468,12 +468,12 @@ AG_EditableMapPosition(AG_Editable *ed, int mx, int my, int *pos, int absflag)
 		}
 	}
 	FreeStringUCS4(ed, ucs);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 	return (1);
 in:
 	FreeStringUCS4(ed, ucs);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 	return (0);
 }
@@ -484,7 +484,7 @@ in:
 void
 AG_EditableMoveCursor(AG_Editable *ed, int mx, int my, int absflag)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *s;
 	int rv;
 
@@ -493,9 +493,9 @@ AG_EditableMoveCursor(AG_Editable *ed, int mx, int my, int absflag)
 	if (rv == -1) {
 		ed->pos = 0;
 	} else if (rv == 1) {
-		stringb = AG_WidgetGetBinding(ed, "string", &s);
+		stringb = AG_GetVariable(ed, "string", &s);
 		ed->pos = AG_LengthUTF8(s);
-		AG_WidgetUnlockBinding(stringb);
+		AG_UnlockVariable(stringb);
 	}
 	AG_ObjectUnlock(ed);
 }
@@ -516,13 +516,13 @@ AG_EditableGetCursorPos(AG_Editable *ed)
 int
 AG_EditableSetCursorPos(AG_Editable *ed, int pos)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	size_t len;
 	char *s;
 	int rv;
 
 	AG_ObjectLock(ed);
-	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	stringb = AG_GetVariable(ed, "string", &s);
 
 	ed->pos = pos;
 	if (ed->pos < 0) {
@@ -532,7 +532,7 @@ AG_EditableSetCursorPos(AG_Editable *ed, int pos)
 	}
 	rv = ed->pos;
 
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 	return (rv);
 }
@@ -541,7 +541,7 @@ static void
 Draw(void *obj)
 {
 	AG_Editable *ed = obj;
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *s;
 	int i, dx, dy, x, y;
 	Uint32 *ucs;
@@ -552,7 +552,7 @@ Draw(void *obj)
 	GLfloat texenvmode;
 #endif
 
-	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	stringb = AG_GetVariable(ed, "string", &s);
 	GetStringUCS4(ed, s, &ucs, &len);
 
 #ifdef HAVE_OPENGL
@@ -694,7 +694,7 @@ Draw(void *obj)
 		}
 	}
 	ed->flags &= ~(AG_EDITABLE_NOSCROLL_ONCE);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_PopTextState();
 
 	AG_PopClipRect();
@@ -882,11 +882,11 @@ MouseMotion(AG_Event *event)
 void
 AG_EditableSetString(AG_Editable *ed, const char *text)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *buf;
 
 	AG_ObjectLock(ed);
-	stringb = AG_WidgetGetBinding(ed, "string", &buf);
+	stringb = AG_GetVariable(ed, "string", &buf);
 	if (text != NULL) {
 		Strlcpy(buf, text, stringb->info.size);
 		ed->pos = AG_LengthUTF8(text);
@@ -895,7 +895,7 @@ AG_EditableSetString(AG_Editable *ed, const char *text)
 		ed->pos = 0;
 	}
 	AG_EditableBufferChanged(ed);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 }
 
@@ -903,11 +903,11 @@ AG_EditableSetString(AG_Editable *ed, const char *text)
 void
 AG_EditableSetStringUCS4(AG_Editable *ed, const Uint32 *ucs)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *buf;
 
 	AG_ObjectLock(ed);
-	stringb = AG_WidgetGetBinding(ed, "string", &buf);
+	stringb = AG_GetVariable(ed, "string", &buf);
 	if (ucs != NULL) {
 		AG_ExportUnicode(AG_UNICODE_TO_UTF8, buf, ucs,
 		    stringb->info.size);
@@ -917,19 +917,19 @@ AG_EditableSetStringUCS4(AG_Editable *ed, const Uint32 *ucs)
 		ed->pos = 0;
 	}
 	AG_EditableBufferChanged(ed);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 }
 
 void
 AG_EditablePrintf(AG_Editable *ed, const char *fmt, ...)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	va_list args;
 	char *s;
 
 	AG_ObjectLock(ed);
-	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	stringb = AG_GetVariable(ed, "string", &s);
 	if (fmt != NULL && fmt[0] != '\0') {
 		va_start(args, fmt);
 		Vsnprintf(s, stringb->info.size, fmt, args);
@@ -940,7 +940,7 @@ AG_EditablePrintf(AG_Editable *ed, const char *fmt, ...)
 		ed->pos = 0;
 	}
 	AG_EditableBufferChanged(ed);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 }
 
@@ -948,12 +948,12 @@ AG_EditablePrintf(AG_Editable *ed, const char *fmt, ...)
 char *
 AG_EditableDupString(AG_Editable *ed)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *s, *sd;
 
-	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	stringb = AG_GetVariable(ed, "string", &s);
 	sd = Strdup(s);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	return (sd);
 }
 
@@ -961,13 +961,13 @@ AG_EditableDupString(AG_Editable *ed)
 Uint32 *
 AG_EditableDupStringUCS4(AG_Editable *ed)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *s;
 	Uint32 *ucs;
 
-	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	stringb = AG_GetVariable(ed, "string", &s);
 	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, 0);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	return (ucs);
 }
 
@@ -975,14 +975,14 @@ AG_EditableDupStringUCS4(AG_Editable *ed)
 size_t
 AG_EditableCopyString(AG_Editable *ed, char *dst, size_t dst_size)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	size_t rv;
 	char *s;
 
 	AG_ObjectLock(ed);
-	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	stringb = AG_GetVariable(ed, "string", &s);
 	rv = Strlcpy(dst, s, dst_size);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 	return (rv);
 }
@@ -991,16 +991,16 @@ AG_EditableCopyString(AG_Editable *ed, char *dst, size_t dst_size)
 size_t
 AG_EditableCopyStringUCS4(AG_Editable *ed, Uint32 *dst, size_t dst_size)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	size_t rv;
 	char *s;
 	Uint32 *ucs;
 
 	AG_ObjectLock(ed);
-	stringb = AG_WidgetGetBinding(ed, "string", &s);
+	stringb = AG_GetVariable(ed, "string", &s);
 	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, s, 0);
 	rv = StrlcpyUCS4(dst, ucs, dst_size);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 	return (rv);
 }
@@ -1009,14 +1009,14 @@ AG_EditableCopyStringUCS4(AG_Editable *ed, Uint32 *dst, size_t dst_size)
 int
 AG_EditableInt(AG_Editable *ed)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *text;
 	int i;
 
 	AG_ObjectLock(ed);
-	stringb = AG_WidgetGetBinding(ed, "string", &text);
+	stringb = AG_GetVariable(ed, "string", &text);
 	i = atoi(text);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 	return (i);
 }
@@ -1025,14 +1025,14 @@ AG_EditableInt(AG_Editable *ed)
 float
 AG_EditableFlt(AG_Editable *ed)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *text;
 	float flt;
 
 	AG_ObjectLock(ed);
-	stringb = AG_WidgetGetBinding(ed, "string", &text);
+	stringb = AG_GetVariable(ed, "string", &text);
 	flt = (float)strtod(text, NULL);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 	return (flt);
 }
@@ -1041,14 +1041,14 @@ AG_EditableFlt(AG_Editable *ed)
 double
 AG_EditableDbl(AG_Editable *ed)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *text;
 	double flt;
 
 	AG_ObjectLock(ed);
-	stringb = AG_WidgetGetBinding(ed, "string", &text);
+	stringb = AG_GetVariable(ed, "string", &text);
 	flt = strtod(text, NULL);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(ed);
 	return (flt);
 }

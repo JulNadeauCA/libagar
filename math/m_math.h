@@ -42,28 +42,34 @@
 
 #if defined(QUAD_PRECISION)
 typedef long double M_Real;
-# define M_REAL(n)	AG_LONG_DOUBLE(n)
-# define M_WIDGET_REAL	AG_WIDGET_LONG_DOUBLE
-# define M_PROP_REAL	AG_PROP_LONG_DOUBLE
-# define M_SetReal	AG_SetLongDouble
-# define M_GetReal	AG_GetLongDouble
-# define M_SetRealFn	AG_BindLongDoubleFn
+# define M_REAL(n)		AG_LONG_DOUBLE(n)
+# define M_VARIABLE_REAL	AG_VARIABLE_LONG_DOUBLE
+# define M_VARIABLE_P_REAL	AG_VARIABLE_P_LONG_DOUBLE
+# define M_WIDGET_REAL		AG_VARIABLE_P_LONG_DOUBLE
+# define M_SetReal		AG_SetLongDouble
+# define M_GetReal		AG_GetLongDouble
+# define M_BindReal		AG_BindLongDouble
+# define M_BindRealFn		AG_BindLongDoubleFn
 #elif defined(DOUBLE_PRECISION)
 typedef double M_Real;
-# define M_REAL(n)	AG_DOUBLE(n)
-# define M_WIDGET_REAL	AG_WIDGET_DOUBLE
-# define M_PROP_REAL	AG_PROP_DOUBLE
-# define M_SetReal	AG_SetDouble
-# define M_GetReal	AG_GetDouble
-# define M_BindRealFn	AG_BindDoubleFn
+# define M_REAL(n)		AG_DOUBLE(n)
+# define M_VARIABLE_REAL	AG_VARIABLE_DOUBLE
+# define M_VARIABLE_P_REAL	AG_VARIABLE_P_DOUBLE
+# define M_WIDGET_REAL		AG_VARIABLE_P_DOUBLE
+# define M_SetReal		AG_SetDouble
+# define M_GetReal		AG_GetDouble
+# define M_BindReal		AG_BindDouble
+# define M_BindRealFn		AG_BindDoubleFn
 #elif defined(SINGLE_PRECISION)
 typedef float M_Real;
-# define M_REAL(n)	AG_FLOAT(n)
-# define M_WIDGET_REAL	AG_WIDGET_FLOAT
-# define M_PROP_REAL	AG_PROP_FLOAT
-# define M_SetReal	AG_SetFloat
-# define M_GetReal	AG_GetFloat
-# define M_BindRealFn	AG_BindFloatFn
+# define M_REAL(n)		AG_FLOAT(n)
+# define M_VARIABLE_REAL	AG_VARIABLE_FLOAT
+# define M_VARIABLE_P_REAL	AG_VARIABLE_P_FLOAT
+# define M_WIDGET_REAL		AG_VARIABLE_P_FLOAT
+# define M_SetReal		AG_SetFloat
+# define M_GetReal		AG_GetFloat
+# define M_BindReal		AG_BindFloat
+# define M_BindRealFn		AG_BindFloatFn
 #else
 # error "Math precision not specified"
 #endif

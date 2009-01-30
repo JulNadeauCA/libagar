@@ -56,7 +56,7 @@ PREINIT:
 CODE:
 	ds = AG_OpenFile(path, "r");
 	if (ds) {
-		RETVAL = AG_PropLoad(self, ds);
+		RETVAL = AG_ObjectLoadVariables(self, ds);
 		AG_CloseFile(ds);
 	} else {
 		XSRETURN_UNDEF;
@@ -285,5 +285,5 @@ setString(self, name, val)
 	const char * name
 	const char * val
 CODE:
-	AG_SetString(self, name, "%s", val);
+	AG_SetString(self, name, val);
 

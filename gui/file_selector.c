@@ -60,7 +60,7 @@ Collapse(AG_FileSelector *fs)
 	AG_ViewDetach(fs->panel);
 	fs->panel = NULL;
 
-	AG_WidgetSetBool(fs->button, "state", 0);
+	AG_SetInt(fs->button, "state", 0);
 }
 
 static void

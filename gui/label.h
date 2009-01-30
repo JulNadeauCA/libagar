@@ -96,13 +96,13 @@ void	 AG_LabelSizeHint(AG_Label *, Uint, const char *);
 
 void	 AG_LabelFlagNew(AG_Label *, Uint, const char *, AG_VariableType, Uint32);
 #define	 AG_LabelFlag(lbl,i,s,v) \
-	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG,(Uint)(v))
+	 AG_LabelFlagNew((lbl),(i),(s),AG_VARIABLE_P_FLAG,(Uint)(v))
 #define	 AG_LabelFlag8(lbl,i,s,v) \
-	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG8,(Uint8)(v))
+	 AG_LabelFlagNew((lbl),(i),(s),AG_VARIABLE_P_FLAG8,(Uint8)(v))
 #define	 AG_LabelFlag16(lbl,i,s,v) \
-	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG16,(Uint16)(v))
+	 AG_LabelFlagNew((lbl),(i),(s),AG_VARIABLE_P_FLAG16,(Uint16)(v))
 #define	 AG_LabelFlag32(lbl,i,s,v) \
-	 AG_LabelFlagNew((lbl),(i),(s),AG_WIDGET_FLAG32,(Uint32)(v))
+	 AG_LabelFlagNew((lbl),(i),(s),AG_VARIABLE_P_FLAG32,(Uint32)(v))
 
 #define AG_LABEL_ARG(lbl,_type) (*(_type *)lbl->poll.ptrs[fPos])
 void	 AG_RegisterLabelFormat(const char *, AG_LabelFormatFn);

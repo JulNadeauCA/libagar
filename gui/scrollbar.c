@@ -220,40 +220,40 @@ AG_ScrollbarSetRealIncrement(AG_Scrollbar *sb, double inc)
 static __inline__ int
 GetPosition(AG_Scrollbar *sb, int *x)
 {
-	AG_WidgetBinding *bMin, *bMax, *bVis, *bVal;
+	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
 
-	bVal = AG_WidgetGetBinding(sb, "value", &pVal);
-	bMin = AG_WidgetGetBinding(sb, "min", &pMin);
-	bMax = AG_WidgetGetBinding(sb, "max", &pMax);
-	bVis = AG_WidgetGetBinding(sb, "visible", &pVis);
+	bVal = AG_GetVariable(sb, "value", &pVal);
+	bMin = AG_GetVariable(sb, "min", &pMin);
+	bMax = AG_GetVariable(sb, "max", &pMax);
+	bVis = AG_GetVariable(sb, "visible", &pVis);
 
-	switch (bVal->type) {
-	case AG_WIDGET_INT:	GET_POSITION(int);	break;
-	case AG_WIDGET_UINT:	GET_POSITION(Uint);	break;
-	case AG_WIDGET_FLOAT:	GET_POSITION(float);	break;
-	case AG_WIDGET_DOUBLE:	GET_POSITION(double);	break;
-	case AG_WIDGET_UINT8:	GET_POSITION(Uint8);	break;
-	case AG_WIDGET_SINT8:	GET_POSITION(Sint8);	break;
-	case AG_WIDGET_UINT16:	GET_POSITION(Uint16);	break;
-	case AG_WIDGET_SINT16:	GET_POSITION(Sint16);	break;
-	case AG_WIDGET_UINT32:	GET_POSITION(Uint32);	break;
-	case AG_WIDGET_SINT32:	GET_POSITION(Sint32);	break;
+	switch (AG_VARIABLE_TYPE(bVal)) {
+	case AG_VARIABLE_INT:		GET_POSITION(int);	break;
+	case AG_VARIABLE_UINT:		GET_POSITION(Uint);	break;
+	case AG_VARIABLE_FLOAT:		GET_POSITION(float);	break;
+	case AG_VARIABLE_DOUBLE:	GET_POSITION(double);	break;
+	case AG_VARIABLE_UINT8:		GET_POSITION(Uint8);	break;
+	case AG_VARIABLE_SINT8:		GET_POSITION(Sint8);	break;
+	case AG_VARIABLE_UINT16:	GET_POSITION(Uint16);	break;
+	case AG_VARIABLE_SINT16:	GET_POSITION(Sint16);	break;
+	case AG_VARIABLE_UINT32:	GET_POSITION(Uint32);	break;
+	case AG_VARIABLE_SINT32:	GET_POSITION(Sint32);	break;
 	default:					break;
 	} 
 	if (sb->wBar == -1) {
 		*x = 0;
 	}
-	AG_WidgetUnlockBinding(bVis);
-	AG_WidgetUnlockBinding(bMax);
-	AG_WidgetUnlockBinding(bMin);
-	AG_WidgetUnlockBinding(bVal);
+	AG_UnlockVariable(bVis);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bVal);
 	return (0);
 fail:
-	AG_WidgetUnlockBinding(bVis);
-	AG_WidgetUnlockBinding(bMax);
-	AG_WidgetUnlockBinding(bMin);
-	AG_WidgetUnlockBinding(bVal);
+	AG_UnlockVariable(bVis);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bVal);
 	return (-1);
 }
 #undef GET_POSITION
@@ -282,32 +282,32 @@ fail:
 static __inline__ void
 SeekToPosition(AG_Scrollbar *sb, int x)
 {
-	AG_WidgetBinding *bMin, *bMax, *bVis, *bVal;
+	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
 
-	bVal = AG_WidgetGetBinding(sb, "value", &pVal);
-	bMin = AG_WidgetGetBinding(sb, "min", &pMin);
-	bMax = AG_WidgetGetBinding(sb, "max", &pMax);
-	bVis = AG_WidgetGetBinding(sb, "visible", &pVis);
+	bVal = AG_GetVariable(sb, "value", &pVal);
+	bMin = AG_GetVariable(sb, "min", &pMin);
+	bMax = AG_GetVariable(sb, "max", &pMax);
+	bVis = AG_GetVariable(sb, "visible", &pVis);
 
-	switch (bVal->type) {
-	case AG_WIDGET_INT:	SEEK_TO_POSITION(int);		break;
-	case AG_WIDGET_UINT:	SEEK_TO_POSITION(Uint);		break;
-	case AG_WIDGET_FLOAT:	SEEK_TO_POSITION(float);	break;
-	case AG_WIDGET_DOUBLE:	SEEK_TO_POSITION(double);	break;
-	case AG_WIDGET_UINT8:	SEEK_TO_POSITION(Uint8);	break;
-	case AG_WIDGET_SINT8:	SEEK_TO_POSITION(Sint8);	break;
-	case AG_WIDGET_UINT16:	SEEK_TO_POSITION(Uint16);	break;
-	case AG_WIDGET_SINT16:	SEEK_TO_POSITION(Sint16);	break;
-	case AG_WIDGET_UINT32:	SEEK_TO_POSITION(Uint32);	break;
-	case AG_WIDGET_SINT32:	SEEK_TO_POSITION(Sint32);	break;
+	switch (AG_VARIABLE_TYPE(bVal)) {
+	case AG_VARIABLE_INT:		SEEK_TO_POSITION(int);		break;
+	case AG_VARIABLE_UINT:		SEEK_TO_POSITION(Uint);		break;
+	case AG_VARIABLE_FLOAT:		SEEK_TO_POSITION(float);	break;
+	case AG_VARIABLE_DOUBLE:	SEEK_TO_POSITION(double);	break;
+	case AG_VARIABLE_UINT8:		SEEK_TO_POSITION(Uint8);	break;
+	case AG_VARIABLE_SINT8:		SEEK_TO_POSITION(Sint8);	break;
+	case AG_VARIABLE_UINT16:	SEEK_TO_POSITION(Uint16);	break;
+	case AG_VARIABLE_SINT16:	SEEK_TO_POSITION(Sint16);	break;
+	case AG_VARIABLE_UINT32:	SEEK_TO_POSITION(Uint32);	break;
+	case AG_VARIABLE_SINT32:	SEEK_TO_POSITION(Sint32);	break;
 	default:						break;
 	} 
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
-	AG_WidgetUnlockBinding(bVis);
-	AG_WidgetUnlockBinding(bMax);
-	AG_WidgetUnlockBinding(bMin);
-	AG_WidgetUnlockBinding(bVal);
+	AG_UnlockVariable(bVis);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bVal);
 }
 #undef SEEK_TO_POSITION
 
@@ -329,32 +329,32 @@ SeekToPosition(AG_Scrollbar *sb, int x)
 static void
 Decrement(AG_Scrollbar *sb, int v)
 {
-	AG_WidgetBinding *bMin, *bMax, *bVis, *bVal;
+	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
 
-	bVal = AG_WidgetGetBinding(sb, "value", &pVal);
-	bMin = AG_WidgetGetBinding(sb, "min", &pMin);
-	bMax = AG_WidgetGetBinding(sb, "max", &pMax);
-	bVis = AG_WidgetGetBinding(sb, "visible", &pVis);
+	bVal = AG_GetVariable(sb, "value", &pVal);
+	bMin = AG_GetVariable(sb, "min", &pMin);
+	bMax = AG_GetVariable(sb, "max", &pMax);
+	bVis = AG_GetVariable(sb, "visible", &pVis);
 
-	switch (bVal->type) {
-	case AG_WIDGET_INT:	DECREMENT_INT(int);	break;
-	case AG_WIDGET_UINT:	DECREMENT_INT(Uint);	break;
-	case AG_WIDGET_FLOAT:	DECREMENT_REAL(float);	break;
-	case AG_WIDGET_DOUBLE:	DECREMENT_REAL(double);	break;
-	case AG_WIDGET_UINT8:	DECREMENT_INT(Uint8);	break;
-	case AG_WIDGET_SINT8:	DECREMENT_INT(Sint8);	break;
-	case AG_WIDGET_UINT16:	DECREMENT_INT(Uint16);	break;
-	case AG_WIDGET_SINT16:	DECREMENT_INT(Sint16);	break;
-	case AG_WIDGET_UINT32:	DECREMENT_INT(Uint32);	break;
-	case AG_WIDGET_SINT32:	DECREMENT_INT(Sint32);	break;
+	switch (AG_VARIABLE_TYPE(bVal)) {
+	case AG_VARIABLE_INT:		DECREMENT_INT(int);	break;
+	case AG_VARIABLE_UINT:		DECREMENT_INT(Uint);	break;
+	case AG_VARIABLE_FLOAT:		DECREMENT_REAL(float);	break;
+	case AG_VARIABLE_DOUBLE:	DECREMENT_REAL(double);	break;
+	case AG_VARIABLE_UINT8:		DECREMENT_INT(Uint8);	break;
+	case AG_VARIABLE_SINT8:		DECREMENT_INT(Sint8);	break;
+	case AG_VARIABLE_UINT16:	DECREMENT_INT(Uint16);	break;
+	case AG_VARIABLE_SINT16:	DECREMENT_INT(Sint16);	break;
+	case AG_VARIABLE_UINT32:	DECREMENT_INT(Uint32);	break;
+	case AG_VARIABLE_SINT32:	DECREMENT_INT(Sint32);	break;
 	default:					break;
 	} 
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
-	AG_WidgetUnlockBinding(bVis);
-	AG_WidgetUnlockBinding(bMax);
-	AG_WidgetUnlockBinding(bMin);
-	AG_WidgetUnlockBinding(bVal);
+	AG_UnlockVariable(bVis);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bVal);
 }
 #undef DECREMENT_INT
 #undef DECREMENT_REAL
@@ -377,32 +377,32 @@ Decrement(AG_Scrollbar *sb, int v)
 static void
 Increment(AG_Scrollbar *sb, int v)
 {
-	AG_WidgetBinding *bMin, *bMax, *bVis, *bVal;
+	AG_Variable *bMin, *bMax, *bVis, *bVal;
 	void *pMin, *pMax, *pVal, *pVis;
 
-	bVal = AG_WidgetGetBinding(sb, "value", &pVal);
-	bMin = AG_WidgetGetBinding(sb, "min", &pMin);
-	bMax = AG_WidgetGetBinding(sb, "max", &pMax);
-	bVis = AG_WidgetGetBinding(sb, "visible", &pVis);
+	bVal = AG_GetVariable(sb, "value", &pVal);
+	bMin = AG_GetVariable(sb, "min", &pMin);
+	bMax = AG_GetVariable(sb, "max", &pMax);
+	bVis = AG_GetVariable(sb, "visible", &pVis);
 
-	switch (bVal->type) {
-	case AG_WIDGET_INT:	INCREMENT_INT(int);	break;
-	case AG_WIDGET_UINT:	INCREMENT_INT(Uint);	break;
-	case AG_WIDGET_FLOAT:	INCREMENT_REAL(float);	break;
-	case AG_WIDGET_DOUBLE:	INCREMENT_REAL(double);	break;
-	case AG_WIDGET_UINT8:	INCREMENT_INT(Uint8);	break;
-	case AG_WIDGET_SINT8:	INCREMENT_INT(Sint8);	break;
-	case AG_WIDGET_UINT16:	INCREMENT_INT(Uint16);	break;
-	case AG_WIDGET_SINT16:	INCREMENT_INT(Sint16);	break;
-	case AG_WIDGET_UINT32:	INCREMENT_INT(Uint32);	break;
-	case AG_WIDGET_SINT32:	INCREMENT_INT(Sint32);	break;
+	switch (AG_VARIABLE_TYPE(bVal)) {
+	case AG_VARIABLE_INT:		INCREMENT_INT(int);	break;
+	case AG_VARIABLE_UINT:		INCREMENT_INT(Uint);	break;
+	case AG_VARIABLE_FLOAT:		INCREMENT_REAL(float);	break;
+	case AG_VARIABLE_DOUBLE:	INCREMENT_REAL(double);	break;
+	case AG_VARIABLE_UINT8:		INCREMENT_INT(Uint8);	break;
+	case AG_VARIABLE_SINT8:		INCREMENT_INT(Sint8);	break;
+	case AG_VARIABLE_UINT16:	INCREMENT_INT(Uint16);	break;
+	case AG_VARIABLE_SINT16:	INCREMENT_INT(Sint16);	break;
+	case AG_VARIABLE_UINT32:	INCREMENT_INT(Uint32);	break;
+	case AG_VARIABLE_SINT32:	INCREMENT_INT(Sint32);	break;
 	default:					break;
 	} 
 	AG_PostEvent(NULL, sb, "scrollbar-changed", NULL);
-	AG_WidgetUnlockBinding(bVis);
-	AG_WidgetUnlockBinding(bMax);
-	AG_WidgetUnlockBinding(bMin);
-	AG_WidgetUnlockBinding(bVal);
+	AG_UnlockVariable(bVis);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bVal);
 }
 #undef INCREMENT_INT
 #undef INCREMENT_REAL
@@ -595,8 +595,8 @@ static void
 BoundValue(AG_Event *event)
 {
 	AG_Scrollbar *sb = AG_SELF();
-	AG_WidgetBinding *bNew = AG_PTR(1);
-	AG_WidgetBinding *bValue;
+	AG_Variable *bNew = AG_PTR(1);
+	AG_Variable *bValue;
 	void *pValue;
 
 	/*
@@ -606,12 +606,12 @@ BoundValue(AG_Event *event)
 	 */
 	if (!strcmp(bNew->name, "min") || !strcmp(bNew->name, "max") ||
 	    !strcmp(bNew->name, "visible")) {
-		bValue = AG_WidgetGetBinding(sb, "value", &pValue);
+		bValue = AG_GetVariable(sb, "value", &pValue);
 		if (bValue->type != bNew->type) {
 			AG_FatalError("Scrollbar \"%s\" binding type disagree "
 			              "with \"value\" binding", bNew->name);
 		}
-		AG_WidgetUnlockBinding(bValue);
+		AG_UnlockVariable(bValue);
 	}
 }
 
@@ -653,7 +653,7 @@ Init(void *obj)
 	AG_SetEvent(sb, "window-keyup", KeyUp, NULL);
 	AG_SetEvent(sb, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(sb, "widget-hidden", LostFocus, NULL);
-	AG_SetEvent(sb, "widget-bound", BoundValue, NULL);
+	AG_SetEvent(sb, "bound", BoundValue, NULL);
 
 	AG_SetTimeout(&sb->scrollTo, ScrollTimeout, NULL, 0);
 	AG_SetTimeout(&sb->decTo, DecrementTimeout, NULL, 0);
@@ -702,10 +702,10 @@ DrawText(AG_Scrollbar *sb)
 	AG_TextBGColorHex(0xccccccff);
 
 	Snprintf(label, sizeof(label), "%d < %d < %d(%d)",
-	    AG_WidgetInt(sb,"min"),
-	    AG_WidgetInt(sb,"value"),
-	    AG_WidgetInt(sb,"max"),
-	    AG_WidgetInt(sb,"visible"));
+	    AG_GetInt(sb,"min"),
+	    AG_GetInt(sb,"value"),
+	    AG_GetInt(sb,"max"),
+	    AG_GetInt(sb,"visible"));
 
 	/* XXX inefficient */
 	txt = AG_TextRender(label);

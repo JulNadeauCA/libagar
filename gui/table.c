@@ -200,15 +200,15 @@ SizeColumns(AG_Table *t)
 static void
 UpdateScrollbars(AG_Table *t)
 {
-	AG_WidgetBinding *bValue, *bMax;
+	AG_Variable *bValue, *bMax;
 	int *value, *max;
 
 	t->mVis = t->r.h/t->hRow;
 	if (t->r.h % t->hRow) { t->mVis++; }
 
 	if (t->vbar != NULL) {
-		bMax = AG_WidgetGetBinding(t->vbar, "max", &max);
-		bValue = AG_WidgetGetBinding(t->vbar, "value", &value);
+		bMax = AG_GetVariable(t->vbar, "max", &max);
+		bValue = AG_GetVariable(t->vbar, "value", &value);
 		if ((*max = LAST_VISIBLE(t)) < 0) {
 			*max = 0;
 		}
@@ -224,8 +224,8 @@ UpdateScrollbars(AG_Table *t)
 		} else {
 			AG_ScrollbarSetBarSize(t->vbar, -1);
 		}
-		AG_WidgetUnlockBinding(bValue);
-		AG_WidgetUnlockBinding(bMax);
+		AG_UnlockVariable(bValue);
+		AG_UnlockVariable(bMax);
 	}
 	if (t->hbar != NULL) {
 		SizeColumns(t);
@@ -236,11 +236,11 @@ UpdateScrollbars(AG_Table *t)
 			    t->r.w*(WIDTH(t->hbar) - t->hbar->wButton*2) /
 			    t->wTot);
 		}
-		bValue = AG_WidgetGetBinding(t->hbar, "value", &value);
+		bValue = AG_GetVariable(t->hbar, "value", &value);
 		if ((t->wTot - t->r.w - *value) < 0) {
 			*value = MAX(0, t->wTot - t->r.w);
 		}
-		AG_WidgetUnlockBinding(bValue);
+		AG_UnlockVariable(bValue);
 	}
 }
 
@@ -544,11 +544,11 @@ ScrollToSelection(AG_Table *t)
 			continue;
 		}
 		if (t->mOffs > m) {
-			AG_WidgetSetInt(t->vbar, "value", m);
+			AG_SetInt(t->vbar, "value", m);
 		} else {
 			offs = m - t->mVis + 2;
 			if (offs < 0) { offs = 0; }
-			AG_WidgetSetInt(t->vbar, "value", offs);
+			AG_SetInt(t->vbar, "value", offs);
 		}
 		return;
 	}
@@ -583,7 +583,7 @@ SelectionVisible(AG_Table *t)
 	int n, m, mOffs;
 	int x, y;
 	
-	mOffs = AG_WidgetInt(t->vbar, "value");
+	mOffs = AG_GetInt(t->vbar, "value");
 	if (t->poll_ev != NULL) {
 		t->poll_ev->handler(t->poll_ev);
 	}
@@ -623,7 +623,7 @@ Draw(void *obj)
 	AG_WidgetDraw(t->vbar);
 	AG_WidgetDraw(t->hbar);
 	
-	t->mOffs = AG_WidgetInt(t->vbar, "value");
+	t->mOffs = AG_GetInt(t->vbar, "value");
 	if (t->poll_ev != NULL) {
 		t->poll_ev->handler(t->poll_ev);
 	}
@@ -829,7 +829,7 @@ AG_TableBegin(AG_Table *t)
 	t->cells = NULL;
 	t->m = 0;
 	t->flags &= ~(AG_TABLE_WIDGETS);
-	AG_WidgetSetInt(t->vbar, "max", 0);
+	AG_SetInt(t->vbar, "max", 0);
 }
 
 int
@@ -1280,7 +1280,7 @@ RowAtY(AG_Table *t, int y)
 {
 	int m;
 	
-	m = AG_WidgetInt(t->vbar, "value");
+	m = AG_GetInt(t->vbar, "value");
 	if (y > t->hCol) {
 		m += (y - t->hCol)/t->hRow;
 	}
@@ -1351,28 +1351,28 @@ MouseButtonDown(AG_Event *event)
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
 		{
-			AG_WidgetBinding *offsb;
+			AG_Variable *offsb;
 			int *offs;
 
-			offsb = AG_WidgetGetBinding(t->vbar, "value", &offs);
+			offsb = AG_GetVariable(t->vbar, "value", &offs);
 			(*offs) -= AG_WidgetScrollDelta(&t->wheelTicks);
 			if (*offs < 0) {
 				*offs = 0;
 			}
-			AG_WidgetUnlockBinding(offsb);
+			AG_UnlockVariable(offsb);
 		}
 		break;
 	case SDL_BUTTON_WHEELDOWN:
 		{
-			AG_WidgetBinding *offsb;
+			AG_Variable *offsb;
 			int *offs;
 
-			offsb = AG_WidgetGetBinding(t->vbar, "value", &offs);
+			offsb = AG_GetVariable(t->vbar, "value", &offs);
 			(*offs) += AG_WidgetScrollDelta(&t->wheelTicks);
 			if (*offs > LAST_VISIBLE(t)) {
 				*offs = LAST_VISIBLE(t);
 			}
-			AG_WidgetUnlockBinding(offsb);
+			AG_UnlockVariable(offsb);
 		}
 		break;
 	case SDL_BUTTON_LEFT:
@@ -1969,7 +1969,7 @@ Init(void *obj)
 
 	t->vbar = AG_ScrollbarNew(t, AG_SCROLLBAR_VERT, 0);
 	t->hbar = AG_ScrollbarNew(t, AG_SCROLLBAR_HORIZ, 0);
-	AG_WidgetSetInt(t->hbar, "min", 0);
+	AG_SetInt(t->hbar, "min", 0);
 	AG_BindInt(t->hbar, "value", &t->xOffs);
 	AG_BindInt(t->hbar, "visible", &t->r.w);
 	AG_BindInt(t->hbar, "max", &t->wTot);

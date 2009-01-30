@@ -79,7 +79,7 @@ Collapse(AG_UCombo *com)
 	AG_ViewDetach(com->panel);
 	com->panel = NULL;
 
-	AG_WidgetSetBool(com->button, "state", 0);
+	AG_SetInt(com->button, "state", 0);
 }
 
 static void

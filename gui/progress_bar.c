@@ -140,9 +140,9 @@ AG_ProgressBarPercent(AG_ProgressBar *pb)
 	int min, max, val;
 
 	AG_ObjectLock(pb);
-	min = AG_WidgetInt(pb, "min");
-	max = AG_WidgetInt(pb, "max");
-	val = AG_WidgetInt(pb, "value");
+	min = AG_GetInt(pb, "min");
+	max = AG_GetInt(pb, "max");
+	val = AG_GetInt(pb, "value");
 	AG_ObjectUnlock(pb);
 
 	if (val < min) { val = min; }
@@ -159,9 +159,9 @@ Draw(void *obj)
 	int wAvail;
 	AG_Rect rd;
 
-	min = AG_WidgetInt(pb, "min");
-	max = AG_WidgetInt(pb, "max");
-	val = AG_WidgetInt(pb, "value");
+	min = AG_GetInt(pb, "min");
+	max = AG_GetInt(pb, "max");
+	val = AG_GetInt(pb, "value");
 	if (val < min) { val = min; }
 	if (val > max) { val = max; }
 

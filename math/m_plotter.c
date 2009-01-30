@@ -314,7 +314,7 @@ static void
 UpdateXBar(AG_Event *event)
 {
 	M_Plotter *ptr = AG_PTR(1);
-	int value = AG_WidgetInt(ptr->hbar, "value");
+	int value = AG_GetInt(ptr->hbar, "value");
 
 	if (value >= ptr->xMax - WIDTH(ptr)) {
 		ptr->flags |= M_PLOTTER_SCROLL;
@@ -377,8 +377,8 @@ Init(void *obj)
 
 	AG_BindInt(ptr->vbar, "value", &ptr->yOffs);
 /*	AG_BindInt(ptr->vbar, "max", &ptr->yMax); */
-	AG_WidgetSetInt(ptr->hbar, "min", 0);
-	AG_WidgetSetInt(ptr->vbar, "min", 0);
+	AG_SetInt(ptr->hbar, "min", 0);
+	AG_SetInt(ptr->vbar, "min", 0);
 
 	AG_SetEvent(ptr, "window-keydown", keydown, NULL);
 	AG_SetEvent(ptr, "window-mousebuttondown", mousebuttondown, NULL);

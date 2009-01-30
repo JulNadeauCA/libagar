@@ -55,6 +55,19 @@ ChildAttached(AG_Event *event)
 		wid->style = style;
 }
 
+#ifdef AG_LEGACY
+/*
+ * Forward object-level `bound' event to `widget-bound'.
+ */
+static void
+Bound(AG_Event *event)
+{
+	AG_Widget *wid = AG_SELF();
+	AG_Variable *V = AG_PTR(1);
+	AG_PostEvent(NULL, wid, "widget-bound", "%p", V);
+}
+#endif /* AG_LEGACY */
+
 static void
 Init(void *obj)
 {
@@ -89,6 +102,9 @@ Init(void *obj)
 	 * of the parent on attachment.
 	 */
 	AG_SetEvent(wid, "child-attached", ChildAttached, NULL);
+#ifdef AG_LEGACY
+	AG_SetEvent(wid, "bound", Bound, NULL);
+#endif
 }
 
 /* Traverse the widget tree using a pathname. */
@@ -218,16 +234,16 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 	AG_ObjectUnlock(wid);
 }
 
+#ifdef AG_LEGACY
 /*
  * Duplicate a widget binding.
- * LEGACY Widget interface to AG_Variable(3).
  */
 int
 AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
 {
 	AG_Variable *Vdst;
 
-	if ((Vdst = AG_WidgetGetBinding(wDst, nDst, NULL)) == NULL) {
+	if ((Vdst = AG_GetVariable(wDst, nDst, NULL)) == NULL) {
 		return (-1);
 	}
 	Vdst->type = Vsrc->type;
@@ -235,26 +251,26 @@ AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
 	Vdst->data.p = Vsrc->data.p;
 
 	switch (Vdst->type) {
-	case AG_WIDGET_FLAG:
-	case AG_WIDGET_FLAG8:
-	case AG_WIDGET_FLAG16:
-	case AG_WIDGET_FLAG32:
+	case AG_VARIABLE_P_FLAG:
+	case AG_VARIABLE_P_FLAG8:
+	case AG_VARIABLE_P_FLAG16:
+	case AG_VARIABLE_P_FLAG32:
 		Vdst->info.bitmask = Vsrc->info.bitmask;
-		break;
-	case AG_WIDGET_STRING:
-		Vdst->info.size = Vsrc->info.size;
 		break;
 	default:
 		break;
 	}
-	AG_PostEvent(NULL, wDst, "widget-bound", "%p", Vdst);
-	AG_WidgetUnlockBinding(Vdst);
+	if (AG_VARIABLE_TYPE(Vdst) == AG_VARIABLE_STRING) {
+		Vdst->info.size = Vsrc->info.size;
+	}
+
+	AG_PostEvent(NULL, wDst, "bound", "%p", Vdst);
+	AG_UnlockVariable(Vdst);
 	return (0);
 }
 
 /*
  * Bind a mutex-protected variable to a widget.
- * LEGACY Widget interface to AG_Variable(3).
  */
 AG_Variable *
 AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
@@ -271,14 +287,17 @@ AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
 
 	va_start(ap, type);
 	switch (type) {
-	case AG_WIDGET_FLAG:			/* AG_VARIABLE_P_FLAG* */
-	case AG_WIDGET_FLAG8:
-	case AG_WIDGET_FLAG16:
-	case AG_WIDGET_FLAG32:
+	case AG_VARIABLE_P_FLAG:
+	case AG_VARIABLE_P_FLAG8:
+	case AG_VARIABLE_P_FLAG16:
+	case AG_VARIABLE_P_FLAG32:
 		p = va_arg(ap, void *);
 		bitmask = va_arg(ap, Uint);
 		break;
-	case AG_WIDGET_STRING:			/* AG_VARIABLE_P_STRING */
+	case AG_VARIABLE_STRING:
+	case AG_VARIABLE_P_STRING:
+	case AG_VARIABLE_CONST_STRING:
+	case AG_VARIABLE_P_CONST_STRING:
 		p = (void *)va_arg(ap, char *);
 		size = va_arg(ap, size_t);
 		break;
@@ -289,13 +308,16 @@ AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
 	va_end(ap);
 	
 	switch (type) {
-	case AG_WIDGET_FLAG:			/* AG_VARIABLE_P_FLAG* */
-	case AG_WIDGET_FLAG8:
-	case AG_WIDGET_FLAG16:
-	case AG_WIDGET_FLAG32:
+	case AG_VARIABLE_P_FLAG:
+	case AG_VARIABLE_P_FLAG8:
+	case AG_VARIABLE_P_FLAG16:
+	case AG_VARIABLE_P_FLAG32:
 		V = AG_WidgetBind(wid, name, type, p, bitmask);
 		break;
-	case AG_WIDGET_STRING:			/* AG_VARIABLE_P_STRING */
+	case AG_VARIABLE_STRING:
+	case AG_VARIABLE_P_STRING:
+	case AG_VARIABLE_CONST_STRING:
+	case AG_VARIABLE_P_CONST_STRING:
 		V = AG_WidgetBind(wid, name, type, p, size);
 		break;
 	default:
@@ -311,7 +333,6 @@ AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
 
 /*
  * Bind a non mutex-protected variable to a widget.
- * LEGACY Widget interface to AG_Variable(3).
  */
 AG_Variable *
 AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
@@ -341,14 +362,17 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 	
 	va_start(ap, type);
 	switch (type) {
-	case AG_WIDGET_FLAG:			/* AG_VARIABLE_P_FLAG* */
-	case AG_WIDGET_FLAG8:
-	case AG_WIDGET_FLAG16:
-	case AG_WIDGET_FLAG32:
+	case AG_VARIABLE_P_FLAG:
+	case AG_VARIABLE_P_FLAG8:
+	case AG_VARIABLE_P_FLAG16:
+	case AG_VARIABLE_P_FLAG32:
 		V->data.p = va_arg(ap, void *);
 		V->info.bitmask = va_arg(ap, Uint);
 		break;
-	case AG_WIDGET_STRING:			/* AG_VARIABLE_P_STRING */
+	case AG_VARIABLE_STRING:
+	case AG_VARIABLE_P_STRING:
+	case AG_VARIABLE_CONST_STRING:
+	case AG_VARIABLE_P_CONST_STRING:
 		V->data.p = va_arg(ap, char *);
 		V->info.size = va_arg(ap, size_t);
 		break;
@@ -359,111 +383,249 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 	}
 	va_end(ap);
 
-	AG_PostEvent(NULL, obj, "widget-bound", "%p", V);
+	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
 	return (V);
 }
 
-/*
- * Lookup a binding and copy its data to pointers passed as arguments.
- * LEGACY Widget interface to AG_Variable(3).
- *
- * Any locking device associated with the binding is acquired, so the
- * caller must invoke AG_WidgetUnlockBinding() when done accessing the
- * data.
- */
-AG_Variable *
-AG_WidgetGetBinding(void *pObj, const char *name, ...)
+size_t
+AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 {
-	AG_Object *obj = pObj;
 	AG_Variable *V;
-	void **res;
-	va_list ap;
-	Uint i;
+	char *s;
+	size_t rv;
 
-	va_start(ap, name);
-	res = va_arg(ap, void **);
-	va_end(ap);
-
-	AG_ObjectLock(obj);
-	for (i = 0; i < obj->nVars; i++) {
-		V = &obj->vars[i];
-		if (strcmp(V->name, name) == 0)
-			break;
+	if ((V = AG_GetVariable(wid, name, &s)) == NULL) {
+		AG_FatalError("%s", AG_GetError());
 	}
-	if (i == obj->nVars) {
-		AG_SetError("%s: No such binding: %s", obj->name, name);
-		goto fail;
-	}
-	if (V->mutex != NULL) {
-		AG_MutexLock(V->mutex);
-	}
-	if (res == NULL) {
-		goto out;
-	}
-	switch (V->type) {
-	case AG_WIDGET_INT:
-		*(int **)res = (int *)V->data.p;
-		break;
-	case AG_WIDGET_UINT:
-		*(Uint **)res = (Uint *)V->data.p;
-		break;
-	case AG_WIDGET_UINT8:
-		*(Uint8 **)res = (Uint8 *)V->data.p;
-		break;
-	case AG_WIDGET_SINT8:
-		*(Sint8 **)res = (Sint8 *)V->data.p;
-		break;
-	case AG_WIDGET_UINT16:
-		*(Uint16 **)res = (Uint16 *)V->data.p;
-		break;
-	case AG_WIDGET_SINT16:
-		*(Sint16 **)res = (Sint16 *)V->data.p;
-		break;
-	case AG_WIDGET_UINT32:
-		*(Uint32 **)res = (Uint32 *)V->data.p;
-		break;
-	case AG_WIDGET_SINT32:
-		*(Sint32 **)res = (Sint32 *)V->data.p;
-		break;
-	case AG_WIDGET_FLOAT:
-		*(float **)res = (float *)V->data.p;
-		break;
-	case AG_WIDGET_DOUBLE:
-		*(double **)res = (double *)V->data.p;
-		break;
-	case AG_WIDGET_STRING:
-		*(char ***)res = (char **)V->data.p;
-		break;
-	case AG_WIDGET_POINTER:
-		*(void ***)res = (void **)V->data.p;
-		break;
-	case AG_WIDGET_FLAG:
-		*(Uint **)res = (Uint *)V->data.p;
-		break;
-	case AG_WIDGET_FLAG8:
-		*(Uint8 **)res = (Uint8 *)V->data.p;
-		break;
-	case AG_WIDGET_FLAG16:
-		*(Uint16 **)res = (Uint16 *)V->data.p;
-		break;
-	case AG_WIDGET_FLAG32:
-		*(Uint32 **)res = (Uint32 *)V->data.p;
-		break;
-	default:
-		AG_SetError("Bad binding type");
-		if (V->mutex != NULL) {
-			AG_MutexUnlock(V->mutex);
-		}
-		goto fail;
-	}
-out:
-	AG_ObjectUnlock(obj);
-	return (V);					/* Return locked */
-fail:
-	AG_ObjectUnlock(obj);
-	return (NULL);
+	rv = Strlcpy(dst, s, dst_size);
+	AG_UnlockVariable(V);
+	return (rv);
 }
+
+/*
+ * Legacy binding get/set routines.
+ */
+int
+AG_WidgetInt(void *wid, const char *name)
+{
+	AG_Variable *b;
+	int *i, rv;
+	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	rv = *i;
+	AG_UnlockVariable(b);
+	return (rv);
+}
+Uint
+AG_WidgetUint(void *wid, const char *name)
+{
+	AG_Variable *b;
+	Uint *i, rv;
+	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	rv = *i;
+	AG_UnlockVariable(b);
+	return (rv);
+}
+Uint8
+AG_WidgetUint8(void *wid, const char *name)
+{
+	AG_Variable *b;
+	Uint8 *i, rv;
+	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	rv = *i;
+	AG_UnlockVariable(b);
+	return (rv);
+}
+Sint8
+AG_WidgetSint8(void *wid, const char *name)
+{
+	AG_Variable *b;
+	Sint8 *i, rv;
+	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	rv = *i;
+	AG_UnlockVariable(b);
+	return (rv);
+}
+Uint16
+AG_WidgetUint16(void *wid, const char *name)
+{
+	AG_Variable *b;
+	Uint16 *i, rv;
+	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	rv = *i;
+	AG_UnlockVariable(b);
+	return (rv);
+}
+Sint16
+AG_WidgetSint16(void *wid, const char *name)
+{
+	AG_Variable *b;
+	Sint16 *i, rv;
+	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	rv = *i;
+	AG_UnlockVariable(b);
+	return (rv);
+}
+Uint32
+AG_WidgetUint32(void *wid, const char *name)
+{
+	AG_Variable *b;
+	Uint32 *i, rv;
+	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	rv = *i;
+	AG_UnlockVariable(b);
+	return (rv);
+}
+Sint32
+AG_WidgetSint32(void *wid, const char *name)
+{
+	AG_Variable *b;
+	Sint32 *i, rv;
+	if ((b = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	rv = *i;
+	AG_UnlockVariable(b);
+	return (rv);
+}
+float
+AG_WidgetFloat(void *wid, const char *name)
+{
+	AG_Variable *b;
+	float *f, rv;
+	if ((b = AG_GetVariable(wid, name, &f)) == NULL) { AG_FatalError(NULL); }
+	rv = *f;
+	AG_UnlockVariable(b);
+	return (rv);
+}
+double
+AG_WidgetDouble(void *wid, const char *name)
+{
+	AG_Variable *b;
+	double *d, rv;
+	if ((b = AG_GetVariable(wid, name, &d)) == NULL) { AG_FatalError(NULL); }
+	rv = *d;
+	AG_UnlockVariable(b);
+	return (rv);
+}
+char *
+AG_WidgetString(void *wid, const char *name)
+{
+	AG_Variable *b;
+	char *s, *sd;
+	if ((b = AG_GetVariable(wid, name, &s)) == NULL) { AG_FatalError(NULL); }
+	sd = AG_Strdup(s);
+	AG_UnlockVariable(b);
+	return (sd);
+}
+void *
+AG_WidgetPointer(void *wid, const char *name)
+{
+	AG_Variable *b;
+	void **p, *rv;
+	if ((b = AG_GetVariable(wid, name, &p)) == NULL) { AG_FatalError(NULL); }
+	rv = *p;
+	AG_UnlockVariable(b);
+	return (p);
+}
+void
+AG_WidgetSetInt(void *wid, const char *name, int ni)
+{
+	AG_Variable *V;
+	int *i;
+	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	*i = ni;
+	AG_UnlockVariable(V);
+}
+void
+AG_WidgetSetUint(void *wid, const char *name, Uint ni)
+{
+	AG_Variable *V;
+	Uint *i;
+	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	*i = ni;
+	AG_UnlockVariable(V);
+}
+void
+AG_WidgetSetUint8(void *wid, const char *name, Uint8 ni)
+{
+	AG_Variable *V;
+	Uint8 *i;
+	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	*i = ni;
+	AG_UnlockVariable(V);
+}
+void
+AG_WidgetSetSint8(void *wid, const char *name, Sint8 ni)
+{
+	AG_Variable *V;
+	Sint8 *i;
+	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	*i = ni;
+	AG_UnlockVariable(V);
+}
+void
+AG_WidgetSetUint16(void *wid, const char *name, Uint16 ni)
+{
+	AG_Variable *V;
+	Uint16 *i;
+	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	*i = ni;
+	AG_UnlockVariable(V);
+}
+void
+AG_WidgetSetSint16(void *wid, const char *name, Sint16 ni)
+{
+	AG_Variable *V;
+	Sint16 *i;
+	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	*i = ni;
+	AG_UnlockVariable(V);
+}
+void
+AG_WidgetSetUint32(void *wid, const char *name, Uint32 ni)
+{
+	AG_Variable *V;
+	Uint32 *i;
+	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	*i = ni;
+	AG_UnlockVariable(V);
+}
+void
+AG_WidgetSetSint32(void *wid, const char *name, Sint32 ni)
+{
+	AG_Variable *V;
+	Sint32 *i;
+	if ((V = AG_GetVariable(wid, name, &i)) == NULL) { AG_FatalError(NULL); }
+	*i = ni;
+	AG_UnlockVariable(V);
+}
+void
+AG_WidgetSetFloat(void *wid, const char *name, float nf)
+{
+	AG_Variable *V;
+	float *f;
+	if ((V = AG_GetVariable(wid, name, &f)) == NULL) { AG_FatalError(NULL); }
+	*f = nf;
+	AG_UnlockVariable(V);
+}
+void
+AG_WidgetSetDouble(void *wid, const char *name, double nd)
+{
+	AG_Variable *V;
+	double *d;
+	if ((V = AG_GetVariable(wid, name, &d)) == NULL) { AG_FatalError(NULL); }
+	*d = nd;
+	AG_UnlockVariable(V);
+}
+void
+AG_WidgetSetPointer(void *wid, const char *name, void *np)
+{
+	AG_Variable *V;
+	void **p;
+	if ((V = AG_GetVariable(wid, name, &p)) == NULL) { AG_FatalError(NULL); }
+	*p = np;
+	AG_UnlockVariable(V);
+}
+#endif /* AG_LEGACY */
 
 /*
  * Register a surface with the given widget. In OpenGL mode, a texture will
@@ -1836,34 +1998,6 @@ AG_WidgetFindRect(const char *type, int x, int y, int w, int h)
 	}
 	AG_UnlockVFS(agView);
 	return (NULL);
-}
-
-void
-AG_WidgetSetString(void *wid, const char *name, const char *ns)
-{
-	AG_Variable *V;
-	char *s;
-
-	if ((V = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	Strlcpy(s, ns, V->info.size);
-	AG_WidgetUnlockBinding(V);
-}
-
-size_t
-AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
-{
-	AG_WidgetBinding *b;
-	char *s;
-	size_t rv;
-
-	if ((b = AG_WidgetGetBinding(wid, name, &s)) == NULL) {
-		AG_FatalError("%s", AG_GetError());
-	}
-	rv = Strlcpy(dst, s, dst_size);
-	AG_WidgetUnlockBinding(b);
-	return (rv);
 }
 
 /* Generic inherited draw() routine. */

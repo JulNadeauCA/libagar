@@ -35,7 +35,7 @@
 
 #include <stdarg.h>
 
-static void SetState(AG_WidgetBinding *, void *, int);
+static void SetState(AG_Variable *, void *, int);
 static void MouseMotion(AG_Event *);
 static void MouseButtonUp(AG_Event *);
 static void MouseButtonDown(AG_Event *);
@@ -177,24 +177,24 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 }
 
 static __inline__ int
-GetState(AG_WidgetBinding *binding, void *p)
+GetState(AG_Variable *binding, void *p)
 {
-	switch (binding->type) {
-	case AG_WIDGET_INT:
+	switch (AG_VARIABLE_TYPE(binding)) {
+	case AG_VARIABLE_INT:
 		return *(int *)p;
-	case AG_WIDGET_UINT8:
+	case AG_VARIABLE_UINT8:
 		return (int)(*(Uint8 *)p);
-	case AG_WIDGET_UINT16:
+	case AG_VARIABLE_UINT16:
 		return (int)(*(Uint16 *)p);
-	case AG_WIDGET_UINT32:
+	case AG_VARIABLE_UINT32:
 		return (int)(*(Uint32 *)p);
-	case AG_WIDGET_FLAG:
+	case AG_VARIABLE_P_FLAG:
 		return (*(int *)p & (int)binding->info.bitmask);
-	case AG_WIDGET_FLAG8:
+	case AG_VARIABLE_P_FLAG8:
 		return (int)(*(Uint8 *)p & (Uint8)binding->info.bitmask);
-	case AG_WIDGET_FLAG16:
+	case AG_VARIABLE_P_FLAG16:
 		return (int)(*(Uint16 *)p & (Uint16)binding->info.bitmask);
-	case AG_WIDGET_FLAG32:
+	case AG_VARIABLE_P_FLAG32:
 		return (int)(*(Uint32 *)p & (Uint32)binding->info.bitmask);
 	default:
 		return (-1);
@@ -203,17 +203,17 @@ GetState(AG_WidgetBinding *binding, void *p)
 }
 
 static __inline__ int
-GetCount(AG_WidgetBinding *binding, void *p)
+GetCount(AG_Variable *binding, void *p)
 {
-	switch (binding->type) {
-	case AG_WIDGET_UINT:	return (Uint)(*(int *)p);
-	case AG_WIDGET_INT:	return *(int *)p;
-	case AG_WIDGET_UINT8:	return (int)(*(Uint8 *)p);
-	case AG_WIDGET_SINT8:	return (int)(*(Sint8 *)p);
-	case AG_WIDGET_UINT16:	return (int)(*(Uint16 *)p);
-	case AG_WIDGET_SINT16:	return (int)(*(Sint16 *)p);
-	case AG_WIDGET_UINT32:	return (int)(*(Uint32 *)p);
-	case AG_WIDGET_SINT32:	return (int)(*(Sint32 *)p);
+	switch (AG_VARIABLE_TYPE(binding)) {
+	case AG_VARIABLE_UINT:	return (Uint)(*(int *)p);
+	case AG_VARIABLE_INT:	return *(int *)p;
+	case AG_VARIABLE_UINT8:	return (int)(*(Uint8 *)p);
+	case AG_VARIABLE_SINT8:	return (int)(*(Sint8 *)p);
+	case AG_VARIABLE_UINT16:	return (int)(*(Uint16 *)p);
+	case AG_VARIABLE_SINT16:	return (int)(*(Sint16 *)p);
+	case AG_VARIABLE_UINT32:	return (int)(*(Uint32 *)p);
+	case AG_VARIABLE_SINT32:	return (int)(*(Sint32 *)p);
 	default:		return (-1);
 	}
 	return (-1);
@@ -223,16 +223,16 @@ static void
 Draw(void *obj)
 {
 	AG_Socket *sock = obj;
-	AG_WidgetBinding *binding;
+	AG_Variable *binding;
 	void *pBinding;
 	int state, count;
 	
-	binding = AG_WidgetGetBinding(sock, "state", &pBinding);
+	binding = AG_GetVariable(sock, "state", &pBinding);
 	state = GetState(binding, pBinding);
-	AG_WidgetUnlockBinding(binding);
-	binding = AG_WidgetGetBinding(sock, "count", &pBinding);
+	AG_UnlockVariable(binding);
+	binding = AG_GetVariable(sock, "count", &pBinding);
 	count = GetCount(binding, pBinding);
-	AG_WidgetUnlockBinding(binding);
+	AG_UnlockVariable(binding);
 	
 	STYLE(sock)->SocketBackground(sock);
 	if (sock->icon != NULL) {
@@ -247,31 +247,31 @@ Draw(void *obj)
 }
 
 static void
-SetState(AG_WidgetBinding *binding, void *p, int v)
+SetState(AG_Variable *binding, void *p, int v)
 {
-	switch (binding->type) {
-	case AG_WIDGET_INT:
+	switch (AG_VARIABLE_TYPE(binding)) {
+	case AG_VARIABLE_INT:
 		*(int *)p = v;
 		break;
-	case AG_WIDGET_UINT8:
+	case AG_VARIABLE_UINT8:
 		*(Uint8 *)p = v;
 		break;
-	case AG_WIDGET_UINT16:
+	case AG_VARIABLE_UINT16:
 		*(Uint16 *)p = v;
 		break;
-	case AG_WIDGET_UINT32:
+	case AG_VARIABLE_UINT32:
 		*(Uint32 *)p = v;
 		break;
-	case AG_WIDGET_FLAG:
+	case AG_VARIABLE_P_FLAG:
 		AG_SETFLAGS(*(int *)p, (int)binding->info.bitmask, v);
 		break;
-	case AG_WIDGET_FLAG8:
+	case AG_VARIABLE_P_FLAG8:
 		AG_SETFLAGS(*(Uint8 *)p, (Uint8)binding->info.bitmask, v);
 		break;
-	case AG_WIDGET_FLAG16:
+	case AG_VARIABLE_P_FLAG16:
 		AG_SETFLAGS(*(Uint16 *)p, (Uint16)binding->info.bitmask, v);
 		break;
-	case AG_WIDGET_FLAG32:
+	case AG_VARIABLE_P_FLAG32:
 		AG_SETFLAGS(*(Uint32 *)p, (Uint32)binding->info.bitmask, v);
 		break;
 	default:
@@ -281,17 +281,17 @@ SetState(AG_WidgetBinding *binding, void *p, int v)
 
 #if 0
 static void
-SetCount(AG_WidgetBinding *binding, void *p, int v)
+SetCount(AG_Variable *binding, void *p, int v)
 {
-	switch (binding->type) {
-	case AG_WIDGET_UINT:	*(Uint *)p = v;		break;
-	case AG_WIDGET_INT:	*(int *)p = v;		break;
-	case AG_WIDGET_UINT8:	*(Uint8 *)p = v;	break;
-	case AG_WIDGET_SINT8:	*(Sint8 *)p = v;	break;
-	case AG_WIDGET_UINT16:	*(Uint16 *)p = v;	break;
-	case AG_WIDGET_SINT16:	*(Sint16 *)p = v;	break;
-	case AG_WIDGET_UINT32:	*(Uint32 *)p = v;	break;
-	case AG_WIDGET_SINT32:	*(Sint32 *)p = v;	break;
+	switch (AG_VARIABLE_TYPE(binding)) {
+	case AG_VARIABLE_UINT:	*(Uint *)p = v;		break;
+	case AG_VARIABLE_INT:	*(int *)p = v;		break;
+	case AG_VARIABLE_UINT8:	*(Uint8 *)p = v;	break;
+	case AG_VARIABLE_SINT8:	*(Sint8 *)p = v;	break;
+	case AG_VARIABLE_UINT16:	*(Uint16 *)p = v;	break;
+	case AG_VARIABLE_SINT16:	*(Sint16 *)p = v;	break;
+	case AG_VARIABLE_UINT32:	*(Uint32 *)p = v;	break;
+	case AG_VARIABLE_SINT32:	*(Sint32 *)p = v;	break;
 	}
 }
 #endif
@@ -300,7 +300,7 @@ static void
 MouseMotion(AG_Event *event)
 {
 	AG_Socket *sock = AG_SELF();
-	AG_WidgetBinding *binding;
+	AG_Variable *binding;
 	int x = AG_INT(1);
 	int y = AG_INT(2);
 	void *pState;
@@ -308,7 +308,7 @@ MouseMotion(AG_Event *event)
 	if (AG_WidgetDisabled(sock))
 		return;
 
-	binding = AG_WidgetGetBinding(sock, "state", &pState);
+	binding = AG_GetVariable(sock, "state", &pState);
 	if (!AG_WidgetRelativeArea(sock, x, y)) {
 		if ((sock->flags & AG_SOCKET_STICKY_STATE) == 0 &&
 		    GetState(binding, pState) == 1) {
@@ -323,7 +323,7 @@ MouseMotion(AG_Event *event)
 		sock->flags |= AG_SOCKET_MOUSEOVER;
 		AG_PostEvent(NULL, sock, "socket-mouseoverlap", "%i", 1);
 	}
-	AG_WidgetUnlockBinding(binding);
+	AG_UnlockVariable(binding);
 }
 
 static void
@@ -375,7 +375,7 @@ MouseButtonDown(AG_Event *event)
 {
 	AG_Socket *sock = AG_SELF();
 	int button = AG_INT(1);
-	AG_WidgetBinding *binding;
+	AG_Variable *binding;
 	void *pState;
 	int newState;
 	AG_Icon *icon;
@@ -386,7 +386,7 @@ MouseButtonDown(AG_Event *event)
 	}
 	AG_WidgetFocus(sock);
 	
-	binding = AG_WidgetGetBinding(sock, "state", &pState);
+	binding = AG_GetVariable(sock, "state", &pState);
 	if (!(sock->flags & AG_SOCKET_STICKY_STATE)) {
 		SetState(binding, pState, 1);
 	} else {
@@ -394,7 +394,7 @@ MouseButtonDown(AG_Event *event)
 		SetState(binding, pState, newState);
 		AG_PostEvent(NULL, sock, "socket-click", "%i", newState);
 	}
-	AG_WidgetUnlockBinding(binding);
+	AG_UnlockVariable(binding);
 
 	if ((icon = sock->icon) != NULL) {
 		AG_Pixmap *px;
@@ -426,7 +426,7 @@ MouseButtonUp(AG_Event *event)
 {
 	AG_Socket *sock = AG_SELF();
 	int button = AG_INT(1);
-	AG_WidgetBinding *binding;
+	AG_Variable *binding;
 	void *pState;
 	int x = AG_INT(2);
 	int y = AG_INT(3);
@@ -437,13 +437,13 @@ MouseButtonUp(AG_Event *event)
 		return;
 	}
 	
-	binding = AG_WidgetGetBinding(sock, "state", &pState);
+	binding = AG_GetVariable(sock, "state", &pState);
 	if (GetState(binding, pState) && button == SDL_BUTTON_LEFT &&
 	    !(sock->flags & AG_SOCKET_STICKY_STATE)) {
 	    	SetState(binding, pState, 0);
 		AG_PostEvent(NULL, sock, "socket-click", "%i", 0);
 	}
-	AG_WidgetUnlockBinding(binding);
+	AG_UnlockVariable(binding);
 }
 
 void

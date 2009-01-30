@@ -51,10 +51,10 @@ AG_FontSelectorNew(void *parent, Uint flags)
 }
 
 static void
-BoundFont(AG_Event *event)
+Bound(AG_Event *event)
 {
 	AG_FontSelector *fs = AG_SELF();
-	AG_WidgetBinding *b = AG_PTR(1);
+	AG_Variable *b = AG_PTR(1);
 	AG_Font **pFont;
 
 	if (strcmp(b->name, "font") != 0)
@@ -63,7 +63,7 @@ BoundFont(AG_Event *event)
 	AG_ObjectLock(fs);
 
 	pFont = b->data.p;
-	AG_WidgetSetPointer(fs, "font", *pFont);
+	AG_SetPointer(fs, "font", *pFont);
 	Strlcpy(fs->curFace, OBJECT(*pFont)->name, sizeof(fs->curFace));
 	fs->curSize = (*pFont)->size;
 	fs->curStyle = (*pFont)->flags;
@@ -77,7 +77,7 @@ BoundFont(AG_Event *event)
 static void
 UpdateFontSelection(AG_FontSelector *fs)
 {
-	AG_WidgetBinding *bFont;
+	AG_Variable *bFont;
 	AG_Font *font, **pFont;
 
 	font = AG_FetchFont(fs->curFace, fs->curSize, fs->curStyle);
@@ -85,19 +85,19 @@ UpdateFontSelection(AG_FontSelector *fs)
 		AG_TextError(_("Error opening font: %s"), AG_GetError());
 		return;
 	}
-	bFont = AG_WidgetGetBinding(fs, "font", &pFont);
+	bFont = AG_GetVariable(fs, "font", &pFont);
 	*pFont = font;
-	AG_WidgetUnlockBinding(bFont);
+	AG_UnlockVariable(bFont);
 }
 
 static void
 UpdatePreview(AG_FontSelector *fs)
 {
-	AG_WidgetBinding *bFont;
+	AG_Variable *bFont;
 	AG_Font **pFont;
 	AG_Surface *s;
 	
-	bFont = AG_WidgetGetBinding(fs, "font", &pFont);
+	bFont = AG_GetVariable(fs, "font", &pFont);
 	AG_PushTextState();
 
 	if (*pFont != NULL) {
@@ -111,13 +111,13 @@ UpdatePreview(AG_FontSelector *fs)
 	}
 
 	AG_PopTextState();
-	AG_WidgetUnlockBinding(bFont);
+	AG_UnlockVariable(bFont);
 }
 
 static void
 UpdateFaces(AG_Event *event)
 {
-	AG_WidgetBinding *bFont;
+	AG_Variable *bFont;
 	AG_Font **pFont;
 	AG_FontSelector *fs = AG_SELF();
 	char fontPath[AG_SEARCHPATH_MAX], *pFontPath = &fontPath[0];
@@ -128,7 +128,7 @@ UpdateFaces(AG_Event *event)
 	                         22,24,26,28,32,48,64 };
 	const int nStdSizes = sizeof(stdSizes) / sizeof(stdSizes[0]);
 	
-	bFont = AG_WidgetGetBinding(fs, "font", &pFont);
+	bFont = AG_GetVariable(fs, "font", &pFont);
 	AG_PushTextState();
 
 	fs->flags &= ~(AG_FONTSELECTOR_UPDATE);
@@ -199,7 +199,7 @@ UpdateFaces(AG_Event *event)
 
 	UpdatePreview(fs);
 
-	AG_WidgetUnlockBinding(bFont);
+	AG_UnlockVariable(bFont);
 }
 
 static void
@@ -270,8 +270,8 @@ Init(void *obj)
 	
 	AG_BindPointer(fs, "font", (void **)&fs->font);
 
+	AG_SetEvent(fs, "bound", Bound, NULL);
 	AG_SetEvent(fs, "widget-shown", UpdateFaces, NULL);
-	AG_SetEvent(fs, "widget-bound", BoundFont, NULL);
 	AG_SetEvent(fs->tlFaces, "tlist-selected", SelectedFace, "%p", fs);
 	AG_SetEvent(fs->tlStyles, "tlist-selected", SelectedStyle, "%p", fs);
 	AG_SetEvent(fs->tlSizes, "tlist-selected", SelectedSize, "%p", fs);

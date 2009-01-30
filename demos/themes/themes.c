@@ -421,8 +421,7 @@ main(int argc, char *argv[])
 				break;
 			case 'T':
 				/* Set an alternate font directory */
-				AG_SetString(agConfig, "font-path", "%s",
-				    optarg);
+				AG_SetString(agConfig, "font-path", optarg);
 				break;
 			case 't':
 				/* Change the default font */

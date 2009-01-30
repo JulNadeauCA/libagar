@@ -77,31 +77,31 @@ agar_gui_widget_get_pointer (AG_Widget *w, const char *binding)
 int
 agar_gui_widget_get_boolean (AG_Widget *w, const char *binding)
 {
-  return AG_WidgetBool (w, binding);
+  return AG_GetInt (w, binding);
 }
 
 int
 agar_gui_widget_get_integer (AG_Widget *w, const char *binding)
 {
-  return AG_WidgetInt (w, binding);
+  return AG_GetInt (w, binding);
 }
 
 unsigned int
 agar_gui_widget_get_unsigned (AG_Widget *w, const char *binding)
 {
-  return AG_WidgetUint (w, binding);
+  return AG_GetUint (w, binding);
 }
 
 float
 agar_gui_widget_get_float (AG_Widget *w, const char *binding)
 {
-  return AG_WidgetFloat (w, binding);
+  return AG_GetFloat (w, binding);
 }
 
 double
 agar_gui_widget_get_double (AG_Widget *w, const char *binding)
 {
-  return AG_WidgetDouble (w, binding);
+  return AG_GetDouble (w, binding);
 }
 
 ]])
@@ -112,14 +112,14 @@ Uint]]..ts(value)..[[
 
 agar_gui_widget_get_uint]]..ts(value)..[[ (AG_Widget *w, const char *binding)
 {
-  return AG_WidgetUint]]..ts(value)..[[ (w, binding);
+  return AG_GetUint]]..ts(value)..[[ (w, binding);
 }
 
 Sint]]..ts(value)..[[
 
 agar_gui_widget_get_int]]..ts(value)..[[ (AG_Widget *w, const char *binding)
 {
-  return AG_WidgetSint]]..ts(value)..[[ (w, binding);
+  return AG_GetSint]]..ts(value)..[[ (w, binding);
 }
 
 ]])
@@ -129,37 +129,37 @@ io.write ([[
 void
 agar_gui_widget_set_pointer (AG_Widget *w, const char *binding, void *val)
 {
-  AG_WidgetSetPointer (w, binding, val);
+  AG_SetPointer (w, binding, val);
 }
 
 void
 agar_gui_widget_set_boolean (AG_Widget *w, const char *binding, int val)
 {
-  AG_WidgetSetBool (w, binding, val);
+  AG_SetInt (w, binding, val);
 }
 
 void
 agar_gui_widget_set_integer (AG_Widget *w, const char *binding, int val)
 {
-  AG_WidgetSetInt (w, binding, val);
+  AG_SetInt (w, binding, val);
 }
 
 void
 agar_gui_widget_set_unsigned (AG_Widget *w, const char *binding, unsigned int val)
 {
-  AG_WidgetSetUint (w, binding, val);
+  AG_SetUint (w, binding, val);
 }
 
 void
 agar_gui_widget_set_float (AG_Widget *w, const char *binding, float val)
 {
-  AG_WidgetSetFloat (w, binding, val);
+  AG_SetFloat (w, binding, val);
 }
 
 void
 agar_gui_widget_set_double (AG_Widget *w, const char *binding, double val)
 {
-  AG_WidgetSetDouble (w, binding, val);
+  AG_SetDouble (w, binding, val);
 }
 
 ]])
@@ -170,14 +170,14 @@ void
 agar_gui_widget_set_uint]]..ts(value)..[[ (AG_Widget *w, const char *binding,
   Uint]]..ts(value)..[[ val)
 {
-  AG_WidgetSetUint]]..ts(value)..[[ (w, binding, val);
+  AG_SetUint]]..ts(value)..[[ (w, binding, val);
 }
 
 void
 agar_gui_widget_set_int]]..ts(value)..[[ (AG_Widget *w, const char *binding,
   Sint]]..ts(value)..[[ val)
 {
-  AG_WidgetSetSint]]..ts(value)..[[ (w, binding, val);
+  AG_SetSint]]..ts(value)..[[ (w, binding, val);
 }
 
 ]])

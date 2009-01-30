@@ -107,18 +107,6 @@ binding.
 .Fn AG_SliderNewSint32R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint32 *value" "Sint32 min" "Sint32 max"
 .Pp
 .Ft "AG_Slider *"
-.Fn AG_SliderNewUint64 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint64 *value" "Uint64 *min" "Uint64 *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewUint64R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Uint64 *value" "Uint64 min" "Uint64 max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewSint64 "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint64 *value" "Sint64 *min" "Sint64 *max"
-.Pp
-.Ft "AG_Slider *"
-.Fn AG_SliderNewSint64R "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "Sint64 *value" "Sint64 min" "Sint64 max"
-.Pp
-.Ft "AG_Slider *"
 .Fn AG_SliderNewFlt "AG_Widget *parent" "enum ag_slider_type type" "Uint flags" "float *value" "float *min" "float *max"
 .Pp
 .Ft "AG_Slider *"
@@ -184,17 +172,6 @@ and
 .Va max
 explicitely.
 .Pp
-.Fn AG_SliderNewUint64*
-and
-.Fn AG_SliderNewSint64*
-only exist if
-.Dv AG_HAVE_64BIT
-is defined.
-.Fn AG_SliderNewLongDouble*
-only exists if
-.Dv AG_HAVE_LONG_DOUBLE
-is defined.
-.Pp
 .Fn AG_SliderSetIntIncrement
 and
 .Fn AG_SliderSetRealIncrement
@@ -227,16 +204,12 @@ Unsigned 8-bit position/range
 Unsigned 16-bit position/range
 .It Va Uint32 *{value,min,max}
 Unsigned 32-bit position/range
-.It Va Uint64 *{value,min,max}
-Unsigned 64-bit position/range
 .It Va Sint8 *{value,min,max}
 Signed 8-bit position/range
 .It Va Sint16 *{value,min,max}
 Signed 16-bit position/range
 .It Va Sint32 *{value,min,max}
 Signed 32-bit position/range
-.It Va Uint64 *{value,min,max}
-Signed 64-bit position/range
 .El
 .Pp
 The slider is positioned to represent
@@ -253,18 +226,6 @@ and
 bindings must share the same type as
 .Va value .
 .Pp
-The
-.Ft Uint64 ,
-.Ft Sint64
-and
-.Ft long double
-types are only available on platforms which support these types.
-The
-.Ft Uint64 ,
-.Ft Sint64
-and
-.Ft long double
-types are only available on platforms which support these types.
 .Sh EVENTS
 The
 .Nm

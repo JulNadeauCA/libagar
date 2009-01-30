@@ -519,8 +519,8 @@ package agar.core.object is
   procedure free_children (object : object_access_t);
   pragma import (c, free_children, "AG_ObjectFreeChildren");
 
-  procedure free_props (object : object_access_t);
-  pragma import (c, free_props, "AG_ObjectFreeProps");
+  procedure free_variables (object : object_access_t);
+  pragma import (c, free_variables, "AG_ObjectFreeVariables");
 
   procedure free_events (object : object_access_t);
   pragma import (c, free_events, "AG_ObjectFreeEvents");

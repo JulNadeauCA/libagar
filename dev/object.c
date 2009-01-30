@@ -96,9 +96,8 @@ PollDeps(AG_Event *event)
 }
 
 static void
-PollProps(AG_Event *event)
+PollVariables(AG_Event *event)
 {
-	char val[AG_TLIST_LABEL_MAX];
 	AG_Tlist *tl = AG_SELF();
 	AG_Object *ob = AG_PTR(1);
 	Uint i;
@@ -106,8 +105,19 @@ PollProps(AG_Event *event)
 	AG_TlistClear(tl);
 	for (i = 0; i < ob->nVars; i++) {
 		AG_Variable *V = &ob->vars[i];
-		AG_PropPrint(val, sizeof(val), ob, V->name);
-		AG_TlistAdd(tl, NULL, "%s = %s", V->name, val);
+		AG_TlistItem *ti;
+
+		AG_LockVariable(V);
+		if (V->fn.fnVoid != NULL &&
+		    AG_EvalVariable(ob, V) == -1) {
+			ti = AG_TlistAdd(tl, NULL, "%s = <eval failed>", V->name);
+		} else {
+			char val[256];
+			AG_PrintVariable(val, sizeof(val), V);
+			ti = AG_TlistAdd(tl, NULL, "%s = %s", V->name, val);
+		}
+		ti->p1 = V;
+		AG_UnlockVariable(V);
 	}
 	AG_TlistRestore(tl);
 }
@@ -137,7 +147,7 @@ PollEvents(AG_Event *event)
 	
 	AG_TlistClear(tl);
 	TAILQ_FOREACH(ev, &ob->events, events) {
-		char args[AG_TLIST_LABEL_MAX], arg[16];
+		char args[AG_TLIST_LABEL_MAX], arg[64];
 		int i;
 
 		args[0] = '(';
@@ -145,37 +155,17 @@ PollEvents(AG_Event *event)
 		for (i = 1; i < ev->argc; i++) {
 			AG_Variable *V = &ev->argv[i];
 
+			AG_LockVariable(V);
 			if (V->name != NULL && V->name[0] != '\0') {
 				Strlcat(args, V->name, sizeof(args));
 				Strlcat(args, "=", sizeof(args));
 			}
-			switch (V->type) {
-			case AG_VARIABLE_POINTER:
-				Snprintf(arg, sizeof(arg), "%p", ev->argv[i].data.p);
-				break;
-			case AG_VARIABLE_STRING:
-				Snprintf(arg, sizeof(arg), "\"%s\"", ev->argv[i].data.s);
-				break;
-			case AG_VARIABLE_INT:
-				Snprintf(arg, sizeof(arg), "%d", ev->argv[i].data.i);
-				break;
-			case AG_VARIABLE_UINT:
-				Snprintf(arg, sizeof(arg), "%u", (Uint)ev->argv[i].data.i);
-				break;
-			case AG_VARIABLE_FLOAT:
-				Snprintf(arg, sizeof(arg), "<%.04f>", ev->argv[i].data.flt);
-				break;
-			case AG_VARIABLE_DOUBLE:
-				Snprintf(arg, sizeof(arg), "<%.04f>", ev->argv[i].data.dbl);
-				break;
-			default:
-				Snprintf(arg, sizeof(arg), "???");
-				break;
-			}
+			AG_PrintVariable(arg, sizeof(arg), &ev->argv[i]);
+			AG_UnlockVariable(V);
+
 			Strlcat(args, arg, sizeof(args));
-			if (i < ev->argc-1) {
+			if (i < ev->argc-1)
 				Strlcat(args, ", ", sizeof(args));
-			}
 		}
 		Strlcat(args, ")", sizeof(args));
 
@@ -370,10 +360,10 @@ DEV_ObjectEdit(void *p)
 		AG_SetEvent(tl, "tlist-poll", PollEvents, "%p", ob);
 	}
 	
-	ntab = AG_NotebookAddTab(nb, _("Properties"), AG_BOX_VERT);
+	ntab = AG_NotebookAddTab(nb, _("Variables"), AG_BOX_VERT);
 	{
 		tl = AG_TlistNew(ntab, AG_TLIST_POLL|AG_TLIST_EXPAND);
-		AG_SetEvent(tl, "tlist-poll", PollProps, "%p", ob);
+		AG_SetEvent(tl, "tlist-poll", PollVariables, "%p", ob);
 	}
 	
 #if defined(AG_THREADS) && defined(AG_LOCKDEBUG)

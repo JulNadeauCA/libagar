@@ -212,6 +212,7 @@ echo "    --enable-lockdebug        Expensive threads debugging [default: no]"
 echo "    --enable-objdebug         Object system debugging [default: no]"
 echo "    --enable-classdebug       Object class debugging [default: no]"
 echo "    --enable-eventdebug       Event system debugging [default: no]"
+echo "    --enable-legacy           Legacy interfaces [default: yes]"
 echo "    --enable-warnings         Suggested compiler warnings [default: no]"
 echo "    --enable-threads          Thread safety [default: check]"
 echo "    --enable-gui              Build Agar-GUI library [default: yes]"
@@ -3600,6 +3601,17 @@ else
 echo "#undef AG_OBJDEBUG" >config/ag_objdebug.h
 echo "hdefs[\"AG_OBJDEBUG\"] = nil" >>configure.lua
 fi
+if [ "${enable_classdebug}" = "yes" ]
+ then
+AG_CLASSDEBUG="yes"
+echo "#ifndef AG_CLASSDEBUG" > config/ag_classdebug.h
+echo "#define AG_CLASSDEBUG \"$AG_CLASSDEBUG\"" >> config/ag_classdebug.h
+echo "#endif" >> config/ag_classdebug.h
+echo "hdefs[\"AG_CLASSDEBUG\"] = \"$AG_CLASSDEBUG\"" >>configure.lua
+else
+echo "#undef AG_CLASSDEBUG" >config/ag_classdebug.h
+echo "hdefs[\"AG_CLASSDEBUG\"] = nil" >>configure.lua
+fi
 if [ "${enable_eventdebug}" = "yes" ]
  then
 AG_EVENTDEBUG="yes"
@@ -3611,16 +3623,16 @@ else
 echo "#undef AG_EVENTDEBUG" >config/ag_eventdebug.h
 echo "hdefs[\"AG_EVENTDEBUG\"] = nil" >>configure.lua
 fi
-if [ "${enable_classdebug}" = "yes" ]
+if [ "${enable_legacy}" != "no" ]
  then
-AG_CLASSDEBUG="yes"
-echo "#ifndef AG_CLASSDEBUG" > config/ag_classdebug.h
-echo "#define AG_CLASSDEBUG \"$AG_CLASSDEBUG\"" >> config/ag_classdebug.h
-echo "#endif" >> config/ag_classdebug.h
-echo "hdefs[\"AG_CLASSDEBUG\"] = \"$AG_CLASSDEBUG\"" >>configure.lua
+AG_LEGACY="yes"
+echo "#ifndef AG_LEGACY" > config/ag_legacy.h
+echo "#define AG_LEGACY \"$AG_LEGACY\"" >> config/ag_legacy.h
+echo "#endif" >> config/ag_legacy.h
+echo "hdefs[\"AG_LEGACY\"] = \"$AG_LEGACY\"" >>configure.lua
 else
-echo "#undef AG_CLASSDEBUG" >config/ag_classdebug.h
-echo "hdefs[\"AG_CLASSDEBUG\"] = nil" >>configure.lua
+echo "#undef AG_LEGACY" >config/ag_legacy.h
+echo "hdefs[\"AG_LEGACY\"] = nil" >>configure.lua
 fi
 $ECHO_N "checking for SDL (http://www.libsdl.org)..."
 $ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
