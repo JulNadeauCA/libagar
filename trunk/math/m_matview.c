@@ -125,8 +125,8 @@ Init(void *obj)
 	
 	AG_BindInt(mv->hBar, "value", &mv->xOffs);
 	AG_BindInt(mv->vBar, "value", &mv->yOffs);
-	AG_WidgetSetInt(mv->hBar, "min", 0);
-	AG_WidgetSetInt(mv->vBar, "min", 0);
+	AG_SetInt(mv->hBar, "min", 0);
+	AG_SetInt(mv->vBar, "min", 0);
 
 	AG_TextSize("-00", &mv->wEnt, &mv->hEnt);
 

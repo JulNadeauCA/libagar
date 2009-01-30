@@ -10,6 +10,7 @@ REGISTER("--enable-lockdebug",	"Expensive threads debugging [default: no]")
 REGISTER("--enable-objdebug",	"Object system debugging [default: no]")
 REGISTER("--enable-classdebug",	"Object class debugging [default: no]")
 REGISTER("--enable-eventdebug",	"Event system debugging [default: no]")
+REGISTER("--enable-legacy",	"Legacy interfaces [default: yes]")
 
 REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: check]")
@@ -110,15 +111,20 @@ if [ "${enable_objdebug}" = "yes" ]; then
 else
 	HUNDEF(AG_OBJDEBUG)
 fi
+if [ "${enable_classdebug}" = "yes" ]; then
+	HDEFINE(AG_CLASSDEBUG, "yes")
+else
+	HUNDEF(AG_CLASSDEBUG)
+fi
 if [ "${enable_eventdebug}" = "yes" ]; then
 	HDEFINE(AG_EVENTDEBUG, "yes")
 else
 	HUNDEF(AG_EVENTDEBUG)
 fi
-if [ "${enable_classdebug}" = "yes" ]; then
-	HDEFINE(AG_CLASSDEBUG, "yes")
+if [ "${enable_legacy}" != "no" ]; then
+	HDEFINE(AG_LEGACY, "yes")
 else
-	HUNDEF(AG_CLASSDEBUG)
+	HUNDEF(AG_LEGACY)
 fi
 
 # SDL is required.

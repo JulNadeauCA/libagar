@@ -1515,8 +1515,8 @@ UpdateTileSettings(AG_Event *event)
 	AG_Numerical *alpha_num = AG_PTR(6);
 	RG_Tileset *ts = tv->ts;
 	RG_Tile *t = tv->tile;
-	int w = AG_WidgetInt(msb, "xvalue");
-	int h = AG_WidgetInt(msb, "yvalue");
+	int w = AG_GetInt(msb, "xvalue");
+	int h = AG_GetInt(msb, "yvalue");
 	Uint flags = 0;
 
 	if (AG_WidgetBool(ckey_cb, "state"))
@@ -1525,7 +1525,7 @@ UpdateTileSettings(AG_Event *event)
 		flags |= RG_TILE_SRCALPHA;
 
 	RG_TileScale(ts, t, w, h, flags);
-	t->su->format->alpha = AG_WidgetInt(alpha_num, "value");
+	t->su->format->alpha = AG_GetInt(alpha_num, "value");
 	RG_TileviewSetZoom(tv, 100, 0);
 	AG_ViewDetach(dlg_w);
 
@@ -1562,20 +1562,20 @@ TileSettingsDlg(AG_Event *event)
 
 	msb = AG_MSpinbuttonNew(win, 0, "x", _("Size: "));
 	AG_MSpinbuttonSetRange(msb, RG_TILE_SIZE_MIN, RG_TILE_SIZE_MAX);
-	AG_WidgetSetInt(msb, "xvalue", t->su->w);
-	AG_WidgetSetInt(msb, "yvalue", t->su->h);
+	AG_SetInt(msb, "xvalue", t->su->w);
+	AG_SetInt(msb, "yvalue", t->su->h);
 	
 	alpha_num = AG_NumericalNew(win, 0, NULL, _("Overall alpha: "));
 	AG_NumericalSetRange(alpha_num, 0, 255);
-	AG_WidgetSetInt(alpha_num, "value", t->su->format->alpha);
+	AG_SetInt(alpha_num, "value", t->su->format->alpha);
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 	
 	ckey_cb = AG_CheckboxNew(win, 0, _("Colorkey"));
-	AG_WidgetSetInt(ckey_cb, "state", t->flags & RG_TILE_SRCCOLORKEY);
+	AG_SetInt(ckey_cb, "state", t->flags & RG_TILE_SRCCOLORKEY);
 
 	alpha_cb = AG_CheckboxNew(win, 0, _("Source alpha"));
-	AG_WidgetSetInt(alpha_cb, "state", t->flags & RG_TILE_SRCALPHA);
+	AG_SetInt(alpha_cb, "state", t->flags & RG_TILE_SRCALPHA);
 	
 	AG_SeparatorNew(win, AG_SEPARATOR_HORIZ);
 

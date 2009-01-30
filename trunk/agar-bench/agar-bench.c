@@ -293,7 +293,7 @@ main(int argc, char *argv[])
 			AG_TextParseFontSpec(optarg);
 			break;
 		case 'T':
-			AG_SetString(agConfig, "font-path", "%s", optarg);
+			AG_SetString(agConfig, "font-path", optarg);
 			break;
 		case 'r':
 			fps = atoi(optarg);

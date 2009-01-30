@@ -54,40 +54,40 @@ static void
 Bound(AG_Event *event)
 {
 	AG_MSpinbutton *sbu = AG_SELF();
-	AG_WidgetBinding *binding = AG_PTR(1);
+	AG_Variable *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "xvalue") == 0 ||
 	    strcmp(binding->name, "yvalue") == 0) {
-		switch (binding->type) {
-		case AG_WIDGET_INT:
+		switch (AG_VARIABLE_TYPE(binding)) {
+		case AG_VARIABLE_INT:
 			sbu->min = AG_INT_MIN+1;
 			sbu->max = AG_INT_MAX-1;
 			break;
-		case AG_WIDGET_UINT:
+		case AG_VARIABLE_UINT:
 			sbu->min = 0;
 			sbu->max = AG_UINT_MAX-1;
 			break;
-		case AG_WIDGET_UINT8:
+		case AG_VARIABLE_UINT8:
 			sbu->min = 0;
 			sbu->max = 0xffU;
 			break;
-		case AG_WIDGET_SINT8:
+		case AG_VARIABLE_SINT8:
 			sbu->min = -0x7f+1;
 			sbu->max =  0x7f-1;
 			break;
-		case AG_WIDGET_UINT16:
+		case AG_VARIABLE_UINT16:
 			sbu->min = 0;
 			sbu->max = 0xffffU;
 			break;
-		case AG_WIDGET_SINT16:
+		case AG_VARIABLE_SINT16:
 			sbu->min = -0x7fff+1;
 			sbu->max =  0x7fff-1;
 			break;
-		case AG_WIDGET_UINT32:
+		case AG_VARIABLE_UINT32:
 			sbu->min = 0;
 			sbu->max = 0xffffffffU;
 			break;
-		case AG_WIDGET_SINT32:
+		case AG_VARIABLE_SINT32:
 			sbu->min = -0x7fffffff+1;
 			sbu->max =  0x7fffffff-1;
 			break;
@@ -124,12 +124,12 @@ TextReturn(AG_Event *event)
 {
 	char text[AG_TEXTBOX_STRING_MAX];
 	AG_MSpinbutton *sbu = AG_PTR(1);
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *tp = &text[0], *s;
 
 	AG_ObjectLock(sbu);
 
-	stringb = AG_WidgetGetBinding(sbu->input->ed, "string", &s);
+	stringb = AG_GetVariable(sbu->input->ed, "string", &s);
 	Strlcpy(text, s, sizeof(text));
 
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
@@ -138,7 +138,7 @@ TextReturn(AG_Event *event)
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "yvalue", atoi(s));
 	}
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 
 	AG_PostEvent(NULL, sbu, "mspinbutton-return", NULL);
 	AG_WidgetUnfocus(sbu->input);
@@ -151,12 +151,12 @@ TextChanged(AG_Event *event)
 {
 	char text[AG_TEXTBOX_STRING_MAX];
 	AG_MSpinbutton *sbu = AG_PTR(1);
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *tp = &text[0], *s;
 	
 	AG_ObjectLock(sbu);
 
-	stringb = AG_WidgetGetBinding(sbu->input->ed, "string", &s);
+	stringb = AG_GetVariable(sbu->input->ed, "string", &s);
 	Strlcpy(text, s, sizeof(text));
 
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
@@ -165,7 +165,7 @@ TextChanged(AG_Event *event)
 	if ((s = AG_Strsep(&tp, sbu->sep)) != NULL) {
 		AG_MSpinbuttonSetValue(sbu, "yvalue", atoi(s));
 	}
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 
 	AG_PostEvent(NULL, sbu, "mspinbutton-changed", NULL);
 	AG_ObjectUnlock(sbu);
@@ -256,7 +256,7 @@ Init(void *obj)
 	AG_WidgetSetFocusable(sbu->yincbu, 0);
 	AG_WidgetSetFocusable(sbu->ydecbu, 0);
 
-	AG_SetEvent(sbu, "widget-bound", Bound, NULL);
+	AG_SetEvent(sbu, "bound", Bound, NULL);
 	AG_SetEvent(sbu, "window-keydown", KeyDown, NULL);
 }
 
@@ -320,7 +320,7 @@ static void
 Draw(void *obj)
 {
 	AG_MSpinbutton *sbu = obj;
-	AG_WidgetBinding *xvalueb, *yvalueb;
+	AG_Variable *xvalueb, *yvalueb;
 	void *xvalue, *yvalue;
 
 	AG_WidgetDraw(sbu->input);
@@ -332,97 +332,97 @@ Draw(void *obj)
 	if (AG_WidgetFocused(sbu->input))
 		return;
 
-	xvalueb = AG_WidgetGetBinding(sbu, "xvalue", &xvalue);
-	yvalueb = AG_WidgetGetBinding(sbu, "yvalue", &yvalue);
-	switch (xvalueb->type) {
-	case AG_WIDGET_INT:
+	xvalueb = AG_GetVariable(sbu, "xvalue", &xvalue);
+	yvalueb = AG_GetVariable(sbu, "yvalue", &yvalue);
+	switch (AG_VARIABLE_TYPE(xvalueb)) {
+	case AG_VARIABLE_INT:
 		AG_TextboxPrintf(sbu->input, "%d%s%d",
 		    *(int *)xvalue, sbu->sep, *(int *)yvalue);
 		break;
-	case AG_WIDGET_UINT:
+	case AG_VARIABLE_UINT:
 		AG_TextboxPrintf(sbu->input, "%u%s%u",
 		    *(Uint *)xvalue, sbu->sep, *(Uint *)yvalue);
 		break;
-	case AG_WIDGET_UINT8:
+	case AG_VARIABLE_UINT8:
 		AG_TextboxPrintf(sbu->input, "%u%s%u",
 		    *(Uint8 *)xvalue, sbu->sep, *(Uint8 *)yvalue);
 		break;
-	case AG_WIDGET_SINT8:
+	case AG_VARIABLE_SINT8:
 		AG_TextboxPrintf(sbu->input, "%d%s%d",
 		    *(Sint8 *)xvalue, sbu->sep, *(Sint8 *)yvalue);
 		break;
-	case AG_WIDGET_UINT16:
+	case AG_VARIABLE_UINT16:
 		AG_TextboxPrintf(sbu->input, "%u%s%u",
 		    *(Uint16 *)xvalue, sbu->sep, *(Uint16 *)yvalue);
 		break;
-	case AG_WIDGET_SINT16:
+	case AG_VARIABLE_SINT16:
 		AG_TextboxPrintf(sbu->input, "%d%s%d",
 		    *(Sint16 *)xvalue, sbu->sep, *(Sint16 *)yvalue);
 		break;
-	case AG_WIDGET_UINT32:
+	case AG_VARIABLE_UINT32:
 		AG_TextboxPrintf(sbu->input, "%u%s%u",
 		    *(Uint32 *)xvalue, sbu->sep, *(Uint32 *)yvalue);
 		break;
-	case AG_WIDGET_SINT32:
+	case AG_VARIABLE_SINT32:
 		AG_TextboxPrintf(sbu->input, "%d%s%d",
 		    *(Sint32 *)xvalue, sbu->sep, *(Sint32 *)yvalue);
 		break;
 	default:
 		break;
 	}
-	AG_WidgetUnlockBinding(xvalueb);
-	AG_WidgetUnlockBinding(yvalueb);
+	AG_UnlockVariable(xvalueb);
+	AG_UnlockVariable(yvalueb);
 }
 
 void
 AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 {
-	AG_WidgetBinding *valueb, *minb, *maxb;
+	AG_Variable *valueb, *minb, *maxb;
 	void *value;
 	int *min, *max;
 
 	AG_ObjectLock(sbu);
-	valueb = AG_WidgetGetBinding(sbu, which, &value);
-	minb = AG_WidgetGetBinding(sbu, "min", &min);
-	maxb = AG_WidgetGetBinding(sbu, "max", &max);
+	valueb = AG_GetVariable(sbu, which, &value);
+	minb = AG_GetVariable(sbu, "min", &min);
+	maxb = AG_GetVariable(sbu, "max", &max);
 
-	switch (valueb->type) {
-	case AG_WIDGET_INT:
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_INT:
 		if (*(int *)value+inc >= *min &&
 		    *(int *)value+inc <= *max)
 			*(int *)value += inc;
 		break;
-	case AG_WIDGET_UINT:
+	case AG_VARIABLE_UINT:
 		if (*(Uint *)value+inc >= *min &&
 		    *(Uint *)value+inc <= *max)
 			*(Uint *)value += inc;
 		break;
-	case AG_WIDGET_UINT8:
+	case AG_VARIABLE_UINT8:
 		if (*(Uint8 *)value+inc >= *min &&
 		    *(Uint8 *)value+inc <= *max)
 			*(Uint8 *)value += inc;
 		break;
-	case AG_WIDGET_SINT8:
+	case AG_VARIABLE_SINT8:
 		if (*(Sint8 *)value+inc >= *min &&
 		    *(Sint8 *)value+inc <= *max)
 			*(Sint8 *)value += inc;
 		break;
-	case AG_WIDGET_UINT16:
+	case AG_VARIABLE_UINT16:
 		if (*(Uint16 *)value+inc >= *min &&
 		    *(Uint16 *)value+inc <= *max)
 			*(Uint16 *)value += inc;
 		break;
-	case AG_WIDGET_SINT16:
+	case AG_VARIABLE_SINT16:
 		if (*(Sint16 *)value+inc >= *min &&
 		    *(Sint16 *)value+inc <= *max)
 			*(Sint16 *)value += inc;
 		break;
-	case AG_WIDGET_UINT32:
+	case AG_VARIABLE_UINT32:
 		if (*(Uint32 *)value+inc >= *min &&
 		    *(Uint32 *)value+inc <= *max)
 			*(Uint32 *)value += inc;
 		break;
-	case AG_WIDGET_SINT32:
+	case AG_VARIABLE_SINT32:
 		if (*(Sint32 *)value+inc >= *min &&
 		    *(Sint32 *)value+inc <= *max)
 			*(Sint32 *)value += inc;
@@ -433,28 +433,28 @@ AG_MSpinbuttonAddValue(AG_MSpinbutton *sbu, const char *which, int inc)
 
 	AG_PostEvent(NULL, sbu, "mspinbutton-changed", "%s", which);
 
-	AG_WidgetUnlockBinding(maxb);
-	AG_WidgetUnlockBinding(minb);
-	AG_WidgetUnlockBinding(valueb);
+	AG_UnlockVariable(maxb);
+	AG_UnlockVariable(minb);
+	AG_UnlockVariable(valueb);
 	AG_ObjectUnlock(sbu);
 }
 
 void
 AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 {
-	AG_WidgetBinding *valueb, *minb, *maxb;
+	AG_Variable *valueb, *minb, *maxb;
 	void *value;
 	int *min, *max;
 	va_list ap;
 
 	AG_ObjectLock(sbu);
-	valueb = AG_WidgetGetBinding(sbu, which, &value);
-	minb = AG_WidgetGetBinding(sbu, "min", &min);
-	maxb = AG_WidgetGetBinding(sbu, "max", &max);
+	valueb = AG_GetVariable(sbu, which, &value);
+	minb = AG_GetVariable(sbu, "min", &min);
+	maxb = AG_GetVariable(sbu, "max", &max);
 
 	va_start(ap, which);
-	switch (valueb->type) {
-	case AG_WIDGET_INT:
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_INT:
 		{
 			int i = va_arg(ap, int);
 
@@ -467,7 +467,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 			}
 		}
 		break;
-	case AG_WIDGET_UINT:
+	case AG_VARIABLE_UINT:
 		{
 			Uint i = va_arg(ap, unsigned int);
 
@@ -480,7 +480,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 			}
 		}
 		break;
-	case AG_WIDGET_UINT8:
+	case AG_VARIABLE_UINT8:
 		{
 			Uint8 i = (Uint8)va_arg(ap, int);
 
@@ -493,7 +493,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 			}
 		}
 		break;
-	case AG_WIDGET_SINT8:
+	case AG_VARIABLE_SINT8:
 		{
 			Sint8 i = (Sint8)va_arg(ap, int);
 
@@ -506,7 +506,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 			}
 		}
 		break;
-	case AG_WIDGET_UINT16:
+	case AG_VARIABLE_UINT16:
 		{
 			Uint16 i = (Uint16)va_arg(ap, int);
 
@@ -519,7 +519,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 			}
 		}
 		break;
-	case AG_WIDGET_SINT16:
+	case AG_VARIABLE_SINT16:
 		{
 			Sint16 i = (Sint16)va_arg(ap, int);
 
@@ -532,7 +532,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 			}
 		}
 		break;
-	case AG_WIDGET_UINT32:
+	case AG_VARIABLE_UINT32:
 		{
 			Uint32 i = (Uint32)va_arg(ap, int);
 
@@ -545,7 +545,7 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 			}
 		}
 		break;
-	case AG_WIDGET_SINT32:
+	case AG_VARIABLE_SINT32:
 		{
 			Sint32 i = (Sint32)va_arg(ap, int);
 
@@ -565,51 +565,51 @@ AG_MSpinbuttonSetValue(AG_MSpinbutton *sbu, const char *which, ...)
 
 	AG_PostEvent(NULL, sbu, "mspinbutton-changed", "%s", which);
 
-	AG_WidgetUnlockBinding(valueb);
-	AG_WidgetUnlockBinding(minb);
-	AG_WidgetUnlockBinding(maxb);
+	AG_UnlockVariable(valueb);
+	AG_UnlockVariable(minb);
+	AG_UnlockVariable(maxb);
 	AG_ObjectUnlock(sbu);
 }
 
 void
 AG_MSpinbuttonSetMin(AG_MSpinbutton *sbu, int nmin)
 {
-	AG_WidgetBinding *minb;
+	AG_Variable *minb;
 	int *min;
 
 	AG_ObjectLock(sbu);
-	minb = AG_WidgetGetBinding(sbu, "min", &min);
+	minb = AG_GetVariable(sbu, "min", &min);
 	*min = nmin;
-	AG_WidgetUnlockBinding(minb);
+	AG_UnlockVariable(minb);
 	AG_ObjectUnlock(sbu);
 }
 
 void
 AG_MSpinbuttonSetMax(AG_MSpinbutton *sbu, int nmax)
 {
-	AG_WidgetBinding *maxb;
+	AG_Variable *maxb;
 	int *max;
 
 	AG_ObjectLock(sbu);
-	maxb = AG_WidgetGetBinding(sbu, "max", &max);
+	maxb = AG_GetVariable(sbu, "max", &max);
 	*max = nmax;
-	AG_WidgetUnlockBinding(maxb);
+	AG_UnlockVariable(maxb);
 	AG_ObjectUnlock(sbu);
 }
 
 void
 AG_MSpinbuttonSetRange(AG_MSpinbutton *sbu, int nmin, int nmax)
 {
-	AG_WidgetBinding *minb, *maxb;
+	AG_Variable *minb, *maxb;
 	int *min, *max;
 
 	AG_ObjectLock(sbu);
-	minb = AG_WidgetGetBinding(sbu, "min", &min);
-	maxb = AG_WidgetGetBinding(sbu, "max", &max);
+	minb = AG_GetVariable(sbu, "min", &min);
+	maxb = AG_GetVariable(sbu, "max", &max);
 	*min = nmin;
 	*max = nmax;
-	AG_WidgetUnlockBinding(minb);
-	AG_WidgetUnlockBinding(maxb);
+	AG_UnlockVariable(minb);
+	AG_UnlockVariable(maxb);
 	AG_ObjectUnlock(sbu);
 }
 

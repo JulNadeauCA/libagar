@@ -190,7 +190,7 @@ FOREACH_VISIBLE_COLUMN(AG_Treetbl *tt, VisibleForeachFn foreachFn, void *arg1,
 {
 	int x, first_col, wCol;
 	Uint i;
-	int view_edge = (tt->hBar ? AG_WidgetInt(tt->hBar, "value") : 0);
+	int view_edge = (tt->hBar ? AG_GetInt(tt->hBar, "value") : 0);
 
 	x = 0;
 	first_col = -1;
@@ -474,14 +474,14 @@ Init(void *obj)
 	tt->vBar = AG_ScrollbarNew(tt, AG_SCROLLBAR_VERT, 0);
 	tt->hBar = NULL;
 
-	AG_WidgetSetInt(tt->vBar, "min", 0);
-	AG_WidgetSetInt(tt->vBar, "max", 0);
-	AG_WidgetSetInt(tt->vBar, "value", 0);
+	AG_SetInt(tt->vBar, "min", 0);
+	AG_SetInt(tt->vBar, "max", 0);
+	AG_SetInt(tt->vBar, "value", 0);
 
 	if (tt->hBar != NULL) {
-		AG_WidgetSetInt(tt->hBar, "min", 0);
-		AG_WidgetSetInt(tt->hBar, "max", 0);
-		AG_WidgetSetInt(tt->hBar, "value", 0);
+		AG_SetInt(tt->hBar, "min", 0);
+		AG_SetInt(tt->hBar, "max", 0);
+		AG_SetInt(tt->hBar, "value", 0);
 	}
 	tt->column = NULL;
 	tt->n = 0;
@@ -1083,15 +1083,15 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		if (col_w > WIDTH(tt->hBar)) {
 			int scroll = col_w - WIDTH(tt->hBar);
 
-			AG_WidgetSetInt(tt->hBar, "max", scroll);
-			if (AG_WidgetInt(tt->hBar, "value") > scroll) {
-				AG_WidgetSetInt(tt->hBar, "value", scroll);
+			AG_SetInt(tt->hBar, "max", scroll);
+			if (AG_GetInt(tt->hBar, "value") > scroll) {
+				AG_SetInt(tt->hBar, "value", scroll);
 			}
 			AG_ScrollbarSetBarSize(tt->hBar,
 			    WIDTH(tt->hBar)*(a->w - tt->hBar->wButton*3) / 
 			    col_w);
 		} else {
-			AG_WidgetSetInt(tt->hBar, "value", 0);
+			AG_SetInt(tt->hBar, "value", 0);
 			AG_ScrollbarSetBarSize(tt->hBar, -1);
 		}
 	}
@@ -1315,9 +1315,9 @@ ViewChanged(AG_Treetbl *tt)
 	if (max && (tt->r.h % tt->hRow) < 16) {
 		max++;
 	}
-	AG_WidgetSetInt(tt->vBar, "max", max);
-	if (AG_WidgetInt(tt->vBar, "value") > max)
-		AG_WidgetSetInt(tt->vBar, "value", max);
+	AG_SetInt(tt->vBar, "max", max);
+	if (AG_GetInt(tt->vBar, "value") > max)
+		AG_SetInt(tt->vBar, "value", max);
 
 	/* Calculate Scrollbar Size */
 	if (rows_per_view && tt->nExpandedRows > rows_per_view) {
@@ -1328,7 +1328,7 @@ ViewChanged(AG_Treetbl *tt)
 	}
 
 	/* locate visible rows */
-	value = AG_WidgetInt(tt->vBar, "value");
+	value = AG_GetInt(tt->vBar, "value");
 	filled = ViewChangedRecurse(tt, &tt->children, 0, 0, &value);
 
 	/* blank empty rows */

@@ -62,7 +62,7 @@ SetPath(AG_Event *event)
 	char *varname = AG_STRING(1);
 
 	AG_TextboxCopyString(tbox, path, sizeof(path));
-	AG_SetString(agConfig, varname, "%s", path);
+	AG_SetString(agConfig, varname, path);
 	AG_WidgetUnfocus(tbox);
 }
 

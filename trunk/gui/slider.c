@@ -66,8 +66,8 @@ AG_SliderNewIntR(void *parent, enum ag_slider_type type, Uint flags,
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
 	if (val != NULL) { AG_BindInt(sl, "value", val); }
-	AG_WidgetSetInt(sl, "min", min);
-	AG_WidgetSetInt(sl, "max", max);
+	AG_SetInt(sl, "min", min);
+	AG_SetInt(sl, "max", max);
 	return (sl);
 }
 
@@ -87,8 +87,8 @@ AG_SliderNewUintR(void *parent, enum ag_slider_type type, Uint flags,
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
 	if (val != NULL) { AG_BindUint(sl, "value", val); }
-	AG_WidgetSetUint(sl, "min", min);
-	AG_WidgetSetUint(sl, "max", max);
+	AG_SetUint(sl, "min", min);
+	AG_SetUint(sl, "max", max);
 	return (sl);
 }
 
@@ -108,8 +108,8 @@ AG_SliderNewUint8R(void *parent, enum ag_slider_type type, Uint flags,
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
 	if (val != NULL) { AG_BindUint8(sl, "value", val); }
-	AG_WidgetSetUint8(sl, "min", min);
-	AG_WidgetSetUint8(sl, "max", max);
+	AG_SetUint8(sl, "min", min);
+	AG_SetUint8(sl, "max", max);
 	return (sl);
 }
 
@@ -129,8 +129,8 @@ AG_SliderNewSint8R(void *parent, enum ag_slider_type type, Uint flags,
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
 	if (val != NULL) { AG_BindSint8(sl, "value", val); }
-	AG_WidgetSetSint8(sl, "min", min);
-	AG_WidgetSetSint8(sl, "max", max);
+	AG_SetSint8(sl, "min", min);
+	AG_SetSint8(sl, "max", max);
 	return (sl);
 }
 
@@ -150,8 +150,8 @@ AG_SliderNewUint16R(void *parent, enum ag_slider_type type, Uint flags,
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
 	if (val != NULL) { AG_BindUint16(sl, "value", val); }
-	AG_WidgetSetUint16(sl, "min", min);
-	AG_WidgetSetUint16(sl, "max", max);
+	AG_SetUint16(sl, "min", min);
+	AG_SetUint16(sl, "max", max);
 	return (sl);
 }
 
@@ -171,8 +171,8 @@ AG_SliderNewSint16R(void *parent, enum ag_slider_type type, Uint flags,
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
 	if (val != NULL) { AG_BindSint16(sl, "value", val); }
-	AG_WidgetSetSint16(sl, "min", min);
-	AG_WidgetSetSint16(sl, "max", max);
+	AG_SetSint16(sl, "min", min);
+	AG_SetSint16(sl, "max", max);
 	return (sl);
 }
 
@@ -192,8 +192,8 @@ AG_SliderNewUint32R(void *parent, enum ag_slider_type type, Uint flags,
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
 	if (val != NULL) { AG_BindUint32(sl, "value", val); }
-	AG_WidgetSetUint32(sl, "min", min);
-	AG_WidgetSetUint32(sl, "max", max);
+	AG_SetUint32(sl, "min", min);
+	AG_SetUint32(sl, "max", max);
 	return (sl);
 }
 
@@ -213,8 +213,8 @@ AG_SliderNewSint32R(void *parent, enum ag_slider_type type, Uint flags,
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
 	if (val != NULL) { AG_BindSint32(sl, "value", val); }
-	AG_WidgetSetSint32(sl, "min", min);
-	AG_WidgetSetSint32(sl, "max", max);
+	AG_SetSint32(sl, "min", min);
+	AG_SetSint32(sl, "max", max);
 	return (sl);
 }
 
@@ -235,8 +235,8 @@ AG_SliderNewFltR(void *parent, enum ag_slider_type type, Uint flags,
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
 	if (val != NULL) { AG_BindFloat(sl, "value", val); }
-	AG_WidgetSetFloat(sl, "min", min);
-	AG_WidgetSetFloat(sl, "max", max);
+	AG_SetFloat(sl, "min", min);
+	AG_SetFloat(sl, "max", max);
 	return (sl);
 }
 
@@ -257,8 +257,8 @@ AG_SliderNewDblR(void *parent, enum ag_slider_type type, Uint flags,
 {
 	AG_Slider *sl = AG_SliderNew(parent, type, flags);
 	if (val != NULL) { AG_BindDouble(sl, "value", val); }
-	AG_WidgetSetDouble(sl, "min", min);
-	AG_WidgetSetDouble(sl, "max", max);
+	AG_SetDouble(sl, "min", min);
+	AG_SetDouble(sl, "max", max);
 	return (sl);
 }
 
@@ -312,34 +312,34 @@ AG_SliderSetRealIncrement(AG_Slider *sl, double inc)
 static __inline__ int
 GetPosition(AG_Slider *sl, int *x)
 {
-	AG_WidgetBinding *bMin, *bMax, *bVal;
+	AG_Variable *bMin, *bMax, *bVal;
 	void *pMin, *pMax, *pVal;
 
-	bVal = AG_WidgetGetBinding(sl, "value", &pVal);
-	bMin = AG_WidgetGetBinding(sl, "min", &pMin);
-	bMax = AG_WidgetGetBinding(sl, "max", &pMax);
+	bVal = AG_GetVariable(sl, "value", &pVal);
+	bMin = AG_GetVariable(sl, "min", &pMin);
+	bMax = AG_GetVariable(sl, "max", &pMax);
 
-	switch (bVal->type) {
-	case AG_WIDGET_INT:	GET_POSITION(int);	break;
-	case AG_WIDGET_UINT:	GET_POSITION(Uint);	break;
-	case AG_WIDGET_FLOAT:	GET_POSITION(float);	break;
-	case AG_WIDGET_DOUBLE:	GET_POSITION(double);	break;
-	case AG_WIDGET_UINT8:	GET_POSITION(Uint8);	break;
-	case AG_WIDGET_SINT8:	GET_POSITION(Sint8);	break;
-	case AG_WIDGET_UINT16:	GET_POSITION(Uint16);	break;
-	case AG_WIDGET_SINT16:	GET_POSITION(Sint16);	break;
-	case AG_WIDGET_UINT32:	GET_POSITION(Uint32);	break;
-	case AG_WIDGET_SINT32:	GET_POSITION(Sint32);	break;
-	default: *x = 0;				break;
+	switch (AG_VARIABLE_TYPE(bVal)) {
+	case AG_VARIABLE_INT:		GET_POSITION(int);	break;
+	case AG_VARIABLE_UINT:		GET_POSITION(Uint);	break;
+	case AG_VARIABLE_FLOAT:		GET_POSITION(float);	break;
+	case AG_VARIABLE_DOUBLE:	GET_POSITION(double);	break;
+	case AG_VARIABLE_UINT8:		GET_POSITION(Uint8);	break;
+	case AG_VARIABLE_SINT8:		GET_POSITION(Sint8);	break;
+	case AG_VARIABLE_UINT16:	GET_POSITION(Uint16);	break;
+	case AG_VARIABLE_SINT16:	GET_POSITION(Sint16);	break;
+	case AG_VARIABLE_UINT32:	GET_POSITION(Uint32);	break;
+	case AG_VARIABLE_SINT32:	GET_POSITION(Sint32);	break;
+	default: *x = 0;					break;
 	} 
-	AG_WidgetUnlockBinding(bMax);
-	AG_WidgetUnlockBinding(bMin);
-	AG_WidgetUnlockBinding(bVal);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bVal);
 	return (0);
 fail:
-	AG_WidgetUnlockBinding(bMax);
-	AG_WidgetUnlockBinding(bMin);
-	AG_WidgetUnlockBinding(bVal);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bVal);
 	return (-1);
 }
 #undef GET_POSITION
@@ -361,30 +361,30 @@ fail:
 static __inline__ void
 SeekToPosition(AG_Slider *sl, int x)
 {
-	AG_WidgetBinding *bMin, *bMax, *bVal;
+	AG_Variable *bMin, *bMax, *bVal;
 	void *pMin, *pMax, *pVal;
 
-	bVal = AG_WidgetGetBinding(sl, "value", &pVal);
-	bMin = AG_WidgetGetBinding(sl, "min", &pMin);
-	bMax = AG_WidgetGetBinding(sl, "max", &pMax);
+	bVal = AG_GetVariable(sl, "value", &pVal);
+	bMin = AG_GetVariable(sl, "min", &pMin);
+	bMax = AG_GetVariable(sl, "max", &pMax);
 
-	switch (bVal->type) {
-	case AG_WIDGET_INT:	SEEK_TO_POSITION(int);		break;
-	case AG_WIDGET_UINT:	SEEK_TO_POSITION(Uint);		break;
-	case AG_WIDGET_FLOAT:	SEEK_TO_POSITION(float);	break;
-	case AG_WIDGET_DOUBLE:	SEEK_TO_POSITION(double);	break;
-	case AG_WIDGET_UINT8:	SEEK_TO_POSITION(Uint8);	break;
-	case AG_WIDGET_SINT8:	SEEK_TO_POSITION(Sint8);	break;
-	case AG_WIDGET_UINT16:	SEEK_TO_POSITION(Uint16);	break;
-	case AG_WIDGET_SINT16:	SEEK_TO_POSITION(Sint16);	break;
-	case AG_WIDGET_UINT32:	SEEK_TO_POSITION(Uint32);	break;
-	case AG_WIDGET_SINT32:	SEEK_TO_POSITION(Sint32);	break;
-	default:						break;
+	switch (AG_VARIABLE_TYPE(bVal)) {
+	case AG_VARIABLE_INT:		SEEK_TO_POSITION(int);		break;
+	case AG_VARIABLE_UINT:		SEEK_TO_POSITION(Uint);		break;
+	case AG_VARIABLE_FLOAT:		SEEK_TO_POSITION(float);	break;
+	case AG_VARIABLE_DOUBLE:	SEEK_TO_POSITION(double);	break;
+	case AG_VARIABLE_UINT8:		SEEK_TO_POSITION(Uint8);	break;
+	case AG_VARIABLE_SINT8:		SEEK_TO_POSITION(Sint8);	break;
+	case AG_VARIABLE_UINT16:	SEEK_TO_POSITION(Uint16);	break;
+	case AG_VARIABLE_SINT16:	SEEK_TO_POSITION(Sint16);	break;
+	case AG_VARIABLE_UINT32:	SEEK_TO_POSITION(Uint32);	break;
+	case AG_VARIABLE_SINT32:	SEEK_TO_POSITION(Sint32);	break;
+	default:							break;
 	} 
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
-	AG_WidgetUnlockBinding(bMax);
-	AG_WidgetUnlockBinding(bMin);
-	AG_WidgetUnlockBinding(bVal);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bVal);
 }
 #undef SEEK_TO_POSITION
 
@@ -406,30 +406,30 @@ SeekToPosition(AG_Slider *sl, int x)
 static void
 Decrement(AG_Slider *sl, int v)
 {
-	AG_WidgetBinding *bMin, *bMax, *bVal;
+	AG_Variable *bMin, *bMax, *bVal;
 	void *pMin, *pMax, *pVal;
 
-	bVal = AG_WidgetGetBinding(sl, "value", &pVal);
-	bMin = AG_WidgetGetBinding(sl, "min", &pMin);
-	bMax = AG_WidgetGetBinding(sl, "max", &pMax);
+	bVal = AG_GetVariable(sl, "value", &pVal);
+	bMin = AG_GetVariable(sl, "min", &pMin);
+	bMax = AG_GetVariable(sl, "max", &pMax);
 
-	switch (bVal->type) {
-	case AG_WIDGET_INT:	DECREMENT_INT(int);	break;
-	case AG_WIDGET_UINT:	DECREMENT_INT(Uint);	break;
-	case AG_WIDGET_FLOAT:	DECREMENT_REAL(float);	break;
-	case AG_WIDGET_DOUBLE:	DECREMENT_REAL(double);	break;
-	case AG_WIDGET_UINT8:	DECREMENT_INT(Uint8);	break;
-	case AG_WIDGET_SINT8:	DECREMENT_INT(Sint8);	break;
-	case AG_WIDGET_UINT16:	DECREMENT_INT(Uint16);	break;
-	case AG_WIDGET_SINT16:	DECREMENT_INT(Sint16);	break;
-	case AG_WIDGET_UINT32:	DECREMENT_INT(Uint32);	break;
-	case AG_WIDGET_SINT32:	DECREMENT_INT(Sint32);	break;
-	default:					break;
+	switch (AG_VARIABLE_TYPE(bVal)) {
+	case AG_VARIABLE_INT:		DECREMENT_INT(int);	break;
+	case AG_VARIABLE_UINT:		DECREMENT_INT(Uint);	break;
+	case AG_VARIABLE_FLOAT:		DECREMENT_REAL(float);	break;
+	case AG_VARIABLE_DOUBLE:	DECREMENT_REAL(double);	break;
+	case AG_VARIABLE_UINT8:		DECREMENT_INT(Uint8);	break;
+	case AG_VARIABLE_SINT8:		DECREMENT_INT(Sint8);	break;
+	case AG_VARIABLE_UINT16:	DECREMENT_INT(Uint16);	break;
+	case AG_VARIABLE_SINT16:	DECREMENT_INT(Sint16);	break;
+	case AG_VARIABLE_UINT32:	DECREMENT_INT(Uint32);	break;
+	case AG_VARIABLE_SINT32:	DECREMENT_INT(Sint32);	break;
+	default:						break;
 	} 
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
-	AG_WidgetUnlockBinding(bMax);
-	AG_WidgetUnlockBinding(bMin);
-	AG_WidgetUnlockBinding(bVal);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bVal);
 }
 #undef DECREMENT_INT
 #undef DECREMENT_REAL
@@ -452,30 +452,30 @@ Decrement(AG_Slider *sl, int v)
 static void
 Increment(AG_Slider *sl, int v)
 {
-	AG_WidgetBinding *bMin, *bMax, *bVal;
+	AG_Variable *bMin, *bMax, *bVal;
 	void *pMin, *pMax, *pVal;
 
-	bVal = AG_WidgetGetBinding(sl, "value", &pVal);
-	bMin = AG_WidgetGetBinding(sl, "min", &pMin);
-	bMax = AG_WidgetGetBinding(sl, "max", &pMax);
+	bVal = AG_GetVariable(sl, "value", &pVal);
+	bMin = AG_GetVariable(sl, "min", &pMin);
+	bMax = AG_GetVariable(sl, "max", &pMax);
 
-	switch (bVal->type) {
-	case AG_WIDGET_INT:	INCREMENT_INT(int);	break;
-	case AG_WIDGET_UINT:	INCREMENT_INT(Uint);	break;
-	case AG_WIDGET_FLOAT:	INCREMENT_REAL(float);	break;
-	case AG_WIDGET_DOUBLE:	INCREMENT_REAL(double);	break;
-	case AG_WIDGET_UINT8:	INCREMENT_INT(Uint8);	break;
-	case AG_WIDGET_SINT8:	INCREMENT_INT(Sint8);	break;
-	case AG_WIDGET_UINT16:	INCREMENT_INT(Uint16);	break;
-	case AG_WIDGET_SINT16:	INCREMENT_INT(Sint16);	break;
-	case AG_WIDGET_UINT32:	INCREMENT_INT(Uint32);	break;
-	case AG_WIDGET_SINT32:	INCREMENT_INT(Sint32);	break;
-	default:					break;
+	switch (AG_VARIABLE_TYPE(bVal)) {
+	case AG_VARIABLE_INT:		INCREMENT_INT(int);	break;
+	case AG_VARIABLE_UINT:		INCREMENT_INT(Uint);	break;
+	case AG_VARIABLE_FLOAT:		INCREMENT_REAL(float);	break;
+	case AG_VARIABLE_DOUBLE:	INCREMENT_REAL(double);	break;
+	case AG_VARIABLE_UINT8:		INCREMENT_INT(Uint8);	break;
+	case AG_VARIABLE_SINT8:		INCREMENT_INT(Sint8);	break;
+	case AG_VARIABLE_UINT16:	INCREMENT_INT(Uint16);	break;
+	case AG_VARIABLE_SINT16:	INCREMENT_INT(Sint16);	break;
+	case AG_VARIABLE_UINT32:	INCREMENT_INT(Uint32);	break;
+	case AG_VARIABLE_SINT32:	INCREMENT_INT(Sint32);	break;
+	default:						break;
 	} 
 	AG_PostEvent(NULL, sl, "slider-changed", NULL);
-	AG_WidgetUnlockBinding(bMax);
-	AG_WidgetUnlockBinding(bMin);
-	AG_WidgetUnlockBinding(bVal);
+	AG_UnlockVariable(bMax);
+	AG_UnlockVariable(bMin);
+	AG_UnlockVariable(bVal);
 }
 #undef INCREMENT_INT
 #undef INCREMENT_REAL
@@ -608,8 +608,8 @@ static void
 BoundValue(AG_Event *event)
 {
 	AG_Slider *sl = AG_SELF();
-	AG_WidgetBinding *bNew = AG_PTR(1);
-	AG_WidgetBinding *bValue;
+	AG_Variable *bNew = AG_PTR(1);
+	AG_Variable *bValue;
 	void *pValue;
 
 	/*
@@ -618,12 +618,12 @@ BoundValue(AG_Event *event)
 	 * implemented if some application really requires it.
 	 */
 	if (!strcmp(bNew->name, "min") || !strcmp(bNew->name, "max")) {
-		bValue = AG_WidgetGetBinding(sl, "value", &pValue);
+		bValue = AG_GetVariable(sl, "value", &pValue);
 		if (bValue->type != bNew->type) {
 			AG_FatalError("Slider \"%s\" binding type disagree "
 			              "with \"value\" binding", bNew->name);
 		}
-		AG_WidgetUnlockBinding(bValue);
+		AG_UnlockVariable(bValue);
 	}
 }
 
@@ -659,7 +659,7 @@ Init(void *obj)
 	AG_SetEvent(sl, "window-keyup", KeyUp, NULL);
 	AG_SetEvent(sl, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(sl, "widget-hidden", LostFocus, NULL);
-	AG_SetEvent(sl, "widget-bound", BoundValue, NULL);
+	AG_SetEvent(sl, "bound", BoundValue, NULL);
 
 	AG_SetTimeout(&sl->incTo, IncrementTimeout, NULL, 0);
 	AG_SetTimeout(&sl->decTo, DecrementTimeout, NULL, 0);

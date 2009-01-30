@@ -120,10 +120,10 @@ SelectObject(AG_Event *event)
 {
 	AG_ObjectSelector *os = AG_PTR(1);
 	AG_TlistItem *it = AG_PTR(2);
-	AG_WidgetBinding *objectb;
+	AG_Variable *objectb;
 	void **object;
 	
-	objectb = AG_WidgetGetBinding(os, "object", &object);
+	objectb = AG_GetVariable(os, "object", &object);
 
 	if (*object != NULL) {
 		if (os->flags & AG_OBJSEL_PAGE_DATA) {
@@ -139,14 +139,14 @@ SelectObject(AG_Event *event)
 	if (os->flags & AG_OBJSEL_PAGE_DATA) {
 		AG_ObjectPageIn(*object);
 	}
-	AG_WidgetUnlockBinding(objectb);
+	AG_UnlockVariable(objectb);
 }
 
 static void
 Bound(AG_Event *event)
 {
 	AG_ObjectSelector *os = AG_SELF();
-	AG_WidgetBinding *b = AG_PTR(1);
+	AG_Variable *b = AG_PTR(1);
 
 	if (strcmp(b->name, "object") == 0) {
 		void **object = b->data.p;
@@ -177,7 +177,7 @@ Init(void *obj)
 
 	AG_SetEvent(os->com.list, "tlist-poll", PollObjects, "%p", os);
 	AG_SetEvent(&os->com, "combo-selected", SelectObject, "%p", os);
-	AG_SetEvent(os, "widget-bound", Bound, NULL);
+	AG_SetEvent(os, "bound", Bound, NULL);
 }
 
 void

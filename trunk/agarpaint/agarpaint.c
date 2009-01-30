@@ -606,7 +606,7 @@ main(int argc, char *argv[])
 		return (-1);
 	}
 	AG_SetRefreshRate(fps);
-	AG_SetString(agConfig, "load-path", ".:%s", SHAREDIR);
+	AG_PrtString(agConfig, "load-path", ".:%s", SHAREDIR);
 
 	AG_AtExitFuncEv(Quit);
 	AG_BindGlobalKeyEv(SDLK_ESCAPE, KMOD_NONE, Quit);

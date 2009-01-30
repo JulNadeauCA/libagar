@@ -161,7 +161,7 @@ getBool(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetBool(self, name);
+	RETVAL = AG_GetBool(self, name);
 OUTPUT:
 	RETVAL
 
@@ -170,7 +170,7 @@ getInt(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetInt(self, name);
+	RETVAL = AG_GetInt(self, name);
 OUTPUT:
 	RETVAL
 
@@ -179,7 +179,7 @@ getUint(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetUint(self, name);
+	RETVAL = AG_GetUint(self, name);
 OUTPUT:
 	RETVAL
 
@@ -188,7 +188,7 @@ getUint8(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetUint8(self, name);
+	RETVAL = AG_GetUint8(self, name);
 OUTPUT:
 	RETVAL
 
@@ -197,7 +197,7 @@ getSint8(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetSint8(self, name);
+	RETVAL = AG_GetSint8(self, name);
 OUTPUT:
 	RETVAL
 
@@ -206,7 +206,7 @@ getUint16(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetUint16(self, name);
+	RETVAL = AG_GetUint16(self, name);
 OUTPUT:
 	RETVAL
 
@@ -215,7 +215,7 @@ getSint16(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetSint16(self, name);
+	RETVAL = AG_GetSint16(self, name);
 OUTPUT:
 	RETVAL
 
@@ -224,7 +224,7 @@ getUint32(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetUint32(self, name);
+	RETVAL = AG_GetUint32(self, name);
 OUTPUT:
 	RETVAL
 
@@ -233,7 +233,7 @@ getSint32(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetSint32(self, name);
+	RETVAL = AG_GetSint32(self, name);
 OUTPUT:
 	RETVAL
 
@@ -242,7 +242,7 @@ getFloat(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetFloat(self, name);
+	RETVAL = AG_GetFloat(self, name);
 OUTPUT:
 	RETVAL
 
@@ -251,7 +251,7 @@ getDouble(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = AG_WidgetDouble(self, name);
+	RETVAL = AG_GetDouble(self, name);
 OUTPUT:
 	RETVAL
 
@@ -260,7 +260,7 @@ getString(self, name)
 	Agar::Widget self
 	const char * name
 CODE:
-	RETVAL = newSVpv(AG_WidgetString(self, name), 0);
+	RETVAL = newSVpv(AG_GetStringDup(self, name), 0);
 OUTPUT:
 	RETVAL
 
@@ -270,7 +270,7 @@ setBool(self, name, val)
 	const char * name
 	int val
 CODE:
-	AG_WidgetSetBool(self, name, val);
+	AG_SetBool(self, name, val);
 
 void
 setInt(self, name, val)
@@ -278,7 +278,7 @@ setInt(self, name, val)
 	const char * name
 	int val
 CODE:
-	AG_WidgetSetInt(self, name, val);
+	AG_SetInt(self, name, val);
 
 void
 setUint(self, name, val)
@@ -286,7 +286,7 @@ setUint(self, name, val)
 	const char * name
 	Uint val
 CODE:
-	AG_WidgetSetUint(self, name, val);
+	AG_SetUint(self, name, val);
 
 void
 setUint8(self, name, val)
@@ -294,7 +294,7 @@ setUint8(self, name, val)
 	const char * name
 	Uint8 val
 CODE:
-	AG_WidgetSetUint8(self, name, val);
+	AG_SetUint8(self, name, val);
 
 void
 setSint8(self, name, val)
@@ -302,7 +302,7 @@ setSint8(self, name, val)
 	const char * name
 	Sint8 val
 CODE:
-	AG_WidgetSetSint8(self, name, val);
+	AG_SetSint8(self, name, val);
 
 void
 setUint16(self, name, val)
@@ -310,7 +310,7 @@ setUint16(self, name, val)
 	const char * name
 	Uint16 val
 CODE:
-	AG_WidgetSetUint16(self, name, val);
+	AG_SetUint16(self, name, val);
 
 void
 setSint16(self, name, val)
@@ -318,7 +318,7 @@ setSint16(self, name, val)
 	const char * name
 	Sint16 val
 CODE:
-	AG_WidgetSetSint16(self, name, val);
+	AG_SetSint16(self, name, val);
 
 void
 setUint32(self, name, val)
@@ -326,7 +326,7 @@ setUint32(self, name, val)
 	const char * name
 	Uint32 val
 CODE:
-	AG_WidgetSetUint32(self, name, val);
+	AG_SetUint32(self, name, val);
 
 void
 setSint32(self, name, val)
@@ -334,7 +334,7 @@ setSint32(self, name, val)
 	const char * name
 	Sint32 val
 CODE:
-	AG_WidgetSetSint32(self, name, val);
+	AG_SetSint32(self, name, val);
 
 void
 setFloat(self, name, val)
@@ -342,7 +342,7 @@ setFloat(self, name, val)
 	const char * name
 	float val
 CODE:
-	AG_WidgetSetFloat(self, name, val);
+	AG_SetFloat(self, name, val);
 
 void
 setDouble(self, name, val)
@@ -350,7 +350,7 @@ setDouble(self, name, val)
 	const char * name
 	double val
 CODE:
-	AG_WidgetSetDouble(self, name, val);
+	AG_SetDouble(self, name, val);
 
 void
 setString(self, name, val)
@@ -358,5 +358,5 @@ setString(self, name, val)
 	const char * name
 	const char * val
 CODE:
-	AG_WidgetSetString(self, name, val);
+	AG_SetString(self, name, val);
 

@@ -331,8 +331,9 @@ AG_ExpandVert(void *wid)
 }
 __END_DECLS
 
-/* LEGACY */
-#include <agar/gui/widget_legacy.h>
+#ifdef AG_LEGACY
+# include <agar/gui/widget_legacy.h>
+#endif
 
 #include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_H_ */

@@ -271,56 +271,56 @@ static void
 Bound(AG_Event *event)
 {
 	AG_Numerical *num = AG_SELF();
-	AG_WidgetBinding *binding = AG_PTR(1);
+	AG_Variable *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "value") == 0) {
-		switch (binding->type) {
-		case AG_WIDGET_DOUBLE:
+		switch (AG_VARIABLE_TYPE(binding)) {
+		case AG_VARIABLE_DOUBLE:
 			num->min = -AG_DBL_MAX+1;
 			num->max =  AG_DBL_MAX-1;
 			AG_TextboxSetFltOnly(num->input, 1);
 			break;
-		case AG_WIDGET_FLOAT:
+		case AG_VARIABLE_FLOAT:
 			num->min = -AG_FLT_MAX+1;
 			num->max =  AG_FLT_MAX-1;
 			AG_TextboxSetFltOnly(num->input, 1);
 			break;
-		case AG_WIDGET_INT:
+		case AG_VARIABLE_INT:
 			num->min = AG_INT_MIN+1;
 			num->max = AG_INT_MAX-1;
 			AG_TextboxSetIntOnly(num->input, 1);
 			break;
-		case AG_WIDGET_UINT:
+		case AG_VARIABLE_UINT:
 			num->min = 0;
 			num->max = AG_UINT_MAX-1;
 			AG_TextboxSetIntOnly(num->input, 1);
 			break;
-		case AG_WIDGET_UINT8:
+		case AG_VARIABLE_UINT8:
 			num->min = 0;
 			num->max = 0xffU;
 			AG_TextboxSetIntOnly(num->input, 1);
 			break;
-		case AG_WIDGET_SINT8:
+		case AG_VARIABLE_SINT8:
 			num->min = -0x7f+1;
 			num->max =  0x7f-1;
 			AG_TextboxSetIntOnly(num->input, 1);
 			break;
-		case AG_WIDGET_UINT16:
+		case AG_VARIABLE_UINT16:
 			num->min = 0;
 			num->max = 0xffffU;
 			AG_TextboxSetIntOnly(num->input, 1);
 			break;
-		case AG_WIDGET_SINT16:
+		case AG_VARIABLE_SINT16:
 			num->min = -0x7fff+1;
 			num->max =  0x7fff-1;
 			AG_TextboxSetIntOnly(num->input, 1);
 			break;
-		case AG_WIDGET_UINT32:
+		case AG_VARIABLE_UINT32:
 			num->min = 0;
 			num->max = 0xffffffffU;
 			AG_TextboxSetIntOnly(num->input, 1);
 			break;
-		case AG_WIDGET_SINT32:
+		case AG_VARIABLE_SINT32:
 			num->min = -0x7fffffff+1;
 			num->max =  0x7fffffff-1;
 			AG_TextboxSetIntOnly(num->input, 1);
@@ -335,47 +335,47 @@ Bound(AG_Event *event)
 static void
 UpdateTextbox(AG_Numerical *num)
 {
-	AG_WidgetBinding *valueb;
+	AG_Variable *valueb;
 	void *value;
 
-	valueb = AG_WidgetGetBinding(num, "value", &value);
-	switch (valueb->type) {
-	case AG_WIDGET_DOUBLE:
+	valueb = AG_GetVariable(num, "value", &value);
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:
 		AG_TextboxPrintf(num->input, num->format,
 		    AG_Base2Unit(*(double *)value, num->unit));
 		break;
-	case AG_WIDGET_FLOAT:
+	case AG_VARIABLE_FLOAT:
 		AG_TextboxPrintf(num->input, num->format,
 		    AG_Base2Unit(*(float *)value, num->unit));
 		break;
-	case AG_WIDGET_INT:
+	case AG_VARIABLE_INT:
 		AG_TextboxPrintf(num->input, "%d", *(int *)value);
 		break;
-	case AG_WIDGET_UINT:
+	case AG_VARIABLE_UINT:
 		AG_TextboxPrintf(num->input, "%u", *(Uint *)value);
 		break;
-	case AG_WIDGET_UINT8:
+	case AG_VARIABLE_UINT8:
 		AG_TextboxPrintf(num->input, "%u", *(Uint8 *)value);
 		break;
-	case AG_WIDGET_SINT8:
+	case AG_VARIABLE_SINT8:
 		AG_TextboxPrintf(num->input, "%d", *(Sint8 *)value);
 		break;
-	case AG_WIDGET_UINT16:
+	case AG_VARIABLE_UINT16:
 		AG_TextboxPrintf(num->input, "%u", *(Uint16 *)value);
 		break;
-	case AG_WIDGET_SINT16:
+	case AG_VARIABLE_SINT16:
 		AG_TextboxPrintf(num->input, "%d", *(Sint16 *)value);
 		break;
-	case AG_WIDGET_UINT32:
+	case AG_VARIABLE_UINT32:
 		AG_TextboxPrintf(num->input, "%u", *(Uint32 *)value);
 		break;
-	case AG_WIDGET_SINT32:
+	case AG_VARIABLE_SINT32:
 		AG_TextboxPrintf(num->input, "%d", *(Sint32 *)value);
 		break;
 	default:
 		break;
 	}
-	AG_WidgetUnlockBinding(valueb);
+	AG_UnlockVariable(valueb);
 }
 
 static void
@@ -408,35 +408,35 @@ UpdateFromText(AG_Event *event)
 {
 	AG_Numerical *num = AG_PTR(1);
 	int unfocus = AG_INT(2);
-	AG_WidgetBinding *stringb, *valueb;
+	AG_Variable *stringb, *valueb;
 	char *s;
 	void *value;
 
-	valueb = AG_WidgetGetBinding(num, "value", &value);
-	stringb = AG_WidgetGetBinding(num->input->ed, "string", &s);
+	valueb = AG_GetVariable(num, "value", &value);
+	stringb = AG_GetVariable(num->input->ed, "string", &s);
 
-	switch (valueb->type) {
-	case AG_WIDGET_DOUBLE:
-	case AG_WIDGET_FLOAT:
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:
+	case AG_VARIABLE_FLOAT:
 		AG_NumericalSetValue(num,
 		    AG_Unit2Base(strtod(s, NULL), num->unit));
 		break;
-	case AG_WIDGET_INT:
-	case AG_WIDGET_UINT:
-	case AG_WIDGET_UINT8:
-	case AG_WIDGET_SINT8:
-	case AG_WIDGET_UINT16:
-	case AG_WIDGET_SINT16:
-	case AG_WIDGET_UINT32:
-	case AG_WIDGET_SINT32:
+	case AG_VARIABLE_INT:
+	case AG_VARIABLE_UINT:
+	case AG_VARIABLE_UINT8:
+	case AG_VARIABLE_SINT8:
+	case AG_VARIABLE_UINT16:
+	case AG_VARIABLE_SINT16:
+	case AG_VARIABLE_UINT32:
+	case AG_VARIABLE_SINT32:
 		AG_NumericalSetValue(num, (double)strtol(s, NULL, 10));
 		break;
 	default:
 		break;
 	}
 
-	AG_WidgetUnlockBinding(stringb);
-	AG_WidgetUnlockBinding(valueb);
+	AG_UnlockVariable(stringb);
+	AG_UnlockVariable(valueb);
 
 	if (unfocus) {
 		AG_WidgetUnfocus(num->input);
@@ -581,7 +581,7 @@ Init(void *obj)
 
 	AG_SetEvent(num, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(num, "widget-gainfocus", GainedFocus, NULL);
-	AG_SetEvent(num, "widget-bound", Bound, NULL);
+	AG_SetEvent(num, "bound", Bound, NULL);
 	AG_SetEvent(num->incbu, "button-pushed", IncrementValue, "%p", num);
 	AG_SetEvent(num->decbu, "button-pushed", DecrementValue, "%p", num);
 	AG_SetEvent(num->input, "textbox-return",
@@ -697,34 +697,34 @@ Draw(void *obj)
 void
 AG_NumericalAddValue(AG_Numerical *num, double inc)
 {
-	AG_WidgetBinding *valueb, *minb, *maxb;
+	AG_Variable *valueb, *minb, *maxb;
 	void *value;
 	double n;
 	double *min, *max;
 
 	AG_ObjectLock(num);
-	valueb = AG_WidgetGetBinding(num, "value", &value);
-	minb = AG_WidgetGetBinding(num, "min", &min);
-	maxb = AG_WidgetGetBinding(num, "max", &max);
+	valueb = AG_GetVariable(num, "value", &value);
+	minb = AG_GetVariable(num, "min", &min);
+	maxb = AG_GetVariable(num, "max", &max);
 
-	switch (valueb->type) {
-	case AG_WIDGET_DOUBLE:	ADD_REAL(double);	break;
-	case AG_WIDGET_FLOAT:	ADD_REAL(float);	break;
-	case AG_WIDGET_INT:	ADD_CONVERTED(int);	break;
-	case AG_WIDGET_UINT:	ADD_CONVERTED(Uint);	break;
-	case AG_WIDGET_UINT8:	ADD_CONVERTED(Uint8);	break;
-	case AG_WIDGET_SINT8:	ADD_CONVERTED(Sint8);	break;
-	case AG_WIDGET_UINT16:	ADD_CONVERTED(Uint16);	break;
-	case AG_WIDGET_SINT16:	ADD_CONVERTED(Sint16);	break;
-	case AG_WIDGET_UINT32:	ADD_CONVERTED(Uint32);	break;
-	case AG_WIDGET_SINT32:	ADD_CONVERTED(Sint32);	break;
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:	ADD_REAL(double);	break;
+	case AG_VARIABLE_FLOAT:		ADD_REAL(float);	break;
+	case AG_VARIABLE_INT:		ADD_CONVERTED(int);	break;
+	case AG_VARIABLE_UINT:		ADD_CONVERTED(Uint);	break;
+	case AG_VARIABLE_UINT8:		ADD_CONVERTED(Uint8);	break;
+	case AG_VARIABLE_SINT8:		ADD_CONVERTED(Sint8);	break;
+	case AG_VARIABLE_UINT16:	ADD_CONVERTED(Uint16);	break;
+	case AG_VARIABLE_SINT16:	ADD_CONVERTED(Sint16);	break;
+	case AG_VARIABLE_UINT32:	ADD_CONVERTED(Uint32);	break;
+	case AG_VARIABLE_SINT32:	ADD_CONVERTED(Sint32);	break;
 	default:					break;
 	}
 	AG_PostEvent(NULL, num, "numerical-changed", NULL);
 
-	AG_WidgetUnlockBinding(valueb);
-	AG_WidgetUnlockBinding(minb);
-	AG_WidgetUnlockBinding(maxb);
+	AG_UnlockVariable(valueb);
+	AG_UnlockVariable(minb);
+	AG_UnlockVariable(maxb);
 
 	UpdateTextbox(num);
 	AG_ObjectUnlock(num);
@@ -742,34 +742,34 @@ AG_NumericalAddValue(AG_Numerical *num, double inc)
 void
 AG_NumericalSetValue(AG_Numerical *num, double nvalue)
 {
-	AG_WidgetBinding *valueb, *minb, *maxb;
+	AG_Variable *valueb, *minb, *maxb;
 	void *value;
 	double *min, *max;
 
 	AG_ObjectLock(num);
-	valueb = AG_WidgetGetBinding(num, "value", &value);
-	minb = AG_WidgetGetBinding(num, "min", &min);
-	maxb = AG_WidgetGetBinding(num, "max", &max);
+	valueb = AG_GetVariable(num, "value", &value);
+	minb = AG_GetVariable(num, "min", &min);
+	maxb = AG_GetVariable(num, "max", &max);
 
-	switch (valueb->type) {
-	case AG_WIDGET_DOUBLE:	ASSIGN_VALUE(double);	break;
-	case AG_WIDGET_FLOAT:	ASSIGN_VALUE(float);	break;
-	case AG_WIDGET_INT:	CONV_VALUE(int);	break;
-	case AG_WIDGET_UINT:	CONV_VALUE(Uint);	break;
-	case AG_WIDGET_UINT8:	CONV_VALUE(Uint8);	break;
-	case AG_WIDGET_SINT8:	CONV_VALUE(Sint8);	break;
-	case AG_WIDGET_UINT16:	CONV_VALUE(Uint16);	break;
-	case AG_WIDGET_SINT16:	CONV_VALUE(Sint16);	break;
-	case AG_WIDGET_UINT32:	CONV_VALUE(Uint32);	break;
-	case AG_WIDGET_SINT32:	CONV_VALUE(Sint32);	break;
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:	ASSIGN_VALUE(double);	break;
+	case AG_VARIABLE_FLOAT:		ASSIGN_VALUE(float);	break;
+	case AG_VARIABLE_INT:		CONV_VALUE(int);	break;
+	case AG_VARIABLE_UINT:		CONV_VALUE(Uint);	break;
+	case AG_VARIABLE_UINT8:		CONV_VALUE(Uint8);	break;
+	case AG_VARIABLE_SINT8:		CONV_VALUE(Sint8);	break;
+	case AG_VARIABLE_UINT16:	CONV_VALUE(Uint16);	break;
+	case AG_VARIABLE_SINT16:	CONV_VALUE(Sint16);	break;
+	case AG_VARIABLE_UINT32:	CONV_VALUE(Uint32);	break;
+	case AG_VARIABLE_SINT32:	CONV_VALUE(Sint32);	break;
 	default:					break;
 	}
 
 	AG_PostEvent(NULL, num, "numerical-changed", NULL);
 
-	AG_WidgetUnlockBinding(valueb);
-	AG_WidgetUnlockBinding(minb);
-	AG_WidgetUnlockBinding(maxb);
+	AG_UnlockVariable(valueb);
+	AG_UnlockVariable(minb);
+	AG_UnlockVariable(maxb);
 	AG_ObjectUnlock(num);
 }
 #undef ASSIGN_VALUE
@@ -778,46 +778,46 @@ AG_NumericalSetValue(AG_Numerical *num, double nvalue)
 void
 AG_NumericalSetMin(AG_Numerical *num, double nmin)
 {
-	AG_WidgetBinding *minb;
+	AG_Variable *minb;
 	void *min;
 
 	/* TODO allow integer min/max bindings */
 	AG_ObjectLock(num);
-	minb = AG_WidgetGetBinding(num, "min", &min);
-	switch (minb->type) {
-	case AG_WIDGET_DOUBLE:
+	minb = AG_GetVariable(num, "min", &min);
+	switch (AG_VARIABLE_TYPE(minb)) {
+	case AG_VARIABLE_DOUBLE:
 		*(double *)min = nmin;
 		break;
-	case AG_WIDGET_FLOAT:
+	case AG_VARIABLE_FLOAT:
 		*(float *)min = (float)nmin;
 		break;
 	default:
 		break;
 	}
-	AG_WidgetUnlockBinding(minb);
+	AG_UnlockVariable(minb);
 	AG_ObjectUnlock(num);
 }
 
 void
 AG_NumericalSetMax(AG_Numerical *num, double nmax)
 {
-	AG_WidgetBinding *maxb;
+	AG_Variable *maxb;
 	void *max;
 	
 	/* TODO allow integer min/max bindings */
 	AG_ObjectLock(num);
-	maxb = AG_WidgetGetBinding(num, "max", &max);
-	switch (maxb->type) {
-	case AG_WIDGET_DOUBLE:
+	maxb = AG_GetVariable(num, "max", &max);
+	switch (AG_VARIABLE_TYPE(maxb)) {
+	case AG_VARIABLE_DOUBLE:
 		*(double *)max = nmax;
 		break;
-	case AG_WIDGET_FLOAT:
+	case AG_VARIABLE_FLOAT:
 		*(float *)max = (float)nmax;
 		break;
 	default:
 		break;
 	}
-	AG_WidgetUnlockBinding(maxb);
+	AG_UnlockVariable(maxb);
 	AG_ObjectUnlock(num);
 }
 
@@ -893,22 +893,22 @@ AG_NumericalSetRange(AG_Numerical *num, double min, double max)
 float
 AG_NumericalGetFlt(AG_Numerical *num)
 {
-	AG_WidgetBinding *bValue;
+	AG_Variable *bValue;
 	void *value;
 
-	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->type) {
-	case AG_WIDGET_FLOAT:	return *(float *)value;
-	case AG_WIDGET_DOUBLE:	return  (float)(*(double *)value);
-	case AG_WIDGET_INT:	return  (float)(*(int *)value);
-	case AG_WIDGET_UINT:	return  (float)(*(Uint *)value);
-	case AG_WIDGET_UINT8:	return  (float)(*(Uint8 *)value);
-	case AG_WIDGET_UINT16:	return  (float)(*(Uint16 *)value);
-	case AG_WIDGET_UINT32:	return  (float)(*(Uint32 *)value);
-	case AG_WIDGET_SINT8:	return  (float)(*(Sint8 *)value);
-	case AG_WIDGET_SINT16:	return  (float)(*(Sint16 *)value);
-	case AG_WIDGET_SINT32:	return  (float)(*(Sint32 *)value);
-	default:		return (0.0);
+	bValue = AG_GetVariable(num, "value", &value);
+	switch (AG_VARIABLE_TYPE(bValue)) {
+	case AG_VARIABLE_FLOAT:		return *(float *)value;
+	case AG_VARIABLE_DOUBLE:	return  (float)(*(double *)value);
+	case AG_VARIABLE_INT:		return  (float)(*(int *)value);
+	case AG_VARIABLE_UINT:		return  (float)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:		return  (float)(*(Uint8 *)value);
+	case AG_VARIABLE_UINT16:	return  (float)(*(Uint16 *)value);
+	case AG_VARIABLE_UINT32:	return  (float)(*(Uint32 *)value);
+	case AG_VARIABLE_SINT8:		return  (float)(*(Sint8 *)value);
+	case AG_VARIABLE_SINT16:	return  (float)(*(Sint16 *)value);
+	case AG_VARIABLE_SINT32:	return  (float)(*(Sint32 *)value);
+	default:			return (0.0);
 	}
 }
 
@@ -916,22 +916,22 @@ AG_NumericalGetFlt(AG_Numerical *num)
 double
 AG_NumericalGetDbl(AG_Numerical *num)
 {
-	AG_WidgetBinding *bValue;
+	AG_Variable *bValue;
 	void *value;
 
-	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->type) {
-	case AG_WIDGET_DOUBLE:	return *(double *)value;
-	case AG_WIDGET_FLOAT:	return  (double)(*(float *)value);
-	case AG_WIDGET_INT:	return  (double)(*(int *)value);
-	case AG_WIDGET_UINT:	return  (double)(*(Uint *)value);
-	case AG_WIDGET_UINT8:	return  (double)(*(Uint8 *)value);
-	case AG_WIDGET_UINT16:	return  (double)(*(Uint16 *)value);
-	case AG_WIDGET_UINT32:	return  (double)(*(Uint32 *)value);
-	case AG_WIDGET_SINT8:	return  (double)(*(Sint8 *)value);
-	case AG_WIDGET_SINT16:	return  (double)(*(Sint16 *)value);
-	case AG_WIDGET_SINT32:	return  (double)(*(Sint32 *)value);
-	default:		return (0.0);
+	bValue = AG_GetVariable(num, "value", &value);
+	switch (AG_VARIABLE_TYPE(bValue)) {
+	case AG_VARIABLE_DOUBLE:	return *(double *)value;
+	case AG_VARIABLE_FLOAT:		return  (double)(*(float *)value);
+	case AG_VARIABLE_INT:		return  (double)(*(int *)value);
+	case AG_VARIABLE_UINT:		return  (double)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:		return  (double)(*(Uint8 *)value);
+	case AG_VARIABLE_UINT16:	return  (double)(*(Uint16 *)value);
+	case AG_VARIABLE_UINT32:	return  (double)(*(Uint32 *)value);
+	case AG_VARIABLE_SINT8:		return  (double)(*(Sint8 *)value);
+	case AG_VARIABLE_SINT16:	return  (double)(*(Sint16 *)value);
+	case AG_VARIABLE_SINT32:	return  (double)(*(Sint32 *)value);
+	default:			return (0.0);
 	}
 }
 
@@ -939,22 +939,22 @@ AG_NumericalGetDbl(AG_Numerical *num)
 int
 AG_NumericalGetInt(AG_Numerical *num)
 {
-	AG_WidgetBinding *bValue;
+	AG_Variable *bValue;
 	void *value;
 
-	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->type) {
-	case AG_WIDGET_INT:	return *(int *)value;
-	case AG_WIDGET_UINT:	return (int)(*(Uint *)value);
-	case AG_WIDGET_UINT8:	return (int)(*(Uint8 *)value);
-	case AG_WIDGET_UINT16:	return (int)(*(Uint16 *)value);
-	case AG_WIDGET_UINT32:	return (int)(*(Uint32 *)value);
-	case AG_WIDGET_SINT8:	return (int)(*(Sint8 *)value);
-	case AG_WIDGET_SINT16:	return (int)(*(Sint16 *)value);
-	case AG_WIDGET_SINT32:	return (int)(*(Sint32 *)value);
-	case AG_WIDGET_DOUBLE:	return (int)(*(double *)value);
-	case AG_WIDGET_FLOAT:	return (int)(*(float *)value);
-	default:		return (0);
+	bValue = AG_GetVariable(num, "value", &value);
+	switch (AG_VARIABLE_TYPE(bValue)) {
+	case AG_VARIABLE_INT:		return *(int *)value;
+	case AG_VARIABLE_UINT:		return (int)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:		return (int)(*(Uint8 *)value);
+	case AG_VARIABLE_UINT16:	return (int)(*(Uint16 *)value);
+	case AG_VARIABLE_UINT32:	return (int)(*(Uint32 *)value);
+	case AG_VARIABLE_SINT8:		return (int)(*(Sint8 *)value);
+	case AG_VARIABLE_SINT16:	return (int)(*(Sint16 *)value);
+	case AG_VARIABLE_SINT32:	return (int)(*(Sint32 *)value);
+	case AG_VARIABLE_DOUBLE:	return (int)(*(double *)value);
+	case AG_VARIABLE_FLOAT:		return (int)(*(float *)value);
+	default:			return (0);
 	}
 }
 
@@ -962,22 +962,22 @@ AG_NumericalGetInt(AG_Numerical *num)
 Uint32
 AG_NumericalGetUint32(AG_Numerical *num)
 {
-	AG_WidgetBinding *bValue;
+	AG_Variable *bValue;
 	void *value;
 
-	bValue = AG_WidgetGetBinding(num, "value", &value);
-	switch (bValue->type) {
-	case AG_WIDGET_INT:	return (Uint32)(*(int *)value);
-	case AG_WIDGET_UINT:	return (Uint32)(*(Uint *)value);
-	case AG_WIDGET_UINT8:	return (Uint32)(*(Uint8 *)value);
-	case AG_WIDGET_UINT16:	return (Uint32)(*(Uint16 *)value);
-	case AG_WIDGET_UINT32:	return *(Uint32 *)value;
-	case AG_WIDGET_SINT8:	return (Uint32)(*(Sint8 *)value);
-	case AG_WIDGET_SINT16:	return (Uint32)(*(Sint16 *)value);
-	case AG_WIDGET_SINT32:	return (Uint32)(*(Sint32 *)value);
-	case AG_WIDGET_DOUBLE:	return (Uint32)(*(double *)value);
-	case AG_WIDGET_FLOAT:	return (Uint32)(*(float *)value);
-	default:		return (0);
+	bValue = AG_GetVariable(num, "value", &value);
+	switch (AG_VARIABLE_TYPE(bValue)) {
+	case AG_VARIABLE_INT:		return (Uint32)(*(int *)value);
+	case AG_VARIABLE_UINT:		return (Uint32)(*(Uint *)value);
+	case AG_VARIABLE_UINT8:		return (Uint32)(*(Uint8 *)value);
+	case AG_VARIABLE_UINT16:	return (Uint32)(*(Uint16 *)value);
+	case AG_VARIABLE_UINT32:	return *(Uint32 *)value;
+	case AG_VARIABLE_SINT8:		return (Uint32)(*(Sint8 *)value);
+	case AG_VARIABLE_SINT16:	return (Uint32)(*(Sint16 *)value);
+	case AG_VARIABLE_SINT32:	return (Uint32)(*(Sint32 *)value);
+	case AG_VARIABLE_DOUBLE:	return (Uint32)(*(double *)value);
+	case AG_VARIABLE_FLOAT:		return (Uint32)(*(float *)value);
+	default:			return (0);
 	}
 }
 

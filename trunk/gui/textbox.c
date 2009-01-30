@@ -290,12 +290,12 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 void
 AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 {
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	va_list args;
 	char *text;
 
 	AG_ObjectLock(tb->ed);
-	stringb = AG_WidgetGetBinding(tb->ed, "string", &text);
+	stringb = AG_GetVariable(tb->ed, "string", &text);
 	if (fmt != NULL && fmt[0] != '\0') {
 		va_start(args, fmt);
 		Vsnprintf(text, stringb->info.size, fmt, args);
@@ -306,7 +306,7 @@ AG_TextboxPrintf(AG_Textbox *tb, const char *fmt, ...)
 		tb->ed->pos = 0;
 	}
 	AG_TextboxBufferChanged(tb);
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 	AG_ObjectUnlock(tb->ed);
 }
 
@@ -400,7 +400,7 @@ Init(void *obj)
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);
 	AG_SetEvent(tb, "widget-enabled", Enabled, NULL);
 #ifdef AG_DEBUG
-	AG_SetEvent(tb, "widget-bound", Bound, NULL);
+	AG_SetEvent(tb, "bound", Bound, NULL);
 #endif
 	AG_SetEvent(tb->ed, "editable-prechg", EditablePreChg, "%p", tb);
 	AG_SetEvent(tb->ed, "editable-postchg", EditablePostChg, "%p", tb);

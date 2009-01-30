@@ -65,16 +65,16 @@ static void
 Bound(AG_Event *event)
 {
 	AG_MFSpinbutton *fsu = AG_SELF();
-	AG_WidgetBinding *binding = AG_PTR(1);
+	AG_Variable *binding = AG_PTR(1);
 
 	if (strcmp(binding->name, "xvalue") == 0 ||
 	    strcmp(binding->name, "yvalue") == 0) {
-		switch (binding->type) {
-		case AG_WIDGET_DOUBLE:
+		switch (AG_VARIABLE_TYPE(binding)) {
+		case AG_VARIABLE_DOUBLE:
 			fsu->min = -AG_DBL_MAX+1;
 			fsu->max =  AG_DBL_MAX-1;
 			break;
-		case AG_WIDGET_FLOAT:
+		case AG_VARIABLE_FLOAT:
 			fsu->min = -AG_FLT_MAX+1;
 			fsu->max =  AG_FLT_MAX-1;
 			break;
@@ -112,12 +112,12 @@ TextChanged(AG_Event *event)
 	char text[AG_TEXTBOX_STRING_MAX];
 	AG_MFSpinbutton *fsu = AG_PTR(1);
 	int unfocus = AG_INT(2);
-	AG_WidgetBinding *stringb;
+	AG_Variable *stringb;
 	char *tp = &text[0], *s;
 
 	AG_ObjectLock(fsu);
 
-	stringb = AG_WidgetGetBinding(fsu->input->ed, "string", &s);
+	stringb = AG_GetVariable(fsu->input->ed, "string", &s);
 	Strlcpy(text, s, sizeof(text));
 
 	if ((s = AG_Strsep(&tp, fsu->sep)) != NULL) {
@@ -128,7 +128,7 @@ TextChanged(AG_Event *event)
 		AG_MFSpinbuttonSetValue(fsu, "yvalue",
 		    strtod(s, NULL)*fsu->unit->divider);
 	}
-	AG_WidgetUnlockBinding(stringb);
+	AG_UnlockVariable(stringb);
 
 	AG_PostEvent(NULL, fsu, "mfspinbutton-return", NULL);
 
@@ -276,7 +276,7 @@ Init(void *obj)
 	AG_WidgetSetFocusable(fsu->yincbu, 0);
 	AG_WidgetSetFocusable(fsu->ydecbu, 0);
 
-	AG_SetEvent(fsu, "widget-bound", Bound, NULL);
+	AG_SetEvent(fsu, "bound", Bound, NULL);
 	AG_SetEvent(fsu, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(fsu->input, "textbox-return", TextChanged, "%p,%i",fsu,1);
 	AG_SetEvent(fsu->input, "textbox-changed", TextChanged, "%p,%i",fsu,0);
@@ -357,50 +357,50 @@ static void
 UpdateTextbox(AG_MFSpinbutton *num)
 {
 	char sx[64], sy[64];
-	AG_WidgetBinding *valueb;
+	AG_Variable *valueb;
 	void *value;
 
 	/* Get X value */
-	valueb = AG_WidgetGetBinding(num, "xvalue", &value);
-	switch (valueb->type) {
-	case AG_WIDGET_DOUBLE:
+	valueb = AG_GetVariable(num, "xvalue", &value);
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:
 		Snprintf(sx, sizeof(sx), num->format,
 		    AG_Base2Unit(*(double *)value, num->unit));
 		break;
-	case AG_WIDGET_FLOAT:
+	case AG_VARIABLE_FLOAT:
 		Snprintf(sx, sizeof(sx), num->format,
 		    AG_Base2Unit(*(float *)value, num->unit));
 		break;
-	case AG_WIDGET_INT:
+	case AG_VARIABLE_INT:
 		Snprintf(sx, sizeof(sx), "%d", *(int *)value);
 		break;
-	case AG_WIDGET_UINT:
+	case AG_VARIABLE_UINT:
 		Snprintf(sx, sizeof(sx), "%u", *(Uint *)value);
 		break;
-	case AG_WIDGET_UINT8:
+	case AG_VARIABLE_UINT8:
 		Snprintf(sx, sizeof(sx), "%u", (unsigned)(*(Uint8 *)value));
 		break;
-	case AG_WIDGET_SINT8:
+	case AG_VARIABLE_SINT8:
 		Snprintf(sx, sizeof(sx), "%d", (int)(*(Sint8 *)value));
 		break;
-	case AG_WIDGET_UINT16:
+	case AG_VARIABLE_UINT16:
 		Snprintf(sx, sizeof(sx), "%u", (unsigned)(*(Uint16 *)value));
 		break;
-	case AG_WIDGET_SINT16:
+	case AG_VARIABLE_SINT16:
 		Snprintf(sx, sizeof(sx), "%d", (int)(*(Sint16 *)value));
 		break;
-	case AG_WIDGET_UINT32:
+	case AG_VARIABLE_UINT32:
 		Snprintf(sx, sizeof(sx), "%u", (unsigned)(*(Uint32 *)value));
 		break;
-	case AG_WIDGET_SINT32:
+	case AG_VARIABLE_SINT32:
 		Snprintf(sx, sizeof(sx), "%d", (int)(*(Sint32 *)value));
 		break;
 #if 0
-	case AG_WIDGET_UINT64:
+	case AG_VARIABLE_UINT64:
 		Snprintf(sx, sizeof(sx), "%llu",
 		    (unsigned long long)(*(Uint64 *)value));
 		break;
-	case AG_WIDGET_SINT64:
+	case AG_VARIABLE_SINT64:
 		Snprintf(sx, sizeof(sx), "%lld",
 		    (long long)(*(Sint64 *)value));
 		break;
@@ -408,49 +408,49 @@ UpdateTextbox(AG_MFSpinbutton *num)
 	default:
 		break;
 	}
-	AG_WidgetUnlockBinding(valueb);
+	AG_UnlockVariable(valueb);
 	
 	/* Get Y value */
-	valueb = AG_WidgetGetBinding(num, "yvalue", &value);
-	switch (valueb->type) {
-	case AG_WIDGET_DOUBLE:
+	valueb = AG_GetVariable(num, "yvalue", &value);
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:
 		Snprintf(sy, sizeof(sy), num->format,
 		    AG_Base2Unit(*(double *)value, num->unit));
 		break;
-	case AG_WIDGET_FLOAT:
+	case AG_VARIABLE_FLOAT:
 		Snprintf(sy, sizeof(sy), num->format,
 		    AG_Base2Unit(*(float *)value, num->unit));
 		break;
-	case AG_WIDGET_INT:
+	case AG_VARIABLE_INT:
 		Snprintf(sy, sizeof(sy), "%d", *(int *)value);
 		break;
-	case AG_WIDGET_UINT:
+	case AG_VARIABLE_UINT:
 		Snprintf(sy, sizeof(sy), "%u", *(Uint *)value);
 		break;
-	case AG_WIDGET_UINT8:
+	case AG_VARIABLE_UINT8:
 		Snprintf(sy, sizeof(sy), "%u", (unsigned)(*(Uint8 *)value));
 		break;
-	case AG_WIDGET_SINT8:
+	case AG_VARIABLE_SINT8:
 		Snprintf(sy, sizeof(sy), "%d", (int)(*(Sint8 *)value));
 		break;
-	case AG_WIDGET_UINT16:
+	case AG_VARIABLE_UINT16:
 		Snprintf(sy, sizeof(sy), "%u", (unsigned)(*(Uint16 *)value));
 		break;
-	case AG_WIDGET_SINT16:
+	case AG_VARIABLE_SINT16:
 		Snprintf(sy, sizeof(sy), "%d", (int)(*(Sint16 *)value));
 		break;
-	case AG_WIDGET_UINT32:
+	case AG_VARIABLE_UINT32:
 		Snprintf(sy, sizeof(sy), "%u", (unsigned)(*(Uint32 *)value));
 		break;
-	case AG_WIDGET_SINT32:
+	case AG_VARIABLE_SINT32:
 		Snprintf(sy, sizeof(sy), "%d", (int)(*(Sint32 *)value));
 		break;
 #if 0
-	case AG_WIDGET_UINT64:
+	case AG_VARIABLE_UINT64:
 		Snprintf(sy, sizeof(sy), "%llu",
 		    (unsigned long long)(*(Uint64 *)value));
 		break;
-	case AG_WIDGET_SINT64:
+	case AG_VARIABLE_SINT64:
 		Snprintf(sy, sizeof(sy), "%lld",
 		    (long long)(*(Uint64 *)value));
 		break;
@@ -459,14 +459,14 @@ UpdateTextbox(AG_MFSpinbutton *num)
 		break;
 	}
 	AG_TextboxPrintf(num->input, "%s%s%s", sx, num->sep, sy);
-	AG_WidgetUnlockBinding(valueb);
+	AG_UnlockVariable(valueb);
 }
 
 static void
 Draw(void *obj)
 {
 	AG_MFSpinbutton *fsu = obj;
-	AG_WidgetBinding *xvalueb, *yvalueb;
+	AG_Variable *xvalueb, *yvalueb;
 	double *xvalue, *yvalue;
 
 	AG_WidgetDraw(fsu->input);
@@ -479,38 +479,38 @@ Draw(void *obj)
 	if (!AG_WidgetFocused(fsu->input))
 		UpdateTextbox(fsu);
 
-	xvalueb = AG_WidgetGetBinding(fsu, "xvalue", &xvalue);
-	yvalueb = AG_WidgetGetBinding(fsu, "yvalue", &yvalue);
+	xvalueb = AG_GetVariable(fsu, "xvalue", &xvalue);
+	yvalueb = AG_GetVariable(fsu, "yvalue", &yvalue);
 
 	AG_TextboxPrintf(fsu->input, fsu->format,
 	    *xvalue/fsu->unit->divider,
 	    *yvalue/fsu->unit->divider);
 
-	AG_WidgetUnlockBinding(xvalueb);
-	AG_WidgetUnlockBinding(yvalueb);
+	AG_UnlockVariable(xvalueb);
+	AG_UnlockVariable(yvalueb);
 }
 
 void
 AG_MFSpinbuttonAddValue(AG_MFSpinbutton *fsu, const char *which, double inc)
 {
-	AG_WidgetBinding *valueb, *minb, *maxb;
+	AG_Variable *valueb, *minb, *maxb;
 	void *value;
 	double *min, *max;
 
 	AG_ObjectLock(fsu);
 	
 	inc *= fsu->unit->divider;
-	valueb = AG_WidgetGetBinding(fsu, which, &value);
-	minb = AG_WidgetGetBinding(fsu, "min", &min);
-	maxb = AG_WidgetGetBinding(fsu, "max", &max);
+	valueb = AG_GetVariable(fsu, which, &value);
+	minb = AG_GetVariable(fsu, "min", &min);
+	maxb = AG_GetVariable(fsu, "max", &max);
 
-	switch (valueb->type) {
-	case AG_WIDGET_DOUBLE:
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:
 		*(double *)value = *(double *)value+inc < *min ? *min :
 		                   *(double *)value+inc > *max ? *max :
 				   *(double *)value+inc;
 		break;
-	case AG_WIDGET_FLOAT:
+	case AG_VARIABLE_FLOAT:
 		*(float *)value = *(float *)value+inc < *min ? *min :
 		                  *(float *)value+inc > *max ? *max :
 				  *(float *)value+inc;
@@ -520,9 +520,9 @@ AG_MFSpinbuttonAddValue(AG_MFSpinbutton *fsu, const char *which, double inc)
 	}
 	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
 
-	AG_WidgetUnlockBinding(valueb);
-	AG_WidgetUnlockBinding(minb);
-	AG_WidgetUnlockBinding(maxb);
+	AG_UnlockVariable(valueb);
+	AG_UnlockVariable(minb);
+	AG_UnlockVariable(maxb);
 	
 	AG_ObjectUnlock(fsu);
 }
@@ -531,23 +531,23 @@ void
 AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
     double nvalue)
 {
-	AG_WidgetBinding *valueb, *minb, *maxb;
+	AG_Variable *valueb, *minb, *maxb;
 	void *value;
 	double *min, *max;
 	
 	AG_ObjectLock(fsu);
 
-	valueb = AG_WidgetGetBinding(fsu, which, &value);
-	minb = AG_WidgetGetBinding(fsu, "min", &min);
-	maxb = AG_WidgetGetBinding(fsu, "max", &max);
+	valueb = AG_GetVariable(fsu, which, &value);
+	minb = AG_GetVariable(fsu, "min", &min);
+	maxb = AG_GetVariable(fsu, "max", &max);
 
-	switch (valueb->type) {
-	case AG_WIDGET_DOUBLE:
+	switch (AG_VARIABLE_TYPE(valueb)) {
+	case AG_VARIABLE_DOUBLE:
 		*(double *)value = nvalue < *min ? *min :
 		                   nvalue > *max ? *max :
 				   nvalue;
 		break;
-	case AG_WIDGET_FLOAT:
+	case AG_VARIABLE_FLOAT:
 		*(float *)value = nvalue < *min ? *min :
 		                  nvalue > *max ? *max :
 				  (float)nvalue;
@@ -557,9 +557,9 @@ AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
 	}
 	AG_PostEvent(NULL, fsu, "mfspinbutton-changed", "%s", which);
 
-	AG_WidgetUnlockBinding(valueb);
-	AG_WidgetUnlockBinding(minb);
-	AG_WidgetUnlockBinding(maxb);
+	AG_UnlockVariable(valueb);
+	AG_UnlockVariable(minb);
+	AG_UnlockVariable(maxb);
 	
 	AG_ObjectUnlock(fsu);
 }
@@ -567,44 +567,44 @@ AG_MFSpinbuttonSetValue(AG_MFSpinbutton *fsu, const char *which,
 void
 AG_MFSpinbuttonSetMin(AG_MFSpinbutton *fsu, double nmin)
 {
-	AG_WidgetBinding *minb;
+	AG_Variable *minb;
 	void *min;
 	
 	AG_ObjectLock(fsu);
-	minb = AG_WidgetGetBinding(fsu, "min", &min);
-	switch (minb->type) {
-	case AG_WIDGET_DOUBLE:
+	minb = AG_GetVariable(fsu, "min", &min);
+	switch (AG_VARIABLE_TYPE(minb)) {
+	case AG_VARIABLE_DOUBLE:
 		*(double *)min = nmin;
 		break;
-	case AG_WIDGET_FLOAT:
+	case AG_VARIABLE_FLOAT:
 		*(float *)min = (float)nmin;
 		break;
 	default:
 		break;
 	}
-	AG_WidgetUnlockBinding(minb);
+	AG_UnlockVariable(minb);
 	AG_ObjectUnlock(fsu);
 }
 
 void
 AG_MFSpinbuttonSetMax(AG_MFSpinbutton *fsu, double nmax)
 {
-	AG_WidgetBinding *maxb;
+	AG_Variable *maxb;
 	void *max;
 	
 	AG_ObjectLock(fsu);
-	maxb = AG_WidgetGetBinding(fsu, "max", &max);
-	switch (maxb->type) {
-	case AG_WIDGET_DOUBLE:
+	maxb = AG_GetVariable(fsu, "max", &max);
+	switch (AG_VARIABLE_TYPE(maxb)) {
+	case AG_VARIABLE_DOUBLE:
 		*(double *)max = nmax;
 		break;
-	case AG_WIDGET_FLOAT:
+	case AG_VARIABLE_FLOAT:
 		*(float *)max = (float)nmax;
 		break;
 	default:
 		break;
 	}
-	AG_WidgetUnlockBinding(maxb);
+	AG_UnlockVariable(maxb);
 	AG_ObjectUnlock(fsu);
 }
 

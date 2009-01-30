@@ -36,51 +36,58 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-A graphical user interface on the Agar platform is described as a tree of
+An Agar graphical user interface is described as a tree of objects
+(see
+.Xr AG_Object 3 )
+derived from the
 .Nm
-objects.
+class.
 .Pp
-Every widget has a local coordinate system and occupies a rectangular
-area of pixels which was allocated by the parent widget (windows are
-themselves a subclass of
-.Nm ,
-see
-.Xr AG_Window 3
+The Widget tree describes the parent/child relation between widgets.
+This relation has implications in the way geometry will be allocated to
+widgets (see
+.Dq WIDGET SIZING
 for details).
 .Pp
-The Agar GUI library is open, such that new, custom widgets may be implemented
-(or derived from existing widget classes) as part of user applications, very
-conveniently.
+The Agar GUI library is open, such that new, custom widgets may be easily
+implemented (or derived from existing widget classes) as part of user
+applications.
+Agar widgets are extensively re-used.
 .Pp
-The widget tree describes the relation between different widgets.
-For example the
-.Xr AG_Table 3
-widget attaches two
-.Xr AG_Scrollbar 3
-widgets at specific positions in its own area, and sizes them accordingly.
-.Pp
-Widgets use the
+Widgets use
 .Xr AG_Event 3
-system extensively to generate and handle many types of events.
+(a part of the
+.Xr AG_Object 3
+system) to generate and handle many types of events.
 .Pp
-To reduce GUI-related code bloat to an absolute minimum (and also to simplify
-its isolation), Agar widgets use a system of
-.Sq bindings
-such that widgets can directly access (read or write) specific data, without
-the need for events.
-For example, the 
-.Xr AG_Scrollbar 3
-widget provides a set of bindings named
-.Sq value ,
-.Sq min ,
-.Sq max
+The
+.Xr AG_Variable 3
+interface is also critical to the Agar GUI system.
+It is customary to use the
+.Fn AG_BindFoo
 and
-.Sq visible
-which, in the current implementation, can be attached to variables of
-different integer and floating-point types.
-The available bindings are always documented in the
+.Fn AG_BindFooFn
+functions of
+.Xr AG_Variable 3
+to connect some data (e.g., an integer or floating-point variable) to some
+.Em state
+provided by the widget (e.g.,
+.Xr AG_Slider 3
+provides
+.Sq value ,
+.Sq min
+and
+.Sq max
+states).
+In the context of Agar-GUI, we refer to these connections as
+.Sq bindings .
+See
+.Xr AG_Variable 3
+for more information.
+Manual pages for all standard Agar widgets all include an
 .Dq BINDINGS
-section of the widget's manual page.
+section with a list of bindings supported by each widget, their supported
+data types and effects.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
@@ -724,23 +731,30 @@ and
 .Fa w
 specify the height/width of the arrow in pixels.
 .Sh BINDINGS
-Each widget has a list of named
-.Sq bindings ,
-which allow variables of specific types to be read or written by the widget
-directly, eliminating the need for event handler functions in many situations.
-.Pp
-For example, the
-.Xr AG_Scrollbar 3
-widget defines three values named
+Agar widgets can be configured to directly access data of specific types.
+For example,
+.Xr AG_Slider 3
+provides a binding called
 .Sq value ,
-.Sq min
-and
-.Sq max ,
-which may be bound to both integral and floating point variables.
+which (in the current implementation) supports the standard integer and
+floating-point types.
+Connecting
+.Sq value
+to an integer or floating point variable allows the user to directly set the
+value of the variable with the need for tedious callback routines.
+Similarly,
 .Xr AG_Textbox 3
-defines a string value which accepts a pointer to a fixed-size text buffer
-(and the size of that buffer).
+connects to a text buffer.
+It is also possible to configure
+.Sq function
+bindings such that the value is evaluated from a provided function every time
+the variable is retrieved.
 .Pp
+NOTE: This interface is now
+.Em deprecated
+and the more generic
+.Xr AG_Variable 3
+interface should be used instead.
 .nr nS 1
 .Ft "AG_WidgetBinding *"
 .Fn AG_WidgetBind "AG_Widget *widget, const char *binding" "enum ag_variable_type type, ..."
@@ -890,7 +904,13 @@ defines a string value which accepts a pointer to a fixed-size text buffer
 The
 .Fn AG_WidgetBind
 function either overrides or creates a new binding.
-Correct values for the
+It is a
+.Em deprecated
+interface to the
+.Fn AG_BindFoo
+routines of
+.Xr AG_Variable 3 .
+Acceptable values for the
 .Fa type
 argument include:
 .Pp
@@ -975,8 +995,18 @@ function returns a matching binding (locked), or NULL if none was found.
 If a binding was found, a pointer to it is written in the
 .Fa res
 argument.
+.Fn AG_WidgetGetBinding
+is a
+.Em deprecated
+interface to
+.Xr AG_GetVariable 3 .
+.Pp
 .Fn AG_WidgetUnlockBinding
 should be called when done manipulating the data.
+It is a
+.Em deprecated
+interface to
+.Xr AG_UnlockVariable 3 .
 .Pp
 The
 .Fn AG_WidgetCopyBinding
@@ -986,6 +1016,8 @@ to
 .Fa dst_binding .
 The destination binding must already exist.
 The function returns 0 on success, -1 if an error occured.
+It is
+.Em deprecated .
 .Pp
 The
 .Fn AG_WidgetSet_*
@@ -1018,6 +1050,19 @@ NUL-terminating the result and returning the number of bytes that would
 have been copied if
 .Fa dst_size
 was unlimited.
+.Pp
+NOTE: All
+.Fn AG_WidgetGetFoo
+and
+.Fn AG_WidgetSetFoo
+routines are
+.Em deprecated
+in favor of
+.Fn AG_GetFoo
+and
+.Fn AG_SetFoo
+(see
+.Xr AG_Variable 3 ) .
 .Sh WIDGET QUERIES
 .nr nS 1
 .Ft "AG_Window *"
@@ -1131,6 +1176,11 @@ The widget now holds focus inside its parent container.
 The widget no longer holds focus.
 .It Fn widget-bound "AG_WidgetBinding *binding"
 A widget binding has been added or modified.
+NOTE: Do not use this event, use the
+.Xr AG_Object 3
+level
+.Sq bound
+event instead.
 .El
 .Sh STRUCTURE DATA
 For the

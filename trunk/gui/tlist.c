@@ -93,7 +93,7 @@ SelectionVisible(AG_Tlist *tl)
 	int offset;
 
 	UpdatePolled(tl);
-	offset = AG_WidgetInt(tl->sbar, "value");
+	offset = AG_GetInt(tl->sbar, "value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (i++ < offset)
@@ -114,7 +114,7 @@ ScrollToSelection(AG_Tlist *tl)
 {
 	AG_TlistItem *it;
 	int m = 0;
-	int offset = AG_WidgetInt(tl->sbar, "value");
+	int offset = AG_GetInt(tl->sbar, "value");
 
 	TAILQ_FOREACH(it, &tl->items, items) {
 		if (!it->selected) {
@@ -122,11 +122,11 @@ ScrollToSelection(AG_Tlist *tl)
 			continue;
 		}
 		if (offset > m) {
-			AG_WidgetSetInt(tl->sbar, "value", m);
+			AG_SetInt(tl->sbar, "value", m);
 		} else {
 			offset = m - tl->nvisitems + 1;
 			if (offset < 0) { offset = 0; }
-			AG_WidgetSetInt(tl->sbar, "value", offset);
+			AG_SetInt(tl->sbar, "value", offset);
 		}
 		return;
 	}
@@ -406,7 +406,7 @@ Draw(void *obj)
 
 	UpdatePolled(tl);
 
-	offset = AG_WidgetInt(tl->sbar, "value");
+	offset = AG_GetInt(tl->sbar, "value");
 	TAILQ_FOREACH(it, &tl->items, items) {
 		int x = 2 + it->depth*tl->icon_w;
 
@@ -465,16 +465,16 @@ Draw(void *obj)
 		}
 	}
 	if (!selSeen && (tl->flags & AG_TLIST_SCROLLTOSEL)) {
-		AG_WidgetBinding *offsetb;
+		AG_Variable *offsetb;
 		int *offset;
 
-		offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
+		offsetb = AG_GetVariable(tl->sbar, "value", &offset);
 		if (selPos == -1) {
 			(*offset)--;
 		} else {
 			(*offset)++;
 		}
-		AG_WidgetUnlockBinding(offsetb);
+		AG_UnlockVariable(offsetb);
 	} else {
 		tl->flags &= ~(AG_TLIST_SCROLLTOSEL);
 	}
@@ -488,14 +488,14 @@ Draw(void *obj)
 static void
 UpdateListScrollbar(AG_Tlist *tl)
 {
-	AG_WidgetBinding *maxb, *offsetb;
+	AG_Variable *maxb, *offsetb;
 	int *max, *offset;
 	int noffset;
 	
 	tl->nvisitems = HEIGHT(tl)/tl->item_h;
 
-	maxb = AG_WidgetGetBinding(tl->sbar, "max", &max);
-	offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
+	maxb = AG_GetVariable(tl->sbar, "max", &max);
+	offsetb = AG_GetVariable(tl->sbar, "value", &offset);
 	noffset = *offset;
 
 	*max = tl->nitems - tl->nvisitems;
@@ -517,8 +517,8 @@ UpdateListScrollbar(AG_Tlist *tl)
 		AG_ScrollbarSetBarSize(tl->sbar, -1);		/* Full range */
 	}
 
-	AG_WidgetUnlockBinding(offsetb);
-	AG_WidgetUnlockBinding(maxb);
+	AG_UnlockVariable(offsetb);
+	AG_UnlockVariable(maxb);
 }
 
 static void
@@ -539,7 +539,7 @@ FreeItem(AG_Tlist *tl, AG_TlistItem *it)
 void
 AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 {
-	AG_WidgetBinding *offsetb;
+	AG_Variable *offsetb;
 	int *offset;
 	int nitems;
 
@@ -549,14 +549,14 @@ AG_TlistDel(AG_Tlist *tl, AG_TlistItem *it)
 	FreeItem(tl, it);
 
 	/* Update the scrollbar range and offset accordingly. */
-	AG_WidgetSetInt(tl->sbar, "max", nitems);
-	offsetb = AG_WidgetGetBinding(tl->sbar, "value", &offset);
+	AG_SetInt(tl->sbar, "max", nitems);
+	offsetb = AG_GetVariable(tl->sbar, "value", &offset);
 	if (*offset > nitems) {
 		*offset = nitems;
 	} else if (nitems > 0 && *offset < nitems) {		/* XXX ugly */
 		*offset = 0;
 	}
-	AG_WidgetUnlockBinding(offsetb);
+	AG_UnlockVariable(offsetb);
 	AG_ObjectUnlock(tl);
 }
 
@@ -583,7 +583,7 @@ AG_TlistClear(AG_Tlist *tl)
 	tl->nitems = 0;
 	
 	/* Preserve the offset value, for polling. */
-	AG_WidgetSetInt(tl->sbar, "max", 0);
+	AG_SetInt(tl->sbar, "max", 0);
 
 	AG_ObjectUnlock(tl);
 }
@@ -699,7 +699,7 @@ InsertItem(AG_Tlist *tl, AG_TlistItem *it, int ins_head)
 	} else {
 		TAILQ_INSERT_TAIL(&tl->items, it, items);
 	}
-	AG_WidgetSetInt(tl->sbar, "max", ++tl->nitems);
+	AG_SetInt(tl->sbar, "max", ++tl->nitems);
 }
 
 /* Add an item to the list. */
@@ -844,10 +844,10 @@ AG_TlistDeselectAll(AG_Tlist *tl)
 static void
 SelectItem(AG_Tlist *tl, AG_TlistItem *it)
 {
-	AG_WidgetBinding *selectedb;
+	AG_Variable *selectedb;
 	void **sel_ptr;
 
-	selectedb = AG_WidgetGetBinding(tl, "selected", &sel_ptr);
+	selectedb = AG_GetVariable(tl, "selected", &sel_ptr);
 	*sel_ptr = it->p1;
 	if (!it->selected) {
 		it->selected = 1;
@@ -858,17 +858,17 @@ SelectItem(AG_Tlist *tl, AG_TlistItem *it)
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 1);
 	}
 	AG_PostEvent(NULL, tl, "tlist-selected", "%p", it);
-	AG_WidgetUnlockBinding(selectedb);
+	AG_UnlockVariable(selectedb);
 }
 
 /* The Tlist must be locked. */
 static void
 DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 {
-	AG_WidgetBinding *selectedb;
+	AG_Variable *selectedb;
 	void **sel_ptr;
 
-	selectedb = AG_WidgetGetBinding(tl, "selected", &sel_ptr);
+	selectedb = AG_GetVariable(tl, "selected", &sel_ptr);
 	*sel_ptr = NULL;
 	if (it->selected) {
 		it->selected = 0;
@@ -878,7 +878,7 @@ DeselectItem(AG_Tlist *tl, AG_TlistItem *it)
 		}
 		AG_PostEvent(NULL, tl, "tlist-changed", "%p, %i", it, 0);
 	}
-	AG_WidgetUnlockBinding(selectedb);
+	AG_UnlockVariable(selectedb);
 }
 
 static void
@@ -891,7 +891,7 @@ MouseButtonDown(AG_Event *event)
 	AG_TlistItem *ti;
 	int tind;
 
-	tind = (AG_WidgetInt(tl->sbar, "value") + y/tl->item_h) + 1;
+	tind = (AG_GetInt(tl->sbar, "value") + y/tl->item_h) + 1;
 
 	/* XXX use array */
 	if ((ti = AG_TlistFindByIndex(tl, tind)) == NULL)
@@ -900,28 +900,28 @@ MouseButtonDown(AG_Event *event)
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
 		{
-			AG_WidgetBinding *offsb;
+			AG_Variable *offsb;
 			int *offs;
 
-			offsb = AG_WidgetGetBinding(tl->sbar, "value", &offs);
+			offsb = AG_GetVariable(tl->sbar, "value", &offs);
 			(*offs) -= AG_WidgetScrollDelta(&tl->wheelTicks);
 			if (*offs < 0) {
 				*offs = 0;
 			}
-			AG_WidgetUnlockBinding(offsb);
+			AG_UnlockVariable(offsb);
 		}
 		break;
 	case SDL_BUTTON_WHEELDOWN:
 		{
-			AG_WidgetBinding *offsb;
+			AG_Variable *offsb;
 			int *offs;
 
-			offsb = AG_WidgetGetBinding(tl->sbar, "value", &offs);
+			offsb = AG_GetVariable(tl->sbar, "value", &offs);
 			(*offs) += AG_WidgetScrollDelta(&tl->wheelTicks);
 			if (*offs > (tl->nitems - tl->nvisitems)) {
 				*offs = tl->nitems - tl->nvisitems;
 			}
-			AG_WidgetUnlockBinding(offsb);
+			AG_UnlockVariable(offsb);
 		}
 		break;
 	case SDL_BUTTON_LEFT:
@@ -1344,14 +1344,14 @@ AG_TlistSetPopup(AG_Tlist *tl, const char *iclass)
 void
 AG_TlistScrollToStart(AG_Tlist *tl)
 {
-	AG_WidgetSetInt(tl->sbar, "value", 0);
+	AG_SetInt(tl->sbar, "value", 0);
 }
 
 /* Scroll to the end of the list. */
 void
 AG_TlistScrollToEnd(AG_Tlist *tl)
 {
-	AG_WidgetSetInt(tl->sbar, "value", tl->nitems - tl->nvisitems);
+	AG_SetInt(tl->sbar, "value", tl->nitems - tl->nvisitems);
 }
 
 static void

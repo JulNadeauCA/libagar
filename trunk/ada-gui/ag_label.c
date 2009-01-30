@@ -5,7 +5,7 @@ void
 agar_gui_widget_label_flag (AG_Label *label, unsigned int index,
   const char *desc, unsigned int bitmask)
 {
-  AG_LabelFlagNew (label, index, desc, AG_WIDGET_FLAG, bitmask);
+  AG_LabelFlagNew (label, index, desc, AG_VARIABLE_P_FLAG, bitmask);
 }
 
 void

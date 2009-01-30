@@ -5,70 +5,44 @@
 #include <agar/math/begin.h>
 
 #if defined(QUAD_PRECISION)
-
-# define M_WIDGET_REAL		 AG_WIDGET_LONG_DOUBLE
-# define M_BindReal(w,n,p)       AG_BindLongDouble((w),(n),(p))
-# define M_WidgetReal(w,n)	 AG_WidgetLongDouble((w),(n))
-# define M_NumericalNewReal	 AG_NumericalNewLongDbl
-# define M_NumericalNewRealR	 AG_NumericalNewLongDblR
-# define M_NumericalGetReal	 AG_NumericalGetLongDbl
-# define M_NumericalNewRealPNZ(p,f,u,l,v) \
-         AG_NumericalNewLongDblR((p),(f),(u),(l),(v),M_TINYVAL,M_INFINITY)
-# define M_NumericalNewRealPNZF(p,f,u,l,v) \
-         AG_NumericalNewLongDblR((p),(f),(u),(l),(v),M_TINYVAL,M_HUGEVAL)
-# define M_NumericalNewRealP(p,f,u,l,v) \
-         AG_NumericalNewLongDblR((p),(f),(u),(l),(v),0.0,M_INFINITY)
-# define M_NumericalNewRealPF(p,f,u,l,v) \
-         AG_NumericalNewLongDblR((p),(f),(u),(l),(v),0.0,M_HUGEVAL)
-
+# define M_NumericalNewReal			AG_NumericalNewLongDbl
+# define M_NumericalNewRealR			AG_NumericalNewLongDblR
+# define M_NumericalGetReal			AG_NumericalGetLongDbl
+# define M_NumericalNewRealPNZ(p,f,u,l,v)	AG_NumericalNewLongDblR((p),(f),(u),(l),(v),M_TINYVAL,M_INFINITY)
+# define M_NumericalNewRealPNZF(p,f,u,l,v)	AG_NumericalNewLongDblR((p),(f),(u),(l),(v),M_TINYVAL,M_HUGEVAL)
+# define M_NumericalNewRealP(p,f,u,l,v)		AG_NumericalNewLongDblR((p),(f),(u),(l),(v),0.0,M_INFINITY)
+# define M_NumericalNewRealPF(p,f,u,l,v)	AG_NumericalNewLongDblR((p),(f),(u),(l),(v),0.0,M_HUGEVAL)
 #elif defined(DOUBLE_PRECISION)
-
-# define M_WIDGET_REAL		 AG_WIDGET_DOUBLE
-# define M_BindReal(w,n,p)       AG_BindDouble((w),(n),(p))
-# define M_WidgetReal(w,n)	 AG_WidgetDouble((w),(n))
-# define M_NumericalNewReal	 AG_NumericalNewDbl
-# define M_NumericalNewRealR	 AG_NumericalNewDblR
-# define M_NumericalGetReal	 AG_NumericalGetDbl
-# define M_NumericalNewRealPNZ(p,f,u,l,v) \
-         AG_NumericalNewDblR((p),(f),(u),(l),(v),M_TINYVAL,M_INFINITY)
-# define M_NumericalNewRealPNZF(p,f,u,l,v) \
-         AG_NumericalNewDblR((p),(f),(u),(l),(v),M_TINYVAL,M_HUGEVAL)
-# define M_NumericalNewRealP(p,f,u,l,v) \
-         AG_NumericalNewDblR((p),(f),(u),(l),(v),0.0,M_INFINITY)
-# define M_NumericalNewRealPF(p,f,u,l,v) \
-         AG_NumericalNewDblR((p),(f),(u),(l),(v),0.0,M_HUGEVAL)
-
+# define M_NumericalNewReal	 		AG_NumericalNewDbl
+# define M_NumericalNewRealR	 		AG_NumericalNewDblR
+# define M_NumericalGetReal	 		AG_NumericalGetDbl
+# define M_NumericalNewRealPNZ(p,f,u,l,v)	AG_NumericalNewDblR((p),(f),(u),(l),(v),M_TINYVAL,M_INFINITY)
+# define M_NumericalNewRealPNZF(p,f,u,l,v)	AG_NumericalNewDblR((p),(f),(u),(l),(v),M_TINYVAL,M_HUGEVAL)
+# define M_NumericalNewRealP(p,f,u,l,v)		AG_NumericalNewDblR((p),(f),(u),(l),(v),0.0,M_INFINITY)
+# define M_NumericalNewRealPF(p,f,u,l,v)	AG_NumericalNewDblR((p),(f),(u),(l),(v),0.0,M_HUGEVAL)
 #elif defined(SINGLE_PRECISION)
-
-# define M_WIDGET_REAL		 AG_WIDGET_FLOAT
-# define M_BindReal(w,n,p)       AG_BindFloat((w),(n),(p))
-# define M_WidgetReal(w,n)	 AG_WidgetFloat((w),(n))
-# define M_NumericalNewReal	 AG_NumericalNewFlt
-# define M_NumericalNewRealR	 AG_NumericalNewFltR
-# define M_NumericalGetReal	 AG_NumericalGetFlt
-# define M_NumericalNewRealPNZ(p,f,u,l,v) \
-         AG_NumericalNewFltR((p),(f),(u),(l),(v),M_TINYVAL,M_INFINITY)
-# define M_NumericalNewRealPNZF(p,f,u,l,v) \
-         AG_NumericalNewFltR((p),(f),(u),(l),(v),M_TINYVAL,M_HUGEVAL)
-# define M_NumericalNewRealP(p,f,u,l,v) \
-         AG_NumericalNewFltR((p),(f),(u),(l),(v),0.0,M_INFINITY)
-# define M_NumericalNewRealPF(p,f,u,l,v) \
-         AG_NumericalNewFltR((p),(f),(u),(l),(v),0.0,M_HUGEVAL)
-
+# define M_NumericalNewReal			AG_NumericalNewFlt
+# define M_NumericalNewRealR			AG_NumericalNewFltR
+# define M_NumericalGetReal	 		AG_NumericalGetFlt
+# define M_NumericalNewRealPNZ(p,f,u,l,v)	AG_NumericalNewFltR((p),(f),(u),(l),(v),M_TINYVAL,M_INFINITY)
+# define M_NumericalNewRealPNZF(p,f,u,l,v)	AG_NumericalNewFltR((p),(f),(u),(l),(v),M_TINYVAL,M_HUGEVAL)
+# define M_NumericalNewRealP(p,f,u,l,v)		AG_NumericalNewFltR((p),(f),(u),(l),(v),0.0,M_INFINITY)
+# define M_NumericalNewRealPF(p,f,u,l,v)	AG_NumericalNewFltR((p),(f),(u),(l),(v),0.0,M_HUGEVAL)
 #else
 # error "Precision is not defined"
 #endif
 
-#define M_WIDGET_TIME		 AG_WIDGET_SINT32
-#define M_BindTime(w,n,p)	 AG_BindSint32((w),(n),(p))
-#define M_WidgetTime(w,n)	 AG_WidgetSint32((w),(n))
-#define M_NumericalNewTime	 AG_NumericalNewSint32
-#define M_NumericalNewTimeR	 AG_NumericalNewSint32R
-#define M_NumericalNewTimeP(p,f,u,l,v) \
-         AG_NumericalNewSint32R((p),(f),(u),(l),(v),0,0x7fffffff-1)
-#define M_NumericalNewTimePNZ(p,f,u,l,v) \
-         AG_NumericalNewSint32R((p),(f),(u),(l),(v),1,0x7fffffff-1)
-#define M_NumericalGetTime	 AG_NumericalGetSint32
+#define M_VARIABLE_TIME	 	 AG_VARIABLE_SINT32
+#define M_VARIABLE_P_TIME	 AG_VARIABLE_P_SINT32
+#define M_BindTime		 AG_BindSint32
+#define M_BindTimeFn		 AG_BindSint32Fn
+#define M_GetTime		 AG_GetSint32
+
+#define M_NumericalNewTime	 	 AG_NumericalNewSint32
+#define M_NumericalNewTimeR	 	 AG_NumericalNewSint32R
+#define M_NumericalNewTimeP(p,f,u,l,v)	 AG_NumericalNewSint32R((p),(f),(u),(l),(v),0,0x7fffffff-1)
+#define M_NumericalNewTimePNZ(p,f,u,l,v) AG_NumericalNewSint32R((p),(f),(u),(l),(v),1,0x7fffffff-1)
+#define M_NumericalGetTime	 	 AG_NumericalGetSint32
 
 __BEGIN_DECLS
 void	*M_EditVector3(void *, const char *, M_Vector3 *);

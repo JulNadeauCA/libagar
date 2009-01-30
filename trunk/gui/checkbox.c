@@ -195,38 +195,38 @@ static void
 Draw(void *obj)
 {
 	AG_Checkbox *cb = obj;
-	AG_WidgetBinding *stateb;
+	AG_Variable *stateb;
 	void *p;
 	int state;
 	
-	stateb = AG_WidgetGetBinding(cb, "state", &p);
-	switch (stateb->type) {
-	case AG_WIDGET_INT:
-	case AG_WIDGET_UINT:
+	stateb = AG_GetVariable(cb, "state", &p);
+	switch (AG_VARIABLE_TYPE(stateb)) {
+	case AG_VARIABLE_INT:
+	case AG_VARIABLE_UINT:
 		state = *(int *)p;
 		break;
-	case AG_WIDGET_FLAG:
+	case AG_VARIABLE_P_FLAG:
 		state = *(int *)p & (int)stateb->info.bitmask;
 		break;
-	case AG_WIDGET_FLAG8:
+	case AG_VARIABLE_P_FLAG8:
 		state = *(Uint8 *)p & (Uint8)stateb->info.bitmask;
 		break;
-	case AG_WIDGET_FLAG16:
+	case AG_VARIABLE_P_FLAG16:
 		state = *(Uint16 *)p & (Uint16)stateb->info.bitmask;
 		break;
-	case AG_WIDGET_FLAG32:
+	case AG_VARIABLE_P_FLAG32:
 		state = *(Uint32 *)p & (Uint32)stateb->info.bitmask;
 		break;
-	case AG_WIDGET_UINT8:
-	case AG_WIDGET_SINT8:
+	case AG_VARIABLE_UINT8:
+	case AG_VARIABLE_SINT8:
 		state = *(Uint8 *)p;
 		break;
-	case AG_WIDGET_UINT16:
-	case AG_WIDGET_SINT16:
+	case AG_VARIABLE_UINT16:
+	case AG_VARIABLE_SINT16:
 		state = *(Uint16 *)p;
 		break;
-	case AG_WIDGET_UINT32:
-	case AG_WIDGET_SINT32:
+	case AG_VARIABLE_UINT32:
+	case AG_VARIABLE_SINT32:
 		state = *(Uint32 *)p;
 		break;
 	default:
@@ -238,7 +238,7 @@ Draw(void *obj)
 	if (cb->lbl != NULL) {
 		AG_WidgetDraw(cb->lbl);
 	}
-	AG_WidgetUnlockBinding(stateb);
+	AG_UnlockVariable(stateb);
 }
 
 static void
@@ -280,14 +280,14 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 void
 AG_CheckboxToggle(AG_Checkbox *cb)
 {
-	AG_WidgetBinding *stateb;
+	AG_Variable *stateb;
 	void *p;
 
 	AG_ObjectLock(cb);
-	stateb = AG_WidgetGetBinding(cb, "state", &p);
-	switch (stateb->type) {
-	case AG_WIDGET_INT:
-	case AG_WIDGET_UINT:
+	stateb = AG_GetVariable(cb, "state", &p);
+	switch (AG_VARIABLE_TYPE(stateb)) {
+	case AG_VARIABLE_INT:
+	case AG_VARIABLE_UINT:
 		{
 			int *state = (int *)p;
 			*state = !(*state);
@@ -295,7 +295,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    *state);
 		}
 		break;
-	case AG_WIDGET_FLAG:
+	case AG_VARIABLE_P_FLAG:
 		{
 			int *state = (int *)p;
 			AG_INVFLAGS(*state, (int)stateb->info.bitmask);
@@ -303,7 +303,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (int)*state);
 		}
 		break;
-	case AG_WIDGET_FLAG8:
+	case AG_VARIABLE_P_FLAG8:
 		{
 			Uint8 *state = (Uint8 *)p;
 			AG_INVFLAGS(*state, (Uint8)stateb->info.bitmask);
@@ -311,7 +311,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (Uint8)*state);
 		}
 		break;
-	case AG_WIDGET_FLAG16:
+	case AG_VARIABLE_P_FLAG16:
 		{
 			Uint16 *state = (Uint16 *)p;
 			AG_INVFLAGS(*state, (Uint16)stateb->info.bitmask);
@@ -319,7 +319,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (Uint16)*state);
 		}
 		break;
-	case AG_WIDGET_FLAG32:
+	case AG_VARIABLE_P_FLAG32:
 		{
 			Uint32 *state = (Uint32 *)p;
 			AG_INVFLAGS(*state, (Uint32)stateb->info.bitmask);
@@ -327,8 +327,8 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (Uint32)*state);
 		}
 		break;
-	case AG_WIDGET_UINT8:
-	case AG_WIDGET_SINT8:
+	case AG_VARIABLE_UINT8:
+	case AG_VARIABLE_SINT8:
 		{
 			Uint8 *state = (Uint8 *)p;
 			*state = !(*state);
@@ -336,8 +336,8 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (int)*state);
 		}
 		break;
-	case AG_WIDGET_UINT16:
-	case AG_WIDGET_SINT16:
+	case AG_VARIABLE_UINT16:
+	case AG_VARIABLE_SINT16:
 		{
 			Uint16 *state = (Uint16 *)p;
 			*state = !(*state);
@@ -345,8 +345,8 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 			    (int)*state);
 		}
 		break;
-	case AG_WIDGET_UINT32:
-	case AG_WIDGET_SINT32:
+	case AG_VARIABLE_UINT32:
+	case AG_VARIABLE_SINT32:
 		{
 			Uint32 *state = (Uint32 *)p;
 			*state = !(*state);
@@ -357,7 +357,7 @@ AG_CheckboxToggle(AG_Checkbox *cb)
 	default:
 		break;
 	}
-	AG_WidgetUnlockBinding(stateb);
+	AG_UnlockVariable(stateb);
 	AG_ObjectUnlock(cb);
 }
 
