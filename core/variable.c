@@ -267,7 +267,7 @@ AG_GetVariable(void *pObj, const char *name, ...)
 
 	AG_LockVariable(V);
 	if (V->fn.fnVoid != NULL) {
-		(void)AG_EvalVariable(obj, V);
+		AG_EvalVariable(obj, V);
 	}
 	*p = (agVariableTypes[V->type].indirLvl > 0) ? V->data.p : &V->data;
 	AG_ObjectUnlock(obj);
@@ -287,6 +287,7 @@ AG_GetVariableVFS(void *vfsRoot, const char *varPath)
 	char sb[AG_OBJECT_PATH_MAX+65];
 	char *s = &sb[0], *objName, *varName;
 	void *obj;
+	AG_Variable *V;
 
 	Strlcpy(sb, varPath, sizeof(sb));
 	objName = Strsep(&s, ":");
@@ -299,7 +300,13 @@ AG_GetVariableVFS(void *vfsRoot, const char *varPath)
 	if ((obj = AG_ObjectFind(vfsRoot, objName)) == NULL) {
 		return (NULL);
 	}
-	return AG_GetVariableLocked(obj, varName);
+	if ((V = AG_GetVariableLocked(obj, varName)) == NULL) {
+		return (NULL);
+	}
+	if (V->fn.fnVoid != NULL) {
+		AG_EvalVariable(obj, V);
+	}
+	return (V);
 }
 
 /*
