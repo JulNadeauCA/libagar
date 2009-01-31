@@ -45,7 +45,6 @@ typedef long double M_Real;
 # define M_REAL(n)		AG_LONG_DOUBLE(n)
 # define M_VARIABLE_REAL	AG_VARIABLE_LONG_DOUBLE
 # define M_VARIABLE_P_REAL	AG_VARIABLE_P_LONG_DOUBLE
-# define M_WIDGET_REAL		AG_VARIABLE_P_LONG_DOUBLE
 # define M_SetReal		AG_SetLongDouble
 # define M_GetReal		AG_GetLongDouble
 # define M_BindReal		AG_BindLongDouble
@@ -55,7 +54,6 @@ typedef double M_Real;
 # define M_REAL(n)		AG_DOUBLE(n)
 # define M_VARIABLE_REAL	AG_VARIABLE_DOUBLE
 # define M_VARIABLE_P_REAL	AG_VARIABLE_P_DOUBLE
-# define M_WIDGET_REAL		AG_VARIABLE_P_DOUBLE
 # define M_SetReal		AG_SetDouble
 # define M_GetReal		AG_GetDouble
 # define M_BindReal		AG_BindDouble
@@ -65,7 +63,6 @@ typedef float M_Real;
 # define M_REAL(n)		AG_FLOAT(n)
 # define M_VARIABLE_REAL	AG_VARIABLE_FLOAT
 # define M_VARIABLE_P_REAL	AG_VARIABLE_P_FLOAT
-# define M_WIDGET_REAL		AG_VARIABLE_P_FLOAT
 # define M_SetReal		AG_SetFloat
 # define M_GetReal		AG_GetFloat
 # define M_BindReal		AG_BindFloat
@@ -74,8 +71,13 @@ typedef float M_Real;
 # error "Math precision not specified"
 #endif
 
-/* TODO: Allow compiling with different M_Time types. */
 typedef M_Real M_Time;
+#define M_VARIABLE_TIME	 	 M_VARIABLE_REAL
+#define M_VARIABLE_P_TIME	 M_VARIABLE_P_REAL
+#define M_SetTime		 M_SetReal
+#define M_GetTime		 M_GetReal
+#define M_BindTime		 M_BindReal
+#define M_BindTimeFn		 M_BindRealFn
 
 typedef struct m_range { M_Real v, min, max, typ; } M_Range;
 typedef struct m_time_range { M_Time v, min, max, typ; } M_TimeRange;

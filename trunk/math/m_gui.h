@@ -32,12 +32,6 @@
 # error "Precision is not defined"
 #endif
 
-#define M_VARIABLE_TIME	 	 AG_VARIABLE_SINT32
-#define M_VARIABLE_P_TIME	 AG_VARIABLE_P_SINT32
-#define M_BindTime		 AG_BindSint32
-#define M_BindTimeFn		 AG_BindSint32Fn
-#define M_GetTime		 AG_GetSint32
-
 #define M_NumericalNewTime	 	 AG_NumericalNewSint32
 #define M_NumericalNewTimeR	 	 AG_NumericalNewSint32R
 #define M_NumericalNewTimeP(p,f,u,l,v)	 AG_NumericalNewSint32R((p),(f),(u),(l),(v),0,0x7fffffff-1)
