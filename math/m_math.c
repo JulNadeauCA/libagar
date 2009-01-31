@@ -40,16 +40,26 @@
  * Math library extensions to AG_Label(3).
  */
 static void
-PrintComplex(AG_Label *lbl, char *s, size_t len, int fPos)
+PrintReal(AG_Label *lbl, char *s, size_t len, int fPos)
 {
-	M_Complex *c = AG_LABEL_ARG(lbl,M_Complex *);
-	Snprintf(s, len, "%f+%fi", c->r, c->i);
+	M_Real r = AG_LABEL_ARG(lbl,M_Real);
+#if defined(QUAD_PRECISION)
+	Snprintf(s, len, "%llf", r);
+#else
+	Snprintf(s, len, "%f", r);
+#endif
 }
 static void
 PrintTime(AG_Label *lbl, char *s, size_t len, int fPos)
 {
 	M_Time t = AG_LABEL_ARG(lbl,M_Time);
 	AG_UnitFormat((double)t, agTimeUnits, s, len);
+}
+static void
+PrintComplex(AG_Label *lbl, char *s, size_t len, int fPos)
+{
+	M_Complex *c = AG_LABEL_ARG(lbl,M_Complex *);
+	Snprintf(s, len, "%f+%fi", c->r, c->i);
 }
 static void
 PrintVector(AG_Label *lbl, char *s, size_t len, int fPos)
@@ -100,8 +110,9 @@ M_InitSubsystem(void)
 		AG_RegisterClass(&mPlotterClass);
 		AG_RegisterClass(&mMatviewClass);
 
-		AG_RegisterLabelFormat("C", PrintComplex);
+		AG_RegisterLabelFormat("R", PrintReal);
 		AG_RegisterLabelFormat("T", PrintTime);
+		AG_RegisterLabelFormat("C", PrintComplex);
 		AG_RegisterLabelFormat("V", PrintVector);
 		AG_RegisterLabelFormat("M", PrintMatrix);
 	}

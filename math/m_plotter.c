@@ -475,6 +475,9 @@ Draw(void *obj)
 	int y0 = ptr->r.h/2;
 
 	AG_DrawBox(ptr, ptr->r, -1, AG_COLOR(GRAPH_BG_COLOR));
+	
+	AG_WidgetDraw(ptr->hbar);
+	AG_WidgetDraw(ptr->vbar);
 
 	AG_PushClipRect(ptr, ptr->r);
 	
@@ -700,11 +703,17 @@ PlotVariableVFS(M_Plotter *ptr, M_Plot *pl)
 		    AG_GetError());
 		return (0.0);
 	}
-	switch (V->type) {
+	switch (AG_VARIABLE_TYPE(V)) {
 	case AG_VARIABLE_FLOAT:		rv = (M_Real)V->data.flt;	break;
 	case AG_VARIABLE_DOUBLE:	rv = (M_Real)V->data.dbl;	break;
-	case AG_VARIABLE_INT:		rv = (M_Real)V->data.i;		break;
 	case AG_VARIABLE_UINT:		rv = (M_Real)V->data.u;		break;
+	case AG_VARIABLE_INT:		rv = (M_Real)V->data.i;		break;
+	case AG_VARIABLE_UINT8:		rv = (M_Real)V->data.u8;	break;
+	case AG_VARIABLE_SINT8:		rv = (M_Real)V->data.s8;	break;
+	case AG_VARIABLE_UINT16:	rv = (M_Real)V->data.u16;	break;
+	case AG_VARIABLE_SINT16:	rv = (M_Real)V->data.s16;	break;
+	case AG_VARIABLE_UINT32:	rv = (M_Real)V->data.u32;	break;
+	case AG_VARIABLE_SINT32:	rv = (M_Real)V->data.s32;	break;
 	default:
 		AG_Verbose("Plot \"%s\": Invalid type\n", pl->src.varVFS.key);
 		rv = 0.0;
