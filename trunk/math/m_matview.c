@@ -63,8 +63,8 @@ M_MatviewSetMatrix(M_Matview *mv, M_Matrix *M)
 	mv->matrix = MMATRIX(MFPU);
 	mv->mPre = MROWS(MFPU);
 	mv->nPre = MCOLS(MFPU);
-	AG_BindUint(mv->hBar, "max", &MMATRIX(mv->matrix)->m);
-	AG_BindUint(mv->vBar, "max", &MMATRIX(mv->matrix)->n);
+	AG_BindInt(mv->hBar, "max", (int *)&MMATRIX(mv->matrix)->m);
+	AG_BindInt(mv->vBar, "max", (int *)&MMATRIX(mv->matrix)->n);
 	AG_ObjectUnlock(mv);
 }
 
