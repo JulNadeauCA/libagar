@@ -403,7 +403,7 @@ __BEGIN_DECLS
 struct ag_list;
 extern const AG_VariableTypeInfo agVariableTypes[];
 
-int		AG_EvalVariable(AG_Object *, AG_Variable *);
+int		AG_EvalVariable(void *, AG_Variable *);
 struct ag_list *AG_VariableList(const char *, ...);
 void            AG_PrintVariable(char *, size_t, AG_Variable *);
 AG_Variable    *AG_GetVariableVFS(void *, const char *);

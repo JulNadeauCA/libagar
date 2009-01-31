@@ -160,8 +160,9 @@ FetchVariableNew(void *pObj, const char *name, enum ag_variable_type type,
 
 /* Evaluate the value of a variable from any associated function. */
 int
-AG_EvalVariable(AG_Object *obj, AG_Variable *V)
+AG_EvalVariable(void *pObj, AG_Variable *V)
 {
+	AG_Object *obj = pObj;
 	char evName[AG_EVENT_NAME_MAX];
 	AG_Event *ev;
 
@@ -347,12 +348,16 @@ AG_Set(void *pObj, const char *name, const char *fmt, ...)
 	return (rv)						\
 
 #undef  VARIABLE_SET
-#define VARIABLE_SET(obj,name,_memb,type)			\
+#define VARIABLE_SET(obj,name,_memb,_type,ntype)		\
 	AG_Variable *V;						\
 								\
 	AG_ObjectLock(obj);					\
-	V = FetchVariable(obj, name, type);			\
-	V->data._memb = v;					\
+	V = FetchVariable(obj, name, ntype);			\
+	if (agVariableTypes[V->type].indirLvl > 0) {		\
+		*(_type *)V->data.p = v;			\
+	} else {						\
+		V->data._memb = v;				\
+	}							\
 	AG_ObjectUnlock(obj);					\
 	return (V)
 
@@ -412,7 +417,7 @@ AG_GetUint(void *obj, const char *name)
 AG_Variable *
 AG_SetUint(void *obj, const char *name, Uint v)
 {
-	VARIABLE_SET(obj, name, u, AG_VARIABLE_UINT);
+	VARIABLE_SET(obj, name, u, Uint, AG_VARIABLE_UINT);
 }
 AG_Variable *
 AG_BindUint(void *obj, const char *name, Uint *v)
@@ -446,7 +451,7 @@ AG_GetInt(void *obj, const char *name)
 AG_Variable *
 AG_SetInt(void *obj, const char *name, int v)
 {
-	VARIABLE_SET(obj, name, i, AG_VARIABLE_INT);
+	VARIABLE_SET(obj, name, i, int, AG_VARIABLE_INT);
 }
 AG_Variable *
 AG_BindInt(void *obj, const char *name, int *v)
@@ -480,7 +485,7 @@ AG_GetUint8(void *obj, const char *name)
 AG_Variable *
 AG_SetUint8(void *obj, const char *name, Uint8 v)
 {
-	VARIABLE_SET(obj, name, s8, AG_VARIABLE_SINT8);
+	VARIABLE_SET(obj, name, s8, Uint8, AG_VARIABLE_SINT8);
 }
 AG_Variable *
 AG_BindUint8(void *obj, const char *name, Uint8 *v)
@@ -514,7 +519,7 @@ AG_GetSint8(void *obj, const char *name)
 AG_Variable *
 AG_SetSint8(void *obj, const char *name, Sint8 v)
 {
-	VARIABLE_SET(obj, name, s8, AG_VARIABLE_SINT8);
+	VARIABLE_SET(obj, name, s8, Sint8, AG_VARIABLE_SINT8);
 }
 AG_Variable *
 AG_BindSint8(void *obj, const char *name, Sint8 *v)
@@ -548,7 +553,7 @@ AG_GetUint16(void *obj, const char *name)
 AG_Variable *
 AG_SetUint16(void *obj, const char *name, Uint16 v)
 {
-	VARIABLE_SET(obj, name, u16, AG_VARIABLE_UINT16);
+	VARIABLE_SET(obj, name, u16, Uint16, AG_VARIABLE_UINT16);
 }
 AG_Variable *
 AG_BindUint16(void *obj, const char *name, Uint16 *v)
@@ -582,7 +587,7 @@ AG_GetSint16(void *obj, const char *name)
 AG_Variable *
 AG_SetSint16(void *obj, const char *name, Sint16 v)
 {
-	VARIABLE_SET(obj, name, s16, AG_VARIABLE_SINT16);
+	VARIABLE_SET(obj, name, s16, Sint16, AG_VARIABLE_SINT16);
 }
 AG_Variable *
 AG_BindSint16(void *obj, const char *name, Sint16 *v)
@@ -616,7 +621,7 @@ AG_GetUint32(void *obj, const char *name)
 AG_Variable *
 AG_SetUint32(void *obj, const char *name, Uint32 v)
 {
-	VARIABLE_SET(obj, name, u32, AG_VARIABLE_UINT32);
+	VARIABLE_SET(obj, name, u32, Uint32, AG_VARIABLE_UINT32);
 }
 AG_Variable *
 AG_BindUint32(void *obj, const char *name, Uint32 *v)
@@ -650,7 +655,7 @@ AG_GetSint32(void *obj, const char *name)
 AG_Variable *
 AG_SetSint32(void *obj, const char *name, Sint32 v)
 {
-	VARIABLE_SET(obj, name, s32, AG_VARIABLE_SINT32);
+	VARIABLE_SET(obj, name, s32, Sint32, AG_VARIABLE_SINT32);
 }
 AG_Variable *
 AG_BindSint32(void *obj, const char *name, Sint32 *v)
@@ -684,7 +689,7 @@ AG_GetFloat(void *obj, const char *name)
 AG_Variable *
 AG_SetFloat(void *obj, const char *name, float v)
 {
-	VARIABLE_SET(obj, name, flt, AG_VARIABLE_FLOAT);
+	VARIABLE_SET(obj, name, flt, float, AG_VARIABLE_FLOAT);
 }
 AG_Variable *
 AG_BindFloat(void *obj, const char *name, float *v)
@@ -718,7 +723,7 @@ AG_GetDouble(void *obj, const char *name)
 AG_Variable *
 AG_SetDouble(void *obj, const char *name, double v)
 {
-	VARIABLE_SET(obj, name, dbl, AG_VARIABLE_DOUBLE);
+	VARIABLE_SET(obj, name, dbl, double, AG_VARIABLE_DOUBLE);
 }
 AG_Variable *
 AG_BindDouble(void *obj, const char *name, double *v)
@@ -752,7 +757,7 @@ AG_GetPointer(void *obj, const char *name)
 AG_Variable *
 AG_SetPointer(void *obj, const char *name, void *v)
 {
-	VARIABLE_SET(obj, name, p, AG_VARIABLE_POINTER);
+	VARIABLE_SET(obj, name, p, void *, AG_VARIABLE_POINTER);
 }
 AG_Variable *
 AG_BindPointer(void *obj, const char *name, void **v)
@@ -787,7 +792,7 @@ AG_GetConstPointer(void *obj, const char *name)
 AG_Variable *
 AG_SetConstPointer(void *obj, const char *name, const void *v)
 {
-	VARIABLE_SET(obj, name, Cp, AG_VARIABLE_CONST_POINTER);
+	VARIABLE_SET(obj, name, Cp, const void *, AG_VARIABLE_CONST_POINTER);
 }
 AG_Variable *
 AG_BindConstPointer(void *obj, const char *name, const void **v)
