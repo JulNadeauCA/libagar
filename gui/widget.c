@@ -1933,7 +1933,8 @@ FindAtPoint(AG_Widget *parent, const char *type, int x, int y)
 		if ((p = FindAtPoint(chld, type, x, y)) != NULL)
 			return (p);
 	}
-	if (AG_OfClass(parent, type) &&
+	if (!(parent->flags & AG_WIDGET_HIDE) &&
+	    AG_OfClass(parent, type) &&
 	    AG_WidgetArea(parent, x, y)) {
 		return (parent);
 	}
