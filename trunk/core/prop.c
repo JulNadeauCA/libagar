@@ -41,7 +41,6 @@ AG_Prop *
 AG_SetProp(void *pObj, const char *key, enum ag_prop_type type, ...)
 {
 	AG_Object *obj = pObj;
-	AG_Variable *V;
 	va_list ap;
 
 	AG_ObjectLock(obj);
@@ -63,7 +62,8 @@ AG_SetProp(void *pObj, const char *key, enum ag_prop_type type, ...)
 	}
 	va_end(ap);
 	AG_ObjectUnlock(obj);
-	return (V);
+
+	return AG_GetProp(obj, key, type, NULL);
 }
 
 #undef PROP_GET
