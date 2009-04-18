@@ -119,7 +119,7 @@ AG_TextState *agTextState;
 
 #define GLYPH_NBUCKETS	  1024	/* Buckets for glyph cache table */
 #define GLYPH_GC_INTERVAL 1000	/* Garbage collection interval (ms) */
-#define SYMBOLS			/* Allow $(x) type symbols */
+/* #define SYMBOLS */		/* Escape $(x) type symbols */
 /* #define GLYPH_GC */
 
 static const char *agTextMsgTitles[] = {
