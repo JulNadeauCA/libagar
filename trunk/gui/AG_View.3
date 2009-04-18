@@ -81,6 +81,12 @@ a number of utility routines for surface and texture manipulation.
 .Ft "void"
 .Fn AG_ViewUpdateFB "const AG_Rect2 *r"
 .Pp
+.Ft "void"
+.Fn AG_LockView "void"
+.Pp
+.Ft "void"
+.Fn AG_UnlockView "void"
+.Pp
 .nr nS 0
 The
 .Fn AG_InitVideo
@@ -171,9 +177,17 @@ cycle.
 If the current display mode is not framebuffer-based,
 .Fn AG_ViewUpdateFB
 is a no-op.
+.Pp
+.Fn AG_LockView
+and
+.Fn AG_UnlockView
+acquire and release the locks protecting direct framebuffer access.
+If the display is not framebuffer-based or direct access does not require
+locking, these functions are no-ops.
 .Sh FRAMEBUFFER-SPECIFIC OPERATIONS
 The following operations are only available when the current display surface
 provides an accessible framebuffer.
+.Pp
 .nr nS 1
 .Ft "void"
 .Fn AG_VIEW_PUT_PIXEL "Uint8 *p" "Uint32 c"

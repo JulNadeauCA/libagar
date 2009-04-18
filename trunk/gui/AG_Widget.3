@@ -515,8 +515,12 @@ The
 .Fn AG_WidgetPutPixelRGB
 variant accepts 8-bit component values.
 .Pp
+The
 .Fn AG_WidgetBlendPixelRGBA
-blends the specified color against the current pixel at widget coordinates
+and
+.Fn AG_WidgetBlendPixel32
+routines blend the specified color against the current pixel at widget
+coordinates
 .Fa x ,
 .Fa y .
 .Fa color 
@@ -534,13 +538,28 @@ typedef enum ag_blend_func {
 } AG_BlendFn;
 .Ed
 .Pp
-Note that
-.Fn AG_WidgetPutPixel32 ,
-.Fn AG_WidgetPutPixelRGBA
+Note that the display surface must be locked (see
+.Xr AG_LockView 3
 and
-.Fn AG_WidgetBlendPixelRGBA
-are affected by the current clipping rectangle (as set by
+.Xr AG_UnlockView 3 )
+before any of the
+.Fn AG_WidgetPutPixel*
+and
+.Fn AG_WidgetBlendPixel*
+routines are invoked.
+Put-pixel and blend-pixel operations are also subject to the current clipping
+rectangle (as set by
 .Fn AG_PushClipRect ) .
+.Pp
+.Fn AG_WidgetPutPixel*
+and
+.Fn AG_WidgetBlendPixel*
+differ from the low-level 
+.Fn AG_VIEW_PUT_PIXEL*
+operations of
+.Xr AG_View 3
+in that the coordinates are relative to the widget's coordinate system.
+These operations are also emulated if the display is not framebuffer-based.
 .Sh GRAPHICS PRIMITIVES
 These primitives are designed specifically for use in GUI widgets.
 They must be called from the
