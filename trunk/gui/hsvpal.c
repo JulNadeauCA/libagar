@@ -682,7 +682,7 @@ Init(void *obj)
 	AG_BindFloat(pal, "value", &pal->v);
 	AG_BindFloat(pal, "alpha", &pal->a);
 	AG_BindUint32(pal, "pixel", &pal->pixel);
-	AG_BindPointer(pal, "pixel-format", (void **)&agVideoFmt);
+	AG_BindPointer(pal, "pixel-format", (void *)&agVideoFmt);
 /*	AG_BindFloat(pal, "red", &pal->r); */
 /*	AG_BindFloat(pal, "green", &pal->g); */
 /*	AG_BindFloat(pal, "blue", &pal->b); */
