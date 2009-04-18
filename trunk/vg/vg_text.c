@@ -53,10 +53,12 @@ Init(void *p)
 	vt->p1 = NULL;
 	vt->p2 = NULL;
 	vt->align = VG_ALIGN_MC;
-	vt->nPtrs = 0;
 	vt->fontSize = agGUI ? agDefaultFont->size : 12;
 	vt->fontFlags = agGUI ? agDefaultFont->flags : 0;
 	vt->fontFace[0] = '\0';
+	vt->args = NULL;
+	vt->argSizes = NULL;
+	vt->vsObj = NULL;
 }
 
 static int
@@ -73,7 +75,6 @@ Load(void *p, AG_DataSource *ds, const AG_Version *ver)
 	vt->fontSize = (int)AG_ReadUint8(ds);
 	vt->fontFlags = (Uint)AG_ReadUint16(ds);
 	AG_CopyString(vt->text, ds, sizeof(vt->text));
-	vt->nPtrs = 0;
 	return (0);
 }
 
@@ -95,11 +96,16 @@ Save(void *p, AG_DataSource *ds)
 void
 VG_TextPrintfPolled(VG_Text *vt, const char *fmt, ...)
 {
-	const char *p;
 	va_list ap;
 	
 	VG_Lock(VGNODE(vt)->vg);
-	
+
+	if (vt->args != NULL) {
+		AG_ListDestroy(vt->args);
+		vt->args = NULL;
+		Free(vt->argSizes);
+		vt->argSizes = NULL;
+	}
 	if (fmt != NULL) {
 		Strlcpy(vt->text, fmt, sizeof(vt->text));
 	} else {
@@ -108,23 +114,8 @@ VG_TextPrintfPolled(VG_Text *vt, const char *fmt, ...)
 	}
 
 	va_start(ap, fmt);
-	for (p = &fmt[0]; *p != '\0'; p++) {
-		if (*p == '%' && *(p+1) != '\0') {
-			switch (*(p+1)) {
-			case ' ':
-			case '(':
-			case ')':
-			case '%':
-				break;
-			default:
-				if (vt->nPtrs >= VG_TEXT_MAX_PTRS) {
-					break;
-				}
-				vt->ptrs[vt->nPtrs++] = va_arg(ap, void *);
-				break;
-			}
-		}
-	}
+	vt->args = AG_ListNew();
+	AG_PARSE_VARIABLE_ARGS(ap, fmt, vt->args, vt->argSizes);
 	va_end(ap);
 out:
 	VG_Unlock(VGNODE(vt)->vg);
@@ -150,12 +141,20 @@ VG_TextPrintf(VG_Text *vt, const char *fmt, ...)
 }
 
 static void
-RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
+RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 {
+	char sSubst[VG_TEXT_MAX], *s;
 	VG_Vector v1, v2, vMid;
 	int x, y, w, h;
 	int su = -1;			/* Make compiler happy */
 	SDL_Surface *suTmp = NULL;
+
+	if (vt->vsObj != NULL) {
+		AG_VariableSubst(vt->vsObj, sIn, sSubst, sizeof(sSubst));
+		s = sSubst;
+	} else {
+		s = sIn;
+	}
 
 	AG_PushTextState();
 	if (vt->fontFace[0] != '\0' &&
@@ -219,92 +218,47 @@ RenderTextStatic(VG_Text *vt, const char *s, VG_View *vv)
 	AG_PopTextState();
 }
 
-#define TARG(_type) (*(_type *)vt->ptrs[ri])
-
 static void
 RenderTextPolled(VG_Text *vt, VG_View *vv)
 {
-	char s[VG_TEXT_MAX], s2[32];
-	char *fmtp;
-	int ri = 0;
-	
-	s[0] = '\0';
-	for (fmtp = &vt->text[0]; *fmtp != '\0'; fmtp++) {
-		if (*fmtp == '%' && *(fmtp+1) != '\0') {
-			switch (*(fmtp+1)) {
-			case 'd':
-			case 'i':
-				Snprintf(s2, sizeof(s2), "%d", TARG(int));
-				Strlcat(s, s2, sizeof(s));
-				ri++;
-				break;
-			case 'o':
-				Snprintf(s2, sizeof(s2), "%o", TARG(Uint));
-				Strlcat(s, s2, sizeof(s));
-				ri++;
-				break;
-			case 'u':
-				Snprintf(s2, sizeof(s2), "%u", TARG(Uint));
-				Strlcat(s, s2, sizeof(s));
-				ri++;
-				break;
-			case 'x':
-				Snprintf(s2, sizeof(s2), "%x", TARG(Uint));
-				Strlcat(s, s2, sizeof(s));
-				ri++;
-				break;
-			case 'X':
-				Snprintf(s2, sizeof(s2), "%X", TARG(Uint));
-				Strlcat(s, s2, sizeof(s));
-				ri++;
-				break;
-			case 'c':
-				s2[0] = TARG(char);
-				s2[1] = '\0';
-				Strlcat(s, s2, sizeof(s));
-				ri++;
-				break;
-			case 's':
-				Strlcat(s, &TARG(char), sizeof(s));
-				ri++;
-				break;
-			case 'f':
-				Snprintf(s2, sizeof(s2), "%.2f", TARG(float));
-				Strlcat(s, s2, sizeof(s));
-				ri++;
-				break;
-			case 'F':
-				Snprintf(s2, sizeof(s2), "%.2f", TARG(double));
-				Strlcat(s, s2, sizeof(s));
-				ri++;
-				break;
-			case '%':
-				s2[0] = '%';
-				s2[1] = '\0';
-				Strlcat(s, s2, sizeof(s));
-				break;
-			}
-			fmtp++;
-		} else {
-			s2[0] = *fmtp;
-			s2[1] = '\0';
-			Strlcat(s, s2, sizeof(s));
-		}
-	}
-	RenderTextStatic(vt, s, vv);
-}
+	char val[64], s[VG_TEXT_MAX], *c;
+	int argIdx = 0;
 
-#undef TARG
+	s[0] = '\0';
+	for (c = &vt->text[0]; *c != '\0'; ) {
+		if (c[0] != '%') {
+			val[0] = *c;
+			val[1] = '\0';
+			Strlcat(s, val, sizeof(s));
+			c++;
+			continue;
+		}
+		if (c[1] == '\0' || c[1] == '%') {
+			val[0] = '%';
+			val[1] = '\0';
+			Strlcat(s, val, sizeof(s));
+			c+=2;
+			continue;
+		}
+		if ((argIdx+1) >= vt->args->n) {
+			AG_FatalError("Argument inconsistency");
+		}
+		AG_PrintVariable(val, sizeof(val), &vt->args->v[argIdx]);
+		Strlcat(s, val, sizeof(s));
+		c += vt->argSizes[argIdx++];
+	}
+	RenderText(vt, s, vv);
+}
 
 static void
 Draw(void *p, VG_View *vv)
 {
 	VG_Text *vt = p;
-	
-	if (vt->nPtrs > 0) {
+
+	if (vt->args != NULL) {
 		RenderTextPolled(vt, vv);
 	} else {
-		RenderTextStatic(vt, vt->text, vv);
+		RenderText(vt, vt->text, vv);
 	}
 }
 

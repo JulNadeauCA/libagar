@@ -68,6 +68,8 @@ MouseButtonDown(void *p, VG_Vector vPos, int button)
 			p2 = VG_PointNew(vg->root, vPos);
 			t->vtIns = VG_TextNew(vg->root, p1, p2);
 			VG_TextPrintf(t->vtIns, "%s", t->text);
+			if (VGTOOL(t)->p != NULL)
+				VG_TextSubstObject(t->vtIns, VGTOOL(t)->p);
 		} else {
 			if ((p2 = VG_NearestPoint(vv, vPos,
 			    t->vtIns->p2))) {

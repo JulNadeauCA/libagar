@@ -21,8 +21,10 @@ typedef struct vg_text {
 #define VG_TEXT_SCALED    0x08		 /* Try to scale the text */
 
 	char text[VG_TEXT_MAX];		/* Text or format string */
-	void *ptrs[VG_TEXT_MAX_PTRS];	/* Polled data */
-	int  nPtrs;
+	AG_List *args;			/* Text arguments */
+	int     *argSizes;		/* Sizes of format strings in text */
+
+	void *vsObj;			/* Object for $(foo) expansion */
 } VG_Text;
 
 #define VGTEXT(p) ((VG_Text *)(p))
@@ -74,6 +76,13 @@ VG_TextFontFlags(VG_Text *vt, Uint flags)
 {
 	VG_Lock(VGNODE(vt)->vg);
 	vt->fontFlags = flags;
+	VG_Unlock(VGNODE(vt)->vg);
+}
+static __inline__ void
+VG_TextSubstObject(VG_Text *vt, void *obj)
+{
+	VG_Lock(VGNODE(vt)->vg);
+	vt->vsObj = obj;
 	VG_Unlock(VGNODE(vt)->vg);
 }
 __END_DECLS
