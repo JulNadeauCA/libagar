@@ -37,16 +37,12 @@
 .Sh DESCRIPTION
 The Agar
 .Nm
-interface manages various configuration parameters used by Agar, but since
-it is based on the generic
-.Xr AG_Prop 3
-functionality, it is also a good way to preserve application-specific
-settings that should remain persistent.
-.Pp
-.Nm
-also implements an optional graphical dialog which allows users to configure
-generic Agar settings such as input device preferences and cosmetic GUI
-parameters.
+interface provides an
+.Xr AG_Variable 3
+interface to various Agar parameters which should remain persistent.
+Typically, parameters are registered as
+.Xr AG_Variable 3
+bindings to specific global variables.
 .Sh LOCATING FILES
 .nr nS 1
 .Ft "int"
@@ -70,28 +66,37 @@ bytes).
 .Fn AG_ConfigFile
 returns 0 on success and -1 on failure.
 .Sh CONFIGURATION PARAMETERS
-Configuration parameters are accessed directly via the global
-.Va agConfig
-object, using the
-.Xr AG_Prop 3
-interface.
-Parameters that are used by Agar are listed below:
+The following parameters are registered by Agar-Core:
 .Bl -tag -width "BOOL view.full-screen "
 .It Va BOOL initial-run
 Application is being ran for the first time (read-only).
+.It Va STRING load-path
+Directory containing data files for the
+.Xr AG_Object 3
+virtual filesystem, as well as the
+.Nm
+data itself.
+Default is platform-dependent (ie. for systems with
+.Xr getpwuid 3
+and
+.Xr getuid 3 ,
+it is
+.Pa $HOME/.(application-name) .
+.It Va STRING save-path
+Target directory for writing the
+.Xr AG_Object 3
+virtual filesystem (usually the same as
+.Sq load-path ) .
+.It Va STRING tmp-path
+Directory for temporary files.
+.El
+.Pp
+The following parameters are registered by the Agar-GUI library:
+.Pp
+.Bl -tag -width "BOOL view.full-screen "
 .It Va BOOL view.full-screen
 Display is in full-screen mode.
 Default = FALSE.
-.It Va BOOL view.async-blits
-When the
-.Dv sdl
-video driver, pass the
-.Dv SDL_ASYNCBLIT
-flag to
-.Xr SDL_SetVideoMode 3
-on initialization, possibly improving performance in multithreaded
-environments.
-Default = FALSE
 .It Va BOOL view.opengl
 OpenGL display mode (Agar must have been compiled with OpenGL support).
 Default = FALSE.
@@ -124,32 +129,6 @@ This is not needed with window systems (e.g., X11), which already implement
 international keyboard input, but it can be useful with less sophisticated
 platforms.
 Default = Platform-specific.
-.It Va STRING load-path
-Directory containing data files for the
-.Xr AG_Object 3
-virtual filesystem, as well as the
-.Nm
-data itself.
-Default is platform-dependent (ie. for systems with
-.Xr getpwuid 3
-and
-.Xr getuid 3 ,
-it is
-.Pa $HOME/.(application-name) .
-.It Va STRING save-path
-Target directory for writing the
-.Xr AG_Object 3
-virtual filesystem (usually the same as
-.Sq load-path ) .
-.It Va STRING tmp-path
-Directory for temporary files.
-.It Va STRING den-path
-Directory containing static
-.Xr AG_DEN 5
-data files, such as
-.Pa core-icons.den
-which is used by the GUI.
-Default is platform-specific.
 .It Va STRING font-path
 Directory containing font files used by the
 .Xr AG_Text 3
@@ -168,7 +147,7 @@ Default font size in points.
 Default font flags (style, weight).
 .El
 .Sh EXAMPLES
-The following example sets platform-specific font paths.
+The following example sets some platform-specific font paths.
 .Bd -literal
 #ifdef __APPLE__
 AG_PrtString(agConfig, "font-path", "%s/Library/Fonts:/Library/Fonts:"
@@ -190,3 +169,5 @@ AG_PrtString(agConfig, "font-path", "%s/.fonts:"
 The
 .Nm
 interface first appeared in Agar 1.0
+.Sh BUGS
+The Agar-GUI parameters should be documented in a separate manual page.
