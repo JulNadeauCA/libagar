@@ -270,32 +270,36 @@ NotebookTabBackground(void *nb, AG_Rect r, int idx, int isSelected)
 static void
 PaneHorizDivider(void *pa, int x, int y, int w, int isMoving)
 {
+	int xMid = x + w/2;
+
 	AG_DrawBox(pa,
 	    AG_RECT(x+1, 0, w-2, HEIGHT(pa)),
 	    isMoving?-1:1,
 	    AG_COLOR(PANE_COLOR));
-	if (!agView->opengl) {
-		int xMid = x + w/2;
-		AG_WidgetPutPixel(pa, xMid, y, AG_COLOR(PANE_CIRCLE_COLOR));
-		AG_WidgetPutPixel(pa, xMid, y-5, AG_COLOR(PANE_CIRCLE_COLOR));
-		AG_WidgetPutPixel(pa, xMid, y+5, AG_COLOR(PANE_CIRCLE_COLOR));
-	}
+	
+	AG_LockView();
+	AG_WidgetPutPixel(pa, xMid, y, AG_COLOR(PANE_CIRCLE_COLOR));
+	AG_WidgetPutPixel(pa, xMid, y-5, AG_COLOR(PANE_CIRCLE_COLOR));
+	AG_WidgetPutPixel(pa, xMid, y+5, AG_COLOR(PANE_CIRCLE_COLOR));
+	AG_UnlockView();
 }
 
 /* Vertical divider for Pane widget */
 static void
 PaneVertDivider(void *pa, int x, int y, int w, int isMoving)
 {
+	int yMid = y + w/2;
+
 	AG_DrawBox(pa,
 	    AG_RECT(0, y+1, WIDTH(pa), w-2),
 	    isMoving?-1:1,
 	    AG_COLOR(PANE_COLOR));
-	if (!agView->opengl) {
-		int yMid = y + w/2;
-		AG_WidgetPutPixel(pa, x, yMid, AG_COLOR(PANE_CIRCLE_COLOR));
-		AG_WidgetPutPixel(pa, x-5, yMid, AG_COLOR(PANE_CIRCLE_COLOR));
-		AG_WidgetPutPixel(pa, x+5, yMid, AG_COLOR(PANE_CIRCLE_COLOR));
-	}
+
+	AG_LockView();
+	AG_WidgetPutPixel(pa, x, yMid, AG_COLOR(PANE_CIRCLE_COLOR));
+	AG_WidgetPutPixel(pa, x-5, yMid, AG_COLOR(PANE_CIRCLE_COLOR));
+	AG_WidgetPutPixel(pa, x+5, yMid, AG_COLOR(PANE_CIRCLE_COLOR));
+	AG_UnlockView();
 }
 
 /* Background for Radio group */
@@ -318,6 +322,7 @@ RadioButton(AG_Radio *rad, int x, int y, int selected, int over)
 	int yc = y + rad->radius;
 	int i;
 
+	AG_LockView();
 	for (i = 0; i < 18; i+=2) {
 		AG_WidgetPutPixel(rad,
 		    xc + highlight[i],
@@ -328,6 +333,8 @@ RadioButton(AG_Radio *rad, int x, int y, int selected, int over)
 		    yc - highlight[i+1],
 		    AG_COLOR(RADIO_LO_COLOR));
 	}
+	AG_UnlockView();
+
 	if (selected) {
 		AG_DrawCircle(rad,
 		    rad->xPadding + rad->radius,

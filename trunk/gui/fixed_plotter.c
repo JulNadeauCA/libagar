@@ -199,7 +199,9 @@ Draw(void *obj)
 
 			switch (fpl->type) {
 			case AG_FIXED_PLOTTER_POINTS:
+				AG_LockView();
 				AG_WidgetPutPixel(fpl, x, y, gi->color);
+				AG_UnlockView();
 				break;
 			case AG_FIXED_PLOTTER_LINES:
 				AG_DrawLine(fpl, ox, oy, x, y, gi->color);

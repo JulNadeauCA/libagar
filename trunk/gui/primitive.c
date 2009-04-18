@@ -93,7 +93,7 @@ ArrowUpFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 	int xs = wid->rView.x1 + x0, xe = xs;
 	int x, y;
 
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	for (y = y1; y < y2; y+=2) {
 		for (x = xs; x <= xe; x++) {
 			AG_VIEW_PUT_PIXEL2_CLIPPED(x, y,
@@ -103,7 +103,7 @@ ArrowUpFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 		xs--;
 		xe++;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static void
@@ -115,7 +115,7 @@ ArrowDownFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 	int xs = wid->rView.x1 + x0, xe = xs;
 	int x, y;
 
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	for (y = y2; y > y1; y-=2) {
 		for (x = xs; x <= xe; x++) {
 			AG_VIEW_PUT_PIXEL2_CLIPPED(x, y,
@@ -125,7 +125,7 @@ ArrowDownFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 		xs--;
 		xe++;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static void
@@ -137,7 +137,7 @@ ArrowLeftFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 	int ys = wid->rView.y1 + y0, ye = ys;
 	int x, y;
 
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	for (x = x1; x < x2; x+=2) {
 		for (y = ys; y <= ye; y++) {
 			AG_VIEW_PUT_PIXEL2_CLIPPED(x+1, y, c1);
@@ -147,7 +147,7 @@ ArrowLeftFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 		ys--;
 		ye++;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static void
@@ -159,7 +159,7 @@ ArrowRightFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 	int ys = wid->rView.y1 + y0, ye = ys;
 	int x, y;
 
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	for (x = x2; x > x1; x-=2) {
 		for (y = ys; y <= ye; y++) {
 			AG_VIEW_PUT_PIXEL2_CLIPPED(x-1, y, c1);
@@ -169,7 +169,7 @@ ArrowRightFB(void *p, int x0, int y0, int h, Uint32 c1, Uint32 c2)
 		ys--;
 		ye++;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 /* Render a 3D-style box. */
@@ -209,11 +209,14 @@ BoxDisabledFB(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
 
 	/* XXX inefficient */
 	AG_DrawBox(p, r, z, c1);
+
+	AG_LockView();
 	for (y = r.y; y < r.y+r.h-2; y++) {
 		flag = !flag;
 		for (x = r.x+1+flag; x < r.x+r.w-2; x+=2)
 			AG_WidgetPutPixel(wid, x, y, cDither);
 	}
+	AG_UnlockView();
 }
 
 /* Render a 3D-style box with rounded top edges. */
@@ -266,7 +269,7 @@ BoxRoundedTopFB(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 	u = 0;
 	x = 0;
 	y = rad;
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	while (x <= y) {
 		AG_WidgetPutPixel(wid, r.x+rad-x, r.y+rad-y, cLeft);
 		AG_WidgetPutPixel(wid, r.x+rad-y, r.y+rad-x, cLeft);
@@ -291,7 +294,7 @@ BoxRoundedTopFB(void *p, AG_Rect r, int z, int rad, Uint32 cBg)
 		}
 		x++;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 /* Render a 3D-style box with rounded edges. */
@@ -359,7 +362,7 @@ BoxRoundedFB(void *p, AG_Rect r, int z, int pRad, Uint32 c)
 	u = 0;
 	x = 0;
 	y = rad;
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	while (x <= y) {
 		AG_WidgetPutPixel(wid, r.x+rad-x,    r.y+rad-y,     cL);
 		AG_WidgetPutPixel(wid, r.x+rad-y,    r.y+rad-x,     cL);
@@ -412,7 +415,7 @@ BoxRoundedFB(void *p, AG_Rect r, int z, int pRad, Uint32 c)
 	AG_DrawLineV(wid, r.x,       r.y+rad,       r.y+r.h-rad, cL);
 	AG_DrawLineV(wid, r.x+w1,    r.y+rad,       r.y+r.h-rad, cR);
 
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 /* Render a 3D-style frame. */
@@ -452,7 +455,7 @@ CircleFB(void *p, int px, int py, int radius, Uint32 color)
 	int e = 0, u = 1;
 	int x = 0, y = radius;
 
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	while (x < y) {
 		AG_WidgetPutPixel(wid, px+x, py+y, color);
 		AG_WidgetPutPixel(wid, px+x, py-y, color);
@@ -473,7 +476,7 @@ CircleFB(void *p, int px, int py, int radius, Uint32 color)
 	}
 	AG_WidgetPutPixel(wid, px-radius, py, color);
 	AG_WidgetPutPixel(wid, px+radius, py, color);
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static void
@@ -484,7 +487,7 @@ Circle2FB(void *p, int px, int py, int radius, Uint32 color)
 	int e = 0, u = 1;
 	int x = 0, y = radius;
 
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	while (x < y) {
 		AG_WidgetPutPixel(wid, px+x,   py+y, color);
 		AG_WidgetPutPixel(wid, px+x+1, py+y, color);
@@ -513,7 +516,7 @@ Circle2FB(void *p, int px, int py, int radius, Uint32 color)
 	}
 	AG_WidgetPutPixel(wid, px-radius, py, color);
 	AG_WidgetPutPixel(wid, px+radius, py, color);
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 /* Render a 3D-style line. */
@@ -543,7 +546,7 @@ LineFB(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 	dx = abs(x2 - x1);
 	dy = abs(y2 - y1);
 
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 
 	if (dy <= dx) {
 		d = dy*2 - dx;
@@ -626,7 +629,7 @@ LineFB(void *widget, int x1, int y1, int x2, int y2, Uint32 color)
 			}
 		}
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static __inline__ int
@@ -662,7 +665,7 @@ LineH32(void *widget, int x1, int x2, int y, Uint32 c)
 	if (ClipHorizLine(wid, &x1, &x2, &y, &dx)) {
 		return;
 	}
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	pDst = (Uint8 *)agView->v->pixels +
 	       (wid->rView.y1 + y)*agView->v->pitch +
 	       ((wid->rView.x1 + x1) << 2);
@@ -671,7 +674,7 @@ LineH32(void *widget, int x1, int x2, int y, Uint32 c)
 		*(Uint32 *)pDst = c;
 		pDst += 4;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static void
@@ -684,7 +687,7 @@ LineH24(void *widget, int x1, int x2, int y, Uint32 c)
 	if (ClipHorizLine(wid, &x1, &x2, &y, &dx)) {
 		return;
 	}
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	pDst = (Uint8 *)agView->v->pixels +
 	    (wid->rView.y1 + y)*agView->v->pitch +
 	    (wid->rView.x1 + x1)*3;
@@ -701,7 +704,7 @@ LineH24(void *widget, int x1, int x2, int y, Uint32 c)
 #endif
 		pDst += 3;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static void
@@ -714,7 +717,7 @@ LineH16(void *widget, int x1, int x2, int y, Uint32 c)
 	if (ClipHorizLine(wid, &x1, &x2, &y, &dx)) {
 		return;
 	}
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	pDst = (Uint8 *)agView->v->pixels +
 	       (wid->rView.y1 + y)*agView->v->pitch +
 	       ((wid->rView.x1 + x1)<<1);
@@ -723,7 +726,7 @@ LineH16(void *widget, int x1, int x2, int y, Uint32 c)
 		*(Uint16 *)pDst = c;
 		pDst += 2;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 		
 static void
@@ -736,13 +739,13 @@ LineH8(void *widget, int x1, int x2, int y, Uint32 c)
 	if (ClipHorizLine(wid, &x1, &x2, &y, &dx)) {
 		return;
 	}
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	pDst = (Uint8 *)agView->v->pixels +
 	       (wid->rView.y1 + y)*agView->v->pitch +
 	       (wid->rView.x1 + x1);
 	pEnd = pDst + dx;
 	memset(pDst, c, pEnd-pDst);
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static __inline__ int
@@ -778,7 +781,7 @@ LineV32(void *widget, int x, int y1, int y2, Uint32 c)
 	if (ClipVertLine(wid, &x, &y1, &y2, &dy)) {
 		return;
 	}
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	pDst = (Uint8 *)agView->v->pixels +
 	       (wid->rView.y1 + y1)*agView->v->pitch +
 	       ((wid->rView.x1 + x)<<2);
@@ -787,7 +790,7 @@ LineV32(void *widget, int x, int y1, int y2, Uint32 c)
 		*(Uint32 *)pDst = c;
 		pDst += agView->v->pitch;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static void
@@ -800,7 +803,7 @@ LineV24(void *widget, int x, int y1, int y2, Uint32 c)
 	if (ClipVertLine(wid, &x, &y1, &y2, &dy)) {
 		return;
 	}
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	pDst = (Uint8 *)agView->v->pixels +
 	       (wid->rView.y1 + y1)*agView->v->pitch +
 	       (wid->rView.x1 + x)*3;
@@ -817,7 +820,7 @@ LineV24(void *widget, int x, int y1, int y2, Uint32 c)
 #endif
 		pDst += agView->v->pitch;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static void
@@ -830,7 +833,7 @@ LineV16(void *widget, int x, int y1, int y2, Uint32 c)
 	if (ClipVertLine(wid, &x, &y1, &y2, &dy)) {
 		return;
 	}
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	pDst = (Uint8 *)agView->v->pixels +
 	       (wid->rView.y1 + y1)*agView->v->pitch +
 	       ((wid->rView.x1 + x)<<1);
@@ -839,7 +842,7 @@ LineV16(void *widget, int x, int y1, int y2, Uint32 c)
 		*(Uint16 *)pDst = c;
 		pDst += agView->v->pitch;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static void
@@ -852,7 +855,7 @@ LineV8(void *widget, int x, int y1, int y2, Uint32 c)
 	if (ClipVertLine(wid, &x, &y1, &y2, &dy)) {
 		return;
 	}
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 	pDst = (Uint8 *)agView->v->pixels +
 	       (wid->rView.y1 + y1)*agView->v->pitch +
 	       (wid->rView.x1 + x);
@@ -861,7 +864,7 @@ LineV8(void *widget, int x, int y1, int y2, Uint32 c)
 		*(Uint8 *)pDst = c;
 		pDst += agView->v->pitch;
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 static void
@@ -878,7 +881,7 @@ LineBlendedFB(void *widget, int x1, int y1, int x2, int y2, Uint8 c[4],
 	dx = abs(x2-x1);
 	dy = abs(y2-y1);
 
-	SDL_LockSurface(agView->v);
+	AG_LockView();
 
 	if (dy <= dx) {
 		d = dy*2 - dx;
@@ -961,7 +964,7 @@ LineBlendedFB(void *widget, int x1, int y1, int x2, int y2, Uint8 c[4],
 			}
 		}
 	}
-	SDL_UnlockSurface(agView->v);
+	AG_UnlockView();
 }
 
 /* Render a rectangle outline. */
@@ -999,6 +1002,7 @@ RectBlendedFB(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 	AG_Widget *wid = p;
 	int x, y;
 
+	AG_LockView();
 	for (y = 0; y < r.h; y++) {
 		for (x = 0; x < r.w; x++) {
 			AG_BLEND_RGBA2_CLIPPED(agView->v,
@@ -1008,6 +1012,7 @@ RectBlendedFB(void *p, AG_Rect r, Uint8 c[4], AG_BlendFn func)
 			    func);
 		}
 	}
+	AG_UnlockView();
 }
 
 /* Render a gimp-style background tiling. */
