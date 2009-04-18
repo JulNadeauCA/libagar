@@ -210,44 +210,48 @@ typedef struct ag_variable {
 
 /* Parse a variable list of AG_Variable arguments. */
 #undef  AG_PARSE_VARIABLE_ARGS
-#define AG_PARSE_VARIABLE_ARGS(ap, fmtString, L)			\
+#define AG_PARSE_VARIABLE_ARGS(ap, fmtString, L, argSizes)		\
 {									\
 	const char *fmtSpec;						\
+	int nArgs = 0;							\
 									\
 	for (fmtSpec = &(fmtString)[0]; *fmtSpec != '\0'; ) {		\
-		const char *sc;						\
+		const char *c;						\
 		int pFlag = 0, fnFlag = 0, lFlag = 0, isExtended = 0;	\
-		int inFmt = 0;						\
-		int fmtChars;						\
+		int fmtChars, inFmt = 0;				\
 		AG_Variable V;						\
 									\
-		for (sc = &fmtSpec[0], fmtChars = 0;			\
-		     *sc != '\0';					\
-		     sc++) {						\
-			if (*sc == '%') { inFmt = 1; }			\
+		for (c = &fmtSpec[0], fmtChars = 0;			\
+		     *c != '\0';					\
+		     c++) {						\
+			if (*c == '%') { inFmt = 1; }			\
 			if (inFmt) { fmtChars++; }			\
-			if (*sc == '%') {				\
+			if (*c == '%') {				\
 				continue;				\
-			} else if (*sc == '*' && sc[1] != '\0') {	\
+			} else if (*c == '*' && c[1] != '\0') {	\
 				pFlag++;				\
-			} else if (*sc == 'l' && sc[1] != '\0') {	\
+			} else if (*c == 'l' && c[1] != '\0') {	\
 				lFlag++;				\
-			} else if (*sc == 'F' && sc[1] != '\0') {	\
+			} else if (*c == 'F' && c[1] != '\0') {	\
 				fnFlag++;				\
-			} else if (*sc == '[' && sc[1] != '\0') {	\
+			} else if (*c == '[' && c[1] != '\0') {	\
 				isExtended++;				\
 				break;					\
-			} else if (inFmt && strchr("*Csdiufgp]", *sc)) { \
+			} else if (inFmt && strchr("*Csdiufgp]", *c)) { \
 				break;					\
-			} else if (strchr(".0123456789", *sc)) {	\
+			} else if (strchr(".0123456789", *c)) {	\
 				continue;				\
 			} else {					\
 				inFmt = 0;				\
 			}						\
 		}							\
 		fmtSpec += fmtChars;					\
-		if (*sc == '\0') { break; }				\
+		if (*c == '\0') { break; }				\
 		if (!inFmt) { continue;	}				\
+									\
+		(argSizes) = AG_Realloc((argSizes),			\
+		    (nArgs+1)*sizeof(int));				\
+		(argSizes)[nArgs++] = fmtChars;				\
 									\
 		V.type = AG_VARIABLE_NULL;				\
 		V.name[0] = '\0';					\
@@ -259,49 +263,49 @@ typedef struct ag_variable {
 			V.data.p = va_arg(ap, void *);			\
 		}							\
 		if (isExtended) {					\
-			sc++;						\
-			if (sc[0] == 's') {				\
-				if (sc[1] == '3' && sc[2] == '2') {	\
+			c++;						\
+			if (c[0] == 's') {				\
+				if (c[1] == '3' && c[2] == '2') {	\
 					AG_VARIABLE_SETARG(&V,		\
 					    AG_VARIABLE_SINT32,		\
 					    AG_VARIABLE_P_SINT32,	\
 					    s32, Sint32, int, 0,	\
 					    fnSint32, AG_Sint32Fn);	\
-				} else if (sc[1] == '1' && sc[2] == '6') { \
+				} else if (c[1] == '1' && c[2] == '6') { \
 					AG_VARIABLE_SETARG(&V,		\
 					    AG_VARIABLE_SINT16,		\
 					    AG_VARIABLE_P_SINT16,	\
 					    s16, Sint16, int, 0,	\
 					    fnSint16, AG_Sint16Fn);	\
-				} else if (sc[1] == '8') {		\
+				} else if (c[1] == '8') {		\
 					AG_VARIABLE_SETARG(&V,		\
 					    AG_VARIABLE_SINT8,		\
 					    AG_VARIABLE_P_SINT8,	\
 					    s8, Sint8, int, 0,		\
 					    fnSint8, AG_Sint8Fn);	\
 				}					\
-			} else if (sc[0] == 'u') {			\
-				if (sc[1] == '3' && sc[2] == '2') {	\
+			} else if (c[0] == 'u') {			\
+				if (c[1] == '3' && c[2] == '2') {	\
 					AG_VARIABLE_SETARG(&V,		\
 					    AG_VARIABLE_UINT32,		\
 					    AG_VARIABLE_P_UINT32,	\
 					    u32, Uint32, Uint, 0,	\
 					    fnUint32, AG_Uint32Fn);	\
-				} else if (sc[1] == '1' && sc[2] == '6') { \
+				} else if (c[1] == '1' && c[2] == '6') { \
 					AG_VARIABLE_SETARG(&V,		\
 					    AG_VARIABLE_UINT16,		\
 					    AG_VARIABLE_P_UINT16,	\
 					    u16, Uint16, Uint, 0,	\
 					    fnUint16, AG_Uint16Fn);	\
-				} else if (sc[1] == '8') {		\
+				} else if (c[1] == '8') {		\
 					AG_VARIABLE_SETARG(&V,		\
 					    AG_VARIABLE_UINT8, 		\
 					    AG_VARIABLE_P_UINT8,	\
 					    u8, Uint8, int, 0,		\
 					    fnUint8, AG_Uint8Fn);	\
 				}					\
-			} else if (sc[0] == 'C') {			\
-				switch (sc[1]) {			\
+			} else if (c[0] == 'C') {			\
+				switch (c[1]) {			\
 				case 'p':				\
 					AG_VARIABLE_SETARG(&V,		\
 					    AG_VARIABLE_CONST_POINTER,	\
@@ -320,7 +324,7 @@ typedef struct ag_variable {
 					    AG_StringFn);		\
 					break;				\
 				}					\
-			} else if (sc[0] == 'B') {			\
+			} else if (c[0] == 'B') {			\
 				AG_VARIABLE_SETARG_STRING_BUFFER(&V,	\
 				    AG_VARIABLE_STRING,			\
 				    AG_VARIABLE_P_STRING,		\
@@ -330,7 +334,7 @@ typedef struct ag_variable {
 			break;						\
 		}							\
 									\
-		switch (sc[0]) {					\
+		switch (c[0]) {						\
 		case 'p':						\
 			AG_VARIABLE_SETARG(&V, AG_VARIABLE_POINTER,	\
 			    AG_VARIABLE_P_POINTER,			\
@@ -407,6 +411,7 @@ AG_Variable    *AG_GetVariableVFS(void *, const char *);
 AG_Variable    *AG_GetVariable(void *, const char *, ...);
 void            AG_CopyVariable(AG_Variable *, const AG_Variable *);
 AG_Variable    *AG_Set(void *, const char *, const char *, ...);
+void		AG_VariableSubst(void *, const char *, char *, size_t);
 
 Uint         AG_GetUint(void *, const char *);
 AG_Variable *AG_SetUint(void *, const char *, Uint);

@@ -229,7 +229,7 @@ AG_PrintVariable(char *s, size_t len, AG_Variable *V)
 	case AG_VARIABLE_DOUBLE:Snprintf(s, len, "%f", V->data.dbl);		break;
 	case AG_VARIABLE_STRING:
 	case AG_VARIABLE_CONST_STRING:
-		Snprintf(s, len, "\"%s\"", V->data.s);
+		Strlcpy(s, V->data.s, len);
 		break;
 	case AG_VARIABLE_POINTER:
 	case AG_VARIABLE_CONST_POINTER:
@@ -325,11 +325,12 @@ AG_Set(void *pObj, const char *name, const char *fmt, ...)
 {
 	AG_Object *obj = pObj;
 	AG_List *vList = AG_ListNew();
+	int *argSizes = NULL;
 	AG_Variable *V;
 	va_list ap;
 
 	va_start(ap, fmt);
-	AG_PARSE_VARIABLE_ARGS(ap, fmt, vList);
+	AG_PARSE_VARIABLE_ARGS(ap, fmt, vList, argSizes);
 	va_end(ap);
 #ifdef DEBUG
 	if (vList->n != 1) { AG_FatalError("Invalid AG_Set() format"); }
@@ -340,6 +341,8 @@ AG_Set(void *pObj, const char *name, const char *fmt, ...)
 	Strlcpy(V->name, name, sizeof(V->name));
 	AG_CopyVariable(V, &vList->v[0]);
 	AG_ObjectUnlock(obj);
+
+	Free(argSizes);
 	return (V);
 }
 
@@ -355,7 +358,8 @@ AG_Set(void *pObj, const char *name, const char *fmt, ...)
 	}							\
 	if (V->fn._fn != NULL) {				\
 		_getfn((obj), V);				\
-	} else if (agVariableTypes[V->type].indirLvl > 0) {	\
+	}							\
+	if (agVariableTypes[V->type].indirLvl > 0) {		\
 		rv = *(_type *)V->data.p;			\
 	} else {						\
 		rv = V->data._memb;				\
@@ -1164,4 +1168,49 @@ AG_BindFlag32Mp(void *obj, const char *name, Uint32 *v, Uint32 bitmask,
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
 	return (V);
+}
+
+void
+AG_VariableSubst(void *obj, const char *s, char *dst, size_t len)
+{
+	char key[AG_VARIABLE_NAME_MAX], val[64];
+	const char *c, *cEnd;
+	AG_Variable *V;
+	size_t kLen;
+
+	if (len < 1) {
+		return;
+	}
+	dst[0] = '\0';
+	for (c = &s[0]; *c != '\0'; ) {
+		if (c[0] == '$' && c[1] == '(' &&
+		    (cEnd = strchr(&c[2], ')')) != NULL) {
+			if ((kLen = cEnd-&c[1]) >= sizeof(key)) {
+				c = &cEnd[1];
+				continue;
+			}
+			memcpy(key, &c[2], kLen);
+			key[kLen-1] = '\0';
+			if (strcmp(key, "name") == 0) {
+				Strlcat(dst, OBJECT(obj)->name, len);
+			} else if (strcmp(key, "class") == 0) {
+				Strlcat(dst, OBJECT(obj)->cls->name, len);
+			} else {
+				if ((V = AG_GetVariableLocked(obj, key)) != NULL) {
+					AG_PrintVariable(val, sizeof(val), V);
+					Strlcat(dst, val, len);
+				} else {
+					Strlcat(dst, "$(", len);
+					Strlcat(dst, key, len);
+					Strlcat(dst, ")", len);
+				}
+			}
+			c = cEnd+1;
+			continue;
+		}
+		val[0] = *c;
+		val[1] = '\0';
+		Strlcat(dst, val, len);
+		c++;
+	}
 }
