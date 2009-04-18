@@ -214,7 +214,7 @@ M_PlotSettings(M_Plot *pl)
 		AG_HSVPal *pal;
 
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-		AG_BindPointer(pal, "pixel-format", (void **)&agSurfaceFmt);
+		AG_BindPointer(pal, "pixel-format", (void *)&agSurfaceFmt);
 		AG_BindUint32(pal, "pixel", &pl->color);
 		AG_SetEvent(pal, "h-changed", UpdateLabel, "%p", pl);
 		AG_SetEvent(pal, "sv-changed", UpdateLabel, "%p", pl);
@@ -517,9 +517,11 @@ Draw(void *obj)
 				if (agView->opengl) {
 					/* TODO */
 				} else {
+					AG_LockView();
 					AG_WidgetPutPixel(ptr, x,
 					    y0 - y + pl->yOffs + ptr->yOffs,
 					    AG_VideoPixel(pl->color));
+					AG_UnlockView();
 				}
 				if (x > ptr->r.w) { break; }
 			}

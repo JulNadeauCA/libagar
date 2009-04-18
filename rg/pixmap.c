@@ -448,7 +448,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 	ntab = AG_NotebookAddTab(nb, _("Colors"), AG_BOX_VERT);
 	{
 		pal = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
-		AG_BindPointer(pal, "pixel-format", (void **)&tv->ts->fmt);
+		AG_BindPointer(pal, "pixel-format", (void *)&tv->ts->fmt);
 		AG_BindFloat(pal, "hue", &px->h);
 		AG_BindFloat(pal, "saturation", &px->s);
 		AG_BindFloat(pal, "value", &px->v);

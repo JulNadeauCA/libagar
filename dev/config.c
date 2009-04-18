@@ -317,7 +317,7 @@ DEV_ConfigWindow(AG_Config *cfg)
 				it->p1 = &agColors[i];
 			}
 			hsv = AG_HSVPalNew(hPane->div[1], AG_HSVPAL_EXPAND);
-			AG_BindPointer(hsv, "pixel-format", (void **)&agVideoFmt);
+			AG_BindPointer(hsv, "pixel-format", (void *)&agVideoFmt);
 			AG_SetEvent(hsv, "h-changed", SetColor, "%p", tl);
 			AG_SetEvent(hsv, "sv-changed", SetColor, "%p", tl);
 			AG_SetEvent(tl, "tlist-selected", BindSelectedColor,
