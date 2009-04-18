@@ -159,7 +159,7 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 		{
 			hsv1 = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
 			AG_BindPointer(hsv1, "pixel-format",
-			    (void **)&tv->ts->fmt);
+			    (void *)&tv->ts->fmt);
 			AG_BindUint32(hsv1, "pixel", &f->f_gradient.c1);
 		}
 
@@ -167,7 +167,7 @@ RG_FillEdit(void *p, RG_Tileview *tv)
 		{
 			hsv2 = AG_HSVPalNew(ntab, AG_HSVPAL_EXPAND);
 			AG_BindPointer(hsv1, "pixel-format",
-			    (void **)&tv->ts->fmt);
+			    (void *)&tv->ts->fmt);
 			AG_BindUint32(hsv2, "pixel", &f->f_gradient.c2);
 		}
 		
