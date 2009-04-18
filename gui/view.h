@@ -356,6 +356,8 @@ void            AG_SurfaceFree(AG_Surface *);
 
 #define AG_SurfaceLock(su) SDL_LockSurface(su)
 #define AG_SurfaceUnlock(su) SDL_UnlockSurface(su)
+#define AG_LockView() SDL_LockSurface(agView->v)
+#define AG_UnlockView() SDL_UnlockSurface(agView->v)
 
 #define AG_SetColorKey(su,f,key) \
 	SDL_SetColorKey((SDL_Surface *)(su),(f),(key))
