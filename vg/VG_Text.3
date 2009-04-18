@@ -65,6 +65,9 @@ The position and orientation of the label is described by two points.
 .Ft "void"
 .Fn VG_TextFontFlags "VG_Text *vt" "Uint flags"
 .Pp
+.Ft "void"
+.Fn VG_TextSubstObject "VG_Text *vt" "AG_Object *obj"
+.Pp
 .nr nS 0
 The
 .Fn VG_TextNew
@@ -106,6 +109,17 @@ sets the size of the font in points.
 .Fn VG_TextFontFlags
 sets various text rendering options, as documented in
 .Xr AG_Text 3 .
+.Pp
+The
+.Fn VG_TextSubstObject
+function enables run-time substitution of
+.Xr AG_Variable 3
+references in the text.
+Before the text is rendered to the display, references of the form "$(foo)"
+will be substituted for the contents of the variable
+.Sq foo
+of object
+.Fa obj .
 .Sh SEE ALSO
 .Xr VG 3 ,
 .Xr VG_Point 3
