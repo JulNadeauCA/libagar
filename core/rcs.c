@@ -35,10 +35,6 @@
 #include <config/ag_network.h>
 #include <config/version.h>
 
-#include <gui/view.h>
-#include <gui/text.h>
-#include <gui/tlist.h>
-
 #include "rcs.h"
 
 char agRcsHostname[64] = "localhost";
@@ -246,7 +242,7 @@ AG_RcsImport(AG_Object *ob)
 	switch ((status = AG_RcsStatus(ob, objdir, digest, NULL, NULL,
 	    &repo_rev, &working_rev))) {
 	case AG_RCS_ERROR:
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+		/* AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError()); */
 		break;
 	case AG_RCS_UNKNOWN:
 		break;
@@ -304,14 +300,14 @@ AG_RcsImport(AG_Object *ob)
 		AG_SetError(_("Commit failed: %s"), rcs_client.read.buf);
 		goto fail_close;
 	}
-
+#if 0
 	AG_TextTmsg(AG_MSG_INFO, 4000,
 	    _("Object %s successfully imported to repository.\n"
 	      "Size: %lu bytes\n"
 	      "%s\n"),
 	      ob->name, (Ulong)wrote,
 	      &rcs_client.read.buf[2]);
-
+#endif
 	AG_RcsSetWorkingRev(ob, 1);
 	fclose(f);
 	AG_RcsDisconnect();
@@ -348,7 +344,7 @@ AG_RcsCommit(AG_Object *ob)
 	case AG_RCS_LOCALMOD:
 		break;
 	case AG_RCS_ERROR:
-		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+/*		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError()); */
 		break;
 	case AG_RCS_UNKNOWN:
 		AG_SetError(
@@ -416,14 +412,14 @@ AG_RcsCommit(AG_Object *ob)
 		AG_SetError(_("Commit failed: %s"), rcs_client.read.buf);
 		goto fail_close;
 	}
-
+#if 0
 	AG_TextTmsg(AG_MSG_INFO, 4000,
 	    _("Object %s successfully committed to repository.\n"
 	      "Size: %lu bytes\n"
 	      "%s\n"),
 	      ob->name, (Ulong)wrote,
 	      &rcs_client.read.buf[2]);
-
+#endif
 	AG_RcsSetWorkingRev(ob, repo_rev+1);
 	fclose(f);
 	AG_RcsDisconnect();
@@ -512,8 +508,10 @@ AG_RcsUpdate(AG_Object *ob)
 	}
 	fclose(f);
 	AG_RcsSetWorkingRev(ob, repo_rev);
+#if 0
 	AG_TextTmsg(AG_MSG_INFO, 1000, "%s: r#%u -> r#%u (%lu bytes)", ob->name,
 	    working_rev, repo_rev, (unsigned long)res->argv_len[0]);
+#endif
 	NC_FreeResult(res);
 	AG_RcsDisconnect();
 
@@ -817,10 +815,11 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 	localpath[1] = '\0';
 	Strlcat(localpath, path, sizeof(localpath));
 	if ((obj = AG_ObjectFind(vfsRoot, localpath)) == NULL) {
+#if 0
 		AG_TextTmsg(AG_MSG_INFO, 750,
 		    _("Creating working copy of %s (%s)."),
 		    name, type);
-
+#endif
 		obj = Malloc(cls->size);
 		AG_ObjectInit(obj, cls);
 		AG_ObjectSetName(obj, "%s", name);
@@ -830,7 +829,9 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 		}
 		AG_ObjectUnlinkDatafiles(obj);
 		if (AG_ObjectSave(obj) == -1) {
+#if 0
 			AG_TextMsg(AG_MSG_ERROR, "%s: %s", name, AG_GetError());
+#endif
 		}
 		if (AG_RcsSetWorkingRev(obj, 0) == -1) {
 			AG_ObjectDetach(obj);
@@ -849,7 +850,9 @@ AG_RcsCheckout(void *vfsRoot, const char *path)
 	if (AG_RcsUpdate(obj) == -1) {
 		goto fail;
 	}
+#if 0
 	AG_TextTmsg(AG_MSG_INFO, 1000, _("Object %s updated."), name);
+#endif
 	AG_RcsDisconnect();
 	return (0);
 fail:
