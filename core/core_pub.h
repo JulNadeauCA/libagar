@@ -30,6 +30,7 @@
 #include <agar/core/file.h>
 #include <agar/core/dir.h>
 #include <agar/core/dso.h>
+#include <agar/core/time.h>
 
 #include <agar/core/core_close.h>
 #endif

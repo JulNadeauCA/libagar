@@ -217,20 +217,20 @@ function advances the timing wheel and executes the callback functions of
 expired timeouts.
 The
 .Fa ticks
-argument is the current time in ticks (e.g., as obtained from
-.Xr SDL_GetTicks 3 ) .
+argument is the current time in milliseconds (usually obtained from
+.Xr AG_GetTicks 3 ) .
 This function intended to be invoked from an event loop function such as
 .Xr AG_EventLoop 3 ,
 in the following way:
 .Bd -literal
 	if (AG_TIMEOUTS_QUEUED())
-		AG_ProcessTimeouts(SDL_GetTicks());
+		AG_ProcessTimeouts(AG_GetTicks());
 .Ed
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr AG_Event 3 ,
 .Xr AG_Object 3 ,
-.Xr SDL_GetTicks 3
+.Xr AG_GetTicks 3
 .Rs
 .%T "Hashed and Hierarchical Timing Wheels: Efficient Data Structures for Implementing a Timer Facility"
 .%A "George Varghese"
