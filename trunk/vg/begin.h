@@ -5,16 +5,8 @@
 #endif
 #define _AGAR_VG_BEGIN_H_
 
-/* Define Uint, Uchar and Ulong if needed. */
-#include <agar/config/_mk_have_unsigned_typedefs.h>
-#ifndef _MK_HAVE_UNSIGNED_TYPEDEFS
-# define _MK_HAVE_UNSIGNED_TYPEDEFS
-# define Uint unsigned int
-# define Uchar unsigned char
-# define Ulong unsigned long
-# define _AGAR_VG_DEFINED_UNSIGNED_TYPEDEFS
-#endif
-#undef _MK_HAVE_UNSIGNED_TYPEDEFS
+#include <agar/core/types.h>
+#include <agar/core/attributes.h>
 
 /* Define internationalization macros if NLS is enabled. */
 #include <agar/config/enable_nls.h>
@@ -157,36 +149,4 @@
 #  define NULL ((void *)0)
 #  define _AGAR_VG_DEFINED_NULL
 # endif
-#endif
-
-/* Expand FOO_ATTRIBUTE() to supported compiler attributes. */
-#include <agar/config/have_bounded_attribute.h>
-#include <agar/config/have_format_attribute.h>
-#include <agar/config/have_nonnull_attribute.h>
-#include <agar/config/have_packed_attribute.h>
-#include <agar/config/have_aligned_attribute.h>
-#ifdef HAVE_BOUNDED_ATTRIBUTE
-# define BOUNDED_ATTRIBUTE(t, a, b) __attribute__((__bounded__ (t,a,b)))
-#else
-# define BOUNDED_ATTRIBUTE(t, a, b)
-#endif
-#ifdef HAVE_FORMAT_ATTRIBUTE
-# define FORMAT_ATTRIBUTE(t, a, b) __attribute__((__format__ (t,a,b)))
-#else
-# define FORMAT_ATTRIBUTE(t, a, b)
-#endif
-#ifdef HAVE_NONNULL_ATTRIBUTE
-# define NONNULL_ATTRIBUTE(a) __attribute__((__nonnull__ (a)))
-#else
-# define NONNULL_ATTRIBUTE(a)
-#endif
-#ifdef HAVE_PACKED_ATTRIBUTE
-# define PACKED_ATTRIBUTE __attribute__((__packed__))
-#else
-# define PACKED_ATTRIBUTE
-#endif
-#ifdef HAVE_ALIGNED_ATTRIBUTE
-# define ALIGNED_ATTRIBUTE(a) __attribute__((__aligned__ (a)))
-#else
-# define ALIGNED_ATTRIBUTE(a)
 #endif
