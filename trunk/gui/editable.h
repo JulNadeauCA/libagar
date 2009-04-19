@@ -106,14 +106,15 @@ int      AG_EditableInt(AG_Editable *);
 float    AG_EditableFlt(AG_Editable *);
 double   AG_EditableDbl(AG_Editable *);
 
-/* Legacy */
-#define AG_EditableSetWriteable(tb,flag)	do {	\
+#ifdef AG_LEGACY
+# define AG_EditableSetWriteable(tb,flag) do {	\
 	if (flag) {				\
 	 	AG_WidgetEnable(tb);		\
 	} else {				\
 		AG_WidgetDisable(tb);		\
 	}					\
 } while (0)
+#endif /* AG_LEGACY */
 
 static __inline__ void
 AG_EditableBufferChanged(AG_Editable *ed)

@@ -333,7 +333,7 @@ __END_DECLS
 
 #ifdef AG_LEGACY
 # include <agar/gui/widget_legacy.h>
-#endif
+#endif /* AG_LEGACY */
 
 #include <agar/gui/close.h>
 #endif /* _AGAR_WIDGET_H_ */

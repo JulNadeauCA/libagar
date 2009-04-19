@@ -64,13 +64,15 @@ void	   AG_ButtonText(AG_Button *, const char *, ...)
 	     FORMAT_ATTRIBUTE(printf, 2, 3)
 	     NONNULL_ATTRIBUTE(2);
 
-/* Legacy routines */
-#define AG_ButtonAct AG_ButtonNewFn
-#define AG_ButtonSetSurface(bu,su) AG_ButtonSurface((bu),(su))
-#define	AG_ButtonPrintf AG_ButtonText
-#define	AG_ButtonEnable AG_WidgetEnable
-#define	AG_ButtonDisable AG_WidgetDisable
-#define AG_ButtonSetJustification AG_ButtonJustify
+#ifdef AG_LEGACY
+# define AG_ButtonAct AG_ButtonNewFn
+# define AG_ButtonSetSurface(bu,su) AG_ButtonSurface((bu),(su))
+# define AG_ButtonPrintf AG_ButtonText
+# define AG_ButtonEnable AG_WidgetEnable
+# define AG_ButtonDisable AG_WidgetDisable
+# define AG_ButtonSetJustification AG_ButtonJustify
+#endif /* AG_LEGACY */
+
 __END_DECLS
 
 #include <agar/gui/close.h>
