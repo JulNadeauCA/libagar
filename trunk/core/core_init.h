@@ -16,8 +16,6 @@ struct ag_event;
 extern char *agProgName;	/* User program name */
 extern int agVerbose;		/* Verbose console output */
 extern int agTerminating;	/* Application is exiting */
-extern int agGUI;		/* GUI is initialized */
-extern int agInitedSDL;		/* Video system had to initialize SDL */
 
 int	 AG_InitCore(const char *, Uint);
 int	 AG_InitVideo(int, int, int, Uint);
@@ -27,8 +25,10 @@ void	 AG_AtExitFuncEv(void (*)(struct ag_event *));
 void	 AG_Quit(void);
 void	 AG_Destroy(void);
 
-/* Legacy */
-#define AG_InitInput(flags)
+#ifdef AG_LEGACY
+# define AG_InitInput(flags)
+#endif /* AG_LEGACY */
+
 __END_DECLS
 
 /* Utility macros */

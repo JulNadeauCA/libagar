@@ -63,6 +63,9 @@ and subsystems.
 .Fn AG_Quit "void"
 .Pp
 .Ft "void"
+.Fn AG_QuitGUI "void"
+.Pp
+.Ft "void"
 .Fn AG_Destroy "void"
 .Pp
 .Ft "void"
@@ -99,9 +102,9 @@ The
 function sets the video mode, initializes the font engine and GUI system.
 The graphics backend is auto-selected.
 .Pp
-Assuming SDL is available, the
+Assuming Agar was compiled with support for SDL,
 .Fn AG_InitVideoSDL
-function initializes the GUI system to use an existing SDL display surface.
+initializes the GUI system to use an existing SDL display surface.
 If the specified surface has the
 .Dv SDL_OPENGL
 flag set, it is assumed that Agar should render itself using OpenGL
@@ -125,11 +128,16 @@ The
 registers a function that will be invoked automatically by
 .Fn AG_Destroy .
 .Pp
-The
 .Fn AG_Quit
-function is used to normally terminate the application by pushing an
-.Dv SDL_QUIT
-event onto the event queue.
+immediately terminates the application by releasing resources allocated by
+Agar-Core and invoking
+.Xr exit 2 .
+.Pp
+If Agar-GUI is in use, the
+.Fn AG_QuitGUI
+function should be used instead as it requests the termination of the
+application through the event system, leaving an opportunity for the
+termination to be interrupted or aborted (e.g., by confirmation dialogs).
 .Pp
 The
 .Fn AG_Destroy
@@ -182,3 +190,5 @@ the given version number.
 http://www.libsdl.org/
 http://www.opengl.org/
 .Ed
+.Sh BUGS
+Routines related to Agar-GUI should be documented in a separate manual page.

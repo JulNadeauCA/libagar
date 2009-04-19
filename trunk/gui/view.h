@@ -3,6 +3,24 @@
 #ifndef _AGAR_GUI_VIEW_H_
 #define _AGAR_GUI_VIEW_H_
 
+/* XXX Undo stupid SDL_config.h defines */
+#undef HAVE_SNPRINTF
+#undef HAVE_VSNPRINTF
+#undef HAVE_SYS_TYPES_H
+#undef HAVE_STDIO_H
+#undef HAVE_STDLIB_H
+#undef HAVE_STDARG_H
+#undef Uint8
+#undef Sint8
+#undef Uint16
+#undef Sint16
+#undef Uint32
+#undef Sint32
+#undef Uint64
+#undef Sint64
+
+#include <SDL.h>
+
 #include <agar/config/have_opengl.h>
 #include <agar/config/view_8bpp.h>
 #include <agar/config/view_16bpp.h>
@@ -265,13 +283,16 @@ extern Uint         agClipRectCount;
 
 extern const SDL_VideoInfo *agVideoInfo; /* XXX */
 
-extern int agFullscreenMode;
-extern int agAsyncBlits;
+extern int agFullscreenMode;		/* Full-screen mode is effective */
+extern int agAsyncBlits;		/* Async blits are effective */
+extern int agGUI;			/* GUI is initialized */
+extern int agInitedSDL;			/* Video system had to initialize SDL */
 
 int  AG_InitVideo(int, int, int, Uint);
 int  AG_InitVideoSDL(SDL_Surface *, Uint);
 int  AG_InitGUI(Uint);
 void AG_DestroyGUI(void);
+void AG_QuitGUI(void);
 void AG_ClearBackground(void);
 int  AG_SetRefreshRate(int);
 void AG_ViewUpdateFB(const AG_Rect2 *);
@@ -373,6 +394,10 @@ void            AG_SurfaceFree(AG_Surface *);
 	SDL_GetRGB((pixel),(SDL_PixelFormat *)(fmt),(r),(g),(b))
 #define AG_GetRGBA(pixel,fmt,r,g,b,a) \
 	SDL_GetRGBA((pixel),(SDL_PixelFormat *)(fmt),(r),(g),(b),(a))
+
+/* Legacy */
+#define AG_SDLKEY(v) ((SDLKey)AG_INT(v))
+#define AG_SDLMOD(v) ((SDLMod)AG_INT(v))
 
 /* Convert a pixel from SurfaceFmt to VideoFmt. */
 static __inline__ Uint32
