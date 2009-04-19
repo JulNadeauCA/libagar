@@ -12,6 +12,9 @@ typedef struct ag_time_ops {
 
 __BEGIN_DECLS
 extern const AG_TimeOps *agTimeOps;
+extern const AG_TimeOps  agTimeOps_dummy;
+extern const AG_TimeOps  agTimeOps_gettimeofday;
+extern const AG_TimeOps  agTimeOps_win32;
 
 void AG_SetTimeOps(const AG_TimeOps *);
 #define AG_GetTicks  agTimeOps->GetTicks

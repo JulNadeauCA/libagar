@@ -33,6 +33,7 @@
 #include <config/localedir.h>
 #include <config/ag_network.h>
 #include <config/ag_threads.h>
+#include <config/have_gettimeofday.h>
 
 #ifdef AG_THREADS
 #include <config/have_pthreads_xopen.h>
@@ -94,7 +95,15 @@ AG_InitCore(const char *progname, Uint flags)
 
 	AG_InitClassTbl();
 	AG_RegisterClass(&agConfigClass);
-	
+
+#if defined(HAVE_GETTIMEOFDAY)
+	AG_SetTimeOps(&agTimeOps_gettimeofday);
+#elif defined(_WIN32)
+	AG_SetTimeOps(&agTimeOps_win32);
+#else
+	AG_SetTimeOps(&agTimeOps_dummy);
+#endif
+
 	AG_InitTimeouts();
 	AG_DataSourceInitSubsystem();
 
