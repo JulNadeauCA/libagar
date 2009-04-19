@@ -138,9 +138,13 @@ int agInitedSDL = 0;		/* Video system had to initialize SDL */
 int
 AG_InitGUI(Uint flags)
 {
+	extern const AG_TimeOps agTimeOps_SDL;
 	char path[AG_PATHNAME_MAX];
 	void **ops;
 	int i, n, njoys;
+
+	/* Use SDL's time interface. */
+	AG_SetTimeOps(&agTimeOps_SDL);
 
 	/* Register the built-in widget classes. */
 	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)
