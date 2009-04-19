@@ -92,15 +92,17 @@ void    AG_TextboxPrintf(AG_Textbox *, const char *, ...);
 #define AG_TextboxFlt(tb) AG_EditableFlt((tb)->ed)
 #define AG_TextboxDbl(tb) AG_EditableDbl((tb)->ed)
 
-/* Legacy interfaces */
-#define AG_TextboxPrescale AG_TextboxSizeHint
-#define AG_TextboxSetWriteable(tb,flag)	do {	\
+#ifdef AG_LEGACY
+# define AG_TextboxPrescale AG_TextboxSizeHint
+# define AG_TextboxSetWriteable(tb,flag) do {	\
 	if (flag) {				\
 	 	AG_WidgetEnable(tb);		\
 	} else {				\
 		AG_WidgetDisable(tb);		\
 	}					\
 } while (0)
+#endif /* AG_LEGACY */
+
 __END_DECLS
 
 #include <agar/gui/close.h>

@@ -208,8 +208,10 @@ void    AG_MenuSetIntBoolMp(AG_MenuItem *, int *, int, AG_Mutex *);
 
 void AG_MenuSetIntFlagsMp(AG_MenuItem *, int *, int, int, AG_Mutex *);
 
-/* Legacy interfaces */
-#define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)
+#ifdef AG_LEGACY
+# define AG_MenuAddItem(m,lbl) AG_MenuNode((m)->root,(lbl),NULL)
+#endif /* AG_LEGACY */
+
 __END_DECLS
 
 #include <agar/gui/close.h>

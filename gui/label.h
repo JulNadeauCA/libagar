@@ -108,8 +108,10 @@ void	 AG_LabelFlagNew(AG_Label *, Uint, const char *, AG_VariableType, Uint32);
 void	 AG_RegisterLabelFormat(const char *, AG_LabelFormatFn);
 void	 AG_RegisterBuiltinLabelFormats(void);
 
-/* Legacy */
-#define AG_LabelPrintf AG_LabelText
+#ifdef AG_LEGACY
+# define AG_LabelPrintf AG_LabelText
+#endif /* AG_LEGACY */
+
 __END_DECLS
 
 #include <agar/gui/close.h>
