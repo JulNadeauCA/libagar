@@ -5,52 +5,24 @@
 #include <agar/config/ag_legacy.h>
 #include <agar/config/ag_threads.h>
 
-#ifndef _AGAR_HAVE_SYS_TYPES_H
-# include <agar/config/_mk_have_sys_types_h.h>
-# define _AGAR_HAVE_SYS_TYPES_H_
-#endif
-#ifndef _AGAR_HAVE_64BIT_H
-# include <agar/config/have_64bit.h>
-# define _AGAR_HAVE_64BIT_H_
-# ifdef HAVE_64BIT
-#  define AG_HAVE_64BIT
-# endif
-#endif
-#ifndef _AGAR_HAVE_LONG_DOUBLE_H_
-# include <agar/config/have_long_double.h>
-# define _AGAR_HAVE_LONG_DOUBLE_H_
-# ifdef HAVE_LONG_DOUBLE
-#  define AG_HAVE_LONG_DOUBLE
-# endif
-#endif
-#ifndef _AGAR_HAVE_STDLIB_H
-# include <agar/config/_mk_have_stdlib_h.h>
-# define _AGAR_HAVE_STDLIB_H_
-#endif
-#ifndef _AGAR_HAVE_UNISTD_H
-# include <agar/config/_mk_have_unistd_h.h>
-# define _AGAR_HAVE_UNISTD_H_
-#endif
-
 #include <agar/core/threads.h>
 
-#ifdef _MK_HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
+#include <agar/config/_mk_have_stdlib_h.h>
 #ifdef _MK_HAVE_STDLIB_H
-#include <stdlib.h>
+# include <stdlib.h>
 #endif
+
+#include <agar/config/_mk_have_unistd_h.h>
 #ifdef _MK_HAVE_UNISTD_H
-#include <unistd.h>
+# include <unistd.h>
 #endif
+
 #include <string.h>
-#include <stdio.h>	/* For use of FILE in headers */
-#include <SDL.h>	/* For use of SDL types in headers */
+#include <stdio.h>
 
 #include <agar/core/limits.h>
-
-#include <agar/core/queue.h>	/* For FOO_ENTRY macros */
-#include <agar/core/cpuinfo.h>	/* For arch extension defines */
+#include <agar/core/queue.h>
+#include <agar/core/cpuinfo.h>
 
 #if !defined(AG_BIG_ENDIAN) && !defined(AG_LITTLE_ENDIAN)
 # define AG_BIG_ENDIAN 4321

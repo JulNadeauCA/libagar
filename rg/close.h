@@ -10,12 +10,17 @@
  * library itself.
  */
 #ifndef _AGAR_RG_INTERNAL
-# ifdef _AGAR_RG_DEFINED_UNSIGNED_TYPEDEFS
-#  undef _AGAR_RG_DEFINED_UNSIGNED_TYPEDEFS
-#  undef Uint
-#  undef Uchar
-#  undef Ulong
-# endif
+# undef Uint
+# undef Uchar
+# undef Ulong
+# undef Uint8
+# undef Sint8
+# undef Uint16
+# undef Sint16
+# undef Uint32
+# undef Sint32
+# undef Uint64
+# undef Sint64
 # ifdef _AGAR_RG_DEFINED_CDECLS
 #  undef _AGAR_RG_DEFINED_CDECLS
 #  undef __BEGIN_DECLS
@@ -26,7 +31,8 @@
 #  undef N_
 #  undef ngettext
 # endif
-#endif
+#endif /* _AGAR_RG_INTERNAL */
+
 #undef _AGAR_RG_USE_INLINE
 
 /* Reset structure packing at previous byte alignment. */
