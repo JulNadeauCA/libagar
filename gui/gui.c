@@ -131,6 +131,9 @@ void *agGUIClasses[] = {
 	NULL
 };
 
+int agGUI = 0;			/* GUI is initialized */
+int agInitedSDL = 0;		/* Video system had to initialize SDL */
+
 /* Initialize Agar-GUI */
 int
 AG_InitGUI(Uint flags)
@@ -200,4 +203,14 @@ AG_DestroyGUI(void)
 	/* Unregister the built-in widget classes. */
 	for (ops = &agGUIClasses[0]; *ops != NULL; ops++)
 		AG_UnregisterClass(*ops);
+}
+
+/* Request application termination. */
+void
+AG_QuitGUI(void)
+{
+	SDL_Event nev;
+
+	nev.type = SDL_QUIT;
+	SDL_PushEvent(&nev);
 }

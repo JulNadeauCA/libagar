@@ -8,26 +8,19 @@
 #ifndef _AGAR_CORE_CORE_H_
 #define _AGAR_CORE_CORE_H_
 
+/* For [SU]intN types */
+#include <core/types.h>
+
 #include <config/ag_debug.h>
 #include <config/ag_lockdebug.h>
 #include <config/ag_legacy.h>
 #include <config/ag_threads.h>
 #include <config/ag_network.h>
-#include <config/have_64bit.h>
-#include <config/have_long_double.h>
 
 /* For threads types and use in inlines. */
 #include <core/threads.h>
 
-/* XXX for SDL_Delay() */
-#include <SDL.h>
-#include <SDL_endian.h>
-
 /* For inline routines */
-#include <config/_mk_have_sys_types_h.h>
-#ifdef _MK_HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
 #include <config/_mk_have_stdlib_h.h>
 #ifdef _MK_HAVE_STDLIB_H
 #include <stdlib.h>
@@ -97,6 +90,7 @@
 #include <core/file.h>
 #include <core/dir.h>
 #include <core/dso.h>
+#include <core/time.h>
 
 #endif /* !_AGAR_CORE_CORE_H_ */
 #endif /* _AGAR_INTERNAL */

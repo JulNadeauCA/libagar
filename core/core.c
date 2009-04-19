@@ -48,6 +48,8 @@
 #endif
 
 #include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 #ifdef AG_THREADS
 pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */
@@ -60,8 +62,6 @@ char *agProgName = NULL;			/* User program name */
 
 int agVerbose = 0;		/* Verbose console output */
 int agTerminating = 0;		/* Application is exiting */
-int agGUI = 0;			/* GUI is initialized */
-int agInitedSDL = 0;		/* Video system had to initialize SDL */
 
 int
 AG_InitCore(const char *progname, Uint flags)
@@ -134,17 +134,15 @@ AG_AtExitFuncEv(void (*func)(AG_Event *))
 	agAtexitFuncEv = func;
 }
 
-/* Request a graceful shutdown of the application. */
+/* Immediately terminate the application. */
 void
 AG_Quit(void)
 {
-	SDL_Event nev;
-
-	nev.type = SDL_QUIT;
-	SDL_PushEvent(&nev);
+	AG_Destroy();
+	exit(0);
 }
 
-/* Immediately clean up and exit the application. */
+/* Clean up the resources allocated by Agar-Core. */
 void
 AG_Destroy(void)
 {
@@ -161,9 +159,6 @@ AG_Destroy(void)
 	AG_DestroyError();
 	AG_DestroyClassTbl();
 	Free(agProgName);
-
-	if (agInitedSDL)
-		SDL_Quit();
 }
 
 void
