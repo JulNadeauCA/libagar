@@ -61,6 +61,7 @@
 #ifdef _MK_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#include <ctype.h>
 
 #include <agar/core/begin.h>
 
