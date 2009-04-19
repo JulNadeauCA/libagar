@@ -79,6 +79,7 @@ CHECK(byte_order)
 CHECK(dlopen)
 CHECK(dyld)
 CHECK(shl_load)
+CHECK(gettimeofday)
 
 C_DEFINE(_AGAR_INTERNAL)
 C_DEFINE(_BSD_SOURCE)
@@ -127,21 +128,21 @@ else
 	HUNDEF(AG_LEGACY)
 fi
 
-# SDL is required.
-CHECK(sdl, 1.2.0)
-if [ "${HAVE_SDL}" != "yes" ]; then
-	echo "*"
-	echo "* Agar-GUI requires the SDL library. You can download it "
-	echo "* from: http://www.libsdl.org/"
-	echo "*"
-	exit 1
-fi
-
 #
 # Options specific to the Agar-GUI library.
 #
 if [ "${enable_gui}" != "no" ]; then
 	HDEFINE(ENABLE_GUI, "yes")
+
+	# SDL is currently required for the event system.
+	CHECK(sdl, 1.2.0)
+	if [ "${HAVE_SDL}" != "yes" ]; then
+		echo "*"
+		echo "* Agar-GUI requires the SDL library. You can download it "
+		echo "* from: http://www.libsdl.org/"
+		echo "*"
+		exit 1
+	fi
 
 	# Enable Freetype support if the Freetype library is found. Otherwise
 	# fall back to the bitmap font engine.

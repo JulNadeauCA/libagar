@@ -3527,6 +3527,58 @@ echo "#ifndef DSO_LIBS" > config/dso_libs.h
 echo "#define DSO_LIBS \"$DSO_LIBS\"" >> config/dso_libs.h
 echo "#endif" >> config/dso_libs.h
 echo "hdefs[\"DSO_LIBS\"] = \"$DSO_LIBS\"" >>configure.lua
+$ECHO_N "checking for the gettimeofday() function..."
+$ECHO_N "checking for the gettimeofday() function..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GETTIMEOFDAY" ]; then
+		HAVE_GETTIMEOFDAY=`cat ${cache}/ctest-HAVE_GETTIMEOFDAY`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GETTIMEOFDAY`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/time.h>
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+	struct timeval tv;
+	int rv = gettimeofday(&tv, NULL);
+	return (rv);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_GETTIMEOFDAY="yes"
+echo "#ifndef HAVE_GETTIMEOFDAY" > config/have_gettimeofday.h
+echo "#define HAVE_GETTIMEOFDAY \"$HAVE_GETTIMEOFDAY\"" >> config/have_gettimeofday.h
+echo "#endif" >> config/have_gettimeofday.h
+echo "hdefs[\"HAVE_GETTIMEOFDAY\"] = \"$HAVE_GETTIMEOFDAY\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_GETTIMEOFDAY="no"
+echo "#undef HAVE_GETTIMEOFDAY" >config/have_gettimeofday.h
+echo "hdefs[\"HAVE_GETTIMEOFDAY\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GETTIMEOFDAY" > ${cache}/ctest-HAVE_GETTIMEOFDAY
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTIMEOFDAY
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 echo "CFLAGS=$CFLAGS" >>Makefile.config
@@ -3634,6 +3686,13 @@ else
 echo "#undef AG_LEGACY" >config/ag_legacy.h
 echo "hdefs[\"AG_LEGACY\"] = nil" >>configure.lua
 fi
+if [ "${enable_gui}" != "no" ]
+ then
+ENABLE_GUI="yes"
+echo "#ifndef ENABLE_GUI" > config/enable_gui.h
+echo "#define ENABLE_GUI \"$ENABLE_GUI\"" >> config/enable_gui.h
+echo "#endif" >> config/enable_gui.h
+echo "hdefs[\"ENABLE_GUI\"] = \"$ENABLE_GUI\"" >>configure.lua
 $ECHO_N "checking for SDL (http://www.libsdl.org)..."
 $ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
 if [ "${SYSTEM}" = "Darwin" ]; then
@@ -4107,21 +4166,14 @@ echo "hdefs[\"SDL_CFLAGS\"] = nil" >>configure.lua
 echo "#undef SDL_LIBS" >config/sdl_libs.h
 echo "hdefs[\"SDL_LIBS\"] = nil" >>configure.lua
 fi;
-if [ "${HAVE_SDL}" != "yes" ]
+	if [ "${HAVE_SDL}" != "yes" ]
  then
-	echo "*"
-	echo "* Agar-GUI requires the SDL library. You can download it "
-	echo "* from: http://www.libsdl.org/"
-	echo "*"
-	exit 1
-fi
-if [ "${enable_gui}" != "no" ]
- then
-ENABLE_GUI="yes"
-echo "#ifndef ENABLE_GUI" > config/enable_gui.h
-echo "#define ENABLE_GUI \"$ENABLE_GUI\"" >> config/enable_gui.h
-echo "#endif" >> config/enable_gui.h
-echo "hdefs[\"ENABLE_GUI\"] = \"$ENABLE_GUI\"" >>configure.lua
+		echo "*"
+		echo "* Agar-GUI requires the SDL library. You can download it "
+		echo "* from: http://www.libsdl.org/"
+		echo "*"
+		exit 1
+	fi
 	if [ "${with_freetype}" != "no" ]
  then
 $ECHO_N "checking for FreeType (http://www.freetype.org)..."

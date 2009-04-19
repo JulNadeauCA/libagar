@@ -67,7 +67,7 @@ AG_ScheduleTimeout(void *p, AG_Timeout *to, Uint32 dt)
 {
 	AG_Object *ob = (p != NULL) ? p : &agTimeoutMgr;
 	AG_Timeout *toAfter;
-	Uint32 t = SDL_GetTicks()+dt;
+	Uint32 t = AG_GetTicks()+dt;
 	int listEmpty;
 
 	AG_ObjectLock(ob);
@@ -116,8 +116,8 @@ AG_DelTimeout(void *p, AG_Timeout *to)
 
 /*
  * Block the calling thread until the given timeout executes (and is not
- * immediately rescheduled), or the given delay (given in SDL_Delay()
- * ticks) is exceeded.
+ * immediately rescheduled), or the given delay (given in milliseconds)
+ * is exceeded.
  */
 int
 AG_TimeoutWait(void *p, AG_Timeout *to, Uint32 timeout)
@@ -130,7 +130,7 @@ wait:
 		AG_SetError(_("Timeout after %u ticks"), (Uint)elapsed);
 		return (-1);
 	}
-	SDL_Delay(1);
+	AG_Delay(1);
 	AG_LockTimeouts(ob);
 	if (to->flags & AG_TIMEOUT_QUEUED) {
 		AG_UnlockTimeouts(ob);
@@ -175,5 +175,5 @@ pop:
 		AG_ObjectUnlock(ob);
 	}
 	AG_UnlockTiming();
-	SDL_Delay(1);
+	AG_Delay(1);
 }

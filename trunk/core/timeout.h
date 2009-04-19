@@ -9,7 +9,7 @@ typedef struct ag_timeout {
 #define AG_CANCEL_ONDETACH	0x01	/* Cancel on ObjectDetach() */
 #define AG_CANCEL_ONLOAD	0x02	/* Cancel on ObjectLoad() */
 #define AG_TIMEOUT_QUEUED	0x04	/* In queue for execution */
-	Uint32 ticks;			/* Expiry time in SDL ticks */
+	Uint32 ticks;			/* Expiry time in ms */
 	Uint32 ival;			/* Interval in ticks */
 
 	AG_TAILQ_ENTRY(ag_timeout) timeouts;	/* Priority queue */
@@ -46,10 +46,12 @@ AG_TimeoutIsScheduled(void *obj, AG_Timeout *to)
 	return (to->flags & AG_TIMEOUT_QUEUED);
 }
 
-/* Legacy */
-#define	AG_ProcessTimeout(x) AG_ProcessTimeouts(x)
-#define AG_AddTimeout(p,to,dt) AG_ScheduleTimeout((p), (to), (dt))
-#define AG_ReplaceTimeout(p,to,dt) AG_ScheduleTimeout((p), (to), (dt))
+#ifdef AG_LEGACY
+# define AG_ProcessTimeout(x) AG_ProcessTimeouts(x)
+# define AG_AddTimeout(p,to,dt) AG_ScheduleTimeout((p),(to),(dt))
+# define AG_ReplaceTimeout(p,to,dt) AG_ScheduleTimeout((p),(to),(dt))
+#endif /* AG_LEGACY */
+
 __END_DECLS
 
 #include <agar/core/close.h>
