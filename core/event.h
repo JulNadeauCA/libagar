@@ -175,8 +175,6 @@ int       AG_SchedEvent(void *, void *, Uint32, const char *,
 int       AG_ReschedEvent(void *, const char *, Uint32);
 int       AG_CancelEvent(void *, const char *);
 void      AG_ForwardEvent(void *, void *, AG_Event *);
-void      AG_BindGlobalKey(SDLKey, SDLMod, void (*)(void));
-void      AG_BindGlobalKeyEv(SDLKey, SDLMod, void (*)(AG_Event *));
 
 /* Execute an event handler routine without processing any arguments. */
 static __inline__ void
@@ -224,12 +222,11 @@ AG_EventPopArgument(AG_Event *ev)
 }
 __END_DECLS
 
-/* Legacy */
-#define AG_SDLKEY(v) ((SDLKey)AG_INT(v))
-#define AG_SDLMOD(v) ((SDLMod)AG_INT(v))
-#define AG_EventPushChar AG_EventPushSint8
-#define AG_EventPushUChar AG_EventPushUint8
-#define AG_EventPushLong AG_EventPushSint32
-#define AG_EventPushULong AG_EventPushUint32
+#ifdef AG_LEGACY
+# define AG_EventPushChar AG_EventPushSint8
+# define AG_EventPushUChar AG_EventPushUint8
+# define AG_EventPushLong AG_EventPushSint32
+# define AG_EventPushULong AG_EventPushUint32
+#endif /* AG_LEGACY */
 
 #include <agar/core/close.h>
