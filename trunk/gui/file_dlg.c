@@ -662,8 +662,9 @@ AG_FileDlgSetDirectoryMRU(AG_FileDlg *fd, const char *key, const char *dflt)
 	char *s;
 
 	AG_ObjectLock(fd);
-	if (AG_GetProp(agConfig, key, AG_PROP_STRING, &s) != NULL) {
+	if (AG_Defined(agConfig,key) && (s = AG_GetStringDup(agConfig,key))) {
 		AG_FileDlgSetDirectory(fd, s);
+		Free(s);
 	} else {
 		AG_SetCfgString(key, "%s", dflt);
 		if (AG_ConfigSave() == -1) {

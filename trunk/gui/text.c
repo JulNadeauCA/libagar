@@ -1440,15 +1440,14 @@ AG_TextInfo(const char *key, const char *format, ...)
 	AG_Checkbox *cb;
 	AG_Button *btnOK;
 	va_list args;
-	int val;
+	AG_Variable *Vdisable;
 	
 	Strlcpy(disableSw, "info.", sizeof(disableSw));
 	Strlcat(disableSw, key, sizeof(disableSw));
-	if (AG_GetProp(agConfig, disableSw, AG_PROP_BOOL, &val) != NULL &&
-	    val == 1) {
+
+	if (AG_Defined(agConfig,disableSw) &&
+	    AG_GetInt(agConfig,disableSw) == 1)
 		return;
-	}
-	AG_SetCfgBool(disableSw, 0);
 
 	va_start(args, format);
 	Vsnprintf(msg, sizeof(msg), format, args);
@@ -1467,7 +1466,8 @@ AG_TextInfo(const char *key, const char *format, ...)
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-//	AG_WidgetBindProp(cb, "state", agConfig, disableSw);
+	Vdisable = AG_SetInt(agConfig,disableSw,0);
+	AG_BindInt(cb, "state", &Vdisable->data.i);
 
 	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
@@ -1487,15 +1487,14 @@ AG_TextWarning(const char *key, const char *format, ...)
 	AG_Checkbox *cb;
 	AG_Button *btnOK;
 	va_list args;
-	int val;
+	AG_Variable *Vdisable;
 	
 	Strlcpy(disableSw, "warn.", sizeof(disableSw));
 	Strlcat(disableSw, key, sizeof(disableSw));
-	if (AG_GetProp(agConfig, disableSw, AG_PROP_BOOL, &val) != NULL &&
-	    val == 1) {
+
+	if (AG_Defined(agConfig,disableSw) &&
+	    AG_GetInt(agConfig,disableSw) == 1)
 		return;
-	}
-	AG_SetCfgBool(disableSw, 0);
 
 	va_start(args, format);
 	Vsnprintf(msg, sizeof(msg), format, args);
@@ -1514,7 +1513,8 @@ AG_TextWarning(const char *key, const char *format, ...)
 	btnOK = AG_ButtonNewFn(vb, 0, _("Ok"), AGWINDETACH(win));
 
 	cb = AG_CheckboxNew(win, AG_CHECKBOX_HFILL, _("Don't tell me again"));
-//	AG_WidgetBindProp(cb, "state", agConfig, disableSw);
+	Vdisable = AG_SetInt(agConfig,disableSw,0);
+	AG_BindInt(cb, "state", &Vdisable->data.i);
 
 	AG_WidgetFocus(btnOK);
 	AG_WindowShow(win);
