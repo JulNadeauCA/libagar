@@ -9,12 +9,14 @@ static void OutputLIBS(void);
 
 #include "../agar-config/agar-config-generic.h"
 
-/* XXX */
-#include <config/have_sdl.h>
-#ifdef HAVE_SDL
-#include <config/sdl_libs.h>
-#include <config/sdl_cflags.h>
-#endif
+#include <config/enable_gui.h>
+#ifdef ENABLE_GUI
+# include <config/have_sdl.h>
+# ifdef HAVE_SDL
+#  include <config/sdl_libs.h>
+#  include <config/sdl_cflags.h>
+# endif
+#endif /* ENABLE_GUI */
 
 #include <config/have_math.h>
 #ifdef HAVE_MATH
@@ -65,7 +67,7 @@ static void
 OutputCFLAGS(void)
 {
 	printf("-I%s ", INCLDIR);
-#ifdef SDL_CFLAGS
+#if defined(ENABLE_GUI) && defined(SDL_CFLAGS)
 	printf("%s ", SDL_CFLAGS);
 #endif
 #ifdef MATH_CFLAGS
@@ -87,7 +89,7 @@ static void
 OutputLIBS(void)
 {
 	printf("-L%s -lag_core ", LIBDIR);
-#ifdef SDL_LIBS
+#if defined(ENABLE_GUI) && defined(SDL_LIBS)
 	printf("%s ", SDL_LIBS);
 #endif
 #ifdef MATH_LIBS

@@ -23,7 +23,7 @@ struct config_string_opt {
 };
 
 #define GENERIC_USAGE_STRING \
-	"Usage: %s [--help] [--version] [--release] [--cflags] [--libs]" \
+	"Usage: %s [--help] [--version] [--release] [--cflags] [--libs] " \
 	"[--prefix] [--sysconfdir] [--incldir] [--libdir] [--sharedir] " \
 	"[--ttfdir] [--localedir] "
 
