@@ -8,28 +8,13 @@ PROJINCLUDES=	${SRCDIR}/configure.lua
 
 include ${TOP}/Makefile.proj
 
-SUBDIR=		core agar-core-config \
-		gui agar-config \
-		vg agar-vg-config \
-		rg agar-rg-config \
-		math agar-math-config \
-		dev agar-dev-config
-
-SUBDIR_CONFIG=	agar-core-config \
-		agar-config \
-		agar-vg-config \
-		agar-rg-config \
-		agar-math-config \
-		agar-dev-config
-
-INCDIRS=core \
-	gui \
-	vg \
-	rg \
-	math \
-	dev
-
-INCPUB=	core gui vg rg math dev
+INCDIR=	core gui vg rg math dev
+SUBDIR=	core agar-core-config \
+	${SUBDIR_GUI} \
+	${SUBDIR_VG} \
+	${SUBDIR_RG} \
+	${SUBDIR_MATH} \
+	${SUBDIR_DEV}
 
 all: all-subdir
 clean: clean-config clean-subdir
@@ -80,7 +65,7 @@ release:
 install-includes:
 	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}
 	${SUDO} ${INSTALL_INCL_DIR} ${INCLDIR}/agar
-	@(cd include/agar && for DIR in ${INCDIRS}; do \
+	@(cd include/agar && for DIR in ${INCDIR}; do \
 	    echo "mk/install-includes.sh $$DIR ${INCLDIR}/agar"; \
 	    ${SUDO} env \
 	      INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
@@ -93,7 +78,7 @@ install-includes:
 	    INSTALL_INCL_DIR="${INSTALL_INCL_DIR}" \
 	    INSTALL_INCL="${INSTALL_INCL}" \
 	    ${SH} ${SRCDIR}/mk/install-includes.sh config ${INCLDIR}/agar
-	@for INC in ${INCPUB}; do \
+	@for INC in ${INCDIR}; do \
 		echo "${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
 		    ${INCLDIR}/agar/$${INC}.h"; \
 		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
