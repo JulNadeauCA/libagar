@@ -110,6 +110,7 @@ AG_ConfigInit(AG_Config *cfg, Uint flags)
 	OBJECT(cfg)->save_pfx = NULL;
 
 	AG_SetInt(cfg, "initial-run", 1);
+	AG_SetInt(cfg, "no-confirm-quit", 0);
 
 	/* XXX XXX move to agar-gui */
 	AG_SetInt(cfg, "view.full-screen", 0);
