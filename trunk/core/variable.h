@@ -407,11 +407,14 @@ extern const AG_VariableTypeInfo agVariableTypes[];
 
 int		AG_EvalVariable(void *, AG_Variable *);
 void            AG_PrintVariable(char *, size_t, AG_Variable *);
-AG_Variable    *AG_GetVariableVFS(void *, const char *);
-AG_Variable    *AG_GetVariable(void *, const char *, ...);
+AG_Variable    *AG_GetVariableVFS(void *, const char *)
+                    WARN_UNUSED_RESULT_ATTRIBUTE;
+AG_Variable    *AG_GetVariable(void *, const char *, ...)
+                    WARN_UNUSED_RESULT_ATTRIBUTE;
 void            AG_CopyVariable(AG_Variable *, const AG_Variable *);
 AG_Variable    *AG_Set(void *, const char *, const char *, ...);
-void		AG_VariableSubst(void *, const char *, char *, size_t);
+void            AG_VariableSubst(void *, const char *, char *, size_t)
+	            BOUNDED_ATTRIBUTE(__string__, 3, 4);
 
 Uint         AG_GetUint(void *, const char *);
 AG_Variable *AG_SetUint(void *, const char *, Uint);
@@ -480,12 +483,12 @@ AG_Variable *AG_BindDouble(void *, const char *, double *);
 AG_Variable *AG_BindDoubleMp(void *, const char *, double *, AG_Mutex *);
 
 size_t       AG_GetString(void *, const char *, char *, size_t)
-	                  BOUNDED_ATTRIBUTE(__string__, 3, 4);
+	         BOUNDED_ATTRIBUTE(__string__, 3, 4);
 char        *AG_GetStringDup(void *, const char *);
 AG_Variable *AG_SetString(void *, const char *, const char *);
 AG_Variable *AG_SetStringNODUP(void *, const char *, char *);
 AG_Variable *AG_SetStringFixed(void *, const char *, char *, size_t)
-                               BOUNDED_ATTRIBUTE(__string__, 3, 4);
+                 BOUNDED_ATTRIBUTE(__string__, 3, 4);
 AG_Variable *AG_PrtString(void *, const char *, const char *, ...);
 AG_Variable *AG_BindString(void *, const char *, char *, size_t);
 AG_Variable *AG_BindStringFn(void *, const char *, AG_StringFn, const char *, ...);
@@ -514,6 +517,11 @@ AG_Variable *AG_BindFlag16(void *, const char *, Uint16 *, Uint16);
 AG_Variable *AG_BindFlag16Mp(void *, const char *, Uint16 *, Uint16, AG_Mutex *);
 AG_Variable *AG_BindFlag32(void *, const char *, Uint32 *, Uint32);
 AG_Variable *AG_BindFlag32Mp(void *, const char *, Uint32 *, Uint32, AG_Mutex *);
+
+static __inline__ int          AG_Defined(void *, const char *)
+                                   WARN_UNUSED_RESULT_ATTRIBUTE;
+static __inline__ AG_Variable *AG_GetVariableLocked(void *, const char *)
+                                   WARN_UNUSED_RESULT_ATTRIBUTE;
 
 /* Return 1 if the named variable exists. */
 static __inline__ int
@@ -560,10 +568,11 @@ AG_FreeVariable(AG_Variable *V)
  * Object must be locked.
  */
 static __inline__ AG_Variable *
-AG_GetVariableLocked(AG_Object *obj, const char *name)
+AG_GetVariableLocked(void *pObj, const char *name)
 {
-	Uint i;
+	AG_Object *obj = pObj;
 	AG_Variable *V;
+	Uint i;
 	
 	for (i = 0; i < obj->nVars; i++) {
 		if (strcmp(obj->vars[i].name, name) == 0)
