@@ -803,6 +803,59 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_BOUNDED_ATTRIBUTE
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking const attribute..."
+$ECHO_N "checking const attribute..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_CONST_ATTRIBUTE" ]; then
+		HAVE_CONST_ATTRIBUTE=`cat ${cache}/ctest-HAVE_CONST_ATTRIBUTE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_CONST_ATTRIBUTE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+int foo(int) __attribute__ ((const));
+int foo(int x) { return (x*x); }
+int main(int argc, char *argv[])
+{
+	int x = foo(1);
+	return (x);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS  -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_CONST_ATTRIBUTE="yes"
+echo "HAVE_CONST_ATTRIBUTE=$HAVE_CONST_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
+echo "#ifndef HAVE_CONST_ATTRIBUTE" > config/have_const_attribute.h
+echo "#define HAVE_CONST_ATTRIBUTE \"$HAVE_CONST_ATTRIBUTE\"" >> config/have_const_attribute.h
+echo "#endif" >> config/have_const_attribute.h
+echo "hdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_CONST_ATTRIBUTE="no"
+echo "HAVE_CONST_ATTRIBUTE=$HAVE_CONST_ATTRIBUTE" >>Makefile.config
+echo "mdefs[\"HAVE_CONST_ATTRIBUTE\"] = \"$HAVE_CONST_ATTRIBUTE\"" >>configure.lua
+echo "#undef HAVE_CONST_ATTRIBUTE" >config/have_const_attribute.h
+echo "hdefs[\"HAVE_CONST_ATTRIBUTE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_CONST_ATTRIBUTE" > ${cache}/ctest-HAVE_CONST_ATTRIBUTE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CONST_ATTRIBUTE
+fi
+rm -f conftest.c $testdir/conftest
 $ECHO_N "checking deprecated attribute..."
 $ECHO_N "checking deprecated attribute..." >> config.log
 MK_CACHED="No"
