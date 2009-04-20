@@ -1004,13 +1004,7 @@ AG_SetRefreshRate(int fps)
 	AG_LockVFS(agView);
 
 	if (fps == -1) {
-		Uint fpsNom;
-
-		if (AG_GetProp(agConfig, "view.nominal-fps", AG_PROP_UINT,
-		    &fpsNom) == NULL) {
-			goto fail;
-		}
-		agView->rNom = 1000/fpsNom;
+		agView->rNom = 1000/AG_GetUint(agConfig,"view.nominal-fps");
 		agView->rCur = 0;
 		goto out;
 	}
@@ -1018,9 +1012,6 @@ AG_SetRefreshRate(int fps)
 	agView->rNom = 1000/fps;
 	agView->rCur = 0;
 out:
-	AG_UnlockVFS(agView);
-	return (0);
-fail:
 	AG_UnlockVFS(agView);
 	return (0);
 }
