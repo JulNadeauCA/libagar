@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,6 +22,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <config/enable_gui.h>
+#ifdef ENABLE_GUI
 
 #include <core/core.h>
 #include <core/config.h>
@@ -335,3 +338,4 @@ AG_WidgetClass mMatviewClass = {
 	SizeAllocate
 };
 
+#endif /* ENABLE_GUI */

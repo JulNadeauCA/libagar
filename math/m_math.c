@@ -27,14 +27,19 @@
  */
 
 #include <core/core.h>
-#include <gui/label.h>
-#include <gui/units.h>
+#include <config/enable_gui.h>
+#include <config/have_long_double.h>
 
 #include "m.h"
-#include "m_plotter.h"
-#include "m_matview.h"
 
-#include <config/have_long_double.h>
+#ifdef ENABLE_GUI
+# include <gui/label.h>
+# include <gui/units.h>
+# include "m_plotter.h"
+# include "m_matview.h"
+#endif
+
+#ifdef ENABLE_GUI
 
 /*
  * Math library extensions to AG_Label(3).
@@ -98,6 +103,7 @@ PrintMatrix(AG_Label *lbl, char *s, size_t len, int fPos)
 	}
 	Strlcat(s, "]", len);
 }
+#endif /* ENABLE_GUI */
 
 /* Initialize the math library. */
 void
@@ -106,6 +112,7 @@ M_InitSubsystem(void)
 	M_VectorInitEngine();
 	M_MatrixInitEngine();
 
+#ifdef ENABLE_GUI
 	if (agGUI) {
 		AG_RegisterClass(&mPlotterClass);
 		AG_RegisterClass(&mMatviewClass);
@@ -116,6 +123,7 @@ M_InitSubsystem(void)
 		AG_RegisterLabelFormat("V", PrintVector);
 		AG_RegisterLabelFormat("M", PrintMatrix);
 	}
+#endif /* ENABLE_GUI */
 }
 
 /* Release resources allocated by the math library. */

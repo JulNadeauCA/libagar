@@ -44,7 +44,6 @@
 
 #include <core/core.h>
 #include "m.h"
-#include "m_gui.h"
 #include "m_sparse.h"
 
 static int CountTwins( MatrixPtr, int, ElementPtr*, ElementPtr* );
