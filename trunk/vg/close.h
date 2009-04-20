@@ -10,17 +10,7 @@
  * library itself.
  */
 #ifndef _AGAR_VG_INTERNAL
-# undef Uint
-# undef Uchar
-# undef Ulong
-# undef Uint8
-# undef Sint8
-# undef Uint16
-# undef Sint16
-# undef Uint32
-# undef Sint32
-# undef Uint64
-# undef Sint64
+# include <agar/core/close_types.h>
 # ifdef _AGAR_VG_DEFINED_CDECLS
 #  undef _AGAR_VG_DEFINED_CDECLS
 #  undef __BEGIN_DECLS
@@ -59,14 +49,4 @@
 # undef NULL
 #endif
 
-/* Undo all FOO_ATTRIBUTE() definitions. */
-#undef HAVE_BOUNDED_ATTRIBUTE
-#undef HAVE_FORMAT_ATTRIBUTE
-#undef HAVE_NONNULL_ATTRIBUTE
-#undef HAVE_PACKED_ATTRIBUTE
-#undef HAVE_ALIGNED_ATTRIBUTE
-#undef BOUNDED_ATTRIBUTE
-#undef FORMAT_ATTRIBUTE
-#undef NONNULL_ATTRIBUTE
-#undef PACKED_ATTRIBUTE
-#undef ALIGNED_ATTRIBUTE
+#include <agar/core/close_attributes.h>
