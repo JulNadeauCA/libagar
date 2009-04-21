@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -347,56 +347,56 @@ install-lib: ${LIBTOOL_COOKIE}
 	@if [ "${INCL}" != "none" -a "${INCL}" != "none" ]; then \
 	    if [ ! -d "${INCLDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${INCLDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${INCLDIR}; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${INCLDIR}; \
 	    fi; \
 	    for F in ${INCL}; do \
 	        echo "${INSTALL_DATA} $$F ${INCLDIR}"; \
-	        ${SUDO} ${INSTALL_DATA} $$F ${INCLDIR}; \
+	        ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${INCLDIR}; \
 	    done; \
 	fi
 	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" -a \
 	      "${LIB_INSTALL}" = "Yes" ]; then \
 	    if [ ! -d "${LIBDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${LIBDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${LIBDIR}; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LIBDIR}; \
 	    fi; \
 	    if [ "${USE_LIBTOOL}" = "Yes" ]; then \
 	        echo "${LIBTOOL} --mode=install \
 	            ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}"; \
 	        ${SUDO} ${LIBTOOL} --mode=install \
-	            ${INSTALL_LIB} lib${LIB}.la ${LIBDIR}; \
+	            ${INSTALL_LIB} lib${LIB}.la ${DESTDIR}${LIBDIR}; \
 	        echo "${LIBTOOL} --finish ${LIBDIR}"; \
-	        ${SUDO} ${LIBTOOL} --finish ${LIBDIR}; \
+	        ${SUDO} ${LIBTOOL} --finish ${DESTDIR}${LIBDIR}; \
 	    else \
 	        echo "${INSTALL_LIB} lib${LIB}.a ${LIBDIR}"; \
-	        ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${LIBDIR}; \
+	        ${SUDO} ${INSTALL_LIB} lib${LIB}.a ${DESTDIR}${LIBDIR}; \
 	    fi; \
 	fi
 	@if [ "${SHARE}" != "none" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}; \
             fi; \
             for F in ${SHARE}; do \
                 echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
-                ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
+                ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${SHAREDIR}; \
             done; \
 	fi
 	@if [ "${SHARESRC}" != "none" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}; \
             fi; \
 	    if [ "${SRC}" != "" ]; then \
                 for F in ${SHARESRC}; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                     ${SUDO} ${INSTALL_DATA} ${SRC}/${BUILDREL}/$$F \
-		    ${SHAREDIR}; \
+		    ${DESTDIR}${SHAREDIR}; \
                 done; \
 	    else \
                 for F in ${SHARESRC}; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
-                    ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
+                    ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${SHAREDIR}; \
                 done; \
 	    fi; \
 	fi
@@ -407,22 +407,22 @@ deinstall-lib: ${LIBTOOL_COOKIE}
 	        echo "${LIBTOOL} --mode=uninstall \
 	            rm -f ${LIBDIR}/lib${LIB}.la"; \
 	        ${SUDO} ${LIBTOOL} --mode=uninstall \
-	            rm -f ${LIBDIR}/lib${LIB}.la; \
+	            rm -f ${DESTDIR}${LIBDIR}/lib${LIB}.la; \
 	    else \
 	        echo "${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a"; \
-	        ${SUDO} ${DEINSTALL_LIB} ${LIBDIR}/lib${LIB}.a; \
+	        ${SUDO} ${DEINSTALL_LIB} ${DESTDIR}${LIBDIR}/lib${LIB}.a; \
 	    fi; \
 	fi
 	@if [ "${SHARE}" != "none" ]; then \
 	    for F in ${SHARE}; do \
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
-	        ${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
+	        ${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${SHAREDIR}/$$F; \
 	    done; \
 	fi
 	@if [ "${SHARESRC}" != "none" ]; then \
 	    for F in ${SHARESRC}; do \
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
-	        ${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
+	        ${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${SHAREDIR}/$$F; \
 	    done; \
 	fi
 

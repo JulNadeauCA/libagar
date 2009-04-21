@@ -270,79 +270,79 @@ install-man-dirs:
 	@if [ "${MANS}" != "       " ]; then \
 	    if [ ! -d "${MANDIR}" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/man1" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man1"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/man1; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man1; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/man2" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man2"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/man2; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man2; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/man3" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man3"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/man3; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man3; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/man4" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man4"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/man4; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man4; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/man5" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man5"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/man5; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man5; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/man6" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man6"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/man6; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man6; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/man7" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man7"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/man7; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man7; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/man8" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man8"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/man8; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man8; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/man9" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/man9"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/man9; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/man9; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/cat1" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat1"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/cat1; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat1; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/cat2" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat2"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/cat2; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat2; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/cat3" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat3"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/cat3; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat3; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/cat4" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat4"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/cat4; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat4; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/cat5" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat5"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/cat5; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat5; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/cat6" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat6"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/cat6; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat6; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/cat7" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat7"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/cat7; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat7; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/cat8" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat8"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/cat8; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat8; \
 	    fi; \
 	    if [ ! -d "${MANDIR}/cat9" ]; then \
 	        echo "${INSTALL_MAN_DIR} ${MANDIR}/cat9"; \
-	        ${SUDO} ${INSTALL_MAN_DIR} ${MANDIR}/cat9; \
+	        ${SUDO} ${INSTALL_MAN_DIR} ${DESTDIR}${MANDIR}/cat9; \
 	    fi; \
 	fi
 
@@ -350,8 +350,8 @@ install-man:
 	@if [ "${MAN1}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    env MAN="${MAN1}" CATMAN="${CATMAN1}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${MANDIR}/man1" \
-	        CATMANDIR="${MANDIR}/cat1" \
+		MANDIR="${DESTDIR}${MANDIR}/man1" \
+	        CATMANDIR="${DESTDIR}${MANDIR}/cat1" \
 	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -361,8 +361,8 @@ install-man:
 	@if [ "${MAN2}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    env MAN="${MAN2}" CATMAN="${CATMAN2}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${MANDIR}/man2" \
-	        CATMANDIR="${MANDIR}/cat2" \
+		MANDIR="${DESTDIR}${MANDIR}/man2" \
+	        CATMANDIR="${DESTDIR}${MANDIR}/cat2" \
 	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -372,8 +372,8 @@ install-man:
 	@if [ "${MAN3}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    env MAN="${MAN3}" CATMAN="${CATMAN3}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${MANDIR}/man3" \
-	        CATMANDIR="${MANDIR}/cat3" \
+		MANDIR="${DESTDIR}${MANDIR}/man3" \
+	        CATMANDIR="${DESTDIR}${MANDIR}/cat3" \
 	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -383,8 +383,8 @@ install-man:
 	@if [ "${MAN4}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    env MAN="${MAN4}" CATMAN="${CATMAN4}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${MANDIR}/man4" \
-	        CATMANDIR="${MANDIR}/cat4" \
+		MANDIR="${DESTDIR}${MANDIR}/man4" \
+	        CATMANDIR="${DESTDIR}${MANDIR}/cat4" \
 	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -394,8 +394,8 @@ install-man:
 	@if [ "${MAN5}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    env MAN="${MAN5}" CATMAN="${CATMAN5}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${MANDIR}/man5" \
-	        CATMANDIR="${MANDIR}/cat5" \
+		MANDIR="${DESTDIR}${MANDIR}/man5" \
+	        CATMANDIR="${DESTDIR}${MANDIR}/cat5" \
 	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -405,8 +405,8 @@ install-man:
 	@if [ "${MAN6}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    env MAN="${MAN6}" CATMAN="${CATMAN6}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${MANDIR}/man6" \
-	        CATMANDIR="${MANDIR}/cat6" \
+		MANDIR="${DESTDIR}${MANDIR}/man6" \
+	        CATMANDIR="${DESTDIR}${MANDIR}/cat6" \
 	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -416,8 +416,8 @@ install-man:
 	@if [ "${MAN7}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    env MAN="${MAN7}" CATMAN="${CATMAN7}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${MANDIR}/man7" \
-	        CATMANDIR="${MANDIR}/cat7" \
+		MANDIR="${DESTDIR}${MANDIR}/man7" \
+	        CATMANDIR="${DESTDIR}${MANDIR}/cat7" \
 	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -427,8 +427,8 @@ install-man:
 	@if [ "${MAN8}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    env MAN="${MAN8}" CATMAN="${CATMAN8}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${MANDIR}/man8" \
-	        CATMANDIR="${MANDIR}/cat8" \
+		MANDIR="${DESTDIR}${MANDIR}/man8" \
+	        CATMANDIR="${DESTDIR}${MANDIR}/cat8" \
 	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -438,8 +438,8 @@ install-man:
 	@if [ "${MAN9}" != "" -a "${NOMAN}" != "yes" ]; then \
 	    env MAN="${MAN9}" CATMAN="${CATMAN9}" \
 	        INSTALL_DATA="${INSTALL_DATA}" \
-		MANDIR="${MANDIR}/man9" \
-	        CATMANDIR="${MANDIR}/cat9" \
+		MANDIR="${DESTDIR}${MANDIR}/man9" \
+	        CATMANDIR="${DESTDIR}${MANDIR}/cat9" \
 	        ${SUDO} ${SH} ${TOP}/mk/install-manpages.sh; \
 	    if [ $$? != 0 ]; then \
 	    	echo "install-manpages.sh failed"; \
@@ -452,7 +452,7 @@ install-man:
 	fi
 
 install-manlinks:
-	@(cd ${MANDIR} && \
+	@(cd ${DESTDIR}${MANDIR} && \
 	     for L in ${MANLINKS}; do \
 	        MPG=`echo $$L | sed 's/:.*//'`; \
 	        MLNK=`echo $$L | sed 's/.*://'`; \
@@ -460,7 +460,7 @@ install-manlinks:
 		echo "ln -fs $$MPG man$$MS/$$MLNK"; \
 		${SUDO} ln -fs $$MPG man$$MS/$$MLNK; \
 	    done)
-	@(cd ${MANDIR} && \
+	@(cd ${DESTDIR}${MANDIR} && \
 	     for L in ${CATLINKS}; do \
 	        MPG=`echo $$L | sed 's/:.*//'`; \
 	        MLNK=`echo $$L | sed 's/.*://'`; \
