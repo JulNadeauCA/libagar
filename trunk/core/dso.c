@@ -584,7 +584,7 @@ SymDSO_DLOPEN(AG_DSO_Generic *d, const char *sym, void **p)
 	*p = NULL;
 
 # if !defined(__ELF__) && (defined(__NetBSD__) || defined(__OpenBSD__) || \
-     defined(__FreeBSD__) || defined(__DragonFly__))
+     defined(__FreeBSD__) || defined(__DragonFly__) || defined(__FabBSD__))
 	{
 		size_t symLen = strlen(sym);
 		char *symUnder = Malloc(symLen+2);

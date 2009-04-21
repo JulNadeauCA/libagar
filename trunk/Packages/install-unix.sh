@@ -44,6 +44,9 @@ if [ "${PREFIX}" = "" ]; then
 fi
 
 case ${PLATFORM} in
+*-*-fabbsd*)
+	HOST_OS="fabbsd"
+	;;
 *-*-freebsd*)
 	HOST_OS="freebsd"
 	;;

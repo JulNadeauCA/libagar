@@ -1079,14 +1079,14 @@ compiler."
 	    # These systems don't actually have c library (as such)
 	    continue
 	    ;;
-	  *-*-openbsd*)
+	  *-*-openbsd* | *-*-fabbsd*)
 	    # Do not include libc due to us having libc/libc_r.
 	    continue
 	    ;;
 	  esac
 	elif test "$arg" = "-lc_r"; then
 	  case "$host" in
-	  *-*-openbsd*)
+	  *-*-openbsd* | *-*-fabbsd*)
 	    # Do not include libc_r directly, use -pthread flag.
 	    continue
 	    ;;
@@ -1104,7 +1104,7 @@ compiler."
 
       -pthread)
 	case $host in
-	*-*-openbsd*)
+	*-*-openbsd* | *-*-fabbsd*)
 	  deplibs="$deplibs $arg"
 	  ;;
 	*)
@@ -1817,7 +1817,7 @@ compiler."
 	*-*-cygwin* | *-*-mingw* | *-*-os2* | *-*-beos*)
 	  # these systems don't actually have a c library (as such)!
 	  ;;
-	*-*-openbsd*)
+	*-*-openbsd* | *-*-fabbsd*)
 	  # Do not include libc due to us having libc/libc_r.
 	  ;;
         *-*-rhapsody*)
