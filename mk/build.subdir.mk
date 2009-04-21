@@ -37,7 +37,7 @@ all-subdir:
 		    	exit 1; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 all-subdir-ifexists:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -50,7 +50,7 @@ all-subdir-ifexists:
 		        fi; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 clean-subdir:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -61,7 +61,7 @@ clean-subdir:
 		    	exit 1; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 clean-subdir-ifexists:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -74,7 +74,7 @@ clean-subdir-ifexists:
 		        fi; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 install-subdir:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -85,7 +85,7 @@ install-subdir:
 		    	exit 1; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 install-subdir-ifexists:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -98,7 +98,7 @@ install-subdir-ifexists:
 		        fi; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 deinstall-subdir:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -109,7 +109,7 @@ deinstall-subdir:
 		    	exit 1; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 deinstall-subdir-ifexists:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -122,7 +122,7 @@ deinstall-subdir-ifexists:
 		        fi; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 depend-subdir:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -133,7 +133,7 @@ depend-subdir:
 		    	exit 1; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 depend-subdir-ifexists:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -146,7 +146,7 @@ depend-subdir-ifexists:
 		        fi; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 
 cleandir-subdir:
@@ -158,7 +158,7 @@ cleandir-subdir:
 		    	exit 1; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 cleandir-subdir-ifexists:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -171,7 +171,7 @@ cleandir-subdir-ifexists:
 		        fi; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 regress-subdir:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -182,7 +182,7 @@ regress-subdir:
 		    	exit 1; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 regress-subdir-ifexists:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -195,7 +195,7 @@ regress-subdir-ifexists:
 		        fi; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 proj-package-subdir:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -206,7 +206,7 @@ proj-package-subdir:
 		    	exit 1; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 proj-clean-subdir:
 	@if [ "X$$SUBDIR" != "X" ]; then \
@@ -217,7 +217,7 @@ proj-clean-subdir:
 		    	exit 1; \
 		    fi; \
 		done; \
-	fi)
+	fi
 
 .PHONY:	all-subdir clean-subdir cleandir-subdir install-subdir
 .PHONY: deinstall-subdir depend-subdir regress-subdir
