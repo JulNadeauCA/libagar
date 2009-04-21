@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2003-2009 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -106,19 +106,19 @@ install-po:
 	     -a "$$_mos" != "" ]; then \
             if [ ! -d "${LOCALEDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${LOCALEDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${LOCALEDIR}; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LOCALEDIR}; \
             fi; \
             for F in $$_mos; do \
 	        _lang=`echo $$F | sed 's,\.mo,,'`; \
                 echo "${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LOCALEDIR}/$$_lang; \
                 echo "${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang/LC_MESSAGES"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${LOCALEDIR}/$$_lang/LC_MESSAGES; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${LOCALEDIR}/$$_lang/LC_MESSAGES; \
 		cp -f $$F ${DOMAIN}.mo; \
                 echo "${INSTALL_DATA} ${DOMAIN}.mo \
 		    ${LOCALEDIR}/$$_lang/LC_MESSAGES"; \
                 ${SUDO} ${INSTALL_DATA} ${DOMAIN}.mo \
-		    ${LOCALEDIR}/$$_lang/LC_MESSAGES; \
+		    ${DESTDIR}${LOCALEDIR}/$$_lang/LC_MESSAGES; \
 		rm -f ${DOMAIN}.mo; \
             done; \
 	else \
@@ -133,7 +133,7 @@ deinstall-po:
                 echo "${DEINSTALL_DATA} \
 		    ${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo"; \
                 ${SUDO} ${DEINSTALL_DATA} \
-		    ${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo; \
+		    ${DESTDIR}${LOCALEDIR}/$$_lang/LC_MESSAGES/${DOMAIN}.mo; \
             done; \
 	fi
 

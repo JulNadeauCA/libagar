@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -297,44 +297,44 @@ cleandir-prog:
 install-prog:
 	@if [ ! -e "${BINDIR}" ]; then \
 	    echo "${INSTALL_PROG_DIR} ${BINDIR}"; \
-	    ${SUDO} ${INSTALL_PROG_DIR} ${BINDIR}; \
+	    ${SUDO} ${INSTALL_PROG_DIR} ${DESTDIR}${BINDIR}; \
 	fi
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
 	    echo "${INSTALL_PROG} ${PROG}${EXECSUFFIX} ${BINDIR}"; \
-	    ${SUDO} ${INSTALL_PROG} ${PROG}${EXECSUFFIX} ${BINDIR}; \
+	    ${SUDO} ${INSTALL_PROG} ${PROG}${EXECSUFFIX} ${DESTDIR}${BINDIR}; \
 	fi
 	@if [ "${SHARE}" != "none" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}; \
             fi; \
             for F in ${SHARE}; do \
                 echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
-                ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
+                ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${SHAREDIR}; \
             done; \
 	fi
 	@if [ "${SHARESRC}" != "none" ]; then \
             if [ ! -d "${SHAREDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SHAREDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}; \
             fi; \
 	    if [ "${SRC}" != "" ]; then \
                 for F in ${SHARESRC}; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
                     ${SUDO} ${INSTALL_DATA} ${SRC}/${BUILDREL}/$$F \
-		    ${SHAREDIR}; \
+		    ${DESTDIR}${SHAREDIR}; \
                 done; \
 	    else \
                 for F in ${SHARESRC}; do \
                     echo "${INSTALL_DATA} $$F ${SHAREDIR}"; \
-                    ${SUDO} ${INSTALL_DATA} $$F ${SHAREDIR}; \
+                    ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${SHAREDIR}; \
                 done; \
 	    fi; \
 	fi
 	@if [ "${CONF}" != "none" ]; then \
             if [ ! -d "${SYSCONFDIR}" ]; then \
                 echo "${INSTALL_DATA_DIR} ${SYSCONFDIR}"; \
-                ${SUDO} ${INSTALL_DATA_DIR} ${SYSCONFDIR}; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SYSCONFDIR}; \
             fi; \
 	    if [ "${CONF_OVERWRITE}" != "Yes" ]; then \
 	        echo "+----------------"; \
@@ -342,17 +342,17 @@ install-prog:
 	        echo "| will not be overwritten:"; \
 	        echo "|"; \
 	        for F in ${CONF}; do \
-	            if [ -e "${SYSCONFDIR}/$$F" ]; then \
+	            if [ -e "${DESTDIR}${SYSCONFDIR}/$$F" ]; then \
 	                echo "| - $$F"; \
 	            else \
-	                ${SUDO} ${INSTALL_DATA} $$F ${SYSCONFDIR}; \
+	                ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${SYSCONFDIR}; \
 	            fi; \
 	        done; \
 	        echo "+----------------"; \
 	    else \
 	        for F in ${CONF}; do \
 	            echo "${INSTALL_DATA} $$F ${SYSCONFDIR}"; \
-	            ${SUDO} ${INSTALL_DATA} $$F ${SYSCONFDIR}; \
+	            ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${SYSCONFDIR}; \
 	        done; \
 	    fi; \
 	fi
@@ -360,12 +360,12 @@ install-prog:
 deinstall-prog:
 	@if [ "${PROG}" != "" -a "${PROG_INSTALL}" != "No" ]; then \
 	    echo "${DEINSTALL_PROG} ${BINDIR}/${PROG}${EXECSUFFIX}"; \
-	    ${SUDO} ${DEINSTALL_PROG} ${BINDIR}/${PROG}${EXECSUFFIX}; \
+	    ${SUDO} ${DEINSTALL_PROG} ${DESTDIR}${BINDIR}/${PROG}${EXECSUFFIX}; \
 	fi
 	@if [ "${SHARE}" != "none" ]; then \
 	    for F in ${SHARE}; do \
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
-	        ${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/$$F; \
+	        ${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${SHAREDIR}/$$F; \
 	    done; \
 	fi
 	@if [ "${CONF}" != "none" ]; then \
@@ -374,7 +374,7 @@ deinstall-prog:
 	    echo "| the following steps as root:"; \
 	    echo "|"; \
 	    for F in ${CONF}; do \
-	        if [ -e "${SYSCONFDIR}/$$F" ]; then \
+	        if [ -e "${DESTDIR}${SYSCONFDIR}/$$F" ]; then \
 	            echo "| rm -f $$F"; \
 	        fi; \
 	    done; \

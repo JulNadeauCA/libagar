@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001-2007 Hypertriton, Inc. <http://hypertriton.com/>
+# Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,18 +23,13 @@
 # USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# Logic required for recursing into subdirectories.
+# Logic needed for directory recursion.
 #
 
-MAKE?=	    make
+MAKE?=make
 
 all-subdir:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/); \
@@ -45,12 +40,7 @@ all-subdir:
 	fi)
 
 all-subdir-ifexists:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    if [ -e "$$F" ]; then \
 		        echo "==> ${REL}$$F"; \
@@ -63,12 +53,7 @@ all-subdir-ifexists:
 	fi)
 
 clean-subdir:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ clean); \
@@ -79,12 +64,7 @@ clean-subdir:
 	fi)
 
 clean-subdir-ifexists:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    if [ -e "$$F" ]; then \
 		        echo "==> ${REL}$$F"; \
@@ -97,12 +77,7 @@ clean-subdir-ifexists:
 	fi)
 
 install-subdir:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ install); \
@@ -113,12 +88,7 @@ install-subdir:
 	fi)
 
 install-subdir-ifexists:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    if [ -e "$$F" ]; then \
 		        echo "==> ${REL}$$F"; \
@@ -131,12 +101,7 @@ install-subdir-ifexists:
 	fi)
 
 deinstall-subdir:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ deinstall); \
@@ -147,12 +112,7 @@ deinstall-subdir:
 	fi)
 
 deinstall-subdir-ifexists:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    if [ -e "$$F" ]; then \
 		        echo "==> ${REL}$$F"; \
@@ -165,12 +125,7 @@ deinstall-subdir-ifexists:
 	fi)
 
 depend-subdir:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ depend); \
@@ -181,12 +136,7 @@ depend-subdir:
 	fi)
 
 depend-subdir-ifexists:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    if [ -e "$$F" ]; then \
 		        echo "==> ${REL}$$F"; \
@@ -200,12 +150,7 @@ depend-subdir-ifexists:
 
 
 cleandir-subdir:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ cleandir); \
@@ -216,12 +161,7 @@ cleandir-subdir:
 	fi)
 
 cleandir-subdir-ifexists:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    if [ -e "$$F" ]; then \
 		        echo "==> ${REL}$$F"; \
@@ -234,12 +174,7 @@ cleandir-subdir-ifexists:
 	fi)
 
 regress-subdir:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ regress); \
@@ -250,12 +185,7 @@ regress-subdir:
 	fi)
 
 regress-subdir-ifexists:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    if [ -e "$$F" ]; then \
 		        echo "==> ${REL}$$F"; \
@@ -268,12 +198,7 @@ regress-subdir-ifexists:
 	fi)
 
 proj-package-subdir:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ proj-package); \
@@ -284,12 +209,7 @@ proj-package-subdir:
 	fi)
 
 proj-clean-subdir:
-	@(if [ "${SUBDIR}" = "" ]; then \
-	    SUBDIR="NONE"; \
-	else \
-	    SUBDIR="${SUBDIR}"; \
-	fi; \
-	if [ "$$SUBDIR" != "" -a "$$SUBDIR" != "NONE" ]; then \
+	@if [ "X$$SUBDIR" != "X" ]; then \
 		for F in $$SUBDIR; do \
 		    echo "==> ${REL}$$F"; \
 		    (cd $$F && ${MAKE} REL=${REL}$$F/ proj-clean); \

@@ -77,18 +77,18 @@ install-den:
 			echo "Makefile is missing DEN_DIR"; \
 			exit 1; \
 		fi; \
-		if [ ! -d "${SHAREDIR}/${DEN_DIR}" ]; then \
+		if [ ! -d "${DESTDIR}${SHAREDIR}/${DEN_DIR}" ]; then \
 			echo "${INSTALL_DATA_DIR} ${SHAREDIR}/${DEN_DIR}"; \
-			${SUDO} ${INSTALL_DATA_DIR} ${SHAREDIR}/${DEN_DIR}; \
+			${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SHAREDIR}/${DEN_DIR}; \
 		fi; \
 		echo "${INSTALL_DATA} ${DEN} ${SHAREDIR}/${DEN_DIR}"; \
-		${SUDO} ${INSTALL_DATA} ${DEN} ${SHAREDIR}/${DEN_DIR}; \
+		${SUDO} ${INSTALL_DATA} ${DEN} ${DESTDIR}${SHAREDIR}/${DEN_DIR}; \
 	fi
 
 deinstall-den:
 	if [ "${DEN}" != "" ]; then \
 		echo "${DEINSTALL_DATA} ${SHAREDIR}/${DEN_DIR}/${DEN}"; \
-		${SUDO} ${DEINSTALL_DATA} ${SHAREDIR}/${DEN_DIR}/${DEN}; \
+		${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${SHAREDIR}/${DEN_DIR}/${DEN}; \
 	fi
 
 .PHONY: install deinstall clean cleandir regress depend
