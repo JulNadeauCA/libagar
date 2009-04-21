@@ -215,6 +215,9 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
     *:MirBSD:*:*)
 	echo ${UNAME_MACHINE}-unknown-mirbsd${UNAME_RELEASE}
 	exit ;;
+    *:FabBSD:*:*)
+	echo ${UNAME_MACHINE}-unknown-fabbsd${UNAME_RELEASE}
+	exit ;;
     alpha:OSF1:*:*)
 	case $UNAME_RELEASE in
 	*4.0)

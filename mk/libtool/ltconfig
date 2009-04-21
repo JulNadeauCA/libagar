@@ -1410,7 +1410,7 @@ else
     hardcode_shlibpath_var=no
     ;;
 
-  openbsd*)
+  openbsd* | fabbsd*)
     case "$host_cpu" in
     m88k|hppa|vax)
       ld_shlibs=no
@@ -2049,7 +2049,7 @@ netbsd*)
   shlibpath_var=LD_LIBRARY_PATH
   ;;
 
-openbsd*)
+openbsd* | fabbsd*)
   version_type=sunos
   need_lib_prefix=no
   need_version=no
