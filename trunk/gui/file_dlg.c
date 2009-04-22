@@ -414,13 +414,11 @@ ProcessFilename(char *file, size_t len)
 	if (strcmp(file, AG_PATHSEP) == 0)
 		return (0);
 
-#if 0
 	/* Remove trailing path separators. */
 	if (*end == AG_PATHSEPCHAR) {
 		*end = '\0';
 		end--;
 	}
-#endif
 	return (0);
 }
 
@@ -431,7 +429,9 @@ SetFilename(AG_FileDlg *fd, const char *file)
 		Strlcpy(fd->cfile, file, sizeof(fd->cfile));
 	} else {
 		Strlcpy(fd->cfile, fd->cwd, sizeof(fd->cfile));
-		if (!AG_FileDlgAtRoot(fd)) {
+		if (!AG_FileDlgAtRoot(fd) &&
+		    (fd->cfile[0] != '\0' &&
+		     fd->cfile[strlen(fd->cfile)-1] != AG_PATHSEPCHAR)) {
 			Strlcat(fd->cfile, AG_PATHSEP, sizeof(fd->cfile));
 		}
 		Strlcat(fd->cfile, file, sizeof(fd->cfile));
@@ -454,21 +454,25 @@ TextboxChanged(AG_Event *event)
 static void
 TextboxReturn(AG_Event *event)
 {
-	char file[AG_PATHNAME_MAX], *end;
+	char file[AG_PATHNAME_MAX];
 	AG_Textbox *tb = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_FileInfo info;
-
+	int endSep;
+	
 	AG_ObjectLock(fd);
 	AG_TextboxCopyString(tb, file, sizeof(file));
-	if (file[0] == '\0' ||
-	    ProcessFilename(file, sizeof(file)) == -1) {
+
+	if (file[0] == '\0') {
+		goto out;
+	}
+	endSep = (file[strlen(file)-1]==AG_PATHSEPCHAR) ? 1 : 0;
+	if (ProcessFilename(file, sizeof(file)) == -1) {
 		goto out;
 	}
 	AG_TextboxPrintf(tb, "%s", file);
-	end = &file[strlen(file)-1];
 
-	if (*end == AG_PATHSEPCHAR ||
+	if (endSep ||
 	    (AG_GetFileInfo(file,&info)==0 && info.type == AG_FILE_DIRECTORY)) {
 		if (AG_FileDlgSetDirectory(fd, file) == 0) {
 			RefreshListing(fd);
