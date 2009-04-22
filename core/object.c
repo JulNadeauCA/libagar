@@ -1120,7 +1120,7 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 
 	AG_ObjectLock(ob);
 
-	if ((ob->flags & AG_OBJECT_RELOAD_PROPS) == 0)
+	if (ob->flags & AG_OBJECT_FLOATING_VARS)
 		AG_ObjectFreeVariables(ob);
 
 	count = AG_ReadUint32(ds);
@@ -1204,8 +1204,9 @@ AG_ObjectSaveVariables(void *p, AG_DataSource *ds)
 	AG_ObjectLock(ob);
 	for (i = 0; i < ob->nVars; i++) {
 		AG_Variable *V = &ob->vars[i];
+		const AG_VariableTypeInfo *Vt = &agVariableTypes[V->type];
 
-		if (agVariableTypes[V->type].code == -1)
+		if (Vt->code == -1)
 			continue;			/* Nonpersistent */
 
 		AG_LockVariable(V);
@@ -1218,7 +1219,7 @@ AG_ObjectSaveVariables(void *p, AG_DataSource *ds)
 		}
 
 		AG_WriteString(ds, (char *)V->name);
-		AG_WriteUint32(ds, agVariableTypes[V->type].code);
+		AG_WriteUint32(ds, Vt->code);
 
 		switch (AG_VARIABLE_TYPE(V)) {
 		case AG_VARIABLE_UINT:	 AG_WriteUint32(ds, (Uint32)V->data.u);	break;
