@@ -1519,9 +1519,9 @@ UpdateTileSettings(AG_Event *event)
 	int h = AG_GetInt(msb, "yvalue");
 	Uint flags = 0;
 
-	if (AG_WidgetBool(ckey_cb, "state"))
+	if (AG_GetBool(ckey_cb,"state"))
 		flags |= RG_TILE_SRCCOLORKEY;
-	if (AG_WidgetBool(alpha_cb, "state"))
+	if (AG_GetBool(alpha_cb,"state"))
 		flags |= RG_TILE_SRCALPHA;
 
 	RG_TileScale(ts, t, w, h, flags);
