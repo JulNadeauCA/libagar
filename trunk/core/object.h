@@ -41,7 +41,7 @@ typedef struct ag_object {
 	char *save_pfx;			/* Prefix for default save paths */
 	AG_ObjectClass *cls;		/* Object class data */
 	Uint flags;
-#define AG_OBJECT_RELOAD_PROPS	 0x0001	/* Don't free props before load */
+#define AG_OBJECT_FLOATING_VARS	 0x0001	/* Clear variables before load */
 #define AG_OBJECT_NON_PERSISTENT 0x0002	/* Never include in saves */
 #define AG_OBJECT_INDESTRUCTIBLE 0x0004	/* Not destructible (advisory) */
 #define AG_OBJECT_RESIDENT	 0x0008	/* Data part is resident */
@@ -55,7 +55,7 @@ typedef struct ag_object {
 #define AG_OBJECT_NAME_ONATTACH	 0x1000	/* Generate name on attach */
 #define AG_OBJECT_CHLD_AUTOSAVE	 0x2000	/* Include child obj data in archive */
 #define AG_OBJECT_DEBUG_DATA	 0x4000	/* Datafiles contain debug info */
-#define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_RELOAD_PROPS|\
+#define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_FLOATING_VARS|\
  				 AG_OBJECT_INDESTRUCTIBLE|\
 				 AG_OBJECT_PRESERVE_DEPS|\
 				 AG_OBJECT_READONLY|\
@@ -272,9 +272,11 @@ void AG_ObjectUnlockDebug(AG_Object *, const char *);
 #endif /* AG_THREADS */
 
 #ifdef AG_LEGACY
-void    AG_ObjectMove(void *, void *);
+void AG_ObjectMove(void *, void *)
+    DEPRECATED_ATTRIBUTE;
 #define AG_ObjectIsClass(obj,cname) AG_OfClass((obj),(cname))
 #define AG_ObjectFreeProps(obj) AG_ObjectFreeVariables(obj)
+#define AG_OBJECT_RELOAD_PROPS AG_OBJECT_FLOATING_VARS
 #endif /* AG_LEGACY */
 
 /*

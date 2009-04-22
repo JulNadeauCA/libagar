@@ -848,11 +848,13 @@ The following public
 .Nm
 flags are defined:
 .Bl -tag -width "AG_OBJECT_NON_PERSISTENT "
-.It AG_OBJECT_RELOAD_PROPS
-Prevents clearing of the
+.It AG_OBJECT_FLOATING_VARS
+Remove all entries of the
 .Xr AG_Variable 3
-table prior to
+table in
 .Fn AG_ObjectLoad .
+By default, the existing table is preserved and entries are created or
+replaced by items found in the archive.
 .It AG_OBJECT_NON_PERSISTENT
 Disables archiving of the object and its children.
 If set,
