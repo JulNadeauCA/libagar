@@ -237,6 +237,7 @@ AG_WidgetForwardFocus(void *obj, void *objFwd)
 #ifdef AG_LEGACY
 /*
  * Duplicate a widget binding.
+ * LEGACY Interface.
  */
 int
 AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
@@ -271,6 +272,7 @@ AG_WidgetCopyBinding(void *wDst, const char *nDst, AG_Variable *Vsrc)
 
 /*
  * Bind a mutex-protected variable to a widget.
+ * LEGACY Interface: new code should use AG_Variable(3).
  */
 AG_Variable *
 AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
@@ -308,23 +310,53 @@ AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
 	va_end(ap);
 	
 	switch (type) {
-	case AG_VARIABLE_P_FLAG:
-	case AG_VARIABLE_P_FLAG8:
-	case AG_VARIABLE_P_FLAG16:
-	case AG_VARIABLE_P_FLAG32:
-		V = AG_WidgetBind(wid, name, type, p, bitmask);
+	case AG_VARIABLE_P_INT:
+		V = AG_BindInt(wid, name, (int *)p);
 		break;
-	case AG_VARIABLE_STRING:
+	case AG_VARIABLE_P_UINT8:
+		V = AG_BindUint8(wid, name, (Uint8 *)p);
+		break;
+	case AG_VARIABLE_P_SINT8:
+		V = AG_BindSint8(wid, name, (Sint8 *)p);
+		break;
+	case AG_VARIABLE_P_UINT16:
+		V = AG_BindUint16(wid, name, (Uint16 *)p);
+		break;
+	case AG_VARIABLE_P_SINT16:
+		V = AG_BindSint16(wid, name, (Sint16 *)p);
+		break;
+	case AG_VARIABLE_P_UINT32:
+		V = AG_BindUint32(wid, name, (Uint32 *)p);
+		break;
+	case AG_VARIABLE_P_SINT32:
+		V = AG_BindSint32(wid, name, (Sint32 *)p);
+		break;
+	case AG_VARIABLE_P_FLOAT:
+		V = AG_BindFloat(wid, name, (float *)p);
+		break;
+	case AG_VARIABLE_P_DOUBLE:
+		V = AG_BindDouble(wid, name, (double *)p);
+		break;
+	case AG_VARIABLE_P_FLAG:
+		V = AG_BindFlag(wid, name, (Uint *)p, bitmask);
+		break;
+	case AG_VARIABLE_P_FLAG8:
+		V = AG_BindFlag8(wid, name, (Uint8 *)p, (Uint8)bitmask);
+		break;
+	case AG_VARIABLE_P_FLAG16:
+		V = AG_BindFlag16(wid, name, (Uint16 *)p, (Uint16)bitmask);
+		break;
+	case AG_VARIABLE_P_FLAG32:
+		V = AG_BindFlag32(wid, name, (Uint32 *)p, (Uint32)bitmask);
+		break;
 	case AG_VARIABLE_P_STRING:
-	case AG_VARIABLE_CONST_STRING:
 	case AG_VARIABLE_P_CONST_STRING:
-		V = AG_WidgetBind(wid, name, type, p, size);
+		V = AG_BindString(wid, name, (char *)p, size);
 		break;
 	default:
-		V = AG_WidgetBind(wid, name, type, p);
-		break;
+		AG_ObjectUnlock(wid);
+		return (NULL);
 	}
-
 	V->mutex = mutex;
 
 	AG_ObjectUnlock(wid);
@@ -333,6 +365,7 @@ AG_WidgetBindMp(void *obj, const char *name, AG_Mutex *mutex,
 
 /*
  * Bind a non mutex-protected variable to a widget.
+ * LEGACY Interface: new code should use AG_Variable(3).
  */
 AG_Variable *
 AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
@@ -345,6 +378,7 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 	AG_ObjectLock(obj);
 
 	for (i = 0; i < obj->nVars; i++) {
+		V = &obj->vars[i];
 		if (strcmp(obj->vars[i].name, name) == 0)
 			break;
 	}
@@ -353,12 +387,10 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 		    (obj->nVars+1)*sizeof(AG_Variable));
 		V = &obj->vars[obj->nVars++];
 		Strlcpy(V->name, name, sizeof(V->name));
-	} else {
-		V = &obj->vars[i];
 	}
 	V->type = type;
-	V->fn.fnVoid = NULL;
 	V->mutex = NULL;
+	V->fn.fnVoid = NULL;
 	
 	va_start(ap, type);
 	switch (type) {
@@ -388,6 +420,9 @@ AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 	return (V);
 }
 
+/*
+ * LEGACY Interfaces: new code should use AG_Variable(3).
+ */
 size_t
 AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 {
@@ -402,10 +437,6 @@ AG_WidgetCopyString(void *wid, const char *name, char *dst, size_t dst_size)
 	AG_UnlockVariable(V);
 	return (rv);
 }
-
-/*
- * Legacy binding get/set routines.
- */
 int
 AG_WidgetInt(void *wid, const char *name)
 {
