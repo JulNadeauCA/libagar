@@ -414,11 +414,13 @@ ProcessFilename(char *file, size_t len)
 	if (strcmp(file, AG_PATHSEP) == 0)
 		return (0);
 
+#if 0
 	/* Remove trailing path separators. */
 	if (*end == AG_PATHSEPCHAR) {
 		*end = '\0';
 		end--;
 	}
+#endif
 	return (0);
 }
 
@@ -452,7 +454,7 @@ TextboxChanged(AG_Event *event)
 static void
 TextboxReturn(AG_Event *event)
 {
-	char file[AG_PATHNAME_MAX];
+	char file[AG_PATHNAME_MAX], *end;
 	AG_Textbox *tb = AG_SELF();
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_FileInfo info;
@@ -464,9 +466,10 @@ TextboxReturn(AG_Event *event)
 		goto out;
 	}
 	AG_TextboxPrintf(tb, "%s", file);
+	end = &file[strlen(file)-1];
 
-	if ((AG_GetFileInfo(file, &info) == 0) &&
-	    (info.type == AG_FILE_DIRECTORY)) {
+	if (*end == AG_PATHSEPCHAR ||
+	    (AG_GetFileInfo(file,&info)==0 && info.type == AG_FILE_DIRECTORY)) {
 		if (AG_FileDlgSetDirectory(fd, file) == 0) {
 			RefreshListing(fd);
 		} else {
@@ -564,7 +567,7 @@ WidgetShown(AG_Event *event)
 	AG_TlistItem *it;
 	int w, wMax = 0, nItems = 0;
 
-/*	AG_WidgetFocus(fd->tbFile); */
+	AG_WidgetFocus(fd->tbFile);
 	RefreshListing(fd);
 	AG_PostEvent(NULL, fd->comTypes, "combo-selected", "%p", NULL);
 
