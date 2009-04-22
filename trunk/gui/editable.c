@@ -1060,7 +1060,7 @@ Init(void *obj)
 
 	WIDGET(ed)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
 
-	AG_WidgetBindString(ed, "string", ed->string, sizeof(ed->string));
+	AG_BindString(ed, "string", ed->string, sizeof(ed->string));
 	ed->string[0] = '\0';
 	ed->encoding = AG_ENCODING_UTF8;
 
