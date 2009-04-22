@@ -31,35 +31,35 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	 * Primitive types
 	 */
 	{ AG_VARIABLE_UINT,		0,	"Uint",		AG_VARIABLE_UINT,		0 },
-	{ AG_VARIABLE_P_UINT,		1,	"Uint *",	AG_VARIABLE_UINT,		0 },
+	{ AG_VARIABLE_P_UINT,		1,	"Uint *",	AG_VARIABLE_UINT,		-1 },
 	{ AG_VARIABLE_INT,		0,	"int",		AG_VARIABLE_INT,		1 },
-	{ AG_VARIABLE_P_INT,		1,	"int *",	AG_VARIABLE_INT,		1 },
+	{ AG_VARIABLE_P_INT,		1,	"int *",	AG_VARIABLE_INT,		-1 },
 	{ AG_VARIABLE_UINT8,		0,	"Uint8",	AG_VARIABLE_UINT8,		2 },
-	{ AG_VARIABLE_P_UINT8,		1,	"Uint8 *",	AG_VARIABLE_UINT8,		2 },
+	{ AG_VARIABLE_P_UINT8,		1,	"Uint8 *",	AG_VARIABLE_UINT8,		-1 },
 	{ AG_VARIABLE_SINT8,		0,	"Sint8",	AG_VARIABLE_SINT8,		3 },
-	{ AG_VARIABLE_P_SINT8,		1,	"Sint8 *",	AG_VARIABLE_SINT8,		3 },
+	{ AG_VARIABLE_P_SINT8,		1,	"Sint8 *",	AG_VARIABLE_SINT8,		-1 },
 	{ AG_VARIABLE_UINT16,		0,	"Uint16",	AG_VARIABLE_UINT16,		4 },
-	{ AG_VARIABLE_P_UINT16,		1,	"Uint16 *",	AG_VARIABLE_UINT16,		4 },
+	{ AG_VARIABLE_P_UINT16,		1,	"Uint16 *",	AG_VARIABLE_UINT16,		-1 },
 	{ AG_VARIABLE_SINT16,		0,	"Sint16",	AG_VARIABLE_SINT16,		5 },
-	{ AG_VARIABLE_P_SINT16,		1,	"Sint16 *",	AG_VARIABLE_SINT16,		5 },
+	{ AG_VARIABLE_P_SINT16,		1,	"Sint16 *",	AG_VARIABLE_SINT16,		-1 },
 	{ AG_VARIABLE_UINT32,		0,	"Uint32",	AG_VARIABLE_UINT32,		6 },
-	{ AG_VARIABLE_P_UINT32,		1,	"Uint32 *" ,	AG_VARIABLE_UINT32,		6 },
+	{ AG_VARIABLE_P_UINT32,		1,	"Uint32 *" ,	AG_VARIABLE_UINT32,		-1 },
 	{ AG_VARIABLE_SINT32,		0,	"Sint32",	AG_VARIABLE_SINT32,		7 },
-	{ AG_VARIABLE_P_SINT32,		1,	"Sint32 *",	AG_VARIABLE_SINT32,		7 },
+	{ AG_VARIABLE_P_SINT32,		1,	"Sint32 *",	AG_VARIABLE_SINT32,		-1 },
 	{ AG_VARIABLE_UINT64,		0,	"Uint64",	AG_VARIABLE_UINT64,		8 },
-	{ AG_VARIABLE_P_UINT64,		1,	"Uint64 *",	AG_VARIABLE_UINT64,		8 },
+	{ AG_VARIABLE_P_UINT64,		1,	"Uint64 *",	AG_VARIABLE_UINT64,		-1 },
 	{ AG_VARIABLE_SINT64,		0,	"Sint64",	AG_VARIABLE_SINT64,		9 },
-	{ AG_VARIABLE_P_SINT64,		1,	"Sint64 *",	AG_VARIABLE_SINT64,		9 },
+	{ AG_VARIABLE_P_SINT64,		1,	"Sint64 *",	AG_VARIABLE_SINT64,		-1 },
 	{ AG_VARIABLE_FLOAT,		0,	"float",	AG_VARIABLE_FLOAT,		10 },
-	{ AG_VARIABLE_P_FLOAT,		1,	"float *",	AG_VARIABLE_FLOAT,		10 },
+	{ AG_VARIABLE_P_FLOAT,		1,	"float *",	AG_VARIABLE_FLOAT,		-1 },
 	{ AG_VARIABLE_DOUBLE,		0,	"double",	AG_VARIABLE_DOUBLE,		11 },
-	{ AG_VARIABLE_P_DOUBLE,		1,	"double *",	AG_VARIABLE_DOUBLE,		11 },
+	{ AG_VARIABLE_P_DOUBLE,		1,	"double *",	AG_VARIABLE_DOUBLE,		-1 },
 	{ AG_VARIABLE_LONG_DOUBLE,	0,	"long double",	AG_VARIABLE_LONG_DOUBLE,	12 },
-	{ AG_VARIABLE_P_LONG_DOUBLE,	1,	"long double *",AG_VARIABLE_LONG_DOUBLE,	12 },
+	{ AG_VARIABLE_P_LONG_DOUBLE,	1,	"long double *",AG_VARIABLE_LONG_DOUBLE,	-1 },
 	{ AG_VARIABLE_STRING,		0,	"Str",		AG_VARIABLE_STRING,		13 },
-	{ AG_VARIABLE_P_STRING,		1,	"Str *",	AG_VARIABLE_STRING,		13 },
+	{ AG_VARIABLE_P_STRING,		1,	"Str *",	AG_VARIABLE_STRING,		-1 },
 	{ AG_VARIABLE_CONST_STRING,	0,	"Const Str",	AG_VARIABLE_CONST_STRING, 	13 },
-	{ AG_VARIABLE_P_CONST_STRING,	1,	"Const Str *",	AG_VARIABLE_CONST_STRING, 	13 },
+	{ AG_VARIABLE_P_CONST_STRING,	1,	"Const Str *",	AG_VARIABLE_CONST_STRING, 	-1 },
 	{ AG_VARIABLE_POINTER,		0,	"Ptr",		AG_VARIABLE_POINTER,		-1 },
 	{ AG_VARIABLE_P_POINTER,	1,	"Ptr *",	AG_VARIABLE_POINTER,		-1 },
 	{ AG_VARIABLE_CONST_POINTER,	0,	"Const Ptr",	AG_VARIABLE_CONST_POINTER,	-1 },
@@ -79,24 +79,24 @@ const AG_VariableTypeInfo agVariableTypes[] = {
 	/*
 	 * Agar-Math specific types
 	 */
-	{ AG_VARIABLE_P_REAL,		1,	"Real *",	AG_VARIABLE_NULL,		20 },
-	{ AG_VARIABLE_P_RANGE,		1,	"Range *",	AG_VARIABLE_NULL,		21 },
-	{ AG_VARIABLE_P_COMPLEX,	1,	"Complex *",	AG_VARIABLE_NULL,		22 },
-	{ AG_VARIABLE_P_QUAT,		1,	"Quat *",	AG_VARIABLE_NULL,		23 },
-	{ AG_VARIABLE_P_RECTANGULAR,	1,	"Rectangular *",AG_VARIABLE_NULL,		24 },
-	{ AG_VARIABLE_P_POLAR,		1,	"Polar *",	AG_VARIABLE_NULL,		25 },
-	{ AG_VARIABLE_P_PARABOLIC,	1,	"Parabolic *",	AG_VARIABLE_NULL,		26 },
-	{ AG_VARIABLE_P_SPHERICAL,	1,	"Spherical *",	AG_VARIABLE_NULL,		27 },
-	{ AG_VARIABLE_P_CYLINDRICAL,	1,	"Cylindrical *",AG_VARIABLE_NULL,		28 },
-	{ AG_VARIABLE_P_COLOR,		1,	"Color *",	AG_VARIABLE_NULL,		29 },
-	{ AG_VARIABLE_P_VECTOR,		1,	"Vector *",	AG_VARIABLE_NULL,		30 },
-	{ AG_VARIABLE_P_VECTOR2,	1,	"Vector2 *",	AG_VARIABLE_NULL,		31 },
-	{ AG_VARIABLE_P_VECTOR3,	1,	"Vector3 *",	AG_VARIABLE_NULL,		32 },
-	{ AG_VARIABLE_P_VECTOR4,	1,	"Vector4 *",	AG_VARIABLE_NULL,		33 },
-	{ AG_VARIABLE_P_MATRIX,		1,	"Matrix *",	AG_VARIABLE_NULL,		34 },
-	{ AG_VARIABLE_P_MATRIX22,	1,	"Matrix22 *",	AG_VARIABLE_NULL,		35 },
-	{ AG_VARIABLE_P_MATRIX33,	1,	"Matrix33 *",	AG_VARIABLE_NULL,		36 },
-	{ AG_VARIABLE_P_MATRIX44,	1,	"Matrix44 *",	AG_VARIABLE_NULL,		37 },
+	{ AG_VARIABLE_P_REAL,		1,	"Real *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_RANGE,		1,	"Range *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_COMPLEX,	1,	"Complex *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_QUAT,		1,	"Quat *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_RECTANGULAR,	1,	"Rectangular *",AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_POLAR,		1,	"Polar *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_PARABOLIC,	1,	"Parabolic *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_SPHERICAL,	1,	"Spherical *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_CYLINDRICAL,	1,	"Cylindrical *",AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_COLOR,		1,	"Color *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_VECTOR,		1,	"Vector *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_VECTOR2,	1,	"Vector2 *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_VECTOR3,	1,	"Vector3 *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_VECTOR4,	1,	"Vector4 *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_MATRIX,		1,	"Matrix *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_MATRIX22,	1,	"Matrix22 *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_MATRIX33,	1,	"Matrix33 *",	AG_VARIABLE_NULL,		-1 },
+	{ AG_VARIABLE_P_MATRIX44,	1,	"Matrix44 *",	AG_VARIABLE_NULL,		-1 },
 #endif
 };
 
@@ -113,19 +113,18 @@ FetchVariable(void *pObj, const char *name, enum ag_variable_type type)
 	
 	for (i = 0; i < obj->nVars; i++) {
 		V = &obj->vars[i];
-		if (strcmp(V->name, name) == 0) {
-			V->type = type;
-			V->mutex = NULL;
-			V->fn.fnVoid = NULL;
-			return (V);
-		}
+		if (strcmp(V->name, name) == 0)
+			break;
 	}
-	obj->vars = Realloc(obj->vars, (obj->nVars+1)*sizeof(AG_Variable));
-	V = &obj->vars[obj->nVars++];
+	if (i == obj->nVars) {
+		obj->vars = Realloc(obj->vars, (obj->nVars+1) *
+		                               sizeof(AG_Variable));
+		V = &obj->vars[obj->nVars++];
+		Strlcpy(V->name, name, sizeof(V->name));
+	}
 	V->type = type;
 	V->mutex = NULL;
 	V->fn.fnVoid = NULL;
-	Strlcpy(V->name, name, sizeof(V->name));
 	return (V);
 }
 
@@ -150,10 +149,10 @@ FetchVariableNew(void *pObj, const char *name, enum ag_variable_type type,
 	}
 	obj->vars = Realloc(obj->vars, (obj->nVars+1)*sizeof(AG_Variable));
 	V = &obj->vars[obj->nVars++];
+	Strlcpy(V->name, name, sizeof(V->name));
 	V->type = type;
 	V->mutex = NULL;
 	V->fn.fnVoid = NULL;
-	Strlcpy(V->name, name, sizeof(V->name));
 	*newFlag = 1;
 	return (V);
 }
@@ -233,10 +232,10 @@ AG_PrintVariable(char *s, size_t len, AG_Variable *V)
 	case AG_VARIABLE_P_UINT32:	Snprintf(s, len, "%lu", (Ulong)*(Uint32 *)V->data.p);	break;
 	case AG_VARIABLE_SINT32:	Snprintf(s, len, "%ld", (long)V->data.s32);		break;
 	case AG_VARIABLE_P_SINT32:	Snprintf(s, len, "%ld", (long)*(Sint32 *)V->data.p);	break;
-	case AG_VARIABLE_FLOAT:		Snprintf(s, len, "%f", V->data.flt);			break;
-	case AG_VARIABLE_P_FLOAT:	Snprintf(s, len, "%f", *(float *)V->data.p);		break;
-	case AG_VARIABLE_DOUBLE:	Snprintf(s, len, "%f", V->data.dbl);			break;
-	case AG_VARIABLE_P_DOUBLE:	Snprintf(s, len, "%f", *(double *)V->data.p);		break;
+	case AG_VARIABLE_FLOAT:		Snprintf(s, len, "%.2f", V->data.flt);			break;
+	case AG_VARIABLE_P_FLOAT:	Snprintf(s, len, "%.2f", *(float *)V->data.p);		break;
+	case AG_VARIABLE_DOUBLE:	Snprintf(s, len, "%.2f", V->data.dbl);			break;
+	case AG_VARIABLE_P_DOUBLE:	Snprintf(s, len, "%.2f", *(double *)V->data.p);		break;
 	case AG_VARIABLE_STRING:
 	case AG_VARIABLE_CONST_STRING:
 		Strlcpy(s, V->data.s, len);
@@ -981,7 +980,9 @@ AG_PrtString(void *obj, const char *name, const char *fmt, ...)
 
 	AG_ObjectLock(obj);
 	V = FetchVariableNew(obj, name, AG_VARIABLE_STRING, &new);
-	if (!new && V->info.size == 0) { Free(V->data.s); }
+	if (!new && V->info.size == 0) {
+		Free(V->data.s);
+	}
 	va_start(ap, fmt);
 	Vasprintf(&V->data.s, fmt, ap);
 	va_end(ap);
@@ -997,7 +998,9 @@ AG_BindString(void *obj, const char *name, char *v, size_t size)
 
 	AG_ObjectLock(obj);
 	V = FetchVariableNew(obj, name, AG_VARIABLE_P_STRING, &new);
-	if (!new && V->info.size == 0) { Free(V->data.s); }
+	if (!new && V->info.size == 0) {
+		Free(V->data.s);
+	}
 	V->data.p = v;
 	V->info.size = size;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
@@ -1212,6 +1215,7 @@ AG_VariableSubst(void *obj, const char *s, char *dst, size_t len)
 				if ((V = AG_GetVariableLocked(obj, key)) != NULL) {
 					AG_PrintVariable(val, sizeof(val), V);
 					Strlcat(dst, val, len);
+					AG_UnlockVariable(V);
 				}
 #if 0
 				} else {
@@ -1220,7 +1224,6 @@ AG_VariableSubst(void *obj, const char *s, char *dst, size_t len)
 					Strlcat(dst, ")", len);
 				}
 #endif
-				AG_UnlockVariable(V);
 			}
 			c = cEnd+1;
 			continue;
