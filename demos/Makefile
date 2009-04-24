@@ -24,7 +24,8 @@ SUBDIR=	fixedres \
 	threads \
 	minimal \
 	textdlg \
-	scrollview
+	scrollview \
+	console
 
 all: all-subdir
 clean: prereq clean-subdir
