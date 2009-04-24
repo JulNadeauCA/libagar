@@ -75,6 +75,15 @@ defined for
 .Ft "AG_ConsoleLine *"
 .Fn AG_ConsoleAppendLine "AG_Console *cons" "const char *s"
 .Pp
+.Ft "void"
+.Fn AG_ConsoleMsgPtr "AG_ConsoleLine *line" "void *ptr"
+.Pp
+.Ft "void"
+.Fn AG_ConsoleMsgIcon "AG_ConsoleLine *line" "int surface"
+.Pp
+.Ft "void"
+.Fn AG_ConsoleClear "AG_Console *cons"
+.Pp
 .nr nS 0
 The
 .Fn AG_ConsoleMsg
@@ -91,6 +100,9 @@ associates an arbitrary user pointer with the given line entry.
 sets an icon to display left of the message
 (see
 .Xr AG_IconMgr 3 ) .
+.Pp
+.Fn AG_ConsoleClear
+removes all entries.
 .Sh EVENTS
 .\" The
 .\" .Nm

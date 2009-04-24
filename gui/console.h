@@ -35,11 +35,12 @@ typedef struct ag_console {
 	int padding;			/* Padding in pixels */
 	int lineskip;			/* Space between lines */
 	AG_ConsoleLine *lines;		/* Lines in buffer */
-	Uint nLines;			/* Line count */
-	Uint rOffs;			/* Row display offset */
+	int nLines;			/* Line count */
+	int rOffs;			/* Row display offset */
 	Uint32 cBg;			/* Background color */
 	AG_Scrollbar *vBar;		/* Scrollbar */
 	AG_Rect r;			/* View area */
+	int rVisible;
 } AG_Console;
 
 __BEGIN_DECLS
@@ -53,6 +54,7 @@ AG_ConsoleLine *AG_ConsoleMsg(AG_Console *, const char *, ...)
 			         NONNULL_ATTRIBUTE(2);
 void		AG_ConsoleMsgPtr(AG_ConsoleLine *, void *);
 void		AG_ConsoleMsgIcon(AG_ConsoleLine *, int);
+void		AG_ConsoleClear(AG_Console *);
 __END_DECLS
 
 #include <agar/gui/close.h>

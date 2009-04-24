@@ -64,12 +64,14 @@ Init(void *obj)
 	cons->lineskip = agTextFontLineSkip - agTextFontHeight;
 	cons->nLines = 0;
 	cons->rOffs = 0;
+	cons->rVisible = 0;
 	cons->cBg = AG_MapRGB(agVideoFmt, 0,0,0);
 	cons->vBar = AG_ScrollbarNew(cons, AG_SCROLLBAR_VERT, 0);
 	cons->r = AG_RECT(0,0,0,0);
-	
-	AG_BindUint(cons->vBar, "value", &cons->rOffs);
-	AG_BindUint(cons->vBar, "max", &cons->nLines);
+
+	AG_BindInt(cons->vBar, "value", &cons->rOffs);
+	AG_BindInt(cons->vBar, "max", &cons->nLines);
+	AG_BindInt(cons->vBar, "visible", &cons->rVisible);
 
 	AG_SetEvent(cons, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(cons, "window-keyup", KeyUp, NULL);
@@ -80,6 +82,16 @@ static void
 SizeRequest(void *p, AG_SizeReq *r)
 {
 	AG_TextSize("XXXXXXXXXXXXXXXXXXXXXXXXX", &r->w, &r->h);
+	r->h *= 2;
+}
+
+static __inline__ void
+UpdateOffset(AG_Console *cons)
+{
+	if ((cons->rOffs+cons->rVisible) > cons->nLines) {
+		cons->rOffs = cons->nLines - cons->rVisible;
+		if (cons->rOffs < 0) { cons->rOffs = 0; }
+	}
 }
 
 static int
@@ -92,17 +104,16 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	if (a->w < 8 || a->h < 8)
 		return (-1);
 
-	cons->r = AG_RECT(0, 0, a->w, a->h);
-
 	AG_WidgetSizeReq(cons->vBar, &rBar);
 	aBar.x = a->w - rBar.w;
 	aBar.y = 0;
 	aBar.w = rBar.w;
 	aBar.h = a->h;
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
-	cons->r.w -= aBar.w;
-
-	cons->vBar->visible = a->h / (agTextFontHeight + cons->lineskip);
+	
+	cons->r = AG_RECT(0, 0, (a->w - aBar.w), a->h);
+	cons->rVisible = a->h / (agTextFontHeight + cons->lineskip);
+	UpdateOffset(cons);
 	return (0);
 }
 
@@ -117,10 +128,8 @@ Draw(void *p)
 	STYLE(cons)->ConsoleBackground(cons, cons->cBg);
 
 	AG_WidgetDraw(cons->vBar);
+	UpdateOffset(cons);
 
-	if (cons->rOffs >= cons->nLines) {
-		cons->rOffs = cons->nLines-1;
-	}
 	if (cons->nLines == 0)
 		return;
 
@@ -145,17 +154,24 @@ Draw(void *p)
 }
 
 static void
-Destroy(void *p)
+FreeLines(AG_Console *cons)
 {
-	AG_Console *cons = p;
 	int i;
-
+	
 	for (i = 0; i < cons->nLines; i++) {
-		AG_ConsoleLine *ln = &cons->lines[i];
-		Free(ln->text);
+		Free(cons->lines[i].text);
 	}
 	Free(cons->lines);
 	cons->lines = NULL;
+	cons->nLines = 0;
+}
+
+static void
+Destroy(void *p)
+{
+	AG_Console *cons = p;
+
+	FreeLines(cons);
 }
 
 static void
@@ -217,7 +233,9 @@ AG_ConsoleAppendLine(AG_Console *cons, const char *s)
 	ln->surface = -1;
 	ln->cBg = AG_MapRGBA(agVideoFmt, 0,0,0,0);
 	ln->cFg = AG_MapRGB(agVideoFmt, 250,250,230);
-	
+
+	cons->rOffs++;
+	UpdateOffset(cons);
 	AG_ObjectUnlock(cons);
 	return (ln);
 }
@@ -254,6 +272,14 @@ AG_ConsoleMsgIcon(AG_ConsoleLine *ln, int icon)
 	AG_ObjectLock(ln->cons);
 	ln->icon = icon;
 	AG_ObjectUnlock(ln->cons);
+}
+
+void
+AG_ConsoleClear(AG_Console *cons)
+{
+	FreeLines(cons);
+	cons->rOffs = 0;
+	UpdateOffset(cons);
 }
 
 AG_WidgetClass agConsoleClass = {
