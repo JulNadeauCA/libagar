@@ -5,41 +5,28 @@
 # http://bsdbuild.hypertriton.com/.
 #
 
-REGISTER("--enable-debug",	"General debugging [default: no]")
-REGISTER("--enable-lockdebug",	"Expensive threads debugging [default: no]")
-REGISTER("--enable-objdebug",	"Object system debugging [default: no]")
-REGISTER("--enable-classdebug",	"Object class debugging [default: no]")
-REGISTER("--enable-eventdebug",	"Event system debugging [default: no]")
-REGISTER("--enable-legacy",	"Legacy interfaces [default: yes]")
+REGISTER("--enable-<library>",	"Libraries (gui|vg|rg|math|dev) [default: all]")
 
 REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 REGISTER("--enable-threads",	"Thread safety [default: check]")
 
-REGISTER("--enable-gui",	"Build Agar-GUI library [default: yes]")
-REGISTER("--enable-vg",		"Build Agar-VG library [default: yes]")
-REGISTER("--enable-rg",		"Build Agar-RG library [default: yes]")
-REGISTER("--enable-math",	"Build Agar-Math library [default: yes]")
-REGISTER("--enable-dev",	"Build Agar-DEV library [default: yes]")
+REGISTER("--enable-debug",	"General debugging [default: no]")
+REGISTER("--enable-<type>debug","Debugging (obj|class|event) [default: none]")
+REGISTER("--enable-legacy",	"Deprecated interfaces [default: yes]")
 
-REGISTER("--enable-utf8",	"Unicode text/input support [default: yes]")
-REGISTER("--enable-8bpp",	"Support for 8 bpp display [default: yes]")
-REGISTER("--enable-16bpp",	"Support for 16 bpp display [default: yes]")
-REGISTER("--enable-24bpp",	"Support for 24 bpp display [default: yes]")
-REGISTER("--enable-32bpp",	"Support for 32 bpp display [default: yes]")
-REGISTER("--enable-network",	"Build network client library [default: check]")
+REGISTER("--enable-network",	"CORE: Network support [default: check]")
 
-REGISTER("--with-gl",		"OpenGL rendering support [default: check]")
-REGISTER("--with-jpeg",		"JPEG screenshot support [default: check]")
+REGISTER("--with-sdl",		"GUI: SDL rendering support [default: check]")
+REGISTER("--with-gl",		"GUI: OpenGL rendering support [default: check]")
+REGISTER("--enable-<depth>bpp", "GUI: FB depths (8|16|24|32) [default: all]")
+REGISTER("--with-jpeg",		"GUI: JPEG screenshot support [default: check]")
 REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
+REGISTER("--enable-utf8",	"GUI: UTF8 text support [default: yes]")
+
 REGISTER("--with-sse",		"M: SSE[123] optimizations [default: no]")
-REGISTER("--with-sse-inline",	"M: Inline SSE operations [default: no]")
-REGISTER("--with-sse2-inline",	"M: Inline SSE2 operations [default: no]")
-REGISTER("--with-sse3-inline",	"M: Inline SSE3 operations [default: no]")
 REGISTER("--with-altivec",	"M: AltiVec optimizations [default: check]")
-REGISTER("--with-altivec-inline", "M: Inline AltiVec operations [default: no]")
-REGISTER("--with-single-fp",    "M: Single precision math (C99) [default: no]")
-REGISTER("--with-double-fp",    "M: Double precision math [default: yes]")
-REGISTER("--with-quad-fp",      "M: Quad precision math (C99) [default: no]")
+REGISTER("--with-<opt>-inline",	"M: Inline ops (sse2|sse3|altivec) [default: no]")
+REGISTER("--with-<mode>-fp",    "M: Mode (single|double|quad) [default: double]")
 
 # Agar version
 HDEFINE(VERSION, "1.3.4-beta")
