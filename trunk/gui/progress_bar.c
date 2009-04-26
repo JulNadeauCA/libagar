@@ -86,7 +86,7 @@ Init(void *obj)
 	pb->max = 100;
 	pb->width = 25;
 	pb->pad = 2;
-	pb->tCache = agTextCache ? AG_TextCacheNew(pb, 50, 10) : NULL;
+	pb->tCache = AG_TextCacheNew(pb, 50, 10);
 }
 
 static void
@@ -155,9 +155,9 @@ static void
 Draw(void *obj)
 {
 	AG_ProgressBar *pb = obj;
-	int min, max, val;
-	int wAvail;
+	char pctText[32];
 	AG_Rect rd;
+	int min, max, val, su, wAvail;
 
 	min = AG_GetInt(pb, "min");
 	max = AG_GetInt(pb, "max");
@@ -187,24 +187,15 @@ Draw(void *obj)
 	AG_DrawRectFilled(pb, rd, AG_COLOR(PROGRESS_BAR_COLOR));
 
 	if (pb->flags & AG_PROGRESS_BAR_SHOW_PCT) {
-		char pctText[32];
-
 		Snprintf(pctText, sizeof(pctText), "%d%%",
 		    AG_ProgressBarPercent(pb));
+
 		AG_PushTextState();
 		AG_TextColor(TEXT_COLOR);
-		if (agTextCache) {
-			int su = AG_TextCacheInsLookup(pb->tCache, pctText);
-			AG_WidgetBlitSurface(pb, su,
-			    WIDTH(pb)/2  - WSURFACE(pb,su)->w/2,
-			    HEIGHT(pb)/2 - WSURFACE(pb,su)->h/2);
-		} else {
-			SDL_Surface *suTmp = AG_TextRender(pctText);
-			AG_WidgetBlit(pb, suTmp,
-			    WIDTH(pb)/2  - suTmp->w/2,
-			    HEIGHT(pb)/2 - suTmp->h/2);
-			AG_SurfaceFree(suTmp);
-		}
+		su = AG_TextCacheGet(pb->tCache, pctText);
+		AG_WidgetBlitSurface(pb, su,
+		    WIDTH(pb)/2  - WSURFACE(pb,su)->w/2,
+		    HEIGHT(pb)/2 - WSURFACE(pb,su)->h/2);
 		AG_PopTextState();
 	}
 }

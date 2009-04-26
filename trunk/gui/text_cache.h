@@ -27,7 +27,7 @@ typedef struct ag_text_cache {
 __BEGIN_DECLS
 AG_TextCache *AG_TextCacheNew(void *, Uint, Uint);
 void          AG_TextCacheDestroy(AG_TextCache *);
-int           AG_TextCacheInsLookup(AG_TextCache *, const char *);
+int           AG_TextCacheGet(AG_TextCache *, const char *);
 
 static __inline__ Uint
 AG_TextCacheHash(AG_TextCache *tc, const char *s)
