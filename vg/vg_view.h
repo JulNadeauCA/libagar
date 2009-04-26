@@ -117,6 +117,7 @@ void     VG_Status(VG_View *, const char *, ...)
 Uint     VG_AddEditArea(VG_View *, void *);
 void     VG_ClearEditAreas(VG_View *);
 void     VG_EditNode(VG_View *, Uint, VG_Node *);
+void     VG_DrawSurface(VG_View *, int, int, float, int);
 
 /*
  * Apply snapping constraints to given coordinates.
@@ -289,6 +290,15 @@ VG_HighlightNearestPoint(VG_View *vv, VG_Vector vPos, void *ignore)
 		}
 	}
 	return (vnNearest);
+}
+
+/* Render text at the specified coordinates and rotation. */
+static __inline__ void
+VG_DrawText(VG_View *vv, int x, int y, float degs, const char *text)
+{
+	int su;
+	su = AG_TextCacheGet(vv->tCache, text);
+	VG_DrawSurface(vv, x, y, degs, su);
 }
 __END_DECLS
 

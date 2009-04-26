@@ -257,13 +257,6 @@ OnShow(AG_Event *event)
 	vv->y = AGWIDGET(vv)->h/2.0f;
 }
 
-/* Update the point selection radius (dependent on scale factor). */
-static void
-UpdatePointSelRadius(VG_View *vv)
-{
-	vv->pointSelRadius = (vv->grid[0].ival/2)*vv->wPixel;
-}
-
 static void
 UpdateGridIntervals(VG_View *vv)
 {
@@ -313,7 +306,7 @@ Init(void *obj)
 	vv->curtool = NULL;
 	vv->deftool = NULL;
 	vv->status[0] = '\0';
-	vv->tCache = agTextCache ? AG_TextCacheNew(vv, 128, 16) : NULL;
+	vv->tCache = AG_TextCacheNew(vv, 128, 16);
 	vv->editAreas = NULL;
 	vv->nEditAreas = 0;
 	vv->r = AG_RECT(0,0,0,0);
@@ -385,7 +378,7 @@ VG_ViewSetGrid(VG_View *vv, int idx, enum vg_grid_type type, int ival,
 	vv->grid[idx].color = color;
 	vv->grid[idx].flags = 0;
 	if (idx == 0) {
-		UpdatePointSelRadius(vv);
+		vv->pointSelRadius = vv->grid[0].ival/2;
 	}
 	if (idx >= vv->nGrids) {
 		vv->nGrids = idx+1;
@@ -602,19 +595,10 @@ Draw(void *obj)
 
 	if (vv->status[0] != '\0') {
 		AG_TextColor(TEXT_COLOR);
-		if (agTextCache) {
-			su = AG_TextCacheInsLookup(vv->tCache, vv->status);
-			AG_WidgetBlitSurface(vv, su,
-			    0,
-			    HEIGHT(vv) - WSURFACE(vv,su)->h);
-		} else {
-			AG_Surface *suTmp;
-			suTmp = AG_TextRender(vv->status);
-			AG_WidgetBlit(vv, suTmp,
-			    0,
-			    HEIGHT(vv) - suTmp->h);
-			AG_SurfaceFree(suTmp);
-		}
+		su = AG_TextCacheGet(vv->tCache, vv->status);
+		AG_WidgetBlitSurface(vv, su,
+		    0,
+		    HEIGHT(vv) - WSURFACE(vv,su)->h);
 	}
 	AG_PopClipRect();
 }
@@ -765,7 +749,7 @@ VG_ViewSetScale(VG_View *vv, float c)
 	vv->wPixel = 1.0/vv->scale;
 	vv->x *= (vv->scale/scalePrev);
 	vv->y *= (vv->scale/scalePrev);
-	UpdatePointSelRadius(vv);
+	vv->pointSelRadius = vv->grid[0].ival/2;
 	UpdateGridIntervals(vv);
 
 	AG_ObjectUnlock(vv);
@@ -851,6 +835,30 @@ VG_EditNode(VG_View *vv, Uint editArea, VG_Node *vn)
 		AG_ObjectAttach(vv->editAreas[editArea], wEdit);
 		AG_WindowUpdate(AG_ParentWindow(vv->editAreas[editArea]));
 		AG_WidgetShownRecursive(vv->editAreas[editArea]);
+	}
+}
+
+/* Render a mapped surface at the specified coordinates and rotation. */
+void
+VG_DrawSurface(VG_View *vv, int x, int y, float degs, int su)
+{
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		glPushMatrix();
+		glTranslatef((float)(AGWIDGET(vv)->rView.x1 + x),
+		             (float)(AGWIDGET(vv)->rView.y1 + y),
+			     0.0f);
+		if (degs != 0.0f) {
+			glRotatef(degs, 0.0f, 0.0f, 1.0f);
+		}
+		AG_WidgetBlitSurfaceGL(vv, su,
+		    WSURFACE(vv,su)->w,
+		    WSURFACE(vv,su)->h);
+		glPopMatrix();
+	} else
+#endif /* HAVE_OPENGL */
+	{
+		AG_WidgetBlitSurface(vv, su, x, y);
 	}
 }
 
