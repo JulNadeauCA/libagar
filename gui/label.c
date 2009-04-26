@@ -60,7 +60,7 @@ AG_LabelNewPolled(void *parent, Uint flags, const char *fmt, ...)
 #ifdef AG_THREADS
 	lbl->poll.lock = NULL;
 #endif
-	lbl->tCache = agTextCache ? AG_TextCacheNew(lbl, 64, 16) : NULL;
+	lbl->tCache = AG_TextCacheNew(lbl, 64, 16);
 
 	va_start(ap, fmt);
 	for (p = fmt; *p != '\0'; p++) {
@@ -107,7 +107,7 @@ AG_LabelNewPolledMT(void *parent, Uint flags, AG_Mutex *mutex,
 #ifdef AG_THREADS
 	lbl->poll.lock = mutex;
 #endif
-	lbl->tCache = agTextCache ? AG_TextCacheNew(lbl, 64, 16) : NULL;
+	lbl->tCache = AG_TextCacheNew(lbl, 64, 16);
 
 	va_start(ap, fmt);
 	for (p = fmt; *p != '\0'; p++) {
@@ -537,6 +537,7 @@ DrawPolled(AG_Label *lbl)
 	char *f;
 	int i, fPos = 0;
 	int x, y;
+	int su;
 
 	if (lbl->text == NULL || lbl->text[0] == '\0') {
 		return;
@@ -625,18 +626,9 @@ DrawPolled(AG_Label *lbl)
 		}
 	}
 
-	if (agTextCache) {
-		int su = AG_TextCacheInsLookup(lbl->tCache,s);
-		
-		GetPosition(lbl, WSURFACE(lbl,su), &x, &y);
-		AG_WidgetBlitSurface(lbl, su, x, y);
-	} else {
-		AG_Surface *su = AG_TextRender(s);
-
-		GetPosition(lbl, su, &x, &y);
-		AG_WidgetBlit(lbl, su, x, y);
-		AG_SurfaceFree(su);
-	}
+	su = AG_TextCacheGet(lbl->tCache,s);
+	GetPosition(lbl, WSURFACE(lbl,su), &x, &y);
+	AG_WidgetBlitSurface(lbl, su, x, y);
 }
 
 static void

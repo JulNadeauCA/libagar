@@ -775,7 +775,7 @@ Init(void *obj)
 	tv->menu = NULL;
 	tv->menu_item = NULL;
 	tv->menu_win = NULL;
-	tv->tCache = agTextCache ? AG_TextCacheNew(tv, 64, 16) : NULL;
+	tv->tCache = AG_TextCacheNew(tv, 64, 16);
 	TAILQ_INIT(&tv->tools);
 	TAILQ_INIT(&tv->ctrls);
 
@@ -1114,21 +1114,13 @@ RG_TileviewPixel2i(RG_Tileview *tv, int x, int y)
 static void
 DrawStatusText(RG_Tileview *tv, const char *label)
 {
-	SDL_Surface *suTmp = NULL;		/* Make compiler happy */
-	int su = -1;
-	int wSu, hSu;
+	int su, wSu, hSu;
 
 	AG_PushTextState();
 	AG_TextColor(TILEVIEW_TEXT_COLOR);
-	if (agTextCache) {
-		su = AG_TextCacheInsLookup(tv->tCache, label);
-		wSu = WSURFACE(tv,su)->w;
-		hSu = WSURFACE(tv,su)->h;
-	} else {
-		suTmp = AG_TextRender(label);
-		wSu = suTmp->w;
-		hSu = suTmp->h;
-	}
+	su = AG_TextCacheGet(tv->tCache, label);
+	wSu = WSURFACE(tv,su)->w;
+	hSu = WSURFACE(tv,su)->h;
 	AG_PopTextState();
 
 	AG_DrawRectFilled(tv,
@@ -1136,12 +1128,7 @@ DrawStatusText(RG_Tileview *tv, const char *label)
 	            HEIGHT(tv)-hSu-2, WIDTH(tv), HEIGHT(tv)),
 	    AG_COLOR(TILEVIEW_TEXTBG_COLOR));
 
-	if (agTextCache) {
-		AG_WidgetBlitSurface(tv, su, WIDTH(tv)-wSu-1, HEIGHT(tv)-hSu-1);
-	} else {
-		AG_WidgetBlit(tv, suTmp, WIDTH(tv)-wSu-1, HEIGHT(tv)-hSu-1);
-		AG_SurfaceFree(suTmp);
-	}
+	AG_WidgetBlitSurface(tv, su, WIDTH(tv)-wSu-1, HEIGHT(tv)-hSu-1);
 }
 
 void

@@ -31,14 +31,18 @@
 #include "widget.h"
 #include "text_cache.h"
 
+/* #define TEXTCACHE_DEBUG */
+
 AG_TextCache *
 AG_TextCacheNew(void *widget, Uint nBuckets, Uint nToExpire)
 {
 	AG_TextCache *tc;
 	Uint i;
 
-	fprintf(stderr, "TextCacheNew(): %d buckets, %d expire queue\n",
+#ifdef TEXTCACHE_DEBUG
+	Debug(widget, "TextCacheNew(): %d buckets, %d expire queue\n",
 	    nBuckets, nToExpire);
+#endif
 	tc = Malloc(sizeof(AG_TextCache));
 	tc->widget = widget;
 	tc->curEnts = 0;
@@ -60,7 +64,9 @@ AG_TextCacheDestroy(AG_TextCache *tc)
 	Uint i;
 	AG_CachedText *ct;
 
-	fprintf(stderr, "TextCacheDestroy: freeing %d buckets\n", tc->nBuckets);
+#ifdef TEXTCACHE_DEBUG
+	Debug(NULL, "TextCacheDestroy: freeing %d buckets\n", tc->nBuckets);
+#endif
 	for (i = 0; i < tc->nBuckets; i++) {
 		SLIST_FOREACH(ct, &tc->buckets[i].ents, ents) {
 			AG_WidgetUnmapSurface(tc->widget, ct->surface);
@@ -76,8 +82,10 @@ AG_TextCacheDestroy(AG_TextCache *tc)
 static __inline__ void
 DeleteEntry(AG_TextCache *tc, Uint h, AG_CachedText *ct)
 {
-	fprintf(stderr, "TextCache: removing entry #%u (\"%s\")\n", h,
+#ifdef TEXTCACHE_DEBUG
+	Debug(NULL, "TextCache: removing entry #%u (\"%s\")\n", h,
 	    ct->text);
+#endif
 	SLIST_REMOVE(&tc->buckets[h].ents, ct, ag_cached_text, ents);
 	AG_WidgetUnmapSurface(tc->widget, ct->surface);
 	free(ct->text);
@@ -115,14 +123,16 @@ ExpireEntries(AG_TextCache *tc)
 }
 
 int
-AG_TextCacheInsLookup(AG_TextCache *tc, const char *text)
+AG_TextCacheGet(AG_TextCache *tc, const char *text)
 {
 	AG_TextCacheBucket *bucket;
 	AG_CachedText *ct;
 	Uint h;
 
 	h = AG_TextCacheHash(tc, text);
-	fprintf(stderr, "TextCacheLookup: string \"%s\" = %u...", text, h);
+#ifdef TEXTCACHE_DEBUG
+	Debug(NULL, "TextCacheLookup: string \"%s\" = %u...", text, h);
+#endif
 	bucket = &tc->buckets[h];
 	SLIST_FOREACH(ct, &bucket->ents, ents) {
 		if (strcmp(ct->text, text) == 0 &&
@@ -130,7 +140,9 @@ AG_TextCacheInsLookup(AG_TextCache *tc, const char *text)
 			break;
 	}
 	if (ct == NULL) {
-		fprintf(stderr, "MISS (ent %u)\n", tc->curEnts+1);
+#ifdef TEXTCACHE_DEBUG
+		Debug(NULL, "MISS (ent %u)\n", tc->curEnts+1);
+#endif
 		ct = Malloc(sizeof(AG_TextCache));
 		ct->text = Strdup(text);
 		ct->surface = AG_WidgetMapSurface(tc->widget,
@@ -141,13 +153,17 @@ AG_TextCacheInsLookup(AG_TextCache *tc, const char *text)
 		SLIST_INSERT_HEAD(&bucket->ents, ct, ents);
 
 		if (tc->curEnts > tc->nBuckets) {
-			fprintf(stderr, "TextCache: Expiring entries "
+#ifdef TEXTCACHE_DEBUG
+			Debug(NULL, "TextCache: Expiring entries "
 			    "(%u > %u)...\n", tc->curEnts, tc->nBuckets);
+#endif
 			ExpireEntries(tc);
 		}
 	} else {
 		ct->stamp = SDL_GetTicks();
-		fprintf(stderr, "HIT (%u)\n", (unsigned)ct->stamp);
+#ifdef TEXTCACHE_DEBUG
+		Debug(NULL, "HIT (%u)\n", (unsigned)ct->stamp);
+#endif
 	}
 	return (ct->surface);
 }
