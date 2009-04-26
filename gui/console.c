@@ -112,7 +112,7 @@ SizeAllocate(void *p, const AG_SizeAlloc *a)
 	AG_WidgetSizeAlloc(cons->vBar, &aBar);
 	
 	cons->r = AG_RECT(0, 0, (a->w - aBar.w), a->h);
-	cons->rVisible = a->h / (agTextFontHeight + cons->lineskip);
+	cons->rVisible = a->h / (agTextFontHeight + cons->lineskip + 1);
 	UpdateOffset(cons);
 	return (0);
 }
