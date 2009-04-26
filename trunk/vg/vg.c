@@ -239,7 +239,8 @@ VG_Delete(void *pVn)
 
 #ifdef AG_DEBUG
 	if (vg == NULL)
-		AG_FatalError("VG_Delete() on unattached node");
+		AG_FatalError("VG_Delete() on unattached node %s%d",
+		    vn->ops->name, vn->handle);
 #endif
 	VG_Lock(vg);
 	if (vn->nDeps > 0) {

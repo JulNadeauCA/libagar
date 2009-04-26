@@ -251,6 +251,50 @@ is closest to the specified VG coordinates
 .Fa vPos .
 .Fa ignore
 is an optional pointer to an element which should be ignored in the computation.
+.Sh RENDERING ROUTINES
+The
+.Fn draw
+operation of most
+.Xr VG 3
+elements will use the standard GUI rendering routines (see
+.Xr AG_Widget 3 ,
+.Dq RENDERING AND PRIMITIVES ) ,
+or perform direct OpenGL calls.
+Vector coordinates are typically translated to view coordinates using
+.Fn VG_GetViewCoords .
+The following rendering routines are specific to
+.Nm
+and must be invoked from
+.Fn VG_Node
+.Fn draw
+context.
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn VG_DrawSurface "VG_View *vv" "int x" "int y" "float degs" "int su"
+.Pp
+.Ft "void"
+.Fn VG_DrawText "VG_View *vv" "int x" "int y" "float degs" "const char *text"
+.nr nS 0
+.Pp
+The
+.Fn VG_DrawSurface
+routine renders the contents of a surface at view coordinates
+.Fa x ,
+.Fa y
+in pixels, rotated clockwise by
+.Fa degs
+degrees.
+The surface
+.Fa su
+must have been previously mapped to the
+.Nm
+object (see
+.Xr AG_WidgetMapSurface 3 ) .
+.Pp
+The
+.Fn VG_DrawText
+variant renders a string of text.
 .Sh TOOL INTERFACE
 .nr nS 1
 .Ft "VG_Tool *"

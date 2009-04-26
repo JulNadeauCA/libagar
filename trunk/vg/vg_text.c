@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -145,9 +145,7 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 {
 	char sSubst[VG_TEXT_MAX], *s;
 	VG_Vector v1, v2, vMid;
-	int x, y, w, h;
-	int su = -1;			/* Make compiler happy */
-	SDL_Surface *suTmp = NULL;
+	int x, y;
 
 	if (vt->vsObj != NULL) {
 		AG_VariableSubst(vt->vsObj, sIn, sSubst, sizeof(sSubst));
@@ -157,6 +155,7 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 	}
 
 	AG_PushTextState();
+
 	if (vt->fontFace[0] != '\0' &&
 	   ((agGUI && vt->fontSize != agDefaultFont->size) ||
 	    (agGUI && vt->fontFlags != agDefaultFont->flags))) {
@@ -164,57 +163,16 @@ RenderText(VG_Text *vt, char *sIn, VG_View *vv)
 	}
 	AG_TextColorVideo32(VG_MapColorRGB(VGNODE(vt)->color));
 
-	if (agTextCache) {
-		su = AG_TextCacheInsLookup(vv->tCache, s);
-		w = WSURFACE(vv,su)->w;
-		h = WSURFACE(vv,su)->h;
-	} else {
-		suTmp = AG_TextRender(s);
-		w = suTmp->w;
-		h = suTmp->h;
-	}
-
 	v1 = VG_Pos(vt->p1);
 	v2 = VG_Pos(vt->p2);
 	vMid.x = v1.x + (v2.x - v1.x)/2.0f;
 	vMid.y = v1.y + (v2.y - v1.y)/2.0f;
 	VG_GetViewCoords(vv, vMid, &x, &y);
-#ifdef HAVE_OPENGL
-	if (agView->opengl) {
-		glPushMatrix();
-		glTranslatef((float)(WIDGET(vv)->rView.x1 + x),
-		             (float)(WIDGET(vv)->rView.y1 + y),
-			     0.0f);
-		glRotatef(VG_Degrees(VG_Atan2(v1.y-v2.y, v1.x-v2.x)),
-		    0.0f, 0.0f, 1.0f);
-		if (agTextCache) {
-			AG_WidgetBlitSurfaceGL(vv, su, w, h);
-		} else {
-			AG_WidgetBlitGL(vv, suTmp, w, h);
-			AG_SurfaceFree(suTmp);
-		}
-		glPopMatrix();
-	} else
-#endif
-	{
-		if (agTextCache) {
-			AG_WidgetBlitSurface(vv, su,
-			    x - w/2,
-			    y - h/2);
-		} else {
-#ifdef HAVE_OPENGL
-			if (agView->opengl) {
-				AG_WidgetBlitGL(vv, suTmp,
-				    x - w/2,
-				    y - h/2);
-			} else
-#endif
-			{
-				/* TODO */
-			}
-			AG_SurfaceFree(suTmp);
-		}
-	}
+
+	VG_DrawText(vv, x, y,
+	    VG_Degrees(VG_Atan2(v1.y-v2.y, v1.x-v2.x)),
+	    s);
+
 	AG_PopTextState();
 }
 
@@ -268,26 +226,14 @@ Extent(void *p, VG_View *vv, VG_Vector *a, VG_Vector *b)
 	VG_Text *vt = p;
 	float wText, hText;
 	VG_Vector v1, v2;
-	AG_Surface *suTmp = NULL;		/* Make compiler happy */
 	int su;
 
-	if (agTextCache) {
-		su = AG_TextCacheInsLookup(vv->tCache, vt->text);
-		wText = (float)WSURFACE(vv,su)->w/vv->scale;
-		hText = (float)WSURFACE(vv,su)->h/vv->scale;
-	} else {
-		suTmp = AG_TextRender(vt->text);
-		wText = (float)suTmp->w/vv->scale;
-		hText = (float)suTmp->h/vv->scale;
-	}
-
+	su = AG_TextCacheGet(vv->tCache, vt->text);
+	wText = (float)WSURFACE(vv,su)->w/vv->scale;
+	hText = (float)WSURFACE(vv,su)->h/vv->scale;
 	v1 = VG_Pos(vt->p1);
 	v2 = VG_Pos(vt->p2);
 	
-	if (!agTextCache) {
-		AG_SurfaceFree(suTmp);
-	}
-
 	a->x = MIN(v1.x,v2.x) - wText/2.0f;
 	a->y = MIN(v1.y,v2.y) - hText/2.0f;
 	b->x = MAX(v1.x,v2.x) + hText/2.0f;
