@@ -58,27 +58,6 @@ AG_TextCacheNew(void *widget, Uint nBuckets, Uint nToExpire)
 	return (tc);
 }
 
-void
-AG_TextCacheDestroy(AG_TextCache *tc)
-{
-	Uint i;
-	AG_CachedText *ct;
-
-#ifdef TEXTCACHE_DEBUG
-	Debug(NULL, "TextCacheDestroy: freeing %d buckets\n", tc->nBuckets);
-#endif
-	for (i = 0; i < tc->nBuckets; i++) {
-		SLIST_FOREACH(ct, &tc->buckets[i].ents, ents) {
-			AG_WidgetUnmapSurface(tc->widget, ct->surface);
-			Free(ct->text);
-			free(ct);
-		}
-	}
-	Free(tc->buckets);
-	Free(tc->toExpire);
-	Free(tc->toExpireHashes);
-}
-
 static __inline__ void
 DeleteEntry(AG_TextCache *tc, Uint h, AG_CachedText *ct)
 {
@@ -91,6 +70,23 @@ DeleteEntry(AG_TextCache *tc, Uint h, AG_CachedText *ct)
 	free(ct->text);
 	free(ct);
 	tc->curEnts--;
+}
+
+void
+AG_TextCacheDestroy(AG_TextCache *tc)
+{
+	Uint i;
+
+#ifdef TEXTCACHE_DEBUG
+	Debug(NULL, "TextCacheDestroy: freeing %d buckets\n", tc->nBuckets);
+#endif
+	for (i = 0; i < tc->nBuckets; i++) {
+		while (!SLIST_EMPTY(&tc->buckets[i].ents))
+			DeleteEntry(tc, i, SLIST_FIRST(&tc->buckets[i].ents));
+	}
+	Free(tc->buckets);
+	Free(tc->toExpire);
+	Free(tc->toExpireHashes);
 }
 
 static void
