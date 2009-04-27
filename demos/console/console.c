@@ -14,7 +14,8 @@ static void
 AddLine(AG_Event *event)
 {
 	AG_Console *cons = AG_PTR(1);
-	AG_ConsoleMsg(cons, "Test %d", (int)AG_GetTicks());
+	AG_ConsoleMsg(cons, "Test %d Test Test Test Test Test Test Test Test",
+	    (int)AG_GetTicks());
 }
 
 static void
