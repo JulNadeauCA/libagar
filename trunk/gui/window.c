@@ -478,10 +478,12 @@ static void
 ListFocusableWidgets(AG_List *L, AG_Widget *wid)
 {
 	AG_Widget *chld;
+	AG_Variable V;
 
 	AG_ObjectLock(wid);
 	if (wid->flags & AG_WIDGET_FOCUSABLE) {
-		AG_ListAppendPointer(L, wid->focusFwd ? wid->focusFwd : wid);
+		AG_InitPointer(&V, wid->focusFwd ? wid->focusFwd : wid);
+		AG_ListAppend(L, &V);
 	}
 	AG_ObjectUnlock(wid);
 
@@ -509,7 +511,7 @@ AG_WindowCycleFocus(AG_Window *win, int reverse)
 				break;
 		}
 		if (j == Luniq->n)
-			AG_ListAppendPointer(Luniq, Lfoc->v[i].data.p);
+			AG_ListAppend(Luniq, &Lfoc->v[i]);
 	}
 	if (Luniq->n == 0)
 		goto out;
