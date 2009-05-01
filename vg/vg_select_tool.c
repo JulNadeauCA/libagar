@@ -216,6 +216,7 @@ KeyDown(void *p, int ksym, int kmod, int unicode)
 del:
 		TAILQ_FOREACH(vn, &vv->vg->nodes, list) {
 			if (vn->flags & VG_NODE_SELECTED) {
+				VG_ClearEditAreas(vv);
 				if (VG_Delete(vn) == -1) {
 					vn->flags &= ~(VG_NODE_SELECTED);
 					VG_Status(vv, "%s%u: %s",
