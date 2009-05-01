@@ -392,6 +392,15 @@ AG_Set(void *pObj, const char *name, const char *fmt, ...)
 	AG_ObjectUnlock(obj);					\
 	return (V)
 
+/* Body of AG_InitFoo() routines. */
+#undef  FN_VARIABLE_INIT
+#define FN_VARIABLE_INIT(_type,ntype)				\
+	V->name[0] = '\0';					\
+	V->type = ntype;					\
+	V->mutex = NULL;					\
+	V->info.size = 0;					\
+	V->fn.fnVoid = NULL
+
 /* Body of AG_BindFoo() routines. */
 #undef  FN_VARIABLE_BIND
 #define FN_VARIABLE_BIND(type)					\
@@ -476,6 +485,12 @@ AG_SetUint(void *obj, const char *name, Uint v)
 {
 	FN_VARIABLE_SET(u, Uint, AG_VARIABLE_UINT);
 }
+void
+AG_InitUint(AG_Variable *V, Uint v)
+{
+	FN_VARIABLE_INIT(Uint, AG_VARIABLE_UINT);
+	V->data.u = v;
+}
 AG_Variable *
 AG_BindUint(void *obj, const char *name, Uint *v)
 {
@@ -509,6 +524,12 @@ AG_Variable *
 AG_SetInt(void *obj, const char *name, int v)
 {
 	FN_VARIABLE_SET(i, int, AG_VARIABLE_INT);
+}
+void
+AG_InitInt(AG_Variable *V, int v)
+{
+	FN_VARIABLE_INIT(int, AG_VARIABLE_INT);
+	V->data.i = v;
 }
 AG_Variable *
 AG_BindInt(void *obj, const char *name, int *v)
@@ -544,6 +565,12 @@ AG_SetUint8(void *obj, const char *name, Uint8 v)
 {
 	FN_VARIABLE_SET(u8, Uint8, AG_VARIABLE_UINT8);
 }
+void
+AG_InitUint8(AG_Variable *V, Uint8 v)
+{
+	FN_VARIABLE_INIT(Uint8, AG_VARIABLE_UINT8);
+	V->data.u8 = v;
+}
 AG_Variable *
 AG_BindUint8(void *obj, const char *name, Uint8 *v)
 {
@@ -577,6 +604,12 @@ AG_Variable *
 AG_SetSint8(void *obj, const char *name, Sint8 v)
 {
 	FN_VARIABLE_SET(s8, Sint8, AG_VARIABLE_SINT8);
+}
+void
+AG_InitSint8(AG_Variable *V, Sint8 v)
+{
+	FN_VARIABLE_INIT(Sint8, AG_VARIABLE_SINT8);
+	V->data.s8 = v;
 }
 AG_Variable *
 AG_BindSint8(void *obj, const char *name, Sint8 *v)
@@ -612,6 +645,12 @@ AG_SetUint16(void *obj, const char *name, Uint16 v)
 {
 	FN_VARIABLE_SET(u16, Uint16, AG_VARIABLE_UINT16);
 }
+void
+AG_InitUint16(AG_Variable *V, Uint16 v)
+{
+	FN_VARIABLE_INIT(Uint16, AG_VARIABLE_UINT16);
+	V->data.u16 = v;
+}
 AG_Variable *
 AG_BindUint16(void *obj, const char *name, Uint16 *v)
 {
@@ -645,6 +684,12 @@ AG_Variable *
 AG_SetSint16(void *obj, const char *name, Sint16 v)
 {
 	FN_VARIABLE_SET(s16, Sint16, AG_VARIABLE_SINT16);
+}
+void
+AG_InitSint16(AG_Variable *V, Sint16 v)
+{
+	FN_VARIABLE_INIT(Sint16, AG_VARIABLE_SINT16);
+	V->data.s16 = v;
 }
 AG_Variable *
 AG_BindSint16(void *obj, const char *name, Sint16 *v)
@@ -680,6 +725,12 @@ AG_SetUint32(void *obj, const char *name, Uint32 v)
 {
 	FN_VARIABLE_SET(u32, Uint32, AG_VARIABLE_UINT32);
 }
+void
+AG_InitUint32(AG_Variable *V, Uint32 v)
+{
+	FN_VARIABLE_INIT(Uint32, AG_VARIABLE_UINT32);
+	V->data.u32 = v;
+}
 AG_Variable *
 AG_BindUint32(void *obj, const char *name, Uint32 *v)
 {
@@ -713,6 +764,12 @@ AG_Variable *
 AG_SetSint32(void *obj, const char *name, Sint32 v)
 {
 	FN_VARIABLE_SET(s32, Sint32, AG_VARIABLE_SINT32);
+}
+void
+AG_InitSint32(AG_Variable *V, Sint32 v)
+{
+	FN_VARIABLE_INIT(Sint32, AG_VARIABLE_SINT32);
+	V->data.s32 = v;
 }
 AG_Variable *
 AG_BindSint32(void *obj, const char *name, Sint32 *v)
@@ -748,6 +805,12 @@ AG_SetFloat(void *obj, const char *name, float v)
 {
 	FN_VARIABLE_SET(flt, float, AG_VARIABLE_FLOAT);
 }
+void
+AG_InitFloat(AG_Variable *V, float v)
+{
+	FN_VARIABLE_INIT(float, AG_VARIABLE_FLOAT);
+	V->data.flt = v;
+}
 AG_Variable *
 AG_BindFloat(void *obj, const char *name, float *v)
 {
@@ -781,6 +844,12 @@ AG_Variable *
 AG_SetDouble(void *obj, const char *name, double v)
 {
 	FN_VARIABLE_SET(dbl, double, AG_VARIABLE_DOUBLE);
+}
+void
+AG_InitDouble(AG_Variable *V, double v)
+{
+	FN_VARIABLE_INIT(double, AG_VARIABLE_DOUBLE);
+	V->data.dbl = v;
 }
 AG_Variable *
 AG_BindDouble(void *obj, const char *name, double *v)
@@ -816,6 +885,12 @@ AG_SetPointer(void *obj, const char *name, void *v)
 {
 	FN_VARIABLE_SET(p, void *, AG_VARIABLE_POINTER);
 }
+void
+AG_InitPointer(AG_Variable *V, void *v)
+{
+	FN_VARIABLE_INIT(void *, AG_VARIABLE_POINTER);
+	V->data.p = v;
+}
 AG_Variable *
 AG_BindPointer(void *obj, const char *name, void **v)
 {
@@ -850,6 +925,12 @@ AG_Variable *
 AG_SetConstPointer(void *obj, const char *name, const void *v)
 {
 	FN_VARIABLE_SET(Cp, const void *, AG_VARIABLE_CONST_POINTER);
+}
+void
+AG_InitConstPointer(AG_Variable *V, const void *v)
+{
+	FN_VARIABLE_INIT(const void *, AG_VARIABLE_CONST_POINTER);
+	V->data.Cp = v;
 }
 AG_Variable *
 AG_BindConstPointer(void *obj, const char *name, const void **v)
@@ -943,6 +1024,20 @@ AG_SetString(void *obj, const char *name, const char *s)
 	AG_ObjectUnlock(obj);
 	return (V);
 }
+void
+AG_InitString(AG_Variable *V, const char *v)
+{
+	FN_VARIABLE_INIT(char *, AG_VARIABLE_STRING);
+	V->data.s = Strdup(v);
+	V->info.size = 0;
+}
+void
+AG_InitStringNODUP(AG_Variable *V, char *v)
+{
+	FN_VARIABLE_INIT(char *, AG_VARIABLE_STRING);
+	V->data.s = v;
+	V->info.size = 0;
+}
 AG_Variable *
 AG_SetStringNODUP(void *obj, const char *name, char *s)
 {
@@ -953,7 +1048,7 @@ AG_SetStringNODUP(void *obj, const char *name, char *s)
 	V = FetchVariableNew(obj, name, AG_VARIABLE_STRING, &new);
 	if (!new && V->info.size == 0) { Free(V->data.s); }
 	V->data.s = s;
-	V->info.size = 0;				/* Allocated */
+	V->info.size = 0;
 	AG_ObjectUnlock(obj);
 	return (V);
 }
@@ -970,6 +1065,13 @@ AG_SetStringFixed(void *obj, const char *name, char *buf, size_t bufSize)
 	V->info.size = bufSize;
 	AG_ObjectUnlock(obj);
 	return (V);
+}
+void
+AG_InitStringFixed(AG_Variable *V, char *v, size_t bufSize)
+{
+	FN_VARIABLE_INIT(char *, AG_VARIABLE_STRING);
+	V->data.s = v;
+	V->info.size = bufSize;
 }
 AG_Variable *
 AG_PrtString(void *obj, const char *name, const char *fmt, ...)
