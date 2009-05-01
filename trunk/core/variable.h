@@ -417,6 +417,7 @@ void            AG_VariableSubst(void *, const char *, char *, size_t)
 	            BOUNDED_ATTRIBUTE(__string__, 3, 4);
 
 Uint         AG_GetUint(void *, const char *);
+void         AG_InitUint(AG_Variable *, Uint);
 AG_Variable *AG_SetUint(void *, const char *, Uint);
 AG_Variable *AG_BindUint(void *, const char *, Uint *);
 AG_Variable *AG_BindUintFn(void *, const char *, AG_UintFn, const char *, ...);
@@ -424,6 +425,7 @@ AG_Variable *AG_BindUintMp(void *, const char *, Uint *, AG_Mutex *);
 
 int          AG_GetInt(void *, const char *);
 AG_Variable *AG_SetInt(void *, const char *, int);
+void         AG_InitInt(AG_Variable *, int);
 AG_Variable *AG_BindInt(void *, const char *, int *);
 AG_Variable *AG_BindIntFn(void *, const char *, AG_IntFn, const char *, ...);
 AG_Variable *AG_BindIntMp(void *, const char *, int *, AG_Mutex *);
@@ -436,48 +438,56 @@ AG_Variable *AG_BindIntMp(void *, const char *, int *, AG_Mutex *);
 
 Uint8        AG_GetUint8(void *, const char *);
 AG_Variable *AG_SetUint8(void *, const char *, Uint8);
+void         AG_InitUint8(AG_Variable *, Uint8);
 AG_Variable *AG_BindUint8(void *, const char *, Uint8 *);
 AG_Variable *AG_BindUint8Fn(void *, const char *, AG_Uint8Fn, const char *, ...);
 AG_Variable *AG_BindUint8Mp(void *, const char *, Uint8 *, AG_Mutex *);
 
 Sint8        AG_GetSint8(void *, const char *);
 AG_Variable *AG_SetSint8(void *, const char *, Sint8);
+void         AG_InitSint8(AG_Variable *, Sint8);
 AG_Variable *AG_BindSint8(void *, const char *, Sint8 *);
 AG_Variable *AG_BindSint8Fn(void *, const char *, AG_Sint8Fn, const char *, ...);
 AG_Variable *AG_BindSint8Mp(void *, const char *, Sint8 *, AG_Mutex *);
 
 Uint16       AG_GetUint16(void *, const char *);
 AG_Variable *AG_SetUint16(void *, const char *, Uint16);
+void         AG_InitUint16(AG_Variable *, Uint16);
 AG_Variable *AG_BindUint16(void *, const char *, Uint16 *);
 AG_Variable *AG_BindUint16Fn(void *, const char *, AG_Uint16Fn, const char *, ...);
 AG_Variable *AG_BindUint16Mp(void *, const char *, Uint16 *, AG_Mutex *);
 
 Sint16       AG_GetSint16(void *, const char *);
 AG_Variable *AG_SetSint16(void *, const char *, Sint16);
+void         AG_InitSint16(AG_Variable *, Sint16);
 AG_Variable *AG_BindSint16Fn(void *, const char *, AG_Sint16Fn, const char *, ...);
 AG_Variable *AG_BindSint16(void *, const char *, Sint16 *);
 AG_Variable *AG_BindSint16Mp(void *, const char *, Sint16 *, AG_Mutex *);
 
 Uint32       AG_GetUint32(void *, const char *);
 AG_Variable *AG_SetUint32(void *, const char *, Uint32);
+void         AG_InitUint32(AG_Variable *, Uint32);
 AG_Variable *AG_BindUint32Fn(void *, const char *, AG_Uint32Fn, const char *, ...);
 AG_Variable *AG_BindUint32(void *, const char *, Uint32 *);
 AG_Variable *AG_BindUint32Mp(void *, const char *, Uint32 *, AG_Mutex *);
 
 Sint32       AG_GetSint32(void *, const char *);
 AG_Variable *AG_SetSint32(void *, const char *, Sint32);
+void         AG_InitSint32(AG_Variable *, Sint32);
 AG_Variable *AG_BindSint32Fn(void *, const char *, AG_Sint32Fn, const char *, ...);
 AG_Variable *AG_BindSint32(void *, const char *, Sint32 *);
 AG_Variable *AG_BindSint32Mp(void *, const char *, Sint32 *, AG_Mutex *);
 
 float        AG_GetFloat(void *, const char *);
 AG_Variable *AG_SetFloat(void *, const char *, float);
+void         AG_InitFloat(AG_Variable *, float);
 AG_Variable *AG_BindFloatFn(void *, const char *, AG_FloatFn, const char *, ...);
 AG_Variable *AG_BindFloat(void *, const char *, float *);
 AG_Variable *AG_BindFloatMp(void *, const char *, float *, AG_Mutex *);
 
 double       AG_GetDouble(void *, const char *);
 AG_Variable *AG_SetDouble(void *, const char *, double);
+void         AG_InitDouble(AG_Variable *, double);
 AG_Variable *AG_BindDoubleFn(void *, const char *, AG_DoubleFn, const char *, ...);
 AG_Variable *AG_BindDouble(void *, const char *, double *);
 AG_Variable *AG_BindDoubleMp(void *, const char *, double *, AG_Mutex *);
@@ -486,8 +496,12 @@ size_t       AG_GetString(void *, const char *, char *, size_t)
 	         BOUNDED_ATTRIBUTE(__string__, 3, 4);
 char        *AG_GetStringDup(void *, const char *);
 AG_Variable *AG_SetString(void *, const char *, const char *);
+void         AG_InitString(AG_Variable *, const char *);
 AG_Variable *AG_SetStringNODUP(void *, const char *, char *);
+void         AG_InitStringNODUP(AG_Variable *, char *);
 AG_Variable *AG_SetStringFixed(void *, const char *, char *, size_t)
+                 BOUNDED_ATTRIBUTE(__string__, 3, 4);
+void         AG_InitStringFixed(AG_Variable *, char *, size_t)
                  BOUNDED_ATTRIBUTE(__string__, 3, 4);
 AG_Variable *AG_PrtString(void *, const char *, const char *, ...);
 AG_Variable *AG_BindString(void *, const char *, char *, size_t);
@@ -499,12 +513,14 @@ AG_Variable *AG_BindConstStringMp(void *, const char *, const char **, AG_Mutex 
 
 void        *AG_GetPointer(void *, const char *);
 AG_Variable *AG_SetPointer(void *, const char *, void *);
+void         AG_InitPointer(AG_Variable *, void *);
 AG_Variable *AG_BindPointer(void *, const char *, void **);
 AG_Variable *AG_BindPointerFn(void *, const char *, AG_PointerFn, const char *, ...);
 AG_Variable *AG_BindPointerMp(void *, const char *, void **, AG_Mutex *);
 
 const void  *AG_GetConstPointer(void *, const char *);
 AG_Variable *AG_SetConstPointer(void *, const char *, const void *);
+void         AG_InitConstPointer(AG_Variable *, const void *);
 AG_Variable *AG_BindConstPointer(void *, const char *, const void **);
 AG_Variable *AG_BindConstPointerFn(void *, const char *, AG_ConstPointerFn, const char *, ...);
 AG_Variable *AG_BindConstPointerMp(void *, const char *, const void **, AG_Mutex *);
@@ -588,7 +604,6 @@ AG_GetVariableLocked(void *pObj, const char *name)
 
 #define AG_VARIABLE_TYPE(V) (agVariableTypes[(V)->type].typeTgt)
 #define AG_VARIABLE_TYPE_NAME(V) (agVariableTypes[(V)->type].name)
-
 __END_DECLS
 
 #include <agar/core/close.h>
