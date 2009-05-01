@@ -34,43 +34,80 @@ AG_ListDup(const AG_List *L)
 {
 	size_t vLen = L->n*sizeof(AG_Variable);
 	AG_List *Ldup;
+	int i;
 
-	Ldup = (AG_List *)AG_Malloc(sizeof(AG_List));
+	if ((Ldup = (AG_List *)malloc(sizeof(AG_List))) == NULL) {
+		goto outofmem;
+	}
 	Ldup->n = L->n;
-	Ldup->v = (AG_Variable *)AG_Malloc(vLen);
+	if ((Ldup->v = (AG_Variable *)malloc(vLen)) == NULL) {
+		AG_Free(Ldup);
+		goto outofmem;
+	}
 	memcpy(Ldup->v, L->v, vLen);
+	for (i = 0; i < L->n; i++) {
+		AG_Variable *V = &L->v[i];
+		AG_Variable *Vdup = &Ldup->v[i];
+		if (V->type == AG_VARIABLE_STRING &&
+		    V->info.size == 0)
+			Vdup->data.s = AG_Strdup(V->data.s);
+	}
 	return (Ldup);
+outofmem:
+	AG_SetError("Out of memory");
+	return (NULL);
 }
 
 /* Insert a new variable at the tail of a list. */
 static __inline__ int
-AG_ListAppend(AG_List *L, const AG_Variable *d)
+AG_ListAppend(AG_List *L, const AG_Variable *V)
 {
-	L->v = (AG_Variable *)AG_Realloc(L->v, (L->n+1)*sizeof(AG_Variable));
-	memcpy(&L->v[L->n], d, sizeof(AG_Variable));
+	AG_Variable *lv;
+
+	if ((lv = (AG_Variable *)realloc(L->v, (L->n+1)*sizeof(AG_Variable)))
+	    == NULL) {
+		AG_SetError("Out of memory");
+		return (-1);
+	}
+	L->v = lv;
+	memcpy(&L->v[L->n], V, sizeof(AG_Variable));
+	if (V->type == AG_VARIABLE_STRING &&
+	    V->info.size == 0) {
+		L->v[L->n].data.s = AG_Strdup(V->data.s);
+	}
 	return (L->n++);
 }
 
 /*
  * Insert a new variable at the specified index in list.
- * Return 1 on success, 0 if index was invalid.
+ * Return position on success, -1 on failure.
  */
 static __inline__ int
-AG_ListInsert(AG_List *L, int pos, const AG_Variable *d)
+AG_ListInsert(AG_List *L, int pos, const AG_Variable *V)
 {
+	AG_Variable *lv;
 	size_t vLen;
 	
-	if (pos < 0 || pos > L->n)
-		return (0);
-
+	if (pos < 0 || pos > L->n) {
+		AG_SetError("Bad index: %d", pos);
+		return (-1);
+	}
 	vLen = (L->n+1)*sizeof(AG_Variable);
-	L->v = (AG_Variable *)AG_Realloc(L->v, vLen);
+	if ((lv = (AG_Variable *)realloc(L->v, vLen)) == NULL) {
+		AG_SetError("Out of memory");
+		return (-1);
+	}
+	L->v = lv;
 	if (pos < L->n) {
 		vLen -= sizeof(AG_Variable);
 		memmove(&L->v[pos+1], &L->v[pos], vLen);
 	}
-	memcpy(&L->v[pos], d, sizeof(AG_Variable));
-	return (1);
+	memcpy(&L->v[pos], V, sizeof(AG_Variable));
+	if (V->type == AG_VARIABLE_STRING &&
+	    V->info.size == 0) {
+		L->v[pos].data.s = AG_Strdup(V->data.s);
+	}
+	return (pos);
 }
 
 /* Insert a new variable at head of list. */
@@ -82,16 +119,24 @@ AG_ListPrepend(AG_List *L, const AG_Variable *d)
 
 /*
  * Remove a variable from a list by index.
- * Return 1 on success, 0 if index was invalid.
+ * Return 1 on success, -1 on failure.
  */
 static __inline__ int
 AG_ListRemove(AG_List *L, int idx)
 {
+	AG_Variable *V;
+
 	if (idx < 0 || idx >= L->n) {
-		return (0);
+		AG_SetError("Bad index: %d", idx);
+		return (-1);
+	}
+	V = &L->v[idx];
+	if (V->type == AG_VARIABLE_STRING &&
+	    V->info.size == 0) {
+		AG_Free(V->data.s);
 	}
 	if (idx < L->n-1) {
-		memmove(&L->v[idx], &L->v[idx+1], (L->n-1)*sizeof(AG_Variable));
+		memmove(V, &L->v[idx+1], (L->n-1)*sizeof(AG_Variable));
 	}
 	L->n--;
 	return (1);
@@ -101,6 +146,14 @@ AG_ListRemove(AG_List *L, int idx)
 static __inline__ void
 AG_ListClear(AG_List *L)
 {
+	int i;
+	
+	for (i = 0; i < L->n; i++) {
+		AG_Variable *V = &L->v[i];
+		if (V->type == AG_VARIABLE_STRING &&
+		    V->info.size == 0)
+			AG_Free(V->data.s);
+	}
 	AG_Free(L->v);
 	L->v = NULL;
 }
@@ -111,20 +164,6 @@ AG_ListDestroy(AG_List *L)
 {
 	AG_ListClear(L);
 	AG_Free(L);
-}
-
-/* Insert items of specific types. */
-static __inline__ int
-AG_ListAppendPointer(AG_List *L, void *p)
-{
-	AG_Variable V;
-	
-	V.type = AG_VARIABLE_POINTER;
-	V.name[0] = '\0';
-	V.mutex = NULL;
-	V.fn.fnVoid = NULL;
-	V.data.p = p;
-	return AG_ListAppend(L, &V);
 }
 __END_DECLS
 
