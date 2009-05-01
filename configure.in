@@ -5,28 +5,28 @@
 # http://bsdbuild.hypertriton.com/.
 #
 
-REGISTER("--enable-<library>",	"Libraries (gui|vg|rg|math|dev) [default: all]")
+REGISTER("--enable-<library>",	"Build libraries (gui|vg|rg|math|dev) [all]")
 
-REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
-REGISTER("--enable-threads",	"Thread safety [default: check]")
+REGISTER("--enable-warnings",	"Suggested compiler warnings [no]")
+REGISTER("--enable-threads",	"Thread safety [check]")
 
-REGISTER("--enable-debug",	"General debugging [default: no]")
-REGISTER("--enable-<type>debug","Debugging (obj|class|event) [default: none]")
-REGISTER("--enable-legacy",	"Deprecated interfaces [default: yes]")
+REGISTER("--enable-debug",	"General debugging [no]")
+REGISTER("--enable-<type>debug","Debugging (obj|class|event) [none]")
+REGISTER("--enable-legacy",	"Deprecated interfaces [yes]")
 
-REGISTER("--enable-network",	"CORE: Network support [default: check]")
+REGISTER("--enable-network",	"CORE: Network support [check]")
 
-REGISTER("--with-sdl",		"GUI: SDL rendering support [default: check]")
-REGISTER("--with-gl",		"GUI: OpenGL rendering support [default: check]")
-REGISTER("--enable-<depth>bpp", "GUI: FB depths (8|16|24|32) [default: all]")
-REGISTER("--with-jpeg",		"GUI: JPEG screenshot support [default: check]")
-REGISTER("--with-freetype",	"GUI: Enable FreeType support [default: check]")
-REGISTER("--enable-utf8",	"GUI: UTF8 text support [default: yes]")
+REGISTER("--with-sdl",		"GUI: SDL rendering support [check]")
+REGISTER("--with-gl",		"GUI: OpenGL rendering support [check]")
+REGISTER("--enable-<depth>bpp", "GUI: Framebuffer depths (8|16|24|32) [all]")
+REGISTER("--with-jpeg",		"GUI: JPEG screenshot support [check]")
+REGISTER("--with-freetype",	"GUI: Enable FreeType support [check]")
+REGISTER("--enable-utf8",	"GUI: UTF8 text support [yes]")
 
-REGISTER("--with-sse",		"M: SSE[123] optimizations [default: no]")
-REGISTER("--with-altivec",	"M: AltiVec optimizations [default: check]")
-REGISTER("--with-<opt>-inline",	"M: Inline ops (sse2|sse3|altivec) [default: no]")
-REGISTER("--with-<mode>-fp",    "M: Mode (single|double|quad) [default: double]")
+REGISTER("--with-sse",		"M: SSE[123] optimizations [no]")
+REGISTER("--with-altivec",	"M: AltiVec optimizations [check]")
+REGISTER("--with-<opt>-inline",	"M: Inline ops (sse2|sse3|altivec) [no]")
+REGISTER("--with-<mode>-fp",    "M: Precision (single|double|quad) [double]")
 
 # Agar version
 HDEFINE(VERSION, "1.3.4-beta")
