@@ -1136,6 +1136,12 @@ VFS is locked.
 .Ft "void"
 .Fn AG_EndRendering "void"
 .Pp
+.Ft "void"
+.Fn AG_WidgetHide "AG_Widget *widget"
+.Pp
+.Ft "void"
+.Fn AG_WidgetShow "AG_Widget *widget"
+.Pp
 .nr nS 0
 The
 .Fn AG_WidgetDraw
@@ -1149,6 +1155,11 @@ invocations must be enclosed between calls to
 .Fn AG_BeginRendering
 and
 .Fn AG_EndRendering .
+.Pp
+.Fn AG_WidgetHide
+and
+.Fn AG_WidgetShow
+set the visibility of a widget.
 .Sh THEME SELECTION
 .nr nS 1
 .Ft "void"

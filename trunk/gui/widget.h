@@ -329,6 +329,20 @@ AG_ExpandVert(void *wid)
 	AGWIDGET(wid)->flags |= AG_WIDGET_VFILL;
 	AG_ObjectUnlock(wid);
 }
+static __inline__ void
+AG_WidgetHide(void *wid)
+{
+	AG_ObjectLock(wid);
+	AGWIDGET(wid)->flags |= AG_WIDGET_HIDE;
+	AG_ObjectUnlock(wid);
+}
+static __inline__ void
+AG_WidgetShow(void *wid)
+{
+	AG_ObjectLock(wid);
+	AGWIDGET(wid)->flags &= ~(AG_WIDGET_HIDE);
+	AG_ObjectUnlock(wid);
+}
 __END_DECLS
 
 #ifdef AG_LEGACY
