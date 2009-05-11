@@ -13,7 +13,6 @@ typedef struct ag_button {
 	int state;			/* Default state binding */
 	AG_Label *lbl;			/* Text label */
 	int surface;			/* Icon surface handle */
-	AG_Surface *surfaceSrc;		/* For ButtonSurface() */
 	enum ag_text_justify justify;	/* Label justification */
 	enum ag_text_valign valign;	/* Vertical alignment */
 	Uint flags;
