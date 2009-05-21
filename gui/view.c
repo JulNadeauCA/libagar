@@ -118,6 +118,8 @@ InitGL(void)
 	glViewport(0, 0, agView->w, agView->h);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
 	glOrtho(0, agView->w, agView->h, 0, -1.0, 1.0);
 
 	if (!agView->overlay) {
@@ -721,19 +723,19 @@ AG_BeginRendering(void)
 	if (agView->opengl) {
 		if (!agView->overlay) {
 			glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-			agClipStateGL[0] = glIsEnabled(GL_CLIP_PLANE0);
-			glEnable(GL_CLIP_PLANE0);
-			agClipStateGL[1] = glIsEnabled(GL_CLIP_PLANE1);
-			glEnable(GL_CLIP_PLANE1);
-			agClipStateGL[2] = glIsEnabled(GL_CLIP_PLANE2);
-			glEnable(GL_CLIP_PLANE2);
-			agClipStateGL[3] = glIsEnabled(GL_CLIP_PLANE3);
-			glEnable(GL_CLIP_PLANE3);
 		} else {
 			glPushAttrib(GL_VIEWPORT_BIT|GL_TRANSFORM_BIT|
 			             GL_LIGHTING_BIT|GL_ENABLE_BIT);
 			InitGL();
 		}
+		agClipStateGL[0] = glIsEnabled(GL_CLIP_PLANE0);
+		glEnable(GL_CLIP_PLANE0);
+		agClipStateGL[1] = glIsEnabled(GL_CLIP_PLANE1);
+		glEnable(GL_CLIP_PLANE1);
+		agClipStateGL[2] = glIsEnabled(GL_CLIP_PLANE2);
+		glEnable(GL_CLIP_PLANE2);
+		agClipStateGL[3] = glIsEnabled(GL_CLIP_PLANE3);
+		glEnable(GL_CLIP_PLANE3);
 	}
 #endif
 }
