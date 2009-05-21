@@ -106,6 +106,7 @@ typedef struct ag_display {
 	Uint nModal;
 	enum ag_wm_operation winop;	/* WM operation in progress */
 	struct ag_style *style;		/* Default style for new windows */
+	int overlay;			/* GL overlay mode */
 } AG_Display;
 
 /* Alpha functions for BlendPixelRGBA(). */
@@ -253,18 +254,19 @@ case 4:					\
 } while (0)
 
 /* Flags for AG_InitVideo() */
-#define AG_VIDEO_HWSURFACE     0x001  /* Request hardware FB */
-#define AG_VIDEO_ASYNCBLIT     0x002  /* Multithreaded blits */
-#define AG_VIDEO_ANYFORMAT     0x004  /* Disable depth emulation */
-#define AG_VIDEO_HWPALETTE     0x008  /* Exclusive palette access */
-#define AG_VIDEO_DOUBLEBUF     0x010  /* Double buffering */
-#define AG_VIDEO_FULLSCREEN    0x020  /* Start in fullscreen mode */
-#define AG_VIDEO_RESIZABLE     0x040  /* Request resizable window */
-#define AG_VIDEO_NOFRAME       0x080  /* Request frameless window */
-#define AG_VIDEO_BGPOPUPMENU   0x100  /* Set a background popup menu */
-#define AG_VIDEO_OPENGL	       0x200  /* Require OpenGL mode */
-#define AG_VIDEO_OPENGL_OR_SDL 0x400  /* Prefer OpenGL mode */
-#define AG_VIDEO_NOBGCLEAR     0x800  /* Don't clear background on init */
+#define AG_VIDEO_HWSURFACE     0x0001  /* Request hardware FB */
+#define AG_VIDEO_ASYNCBLIT     0x0002  /* Multithreaded blits */
+#define AG_VIDEO_ANYFORMAT     0x0004  /* Disable depth emulation */
+#define AG_VIDEO_HWPALETTE     0x0008  /* Exclusive palette access */
+#define AG_VIDEO_DOUBLEBUF     0x0010  /* Double buffering */
+#define AG_VIDEO_FULLSCREEN    0x0020  /* Start in fullscreen mode */
+#define AG_VIDEO_RESIZABLE     0x0040  /* Request resizable window */
+#define AG_VIDEO_NOFRAME       0x0080  /* Request frameless window */
+#define AG_VIDEO_BGPOPUPMENU   0x0100  /* Set a background popup menu */
+#define AG_VIDEO_OPENGL	       0x0200  /* Require OpenGL mode */
+#define AG_VIDEO_OPENGL_OR_SDL 0x0400  /* Prefer OpenGL mode */
+#define AG_VIDEO_NOBGCLEAR     0x0800  /* Don't clear background on init */
+#define AG_VIDEO_OVERLAY       0x1000  /* Overlay in OpenGL mode */
 
 __BEGIN_DECLS
 extern AG_ObjectClass agDisplayClass;	/* Agar(Display) class definition */

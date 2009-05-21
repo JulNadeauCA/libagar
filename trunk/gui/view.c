@@ -120,9 +120,12 @@ InitGL(void)
 	glLoadIdentity();
 	glOrtho(0, agView->w, agView->h, 0, -1.0, 1.0);
 
-	AG_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &bR, &bG, &bB);
-	glClearColor(bR/255.0, bG/255.0, bB/255.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	if (!agView->overlay) {
+		AG_GetRGB(AG_COLOR(BG_COLOR), agVideoFmt, &bR, &bG, &bB);
+		glClearColor(bR/255.0, bG/255.0, bB/255.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	}
+
 	glShadeModel(GL_FLAT);
 		
 	glEnable(GL_TEXTURE_2D);
@@ -248,6 +251,8 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 	agView->h = display->h;
 	agView->depth = display->format->BitsPerPixel;
 	agView->rNom = 1000/AG_GetUint(agConfig, "view.nominal-fps");
+	if (flags & AG_VIDEO_OVERLAY)
+		agView->overlay = 1;
 
 	AG_SetUint8(agConfig, "view.depth", agView->depth);
 	AG_SetUint16(agConfig, "view.w", agView->w);
@@ -292,9 +297,10 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 	
 	if (flags & AG_VIDEO_BGPOPUPMENU)
 		agBgPopupMenu = 1;
-	if (!(flags & AG_VIDEO_NOBGCLEAR))
-		AG_ClearBackground();
 
+	if (!(flags & AG_VIDEO_NOBGCLEAR) && !agView->overlay) {
+		AG_ClearBackground();
+	}
 	return (0);
 fail:
 	Free(agView);
@@ -352,6 +358,8 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 
 	agView = Malloc(sizeof(AG_Display));
 	InitView(agView);
+	if (flags & AG_VIDEO_OVERLAY)
+		agView->overlay = 1;
 
 	agView->rNom = 1000/AG_GetUint(agConfig,"view.nominal-fps");
 	depth = bpp > 0 ? bpp : AG_GetUint8(agConfig,"view.depth");
@@ -443,7 +451,7 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	}
 	InitClipRects(w, h);
 
-	if (!(flags & AG_VIDEO_NOBGCLEAR)) {
+	if (!(flags & AG_VIDEO_NOBGCLEAR) && !agView->overlay) {
 		AG_ClearBackground();
 	}
 	return (0);
@@ -711,15 +719,21 @@ AG_BeginRendering(void)
 #endif
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-		agClipStateGL[0] = glIsEnabled(GL_CLIP_PLANE0);
-		glEnable(GL_CLIP_PLANE0);
-		agClipStateGL[1] = glIsEnabled(GL_CLIP_PLANE1);
-		glEnable(GL_CLIP_PLANE1);
-		agClipStateGL[2] = glIsEnabled(GL_CLIP_PLANE2);
-		glEnable(GL_CLIP_PLANE2);
-		agClipStateGL[3] = glIsEnabled(GL_CLIP_PLANE3);
-		glEnable(GL_CLIP_PLANE3);
+		if (!agView->overlay) {
+			glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+			agClipStateGL[0] = glIsEnabled(GL_CLIP_PLANE0);
+			glEnable(GL_CLIP_PLANE0);
+			agClipStateGL[1] = glIsEnabled(GL_CLIP_PLANE1);
+			glEnable(GL_CLIP_PLANE1);
+			agClipStateGL[2] = glIsEnabled(GL_CLIP_PLANE2);
+			glEnable(GL_CLIP_PLANE2);
+			agClipStateGL[3] = glIsEnabled(GL_CLIP_PLANE3);
+			glEnable(GL_CLIP_PLANE3);
+		} else {
+			glPushAttrib(GL_VIEWPORT_BIT|GL_TRANSFORM_BIT|
+			             GL_LIGHTING_BIT|GL_ENABLE_BIT);
+			InitGL();
+		}
 	}
 #endif
 }
@@ -735,15 +749,19 @@ AG_EndRendering(void)
 
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
-		SDL_GL_SwapBuffers();
-		if (agClipStateGL[0])	{ glEnable(GL_CLIP_PLANE0); }
-		else			{ glDisable(GL_CLIP_PLANE0); }
-		if (agClipStateGL[1])	{ glEnable(GL_CLIP_PLANE1); }
-		else			{ glDisable(GL_CLIP_PLANE1); }
-		if (agClipStateGL[2])	{ glEnable(GL_CLIP_PLANE2); }
-		else			{ glDisable(GL_CLIP_PLANE2); }
-		if (agClipStateGL[3])	{ glEnable(GL_CLIP_PLANE3); }
-		else			{ glDisable(GL_CLIP_PLANE3); }
+		if (!agView->overlay) {
+			SDL_GL_SwapBuffers();
+			if (agClipStateGL[0])	{ glEnable(GL_CLIP_PLANE0); }
+			else			{ glDisable(GL_CLIP_PLANE0); }
+			if (agClipStateGL[1])	{ glEnable(GL_CLIP_PLANE1); }
+			else			{ glDisable(GL_CLIP_PLANE1); }
+			if (agClipStateGL[2])	{ glEnable(GL_CLIP_PLANE2); }
+			else			{ glDisable(GL_CLIP_PLANE2); }
+			if (agClipStateGL[3])	{ glEnable(GL_CLIP_PLANE3); }
+			else			{ glDisable(GL_CLIP_PLANE3); }
+		} else {
+			glPopAttrib();
+		}
 	} else
 #endif
 	if (agView->ndirty > 0) {
