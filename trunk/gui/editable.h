@@ -37,6 +37,7 @@ typedef struct ag_editable {
 #define AG_EDITABLE_NOEMACS       0x08000 /* Disable emacs-style fn keys */
 #define AG_EDITABLE_NOWORDSEEK    0x10000 /* Disable ALT+b/ALT+f emacs keys */
 #define AG_EDITABLE_NOLATIN1      0x20000 /* Disable LATIN-1 combinations */
+#define AG_EDITABLE_WORDWRAP      0x40000 /* Word wrapping */
 
 	enum ag_editable_encoding encoding;  /* Character set of buffer */
 	char string[AG_EDITABLE_STRING_MAX]; /* Default string binding */
@@ -84,6 +85,7 @@ void         AG_EditableSizeHintPixels(AG_Editable *, Uint, Uint);
 void         AG_EditableSizeHintLines(AG_Editable *, Uint);
 #define      AG_EditablePrescale AG_EditableSizeHint
 void         AG_EditableSetPassword(AG_Editable *, int);
+void         AG_EditableSetWordWrap(AG_Editable *, int);
 void         AG_EditableSetStatic(AG_Editable *, int);
 void         AG_EditableSetFltOnly(AG_Editable *, int);
 void         AG_EditableSetIntOnly(AG_Editable *, int);
