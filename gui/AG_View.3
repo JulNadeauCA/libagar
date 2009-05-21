@@ -54,6 +54,9 @@ a number of utility routines for surface and texture manipulation.
 .Ft "int"
 .Fn AG_InitVideo "int w" "int h" "int bpp" "Uint flags"
 .Pp
+.Ft "int"
+.Fn AG_InitVideoSDL "SDL_Surface *display" "Uint flags"
+.Pp
 .Ft "void"
 .Fn AG_DestroyVideo "void"
 .Pp
@@ -124,7 +127,18 @@ by default listing the minimize windows.
 Request OpenGL mode and fail if it is not available.
 .It AG_VIDEO_OPENGL_OR_SDL
 Request OpenGL mode if it is available, and fallback to SDL.
+.It AG_VIDEO_OVERLAY
+Overlay GUI elements onto an existing OpenGL scene.
+The user is responsible for clearing and updating the display.
 .El
+.Pp
+The
+.Fn AG_InitVideoSDL
+function initializes Agar to use an existing
+.Xr SDL_Surface 3 .
+If the surface has the
+.Dv SDL_OPENGL
+bit, it is assumed that Agar should render using GL primitives.
 .Pp
 The
 .Fn AG_DestroyVideo
@@ -241,7 +255,7 @@ has an associated OpenGL context.
 .Fn AG_SurfaceTexture
 creates an OpenGL texture from
 .Fa src ,
-returning the GL surface handel.
+returning the GL surface handle.
 Texture coordinates (described as 4
 .Ft float
 values) is returned into
