@@ -129,12 +129,14 @@ InitGL(void)
 	}
 
 	glShadeModel(GL_FLAT);
-		
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	
 	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DITHER);
 	glDisable(GL_BLEND);
+	glDisable(GL_LIGHTING);
 }
 #endif /* HAVE_OPENGL */
 
