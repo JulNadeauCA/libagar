@@ -65,6 +65,9 @@ It allows the user to edit UTF-8 encoded text in single-line or multi-line mode.
 .Fn AG_EditableSetPassword "AG_Editable *ed" "int enable"
 .Pp
 .Ft void
+.Fn AG_EditableSetWordWrap "AG_Editable *ed" "int enable"
+.Pp
+.Ft void
 .Fn AG_EditableSetIntOnly "AG_Editable *ed" "int enable"
 .Pp
 .Ft void
@@ -160,6 +163,9 @@ function enables or disables password-type input, where characters are
 substituted for
 .Sq *
 in the display.
+.Pp
+.Fn AG_EditableSetWordWrap
+enables/disable word wrapping.
 .Pp
 .Fn AG_EditableSetIntOnly
 restricts input to integers (see flags)
