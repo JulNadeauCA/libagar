@@ -208,25 +208,6 @@ CreateWindow(void)
 			}
 		}
 		
-		ntab = AG_NotebookAddTab(nb, "Tlist", AG_BOX_VERT);
-		{
-			AG_Tlist *tl;
-			AG_TlistItem *ti;
-
-			/* The Tlist widget displays a tree or list of items. */
-			tl = AG_TlistNew(ntab, AG_TLIST_EXPAND|AG_TLIST_TREE);
-			ti = AG_TlistAdd(tl, agIconDoc.s, "Category");
-			ti->depth = 0;
-			ti = AG_TlistAdd(tl, agIconDoc.s, "Science");
-			ti->depth = 1;
-			ti = AG_TlistAdd(tl, agIconDoc.s, "Culture");
-			ti->depth = 1;
-			ti = AG_TlistAdd(tl, agIconDoc.s, "Art");
-			ti->depth = 2;
-			ti = AG_TlistAdd(tl, agIconDoc.s, "Craft");
-			ti->depth = 2;
-		}
-		
 		ntab = AG_NotebookAddTab(nb, "Text", AG_BOX_VERT);
 		{
 			char *someText;
