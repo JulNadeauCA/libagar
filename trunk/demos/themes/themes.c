@@ -155,7 +155,6 @@ CreateWindow(void)
 		static int myVal = 50, myMin = -100, myMax = 100, myVisible = 0;
 		AG_Scrollbar *sb;
 		AG_Slider *sl;
-		AG_Statusbar *st;
 		AG_ProgressBar *pb;
 
 		sb = AG_ScrollbarNewInt(div1, AG_SCROLLBAR_HORIZ,
@@ -171,11 +170,6 @@ CreateWindow(void)
 		pb = AG_ProgressBarNewInt(div1, AG_PROGRESS_BAR_HORIZ,
 		    AG_PROGRESS_BAR_SHOW_PCT,
 		    &myVal, &myMin, &myMax);
-
-		/* Statusbar displays one or more text labels. */
-		st = AG_StatusbarNew(div1, 0);
-		AG_StatusbarAddLabel(st, AG_LABEL_POLLED, "Value = %d",
-		    &myVal);
 	}
 
 	/*
