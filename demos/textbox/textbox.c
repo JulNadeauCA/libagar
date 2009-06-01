@@ -13,7 +13,7 @@
 #include <stdlib.h>
 
 static void
-DisableInput(AG_Event *event)
+SetDisable(AG_Event *event)
 {
 	AG_Textbox *textbox = AG_PTR(1);
 	int flag = AG_INT(2);
@@ -23,6 +23,15 @@ DisableInput(AG_Event *event)
 	} else {
 		AG_WidgetEnable(textbox);
 	}
+}
+
+static void
+SetWordWrap(AG_Event *event)
+{
+	AG_Textbox *textbox = AG_PTR(1);
+	int enable = AG_INT(2);
+
+	AG_TextboxSetWordWrap(textbox, enable);
 }
 
 static void
@@ -45,7 +54,7 @@ SingleLineExample(void)
 
 	/* Bind checkboxes to some flags. */
 	AG_SeparatorNewHoriz(win);
-	AG_CheckboxNewFn(win, 0, "Disable input", DisableInput, "%p", textbox);
+	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
 	AG_CheckboxNewFlag(win, 0, "Password input",
 	    &textbox->ed->flags, AG_EDITABLE_PASSWORD);
 	AG_CheckboxNewFlag(win, 0, "Force integer input",
@@ -107,13 +116,12 @@ MultiLineExample(void)
 	AG_TextboxBindUTF8(textbox, someText, bufSize);
 	AG_TextboxSetCursorPos(textbox, 0);
 
-	AG_CheckboxNewFn(win, 0, "Disable input",
-	    DisableInput, "%p", textbox);
+	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
+	AG_CheckboxNewFn(win, 0, "Word wrapping", SetWordWrap, "%p", textbox);
 	AG_SeparatorNewHoriz(win);
-	AG_LabelNewPolled(win, AG_LABEL_HFILL,
-	    "Lines: %d", &textbox->ed->yMax);
-	AG_LabelNewPolled(win, AG_LABEL_HFILL,
-	    "Cursor position: %d", &textbox->ed->pos);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Lines: %d", &textbox->ed->yMax);
+	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Cursor position: %d",
+	    &textbox->ed->pos);
 
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 540, 380);
 	AG_WindowShow(win);
