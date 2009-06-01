@@ -627,6 +627,9 @@ arguments are indices into the global GUI color array (see
 .Fn AG_DrawRectFilled "AG_Widget *widget, AG_Rect r" "Uint32 c"
 .Pp
 .Ft void
+.Fn AG_DrawRectBlended "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Pp
+.Ft void
 .Fn AG_DrawPlus "AG_Widget *widget, AG_Rect r" "Uint8 c[4]" "AG_BlendFn blendFn"
 .Pp
 .Ft void
@@ -689,7 +692,12 @@ variant only rounds the top two corners.
 .Fn AG_DrawFrame
 draws a 3D-style frame.
 .Fn AG_DrawFrameBlended
-draws a frame with alpha-blending.
+draws a frame with alpha-blending, with the color
+.Fa c
+specified as an array of RGBA components, and the given blending mode
+.Fa blendFn
+(see
+.Fn AG_WidgetBlendPixelRGBA ) .
 .Pp
 .Fn AG_DrawCircle
 draws a circle with the origin at
@@ -718,7 +726,15 @@ renders two line segments for a 3D-style effect.
 draws the outline of a rectangle.
 .Pp
 .Fn AG_DrawRectFilled
-fills a rectangle of pixels.
+fills a rectangle of pixels
+.Fa r .
+.Fn AG_DrawRectBlended
+draws a blended rectangle of the color
+.Fa c ,
+specified as an array or RGBA components, with the specified blending
+mode
+.Fa blendFn (see
+.Fn AG_WidgetBlendPixelRGBA ) .
 .Pp
 .Fn AG_DrawPlus
 and
