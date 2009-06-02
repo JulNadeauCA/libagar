@@ -5,6 +5,7 @@
 
 #ifndef _AGAR_CORE_LIST_H_
 #define _AGAR_CORE_LIST_H_
+#include <agar/core/begin.h>
 
 typedef struct ag_list {
 	int n;			/* Element count */
@@ -167,4 +168,5 @@ AG_ListDestroy(AG_List *L)
 }
 __END_DECLS
 
+#include <agar/core/close.h>
 #endif /* _AGAR_CORE_LIST_H_ */
