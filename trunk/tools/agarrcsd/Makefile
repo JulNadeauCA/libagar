@@ -1,11 +1,13 @@
-TOP=	..
+TOP=	../..
 include Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
+include ${TOP}/dev/Makefile.inc
 
 PROG=		agarrcsd
 PROG_TYPE=	"DAEMON"
 PROG_GUID=	"45170011-03CA-40f2-BA07-D954E3C61CA2"
-PROG_LINKS=	ag_core ag_gui ag_dev \
-		pthreads winmm SDL SDLmain opengl freetype
+PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS} ${DEV_LINKS}
 
 SRCS=	agarrcsd.c user.c mkpath.c rcsinfo.c rcs.c fgetln.c
 MAN8=	agarrcsd.8

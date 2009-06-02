@@ -1,12 +1,13 @@
 TOP=	..
 include ${TOP}/Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
 
 LIB=		ag_vg
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"6d009edb-c66a-46e8-a1dd-b6f653db6327"
-LIB_LINKS=	ag_core_static ag_gui_static pthreads \
-		SDL opengl freetype
+LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LINKS_STATIC}
 
 SRCS=	vg.c vg_circle.c vg_arc.c vg_line.c vg_ortho.c vg_point.c vg_snap.c \
 	vg_tables.c vg_text.c vg_polygon.c vg_view.c vg_tool.c \

@@ -29,7 +29,7 @@ SUBDIR=	fixedres \
 
 all: all-subdir
 clean: prereq clean-subdir
-cleandir: prereq cleandir-subdir
+cleandir: prereq cleandir-subdir cleandir-cache
 deinstall: deinstall-subdir
 depend: depend-subdir
 
@@ -49,6 +49,9 @@ configure:
 		echo "==> $$D"; \
 		(cd $$D && ./configure --cache=../.cache); \
 	done
+
+cleandir-cache:
+	rm -fR .cache
 
 configure-scripts:
 	for D in ${SUBDIR}; do \
@@ -74,7 +77,7 @@ proj-vs2005:
 		(cd $$D && unzip ProjectFiles/vs2005-windows.zip); \
 	done
 
-.PHONY: clean cleandir install deinstall depend configure configure-scripts prereq proj proj-vs2005
+.PHONY: clean cleandir cleandir-cache install deinstall depend configure configure-scripts prereq proj proj-vs2005
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk

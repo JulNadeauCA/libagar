@@ -1,5 +1,10 @@
-TOP=	..
+TOP=	../..
 include Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
+include ${TOP}/rg/Makefile.inc
+include ${TOP}/vg/Makefile.inc
+include ${TOP}/dev/Makefile.inc
 
 PROJECT=	"agarpaint"
 PROJINCLUDES=	configure.lua
@@ -8,8 +13,7 @@ PROJINCLUDES=	configure.lua
 PROG=		agarpaint
 PROG_TYPE=	"GUI"
 PROG_GUID=	"68DBFDA9-4965-4cca-8348-38409D8587A6"
-PROG_LINKS=	ag_core ag_gui ag_rg ag_vg ag_dev \
-		pthreads winmm SDL SDLmain opengl freetype
+PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS} ${RG_LINKS} ${VG_LINKS} ${DEV_LINKS}
 
 SRCS=	agarpaint.c
 SHARE=	agarpaint.bmp
