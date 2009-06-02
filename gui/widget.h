@@ -141,11 +141,6 @@ struct ag_window;
 
 __BEGIN_DECLS
 extern AG_WidgetClass agWidgetClass;
-extern int agKbdDelay;
-extern int agKbdRepeat;
-extern int agMouseDblclickDelay;
-extern int agMouseSpinDelay;
-extern int agMouseSpinIval;
 
 void AG_WidgetDraw(void *);
 void AG_WidgetSizeReq(void *, AG_SizeReq *);
