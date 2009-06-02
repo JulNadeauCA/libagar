@@ -44,8 +44,7 @@ clean-config:
 cleandir-config: clean-config
 	rm -fr config config.log Makefile.config .projfiles.out .projfiles2.out
 	touch Makefile.config
-	-(cd agarpaint && ${MAKE} cleandir)
-	-(cd agarrcsd && ${MAKE} cleandir)
+	-(cd tools && ${MAKE} cleandir)
 	-(cd demos && ${MAKE} cleandir)
 	-rm -fR demos/.cache
 	find . -name premake.lua -exec rm -f {} \;
