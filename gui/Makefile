@@ -1,5 +1,6 @@
 TOP=..
 include ${TOP}/Makefile.config
+include ${TOP}/core/Makefile.inc
 
 SUBDIR=	fonts
 
@@ -7,7 +8,7 @@ LIB=		ag_gui
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"71a13512-13e7-44a6-ba69-e868296cdc34"
-LIB_LINKS=	ag_core_static pthreads SDL opengl freetype
+LIB_LINKS=	${CORE_LINKS_STATIC} SDL opengl freetype
 
 SRCS=	gui.c view.c widget.c window.c style.c style_default.c iconmgr.c \
 	colors.c cursors.c ttf.c text.c keymap_ascii.c keymap_utf8.c \

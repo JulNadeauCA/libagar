@@ -1,12 +1,13 @@
 TOP=	..
 include ${TOP}/Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
 
 LIB=		ag_math
 LIB_INSTALL=	Yes
 LIB_SHARED=	Yes
 LIB_GUID=	"ba35a553-bd88-4e5e-8c4b-d17f60ae7439"
-LIB_LINKS=	ag_core_static ag_gui_static \
-		pthreads SDL opengl freetype
+LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LINKS_STATIC}
 
 SRCS=	m_math.c m_complex.c m_quaternion.c \
 	m_int_vector.c m_vector.c m_vector_fpu.c \

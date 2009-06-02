@@ -1,17 +1,18 @@
-TOP=	..
-include ./Makefile.config
+TOP=	../..
+include Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
 
 PROG=		agar-bench
 PROG_TYPE=	"GUI"
 PROG_GUID=	"8CECE971-4D10-4787-B8CF-349F58861C95"
-PROG_LINKS=	ag_core ag_gui \
-		pthreads winmm SDL SDLmain opengl freetype
+PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}
 
 SRCS=		agar-bench.c generic.c pixelops.c primitives.c surfaceops.c \
 		memops.c misc.c events.c
 
-CFLAGS+=${AGAR_CFLAGS} ${AGAR_SG_CFLAGS}
-LIBS+=	${AGAR_LIBS} ${AGAR_SG_LIBS}
+CFLAGS+=${AGAR_CFLAGS}
+LIBS+=	${AGAR_LIBS}
 
 all: all-subdir ${PROG}
 
