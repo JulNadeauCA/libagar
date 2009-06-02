@@ -502,7 +502,7 @@ void         AG_InitStringNODUP(AG_Variable *, char *);
 AG_Variable *AG_SetStringFixed(void *, const char *, char *, size_t)
                  BOUNDED_ATTRIBUTE(__string__, 3, 4);
 void         AG_InitStringFixed(AG_Variable *, char *, size_t)
-                 BOUNDED_ATTRIBUTE(__string__, 3, 4);
+                 BOUNDED_ATTRIBUTE(__string__, 2, 3);
 AG_Variable *AG_PrtString(void *, const char *, const char *, ...);
 AG_Variable *AG_BindString(void *, const char *, char *, size_t);
 AG_Variable *AG_BindStringFn(void *, const char *, AG_StringFn, const char *, ...);
