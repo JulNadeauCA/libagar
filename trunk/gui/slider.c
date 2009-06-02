@@ -24,6 +24,7 @@
  */
 
 #include <core/core.h>
+#include <core/config.h>
 
 #include "slider.h"
 #include "window.h"
