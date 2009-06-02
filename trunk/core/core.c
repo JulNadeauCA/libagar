@@ -49,8 +49,10 @@
 #endif
 
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 #ifdef AG_THREADS
 pthread_mutexattr_t agRecursiveMutexAttr;	/* Recursive mutex attributes */

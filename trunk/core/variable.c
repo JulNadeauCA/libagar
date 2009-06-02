@@ -1148,7 +1148,7 @@ AG_BindConstString(void *obj, const char *name, const char **v)
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_CONST_STRING);
-	V->data.p = v;
+	V->data.Cs = (const char *)v;
 	V->info.size = strlen(*v)+1;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
 	AG_ObjectUnlock(obj);
@@ -1162,7 +1162,7 @@ AG_BindConstStringMp(void *obj, const char *name, const char **v,
 
 	AG_ObjectLock(obj);
 	V = FetchVariable(obj, name, AG_VARIABLE_P_CONST_STRING);
-	V->data.p = v;
+	V->data.Cs = (const char *)v;
 	V->info.size = strlen(*v)+1;
 	V->mutex = mutex;
 	AG_PostEvent(NULL, obj, "bound", "%p", V);
