@@ -12,7 +12,7 @@ SUBDIR=	agar-bench \
 
 all: all-subdir
 clean: prereq clean-subdir
-cleandir: prereq cleandir-subdir
+cleandir: prereq cleandir-subdir cleandir-cache
 deinstall: deinstall-subdir
 depend: depend-subdir
 
@@ -32,6 +32,9 @@ configure:
 		(cd $$D && ./configure --cache=../.cache); \
 	done
 
+cleandir-cache:
+	rm -fR .cache
+
 configure-scripts:
 	for D in ${SUBDIR}; do \
 		echo "==> $$D"; \
@@ -50,7 +53,7 @@ proj:
 		(cd $$D && touch Makefile.config && ${MAKE} proj); \
 	done
 
-.PHONY: clean cleandir install deinstall depend configure configure-scripts prereq proj
+.PHONY: clean cleandir cleandir-cache install deinstall depend configure configure-scripts prereq proj
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk
