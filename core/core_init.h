@@ -18,7 +18,6 @@ extern int agVerbose;		/* Verbose console output */
 extern int agTerminating;	/* Application is exiting */
 
 int	 AG_InitCore(const char *, Uint);
-int	 AG_InitVideo(int, int, int, Uint);
 int	 AG_InitNetwork(Uint);
 void	 AG_AtExitFunc(void (*)(void));
 void	 AG_AtExitFuncEv(void (*)(struct ag_event *));
