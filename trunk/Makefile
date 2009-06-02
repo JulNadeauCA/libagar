@@ -46,7 +46,6 @@ cleandir-config: clean-config
 	touch Makefile.config
 	-(cd tools && ${MAKE} cleandir)
 	-(cd demos && ${MAKE} cleandir)
-	-rm -fR demos/.cache
 	find . -name premake.lua -exec rm -f {} \;
 	find . -name configure.lua -exec rm -f {} \;
 
