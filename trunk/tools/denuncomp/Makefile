@@ -1,17 +1,14 @@
 TOP=	..
 include Makefile.config
 
-PROJECT=	"agar-disasm"
-PROJINCLUDES=	configure.lua
-
-PROG=		agar-disasm
+PROG=		denuncomp
 PROG_TYPE=	"CLI"
-PROG_GUID=	"e685b12e-1313-486c-80c1-5195cc03a3dd"
+PROG_GUID=	"3B69DB91-66D5-4d11-B77E-D83A26372A7D"
 PROG_LINKS=	ag_core \
-		pthreads SDL SDLmain
+		pthreads winmm SDL SDLmain
 
-SRCS=	agar-disasm.c
-MAN1=	agar-disasm.1
+SRCS=	denuncomp.c
+MAN1=	denuncomp.1
 
 CFLAGS+=${AGAR_CFLAGS}
 LIBS+=	${AGAR_LIBS}
