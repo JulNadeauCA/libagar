@@ -4,10 +4,10 @@ REGISTER("--enable-static",	"Produce a static binary [default: no]")
 REGISTER("--enable-warnings",	"Suggested compiler warnings [default: no]")
 
 CHECK(cc)
-REQUIRE(agar, 1.3)
+REQUIRE(agar-core, 1.3)
 
-if [ "${HAVE_AGAR}" != "yes" ]; then
-	echo "This application requires Agar."
+if [ "${HAVE_AGAR_CORE}" != "yes" ]; then
+	echo "This application requires Agar-Core."
 	exit 1
 fi
 
