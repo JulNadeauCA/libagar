@@ -2,8 +2,11 @@
 
 #ifdef _WIN32
 
+#include <core/queue_close.h>			/* Conflicts */
 #include <windows.h>
 #include <mmsystem.h>
+#include <core/queue_close.h>			/* Conflicts */
+#include <core/queue.h>
 
 #include <core/core.h>
 
