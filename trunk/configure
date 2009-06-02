@@ -3949,9 +3949,9 @@ echo "#ifndef ENABLE_GUI" > config/enable_gui.h
 echo "#define ENABLE_GUI \"$ENABLE_GUI\"" >> config/enable_gui.h
 echo "#endif" >> config/enable_gui.h
 echo "hdefs[\"ENABLE_GUI\"] = \"$ENABLE_GUI\"" >>configure.lua
-SUBDIR_GUI="gui agar-config"
-echo "SUBDIR_GUI=$SUBDIR_GUI" >>Makefile.config
-echo "mdefs[\"SUBDIR_GUI\"] = \"$SUBDIR_GUI\"" >>configure.lua
+SUBDIR_gui="gui agar-config"
+echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
+echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
 $ECHO_N "checking for SDL (http://www.libsdl.org)..."
 $ECHO_N "checking for SDL (http://www.libsdl.org)..." >> config.log
 if [ "${SYSTEM}" = "Darwin" ]; then
@@ -5065,9 +5065,9 @@ echo "mdefs[\"JPEG_LIBS\"] = \"$JPEG_LIBS\"" >>configure.lua
 else
 echo "#undef ENABLE_GUI" >config/enable_gui.h
 echo "hdefs[\"ENABLE_GUI\"] = nil" >>configure.lua
-SUBDIR_GUI=""""
-echo "SUBDIR_GUI=$SUBDIR_GUI" >>Makefile.config
-echo "mdefs[\"SUBDIR_GUI\"] = \"$SUBDIR_GUI\"" >>configure.lua
+SUBDIR_gui=""""
+echo "SUBDIR_gui=$SUBDIR_gui" >>Makefile.config
+echo "mdefs[\"SUBDIR_gui\"] = \"$SUBDIR_gui\"" >>configure.lua
 echo "#undef HAVE_FREETYPE" >config/have_freetype.h
 echo "hdefs[\"HAVE_FREETYPE\"] = nil" >>configure.lua
 FREETYPE_CFLAGS=""""
@@ -6195,15 +6195,15 @@ echo "#ifndef ENABLE_MATH" > config/enable_math.h
 echo "#define ENABLE_MATH \"$ENABLE_MATH\"" >> config/enable_math.h
 echo "#endif" >> config/enable_math.h
 echo "hdefs[\"ENABLE_MATH\"] = \"$ENABLE_MATH\"" >>configure.lua
-SUBDIR_MATH="math agar-math-config"
-echo "SUBDIR_MATH=$SUBDIR_MATH" >>Makefile.config
-echo "mdefs[\"SUBDIR_MATH\"] = \"$SUBDIR_MATH\"" >>configure.lua
+SUBDIR_math="math agar-math-config"
+echo "SUBDIR_math=$SUBDIR_math" >>Makefile.config
+echo "mdefs[\"SUBDIR_math\"] = \"$SUBDIR_math\"" >>configure.lua
 else
 echo "#undef ENABLE_MATH" >config/enable_math.h
 echo "hdefs[\"ENABLE_MATH\"] = nil" >>configure.lua
-SUBDIR_MATH=""""
-echo "SUBDIR_MATH=$SUBDIR_MATH" >>Makefile.config
-echo "mdefs[\"SUBDIR_MATH\"] = \"$SUBDIR_MATH\"" >>configure.lua
+SUBDIR_math=""""
+echo "SUBDIR_math=$SUBDIR_math" >>Makefile.config
+echo "mdefs[\"SUBDIR_math\"] = \"$SUBDIR_math\"" >>configure.lua
 fi
 if [ "${with_sse}" = "yes" ]
  then
@@ -6871,15 +6871,15 @@ echo "#ifndef ENABLE_VG" > config/enable_vg.h
 echo "#define ENABLE_VG \"$ENABLE_VG\"" >> config/enable_vg.h
 echo "#endif" >> config/enable_vg.h
 echo "hdefs[\"ENABLE_VG\"] = \"$ENABLE_VG\"" >>configure.lua
-SUBDIR_VG="vg agar-vg-config"
-echo "SUBDIR_VG=$SUBDIR_VG" >>Makefile.config
-echo "mdefs[\"SUBDIR_VG\"] = \"$SUBDIR_VG\"" >>configure.lua
+SUBDIR_vg="vg agar-vg-config"
+echo "SUBDIR_vg=$SUBDIR_vg" >>Makefile.config
+echo "mdefs[\"SUBDIR_vg\"] = \"$SUBDIR_vg\"" >>configure.lua
 else
 echo "#undef ENABLE_VG" >config/enable_vg.h
 echo "hdefs[\"ENABLE_VG\"] = nil" >>configure.lua
-SUBDIR_VG=""""
-echo "SUBDIR_VG=$SUBDIR_VG" >>Makefile.config
-echo "mdefs[\"SUBDIR_VG\"] = \"$SUBDIR_VG\"" >>configure.lua
+SUBDIR_vg=""""
+echo "SUBDIR_vg=$SUBDIR_vg" >>Makefile.config
+echo "mdefs[\"SUBDIR_vg\"] = \"$SUBDIR_vg\"" >>configure.lua
 fi
 if [ "${enable_rg}" != "no" -a "${enable_gui}" != "no" ]
  then
@@ -6888,15 +6888,15 @@ echo "#ifndef ENABLE_RG" > config/enable_rg.h
 echo "#define ENABLE_RG \"$ENABLE_RG\"" >> config/enable_rg.h
 echo "#endif" >> config/enable_rg.h
 echo "hdefs[\"ENABLE_RG\"] = \"$ENABLE_RG\"" >>configure.lua
-SUBDIR_RG="rg agar-rg-config"
-echo "SUBDIR_RG=$SUBDIR_RG" >>Makefile.config
-echo "mdefs[\"SUBDIR_RG\"] = \"$SUBDIR_RG\"" >>configure.lua
+SUBDIR_rg="rg agar-rg-config"
+echo "SUBDIR_rg=$SUBDIR_rg" >>Makefile.config
+echo "mdefs[\"SUBDIR_rg\"] = \"$SUBDIR_rg\"" >>configure.lua
 else
 echo "#undef ENABLE_RG" >config/enable_rg.h
 echo "hdefs[\"ENABLE_RG\"] = nil" >>configure.lua
-SUBDIR_RG=""""
-echo "SUBDIR_RG=$SUBDIR_RG" >>Makefile.config
-echo "mdefs[\"SUBDIR_RG\"] = \"$SUBDIR_RG\"" >>configure.lua
+SUBDIR_rg=""""
+echo "SUBDIR_rg=$SUBDIR_rg" >>Makefile.config
+echo "mdefs[\"SUBDIR_rg\"] = \"$SUBDIR_rg\"" >>configure.lua
 fi
 if [ "${enable_dev}" != "no" -a "${enable_gui}" != "no" ]
  then
@@ -6905,15 +6905,15 @@ echo "#ifndef ENABLE_DEV" > config/enable_dev.h
 echo "#define ENABLE_DEV \"$ENABLE_DEV\"" >> config/enable_dev.h
 echo "#endif" >> config/enable_dev.h
 echo "hdefs[\"ENABLE_DEV\"] = \"$ENABLE_DEV\"" >>configure.lua
-SUBDIR_DEV="dev agar-dev-config"
-echo "SUBDIR_DEV=$SUBDIR_DEV" >>Makefile.config
-echo "mdefs[\"SUBDIR_DEV\"] = \"$SUBDIR_DEV\"" >>configure.lua
+SUBDIR_dev="dev agar-dev-config"
+echo "SUBDIR_dev=$SUBDIR_dev" >>Makefile.config
+echo "mdefs[\"SUBDIR_dev\"] = \"$SUBDIR_dev\"" >>configure.lua
 else
 echo "#undef ENABLE_DEV" >config/enable_dev.h
 echo "hdefs[\"ENABLE_DEV\"] = nil" >>configure.lua
-SUBDIR_DEV=""""
-echo "SUBDIR_DEV=$SUBDIR_DEV" >>Makefile.config
-echo "mdefs[\"SUBDIR_DEV\"] = \"$SUBDIR_DEV\"" >>configure.lua
+SUBDIR_dev=""""
+echo "SUBDIR_dev=$SUBDIR_dev" >>Makefile.config
+echo "mdefs[\"SUBDIR_dev\"] = \"$SUBDIR_dev\"" >>configure.lua
 fi
 if [ ! -e "include" ]; then mkdir "include"; fi
 if [ "${includes}" = "link" ]; then

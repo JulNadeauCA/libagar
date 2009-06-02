@@ -125,7 +125,7 @@ fi
 #
 if [ "${enable_gui}" != "no" ]; then
 	HDEFINE(ENABLE_GUI, "yes")
-	MDEFINE(SUBDIR_GUI, "gui agar-config")
+	MDEFINE(SUBDIR_gui, "gui agar-config")
 
 	# SDL is currently required for the event system.
 	CHECK(sdl, 1.2.0)
@@ -204,7 +204,7 @@ if [ "${enable_gui}" != "no" ]; then
 	fi
 else
 	HUNDEF(ENABLE_GUI)
-	MDEFINE(SUBDIR_GUI, "")
+	MDEFINE(SUBDIR_gui, "")
 
 	HUNDEF(HAVE_FREETYPE)
 	MDEFINE(FREETYPE_CFLAGS, "")
@@ -345,10 +345,10 @@ fi
 #
 if [ "${enable_math}" != "no" ]; then
 	HDEFINE(ENABLE_MATH, "yes")
-	MDEFINE(SUBDIR_MATH, "math agar-math-config")
+	MDEFINE(SUBDIR_math, "math agar-math-config")
 else
 	HUNDEF(ENABLE_MATH)
-	MDEFINE(SUBDIR_MATH, "")
+	MDEFINE(SUBDIR_math, "")
 fi
 # Enable optional SSE optimizations if compiler supports intrinsics.
 if [ "${with_sse}" = "yes" ]; then
@@ -471,10 +471,10 @@ fi
 #
 if [ "${enable_vg}" != "no" -a "${enable_gui}" != "no" ]; then
 	HDEFINE(ENABLE_VG, "yes")
-	MDEFINE(SUBDIR_VG, "vg agar-vg-config")
+	MDEFINE(SUBDIR_vg, "vg agar-vg-config")
 else
 	HUNDEF(ENABLE_VG)
-	MDEFINE(SUBDIR_VG, "")
+	MDEFINE(SUBDIR_vg, "")
 fi
 
 #
@@ -482,10 +482,10 @@ fi
 #
 if [ "${enable_rg}" != "no" -a "${enable_gui}" != "no" ]; then
 	HDEFINE(ENABLE_RG, "yes")
-	MDEFINE(SUBDIR_RG, "rg agar-rg-config")
+	MDEFINE(SUBDIR_rg, "rg agar-rg-config")
 else
 	HUNDEF(ENABLE_RG)
-	MDEFINE(SUBDIR_RG, "")
+	MDEFINE(SUBDIR_rg, "")
 fi
 
 #
@@ -493,10 +493,10 @@ fi
 #
 if [ "${enable_dev}" != "no" -a "${enable_gui}" != "no" ]; then
 	HDEFINE(ENABLE_DEV, "yes")
-	MDEFINE(SUBDIR_DEV, "dev agar-dev-config")
+	MDEFINE(SUBDIR_dev, "dev agar-dev-config")
 else
 	HUNDEF(ENABLE_DEV)
-	MDEFINE(SUBDIR_DEV, "")
+	MDEFINE(SUBDIR_dev, "")
 fi
 
 # Generate includes into ./include/agar.
