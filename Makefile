@@ -4,17 +4,17 @@ include ${TOP}/Makefile.config
 PROJECT=	"Agar"
 PROJECT_GUID=	"93733df2-c743-489e-bc9f-f22aee00d787"
 PROJCONFIGDIR=	include/agar/config
-PROJINCLUDES=	${SRCDIR}/configure.lua
+PROJINCLUDES=	../configure.lua
 
 include ${TOP}/Makefile.proj
 
 INCDIR=	core gui vg rg math dev
 SUBDIR=	core agar-core-config \
-	${SUBDIR_GUI} \
-	${SUBDIR_VG} \
-	${SUBDIR_RG} \
-	${SUBDIR_MATH} \
-	${SUBDIR_DEV}
+	${SUBDIR_gui} \
+	${SUBDIR_vg} \
+	${SUBDIR_rg} \
+	${SUBDIR_math} \
+	${SUBDIR_dev}
 
 all: all-subdir
 clean: clean-config clean-subdir
