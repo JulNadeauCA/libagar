@@ -62,7 +62,7 @@ __END_DECLS
 #define	AG_MAX3(a,b,c) AG_MAX((a),AG_MAX((b),(c)))
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #define AG_PATHSEP "\\"
 #define AG_PATHSEPCHAR '\\'
 #else
