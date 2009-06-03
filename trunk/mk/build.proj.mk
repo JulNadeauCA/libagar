@@ -88,10 +88,10 @@ proj:
 			rm -fR "${PROJCONFIGDIR}"; \
 		fi; \
 		echo "mkconfigure --emul-env=$$_tgtproj --emul-os=$$_tgtos \
-		    > configure.tmp"; \
+		    --output-lua=${TOP}/configure.lua > configure.tmp"; \
 		cat configure.in | \
 		    mkconfigure --emul-env=$$_tgtproj --emul-os=$$_tgtos \
-		    > configure.tmp; \
+		    --output-lua=${TOP}/configure.lua > configure.tmp; \
 		if [ $$? != 0 ]; then \
 			echo "mkconfigure failed"; \
 			rm -fR configure.tmp ${TOP}/configure.lua; \
