@@ -208,7 +208,7 @@ AG_EventPushUint(AG_Event *ev, const char *key, Uint val)
 static __inline__ void
 AG_EventPushFloat(AG_Event *ev, const char *key, float val)
 {
-	AG_EVENT_INS_VAL(ev, AG_VARIABLE_FLOAT, key, flt, (double)val);
+	AG_EVENT_INS_VAL(ev, AG_VARIABLE_FLOAT, key, flt, val);
 }
 static __inline__ void
 AG_EventPushDouble(AG_Event *ev, const char *key, double val)
