@@ -4,7 +4,6 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"scrollview"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"831bd651-cd1d-438a-82bd-27a304ab2971"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}

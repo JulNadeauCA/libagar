@@ -4,7 +4,6 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"sockets"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"9438EB01-3853-438d-AEE7-471BCD28CA8F"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}

@@ -4,7 +4,6 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"focusing"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"B8BAE87E-AD27-47db-B61F-3720BE8C8A77"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}

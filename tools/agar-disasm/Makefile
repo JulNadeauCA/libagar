@@ -4,8 +4,6 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"agar-disasm"
-PROJINCLUDES=	configure.lua
-
 PROG=		agar-disasm
 PROG_TYPE=	"CLI"
 PROG_GUID=	"e685b12e-1313-486c-80c1-5195cc03a3dd"

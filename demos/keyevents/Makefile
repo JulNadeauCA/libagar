@@ -4,7 +4,6 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"keyevents"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"cfde128b-ef9c-42c5-a571-dc8dd6d2650e"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}

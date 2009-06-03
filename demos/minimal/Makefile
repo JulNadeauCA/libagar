@@ -4,7 +4,6 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"minimal"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"4bf79e00-b744-404a-b809-5cbed7d2afc1"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}

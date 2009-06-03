@@ -5,7 +5,6 @@ include ${TOP}/gui/Makefile.inc
 include ${TOP}/math/Makefile.inc
 
 PROJECT=	"plotting"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"19dbbfcd-9e00-46ed-9f5c-7934652a6b9b"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS} ${MATH_LINKS}

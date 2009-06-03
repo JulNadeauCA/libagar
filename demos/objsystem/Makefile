@@ -5,7 +5,6 @@ include ${TOP}/gui/Makefile.inc
 include ${TOP}/dev/Makefile.inc
 
 PROJECT=	"objsystem"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"85CA41FA-DD75-4136-8200-3AF5F3D7B6AF"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS} ${DEV_LINKS}

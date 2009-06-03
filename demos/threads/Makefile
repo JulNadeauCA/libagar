@@ -4,7 +4,6 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"threads"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"7bbc1bab-f1ec-479c-be08-c92b823d838c"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}
