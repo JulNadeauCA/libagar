@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2005-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,12 +31,26 @@
 #include <gui/hbox.h>
 #include <gui/numerical.h>
 #include <gui/checkbox.h>
+#include <gui/separator.h>
 
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 
 #include "icons.h"
+
+#ifdef _WIN32
+# include <core/queue_close.h>			/* Conflicts */
+# include <windows.h>
+# include <core/queue_close.h>
+# include <core/queue.h>
+#else
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <unistd.h>
+# include <string.h>
+# include <errno.h>
+#endif
 
 AG_FileDlg *
 AG_FileDlgNew(void *parent, Uint flags)
@@ -74,6 +88,28 @@ AG_FileDlgSetOptionContainer(AG_FileDlg *fd, void *ctr)
 	AG_ObjectUnlock(fd);
 }
 
+static __inline__ int
+PathIsFilesystemRoot(const char *path)
+{
+#ifdef _WIN32
+	return isalpha(path[0]) && path[1] == ':' &&
+	       (path[2] == '\0' || (path[2] == '\\' && path[3] == '\0'));
+#else
+	return (path[0] == AG_PATHSEPCHAR && path[1] == '\0');
+#endif
+}
+
+static __inline__ int
+PathIsAbsolute(const char *path)
+{
+#ifdef _WIN32
+	return isalpha(path[0]) && path[1] == ':' &&
+	       (path[2] == '\0' || path[2] == '\\');
+#else
+	return (path[0] == AG_PATHSEPCHAR);
+#endif
+}
+
 static int
 AG_FilenameCompare(const void *p1, const void *p2)
 {
@@ -83,6 +119,7 @@ AG_FilenameCompare(const void *p1, const void *p2)
 	return (strcmp(s1, s2));
 }
 
+/* Update the file / directory listing */
 static void
 RefreshListing(AG_FileDlg *fd)
 {
@@ -110,7 +147,8 @@ RefreshListing(AG_FileDlg *fd)
 		Strlcat(path, AG_PATHSEP, sizeof(path));
 		Strlcat(path, dir->ents[i], sizeof(path));
 
-		if (AG_FileDlgAtRoot(fd) && strcmp(dir->ents[i], "..")==0) {
+		if (PathIsFilesystemRoot(fd->cwd) &&
+		    strcmp(dir->ents[i], "..")==0) {
 			continue;
 		}
 		if (AG_GetFileInfo(path, &info) == -1) {
@@ -151,6 +189,52 @@ RefreshListing(AG_FileDlg *fd)
 	AG_CloseDir(dir);
 }
 
+/* Update locations box. */
+static void
+RefreshLocations(AG_FileDlg *fd, int init)
+{
+#ifdef _WIN32
+	char path[4];
+	DWORD d = GetLogicalDrives();
+	int drive;
+	AG_TlistItem *ti;
+
+	AG_TlistClear(fd->comLoc->list);
+	for (drive = 0; drive < 26; drive++) {
+		if (!(d & (1 << drive))) {
+			continue;
+		}
+		path[0] = 'A'+drive;
+		path[1] = ':';
+		path[2] = '\\';
+		path[3] = '\0';
+		ti = AG_TlistAdd(fd->comLoc->list, agIconDirectory.s, path);
+
+		if (init &&
+		    toupper(fd->cwd[0]) == path[0] &&
+		    fd->cwd[1] == ':') {
+			AG_ComboSelect(fd->comLoc, ti);
+		}
+		/* TODO icons, etc */
+#if 0
+		switch (GetDriveType(path)) {
+		case DRIVE_UNKNOWN:
+		case DRIVE_NO_ROOT_DIR:
+		case DRIVE_REMOVABLE:
+		case DRIVE_FIXED:
+		case DRIVE_REMOTE:
+		case DRIVE_CDROM:
+		case DRIVE_RAMDISK:
+			break;
+		}
+#endif
+	}
+	AG_TlistRestore(fd->comLoc->list);
+#else /* _WIN32 */
+	/* TODO: Homedir, etc */
+#endif /* _WIN32 */
+}
+
 static void
 DirSelected(AG_Event *event)
 {
@@ -162,7 +246,7 @@ DirSelected(AG_Event *event)
 	AG_ObjectLock(tl);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
 		if (AG_FileDlgSetDirectory(fd, ti->text) == -1) {
-			AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+			//AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 		} else {
 			AG_PostEvent(NULL, fd, "dir-selected", NULL);
 			RefreshListing(fd);
@@ -170,6 +254,23 @@ DirSelected(AG_Event *event)
 	}
 	AG_ObjectUnlock(tl);
 	AG_ObjectUnlock(fd);
+}
+
+static void
+LocSelected(AG_Event *event)
+{
+	AG_FileDlg *fd = AG_PTR(1);
+	AG_TlistItem *ti = AG_PTR(2);
+
+	if (ti == NULL) {
+		return;
+	}
+	if (AG_FileDlgSetDirectory(fd, ti->text) == -1) {
+		//AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+	} else {
+		AG_PostEvent(NULL, fd, "dir-selected", NULL);
+		RefreshListing(fd);
+	}
 }
 
 static void
@@ -425,11 +526,11 @@ ProcessFilename(char *file, size_t len)
 static void
 SetFilename(AG_FileDlg *fd, const char *file)
 {
-	if (file[0] == '/') {
+	if (file[0] == AG_PATHSEPCHAR) {
 		Strlcpy(fd->cfile, file, sizeof(fd->cfile));
 	} else {
 		Strlcpy(fd->cfile, fd->cwd, sizeof(fd->cfile));
-		if (!AG_FileDlgAtRoot(fd) &&
+		if (!PathIsFilesystemRoot(fd->cwd) &&
 		    (fd->cfile[0] != '\0' &&
 		     fd->cfile[strlen(fd->cfile)-1] != AG_PATHSEPCHAR)) {
 			Strlcat(fd->cfile, AG_PATHSEP, sizeof(fd->cfile));
@@ -477,7 +578,7 @@ TextboxReturn(AG_Event *event)
 		if (AG_FileDlgSetDirectory(fd, file) == 0) {
 			RefreshListing(fd);
 		} else {
-			AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+			//AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 			goto out;
 		}
 	} else {
@@ -573,6 +674,7 @@ WidgetShown(AG_Event *event)
 
 	AG_WidgetFocus(fd->tbFile);
 	RefreshListing(fd);
+	RefreshLocations(fd, 1);
 	AG_PostEvent(NULL, fd->comTypes, "combo-selected", "%p", NULL);
 
 	AG_COMBO_FOREACH(it, fd->comTypes) {
@@ -581,21 +683,6 @@ WidgetShown(AG_Event *event)
 		nItems++;
 	}
 	AG_ComboSizeHintPixels(fd->comTypes, wMax, nItems);
-}
-
-/*
- * Evaluate whether the cwd is the filesystem root. Return value is only
- * valid as long as the FileDlg is locked.
- */
-int
-AG_FileDlgAtRoot(AG_FileDlg *fd)
-{
-	int rv;
-	
-	AG_ObjectLock(fd);
-	rv = (fd->cwd[0] == AG_PATHSEPCHAR && fd->cwd[1] == '\0');
-	AG_ObjectUnlock(fd);
-	return (rv);
 }
 
 /* Move to the specified directory. */
@@ -613,7 +700,7 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 			goto fail;
 		}
 	} else if (dir[0] == '.' && dir[1] == '.' && dir[2] == '\0') {
-		if (!AG_FileDlgAtRoot(fd)) {
+		if (!PathIsFilesystemRoot(fd->cwd)) {
 			Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
 			if ((c = strrchr(ncwd, AG_PATHSEPCHAR)) != NULL) {
 				*c = '\0';
@@ -623,7 +710,7 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 				ncwd[1] = '\0';
 			}
 		}
-	} else if (dir[0] != AG_PATHSEPCHAR) {
+	} else if (!PathIsAbsolute(dir)) {
 		Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
 		if (!(ncwd[0] == AG_PATHSEPCHAR &&
 		      ncwd[1] == '\0')) {
@@ -646,7 +733,7 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 		goto fail;
 	}
 	if (Strlcpy(fd->cwd, ncwd, sizeof(fd->cwd)) >= sizeof(fd->cwd)) {
-		AG_SetError(_("Path is too large: `%s'"), ncwd);
+		AG_SetError(_("Path is too long: `%s'"), ncwd);
 		goto fail;
 	}
 	if (fd->dirMRU != NULL) {
@@ -715,6 +802,9 @@ Init(void *obj)
 	TAILQ_INIT(&fd->types);
 
 	fd->hPane = AG_PaneNewHoriz(fd, AG_PANE_EXPAND);
+	fd->comLoc = AG_ComboNew(fd->hPane->div[0], AG_COMBO_HFILL, NULL);
+	AG_ComboSizeHint(fd->comLoc, "XXXXXXXX", 4);
+
 	fd->tlDirs = AG_TlistNew(fd->hPane->div[0], AG_TLIST_EXPAND);
 	fd->tlFiles = AG_TlistNew(fd->hPane->div[1], AG_TLIST_EXPAND);
 	fd->lbCwd = AG_LabelNewPolled(fd, AG_LABEL_HFILL,
@@ -734,6 +824,7 @@ Init(void *obj)
 
 	AG_SetEvent(fd, "widget-shown", WidgetShown, NULL);
 	AG_SetEvent(fd->tlDirs, "tlist-dblclick", DirSelected, "%p", fd);
+	AG_SetEvent(fd->comLoc, "combo-selected", LocSelected, "%p", fd);
 	AG_SetEvent(fd->tlFiles, "tlist-selected", FileSelected, "%p", fd);
 	AG_SetEvent(fd->tlFiles, "tlist-dblclick", FileDblClicked, "%p", fd);
 	AG_SetEvent(fd->tbFile, "textbox-postchg", TextboxChanged, "%p", fd);

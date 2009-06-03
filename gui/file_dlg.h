@@ -76,6 +76,7 @@ typedef struct ag_file_dlg {
 	char *dirMRU;				/* MRU Directory */
 	void *optsCtr;				/* Container widget for opts */
 	AG_TAILQ_HEAD(,ag_file_type) types;	/* File type handlers */
+	AG_Combo *comLoc;			/* Locations list */
 } AG_FileDlg;
 
 __BEGIN_DECLS
@@ -92,7 +93,6 @@ void AG_FileDlgOkAction(AG_FileDlg *, AG_EventFn, const char *, ...);
 void AG_FileDlgCancelAction(AG_FileDlg *, AG_EventFn, const char *, ...);
 int AG_FileDlgCheckReadAccess(AG_FileDlg *);
 int AG_FileDlgCheckWriteAccess(AG_FileDlg *);
-int AG_FileDlgAtRoot(AG_FileDlg *);
 
 AG_FileType *AG_FileDlgAddType(AG_FileDlg *, const char *,
 			       const char *, void (*)(AG_Event *),
