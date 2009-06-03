@@ -1,11 +1,14 @@
 TOP=	../..
 include Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
+include ${TOP}/math/Makefile.inc
 
 PROJECT=	"plotting"
 PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"19dbbfcd-9e00-46ed-9f5c-7934652a6b9b"
-PROG_LINKS=	ag_core ag_gui ag_math pthreads SDL SDLmain opengl freetype
+PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS} ${MATH_LINKS}
 
 PROG=	plotting
 SRCS=	plotting.c

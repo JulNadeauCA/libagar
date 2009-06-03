@@ -1,11 +1,14 @@
 TOP=	../..
 include Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
+include ${TOP}/dev/Makefile.inc
 
 PROJECT=	"themes"
 PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"11D6C9FF-522E-43ed-B3EB-92A2C636CCA7"
-PROG_LINKS=	ag_core ag_gui ag_dev pthreads SDL SDLmain opengl freetype
+PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS} ${DEV_LINKS}
 
 PROG=	themes
 SRCS=	themes.c mytheme.c

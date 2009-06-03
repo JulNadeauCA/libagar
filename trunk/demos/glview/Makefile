@@ -1,12 +1,13 @@
 TOP=	../..
 include Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"glview"
 PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"B22C8324-AB8E-417e-9459-9FA0698D45D7"
-PROG_LINKS=	ag_core ag_gui \
-		pthreads SDL SDLmain opengl glu freetype
+PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS} opengl glu
 
 PROG=		glview
 SRCS=		glview.c
