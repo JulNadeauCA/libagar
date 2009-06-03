@@ -4,7 +4,6 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"windows"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"7085f719-bbbf-46a0-88d0-a4cd2b31eb74"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}

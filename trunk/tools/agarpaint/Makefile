@@ -7,7 +7,6 @@ include ${TOP}/vg/Makefile.inc
 include ${TOP}/dev/Makefile.inc
 
 PROJECT=	"agarpaint"
-PROJINCLUDES=	configure.lua
 #SUBDIR=	po
 
 PROG=		agarpaint

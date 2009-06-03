@@ -4,7 +4,6 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"loader"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"D1E36CAF-5EC8-45dc-9050-CCEC50B2F7E3"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}

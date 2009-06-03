@@ -4,7 +4,6 @@ include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"initvideosdl"
-PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"114ad05c-321b-42ff-8917-a2aa2cc44419"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}
