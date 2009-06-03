@@ -118,7 +118,6 @@ proj:
 		if [ "${PROJNOCLEAN}" = "no" ]; then \
 			echo "rm -f configure.tmp config.log"; \
 			rm -f configure.tmp config.log; \
-			echo >Makefile.config; \
 		fi; \
 		\
 	        echo "cat Makefile | ${MKPROJFILES} > ${PREMAKEOUT}"; \
@@ -163,14 +162,6 @@ proj:
 			rm -f .projfiles.out ${PROJINCLUDES}; \
 		fi; \
 	done
-	@if [ "${PROJNOCLEAN}" = "no" ]; then \
-		echo "${MAKE} proj-clean"; \
-		${MAKE} proj-clean; \
-	fi
 	@echo "* Done"
-
-proj-clean: proj-clean-subdir
-	@echo "rm -f ${PREMAKEOUT}"
-	@rm -f ${PREMAKEOUT}
 
 .PHONY: proj
