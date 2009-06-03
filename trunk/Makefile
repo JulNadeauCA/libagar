@@ -4,7 +4,6 @@ include ${TOP}/Makefile.config
 PROJECT=	"Agar"
 PROJECT_GUID=	"93733df2-c743-489e-bc9f-f22aee00d787"
 PROJCONFIGDIR=	include/agar/config
-PROJINCLUDES=	../configure.lua
 
 include ${TOP}/Makefile.proj
 
@@ -38,16 +37,15 @@ configure:
 	chmod 755 configure
 
 clean-config:
-	rm -f configure.lua
 	rm -fR include
 
 cleandir-config: clean-config
 	rm -fr config config.log Makefile.config .projfiles.out .projfiles2.out
+	rm -f configure.lua
 	touch Makefile.config
 	-(cd tools && ${MAKE} cleandir)
 	-(cd demos && ${MAKE} cleandir)
 	find . -name premake.lua -exec rm -f {} \;
-	find . -name configure.lua -exec rm -f {} \;
 
 beta:
 	sh mk/dist.sh beta
