@@ -1,11 +1,13 @@
 TOP=	../..
 include Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"sockets"
 PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"9438EB01-3853-438d-AEE7-471BCD28CA8F"
-PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
+PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}
 
 PROG=	sockets
 SRCS=	sockets.c

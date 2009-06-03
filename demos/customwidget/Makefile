@@ -1,11 +1,13 @@
 TOP=	../..
 include Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"customwidget"
 PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"5d140e81-5592-4aa7-9395-16604afae922"
-PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
+PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}
 
 PROG=	customwidget
 SRCS=	customwidget.c mywidget.c

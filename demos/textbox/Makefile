@@ -1,11 +1,13 @@
 TOP=	../..
 include Makefile.config
+include ${TOP}/core/Makefile.inc
+include ${TOP}/gui/Makefile.inc
 
 PROJECT=	"textbox"
 PROJINCLUDES=	configure.lua
 PROG_TYPE=	"GUI"
 PROG_GUID=	"0D29CDD8-4AEE-4717-BC3B-AA090F2956BD"
-PROG_LINKS=	ag_core ag_gui pthreads SDL SDLmain opengl freetype
+PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}
 
 PROG=	textbox
 SRCS=	textbox.c
