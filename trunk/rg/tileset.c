@@ -1194,7 +1194,8 @@ InsertTileDlg(AG_Event *event)
 	AG_CheckboxNewInt(win, 0, _("Colorkey"), &ins_colorkey);
 	
 	AG_LabelNewString(win, 0, _("Snapping mode: "));
-	AG_RadioNewUint(win, AG_RADIO_HFILL, rgTileSnapModes, &ins_snap_mode);
+	AG_RadioNewUint(win, AG_RADIO_HFILL, rgTileSnapModes,
+	    (Uint *)&ins_snap_mode);
 
 	btnbox = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
 	{
