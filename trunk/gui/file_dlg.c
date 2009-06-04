@@ -23,6 +23,9 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/have_getpwuid.h>
+#include <config/have_getuid.h>
+
 #include <core/core.h>
 #include <core/config.h>
 
@@ -36,6 +39,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
+#include <pwd.h>
+#endif
 
 #include "icons.h"
 
@@ -193,46 +199,77 @@ RefreshListing(AG_FileDlg *fd)
 static void
 RefreshLocations(AG_FileDlg *fd, int init)
 {
+	AG_Tlist *tl = fd->comLoc->list;
+	AG_TlistItem *ti, *tiSel = NULL;
+
+	AG_TlistClear(tl);
 #ifdef _WIN32
-	char path[4];
-	DWORD d = GetLogicalDrives();
-	int drive;
-	AG_TlistItem *ti;
+	{
+		char path[4];
+		DWORD d = GetLogicalDrives();
+		int drive;
 
-	AG_TlistClear(fd->comLoc->list);
-	for (drive = 0; drive < 26; drive++) {
-		if (!(d & (1 << drive))) {
-			continue;
-		}
-		path[0] = 'A'+drive;
-		path[1] = ':';
-		path[2] = '\\';
-		path[3] = '\0';
-		ti = AG_TlistAdd(fd->comLoc->list, agIconDirectory.s, path);
+		for (drive = 0; drive < 26; drive++) {
+			if (!(d & (1 << drive))) {
+				continue;
+			}
+			path[0] = 'A'+drive;
+			path[1] = ':';
+			path[2] = '\\';
+			path[3] = '\0';
+			ti = AG_TlistAdd(tl, agIconDirectory.s, path);
 
-		if (init &&
-		    toupper(fd->cwd[0]) == path[0] &&
-		    fd->cwd[1] == ':') {
-			AG_ComboSelect(fd->comLoc, ti);
-		}
-		/* TODO icons, etc */
+			if (init &&
+			    toupper(fd->cwd[0]) == path[0] &&
+			    fd->cwd[1] == ':')
+				tiSel = ti;
+
 #if 0
-		switch (GetDriveType(path)) {
-		case DRIVE_UNKNOWN:
-		case DRIVE_NO_ROOT_DIR:
-		case DRIVE_REMOVABLE:
-		case DRIVE_FIXED:
-		case DRIVE_REMOTE:
-		case DRIVE_CDROM:
-		case DRIVE_RAMDISK:
-			break;
+			/* TODO icons, etc */
+			switch (GetDriveType(path)) {
+			case DRIVE_UNKNOWN:
+			case DRIVE_NO_ROOT_DIR:
+			case DRIVE_REMOVABLE:
+			case DRIVE_FIXED:
+			case DRIVE_REMOTE:
+			case DRIVE_CDROM:
+			case DRIVE_RAMDISK:
+				break;
+			}
+#endif
+		}
+	}
+#else /* _WIN32 */
+	{
+		char path[AG_PATHNAME_MAX];
+		
+		ti = AG_TlistAdd(tl, agIconDirectory.s, "/");
+		if (strcmp(fd->cwd, "/") == 0)
+			tiSel = ti;
+
+#if defined(HAVE_GETPWUID) && defined(HAVE_GETUID)
+		{
+			struct passwd *pw;
+			if ((pw = getpwuid(getuid())) != NULL) {
+				ti = AG_TlistAdd(tl, agIconDirectory.s,
+				    pw->pw_dir);
+				if (strcmp(fd->cwd, path) == 0)
+					tiSel = ti;
+			}
 		}
 #endif
+		if (AG_GetCWD(path, sizeof(path)) == 0) {
+			ti = AG_TlistAdd(tl, agIconDirectory.s, path);
+			if (strcmp(fd->cwd, path) == 0)
+				tiSel = ti;
+		}
 	}
-	AG_TlistRestore(fd->comLoc->list);
-#else /* _WIN32 */
-	/* TODO: Homedir, etc */
 #endif /* _WIN32 */
+	
+	if (tiSel != NULL) {
+		AG_ComboSelect(fd->comLoc, tiSel);
+	}
+	AG_TlistRestore(tl);
 }
 
 static void
@@ -695,10 +732,7 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 	AG_ObjectLock(fd);
 
 	if (dir[0] == '.' && dir[1] == '\0') {
-		if (AG_GetCWD(ncwd, sizeof(ncwd)) == -1) {
-			AG_SetError("%s", AG_GetError());
-			goto fail;
-		}
+		Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
 	} else if (dir[0] == '.' && dir[1] == '.' && dir[2] == '\0') {
 		if (!PathIsFilesystemRoot(fd->cwd)) {
 			Strlcpy(ncwd, fd->cwd, sizeof(ncwd));
@@ -740,6 +774,7 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *dir)
 		AG_SetCfgString(fd->dirMRU, "%s", fd->cwd);
 		AG_ConfigSave();
 	}
+
 	AG_TlistScrollToStart(fd->tlDirs);
 	AG_TlistScrollToStart(fd->tlFiles);
 
@@ -803,7 +838,7 @@ Init(void *obj)
 
 	fd->hPane = AG_PaneNewHoriz(fd, AG_PANE_EXPAND);
 	fd->comLoc = AG_ComboNew(fd->hPane->div[0], AG_COMBO_HFILL, NULL);
-	AG_ComboSizeHint(fd->comLoc, "XXXXXXXX", 4);
+	AG_ComboSizeHint(fd->comLoc, "XXXXXXXXXXX", 4);
 
 	fd->tlDirs = AG_TlistNew(fd->hPane->div[0], AG_TLIST_EXPAND);
 	fd->tlFiles = AG_TlistNew(fd->hPane->div[1], AG_TLIST_EXPAND);
