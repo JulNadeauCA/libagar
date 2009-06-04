@@ -481,7 +481,7 @@ RG_PixmapEdit(RG_Tileview *tv, RG_TileElement *tel)
 		};
 
 		AG_LabelNewString(ntab, 0, _("Blending method:"));
-		AG_RadioNewUint(ntab, 0, blend_modes, (Uint *)&px->blend_mode);
+		AG_RadioNewUint(ntab, 0, blend_modes, &px->blend_mode);
 		AG_SeparatorNew(ntab, AG_SEPARATOR_HORIZ);
 		AG_CheckboxNewInt(ntab, 0, _("Source pixmap only"),
 		    &pixmap_source);
