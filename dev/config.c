@@ -120,7 +120,7 @@ SetColor(AG_Event *event)
 void
 DEV_ConfigShow(void)
 {
-	if (agView->nModal > 0)		/* Avoid clobbering modal windows */
+	if (agView->Lmodal->n > 0)	/* Avoid clobbering modal windows */
 		return;
 
 	if (devConfigWindow != NULL) {

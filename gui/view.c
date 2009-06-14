@@ -167,12 +167,12 @@ InitView(AG_Display *v)
 	v->maxdirty = 4;
 	v->dirty = Malloc(v->maxdirty*sizeof(SDL_Rect));
 	v->opengl = 0;
-	v->winModal = Malloc(sizeof(AG_Window *));
-	v->nModal = 0;
+	v->Lmodal = AG_ListNew();
 	v->winSelected = NULL;
 	v->winToFocus = NULL;
 	v->rNom = 16;
 	v->rCur = 0;
+	v->overlay = 0;
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
 }
@@ -487,10 +487,10 @@ AG_DestroyVideo(void)
 	}
 
 	AG_TextDestroy();
-
+	
+	AG_ListDestroy(agView->Lmodal);
 	AG_SurfaceFree(agView->stmpl);
 	Free(agView->dirty);
-	Free(agView->winModal);
 	Free(agView);
 	
 	AG_ColorsDestroy();
