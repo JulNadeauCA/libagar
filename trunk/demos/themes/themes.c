@@ -18,6 +18,14 @@
 #include "mytheme.h"
 
 static void
+ComboSelected(AG_Event *event)
+{
+	AG_TlistItem *ti = AG_PTR(1);
+
+	AG_TextMsg(AG_MSG_INFO, "Item %s", ti->text);
+}
+
+static void
 CreateWindow(void)
 {
 	AG_Window *win;
@@ -115,6 +123,7 @@ CreateWindow(void)
 	 */
 	com = AG_ComboNew(div1, AG_COMBO_HFILL, "Combo: ");
 	AG_ComboSizeHint(com, "Item #00 ", 10);
+	AG_SetEvent(com, "combo-selected", ComboSelected, NULL);
 
 	/* UCombo is a variant of Combo which looks like a single button. */
 	ucom = AG_UComboNew(div1, AG_UCOMBO_HFILL);

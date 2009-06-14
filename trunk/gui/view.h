@@ -102,8 +102,7 @@ typedef struct ag_display {
 	struct ag_window *winToFocus;	/* Give focus to this window,
 					   when event processing is done */
 	struct ag_window *winSelected;	/* Window being moved/resized/etc */
-	struct ag_window **winModal;	/* Modal window stack */
-	Uint nModal;
+	AG_List *Lmodal;		/* Modal window stack */
 	enum ag_wm_operation winop;	/* WM operation in progress */
 	struct ag_style *style;		/* Default style for new windows */
 	int overlay;			/* GL overlay mode */

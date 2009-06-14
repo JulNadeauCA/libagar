@@ -317,10 +317,10 @@ Shown(AG_Event *event)
 		AG_WindowFocus(win);
 	}
 	if (win->flags & AG_WINDOW_MODAL) {
-		agView->winModal = Realloc(agView->winModal,
-		    (agView->nModal+1) * sizeof(AG_Window *));
-		agView->winModal[agView->nModal] = win;
-		agView->nModal++;
+		AG_Variable Vmodal;
+
+		AG_InitPointer(&Vmodal, win);
+		AG_ListAppend(agView->Lmodal, &Vmodal);
 	}
 	if (WIDGET(win)->x == -1 && WIDGET(win)->y == -1) {
 		AG_WidgetSizeReq(win, &r);
@@ -348,13 +348,19 @@ static void
 Hidden(AG_Event *event)
 {
 	AG_Window *win = AG_SELF();
+	int i;
 
 	if ((win->flags & AG_WINDOW_DENYFOCUS) == 0) {
 		/* Remove the focus. XXX cycle */
 		agView->winToFocus = NULL;
 	}
 	if (win->flags & AG_WINDOW_MODAL) {
-		agView->nModal--;
+		for (i = 0; i < agView->Lmodal->n; i++) {
+			if (agView->Lmodal->v[i].data.p == win)
+				break;
+		}
+		if (i < agView->Lmodal->n)
+			AG_ListRemove(agView->Lmodal, i);
 	}
 
 	/* Update the background if necessary. */
@@ -719,13 +725,10 @@ AG_WindowMouseOverCtrl(AG_Window *win, int x, int y)
 static int
 ModalClose(AG_Window *win, int x, int y)
 {
-	AG_ObjectLock(win);
 	if (!AG_WidgetArea(win, x, y)) {
 		AG_PostEvent(NULL, win, "window-modal-close", NULL);
-		AG_ObjectUnlock(win);
 		return (1);
 	}
-	AG_ObjectUnlock(win);
 	return (0);
 }
 
@@ -832,8 +835,8 @@ AG_WindowEvent(SDL_Event *ev)
 
 	agCursorToSet = NULL;
 	
-	if (agView->nModal > 0) {
-		win = agView->winModal[agView->nModal-1];
+	if (agView->Lmodal->n > 0) {
+		win = agView->Lmodal->v[agView->Lmodal->n-1].data.p;
 		switch (ev->type) {
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
@@ -841,11 +844,13 @@ AG_WindowEvent(SDL_Event *ev)
 				return (1);
 			}
 			break;
+#if 0
 		case SDL_MOUSEMOTION:
 			if (ModalClose(win, ev->motion.x, ev->motion.y)) {
 				return (1);
 			}
 			break;
+#endif
 		default:
 			break;
 		}
@@ -873,8 +878,8 @@ scan:
 		AG_ObjectLock(win);
 
 		/* XXX TODO move invisible windows to different tailq! */
-		if (!win->visible || (agView->nModal > 0 &&
-		    win != agView->winModal[agView->nModal-1])) {
+		if (!win->visible || (agView->Lmodal->n > 0 &&
+		    win != agView->Lmodal->v[agView->Lmodal->n-1].data.p)) {
 			AG_ObjectUnlock(win);
 			continue;
 		}
