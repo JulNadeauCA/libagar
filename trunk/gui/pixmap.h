@@ -32,6 +32,9 @@ AG_Pixmap *AG_PixmapFromSurface(void *, Uint, AG_Surface *);
 AG_Pixmap *AG_PixmapFromSurfaceCopy(void *, Uint, AG_Surface *);
 AG_Pixmap *AG_PixmapFromSurfaceScaled(void *, Uint, AG_Surface *, Uint, Uint);
 AG_Pixmap *AG_PixmapFromBMP(void *, Uint, const char *);
+#ifdef HAVE_OPENGL
+AG_Pixmap *AG_PixmapFromTexture(void *, Uint, GLuint, int);
+#endif
 
 int	   AG_PixmapAddSurface(AG_Pixmap *, AG_Surface *);
 int	   AG_PixmapAddSurfaceFromBMP(AG_Pixmap *, const char *);

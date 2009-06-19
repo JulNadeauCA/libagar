@@ -23,12 +23,14 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <config/have_opengl.h>
 #include <core/core.h>
 #if 0
 #include "load_xcf.h"
 #endif
 #include "pixmap.h"
 #include "primitive.h"
+#include "opengl.h"
 
 AG_Pixmap *
 AG_PixmapNew(void *parent, Uint flags, Uint w, Uint h)
@@ -126,6 +128,55 @@ AG_PixmapFromBMP(void *parent, Uint flags, const char *bmpfile)
 	AG_WidgetMapSurface(px, bmp);
 	return (px);
 }
+
+#ifdef HAVE_OPENGL
+
+AG_Pixmap *
+AG_PixmapFromTexture(void *parent, Uint flags, GLuint name, int lod)
+{
+	AG_Pixmap *px;
+	AG_Surface *su;
+	GLint w, h;
+
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, lod, GL_TEXTURE_WIDTH, &w);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, lod, GL_TEXTURE_HEIGHT, &h);
+
+	su = AG_SurfaceRGBA(w, h, 32, 0,
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+		0xff000000,
+		0x00ff0000,
+		0x0000ff00,
+		0x000000ff
+#else
+		0x000000ff,
+		0x0000ff00,
+		0x00ff0000,
+		0xff000000
+#endif
+	);
+	if (su == NULL) {
+		AG_SetError("Allocating texture: %s", AG_GetError());
+		return (NULL);
+	}
+
+	glBindTexture(GL_TEXTURE_2D, name);
+	glGetTexImage(GL_TEXTURE_2D, lod, GL_RGBA, GL_UNSIGNED_BYTE,
+	    su->pixels);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	px = Malloc(sizeof(AG_Pixmap));
+	AG_ObjectInit(px, &agPixmapClass);
+	px->flags |= flags;
+
+	if (flags & AG_PIXMAP_HFILL) { AG_ExpandHoriz(px); }
+	if (flags & AG_PIXMAP_VFILL) { AG_ExpandVert(px); }
+	
+	AG_ObjectAttach(parent, px);
+	AG_WidgetMapSurface(px, su);
+	return (px);
+}
+
+#endif /* HAVE_OPENGL */
 
 /*
  * Map an existing surface. Returned surface ID is valid as long as pixmap

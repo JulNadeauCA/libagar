@@ -1,4 +1,4 @@
-.\" Copyright (c) 2006-2007 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2009 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,12 @@ from a timer with
 .Ft "AG_Pixmap *"
 .Fn AG_PixmapFromSurfaceScaled "AG_Widget *parent" "Uint flags" "AG_Surface *src" "int width" "int height"
 .Pp
+.Ft "AG_Pixmap *"
+.Fn AG_PixmapFromBMP "AG_Widget *parent" "Uint flags" "const char *path"
+.Pp
+.Ft "AG_Pixmap *"
+.Fn AG_PixmapFromTexture "AG_Widget *parent" "Uint flags" "GLuint texture" "int lod"
+.Pp
 .nr nS 0
 The
 .Fn AG_PixmapNew
@@ -85,7 +91,7 @@ The following
 are accepted:
 .Pp
 .Bl -tag -width "AG_PIXMAP_RESCALE "
-.Dv AG_PIXMAP_RESCALE
+.It Dv AG_PIXMAP_RESCALE
 Rescale image to fit widget size.
 .El
 .Pp
@@ -105,6 +111,19 @@ The
 variant instead creates and manages a copy of the surface.
 .Fn AG_PixmapFromSurfaceScaled
 uses rescaled copy of the surface.
+.Pp
+The
+.Fn AG_PixmapFromBMP
+variant loads a surface from the bmp file at
+.Fa path .
+.Pp
+The
+.Fn AG_PixmapFromTexture
+function copies the surface from an existing GL texture.
+.Fa lod
+specifies the level-of-detail of the texture (level 0 is the base image
+level).
+This function is only available if Agar was compiled with OpenGL support.
 .Sh CHANGING SURFACES
 .nr nS 1
 .Ft "int"
@@ -115,6 +134,9 @@ uses rescaled copy of the surface.
 .Pp
 .Ft "int"
 .Fn AG_PixmapAddSurfaceScaled "AG_Pixmap *pixmap" "AG_Surface *surface" "int width" "int height"
+.Pp
+.Ft "int"
+.Fn AG_PixmapAddSurfaceFromBMP "AG_Pixmap *pixmap" "const char *path"
 .Pp
 .Ft "void"
 .Fn AG_PixmapSetSurface "AG_Pixmap *pixmap" "int surface_name"
@@ -146,9 +168,10 @@ The
 widget can map multiple surfaces and switch between them.
 To add a new surface, use
 .Fn AG_PixmapAddSurface ,
-.Fn AG_PixmapAddSurfaceCopy
+.Fn AG_PixmapAddSurfaceCopy ,
+.Fn AG_PixmapAddSurfaceScaled
 or
-.Fn AG_PixmapAddSurfaceScaled .
+.Fn AG_PixmapAddSurfaceFromBMP .
 .Pp
 .Fn AG_PixmapSetSurface
 changes the currently visible surface to another surface that has been
