@@ -43,8 +43,6 @@ static float cH = 0.0, cS = 0.0, cV = 0.0, cA = 0.0;	/* Copy buffer */
 static AG_Mutex CopyLock = AG_MUTEX_INITIALIZER;
 #endif
 
-static void RenderPalette(AG_HSVPal *);
-
 AG_HSVPal *
 AG_HSVPalNew(void *parent, Uint flags)
 {
@@ -840,6 +838,10 @@ Draw(void *obj)
 	if (WIDGET(pal)->w < 16 || WIDGET(pal)->h < 16)
 		return;
 
+#ifdef HAVE_OPENGL
+	if (WIDGET(pal)->textures[0] == 0)
+		pal->flags |= AG_HSVPAL_DIRTY;
+#endif
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
 		pal->surface = AG_SurfaceVideoRGB(WIDTH(pal), HEIGHT(pal));
