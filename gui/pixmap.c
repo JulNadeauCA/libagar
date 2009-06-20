@@ -132,7 +132,7 @@ AG_PixmapFromBMP(void *parent, Uint flags, const char *bmpfile)
 #ifdef HAVE_OPENGL
 
 AG_Pixmap *
-AG_PixmapFromTexture(void *parent, Uint flags, GLuint name, int lod)
+AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
 {
 	AG_Pixmap *px;
 	AG_Surface *su;
@@ -159,7 +159,7 @@ AG_PixmapFromTexture(void *parent, Uint flags, GLuint name, int lod)
 		return (NULL);
 	}
 
-	glBindTexture(GL_TEXTURE_2D, name);
+	glBindTexture(GL_TEXTURE_2D, (GLuint)name);
 	glGetTexImage(GL_TEXTURE_2D, lod, GL_RGBA, GL_UNSIGNED_BYTE,
 	    su->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
