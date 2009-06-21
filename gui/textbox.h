@@ -37,6 +37,7 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_NOEMACS       0x08000 /* Disable emacs-style fn keys */
 #define AG_TEXTBOX_NOWORDSEEK    0x10000 /* Disable ALT+b/ALT+f emacs keys */
 #define AG_TEXTBOX_NOLATIN1      0x20000 /* Disable LATIN-1 combinations */
+#define AG_TEXTBOX_WORDWRAP	 0x40000 /* Enable word wrapping */
 
 	int boxPadX, boxPadY;		/* Padding around textbox */
 	int lblPadL, lblPadR;		/* Padding around label */

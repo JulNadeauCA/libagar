@@ -26,15 +26,6 @@ SetDisable(AG_Event *event)
 }
 
 static void
-SetWordWrap(AG_Event *event)
-{
-	AG_Textbox *textbox = AG_PTR(1);
-	int enable = AG_INT(2);
-
-	AG_TextboxSetWordWrap(textbox, enable);
-}
-
-static void
 SingleLineExample(void)
 {
 	AG_Window *win;
@@ -119,13 +110,12 @@ MultiLineExample(const char *title, int wordwrap)
 	AG_TextboxSetCursorPos(textbox, 0);
 
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
-	AG_CheckboxNewFn(win, 0, "Word wrapping", SetWordWrap, "%p", textbox);
-
+#if 0
 	AG_SeparatorNewHoriz(win);
 	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Lines: %d", &textbox->ed->yMax);
 	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Cursor position: %d",
 	    &textbox->ed->pos);
-
+#endif
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 540, 380);
 	AG_WindowShow(win);
 }
