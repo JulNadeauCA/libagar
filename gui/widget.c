@@ -1211,13 +1211,45 @@ AG_WidgetPutPixelRGB_GL(void *p, int x, int y, Uint8 r, Uint8 g, Uint8 b)
 }
 
 /*
- * Release the OpenGL resources associated with a widget.
+ * Release the OpenGL resources associated with a widget. If some textures
+ * exist without a corresponding surface, allocate a software surface and
+ * copy their contents to be later restored.
  * GL lock must be held.
  */
 void
 AG_WidgetFreeResourcesGL(AG_Widget *wid)
 {
+	AG_Surface *su;
+	GLint w, h;
+	Uint i;
+
 	AG_ObjectLock(wid);
+	for (i = 0; i < wid->nsurfaces; i++)  {
+		if (wid->textures[i] == 0 ||
+		    wid->surfaces[i] != NULL) {
+			continue;
+		}
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,
+		    &w);
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT,
+		    &h);
+
+		su = AG_SurfaceRGBA(w, h, 32, 0,
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+			0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+#else
+			0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+#endif
+		);
+		if (su == NULL) {
+			AG_FatalError("Allocating texture: %s", AG_GetError());
+		}
+		glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[i]);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+		    su->pixels);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		wid->surfaces[i] = su;
+	}
 	glDeleteTextures(wid->nsurfaces, (GLuint *)wid->textures);
 	memset(wid->textures, 0, wid->nsurfaces*sizeof(Uint));
 	AG_ObjectUnlock(wid);
