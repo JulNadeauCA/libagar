@@ -278,8 +278,8 @@ unnecessary text rendering (and texture uploads in OpenGL mode).
 .nr nS 0
 The
 .Fn AG_TableAddCol
-function inserts a new column into the table and returns an integer column
-identifier.
+function inserts a new column into the table, returning the number of the
+new column if successful, or -1 if an error occured.
 .Fa name
 specifies the text to display in the column header.
 .Fa size_spec
@@ -330,7 +330,8 @@ selection flag of individual cells; their meaning is application-specific.
 .nr nS 0
 The
 .Fn AG_TableAddRow
-function inserts a new row into the table.
+function inserts a new row into the table and returns the new row number,
+or -1 if a failure occured.
 The
 .Fa fmt
 argument describes the individual fields (or cells) of this row.
@@ -391,7 +392,10 @@ and
 .Fa y
 parameters can be ignored.
 .It %[W]
-An arbitrary widget to insert into the table.
+A widget to insert into the table.
+The widget must have the
+.Dv AG_WIDGET_TABLE_EMBEDDABLE
+flag set or the operation will fail.
 Note that for efficiency reasons,
 .Nm
 is not treated like a standard widget container, so widgets that are

@@ -212,6 +212,8 @@ Init(void *obj)
 {
 	AG_Combo *com = obj;
 
+	WIDGET(com)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
+
 	com->flags = 0;
 	com->panel = NULL;
 	com->wSaved = 0;

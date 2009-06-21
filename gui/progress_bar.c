@@ -73,7 +73,8 @@ Init(void *obj)
 	AG_ProgressBar *pb = obj;
 
 	WIDGET(pb)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
-	                     AG_WIDGET_UNFOCUSED_MOTION;
+	                     AG_WIDGET_UNFOCUSED_MOTION|
+			     AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindInt(pb, "value", &pb->value);
 	AG_BindInt(pb, "min", &pb->min);

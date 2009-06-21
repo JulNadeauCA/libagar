@@ -554,7 +554,8 @@ Init(void *obj)
 {
 	AG_Numerical *num = obj;
 
-	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(num)->flags |= AG_WIDGET_FOCUSABLE|
+	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindDouble(num, "value", &num->value);
 	AG_BindDouble(num, "min", &num->min);

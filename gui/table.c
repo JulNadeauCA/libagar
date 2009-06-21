@@ -630,6 +630,8 @@ Draw(void *obj)
 	if (t->flags & AG_TABLE_WIDGETS)
 		UpdateEmbeddedWidgets(t);
 
+	AG_PushTextState();
+
 	rCol.y = 0;
 	rCol.h = t->hCol + t->r.h - 2;
 	rCell.h = t->hRow;
@@ -706,6 +708,8 @@ Draw(void *obj)
 		    AG_COLOR(TABLE_LINE_COLOR));
 	}
 	t->flags &= ~(AG_TABLE_REDRAW_CELLS);
+
+	AG_PopTextState();
 }
 
 AG_MenuItem *
@@ -1634,12 +1638,17 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
     int (*sort_fn)(const void *, const void *))
 {
 	AG_TableCol *tc, *lc;
+	AG_TableCol *colsNew;
 	Uint m, n;
 
 	AG_ObjectLock(t);
 
 	/* Initialize the column information structure. */
-	t->cols = Realloc(t->cols, (t->n+1)*sizeof(AG_TableCol));
+	if ((colsNew = realloc(t->cols, (t->n+1)*sizeof(AG_TableCol))) == NULL) {
+		goto outofmem;
+	}
+	t->cols = colsNew;
+
 	tc = &t->cols[t->n];
 	if (name != NULL) {
 		Strlcpy(tc->name, name, sizeof(tc->name));
@@ -1654,10 +1663,12 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 	tc->pool = NULL;
 	tc->mpool = 0;
 
-	/* XXX CONTEXT */
+	AG_PushTextState();
 	AG_TextColor(TEXT_COLOR);
 	tc->surface = (name == NULL) ? -1 :
 	    AG_WidgetMapSurface(t, AG_TextRender(name));
+	AG_PopTextState();
+
 	if (t->n > 0) {
 		lc = &t->cols[t->n - 1];
 		tc->x = lc->x+lc->w;
@@ -1682,13 +1693,22 @@ AG_TableAddCol(AG_Table *t, const char *name, const char *size_spec,
 
 	/* Resize the row arrays. */
 	for (m = 0; m < t->m; m++) {
-		t->cells[m] = Realloc(t->cells[m],
-		    (t->n+1)*sizeof(AG_TableCell));
+		AG_TableCell *cellsNew;
+
+		if ((cellsNew = realloc(t->cells[m],
+		    (t->n+1)*sizeof(AG_TableCell))) == NULL) {
+			goto outofmem;
+		}
+		t->cells[m] = cellsNew;
 		AG_TableInitCell(t, &t->cells[m][t->n]);
 	}
 	n = t->n++;
 	AG_ObjectUnlock(t);
 	return (n);
+outofmem:
+	AG_SetError("Out of memory for column");
+	AG_ObjectUnlock(t);
+	return (-1);
 }
 
 void
@@ -1709,14 +1729,23 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	char fmt[64], *sp = &fmt[0];
 	va_list ap;
 	Uint n, rv;
+	AG_TableCell **cellsNew;
 
 	Strlcpy(fmt, fmtp, sizeof(fmt));
 
 	AG_ObjectLock(t);
 
+	if ((cellsNew = realloc(t->cells, (t->m+1)*sizeof(AG_TableCell)))
+	    == NULL) {
+		goto outofmem;
+	}
+	if ((cellsNew[t->m] = malloc(t->n*sizeof(AG_TableCell))) == NULL) {
+		free(cellsNew);
+		goto outofmem;
+	}
+	t->cells = cellsNew;
+
 	va_start(ap, fmtp);
-	t->cells = Realloc(t->cells, (t->m+1)*sizeof(AG_TableCell));
-	t->cells[t->m] = Malloc(t->n*sizeof(AG_TableCell));
 	for (n = 0; n < t->n; n++) {
 		AG_TableCell *c = &t->cells[t->m][n];
 		char *s = AG_Strsep(&sp, ":"), *sc;
@@ -1787,6 +1816,13 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 				a.h = 0;
 				c->type = AG_CELL_WIDGET;
 				c->widget = c->data.p;
+				if (!(c->widget->flags &
+				      AG_WIDGET_TABLE_EMBEDDABLE)) {
+					AG_SetError("%s widgets are not "
+					            "%%[W]-embeddable",
+					    AGOBJECT_CLASS(c->widget)->name);
+					goto fail;
+				}
 				AG_ObjectAttach(t, c->widget);
 				AG_WidgetSizeAlloc(c->widget, &a);
 				t->flags |= AG_TABLE_WIDGETS;
@@ -1886,6 +1922,11 @@ AG_TableAddRow(AG_Table *t, const char *fmtp, ...)
 	rv = t->m++;
 	AG_ObjectUnlock(t);
 	return (rv);
+outofmem:
+	AG_SetError("Out of memory for new cell");
+fail:
+	AG_ObjectUnlock(t);
+	return (-1);
 }
 
 int

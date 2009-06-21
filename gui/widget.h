@@ -75,6 +75,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_UNFOCUSED_KEYDOWN	0x10000 /* All mousebuttondown events */
 #define AG_WIDGET_UNFOCUSED_KEYUP	0x20000 /* All mousebuttondown events */
 #define AG_WIDGET_DEBUG_RSENS		0x40000 /* Debug sensitivity rect */
+#define AG_WIDGET_TABLE_EMBEDDABLE	0x80000	/* Can be used in AG_Table(3) */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int x, y;			/* Coordinates in container */

@@ -240,7 +240,8 @@ Init(void *obj)
 {
 	AG_MFSpinbutton *fsu = obj;
 
-	WIDGET(fsu)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(fsu)->flags |= AG_WIDGET_FOCUSABLE|
+	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindDouble(fsu, "xvalue", &fsu->xvalue);
 	AG_BindDouble(fsu, "yvalue", &fsu->yvalue);

@@ -271,6 +271,8 @@ static void
 Init(void *obj)
 {
 	AG_FSpinbutton *fsu = obj;
+	
+	WIDGET(fsu)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindDouble(fsu, "value", &fsu->value);
 	AG_BindDouble(fsu, "min", &fsu->min);

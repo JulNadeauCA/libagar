@@ -326,7 +326,8 @@ Init(void *obj)
 {
 	AG_Radio *rad = obj;
 
-	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION;
+	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION|
+	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindInt(rad, "value", &rad->value);
 

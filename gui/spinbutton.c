@@ -170,6 +170,8 @@ static void
 Init(void *obj)
 {
 	AG_Spinbutton *sbu = obj;
+	
+	WIDGET(sbu)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindInt(sbu, "value", &sbu->value);
 	AG_BindInt(sbu, "min", &sbu->min);
