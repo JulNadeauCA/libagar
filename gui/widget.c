@@ -1229,6 +1229,7 @@ AG_WidgetFreeResourcesGL(AG_Widget *wid)
 		    wid->surfaces[i] != NULL) {
 			continue;
 		}
+		glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[i]);
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,
 		    &w);
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT,
@@ -1244,7 +1245,6 @@ AG_WidgetFreeResourcesGL(AG_Widget *wid)
 		if (su == NULL) {
 			AG_FatalError("Allocating texture: %s", AG_GetError());
 		}
-		glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[i]);
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE,
 		    su->pixels);
 		glBindTexture(GL_TEXTURE_2D, 0);
