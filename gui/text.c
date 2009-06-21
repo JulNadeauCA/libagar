@@ -64,7 +64,6 @@
 
 #include <config/have_freetype.h>
 #include <config/ttfdir.h>
-#include <config/utf8.h>
 
 #include <core/core.h>
 #include <core/config.h>
@@ -1293,11 +1292,7 @@ AG_TextSize(const char *text, int *w, int *h)
 		if (h != NULL) { *h = 0; }
 		return;
 	}
-#ifdef UTF8
 	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
-#else
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text, 0);
-#endif
 	AG_TextSizeUCS4(ucs4, w, h);
 	free(ucs4);
 }
@@ -1311,11 +1306,7 @@ AG_TextSizeMulti(const char *text, int *w, int *h, Uint **wLines, Uint *nLines)
 {
 	Uint32 *ucs4;
 
-#ifdef UTF8
 	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
-#else
-	ucs4 = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text, 0);
-#endif
 	AG_TextSizeMultiUCS4(ucs4, w, h, wLines, nLines);
 	free(ucs4);
 }

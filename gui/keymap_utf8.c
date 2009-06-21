@@ -27,9 +27,6 @@
  * Basic keyboard input processing in UTF-8 mode.
  */
 
-#include <config/utf8.h>
-#ifdef UTF8
-
 #include <core/core.h>
 #include <core/config.h>
 
@@ -444,4 +441,3 @@ const struct ag_keycode_utf8 agKeymapUTF8[] = {
 	{ SDLK_f,		KMOD_ALT,	WordForwUTF8 },
 	{ SDLK_LAST,		0,		InsertUTF8 },
 };
-#endif /* UTF8 */

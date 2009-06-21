@@ -4,7 +4,6 @@
 #define _AGAR_WIDGET_TEXT_H_
 
 #include <agar/config/have_opengl.h>
-#include <agar/config/utf8.h>
 
 #include <agar/gui/begin.h>
 
@@ -233,11 +232,7 @@ AG_TextRender(const char *text)
 	Uint32 *ucs;
 	AG_Surface *su;
 	
-#ifdef UTF8
 	ucs = AG_ImportUnicode(AG_UNICODE_FROM_UTF8, text, 0);
-#else
-	ucs = AG_ImportUnicode(AG_UNICODE_FROM_USASCII, text, 0);
-#endif
 	su = AG_TextRenderUCS4(ucs);
 	free(ucs);
 	return (su);
