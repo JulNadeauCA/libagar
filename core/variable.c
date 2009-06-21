@@ -283,7 +283,10 @@ AG_GetVariable(void *pObj, const char *name, ...)
 	if (V->fn.fnVoid != NULL) {
 		AG_EvalVariable(obj, V);
 	}
-	*p = (agVariableTypes[V->type].indirLvl > 0) ? V->data.p : &V->data;
+	if (p != NULL) {
+		*p = (agVariableTypes[V->type].indirLvl > 0) ?
+		    V->data.p : &V->data;
+	}
 	AG_ObjectUnlock(obj);
 	return (V);
 fail:
