@@ -98,22 +98,28 @@ AG_TextboxNew(void *parent, Uint flags, const char *label)
 		tb->ed->flags |= AG_EDITABLE_NOWORDSEEK;
 	if (flags & AG_TEXTBOX_NOLATIN1)
 		tb->ed->flags |= AG_EDITABLE_NOLATIN1;
+	if (flags & AG_TEXTBOX_WORDWRAP)
+		tb->ed->flags |= AG_EDITABLE_WORDWRAP;
 	
 	if (flags & AG_TEXTBOX_MULTILINE) {
 		tb->ed->flags |= AG_EDITABLE_MULTILINE;
-		tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ, 0);
+
 		tb->vBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_VERT, 0);
-		AG_BindInt(tb->hBar, "value", &tb->ed->x);
 		AG_BindInt(tb->vBar, "value", &tb->ed->y);
-		AG_BindInt(tb->hBar, "max", &tb->ed->xMax);
 		AG_BindInt(tb->vBar, "max", &tb->ed->yMax);
-		AG_BindInt(tb->hBar, "visible", &WIDTH(tb->ed));
 		AG_BindInt(tb->vBar, "visible", &tb->ed->yVis);
-		AG_SetEvent(tb->hBar, "scrollbar-drag-begin", BeginScrollbarDrag, "%p", tb);
 		AG_SetEvent(tb->vBar, "scrollbar-drag-begin", BeginScrollbarDrag, "%p", tb);
-		AG_SetEvent(tb->hBar, "scrollbar-drag-end", EndScrollbarDrag, "%p", tb);
 		AG_SetEvent(tb->vBar, "scrollbar-drag-end", EndScrollbarDrag, "%p", tb);
-		AG_TextboxSizeHintLines(tb, 4);
+		
+		if (!(flags & AG_TEXTBOX_WORDWRAP)) {
+			tb->hBar = AG_ScrollbarNew(tb, AG_SCROLLBAR_HORIZ, 0);
+			AG_BindInt(tb->hBar, "value", &tb->ed->x);
+			AG_BindInt(tb->hBar, "max", &tb->ed->xMax);
+			AG_BindInt(tb->hBar, "visible", &WIDTH(tb->ed));
+			AG_SetEvent(tb->hBar, "scrollbar-drag-begin", BeginScrollbarDrag, "%p", tb);
+			AG_SetEvent(tb->hBar, "scrollbar-drag-end", EndScrollbarDrag, "%p", tb);
+			AG_TextboxSizeHintLines(tb, 4);
+		}
 	}
 
 	tb->flags |= flags;
@@ -244,16 +250,17 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	}
 	
 	if (tb->flags & AG_TEXTBOX_MULTILINE) {
-		AG_WidgetSizeReq(tb->hBar, &r);
-		d = MIN(r.h, a->h);
-		aChld.x = 0;
-		aChld.y = a->h - d;
-		aChld.w = a->w - d + 1;
-		aChld.h = d;
-		AG_WidgetSizeAlloc(tb->hBar, &aChld);
-		if (AG_ScrollbarVisible(tb->hBar))
-			hBar = aChld.h;
-		
+		if (tb->hBar != NULL) {
+			AG_WidgetSizeReq(tb->hBar, &r);
+			d = MIN(r.h, a->h);
+			aChld.x = 0;
+			aChld.y = a->h - d;
+			aChld.w = a->w - d + 1;
+			aChld.h = d;
+			AG_WidgetSizeAlloc(tb->hBar, &aChld);
+			if (AG_ScrollbarVisible(tb->hBar))
+				hBar = aChld.h;
+		}
 		AG_WidgetSizeReq(tb->vBar, &r);
 		d = MIN(r.w, a->w);
 		aChld.x = a->w - d;
@@ -380,6 +387,8 @@ static void
 Init(void *obj)
 {
 	AG_Textbox *tb = obj;
+	
+	WIDGET(tb)->flags |= AG_WIDGET_TABLE_EMBEDDABLE;
 
 	tb->ed = AG_EditableNew(tb, 0);
 
