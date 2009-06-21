@@ -1,0 +1,757 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd June 15, 2009
+.Dt AG_VARIABLE 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm AG_Variable
+.Nd generic agar data item
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+structure holds primitive data such as integer, floats, strings or typed
+pointers.
+It is possible to tie variables to functions, or protect access to data
+referenced by typed pointers using a mutex device.
+.Pp
+.Nm
+is used extensively throughout the Agar library, notably by
+.Xr AG_Object 3
+(for property tables), by
+.Xr AG_Event 3
+(for argument passing to event handlers),
+and
+.Xr AG_Widget 3
+(where typed pointers are the basis of widget
+.Sq bindings ) .
+.Pp
+The
+.Nm
+structure is defined as follows:
+.Bd -literal
+typedef struct ag_variable {
+	char name[AG_VARIABLE_NAME_MAX]; /* Variable name */
+	AG_VariableType type;            /* Variable type */
+	AG_Mutex *mutex;                 /* Lock on data (or NULL) */
+	union {
+		Uint32 bitmask;          /* Bitmask (for P_FLAG_*) */
+		size_t size;             /* Size (for STRING_*) */
+	} info;
+	union ag_variable_fn fn;
+	union ag_variable_data data;
+} AG_Variable;
+
+typedef enum ag_variable_type {
+	AG_VARIABLE_NULL,		/* No data */
+	/* Primitive */
+	AG_VARIABLE_UINT,		/* Unsigned int */
+	AG_VARIABLE_P_UINT,		/* Pointer to Uint */
+	AG_VARIABLE_INT,		/* Natural int */
+	AG_VARIABLE_P_INT,		/* Pointer to int */
+	AG_VARIABLE_UINT8,		/* Unsigned 8-bit */
+	AG_VARIABLE_P_UINT8,		/* Pointer to Uint8 */
+	AG_VARIABLE_SINT8,		/* Signed 8-bit */
+	AG_VARIABLE_P_SINT8,		/* Pointer to Sint8 */
+	AG_VARIABLE_UINT16,		/* Unsigned 16-bit */
+	AG_VARIABLE_P_UINT16,		/* Pointer to Uint16 */
+	AG_VARIABLE_SINT16,		/* Signed 16-bit */
+	AG_VARIABLE_P_SINT16,		/* Pointer to Sint16 */
+	AG_VARIABLE_UINT32,		/* Unsigned 32-bit */
+	AG_VARIABLE_P_UINT32,		/* Pointer to Uint32 */
+	AG_VARIABLE_SINT32,		/* Signed 32-bit */
+	AG_VARIABLE_P_SINT32,		/* Pointer to Sint32 */
+	AG_VARIABLE_UINT64,		/* Unsigned 64-bit (opt.) */
+	AG_VARIABLE_P_UINT64,		/* Pointer to Uint64 (opt.) */
+	AG_VARIABLE_SINT64,		/* Signed 64-bit (opt.) */
+	AG_VARIABLE_P_SINT64,		/* Pointer to Sint64 (opt.) */
+	AG_VARIABLE_FLOAT,		/* Single-precision float */
+	AG_VARIABLE_P_FLOAT,		/* Pointer to float */
+	AG_VARIABLE_DOUBLE,		/* Double-precision float */
+	AG_VARIABLE_P_DOUBLE,		/* Pointer to double */
+	AG_VARIABLE_LONG_DOUBLE,	/* Quad-precision float (opt.) */
+	AG_VARIABLE_P_LONG_DOUBLE,	/* Pointer to long double (opt.) */
+	AG_VARIABLE_STRING,		/* C string */
+	AG_VARIABLE_P_STRING,		/* Pointer to C string */
+	AG_VARIABLE_CONST_STRING,	/* C string (const) */
+	AG_VARIABLE_P_CONST_STRING,	/* Pointer to C string (const) */
+	AG_VARIABLE_POINTER,		/* C pointer */
+	AG_VARIABLE_P_POINTER,		/* Pointer to C pointer */
+	AG_VARIABLE_CONST_POINTER,	/* C pointer (const) */
+	AG_VARIABLE_P_CONST_POINTER, 	/* Pointer to C pointer (const) */
+	/* Bitmask */
+	AG_VARIABLE_P_FLAG,		/* Bit in int (uses info.mask) */
+	AG_VARIABLE_P_FLAG8,		/* Bit in int8 (uses info.mask) */
+	AG_VARIABLE_P_FLAG16,		/* Bit in int16 (uses info.mask) */
+	AG_VARIABLE_P_FLAG32,		/* Bit in int32 (uses info.mask) */
+	/* ... */
+	AG_VARIABLE_TYPE_LAST
+};
+
+union ag_variable_data {
+	void *p;
+	const void *Cp;
+	char *s;
+	const char *Cs;
+	int i;
+	Uint u;
+	float flt;
+	double dbl;
+	Uint8 u8;
+	Sint8 s8;
+	Uint16 u16;
+	Sint16 s16;
+	Uint32 u32;
+	Sint32 s32;
+};
+.Ed
+.Pp
+The
+.Va name
+string identifies the variable when it is part of a set, such as the
+.Xr AG_Object 3
+property table or a list of named
+.Xr AG_Event 3
+arguments.
+The
+.Va type
+field indicates the type of variable.
+.Pp
+The optional
+.Va mutex
+specifies a mutex device that any user of the variable should acquire
+prior to accessing data (only applies to pointer-type variables).
+.Pp
+.Va bitmask
+and
+.Va size
+are extra arguments needed by
+.Dv BITMASK_*
+and
+.Dv STRING_*
+type variables, respectively.
+.Pp
+.Va fn ,
+if not NULL, ties the variable to a function.
+Whenever the variable is accessed, this function will be invoked by
+.Fn AG_EvalVariable
+to return the data in the
+.Nm
+structure itself.
+.Va fn
+is an union of function pointers such as
+.Fn fnVoid ,
+.Fn fnUint ,
+.Fn fnInt ,
+etc.
+The functions are defined as:
+.Pp
+.nr nS 1
+.Ft TYPE
+.Fn fnTYPE "AG_Event *event"
+.nr nS 0
+.Pp
+with the exception of
+.Fn fnString ,
+which expects the string to be copied to a fixed-size buffer, and is defined as:
+.Pp
+.nr nS 1
+.Ft size_t
+.Fn fnString "AG_Event *event" "char *buffer" "size_t length"
+.nr nS 0
+.Pp
+The
+.Va data
+union contains the primitive data itself.
+.Sh INTERFACE
+.nr nS 1
+.Ft int
+.Fn AG_Defined "AG_Object *obj" "const char *name"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_GetVariable "AG_Object *obj" "const char *name" "void **data"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_GetVariableLocked "AG_Object *obj" "const char *name"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_GetVariableVFS "AG_Object *obj" "const char *name" 
+.Pp
+.Ft int
+.Fn AG_EvalVariable "AG_Object *obj" "AG_Variable *var"
+.Pp
+.Ft void
+.Fn AG_PrintVariable "char *dst" "size_t len" "AG_Variable *var"
+.Pp
+.Ft void
+.Fn AG_CopyVariable "AG_Variable *Vdst" "const AG_Variable *Vsrc"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_Set "AG_Object *obj" "const char *name" "const char *fmt" "..."
+.Pp
+.Ft void
+.Fn AG_VariableSubst "AG_Object *obj" "const char *s" "char *dst" "size_t dst_len"
+.Pp
+.nr nS 0
+The
+.Fn AG_Defined
+routine returns 1 if the specified variable
+.Fa name
+is defined under the object
+.Fa obj ,
+otherwise it returns 0.
+.Pp
+.Fn AG_GetVariable
+searches for a named variable under object
+.Fa obj
+and returns a pointer to the corresponding
+.Ft AG_Variable
+structure if found, otherwise NULL is returned.
+If the variable is tied to a function, the function is evaluated first.
+If
+.Fa data
+is non-NULL, the primitive data or pointer is copied (not valid for strings).
+.Pp
+.Fn AG_GetVariableLocked
+looks up the named variable under
+.Fa obj
+and returns a pointer to the corresponding
+.Ft AG_Variable
+structure if found, otherwise NULL is returned.
+If the variable is tied to a function, the function is not evaluated internally.
+Before returning,
+.Fn AG_GetVariableLocked
+acquires any locking devices associated with the variable.
+The caller is expected to invoke
+.Fn AG_UnlockVariable
+when done accessing the data.
+.Pp
+.Fn AG_GetVariableVFS
+searches an
+.Xr AG_Object 3
+VFS for a variable from a string of the form
+.Sq object:variable .
+.Pp
+The
+.Fn AG_EvalVariable
+function evaluates the value of a variable tied to a function.
+The corresponding function is invoked and the value is returned into the
+.Va data
+union.
+Note that internally,
+.Fn AG_GetVariable
+calls
+.Fn AG_EvalVariable ,
+but
+.Fn AG_GetVariableLocked
+does not.
+.Pp
+.Fn AG_PrintVariable
+returns a string representation of the value of variable
+.Fa var
+into a fixed-size buffer
+.Fa dst ,
+of
+.Fa len
+bytes.
+.Pp
+.Fn AG_CopyVariable
+copies the contents of a variable from
+.Fa Vsrc
+to
+.Fa Vdst.
+.Pp
+The
+.Fn AG_Set
+sets a variable value using a format-string interface (see
+.Fn AG_PARSE_VARIABLE_ARGS ) .
+.Pp
+.Fn AG_VariableSubst
+parses the string
+.Fa s
+for references of the form "$(foo)", and substitutes those references for
+the value of variable
+.Va foo
+(under object
+.Fa obj ) .
+The substituted string is returned into fixed-size buffer
+.Fa dst ,
+of size
+.Fa dst_size .
+.Sh TYPE-SPECIFIC INTERFACES
+The following functions are used to retrieve or set variables of
+specific types.
+.Pp
+The
+.Fn AG_GetFoo
+functions return the value of variable
+.Fa name
+(under object
+.Fa obj ) .
+If the variable is a pointer type, it is dereferenced.
+If it is tied to a function, the function is evaluated first.
+.Pp
+The
+.Fn AG_InitFoo
+functions initialize an
+.Nm
+structure
+.Fa var
+with the specified value
+.Fa val .
+.Pp
+The
+.Fn AG_SetFoo
+functions set the value of variable
+.Fa name
+to the specified value
+.Fa val .
+If the variable does not exist, it is created.
+.Pp
+The
+.Fn AG_BindFoo
+functions create or modify a typed pointer variable.
+The argument
+.Fa pVal
+is a pointer to the actual value.
+.Pp
+The
+.Fn AG_BindFooMp
+variant accepts an extra
+.Fa lock
+argument, which is a mutex device (i.e., an
+.Ft AG_Mutex
+or
+.Ft pthread_mutex_t ) 
+to be acquired whenever the data referenced by
+.Fa pVal
+will be accessed.
+.Pp
+The
+.Fn AG_BindFooFn
+variants create or modify a variable, tying the variable to a function
+.Fa fn ,
+which will be evaluated whenever the variable is read.
+A list of optional
+.Xr AG_Event 3
+style arguments follow the
+.Fa fn
+argument.
+.Sh INTEGERS
+.nr nS 1
+.Ft "Uint"
+.Fn AG_GetUint "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitUint "AG_Variable *var" "Uint val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetUint "AG_Object *obj" "const char *name" "Uint val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUint "AG_Object *obj" "const char *name" "Uint *pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUintMp "AG_Object *obj" "const char *name" "Uint *pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUintFn "AG_Object *obj" "const char *name" "Uint (*fn)(AG_Event *)" "..."
+.Pp
+.Ft "int"
+.Fn AG_GetInt "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitInt "AG_Variable *var" "int val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetInt "AG_Object *obj" "const char *name" "int val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindInt "AG_Object *obj" "const char *name" "int *pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindIntMp "AG_Object *obj" "const char *name" "int *pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindIntFn "AG_Object *obj" "const char *name" "int (*fn)(AG_Event *)"
+.Pp
+.Ft "Uint8"
+.Fn AG_GetUint8 "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitUint8 "AG_Variable *var" "Uint8 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetUint8 "AG_Object *obj" "const char *name" "Uint8 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUint8 "AG_Object *obj" "const char *name" "Uint8 *pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUint8Mp "AG_Object *obj" "const char *name" "Uint8 *pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUint8Fn "AG_Object *obj" "const char *name" "Uint8 (*fn)(AG_Event *)"
+.Pp
+.Ft "Sint8"
+.Fn AG_GetSint8 "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitSint8 "AG_Variable *var" "Sint8 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetSint8 "AG_Object *obj" "const char *name" "Sint8 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindSint8 "AG_Object *obj" "const char *name" "Sint8 *pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindSint8Mp "AG_Object *obj" "const char *name" "Sint8 *pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindSint8Fn "AG_Object *obj" "const char *name" "Sint8 (*fn)(AG_Event *)"
+.Pp
+.Ft "Uint16"
+.Fn AG_GetUint16 "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitUint16 "AG_Variable *var" "Uint16 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetUint16 "AG_Object *obj" "const char *name" "Uint16 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUint16 "AG_Object *obj" "const char *name" "Uint16 *pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUint16Mp "AG_Object *obj" "const char *name" "Uint16 *pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUint16Fn "AG_Object *obj" "const char *name" "Uint16 (*fn)(AG_Event *)"
+.Pp
+.Ft "Sint16"
+.Fn AG_GetSint16 "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitSint16 "AG_Variable *var" "Sint16 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetSint16 "AG_Object *obj" "const char *name" "Sint16 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindSint16 "AG_Object *obj" "const char *name" "Sint16 *pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindSint16Mp "AG_Object *obj" "const char *name" "Sint16 *pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindSint16Fn "AG_Object *obj" "const char *name" "Sint16 (*fn)(AG_Event *)"
+.Pp
+.Ft "Uint32"
+.Fn AG_GetUint32 "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitUint32 "AG_Variable *var" "Uint32 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetUint32 "AG_Object *obj" "const char *name" "Uint32 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUint32 "AG_Object *obj" "const char *name" "Uint32 *pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUint32Mp "AG_Object *obj" "const char *name" "Uint32 *pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindUint32Fn "AG_Object *obj" "const char *name" "Uint32 (*fn)(AG_Event *)"
+.Pp
+.Ft "Sint32"
+.Fn AG_GetSint32 "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitSint32 "AG_Variable *var" "Sint32 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetSint32 "AG_Object *obj" "const char *name" "Sint32 val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindSint32 "AG_Object *obj" "const char *name" "Sint32 *pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindSint32Mp "AG_Object *obj" "const char *name" "Sint32 *pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindSint32Fn "AG_Object *obj" "const char *name" "Sint32 (*fn)(AG_Event *)"
+.Pp
+.nr nS 0
+These functions provide an interface to primitive integer types.
+.Sh REAL NUMBERS
+.nr nS 1
+.Ft "float"
+.Fn AG_GetFloat "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitFloat "AG_Variable *var" "float val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetFloat "AG_Object *obj" "const char *name" "float val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindFloat "AG_Object *obj" "const char *name" "float *pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindFloatMp "AG_Object *obj" "const char *name" "float *pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindFloatFn "AG_Object *obj" "const char *name" "float (*fn)(AG_Event *)"
+.Pp
+.Ft "double"
+.Fn AG_GetDouble "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitDouble "AG_Variable *var" "double val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetDouble "AG_Object *obj" "const char *name" "double val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindDouble "AG_Object *obj" "const char *name" "double *pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindDoubleMp "AG_Object *obj" "const char *name" "double *pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindDoubleFn "AG_Object *obj" "const char *name" "double (*fn)(AG_Event *)"
+.Pp
+.nr nS 0
+These functions provide an interface to primitive floating-point types.
+.Sh C STRINGS
+.nr nS 1
+.Ft "size_t"
+.Fn AG_GetString "AG_Object *obj" "const char *name" "char *dst" "size_t dst_size"
+.Pp
+.Ft "char *"
+.Fn AG_GetStringDup "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitString "AG_Variable *var" "const char *s"
+.Pp
+.Ft "void"
+.Fn AG_InitStringNODUP "AG_Variable *var" "const char *s"
+.Pp
+.Ft "void"
+.Fn AG_InitStringFixed "AG_Variable *var" "char *s" "size_t len"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetString "AG_Object *obj" "const char *name" "const char *s"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetStringNODUP "AG_Object *obj" "const char *name" "const char *s"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetStringFixed "AG_Object *obj" "const char *name" "char *s" "size_t len"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_PrtString "AG_Object *obj" "const char *name" "const char *fmt" "..."
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindString "AG_Object *obj" "const char *name" "char *s" "size_t len"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindStringMp "AG_Object *obj" "const char *name" "char *s" "size_t len" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindStringFn "AG_Object *obj" "const char *name" "size_t (*fn)(AG_Event *, char *, size_t)"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetConstString "AG_Object *obj" "const char *name" "const char *s"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindConstString "AG_Object *obj" "const char *name" "const char **s"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindConstStringMp "AG_Object *obj" "const char *name" "const char **s" "AG_Mutex *lock"
+.Pp
+.nr nS 0
+These functions provide an interface to string types.
+To handle strings properly, their form differs from that of primitive types.
+.Pp
+.Fn AG_GetString
+returns the contents of a string variable.
+The string is safely copied to fixed-size buffer
+.Fa dst ,
+of size
+.Fa dst_size .
+The return value is the number of bytes that would have been copied, were
+.Fa dst_size
+unlimited.
+.Pp
+.Fn AG_GetStringDup
+returns a newly-allocated copy of the string variable.
+If the string cannot be allocated, NULL is returned.
+.Pp
+.Fn AG_InitString
+initializes a
+.Nm
+structure with the given string, which is copied from
+.Fa s .
+The
+.Fn AG_InitStringNODUP
+variant sets the
+.Fa s
+pointer without copying the string.
+The
+.Fn AG_InitStringFixed
+variant initializes a string variable to use a fixed-size buffer
+.Fa s ,
+of size
+.Fa len .
+.Pp
+.Fn AG_SetString
+creates or modifies a named string variable with string
+.Fa s .
+The
+.Fn AG_SetStringNODUP
+sets the
+.Fa s
+pointer without copying the string.
+The
+.Fn AG_SetStringFixed
+creates or modifies a variable to use a fixed-size buffer
+.Fa s ,
+of size
+.Fa len .
+.Pp
+.Fn AG_PrtString
+sets a string variable from a format string
+.Fa fmt .
+.Pp
+.Fn AG_BindString
+creates or modifies a variable referencing a fixed-size string buffer
+.Fa s ,
+of size
+.Fa len .
+The
+.Fn AG_BindStringFn
+variant ties the variable to a function
+.Fa fn .
+.Pp
+The functions
+.Fn AG_SetConstString ,
+.Fn AG_BindConstString
+and
+.Fn AG_BindConstStringMp
+follow the standard form for primitive type variables.
+.Sh GENERIC POINTERS
+.nr nS 1
+.Ft "void *"
+.Fn AG_GetPointer "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitPointer "AG_Variable *var" "void *val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetPointer "AG_Object *obj" "const char *name" "void *val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindPointer "AG_Object *obj" "const char *name" "void **pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindPointerMp "AG_Object *obj" "const char *name" "void **pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindPointerFn "AG_Object *obj" "const char *name" "void *(*fn)(AG_Event *)"
+.Pp
+.Ft "const void *"
+.Fn AG_GetConstPointer "AG_Object *obj" "const char *name"
+.Pp
+.Ft "void"
+.Fn AG_InitConstPointer "AG_Variable *var" "const void *val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_SetConstPointer "AG_Object *obj" "const char *name" "const void *val"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindConstPointer "AG_Object *obj" "const char *name" "const void **pVal"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindConstPointerMp "AG_Object *obj" "const char *name" "const void **pVal" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindConstPointerFn "AG_Object *obj" "const char *name" "const void *(*fn)(AG_Event *)"
+.Pp
+.nr nS 0
+These functions provide an interface to generic pointer types.
+.Sh BITS
+.nr nS 1
+.Ft "AG_Variable *"
+.Fn AG_BindFlag "AG_Object *obj" "const char *name" "Uint *pVal" "Uint bitmask"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindFlagMp "AG_Object *obj" "const char *name" "Uint *pVal" "Uint bitmask" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindFlag8 "AG_Object *obj" "const char *name" "Uint8 *pVal" "Uint8 bitmask"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindFlag8Mp "AG_Object *obj" "const char *name" "Uint8 *pVal" "Uint8 bitmask" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindFlag16 "AG_Object *obj" "const char *name" "Uint16 *pVal" "Uint16 bitmask"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindFlag16Mp "AG_Object *obj" "const char *name" "Uint16 *pVal" "Uint16 bitmask" "AG_Mutex *lock"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindFlag32 "AG_Object *obj" "const char *name" "Uint32 *pVal" "Uint32 bitmask"
+.Pp
+.Ft "AG_Variable *"
+.Fn AG_BindFlag32Mp "AG_Object *obj" "const char *name" "Uint32 *pVal" "Uint32 bitmask" "AG_Mutex *lock"
+.Pp
+.nr nS 0
+These functions provide an interface for binding to specific bits in integers.
+They follow the standard form, with an extra
+.Fa bitmask
+argument.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Object 3 ,
+.Xr AG_Widget 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.3.4.
+It replaced, notably, the
+.Xr AG_Prop 3
+interface and
+.Sq widget bindings
+at the
+.Xr AG_Widget 3
+level which had both been using different structures.
