@@ -21,7 +21,6 @@ REGISTER("--with-gl",		"GUI: OpenGL rendering support [check]")
 REGISTER("--enable-<depth>bpp", "GUI: Framebuffer depths (8|16|24|32) [all]")
 REGISTER("--with-jpeg",		"GUI: JPEG screenshot support [check]")
 REGISTER("--with-freetype",	"GUI: Enable FreeType support [check]")
-REGISTER("--enable-utf8",	"GUI: UTF8 text support [yes]")
 
 REGISTER("--with-sse",		"M: SSE[123] optimizations [no]")
 REGISTER("--with-altivec",	"M: AltiVec optimizations [check]")
@@ -289,13 +288,6 @@ else
 	if [ "${enable_warnings}" = "yes" ]; then
 		C_OPTION(-Wno-unused)
 	fi
-fi
-
-# Enable UTF8 support by default.
-if [ "${enable_utf8}" != "no" ]; then
-	HDEFINE(UTF8, "yes")
-else
-	HUNDEF(UTF8)
 fi
 
 # Disable astronomical units (constants are too large for some compilers).
