@@ -138,6 +138,7 @@ AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
 	AG_Surface *su;
 	GLint w, h;
 
+	glBindTexture(GL_TEXTURE_2D, (GLuint)name);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, lod, GL_TEXTURE_WIDTH, &w);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, lod, GL_TEXTURE_HEIGHT, &h);
 
@@ -156,10 +157,9 @@ AG_PixmapFromTexture(void *parent, Uint flags, Uint name, int lod)
 	);
 	if (su == NULL) {
 		AG_SetError("Allocating texture: %s", AG_GetError());
+		glBindTexture(GL_TEXTURE_2D, 0);
 		return (NULL);
 	}
-
-	glBindTexture(GL_TEXTURE_2D, (GLuint)name);
 	glGetTexImage(GL_TEXTURE_2D, lod, GL_RGBA, GL_UNSIGNED_BYTE,
 	    su->pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
