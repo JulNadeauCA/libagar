@@ -71,16 +71,19 @@ SingleLineExample(void)
 }
 
 static void
-MultiLineExample(void)
+MultiLineExample(const char *title, int wordwrap)
 {
 	AG_Window *win;
 	AG_Textbox *textbox;
 	char *someText;
 	FILE *f;
 	size_t size, bufSize;
+	unsigned int flags = AG_TEXTBOX_MULTILINE|AG_TEXTBOX_CATCH_TAB;
+
+	if (wordwrap) { flags |= AG_TEXTBOX_WORDWRAP; }
 
 	win = AG_WindowNew(0);
-	AG_WindowSetCaption(win, "Multiline Example");
+	AG_WindowSetCaption(win, title);
 
 	/*
 	 * Create a multiline textbox.
@@ -88,9 +91,8 @@ MultiLineExample(void)
 	 * We use the CATCH_TAB flag so that tabs are entered literally in
 	 * the string.
 	 */
-	textbox = AG_TextboxNew(win,
-	    AG_TEXTBOX_MULTILINE|AG_TEXTBOX_EXPAND|AG_TEXTBOX_CATCH_TAB,
-	    NULL);
+	textbox = AG_TextboxNew(win, flags, NULL);
+	AG_Expand(textbox);
 
 	/*
 	 * Load the contents of this file into a buffer. Make the buffer a
@@ -118,6 +120,7 @@ MultiLineExample(void)
 
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
 	AG_CheckboxNewFn(win, 0, "Word wrapping", SetWordWrap, "%p", textbox);
+
 	AG_SeparatorNewHoriz(win);
 	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Lines: %d", &textbox->ed->yMax);
 	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Cursor position: %d",
@@ -141,7 +144,8 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
-	MultiLineExample();
+	MultiLineExample("Multiline Example (no word wrapping)", 0);
+	MultiLineExample("Multiline Example (with word wrapping)", 1);
 	SingleLineExample();
 	AG_EventLoop();
 	AG_Destroy();
