@@ -635,7 +635,8 @@ Init(void *obj)
 
 	WIDGET(sl)->flags |= AG_WIDGET_UNFOCUSED_BUTTONUP|
 	                     AG_WIDGET_UNFOCUSED_MOTION|
-			     AG_WIDGET_FOCUSABLE;
+			     AG_WIDGET_FOCUSABLE|
+			     AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindInt(sl, "value", &sl->value);
 	AG_BindInt(sl, "min", &sl->min);

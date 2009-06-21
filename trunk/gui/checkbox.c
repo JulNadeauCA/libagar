@@ -177,7 +177,8 @@ Init(void *obj)
 {
 	AG_Checkbox *cb = obj;
 
-	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE;
+	WIDGET(cb)->flags |= AG_WIDGET_FOCUSABLE|
+	                     AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindInt(cb, "state", &cb->state);
 

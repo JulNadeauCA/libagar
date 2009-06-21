@@ -176,7 +176,8 @@ Init(void *obj)
 	/* TODO replace the unfocused motion flag with a timer */
 	WIDGET(bu)->flags |= AG_WIDGET_FOCUSABLE|
 	                     AG_WIDGET_UNFOCUSED_MOTION|
-			     AG_WIDGET_UNFOCUSED_BUTTONUP;
+			     AG_WIDGET_UNFOCUSED_BUTTONUP|
+			     AG_WIDGET_TABLE_EMBEDDABLE;
 
 	AG_BindInt(bu, "state", &bu->state);
 
