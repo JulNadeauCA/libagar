@@ -496,11 +496,11 @@ size_t       AG_GetString(void *, const char *, char *, size_t)
 	         BOUNDED_ATTRIBUTE(__string__, 3, 4);
 char        *AG_GetStringDup(void *, const char *);
 AG_Variable *AG_SetString(void *, const char *, const char *);
-void         AG_InitString(AG_Variable *, const char *);
 AG_Variable *AG_SetStringNODUP(void *, const char *, char *);
-void         AG_InitStringNODUP(AG_Variable *, char *);
 AG_Variable *AG_SetStringFixed(void *, const char *, char *, size_t)
                  BOUNDED_ATTRIBUTE(__string__, 3, 4);
+void         AG_InitString(AG_Variable *, const char *);
+void         AG_InitStringNODUP(AG_Variable *, char *);
 void         AG_InitStringFixed(AG_Variable *, char *, size_t)
                  BOUNDED_ATTRIBUTE(__string__, 2, 3);
 AG_Variable *AG_PrtString(void *, const char *, const char *, ...);
