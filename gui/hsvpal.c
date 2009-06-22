@@ -802,7 +802,7 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 {
 	AG_HSVPal *pal = obj;
 
-	if (a->w < 32 || a->h < 32)
+	if (a->w < 64 || a->h < 64)
 		return (-1);
 
 	pal->rAlpha.x = 0;
