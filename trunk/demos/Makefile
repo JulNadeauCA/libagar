@@ -17,7 +17,6 @@ SUBDIR=	fixedres \
 	cplusplus \
 	plotting \
 	scrollbar \
-	initvideosdl \
 	keyevents \
 	customwidget \
 	windows \
