@@ -14,7 +14,7 @@ extern int agKbdDelay, agKbdRepeat;
 extern int agMouseDblclickDelay, agMouseSpinDelay, agMouseSpinIval;
 extern int agTextComposition, agTextBidi, agTextAntialiasing, agTextTabWidth,
 	   agTextBlinkRate, agTextAntialiasing, agPageIncrement,
-	   agTextSymbols;
+	   agTextSymbols, agTextCache;
 extern int agIdleThresh;
 extern int agScreenshotQuality;
 extern int agWindowAnySize;
