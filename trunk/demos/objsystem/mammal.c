@@ -83,10 +83,12 @@ Edit(void *obj)
 
 	/* Allow user to edit paramters specific to this class. */
 	AG_LabelNew(win, 0, "Hair color:");
-	pal = AG_HSVPalNew(win, AG_HSVPAL_EXPAND);
+	pal = AG_HSVPalNew(win, 0);
 	AG_BindFloat(pal, "hue", &mammal->hairColor.h);
 	AG_BindFloat(pal, "saturation", &mammal->hairColor.s);
 	AG_BindFloat(pal, "value", &mammal->hairColor.v);
+	AG_Expand(pal);
+
 	return (win);
 }
 

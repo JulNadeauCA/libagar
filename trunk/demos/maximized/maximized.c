@@ -23,7 +23,8 @@ CreateWindow(void)
 	AG_WindowSetPadding(win, 0, 0, 0, 0);
 
 	/* Create an example table. */
-	table = AG_TableNew(win, AG_TABLE_EXPAND);
+	table = AG_TableNew(win, 0);
+	AG_Expand(table);
 	AG_TableAddCol(table, "Foo", "<8888>", NULL);
 	AG_TableAddCol(table, "Bar", NULL, NULL);
 	for (i = 0; i < 100; i++) {

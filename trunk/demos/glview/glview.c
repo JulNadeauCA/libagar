@@ -238,13 +238,15 @@ CreateMainWindow(void)
 	AG_HSVPal *pal;
 
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
-	hb = AG_BoxNewHoriz(win, AG_BOX_EXPAND);
+	hb = AG_BoxNewHoriz(win, 0);
+	AG_Expand(hb);
 	{
 		AG_Notebook *nb;
 		AG_NotebookTab *ntab;
 
 		/* Create the AG_GLView widget. */
-		glv = AG_GLViewNew(hb, AG_GLVIEW_EXPAND);
+		glv = AG_GLViewNew(hb, 0);
+		AG_Expand(glv);
 		AG_WidgetFocus(glv);
 
 		/* Set up our callback functions. */ 
@@ -253,18 +255,26 @@ CreateMainWindow(void)
 		AG_GLViewOverlayFn(glv, MyOverlayFunction, NULL);
 		AG_GLViewButtondownFn(glv, Mousebutton, NULL);
 
-		nb = AG_NotebookNew(hb, AG_NOTEBOOK_VFILL);
+		nb = AG_NotebookNew(hb, 0);
+		AG_ExpandVert(nb);
+
 		ntab = AG_NotebookAddTab(nb, "Amb", AG_BOX_VERT);
-		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
+		pal = AG_HSVPalNew(ntab, 0);
 		AG_BindFloat(pal, "RGBAv", ambient);
+		AG_ExpandVert(pal);
+
 		ntab = AG_NotebookAddTab(nb, "Dif", AG_BOX_VERT);
-		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
+		pal = AG_HSVPalNew(ntab, 0);
 		AG_BindFloat(pal, "RGBAv", diffuse);
+		AG_ExpandVert(pal);
+
 		ntab = AG_NotebookAddTab(nb, "Spe", AG_BOX_VERT);
-		pal = AG_HSVPalNew(ntab, AG_HSVPAL_VFILL);
+		pal = AG_HSVPalNew(ntab, 0);
 		AG_BindFloat(pal, "RGBAv", specular);
+		AG_ExpandVert(pal);
 	}
-	hb = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_FRAME);
+	hb = AG_BoxNewHoriz(win, AG_BOX_FRAME);
+	AG_ExpandHoriz(hb);
 	{
 		AG_RadioNewInt(hb, 0, primitiveNames, (int *)&primitive);
 		AG_SeparatorNewVert(hb);

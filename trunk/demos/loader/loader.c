@@ -127,12 +127,14 @@ CreateWindow(void)
 	AG_Window *win;
 	AG_FileDlg *fd;
 	AG_FileType *ft;
+	AG_Box *box;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Image loader");
 
 	/* Create the file loader widget. */
-	fd = AG_FileDlgNew(win, AG_FILEDLG_EXPAND);
+	fd = AG_FileDlgNew(win, 0);
+	AG_Expand(fd);
 	
 	/* Set some default directory. */
 	AG_FileDlgSetDirectoryMRU(fd, "images-dir", "./Images");
@@ -167,7 +169,9 @@ CreateWindow(void)
 	 * create various widgets for per-type options. We specify where those
 	 * widgets will be created here.
 	 */
-	AG_FileDlgSetOptionContainer(fd, AG_BoxNewVert(win, AG_BOX_HFILL));
+	box = AG_BoxNewVert(win, 0);
+	AG_ExpandHoriz(box);
+	AG_FileDlgSetOptionContainer(fd, box);
 
 	AG_WindowSetPosition(win, AG_WINDOW_MIDDLE_LEFT, 0);
 	AG_WindowShow(win);

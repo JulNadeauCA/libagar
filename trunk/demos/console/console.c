@@ -45,8 +45,12 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_F8, KMOD_NONE, AG_ViewCapture);
 
 	win = AG_WindowNew(0);
-	cons = AG_ConsoleNew(win, AG_CONSOLE_EXPAND);
-	box = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+
+	cons = AG_ConsoleNew(win, 0);
+	AG_Expand(cons);
+
+	box = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS);
+	AG_ExpandHoriz(box);
 	{
 		AG_ButtonNewFn(box, 0, "Add Line", AddLine, "%p", cons);
 		AG_ButtonNewFn(box, 0, "Clear", ClearLines, "%p", cons);

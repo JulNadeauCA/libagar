@@ -122,14 +122,15 @@ Edit(void *obj)
 {
 	Animal *animal = obj;
 	AG_Window *win;
+	AG_Numerical *num;
 
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Animal: %s", AGOBJECT(animal)->name);
 
-	AG_NumericalNewFlt(win, AG_NUMERICAL_HFILL, "sec", "Age: ",
-	    &animal->age);
-	AG_NumericalNewInt(win, AG_NUMERICAL_HFILL, NULL, "Cell count: ",
-	    &animal->cellCount);
+	num = AG_NumericalNewFlt(win, 0, "sec", "Age: ", &animal->age);
+	AG_ExpandHoriz(num);
+	num = AG_NumericalNewInt(win, 0, NULL, "Cell count: ", &animal->cellCount);
+	AG_ExpandHoriz(num);
 
 	return (win);
 }

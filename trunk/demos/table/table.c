@@ -69,7 +69,8 @@ CreateStaticTable(void)
 	 * we wanted to allow multiple selections, or the AG_TABLE_POLL
 	 * flag to update the table periodically.
 	 */
-	table = AG_TableNew(win, AG_TABLE_EXPAND);
+	table = AG_TableNew(win, 0);
+	AG_Expand(table);
 	
 	/*
 	 * Create a column large enough to hold the string "<HIDDEN POINTER>".
@@ -162,9 +163,10 @@ CreatePolledTable(void)
 	AG_WindowSetCaption(win, "Example 2: Polled Table");
 
 	/* Create a polled table. */
-	table = AG_TableNewPolled(win, AG_TABLE_EXPAND, UpdateTable, NULL);
+	table = AG_TableNewPolled(win, 0, UpdateTable, NULL);
 	AG_TableAddCol(table, "Column 1", "<8888>", NULL);
 	AG_TableAddCol(table, "Column 2", "<888888888>", NULL);
+	AG_Expand(table);
 
 	/* Display and resize our window. */
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_ML, 150, 300);
@@ -212,7 +214,8 @@ CreateTableWithControls(void)
 	AG_WindowSetCaption(win, "Example 3: Table With Embedded Widgets");
 
 	/* Create our table. */
-	table = AG_TableNew(win, AG_TABLE_EXPAND);
+	table = AG_TableNew(win, 0);
+	AG_Expand(table);
 
 	/* Create our columns. */
 	AG_TableAddCol(table, "Widgets", "<Widgets>", NULL);
@@ -242,7 +245,8 @@ CreateTableWithControls(void)
 	AG_TableEnd(table);
 
 	/* Provide a function to report on the status of MyTable. */
-	box = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	box = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS);
+	AG_ExpandHoriz(box);
 	{
 		AG_ButtonNewFn(box, 0, "Report selected rows",
 		    ReportSelectedRows, "%p", MyTable);
