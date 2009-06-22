@@ -112,9 +112,17 @@ MultiLineExample(const char *title, int wordwrap)
 	AG_CheckboxNewFn(win, 0, "Disable input", SetDisable, "%p", textbox);
 #if 0
 	AG_SeparatorNewHoriz(win);
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Lines: %d", &textbox->ed->yMax);
-	AG_LabelNewPolled(win, AG_LABEL_HFILL, "Cursor position: %d",
-	    &textbox->ed->pos);
+	{
+		AG_Label *lbl;
+
+		lbl = AG_LabelNewPolled(win, 0, "Lines: %d",
+		    &textbox->ed->yMax);
+		AG_ExpandHoriz(lbl);
+
+		lbl = AG_LabelNewPolled(win, 0, "Cursor position: %d",
+		    &textbox->ed->pos);
+		AG_ExpandHoriz(lbl);
+	}
 #endif
 	AG_WindowSetGeometryAligned(win, AG_WINDOW_MC, 540, 380);
 	AG_WindowShow(win);

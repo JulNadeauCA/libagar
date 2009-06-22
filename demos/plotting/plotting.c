@@ -199,6 +199,7 @@ main(int argc, char *argv[])
 	AG_Pane *pane;
 	AG_Numerical *num;
 	AG_Box *box;
+	AG_Button *btn;
 	int i;
 
 	if (AG_InitCore("agar-plotting-demo", 0) == -1) {
@@ -217,10 +218,12 @@ main(int argc, char *argv[])
 	win = AG_WindowNew(AG_WINDOW_PLAIN);
 	AG_WindowSetCaption(win, "M_Plotter example");
 
-	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
+	pane = AG_PaneNew(win, AG_PANE_HORIZ, 0);
+	AG_Expand(pane);
 	{
 		/* Create our plotter widget */
-		plt = M_PlotterNew(pane->div[1], M_PLOTTER_EXPAND);
+		plt = M_PlotterNew(pane->div[1], 0);
+		AG_Expand(plt);
 
 		/*
 		 * Create the velocity plot item. This is what our algorithm
@@ -249,7 +252,8 @@ main(int argc, char *argv[])
 	}
 
 	/* Allow the user to play with the parameters. */
-	box = AG_BoxNew(pane->div[0], AG_BOX_VERT, AG_BOX_EXPAND);
+	box = AG_BoxNew(pane->div[0], AG_BOX_VERT, 0);
+	AG_Expand(box);
 	{
 		struct {
 			const char *name;
@@ -282,8 +286,9 @@ main(int argc, char *argv[])
 		AG_LabelNewPolled(box, 0, "Ts: %lf", &Ts);
 		AG_LabelNewPolled(box, 0, "Ta: %lf", &Ta);
 		AG_LabelNewPolled(box, 0, "To: %lf", &To);
-		AG_ButtonAct(box, AG_BUTTON_HFILL, "Generate",
-		    GeneratePlot, "%p", plt);
+
+		btn = AG_ButtonAct(box, 0, "Generate", GeneratePlot, "%p", plt);
+		AG_ExpandHoriz(btn);
 	}
 	AG_SetEvent(win, "window-shown", GeneratePlot, "%p", plt);
 	AG_WindowMaximize(win);

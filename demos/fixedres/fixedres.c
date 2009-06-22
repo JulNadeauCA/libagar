@@ -27,10 +27,11 @@ CreateGameMenu(void)
 
 	/*
 	 * Create a container which allows manual setting of the coordinates
-	 * and geometry of its child widgets. The AG_FIXED_EXPAND flag
-	 * requests that the container cover the entire window.
+	 * and geometry of its child widgets. We use AG_Expand() so the
+	 * container will cover the entire window.
 	 */
-	fx = AG_FixedNew(win, AG_FIXED_EXPAND);
+	fx = AG_FixedNew(win, 0);
+	AG_Expand(fx);
 
 	/*
 	 * Set the window background color to black since the background

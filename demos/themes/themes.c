@@ -51,7 +51,8 @@ CreateWindow(void)
 	 * The MPane widget also provides a set of preconfigured layouts
 	 * for multiple pane views.
 	 */
-	pane = AG_PaneNew(win, AG_PANE_HORIZ, AG_PANE_EXPAND);
+	pane = AG_PaneNew(win, AG_PANE_HORIZ, 0);
+	AG_Expand(pane);
 	div1 = pane->div[0];
 	div2 = pane->div[1];
 	{
@@ -78,8 +79,8 @@ CreateWindow(void)
 	 * Box is a general-purpose widget container. We use AG_BoxNewHoriz()
 	 * for horizontal widget packing.
 	 */
-	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL|AG_BOX_HOMOGENOUS|
-	                            AG_BOX_FRAME);
+	hBox = AG_BoxNewHoriz(div1, AG_BOX_HOMOGENOUS|AG_BOX_FRAME);
+	AG_ExpandHoriz(hBox);
 	{
 		/*
 		 * The Button widget is a simple push-button. It is typically
@@ -90,7 +91,8 @@ CreateWindow(void)
 			AG_ButtonNew(hBox, 0, "%c", 0x41+i);
 	}
 
-	hBox = AG_BoxNewHoriz(div1, AG_BOX_HFILL);
+	hBox = AG_BoxNewHoriz(div1, 0);
+	AG_ExpandHoriz(hBox);
 	{
 		/* The Radio checkbox is a group of radio buttons. */
 		{
@@ -99,7 +101,10 @@ CreateWindow(void)
 				"Radio2",
 				NULL
 			};
-			AG_RadioNew(hBox, AG_RADIO_EXPAND, radioItems);
+			AG_Radio *rad;
+
+			rad = AG_RadioNew(hBox, 0, radioItems);
+			AG_Expand(rad);
 		}
 	
 		vBox = AG_BoxNewVert(hBox, 0);
@@ -121,12 +126,14 @@ CreateWindow(void)
 	 * to it. The button triggers a popup window which displays a list
 	 * (using the AG_Tlist(3) widget).
 	 */
-	com = AG_ComboNew(div1, AG_COMBO_HFILL, "Combo: ");
+	com = AG_ComboNew(div1, 0, "Combo: ");
+	AG_ExpandHoriz(com);
 	AG_ComboSizeHint(com, "Item #00 ", 10);
 	AG_SetEvent(com, "combo-selected", ComboSelected, NULL);
 
 	/* UCombo is a variant of Combo which looks like a single button. */
-	ucom = AG_UComboNew(div1, AG_UCOMBO_HFILL);
+	ucom = AG_UComboNew(div1, 0);
+	AG_ExpandHoriz(ucom);
 
 	/* Populate the Tlist displayed by the combo widgets we just created. */
 	for (i = 0; i < 50; i++) {
@@ -143,9 +150,12 @@ CreateWindow(void)
 		static float myFloat = 1.0;
 		static int myMin = 0, myMax = 10, myInt = 1;
 
-		num = AG_NumericalNew(div1, AG_NUMERICAL_HFILL, "cm", "Real: ");
+		num = AG_NumericalNew(div1, 0, "cm", "Real: ");
+		AG_ExpandHoriz(num);
 		AG_BindFloat(num, "value", &myFloat);
-		num = AG_NumericalNew(div1, AG_NUMERICAL_HFILL, NULL, "Int: ");
+
+		num = AG_NumericalNew(div1, 0, NULL, "Int: ");
+		AG_ExpandHoriz(num);
 		AG_BindInt(num, "value", &myInt);
 	}
 
@@ -166,14 +176,14 @@ CreateWindow(void)
 		AG_Slider *sl;
 		AG_ProgressBar *pb;
 
-		sb = AG_ScrollbarNewInt(div1, AG_SCROLLBAR_HORIZ,
-		    AG_SCROLLBAR_HFILL,
+		sb = AG_ScrollbarNewInt(div1, AG_SCROLLBAR_HORIZ, 0,
 		    &myVal, &myMin, &myMax, &myVisible);
+		AG_ExpandHoriz(sb);
 		AG_ScrollbarSetIntIncrement(sb, 10);
 
-		sl = AG_SliderNewInt(div1, AG_SLIDER_HORIZ,
-		    AG_SLIDER_HFILL,
+		sl = AG_SliderNewInt(div1, AG_SLIDER_HORIZ, 0,
 		    &myVal, &myMin, &myMax);
+		AG_ExpandHoriz(sl);
 		AG_SliderSetIntIncrement(sl, 10);
 
 		pb = AG_ProgressBarNewInt(div1, AG_PROGRESS_BAR_HORIZ,
@@ -190,7 +200,8 @@ CreateWindow(void)
 		AG_NotebookTab *ntab;
 		AG_Table *table;
 
-		nb = AG_NotebookNew(div2, AG_NOTEBOOK_EXPAND);
+		nb = AG_NotebookNew(div2, 0);
+		AG_Expand(nb);
 
 		ntab = AG_NotebookAddTab(nb, "Table", AG_BOX_VERT);
 		{
@@ -202,10 +213,11 @@ CreateWindow(void)
 			 * the table is static or needs to be repopulated
 			 * periodically.
 			 */
-			table = AG_TableNew(ntab, AG_TABLE_EXPAND);
+			table = AG_TableNew(ntab, 0);
 			AG_TableAddCol(table, "x", "33%", NULL);
 			AG_TableAddCol(table, "sin(x)", "33%", NULL);
 			AG_TableAddCol(table, "cos(x)", "33%", NULL);
+			AG_Expand(table);
 			for (f = 0.0f; f < 60.0f; f += 0.3f) {
 				/*
 				 * Insert a Table row for sin(f) and cos(f).
@@ -226,12 +238,12 @@ CreateWindow(void)
 			/*
 			 * Textboxes with the MULTILINE flag provide basic
 			 * text edition functionality. The CATCH_TAB flag
-			 * causes the widget to receive TAB key events (which
-			 * are normally used to focus other widget).
+			 * causes the widget to receive TAB key events
+			 * (normally used to focus other widgets).
 			 */
-			tbox = AG_TextboxNew(ntab, AG_TEXTBOX_EXPAND|
-			                           AG_TEXTBOX_MULTILINE|
+			tbox = AG_TextboxNew(ntab, AG_TEXTBOX_MULTILINE|
 						   AG_TEXTBOX_CATCH_TAB, NULL);
+			AG_Expand(tbox);
 			AG_WidgetSetFocusable(tbox, 1);
 
 			/*
@@ -456,15 +468,17 @@ main(int argc, char *argv[])
 		AG_Label *lbl;
 		AG_Box *hBox;
 
-		lbl = AG_LabelNew(win, AG_LABEL_HFILL,
+		lbl = AG_LabelNew(win, 0,
 		    "Using Agar version: %d.%d.%d (\"%s\")\n"
 		    "Graphics mode: %s",
 		    ver.major, ver.minor, ver.patch, ver.release,
 		    AG_GetBool(agConfig,"view.opengl") ?
 		    "OpenGL" : "Unaccelerated (framebuffer)");
+		AG_ExpandHoriz(lbl);
 		AG_LabelJustify(lbl, AG_TEXT_CENTER);
 
-		hBox = AG_BoxNewHoriz(win, AG_BOX_HFILL);
+		hBox = AG_BoxNewHoriz(win, 0);
+		AG_ExpandHoriz(hBox);
 		{
 			AG_ButtonNewFn(hBox, 0, "Default theme",
 			    SetTheme, "%p", &agStyleDefault);

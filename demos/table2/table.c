@@ -41,7 +41,8 @@ CreateTable1(void)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Example 1: Static Table");
 
-	table = AG_TableNew(win, AG_TABLE_EXPAND);
+	table = AG_TableNew(win, 0);
+	AG_Expand(table);
 	
 	AG_TableAddCol(table, "This column", "<Foobar>", NULL);
 	AG_TableAddCol(table, "Sorted column", "100px", NULL);
@@ -77,7 +78,9 @@ CreateTable3(void)
         AG_WindowSetGeometry(win, 0, 0, 320, 240);
         AG_WindowSetPosition(win, AG_WINDOW_LOWER_CENTER, 0);
             
-        table = AG_TableNew(win, AG_TABLE_EXPAND);
+        table = AG_TableNew(win, 0);
+	AG_Expand(table);
+
         AG_LabelNew(win, 0, "%d total", 100);
     
         /* Create our columns. */
@@ -154,13 +157,14 @@ CreateTable2(void)
 	win = AG_WindowNew(0);
 	AG_WindowSetCaption(win, "Example 3: Table With Embedded Widgets");
 
-	table = AG_TableNew(win, AG_TABLE_EXPAND);
+	table = AG_TableNew(win, 0);
 	AG_TableAddCol(table, "Button", "20%", NULL);
 	AG_TableAddCol(table, "Button2", "20%", NULL);
 	AG_TableAddCol(table, "Items", "20%", NULL);
 	AG_TableAddCol(table, "Pixmap1", "20%", NULL);
 	AG_TableAddCol(table, "Pixmap2", "20%", NULL);
         AG_TableSetRowHeight(table,120);
+	AG_Expand(table);
 
 	memset(MyTable, 0, 20*sizeof(int));
 
@@ -184,7 +188,8 @@ CreateTable2(void)
 	}
 	AG_TableEnd(table);
 
-	box = AG_BoxNewHoriz(win, AG_BOX_HFILL|AG_BOX_HOMOGENOUS);
+	box = AG_BoxNewHoriz(win, AG_BOX_HOMOGENOUS);
+	AG_ExpandHoriz(box);
 	{
 		AG_ButtonNewFn(box, 0, "Report selected rows",
 		    ReportSelectedRows, "%p", MyTable);
