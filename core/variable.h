@@ -586,7 +586,7 @@ AG_FreeVariable(AG_Variable *V)
 static __inline__ AG_Variable *
 AG_GetVariableLocked(void *pObj, const char *name)
 {
-	AG_Object *obj = pObj;
+	AG_Object *obj = AGOBJECT(pObj);
 	AG_Variable *V;
 	Uint i;
 	
