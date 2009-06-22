@@ -123,7 +123,7 @@ Init(void *obj)
 	mv->mPre = 0;
 	mv->nPre = 0;
 	mv->numFmt = "%g";
-	mv->tCache = AG_TextCacheNew(mv, 64, 16);
+	mv->tCache = agTextCache ? AG_TextCacheNew(mv, 64, 16) : NULL;
 	mv->r = AG_RECT(0,0,0,0);
 	
 	AG_BindInt(mv->hBar, "value", &mv->xOffs);
@@ -218,7 +218,6 @@ DrawNumerical(void *p)
 	int xMin = 5, xMax = 0;
 	int xOffs = -mv->xOffs*mv->wEnt + 8;
 	int yOffs = -mv->yOffs*mv->hEnt + 8;
-	int su;
 
 	AG_DrawBox(mv, mv->r, -1, AG_COLOR(BG_COLOR));
 	AG_PushClipRect(mv, mv->r);
@@ -233,9 +232,16 @@ DrawNumerical(void *p)
 		     n < MCOLS(M) && x < mv->r.w;
 		     n++, x += (mv->wEnt + mv->hSpacing)) {
 			Snprintf(text, sizeof(text), mv->numFmt, M_Get(M,m,n));
-			su = AG_TextCacheGet(mv->tCache,text);
-			AG_WidgetBlitSurface(mv, su, x, y);
-			xMax = MAX(xMax, x+WSURFACE(mv,su)->w);
+			if (agTextCache) {
+				int su = AG_TextCacheGet(mv->tCache,text);
+				AG_WidgetBlitSurface(mv, su, x, y);
+				xMax = MAX(xMax, x+WSURFACE(mv,su)->w);
+			} else {
+				AG_Surface *su = AG_TextRender(text);
+				AG_WidgetBlit(mv, su, x, y);
+				xMax = MAX(xMax, x+su->w);
+				AG_SurfaceFree(su);
+			}
 			xMin = MIN(xMin, x);
 		}
 	}
