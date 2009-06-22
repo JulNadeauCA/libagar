@@ -838,10 +838,6 @@ Draw(void *obj)
 	if (WIDGET(pal)->w < 16 || WIDGET(pal)->h < 16)
 		return;
 
-#ifdef HAVE_OPENGL
-	if (WIDGET(pal)->textures[0] == 0)
-		pal->flags |= AG_HSVPAL_DIRTY;
-#endif
 	if (pal->flags & AG_HSVPAL_DIRTY) {
 		pal->flags &= ~(AG_HSVPAL_DIRTY);
 		pal->surface = AG_SurfaceVideoRGB(WIDTH(pal), HEIGHT(pal));
