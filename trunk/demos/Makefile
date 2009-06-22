@@ -6,7 +6,6 @@ SUBDIR=	fixedres \
 	focusing \
 	loader \
 	table \
-	table2 \
 	textbox \
 	themes \
 	maximized \
