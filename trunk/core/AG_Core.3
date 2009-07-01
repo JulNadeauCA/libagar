@@ -110,6 +110,52 @@ If the specified surface has the
 flag set, it is assumed that Agar should render itself using OpenGL
 primitives, otherwise plain framebuffer mode is used.
 .Pp
+.Fn AG_InitVideo
+and
+.Fn AG_InitVideoSDL
+recognize the following
+.Fa flags
+options:
+.Bl -tag -width "AG_VIDEO_OPENGL_OR_SDL "
+.It AG_VIDEO_HWSURFACE
+Request a hardware frame buffer (pass
+.Dv SDL_HWSURFACE
+in SDL mode).
+.It AG_VIDEO_ASYNCBLIT
+Enable asynchronous blitting updates (pass
+.Dv SDL_ASYNCBLIT
+in SDL mode).
+.It AG_VIDEO_ANYFORMAT
+Disable emulation of surface depth (pass
+.Dv SDL_ANYFORMAT
+in SDL mode).
+.It AG_VIDEO_HWPALETTE
+Exclusive palette access (pass
+.Dv SDL_HWPALETTE
+in SDL mode).
+.It AG_VIDEO_DOUBLEBUF
+Enable double-buffering in frame buffer mode.
+.It AG_VIDEO_FULLSCREEN
+Start up application in full-screen mode
+.It AG_VIDEO_RESIZABLE
+If a window manager is available, request that the application be
+resizable.
+.It AG_VIDEO_NOFRAME
+If a window manager is available, disable window decorations.
+.It AG_VIDEO_BGPOPUPMENU
+Whenever the user right-clicks on an area not covered by an Agar window,
+display a standard pop-up menu with the list of active windows.
+.It AG_VIDEO_OPENGL
+Require OpenGL mode.
+If OpenGL is not available, initialization will fail.
+.It AG_VIDEO_OPENGL_OR_SDL
+Try OpenGL mode if available, otherwise fallback to SDL frame-buffer mode.
+.It AG_VIDEO_OVERLAY
+Run in OpenGL "overlay" mode.
+In this mode, Agar will never clear the background of the application or
+swap the GL buffers.
+.El
+.Pp
 The
 .Fn AG_InitGUI
 function initializes the Agar GUI system.
