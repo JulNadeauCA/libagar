@@ -1026,18 +1026,19 @@ scan:
 				    (int)ev->key.keysym.unicode);
 				break;
 			}
-			switch (ev->key.keysym.sym) {		/* XXX */
-			case SDLK_LSHIFT:
-			case SDLK_RSHIFT:
-			case SDLK_LALT:
-			case SDLK_RALT:
-			case SDLK_LCTRL:
-			case SDLK_RCTRL:
-				/* Always ignore modifiers */
-				AG_ObjectUnlock(win);
-				return (0);
-			default:
-				break;
+			if (!(win->flags & AG_WINDOW_MODKEYEVENTS)) {
+				switch (ev->key.keysym.sym) {
+				case SDLK_LSHIFT:
+				case SDLK_RSHIFT:
+				case SDLK_LALT:
+				case SDLK_RALT:
+				case SDLK_LCTRL:
+				case SDLK_RCTRL:
+					AG_ObjectUnlock(win);
+					return (0);
+				default:
+					break;
+				}
 			}
 			tabCycle = 1;
 			if (AG_WindowIsFocused(win) &&
