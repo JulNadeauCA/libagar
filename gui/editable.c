@@ -816,8 +816,24 @@ KeyDown(AG_Event *event)
 	int keymod = AG_INT(2);
 	Uint32 unicode = (Uint32)AG_INT(3);		/* XXX use AG_UINT32 */
 
-	if (keysym == SDLK_TAB && !(WIDGET(ed)->flags & AG_WIDGET_CATCH_TAB))
+	switch (keysym) {
+	case SDLK_LSHIFT:
+	case SDLK_RSHIFT:
+	case SDLK_LALT:
+	case SDLK_RALT:
+	case SDLK_LMETA:
+	case SDLK_RMETA:
+	case SDLK_LCTRL:
+	case SDLK_RCTRL:
 		return;
+	case SDLK_TAB:
+		if (!(WIDGET(ed)->flags & AG_WIDGET_CATCH_TAB)) {
+			return;
+		}
+		break;
+	default:
+		break;
+	}
 
 	ed->repeatKey = keysym;
 	ed->repeatMod = keymod;
