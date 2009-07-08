@@ -23,7 +23,8 @@ SUBDIR=	fixedres \
 	minimal \
 	textdlg \
 	scrollview \
-	console
+	console \
+	chinese
 
 all: all-subdir
 clean: prereq clean-subdir
