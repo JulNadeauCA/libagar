@@ -1,5 +1,5 @@
 .\"
-.\" Copyright (c) 2006-2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2006-2009 Hypertriton, Inc. <http://hypertriton.com/>
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -48,9 +48,10 @@ library can be compiled to provide inline expansions of these operations under
 a specific backend.
 .Sh M-BY-N MATRICES
 The following routines operate on dynamically-allocated m-by-n matrices.
-Matrix elements are not accessible as arrays, since some backends (such as
-.Em sparse
-does not actually store matrix elements in arrays).
+Matrix elements are not directly accessible as array members, since some
+backends (such as
+.Em sparse )
+do not actually store matrix elements in arrays.
 The dimensions can be obtained from the
 .Va m
 (rows) and
@@ -269,7 +270,7 @@ The
 .Fn M_AddToDiag
 routine adds
 .Va value
-to each entry
+to each diagonal entry
 .Fa i ,
 .Fa i
 of matrix
@@ -394,11 +395,7 @@ diagonal.
 The following routines are optimized for 4x4 matrices, as frequently
 encountered in computer graphics.
 Contrary to m-by-n matrices, the entries are not dynamically allocated and
-are directly accessible via the
-.Va m
-member of the
-.Ft M_Matrix44
-structure (row-major format).
+are directly accessible.
 Available backends include:
 .Pp
 .Bl -tag -width "fpu " -compact
@@ -407,9 +404,339 @@ Native scalar floating point methods.
 .It sse
 Accelerate operations using Streaming SIMD Extensions (SSE).
 .El
+.Sh 4-BY-4 MATRICES: INITIALIZATION
+.nr nS 1
+.Ft "M_Matrix44"
+.Fn M_MatZero44 "void"
 .Pp
-TODO
-
+.Ft "void"
+.Fn M_MatZero44v "M_Matrix44 *Z"
+.Pp
+.Ft "M_Matrix44"
+.Fn M_MatIdentity44 "void"
+.Pp
+.Ft "void"
+.Fn M_MatIdentity44v "M_Matrix44 *I"
+.Pp
+.Ft "void"
+.Fn M_MatCopy44 "M_Matrix44 *Mdst" "const M_Matrix44 *Msrc"
+.Pp
+.nr nS 0
+The
+.Fn M_MatZero44
+and
+.Fn M_MatZero44v
+functions initializes the target matrix
+.Fa Z
+to the zero matrix.
+.Pp
+.Fn M_MatIdentity44
+and
+.Fn M_MatIdentity44v
+initializes the target matrix
+.Fa I
+to the identity matrix.
+.Pp
+The
+.Fn M_MatCopy44
+routine copies the contents of matrix
+.Fa Msrc
+into
+.Fa Mdst.
+The original contents of
+.Fa Mdst
+are overwritten.
+.Sh 4-BY-4 MATRICES: ACCESSING ELEMENTS
+The elements of
+.Ft M_Matrix44
+are directly accessible via the
+.Va m[4][4]
+member of the structure.
+Elements of the matrix are stored in row-major format.
+.Pp
+If SSE support is available (i.e.,
+.Dv HAVE_SSE
+is defined),
+.Ft M_Matrix44
+is an union:
+.Bd -literal
+typedef union m_matrix44 {
+	struct { __m128 m1, m2, m3, m4; };
+	M_Real m[4][4];
+} M_Matrix44;
+.Ed
+.Pp
+If there is no SSE support, it is a simple structure:
+.Bd -literal
+typedef struct m_matrix44 {
+	M_Real m[4][4];
+} M_Matrix44;
+.Ed
+.Pp
+The following functions convert between
+.Ft M_Matrix44
+and numerical arrays:
+.Pp
+.nr nS 1
+.Ft "void"
+.Fn M_MatToFloats44 "float *flts" "const M_Matrix44 *A"
+.Pp
+.Ft "void"
+.Fn M_MatToDoubles44 "double *dbls" "const M_Matrix44 *A"
+.Pp
+.Ft "void"
+.Fn M_MatFromFloats44 "M_Matrix44 *M" "const float *flts"
+.Pp
+.Ft "void"
+.Fn M_MatFromDoubles44 "M_Matrix44 *M" "const double *dbls"
+.Pp
+.nr nS 0
+.Fn M_MatToFloats44
+converts matrix
+.Fa A
+to a 4x4 array of floats
+.Fa flts .
+.Fn M_MatToDoubles44
+converts matrix
+.Fa A
+to a 4x4 array of doubles
+.Fa dbls .
+.Fn M_MatFromFloats44
+initializes matrix
+.Fa M
+from the contents of a 4x4 array of floats
+.Fa flts .
+.Fn M_MatFromDoubles44
+initializes matrix
+.Fa M
+from the contents of a 4x4 array of doubles
+.Fa dbls .
+.Sh 4-BY-4 MATRICES: BASIC OPERATIONS
+.nr nS 1
+.Ft "M_Matrix44"
+.Fn M_MatTranspose44 "M_Matrix44 A"
+.Pp
+.Ft "M_Matrix44"
+.Fn M_MatTranspose44p "const M_Matrix44 *A"
+.Pp
+.Ft "void"
+.Fn M_MatTranspose44v "M_Matrix44 *A"
+.Pp
+.Ft "M_Matrix44"
+.Fn M_MatInvert44 "M_Matrix44 A"
+.Pp
+.Ft "M_Matrix44"
+.Fn M_MatInvert44p "const M_Matrix44 *A"
+.Pp
+.Ft "int"
+.Fn M_MatInvertGaussJordan44v "const M_Matrix44 *A" "M_Matrix44 *Ainv"
+.Pp
+.Ft "M_Matrix44"
+.Fn M_MatMult44 "M_Matrix44 A" "M_Matrix44 B"
+.Pp
+.Ft "void"
+.Fn M_MatMult44v "M_Matrix44 *A" "const M_Matrix44 *B"
+.Pp
+.Ft "void"
+.Fn M_MatMult44pv "M_Matrix44 *AB" "const M_Matrix44 *A" "const M_Matrix44 *B"
+.Pp
+.Ft "M_Vector3"
+.Fn M_MatMult44Vector3 "M_Matrix44 A" "M_Vector3 x"
+.Pp
+.Ft "M_Vector3"
+.Fn M_MatMult44Vector3p "const M_Matrix44 *A" "const M_Vector3 *x"
+.Pp
+.Ft "void"
+.Fn M_MatMult44Vector3v "M_Vector3 *x" "const M_Matrix44 *A"
+.Pp
+.Ft "M_Vector4"
+.Fn M_MatMult44Vector4 "M_Matrix44 A" "M_Vector4 x"
+.Pp
+.Ft "M_Vector4"
+.Fn M_MatMult44Vector4p "const M_Matrix44 *A" "const M_Vector4 *x"
+.Pp
+.Ft "void"
+.Fn M_MatMult44Vector4v "M_Vector4 *x" "const M_Matrix44 *A"
+.Pp
+.Ft "void"
+.Fn M_MatGetDirection44 "const M_Matrix44 *A" "M_Vector3 *x" "M_Vector3 *y" "M_Vector3 *z"
+.Pp
+.Ft "void"
+.Fn M_MatDiagonalSwap44v "M_Matrix44 *A"
+.Pp
+.Ft "void"
+.Fn M_MatRotateAxis44 "M_Matrix44 *T" "M_Real theta" "M_Vector3 axis"
+.Pp
+.Ft "void"
+.Fn M_MatOrbitAxis44 "M_Matrix44 *T" "M_Vector3 center" "M_Vector3 axis" "M_Real theta"
+.Pp
+.Ft "void"
+.Fn M_MatRotateEul44 "M_Matrix44 *T" "M_Real pitch" "M_Real roll" "M_Real yaw"
+.Pp
+.Ft "void"
+.Fn M_MatRotate44I "M_Matrix44 *T" "M_Real theta"
+.Pp
+.Ft "void"
+.Fn M_MatRotate44J "M_Matrix44 *T" "M_Real theta"
+.Pp
+.Ft "void"
+.Fn M_MatRotate44K "M_Matrix44 *T" "M_Real theta"
+.Pp
+.Ft "void"
+.Fn M_MatTranslate44v "M_Matrix44 *T" "M_Vector3 v"
+.Pp
+.Ft "void"
+.Fn M_MatTranslate44 "M_Matrix44 *T" "M_Real x" "M_Real y" "M_Real z"
+.Pp
+.Ft "void"
+.Fn M_MatTranslate44X "M_Matrix44 *T" "M_Real c"
+.Pp
+.Ft "void"
+.Fn M_MatTranslate44Y "M_Matrix44 *T" "M_Real c"
+.Pp
+.Ft "void"
+.Fn M_MatTranslate44Z "M_Matrix44 *T" "M_Real c"
+.Pp
+.Ft "void"
+.Fn M_MatScale44 "M_Matrix44 *T" "M_Real x" "M_Real y" "M_Real z" "M_Real w"
+.Pp
+.Ft "void"
+.Fn M_MatUniScale44 "M_Matrix44 *T" "M_Real c"
+.Pp
+The
+.Fn M_MatTranspose44 ,
+.Fn M_MatTranspose44p
+and
+.Fn M_MatTranspose44v
+function compute and return the transpose of matrix
+.Fa A
+(i.e., all elements
+.Va i,j
+are swapped for elements
+.Va j,i ) .
+.Pp
+The functions
+.Fn M_MatInvert44
+and
+.Fn M_MatInvert44p
+compute the inverse of the matrix
+.Fa A
+using an optimized algorithm based on cofactors.
+The matrix must be invertible.
+.Pp
+The
+.Fn M_MatInvertGaussJordan44v
+routine computes the inverse of
+.Fa A
+using simple Gauss-Jordan elimination.
+If the matrix is invertible, the function returns 0 and the inverse matrix
+is written to
+.Fa Ainv .
+If the matrix is singular to machine precision (i.e.,
+.Dv M_MACHEP ) ,
+the function returns -1 and the contents of
+.Fa Ainv
+are undefined.
+.Pp
+.Fn M_MatMult44 ,
+.Fn M_MatMult44v
+and
+.Fn M_MatMult44pv
+compute the product of matrices
+.Fa A
+and
+.Fa B .
+.Pp
+.Fn M_MatMult44Vector3 ,
+.Fn M_MatMult44Vector3p
+and
+.Fn M_MatMult44Vector3v
+return the product of the matrix
+.Fa A
+and vector [x,0].
+.Pp
+.Fn M_MatMult44Vector4 ,
+.Fn M_MatMult44Vector4p
+and
+.Fn M_MatMult44Vector4v
+return the product of matrix
+.Fa A
+and vector [x].
+.Pp
+.Fn M_MatGetDirection44
+retrieves the 3-dimensional direction vectors
+.Fa x ,
+.Fa y ,
+.Fa z
+from matrix
+.Fa A .
+.Pp
+.Fn M_MatDiagonalSwap44v
+swaps the elements of
+.Fa A
+about the diagonal.
+.Pp
+.Fn M_MatRotateAxis44
+multiplies matrix
+.Fa T
+against a rotation matrix describing a rotation of
+.Fa theta
+radians about
+.Fa axis
+(relative to the origin).
+The
+.Fn M_MatOrbitAxis44
+variant takes
+.Fa axis
+to be relative to the specified
+.Fa center
+point as opposed to the origin.
+.Pp
+.Fn M_MatRotateEul44
+multiplies
+.Fa T
+against a matrix describing a rotation about the origin in terms of Euler
+angles
+.Fa pitch ,
+.Fa roll
+and
+.Fa yaw
+(given in radians).
+.Pp
+.Fn M_MatRotate44I ,
+.Fn M_MatRotate44J
+and
+.Fn M_MatRotate44K
+multiply
+.Fa T
+with a matrix describing a rotation of
+.Fa theta
+radians about the basis vector
+.Va i ,
+.Va j
+or
+.Va k ,
+respectively.
+.Pp
+.Fn M_MatTranslate44v
+multiplies
+.Fa T
+against a matrix describing a translation by vector
+.Fa v .
+.Fn M_MatTranslate44 ,
+.Fn M_MatTranslate44X ,
+.Fn M_MatTranslate44Y
+and
+.Fn M_MatTranslate44Z
+accept individual coordinate arguments.
+.Pp
+.Fn M_MatScale44
+multiplies
+.Fa T
+against a matrix describing uniform/non-uniform scaling by [x,y,z,w].
+.Fn M_MatUniScale44
+performs uniform scaling by
+.Fa c .
 .Sh SEE ALSO
 .Xr AG_Intro 3 ,
 .Xr M_Vector 3
