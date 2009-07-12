@@ -28,9 +28,6 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <config/have_md5.h>
-#ifndef HAVE_MD5
-
 #include "core.h"
 #include "md5.h"
 
@@ -291,5 +288,3 @@ AG_MD5Data(const Uint8 *data, size_t len, char *buf)
 	AG_MD5Update(&ctx, data, len);
 	return AG_MD5End(&ctx, buf);
 }
-
-#endif /* !HAVE_MD5 */
