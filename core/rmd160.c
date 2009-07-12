@@ -27,9 +27,6 @@
  * ftp://ftp.rsasecurity.com/pub/cryptobytes/crypto3n2.pdf
  */
 
-#include <config/have_rmd160.h>
-#ifndef HAVE_RMD160
-
 #include "core.h"
 #include "rmd160.h"
 
@@ -406,5 +403,3 @@ AG_RMD160Data(const Uint8 *data, size_t len, char *buf)
 	AG_RMD160Update(&ctx, data, len);
 	return AG_RMD160End(&ctx, buf);
 }
-
-#endif /* !HAVE_RMD160 */

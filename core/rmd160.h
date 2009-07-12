@@ -1,4 +1,3 @@
-/*	$OpenBSD: rmd160.h,v 1.16 2004/06/22 01:57:30 jfb Exp $	*/
 /*
  * Copyright (c) 2001 Markus Friedl.  All rights reserved.
  *
@@ -22,31 +21,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include <agar/config/have_rmd160.h>
-
-#ifdef HAVE_RMD160
-
-# include <agar/config/_mk_have_sys_types_h.h>
-# ifdef _MK_HAVE_SYS_TYPES_H
-#  include <sys/types.h>
-# endif
-# include <rmd160.h>
-
-# define AG_RMD160_CTX			RMD160_CTX
-# define AG_RMD160_BLOCK_LENGTH		RMD160_BLOCK_LENGTH
-# define AG_RMD160_DIGEST_LENGTH	RMD160_DIGEST_LENGTH
-# define AG_RMD160_DIGEST_STRING_LENGTH	RMD160_DIGEST_STRING_LENGTH
-
-# define AG_RMD160Init		RMD160Init
-# define AG_RMD160Transform	RMD160Transform
-# define AG_RMD160Update	RMD160Update
-# define AG_RMD160Pad		RMD160Pad
-# define AG_RMD160Final		RMD160Final
-# define AG_RMD160End		RMD160End
-# define AG_RMD160Data		RMD160Data
-
-#else /* !HAVE_RMD160 */
 
 #include <agar/core/begin.h>
 
@@ -73,4 +47,3 @@ char *AG_RMD160Data(const Uint8 *, size_t, char *)
 __END_DECLS
 
 #include <agar/core/close.h>
-#endif /* !HAVE_RMD160 */

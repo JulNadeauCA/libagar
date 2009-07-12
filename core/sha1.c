@@ -21,9 +21,6 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <config/have_sha1.h>
-#ifndef HAVE_SHA1
-
 #include "core.h"
 #include "sha1.h"
 
@@ -215,5 +212,3 @@ AG_SHA1Data(const Uint8 *data, size_t len, char *buf)
 	AG_SHA1Update(&ctx, data, len);
 	return AG_SHA1End(&ctx, buf);
 }
-
-#endif /* !HAVE_SHA1 */
