@@ -615,6 +615,9 @@ arguments are indices into the global GUI color array (see
 .Fn AG_DrawLine2 "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint32 c"
 .Pp
 .Ft void
+.Fn AG_DrawLineBlended "AG_Widget *widget" "int x1" "int y1" "int x2" "int y2" "Uint8 c[4]" "AG_BlendFn blendFn"
+.Pp
+.Ft void
 .Fn AG_DrawLineH "AG_Widget *widget" "int x1" "int x2" "int y" "Uint32 c"
 .Pp
 .Ft void
@@ -721,6 +724,14 @@ and
 render horizontal and vertical line segments, respectively.
 .Fn AG_DrawLine2
 renders two line segments for a 3D-style effect.
+.Pp
+.Fn AG_DrawLineBlended
+renders an alpha-blended line, where the RGBA components are passed as the
+.Fa c
+array, and the blending function is specified in
+.Fa blendFn
+(see
+.Fn AG_WidgetBlendPixelRGBA ) .
 .Pp
 .Fn AG_DrawRectOutline
 draws the outline of a rectangle.
