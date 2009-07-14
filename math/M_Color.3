@@ -1,0 +1,147 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 13, 2009
+.Dt M_COLOR 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Color
+.Nd Agar-Math color structure
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+structure describes a color in terms of RGB values and an alpha component:
+.Bd -literal
+typedef struct m_color {
+	M_Real r, g, b, a;
+} M_Color;
+.Ed
+.Pp
+If SSE support is available (i.e.,
+.Dv HAVE_SSE
+is defined),
+.Nm
+is an union:
+.Bd -literal
+typedef union m_color {
+	__m128 m128;
+	struct { M_Real r, g, b, a; };
+} M_Color;
+.Ed
+.Sh INITIALIZATION
+.nr nS 1
+.Ft M_Color
+.Fn M_ColorRGB "M_Real r" "M_Real g" "M_Real b"
+.Pp
+.Ft M_Color
+.Fn M_ColorRGBA "M_Real r" "M_Real g" "M_Real b" "M_Real a"
+.Pp
+.Ft M_Color
+.Fn M_ColorHSV "M_Real hue" "M_Real saturation" "M_Real value"
+.Pp
+.Ft M_Color
+.Fn M_ColorHSVA "M_Real hue" "M_Real saturation" "M_Real value" "M_Real a"
+.Pp
+.Ft M_Color
+.Fn M_ColorBlack "void"
+.Pp
+.Ft M_Color
+.Fn M_ColorWhite "void"
+.Pp
+.Ft M_Color
+.Fn M_ColorGray "M_Real c"
+.Pp
+.Ft M_Color
+.Fn M_ReadColor "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_WriteColor "AG_DataSource *ds" "const M_Color *C"
+.Pp
+.Ft void
+.Fn M_ColorTo4fv "const M_Color *C" "float *fv"
+.Pp
+.Ft void
+.Fn M_ColorTo4dv "const M_Color *C" "double *fv"
+.Pp
+.nr nS 0
+The
+.Fn M_ColorRGB
+function returns an
+.Nm
+structure describing an opaque color composed of the given red, green and blue
+components.
+The components are real values ranging from 0.0 to 1.0.
+.Fn M_ColorRGBA
+accepts an alpha component as well.
+.Pp
+The
+.Fn M_ColorHSV
+and
+.Fn M_ColorHSVA
+functions return a color specified in terms of
+.Fa hue ,
+.Fa saturation
+and
+.Fa value ,
+all real numbers ranging from 0.0 to 1.0.
+.Pp
+.Fn M_ColorBlack
+returns an opaque black and
+.Fn M_ColorWhite
+returns an opaque white.
+.Fn M_ColorGray
+returns a shade of gray where
+.Fa c
+ranges from 0 to 1.0.
+.Pp
+The
+.Fn M_ReadColor
+and
+.Fn M_WriteColor
+functions read or write a color structure from/to an
+.Xr AG_DataSource 3 .
+.Pp
+.Fn M_ColorTo4fv
+and
+.Fn M_ColorTo4dv
+convert a
+.Nm
+structure to an array of 4
+.Ft float
+or
+.Ft double ,
+respectively.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.4.
