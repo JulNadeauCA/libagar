@@ -15,27 +15,7 @@ M_ComplexGet(M_Real r, M_Real i)
 }
 
 static __inline__ M_Complex
-M_ComplexAddIdentity(void)
-{
-	M_Complex z;
-
-	z.r = 0.0;
-	z.i = 0.0;
-	return (z);
-}
-
-static __inline__ M_Complex
-M_ComplexMultIdentity(void)
-{
-	M_Complex z;
-
-	z.r = 1.0;
-	z.i = 0.0;
-	return (z);
-}
-
-static __inline__ M_Complex
-M_ComplexAddInverse(M_Complex z)
+M_ComplexAdditiveInverse(M_Complex z)
 {
 	M_Complex w;
 
@@ -45,7 +25,7 @@ M_ComplexAddInverse(M_Complex z)
 }
 
 static __inline__ M_Complex
-M_ComplexMultInverse(M_Complex z)
+M_ComplexMultiplicativeInverse(M_Complex z)
 {
 	M_Complex w;
 	M_Real divisor;
@@ -131,5 +111,4 @@ M_Complex M_ComplexCosh(M_Complex);
 M_Complex M_ComplexAcosh(M_Complex);
 M_Complex M_ComplexTanh(M_Complex);
 M_Complex M_ComplexAtanh(M_Complex);
-M_Complex M_ComplexPow(M_Complex, M_Complex);
 __END_DECLS
