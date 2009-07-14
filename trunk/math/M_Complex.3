@@ -1,0 +1,286 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 14, 2009
+.Dt M_COMPLEX 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Complex
+.Nd Agar-Math complex number
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+object describes a complex number (without requiring an ISO C90 compiler).
+It is a simple structure defined as:
+.Bd -literal
+typedef struct m_complex {
+	M_Real r;		/* Real part */
+	M_Real i;		/* Imaginary part */
+} M_Complex;
+.Ed
+.Sh INITIALIZATION
+.nr nS 1
+.Ft M_Complex
+.Fn M_ComplexGet "M_Real r" "M_Real i"
+.Pp
+.Ft M_Complex
+.Fn M_ReadComplex "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_CopyComplex "AG_DataSource *ds" "M_Complex *z"
+.Pp
+.Ft void
+.Fn M_WriteComplex "AG_DataSource *ds" "M_Complex z"
+.Pp
+.nr nS 0
+The
+.Fn M_ComplexGet
+routine returns a
+.Nm
+structure describing a complex number with real part
+.Fa r
+and imaginary part
+.Fa i .
+.Pp
+.Fn M_ComplexI
+returns the complex number for
+.Va i .
+.Fn M_ComplexMinusI
+returns the complex number for
+.Va -i .
+.Pp
+The
+.Fn M_ReadComplex
+function reads a complex number from an
+.Xr AG_DataSource 3
+and returns the structure.
+The
+.Fn M_CopyComplex
+variant returns the number in
+.Fa z .
+.Fn M_WriteComplex
+writes a complex number to a data source.
+.Sh BASIC OPERATIONS
+.nr nS 1
+.Ft M_Real
+.Fn M_ComplexReal "M_Complex z"
+.Pp
+.Ft M_Real
+.Fn M_ComplexImag "M_Complex z"
+.Pp
+.Ft M_Real
+.Fn M_ComplexModulus "M_Complex z"
+.Pp
+.Ft M_Real
+.Fn M_ComplexArg "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexAdditiveInverse "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexMultiplicativeInverse "M_Complex z"
+.Pp
+.Ft void
+.Fn M_ComplexPolar "M_Complex z" "M_Real *r" "M_Real *theta"
+.nr nS 0
+The
+.Fn M_ComplexReal
+routine extracts and return the real part of complex number
+.Fa z .
+.Fn M_ComplexImag
+returns the imaginary part.
+.Pp
+.Fn M_ComplexModulus
+returns the modulus of
+.Fa z ,
+which is computed as sqrt(r^2 + i^2).
+.Fn M_ComplexArg
+returns the argument of
+.Fa z ,
+computed as atan2(i,r);
+.Pp
+.Fn M_ComplexAdditiveInverse
+returns the additive inverse of
+.Fa z .
+.Pp
+.Fn M_ComplexMultiplicativeInverse
+returns the multiplicative inverse of
+.Fa z .
+.Pp
+.Fn M_ComplexPolar
+returns the polar form of
+.Fa z
+into
+.Fa r
+(corresponding to the modulus)
+and
+.Fa theta
+(corresponding to the argument).
+.Sh ARITHMETIC OPERATIONS
+.nr nS 1
+.Ft M_Complex
+.Fn M_ComplexAdd "M_Complex a" "M_Complex b"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexSub "M_Complex a" "M_Complex b"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexMult "M_Complex a" "M_Complex b"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexDiv "M_Complex a" "M_Complex b"
+.Pp
+.Ft M_Real
+.Fn M_ComplexAbs "M_Complex z"
+.Pp
+.nr nS 0
+The
+.Fn M_ComplexAdd
+routine returns the sum of complex numbers
+.Fa a
+and
+.Fa b .
+.Fn M_ComplexSub
+returns the difference.
+.Pp
+.Fn M_ComplexMult
+computes the product of complex numbers
+.Fa a
+and
+.Fa b .
+.Fn M_ComplexDiv
+divides
+.Fa a
+by
+.Fa b
+and returns the result.
+.Pp
+The
+.Fn M_ComplexAbs
+function computes the complex absolute value (i.e., sqrt(r^2 + i^2)).
+If the magnitude of either real or imaginary parts differs with zero up
+to 50% of machine precision, both parts are rescaled prior to squaring.
+.Pp
+.Fn M_ComplexSqrt
+computes the complex square root of
+.Fa z .
+.Pp
+.Fn M_ComplexLog
+computes the complex natural logarithm of
+.Fa z .
+.Pp
+.Fn M_ComplexExp
+computes the exponential of
+.Fa z .
+.Pp
+.Fn M_ComplexPow
+returns
+.Fa a
+raised to the complex power
+.Fa z .
+.Sh TRIGONOMETRIC AND HYPERBOLIC OPERATIONS
+.nr nS 1
+.Ft M_Complex
+.Fn M_ComplexSin "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexCos "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexTan "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexCot "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexAsin "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexAcos "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexAtan "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexSinh "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexAsinh "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexCosh "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexAcosh "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexTanh "M_Complex z"
+.Pp
+.Ft M_Complex
+.Fn M_ComplexAtanh "M_Complex z"
+.Pp
+.nr nS 0
+The
+.Fn M_ComplexSin
+function returns the complex sine of
+.Fa z .
+.Fn M_ComplexCos
+returns the complex cosine,
+.Fn M_ComplexTan
+returns the complex tangent and
+.Fn M_ComplexCot
+returns the complex cotangent.
+.Pp
+.Fn M_ComplexAsin ,
+.Fn M_ComplexAcos
+and
+.Fn M_ComplexAtan
+compute the complex arc sine, arc cosine and arc tangent of
+.Fa z ,
+respectively.
+.Pp
+.Fn M_ComplexSinh ,
+.Fn M_ComplexAsinh ,
+.Fn M_ComplexCosh ,
+.Fn M_ComplexAcosh ,
+.Fn M_ComplexTanh ,
+.Fn M_ComplexAtanh
+compute the complex hyperbolic sine, arc sine, cosine, arc cosine, tangent
+and arc tangent of
+.Fa z ,
+respectively.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3 ,
+.Xr M_Real 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.4.
