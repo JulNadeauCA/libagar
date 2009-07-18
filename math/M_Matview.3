@@ -1,0 +1,153 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 18, 2009
+.Dt M_MATVIEW 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Matview
+.Nd Agar-Math matrix viewer widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget displays the contents of a
+.Xr M_Matrix 3 ,
+either numerically or graphically.
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "M_Matview *"
+.Fn M_MatviewNew "AG_Widget *parent" "M_Matrix *M" "Uint flags"
+.Pp
+.Ft void
+.Fn M_MatviewSizeHint "M_Matview *mv" "const char *text" "Uint m" "Uint n"
+.Pp
+.Ft void
+.Fn M_MatviewSetMatrix "M_Matview *mv" "M_Matrix *M"
+.Pp
+.Ft void
+.Fn M_MatviewSetDisplayMode "M_Matview *mv" "enum m_matview_mode mode"
+.Pp
+.Ft void
+.Fn M_MatviewSetNumericalFmt "M_Matview *mv" "const char *fmt"
+.Pp
+.nr nS 0
+The
+.Fn M_MatviewNew
+function allocates, initializes, and attaches a new
+.Nm
+widget displaying the matrix
+.Fa M
+(if not NULL).
+There are no
+.Fa flags
+options currently defined.
+.Pp
+.Fn M_MatviewSizeHint
+sets an initial preferred widget size such that the widget can display
+.Fa m
+by
+.Fa n
+cells containing the specified
+.Fa text
+string.
+.Pp
+.Fn M_MatviewSetMatrix
+changes the matrix currently associated with the widget.
+.Pp
+.Fn M_MatviewSetDisplayMode
+selects the display mode, where
+.Fa mode
+can be:
+.Bd -literal
+enum m_matview_mode {
+	M_MATVIEW_GREYSCALE,	/* Graphical rendering (greyscale) */
+	M_MATVIEW_NUMERICAL	/* Numerical display */
+};
+.Ed
+.Pp
+.Fn M_MatviewSetNumericalFmt
+configures the numerical format (i.e., the
+.Xr printf 3
+format string) that will be used to display element values.
+.Sh EVENTS
+.\" The
+.\" .Nm
+.\" widget neither reacts to nor generates any event.
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebuttondown "
+.It window-keydown
+Default hotkeys:
+.Dv SDLK_g
+sets graphical (greyscale) mode,
+.Dv SDLK_n
+sets numerical mode,
+.Dv SDLK_EQUALS
+and
+.Dv SDLK_MINUS
+increases/decreases the scaling factor for graphical display.
+.It window-mousebuttondown
+Move focus over the widget.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
+.Sh STRUCTURE DATA
+For the
+.Ft M_Matview
+object:
+.Pp
+.Bl -tag -compact -width "int hSpacing "
+.It Ft int hSpacing
+Horizontal spacing between entries
+.It Ft int vSpacing
+Vertical spacing between entries
+.It Ft int xOffs
+X display offset (bound to scrollbar)
+.It Ft int yOffs
+Y display offset (bound to scrollbar)
+.It Ft int scale
+Scaling factor in graphical mode
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr M_Matrix 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.3.4.
