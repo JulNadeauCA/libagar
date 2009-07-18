@@ -7,7 +7,7 @@ typedef struct m_matrix_fpu {
 	struct m_matrix _inherit;
 	M_Real **v;			/* Values */
 	struct m_matrix_fpu *LU;
-	M_IntVector *ivec;
+	M_VectorZ *ivec;
 } M_MatrixFPU;
 
 __BEGIN_DECLS

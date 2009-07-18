@@ -1,18 +1,18 @@
 /*	Public domain	*/
 
-typedef struct m_int_vector {
+typedef struct m_vectorz {
 	Uint n;
 	int *v;
-} M_IntVector;
+} M_VectorZ;
 
 __BEGIN_DECLS
-M_IntVector *M_IntVectorNew(Uint);
-void         M_IntVectorSet(M_IntVector *, int);
-void         M_IntVectorCopy(const M_IntVector *, M_IntVector *);
-void	     M_IntVectorFree(M_IntVector *);
-void	     M_IntVectorAddv(M_IntVector *, const M_IntVector *);
-void	     M_IntVectorSubv(M_IntVector *, const M_IntVector *);
-void	     M_IntVectorScalev(M_IntVector *, M_Real);
-void	     M_IntVectorResize(M_IntVector *, Uint);
-void	     M_IntVectorPrint(const M_IntVector *);
+M_VectorZ *M_VectorNewZ(Uint);
+void       M_VectorSetZ(M_VectorZ *, int);
+void       M_VectorCopyZ(const M_VectorZ *, M_VectorZ *);
+void	   M_VectorFreeZ(M_VectorZ *);
+void	   M_VectorAddZv(M_VectorZ *, const M_VectorZ *);
+void	   M_VectorSubZv(M_VectorZ *, const M_VectorZ *);
+void	   M_VectorScaleZv(M_VectorZ *, M_Real);
+void	   M_VectorResizeV(M_VectorZ *, Uint);
+void	   M_VectorPrintZ(const M_VectorZ *);
 __END_DECLS

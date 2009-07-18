@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2008 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2004-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,6 +23,10 @@
  * USE OF THIS SOFTWARE EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Operations on integer vectors.
+ */
+
 #include <core/core.h>
 #include "m.h"
 
@@ -30,19 +34,19 @@
 	if ((A)->n != (B)->n) \
 		AG_FatalError("Incompatible vectors")
 
-M_IntVector *
-M_IntVectorNew(Uint n)
+M_VectorZ *
+M_VectorNewZ(Uint n)
 {
-	M_IntVector *veci;
+	M_VectorZ *veci;
 
-	veci = Malloc(sizeof(M_IntVector));
+	veci = Malloc(sizeof(M_VectorZ));
 	veci->v = Malloc(n*sizeof(int));
 	veci->n = n;
 	return (veci);
 }
 
 void
-M_IntVectorSet(M_IntVector *v, int val)
+M_VectorSetZ(M_VectorZ *v, int val)
 {
 	Uint i;
 
@@ -51,7 +55,7 @@ M_IntVectorSet(M_IntVector *v, int val)
 }
 
 void
-M_IntVectorCopy(const M_IntVector *v1, M_IntVector *v2)
+M_VectorCopyZ(const M_VectorZ *v1, M_VectorZ *v2)
 {
 	Uint i;
 
@@ -61,14 +65,14 @@ M_IntVectorCopy(const M_IntVector *v1, M_IntVector *v2)
 }
 
 void
-M_IntVectorFree(M_IntVector *v)
+M_VectorFreeZ(M_VectorZ *v)
 {
 	Free(v->v);
 	Free(v);
 }
 
 void
-M_IntVectorAddv(M_IntVector *v2, const M_IntVector *v1)
+M_VectorAddZv(M_VectorZ *v2, const M_VectorZ *v1)
 {
 	Uint i;
 
@@ -78,7 +82,7 @@ M_IntVectorAddv(M_IntVector *v2, const M_IntVector *v1)
 }
 
 void
-M_IntVectorSubv(M_IntVector *v2, const M_IntVector *v1)
+M_VectorSubZv(M_VectorZ *v2, const M_VectorZ *v1)
 {
 	Uint i;
 
@@ -88,7 +92,7 @@ M_IntVectorSubv(M_IntVector *v2, const M_IntVector *v1)
 }
 
 void
-M_IntVectorScalev(M_IntVector *v, M_Real c)
+M_VectorScaleZv(M_VectorZ *v, M_Real c)
 {
 	Uint i;
 
@@ -97,14 +101,14 @@ M_IntVectorScalev(M_IntVector *v, M_Real c)
 }
 
 void
-M_IntVectorResize(M_IntVector *v, Uint n)
+M_VectorResizeV(M_VectorZ *v, Uint n)
 {
 	v->v = Realloc(v->v, n*sizeof(int));
 	v->n = n;
 }
 
 void
-M_IntVectorPrint(const M_IntVector *v)
+M_VectorPrintZ(const M_VectorZ *v)
 {
 	Uint i;
 
