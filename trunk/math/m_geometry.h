@@ -1,7 +1,7 @@
 /*	Public domain	*/
 
 /*
- * Line segment or ray in R2/R3.
+ * Line segment or ray in R^2 and R^3.
  */
 typedef struct m_line2 {
 	M_Vector2 p;		/* Origin point */
@@ -16,11 +16,9 @@ typedef struct m_line3 {
 
 #define M_LINE2_INITIALIZER(px,py,nx,ny,t) { {px,py}, {nx,ny}, t }
 #define M_LINE3_INITIALIZER(px,py,pz,nx,ny,nz,t) { {px,py,pz}, {nx,ny,nz}, t }
-#define MLINE2(v) ((M_Line2 *)(v))
-#define MLINE3(v) ((M_Line3 *)(v))
 
 /*
- * Circle in R2/R3.
+ * Circle in R^2 and R^3.
  */
 typedef struct m_circle2 {
 	M_Vector2 p;		/* Origin point */
@@ -35,17 +33,17 @@ typedef struct m_circle3 {
 #define M_CIRCLE3_INITIALIZER(px,py,pz,r) { { px,py,pz }, r }
 
 /*
- * Sphere in R3
+ * Sphere in R^3.
  */
-typedef struct m_sphere3 {
+typedef struct m_sphere {
 	M_Vector3 p;		/* Origin point */
 	M_Real r;		/* Radius */
-} M_Sphere3;
+} M_Sphere;
 
 #define M_SPHERE_INITIALIZER(px,py,pz,r) { { px,py,pz }, r }
 
 /*
- * Plane in R3 or hyperplane in Rn
+ * Plane in R^3 and hyperplane in R^n.
  */
 typedef struct m_plane3 {
 	M_Real a, b, c, d;	/* Coefficients of plane equation */
@@ -57,11 +55,9 @@ typedef struct m_plane {
 
 #define M_PLANE3_INITIALIZER(a,b,c,d) { a,b,c,d }
 #define M_PLANE_INITIALIZER { NULL, 0 }
-#define MPLANE3(v) ((M_Plane3 *)(v))
-#define MPLANE(v) ((M_Plane *)(v))
 
 /*
- * Triangle in R2/R3
+ * Triangle in R^2 and R^3.
  */
 typedef struct m_triangle2 {
 	M_Line2 a, b, c;
@@ -78,7 +74,7 @@ typedef struct m_triangle3 {
 	  M_LineFromPts3(cx,cy,cz) }
 
 /*
- * Rectangle in R2/R3
+ * Rectangle in R^2 and R^3.
  */
 typedef struct m_rectangle2 {
 	M_Line2 a, b, c, d;
@@ -95,7 +91,7 @@ typedef struct m_rectangle3 {
 	  M_LineFromPts3(cx,cy,cz), M_LineFromPts3(dx,dy,dz) }
 
 /*
- * Simple polygon in R2/R3 (no self-intersections, no holes)
+ * Simple polygon in R^2 and R^3 (no self-intersections, no holes).
  */
 typedef struct m_polygon2 {
 	M_Line2 *s;		/* Sides (must be closed) */
@@ -110,7 +106,7 @@ typedef struct m_polygon3 {
 #define M_POLYGON3_INITIALIZER { NULL, 0 }
 
 /*
- * Generic geometrical structure in R2 and R3
+ * Generic geometrical structure in R^2 and R^3.
  */
 typedef enum m_geom_type {
 	M_NONE,
@@ -142,7 +138,7 @@ typedef struct m_geom3 {
 		M_Vector3   point;
 		M_Line3     line;
 		M_Circle3   circle;
-		M_Sphere3   sphere;
+		M_Sphere    sphere;
 		M_Plane3    plane;
 		M_Polygon3  polygon;
 		M_Triangle3 triangle;
@@ -161,7 +157,7 @@ typedef struct m_geom3 {
 #define g_rectangle g.rectangle
 #endif
 
-/* Sets of any geometric structures in R2 and R3. */
+/* Sets of generic geometric entities. */
 typedef struct m_geom_set2 {
 	M_Geom2 *g;
 	Uint n;
@@ -172,7 +168,7 @@ typedef struct m_geom_set3 {
 } M_GeomSet3;
 #define M_GEOM_SET_EMPTY { NULL, 0 }
 
-/* Sets of points in R2 and R3. */
+/* Sets of points. */
 typedef struct m_point_set2 {
 	M_Vector2 *p;
 	Uint n;
@@ -185,6 +181,7 @@ typedef struct m_point_set3 {
 
 #include <agar/math/m_line.h>
 #include <agar/math/m_circle.h>
+#include <agar/math/m_sphere.h>
 #include <agar/math/m_plane.h>
 #include <agar/math/m_triangle.h>
 #include <agar/math/m_rectangle.h>
@@ -194,7 +191,7 @@ typedef struct m_point_set3 {
 __BEGIN_DECLS
 
 /*
- * Basic routines for manipulating general sets.
+ * Interface to M_GeomSet2 and M_GeomSet3.
  */
 static __inline__ void
 M_GeomSetAdd2(M_GeomSet2 *S, const M_Geom2 *g)
