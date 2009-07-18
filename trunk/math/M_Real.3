@@ -1,0 +1,357 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 18, 2009
+.Dt M_REAL 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Real
+.Nd Agar-Math real number operations
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+Real numbers in Agar-Math are described using the
+.Nm
+type.
+Depending on which precision mode the library was compiled against,
+.Nm
+may expand to
+.Ft float
+(32-bit,
+.Dv SINGLE_PRECISION
+is defined),
+.Ft double
+(64-bit,
+.Dv DOUBLE_PRECISION
+is defined) or
+.Ft long double
+(80-bit or 128-bit,
+.Dv QUAD_PRECISION
+is defined).
+.Pp
+The higher-level structures, such as
+.Xr M_Complex 3 ,
+.Xr M_Vector 3
+and
+.Xr M_Matrix 3 ,
+all store numerical values as
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft M_Real
+.Fn M_ReadReal "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_CopyReal "AG_DataSource *ds" "M_Real *r"
+.Pp
+.Ft void
+.Fn M_WriteReal "AG_DataSource *ds" "M_Real r"
+.Pp
+.nr nS 0
+The
+.Fn M_ReadReal
+function reads a complex number from an
+.Xr AG_DataSource 3
+and returns it.
+The
+.Fn M_CopyReal
+variant returns the number in
+.Fa r .
+.Fn M_WriteReal
+writes a real number to a data source.
+.Sh CONSTANTS
+The library defines the following fundamental constants:
+.Bl -tag -compact -width "M_2_SQRTPI "
+.It Dv M_E
+Euler's constant
+.It Dv M_LOG2E
+log_2 e
+.It Dv M_LOG10E
+log_10 e
+.It Dv M_LN2
+log_e 2
+.It Dv M_LN10
+log_e 10
+.It Dv M_PI
+pi
+.It Dv M_PI_2
+pi/2
+.It Dv M_PI_4
+pi/4
+.It Dv M_1_PI
+1/pi
+.It Dv M_2_PI
+2/pi
+.It Dv M_2_SQRTPI
+2/sqrt(pi)
+.It Dv M_SQRT2
+sqrt(2)
+.It Dv M_SQRT1_2
+1/sqrt(2)
+.El
+.Pp
+The following constants describe the limitations of the memory format
+for the current precision mode:
+.Bl -tag -compact -width "M_PRECISION_2 "
+.It Dv M_EXPMIN
+Minimum exponent.
+.It Dv M_EXPMAX
+Maximum exponent.
+.It Dv M_PRECISION
+Precision of the significand in bits.
+.It Dv M_PRECISION_2
+M_PRECISION/2 (rounded up).
+.It Dv M_NUMMAX
+Highest representible number.
+.It Dv M_MACHEP
+Machine epsilon, or unit roundoff.
+.It Dv M_TINYVAL
+A very small number, close to
+.Dv M_MACHEP .
+.It Dv M_HUGEVAL
+A very large number.
+.It Dv M_INFINITY
+Representation of infinity.
+.El
+.Sh STANDARD MATH ROUTINES
+.nr nS 1
+.Ft M_Real
+.Fn M_Log "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Exp "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_ExpM1 "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Sqrt "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Cbrt "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Sin "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Cos "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Tan "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Sinh "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Cosh "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Tanh "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Cot "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Sec "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Csc "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Asin "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Acos "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Atan "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Asinh "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Acosh "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Atanh "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Atan2 "M_Real y" "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Hypot2 "M_Real x" "M_Real y"
+.Pp
+.Ft M_Real
+.Fn M_Fabs "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Sgn "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Pow "M_Real x" "M_Real y"
+.Pp
+.Ft M_Real
+.Fn M_Frexp "M_Real x" "int *exp"
+.Pp
+.Ft M_Real
+.Fn M_Ldexp "M_Real x" "int *exp"
+.Pp
+.Ft M_Real
+.Fn M_Ceil "M_Real x"
+.Pp
+.Ft M_Real
+.Fn M_Floor "M_Real x"
+.Pp
+.Ft int
+.Fn M_IsNaN "M_Real x"
+.Pp
+.Ft int
+.Fn M_IsInf "M_Real x"
+.Pp
+.nr nS 0
+.Fn M_Log
+returns the natural logarithm of
+.Fa x .
+.Pp
+.Fn M_Exp
+returns the value of e, raised to the power of
+.Fa x .
+.Pp
+The
+.Fn M_ExpM1
+routine returns the equivalent of M_Exp(x)-1.
+Numerical roundoff error is prevented in the case of
+.Fa x
+being near zero.
+.Pp
+.Fn M_Sqrt
+returns the square root of
+.Fa x .
+.Fn M_Cbrt
+returns the cube root of
+.Fa x .
+.Pp
+.Fn M_Sin ,
+.Fn M_Cos
+and
+.Fn M_Tan
+return the sine, cosine and tangent of
+.Fa x
+(given in radians).
+.Fn M_Sinh ,
+.Fn M_Cosh ,
+.Fn M_Tanh
+return the hyperbolic sine, cosine and tangent of
+.Fa x .
+.Pp
+.Fn M_Cot ,
+.Fn M_Sec
+and
+.Fn M_Csc
+return the cotangent, secant and cosecant of
+.Fa x .
+.Pp
+.Fn M_Asin ,
+.Fn M_Acos
+and
+.Fn M_Atan
+return the arc sine, arc cosine and arc tangent of
+.Fa x .
+.Fn M_Asinh ,
+.Fn M_Acosh
+and
+.Fn M_Atanh
+return the hyperbolic arc sine, arc cosine and arc tangent of
+.Fa x .
+.Pp
+.Fn M_Atan2
+returns the equivalent of Atan(y/x), except that the sign of the result is
+determined from the signs of both arguments.
+.Pp
+.Fn M_Hypot2
+computes the length of the hypotenuse of a right-angle triangle with the
+right-angle side lengths of
+.Fa x
+and
+.Fa y .
+.Pp
+.Fn M_Fabs
+returns the absolute value of
+.Fa x .
+.Pp
+The sign function
+.Fn M_Sgn
+returns +1.0 if the sign of
+.Fa x
+is positive or -1.0 if the sign is negative.
+.Pp
+.Fn M_Pow
+returns
+.Fa x
+raised to the power of
+.Fa y .
+.Pp
+.Fn M_Frexp
+returns the normalized fraction for
+.Fa x ,
+and writes the exponent to
+.Fa exp .
+.Pp
+.Fn M_Ldexp
+returns the result of multiplication of
+.Fa x
+by 2 to the power
+.Fa exp .
+.Pp
+.Fn M_Ceil
+rounds
+.Fa x
+up to the nearest integer.
+.Fn M_Floor
+rounds down to the nearest integer.
+.Pp
+.Fn M_IsNan
+evaluates to 1 if
+.Fa x
+is "not a number".
+.Pp
+.Fn M_IsInf
+evaluates to 1 if
+.Fa x
+represents infinity.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3 ,
+.Xr M_Complex 3 ,
+.Xr M_Geometry 3 ,
+.Xr M_Matrix 3 ,
+.Xr M_Vector 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.4.
