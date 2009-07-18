@@ -15,16 +15,16 @@ int
 M_InvertGaussJordanv_FPU(void *pA, void *pb)
 {
 	M_MatrixFPU *A=pA, *b=pb;
-	M_IntVector *iCol, *iRow, *iPivot;
+	M_VectorZ *iCol, *iRow, *iPivot;
 	int col = 0, row = 0;
 	int i, j, k, l, m;
 	M_Real big, dum, pivinv, tmp;
 
 	M_ASSERT_SQUARE_MATRIX(A, -1);
-	iRow = M_IntVectorNew(MCOLS(A));
-	iCol = M_IntVectorNew(MCOLS(A));
-	iPivot = M_IntVectorNew(MCOLS(A));
-	M_IntVectorSet(iPivot, 0);
+	iRow = M_VectorNewZ(MCOLS(A));
+	iCol = M_VectorNewZ(MCOLS(A));
+	iPivot = M_VectorNewZ(MCOLS(A));
+	M_VectorSetZ(iPivot, 0);
 
 	for (i = 0; i < MCOLS(A); i++) {
 		big = 0.0;
@@ -91,14 +91,14 @@ M_InvertGaussJordanv_FPU(void *pA, void *pb)
 		}
 	}
 
-	M_IntVectorFree(iRow);
-	M_IntVectorFree(iCol);
-	M_IntVectorFree(iPivot);
+	M_VectorFreeZ(iRow);
+	M_VectorFreeZ(iCol);
+	M_VectorFreeZ(iPivot);
 	return (0);
 fail:
-	M_IntVectorFree(iRow);
-	M_IntVectorFree(iCol);
-	M_IntVectorFree(iPivot);
+	M_VectorFreeZ(iRow);
+	M_VectorFreeZ(iCol);
+	M_VectorFreeZ(iPivot);
 	return (-1);
 }
 

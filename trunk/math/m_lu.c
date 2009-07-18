@@ -22,7 +22,7 @@ M_FactorizeLU_FPU(void *pA)
 
 	/* initialize LU structure if not previously used */
 	if(Aorig->ivec == NULL)
-		Aorig->ivec = M_IntVectorNew(MCOLS(Aorig));
+		Aorig->ivec = M_VectorNewZ(MCOLS(Aorig));
 
 	if(Aorig->LU == NULL)
 		Aorig->LU = M_New(MROWS(Aorig), MCOLS(Aorig));
@@ -109,7 +109,7 @@ M_BacksubstLU_FPU(void *pA, void *pb)
 	const M_MatrixFPU *A=pA;
 	M_MatrixFPU *LU = A->LU;
 	M_VectorFPU *b=pb;
-	M_IntVector *ivec = A->ivec;
+	M_VectorZ *ivec = A->ivec;
 	M_Real sum;
 	int i, ip, j;
 	int ii = 0;
