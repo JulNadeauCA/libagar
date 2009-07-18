@@ -1,0 +1,271 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 16, 2009
+.Dt M_LINE 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Line
+.Nd Agar-Math line segment / half-line structure
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Ft M_Line2
+structure describes a line segment or half-line in R^2 in terms of an
+origin point
+.Va p ,
+a direction
+vector
+.Va d
+(of unit length), and a real length
+.Fa t .
+The length
+.Fa t
+can take on the value
+.Dv M_INFINITY
+in order to express a half-line.
+The structure is defined as:
+.Bd -literal
+typedef struct m_line2 {
+	M_Vector2 p;
+	M_Vector2 d;
+	M_Real t;
+} M_Line2;
+.Ed
+.Pp
+Similarly,
+.Ft M_Line3
+describes a line segment or half-line in R^3:
+.Bd -literal
+typedef struct m_line3 {
+	M_Vector3 p;
+	M_Vector3 d;
+	M_Real t;
+} M_Line3;
+.Ed
+.Sh INITIALIZATION
+.nr nS 1
+.Ft M_Line2
+.Fn M_LineFromPtDir2 "M_Vector2 p" "M_Vector2 d" "M_Real t"
+.Pp
+.Ft M_Line3
+.Fn M_LineFromPtDir3 "M_Vector3 p" "M_Vector3 d" "M_Real t"
+.Pp
+.Ft M_Line2
+.Fn M_LineFromPts2 "M_Vector2 p1" "M_Vector2 p2"
+.Pp
+.Ft M_Line3
+.Fn M_LineFromPts3 "M_Vector3 p1" "M_Vector3 p2"
+.Pp
+.Ft M_Line2
+.Fn M_LineParallel2 "M_Line2 L" "M_Real offset"
+.Pp
+.Ft M_Line3
+.Fn M_LineParallel3 "M_Line3 L" "M_Real offset"
+.Pp
+.Ft M_Line2
+.Fn M_LineProject2 "M_Line3 L"
+.Pp
+.Ft M_Line3
+.Fn M_LineProject3 "M_Line2 L"
+.Pp
+.Ft M_Line2
+.Fn M_LineRead2 "AG_DataSource *ds"
+.Pp
+.Ft M_Line3
+.Fn M_LineRead3 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_LineWrite2 "AG_DataSource *ds" "M_Line2 *L"
+.Pp
+.Ft void
+.Fn M_LineWrite3 "AG_DataSource *ds" "M_Line3 *L"
+.Pp
+.Ft M_Line2
+.Fn M_LINE2_INITIALIZER "M_Real px" "M_Real py" "M_Real nx" "M_Real ny" "M_Real t"
+.Pp
+.Ft M_Line3
+.Fn M_LINE3_INITIALIZER "M_Real px" "M_Real py" "M_Real pz" "M_Real nx" "M_Real ny" "M_Real nz" "M_Real t"
+.Pp
+.nr nS 0
+The functions
+.Fn M_LineFromPtDir2
+and
+.Fn M_LineFromPtDir3
+return an
+.Ft M_Line2
+or
+.Ft M_Line3
+describing a line segment a specified origin point
+.Fa p ,
+direction vector
+.Fa d
+(of unit-length) and length
+.Fa t .
+The endpoints of the line will be
+.Fa p
+and (p + d*t).
+.Pp
+.Fn M_LineFromPts2
+and
+.Fn M_LineFromPts3
+return a line segment from two specified endpoints
+.Fa p1
+and
+.Fa p2 .
+.Pp
+.Fn M_LineParallel2
+and
+.Fn M_LineParallel3
+return a line parallel to
+.Fa L ,
+with the specified offset amount.
+The direction of the offset is determined by the handedness of
+.Fa L .
+.Pp
+The
+.Fn M_LineRead[23]
+and
+.Fn M_LineWrite[23]
+functions read or write a line structure from/to an
+.Xr AG_DataSource 3 .
+.Pp
+The macros
+.Fn M_LINE2_INITIALIZER
+and
+.Fn M_LINE3_INITIALIZER
+expand to static initializers for
+.Ft M_Line2
+and
+.Ft M_Line3 ,
+respectively.
+.Sh COMPUTATIONS
+.nr nS 1
+.Ft void
+.Fn M_LineToPts2 "M_Line2 L" "M_Vector2 *p1" "M_Vector2 *p2"
+.Pp
+.Ft void
+.Fn M_LineToPts3 "M_Line3 L" "M_Vector3 *p1" "M_Vector3 *p2"
+.Pp
+.Ft void
+.Fn M_LineIsRay2 "M_Line2 L"
+.Pp
+.Ft void
+.Fn M_LineIsRay3 "M_Line3 L"
+.Pp
+.Ft M_Real
+.Fn M_LinePointSide2 "M_Line2 L" "M_Vector2 p"
+.Pp
+.Ft M_Real
+.Fn M_LinePointDistance2 "M_Line2 L" "M_Vector2 p"
+.Pp
+.Ft M_Real
+.Fn M_LinePointDistance3 "M_Line3 L" "M_Vector3 p"
+.Pp
+.Ft M_Real
+.Fn M_LineLineAngle2 "M_Line2 L1" "M_Line2 L2"
+.Pp
+.Ft M_Real
+.Fn M_LineLineAngle3 "M_Line3 L1" "M_Line3 L2"
+.Pp
+.Ft M_GeomSet2
+.Fn M_IntersectLineLine2 "M_Line2 L1" "M_Line2 L2"
+.Pp
+.nr nS 0
+The
+.Fn M_LineToPts2
+and
+.Fn M_LineToPts3
+routines return the two endpoints of line
+.Fa L
+into
+.Fa p1
+and
+.Fa p2 .
+.Pp
+.Fn M_LineIsRay2
+and
+.Fn M_LineIsRay3
+evaluate to 1 of the line is defined as a half-line.
+.Pp
+.Fn M_LinePointSide2
+tests whether point
+.Fa p
+lies on the left (<0), is coincident (==0), or is on the right (>0)
+of the line
+.Fa L .
+The direction is determined by the handedness of the line.
+.Pp
+The
+.Fn M_LinePointDistance2
+and
+.Fn M_LinePointDistance3
+routines compute the minimal distance between a line
+.Fa L
+and a point
+.Fa p .
+.Pp
+.Fn M_LineLineAngle2
+and
+.Fn M_LineLineAngle3
+return the counterclockwise angle (in radians) between
+.Fa L1
+and
+.Fa L2 .
+The angle is computed as the arc cosine of the dot product of the
+direction vectors of the two lines.
+.Pp
+.Fn M_IntersectLineLine2
+computes the intersection of two lines in R^2 and returns an
+.Xr M_GeomSet2 3
+describing the intersection.
+The returned set may be:
+.Bl -bullet -compact
+.It
+One point.
+.It
+One line (lines are colinear).
+.It
+The empty set.
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3 ,
+.Xr M_Geometry 3 ,
+.Xr M_Circle 3 ,
+.Xr M_Sphere 3 ,
+.Xr M_Plane 3 ,
+.Xr M_Triangle 3 ,
+.Xr M_Rectangle 3 ,
+.Xr M_Polygon 3 ,
+.Xr M_Vector 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.4.

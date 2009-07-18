@@ -1,0 +1,146 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 17, 2009
+.Dt M_RECTANGLE 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Rectangle
+.Nd Agar-Math rectangle structure
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Ft M_Rectangle2
+structure describes a rectangle in R^2 in terms of four lines:
+.Bd -literal
+typedef struct m_rectangle2 {
+	M_Line2 a, b, c, d;
+} M_Rectangle2;
+.Ed
+.Pp
+Similarly,
+.Ft M_Rectangle3
+describes a rectangle in R^3:
+.Bd -literal
+typedef struct m_rectangle3 {
+	M_Line3 a, b, c, d;
+} M_Rectangle3;
+.Ed
+.Sh INITIALIZATION
+.nr nS 1
+.Ft M_Rectangle2
+.Fn M_RectangleFromLines2 "M_Line2 L1" "M_Line2 L2"
+.Pp
+.Ft M_Rectangle3
+.Fn M_RectangleFromLines3 "M_Line2 L1" "M_Line2 L2" "M_Line2 L3"
+.Pp
+.Ft M_Rectangle2
+.Fn M_RectangleFromPts2 "M_Vector2 a" "M_Vector2 b"
+.Pp
+.Ft M_Rectangle3
+.Fn M_RectangleFromPts3 "M_Vector3 a" "M_Vector3 b" "M_Vector3 c"
+.Pp
+.Ft M_Rectangle2
+.Fn M_RectangleRead2 "AG_DataSource *ds"
+.Pp
+.Ft M_Rectangle3
+.Fn M_RectangleRead3 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_RectangleWrite2 "AG_DataSource *ds" "M_Rectangle2 *R"
+.Pp
+.Ft void
+.Fn M_RectangleWrite3 "AG_DataSource *ds" "M_Rectangle3 *R"
+.Pp
+.Ft M_Rectangle2
+.Fn M_RECTANGLE2_INITIALIZER "M_Real ax" "M_Real ay" "M_Real bx" "M_Real by" "M_Real cx" "M_Real cy" "M_Real dx" "M_Real dy"
+.Pp
+.Ft M_Rectangle3
+.Fn M_RECTANGLE3_INITIALIZER "M_Real ax" "M_Real ay" "M_Real az" "M_Real bx" "M_Real by" "M_Real bz" "M_Real cx" "M_Real cy" "M_Real cz" "M_Real dx" "M_Real dy" "M_Real dz"
+.Pp
+.nr nS 0
+The functions
+.Fn M_RectangleFromLines2
+and
+.Fn M_RectangleFromLines3
+return an
+.Ft M_Rectangle2
+or
+.Ft M_Rectangle3
+describing a rectangle in terms of two or three lines.
+.Pp
+.Fn M_RectangleFromPts2
+and
+.Fn M_RectangleFromPts3
+return a rectangle in terms of two or three points.
+.Pp
+The
+.Fn M_RectangleRead[23]
+and
+.Fn M_RectangleWrite[23]
+functions read or write a rectangle structure from/to an
+.Xr AG_DataSource 3 .
+.Pp
+The macros
+.Fn M_RECTANGLE2_INITIALIZER
+and
+.Fn M_RECTANGLE3_INITIALIZER
+expand to static initializers for
+.Ft M_Rectangle2
+and
+.Ft M_Rectangle3 ,
+respectively.
+.Sh COMPUTATIONS
+.nr nS 1
+.Ft int
+.Fn M_PointInRectangle2 "M_Rectangle2 R" "M_Vector2 p"
+.Pp
+.nr nS 0
+The
+.Fn M_PointInRectangle2
+routine tests whether point
+.Fa p
+lies inside the rectangle
+.Fa R
+and returns 1 if it does, otherwise 0.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3 ,
+.Xr M_Geometry 3 ,
+.Xr M_Circle 3 ,
+.Xr M_Sphere 3 ,
+.Xr M_Plane 3 ,
+.Xr M_Triangle 3 ,
+.Xr M_Rectangle 3 ,
+.Xr M_Polygon 3 ,
+.Xr M_Vector 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.4.

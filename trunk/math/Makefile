@@ -18,7 +18,7 @@ SRCS=	m_math.c m_complex.c m_quaternion.c \
 	m_gui.c m_plotter.c m_matview.c \
 	m_line.c m_circle.c m_triangle.c m_rectangle.c m_polygon.c m_plane.c \
 	m_coordinates.c m_heapsort.c m_mergesort.c m_qsort.c m_radixsort.c \
-	m_point_set.c m_color.c \
+	m_point_set.c m_color.c m_sphere.c \
 	m_matrix_sparse.c \
 	m_sparse_allocate.c \
 	m_sparse_build.c \
@@ -28,7 +28,8 @@ SRCS=	m_math.c m_complex.c m_quaternion.c \
 	m_sparse_solve.c \
 	m_sparse_utils.c
 
-MAN3=	M_Matrix.3
+MAN3=	M_Matrix.3 M_Circle.3 M_Color.3 M_Complex.3 M_Geometry.3 M_Line.3 \
+	M_Plane.3 M_Polygon.3 M_Rectangle.3 M_Sphere.3 M_Triangle.3
 
 CFLAGS+=-D_AGAR_MATH_INTERNAL ${SDL_CFLAGS} ${PTHREADS_XOPEN_CFLAGS} \
 	${ALTIVEC_CFLAGS} ${SSE_CFLAGS} ${SSE2_CFLAGS} ${SSE3_CFLAGS} \

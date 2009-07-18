@@ -1,0 +1,122 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 17, 2009
+.Dt M_SPHERE 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Circle
+.Nd Agar-Math sphere structure
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Ft M_Sphere
+structure describes a sphere in terms of an origin point
+.Va p
+and a radius
+.Va r :
+.Bd -literal
+typedef struct m_sphere {
+	M_Vector3 p;
+	M_Real r;
+} M_Sphere;
+.Ed
+.Sh INITIALIZATION
+.nr nS 1
+.Ft M_Sphere
+.Fn M_SphereFromPt "M_Vector p" "M_Real r"
+.Pp
+.Ft M_Sphere
+.Fn M_SphereRead "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_SphereWrite "AG_DataSource *ds" "M_Sphere *S"
+.Pp
+.Ft M_Sphere
+.Fn M_SPHERE_INITIALIZER "M_Real x" "M_Real y" "M_Real z" "M_Real r"
+.Pp
+.nr nS 0
+The
+.Fn M_SphereFromPt
+function returns a
+.Ft M_Sphere
+describing a sphere of radius
+.Fa r
+centered at point
+.Ft p .
+.Pp
+The
+.Fn M_SphereRead
+and
+.Fn M_SphereWrite
+functions read or write a sphere structure from/to an
+.Xr AG_DataSource 3 .
+.Pp
+The
+.Fn M_SPHERE_INITIALIZER
+macro expands to a static initializer for
+.Ft M_Sphere .
+.Sh COMPUTATIONS
+.nr nS 1
+.Ft M_Real
+.Fn M_SpherePointDistance "M_Sphere S" "M_Vector3 p"
+.Pp
+.Ft M_Real
+.Fn M_SphereSurfaceArea "M_Sphere S"
+.Pp
+.Ft M_Real
+.Fn M_SphereVolume "M_Sphere S"
+.Pp
+.nr nS 0
+The
+.Fn M_SpherePointDistance
+routine computes the minimal distance between a sphere
+.Fa S
+and a point
+.Fa p .
+.Pp
+.Fn M_SphereSurfaceArea
+returns the surface area of the sphere.
+.Fn M_SphereVolume
+returns the volume of the interior of the sphere.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3 ,
+.Xr M_Geometry 3 ,
+.Xr M_Circle 3 ,
+.Xr M_Sphere 3 ,
+.Xr M_Plane 3 ,
+.Xr M_Triangle 3 ,
+.Xr M_Rectangle 3 ,
+.Xr M_Polygon 3 ,
+.Xr M_Vector 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.4.
