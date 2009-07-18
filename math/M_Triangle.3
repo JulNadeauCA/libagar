@@ -1,0 +1,154 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 17, 2009
+.Dt M_TRIANGLE 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Triangle
+.Nd Agar-Math triangle structure
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Ft M_Triangle2
+structure describes a triangle in R^2 in terms of three lines:
+.Bd -literal
+typedef struct m_triangle2 {
+	M_Line2 a, b, c;
+} M_Triangle2;
+.Ed
+.Pp
+Similarly,
+.Ft M_Triangle3
+describes a triangle in R^3:
+.Bd -literal
+typedef struct m_triangle3 {
+	M_Line3 a, b, c;
+} M_Triangle3;
+.Ed
+.Sh INITIALIZATION
+.nr nS 1
+.Ft M_Triangle2
+.Fn M_TriangleFromLines2 "M_Line2 L1" "M_Line2 L2" "M_Line2 L3"
+.Pp
+.Ft M_Triangle3
+.Fn M_TriangleFromLines3 "M_Line3 L1" "M_Line3 L2" "M_Line3 L3"
+.Pp
+.Ft M_Triangle2
+.Fn M_TriangleFromPts2 "M_Vector2 a" "M_Vector2 b" "M_Vector2 c"
+.Pp
+.Ft M_Triangle3
+.Fn M_TriangleFromPts3 "M_Vector3 a" "M_Vector3 b" "M_Vector3 c"
+.Pp
+.Ft M_Triangle2
+.Fn M_TriangleRead2 "AG_DataSource *ds"
+.Pp
+.Ft M_Triangle3
+.Fn M_TriangleRead3 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_TriangleWrite2 "AG_DataSource *ds" "M_Triangle2 *T"
+.Pp
+.Ft void
+.Fn M_TriangleWrite3 "AG_DataSource *ds" "M_Triangle3 *T"
+.Pp
+.Ft M_Triangle2
+.Fn M_TRIANGLE2_INITIALIZER "M_Real ax" "M_Real ay" "M_Real bx" "M_Real by" "M_Real cx" "M_Real cy"
+.Pp
+.Ft M_Triangle3
+.Fn M_TRIANGLE3_INITIALIZER "M_Real ax" "M_Real ay" "M_Real az" "M_Real bx" "M_Real by" "M_Real bz" "M_Real cx" "M_Real cy" "M_Real cz"
+.Pp
+.nr nS 0
+The functions
+.Fn M_TriangleFromLines2
+and
+.Fn M_TriangleFromLines3
+return an
+.Ft M_Triangle2
+or
+.Ft M_Triangle3
+describing a triangle in terms of three lines
+.Fa L1 ,
+.Fa L2
+and
+.Fa L3 .
+The three lines must be non-colinear and their endpoints must coincide.
+.Pp
+.Fn M_TriangleFromPts2
+and
+.Fn M_TriangleFromPts3
+return a triangle in terms of three (non-colinear) points
+.Fa a ,
+.Fa b ,
+.Fa c .
+.Pp
+The
+.Fn M_TriangleRead[23]
+and
+.Fn M_TriangleWrite[23]
+functions read or write a triangle structure from/to an
+.Xr AG_DataSource 3 .
+.Pp
+The macros
+.Fn M_TRIANGLE2_INITIALIZER
+and
+.Fn M_TRIANGLE3_INITIALIZER
+expand to static initializers for
+.Ft M_Triangle2
+and
+.Ft M_Triangle3 ,
+respectively.
+.Sh COMPUTATIONS
+.nr nS 1
+.Ft int
+.Fn M_PointInTriangle2 "M_Triangle2 T" "M_Vector2 p"
+.Pp
+.nr nS 0
+The
+.Fn M_PointInTriangle2
+routine tests (using barycentric coordinates) whether point
+.Fa p
+lies within the triangle
+.Fa T
+and returns 1 if it does, otherwise 0.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3 ,
+.Xr M_Geometry 3 ,
+.Xr M_Circle 3 ,
+.Xr M_Sphere 3 ,
+.Xr M_Plane 3 ,
+.Xr M_Triangle 3 ,
+.Xr M_Rectangle 3 ,
+.Xr M_Polygon 3 ,
+.Xr M_Vector 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.4.

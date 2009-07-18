@@ -1,0 +1,173 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 14, 2009
+.Dt M_GEOMETRY 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Geometry
+.Nd Agar-Math geometrical structures
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The Agar-Math library implements a number of algorithms and operations on
+related to geometrical structures.
+The following basic structures are defined, see their respective manual
+pages for more details:
+.Pp
+.Bl -tag -width "M_Rectangle(3) " -compact
+.It Xr M_Line 3
+Line segment or ray in R^2 (M_Line2) or R^3 (M_Line3).
+.It Xr M_Circle 3
+Circle in R^2 (M_Circle2) or R^3 (M_Circle3).
+.It Xr M_Sphere 3
+Sphere in R^3 (M_Sphere3).
+.It Xr M_Plane 3
+Plane in R^n (M_Plane) or R^3 (M_Plane3).
+.It Xr M_Triangle 3
+Triangle in R^2 (M_Triangle2) or R^3 (M_Triangle3).
+.It Xr M_Rectangle 3
+Rectangle in R^2 (M_Rectangle2) or R^3 (M_Rectangle3).
+.It Xr M_Polygon 3
+Polygon in R^2 (M_Polygon2) or R^3 (M_Polygon3).
+.El
+.Sh GENERIC GEOMETRIC ENTITIES
+A number of routines (e.g., computation of intersections) return sets of
+zero or more geometrical structures of different types, depending on the
+.Pp
+The
+.Ft M_Geom2
+structure defines a geometrical entity in R^2:
+.Bd -literal
+typedef struct m_geom2 {
+	M_GeomType type;
+	union {
+		M_Vector2    point;
+		M_Line2      line;
+		M_Circle2    circle;
+		M_Polygon2   polygon;
+		M_Triangle2  triangle;
+		M_Rectangle2 rectangle;
+	} g;
+} M_Geom2;
+.Ed
+.Pp
+Similarly,
+.Ft M_Geom3
+defines an entity in R^3:
+.Bd -literal
+typedef struct m_geom3 {
+	M_GeomType type;
+	union {
+		M_Vector3   point;
+		M_Line3     line;
+		M_Circle3   circle;
+		M_Sphere3   sphere;
+		M_Plane3    plane;
+		M_Polygon3  polygon;
+		M_Triangle3 triangle;
+		M_Rectangle3 rectangle;
+	} g;
+} M_Geom3;
+.Ed
+.Pp
+The
+.Va type
+field can take on the values
+.Dv M_NONE ,
+.Dv M_POINT
+for an
+.Xr M_Point 3 ,
+.Dv M_LINE
+for an
+.Xr M_Line 3 ,
+and so on.
+.Sh GENERIC GEOMETRIC ENTITIES: SETS
+Sets of generic geometric entities in R^2 are described by the structure:
+.Bd -literal
+typedef struct m_geom_set2 {
+	M_Geom2 *g;
+	Uint n;
+} M_GeomSet2;
+.Ed
+Similarly for R^3:
+.Bd -literal
+typedef struct m_geom_set3 {
+	M_Geom3 *g;
+	Uint n;
+} M_GeomSet3;
+.Ed
+.Pp
+The following routines allow the manipulation of these sets.
+.Pp
+.nr nS 1
+.Ft M_GeomSet2
+.Fn M_GEOM_SET_EMPTY "void"
+.Pp
+.Ft M_GeomSet3
+.Fn M_GEOM_SET_EMPTY "void"
+.Pp
+.Ft void
+.Fn M_GeomSetAdd2 "M_GeomSet2 *S" "const M_Geom2 *g"
+.Pp
+.Ft void
+.Fn M_GeomSetAdd3 "M_GeomSet3 *S" "const M_Geom3 *g"
+.Pp
+.Ft void
+.Fn M_GeomSetFree2 "M_GeomSet2 *S"
+.Pp
+.Ft void
+.Fn M_GeomSetFree3 "M_GeomSet3 *S"
+.Pp
+.nr nS 0
+The
+.Fn M_GEOM_SET_EMPTY
+macro is provided as a static initializer for
+.Ft M_GeomSet2
+and
+.Ft M_GeomSet3 .
+.Pp
+The
+.Fn M_GeomSetAdd2
+and
+.Fn M_GeomSetAdd3
+functions insert a copy of the entity
+.Fa g
+into the geometric set
+.Fa S .
+.Pp
+.Fn M_GeomSetFree2
+and
+.Fn M_GeomSetFree3
+release the resources allocated by a geometric set.
+.Sh SEE ALSO
+.Xr AG_Intro 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.4.

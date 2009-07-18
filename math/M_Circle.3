@@ -1,0 +1,170 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 13, 2009
+.Dt M_CIRCLE 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Circle
+.Nd Agar-Math circle structure
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Ft M_Circle2
+structure describes a circle in R^2 in terms of an origin point
+.Va p
+and radius
+.Va r :
+.Bd -literal
+typedef struct m_circle2 {
+	M_Vector2 p;
+	M_Real r;
+} M_Circle2;
+.Ed
+.Pp
+Similarly,
+.Ft M_Circle3
+describes a circle in R^3:
+.Bd -literal
+typedef struct m_circle3 {
+	M_Vector3 p;
+	M_Real r;
+} M_Circle3;
+.Ed
+.Sh INITIALIZATION
+.nr nS 1
+.Ft M_Circle2
+.Fn M_CircleFromPt "M_Vector2 p" "M_Real r"
+.Pp
+.Ft M_Circle2
+.Fn M_CircleRead2 "AG_DataSource *ds"
+.Pp
+.Ft M_Circle3
+.Fn M_CircleRead3 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_CircleWrite2 "AG_DataSource *ds" "M_Circle2 *C"
+.Pp
+.Ft void
+.Fn M_CircleWrite3 "AG_DataSource *ds" "M_Circle3 *C"
+.Pp
+.Ft M_Circle2
+.Fn M_CIRCLE2_INITIALIZER "M_Real x" "M_Real y" "M_Real r"
+.Pp
+.Ft M_Circle3
+.Fn M_CIRCLE3_INITIALIZER "M_Real x" "M_Real y" "M_Real z" "M_Real r"
+.Pp
+.nr nS 0
+The
+.Fn M_CircleFromPt
+function returns a
+.Ft M_Circle2
+describing a circle of radius
+.Fa r
+centered at point
+.Ft p .
+.Pp
+The
+.Fn M_CircleRead[23]
+and
+.Fn M_CircleWrite[23]
+functions read or write a circle structure from/to an
+.Xr AG_DataSource 3 .
+.Pp
+The macros
+.Fn M_CIRCLE2_INITIALIZER
+and
+.Fn M_CIRCLE3_INITIALIZER
+expand to static initializers for
+.Ft M_Circle2
+and
+.Ft M_Circle3 ,
+respectively.
+.Sh COMPUTATIONS
+.nr nS 1
+.Ft M_Real
+.Fn M_CirclePointDistance2 "M_Circle2 C" "M_Vector2 p"
+.Pp
+.Ft M_GeomSet2
+.Fn M_IntersectCircleCircle2 "M_Circle2 C1" "M_Circle2 C2"
+.Pp
+.Ft M_GeomSet2
+.Fn M_IntersectCircleLine2 "M_Circle2 C" "M_Line2 L"
+.Pp
+.nr nS 0
+The
+.Fn M_CirclePointDistance2
+routine computes the minimal distance between a circle
+.Fa C
+and a point
+.Fa p .
+.Pp
+.Fn M_IntersectCircleCircle2
+computes the intersection of two circles in R^2 and returns an
+.Xr M_GeomSet2 3
+describing the intersection.
+The returned set may be:
+.Bl -bullet -compact
+.It
+Two points.
+.It
+One point (circles are tangent up to machine precision).
+.It
+A circle (circles are equivalent).
+.It
+The empty set.
+.El
+.Pp
+The
+.Fn M_IntersectCircleCircle2
+function computes the intersection of a circle and a line in R^2.
+The returned set may be:
+.Bl -bullet -compact
+.It
+Two points.
+.It
+One point (line is tangent up to machine precision).
+.It
+The empty set.
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3 ,
+.Xr M_Geometry 3 ,
+.Xr M_Circle 3 ,
+.Xr M_Sphere 3 ,
+.Xr M_Plane 3 ,
+.Xr M_Triangle 3 ,
+.Xr M_Rectangle 3 ,
+.Xr M_Polygon 3 ,
+.Xr M_Vector 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.4.
