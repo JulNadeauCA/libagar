@@ -106,3 +106,10 @@ M_RectangleFromPts3(M_Vector3 a, M_Vector3 b, M_Vector3 c)
 	R.d = M_LineFromPts3(d, a);
 	return (R);
 }
+
+int
+M_PointInRectangle2(M_Rectangle2 R, M_Vector2 p)
+{
+	return (p.x >= R.a.x && p.y >= R.a.y &&
+	        p.x <= R.c.x && p.y <= R.c.y);
+}

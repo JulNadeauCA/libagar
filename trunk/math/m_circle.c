@@ -61,7 +61,7 @@ M_CircleWrite3(AG_DataSource *ds, M_Circle3 *C)
 	M_WriteReal(ds, C->r);
 }
 
-/* Create a line from a point, direction vector and length. */
+/* Create a circle from a point and radius. */
 M_Circle2
 M_CircleFromPt(M_Vector2 p, M_Real r)
 {
