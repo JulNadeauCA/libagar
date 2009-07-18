@@ -10,7 +10,7 @@ LIB_GUID=	"ba35a553-bd88-4e5e-8c4b-d17f60ae7439"
 LIB_LINKS=	${CORE_LINKS_STATIC} ${GUI_LINKS_STATIC}
 
 SRCS=	m_math.c m_complex.c m_quaternion.c \
-	m_int_vector.c m_vector.c m_vector_fpu.c \
+	m_vector.c m_vectorz.c m_vector_fpu.c \
 	m_vector2_fpu.c m_vector3_fpu.c m_vector4_fpu.c \
 	m_vector3_sse.c m_vector3_sse3.c \
 	m_matrix.c m_matrix_fpu.c m_matrix44_fpu.c m_matrix44_sse.c \
