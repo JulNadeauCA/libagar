@@ -110,6 +110,6 @@ M_RectangleFromPts3(M_Vector3 a, M_Vector3 b, M_Vector3 c)
 int
 M_PointInRectangle2(M_Rectangle2 R, M_Vector2 p)
 {
-	return (p.x >= R.a.x && p.y >= R.a.y &&
-	        p.x <= R.c.x && p.y <= R.c.y);
+	return (p.x >= R.a.p.x && p.y >= R.a.p.y &&
+	        p.x <= R.c.p.x && p.y <= R.c.p.y);
 }
