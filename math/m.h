@@ -6,7 +6,7 @@
 #include <agar/math/begin.h>
 
 #include <agar/math/m_math.h>
-#include <agar/math/m_int_vector.h>
+#include <agar/math/m_vectorz.h>
 #include <agar/math/m_complex.h>
 #include <agar/math/m_vector.h>
 #include <agar/math/m_matrix.h>
