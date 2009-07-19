@@ -1,0 +1,281 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 19, 2009
+.Dt M_QUATERNION 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Quaternion
+.Nd Agar-Math quaternion
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+structure describes a quaternion.
+Quaternions are a non-commutative extension of complex numbers (see
+.Xr M_Complex 3 ) .
+Quaternions provide a convenient way of representing and concatenating
+rotations.
+The structure is defined as:
+.Bd -literal
+typedef struct m_quaternion {
+	M_Real w, x, y, z;
+} M_Quaternion;
+.Ed
+.Sh INITIALIZATION
+.nr nS 1
+.Ft M_Quaternion
+.Fn M_QuaternionMultIdentity "void"
+.Pp
+.Ft M_Quaternion
+.Fn M_QuaternionAddIdentity "void"
+.Pp
+.Ft M_Quaternion
+.Fn M_ReadQuaternion "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_WriteQuaternion "AG_DataSource *ds" "M_Quaternion q"
+.Pp
+.nr nS 0
+The
+.Fn M_QuaternionMultIdentity
+routine returns the multiplicative identity (1,0,0,0).
+.Fn M_QuaternionAddIdentity
+returns the additive identity (0,0,0,0).
+.Pp
+The
+.Fn M_ReadQuaternion
+function reads a quaternion from an
+.Xr AG_DataSource 3
+and returns it.
+.Fn M_WriteQuaternion
+writes a quaternion to a data source.
+.Sh CONVERSION ROUTINES
+.nr nS 1
+.Ft "void"
+.Fn M_QuaternionpToAxisAngle "const M_Quaternion *q" "M_Vector3 *axis" "M_Real *theta"
+.Pp
+.Ft "void"
+.Fn M_QuaternionpToAxisAngle3 "const M_Quaternion *q" "M_Real *theta" "M_Real *x" "M_Real *y" "M_Real *z"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionFromAxisAngle "M_Vector3 axis" "M_Real theta"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionFromAxisAngle3 "M_Real theta" "M_Real x" "M_Real y" "M_Real z"
+.Pp
+.Ft "void"
+.Fn M_QuaternionpFromAxisAngle "M_Quaternion *q" "M_Vector3 axis" "M_Real theta"
+.Pp
+.Ft "void"
+.Fn M_QuaternionpFromAxisAngle3 "M_Quaternion *q" "M_Real theta" "M_Real x" "M_Real y" "M_Real z"
+.Pp
+.Ft "void"
+.Fn M_QuaternionFromEulv "M_Quaternion *q" "M_Real a" "M_Real b" "M_Real c"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionFromEul "M_Real a" "M_Real b" "M_Real c"
+.Pp
+.Ft "void"
+.Fn M_QuaternionToMatrix44 "M_Matrix44 *A" "const M_Quaternion *q"
+.Pp
+.nr nS 0
+The
+.Fn M_QuaternionpToAxisAngle
+function obtains a rotation in axis-angle format from a quaternion
+.Fa q .
+The axis is returned into
+.Fa v
+and angle into
+.Fa theta .
+The
+.Fn M_QuaternionpToAxisAngle3
+variant returns the axis into
+.Fa x ,
+.Fa y
+and
+.Fa z .
+.Pp
+.Fn M_QuaternionFromAxisAngle
+returns a quaternion describing a rotation of
+.Fa theta
+radians about the
+.Fa axis
+vector.
+The
+.Fn M_QuaternionFromAxisAngle3
+form accepts individual
+.Fa x ,
+.Fa y ,
+.Fa z
+arguments.
+.Pp
+The
+.Fn M_QuaternionpFromAxisAngle
+and
+.Fn M_QuaternionpFromAxisAngle3
+variants write the resulting quaternion into
+.Fa q
+as opposed to returning it.
+.Pp
+.Fn M_QuaternionFromEulv
+and
+.Fn M_QuaternionFromEul
+return a quaternion describing a rotation given the set of Euler angles.
+.Pp
+.Fn M_QuaternionToMatrix44
+converts the rotation described by quaternion
+.Fa q
+into a 4x4 matrix
+.Fa A .
+.Sh ARITHMETIC OPERATIONS
+.nr nS 1
+.Ft "void"
+.Ft "M_Quaternion"
+.Fn M_QuaternionConj "M_Quaternion q"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionConjp "const M_Quaternion *q"
+.Pp
+.Ft "void"
+.Fn M_QuaternionConjv "M_Quaternion *q"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionScale "M_Quaternion q" "M_Real c"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionScalep "const M_Quaternion *q" "M_Real c"
+.Pp
+.Ft "void"
+.Fn M_QuaternionScalev "M_Quaternion *q" "M_Real c"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionConcat "const M_Quaternion *q1" "const M_Quaternion *q2"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionMult "M_Quaternion q1" "M_Quaternion q2"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionMultp "const M_Quaternion *q1" "const M_Quaternion *q2"
+.Pp
+.Ft "void"
+.Fn M_QuaternionMultv "M_Quaternion *q" "const M_Quaternion *q1" "const M_Quaternion *q2"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionNormp "const M_Quaternion *q"
+.Pp
+.Ft "void"
+.Fn M_QuaternionNormv "M_Quaternion *q"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionInverse "M_Quaternion q"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionInversep "const M_Quaternion *q"
+.Pp
+.Ft "void"
+.Fn M_QuaternionInversev "M_Quaternion *q"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionSLERP "M_Quaternion q1" "M_Quaternion q2" "M_Real c"
+.Pp
+.Ft "M_Quaternion"
+.Fn M_QuaternionSLERPp "const M_Quaternion *q1" "const M_Quaternion *q2" "M_Real c"
+.Pp
+.nr nS 0
+.Fn M_QuaternionConj ,
+.Fn M_QuaternionConjp
+and
+.Fn M_QuaternionConjv
+return the conjugate of
+.Fa q .
+.Pp
+.Fn M_QuaternionScale ,
+.Fn M_QuaternionScalep
+and
+.Fn M_QuaternionScalev
+return the quaternion
+.Fa q
+scaled by factor
+.Fa c .
+.Pp
+.Fn M_QuaternionConcat
+concatenates the rotations described by
+.Fa q1
+and
+.Fa q2
+and returns the resulting quaternion.
+.Pp
+.Fn M_QuaternionMult ,
+.Fn M_QuaternionMultp
+and
+.Fn M_QuaternionMultv
+compute the product of
+.Fa q1
+and
+.Fa q2 .
+.Pp
+.Fn M_QuaternionNormp
+and
+.Fn M_QuaternionNormv
+return the normalized form of
+.Fa q
+(equivalent to normalizing
+.Fa q
+as a vector).
+.Pp
+.Fn M_QuaternionInverse ,
+.Fn M_QuaternionInversep
+and
+.Fn M_QuaternionInversev
+return the inverse (i.e., the normalized form of the conjugate) of
+.Fa q .
+.Pp
+The functions
+.Fn M_QuaternionSLERP
+and
+.Fn M_QuaternionSLERPp
+perform spherical linear interpolation (SLERP) between
+.Fa q1
+and
+.Fa q2 ,
+by factor
+.Fa c ,
+and returns the result.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DataSource 3 ,
+.Xr M_Real 3 ,
+.Xr M_Complex 3 ,
+.Xr M_Matrix 3 ,
+.Xr M_Vector 3
+.Sh HISTORY
+The
+.Nm
+structure first appeared in Agar 1.3.4.

@@ -40,6 +40,5 @@ M_Quaternion	M_QuaternionSLERP(M_Quaternion, M_Quaternion, M_Real);
 M_Quaternion	M_QuaternionSLERPp(const M_Quaternion *, const M_Quaternion *,
 		                   M_Real);
 M_Quaternion	M_ReadQuaternion(AG_DataSource *);
-void		M_ReadQuaternionv(AG_DataSource *, M_Quaternion *);
 void		M_WriteQuaternion(AG_DataSource *, M_Quaternion *);
 __END_DECLS

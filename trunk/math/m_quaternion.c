@@ -443,15 +443,6 @@ M_ReadQuaternion(AG_DataSource *buf)
 }
 
 void
-M_ReadQuaternionv(AG_DataSource *buf, M_Quaternion *q)
-{
-	q->w = M_ReadReal(buf);
-	q->x = M_ReadReal(buf);
-	q->y = M_ReadReal(buf);
-	q->z = M_ReadReal(buf);
-}
-
-void
 M_WriteQuaternion(AG_DataSource *buf, M_Quaternion *q)
 {
 	M_WriteReal(buf, q->w);
