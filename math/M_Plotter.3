@@ -1,0 +1,378 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 19, 2009
+.Dt M_PLOTTER 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Plotter
+.Nd Agar-Math plotting widget
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+widget plots one or more numerical datasets.
+The widget is suitable for plotting data in real-time (fetching the data from
+different types of sources), but it can also plot existing datasets all at once.
+Extra annotations (labels) can be associated with the individual plots.
+.Pp
+The data displayed by
+.Nm
+can be retrieved from different types of sources.
+Currently implemented sources include:
+.Bl -tag -width "M_PLOT_FROM_VARIABLE_VFS "
+.It Dv M_PLOT_MANUALLY 
+He data will be entered explicitely via calls to
+.Fn M_PlotReal
+(see
+.Dv PLOTTING
+section).
+This is the default plot type set by
+.Fn M_PlotNew .
+.It Dv M_PLOT_FROM_VARIABLE_VFS
+Fetch the value of the given object variable/property.
+See
+.Xr AG_Object 3 ,
+.Xr AG_Variable 3 .
+.It Dv M_PLOT_FROM_REAL
+Fetch value by dereferencing a pointer to an
+.Ft M_Real .
+.It Dv M_PLOT_FROM_INT
+Fetch value by dereferencing a pointer to an
+.Ft int .
+.It Dv M_PLOT_FROM_COMPONENT
+Fetch value from entry
+.Fa i ,
+.Fa j
+of a
+.Ft M_Matrix 3 .
+.It Dv M_PLOT_DERIVATIVE
+Compute as the derivative of another
+.Ft M_Plot .
+.El
+.Sh INHERITANCE HIERARCHY
+.Xr AG_Object 3 ->
+.Xr AG_Widget 3 ->
+.Nm .
+.Sh INITIALIZATION
+.nr nS 1
+.Ft "M_Plotter *"
+.Fn M_PlotterNew "void *parent" "Uint flags"
+.Pp
+.Ft "void"
+.Fn M_PlotterSizeHint "M_Plotter *ptr" "Uint w" "Uint h"
+.Pp
+.Ft "void"
+.Fn M_PlotterSetDefaultFont "M_Plotter *ptr" "const char *face" "int size"
+.Pp
+.Ft "void"
+.Fn M_PlotterSetDefaultColor "M_Plotter *ptr" "int colorIdx" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "void"
+.Fn M_PlotterSetDefaultScale "M_Plotter *ptr" "M_Real xScale" "M_Real yScale"
+.Pp
+.nr nS 0
+The
+.Fn M_PlotterNew
+function allocates, initializes, and attaches a new
+.Nm
+widget.
+There are no
+.Fa flags
+options currently defined.
+.Pp
+.Fn M_PlotterSizeHint
+sets an initial preferred widget size in pixels.
+.Pp
+.Fn M_PlotterSetDefaultFont
+configures a default font face for use with plotter labels (see
+.Dq PLOT LABELS
+section).
+.Pp
+.Fn M_PlotterSetDefaultColor
+sets entry
+.Fa colorIdx
+in the palette of default plot colors.
+Newly created plots are assigned an initial plot color from this palette
+in a round-robin fashion.
+Valid indices are 0 up to
+.Dv M_PLOTTER_NDEFCOLORS-1.
+.Pp
+.Fn M_PlotterSetDefaultScale
+sets the default X and Y scaling factor that will be assigned to newly
+created plots.
+.Sh PLOTTING
+.nr nS 1
+.Ft "M_Plot *"
+.Fn M_PlotNew "M_Plotter *ptr" "enum m_plot_type type"
+.Pp
+.Ft "M_Plot *"
+.Fn M_PlotFromReal "M_Plotter *ptr" "enum m_plot_type type" "const char *label" "M_Real *variable"
+.Pp
+.Ft "M_Plot *"
+.Fn M_PlotFromInt "M_Plotter *ptr" "enum m_plot_type type" "const char *label" "int *variable"
+.Pp
+.Ft "M_Plot *"
+.Fn M_PlotFromDerivative "M_Plotter *ptr" "enum m_plot_type type" "M_Plot *plot"
+.Pp
+.Ft "M_Plot *"
+.Fn M_PlotFromVariableVFS "M_Plotter *ptr" "enum m_plot_type type" "const char *label" "void *vfsRoot" "const char *varName"
+.Pp
+.Ft "void"
+.Fn M_PlotClear "M_Plot *pl"
+.Pp
+.Ft "struct ag_window *"
+.Fn M_PlotSettings "M_Plot *pl"
+.Pp
+.Ft "void"
+.Fn M_PlotSetColor "M_Plot *pl" "Uint8 r" "Uint8 g" "Uint8 b"
+.Pp
+.Ft "void"
+.Fn M_PlotSetScale "M_Plot *pl" "M_Real xScale" "M_Real yScale"
+.Pp
+.Ft "void"
+.Fn M_PlotSetXoffs "M_Plot *pl" "int xOffs"
+.Pp
+.Ft "void"
+.Fn M_PlotSetYoffs "M_Plot *pl" "int yOffs"
+.Pp
+.Ft "void"
+.Fn M_PlotReal "M_Plot *pl" "M_Real v"
+.Pp
+.Ft "void"
+.Fn M_PlotRealv "M_Plot *pl" "Uint n" "const M_Real *values"
+.Pp
+.Ft "void"
+.Fn M_PlotVector "M_Plot *pl" "const M_Vector *v"
+.Pp
+.Ft "void"
+.Fn M_PlotVectorv "M_Plot *pl" "Uint n" "const M_Vector **values"
+.Pp
+.Ft "void"
+.Fn M_PlotterUpdate "M_Plot *pl"
+.Pp
+.nr nS 0
+.Fn M_PlotNew
+creates a new plot with no label and a source type of
+.Dv M_PLOT_MANUALLY
+(see
+.Dq DESCRIPTION).
+The
+.Fa type ,
+argument can take on the values:
+.Bd -literal
+enum m_plot_type {
+	M_PLOT_POINTS,		/* Individual points */
+	M_PLOT_LINEAR,		/* Linear interpolation */
+	M_PLOT_CUBIC_SPLINE,	/* Cubic spline interpolation */
+	M_PLOT_VECTORS		/* Vector arrows/cones */
+};
+.Ed
+.Pp
+The
+.Fn M_PlotFromReal
+and
+.Fn M_PlotFromInt
+variants create a plot which will be generated by dereferencing the value of
+an integer or real
+.Fa variable .
+The plot is assigned a specified
+.Fa label
+string by default.
+.Pp
+.Fn M_PlotFromDerivative
+creates a plot which will be computed as the derivative of
+.Fa plot .
+Nothing prevents
+.Fa plot
+from being a derivative plot itself.
+.Pp
+.Fn M_PlotFromVariableVFS
+creates a plot that will be generated by reading the value of a numerical
+.Xr AG_Object 3
+variable.
+The object itself must be located under
+.Fa vfsRoot ,
+and the
+.Fa varName
+string can take on the form "<object-name>:<variable-name>".
+See
+.Xr AG_Variable 3
+for details.
+.Pp
+.Fn M_PlotClear
+erases the existing contents of a plot.
+.Pp
+.Fn M_PlotSettings
+constructs and displays a dialog which allows the user to change plot
+parameters (style, color, etc.), as well as to display the plot data in
+tabular format.
+.Pp
+.Fn M_PlotSetColor
+configures an alternate color for plot
+.Fa pl
+in RGB format.
+.Pp
+.Fn M_PlotSetScale
+configures an alternate horizontal and vertical scaling factor for plot
+.Fa pl .
+.Pp
+The functions
+.Fn M_PlotSetXoffs
+and
+.Fn M_PlotSetYoffs
+set specific display X and Y offsets.
+Note that these offsets are bound to scrollbars and can be manipulated by
+the user.
+.Pp
+The
+.Fn M_PlotReal
+function enters an explicit value
+.Fa v
+in plot
+.Fa pl .
+.Fn M_PlotRealv
+enters data from an array
+.Fa values ,
+containing
+.Fa n
+entries.
+.Pp
+.Fn M_PlotVector
+enters data from an
+.Xr M_Vector 3 .
+.Fn M_PlotVectorv
+enters data from an array of
+.Fa n
+vectors.
+.Pp
+The
+.Fn M_PlotterUpdate
+routine updates all plots (except those using the
+.Dv M_PLOT_MANUALLY
+source type), effectively increasing the width of the plot display.
+This involves the dereferencing of associated variables (and possibly the
+evaluation of
+.Xr AG_Variable 3
+functions for
+.Dv M_PLOT_FROM_VARIABLE_VFS ) .
+If scrolling mode is set (scrolling mode can be enabled by the user
+panning to the right edge of the display), the display is scrolled by
+one increment.
+.Sh PLOT LABELS
+.nr nS 1
+.Ft "M_PlotLabel *"
+.Fn M_PlotLabelNew "M_Plot *pl" "enum m_plot_label_type type" "Uint x" "Uint y" "const char *format" "..."
+.Pp
+.Ft "M_PlotLabel *"
+.Fn M_PlotLabelReplace "M_Plot *pl" "enum m_plot_label_type type" "Uint x" "Uint y" "const char *format" "..."
+.Pp
+.Ft void
+.Fn M_PlotLabelSetText "M_Plot *pl" "enum m_plot_label_type type" "Uint x" "Uint y" "const char *format" "..."
+.Pp
+.nr nS 0
+The
+.Fn M_PlotLabelNew
+function creates a new label, associated with plot
+.Fa pl ,
+and returns a pointer to the new label object.
+The
+.Fa type
+argument can take on the values:
+.Bl -tag -width "M_LABEL_OVERLAY "
+.It M_LABEL_X
+Associate label with an X value.
+A vertical alpha-blended line will be rendered along with the label.
+.It M_LABEL_Y
+Associate label with an Y value.
+.It M_LABEL_FREE
+Label can be freely moved by the user.
+.El
+.Pp
+The
+.Fn M_PlotLabelReplace
+variant searches for an existing label with the same text string.
+If such a label is found, it is replaced by the new label.
+.Pp
+.Fn M_PlotLabelSetText
+changes the text string associated with the label.
+.Fa format
+is a standard format string.
+.Sh EVENTS
+The
+.Nm
+widget reacts to the following events:
+.Pp
+.Bl -tag -compact -width "window-mousebuttondown "
+.It window-keydown
+Default hotkeys:
+.Dv SDLK_0
+and
+.Dv SDLK_1
+reset scaling factor to 100%.
+.Dv SDLK_EQUALS
+increases and
+.Dv SDLK_MINUS
+decreases the scaling factor.
+.It window-mousebuttondown
+.It window-mousemotion
+Select plots, select/drag labels, trigger contextual menus.
+Mouse wheel controls scaling factor of currently selected plots.
+.El
+.Pp
+The
+.Nm
+widget does not generate any event.
+.Sh STRUCTURE DATA
+For the
+.Ft M_Plotter
+object:
+.Pp
+.Bl -tag -compact -width "M_Real xScale, yScale "
+.It Ft int xOffs, yOffs
+Display offset in pixels (bound to scrollbars).
+.It Ft M_Real xScale, yScale
+Horizontal and vertical scaling factors (also user-controlled).
+.It Ft AG_Scrollbar *hbar
+Horizontal scrollbar object.
+.It Ft AG_Scrollbar *vbar
+Vertical scrollbar object.
+.El
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Scrollbar 3 ,
+.Xr M_Complex 3 ,
+.Xr M_Matrix 3 ,
+.Xr M_Real 3 ,
+.Xr M_Vector 3
+.Sh HISTORY
+The
+.Nm
+widget first appeared in Agar 1.3.4.
