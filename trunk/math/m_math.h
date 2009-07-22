@@ -113,9 +113,10 @@ typedef struct m_matrix44 { M_Real m[4][4]; } M_Matrix44;
 typedef struct m_color { M_Real r, g, b, a; } M_Color;
 #endif /* HAVE_SSE */
 
-/* Base class for vectors in R^n. */
+/* Vector in R^n. */
 typedef struct m_vector {
 	Uint m;			/* Size */
+	M_Real *v;		/* Elements */
 } M_Vector;
 
 struct m_matrix_ops;
