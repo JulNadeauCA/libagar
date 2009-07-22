@@ -23,10 +23,6 @@ const M_VectorOps4 mVecOps4_FPU = {
 	M_VectorNorm4_FPU,
 	M_VectorNorm4p_FPU,
 	M_VectorNorm4v_FPU,
-	M_VectorCross4_FPU,
-	M_VectorCross4p_FPU,
-	M_VectorNormCross4_FPU,
-	M_VectorNormCross4p_FPU,
 	M_VectorScale4_FPU,
 	M_VectorScale4p_FPU,
 	M_VectorScale4v_FPU,
@@ -195,53 +191,6 @@ M_VectorNorm4v_FPU(M_Vector4 *v)
 	v->y /= len;
 	v->z /= len;
 	v->w /= len;
-}
-
-M_Vector4
-M_VectorCross4_FPU(M_Vector4 a, M_Vector4 b, M_Vector4 c)
-{
-	return M_VectorCross4p_FPU(&a, &b, &c);
-}
-
-M_Vector4
-M_VectorCross4p_FPU(const M_Vector4 *u, const M_Vector4 *v,
-    const M_Vector4 *w)
-{
-	M_Real a, b, c, d, e, f;
-	M_Vector4 r;
-
-	a = v->x*w->y - v->y*w->x;
-	b = v->x*w->z - v->z*w->x;
-	c = v->x*w->w - v->w*w->x;
-	d = v->y*w->z - v->z*w->y;
-	e = v->y*w->w - v->w*w->y;
-	f = v->z*w->w - v->w*w->z;
-	r.x =  u->y*f - u->z*e + u->w*d;
-	r.y = -u->x*f + u->z*c - u->w*b;
-	r.z =  u->x*e + u->y*c - u->w*a;
-	r.w = -u->x*d + u->y*b - u->z*a;
-	return (r);
-}
-
-M_Vector4
-M_VectorNormCross4_FPU(M_Vector4 u, M_Vector4 v, M_Vector4 w)
-{
-	M_Vector4 c;
-
-	c = M_VectorCross4p_FPU(&u, &v, &w);
-	M_VectorNorm4v_FPU(&c);
-	return (c);
-}
-
-M_Vector4
-M_VectorNormCross4p_FPU(const M_Vector4 *u, const M_Vector4 *v,
-    const M_Vector4 *w)
-{
-	M_Vector4 c;
-
-	c = M_VectorCross4p_FPU(u, v, w);
-	M_VectorNorm4v_FPU(&c);
-	return (c);
 }
 
 M_Vector4
