@@ -36,13 +36,13 @@
 .Ed
 .Sh DESCRIPTION
 The
+.Xr M_Vector 3
+and
 .Nm
-interface provides basic linear algebra routines specific to matrices.
-Similarly to
-.Xr M_Vector 3 ,
-a consistent interface to different
-.Em backends
-is provided, allowing different numerical solvers and memory representations.
+interfaces implement the basic linear algebra routines.
+Both provide a consistent interface to different
+.Em backends ,
+allowing different numerical solvers and memory representations.
 Selection between multiple backends is possible at run-time, or the Agar-Math
 library can be compiled to provide inline expansions of these operations under
 a specific backend.
@@ -76,7 +76,7 @@ Based on the excellent Sparse 1.4 package by Kenneth Kundert at UC Berkeley
 .Ft "void"
 .Fn M_Free "M_Matrix *M"
 .Pp
-.Ft "void"
+.Ft "int"
 .Fn M_Resize "M_Matrix *M" "Uint m" "Uint n"
 .Pp
 .Ft "void"
@@ -115,6 +115,9 @@ to
 by
 .Fa n .
 Existing entries are preserved, but new entries are left uninitialized.
+If insufficient memory is available, -1 is returned and an error message
+is set.
+On success, the function returns 0.
 .Pp
 .Fn M_SetIdentity
 initializes
@@ -212,7 +215,7 @@ the given matrix dimensions.
 .Fn M_Print
 dumps the individual matrix entries to the standard error output.
 It is only for debugging purposes. Agar GUI applications can use the provided
-.Xr M_Matview
+.Xr M_Matview 3
 widget to display matrix contents.
 .Sh M-BY-N MATRICES: BASIC OPERATIONS
 .nr nS 1
