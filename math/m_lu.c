@@ -15,7 +15,7 @@ M_FactorizeLU_FPU(void *pA)
 	M_Real big;
 	M_Real sum, dum, a;
 	int i, j, k, iMax = 0;
-	M_VectorFPU *vs;
+	M_Vector *vs;
 	M_MatrixFPU *A = NULL;
 
 	M_ASSERT_SQUARE_MATRIX(Aorig, -1);
@@ -108,7 +108,7 @@ M_BacksubstLU_FPU(void *pA, void *pb)
 {
 	const M_MatrixFPU *A=pA;
 	M_MatrixFPU *LU = A->LU;
-	M_VectorFPU *b=pb;
+	M_Vector *b=pb;
 	M_VectorZ *ivec = A->ivec;
 	M_Real sum;
 	int i, ip, j;

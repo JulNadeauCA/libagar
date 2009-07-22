@@ -20,37 +20,37 @@ typedef struct m_vector_ops {
 	const char *name;
 	
 	/* Basic access functions */
-	void     *(*NewVector)(Uint m);
-	M_Real   *(*GetElement)(const void *v, Uint j);
-	void      (*SetZero)(void *v);
-	int       (*Resize)(void *v, Uint m);
-	void      (*FreeVector)(void *v);
-	void     *(*Mirror)(const void *v);
-	int       (*Mirrorv)(void *v);
-	void     *(*Scale)(const void *v, M_Real c);
-	int       (*Scalev)(void *v, M_Real c);
-	void     *(*Add)(const void *a, const void *b);
-	int       (*Addv)(void *a, const void *b);
-	void     *(*Sub)(const void *a, const void *b);
-	int       (*Subv)(void *a, const void *b);
-	M_Real    (*Len)(const void *v);
-	M_Real    (*Dot)(const void *a, const void *b);
-	M_Real    (*Distance)(const void *a, const void *b);
-	void     *(*Norm)(const void *a);
-	void     *(*LERP)(const void *a, const void *b, M_Real c);
-	void     *(*ElemPow)(const void *a, M_Real pow);
-	int       (*Copy)(void *x, const void *y);
-	void     *(*Read)(AG_DataSource *ds);
-	void      (*Write)(AG_DataSource *ds, const void *v);
-	void     *(*FromReals)(Uint, const M_Real *);
-	void     *(*FromFloats)(Uint, const float *);
-	void     *(*FromDoubles)(Uint, const double *);
+	M_Vector *(*NewVector)(Uint m);
+	M_Real   *(*GetElement)(const M_Vector *v, Uint j);
+	void      (*SetZero)(M_Vector *v);
+	int       (*Resize)(M_Vector *v, Uint m);
+	void      (*FreeVector)(M_Vector *v);
+	M_Vector *(*Mirror)(const M_Vector *v);
+	int       (*Mirrorv)(M_Vector *v);
+	M_Vector *(*Scale)(const M_Vector *v, M_Real c);
+	int       (*Scalev)(M_Vector *v, M_Real c);
+	M_Vector *(*Add)(const M_Vector *a, const M_Vector *b);
+	int       (*Addv)(M_Vector *a, const M_Vector *b);
+	M_Vector *(*Sub)(const M_Vector *a, const M_Vector *b);
+	int       (*Subv)(M_Vector *a, const M_Vector *b);
+	M_Real    (*Len)(const M_Vector *v);
+	M_Real    (*Dot)(const M_Vector *a, const M_Vector *b);
+	M_Real    (*Distance)(const M_Vector *a, const M_Vector *b);
+	M_Vector *(*Norm)(const M_Vector *a);
+	M_Vector *(*LERP)(const M_Vector *a, const M_Vector *b, M_Real c);
+	M_Vector *(*ElemPow)(const M_Vector *a, M_Real pow);
+	int       (*Copy)(M_Vector *x, const M_Vector *y);
+	M_Vector *(*Read)(AG_DataSource *ds);
+	void      (*Write)(AG_DataSource *ds, const M_Vector *v);
+	M_Vector *(*FromReals)(Uint, const M_Real *);
+	M_Vector *(*FromFloats)(Uint, const float *);
+	M_Vector *(*FromDoubles)(Uint, const double *);
 #ifdef HAVE_LONG_DOUBLE
-	void     *(*FromLongDoubles)(Uint, const long double *);
+	M_Vector *(*FromLongDoubles)(Uint, const long double *);
 #else /* Padding */
-	void     *(*FromLongDoubles)(Uint, const double *);
+	M_Vector *(*FromLongDoubles)(Uint, const double *);
 #endif
-	void	  (*Print)(const void *v);
+	void	  (*Print)(const M_Vector *v);
 } M_VectorOps;
 
 /* Operations on vectors in R^2 */
@@ -162,12 +162,6 @@ typedef struct m_vector_ops4 {
 	M_Vector4 (*Norm)(M_Vector4);
 	M_Vector4 (*Normp)(const M_Vector4 *);
 	void      (*Normv)(M_Vector4 *);
-	M_Vector4 (*Cross)(M_Vector4, M_Vector4, M_Vector4);
-	M_Vector4 (*Crossp)(const M_Vector4 *, const M_Vector4 *,
-	                                         const M_Vector4 *);
-	M_Vector4 (*NormCross)(M_Vector4, M_Vector4, M_Vector4);
-	M_Vector4 (*NormCrossp)(const M_Vector4 *, const M_Vector4 *,
-	                                             const M_Vector4 *);
 	M_Vector4 (*Scale)(M_Vector4, M_Real);
 	M_Vector4 (*Scalep)(const M_Vector4 *, M_Real);
 	void      (*Scalev)(M_Vector4 *, M_Real);
@@ -197,9 +191,8 @@ extern const M_VectorOps4 *mVecOps4;
 extern const M_VectorOps *mVecOps;
 
 static __inline__ void
-M_VectorInit(void *obj, Uint m)
+M_VectorInit(M_Vector *v, Uint m)
 {
-	M_Vector *v = obj;
 	v->m = m;
 }
 __END_DECLS
@@ -265,22 +258,20 @@ __END_DECLS
 #define M_VecNorm		mVecOps->Norm
 #define M_VecLERP		mVecOps->LERP
 #define M_VecElemPow		mVecOps->ElemPow
-#define M_VecRead		mVecOps->Read
-#define M_VecWrite		mVecOps->Write
+#define M_ReadVector		mVecOps->Read
+#define M_WriteVector		mVecOps->Write
 #define M_VecFromReals		mVecOps->FromReals
 #define M_VecFromFloats		mVecOps->FromFloats
 #define M_VecFromDoubles	mVecOps->FromDoubles
 #define M_VecFromLongDoubles	mVecOps->FromLongDoubles
-#define M_VectorPrint		mVecOps->Print
+#define M_VecPrint		mVecOps->Print
 
 /* Simple wrappers */
 #define M_VecGet(v,i) *M_VecGetElement(v, i)
 #define M_VecSet(v,i,val) *M_VecGetElement(v, i) = val;
 
-
-
 /*
- * Operations on vectors in R^3
+ * Operations on vectors in R^2
  */
 #define M_VecI2()		mVecOps2->Get(1.0,0.0)
 #define M_VecJ2()		mVecOps2->Get(0.0,1.0)

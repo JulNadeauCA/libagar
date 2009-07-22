@@ -146,7 +146,7 @@ void
 M_BacksubstLU_SP(void *pA, void *pV)
 {
 	M_MatrixSP *A = pA;
-	M_VectorFPU *v = pV;
+	M_Vector *v = pV;
 	/* this makes SPARSE solve in place */
 	spSolve(A->d, v->v, v->v);
 }

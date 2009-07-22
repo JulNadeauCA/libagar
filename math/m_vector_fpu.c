@@ -43,10 +43,10 @@ const M_VectorOps mVecOps_FPU = {
 	M_VectorPrint_FPU
 };
 
-void *
+M_Vector *
 M_ReadVector_FPU(AG_DataSource *buf)
 {
-	M_VectorFPU *v;
+	M_Vector *v;
 	Uint i, n;
 
 	n = (Uint)AG_ReadUint32(buf);
@@ -58,9 +58,8 @@ M_ReadVector_FPU(AG_DataSource *buf)
 }
 
 void
-M_WriteVector_FPU(AG_DataSource *buf, const void *pv)
+M_WriteVector_FPU(AG_DataSource *buf, const M_Vector *v)
 {
-	const M_VectorFPU *v=pv;
 	Uint i;
 
 	AG_WriteUint32(buf, (Uint)MVECSIZE(v));
@@ -68,10 +67,10 @@ M_WriteVector_FPU(AG_DataSource *buf, const void *pv)
 		M_WriteReal(buf, v->v[i]);
 }
 
-void *
+M_Vector *
 M_VectorFromReals_FPU(Uint n, const M_Real *r)
 {
-	M_VectorFPU *a=M_VecNew(n);
+	M_Vector *a=M_VecNew(n);
 	Uint i;
 
 	for (i = 0; i < n; i++) {
@@ -80,10 +79,10 @@ M_VectorFromReals_FPU(Uint n, const M_Real *r)
 	return (a);
 }
 
-void *
+M_Vector *
 M_VectorFromFloats_FPU(Uint n, const float *fv)
 {
-	M_VectorFPU *a=M_VecNew(n);
+	M_Vector *a=M_VecNew(n);
 	Uint i;
 
 	for (i = 0; i < n; i++) {
@@ -92,10 +91,10 @@ M_VectorFromFloats_FPU(Uint n, const float *fv)
 	return (a);
 }
 
-void *
+M_Vector *
 M_VectorFromDoubles_FPU(Uint n, const double *fv)
 {
-	M_VectorFPU *a=M_VecNew(n);
+	M_Vector *a=M_VecNew(n);
 	Uint i;
 
 	for (i = 0; i < n; i++) {
@@ -105,10 +104,10 @@ M_VectorFromDoubles_FPU(Uint n, const double *fv)
 }
 
 #ifdef HAVE_LONG_DOUBLE
-void *
+M_Vector *
 M_VectorFromLongDoubles_FPU(Uint n, const long double *fv)
 {
-	M_VectorFPU *a=M_VecNew(n);
+	M_Vector *a=M_VecNew(n);
 	Uint i;
 
 	for (i = 0; i < n; i++) {
@@ -119,9 +118,8 @@ M_VectorFromLongDoubles_FPU(Uint n, const long double *fv)
 #endif /* HAVE_LONG_DOUBLE */
 
 void
-M_VectorPrint_FPU(const void *pv)
+M_VectorPrint_FPU(const M_Vector *v)
 {
-	const M_VectorFPU *v = pv;
 	Uint i;
 
 	fputs(" ----\n", stdout);
