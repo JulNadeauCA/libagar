@@ -1,0 +1,1390 @@
+.\"
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd July 20, 2009
+.Dt M_VECTOR 3
+.Os
+.ds vT Agar-Math API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm M_Vector
+.Nd Agar-Math vector-related functions
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/math.h>
+.Ed
+.Sh DESCRIPTION
+The
+.Nm
+and
+.Xr M_Matrix 3
+interfaces implement the basic linear algebra routines.
+Both provide a consistent interface to different
+.Em backends
+allowing different numerical solvers and memory representations.
+Selection between multiple backends is possible at run-time, or the Agar-Math
+library can be compiled to provide inline expansions of these operations under
+a specific backend.
+.Sh VECTORS IN R^N
+The following routines operate on dynamically-allocated vectors in R^n.
+Unlike
+.Ft M_Matrix
+(which might use different memory representations), vector elements are always
+directly accessible through the
+.Va v
+array.
+The
+.Ft M_Vector
+structure is defined as:
+.Bd -literal
+typedef struct m_vector {
+	Uint m;			/* Size */
+	M_Real *v;		/* Elements */
+} M_Vector;
+.Ed
+.Pp
+The following backends are currently available for
+.Ft M_Vector :
+.Pp
+.Bl -tag -width "fpu " -compact
+.It fpu
+Native scalar floating point methods.
+.El
+.Sh VECTORS IN R^N: INITIALIZATION
+.nr nS 1
+.Ft "M_Vector *"
+.Fn M_VecNew "Uint m"
+.Pp
+.Ft "void"
+.Fn M_VecFree "M_Vector *v"
+.Pp
+.Ft int
+.Fn M_VecResize "M_Vector *v" "Uint m"
+.Pp
+.Ft void
+.Fn M_VecSetZero "M_Vector *v"
+.Pp
+.Ft "M_Vector *"
+.Fn M_ReadVector "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_WriteVector "AG_DataSource *ds" "const M_Vector *v"
+.Pp
+.nr nS 0
+The
+.Fn M_VecNew
+function allocates a new vector in R^n.
+.Fn M_VecFree
+releases all resources allocated for the specified vector.
+.Pp
+.Fn M_VecResize
+resizes the vector
+.Fa v
+to
+.Fa m .
+Existing entries are preserved, but new entries are left uninitialized.
+If insufficient memory is available, -1 is returned and an error message
+is set.
+On success, the function returns 0.
+.Pp
+.Fn M_VecSetZero
+initializes
+.Fa v
+to the zero vector.
+.Pp
+.Fn M_ReadVector
+reads a
+.Ft M_Vector
+from a data source and
+.Fn M_WriteVector
+writes vector
+.Fa v
+to a data source; see
+.Xr AG_DataSource 3
+for details.
+.Sh VECTORS IN R^N: ACCESSING ELEMENTS
+.nr nS 1
+.Ft "M_Real *"
+.Fn M_VecGetElement "const M_Vector *v" "Uint i"
+.Pp
+.Ft "M_Real"
+.Fn M_VecGet "const M_Vector *v" "Uint i"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecFromReals "Uint n" "const M_Real *values"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecFromFloats "Uint n" "const float *values"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecFromDoubles "Uint n" "const double *values"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecFromLongDoubles "Uint n" "const long double *values"
+.Pp
+.Ft "void"
+.Fn M_VecPrint "const M_Vector *v"
+.Pp
+.nr nS 0
+.Fn M_VecGetElement
+returns a pointer to element
+.Fa i
+of vector
+.Fa v .
+This operation is only provided for symmetry with
+.Ft M_Matrix .
+Vector elements are also directly accessible the
+.Va v
+array.
+.Fn M_VecGet
+returns the value of element
+.Fa i .
+.Pp
+The
+.Fn M_VecFromReals ,
+.Fn M_VecFromFloats ,
+.Fn M_VecFromDoubles ,
+and
+.Fn M_VecFromLongDoubles 
+functions generate an
+.Nm
+from an array of
+.Ft M_Real ,
+.Ft float ,
+.Ft double
+or
+.Ft "long double" ,
+respectively.
+The latter function is only available on platforms where
+.Dv HAVE_LONG_DOUBLE
+is defined.
+.Pp
+.Fn M_VecPrint
+dumps the individual vector entries to the standard error output.
+It is only for debugging purposes.
+Agar GUI applications can use the provided
+.Xr M_Matview 3
+widget to display vector or matrix contents.
+.Sh VECTORS IN R^N: BASIC OPERATIONS
+.nr nS 1
+.Ft int
+.Fn M_VecCopy "M_Vector *vDst" "const M_Vector *vSrc"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecMirror "M_Vector *v"
+.Pp
+.Ft void
+.Fn M_VecMirrorv "M_Vector *v"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecScale "const M_Vector *v" "M_Real c"
+.Pp
+.Ft "void"
+.Fn M_VecScalev "M_Vector *v" "M_Real c"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecAdd "const M_Vector *a" "const M_Vector *b"
+.Pp
+.Ft int
+.Fn M_VecAddv "M_Vector *a" "const M_Vector *b"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecSub "const M_Vector *a" "const M_Vector *b"
+.Pp
+.Ft int
+.Fn M_VecSubv "M_Vector *a" "const M_Vector *b"
+.Pp
+.Ft M_Real
+.Fn M_VecLen "const M_Vector *v"
+.Pp
+.Ft M_Real
+.Fn M_VecDot "const M_Vector *a" "const M_Vector *b"
+.Pp
+.Ft M_Real
+.Fn M_VecDistance "const M_Vector *a" "const M_Vector *b"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecNorm "const M_Vector *v"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecLERP "const M_Vector *a" "const M_Vector *b" "M_Real t"
+.Pp
+.Ft "M_Vector *"
+.Fn M_VecElemPow "const M_Vector *v" "M_Real pow"
+.Pp
+.nr nS 0
+RETURN VALUES: Unless mentioned otherwise, the following functions returning a
+.Ft M_Vector
+pointer may fail returning NULL those returning an
+.Ft int
+may fail returning -1.
+.Pp
+.Fn M_VecCopy
+copies the contents of vector
+.Fa vSrc
+into
+.Fa vDst .
+Both vectors must have the same size.
+.Pp
+The
+.Fn M_VecMirror
+function returns the mirror image of
+.Fa v
+(i.e., all entries multiplied by -1).
+.Fn M_VecMirrorv
+inverts the entries of
+.Fa v
+in place.
+.Pp
+.Fn M_VecScale
+scales the vector
+.Fa v
+by factor
+.Fa c
+and returns the resulting vector.
+.Fn M_VecScalev
+scales the vector in place.
+.Pp
+.Fn M_VecAdd
+returns the sum of
+.Fa a
+and
+.Fa b ,
+which must be of equal size.
+The
+.Fn M_VecAddv
+variant writes the result back into
+.Fa a .
+.Pp
+.Fn M_VecSub
+returns the difference (a - b).
+Both vectors must be of equal size.
+The
+.Fn M_VecSubv
+variant writes the result back into
+.Fa a .
+.Pp
+.Fn M_VecLen
+returns the real length of a vector.
+.Pp
+.Fn M_VecDot
+returns the dot product of vectors
+.Fa a
+and
+.Fa b ,
+which must be of equal size.
+.Pp
+.Fn M_VecDistance
+returns the distance between the points described by equally-sized vectors
+.Fa a
+and
+.Fa b .
+.Pp
+.Fn M_VecNorm
+returns the normalized (unit-length) form of
+.Fa v .
+.Pp
+.Fn M_VecLERP
+returns the result of linear interpolation between equally-sized vectors
+.Fa a
+and
+.Fa b ,
+with scaling factor
+.Fa t .
+.Pp
+.Fn M_ElemPow
+raises the entries of
+.Fa v
+to the power
+.Fa pow ,
+and returns the resulting vector.
+.Sh VECTORS IN R^2
+The following routines operate on vectors in R^2, which are always
+represented by the structure:
+.Bd -literal
+typedef struct m_vector2 {
+	M_Real x, y;
+} M_Vector2;
+.Ed
+.Pp
+The following backends are currently available for
+.Ft M_Vector :
+.Pp
+.Bl -tag -width "fpu " -compact
+.It fpu
+Native scalar floating point methods.
+.El
+.Sh VECTORS IN R^2: INITIALIZATION
+.nr nS 1
+.Ft M_Vector2
+.Fn M_VecI2 "void"
+.Pp
+.Ft M_Vector2
+.Fn M_VecJ2 "void"
+.Pp
+.Ft M_Vector2
+.Fn M_VecZero2 "void"
+.Pp
+.Ft M_Vector2
+.Fn M_VecGet2 "M_Real x" "M_Real y"
+.Pp
+.Ft void
+.Fn M_VecSet2 "M_Vector2 *v" "M_Real x" "M_Real y"
+.Pp
+.Ft void
+.Fn M_VecCopy2 "M_Vector2 *vDst" "const M_Vector2 *vSrc"
+.Pp
+.Ft M_Vector2
+.Fn M_ReadVector2 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_WriteVector2 "AG_DataSource *ds" "const M_Vector2 *v"
+.Pp
+.nr nS 0
+The
+.Fn M_VecI2
+and
+.Fn M_VecJ2
+routines return the basis vectors [1;0] and [0;1], respectively.
+.Fn M_VecZero2
+returns the zero vector [0;0].
+.Fn M_VecGet2
+returns the vector [x,y].
+The
+.Fn M_VECTOR2
+macro is an alias for
+.Fn M_VecGet2 .
+.Pp
+.Fn M_VecSet2
+writes the values [x,y] into vector
+.Fa v .
+It is only provided for symmetry with the other interfaces; elements are
+more efficiently accessed directly from the
+.Ft M_Vector2
+structure.
+.Pp
+.Fn M_ReadVector2
+reads a
+.Ft M_Vector2
+from a data source and
+.Fn M_WriteVector2
+writes vector
+.Fa v
+to a data source; see
+.Xr AG_DataSource 3
+for details.
+.Sh VECTORS IN R^2: BASIC OPERATIONS
+.nr nS 1
+.Ft int
+.Fn M_VecCopy2 "M_Vector2 *vDst" "const M_Vector2 *vSrc"
+.Pp
+.Ft M_Vector2
+.Fn M_VecMirror2 "M_Vector2 v" "int xFlag" "int yFlag"
+.Pp
+.Ft M_Vector2
+.Fn M_VecMirror2p "const M_Vector2 *v" "int xFlag" "int yFlag"
+.Pp
+.Ft M_Real
+.Fn M_VecLen2 "M_Vector2 v"
+.Pp
+.Ft M_Real
+.Fn M_VecLen2p "const M_Vector2 *v"
+.Pp
+.Ft M_Real
+.Fn M_VecDot2 "M_Vector2 a" "M_Vector2 b"
+.Pp
+.Ft M_Real
+.Fn M_VecDot2p "const M_Vector2 *a" "const M_Vector2 *b"
+.Pp
+.Ft M_Real
+.Fn M_VecPerpDot2 "M_Vector2 a" "M_Vector2 b"
+.Pp
+.Ft M_Real
+.Fn M_VecPerpDot2p "const M_Vector2 *a" "const M_Vector2 *b"
+.Pp
+.Ft M_Real
+.Fn M_VecDistance2 "M_Vector2 a" "M_Vector2 b"
+.Pp
+.Ft M_Real
+.Fn M_VecDistance2p "const M_Vector2 *a" "const M_Vector2 *b"
+.Pp
+.Ft M_Vector2
+.Fn M_VecNorm2 "M_Vector2 v"
+.Pp
+.Ft M_Vector2
+.Fn M_VecNorm2p "const M_Vector2 *v"
+.Pp
+.Ft void
+.Fn M_VecNorm2v "M_Vector2 *v"
+.Pp
+.Ft M_Vector2
+.Fn M_VecScale2 "M_Vector2 v" "M_Real c"
+.Pp
+.Ft M_Vector2
+.Fn M_VecScale2p "const M_Vector2 *v" "M_Real c"
+.Pp
+.Ft void
+.Fn M_VecScale2v "M_Vector2 *v" "M_Real c"
+.Pp
+.Ft M_Vector2
+.Fn M_VecAdd2 "M_Vector2 a" "M_Vector2 b"
+.Pp
+.Ft M_Vector2
+.Fn M_VecAdd2p "const M_Vector2 *a" "const M_Vector2 *b"
+.Pp
+.Ft void
+.Fn M_VecAdd2v "M_Vector2 *a" "const M_Vector2 *b"
+.Pp
+.Ft void
+.Fn M_VecAdd2n "int n" "..."
+.Pp
+.Ft M_Vector2
+.Fn M_VecSub2 "M_Vector2 a" "M_Vector2 b"
+.Pp
+.Ft M_Vector2
+.Fn M_VecSub2p "const M_Vector2 *a" "const M_Vector2 *b"
+.Pp
+.Ft void
+.Fn M_VecSub2v "M_Vector2 *a" "const M_Vector2 *b"
+.Pp
+.Ft void
+.Fn M_VecSub2n "int n" "..."
+.Pp
+.Ft M_Vector2
+.Fn M_VecAvg2 "M_Vector2 a" "M_Vector2 b"
+.Pp
+.Ft M_Vector2
+.Fn M_VecAvg2p "const M_Vector2 *a" "const M_Vector2 *b"
+.Pp
+.Ft M_Vector2
+.Fn M_VecLERP2 "M_Vector2 a" "M_Vector2 b" "M_Real t"
+.Pp
+.Ft M_Vector2
+.Fn M_VecLERP2p "M_Vector2 *a" "M_Vector2 *b" "M_Real t"
+.Pp
+.Ft M_Vector2
+.Fn M_VecElemPow2 "M_Vector2 *v" "M_Real pow"
+.Pp
+.Ft M_Real
+.Fn M_VecVecAngle2 "M_Vector2 a" "M_Vector2 b"
+.Pp
+.Ft M_Vector2
+.Fn M_VecRotate2 "M_Vector2 v" "M_Real theta"
+.Pp
+.Ft void
+.Fn M_VecRotate2v "M_Vector2 *v" "M_Real theta"
+.Pp
+.nr nS 0
+The
+.Fn M_VecCopy2
+function copies the contents of vector
+.Fa vSrc
+into
+.Fa vDst .
+.Pp
+The functions
+.Fn M_VecMirror2
+and
+.Fn M_VecMirror2p
+multiply the specified entries by -1 (i.e., if
+.Fa xFlag
+is 1, the X entry is inverted) and returns the resulting vector.
+.Pp
+.Fn M_VecLen2
+and
+.Fn M_VecLen2p
+return the real length of vector
+.Fa v ,
+that is Sqrt(x^2 + y^2).
+.Pp
+.Fn M_VecDot2
+and
+.Fn M_VecDot2p
+return the dot product of vectors
+.Fa a
+and
+.Fa b ,
+that is (a.x*b.x + a.y*b.y).
+.Pp
+.Fn M_VecPerpDot2
+and
+.Fn M_VecPerpDot2p
+compute the "perp dot product" of
+.Fa a
+and
+.Fa b ,
+which is (a.x*b.y - a.y*b.x).
+.Pp
+.Fn M_VecDistance2
+and
+.Fn M_VecDistance2p
+return the real distance between vectors
+.Fa a
+and
+.Fa b ,
+that is the length of the difference vector (a - b).
+.Pp
+.Fn M_VecNorm2
+and
+.Fn M_VecNorm2p
+return the normalized (unit-length) form of
+.Fa v .
+The
+.Fn M_VecNorm2v
+variant normalizes the vector in-place.
+.Pp
+.Fn M_VecScale2
+and
+.Fn M_VecScale2p
+multiplies vector
+.Fa v
+by scalar
+.Fa c
+and returns the result.
+The
+.Fn M_VecScale2v
+variant scales the vector in-place.
+.Pp
+.Fn M_VecAdd2
+and
+.Fn M_VecAdd2p
+return the sum of vectors
+.Fa a
+and
+.Fa b .
+The
+.Fn M_VecAdd2v
+variant returns the result back into
+.Fa a .
+The
+.Fn M_VecAdd2n
+function returns the sum of
+.Fa n
+vectors passed as a variable argument list (following
+.Fa n ) .
+.Pp
+.Fn M_VecSub2
+and
+.Fn M_VecSub2p
+return the difference of vectors (a-b).
+The
+.Fn M_VecSub2v
+variant returns the result back into
+.Fa a .
+The
+.Fn M_VecSub2n
+function returns the difference of
+.Fa n
+vectors passed as a variable argument list (following
+.Fa n ) .
+.Pp
+The
+.Fn M_VecAvg2
+and
+.Fn M_VecAvg2p
+routines compute the average of two vectors (a+b)/2.
+.Pp
+The functions
+.Fn M_VecLERP2
+and
+.Fn M_VecLERP2p
+interpolate linearly between vectors
+.Fa a
+and
+.Fa b ,
+using the scaling factor
+.Fa t
+and returns the result.
+The result is computed as a+(b-a)*t.
+.Pp
+.Fn M_VecElemPow2
+raises the entries of
+.Fa v
+to the power
+.Fa pow ,
+and returns the resulting vector.
+.Pp
+.Fn M_VecVecAngle2
+returns the angle (in radians) between vectors
+.Fa a
+and
+.Fa b ,
+about the origin.
+.Pp
+.Fn M_VecRotate2
+rotates vector
+.Fa v
+about the origin by
+.Fa theta
+radians and returns the result.
+The
+.Fn M_VecRotate2v
+variant rotates the vector in-place.
+In R^2, this function is slightly faster than general
+.Xr M_Matrix 3
+or
+.Xr M_Quaternion 3
+rotations.
+.Sh VECTORS IN R^3
+The following routines operate on vectors in R^3, which are represented
+by the structure:
+.Bd -literal
+typedef struct m_vector3 {
+	M_Real x, y, z, _pad;
+} M_Vector3;
+.Ed
+.Pp
+If SSE support is available (i.e.,
+.Dv HAVE_SSE
+is defined),
+.Ft M_Vector3
+is an union:
+.Bd -literal
+typedef union m_vector3 {
+	__m128 m128;
+	struct { M_Real x, y, z, _pad; };
+} M_Vector3;
+.Ed
+.Pp
+The following backends are currently available for
+.Ft M_Vector3 :
+.Pp
+.Bl -tag -width "fpu " -compact
+.It fpu
+Native scalar floating point methods.
+.It sse
+Accelerate operations using Streaming SIMD Extensions (SSE).
+.It sse3
+Accelerate operations using SSE3 extensions.
+.El
+.Sh VECTORS IN R^3: INITIALIZATION
+.nr nS 1
+.Ft M_Vector3
+.Fn M_VecI3 "void"
+.Pp
+.Ft M_Vector3
+.Fn M_VecJ3 "void"
+.Pp
+.Ft M_Vector3
+.Fn M_VecK3 "void"
+.Pp
+.Ft M_Vector3
+.Fn M_VecZero3 "void"
+.Pp
+.Ft M_Vector3
+.Fn M_VecGet3 "M_Real x" "M_Real y" "M_Real z"
+.Pp
+.Ft void
+.Fn M_VecSet3 "M_Vector3 *v" "M_Real x" "M_Real y" "M_Real z"
+.Pp
+.Ft void
+.Fn M_VecCopy3 "M_Vector3 *vDst" "const M_Vector3 *vSrc"
+.Pp
+.Ft M_Vector3
+.Fn M_ReadVector3 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_WriteVector3 "AG_DataSource *ds" "const M_Vector3 *v"
+.Pp
+.nr nS 0
+The
+.Fn M_VecI3 ,
+.Fn M_VecJ3
+and
+.Fn M_VecK3
+routines return the basis vectors [1;0;0], [0;1;0] and [0;0;1], respectively.
+.Fn M_VecZero3
+returns the zero vector [0;0;0].
+.Fn M_VecGet3
+returns the vector [x,y,z].
+The
+.Fn M_VECTOR3
+macro is an alias for
+.Fn M_VecGet3 .
+.Pp
+.Fn M_VecSet3
+writes the values [x,y,z] into vector
+.Fa v .
+It is only provided for symmetry with the other interfaces; elements are
+more efficiently accessed directly from the
+.Ft M_Vector3
+structure.
+.Pp
+.Fn M_ReadVector3
+reads a
+.Ft M_Vector3
+from a data source and
+.Fn M_WriteVector3
+writes vector
+.Fa v
+to a data source; see
+.Xr AG_DataSource 3
+for details.
+.Sh VECTORS IN R^3: BASIC OPERATIONS
+.nr nS 1
+.Ft int
+.Fn M_VecCopy3 "M_Vector3 *vDst" "const M_Vector3 *vSrc"
+.Pp
+.Ft M_Vector3
+.Fn M_VecMirror3 "M_Vector3 v" "int xFlag" "int yFlag" "int zFlag"
+.Pp
+.Ft M_Vector3
+.Fn M_VecMirror3p "const M_Vector3 *v" "int xFlag" "int yFlag" "int zFlag"
+.Pp
+.Ft M_Real
+.Fn M_VecLen3 "M_Vector3 v"
+.Pp
+.Ft M_Real
+.Fn M_VecLen3p "const M_Vector3 *v"
+.Pp
+.Ft M_Real
+.Fn M_VecDot3 "M_Vector3 a" "M_Vector3 b"
+.Pp
+.Ft M_Real
+.Fn M_VecDot3p "const M_Vector3 *a" "const M_Vector3 *b"
+.Pp
+.Ft M_Real
+.Fn M_VecDistance3 "M_Vector3 a" "M_Vector3 b"
+.Pp
+.Ft M_Real
+.Fn M_VecDistance3p "const M_Vector3 *a" "const M_Vector3 *b"
+.Pp
+.Ft M_Vector3
+.Fn M_VecNorm3 "M_Vector3 v"
+.Pp
+.Ft M_Vector3
+.Fn M_VecNorm3p "const M_Vector3 *v"
+.Pp
+.Ft void
+.Fn M_VecNorm3v "M_Vector3 *v"
+.Pp
+.Ft M_Vector3
+.Fn M_VecCross3 "M_Vector3 a" "M_Vector3 b"
+.Pp
+.Ft M_Vector3
+.Fn M_VecCross3p "const M_Vector3 *a" "const M_Vector3 *b"
+.Pp
+.Ft M_Vector3
+.Fn M_VecNormCross3 "M_Vector3 a" "M_Vector3 b"
+.Pp
+.Ft M_Vector3
+.Fn M_VecNormCross3p "const M_Vector3 *a" "const M_Vector3 *b"
+.Pp
+.Ft M_Vector3
+.Fn M_VecScale3 "M_Vector3 v" "M_Real c"
+.Pp
+.Ft M_Vector3
+.Fn M_VecScale3p "const M_Vector3 *v" "M_Real c"
+.Pp
+.Ft void
+.Fn M_VecScale3v "M_Vector3 *v" "M_Real c"
+.Pp
+.Ft M_Vector3
+.Fn M_VecAdd3 "M_Vector3 a" "M_Vector3 b"
+.Pp
+.Ft M_Vector3
+.Fn M_VecAdd3p "const M_Vector3 *a" "const M_Vector3 *b"
+.Pp
+.Ft void
+.Fn M_VecAdd3v "M_Vector3 *a" "const M_Vector3 *b"
+.Pp
+.Ft void
+.Fn M_VecAdd3n "int n" "..."
+.Pp
+.Ft M_Vector3
+.Fn M_VecSub3 "M_Vector3 a" "M_Vector3 b"
+.Pp
+.Ft M_Vector3
+.Fn M_VecSub3p "const M_Vector3 *a" "const M_Vector3 *b"
+.Pp
+.Ft void
+.Fn M_VecSub3v "M_Vector3 *a" "const M_Vector3 *b"
+.Pp
+.Ft void
+.Fn M_VecSub3n "int n" "..."
+.Pp
+.Ft M_Vector3
+.Fn M_VecAvg3 "M_Vector3 a" "M_Vector3 b"
+.Pp
+.Ft M_Vector3
+.Fn M_VecAvg3p "const M_Vector3 *a" "const M_Vector3 *b"
+.Pp
+.Ft M_Vector3
+.Fn M_VecLERP3 "M_Vector3 a" "M_Vector3 b" "M_Real t"
+.Pp
+.Ft M_Vector3
+.Fn M_VecLERP3p "M_Vector3 *a" "M_Vector3 *b" "M_Real t"
+.Pp
+.Ft M_Vector3
+.Fn M_VecElemPow3 "M_Vector3 *v" "M_Real pow"
+.Pp
+.Ft void
+.Fn M_VecVecAngle3 "M_Vector3 a" "M_Vector3 b" "M_Real *theta" "M_Real *phi"
+.Pp
+.Ft M_Vector3
+.Fn M_VecRotate3 "M_Vector3 v" "M_Real theta" "M_Vector3 axis"
+.Pp
+.Ft void
+.Fn M_VecRotate3v "M_Vector3 *v" "M_Real theta" "M_Vector3 axis"
+.Pp
+.Ft M_Vector3
+.Fn M_VecRotateQuat3 "M_Vector3 v" "M_Quaternion Q"
+.Pp
+.Ft M_Vector3
+.Fn M_VecRotateI3 "M_Vector3 v" "M_Real theta"
+.Pp
+.Ft M_Vector3
+.Fn M_VecRotateJ3 "M_Vector3 v" "M_Real theta"
+.Pp
+.Ft M_Vector3
+.Fn M_VecRotateK3 "M_Vector3 v" "M_Real theta"
+.Pp
+.nr nS 0
+The
+.Fn M_VecCopy3
+function copies the contents of vector
+.Fa vSrc
+into
+.Fa vDst .
+.Pp
+The functions
+.Fn M_VecMirror3
+and
+.Fn M_VecMirror3p
+multiply the specified entries by -1 (i.e., if
+.Fa xFlag
+is 1, the X entry is inverted) and returns the resulting vector.
+.Pp
+.Fn M_VecLen3
+and
+.Fn M_VecLen3p
+return the real length of vector
+.Fa v ,
+that is Sqrt(x^2 + y^2 + z^2).
+.Pp
+.Fn M_VecDot3
+and
+.Fn M_VecDot3p
+return the dot product of vectors
+.Fa a
+and
+.Fa b ,
+that is (a.x*b.x + a.y*b.y + a.z*b.z).
+.Pp
+.Fn M_VecDistance3
+and
+.Fn M_VecDistance3p
+return the real distance between vectors
+.Fa a
+and
+.Fa b ,
+that is the length of the difference vector (a - b).
+.Pp
+.Fn M_VecNorm3
+and
+.Fn M_VecNorm3p
+return the normalized (unit-length) form of
+.Fa v .
+The
+.Fn M_VecNorm3v
+variant normalizes the vector in-place.
+.Pp
+.Fn M_VecCross3
+and
+.Fn M_VecCross3p
+return the cross-product (also known as the "vector product" or "Gibbs
+vector product) of vectors
+.Fa a
+and
+.Fa b .
+.Pp
+.Fn M_VecNormCross3
+and
+.Fn M_VecNormCross3
+return the normalized cross-product of vectors
+.Fa a
+and
+.Fa b .
+This is a useful operation in computer graphics (e.g., for computing plane
+normals from the vertices of a triangle).
+.Pp
+.Fn M_VecScale3
+and
+.Fn M_VecScale3p
+multiplies vector
+.Fa v
+by scalar
+.Fa c
+and returns the result.
+The
+.Fn M_VecScale3v
+variant scales the vector in-place.
+.Pp
+.Fn M_VecAdd3
+and
+.Fn M_VecAdd3p
+return the sum of vectors
+.Fa a
+and
+.Fa b .
+The
+.Fn M_VecAdd3v
+variant returns the result back into
+.Fa a .
+The
+.Fn M_VecAdd3n
+function returns the sum of
+.Fa n
+vectors passed as a variable argument list (following
+.Fa n ) .
+.Pp
+.Fn M_VecSub3
+and
+.Fn M_VecSub3p
+return the difference of vectors (a-b).
+The
+.Fn M_VecSub3v
+variant returns the result back into
+.Fa a .
+The
+.Fn M_VecSub3n
+function returns the difference of
+.Fa n
+vectors passed as a variable argument list (following
+.Fa n ) .
+.Pp
+The
+.Fn M_VecAvg3
+and
+.Fn M_VecAvg3p
+routines compute the average of two vectors (a+b)/2.
+.Pp
+The functions
+.Fn M_VecLERP3
+and
+.Fn M_VecLERP3p
+interpolate linearly between vectors
+.Fa a
+and
+.Fa b ,
+using the scaling factor
+.Fa t
+and returns the result.
+The result is computed as a+(b-a)*t.
+.Pp
+.Fn M_VecElemPow3
+raises the entries of
+.Fa v
+to the power
+.Fa pow ,
+and returns the resulting vector.
+.Pp
+.Fn M_VecVecAngle3
+returns the two angles (in radians) between vectors
+.Fa a
+and
+.Fa b ,
+about the origin.
+.Pp
+.Fn M_VecRotate3
+rotates vector
+.Fa v
+around the origin, about the
+.Fa axis
+vector, by
+.Fa theta
+radians and returns the result.
+The
+.Fn M_VecRotate3v
+variant rotates the vector in-place.
+This function is equivalent to multiplying the vector with a rotation
+matrix (see
+.Xr M_Matrix 3 )
+for the given axis and angle.
+.Pp
+.Fn M_VecRotateQuat3
+performs the rotation described by a quaternion
+.Fa Q
+on vector
+.Fa v .
+See
+.Xr M_Quaternion 3
+for details.
+.Pp
+The
+.Fn M_VecRotateI3 ,
+.Fn M_VecRotateJ3
+and
+.Fn M_VecRotateK3
+shorthands perform a rotation of
+.Fa theta
+radians about the basis vectors I, J or K, respectively.
+.Sh VECTORS IN R^3
+The following routines operate on vectors in R^4, which are represented
+by the structure:
+.Bd -literal
+typedef struct m_vector4 {
+	M_Real x, y, z, w;
+} M_Vector4;
+.Ed
+.Pp
+If SSE support is available (i.e.,
+.Dv HAVE_SSE
+is defined),
+.Ft M_Vector4
+is an union:
+.Bd -literal
+typedef union m_vector4 {
+	__m128 m128;
+	struct { M_Real x, y, z, w; };
+} M_Vector4;
+.Ed
+.Pp
+The following backends are currently available for
+.Ft M_Vector4 :
+.Pp
+.Bl -tag -width "fpu " -compact
+.It fpu
+Native scalar floating point methods.
+.It sse
+Accelerate operations using Streaming SIMD Extensions (SSE).
+.It sse3
+Accelerate operations using SSE3 extensions.
+.El
+.Sh VECTORS IN R^4: INITIALIZATION
+.nr nS 1
+.Ft M_Vector4
+.Fn M_VecI4 "void"
+.Pp
+.Ft M_Vector4
+.Fn M_VecJ4 "void"
+.Pp
+.Ft M_Vector4
+.Fn M_VecK4 "void"
+.Pp
+.Ft M_Vector4
+.Fn M_VecL4 "void"
+.Pp
+.Ft M_Vector4
+.Fn M_VecZero4 "void"
+.Pp
+.Ft M_Vector4
+.Fn M_VecGet4 "M_Real x" "M_Real y" "M_Real z" "M_Real w"
+.Pp
+.Ft void
+.Fn M_VecSet4 "M_Vector4 *v" "M_Real x" "M_Real y" "M_Real z" "M_Real w"
+.Pp
+.Ft void
+.Fn M_VecCopy4 "M_Vector4 *vDst" "const M_Vector4 *vSrc"
+.Pp
+.Ft M_Vector4
+.Fn M_ReadVector4 "AG_DataSource *ds"
+.Pp
+.Ft void
+.Fn M_WriteVector4 "AG_DataSource *ds" "const M_Vector4 *v"
+.Pp
+.nr nS 0
+The
+.Fn M_VecI4 ,
+.Fn M_VecJ4 ,
+.Fn M_VecK4
+and
+.Fn M_VecL4
+routines return the basis vectors [1;0;0;0], [0;1;0;0], [0;0;1;0] and [0;0;0;1],
+respectively.
+.Fn M_VecZero4
+returns the zero vector [0;0;0;0].
+.Fn M_VecGet4
+returns the vector [x,y,z,w].
+The
+.Fn M_VECTOR4
+macro is an alias for
+.Fn M_VecGet4 .
+.Pp
+.Fn M_VecSet4
+writes the values [x,y,z,w] into vector
+.Fa v .
+It is only provided for symmetry with the other interfaces; elements are
+more efficiently accessed directly from the
+.Ft M_Vector4
+structure.
+.Pp
+.Fn M_ReadVector4
+reads a
+.Ft M_Vector4
+from a data source and
+.Fn M_WriteVector4
+writes vector
+.Fa v
+to a data source; see
+.Xr AG_DataSource 4
+for details.
+.Sh VECTORS IN R^4: BASIC OPERATIONS
+.nr nS 1
+.Ft int
+.Fn M_VecCopy4 "M_Vector4 *vDst" "const M_Vector4 *vSrc"
+.Pp
+.Ft M_Vector4
+.Fn M_VecMirror4 "M_Vector4 v" "int xFlag" "int yFlag" "int zFlag" "int wFlag"
+.Pp
+.Ft M_Vector4
+.Fn M_VecMirror4p "const M_Vector4 *v" "int xFlag" "int yFlag" "int zFlag" "int wFlag"
+.Pp
+.Ft M_Real
+.Fn M_VecLen4 "M_Vector4 v"
+.Pp
+.Ft M_Real
+.Fn M_VecLen4p "const M_Vector4 *v"
+.Pp
+.Ft M_Real
+.Fn M_VecDot4 "M_Vector4 a" "M_Vector4 b"
+.Pp
+.Ft M_Real
+.Fn M_VecDot4p "const M_Vector4 *a" "const M_Vector4 *b"
+.Pp
+.Ft M_Real
+.Fn M_VecDistance4 "M_Vector4 a" "M_Vector4 b"
+.Pp
+.Ft M_Real
+.Fn M_VecDistance4p "const M_Vector4 *a" "const M_Vector4 *b"
+.Pp
+.Ft M_Vector4
+.Fn M_VecNorm4 "M_Vector4 v"
+.Pp
+.Ft M_Vector4
+.Fn M_VecNorm4p "const M_Vector4 *v"
+.Pp
+.Ft void
+.Fn M_VecNorm4v "M_Vector4 *v"
+.Pp
+.Ft M_Vector4
+.Fn M_VecScale4 "M_Vector4 v" "M_Real c"
+.Pp
+.Ft M_Vector4
+.Fn M_VecScale4p "const M_Vector4 *v" "M_Real c"
+.Pp
+.Ft void
+.Fn M_VecScale4v "M_Vector4 *v" "M_Real c"
+.Pp
+.Ft M_Vector4
+.Fn M_VecAdd4 "M_Vector4 a" "M_Vector4 b"
+.Pp
+.Ft M_Vector4
+.Fn M_VecAdd4p "const M_Vector4 *a" "const M_Vector4 *b"
+.Pp
+.Ft void
+.Fn M_VecAdd4v "M_Vector4 *a" "const M_Vector4 *b"
+.Pp
+.Ft void
+.Fn M_VecAdd4n "int n" "..."
+.Pp
+.Ft M_Vector4
+.Fn M_VecSub4 "M_Vector4 a" "M_Vector4 b"
+.Pp
+.Ft M_Vector4
+.Fn M_VecSub4p "const M_Vector4 *a" "const M_Vector4 *b"
+.Pp
+.Ft void
+.Fn M_VecSub4v "M_Vector4 *a" "const M_Vector4 *b"
+.Pp
+.Ft void
+.Fn M_VecSub4n "int n" "..."
+.Pp
+.Ft M_Vector4
+.Fn M_VecAvg4 "M_Vector4 a" "M_Vector4 b"
+.Pp
+.Ft M_Vector4
+.Fn M_VecAvg4p "const M_Vector4 *a" "const M_Vector4 *b"
+.Pp
+.Ft M_Vector4
+.Fn M_VecLERP4 "M_Vector4 a" "M_Vector4 b" "M_Real t"
+.Pp
+.Ft M_Vector4
+.Fn M_VecLERP4p "M_Vector4 *a" "M_Vector4 *b" "M_Real t"
+.Pp
+.Ft M_Vector4
+.Fn M_VecElemPow4 "M_Vector4 *v" "M_Real pow"
+.Pp
+.Ft void
+.Fn M_VecVecAngle4 "M_Vector4 a" "M_Vector4 b" "M_Real *phi1" "M_Real *phi2" "M_Real *phi3"
+.Pp
+.Ft M_Vector4
+.Fn M_VecRotate4 "M_Vector4 v" "M_Real theta" "M_Vector4 axis"
+.Pp
+.Ft void
+.Fn M_VecRotate4v "M_Vector4 *v" "M_Real theta" "M_Vector4 axis"
+.Pp
+.nr nS 0
+The
+.Fn M_VecCopy4
+function copies the contents of vector
+.Fa vSrc
+into
+.Fa vDst .
+.Pp
+The functions
+.Fn M_VecMirror4
+and
+.Fn M_VecMirror4p
+multiply the specified entries by -1 (i.e., if
+.Fa xFlag
+is 1, the X entry is inverted) and returns the resulting vector.
+.Pp
+.Fn M_VecLen4
+and
+.Fn M_VecLen4p
+return the real length of vector
+.Fa v ,
+that is Sqrt(x^2 + y^2 + z^2 + w^2).
+.Pp
+.Fn M_VecDot4
+and
+.Fn M_VecDot4p
+return the dot product of vectors
+.Fa a
+and
+.Fa b ,
+that is (a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w).
+.Pp
+.Fn M_VecDistance4
+and
+.Fn M_VecDistance4p
+return the real distance between vectors
+.Fa a
+and
+.Fa b ,
+that is the length of the difference vector (a - b).
+.Pp
+.Fn M_VecNorm4
+and
+.Fn M_VecNorm4p
+return the normalized (unit-length) form of
+.Fa v .
+The
+.Fn M_VecNorm4v
+variant normalizes the vector in-place.
+.Pp
+.Fn M_VecScale4
+and
+.Fn M_VecScale4p
+multiplies vector
+.Fa v
+by scalar
+.Fa c
+and returns the result.
+The
+.Fn M_VecScale4v
+variant scales the vector in-place.
+.Pp
+.Fn M_VecAdd4
+and
+.Fn M_VecAdd4p
+return the sum of vectors
+.Fa a
+and
+.Fa b .
+The
+.Fn M_VecAdd4v
+variant returns the result back into
+.Fa a .
+The
+.Fn M_VecAdd4n
+function returns the sum of
+.Fa n
+vectors passed as a variable argument list (following
+.Fa n ) .
+.Pp
+.Fn M_VecSub4
+and
+.Fn M_VecSub4p
+return the difference of vectors (a-b).
+The
+.Fn M_VecSub4v
+variant returns the result back into
+.Fa a .
+The
+.Fn M_VecSub4n
+function returns the difference of
+.Fa n
+vectors passed as a variable argument list (following
+.Fa n ) .
+.Pp
+The
+.Fn M_VecAvg4
+and
+.Fn M_VecAvg4p
+routines compute the average of two vectors (a+b)/2.
+.Pp
+The functions
+.Fn M_VecLERP4
+and
+.Fn M_VecLERP4p
+interpolate linearly between vectors
+.Fa a
+and
+.Fa b ,
+using the scaling factor
+.Fa t
+and returns the result.
+The result is computed as a+(b-a)*t.
+.Pp
+.Fn M_VecElemPow4
+raises the entries of
+.Fa v
+to the power
+.Fa pow ,
+and returns the resulting vector.
+.Pp
+.Fn M_VecVecAngle4
+returns the three angles (in radians) between vectors
+.Fa a
+and
+.Fa b ,
+about the origin.
+.Pp
+.Fn M_VecRotate4
+rotates vector
+.Fa v
+around the origin, about the
+.Fa axis
+vector, by
+.Fa theta
+radians and returns the result.
+The
+.Fn M_VecRotate4v
+variant rotates the vector in-place.
+This function is equivalent to multiplying the vector with a rotation
+matrix (see
+.Xr M_Matrix 4 )
+for the given axis and angle.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr M_Real 3 ,
+.Xr M_Complex 3 ,
+.Xr M_Quaternion 3 ,
+.Xr M_Matrix 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.3.4.
