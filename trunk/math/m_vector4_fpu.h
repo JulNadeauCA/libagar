@@ -20,12 +20,6 @@ M_Vector4	M_VectorNorm4_FPU(M_Vector4);
 
 M_Vector4	M_VectorNorm4p_FPU(const M_Vector4 *);
 void		M_VectorNorm4v_FPU(M_Vector4 *);
-M_Vector4	M_VectorCross4_FPU(M_Vector4, M_Vector4, M_Vector4);
-M_Vector4	M_VectorCross4p_FPU(const M_Vector4 *, const M_Vector4 *,
-		                     const M_Vector4 *);
-M_Vector4	M_VectorNormCross4_FPU(M_Vector4, M_Vector4, M_Vector4);
-M_Vector4	M_VectorNormCross4p_FPU(const M_Vector4 *, const M_Vector4 *,
-		                         const M_Vector4 *);
 M_Vector4	M_VectorScale4_FPU(M_Vector4, M_Real);
 M_Vector4	M_VectorScale4p_FPU(const M_Vector4 *, M_Real);
 void		M_VectorScale4v_FPU(M_Vector4 *, M_Real);
