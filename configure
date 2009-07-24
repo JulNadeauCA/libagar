@@ -899,6 +899,9 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DEPRECATED_ATTRIBUTE
 fi
 rm -f conftest.c $testdir/conftest
+else
+echo "#undef HAVE_DEPRECATED_ATTRIBUTE" >config/have_deprecated_attribute.h
+echo "hdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = nil" >>configure.lua
 fi;
 $ECHO_N "checking format attribute..."
 $ECHO_N "checking format attribute..." >> config.log
