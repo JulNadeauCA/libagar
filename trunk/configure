@@ -844,6 +844,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_CONST_ATTRIBUTE
 fi
 rm -f conftest.c $testdir/conftest
+if [ "${SYSTEM}" != "Darwin" ]; then
 $ECHO_N "checking deprecated attribute..."
 $ECHO_N "checking deprecated attribute..." >> config.log
 MK_CACHED="No"
@@ -898,6 +899,7 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DEPRECATED_ATTRIBUTE
 fi
 rm -f conftest.c $testdir/conftest
+fi;
 $ECHO_N "checking format attribute..."
 $ECHO_N "checking format attribute..." >> config.log
 MK_CACHED="No"
