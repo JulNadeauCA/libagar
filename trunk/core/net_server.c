@@ -41,9 +41,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#ifdef HAVE_SYSLOG
-#include <syslog.h>
-#endif
 #include <unistd.h>
 #include <netdb.h>
 #include <errno.h>
@@ -56,9 +53,12 @@
 #include "net_sockunion.h"
 #include "net_fgetln.h"
 
-#define MAX_SERVER_SOCKS 64
-
-#if defined(HAVE_SYSLOG) || defined(HAVE_VSYSLOG)
+#include <config/have_syslog.h>
+#include <config/have_syslog_r.h>
+#include <config/have_vsyslog.h>
+#include <config/have_vsyslog_r.h>
+#if defined(HAVE_SYSLOG)
+#include <syslog.h>
 const int nsSyslogLevels[] = {
 	LOG_DEBUG, LOG_INFO, LOG_NOTICE, LOG_WARNING,
 	LOG_ERR, LOG_CRIT, LOG_ALERT, LOG_EMERG
@@ -68,7 +68,16 @@ const char *nsLogLevelNames[] = {
 	"DEBUG", "INFO", "NOTICE", "WARNING",
 	"ERR", "CRIT", "ALERT", "EMERG"
 };
+#endif /* HAVE_SYSLOG */
+
+#include <config/have_setproctitle.h>
+#ifdef HAVE_SETPROCTITLE
+#define Setproctitle setproctitle
+#else
+#define Setproctitle(arg...) ((void)0)
 #endif
+
+#define MAX_SERVER_SOCKS 64
 
 void
 NS_InitSubsystem(Uint flags)
@@ -77,6 +86,63 @@ NS_InitSubsystem(Uint flags)
 	AG_RegisterClass(&nsClientClass);
 }
 
+/* Server: General-purpose write() in server context. */
+int
+NS_Write(NS_Server *ns, int fd, const void *data, size_t len)
+{
+	size_t nwrote;
+	ssize_t rv;
+
+	for (nwrote = 0; nwrote < len; ) {
+		rv = write(fd, data+nwrote, len-nwrote);
+		if (rv == -1) {
+			if (errno == EINTR) {
+				if (ns->sigCheckFn != NULL) {
+					ns->sigCheckFn(ns);
+				}
+				continue;
+			} else {
+				AG_SetError("Write error: %s", strerror(errno));
+				return (-1);
+			}
+		} else if (rv == 0) {
+			AG_SetError("EOF");
+			return (-1);
+		}
+		nwrote += rv;
+	}
+	return (0);
+}
+
+/* Server: General-purpose read() in server context. */
+int
+NS_Read(NS_Server *ns, int fd, void *data, size_t len)
+{
+	size_t nread;
+	ssize_t rv;
+
+	for (nread = 0; nread< len; ) {
+		rv = read(fd, data+nread, len-nread);
+		if (rv == -1) {
+			if (errno == EINTR) {
+				if (ns->sigCheckFn != NULL) {
+					ns->sigCheckFn(ns);
+				}
+				continue;
+			} else {
+				AG_SetError("Read error: %s", strerror(errno));
+				return (-1);
+			}
+		} else if (rv == 0) {
+			AG_SetError("EOF");
+			return (-1);
+		}
+		nread += rv;
+	}
+	return (0);
+}
+
+/* Create a new server instance. */
 NS_Server *
 NS_ServerNew(void *parent, Uint flags, const char *name, const char *proto,
     const char *protoVer, const char *port)
@@ -126,7 +192,7 @@ DestroyServer(void *obj)
 	Free(ns->listItems);
 }
 
-/* Set the protocol version string to use (thread unsafe). */
+/* Server: Set protocol version string to use. */
 void
 NS_ServerSetProtocol(NS_Server *ns, const char *proto, const char *ver)
 {
@@ -134,7 +200,7 @@ NS_ServerSetProtocol(NS_Server *ns, const char *proto, const char *ver)
 	ns->protoVer = ver;
 }
 
-/* Set the bind() hostname to use (thread unsafe). */
+/* Server: Set the bind() hostname to use. */
 void
 NS_ServerBind(NS_Server *ns, const char *hostName, const char *portName)
 {
@@ -142,30 +208,38 @@ NS_ServerBind(NS_Server *ns, const char *hostName, const char *portName)
 	ns->port = portName;
 }
 
+/* Log an error / informational message from the daemon. */
 void
 NS_Log(enum ns_log_lvl loglvl, const char *fmt, ...)
 {
+#if defined(HAVE_VSYSLOG_R) || defined(HAVE_SYSLOG_R)
+	struct syslog_data sdata = SYSLOG_DATA_INIT;
+#endif
 #if !defined(HAVE_VSYSLOG) && defined(HAVE_SYSLOG)
 	char msg[256];
 #endif
 	va_list ap;
 
 	va_start(ap, fmt);
-#ifdef HAVE_VSYSLOG
-	vsyslog(nsSyslogLevels[loglvl], fmt, ap)
-#else
-# ifdef HAVE_SYSLOG
+#if defined(HAVE_VSYSLOG_R)
+	vsyslog_r(nsSyslogLevels[loglvl], &sdata, fmt, ap);
+#elif defined(HAVE_VSYSLOG)
+	vsyslog(nsSyslogLevels[loglvl], fmt, ap);
+#elif defined(HAVE_SYSLOG_R)
+	Vsnprintf(msg, sizeof(msg), fmt, ap);
+	syslog_r(nsSyslogLevels[loglvl], &sdata, "%s", msg);
+#elif defined(HAVE_SYSLOG)
 	Vsnprintf(msg, sizeof(msg), fmt, ap);
 	syslog(nsSyslogLevels[loglvl], "%s", msg);
-# else
+#else
 	fprintf(stderr, "[%s] ", nsLogLevelNames[loglvl]);
 	vfprintf(stderr, fmt, ap);
 	fputc('\n', stderr);
-# endif
 #endif
 	va_end(ap);
 }
 
+/* Child: Initiate a List response. */
 void
 NS_BeginList(NS_Server *ns)
 {
@@ -178,6 +252,7 @@ NS_BeginList(NS_Server *ns)
 	ns->listItemCount = 0;
 }
 
+/* Child: Send a completed List response. */
 void
 NS_EndList(NS_Server *ns)
 {
@@ -197,8 +272,8 @@ NS_EndList(NS_Server *ns)
 		void *itembuf = ns->listItems[i];
 		size_t itemsz = ns->listItemSize[i];
 
-		if (fwrite(itembuf, 1, itemsz, stdout) < itemsz) {
-			NS_Log(NS_ERR, "EndList: Write error");
+		if (NS_Write(ns, STDOUT_FILENO, itembuf, itemsz) == -1) {
+			NS_Log(NS_ERR, "EndList: %s", AG_GetError());
 			exit(1);
 		}
 	}
@@ -215,6 +290,7 @@ NS_EndList(NS_Server *ns)
 	ns->listItems = NULL;
 }
 
+/* Child: Append a data item to the current List response. */
 void
 NS_ListItem(NS_Server *ns, void *buf, size_t len)
 {
@@ -232,6 +308,7 @@ NS_ListItem(NS_Server *ns, void *buf, size_t len)
 	ns->listItemCount++;
 }
 
+/* Child: Append a string item to the current List response. */
 void
 NS_ListString(NS_Server *ns, const char *fmt, ...)
 {
@@ -245,22 +322,45 @@ NS_ListString(NS_Server *ns, const char *fmt, ...)
 	NS_ListItem(ns, buf, strlen(buf)+1);
 }
 
+/*
+ * Server: Register a "login" callback routine, to be invoked just after
+ * successful authentication of a client.
+ */
 void
 NS_RegLoginFn(NS_Server *ns, NS_LoginFn fn)
 {
 	ns->loginFn = fn;
 }
 
+/*
+ * Server: Register a "logout" callback routine, to be invoked just after
+ * a normal session logout.
+ */
 void
 NS_RegLogoutFn(NS_Server *ns, NS_LogoutFn fn)
 {
 	ns->logoutFn = fn;
 }
 
+/*
+ * Server: Register an alternate error handler routine for failed commands.
+ * The default routine simply returns an error message (code=1) to the client.
+ */
 void
 NS_RegErrorFn(NS_Server *ns, NS_ErrorFn fn)
 {
 	ns->errorFn = fn;
+}
+
+/*
+ * Server: Register a signal check function, to be invoked whenever the
+ * process should check for pending signals (e.g., after an EINTR return
+ * from a system call).
+ */
+void
+NS_RegSigCheckFn(NS_Server *ns, NS_SigCheckFn fn)
+{
+	ns->sigCheckFn = fn;
 }
 
 /* Register a server command. */
@@ -275,7 +375,11 @@ NS_RegCmd(NS_Server *ns, const char *name, NS_CommandFn fn, void *arg)
 	Debug(ns, "Registered function: %s (%p)", name, arg);
 }
 
-/* Register an authentication method. */
+/*
+ * Register an authentication method. The callback routine is expected
+ * to return 0 on success. On error, it should return -1 and set an
+ * error message.
+ */
 void
 NS_RegAuthMode(NS_Server *ns, const char *name, NS_AuthFn fn, void *arg)
 {
@@ -310,11 +414,11 @@ ProcessCommand(NS_Server *ns, NS_Command *ncmd)
 }
 
 /*
- * Negotiate the version, authenticate and loop processing requests from
- * the client.
+ * Child: Main routine - Authenticate and loop processing requests
+ * from the client.
  */
 static void
-ServerLoop(NS_Server *ns)
+ChildQueryLoop(NS_Server *ns)
 {
 	char tmp[AG_BUFFER_MAX];
 	char prot[32];
@@ -367,7 +471,6 @@ ServerLoop(NS_Server *ns)
 		NS_Message(ns, 1, "Auth failed: %s", AG_GetError());
 		exit(1);
 	}
-	
 	if (ns->loginFn != NULL) {
 		if (ns->loginFn(ns, NULL) == -1) {
 			NS_Log(NS_ERR, "Login failed: %s", AG_GetError());
@@ -441,19 +544,25 @@ read_failure:
 	exit(0);
 }
 
+/* Child: Terminate the current session (daemon child context). */
 void
 NS_Logout(NS_Server *ns, int rv, const char *fmt, ...)
 {
 	char buf[AG_BUFFER_MAX];
 	va_list ap;
-
+	
 	va_start(ap, fmt);
 	Vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 	NS_Message(ns, 1, "%s", buf);
+	
+	if (ns->logoutFn != NULL) {
+		ns->logoutFn(ns, NULL);
+	}
 	exit(rv);
 }
 
+/* Child: Write a numerical status code to the client. */
 void
 NS_Message(NS_Server *ns, int rv, const char *fmt, ...)
 {
@@ -484,7 +593,7 @@ NS_BeginData(NS_Server *ns, size_t nbytes)
 size_t
 NS_Data(NS_Server *ns, char *buf, size_t len)
 {
-	return (fwrite(buf, 1, len, stdout));
+	return NS_Write(ns, STDOUT_FILENO, buf, len);
 }
 
 /* Terminate binary transfer. */
@@ -520,11 +629,11 @@ sig_urg(int sigraised)
 static void
 sig_quit(int sigraised)
 {
-#ifdef HAVE_SYSLOG
+#if defined(HAVE_SYSLOG_R)
 	struct syslog_data sdata = SYSLOG_DATA_INIT;
-
-	syslog_r(LOG_ERR, &sdata, "client got signal %s",
-	    sys_signame[sigraised]);
+	syslog_r(LOG_ERR, &sdata, "client got signal %d", sigraised);
+#elif defined(HAVE_SYSLOG)
+	syslog(LOG_ERR, "client got signal %d", sigraised);
 #endif
 	_exit(0);
 }
@@ -532,10 +641,11 @@ sig_quit(int sigraised)
 static void
 sig_pipe(int sigraised)
 {
-#ifdef HAVE_SYSLOG
+#if defined(HAVE_SYSLOG_R)
 	struct syslog_data sdata = SYSLOG_DATA_INIT;
-
 	syslog_r(LOG_DEBUG, &sdata, "client lost connection");
+#elif defined(HAVE_SYSLOG)
+	syslog(LOG_DEBUG, "client lost connection");
 #endif
 	_exit(0);
 }
@@ -543,11 +653,11 @@ sig_pipe(int sigraised)
 static void
 sig_die(int sigraised)
 {
-#ifdef HAVE_SYSLOG
+#if defined(HAVE_SYSLOG_R)
 	struct syslog_data sdata = SYSLOG_DATA_INIT;
-
-	syslog_r(LOG_DEBUG, &sdata, "server got signal %s",
-	    sys_signame[sigraised]);
+	syslog_r(LOG_DEBUG, &sdata, "server got signal %d", sigraised);
+#elif defined(HAVE_SYSLOG)
+	syslog(LOG_DEBUG, "server got signal %d", sigraised);
 #endif
 	kill(0, SIGUSR1);
 	_exit(0);
@@ -562,7 +672,7 @@ cmd_quit(NS_Server *ns, NS_Command *cmd, void *arg)
 
 /* Main loop of the listening process. */
 int
-NS_Listen(NS_Server *ns)
+NS_ServerLoop(NS_Server *ns)
 {
 	struct addrinfo hints, *res, *res0;
 	const char *cause = NULL;
@@ -650,7 +760,6 @@ NS_Listen(NS_Server *ns)
 			AG_SetError("select: %s", strerror(errno));
 			return (-1);
 		}
-
 		for (i = 0; i < nservsocks; i++) {
 			union sockunion paddr;
 			socklen_t paddrlen = sizeof(paddr);
@@ -662,57 +771,65 @@ NS_Listen(NS_Server *ns)
 			rv = accept(servsocks[i], (struct sockaddr *)&paddr,
 			    &paddrlen);
 			if (rv == -1) {
-				fprintf(stderr, "accept: %s\n",
-				    strerror(errno));
+				NS_Log(NS_ERR, "serv socket accept(): %s", strerror(errno));
 				continue;
 			}
-			if ((pid = fork()) == 0) {	/* Child */
-				dup2(rv, 0);
-				dup2(rv, 1);
-
-				for (i = 0; i < nservsocks; i++) {
-					close(servsocks[i]);
-				}
-				sa.sa_handler = SIG_DFL;
-				sigaction(SIGCHLD, &sa, NULL);
-
-				sa.sa_handler = sig_urg;	/* OOB */
-				sa.sa_flags = 0;
-				sigaction(SIGURG, &sa, NULL);
-
-				sa.sa_handler = sig_pipe;	/* Lost conn. */
-				sigaction(SIGPIPE, &sa, NULL);
-
-				sigfillset(&sa.sa_mask);	/* Fatal */
-				sa.sa_flags = SA_RESTART;
-				sa.sa_handler = sig_quit;
-				sigaction(SIGHUP, &sa, NULL);
-				sigaction(SIGINT, &sa, NULL);
-				sigaction(SIGQUIT, &sa, NULL);
-				sigaction(SIGTERM, &sa, NULL);
-				sigaction(SIGUSR1, &sa, NULL);
-
-				i = 1;
-				if (setsockopt(0, SOL_SOCKET, SO_OOBINLINE, &i,
-				    sizeof(i)) == -1) {
-					NS_Log(NS_ERR,
-					    "SO_OOBINLINE: %s (ignored)",
-					    strerror(errno));
-				}
-				if (fcntl(fileno(stdin), F_SETOWN, getpid())
-				    == -1) {
-					NS_Log(NS_ERR,
-					    "fcntl F_SETOWN: %s (ignored)",
-					    strerror(errno));
-				}
-				if (setvbuf(stdout, NULL, _IOLBF, 0) == EOF) {
-					NS_Log(NS_ERR, "_IOLBF stdout: %s",
-					    strerror(errno));
-					exit(1);
-				}
-				ServerLoop(ns);
+			if ((pid = fork()) == -1) {
+				NS_Log(NS_ERR, "serv fork: %s", strerror(errno));
+				close(rv);
+				continue;
+			} else if (pid != 0) {
+				close(rv);
+				continue;
 			}
-			close(rv);
+
+			/* In child process */
+
+			Setproctitle("%s", ns->protoName);
+#ifdef HAVE_SYSLOG
+			openlog(ns->protoName, LOG_PID, LOG_LOCAL0);
+#endif
+			dup2(rv, 0);
+			dup2(rv, 1);
+
+			for (i = 0; i < nservsocks; i++) {
+				close(servsocks[i]);
+			}
+			sa.sa_handler = SIG_DFL;
+			sigaction(SIGCHLD, &sa, NULL);
+
+			sa.sa_handler = sig_urg;	/* OOB */
+			sa.sa_flags = 0;
+			sigaction(SIGURG, &sa, NULL);
+
+			sa.sa_handler = sig_pipe;	/* Lost conn. */
+			sigaction(SIGPIPE, &sa, NULL);
+
+			sigfillset(&sa.sa_mask);	/* Fatal */
+			sa.sa_flags = SA_RESTART;
+			sa.sa_handler = sig_quit;
+			sigaction(SIGHUP, &sa, NULL);
+			sigaction(SIGINT, &sa, NULL);
+			sigaction(SIGQUIT, &sa, NULL);
+			sigaction(SIGTERM, &sa, NULL);
+			sigaction(SIGUSR1, &sa, NULL);
+
+			i = 1;
+			if (setsockopt(0, SOL_SOCKET, SO_OOBINLINE, &i,
+			    sizeof(i)) == -1) {
+				NS_Log(NS_ERR, "SO_OOBINLINE: %s (ignored)",
+				    strerror(errno));
+			}
+			if (fcntl(fileno(stdin), F_SETOWN, getpid()) == -1) {
+				NS_Log(NS_ERR, "fcntl F_SETOWN: %s (ignored)",
+				    strerror(errno));
+			}
+			if (setvbuf(stdout, NULL, _IOLBF, 0) == EOF) {
+				NS_Log(NS_ERR, "_IOLBF stdout: %s",
+				    strerror(errno));
+				exit(1);
+			}
+			ChildQueryLoop(ns);
 		}
 	}
 	return (0);
