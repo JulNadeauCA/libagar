@@ -327,7 +327,7 @@ ServerLoop(void *p)
 {
 	AG_TextTmsg(AG_MSG_INFO, 1000, _("Debug server started"));
 
-	if (NS_Listen(&server) == -1) {
+	if (NS_ServerLoop(&server) == -1) {
 		AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
 	}
 	AG_ThreadExit(NULL);
