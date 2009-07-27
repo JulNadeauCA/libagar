@@ -62,6 +62,7 @@ prereq:
 	for D in ${SUBDIR}; do \
 		echo "==> $$D"; \
 		touch $$D/Makefile.config; \
+		touch $$D/.depend; \
 	done
 
 proj:
