@@ -215,9 +215,11 @@ MyOverlayFunction(AG_Event *event)
 
 /* Mouse click callback function. */
 static void
-Mousebutton(AG_Event *event)
+ButtonDown(AG_Event *event)
 {
 	int button = AG_INT(1);
+
+	printf("button down %d\n", button);
 
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
@@ -227,6 +229,14 @@ Mousebutton(AG_Event *event)
 		vz += 0.1;
 		break;
 	}
+}
+
+static void
+ButtonUp(AG_Event *event)
+{
+	int button = AG_INT(1);
+
+	printf("button up %d\n", button);
 }
 
 static void
@@ -253,7 +263,8 @@ CreateMainWindow(void)
 		AG_GLViewScaleFn(glv, MyScaleFunction, NULL);
 		AG_GLViewDrawFn(glv, MyDrawFunction, NULL);
 		AG_GLViewOverlayFn(glv, MyOverlayFunction, NULL);
-		AG_GLViewButtondownFn(glv, Mousebutton, NULL);
+		AG_GLViewButtondownFn(glv, ButtonDown, NULL);
+		AG_GLViewButtonupFn(glv, ButtonUp, NULL);
 
 		nb = AG_NotebookNew(hb, 0);
 		AG_ExpandVert(nb);
