@@ -213,8 +213,8 @@ main(int argc, char *argv[])
 		goto out;
 	}
 
-	/* Start server main loop. */
-	if (NS_Listen(serv) == -1) {
+	/* Server main loop. */
+	if (NS_ServerLoop(serv) == -1) {
 		fprintf(stderr, "%s.%s: %s\n", host, port, strerror(errno));
 		exit(1);
 	}
