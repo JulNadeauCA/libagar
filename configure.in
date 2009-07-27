@@ -68,6 +68,8 @@ CHECK(dlopen)
 CHECK(dyld)
 CHECK(shl_load)
 CHECK(gettimeofday)
+CHECK(setproctitle)
+CHECK(syslog)
 
 C_DEFINE(_AGAR_INTERNAL)
 C_DEFINE(_BSD_SOURCE)

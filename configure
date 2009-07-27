@@ -137,6 +137,16 @@ else
     ECHO_N="echo -n"
 fi
 
+PERL=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -x "${path}" ]; then
+		if [ -e "${path}/perl" ]; then
+			PERL="${path}/perl"
+			break
+		fi
+	fi
+done
+
 if [ "${prefix}" != "" ]; then
     PREFIX="$prefix"
 else
@@ -144,9 +154,16 @@ else
 fi
 
 if [ "${srcdir}" != "" ]; then
+	if [ "${PERL}" = "" ]; then
+		echo "*"
+		echo "* Separate build (--srcdir) requires perl, but there is"
+		echo "* no perl interpreter to be found in your PATH."
+		echo "*"
+		exit 1
+	fi
 	echo "* Separate build (source in ${srcdir})"
 	SRC=${srcdir}
-	perl ${SRC}/mk/mkconcurrent.pl ${SRC}
+	${PERL} ${SRC}/mk/mkconcurrent.pl ${SRC}
 	if [ $? != 0 ]; then
 		exit 1;
 	fi
@@ -171,20 +188,28 @@ fi
 if [ "${includes}" = "" ]; then
 	includes="yes"
 fi
-if [ "${includes}" = "link" ]; then
+case "${includes}" in
+yes|no)
+	;;
+link)
 	if [ "${with_proj_generation}" ]; then
 		echo "Cannot use --includes=link with --with-proj-generation!"
 		exit 1
 	fi
-elif [ "${includes}" = "yes" ]; then
-	noop=1
-elif [ "${includes}" = "no" ]; then
-	noop=1
-else
+	;;
+*)
 	echo "Usage: --includes [yes|no|link]"
 	exit 1
-fi
+	;;
+esac
 
+if [ "${PERL}" != "" ]; then
+	${PERL} ${SRC}/mk/gen-dotdepend.pl
+else
+	echo "* Warning: No perl was found. Perl is required for automatic"
+	echo "* generation of .depend files. You may need to create empty"
+	echo "* .depend files where it is required."
+fi
 if [ "${help}" = "yes" ]; then
 echo "Usage: ./configure [args]"
 echo "    --prefix                  Installation prefix [/usr/local]"
@@ -3675,6 +3700,277 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GETTIMEOFDAY
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for a setproctitle() function..."
+$ECHO_N "checking for a setproctitle() function..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SETPROCTITLE" ]; then
+		HAVE_SETPROCTITLE=`cat ${cache}/ctest-HAVE_SETPROCTITLE`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SETPROCTITLE`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdlib.h>
+int
+main(int argc, char *argv[])
+{
+	setproctitle("foo %d", 1);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SETPROCTITLE="yes"
+echo "#ifndef HAVE_SETPROCTITLE" > config/have_setproctitle.h
+echo "#define HAVE_SETPROCTITLE \"$HAVE_SETPROCTITLE\"" >> config/have_setproctitle.h
+echo "#endif" >> config/have_setproctitle.h
+echo "hdefs[\"HAVE_SETPROCTITLE\"] = \"$HAVE_SETPROCTITLE\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SETPROCTITLE="no"
+echo "#undef HAVE_SETPROCTITLE" >config/have_setproctitle.h
+echo "hdefs[\"HAVE_SETPROCTITLE\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SETPROCTITLE" > ${cache}/ctest-HAVE_SETPROCTITLE
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SETPROCTITLE
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for a syslog() function..."
+$ECHO_N "checking for a syslog() function..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SYSLOG" ]; then
+		HAVE_SYSLOG=`cat ${cache}/ctest-HAVE_SYSLOG`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SYSLOG`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <syslog.h>
+#include <stdarg.h>
+int
+main(int argc, char *argv[])
+{
+	syslog(LOG_DEBUG, "foo %d", 1);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SYSLOG="yes"
+echo "#ifndef HAVE_SYSLOG" > config/have_syslog.h
+echo "#define HAVE_SYSLOG \"$HAVE_SYSLOG\"" >> config/have_syslog.h
+echo "#endif" >> config/have_syslog.h
+echo "hdefs[\"HAVE_SYSLOG\"] = \"$HAVE_SYSLOG\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SYSLOG="no"
+echo "#undef HAVE_SYSLOG" >config/have_syslog.h
+echo "hdefs[\"HAVE_SYSLOG\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SYSLOG" > ${cache}/ctest-HAVE_SYSLOG
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SYSLOG
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for syslog_r()..."
+$ECHO_N "checking for syslog_r()..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_SYSLOG_R" ]; then
+		HAVE_SYSLOG_R=`cat ${cache}/ctest-HAVE_SYSLOG_R`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_SYSLOG_R`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <syslog.h>
+#include <stdarg.h>
+int
+main(int argc, char *argv[])
+{
+	struct syslog_data sdata = SYSLOG_DATA_INIT;
+	syslog_r(LOG_ERR, &sdata, "foo %d", 1);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SYSLOG_R="yes"
+echo "#ifndef HAVE_SYSLOG_R" > config/have_syslog_r.h
+echo "#define HAVE_SYSLOG_R \"$HAVE_SYSLOG_R\"" >> config/have_syslog_r.h
+echo "#endif" >> config/have_syslog_r.h
+echo "hdefs[\"HAVE_SYSLOG_R\"] = \"$HAVE_SYSLOG_R\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SYSLOG_R="no"
+echo "#undef HAVE_SYSLOG_R" >config/have_syslog_r.h
+echo "hdefs[\"HAVE_SYSLOG_R\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_SYSLOG_R" > ${cache}/ctest-HAVE_SYSLOG_R
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_SYSLOG_R
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for vsyslog()..."
+$ECHO_N "checking for vsyslog()..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_VSYSLOG" ]; then
+		HAVE_VSYSLOG=`cat ${cache}/ctest-HAVE_VSYSLOG`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_VSYSLOG`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <syslog.h>
+#include <stdarg.h>
+
+void
+foofn(const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	vsyslog(LOG_DEBUG, fmt, ap);
+	va_end(ap);
+}
+int
+main(int argc, char *argv[])
+{
+	foofn("foo %d", 1);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_VSYSLOG="yes"
+echo "#ifndef HAVE_VSYSLOG" > config/have_vsyslog.h
+echo "#define HAVE_VSYSLOG \"$HAVE_VSYSLOG\"" >> config/have_vsyslog.h
+echo "#endif" >> config/have_vsyslog.h
+echo "hdefs[\"HAVE_VSYSLOG\"] = \"$HAVE_VSYSLOG\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_VSYSLOG="no"
+echo "#undef HAVE_VSYSLOG" >config/have_vsyslog.h
+echo "hdefs[\"HAVE_VSYSLOG\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_VSYSLOG" > ${cache}/ctest-HAVE_VSYSLOG
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VSYSLOG
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for vsyslog_r()..."
+$ECHO_N "checking for vsyslog_r()..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_VSYSLOG_R" ]; then
+		HAVE_VSYSLOG_R=`cat ${cache}/ctest-HAVE_VSYSLOG_R`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_VSYSLOG_R`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <syslog.h>
+#include <stdarg.h>
+
+void
+foofn(const char *fmt, ...)
+{
+	va_list ap;
+	struct syslog_data sdata = SYSLOG_DATA_INIT;
+	va_start(ap, fmt);
+	vsyslog_r(LOG_DEBUG, &sdata, fmt, ap);
+	va_end(ap);
+}
+int
+main(int argc, char *argv[])
+{
+	foofn("foo %d", 1);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_VSYSLOG_R="yes"
+echo "#ifndef HAVE_VSYSLOG_R" > config/have_vsyslog_r.h
+echo "#define HAVE_VSYSLOG_R \"$HAVE_VSYSLOG_R\"" >> config/have_vsyslog_r.h
+echo "#endif" >> config/have_vsyslog_r.h
+echo "hdefs[\"HAVE_VSYSLOG_R\"] = \"$HAVE_VSYSLOG_R\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_VSYSLOG_R="no"
+echo "#undef HAVE_VSYSLOG_R" >config/have_vsyslog_r.h
+echo "hdefs[\"HAVE_VSYSLOG_R\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_VSYSLOG_R" > ${cache}/ctest-HAVE_VSYSLOG_R
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VSYSLOG_R
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 echo "CFLAGS=$CFLAGS" >>Makefile.config
@@ -6755,17 +7051,25 @@ if [ "${includes}" = "link" ]; then
 		fi
 	fi
 else
+	if [ "${PERL}" = "" ]; then
+		echo "*"
+		echo "* The --includes=yes option requires perl, but no perl"
+		echo "* interpreter was found. If perl is unavailable, please"
+		echo "* please rerun configure with --includes=link instead."
+		echo "*"
+		exit 1
+	fi
 	if [ ! -e "include/agar" ]; then
 		if [ "${SRCDIR}" != "${BLDDIR}" ]; then
 			$ECHO_N "* Preprocessing includes (from ${SRCDIR})..."
-			(cd ${SRCDIR} && perl mk/gen-includes.pl "${BLDDIR}/include/agar" 1>>${BLDDIR}/config.log 2>&1)
+			(cd ${SRCDIR} && ${PERL} mk/gen-includes.pl "${BLDDIR}/include/agar" 1>>${BLDDIR}/config.log 2>&1)
 			cp -fR config include/agar
 		else
 			$ECHO_N "* Preprocessing includes (in ${BLDDIR})...";
-			perl mk/gen-includes.pl "include/agar" 1>>config.log 2>&1
+			${PERL} mk/gen-includes.pl "include/agar" 1>>config.log 2>&1
 		fi
 		if [ $? != 0 ]; then
-			echo "perl mk/gen-includes.pl failed"
+			echo "${PERL} mk/gen-includes.pl failed"
 			exit 1
 		fi
 		echo "done"
