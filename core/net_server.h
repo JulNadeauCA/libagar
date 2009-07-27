@@ -45,7 +45,7 @@ typedef struct ns_server {
 
 	Uint flags;
 
-	const char *protoName;		/* Protocol string */
+	const char *protoName;		/* Daemon name / protocol signature */
 	const char *protoVer;		/* Protocol version string */
 	const char *host;		/* Hostname for bind(), or NULL */
 	const char *port;		/* Port number or name */
@@ -87,11 +87,12 @@ void	   NS_ServerBind(NS_Server *, const char *, const char *);
 
 void	NS_Log(enum ns_log_lvl, const char *, ...);
 void	NS_RegErrorFn(NS_Server *, NS_ErrorFn);
+void	NS_RegSigCheckFn(NS_Server *, NS_SigCheckFn);
 void	NS_RegCmd(NS_Server *, const char *, NS_CommandFn, void *);
 void	NS_RegAuthMode(NS_Server *, const char *, NS_AuthFn, void *);
 void	NS_RegLoginFn(NS_Server *, NS_LoginFn);
 void	NS_RegLogoutFn(NS_Server *, NS_LogoutFn);
-int	NS_Listen(NS_Server *);
+int	NS_ServerLoop(NS_Server *);
 void	NS_Logout(NS_Server *, int, const char *, ...);
 void	NS_Message(NS_Server *, int, const char *, ...);
 
@@ -103,6 +104,9 @@ void	NS_BeginList(NS_Server *);
 void	NS_EndList(NS_Server *);
 void	NS_ListItem(NS_Server *, void *, size_t);
 void	NS_ListString(NS_Server *, const char *, ...);
+
+int	NS_Write(NS_Server *, int, const void *, size_t);
+int	NS_Read(NS_Server *, int, void *, size_t);
 __END_DECLS
 
 #include <agar/core/close.h>
