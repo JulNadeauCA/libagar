@@ -14,7 +14,6 @@ sub MakefileIncludesDepend ($$)
 	my $cwd = shift;
 
 	if (!open(MF, $path)) {
-		print STDERR "$path: $!; ignored\n";
 		return (0);
 	}
 	my @lines = ();
@@ -63,13 +62,12 @@ sub Scan ($)
 	my $dir = shift;
 
 	unless (opendir(CWD, $dir)) {
-		print STDERR "$dir: $!; ignored\n";
 		return;
 	}
 	%V = ();
 	if (-e $dir.'/Makefile') {
 		if (MakefileIncludesDepend("$dir/Makefile", $dir)) {
-			print STDERR "Creating: $dir/.depend\n";
+			#print STDERR "Creating: $dir/.depend\n";
 			if (open(OUT, ">$dir/.depend")) {
 				close(OUT);
 			}
