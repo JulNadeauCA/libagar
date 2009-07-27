@@ -68,6 +68,8 @@ SHARESRC?=none
 SRCS?=none
 OBJS?=none
 SHOBJS?=none
+CONF?=none
+CONF_OVERWRITE?=No
 INCL?=none
 INCLDIR?=
 CLEANFILES?=
@@ -400,6 +402,31 @@ install-lib: ${LIBTOOL_COOKIE}
                 done; \
 	    fi; \
 	fi
+	@if [ "${CONF}" != "none" ]; then \
+            if [ ! -d "${SYSCONFDIR}" ]; then \
+                echo "${INSTALL_DATA_DIR} ${SYSCONFDIR}"; \
+                ${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${SYSCONFDIR}; \
+            fi; \
+	    if [ "${CONF_OVERWRITE}" != "Yes" ]; then \
+	        echo "+----------------"; \
+	        echo "| The following configuration files exist and "; \
+	        echo "| will not be overwritten:"; \
+	        echo "|"; \
+	        for F in ${CONF}; do \
+	            if [ -e "${DESTDIR}${SYSCONFDIR}/$$F" ]; then \
+	                echo "| - $$F"; \
+	            else \
+	                ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${SYSCONFDIR}; \
+	            fi; \
+	        done; \
+	        echo "+----------------"; \
+	    else \
+	        for F in ${CONF}; do \
+	            echo "${INSTALL_DATA} $$F ${SYSCONFDIR}"; \
+	            ${SUDO} ${INSTALL_DATA} $$F ${DESTDIR}${SYSCONFDIR}; \
+	        done; \
+	    fi; \
+	fi
 
 deinstall-lib: ${LIBTOOL_COOKIE}
 	@if [ "${LIB}" != "" -a "${USE_LIBTOOL}" = "Yes" ]; then \
@@ -424,6 +451,21 @@ deinstall-lib: ${LIBTOOL_COOKIE}
 	        echo "${DEINSTALL_DATA} ${SHAREDIR}/$$F"; \
 	        ${SUDO} ${DEINSTALL_DATA} ${DESTDIR}${SHAREDIR}/$$F; \
 	    done; \
+	fi
+	@if [ "${CONF}" != "none" ]; then \
+	    echo "+----------------"; \
+	    echo "| To completely deinstall lib${LIB} you need to perform."; \
+	    echo "| the following steps as root:"; \
+	    echo "|"; \
+	    for F in ${CONF}; do \
+	        if [ -e "${DESTDIR}${SYSCONFDIR}/$$F" ]; then \
+	            echo "| rm -f $$F"; \
+	        fi; \
+	    done; \
+	    echo "|"; \
+	    echo "| Do not do this if you plan on re-installing lib${LIB}"; \
+	    echo "| at some future time."; \
+	    echo "+----------------"; \
 	fi
 
 includes:
