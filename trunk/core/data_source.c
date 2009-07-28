@@ -61,15 +61,15 @@ AG_DataSourceSetErrorFn(AG_DataSource *ds, AG_EventFn fn, const char *fmt, ...)
 void
 AG_DataSourceError(AG_DataSource *ds, const char *fmt, ...)
 {
+	static char msg[256];
 	va_list args;
-	char *msg;
 
 	if (fmt != NULL) {
 		va_start(args, fmt);
-		Vasprintf(&msg, fmt, args);
+		Vsnprintf(msg, sizeof(msg), fmt, args);
 		va_end(args);
 	} else {
-		msg = Strdup(AG_GetError());
+		Strlcpy(msg, AG_GetError(), sizeof(msg));
 	}
 	
 	AG_ObjectLock(&errorMgr);
@@ -415,13 +415,10 @@ CoreSeek(AG_DataSource *ds, off_t offs, enum ag_seek_mode mode)
 static void
 ErrorDefault(AG_Event *event)
 {
-	AG_DataSource *ds = AG_SELF();
-	char *errorMsg = AG_STRING(1);
-
-	AG_FatalError("Data source (%p): %s", ds, errorMsg);
-/*	free(errorMsg); */
+	AG_FatalError("Data source error: %s", AG_GetError());
 }
 
+/* Initialize the data source structure. */
 void
 AG_DataSourceInit(AG_DataSource *ds)
 {
@@ -442,12 +439,14 @@ AG_DataSourceInit(AG_DataSource *ds)
 	AG_DataSourceSetErrorFn(ds, ErrorDefault, "%p", ds);
 }
 
+/* Close a data source of any type. */
 void
 AG_CloseDataSource(AG_DataSource *ds)
 {
 	ds->close(ds);
 }
 
+/* Release the resources allocated by the data source structure. */
 void
 AG_DataSourceDestroy(AG_DataSource *ds)
 {
@@ -455,6 +454,7 @@ AG_DataSourceDestroy(AG_DataSource *ds)
 	Free(ds);
 }
 
+/* Create a data source from a stdio file handle. */
 AG_DataSource *
 AG_OpenFileHandle(FILE *f)
 {
@@ -474,6 +474,7 @@ AG_OpenFileHandle(FILE *f)
 	return (&fs->ds);
 }
 
+/* Create a data source from a specified file path. */
 AG_DataSource *
 AG_OpenFile(const char *path, const char *mode)
 {
@@ -486,6 +487,7 @@ AG_OpenFile(const char *path, const char *mode)
 	return AG_OpenFileHandle(f);
 }
 
+/* Create a data source from a specified chunk of memory. */
 AG_DataSource *
 AG_OpenCore(void *data, size_t size)
 {
@@ -506,6 +508,7 @@ AG_OpenCore(void *data, size_t size)
 	return (&cs->ds);
 }
 
+/* Create a data source from a specified chunk of memory (read-only). */
 AG_DataSource *
 AG_OpenConstCore(const void *data, size_t size)
 {
@@ -526,6 +529,7 @@ AG_OpenConstCore(const void *data, size_t size)
 	return (&cs->ds);
 }
 
+/* Create a data source using dynamically-allocated memory. */
 AG_DataSource *
 AG_OpenAutoCore(void)
 {
