@@ -36,22 +36,18 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-An Agar graphical user interface is described as a tree of objects
-(see
-.Xr AG_Object 3 )
-derived from the
-.Nm
-class.
-.Pp
-The Widget tree describes the parent/child relation between widgets.
-This relation has implications in the way geometry will be allocated to
-widgets (see
+An Agar graphical user interface is described as a tree of widgets
+(i.e., structures derived from
+.Nm ,
+which is itself derived from
+.Xr AG_Object 3 ) .
+All widgets are attached to some parent (container widget), which is
+responsible for allocating its final position and size (see
 .Dq WIDGET SIZING
 for details).
 .Pp
-The Agar GUI library is open, such that new, custom widgets may be easily
-implemented (or derived from existing widget classes) as part of user
-applications.
+Arbitrary, custom widgets may be easily implemented (or derived from existing
+widget classes) as part of user applications.
 Agar widgets are extensively re-used.
 .Pp
 Widgets use
@@ -273,11 +269,11 @@ and
 .Sq window-keydown .
 .Pp
 Widget can explicitely disable focus-dependent filtering for those events
-by setting the flags
-.Dv AG_WIDGET_UNFOCUSED_MOTION ,
-.Dv AG_WIDGET_UNFOCUSED_BUTTONUP
-and
-.Dv AG_WIDGET_UNFOCUSED_BUTTONDOWN .
+by setting the
+.Dv AG_WIDGET_UNFOCUSED_*
+flags (see
+.Dq FLAGS
+section for details).
 .Pp
 .Fn AG_WidgetSetFocusable
 specifies whether the widget should be allowed to receive focus
@@ -1244,7 +1240,7 @@ For the
 .Ft AG_Widget
 object:
 .Pp
-.Bl -tag -width "int cx2, cy2 "
+.Bl -tag -width "AG_Rect2 rView "
 .It Ft Uint flags
 Option flags (see
 .Dq FLAGS
@@ -1253,10 +1249,24 @@ section below).
 Pixel coordinates of the widget relative to its parent.
 .It Ft int w, h
 Dimensions of the widget in pixels.
-.It Ft int cx, cy
-Absolute view coordinates of the upper left corner of the widget (read-only).
-.It Ft int cx2, cy2
-Absolute view coordinates of the lower right corner of the widget (read-only).
+.It Ft AG_Rect2 rView
+Absolute view coordinates of the widget.
+Since both dimensions and upper-left/lower-right coordinates are frequently
+used, the
+.Ft AG_Rect2
+structure contains the fields
+.Va x1 ,
+.Va y1 ,
+.Va x2
+and
+.Va y2 ,
+as well as
+.Va w
+and
+.Va h .
+.It Ft AG_Rect2 rSens
+The sensitivity rectangle.
+This defines that area of the display which should respond to cursor events.
 .El
 .Sh FLAGS
 The
@@ -1292,13 +1302,21 @@ Receive
 .Sq window-mousemotion
 events unconditionally (focus is required by default).
 .It AG_WIDGET_UNFOCUSED_BUTTONUP
-Receive
+Receive all
 .Sq window-mousebuttonup
-events unconditionally (focus is required by default).
+(mouse button release) events unconditionally.
 .It AG_WIDGET_UNFOCUSED_BUTTONDOWN
-Receive
+Receive all
 .Sq window-mousebuttonup
-events unconditionally (focus is required by default).
+(mouse button press) events unconditionally.
+.It AG_WIDGET_UNFOCUSED_KEYDOWN
+Receive
+.Sq window-keydown
+(key press) events unconditionally (focus is required by default).
+.It AG_WIDGET_UNFOCUSED_KEYUP
+Receive
+.Sq window-keyup
+(key release) events unconditionally (focus is required by default).
 .It AG_WIDGET_CATCH_TAB
 When the user presses the
 .Dv TAB
