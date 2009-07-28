@@ -275,8 +275,8 @@ CoreRead(AG_DataSource *ds, void *buf, size_t msize, size_t nmemb, size_t *rv)
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 	size_t size = msize*nmemb;
 
-	if (cs->offs+size >= cs->size) {
-		AG_SetError("EOF (%u+%u >= %u)", (Uint)cs->offs, (Uint)size,
+	if (cs->offs+size > cs->size) {
+		AG_SetError("EOF (%u+%u > %u)", (Uint)cs->offs, (Uint)size,
 		    (Uint)cs->size);
 		return (AG_IO_EOF);
 	}
@@ -297,8 +297,8 @@ CoreReadAt(AG_DataSource *ds, void *buf, size_t msize, size_t nmemb, off_t pos,
 		AG_SetError("Bad position");
 		return (AG_IO_ERROR);
 	}
-	if (pos+size >= cs->size) {
-		AG_SetError("EOF (%u+%u >= %u)", (Uint)pos, (Uint)size,
+	if (pos+size > cs->size) {
+		AG_SetError("EOF (%u+%u > %u)", (Uint)pos, (Uint)size,
 		    (Uint)cs->size);
 		return (AG_IO_EOF);
 	}
@@ -314,7 +314,7 @@ CoreWrite(AG_DataSource *ds, const void *buf, size_t msize, size_t nmemb,
 	AG_CoreSource *cs = AG_CORE_SOURCE(ds);
 	size_t size = msize*nmemb;
 
-	if (cs->offs+size >= cs->size) {
+	if (cs->offs+size > cs->size) {
 		AG_SetError("EOF");
 		return (AG_IO_EOF);
 	}
@@ -350,7 +350,7 @@ CoreWriteAt(AG_DataSource *ds, const void *buf, size_t msize, size_t nmemb,
 		AG_SetError("Bad position");
 		return (AG_IO_ERROR);
 	}
-	if (pos+size >= cs->size) {
+	if (pos+size > cs->size) {
 		AG_SetError("EOF");
 		return (AG_IO_EOF);
 	}
@@ -370,7 +370,7 @@ CoreAutoWriteAt(AG_DataSource *ds, const void *buf, size_t msize, size_t nmemb,
 		AG_SetError("Bad position");
 		return (AG_IO_ERROR);
 	}
-	if (pos+size >= cs->size) {
+	if (pos+size > cs->size) {
 		cs->data = Realloc(cs->data, (pos+size));
 		cs->size = pos+size;
 	}
