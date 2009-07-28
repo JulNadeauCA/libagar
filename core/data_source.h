@@ -91,6 +91,7 @@ typedef struct ag_const_core_source {
 #define AG_DATA_SOURCE(ds) ((AG_DataSource *)(ds))
 #define AG_FILE_SOURCE(ds) ((AG_FileSource *)(ds))
 #define AG_CORE_SOURCE(ds) ((AG_CoreSource *)(ds))
+#define AG_AUTO_CORE_SOURCE(ds) ((AG_CoreSource *)(ds))
 #define AG_CONST_CORE_SOURCE(ds) ((AG_ConstCoreSource *)(ds))
 
 __BEGIN_DECLS
@@ -112,6 +113,7 @@ AG_DataSource *AG_OpenFileHandle(FILE *);
 AG_DataSource *AG_OpenCore(void *, size_t);
 AG_DataSource *AG_OpenConstCore(const void *, size_t);
 AG_DataSource *AG_OpenAutoCore(void);
+
 void           AG_CloseFile(AG_DataSource *);
 #define        AG_CloseFileHandle(ds) AG_CloseFile(ds)
 void           AG_CloseCore(AG_DataSource *);
