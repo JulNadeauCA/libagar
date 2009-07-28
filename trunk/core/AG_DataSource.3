@@ -65,6 +65,9 @@ structure.
 .Ft "AG_DataSource *"
 .Fn AG_OpenConstCore "const void *p" "size_t size"
 .Pp
+.Ft "AG_DataSource *"
+.Fn AG_OpenAutoCore "void"
+.Pp
 .Ft "void"
 .Fn AG_CloseFile "AG_DataSource *ds"
 .Pp
@@ -76,6 +79,9 @@ structure.
 .Pp
 .Ft "void"
 .Fn AG_CloseConstCore "AG_DataSource *ds"
+.Pp
+.Ft "void"
+.Fn AG_CloseAutoCore "AG_DataSource *ds"
 .Pp
 .Ft "void"
 .Fn AG_CloseDataSource "AG_DataSource *ds"
@@ -133,23 +139,30 @@ is a
 .Xr fopen 3 
 style mode string.
 .Fn AG_OpenFileHandle
-creates a data source for a previously opened file.
+creates a new data source for a previously opened file.
 .Pp
 The
 .Fn AG_OpenCore
 and
 .Fn AG_OpenConstCore
-functions create data sources for the region of memory
+functions create new data sources for the region of memory
 .Fa p
 of
 .Fa size
 bytes.
 .Pp
+.Fn AG_OpenAutoCore
+creates a new data source using dynamically-allocated memory (accessible
+as the
+.Va data
+member of the structure).
+.Pp
 .Fn AG_CloseFile ,
 .Fn AG_CloseFileHandle ,
-.Fn AG_CloseCore
-and
+.Fn AG_CloseCore ,
 .Fn AG_CloseConstCore
+and
+.Fn AG_CloseAutoCore
 close a data source of the given type.
 Alternatively,
 .Fn AG_CloseDataSource
@@ -222,8 +235,8 @@ or
 Prior to writing to a data source,
 .Fn AG_SetSourceDebug
 enables encoding and verification of debugging information in the archive.
-At the cost of increasing the size of the archive, it enables, notably,
-type-safety checks at primitive data type level as the archive decoded.
+At the cost of increasing the size of the archive, it enables type-safety
+checks at primitive data level, as the archive is decoded.
 .Pp
 The
 .Fn AG_DataSourceInit
