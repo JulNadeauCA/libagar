@@ -372,7 +372,7 @@ fail:
 int
 AG_UnloadDSO(AG_DSO *dso)
 {
-	AG_DSOSym *cSym;
+	AG_DSOSym *cSym, *cSymNext;
 	int rv = -1;
 
 	AG_MutexLock(&agDSOLock);
@@ -444,7 +444,10 @@ AG_UnloadDSO(AG_DSO *dso)
 	goto out;
 #endif /* DSO_USE_FOO */
 
-	while ((cSym = TAILQ_FIRST(&dso->syms)) != NULL) {
+	for (cSym = TAILQ_FIRST(&dso->syms);
+	     cSym != TAILQ_END(&dso->syms);
+	     cSym = cSymNext) {
+		cSymNext = TAILQ_NEXT(cSym, syms);
 		free(cSym->sym);
 		free(cSym);
 	}
