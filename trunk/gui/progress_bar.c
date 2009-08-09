@@ -160,6 +160,10 @@ Draw(void *obj)
 	AG_Rect rd;
 	int min, max, val, wAvail;
 
+	/* XXX why isn't SizeAllocate() working? */
+	if (WIDTH(pb) < pb->width || HEIGHT(pb) < pb->width)
+		return;
+
 	min = AG_GetInt(pb, "min");
 	max = AG_GetInt(pb, "max");
 	val = AG_GetInt(pb, "value");
