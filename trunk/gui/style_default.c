@@ -70,7 +70,8 @@ Window(AG_Window *win)
 		r.y = HEIGHT(win) - win->wBorderBot;
 		r.h = win->wBorderBot;
 
-		if (!(win->flags & AG_WINDOW_NORESIZE)) {
+		if (!(win->flags & AG_WINDOW_NORESIZE) &&
+		    WIDTH(win) > win->wResizeCtrl*2) {
 			r.w = win->wResizeCtrl;
 			AG_DrawBox(win, r,
 			    AG_WindowSelectedWM(win,AG_WINOP_LRESIZE) ? -1 : 1,
