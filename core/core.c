@@ -97,6 +97,8 @@ AG_InitCore(const char *progname, Uint flags)
 
 	AG_InitClassTbl();
 	AG_RegisterClass(&agConfigClass);
+	AG_RegisterClass(&agDbObjectClass);
+	AG_RegisterClass(&agDbClass);
 
 #if defined(HAVE_GETTIMEOFDAY)
 	AG_SetTimeOps(&agTimeOps_gettimeofday);

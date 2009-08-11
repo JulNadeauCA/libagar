@@ -24,7 +24,7 @@
  */
 
 /*
- * Implementation of the generic Object class.
+ * Base object class.
  */
 
 #include <core/core.h>

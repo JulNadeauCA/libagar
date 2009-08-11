@@ -1,0 +1,211 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 11, 2009
+.Dt AG_DB 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm AG_Db
+.Nd agar key/value database
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+.Ed
+.Sh DESCRIPTION
+.Nm
+provides a simple interface to a database consisting of key/value pairs
+(e.g., a Berkeley DB file).
+.Pp
+In the base
+.Nm
+interface, the key and value consist of arbitrary data.
+Functions are provided for convenience where C strings are used as keys.
+Using the
+.Xr AG_DbObject 3
+class, the value can be made to consist of serialized
+.Xr AG_Object 3
+data.
+.Sh INTERFACE
+.nr nS 1
+.Ft "AG_Db *"
+.Fn AG_DbNew "enum ag_db_type type"
+.Pp
+.Ft "AG_Db *"
+.Fn AG_DbNewDB4 "const char *path" "enum ag_db4_type type" "Uint32 flags"
+.Pp
+.Ft "AG_List *"
+.Fn AG_DbListKeys "AG_Db *db"
+.Pp
+.Ft "int"
+.Fn AG_DbExists "AG_Db *db" "const char *key"
+.Pp
+.Ft "int"
+.Fn AG_DbExistsDK "AG_Db *db" "const void *keyData" "size_t keySize"
+.Pp
+.Ft "int"
+.Fn AG_DbLookup "AG_Db *db" "AG_DbEntry *dbe" "const char *key"
+.Pp
+.Ft "int"
+.Fn AG_DbLookupDK "AG_Db *db" "AG_DbEntry *dbe" "const void *keyData" "size_t keySize"
+.Pp
+.Ft "int"
+.Fn AG_DbDelete "AG_Db *db" "const char *key"
+.Pp
+.Ft "int"
+.Fn AG_DbDeleteDK "AG_Db *db" "const void *keyData" "size_t keySize"
+.Pp
+.Ft "int"
+.Fn AG_DbPut "AG_Db *db" "AG_DbEntry *dbe"
+.Pp
+.Ft "int"
+.Fn AG_DbSync "AG_Db *db"
+.Pp
+.nr nS 0
+The
+.Fn AG_DbNew
+function creates a new, generic
+.Nm
+object.
+The
+.Fa type
+argument specifies the backend to use:
+.Pp
+.Bl -tag -compact -width "AG_DB_DUMMY "
+.It AG_DB_DUMMY
+Dummy (no-op).
+.It AG_DB_DB4
+Berkeley DB v4 database.
+.El
+.Pp
+The
+.Fn AG_DbNewDB4
+function opens a Berlekey DB database.
+The
+.Fa path
+argument specifies the database file name.
+.Fa type
+specifies the type of database to use:
+.Pp
+.Bl -tag -compact -width "AG_DB4_BTREE "
+.It AG_DB4_BTREE
+Sorted, balanced tree structure.
+.It AG_DB4_HASH
+Extensible, dynamic hashing scheme.
+.It AG_DB4_RECNO
+Entries associated with record numbers (fixed-length).
+.It AG_DB4_QUEUE
+Entries associated with record numbers (fixed or variable-length).
+.El
+.Pp
+Accepted
+.Fa flags
+options include:
+.Pp
+.Bl -tag -compact -width "AG_DB4_AUTO_COMMIT "
+.It AG_DB4_CREATE
+Create the database file if it does not already exist.
+.It AG_DB4_EXCL
+Fail if the database file already exists.
+.It AG_DB4_RDONLY
+Open the database in read-only mode, such that write operations will fail.
+.It AG_DB4_TRUNCATE
+Truncate the database file (where supported by the filesystem).
+.It AG_DB4_THREAD
+Enable thread safety.
+.It AG_DB4_MULTIVERSION
+Enable multiversion concurrency control (see Berkeley DB manual).
+.It AG_DB4_NOMMAP
+Disable
+.Xr mmap 2
+of the database file into the process's address space.
+.It AG_DB4_AUTO_COMMIT
+Enclose the
+.Fa open
+operation within a transaction (see Berkeley DB manual).
+.El
+.Pp
+.Fn AG_DbListKeys
+reads the database entries sequentially and returns an
+.Xr AG_List 3
+with the keys (as strings) for all entries.
+.Pp
+.Fn AG_DbExists
+evaluates to 1 if the given key exists in the database.
+The
+.Fn AG_DbExistsDK
+variant accepts arbitrary data as key.
+If the key is not found, 0 is returned.
+.Pp
+The
+.Fn AG_DbLookup
+function looks up the specified key as string (the
+.Fn AG_DbLookupDK
+variant accepts arbitrary data as key).
+If an entry is found, a description of its contents are written to
+.Fa dbe
+and the function returns 0.
+The
+.Ft AG_DbEntry
+structure is defined as:
+.Bd -literal
+typedef struct ag_db_entry {
+	AG_Db *db;			/* Back pointer to Db */
+	void *key, *data;		/* Pointer to key/data */
+	size_t keySize, dataSize;	/* Key/data size (bytes) */
+} AG_DbEntry;
+.Ed
+.Pp
+The
+.Fn AG_DbDelete
+function deletes the named entry associated with
+.Fa key ,
+from the database (the
+.Fn AG_DbDeleteDK
+variant accepts arbitrary data as key).
+.Pp
+The
+.Fn AG_DbPut
+function writes the entry described by
+.Fa dbe
+to the database (see
+.Fn AG_DbLookup
+for a description of the
+.Ft AG_DbEntry
+structure).
+.Pp
+.Fn AG_DbSync
+synchronizes the actual contents of
+.Fa db
+with any associated database files.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_DbObject 3 ,
+.Xr AG_List 3 ,
+.Xr AG_Variable 3
+.Sh HISTORY
+The
+.Nm
+interface first appeared in Agar 1.3.4

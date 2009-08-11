@@ -91,6 +91,8 @@
 #include <core/dir.h>
 #include <core/dso.h>
 #include <core/time.h>
+#include <core/db.h>
+#include <core/dbobject.h>
 
 #endif /* !_AGAR_CORE_CORE_H_ */
 #endif /* _AGAR_INTERNAL */

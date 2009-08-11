@@ -30,6 +30,12 @@ static void OutputLIBS(void);
 #include <config/pthreads_cflags.h>
 #endif
 
+#include <config/have_db4.h>
+#ifdef HAVE_DB4
+#include <config/db4_libs.h>
+#include <config/db4_cflags.h>
+#endif
+
 #include <config/enable_nls.h>
 #ifdef ENABLE_NLS
 #include <config/gettext_libs.h>
@@ -76,6 +82,9 @@ OutputCFLAGS(void)
 #ifdef HAVE_PTHREADS
 	printf("%s ", PTHREADS_CFLAGS);
 #endif
+#ifdef HAVE_DB4
+	printf("%s ", DB4_CFLAGS);
+#endif
 #ifdef ENABLE_NLS
 	printf("%s ", GETTEXT_CFLAGS);
 #endif
@@ -97,6 +106,9 @@ OutputLIBS(void)
 #endif
 #ifdef HAVE_PTHREADS
 	printf("%s ", PTHREADS_LIBS);
+#endif
+#ifdef HAVE_DB4
+	printf("%s ", DB4_LIBS);
 #endif
 #ifdef ENABLE_NLS
 	printf("%s ", GETTEXT_LIBS);
