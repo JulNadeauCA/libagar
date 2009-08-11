@@ -87,6 +87,17 @@ AG_Malloc(size_t len)
 }
 
 static __inline__ void *
+AG_TryMalloc(size_t len)
+{
+	void *p;
+	if ((p = malloc(len)) == NULL) {
+		AG_SetError("Out of memory");
+		return (NULL);
+	}
+	return (p);
+}
+
+static __inline__ void *
 AG_Realloc(void *pOld, size_t len)
 {
 	void *pNew;
@@ -99,6 +110,24 @@ AG_Realloc(void *pOld, size_t len)
 			AG_FatalError("realloc");
 	}
 	return (pNew);
+}
+
+static __inline__ void *
+AG_TryRealloc(void *pOld, size_t len)
+{
+	void *pNew;
+	/* XXX redundant on some systems */
+	if (pOld == NULL) {
+		if ((pNew = malloc(len)) == NULL)
+			goto outofmem;
+	} else {
+		if ((pNew = realloc(pOld, len)) == NULL)
+			goto outofmem;
+	}
+	return (pNew);
+outofmem:
+	AG_SetError("Out of memory");
+	return (NULL);
 }
 
 #ifdef FREE_NULL_IS_A_NOOP

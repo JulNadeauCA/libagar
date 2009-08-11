@@ -123,7 +123,13 @@ is >= 1.
 .Fn AG_Malloc "size_t len"
 .Pp
 .Ft "void *"
+.Fn AG_TryMalloc "size_t len"
+.Pp
+.Ft "void *"
 .Fn AG_Realloc "void *p" "size_t len"
+.Pp
+.Ft "void *"
+.Fn AG_TryRealloc "void *p" "size_t len"
 .Pp
 .Ft void
 .Fn AG_Free "void *p"
@@ -134,18 +140,29 @@ The
 function calls
 .Xr malloc 3
 and raises a fatal error if the memory cannot be allocated.
-It is a good practice to use this wrapper only when allocating structures
-and other fixed-size items.
+The
+.Fn AG_TryMalloc
+variant also calls
+.Xr malloc 3 ,
+but sets the standard error message and returns NULL if the memory cannot
+be allocated.
 .Pp
 .Ft AG_Realloc
 calls
 .Xr realloc 3
 and raises a fatal error if the memory cannot be allocated.
+The
+.Fn AG_TryRealloc
+variant sets the standard error message and returns NULL if the memory cannot
+be reallocated.
 If
 .Fa p
-is NULL, it calls
-.Xr malloc 3
-instead.
+is NULL,
+.Fn AG_Realloc
+and
+.Fn AG_TryRealloc
+simply invoke
+.Xr malloc 3 .
 .Pp
 .Ft AG_Free
 calls
