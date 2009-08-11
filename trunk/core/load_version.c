@@ -46,7 +46,8 @@ AG_ReadVersion(AG_DataSource *ds, const char *name, const AG_Version *ver,
 
 	if (AG_Read(ds, nbuf, sizeof(nbuf), 1) != 0 ||
 	    strncmp(nbuf, name, nlen) != 0) {
-		AG_SetError("%s: Bad magic (\"%s\")", name, nbuf);
+		AG_SetError("%s: Bad magic (\"%s\" != %s)", name, nbuf,
+		    name);
 		return (-1);
 	}
 	if (AG_ReadUint32v(ds, &major) == -1 ||
