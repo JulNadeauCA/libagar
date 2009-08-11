@@ -337,6 +337,7 @@ echo "    --enable-debug            General debugging [no]"
 echo "    --enable-<type>debug      Debugging (obj|class|event) [none]"
 echo "    --enable-legacy           Deprecated interfaces [yes]"
 echo "    --enable-network          CORE: Network support [check]"
+echo "    --with-db4                CORE: Berkeley DB support [check]"
 echo "    --with-sdl                GUI: SDL rendering support [check]"
 echo "    --with-gl                 GUI: OpenGL rendering support [check]"
 echo "    --enable-<depth>bpp       GUI: Framebuffer depths (8|16|24|32) [all]"
@@ -2501,9 +2502,6 @@ if [ "${cache}" != "" ]; then
 fi
 if [ "${MK_CACHED}" = "No" ]; then
 	cat << EOT > conftest.c
-#ifdef __linux__
-#define _GNU_SOURCE
-#endif
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -2527,8 +2525,8 @@ main(int argc, char *argv[])
 }
 
 EOT
-	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	echo "$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -D_GNU_SOURCE -o $testdir/conftest conftest.c 2>>config.log
 	if [ $? != 0 ]; then
 		echo "-> failed ($?)" >> config.log
 		MK_COMPILE_STATUS="FAIL($?)"
@@ -2538,6 +2536,8 @@ if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
 echo "yes"
 echo "yes" >> config.log
 HAVE_VASPRINTF="yes"
+echo "HAVE_VASPRINTF=$HAVE_VASPRINTF" >>Makefile.config
+echo "mdefs[\"HAVE_VASPRINTF\"] = \"$HAVE_VASPRINTF\"" >>configure.lua
 echo "#ifndef HAVE_VASPRINTF" > config/have_vasprintf.h
 echo "#define HAVE_VASPRINTF \"$HAVE_VASPRINTF\"" >> config/have_vasprintf.h
 echo "#endif" >> config/have_vasprintf.h
@@ -2546,6 +2546,8 @@ else
 echo "no"
 echo "no" >> config.log
 HAVE_VASPRINTF="no"
+echo "HAVE_VASPRINTF=$HAVE_VASPRINTF" >>Makefile.config
+echo "mdefs[\"HAVE_VASPRINTF\"] = \"$HAVE_VASPRINTF\"" >>configure.lua
 echo "#undef HAVE_VASPRINTF" >config/have_vasprintf.h
 echo "hdefs[\"HAVE_VASPRINTF\"] = nil" >>configure.lua
 fi;
@@ -2553,7 +2555,7 @@ if [ "${cache}" != "" ]; then
 	echo "$HAVE_VASPRINTF" > ${cache}/ctest-HAVE_VASPRINTF
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VASPRINTF
 fi
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
+rm -f conftest.c $testdir/conftest
 $ECHO_N "checking for the X window system..."
 $ECHO_N "checking for the X window system..." >> config.log
 X11_CFLAGS=""
@@ -5416,6 +5418,207 @@ echo "#undef AG_NETWORK" >config/ag_network.h
 echo "hdefs[\"AG_NETWORK\"] = nil" >>configure.lua
 echo "#undef HAVE_GETADDRINFO" >config/have_getaddrinfo.h
 echo "hdefs[\"HAVE_GETADDRINFO\"] = nil" >>configure.lua
+fi
+	
+if [ "${with_db4}" != "no" ]
+ then
+$ECHO_N "checking for Berkeley DB 4.x..."
+$ECHO_N "checking for Berkeley DB 4.x..." >> config.log
+DB4_CFLAGS=""
+DB4_LIBS=""
+DB4_VERSION=""
+for path in /usr /usr/local /opt; do
+	if [ -e "${path}/include/db4.7" ]; then
+		DB4_CFLAGS="-I${path}/include/db4.7"
+		DB4_VERSION="4.7"
+	elif [ -e "${path}/include/db4.6" ]; then
+		DB4_CFLAGS="-I${path}/include/db4.6"
+		DB4_VERSION="4.6"
+	elif [ -e "${path}/include/db4.5" ]; then
+		DB4_CFLAGS="-I${path}/include/db4.5"
+		DB4_VERSION="4.5"
+	elif [ -e "${path}/include/db4.4" ]; then
+		DB4_CFLAGS="-I${path}/include/db4.4"
+		DB4_VERSION="4.4"
+	elif [ -e "${path}/include/db4.3" ]; then
+		DB4_CFLAGS="-I${path}/include/db4.3"
+		DB4_VERSION="4.3"
+	elif [ -e "${path}/include/db4.2" ]; then
+		DB4_CFLAGS="-I${path}/include/db4.2"
+		DB4_VERSION="4.2"
+	elif [ -e "${path}/include/db47" ]; then
+		DB4_CFLAGS="-I${path}/include/db47"
+		DB4_VERSION="4.7"
+	elif [ -e "${path}/include/db46" ]; then
+		DB4_CFLAGS="-I${path}/include/db46"
+		DB4_VERSION="4.6"
+	elif [ -e "${path}/include/db45" ]; then
+		DB4_CFLAGS="-I${path}/include/db45"
+		DB4_VERSION="4.5"
+	elif [ -e "${path}/include/db44" ]; then
+		DB4_CFLAGS="-I${path}/include/db44"
+		DB4_VERSION="4.4"
+	elif [ -e "${path}/include/db43" ]; then
+		DB4_CFLAGS="-I${path}/include/db43"
+		DB4_VERSION="4.3"
+	elif [ -e "${path}/include/db42" ]; then
+		DB4_CFLAGS="-I${path}/include/db42"
+		DB4_VERSION="4.2"
+	elif [ -e "${path}/include/db4" ]; then
+		DB4_CFLAGS="-I${path}/include/db4"
+		DB4_VERSION="4"
+	fi
+	case "${DB4_VERSION}" in
+	4)
+		if [ -e "${path}/lib/db4" ]; then
+			DB4_LIBS="-L${path}/lib/db4 -ldb"
+		fi
+		;;
+	4.2)
+		if [ -e "${path}/lib/db42" ]; then
+			DB4_LIBS="-L${path}/lib/db42 -ldb"
+		elif [ -e "${path}/lib/libdb-4.2.so" ]; then
+			DB4_LIBS="-L${path}/lib -ldb-4.2"
+		fi
+		;;
+	4.3)
+		if [ -e "${path}/lib/db43" ]; then
+			DB4_LIBS="-L${path}/lib/db43 -ldb"
+		elif [ -e "${path}/lib/libdb-4.3.so" ]; then
+			DB4_LIBS="-L${path}/lib -ldb-4.3"
+		fi
+		;;
+	4.4)
+		if [ -e "${path}/lib/db44" ]; then
+			DB4_LIBS="-L${path}/lib/db44 -ldb"
+		elif [ -e "${path}/lib/libdb-4.4.so" ]; then
+			DB4_LIBS="-L${path}/lib -ldb-4.4"
+		fi
+		;;
+	4.5)
+		if [ -e "${path}/lib/db45" ]; then
+			DB4_LIBS="-L${path}/lib/db45 -ldb"
+		elif [ -e "${path}/lib/libdb-4.5.so" ]; then
+			DB4_LIBS="-L${path}/lib -ldb-4.5"
+		fi
+		;;
+	4.6)
+		if [ -e "${path}/lib/db46" ]; then
+			DB4_LIBS="-L${path}/lib/db46 -ldb"
+		elif [ -e "${path}/lib/libdb-4.6.so" ]; then
+			DB4_LIBS="-L${path}/lib -ldb-4.6"
+		fi
+		;;
+	4.7)
+		if [ -e "${path}/lib/db47" ]; then
+			DB4_LIBS="-L${path}/lib/db47 -ldb"
+		elif [ -e "${path}/lib/libdb-4.7.so" ]; then
+			DB4_LIBS="-L${path}/lib -ldb-4.7"
+		fi
+		;;
+	*)
+		;;
+	esac
+done
+if [ "${DB4_VERSION}" != "" ]; then
+echo "found ${DB4_VERSION}"
+echo "found ${DB4_VERSION}" >> config.log
+$ECHO_N "checking whether DB4 works..."
+$ECHO_N "checking whether DB4 works..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_DB4" ]; then
+		HAVE_DB4=`cat ${cache}/ctest-HAVE_DB4`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_DB4`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <db.h>
+int main(int argc, char *argv[]) {
+	DB *db;
+	db_create(&db, NULL, 0);
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS ${DB4_CFLAGS} -o $testdir/conftest conftest.c ${DB4_LIBS}" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS ${DB4_CFLAGS} -o $testdir/conftest conftest.c ${DB4_LIBS} 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_DB4="yes"
+echo "HAVE_DB4=$HAVE_DB4" >>Makefile.config
+echo "mdefs[\"HAVE_DB4\"] = \"$HAVE_DB4\"" >>configure.lua
+echo "#ifndef HAVE_DB4" > config/have_db4.h
+echo "#define HAVE_DB4 \"$HAVE_DB4\"" >> config/have_db4.h
+echo "#endif" >> config/have_db4.h
+echo "hdefs[\"HAVE_DB4\"] = \"$HAVE_DB4\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_DB4="no"
+echo "HAVE_DB4=$HAVE_DB4" >>Makefile.config
+echo "mdefs[\"HAVE_DB4\"] = \"$HAVE_DB4\"" >>configure.lua
+echo "#undef HAVE_DB4" >config/have_db4.h
+echo "hdefs[\"HAVE_DB4\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_DB4" > ${cache}/ctest-HAVE_DB4
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_DB4
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_DB4}" != "" ]; then
+echo "DB4_CFLAGS=$DB4_CFLAGS" >>Makefile.config
+echo "mdefs[\"DB4_CFLAGS\"] = \"$DB4_CFLAGS\"" >>configure.lua
+echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config
+echo "mdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
+echo "#ifndef DB4_CFLAGS" > config/db4_cflags.h
+echo "#define DB4_CFLAGS \"$DB4_CFLAGS\"" >> config/db4_cflags.h
+echo "#endif" >> config/db4_cflags.h
+echo "hdefs[\"DB4_CFLAGS\"] = \"$DB4_CFLAGS\"" >>configure.lua
+echo "#ifndef DB4_LIBS" > config/db4_libs.h
+echo "#define DB4_LIBS \"$DB4_LIBS\"" >> config/db4_libs.h
+echo "#endif" >> config/db4_libs.h
+echo "hdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
+fi;
+else
+echo "no"
+echo "no" >> config.log
+echo "#undef HAVE_DB4" >config/have_db4.h
+echo "hdefs[\"HAVE_DB4\"] = nil" >>configure.lua
+fi;
+	if [ "${HAVE_DB4}" != "yes" ]
+ then
+		if [ "${with_db4}" = "yes" ]
+ then
+			echo "*"
+			echo "* --with-db4 was requested, but Berkeley DB v4"
+			echo "* was not found. Try running configure"
+			echo "* again without this option."
+			echo "*"
+			exit 1
+		else
+echo "#undef HAVE_DB4" >config/have_db4.h
+echo "hdefs[\"HAVE_DB4\"] = nil" >>configure.lua
+		fi
+	fi
+else
+echo "#undef HAVE_DB4" >config/have_db4.h
+echo "hdefs[\"HAVE_DB4\"] = nil" >>configure.lua
+DB4_CFLAGS=""""
+echo "DB4_CFLAGS=$DB4_CFLAGS" >>Makefile.config
+echo "mdefs[\"DB4_CFLAGS\"] = \"$DB4_CFLAGS\"" >>configure.lua
+DB4_LIBS=""""
+echo "DB4_LIBS=$DB4_LIBS" >>Makefile.config
+echo "mdefs[\"DB4_LIBS\"] = \"$DB4_LIBS\"" >>configure.lua
 fi
 if [ "${enable_threads}" != "no" ]
  then

@@ -1,4 +1,4 @@
-.\" Copyright (c) 2001-2008 Hypertriton, Inc. <http://hypertriton.com/>
+.\" Copyright (c) 2001-2009 Hypertriton, Inc. <http://hypertriton.com/>
 .\" All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
@@ -36,8 +36,10 @@ It provides all types of graphical applications, written in different languages,
 with consistent interfaces across a wide array of platforms.
 .Pp
 This document summarizes the various interfaces provided by the standard
-libraries included in the official Agar source distribution (such as Agar-Core,
-Agar-GUI, etc).
+libraries included in the official Agar source distribution (such as
+.Em ag_core ,
+.Em ag_gui ,
+etc.)
 These libraries share the same version number and release cycle, but they are
 separate and can be packaged and distributed independently.
 .Pp
@@ -90,7 +92,9 @@ in some contexts, see
 for details).
 .El
 .Sh AGAR-CORE
-Agar-Core implements the
+Agar's general utility library is named
+.Em ag_core .
+It implements the
 .Xr AG_Object 3
 object system which is used extensively by all other Agar libraries.
 It also provides cross-platform interfaces to operating system services
@@ -109,6 +113,10 @@ Manage Agar configuration settings.
 Core Agar library initialization.
 .It Xr AG_DataSource 3
 Generic interface to different data sources.
+.It Xr AG_Db 3
+Interface to key/value databases (e.g., Berkeley DB).
+.It Xr AG_DbObject 3
+Database-bound Agar object class.
 .It Xr AG_DSO 3
 Cross-platform interface to dynamic linkers.
 .It Xr AG_Error 3
@@ -131,8 +139,11 @@ Primitiive data variables and bindings.
 Datafile versioning functions.
 .El
 .Sh AGAR-GUI
-Agar-GUI implements a standard widget set and a built-in window system.
-It is implemented in a fashion independent of the underlying graphics API
+The
+.Em ag_gui
+library implements the Agar GUI system.
+It also includes a set of standard, built-in widgets.
+The Agar GUI is implemented in a fashion independent of the underlying graphics API
 (i.e., direct-video, OpenGL), and is designed to provide the highest
 performance and efficiency achievable with any given graphics system.
 .Pp
@@ -261,13 +272,17 @@ Alternate interface to
 .El
 .Pp
 .Sh AGAR-VG
-Agar-VG is a simple 2D vector graphics library which allows developers
+The
+.Em ag_vg
+library is a simple 2D vector graphics library which allows developers
 to specify hierarchical sketches consisting of elements such as lines, curves
 and text.
 It uses linear transformations to define the placement of geometrical
 entities, which the best approach for most applications.
 .Pp
-Following the same design philosophy as Agar-GUI, Agar-VG only provides the
+Following the same design philosophy as the Agar-GUI,
+.Em ag_vg
+only provides the
 entity classes (e.g., lines, arcs) useful to the widest range of applications,
 and allows specialized and application-specific entities to be implemented
 easily in separate libraries.
@@ -297,10 +312,12 @@ Polygon entity.
 Text entity.
 .El
 .Sh AGAR-RG
-Agar-RG is a library for generating and manipulating raster graphics (either
+The
+.Em ag_rg
+library is useful at generating and manipulating raster graphics (either
 static or animated) by compositing a set of graphical elements.
-It implements a "smart" image format which allows directives, transformations
-and instancing of graphical elements.
+It implements a composite image format which allows directives,
+transformations and instancing of discrete graphical elements.
 .Pp
 To use this library, link against
 .Sq agar-rg-config --libs .
@@ -322,9 +339,10 @@ Generic graphical operation framework.
 Widget for graphics edition, generic tool framework with undo.
 .El
 .Sh AGAR-MATH
-Agar-Math is a general-purpose math library focused on providing consistent
+.Em ag_math
+is a general-purpose math library focused on providing consistent
 structures and highly optimized routines.
-In addition to linear algebra, Agar-Math also provides useful computational
+In addition to linear algebra, ag_math also provides useful computational
 geometry structures and methods (e.g., intersections, tesselations), portable
 complex-number/quaternion routines and some useful Agar-GUI widgets and
 extensions.
