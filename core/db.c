@@ -301,11 +301,13 @@ Init(void *obj)
 static void
 Destroy(void *obj)
 {
+#ifdef HAVE_DB4
 	AG_Db *db = obj;
 	int rv;
 
 	if ((rv = ((DB *)db->db4)->close((DB *)db->db4, 0)) != 0)
 		AG_FatalError("Closing database: %s", db_strerror(rv));
+#endif
 }
 
 AG_ObjectClass agDbClass = {
