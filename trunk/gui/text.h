@@ -122,7 +122,9 @@ void	 AG_SetDefaultFont(AG_Font *);
 
 void	 AG_PushTextState(void);
 void	 AG_PopTextState(void);
-int	 AG_TextFontLookup(const char *, int, Uint);
+AG_Font *AG_TextFontLookup(const char *, int, Uint);
+AG_Font *AG_TextFontPts(int);
+AG_Font *AG_TextFontPct(int);
 
 void	 AG_TextSize(const char *, int *, int *);
 void	 AG_TextSizeMulti(const char *, int *, int *, Uint **, Uint *);

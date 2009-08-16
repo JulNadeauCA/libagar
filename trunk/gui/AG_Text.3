@@ -57,8 +57,17 @@ rendering attributes.
 .Ft void
 .Fn AG_PopTextState "void"
 .Pp
-.Ft int
-.Fn AG_TextFont "const char *face" "int size" "Uint flags"
+.Ft void
+.Fn AG_TextFont "AG_Font *font"
+.Pp
+.Ft "AG_Font *"
+.Fn AG_TextFontLookup "const char *face" "int size" "Uint flags"
+.Pp
+.Ft "AG_Font *"
+.Fn AG_TextFontPct "int size_pct"
+.Pp
+.Ft "AG_Font *"
+.Fn AG_TextFontPts "int points"
 .Pp
 .Ft void
 .Fn AG_TextJustify "enum ag_text_justify mode"
@@ -103,12 +112,27 @@ The attribute stack can hold
 .Dv AG_TEXT_STATES_MAX
 items (at least 32).
 .Pp
+The
 .Fn AG_TextFont
+function selects
+.Fa font
+as the active font.
+.Pp
+.Fn AG_TextFontLookup
 searches the font cache for the given font face, size and flags combination,
 possibly loading new fonts from disk (scanning all
 .Sq font-path
 directories).
-It returns 0 on success or -1 if no suitable combination was found.
+On success, the font is selected as the active font and returned.
+If no match is found, the function returns NULL.
+.Pp
+.Fn AG_TextFontPts
+sets the size of the active font in points.
+.Pp
+.Fn AG_TextFontPct
+sets the size of the active font, specified as percentage of current font
+size.
+An argument of 100% leaves the size unchanged.
 .Pp
 .Fn AG_TextJustify
 selects the justification mode to use in multi-line rendering:

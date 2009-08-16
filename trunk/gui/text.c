@@ -679,18 +679,63 @@ AG_PopTextState(void)
 }
 
 /* Select the font face to use in rendering text. */
-int
+AG_Font *
 AG_TextFontLookup(const char *face, int size, Uint flags)
 {
-	int rv;
+	AG_Font *newFont;
 
 	AG_MutexLock(&agTextLock);
-	if ((agTextState->font = AG_FetchFont(face, size, flags)) == NULL) {
-		AG_FatalError("No such font: %s:%d", face, size);
+	if ((newFont = AG_FetchFont(face, size, flags)) == NULL) {
+		goto fail;
 	}
-	rv = (agTextState->font != NULL) ? 0 : -1;
+	agTextState->font = newFont;
 	AG_MutexUnlock(&agTextLock);
-	return (rv);
+	return (newFont);
+fail:
+	AG_MutexUnlock(&agTextLock);
+	return (NULL);
+}
+
+/* Set font size in points. */
+AG_Font *
+AG_TextFontPts(int pts)
+{
+	AG_Font *font, *newFont;
+
+	AG_MutexLock(&agTextLock);
+	font = agTextState->font;
+	newFont = AG_FetchFont(OBJECT(font)->name, pts, font->flags);
+	if (newFont == NULL) {
+		goto fail;
+	}
+	agTextState->font = newFont;
+	AG_MutexUnlock(&agTextLock);
+	return (agTextState->font);
+fail:
+	AG_MutexUnlock(&agTextLock);
+	return (NULL);
+}
+
+/* Set font size as % of the current font size. */
+AG_Font *
+AG_TextFontPct(int pct)
+{
+	AG_Font *font, *newFont;
+
+	AG_MutexLock(&agTextLock);
+	font = agTextState->font;
+	newFont = AG_FetchFont(OBJECT(font)->name,
+	    font->size*pct/100,
+	    font->flags);
+	if (newFont == NULL) {
+		goto fail;
+	}
+	agTextState->font = newFont;
+	AG_MutexUnlock(&agTextLock);
+	return (agTextState->font);
+fail:
+	AG_MutexUnlock(&agTextLock);
+	return (NULL);
 }
 
 /* Varargs variant of TextRender(). */
