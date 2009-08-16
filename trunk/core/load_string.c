@@ -50,8 +50,7 @@ AG_ReadStringLen(AG_DataSource *ds, size_t maxlen)
 		    (Ulong)maxlen);
 		goto fail;
 	}
-	if ((s = malloc((size_t)len+1)) == NULL) {
-		AG_SetError("String (%luB): Out of memory", (Ulong)len);
+	if ((s = AG_TryMalloc((size_t)len+1)) == NULL) {
 		goto fail;
 	}
 	if (len > 0) {
@@ -72,11 +71,18 @@ fail:
 	return (NULL);
 }
 
-/* Allocate and read a length-encoded string (no exceptions). */
+/*
+ * Read a length-encoded string (no exceptions) and return its contents
+ * in newly-allocated memory.
+ *
+ * If s is non-NULL, *s is taken to be an existing, valid buffer which will
+ * be reallocated to fit the new string size.
+ */
 int
 AG_ReadStringLenv(AG_DataSource *ds, size_t maxlen, char **s)
 {
 	Uint32 len;
+	char *sp;
 
 	AG_LockDataSource(ds);
 
@@ -92,20 +98,19 @@ AG_ReadStringLenv(AG_DataSource *ds, size_t maxlen, char **s)
 		    (Ulong)maxlen);
 		goto fail;
 	}
-	if ((*s = malloc((size_t)len+1)) == NULL) {
-		AG_SetError("String (%luB): Out of memory", (Ulong)len);
+	if ((sp = AG_TryRealloc(*s, (size_t)len+1)) == NULL) {
 		goto fail;
 	}
+	*s = sp;
 	if (len > 0) {
-	  	if (AG_Read(ds, *s, len, 1) != 0) {
+	  	if (AG_Read(ds, sp, len, 1) != 0) {
 			AG_SetError("String (%luB): %s", (Ulong)len,
 			    AG_GetError());
-			free(*s);
-			*s = NULL;
+			sp[0] = '\0';
 			goto fail;
 		}
+		sp[len] = '\0';
 	}
-	(*s)[len] = '\0';
 
 	AG_UnlockDataSource(ds);
 	return (0);
@@ -115,8 +120,9 @@ fail:
 }
 
 /*
- * Allocate and read a NUL-terminated, length-encoded string. Type checking
- * is never done.
+ * Allocate and read a length-encoded string with NUL-termination.
+ * Type checking is never done; this function is useful when reading
+ * non-Agar generated datasets.
  */
 char *
 AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
@@ -135,8 +141,7 @@ AG_ReadNulStringLen(AG_DataSource *ds, size_t maxlen)
 		    (Ulong)maxlen);
 		goto fail;
 	}
-	if ((s = malloc((size_t)len)) == NULL) {
-		AG_SetError("String (%luB): Out of memory", (Ulong)len);
+	if ((s = AG_TryMalloc((size_t)len)) == NULL) {
 		goto fail;
 	}
 	if (len > 0) {
