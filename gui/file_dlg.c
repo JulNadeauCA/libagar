@@ -58,6 +58,11 @@
 # include <errno.h>
 #endif
 
+#include <config/have_glob.h>
+#ifdef HAVE_GLOB
+#include <glob.h>
+#endif
+
 AG_FileDlg *
 AG_FileDlgNew(void *parent, Uint flags)
 {
@@ -589,6 +594,150 @@ TextboxChanged(AG_Event *event)
 	AG_ObjectUnlock(fd);
 }
 
+#ifdef HAVE_GLOB
+static void
+CollapseGlobResults(AG_FileDlg *fd)
+{
+	if (fd->winGlob == NULL) {
+		return;
+	}
+	fd->winGlobRect.w = WIDTH(fd->winGlob);
+	fd->winGlobRect.h = HEIGHT(fd->winGlob);
+	AG_WindowHide(fd->winGlob);
+	AG_ObjectDetach(fd->winGlobList);
+	AG_ViewDetach(fd->winGlob);
+	fd->winGlob = NULL;
+}
+
+static void
+ModalCloseGlobResults(AG_Event *event)
+{
+	AG_FileDlg *fd = AG_PTR(1);
+
+	if (fd->winGlob != NULL)
+		CollapseGlobResults(fd);
+}
+
+static void
+ExpandGlobResults(AG_FileDlg *fd, int wMax)
+{
+	AG_SizeReq rList;
+	int x, y, w, h;
+
+	fd->winGlob = AG_WindowNew(AG_WINDOW_MODAL|AG_WINDOW_NOTITLE);
+	AG_WindowSetPadding(fd->winGlob, 0, 0, 0, 0);
+	AG_ObjectAttach(fd->winGlob, fd->winGlobList);
+		
+	if (fd->winGlobRect.w > 0) {
+		w = fd->winGlobRect.w;
+		h = fd->winGlobRect.h;
+	} else {
+		AG_TlistSizeHintPixels(fd->winGlobList, wMax, 10);
+		AG_WidgetSizeReq(fd->winGlobList, &rList);
+		w = rList.w + fd->winGlob->wBorderSide*2;
+		h = rList.h + fd->winGlob->wBorderBot;
+ 	}
+	x = WIDGET(fd->tbFile)->rView.x2 - w;
+	y = WIDGET(fd->tbFile)->rView.y1;
+
+	if (x+w > agView->w) { w = agView->w - x; }
+	if (y+h > agView->h) { h = agView->h - y; }
+	if (w < 4 || h < 4) {
+		CollapseGlobResults(fd);
+		return;
+	}
+	AG_SetEvent(fd->winGlob, "window-modal-close",
+	    ModalCloseGlobResults, "%p", fd);
+	AG_WindowSetGeometry(fd->winGlob, x, y, w, h);
+	AG_WindowShow(fd->winGlob);
+}
+
+static void
+SelectGlobResult(AG_Event *event)
+{
+	char file[AG_PATHNAME_MAX];
+	AG_FileDlg *fd = AG_PTR(1);
+	AG_Textbox *tb = fd->tbFile;
+	AG_TlistItem *ti = AG_PTR(2);
+	AG_FileInfo info;
+	int endSep;
+
+	AG_ObjectLock(fd);
+	Strlcpy(file, ti->text, sizeof(file));
+	endSep = (file[strlen(file)-1]==AG_PATHSEPCHAR) ? 1 : 0;
+	if (ProcessFilename(file, sizeof(file)) == -1) {
+		goto out;
+	}
+	AG_TextboxSetString(tb, file);
+
+	if (endSep ||
+	    (AG_GetFileInfo(file,&info)==0 && info.type == AG_FILE_DIRECTORY)) {
+		if (AG_FileDlgSetDirectory(fd, file) == 0) {
+			RefreshListing(fd);
+		} else {
+			//AG_TextMsg(AG_MSG_ERROR, "%s", AG_GetError());
+			goto out;
+		}
+	} else {
+		AG_FileDlgSetFilename(fd, file);
+		CheckAccessAndChoose(fd);
+	}
+out:
+	CollapseGlobResults(fd);
+	AG_ObjectUnlock(fd);
+}
+
+static int
+GlobExpansion(AG_FileDlg *fd, char *path, size_t path_len)
+{
+	glob_t gl;
+	int i;
+
+	if (glob(path, GLOB_TILDE, NULL, &gl) != 0) {
+		return (0);
+	}
+	if (gl.gl_pathc == 1) {
+		Strlcpy(path, gl.gl_pathv[0], path_len);
+	} else if (gl.gl_pathc > 1) {
+		int w, wMax = 0;
+		AG_TlistBegin(fd->winGlobList);
+		for (i = 0; i < gl.gl_pathc; i++) {
+			char *p = gl.gl_pathv[i];
+			AG_FileInfo fi;
+			AG_TlistItem *ti;
+
+			if (AG_GetFileInfo(p, &fi) != 0) {
+				continue;
+			}
+			if (fi.type == AG_FILE_DIRECTORY) {
+				if (p[strlen(p)-1] != AG_PATHSEPCHAR) {
+					ti = AG_TlistAdd(fd->winGlobList,
+					    agIconDirectory.s,
+					    "%s%c", p, AG_PATHSEPCHAR);
+				} else {
+					ti = AG_TlistAdd(fd->winGlobList,
+					    agIconDirectory.s,
+					    "%s", p);
+				}
+			} else {
+				ti = AG_TlistAdd(fd->winGlobList,
+				    agIconDoc.s, "%s", p);
+			}
+			ti->p1 = &gl.gl_pathv[i];
+			AG_TextSize(p, &w, NULL);
+			if (w > wMax) { wMax = w; }
+		}
+		AG_TlistEnd(fd->winGlobList);
+		AG_SetEvent(fd->winGlobList, "tlist-selected",
+		    SelectGlobResult, "%p", fd);
+		ExpandGlobResults(fd, wMax);
+		return (1);
+	}
+	globfree(&gl);
+	return (0);
+}
+#endif /* HAVE_GLOB */
+
 static void
 TextboxReturn(AG_Event *event)
 {
@@ -600,7 +749,10 @@ TextboxReturn(AG_Event *event)
 	
 	AG_ObjectLock(fd);
 	AG_TextboxCopyString(tb, file, sizeof(file));
-
+#ifdef HAVE_GLOB
+	if (GlobExpansion(fd, file, sizeof(file)))
+		goto out;
+#endif
 	if (file[0] == '\0') {
 		goto out;
 	}
@@ -608,7 +760,7 @@ TextboxReturn(AG_Event *event)
 	if (ProcessFilename(file, sizeof(file)) == -1) {
 		goto out;
 	}
-	AG_TextboxPrintf(tb, "%s", file);
+	AG_TextboxSetString(tb, file);
 
 	if (endSep ||
 	    (AG_GetFileInfo(file,&info)==0 && info.type == AG_FILE_DIRECTORY)) {
@@ -817,7 +969,7 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 
 	AG_ObjectLock(fd);
 	SetFilename(fd, file);
-	AG_TextboxPrintf(fd->tbFile, "%s", file);
+	AG_TextboxSetString(fd->tbFile, file);
 	AG_TextboxSetCursorPos(fd->tbFile, -1);
 	AG_ObjectUnlock(fd);
 }
@@ -856,6 +1008,11 @@ Init(void *obj)
 	fd->btnCancel = AG_ButtonNew(fd, 0, _("Cancel"));
 	fd->okAction = NULL;
 	fd->cancelAction = NULL;
+
+	fd->winGlob = NULL;
+	fd->winGlobList = Malloc(sizeof(AG_Tlist));
+	AG_ObjectInit(fd->winGlobList, &agTlistClass);
+	AG_Expand(fd->winGlobList);
 
 	AG_SetEvent(fd, "widget-shown", WidgetShown, NULL);
 	AG_SetEvent(fd->tlDirs, "tlist-dblclick", DirSelected, "%p", fd);

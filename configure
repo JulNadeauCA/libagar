@@ -4071,6 +4071,62 @@ if [ "${cache}" != "" ]; then
 	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_VSYSLOG_R
 fi
 rm -f conftest.c $testdir/conftest$EXECSUFFIX
+$ECHO_N "checking for the glob() function..."
+$ECHO_N "checking for the glob() function..." >> config.log
+MK_CACHED="No"
+MK_COMPILE_STATUS="OK"
+if [ "${cache}" != "" ]; then
+	if [ -e "${cache}/ctest-HAVE_GLOB" ]; then
+		HAVE_GLOB=`cat ${cache}/ctest-HAVE_GLOB`
+		MK_COMPILE_STATUS=`cat ${cache}/ctest-status-HAVE_GLOB`
+		MK_CACHED="Yes"
+	fi
+fi
+if [ "${MK_CACHED}" = "No" ]; then
+	cat << EOT > conftest.c
+#include <glob.h>
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+	glob_t gl;
+	int rv, i;
+	char *s;
+
+	rv = glob("~/foo", GLOB_TILDE, NULL, &gl);
+	for (i = 0; i < gl.gl_pathc; i++) { s = gl.gl_pathv[i]; }
+	return (0);
+}
+
+EOT
+	echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
+	$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+	if [ $? != 0 ]; then
+		echo "-> failed ($?)" >> config.log
+		MK_COMPILE_STATUS="FAIL($?)"
+	fi
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_GLOB="yes"
+echo "#ifndef HAVE_GLOB" > config/have_glob.h
+echo "#define HAVE_GLOB \"$HAVE_GLOB\"" >> config/have_glob.h
+echo "#endif" >> config/have_glob.h
+echo "hdefs[\"HAVE_GLOB\"] = \"$HAVE_GLOB\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_GLOB="no"
+echo "#undef HAVE_GLOB" >config/have_glob.h
+echo "hdefs[\"HAVE_GLOB\"] = nil" >>configure.lua
+fi;
+if [ "${cache}" != "" ]; then
+	echo "$HAVE_GLOB" > ${cache}/ctest-HAVE_GLOB
+	echo $MK_COMPILE_STATUS > ${cache}/ctest-status-HAVE_GLOB
+fi
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
 CFLAGS="$CFLAGS -D_AGAR_INTERNAL"
 CXXFLAGS="$CXXFLAGS -D_AGAR_INTERNAL"
 echo "CFLAGS=$CFLAGS" >>Makefile.config
