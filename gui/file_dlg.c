@@ -665,9 +665,6 @@ SelectGlobResult(AG_Event *event)
 	AG_ObjectLock(fd);
 	Strlcpy(file, ti->text, sizeof(file));
 	endSep = (file[strlen(file)-1]==AG_PATHSEPCHAR) ? 1 : 0;
-	if (ProcessFilename(file, sizeof(file)) == -1) {
-		goto out;
-	}
 	AG_TextboxSetString(tb, file);
 
 	if (endSep ||
