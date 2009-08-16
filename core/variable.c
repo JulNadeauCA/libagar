@@ -359,6 +359,26 @@ AG_Set(void *pObj, const char *name, const char *fmt, ...)
 	return (V);
 }
 
+/* Unset a variable */
+void
+AG_Unset(void *pObj, const char *name)
+{
+	AG_Object *obj = pObj;
+	Uint i;
+
+	for (i = 0; i < obj->nVars; i++) {
+		if (strcmp(obj->vars[i].name, name) != 0) {
+			continue;
+		}
+		if (i < obj->nVars-1) {
+			memmove(&obj->vars[i], &obj->vars[i+1],
+			    (obj->nVars-1)*sizeof(AG_Variable));
+		}
+		obj->nVars--;
+		break;
+	}
+}
+
 /* Body of AG_GetFoo() routines. */
 #undef  FN_VARIABLE_GET
 #define FN_VARIABLE_GET(_memb,_fn,_type,_getfn)			\
