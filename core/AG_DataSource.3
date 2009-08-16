@@ -643,13 +643,22 @@ bytes and returns a dynamically allocated, NUL-terminated copy of the string.
 implicitely limits the string to
 .Dv AG_LOAD_STRING_MAX
 bytes.
-On error, a data source exception is raised.
+Both functions will raise a data source exception on error.
 .Pp
 The
 .Fn AG_ReadStringLenv
 and
 .Fn AG_ReadStringv
-variants accept pointer arguments and will not raise exceptions on error.
+variants accept a pointer
+.Fa s
+to an existing, valid string buffer which will be reallocated to fit the
+new string.
+Both functions will return -1 (without raising a data source exception)
+on failure.
+If a low-level I/O error occurs after the buffer is reallocated, the
+string at
+.Fa s
+will be truncated to zero-length.
 .Pp
 .Fn AG_CopyString
 copies the string directly into a fixed-size buffer
@@ -661,13 +670,16 @@ bytes and NUL-terminates it.
 returns the number of bytes that would have been copied were
 .Fa buf_size
 unlimited.
+If an error occurs, a data source exception is raised.
 .Pp
 The
 .Fn AG_ReadNulString ,
 .Fn AG_ReadNulStringLen
 and
 .Fn AG_CopyNulString
-variants handle the case where the encoding of the string is NUL-terminated.
+variants handle strings where the encoding includes the NUL-termination.
+These functions do not perform type checking are mostly useful when
+reading non-Agar generated data files.
 .Pp
 The
 .Fn AG_SkipString
