@@ -96,7 +96,7 @@ typedef struct ag_variable_type_info {
 	int code;				/* Numerical code (-1 = non persistent) */
 } AG_VariableTypeInfo;
 
-#define AG_VARIABLE_NAME_MAX	24
+#define AG_VARIABLE_NAME_MAX	40
 #define AG_VARIABLE_BOOL	AG_VARIABLE_INT
 
 struct ag_event;
@@ -413,6 +413,7 @@ AG_Variable    *AG_GetVariable(void *, const char *, ...)
                     WARN_UNUSED_RESULT_ATTRIBUTE;
 void            AG_CopyVariable(AG_Variable *, const AG_Variable *);
 AG_Variable    *AG_Set(void *, const char *, const char *, ...);
+void		AG_Unset(void *, const char *);
 void            AG_VariableSubst(void *, const char *, char *, size_t)
 	            BOUNDED_ATTRIBUTE(__string__, 3, 4);
 

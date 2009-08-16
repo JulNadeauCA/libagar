@@ -216,6 +216,9 @@ union contains the primitive data itself.
 .Ft "AG_Variable *"
 .Fn AG_Set "AG_Object *obj" "const char *name" "const char *fmt" "..."
 .Pp
+.Ft "void"
+.Fn AG_Unset "AG_Object *obj" "const char *name"
+.Pp
 .Ft void
 .Fn AG_VariableSubst "AG_Object *obj" "const char *s" "char *dst" "size_t dst_len"
 .Pp
@@ -290,8 +293,11 @@ to
 .Pp
 The
 .Fn AG_Set
-sets a variable value using a format-string interface (see
+sets an object-bound variable value using a format-string interface (see
 .Fn AG_PARSE_VARIABLE_ARGS ) .
+.Pp
+.Fn AG_Unset
+deletes the named object-bound variable.
 .Pp
 .Fn AG_VariableSubst
 parses the string
