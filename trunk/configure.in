@@ -71,6 +71,7 @@ CHECK(shl_load)
 CHECK(gettimeofday)
 CHECK(setproctitle)
 CHECK(syslog)
+CHECK(glob)
 
 C_DEFINE(_AGAR_INTERNAL)
 C_DEFINE(_BSD_SOURCE)
