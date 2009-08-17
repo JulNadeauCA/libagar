@@ -331,6 +331,7 @@ void              AG_EventLoop_FixedFPS(void);
 Uint8             AG_MouseGetState(int *, int *);
 #ifdef AG_DEBUG
 struct ag_window *AG_EventShowPerfGraph(void);
+struct ag_window *AG_GuiDebugger(void);
 #endif
 
 void AG_BlendPixelRGBA(AG_Surface *, Uint8 *, Uint8, Uint8, Uint8, Uint8,
@@ -545,6 +546,24 @@ AG_RectSize2(AG_Rect2 *r, int w, int h)
 	r->x2 = r->x1+w;
 	r->h = h;
 	r->y2 = r->y1+h;
+}
+
+/* Translate a Rect. */
+static __inline__ void
+AG_RectTranslate(AG_Rect *r, int x, int y)
+{
+	r->x += x;
+	r->y += y;
+}
+
+/* Translate a Rect2. */
+static __inline__ void
+AG_RectTranslate2(AG_Rect2 *r, int x, int y)
+{
+	r->x1 += x;
+	r->y1 += y;
+	r->x2 += x;
+	r->y2 += y;
 }
 
 /* Convert a Rect to a Rect2. */

@@ -45,7 +45,6 @@ static const struct dev_tool_ent {
 } devTools[] = {
 	{ N_("Registered classes"),	DEV_ClassInfo },
 	{ N_("Display Settings"),	DEV_DisplaySettings },
-	{ N_("GUI Debugger"),		DEV_GuiDebugger },
 	{ N_("Timer Inspector"),	DEV_TimerInspector },
 	{ N_("Unicode Browser"),	DEV_UnicodeBrowser },
 #if defined(AG_DEBUG)
