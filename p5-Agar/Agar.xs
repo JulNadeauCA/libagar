@@ -295,9 +295,6 @@ CODE:
 	TAILQ_FOREACH(win, &(agView->windows), windows) {
 		AG_WindowDraw(win);
 	}
-	for (i = 0; i < agView->nModal; i++) {
-		AG_WindowDraw(agView->winModal[i]);
-	}
 
 Agar::Widget
 FindWidget(name)
