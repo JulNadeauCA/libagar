@@ -43,6 +43,7 @@
 #include "fixed_plotter.h"
 #endif
 #include "gui_math.h"
+#include "icons.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -1560,6 +1561,59 @@ UnminimizeWindow(AG_Event *event)
 	AG_WindowUnminimize(win);
 }
 
+#ifdef AG_DEBUG
+static void
+OpenGuiDebugger(AG_Event *event)
+{
+	AG_Window *win;
+	if ((win = AG_GuiDebugger()) != NULL)
+		AG_WindowShow(win);
+}
+#endif /* AG_DEBUG */
+
+static void
+ExitApplication(AG_Event *event)
+{
+	AG_Quit();
+}
+
+/* Display the generic background popup menu. */
+static void
+BackgroundPopupMenu(void)
+{
+	AG_Menu *me;
+	AG_MenuItem *mi;
+	AG_Window *win;
+	int x, y;
+	int nWindows = 0;
+
+	me = AG_MenuNew(NULL, 0);
+	mi = me->itemSel = AG_MenuAddItem(me, NULL);
+
+	TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq, windows) {
+		if (strcmp(win->caption, "win-popup") == 0) {
+			continue;
+		}
+		AG_MenuAction(mi,
+		    win->caption[0] != '\0' ? win->caption : _("Untitled"),
+		    agIconWinMaximize.s,
+		    UnminimizeWindow, "%p", win);
+		nWindows++;
+	}
+	if (nWindows > 0) {
+		AG_MenuSeparator(mi);
+	}
+#ifdef AG_DEBUG
+	AG_MenuAction(mi, _("GUI debugger"), agIconMagnifier.s,
+	    OpenGuiDebugger, NULL);
+#endif
+	AG_MenuAction(mi, _("Exit application"), agIconWinClose.s,
+	    ExitApplication, NULL);
+				
+	AG_MouseGetState(&x, &y);
+	AG_MenuExpand(me, mi, x+4, y+4);
+}
+
 /*
  * Process an SDL event. Returns 1 if the event was processed in some
  * way, -1 if application is exiting.
@@ -1591,26 +1645,7 @@ AG_ProcessEvent(SDL_Event *ev)
 		    agBgPopupMenu && ev->type == SDL_MOUSEBUTTONDOWN &&
 		    (ev->button.button == SDL_BUTTON_MIDDLE ||
 		     ev->button.button == SDL_BUTTON_RIGHT)) {
-			AG_Menu *me;
-			AG_MenuItem *mi;
-			AG_Window *win;
-			int x, y;
-
-			me = AG_MenuNew(NULL, 0);
-			mi = me->itemSel = AG_MenuAddItem(me, NULL);
-
-			TAILQ_FOREACH_REVERSE(win, &agView->windows, ag_windowq,
-			    windows) {
-				if (strcmp(win->caption, "win-popup")
-				    == 0) {
-					continue;
-				}
-				AG_MenuAction(mi, win->caption, NULL,
-				    UnminimizeWindow, "%p", win);
-			}
-				
-			AG_MouseGetState(&x, &y);
-			AG_MenuExpand(me, mi, x+4, y+4);
+			BackgroundPopupMenu();
 			rv = 1;
 		}
 		break;
