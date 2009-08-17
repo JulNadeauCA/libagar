@@ -21,7 +21,7 @@ SRCS=	gui.c view.c widget.c window.c style.c style_default.c iconmgr.c \
 	fixed.c numerical.c table.c glview.c mpane.c pane.c console.c graph.c \
 	socket.c icon.c progress_bar.c slider.c text_cache.c load_surface.c \
 	load_color.c load_xcf.c file_selector.c scrollview.c font_selector.c \
-	time_sdl.c
+	time_sdl.c debugger.c
 
 MAN3=	AG_View.3 AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Label.3 AG_Radio.3 AG_Textbox.3 AG_Window.3 AG_Scrollbar.3 \
