@@ -38,22 +38,15 @@
 .Sh DESCRIPTION
 The
 .Nm
-widget is a dual container widget with a separator that is (by default)
-movable by the user.
-The two partitions are general-purpose
+container divides its allocated space into two partitions (general-purpose
 .Xr AG_Box 3
-containers.
-Depending on the application, partitions may or may not be allowed to shrink
-to zero size.
+containers), horizontally or vertically.
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Xr AG_Widget 3 ->
 .Nm .
 .Sh INITIALIZATION
 .nr nS 1
-.Ft "AG_Pane *"
-.Fn AG_PaneNew "AG_Widget *parent" "enum ag_pane_type type" "Uint flags"
-.Pp
 .Ft "AG_Pane *"
 .Fn AG_PaneNewHoriz "AG_Widget *parent" "Uint flags"
 .Pp
@@ -77,24 +70,16 @@ to zero size.
 .Pp
 .nr nS 0
 The
-.Fn AG_PaneNew
-function allocates, initializes, and attaches a new
+.Fn AG_PaneNewHoriz
+and
+.Fn AG_PaneNewVert
+functions allocate, initialize, and attach a new
 .Nm
-widget.
-The
-.Fa type
-argument is one of:
+container, dividing space in the specified orientation.
 .Pp
-.Bd -literal
-enum ag_pane_type {
-	AG_PANE_HORIZ,
-	AG_PANE_VERT
-};
-.Ed
-.Pp
-The
+Available
 .Fa flags
-may include:
+options include:
 .Pp
 .Bl -tag -width "AG_PANE_FORCE_DIV "
 .It AG_PANE_DIV1FILL
