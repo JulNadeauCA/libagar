@@ -629,6 +629,15 @@ Init(void *obj)
 	AG_BindInt(sb, "min", &sb->min);
 	AG_BindInt(sb, "max", &sb->max);
 	AG_BindInt(sb, "visible", &sb->visible);
+#ifdef AG_DEBUG
+	AG_BindInt(sb, "wButton", &sb->wButton);
+	AG_BindInt(sb, "wBar", &sb->wBar);
+	AG_BindInt(sb, "hArrow", &sb->hArrow);
+	AG_BindInt(sb, "xOffs", &sb->xOffs);
+	AG_BindInt(sb, "extent", &sb->extent);
+	AG_BindDouble(sb, "rInc", &sb->rInc);
+	AG_BindInt(sb, "iInc", &sb->iInc);
+#endif
 
 	sb->type = AG_SCROLLBAR_HORIZ;
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
@@ -697,6 +706,7 @@ DrawText(AG_Scrollbar *sb)
 {
 	AG_Surface *txt;
 	char label[32];
+	AG_Rect2 r;
 
 	AG_PushTextState();
 	AG_TextColor(TEXT_COLOR);
@@ -708,12 +718,18 @@ DrawText(AG_Scrollbar *sb)
 	    AG_GetInt(sb,"max"),
 	    AG_GetInt(sb,"visible"));
 
-	/* XXX inefficient */
-	txt = AG_TextRender(label);
-	AG_WidgetBlit(sb, txt,
+	txt = AG_TextRender(label);		/* XXX inefficient */
+	r = AG_RECT2(
 	    WIDTH(sb)/2 - txt->w/2,
-	    HEIGHT(sb)/2 - txt->h/2);
+	    HEIGHT(sb)/2 - txt->h/2,
+	    txt->w,
+	    txt->h);
+	AG_WidgetBlit(sb, txt, r.x1, r.y1);
 	AG_SurfaceFree(txt);
+
+	AG_DrawRectOutline(sb, AG_Rect2ToRect(r), AG_MapRGB(agVideoFmt, 250, 250, 0));
+	AG_RectTranslate2(&r, WIDGET(sb)->rView.x1, WIDGET(sb)->rView.y1);
+	AG_ViewUpdateFB(&r);
 	
 	AG_PopTextState();
 }

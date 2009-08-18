@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2007 Hypertriton, Inc. <http://hypertriton.com/>
+ * Copyright (c) 2003-2009 Hypertriton, Inc. <http://hypertriton.com/>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,11 @@
 #include "window.h"
 #include "primitive.h"
 #include "text.h"
+
+#ifdef AG_DEBUG
+#include "numerical.h"
+#include "checkbox.h"
+#endif
 
 AG_Box *
 AG_BoxNew(void *parent, enum ag_box_type type, Uint flags)
@@ -360,6 +365,40 @@ AG_BoxSetType(AG_Box *box, enum ag_box_type type)
 	AG_ObjectUnlock(box);
 }
 
+#ifdef AG_DEBUG
+static void
+UpdateWindow(AG_Event *event)
+{
+	AG_Window *win = AG_PTR(1);
+	AG_WindowUpdate(win);
+}
+
+static void *
+Edit(void *obj)
+{
+	AG_Box *ctr = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+	AG_Box *box = obj;
+	AG_Numerical *num;
+		
+	num = AG_NumericalNewIntR(ctr, 0, "px", _("Padding: "),
+	    &box->padding, 0, 255);
+	AG_SetEvent(num, "numerical-changed",
+	    UpdateWindow, "%p", AG_ParentWindow(box));
+		
+	num = AG_NumericalNewIntR(ctr, 0, "px", _("Spacing: "),
+	    &box->spacing, 0, 255);
+	AG_SetEvent(num, "numerical-changed",
+	    UpdateWindow, "%p", AG_ParentWindow(box));
+		
+	AG_CheckboxNewFlag(ctr, 0, _("Homogenous"),
+	    &box->flags, AG_BOX_HOMOGENOUS);
+	AG_CheckboxNewFlag(ctr, 0, _("Visual frame"),
+	    &box->flags, AG_BOX_FRAME);
+
+	return (ctr);
+}
+#endif /* AG_DEBUG */
+
 AG_WidgetClass agBoxClass = {
 	{
 		"Agar(Widget:Box)",
@@ -370,7 +409,11 @@ AG_WidgetClass agBoxClass = {
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
+#ifdef AG_DEBUG
+		Edit
+#else
 		NULL		/* edit */
+#endif
 	},
 	Draw,
 	SizeRequest,
