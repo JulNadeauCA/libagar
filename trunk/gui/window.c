@@ -34,6 +34,14 @@
 #include "icons.h"
 #include "cursors.h"
 
+#ifdef AG_DEBUG
+#include "textbox.h"
+#include "label.h"
+#include "numerical.h"
+#include "checkbox.h"
+#include "separator.h"
+#endif
+
 #include <string.h>
 #include <stdarg.h>
 
@@ -1759,6 +1767,80 @@ AG_WindowUpdateCaption(AG_Window *win)
 	AG_ObjectUnlock(win);
 }
 
+#ifdef AG_DEBUG
+static void
+UpdateWindow(AG_Event *event)
+{
+	AG_Window *win = AG_PTR(1);
+	AG_WindowUpdate(win);
+}
+
+static void
+UpdateWindowCaption(AG_Event *event)
+{
+	AG_Window *win = AG_PTR(1);
+	AG_WindowUpdateCaption(win);
+}
+
+static void *
+Edit(void *obj)
+{
+	AG_Box *ctr = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+	AG_Window *ww = obj;
+	static const AG_FlagDescr flagDescr[] = {
+	    { AG_WINDOW_MODAL,		"MODAL",	1 },
+	    { AG_WINDOW_MAXIMIZED,	"MAXIMIZED",	1 },
+	    { AG_WINDOW_MINIMIZED,	"MINIMIZED",	1 },
+	    { AG_WINDOW_KEEPABOVE,	"KEEPABOVE",	1 },
+	    { AG_WINDOW_KEEPBELOW,	"KEEPBELOW",	1 },
+	    { AG_WINDOW_DENYFOCUS,	"DENYFOCUS",	1 },
+	    { AG_WINDOW_NOBORDERS,	"NOBORDERS",	1 },
+	    { AG_WINDOW_NOHRESIZE,	"NOHRESIZE",	1 },
+	    { AG_WINDOW_NOVRESIZE,	"NOVRESIZE",	1 },
+	    { AG_WINDOW_NOBACKGROUND,	"NOBACKGROUND",	1 },
+	    { AG_WINDOW_NOUPDATERECT,	"NOUPDATERECT",	1 },
+	    { 0,			NULL,		0 }
+	};
+	AG_Numerical *nums[4];
+	AG_Textbox *tb;
+	AG_Label *lbl;
+	int i;
+
+	tb = AG_TextboxNew(ctr, 0, _("Caption: "));
+	AG_TextboxBindUTF8(tb, ww->caption, sizeof(ww->caption));
+	AG_SetEvent(tb, "textbox-postchg", UpdateWindowCaption, "%p", ww);
+
+#ifdef AG_THREADS
+	lbl = AG_LabelNewPolledMT(ctr, AG_LABEL_HFILL, &OBJECT(ww)->lock,
+	    "Flags: <%[flags]>", &ww->flags);
+#else
+	lbl = AG_LabelNewPolled(ctr, AG_LABEL_HFILL,
+	    "Flags: <%[flags]>", &ww->flags);
+#endif
+
+	AG_SeparatorNewHoriz(ctr);
+	AG_CheckboxSetFromFlags(ctr, 0, &ww->flags, flagDescr);
+	AG_SeparatorNewHoriz(ctr);
+
+	nums[0] = AG_NumericalNewIntR(ctr, 0, "px",
+	    _("Widget spacing: "), &ww->spacing, 0, 255);
+	nums[1] = AG_NumericalNewIntR(ctr, 0, "px",
+	    _("Top padding: "), &ww->tPad, 0, 255);
+	nums[2] = AG_NumericalNewIntR(ctr, 0, "px",
+	    _("Bottom padding: "), &ww->bPad, 0, 255);
+	nums[3] = AG_NumericalNewIntR(ctr, 0, "px",
+	    _("Left padding: "), &ww->lPad, 0, 255);
+	nums[4] = AG_NumericalNewIntR(ctr, 0, "px",
+	    _("Right padding: "), &ww->rPad, 0, 255);
+	
+	for (i = 0; i < 4; i++) {
+		AG_SetEvent(nums[i], "numerical-changed",
+		    UpdateWindow, "%p", ww);
+	}
+	return (ctr);
+}
+#endif /* AG_DEBUG */
+
 AG_WidgetClass agWindowClass = {
 	{
 		"Agar(Widget:Window)",
@@ -1769,7 +1851,11 @@ AG_WidgetClass agWindowClass = {
 		NULL,			/* destroy */
 		NULL,			/* load */
 		NULL,			/* save */
+#ifdef AG_DEBUG
+		Edit
+#else
 		NULL			/* edit */
+#endif
 	},
 	Draw,
 	SizeRequest,

@@ -44,6 +44,11 @@
 #include "primitive.h"
 #include "cursors.h"
 
+#ifdef AG_DEBUG
+#include "numerical.h"
+#include "separator.h"
+#endif
+
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
@@ -1179,6 +1184,26 @@ Destroy(void *obj)
 		Free(ed->ucsBuf);
 }
 
+#ifdef AG_DEBUG
+static void *
+Edit(void *obj)
+{
+	AG_Editable *ed = obj;
+	AG_Box *ctr = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
+
+	AG_NumericalNewInt(ctr, 0, "px", "x: ", &ed->x);
+	AG_NumericalNewInt(ctr, 0, "px", "xMax: ", &ed->xMax);
+	AG_NumericalNewInt(ctr, 0, "px", "y: ", &ed->y);
+	AG_NumericalNewInt(ctr, 0, "px", "yMax: ", &ed->yMax);
+	AG_NumericalNewInt(ctr, 0, "px", "yVis: ", &ed->yVis);
+	AG_SeparatorNewHoriz(ctr);
+	AG_NumericalNewInt(ctr, 0, "px", "pos: ", &ed->pos);
+	AG_NumericalNewInt(ctr, 0, "px", "xCurs: ", &ed->xCurs);
+	AG_NumericalNewInt(ctr, 0, "px", "yCurs: ", &ed->yCurs);
+	return (ctr);
+}
+#endif /* AG_DEBUG */
+
 AG_WidgetClass agEditableClass = {
 	{
 		"Agar(Widget:Editable)",
@@ -1189,7 +1214,11 @@ AG_WidgetClass agEditableClass = {
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
+#ifdef AG_DEBUG
+		Edit,
+#else
 		NULL		/* edit */
+#endif
 	},
 	Draw,
 	SizeRequest,
