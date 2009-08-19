@@ -162,6 +162,24 @@ PollSurfaces(AG_Event *event)
 }
 
 static void
+PollVariables(AG_Event *event)
+{
+	AG_Tlist *tl = AG_SELF();
+	AG_Object *obj = AG_PTR(1);
+	AG_Variable *V;
+	Uint i;
+
+	AG_TlistBegin(tl);
+	AGOBJECT_FOREACH_VARIABLE(V, i, obj) {
+		char val[1024];
+
+		AG_PrintVariable(val, sizeof(val), V);
+		AG_TlistAdd(tl, NULL, "%s: %s", V->name, val);
+	}
+	AG_TlistEnd(tl);
+}
+
+static void
 WidgetSelected(AG_Event *event)
 {
 	AG_Box *box = AG_PTR(1);
@@ -176,7 +194,7 @@ WidgetSelected(AG_Event *event)
 	AG_ObjectFreeChildren(box);
 
 	nb = AG_NotebookNew(box, AG_NOTEBOOK_EXPAND);
-	nTab = AG_NotebookAddTab(nb, _("Widget"), AG_BOX_VERT);
+	nTab = AG_NotebookAddTab(nb, _("General Settings"), AG_BOX_VERT);
 	{
 		static const AG_FlagDescr flagDescr[] = {
 		    { AG_WIDGET_FOCUSABLE,		"FOCUSABLE",1 },
@@ -207,9 +225,16 @@ WidgetSelected(AG_Event *event)
 	}
 
 	if (AGOBJECT_CLASS(wid)->edit != NULL) {
-		nTab = AG_NotebookAddTab(nb, AGOBJECT_CLASS(wid)->name,
-		    AG_BOX_VERT);
+		nTab = AG_NotebookAddTab(nb, _("Widget-specific"), AG_BOX_VERT);
 		AG_ObjectAttach(nTab, AGOBJECT_CLASS(wid)->edit(wid));
+	}
+	
+	nTab = AG_NotebookAddTab(nb, _("Variables"), AG_BOX_VERT);
+	{
+		AG_Tlist *tlSurf;
+		
+		tlSurf = AG_TlistNewPolled(nTab, AG_TLIST_EXPAND,
+		    PollVariables, "%p", wid);
 	}
 
 	nTab = AG_NotebookAddTab(nb, _("Geometry"), AG_BOX_VERT);
