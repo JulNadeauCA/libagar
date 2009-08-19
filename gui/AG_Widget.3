@@ -1122,10 +1122,10 @@ and
 .Pp
 .nr nS 0
 .Fn AG_ParentWindow
-searches the parent objects of the given widget for an
+returns a pointer to the parent
 .Xr AG_Window 3
-(or a subclass of it).
-If one is found, it is returned, otherwise the function returns NULL.
+for the given widget.
+If the widget is unattached, NULL is returned.
 With threads, the return value is only valid as long as the view is locked
 (see
 .Xr AG_View 3 ) .
