@@ -50,6 +50,24 @@ ChildAttached(AG_Event *event)
 	AG_Widget *wid = AG_SENDER();
 	AG_Style *style = pwid->style;
 
+	if (AG_OfClass(pwid, "AG_Widget:AG_Window:*"))
+		wid->window = AGWINDOW(pwid);
+
+	/* Inherit style from parent widget. */
+	if (style != NULL)
+		wid->style = style;
+}
+
+static void
+ChildDetached(AG_Event *event)
+{
+	AG_Widget *pwid = AG_SELF();
+	AG_Widget *wid = AG_SENDER();
+	AG_Style *style = pwid->style;
+
+	if (AG_OfClass(pwid, "AG_Widget:AG_Window:*"))
+		wid->window = NULL;
+
 	/* Inherit style from parent widget. */
 	if (style != NULL)
 		wid->style = style;
@@ -86,6 +104,7 @@ Init(void *obj)
 	wid->style = &agStyleDefault;
 	SLIST_INIT(&wid->menus);
 	wid->focusFwd = NULL;
+	wid->window = NULL;
 
 	wid->nsurfaces = 0;
 	wid->surfaces = NULL;
@@ -97,11 +116,8 @@ Init(void *obj)
 	wid->nTextureGC = 0;
 #endif
 
-	/*
-	 * Arrange for immediate children to inherit the style settings
-	 * of the parent on attachment.
-	 */
 	AG_SetEvent(wid, "child-attached", ChildAttached, NULL);
+	AG_SetEvent(wid, "child-detached", ChildDetached, NULL);
 #ifdef AG_LEGACY
 	AG_SetEvent(wid, "bound", Bound, NULL);
 #endif
@@ -1324,28 +1340,6 @@ AG_WidgetUnfocus(void *p)
 		AG_WidgetUnfocus(cwid);
 	}
 	AG_ObjectUnlock(wid);
-}
-
-/*
- * Find the parent window of a widget. Result is only valid as long as
- * the View VFS is locked.
- */
-AG_Window *
-AG_ParentWindow(void *p)
-{
-	AG_Widget *wid = p;
-	AG_Widget *pwid = wid;
-
-	if (AG_OfClass(wid, "AG_Widget:AG_Window:*"))
-		return ((AG_Window *)wid);
-
-	AG_LockVFS(agView);
-	while ((pwid = OBJECT(pwid)->parent) != NULL) {
-		if (AG_OfClass(pwid, "AG_Widget:AG_Window:*"))
-			break;
-	}
-	AG_UnlockVFS(agView);
-	return ((AG_Window *)pwid);
 }
 
 /* Move the focus over a widget (and its parents). */

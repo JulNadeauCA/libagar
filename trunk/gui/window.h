@@ -242,6 +242,16 @@ AG_WindowSelectedWM(AG_Window *win, enum ag_wm_operation op)
 	return (agView->winSelected == win && agView->winop == op);
 }
 
+/*
+ * Return a pointer to a widget's parent window.
+ * The View VFS must be locked.
+ */
+static __inline__ AG_Window *
+AG_ParentWindow(void *obj)
+{
+	return (AGWIDGET(obj)->window);
+}
+
 /* Manually set widget geometry. */
 static __inline__ void
 AG_WidgetSetPosition(void *wid, int x, int y)

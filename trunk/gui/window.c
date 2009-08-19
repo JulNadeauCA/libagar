@@ -201,7 +201,7 @@ Init(void *obj)
 	ev->flags |= AG_EVENT_PROPAGATE;
 	ev = AG_SetEvent(win, "detached", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
-	AG_SetEvent(win, "child-attached", ChildAttached, NULL);
+	AG_AddEvent(win, "child-attached", ChildAttached, NULL);
 }
 
 /* Attach a sub-window. */

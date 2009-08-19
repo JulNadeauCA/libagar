@@ -101,6 +101,7 @@ typedef struct ag_widget {
 	AG_Mutex bindings_lock;		 	/* Lock on bindings */
 	AG_SLIST_HEAD(,ag_popup_menu) menus;	/* Managed menus */
 	struct ag_widget *focusFwd;		/* For ForwardFocus() */
+	struct ag_window *window;		/* Back ptr to parent window */
 } AG_Widget;
 
 #define AGWIDGET(wi)		((AG_Widget *)(wi))
@@ -155,8 +156,6 @@ AG_Widget	 *AG_WidgetFindFocused(void *);
 void		 *AG_WidgetFindPoint(const char *, int, int);
 void		 *AG_WidgetFindRect(const char *, int, int, int, int);
 void		  AG_WidgetUpdateCoords(void *, int, int);
-struct ag_window *AG_ParentWindow(void *);
-#define		  AG_WidgetParentWindow(w) AG_ParentWindow(w)
 
 int	 AG_WidgetMapSurface(void *, AG_Surface *);
 int	 AG_WidgetMapSurfaceNODUP(void *, AG_Surface *);
