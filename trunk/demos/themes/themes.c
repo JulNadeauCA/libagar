@@ -14,6 +14,7 @@
 #include <math.h>
 
 #include "config/have_getopt.h"
+#include <agar/config/ag_debug.h>
 
 #include "mytheme.h"
 
@@ -52,6 +53,7 @@ CreateWindow(void)
 	 * for multiple pane views.
 	 */
 	pane = AG_PaneNew(win, AG_PANE_HORIZ, 0);
+	AG_PaneSetDivisionMin(pane, 0, 50, 100);
 	AG_Expand(pane);
 	div1 = pane->div[0];
 	div2 = pane->div[1];
@@ -297,11 +299,13 @@ Preferences(AG_Event *event)
 	DEV_ConfigShow();
 }
 
+#ifdef AG_DEBUG
 static void
-GuiDebugger(AG_Event *event)
+ShowGuiDebugger(AG_Event *event)
 {
-	AG_WindowShow(DEV_GuiDebugger());
+	AG_WindowShow(AG_GuiDebugger());
 }
+#endif
 
 static void
 SetTheme(AG_Event *event)
@@ -505,8 +509,10 @@ main(int argc, char *argv[])
 	{
 		AG_MenuAction(m, "Preferences...", agIconGear.s,
 		    Preferences, NULL);
+#ifdef AG_DEBUG
 		AG_MenuAction(m, "GUI Debugger...", agIconMagnifier.s,
-		    GuiDebugger, NULL);
+		    ShowGuiDebugger, NULL);
+#endif
 		AG_MenuSeparator(m);
 		AG_MenuAction(m, "Quit", agIconClose.s,
 		    Quit, NULL);
