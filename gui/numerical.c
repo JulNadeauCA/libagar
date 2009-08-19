@@ -543,9 +543,8 @@ AG_NumericalSetUnitSystem(AG_Numerical *num, const char *unit_key)
 	AG_UComboSizeHintPixels(num->units, num->wPreUnit,
 	    nUnits<6 ? (nUnits + 1) : 6);
 	
+	AG_WidgetUpdate(num);
 	AG_ObjectUnlock(num);
-	
-	AG_WindowUpdate(AG_ParentWindow(num));
 	return (0);
 }
 

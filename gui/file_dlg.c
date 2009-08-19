@@ -847,8 +847,7 @@ SelectedType(AG_Event *event)
 		}
 	}
 	AG_ObjectUnlock(fd);
-
-	AG_WindowUpdate(AG_ParentWindow(fd));
+	AG_WidgetUpdate(fd);
 }
 
 static void

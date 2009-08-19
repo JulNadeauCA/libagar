@@ -302,17 +302,12 @@ AG_NotebookDelTab(AG_Notebook *nb, AG_NotebookTab *tab)
 void
 AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 {
-	AG_Window *pwin;
 	AG_SizeReq rTab;
 	AG_SizeAlloc aTab;
 
 	AG_LockVFS(agView);
 	AG_ObjectLock(nb);
 
-	if ((pwin = AG_WidgetParentWindow(nb)) == NULL) {
-		/* AG_FatalError("AG_Notebook: No window is attached"); */
-		goto out;
-	}
 	if (nb->sel_tab != NULL) {
 		AG_WidgetHiddenRecursive(nb->sel_tab);
 		AG_ObjectDetach(nb->sel_tab);
@@ -323,7 +318,6 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 		goto out;
 	}
 	AG_ObjectAttach(nb, tab);
-	AG_SetStyle(nb, WIDGET(pwin)->style);
 	nb->sel_tab = tab;
 
 	AG_WidgetSizeReq(tab, &rTab);
@@ -333,8 +327,8 @@ AG_NotebookSelectTab(AG_Notebook *nb, AG_NotebookTab *tab)
 	aTab.h = WIDGET(nb)->h - nb->bar_h;
 	AG_WidgetSizeAlloc(tab, &aTab);
 	AG_WidgetShownRecursive(tab);
-	
-	AG_WindowUpdate(pwin);
+
+	AG_WidgetUpdate(nb);
 /* 	AG_WidgetFocus(tab); */
 out:
 	AG_ObjectUnlock(nb);

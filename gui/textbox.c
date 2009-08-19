@@ -179,7 +179,7 @@ Draw(void *p)
 			    AG_RECT(WIDTH(tb)-d, HEIGHT(tb)-d, d, d), -1,
 			    AG_COLOR(TEXTBOX_COLOR));
 		}
-		AG_WindowUpdate(AG_ParentWindow(tb));
+		AG_WidgetUpdate(tb);
 	}
 	AG_WidgetDraw(tb->ed);
 	if (tb->hBar != NULL) { AG_WidgetDraw(tb->hBar); }

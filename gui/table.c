@@ -110,7 +110,7 @@ AG_TableSetColHeight(AG_Table *t, int h)
 {
 	AG_ObjectLock(t);
 	t->hCol = h;
-	AG_WindowUpdate(AG_ParentWindow(t));
+	AG_WidgetUpdate(t);
 	AG_ObjectUnlock(t);
 }
 
@@ -120,7 +120,7 @@ AG_TableSetRowHeight(AG_Table *t, int h)
 {
 	AG_ObjectLock(t);
 	t->hRow = h;
-	AG_WindowUpdate(AG_ParentWindow(t));
+	AG_WidgetUpdate(t);
 	AG_ObjectUnlock(t);
 }
 

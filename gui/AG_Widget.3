@@ -169,6 +169,9 @@ flag, disabling rendering of the widget with its current geometry.
 .Ft void
 .Fn AG_WidgetSetGeometry "AG_Widget *widget" "AG_Rect rect"
 .Pp
+.Ft void
+.Fn AG_WidgetUpdate "AG_Widget *widget"
+.Pp
 .nr nS 0
 The
 .Fn AG_Expand
@@ -218,6 +221,26 @@ These functions are typically only used in the context of the
 and
 .Fn size_allocate
 routines of container widgets.
+.Pp
+.Fn AG_WidgetUpdate
+requests an update of the computed coordinates and geometries of all widgets
+attached to the widget's current window.
+The widget may or may not be attached to a parent window (the actual update
+will be performed later, before rendering starts in
+.Fn AG_WindowDraw ) .
+.Fn AG_WidgetUpdate
+should be called following
+.Xr AG_ObjectAttach 3
+or
+.Xr AG_ObjectDetach 3
+calls made in event context, or manual modifications of the
+.Va x ,
+.Va y ,
+.Va w ,
+.Va h
+fields of the
+.Nm
+structure.
 .Sh INPUT STATE
 .nr nS 1
 .Ft "void"

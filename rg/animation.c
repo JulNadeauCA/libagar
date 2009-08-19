@@ -514,7 +514,7 @@ EditInsn(RG_Anim *ani, RG_AnimInsn *insn, AG_Box *box)
 	    &insn->delay, 0, 10000);
 	AG_SliderSetIntIncrement(sl, 50);
 	
-	AG_WindowUpdate(AG_ParentWindow(box));
+	AG_WidgetUpdate(box);
 }
 
 static void
@@ -533,7 +533,7 @@ EditFrame(RG_Anim *ani, RG_AnimFrame *fr, AG_Box *box)
 	    &fr->delay, 0, 10000);
 	AG_NumericalSetIncrement(num, 50);
 
-	AG_WindowUpdate(AG_ParentWindow(box));
+	AG_WidgetUpdate(box);
 }
 
 static void

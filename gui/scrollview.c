@@ -111,11 +111,10 @@ static void
 PanView(AG_Event *event)
 {
 	AG_Scrollview *sv = AG_PTR(1);
-	AG_Window *pWin = AG_ParentWindow(sv);
 
-	if (pWin != NULL) { AG_WindowUpdate(pWin); }
+	AG_WidgetUpdate(sv);
 	PlaceWidgets(sv, NULL, NULL);
-	if (pWin != NULL) { AG_WindowUpdate(pWin); }
+	AG_WidgetUpdate(sv);
 }
 
 static void

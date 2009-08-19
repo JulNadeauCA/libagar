@@ -232,11 +232,30 @@ AG_WindowDetach(AG_Window *win, AG_Window *subwin)
 	AG_UnlockVFS(agView);
 }
 
+/* Evaluate whether a widget is requesting geometry update. */
+static int
+UpdateNeeded(AG_Widget *wid)
+{
+	AG_Widget *chld;
+
+	if (wid->flags & AG_WIDGET_UPDATE_WINDOW) {
+		return (1);
+	}
+	WIDGET_FOREACH_CHILD(chld, wid) {
+		if (UpdateNeeded(chld))
+			return (1);
+	}
+	return (0);
+}
+
 static void
 Draw(void *obj)
 {
 	AG_Window *win = obj;
 	AG_Widget *chld;
+
+	if (UpdateNeeded(WIDGET(win)))
+		AG_WindowUpdate(win);
 	
 	STYLE(win)->Window(win);
 

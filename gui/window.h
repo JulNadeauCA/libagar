@@ -207,8 +207,10 @@ AG_WindowIsFocused(AG_Window *win)
 }
 
 /*
- * Commit direct changes made to the coordinates of Widgets attached to 
- * the window.
+ * Recompute the coordinates and geometries of all widgets attached to the
+ * window. This is used following AG_ObjectAttach() and AG_ObjectDetach()
+ * calls made in event context, or direct modifications to the x,y,w,h
+ * fields of the Widget structure.
  */
 static __inline__ void
 AG_WindowUpdate(AG_Window *win)
@@ -252,40 +254,38 @@ AG_ParentWindow(void *obj)
 	return (AGWIDGET(obj)->window);
 }
 
-/* Manually set widget geometry. */
+/* Set an explicit widget position in pixels. */
 static __inline__ void
 AG_WidgetSetPosition(void *wid, int x, int y)
 {
-	AG_Window *pWin;
-
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->x = x;
 	AGWIDGET(wid)->y = y;
-	if ((pWin = AG_ParentWindow(wid)) != NULL) { AG_WindowUpdate(pWin); }
+	AG_WidgetUpdate(wid);
 	AG_ObjectUnlock(wid);
 }
+
+/* Set an explicit widget geometry in pixels. */
 static __inline__ void
 AG_WidgetSetSize(void *wid, int w, int h)
 {
-	AG_Window *pWin;
-
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->w = w;
 	AGWIDGET(wid)->h = h;
-	if ((pWin = AG_ParentWindow(wid)) != NULL) { AG_WindowUpdate(pWin); }
+	AG_WidgetUpdate(wid);
 	AG_ObjectUnlock(wid);
 }
+
+/* Set an explicit widget geometry from an AG_Rect argument. */
 static __inline__ void
 AG_WidgetSetGeometry(void *wid, AG_Rect r)
 {
-	AG_Window *pWin;
-
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->x = r.x;
 	AGWIDGET(wid)->y = r.y;
 	AGWIDGET(wid)->w = r.w;
 	AGWIDGET(wid)->h = r.h;
-	if ((pWin = AG_ParentWindow(wid)) != NULL) { AG_WindowUpdate(pWin); }
+	AG_WidgetUpdate(wid);
 	AG_ObjectUnlock(wid);
 }
 __END_DECLS

@@ -197,6 +197,7 @@ WidgetSelected(AG_Event *event)
 		AG_TextboxBindUTF8(tb, OBJECT(wid)->name,
 		    sizeof(OBJECT(wid)->name));
 		AG_LabelNew(nTab, 0, _("Class: %s"), OBJECT(wid)->cls->name);
+		AG_LabelNewPolled(nTab, 0, _("Parent window: %p"), &wid->window);
 		AG_SeparatorNewHoriz(nTab);
 		AG_CheckboxSetFromFlags(nTab, 0, &wid->flags, flagDescr);
 	}
@@ -234,7 +235,7 @@ WidgetSelected(AG_Event *event)
 		AG_TlistSetItemHeight(tlSurf, 16);
 	}
 
-	AG_WindowUpdate(AG_ParentWindow(box));
+	AG_WidgetUpdate(box);
 }
 
 static void

@@ -56,34 +56,30 @@ typedef struct ag_widget {
 	struct ag_object obj;
 
 	Uint flags;
-#define AG_WIDGET_FOCUSABLE		0x00001 /* Can grab focus */
-#define AG_WIDGET_FOCUSED		0x00002 /* Holds focus (optimization) */
-#define AG_WIDGET_UNFOCUSED_MOTION	0x00004 /* All mousemotion events */
-#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x00008 /* All mousebuttonup events */
-#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x00010 /* All mousebuttondown events */
-#define AG_WIDGET_HFILL			0x00040 /* Expand to fill width */
-#define AG_WIDGET_VFILL			0x00080 /* Expand to fill height */
-#define AG_WIDGET_HIDE			0x00200 /* Don't draw this widget */
-#define AG_WIDGET_DISABLED		0x00400 /* Don't respond to input */
-#define AG_WIDGET_CATCH_TAB		0x01000 /* Catch tab key events */
-#define AG_WIDGET_PRIO_MOTION		0x02000 /* Block mousemotion events to
-						  any other widget, regardless
-						  of focus */
-#define AG_WIDGET_UNDERSIZE		0x04000 /* Size allocation failed */
-#define AG_WIDGET_NOSPACING		0x08000 /* Disable spacings around
-						   widget; container-specific */
-#define AG_WIDGET_UNFOCUSED_KEYDOWN	0x10000 /* All mousebuttondown events */
-#define AG_WIDGET_UNFOCUSED_KEYUP	0x20000 /* All mousebuttondown events */
-#define AG_WIDGET_DEBUG_RSENS		0x40000 /* Debug sensitivity rect */
-#define AG_WIDGET_TABLE_EMBEDDABLE	0x80000	/* Can be used in AG_Table(3) */
+#define AG_WIDGET_FOCUSABLE		0x000001 /* Can grab focus */
+#define AG_WIDGET_FOCUSED		0x000002 /* Holds focus (optimization) */
+#define AG_WIDGET_UNFOCUSED_MOTION	0x000004 /* All mousemotion events */
+#define AG_WIDGET_UNFOCUSED_BUTTONUP	0x000008 /* All mousebuttonup events */
+#define AG_WIDGET_UNFOCUSED_BUTTONDOWN	0x000010 /* All mousebuttondown events */
+#define AG_WIDGET_HFILL			0x000040 /* Expand to fill width */
+#define AG_WIDGET_VFILL			0x000080 /* Expand to fill height */
+#define AG_WIDGET_HIDE			0x000200 /* Don't draw this widget */
+#define AG_WIDGET_DISABLED		0x000400 /* Don't respond to input */
+#define AG_WIDGET_CATCH_TAB		0x001000 /* Catch tab key events */
+#define AG_WIDGET_PRIO_MOTION		0x002000 /* Block mousemotion events to any other widget, regardless of focus */
+#define AG_WIDGET_UNDERSIZE		0x004000 /* Size allocation failed */
+#define AG_WIDGET_NOSPACING		0x008000 /* Disable spacings around widget; container-specific */
+#define AG_WIDGET_UNFOCUSED_KEYDOWN	0x010000 /* All mousebuttondown events */
+#define AG_WIDGET_UNFOCUSED_KEYUP	0x020000 /* All mousebuttondown events */
+#define AG_WIDGET_DEBUG_RSENS		0x040000 /* Debug sensitivity rect */
+#define AG_WIDGET_TABLE_EMBEDDABLE	0x080000 /* Usable in polled tables */
+#define AG_WIDGET_UPDATE_WINDOW		0x100000 /* Request an AG_WindowUpdate() as soon as possible */
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int x, y;			/* Coordinates in container */
 	int w, h;			/* Allocated geometry */
 	AG_Rect2 rView;			/* Computed view coordinates */
-	AG_Rect2 rSens;			/* Rectangle of sensitivity (i.e., to
-					   cursor events), in view coords */
-
+	AG_Rect2 rSens;			/* Rectangle of sensitivity (i.e., to cursor events), in view coords */
 	AG_Style *style;		/* Style (inherited from parent) */
 
 	AG_Surface **surfaces;		/* Registered surfaces */
@@ -105,8 +101,8 @@ typedef struct ag_widget {
 } AG_Widget;
 
 #define AGWIDGET(wi)		((AG_Widget *)(wi))
-#define AGWIDGET_OPS(wi)	((AG_WidgetClass *)OBJECT(wi)->cls)
-#define AGWIDGET_SUPER_OPS(wi)	((AG_WidgetClass *)OBJECT(wi)->cls->super)
+#define AGWIDGET_OPS(wi)	((AG_WidgetClass *)AGOBJECT(wi)->cls)
+#define AGWIDGET_SUPER_OPS(wi)	((AG_WidgetClass *)AGOBJECT(wi)->cls->super)
 
 #define AGWIDGET_SURFACE(wi, ind)	AGWIDGET(wi)->surfaces[ind]
 #define AGWIDGET_TEXTURE(wi, ind)	AGWIDGET(wi)->textures[ind]
@@ -261,7 +257,7 @@ AG_WidgetRelativeArea(void *p, int x, int y)
 		y < wid->h);
 }
 
-/* Put a single pixel at specified coordinates. */
+/* Write a single pixel at widget-relative coordinates (32-bit agVideoFmt). */
 static __inline__ void
 AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 {
@@ -278,6 +274,7 @@ AG_WidgetPutPixel32(void *p, int wx, int wy, Uint32 color)
 		AG_PUT_PIXEL2(agView->v, vx,vy, color);
 }
 
+/* Write a single pixel at widget-relative coordinates (RGB components). */
 static __inline__ void
 AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 {
@@ -294,6 +291,7 @@ AG_WidgetPutPixelRGB(void *p, int wx, int wy, Uint8 r, Uint8 g, Uint8 b)
 		AG_PUT_PIXEL2(agView->v, vx,vy, AG_MapRGB(agVideoFmt,r,g,b));
 }
 
+/* Blend a single pixel at widget-relative coordinates (32-bit agVideoFmt). */
 static __inline__ void
 AG_WidgetBlendPixel32(void *p, int wx, int wy, Uint32 pixel, AG_BlendFn fn)
 {
@@ -303,6 +301,7 @@ AG_WidgetBlendPixel32(void *p, int wx, int wy, Uint32 pixel, AG_BlendFn fn)
 	AG_WidgetBlendPixelRGBA(p, wx,wy, c, fn);
 }
 
+/* Expand widget to fill available space in parent container. */
 static __inline__ void
 AG_Expand(void *wid)
 {
@@ -324,6 +323,8 @@ AG_ExpandVert(void *wid)
 	AGWIDGET(wid)->flags |= AG_WIDGET_VFILL;
 	AG_ObjectUnlock(wid);
 }
+
+/* Toggle widget visibility */
 static __inline__ void
 AG_WidgetHide(void *wid)
 {
@@ -336,6 +337,21 @@ AG_WidgetShow(void *wid)
 {
 	AG_ObjectLock(wid);
 	AGWIDGET(wid)->flags &= ~(AG_WIDGET_HIDE);
+	AG_ObjectUnlock(wid);
+}
+
+/*
+ * Request that all computed widget coordinates and geometries in the widget's
+ * current window be updated as soon as possible. The widget may or may not
+ * be currently attached to a window at the time the call is made.
+ */
+static __inline__ void
+AG_WidgetUpdate(void *obj)
+{
+	AG_Widget *wid = obj;
+
+	AG_ObjectLock(wid);
+	wid->flags |= AG_WIDGET_UPDATE_WINDOW;
 	AG_ObjectUnlock(wid);
 }
 __END_DECLS

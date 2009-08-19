@@ -784,7 +784,7 @@ CloseElement(RG_Tileview *tv)
 
 	if (tv->tel_tbar != NULL) {
 		AG_ObjectDetach(tv->tel_tbar);
-		AG_WindowUpdate(AG_ParentWindow(tv->tel_tbar));
+		AG_WidgetUpdate(tv->tel_tbar);
 		AG_ObjectDestroy(tv->tel_tbar);
 		tv->tel_tbar = NULL;
 	}
@@ -886,7 +886,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel)
 
 			if (ft->ops->toolbar != NULL) {
 				tv->tel_tbar = ft->ops->toolbar(ft, tv);
-				AG_WindowUpdate(pWin);
+				AG_WidgetUpdate(tv);
 			}
 		}
 		break;
@@ -920,7 +920,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel)
 			AG_WidgetFocus(tv);
 			
 			tv->tel_tbar = RG_PixmapToolbar(tv, tel);
-			AG_WindowUpdate(pWin);
+			AG_WidgetUpdate(tv);
 		}
 		break;
 #if 0
@@ -953,7 +953,7 @@ OpenElement(RG_Tileview *tv, RG_TileElement *tel)
 			AG_WidgetFocus(tv);
 
 			tv->tel_tbar = RG_SketchToolbar(tv, tel);
-			AG_WindowUpdate(pWin);
+			AG_WidgetUpdate(tv);
 		}
 		break;
 #endif

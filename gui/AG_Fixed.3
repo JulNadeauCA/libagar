@@ -69,22 +69,15 @@ Draw a decorative 3D-style box in the background.
 .It AG_FIXED_FRAME
 Draw a decorative frame in the background.
 .It AG_FIXED_NO_UPDATE
-Don't automatically call
-.Xr WINDOW_UPDATE 3
-when items are added, resized or moved.
-.El
+Disable automatic invocation of
+.Xr AG_WidgetUpdate 3
+whenever widgets are repositioned.
+As an optimisation when large number of widgets are to be positioned, this
+option can be used and
+.Xr AG_WidgetUpdate 3
+manually invoked only once all widgets are in place.
 .Pp
-Whenever widgets are repositioned, the Agar GUI requires a call to the
-.Xr AG_WindowUpdate 3
-function.
-Unless the
-.Dv AG_FIXED_NO_UPDATE
-flag is given,
-.Nm
-automatically invokes this macro.
-This flag is useful for manual updates after a large number of widgets are
-positioned.
-.Pp
+.It AG_FIXED_FILLBG
 By default, the
 .Nm
 is invisible.
