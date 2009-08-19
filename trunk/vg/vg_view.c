@@ -615,7 +615,7 @@ VG_ViewSelectTool(VG_View *vv, void *pTool, void *p)
 	if (ntool == NULL || !(ntool->ops->flags & VG_NOEDITCLEAR)) {
 		for (i = 0; i < vv->nEditAreas; i++) {
 			AG_ObjectFreeChildren(vv->editAreas[i]);
-			AG_WindowUpdate(AG_ParentWindow(vv->editAreas[i]));
+			AG_WidgetUpdate(vv->editAreas[i]);
 		}
 	}
 	if (vv->curtool != NULL) {
@@ -643,7 +643,7 @@ VG_ViewSelectTool(VG_View *vv, void *pTool, void *p)
 		if (ntool->ops->edit != NULL && vv->nEditAreas > 0) {
 			AG_ObjectAttach(vv->editAreas[0],
 			    ntool->ops->edit(ntool,vv));
-			AG_WindowUpdate(AG_ParentWindow(vv->editAreas[0]));
+			AG_WidgetUpdate(vv->editAreas[0]);
 		}
 
 		VG_Status(vv, _("Tool: %s"), ntool->ops->name);
@@ -816,7 +816,7 @@ VG_ClearEditAreas(VG_View *vv)
 		AG_Widget *editArea = vv->editAreas[i];
 
 		AG_ObjectFreeChildren(editArea);
-		AG_WindowUpdate(AG_ParentWindow(editArea));
+		AG_WidgetUpdate(editArea);
 		AG_WidgetHiddenRecursive(editArea);
 	}
 	AG_ObjectUnlock(vv);
@@ -833,7 +833,7 @@ VG_EditNode(VG_View *vv, Uint editArea, VG_Node *vn)
 	    (wEdit = vn->ops->edit(vn, vv)) != NULL) {
 		AG_ObjectFreeChildren(vv->editAreas[editArea]);
 		AG_ObjectAttach(vv->editAreas[editArea], wEdit);
-		AG_WindowUpdate(AG_ParentWindow(vv->editAreas[editArea]));
+		AG_WidgetUpdate(vv->editAreas[editArea]);
 		AG_WidgetShownRecursive(vv->editAreas[editArea]);
 	}
 }

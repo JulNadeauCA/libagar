@@ -72,7 +72,6 @@ MouseButtonDown(AG_Event *event)
 int
 AG_PaneMoveDivider(AG_Pane *pa, int dx)
 {
-	AG_Window *pwin;
 	AG_SizeAlloc a;
 	int dxNew;
 
@@ -84,12 +83,8 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 	a.h = HEIGHT(pa);
 	AG_WidgetSizeAlloc(pa, &a);
 	dxNew = pa->dx;
+	AG_WidgetUpdate(pa);
 	AG_ObjectUnlock(pa);
-	
-	if ((pwin = AG_WidgetParentWindow(pa)) != NULL) {
-		AG_WidgetUpdateCoords(pwin, WIDGET(pwin)->x,
-		                            WIDGET(pwin)->y);
-	}
 	return (dxNew);
 }
 

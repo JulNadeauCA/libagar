@@ -346,17 +346,26 @@ function removes
 from its parent window
 .Fa pwin .
 .Pp
-Widgets are allowed to modify the
-.Va x ,
-.Va y ,
-.Va w
-and
-.Va h
-members of their structures directly.
 The
 .Fn AG_WindowUpdate
-function commits all such changes previously made to any widget attached to
+function recomputes the coordinates and geometries of all widgets attached to
 .Fa win .
+.Fn AG_WindowUpdate
+should be called following
+.Xr AG_ObjectAttach 3
+or
+.Xr AG_ObjectDetach 3
+calls made in event context, or manual modifications of the
+.Va x ,
+.Va y ,
+.Va w ,
+.Va h
+fields of the
+.Nm
+structure.
+When this function is used in the context of a widget implementation,
+.Xr AG_WidgetUpdate 3
+is preferred.
 .Pp
 .Fn AG_WindowDraw
 renders the window to the display.

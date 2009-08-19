@@ -1855,6 +1855,7 @@ AG_WidgetUpdateCoords(void *obj, int x, int y)
 
 	AG_LockVFS(wid);
 	AG_ObjectLock(wid);
+	wid->flags &= ~(AG_WIDGET_UPDATE_WINDOW);
 
 	rPrev = wid->rView;
 	wid->rView.x1 = x;

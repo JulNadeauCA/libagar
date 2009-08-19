@@ -522,7 +522,7 @@ AG_TreetblSetColHeight(AG_Treetbl *tt, int h)
 {
 	AG_ObjectLock(tt);
 	tt->hCol = h;
-	AG_WindowUpdate(AG_ParentWindow(tt));
+	AG_WidgetUpdate(tt);
 	AG_ObjectUnlock(tt);
 }
 

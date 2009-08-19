@@ -59,7 +59,7 @@ VG_ToolDestroy(VG_Tool *tool)
 	
 	if (tool->editArea != NULL) {
 		AG_ObjectFreeChildren(tool->editArea);
-		AG_WindowUpdate(AG_ParentWindow(tool->editArea));
+		AG_WidgetUpdate(tool->editArea);
 	}
 	for (cmd = TAILQ_FIRST(&tool->cmds);
 	     cmd != TAILQ_END(&tool->cmds);
