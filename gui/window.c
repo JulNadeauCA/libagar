@@ -40,6 +40,7 @@
 #include "numerical.h"
 #include "checkbox.h"
 #include "separator.h"
+#include "scrollview.h"
 #endif
 
 #include <string.h>
@@ -1806,6 +1807,7 @@ Edit(void *obj)
 {
 	AG_Box *ctr = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
 	AG_Window *ww = obj;
+	AG_Scrollview *sv;
 	static const AG_FlagDescr flagDescr[] = {
 	    { AG_WINDOW_MODAL,		"MODAL",	1 },
 	    { AG_WINDOW_MAXIMIZED,	"MAXIMIZED",	1 },
@@ -1838,7 +1840,8 @@ Edit(void *obj)
 #endif
 
 	AG_SeparatorNewHoriz(ctr);
-	AG_CheckboxSetFromFlags(ctr, 0, &ww->flags, flagDescr);
+	sv = AG_ScrollviewNew(ctr, AG_SCROLLVIEW_EXPAND);
+	AG_CheckboxSetFromFlags(sv, 0, &ww->flags, flagDescr);
 	AG_SeparatorNewHoriz(ctr);
 
 	nums[0] = AG_NumericalNewIntR(ctr, 0, "px",
