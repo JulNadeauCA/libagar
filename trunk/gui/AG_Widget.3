@@ -38,52 +38,40 @@
 .Sh DESCRIPTION
 An Agar graphical user interface is described as a tree of widgets
 (i.e., structures derived from
-.Nm ,
-which is itself derived from
-.Xr AG_Object 3 ) .
-All widgets are attached to some parent (container widget), which is
-responsible for allocating its final position and size (see
-.Dq WIDGET SIZING
-for details).
+.Nm ) .
 .Pp
-Arbitrary, custom widgets may be easily implemented (or derived from existing
-widget classes) as part of user applications.
-Agar widgets are extensively re-used.
-.Pp
-Widgets use
-.Xr AG_Event 3
-(a part of the
-.Xr AG_Object 3
-system) to generate and handle many types of events.
+A widget object is always attached (via
+.Xr AG_ObjectAttach 3 )
+to a parent
+.Em container
+widget.
+Some container widgets (such as
+.Xr AG_Box 3
+or
+.Xr AG_Window 3 )
+are designed as general-purpose container widgets.
+Other widgets (such as
+.Xr AG_FileDlg 3 )
+will internally create, attach and position a specific set of child widgets
+to create a complex, easily re-usable dialog (Agar developers are encouraged
+to create custom widgets using this technique).
 .Pp
 The
+.Nm
+structure is derived from
+.Xr AG_Object 3 .
+Using Agar's Object system, custom widgets are easily implemented (or derived
+from existing widget classes) as part of user applications.
+Agar widgets are extensively re-used.
+The Object system also provides the
+.Xr AG_Event 3
+system and the
 .Xr AG_Variable 3
-interface is also critical to the Agar GUI system.
-It is customary to use the
-.Fn AG_BindFoo
-and
-.Fn AG_BindFooFn
-functions of
-.Xr AG_Variable 3
-to connect some data (e.g., an integer or floating-point variable) to some
-.Em state
-provided by the widget (e.g.,
-.Xr AG_Slider 3
-provides
-.Sq value ,
-.Sq min
-and
-.Sq max
-states).
-In the context of Agar-GUI, we refer to these connections as
-.Sq bindings .
-See
-.Xr AG_Variable 3
-for more information.
-Manual pages for all standard Agar widgets all include an
-.Dq BINDINGS
-section with a list of bindings supported by each widget, their supported
-data types and effects.
+interface which is the basis of widget
+.Em bindings
+(see
+.Dq WIDGET BINDINGS
+section below).
 .Sh INHERITANCE HIERARCHY
 .Xr AG_Object 3 ->
 .Nm .
@@ -139,10 +127,8 @@ structure are already set to the new allocated position and size.
 .Pp
 Widgets are not allowed to modify their geometry from
 .Fn size_allocate ,
-but operation can return -1 to reject the allocated geometry.
-This sets the
-.Dv AG_WIDGET_UNDERSIZE
-flag, disabling rendering of the widget with its current geometry.
+but the function can return -1, effectively marking the widget as "undersize",
+and disabling further rendering of the widget until it is resized.
 .Sh WIDGET SIZING
 .nr nS 1
 .Ft "void"
@@ -588,10 +574,13 @@ functions of widgets exclusively and may not be used in any other context.
 The coordinates for all of the
 .Fn AG_Draw*
 functions are given in pixels and are relative to the specified widget.
-Unless otherwise noted, the
-.Fa c
-arguments are indices into the global GUI color array (see
-.Xr AG_Colors 3 ).
+Unless otherwise noted, the color arguments in
+.Ft Uint32
+format should follow the
+.Va agVideoFmt
+pixel format (see
+.Xr AG_MapRGB 3 ,
+.Xr AG_MapRGBA 3 ) .
 .Pp
 .nr nS 1
 .Ft void
@@ -673,12 +662,6 @@ arguments are indices into the global GUI color array (see
 .Fn AG_DrawArrowRight "AG_Widget *widget" "int x" "int y" "int w" "Uint32 c1" "Uint32 c2"
 .Pp
 .nr nS 0
-For all of the following functions accepting
-.Ft Uint32
-color arguments, the values are assumed to be in
-.Fa agViewFmt
-pixel format.
-.Pp
 .Fn AG_DrawPixel
 draws a single pixel at the specified coordinates.
 The
@@ -815,320 +798,20 @@ It is also possible to configure
 bindings such that the value is evaluated from a provided function every time
 the variable is retrieved.
 .Pp
-NOTE: This interface is now
-.Em deprecated
-and the more generic
+Widget bindings are established using the
+.Fn AG_BindFoo ,
+.Fn AG_BindFooFn
+and
+.Fn AG_BindFooMp
+functions, see
 .Xr AG_Variable 3
-interface should be used instead.
+for more information.
 .Pp
-.nr nS 1
-.Ft "AG_WidgetBinding *"
-.Fn AG_WidgetBind "AG_Widget *widget, const char *binding" "enum ag_variable_type type, ..."
-.Pp
-.Ft "AG_WidgetBinding *"
-.Fn AG_WidgetGetBinding "AG_Widget *widget" "const char *binding" "void *res"
-.Pp
-.Ft "int"
-.Fn AG_WidgetCopyBinding "AG_Widget *dst_widget" "const char *dst_binding" "AG_WidgetBinding *src_binding"
-.Pp
-.Ft void
-.Fn AG_WidgetLockBinding "AG_WidgetBinding *binding"
-.Pp
-.Ft void
-.Fn AG_WidgetUnlockBinding "AG_WidgetBinding *binding"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindBool "AG_Widget *widget" "const char *binding" "int *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindInt "AG_Widget *widget" "const char *binding" "int *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindUint "AG_Widget *widget" "const char *binding" "Uint *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindUint8 "AG_Widget *widget" "const char *binding" "Uint8 *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindSint8 "AG_Widget *widget" "const char *binding" "Sint8 *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindUint16 "AG_Widget *widget" "const char *binding" "Uint16 *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindSint16 "AG_Widget *widget" "const char *binding" "Sint16 *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindUint32 "AG_Widget *widget" "const char *binding" "Uint32 *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindSint32 "AG_Widget *widget" "const char *binding" "Sint32 *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindFloat "AG_Widget *widget" "const char *binding" "float *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindDouble "AG_Widget *widget" "const char *binding" "double *p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindPointer "AG_Widget *widget" "const char *binding" "void **p"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindString "AG_Widget *widget" "const char *binding" "char *p" "size_t len"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindFlag "AG_Widget *widget" "const char *binding" "int *p" "int bitmask"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindFlag8 "AG_Widget *widget" "const char *binding" "Uint8 *p" "Uint8 bitmask"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindFlag16 "AG_Widget *widget" "const char *binding" "Uint16 *p" "Uint16 bitmask"
-.Pp
-.Ft "void"
-.Fn AG_WidgetBindFlag32 "AG_Widget *widget" "const char *binding" "Uint32 *p" "Uint32 bitmask"
-.Pp
-.Ft int
-.Fn AG_WidgetBool "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft int
-.Fn AG_WidgetInt "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft "Uint"
-.Fn AG_WidgetUint "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft Uint8
-.Fn AG_WidgetUint8 "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft Sint8
-.Fn AG_WidgetSint8 "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft Uint16
-.Fn AG_WidgetUint16 "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft Sint16
-.Fn AG_WidgetSint16 "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft Uint32
-.Fn AG_WidgetUint32 "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft Sint32
-.Fn AG_WidgetSint32 "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft float
-.Fn AG_WidgetFloat "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft double
-.Fn AG_WidgetDouble "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft "char *"
-.Fn AG_WidgetString "AG_Widget *widget" "const char *binding"
-.Pp
-.Ft size_t
-.Fn AG_WidgetCopyString "AG_Widget *widget, const char *binding, char *dst" "size_t dst_size"
-.Pp
-.Ft void
-.Fn AG_WidgetSetBool "AG_Widget *widget" "const char *binding" "int i"
-.Pp
-.Ft void
-.Fn AG_WidgetSetInt "AG_Widget *widget" "const char *binding" "int i"
-.Pp
-.Ft void
-.Fn AG_WidgetSetUint "AG_Widget *widget" "const char *binding" "Uint i"
-.Pp
-.Ft void
-.Fn AG_WidgetSetUint8 "AG_Widget *widget" "const char *binding" "Uint8 u8"
-.Pp
-.Ft void
-.Fn AG_WidgetSetSint8 "AG_Widget *widget" "const char *binding" "Sint8 u8"
-.Pp
-.Ft void
-.Fn AG_WidgetSetUint16 "AG_Widget *widget" "const char *binding" "Uint16 u16"
-.Pp
-.Ft void
-.Fn AG_WidgetSetSint16 "AG_Widget *widget" "const char *binding" "Sint16 u16"
-.Pp
-.Ft void
-.Fn AG_WidgetSetUint32 "AG_Widget *widget" "const char *binding" "Uint32 u32"
-.Pp
-.Ft void
-.Fn AG_WidgetSetSint32 "AG_Widget *widget" "const char *binding" "Sint32 u32"
-.Pp
-.Ft void
-.Fn AG_WidgetSetFloat "AG_Widget *widget" "const char *binding" "float f"
-.Pp
-.Ft void
-.Fn AG_WidgetSetDouble "AG_Widget *widget" "const char *binding" "double d"
-.Pp
-.Ft void
-.Fn AG_WidgetSetString "AG_Widget *widget" "const char *binding" "const char *s"
-.Pp
-.Ft void
-.Fn AG_WidgetSetPointer "AG_Widget *widget" "const char *binding" "void *p"
-.Pp
-.nr nS 0
-The
-.Fn AG_WidgetBind
-function either overrides or creates a new binding.
-It is a
-.Em deprecated
-interface to the
-.Fn AG_BindFoo
-routines of
-.Xr AG_Variable 3 .
-Acceptable values for the
-.Fa type
-argument include:
-.Pp
-.Bl -tag -compact
-.It AG_WIDGET_NONE
-.It AG_WIDGET_BOOL
-.It AG_WIDGET_UINT
-.It AG_WIDGET_INT
-.It AG_WIDGET_UINT8
-.It AG_WIDGET_SINT8
-.It AG_WIDGET_UINT16
-.It AG_WIDGET_SINT16
-.It AG_WIDGET_UINT32
-.It AG_WIDGET_SINT32
-.It AG_WIDGET_FLOAT
-.It AG_WIDGET_DOUBLE
-.It AG_WIDGET_STRING
-.It AG_WIDGET_POINTER
-.It AG_WIDGET_FLAG
-.It AG_WIDGET_FLAG8
-.It AG_WIDGET_FLAG16
-.It AG_WIDGET_FLAG32
-.El
-.Pp
-The meaning of the following arguments depend on the type:
-.Bl -tag -width "AG_WIDGET_STRING "
-.It AG_WIDGET_STRING
-Fixed-size, NUL-terminated string.
-.Bl -tag -width "AG_Mutex *lock " -compact
-.It Ft AG_Mutex *lock
-Lock to acquire, or NULL.
-.It Ft char *text
-Fixed-size, NUL-terminated string.
-.It Ft size_t bufsize
-Total buffer size in bytes.
-.El
-.It AG_WIDGET_FLAG
-One or more bits in a natural integer.
-.Bl -tag -width "Uint bitmask " -compact
-.It Ft Uint value
-Flags value.
-.It Ft Uint bitmask
-Bitmask value.
-.El
-.It AG_WIDGET_FLAG8
-One or more bits in a 8-bit integer.
-.Bl -tag -width "Uint8 bitmask " -compact
-.It Ft Uint8 value
-Flags value.
-.It Ft Uint8 bitmask
-Bitmask value.
-.El
-.It AG_WIDGET_FLAG16
-One or more bits in a 16-bit integer.
-.Bl -tag -width "Uint16 bitmask " -compact
-.It Ft Uint16 value
-Flags value.
-.It Ft Uint16 bitmask
-Bitmask value.
-.El
-.It AG_WIDGET_FLAG32
-One or more bits in a 32-bit integer.
-.Bl -tag -width "Uint32 bitmask " -compact
-.It Ft Uint32 value
-Flags value.
-.It Ft Uint32 bitmask
-Bitmask value.
-.El
-.It AG_WIDGET_*
-Other types of data.
-.Bl -tag -width "AG_Mutex *lock " -compact
-.It Ft AG_Mutex *lock
-Lock to acquire, or NULL.
-.It Ft void *p
-Pointer to the data.
-.El
-.El
-.Pp
-The
-.Fn AG_WidgetGetBinding
-function returns a matching binding (locked), or NULL if none was found.
-If a binding was found, a pointer to it is written in the
-.Fa res
-argument.
-.Fn AG_WidgetGetBinding
-is a
-.Em deprecated
-interface to
-.Xr AG_GetVariable 3 .
-.Pp
-.Fn AG_WidgetUnlockBinding
-should be called when done manipulating the data.
-It is a
-.Em deprecated
-interface to
-.Xr AG_UnlockVariable 3 .
-.Pp
-The
-.Fn AG_WidgetCopyBinding
-function copies the data (ie. type, pointer values) of the binding
-.Fa src_binding
-to
-.Fa dst_binding .
-The destination binding must already exist.
-The function returns 0 on success, -1 if an error occured.
-It is
-.Em deprecated .
-.Pp
-The
-.Fn AG_WidgetSet_*
-routines are all simple variants of
-.Fa AG_WidgetBind ,
-with an implicit
-.Fa type
-argument.
-The
-.Fn AG_WidgetGet_*
-routines return the current value of the specified binding.
-.Pp
-Note: Usages such as
-.Fn AG_WidgetGetFoo
-followed by
-.Fn AG_WidgetSetFoo
-are not thread-safe.
-In such cases, the race condition can be avoided by using the
-.Fn AG_WidgetGetBinding
-interface, which requires explicit unlocking after use.
-.Pp
-.Fn AG_WidgetString
-returns a copy of the string (or NULL on failure).
-.Fn AG_WidgetCopyString
-copies up to
-.Fa dst_size
-- 1 bytes from the string to
-.Fa dst ,
-NUL-terminating the result and returning the number of bytes that would
-have been copied if
-.Fa dst_size
-was unlimited.
-.Pp
-NOTE: All
-.Fn AG_WidgetGetFoo
-and
-.Fn AG_WidgetSetFoo
-routines are
-.Em deprecated
-in favor of
-.Fn AG_GetFoo
-and
-.Fn AG_SetFoo
-(see
-.Xr AG_Variable 3 ) .
+Bindings are specifically documented in the API reference.
+Manual pages for standard Agar widgets include a
+.Dq BINDINGS
+section with a list of bindings supported by each widget, their supported
+data types and effects.
 .Sh WIDGET QUERIES
 .nr nS 1
 .Ft "AG_Window *"
