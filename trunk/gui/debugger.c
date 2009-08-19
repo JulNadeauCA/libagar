@@ -46,6 +46,7 @@
 #include "separator.h"
 #include "notebook.h"
 #include "pane.h"
+#include "scrollview.h"
 
 #include <string.h>
 
@@ -170,6 +171,7 @@ WidgetSelected(AG_Event *event)
 	AG_NotebookTab *nTab;
 	AG_Textbox *tb;
 	AG_MSpinbutton *msb;
+	AG_Scrollview *sv;
 
 	AG_ObjectFreeChildren(box);
 
@@ -199,7 +201,9 @@ WidgetSelected(AG_Event *event)
 		AG_LabelNew(nTab, 0, _("Class: %s"), OBJECT(wid)->cls->name);
 		AG_LabelNewPolled(nTab, 0, _("Parent window: %p"), &wid->window);
 		AG_SeparatorNewHoriz(nTab);
-		AG_CheckboxSetFromFlags(nTab, 0, &wid->flags, flagDescr);
+
+		sv = AG_ScrollviewNew(nTab, AG_SCROLLVIEW_EXPAND);
+		AG_CheckboxSetFromFlags(sv, 0, &wid->flags, flagDescr);
 	}
 
 	if (AGOBJECT_CLASS(wid)->edit != NULL) {
