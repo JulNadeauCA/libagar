@@ -242,7 +242,7 @@ AG_PrintVariable(char *s, size_t len, AG_Variable *V)
 		break;
 	case AG_VARIABLE_P_STRING:
 	case AG_VARIABLE_P_CONST_STRING:
-		Strlcpy(s, *(char **)V->data.p, len);
+		Strlcpy(s, (char *)V->data.p, len);
 		break;
 	case AG_VARIABLE_POINTER:
 	case AG_VARIABLE_CONST_POINTER:
