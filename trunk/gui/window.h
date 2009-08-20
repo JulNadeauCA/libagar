@@ -163,6 +163,7 @@ void	 AG_WindowResize(AG_Window *);
 int	 AG_WindowIsSurrounded(AG_Window *);
 
 void	 AG_WindowFocus(AG_Window *);
+int      AG_WindowFocusAtPos(int, int);
 int	 AG_WindowFocusNamed(const char *);
 void	 AG_WindowCycleFocus(AG_Window *, int);
 
