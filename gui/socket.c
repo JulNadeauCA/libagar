@@ -89,9 +89,6 @@ Init(void *obj)
 	                       AG_WIDGET_UNFOCUSED_MOTION|
 	                       AG_WIDGET_UNFOCUSED_BUTTONUP;
 
-	AG_BindInt(sock, "state", &sock->state);
-	AG_BindInt(sock, "count", &sock->count);
-
 	sock->flags = 0;
 	sock->state = 0;
 	sock->count = 0;
@@ -111,6 +108,19 @@ Init(void *obj)
 	AG_SetEvent(sock, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(sock, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(sock, "window-mousemotion", MouseMotion, NULL);
+	
+	AG_BindInt(sock, "state", &sock->state);
+	AG_BindInt(sock, "count", &sock->count);
+#ifdef AG_DEBUG
+	AG_BindUint(sock, "flags", &sock->flags);
+	AG_BindUint(sock, "bgType", &sock->bgType);
+	AG_BindUint(sock, "lblJustify", &sock->lblJustify);
+	AG_BindInt(sock, "lPad", &sock->lPad);
+	AG_BindInt(sock, "rPad", &sock->rPad);
+	AG_BindInt(sock, "tPad", &sock->tPad);
+	AG_BindInt(sock, "bPad", &sock->bPad);
+	AG_BindPointer(sock, "icon", (void *)&sock->icon);
+#endif /* AG_DEBUG */
 }
 
 void

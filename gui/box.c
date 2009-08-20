@@ -87,6 +87,12 @@ Init(void *obj)
 	box->caption = NULL;
 	box->sCaption = -1;
 	box->rCaption = AG_RECT(5, agTextFontHeight/2, 0, 0);
+#ifdef AG_DEBUG
+	AG_BindUint(box, "flags", &box->flags);
+	AG_BindInt(box, "padding", &box->padding);
+	AG_BindInt(box, "spacing", &box->spacing);
+	AG_BindInt(box, "depth", &box->depth);
+#endif
 }
 
 static void

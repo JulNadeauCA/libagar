@@ -270,6 +270,21 @@ Init(void *obj)
 	
 	memset(lbl->poll.ptrs, 0, sizeof(void *)*AG_LABEL_MAX_POLLPTRS);
 	lbl->poll.nptrs = 0;
+
+#ifdef AG_DEBUG
+	AG_BindUint(lbl, "flags", &lbl->flags);
+	AG_BindPointer(lbl, "text", (void *)&lbl->text);
+	AG_BindInt(lbl, "surface", &lbl->surface);
+	AG_BindInt(lbl, "surfaceCont", &lbl->surfaceCont);
+	AG_BindInt(lbl, "wPre", &lbl->wPre);
+	AG_BindInt(lbl, "hPre", &lbl->hPre);
+	AG_BindInt(lbl, "lPad", &lbl->lPad);
+	AG_BindInt(lbl, "rPad", &lbl->rPad);
+	AG_BindInt(lbl, "tPad", &lbl->tPad);
+	AG_BindInt(lbl, "bPad", &lbl->bPad);
+	AG_BindUint(lbl, "justify", &lbl->justify);
+	AG_BindUint(lbl, "valign", &lbl->valign);
+#endif /* AG_DEBUG */
 }
 
 /* Size the widget to accomodate the given text. */

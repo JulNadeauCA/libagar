@@ -268,13 +268,20 @@ Init(void *obj)
 	AG_TlistSizeHint(fs->tlStyles, "XXXXXXXXX", 8);
 	AG_TlistSizeHint(fs->tlSizes, "100", 8);
 	
-	AG_BindPointer(fs, "font", (void *)&fs->font);
-
 	AG_SetEvent(fs, "bound", Bound, NULL);
 	AG_SetEvent(fs, "widget-shown", UpdateFaces, NULL);
 	AG_SetEvent(fs->tlFaces, "tlist-selected", SelectedFace, "%p", fs);
 	AG_SetEvent(fs->tlStyles, "tlist-selected", SelectedStyle, "%p", fs);
 	AG_SetEvent(fs->tlSizes, "tlist-selected", SelectedSize, "%p", fs);
+	
+	AG_BindPointer(fs, "font", (void *)&fs->font);
+#ifdef AG_DEBUG
+	AG_BindUint(fs, "flags", &fs->flags);
+	/* AG_BindString(fs, "curFace", fs->curFace, sizeof(fs->curFace)); */
+	AG_BindUint(fs, "curStyle", &fs->curStyle);
+	AG_BindInt(fs, "curSize", &fs->curSize);
+	AG_BindInt(fs, "sPreview", &fs->sPreview);
+#endif
 }
 
 static void

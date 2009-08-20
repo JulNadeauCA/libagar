@@ -1020,6 +1020,11 @@ Init(void *obj)
 	AG_SetEvent(fd->btnOk, "button-pushed", PressedOK, "%p", fd);
 	AG_SetEvent(fd->btnCancel, "button-pushed", PressedCancel, "%p", fd);
 	AG_SetEvent(fd->comTypes, "combo-selected", SelectedType, "%p", fd);
+
+#ifdef AG_DEBUG
+	AG_BindPointer(fd, "dirMRU", (void *)&fd->dirMRU);
+	AG_BindPointer(fd, "optsCtr", &fd->optsCtr);
+#endif
 }
 
 /*

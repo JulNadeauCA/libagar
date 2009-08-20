@@ -638,10 +638,6 @@ Init(void *obj)
 			     AG_WIDGET_FOCUSABLE|
 			     AG_WIDGET_TABLE_EMBEDDABLE;
 
-	AG_BindInt(sl, "value", &sl->value);
-	AG_BindInt(sl, "min", &sl->min);
-	AG_BindInt(sl, "max", &sl->max);
-
 	sl->type = AG_SLIDER_HORIZ;
 	sl->ctlPressed = 0;
 	sl->flags = 0;
@@ -665,6 +661,21 @@ Init(void *obj)
 
 	AG_SetTimeout(&sl->incTo, IncrementTimeout, NULL, 0);
 	AG_SetTimeout(&sl->decTo, DecrementTimeout, NULL, 0);
+
+	AG_BindInt(sl, "value", &sl->value);
+	AG_BindInt(sl, "min", &sl->min);
+	AG_BindInt(sl, "max", &sl->max);
+#ifdef AG_DEBUG
+	AG_BindUint(sl, "flags", &sl->flags);
+	AG_BindUint(sl, "type", &sl->type);
+	AG_BindInt(sl, "ctlPressed", &sl->ctlPressed);
+	AG_BindInt(sl, "wControlPref", &sl->wControlPref);
+	AG_BindInt(sl, "wControl", &sl->wControl);
+	AG_BindInt(sl, "xOffs", &sl->xOffs);
+	AG_BindInt(sl, "extent", &sl->extent);
+	AG_BindDouble(sl, "rInc", &sl->rInc);
+	AG_BindInt(sl, "iInc", &sl->iInc);
+#endif /* AG_DEBUG */
 }
 
 static void

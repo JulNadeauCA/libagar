@@ -391,6 +391,25 @@ Init(void *obj)
 #endif
 	AG_SetEvent(m, "window-mousemotion", MouseMotion, NULL);
 	AG_SetEvent(m, "attached", Attached, NULL);
+
+#ifdef AG_DEBUG
+	AG_BindUint(m, "flags", &m->flags);
+	AG_BindInt(m, "selecting", &m->selecting);
+	AG_BindPointer(m, "itemSel", (void *)&m->itemSel);
+	AG_BindInt(m, "spHoriz", &m->spHoriz);
+	AG_BindInt(m, "spVert", &m->spVert);
+	AG_BindInt(m, "lPad", &m->lPad);
+	AG_BindInt(m, "rPad", &m->rPad);
+	AG_BindInt(m, "tPad", &m->tPad);
+	AG_BindInt(m, "bPad", &m->bPad);
+	AG_BindInt(m, "lPadLbl", &m->lPadLbl);
+	AG_BindInt(m, "rPadLbl", &m->rPadLbl);
+	AG_BindInt(m, "tPadLbl", &m->tPadLbl);
+	AG_BindInt(m, "bPadLbl", &m->bPadLbl);
+	AG_BindInt(m, "itemh", &m->itemh);
+	AG_BindInt(m, "curState", &m->curState);
+	AG_BindPointer(m, "curToolbar", (void *)&m->curToolbar);
+#endif /* AG_DEBUG */
 }
 
 /* Change the icon associated with a menu item. */

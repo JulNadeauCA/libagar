@@ -76,10 +76,6 @@ Init(void *obj)
 	                     AG_WIDGET_UNFOCUSED_MOTION|
 			     AG_WIDGET_TABLE_EMBEDDABLE;
 
-	AG_BindInt(pb, "value", &pb->value);
-	AG_BindInt(pb, "min", &pb->min);
-	AG_BindInt(pb, "max", &pb->max);
-
 	pb->type = AG_PROGRESS_BAR_HORIZ;
 	pb->flags = 0;
 	pb->value = 0;
@@ -88,6 +84,16 @@ Init(void *obj)
 	pb->width = 25;
 	pb->pad = 2;
 	pb->tCache = agTextCache ? AG_TextCacheNew(pb, 50, 10) : NULL;
+
+	AG_BindInt(pb, "value", &pb->value);
+	AG_BindInt(pb, "min", &pb->min);
+	AG_BindInt(pb, "max", &pb->max);
+#ifdef AG_DEBUG
+	AG_BindUint(pb, "flags", &pb->flags);
+	AG_BindUint(pb, "type", &pb->type);
+	AG_BindInt(pb, "width", &pb->width);
+	AG_BindInt(pb, "pad", &pb->pad);
+#endif
 }
 
 static void

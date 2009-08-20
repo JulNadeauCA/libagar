@@ -675,17 +675,6 @@ Init(void *obj)
 
 	WIDGET(pal)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_BindFloat(pal, "hue", &pal->h);
-	AG_BindFloat(pal, "saturation", &pal->s);
-	AG_BindFloat(pal, "value", &pal->v);
-	AG_BindFloat(pal, "alpha", &pal->a);
-	AG_BindUint32(pal, "pixel", &pal->pixel);
-	AG_BindPointer(pal, "pixel-format", (void *)&agVideoFmt);
-/*	AG_BindFloat(pal, "red", &pal->r); */
-/*	AG_BindFloat(pal, "green", &pal->g); */
-/*	AG_BindFloat(pal, "blue", &pal->b); */
-/*	AG_BindFloat(pal, "RGBAv", &pal->rgbav); */
-
 	pal->flags = 0;
 	pal->h = 0.0;
 	pal->s = 0.0;
@@ -705,6 +694,35 @@ Init(void *obj)
 	AG_SetEvent(pal, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(pal, "window-mousemotion", MouseMotion, NULL);
 	AG_SetEvent(pal, "bound", Bound, NULL);
+	
+	AG_BindFloat(pal, "hue", &pal->h);
+	AG_BindFloat(pal, "saturation", &pal->s);
+	AG_BindFloat(pal, "value", &pal->v);
+	AG_BindFloat(pal, "alpha", &pal->a);
+	AG_BindUint32(pal, "pixel", &pal->pixel);
+	AG_BindPointer(pal, "pixel-format", (void *)&agVideoFmt);
+/*	AG_BindFloat(pal, "red", &pal->r); */
+/*	AG_BindFloat(pal, "green", &pal->g); */
+/*	AG_BindFloat(pal, "blue", &pal->b); */
+/*	AG_BindFloat(pal, "RGBAv", &pal->rgbav); */
+#ifdef AG_DEBUG
+	AG_BindInt(pal, "flags", &pal->flags);
+	AG_BindPointer(pal, "surface", (void *)&pal->surface);
+	AG_BindInt(pal, "selcircle_r", &pal->selcircle_r);
+	AG_BindInt(pal, "circle.x", &pal->circle.x);
+	AG_BindInt(pal, "circle.y", &pal->circle.y);
+	AG_BindInt(pal, "circle.rout", &pal->circle.rout);
+	AG_BindInt(pal, "circle.rin", &pal->circle.rin);
+	AG_BindInt(pal, "circle.spacing", &pal->circle.spacing);
+	AG_BindInt(pal, "circle.width", &pal->circle.width);
+	AG_BindFloat(pal, "circle.dh", &pal->circle.dh);
+	AG_BindInt(pal, "triangle.x", &pal->triangle.x);
+	AG_BindInt(pal, "triangle.y", &pal->triangle.y);
+	AG_BindInt(pal, "triangle.w", &pal->triangle.w);
+	AG_BindInt(pal, "triangle.h", &pal->triangle.h);
+	AG_BindUint(pal, "state", &pal->state);
+	AG_BindUint32(pal, "cTile", &pal->cTile);
+#endif /* AG_DEBUG */
 }
 
 static void

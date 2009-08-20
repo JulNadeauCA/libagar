@@ -329,8 +329,6 @@ Init(void *obj)
 	WIDGET(rad)->flags |= AG_WIDGET_FOCUSABLE|AG_WIDGET_UNFOCUSED_MOTION|
 	                      AG_WIDGET_TABLE_EMBEDDABLE;
 
-	AG_BindInt(rad, "value", &rad->value);
-
 	rad->flags = 0;
 	rad->value = -1;
 	rad->max_w = 0;
@@ -347,6 +345,20 @@ Init(void *obj)
 	AG_SetEvent(rad, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(rad, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(rad, "window-mousemotion", MouseMotion, NULL);
+
+	AG_BindInt(rad, "value", &rad->value);
+#ifdef AG_DEBUG
+	AG_BindUint(rad, "flags", &rad->flags);
+	AG_BindInt(rad, "nItems", &rad->nItems);
+	AG_BindInt(rad, "selitem", &rad->selitem);
+	AG_BindInt(rad, "max_w", &rad->max_w);
+	AG_BindInt(rad, "oversel", &rad->oversel);
+	AG_BindInt(rad, "xPadding", &rad->xPadding);
+	AG_BindInt(rad, "yPadding", &rad->yPadding);
+	AG_BindInt(rad, "xSpacing", &rad->xSpacing);
+	AG_BindInt(rad, "ySpacing", &rad->ySpacing);
+	AG_BindInt(rad, "radius", &rad->radius);
+#endif
 }
 
 AG_WidgetClass agRadioClass = {

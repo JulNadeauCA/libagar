@@ -173,7 +173,14 @@ PollVariables(AG_Event *event)
 	AGOBJECT_FOREACH_VARIABLE(V, i, obj) {
 		char val[1024];
 
-		AG_PrintVariable(val, sizeof(val), V);
+		if ((V->type == AG_VARIABLE_P_UINT ||
+		     V->type == AG_VARIABLE_P_INT) &&
+		     strcmp(V->name, "flags") == 0) {
+			Snprintf(val, sizeof(val), "0x%08x",
+			    *(Uint *)V->data.p);
+		} else {
+			AG_PrintVariable(val, sizeof(val), V);
+		}
 		AG_TlistAdd(tl, NULL, "%s: %s", V->name, val);
 	}
 	AG_TlistEnd(tl);

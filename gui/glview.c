@@ -104,6 +104,12 @@ Init(void *obj)
 
 	AG_SetEvent(glv, "widget-moved", WidgetMoved, NULL);
 	AG_SetEvent(glv, "window-mousebuttondown", mousebuttondown, NULL);
+
+#ifdef AG_DEBUG
+	AG_BindUint(glv, "flags", &glv->flags);
+	AG_BindInt(glv, "wPre", &glv->wPre);
+	AG_BindInt(glv, "hPre", &glv->hPre);
+#endif
 }
 
 void
