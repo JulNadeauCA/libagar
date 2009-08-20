@@ -23,13 +23,14 @@ typedef struct ag_pane {
 #define AG_PANE_FRAME		0x008	/* Display frames for each division */
 #define AG_PANE_FORCE_DIV1FILL	0x010	/* Enforce div1 expansion */
 #define AG_PANE_FORCE_DIV2FILL	0x020	/* Enforce div2 expansion */
-#define AG_PANE_DIV		0x040	/* Initially divide area in two */
-#define AG_PANE_FORCE_DIV	0x080	/* Force divide area in two */
-#define AG_PANE_INITSCALE	0x100	/* Used internally */
+#define AG_PANE_DIV		0x040	/* Initially divide equally */
+#define AG_PANE_FORCE_DIV	0x080	/* Enforce equal division */
+#define AG_PANE_UNMOVABLE	0x100	/* Pane is not user-movable */
 #define AG_PANE_EXPAND (AG_PANE_HFILL|AG_PANE_VFILL)
 
 	AG_Box *div[2];			/* Division containers */
-	int	minw[2], minh[2];	/* Minimum geometry */
+	int	wMin[2], hMin[2];	/* Minimum geometry */
+	int	wReq[2], hReq[2];	/* Requisition geometry */
 	int	dmoving;		/* Divider being moved */
 	int	dx;			/* Actual divider position */
 	int	rx;			/* Requested divider position */
