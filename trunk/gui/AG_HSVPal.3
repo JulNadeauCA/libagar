@@ -62,9 +62,21 @@ The
 function allocates, initializes, and attaches a new
 .Nm
 widget.
-There are currently no
+There following
 .Fa flags
-specific to this widget.
+options are available:
+.Bl -tag -width "AG_HSVPAL_NOPREVIEW "
+.It AG_HSVPAL_NOALPHA
+Disable the alpha component editor.
+This flag is automatically set or cleared whenever
+.Va pixel-format
+is bound to a pixel format with or without alpha channel.
+.It AG_HSVPAL_FORCE_NOALPHA
+Disable the alpha component editor, regardless of whether the
+pixel format includes alpha support.
+.It AG_HSVPAL_NOPREVIEW
+Disable the color preview band.
+.El
 .Sh BINDINGS
 The
 .Nm
@@ -85,6 +97,12 @@ Pointer to the
 to use for generating the
 .Va pixel
 value.
+The
+.Dv AG_HSVPAL_NOALPHA
+flag will be set automatically depending on the presence of an
+alpha component in the newly bound format (use
+.Dv AG_HSVPAL_FORCE_NOALPHA
+to disable this test).
 .It Va Uint32 *pixel
 Resulting pixel value.
 The pixel's components are extracted immediately when this binding is made

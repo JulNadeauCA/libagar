@@ -12,10 +12,13 @@
 typedef struct ag_hsvpal {
 	struct ag_widget wid;
 	int flags;
-#define AG_HSVPAL_PIXEL	0x01		/* Edit the pixel binding */ 
-#define AG_HSVPAL_DIRTY	0x02		/* Redraw the palette */
-#define AG_HSVPAL_HFILL 0x04
-#define AG_HSVPAL_VFILL 0x08
+#define AG_HSVPAL_PIXEL		0x01	/* Edit the pixel binding */ 
+#define AG_HSVPAL_DIRTY		0x02	/* Redraw the palette */
+#define AG_HSVPAL_HFILL 	0x04
+#define AG_HSVPAL_VFILL 	0x08
+#define AG_HSVPAL_NOALPHA	0x10	/* Disable alpha slider by default */
+#define AG_HSVPAL_FORCE_NOALPHA	0x10	/* Disable alpha regardless of pixel-format */
+#define AG_HSVPAL_NOPREVIEW	0x20	/* Disable color preview */
 #define AG_HSVPAL_EXPAND (AG_HSVPAL_HFILL|AG_HSVPAL_VFILL)
 
 	float h, s, v, a;		/* Default bindings */
