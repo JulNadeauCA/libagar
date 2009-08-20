@@ -203,6 +203,37 @@ Init(void *obj)
 	ev = AG_SetEvent(win, "detached", NULL, NULL);
 	ev->flags |= AG_EVENT_PROPAGATE;
 	AG_AddEvent(win, "child-attached", ChildAttached, NULL);
+
+#ifdef AG_DEBUG
+	AG_BindUint(win, "flags", &win->flags);
+	AG_BindString(win, "caption", win->caption, sizeof(win->caption));
+	AG_BindInt(win, "visible", &win->visible);
+	AG_BindPointer(win, "tbar", (void *)&win->tbar);
+	AG_BindUint(win, "alignment", &win->alignment);
+	AG_BindInt(win, "spacing", &win->spacing);
+	AG_BindInt(win, "tPad", &win->tPad);
+	AG_BindInt(win, "bPad", &win->bPad);
+	AG_BindInt(win, "lPad", &win->lPad);
+	AG_BindInt(win, "rPad", &win->rPad);
+	AG_BindInt(win, "wReq", &win->wReq);
+	AG_BindInt(win, "hReq", &win->hReq);
+	AG_BindInt(win, "wMin", &win->wMin);
+	AG_BindInt(win, "hMin", &win->hMin);
+	AG_BindInt(win, "wBorderBot", &win->wBorderBot);
+	AG_BindInt(win, "wBorderSide", &win->wBorderSide);
+	AG_BindInt(win, "wResizeCtrl", &win->wResizeCtrl);
+	AG_BindInt(win, "rSaved.x", &win->rSaved.x);
+	AG_BindInt(win, "rSaved.y", &win->rSaved.y);
+	AG_BindInt(win, "rSaved.w", &win->rSaved.w);
+	AG_BindInt(win, "rSaved.h", &win->rSaved.h);
+	AG_BindInt(win, "r.x", &win->r.x);
+	AG_BindInt(win, "r.y", &win->r.y);
+	AG_BindInt(win, "r.w", &win->r.w);
+	AG_BindInt(win, "r.h", &win->r.h);
+	AG_BindInt(win, "minPct", &win->minPct);
+	AG_BindPointer(win, "icon", (void *)&win->icon);
+	AG_BindInt(win, "nFocused", &win->nFocused);
+#endif /* AG_DEBUG */
 }
 
 /* Attach a sub-window. */
@@ -764,8 +795,8 @@ ModalClose(AG_Window *win, int x, int y)
  * Place focus on a Window following a click at the given coordinates.
  * Returns 1 if the focus state has changed as a result.
  */
-static int
-FocusWindowAt(int x, int y)
+int
+AG_WindowFocusAtPos(int x, int y)
 {
 	AG_Window *win;
 
@@ -888,7 +919,7 @@ AG_WindowEvent(SDL_Event *ev)
 	/* Process WM events */
 	switch (ev->type) {
 	case SDL_MOUSEBUTTONDOWN:			/* Focus on window */
-		if (FocusWindowAt(ev->button.x, ev->button.y)) {
+		if (AG_WindowFocusAtPos(ev->button.x, ev->button.y)) {
 			focusChg++;
 		}
 		break;
@@ -1787,82 +1818,6 @@ AG_WindowUpdateCaption(AG_Window *win)
 	AG_ObjectUnlock(win);
 }
 
-#ifdef AG_DEBUG
-static void
-UpdateWindow(AG_Event *event)
-{
-	AG_Window *win = AG_PTR(1);
-	AG_WindowUpdate(win);
-}
-
-static void
-UpdateWindowCaption(AG_Event *event)
-{
-	AG_Window *win = AG_PTR(1);
-	AG_WindowUpdateCaption(win);
-}
-
-static void *
-Edit(void *obj)
-{
-	AG_Box *ctr = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
-	AG_Window *ww = obj;
-	AG_Scrollview *sv;
-	static const AG_FlagDescr flagDescr[] = {
-	    { AG_WINDOW_MODAL,		"MODAL",	1 },
-	    { AG_WINDOW_MAXIMIZED,	"MAXIMIZED",	1 },
-	    { AG_WINDOW_MINIMIZED,	"MINIMIZED",	1 },
-	    { AG_WINDOW_KEEPABOVE,	"KEEPABOVE",	1 },
-	    { AG_WINDOW_KEEPBELOW,	"KEEPBELOW",	1 },
-	    { AG_WINDOW_DENYFOCUS,	"DENYFOCUS",	1 },
-	    { AG_WINDOW_NOBORDERS,	"NOBORDERS",	1 },
-	    { AG_WINDOW_NOHRESIZE,	"NOHRESIZE",	1 },
-	    { AG_WINDOW_NOVRESIZE,	"NOVRESIZE",	1 },
-	    { AG_WINDOW_NOBACKGROUND,	"NOBACKGROUND",	1 },
-	    { AG_WINDOW_NOUPDATERECT,	"NOUPDATERECT",	1 },
-	    { 0,			NULL,		0 }
-	};
-	AG_Numerical *nums[4];
-	AG_Textbox *tb;
-	AG_Label *lbl;
-	int i;
-
-	tb = AG_TextboxNew(ctr, 0, _("Caption: "));
-	AG_TextboxBindUTF8(tb, ww->caption, sizeof(ww->caption));
-	AG_SetEvent(tb, "textbox-postchg", UpdateWindowCaption, "%p", ww);
-
-#ifdef AG_THREADS
-	lbl = AG_LabelNewPolledMT(ctr, AG_LABEL_HFILL, &OBJECT(ww)->lock,
-	    "Flags: <%[flags]>", &ww->flags);
-#else
-	lbl = AG_LabelNewPolled(ctr, AG_LABEL_HFILL,
-	    "Flags: <%[flags]>", &ww->flags);
-#endif
-
-	AG_SeparatorNewHoriz(ctr);
-	sv = AG_ScrollviewNew(ctr, AG_SCROLLVIEW_EXPAND);
-	AG_CheckboxSetFromFlags(sv, 0, &ww->flags, flagDescr);
-	AG_SeparatorNewHoriz(ctr);
-
-	nums[0] = AG_NumericalNewIntR(ctr, 0, "px",
-	    _("Widget spacing: "), &ww->spacing, 0, 255);
-	nums[1] = AG_NumericalNewIntR(ctr, 0, "px",
-	    _("Top padding: "), &ww->tPad, 0, 255);
-	nums[2] = AG_NumericalNewIntR(ctr, 0, "px",
-	    _("Bottom padding: "), &ww->bPad, 0, 255);
-	nums[3] = AG_NumericalNewIntR(ctr, 0, "px",
-	    _("Left padding: "), &ww->lPad, 0, 255);
-	nums[4] = AG_NumericalNewIntR(ctr, 0, "px",
-	    _("Right padding: "), &ww->rPad, 0, 255);
-	
-	for (i = 0; i < 4; i++) {
-		AG_SetEvent(nums[i], "numerical-changed",
-		    UpdateWindow, "%p", ww);
-	}
-	return (ctr);
-}
-#endif /* AG_DEBUG */
-
 AG_WidgetClass agWindowClass = {
 	{
 		"Agar(Widget:Window)",
@@ -1873,11 +1828,7 @@ AG_WidgetClass agWindowClass = {
 		NULL,			/* destroy */
 		NULL,			/* load */
 		NULL,			/* save */
-#ifdef AG_DEBUG
-		Edit
-#else
 		NULL			/* edit */
-#endif
 	},
 	Draw,
 	SizeRequest,

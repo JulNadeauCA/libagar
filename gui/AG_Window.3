@@ -436,6 +436,9 @@ sets the visibility state of
 .Ft int
 .Fn AG_WindowFocusNamed "const char *name"
 .Pp
+.Ft int
+.Fn AG_WindowFocusAtPos "int x" "int y"
+.Pp
 .Ft "AG_Window *"
 .Fn AG_WindowFindFocused "void"
 .Pp
@@ -455,6 +458,11 @@ flag set, this function becomes a no-op.
 .Fn AG_WindowFocusNamed
 sets the focus on the window of the given name and returns 0 on success
 or -1 if the window was not found.
+.Pp
+.Fn AG_WindowFocusAtPos
+looks for a window at the specified coordinates.
+If a window is found, it is focused and 1 is returned.
+Otherwise, 0 is returned.
 .Pp
 .Fn AG_WindowFindFocused
 returns a pointer to the window currently holding focus, or NULL if there
