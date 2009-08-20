@@ -213,13 +213,11 @@ MyOverlayFunction(AG_Event *event)
 	AG_SurfaceFree(myText);
 }
 
-/* Mouse click callback function. */
+/* Control the Z using the mouse wheel. */
 static void
 ButtonDown(AG_Event *event)
 {
 	int button = AG_INT(1);
-
-	printf("button down %d\n", button);
 
 	switch (button) {
 	case SDL_BUTTON_WHEELUP:
@@ -229,14 +227,6 @@ ButtonDown(AG_Event *event)
 		vz += 0.1;
 		break;
 	}
-}
-
-static void
-ButtonUp(AG_Event *event)
-{
-	int button = AG_INT(1);
-
-	printf("button up %d\n", button);
 }
 
 static void
@@ -264,23 +254,22 @@ CreateMainWindow(void)
 		AG_GLViewDrawFn(glv, MyDrawFunction, NULL);
 		AG_GLViewOverlayFn(glv, MyOverlayFunction, NULL);
 		AG_GLViewButtondownFn(glv, ButtonDown, NULL);
-		AG_GLViewButtonupFn(glv, ButtonUp, NULL);
 
 		nb = AG_NotebookNew(hb, 0);
 		AG_ExpandVert(nb);
 
 		ntab = AG_NotebookAddTab(nb, "Amb", AG_BOX_VERT);
-		pal = AG_HSVPalNew(ntab, 0);
+		pal = AG_HSVPalNew(ntab, AG_HSVPAL_NOALPHA);
 		AG_BindFloat(pal, "RGBAv", ambient);
 		AG_ExpandVert(pal);
 
 		ntab = AG_NotebookAddTab(nb, "Dif", AG_BOX_VERT);
-		pal = AG_HSVPalNew(ntab, 0);
+		pal = AG_HSVPalNew(ntab, AG_HSVPAL_NOALPHA);
 		AG_BindFloat(pal, "RGBAv", diffuse);
 		AG_ExpandVert(pal);
 
 		ntab = AG_NotebookAddTab(nb, "Spe", AG_BOX_VERT);
-		pal = AG_HSVPalNew(ntab, 0);
+		pal = AG_HSVPalNew(ntab, AG_HSVPAL_NOALPHA);
 		AG_BindFloat(pal, "RGBAv", specular);
 		AG_ExpandVert(pal);
 	}
