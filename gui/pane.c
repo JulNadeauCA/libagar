@@ -70,6 +70,7 @@ MouseButtonDown(AG_Event *event)
 	}
 }
 
+/* Move a divider to the given position. */
 int
 AG_PaneMoveDivider(AG_Pane *pa, int dx)
 {
@@ -77,7 +78,7 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 	int rv;
 
 	AG_ObjectLock(pa);
-	if (pa->rx == -1) {
+	if (pa->rx == -1) {		/* Geometry not yet allocated */
 		pa->rx = dx;
 		pa->dx = dx;
 		rv = dx;
@@ -91,6 +92,24 @@ AG_PaneMoveDivider(AG_Pane *pa, int dx)
 		rv = pa->dx;
 		AG_WidgetUpdate(pa);
 		pa->rx = rv;
+	}
+	AG_ObjectUnlock(pa);
+	return (rv);
+}
+
+/* Move a divider to the given position (%). */
+int
+AG_PaneMoveDividerPct(AG_Pane *pa, int pct)
+{
+	int rv;
+
+	AG_ObjectLock(pa);
+	if (pa->rx == -1) {		/* Geometry not yet allocated */
+		pa->rxPct = pct;
+		rv = 0;
+	} else {
+		int size = (pa->type == AG_PANE_HORIZ) ? WIDTH(pa) : HEIGHT(pa);
+		rv = AG_PaneMoveDivider(pa, pct*size/100);
 	}
 	AG_ObjectUnlock(pa);
 	return (rv);
@@ -169,6 +188,7 @@ Init(void *obj)
 	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, AG_BOX_FRAME);
 	pa->dx = 0;
 	pa->rx = -1;
+	pa->rxPct = -1;
 	pa->dmoving = 0;
 	pa->wDiv = 8;
 
@@ -333,15 +353,21 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
 		if (pa->dx == 0 && pa->rx == -1) {
+			/* Set initial divider position. */
 			if (pa->flags & AG_PANE_DIV) {
 				pa->dx = a->w/2;
 			} else if (pa->flags & AG_PANE_DIV1FILL) {
 				pa->dx = a->w - pa->wReq[1];
 			} else {
-				pa->dx = pa->wReq[0];
+				if (pa->rxPct != -1) {
+					pa->dx = pa->rxPct*WIDTH(pa)/100;
+				} else {
+					pa->dx = pa->wReq[0];
+				}
 			}
 			pa->rx = pa->dx;
 		} else {
+			/* Apply change in divider position. */
 			if (pa->flags & AG_PANE_FORCE_DIV) {
 				pa->dx = a->w/2;
 			} else if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
@@ -366,15 +392,21 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		break;
 	case AG_PANE_VERT:
 		if (pa->dx == 0 && pa->rx == -1) {
+			/* Set initial divider position. */
 			if (pa->flags & AG_PANE_DIV) {
 				pa->dx = a->h/2;
 			} else if (pa->flags & AG_PANE_DIV1FILL) {
 				pa->dx = a->h - pa->hReq[1];
 			} else {
-				pa->dx = pa->hReq[0];
+				if (pa->rxPct != -1) {
+					pa->dx = pa->rxPct*HEIGHT(pa)/100;
+				} else {
+					pa->dx = pa->hReq[0];
+				}
 			}
 			pa->rx = pa->dx;
 		} else {
+			/* Apply change in divider position. */
 			if (pa->flags & AG_PANE_FORCE_DIV) {
 				pa->dx = a->h/2;
 			} else if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
