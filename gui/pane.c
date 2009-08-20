@@ -61,7 +61,8 @@ MouseButtonDown(AG_Event *event)
 	AG_Pane *pa = AG_SELF();
 	int button = AG_INT(1);
 
-	if (button == SDL_BUTTON_LEFT) {
+	if (button == SDL_BUTTON_LEFT &&
+	    !(pa->flags & AG_PANE_UNMOVABLE)) {
 		pa->dmoving = OverDivControl(pa,
 		    pa->type == AG_PANE_HORIZ ? AG_INT(2) : AG_INT(3));
 		if (pa->dmoving)
@@ -73,19 +74,26 @@ int
 AG_PaneMoveDivider(AG_Pane *pa, int dx)
 {
 	AG_SizeAlloc a;
-	int dxNew;
+	int rv;
 
 	AG_ObjectLock(pa);
-	pa->dx = dx;
-	a.x = WIDGET(pa)->x;
-	a.y = WIDGET(pa)->y;
-	a.w = WIDTH(pa);
-	a.h = HEIGHT(pa);
-	AG_WidgetSizeAlloc(pa, &a);
-	dxNew = pa->dx;
-	AG_WidgetUpdate(pa);
+	if (pa->rx == -1) {
+		pa->rx = dx;
+		pa->dx = dx;
+		rv = dx;
+	} else {
+		pa->dx = dx;
+		a.x = WIDGET(pa)->x;
+		a.y = WIDGET(pa)->y;
+		a.w = WIDTH(pa);
+		a.h = HEIGHT(pa);
+		AG_WidgetSizeAlloc(pa, &a);
+		rv = pa->dx;
+		AG_WidgetUpdate(pa);
+		pa->rx = rv;
+	}
 	AG_ObjectUnlock(pa);
-	return (dxNew);
+	return (rv);
 }
 
 static void
@@ -106,7 +114,7 @@ MouseMotion(AG_Event *event)
 			if (pa->rx < 0) { pa->rx = pa->dx; }
 			pa->rx += dx;
 			if (pa->rx < 2) { pa->rx = 2; }
-			pa->rx = AG_PaneMoveDivider(pa, pa->rx);
+			AG_PaneMoveDivider(pa, pa->rx);
 			if (OverDivControl(pa, x)) {
 				AG_SetCursor(AG_HRESIZE_CURSOR);
 			}
@@ -122,7 +130,7 @@ MouseMotion(AG_Event *event)
 		if (pa->dmoving) {
 			if (pa->rx < 0) { pa->rx = pa->dx; }
 			pa->rx += dy;
-			pa->rx = AG_PaneMoveDivider(pa, pa->rx);
+			AG_PaneMoveDivider(pa, pa->rx);
 			if (pa->rx < 2) { pa->rx = 2; }
 			if (OverDivControl(pa, y)) {
 				AG_SetCursor(AG_VRESIZE_CURSOR);
@@ -156,7 +164,7 @@ Init(void *obj)
 			     AG_WIDGET_UNFOCUSED_MOTION;
 
 	pa->type = AG_PANE_VERT;
-	pa->flags = AG_PANE_INITSCALE;
+	pa->flags = 0;
 	pa->div[0] = AG_BoxNew(pa, AG_BOX_VERT, AG_BOX_FRAME);
 	pa->div[1] = AG_BoxNew(pa, AG_BOX_VERT, AG_BOX_FRAME);
 	pa->dx = 0;
@@ -165,17 +173,31 @@ Init(void *obj)
 	pa->wDiv = 8;
 
 	for (i = 0; i < 2; i++) {
-		pa->minw[i] = -1;
-		pa->minh[i] = -1;
-#if 0
-		AG_BoxSetPadding(pa->div[i], 0);
-		AG_BoxSetSpacing(pa->div[i], 0);
-#endif
+		pa->wMin[i] = 0;
+		pa->hMin[i] = 0;
+		pa->wReq[i] = -1;
+		pa->hReq[i] = -1;
 	}
 
 	AG_SetEvent(pa, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(pa, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(pa, "window-mousemotion", MouseMotion, NULL);
+
+#ifdef AG_DEBUG
+	AG_BindInt(pa, "flags", &pa->flags);
+	AG_BindInt(pa, "wMin[0]", &pa->wMin[0]);
+	AG_BindInt(pa, "hMin[0]", &pa->hMin[0]);
+	AG_BindInt(pa, "wMin[1]", &pa->wMin[1]);
+	AG_BindInt(pa, "hMin[1]", &pa->hMin[1]);
+	AG_BindInt(pa, "wReq[0]", &pa->wReq[0]);
+	AG_BindInt(pa, "hReq[0]", &pa->hReq[0]);
+	AG_BindInt(pa, "wReq[1]", &pa->wReq[1]);
+	AG_BindInt(pa, "hReq[1]", &pa->hReq[1]);
+	AG_BindInt(pa, "dmoving", &pa->dmoving);
+	AG_BindInt(pa, "dx", &pa->dx);
+	AG_BindInt(pa, "rx", &pa->rx);
+	AG_BindInt(pa, "wDiv", &pa->wDiv);
+#endif
 }
 
 void
@@ -195,11 +217,11 @@ AG_PaneSetDivisionPacking(AG_Pane *pa, int which, enum ag_box_type packing)
 }
 
 void
-AG_PaneSetDivisionMin(AG_Pane *pa, int which, int minw, int minh)
+AG_PaneSetDivisionMin(AG_Pane *pa, int which, int wMin, int hMin)
 {
 	AG_ObjectLock(pa);
-	pa->minw[which] = minw;
-	pa->minh[which] = minh;
+	pa->wMin[which] = wMin;
+	pa->hMin[which] = hMin;
 	AG_ObjectUnlock(pa);
 }
 
@@ -268,8 +290,9 @@ SizeRequest(void *obj, AG_SizeReq *r)
 		AG_Widget *div = WIDGET(pa->div[i]);
 
 		AG_WidgetSizeReq(div, &rDiv);
-		if (pa->minw[i] == -1) { pa->minw[i] = rDiv.w; }
-		if (pa->minh[i] == -1) { pa->minh[i] = rDiv.h; }
+		pa->wReq[i] = rDiv.w;
+		pa->hReq[i] = rDiv.h;
+
 		if (rDiv.w > wMax) { wMax = rDiv.w; }
 		if (rDiv.h > hMax) { hMax = rDiv.h; }
 
@@ -306,33 +329,33 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 
 	AG_WidgetSizeReq(pa->div[0], &r1);
 	AG_WidgetSizeReq(pa->div[1], &r2);
-	
+
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
-		if (pa->rx == -1) {
+		if (pa->dx == 0 && pa->rx == -1) {
 			if (pa->flags & AG_PANE_DIV) {
 				pa->dx = a->w/2;
 			} else if (pa->flags & AG_PANE_DIV1FILL) {
-				pa->dx = a->w - pa->minw[1];
+				pa->dx = a->w - pa->wReq[1];
 			} else {
-				pa->dx = pa->minw[0];
+				pa->dx = pa->wReq[0];
 			}
 			pa->rx = pa->dx;
 		} else {
 			if (pa->flags & AG_PANE_FORCE_DIV) {
 				pa->dx = a->w/2;
 			} else if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
-				pa->dx = a->w - pa->minw[1];
+				pa->dx = a->w - pa->wReq[1];
 			} else if (pa->flags & AG_PANE_FORCE_DIV2FILL) {
-				pa->dx = pa->minw[0];
+				pa->dx = pa->wReq[0];
 			}
 		}
-		if (pa->dx < pa->minw[0]) {
-			pa->rx = pa->dx = pa->minw[0];
+		if (pa->dx < pa->wMin[0]) {
+			pa->rx = pa->dx = pa->wMin[0];
 		} else if (pa->dx > (a->w - pa->wDiv)) {
 			pa->rx = pa->dx = a->w - pa->wDiv;
-		} else if (pa->dx > (a->w - pa->minw[1])) {
-			pa->rx = pa->dx = a->w - pa->minw[1];
+		} else if (pa->dx > (a->w - pa->wMin[1])) {
+			pa->rx = pa->dx = a->w - pa->wMin[1];
 		}
     		a1.w = pa->dx;
 		a1.h = a->h;
@@ -342,30 +365,30 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 		a2.h = a->h;
 		break;
 	case AG_PANE_VERT:
-		if (pa->rx == -1) {
+		if (pa->dx == 0 && pa->rx == -1) {
 			if (pa->flags & AG_PANE_DIV) {
 				pa->dx = a->h/2;
 			} else if (pa->flags & AG_PANE_DIV1FILL) {
-				pa->dx = a->h - pa->minh[1];
+				pa->dx = a->h - pa->hReq[1];
 			} else {
-				pa->dx = pa->minh[0];
+				pa->dx = pa->hReq[0];
 			}
 			pa->rx = pa->dx;
 		} else {
 			if (pa->flags & AG_PANE_FORCE_DIV) {
 				pa->dx = a->h/2;
 			} else if (pa->flags & AG_PANE_FORCE_DIV1FILL) {
-				pa->dx = a->h - pa->minh[1];
+				pa->dx = a->h - pa->hReq[1];
 			} else if (pa->flags & AG_PANE_FORCE_DIV2FILL) {
-				pa->dx = pa->minh[0];
+				pa->dx = pa->hReq[0];
 			}
 		}
-		if (pa->dx < pa->minh[0]) {
-			pa->rx = pa->dx = pa->minh[0];
+		if (pa->dx < pa->hMin[0]) {
+			pa->rx = pa->dx = pa->hMin[0];
 		} else if (pa->dx > (a->h - pa->wDiv)) {
 			pa->rx = pa->dx = a->h - pa->wDiv;
-		} else if (pa->dx > (a->h - pa->minh[1])) {
-			pa->rx = pa->dx = a->h - pa->minh[1];
+		} else if (pa->dx > (a->h - pa->hMin[1])) {
+			pa->rx = pa->dx = a->h - pa->hMin[1];
 		}
 		a1.w = a->w;
 		a1.h = pa->dx;
@@ -377,13 +400,6 @@ SizeAllocate(void *obj, const AG_SizeAlloc *a)
 	}
 	AG_WidgetSizeAlloc(pa->div[0], &a1);
 	AG_WidgetSizeAlloc(pa->div[1], &a2);
-	
-	if (pa->flags & AG_PANE_INITSCALE) {
-		pa->minw[0] = 0;
-		pa->minh[0] = 0;
-		pa->minw[1] = 0;
-		pa->minh[1] = 0;
-	}
 	return (0);
 }
 

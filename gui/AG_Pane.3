@@ -81,16 +81,31 @@ Available
 .Fa flags
 options include:
 .Pp
-.Bl -tag -width "AG_PANE_FORCE_DIV "
+.Bl -tag -width "AG_PANE_FORCE_DIV1FILL "
 .It AG_PANE_DIV1FILL
-Allocate the preferred size for the second division, and allocate the
-remaining space to the first division (default is the other way around).
+Allocate optimal size for the second division and expand the first division
+to use the remaining space.
+.It AG_PANE_DIV2FILL
+Allocate optimal size for the first division and expand the second division
+to use the remaining space (default).
+.It AG_PANE_FORCE_DIV1FILL
+Enforce continuous
+.Dv AG_PANE_DIV1FILL
+behavior.
+.It AG_PANE_FORCE_DIV2FILL
+Enforce continuous
+.Dv AG_PANE_DIV2FILL
+behavior.
 .It AG_PANE_FRAME
 Render decorative frames.
 .It AG_PANE_DIV
-Ignore the preferred sizes and divide into two equal parts.
+Divide in two equal parts.
 .It AG_PANE_FORCE_DIV
-Don't allow the user to move the divider.
+Enforce continuous
+.Dv AG_PANE_DIV
+behavior.
+.It AG_PANE_UNMOVABLE
+Do not allow the user to move the divider.
 .El
 .Pp
 If
@@ -128,6 +143,11 @@ function.
 .Fn AG_PaneMoveDivider
 tries to move the divider to the specified position and returns the actual
 new position.
+Note that
+.Fn AG_PaneMoveDivider
+will not have any effect if any of the
+.Dv AG_PANE_FORCE_*
+options are set.
 .Sh EVENTS
 The
 .Nm
