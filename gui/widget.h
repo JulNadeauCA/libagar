@@ -348,7 +348,7 @@ AG_WidgetShow(void *wid)
 static __inline__ void
 AG_WidgetUpdate(void *obj)
 {
-	AG_Widget *wid = obj;
+	AG_Widget *wid = (AG_Widget *)obj;
 
 	AG_ObjectLock(wid);
 	wid->flags |= AG_WIDGET_UPDATE_WINDOW;
