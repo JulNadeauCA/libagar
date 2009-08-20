@@ -34,6 +34,7 @@ typedef struct ag_pane {
 	int	dmoving;		/* Divider being moved */
 	int	dx;			/* Actual divider position */
 	int	rx;			/* Requested divider position */
+	int     rxPct;			/* Requested position in % */
 	int	wDiv;			/* Divider width */
 } AG_Pane;
 
@@ -49,6 +50,7 @@ void	 AG_PaneSetDividerWidth(AG_Pane *, int);
 void	 AG_PaneSetDivisionMin(AG_Pane *, int, int, int);
 void	 AG_PaneSetDivisionPacking(AG_Pane *, int, enum ag_box_type);
 int	 AG_PaneMoveDivider(AG_Pane *, int);
+int	 AG_PaneMoveDividerPct(AG_Pane *, int);
 __END_DECLS
 
 #include <agar/gui/close.h>

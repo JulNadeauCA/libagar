@@ -66,7 +66,10 @@ containers), horizontally or vertically.
 .Fn AG_PaneSetDivisionMin "AG_Pane *pane" "int which" "int min_w" "int min_h"
 .Pp
 .Ft "int"
-.Fn AG_PaneMoveDivider "AG_Pane *pane" "int dx"
+.Fn AG_PaneMoveDivider "AG_Pane *pane" "int x"
+.Pp
+.Ft "int"
+.Fn AG_PaneMoveDividerPct "AG_Pane *pane" "int pct"
 .Pp
 .nr nS 0
 The
@@ -141,13 +144,17 @@ The separator can also be moved programmatically with the
 .Fn AG_PaneMoveDivider
 function.
 .Fn AG_PaneMoveDivider
-tries to move the divider to the specified position and returns the actual
-new position.
+tries to move the divider to the specified position
+.Fa x
+(in pixels) and returns the actual new position.
 Note that
 .Fn AG_PaneMoveDivider
 will not have any effect if any of the
 .Dv AG_PANE_FORCE_*
 options are set.
+The
+.Fn AG_PaneMoveDividerPct
+variant accepts an argument in % of total available size.
 .Sh EVENTS
 The
 .Nm
