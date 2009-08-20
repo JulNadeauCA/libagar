@@ -176,6 +176,16 @@ Init(void *obj)
 
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 	AG_WidgetForwardFocus(com, com->button);
+
+#ifdef AG_DEBUG
+	AG_BindUint(com, "flags", &com->flags);
+	AG_BindPointer(com, "list", (void *)&com->list);
+	AG_BindPointer(com, "panel", (void *)&com->panel);
+	AG_BindInt(com, "wSaved", &com->wSaved);
+	AG_BindInt(com, "hSaved", &com->hSaved);
+	AG_BindInt(com, "wPreList", &com->wPreList);
+	AG_BindInt(com, "hPreList", &com->hPreList);
+#endif
 }
 
 void

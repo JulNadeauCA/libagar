@@ -625,20 +625,6 @@ Init(void *obj)
 	                     AG_WIDGET_UNFOCUSED_MOTION|
 			     AG_WIDGET_FOCUSABLE;
 
-	AG_BindInt(sb, "value", &sb->value);
-	AG_BindInt(sb, "min", &sb->min);
-	AG_BindInt(sb, "max", &sb->max);
-	AG_BindInt(sb, "visible", &sb->visible);
-#ifdef AG_DEBUG
-	AG_BindInt(sb, "wButton", &sb->wButton);
-	AG_BindInt(sb, "wBar", &sb->wBar);
-	AG_BindInt(sb, "hArrow", &sb->hArrow);
-	AG_BindInt(sb, "xOffs", &sb->xOffs);
-	AG_BindInt(sb, "extent", &sb->extent);
-	AG_BindDouble(sb, "rInc", &sb->rInc);
-	AG_BindInt(sb, "iInc", &sb->iInc);
-#endif
-
 	sb->type = AG_SCROLLBAR_HORIZ;
 	sb->curBtn = AG_SCROLLBAR_BUTTON_NONE;
 	sb->flags = 0;
@@ -668,6 +654,23 @@ Init(void *obj)
 	AG_SetTimeout(&sb->scrollTo, ScrollTimeout, NULL, 0);
 	AG_SetTimeout(&sb->decTo, DecrementTimeout, NULL, 0);
 	AG_SetTimeout(&sb->incTo, IncrementTimeout, NULL, 0);
+	
+	AG_BindInt(sb, "value", &sb->value);
+	AG_BindInt(sb, "min", &sb->min);
+	AG_BindInt(sb, "max", &sb->max);
+	AG_BindInt(sb, "visible", &sb->visible);
+#ifdef AG_DEBUG
+	AG_BindUint(sb, "flags", &sb->flags);
+	AG_BindUint(sb, "type", &sb->type);
+	AG_BindUint(sb, "curBtn", &sb->curBtn);
+	AG_BindInt(sb, "wButton", &sb->wButton);
+	AG_BindInt(sb, "wBar", &sb->wBar);
+	AG_BindInt(sb, "hArrow", &sb->hArrow);
+	AG_BindInt(sb, "xOffs", &sb->xOffs);
+	AG_BindInt(sb, "extent", &sb->extent);
+	AG_BindDouble(sb, "rInc", &sb->rInc);
+	AG_BindInt(sb, "iInc", &sb->iInc);
+#endif /* AG_DEBUG */
 }
 
 static void

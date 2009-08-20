@@ -251,8 +251,6 @@ Init(void *obj)
 
 	WIDGET(tl)->flags |= AG_WIDGET_FOCUSABLE;
 
-	AG_BindPointer(tl, "selected", &tl->selected);
-
 	tl->flags = 0;
 	tl->selected = NULL;
 	tl->wSpace = 4;
@@ -288,6 +286,21 @@ Init(void *obj)
 	AG_SetTimeout(&tl->decTo, DecrementTimeout, NULL, 0);
 	AG_SetTimeout(&tl->incTo, IncrementTimeout, NULL, 0);
 	AG_SetTimeout(&tl->refreshTo, RefreshTimeout, NULL, 0);
+
+	AG_BindPointer(tl, "selected", &tl->selected);
+#ifdef AG_DEBUG
+	AG_BindUint(tl, "flags", &tl->flags);
+	AG_BindInt(tl, "wHint", &tl->wHint);
+	AG_BindInt(tl, "hHint", &tl->hHint);
+	AG_BindInt(tl, "wSpace", &tl->wSpace);
+	AG_BindInt(tl, "item_h", &tl->item_h);
+	AG_BindInt(tl, "icon_w", &tl->icon_w);
+	AG_BindPointer(tl, "dblclicked", &tl->dblclicked);
+	AG_BindInt(tl, "nitems", &tl->nitems);
+	AG_BindInt(tl, "nvisitems", &tl->nvisitems);
+	AG_BindUint32(tl, "wheelTicks", &tl->wheelTicks);
+	AG_BindInt(tl, "wRow", &tl->wRow);
+#endif /* AG_DEBUG */
 }
 
 void

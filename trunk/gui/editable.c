@@ -1132,7 +1132,6 @@ Init(void *obj)
 	                     AG_WIDGET_UNFOCUSED_MOTION|
 			     AG_WIDGET_TABLE_EMBEDDABLE;
 
-	AG_BindString(ed, "string", ed->string, sizeof(ed->string));
 	ed->string[0] = '\0';
 	ed->encoding = AG_ENCODING_UTF8;
 
@@ -1173,6 +1172,30 @@ Init(void *obj)
 	AG_SetTimeout(&ed->toRepeat, RepeatTimeout, NULL, 0);
 	AG_SetTimeout(&ed->toDelay, DelayTimeout, NULL, 0);
 	AG_SetTimeout(&ed->toCursorBlink, BlinkTimeout, NULL, 0);
+
+	AG_BindString(ed, "string", ed->string, sizeof(ed->string));
+#ifdef AG_DEBUG
+	AG_BindUint(ed, "flags", &ed->flags);
+	AG_BindUint(ed, "encoding", &ed->encoding);
+	AG_BindInt(ed, "wPre", &ed->wPre);
+	AG_BindInt(ed, "hPre", &ed->hPre);
+	AG_BindInt(ed, "pos", &ed->pos);
+	AG_BindUint32(ed, "compose", &ed->compose);
+	AG_BindInt(ed, "xCurs", &ed->xCurs);
+	AG_BindInt(ed, "yCurs", &ed->yCurs);
+	AG_BindInt(ed, "xCursPref", &ed->xCursPref);
+	AG_BindInt(ed, "sel_x1", &ed->sel_x1);
+	AG_BindInt(ed, "sel_x2", &ed->sel_x2);
+	AG_BindInt(ed, "sel_edit", &ed->sel_edit);
+	AG_BindInt(ed, "x", &ed->x);
+	AG_BindInt(ed, "xMax", &ed->xMax);
+	AG_BindInt(ed, "y", &ed->y);
+	AG_BindInt(ed, "yMax", &ed->yMax);
+	AG_BindInt(ed, "yVis", &ed->yVis);
+	AG_BindUint32(ed, "wheelTicks", &ed->wheelTicks);
+	AG_BindUint32(ed, "repeatUnicode", &ed->repeatUnicode);
+	AG_BindUint(ed, "ucsLen", &ed->ucsLen);
+#endif /* AG_DEBUG */
 }
 
 static void
@@ -1184,26 +1207,6 @@ Destroy(void *obj)
 		Free(ed->ucsBuf);
 }
 
-#ifdef AG_DEBUG
-static void *
-Edit(void *obj)
-{
-	AG_Editable *ed = obj;
-	AG_Box *ctr = AG_BoxNewVert(NULL, AG_BOX_EXPAND);
-
-	AG_NumericalNewInt(ctr, 0, "px", "x: ", &ed->x);
-	AG_NumericalNewInt(ctr, 0, "px", "xMax: ", &ed->xMax);
-	AG_NumericalNewInt(ctr, 0, "px", "y: ", &ed->y);
-	AG_NumericalNewInt(ctr, 0, "px", "yMax: ", &ed->yMax);
-	AG_NumericalNewInt(ctr, 0, "px", "yVis: ", &ed->yVis);
-	AG_SeparatorNewHoriz(ctr);
-	AG_NumericalNewInt(ctr, 0, "px", "pos: ", &ed->pos);
-	AG_NumericalNewInt(ctr, 0, "px", "xCurs: ", &ed->xCurs);
-	AG_NumericalNewInt(ctr, 0, "px", "yCurs: ", &ed->yCurs);
-	return (ctr);
-}
-#endif /* AG_DEBUG */
-
 AG_WidgetClass agEditableClass = {
 	{
 		"Agar(Widget:Editable)",
@@ -1214,11 +1217,7 @@ AG_WidgetClass agEditableClass = {
 		Destroy,
 		NULL,		/* load */
 		NULL,		/* save */
-#ifdef AG_DEBUG
-		Edit,
-#else
 		NULL		/* edit */
-#endif
 	},
 	Draw,
 	SizeRequest,

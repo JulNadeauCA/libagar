@@ -264,6 +264,18 @@ Init(void *obj)
 
 	/* XXX wasteful */
 	AG_WidgetMapSurface(mview, AG_DupSurface(agIconSmallArrowRight.s));
+
+#ifdef AG_DEBUG
+	AG_BindPointer(mview, "panel", (void *)&mview->panel);
+	AG_BindPointer(mview, "pmenu", (void *)&mview->pmenu);
+	AG_BindPointer(mview, "pitem", (void *)&mview->pitem);
+	AG_BindInt(mview, "spIconLbl", &mview->spIconLbl);
+	AG_BindInt(mview, "spLblArrow", &mview->spLblArrow);
+	AG_BindInt(mview, "lPad", &mview->lPad);
+	AG_BindInt(mview, "rPad", &mview->rPad);
+	AG_BindInt(mview, "tPad", &mview->tPad);
+	AG_BindInt(mview, "bPad", &mview->bPad);
+#endif
 }
 
 static void

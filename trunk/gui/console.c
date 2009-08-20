@@ -76,6 +76,14 @@ Init(void *obj)
 	AG_SetEvent(cons, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(cons, "window-keyup", KeyUp, NULL);
 	AG_SetEvent(cons, "window-keydown", KeyDown, NULL);
+
+#ifdef AG_DEBUG
+	AG_BindUint(cons, "flags", &cons->flags);
+	AG_BindInt(cons, "padding", &cons->padding);
+	AG_BindInt(cons, "lineskip", &cons->lineskip);
+	AG_BindInt(cons, "nLines", &cons->nLines);
+	AG_BindInt(cons, "rOffs", &cons->rOffs);
+#endif
 }
 
 static void

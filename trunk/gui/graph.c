@@ -459,6 +459,24 @@ Init(void *obj)
 	AG_SetEvent(gf, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(gf, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(gf, "window-mousemotion", MouseMotion, NULL);
+
+#ifdef AG_DEBUG
+	AG_BindUint(gf, "flags", &gf->flags);
+	AG_BindInt(gf, "wPre", &gf->wPre);
+	AG_BindInt(gf, "hPre", &gf->hPre);
+	AG_BindInt(gf, "xOffs", &gf->xOffs);
+	AG_BindInt(gf, "yOffs", &gf->yOffs);
+	AG_BindInt(gf, "xMin", &gf->xMin);
+	AG_BindInt(gf, "yMin", &gf->yMin);
+	AG_BindInt(gf, "xMax", &gf->xMax);
+	AG_BindInt(gf, "yMax", &gf->yMax);
+	AG_BindUint(gf, "nvertices", &gf->nvertices);
+	AG_BindUint(gf, "nedges", &gf->nedges);
+	AG_BindInt(gf, "pxMin", &gf->pxMin);
+	AG_BindInt(gf, "pyMin", &gf->pyMin);
+	AG_BindInt(gf, "pxMax", &gf->pxMax);
+	AG_BindInt(gf, "pyMax", &gf->pyMax);
+#endif /* AG_DEBUG */
 }
 
 void

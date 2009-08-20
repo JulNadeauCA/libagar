@@ -408,14 +408,24 @@ Init(void *obj)
 	AG_SetEvent(tb, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(tb, "widget-disabled", Disabled, NULL);
 	AG_SetEvent(tb, "widget-enabled", Enabled, NULL);
-#ifdef AG_DEBUG
-	AG_SetEvent(tb, "bound", Bound, NULL);
-#endif
 	AG_SetEvent(tb->ed, "editable-prechg", EditablePreChg, "%p", tb);
 	AG_SetEvent(tb->ed, "editable-postchg", EditablePostChg, "%p", tb);
 	AG_SetEvent(tb->ed, "editable-return", EditableReturn, "%p", tb);
 	
 	AG_WidgetForwardFocus(tb, tb->ed);
+
+#ifdef AG_DEBUG
+	AG_BindUint(tb, "flags", &tb->flags);
+	AG_BindInt(tb, "label", &tb->label);
+	AG_BindInt(tb, "boxPadX", &tb->boxPadX);
+	AG_BindInt(tb, "boxPadY", &tb->boxPadY);
+	AG_BindInt(tb, "lblPadL", &tb->lblPadL);
+	AG_BindInt(tb, "lblPadR", &tb->lblPadR);
+	AG_BindInt(tb, "wLbl", &tb->wLbl);
+	AG_BindInt(tb, "hLbl", &tb->hLbl);
+
+	AG_SetEvent(tb, "bound", Bound, NULL);
+#endif /* AG_DEBUG */
 }
 
 AG_WidgetClass agTextboxClass = {

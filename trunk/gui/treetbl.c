@@ -506,6 +506,22 @@ Init(void *obj)
 	AG_SetEvent(tt, "dblclick-expire", ExpireDoubleClick, NULL);
 	AG_SetEvent(tt, "widget-lostfocus", FocusLost, NULL);
 	AG_SetEvent(tt, "widget-hidden", FocusLost, NULL);
+
+#ifdef AG_DEBUG
+	AG_BindUint(tt, "flags", &tt->flags);
+	AG_BindInt(tt, "hCol", &tt->hCol);
+	AG_BindInt(tt, "hRow", &tt->hRow);
+	AG_BindInt(tt, "dblclicked", &tt->dblclicked);
+	AG_BindInt(tt, "wHint", &tt->wHint);
+	AG_BindInt(tt, "hHint", &tt->hHint);
+	AG_BindUint(tt, "n", &tt->n);
+	AG_BindUint(tt, "sortMode", &tt->sortMode);
+	AG_BindInt(tt, "nExpandedRows", &tt->nExpandedRows);
+	AG_BindUint(tt, "visible.redraw_last", &tt->visible.redraw_last);
+	AG_BindUint(tt, "visible.redraw_rate", &tt->visible.redraw_rate);
+	AG_BindInt(tt, "visible.dirty", &tt->visible.dirty);
+	AG_BindUint(tt, "visible.count", &tt->visible.count);
+#endif /* AG_DEBUG */
 }
 
 void

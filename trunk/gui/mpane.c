@@ -64,6 +64,12 @@ Init(void *obj)
 	}
 	mp->flags = 0;
 	mp->npanes = 0;
+
+#ifdef AG_DEBUG
+	AG_BindUint(mp, "flags", &mp->flags);
+	AG_BindUint(mp, "layout", &mp->layout);
+	AG_BindUint(mp, "npanes", &mp->npanes);
+#endif
 }
 
 void

@@ -54,6 +54,12 @@ Init(void *obj)
 	fx->flags = 0;
 	fx->wPre = 0;
 	fx->hPre = 0;
+
+#ifdef AG_DEBUG
+	AG_BindUint(fx, "flags", &fx->flags);
+	AG_BindInt(fx, "wPre", &fx->wPre);
+	AG_BindInt(fx, "hPre", &fx->hPre);
+#endif
 }
 
 void

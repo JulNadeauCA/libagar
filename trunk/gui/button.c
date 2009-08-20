@@ -179,8 +179,6 @@ Init(void *obj)
 			     AG_WIDGET_UNFOCUSED_BUTTONUP|
 			     AG_WIDGET_TABLE_EMBEDDABLE;
 
-	AG_BindInt(bu, "state", &bu->state);
-
 	bu->flags = 0;
 	bu->lbl = NULL;
 	bu->surface = -1;
@@ -200,6 +198,16 @@ Init(void *obj)
 	AG_SetEvent(bu, "window-mousemotion", mousemotion, NULL);
 	AG_SetEvent(bu, "window-keyup", keyup, NULL);
 	AG_SetEvent(bu, "window-keydown", keydown, NULL);
+
+	AG_BindInt(bu, "state", &bu->state);
+#ifdef AG_DEBUG
+	AG_BindInt(bu, "surface", &bu->surface);
+	AG_BindUint(bu, "flags", &bu->flags);
+	AG_BindInt(bu, "lPad", &bu->lPad);
+	AG_BindInt(bu, "rPad", &bu->rPad);
+	AG_BindInt(bu, "tPad", &bu->tPad);
+	AG_BindInt(bu, "bPad", &bu->bPad);
+#endif
 }
 
 static void

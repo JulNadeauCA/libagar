@@ -234,6 +234,14 @@ Init(void *obj)
 	AG_SetEvent(com->list, "tlist-changed", SelectedItem, "%p", com);
 	AG_SetEvent(com->tbox, "textbox-return", Return, "%p", com);
 	AG_WidgetForwardFocus(com, com->tbox);
+
+#ifdef AG_DEBUG
+	AG_BindUint(com, "flags", &com->flags);
+	AG_BindInt(com, "wSaved", &com->wSaved);
+	AG_BindInt(com, "hSaved", &com->hSaved);
+	AG_BindInt(com, "wPreList", &com->wPreList);
+	AG_BindInt(com, "hPreList", &com->hPreList);
+#endif
 }
 
 void

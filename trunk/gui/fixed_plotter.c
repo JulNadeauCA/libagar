@@ -74,6 +74,14 @@ Init(void *obj)
 	AG_SetEvent(fpl, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(fpl, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(fpl, "window-mousebuttondown", MouseButtonDown, NULL);
+
+#ifdef AG_DEBUG
+	AG_BindUint(fpl, "type", &fpl->type);
+	AG_BindUint(fpl, "flags", &fpl->flags);
+	AG_BindSint16(fpl, "yrange", &fpl->yrange);
+	AG_BindSint16(fpl, "xoffs", &fpl->xoffs);
+	AG_BindInt(fpl, "yOrigin", &fpl->yOrigin);
+#endif
 }
 
 void
