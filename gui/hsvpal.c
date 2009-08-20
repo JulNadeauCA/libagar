@@ -665,6 +665,15 @@ Bound(AG_Event *event)
 		UpdateHSVFromRGBAv(hsv);
 	} else if (strcmp(V->name, "RGBv") == 0) {
 		UpdateHSVFromRGBv(hsv);
+	} else if (strcmp(V->name, "pixel-format") == 0) {
+		if (!(hsv->flags & AG_HSVPAL_FORCE_NOALPHA)) {
+			AG_PixelFormat **pFormat = (AG_PixelFormat **)V->data.p;
+			if ((*pFormat)->Amask != 0) {
+				hsv->flags &= ~(AG_HSVPAL_NOALPHA);
+			} else {
+				hsv->flags |= AG_HSVPAL_NOALPHA;
+			}
+		}
 	}
 }
 
@@ -693,7 +702,6 @@ Init(void *obj)
 	AG_SetEvent(pal, "window-mousebuttonup", MouseButtonUp, NULL);
 	AG_SetEvent(pal, "window-mousebuttondown", MouseButtonDown, NULL);
 	AG_SetEvent(pal, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(pal, "bound", Bound, NULL);
 	
 	AG_BindFloat(pal, "hue", &pal->h);
 	AG_BindFloat(pal, "saturation", &pal->s);
@@ -723,6 +731,8 @@ Init(void *obj)
 	AG_BindUint(pal, "state", &pal->state);
 	AG_BindUint32(pal, "cTile", &pal->cTile);
 #endif /* AG_DEBUG */
+	
+	AG_SetEvent(pal, "bound", Bound, NULL);
 }
 
 static void
@@ -777,32 +787,34 @@ RenderPalette(AG_HSVPal *pal)
 		}
 	}
 
-	/* Render the alpha selector. */
-	/* XXX overblending */
-	for (y = 8; y < pal->rAlpha.h+16; y+=8) {
-		for (x = 0; x < pal->rAlpha.w; x+=16) {
-			rd.w = 8;
-			rd.h = 8;
-			rd.x = pal->rAlpha.x+x;
-			rd.y = pal->rAlpha.y+y;
-			AG_FillRect(pal->surface, &rd, pal->cTile);
+	if (!(pal->flags & AG_HSVPAL_NOALPHA)) {
+		/* Render the color preview. */
+		/* XXX overblending */
+		for (y = 8; y < pal->rAlpha.h+16; y+=8) {
+			for (x = 0; x < pal->rAlpha.w; x+=16) {
+				rd.w = 8;
+				rd.h = 8;
+				rd.x = pal->rAlpha.x+x;
+				rd.y = pal->rAlpha.y+y;
+				AG_FillRect(pal->surface, &rd, pal->cTile);
+			}
+			y += 8;
+			for (x = 8; x < pal->rAlpha.w; x+=16) {
+				rd.w = 8;
+				rd.h = 8;
+				rd.x = pal->rAlpha.x+x;
+				rd.y = pal->rAlpha.y+y;
+				AG_FillRect(pal->surface, &rd, pal->cTile);
+			}
 		}
-		y += 8;
-		for (x = 8; x < pal->rAlpha.w; x+=16) {
-			rd.w = 8;
-			rd.h = 8;
-			rd.x = pal->rAlpha.x+x;
-			rd.y = pal->rAlpha.y+y;
-			AG_FillRect(pal->surface, &rd, pal->cTile);
-		}
-	}
-	AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, cur_s, cur_v, &r, &g, &b);
-	da = MIN(1, pal->surface->w/255);
-	for (y = pal->rAlpha.y+8; y < pal->surface->h; y++) {
-		for (x = 0, a = 0; x < pal->surface->w; x++) {
-			AG_BLEND_RGBA2_CLIPPED(pal->surface, x, y,
-			    r, g, b, a, AG_ALPHA_SRC);
-			a = x*255/pal->surface->w;
+		AG_HSV2RGB((cur_h/(2*AG_PI))*360.0, cur_s, cur_v, &r, &g, &b);
+		da = MIN(1, pal->surface->w/255);
+		for (y = pal->rAlpha.y+8; y < pal->surface->h; y++) {
+			for (x = 0, a = 0; x < pal->surface->w; x++) {
+				AG_BLEND_RGBA2_CLIPPED(pal->surface, x, y,
+				    r, g, b, a, AG_ALPHA_SRC);
+				a = x*255/pal->surface->w;
+			}
 		}
 	}
 	AG_SurfaceUnlock(pal->surface);
@@ -896,27 +908,30 @@ Draw(void *obj)
 	if (x > pal->rAlpha.w-3) { x = pal->rAlpha.w-3; }
 
 	/* Draw the color preview. */
-	AG_HSV2RGB((cur_h*360.0)/(2*AG_PI), cur_s, cur_v, &r, &g, &b);
-	AG_DrawRectFilled(pal,
-	    AG_RECT(pal->rAlpha.x, pal->rAlpha.y, pal->rAlpha.w, 8),
-	    AG_MapRGB(agVideoFmt, r,g,b));
-
-	/* Draw the alpha bar. */
-	AG_DrawLineV(pal,
-	    pal->rAlpha.x + x,
-	    pal->rAlpha.y + 1,
-	    pal->rAlpha.y + pal->rAlpha.h,
-	    AG_COLOR(HSVPAL_BAR1_COLOR));
-	AG_DrawLineV(pal,
-	    pal->rAlpha.x + x + 1,
-	    pal->rAlpha.y + 1,
-	    pal->rAlpha.y + pal->rAlpha.h,
-	    AG_COLOR(HSVPAL_BAR2_COLOR));
-	AG_DrawLineV(pal,
-	    pal->rAlpha.x + x + 2,
-	    pal->rAlpha.y + 1,
-	    pal->rAlpha.y + pal->rAlpha.h,
-	    AG_COLOR(HSVPAL_BAR1_COLOR));
+	if (!(pal->flags & AG_HSVPAL_NOPREVIEW)) {
+		AG_HSV2RGB((cur_h*360.0)/(2*AG_PI), cur_s, cur_v, &r, &g, &b);
+		AG_DrawRectFilled(pal,
+		    AG_RECT(pal->rAlpha.x, pal->rAlpha.y, pal->rAlpha.w, 8),
+		    AG_MapRGB(agVideoFmt, r,g,b));
+	}
+	if (!(pal->flags & AG_HSVPAL_NOALPHA)) {
+		/* Draw the alpha bar. */
+		AG_DrawLineV(pal,
+		    pal->rAlpha.x + x,
+		    pal->rAlpha.y + 1,
+		    pal->rAlpha.y + pal->rAlpha.h,
+		    AG_COLOR(HSVPAL_BAR1_COLOR));
+		AG_DrawLineV(pal,
+		    pal->rAlpha.x + x + 1,
+		    pal->rAlpha.y + 1,
+		    pal->rAlpha.y + pal->rAlpha.h,
+		    AG_COLOR(HSVPAL_BAR2_COLOR));
+		AG_DrawLineV(pal,
+		    pal->rAlpha.x + x + 2,
+		    pal->rAlpha.y + 1,
+		    pal->rAlpha.y + pal->rAlpha.h,
+		    AG_COLOR(HSVPAL_BAR1_COLOR));
+	}
 }
 
 AG_WidgetClass agHSVPalClass = {
