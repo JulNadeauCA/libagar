@@ -52,7 +52,7 @@ static __inline__ int
 OverDivControl(AG_Pane *pa, int pos)
 {
 	return (pos >= pa->dx &&
-	        pos <= (pa->dx + pa->wDiv));
+	        pos <= (pa->dx + MIN(pa->wDiv,4)));
 }
 
 static void
@@ -138,7 +138,8 @@ MouseMotion(AG_Event *event)
 				AG_SetCursor(AG_HRESIZE_CURSOR);
 			}
 			break;
-		} else if (OverDivControl(pa, x)) {
+		} else if (!(pa->flags & AG_PANE_UNMOVABLE) &&
+		    OverDivControl(pa, x)) {
 			AG_SetCursor(AG_HRESIZE_CURSOR);
 		}
 		break;
@@ -155,7 +156,8 @@ MouseMotion(AG_Event *event)
 				AG_SetCursor(AG_VRESIZE_CURSOR);
 			}
 			break;
-		} else if (OverDivControl(pa, y)) {
+		} else if (!(pa->flags & AG_PANE_UNMOVABLE) &&
+		    OverDivControl(pa, y)) {
 			AG_SetCursor(AG_VRESIZE_CURSOR);
 		}
 		break;
@@ -283,15 +285,17 @@ Draw(void *obj)
 	AG_WidgetDraw(pa->div[0]);
 	AG_WidgetDraw(pa->div[1]);
 
-	switch (pa->type) {
-	case AG_PANE_HORIZ:
-		STYLE(pa)->PaneHorizDivider(pa, pa->dx, HEIGHT(pa)/2,
-		    pa->wDiv, pa->dmoving);
-		break;
-	case AG_PANE_VERT:
-		STYLE(pa)->PaneVertDivider(pa, WIDTH(pa)/2, pa->dx,
-		    pa->wDiv, pa->dmoving);
-		break;
+	if (pa->wDiv > 0) {
+		switch (pa->type) {
+		case AG_PANE_HORIZ:
+			STYLE(pa)->PaneHorizDivider(pa, pa->dx, HEIGHT(pa)/2,
+			    pa->wDiv, pa->dmoving);
+			break;
+		case AG_PANE_VERT:
+			STYLE(pa)->PaneVertDivider(pa, WIDTH(pa)/2, pa->dx,
+			    pa->wDiv, pa->dmoving);
+			break;
+		}
 	}
 }
 
@@ -329,10 +333,10 @@ SizeRequest(void *obj, AG_SizeReq *r)
 	}
 	switch (pa->type) {
 	case AG_PANE_HORIZ:
-		r->w += pa->wDiv + 2;
+		r->w += (pa->wDiv > 0) ? (pa->wDiv + 2) : 0;
 		break;
 	case AG_PANE_VERT:
-		r->h += pa->wDiv + 2;
+		r->h += (pa->wDiv > 0) ? (pa->wDiv + 2) : 0;
 		break;
 	}
 }
