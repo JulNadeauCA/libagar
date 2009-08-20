@@ -501,6 +501,7 @@ AG_DestroyVideo(void)
 	AG_MutexDestroy(&agGlobalKeysLock);
 	
 	agView = NULL;
+	initedGlobals = 0;
 }
 
 void
