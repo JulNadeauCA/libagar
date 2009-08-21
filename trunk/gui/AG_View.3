@@ -36,19 +36,21 @@
 #include <agar/gui.h>
 .Ed
 .Sh DESCRIPTION
-The Agar
+The
 .Nm
-interface provides low-level video functions to the Agar GUI.
-Every display is described by the
+object describes a graphics context, such as a framebuffer or a graphical
+window (if there is an underlying window manager).
 .Nm
-structure, and is associated with a set of GUI windows (see the
-.Dq WINDOW SYSTEM
-section).
+provides the Agar GUI with low-level video initialization and access
+routines.
 .Pp
 The
 .Nm
-interface also implements a series of macros for basic pixel operations, and
-a number of utility routines for surface and texture manipulation.
+object is also the root of the VFS, or virtual filesystem (see
+.Xr AG_Object 3 ) ,
+which describes the currently attached Agar GUI windows (see
+.Dq WINDOW VFS
+for details).
 .Sh INTERFACE
 .nr nS 1
 .Ft "int"
@@ -275,7 +277,42 @@ The
 function captures the contents of the current OpenGL display into an
 .Ft AG_Surface .
 The surface must be freed after use.
-.Sh WINDOW SYSTEM
+.Sh WINDOW VFS
+Agar GUI elements (i.e.,
+.Xr AG_Widget 3
+objects) are organized in a simple
+.Em VFS
+(or virtual filesystem) tree of
+.Xr AG_Widget 3
+elements.
+The
+.Nm
+object represents the root, to which
+.Xr AG_Window 3
+items are directly attached.
+.Pp
+As of Agar-1.3, SDL is still relied upon for video initialization, so an
+application is limited to one graphics context, described by the global
+.Va agView
+object.
+.Pp
+Locking of the
+.Nm
+VFS (i.e.,
+.Xr AG_LockVFS 3 )
+is important when implementing multithreaded Agar-GUI applications, where
+different threads can create, destroy and move different windows and widgets.
+This is done internally, unless otherwise noted.
+Code in event handler context, as well as code invoked from the widget
+.Fn draw ,
+.Fn size_request
+and
+.Fn size_allocate
+functions can safely assume that the View VFS is already locked.
+See
+.Xr AG_Threads 3
+for more information regarding thread-safety.
+.Pp
 .nr nS 1
 .Ft "void"
 .Fn AG_ViewAttach "AG_Window *child"
@@ -290,29 +327,24 @@ The surface must be freed after use.
 .Fn AG_FindWindow "char *name"
 .Pp
 .nr nS 0
-The Agar GUI operates on a set of windows which are associated with an
-.Nm .
-For more details, see
-.Xr AG_Window 3 .
-.Pp
 The
 .Fn AG_ViewAttach
-function attaches the window pointed to by
-.Fa child
-to the view.
-The
+function attaches the specified window to the global
+.Va agView
+VFS.
+.Pp
 .Fn AG_ViewDetach
-function detaches the window pointed to by
-.Fa child
-from the view by adding it to the detach queue.
-The detachment will be performed later by
+detaches the specified window from its parent VFS.
+So that this function can be invoked in event context, this is not done
+immediately, the operation is instead queued to be later processed by
 .Fa AG_ViewDetachQueued .
 .Pp
 The
 .Fn AG_FindWindow
-functions looks for a window identified by
-.Fa name
-and return NULL if there is no such window.
+functions searches the
+.Va agView
+VFS for a window with the specified name string and returns a pointer
+to it, or NULL on failure.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_View
@@ -344,3 +376,11 @@ objects associated with display (read-only).
 The
 .Nm
 interface first appeared in Agar 1.0
+.Sh CAVEATS
+Support for multiple
+.Nm
+objects is planned in the future Agar 1.4 release.
+The
+.Va agView
+pointer will be preserved for backwards compatibility, and will likely point
+to the first item in the list of potentially multiple graphics contexts.
