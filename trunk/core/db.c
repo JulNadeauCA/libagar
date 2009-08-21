@@ -84,7 +84,6 @@ AG_List *
 AG_DbListKeys(AG_Db *db)
 {
 	AG_List *L;
-	int rv;
 
 	if ((L = AG_ListNew()) == NULL)
 		return (NULL);
@@ -94,6 +93,7 @@ AG_DbListKeys(AG_Db *db)
 	case AG_DB_DB4: {
 		DBC *c;
 		DBT key, data;
+		int rv;
 
 		((DB *)db->db4)->cursor((DB *)db->db4, NULL, &c, 0);
 		memset(&key, 0, sizeof(DBT));
@@ -163,14 +163,13 @@ AG_DbLookup(AG_Db *db, AG_DbEntry *dbe, const char *s)
 int
 AG_DbLookupDK(AG_Db *db, AG_DbEntry *dbe, void *keyData, size_t keySize)
 {
-	int rv;
-
 	dbe->db = db;
 
 	switch (db->type) {
 #ifdef HAVE_DB4
 	case AG_DB_DB4: {
 		DBT key, data;
+		int rv;
 
 		memset(&key, 0, sizeof(DBT));
 		memset(&data, 0, sizeof(DBT));
@@ -199,12 +198,11 @@ AG_DbLookupDK(AG_Db *db, AG_DbEntry *dbe, void *keyData, size_t keySize)
 int
 AG_DbPut(AG_Db *db, AG_DbEntry *dbe)
 {
-	int rv;
-
 	switch (db->type) {
 #ifdef HAVE_DB4
 	case AG_DB_DB4: {
 		DBT key, data;
+		int rv;
 
 		memset(&key, 0, sizeof(DBT));
 		key.data = dbe->key;
@@ -231,11 +229,10 @@ AG_DbPut(AG_Db *db, AG_DbEntry *dbe)
 int
 AG_DbSync(AG_Db *db)
 {
-	int rv;
-
 	switch (db->type) {
 #ifdef HAVE_DB4
 	case AG_DB_DB4: {
+		int rv;
 		if ((rv = ((DB *)db->db4)->sync((DB *)db->db4, 0)) != 0) {
 			AG_SetError("DB Sync: %s", db_strerror(rv));
 			return (-1);
@@ -260,12 +257,11 @@ AG_DbDelete(AG_Db *db, const char *key)
 int
 AG_DbDeleteDK(AG_Db *db, void *keyData, size_t keySize)
 {
-	int rv;
-
 	switch (db->type) {
 #ifdef HAVE_DB4
 	case AG_DB_DB4: {
 		DBT key, data;
+		int rv;
 
 		memset(&key, 0, sizeof(DBT));
 		memset(&data, 0, sizeof(DBT));
