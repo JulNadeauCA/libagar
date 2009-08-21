@@ -84,8 +84,8 @@ fi
 if [ "$PHASE" = "stable" ]; then
 	echo "*********************************************************"
 	echo "TODO:"
-	echo "- Update http://en.wikipedia.org/wiki/Agar (software)"
-	echo "- Update http://fr.wikipedia.org/wiki/Agar (moteur)"
+	echo "- Create http://wiki.libagar.org/wiki/Agar-${VER}"
+	echo "- Update http://wiki.libagar.org/wiki/Main_Page"
 	echo "- Update http://sourceforge.net/projects/agar/"
 	echo "- Update http://freshmeat.net/projects/agar/"
 	echo "- Notify agar@, agar-announce@, agar-announce-fr@"
