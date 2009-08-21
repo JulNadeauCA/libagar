@@ -249,56 +249,87 @@ The interpretation of this flag is widget-specific.
 sets the flag,
 .Fn AG_WidgetDisable
 clears it.
+These functions will raise the
+.Sq widget-enabled
+and
+.Sq widget-disabled
+events accordingly.
+.Pp
+The functions
+.Fn AG_WidgetEnabled
+and
+.Fn AG_WidgetDisabled
+return the current "enabled" state of the widget.
+The
+.Nm
+object must be locked when the call is made.
 .Sh FOCUS STATE
+The focus state of widgets enables the reception of specific types of
+events which are filtered by default.
+The focus state also affects the behavior and appearance of some widgets.
+A widget holding focus (in a currently focused window) will receive mouse
+events
+.Sq window-mousemotion ,
+.Sq window-mousebuttonup ,
+as well as keyboard events
+.Sq window-keyup
+and
+.Sq window-keydown
+(note that unfocused widgets can be configured to receive those events
+unfiltered as well using the
+.Dv AG_WIDGET_UNFOCUSED_*
+options).
+.Pp
 .nr nS 1
 .Ft "void"
 .Fn AG_WidgetSetFocusable "AG_Widget *widget" "int enable"
 .Pp
-.Ft "void"
+.Ft "int"
 .Fn AG_WidgetFocus "AG_Widget *widget"
 .Pp
 .Ft "void"
 .Fn AG_WidgetUnfocus "AG_Widget *widget"
 .Pp
 .Ft "int"
-.Fn AG_WidgetFocused "AG_Widget *widget"
+.Fn AG_WidgetIsFocused "AG_Widget *widget"
+.Pp
+.Ft "int"
+.Fn AG_WidgetIsFocusedInWindow "AG_Widget *widget"
 .Pp
 .Ft "AG_Widget *"
 .Fn AG_WidgetFindFocused "AG_Window *win"
 .Pp
+.Ft "void"
+.Fn AG_WidgetForwardFocus "AG_Widget *widget" "AG_Widget *widgetToFocus"
+.Pp
 .nr nS 0
-The focus state of a widget controls both its appearance and enables the
-reception of specific types of events which are filtered by default.
-A focused widget (in a currently focused window) will receive mouse events
-.Sq window-mousemotion ,
-.Sq window-mousebuttonup ,
-as well as keyboard events
-.Sq window-keyup
-and
-.Sq window-keydown .
-.Pp
-Widget can explicitely disable focus-dependent filtering for those events
-by setting the
-.Dv AG_WIDGET_UNFOCUSED_*
-flags (see
-.Dq FLAGS
-section for details).
-.Pp
 .Fn AG_WidgetSetFocusable
-specifies whether the widget should be allowed to receive focus
-(default = FALSE).
+specifies whether the widget should be allowed to receive focus (1 = accept
+focus, 0 = reject focus).
+The default is to reject focus.
+Further
+.Fn AG_WidgetFocus
+calls on a widget rejecting focus will return 0.
 .Pp
 The
 .Fn AG_WidgetFocus
-function moves the keyboard/mousemotion focus over the given widget
-and its parents.
-.Fn AG_WidgetUnfocus
-removes the focus state from the given widget and its children.
+function gives focus to the given widget (and all of its parent widgets,
+up to the parent window if there is one).
+Returns 1 on success and 0 if the widget cannot gain focus (i.e.,
+.Dv AG_WIDGET_FOCUSABLE
+is not set).
 .Pp
-.Fn AG_WidgetFocused
-returns 1 if
-.Fa widget
-is currently holding focus.
+.Fn AG_WidgetUnfocus
+removes the focus state from the given widget and its children (but not
+the parent window if any).
+.Pp
+.Fn AG_WidgetIsFocused
+returns 1 if the focus flag is set, and the parent window is focused as well.
+.Fn AG_WidgetIsFocusedInWindow
+returns 1 if the widget holds focus inside of its parent window.
+With both functions, the
+.Nm
+object must be locked when the call is made.
 .Pp
 .Fn AG_WidgetFindFocused
 recursively searches
@@ -308,9 +339,19 @@ Where multiple widgets may be holding focus, widgets found deepest in the
 tree have priority over their parents.
 .Fn AG_WidgetFindFocused
 returns NULL if no widget is focused.
-Note: Under multithreading, the return value is only valid as long as the
+The
 .Xr AG_View 3
-VFS object is locked.
+VFS must be locked when the call is made.
+.Pp
+.Fn AG_WidgetForwardFocus
+arranges automatic forwarding of the focus to a specified widget.
+Whenever
+.Fa AG_WidgetFocus
+will be invoked on
+.Fa widget ,
+the focus will be given to
+.Fa widgetToFocus
+instead.
 .Sh COORDINATES
 .nr nS 1
 .Ft int
@@ -832,9 +873,9 @@ returns a pointer to the parent
 .Xr AG_Window 3
 for the given widget.
 If the widget is unattached, NULL is returned.
-With threads, the return value is only valid as long as the view is locked
-(see
-.Xr AG_View 3 ) .
+The
+.Xr AG_View 3
+VFS must be locked when the call is made.
 .Pp
 .Fn AG_WidgetFind
 searches for a given widget by name, given an absolute path,
@@ -852,7 +893,7 @@ With threads, the return value of
 .Fn AG_WidgetFindPoint
 and
 .Fn AG_WidgetFindRect
-is only accurate as long as the
+is only valid as long as the
 .Xr AG_View 3
 VFS is locked.
 .Sh GUI RENDERING
