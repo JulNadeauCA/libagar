@@ -69,6 +69,12 @@ SelectTool(AG_Event *event)
 		AG_WindowShow(win);
 }
 
+static void
+ShowGuiDebugger(AG_Event *event)
+{
+	AG_WindowShow(AG_GuiDebugger());
+}
+
 void
 DEV_ToolMenu(AG_MenuItem *mi)
 {
@@ -79,6 +85,8 @@ DEV_ToolMenu(AG_MenuItem *mi)
 		AG_MenuAction(mi, _(devTools[i].name), NULL,
 		    SelectTool, "%p", &devTools[i]);
 	}
+	AG_MenuSeparator(mi);
+	AG_MenuAction(mi, _("GUI Debugger"), NULL, ShowGuiDebugger, NULL);
 }
 
 void
