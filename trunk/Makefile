@@ -125,9 +125,13 @@ post-package:
 		rm -f Release-* ChangeLog-* LICENSE LICENSE-Vera Logo.png; \
 	fi
 
+function-list:
+	find . -name \*.3 -exec grep ^\.Fn {} \; |awk '{print $$2}' |uniq
+
 .PHONY: clean cleandir install deinstall depend regress includes
 .PHONY: configure cleandir-config package beta release
 .PHONY: install-includes deinstall-includes pre-package post-package
+.PHONY: function-list
 
 include ${TOP}/mk/build.common.mk
 include ${TOP}/mk/build.subdir.mk
