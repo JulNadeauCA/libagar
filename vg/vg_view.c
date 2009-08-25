@@ -322,6 +322,29 @@ Init(void *obj)
 	AG_SetEvent(vv, "window-keydown", KeyDown, NULL);
 	AG_SetEvent(vv, "window-keyup", KeyUp, NULL);
 	AG_SetEvent(vv, "widget-shown", OnShow, NULL);
+
+#ifdef AG_DEBUG
+	AG_BindUint(vv, "flags", &vv->flags);
+	AG_BindPointer(vv, "vg", (void *)&vv->vg);
+	AG_BindFloat(vv, "x", &vv->x);
+	AG_BindFloat(vv, "y", &vv->y);
+	AG_BindInt(vv, "scaleIdx", &vv->scaleIdx);
+	AG_BindFloat(vv, "scale", &vv->scale);
+	AG_BindFloat(vv, "scaleMin", &vv->scaleMin);
+	AG_BindFloat(vv, "scaleMax", &vv->scaleMax);
+	AG_BindFloat(vv, "wPixel", &vv->wPixel);
+	AG_BindUint(vv, "snap_mode", &vv->snap_mode);
+	AG_BindUint(vv, "ortho_mode", &vv->ortho_mode);
+	AG_BindUint(vv, "nGrids", &vv->nGrids);
+	AG_BindFloat(vv, "mouse.x", &vv->mouse.x);
+	AG_BindFloat(vv, "mouse.y", &vv->mouse.y);
+	AG_BindInt(vv, "mouse.panning", &vv->mouse.panning);
+	AG_BindPointer(vv, "curtool", (void *)&vv->curtool);
+	AG_BindPointer(vv, "deftool", (void *)&vv->deftool);
+	AG_BindStringMp(vv, "status", vv->status, sizeof(vv->status), &OBJECT(vv)->lock);
+	AG_BindUint(vv, "nEditAreas", &vv->nEditAreas);
+	AG_BindInt(vv, "pointSelRadius", &vv->pointSelRadius);
+#endif /* AG_DEBUG */
 }
 
 static void
