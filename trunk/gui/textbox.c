@@ -340,6 +340,7 @@ static void
 MouseButtonDown(AG_Event *event)
 {
 	AG_Textbox *tb = AG_SELF();
+	AG_WidgetFocus(tb);
 	AG_ForwardEvent(NULL, tb->ed, event);
 }
 

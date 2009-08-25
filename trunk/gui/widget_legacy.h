@@ -59,6 +59,7 @@
 #define AG_WidgetUnlockBinding(V) AG_UnlockVariable(V)
 #endif
 #define AG_WidgetParentWindow(w) AG_ParentWindow(w)
+#define AG_WidgetFocused AG_WidgetIsFocused(w)
 
 __BEGIN_DECLS
 AG_Variable *AG_WidgetBind(void *, const char *, AG_VariableType, ...)

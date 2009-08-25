@@ -180,7 +180,7 @@ Box(void *p, AG_Rect r, int z, Uint32 c)
 	AG_Widget *wid = p;
 	Uint32 cBg;
 
-	if (AG_WidgetFocused(wid)) {
+	if (AG_WidgetIsFocusedInWindow(wid)) {
 		cBg = ColorShift(c, (z<0) ? agFocusSunkColorShift :
 		                            agFocusRaisedColorShift);
 	} else {
@@ -200,7 +200,7 @@ BoxDisabledFB(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
 	int flag = 0;
 	Uint32 cDither;
 	
-	if (AG_WidgetFocused(wid)) {
+	if (AG_WidgetIsFocusedInWindow(wid)) {
 		cDither = ColorShift(c2, (z<0) ? agFocusSunkColorShift :
 		                                 agFocusRaisedColorShift);
 	} else {
@@ -316,7 +316,7 @@ BoxRoundedFB(void *p, AG_Rect r, int z, int pRad, Uint32 c)
 	if (r.w < 4 || r.h < 4)
 		return;
 
-	if (AG_WidgetFocused(wid)) {
+	if (AG_WidgetIsFocusedInWindow(wid)) {
 		cBg = ColorShift(c, (z<0) ? agFocusSunkColorShift :
 		                            agFocusRaisedColorShift);
 	} else {
@@ -1292,7 +1292,7 @@ BoxDisabledGL(void *p, AG_Rect r, int z, Uint32 c1, Uint32 c2)
 	glPushAttrib(GL_POLYGON_STIPPLE_BIT);
 	glPolygonStipple(DisabledStipple);
 
-	if (AG_WidgetFocused(wid)) {
+	if (AG_WidgetIsFocusedInWindow(wid)) {
 		cBg = ColorShift(c2, (z<0) ? agFocusSunkColorShift :
 		                             agFocusRaisedColorShift);
 	} else {

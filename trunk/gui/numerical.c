@@ -686,7 +686,7 @@ Draw(void *obj)
 	AG_WidgetDraw(num->incbu);
 	AG_WidgetDraw(num->decbu);
 
-	if (!AG_WidgetFocused(num->input))
+	if (!AG_WidgetIsFocused(num->input))
 		UpdateTextbox(num);
 }
 

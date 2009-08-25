@@ -212,7 +212,7 @@ Draw(void *obj)
 	AG_WidgetDraw(sbu->incbu);
 	AG_WidgetDraw(sbu->decbu);
 
-	if (AG_WidgetFocused(sbu->input)) {
+	if (AG_WidgetIsFocused(sbu->input)) {
 		/* The value is being edited. */
 		return;
 	}

@@ -329,7 +329,7 @@ Draw(void *obj)
 	AG_WidgetDraw(sbu->xincbu);
 	AG_WidgetDraw(sbu->yincbu);
 
-	if (AG_WidgetFocused(sbu->input))
+	if (AG_WidgetIsFocused(sbu->input))
 		return;
 
 	xvalueb = AG_GetVariable(sbu, "xvalue", &xvalue);

@@ -1343,7 +1343,7 @@ AG_WidgetUnfocus(void *p)
 }
 
 /* Move the focus over a widget (and its parents). */
-void
+int
 AG_WidgetFocus(void *p)
 {
 	AG_Widget *wid = p, *wParent = wid;
@@ -1352,13 +1352,27 @@ AG_WidgetFocus(void *p)
 	AG_LockVFS(agView);
 	AG_ObjectLock(wid);
 
-	/* Remove any existing focus. */
+	if (!(wid->flags & AG_WIDGET_FOCUSABLE)) {
+		if (wid->focusFwd != NULL &&
+		    !(wid->focusFwd->flags & AG_WIDGET_FOCUSED)) {
+			AG_ObjectLock(wid->focusFwd);
+			FocusWidget(wid->focusFwd);
+			AG_ObjectUnlock(wid->focusFwd);
+			goto out;
+		}
+		goto fail;
+	}
+
+	/* Remove any existing focus. XXX inefficient */
 	TAILQ_FOREACH(win, &agView->windows, windows) {
 		if (win->nFocused > 0)
 			AG_WidgetUnfocus(win);
 	}
 
-	/* Set the focus flag on the widget and its parents. */
+	/*
+	 * Set the focus flag on the widget and its parents, up
+	 * to the parent window.
+	 */
 	do {
 		if (AG_OfClass(wParent, "AG_Widget:AG_Window:*")) {
 			AG_WindowFocus(AGWINDOW(wParent));
@@ -1374,9 +1388,14 @@ AG_WidgetFocus(void *p)
 		}
 		AG_ObjectUnlock(wParent);
 	} while ((wParent = OBJECT(wParent)->parent) != NULL);
-
+out:
 	AG_ObjectUnlock(wid);
 	AG_UnlockVFS(agView);
+	return (1);
+fail:
+	AG_ObjectUnlock(wid);
+	AG_UnlockVFS(agView);
+	return (0);
 }
 
 /*
@@ -1692,7 +1711,7 @@ AG_WidgetMouseMotion(AG_Window *win, AG_Widget *wid, int x, int y,
 	AG_Widget *cwid;
 
 	AG_ObjectLock(wid);
-	if ((AG_WindowIsFocused(win) && AG_WidgetFocused(wid)) ||
+	if ((AG_WidgetIsFocusedInWindow(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_MOTION)) {
 		AG_PostEvent(NULL, wid, "window-mousemotion",
 		    "%i,%i,%i,%i,%i",
@@ -1721,7 +1740,7 @@ AG_WidgetMouseButtonUp(AG_Window *win, AG_Widget *wid, int button,
 	AG_Widget *cwid;
 
 	AG_ObjectLock(wid);
-	if ((AG_WindowIsFocused(win) && AG_WidgetFocused(wid)) ||
+	if ((AG_WidgetIsFocusedInWindow(wid)) ||
 	    (wid->flags & AG_WIDGET_UNFOCUSED_BUTTONUP)) {
 		AG_PostEvent(NULL, wid, "window-mousebuttonup", "%i,%i,%i",
 		    button,

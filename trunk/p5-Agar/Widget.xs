@@ -80,7 +80,15 @@ int
 isFocused(self)
 	Agar::Widget self
 CODE:
-	RETVAL = AG_WidgetFocused(self);
+	RETVAL = AG_WidgetIsFocused(self);
+OUTPUT:
+	RETVAL
+
+int
+isFocusedInWindow(self)
+	Agar::Widget self
+CODE:
+	RETVAL = AG_WidgetIsFocusedInWindow(self);
 OUTPUT:
 	RETVAL
 

@@ -390,7 +390,7 @@ Draw(void *obj)
 	AG_WidgetDraw(fsu->decbu);
 	if (fsu->units != NULL) { AG_WidgetDraw(fsu->units); }
 
-	if (AG_WidgetFocused(fsu->input))
+	if (AG_WidgetIsFocused(fsu->input))
 		return;
 
 	valueb = AG_GetVariable(fsu, "value", &value);

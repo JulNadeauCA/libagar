@@ -181,6 +181,7 @@ void	 AG_WindowCloseGenEv(AG_Event *);
 /*
  * Render a window to the display (must be enclosed between calls to
  * AG_BeginRendering() and AG_EndRendering()).
+ * The View VFS and Window object must be locked.
  */
 static __inline__ void
 AG_WindowDraw(AG_Window *win)
@@ -193,14 +194,20 @@ AG_WindowDraw(AG_Window *win)
 		AG_ViewUpdateFB(&AGWIDGET(win)->rView);
 }
 
-/* Return the currently focused window. */
+/*
+ * Return the currently focused window.
+ * The View VFS must be locked.
+ */
 static __inline__ AG_Window *
 AG_WindowFindFocused(void)
 {
 	return AG_TAILQ_LAST(&agView->windows,ag_windowq);
 }
 
-/* Evaluate whether the given window is holding focus. */
+/*
+ * Evaluate whether the given window is holding focus.
+ * The View VFS must be locked.
+ */
 static __inline__ int
 AG_WindowIsFocused(AG_Window *win)
 {
@@ -208,10 +215,24 @@ AG_WindowIsFocused(AG_Window *win)
 }
 
 /*
+ * Return the effective focus state of a widget.
+ * The Widget and View VFS must be locked.
+ */
+static __inline__ int
+AG_WidgetIsFocused(void *p)
+{
+	AG_Widget *wid = (AG_Widget *)p;
+	return ((AGWIDGET(p)->flags & AG_WIDGET_FOCUSED) &&
+                (wid->window == NULL || AG_WindowIsFocused(wid->window)));
+}
+
+/*
  * Recompute the coordinates and geometries of all widgets attached to the
  * window. This is used following AG_ObjectAttach() and AG_ObjectDetach()
  * calls made in event context, or direct modifications to the x,y,w,h
  * fields of the Widget structure.
+ *
+ * The View VFS and Window must be locked.
  */
 static __inline__ void
 AG_WindowUpdate(AG_Window *win)
@@ -231,14 +252,20 @@ AG_WindowUpdate(AG_Window *win)
 	AG_WidgetUpdateCoords(win, AGWIDGET(win)->x, AGWIDGET(win)->y);
 }
 
-/* Return visibility status of window. */
+/*
+ * Return visibility status of window.
+ * The View VFS and Window object must be locked.
+ */
 static __inline__ int
 AG_WindowIsVisible(AG_Window *win)
 {
 	return (win->visible);
 }
 
-/* Test whether a window is currently selected for a given WM operation. */
+/*
+ * Test whether a window is currently selected for a given WM operation.
+ * The View VFS must be locked.
+ */
 static __inline__ int
 AG_WindowSelectedWM(AG_Window *win, enum ag_wm_operation op)
 {

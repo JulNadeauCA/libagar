@@ -324,10 +324,15 @@ removes the focus state from the given widget and its children (but not
 the parent window if any).
 .Pp
 .Fn AG_WidgetIsFocused
-returns 1 if the focus flag is set, and the parent window is focused as well.
+returns 1 if the widget is currently holding focus (i.e., the widget
+has the focus flag set, and its parent window, if any, is focused as
+well).
 .Fn AG_WidgetIsFocusedInWindow
-returns 1 if the widget holds focus inside of its parent window.
+returns 1 if the widget has the focus flag set (without evaluating the
+focus state of any parent windows).
 With both functions, the
+.Xr AG_View 3
+VFS as well as the
 .Nm
 object must be locked when the call is made.
 .Pp
