@@ -81,6 +81,10 @@ install-includes:
 		${SUDO} ${INSTALL_INCL} include/agar/$$INC/$${INC}_pub.h \
 		    ${DESTDIR}${INCLDIR}/agar/$${INC}.h; \
 	done
+	@echo "${INSTALL_DATA_DIR} ${PREFIX}/share/aclocal"
+	@${SUDO} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/share/aclocal
+	@echo "${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${PREFIX}/share/aclocal"
+	@${SUDO} ${INSTALL_DATA} ${SRCDIR}/mk/agar.m4 ${DESTDIR}${PREFIX}/share/aclocal
 
 deinstall-includes:
 	@echo "rm -fR ${INCLDIR}/agar"
