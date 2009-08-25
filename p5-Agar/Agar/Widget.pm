@@ -54,15 +54,22 @@ Accepts a true or false value to allow or forbid the widget to take focus.
 
 =item B<$widget-E<gt>focus()>
 
-Gives focus to the widget.
+Gives focus to the widget (and all of its parent widgets, up to the
+parent window if there is one).
 
 =item B<$widget-E<gt>unfocus()>
 
-Takes focus from the widget.
+Takes focus away from the widget and its children.
 
 =item B<$focused = $widget-E<gt>isFocused()>
 
-Returns a true value if and only if the widget currently has focus.
+Returns a true value if and only if the widget, as well as its parent window,
+are both holding focus.
+
+=item B<$focused = $widget-E<gt>isFocusedInWindow()>
+
+Returns a true value if and only if the widget currently has focus inside
+of its parent window.
 
 =item B<$win = $widget-E<gt>window()>
 

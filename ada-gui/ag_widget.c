@@ -46,7 +46,13 @@ agar_widget_disabled (AG_Widget *widget)
 int
 agar_widget_focused (AG_Widget *widget)
 {
-  return AG_WidgetFocused (widget);
+  return AG_WidgetIsFocused (widget);
+}
+
+int
+agar_widget_focused_in_window (AG_Widget *widget)
+{
+  return AG_WidgetIsFocusedInWindow (widget);
 }
 
 int

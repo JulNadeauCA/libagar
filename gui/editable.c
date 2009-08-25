@@ -625,7 +625,7 @@ Draw(void *obj)
 		AG_Glyph *gl;
 		Uint32 c = ucs[i];
 
-		if (i == ed->pos && AG_WidgetFocused(ed)) {
+		if (i == ed->pos && AG_WidgetIsFocused(ed)) {
 			if ((ed->flags & AG_EDITABLE_BLINK_ON) &&
 			    ed->y >= 0 && ed->y <= ed->yMax-1) {
 				AG_DrawLineV(ed,
@@ -938,7 +938,7 @@ MouseMotion(AG_Event *event)
 	if (mx > 0 && my > 0 && mx < WIDTH(ed) && my < HEIGHT(ed)) {
 		AG_SetCursor(AG_TEXT_CURSOR);
 	}
-	if (!AG_WidgetFocused(ed))
+	if (!AG_WidgetIsFocused(ed))
 		return;
 	if ((ed->flags & AG_EDITABLE_CURSOR_MOVING) == 0)
 		return;

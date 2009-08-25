@@ -477,7 +477,7 @@ Draw(void *obj)
 	AG_WidgetDraw(fsu->xdecbu);
 	AG_WidgetDraw(fsu->ydecbu);
 
-	if (!AG_WidgetFocused(fsu->input))
+	if (!AG_WidgetIsFocused(fsu->input))
 		UpdateTextbox(fsu);
 
 	xvalueb = AG_GetVariable(fsu, "xvalue", &xvalue);

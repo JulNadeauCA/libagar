@@ -131,10 +131,6 @@ typedef struct ag_widget {
 #define WIDGET_NEXT_CHILD(var)		AGWIDGET_NEXT_CHILD(var)
 #endif
 
-#define AG_WidgetFocused(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_FOCUSED)
-#define AG_WidgetDisabled(wi)	(AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)
-#define AG_WidgetEnabled(wi)	((AGWIDGET(wi)->flags&AG_WIDGET_DISABLED)==0)
-
 struct ag_window;
 
 __BEGIN_DECLS
@@ -146,7 +142,7 @@ int  AG_WidgetSizeAlloc(void *, AG_SizeAlloc *);
 void AG_WidgetSetFocusable(void *, int);
 void AG_WidgetForwardFocus(void *, void *);
 
-void		  AG_WidgetFocus(void *);
+int		  AG_WidgetFocus(void *);
 void		  AG_WidgetUnfocus(void *);
 AG_Widget	 *AG_WidgetFindFocused(void *);
 void		 *AG_WidgetFindPoint(const char *, int, int);
@@ -233,6 +229,28 @@ AG_WidgetDisable(void *p)
 		AG_PostEvent(NULL, p, "widget-disabled", NULL);
 	}
 	AG_ObjectUnlock(p);
+}
+
+/* Return the widget state. The Widget object must be locked. */
+static __inline__ int
+AG_WidgetEnabled(void *p)
+{
+	return !(AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
+}
+static __inline__ int
+AG_WidgetDisabled(void *p)
+{
+	return (AGWIDGET(p)->flags & AG_WIDGET_DISABLED);
+}
+
+/*
+ * Return the focus state of the widget inside of its parent window (not
+ * necessarily the effective focus). The Widget object must be locked.
+ */
+static __inline__ int
+AG_WidgetIsFocusedInWindow(void *p)
+{
+	return (AGWIDGET(p)->flags & AG_WIDGET_FOCUSED);
 }
 
 /* Test whether view coordinates x,y lie in widget's allocated space. */
