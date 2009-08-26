@@ -24,7 +24,8 @@ SUBDIR=	fixedres \
 	textdlg \
 	scrollview \
 	console \
-	chinese
+	chinese \
+	rendertosurface
 
 all: all-subdir
 clean: prereq clean-subdir
