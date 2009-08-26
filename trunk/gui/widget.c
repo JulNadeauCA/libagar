@@ -2107,12 +2107,11 @@ AG_WidgetSurface(void *obj)
 	AG_Surface *su;
 	int visiblePrev;
 
-	AG_LockVFS(agView);
-
 	if (wid->window == NULL) {
 		AG_SetError("Widget is unattached");
-		goto fail;
+		return (NULL);
 	}
+	AG_LockVFS(agView);
 	AG_BeginRendering();
 	visiblePrev = wid->window->visible;
 	wid->window->visible = 1;
@@ -2124,14 +2123,18 @@ AG_WidgetSurface(void *obj)
 	if (agView->opengl) {
 		Uint8 *pixels;
 
-		if ((pixels = AG_TryMalloc(wid->w*wid->h*3)) == NULL) {
+		if ((pixels = AG_TryMalloc(wid->w*wid->h*4)) == NULL) {
 			goto fail;
 		}
-		glReadPixels(wid->rView.x1, wid->rView.y2, wid->w, wid->h,
-		    GL_RGB, GL_UNSIGNED_BYTE, pixels);
-		AG_FlipSurface(pixels, wid->h, wid->w*3);
-		su = AG_SurfaceFromPixelsRGBA(pixels, wid->w, wid->h, 0, 24,
-		    wid->w*3, 0x000000ff, 0x0000ff00, 0x00ff0000);
+		glReadPixels(
+		    wid->rView.x1,
+		    agView->h - wid->rView.y2,
+		    wid->w,
+		    wid->h,
+		    GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+		AG_FlipSurface(pixels, wid->h, wid->w*4);
+		su = AG_SurfaceFromPixelsRGBA(pixels, wid->w, wid->h, 32,
+		    (wid->w*4), 0x000000ff, 0x0000ff00, 0x00ff0000, 0);
 		if (su == NULL) {
 			free(pixels);
 			goto fail;

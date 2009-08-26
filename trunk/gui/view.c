@@ -1187,7 +1187,7 @@ AG_CaptureGLView(void)
 	glReadPixels(0, 0, agView->w, agView->h, GL_RGB, GL_UNSIGNED_BYTE,
 	    pixels);
 	AG_FlipSurface(pixels, agView->h, agView->w*3);
-	return AG_SurfaceFromPixelsRGBA(pixels, agView->w, agView->h, 0, 24,
+	return AG_SurfaceFromPixelsRGB(pixels, agView->w, agView->h, 24,
 	    agView->w*3, 0x000000ff, 0x0000ff00, 0x00ff0000);
 }
 #endif /* HAVE_OPENGL */
