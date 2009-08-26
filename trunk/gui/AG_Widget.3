@@ -918,6 +918,9 @@ VFS is locked.
 .Ft "void"
 .Fn AG_WidgetShow "AG_Widget *widget"
 .Pp
+.Ft "AG_Surface *"
+.Fn AG_WidgetSurface "AG_Widget *widget"
+.Pp
 .nr nS 0
 The
 .Fn AG_WidgetDraw
@@ -936,6 +939,12 @@ and
 and
 .Fn AG_WidgetShow
 set the visibility of a widget.
+.Pp
+The
+.Fn AG_WidgetSurface
+routine renders the widget to a newly-allocated
+.Xr AG_Surface 3 .
+This surface should be freed after use.
 .Sh THEME SELECTION
 .nr nS 1
 .Ft "void"

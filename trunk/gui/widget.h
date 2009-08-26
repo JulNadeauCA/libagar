@@ -204,6 +204,7 @@ void AG_WidgetHiddenRecursive(void *);
 void AG_WidgetInheritDraw(void *);
 void AG_WidgetInheritSizeRequest(void *, AG_SizeReq *);
 int AG_WidgetInheritSizeAllocate(void *, const AG_SizeAlloc *);
+AG_Surface *AG_WidgetSurface(void *);
 
 /*
  * Inlines

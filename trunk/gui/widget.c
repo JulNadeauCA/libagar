@@ -2099,6 +2099,60 @@ AG_WidgetInheritSizeAllocate(void *obj, const AG_SizeAlloc *a)
 	return WIDGET_SUPER_OPS(obj)->size_allocate(obj, a);
 }
 
+/* Render a widget to an AG_Surface(3). */
+AG_Surface *
+AG_WidgetSurface(void *obj)
+{
+	AG_Widget *wid = obj;
+	AG_Surface *su;
+	int visiblePrev;
+
+	AG_LockVFS(agView);
+
+	if (wid->window == NULL) {
+		AG_SetError("Widget is unattached");
+		goto fail;
+	}
+	AG_BeginRendering();
+	visiblePrev = wid->window->visible;
+	wid->window->visible = 1;
+	AG_WindowDraw(wid->window);
+	wid->window->visible = visiblePrev;
+	AG_EndRendering();
+
+#ifdef HAVE_OPENGL
+	if (agView->opengl) {
+		Uint8 *pixels;
+
+		if ((pixels = AG_TryMalloc(wid->w*wid->h*3)) == NULL) {
+			goto fail;
+		}
+		glReadPixels(wid->rView.x1, wid->rView.y2, wid->w, wid->h,
+		    GL_RGB, GL_UNSIGNED_BYTE, pixels);
+		AG_FlipSurface(pixels, wid->h, wid->w*3);
+		su = AG_SurfaceFromPixelsRGBA(pixels, wid->w, wid->h, 0, 24,
+		    wid->w*3, 0x000000ff, 0x0000ff00, 0x00ff0000);
+		if (su == NULL) {
+			free(pixels);
+			goto fail;
+		}
+	} else
+#endif /* HAVE_OPENGL */
+	{
+		AG_Rect r;
+		if ((su = AG_SurfaceStdRGB(wid->w, wid->h)) == NULL) {
+			goto fail;
+		}
+		r = AG_Rect2ToRect(wid->rView);
+		AG_SurfaceBlit(agView->v, &r, su, 0, 0);
+	}
+	AG_UnlockVFS(agView);
+	return (su);
+fail:
+	AG_UnlockVFS(agView);
+	return (NULL);
+}
+
 AG_WidgetClass agWidgetClass = {
 	{
 		"Agar(Widget)",
