@@ -25,7 +25,8 @@ SUBDIR=	fixedres \
 	scrollview \
 	console \
 	chinese \
-	rendertosurface
+	rendertosurface \
+	reinit
 
 all: all-subdir
 clean: prereq clean-subdir
