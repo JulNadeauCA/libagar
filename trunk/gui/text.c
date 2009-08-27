@@ -556,6 +556,7 @@ AG_TextDestroy(void)
 		if (font == agDefaultFont)
 			agDefaultFont = NULL;
 	}
+	SLIST_INIT(&fonts);
 
 #ifdef HAVE_FREETYPE
 	if (agFreetypeInited) {
