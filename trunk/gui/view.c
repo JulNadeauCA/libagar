@@ -158,17 +158,28 @@ AG_ClearBackground(void)
 	}
 }
 
-static void
-InitView(AG_Display *v)
+/* Allocate an Agar view (AG_View(3)) context.  */
+static AG_Display *
+AllocView(void)
 {
+	AG_Display *v;
+
+	if ((v = AG_TryMalloc(sizeof(AG_Display))) == NULL) {
+		return (NULL);
+	}
 	AG_ObjectInit(v, &agDisplayClass);
 	AG_ObjectSetName(v, "_agView");
 	v->winop = AG_WINOP_NONE;
 	v->ndirty = 0;
 	v->maxdirty = 4;
-	v->dirty = Malloc(v->maxdirty*sizeof(SDL_Rect));
 	v->opengl = 0;
-	v->Lmodal = AG_ListNew();
+	if ((v->dirty = AG_TryMalloc(v->maxdirty*sizeof(SDL_Rect))) == NULL) {
+		goto fail;
+	}
+	if ((v->Lmodal = AG_ListNew()) == NULL) {
+		free(v->dirty);
+		goto fail;
+	}
 	v->winSelected = NULL;
 	v->winToFocus = NULL;
 	v->rNom = 16;
@@ -176,6 +187,46 @@ InitView(AG_Display *v)
 	v->overlay = 0;
 	TAILQ_INIT(&v->windows);
 	TAILQ_INIT(&v->detach);
+	return (v);
+fail:
+	free(v);
+	return (NULL);
+}
+
+/*
+ * Allocate the standard "reference" surfaces which Agar will use as
+ * template when generating new surfaces.
+ */
+static int
+AllocReferenceSurfaces(AG_Display *v)
+{
+	v->stmpl = AG_SurfaceRGBA(1,1, 32, 0,
+#if AG_BYTEORDER == AG_BIG_ENDIAN
+ 	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+#else
+	    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+#endif
+	);
+	if (v->stmpl == NULL) {
+		return (-1);
+	}
+	agVideoFmt = agView->v->format;
+	agSurfaceFmt = agView->stmpl->format;
+	return (0);
+}
+
+/* Destroy an AG_View(3).  */
+static void
+DestroyView(AG_Display *v)
+{
+	if (v->Lmodal != NULL)
+		AG_ListDestroy(v->Lmodal);
+	if (v->stmpl != NULL)
+		AG_SurfaceFree(v->stmpl);
+	if (v->dirty != NULL)
+		Free(v->dirty);
+	
+	Free(v);
 }
 
 static void
@@ -195,7 +246,7 @@ InitGlobals(void)
 }
 
 /* Initialize the clipping rectangle stack. */
-static void
+static int
 InitClipRects(int wView, int hView)
 {
 	AG_ClipRect *cr;
@@ -205,7 +256,9 @@ InitClipRects(int wView, int hView)
 		agClipStateGL[i] = 0;
 
 	/* Rectangle 0 always covers the whole view. */
-	agClipRects = Malloc(sizeof(AG_ClipRect));
+	if ((agClipRects = AG_TryMalloc(sizeof(AG_ClipRect))) == NULL)
+		return (-1);
+
 	cr = &agClipRects[0];
 	cr->r = AG_RECT(0, 0, wView, hView);
 
@@ -230,6 +283,7 @@ InitClipRects(int wView, int hView)
 	cr->eqns[3][3] = (double)hView;
 	
 	agClipRectCount = 1;
+	return (0);
 }
 
 /*
@@ -249,22 +303,26 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 		return (-1);
 	}
 
-	agView = Malloc(sizeof(AG_Display));
-	InitView(agView);
+	/* Allocate the Agar view context. */
+	if ((agView = AllocView()) == NULL) {
+		return (-1);
+	}
 	agView->v = display;
 	agView->w = display->w;
 	agView->h = display->h;
 	agView->depth = display->format->BitsPerPixel;
 	agView->rNom = 1000/AG_GetUint(agConfig, "view.nominal-fps");
-	if (flags & AG_VIDEO_OVERLAY)
-		agView->overlay = 1;
 
+	/* Set the requested parameters; pull defaults from agConfig. */
 	AG_SetUint8(agConfig, "view.depth", agView->depth);
 	AG_SetUint16(agConfig, "view.w", agView->w);
 	AG_SetUint16(agConfig, "view.h", agView->h);
 	AG_SetBool(agConfig, "view.full-screen", display->flags&SDL_FULLSCREEN);
 	AG_SetBool(agConfig, "view.async-blits", display->flags&SDL_ASYNCBLIT);
+	if (flags & AG_VIDEO_OVERLAY) { agView->overlay = 1; }
+	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 
+	/* Enable OpenGL mode if the surface has SDL_OPENGL set. */
 	if (display->flags & (SDL_OPENGL|SDL_OPENGLBLIT)) {
 		AG_SetBool(agConfig, "view.opengl", 1);
 		agView->opengl = 1;
@@ -278,37 +336,23 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 		agView->opengl = 0;
 	}
 
-	agView->stmpl = AG_SurfaceRGBA(1,1, 32, 0,
-#if AG_BYTEORDER == AG_BIG_ENDIAN
- 	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
-#else
-	    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
-#endif
-	);
-	if (agView->stmpl == NULL) {
-		return (-1);
-	}
-	agVideoFmt = agView->v->format;
-	agSurfaceFmt = agView->stmpl->format;
-
+	/* Allocate the standard reference surfaces. */
+	if (AllocReferenceSurfaces(agView) == -1)
+		goto fail;
 #ifdef HAVE_OPENGL
 	if (agView->opengl)
 		InitGL();
 #endif
-	if (AG_InitGUI(0) == -1) {
+	if (AG_InitGUI(0) == -1 ||
+	    InitClipRects(agView->w, agView->h) == -1) {
 		goto fail;
 	}
-	InitClipRects(agView->w, agView->h);
-	
-	if (flags & AG_VIDEO_BGPOPUPMENU)
-		agBgPopupMenu = 1;
-
 	if (!(flags & AG_VIDEO_NOBGCLEAR) && !agView->overlay) {
 		AG_ClearBackground();
 	}
 	return (0);
 fail:
-	Free(agView);
+	DestroyView(agView);
 	agView = NULL;
 	return (-1);
 }
@@ -326,13 +370,15 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		AG_SetError("SDL_Init() failed: %s", SDL_GetError());
 		return (-1);
 	}
-	if (!SDL_WasInit(SDL_INIT_VIDEO) &&
-	    SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-		AG_SetError("SDL_INIT_VIDEO failed: %s", SDL_GetError());
-		SDL_Quit();
-		return (-1);
-	}
 	agInitedSDL = 1;
+
+	if (!SDL_WasInit(SDL_INIT_VIDEO)) {
+		if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+			AG_SetError("SDL_INIT_VIDEO failed: %s", SDL_GetError());
+			return (-1);
+		}
+		agInitedSDLVideo = 1;
+	}
 
 	SDL_WM_SetCaption(agProgName, agProgName);
 
@@ -340,8 +386,11 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 #ifdef HAVE_OPENGL
 		AG_SetBool(agConfig, "view.opengl", 1);
 #else
-		if ((flags & AG_VIDEO_OPENGL_OR_SDL) == 0)
-			AG_FatalError("Agar OpenGL support is not compiled in");
+		if (!(flags & AG_VIDEO_OPENGL_OR_SDL)) {
+			AG_SetError("AG_VIDEO_OPENGL requested but OpenGL "
+			            "support is not compiled in");
+			goto fail;
+		}
 #endif
 	} else {
 		AG_SetBool(agConfig, "view.opengl", 0);
@@ -359,28 +408,33 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	if (flags & AG_VIDEO_DOUBLEBUF) { screenflags |= SDL_DOUBLEBUF; }
 	if (flags & AG_VIDEO_FULLSCREEN) { screenflags |= SDL_FULLSCREEN; }
 	if (flags & AG_VIDEO_NOFRAME) { screenflags |= SDL_NOFRAME; }
+
+	/* Allocate the Agar view context. */
+	if ((agView = AllocView()) == NULL) {
+		goto fail;
+	}
+	if (flags & AG_VIDEO_OVERLAY) { agView->overlay = 1; }
 	if (flags & AG_VIDEO_BGPOPUPMENU) { agBgPopupMenu = 1; }
 
-	agView = Malloc(sizeof(AG_Display));
-	InitView(agView);
-	if (flags & AG_VIDEO_OVERLAY)
-		agView->overlay = 1;
-
+	/* Set the requested parameters; pull defaults from agConfig. */
 	agView->rNom = 1000/AG_GetUint(agConfig,"view.nominal-fps");
 	depth = bpp > 0 ? bpp : AG_GetUint8(agConfig,"view.depth");
 	agView->w = w > 0 ? w : AG_GetUint16(agConfig,"view.w");
 	agView->h = h > 0 ? h : AG_GetUint16(agConfig,"view.h");
-
 	if (AG_GetBool(agConfig,"view.full-screen"))
 		screenflags |= SDL_FULLSCREEN;
 	if (AG_GetBool(agConfig,"view.async-blits"))
 		screenflags |= SDL_HWSURFACE|SDL_ASYNCBLIT;
 
+	/*
+	 * Set the video mode.
+	 */
 	agView->depth = SDL_VideoModeOK(agView->w, agView->h, depth,
 	    screenflags);
-	if (agView->depth == 8)
+	if (agView->depth == 8) {
+		Verbose(_("Enabling hardware palette"));
 		screenflags |= SDL_HWPALETTE;
-	
+	}
 #ifdef HAVE_OPENGL
 	if (AG_GetBool(agConfig,"view.opengl")) {
 		screenflags |= SDL_OPENGL;
@@ -392,14 +446,11 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		agView->opengl = 1;
 	}
 #endif
-
 	if (agView->w < AG_GetUint16(agConfig,"view.min-w") ||
 	    agView->h < AG_GetUint16(agConfig,"view.min-h")) {
 		AG_SetError(_("The resolution is too small."));
 		goto fail;
 	}
-
-	/* Set the video mode. */
 	agView->v = SDL_SetVideoMode(agView->w, agView->h, agView->depth,
 	    screenflags);
 	if (agView->v == NULL) {
@@ -407,18 +458,10 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 		    agView->w, agView->h, agView->depth, SDL_GetError());
 		goto fail;
 	}
-	agView->stmpl = AG_SurfaceRGBA(1,1, 32, 0,
-#if AG_BYTEORDER == AG_BIG_ENDIAN
- 	    0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
-#else
-	    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
-#endif
-	);
-	if (agView->stmpl == NULL) {
-		AG_FatalError(NULL);
-	}
-	agVideoFmt = agView->v->format;
-	agSurfaceFmt = agView->stmpl->format;
+
+	/* Allocate the standard reference surfaces. */
+	if (AllocReferenceSurfaces(agView) == -1)
+		goto fail;
 
 	Verbose(_("Video display is %dbpp (%08x,%08x,%08x)\n"),
 	     (int)agVideoFmt->BitsPerPixel, 
@@ -451,18 +494,23 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 	AG_SetUint16(agConfig, "view.w", agView->w);
 	AG_SetUint16(agConfig, "view.h", agView->h);
 
-	if (AG_InitGUI(0) == -1) {
+	if (AG_InitGUI(0) == -1 ||
+	    InitClipRects(w, h) == -1)
 		goto fail;
-	}
-	InitClipRects(w, h);
 
 	if (!(flags & AG_VIDEO_NOBGCLEAR) && !agView->overlay) {
 		AG_ClearBackground();
 	}
 	return (0);
 fail:
-	Free(agView);
-	agView = NULL;
+	if (agView != NULL) {
+		DestroyView(agView);
+		agView = NULL;
+	}
+	if (agInitedSDLVideo) {
+		SDL_QuitSubSystem(SDL_INIT_VIDEO);
+		agInitedSDLVideo = 0;
+	}
 	return (-1);
 }
 
@@ -473,7 +521,7 @@ AG_DestroyVideo(void)
 
 	if (agView == NULL)
 		return;
-	
+
 	for (win = TAILQ_FIRST(&agView->detach);
 	     win != TAILQ_END(&agView->detach);
 	     win = nwin) {
@@ -486,13 +534,13 @@ AG_DestroyVideo(void)
 		nwin = TAILQ_NEXT(win, windows);
 		AG_ObjectDestroy(win);
 	}
+	TAILQ_INIT(&agView->detach);
+	TAILQ_INIT(&agView->windows);
 
 	AG_TextDestroy();
 	
-	AG_ListDestroy(agView->Lmodal);
-	AG_SurfaceFree(agView->stmpl);
-	Free(agView->dirty);
-	Free(agView);
+	DestroyView(agView);
+	agView = NULL;
 	
 	AG_ColorsDestroy();
 	AG_CursorsDestroy();
@@ -500,7 +548,6 @@ AG_DestroyVideo(void)
 	AG_ClearGlobalKeys();
 	AG_MutexDestroy(&agGlobalKeysLock);
 	
-	agView = NULL;
 	initedGlobals = 0;
 }
 

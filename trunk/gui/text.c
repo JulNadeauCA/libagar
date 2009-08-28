@@ -128,7 +128,7 @@ static const char *agTextMsgTitles[] = {
 };
 
 AG_Mutex agTextLock;
-static SLIST_HEAD(ag_fontq, ag_font) fonts = SLIST_HEAD_INITIALIZER(&fonts);
+static SLIST_HEAD(ag_fontq, ag_font) fonts;
 AG_Font *agDefaultFont = NULL;
 
 static struct {
@@ -432,9 +432,11 @@ GlyphGC(void *obj, Uint32 ival, void *arg)
 int
 AG_TextInit(void)
 {
+	AG_Font *font;
 	int i;
 	
 	AG_MutexInitRecursive(&agTextLock);
+	SLIST_INIT(&fonts);
 
 	/* Set the default font search path. */
 	if (!AG_CfgDefined("font-path")) {
@@ -485,14 +487,15 @@ AG_TextInit(void)
 	if (!AG_CfgDefined("font.flags")) {
 		AG_SetCfgUint("font.flags", 0);
 	}
-	if ((agDefaultFont = AG_FetchFont(NULL, -1, -1)) == NULL) {
+	if ((font = AG_FetchFont(NULL, -1, -1)) == NULL) {
 		AG_SetError("Failed to load default font: %s", AG_GetError());
 		goto fail;
 	}
-	agTextFontHeight = agDefaultFont->height;
-	agTextFontAscent = agDefaultFont->ascent;
-	agTextFontDescent = agDefaultFont->descent;
-	agTextFontLineSkip = agDefaultFont->lineskip;
+	agDefaultFont = font;
+	agTextFontHeight = font->height;
+	agTextFontAscent = font->ascent;
+	agTextFontDescent = font->descent;
+	agTextFontLineSkip = font->lineskip;
 
 	/* Initialize the state engine and cache. */
 	curState = 0;
