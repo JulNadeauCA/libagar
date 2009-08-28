@@ -26,8 +26,7 @@ SUBDIR=	fixedres \
 	console \
 	chinese \
 	rendertosurface \
-	reinit \
-	boxpacking
+	reinit
 
 all: all-subdir
 clean: prereq clean-subdir
