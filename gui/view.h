@@ -287,7 +287,8 @@ extern const SDL_VideoInfo *agVideoInfo; /* XXX */
 extern int agFullscreenMode;		/* Full-screen mode is effective */
 extern int agAsyncBlits;		/* Async blits are effective */
 extern int agGUI;			/* GUI is initialized */
-extern int agInitedSDL;			/* Video system had to initialize SDL */
+extern int agInitedSDL;			/* SDL_Init() was used */
+extern int agInitedSDLVideo;		/* SDL_INIT_VIDEO was used */
 
 int  AG_InitVideo(int, int, int, Uint);
 int  AG_InitVideoSDL(SDL_Surface *, Uint);

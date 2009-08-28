@@ -132,7 +132,8 @@ void *agGUIClasses[] = {
 };
 
 int agGUI = 0;			/* GUI is initialized */
-int agInitedSDL = 0;		/* Video system had to initialize SDL */
+int agInitedSDL = 0;		/* SDL_Init() was used */
+int agInitedSDLVideo = 0;	/* SDL_INIT_VIDEO was used */
 
 /* Initialize Agar-GUI */
 int
