@@ -3,13 +3,13 @@ include Makefile.config
 include ${TOP}/core/Makefile.inc
 include ${TOP}/gui/Makefile.inc
 
-PROJECT=	"boxpacking"
+PROJECT=	"minimal"
 PROG_TYPE=	"GUI"
-PROG_GUID=	"4bf79e00-b744-404a-b809-5cbed7d2afc1"
+PROG_GUID=	"1ce3d47e-18df-4e21-8cea-12370df730cd"
 PROG_LINKS=	${CORE_LINKS} ${GUI_LINKS}
 
-PROG=	boxpacking
-SRCS=	boxpacking.c
+PROG=	minimal
+SRCS=	minimal.c
 
 CFLAGS+=${AGAR_CFLAGS}
 LIBS+=	${AGAR_LIBS}
