@@ -324,6 +324,11 @@ AG_InitVideoSDL(SDL_Surface *display, Uint flags)
 
 	/* Enable OpenGL mode if the surface has SDL_OPENGL set. */
 	if (display->flags & (SDL_OPENGL|SDL_OPENGLBLIT)) {
+		if (flags & AG_VIDEO_SDL) {
+			AG_SetError("AG_VIDEO_SDL flag requested, but "
+			            "display surface has SDL_OPENGL set");
+			goto fail;
+		}
 		AG_SetBool(agConfig, "view.opengl", 1);
 		agView->opengl = 1;
 	} else {
@@ -392,6 +397,8 @@ AG_InitVideo(int w, int h, int bpp, Uint flags)
 			goto fail;
 		}
 #endif
+	} else if (flags & AG_VIDEO_SDL) {
+		AG_SetBool(agConfig, "view.opengl", 0);
 	} else {
 		AG_SetBool(agConfig, "view.opengl", 0);
 	}

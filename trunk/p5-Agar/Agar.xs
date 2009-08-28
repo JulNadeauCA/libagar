@@ -186,6 +186,7 @@ PREINIT:
 		{ "bgPopupMenu", AG_VIDEO_BGPOPUPMENU },
 		{ "openGL",      AG_VIDEO_OPENGL },
 		{ "openGLOrSDL", AG_VIDEO_OPENGL_OR_SDL },
+		{ "SDL",         AG_VIDEO_SDL },
 		{ "noBgClear",   AG_VIDEO_NOBGCLEAR },
 		{ NULL,          0 }
 	};
@@ -209,6 +210,7 @@ PREINIT:
 		{ "bgPopupMenu", AG_VIDEO_BGPOPUPMENU },
 		{ "openGL",      AG_VIDEO_OPENGL },
 		{ "openGLOrSDL", AG_VIDEO_OPENGL_OR_SDL },
+		{ "SDL",         AG_VIDEO_SDL },
 		{ "noBgClear",   AG_VIDEO_NOBGCLEAR },
 		{ NULL,          0 }
 	};

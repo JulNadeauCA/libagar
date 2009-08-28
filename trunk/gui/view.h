@@ -266,6 +266,7 @@ case 4:					\
 #define AG_VIDEO_OPENGL_OR_SDL 0x0400  /* Prefer OpenGL mode */
 #define AG_VIDEO_NOBGCLEAR     0x0800  /* Don't clear background on init */
 #define AG_VIDEO_OVERLAY       0x1000  /* Overlay in OpenGL mode */
+#define AG_VIDEO_SDL           0x2000  /* Prefer SDL mode */
 
 __BEGIN_DECLS
 extern AG_ObjectClass agDisplayClass;	/* Agar(Display) class definition */
