@@ -202,7 +202,6 @@ static void
 Draw(void *p, VG_View *vv)
 {
 	VG_Polygon *vp = p;
-	int i;
 
 	if (vp->nPts < 3 || vp->outline) {
 		DrawOutline(vp, vv);
@@ -211,7 +210,7 @@ Draw(void *p, VG_View *vv)
 #ifdef HAVE_OPENGL
 	if (agView->opengl) {
 		VG_Color *c = &VGNODE(vp)->color;
-		int x, y;
+		int x, y, i;
 
 		glBegin(GL_POLYGON);
 		glColor3ub(c->r, c->g, c->b);
