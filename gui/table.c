@@ -2041,7 +2041,7 @@ Init(void *obj)
 	AG_SetEvent(t, "window-keyup", KeyUp, NULL);
 	AG_SetEvent(t, "widget-lostfocus", LostFocus, NULL);
 	AG_SetEvent(t, "widget-hidden", LostFocus, NULL);
-	AG_SetEvent(t, "detached", LostFocus, NULL);
+	AG_AddEvent(t, "detached", LostFocus, NULL);
 	AG_SetEvent(t, "dblclick-row-expire", ExpireRowDblClick, NULL);
 	AG_SetEvent(t, "dblclick-col-expire", ExpireColDblClick, NULL);
 	AG_SetEvent(t, "dblclick-cell-expire", ExpireCellDblClick, NULL);
