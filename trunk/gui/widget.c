@@ -43,34 +43,58 @@
 
 SDL_Cursor  *agCursorToSet = NULL;	/* Set cursor at end of event cycle */
 
+/* Set the parent window pointer on a widget and its children. */
 static void
-ChildAttached(AG_Event *event)
+SetParentWindow(AG_Widget *wid, AG_Window *win)
 {
-	AG_Widget *pwid = AG_SELF();
-	AG_Widget *wid = AG_SENDER();
-	AG_Style *style = pwid->style;
+	AG_Widget *chld;
 
-	if (AG_OfClass(pwid, "AG_Widget:AG_Window:*"))
-		wid->window = AGWINDOW(pwid);
+	wid->window = win;
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
+		SetParentWindow(chld, win);
+}
 
-	/* Inherit style from parent widget. */
-	if (style != NULL)
-		wid->style = style;
+/* Set the style pointer on a widget and its children. */
+static void
+SetStyle(AG_Widget *wid, AG_Style *style)
+{
+	AG_Widget *chld;
+
+	wid->style = style;
+	OBJECT_FOREACH_CHILD(chld, wid, ag_widget)
+		SetStyle(chld, style);
 }
 
 static void
-ChildDetached(AG_Event *event)
+OnAttach(AG_Event *event)
 {
-	AG_Widget *pwid = AG_SELF();
-	AG_Widget *wid = AG_SENDER();
-	AG_Style *style = pwid->style;
+	AG_Widget *wParent = AG_SENDER();
+	AG_Widget *w = AG_SELF();
 
-	if (AG_OfClass(pwid, "AG_Widget:AG_Window:*"))
-		wid->window = NULL;
+	if (!AG_OfClass(wParent, "AG_Widget:*"))
+		return;				/* Attaching to agView */
+
+	if (AG_OfClass(wParent, "AG_Widget:AG_Window:*")) {
+		SetParentWindow(w, AGWINDOW(wParent));
+	} else {
+		SetParentWindow(w, wParent->window);
+	}
 
 	/* Inherit style from parent widget. */
-	if (style != NULL)
-		wid->style = style;
+	if (wParent->style != NULL)
+		SetStyle(w, wParent->style);
+}
+
+static void
+OnDetach(AG_Event *event)
+{
+	AG_Widget *wParent = AG_SENDER();
+	AG_Widget *w = AG_SELF();
+	
+	if (!AG_OfClass(wParent, "AG_Widget:*"))
+		return;				/* Attaching to agView */
+
+	SetParentWindow(w, NULL);
 }
 
 #ifdef AG_LEGACY
@@ -116,8 +140,8 @@ Init(void *obj)
 	wid->nTextureGC = 0;
 #endif
 
-	AG_SetEvent(wid, "child-attached", ChildAttached, NULL);
-	AG_SetEvent(wid, "child-detached", ChildDetached, NULL);
+	AG_SetEvent(wid, "attached", OnAttach, NULL);
+	AG_SetEvent(wid, "detached", OnDetach, NULL);
 #ifdef AG_LEGACY
 	AG_SetEvent(wid, "bound", Bound, NULL);
 #endif
@@ -1297,12 +1321,13 @@ AG_WidgetRegenResourcesGL(AG_Widget *wid)
 static __inline__ void
 FocusWidget(AG_Widget *w)
 {
-	AG_Window *winParent;
-
 	w->flags |= AG_WIDGET_FOCUSED;
-	if ((winParent = AG_ParentWindow(w)) != NULL) {
-		AG_PostEvent(winParent, w, "widget-gainfocus", NULL);
-		winParent->nFocused++;
+	if (w->window != NULL) {
+		AG_PostEvent(w->window, w, "widget-gainfocus", NULL);
+		w->window->nFocused++;
+	} else {
+		Verbose("%s: Gained focus, but no parent window\n",
+		    OBJECT(w)->name);
 	}
 }
 
@@ -1310,12 +1335,10 @@ FocusWidget(AG_Widget *w)
 static __inline__ void
 UnfocusWidget(AG_Widget *w)
 {
-	AG_Window *winParent;
-
 	w->flags &= ~(AG_WIDGET_FOCUSED);
-	if ((winParent = AG_ParentWindow(w)) != NULL) {
-		AG_PostEvent(winParent, w, "widget-lostfocus", NULL);
-		winParent->nFocused--;
+	if (w->window != NULL) {
+		AG_PostEvent(w->window, w, "widget-lostfocus", NULL);
+		w->window->nFocused--;
 	}
 }
 

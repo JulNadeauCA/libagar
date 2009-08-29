@@ -390,7 +390,7 @@ Init(void *obj)
 	AG_SetEvent(m, "window-mousebuttonup", MouseButtonUp, NULL);
 #endif
 	AG_SetEvent(m, "window-mousemotion", MouseMotion, NULL);
-	AG_SetEvent(m, "attached", Attached, NULL);
+	AG_AddEvent(m, "attached", Attached, NULL);
 
 #ifdef AG_DEBUG
 	AG_BindUint(m, "flags", &m->flags);
