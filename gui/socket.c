@@ -513,7 +513,8 @@ AG_SocketInsertIcon(AG_Socket *sock, AG_Icon *icon)
 	
 	AG_ObjectLock(sock);
 	AG_ObjectLock(icon);
-	
+
+	AG_ObjectAttach(sock, icon);
 	sock->icon = icon;
 	icon->sock = sock;
 
@@ -541,6 +542,7 @@ AG_SocketRemoveIcon(AG_Socket *sock)
 			goto out;
 		}
 		sock->icon->sock = NULL;
+		AG_ObjectDetach(sock->icon);
 		AG_ObjectUnlock(sock->icon);
 	}
 	sock->icon = NULL;
