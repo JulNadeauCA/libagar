@@ -39,6 +39,7 @@
 #include "ttf.h"
 #include "editable.h"
 #include "text.h"
+#include "window.h"
 
 #include "keymap.h"
 #include "primitive.h"

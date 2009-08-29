@@ -36,6 +36,7 @@
 
 #include <gui/window.h>
 #include <gui/menu.h>
+#include <gui/view.h>
 
 #include "dev.h"
 
@@ -69,11 +70,13 @@ SelectTool(AG_Event *event)
 		AG_WindowShow(win);
 }
 
+#ifdef AG_DEBUG
 static void
 ShowGuiDebugger(AG_Event *event)
 {
 	AG_WindowShow(AG_GuiDebugger());
 }
+#endif /* AG_DEBUG */
 
 void
 DEV_ToolMenu(AG_MenuItem *mi)
@@ -85,8 +88,10 @@ DEV_ToolMenu(AG_MenuItem *mi)
 		AG_MenuAction(mi, _(devTools[i].name), NULL,
 		    SelectTool, "%p", &devTools[i]);
 	}
+#ifdef AG_DEBUG
 	AG_MenuSeparator(mi);
 	AG_MenuAction(mi, _("GUI Debugger"), NULL, ShowGuiDebugger, NULL);
+#endif
 }
 
 void
