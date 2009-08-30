@@ -1,0 +1,131 @@
+
+Release Notes for Agar 1.3.4 (Pandemonic Incantation)
+-----------------------------------------------------
+
+Here are some of the most notable changes since Agar 1.3.3, in no
+particular order. A wikified version of this list is available at:
+http://wiki.libagar.org/wiki/Agar-1.3.4.
+
+- Continued improvements to the API reference.
+- Overall improved handling of out-of-memory conditions.
+- Implement simpler, unified AG_Variable(3) interface at the AG_Object(3)
+  level in ag_core. This renders the AG_Widget(3)-level "AG_WidgetBinding"
+  and the "AG_Prop" interfaces obsolete, as well as the AG_Event(3) argument
+  lists, which all used different structures and interfaces. Backwards
+  compatibility is preserved.
+- GUI: Implemented word-wrapping in AG_Editable(3) and AG_Textbox(3). Thanks
+  to CoKinetic Systems (http://www.cokinetic.com/) for sponsoring this feature!
+- Perl XS bindings improved to the level that they are now useful, thanks to
+  Mat Sutcliffe!
+- Continued improvements to the Ada bindings; added ada-demos/
+  (thanks rothwell!)
+- Remove unnecessary --disable-utf8 switch, always use Unicode.
+- Removed DEV_GuiDebugger() from ag_dev library. Reimplemented a more useful
+  debugging tool, AG_GuiDebugger(), in ag_gui itself.
+- Fixed font engine initialization/clean-up issue which prevented Agar from
+  being destroyed and re-initialized later (thanks naiina!)
+- CORE: Eliminate unnecessary list traversals when scheduling timeouts.
+  AG_ScheduleTimeout() is now preferred over AG_AddTimeout() and
+  ReplaceTimeout().
+- CORE: Added AG_LookupDSO() to AG_DSO(3) interface.
+- CORE: Added public AG_ObjectReadHeader() routine, for checking object file
+  metadata prior to loading.
+- CORE: Added AG_Time(3) interface.
+- CORE: Implemented support for database-bound objects with AG_Db(3) and
+  AG_DbObject(3).
+- CORE: Added AG_List(3) interface to complement AG_Variable(3).
+- CORE: Agar datafiles now support debugging information and optional runtime
+  type-safety. Added agar-disasm utility for dumping contents of Agar
+  object datafiles with debug information (see AG_SetSourceDebug()).
+- CORE: Implemented "AutoCore" (dynamically-grown memory) data source into
+  AG_DataSource(3).
+- CORE: Much improved error handling in AG_DataSource(3). Added
+  AG_DataSourceSetErrorFn(), and error-return variants for all standard
+  AG_ReadFoo() routines.
+- CORE: Added simpler AG_ConfigLoad() and AG_ConfigSave().
+- Merged NS/NC library ("ag_net") into ag_core.
+- Updated build system components with latest BSDBuild
+  (http://bsdbuild.hypertriton.com/).
+- GUI: Added widget: AG_FontSelector(3).
+- GUI: Added widget: AG_Scrollview(3).
+- GUI: Added widget: AG_Treetbl(3) (based on previous "AG_Tableview").
+- GUI: Added advisory AG_Widget(3) flag AG_WIDGET_TABLE_EMBEDDABLE.
+- GUI: Added AG_TextFontPts(), AG_TextFontPct(), AG_TextFontLookup(),
+  AG_TextValign(), AG_ButtonValign().
+- Fixes to AG_Label(3) clipping when partially occluded.
+- GUI: Added AG_TextInfo() (similar to AG_TextWarning(), with disable key).
+- GUI: Cosmetic fixes in AG_Menu(3).
+- GUI: Implemented AG_InitGUI(), AG_QuitGUI().
+- GUI: Implemented AG_VIDEO_OVERLAY option to simplify rendering of Agar GUI
+  elements over an existing OpenGL scene when a custom event loop is needed.
+- GUI: Avoid the slow recursive searches needed by functions such as
+  AG_WindowUpdate() by storing a "window" pointer in the Widget structure.
+- GUI: Clean up focus-related code. Allow AG_WidgetFocus() to fail. Add
+  separate AG_WidgetIsFocusedInWindow() routine in addition to
+  AG_WidgetIsFocused().
+- GUI: Fix a potential problem on platforms where the GL context is lost
+  following a window resize.
+- GUI: Allow widgets to request geometry updates asynchronously with
+  AG_WidgetUpdate(). This avoids redundant, expensive searches. Use of
+  AG_WindowUpdate() within widget implementations is now strongly deprecated.
+- GUI: Fix incorrect parsing of "Npx" size specifications in
+  AG_WidgetParseSizeSpec().
+- GUI: Implement AG_WidgetSurface(), for rendering widgets to an AG_Surface(3).
+- GUI: Fix improper initialization and cleanup of embedded widget cells,
+  improve handling of out-of-memory conditions.
+- GUI: Fix scrolling behavior of AG_Console(3), add AG_ConsoleClear(),
+  AG_ConsoleMsgIcon() and AG_ConsoleMsgPtr().
+- Removed remaining SDL dependencies in GUI rendering code and ag_core.
+- GUI: Use stippled polygons in GL mode for "disabled" widget controls. Add
+  AG_DrawArrowLeft(), AG_DrawArrowRight().
+- GUI: Embed AG_Label(3) in AG_Button(3) instead of rendering text. Added
+  constructors AG_ButtonNewUint{8,16,32}().
+- GUI: Embed AG_Label(3) in AG_Checkbox(3) instead of rendering text.
+- GUI: Some small optimizations to text rendering system.
+- GUI: Cosmetic fixes to decorative window frames and rendering of "resize"
+  controls.
+- GUI: Added auto-completion and pattern matching support in
+  AG_FileDlg(3) on platforms where glob(3) is available.
+- GUI: AG_FileDlg(3) now displays OS-specific directory shortcuts. Display
+  drive letters on win32.
+- GUI: AG_Slider(3): added AG_SliderNewFooR constructor variants, added
+  AG_SliderSetControlSize().
+- GUI: Implemented AG_PixmapFromTexture() constructor and
+  AG_PixmapFooCurrentSurface in the AG_Pixmap(3) widget.
+- GUI: Added support for caption text in AG_Box(3).
+- GUI: Added AG_HSVPAL_NOALPHA and AG_HSVPAL_NOPREVIEW options to AG_HSVPal(3).
+- GUI: Added AG_WIDGET_NOSPACING flag to request that parent container widgets
+  do not apply spacing around the widget.
+- GUI: The polling rate of AG_Tlist(3) is now controllable with
+  AG_TlistSetRefresh() and AG_TlistRefresh(). Added AG_TlistScrollToStart()
+  and AG_TlistScrollToEnd() routines.
+- GUI: Added AG_TableSetColHeight(), AG_TableSetRowHeight(),
+  AG_TableSetColMin(), AG_TableSetSelectionMode() and
+  AG_TableSetSelectionColor().
+- GUI: Added AG_RadioNewUint(). Fixed clipping in AG_Radio(3).
+- GUI: Added AG_ProgressBarNewInt().
+- GUI: Implicitely glPushAttrib(GL_TRANSFORM_BIT) in AG_GLView(3).
+- GUI: Rework of the "modal window" system to keep modal windows in a stack.
+  This fixes a bug that would occur with cascading modal windows (e.g., a
+  modal window created from an event handler of another modal window).
+- GUI: Rework of the logic responsible for cycling focus between widgets with
+  the "tab" key. The new version is more efficient and fixes focusing bugs
+  that would occur when using certain container configurations.
+- GUI: Added public AG_WindowFocusAtPos() (was previously an internal).
+- GUI: Implemented AG_WindowSetGeometryRect(), AG_WindowSetMinSizePct(),
+  AG_WindowSetSideBorders(), AG_WindowSetBottomBorder().
+- GUI: Fixed many issues with AG_Pane(3). AG_PaneMoveDivider() now
+  works pre-WindowShow(), added AG_PaneMoveDividerPct(). Fixed incorrect
+  documentation of the AG_PANE_DIV flag (actually divides area by two).
+  Added AG_PANE_UNMOVABLE option. The divider is now resizable to 0 pixels.
+- VG: Fixed rendering of VG_Polygon(3).
+- VG: Implemented general-purpose "select" tool (adapted from Edacious).
+- VG: Added VG_ViewSetScalePreset(), VG_ClearEditAreas(), VG_EditNode(),
+  VG_DrawSurface(), VG_ToolCommandExec() to VG_View(3) widget. Improvements
+  to "text" tool, such as font selection.
+- VG: Library is now usable without Agar-GUI.
+- VG: Added VG_Merge().
+- VG: Added variable substitution and removed complex parser from "polled"
+- VG_Text element, thanks to the new AG_Variable(3) system.
+- VG: Added missing manual pages.
+- MATH: The math library is now official and documented; see AG_Intro(3).
