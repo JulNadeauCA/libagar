@@ -43,10 +43,16 @@ interface to various Agar parameters which should remain persistent.
 Typically, parameters are registered as
 .Xr AG_Variable 3
 bindings to specific global variables.
-.Sh LOCATING FILES
+.Sh INTERFACE
 .nr nS 1
 .Ft "int"
 .Fn AG_ConfigFile "const char *path_key" "const char *name" "const char *extension" "char *dst_path" "size_t dst_len"
+.Pp
+.Ft "int"
+.Fn AG_ConfigLoad "void"
+.Pp
+.Ft "int"
+.Fn AG_ConfigSave "void"
 .Pp
 .nr nS 0
 The
@@ -65,6 +71,21 @@ fixed-size buffer
 bytes).
 .Fn AG_ConfigFile
 returns 0 on success and -1 on failure.
+.Pp
+.Fn AG_ConfigLoad
+loads the configuration data.
+It is equivalent to:
+.Bd -literal
+	AG_ObjectLoad(agConfig);
+.Ed
+.Pp
+.Fn AG_ConfigSave
+saves the configuration data, creating the parent directories if needed.
+It is equivalent to:
+.Bd -literal
+	AG_CreateDataDir();
+	AG_ObjectSave(agConfig);
+.Ed
 .Sh CONFIGURATION PARAMETERS
 The following parameters are registered by Agar-Core:
 .Bl -tag -width "BOOL view.full-screen "
