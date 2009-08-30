@@ -32,7 +32,7 @@ MAN3=	AG_View.3 AG_Widget.3 AG_Button.3 AG_FixedPlotter.3 AG_Checkbox.3 \
 	AG_Console.3 AG_GLView.3 AG_Graph.3 AG_Icon.3 AG_Socket.3 AG_Cursor.3 \
 	AG_Separator.3 AG_Numerical.3 AG_Style.3 AG_ProgressBar.3 \
 	AG_Editable.3 AG_Slider.3 AG_Surface.3 AG_Scrollview.3 AG_Rect.3 \
-	AG_Titlebar.3 AG_FontSelector.3 AG_Treetbl.3
+	AG_Titlebar.3 AG_FontSelector.3 AG_Treetbl.3 AG_GuiDebugger.3
 
 CFLAGS+=-D_AGAR_GUI_INTERNAL ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${OPENGL_CFLAGS} \
 	${X11_CFLAGS} ${JPEG_CFLAGS} ${MATH_CFLAGS} ${GETTEXT_CFLAGS}

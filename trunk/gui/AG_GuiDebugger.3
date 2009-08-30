@@ -1,0 +1,63 @@
+.\" Copyright (c) 2009 Hypertriton, Inc. <http://hypertriton.com/>
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\" SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+.\" STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+.\" IN ANY WAY OUT OF THE USE OF THIS SOFTWARE EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 30, 2009
+.Dt AG_GUIDEBUGGER 3
+.Os
+.ds vT Agar API Reference
+.ds oS Agar 1.3.4
+.Sh NAME
+.Nm AG_GuiDebugger
+.Nd agar GUI debugging tool
+.Sh SYNOPSIS
+.Bd -literal
+#include <agar/core.h>
+#include <agar/gui.h>
+.Ed
+.Sh DESCRIPTION
+The Agar GUI debugger is available when the Agar library is compiled with the
+.Sq --enable-debug
+option.
+The GUI debugger allows the tree of windows and widgets to be inspected in
+extensive detail.
+.Sh INTERFACE
+.nr nS 1
+.Ft "AG_Window *"
+.Fn AG_GuiDebugger "void"
+.Pp
+.nr nS 0
+The
+.Fn AG_GuiDebugger
+function creates the GUI debugger window.
+The caller should invoke
+.Xr AG_WindowShow 3
+to display it.
+.Sh SEE ALSO
+.Xr AG_Intro 3 ,
+.Xr AG_Widget 3 ,
+.Xr AG_Window 3
+.Sh HISTORY
+The
+.Nm
+tool first appeared in Agar 1.3.4.
