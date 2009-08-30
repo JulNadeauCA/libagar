@@ -66,7 +66,7 @@ AG_DbNewDB4(const char *path, enum ag_db4_type db4_type, Uint32 db4_flags)
 		return (NULL);
 	}
 	db->db4 = (void *)dbp;
-	rv = ((DB *)db->db4)->open((DB *)db->db4, NULL, path, NULL,
+	rv = ((DB *)db->db4)->open((DB *)db->db4, NULL, path,
 	    (DBTYPE)db4_type, db4_flags, 0);
 	if (rv != 0) {
 		AG_SetError("%s: %s", path, db_strerror(rv));

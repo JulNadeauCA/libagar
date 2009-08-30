@@ -240,8 +240,8 @@ else
 	HUNDEF(HAVE_GETADDRINFO)
 fi
 	
-# Enable Berkeley DB support if db4 is found (for AG_DbObject).
-if [ "${with_db4}" != "no" ]; then
+# Enable Berkeley DB support if requested (for AG_DbObject).
+if [ "${with_db4}" = "yes" ]; then
 	CHECK(db4)
 	if [ "${HAVE_DB4}" != "yes" ]; then
 		if [ "${with_db4}" = "yes" ]; then
