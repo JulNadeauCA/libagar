@@ -6,8 +6,12 @@
 void
 PopupReact(AG_Event *event)
 {
-	AG_TextPromptString("This is the second popup prompt.",
-	    PopupReact, NULL);
+	char s[128];
+	int count = AG_INT(1);
+
+	AG_Snprintf(s, sizeof(s), "This is the #%d popup prompt.",
+	    count++);
+	AG_TextPromptString(s, PopupReact, "%i", count++);
 }
 
 int
@@ -23,7 +27,7 @@ main(int argc, char *argv[])
 	AG_BindGlobalKey(SDLK_ESCAPE, KMOD_NONE, AG_Quit);
 
 	AG_TextPromptString("This is the first popup prompt.",
-	    PopupReact, NULL);
+	    PopupReact, "%i", 2);
 
 	AG_EventLoop();
 	AG_Destroy();
