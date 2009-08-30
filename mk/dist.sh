@@ -84,6 +84,7 @@ fi
 if [ "$PHASE" = "stable" ]; then
 	echo "*********************************************************"
 	echo "TODO:"
+	echo "- Update Make sure core/version.h is up to date"
 	echo "- Create http://wiki.libagar.org/wiki/Agar-${VER}"
 	echo "- Update http://wiki.libagar.org/wiki/Main_Page"
 	echo "- Update http://sourceforge.net/projects/agar/"
