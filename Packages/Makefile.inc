@@ -10,8 +10,8 @@ PKGNAME?=	${PROJNAME}-${VERSION}-${PORTNAME}
 
 VERSION=	`(cd ${SRCDIR} && perl mk/get-version.pl)`
 RELEASE=	`(cd ${SRCDIR} && perl mk/get-release.pl)`
-BUILDDIR=	/tmp/w-${PKGNAME}
-FAKEDIR=	/tmp/pkg-${PKGNAME}
+BUILDDIR=	${HOME}/tmp/w-${PKGNAME}
+FAKEDIR=	${HOME}/tmp/pkg-${PKGNAME}
 RELENGDIR=	${SRCDIR}/Packages/${PORTNAME}
 PLATFORM?=	unix
 
