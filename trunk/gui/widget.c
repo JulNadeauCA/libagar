@@ -411,7 +411,7 @@ AG_Variable *
 AG_WidgetBind(void *pObj, const char *name, enum ag_variable_type type, ...)
 {
 	AG_Object *obj = pObj;
-	AG_Variable *V;
+	AG_Variable *V = NULL;	/* make compiler happy */
 	va_list ap;
 	Uint i;
 
