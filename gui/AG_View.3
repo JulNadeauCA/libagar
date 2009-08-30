@@ -101,39 +101,41 @@ Acceptable
 .Fa flags
 include:
 .Bl -tag -width "AG_VIDEO_OPENGL_OR_SDL "
-.It AG_VIDEO_HWSURFACE
-Request hardware framebuffer, whenever possible.
-.It AG_VIDEO_ASYNCBLIT
-If SDL is selected as a back-end, pass the
-.Dv SDL_ASYNCBLIT
-flag to
-.Xr SDL_SetVideoMode 3 .
-.It AG_VIDEO_ANYFORMAT
-In SDL mode, avoid emulating surface of requested depth if not available.
-.It AG_VIDEO_HWPALETTE
-In color-index mode, request exclusive palette access.
-.It AG_VIDEO_DOUBLEBUF
-If
-.Dv AG_VIDEO_HWSURFACE
-is used, enable hardware double-buffering.
-.It AG_VIDEO_FULLSCREEN
-Start in full screen mode.
-.It AG_VIDEO_RESIZABLE
-If display is windowed, request a resizable window.
-.It AG_VIDEO_NOFRAME
-If display is windowed, request a frame-less window.
-.It AG_VIDEO_BGPOPUPMENU
-When the user clicks on the background, display a generic popup menu.
-The popup menu, by default, will contain the list of minimized window.
 .It AG_VIDEO_OPENGL
 Request OpenGL mode and fail if it is not available.
 .It AG_VIDEO_SDL
 Request SDL mode and fail if it is not available.
 .It AG_VIDEO_OPENGL_OR_SDL
 Request OpenGL mode if it is available, and fallback to SDL.
+.It AG_VIDEO_RESIZABLE
+If display is windowed, request a resizable window.
+.It AG_VIDEO_FULLSCREEN
+Start in full screen mode.
+.It AG_VIDEO_BGPOPUPMENU
+When the user clicks on the background, display a generic popup menu.
+The popup menu, by default, will contain the list of minimized window.
+If debugging is enabled, the menu will include "GUI debugger" as well.
 .It AG_VIDEO_OVERLAY
 Overlay GUI elements onto an existing OpenGL scene.
 The user is responsible for clearing and updating the display.
+.It AG_VIDEO_NOFRAME
+If display is windowed, request a frame-less window.
+.It AG_VIDEO_HWSURFACE
+If using framebuffer mode, request a hardware framebuffer.
+.It AG_VIDEO_DOUBLEBUF
+In conjuction with
+.Dv AG_VIDEO_HWSURFACE ,
+enable hardware double-buffering.
+.It AG_VIDEO_ASYNCBLIT
+If using framebuffer mode, pass the
+.Dv SDL_ASYNCBLIT
+flag to
+.Xr SDL_SetVideoMode 3 .
+.It AG_VIDEO_ANYFORMAT
+If using framebuffer mode, avoid emulating surface of requested depth if
+not available.
+.It AG_VIDEO_HWPALETTE
+If using framebuffer/color-index mode, request exclusive palette access.
 .El
 .Pp
 The
