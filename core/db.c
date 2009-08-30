@@ -31,7 +31,7 @@
 #include <core/core.h>
 
 #ifdef HAVE_DB4
-#include <db.h>
+#include <db4/db.h>
 #endif
 
 /* Create a new database. */

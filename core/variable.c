@@ -109,7 +109,7 @@ FetchVariable(void *pObj, const char *name, enum ag_variable_type type)
 {
 	AG_Object *obj = pObj;
 	Uint i;
-	AG_Variable *V;
+	AG_Variable *V = NULL;
 	
 	for (i = 0; i < obj->nVars; i++) {
 		V = &obj->vars[i];
