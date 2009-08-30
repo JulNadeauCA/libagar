@@ -23,7 +23,8 @@ MAN3=	AG_Intro.3 AG_Core.3 AG_Event.3 AG_Object.3 AG_Prop.3 AG_Timeout.3 \
 MAN5=	AG_DEN.5
 
 CFLAGS+=-D_AGAR_CORE_INTERNAL ${PTHREADS_XOPEN_CFLAGS} \
-	${ALTIVEC_CHECK_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS}
+	${ALTIVEC_CHECK_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
+	${DB4_CFLAGS}
 
 include .manlinks.mk
 include ${TOP}/mk/build.lib.mk
