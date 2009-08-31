@@ -62,7 +62,7 @@ AG_EditableNew(void *parent, Uint flags)
 	ed = Malloc(sizeof(AG_Editable));
 	AG_ObjectInit(ed, &agEditableClass);
 
-	if ((flags & AG_EDITABLE_NO_HFILL) == 0)
+	if (flags & AG_EDITABLE_HFILL)
 		AG_ExpandHoriz(ed);
 	if (flags & AG_EDITABLE_VFILL)
 		AG_ExpandVert(ed);

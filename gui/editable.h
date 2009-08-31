@@ -29,7 +29,6 @@ typedef struct ag_editable {
 #define AG_EDITABLE_FLT_ONLY      0x00080 /* Accepts only float input */
 #define AG_EDITABLE_CATCH_TAB     0x00100 /* Process tab key input */
 #define AG_EDITABLE_CURSOR_MOVING 0x00200 /* Cursor is being moved */
-#define AG_EDITABLE_NO_HFILL      0x00400
 #define AG_EDITABLE_NOSCROLL      0x00800 /* Inhibit automatic scrolling */
 #define AG_EDITABLE_NOSCROLL_ONCE 0x01000 /* Inhibit scrolling at next draw */
 #define AG_EDITABLE_MARKPREF      0x02000 /* Mark current cursor position */

@@ -10,7 +10,6 @@ package agar.gui.widget.numerical is
   type flags_t is new c.unsigned;
   NUMERICAL_HFILL    : constant flags_t := 16#01#;
   NUMERICAL_VFILL    : constant flags_t := 16#02#;
-  NUMERICAL_NO_HFILL : constant flags_t := 16#04#;
 
   type numerical_t is limited private;
   type numerical_access_t is access all numerical_t;

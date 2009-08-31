@@ -40,7 +40,7 @@ AG_NumericalNew(void *parent, Uint flags, const char *unit, const char *label)
 	num = Malloc(sizeof(AG_Numerical));
 	AG_ObjectInit(num, &agNumericalClass);
 
-	if ((flags & AG_NUMERICAL_NO_HFILL) == 0) { AG_ExpandHoriz(num); }
+	if (flags & AG_NUMERICAL_HFILL) { AG_ExpandHoriz(num); }
 	if (flags & AG_NUMERICAL_VFILL) { AG_ExpandVert(num); }
 	
 	if (label != NULL) {

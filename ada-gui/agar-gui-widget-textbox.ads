@@ -20,7 +20,6 @@ package agar.gui.widget.textbox is
   TEXTBOX_FLT_ONLY      : constant flags_t := 16#00400#;
   TEXTBOX_CATCH_TAB     : constant flags_t := 16#00800#;
   TEXTBOX_CURSOR_MOVING : constant flags_t := 16#01000#;
-  TEXTBOX_NO_HFILL      : constant flags_t := 16#02000#;
   TEXTBOX_STATIC        : constant flags_t := 16#04000#;
   TEXTBOX_NOEMACS       : constant flags_t := 16#08000#;
   TEXTBOX_NOWORDSEEK    : constant flags_t := 16#10000#;
