@@ -22,7 +22,6 @@ package agar.gui.widget.editable is
   EDITABLE_FLT_ONLY      : constant flags_t := 16#00080#;
   EDITABLE_CATCH_TAB     : constant flags_t := 16#00100#;
   EDITABLE_CURSOR_MOVING : constant flags_t := 16#00200#;
-  EDITABLE_NO_HFILL      : constant flags_t := 16#00400#;
   EDITABLE_NOSCROLL      : constant flags_t := 16#00800#;
   EDITABLE_NOSCROLL_ONCE : constant flags_t := 16#01000#;
   EDITABLE_MARKPREF      : constant flags_t := 16#02000#;

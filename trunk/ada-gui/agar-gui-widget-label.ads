@@ -49,7 +49,6 @@ package agar.gui.widget.label is
   LABEL_NOMINSIZE : constant flags_t := 16#04#;
   LABEL_PARTIAL   : constant flags_t := 16#10#;
   LABEL_REGEN     : constant flags_t := 16#20#;
-  LABEL_NO_HFILL  : constant flags_t := 16#40#;
   LABEL_FRAME     : constant flags_t := 16#80#;
   LABEL_EXPAND    : constant flags_t := LABEL_HFILL or LABEL_VFILL;
 

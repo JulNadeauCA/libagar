@@ -32,7 +32,6 @@ typedef struct ag_textbox {
 #define AG_TEXTBOX_CATCH_TAB     0x00800 /* Enter literal tabs into text
 					    instead of cycling focus */
 #define AG_TEXTBOX_CURSOR_MOVING 0x01000 /* Cursor is being moved */
-#define AG_TEXTBOX_NO_HFILL      0x02000
 #define AG_TEXTBOX_STATIC        0x04000 /* String binding will not change */
 #define AG_TEXTBOX_NOEMACS       0x08000 /* Disable emacs-style fn keys */
 #define AG_TEXTBOX_NOWORDSEEK    0x10000 /* Disable ALT+b/ALT+f emacs keys */
