@@ -46,9 +46,17 @@ Z<>
 
 =back
 
+=item B<$widget-E<gt>setLabel($text)>
+
+=item B<$widget-E<gt>setHomogenous($flag)>
+
 =item B<$widget-E<gt>setPadding($padding)>
 
 =item B<$widget-E<gt>setSpacing($spacing)>
+
+=item B<$widget-E<gt>setHoriz()>
+
+=item B<$widget-E<gt>setVert()>
 
 =item B<$widget-E<gt>setDepth($depth)>
 
