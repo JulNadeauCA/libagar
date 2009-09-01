@@ -80,6 +80,21 @@ OUTPUT:
 	RETVAL
 
 void
+setLabel(self, label)
+	Agar::Box self
+	const char * label
+CODE:
+	AG_BoxSetLabel(self, "%s", label);
+
+void
+setHomogenous(self, flag)
+	Agar::Box self
+	int flag
+CODE:
+	AG_BoxSetHomogenous(self, flag);
+
+
+void
 setPadding(self, padding)
 	Agar::Box self
 	int padding
@@ -92,6 +107,18 @@ setSpacing(self, spacing)
 	int spacing
 CODE:
 	AG_BoxSetSpacing(self, spacing);
+
+void
+setHoriz(self)
+	Agar::Box self
+CODE:
+	AG_BoxSetType(self, AG_BOX_HORIZ);
+
+void
+setVert(self)
+	Agar::Box self
+CODE:
+	AG_BoxSetType(self, AG_BOX_HORIZ);
 
 void
 setDepth(self, depth)
