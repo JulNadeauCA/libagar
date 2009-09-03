@@ -24,6 +24,7 @@
  */
 
 #include <agar/core.h>
+#include <agar/core/types.h>
 #include <agar/config/have_64bit.h>
 #include <agar/config/have_long_double.h>
 
