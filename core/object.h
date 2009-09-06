@@ -41,20 +41,22 @@ typedef struct ag_object {
 	char *save_pfx;			/* Prefix for default save paths */
 	AG_ObjectClass *cls;		/* Object class data */
 	Uint flags;
-#define AG_OBJECT_FLOATING_VARS	 0x0001	/* Clear variables before load */
-#define AG_OBJECT_NON_PERSISTENT 0x0002	/* Never include in saves */
-#define AG_OBJECT_INDESTRUCTIBLE 0x0004	/* Not destructible (advisory) */
-#define AG_OBJECT_RESIDENT	 0x0008	/* Data part is resident */
-#define AG_OBJECT_PRESERVE_DEPS	 0x0010	/* Preserve cnt=0 dependencies */
-#define AG_OBJECT_STATIC	 0x0020	/* Don't free() after detach */
-#define AG_OBJECT_READONLY	 0x0040	/* Disallow edition (advisory) */
-#define AG_OBJECT_WAS_RESIDENT	 0x0080	/* Used internally by ObjectLoad() */
-#define AG_OBJECT_REOPEN_ONLOAD	 0x0200	/* Recreate editor UI on ObjectLoad() */
-#define AG_OBJECT_REMAIN_DATA	 0x0400	/* Keep user data resident */
-#define AG_OBJECT_DEBUG		 0x0800	/* Enable debugging */
-#define AG_OBJECT_NAME_ONATTACH	 0x1000	/* Generate name on attach */
-#define AG_OBJECT_CHLD_AUTOSAVE	 0x2000	/* Include child obj data in archive */
-#define AG_OBJECT_DEBUG_DATA	 0x4000	/* Datafiles contain debug info */
+#define AG_OBJECT_FLOATING_VARS	 0x00001	/* Clear variables before load */
+#define AG_OBJECT_NON_PERSISTENT 0x00002	/* Never include in saves */
+#define AG_OBJECT_INDESTRUCTIBLE 0x00004	/* Not destructible (advisory) */
+#define AG_OBJECT_RESIDENT	 0x00008	/* Data part is resident */
+#define AG_OBJECT_PRESERVE_DEPS	 0x00010	/* Preserve cnt=0 dependencies */
+#define AG_OBJECT_STATIC	 0x00020	/* Don't free() after detach */
+#define AG_OBJECT_READONLY	 0x00040	/* Disallow edition (advisory) */
+#define AG_OBJECT_WAS_RESIDENT	 0x00080	/* Used internally by ObjectLoad() */
+#define AG_OBJECT_REOPEN_ONLOAD	 0x00200	/* Recreate editor UI on ObjectLoad() */
+#define AG_OBJECT_REMAIN_DATA	 0x00400	/* Keep user data resident */
+#define AG_OBJECT_DEBUG		 0x00800	/* Enable debugging */
+#define AG_OBJECT_NAME_ONATTACH	 0x01000	/* Generate name on attach */
+#define AG_OBJECT_CHLD_AUTOSAVE	 0x02000	/* Include child obj data in archive */
+#define AG_OBJECT_DEBUG_DATA	 0x04000	/* Datafiles contain debug info */
+#define AG_OBJECT_INATTACH	 0x08000	/* In AG_ObjectAttach() */
+#define AG_OBJECT_INDETACH	 0x10000	/* In AG_ObjectDetach() */
 #define AG_OBJECT_SAVED_FLAGS	(AG_OBJECT_FLOATING_VARS|\
  				 AG_OBJECT_INDESTRUCTIBLE|\
 				 AG_OBJECT_PRESERVE_DEPS|\
@@ -92,6 +94,8 @@ typedef struct ag_object {
 	void (*debugFn)(void *, void *, const char *);
 	void *debugPtr;
 #endif
+	struct ag_event *attachFn;	/* Attach hook */
+	struct ag_event *detachFn;	/* Detach hook */
 } AG_Object;
 
 /* Object archive header information. */
@@ -118,6 +122,10 @@ enum ag_object_checksum_alg {
 /* Return next entry in list of direct child objects. */
 #define AGOBJECT_NEXT_CHILD(var,t) \
 	((struct t *)AG_TAILQ_NEXT(AGOBJECT(var),cobjs))
+
+/* Return last entry in list of direct child objects. */
+#define AGOBJECT_LAST_CHILD(var,t) \
+	((struct t *)AG_TAILQ_LAST(&AGOBJECT(var)->children,ag_objectq))
 	
 /* Iterate over the direct child objects (reverse order). */
 #define AGOBJECT_FOREACH_CHILD_REVERSE(var, ob, t) \
@@ -149,14 +157,11 @@ enum ag_object_checksum_alg {
 # define OBJECT_PERSISTENT(ob) !(AGOBJECT(ob)->flags & AG_OBJECT_NON_PERSISTENT)
 # define OBJECT_DEBUG(ob)      (AGOBJECT(ob)->flags & AG_OBJECT_DEBUG)
 
-# define OBJECT_FOREACH_CHILD(var,ob,t) \
-         AGOBJECT_FOREACH_CHILD((var),(ob),t)
-# define OBJECT_FOREACH_CHILD_REVERSE(var,ob,t) \
-         AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),t)
-# define OBJECT_FOREACH_CLASS(var,ob,t,subclass) \
-         AGOBJECT_FOREACH_CLASS((var),(ob),t,(subclass))
-# define OBJECT_NEXT_CHILD(var,t) \
-	 AGOBJECT_NEXT_CHILD((var),t)
+# define OBJECT_FOREACH_CHILD(var,ob,t)			AGOBJECT_FOREACH_CHILD((var),(ob),t)
+# define OBJECT_FOREACH_CHILD_REVERSE(var,ob,t)		AGOBJECT_FOREACH_CHILD_REVERSE((var),(ob),t)
+# define OBJECT_FOREACH_CLASS(var,ob,t,subclass)	AGOBJECT_FOREACH_CLASS((var),(ob),t,(subclass))
+# define OBJECT_NEXT_CHILD(var,t)			AGOBJECT_NEXT_CHILD((var),t)
+# define OBJECT_LAST_CHILD(var,t)			AGOBJECT_LAST_CHILD((var),t)
 
 #endif /* _AGAR_INTERNAL || _USE_AGAR_CORE */
 
@@ -200,8 +205,13 @@ void	 AG_ObjectSetClass(void *, void *);
 void	 AG_ObjectSetDebugFn(void *, void (*)(void *, void *, const char *),
                              void *);
 
+void	 AG_ObjectSetAttachFn(void *, void (*fn)(struct ag_event *), const char *, ...);
+void	 AG_ObjectSetDetachFn(void *, void (*fn)(struct ag_event *), const char *, ...);
+
 void	 AG_ObjectMoveUp(void *);
 void	 AG_ObjectMoveDown(void *);
+void	 AG_ObjectMoveToHead(void *);
+void	 AG_ObjectMoveToTail(void *);
 void	*AG_ObjectDuplicate(void *, const char *);
 void	 AG_ObjectDestroy(void *);
 void	 AG_ObjectUnlinkDatafiles(void *);
