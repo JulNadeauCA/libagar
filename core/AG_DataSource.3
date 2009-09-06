@@ -232,11 +232,11 @@ define (which evaluates to
 or
 .Dv AG_LITTLE_ENDIAN ) .
 .Pp
-Prior to writing to a data source,
 .Fn AG_SetSourceDebug
-enables encoding and verification of debugging information in the archive.
-At the cost of increasing the size of the archive, it enables type-safety
-checks at primitive data level, as the archive is decoded.
+enables or disables the inclusion of debugging information in the archive.
+Debugging information allows type-safety checking at the primitive data
+level, at the cost of an increased archive size due to the additional
+metadata that must be encoded.
 .Pp
 The
 .Fn AG_DataSourceInit
