@@ -80,6 +80,8 @@ AG_ObjectInit(void *p, void *cl)
 	ob->nevents = 0;
 	ob->vars = NULL;
 	ob->nVars = 0;
+	ob->attachFn = NULL;
+	ob->detachFn = NULL;
 
 #ifdef AG_LOCKDEBUG
 	ob->lockinfo = Malloc(sizeof(char *));
@@ -89,6 +91,7 @@ AG_ObjectInit(void *p, void *cl)
 	ob->debugFn = NULL;
 	ob->debugPtr = NULL;
 #endif
+
 	AG_MutexInitRecursive(&ob->lock);
 	
 	TAILQ_INIT(&ob->deps);
@@ -355,6 +358,38 @@ AG_ObjectMove(void *childp, void *newparentp)
 }
 #endif /* AG_LEGACY */
 
+/* Configure a custom "attach" function. */
+void
+AG_ObjectSetAttachFn(void *p, void (*fn)(struct ag_event *), const char *fmt, ...)
+{
+	AG_Object *obj = p;
+
+	AG_ObjectLock(obj);
+	if (fn != NULL) {
+		obj->attachFn = AG_SetEvent(obj, NULL, fn, NULL);
+		AG_EVENT_GET_ARGS(obj->attachFn, fmt);
+	} else {
+		obj->attachFn = NULL;
+	}
+	AG_ObjectUnlock(obj);
+}
+
+/* Configure a custom "detach" function. */
+void
+AG_ObjectSetDetachFn(void *p, void (*fn)(struct ag_event *), const char *fmt, ...)
+{
+	AG_Object *obj = p;
+
+	AG_ObjectLock(obj);
+	if (fn != NULL) {
+		obj->detachFn = AG_SetEvent(obj, NULL, fn, NULL);
+		AG_EVENT_GET_ARGS(obj->detachFn, fmt);
+	} else {
+		obj->detachFn = NULL;
+	}
+	AG_ObjectUnlock(obj);
+}
+
 /* Attach an object to another object. */
 void
 AG_ObjectAttach(void *parentp, void *pChld)
@@ -369,14 +404,35 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	AG_ObjectLock(parent);
 	AG_ObjectLock(chld);
 
+	/*
+	 * Update the child's "parent" and "root" pointers. If we are using
+	 * a custom attach function, we assume that it will follow through.
+	 */
+	chld->parent = parent;
+	chld->root = parent->root;
+	
+	/*
+	 * Call the attach function if one is defined (and AG_ObjectAttach()
+	 * is not being called from it).
+	 */
+	if (chld->attachFn != NULL &&
+	    !(chld->flags & AG_OBJECT_INATTACH)) {
+		chld->flags |= AG_OBJECT_INATTACH;
+		chld->attachFn->handler(chld->attachFn);
+		chld->flags &= ~(AG_OBJECT_INATTACH);
+		goto out;
+	}
+
+	/* Name the object if it has the name-on-attach flag set. */
 	if (chld->flags & AG_OBJECT_NAME_ONATTACH) {
 		AG_ObjectGenName(parent, chld->cls, chld->name,
 		    sizeof(chld->name));
 	}
+	
+	/* Attach the object. */
 	TAILQ_INSERT_TAIL(&parent->children, chld, cobjs);
-	chld->parent = parent;
-	chld->root = parent->root;
 
+	/* Notify both the parent and child objects. */
 	AG_PostEvent(parent, chld, "attached", NULL);
 	AG_PostEvent(chld, parent, "child-attached", NULL);
 
@@ -384,6 +440,8 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	Debug(parent, "Attached child object: %s\n", chld->name);
 	Debug(chld, "Attached to new parent: %s\n", parent->name);
 #endif
+
+out:
 	AG_ObjectUnlock(chld);
 	AG_ObjectUnlock(parent);
 	AG_UnlockVFS(parent);
@@ -429,33 +487,47 @@ AG_ObjectAttachToNamed(void *vfsRoot, const char *path, void *child)
 
 /* Detach a child object from its parent. */
 void
-AG_ObjectDetach(void *childp)
+AG_ObjectDetach(void *pChld)
 {
-	AG_Object *child = childp;
+	AG_Object *chld = pChld;
 #ifdef AG_THREADS
-	AG_Object *root = child->root;
+	AG_Object *root = chld->root;
 #endif
-	AG_Object *parent = child->parent;
+	AG_Object *parent = chld->parent;
 
 #ifdef AG_THREADS
 	AG_LockVFS(root);
 #endif
 	AG_ObjectLock(parent);
-	AG_ObjectLock(child);
+	AG_ObjectLock(chld);
 
-	AG_ObjectCancelTimeouts(child, AG_CANCEL_ONDETACH);
+	/*
+	 * Call the detach function if one is defined (and AG_ObjectDetach()
+	 * is not being called from it).
+	 */
+	if (chld->detachFn != NULL &&
+	    !(chld->flags & AG_OBJECT_INDETACH)) {
+		chld->flags |= AG_OBJECT_INDETACH;
+		chld->detachFn->handler(chld->detachFn);
+		chld->flags &= ~(AG_OBJECT_INDETACH);
+		goto out;
+	}
 
-	TAILQ_REMOVE(&parent->children, child, cobjs);
-	child->parent = NULL;
-	child->root = child;
-	AG_PostEvent(parent, child, "detached", NULL);
-	AG_PostEvent(child, parent, "child-detached", NULL);
+	AG_ObjectCancelTimeouts(chld, AG_CANCEL_ONDETACH);
+
+	TAILQ_REMOVE(&parent->children, chld, cobjs);
+	chld->parent = NULL;
+	chld->root = chld;
+	AG_PostEvent(parent, chld, "detached", NULL);
+	AG_PostEvent(chld, parent, "child-detached", NULL);
 
 #ifdef AG_OBJDEBUG
-	Debug(parent, "Detached child object %s\n", child->name);
-	Debug(child, "Detached from parent %s\n", parent->name);
+	Debug(parent, "Detached child object %s\n", chld->name);
+	Debug(chld, "Detached from parent %s\n", parent->name);
 #endif
-	AG_ObjectUnlock(child);
+
+out:
+	AG_ObjectUnlock(chld);
 	AG_ObjectUnlock(parent);
 #ifdef AG_THREADS
 	AG_UnlockVFS(root);
@@ -2008,6 +2080,36 @@ AG_ObjectMoveDown(void *p)
 	if (parent != NULL && next != NULL) {
 		TAILQ_REMOVE(&parent->children, ob, cobjs);
 		TAILQ_INSERT_AFTER(&parent->children, next, ob, cobjs);
+	}
+	AG_UnlockVFS(parent);
+}
+
+/* Move an object to the head of its parent's children list. */
+void
+AG_ObjectMoveToHead(void *p)
+{
+	AG_Object *ob = p;
+	AG_Object *parent = ob->parent;
+
+	AG_LockVFS(parent);
+	if (parent != NULL) {
+		TAILQ_REMOVE(&parent->children, ob, cobjs);
+		TAILQ_INSERT_HEAD(&parent->children, ob, cobjs);
+	}
+	AG_UnlockVFS(parent);
+}
+
+/* Move an object to the tail of its parent's children list. */
+void
+AG_ObjectMoveToTail(void *p)
+{
+	AG_Object *ob = p;
+	AG_Object *parent = ob->parent;
+
+	AG_LockVFS(parent);
+	if (parent != NULL) {
+		TAILQ_REMOVE(&parent->children, ob, cobjs);
+		TAILQ_INSERT_TAIL(&parent->children, ob, cobjs);
 	}
 	AG_UnlockVFS(parent);
 }

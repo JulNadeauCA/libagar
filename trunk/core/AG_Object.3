@@ -70,6 +70,18 @@ interface.
 .Fn AG_ObjectDetach "AG_Object *obj"
 .Pp
 .Ft "void"
+.Fn AG_ObjectMoveToHead "AG_Object *obj"
+.Pp
+.Ft "void"
+.Fn AG_ObjectMoveToTail "AG_Object *obj"
+.Pp
+.Ft "void"
+.Fn AG_ObjectMoveUp "AG_Object *obj"
+.Pp
+.Ft "void"
+.Fn AG_ObjectMoveDown "AG_Object *obj"
+.Pp
+.Ft "void"
 .Fn AG_ObjectDelete "AG_Object *obj"
 .Pp
 .Ft "AG_Object *"
@@ -194,6 +206,16 @@ If
 is NULL,
 .Fn AG_ObjectAttach
 is a no-op.
+.Pp
+The
+.Fn AG_ObjectMoveUp ,
+.Fn AG_ObjectMoveDown ,
+.Fn AG_ObjectMoveToHead
+and
+.Fn AG_ObjectMoveToTail
+functions move the object in the parent object's list of child objects.
+These functions are useful when the ordering is important - when the child
+objects represent a stack, for instance.
 .Pp
 The
 .fn AG_ObjectDelete
