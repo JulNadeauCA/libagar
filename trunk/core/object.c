@@ -411,15 +411,9 @@ AG_ObjectAttach(void *parentp, void *pChld)
 	chld->parent = parent;
 	chld->root = parent->root;
 	
-	/*
-	 * Call the attach function if one is defined (and AG_ObjectAttach()
-	 * is not being called from it).
-	 */
-	if (chld->attachFn != NULL &&
-	    !(chld->flags & AG_OBJECT_INATTACH)) {
-		chld->flags |= AG_OBJECT_INATTACH;
+	/* Call the attach function if one is defined. */
+	if (chld->attachFn != NULL)  {
 		chld->attachFn->handler(chld->attachFn);
-		chld->flags &= ~(AG_OBJECT_INATTACH);
 		goto out;
 	}
 
@@ -501,15 +495,9 @@ AG_ObjectDetach(void *pChld)
 	AG_ObjectLock(parent);
 	AG_ObjectLock(chld);
 
-	/*
-	 * Call the detach function if one is defined (and AG_ObjectDetach()
-	 * is not being called from it).
-	 */
-	if (chld->detachFn != NULL &&
-	    !(chld->flags & AG_OBJECT_INDETACH)) {
-		chld->flags |= AG_OBJECT_INDETACH;
+	/* Call the detach function if one is defined. */
+	if (chld->detachFn != NULL) {
 		chld->detachFn->handler(chld->detachFn);
-		chld->flags &= ~(AG_OBJECT_INDETACH);
 		goto out;
 	}
 
@@ -1252,6 +1240,15 @@ AG_ObjectLoadVariables(void *p, AG_DataSource *ds)
 			    agVariableTypes[j].name);
 			goto fail;
 		}
+#if 0
+		{
+			char buf[64];
+			AG_Variable *V = AG_GetVariableLocked(ob, key);
+			AG_PrintVariable(buf, sizeof(buf), V);
+			fprintf(stderr, "%s: %s -> %s\n", ob->name, key, buf);
+			AG_UnlockVariable(V);
+		}
+#endif
 	}
 	AG_ObjectUnlock(ob);
 	return (0);
@@ -1262,9 +1259,9 @@ fail:
 
 /* Save Object variables. */
 void
-AG_ObjectSaveVariables(void *p, AG_DataSource *ds)
+AG_ObjectSaveVariables(void *pObj, AG_DataSource *ds)
 {
-	AG_Object *ob = p;
+	AG_Object *ob = pObj;
 	off_t countOffs;
 	Uint32 count = 0;
 	Uint i;
@@ -1277,9 +1274,13 @@ AG_ObjectSaveVariables(void *p, AG_DataSource *ds)
 	for (i = 0; i < ob->nVars; i++) {
 		AG_Variable *V = &ob->vars[i];
 		const AG_VariableTypeInfo *Vt = &agVariableTypes[V->type];
+		void *p;
 
-		if (Vt->code == -1)
+		if (Vt->code == -1) {
+			fprintf(stderr, "skipping %s (non-persistent)\n",
+			    V->name);
 			continue;			/* Nonpersistent */
+		}
 
 		AG_LockVariable(V);
 		if (V->fn.fnVoid != NULL &&
@@ -1293,20 +1294,31 @@ AG_ObjectSaveVariables(void *p, AG_DataSource *ds)
 		AG_WriteString(ds, (char *)V->name);
 		AG_WriteUint32(ds, Vt->code);
 
+		p = (agVariableTypes[V->type].indirLvl > 0) ?
+		    V->data.p : &V->data;
+
 		switch (AG_VARIABLE_TYPE(V)) {
-		case AG_VARIABLE_UINT:	 AG_WriteUint32(ds, (Uint32)V->data.u);	break;
-		case AG_VARIABLE_INT:	 AG_WriteSint32(ds, (Sint32)V->data.i);	break;
-		case AG_VARIABLE_UINT8:	 AG_WriteUint8(ds, V->data.u8);		break;
-		case AG_VARIABLE_SINT8:	 AG_WriteSint8(ds, V->data.s8);		break;
-		case AG_VARIABLE_UINT16: AG_WriteUint16(ds, V->data.u16);	break;
-		case AG_VARIABLE_SINT16: AG_WriteSint16(ds, V->data.s16);	break;
-		case AG_VARIABLE_UINT32: AG_WriteUint32(ds, V->data.u32);	break;
-		case AG_VARIABLE_SINT32: AG_WriteSint32(ds, V->data.s32);	break;
-		case AG_VARIABLE_FLOAT:  AG_WriteFloat(ds, V->data.flt);	break;
-		case AG_VARIABLE_DOUBLE: AG_WriteDouble(ds, V->data.dbl);	break;
-		case AG_VARIABLE_STRING: AG_WriteString(ds, V->data.s);		break;
-		default:							break;
+		case AG_VARIABLE_UINT:	 AG_WriteUint32(ds, (Uint32)*(Uint *)p);	break;
+		case AG_VARIABLE_INT:	 AG_WriteSint32(ds, (Sint32)*(int *)p);		break;
+		case AG_VARIABLE_UINT8:	 AG_WriteUint8(ds, *(Uint8 *)p);		break;
+		case AG_VARIABLE_SINT8:	 AG_WriteSint8(ds, *(Sint8 *)p);		break;
+		case AG_VARIABLE_UINT16: AG_WriteUint16(ds, *(Uint16 *)p);		break;
+		case AG_VARIABLE_SINT16: AG_WriteSint16(ds, *(Sint16 *)p);		break;
+		case AG_VARIABLE_UINT32: AG_WriteUint32(ds, *(Uint32 *)p);		break;
+		case AG_VARIABLE_SINT32: AG_WriteSint32(ds, *(Sint32 *)p);		break;
+		case AG_VARIABLE_FLOAT:  AG_WriteFloat(ds, *(float *)p);		break;
+		case AG_VARIABLE_DOUBLE: AG_WriteDouble(ds, *(double *)p);		break;
+		case AG_VARIABLE_STRING: AG_WriteString(ds, V->data.s);			break;
+		default:								break;
 		}
+#if 0
+		{
+			char buf[64];
+			AG_PrintVariable(buf, sizeof(buf), V);
+			fprintf(stderr, "%s: Saving: %s: %s\n",
+			    ob->name, V->name, buf);
+		}
+#endif
 		AG_UnlockVariable(V);
 
 		count++;
