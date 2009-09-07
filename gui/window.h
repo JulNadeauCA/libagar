@@ -179,7 +179,8 @@ void	 AG_WindowCloseGenEv(AG_Event *);
 #define AGWINCLOSE(win)      AG_WindowCloseGenEv, "%p", (win)
 
 #ifdef AG_LEGACY
-#define AG_FindWindow(name) AG_ObjectFind(agView,(name))
+struct ag_window *AG_FindWindow(const char *)
+                  DEPRECATED_ATTRIBUTE;
 #endif /* AG_LEGACY */
 
 /*

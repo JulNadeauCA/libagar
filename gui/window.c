@@ -1889,6 +1889,15 @@ AG_WindowUpdateCaption(AG_Window *win)
 	AG_ObjectUnlock(win);
 }
 
+#ifdef AG_LEGACY
+/* Pre-1.4 */
+AG_Window *
+AG_FindWindow(const char *name)
+{
+	return AG_ObjectFind(agView, name);
+}
+#endif /* AG_LEGACY */
+
 AG_WidgetClass agWindowClass = {
 	{
 		"Agar(Widget:Window)",

@@ -221,9 +221,9 @@ struct ag_window *AG_GuiDebugger(void);
 #ifdef AG_LEGACY
 #define AG_SDLKEY(v) ((SDLKey)AG_INT(v))
 #define AG_SDLMOD(v) ((SDLMod)AG_INT(v))
-#define AG_ViewAttach(win) AG_ObjectAttach(agView,(win))
-#define AG_ViewDetach(win) AG_ObjectDetach(win)
-#endif
+void	AG_ViewAttach(void *)			DEPRECATED_ATTRIBUTE;
+void	AG_ViewDetach(struct ag_window *)	DEPRECATED_ATTRIBUTE;
+#endif /* AG_LEGACY */
 
 /* Convert a pixel from SurfaceFmt to VideoFmt. */
 static __inline__ Uint32
