@@ -30,7 +30,6 @@
 #include "opengl.h"
 
 #include <core/core.h>
-#include <gui/view.h>
 
 #include "widget.h"
 #include "window.h"
