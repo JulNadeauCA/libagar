@@ -317,38 +317,15 @@ See
 .Xr AG_Threads 3
 for more information regarding thread-safety.
 .Pp
-.nr nS 1
-.Ft "void"
-.Fn AG_ViewAttach "AG_Window *child"
-.Pp
-.Ft "void"
-.Fn AG_ViewDetach "AG_Window *child"
-.Pp
-.Ft void
-.Fn AG_ViewDetachQueued "void"
-.Pp
-.Ft "AG_Window *"
-.Fn AG_FindWindow "char *name"
-.Pp
-.nr nS 0
-The
-.Fn AG_ViewAttach
-function attaches the specified window to the global
-.Va agView
-VFS.
-.Pp
-.Fn AG_ViewDetach
-detaches the specified window from its parent VFS.
-So that this function can be invoked in event context, this is not done
-immediately, the operation is instead queued to be later processed by
-.Fa AG_ViewDetachQueued .
-.Pp
-The
-.Fn AG_FindWindow
-functions searches the
-.Va agView
-VFS for a window with the specified name string and returns a pointer
-to it, or NULL on failure.
+Windows are attached to views using
+.Xr AG_ObjectAttach 3 ,
+and detached using
+.Xr AG_ObjectDetach 3 .
+Note that
+.Fn AG_ObjectDetach
+does not immediately remove the window from the list, instead it is queued
+to be detached at the end of the current event processing cycle.
+This makes window detach a safe operation to perform in event handler context.
 .Sh STRUCTURE DATA
 For the
 .Ft AG_View
