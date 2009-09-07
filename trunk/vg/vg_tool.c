@@ -28,8 +28,6 @@
  */
 
 #include <core/core.h>
-
-#include <gui/view.h>
 #include <gui/window.h>
 
 #include "vg.h"
@@ -55,7 +53,7 @@ VG_ToolDestroy(VG_Tool *tool)
 	VG_ToolCommand *cmd, *cmdNext;
 	
 	if (tool->editWin != NULL)
-		AG_ViewDetach(tool->editWin);
+		AG_ObjectDetach(tool->editWin);
 	
 	if (tool->editArea != NULL) {
 		AG_ObjectFreeChildren(tool->editArea);

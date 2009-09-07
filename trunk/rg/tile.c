@@ -26,6 +26,8 @@
 #include <core/core.h>
 #include <core/config.h>
 
+#include <gui/geometry.h>
+#include <gui/surface.h>
 #include <gui/view.h>
 #include <gui/text.h>
 #include <gui/load_surface.h>
@@ -725,14 +727,14 @@ CloseElement(RG_Tileview *tv)
 			RG_FeatureCloseMenu(tv);
 		}
 		if (tv->tv_feature.win != NULL) {
-			AG_ViewDetach(tv->tv_feature.win);
+			AG_ObjectDetach(tv->tv_feature.win);
 			tv->tv_feature.win = NULL;
 		}
 		break;
 	case RG_TILEVIEW_PIXMAP_EDIT:
 		if (tv->tv_pixmap.win != NULL) {
 			tv->tv_pixmap.ctrl = NULL;
-			AG_ViewDetach(tv->tv_pixmap.win);
+			AG_ObjectDetach(tv->tv_pixmap.win);
 			tv->tv_pixmap.win = NULL;
 		}
 		break;
@@ -740,7 +742,7 @@ CloseElement(RG_Tileview *tv)
 	case RG_TILEVIEW_SKETCH_EDIT:
 		if (tv->tv_sketch.win != NULL) {
 			tv->tv_sketch.ctrl = NULL;
-			AG_ViewDetach(tv->tv_sketch.win);
+			AG_ObjectDetach(tv->tv_sketch.win);
 			tv->tv_sketch.win = NULL;
 		}
 		break;
@@ -1090,7 +1092,7 @@ AttachPixmap(AG_Event *event)
 			break;
 		}
 	}
-	AG_ViewDetach(dlgWin);
+	AG_ObjectDetach(dlgWin);
 }
 
 static void
@@ -1165,7 +1167,7 @@ AttachSketch(AG_Event *event)
 			break;
 		}
 	}
-	AG_ViewDetach(dlgWin);
+	AG_ObjectDetach(dlgWin);
 }
 
 static void
@@ -1527,7 +1529,7 @@ UpdateTileSettings(AG_Event *event)
 	RG_TileScale(ts, t, w, h, flags);
 	t->su->format->alpha = AG_GetInt(alpha_num, "value");
 	RG_TileviewSetZoom(tv, 100, 0);
-	AG_ViewDetach(dlg_w);
+	AG_ObjectDetach(dlg_w);
 
 	if (tv->state == RG_TILEVIEW_TILE_EDIT) {
 		RG_TileviewSetInt(tv->tv_tile.geo_ctrl, 2, w);

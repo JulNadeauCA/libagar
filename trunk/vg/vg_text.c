@@ -284,7 +284,7 @@ SelectFont(AG_Event *event)
 	if (fs->curStyle & AG_FONT_BOLD) { vt->fontFlags |= VG_TEXT_BOLD; }
 	if (fs->curStyle & AG_FONT_ITALIC) { vt->fontFlags |= VG_TEXT_ITALIC; }
 
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 }
 
 static void

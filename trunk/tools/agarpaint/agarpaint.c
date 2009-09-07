@@ -55,7 +55,7 @@ static RG_Tileset *tsFocused = NULL;
 static void
 SaveAndClose(RG_Tileset *ts, AG_Window *win)
 {
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 	AG_ObjectPageOut(ts);
 }
 
@@ -417,7 +417,7 @@ AbortQuit(AG_Event *event)
 	AG_Window *win = AG_PTR(1);
 
 	agTerminating = 0;
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 }
 
 static void
@@ -515,7 +515,7 @@ SplashExpire(void *obj, Uint32 ival, void *arg)
 {
 	AG_Window *win = obj;
 
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 	return (0);
 }
 

@@ -1022,7 +1022,7 @@ tryname2:
 		    AG_GetError());
 	}
 	ins_tile_name[0] = '\0';
-	AG_ViewDetach(pwin);
+	AG_ObjectDetach(pwin);
 }
 
 static void
@@ -1082,7 +1082,7 @@ tryname2:
 	TAILQ_INSERT_TAIL(&ts->textures, tex, textures);
 	
 	ins_texture_name[0] = '\0';
-	AG_ViewDetach(dlgwin);
+	AG_ObjectDetach(dlgwin);
 	
 	if ((win = RG_TextureEdit(OBJECT(ts)->root, tex)) != NULL) {
 		AG_WindowAttach(pwin, win);
@@ -1156,7 +1156,7 @@ tryname2:
 		    AG_GetError());
 	}
 	ins_anim_name[0] = '\0';
-	AG_ViewDetach(pwin);
+	AG_ObjectDetach(pwin);
 }
 
 static void

@@ -25,6 +25,8 @@
 
 #include <core/core.h>
 
+#include <gui/geometry.h>
+#include <gui/surface.h>
 #include <gui/view.h>
 #include <gui/load_surface.h>
 
@@ -341,7 +343,7 @@ EditClose(AG_Event *event)
 	ani->nrefs--;
 	AG_MutexUnlock(&ts->lock);
 
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 }
 
 static void

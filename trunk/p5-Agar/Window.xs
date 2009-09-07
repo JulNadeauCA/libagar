@@ -162,13 +162,13 @@ void
 attach(win)
 	Agar::Window win
 CODE:
-	AG_ViewAttach(win);
+	AG_ObjectAttach(agView, win);
 
 void
 detach(win)
 	Agar::Window win
 CODE:
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 
 Agar::Widget
 findFocused(win)
@@ -184,5 +184,5 @@ void
 DESTROY(win)
 	Agar::Window win
 CODE:
-	AG_ViewDetach(win);
+	AG_ObjectDetach(win);
 
